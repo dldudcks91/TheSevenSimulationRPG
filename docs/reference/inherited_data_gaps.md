@@ -45,6 +45,7 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 `magic_defense`·`magic_resist`는 존재하지만 **마법 "공격" 개념이 데이터에 아예 없다** (원작이 물리 근접 1:1 전투였기 때문).
 → GAME_DESIGN §4-2가 확정한 직업 3종 중 **마법사가 성립하지 않는다.**
 → §9 미확정 항목 "직업 3종의 무기군 배정"이 이 갭의 해결책이며, **아이템 설계보다 먼저 와야 하는 순서**임이 드러남
+→ **[방향 확정 2026-08-21]** 직업 7종 + 무기군 배정 확정 (hero_design.md §4) — 신규 무기군 지팡이·활(본편), 단검·낫?(확장). 마법사 기본 공격 = 지팡이 기본 마법 공격 (battle_design.md §4). 베이스/Implicit/마법 공격 수치 **데이터 작성은 미착수**
 
 ### G3-b. 8부위 변경으로 생긴 신규 갭 (2026-08-21)
 슬롯이 5 → 8로 늘었으나(item_design.md) 계승 데이터는 5부위 기준이다.
@@ -59,6 +60,7 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 - 오만 2/4 = **행 자체 없음**
 - 폭식 = 2(과식 패널티)만 있고 4/6 없음
 → 21칸 중 17칸. 죄종 매핑 확정(`sin_mapping.md`) 때 같이 채워야 함
+→ **[갱신 2026-08-21]** 브레이크포인트 자체가 **3/6/9로 재조정 확정** (item_design.md §2) — 계승 CSV 무수정, 신규 세트 테이블로 오버라이드. 빈칸 4칸도 그 테이블에서 작성
 
 ### G5. 코스트 폐지 결정과 잔재 (2026-08-21 결정 로그)
 - `equipment_base.cost_size_multiplier`, `equip_rarity_config.base_cost`, common_option의 `cost_reduction` 접사
@@ -67,6 +69,7 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 ### G6. 1:1 전투 전제 (GAME_DESIGN §9 기재 항목과 동일)
 `stage_info`는 `wave` 컬럼으로 웨이브당 **몬스터 1마리**(monster_idx 단수)를 지정 — 원작이 1:1이었기 때문.
 → 파티 3인 전투로 재해석 시 웨이브당 다수 몬스터가 필요. `spawn_grade_config.battle_time_target`(일반 14초/정예 28초/챕보 300초)이 밸런스 기준선으로 쓸 수 있음
+→ **[방향 확정 2026-08-21]** 스테이지 구조 확정 (base_expedition_design.md §1-2 — 9라운드, 라운드당 1~3마리, 풀 시드 랜덤 구성). `stage_info`는 무변환 유지하고 **신규 스테이지 구조 테이블로 대체** (스키마 미정). `battle_time_target`은 라운드 전체 목표 시간으로 재해석, 몬스터 수치는 3인 파티 기준 재스케일
 
 ### G7. 죄종 접사 효과 ↔ 신규 `sin_types.affinity_stat` 충돌 가능
 계승분은 죄종별 효과가 이미 확정돼 있음 (예: 분노=치명률/반사/HP%/치명타일격/회피).
@@ -75,15 +78,16 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 
 ## 3. 미포크 (신규 설계 영역)
 
-계승 원본이 없어 새로 만든 것 — `src/data/` 루트:
+계승 원본이 없어 새로 만들 영역 — `src/data/` 루트. **2026-08-21 현재 balance.csv만 실제 생성됨**, 나머지는 계획 상태:
 
-| 파일 | 이유 |
-|---|---|
-| balance.csv | 파티 전투 공식 계수. 원작은 1:1이라 대응 데이터 없음 |
-| classes.csv | 직업 3종은 본작 신규 (GAME_DESIGN §4-2) |
-| traits.csv | TheSevenSimulation 21종에서 선별 예정 (§9 후순위) |
-| hero_names.csv | 이름 풀 처리 방식 미정 (§9 후순위) |
-| sin_types.csv | 죄종 → 7스탯 친화. **G7 참조 — sin_mapping.md로 대체될 임시본** |
+| 파일 | 상태 | 이유 |
+|---|---|---|
+| balance.csv | **생성됨** (2026-08-21) | 파티/로스터/스테이지 구조 키 등재 (party_size_max, roster_cap, concurrent_expedition_parties, rounds_per_stage, stages_per_chapter, wave_monster_max) |
+| classes.csv | 미생성 | 직업 7종(본편 5+확장 2)은 본작 신규 (hero_design.md §4) |
+| traits.csv | 미생성 | TheSevenSimulation 21종에서 선별 예정 (§9 후순위) |
+| hero_names.csv | 미생성 | 레어 영웅 이름 생성 규칙 (영웅 2층 구조 — 유니크는 고정 이름이라 해당 없음) |
+| sin_types.csv | 미생성 | 죄종 → 7스탯 친화. **G7 참조 — sin_mapping.md로 대체될 임시본** |
+| heroes.csv | 미생성 | 유니크 영웅 15종 풀 SSOT (hero_design.md — 영웅 2층 구조) |
 
 ---
-*마지막 업데이트: 2026-08-21 (8부위 변경에 따른 갭 G3-b 추가)*
+*마지막 업데이트: 2026-08-21 (G3·G4·G6 방향 확정 반영 + 신규 CSV 현황 정정 — balance.csv만 생성됨)*
