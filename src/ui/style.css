@@ -30,6 +30,27 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ───────── 게임 화면 기본기 ─────────
+   문서가 아니라 게임 UI다. 클릭했을 때 글자 입력 커서(캐럿)·드래그 선택·포커스 링이
+   뜨면 안 된다. 셋은 원인이 각각 달라서 따로 꺼야 한다. */
+
+body {
+    /* ① 드래그 선택 — 클릭·드래그로 글자가 파랗게 잡히는 것 */
+    -webkit-user-select: none;
+    user-select: none;
+    /* ② 캐럿 — Edge 의 캐럿 브라우징(F7)이 켜지면 깜빡이는 입력 커서가 생긴다.
+          입력 요소가 없어도 뜨므로 색을 투명으로 죽인다 */
+    caret-color: transparent;
+}
+
+/* ③ 포커스 링 — 마우스 클릭에는 그리지 않되, 키보드 이동(Tab)에는 남긴다.
+      :focus 를 통째로 없애면 키보드로 화면을 못 읽는다 */
+:focus { outline: none; }
+:focus-visible { outline: 1px solid var(--border-highlight); outline-offset: 1px; }
+
+/* 실제로 눌리는 것에만 손가락 커서 — 안 눌리는 카드까지 주면 거짓 신호가 된다 */
+summary { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
 body {
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -39,24 +60,45 @@ body {
     -webkit-font-smoothing: none;
 }
 
+/* 전역 배경 = 계승 거점 아트(town.webp). 패널 뒤에 깔리고 여백에서만 보인다.
+   경로는 이 CSS 파일 기준 상대경로 (src/ui/ → src/assets/) */
+body::before {
+    content: ''; position: fixed; inset: 0; z-index: -2;
+    background: url('../assets/inherited/backgrounds/town.webp') center top / cover no-repeat;
+    image-rendering: pixelated;
+    opacity: .62;
+}
+/* 가장자리·하단을 눌러 본문 대비를 지킨다 — 그림은 남기고 글자만 살린다 */
+body::after {
+    content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+        radial-gradient(ellipse at 50% 22%, rgba(10,10,18,.10) 0%, rgba(10,10,18,.68) 72%),
+        linear-gradient(180deg, rgba(10,10,18,.18) 0%, rgba(10,10,18,.55) 55%, rgba(10,10,18,.90) 100%);
+}
+
 button { font-family: inherit; font-size: inherit; color: inherit; cursor: pointer; }
 
 /* ───────── 셸 ───────── */
 
+/* 폭 정책 (2026-08-23) — 해외 대상 기준.
+   1920 모니터에서 1440은 480px을 놀렸고, 영어는 같은 내용이 1.3~1.5배 길다.
+   상한 1600 / 하한 1280(그 아래는 가로 스크롤 허용 — 반응형 재설계는 과잉).
+   nav 는 영어 라벨("Expedition")이 들어가야 해서 172 → 188. */
 #app {
     display: grid;
-    grid-template-columns: 172px 1fr;
+    grid-template-columns: 188px 1fr;
     grid-template-rows: 48px 1fr;
     grid-template-areas: "brand topbar" "nav main";
     height: 100vh;
-    max-width: 1440px;
+    max-width: 1600px;
+    min-width: 1280px;
     margin: 0 auto;
 }
 
 .brand {
     grid-area: brand;
     display: flex; align-items: center; padding: 0 16px;
-    background: var(--bg-secondary);
+    background: rgba(18, 18, 30, .90);
     border-right: 1px solid var(--border-primary);
     border-bottom: 1px solid var(--border-primary);
     font-size: var(--fs-md); letter-spacing: 1px;
@@ -67,17 +109,19 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     grid-area: topbar;
     display: flex; align-items: center; justify-content: space-between;
     gap: 24px; padding: 0 20px;
-    background: var(--bg-secondary);
+    background: rgba(18, 18, 30, .90);
     border-bottom: 1px solid var(--border-primary);
 }
 .topbar .crumb { color: var(--text-secondary); font-size: var(--fs-sm); }
 .resources { display: flex; gap: 18px; font-size: var(--fs-sm); }
 .resources span b { color: var(--text-primary); margin-left: 6px; }
 .resources span { color: var(--text-muted); }
+/* 언어 토글 — 리소스 줄 끝에 붙는다 */
+.lang-btn { margin-left: 4px; min-width: 46px; }
 
 .nav {
     grid-area: nav;
-    background: var(--bg-secondary);
+    background: rgba(18, 18, 30, .90);
     border-right: 1px solid var(--border-primary);
     padding: 12px 0;
     display: flex; flex-direction: column; gap: 2px;
@@ -100,24 +144,35 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* ───────── 공통 조각 ───────── */
 
+/* 패널은 살짝 비쳐서 배경 텍스처가 숨쉬되, 글자 대비는 유지한다 */
 .panel {
-    background: var(--bg-card);
+    background: rgba(22, 22, 36, .93);
     border: 1px solid var(--border-primary);
     padding: 14px 16px;
+}
+
+/* 선술집 = 거점 아트를 그대로 쓰는 자리 (town.webp 안에 상인 좌판과 7색 깃발이 있다) */
+.panel.town-bg {
+    background:
+        linear-gradient(rgba(18,18,30,.90), rgba(18,18,30,.96)),
+        url('../assets/inherited/backgrounds/town.webp') center 34% / cover no-repeat;
+    image-rendering: pixelated;
+    border-color: var(--border-secondary);
 }
 .panel + .panel { margin-top: 14px; }
 .panel > h2 {
     font-size: var(--fs-md); font-weight: normal; color: var(--text-secondary);
     letter-spacing: 1px; margin-bottom: 12px;
     border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;
-    display: flex; justify-content: space-between; align-items: baseline;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
 }
+.panel > h2 small { text-align: right; }
 .panel > h2 small { color: var(--text-muted); font-size: var(--fs-xs); letter-spacing: 0; }
 
 .cols { display: grid; gap: 14px; }
 .cols.c2 { grid-template-columns: 1fr 1fr; }
-.cols.c-side { grid-template-columns: 300px 1fr; }
-.cols.c-equip { grid-template-columns: 196px 1fr 372px; }
+/* minmax 로 최소만 보장하고 나머지는 흐르게 — 영어에서 라벨이 길어져도 안 깨진다 */
+.cols.c-side { grid-template-columns: minmax(300px, 24%) 1fr; }
 
 .muted { color: var(--text-muted); }
 .dim { color: var(--text-secondary); }
@@ -139,7 +194,62 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .sin-chip {
     display: inline-block; font-size: var(--fs-xs); padding: 0 6px;
     border: 1px solid currentColor; border-radius: 2px; line-height: 16px;
+    white-space: nowrap;   /* 영어 죄종명이 접히면 칩 모양이 무너진다 */
 }
+
+/* 영웅 2층 구조 — 유니크/레어 배지 (아이템 희귀도와 같은 계단) */
+.tier-chip {
+    display: inline-block; font-size: 9px; padding: 0 5px; line-height: 15px;
+    border: 1px solid currentColor; border-radius: 2px; vertical-align: 1px;
+}
+
+/* 부상/치료 — 방치형 계약의 언어("사망" 아님) */
+.injury-chip {
+    display: inline-block; font-size: var(--fs-xs); color: var(--color-error);
+    border: 1px solid currentColor; padding: 0 5px; line-height: 15px; margin-top: 3px;
+}
+.party-slot.downed { opacity: .6; border-color: #5a2424; }
+.injury-box {
+    border: 1px solid #5a2424; background: #1c1216; padding: 9px 11px; margin-bottom: 12px;
+}
+.injury-box .t { font-size: var(--fs-xs); color: var(--color-error); letter-spacing: 1px; margin-bottom: 5px; }
+.injury-box .r { display: flex; justify-content: space-between; font-size: var(--fs-sm); }
+
+/* 고유 패시브 = 영웅 Implicit (유니크 전용) */
+.passive-box {
+    border: 1px solid #6a4a1a; background: #1d1710; padding: 8px 10px; margin-bottom: 12px;
+}
+.passive-box .t { font-size: var(--fs-xs); color: #d09040; letter-spacing: 1px; margin-bottom: 3px; }
+.passive-box .n { font-size: var(--fs-sm); color: var(--text-primary); }
+
+/* 몬스터 얼굴 — 256×256 투명 PNG. 원형 마스크는 CSS가 하고 파일에는 굽지 않는다 */
+.face {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; flex: 0 0 auto;
+    background: var(--bg-input); border: 1px solid var(--border-secondary);
+    border-radius: 50%; overflow: hidden; vertical-align: middle;
+}
+.face img { width: 118%; height: 118%; object-fit: cover; image-rendering: pixelated; }
+/* 아트가 없는 몬스터 — 죄종 색 원판 + 이니셜 (색은 JS가 인라인으로 준다) */
+.face.none { font-size: var(--fs-xs); font-weight: normal; }
+.face.lg.none { font-size: var(--fs-md); }
+.face.boss { border-color: var(--text-accent); box-shadow: 0 0 0 1px rgba(224,48,48,.25); }
+.face.lg { width: 44px; height: 44px; }
+.face.unfound { opacity: .45; border-style: dashed; color: var(--text-muted); }
+
+.face-row { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.face-row.lg { gap: 6px; margin: 7px 0; }
+.face-row .muted { margin-left: 4px; }
+.face-sep { color: var(--text-muted); margin: 0 2px; }
+
+/* 라운드 종류 태그 — 정예 3·6 / 보스 9 */
+.rk {
+    display: inline-block; font-size: var(--fs-xs); padding: 0 5px; line-height: 15px;
+    border: 1px solid currentColor; color: var(--text-muted); margin-right: 4px;
+}
+.rk.elite { color: #d09040; }
+.rk.boss { color: var(--text-accent); }
+.round-plan { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 
 .bar { height: 6px; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .bar > i { display: block; height: 100%; background: var(--color-info); }
@@ -154,6 +264,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     border: 1px solid var(--border-dark); border-left: 3px solid var(--border-secondary);
     margin-bottom: 8px;
 }
+.zone.has-bg { background-size: cover; background-position: center 60%; image-rendering: pixelated; }
 .zone.locked { opacity: .45; }
 .zone.boss { border-left-color: var(--text-accent); }
 .zone .title { display: flex; align-items: center; gap: 8px; }
@@ -172,16 +283,20 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     border: 1px solid var(--border-dark); margin-bottom: 6px;
 }
 .party-slot.empty { justify-content: center; color: var(--text-muted); border-style: dashed; }
-.party-slot .lv { font-size: var(--fs-sm); color: var(--text-muted); }
+/* "Archer · Lv.8" 이 중간에서 접히면 가운뎃점만 앞줄에 남는다 — 통째로 넘긴다 */
+.party-slot .lv { font-size: var(--fs-sm); color: var(--text-muted); white-space: nowrap; }
 
 /* ───────── 로스터 ───────── */
 
-.hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 10px; }
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(296px, 1fr)); gap: 10px; }
 .hero-card {
     background: var(--bg-tertiary); border: 1px solid var(--border-dark);
     border-top: 3px solid var(--border-secondary); padding: 11px 12px;
 }
 .hero-card.selected { border-color: var(--border-highlight); background: #1e1e30; }
+.hero-card.unique { border-color: #6a4a1a; }
+.hero-card { cursor: pointer; }
+.hero-card:hover { border-color: var(--border-highlight); }
 .hero-card .name { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .hero-card .name b { font-weight: normal; font-size: var(--fs-lg); }
 .hero-card .line { display: flex; justify-content: space-between; font-size: var(--fs-sm); color: var(--text-secondary); }
@@ -191,7 +306,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* ───────── 장비 ───────── */
 
 .slot-row {
-    display: grid; grid-template-columns: 44px 1fr; gap: 9px; align-items: center;
+    /* 죄종 칩 열은 고정폭이면 영어 "Gluttony" 가 잘린다 — 내용에 맞춰 늘어나게 */
+    display: grid; grid-template-columns: minmax(44px, auto) minmax(0, 1fr); gap: 9px; align-items: center;
     padding: 7px 9px; background: var(--bg-tertiary);
     border: 1px solid var(--border-dark); margin-bottom: 5px;
 }
@@ -213,6 +329,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 .setpoint b { font-weight: normal; }
 .setpoint.reached { background: rgba(255,255,255,.07); }
+.setpoint .main-sin { font-style: normal; font-size: 9px; opacity: .9; }
 
 .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 7px; }
 .inv-item {
@@ -228,10 +345,10 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     position: fixed; z-index: 50; display: none;
     background: var(--bg-secondary); border: 1px solid var(--border-secondary);
     padding: 0; box-shadow: 0 6px 24px rgba(0,0,0,.75);
-    max-width: 560px;
+    max-width: 640px;
 }
 .tooltip.show { display: flex; }
-.tip-card { width: 264px; padding: 11px 13px; font-size: var(--fs-sm); }
+.tip-card { width: 304px; padding: 11px 13px; font-size: var(--fs-sm); }
 .tip-card + .tip-card { border-left: 1px solid var(--border-dark); background: var(--bg-input); }
 .tip-card .tip-head { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 5px; letter-spacing: 1px; }
 .tip-card .tip-name { font-size: var(--fs-md); word-break: keep-all; margin-bottom: 3px; }
@@ -255,9 +372,12 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .gain-row div span { color: var(--text-muted); margin-right: 7px; }
 
 .wave-log { font-size: var(--fs-sm); }
-.wave-log li { list-style: none; display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border-dark); }
-.wave-log li span:first-child { color: var(--text-muted); }
+.wave-log li { list-style: none; display: grid; grid-template-columns: minmax(74px, auto) minmax(0, 1fr) auto; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border-dark); }
+.wave-log li span:first-child { color: var(--text-muted); white-space: nowrap; }
 .wave-log li span:last-child { color: var(--text-secondary); font-size: var(--fs-xs); }
+.wave-log li.r-elite { background: rgba(208,144,64,.06); }
+.wave-log li.r-boss { background: rgba(224,48,48,.07); }
+.wave-log li .rk { font-weight: normal; }
 
 .drop-row {
     display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
@@ -290,14 +410,30 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .btn.sm.on { border-color: var(--border-highlight); background: #24243c; }
 
 /* 좌: 아레나 / 우: 전투 로그 */
-.battle-body { display: grid; grid-template-columns: 1fr 300px; gap: 14px; align-items: stretch; }
+.battle-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 25%); gap: 14px; align-items: stretch; }
 
 .arena {
     display: flex; flex-direction: column; justify-content: center;
-    padding: 18px 14px; min-height: 420px;
+    /* 세로 예산 700px — 1366×768 노트북에서 브라우저 크롬 빼면 ~660px 만 남는다.
+       아레나를 뷰포트 비례로 잡아 큰 화면에선 시원하게, 작은 화면에선 접히게 한다 */
+    padding: 14px 12px; min-height: clamp(300px, 46vh, 430px);
     background: radial-gradient(ellipse at center, #17171f 0%, var(--bg-input) 100%);
     border: 1px solid var(--border-dark);
+    position: relative;
 }
+/* 스테이지 배경 = TheSevenRPG 계승 픽셀아트 (2752×1536). 없는 스테이지는 위 그라디언트로 폴백 */
+.arena.has-bg {
+    background-size: cover;
+    background-position: center 62%;
+    image-rendering: pixelated;             /* 픽셀아트라 보간하면 뭉갠다 */
+    border-color: var(--border-secondary);
+}
+/* 가장자리를 어둡게 눌러 유닛 카드가 배경에서 떠 보이게 한다 */
+.arena.has-bg::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 42%, rgba(6,6,12,.72) 100%);
+}
+.arena > * { position: relative; z-index: 1; }
 
 /* 진영 = 가로 한 줄 (수가 많으면 줄바꿈) */
 .side { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; }
@@ -316,7 +452,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 유닛 카드 — 세로형 */
 .unit {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    width: 122px; padding: 9px 7px 8px;
+    /* 영어 이름("Skeleton Knight")이 122px 에 안 들어간다 — 최소만 잡고 늘어나게 */
+    width: clamp(122px, 11vw, 150px); padding: 8px 7px 7px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-dark); border-top: 3px solid var(--border-secondary);
     position: relative; text-align: center;
@@ -331,7 +468,18 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
     font-size: 26px; background: var(--bg-input);
     border: 1px solid var(--border-secondary);
+    overflow: hidden;
 }
+/* 얼굴 이미지가 있는 유닛 — 없으면 기존 이모지 글리프 그대로 */
+.sprite.has-face { background: radial-gradient(circle at 50% 38%, #24243a 0%, var(--bg-input) 100%); }
+.sprite.has-face img {
+    width: 100%; height: 100%; object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.8));
+}
+.unit.boss .sprite { width: 58px; height: 58px; }
+/* 전투 유닛의 얼굴 폴백 원판 — 사각 스프라이트 칸 안의 원 */
+.sprite.disc { border-radius: 50%; font-size: var(--fs-lg); }
 .unit.elite .sprite { border-color: #8a6a3a; }
 
 /* 공격 모션 — 상대 진영 쪽(세로)으로 밀고 들어간다 */
@@ -339,8 +487,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .unit.enemy.attacking { transform: translateY(10px); }
 
 .unit-name {
-    font-size: var(--fs-sm); line-height: 1.35; word-break: keep-all;
-    min-height: 30px; display: flex; align-items: center;
+    font-size: var(--fs-sm); line-height: 1.3; word-break: keep-all;
+    min-height: 28px; display: flex; align-items: center; text-align: center;
 }
 .tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-height: 17px; }
 .tags .status { font-size: var(--fs-xs); }
@@ -348,11 +496,49 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 .unit .bar { width: 100%; }
 .unit-sub { font-size: var(--fs-xs); color: var(--text-muted); }
-.skill-chip {
-    font-size: var(--fs-xs); background: var(--bg-input);
-    border: 1px solid var(--border-secondary); padding: 0 6px; line-height: 16px;
+/* ───────── 행동 게이지 / 쿨 게이지 ─────────
+   숫자로 "12s" 라고 적어두면 언제 터지는지 읽히지 않는다. 채워지는 칸으로 바꾸면
+   행동 주기(battle_design §2)와 실시간 쿨(§6)이 눈으로 보인다. */
+
+/* 행동 게이지 — 다 차면 그 유닛이 행동한다 */
+.act-row {
+    width: 100%; height: 7px; margin-top: 3px;
+    background: var(--bg-input); border: 1px solid var(--border-dark);
 }
-.skill-chip b { font-weight: normal; color: var(--text-secondary); }
+.act-fill {
+    display: block; height: 100%; width: 0;
+    background: var(--color-warning);
+    transition: width .1s linear;            /* 틱 간격과 맞춘다 */
+}
+.unit.enemy .act-fill { background: #b06030; }
+
+/* 액티브 슬롯 3개 — 슬롯 순서 = 동률 시 우선순위. 위에서부터 1·2·3번 */
+.cd-list { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 3px; }
+.cd-row { display: flex; align-items: center; gap: 3px; }
+.cd-ico { font-size: 9px; width: 11px; text-align: center; filter: grayscale(1) brightness(.65); }
+.cd-bar { flex: 1; height: 5px; background: var(--bg-input); border: 1px solid var(--border-dark); }
+.cd-bar > i { display: block; height: 100%; width: 0; background: #46639e; transition: width .1s linear; }
+/* 다 찬 스킬 = 다음 행동에 나갈 후보 */
+.cd-row.ready .cd-ico { filter: none; }
+.cd-row.ready .cd-bar { border-color: var(--color-info); }
+.cd-row.ready .cd-bar > i { background: var(--color-info); }
+
+.unit.boss { border-color: #7a2a2a; background: #1f1416; width: 138px; }
+.boss-tag { color: var(--text-accent); }
+.trait-line {
+    font-size: 9px; color: #b08850; line-height: 1.4; word-break: keep-all;
+}
+
+/* 라운드 진행 트랙 — 구조가 고정이라 한눈에 읽힌다 */
+.round-track { display: flex; gap: 3px; margin-top: 6px; }
+.round-track .rt {
+    width: 18px; line-height: 16px; text-align: center; font-size: 9px;
+    border: 1px solid var(--border-dark); background: var(--bg-input); color: var(--text-muted);
+}
+.round-track .rt.elite { border-color: #6a4a2a; color: #d09040; }
+.round-track .rt.boss { border-color: #7a2a2a; color: var(--text-accent); }
+.round-track .rt.done { opacity: .35; }
+.round-track .rt.now { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-highlight); }
 
 /* 데미지 숫자 — 생성 후 0.9초 뒤 DOM에서 제거 */
 .pop-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
@@ -373,7 +559,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 .battle-log-wrap {
     background: var(--bg-input); border: 1px solid var(--border-dark);
-    padding: 8px 11px; overflow-y: auto; max-height: 456px;
+    padding: 8px 11px; overflow-y: auto;
+    max-height: clamp(300px, 46vh, 430px);   /* 아레나와 같은 높이 예산 */
 }
 .log-head {
     font-size: var(--fs-xs); letter-spacing: 1px; padding-bottom: 6px; margin-bottom: 6px;
@@ -398,27 +585,90 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 .cols.c-skill { grid-template-columns: 232px 1fr; }
 
-.tree { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
-.tree-row { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; }
-.tree-row .tier { font-size: var(--fs-xs); letter-spacing: 1px; }
-.tree-nodes { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 트리 3개를 세로로 쌓는다 — 탭 없이 전부 보인다 */
+.sk-box {
+    background: var(--bg-card); border: 1px solid var(--border-primary);
+    padding: 12px 14px 13px; margin-bottom: 12px;
+}
+.sk-box.locked { opacity: .5; }
 
-.sk-node {
-    width: 158px; padding: 9px 11px;
-    background: var(--bg-tertiary); border: 1px solid var(--border-dark);
+/* 좌상단 라벨 — 어떤 트리인지 */
+.sk-box-head {
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    padding-bottom: 9px; margin-bottom: 11px;
+    border-bottom: 1px solid var(--border-dark);
+}
+.sk-tag {
+    font-size: var(--fs-xs); color: var(--text-accent);
+    border: 1px solid currentColor; padding: 0 6px; line-height: 16px;
+}
+.sk-title { font-size: var(--fs-md); }
+.sk-sub { font-size: var(--fs-xs); }
+.sk-note { font-size: var(--fs-xs); margin-top: 10px; }
+
+/* 3행 × 5열 — 정사각 노드, 오른쪽으로 선 연결 */
+.sk-grid { display: flex; flex-direction: column; gap: 10px; }
+.sk-line { display: flex; align-items: center; }
+
+/* 영어 노드명이 길다("Attack per Missing Health") — 정사각 유지하되 한 변을 키우고,
+   긴 이름은 폰트를 한 단계 줄여 카드 안에서 접히게 한다 */
+.sk-cell {
+    width: 104px; height: 104px; flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    padding: 6px 7px; text-align: center;
+    background: var(--bg-tertiary); border: 1px solid var(--border-primary);
     cursor: pointer;
 }
-.sk-node:hover { background: #1e1e30; border-color: var(--border-highlight); }
-.sk-node.taken { background: #1b1b2c; }
-.sk-node.tbd { border-style: dashed; opacity: .55; cursor: default; }
-.sk-node.locked { opacity: .4; cursor: not-allowed; }
-.sk-name { font-size: var(--fs-sm); word-break: keep-all; line-height: 1.35; min-height: 30px; }
-.sk-rank { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 4px; }
-.sk-node.taken .sk-rank { color: var(--text-secondary); }
+.sk-cell:hover { background: #1e1e30; border-color: var(--border-highlight); }
+.sk-cell.taken { background: #1b1b2c; }
+.sk-cell.full { box-shadow: inset 0 0 0 1px rgba(255,255,255,.10); }
+.sk-cell.locked { opacity: .6; cursor: not-allowed; }
+/* 미작성 칸 — 3×5 프레임이 보이도록 점선으로 남긴다 (비어 있음을 보여주는 것도 정보다) */
+.sk-cell.empty {
+    background: rgba(255, 255, 255, .015);
+    border: 1px dashed var(--border-primary);
+    cursor: default;
+}
+.sk-cell.empty:hover { background: rgba(255, 255, 255, .015); border-color: var(--border-primary); }
+/* 잠긴 박스 안의 빈 칸은 한 번만 흐리게 — 이중으로 흐려지면 프레임이 사라진다 */
+.sk-box.locked .sk-cell.empty { opacity: 1; }
+
+.sk-n {
+    font-size: 10px; line-height: 1.25; word-break: keep-all;
+    overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+}
+:root[lang="en"] .sk-n, html[lang="en"] .sk-n { font-size: 9px; letter-spacing: -.1px; }
+.sk-r { font-size: var(--fs-xs); color: var(--text-muted); }
+.sk-cell.taken .sk-r { color: var(--text-secondary); }
+
+/* 칸 사이 연결선 — 선행 조건이 있을 때만 그린다 */
+.sk-conn { flex: 0 0 20px; height: 2px; background: transparent; }
+.sk-conn.has { background: var(--border-dark); }
+.sk-conn.on { background: var(--border-highlight); }
+
+/* 액티브 슬롯 3개 + 실효 쿨 병기 (battle_design §5·§6) */
+.cycle-line {
+    font-size: var(--fs-sm); padding-bottom: 8px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-dark);
+}
+.cycle-line b { font-weight: normal; color: var(--color-info); }
+.cycle-line .muted { display: block; font-size: var(--fs-xs); }
+
+.slot-list { display: flex; flex-direction: column; gap: 5px; }
+.act-slot {
+    display: grid; grid-template-columns: 16px 20px 1fr; gap: 6px; align-items: center;
+    padding: 6px 8px; background: var(--bg-tertiary); border: 1px solid var(--border-dark);
+}
+.act-slot.empty { grid-template-columns: 16px 1fr; border-style: dashed; opacity: .55; }
+.act-slot .no { font-size: var(--fs-xs); color: var(--text-muted); text-align: center; }
+.act-slot .ico { font-size: var(--fs-md); text-align: center; }
+.act-slot .nm { font-size: var(--fs-sm); word-break: keep-all; line-height: 1.3; min-width: 0; }
+.act-slot .cd { display: block; font-size: var(--fs-xs); color: var(--text-muted); }
+.act-slot .cd b { font-weight: normal; }
 
 /* ───────── 선술집 ───────── */
 
-.cand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.cand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: 12px; }
 .cand-card {
     background: var(--bg-tertiary); border: 1px solid var(--border-dark);
     border-top: 3px solid var(--border-secondary); padding: 12px;
@@ -442,24 +692,68 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* ───────── 도감 ───────── */
 
-.codex-row {
-    padding: 10px 12px; background: var(--bg-tertiary);
+/* 스테이지 = 한 줄, 몬스터는 오른쪽으로 쭉 나열.
+   한 챕터(4스테이지)가 한 화면에 들어와야 하므로 행 높이를 최소로 눌렀다 */
+.codex-stage {
+    padding: 8px 10px; background: var(--bg-tertiary);
     border: 1px solid var(--border-dark); margin-bottom: 7px;
 }
-.codex-row.locked { opacity: .4; }
-.codex-row .title { display: flex; align-items: baseline; gap: 8px; font-size: var(--fs-sm); }
-.codex-row .meta { font-size: var(--fs-xs); }
+.codex-stage.locked { opacity: .42; }
+
+.cs-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+    flex-wrap: wrap; margin-bottom: 7px;
+}
+.cs-title { font-size: var(--fs-sm); }
+.cs-title .muted { margin-right: 4px; }
+.cs-gain { font-size: var(--fs-xs); }
+
+/* 가로 나열 — 몬스터가 늘어나면 이 줄만 가로 스크롤된다 */
+.mon-strip { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: thin; }
+
+/* 가로형 카드 — 얼굴 왼쪽 / 정보 오른쪽 */
+.mon-card {
+    flex: 1 1 0; min-width: 196px; max-width: 340px;
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    background: var(--bg-card); border: 1px solid var(--border-dark);
+    border-left: 2px solid var(--border-secondary);
+}
+.mon-card.boss { border-left-color: var(--text-accent); }
+.mon-card.maxed { border-color: #3a5a3a; border-left-color: var(--color-success); background: #16201a; }
+.mon-card.locked { opacity: .7; }
+.mon-card .face { width: 38px; height: 38px; }
+.mon-card .face img { width: 100%; height: 100%; object-fit: contain; }
+
+.mon-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mon-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.mon-name {
+    font-size: var(--fs-xs); line-height: 1.3; word-break: keep-all;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mon-name .b-tag { color: var(--text-accent); font-size: 9px; margin-left: 3px; }
+.mon-kills b { font-weight: normal; font-size: var(--fs-md); color: var(--text-primary); }
+.mon-mid { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.mon-next { font-size: 9px; white-space: nowrap; }
+.mon-card .bar { width: 100%; height: 3px; }
+
+/* 문턱 핍 — 넘긴 문턱 수를 한눈에 */
+.pips { display: flex; gap: 2px; }
+.pips .pip {
+    width: 11px; height: 4px; background: var(--bg-input);
+    border: 1px solid var(--border-dark);
+}
+.pips .pip.on { background: var(--color-success); border-color: var(--color-success); }
 
 /* ───────── 페이퍼돌 (8부위) ───────── */
 
 .paperdoll {
-    display: grid; grid-template-columns: repeat(3, 66px);
-    gap: 9px; justify-content: center; margin-top: 4px;
+    display: grid; grid-template-columns: repeat(3, 60px);
+    gap: 8px; justify-content: center; margin-top: 4px;
 }
-.pd-gap { width: 66px; height: 66px; }
+.pd-gap { width: 60px; height: 60px; }
 
 .pd-cell {
-    width: 66px; height: 66px;
+    width: 60px; height: 60px;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
     background: var(--bg-input); border: 2px solid var(--border-dark);
     position: relative; cursor: pointer;
@@ -468,7 +762,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .pd-cell.filled { background: var(--bg-tertiary); }
 .pd-cell.locked { opacity: .35; border-style: dashed; cursor: not-allowed; }
 
-.pd-icon { font-size: 24px; line-height: 1; filter: grayscale(1) brightness(.55); }
+.pd-icon { font-size: 22px; line-height: 1; filter: grayscale(1) brightness(.55); }
 .pd-cell.filled .pd-icon { filter: none; }
 .pd-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0; }
 .pd-cell.filled .pd-label { color: var(--text-secondary); }
@@ -497,3 +791,135 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     0%, 100% { box-shadow: none; }
     50% { box-shadow: 0 0 9px rgba(255, 140, 0, .55); }
 }
+
+/* ───────── 접이식 설명 ─────────
+   설계 근거 문구가 화면에 상시로 깔리면 정작 고를 정보를 밀어낸다. 눌러야 나오게 접었다 */
+
+details.note { margin-top: 9px; }
+details.note > summary,
+details.zone-more > summary {
+    list-style: none; cursor: pointer;
+    font-size: var(--fs-xs); color: var(--text-muted);
+    display: inline-flex; align-items: center; gap: 4px;
+    border: 1px solid var(--border-dark); padding: 1px 8px; line-height: 16px;
+}
+details.note > summary::-webkit-details-marker,
+details.zone-more > summary::-webkit-details-marker { display: none; }
+details.note > summary::before,
+details.zone-more > summary::before { content: '+'; }
+details[open].note > summary::before,
+details[open].zone-more > summary::before { content: '−'; }
+details.note > summary:hover,
+details.zone-more > summary:hover { color: var(--text-secondary); border-color: var(--border-secondary); }
+
+.note-body {
+    font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.7;
+    margin-top: 7px; padding-left: 2px;
+}
+
+/* 지역 행 안의 "구성 보기" — 그리드 두 칸을 다 쓴다 */
+.zone > details.zone-more { grid-column: 1 / -1; margin-top: 2px; }
+.zone .round-plan { margin-top: 6px; }
+
+/* ───────── 캐릭터 탭 (2026-08-23) ─────────
+   세로 3단: 영웅 띠 / 4칸 / 아이템. 단 사이 간격은 .panel + .panel 이 아니라 스택이 준다 */
+
+.char-stack { display: grid; gap: 14px; }
+
+/* ① 영웅 띠 — 로스터 상한(7)까지 한 줄에 편다.
+   개수를 CSS에 박지 않는다(roster_cap 은 데이터다) — flex 로 나눠 갖고 최소폭만 보장한다 */
+.hero-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.hs-card {
+    flex: 1 1 0; min-width: 118px;
+    background: var(--bg-tertiary); border: 1px solid var(--border-dark);
+    border-top: 3px solid var(--border-secondary);
+    padding: 7px 8px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.hs-card:hover { border-color: var(--border-highlight); }
+.hs-card.on { border-color: var(--border-highlight); background: #22223a; box-shadow: inset 0 0 0 1px var(--border-highlight); }
+.hs-card.unique { border-bottom-color: #6a4a1a; }
+.hs-card.downed { opacity: .62; }
+.hs-card.empty {
+    align-items: center; justify-content: center; cursor: default;
+    border-style: dashed; border-top-width: 1px; background: transparent;
+    color: var(--text-muted); font-size: var(--fs-lg);
+}
+.hs-card.empty:hover { border-color: var(--border-dark); }
+
+.hs-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+/* 이름은 남는 폭을 다 쓰고(넘치면 생략표), 등급 칩은 오른쪽 끝에 고정폭으로 붙는다 */
+.hs-name { display: flex; align-items: center; gap: 5px; line-height: 1.3; }
+.hs-name > b {
+    font-weight: normal; font-size: var(--fs-md);
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hs-name .tier-chip { flex: 0 0 auto; margin-left: auto; }
+/* "Knight · Lv.11" 이 중간에서 접히면 가운뎃점만 남는다 */
+.hs-cls { font-size: var(--fs-xs); color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 부상·파티 표시는 카드마다 있고 없으므로 아래에 쌓는다 — 카드 높이는 flex 스트레치가 맞춘다 */
+.hs-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.hs-foot:empty { display: none; }
+.hs-foot .in-party { font-size: var(--fs-xs); color: var(--color-info); }
+.hs-card .bar { height: 4px; }
+
+/* ② 네 칸 — 장비 / 전체 능력치 / 세부 능력치 / 현재 스킬.
+   전부 minmax 최소폭만 잡는다. 합(약 990px)이 최소 창(1280 − 네비 188 − 패딩 40)에 들어간다 */
+.cols.c-char {
+    grid-template-columns:
+        minmax(228px, .95fr)   /* 장비: 페이퍼돌 3×60 + 여백 */
+        minmax(218px, 1fr)     /* 전체 능력치 */
+        minmax(238px, 1.1fr)   /* 세부 능력치 */
+        minmax(258px, 1.2fr);  /* 현재 스킬: "기본 12초 · 실효 12.7초" 가 들어가야 한다 */
+    align-items: stretch;
+}
+.cols.c-char > .panel { display: flex; flex-direction: column; }
+.cols.c-char > .panel > details.note { margin-top: auto; }
+
+/* 패널 안의 작은 소제목 — h2 를 또 쓰면 칸이 나뉜 것처럼 보인다 */
+.sub-h {
+    font-size: var(--fs-sm); color: var(--text-secondary);
+    margin: 12px 0 7px; padding-top: 9px; border-top: 1px solid var(--border-dark);
+    display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+}
+.sub-h .muted { font-size: var(--fs-xs); }
+.pd-foot { font-size: var(--fs-xs); text-align: center; margin-top: 8px; }
+.bp-block { margin-bottom: 7px; }
+
+/* ②-2 기본 능력치 막대 — 범위는 [balance.csv:hero_attr_min ~ hero_attr_max] */
+.attr-list { display: grid; gap: 4px; }
+.attr-row { display: grid; grid-template-columns: minmax(0, auto) minmax(38px, 1fr) 24px; gap: 7px; align-items: center; }
+.attr-n { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
+.attr-bar { height: 7px; background: var(--bg-input); border: 1px solid var(--border-dark); }
+.attr-bar > i { display: block; height: 100%; }
+.attr-v { font-size: var(--fs-sm); text-align: right; }
+.attr-range { font-size: var(--fs-xs); text-align: right; margin-top: 3px; }
+
+/* 능력치 약어 배지 — 언어 중립(STR/AGI…)이라 한/영 어느 쪽에서도 폭이 같다 */
+.cs-a {
+    font-style: normal; font-size: 9px; color: var(--text-muted);
+    border: 1px solid var(--border-dark); padding: 0 3px; margin-left: 4px;
+    vertical-align: 1px; letter-spacing: 0;
+}
+
+/* ②-3 전투 능력치 27종 — 칸 높이를 맞추려고 안쪽만 스크롤한다 */
+/* 높이는 장비 칸(페이퍼돌 4행)이 정한다 — 세부 목록이 그 남은 높이를 채우고 나머지만 스크롤한다 */
+.cs-scroll { flex: 1 1 0; min-height: 200px; overflow-y: auto; padding-right: 4px; }
+.cs-cat {
+    font-size: var(--fs-xs); color: var(--text-muted); letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-dark); padding-bottom: 3px; margin: 9px 0 4px;
+}
+.cs-cat:first-child { margin-top: 0; }
+.cs-row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 2px 0; }
+.cs-n { font-size: var(--fs-sm); color: var(--text-secondary); }
+.cs-v { font-size: var(--fs-sm); color: var(--text-primary); white-space: nowrap; }
+/* 값이 없는 축 = 다음 장비가 들어올 자리. 지우지 않고 흐리게 남긴다 */
+.cs-row.off .cs-n, .cs-row.off .cs-v { color: var(--text-muted); }
+.cs-row.off .cs-a { opacity: .5; }
+
+.go-tree { width: 100%; margin-top: 10px; }
+
+/* ③ 아이템 — 열 수는 창 폭이 정한다. 데이터는 용량(INV_GRID.cap)만 지킨다 */
+.inv-cells.wide { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
+.inv-filter { margin-bottom: 10px; }

@@ -39,6 +39,10 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 접사가 참조하는 능력치는 `str`, `dex` **2종뿐** (common_option 기준). 본작 영웅은 7스탯(힘/민첩/지능/건강/감각/통솔/매력).
 → 지능·건강·감각·통솔·매력을 올려주는 접사가 계승분에 **존재하지 않음**. 마법사 직업이 장비로 지능을 못 얻는다.
 → 선택: (a) 공통 접사에 5종 추가 (접사 풀 희석 주의 — 니즈 1) / (b) 7스탯을 장비 축에서 빼고 파생 수치로만 굴림
+→ **[해소 2026-08-22] (b) 채택 — 그리고 한 발 더 나갔다.** 5종을 추가하지 않는 데 그치지 않고, **기존 `str`/`dex`까지 걷어낸다.** 장비는 기본 능력치에 일절 기여하지 않고(`[balance.csv:attr_equip_bonus]` = 0) **전투 능력치만** 준다 (`combat_stat.csv` 27종).
+→ 근거: 기본 능력치 범위가 `hero_attr_min~max`(1~20)라 장비가 +n을 주면 개체차와 파견 배치 결정이 붕괴 (hero_design.md §6-3). **[갱신 2026-08-23] 요구치 게이트 자체가 폐지**되어 근거에서 빠졌으나 결론은 동일
+→ 조치: `equipment_option_override.csv` — `str`/`dex` 공통옵션 **10행 exclude**, 오만 `all_stats` 접사 **4행 replace_provisional**
+→ **이 갭은 결함이 아니라 신호였다.** 계승분의 접사 어휘가 파생 수치 일색이었던 것은 원작이 이미 "장비는 파생 수치를 준다"를 지키고 있었다는 뜻이고, `str`/`dex`·`all_stats`만 그 규칙을 어긴 이물질이었다
 
 ### G3. 무기군이 **전부 물리 근접** — 마법사가 들 무기가 없음 (심각)
 무기 15종 = 검/대검/도끼/창/둔기 5군 × 3사이즈. **지팡이·완드·활·석궁 없음.**
@@ -46,6 +50,7 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 → GAME_DESIGN §4-2가 확정한 직업 3종 중 **마법사가 성립하지 않는다.**
 → §9 미확정 항목 "직업 3종의 무기군 배정"이 이 갭의 해결책이며, **아이템 설계보다 먼저 와야 하는 순서**임이 드러남
 → **[방향 확정 2026-08-21]** 직업 7종 + 무기군 배정 확정 (hero_design.md §4) — 신규 무기군 지팡이·활(본편), 단검·낫?(확장). 마법사 기본 공격 = 지팡이 기본 마법 공격 (battle_design.md §4). 베이스/Implicit/마법 공격 수치 **데이터 작성은 미착수**
+→ **[몬스터 측 해결 2026-08-22]** 이 갭에는 **반대편 절반**이 있었다. 몬스터도 마법 공격을 하지 않아 **영웅의 마법방어가 사문화**돼 있었고, `Lich`(마법 극대)·`Imp`(빠른 마법)·`Succubus`(디버프)·`Ghost`(물방↓마방↑) 4개 베이스의 컨셉이 데이터에 존재하지 않았다. `monster.csv:attack_type`(physical/magic) 신설로 해결 — monster_design.md §2, battle_design.md §2-1. **남은 것은 영웅 측 데이터**(지팡이·활 베이스와 Implicit, 마법 피해 수치)뿐이다
 
 ### G3-b. 8부위 변경으로 생긴 신규 갭 (2026-08-21)
 슬롯이 5 → 8로 늘었으나(item_design.md) 계승 데이터는 5부위 기준이다.
@@ -65,6 +70,7 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 ### G5. 코스트 폐지 결정과 잔재 (2026-08-21 결정 로그)
 - `equipment_base.cost_size_multiplier`, `equip_rarity_config.base_cost`, common_option의 `cost_reduction` 접사
 → **CSV는 그대로 두고 로직에서 무시**. `cost_reduction` 접사는 드롭 풀에서 제외 필요 (안 하면 죽은 옵션이 굴러나옴)
+→ **[해소 2026-08-22] `cost_reduction` 5행을 `equipment_option_override.csv` 에 exclude 등재.** G2 조치와 같은 테이블에서 처리됐다. `cost_size_multiplier`·`base_cost` 컴럼은 계속 무시(무변환 원칙)
 
 ### G6. 1:1 전투 전제 (GAME_DESIGN §9 기재 항목과 동일)
 `stage_info`는 `wave` 컬럼으로 웨이브당 **몬스터 1마리**(monster_idx 단수)를 지정 — 원작이 1:1이었기 때문.
@@ -75,19 +81,40 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 계승분은 죄종별 효과가 이미 확정돼 있음 (예: 분노=치명률/반사/HP%/치명타일격/회피).
 반면 신규 `src/data/sin_types.csv`의 `affinity_stat`(영웅 죄종 → 7스탯 친화)은 **임시 1:1 배정**이며 계승분과 맞춰본 적 없음.
 → `sin_mapping.md` 확정 시 계승분을 기준으로 재조정. 그 전까지 `sin_types.csv`는 **placeholder**로 취급
+→ **[갱신 2026-08-22]** 그 "7스탯" 어휘는 이제 `hero_attribute.csv`가 SSOT다. 죄종 친화가 가리킬 수 있는 것은 **기본 능력치 7종**(파견 판정용)이고, 전투 쪽 죄종 효과는 `combat_stat.csv` 어휘로 쓴다 — 두 층을 섞지 않는다
 
 ## 3. 미포크 (신규 설계 영역)
 
-계승 원본이 없어 새로 만들 영역 — `src/data/` 루트. **2026-08-21 현재 balance.csv만 실제 생성됨**, 나머지는 계획 상태:
+계승 원본이 없어 새로 만들 영역 — `src/data/` 루트. **2026-08-22 현재 9종 생성됨**, 나머지는 계획 상태:
 
 | 파일 | 상태 | 이유 |
 |---|---|---|
-| balance.csv | **생성됨** (2026-08-21) | 파티/로스터/스테이지 구조 키 등재 (party_size_max, roster_cap, concurrent_expedition_parties, rounds_per_stage, stages_per_chapter, wave_monster_max) |
+| balance.csv | **생성됨** (2026-08-21) | 파티/로스터/스테이지 구조 키 (party_size_max, roster_cap, concurrent_expedition_parties, rounds_per_stage, stages_per_chapter, wave_monster_max=전역 상한, advance_unlock_level) |
+| monster.csv / stage.csv / stage_round.csv / round_budget.csv / spawn_grade.csv | **생성됨** (2026-08-22) | 몬스터·스테이지 신규 SSOT — 계승 monster_info/stage_info/spawn_grade_config/chapter_monster_pool 을 대체 (monster_design.md §7) |
+| hero_attribute.csv | **생성됨** (2026-08-22) | 기본 능력치 7종 SSOT — 전투 보정 / 파견 배정 (hero_design.md §6-1). 게이트 컬럼은 2026-08-23 폐지로 삭제 |
+| combat_stat.csv | **생성됨** (2026-08-22) | 전투 능력치 27종 SSOT — 장비·스킬이 주는 파생 수치 목록 (battle_design.md §8) |
+| equipment_option_override.csv | **생성됨** (2026-08-22) | 계승 옵션 패치 테이블 — exclude 15행 / replace_provisional 4행 (G2·G5 조치) |
 | classes.csv | 미생성 | 직업 7종(본편 5+확장 2)은 본작 신규 (hero_design.md §4) |
 | traits.csv | 미생성 | TheSevenSimulation 21종에서 선별 예정 (§9 후순위) |
 | hero_names.csv | 미생성 | 레어 영웅 이름 생성 규칙 (영웅 2층 구조 — 유니크는 고정 이름이라 해당 없음) |
-| sin_types.csv | 미생성 | 죄종 → 7스탯 친화. **G7 참조 — sin_mapping.md로 대체될 임시본** |
+| sin_types.csv | 미생성 | 죄종 → **기본 능력치 7종** 친화(파견 판정용). **G7 참조 — sin_mapping.md로 대체될 임시본** |
 | heroes.csv | 미생성 | 유니크 영웅 15종 풀 SSOT (hero_design.md — 영웅 2층 구조) |
 
+### G8. 몬스터 데이터 구조 결함 5종 (2026-08-22 발견·해결)
+
+계승 몬스터/스테이지 데이터를 그대로 쓰면 깨지는 지점들. **전부 해결** — 상세는 monster_design.md §0.
+
+| | 문제 | 조치 |
+|---|---|---|
+| G8-a | 마법 공격 부재 (G3의 몬스터 측 절반) | `attack_type` 신설 |
+| G8-b | 등급 배율 이중 적용 — 보스 행이 절대값인데 `spawn_grade_config`에도 배율. Ch1은 ATK 배율 미적용, Ch2는 과적용 | `monster.csv` = 소재값 단독, 배율은 `spawn_grade.csv` 단독 |
+| G8-c | "1스테이지=1타입" 규칙과 챕터 풀 랜덤이 충돌. 4스테이지 타입 미정의(`stage_type_order`가 3개뿐) | `stage.csv` 타입 고정 + 2단 랜덤 |
+| G8-d | 등급 배율과 시간 예산이 한 테이블에 섞여 서로 어긋남. 챕터보스가 단독으로 런 예산 초과 | `spawn_grade.csv` / `round_budget.csv` 분리 |
+| G8-e | `size_type` 미사용 | 보존 — 진형·타겟팅에서 결정 |
+
+부수 정리: 공속 축 Ch1↔Ch2 단절 → `action_period`(초) 통일 · Ch5~7 스테이지보스 플레이스홀더 9종 명명 · Ch2~7 4스테이지 잡몹 0마리 → 챕터당 3종 신설 · dlvl 곡선 Ch5 이후 정체 → 단조 증가 재작성.
+
+⚠ **원본 파일명 오류**: `TheSevenRPG/fastapi/public/assets/sprites/monster_1101.png` 는 이름과 달리 고블린 척후병(1101)이 아니라 **스켈레톤 전사** 그림이다 (`src/assets/inherited/faces/README.md`).
+
 ---
-*마지막 업데이트: 2026-08-21 (G3·G4·G6 방향 확정 반영 + 신규 CSV 현황 정정 — balance.csv만 생성됨)*
+*마지막 업데이트: 2026-08-23 (게이트 폐지 반영 — G2 결론 유지, 근거만 축소)*
