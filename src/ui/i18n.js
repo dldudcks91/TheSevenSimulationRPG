@@ -63,6 +63,108 @@ export function t(key, params) {
 const STRINGS = {
     /* ── 셸 ── */
     'app.title': { ko: 'The Seven Simulation RPG — 화면 목업', en: 'The Seven Simulation RPG — Screen Mockup' },
+    /* ── 새 게임 (2026-08-24) ── */
+    'ng.h': { ko: '새 게임', en: 'New Game' },
+    'ng.title': { ko: '첫 파티', en: 'Your First Party' },
+    'ng.sub': {
+        ko: '이 {n}명이 그대로 시작 로스터가 된다 — 마음에 들 때까지 다시 굴려도 된다',
+        en: 'These {n} become your starting roster — reroll as many times as you like',
+    },
+    'ng.roll': { ko: '{n}번째 굴림', en: 'Roll {n}' },
+    'ng.reroll': { ko: '다시 굴리기', en: 'Reroll' },
+    'ng.start': { ko: '이 셋으로 시작', en: 'Start with these' },
+    'ng.trait': { ko: '시작 특성', en: 'Starting Trait' },
+    'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
+    'ng.note': {
+        ko: '시작 영웅은 전부 <b>레어</b>다 — 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
+            + '기본 능력치는 축마다 따로 굴리되 <b>합은 [balance.csv:hero_attr_total] 로 고정</b>이다 — '
+            + '세 장의 차이는 양이 아니라 <b>모양</b>이다. 장비로는 1도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
+            + '최대 HP는 굴리지 않는다 — 전 영웅 [balance.csv:hero_hp_base] 공통 시작<br>'
+            + '메인 죄종은 <b>세트포인트 +1</b>의 출처다 — 장비가 하나도 없어도 붙는다<br>'
+            + '리롤은 <b>무제한·무료</b>다 — 시작 선택을 도박으로 만들지 않는다<br>'
+            + '<b>미확정</b>: 합 70 자체(제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부 · '
+            + '확정한 3명을 실제 로스터로 넘기는 연결(세이브 없음 — 지금은 목업 데이터로 이어진다)',
+        en: 'Starting heroes are all <b>Rare</b> — the 15 Uniques are a fixed roster and are not spent at the start<br>'
+            + 'Attributes roll per axis but their <b>total is fixed at [balance.csv:hero_attr_total]</b> — '
+            + 'the three differ in <b>shape</b>, not in amount. Gear never raises them, so what you roll here <b>lasts forever</b><br>'
+            + 'Max HP is not rolled — every hero starts at [balance.csv:hero_hp_base]<br>'
+            + 'The main sin is where <b>Set Point +1</b> comes from — it applies with no gear at all<br>'
+            + 'Rerolling is <b>unlimited and free</b> — the opening choice is not a gamble<br>'
+            + '<b>Open</b>: the total itself (a proposed value) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed · '
+            + 'handing the confirmed three to the real roster (no save yet — for now it continues into the mock data)',
+    },
+
+    /* ── 새 게임 · 세이브 (2026-08-25) ── */
+    'ng.continue': { ko: '이어하기', en: 'Continue' },
+    'ng.hasSave': { ko: '저장된 게임이 있다 — {t}', en: 'A saved game exists — {t}' },
+    'ng.saveLine': { ko: '영웅 {h}명 · 클리어 {c} · 골드 {g}', en: '{h} heroes · {c} cleared · {g} gold' },
+    'ng.overwrite': { ko: '세이브를 지우고 이 셋으로 시작', en: 'Delete save & start with these' },
+    'ng.overwriteConfirm': { ko: '정말? 한 번 더 누르면 지운다', en: 'Really? Click again to delete' },
+    'ng.startWeapon': { ko: '직업 무기 1개를 쥐고 시작한다', en: 'Starts with one class weapon' },
+
+    /* ── 원정 (실동작) ── */
+    'exp.toParty': { ko: '파티에', en: 'To party' },
+    'exp.fromParty': { ko: '빼기', en: 'Remove' },
+    'exp.partyFull': { ko: '파티가 찼다', en: 'Party full' },
+    'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
+    'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
+    'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
+    'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat' },
+    'exp.repeat.sub': { ko: '승리하면 같은 곳으로 다시 나간다 · 부상·패배·가방 가득이면 멈춘다', en: 'Re-runs the same stage after a win · stops on injury, defeat, or a full bag' },
+    'exp.offline.h': { ko: '부재중 원정', en: 'While you were away' },
+    'exp.offline.body': { ko: '{n}회 원정 ({w}승) · 골드 +{g} · 가루 +{d} · XP +{x} · 아이템 {i}개', en: '{n} runs ({w} won) · gold +{g} · dust +{d} · XP +{x} · {i} items' },
+    'exp.offline.stop.defeat': { ko: '패배해서 멈췄다', en: 'Stopped after a defeat' },
+    'exp.offline.stop.injured': { ko: '부상자가 생겨 멈췄다', en: 'Stopped — a hero was injured' },
+    'exp.offline.stop.bagFull': { ko: '가방이 가득 차 멈췄다', en: 'Stopped — bag is full' },
+    'exp.offline.stop.limit': { ko: '정산 상한 {h}시간에 닿았다', en: 'Hit the {h}h catch-up cap' },
+    'exp.offline.dismiss': { ko: '확인', en: 'OK' },
+
+    /* ── 리포트 (실동작) ── */
+    'rep.defeat': { ko: '패배', en: 'Defeat' },
+    'rep.retreat': { ko: '철수', en: 'Retreat' },
+    'rep.reason.wipe': { ko: '전원 전투불능', en: 'Whole party downed' },
+    'rep.reason.timeout': { ko: '제한시간 초과', en: 'Timed out' },
+    'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
+    'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
+    'rep.roundLine': { ko: '{list} 처치', en: '{list} slain' },
+    'rep.roundNone': { ko: '처치 없음', en: 'No kills' },
+    'rep.again': { ko: '같은 곳으로 다시', en: 'Run it again' },
+    'rep.toIdle': { ko: '편성으로', en: 'Back to party' },
+    'rep.gainsNone': { ko: '능력치 변화 없음', en: 'no attribute change' },
+
+    /* ── 캐릭터 (실동작) ── */
+    'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제', en: 'Click an item = equip · click a worn slot = unequip' },
+    'ch.salvageMode': { ko: '분해 모드', en: 'Salvage mode' },
+    'ch.salvageHint': { ko: '분해 모드: 클릭한 아이템을 가루로 만든다', en: 'Salvage mode: clicking an item turns it to dust' },
+    'ch.err.class': { ko: '이 직업의 무기가 아니다', en: "Not this class's weapon" },
+    'ch.err.twoHanded': { ko: '양손 무기 착용 중 — 보조 불가', en: 'Two-hander equipped — no off-hand' },
+    'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
+    'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
+    'ch.weaponOf': { ko: '{cls} 무기', en: '{cls} weapon' },
+    'ch.noTrees': { ko: '스킬 트리는 아직 목업이다', en: 'Skill trees are still a mockup' },
+
+    /* ── 선술집 (실동작) ── */
+    'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)' },
+    'tv.reroll': { ko: '후보 교체 ({g} 골드)', en: 'New candidates ({g} gold)' },
+    'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
+    'tv.err.roster': { ko: '로스터가 가득 찼다 ({cap})', en: 'Roster full ({cap})' },
+    'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
+
+    /* ── 시간 표기 ── */
+    'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
+    'time.m': { ko: '{m}분', en: '{m}m' },
+    'time.s': { ko: '{s}초', en: '{s}s' },
+    'time.ms': { ko: '{m}분 {s}초', en: '{m}m {s}s' },
+    'injury.left': { ko: '치료 {t} 남음', en: '{t} to recover' },
+
+    /* ── 전투 재생 ── */
+    'bt.won': { ko: '승리', en: 'Victory' },
+    'bt.lost': { ko: '패배', en: 'Defeat' },
+    'bt.toReport': { ko: '리포트 보기', en: 'View report' },
+    'bt.nextRun': { ko: '다음 원정 {s}초 후', en: 'Next run in {s}s' },
+    'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
+    'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
+
     'nav.expedition': { ko: '원정', en: 'Expedition' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
     'nav.skill': { ko: '스킬', en: 'Skills' },
@@ -75,7 +177,6 @@ const STRINGS = {
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
 
     /* ── 공통 ── */
-    'injury.chip': { ko: '부상 · {t}', en: 'Injured · {t}' },
     'injury.short': { ko: ' · 부상', en: ' · Injured' },
     'face.noArt': { ko: '{name} — 원작 아트 없음', en: '{name} — no source art' },
     'class.unassigned': { ko: '역할 미배정', en: 'Role unassigned' },
@@ -106,7 +207,6 @@ const STRINGS = {
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
     'exp.bench.sub': { ko: '파견 대기 · 로스터 {n} / {cap}', en: 'Awaiting dispatch · Roster {n} / {cap}' },
-    'exp.dispatch': { ko: '파견', en: 'Dispatch' },
     'exp.bench.note': {
         ko: '파견 화면은 <b>미착수</b> — 파견 유형 목록이 미정이다 (base_expedition_design §6)',
         en: 'Dispatch screen <b>not started</b> — the dispatch type list is undecided (base_expedition_design §6)',
@@ -115,7 +215,6 @@ const STRINGS = {
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },
     'exp.cleared': { ko: '클리어', en: 'Cleared' },
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
-    'exp.zoneMeta': { ko: 'Lv.{lv} · 약 {m}분', en: 'Lv.{lv} · ~{m} min' },
     'exp.viewComp': { ko: '구성 보기', en: 'Composition' },
     'exp.eliteR': { ko: 'R{n} 정예', en: 'R{n} Elite' },
     'exp.solo': { ko: ' 단독', en: ' solo' },
@@ -145,10 +244,6 @@ const STRINGS = {
     },
     'rep.drops.h': { ko: '획득 장비', en: 'Loot' },
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
-    'verdict.upgrade': { ko: '업그레이드', en: 'Upgrade' },
-    'verdict.sidegrade': { ko: '검토', en: 'Review' },
-    'verdict.junk': { ko: '분해', en: 'Salvage' },
-    'rep.equip': { ko: '장착', en: 'Equip' },
     'rep.salvage': { ko: '분해', en: 'Salvage' },
     'rep.log.h': { ko: '전투 경과', en: 'Battle Summary' },
     'rep.log.sub': { ko: '정예 {e} / 보스 {b}', en: 'Elite {e} / Boss {b}' },
@@ -162,7 +257,6 @@ const STRINGS = {
 
     /* ── 장비 ── */
     'eq.passive.h': { ko: '고유 패시브', en: 'Unique Passive' },
-    'eq.passive.sub': { ko: '항시 발동 · 스킬 포인트 불요', en: 'Always on · no skill points' },
     'eq.equipped': { ko: '착용 {n} / 8', en: 'Equipped {n} / 8' },
     'eq.twoHand': { ko: '양손 무기라 보조 슬롯이 잠긴다', en: 'Two-hander locks the off-hand slot' },
     'st.atk': { ko: '공격력', en: 'Attack' },
@@ -170,7 +264,6 @@ const STRINGS = {
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     'eq.set.h': { ko: '세트포인트', en: 'Set Points' },
     'eq.set.sub': { ko: '{list} — 상한 {max}', en: '{list} — cap {max}' },
-    'eq.noEquip': { ko: '착용 장비 없음', en: 'No equipment' },
     'eq.mainSin': { ko: '메인 죄종 +1', en: 'Main sin +1' },
     'eq.set.note': {
         ko: '접사 1개 = 1포인트 · <b>양손 무기는 2포인트</b> (보조 슬롯 잠금 보상)<br>'
@@ -224,10 +317,8 @@ const STRINGS = {
     'tip.empty': { ko: '비어 있음', en: 'Empty' },
     'tip.equipped': { ko: '착용 중', en: 'Equipped' },
     'tip.this': { ko: '이 아이템', en: 'This Item' },
-    'tip.fixed': { ko: '고정 효과', en: 'Fixed Effects' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
     'tip.zeroSet': { ko: '세트포인트 0', en: '0 set points' },
-    'tip.uniqueTrade': { ko: ' — 유니크의 트레이드오프', en: " — the unique's trade-off" },
 
     /* ── 스킬 ── */
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
@@ -283,19 +374,14 @@ const STRINGS = {
     'tv.h': { ko: '영입 후보', en: 'Recruits' },
     'tv.sub': { ko: '레어 층 — 직업 × 죄종 × 시작특성이 등장 시 굴려진다', en: 'Rare tier — class × sin × trait rolled on arrival' },
     'tv.trait': { ko: '특성', en: 'Trait' },
-    'tv.hire': { ko: '고용', en: 'Hire' },
-    'tv.chaDiscount': { ko: '매력 -{n}%', en: 'CHA -{n}%' },
-    'tv.recruit': { ko: '영입', en: 'Recruit' },
-    'tv.reroll': { ko: '후보 리롤', en: 'Reroll' },
-    'tv.goldCost': { ko: '{n} 골드', en: '{n} gold' },
     'tv.reroll.note': {
         ko: '선술집 리롤 = <b>아이템 파밍의 영웅판</b> — 굴림 루프는 <b>레어 층</b>에 산다. 죄종 × 직업 35칸을 전부 여기서 공급한다',
         en: 'Tavern rerolls are <b>item farming for heroes</b> — the rolling loop lives in the <b>rare tier</b>, which supplies all 35 sin × class combinations',
     },
-    'tv.uniqueTodo.h': { ko: '유니크 영웅 획득 경로 — 미확정', en: 'Unique hero acquisition — undecided' },
+    'tv.uniqueTodo.h': { ko: '유니크 영웅 — 선술집 희귀 등장', en: 'Unique heroes — rare tavern appearances' },
     'tv.uniqueTodo.b': {
-        ko: '챕터 보스 고정 합류 vs 선술집 희귀 등장. 등장 페이싱과 함께 결정 (hero_design.md §9)',
-        en: 'Fixed join after chapter bosses vs rare tavern appearances. Decided together with pacing (hero_design.md §9)',
+        ko: '명단 주기 갱신에 희귀 등장 — 매력 영웅 배치가 등장 확률·품질을 올린다 (hero_design.md §1)',
+        en: 'Appears rarely on the periodic roster refresh — stationing a high-Charisma hero raises the odds and quality (hero_design.md §1)',
     },
     'tv.roster.h': { ko: '보유 로스터', en: 'Roster' },
     'tv.roster.sub': { ko: '{n} / {cap} — 소수 정예 · 유니크 {u}명', en: '{n} / {cap} — small and elite · {u} unique' },
@@ -343,14 +429,12 @@ const STRINGS = {
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '행동 주기 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Action cycle {s}s — acts when the gauge fills' },
-    'bt.slotTitle': { ko: '{n}번 슬롯 · {name} — 표기 {cd}초 / 실효 {eff}초', en: 'Slot {n} · {name} — base {cd}s / eff. {eff}s' },
     'bt.traitsTitle': { ko: '죄종 고유 1 + 공통 2 — 런타임 랜덤', en: '1 sin trait + 2 common — rolled at runtime' },
-    'log.stageClear': { ko: '<b>스테이지 클리어</b> — 리포트로 정리된다', en: '<b>Stage clear</b> — wrapping up into the report' },
     'log.roundStart': { ko: '<b>라운드 {n} ({kind})</b> — {list}', en: '<b>Round {n} ({kind})</b> — {list}' },
-    'log.skillHit': { ko: '{name} <b>[{slot}번 · {skill}]</b> → {target} <b>{dmg}</b> 피해', en: '{name} <b>[Slot {slot} · {skill}]</b> → {target} for <b>{dmg}</b>' },
     'log.crit': { ko: '{name} → {target} <b class="crit-t">{dmg}</b> 치명타!', en: '{name} → {target} <b class="crit-t">{dmg}</b> critical!' },
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
     'log.downed': { ko: '{name} <b>전투 불능</b> — 귀환 시 치료 타이머', en: '{name} <b>downed</b> — recovery timer on return' },
+    'pop.dodge': { ko: '회피', en: 'MISS' },
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
 };

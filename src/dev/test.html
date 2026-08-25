@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>game_logic 검증</title>
+    <style>
+        body { background: #0a0a12; color: #e8e8f0; font: 13px/1.5 Consolas, 'Malgun Gothic', monospace; padding: 16px 20px; }
+        h1 { font-size: 22px; font-weight: normal; margin: 0 0 6px; }
+        h1 b.ok { color: #40d870; } h1 b.fail { color: #f04040; }
+        h2 { font-size: 14px; color: #a0a0c0; margin: 18px 0 6px; border-bottom: 1px solid #303048; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 2px 0; }
+        li.ok::before { content: 'PASS '; color: #40d870; }
+        li.fail::before { content: 'FAIL '; color: #f04040; }
+        li .m { color: #a0a0c0; margin-left: 8px; }
+        table { border-collapse: collapse; font-size: 12px; }
+        td, th { border: 1px solid #303048; padding: 3px 8px; text-align: right; }
+        th { color: #a0a0c0; font-weight: normal; }
+        td:first-child, th:first-child { text-align: left; }
+        .up { color: #40d870; } .down { color: #f04040; } .warn { color: #f8b830; }
+        pre { color: #a0a0c0; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <h1 id="head">…</h1>
+    <div id="meta" style="color:#606080;font-size:11px"></div>
+    <h2>캘리브레이션 — 시작 파티(시드 N개) × 스테이지</h2>
+    <div id="calib"></div>
+    <h2>단정</h2>
+    <ul id="out"></ul>
+    <script type="module" src="./test.js"></script>
+</body>
+</html>
