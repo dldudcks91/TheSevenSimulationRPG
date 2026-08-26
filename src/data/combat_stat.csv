@@ -1,25 +1,25 @@
 stat_id,stat_kr,category,source,attr_bonus,description_kr
-atk_physical,물리 공격력,offense,weapon_base|equipment|skill,str,physical 공격의 피해원. 상대 defense 와 감산
-atk_magic,마법 공격력,offense,weapon_base|equipment|skill,int,magic 공격의 피해원. 상대 원소 저항(res_*)과 대결 — 공격의 원소 배정은 미정 (2026-08-25). 회복 스킬의 회복량도 이 값에 비례한다 (별도 회복량 스탯 없음)
-accuracy,명중,offense,equipment|skill,sen,상대 evasion 과 대결해 적중 판정
-crit_rate,치명타 확률,offense,equipment|skill,-,치명타 발생 확률 — 기본 능력치 보정 없음. 장비·스킬 전담
-crit_damage,치명타 피해,offense,equipment|skill,-,치명타 시 피해 배율
-def_ignore,방어 무시,offense,equipment|skill,-,감산 전에 상대 방어를 무시하는 비율
-vs_type_damage,타입 특효,offense,equipment,-,Normal/Demon/Undead 대상 추가 피해
-vs_size_damage,사이즈 특효,offense,equipment,-,소/중/대(size_type) 대상 추가 피해
+atk_physical,물리 공격력,offense,weapon_base|equipment|skill,str,physical 공격의 피해원 — (무기공 + flat) x (1 + 합%) x 힘 계수. 상대 defense 가 곱셈 감쇠 (battle_design §9-1·9-3)
+atk_magic,마법 공격력,offense,weapon_base|equipment|skill,int,원소 공격의 피해원 — 원소는 마법 무기 개체가 든다 (스킬 태그 우선). 상대의 그 원소 저항이 곱셈 감쇠 (battle_design §9-5). 회복 스킬의 회복량도 이 값에 비례한다 (별도 회복량 스탯 없음)
+accuracy,명중,offense,equipment|skill,sen,적중률 = clamp(100 - 회피 + 명중) — 단위 %p. 몬스터 회피는 평소 0 이라 회피·매혹의 카운터로 산다 (battle_design §9-4)
+crit_rate,치명타 확률,offense,equipment|skill,-,치명타 발생 확률 — 상한 [balance.csv:crit_cap_pct]. 기본 능력치 보정 없음. 장비·스킬 전담
+crit_damage,치명타 피해,offense,equipment|skill,-,치명타 시 피해 배율 — 직격에만 붙는다 (반사·도트 제외 — battle_design §9-6)
+def_ignore,방어 무시,offense,equipment|skill,-,감쇠 곡선에 넣기 전 상대 방어·저항 소재값을 이 비율만큼 깎는다 — 감쇠율의 %가 아니다 (battle_design §9-3)
+vs_type_damage,타입 특효,offense,equipment,-,Normal/Demon/Undead 대상 추가 피해 — 조건부 합% 괄호에 덧셈으로 들어간다 (battle_design §9-2)
+vs_size_damage,사이즈 특효,offense,equipment,-,소/중/대(size_type) 대상 추가 피해 — 조건부 합% 괄호에 덧셈
 hp_max,최대 HP,defense,equipment|skill,-,전투불능(부상) 판정 기준. 시작값 [balance.csv:hero_hp_base] 전 영웅 공통 고정 — 기본 능력치와 무관
-defense,물리 방어,defense,equipment|skill,-,attack_type=physical 피해에서 감산
-res_lightning,전기 저항,defense,equipment|skill,-,전기 원소 피해 저항 — 마법 방어 대체 (2026-08-25)
-res_fire,불 저항,defense,equipment|skill,-,불 원소 피해 저항 — 마법 방어 대체 (2026-08-25)
-res_cold,냉기 저항,defense,equipment|skill,-,냉기 원소 피해 저항 — 마법 방어 대체 (2026-08-25)
-res_poison,독 저항,defense,equipment|skill,-,독 원소 피해 저항 — 마법 방어 대체 (2026-08-25)
-evasion,회피,defense,equipment|skill,sen,상대 accuracy 와 대결. 감각이 미는 계수 (민첩 아님)
-damage_reduction,피해 감소,defense,equipment,-,타입·사이즈별 피해 감소(vs_*_dr)
-reflect_damage,반사 피해,defense,equipment|skill,-,피격 시 공격자에게 되돌리는 피해
-life_steal,흡혈,sustain,equipment|skill,-,가한 피해 비례 회복 — 런 깊이와 부상 예방 담당
-hp_regen,HP 재생,sustain,equipment|skill,-,시간당 회복. 제한시간 룰의 대상
+defense,물리 방어,defense,equipment|skill,-,attack_type=physical 피해의 감쇠 소재값 — 감쇠율 = D/(D+K) 이고 K = [balance.csv:def_curve_k] x 공격자 레벨. 면역 없음 (battle_design §9-3)
+res_lightning,전기 저항,defense,equipment|skill,-,attack_type=lightning 피해의 감쇠 소재값 — 물리 방어와 같은 곡선·같은 K. 전 원소 공통 접사(res_all)는 네 항에 함께 더해진다
+res_fire,불 저항,defense,equipment|skill,-,attack_type=fire 피해의 감쇠 소재값 — 물리 방어와 같은 곡선·같은 K. 전 원소 공통 접사(res_all)는 네 항에 함께 더해진다
+res_cold,냉기 저항,defense,equipment|skill,-,attack_type=cold 피해의 감쇠 소재값 — 물리 방어와 같은 곡선·같은 K. 전 원소 공통 접사(res_all)는 네 항에 함께 더해진다
+res_poison,독 저항,defense,equipment|skill,-,attack_type=poison 피해의 감쇠 소재값 — 물리 방어와 같은 곡선·같은 K. 전 원소 공통 접사(res_all)는 네 항에 함께 더해진다
+evasion,회피,defense,equipment|skill,sen,적중률에서 %p 로 빠진다. 하한 [balance.csv:hit_floor_pct] 가 회피 상한을 겸한다 — 회피 몰빵 면역 없음. 감각이 미는 계수 (민첩 아님)
+damage_reduction,피해 감소,defense,equipment,-,타입·사이즈별 피해 감소(vs_*_dr) — 이미 %라 변환 없이 감쇠 뒤에 곱한다 (battle_design §9-3)
+reflect_damage,반사 피해,defense,equipment|skill,-,받은 최종 피해 x 이 비율을 공격자 HP 에서 직접 뺀다. **비직격** — 감쇠·치명·편차를 받지 않고 아무것도 유발하지 않는다 (battle_design §9-6)
+life_steal,흡혈,sustain,equipment|skill,-,직격의 **최종 피해**(감쇠 후)에 비례해 회복 — 비직격은 흡혈하지 않는다. 런 깊이와 부상 예방 담당
+hp_regen,HP 재생,sustain,equipment|skill,-,시간당 회복 — 행동 주기와 무관하게 실시간. 제한시간 룰의 대상
 action_period,행동 주기,tempo,weapon_base|equipment,agi,차례가 오는 간격(초). 공격속도와 캐스팅 속도가 같은 축이다 — 영웅·몬스터 공통 단일 시계
-fhr,상태이상 회복 속도,tempo,equipment|skill,vit,걸린 상태이상에서 벗어나는 속도(지속시간 단축). 건강이 미는 계수 — 저항(확률 차단)은 없다: 상태이상은 걸리되 빨리 털어낸다 (2026-08-25 재배정, 피격 경직 폐지). stat_id 는 계승 나태 갑옷 접사 매핑 유지를 위해 fhr 보존
+fhr,상태이상 회복 속도,tempo,equipment|skill,vit,걸린 상태이상에서 벗어나는 속도(지속시간 단축). 건강이 미는 계수 — 저항(확률 차단)은 없다: 상태이상은 걸리되 빨리 털어낸다 (2026-08-25 재배정 — 피격 경직 폐지). stat_id 는 계승 나태 갑옷 접사 매핑 유지를 위해 fhr 보존
 cooldown_reduction,쿨타임 감소,tempo,equipment|skill,-,표기 쿨 단축 — 실효 쿨 정렬 최적화의 손잡이
 item_find,드랍률,utility,equipment,-,전투 밖 산출 — 전투력 vs 파밍 효율 스왑 축
 gold_find,골드 획득,utility,equipment,-,전투 밖 산출

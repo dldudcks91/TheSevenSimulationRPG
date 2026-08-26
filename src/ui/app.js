@@ -10,7 +10,7 @@
  * 화면 흐름: 시작(새 게임 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 선술집 / 도감
  *   전투 파티는 한 팀만 운용하므로 원정 탭 하나가 세 상태를 갖는다.
  *
- * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (부재 정산 배너)
+ * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너)
  */
 
 import * as M from './mock.js';
@@ -19,6 +19,7 @@ import { mountBattle } from './battle.js';
 import { D, SYS, loadData } from './data.js';
 import { loadSave, writeSave, clearSave } from './storage.js';
 import { makeRng } from '../game_logic/rng.js';
+import { SAVE_VERSION } from '../game_logic/state.js';
 
 const $ = sel => document.querySelector(sel);
 const el = (tag, cls, html) => {
@@ -61,11 +62,13 @@ function fmtDuration(ms) {
 const injuryText = h => t('injury.left', { t: fmtDuration(h.injuredUntil - now()) });
 const injuryChip = h => injured(h) ? `<span class="injury-chip">${injuryText(h)}</span>` : '';
 
-/* 직업 7종 — id 로 참조, 표시는 L() (hero_design §5) */
+/* 직업 7종 — id 로 참조, 표시는 L() (hero_design §2). 무기군 목록은 weapon_group.csv(D.weaponGroupList)에서 파생 */
 const classDef = id => M.CLASSES.find(c => c.id === id);
 const className = id => L(classDef(id)) || id;
-const classLine = id => { const c = classDef(id); return c ? `${L(c.role)} · ${L(c.weapons)}` : t('class.unassigned'); };
-const slotDef = id => M.SLOTS.find(s => s.id === id);
+const classWeapons = id => D.weaponGroupList.filter(g => g.classes.includes(id)).map(g => L(g)).join(' / ');
+const classLine = id => { const c = classDef(id); return c ? `${L(c.role)} · ${classWeapons(id)}` : t('class.unassigned'); };
+const slotDef = id => M.SLOTS.find(s => s.id === id);                                   // 부위
+const posDef = pos => slotDef(M.EQUIP_SLOTS.find(s => s.id === pos)?.part);            // 착용 위치 → 부위 정의
 const affixText = a => L(M.affixText(a.stat, a.v));
 
 /* 스테이지 표시 — 수치는 D.stages(stage.csv), 이름은 M.stageName */
@@ -218,7 +221,7 @@ function continueGame() {
     try { G = SYS.game.deserialize(saved); }
     catch (e) { console.warn(e); G = null; return false; }
     SYS.game.tickInjuries(G, now());
-    if (SYS.game.offlineCatchup(G, now())) save();
+    if (SYS.game.closeRun(G, now())) save();      // 반복 원정은 게임이 켜져 있는 동안만 — 꺼진 사이의 런은 마무리 (08-25)
     state.screen = 'game'; state.tab = 'expedition'; state.exp = 'idle';
     return true;
 }
@@ -249,8 +252,6 @@ function candidateCard(h, extra = '') {
         </div>
         <div class="ng-chips">
             <span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span>
-            <span class="setpoint reached" style="color:${sinColor(h.sin)}">
-                ${t('eq.set.h')} <b>+1</b><i class="main-sin" title="${t('eq.mainSin')}">★</i></span>
         </div>
         <div class="ng-line"><span>${t('ng.trait')}</span><b>${L(h.trait)}</b></div>
         <div class="attr-list">${bars}</div>
@@ -270,11 +271,15 @@ function renderStart(main) {
 
     if (saved) {
         const box = el('div', 'ng-continue');
+        const old = saved.version !== SAVE_VERSION;     // 형식이 다른 세이브는 이어하기 대신 사유를 보여준다
         box.innerHTML = `
             <div class="l">${t('ng.hasSave', { t: new Date(saved.savedAt).toLocaleString() })}
-                <small>${t('ng.saveLine', { h: saved.heroes.length, c: saved.progress.cleared.length, g: saved.resources.gold.toLocaleString() })}</small></div>
-            <button class="btn primary b-continue">${t('ng.continue')}</button>`;
-        box.querySelector('.b-continue').onclick = () => { if (continueGame()) render(); };
+                <small${old ? ' class="down"' : ''}>${old
+                    ? t('ng.oldSave', { v: saved.version })
+                    : t('ng.saveLine', { h: saved.heroes.length, c: saved.progress.cleared.length, g: saved.resources.gold.toLocaleString() })}</small></div>
+            ${old ? '' : `<button class="btn primary b-continue">${t('ng.continue')}</button>`}`;
+        const cb = box.querySelector('.b-continue');
+        if (cb) cb.onclick = () => { if (continueGame()) render(); };
         wrap.appendChild(box);
     }
 
@@ -364,25 +369,26 @@ function heroRow(h, i, inParty) {
     return row;
 }
 
-function offlineBanner() {
-    const o = G.offline;
-    if (!o) return null;
-    const box = el('div', 'offline-box');
-    const stop = o.stopped === 'limit' || (o.stopped == null)
-        ? (o.stopped ? t('exp.offline.stop.limit', { h: D.balance.offline_cap_hours }) : '')
-        : t(`exp.offline.stop.${o.stopped}`);
+/** 재접속 알림 — 반복 원정은 게임이 켜져 있는 동안만 돈다. 꺼진 사이의 런은 마무리됐고 결과는 마지막 리포트에 있다 */
+function noticeBanner() {
+    const n = G.notice;
+    if (!n) return null;
+    const box = el('div', 'notice-box');
+    const stage = D.stages[n.stageId];
     box.innerHTML = `
-        <span class="t">${t('exp.offline.h')}</span>
-        <span class="b">${t('exp.offline.body', { n: o.battles, w: o.wins, g: o.gold.toLocaleString(), d: o.dust, x: o.xpEach.toLocaleString(), i: o.drops })}
-            ${stop ? `<span class="stop"> · ${stop}</span>` : ''}</span>
-        <button class="btn sm b-ok">${t('exp.offline.dismiss')}</button>`;
-    box.querySelector('.b-ok').onclick = () => { G.offline = null; save(); render(); };
+        <span class="t">${t(`exp.notice.${n.kind}.h`)}</span>
+        <span class="b">${t(`exp.notice.${n.kind}.body`, { stage: stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(M.stageName(stage))}` : '' })}</span>
+        ${G.lastReport ? `<button class="btn sm b-report">${t('exp.notice.report')}</button>` : ''}
+        <button class="btn sm b-ok">${t('exp.notice.dismiss')}</button>`;
+    const rb = box.querySelector('.b-report');
+    if (rb) rb.onclick = () => { SYS.game.dismissNotice(G); save(); state.exp = 'report'; render(); };
+    box.querySelector('.b-ok').onclick = () => { SYS.game.dismissNotice(G); save(); render(); };
     return box;
 }
 
 function renderExpIdle(main) {
-    const ob = offlineBanner();
-    if (ob) main.appendChild(ob);
+    const nb = noticeBanner();
+    if (nb) main.appendChild(nb);
 
     const wrap = el('div', 'cols c-side');
     const left = el('div');
@@ -489,6 +495,8 @@ function renderExpReport(main) {
     const verdictCls = R.won ? 'clear' : R.reason === 'timeout' ? 'retreat' : 'lose';
     const verdictText = R.won ? t('rep.clear') : R.reason === 'timeout' ? t('rep.retreat') : t('rep.defeat');
     const roundsDone = R.won ? R.rounds.length : Math.max(0, R.rounds.length - 1);
+    const cardEntries = Object.entries(R.cards ?? {});
+    const cardTotal = cardEntries.reduce((a, [, n]) => a + n, 0);
 
     const p = el('div', 'panel');
     p.innerHTML = `
@@ -503,12 +511,23 @@ function renderExpReport(main) {
             <div><span>${t('rep.xp')}</span>${t('rep.xpEach', { n: R.xpEach.toLocaleString() })}</div>
             <div><span>${t('rep.rounds')}</span>${t('rep.roundsCleared', { n: roundsDone, total: D.balance.rounds_per_stage })}</div>
             <div><span>${t('rep.downed')}</span>${R.downed.length ? `<span class="down">${t('rep.downedN', { n: R.downed.length })}</span>` : t('rep.none')}</div>
+            <div><span>${t('rep.cards')}</span>${cardTotal ? t('cx.cards', { n: cardTotal }) : t('rep.cardsNone')}</div>
         </div>`;
     for (const lu of R.levelUps) {
         const h = heroById(lu.uid);
         const gains = Object.entries(lu.gains).map(([id, n]) => `${L(M.STATS.find(s => s.id === id))} +${n}`).join(', ') || t('rep.gainsNone');
         p.appendChild(el('div', '', `<div class="up" style="font-size:var(--fs-sm);margin-bottom:8px">
             ${t('rep.levelUp', { name: L(h?.name), a: lu.from, b: lu.to })} &nbsp;<span class="muted">${gains}</span></div>`));
+    }
+    // 도감 카드 — 루팅 리포트에 찍히는 사건 (monster_design §8). 이번 카드로 레벨이 올랐으면 같이 알린다
+    if (cardEntries.length) {
+        const lines = cardEntries.map(([id, n]) => {
+            const total = G.codexCards[id] ?? 0;
+            const up = SYS.game.codexLevel(total) > SYS.game.codexLevel(total - n);
+            const name = L(M.monsterName(Number(id)));
+            return `${name}${n > 1 ? ` ×${n}` : ''}${up ? ` <span class="up">▲ ${t('rep.cardLevelUp', { name, lv: SYS.game.codexLevel(total) })}</span>` : ''}`;
+        });
+        p.appendChild(el('div', '', `<div style="font-size:var(--fs-sm);margin-bottom:8px"><span class="muted">${t('rep.cards')}</span> &nbsp;${lines.join(', ')}</div>`));
     }
     if (R.downed.length) {
         const inj = el('div', 'injury-box');
@@ -569,72 +588,60 @@ function renderExpReport(main) {
     main.appendChild(cols);
 }
 
-/* ═══════════ 공통: 영웅 선택 열 ═══════════ */
+/* ═══════════ 공통: 영웅 띠 (캐릭터 · 스킬 · 선술집 상단) ═══════════
+   초상화가 주인공 — 그 아래 이름과 "지금 뭘 하는가"만 적는다. 직업·레벨·죄종은 마우스를 올리면 나온다.
+   세 탭이 같은 띠를 쓰므로 어느 탭에서든 로스터가 같은 자리, 같은 순서로 보인다. */
 
-function heroPicker() {
-    const hp = el('div', 'panel');
-    hp.appendChild(el('h2', '', t('hp.h')));
-    for (const x of G.heroes) {
-        const b = el('div', `slot-row ${x.uid === state.heroUid ? 'on' : ''}`);
-        b.style.cursor = 'pointer';
-        b.innerHTML = `<span class="sin-chip" style="color:${sinColor(x.sin)};font-size:9px">${sinName(x.sin)}</span>
-            <span class="item-name">${L(x.name)} ${tierChip(x)}
-                <span class="muted">${className(x.cls)} Lv.${x.level}</span>
-                ${injured(x) ? `<span class="down" style="font-size:var(--fs-xs)">${t('injury.short')}</span>` : ''}</span>`;
-        b.onclick = () => { state.heroUid = x.uid; render(); };
-        hp.appendChild(b);
-    }
-    return hp;
+/** 영웅이 지금 하는 일 — 치료 중 > 전투 파티 > 대기. 파견은 미구현이라 아직 대기로 뭉뚱그린다 */
+function heroDoing(h) {
+    if (injured(h)) return { cls: 'down', text: t('hs.doing.injured', { t: fmtDuration(h.injuredUntil - now()) }) };
+    if (G.party.includes(h.uid)) return { cls: 'party', text: t('hs.doing.party') };
+    return { cls: 'idle', text: t('hs.doing.idle') };
 }
 
-/* ═══════════ 캐릭터 ═══════════
-   세로 3단: ① 영웅 띠 ② 장비 / 전체 능력치 / 세부 능력치 / 현재 스킬 ③ 아이템(가로 전폭).
-   장착·해제·분해가 여기서 실제로 일어난다. */
-
-function heroStrip() {
-    const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('ch.roster.h')} <small>${t('ch.roster.sub', { n: G.heroes.length, cap: D.balance.roster_cap })}</small>`));
+/** 영웅 띠 패널 — onPick(hero) 가 카드 클릭. 선택된 영웅(state.heroUid)은 테두리로만 표시한다 */
+function heroStrip(onPick) {
+    const p = el('div', 'panel hs-panel');
     const strip = el('div', 'hero-strip');
     for (const h of G.heroes) {
+        const doing = heroDoing(h);
         const c = el('div', `hs-card${h.uid === state.heroUid ? ' on' : ''}${h.tier === 'unique' ? ' unique' : ''}${injured(h) ? ' downed' : ''}`);
         c.style.borderTopColor = sinColor(h.sin);
+        c.title = `${L(h.name)} — ${className(h.cls)} · Lv.${h.level} · ${sinName(h.sin)} · ${L(tierOf(h))}`;
         c.innerHTML = `
-            <div class="hs-top">
-                ${heroFace(h, 'lg')}
-                <span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span>
-            </div>
-            <div class="hs-name"><b>${L(h.name)}</b>${tierChip(h)}</div>
-            <div class="hs-cls">${className(h.cls)} · Lv.${h.level}</div>
-            <div class="bar xp"><i style="width:${h.xp / xpNext(h) * 100}%"></i></div>
-            <div class="hs-foot">
-                ${G.party.includes(h.uid) ? `<span class="in-party">${t('tv.inParty')}</span>` : ''}
-                ${injured(h) ? injuryChip(h) : ''}
-            </div>`;
-        c.onclick = () => { state.heroUid = h.uid; render(); };
+            ${heroFace(h, 'xl')}
+            <div class="hs-name"><b>${L(h.name)}</b></div>
+            <div class="hs-doing ${doing.cls}">${doing.text}</div>`;
+        c.onclick = () => onPick(h);
         strip.appendChild(c);
     }
     for (let i = G.heroes.length; i < D.balance.roster_cap; i++) strip.appendChild(el('div', 'hs-card empty', '<span>+</span>'));
     p.appendChild(strip);
     return p;
 }
+const pickHero = h => { state.heroUid = h.uid; render(); };
 
-/** 페이퍼돌 — 신체 위치대로 8부위. 착용 칸을 누르면 벗는다 */
+/* ═══════════ 캐릭터 ═══════════
+   세로 3단: ① 영웅 띠 ② 장비 / 전체 능력치 / 세부 능력치 / 현재 스킬 ③ 아이템(가로 전폭).
+   장착·해제·분해가 여기서 실제로 일어난다. */
+
+/** 페이퍼돌 — 신체 위치대로 착용 위치 9개(부위 8종, 반지 ×2). 착용 칸을 누르면 벗는다 */
 function paperdoll(h) {
     const box = el('div', 'paperdoll');
     const twoHanded = itemOf(h.equipped.weapon)?.twoHanded === true;
     for (const row of M.PAPERDOLL) {
-        for (const slotId of row) {
-            if (!slotId) { box.appendChild(el('div', 'pd-gap')); continue; }
-            const def = slotDef(slotId);
-            const it = itemOf(h.equipped[slotId]);
-            const locked = slotId === 'offhand' && twoHanded;
+        for (const pos of row) {
+            if (!pos) { box.appendChild(el('div', 'pd-gap')); continue; }
+            const def = posDef(pos);
+            const it = itemOf(h.equipped[pos]);
+            const locked = pos === 'offhand' && twoHanded;
             const cell = el('div', `pd-cell${it ? ' filled' : ''}${locked ? ' locked' : ''}`);
             if (it) cell.style.borderColor = rarity(it.rarity).color;
             cell.innerHTML = `<div class="pd-icon">${def.icon}</div><div class="pd-label">${locked ? t('pd.twoHand') : L(def)}</div>`;
             if (it) {
                 bindTip(cell, it);
                 cell.onclick = () => {
-                    const r = SYS.game.unequip(G, h.uid, slotId);
+                    const r = SYS.game.unequip(G, h.uid, pos);
                     if (!r.ok) flash(`ch.err.${r.err}`); else save();
                     render();
                 };
@@ -648,26 +655,25 @@ function paperdoll(h) {
 function gearPanel(h) {
     const p = el('div', 'panel');
     const worn = wornItems(h);
-    p.appendChild(el('h2', '', `${t('ch.gear.h')} <small>${t('eq.equipped', { n: worn.length })}</small>`));
+    p.appendChild(el('h2', '', `${t('ch.gear.h')} <small>${t('eq.equipped', { n: worn.length, cap: M.EQUIP_SLOTS.length })}</small>`));
     p.appendChild(paperdoll(h));
     if (itemOf(h.equipped.weapon)?.twoHanded) p.appendChild(el('div', 'muted pd-foot', t('eq.twoHand')));
 
-    const bpMax = M.BREAKPOINTS[M.BREAKPOINTS.length - 1];
-    p.appendChild(el('div', 'sub-h', `${t('eq.set.h')} <span class="muted">${t('eq.set.sub', { list: M.BREAKPOINTS.join(' / '), max: bpMax })}</span>`));
-    const entries = Object.entries(SYS.game.setPoints(G, h)).sort((a, b) => b[1] - a[1]);
-    const chips = el('div', 'setpoints');
-    for (const [sin, pts] of entries) {
-        const chip = el('span', `setpoint ${pts >= M.BREAKPOINTS[0] ? 'reached' : ''}`);
+    // 접사 죄종 — 세트포인트가 아니라 **태그**다 (세트효과 보류, item_design §4). 수는 "죄종 접사 수" — 접사 시너지 노드의 축
+    const counts = {};
+    for (const it of worn) for (const s of it.sins ?? []) counts[s] = (counts[s] ?? 0) + 1;
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    p.appendChild(el('div', 'sub-h', t('eq.sins.h')));
+    const chips = el('div', 'sin-tags');
+    if (!entries.length) chips.appendChild(el('span', 'muted', t('eq.sins.none')));
+    for (const [sin, n] of entries) {
+        const chip = el('span', 'sin-tag');
         chip.style.color = sinColor(sin);
-        chip.innerHTML = `${sinName(sin)} <b>${pts}</b>${sin === h.sin ? `<i class="main-sin" title="${t('eq.mainSin')}">★</i>` : ''}`;
+        chip.innerHTML = `${sinName(sin)}${n > 1 ? ` <b>×${n}</b>` : ''}`;
         chips.appendChild(chip);
     }
     p.appendChild(chips);
-    const detail = entries.map(([sin, pts]) => `<div class="bp-block">${M.BREAKPOINTS.map(b => {
-        const on = pts >= b;
-        return `<div style="color:${on ? sinColor(sin) : 'var(--text-muted)'}">${on ? '●' : '○'} ${sinName(sin)} ${b} — ${L(M.SET_BONUSES[sin]?.[b]) ?? ''}</div>`;
-    }).join('')}</div>`).join('');
-    p.appendChild(note(detail + t('eq.set.note', { max: bpMax }), t('eq.set.h')));
+    p.appendChild(note(t('eq.sins.note'), t('eq.sins.h')));
     return p;
 }
 
@@ -689,14 +695,20 @@ function attrPanel(h) {
     const c = combatOf(h);
     const tbl = el('table', 'stat-table');
     tbl.innerHTML = `
-        <tr class="sep"><td>${t('st.atk')}</td><td>${c.attack_type === 'magic' ? c.atk_magic : c.atk_physical}</td></tr>
-        <tr><td>${t('st.def')}</td><td>${c.defense}</td></tr>
+        <tr class="sep"><td>${t('st.atk')} <span class="muted">(${t(`st.atkType.${c.attack_type}`)})</span></td><td>${c.atk_physical ?? c.atk_magic}</td></tr>
+        <tr><td>${t('st.def')}</td><td>${c.defense} <span class="muted">${t('st.mitigation', { p: mitigationPct(c.defense, c.level) })}</span></td></tr>
         <tr><td>${t('st.maxhp')}</td><td>${c.hp_max}</td></tr>
         <tr><td>${t('sk.cycle')}</td><td>${t('sk.cycleSec', { s: c.action_period.toFixed(2) })}</td></tr>`;
     p.appendChild(tbl);
     p.appendChild(note(t('ch.attr.note')));
     return p;
 }
+
+/**
+ * 방어 소재값 → 감쇠율(%) — 소재값만 보이면 "방어 +10 이 얼마인가"를 못 읽는다 (battle_design §9-8).
+ * 같은 곡선을 두 번 구현하지 않도록 formula.js 를 그대로 쓴다.
+ */
+const mitigationPct = (D, lvl) => Math.round(SYS.formula.mitigation(D, lvl) * 100);
 
 /** 전투 능력치 표기 — 단위 붙이기는 여기 한 곳에서만 */
 const fmtCombat = (def, v) => v === undefined ? '—'
@@ -764,7 +776,10 @@ function itemsPanel(h) {
             cell.style.borderColor = rarity(it.rarity).color;
             cell.innerHTML = `<span class="inv-icon">${slotDef(it.slot).icon}</span>`;
             if (it.rarity === 'unique') cell.classList.add('shine');
-            bindTip(cell, it, itemOf(h.equipped[it.slot]));
+            // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
+            const target = SYS.game.equipTarget(h, it);
+            const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
+            bindTip(cell, it, itemOf(h.equipped[target]), ringHint);
             cell.onclick = () => {
                 if (state.salvageMode) {
                     const r = SYS.game.salvage(G, it.uid);
@@ -786,7 +801,7 @@ function itemsPanel(h) {
 function renderCharacter(main) {
     const h = heroById(state.heroUid);
     const stack = el('div', 'char-stack');
-    stack.appendChild(heroStrip());
+    stack.appendChild(heroStrip(pickHero));
     const band = el('div', 'cols c-char');
     band.appendChild(gearPanel(h));
     band.appendChild(attrPanel(h));
@@ -799,34 +814,34 @@ function renderCharacter(main) {
 
 /* ── 비교 툴팁 ── */
 
-function tipCard(item, headText) {
+function tipCard(item, headText, hint = '') {
     const c = el('div', 'tip-card');
     if (!item) {
         c.innerHTML = `<div class="tip-head">${headText}</div><div class="tip-empty">${t('tip.empty')}</div>`;
         return c;
     }
-    const sins = Object.entries(item.sins ?? {});
+    const sins = item.sins ?? [];
+    const g = SYS.item.groupOf(item);            // 무기군 — 직업 전속·행동 주기·공격 타입의 출처 (weapon_group.csv)
     const sub = [L(rarity(item.rarity)), L(slotDef(item.slot)), `ilvl ${item.ilvl}`];
-    if (item.cls) sub.push(t('ch.weaponOf', { cls: className(item.cls) }));
+    if (g) sub.push(t('ch.weaponGroup', { group: L(g), cls: g.classes.map(className).join('/') }));
     if (item.twoHanded) sub.push(t('pd.twoHand'));
     c.innerHTML = `
         <div class="tip-head">${headText}</div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${L(item.name)}</div>
         <div class="tip-sub">${sub.join(' · ')}</div>
-        ${item.watk ? `<div class="tip-implicit">${t('st.atk')} ${item.watk} · ${t('sk.cycleSec', { s: item.period.toFixed(2) })}</div>` : ''}
+        ${g ? `<div class="tip-implicit">${t('st.atk')} ${item.watk} (${t(`st.atkType.${item.element ?? g.attackType}`)}) · ${t('sk.cycleSec', { s: g.period.toFixed(2) })}</div>` : ''}
         ${item.implicit ? `<div class="tip-implicit">${affixText(item.implicit)}</div>` : ''}
         <ul>${(item.affixes ?? []).map(a => `<li>${affixText(a)}</li>`).join('') || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>
-        <div class="tip-sins">${sins.length
-            ? sins.map(([s, n]) => `<span class="setpoint" style="color:${sinColor(s)};margin-right:4px">${sinName(s)} <b>+${n}</b></span>`).join('')
-            : `<span class="tip-empty">${t('tip.zeroSet')}</span>`}</div>`;
+        <div class="tip-sins">${sins.map(s => `<span class="sin-tag" style="color:${sinColor(s)};margin-right:4px">${sinName(s)}</span>`).join('')}
+            ${hint ? `<span class="muted">${hint}</span>` : ''}</div>`;
     return c;
 }
 
-function bindTip(node, item, equipped) {
+function bindTip(node, item, equipped, hint) {
     node.onmouseenter = ev => {
         const tip = $('#tooltip');
         tip.innerHTML = '';
-        tip.appendChild(tipCard(item, equipped === undefined ? t('tip.equipped') : t('tip.this')));
+        tip.appendChild(tipCard(item, equipped === undefined ? t('tip.equipped') : t('tip.this'), hint));
         if (equipped !== undefined) tip.appendChild(tipCard(equipped, t('tip.equipped')));
         tip.classList.add('show');
         moveTip(ev);
@@ -921,10 +936,11 @@ function skillBox({ tag, title, sub, grid, accent, locked, emptyNote }) {
 
 function renderSkill(main) {
     const h = heroById(state.heroUid);
+    const stack = el('div', 'char-stack');
+    stack.appendChild(heroStrip(pickHero));          // 캐릭터 탭과 같은 자리·같은 띠 — 여기서 영웅을 고른다
     const wrap = el('div', 'cols c-skill');
 
     const c1 = el('div');
-    c1.appendChild(heroPicker());
     const pp = el('div', 'panel');
     const points = h.level - 1;     // 레벨당 1 — 트리가 목업이라 아직 쓸 곳이 없다
     pp.appendChild(el('h2', '', t('sk.points.h')));
@@ -959,7 +975,8 @@ function renderSkill(main) {
     }));
     c2.appendChild(note(t('sk.grid.note')));
     wrap.appendChild(c2);
-    main.appendChild(wrap);
+    stack.appendChild(wrap);
+    main.appendChild(stack);
 }
 
 /* ═══════════ 선술집 ═══════════ */
@@ -967,6 +984,9 @@ function renderSkill(main) {
 function renderTavern(main) {
     const B = D.balance;
     const full = G.heroes.length >= B.roster_cap;
+    const stack = el('div', 'char-stack');
+    // 보유 로스터 = 캐릭터 탭과 같은 띠. 여기서 누르면 그 영웅의 캐릭터 탭으로 간다
+    stack.appendChild(heroStrip(h => { state.heroUid = h.uid; state.tab = 'character'; render(); }));
     const p = el('div', 'panel town-bg');
     p.appendChild(el('h2', '', `${t('tv.h')} <small>${t('tv.sub')}</small>`));
 
@@ -991,53 +1011,30 @@ function renderTavern(main) {
     tools.appendChild(el('span', 'muted', `<span style="font-size:var(--fs-xs)">${t('tv.reroll.note')}</span>`));
     p.appendChild(tools);
     p.appendChild(el('div', 'todo', `<b>${t('tv.uniqueTodo.h')}</b>${t('tv.uniqueTodo.b')}`));
-    main.appendChild(p);
-
-    const rp = el('div', 'panel');
-    const uniqueCount = G.heroes.filter(h => h.tier === 'unique').length;
-    rp.appendChild(el('h2', '', `${t('tv.roster.h')} <small>${t('tv.roster.sub', { n: G.heroes.length, cap: B.roster_cap, u: uniqueCount })}</small>`));
-    const hg = el('div', 'hero-grid');
-    for (const h of G.heroes) {
-        const c = el('div', `hero-card${h.tier === 'unique' ? ' unique' : ''}`);
-        c.style.borderTopColor = sinColor(h.sin);
-        const statline = M.STATS.map(s => `${lang() === 'ko' ? s.ko : s.abbr} ${h.stats[s.id]}`).join(' · ');
-        c.innerHTML = `
-            <div class="name">
-                <b>${L(h.name)}</b>${tierChip(h)}
-                <span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span>
-                <span class="muted" style="font-size:var(--fs-sm)">${className(h.cls)}</span>
-                ${G.party.includes(h.uid) ? `<span class="in-party" style="margin-left:auto">${t('tv.inParty')}</span>` : ''}
-            </div>
-            <div class="line"><span>Lv.${h.level}</span><span>${h.xp} / ${xpNext(h)} XP</span></div>
-            <div class="bar xp" style="margin:5px 0 7px"><i style="width:${h.xp / xpNext(h) * 100}%"></i></div>
-            <div class="line"><span>${t('tv.trait')}</span><span>${L(h.trait)}</span></div>
-            <div class="line"><span>${t('eq.passive.h')}</span><span>${h.passive ? L(h.passive.name) : `<span class="muted">${t('tv.noPassive')}</span>`}</span></div>
-            ${injured(h) ? `<div style="margin-top:5px">${injuryChip(h)}</div>` : ''}
-            <div class="statline">${statline}</div>`;
-        c.onclick = () => { state.heroUid = h.uid; state.tab = 'character'; render(); };
-        hg.appendChild(c);
-    }
-    rp.appendChild(hg);
-    rp.appendChild(note(t('tv.tiers.note')));
-    main.appendChild(rp);
+    p.appendChild(note(t('tv.tiers.note')));
+    stack.appendChild(p);
+    main.appendChild(stack);
 }
 
-/* ═══════════ 도감 ═══════════ */
+/* ═══════════ 도감 — 몬스터 카드 모델 (monster_design §8) ═══════════
+   레벨·필요 장수 계산은 SYS.game(codex_level.csv). 여기는 카드 수를 읽어 그리기만 한다 */
 
-const milestoneLevel = kills => M.CODEX_MILESTONES.filter(v => kills >= v).length;
-const monsterBonus = kills => M.CODEX_MILESTONE_BONUS.slice(0, milestoneLevel(kills)).reduce((a, b) => a + b, 0);
+const codexLv = cards => SYS.game.codexLevel(cards);
+/** 레벨별 누적 문턱 — 진행 막대용 (codex_level.csv 의 cards_required 는 레벨당 장수라 누적한다) */
+const codexCum = () => D.codexLevels.reduce((a, r) => (a.push((a[a.length - 1] ?? 0) + r), a), []);
 function stageBonus(stage) {
-    const total = stage.monsters.reduce((a, m) => a + monsterBonus(m.kills), 0);
-    const complete = stage.monsters.every(m => milestoneLevel(m.kills) === M.CODEX_MILESTONES.length);
+    const total = stage.monsters.reduce((a, m) => a + SYS.game.codexBonusAt(codexLv(m.cards)), 0);
+    const complete = stage.monsters.every(m => codexLv(m.cards) === SYS.game.codexMaxLevel());
     return { total, complete };
 }
 
 function monsterCard(m, stage) {
-    const lv = milestoneLevel(m.kills);
-    const maxLv = M.CODEX_MILESTONES.length;
-    const next = M.CODEX_MILESTONES[lv];
-    const prev = lv > 0 ? M.CODEX_MILESTONES[lv - 1] : 0;
-    const pct = next ? Math.min(100, (m.kills - prev) / (next - prev) * 100) : 100;
+    const cum = codexCum();
+    const lv = codexLv(m.cards);
+    const maxLv = cum.length;
+    const next = cum[lv] ?? null;
+    const prev = lv > 0 ? cum[lv - 1] : 0;
+    const pct = next ? Math.min(100, (m.cards - prev) / (next - prev) * 100) : 100;
     const src = M.monsterFace(m.id);
     const name = stage.locked ? '???' : L(M.monsterName(m.id));
     const c = sinColor(M.monsterSin(m.id));
@@ -1047,20 +1044,20 @@ function monsterCard(m, stage) {
             ? `<span class="face${m.boss ? ' boss' : ''}"><img src="${src}" alt="${name}" loading="lazy"></span>`
             : `<span class="face none${m.boss ? ' boss' : ''}" style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
     const pips = Array.from({ length: maxLv }, (_, i) =>
-        `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.killsTitle', { n: M.CODEX_MILESTONES[i].toLocaleString() })}"></span>`).join('');
+        `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.cards', { n: cum[i] })}"></span>`).join('');
     return `
         <div class="mon-card${m.boss ? ' boss' : ''}${lv === maxLv ? ' maxed' : ''}${stage.locked ? ' locked' : ''}">
             ${faceHtml}
             <div class="mon-body">
                 <div class="mon-top">
                     <span class="mon-name">${name}${m.boss ? `<span class="b-tag">${t('kind.boss')}</span>` : ''}</span>
-                    <span class="mon-kills"><b>${m.kills.toLocaleString()}</b></span>
+                    <span class="mon-kills" title="${t('cx.lvTitle', { lv })}"><b>${t('cx.cards', { n: m.cards })}</b></span>
                 </div>
                 <div class="mon-mid">
                     <span class="pips">${pips}</span>
-                    <span class="mon-next muted">${stage.locked ? '' : (next
-                        ? `${t('cx.next', { n: next.toLocaleString() })} <span class="up">+${M.CODEX_MILESTONE_BONUS[lv]}%</span>`
-                        : `<span class="up">${t('cx.max')}</span>`)}</span>
+                    <span class="mon-next muted">${stage.locked ? '' : `${t('cx.kills', { n: m.kills.toLocaleString() })} · ${next
+                        ? `${t('cx.next', { n: next })} <span class="up">+${M.CODEX_LEVEL_BONUS[lv] ?? 0}%</span>`
+                        : `<span class="up">${t('cx.max')}</span>`}`}</span>
                 </div>
                 <div class="bar"><i style="width:${pct}%"></i></div>
             </div>
@@ -1069,15 +1066,15 @@ function monsterCard(m, stage) {
 
 function renderCodex(main) {
     const ch = M.CODEX_CHAPTERS.find(c => c.id === state.codexChapter) ?? M.CODEX_CHAPTERS[0];
-    // 처치 수는 실집계(G.codexKills), 잠금은 스테이지 해금 상태에서 온다
+    // 카드·처치 수는 실집계(G.codexCards / G.codexKills), 잠금은 스테이지 해금 상태에서 온다
     const stages = M.CODEX_STAGES.filter(st => st.chapter === ch.id).map(st => ({
         ...st, locked: !SYS.game.stageUnlocked(G, st.id),
-        monsters: st.monsters.map(m => ({ ...m, kills: G.codexKills[m.id] ?? 0 })),
+        monsters: st.monsters.map(m => ({ ...m, cards: G.codexCards[m.id] ?? 0, kills: G.codexKills[m.id] ?? 0 })),
     }));
     const chLocked = stages.every(st => st.locked);
 
     const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('cx.h')} <small>${t('cx.sub', { list: M.CODEX_MILESTONES.map(n => n.toLocaleString()).join(' · ') })}</small>`));
+    p.appendChild(el('h2', '', `${t('cx.h')} <small>${t('cx.sub', { pct: D.balance.codex_card_drop_pct, list: D.codexLevels.join(' · ') })}</small>`));
     const bar = el('div', 'sub-bar');
     bar.appendChild(segmented(M.CODEX_CHAPTERS.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}` })), ch.id,
         id => { state.codexChapter = id; render(); }));
@@ -1115,18 +1112,19 @@ async function boot() {
     // 개발용 — 헤드리스 검증에서 클릭 없이 흐름을 태운다
     const dev = new URLSearchParams(location.search).get('dev');
     const tab = new URLSearchParams(location.search).get('tab');
-    if (TABS.includes(tab)) state.tab = tab;
     if (new URLSearchParams(location.search).get('screen') === 'start') state.screen = 'start';
     if (dev === 'newgame' || (dev === 'battle' && !G)) startGame();
     if (dev === 'battle') runBattle(D.stageOrder[0], { instant: true });
     if (dev === 'play') { if (!G) startGame(); runBattle(D.stageOrder[0]); return; }
-    if (dev === 'offline') {   // 반복을 켜고 30분 전에 떠난 것처럼 — 부재 정산 배너 확인용
+    if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
         if (!G.run) SYS.game.resolveBattle(G, D.stageOrder[0], now() - 31 * 60000);
         for (const h of G.heroes) h.injuredUntil = null;
-        G.run.repeat = true; G.run.lastAt = now() - 30 * 60000;
-        SYS.game.offlineCatchup(G, now()); save();
+        G.run.repeat = true;
+        SYS.game.closeRun(G, now()); save();
     }
+    // ?tab= 은 dev 분기 **뒤에** 건다 — startGame() 이 탭을 원정으로 되돌리므로 앞에 두면 먹히지 않는다
+    if (TABS.includes(tab)) state.tab = tab;
     render();
 }
 

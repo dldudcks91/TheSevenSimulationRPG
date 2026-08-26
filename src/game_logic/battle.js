@@ -9,11 +9,18 @@
  *   · 몬스터 소재값(monster.csv) × 등급 배율(spawn_grade.csv)
  *   · 용어는 "사망"이 아니라 전투불능(부상) — 라운드 사이 회복 없음, 귀환 시 무료 회복
  *
- * ⚠ 피해 계산 공식은 기획 미확정 — 아래는 프로토타입 임시식이다. 계수는 전부 balance.csv ⚠제안 키.
- *   명중/회피: 몬스터 쪽에 명중·회피 축이 없어(monster.csv) v1 은 **영웅의 회피만** 적용한다.
+ *   · 피해 계산은 formula.js — battle_design §9 (명중 대결 → 타격 피해 → 곱셈 감쇠). 이 파일은 **누가 언제 때리는가**만 본다
+ *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 마법 무기 개체의 원소 (§9-5)
+ *   · 반사는 비직격 — 감쇠·치명 없이 공격자 HP 를 직접 깎고 아무것도 유발하지 않는다 (§9-6)
+ *
+ * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   타겟팅: 진형·어그로 미확정 → 랜덤.
- *   스킬: 액티브 슬롯은 아직 비어 있다(스킬 효과 미작성) — 기본 공격만 돈다. 구조는 battle_design §3 대로 남긴다.
+ *   스킬: 액티브 슬롯은 아직 비어 있다(스킬 효과 미작성) — 기본 공격만 돈다(스킬 배율 1). 구조는 battle_design §3 대로 남긴다.
+ *   몬스터의 명중·회피·치명·반사는 0 — 정예 특성(elite_trait.csv)이 붙기 전까지 값이 없다 (§8 "몬스터는 부분집합만").
+ *   도감 카드: 처치마다 장비 드롭과 **별개로** 카드 판정 (monster_design §8) — 결과 cards 와 타임라인 'card' 이벤트.
  */
+
+import { createFormula } from './formula.js';
 
 const TICK = 0.1;
 
@@ -25,6 +32,7 @@ const TICK = 0.1;
  */
 export function createBattleSystem(data) {
     const B = data.balance;
+    const F = createFormula(B);
     const r1 = v => Math.round(v * 10) / 10;
 
     const stagePool = stage => Object.values(data.monsters)
@@ -32,18 +40,20 @@ export function createBattleSystem(data) {
         .map(m => m.monster_idx);
 
     /** 몬스터 소재값 × 등급 배율 × 전역 스케일 → 전투 유닛 */
-    function makeEnemy(key, monsterId, grade, extra = {}) {
+    function makeEnemy(key, monsterId, grade, lvl, extra = {}) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
         const hp = Math.round(m.hp * g.hp_mult * B.monster_hp_scale);
+        const dScale = g.def_mult * B.monster_def_scale;
         return {
             key, side: 'enemy', monsterId, grade,
             hp, hpMax: hp,
             atk: m.attack * g.atk_mult * B.monster_atk_scale,
-            atkType: m.attack_type,
-            def: m.defense * g.def_mult, mdef: m.magic_defense * g.def_mult,
+            atkType: m.attack_type,                 // physical 또는 스테이지 원소 (monster_design §2)
+            def: m.defense * dScale, res: m.resist * dScale,   // resist = 4원소 공통 소재값
+            lvl,                                    // 감쇠 곡선 K 의 공격자 레벨 = 스테이지 dlvl (§9-3)
             period: m.action_period, next: 0,
-            eva: 0, crit: 0, critDmg: B.base_crit_damage_pct, ls: 0, dmgBonus: 0,
+            acc: 0, eva: 0, crit: 0, critDmg: B.base_crit_damage_pct, ls: 0, reflect: 0, dr: 0, defIgnore: 0, dmgBonus: 0,
             expReward: m.exp_reward * g.exp_mult, goldMult: g.gold_mult, dropRoll: g.drop_roll,
             ...extra,
         };
@@ -65,7 +75,7 @@ export function createBattleSystem(data) {
         const between = (lo, hi) => lo + Math.floor(rng() * (hi - lo + 1));
         const list = [];
         let k = 0;
-        const add = (id, grade, extra) => list.push(makeEnemy(`e${k++}`, id, grade, extra));
+        const add = (id, grade, extra) => list.push(makeEnemy(`e${k++}`, id, grade, stage.dlvl, extra));
 
         if (type === 'boss') {
             add(stage.boss_monster_idx, stage.boss_grade);
@@ -84,17 +94,6 @@ export function createBattleSystem(data) {
         return { type, list: list.slice(0, B.wave_monster_max) };
     }
 
-    /** 피해 1회 — 임시식: atk × 편차 × 치명 − 방어(타입별), 최소 1 */
-    function damage(rng, a, d) {
-        const varPct = B.dmg_variance_pct / 100;
-        const crit = rng() * 100 < a.crit;
-        let v = a.atk * (1 - varPct + rng() * varPct * 2);
-        if (crit) v *= a.critDmg / 100;
-        v *= 1 + a.dmgBonus / 100;
-        v -= a.atkType === 'magic' ? d.mdef : d.def;
-        return { dmg: Math.max(1, Math.round(v)), crit };
-    }
-
     /**
      * @param partyUnits [{uid, combat:{...}}] — heroSystem.computeCombat 결과
      * @returns 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
@@ -110,9 +109,11 @@ export function createBattleSystem(data) {
                 key: `p${i}`, side: 'party', uid: p.uid,
                 hp: c.hp_max, hpMax: c.hp_max,
                 atk: c.atk_physical ?? c.atk_magic ?? 0, atkType: c.attack_type,
-                def: c.defense, mdef: c.magic_defense,
-                eva: Math.min(c.evasion, B.evasion_cap_pct),
-                crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal,
+                def: c.defense,
+                res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
+                lvl: c.level, variance: c.variance_pct,
+                acc: c.accuracy, eva: c.evasion, dr: c.damage_reduction, defIgnore: c.def_ignore,
+                crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
                 dmgBonus: c.dmg_bonus_pct, period: c.action_period,
                 next: i * 0.3,           // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
                 goldFind: c.gold_find, itemFind: c.item_find,
@@ -126,7 +127,7 @@ export function createBattleSystem(data) {
         const out = {
             won: false, reason: null, durationSec: 0,
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period })),
-            timeline, xpTotal: 0, gold: 0, dust: 0, kills: {}, drops: [], downed: [],
+            timeline, xpTotal: 0, gold: 0, dust: 0, kills: {}, cards: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [],
         };
 
@@ -158,6 +159,11 @@ export function createBattleSystem(data) {
             out.gold += Math.round(e.expReward * e.goldMult * B.gold_rate * goldMult);
             if (e.grade === 'elite') out.dust += B.dust_elite;
             if (e.grade === 'stage_boss' || e.grade === 'chapter_boss') out.dust += B.dust_boss;
+            // 도감 카드 — 장비 드롭과 별개 판정 [balance.csv:codex_card_drop_pct]. 등급별 차등은 후속 (monster_design §8)
+            if (rng() * 100 < B.codex_card_drop_pct) {
+                out.cards[e.monsterId] = (out.cards[e.monsterId] ?? 0) + 1;
+                timeline.push({ t: r1(t), e: 'card', u: e.key, monsterId: e.monsterId });
+            }
             // 드롭 판정 — 등급별 굴림 횟수(spawn_grade.drop_roll) × 확률. 보스는 최소 1개 보장
             let got = 0;
             for (let i = 0; i < e.dropRoll; i++) {
@@ -170,27 +176,36 @@ export function createBattleSystem(data) {
             }
         };
 
+        const downed = u => {
+            timeline.push({ t: r1(t), e: 'down', u: u.key });
+            if (u.side === 'enemy') onKill(u);
+            else out.downed.push(u.uid);
+        };
+
         const act = u => {
             const foes = alive(u.side === 'party' ? enemies : party);
             if (foes.length === 0) return;
             const target = foes[Math.floor(rng() * foes.length)];   // 타겟팅 미확정 → 랜덤
-            if (target.eva > 0 && rng() * 100 < target.eva) {
+            const { hit, dmg, crit } = F.strike(rng, u, target);
+            if (!hit) {
                 timeline.push({ t: r1(t), e: 'dodge', a: u.key, d: target.key });
                 return;
             }
-            const { dmg, crit } = damage(rng, u, target);
             target.hp = Math.max(0, target.hp - dmg);
             const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg, crit, dhp: target.hp };
-            if (u.ls > 0 && u.hp > 0) {
-                u.hp = Math.min(u.hpMax, u.hp + Math.round(dmg * u.ls / 100));
+            if (u.ls > 0 && u.hp > 0) {                      // 흡혈 — 직격의 최종 피해에만 비례 (§9-6)
+                u.hp = Math.min(u.hpMax, u.hp + F.leech(dmg, u.ls));
                 ev.ahp = u.hp;
             }
             timeline.push(ev);
-            if (target.hp <= 0) {
-                timeline.push({ t: r1(t), e: 'down', u: target.key });
-                if (target.side === 'enemy') onKill(target);
-                else out.downed.push(target.uid);
+            // 반사 — 비직격. 감쇠·치명 없이 공격자 HP 를 직접 깎고 흡혈·반사를 유발하지 않는다 (§9-6)
+            if (target.reflect > 0 && u.hp > 0) {
+                const back = F.indirect(dmg * target.reflect / 100);
+                u.hp = Math.max(0, u.hp - back);
+                timeline.push({ t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp });
+                if (u.hp <= 0) downed(u);
             }
+            if (target.hp <= 0) downed(target);
         };
 
         beginRound();

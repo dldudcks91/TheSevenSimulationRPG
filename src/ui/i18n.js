@@ -80,27 +80,29 @@ const STRINGS = {
             + '기본 능력치는 축마다 따로 굴리되 <b>합은 [balance.csv:hero_attr_total] 로 고정</b>이다 — '
             + '세 장의 차이는 양이 아니라 <b>모양</b>이다. 장비로는 1도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
             + '최대 HP는 굴리지 않는다 — 전 영웅 [balance.csv:hero_hp_base] 공통 시작<br>'
-            + '메인 죄종은 <b>세트포인트 +1</b>의 출처다 — 장비가 하나도 없어도 붙는다<br>'
+            + '메인 죄종은 죄종 트리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>보류</b> (item_design.md §4)<br>'
             + '리롤은 <b>무제한·무료</b>다 — 시작 선택을 도박으로 만들지 않는다<br>'
-            + '<b>미확정</b>: 합 70 자체(제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부 · '
-            + '확정한 3명을 실제 로스터로 넘기는 연결(세이브 없음 — 지금은 목업 데이터로 이어진다)',
+            + '<b>미확정</b>: 합 70 자체(제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부',
         en: 'Starting heroes are all <b>Rare</b> — the 15 Uniques are a fixed roster and are not spent at the start<br>'
             + 'Attributes roll per axis but their <b>total is fixed at [balance.csv:hero_attr_total]</b> — '
             + 'the three differ in <b>shape</b>, not in amount. Gear never raises them, so what you roll here <b>lasts forever</b><br>'
             + 'Max HP is not rolled — every hero starts at [balance.csv:hero_hp_base]<br>'
-            + 'The main sin is where <b>Set Point +1</b> comes from — it applies with no gear at all<br>'
+            + 'The main sin decides the sin tree (tab 1) and dispatch aptitude — gear affinity (set points) is <b>on hold</b> (item_design.md §4)<br>'
             + 'Rerolling is <b>unlimited and free</b> — the opening choice is not a gamble<br>'
-            + '<b>Open</b>: the total itself (a proposed value) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed · '
-            + 'handing the confirmed three to the real roster (no save yet — for now it continues into the mock data)',
+            + '<b>Open</b>: the total itself (a proposed value) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed',
     },
 
     /* ── 새 게임 · 세이브 (2026-08-25) ── */
     'ng.continue': { ko: '이어하기', en: 'Continue' },
     'ng.hasSave': { ko: '저장된 게임이 있다 — {t}', en: 'A saved game exists — {t}' },
     'ng.saveLine': { ko: '영웅 {h}명 · 클리어 {c} · 골드 {g}', en: '{h} heroes · {c} cleared · {g} gold' },
+    'ng.oldSave': {
+        ko: '이전 형식(v{v})의 세이브다 — 무기군·슬롯·도감이 바뀌어 이어할 수 없다. 새 게임으로 시작한다',
+        en: 'This save is an older format (v{v}) — weapon groups, slots and the codex changed, so it cannot continue. Start a new game',
+    },
     'ng.overwrite': { ko: '세이브를 지우고 이 셋으로 시작', en: 'Delete save & start with these' },
     'ng.overwriteConfirm': { ko: '정말? 한 번 더 누르면 지운다', en: 'Really? Click again to delete' },
-    'ng.startWeapon': { ko: '직업 무기 1개를 쥐고 시작한다', en: 'Starts with one class weapon' },
+    'ng.startWeapon': { ko: '직업 전속 무기군의 무기 1개를 쥐고 시작한다', en: 'Starts with one weapon from a class-exclusive weapon group' },
 
     /* ── 원정 (실동작) ── */
     'exp.toParty': { ko: '파티에', en: 'To party' },
@@ -110,14 +112,17 @@ const STRINGS = {
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
     'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat' },
-    'exp.repeat.sub': { ko: '승리하면 같은 곳으로 다시 나간다 · 부상·패배·가방 가득이면 멈춘다', en: 'Re-runs the same stage after a win · stops on injury, defeat, or a full bag' },
-    'exp.offline.h': { ko: '부재중 원정', en: 'While you were away' },
-    'exp.offline.body': { ko: '{n}회 원정 ({w}승) · 골드 +{g} · 가루 +{d} · XP +{x} · 아이템 {i}개', en: '{n} runs ({w} won) · gold +{g} · dust +{d} · XP +{x} · {i} items' },
-    'exp.offline.stop.defeat': { ko: '패배해서 멈췄다', en: 'Stopped after a defeat' },
-    'exp.offline.stop.injured': { ko: '부상자가 생겨 멈췄다', en: 'Stopped — a hero was injured' },
-    'exp.offline.stop.bagFull': { ko: '가방이 가득 차 멈췄다', en: 'Stopped — bag is full' },
-    'exp.offline.stop.limit': { ko: '정산 상한 {h}시간에 닿았다', en: 'Hit the {h}h catch-up cap' },
-    'exp.offline.dismiss': { ko: '확인', en: 'OK' },
+    'exp.repeat.sub': {
+        ko: '승리하면 같은 곳으로 다시 나간다 · <b>게임이 켜져 있는 동안만</b> 돈다 · 부상·패배·가방 가득이면 멈춘다',
+        en: 'Re-runs the same stage after a win · <b>only while the game is open</b> · stops on injury, defeat, or a full bag',
+    },
+    'exp.notice.runClosed.h': { ko: '부재 중', en: 'While you were away' },
+    'exp.notice.runClosed.body': {
+        ko: '반복 원정은 게임이 켜져 있을 때만 돈다 — {stage} 런은 진행 중이던 전투까지 정산하고 마무리됐다. 결과는 마지막 리포트에 있다',
+        en: 'Auto-repeat only runs while the game is open — the {stage} run settled up to the battle in progress and ended. The result is in the last report',
+    },
+    'exp.notice.report': { ko: '리포트 보기', en: 'View report' },
+    'exp.notice.dismiss': { ko: '확인', en: 'OK' },
 
     /* ── 리포트 (실동작) ── */
     'rep.defeat': { ko: '패배', en: 'Defeat' },
@@ -131,16 +136,20 @@ const STRINGS = {
     'rep.again': { ko: '같은 곳으로 다시', en: 'Run it again' },
     'rep.toIdle': { ko: '편성으로', en: 'Back to party' },
     'rep.gainsNone': { ko: '능력치 변화 없음', en: 'no attribute change' },
+    'rep.cards': { ko: '도감 카드', en: 'Codex cards' },
+    'rep.cardsNone': { ko: '없음', en: 'None' },
+    'rep.cardLevelUp': { ko: '{name} 도감 Lv.{lv}', en: '{name} codex Lv.{lv}' },
 
     /* ── 캐릭터 (실동작) ── */
     'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제', en: 'Click an item = equip · click a worn slot = unequip' },
     'ch.salvageMode': { ko: '분해 모드', en: 'Salvage mode' },
     'ch.salvageHint': { ko: '분해 모드: 클릭한 아이템을 가루로 만든다', en: 'Salvage mode: clicking an item turns it to dust' },
-    'ch.err.class': { ko: '이 직업의 무기가 아니다', en: "Not this class's weapon" },
+    'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
     'ch.err.twoHanded': { ko: '양손 무기 착용 중 — 보조 불가', en: 'Two-hander equipped — no off-hand' },
     'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
     'ch.weaponOf': { ko: '{cls} 무기', en: '{cls} weapon' },
+    'ch.weaponGroup': { ko: '{group} · {cls} 전용', en: '{group} · {cls} only' },
     'ch.noTrees': { ko: '스킬 트리는 아직 목업이다', en: 'Skill trees are still a mockup' },
 
     /* ── 선술집 (실동작) ── */
@@ -177,7 +186,6 @@ const STRINGS = {
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
 
     /* ── 공통 ── */
-    'injury.short': { ko: ' · 부상', en: ' · Injured' },
     'face.noArt': { ko: '{name} — 원작 아트 없음', en: '{name} — no source art' },
     'class.unassigned': { ko: '역할 미배정', en: 'Role unassigned' },
     'kind.normal': { ko: '일반', en: 'Normal' },
@@ -202,14 +210,16 @@ const STRINGS = {
         en: 'A hero is still recovering — this party cannot depart',
     },
     'exp.party.note': {
-        ko: '리더의 통솔이 파티 전원에게 적용된다<br>귀환하면 깎인 HP는 <b>무료·즉시 회복</b> — 비용은 부상(전투불능)의 치료 타이머뿐이다',
-        en: "The leader's Leadership applies to the whole party<br>Lost HP is restored <b>free and instantly</b> on return — the only cost is the recovery timer on downed heroes",
+        ko: '귀환하면 깎인 HP는 <b>무료·즉시 회복</b> — 비용은 부상(전투불능)의 치료 타이머뿐이다<br>'
+            + '파티 버프는 스탯이 아니라 스킬 효과다 — 통솔의 전투 계수는 없다 (08-25)',
+        en: 'Lost HP is restored <b>free and instantly</b> on return — the only cost is the recovery timer on downed heroes<br>'
+            + 'Party buffs are skill effects, not a stat — Leadership has no combat coefficient (08-25)',
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
     'exp.bench.sub': { ko: '파견 대기 · 로스터 {n} / {cap}', en: 'Awaiting dispatch · Roster {n} / {cap}' },
     'exp.bench.note': {
-        ko: '파견 화면은 <b>미착수</b> — 파견 유형 목록이 미정이다 (base_expedition_design §6)',
-        en: 'Dispatch screen <b>not started</b> — the dispatch type list is undecided (base_expedition_design §6)',
+        ko: '파견 화면은 <b>미착수</b> — 시설 5(영입·교역·연구·제련·채광) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)',
+        en: 'Dispatch screen <b>not started</b> — 5 facilities (recruit · trade · research · smelt · mine) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },
@@ -252,27 +262,33 @@ const STRINGS = {
         en: 'The idle-game contract — the roster is never destroyed while you are away. Every event resolves inside the report',
     },
 
-    /* ── 영웅 선택 ── */
-    'hp.h': { ko: '영웅', en: 'Heroes' },
+    /* ── 영웅 띠 (캐릭터·스킬·선술집 공통 상단, 2026-08-26) — 초상화 + 이름 + 지금 하는 일 ── */
+    'hs.doing.party': { ko: '전투 파티', en: 'In party' },
+    'hs.doing.idle': { ko: '대기 중', en: 'Idle' },
+    'hs.doing.injured': { ko: '치료 중 · {t}', en: 'Recovering · {t}' },
 
     /* ── 장비 ── */
-    'eq.passive.h': { ko: '고유 패시브', en: 'Unique Passive' },
-    'eq.equipped': { ko: '착용 {n} / 8', en: 'Equipped {n} / 8' },
+    'eq.equipped': { ko: '착용 {n} / {cap}', en: 'Equipped {n} / {cap}' },
     'eq.twoHand': { ko: '양손 무기라 보조 슬롯이 잠긴다', en: 'Two-hander locks the off-hand slot' },
     'st.atk': { ko: '공격력', en: 'Attack' },
+    'st.atkType.physical': { ko: '물리', en: 'Physical' },
+    'st.atkType.magic': { ko: '마법', en: 'Magic' },
+    'st.atkType.fire': { ko: '불', en: 'Fire' },
+    'st.atkType.cold': { ko: '냉기', en: 'Cold' },
+    'st.atkType.lightning': { ko: '전기', en: 'Lightning' },
+    'st.atkType.poison': { ko: '독', en: 'Poison' },
+    'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated' },
+    'log.reflect': { ko: '{name} 의 반사 — {target} 에게 {dmg}', en: '{name} reflects {dmg} to {target}' },
     'st.def': { ko: '방어력', en: 'Defense' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
-    'eq.set.h': { ko: '세트포인트', en: 'Set Points' },
-    'eq.set.sub': { ko: '{list} — 상한 {max}', en: '{list} — cap {max}' },
-    'eq.mainSin': { ko: '메인 죄종 +1', en: 'Main sin +1' },
-    'eq.set.note': {
-        ko: '접사 1개 = 1포인트 · <b>양손 무기는 2포인트</b> (보조 슬롯 잠금 보상)<br>'
-            + '<b>★ 메인 죄종 +1</b> — 장비가 없어도 붙는다. {max}세트(각성) 도달의 필수 경로<br>'
-            + '상한 {max} = 장비 8부위 + 메인 죄종 1 → 각성은 한 죄종에만 성립한다',
-        en: '1 affix = 1 point · <b>two-handers count 2</b> (compensation for the locked off-hand)<br>'
-            + '<b>★ main sin +1</b> — applies even with no gear. The required path to the {max}-set Awakening<br>'
-            + 'Cap {max} = 8 gear slots + 1 main sin → Awakening can only exist in one sin',
+    'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
+    'eq.sins.note': {
+        ko: '착용 장비에 붙은 접사의 죄종 — 접사 카테고리 · 지역 드롭 편향 · 낙인 지정의 축이다<br>'
+            + '<b>죄종 세트효과는 보류</b> (item_design.md §4, 08-25) — 세트포인트·브레이크포인트·메인 죄종 +1 은 화면에서 내렸다',
+        en: 'Sins of the affixes on worn gear — the axis of affix categories, zone drop bias, and stigma targeting<br>'
+            + '<b>Sin set effects are on hold</b> (item_design.md §4, 08-25) — set points, breakpoints, and main sin +1 are off the screen',
     },
+    'eq.sins.none': { ko: '접사 없음', en: 'No affixes' },
     'eq.filter.all': { ko: '전체', en: 'All' },
     'eq.inv.note': {
         ko: '칸에 마우스를 올리면 <b>착용 중인 장비와 나란히</b> 비교된다. 테두리 색 = 희귀도',
@@ -281,8 +297,6 @@ const STRINGS = {
     'pd.twoHand': { ko: '양손', en: '2H' },
 
     /* ── 캐릭터 탭 (2026-08-23 개편) — 영웅 띠 / 장비·전체·세부·스킬 4칸 / 아이템 가로 ── */
-    'ch.roster.h': { ko: '영웅', en: 'Heroes' },
-    'ch.roster.sub': { ko: '보유 {n} / {cap}', en: '{n} / {cap} owned' },
     'ch.gear.h': { ko: '장비', en: 'Equipment' },
     'ch.attr.h': { ko: '전체 능력치', en: 'Attributes' },
     'ch.attr.sub': { ko: '장비 불변', en: 'Gear-immutable' },
@@ -318,7 +332,7 @@ const STRINGS = {
     'tip.equipped': { ko: '착용 중', en: 'Equipped' },
     'tip.this': { ko: '이 아이템', en: 'This Item' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
-    'tip.zeroSet': { ko: '세트포인트 0', en: '0 set points' },
+    'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
 
     /* ── 스킬 ── */
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
@@ -330,7 +344,7 @@ const STRINGS = {
     'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
     'sk.cycle': { ko: '행동 주기', en: 'Action Cycle' },
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
-    'sk.cycle.sub': { ko: '민첩 + 무기 속도 (물리·마법 단일 축)', en: 'Agility + weapon speed (one clock for melee & magic)' },
+    'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 슬롯', en: 'Empty slot' },
     'sk.base': { ko: '표기 {s}초', en: 'Base {s}s' },
     'sk.eff': { ko: '실효 {s}초', en: 'Eff. {s}s' },
@@ -351,8 +365,8 @@ const STRINGS = {
     'sk.sinTree': { ko: '{sin} 트리', en: '{sin} Tree' },
     'sk.sinTree.sub': { ko: '죄종에서 옴 — 모든 {sin} 영웅 공유', en: 'From the sin — shared by all {sin} heroes' },
     'sk.sinTree.missing': {
-        ko: '{sin} 트리 <b>미작성</b> — 죄종 트리 7종은 sin_mapping.md 에서 접사·세트와 함께 확정된다',
-        en: '{sin} tree <b>unwritten</b> — all 7 sin trees are finalized in sin_mapping.md alongside affixes and sets',
+        ko: '{sin} 트리 <b>미작성</b> — 죄종 트리 7종은 sin_mapping.md 에서 접사와 함께 확정된다 (세트 시너지 노드는 보류)',
+        en: '{sin} tree <b>unwritten</b> — all 7 sin trees are finalized in sin_mapping.md alongside affixes (set synergy nodes on hold)',
     },
     'sk.mastery': { ko: '{cls} 마스터리', en: '{cls} Mastery' },
     'sk.mastery.missing': {
@@ -373,7 +387,6 @@ const STRINGS = {
     /* ── 선술집 ── */
     'tv.h': { ko: '영입 후보', en: 'Recruits' },
     'tv.sub': { ko: '레어 층 — 직업 × 죄종 × 시작특성이 등장 시 굴려진다', en: 'Rare tier — class × sin × trait rolled on arrival' },
-    'tv.trait': { ko: '특성', en: 'Trait' },
     'tv.reroll.note': {
         ko: '선술집 리롤 = <b>아이템 파밍의 영웅판</b> — 굴림 루프는 <b>레어 층</b>에 산다. 죄종 × 직업 35칸을 전부 여기서 공급한다',
         en: 'Tavern rerolls are <b>item farming for heroes</b> — the rolling loop lives in the <b>rare tier</b>, which supplies all 35 sin × class combinations',
@@ -383,10 +396,6 @@ const STRINGS = {
         ko: '명단 주기 갱신에 희귀 등장 — 매력 영웅 배치가 등장 확률·품질을 올린다 (hero_design.md §1)',
         en: 'Appears rarely on the periodic roster refresh — stationing a high-Charisma hero raises the odds and quality (hero_design.md §1)',
     },
-    'tv.roster.h': { ko: '보유 로스터', en: 'Roster' },
-    'tv.roster.sub': { ko: '{n} / {cap} — 소수 정예 · 유니크 {u}명', en: '{n} / {cap} — small and elite · {u} unique' },
-    'tv.inParty': { ko: '전투 파티', en: 'In Party' },
-    'tv.noPassive': { ko: '없음 (레어)', en: 'None (Rare)' },
     'tv.tiers.note': {
         ko: '<b>유니크</b> — 이름·직업·죄종 고정 + 고유 패시브 1개, 로스터에 1명만. 본편 15명(직업별 3)이 상한<br>'
             + '<b>레어</b> — 전부 굴림, 고유 패시브 없음. 죄종 × 직업 35칸 커버리지를 전담한다',
@@ -396,21 +405,27 @@ const STRINGS = {
 
     /* ── 도감 ── */
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
-    'cx.sub': { ko: '처치 수 문턱 {list} — 스테이지 계열 스탯이 오른다', en: 'Kill thresholds {list} — raises the stage\'s stat line' },
+    'cx.sub': { ko: '카드 {pct}% 드롭 · 레벨별 필요 {list}장 — 스테이지 계열 스탯이 오른다', en: 'Cards drop at {pct}% · {list} per level — raises the stage\'s stat line' },
     'cx.chLocked': { ko: '미해금 챕터', en: 'Locked chapter' },
     'cx.chLockedTail': { ko: ' — 도달하면 열린다', en: ' — unlocks when reached' },
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
     'cx.locked': { ko: '미해금', en: 'Locked' },
     'cx.completion': { ko: '완주', en: 'Completion' },
-    'cx.next': { ko: '다음 {n}', en: 'Next {n}' },
+    'cx.cards': { ko: '{n}장', en: '{n} cards' },
+    'cx.next': { ko: '다음 {n}장', en: 'Next at {n}' },
     'cx.max': { ko: '최종', en: 'Max' },
-    'cx.killsTitle': { ko: '{n}회 처치', en: '{n} kills' },
+    'cx.kills': { ko: '처치 {n}', en: '{n} kills' },
+    'cx.lvTitle': { ko: '도감 Lv.{lv}', en: 'Codex Lv.{lv}' },
     'cx.note': {
-        ko: '몬스터마다 처치 수가 문턱을 넘을 때마다 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
-            + '⚠ 문턱·수치는 <b>화면 확인용 임시값</b> (balance.csv 미등재). 계승 collection_group_bonus.csv 는 트리거가 발견 → 처치 수로 바뀌어 <b>신규 도감 CSV로 교체 필요</b><br>'
+        ko: '몬스터를 잡으면 확률로 <b>그 몬스터의 카드</b>가 떨어진다 ([balance.csv:codex_card_drop_pct], 장비 드롭과 별개 판정). '
+            + '카드가 누적 문턱을 넘을 때마다 도감 레벨이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
+            + '카드는 누적이고 소모되지 않는다 · 처치 수는 기록만 · 필요 장수는 codex_level.csv(⚠제안값)<br>'
+            + '⚠ 레벨별 보정 %는 <b>화면 확인용 자리표시</b> — codex_level.csv 로 이관 예정. 보스 등급별 차등은 후속<br>'
             + '얼굴 아트는 Ch1 5종만 존재 — 나머지는 죄종 색 원판 + 이니셜로 폴백한다',
-        en: "Each kill-count threshold a monster crosses raises that stage's stat line — <b>farming pushes the codex</b><br>"
-            + '⚠ Thresholds and values are <b>screen-mock placeholders</b> (not in balance.csv). The inherited collection_group_bonus.csv no longer fits (trigger changed from discovery to kills) — <b>a new codex CSV is needed</b><br>'
+        en: 'Slaying a monster has a chance to drop <b>its card</b> ([balance.csv:codex_card_drop_pct], rolled separately from gear). '
+            + "Each cumulative card threshold raises the monster's codex level and that stage's stat line — <b>farming pushes the codex</b><br>"
+            + 'Cards accumulate and are never spent · kills are only recorded · card requirements live in codex_level.csv (⚠ proposed)<br>'
+            + '⚠ Per-level bonus % is a <b>screen-mock placeholder</b> — to be moved into codex_level.csv. Boss-grade scaling comes later<br>'
             + 'Face art exists for 5 Ch1 monsters only — the rest fall back to a sin-colored disc + initial',
     },
 
@@ -433,6 +448,8 @@ const STRINGS = {
     'log.roundStart': { ko: '<b>라운드 {n} ({kind})</b> — {list}', en: '<b>Round {n} ({kind})</b> — {list}' },
     'log.crit': { ko: '{name} → {target} <b class="crit-t">{dmg}</b> 치명타!', en: '{name} → {target} <b class="crit-t">{dmg}</b> critical!' },
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
+    'log.card': { ko: '<b>{name} 카드</b> 획득 — 도감', en: '<b>{name} card</b> found — codex' },
+    'pop.card': { ko: '카드', en: 'Card' },
     'log.downed': { ko: '{name} <b>전투 불능</b> — 귀환 시 치료 타이머', en: '{name} <b>downed</b> — recovery timer on return' },
     'pop.dodge': { ko: '회피', en: 'MISS' },
     'pop.slain': { ko: '처치', en: 'Slain' },

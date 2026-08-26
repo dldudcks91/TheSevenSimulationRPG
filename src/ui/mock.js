@@ -68,25 +68,28 @@ export const HERO_TIER = {
 /**
  * 직업 7종 (hero_design §2) — 본편 5 + 확장 2. 확장 직업은 아직 화면에 등장하지 않는다.
  * i18n 을 위해 **id 로 참조**한다 — HEROES.cls / SKILL_TREES.mastery 키가 이 id 를 쓴다.
+ * 무기군은 여기 적지 않는다 — 직업 전속 배정은 **weapon_group.csv 의 classes 열**이 SSOT 다 (2026-08-25 확정).
  *
  * keyAttr = 이 직업을 미는 기본 능력치. hero_attribute.csv 의 combat_stat 열에서 그대로 나온다
- *   (힘→물리 공격력 / 건강→타격회복·상태이상 저항 / 지능→마법 공격력 /
- *    감각→명중·회피 / 통솔→회복량·파티 보정 — CSV 가 "사제의 파워 출처"라고 명시).
+ *   (힘→물리 공격력 / 지능→마법 공격력 / 민첩→행동 주기 / 감각→명중·회피 / 건강→상태이상 회복 속도 / 통솔·매력→없음).
  *   생성 굴림이 이 축을 밀어 준다 — 지능 7인 마법사가 나오면 플레이어가 인과를 읽을 수 없다.
+ *   사제 = 순수 캐스터(마법사와 무기 풀 공유) → 파워 출처는 마법 공격력 = 지능 (battle_design §8, 08-25).
+ *   ⚠ 기사=건강은 제안 — 건강이 HP 를 떠나 상태이상 회복 속도만 밀게 된 뒤(08-25) 탱커의 주력 축은 미확정.
  *   ⚠ 밀어주는 세기는 제안 — 기획 확정 필요 (2026-08-24)
  */
 export const CLASSES = [
-    { id: 'warrior', keyAttr: 'str', ko: '전사', en: 'Warrior', role: { ko: '근접 물리', en: 'Melee Physical' }, weapons: { ko: '도끼 / 양손검 / 둔기', en: 'Axe / Two-Hander / Mace' }, stage: 'main' },
-    { id: 'knight', keyAttr: 'vit', ko: '기사', en: 'Knight', role: { ko: '탱커 · 수호', en: 'Tank · Guardian' }, weapons: { ko: '한손검+방패 / 창', en: 'Sword+Shield / Spear' }, stage: 'main' },
-    { id: 'mage', keyAttr: 'int', ko: '마법사', en: 'Mage', role: { ko: '마법', en: 'Magic' }, weapons: { ko: '지팡이', en: 'Staff' }, stage: 'main' },
-    { id: 'archer', keyAttr: 'sen', ko: '궁수', en: 'Archer', role: { ko: '원거리 물리', en: 'Ranged Physical' }, weapons: { ko: '활', en: 'Bow' }, stage: 'main' },
-    { id: 'priest', keyAttr: 'ldr', ko: '사제', en: 'Priest', role: { ko: '지원 · 회복', en: 'Support · Healing' }, weapons: { ko: '둔기+방패', en: 'Mace+Shield' }, stage: 'main' },
-    { id: 'assassin', keyAttr: 'agi', ko: '암살자', en: 'Assassin', role: { ko: '치명 · 속도', en: 'Crit · Speed' }, weapons: { ko: '단검', en: 'Dagger' }, stage: 'expansion' },
-    { id: 'necromancer', keyAttr: 'int', ko: '네크로맨서', en: 'Necromancer', role: { ko: '소환', en: 'Summoning' }, weapons: { ko: '낫 / 지팡이 (미정)', en: 'Scythe / Staff (TBD)' }, stage: 'expansion' },
+    { id: 'warrior', keyAttr: 'str', ko: '전사', en: 'Warrior', role: { ko: '근접 물리', en: 'Melee Physical' }, stage: 'main' },
+    { id: 'knight', keyAttr: 'vit', ko: '기사', en: 'Knight', role: { ko: '탱커 · 수호', en: 'Tank · Guardian' }, stage: 'main' },
+    { id: 'mage', keyAttr: 'int', ko: '마법사', en: 'Mage', role: { ko: '마법', en: 'Magic' }, stage: 'main' },
+    { id: 'archer', keyAttr: 'sen', ko: '궁수', en: 'Archer', role: { ko: '원거리 물리', en: 'Ranged Physical' }, stage: 'main' },
+    { id: 'priest', keyAttr: 'int', ko: '사제', en: 'Priest', role: { ko: '지원 · 회복', en: 'Support · Healing' }, stage: 'main' },
+    { id: 'assassin', keyAttr: 'agi', ko: '암살자', en: 'Assassin', role: { ko: '치명 · 속도', en: 'Crit · Speed' }, stage: 'expansion' },
+    { id: 'necromancer', keyAttr: 'int', ko: '네크로맨서', en: 'Necromancer', role: { ko: '소환', en: 'Summoning' }, stage: 'expansion' },
 ];
 
 /**
- * 장비 8부위.
+ * 장비 — **부위 8종 · 착용 위치 9개** (반지 ×2, 2026-08-25 확정 — item_design §1 / GAME_DESIGN §5).
+ * 드롭·접사·필터는 부위(SLOTS) 단위, 페이퍼돌·equipped 는 위치(EQUIP_SLOTS) 단위다.
  * ⚠ 계승분(equipment_base.csv)은 5부위(weapon/armor/helmet/gloves/boots)뿐이고
  *   접사 매트릭스도 7죄종 × 5부위다. 보조/목걸이/반지 3부위는 계승 데이터가 없다 —
  *   신규 3부위의 베이스·접사 데이터는 미작성 (inherited_data_gaps.md G3-b). 지금은 화면 확인용 목업.
@@ -101,26 +104,21 @@ export const SLOTS = [
     { id: 'amulet', ko: '목걸이', en: 'Amulet', icon: '📿' },
     { id: 'ring', ko: '반지', en: 'Ring', icon: '💍' },
 ];
+/** 착용 위치 9개 — id 는 세이브의 equipped 키, part 는 SLOTS 의 부위 id */
+export const EQUIP_SLOTS = [
+    { id: 'weapon', part: 'weapon' }, { id: 'offhand', part: 'offhand' },
+    { id: 'helmet', part: 'helmet' }, { id: 'armor', part: 'armor' },
+    { id: 'gloves', part: 'gloves' }, { id: 'boots', part: 'boots' },
+    { id: 'amulet', part: 'amulet' }, { id: 'ring1', part: 'ring' }, { id: 'ring2', part: 'ring' },
+];
 
 
 /**
  * 아이템 베이스 — 부위별 기본 이름 풀. 이름 조립은 nm() (죄종 접두 + 베이스 + 죄종 접미).
- * 무기는 직업(cls)과 행동 주기(period, 초)를 가진다 — 무기군 = 직업 무기 목록 (hero_design §5).
+ * **무기는 여기 없다** — 무기의 베이스는 무기군 자체이고, 직업 전속·한손/양손·행동 주기·공격 타입 전부 weapon_group.csv 가 SSOT 다.
  * ⚠ 계승 equipment_base.csv(5부위)를 아직 연결하지 않았다 — 보조/목걸이/반지 3부위는 계승 데이터가 없다.
  */
 export const ITEM_BASES = {
-    weapon: [
-        { ko: '도끼', en: 'Axe', cls: 'warrior', period: 1.3 },
-        { ko: '양손검', en: 'Zweihander', cls: 'warrior', period: 1.6, twoHanded: true },
-        { ko: '둔기', en: 'Mace', cls: 'warrior', period: 1.4 },
-        { ko: '한손검', en: 'Longsword', cls: 'knight', period: 1.2 },
-        { ko: '창', en: 'Spear', cls: 'knight', period: 1.5, twoHanded: true },
-        { ko: '지팡이', en: 'Staff', cls: 'mage', period: 1.7, twoHanded: true },
-        { ko: '활', en: 'Bow', cls: 'archer', period: 1.4, twoHanded: true },
-        { ko: '홀', en: 'Scepter', cls: 'priest', period: 1.4 },
-        { ko: '단검', en: 'Dagger', cls: 'assassin', period: 0.9 },
-        { ko: '낫', en: 'Scythe', cls: 'necromancer', period: 1.6, twoHanded: true },
-    ],
     offhand: [
         { ko: '원형 방패', en: 'Round Shield' }, { ko: '탑 방패', en: 'Tower Shield' },
         { ko: '견갑', en: 'Spaulder' }, { ko: '버클러', en: 'Buckler' },
@@ -155,6 +153,8 @@ export const ITEM_BASES = {
  * 접사 정의 — stat id + 범위. 수치는 임시(⚠) — 계승 접사 매트릭스(7죄종×슬롯)는 미연결.
  * **여기 있는 축은 전부 전투에 실제로 걸린다** — 안 걸리는 접사는 넣지 않는다 (거짓 선택지 금지).
  * slots 가 없으면 전 부위.
+ * res_all = 원소 저항 4종(전기·불·냉기·독, 08-25 마법 방어 대체)에 같은 값으로 펴지는 프로토타입 접사 —
+ *   공격의 원소 배정이 정해지면 res_lightning/res_fire/res_cold/res_poison 으로 쪼갠다.
  */
 export const AFFIX_DEFS = [
     { stat: 'atk_flat', min: 2, max: 6, perIlvl: 0.8, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
@@ -162,12 +162,15 @@ export const AFFIX_DEFS = [
     { stat: 'hp_flat', min: 8, max: 20, perIlvl: 2, slots: ['armor', 'helmet', 'boots', 'offhand', 'amulet', 'ring'] },
     { stat: 'hp_pct', min: 2, max: 5, perIlvl: 0.2, slots: ['armor', 'helmet', 'amulet'] },
     { stat: 'def_flat', min: 2, max: 6, perIlvl: 0.8, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand'] },
-    { stat: 'mdef_flat', min: 2, max: 6, perIlvl: 0.8, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet'] },
+    { stat: 'res_all', min: 2, max: 6, perIlvl: 0.8, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet'] },
     { stat: 'crit_rate', min: 2, max: 5, perIlvl: 0.2, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
     { stat: 'crit_damage', min: 8, max: 18, perIlvl: 0.8, slots: ['weapon', 'ring', 'amulet'] },
     { stat: 'aspd_pct', min: 2, max: 5, perIlvl: 0.15, slots: ['weapon', 'gloves', 'boots'] },
     { stat: 'life_steal', min: 1, max: 3, perIlvl: 0.1, slots: ['weapon', 'ring'] },
     { stat: 'evasion', min: 3, max: 8, perIlvl: 0.5, slots: ['boots', 'armor', 'offhand'] },
+    { stat: 'accuracy', min: 3, max: 8, perIlvl: 0.5, slots: ['gloves', 'helmet', 'ring'] },
+    { stat: 'def_ignore', min: 3, max: 8, perIlvl: 0.2, slots: ['weapon', 'gloves'] },
+    { stat: 'reflect_damage', min: 3, max: 8, perIlvl: 0.3, slots: ['armor', 'offhand'] },
     { stat: 'gold_find', min: 5, max: 12, perIlvl: 0.5, slots: ['boots', 'gloves', 'ring', 'amulet'] },
     { stat: 'item_find', min: 4, max: 10, perIlvl: 0.4, slots: ['boots', 'gloves', 'ring', 'amulet'] },
 ];
@@ -179,12 +182,15 @@ export const AFFIX_LABELS = {
     hp_flat: { ko: '최대 HP', en: 'Max HP', fmt: 'n' },
     hp_pct: { ko: '최대 HP', en: 'Max HP', fmt: 'pct' },
     def_flat: { ko: '물리 방어', en: 'Physical Defense', fmt: 'n' },
-    mdef_flat: { ko: '마법 방어', en: 'Magic Defense', fmt: 'n' },
+    res_all: { ko: '모든 원소 저항', en: 'All Resistances', fmt: 'n' },
     crit_rate: { ko: '치명타 확률', en: 'Crit Chance', fmt: 'pct' },
     crit_damage: { ko: '치명타 피해', en: 'Crit Damage', fmt: 'pct' },
     aspd_pct: { ko: '공격 속도', en: 'Attack Speed', fmt: 'pct' },
     life_steal: { ko: '흡혈', en: 'Life Steal', fmt: 'pct' },
     evasion: { ko: '회피', en: 'Evasion', fmt: 'n' },
+    accuracy: { ko: '명중', en: 'Accuracy', fmt: 'n' },
+    def_ignore: { ko: '방어 무시', en: 'Defense Ignore', fmt: 'pct' },
+    reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', fmt: 'pct' },
     gold_find: { ko: '골드 획득', en: 'Gold Find', fmt: 'pct' },
     item_find: { ko: '드랍률', en: 'Item Find', fmt: 'pct' },
 };
@@ -196,12 +202,12 @@ export const affixText = (stat, v) => {
     return { ko: `${d.ko} ${num}`, en: `${num} ${d.en}` };
 };
 
-/** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다 */
+/** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다. 칸은 착용 **위치**(EQUIP_SLOTS.id) — 반지 두 칸 */
 export const PAPERDOLL = [
     [null, 'helmet', null],
     ['weapon', 'armor', 'offhand'],
-    ['amulet', 'gloves', 'ring'],
-    [null, 'boots', null],
+    ['amulet', 'gloves', 'ring1'],
+    [null, 'boots', 'ring2'],
 ];
 
 /**
@@ -255,10 +261,11 @@ export const HERO_TRAIT_POOL = [
 
 
 /**
- * 전투 능력치 27종 — src/data/combat_stat.csv 의 화면용 사본.
+ * 전투 능력치 24종 — src/data/combat_stat.csv 의 화면용 사본 (2026-08-25 27→24: 상태이상 적중·저항 · 회복량 ·
+ * 파티 보정 · 스킬 레벨 · 파견 시간 단축 · 마법 방어 삭제, 원소 저항 4종 추가).
  * **기본 능력치(STATS)와는 다른 층이다** (CLAUDE.md / hero_design §4):
- *   기본 7종 = 영웅 고유·장비 불변 / 전투 27종 = 장비·스킬이 만든다.
- * attr = 이 전투 능력치를 미는 기본 능력치(계수). '-' 는 장비·스킬 전담.
+ *   기본 7종 = 영웅 고유·장비 불변 / 전투 24종 = 장비·스킬이 만든다.
+ * attr = 이 전투 능력치를 미는 기본 능력치(계수). null 은 장비·스킬 전담. 계수가 붙는 것은 6종뿐이다.
  * fmt = 표기 단위. 숫자는 데이터로 두고 단위 붙이기는 렌더러가 한 곳에서 한다.
  * CSV 로 이사할 때 stat_kr 옆에 stat_en 컬럼이 붙는다.
  */
@@ -267,8 +274,6 @@ export const COMBAT_CATS = [
     { id: 'defense', ko: '방어', en: 'Defense' },
     { id: 'sustain', ko: '유지', en: 'Sustain' },
     { id: 'tempo', ko: '템포', en: 'Tempo' },
-    { id: 'support', ko: '지원', en: 'Support' },
-    { id: 'skill', ko: '스킬', en: 'Skill' },
     { id: 'utility', ko: '유틸', en: 'Utility' },
 ];
 
@@ -279,13 +284,15 @@ export const COMBAT_STATS = [
     { id: 'crit_rate', ko: '치명타 확률', en: 'Crit Chance', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'crit_damage', ko: '치명타 피해', en: 'Crit Damage', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'def_ignore', ko: '방어 무시', en: 'Defense Ignore', cat: 'offense', attr: null, fmt: 'pct' },
-    { id: 'status_chance', ko: '상태이상 적중', en: 'Status Chance', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'vs_type_damage', ko: '타입 특효', en: 'Type Damage', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'vs_size_damage', ko: '사이즈 특효', en: 'Size Damage', cat: 'offense', attr: null, fmt: 'pct' },
 
     { id: 'hp_max', ko: '최대 HP', en: 'Max HP', cat: 'defense', attr: null, fmt: 'n' },
     { id: 'defense', ko: '물리 방어', en: 'Physical Defense', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'magic_defense', ko: '마법 방어', en: 'Magic Defense', cat: 'defense', attr: null, fmt: 'n' },
+    { id: 'res_lightning', ko: '전기 저항', en: 'Lightning Resist', cat: 'defense', attr: null, fmt: 'n' },
+    { id: 'res_fire', ko: '불 저항', en: 'Fire Resist', cat: 'defense', attr: null, fmt: 'n' },
+    { id: 'res_cold', ko: '냉기 저항', en: 'Cold Resist', cat: 'defense', attr: null, fmt: 'n' },
+    { id: 'res_poison', ko: '독 저항', en: 'Poison Resist', cat: 'defense', attr: null, fmt: 'n' },
     { id: 'evasion', ko: '회피', en: 'Evasion', cat: 'defense', attr: 'sen', fmt: 'n' },
     { id: 'damage_reduction', ko: '피해 감소', en: 'Damage Reduction', cat: 'defense', attr: null, fmt: 'pct' },
     { id: 'reflect_damage', ko: '반사 피해', en: 'Reflect Damage', cat: 'defense', attr: null, fmt: 'n' },
@@ -294,18 +301,11 @@ export const COMBAT_STATS = [
     { id: 'hp_regen', ko: 'HP 재생', en: 'HP Regen', cat: 'sustain', attr: null, fmt: 'n' },
 
     { id: 'action_period', ko: '행동 주기', en: 'Action Period', cat: 'tempo', attr: 'agi', fmt: 'sec' },
-    { id: 'fhr', ko: '타격 회복 속도', en: 'Hit Recovery', cat: 'tempo', attr: 'vit', fmt: 'pct' },
+    { id: 'fhr', ko: '상태이상 회복 속도', en: 'Status Recovery', cat: 'tempo', attr: 'vit', fmt: 'pct' },
     { id: 'cooldown_reduction', ko: '쿨타임 감소', en: 'Cooldown Reduction', cat: 'tempo', attr: null, fmt: 'pct' },
-    { id: 'cc_reduction', ko: '상태이상 저항', en: 'Status Resistance', cat: 'tempo', attr: 'vit', fmt: 'pct' },
-
-    { id: 'heal_power', ko: '회복량', en: 'Heal Power', cat: 'support', attr: 'ldr', fmt: 'n' },
-    { id: 'party_bonus', ko: '파티 보정', en: 'Party Bonus', cat: 'support', attr: 'ldr', fmt: 'pct' },
-
-    { id: 'skill_level', ko: '스킬 레벨', en: 'Skill Level', cat: 'skill', attr: null, fmt: 'n' },
 
     { id: 'item_find', ko: '드랍률', en: 'Item Find', cat: 'utility', attr: null, fmt: 'pct' },
     { id: 'gold_find', ko: '골드 획득', en: 'Gold Find', cat: 'utility', attr: null, fmt: 'pct' },
-    { id: 'dispatch_speed', ko: '파견 시간 단축', en: 'Dispatch Speed', cat: 'utility', attr: null, fmt: 'pct' },
 ];
 
 /**
@@ -319,6 +319,15 @@ export const heroFace = uid => null;   // eslint-disable-line no-unused-vars
  * 아이템 이름 — ko "분노의 Base — 오만" / en "Wrathful Base of Pride" (D2 매직/레어 명명).
  * base 는 문자열(양 언어 공통, 계승 영문 베이스명) 또는 {ko, en} (한국어 전용 베이스).
  */
+/** 원소 4종 표시 — id 는 monster.csv:attack_type · combat_stat.csv:res_* 와 같은 어휘 (battle_design §9-5) */
+export const ELEMENT_LABELS = {
+    fire: { ko: '불', en: 'Fire' },
+    cold: { ko: '냉기', en: 'Cold' },
+    lightning: { ko: '전기', en: 'Lightning' },
+    poison: { ko: '독', en: 'Poison' },
+};
+export const ELEMENT_IDS = Object.keys(ELEMENT_LABELS);
+
 export const nm = (preSin, base, sufSin) => {
     const b = typeof base === 'string' ? { ko: base, en: base } : base;
     const p = SINS[preSin];
@@ -536,50 +545,11 @@ export const stageBgOf = id => STAGE_META[id]?.bg ?? null;
 /** 챕터 이름·죄종 — CODEX_CHAPTERS 가 이미 들고 있다 */
 export const chapterOf = ch => CODEX_CHAPTERS.find(c => c.id === ch);
 
-/**
- * 세트 브레이크포인트 — **3/6/9** (item_design §2 확정, 2026-08-21).
- * 8부위 확장으로 한 죄종 상한이 6 → 9(장비 8 + 메인 죄종 1)가 되면서 원작 2/4/6에서 이동.
- * 효과 자체는 계승분 equipment_set_bonus.csv 를 그대로 옮겼다 (2→3, 4→6, 6→9 대응).
- * 3=상태이상 / 6=조건부 패시브 / 9=각성
+/*
+ * 죄종 세트효과 — **보류** (item_design.md §4, 2026-08-25). 세트포인트·브레이크포인트 3/6/9·세트 보너스 표는
+ * 화면에서 내렸다. 설계안은 문서에, 원본 값은 계승 equipment_set_bonus.csv 에 그대로 남아 있다.
+ * 접사의 죄종은 이름(nm)과 태그로만 보인다 — 접사 카테고리 · 지역 드롭 편향 · 낙인 지정의 축.
  */
-const TBD = { ko: '(미확정)', en: '(TBD)' };
-const UNWRITTEN = { ko: '(미작성)', en: '(unwritten)' };
-export const SET_BONUSES = {
-    wrath: {
-        3: { ko: '화상 — 적 체력회복 감소', en: 'Burn — cuts enemy health regen' },
-        6: { ko: '잃은 체력 비례 공격력', en: 'Attack per missing health' },
-        9: { ko: '최후의 저항 — 사망 시 1회 생존', en: 'Last Stand — survive death once' },
-    },
-    envy: {
-        3: { ko: '중독 — 매 초 고정 데미지', en: 'Poison — flat damage per second' },
-        6: { ko: '버프 박탈', en: 'Buff Strip' },
-        9: { ko: '약자멸시 — 체력 30% 이하 방어 무시', en: 'Execution — ignore defense under 30% HP' },
-    },
-    greed: {
-        3: { ko: '스턴', en: 'Stun' },
-        6: { ko: '탐욕의 감정 — 상위 굴림 확률 증가', en: "Greed's Favor — better affix rolls" },
-        9: { ko: '약탈왕 — 보스 처치 시 2개 드롭', en: 'Plunder King — bosses drop twice' },
-    },
-    sloth: {
-        3: { ko: '빙결 — 적 공격속도 감소', en: 'Freeze — slows enemy attacks' },
-        6: TBD, 9: TBD,
-    },
-    gluttony: {
-        3: { ko: '과식 패널티 — 모든 스탯 감소', en: 'Overeating — all stats reduced' },
-        6: UNWRITTEN, 9: UNWRITTEN,
-    },
-    lust: {
-        3: { ko: '매혹 — 적 명중률 감소', en: 'Charm — cuts enemy accuracy' },
-        6: { ko: '갈취', en: 'Siphon' },
-        9: { ko: '지배 — 피해 일부 마법 변환', en: 'Domination — part of damage becomes magic' },
-    },
-    pride: {
-        3: UNWRITTEN, 6: UNWRITTEN,
-        9: { ko: '완전무결 — 상태이상 면역', en: 'Perfection — immune to status effects' },
-    },
-};
-
-export const BREAKPOINTS = [3, 6, 9];
 
 
 /* ═══════════ 스킬 ═══════════ */
@@ -601,7 +571,7 @@ export const SKILL_TREES = {
         wrath: [
             [{ n: { ko: '격노', en: 'Enrage' }, r: 3, max: 5 }, { n: { ko: '치명 강화', en: 'Lethality' }, r: 5, max: 5, link: true }, _, _, _],
             [{ n: { ko: '잃은 체력 비례 공격력', en: 'Attack per Missing Health' }, r: 2, max: 5 }, _, _, _, _],
-            [_, _, { n: { ko: '분노 세트포인트당 치명타', en: 'Crit per Wrath Set Point' }, r: 0, max: 3, locked: true }, _, _],
+            [_, _, { n: { ko: '분노 접사 수당 치명타 보정', en: 'Crit per Wrath Affix' }, r: 0, max: 3, locked: true }, _, _],
         ],
         pride: [
             [{ n: { ko: '증폭', en: 'Amplify' }, r: 4, max: 5 }, _, _, _, _],
@@ -615,31 +585,31 @@ export const SKILL_TREES = {
         ],
     },
     // 마스터리는 **직업별**로 따로 있다 (7 + 2N 덧셈 구조, skill_design §4)
-    // 키는 CLASSES 의 id — 무기군 배정은 hero_design §2 표 그대로, 무기군마다 독립 분기라 행을 하나씩 쓴다
+    // 키는 CLASSES 의 id — 무기군 배정은 weapon_group.csv(2026-08-25 직업 전속) 그대로, 무기군마다 독립 분기라 행을 하나씩 쓴다
     mastery: {
         warrior: [
-            [{ n: { ko: '도끼 숙련', en: 'Axe Mastery' }, r: 3, max: 5 }, _, _, _, _],
-            [{ n: { ko: '양손검 숙련', en: 'Two-Hander Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [{ n: { ko: '둔기 숙련', en: 'Mace Mastery' }, r: 0, max: 5 }, { n: { ko: '방어구 숙련', en: 'Armor Mastery' }, r: 2, max: 5 }, _, _, _],
+            [{ n: { ko: '둔기 숙련', en: 'Mace Mastery' }, r: 3, max: 5 }, _, _, _, _],
+            [{ n: { ko: '도끼 숙련', en: 'Axe Mastery' }, r: 0, max: 5 }, _, _, _, _],
+            [{ n: { ko: '창 숙련', en: 'Spear Mastery' }, r: 0, max: 5 }, { n: { ko: '방어구 숙련', en: 'Armor Mastery' }, r: 2, max: 5 }, _, _, _],
         ],
         knight: [
-            [{ n: { ko: '한손검+방패 숙련', en: 'Sword & Shield Mastery' }, r: 4, max: 5 }, _, _, _, _],
-            [{ n: { ko: '창 숙련', en: 'Spear Mastery' }, r: 0, max: 5 }, _, _, _, _],
+            [{ n: { ko: '한손검 숙련', en: 'Longsword Mastery' }, r: 4, max: 5 }, _, _, _, _],
+            [{ n: { ko: '양손검 숙련', en: 'Greatsword Mastery' }, r: 0, max: 5 }, _, _, _, _],
             [{ n: { ko: '방어구 숙련', en: 'Armor Mastery' }, r: 3, max: 5 }, _, _, _, _],
         ],
         mage: [
-            [{ n: { ko: '지팡이 숙련', en: 'Staff Mastery' }, r: 2, max: 5 }, _, _, _, _],
-            [_, _, _, _, _],
+            [{ n: { ko: '완드 숙련', en: 'Wand Mastery' }, r: 2, max: 5 }, _, _, _, _],
+            [{ n: { ko: '스태프 숙련', en: 'Staff Mastery' }, r: 0, max: 5 }, _, _, _, _],
             [_, _, _, _, _],
         ],
         archer: [
             [{ n: { ko: '활 숙련', en: 'Bow Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [_, _, _, _, _],
+            [{ n: { ko: '석궁 숙련', en: 'Crossbow Mastery' }, r: 0, max: 5 }, _, _, _, _],
             [_, _, _, _, _],
         ],
         priest: [
-            [{ n: { ko: '둔기+방패 숙련', en: 'Mace & Shield Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [_, _, _, _, _],
+            [{ n: { ko: '완드 숙련', en: 'Wand Mastery' }, r: 0, max: 5 }, _, _, _, _],
+            [{ n: { ko: '스태프 숙련', en: 'Staff Mastery' }, r: 0, max: 5 }, _, _, _, _],
             [_, _, _, _, _],
         ],
     },
@@ -656,16 +626,16 @@ export const SKILL_POINTS = { total: 24, spent: 21 };
 
 /* ═══════════ 도감 ═══════════ */
 /**
- * 몬스터 도감 — **처치 수 기반** (2026-08-22 방향 전환, GAME_DESIGN 결정 로그).
+ * 몬스터 도감 — **몬스터 카드 모델** (2026-08-25 확정, monster_design §8). 처치 수 문턱(08-22)을 대체한다.
  *
- * 몬스터마다 처치 수가 문턱을 넘을 때마다 그 스테이지의 스탯 계열이 조금씩 오른다.
- * 스탯 계열은 계승 bonus 테이블의 배정을 유지 (1=공격, 2=체력, 3=명중, 4=피해).
- * ⚠ 문턱·수치는 전부 **화면 확인용 임시값** — 확정 시 balance.csv / 신규 도감 CSV로 나가야 한다.
+ * 처치마다 확률로 그 몬스터의 카드가 떨어지고([balance.csv:codex_card_drop_pct]), 카드가 누적 문턱을 넘을 때마다
+ * 도감 레벨이 오른다 — 레벨별 필요 장수는 **codex_level.csv**(SSOT, data.js 가 읽는다). 처치 수는 기록만.
+ * 레벨이 주는 것은 스테이지 계열 스탯 보정 — 계열 배정은 계승 bonus 테이블 유지 (1=공격, 2=체력, 3=명중, 4=피해).
+ * ⚠ 레벨별 보정 %(아래)는 아직 **화면 확인용 자리표시** — codex_level.csv 컬럼으로 이관 예정.
  */
-export const CODEX_MILESTONES = [10, 50, 200, 1000];        // 처치 수 문턱
-export const CODEX_MILESTONE_BONUS = [0.5, 0.5, 1, 1];
+export const CODEX_LEVEL_BONUS = [0.5, 0.5, 1, 1];       // 레벨 1..4 도달 시 얻는 % (누적) — codex_level.csv 행 수와 맞춘다
 /** 스테이지 번호 → 전투 보너스 키 (1 공격 / 2 체력 / 3 명중 / 4 피해 — 계승 collection_group_bonus 배정) */
-export const CODEX_STAT_BY_NUM = { 1: 'atk_pct', 2: 'hp_pct', 3: 'acc_pct', 4: 'dmg_pct' };      // 문턱별 획득 % (누적)
+export const CODEX_STAT_BY_NUM = { 1: 'atk_pct', 2: 'hp_pct', 3: 'acc_pct', 4: 'dmg_pct' };
 
 /** 챕터 이름 = chapter_info.csv 의 region_kr / region_en 그대로 */
 export const CODEX_CHAPTERS = [

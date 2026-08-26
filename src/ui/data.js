@@ -11,25 +11,29 @@ import { parseCsv, keyValue, indexBy } from '../game_logic/csv.js';
 import { createHeroSystem } from '../game_logic/hero.js';
 import { createItemSystem } from '../game_logic/item.js';
 import { createBattleSystem } from '../game_logic/battle.js';
+import { createFormula } from '../game_logic/formula.js';
 import { createGameSystem } from '../game_logic/state.js';
 
 /** 로드된 데이터 — 렌더러는 수치를 여기서 읽는다 (D.balance.party_size_max 처럼) */
 export const D = {
     balance: null, monsters: null, stages: null, stageList: [], stageOrder: [],
     roundTypes: [], budgets: null, grades: null, eliteRounds: [], bossRound: 0,
+    codexLevels: [],          // codex_level.csv — 레벨순 cards_required
+    weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, twoHanded, period, attackType, stage}}
+    weaponGroupList: [],
 };
 
 /** 조립된 시스템 — hero / item / battle / game */
 export let SYS = null;
 
-const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade'];
+const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade', 'codex_level', 'weapon_group'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
         if (!r.ok) throw new Error(`data: ${f}.csv ${r.status}`);
         return r.text();
     })));
-    const [balance, monster, stage, roundRows, budget, grade] = texts.map(parseCsv);
+    const [balance, monster, stage, roundRows, budget, grade, codexLevel, weaponGroup] = texts.map(parseCsv);
 
     D.balance = keyValue(balance);
     D.monsters = indexBy(monster, 'monster_idx');
@@ -41,6 +45,14 @@ export async function loadData(base = './data/') {
     D.grades = indexBy(grade, 'grade');
     D.eliteRounds = roundRows.filter(r => r.round_type === 'elite').map(r => r.round_num);
     D.bossRound = roundRows.find(r => r.round_type === 'boss')?.round_num ?? D.balance.rounds_per_stage;
+    D.codexLevels = codexLevel.slice().sort((a, b) => a.level - b.level).map(r => r.cards_required);
+    // 무기군 — CSV 한 행이 곧 무기 베이스다 (이름 ko/en 도 CSV 의 _kr/_en 쌍에서 온다)
+    D.weaponGroupList = weaponGroup.map(r => ({
+        id: r.group_id, ko: r.group_kr, en: r.group_en,
+        classes: String(r.classes).split('|'), twoHanded: Number(r.hands) === 2,
+        period: r.action_period, variance: r.variance_pct, attackType: r.attack_type, stage: r.stage,
+    }));
+    D.weaponGroups = indexBy(D.weaponGroupList, 'id');
 
     SYS = buildSystems(D);
     return D;
@@ -50,11 +62,11 @@ export async function loadData(base = './data/') {
 export function buildSystems(d) {
     const sins = Object.keys(M.SINS);
     const hero = createHeroSystem({
-        balance: d.balance, stats: M.STATS, sins, classes: M.CLASSES,
+        balance: d.balance, stats: M.STATS, sins, classes: M.CLASSES, weaponGroups: d.weaponGroups,
         namePool: M.HERO_NAME_POOL, traitPool: M.HERO_TRAIT_POOL,
     });
     const item = createItemSystem({
-        balance: d.balance, slots: M.SLOTS.map(s => s.id), sins,
+        balance: d.balance, slots: M.SLOTS.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: M.ELEMENT_IDS,
         itemBases: M.ITEM_BASES, affixDefs: M.AFFIX_DEFS, composeName: M.nm,
     });
     const battle = createBattleSystem({
@@ -64,8 +76,9 @@ export function buildSystems(d) {
     });
     const game = createGameSystem({
         hero, item, battle, balance: d.balance,
-        slots: M.SLOTS.map(s => s.id), stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
-        codex: { milestones: M.CODEX_MILESTONES, bonus: M.CODEX_MILESTONE_BONUS, statByNum: M.CODEX_STAT_BY_NUM },
+        equipSlots: M.EQUIP_SLOTS, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
+        codex: { levels: d.codexLevels, bonus: M.CODEX_LEVEL_BONUS, statByNum: M.CODEX_STAT_BY_NUM },
     });
-    return { hero, item, battle, game };
+    // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
+    return { hero, item, battle, game, formula: createFormula(d.balance) };
 }

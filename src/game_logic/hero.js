@@ -9,12 +9,16 @@
  *   ⚠제안 키에서 온다 — 확정되면 이 파일이 아니라 CSV 를 고친다.
  */
 
+/** 원소 4종 — combat_stat.csv 의 res_* 와 monster.csv:attack_type 이 쓰는 같은 어휘 (battle_design §9-5) */
+export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
+
 /**
  * @param {object} data
  *   balance      — balance.csv 를 {key: value} 로 눕힌 것
  *   stats        — 기본 능력치 7종 정의 [{id}...] (순서 = 표시 순서)
  *   sins         — 죄종 id 목록
  *   classes      — 직업 정의 [{id, keyAttr, stage}...]
+ *   weaponGroups — {id: {period, attackType, ...}}  ← weapon_group.csv. 무기가 행동 주기·공격 타입을 정한다
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
  */
@@ -122,16 +126,19 @@ export function createHeroSystem(data) {
 
     /* ── 전투 능력치 (임시식 — 계수는 전부 balance.csv ⚠제안 키) ── */
 
-    const isMagicClass = cls => cls === 'mage' || cls === 'necromancer';
     const attrMult = v => 1 + v * B.attr_bonus_per_point / 100;
 
     /**
      * 기본 능력치 + 장비 + 도감 보너스 → 전투 능력치.
      * items = 착용 중 아이템 배열. codex = {atk_pct, hp_pct, dmg_pct} (없으면 0).
      *
-     * v1 에서 실제로 전투에 걸리는 기본 능력치: 힘/지능(공격력), 민첩(행동 주기), 감각(회피).
-     * 건강(타격 회복·상태이상 저항)·통솔(힐·파티 버프)은 해당 시스템 미구현으로 아직 밖 —
-     * 축 자체는 combat_stat.csv 대로 유지하고 구현만 미룬다.
+     * · 공격 타입은 직업이 아니라 **무기군**이 정한다 (battle_design §2-1 — 스태프·완드 = magic). 맨손은 physical.
+     *   사제가 마법사와 무기 풀을 공유하므로 사제의 파워 출처 = 마법 공격력 = 지능이 여기서 성립한다.
+     * · **원소는 무기 개체가 든다** (battle_design §9-5) — 마법 무기군이면 그 무기의 element 가 공격 타입이다.
+     *   저항은 전 원소 공통 접사 `res_all` + 원소별 접사 `res_<원소>` 의 합 (§9-3).
+     * · v1 에서 실제로 전투에 걸리는 기본 능력치: 힘/지능(공격력), 민첩(행동 주기), 감각(명중·회피).
+     *   건강(상태이상 회복 속도)은 상태이상 미구현으로 아직 밖 · 통솔은 전투 계수 없음(08-25).
+     * · 명중·회피는 §8 대로 **곱셈**이다 — 장비가 0이면 감각도 0을 곱한다 (예전 임시식의 flat 가산 폐기).
      */
     function computeCombat(hero, items, codex = {}) {
         const A = hero.stats;
@@ -143,7 +150,8 @@ export function createHeroSystem(data) {
         const f = id => flat[id] ?? 0;
 
         const weapon = items.find(it => it.slot === 'weapon');
-        const magic = isMagicClass(hero.cls);
+        const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
+        const magic = group?.attackType === 'magic';
         const watk = weapon ? weapon.watk : B.unarmed_atk;
         const atk = Math.round(
             (watk + f('atk_flat'))
@@ -157,19 +165,26 @@ export function createHeroSystem(data) {
             * (1 + (codex.hp_pct ?? 0) / 100));
 
         const period = Math.max(0.4,
-            (weapon ? weapon.period : B.unarmed_period)
+            (group ? group.period : B.unarmed_period)
             / attrMult(A.agi)
             * (1 - f('aspd_pct') / 100));
 
+        const resAll = f('res_all');
+        const senMult = attrMult(A.sen);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
-            attack_type: magic ? 'magic' : 'physical',
+            attack_type: magic ? (weapon?.element ?? ELEMENTS[0]) : 'physical',
+            level: hero.level,                 // 감쇠 곡선 K = def_curve_k × 공격자 레벨 (§9-3)
+            variance_pct: group?.variance ?? B.dmg_variance_pct,
             hp_max: hpMax,
             defense: f('def_flat'),
-            magic_defense: f('mdef_flat'),
-            // 회피 — 감각이 미는 축 (combat_stat.csv). 몬스터에는 명중 축이 없어
-            // v1 은 "영웅이 피할 확률"로만 쓴다. 상한은 balance.evasion_cap_pct
-            evasion: Math.round(f('evasion') + A.sen * B.attr_bonus_per_point),
+            ...Object.fromEntries(ELEMENTS.map(e => [`res_${e}`, resAll + f(`res_${e}`)])),
+            // 명중·회피 — 감각이 미는 축 (combat_stat.csv). 적중률 = clamp(100 − 회피 + 명중) (§9-4)
+            accuracy: Math.round(f('accuracy') * senMult),
+            evasion: Math.round(f('evasion') * senMult),
+            def_ignore: f('def_ignore'),
+            reflect_damage: f('reflect_damage'),
+            damage_reduction: f('damage_reduction'),
             crit_rate: B.base_crit_pct + f('crit_rate'),
             crit_damage: B.base_crit_damage_pct + f('crit_damage'),
             life_steal: f('life_steal'),

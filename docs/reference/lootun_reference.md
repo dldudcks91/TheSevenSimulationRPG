@@ -1,6 +1,6 @@
 # Lootun — 시스템 전수 조사
 
-> 상태: **총조사 완료** (2026-08-24) · v1(1차 조사) 전면 재작성
+> 상태: **총조사 완료** (2026-08-24) · v1(1차 조사) 전면 재작성 · **§7 거점 건물 심층조사 v2** (2026-08-26, 26종 전수 확인)
 > 목적: 본작의 **게임 형태 참고작**(CLAUDE.md)이 스킬·아이템·경제·콘텐츠를 실제로 어떻게 짰는지 확보
 > ⚠ **이 문서의 수치는 전부 Lootun의 수치다.** 본작 SSOT가 아니며 `src/data/*.csv` 로 옮기지 말 것
 
@@ -226,15 +226,17 @@ Uncommon 2 → Rare 3 → Epic 4 → Legendary 5 → Mythical 6
 | **Lock Attributes** | 원하는 속성을 잠그고 나머지만 리롤 | **부분 확정** | Blacksmith |
 | **Randomise Ranks** | 수치(랭크)만 재굴림 | 2단 목표의 둘째 단 | Blacksmith |
 | **Upgrade Attribute** | **크래프트 1회당 랭크 +1** | 확정 상승 | Blacksmith |
-| **Transmute** | 속성 **타입 변환** (원거리→근접, 비전→화염). 무작위 아님 | **완전 확정** | Blacksmith **r6** |
-| **Imbue** | 아이템 A의 속성 전부를 B로 이식 (분배 구조도 바뀜: 3-3 → 4-2) | **좋은 굴림의 이사** | Blacksmith **r6** |
-| **Imprint** | 속성 배치를 아이템 타입별 1개 저장 → 복제 | **성공 굴림의 재생산** | Blacksmith **r6** |
+| **Transmute** | 속성 **타입 변환** (원거리→근접, 비전→화염). 무작위 아님 | **완전 확정** | Artisan's Hall r5~6* |
+| **Imbue** | 아이템 A의 속성 전부를 B로 이식 (분배 구조도 바뀜: 3-3 → 4-2) | **좋은 굴림의 이사** | Artisan's Hall r5~6* |
+| **Imprint** | 속성 배치를 아이템 타입별 1개 저장 → 복제 | **성공 굴림의 재생산** | Artisan's Hall r5~6* |
 | **Reinforcement** | 베이스 수치(무기 피해·방어도) 강화. **랭크당 +10%, 10랭크 = +100%** | 확정 성장 | Agony 전용 재료 |
 | **Blessing** | 베이스 보너스 강화. **랭크당 +25%, 4랭크 = +100%.** Divine 불가 | 확정 성장 | — |
 | **Paragon** | 속성 **랭크 상한 10 → 20** (Paragon 1~10, 현재랭크·최대랭크 동시 상승) | **상한 돌파** | **Keep** |
 | **Nemesis Infusion** | Nemesis 속성 이식 | 엔드게임 | **Castle r3** |
 | **Add Sockets** | 소켓 추가 (잠재 소켓 수까지) | — | Gemcutter r2 |
 | **Duplicate Equipment** | **강화·인챈트 포함 아이템 통째 복제** | 완전 복제 | **[1.3]** |
+
+> **v2 정정(2026-08-26, §7-3 참조)**: Transmute·Imbue·Imprint의 해금처는 Blacksmith 랭크가 아니라 **별도 건물 Artisan's Hall의 자체 랭크**다. Artisan's Hall은 **Scrapper r6**에서 해금되는 하위 건물이고, 그 건물 자체의 랭크 5(혹은 6 — 출처 불일치)가 **Blacksmith UI 안에서** 이 세 크래프트를 쓸 수 있게 연다. "도구는 Blacksmith에 있다"는 맞지만 "Blacksmith 랭크가 그것을 연다"는 틀렸다 — 게이트를 쥔 건물과 크래프트를 수행하는 건물이 분리되어 있다.
 
 **구조 요약** — 하나의 계단이다:
 ```
@@ -442,31 +444,122 @@ Profession Hall → Mine(광물) / Forest(약초) / Farm(농작)
 
 ---
 
-## 7. 거점 건물 [공식 #5 + 가이드]
+## 7. 거점 건물 — 전수 조사 v2 (2026-08-26)
 
-| 건물 | 해금하는 것 |
+> v1(2026-08-24)은 26종 중 약 12종만, 그마저 하이라이트 랭크 위주로 다뤘다. 이번 조사로 **건물 전수(26종) 확인** + **랭크별 효과 재검증** + **§4-5 서술 오류 1건 정정**(Artisan's Hall 해금 체인)을 완료했다.
+> ⚠ Lootun에는 위키가 없다. 대부분 건물의 **정확한 총 랭크 수·랭크별 골드/재료 비용은 게임 클라이언트 툴팁 안에만 있고 외부에 거의 새어나오지 않는다** — 아래 "N/F"(미확인)는 3개 조사가 각각 수십 건씩 검색·페이지 열람을 시도하고도 못 찾은 것으로, **탐색 실패가 아니라 외부에 인덱싱된 정보 자체가 없다**고 판단한다.
+
+### 7-1. 건물 전수 목록 — 26종 [커뮤니티 — Steam 도전과제 "OO 완전 강화" 26개 집계, chaptercheats.com 미러]
+
+Steam 도전과제에 건물마다 "Fully upgrade the X" 1개씩이 있고, 이것이 사실상 유일한 **공식 완전 목록**이다. 도전과제 중 "Upgrade Perfection: 15개 건물 풀업"이 따로 있어 **26종 중 상위 15종만 그 도전과제의 카운트 대상으로 추정**되나 **어느 15종인지는 미확인**이다.
+
+| 분류 | 건물 (7-2~7-8 상세 서술) |
 |---|---|
-| **Scrapper** | 분해. **r3 = 자동 분해 설정** |
-| **Blacksmith** | 제작·개조. **r5 → Artisan's Hall / r6 → Transmute·Imbue·Imprint** |
-| **Barracks** | **Tactics**(타겟팅 4모드·쿨 배정) → 상위 랭크 **자동 시전** |
-| **Profession Hall** | Mine / Forest / Farm 해금 |
-| **Community Project** | 재료 기부 → Donation Credits → **영구 패시브**. r4 = 자동 기부 |
-| **Gemcutter's Cabin** | 젬 제작. **r2 = 소켓 추가 크래프트** / r3 = 젬 보관 탭 |
-| **Alchemist's Hut** | 플라스크 |
-| **Armoury** | **로드아웃** — 파티 편성+플라스크를 통째로 저장/호출 |
-| **Keep** | **Paragon** 제작 |
-| **Castle** | **Nemesis** — r1 최소 2속성 / r2 최소 랭크 4 / **r3 Nemesis Infusion** |
-| **Watchtower** | Nemesis 품질 — r3 최대 3속성 / r5 최대 랭크 8 |
-| **Item Vault** | 아이템 보관. **r4 = [1.3] Item Research** |
-| **Bounty Board** | 바운티 |
-| **Domain of Agony** | 아고니 |
-| **War Cap** | 팩션 |
-| **Map Room / Ancient Reliquary / Artisan's Hall** | (역할 미확인) |
+| 제작·개조·경제 (6) | Scrapper · Blacksmith · Artisan's Hall · Gemcutter's Cabin · Alchemist's Hut · Community Project |
+| 성장 상한 트랙 (3) | Keep · Castle · Watchtower |
+| 자동화·로스터 (2) | Barracks · Armoury |
+| 콘텐츠 게이트 (5) | Bounty Board · War Camp · Domain of Agony · Map Room · Ancient Reliquary |
+| 저장 (2) | Item Vault · Hidden Vault |
+| 채집(직업) (4) | Profession Hall · Mine · Forest · Farm |
+| **정체 미상 (4)** | **Expedition · Grand Expedition · Fortress · Pinnacle** |
 
-**Community Project 영구 패시브** (리스펙 불가, 결국 전부 획득 가능):
-재료 보관량 1~5 · 기부 크레딧 획득 1~50랭크(랭크당 +1%) · **채집 20초→10초** · Tool Fortune / Tool Luck · **Double Scrapping / Double Resources** · 모서리에 **Luck / Fate / Wealth / Fortune**
+### 7-2. 초반 건설 순서 [공식 — Deep Dive #5 "Building Upgrades & Professions", 2022-06-04]
 
-> **건물이 곧 시스템 해금이다.** 개조 도구도, 자동화도, 드롭 품질(Nemesis)도 전부 건물 랭크 뒤에 있다.
+```
+Scrapper (최우선 — 분해가 이후 모든 건물의 재료원)
+   → Blacksmith (100골드 + 재료 — 장비 제작·개조)
+   → Barracks (자동 타겟팅·자동 시전)
+   → Profession Hall (Mine/Forest/Farm 해금 — 패시브 채집)
+   → Community Project (재료 기부 → Donation Credits)
+```
+이후 건물(Castle/Watchtower/War Camp/Map Room/Ancient Reliquary/Domain of Agony 등)은 **Deep Dive #5에 아예 언급이 없다** — 전부 2022년 이후 엔드게임 패치로 추가된 것으로 판단. 이 5개는 개별 게이트(다른 건물 랭크, 캐릭터 레벨)를 따를 뿐 하나의 마스터 순서를 따르지 않는다.
+
+### 7-3. 제작·개조·경제 건물군
+
+| 건물 | 확인된 효과 | 출처/신뢰도 |
+|---|---|---|
+| **Scrapper** | 장비를 넣고 분해 → 재료 (+대부분 아이템은 분해 시 그 레시피를 함께 해금). **r3 = Auto Scrap Settings 패널** — 아이템 타입별(기본/젬/도구 등)로 독립적인 희귀도 문턱 설정, "설정한 희귀도 이하를 전부 자동 분해". 자동 분해는 **신규 드롭에만** 적용, 기존 인벤토리는 소급 안 됨. **r6 = Artisan's Hall(하위 건물) 해금** | [공식] Dev Q&A 스레드(개발자 arrowsoftgames 직답, r3/r6 둘 다) |
+| **Artisan's Hall** | Scrapper r6로 해금되는 별도 건물. **r1 = "Bag Settings"**(보스 상자 자동 개봉, 가방별 개별 설정). **r5(혹은 r6, 출처 불일치) = Blacksmith에서 Transmute·Imbue·Imprint 사용 가능** | r1: [공식] Dev Q&A. r5/r6: [가이드]/[커뮤니티] 2건이 랭크 숫자만 불일치, 기능 자체는 일치 |
+| **Blacksmith** | r1부터 제작 가능(레시피 대부분은 해당 아이템 분해로 개별 해금). r2~r5는 "기본 장비개조 레시피"가 순차 해금(개별 랭크당 무엇인지는 **N/F**). 소켓 추가는 **소켓 조각 소모, 이미 있는 소켓 수에 비례해 비용 증가**. **아이템 레벨 51+는 소켓이 자연 굴림**(§4-7과 일치). 랭크업 비용 통화는 **"Fragment"**로 확인(0.8 패치: "Blacksmith 전 랭크의 Fragment 비용 인하") | [공식] Dev Q&A + 0.8 패치노트. 정확한 Fragment 수치는 **N/F** |
+| **Gemcutter's Cabin** | **r2 = 소켓 추가 크래프트 해금**(Blacksmith에서 수행). **r3 = 젬 보관 탭** | [공식] Dev Q&A + 0.8 패치노트, 기존 §7 서술과 일치·재확인 |
+| **Alchemist's Hut** | 플라스크 제작. **총 랭크 ≥7 확인**(r1은 과거 "민들레" 재료 요구였으나 0.6.0.4에서 제거). **r7 = Auto Refill**(플라스크 자동 충전, Ctrl+좌클릭 또는 개별 토글) | r1 이력: [itch] 구버전. r7: [공식] 0.9 베타 노트 — **총 랭크 수 자체는 기존 문서에 없던 신규 정보** |
+| **Community Project** | 재료 기부(재료 보관 메뉴에서 우클릭) → Donation Credits. **r2 = Community Passives 해금**(보관량 상승 등). **Auto Donation Threshold**(수량 지정 시 자동 기부) 기능 존재하나 **정확히 몇 랭크에서 열리는지는 N/F**(기존 문서 "r4"는 이번 조사로 재확인 못 함 — 신뢰도 하향) | [공식] Dev Q&A + 0.8 패치노트 |
+
+**⚠ 미해소 충돌 — Community Project ↔ Faction**: 0.8 "Faction Update"(2023-05)로 완전히 별개 엔드게임 시스템("Faction", 4팩션 + 팩션 던전 + 팩션 평판)이 추가됐다. 그런데 일부 검색 결과가 "Faction Passives"·"Divine Favour 패시브"를 Community Project의 Donation Credits 패시브와 혼용해서 쓴다. **두 트리가 같은 통화를 공유하는지, 완전히 별개인지 확정하지 못했다** — 인게임 확인 전까지는 별개로 취급 권고.
+
+**Community Project 영구 패시브**(리스펙 불가, 결국 전부 획득 가능, v1 서술 유지): 재료 보관량 1~5 · 기부 크레딧 획득 1~50랭크(랭크당 +1%) · 채집 20초→10초 · Tool Fortune / Tool Luck · Double Scrapping / Double Resources · Luck / Fate / Wealth / Fortune
+
+### 7-4. 성장 상한 트랙 — Keep · Castle · Watchtower [공식/가이드 — 단일 출처 3건이 문구까지 동일(같은 원문의 미러)]
+
+세 건물이 **서로 다른 두 축의 "상한 돌파"를 나눠 맡는다**:
+
+| 건물 | 트랙 | 확인된 효과 |
+|---|---|---|
+| **Keep** | **Paragon** (희귀도 밖 수직 성장) | Paragon 제작 해금 — **P1~P10**이 속성 랭크 상한을 **10→20**으로 밀어올림. 실제 크래프트 조작(Bulk Paragon craft 포함)은 **Blacksmith UI**에서 수행 — Keep은 게이트, Blacksmith는 작업대(§4-5와 같은 분리 패턴). 재료: Paragon Orb(Paragon 아이템 분해 또는 바운티 보상) |
+| **Castle** | **Nemesis** 발생 보장 | r1 = Nemesis 아이템 **최소 2속성** 보장 · r2 = Nemesis 속성 **최소 랭크 4** 보장 · r3 = **Nemesis Infusion**(Blacksmith에서 일반 아이템→Nemesis 전환) 해금 |
+| **Watchtower** | **Nemesis** 품질 상한 | r3 = Nemesis 속성 **최대 3개**까지 롤 가능 · r5 = Nemesis 속성 **최대 랭크 8**까지 롤 가능 |
+
+- Castle/Watchtower 이상 랭크(4+)와 정확한 건설·랭크업 비용은 **N/F**
+- **1.3.0.0**: 도전과제 추적에 "Transmute Attribute·Imprint Attributes·Reroll Nemesis" 크래프트가 추가로 언급됨 → Nemesis 계열에 Infusion 외 크래프트가 더 있음을 시사하나 소속 건물·랭크는 **N/F**. (별개로 1.3은 "Nemesis 몬스터" 체력 배율을 +200%→+100%로 너프 — 이건 건물이 아니라 몬스터 밸런스)
+
+> **본작 관점**: Lootun은 "상한 돌파"라는 하나의 파워크리프 축을 **건물 3개에 나눠 심었다** — Keep(별개 축 Paragon) / Castle+Watchtower(같은 축 Nemesis의 발생확률·품질을 분리). 본작 §10-2 검토 후보에 이 패턴을 추가할 가치가 있다(아래 §10 갱신 참조).
+
+### 7-5. 자동화·로스터 건물
+
+| 건물 | 확인된 효과 | 출처/신뢰도 |
+|---|---|---|
+| **Barracks** | 건설 비용 **골드 400**. 해금 조건은 초반 특정 보스 처치(구버전 가이드 — 1.0+ 재검증 필요). **Tactics**: 기본 공격 타겟팅 정확히 4모드 = **Random / Strongest(최대체력 기준) / Weakest(최대체력 기준) / Round Robin**("Closest/Furthest"는 이번 조사로 반증, 폐기). 쿨다운 스킬별 타겟팅도 개별 지정. **상위 랭크 = 쿨다운 스킬 자동 시전**(정확한 해금 랭크는 N/F). 이후 패치로 "Stunnable Targets"·"Buff Expired"(버프 만료 시 자동 재시전) 등 자동시전 조건이 추가됨 | [가이드] Walkthrough 0.9 (건설비·타겟팅 4종) — 나머지 자동화 확장은 [커뮤니티] 검색 종합, 낮은 확신 |
+| **Armoury** | 캐릭터 **레벨 20**에서 해금. **로드아웃**(파티 장비+플라스크 세트 통째 저장/호출). **랭크당 로드아웃 2슬롯**(1.0.0 베타, 2024-03-15에 1→2로 버프) — ⚠ 일부 검색 결과가 이 버프를 "1.3(2026) 패치"로 잘못 귀속시키는데, 원문을 직접 확인하니 **2024-03 베타 패치가 맞다.** 총 랭크 수·최대 로드아웃 수는 N/F | [가이드] Walkthrough 0.9(레벨20) + [공식] 1.0.0 베타 패치노트 원문(로드아웃 2배) |
+
+### 7-6. 콘텐츠 게이트 건물
+
+Lootun은 **엔드게임 콘텐츠 접근권 자체를 건물 랭크로 판다** — 던전/사냥 슬롯이 대표적:
+
+| 건물 | 확인된 효과 | 출처/신뢰도 |
+|---|---|---|
+| **Bounty Board** | **r1 = Hunt(사냥) 2번째 슬롯 해금**(개발자 직답). r2 = 바운티 보상 자동 수령이라는 설이 있으나 **미검증**. **Favour** 통화(바운티 클리어로 획득 → 바운티 리롤/포기, 일부 건물 업그레이드에 사용)의 공급원 | 사냥 슬롯: [공식] Dev 스레드 직답. 나머지: [커뮤니티], 낮은 확신 |
+| **War Camp**(도전과제 표기는 "Warcamp") | **r1 = Hunt 3번째 슬롯 해금**(개발자 직답, Bounty Board와 동일 스레드). **Faction** 시스템(Riverfoot Clan / Elemental Conclave / Druidic Council 등, 팩션별 바운티 패시브)과 연관되나 War Camp 건물 자체가 팩션 게이트인지는 **미확정** | [공식] Dev 스레드 직답(사냥 슬롯만) |
+| **Domain of Agony** | r4는 (너프 후) "Agony 미션 슬롯 +4" 대신 **"Agony 미션에서 흑요석(Obsidian) 드롭 +50%"**로 변경됨 — 즉 원래 Agony 랭크는 **미션 슬롯을 팔았다**는 뜻. r1~r3은 N/F | [공식]-추정(패치노트 검색 종합, 원문 페이지 미확보) |
+| **Map Room** | 해금 조건은 대략 **캐릭터 레벨 100**(비개발자 커뮤니티 답변). **기능**: "맵/유물 탐색"이 아니라 **Map Expertise 소프트캡 우회 장치** — 캐릭터가 그 맵 최대 레벨을 크게 넘으면 그 맵에서 Expertise 획득이 멈추는데, Map Room은 몬스터를 **파티 최고 레벨까지 스케일업**시켜 저레벨 구 맵에서도 계속 Expertise를 채울 수 있게 한다(Expertise 15+부터 보너스가 커짐) | [커뮤니티] 비개발자 답변이나 메커니즘 설명이 구체적이고 자기일관적 |
+| **Ancient Reliquary** | **"Reliquary" 버튼 = 유니크 아이템 강화 메뉴.** 유니크를 장착하고 미션을 돌려 강화 경험치 획득 → 재료 소모로 강화 포인트 지급(통상 **아이템당 최대 4포인트**). 상위 티어 **"Heroic Upgrade"**는 해당 유니크의 연계 레이드를 **Heroic 난이도로 클리어**해야 추가 해금. **r3 비용 = 희귀도별 코어/파편/룬/글리프**(하위 등급 아이템을 분해·"shatter"해서 얻는 재료) | [공식] 개발자 직답 2건(강화 메뉴 정체 + r3 재료) |
+| **Item Vault** | r3 = "Divine Storage" 탭 추가(확신 낮음). **r4 = Item Research**([1.3], 2026-03-21 확정) — 드롭 전용 유니크를 줍거나 자동분해 → 리서치 포인트 누적 → 충분하면 그 아이템의 사본을 새 희귀 재료로 제작 가능 | r4: [공식] 버전 태그된 패치노트 원문(이 조사에서 가장 신뢰도 높은 단일 사실) |
+
+> **Hidden Vault는 Item Vault와 다른 건물**(도전과제로 별도 확인). r2가 "Overload Core" 드롭 게이트라는 언급이 있음 — 두 "Vault"를 혼동하지 않을 것.
+
+### 7-7. 채집 — Profession Hall
+
+```
+Profession Hall → Mine(광물) / Forest(약초) / Farm(농작)  ※ v1 §6-3과 동일, 재확인
+```
+기본 20초에 1회 수확 → Community 패시브로 10초까지 단축. 플라스크 재료는 이 세 서브건물에서만 나온다.
+
+### 7-8. 정체 미상 — Expedition · Grand Expedition · Fortress · Pinnacle
+
+도전과제("완전 강화")로 존재는 확인되나, **기능을 설명하는 출처를 전혀 찾지 못했다.** 유일한 단서: "마지막 건물업그레이드 해금에 Bonus Raid 클리어가 필요했다가 버그로 처리된 적 있다"는 패치노트 검색 스니펫 — **Pinnacle과/또는 Hidden Vault가 진행도 최상단에 있을 가능성**을 시사하나 원문을 확보하지 못해 추정에 그친다. 이름으로 볼 때 Expedition/Grand Expedition은 §8의 미션 루프 규모 확장(파티 인원·라운드 수)과 관련 있을 가능성이 있으나 **완전 추정**이며 반영하지 않는다.
+
+### 7-9. 재화·비용 구조
+
+- **골드 단일이 아니다.** 초기 건설은 골드+재료 혼합(Blacksmith = 골드 100 + 재료). 이후 랭크업은 건물군마다 **별도 통화**가 추가로 붙는다:
+
+| 통화 | 획득처 | 소모처 |
+|---|---|---|
+| **Fragment** | (미확인 — 아마 분해/미션) | Blacksmith 랭크업 |
+| **Favour** | 바운티 클리어 | 바운티 리롤/포기, 일부 건물 업그레이드 |
+| **Donation Credits** | Community Project 재료 기부 | Community Passives |
+| **코어/파편/룬/글리프** | 하위 등급 아이템 분해("shatter") | Ancient Reliquary 랭크업 |
+| **Obsidian** | Agony 미션 | Domain of Agony 관련 소모(추정) |
+
+- 패치노트 검색 스니펫: "Domain of Agony **이전** 모든 건물업그레이드의 재료 비용이 인하됐다" → **Lootun 내부적으로 건물을 순서화된 티어로 관리**하고 있다는 방증(원문 미확보, [공식]-추정)
+
+### 7-10. v2에서 바로잡은 것
+
+| # | v1(2026-08-24) 서술 | v2 정정 | 근거 |
+|---|---|---|---|
+| 1 | "Blacksmith r5 → Artisan's Hall / r6 → Transmute·Imbue·Imprint" | **Scrapper r6이 Artisan's Hall(별개 건물)을 해금**하고, **Artisan's Hall 자체의 r5~6(출처 불일치)**이 Blacksmith에서 Transmute·Imbue·Imprint를 쓸 수 있게 한다. 해금 방향이 반대였다 | [공식] Dev Q&A 스레드 |
+| 2 | Community Project **r4 = 자동 기부** | 자동 기부 기능(Threshold 설정) 자체는 존재하나 **정확한 해금 랭크를 이번 조사로 재확인하지 못함** — r4는 미검증 상태로 하향 | 재조사 결과 N/F |
+| 3 | Map Room/Ancient Reliquary/Artisan's Hall "역할 미확인" | **셋 다 해소** — §7-3(Artisan's Hall), §7-6(Map Room, Ancient Reliquary) | 상기 각 출처 |
+
+> **건물이 곧 시스템 해금이다** — v1 결론 유지. 개조 도구(§4-5)도, 자동화(Barracks)도, 드롭 품질(Nemesis)도, **콘텐츠 접근권(사냥 슬롯)** 도 전부 건물 랭크 뒤에 있다. v2에서 새로 드러난 것은 그 게이트가 **단일 건물이 아니라 여러 건물에 분산**되어 있다는 점(Keep/Castle/Watchtower가 한 축을 나눠 가짐, Bounty Board/War Camp가 같은 종류의 슬롯을 순차로 파는 것 등).
 > 본작 base_expedition_design.md §2가 "시설이 곧 파견지"로 방향을 잡았는데, **Lootun은 "시설이 곧 규칙 해금"**이다. 두 방향은 겹치지 않으므로 **병행 가능**하다.
 
 ---
@@ -586,6 +679,8 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 7. **젬식 공유 슬롯** — 세트를 장비 밖에 두는 형태. 본작 3/6/9와 충돌하므로 채택 시 재검토 필요
 8. **레벨 게이트(챌린지)** — 후반 레벨업을 시간이 아니라 도전으로 막기
 9. **레벨 스케일 장비(유물)** — 버려지지 않는 슬롯
+10. **파워상한 축을 건물 여러 개에 분산** — Keep(Paragon)·Castle+Watchtower(Nemesis 발생확률·품질 분리). 본작 base_expedition_design.md 시설 목록이 확정되면, "한 축 = 한 시설"이 아니라 "한 축 = 여러 시설의 랭크 조합"으로 쪼갤지 검토 (§7-4)
+11. **콘텐츠 접근 슬롯 자체를 건물이 판다** — 사냥(Hunt) 슬롯이 Bounty Board r1 → War Camp r1으로 순차 해금. 파견지/스테이지 슬롯을 거점 진행도에 묶을지 검토 (§7-6)
 
 ---
 
@@ -612,6 +707,19 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 - itch.io (구버전 스냅샷) — https://arrowsoft.itch.io/lootun
 - PC Gamer 소개 — https://www.pcgamer.com/games/lootun-is-an-auto-battling-rpg-for-people-who-just-really-love-managing-their-partys-gear/
 
+**§7 v2 건물 심층조사 추가 출처 (2026-08-26)**
+- Steam 뉴스 피드 timestamp-cursor 방식(JS 렌더 우회) — `https://store.steampowered.com/news/posts/?feed=steam_community_announcements&enddate=<unix시각>` — Deep Dive #3/#5, 0.8 Faction Update, 1.2.1~1.3.0.14 패치노트 원문 확보에 사용. **이 방식이 기존 view/announcement 직링크보다 안정적** — 향후 Deep Dive #4·#6 재시도 시 우선 사용 권고
+- Hunt 슬롯(Bounty Board r1/War Camp r1) 개발자 직답 — https://steamcommunity.com/app/1960270/discussions/0/596279819757476771/
+- Ancient Reliquary r3 재료 + 강화메뉴 정체 개발자 직답 — https://steamcommunity.com/app/1960270/discussions/0/3275816470981302593/ (ctp=6/10/12), https://steamcommunity.com/app/1960270/discussions/0/4515505814159799319/
+- Map Room / Map Expertise 커뮤니티 답변 — https://steamcommunity.com/app/1960270/discussions/0/596271495257325294/
+- Artisan's Hall → Blacksmith Transmute/Imbue/Imprint — https://steamcommunity.com/app/1960270/discussions/0/4333105405782462935/
+- Scrapper r3(Auto Scrap)/r6(Artisan's Hall) 개발자 직답 — https://steamcommunity.com/app/1960270/discussions/0/5219148331328222101/, ctp=12 게시물(위 Developer Questions 스레드)
+- 소켓(잠재소켓/ilvl51+ 자연굴림) 개발자 직답 — https://steamcommunity.com/app/1960270/discussions/0/4333105050948161252/
+- 1.0.0 베타 패치노트(Armoury 로드아웃 1→2, Faction 이름) — https://steamcommunity.com/app/1960270/discussions/1/7056649947877379138/
+- 0.9 베타 노트(Alchemist's Hut r7 Auto Refill) — https://steamcommunity.com/app/1960270/discussions/1/3827551537104342183/
+- 건물 전수 목록(도전과제 26종 미러) — https://www.chaptercheats.com/cheat/pc/557106/lootun/unlocks/120036
+- Nemesis Infusion Guide(Castle/Watchtower 랭크, 단일 원문의 미러 3곳 중 하나) — https://gameplay.tips/guides/lootun-nemesis-infusion-guide-endgame-crafting.html
+
 ### 11-2. 총조사 후에도 남은 미확인
 
 | 항목 | 상태 |
@@ -623,9 +731,15 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 | **4클래스 체제의 어센던시 총수** | 12로 추정 |
 | **인챈트 총수** | [상점] 50+ vs [가이드] 100~150+ 충돌 |
 | **로스터 상한** | [상점 1.3] 18 vs 구 인게임 FAQ 10 충돌 |
-| **Map Room / Ancient Reliquary / Artisan's Hall** | 역할 미확인 |
 | **랭크 +10%의 정확한 기준** | "랭크당 기본값의 10% 추가"까지만 확인. 곱연산 기준선 미확인 |
 | **Nemesis Overload / Pristine 재료 획득 경로** | Mythic 콘텐츠라는 것까지만 |
+| **26개 건물의 정확한 랭크별 골드/재료 비용 전체** | 초기 건설비 일부(Blacksmith 100골드+재료, Barracks 400골드)만 확인. 랭크업 비용 전 구간 미확인 — §7-9 |
+| **Expedition · Grand Expedition · Fortress · Pinnacle** | 도전과제로 존재만 확인, 기능 완전 미상 — §7-8 |
+| **Hidden Vault** 전체 기능 | r2가 Overload Core 드롭 게이트라는 단편만 확인, Item Vault와의 관계 불명 |
+| **Community Project 패시브 트리 ↔ Faction 패시브 트리** | 같은 재화 풀인지 별개인지 출처끼리 혼용 — §7-3 |
+| **"건물 풀업 15개" 도전과제가 26종 중 어느 15종을 지칭하는지** | 미확인 — §7-1 |
+| **Artisan's Hall이 Transmute/Imbue/Imprint를 여는 정확한 랭크** | 5 vs 6, 출처 2건 불일치 — §7-3 |
+| **Castle/Watchtower의 랭크 4 이상, War Camp/Bounty Board의 랭크 2 이상** | 개별 밀리스톤(r1~3, r5) 외 전 구간 미확인 |
 
 ### 11-3. v1(1차 조사)에서 정정한 것
 
@@ -637,6 +751,10 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 | 4 | 무기 = "타입 3종" | 3계열 아래 **세부 베이스 11종**, **양손은 베이스 수치 2배** | [공식 #2] |
 | 5 | 리롤 비용 = "분해 조각" | 조각 3종 **+ Rarity Core**. 소켓 조각·인챈트 시약도 별도 | [공식 #3] |
 
+### 11-4. v2(2026-08-26, §7 건물 심층조사)에서 정정한 것
+
+전체 표는 **§7-10**에 있음. 요지만: ① Artisan's Hall 해금 체인이 반대였다(Blacksmith가 아니라 **Scrapper r6 → Artisan's Hall → 그 자체 r5~6**), ② Community Project "r4=자동기부"는 재확인 실패로 미검증 하향, ③ Map Room·Ancient Reliquary·Artisan's Hall "역할 미확인" 3건 해소.
+
 ---
 
-*마지막 업데이트: 2026-08-24 (총조사 완료 — 공식 Deep Dive 원문 반영, v1 오류 5건 정정)*
+*마지막 업데이트: 2026-08-26 (§7 거점 건물 심층조사 v2 — 26종 전수 확인, 랭크별 효과 재검증, §4-5 서술 오류 1건 정정)*

@@ -276,6 +276,13 @@ function apply(state, root, opts, ev) {
             if (ev.crit && a && d) pushLog(state, root, t('log.crit', { name: L(a.name), target: L(d.name), dmg: ev.dmg }));
             break;
         }
+        case 'reflect': {
+            // 반사 — 비직격. 공격자 HP 만 줄고 아무것도 유발하지 않는다 (battle_design §9-6)
+            const a = U(ev.a), d = U(ev.d);
+            if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
+            if (a && d) pushLog(state, root, t('log.reflect', { name: L(a.name), target: L(d.name), dmg: ev.dmg }));
+            break;
+        }
         case 'dodge': {
             const a = U(ev.a), d = U(ev.d);
             if (a) { a.lastAct = ev.t; lunge(state, a); }
@@ -290,6 +297,12 @@ function apply(state, root, opts, ev) {
             const enemy = u.side === 'enemy';
             pushLog(state, root, t(enemy ? 'log.slain' : 'log.downed', { name: L(u.name) }));
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
+            break;
+        }
+        case 'card': {   // 도감 카드 — 처치와 별개 판정 (monster_design §8). 리포트에도 찍힌다
+            const u = U(ev.u);
+            pushLog(state, root, t('log.card', { name: L(M.monsterName(ev.monsterId)) }));
+            if (u) popup(state, u, t('pop.card'), 'card-tag');
             break;
         }
         case 'end': {
