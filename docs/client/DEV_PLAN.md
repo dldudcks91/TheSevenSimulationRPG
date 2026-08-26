@@ -76,7 +76,7 @@
 | R6 | **원소 저항 = 상한형 %** (`res_cap_base` + 최대 저항 증가 · `res_cap_absolute` · 하한 없음) | `res` 를 방어처럼 곡선에 넣음 | `formula.js defenseAgainst` · `balance.csv` 키 신규 |
 | R7 | **감각 → 운** — 전투 계수 제거, 드랍률·골드 계수 | `senMult` 가 명중·회피를 곱함 | `hero.js` · `hero_attribute.csv` 는 이미 개정됨(코드 미반영) · `ui/mock.js STATS` |
 | R8 | **몬스터 = 영웅 공통 전투 능력치 체계** | 몬스터 `res` 숫자 하나 / 영웅 `res` 객체 (INTERFACE §8 항목 11) | `battle.js makeEnemy` · `monster.csv` |
-| R9 | **게임 정의 개정** — 원정 독점 삭제 → 크래프트 제작 · 영웅 획득 = 선술집 + 수색 · 해고 | 구현 없음 (기획 상세 미정) | — |
+| R9 | **게임 정의 개정** — 원정 독점 삭제 → 크래프트 제작 · 영웅 획득 창구 = 선술집 하나(명단 + 수색, 수색은 파견 아님 — base_expedition §2-4) · 해고 | 구현 없음 (기획 상세 미정) | — |
 | R10 | **성장 SSOT `power_growth_per_level`** — 무기 공격력·영웅 HP·공격/HP flat 접사가 기하 곡선을 탄다. `weapon_atk_per_ilvl`·`hero_hp_per_level` 은 **삭제됨** | `base + ilvl x per_ilvl` 선형 | `item.js:88` · `hero.js:163` |
 | R11 | **접사 ilvl 스케일링 3분류** (item_design §2-1) — % 접사의 `perIlvl` 전면 제거 · flat 은 기하 · def_flat 만 완만 · 저항은 직접 % | 전 접사가 `perIlvl` 가산 | `ui/mock.js AFFIX_DEFS` |
 | R12 | **레벨 상한 99 · 50 이후 느린 곡선 · 전직 30** (GAME_DESIGN §9 08-26) | 레벨 상한 없음 · `hero_xp_base × level^hero_xp_exp` 단일 곡선 · `advance_unlock_level` 은 키 존재 | `hero.js grantXp/xpNeeded` · `balance.csv` 상한·무릎 키 **미발행** — 곡선 숫자는 캘리브레이션 뒤 |
