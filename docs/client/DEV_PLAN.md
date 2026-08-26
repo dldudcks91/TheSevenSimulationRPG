@@ -77,6 +77,13 @@
 | R7 | **감각 → 운** — 전투 계수 제거, 드랍률·골드 계수 | `senMult` 가 명중·회피를 곱함 | `hero.js` · `hero_attribute.csv` 는 이미 개정됨(코드 미반영) · `ui/mock.js STATS` |
 | R8 | **몬스터 = 영웅 공통 전투 능력치 체계** | 몬스터 `res` 숫자 하나 / 영웅 `res` 객체 (INTERFACE §8 항목 11) | `battle.js makeEnemy` · `monster.csv` |
 | R9 | **게임 정의 개정** — 원정 독점 삭제 → 크래프트 제작 · 영웅 획득 = 선술집 + 수색 · 해고 | 구현 없음 (기획 상세 미정) | — |
+| R10 | **성장 SSOT `power_growth_per_level`** — 무기 공격력·영웅 HP·공격/HP flat 접사가 기하 곡선을 탄다. `weapon_atk_per_ilvl`·`hero_hp_per_level` 은 **삭제됨** | `base + ilvl x per_ilvl` 선형 | `item.js:88` · `hero.js:163` |
+| R11 | **접사 ilvl 스케일링 3분류** (item_design §2-1) — % 접사의 `perIlvl` 전면 제거 · flat 은 기하 · def_flat 만 완만 · 저항은 직접 % | 전 접사가 `perIlvl` 가산 | `ui/mock.js AFFIX_DEFS` |
+| R12 | **레벨 상한 99 · 50 이후 느린 곡선 · 전직 30** (GAME_DESIGN §9 08-26) | 레벨 상한 없음 · `hero_xp_base × level^hero_xp_exp` 단일 곡선 · `advance_unlock_level` 은 키 존재 | `hero.js grantXp/xpNeeded` · `balance.csv` 상한·무릎 키 **미발행** — 곡선 숫자는 캘리브레이션 뒤 |
+| R13 | **엔드게임 = 티어 재순환 + 무한모드 · 레이드 5인 · 챕터 클리어 해금** (GAME_DESIGN §9 08-26) | 구현 없음 — 스테이지 28개 단일 티어, 해금 없음, 레이드 없음 | `stage.csv` 티어 축 · `balance.csv` `raid_party_size` 등 키 미발행 |
+
+> **CSV 는 2026-08-26 저녁에 전부 반영 완료** — `balance.csv`(신설 7·삭제 3·변경 8) · `monster.csv`(21컬럼, defense/저항 규칙 생성) · `combat_stat.csv` · `hero_attribute.csv`(sen→luck) · `spawn_grade.csv`(res_add 신설) · `equipment_option_override.csv`(+15행).
+> **코드는 아직 옛 스키마를 읽으므로 현재 실행되지 않는다** — 삭제된 키(`weapon_atk_per_ilvl`·`hero_hp_per_level`·`hit_floor_pct`)와 삭제된 컬럼(`monster.csv:resist`)을 참조하는 지점이 R1~R11 에 전부 들어 있다.
 
 R1~R7 은 `formula.js` 재작성 한 묶음이다. 반영하면 **골든 스냅샷(§5-A #4)이 전부 바뀌므로** 스냅샷은 R 반영 뒤에 찍는다.
 
@@ -188,4 +195,4 @@ INTERFACE §7 표의 12항목. 우선순위 = game_logic 이 실제로 읽는 �
 
 ---
 
-*마지막 업데이트: 2026-08-26 (§3-3 기획 개정 미반영 R1~R9 등재) · 2026-08-26 (최초 작성 — 구현 현황을 game_logic/README 에서 이관, 부채 12건 등재)*
+*마지막 업데이트: 2026-08-26 (R12 레벨 상한·곡선 · R13 엔드게임·레이드·해금 등재) · 2026-08-26 (수치 대역 재설계 CSV 반영 완료 — R10·R11 추가, 코드 미반영 상태 명시) · 2026-08-26 (§3-3 기획 개정 미반영 R1~R9 등재) · 2026-08-26 (최초 작성 — 구현 현황을 game_logic/README 에서 이관, 부채 12건 등재)*
