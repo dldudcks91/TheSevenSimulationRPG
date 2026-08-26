@@ -1,0 +1,16 @@
+skill_id,class,name_kr,name_en,kind,target,hits,mult_pct,cool_sec,duration_sec,element,effect_stat,effect_value,cast_condition,rider,priority,description_kr
+war_frenzy,warrior,광폭화,Frenzy,buff,self,0,0,18,8,-,atk_pct,60,buff_absent,-,1,자기 창 — 지속 동안 상시 피해 % 가산. 행동 1회가 유일한 비용 ⚠제안값
+war_decap,warrior,참수,Decapitate,attack,enemy_single,1,300,15,0,-,-,0,-,reset_on_kill,2,장쿨 단일 최대 배율 — 이 타격으로 대상이 쓰러지면 쿨이 즉시 초기화된다 ⚠제안값
+war_whirl,warrior,회전 베기,Whirlwind,attack,enemy_all,1,100,5,0,-,-,0,-,-,3,단쿨 광역 — 생존 적 전원에게 각각 독립 직격. 다수전 정리 담당 ⚠제안값
+kni_bulwark,knight,수호의 방벽,Bulwark,buff,party,0,0,24,10,-,damage_reduction,20,buff_absent,-,1,파티 창 — 지속 동안 파티 전원 피해 감소. 원천별 곱의 한 항으로 들어간다 ⚠제안값
+kni_order,knight,전열 지휘,Vanguard Order,buff,party,0,0,20,8,-,atk_pct,25,buff_absent,-,2,파티 창 — 지속 동안 파티 전원 상시 피해 % 가산 ⚠제안값
+kni_retribution,knight,응징의 강타,Retribution,attack,enemy_single,1,210,9,4,-,damage_reduction,15,-,self_buff_on_hit,3,중쿨 단일 — 명중하면 자신에게 짧은 피해 감소 창이 남는다 ⚠제안값
+mag_fire,mage,화염 작렬,Fire Burst,attack,enemy_single,1,310,15,0,fire,-,0,-,-,1,장쿨 단일 최대 배율 — 원소 태그 화염. 무기 원소를 무시한다 ⚠제안값
+mag_chain,mage,연쇄 번개,Chain Lightning,attack,enemy_all,1,130,9,0,lightning,-,0,-,-,2,중쿨 광역 — 원소 태그 전기 ⚠제안값
+mag_frost,mage,서릿발 화살,Frost Bolt,attack,enemy_single,1,180,5,0,cold,-,0,-,-,3,단쿨 단일 — 원소 태그 냉기 ⚠제안값
+arc_snipe,archer,저격,Aimed Shot,attack,enemy_single,1,200,15,0,-,-,0,-,always_crit,1,장쿨 단일 — 치명 굴림 없이 반드시 치명타. 세기는 치명타 피해가 정한다 ⚠제안값
+arc_pierce,archer,관통 사격,Piercing Shot,attack,enemy_all,1,120,9,0,-,-,0,-,-,2,중쿨 광역 — 생존 적 전원 관통 ⚠제안값
+arc_rapid,archer,연사,Rapid Shot,attack,enemy_single,3,55,5,0,-,-,0,-,-,3,단쿨 다단 — 한 대상에게 hits 회. 타격마다 적중·치명을 따로 굴린다 ⚠제안값
+pri_sanctuary,priest,성역,Sanctuary,heal,party,0,160,16,0,-,-,0,ally_hp_below_75,-,1,장쿨 파티 회복 — 전원에게 같은 배율 ⚠제안값
+pri_heal,priest,치유의 빛,Healing Light,heal,ally_lowest,0,300,8,0,-,-,0,ally_hp_below_75,-,2,중쿨 단일 회복 — HP 비율이 가장 낮은 아군 1인. 회복량 = 마법 공격력 x 배율 ⚠제안값
+pri_judgment,priest,심판,Judgment,attack,enemy_single,1,180,9,0,-,-,0,-,vs_undead_100,3,중쿨 단일 — 원소 태그 없음(무기 원소를 따른다) · 언데드 대상에만 조건부 % 가산 ⚠제안값

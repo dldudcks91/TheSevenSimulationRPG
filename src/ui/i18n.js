@@ -111,6 +111,8 @@ const STRINGS = {
     'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
+    /* 스테이지 원소 — 어느 저항을 챙겨야 하는지의 신호 (battle_design §9-8) */
+    'exp.element': { ko: '원소 {e}', en: 'Element {e}' },
     'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat' },
     'exp.repeat.sub': {
         ko: '승리하면 같은 곳으로 다시 나간다 · <b>게임이 켜져 있는 동안만</b> 돈다 · 부상·패배·가방 가득이면 멈춘다',
@@ -139,6 +141,9 @@ const STRINGS = {
     'rep.cards': { ko: '도감 카드', en: 'Codex cards' },
     'rep.cardsNone': { ko: '없음', en: 'None' },
     'rep.cardLevelUp': { ko: '{name} 도감 Lv.{lv}', en: '{name} codex Lv.{lv}' },
+    /* 빗나감 — 레벨 부족의 전용 신호 (battle_design §9-8). 파티 기준 {맞지 않은 타격}/{총 타격} */
+    'rep.miss': { ko: '빗나감', en: 'Misses' },
+    'rep.missN': { ko: '{m} / {n} ({p}%)', en: '{m} / {n} ({p}%)' },
 
     /* ── 캐릭터 (실동작) ── */
     'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제', en: 'Click an item = equip · click a worn slot = unequip' },
@@ -179,11 +184,19 @@ const STRINGS = {
     'nav.skill': { ko: '스킬', en: 'Skills' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.codex': { ko: '도감', en: 'Codex' },
+    'nav.help': { ko: '도움말', en: 'Help' },
     'res.gold': { ko: '골드', en: 'Gold' },
     'res.dust': { ko: '분해 가루', en: 'Dust' },
     'res.stigma': { ko: '낙인', en: 'Stigma' },
-    'ui.note': { ko: '설명', en: 'Details' },
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
+
+    /* ── 도움말 탭 (2026-08-26) ──
+       설명 문구는 여기서 새로 쓰지 않는다 — 인게임에서 걷어낸 *.note / *.sub / *.hint 를 같은 키로 재사용한다.
+       아래 넷은 그 재사용으로 못 덮는 자리만 채운다: 페이지 제목 · 섹션 제목 하나 · 인게임에서 숫자만 남기며 밀려난 원문 둘. */
+    'help.title': { ko: '도움말', en: 'Help' },
+    'help.newgame': { ko: '새 게임', en: 'New Game' },
+    'help.exp.party': { ko: '전투 {n}인 — 동시 원정 {m}팀', en: '{n} fighters — {m} expedition at a time' },
+    'help.exp.bench': { ko: '파견 대기 · 로스터 {n} / {cap}', en: 'Awaiting dispatch · Roster {n} / {cap}' },
 
     /* ── 공통 ── */
     'face.noArt': { ko: '{name} — 원작 아트 없음', en: '{name} — no source art' },
@@ -202,7 +215,8 @@ const STRINGS = {
         en: 'One battle party — the expedition is the battle. Three states flow within one tab',
     },
     'exp.party.h': { ko: '파티', en: 'Party' },
-    'exp.party.sub': { ko: '전투 {n}인 — 동시 원정 {m}팀', en: '{n} fighters — {m} expedition at a time' },
+    /* 패널 부제는 숫자만 — 설명은 도움말 탭으로 갔다 (원문은 help.exp.party) */
+    'exp.party.sub': { ko: '{n}인', en: '{n}' },
     'exp.emptySlot': { ko: '+ 빈 자리', en: '+ Empty' },
     'exp.leader': { ko: '리더', en: 'Leader' },
     'exp.cantDepart': {
@@ -216,7 +230,7 @@ const STRINGS = {
             + 'Party buffs are skill effects, not a stat — Leadership has no combat coefficient (08-25)',
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
-    'exp.bench.sub': { ko: '파견 대기 · 로스터 {n} / {cap}', en: 'Awaiting dispatch · Roster {n} / {cap}' },
+    'exp.bench.sub': { ko: '{n} / {cap}', en: '{n} / {cap}' },     // 원문은 help.exp.bench
     'exp.bench.note': {
         ko: '파견 화면은 <b>미착수</b> — 시설 5(영입·교역·연구·제련·채광) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)',
         en: 'Dispatch screen <b>not started</b> — 5 facilities (recruit · trade · research · smelt · mine) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)',
@@ -278,6 +292,7 @@ const STRINGS = {
     'st.atkType.lightning': { ko: '전기', en: 'Lightning' },
     'st.atkType.poison': { ko: '독', en: 'Poison' },
     'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated' },
+    'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'log.reflect': { ko: '{name} 의 반사 — {target} 에게 {dmg}', en: '{name} reflects {dmg} to {target}' },
     'st.def': { ko: '방어력', en: 'Defense' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
@@ -298,7 +313,7 @@ const STRINGS = {
 
     /* ── 캐릭터 탭 (2026-08-23 개편) — 영웅 띠 / 장비·전체·세부·스킬 4칸 / 아이템 가로 ── */
     'ch.gear.h': { ko: '장비', en: 'Equipment' },
-    'ch.attr.h': { ko: '전체 능력치', en: 'Attributes' },
+    'ch.attr.h': { ko: '기본 옵션', en: 'Basic Stats' },
     'ch.attr.sub': { ko: '장비 불변', en: 'Gear-immutable' },
     'ch.attr.range': { ko: '{min} ~ {max}', en: '{min} ~ {max}' },
     'ch.attr.note': {
@@ -312,7 +327,7 @@ const STRINGS = {
             + 'and <b>decide dispatch outcomes</b>.<br>'
             + 'No attribute governs Max HP — every hero starts at the same value and grows it only by level and gear',
     },
-    'ch.detail.h': { ko: '세부 능력치', en: 'Combat Stats' },
+    'ch.detail.h': { ko: '세부 옵션', en: 'Detailed Stats' },
     'ch.detail.sub': { ko: '{n} / {total}', en: '{n} / {total}' },
     'ch.detail.note': {
         ko: '전투 능력치는 <b>장비와 스킬이 만든다</b>. 값이 <b>—</b> 인 축은 0이 아니라 '
@@ -397,10 +412,10 @@ const STRINGS = {
         en: 'Appears rarely on the periodic roster refresh — stationing a high-Charisma hero raises the odds and quality (hero_design.md §1)',
     },
     'tv.tiers.note': {
-        ko: '<b>유니크</b> — 이름·직업·죄종 고정 + 고유 패시브 1개, 로스터에 1명만. 본편 15명(직업별 3)이 상한<br>'
-            + '<b>레어</b> — 전부 굴림, 고유 패시브 없음. 죄종 × 직업 35칸 커버리지를 전담한다',
-        en: '<b>Unique</b> — fixed name, class, and sin + 1 unique passive; one copy per roster. Capped at 15 in the base game (3 per class)<br>'
-            + '<b>Rare</b> — everything rolled, no unique passive. Covers all 35 sin × class cells',
+        ko: '<b>유니크</b> — 이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용), 로스터에 1명만. 본편 15명(직업별 3)이 상한<br>'
+            + '<b>레어</b> — 전부 굴림, 고유 스킬은 공용 풀에서 배정. 죄종 × 직업 35칸 커버리지를 전담한다',
+        en: '<b>Unique</b> — fixed name, class, and sin + 1 signature skill (hero-exclusive); one copy per roster. Capped at 15 in the base game (3 per class)<br>'
+            + '<b>Rare</b> — everything rolled; signature skill assigned from the shared pool. Covers all 35 sin × class cells',
     },
 
     /* ── 도감 ── */
@@ -451,7 +466,7 @@ const STRINGS = {
     'log.card': { ko: '<b>{name} 카드</b> 획득 — 도감', en: '<b>{name} card</b> found — codex' },
     'pop.card': { ko: '카드', en: 'Card' },
     'log.downed': { ko: '{name} <b>전투 불능</b> — 귀환 시 치료 타이머', en: '{name} <b>downed</b> — recovery timer on return' },
-    'pop.dodge': { ko: '회피', en: 'MISS' },
+    'pop.dodge': { ko: '빗나감', en: 'MISS' },
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
 };

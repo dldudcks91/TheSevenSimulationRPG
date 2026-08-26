@@ -12,9 +12,18 @@
  * 세트포인트는 **보류** (item_design.md §4, 2026-08-25) — `sins` 는 접사의 죄종 **목록**(접사 카테고리 · 지역 드롭 편향 ·
  *   낙인 지정의 축)일 뿐 포인트가 아니다. 양손 2포인트 · 메인 죄종 +1 도 같이 보류라 여기 없다.
  *
+ * **개체 굴림** (item_design §2 · battle_design §9-1, 08-26) — 편차는 타격마다가 아니라 **드롭 시 한 번** 굴려
+ *   개체에 박는다. 무기는 공격력(watk, 무기군 편차 폭), 방어구는 부위 고유 방어력(전역 폭 하나).
+ *   같은 등급·같은 ilvl 이라도 개체차가 영구히 남아 "잘 뜬 것을 찾는" 파밍 성격이 생긴다.
+ *
+ * **접사 ilvl 스케일링은 3분류다** (item_design §2-1) — 정의의 `scale` 이 정한다:
+ *   `growth` 기하 곡선(공격력·HP flat) / `band` 완만한 가산(물리 방어 flat) / `flat` ilvl 무관(% · 저항 · 유틸 전부).
+ *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 affixDefs 에서 온다. 계승 접사 매트릭스(7죄종×슬롯)는 아직 연결하지 않았다.
  */
+
+import { createFormula } from './formula.js';
 
 /**
  * @param {object} data
@@ -24,13 +33,16 @@
  *   weaponGroups — {id: {id, ko, en, classes:[cls...], twoHanded, period, variance, attackType, stage}}  ← weapon_group.csv
  *   elements     — 원소 4종 id 목록 (마법 무기 개체가 하나를 든다)
  *   itemBases    — {slot: [{ko,en}...]}  무기 외 부위의 베이스 이름 풀. 무기의 베이스는 무기군 자체다
- *   affixDefs    — [{stat, min, max, perIlvl, slots?:[...]}]  slots 없으면 전 부위
+ *   affixDefs    — [{stat, scale:'growth'|'band'|'flat', min, max, perIlvl?, slots?:[...]}]  slots 없으면 전 부위
  *   composeName  — (prefixSin, base, suffixSin|null) → {ko,en}
  */
 export function createItemSystem(data) {
     const B = data.balance;
     const WG = data.weaponGroups;
+    const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
+    const r1 = v => Math.round(v * 10) / 10;
+    const r2 = v => Math.round(v * 100) / 100;
 
     /** 드롭·시작 무기에 쓰는 무기군 = 본편(stage=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
     const dropGroups = Object.values(WG).filter(g => g.stage === 'main');
@@ -47,27 +59,43 @@ export function createItemSystem(data) {
         return lo + Math.floor(rng() * (hi - lo + 1));
     };
 
-    /** 접사 n개 — 같은 stat 이 두 번 붙지 않는다 */
+    /**
+     * 접사 n개 — 같은 stat 이 두 번 붙지 않는다. 값은 정의의 `scale` 이 정한다 (item_design §2-1):
+     *   growth — 굴림 × growthMult(ilvl), 소수 1자리 (밑수가 2.3 대역이라 정수로 반올림하면 뭉개진다)
+     *   band   — 굴림 + ilvl × perIlvl, 정수 (비율 축은 완만하게만 오른다)
+     *   flat   — 굴림 그대로, 정수. **ilvl 무관** — % 접사가 곡선을 타면 곱셈층이 두 번 자라 후반이 폭주한다
+     */
     function rollAffixes(rng, slot, ilvl, n) {
         const pool = data.affixDefs.filter(d => !d.slots || d.slots.includes(slot));
         const out = [];
         for (let i = 0; i < n && pool.length; i++) {
             const d = pool.splice(Math.floor(rng() * pool.length), 1)[0];
-            const v = Math.round(d.min + rng() * (d.max - d.min) + ilvl * d.perIlvl);
-            out.push({ stat: d.stat, v: Math.max(1, v) });
+            const roll = d.min + rng() * (d.max - d.min);
+            const v = d.scale === 'growth' ? Math.max(0.1, r1(roll * F.growthMult(ilvl)))
+                : d.scale === 'band' ? Math.max(1, Math.round(roll + ilvl * (d.perIlvl ?? 0)))
+                    : Math.max(1, Math.round(roll));
+            out.push({ stat: d.stat, v });
         }
         return out;
     }
 
-    /** 부위 고유값(Implicit) — 방어구는 방어력, 무기는 공격력을 따로 든다 */
-    const implicitFor = (slot, ilvl) => {
-        if (slot === 'weapon') return null;
-        if (['amulet', 'ring'].includes(slot)) return null;
-        const v = Math.round(B.armor_def_base + ilvl * B.armor_def_per_ilvl);
-        return { stat: 'def_flat', v: slot === 'offhand' ? Math.round(v * 1.5) : v };
-    };
+    /**
+     * 부위 고유값(Implicit) — 방어구만 든다 (무기는 watk, 목걸이·반지는 없다).
+     * 방어는 **비율 축**이라 성장 곡선을 타지 않는다 (§9-0) — ilvl 완만 가산 + 개체 편차 1회.
+     * ⚠ 보조(offhand) ×1.5 는 코드 상수 (INTERFACE §5-3 — CSV 후보).
+     */
+    function implicitFor(rng, slot, ilvl) {
+        if (slot === 'weapon' || slot === 'amulet' || slot === 'ring') return null;    // rng 소비 없음
+        const eps = (rng() * 2 - 1) * B.armor_def_variance_pct / 100;
+        const base = (B.armor_def_base + ilvl * B.armor_def_per_ilvl) * (slot === 'offhand' ? 1.5 : 1);
+        return { stat: 'def_flat', v: r1(base * (1 + eps)) };
+    }
 
-    /** base = 무기면 무기군 정의, 아니면 {ko,en} 이름 */
+    /**
+     * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
+     * rng 소비 순서(계약 — INTERFACE §5-2): 접두 죄종 → (레어) 접미 판정 → (성공 시) 접미 죄종 →
+     *   접사 수 → 접사마다 (정의 선택 → 값) → **개체 굴림 1회** → (마법 무기) 원소
+     */
     function build(rng, slot, rarity, ilvl, base) {
         const prefix = pick(rng, data.sins);
         let suffix = null;
@@ -78,17 +106,22 @@ export function createItemSystem(data) {
             uid: null,
             slot, rarity, ilvl,
             name: data.composeName(prefix, base, suffix),
-            implicit: implicitFor(slot, ilvl),
+            implicit: null,
             affixes: rollAffixes(rng, slot, ilvl, affixCount(rng, rarity)),
             sins: suffix ? [prefix, suffix] : [prefix],
         };
         if (slot === 'weapon') {
             item.group = base.id;
             if (base.twoHanded) item.twoHanded = true;
-            item.watk = Math.round((B.weapon_atk_base + ilvl * B.weapon_atk_per_ilvl) * (base.twoHanded ? B.two_hand_atk_mult : 1));
+            // 무기 공격력 = 밑수 × 성장 곡선 × (양손 보상) × 개체 편차. 편차 폭은 무기군 값이 우선 (§9-1)
+            const eps = (rng() * 2 - 1) * (base.variance ?? B.dmg_variance_pct) / 100;
+            item.watk = r2(B.weapon_atk_base * F.growthMult(ilvl)
+                * (base.twoHanded ? B.two_hand_atk_mult : 1) * (1 + eps));
             // 마법 무기는 **개체**가 원소를 든다 (battle_design §9-5) — 무기군은 종류를, 개체는 상대할 저항을 정한다.
             // 세기가 아니라 대상 선택이라 "무기군 스킬은 개체에 붙지 않는다"(skill_design §3)와 충돌하지 않는다.
             if (base.attackType === 'magic') item.element = pick(rng, data.elements);
+        } else {
+            item.implicit = implicitFor(rng, slot, ilvl);
         }
         return item;
     }
@@ -100,7 +133,7 @@ export function createItemSystem(data) {
         return build(rng, slot, rollRarity(rng), ilvl, base);
     }
 
-    /** 시작 무기 — 그 직업 전속 무기군에서 ilvl 1 매직 1개 (장비가 주인공이라 빈손으로 내보내지 않는다) */
+    /** 시작 무기 — 그 직업 전속 무기군에서 ilvl 1 매직 1개 (무기가 밑수라 빈손이면 세기가 성립하지 않는다) */
     function startingWeapon(rng, cls) {
         const gs = groupsFor(cls);
         return build(rng, 'weapon', 'magic', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups));

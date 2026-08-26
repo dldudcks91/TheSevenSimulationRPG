@@ -52,15 +52,15 @@ export const HERO_TIER = {
     unique: {
         ko: '유니크', en: 'Unique', color: '#FF8C00',
         desc: {
-            ko: '이름·직업·죄종 고정 + 고유 패시브 1개 · 로스터에 1명만',
-            en: 'Fixed name, class & sin + 1 unique passive · one per roster',
+            ko: '이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용) · 로스터에 1명만',
+            en: 'Fixed name, class & sin + 1 signature skill (hero-exclusive) · one per roster',
         },
     },
     rare: {
         ko: '레어', en: 'Rare', color: '#FFD700',
         desc: {
-            ko: '직업·죄종·특성 전부 굴림 · 고유 패시브 없음 · 죄종×직업 35칸 담당',
-            en: 'Class, sin & trait all rolled · no unique passive · covers all 35 sin×class cells',
+            ko: '직업·죄종·특성 전부 굴림 · 고유 스킬은 공용 풀 배정 · 죄종×직업 35칸 담당',
+            en: 'Class, sin & trait all rolled · signature skill from shared pool · covers all 35 sin×class cells',
         },
     },
 };
@@ -71,9 +71,11 @@ export const HERO_TIER = {
  * 무기군은 여기 적지 않는다 — 직업 전속 배정은 **weapon_group.csv 의 classes 열**이 SSOT 다 (2026-08-25 확정).
  *
  * keyAttr = 이 직업을 미는 기본 능력치. hero_attribute.csv 의 combat_stat 열에서 그대로 나온다
- *   (힘→물리 공격력 / 지능→마법 공격력 / 민첩→행동 주기 / 감각→명중·회피 / 건강→상태이상 회복 속도 / 통솔·매력→없음).
+ *   (힘→물리 공격력 / 지능→마법 공격력 / 민첩→행동 주기 / 건강→상태이상 회복 속도 / **운→드랍률·골드(전투 밖)** / 통솔·매력→없음).
  *   생성 굴림이 이 축을 밀어 준다 — 지능 7인 마법사가 나오면 플레이어가 인과를 읽을 수 없다.
  *   사제 = 순수 캐스터(마법사와 무기 풀 공유) → 파워 출처는 마법 공격력 = 지능 (battle_design §8, 08-25).
+ *   ⚠ 궁수=운은 **이름만 따라간 것**이다 (08-26 감각→운) — 전투 계수가 없는 축이 주력이 됐다.
+ *     물리 공격력을 쓰는데 힘이 안 곱해지므로 `str` 재배정이 유력하나 기획 미결 (GAME_DESIGN §10 · hero_design §4-1-1).
  *   ⚠ 기사=건강은 제안 — 건강이 HP 를 떠나 상태이상 회복 속도만 밀게 된 뒤(08-25) 탱커의 주력 축은 미확정.
  *   ⚠ 밀어주는 세기는 제안 — 기획 확정 필요 (2026-08-24)
  */
@@ -81,7 +83,7 @@ export const CLASSES = [
     { id: 'warrior', keyAttr: 'str', ko: '전사', en: 'Warrior', role: { ko: '근접 물리', en: 'Melee Physical' }, stage: 'main' },
     { id: 'knight', keyAttr: 'vit', ko: '기사', en: 'Knight', role: { ko: '탱커 · 수호', en: 'Tank · Guardian' }, stage: 'main' },
     { id: 'mage', keyAttr: 'int', ko: '마법사', en: 'Mage', role: { ko: '마법', en: 'Magic' }, stage: 'main' },
-    { id: 'archer', keyAttr: 'sen', ko: '궁수', en: 'Archer', role: { ko: '원거리 물리', en: 'Ranged Physical' }, stage: 'main' },
+    { id: 'archer', keyAttr: 'luck', ko: '궁수', en: 'Archer', role: { ko: '원거리 물리', en: 'Ranged Physical' }, stage: 'main' },
     { id: 'priest', keyAttr: 'int', ko: '사제', en: 'Priest', role: { ko: '지원 · 회복', en: 'Support · Healing' }, stage: 'main' },
     { id: 'assassin', keyAttr: 'agi', ko: '암살자', en: 'Assassin', role: { ko: '치명 · 속도', en: 'Crit · Speed' }, stage: 'expansion' },
     { id: 'necromancer', keyAttr: 'int', ko: '네크로맨서', en: 'Necromancer', role: { ko: '소환', en: 'Summoning' }, stage: 'expansion' },
@@ -150,29 +152,40 @@ export const ITEM_BASES = {
 };
 
 /**
- * 접사 정의 — stat id + 범위. 수치는 임시(⚠) — 계승 접사 매트릭스(7죄종×슬롯)는 미연결.
+ * 접사 정의 — stat id + 굴림 범위 + **스케일 분류**. 수치는 임시(⚠) — 계승 접사 매트릭스(7죄종×슬롯)는 미연결.
  * **여기 있는 축은 전부 전투에 실제로 걸린다** — 안 걸리는 접사는 넣지 않는다 (거짓 선택지 금지).
  * slots 가 없으면 전 부위.
- * res_all = 원소 저항 4종(전기·불·냉기·독, 08-25 마법 방어 대체)에 같은 값으로 펴지는 프로토타입 접사 —
- *   공격의 원소 배정이 정해지면 res_lightning/res_fire/res_cold/res_poison 으로 쪼갠다.
+ *
+ * `scale` (item_design §2-1 · battle_design §9-0) — ilvl 로 어떻게 커지는가:
+ *   `growth` 굴림 × power_growth_per_level^(ilvl−1) — 성장 축(공격력·HP flat). 소수 1자리
+ *   `band`   굴림 + ilvl × perIlvl — 비율 축(물리 방어). **`perIlvl` 은 여기에만 남는다**
+ *   `flat`   굴림 그대로, **ilvl 무관** — % 접사·치명·공속·흡혈·방어 무시·저항·유틸 전부
+ *
+ * 저항은 소재값이 아니라 **직접 %**(상한형)라 자랄 이유가 없다 (battle_design §9-5) —
+ *   전 원소 공통 `res_all` + 원소별 4종이 같은 항에 더해진다.
+ * `damage_reduction` 은 **원천별 곱**이라 실효 체력이 개수에 지수로 자란다 — 값을 낮게 유지한다 (item_design §2 주의문).
+ * `res_max_bonus` · `res_reduction` 은 축은 살아 있지만 **드롭 접사 풀에 넣지 않는다** — 유니크·크래프트·낙인의 자리.
  */
 export const AFFIX_DEFS = [
-    { stat: 'atk_flat', min: 2, max: 6, perIlvl: 0.8, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
-    { stat: 'atk_pct', min: 3, max: 8, perIlvl: 0.3, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
-    { stat: 'hp_flat', min: 8, max: 20, perIlvl: 2, slots: ['armor', 'helmet', 'boots', 'offhand', 'amulet', 'ring'] },
-    { stat: 'hp_pct', min: 2, max: 5, perIlvl: 0.2, slots: ['armor', 'helmet', 'amulet'] },
-    { stat: 'def_flat', min: 2, max: 6, perIlvl: 0.8, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand'] },
-    { stat: 'res_all', min: 2, max: 6, perIlvl: 0.8, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet'] },
-    { stat: 'crit_rate', min: 2, max: 5, perIlvl: 0.2, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
-    { stat: 'crit_damage', min: 8, max: 18, perIlvl: 0.8, slots: ['weapon', 'ring', 'amulet'] },
-    { stat: 'aspd_pct', min: 2, max: 5, perIlvl: 0.15, slots: ['weapon', 'gloves', 'boots'] },
-    { stat: 'life_steal', min: 1, max: 3, perIlvl: 0.1, slots: ['weapon', 'ring'] },
-    { stat: 'evasion', min: 3, max: 8, perIlvl: 0.5, slots: ['boots', 'armor', 'offhand'] },
-    { stat: 'accuracy', min: 3, max: 8, perIlvl: 0.5, slots: ['gloves', 'helmet', 'ring'] },
-    { stat: 'def_ignore', min: 3, max: 8, perIlvl: 0.2, slots: ['weapon', 'gloves'] },
-    { stat: 'reflect_damage', min: 3, max: 8, perIlvl: 0.3, slots: ['armor', 'offhand'] },
-    { stat: 'gold_find', min: 5, max: 12, perIlvl: 0.5, slots: ['boots', 'gloves', 'ring', 'amulet'] },
-    { stat: 'item_find', min: 4, max: 10, perIlvl: 0.4, slots: ['boots', 'gloves', 'ring', 'amulet'] },
+    { stat: 'atk_flat', scale: 'growth', min: 0.3, max: 0.9, slots: ['weapon'] },
+    { stat: 'atk_pct', scale: 'flat', min: 3, max: 8, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
+    { stat: 'hp_flat', scale: 'growth', min: 8, max: 20, slots: ['armor', 'helmet', 'boots', 'offhand', 'amulet', 'ring'] },
+    { stat: 'hp_pct', scale: 'flat', min: 2, max: 5, slots: ['armor', 'helmet', 'amulet'] },
+    { stat: 'def_flat', scale: 'band', min: 2, max: 6, perIlvl: 0.3, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand'] },
+    { stat: 'res_all', scale: 'flat', min: 3, max: 10, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet'] },
+    { stat: 'res_fire', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
+    { stat: 'res_cold', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
+    { stat: 'res_lightning', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
+    { stat: 'res_poison', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
+    { stat: 'crit_rate', scale: 'flat', min: 2, max: 5, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
+    { stat: 'crit_damage', scale: 'flat', min: 8, max: 18, slots: ['weapon', 'ring', 'amulet'] },
+    { stat: 'aspd_pct', scale: 'flat', min: 2, max: 5, slots: ['weapon', 'gloves', 'boots'] },
+    { stat: 'life_steal', scale: 'flat', min: 1, max: 3, slots: ['weapon', 'ring'] },
+    { stat: 'def_ignore', scale: 'flat', min: 3, max: 8, slots: ['weapon', 'gloves'] },
+    { stat: 'reflect_damage', scale: 'flat', min: 3, max: 8, slots: ['armor', 'offhand'] },
+    { stat: 'damage_reduction', scale: 'flat', min: 2, max: 5, slots: ['armor', 'helmet', 'offhand'] },
+    { stat: 'gold_find', scale: 'flat', min: 5, max: 12, slots: ['boots', 'gloves', 'ring', 'amulet'] },
+    { stat: 'item_find', scale: 'flat', min: 4, max: 10, slots: ['boots', 'gloves', 'ring', 'amulet'] },
 ];
 
 /** 접사 표기 — stat id → 이름 + 단위. 단위 붙이기는 렌더러 한 곳(affixText)에서만 */
@@ -182,15 +195,18 @@ export const AFFIX_LABELS = {
     hp_flat: { ko: '최대 HP', en: 'Max HP', fmt: 'n' },
     hp_pct: { ko: '최대 HP', en: 'Max HP', fmt: 'pct' },
     def_flat: { ko: '물리 방어', en: 'Physical Defense', fmt: 'n' },
-    res_all: { ko: '모든 원소 저항', en: 'All Resistances', fmt: 'n' },
+    res_all: { ko: '모든 원소 저항', en: 'All Resistances', fmt: 'pct' },
+    res_fire: { ko: '불 저항', en: 'Fire Resist', fmt: 'pct' },
+    res_cold: { ko: '냉기 저항', en: 'Cold Resist', fmt: 'pct' },
+    res_lightning: { ko: '전기 저항', en: 'Lightning Resist', fmt: 'pct' },
+    res_poison: { ko: '독 저항', en: 'Poison Resist', fmt: 'pct' },
     crit_rate: { ko: '치명타 확률', en: 'Crit Chance', fmt: 'pct' },
     crit_damage: { ko: '치명타 피해', en: 'Crit Damage', fmt: 'pct' },
     aspd_pct: { ko: '공격 속도', en: 'Attack Speed', fmt: 'pct' },
     life_steal: { ko: '흡혈', en: 'Life Steal', fmt: 'pct' },
-    evasion: { ko: '회피', en: 'Evasion', fmt: 'n' },
-    accuracy: { ko: '명중', en: 'Accuracy', fmt: 'n' },
     def_ignore: { ko: '방어 무시', en: 'Defense Ignore', fmt: 'pct' },
     reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', fmt: 'pct' },
+    damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', fmt: 'pct' },
     gold_find: { ko: '골드 획득', en: 'Gold Find', fmt: 'pct' },
     item_find: { ko: '드랍률', en: 'Item Find', fmt: 'pct' },
 };
@@ -224,7 +240,7 @@ export const STATS = [
     { id: 'agi', ko: '민첩', en: 'Agility', abbr: 'AGI' },
     { id: 'int', ko: '지능', en: 'Intelligence', abbr: 'INT' },
     { id: 'vit', ko: '건강', en: 'Vitality', abbr: 'VIT' },
-    { id: 'sen', ko: '감각', en: 'Sense', abbr: 'SEN' },
+    { id: 'luck', ko: '운', en: 'Luck', abbr: 'LCK' },
     { id: 'ldr', ko: '통솔', en: 'Leadership', abbr: 'LDR' },
     { id: 'cha', ko: '매력', en: 'Charisma', abbr: 'CHA' },
 ];
@@ -261,13 +277,15 @@ export const HERO_TRAIT_POOL = [
 
 
 /**
- * 전투 능력치 24종 — src/data/combat_stat.csv 의 화면용 사본 (2026-08-25 27→24: 상태이상 적중·저항 · 회복량 ·
- * 파티 보정 · 스킬 레벨 · 파견 시간 단축 · 마법 방어 삭제, 원소 저항 4종 추가).
+ * 전투 능력치 25종 — src/data/combat_stat.csv 의 화면용 사본. **행·순서를 CSV 와 1:1 로 맞춘다**
+ * (2026-08-26: 명중·회피 삭제 → 저항 감소 · 상태이상 대상 피해 · 최대 저항 증가 추가).
  * **기본 능력치(STATS)와는 다른 층이다** (CLAUDE.md / hero_design §4):
- *   기본 7종 = 영웅 고유·장비 불변 / 전투 24종 = 장비·스킬이 만든다.
- * attr = 이 전투 능력치를 미는 기본 능력치(계수). null 은 장비·스킬 전담. 계수가 붙는 것은 6종뿐이다.
+ *   기본 7종 = 영웅 고유·장비 불변 / 전투 25종 = 장비·스킬이 만든다.
+ * attr = 이 전투 능력치를 미는 기본 능력치(계수). null 은 장비·스킬 전담.
+ *   전투 계수는 힘·지능·민첩·건강 4종뿐이고, 드랍률·골드의 **운은 전투 계산 밖**이다 (hero_design §4-1).
  * fmt = 표기 단위. 숫자는 데이터로 두고 단위 붙이기는 렌더러가 한 곳에서 한다.
- * CSV 로 이사할 때 stat_kr 옆에 stat_en 컬럼이 붙는다.
+ *   저항 4종은 소재값이 아니라 **직접 %** 라 pct 다 (battle_design §9-5).
+ * ⚠ 코드가 아직 combat_stat.csv 를 읽지 않아 여기가 사본이다 — 읽기 전환은 DEV_PLAN §5-B (부채 #12).
  */
 export const COMBAT_CATS = [
     { id: 'offense', ko: '공격', en: 'Offense' },
@@ -280,20 +298,21 @@ export const COMBAT_CATS = [
 export const COMBAT_STATS = [
     { id: 'atk_physical', ko: '물리 공격력', en: 'Physical Attack', cat: 'offense', attr: 'str', fmt: 'n' },
     { id: 'atk_magic', ko: '마법 공격력', en: 'Magic Attack', cat: 'offense', attr: 'int', fmt: 'n' },
-    { id: 'accuracy', ko: '명중', en: 'Accuracy', cat: 'offense', attr: 'sen', fmt: 'n' },
     { id: 'crit_rate', ko: '치명타 확률', en: 'Crit Chance', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'crit_damage', ko: '치명타 피해', en: 'Crit Damage', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'def_ignore', ko: '방어 무시', en: 'Defense Ignore', cat: 'offense', attr: null, fmt: 'pct' },
+    { id: 'res_reduction', ko: '저항 감소', en: 'Resist Reduction', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'vs_type_damage', ko: '타입 특효', en: 'Type Damage', cat: 'offense', attr: null, fmt: 'pct' },
     { id: 'vs_size_damage', ko: '사이즈 특효', en: 'Size Damage', cat: 'offense', attr: null, fmt: 'pct' },
+    { id: 'vs_status_damage', ko: '상태이상 대상 피해', en: 'Damage vs Ailing', cat: 'offense', attr: null, fmt: 'pct' },
 
     { id: 'hp_max', ko: '최대 HP', en: 'Max HP', cat: 'defense', attr: null, fmt: 'n' },
     { id: 'defense', ko: '물리 방어', en: 'Physical Defense', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'res_lightning', ko: '전기 저항', en: 'Lightning Resist', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'res_fire', ko: '불 저항', en: 'Fire Resist', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'res_cold', ko: '냉기 저항', en: 'Cold Resist', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'res_poison', ko: '독 저항', en: 'Poison Resist', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'evasion', ko: '회피', en: 'Evasion', cat: 'defense', attr: 'sen', fmt: 'n' },
+    { id: 'res_fire', ko: '불 저항', en: 'Fire Resist', cat: 'defense', attr: null, fmt: 'pct' },
+    { id: 'res_cold', ko: '냉기 저항', en: 'Cold Resist', cat: 'defense', attr: null, fmt: 'pct' },
+    { id: 'res_lightning', ko: '전기 저항', en: 'Lightning Resist', cat: 'defense', attr: null, fmt: 'pct' },
+    { id: 'res_poison', ko: '독 저항', en: 'Poison Resist', cat: 'defense', attr: null, fmt: 'pct' },
+    { id: 'res_max_bonus', ko: '최대 저항 증가', en: 'Max Resist Bonus', cat: 'defense', attr: null, fmt: 'pct' },
     { id: 'damage_reduction', ko: '피해 감소', en: 'Damage Reduction', cat: 'defense', attr: null, fmt: 'pct' },
     { id: 'reflect_damage', ko: '반사 피해', en: 'Reflect Damage', cat: 'defense', attr: null, fmt: 'n' },
 
@@ -304,8 +323,8 @@ export const COMBAT_STATS = [
     { id: 'fhr', ko: '상태이상 회복 속도', en: 'Status Recovery', cat: 'tempo', attr: 'vit', fmt: 'pct' },
     { id: 'cooldown_reduction', ko: '쿨타임 감소', en: 'Cooldown Reduction', cat: 'tempo', attr: null, fmt: 'pct' },
 
-    { id: 'item_find', ko: '드랍률', en: 'Item Find', cat: 'utility', attr: null, fmt: 'pct' },
-    { id: 'gold_find', ko: '골드 획득', en: 'Gold Find', cat: 'utility', attr: null, fmt: 'pct' },
+    { id: 'item_find', ko: '드랍률', en: 'Item Find', cat: 'utility', attr: 'luck', fmt: 'pct' },
+    { id: 'gold_find', ko: '골드 획득', en: 'Gold Find', cat: 'utility', attr: 'luck', fmt: 'pct' },
 ];
 
 /**
@@ -634,7 +653,11 @@ export const SKILL_POINTS = { total: 24, spent: 21 };
  * ⚠ 레벨별 보정 %(아래)는 아직 **화면 확인용 자리표시** — codex_level.csv 컬럼으로 이관 예정.
  */
 export const CODEX_LEVEL_BONUS = [0.5, 0.5, 1, 1];       // 레벨 1..4 도달 시 얻는 % (누적) — codex_level.csv 행 수와 맞춘다
-/** 스테이지 번호 → 전투 보너스 키 (1 공격 / 2 체력 / 3 명중 / 4 피해 — 계승 collection_group_bonus 배정) */
+/**
+ * 스테이지 번호 → 전투 보너스 키 (1 공격 / 2 체력 / 3 명중 / 4 피해 — 계승 collection_group_bonus 배정)
+ * ⚠ **3 계열(`acc_pct`)은 갈 곳이 없다** — 명중 폐지(08-26)로 `computeCombat` 이 읽는 키가 아니다.
+ *   재배정은 기획 결정이라 배정 자체는 그대로 두고 미결로 등재했다 (GAME_DESIGN §10 · DEV_PLAN §3-2).
+ */
 export const CODEX_STAT_BY_NUM = { 1: 'atk_pct', 2: 'hp_pct', 3: 'acc_pct', 4: 'dmg_pct' };
 
 /** 챕터 이름 = chapter_info.csv 의 region_kr / region_en 그대로 */

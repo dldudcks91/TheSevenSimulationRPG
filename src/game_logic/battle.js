@@ -9,14 +9,17 @@
  *   · 몬스터 소재값(monster.csv) × 등급 배율(spawn_grade.csv)
  *   · 용어는 "사망"이 아니라 전투불능(부상) — 라운드 사이 회복 없음, 귀환 시 무료 회복
  *
- *   · 피해 계산은 formula.js — battle_design §9 (명중 대결 → 타격 피해 → 곱셈 감쇠). 이 파일은 **누가 언제 때리는가**만 본다
+ *   · 피해 계산은 formula.js — battle_design §9 (적중 게이트 → 타격 피해 → 감소). 이 파일은 **누가 언제 때리는가**만 본다
+ *   · **몬스터는 영웅과 같은 전투 능력치 체계를 쓴다** (§8-1) — 같은 `strike` 에 같은 모양의 유닛이 양쪽으로 들어간다.
+ *     몬스터 방어 200과 영웅 방어 200은 정확히 같은 감쇠를 만든다. 저항은 양쪽 다 **4원소 객체 · 직접 %**
+ *   · 적중은 **레벨 차 0/1 게이트** (§9-4) — 영웅은 자기 레벨, 몬스터는 스테이지 dlvl. 빗나가면 흡혈·반사도 유발되지 않는다
  *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 마법 무기 개체의 원소 (§9-5)
  *   · 반사는 비직격 — 감쇠·치명 없이 공격자 HP 를 직접 깎고 아무것도 유발하지 않는다 (§9-6)
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   타겟팅: 진형·어그로 미확정 → 랜덤.
  *   스킬: 액티브 슬롯은 아직 비어 있다(스킬 효과 미작성) — 기본 공격만 돈다(스킬 배율 1). 구조는 battle_design §3 대로 남긴다.
- *   몬스터의 명중·회피·치명·반사는 0 — 정예 특성(elite_trait.csv)이 붙기 전까지 값이 없다 (§8 "몬스터는 부분집합만").
+ *   몬스터의 치명·반사·피해 감소는 0 — 정예 특성(elite_trait.csv)이 붙기 전까지 값이 없다 (§8-1 "몬스터는 부분집합만").
  *   도감 카드: 처치마다 장비 드롭과 **별개로** 카드 판정 (monster_design §8) — 결과 cards 와 타임라인 'card' 이벤트.
  */
 
@@ -35,25 +38,45 @@ export function createBattleSystem(data) {
     const F = createFormula(B);
     const r1 = v => Math.round(v * 10) / 10;
 
-    const stagePool = stage => Object.values(data.monsters)
-        .filter(m => m.chapter === stage.chapter && m.stage_num === stage.stage_num && m.spawn_grade === 'normal')
+    const stageMonsters = stage => Object.values(data.monsters)
+        .filter(m => m.chapter === stage.chapter && m.stage_num === stage.stage_num);
+
+    const stagePool = stage => stageMonsters(stage)
+        .filter(m => m.spawn_grade === 'normal')
         .map(m => m.monster_idx);
 
-    /** 몬스터 소재값 × 등급 배율 × 전역 스케일 → 전투 유닛 */
+    /**
+     * 스테이지 원소 — 그 스테이지 몬스터의 `attack_type` 중 physical 이 아닌 첫 값 (없으면 'physical').
+     * 편성 화면이 "이 스테이지는 어느 저항을 요구하나"를 표시하려면 필요한데(§9-8),
+     * 렌더러가 몬스터 테이블을 훑어 계산하면 규칙이 화면 층에 새므로 여기 둔다.
+     */
+    const stageElement = stage =>
+        stageMonsters(stage).find(m => m.attack_type !== 'physical')?.attack_type ?? 'physical';
+
+    /**
+     * 몬스터 → 전투 유닛. 영웅과 **같은 필드 모양**을 갖는다 (§8-1) — 대부분의 축은 값이 0인 부분집합.
+     *   hp·공격력 = 소재값 × 등급 배율 × 전역 스케일 (성장 축)
+     *   방어      = 소재값 × 등급 배율 × 전역 스케일 (비율 축 — monster_design §7-1 규칙 생성)
+     *   저항      = **직접 %** — 배율을 받지 않고 등급은 `spawn_grade.res_add` 로 %p 가산만 한다
+     */
     function makeEnemy(key, monsterId, grade, lvl, extra = {}) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
         const hp = Math.round(m.hp * g.hp_mult * B.monster_hp_scale);
-        const dScale = g.def_mult * B.monster_def_scale;
         return {
             key, side: 'enemy', monsterId, grade,
             hp, hpMax: hp,
             atk: m.attack * g.atk_mult * B.monster_atk_scale,
             atkType: m.attack_type,                 // physical 또는 스테이지 원소 (monster_design §2)
-            def: m.defense * dScale, res: m.resist * dScale,   // resist = 4원소 공통 소재값
-            lvl,                                    // 감쇠 곡선 K 의 공격자 레벨 = 스테이지 dlvl (§9-3)
+            def: m.defense * g.def_mult * B.monster_def_scale,
+            res: {
+                fire: m.res_fire + g.res_add, cold: m.res_cold + g.res_add,
+                lightning: m.res_lightning + g.res_add, poison: m.res_poison + g.res_add,
+            },
+            lvl,                                    // 적중률의 레벨 = 스테이지 dlvl (§9-4 — 몬스터마다 두지 않는다)
             period: m.action_period, next: 0,
-            acc: 0, eva: 0, crit: 0, critDmg: B.base_crit_damage_pct, ls: 0, reflect: 0, dr: 0, defIgnore: 0, dmgBonus: 0,
+            crit: 0, critDmg: B.base_crit_damage_pct, defIgnore: 0, resReduction: 0,
+            skillMult: 1, bonusPct: 0, resMaxBonus: 0, dr: 0, ls: 0, reflect: 0,
             expReward: m.exp_reward * g.exp_mult, goldMult: g.gold_mult, dropRoll: g.drop_roll,
             ...extra,
         };
@@ -103,6 +126,7 @@ export function createBattleSystem(data) {
         const pool = stagePool(stage);
         const rounds = B.rounds_per_stage;
 
+        // 파티 유닛 — 몬스터와 **같은 필드 모양**이다 (§8-1). 필드명은 formula.strike 가 읽는 이름 그대로
         const party = partyUnits.map((p, i) => {
             const c = p.combat;
             return {
@@ -111,10 +135,12 @@ export function createBattleSystem(data) {
                 atk: c.atk_physical ?? c.atk_magic ?? 0, atkType: c.attack_type,
                 def: c.defense,
                 res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
-                lvl: c.level, variance: c.variance_pct,
-                acc: c.accuracy, eva: c.evasion, dr: c.damage_reduction, defIgnore: c.def_ignore,
+                lvl: c.level,
+                resMaxBonus: c.res_max_bonus, dr: c.damage_reduction,
+                defIgnore: c.def_ignore, resReduction: c.res_reduction,
+                skillMult: 1, bonusPct: c.dmg_bonus_pct,     // 도감·특효 보정 — strike 가 읽는 이름과 같아야 한다
                 crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
-                dmgBonus: c.dmg_bonus_pct, period: c.action_period,
+                period: c.action_period,
                 next: i * 0.3,           // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
                 goldFind: c.gold_find, itemFind: c.item_find,
             };
@@ -129,6 +155,8 @@ export function createBattleSystem(data) {
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period })),
             timeline, xpTotal: 0, gold: 0, dust: 0, kills: {}, cards: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [],
+            // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
+            strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
         };
 
         let t = 0, round = 1;
@@ -187,6 +215,9 @@ export function createBattleSystem(data) {
             if (foes.length === 0) return;
             const target = foes[Math.floor(rng() * foes.length)];   // 타겟팅 미확정 → 랜덤
             const { hit, dmg, crit } = F.strike(rng, u, target);
+            const tally = out.strikes[u.side === 'party' ? 'party' : 'enemy'];
+            tally.n += 1;
+            if (!hit) tally.miss += 1;
             if (!hit) {
                 timeline.push({ t: r1(t), e: 'dodge', a: u.key, d: target.key });
                 return;
@@ -230,5 +261,6 @@ export function createBattleSystem(data) {
         return out;
     }
 
-    return { simulate, stagePool };
+    // makeEnemy 는 검증(dev/test.js)이 몬스터→유닛 변환 규칙을 직접 볼 수 있도록 함께 내보낸다 — stagePool 과 같은 이유
+    return { simulate, stagePool, stageElement, makeEnemy };
 }

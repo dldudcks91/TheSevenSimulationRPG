@@ -104,11 +104,7 @@ function buildDom(state, stage, stageId) {
                 <div class="log-head muted">${t('bt.log.h')}</div>
                 <ul class="battle-log"></ul>
             </div>
-        </div>
-        <details class="note">
-            <summary>${t('ui.note')}</summary>
-            <div class="note-body">${t('bt.note')}</div>
-        </details>`;
+        </div>`;
     return wrap;
 }
 
@@ -211,12 +207,6 @@ function popup(state, u, text, cls) {
     state.timeouts.push(setTimeout(() => p.remove(), 900));
 }
 
-function lunge(state, u) {
-    if (!u?.node) return;
-    u.node.classList.add('attacking');
-    state.timeouts.push(setTimeout(() => u.node?.classList.remove('attacking'), 260));
-}
-
 function pushLog(state, root, text) {
     const ul = root.querySelector('.battle-log');
     const li = document.createElement('li');
@@ -267,7 +257,7 @@ function apply(state, root, opts, ev) {
         }
         case 'hit': {
             const a = U(ev.a), d = U(ev.d);
-            if (a) { a.lastAct = ev.t; lunge(state, a); if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
+            if (a) { a.lastAct = ev.t; if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
                 popup(state, d, `-${ev.dmg}`, ev.crit ? 'crit' : (a?.side === 'party' ? 'dmg' : 'dmg-in'));
@@ -285,7 +275,7 @@ function apply(state, root, opts, ev) {
         }
         case 'dodge': {
             const a = U(ev.a), d = U(ev.d);
-            if (a) { a.lastAct = ev.t; lunge(state, a); }
+            if (a) { a.lastAct = ev.t; }
             if (d) popup(state, d, t('pop.dodge'), 'miss');
             break;
         }

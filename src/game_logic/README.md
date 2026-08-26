@@ -16,7 +16,7 @@
 |---|---|
 | `rng.js` | mulberry32 + `deriveSeed(마스터 시드, 스트림)` |
 | `csv.js` | CSV 파서 (fetch 는 `ui/data.js`) |
-| `formula.js` | **피해 계산** = battle_design.md §9. 순수 함수만 — 명중 대결 · 곱셈 감쇠 · 직격/비직격. 엔진 이식 대조 검증의 핵 |
+| `formula.js` | **피해 계산** = battle_design.md §9. 순수 함수만 — **레벨 차 적중**(명중·회피 없음) · `def_curve_k` **상수** 감쇠 · **저항 상한형**(직접 %) · 피해 감소 원천별 곱 · 직격/비직격 · 성장 축의 유일한 곡선 `growthMult`. 엔진 이식 대조 검증의 핵 |
 | `hero.js` | 생성(합 고정·주력 축) · XP/레벨 · 히든 상한 성장 · 전투 능력치 합산 |
 | `item.js` | 드롭 · 시작 무기(직업 전속 무기군) · 착용 규칙 · 분해 |
 | `battle.js` | 헤드리스 시뮬 — 누가 언제 때리는가. 피해 자체는 `formula.js` |
@@ -26,4 +26,4 @@
 검증: [`src/dev/README.md`](../dev/README.md)
 
 ---
-*마지막 업데이트: 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*
+*마지막 업데이트: 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*

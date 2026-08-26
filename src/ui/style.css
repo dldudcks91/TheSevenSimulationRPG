@@ -376,13 +376,6 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .verdict-sidegrade { color: var(--color-warning); }
 .verdict-junk { color: var(--text-muted); }
 
-/* ───────── 미구현 안내 ───────── */
-.todo {
-    border: 1px dashed var(--border-secondary); padding: 40px;
-    text-align: center; color: var(--text-muted); background: var(--bg-card);
-}
-.todo b { display: block; color: var(--text-secondary); font-size: var(--fs-lg); margin-bottom: 10px; font-weight: normal; }
-
 /* ───────── 전투 관전 ─────────
    상하 대치: 적(위) / 파티(아래)
    진영 안에서는 유닛이 가로로 나란히 → 유닛 카드는 세로형 */
@@ -467,10 +460,6 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 전투 유닛의 얼굴 폴백 원판 — 사각 스프라이트 칸 안의 원 */
 .sprite.disc { border-radius: 50%; font-size: var(--fs-lg); }
 .unit.elite .sprite { border-color: #8a6a3a; }
-
-/* 공격 모션 — 상대 진영 쪽(세로)으로 밀고 들어간다 */
-.unit.party.attacking { transform: translateY(-10px); }
-.unit.enemy.attacking { transform: translateY(10px); }
 
 .unit-name {
     font-size: var(--fs-sm); line-height: 1.3; word-break: keep-all;
@@ -591,7 +580,6 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 .sk-title { font-size: var(--fs-md); }
 .sk-sub { font-size: var(--fs-xs); }
-.sk-note { font-size: var(--fs-xs); margin-top: 10px; }
 
 /* 3행 × 5열 — 정사각 노드, 오른쪽으로 선 연결 */
 .sk-grid { display: flex; flex-direction: column; gap: 10px; }
@@ -779,26 +767,22 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     50% { box-shadow: 0 0 9px rgba(255, 140, 0, .55); }
 }
 
-/* ───────── 접이식 설명 ─────────
-   설계 근거 문구가 화면에 상시로 깔리면 정작 고를 정보를 밀어낸다. 눌러야 나오게 접었다 */
+/* ───────── 접이식 (지역 구성 보기) ─────────
+   설명 문구용 `details.note` 는 폐기됐다 (2026-08-26 — 설명은 전부 도움말 탭). 남은 접이식은
+   지역 행의 "구성 보기" 하나뿐 — 이건 설명이 아니라 **데이터**(등장 몬스터·라운드 배치)라서 남는다 */
 
-details.note { margin-top: 9px; }
-details.note > summary,
 details.zone-more > summary {
     list-style: none; cursor: pointer;
     font-size: var(--fs-xs); color: var(--text-muted);
     display: inline-flex; align-items: center; gap: 4px;
     border: 1px solid var(--border-dark); padding: 1px 8px; line-height: 16px;
 }
-details.note > summary::-webkit-details-marker,
 details.zone-more > summary::-webkit-details-marker { display: none; }
-details.note > summary::before,
 details.zone-more > summary::before { content: '+'; }
-details[open].note > summary::before,
 details[open].zone-more > summary::before { content: '−'; }
-details.note > summary:hover,
 details.zone-more > summary:hover { color: var(--text-secondary); border-color: var(--border-secondary); }
 
+/* 접이식 본문 겸 도움말 본문의 글자 규격 */
 .note-body {
     font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.7;
     margin-top: 7px; padding-left: 2px;
@@ -861,7 +845,6 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
     align-items: stretch;
 }
 .cols.c-char > .panel { display: flex; flex-direction: column; }
-.cols.c-char > .panel > details.note { margin-top: auto; }
 
 /* 패널 안의 작은 소제목 — h2 를 또 쓰면 칸이 나뉜 것처럼 보인다 */
 .sub-h {
@@ -870,7 +853,6 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
     display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
 }
 .sub-h .muted { font-size: var(--fs-xs); }
-.pd-foot { font-size: var(--fs-xs); text-align: center; margin-top: 8px; }
 
 /* ②-2 기본 능력치 막대 — 범위는 [balance.csv:hero_attr_min ~ hero_attr_max] */
 .attr-list { display: grid; gap: 4px; }
@@ -891,11 +873,6 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 /* ②-3 전투 능력치 27종 — 칸 높이를 맞추려고 안쪽만 스크롤한다 */
 /* 높이는 장비 칸(페이퍼돌 4행)이 정한다 — 세부 목록이 그 남은 높이를 채우고 나머지만 스크롤한다 */
 .cs-scroll { flex: 1 1 0; min-height: 200px; overflow-y: auto; padding-right: 4px; }
-.cs-cat {
-    font-size: var(--fs-xs); color: var(--text-muted); letter-spacing: 1px;
-    border-bottom: 1px solid var(--border-dark); padding-bottom: 3px; margin: 9px 0 4px;
-}
-.cs-cat:first-child { margin-top: 0; }
 .cs-row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 2px 0; }
 .cs-n { font-size: var(--fs-sm); color: var(--text-secondary); }
 .cs-v { font-size: var(--fs-sm); color: var(--text-primary); white-space: nowrap; }
@@ -963,9 +940,6 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .ng-count { font-size: var(--fs-xs); margin-right: 4px; }
 .btn.lg { padding: 10px 26px; font-size: var(--fs-md); }
 
-/* 설명은 가운데 정렬된 본문 밑에 왼쪽 정렬로 붙는다 */
-.ng-wrap > details.note { max-width: 760px; margin: 14px auto 0; }
-
 /* ───────── 초반 루프 실동작 (2026-08-25) ───────── */
 
 /* 한 줄 피드백 — 장착 실패·고용 결과 등. 다음 render() 에서 사라진다 */
@@ -1029,7 +1003,6 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .inv-cells.salvage .inv-cell.filled { border-style: dashed; cursor: crosshair; }
 .inv-cells.salvage .inv-cell.filled:hover { background: #2e1616; }
 .items-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-.items-tools .hint { font-size: var(--fs-xs); color: var(--text-muted); margin-left: auto; }
 .pd-cell.filled { cursor: pointer; }
 .pd-cell.filled:hover { background: #2a2a44; }
 
@@ -1052,3 +1025,24 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .party-slot .ps-sub { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .party-slot .ps-sub .injury-chip { margin-top: 0; white-space: nowrap; }
 .party-slot .b-toggle { flex: 0 0 auto; }
+
+/* ───────── 도움말 탭 (2026-08-26) ─────────
+   인게임 패널에서 걷어낸 설명 문장이 전부 모이는 한 페이지. 읽기 폭과 제목 간격만 잡는다 — 장식 없음.
+   본문 글자는 기존 `.note-body` 규격을 그대로 쓴다 */
+.help { max-width: 860px; }
+.help > h1 { font-size: var(--fs-xl); color: var(--text-primary); font-weight: normal; }
+.help > .segmented { margin: 12px 0 4px; }
+/* .panel > h2 의 flex·자간을 되돌린다 — 여기 h2 는 패널 제목이 아니라 문서 섹션 제목이다 */
+.help > h2 {
+    display: block; letter-spacing: 0;
+    font-size: var(--fs-lg); color: var(--text-primary); font-weight: normal;
+    margin: 26px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--border-dark);
+    scroll-margin-top: 10px;
+}
+.help > h3 {
+    font-size: var(--fs-sm); color: var(--text-secondary); font-weight: normal;
+    margin: 15px 0 0;
+}
+.help > h3 small { color: var(--text-muted); font-size: var(--fs-xs); margin-left: 7px; }
+.help > .note-body { margin-top: 5px; }
+.help > .note-body + .note-body { margin-top: 7px; }

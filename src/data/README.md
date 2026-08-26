@@ -18,7 +18,8 @@
 | `spawn_grade.csv` | 등급 배율 (시간 예산과 분리) |
 | `weapon_group.csv` | 무기군 11종(본편 9 + 확장 2) — 직업 전속 배정 · 한손/양손 · **공격 타입** · 행동 주기(⚠제안) · `_kr`/`_en` |
 | `codex_level.csv` | 도감 레벨별 필요 카드 수 (⚠제안). 레벨별 보정 % 는 아직 `ui/mock.js` |
-| `hero_attribute.csv` | 기본 능력치 7종 — 전투 계수 + 파견 담당 시설. 장비로 불변 (`attr_equip_bonus = 0`) |
+| `hero_attribute.csv` | 기본 능력치 7종 — 전투 계수 + 담당 파견처. 장비로 불변 (`attr_equip_bonus = 0`) |
+| `skill.csv` | 직업 액티브 15종(본편 5직업 × 3) — 배율·쿨·지속·원소·라이더(⚠제안). 무기군 액티브 7 · 고유 스킬 풀은 미작성 (skill_design §9) |
 | `combat_stat.csv` | 전투 능력치 24종 — 장비·스킬 파생. `fhr` = 상태이상 회복 속도 (stat_id 는 계승 접사 매핑 보존을 위해 유지) |
 | `equipment_option_override.csv` | 계승 옵션 패치 — 기본 능력치/코스트 접사 제외, 오만 신발 `cc_reduction` → `fhr` |
 
@@ -32,4 +33,4 @@
 - 계승 데이터의 빈 구멍: [inherited_data_gaps.md](../../docs/reference/inherited_data_gaps.md)
 
 ---
-*마지막 업데이트: 2026-08-26 (CLAUDE.md 에서 분리)*
+*마지막 업데이트: 2026-08-26 (skill.csv 등재 — 직업 액티브 15) · 2026-08-26 (CLAUDE.md 에서 분리)*

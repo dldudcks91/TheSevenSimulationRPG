@@ -5,7 +5,7 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v2 (2026-08-26)
+ * 세이브 형식 v3 (2026-08-26)
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
@@ -20,13 +20,19 @@
  *   lastReport: {...} | null,
  *   notice: {kind:'runClosed', stageId, at, seenAt} | null   — 재접속 알림 (배너 1회)
  * }
- * v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯 9·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
- * 하루 된 프로토타입 세이브라 새 게임으로 받는다. 다음 버전부터는 여기(deserialize)서 올린다.
+ *
+ * **버전 이관** — v2 부터는 `deserialize` 안에서 올린다 (INTERFACE §4 정책).
+ *   v2 → v3 (2026-08-26 — 감각→운 · 명중/회피 폐지):
+ *     · `heroes[*].stats.sen` → `stats.luck` (키 이름만 바꾸고 값·자리는 유지) · `caps` 동일
+ *     · `items[*].affixes` 에서 `stat ∈ {accuracy, evasion}` 제거 — 폐지된 축이라 읽는 곳이 없다
+ *     · 무기 `watk` 는 **재굴림하지 않는다** — 편차 없이 굴려진 개체로 그대로 남는다 (개체값은 개체의 역사다)
+ *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯 9·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
+ *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 /**
  * @param {object} deps
@@ -81,11 +87,30 @@ export function createGameSystem(deps) {
 
     const serialize = (state, now) => ({ ...clone(state), version: SAVE_VERSION, savedAt: now });
 
+    /** 키 이름만 바꾼다 — 자리(순서)를 지켜야 표시 순서·직렬화 결과가 흔들리지 않는다 */
+    const renameKey = (o, from, to) =>
+        Object.fromEntries(Object.entries(o ?? {}).map(([k, v]) => [k === from ? to : k, v]));
+
+    /** v2 → v3 — 감각→운(hero_design §4-1) · 명중/회피 접사 폐지(battle_design §9-4) */
+    function upgradeV2(s) {
+        for (const h of s.heroes ?? []) {
+            h.stats = renameKey(h.stats, 'sen', 'luck');
+            h.caps = renameKey(h.caps, 'sen', 'luck');
+        }
+        for (const it of Object.values(s.items ?? {})) {
+            if (Array.isArray(it.affixes)) it.affixes = it.affixes.filter(a => a.stat !== 'accuracy' && a.stat !== 'evasion');
+        }
+        s.version = 3;
+        return s;
+    }
+
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (obj.version !== SAVE_VERSION) throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
-        const s = clone(obj);
+        if (obj.version !== SAVE_VERSION && obj.version !== 2)
+            throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
+        let s = clone(obj);
+        if (s.version === 2) s = upgradeV2(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -125,13 +150,20 @@ export function createGameSystem(deps) {
     /** 레벨 lv 까지의 누적 보정 % (⚠ 레벨별 값은 mock 자리표시 — codex_level.csv 이관 예정) */
     const codexBonusAt = lv => deps.codex.bonus.slice(0, lv).reduce((a, b) => a + b, 0);
 
-    /** 도감 보너스 — 몬스터별 레벨 보정을 스테이지 번호가 정하는 계열 스탯에 합산한다 */
+    /**
+     * 도감 보너스 — 몬스터별 레벨 보정을 스테이지 번호가 정하는 계열 스탯에 합산한다.
+     * 누적 객체의 키는 `codex.statByNum` 의 값들에서 만든다 — 계열 배정이 바뀌어도 여기를 고칠 필요가 없다.
+     * ⚠ `computeCombat` 이 읽는 것은 `atk_pct` · `hp_pct` · `dmg_pct` 뿐이다. 명중 폐지(08-26)로
+     *   스테이지 3 계열(`acc_pct`)은 갈 곳이 없다 — 재배정은 기획 결정 (GAME_DESIGN §10).
+     */
     function codexBonus(state) {
-        const out = { atk_pct: 0, hp_pct: 0, acc_pct: 0, dmg_pct: 0 };
+        const out = Object.fromEntries(Object.values(deps.codex.statByNum).map(k => [k, 0]));
         for (const [id, cards] of Object.entries(state.codexCards)) {
             const m = deps.monsters[id];
             if (!m) continue;
-            out[deps.codex.statByNum[m.stage_num]] += codexBonusAt(codexLevel(cards));
+            const key = deps.codex.statByNum[m.stage_num];
+            if (key === undefined) continue;
+            out[key] += codexBonusAt(codexLevel(cards));
         }
         return out;
     }
@@ -278,6 +310,8 @@ export function createGameSystem(deps) {
             downed: result.downed.slice(), drops, discarded,
             cards: { ...result.cards },
             rounds: result.rounds,
+            // 빗나감 비율 — 레벨 부족의 전용 신호 (battle_design §9-8). 옛 리포트에는 없을 수 있다(렌더러가 허용)
+            strikes: result.strikes ? clone(result.strikes) : null,
         };
         state.lastReport = report;
         state.run = { stageId, repeat: state.run?.stageId === stageId ? state.run.repeat : false, lastAt: now, durationSec: result.durationSec };

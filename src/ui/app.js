@@ -7,8 +7,11 @@
  * i18n 규약 (2026-08-23): **이 파일에 한국어 리터럴을 쓰지 않는다** (주석 제외).
  *   UI 문구 → i18n.js 의 t(key) / 데이터 문자열 → mock.js 의 {ko, en} 쌍을 L() 로 푼다.
  *
- * 화면 흐름: 시작(새 게임 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 선술집 / 도감
+ * 화면 흐름: 시작(새 게임 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 선술집 / 도감 / 도움말
  *   전투 파티는 한 팀만 운용하므로 원정 탭 하나가 세 상태를 갖는다.
+ *
+ * 2026-08-26 — **인게임 패널에는 설명 문장을 두지 않는다** (사용자 지시). 숫자·상태·오류·버튼·툴팁만 남기고
+ *   규칙 문구는 전부 도움말 탭(renderHelp)으로 옮겼다. 새 안내 문장을 패널에 붙이려면 도움말에 넣는다.
  *
  * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너)
  */
@@ -102,16 +105,9 @@ const heroFace = (h, extraCls = '') => {
     return `<span class="face none ${extraCls}" style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
 };
 
-/** 접이식 설명 — 기본은 접혀 있고 누르면 펼쳐진다 */
-const note = (html, label) => {
-    const d = el('details', 'note');
-    d.innerHTML = `<summary>${label ?? t('ui.note')}</summary><div class="note-body">${html}</div>`;
-    return d;
-};
-
 /* ═══════════ 화면 상태 ═══════════ */
 
-const TABS = ['expedition', 'character', 'skill', 'tavern', 'codex'];
+const TABS = ['expedition', 'character', 'skill', 'tavern', 'codex', 'help'];
 
 /* 시작 파티 후보의 기준 시드 — 고정값이라 같은 리롤 횟수면 언제나 같은 3명 (결정론 확인용).
    마스터 시드(전투·드롭)는 확정 시각으로 찍는다 — 플레이마다 다른 전투, 같은 세이브 안에선 같은 전투. */
@@ -184,6 +180,7 @@ function render() {
         skill: renderSkill,
         tavern: renderTavern,
         codex: renderCodex,
+        help: renderHelp,
     })[state.tab](main);
     if (state.flash) {
         main.prepend(el('div', 'flash', t(state.flash.key, state.flash.params)));
@@ -266,7 +263,7 @@ function renderStart(main) {
     const saved = loadSave();
 
     const head = el('div', 'ng-title');
-    head.innerHTML = `<h1>${t('ng.title')}</h1><p class="muted">${t('ng.sub', { n: D.balance.party_size_max })}</p>`;
+    head.innerHTML = `<h1>${t('ng.title')}</h1>`;
     wrap.appendChild(head);
 
     if (saved) {
@@ -301,9 +298,6 @@ function renderStart(main) {
     actions.appendChild(reroll);
     actions.appendChild(start);
     wrap.appendChild(actions);
-    wrap.appendChild(el('div', 'muted center', `<div style="font-size:var(--fs-xs);margin-top:8px">${t('ng.startWeapon')}</div>`));
-
-    wrap.appendChild(note(t('ng.note')));
     main.appendChild(wrap);
 }
 
@@ -330,7 +324,6 @@ function renderExpedition(main) {
         { id: 'battle', label: t('exp.seg.battle'), disabled: !state.battle },
         { id: 'report', label: t('exp.seg.report'), disabled: !G.lastReport },
     ], state.exp, id => { state.exp = id; render(); }));
-    bar.appendChild(el('div', 'muted', `<span style="font-size:var(--fs-xs)">${t('exp.oneParty')}</span>`));
     main.appendChild(bar);
 
     if (state.exp === 'battle' && state.battle) {
@@ -395,7 +388,7 @@ function renderExpIdle(main) {
 
     /* 파티 — 클릭으로 넣고 뺀다. 부상자는 못 넣는다 */
     const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('exp.party.h')} <small>${t('exp.party.sub', { n: D.balance.party_size_max, m: D.balance.concurrent_expedition_parties })}</small>`));
+    p.appendChild(el('h2', '', `${t('exp.party.h')} <small>${t('exp.party.sub', { n: D.balance.party_size_max })}</small>`));
     for (let i = 0; i < D.balance.party_size_max; i++) {
         const h = heroById(G.party[i]);
         if (!h) { p.appendChild(el('div', 'party-slot empty', t('exp.emptySlot'))); continue; }
@@ -404,7 +397,6 @@ function renderExpIdle(main) {
     if (G.party.length === 0) p.appendChild(el('div', 'down', `<div style="font-size:var(--fs-xs);margin-top:8px">${t('exp.noParty')}</div>`));
     else if (G.party.map(heroById).some(injured)) p.appendChild(el('div', 'down', `<div style="font-size:var(--fs-xs);margin-top:8px">${t('exp.cantDepart')}</div>`));
     if (G.run) p.appendChild(repeatRow());
-    p.appendChild(note(t('exp.party.note')));
     left.appendChild(p);
 
     const bench = el('div', 'panel');
@@ -412,14 +404,13 @@ function renderExpIdle(main) {
     const benched = G.heroes.filter(h => !G.party.includes(h.uid));
     if (benched.length === 0) bench.appendChild(el('div', 'muted', `<div style="font-size:var(--fs-xs)">${t('exp.emptySlot')}</div>`));
     for (const h of benched) bench.appendChild(heroRow(h, -1, false));
-    bench.appendChild(note(t('exp.bench.note')));
     left.appendChild(bench);
     wrap.appendChild(left);
 
     /* 스테이지 — 해금된 챕터까지 보여주고, 다음 챕터 첫 스테이지는 잠긴 채로 예고 */
     const right = el('div');
     const zp = el('div', 'panel');
-    zp.appendChild(el('h2', '', `${t('exp.zones.h')} <small>${t('exp.zones.sub', { r: D.balance.rounds_per_stage })}</small>`));
+    zp.appendChild(el('h2', '', t('exp.zones.h')));
     const firstLocked = D.stageList.find(s => !SYS.game.stageUnlocked(G, s.stage_id));
     const maxCh = firstLocked ? firstLocked.chapter : D.stageList[D.stageList.length - 1].chapter;
     const rows = D.stageList.filter(s => s.chapter <= maxCh);   // 해금된 챕터는 잠긴 스테이지까지 다 보인다 — 어디까지 가야 하는지가 보여야 한다
@@ -445,7 +436,7 @@ function renderExpIdle(main) {
                     <span>Ch${z.chapter}-${z.stage_num} ${L(M.stageName(z))}</span>
                     ${cleared ? `<span class="muted" style="font-size:var(--fs-xs)">${t('exp.cleared')}</span>` : ''}
                 </div>
-                <div class="meta">${t('exp.stageMeta', { lv: z.dlvl, m: stageMinutes(z) })}</div>
+                <div class="meta">${t('exp.stageMeta', { lv: z.dlvl, m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</div>
             </div>
             <div>${unlocked
                 ? `<button class="btn ${chapterBoss ? 'primary' : ''} b-go">${t('exp.deploy')}</button>`
@@ -468,7 +459,6 @@ function renderExpIdle(main) {
         if (go) go.onclick = () => runBattle(z.stage_id);
         zp.appendChild(row);
     }
-    zp.appendChild(note(t('exp.zones.note', { e: D.eliteRounds.join('·'), b: D.bossRound })));
     right.appendChild(zp);
     wrap.appendChild(right);
     main.appendChild(wrap);
@@ -481,7 +471,7 @@ function repeatRow() {
     const stage = D.stages[G.run.stageId];
     row.innerHTML = `
         <button class="btn sm toggle${on ? ' on' : ''}">${t('exp.repeat')}</button>
-        <span class="sub">${stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(M.stageName(stage))} · ` : ''}${t('exp.repeat.sub')}</span>`;
+        <span class="sub">${stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(M.stageName(stage))}` : ''}</span>`;
     row.querySelector('button').onclick = ev => {
         ev.stopPropagation();
         G.run.repeat = !on; save(); render();
@@ -497,6 +487,11 @@ function renderExpReport(main) {
     const roundsDone = R.won ? R.rounds.length : Math.max(0, R.rounds.length - 1);
     const cardEntries = Object.entries(R.cards ?? {});
     const cardTotal = cardEntries.reduce((a, [, n]) => a + n, 0);
+    // 빗나감 — 파티 기준. 옛 리포트(v2 이관본)에는 strikes 가 없다
+    const ms = R.strikes?.party;
+    const missText = ms?.n
+        ? t('rep.missN', { m: ms.miss, n: ms.n, p: Math.round(100 * ms.miss / ms.n) })
+        : t('rep.none');
 
     const p = el('div', 'panel');
     p.innerHTML = `
@@ -511,6 +506,7 @@ function renderExpReport(main) {
             <div><span>${t('rep.xp')}</span>${t('rep.xpEach', { n: R.xpEach.toLocaleString() })}</div>
             <div><span>${t('rep.rounds')}</span>${t('rep.roundsCleared', { n: roundsDone, total: D.balance.rounds_per_stage })}</div>
             <div><span>${t('rep.downed')}</span>${R.downed.length ? `<span class="down">${t('rep.downedN', { n: R.downed.length })}</span>` : t('rep.none')}</div>
+            <div><span>${t('rep.miss')}</span>${missText}</div>
             <div><span>${t('rep.cards')}</span>${cardTotal ? t('cx.cards', { n: cardTotal }) : t('rep.cardsNone')}</div>
         </div>`;
     for (const lu of R.levelUps) {
@@ -533,8 +529,7 @@ function renderExpReport(main) {
         const inj = el('div', 'injury-box');
         inj.innerHTML = `
             <div class="t">${t('rep.injuryHead')}</div>
-            ${R.downed.map(uid => { const h = heroById(uid); return `<div class="r"><span>${L(h?.name)}</span><span class="down">${h && injured(h) ? injuryText(h) : t('rep.none')}</span></div>`; }).join('')}
-            <div class="muted" style="font-size:var(--fs-xs);margin-top:6px">${t('rep.injuryNote')}</div>`;
+            ${R.downed.map(uid => { const h = heroById(uid); return `<div class="r"><span>${L(h?.name)}</span><span class="down">${h && injured(h) ? injuryText(h) : t('rep.none')}</span></div>`; }).join('')}`;
         p.appendChild(inj);
     }
     const actions = el('div', 'report-actions');
@@ -583,7 +578,6 @@ function renderExpReport(main) {
             <span>${w.eliteSin ? `<span class="sin-chip" style="color:${sinColor(w.eliteSin)}">${sinName(w.eliteSin)}</span>` : ''}</span>`));
     }
     wp.appendChild(ul);
-    wp.appendChild(note(t('rep.contract')));
     cols.appendChild(wp);
     main.appendChild(cols);
 }
@@ -657,7 +651,6 @@ function gearPanel(h) {
     const worn = wornItems(h);
     p.appendChild(el('h2', '', `${t('ch.gear.h')} <small>${t('eq.equipped', { n: worn.length, cap: M.EQUIP_SLOTS.length })}</small>`));
     p.appendChild(paperdoll(h));
-    if (itemOf(h.equipped.weapon)?.twoHanded) p.appendChild(el('div', 'muted pd-foot', t('eq.twoHand')));
 
     // 접사 죄종 — 세트포인트가 아니라 **태그**다 (세트효과 보류, item_design §4). 수는 "죄종 접사 수" — 접사 시너지 노드의 축
     const counts = {};
@@ -673,13 +666,12 @@ function gearPanel(h) {
         chips.appendChild(chip);
     }
     p.appendChild(chips);
-    p.appendChild(note(t('eq.sins.note'), t('eq.sins.h')));
     return p;
 }
 
 function attrPanel(h) {
     const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('ch.attr.h')} <small>${t('ch.attr.sub')}</small>`));
+    p.appendChild(el('h2', '', t('ch.attr.h')));
     const min = D.balance.hero_attr_min, max = D.balance.hero_attr_max;
     const box = el('div', 'attr-list');
     box.innerHTML = M.STATS.map(s => {
@@ -696,11 +688,10 @@ function attrPanel(h) {
     const tbl = el('table', 'stat-table');
     tbl.innerHTML = `
         <tr class="sep"><td>${t('st.atk')} <span class="muted">(${t(`st.atkType.${c.attack_type}`)})</span></td><td>${c.atk_physical ?? c.atk_magic}</td></tr>
-        <tr><td>${t('st.def')}</td><td>${c.defense} <span class="muted">${t('st.mitigation', { p: mitigationPct(c.defense, c.level) })}</span></td></tr>
+        <tr><td>${t('st.def')}</td><td>${c.defense} <span class="muted">${t('st.mitigation', { p: mitigationPct(c.defense) })}</span></td></tr>
         <tr><td>${t('st.maxhp')}</td><td>${c.hp_max}</td></tr>
         <tr><td>${t('sk.cycle')}</td><td>${t('sk.cycleSec', { s: c.action_period.toFixed(2) })}</td></tr>`;
     p.appendChild(tbl);
-    p.appendChild(note(t('ch.attr.note')));
     return p;
 }
 
@@ -708,7 +699,10 @@ function attrPanel(h) {
  * 방어 소재값 → 감쇠율(%) — 소재값만 보이면 "방어 +10 이 얼마인가"를 못 읽는다 (battle_design §9-8).
  * 같은 곡선을 두 번 구현하지 않도록 formula.js 를 그대로 쓴다.
  */
-const mitigationPct = (D, lvl) => Math.round(SYS.formula.mitigation(D, lvl) * 100);
+const mitigationPct = D => Math.round(SYS.formula.mitigation(D) * 100);
+
+/** 상한이 걸리는 저항 4행 — 값만으로는 "몇 %까지 의미가 있나"를 못 읽는다 (battle_design §9-5) */
+const RES_ROWS = ['res_fire', 'res_cold', 'res_lightning', 'res_poison'];
 
 /** 전투 능력치 표기 — 단위 붙이기는 여기 한 곳에서만 */
 const fmtCombat = (def, v) => v === undefined ? '—'
@@ -718,6 +712,7 @@ const fmtCombat = (def, v) => v === undefined ? '—'
 
 function detailPanel(h) {
     const c = combatOf(h);
+    const resCap = SYS.formula.resCap(c.res_max_bonus ?? 0);
     const filled = M.COMBAT_STATS.filter(s => c[s.id] !== undefined).length;
     const p = el('div', 'panel');
     p.appendChild(el('h2', '', `${t('ch.detail.h')} <small>${t('ch.detail.sub', { n: filled, total: M.COMBAT_STATS.length })}</small>`));
@@ -725,16 +720,15 @@ function detailPanel(h) {
     scroll.innerHTML = M.COMBAT_CATS.map(cat => {
         const rows = M.COMBAT_STATS.filter(s => s.cat === cat.id);
         if (!rows.length) return '';
-        return `<div class="cs-cat">${L(cat)}</div>` + rows.map(s => {
+        return rows.map(s => {
             const has = c[s.id] !== undefined;
             const a = s.attr ? M.STATS.find(x => x.id === s.attr) : null;
             return `<div class="cs-row${has ? '' : ' off'}">
                 <span class="cs-n">${L(s)}${a ? `<i class="cs-a" title="${L(a)}">${a.abbr}</i>` : ''}</span>
-                <span class="cs-v">${fmtCombat(s, c[s.id])}</span></div>`;
+                <span class="cs-v">${fmtCombat(s, c[s.id])}${RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: resCap })}</span>` : ''}</span></div>`;
         }).join('');
     }).join('');
     p.appendChild(scroll);
-    p.appendChild(note(t('ch.detail.note')));
     return p;
 }
 
@@ -765,7 +759,6 @@ function itemsPanel(h) {
     const sv = el('button', `btn sm toggle${state.salvageMode ? ' on' : ''}`, t('ch.salvageMode'));
     sv.onclick = () => { state.salvageMode = !state.salvageMode; render(); };
     tools.appendChild(sv);
-    tools.appendChild(el('span', 'hint', t(state.salvageMode ? 'ch.salvageHint' : 'ch.equip.hint')));
     p.appendChild(tools);
 
     const grid = el('div', `inv-cells wide${state.salvageMode ? ' salvage' : ''}`);
@@ -794,7 +787,6 @@ function itemsPanel(h) {
         grid.appendChild(cell);
     }
     p.appendChild(grid);
-    p.appendChild(note(t('eq.inv.note')));
     return p;
 }
 
@@ -870,10 +862,9 @@ function hideTip() { $('#tooltip').classList.remove('show'); }
 function activeSlots(h, title) {
     const cycle = cycleOf(h);
     const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${title ?? t('sk.slots.h')} <small>${t('sk.slots.sub')}</small>`));
+    p.appendChild(el('h2', '', title ?? t('sk.slots.h')));
     p.appendChild(el('div', 'cycle-line', `
-        ${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycle.toFixed(2) })}</b>
-        <span class="muted">${t('sk.cycle.sub')}</span>`));
+        ${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycle.toFixed(2) })}</b>`));
     const box = el('div', 'slot-list');
     (h.actives ?? [null, null, null]).forEach((a, i) => {
         const row = el('div', `act-slot${a ? '' : ' empty'}`);
@@ -891,7 +882,6 @@ function activeSlots(h, title) {
         box.appendChild(row);
     });
     p.appendChild(box);
-    p.appendChild(note(t('sk.slots.note')));
     return p;
 }
 
@@ -908,7 +898,7 @@ function skillCell(node, accent) {
         </div>`;
 }
 
-function skillBox({ tag, title, sub, grid, accent, locked, emptyNote }) {
+function skillBox({ tag, title, sub, grid, accent, locked }) {
     const box = el('div', `sk-box${locked ? ' locked' : ''}`);
     const { rows, cols } = M.SKILL_GRID;
     const safe = grid ?? Array.from({ length: rows }, () => Array(cols).fill(null));
@@ -929,8 +919,7 @@ function skillBox({ tag, title, sub, grid, accent, locked, emptyNote }) {
             <span class="sk-tag">${tag}</span><span class="sk-title">${title}</span>
             ${sub ? `<span class="muted sk-sub">${sub}</span>` : ''}
         </div>
-        <div class="sk-grid">${lines}</div>
-        ${emptyNote ? `<div class="muted sk-note">${emptyNote}</div>` : ''}`;
+        <div class="sk-grid">${lines}</div>`;
     return box;
 }
 
@@ -946,8 +935,7 @@ function renderSkill(main) {
     pp.appendChild(el('h2', '', t('sk.points.h')));
     pp.appendChild(el('div', '', `
         <div style="font-size:var(--fs-xl);text-align:center;padding:4px 0">${points}
-            <span class="muted" style="font-size:var(--fs-sm)">/ ${points}</span></div>
-        <div class="muted" style="font-size:var(--fs-xs);line-height:1.6">${t('sk.points.note')}<br>${t('ch.noTrees')}</div>`));
+            <span class="muted" style="font-size:var(--fs-sm)">/ ${points}</span></div>`));
     c1.appendChild(pp);
     c1.appendChild(activeSlots(h));
     wrap.appendChild(c1);
@@ -958,22 +946,18 @@ function renderSkill(main) {
     const sin = sinName(h.sin);
     const cls = className(h.cls);
     c2.appendChild(skillBox({
-        tag: t('sk.tab1'), title: t('sk.sinTree', { sin }), sub: t('sk.sinTree.sub', { sin }),
+        tag: t('sk.tab1'), title: t('sk.sinTree', { sin }),
         grid: M.SKILL_TREES.sin[h.sin], accent,
-        emptyNote: M.SKILL_TREES.sin[h.sin] ? null : t('sk.sinTree.missing', { sin }),
     }));
     c2.appendChild(skillBox({
         tag: t('sk.tab2'), title: t('sk.mastery', { cls }), sub: classLine(h.cls),
         grid: M.SKILL_TREES.mastery[h.cls],
-        emptyNote: M.SKILL_TREES.mastery[h.cls] ? null : t('sk.mastery.missing', { cls }),
     }));
     c2.appendChild(skillBox({
         tag: t('sk.tab3'), title: t('sk.advTree'),
         sub: advLocked ? t('sk.advLocked', { lv: D.balance.advance_unlock_level, cur: h.level }) : t('sk.advOpen'),
         grid: null, locked: true,
-        emptyNote: L(M.SKILL_TREES.advance.note),
     }));
-    c2.appendChild(note(t('sk.grid.note')));
     wrap.appendChild(c2);
     stack.appendChild(wrap);
     main.appendChild(stack);
@@ -988,7 +972,7 @@ function renderTavern(main) {
     // 보유 로스터 = 캐릭터 탭과 같은 띠. 여기서 누르면 그 영웅의 캐릭터 탭으로 간다
     stack.appendChild(heroStrip(h => { state.heroUid = h.uid; state.tab = 'character'; render(); }));
     const p = el('div', 'panel town-bg');
-    p.appendChild(el('h2', '', `${t('tv.h')} <small>${t('tv.sub')}</small>`));
+    p.appendChild(el('h2', '', t('tv.h')));
 
     const grid = el('div', 'tv-cands');
     SYS.game.tavernCandidates(G).forEach((c, i) => {
@@ -1008,10 +992,7 @@ function renderTavern(main) {
     rr.disabled = G.resources.gold < B.tavern_reroll_cost;
     rr.onclick = () => { const r = SYS.game.tavernReroll(G); if (!r.ok) flash('tv.err.gold'); else save(); render(); };
     tools.appendChild(rr);
-    tools.appendChild(el('span', 'muted', `<span style="font-size:var(--fs-xs)">${t('tv.reroll.note')}</span>`));
     p.appendChild(tools);
-    p.appendChild(el('div', 'todo', `<b>${t('tv.uniqueTodo.h')}</b>${t('tv.uniqueTodo.b')}`));
-    p.appendChild(note(t('tv.tiers.note')));
     stack.appendChild(p);
     main.appendChild(stack);
 }
@@ -1074,7 +1055,7 @@ function renderCodex(main) {
     const chLocked = stages.every(st => st.locked);
 
     const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('cx.h')} <small>${t('cx.sub', { pct: D.balance.codex_card_drop_pct, list: D.codexLevels.join(' · ') })}</small>`));
+    p.appendChild(el('h2', '', t('cx.h')));
     const bar = el('div', 'sub-bar');
     bar.appendChild(segmented(M.CODEX_CHAPTERS.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}` })), ch.id,
         id => { state.codexChapter = id; render(); }));
@@ -1098,8 +1079,97 @@ function renderCodex(main) {
             <div class="mon-strip">${stage.monsters.map(m => monsterCard(m, stage)).join('')}</div>`;
         p.appendChild(row);
     }
-    p.appendChild(note(t('cx.note')));
     main.appendChild(p);
+}
+
+/* ═══════════ 도움말 ═══════════
+   2026-08-26 사용자 지시 — 인게임 패널에는 설명 문장을 두지 않는다. 규칙·근거·미구현 안내는 전부 이 탭으로 모았다.
+   문구를 **새로 쓰지 않는다**: 각 패널이 쓰던 i18n 키를 같은 파라미터로 그대로 렌더한다 (SCREEN_DESIGN §12).
+   한 페이지 스크롤 + 섹션 점프 버튼 6개. 그 외 장식 없음. */
+
+/** 섹션 6개 — {title, lead?, groups:[{h, sub?, body:[]}]} */
+function helpSections() {
+    const h = heroById(state.heroUid);
+    const B = D.balance;
+    const sin = sinName(h.sin);
+    const cls = className(h.cls);
+    const rounds = { e: D.eliteRounds.join('·'), b: D.bossRound };
+    return [
+        {
+            title: t('nav.expedition'),
+            lead: t('exp.oneParty'),
+            groups: [
+                { h: t('exp.party.h'), sub: t('help.exp.party', { n: B.party_size_max, m: B.concurrent_expedition_parties }), body: [t('exp.party.note')] },
+                { h: t('exp.bench.h'), sub: t('help.exp.bench', { n: G.heroes.length, cap: B.roster_cap }), body: [t('exp.bench.note')] },
+                { h: t('exp.zones.h'), sub: t('exp.zones.sub', { r: B.rounds_per_stage }), body: [t('exp.zones.note', rounds)] },
+                { h: t('exp.repeat'), body: [t('exp.repeat.sub')] },
+                { h: t('exp.seg.battle'), body: [t('bt.note')] },
+                { h: t('exp.seg.report'), sub: t('rep.log.sub', rounds), body: [t('rep.contract'), t('rep.injuryNote')] },
+            ],
+        },
+        {
+            title: t('nav.character'),
+            groups: [
+                { h: t('ch.gear.h'), body: [t('eq.twoHand')] },
+                { h: t('eq.sins.h'), body: [t('eq.sins.note')] },
+                { h: t('ch.attr.h'), sub: t('ch.attr.sub'), body: [t('ch.attr.note')] },
+                { h: t('ch.detail.h'), body: [t('ch.detail.note')] },
+                { h: t('ch.items.h'), body: [t('ch.equip.hint'), t('ch.salvageHint'), t('eq.inv.note')] },
+            ],
+        },
+        {
+            title: t('nav.skill'),
+            lead: t('sk.grid.note'),
+            groups: [
+                { h: t('sk.points.h'), body: [t('sk.points.note'), t('ch.noTrees')] },
+                { h: t('sk.slots.h'), sub: t('sk.slots.sub'), body: [t('sk.cycle.sub'), t('sk.slots.note')] },
+                { h: t('sk.sinTree', { sin }), sub: t('sk.sinTree.sub', { sin }), body: [t('sk.sinTree.missing', { sin })] },
+                { h: t('sk.mastery', { cls }), body: [t('sk.mastery.missing', { cls })] },
+                { h: t('sk.advTree'), body: [L(M.SKILL_TREES.advance.note)] },
+            ],
+        },
+        {
+            title: t('nav.tavern'),
+            groups: [
+                { h: t('tv.h'), sub: t('tv.sub'), body: [t('tv.tiers.note')] },
+                { h: t('tv.reroll', { g: B.tavern_reroll_cost.toLocaleString() }), body: [t('tv.reroll.note')] },
+                { h: t('tv.uniqueTodo.h'), body: [t('tv.uniqueTodo.b')] },
+            ],
+        },
+        {
+            title: t('nav.codex'),
+            groups: [
+                { h: t('cx.h'), sub: t('cx.sub', { pct: B.codex_card_drop_pct, list: D.codexLevels.join(' · ') }), body: [t('cx.note')] },
+            ],
+        },
+        {
+            title: t('help.newgame'),
+            groups: [
+                { h: t('ng.title'), sub: t('ng.sub', { n: B.party_size_max }), body: [t('ng.startWeapon'), t('ng.note')] },
+            ],
+        },
+    ];
+}
+
+function renderHelp(main) {
+    const secs = helpSections();
+    // panel — 다른 탭과 같은 바탕. 전역 거점 아트(body::before)가 글자 뒤로 비치면 본문을 읽을 수 없다
+    const wrap = el('div', 'panel help');
+    wrap.appendChild(el('h1', '', t('help.title')));
+    const heads = [];
+    wrap.appendChild(segmented(secs.map((s, i) => ({ id: i, label: s.title })), null,
+        i => heads[i]?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
+    for (const s of secs) {
+        const head = el('h2', '', s.title);
+        heads.push(head);
+        wrap.appendChild(head);
+        if (s.lead) wrap.appendChild(el('div', 'note-body', s.lead));
+        for (const g of s.groups) {
+            wrap.appendChild(el('h3', '', `${g.h}${g.sub ? ` <small>${g.sub}</small>` : ''}`));
+            for (const line of g.body) wrap.appendChild(el('div', 'note-body', line));
+        }
+    }
+    main.appendChild(wrap);
 }
 
 /* ═══════════ 부팅 ═══════════ */

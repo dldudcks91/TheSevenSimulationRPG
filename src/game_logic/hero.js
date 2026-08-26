@@ -4,10 +4,18 @@
  * 순수 모듈 — DOM·저장소·시계·Math.random 접근 없음. 난수는 전부 rng 인자로 주입받는다.
  * 데이터(밸런스 수치·이름 풀·직업 정의)는 생성자에서 주입받는다 (CLAUDE.md 개발 규칙).
  *
- * ⚠ 공식 표기: 피해 계산 공식은 기획 미확정이다 (battle_design.md 남은 항목).
- *   여기 있는 전투 능력치 산식은 **프로토타입 임시식**이고, 모든 계수는 balance.csv 의
- *   ⚠제안 키에서 온다 — 확정되면 이 파일이 아니라 CSV 를 고친다.
+ * 전투 능력치 = ( 장비(베이스 + Implicit + 접사) + 스킬 ) × 기본 능력치 계수 (battle_design §8).
+ *   **곱셈이라 장비가 0이면 능력치도 0을 곱한다** — "레벨 = 진입 자격 / 장비 = 세기"의 수치적 표현.
+ *   ⚠ 계수 **함수의 형태**는 아직 미확정이다 (hero_design §4-1-1 — 분포부터 정해야 한다).
+ *   현재 형태는 `1 + 능력치 × [balance.csv:attr_bonus_per_point] / 100` 프로토타입 임시식이고,
+ *   모든 계수는 balance.csv 의 ⚠제안 키에서 온다 — 확정되면 이 파일이 아니라 CSV 를 고친다.
+ *
+ * 전투 계수가 실제로 걸리는 축은 셋뿐 — 힘(물리 공격력) · 지능(마법 공격력) · 민첩(행동 주기).
+ *   건강(fhr)은 상태이상 미구현으로 휴면 · 통솔·매력은 계수 없음 · **운은 전투 계산 밖**이다
+ *   (드랍률·골드 획득 계수 — hero_design §4-1 감각→운 개정 2026-08-26).
  */
+
+import { createFormula } from './formula.js';
 
 /** 원소 4종 — combat_stat.csv 의 res_* 와 monster.csv:attack_type 이 쓰는 같은 어휘 (battle_design §9-5) */
 export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
@@ -24,6 +32,7 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  */
 export function createHeroSystem(data) {
     const B = data.balance;
+    const F = createFormula(B);        // 성장 곡선(growthMult)을 시뮬과 같은 함수에서 읽는다
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
@@ -124,43 +133,55 @@ export function createHeroSystem(data) {
         return hero.level > from ? { uid: hero.uid, from, to: hero.level, gains } : null;
     }
 
-    /* ── 전투 능력치 (임시식 — 계수는 전부 balance.csv ⚠제안 키) ── */
+    /* ── 전투 능력치 (계수는 전부 balance.csv ⚠제안 키) ── */
 
-    const attrMult = v => 1 + v * B.attr_bonus_per_point / 100;
+    const attrMult = v => 1 + (v ?? 0) * B.attr_bonus_per_point / 100;
 
     /**
      * 기본 능력치 + 장비 + 도감 보너스 → 전투 능력치.
      * items = 착용 중 아이템 배열. codex = {atk_pct, hp_pct, dmg_pct} (없으면 0).
      *
+     * · **무기가 밑수다** (battle_design §9-1, 08-26 개정) — 다른 슬롯의 고정 공격력을 밑수에 더하지 않는다.
+     *   `atk_flat` 은 무기 슬롯 접사만 합산하고, `+피해 %` 는 그 밑수 전체를 곱한다.
+     *   무기 개체 공격력(watk)에는 드롭 시 굴린 편차가 이미 박혀 있다 — 타격마다 굴리지 않는다.
      * · 공격 타입은 직업이 아니라 **무기군**이 정한다 (battle_design §2-1 — 스태프·완드 = magic). 맨손은 physical.
      *   사제가 마법사와 무기 풀을 공유하므로 사제의 파워 출처 = 마법 공격력 = 지능이 여기서 성립한다.
-     * · **원소는 무기 개체가 든다** (battle_design §9-5) — 마법 무기군이면 그 무기의 element 가 공격 타입이다.
-     *   저항은 전 원소 공통 접사 `res_all` + 원소별 접사 `res_<원소>` 의 합 (§9-3).
-     * · v1 에서 실제로 전투에 걸리는 기본 능력치: 힘/지능(공격력), 민첩(행동 주기), 감각(명중·회피).
-     *   건강(상태이상 회복 속도)은 상태이상 미구현으로 아직 밖 · 통솔은 전투 계수 없음(08-25).
-     * · 명중·회피는 §8 대로 **곱셈**이다 — 장비가 0이면 감각도 0을 곱한다 (예전 임시식의 flat 가산 폐기).
+     * · **원소는 무기 개체가 든다** (§9-5) — 마법 무기군이면 그 무기의 element 가 공격 타입이다.
+     * · **저항은 소재값이 아니라 직접 %다** (§9-5) — `res_all` + 원소별 접사. 상한은 전투에서 적용된다
+     *   (formula.appliedResist) — 여기서는 원값을 그대로 내고, 상한을 뚫는 `res_max_bonus` 를 따로 낸다.
+     * · **최대 HP 는 성장 축**이라 레벨이 기하 곡선을 탄다 (§9-0 · hero_design §5). 방어는 비율 축이라 타지 않는다.
+     * · **피해 감소는 원천별 곱**이라 (§9-3) 접사를 각각 곱해 **실효 %** 한 숫자로 낸다 — 시트에도 그 숫자가 찍힌다.
+     * · **운은 전투 계산 밖**이다 — 드랍률·골드 획득에만 계수로 곱한다 (hero_design §4-1).
+     *   장비가 0이면 운도 0을 곱한다 (§8 곱셈 원칙).
      */
     function computeCombat(hero, items, codex = {}) {
         const A = hero.stats;
         const flat = {};                       // 접사 합산 {stat: v}
+        const drList = [];                     // 피해 감소는 합치지 않고 원천별로 모은다 (§9-3)
         for (const it of items) {
             if (it.implicit) flat[it.implicit.stat] = (flat[it.implicit.stat] ?? 0) + it.implicit.v;
-            for (const a of it.affixes ?? []) flat[a.stat] = (flat[a.stat] ?? 0) + a.v;
+            for (const a of it.affixes ?? []) {
+                flat[a.stat] = (flat[a.stat] ?? 0) + a.v;
+                if (a.stat === 'damage_reduction') drList.push(a.v);
+            }
         }
         const f = id => flat[id] ?? 0;
 
         const weapon = items.find(it => it.slot === 'weapon');
         const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
         const magic = group?.attackType === 'magic';
-        const watk = weapon ? weapon.watk : B.unarmed_atk;
+        // 밑수 = 무기 개체 공격력 + 무기 슬롯 접사의 고정 공격력. 맨손이면 unarmed_atk
+        const base = weapon
+            ? weapon.watk + (weapon.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0)
+            : B.unarmed_atk;
         const atk = Math.round(
-            (watk + f('atk_flat'))
-            * attrMult(magic ? A.int : A.str)
+            attrMult(magic ? A.int : A.str)
+            * base
             * (1 + f('atk_pct') / 100)
             * (1 + (codex.atk_pct ?? 0) / 100));
 
         const hpMax = Math.round(
-            (B.hero_hp_base + (hero.level - 1) * B.hero_hp_per_level + f('hp_flat'))
+            (B.hero_hp_base * F.growthMult(hero.level) + f('hp_flat'))
             * (1 + f('hp_pct') / 100)
             * (1 + (codex.hp_pct ?? 0) / 100));
 
@@ -170,28 +191,26 @@ export function createHeroSystem(data) {
             * (1 - f('aspd_pct') / 100));
 
         const resAll = f('res_all');
-        const senMult = attrMult(A.sen);
+        const luckMult = attrMult(A.luck);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
             attack_type: magic ? (weapon?.element ?? ELEMENTS[0]) : 'physical',
-            level: hero.level,                 // 감쇠 곡선 K = def_curve_k × 공격자 레벨 (§9-3)
-            variance_pct: group?.variance ?? B.dmg_variance_pct,
+            level: hero.level,                 // 적중률의 공격자 레벨 (§9-4)
             hp_max: hpMax,
             defense: f('def_flat'),
             ...Object.fromEntries(ELEMENTS.map(e => [`res_${e}`, resAll + f(`res_${e}`)])),
-            // 명중·회피 — 감각이 미는 축 (combat_stat.csv). 적중률 = clamp(100 − 회피 + 명중) (§9-4)
-            accuracy: Math.round(f('accuracy') * senMult),
-            evasion: Math.round(f('evasion') * senMult),
+            res_max_bonus: f('res_max_bonus'),  // 저항 기본 상한을 뚫는 유일한 수단 (§9-5)
+            res_reduction: f('res_reduction'),  // 상대 저항을 %p 로 깎는다 — 관통이 아니라 음수 가산
             def_ignore: f('def_ignore'),
             reflect_damage: f('reflect_damage'),
-            damage_reduction: f('damage_reduction'),
+            damage_reduction: Number((100 * (1 - F.reductionMult(drList))).toFixed(3)),
             crit_rate: B.base_crit_pct + f('crit_rate'),
             crit_damage: B.base_crit_damage_pct + f('crit_damage'),
             life_steal: f('life_steal'),
             action_period: Number(period.toFixed(3)),
             dmg_bonus_pct: codex.dmg_pct ?? 0,
-            gold_find: f('gold_find'),
-            item_find: f('item_find'),
+            gold_find: Math.round(f('gold_find') * luckMult),
+            item_find: Math.round(f('item_find') * luckMult),
         };
     }
 

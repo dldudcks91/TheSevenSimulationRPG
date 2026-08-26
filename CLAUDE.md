@@ -9,7 +9,7 @@
 
 | | 접속 중 | 오프라인 |
 |---|---|---|
-| 활동 | 원정(실시간 전투) · 아이템 정리 | 파견 — 시설 · 탐험 등 |
+| 활동 | 원정(실시간 전투) · 아이템 정리 | 파견 — 파견처 · 탐험 등 |
 | 산출 | 장비 드롭 | 재료 · 재화 · 해금 |
 
 ### 따름정리 — 제안이 이 셋과 부딪히면 제안을 버린다
@@ -26,8 +26,8 @@
 
 7대 죄악(Seven Deadly Sins) 테마의 **파밍 RPG** (신규 프로젝트, 초기 기획 단계).
 **접속 중**엔 파티를 자동전투 원정에 보내 실시간으로 장비를 줍고, 루팅 리포트를 확인해 장비를 재배분한다.
-**꺼져 있는 동안**엔 원정에 안 나간 영웅을 시설·탐험에 파견해 재료·재화·해금을 모은다.
-**목표 — 좋은 영웅과 좋은 아이템을 얻고, 파티 운영으로 챕터를 진행한다.** 영웅·아이템은 대등한 수집 대상 · 성장마다 기능이 하나씩 열린다 · 재료는 다양한 경로, 아이템은 다방면 획득·업그레이드. 조작이 아니라 편성·배분·배치 의사결정이 본체 (08-26 — "장비가 주인공(A안)" 폐기).
+**꺼져 있는 동안**엔 원정에 안 나간 영웅을 파견처·탐험에 파견해 재료·재화·해금을 모은다.
+**목표 — 좋은 영웅과 좋은 아이템을 얻고, 파티 운영으로 챕터를 진행한다.** 영웅·아이템은 대등한 수집 대상 · 성장마다 기능이 하나씩 열린다 · 재료는 다양한 경로, 아이템은 다방면 획득·업그레이드. 조작이 아니라 빌드·편성·배분 의사결정이 본체 (08-26 — "장비가 주인공(A안)" 폐기).
 
 - **참고작**: Lootun (게임 형태) · Diablo 2 (아이템 철학) — 조사는 [docs/reference/](docs/reference/)
 - **계보**: TheSevenRPG → 아이템·몬스터·스토리 코어 계승 (변경점 [item_design.md](docs/game_design/item_design.md)) / TheSevenSimulation → 영웅 로스터 프레임 계승 (재설계 [hero_design.md](docs/game_design/hero_design.md)). 두 원작의 죄종 매핑이 달라 **통일 매핑(sin_mapping.md)이 첫 SSOT 과제**
@@ -53,7 +53,7 @@ TheSevenSimulationRPG/
 ├── CLAUDE.md
 ├── start.bat              # 로컬 서버 (python -m http.server) — ES Modules 는 file:// 에서 막힌다
 ├── docs/
-│   ├── game_design/       # 게임의 WHAT — GAME_DESIGN.md(메인 · §10 미확정 과제) + 세부 7종
+│   ├── game_design/       # 게임의 WHAT — GAME_DESIGN.md(메인 · §10 미확정 과제) + 세부 8종
 │   ├── client/            # 소프트웨어의 HOW — DEV_PLAN(계획·부채) · ARCHITECTURE(구조) · INTERFACE(이식 계약) · SCREEN_DESIGN(화면)
 │   └── reference/         # 참고작 전수 조사 · 형제 프로젝트 분석 · inherited_data_gaps.md
 └── src/
@@ -77,4 +77,4 @@ TheSevenSimulationRPG/
 경계(export·스키마·rng 순서)를 바꾸면 **INTERFACE.md 먼저**, 화면을 바꾸면 **SCREEN_DESIGN.md 먼저** → [docs/client/DEV_PLAN.md §7](docs/client/DEV_PLAN.md)
 
 ---
-*마지막 업데이트: 2026-08-26 (게임 정의 개정 — "장비가 주인공" 폐기 · docs/client/ 신설)*
+*마지막 업데이트: 2026-08-26 (「시설」 어휘 폐기 → 「파견처」 · 건설·업그레이드 없음 — 가짓수 = 챕터 해금 / 세기 = 배치된 영웅) · 2026-08-26 (게임 정의 개정 — "장비가 주인공" 폐기 · docs/client/ 신설)*
