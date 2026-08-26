@@ -18,3 +18,18 @@ equipment_prefix,pride|gloves,replace_provisional,crit_damage,fixed,10,60,all_st
 equipment_prefix,pride|boots,replace_provisional,fhr,percentile,5,30,all_stats 폐기 — 오만의 불가침 성격을 상태이상 회복 속도로 번역 (상태이상 저항은 2026-08-25 삭제 → fhr 로 치환 2026-08-26). sin_mapping.md 에서 확정
 equipment_suffix,pride|gloves,replace_provisional,crit_damage,fixed,10,60,all_stats 폐기 — 오만의 증폭 성격을 치명타 피해로 번역. sin_mapping.md 에서 확정
 equipment_suffix,pride|boots,replace_provisional,fhr,percentile,5,30,all_stats 폐기 — 오만의 불가침 성격을 상태이상 회복 속도로 번역 (상태이상 저항은 2026-08-25 삭제 → fhr 로 치환 2026-08-26). sin_mapping.md 에서 확정
+equipment_common_option,w03,exclude,,,,,명중 접사 폐지 — 적중은 레벨 차만으로 정해진다 (battle_design 9-4) — 2026-08-26
+equipment_common_option,a03,exclude,,,,,회피 접사 폐지 — 피해 감소와 기대값이 같고 분산만 더한다 (battle_design 9-4) — 2026-08-26
+equipment_common_option,h03,exclude,,,,,회피 접사 폐지 (battle_design 9-4) — 2026-08-26
+equipment_common_option,g03,exclude,,,,,회피 접사 폐지 (battle_design 9-4) — 2026-08-26
+equipment_common_option,b03,exclude,,,,,회피 접사 폐지 (battle_design 9-4) — 2026-08-26
+equipment_prefix,wrath|boots,replace_provisional,atk_speed,percentile,5,25,회피 폐지(9-4) 대체 — 분노의 몰아치는 성격을 행동 주기로 번역. sin_mapping.md 에서 확정 — 2026-08-26
+equipment_prefix,sloth|gloves,replace_provisional,damage_reduction,percentile,3,15,명중 폐지(9-4) 대체 — 나태의 버티는 성격을 피해 감소로 번역(원천별 곱 · 9-3). sin_mapping.md 에서 확정 — 2026-08-26
+equipment_prefix,sloth|boots,replace_provisional,hp_regen,percentile,10,60,회피 폐지(9-4) 대체 — stat_2(defense 감소)는 유지. sin_mapping.md 에서 확정 — 2026-08-26
+equipment_prefix,gluttony|boots,replace_provisional,life_steal,percentile,3,12,회피 폐지(9-4) 대체 — 폭식의 흡수 성격을 흡혈로 번역. sin_mapping.md 에서 확정 — 2026-08-26
+equipment_prefix,lust|helmet,replace_provisional,res_all,percentile,5,30,magic_resist 는 전 원소 공통 저항이 되었고 단위가 소재값 -> 직접 %로 바뀌었다 (9-5). 범위를 % 스케일로 환산 — 2026-08-26
+equipment_suffix,wrath|boots,replace_provisional,atk_speed,percentile,5,25,회피 폐지(9-4) 대체 — 분노의 몰아치는 성격을 행동 주기로 번역. sin_mapping.md 에서 확정 — 2026-08-26
+equipment_suffix,sloth|gloves,replace_provisional,damage_reduction,percentile,3,15,명중 폐지(9-4) 대체 — 나태의 버티는 성격을 피해 감소로 번역(원천별 곱 · 9-3). sin_mapping.md 에서 확정 — 2026-08-26
+equipment_suffix,sloth|boots,replace_provisional,hp_regen,percentile,10,60,회피 폐지(9-4) 대체 — stat_2(defense 감소)는 유지. sin_mapping.md 에서 확정 — 2026-08-26
+equipment_suffix,gluttony|boots,replace_provisional,life_steal,percentile,3,12,회피 폐지(9-4) 대체 — 폭식의 흡수 성격을 흡혈로 번역. sin_mapping.md 에서 확정 — 2026-08-26
+equipment_suffix,lust|helmet,replace_provisional,res_all,percentile,5,30,magic_resist 는 전 원소 공통 저항이 되었고 단위가 소재값 -> 직접 %로 바뀌었다 (9-5). 범위를 % 스케일로 환산 — 2026-08-26

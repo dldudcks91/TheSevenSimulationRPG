@@ -1,126 +1,80 @@
 # TheSevenSimulationRPG - Project Guide
 
-## 프로젝트 개요
-7대 죄악(Seven Deadly Sins) 테마의 **Lootun형 방치 파밍 RPG** (신규 프로젝트, 초기 기획 단계).
-파티를 편성해 자동전투 원정을 보내고, 루팅 리포트를 확인하고, 장비를 재배분하는 것이 핵심 플레이.
-**장비가 주인공** — 조작이 아니라 편성·장비 의사결정이 게임의 본체 (A안).
+## 컨셉 락 (최우선 — 판단이 갈릴 때 여기로 돌아온다)
 
-**참고작**: Lootun (게임 형태), Diablo 2 (아이템 철학)
+> **게임 접속 시 → 원정 전투와 아이템 정리**
+> **게임 오프 시 → 영웅들을 다양한 요소에 파견**
 
-### 계보 (형제 프로젝트에서 계승)
-- **TheSevenRPG** → 아이템 코어 전체: 죄종 접사(7죄종×슬롯), 희귀도 4단계(매직→레어→크래프트→유니크, 통제 가능성의 계단), 세트포인트 2/4/6, 코스트(수평 제약), 무기군 Implicit, 낙인(stigma) 크래프팅, 드롭 파이프라인 — *본작 변경: 세트효과 보류(설계안 item_design.md §4 보존), 코스트 폐지, 부위 8종 · 착용 위치 9개(반지 ×2) (item_design.md)*
-- **TheSevenSimulation** → 로스터 프레임: 영웅 = 1이름 + 1메인죄종 + 1시작특성 (반고정 생성), XP 카테고리 자동 성장, 히든 성장률/상한선. 사기·폭주·경영 레이어는 **미탑재** — *본작 변경: 영웅 2층 구조(유니크 15 + 레어 무한 생성)로 재설계 (hero_design.md)*
-- 두 게임의 죄종→스탯 매핑이 서로 다르므로, 본 프로젝트의 **통일 매핑 테이블이 첫 SSOT 문서** (docs/game_design/sin_mapping.md 예정)
+**시간축이 활동을 가른다 — 실시간 = 전투 = 원정 하나 / 오프라인 = 비전투 전부.**
 
-## 기술 스택
+| | 접속 중 | 오프라인 |
+|---|---|---|
+| 활동 | 원정(실시간 전투) · 아이템 정리 | 파견 — 시설 · 탐험 등 |
+| 산출 | 장비 드롭 | 재료 · 재화 · 해금 |
 
-### Phase 1: 웹 프로토타입 (현재)
-- 서버 없음 — 클라이언트 JS만으로 동작 (싱글플레이어)
-- **무빌드** — package.json/node_modules 없음. 실행은 `start.bat` (ES Modules는 `file://`에서 CORS로 막히므로 로컬 http 서버 필요)
-- 게임 로직: JS (ES Modules), 렌더링: **순수 DOM + CSS** (게임 엔진 미사용)
-- 데이터: **CSV** (SSOT), 세이브는 LocalStorage
+### 따름정리 — 제안이 이 셋과 부딪히면 제안을 버린다
 
-### Phase 2: 엔진 이식 (추후, 스팀 출시 시)
-- Godot 또는 Unity — 시점/엔진 미확정. 기획 검증 완료 후 판단
-- **이식 대상은 `game_logic/`과 `data/*.csv`뿐** — UI 레이어는 재작성 전제
+1. **전투는 실시간 독점** — 오프라인에 전투는 돌지 않는다. 뒤집으면, **전투가 아닌 것은 오프라인에 돈다.** 탐험이 원정의 문법(편성 → 출발 → 리포트)을 빌려도 전투가 아니므로 오프라인 쪽이다. 가르는 기준은 문법이 아니라 **전투 여부**.
+2. **전투 창구는 하나** — 그래서 관전이 성립한다. 관전을 죽이는 제안(동시 원정 확대 등)은 이 조항과 먼저 대조한다.
+3. **병렬 가동은 비전투가 전담** — 로스터 전원을 굴리는 압력(타겟 니즈 3)은 파견·탐험으로 푼다. **전투를 복제해서 풀지 않는다.** Lootun과 갈리는 지점 — Lootun은 3인 팀을 여러 개 동시에 돌려서(로스터 10~15) 병렬을 만들고, 그 대가로 관전이 구조적으로 불가능하다.
 
-### 이식성 규칙 (Phase 2를 실제로 가능하게 하는 조건)
-1. **`game_logic/`은 DOM을 모른다** — `document`/`window`/`localStorage` 참조 0. 입력은 생성자 주입, 출력은 순수 데이터
-2. **난수는 주입** — `Math.random()` 직접 호출 금지. 시드 가능한 RNG를 주입받아 사용 (엔진 이식 후 동일 시드로 결과 대조 검증)
-3. **세이브는 엔진 중립 JSON** — 직렬화 로직도 `game_logic/`에, LocalStorage 접근은 어댑터 1곳으로 격리
-4. **CSV는 손대지 않는다** — Godot/Unity 둘 다 그대로 읽음. 엔진별 포맷 변환 금지
+미확정 (락 아님): 동시 원정 1의 영구 여부 · 파견 종류 어휘(탐험·채집·여행·수색) · 기능 해금 사다리 — [GAME_DESIGN.md §10](docs/game_design/GAME_DESIGN.md)
 
-## 프로젝트 구조
-```
-TheSevenSimulationRPG/
-├── CLAUDE.md
-├── start.bat              # 로컬 서버 실행 (python -m http.server)
-├── docs/
-│   ├── game_design/       # GAME_DESIGN.md(메인) + 세부 7종 (battle_design.md 포함)
-│   └── reference/         # 형제 프로젝트 분석 + inherited_data_gaps.md
-└── src/
-    ├── index.html         # 진입점
-    ├── ui/                # DOM 렌더러 (Phase 2에서 버려질 레이어)
-    │   ├── i18n.js        # 한/영 사전 + 언어 상태
-    │   ├── style.css
-    │   ├── app.js         # 화면 렌더링 — 상태(G)를 읽고 시스템(SYS)을 부르고 save() 한다. 계산·난수 없음
-    │   ├── battle.js      # 전투 관전 = game_logic 타임라인 **재생기** (계산하지 않는다)
-    │   ├── data.js        # CSV fetch → game_logic 시스템 조립(주입). mock 의 BALANCE 미러 폐지
-    │   ├── storage.js     # localStorage 어댑터 — 저장소를 만지는 **유일한** 파일
-    │   └── mock.js        # 표시 사전 (이름 ko/en·아이콘·얼굴·아이템 베이스·접사 정의·스킬 트리 목업)
-    ├── game_logic/        # 순수 게임 로직 (2026-08-25 개봉) — DOM/localStorage/Date/Math.random 0
-    │   ├── rng.js         # mulberry32 + deriveSeed(마스터 시드, 스트림)
-    │   ├── csv.js         # CSV 파서 (fetch 는 ui/data.js)
-    │   ├── formula.js     # **피해 계산** (battle_design §9) — 순수 함수만. 명중 대결·곱셈 감쇠·직격/비직격. 엔진 이식 대조 검증의 핵
-    │   ├── hero.js        # 생성(합 고정·주력 축)·XP/레벨·히든 상한 성장·전투 능력치 합산 — 공격 타입은 무기군이, 원소는 무기 개체가 정한다
-    │   ├── item.js        # 드롭·시작 무기(직업 전속 무기군)·착용 규칙·분해 (세트포인트 없음 — 보류)
-    │   ├── battle.js      # 헤드리스 시뮬 — 누가 언제 때리는가. 피해 자체는 formula.js (같은 시드 = 같은 전투)
-    │   └── state.js       # 세이브 v2 스키마 · newGame/serialize/deserialize · 장착(위치 9)/고용/원정 정산/도감 카드 레벨/재접속 런 마무리(closeRun)
-    ├── dev/
-    │   └── test.html      # game_logic 검증 페이지 (+test.js) — 단정 51개 + 밸런스 캘리브레이션 표 (실패는 fail() 로 던진다)
-    ├── assets/
-    │   └── inherited/     # 계승 아트 포크 — 배경 4종(WebP) + CH1 얼굴 5종(README에 규격/재동기화)
-    └── data/
-        ├── balance.csv    # 신규 SSOT 수치 — 구조 키 + 프로토타입 산식 계수(⚠제안 표기, 2026-08-25 43키 추가 · 08-26 offline_cap_hours 퇴역)
-        ├── monster.csv    # 신규 SSOT — 몬스터 112종 (일반 등급 소재값). attack_type = physical + 원소 4종 · resist = 4원소 공통 (08-26)
-        ├── stage.csv      # 신규 SSOT — 스테이지 28개 (타입/dlvl/보스)
-        ├── stage_round.csv    # 신규 SSOT — 스테이지 내부 라운드 9개 구조
-        ├── round_budget.csv   # 신규 SSOT — 라운드 타입별 편성 상한 + 목표 전투시간
-        ├── spawn_grade.csv    # 신규 SSOT — 등급 배율 (시간 예산과 분리)
-        ├── weapon_group.csv   # 신규 SSOT — 무기군 11종(본편 9 + 확장 2): 직업 전속 배정 · 한손/양손 · 공격 타입 · 행동 주기(⚠제안) · _kr/_en 이름 쌍 (2026-08-26)
-        ├── codex_level.csv    # 신규 SSOT — 도감 레벨별 필요 카드 수 (⚠제안, 2026-08-25. 코드 이관 완료 08-26 — 레벨별 보정 %는 아직 mock)
-        ├── hero_attribute.csv        # 신규 SSOT — 기본 능력치 7종 (전투 보정 + 파견, 장비로 불변)
-        ├── combat_stat.csv           # 신규 SSOT — 전투 능력치 24종 (장비·스킬 파생)
-        ├── equipment_option_override.csv  # 계승 옵션 패치 — 기본 능력치/코스트 접사 제외
-        └── inherited/     # TheSevenRPG 포크 25종 — 스키마 무변환, 재동기화 가능, **읽기 전용**
-```
+---
 
-### 현재 진행 단계
-**코어 기획 확정 진행 + 화면 UI 목업 병행** — 전투 발동 규칙(battle_design.md), 스테이지 구조(챕터 4스테이지×9라운드), 직업 7종(본편 5+확장 2), 영웅 2층 구조, 부상/치료 모델 등 골격 확정 (세트효과는 08-25 보류) (GAME_DESIGN.md §10 결정 로그 참조).
-**몬스터 데이터 재작성 완료 (2026-08-22)** — 계승본 구조 결함 5종 수정, 신규 SSOT 4테이블 발행 (monster_design.md §0).
-**능력치 두 층 확정 (2026-08-22) + 게이트 폐지 (2026-08-23)** — 기본 능력치 7종(`hero_attribute.csv`, 영웅 고유·장비 불변) / 전투 능력치 24종(`combat_stat.csv`, 장비·스킬 파생) 분리. 불변식 `attr_equip_bonus=0`. **기본 능력치가 하는 일은 전투 계수와 파견 판정 둘뿐** — 착용 게이트·스킬 게이트는 전면 폐지, 착용 제약은 요구 레벨만. 최대 HP는 전 영웅 공통 `hero_hp_base` 시작 (hero_design.md §4).
-**거점 원칙 개정 (2026-08-23)** — "영웅 판정 없음" 폐지. **시설이 곧 파견지**이고, 플레이어가 굴리되 배치된 영웅이 효율을 민다. 능력치 ↔ 시설 배정 (base_expedition_design.md §2).
-**기획서 전면 정리 (2026-08-25)** — 8종 재작성: 미확정 항목 삭제, 확정 사항만 유지. 남은 과제는 아래 한 줄이 유일한 백로그다.
-**비전투 활동 확정 (2026-08-25)** — 시설 5(영입·교역·연구·제련·채광) + **탐험**(파티 단위 "제2의 원정", 시설 아님). **매력 = 선술집 + 상단(교역)** — 1:1의 유일한 예외. 상점·공방 없음(제작 계열은 제련소). 합성 = 스킬 카드 합성(별개 개념, 후속 — skill_design.md §5). 민첩·건강·통솔의 파견 역할 미정(후보: 탐험 판정) — base_expedition_design.md §2-2·§3-1.
-**초반 루프 실동작 + 세이브 (2026-08-25)** — `game_logic/` 개봉. 새 게임(3명 굴림·리롤) → 편성 → 스테이지 해금 → 전투(헤드리스 시뮬, 관전은 재생) → 리포트(드롭·XP·부상·도감 카드 실적용) → 장착/해제/분해 → 선술집 고용 → 도감 실집계 → 반복 원정(게임이 켜져 있는 동안만). 세이브는 엔진 중립 JSON(localStorage, 어댑터 1곳). 전투는 monster/stage/round_budget/spawn_grade/weapon_group.csv 실값으로 돈다.
-  - **피해 공식 확정 (2026-08-26)** — `game_logic/formula.js` = battle_design §9. 명중 대결 → 타격 피해 → **곱셈 감쇠** `D/(D+K)` (`K = def_curve_k × 공격자 레벨`). 감산식 폐기 · 원소 4종 도입 · 반사/도트는 비직격. 계수는 여전히 `balance.csv` ⚠제안 키. 캘리브레이션(시작 파티, 시드 20개, `def_curve_k=18`): Ch1-1 승률 95% / 1-2 45% / 1-3 5% / 1-4 0%
-  - 미구현(기획 미작성): 스킬 효과·액티브 슬롯 실동작, 명중/회피 대결(몬스터 축 없음 → 영웅 회피만), 건강 계수(상태이상 미구현), 유니크 영웅·아이템, 크래프트·낙인, 거점/파견
-**세트효과 보류 + 오프라인 원정 규칙 (2026-08-25)** — "접사의 죄종 = 자동 세트포인트 → 3/6/9" 구조 통째 보류(설계안 item_design.md §4 보존 · 세트 3 = 상태이상 부여 · 세트 시너지 노드 · 메인 죄종 +1 함께 보류). 반복 원정은 **게임이 켜져 있는 동안만** 돌고, 꺼지면 진행 중 전투까지 정산 후 런 마무리. **전투 능력치 27→24 (08-25)** — 삭제 7(상태이상 적중·저항 · 회복량→마공 비례 · 파티 보정→스킬 · 스킬 레벨 · 파견 시간 단축 · 마법 방어) + 원소 저항 4(전기·불·냉기·독). 공격 원소 배정은 08-26 피해 공식에서 확정(위 항목 참조 — 몬스터는 스테이지 원소, 영웅은 마법 무기 개체의 원소).
-**피격 경직 폐지 + 건강 재배정 (08-25)** — 맞아도 행동 주기가 밀리지 않는다(행동 방해는 상태이상으로 일원화). `fhr` 의 의미가 "타격 회복 속도" → **"상태이상 회복 속도"** 로 바뀌었다 — **stat_id 는 `fhr` 유지**(계승 나태 갑옷 접사 매핑 보존).
-**프로토타입 ↔ 기획서 동기화 (2026-08-26)** — 08-25 결정 중 코드에 미반영이던 것을 전부 옮겼다. 세이브 **v2** (v1 은 스키마 단절이라 이관하지 않고 시작 화면에서 사유를 보여준다).
-  - **도감 = 몬스터 카드**: `battle.js` 처치마다 `codex_card_drop_pct` 별개 판정 → `state.codexCards` 누적 → 레벨은 `codex_level.csv` 누적 문턱. 처치 수(`codexKills`)는 기록만. 리포트·관전 로그에 카드가 찍힌다. 레벨별 보정 %는 아직 `mock.js` 자리표시
-  - **오프라인 규칙**: `offlineCatchup`/`offline_cap_hours` 삭제 → `state.closeRun` — 재접속 시 반복을 끄고 알림(`notice`)만. 런은 출발 시점에 통째로 정산되므로 꺼져도 미정산분이 없다
-  - **세트 보류**: `item.setPoints`·세트 UI·`SET_BONUSES`/`BREAKPOINTS` 삭제. 아이템 `sins` 는 죄종 **목록**(태그) — 양손 2포인트·메인 죄종 +1 없음
-  - **무기군 SSOT `weapon_group.csv`**: 직업 전속 배정(전사 둔기·도끼·창 / 기사 한손검·양손검 / 마법사·사제 완드·스태프 공유 / 궁수 활·석궁) · 한손/양손 · **공격 타입은 무기군이 정한다**(스태프·완드 = magic → 사제의 파워 = 지능, `CLASSES.priest.keyAttr` = int) · 행동 주기(⚠제안). 아이템은 `group` id 만 들고 나머지는 매번 CSV 에서 읽는다. 드롭·시작 무기는 본편 무기군만
-  - **착용 위치 9개**(`EQUIP_SLOTS`, 반지 ring1/ring2) — 부위 8종은 그대로. 빈 반지 칸부터 채우고 없으면 1번 교체
-  - **전투 능력치 24 사본**(`mock.COMBAT_STATS`) · `fhr` 라벨 "상태이상 회복 속도" · 마법 방어 → 원소 저항 4종: 저항 = 전 원소 공통 접사 `res_all` + 원소별 접사 `res_<원소>` 의 합(`hero.js`). `monster.csv` 는 `resist`(4원소 공통) 컬럼으로 이관 완료 — 같은 날 피해 공식에서 함께 정리됨
-  - **공통 영웅 띠 (08-26)** — 캐릭터·스킬·선술집 탭 상단에 같은 띠(`app.js heroStrip`): 초상화(`.face.xl`) + 이름 + 지금 하는 일(치료 중 / 전투 파티 / 대기)만. 직업·레벨·죄종·등급은 툴팁. 스킬 탭의 목록형 선택기와 선술집 하단 로스터 격자는 이 띠로 대체
-  - `hero_attribute.csv` 파견 열(매력=선술집+상단 · 힘=광산⚠ · 민첩/건강/통솔=탐험 판정 후보) · `equipment_option_override.csv` 오만 신발 `cc_reduction`→`fhr` · `test.js` 실패 사유는 `fail()` 로 던진다(이전엔 문자열 반환이 통과로 집계됐다)
-`game_logic/` 골격은 있으나 규칙은 임시 — 남은 큰 기획은 죄종 매핑(sin_mapping.md), 진형·타겟팅, 신규 무기군 베이스 데이터(G3 영웅 측 — 무기군 구조는 08-26 CSV 발행, 베이스·Implicit 수치는 미작성), 탐험 상세(인원·산출·판정), 광산/힘 확정, 민첩·건강·통솔 파견 역할, 스킬 카드 정의, 기사 주력 축(건강⚠).
+## 개요
 
-## 개발 규칙
-- 기획서는 한국어로 작성, 문서 변경 시 마지막 업데이트 날짜 기재
-- 게임 데이터는 **CSV**로 관리, 밸런스 수치 코드 하드코딩 금지
-- **기획 문서에 절대 수치 기재 금지** — 수치는 CSV(SSOT). 기획서는 키 참조(`[balance.csv:key]`), 체감 범위, 공식 변수명, 테이블 링크만 허용
-- **`src/data/inherited/` 와 `src/assets/inherited/` 는 읽기 전용** — TheSevenRPG의 재동기화 가능한 포크다. 계승분을 바꿔야 하면 수정하지 말고 `src/data/` 에 신규 테이블을 만들어 **대체**하고, 무엇이 무엇을 대체했는지 문서에 남긴다 (monster_design.md §7 참조)
-- game_logic 모듈은 생성자에서 데이터를 주입받음
-- **git 커밋/푸시는 사용자가 명시적으로 요청할 때만 실행**
-- **다국어(한/영) 필수** — 화면에 나가는 모든 문자열은 한 곳에 ko/en 이 **나란히** 있어야 한다
-  - UI 문구: `src/ui/i18n.js` 의 `STRINGS` (키 하나에 `{ko, en}`) → `t('key')`
-  - 데이터 문자열: `mock.js` 의 `{ko, en}` 쌍 → `L(value)`. CSV 로 이사할 때 `_kr`/`_en` 컬럼 쌍이 된다
-  - **렌더러(app.js/battle.js)에 한국어 리터럴 금지** — 주석 제외. 이게 누락 검증 기준이다
-  - 이름 조립 규칙(어순·조사)은 렌더러가 아니라 데이터 층에 둔다 (`nm()`, `eliteName()`)
-- **검증 방법** — `start.bat` 후 `http://localhost:8777/dev/test.html` (단정 + 캘리브레이션). 개발용 URL: `?dev=newgame` / `?dev=battle`(즉시 정산→리포트) / `?dev=play`(관전) / `?dev=offline`(반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / `?screen=start` / `?tab=character` — 헤드리스 스크린샷으로 흐름을 태울 때 쓴다 (Edge: `msedge --headless=new --screenshot=… --virtual-time-budget=8000 URL`)
-- **밸런스 손잡이** — `def_curve_k`(감쇠 곡선) / `monster_hp_scale` / `monster_atk_scale` / `monster_def_scale` / `weapon_atk_base` / `xp_rate` / `gold_rate`. 값을 바꾸면 test.html 표를 다시 찍는다
-  - 헤드리스로 표를 찍을 땐 **브라우저 캐시를 끈다** — 프로필 폴더를 지우고 `--disk-cache-size=1`. 안 그러면 CSV 가 캐시돼 손잡이를 돌려도 같은 표가 나온다
-- **화면 폭 정책** — 상한 1600px / 하한 1280px, 세로 예산 700px (1366×768 노트북 기준)
-  - 해외 배율 125% 환경에서 CSS 뷰포트가 1536/1280 으로 잡힌다. 영어는 같은 내용이 1.3~1.5배 길다
-  - 라벨이 들어가는 칸은 **고정 px 금지** — `minmax()` / `clamp()` 로 최소만 보장한다
+7대 죄악(Seven Deadly Sins) 테마의 **파밍 RPG** (신규 프로젝트, 초기 기획 단계).
+**접속 중**엔 파티를 자동전투 원정에 보내 실시간으로 장비를 줍고, 루팅 리포트를 확인해 장비를 재배분한다.
+**꺼져 있는 동안**엔 원정에 안 나간 영웅을 시설·탐험에 파견해 재료·재화·해금을 모은다.
+**목표 — 좋은 영웅과 좋은 아이템을 얻고, 파티 운영으로 챕터를 진행한다.** 영웅·아이템은 대등한 수집 대상 · 성장마다 기능이 하나씩 열린다 · 재료는 다양한 경로, 아이템은 다방면 획득·업그레이드. 조작이 아니라 편성·배분·배치 의사결정이 본체 (08-26 — "장비가 주인공(A안)" 폐기).
 
-## 기획 조언 원칙
+- **참고작**: Lootun (게임 형태) · Diablo 2 (아이템 철학) — 조사는 [docs/reference/](docs/reference/)
+- **계보**: TheSevenRPG → 아이템·몬스터·스토리 코어 계승 (변경점 [item_design.md](docs/game_design/item_design.md)) / TheSevenSimulation → 영웅 로스터 프레임 계승 (재설계 [hero_design.md](docs/game_design/hero_design.md)). 두 원작의 죄종 매핑이 달라 **통일 매핑(sin_mapping.md)이 첫 SSOT 과제**
+- 메인 기획서: [GAME_DESIGN.md](docs/game_design/GAME_DESIGN.md) — 타겟 니즈 5 · 코어 루프 · 결정 로그
+
+## 철학
+
+### 기획 조언 원칙
 1. **구조적 완성도 > 재미** — 모순/빈 구멍/이중 처벌/SSOT 위반을 먼저 잡는다
 2. **통제성 우선** — 플레이어가 인과를 읽을 수 있는 구조가 기본. 특히 방치형의 계약: "자리 비워도 안전"
 3. **단순화가 정답** — 새 게이지/수치/분기 추가 전에 기존 축으로 표현 가능한지 검증
 
+### 아키텍처 원칙
+Phase 1 = **무빌드 웹**(ES Modules + 순수 DOM/CSS, 서버 없음, CSV, LocalStorage) → Phase 2 = Godot/Unity 이식(미확정). **이식 대상은 `game_logic/` + `data/*.csv` 뿐**, UI 는 재작성. 그걸 가능하게 하는 조건:
+1. **`game_logic/` 은 DOM 을 모른다** — `document`/`window`/`localStorage` 참조 0. 입력은 생성자 주입, 출력은 순수 데이터
+2. **난수는 주입** — `Math.random()` 금지. 시드 가능한 RNG → 같은 시드 = 같은 결과 (이식 후 대조 검증)
+3. **세이브는 엔진 중립 JSON** — 직렬화는 `game_logic/`, 저장소 접근은 어댑터 1곳
+4. **CSV 는 손대지 않는다** — 엔진별 포맷 변환 금지
+
+## 폴더 구조
+```
+TheSevenSimulationRPG/
+├── CLAUDE.md
+├── start.bat              # 로컬 서버 (python -m http.server) — ES Modules 는 file:// 에서 막힌다
+├── docs/
+│   ├── game_design/       # 게임의 WHAT — GAME_DESIGN.md(메인 · §10 미확정 과제) + 세부 7종
+│   ├── client/            # 소프트웨어의 HOW — DEV_PLAN(계획·부채) · ARCHITECTURE(구조) · INTERFACE(이식 계약) · SCREEN_DESIGN(화면)
+│   └── reference/         # 참고작 전수 조사 · 형제 프로젝트 분석 · inherited_data_gaps.md
+└── src/
+    ├── index.html         # 진입점
+    ├── ui/                # DOM 렌더러 (Phase 2 에서 버려질 레이어)         → ui/README.md
+    ├── game_logic/        # 순수 게임 로직 — 이식 대상                       → game_logic/README.md
+    ├── dev/               # test.html — 단정 + 밸런스 캘리브레이션           → dev/README.md
+    ├── data/              # CSV SSOT + inherited/ (읽기 전용 포크 25종)       → data/README.md
+    └── assets/inherited/  # 계승 아트 포크 (읽기 전용)                       → assets/inherited/README.md
+```
+
+## 규칙
+1. **기획서는 한국어**, 변경 시 마지막 업데이트 날짜 기재
+2. **수치는 CSV(SSOT)** — 코드 하드코딩 금지, 기획서에 절대 수치 금지 (키 참조 `[balance.csv:key]` 만)
+3. **`src/data/inherited/` · `src/assets/inherited/` 읽기 전용** — 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다
+4. **`game_logic` 모듈은 생성자에서 데이터를 주입받는다**
+5. **git 커밋/푸시는 사용자가 명시적으로 요청할 때만**
+6. **다국어 ko/en 나란히** — 렌더러(`app.js`/`battle.js`)에 한국어 리터럴 금지 (세부: [src/ui/README.md](src/ui/README.md))
+
+검증 방법 · 개발용 URL · 밸런스 손잡이 → [src/dev/README.md](src/dev/README.md)
+경계(export·스키마·rng 순서)를 바꾸면 **INTERFACE.md 먼저**, 화면을 바꾸면 **SCREEN_DESIGN.md 먼저** → [docs/client/DEV_PLAN.md §7](docs/client/DEV_PLAN.md)
+
 ---
-*마지막 업데이트: 2026-08-26 (피해 계산 공식 확정 — formula.js · 곱셈 감쇠 · 명중 대결 · 원소 4종(스테이지 단위) · 직격/비직격 격리)*
+*마지막 업데이트: 2026-08-26 (게임 정의 개정 — "장비가 주인공" 폐기 · docs/client/ 신설)*
