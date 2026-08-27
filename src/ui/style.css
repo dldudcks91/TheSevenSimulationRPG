@@ -20,12 +20,16 @@
     --color-error: #f04040;
     --color-info: #40a0f8;
 
-    --font-main: 'Galmuri14', 'Galmuri11', 'Malgun Gothic', monospace;
-    --fs-xs: 10px;
-    --fs-sm: 11px;
-    --fs-md: 13px;
-    --fs-lg: 16px;
-    --fs-xl: 20px;
+    /* 2026-08-27 — 하이브리드 폰트. 본문은 가독성 우선(Pretendard),
+       브랜드 워드마크(.brand)만 장르 분위기를 위해 Galmuri를 유지한다 */
+    --font-main: 'Pretendard', 'Malgun Gothic', sans-serif;
+    --font-display: 'Galmuri14', 'Galmuri11', 'Malgun Gothic', monospace;
+    /* 2026-08-27 — 전체 확대(+약 20%). 장시간 응시하는 화면이라 판독성이 우선 */
+    --fs-xs: 12px;
+    --fs-sm: 13px;
+    --fs-md: 15px;
+    --fs-lg: 18px;
+    --fs-xl: 24px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -57,7 +61,7 @@ body {
     font-family: var(--font-main);
     font-size: var(--fs-md);
     line-height: 1.6;
-    -webkit-font-smoothing: none;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* 전역 배경 = 계승 거점 아트(town.webp). 패널 뒤에 깔리고 여백에서만 보인다.
@@ -101,6 +105,10 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     background: rgba(18, 18, 30, .90);
     border-right: 1px solid var(--border-primary);
     border-bottom: 1px solid var(--border-primary);
+    /* 브랜드 워드마크만 비트맵 픽셀 폰트 유지 — 안티에일리어싱을 꺼야 픽셀이 또렷하다.
+       본문(Pretendard)은 body 의 antialiased 를 그대로 받는다 */
+    font-family: var(--font-display);
+    -webkit-font-smoothing: none;
     font-size: var(--fs-md); letter-spacing: 1px;
 }
 .brand b { color: var(--text-accent); }
@@ -393,9 +401,9 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 .arena {
     display: flex; flex-direction: column; justify-content: center;
-    /* 세로 예산 700px — 1366×768 노트북에서 브라우저 크롬 빼면 ~660px 만 남는다.
-       아레나를 뷰포트 비례로 잡아 큰 화면에선 시원하게, 작은 화면에선 접히게 한다 */
-    padding: 14px 12px; min-height: clamp(300px, 46vh, 430px);
+    /* 세로 예산 확대 (2026-08-27) — 초상화를 키운 만큼 카드가 커져서 더 필요하다.
+       뷰포트 비례로 잡아 큰 화면에선 시원하게, 작은 화면에선 접히게 한다 */
+    padding: 14px 12px; min-height: clamp(380px, 60vh, 620px);
     background: radial-gradient(ellipse at center, #17171f 0%, var(--bg-input) 100%);
     border: 1px solid var(--border-dark);
     position: relative;
@@ -431,8 +439,9 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 유닛 카드 — 세로형 */
 .unit {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    /* 영어 이름("Skeleton Knight")이 122px 에 안 들어간다 — 최소만 잡고 늘어나게 */
-    width: clamp(122px, 11vw, 150px); padding: 8px 7px 7px;
+    /* 영어 이름("Skeleton Knight")이 안 들어간다 — 최소만 잡고 늘어나게.
+       초상화 확대(2026-08-27)에 맞춰 카드 자체도 키웠다 */
+    width: clamp(140px, 12vw, 172px); padding: 9px 8px 8px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-dark); border-top: 3px solid var(--border-secondary);
     position: relative; text-align: center;
@@ -444,8 +453,9 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .unit.dead { opacity: .26; filter: grayscale(1); }
 
 .sprite {
-    width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
-    font-size: 26px; background: var(--bg-input);
+    /* 초상화 확대 (2026-08-27) — 전투 관전에서 가장 오래 쳐다보는 요소다 */
+    width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+    font-size: 34px; background: var(--bg-input);
     border: 1px solid var(--border-secondary);
     overflow: hidden;
 }
@@ -456,21 +466,24 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     image-rendering: pixelated;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,.8));
 }
-.unit.boss .sprite { width: 58px; height: 58px; }
+.unit.boss .sprite { width: 82px; height: 82px; font-size: 42px; }
 /* 전투 유닛의 얼굴 폴백 원판 — 사각 스프라이트 칸 안의 원 */
 .sprite.disc { border-radius: 50%; font-size: var(--fs-lg); }
 .unit.elite .sprite { border-color: #8a6a3a; }
 
 .unit-name {
     font-size: var(--fs-sm); line-height: 1.3; word-break: keep-all;
-    min-height: 28px; display: flex; align-items: center; text-align: center;
+    min-height: 34px; display: flex; align-items: center; text-align: center;
 }
 .tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-height: 17px; }
 .tags .status { font-size: var(--fs-xs); }
 .elite-tag { font-size: var(--fs-xs); color: #d09040; border: 1px solid currentColor; padding: 0 4px; line-height: 15px; }
 
 .unit .bar { width: 100%; }
-.unit-sub { font-size: var(--fs-xs); color: var(--text-muted); }
+/* HP 숫자를 바 아래가 아니라 옆에 — 한 줄로 읽는다 (2026-08-27) */
+.hp-row { display: flex; align-items: center; gap: 6px; width: 100%; }
+.hp-row .bar.hp { flex: 1; min-width: 0; }
+.unit-sub { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 /* ───────── 행동 게이지 / 쿨 게이지 ─────────
    숫자로 "12s" 라고 적어두면 언제 터지는지 읽히지 않는다. 채워지는 칸으로 바꾸면
    행동 주기(battle_design §2)와 실시간 쿨(§6)이 눈으로 보인다. */
@@ -498,7 +511,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .cd-row.ready .cd-bar { border-color: var(--color-info); }
 .cd-row.ready .cd-bar > i { background: var(--color-info); }
 
-.unit.boss { border-color: #7a2a2a; background: #1f1416; width: 138px; }
+.unit.boss { border-color: #7a2a2a; background: #1f1416; width: 162px; }
 .boss-tag { color: var(--text-accent); }
 .trait-line {
     font-size: 9px; color: #b08850; line-height: 1.4; word-break: keep-all;
@@ -536,7 +549,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .battle-log-wrap {
     background: var(--bg-input); border: 1px solid var(--border-dark);
     padding: 8px 11px; overflow-y: auto;
-    max-height: clamp(300px, 46vh, 430px);   /* 아레나와 같은 높이 예산 */
+    max-height: clamp(380px, 60vh, 620px);   /* 아레나와 같은 높이 예산 */
 }
 .log-head {
     font-size: var(--fs-xs); letter-spacing: 1px; padding-bottom: 6px; margin-bottom: 6px;

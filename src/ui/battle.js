@@ -172,9 +172,9 @@ function renderUnits(state, root) {
                     ${boss ? `<span class="elite-tag boss-tag">${t(u.grade === 'chapter_boss' ? 'kind.chapterBoss' : 'kind.boss')}</span>` : ''}
                 </div>` : ''}
                 ${u.traits ? `<div class="trait-line" title="${t('bt.traitsTitle')}">${u.traits.map(x => L(x)).join(' · ')}</div>` : ''}
-                <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
-                <div class="unit-sub">
-                    <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
+                <div class="hp-row">
+                    <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
+                    <span class="unit-sub hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
                 </div>
                 <div class="act-row" title="${t('bt.actTitle', { s: u.period.toFixed(2) })}">
                     <i class="act-fill"></i>
