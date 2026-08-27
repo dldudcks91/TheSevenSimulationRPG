@@ -13,7 +13,13 @@
  * 2026-08-26 — **인게임 패널에는 설명 문장을 두지 않는다** (사용자 지시). 숫자·상태·오류·버튼·툴팁만 남기고
  *   규칙 문구는 전부 도움말 탭(renderHelp)으로 옮겼다. 새 안내 문장을 패널에 붙이려면 도움말에 넣는다.
  *
- * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너)
+ * 2026-08-27 — **영웅 초상은 네모 박스** (heroFace). 관전 유닛 카드와 같은 규격 · 같은 직업 글리프(M.classGlyph).
+ *   영웅의 생김새는 어디서나 같다. 원형(.face)은 몬스터 얼굴 전용으로 남는다 (SCREEN_DESIGN §5).
+ *   영웅 띠 카드(heroStrip)는 초상이 카드 전체를 채우고, 글자는 위칸(상태 태그 · 이름) 하나로 초상 위에 얹는다.
+ *   캐릭터 탭 4칸은 같은 폭·높이 — 장비 / 기본 옵션(+현재 스킬 정사각 카드) / 세부 옵션 1 / 세부 옵션 2.
+ *   옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (감쇠율은 물리 방어 행에 병기, SCREEN_DESIGN §6).
+ *
+ * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=dmg 면 누적 데미지 탭) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너)
  */
 
 import * as M from './mock.js';
@@ -96,13 +102,16 @@ const faceChip = (id, extraCls = '') => {
     return `<span class="face none ${extraCls}" title="${t('face.noArt', { name })}"
         style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
 };
-/** 영웅 초상 — 아직 아트가 없다(M.heroFace 는 전부 null). 폴백 규격은 몬스터와 동일 */
-const heroFace = (h, extraCls = '') => {
+/**
+ * 영웅 초상 — 네모 박스. 관전 유닛 카드의 스프라이트와 같은 규격이다: **영웅의 생김새는 어디서나 같다**
+ * (2026-08-27, SCREEN_DESIGN §5). 아직 아트가 없어(M.heroFace 는 전부 null) 직업 글리프가 얼굴이다.
+ * 죄종 색은 카드 상단 테두리가 들고 초상은 색을 갖지 않는다. 크기는 담는 카드의 CSS 가 정한다.
+ */
+const heroFace = h => {
     const src = M.heroFace(h.uid);
     const name = L(h.name);
-    if (src) return `<span class="face ${extraCls}" title="${name}"><img src="${src}" alt="${name}"></span>`;
-    const c = sinColor(h.sin);
-    return `<span class="face none ${extraCls}" style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
+    if (src) return `<span class="hero-face"><img src="${src}" alt="${name}"></span>`;
+    return `<span class="hero-face">${M.classGlyph(h.cls)}</span>`;
 };
 
 /* ═══════════ 화면 상태 ═══════════ */
@@ -164,7 +173,8 @@ function renderShell() {
 }
 
 function render() {
-    if (stopBattle) { stopBattle(); stopBattle = null; }
+    // 관전 중 재렌더(가방 클릭 · 언어 전환 · 세그먼트 이동)면 재생 위치를 받아 뒀다가 다음 mount 에 넘긴다 — 처음부터 다시 틀지 않는다 (2026-08-27)
+    if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
     applyDocumentLang();
     if (G) {
         SYS.game.tickInjuries(G, now());
@@ -240,7 +250,7 @@ function candidateCard(h, extra = '') {
     }).join('');
     c.innerHTML = `
         <div class="ng-head">
-            ${heroFace(h, 'lg')}
+            ${heroFace(h)}
             <div class="ng-id">
                 <div class="ng-name"><b>${L(h.name)}</b>${tierChip(h)}</div>
                 <div class="ng-cls">${className(h.cls)} · Lv.${h.level}</div>
@@ -304,7 +314,7 @@ function renderStart(main) {
 /* ═══════════ 원정 (편성 · 전투 · 리포트) ═══════════ */
 
 /** 원정 1회 — 정산은 즉시, 관전은 재생. instant 면 재생을 건너뛰고 리포트로 */
-function runBattle(stageId, { instant = false } = {}) {
+function runBattle(stageId, { instant = false, tab = null } = {}) {
     const r = SYS.game.resolveBattle(G, stageId, now());
     if (!r.ok) {
         flash({ locked: 'exp.locked', noParty: 'exp.noParty', injured: 'exp.cantDepart' }[r.err] ?? 'exp.cantDepart');
@@ -312,7 +322,8 @@ function runBattle(stageId, { instant = false } = {}) {
     }
     save();
     if (instant) { state.battle = null; state.exp = 'report'; render(); return; }
-    state.battle = { result: r.result, stageId };
+    // tab — 개발용 ?dev=play&bt=dmg: 우측 탭을 누적 데미지로 열어 헤드리스가 클릭 없이 닿게 한다
+    state.battle = { result: r.result, stageId, resume: tab ? { t: 0, speed: 1, running: true, tab } : undefined };
     state.exp = 'battle';
     render();
 }
@@ -329,12 +340,14 @@ function renderExpedition(main) {
     if (state.exp === 'battle' && state.battle) {
         const { result, stageId } = state.battle;
         stopBattle = mountBattle(main, {
-            result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true,
+            result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
             onEnd: auto => {
                 if (auto && G.run?.repeat && result.won) runBattle(stageId);
                 else { state.exp = 'report'; render(); }
             },
         });
+        // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (CLAUDE.md 컨셉 락). 정산은 출발 순간 끝났으므로 여기서 정리해도 이 전투는 안 바뀐다
+        main.appendChild(itemsPanel(heroById(state.heroUid), { showTarget: true }));
         return;
     }
     if (state.exp === 'report' && G.lastReport) return renderExpReport(main);
@@ -342,25 +355,13 @@ function renderExpedition(main) {
     renderExpIdle(main);
 }
 
-function heroRow(h, i, inParty) {
-    const row = el('div', `party-slot click${injured(h) ? ' downed' : ''}`);
-    // 영어는 같은 내용이 1.5배 길다 — 이름 줄 / 죄종·부상 줄로 나눠 300px 열에서도 안 접히게 한다
-    row.innerHTML = `
-        <div class="ps-main">
-            <div class="ps-name">${L(h.name)} ${tierChip(h)} <span class="lv">${className(h.cls)} · Lv.${h.level}</span>
-                ${inParty && i === 0 ? `<span class="muted ps-leader">${t('exp.leader')}</span>` : ''}</div>
-            <div class="ps-sub"><span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span>${injuryChip(h)}</div>
-        </div>
-        <button class="btn sm b-toggle" ${!inParty && injured(h) ? 'disabled' : ''}>${t(inParty ? 'exp.fromParty' : 'exp.toParty')}</button>`;
-    const toggle = () => {
-        const r = SYS.game.toggleParty(G, h.uid, now());
-        if (!r.ok) flash({ injured: 'exp.cantDepart', full: 'exp.partyFull' }[r.err] ?? 'exp.partyFull');
-        else save();
-        render();
-    };
-    row.onclick = toggle;
-    return row;
-}
+/** 파티에 넣고 뺀다 — 편성 화면 영웅 띠의 클릭 (2026-08-27, 옛 파티·벤치 행을 띠가 대신한다) */
+const toggleParty = h => {
+    const r = SYS.game.toggleParty(G, h.uid, now());
+    if (!r.ok) flash({ injured: 'exp.cantDepart', full: 'exp.partyFull' }[r.err] ?? 'exp.partyFull');
+    else save();
+    render();
+};
 
 /** 재접속 알림 — 반복 원정은 게임이 켜져 있는 동안만 돈다. 꺼진 사이의 런은 마무리됐고 결과는 마지막 리포트에 있다 */
 function noticeBanner() {
@@ -383,32 +384,16 @@ function renderExpIdle(main) {
     const nb = noticeBanner();
     if (nb) main.appendChild(nb);
 
-    const wrap = el('div', 'cols c-side');
-    const left = el('div');
-
-    /* 파티 — 클릭으로 넣고 뺀다. 부상자는 못 넣는다 */
-    const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('exp.party.h')} <small>${t('exp.party.sub', { n: D.balance.party_size_max })}</small>`));
-    for (let i = 0; i < D.balance.party_size_max; i++) {
-        const h = heroById(G.party[i]);
-        if (!h) { p.appendChild(el('div', 'party-slot empty', t('exp.emptySlot'))); continue; }
-        p.appendChild(heroRow(h, i, true));
-    }
-    if (G.party.length === 0) p.appendChild(el('div', 'down', `<div style="font-size:var(--fs-xs);margin-top:8px">${t('exp.noParty')}</div>`));
-    else if (G.party.map(heroById).some(injured)) p.appendChild(el('div', 'down', `<div style="font-size:var(--fs-xs);margin-top:8px">${t('exp.cantDepart')}</div>`));
-    if (G.run) p.appendChild(repeatRow());
-    left.appendChild(p);
-
-    const bench = el('div', 'panel');
-    bench.appendChild(el('h2', '', `${t('exp.bench.h')} <small>${t('exp.bench.sub', { n: G.heroes.length, cap: D.balance.roster_cap })}</small>`));
-    const benched = G.heroes.filter(h => !G.party.includes(h.uid));
-    if (benched.length === 0) bench.appendChild(el('div', 'muted', `<div style="font-size:var(--fs-xs)">${t('exp.emptySlot')}</div>`));
-    for (const h of benched) bench.appendChild(heroRow(h, -1, false));
-    left.appendChild(bench);
-    wrap.appendChild(left);
+    /* 파티 = 영웅 띠 (2026-08-27 — 옛 파티·벤치 두 패널을 걷어내고 띠 하나가 그 결정을 든다).
+       클릭 = 파티에 넣고 뺀다(부상자는 거절 → 플래시) · 「지금 하는 일」이 전투 파티 / 대기 · 첫 슬롯은 리더 표시.
+       전투 관전·리포트에는 띠를 두지 않는다 — 전투 화면만 본다 (SCREEN_DESIGN §4-1) */
+    const strip = heroStrip(toggleParty, { leaderUid: G.party[0] ?? null });
+    if (G.party.length === 0) strip.appendChild(el('div', 'down exp-warn', t('exp.noParty')));
+    else if (G.party.map(heroById).some(injured)) strip.appendChild(el('div', 'down exp-warn', t('exp.cantDepart')));
+    if (G.run) strip.appendChild(repeatRow());
+    main.appendChild(strip);
 
     /* 스테이지 — 해금된 챕터까지 보여주고, 다음 챕터 첫 스테이지는 잠긴 채로 예고 */
-    const right = el('div');
     const zp = el('div', 'panel');
     zp.appendChild(el('h2', '', t('exp.zones.h')));
     const firstLocked = D.stageList.find(s => !SYS.game.stageUnlocked(G, s.stage_id));
@@ -459,9 +444,7 @@ function renderExpIdle(main) {
         if (go) go.onclick = () => runBattle(z.stage_id);
         zp.appendChild(row);
     }
-    right.appendChild(zp);
-    wrap.appendChild(right);
-    main.appendChild(wrap);
+    main.appendChild(zp);
 }
 
 /** 반복 원정 토글 — 마지막으로 간 스테이지에 붙는다 */
@@ -593,8 +576,12 @@ function heroDoing(h) {
     return { cls: 'idle', text: t('hs.doing.idle') };
 }
 
-/** 영웅 띠 패널 — onPick(hero) 가 카드 클릭. 선택된 영웅(state.heroUid)은 테두리로만 표시한다 */
-function heroStrip(onPick) {
+/**
+ * 영웅 띠 패널 — 원정(편성)·캐릭터·스킬·선술집 공통. onPick(hero) 가 카드 클릭. 선택된 영웅(state.heroUid)은 테두리로만 표시한다.
+ * 카드 = 초상(카드 전체) + 위칸(왼쪽 지금 하는 일 · 오른쪽 이름) — SCREEN_DESIGN §5 (2026-08-27)
+ * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
+ */
+function heroStrip(onPick, { leaderUid = null } = {}) {
     const p = el('div', 'panel hs-panel');
     const strip = el('div', 'hero-strip');
     for (const h of G.heroes) {
@@ -603,9 +590,12 @@ function heroStrip(onPick) {
         c.style.borderTopColor = sinColor(h.sin);
         c.title = `${L(h.name)} — ${className(h.cls)} · Lv.${h.level} · ${sinName(h.sin)} · ${L(tierOf(h))}`;
         c.innerHTML = `
-            ${heroFace(h, 'xl')}
-            <div class="hs-name"><b>${L(h.name)}</b></div>
-            <div class="hs-doing ${doing.cls}">${doing.text}</div>`;
+            <div class="hs-band">
+                <span class="hs-doing ${doing.cls}">${doing.text}</span>
+                <b class="hs-name">${L(h.name)}</b>
+            </div>
+            ${heroFace(h)}
+            ${h.uid === leaderUid ? `<span class="hs-leader">${t('exp.leader')}</span>` : ''}`;
         c.onclick = () => onPick(h);
         strip.appendChild(c);
     }
@@ -616,7 +606,7 @@ function heroStrip(onPick) {
 const pickHero = h => { state.heroUid = h.uid; render(); };
 
 /* ═══════════ 캐릭터 ═══════════
-   세로 3단: ① 영웅 띠 ② 장비 / 전체 능력치 / 세부 능력치 / 현재 스킬 ③ 아이템(가로 전폭).
+   세로 3단: ① 영웅 띠 ② 같은 폭·높이의 4칸 — 장비 / 기본 옵션(+현재 스킬 카드) / 세부 옵션 1 / 세부 옵션 2 (2026-08-27) ③ 아이템(가로 전폭).
    장착·해제·분해가 여기서 실제로 일어난다. */
 
 /** 페이퍼돌 — 신체 위치대로 착용 위치 9개(부위 8종, 반지 ×2). 착용 칸을 누르면 벗는다 */
@@ -669,6 +659,7 @@ function gearPanel(h) {
     return p;
 }
 
+/** ②-2 기본 옵션 — 기본 능력치 7 막대 + 그 아래 현재 스킬(액티브 3, 정사각 카드). 옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (2026-08-27) */
 function attrPanel(h) {
     const p = el('div', 'panel');
     p.appendChild(el('h2', '', t('ch.attr.h')));
@@ -683,16 +674,25 @@ function attrPanel(h) {
             <span class="attr-v">${v}</span></div>`;
     }).join('') + `<div class="attr-range muted">${t('ch.attr.range', { min, max })}</div>`;
     p.appendChild(box);
-
-    const c = combatOf(h);
-    const tbl = el('table', 'stat-table');
-    tbl.innerHTML = `
-        <tr class="sep"><td>${t('st.atk')} <span class="muted">(${t(`st.atkType.${c.attack_type}`)})</span></td><td>${c.atk_physical ?? c.atk_magic}</td></tr>
-        <tr><td>${t('st.def')}</td><td>${c.defense} <span class="muted">${t('st.mitigation', { p: mitigationPct(c.defense) })}</span></td></tr>
-        <tr><td>${t('st.maxhp')}</td><td>${c.hp_max}</td></tr>
-        <tr><td>${t('sk.cycle')}</td><td>${t('sk.cycleSec', { s: c.action_period.toFixed(2) })}</td></tr>`;
-    p.appendChild(tbl);
+    p.appendChild(skillCards(h));
     return p;
+}
+
+/** 현재 스킬 — 액티브 3 을 정사각 카드로. 행동 주기는 소제목 오른쪽. 슬롯 데이터를 읽는 법은 activeSlots 와 같다 */
+function skillCards(h) {
+    const wrap = el('div', 'sk-cards-wrap');
+    wrap.appendChild(el('div', 'sub-h', `${t('ch.skill.h')}<span class="muted">${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycleOf(h).toFixed(2) })}</b></span>`));
+    const grid = el('div', 'sk-cards');
+    (h.actives ?? [null, null, null]).forEach((a, i) => {
+        const c = el('div', `sk-card${a ? '' : ' vacant'}`);
+        c.innerHTML = `<span class="no">${i + 1}</span>${a ? `<span class="ico">${a.icon}</span>` : ''}<span class="nm">${a ? L(a.name) : t('sk.emptySlot')}</span>`;
+        grid.appendChild(c);
+    });
+    wrap.appendChild(grid);
+    const go = el('button', 'btn sm go-tree', t('ch.skill.go'));
+    go.onclick = () => { state.tab = 'skill'; render(); };
+    wrap.appendChild(go);
+    return wrap;
 }
 
 /**
@@ -710,42 +710,42 @@ const fmtCombat = (def, v) => v === undefined ? '—'
     : def.fmt === 'sec' ? t('sk.cycleSec', { s: v.toFixed(2) })
     : String(v);
 
-function detailPanel(h) {
+/** 세부 옵션을 두 칸으로 가르는 자리 — 저항 4행 묶음을 가르지 않도록 '불 저항' 앞에서 끊는다 (SCREEN_DESIGN §6, 2026-08-27) */
+const DETAIL_SPLIT_AT = 'res_fire';
+
+/** ②-3·4 세부 옵션 1·2 — 전투 능력치 25 를 두 칸에 나눠 스크롤 없이. 물리 방어 행은 감쇠율을 병기한다 */
+function detailPanels(h) {
     const c = combatOf(h);
     const resCap = SYS.formula.resCap(c.res_max_bonus ?? 0);
-    const filled = M.COMBAT_STATS.filter(s => c[s.id] !== undefined).length;
-    const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('ch.detail.h')} <small>${t('ch.detail.sub', { n: filled, total: M.COMBAT_STATS.length })}</small>`));
-    const scroll = el('div', 'cs-scroll');
-    scroll.innerHTML = M.COMBAT_CATS.map(cat => {
-        const rows = M.COMBAT_STATS.filter(s => s.cat === cat.id);
-        if (!rows.length) return '';
-        return rows.map(s => {
+    const ordered = M.COMBAT_CATS.flatMap(cat => M.COMBAT_STATS.filter(s => s.cat === cat.id));
+    const cut = ordered.findIndex(s => s.id === DETAIL_SPLIT_AT);
+    const pages = [ordered.slice(0, cut), ordered.slice(cut)];
+    return pages.map((rows, pi) => {
+        const filled = rows.filter(s => c[s.id] !== undefined).length;
+        const p = el('div', 'panel');
+        p.appendChild(el('h2', '', `${t('ch.detail.hn', { n: pi + 1 })} <small>${t('ch.detail.sub', { n: filled, total: rows.length })}</small>`));
+        const list = el('div', 'cs-scroll');
+        list.innerHTML = rows.map(s => {
             const has = c[s.id] !== undefined;
             const a = s.attr ? M.STATS.find(x => x.id === s.attr) : null;
+            const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: resCap })}</span>`
+                : s.id === 'defense' && has ? ` <span class="muted">${t('st.mitigation', { p: mitigationPct(c.defense) })}</span>` : '';
             return `<div class="cs-row${has ? '' : ' off'}">
                 <span class="cs-n">${L(s)}${a ? `<i class="cs-a" title="${L(a)}">${a.abbr}</i>` : ''}</span>
-                <span class="cs-v">${fmtCombat(s, c[s.id])}${RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: resCap })}</span>` : ''}</span></div>`;
+                <span class="cs-v">${fmtCombat(s, c[s.id])}${extra}</span></div>`;
         }).join('');
-    }).join('');
-    p.appendChild(scroll);
-    return p;
-}
-
-function currentSkillPanel(h) {
-    const p = activeSlots(h, t('ch.skill.h'));
-    const go = el('button', 'btn sm go-tree', t('ch.skill.go'));
-    go.onclick = () => { state.tab = 'skill'; render(); };
-    p.appendChild(go);
-    return p;
+        p.appendChild(list);
+        return p;
+    });
 }
 
 /** ③ 아이템 — 가방. 클릭 = 착용(분해 모드면 분해). 열 수는 창 폭이 정한다 */
-function itemsPanel(h) {
+function itemsPanel(h, { showTarget = false } = {}) {
     const p = el('div', 'panel');
     const bagItems = G.bag.map(itemOf).filter(Boolean);
     const items = bagItems.filter(i => !state.slotFilter || i.slot === state.slotFilter);
-    p.appendChild(el('h2', '', `${t('ch.items.h')} <small>${t('ch.items.sub', { n: G.bag.length, cap: D.balance.inventory_cap })}</small>`));
+    // showTarget — 관전 화면처럼 영웅 띠가 없는 곳에서는 장착 대상 영웅을 머리에 적는다
+    p.appendChild(el('h2', '', `${t('ch.items.h')} <small>${t('ch.items.sub', { n: G.bag.length, cap: D.balance.inventory_cap })}${showTarget ? ` · ${t('bt.items.target', { name: L(h.name) })}` : ''}</small>`));
 
     const tools = el('div', 'items-tools');
     const filter = el('div', 'segmented');
@@ -797,8 +797,7 @@ function renderCharacter(main) {
     const band = el('div', 'cols c-char');
     band.appendChild(gearPanel(h));
     band.appendChild(attrPanel(h));
-    band.appendChild(detailPanel(h));
-    band.appendChild(currentSkillPanel(h));
+    for (const p of detailPanels(h)) band.appendChild(p);
     stack.appendChild(band);
     stack.appendChild(itemsPanel(h));
     main.appendChild(stack);
@@ -1185,7 +1184,7 @@ async function boot() {
     if (new URLSearchParams(location.search).get('screen') === 'start') state.screen = 'start';
     if (dev === 'newgame' || (dev === 'battle' && !G)) startGame();
     if (dev === 'battle') runBattle(D.stageOrder[0], { instant: true });
-    if (dev === 'play') { if (!G) startGame(); runBattle(D.stageOrder[0]); return; }
+    if (dev === 'play') { if (!G) startGame(); runBattle(D.stageOrder[0], { tab: new URLSearchParams(location.search).get('bt') }); return; }
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
         if (!G.run) SYS.game.resolveBattle(G, D.stageOrder[0], now() - 31 * 60000);

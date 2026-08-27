@@ -16,7 +16,7 @@
 |---|---|
 | `?dev=newgame` | 새 게임 시작 화면 |
 | `?dev=battle` | 즉시 정산 → 리포트 |
-| `?dev=play` | 관전 |
+| `?dev=play` | 관전 — `&bt=dmg` 면 우측 탭이 누적 데미지 |
 | `?dev=offline` | 반복 켠 채 껐다 켠 상황 — 런 마무리 배너 |
 | `?screen=start` | 시작 화면 |
 | `?tab=character` | 캐릭터 탭 |

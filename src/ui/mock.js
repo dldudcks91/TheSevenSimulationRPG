@@ -218,12 +218,13 @@ export const affixText = (stat, v) => {
     return { ko: `${d.ko} ${num}`, en: `${num} ${d.en}` };
 };
 
-/** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다. 칸은 착용 **위치**(EQUIP_SLOTS.id) — 반지 두 칸 */
+/** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다. 칸은 착용 **위치**(EQUIP_SLOTS.id) — 반지 두 칸.
+ *  2026-08-27 재배치 — 목걸이는 투구 오른쪽 · 장갑은 무기 아래 · 신발은 보조 아래 · 반지는 장갑·신발 아래 (SCREEN_DESIGN §6) */
 export const PAPERDOLL = [
-    [null, 'helmet', null],
+    [null, 'helmet', 'amulet'],
     ['weapon', 'armor', 'offhand'],
-    ['amulet', 'gloves', 'ring1'],
-    [null, 'boots', 'ring2'],
+    ['gloves', null, 'boots'],
+    ['ring1', null, 'ring2'],
 ];
 
 /**
@@ -329,9 +330,30 @@ export const COMBAT_STATS = [
 
 /**
  * 영웅 초상 — 아직 아트가 없다. 몬스터와 같은 자리(faces/)를 쓰되 파일명만 hero_<uid>.png.
- * 지금은 전부 null → 폴백(죄종 색 원판 + 이니셜)이 그려진다. 아트가 들어오면 이 함수 한 줄만 바꾼다.
+ * 지금은 전부 null → 폴백(네모 박스 + 직업 글리프)이 그려진다. 아트가 들어오면 이 함수 한 줄만 바꾼다.
  */
 export const heroFace = uid => null;   // eslint-disable-line no-unused-vars
+/**
+ * 직업 글리프 — 아트가 없는 영웅의 얼굴. **영웅의 생김새는 어디서나 같다** (2026-08-27, SCREEN_DESIGN §5):
+ * 영웅 띠 · 후보 카드 · 관전 유닛 카드가 전부 이 표 하나를 읽는다. 표시 사전이라 game_logic 에 주입하지 않는다.
+ */
+export const CLASS_GLYPH = { warrior: '⚔', knight: '⛨', mage: '✦', archer: '🏹', priest: '✚', assassin: '🗡', necromancer: '☠' };
+export const classGlyph = cls => CLASS_GLYPH[cls] ?? '⚔';
+/**
+ * 관전 스킬 쿨 게이지 **목업** (2026-08-27, DEV_PLAN 부채 #13) — 스킬이 미작성이라 타임라인에 스킬 이벤트가 없다.
+ * 직업별 액티브 3 자리표시: 이름 ko/en · 표기 쿨(초). 재생기(battle.js mockUseSkill)가 영웅의 실제 행동 이벤트마다
+ * 슬롯 순으로 준비된 것 하나를 "쓴" 것처럼 리셋만 한다 — 결과에 아무 영향이 없다. 스킬 이벤트가 생기면 이 표는 지운다.
+ */
+export const MOCK_ACTIVES = {
+    warrior:     [{ n: { ko: '강타', en: 'Heavy Strike' }, cd: 6 }, { n: { ko: '회전 베기', en: 'Whirlwind' }, cd: 12 }, { n: { ko: '전투 함성', en: 'Battle Cry' }, cd: 20 }],
+    knight:      [{ n: { ko: '방패 치기', en: 'Shield Bash' }, cd: 8 }, { n: { ko: '도발', en: 'Taunt' }, cd: 12 }, { n: { ko: '철벽', en: 'Iron Wall' }, cd: 24 }],
+    mage:        [{ n: { ko: '화염구', en: 'Fireball' }, cd: 5 }, { n: { ko: '냉기 파동', en: 'Frost Wave' }, cd: 10 }, { n: { ko: '번개 폭풍', en: 'Lightning Storm' }, cd: 18 }],
+    archer:      [{ n: { ko: '속사', en: 'Quick Shot' }, cd: 4 }, { n: { ko: '관통 화살', en: 'Piercing Arrow' }, cd: 9 }, { n: { ko: '화살비', en: 'Arrow Rain' }, cd: 16 }],
+    priest:      [{ n: { ko: '치유', en: 'Heal' }, cd: 8 }, { n: { ko: '축복', en: 'Bless' }, cd: 14 }, { n: { ko: '정화', en: 'Purify' }, cd: 20 }],
+    assassin:    [{ n: { ko: '급습', en: 'Ambush' }, cd: 5 }, { n: { ko: '독 바르기', en: 'Envenom' }, cd: 10 }, { n: { ko: '은신', en: 'Vanish' }, cd: 18 }],
+    necromancer: [{ n: { ko: '해골 소환', en: 'Raise Skeleton' }, cd: 10 }, { n: { ko: '생명력 흡수', en: 'Life Drain' }, cd: 8 }, { n: { ko: '저주', en: 'Curse' }, cd: 15 }],
+};
+export const mockActives = cls => MOCK_ACTIVES[cls] ?? MOCK_ACTIVES.warrior;
 
 /* ═══════════ 아이템 빌더 ═══════════ */
 /**
@@ -391,7 +413,7 @@ export const MONSTERS = {
     1401: { ko: '제단의 화염마', en: 'Altar Flamefiend' },
     1402: { ko: '몰록의 제물관', en: "Moloch's Sacrificer" },
     1403: { ko: '몰록의 심판관', en: "Moloch's Judge" },
-    1900: { ko: '몰록', en: 'Moloch' },
+    1900: { ko: '사탄', en: 'Satan' },
     // Ch2 뒤틀린 숲 Twisted Forest
     2101: { ko: '독늑대 척후', en: 'Venomwolf Scout' },
     2102: { ko: '도마뱀 저주사', en: 'Lizardman Curser' },

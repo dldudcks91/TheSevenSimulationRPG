@@ -45,7 +45,8 @@ Lootun에는 **공식 위키가 없다.** 대신 개발사(ArrowSoft)가 스팀�
 1. **"희귀도 7단계 + Set 아이템(초록)"** → **Loot of Baal**의 것
 2. **"유물 3~5슬롯, 16 어피니티, 52 키워드"** → **Mind Over Magic**의 것 (Steam 가이드 URL 오조회)
 3. **"쿼터스태프/모닝스타/도끼는 나무 벌목용"** → 다른 게임
-→ 셋 다 본문에 반영하지 않았다. **[가이드] 단독 출처인 항목은 아래에서 별도 표시**한다.
+4. **"Early Game Paladin Guide 1-35"** → **Erenshor**의 동명 가이드 (2026-08-27, §3-2-1 스킬 조사 중 발견 — 검색으로 걸렸으나 확인 결과 Lootun과 무관)
+→ 넷 다 본문에 반영하지 않았다. **[가이드] 단독 출처인 항목은 아래에서 별도 표시**한다.
 
 ---
 
@@ -91,10 +92,12 @@ Lootun에는 **공식 위키가 없다.** 대신 개발사(ArrowSoft)가 스팀�
 ├─ Warrior   근접·원거리(마법 X)  → Warden(탱) / Juggernaut(하이브리드) / Barbarian(DoT)
 ├─ Ranger    근접·원거리(마법 X)  → Renegade(탱) / Assassin / Marksman
 ├─ Mage      마법·근접(원거리 X)  → Battlemage(탱) / Archmage(단일) / Vizier(광역)
-└─ Paladin   [1.3 신규]           → Crusader / (나머지 2종 미확인)
+└─ Paladin   [1.0 신규]           → Crusader / Inquisitor / Templar
 ```
 
-- **[상점]** "4 core classes ... 3 Ascendancy Classes to upgrade into" → 4×3 = **12로 추정**(공식 확인 미완)
+> **v3 정정(2026-08-27)**: Paladin은 `[1.3 신규]`가 아니라 **1.0(2024-03) 신규**다 — 1.0 패치노트 원문 "1.0 will also introduce a new class, the Paladin!"[공식]로 확정. 어센던시 3종(Crusader/Inquisitor/Templar)도 1.1~1.2 패치노트의 `Paladin: Crusader: ...` / `Inquisitor: ...` / `Templar: ...` 섹션 헤더로 전부 확정 — **12개 어센던시 전체가 이제 확정**이다(4×3=12 추정이 실측으로 바뀜).
+
+- **[상점]** "4 core classes ... 3 Ascendancy Classes to upgrade into" → **4×3=12 확정** [패치노트]
 - **어센던시 자유 교체 가능. 단 교체하면 레벨이 100으로 리셋** [가이드]
 - **클래스 = 무기 타입 접근권.** 각 클래스는 3계열 중 2계열만 든다
 - **어센던시마다 탱/딜 역할이 갈린다** — 클래스가 아니라 **어센던시가 역할을 정한다**
@@ -108,12 +111,103 @@ Lootun에는 **공식 위키가 없다.** 대신 개발사(ArrowSoft)가 스팀�
 | **Default Attack** (기본 공격) | **28** | 쿨 없이 계속 나가는 **주력**. 레벨 1/10/20/… 순차 해금 → **그중 하나를 골라 장착** |
 | **Cooldown Skill** (쿨다운 스킬) | **28** | 공격형/방어형으로 나뉘고 초 단위 쿨로 발동 |
 
-> [itch] 구버전은 21 / 18. 클래스별 예시 — Warrior `Cleave`/`Sunder`, Ranger `Explosive Shot`/`Poison Sting`, Mage `Arcane Explosion`/`Fireball`, Paladin `Sweeping Judgement`.
-> 쿨다운 예시 — 공격형 `Dragon's Roar`/`Blade Flurry`/`Arcane Torrent`/`Earthquake`, 방어형 `Defensive Stance`/`Crippling Poison`/`Stasis`/`Ground Slam`/`Smokescreen`.
+> [itch] 구버전은 21 / 18. **구조 역산(2026-08-27)**: 2022년(3클래스, Paladin 없음) 21기본+18쿨다운 → Paladin 추가(1.0, 2024)로 28기본+24쿨다운 → **1.1(2024-10)에서 "클래스당 공격형 쿨다운 1개씩 추가"로 24→28**. 즉 **클래스당 정확히 7기본공격 + 7쿨다운(공격형4/방어형3) = 14개 × 4클래스 = 56개**라는 균등 구조가 수치적으로 정합한다.
 
 **본작과의 결정적 차이**: Lootun의 "기본 공격"은 무기가 아니라 **스킬 슬롯**이다. *스킬을 못 쓸 때 나가는 공격*이 아니라 **기본 공격 자체가 빌드의 주력**이고, 쿨다운 스킬이 보조·버프·유틸이다.
 본작은 반대로 `기본 공격 = 무기군이 결정`(item_design.md §4) + `액티브 슬롯 3`(skill_design.md §3).
 → **Lootun = "무기는 수치, 빌드는 스킬" / 본작 = "무기가 곧 전투 규칙".** 방향이 정반대이며, 본작 쪽이 아이템에 무게를 더 싣는다.
+
+### 3-2-1. 56개 액티브 스킬 전수 — 47/56 확보 (2026-08-27 조사)
+
+> 신뢰도 표기: **[스크린샷]** = Deep Dive 등 공식 자료에 임베드된 인게임 툴팁/패널 이미지를 직접 판독(최고 신뢰도) · **[패치노트]** = 공식 밸런스 조정 공지 원문에 `클래스: 스킬명 -> 패시브명` 형태로 등장(이름·클래스는 확정, 수치는 조정분만) · **[가이드]** = Steam 유저 가이드·gameplay.tips 단독 출처(가장 낮음 — 가이드끼리 클래스 귀속이 엇갈리는 사례 있음, 아래 각주 참조).
+> 조사 방법: Steam 뉴스 페이지는 JS 렌더라 WebFetch가 막히는데, **공식 `ISteamNews` Web API**(`api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=1960270&count=100&maxlength=100000&format=json`)로 우회해 뉴스 68건 전문(§11-1에 없던 Deep Dive #4·#6 원문 포함)을 확보했고, 이 중 **"0.9 Raids Update"(2023-09) 패치노트**가 당시(3클래스) 스킬 로스터 전체를 `Warrior Skills:`/`Ranger Skills:`/`Mage Skills:` 헤더로 나열하고 있어 Warrior·Ranger·Mage 기본공격이 여기서 대부분 확정됐다.
+
+**Warrior — 13/14**
+
+| 스킬 | 유형 | 효과 |
+|---|---|---|
+| Quick Slash | 기본공격 | 약한 기본기, Execute/Ignite로 패시브 변형 [패치노트] |
+| Cleave | 기본공격 | 다타겟, Doublestrike/Frenzy 계열 [패치노트] |
+| Rend | 기본공격 | 물리/DoT, 100%WeaponDmg, 3초 출혈 [스크린샷] |
+| Sunder | 기본공격 | 방어도 감소 + 도발 계열 [패치노트] |
+| Slam | 기본공격 | 120%WD/100%공속, 출혈+냉기전환 [패치노트] |
+| Taunting Blow | 기본공격 | 80%WD/120%공속, 3초 도발 [스크린샷] |
+| Fire Arrow | 기본공격 | Warrior의 원거리 옵션 [패치노트] |
+| Dragon's Roar | 쿨다운(공) | 150%WD/60초, 팀 +25%데미지 10초 [스크린샷] |
+| Armour Break | 쿨다운(공) | 400%WD/45초, 대상 방어도 -100% 15초 [스크린샷] |
+| Earthquake | 쿨다운(공) | 20초, 다음 공격 강화 [패치노트] |
+| Ground Slam | 쿨다운(방) | 30초, 스턴+방어도 감소 [패치노트] |
+| Imposing Cry | 쿨다운(방) | 15초, 공속감소 디버프+HP회복 [패치노트] |
+| Defensive Stance | 쿨다운(방) | 60초, 받는/주는 데미지 조절 [스크린샷] |
+
+미확정 1개: **Bladestorm** — 실존은 [패치노트]("Bladestorm -> Repeating Strikes")로 확실하나, 가이드마다 Warrior/Ranger로 소속이 엇갈려 어느 쪽에도 카운트하지 않았다.
+
+**Ranger — 13/14**
+
+| 스킬 | 유형 | 효과 |
+|---|---|---|
+| Quickdraw | 기본공격 | 기본 원거리타격, Bleedout DoT [패치노트] |
+| Disable | 기본공격 | 100%WD, Hamstring/Leverage 계열 [패치노트] |
+| Explosive Shot | 기본공격 | 120%WD, 폭발+점화 (구명 Explosive Blast, 1.0에서 개명) [패치노트] |
+| Poison Sting | 기본공격 | 40%WD/100%공속, 3초 DoT [스크린샷] |
+| Barrage | 기본공격 | 다타겟 [스크린샷] |
+| Snipe | 기본공격 | 120%WD/100%공속, 보스 즉사기 [패치노트] |
+| Vigilance | 기본공격 | 강제 도발 패시브. 나머지 6개가 전부 확정된 상태에서 **소거법으로 유형 확정** [패치노트] |
+| Blade Flurry | 쿨다운(공) | 150~200%WD/20~40초 [패치노트] |
+| Pin Down | 쿨다운(공) | 20~45초, 출혈 계열 [패치노트] |
+| Rain of Arrows | 쿨다운(공) | 250%WD/60초, 다타겟 [스크린샷] |
+| Smokescreen | 쿨다운(방) | 45초, 팀 회피 +15% [스크린샷] |
+| Crippling Poison | 쿨다운(방) | 대상 디버프 [패치노트][가이드] |
+| Vanish | 쿨다운(방) | 무타겟 상태+데미지 배율 [패치노트][가이드] |
+
+미확인 1개: **1.1 신규 4번째 공격형 쿨다운** — "클래스당 1개 추가"라는 선언만 있고 이름이 패치노트에 등장하지 않는다.
+
+**Mage — 13/14** (기본공격 7 + 방어쿨다운 3은 Deep Dive #1의 마스터리 패널 스크린샷 1장으로 최고 신뢰도 확보)
+
+| 스킬 | 유형 | 효과 |
+|---|---|---|
+| Fireball | 기본공격 | Ignite/Fork/Cascade 계열 [패치노트][가이드] |
+| Arcane Explosion | 기본공격 | 50%WD/100%공속, 3타 광역 [스크린샷] |
+| Frostbolt | 기본공격 | 둔화+치명 취약 디버프 [패치노트] |
+| Frost Strike | 기본공격 | 도발 부여 가능(탱용) [패치노트][가이드] |
+| Chain Lightning | 기본공격 | 80%WD/120%공속, 3연쇄(-30%/연쇄) [스크린샷] |
+| Thunderbolt | 기본공격 | 감전 계열 [패치노트] |
+| Meteor | 기본공격 | 후반 최강 기본기, Maelstrom 시너지(§3-3) [패치노트][가이드] |
+| Firestorm | 쿨다운(공) | Arcane Torrent 대체, 지속회복 계열 [패치노트][가이드] |
+| Arcane Torrent | 쿨다운(공) | 200%WD/40초, 3회 타격 [스크린샷] |
+| Blizzard | 쿨다운(공) | 냉기 광역 [가이드] |
+| Stasis | 쿨다운(방) | 대상 받는피해 증가 디버프 [패치노트][가이드] |
+| Frost Nova | 쿨다운(방) | 50초, 3명 3초 빙결 [스크린샷] |
+| Arcane Cloak | 쿨다운(방) | 방어 배리어 [가이드] |
+
+미확인 1개: Ranger와 동일한 사유(1.1 신규 4번째 공격형 쿨다운, 이름 미확보).
+
+**Paladin — 8/14** (신뢰도 혼재 — 확정 3, 나머지는 [가이드] 단독)
+
+| 스킬 | 유형 | 효과 | 신뢰도 |
+|---|---|---|---|
+| Wrath | 기본공격 | 120%WD/100%공속, 5%받는피해증가 5초 | [스크린샷] 1.0 Preview |
+| Purging Flames | 쿨다운(공) | 200%WD/20초, 점화+대상 버프 제거 | [스크린샷] 1.0 Preview |
+| Revival | 쿨다운(방) | 120초, 사망 아군 부활(60%HP/방벽) | [스크린샷] 1.0 Preview |
+| Sweeping Judgement | 기본공격(추정) | Sunder와 유사한 방어도 파쇄+감전 | [가이드] 단독 |
+| Zealot's Blaze | 기본공격(추정) | 이상상태 효과로 스케일하는 DoT | [패치노트]로 실존 확인 + [가이드] 라벨링 |
+| Executioner's Strike | 기본공격(추정) | 처형기 계열 | [가이드] 단독 |
+| Divine Sweep | 쿨다운(공, 추정) | 다타겟기 | [가이드] 단독 |
+| Sanctify | 쿨다운(방, 유형만 확정) | 회복 + 버프 부여 | [가이드]가 "Defensive cooldown"으로 명시 |
+
+**끝내 미확인 — Paladin 잔여 최소 4~5개(기본공격 최대 2 + 쿨다운 최소 2~3, 정확한 슬롯 배분은 유동적)**. 사유: ① **Paladin은 출시(1.0) 이후 밸런스 조정 이력이 68건 뉴스 전체에서 0건** — 패치노트에 이름이 등장할 기회 자체가 없었다 ② **1.0 Preview 이후 패치노트에 스크린샷이 전혀 첨부되지 않는다**(1.0 Preview 1장이 유일) ③ Steam 가이드에 Paladin 전용 태그가 없다 — 검색으로 걸린 후보 가이드 1건("Early Game Paladin Guide")은 확인 결과 **Lootun이 아니라 다른 게임(Erenshor)의 동명 가이드**였다(§0의 Loot of Baal/Mind Over Magic 오염과 같은 패턴, 신규 오염 사례로 §0-오염 목록에 추가할 만함). `Sweep`·`Holy Invocation`(둘 다 "Blessing of Haste 제공"이라는 서술만 있음)은 별도 스킬인지 `Sweeping Judgement`의 저자 약칭인지 구분 못 해 카운트에서 제외했다.
+
+**집계**
+
+| | 기본공격 | 쿨다운 | 합계 |
+|---|---|---|---|
+| Warrior | 7/7 | 6/7 | 13/14 |
+| Ranger | 7/7 | 6/7 | 13/14 |
+| Mage | 7/7 | 6/7 | 13/14 |
+| Paladin | 4/7 | 4/7 | 8/14 |
+| **합계** | **25/28** | **22/28** | **47/56** |
+
+별도로 소속·유형이 불명확해 위 집계에서 뺀 게 3개(Bladestorm, Sweep, Holy Invocation) 있다.
 
 ### 3-3. 스킬 하나가 자기 트리를 갖는다 (8패시브)
 
@@ -720,6 +814,13 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 - 건물 전수 목록(도전과제 26종 미러) — https://www.chaptercheats.com/cheat/pc/557106/lootun/unlocks/120036
 - Nemesis Infusion Guide(Castle/Watchtower 랭크, 단일 원문의 미러 3곳 중 하나) — https://gameplay.tips/guides/lootun-nemesis-infusion-guide-endgame-crafting.html
 
+**§3-2-1 액티브 스킬 전수 조사 추가 출처 (2026-08-27)**
+- **`ISteamNews` 공식 Web API** — `https://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=1960270&count=100&maxlength=100000&format=json` — 뉴스 68건 전문(원본 마크업 포함)을 JS 렌더 우회 없이 통째로 확보. **기존 timestamp-cursor 방식보다 안정적** — 향후 이 문서 재조사 시 최우선 방법으로 권고. 이 API로 §11-1의 "확보 실패"였던 **Deep Dive #4·#6 원문도 이번에 확보**했다(§3-2-1 스킬 조사 외 용도로는 미반영 — 필요 시 재조사)
+- "0.9 Raids Update" 패치노트(2023-09, 3클래스 시절 스킬 로스터 텍스트 전수 나열) — 위 API로 확보, Steam 뉴스 원본 링크는 JS 렌더라 직접 링크 불가
+- "1.0 Preview" / "1.0 Beta Release" 패치노트(2024-03, Paladin 신규 공개 + 스킬 3종 스크린샷) — 위 API로 확보
+- 1.1(2024-10)·1.2 패치노트의 `Paladin: Crusader/Inquisitor/Templar:` 섹션(어센던시 3종 확정 근거) — 위 API로 확보
+- Steam Deep Dive #1 임베드 이미지(Mage 마스터리 패널, 해시 `dbfbc15f...`) — clan 이미지 CDN(`clan.cloudflare.steamstatic.com/images/42341708/...`) 직접 열람으로 판독
+
 ### 11-2. 총조사 후에도 남은 미확인
 
 | 항목 | 상태 |
@@ -727,8 +828,9 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 | **Deep Dive #4 · #6 원문** | 확보 실패 (스팀 뉴스 JS 렌더). 주제 미상 — 미션/전투와 플라스크/인챈트로 추정 |
 | **전투가 실시간인가 라운드 턴제인가** | 1차 자료 없음. 공격속도·초 단위 쿨·자동 시전은 확인 |
 | **어그로/위협 수치의 구체 규칙** | 탱 역할과 레이드 전담 탱커 요구는 확인, 수치 규칙 미확인 |
-| **Paladin의 어센던시 3종 이름** | `Crusader`만 확인 |
-| **4클래스 체제의 어센던시 총수** | 12로 추정 |
+| ~~**Paladin의 어센던시 3종 이름** — `Crusader`만 확인~~ | **2026-08-27 해소**: Crusader/Inquisitor/Templar 3종 전부 확정 — §3-1 |
+| ~~**4클래스 체제의 어센던시 총수** — 12로 추정~~ | **2026-08-27 해소**: 4×3=12 확정 — §3-1 |
+| **56개 액티브 스킬 중 9개** | Ranger·Mage 각 1개(1.1 신규 4번째 공격형 쿨다운, 이름 미확보) + Paladin 4~5개(밸런스 조정 이력 0건이라 패치노트 경로 자체가 없음) + 소속·유형 불명 3개(Bladestorm/Sweep/Holy Invocation) — §3-2-1 |
 | **인챈트 총수** | [상점] 50+ vs [가이드] 100~150+ 충돌 |
 | **로스터 상한** | [상점 1.3] 18 vs 구 인게임 FAQ 10 충돌 |
 | **랭크 +10%의 정확한 기준** | "랭크당 기본값의 10% 추가"까지만 확인. 곱연산 기준선 미확인 |
@@ -757,4 +859,4 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 
 ---
 
-*마지막 업데이트: 2026-08-26 (§7 거점 건물 심층조사 v2 — 26종 전수 확인, 랭크별 효과 재검증, §4-5 서술 오류 1건 정정)*
+*마지막 업데이트: 2026-08-27 (§3 액티브 스킬 47/56 전수 확보 — §3-2-1 신설, Paladin 출시버전 정정 1.3→1.0, 어센던시 12종 전체 확정) · 2026-08-26 (§7 거점 건물 심층조사 v2 — 26종 전수 확인, 랭크별 효과 재검증, §4-5 서술 오류 1건 정정)*

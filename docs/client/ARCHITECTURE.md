@@ -50,7 +50,7 @@
 
 | 전역 | 정체 | 소유 | 가변성 |
 |---|---|---|---|
-| `D` | 로드된 CSV 파생 데이터 (`balance`, `monsters`, `stages`, `stageOrder`, `roundTypes`, `budgets`, `grades`, `eliteRounds`, `bossRound`, `codexLevels`, `weaponGroups`) | `ui/data.js` | 부팅 후 읽기 전용 |
+| `D` | 로드된 CSV 파생 데이터 (`balance`, `monsters`, `stages`, `stageOrder`, `roundTypes`, `budgets`, `grades`, `eliteRounds`, `bossRound`, `codexLevels`, `weaponGroups`, `stageList`, `weaponGroupList`) | `ui/data.js` | 부팅 후 읽기 전용 |
 | `SYS` | 조립된 시스템 5개 (`hero` `item` `battle` `game` `formula`) | `ui/data.js` | 무상태 — 함수 묶음 |
 | `G` | 세이브 상태 (JSON 평문) | `ui/app.js` | **유일한 가변 상태.** `null` 이면 시작 화면 |
 
@@ -151,4 +151,4 @@ render()
 
 ---
 
-*마지막 업데이트: 2026-08-26 (최초 작성)*
+*마지막 업데이트: 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*

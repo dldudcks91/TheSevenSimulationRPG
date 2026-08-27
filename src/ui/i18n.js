@@ -80,14 +80,14 @@ const STRINGS = {
             + '기본 능력치는 축마다 따로 굴리되 <b>합은 [balance.csv:hero_attr_total] 로 고정</b>이다 — '
             + '세 장의 차이는 양이 아니라 <b>모양</b>이다. 장비로는 1도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
             + '최대 HP는 굴리지 않는다 — 전 영웅 [balance.csv:hero_hp_base] 공통 시작<br>'
-            + '메인 죄종은 죄종 트리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>보류</b> (item_design.md §4)<br>'
+            + '메인 죄종은 죄종 마스터리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>폐기</b> — 전술카드로 이관 (tactic_card_design.md §4)<br>'
             + '리롤은 <b>무제한·무료</b>다 — 시작 선택을 도박으로 만들지 않는다<br>'
             + '<b>미확정</b>: 합 70 자체(제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부',
         en: 'Starting heroes are all <b>Rare</b> — the 15 Uniques are a fixed roster and are not spent at the start<br>'
             + 'Attributes roll per axis but their <b>total is fixed at [balance.csv:hero_attr_total]</b> — '
             + 'the three differ in <b>shape</b>, not in amount. Gear never raises them, so what you roll here <b>lasts forever</b><br>'
             + 'Max HP is not rolled — every hero starts at [balance.csv:hero_hp_base]<br>'
-            + 'The main sin decides the sin tree (tab 1) and dispatch aptitude — gear affinity (set points) is <b>on hold</b> (item_design.md §4)<br>'
+            + 'The main sin decides the sin mastery (tab 1) and dispatch aptitude — gear affinity (set points) is <b>dropped</b> — moved to tactic cards (tactic_card_design.md §4)<br>'
             + 'Rerolling is <b>unlimited and free</b> — the opening choice is not a gamble<br>'
             + '<b>Open</b>: the total itself (a proposed value) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed',
     },
@@ -105,8 +105,6 @@ const STRINGS = {
     'ng.startWeapon': { ko: '직업 전속 무기군의 무기 1개를 쥐고 시작한다', en: 'Starts with one weapon from a class-exclusive weapon group' },
 
     /* ── 원정 (실동작) ── */
-    'exp.toParty': { ko: '파티에', en: 'To party' },
-    'exp.fromParty': { ko: '빼기', en: 'Remove' },
     'exp.partyFull': { ko: '파티가 찼다', en: 'Party full' },
     'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
@@ -152,8 +150,8 @@ const STRINGS = {
     'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
     'ch.err.twoHanded': { ko: '양손 무기 착용 중 — 보조 불가', en: 'Two-hander equipped — no off-hand' },
     'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
+    'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
-    'ch.weaponOf': { ko: '{cls} 무기', en: '{cls} weapon' },
     'ch.weaponGroup': { ko: '{group} · {cls} 전용', en: '{group} · {cls} only' },
     'ch.noTrees': { ko: '스킬 트리는 아직 목업이다', en: 'Skill trees are still a mockup' },
 
@@ -216,8 +214,6 @@ const STRINGS = {
     },
     'exp.party.h': { ko: '파티', en: 'Party' },
     /* 패널 부제는 숫자만 — 설명은 도움말 탭으로 갔다 (원문은 help.exp.party) */
-    'exp.party.sub': { ko: '{n}인', en: '{n}' },
-    'exp.emptySlot': { ko: '+ 빈 자리', en: '+ Empty' },
     'exp.leader': { ko: '리더', en: 'Leader' },
     'exp.cantDepart': {
         ko: '치료 중인 영웅이 있어 이 편성으로는 출발할 수 없다',
@@ -230,10 +226,9 @@ const STRINGS = {
             + 'Party buffs are skill effects, not a stat — Leadership has no combat coefficient (08-25)',
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
-    'exp.bench.sub': { ko: '{n} / {cap}', en: '{n} / {cap}' },     // 원문은 help.exp.bench
     'exp.bench.note': {
-        ko: '파견 화면은 <b>미착수</b> — 시설 5(영입·교역·연구·제련·채광) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)',
-        en: 'Dispatch screen <b>not started</b> — 5 facilities (recruit · trade · research · smelt · mine) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)',
+        ko: '파견 화면은 <b>미착수</b> — 파견처 5(영입·교역·연구·제련·채광) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)',
+        en: 'Dispatch screen <b>not started</b> — 5 dispatch posts (recruit · trade · research · smelt · mine) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },
@@ -294,14 +289,13 @@ const STRINGS = {
     'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'log.reflect': { ko: '{name} 의 반사 — {target} 에게 {dmg}', en: '{name} reflects {dmg} to {target}' },
-    'st.def': { ko: '방어력', en: 'Defense' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
     'eq.sins.note': {
         ko: '착용 장비에 붙은 접사의 죄종 — 접사 카테고리 · 지역 드롭 편향 · 낙인 지정의 축이다<br>'
-            + '<b>죄종 세트효과는 보류</b> (item_design.md §4, 08-25) — 세트포인트·브레이크포인트·메인 죄종 +1 은 화면에서 내렸다',
+            + '<b>죄종 세트효과는 폐기</b> — 전술카드로 이관됐다 (tactic_card_design.md §4, 08-26)',
         en: 'Sins of the affixes on worn gear — the axis of affix categories, zone drop bias, and stigma targeting<br>'
-            + '<b>Sin set effects are on hold</b> (item_design.md §4, 08-25) — set points, breakpoints, and main sin +1 are off the screen',
+            + '<b>Sin set effects are dropped</b> — they moved to tactic cards (tactic_card_design.md §4, 08-26)',
     },
     'eq.sins.none': { ko: '접사 없음', en: 'No affixes' },
     'eq.filter.all': { ko: '전체', en: 'All' },
@@ -329,6 +323,7 @@ const STRINGS = {
     },
     'ch.detail.h': { ko: '세부 옵션', en: 'Detailed Stats' },
     'ch.detail.sub': { ko: '{n} / {total}', en: '{n} / {total}' },
+    'ch.detail.hn': { ko: '세부 옵션 {n}', en: 'Detailed Stats {n}' },
     'ch.detail.note': {
         ko: '전투 능력치는 <b>장비와 스킬이 만든다</b>. 값이 <b>—</b> 인 축은 0이 아니라 '
             + '<b>아직 아무것도 그 축을 건드리지 않았다</b>는 뜻이다 — 비어 있는 축이 곧 다음 장비의 자리다.<br>'
@@ -355,12 +350,12 @@ const STRINGS = {
         ko: '3탭이 <b>포인트 풀을 공유</b>한다. 3택1 같은 선택은 없고, 개성은 "선택"이 아니라 <b>"배분"</b>에서 나온다.',
         en: 'All 3 tabs <b>share one point pool</b>. No pick-one-of-three — identity comes from <b>allocation</b>, not selection.',
     },
-    'sk.slots.h': { ko: '액티브 슬롯', en: 'Active Slots' },
+    'sk.slots.h': { ko: '액티브', en: 'Actives' },
     'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
     'sk.cycle': { ko: '행동 주기', en: 'Action Cycle' },
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
-    'sk.emptySlot': { ko: '빈 슬롯', en: 'Empty slot' },
+    'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
     'sk.base': { ko: '표기 {s}초', en: 'Base {s}s' },
     'sk.eff': { ko: '실효 {s}초', en: 'Eff. {s}s' },
     'sk.aligned': { ko: '(정렬 일치)', en: '(aligned)' },
@@ -377,11 +372,11 @@ const STRINGS = {
     'sk.tab1': { ko: '탭1', en: 'Tab 1' },
     'sk.tab2': { ko: '탭2', en: 'Tab 2' },
     'sk.tab3': { ko: '탭3', en: 'Tab 3' },
-    'sk.sinTree': { ko: '{sin} 트리', en: '{sin} Tree' },
+    'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
     'sk.sinTree.sub': { ko: '죄종에서 옴 — 모든 {sin} 영웅 공유', en: 'From the sin — shared by all {sin} heroes' },
     'sk.sinTree.missing': {
-        ko: '{sin} 트리 <b>미작성</b> — 죄종 트리 7종은 sin_mapping.md 에서 접사와 함께 확정된다 (세트 시너지 노드는 보류)',
-        en: '{sin} tree <b>unwritten</b> — all 7 sin trees are finalized in sin_mapping.md alongside affixes (set synergy nodes on hold)',
+        ko: '{sin} 마스터리 <b>미작성</b> — 죄종 마스터리 7종은 sin_mapping.md 에서 접사와 함께 확정된다 (세트 시너지 노드는 전술카드 이관 대기)',
+        en: '{sin} mastery <b>unwritten</b> — all 7 sin masteries are finalized in sin_mapping.md alongside affixes (set synergy nodes await the tactic-card move)',
     },
     'sk.mastery': { ko: '{cls} 마스터리', en: '{cls} Mastery' },
     'sk.mastery.missing': {
@@ -460,8 +455,17 @@ const STRINGS = {
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '행동 주기 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Action cycle {s}s — acts when the gauge fills' },
     'bt.traitsTitle': { ko: '죄종 고유 1 + 공통 2 — 런타임 랜덤', en: '1 sin trait + 2 common — rolled at runtime' },
+    'bt.cdTitle': { ko: '표기 쿨 {s}초 — 다 차면 다음 행동에 나간다 (목업)', en: 'Cooldown {s}s — fires on the next action when full (mockup)' },
+    'bt.tab.dmg': { ko: '누적 데미지', en: 'Damage' },
+    'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack' },
+    'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
+    'bt.dmg.party': { ko: '파티', en: 'Party' },
+    'bt.dmg.enemy': { ko: '적', en: 'Enemies' },
+    'bt.items.target': { ko: '장착 대상 {name}', en: 'equip target {name}' },
+    'log.hit': { ko: '{name} → {target} <b>{dmg}</b> · {skill}', en: '{name} → {target} <b>{dmg}</b> · {skill}' },
+    'log.dodge': { ko: '{name} → {target} <b>빗나감</b> · {skill}', en: '{name} → {target} <b>miss</b> · {skill}' },
     'log.roundStart': { ko: '<b>라운드 {n} ({kind})</b> — {list}', en: '<b>Round {n} ({kind})</b> — {list}' },
-    'log.crit': { ko: '{name} → {target} <b class="crit-t">{dmg}</b> 치명타!', en: '{name} → {target} <b class="crit-t">{dmg}</b> critical!' },
+    'log.crit': { ko: '{name} → {target} <b class="crit-t">{dmg}</b> 치명타! · {skill}', en: '{name} → {target} <b class="crit-t">{dmg}</b> critical! · {skill}' },
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
     'log.card': { ko: '<b>{name} 카드</b> 획득 — 도감', en: '<b>{name} card</b> found — codex' },
     'pop.card': { ko: '카드', en: 'Card' },
