@@ -36,11 +36,11 @@ export const SAVE_VERSION = 3;
 
 /**
  * @param {object} deps
- *   hero, item, battle — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 9개) / stages(byId) / stageOrder [id...]
- *   monsters(byId) / codex {levels:[cards_required...](codex_level.csv 레벨순), bonus:[레벨별 %](⚠mock), statByNum:{1:'atk_pct',...}}
+ *   hero, item, battle, skill — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 9개) / stages(byId) / stageOrder [id...]
+ *   monsters(byId) / codex {levels:[cards_to_next...](codex_level.csv 레벨순), bonus:[레벨별 %](codex_level.csv:bonus_pct), statByNum:{stage_num: statKey}(codex_series.csv)}
  */
 export function createGameSystem(deps) {
-    const { hero: H, item: I, battle: BT, balance: B } = deps;
+    const { hero: H, item: I, battle: BT, skill: SK, balance: B } = deps;
     const clone = v => JSON.parse(JSON.stringify(v));
 
     const positions = deps.equipSlots.map(s => s.id);
@@ -126,7 +126,7 @@ export function createGameSystem(deps) {
     /* ── 도감 — 몬스터 카드 모델 (monster_design §8) ── */
 
     /**
-     * 카드 수 → 도감 레벨. codex_level.csv 의 cards_required 는 "그 레벨에 오르는 데 필요한 장수"(누적 아님)라
+     * 카드 수 → 도감 레벨. codex_level.csv 의 cards_to_next 는 "그 레벨에 오르는 데 필요한 장수"(누적 아님)라
      * 여기서 누적해 비교한다. 레벨은 역행하지 않고 카드는 소모되지 않는다.
      */
     function codexLevel(cards) {
@@ -147,7 +147,7 @@ export function createGameSystem(deps) {
         return null;
     }
     const codexMaxLevel = () => deps.codex.levels.length;
-    /** 레벨 lv 까지의 누적 보정 % (⚠ 레벨별 값은 mock 자리표시 — codex_level.csv 이관 예정) */
+    /** 레벨 lv 까지의 누적 보정 % (codex_level.csv:bonus_pct) */
     const codexBonusAt = lv => deps.codex.bonus.slice(0, lv).reduce((a, b) => a + b, 0);
 
     /**
@@ -255,9 +255,10 @@ export function createGameSystem(deps) {
         return null;
     }
 
+    // 액티브는 **전투 안에서만** 산다 — 쿨·창·배리어는 HP 와 같은 취급이라 세이브에 넣지 않는다 (INTERFACE §4)
     const partyUnits = state => state.party.map(uid => {
         const h = heroById(state, uid);
-        return { uid, combat: heroCombat(state, h) };
+        return { uid, combat: heroCombat(state, h), actives: SK.activesFor(h) };
     });
 
     /**

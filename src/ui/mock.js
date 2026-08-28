@@ -5,8 +5,16 @@
  * 수치는 전부 손으로 박은 예시이며 밸런스 근거가 없다.
  * 실데이터가 붙는 시점에 이 파일은 통째로 삭제된다.
  *
- * 단, 이름 / 희귀도 색상 / 죄종 색상 / 챕터·스테이지·몬스터 이름은
- * 실데이터(src/data/ + 계승분)의 실제 값을 썼다. 화면 폭과 글자 수 감각을 실제와 맞추기 위함.
+ * 단, 이름 / 희귀도 색상 / 죄종 색상은 실데이터(src/data/ + 계승분)의 실제 값을 썼다.
+ * 화면 폭과 글자 수 감각을 실제와 맞추기 위함.
+ *
+ * ── 2026-08-28 CSV 이관 ──
+ * 챕터·스테이지·몬스터 이름 · 몬스터 얼굴 유무 · 기본 능력치 7 · 전투 능력치 25 · 도감 레벨 보정·계열이
+ * **전부 CSV 로 나갔다** (`chapter` · `stage` · `monster` · `hero_attribute` · `combat_stat` ·
+ * `codex_level` · `codex_series`). 이름·얼굴·배경 헬퍼는 `ui/data.js` 에 있다.
+ * game_logic 이 주입받는데 아직 여기 남은 것 — `CLASSES` · `SLOTS`/`EQUIP_SLOTS` · `SINS` · `ELEMENT_IDS` ·
+ * `ITEM_BASES` · `AFFIX_DEFS` · `nm` · `HERO_NAME_POOL` · `HERO_TRAIT_POOL` · `SIN_TRAITS` · `COMMON_TRAITS`
+ * (이식 차단 목록 — INTERFACE §7 · DEV_PLAN §5-B).
  *
  * ── i18n 규약 (2026-08-23) ──
  * 표시 문자열은 전부 **{ko, en} 쌍**이다. 화면은 i18n.js 의 L() 로 현재 언어를 고른다.
@@ -227,25 +235,6 @@ export const PAPERDOLL = [
     ['ring1', null, 'ring2'],
 ];
 
-/**
- * 기본 능력치 7종 — 범위 [balance.csv:hero_attr_min ~ hero_attr_max] (1~20).
- * 최대 HP는 어떤 능력치도 담당하지 않는다 — 전 영웅 [balance.csv:hero_hp_base](100) 시작,
- * 이후 레벨·장비로만 성장한다 (hero_design.md §4-1). 아래 hpMax 값은 그 전제의 예시.
- * 장비가 하나도 없는 영웅(도리안·가웨인·엘로이즈)은 레벨 성장분만 붙어 있다.
- * **장비는 기본 능력치를 주지 않는다** ([balance.csv:attr_equip_bonus] = 0, hero_design.md §4-2).
- * 따라서 아래 어떤 접사 목록에도 '힘 +n' 류가 등장해선 안 된다 — 장비는 전투 능력치만 준다.
- * abbr 은 영문 한 줄 요약(로스터 카드)용 — 한국어는 이름이 이미 짧아 abbr 불요.
- */
-export const STATS = [
-    { id: 'str', ko: '힘', en: 'Strength', abbr: 'STR' },
-    { id: 'agi', ko: '민첩', en: 'Agility', abbr: 'AGI' },
-    { id: 'int', ko: '지능', en: 'Intelligence', abbr: 'INT' },
-    { id: 'vit', ko: '건강', en: 'Vitality', abbr: 'VIT' },
-    { id: 'luck', ko: '운', en: 'Luck', abbr: 'LCK' },
-    { id: 'ldr', ko: '통솔', en: 'Leadership', abbr: 'LDR' },
-    { id: 'cha', ko: '매력', en: 'Charisma', abbr: 'CHA' },
-];
-
 /* ═══════════ 영웅 생성 풀 ═══════════
    굴리는 규칙은 game_logic/hero.js 에 있다. 여기는 풀(데이터)만 — CSV 로 이사하면 _kr/_en 컬럼 쌍이 된다. */
 
@@ -276,17 +265,12 @@ export const HERO_TRAIT_POOL = [
     { ko: '무쇠 팔', en: 'Iron Arm' }, { ko: '잔꾀', en: 'Cunning' }, { ko: '신실함', en: 'Devout' },
 ];
 
-
 /**
- * 전투 능력치 25종 — src/data/combat_stat.csv 의 화면용 사본. **행·순서를 CSV 와 1:1 로 맞춘다**
- * (2026-08-26: 명중·회피 삭제 → 저항 감소 · 상태이상 대상 피해 · 최대 저항 증가 추가).
- * **기본 능력치(STATS)와는 다른 층이다** (CLAUDE.md / hero_design §4):
- *   기본 7종 = 영웅 고유·장비 불변 / 전투 25종 = 장비·스킬이 만든다.
- * attr = 이 전투 능력치를 미는 기본 능력치(계수). null 은 장비·스킬 전담.
- *   전투 계수는 힘·지능·민첩·건강 4종뿐이고, 드랍률·골드의 **운은 전투 계산 밖**이다 (hero_design §4-1).
- * fmt = 표기 단위. 숫자는 데이터로 두고 단위 붙이기는 렌더러가 한 곳에서 한다.
- *   저항 4종은 소재값이 아니라 **직접 %** 라 pct 다 (battle_design §9-5).
- * ⚠ 코드가 아직 combat_stat.csv 를 읽지 않아 여기가 사본이다 — 읽기 전환은 DEV_PLAN §5-B (부채 #12).
+ * 전투 능력치 카테고리 라벨 — **화면 전용 사전**이라 CSV 로 가지 않는다.
+ * 능력치 자체(25종 · id·이름·카테고리·계수·단위·`impl`)는 `combat_stat.csv` 가 SSOT 고
+ * 로더(`ui/data.js:D.combatStats`)가 읽는다 — 시트는 `impl=1` 행만 그린다.
+ * **기본 능력치와는 다른 층이다** (CLAUDE.md / hero_design §4) — 기본 7종 = 영웅 고유·장비 불변 /
+ * 전투 25종 = 장비·스킬이 만든다.
  */
 export const COMBAT_CATS = [
     { id: 'offense', ko: '공격', en: 'Offense' },
@@ -294,38 +278,6 @@ export const COMBAT_CATS = [
     { id: 'sustain', ko: '유지', en: 'Sustain' },
     { id: 'tempo', ko: '템포', en: 'Tempo' },
     { id: 'utility', ko: '유틸', en: 'Utility' },
-];
-
-export const COMBAT_STATS = [
-    { id: 'atk_physical', ko: '물리 공격력', en: 'Physical Attack', cat: 'offense', attr: 'str', fmt: 'n' },
-    { id: 'atk_magic', ko: '마법 공격력', en: 'Magic Attack', cat: 'offense', attr: 'int', fmt: 'n' },
-    { id: 'crit_rate', ko: '치명타 확률', en: 'Crit Chance', cat: 'offense', attr: null, fmt: 'pct' },
-    { id: 'crit_damage', ko: '치명타 피해', en: 'Crit Damage', cat: 'offense', attr: null, fmt: 'pct' },
-    { id: 'def_ignore', ko: '방어 무시', en: 'Defense Ignore', cat: 'offense', attr: null, fmt: 'pct' },
-    { id: 'res_reduction', ko: '저항 감소', en: 'Resist Reduction', cat: 'offense', attr: null, fmt: 'pct' },
-    { id: 'vs_type_damage', ko: '타입 특효', en: 'Type Damage', cat: 'offense', attr: null, fmt: 'pct' },
-    { id: 'vs_size_damage', ko: '사이즈 특효', en: 'Size Damage', cat: 'offense', attr: null, fmt: 'pct' },
-    { id: 'vs_status_damage', ko: '상태이상 대상 피해', en: 'Damage vs Ailing', cat: 'offense', attr: null, fmt: 'pct' },
-
-    { id: 'hp_max', ko: '최대 HP', en: 'Max HP', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'defense', ko: '물리 방어', en: 'Physical Defense', cat: 'defense', attr: null, fmt: 'n' },
-    { id: 'res_fire', ko: '불 저항', en: 'Fire Resist', cat: 'defense', attr: null, fmt: 'pct' },
-    { id: 'res_cold', ko: '냉기 저항', en: 'Cold Resist', cat: 'defense', attr: null, fmt: 'pct' },
-    { id: 'res_lightning', ko: '전기 저항', en: 'Lightning Resist', cat: 'defense', attr: null, fmt: 'pct' },
-    { id: 'res_poison', ko: '독 저항', en: 'Poison Resist', cat: 'defense', attr: null, fmt: 'pct' },
-    { id: 'res_max_bonus', ko: '최대 저항 증가', en: 'Max Resist Bonus', cat: 'defense', attr: null, fmt: 'pct' },
-    { id: 'damage_reduction', ko: '피해 감소', en: 'Damage Reduction', cat: 'defense', attr: null, fmt: 'pct' },
-    { id: 'reflect_damage', ko: '반사 피해', en: 'Reflect Damage', cat: 'defense', attr: null, fmt: 'n' },
-
-    { id: 'life_steal', ko: '흡혈', en: 'Life Steal', cat: 'sustain', attr: null, fmt: 'pct' },
-    { id: 'hp_regen', ko: 'HP 재생', en: 'HP Regen', cat: 'sustain', attr: null, fmt: 'n' },
-
-    { id: 'action_period', ko: '행동 주기', en: 'Action Period', cat: 'tempo', attr: 'agi', fmt: 'sec' },
-    { id: 'fhr', ko: '상태이상 회복 속도', en: 'Status Recovery', cat: 'tempo', attr: 'vit', fmt: 'pct' },
-    { id: 'cooldown_reduction', ko: '쿨타임 감소', en: 'Cooldown Reduction', cat: 'tempo', attr: null, fmt: 'pct' },
-
-    { id: 'item_find', ko: '드랍률', en: 'Item Find', cat: 'utility', attr: 'luck', fmt: 'pct' },
-    { id: 'gold_find', ko: '골드 획득', en: 'Gold Find', cat: 'utility', attr: 'luck', fmt: 'pct' },
 ];
 
 /**
@@ -410,160 +362,19 @@ export const nm = (preSin, base, sufSin) => {
  */
 export const BG_DIR = './assets/inherited/backgrounds/';
 export const TOWN_BG = BG_DIR + 'town.webp';
-const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
+export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
 
 /**
- * 몬스터 — ko 는 src/data/monster.csv 의 monster_name_kr 그대로 (112종).
- * en 은 CSV `monster_name_en` 컬럼(예정)의 **초안** — 검수 후 CSV 로 이사한다.
- * `face: true` 인 것만 얼굴 이미지가 있다 (src/assets/inherited/faces/face_<idx>.png).
+ * 몬스터 얼굴 — 계승 자산(src/assets/inherited/faces/face_<idx>.png).
+ * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
+ * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
 export const FACE_DIR = './assets/inherited/faces/';
-export const MONSTERS = {
-    // Ch1 불타는 전장 Burning Battlefield
-    1101: { ko: '고블린 척후병', en: 'Goblin Scout', face: true },
-    1102: { ko: '고블린 전사', en: 'Goblin Warrior', face: true },
-    1103: { ko: '오크 전사', en: 'Orc Warrior' },
-    1150: { ko: '아바돈', en: 'Abaddon' },
-    1201: { ko: '인간 보병', en: 'Human Footman' },
-    1202: { ko: '인간 창병', en: 'Human Spearman' },
-    1203: { ko: '트롤 돌격병', en: 'Troll Charger' },
-    1250: { ko: '레기온', en: 'Legion' },
-    1301: { ko: '스켈레톤 전사', en: 'Skeleton Warrior', face: true },
-    1302: { ko: '스켈레톤 궁수', en: 'Skeleton Archer' },
-    1303: { ko: '스켈레톤 기사', en: 'Skeleton Knight', face: true },
-    1350: { ko: '둘라한', en: 'Dullahan', face: true },
-    1401: { ko: '제단의 화염마', en: 'Altar Flamefiend' },
-    1402: { ko: '몰록의 제물관', en: "Moloch's Sacrificer" },
-    1403: { ko: '몰록의 심판관', en: "Moloch's Judge" },
-    1900: { ko: '사탄', en: 'Satan' },
-    // Ch2 뒤틀린 숲 Twisted Forest
-    2101: { ko: '독늑대 척후', en: 'Venomwolf Scout' },
-    2102: { ko: '도마뱀 저주사', en: 'Lizardman Curser' },
-    2103: { ko: '도마뱀 돌격병', en: 'Lizardman Charger' },
-    2150: { ko: '사마엘', en: 'Samael' },
-    2201: { ko: '서큐버스 유혹마', en: 'Succubus Temptress' },
-    2202: { ko: '서큐버스 독술사', en: 'Succubus Poisoner' },
-    2203: { ko: '오크 탈취자', en: 'Orc Plunderer' },
-    2250: { ko: '아비주', en: 'Abyzou' },
-    2301: { ko: '수목 원혼', en: 'Tree Wraith' },
-    2302: { ko: '울부짖는 유령', en: 'Wailing Ghost' },
-    2303: { ko: '뿌리 좀비', en: 'Root Zombie' },
-    2350: { ko: '밴시', en: 'Banshee' },
-    2401: { ko: '심연의 유혹마', en: 'Abyssal Temptress' },
-    2402: { ko: '심연 오크 병사', en: 'Abyssal Orc Soldier' },
-    2403: { ko: '오크 심연장', en: 'Orc Abyss Warden' },
-    2900: { ko: '레비아탄', en: 'Leviathan' },
-    // Ch3 황금의 사막 Golden Desert
-    3101: { ko: '사막 도마뱀 약탈자', en: 'Desert Lizardman Raider' },
-    3102: { ko: '사막 도마뱀 주술사', en: 'Desert Lizardman Shaman' },
-    3103: { ko: '사암 골렘', en: 'Sandstone Golem' },
-    3150: { ko: '다곤', en: 'Dagon' },
-    3201: { ko: '해골 수호병', en: 'Skeleton Guard' },
-    3202: { ko: '해골 석궁병', en: 'Skeleton Arbalist' },
-    3203: { ko: '뱀파이어 귀족', en: 'Vampire Noble' },
-    3250: { ko: '카론', en: 'Charon' },
-    3301: { ko: '황금 임프', en: 'Golden Imp' },
-    3302: { ko: '고블린 약탈병', en: 'Goblin Looter' },
-    3303: { ko: '고블린 금고지기', en: 'Goblin Vaultkeeper' },
-    3350: { ko: '메피스토펠레스', en: 'Mephistopheles' },
-    3401: { ko: '황금궁 임프', en: 'Palace Imp' },
-    3402: { ko: '금위 고블린', en: 'Gilded Guard Goblin' },
-    3403: { ko: '고블린 근위대장', en: 'Goblin Guard Captain' },
-    3900: { ko: '맘몬', en: 'Mammon' },
-    // Ch4 망각의 동토 Frozen Tundra
-    4101: { ko: '서리 원혼', en: 'Frost Wraith' },
-    4102: { ko: '동결 곡성귀', en: 'Frozen Wailer' },
-    4103: { ko: '빙결 좀비', en: 'Frostbitten Zombie' },
-    4150: { ko: '유키온나', en: 'Yuki-onna' },
-    4201: { ko: '서리 고블린 병사', en: 'Frost Goblin Soldier' },
-    4202: { ko: '얼음 임프', en: 'Ice Imp' },
-    4203: { ko: '고블린 빙하대장', en: 'Goblin Glacier Chief' },
-    4250: { ko: '아스타로스', en: 'Astaroth' },
-    4301: { ko: '예티 척후', en: 'Yeti Scout' },
-    4302: { ko: '예티 투석병', en: 'Yeti Slinger' },
-    4303: { ko: '트롤 빙하거인', en: 'Troll Glacier Giant' },
-    4350: { ko: '파주주', en: 'Pazuzu' },
-    4401: { ko: '동결 임프', en: 'Frozen Imp' },
-    4402: { ko: '왕좌 고블린 위병', en: 'Throne Goblin Sentry' },
-    4403: { ko: '고블린 동결기사', en: 'Goblin Frost Knight' },
-    4900: { ko: '벨페고르', en: 'Belphegor' },
-    // Ch5 심연의 동굴 Caverns of the Abyss
-    5101: { ko: '부식 좀비', en: 'Corroded Zombie' },
-    5102: { ko: '리치 수행자', en: 'Lich Acolyte' },
-    5103: { ko: '부식 리치', en: 'Corroded Lich' },
-    5150: { ko: '오르쿠스', en: 'Orcus' },
-    5201: { ko: '동굴 예티', en: 'Cave Yeti' },
-    5202: { ko: '바위 골렘', en: 'Rock Golem' },
-    5203: { ko: '거대 골렘', en: 'Giant Golem' },
-    5250: { ko: '탈로스', en: 'Talos' },
-    5301: { ko: '가고일 주술사', en: 'Gargoyle Shaman' },
-    5302: { ko: '오크 포식자', en: 'Orc Devourer' },
-    5303: { ko: '악마 가고일', en: 'Demon Gargoyle' },
-    5350: { ko: '베히모스', en: 'Behemoth' },
-    5401: { ko: '연회장 가고일', en: 'Banquet Gargoyle' },
-    5402: { ko: '오크 대식가', en: 'Orc Glutton' },
-    5403: { ko: '대가고일 집사', en: 'Grand Gargoyle Butler' },
-    5900: { ko: '바알제붑', en: 'Beelzebub' },
-    // Ch6 타락한 궁전 Corrupted Palace
-    6101: { ko: '서큐버스 유혹자', en: 'Succubus Seductress' },
-    6102: { ko: '화염 임프', en: 'Flame Imp' },
-    6103: { ko: '대임프 사제', en: 'Grand Imp Priest' },
-    6150: { ko: '릴리스', en: 'Lilith' },
-    6201: { ko: '뱀파이어 후작', en: 'Vampire Marquis' },
-    6202: { ko: '유혹의 유령', en: 'Ghost of Temptation' },
-    6203: { ko: '뱀파이어 백작', en: 'Vampire Count' },
-    6250: { ko: '카밀라', en: 'Carmilla' },
-    6301: { ko: '도마뱀 근위병', en: 'Lizardman Guard' },
-    6302: { ko: '트롤 집행자', en: 'Troll Executioner' },
-    6303: { ko: '도마뱀 대장', en: 'Lizardman Captain' },
-    6350: { ko: '그렌델', en: 'Grendel' },
-    6401: { ko: '침실의 서큐버스', en: 'Chamber Succubus' },
-    6402: { ko: '시종 임프', en: 'Attendant Imp' },
-    6403: { ko: '대서큐버스 시녀장', en: 'Grand Succubus Matron' },
-    6900: { ko: '아스모데우스', en: 'Asmodeus' },
-    // Ch7 신의 폐허 Ruins of God
-    7101: { ko: '가고일 천상병', en: 'Gargoyle Celestial' },
-    7102: { ko: '오크 성기사', en: 'Orc Paladin' },
-    7103: { ko: '가고일 대장', en: 'Gargoyle Captain' },
-    7150: { ko: '아자젤', en: 'Azazel' },
-    7201: { ko: '신전 골렘', en: 'Temple Golem' },
-    7202: { ko: '예티 순례자', en: 'Yeti Pilgrim' },
-    7203: { ko: '고대 골렘', en: 'Ancient Golem' },
-    7250: { ko: '골리앗', en: 'Goliath' },
-    7301: { ko: '리치 왕', en: 'Lich King' },
-    7302: { ko: '뱀파이어 공작', en: 'Vampire Duke' },
-    7303: { ko: '대리치', en: 'Archlich' },
-    7350: { ko: '아스클레피오스', en: 'Asclepius' },
-    7401: { ko: '옥좌의 주문석상', en: 'Throne Spellstone' },
-    7402: { ko: '타락 오크 근위', en: 'Fallen Orc Guard' },
-    7403: { ko: '대가고일 옥좌지기', en: 'Grand Gargoyle Thronekeeper' },
-    7900: { ko: '루시퍼', en: 'Lucifer' },
-};
-
-/** 챕터 죄종 (chapter_info.csv) — 얼굴 없는 몬스터의 폴백 원판 색으로 쓴다 */
-export const CHAPTER_SIN = {
-    1: 'wrath', 2: 'envy', 3: 'greed', 4: 'sloth', 5: 'gluttony', 6: 'lust', 7: 'pride',
-};
-
-/** {ko, en} 이름 쌍을 돌려준다 — 화면은 i18n.L() 로 푼다. 이니셜도 L() 결과의 첫 글자를 쓴다 */
-export const monsterName = id => MONSTERS[id] ?? { ko: '???', en: '???' };
-export const monsterFace = id => MONSTERS[id]?.face ? `${FACE_DIR}face_${id}.png` : null;
-/** 몬스터 id 앞자리 = 챕터 (1101 → 1챕터) */
-export const monsterSin = id => CHAPTER_SIN[Math.floor(id / 1000)] ?? 'wrath';
 
 /**
  * 정예 특성 — 계승 elite_trait.csv. en 은 CSV 의 trait_name(영문) 그대로.
  * 죄종 고유 1 + 공통 2 로 정예가 조립된다 (840 변형).
  */
-/**
- * 정예 이름 조립 — ko "분노의 스켈레톤 기사" / en "Wrathful Skeleton Knight".
- * 언어별 어순·조사가 다르므로 조립 규칙은 렌더러가 아니라 **데이터 층**에 둔다 (nm() 과 같은 자리).
- */
-export const eliteName = (sin, baseId) => {
-    const s = SINS[sin], b = monsterName(baseId);
-    return { ko: `${s.ko}의 ${b.ko}`, en: `${s.adj} ${b.en}` };
-};
-
 export const SIN_TRAITS = {
     wrath: { ko: '격분', en: 'Frenzy' },
     sloth: { ko: '태만', en: 'Apathy' },
@@ -590,23 +401,6 @@ export const COMMON_TRAITS = [
  * 원정 = 스테이지 런 (base_expedition_design §1-2).
  * 챕터 1 = 스테이지 4개, 각 스테이지 9라운드. 이름·몬스터·보스는 실데이터(stage.csv) 그대로.
  */
-/**
- * 스테이지 표시 사전 — 수치(dlvl·보스·타입)는 stage.csv 가 SSOT 다. 여기는 영문 이름·배경만.
- * 없는 스테이지는 stage_name_kr 을 양쪽에 쓴다 (영문명 미작성 — CSV 에 stage_name_en 이 붙으면 이 표는 사라진다).
- */
-export const STAGE_META = {
-    101: { name: { ko: '파멸의 진영', en: 'Camp of Ruin' }, bg: stageBg(101) },
-    102: { name: { ko: '핏빛 교전지대', en: 'Crimson Battleground' }, bg: stageBg(102) },
-    103: { name: { ko: '원한의 묘지', en: 'Graveyard of Grudges' }, bg: stageBg(103) },
-    104: { name: { ko: '사탄의 제단', en: "Satan's Altar" }, bg: null },   // 계승분 없음 (원작 미제작)
-    201: { name: { ko: '변형의 경계', en: 'Verge of Mutation' }, bg: null },
-    202: { name: { ko: '독무의 심림', en: 'Miasma Deepwood' }, bg: null },
-    203: { name: { ko: '부패한 뿌리', en: 'Rotten Roots' }, bg: null },
-};
-export const stageName = row => STAGE_META[row.stage_id]?.name ?? { ko: row.stage_name_kr, en: row.stage_name_kr };
-export const stageBgOf = id => STAGE_META[id]?.bg ?? null;
-/** 챕터 이름·죄종 — CODEX_CHAPTERS 가 이미 들고 있다 */
-export const chapterOf = ch => CODEX_CHAPTERS.find(c => c.id === ch);
 
 /*
  * 죄종 세트효과 — **보류** (item_design.md §4, 2026-08-25). 세트포인트·브레이크포인트 3/6/9·세트 보너스 표는
@@ -692,77 +486,22 @@ export const SKILL_POINTS = { total: 24, spent: 21 };
  * 몬스터 도감 — **몬스터 카드 모델** (2026-08-25 확정, monster_design §8). 처치 수 문턱(08-22)을 대체한다.
  *
  * 처치마다 확률로 그 몬스터의 카드가 떨어지고([balance.csv:codex_card_drop_pct]), 카드가 누적 문턱을 넘을 때마다
- * 도감 레벨이 오른다 — 레벨별 필요 장수는 **codex_level.csv**(SSOT, data.js 가 읽는다). 처치 수는 기록만.
- * 레벨이 주는 것은 스테이지 계열 스탯 보정 — 계열 배정은 계승 bonus 테이블 유지 (1=공격, 2=체력, 3=명중, 4=피해).
- * ⚠ 레벨별 보정 %(아래)는 아직 **화면 확인용 자리표시** — codex_level.csv 컬럼으로 이관 예정.
+ * 도감 레벨이 오른다. 레벨별 필요 장수(`codex_level.csv:cards_to_next`) · 레벨별 보정 %(`bonus_pct`) ·
+ * 계열 배정(`codex_series.csv`) 는 전부 CSV 다 — 여기 남은 것은 **화면 전용 라벨**뿐이다.
+ * 챕터 이름·죄종은 `chapter.csv` (ui/data.js:D.chapterList · chapterOf).
  */
-export const CODEX_LEVEL_BONUS = [0.5, 0.5, 1, 1];       // 레벨 1..4 도달 시 얻는 % (누적) — codex_level.csv 행 수와 맞춘다
-/**
- * 스테이지 번호 → 전투 보너스 키 (1 공격 / 2 체력 / 3 명중 / 4 피해 — 계승 collection_group_bonus 배정)
- * ⚠ **3 계열(`acc_pct`)은 갈 곳이 없다** — 명중 폐지(08-26)로 `computeCombat` 이 읽는 키가 아니다.
- *   재배정은 기획 결정이라 배정 자체는 그대로 두고 미결로 등재했다 (GAME_DESIGN §10 · DEV_PLAN §3-2).
- */
-export const CODEX_STAT_BY_NUM = { 1: 'atk_pct', 2: 'hp_pct', 3: 'acc_pct', 4: 'dmg_pct' };
 
-/** 챕터 이름 = chapter_info.csv 의 region_kr / region_en 그대로 */
-export const CODEX_CHAPTERS = [
-    { id: 1, name: { ko: '불타는 전장', en: 'Burning Battlefield' }, sin: 'wrath', locked: false },
-    { id: 2, name: { ko: '뒤틀린 숲', en: 'Twisted Forest' }, sin: 'envy', locked: true },
-    { id: 3, name: { ko: '황금의 사막', en: 'Golden Desert' }, sin: 'greed', locked: true },
-    { id: 4, name: { ko: '망각의 동토', en: 'Frozen Tundra' }, sin: 'sloth', locked: true },
-    { id: 5, name: { ko: '심연의 동굴', en: 'Caverns of the Abyss' }, sin: 'gluttony', locked: true },
-    { id: 6, name: { ko: '타락한 궁전', en: 'Corrupted Palace' }, sin: 'lust', locked: true },
-    { id: 7, name: { ko: '신의 폐허', en: 'Ruins of God' }, sin: 'pride', locked: true },
-];
-
-/** 스테이지별 계열 스탯 (스테이지 번호 고정 배정 — 계승 collection_group_bonus 유지) */
-const CX_STAT = {
+/** 스테이지 번호별 계열 라벨 — 계열 자체는 codex_series.csv, 여기는 표시 문구뿐. 스테이지 목록은 ui/data.js:codexStages() 가 stage.csv 에서 만든다 */
+export const CX_STAT = {
     1: { ko: '공격력', en: 'Attack' },
     2: { ko: '체력', en: 'Health' },
     3: { ko: '명중률', en: 'Accuracy' },
     4: { ko: '피해량', en: 'Damage' },
 };
-const CX_DONE = {
+/** 완성 보상 라벨 — 표시 전용(보상 효과 미구현) */
+export const CX_DONE = {
     1: { ko: '치명률 +2%', en: '+2% Crit Rate' },
     2: { ko: '방어력 +2%', en: '+2% Defense' },
     3: { ko: '회피율 +2%', en: '+2% Evasion' },
     4: { ko: '공격 속도 +2%', en: '+2% Attack Speed' },
 };
-/** 스테이지 행 빌더 — 이름은 stage.csv 의 stage_name_kr + en 초안 */
-const cxStage = (id, chapter, num, name, monsters, locked) => ({
-    id, chapter, num, name, stat: CX_STAT[num], completion: CX_DONE[num],
-    ...(locked ? { locked: true } : {}),
-    monsters,
-});
-const mons = (a, b, c, boss) => [{ id: a }, { id: b }, { id: c }, { id: boss, boss: true }];
-
-export const CODEX_STAGES = [
-    cxStage(101, 1, 1, { ko: '파멸의 진영', en: 'Camp of Ruin' }, mons(1101, 1102, 1103, 1150)),
-    cxStage(102, 1, 2, { ko: '핏빛 교전지대', en: 'Crimson Battleground' }, mons(1201, 1202, 1203, 1250)),
-    cxStage(103, 1, 3, { ko: '원한의 묘지', en: 'Graveyard of Grudges' }, mons(1301, 1302, 1303, 1350)),
-    cxStage(104, 1, 4, { ko: '사탄의 제단', en: "Satan's Altar" }, mons(1401, 1402, 1403, 1900)),
-    cxStage(201, 2, 1, { ko: '변형의 경계', en: 'Verge of Mutation' }, mons(2101, 2102, 2103, 2150), true),
-    cxStage(202, 2, 2, { ko: '독무의 심림', en: 'Miasma Thicket' }, mons(2201, 2202, 2203, 2250), true),
-    cxStage(203, 2, 3, { ko: '부패한 뿌리', en: 'Rotten Roots' }, mons(2301, 2302, 2303, 2350), true),
-    cxStage(204, 2, 4, { ko: '레비아탄의 심연', en: "Leviathan's Abyss" }, mons(2401, 2402, 2403, 2900), true),
-    cxStage(301, 3, 1, { ko: '모래에 묻힌 폐허', en: 'Sand-Buried Ruins' }, mons(3101, 3102, 3103, 3150), true),
-    cxStage(302, 3, 2, { ko: '저주받은 지하묘지', en: 'Cursed Catacombs' }, mons(3201, 3202, 3203, 3250), true),
-    cxStage(303, 3, 3, { ko: '황금 보물고', en: 'Golden Vault' }, mons(3301, 3302, 3303, 3350), true),
-    cxStage(304, 3, 4, { ko: '맘몬의 황금궁', en: "Mammon's Golden Palace" }, mons(3401, 3402, 3403, 3900), true),
-    cxStage(401, 4, 1, { ko: '얼어붙은 평원', en: 'Frozen Plains' }, mons(4101, 4102, 4103, 4150), true),
-    cxStage(402, 4, 2, { ko: '빙하 요새', en: 'Glacier Fortress' }, mons(4201, 4202, 4203, 4250), true),
-    cxStage(403, 4, 3, { ko: '영구동결의 심부', en: 'Permafrost Depths' }, mons(4301, 4302, 4303, 4350), true),
-    cxStage(404, 4, 4, { ko: '벨페고르의 동결왕좌', en: "Belphegor's Frozen Throne" }, mons(4401, 4402, 4403, 4900), true),
-    cxStage(501, 5, 1, { ko: '탐식의 입구', en: 'Maw of Gluttony' }, mons(5101, 5102, 5103, 5150), true),
-    cxStage(502, 5, 2, { ko: '맥동하는 미로', en: 'Pulsing Labyrinth' }, mons(5201, 5202, 5203, 5250), true),
-    cxStage(503, 5, 3, { ko: '소화의 심연', en: 'Digestive Abyss' }, mons(5301, 5302, 5303, 5350), true),
-    cxStage(504, 5, 4, { ko: '바알제붑의 연회장', en: "Beelzebub's Banquet Hall" }, mons(5401, 5402, 5403, 5900), true),
-    cxStage(601, 6, 1, { ko: '부패한 정원', en: 'Decayed Garden' }, mons(6101, 6102, 6103, 6150), true),
-    cxStage(602, 6, 2, { ko: '유혹의 회랑', en: 'Corridor of Temptation' }, mons(6201, 6202, 6203, 6250), true),
-    cxStage(603, 6, 3, { ko: '욕망의 왕좌', en: 'Throne of Desire' }, mons(6301, 6302, 6303, 6350), true),
-    cxStage(604, 6, 4, { ko: '아스모데우스의 침실', en: "Asmodeus's Chamber" }, mons(6401, 6402, 6403, 6900), true),
-    cxStage(701, 7, 1, { ko: '천상의 계단', en: 'Celestial Stairs' }, mons(7101, 7102, 7103, 7150), true),
-    cxStage(702, 7, 2, { ko: '무너진 신전', en: 'Fallen Temple' }, mons(7201, 7202, 7203, 7250), true),
-    cxStage(703, 7, 3, { ko: '오만의 왕좌', en: 'Throne of Pride' }, mons(7301, 7302, 7303, 7350), true),
-    cxStage(704, 7, 4, { ko: '루시퍼의 빈 옥좌', en: "Lucifer's Empty Throne" }, mons(7401, 7402, 7403, 7900), true),
-];

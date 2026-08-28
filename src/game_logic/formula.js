@@ -99,8 +99,15 @@ export function createFormula(balance) {
     /** 흡혈 — 직격의 최종 피해에만 비례한다 */
     const leech = (dmg, pct) => Math.round(dmg * (pct ?? 0) / 100);
 
+    /**
+     * 실효 쿨 (battle_design §6) — 스킬은 **행동 주기에 얹혀** 나가므로 쿨이 돌아도 다음 차례까지 기다린다.
+     * `ceil(쿨 / 주기) × 주기` — 쿨이 주기의 정수배면 손실 0. 엔진은 이 함수를 쓰지 않는다(틱 루프에서
+     * 자연히 생긴다) — 화면 표기와 검증이 같은 규칙을 읽게 하려고 여기 둔다.
+     */
+    const effectiveCd = (cd, period) => Math.ceil(cd / period) * period;
+
     return {
         growthMult, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
-        hitChance, strike, indirect, leech,
+        hitChance, strike, indirect, leech, effectiveCd,
     };
 }

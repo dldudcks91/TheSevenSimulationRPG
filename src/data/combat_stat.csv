@@ -1,26 +1,26 @@
-stat_id,stat_kr,category,source,attr_bonus,description_kr
-atk_physical,물리 공격력,offense,weapon_base|equipment|skill,str,physical 공격의 피해원 — 힘 계수 x 무기 공격력 x (1 + 상시 피해 % 합). **무기가 밑수다** — 다른 슬롯의 고정 공격력을 이 괄호에 더하지 않는다. 상대 defense 가 곱셈 감쇠 (battle_design §9-1·9-3)
-atk_magic,마법 공격력,offense,weapon_base|equipment|skill,int,원소 공격의 피해원 — 구조는 물리와 동일(지능 계수 x 마법 무기 공격력 x (1 + 상시 피해 %)). 원소는 마법 무기 개체가 든다(스킬 태그 우선). 상대의 그 원소 저항이 % 로 감소시킨다 (battle_design §9-5). 회복 스킬의 회복량도 이 값에 비례한다 (별도 회복량 스탯 없음)
-crit_rate,치명타 확률,offense,equipment|skill,-,치명타 발생 확률 — 상한 [balance.csv:crit_cap_pct]. 기본 능력치 보정 없음. 장비·스킬 전담
-crit_damage,치명타 피해,offense,equipment|skill,-,치명타 시 피해 배율 — 직격에만 붙는다 (반사·도트 제외 — battle_design §9-6)
-def_ignore,방어 무시,offense,equipment|skill,-,**물리 전용**. 감쇠 곡선에 넣기 전 상대 물리 방어값을 이 비율만큼 깎는다 — 감쇠율의 %가 아니다. 원소 쪽 대응은 res_reduction (battle_design §9-3)
-res_reduction,저항 감소,offense,equipment|skill,-,**원소 전용**. 상대 원소 저항을 %p 로 깎는다 — 관통이라는 별도 규칙이 아니라 저항값에 음수를 더하는 것이다. 저항은 하한이 없어 음수가 되면 피해가 증폭된다 (battle_design §9-5)
-vs_type_damage,타입 특효,offense,equipment,-,Normal/Demon/Undead 대상 추가 피해 — **조건부 괄호**에 덧셈으로 들어간다. 조건부 괄호는 상시 괄호와 곱해진다. 무기 슬롯 전속 (battle_design §9-2)
-vs_size_damage,사이즈 특효,offense,equipment,-,소/중/대(size_type) 대상 추가 피해 — 조건부 괄호에 덧셈. ⚠ **존치 미결** — 종족은 스테이지 단위로 예측되지만 사이즈는 대상마다 갈려 인과를 읽기 어렵다 (battle_design §9-9)
-vs_status_damage,상태이상 대상 피해,offense,equipment|skill,-,상태이상에 걸린 대상에게 추가 피해 — 조건부 괄호에 덧셈. **상태이상별로 쪼개지 않는다**(불리언 하나). 부여 수단이 생기기 전까지 접사 풀에 넣지 않는다 (battle_design §9-2)
-hp_max,최대 HP,defense,equipment|skill,-,전투불능(부상) 판정 기준. 레벨 1 값 [balance.csv:hero_hp_base] 전 영웅 공통 고정 — 기본 능력치와 무관. 레벨 성장은 [balance.csv:power_growth_per_level] 곡선을 탄다
-defense,물리 방어,defense,equipment|skill,-,attack_type=physical 피해의 감쇠 소재값 — 감쇠율 = 방어값/(방어값 + [balance.csv:def_curve_k]). K는 **상수**(롤 방식)라 실효 체력이 방어에 선형이다. 면역 없음·상한 규칙 없음. **성장 축이 아니라 비율 축** (battle_design §9-3)
-res_fire,불 저항,defense,equipment|skill,-,attack_type=fire 피해를 이 **%만큼 직접** 줄인다(소재값 아님). 전 원소 공통 접사(res_all)가 네 항에 함께 더해진다. 상한 [balance.csv:res_cap_base] + res_max_bonus · 절대 상한 [balance.csv:res_cap_absolute] · **하한 없음**(음수 = 피해 증폭)
-res_cold,냉기 저항,defense,equipment|skill,-,attack_type=cold 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일
-res_lightning,전기 저항,defense,equipment|skill,-,attack_type=lightning 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일
-res_poison,독 저항,defense,equipment|skill,-,attack_type=poison 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일
-res_max_bonus,최대 저항 증가,defense,equipment|skill,-,원소 저항 기본 상한([balance.csv:res_cap_base])을 뚫는 **유일한** 수단 — 절대 상한 [balance.csv:res_cap_absolute] 까지. 상한 근처에서 실효 체력 기여가 커 유니크·크래프트·낙인의 자리 (battle_design §9-5)
-damage_reduction,피해 감소,defense,equipment,-,감쇠 뒤에 곱한다. **원천별로 각각 곱한다** — 덧셈이 아니다. 0에 수렴할 뿐 닿지 않아 상한 규칙이 필요 없고 접사 하나의 실효 체력 기여가 항상 일정하다. 방어 곡선과도 곱해지므로 한쪽 몰빵이 손해 (battle_design §9-3)
-reflect_damage,반사 피해,defense,equipment|skill,-,받은 최종 피해 x 이 비율을 공격자 HP 에서 직접 뺀다. **비직격** — 감소·치명을 받지 않고 아무것도 유발하지 않는다 (battle_design §9-6)
-life_steal,흡혈,sustain,equipment|skill,-,직격의 **최종 피해**(감소 후)에 비례해 회복 — 비직격은 흡혈하지 않는다. 런 깊이와 부상 예방 담당
-hp_regen,HP 재생,sustain,equipment|skill,-,시간당 회복 — 행동 주기와 무관하게 실시간. 제한시간 룰의 대상
-action_period,행동 주기,tempo,weapon_base|equipment,agi,차례가 오는 간격(초). 공격속도와 캐스팅 속도가 같은 축이다 — 영웅·몬스터 공통 단일 시계
-fhr,상태이상 회복 속도,tempo,equipment|skill,vit,걸린 상태이상에서 벗어나는 속도(지속시간 단축). 건강이 미는 계수 — 저항(확률 차단)은 없다: 상태이상은 걸리되 빨리 털어낸다 (2026-08-25 재배정 — 피격 경직 폐지). stat_id 는 계승 나태 갑옷 접사 매핑 유지를 위해 fhr 보존
-cooldown_reduction,쿨타임 감소,tempo,equipment|skill,-,표기 쿨 단축 — 실효 쿨 정렬 최적화의 손잡이
-item_find,드랍률,utility,equipment,luck,전투 밖 산출 — 전투력 vs 파밍 효율 스왑 축. 운 계수 (2026-08-26 감각→운 재정의)
-gold_find,골드 획득,utility,equipment,luck,전투 밖 산출 — 운 계수 (2026-08-26)
+stat_id,stat_kr,stat_en,category,attr,fmt,impl,description_kr
+atk_physical,물리 공격력,Physical Attack,offense,str,n,1,physical 공격의 피해원 — 힘 계수 x 무기 공격력 x (1 + 상시 피해 % 합). **무기가 밑수다** — 다른 슬롯의 고정 공격력을 이 괄호에 더하지 않는다. 상대 defense 가 곱셈 감쇠 (battle_design §9-1·9-3)
+atk_magic,마법 공격력,Magic Attack,offense,int,n,1,원소 공격의 피해원 — 구조는 물리와 동일(지능 계수 x 마법 무기 공격력 x (1 + 상시 피해 %)). 원소는 마법 무기 개체가 든다(스킬 태그 우선). 상대의 그 원소 저항이 % 로 감소시킨다 (battle_design §9-5). 회복 스킬의 회복량도 이 값에 비례한다 (별도 회복량 스탯 없음)
+crit_rate,치명타 확률,Crit Chance,offense,-,pct,1,치명타 발생 확률 — 상한 [balance.csv:crit_cap_pct]. 기본 능력치 보정 없음. 장비·스킬 전담
+crit_damage,치명타 피해,Crit Damage,offense,-,pct,1,치명타 시 피해 배율 — 직격에만 붙는다 (반사·도트 제외 — battle_design §9-6)
+def_ignore,방어 무시,Defense Ignore,offense,-,pct,1,**물리 전용**. 감쇠 곡선에 넣기 전 상대 물리 방어값을 이 비율만큼 깎는다 — 감쇠율의 %가 아니다. 원소 쪽 대응은 res_reduction (battle_design §9-3)
+res_reduction,저항 감소,Resist Reduction,offense,-,pct,1,**원소 전용**. 상대 원소 저항을 %p 로 깎는다 — 관통이라는 별도 규칙이 아니라 저항값에 음수를 더하는 것이다. 저항은 하한이 없어 음수가 되면 피해가 증폭된다 (battle_design §9-5)
+vs_type_damage,타입 특효,Type Damage,offense,-,pct,0,Normal/Demon/Undead 대상 추가 피해 — **조건부 괄호**에 덧셈으로 들어간다. 조건부 괄호는 상시 괄호와 곱해진다. 무기 슬롯 전속 (battle_design §9-2)
+vs_size_damage,사이즈 특효,Size Damage,offense,-,pct,0,소/중/대(size_type) 대상 추가 피해 — 조건부 괄호에 덧셈. ⚠ **존치 미결** — 종족은 스테이지 단위로 예측되지만 사이즈는 대상마다 갈려 인과를 읽기 어렵다 (battle_design §9-9)
+vs_status_damage,상태이상 대상 피해,Damage vs Ailing,offense,-,pct,0,상태이상에 걸린 대상에게 추가 피해 — 조건부 괄호에 덧셈. **상태이상별로 쪼개지 않는다**(불리언 하나). 부여 수단이 생기기 전까지 접사 풀에 넣지 않는다 (battle_design §9-2)
+hp_max,최대 HP,Max HP,defense,-,n,1,전투불능(부상) 판정 기준. 레벨 1 값 [balance.csv:hero_hp_base] 전 영웅 공통 고정 — 기본 능력치와 무관. 레벨 성장은 [balance.csv:power_growth_per_level] 곡선을 탄다
+defense,물리 방어,Physical Defense,defense,-,n,1,attack_type=physical 피해의 감쇠 소재값 — 감쇠율 = 방어값/(방어값 + [balance.csv:def_curve_k]). K는 **상수**(롤 방식)라 실효 체력이 방어에 선형이다. 면역 없음·상한 규칙 없음. **성장 축이 아니라 비율 축** (battle_design §9-3)
+res_fire,불 저항,Fire Resist,defense,-,pct,1,attack_type=fire 피해를 이 **%만큼 직접** 줄인다(소재값 아님). 전 원소 공통 접사(res_all)가 네 항에 함께 더해진다. 상한 [balance.csv:res_cap_base] + res_max_bonus · 절대 상한 [balance.csv:res_cap_absolute] · **하한 없음**(음수 = 피해 증폭)
+res_cold,냉기 저항,Cold Resist,defense,-,pct,1,attack_type=cold 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일
+res_lightning,전기 저항,Lightning Resist,defense,-,pct,1,attack_type=lightning 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일
+res_poison,독 저항,Poison Resist,defense,-,pct,1,attack_type=poison 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일
+res_max_bonus,최대 저항 증가,Max Resist Bonus,defense,-,pct,1,원소 저항 기본 상한([balance.csv:res_cap_base])을 뚫는 **유일한** 수단 — 절대 상한 [balance.csv:res_cap_absolute] 까지. 상한 근처에서 실효 체력 기여가 커 유니크·크래프트·낙인의 자리 (battle_design §9-5)
+damage_reduction,피해 감소,Damage Reduction,defense,-,pct,1,감쇠 뒤에 곱한다. **원천별로 각각 곱한다** — 덧셈이 아니다. 0에 수렴할 뿐 닿지 않아 상한 규칙이 필요 없고 접사 하나의 실효 체력 기여가 항상 일정하다. 방어 곡선과도 곱해지므로 한쪽 몰빵이 손해 (battle_design §9-3)
+reflect_damage,반사 피해,Reflect Damage,defense,-,n,1,받은 최종 피해 x 이 비율을 공격자 HP 에서 직접 뺀다. **비직격** — 감소·치명을 받지 않고 아무것도 유발하지 않는다 (battle_design §9-6)
+life_steal,흡혈,Life Steal,sustain,-,pct,1,직격의 **최종 피해**(감소 후)에 비례해 회복 — 비직격은 흡혈하지 않는다. 런 깊이와 부상 예방 담당
+hp_regen,HP 재생,HP Regen,sustain,-,n,0,시간당 회복 — 행동 주기와 무관하게 실시간. 제한시간 룰의 대상
+action_period,행동 주기,Action Period,tempo,agi,sec,1,차례가 오는 간격(초). 공격속도와 캐스팅 속도가 같은 축이다 — 영웅·몬스터 공통 단일 시계
+fhr,상태이상 회복 속도,Status Recovery,tempo,vit,pct,0,걸린 상태이상에서 벗어나는 속도(지속시간 단축). 건강이 미는 계수 — 저항(확률 차단)은 없다: 상태이상은 걸리되 빨리 털어낸다 (2026-08-25 재배정 — 피격 경직 폐지). stat_id 는 계승 나태 갑옷 접사 매핑 유지를 위해 fhr 보존
+cooldown_reduction,쿨타임 감소,Cooldown Reduction,tempo,-,pct,0,표기 쿨 단축 — 실효 쿨 정렬 최적화의 손잡이
+item_find,드랍률,Item Find,utility,luck,pct,1,전투 밖 산출 — 전투력 vs 파밍 효율 스왑 축. 운 계수 (2026-08-26 감각→운 재정의)
+gold_find,골드 획득,Gold Find,utility,luck,pct,1,전투 밖 산출 — 운 계수 (2026-08-26)

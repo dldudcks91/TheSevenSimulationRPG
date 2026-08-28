@@ -30,7 +30,7 @@ import * as M from './mock.js';
 import { t, L, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
 import { bindTipNode, hideTip, heroTipCard } from './tip.js';
-import { D, SYS, loadData } from './data.js';
+import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, codexStages } from './data.js';
 import { loadSave, writeSave, clearSave } from './storage.js';
 import { makeRng } from '../game_logic/rng.js';
 import { SAVE_VERSION } from '../game_logic/state.js';
@@ -85,8 +85,8 @@ const slotDef = id => M.SLOTS.find(s => s.id === id);                           
 const posDef = pos => slotDef(M.EQUIP_SLOTS.find(s => s.id === pos)?.part);            // 착용 위치 → 부위 정의
 const affixText = a => L(M.affixText(a.stat, a.v));
 
-/* 스테이지 표시 — 수치는 D.stages(stage.csv), 이름은 M.stageName */
-const stageTitle = row => `${L(M.chapterOf(row.chapter)?.name)} — ${L(M.stageName(row))}`;
+/* 스테이지 표시 — 수치도 이름도 D.stages(stage.csv) · 조립은 data.js:stageName */
+const stageTitle = row => `${L(chapterOf(row.chapter)?.name)} — ${L(stageName(row))}`;
 /** 예상 소요 = 라운드별 목표 전투시간 합 (round_budget.csv) */
 function stageMinutes(stage) {
     const sec = D.roundTypes.reduce((a, r) => {
@@ -100,10 +100,10 @@ function stageMinutes(stage) {
  * 몬스터 얼굴 (src/assets/inherited/faces/). 폴백은 죄종 색 원판 + 이름 이니셜 (faces/README 규격).
  */
 const faceChip = (id, extraCls = '') => {
-    const src = M.monsterFace(id);
-    const name = L(M.monsterName(id));
+    const src = monsterFace(id);
+    const name = L(monsterName(id));
     if (src) return `<span class="face ${extraCls}" title="${name}"><img src="${src}" alt="${name}" loading="lazy"></span>`;
-    const c = sinColor(M.monsterSin(id));
+    const c = sinColor(monsterSin(id));
     return `<span class="face none ${extraCls}" title="${t('face.noArt', { name })}"
         style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
 };
@@ -247,8 +247,8 @@ function candidateCard(h, extra = '') {
     const c = el('div', 'ng-card');
     c.style.borderTopColor = sinColor(h.sin);
     const min = D.balance.hero_attr_min, max = D.balance.hero_attr_max;
-    const total = M.STATS.reduce((a, s) => a + h.stats[s.id], 0);
-    const bars = M.STATS.map(s => {
+    const total = D.heroAttributes.reduce((a, s) => a + h.stats[s.id], 0);
+    const bars = D.heroAttributes.map(s => {
         const v = h.stats[s.id];
         const pct = Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
         return `<div class="attr-row">
@@ -382,7 +382,7 @@ function noticeBanner() {
     const stage = D.stages[n.stageId];
     box.innerHTML = `
         <span class="t">${t(`exp.notice.${n.kind}.h`)}</span>
-        <span class="b">${t(`exp.notice.${n.kind}.body`, { stage: stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(M.stageName(stage))}` : '' })}</span>
+        <span class="b">${t(`exp.notice.${n.kind}.body`, { stage: stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(stageName(stage))}` : '' })}</span>
         ${G.lastReport ? `<button class="btn sm b-report">${t('exp.notice.report')}</button>` : ''}
         <button class="btn sm b-ok">${t('exp.notice.dismiss')}</button>`;
     const rb = box.querySelector('.b-report');
@@ -405,8 +405,8 @@ function renderExpIdle(main) {
         const unlocked = SYS.game.stageUnlocked(G, z.stage_id);
         const cleared = G.progress.cleared.includes(z.stage_id);
         const chapterBoss = z.boss_grade === 'chapter_boss';
-        const sin = M.chapterOf(z.chapter)?.sin ?? 'wrath';
-        const bg = M.stageBgOf(z.stage_id);
+        const sin = chapterOf(z.chapter)?.sin ?? 'wrath';
+        const bg = stageBgOf(z.stage_id);
         const row = el('div', `zone${unlocked ? '' : ' locked'}${chapterBoss ? ' boss' : ''}${z.stage_id === state.expStage ? ' on' : ''}`);
         row.style.borderLeftColor = unlocked ? sinColor(sin) : '';
         if (bg) {
@@ -420,7 +420,7 @@ function renderExpIdle(main) {
             <div>
                 <div class="title">
                     <span class="sin-chip" style="color:${sinColor(sin)}">${sinName(sin)}</span>
-                    <span>Ch${z.chapter}-${z.stage_num} ${L(M.stageName(z))}</span>
+                    <span>Ch${z.chapter}-${z.stage_num} ${L(stageName(z))}</span>
                     ${cleared ? `<span class="muted" style="font-size:var(--fs-xs)">${t('exp.cleared')}</span>` : ''}
                 </div>
                 <div class="meta">${t('exp.stageMeta', { lv: z.dlvl, m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</div>
@@ -434,11 +434,11 @@ function renderExpIdle(main) {
                     <div class="face-row">
                         ${pool.map(id => faceChip(id)).join('')}
                         <span class="face-sep">·</span>${faceChip(z.boss_monster_idx, 'boss')}
-                        <span class="muted">${pool.map(id => L(M.monsterName(id))).join(', ')}</span>
+                        <span class="muted">${pool.map(id => L(monsterName(id))).join(', ')}</span>
                     </div>
                     <div class="round-plan">
                         ${D.eliteRounds.map(n => `<span class="rk elite">${t('exp.eliteR', { n })}</span>`).join('')}
-                        <span class="rk boss">R${D.bossRound} ${bossLabel} · ${L(M.monsterName(z.boss_monster_idx))}${bossTail}</span>
+                        <span class="rk boss">R${D.bossRound} ${bossLabel} · ${L(monsterName(z.boss_monster_idx))}${bossTail}</span>
                     </div>
                 </div>
             </details>`;
@@ -508,7 +508,7 @@ function repeatRow() {
     const stage = D.stages[G.run.stageId];
     row.innerHTML = `
         <button class="btn sm toggle${on ? ' on' : ''}">${t('exp.repeat')}</button>
-        <span class="sub">${stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(M.stageName(stage))}` : ''}</span>`;
+        <span class="sub">${stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(stageName(stage))}` : ''}</span>`;
     row.querySelector('button').onclick = ev => {
         ev.stopPropagation();
         G.run.repeat = !on;
@@ -550,7 +550,7 @@ function renderExpReport(main) {
         </div>`;
     for (const lu of R.levelUps) {
         const h = heroById(lu.uid);
-        const gains = Object.entries(lu.gains).map(([id, n]) => `${L(M.STATS.find(s => s.id === id))} +${n}`).join(', ') || t('rep.gainsNone');
+        const gains = Object.entries(lu.gains).map(([id, n]) => `${L(D.heroAttributes.find(s => s.id === id))} +${n}`).join(', ') || t('rep.gainsNone');
         p.appendChild(el('div', '', `<div class="up" style="font-size:var(--fs-sm);margin-bottom:8px">
             ${t('rep.levelUp', { name: L(h?.name), a: lu.from, b: lu.to })} &nbsp;<span class="muted">${gains}</span></div>`));
     }
@@ -559,7 +559,7 @@ function renderExpReport(main) {
         const lines = cardEntries.map(([id, n]) => {
             const total = G.codexCards[id] ?? 0;
             const up = SYS.game.codexLevel(total) > SYS.game.codexLevel(total - n);
-            const name = L(M.monsterName(Number(id)));
+            const name = L(monsterName(Number(id)));
             return `${name}${n > 1 ? ` ×${n}` : ''}${up ? ` <span class="up">▲ ${t('rep.cardLevelUp', { name, lv: SYS.game.codexLevel(total) })}</span>` : ''}`;
         });
         p.appendChild(el('div', '', `<div style="font-size:var(--fs-sm);margin-bottom:8px"><span class="muted">${t('rep.cards')}</span> &nbsp;${lines.join(', ')}</div>`));
@@ -610,7 +610,7 @@ function renderExpReport(main) {
         const kindTag = w.kind !== 'normal' ? ` <b class="rk ${w.kind === 'normal' ? '' : (w.kind.includes('boss') ? 'boss' : w.kind)}">${t(`kind.${w.kind === 'stage_boss' || w.kind === 'chapter_boss' ? 'boss' : w.kind}`)}</b>` : '';
         const counts = {};
         for (const id of w.killed) counts[id] = (counts[id] ?? 0) + 1;
-        const list = Object.entries(counts).map(([id, n]) => `${L(M.monsterName(Number(id)))}${n > 1 ? ` ×${n}` : ''}`).join(', ');
+        const list = Object.entries(counts).map(([id, n]) => `${L(monsterName(Number(id)))}${n > 1 ? ` ×${n}` : ''}`).join(', ');
         ul.appendChild(el('li', `r-${w.kind.includes('boss') ? 'boss' : w.kind}`, `
             <span>R${w.n}${kindTag}</span>
             <span>${list ? t('rep.roundLine', { list }) : t('rep.roundNone')}</span>
@@ -730,7 +730,7 @@ function attrPanel(h) {
     p.appendChild(el('h2', '', t('ch.attr.h')));
     const min = D.balance.hero_attr_min, max = D.balance.hero_attr_max;
     const box = el('div', 'attr-list');
-    box.innerHTML = M.STATS.map(s => {
+    box.innerHTML = D.heroAttributes.map(s => {
         const v = h.stats[s.id];
         const pct = Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
         return `<div class="attr-row">
@@ -782,7 +782,8 @@ const DETAIL_SPLIT_AT = 'res_fire';
 function detailPanels(h) {
     const c = combatOf(h);
     const resCap = SYS.formula.resCap(c.res_max_bonus ?? 0);
-    const ordered = M.COMBAT_CATS.flatMap(cat => M.COMBAT_STATS.filter(s => s.cat === cat.id));
+    // impl=0 은 computeCombat 이 내지 않는 축이라 시트가 그리지 않는다 (combat_stat.csv:impl)
+    const ordered = M.COMBAT_CATS.flatMap(cat => D.combatStats.filter(s => s.cat === cat.id && s.impl));
     const cut = ordered.findIndex(s => s.id === DETAIL_SPLIT_AT);
     const pages = [ordered.slice(0, cut), ordered.slice(cut)];
     return pages.map((rows, pi) => {
@@ -792,7 +793,7 @@ function detailPanels(h) {
         const list = el('div', 'cs-scroll');
         list.innerHTML = rows.map(s => {
             const has = c[s.id] !== undefined;
-            const a = s.attr ? M.STATS.find(x => x.id === s.attr) : null;
+            const a = s.attr ? D.heroAttributes.find(x => x.id === s.attr) : null;
             const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: resCap })}</span>`
                 : s.id === 'defense' && has ? ` <span class="muted">${t('st.mitigation', { p: mitigationPct(c.defense) })}</span>` : '';
             return `<div class="cs-row${has ? '' : ' off'}">
@@ -885,7 +886,7 @@ function tipCard(item, headText, hint = '') {
         <div class="tip-head">${headText}</div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${L(item.name)}</div>
         <div class="tip-sub">${sub.join(' · ')}</div>
-        ${g ? `<div class="tip-implicit">${t('st.atk')} ${item.watk} (${t(`st.atkType.${item.element ?? g.attackType}`)}) · ${t('sk.cycleSec', { s: g.period.toFixed(2) })}</div>` : ''}
+        ${g ? `<div class="tip-implicit">${t('st.atk')} ${item.watk} (${t(`st.atkType.${item.element ?? g.damageKind}`)}) · ${t('sk.cycleSec', { s: g.period.toFixed(2) })}</div>` : ''}
         ${item.implicit ? `<div class="tip-implicit">${affixText(item.implicit)}</div>` : ''}
         <ul>${(item.affixes ?? []).map(a => `<li>${affixText(a)}</li>`).join('') || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>
         <div class="tip-sins">${sins.map(s => `<span class="sin-tag" style="color:${sinColor(s)};margin-right:4px">${sinName(s)}</span>`).join('')}
@@ -1053,7 +1054,7 @@ function renderTavern(main) {
    레벨·필요 장수 계산은 SYS.game(codex_level.csv). 여기는 카드 수를 읽어 그리기만 한다 */
 
 const codexLv = cards => SYS.game.codexLevel(cards);
-/** 레벨별 누적 문턱 — 진행 막대용 (codex_level.csv 의 cards_required 는 레벨당 장수라 누적한다) */
+/** 레벨별 누적 문턱 — 진행 막대용 (codex_level.csv 의 cards_to_next 는 레벨당 장수라 누적한다) */
 const codexCum = () => D.codexLevels.reduce((a, r) => (a.push((a[a.length - 1] ?? 0) + r), a), []);
 function stageBonus(stage) {
     const total = stage.monsters.reduce((a, m) => a + SYS.game.codexBonusAt(codexLv(m.cards)), 0);
@@ -1068,9 +1069,9 @@ function monsterCard(m, stage) {
     const next = cum[lv] ?? null;
     const prev = lv > 0 ? cum[lv - 1] : 0;
     const pct = next ? Math.min(100, (m.cards - prev) / (next - prev) * 100) : 100;
-    const src = M.monsterFace(m.id);
-    const name = stage.locked ? '???' : L(M.monsterName(m.id));
-    const c = sinColor(M.monsterSin(m.id));
+    const src = monsterFace(m.id);
+    const name = stage.locked ? '???' : L(monsterName(m.id));
+    const c = sinColor(monsterSin(m.id));
     const faceHtml = stage.locked
         ? `<span class="face unfound">·</span>`
         : src
@@ -1089,7 +1090,7 @@ function monsterCard(m, stage) {
                 <div class="mon-mid">
                     <span class="pips">${pips}</span>
                     <span class="mon-next muted">${stage.locked ? '' : `${t('cx.kills', { n: m.kills.toLocaleString() })} · ${next
-                        ? `${t('cx.next', { n: next })} <span class="up">+${M.CODEX_LEVEL_BONUS[lv] ?? 0}%</span>`
+                        ? `${t('cx.next', { n: next })} <span class="up">+${D.codexBonus[lv] ?? 0}%</span>`
                         : `<span class="up">${t('cx.max')}</span>`}`}</span>
                 </div>
                 <div class="bar"><i style="width:${pct}%"></i></div>
@@ -1098,10 +1099,10 @@ function monsterCard(m, stage) {
 }
 
 function renderCodex(main) {
-    const ch = M.CODEX_CHAPTERS.find(c => c.id === state.codexChapter) ?? M.CODEX_CHAPTERS[0];
+    const ch = chapterOf(state.codexChapter) ?? D.chapterList[0];
     // 카드·처치 수는 실집계(G.codexCards / G.codexKills), 잠금은 스테이지 해금 상태에서 온다
-    const stages = M.CODEX_STAGES.filter(st => st.chapter === ch.id).map(st => ({
-        ...st, locked: !SYS.game.stageUnlocked(G, st.id),
+    const stages = codexStages().filter(st => st.chapter === ch.id).map(st => ({
+        ...st, stat: M.CX_STAT[st.num], completion: M.CX_DONE[st.num], locked: !SYS.game.stageUnlocked(G, st.id),
         monsters: st.monsters.map(m => ({ ...m, cards: G.codexCards[m.id] ?? 0, kills: G.codexKills[m.id] ?? 0 })),
     }));
     const chLocked = stages.every(st => st.locked);
@@ -1109,7 +1110,7 @@ function renderCodex(main) {
     const p = el('div', 'panel');
     p.appendChild(el('h2', '', t('cx.h')));
     const bar = el('div', 'sub-bar');
-    bar.appendChild(segmented(M.CODEX_CHAPTERS.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}` })), ch.id,
+    bar.appendChild(segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}` })), ch.id,
         id => { state.codexChapter = id; render(); }));
     bar.appendChild(el('div', 'muted', `<span style="font-size:var(--fs-xs)">
         ${chLocked

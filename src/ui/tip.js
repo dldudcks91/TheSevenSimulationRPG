@@ -16,6 +16,7 @@
 
 import * as M from './mock.js';
 import { t, L } from './i18n.js';
+import { D } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
 
@@ -88,7 +89,7 @@ export function heroTipCard(h) {
         <div class="tip-head">${t('tip.hero.h')}</div>
         <div class="tip-name" style="color:${tier.color}">${L(h.name)}</div>
         <div class="tip-sub">${sub.join(' · ')}</div>
-        <div class="tip-stats">${M.STATS.map(s => `
+        <div class="tip-stats">${D.heroAttributes.map(s => `
             <div class="tip-stat"><span class="n">${L(s)}<i>${s.abbr}</i></span><b>${h.stats?.[s.id] ?? '—'}</b></div>`).join('')}</div>`;
     return c;
 }

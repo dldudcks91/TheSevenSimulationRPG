@@ -30,7 +30,7 @@ import { createFormula } from './formula.js';
  *   balance      — {key: value}
  *   slots        — 부위 id 목록 (8부위). 드롭은 부위 단위 — 반지는 착용 **위치**가 2개일 뿐 부위는 하나다
  *   sins         — 죄종 id 목록
- *   weaponGroups — {id: {id, ko, en, classes:[cls...], twoHanded, period, variance, attackType, stage}}  ← weapon_group.csv
+ *   weaponGroups — {id: {id, ko, en, classes:[cls...], twoHanded, period, variance, damageKind, release}}  ← weapon_group.csv
  *   elements     — 원소 4종 id 목록 (마법 무기 개체가 하나를 든다)
  *   itemBases    — {slot: [{ko,en}...]}  무기 외 부위의 베이스 이름 풀. 무기의 베이스는 무기군 자체다
  *   affixDefs    — [{stat, scale:'growth'|'band'|'flat', min, max, perIlvl?, slots?:[...]}]  slots 없으면 전 부위
@@ -44,8 +44,8 @@ export function createItemSystem(data) {
     const r1 = v => Math.round(v * 10) / 10;
     const r2 = v => Math.round(v * 100) / 100;
 
-    /** 드롭·시작 무기에 쓰는 무기군 = 본편(stage=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
-    const dropGroups = Object.values(WG).filter(g => g.stage === 'main');
+    /** 드롭·시작 무기에 쓰는 무기군 = 본편(release=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
+    const dropGroups = Object.values(WG).filter(g => g.release === 'main');
     const groupsFor = cls => dropGroups.filter(g => g.classes.includes(cls));
 
     const rollRarity = rng => {
@@ -119,7 +119,7 @@ export function createItemSystem(data) {
                 * (base.twoHanded ? B.two_hand_atk_mult : 1) * (1 + eps));
             // 마법 무기는 **개체**가 원소를 든다 (battle_design §9-5) — 무기군은 종류를, 개체는 상대할 저항을 정한다.
             // 세기가 아니라 대상 선택이라 "무기군 스킬은 개체에 붙지 않는다"(skill_design §3)와 충돌하지 않는다.
-            if (base.attackType === 'magic') item.element = pick(rng, data.elements);
+            if (base.damageKind === 'magic') item.element = pick(rng, data.elements);
         } else {
             item.implicit = implicitFor(rng, slot, ilvl);
         }

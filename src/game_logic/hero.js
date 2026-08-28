@@ -10,6 +10,9 @@
  *   현재 형태는 `1 + 능력치 × [balance.csv:attr_bonus_per_point] / 100` 프로토타입 임시식이고,
  *   모든 계수는 balance.csv 의 ⚠제안 키에서 온다 — 확정되면 이 파일이 아니라 CSV 를 고친다.
  *
+ * `computeCombat` 은 Σ 상시 피해 %(`atk_pct_sum`)를 따로도 낸다 — 전투 중 스킬 버프가 **새 곱셈 층이 아니라
+ *   같은 괄호에 덧셈**으로 들어가야 해서(battle_design §9-2) battle.js 가 그 괄호를 다시 쓸 수 있어야 한다.
+ *
  * 전투 계수가 실제로 걸리는 축은 셋뿐 — 힘(물리 공격력) · 지능(마법 공격력) · 민첩(행동 주기).
  *   건강(fhr)은 상태이상 미구현으로 휴면 · 통솔·매력은 계수 없음 · **운은 전투 계산 밖**이다
  *   (드랍률·골드 획득 계수 — hero_design §4-1 감각→운 개정 2026-08-26).
@@ -23,10 +26,10 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
 /**
  * @param {object} data
  *   balance      — balance.csv 를 {key: value} 로 눕힌 것
- *   stats        — 기본 능력치 7종 정의 [{id}...] (순서 = 표시 순서)
+ *   stats        — 기본 능력치 7종 정의 [{id}...] (순서 = 표시 순서)  ← hero_attribute.csv
  *   sins         — 죄종 id 목록
  *   classes      — 직업 정의 [{id, keyAttr, stage}...]
- *   weaponGroups — {id: {period, attackType, ...}}  ← weapon_group.csv. 무기가 행동 주기·공격 타입을 정한다
+ *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
  */
@@ -169,7 +172,7 @@ export function createHeroSystem(data) {
 
         const weapon = items.find(it => it.slot === 'weapon');
         const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
-        const magic = group?.attackType === 'magic';
+        const magic = group?.damageKind === 'magic';
         // 밑수 = 무기 개체 공격력 + 무기 슬롯 접사의 고정 공격력. 맨손이면 unarmed_atk
         const base = weapon
             ? weapon.watk + (weapon.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0)
@@ -211,6 +214,9 @@ export function createHeroSystem(data) {
             dmg_bonus_pct: codex.dmg_pct ?? 0,
             gold_find: Math.round(f('gold_find') * luckMult),
             item_find: Math.round(f('item_find') * luckMult),
+            // Σ 상시 피해 % — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면
+            // (battle_design §9-2 "괄호는 둘뿐") 그 괄호 안의 합을 따로 알아야 한다 (battle.js atkBase/atkPct)
+            atk_pct_sum: f('atk_pct'),
         };
     }
 

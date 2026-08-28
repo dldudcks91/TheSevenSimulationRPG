@@ -19,11 +19,12 @@
 | `formula.js` | **피해 계산** = battle_design.md §9. 순수 함수만 — **레벨 차 적중**(명중·회피 없음) · `def_curve_k` **상수** 감쇠 · **저항 상한형**(직접 %) · 피해 감소 원천별 곱 · 직격/비직격 · 성장 축의 유일한 곡선 `growthMult`. 엔진 이식 대조 검증의 핵 |
 | `hero.js` | 생성(합 고정·주력 축) · XP/레벨 · 히든 상한 성장 · 전투 능력치 합산 |
 | `item.js` | 드롭 · 시작 무기(직업 전속 무기군) · 착용 규칙 · 분해 |
-| `battle.js` | 헤드리스 시뮬 — 누가 언제 때리는가. 피해 자체는 `formula.js` |
+| `skill.js` | 액티브 정의 정규화·검증 · 직업 배정 · 발동 선택. **실행은 하지 않는다** (정의는 `skill.csv`, 종류 어휘는 코드) |
+| `battle.js` | 헤드리스 시뮬 — 누가 언제 때리는가 + **액티브 실행**(쿨·버프 창·배리어·회복·다단타·광역·도발). 피해 자체는 `formula.js` |
 | `state.js` | 세이브 스키마 · `newGame` / `serialize` / `deserialize` · 모든 상태 전이 |
 
 조립은 `ui/data.js:buildSystems` 한 곳 — 테스트(`dev/test.js`)도 같은 조립을 쓴다.
 검증: [`src/dev/README.md`](../dev/README.md)
 
 ---
-*마지막 업데이트: 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*
+*마지막 업데이트: 2026-08-28 (skill.js 신설 등재 · battle.js 에 액티브 실행 추가) · 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*

@@ -22,7 +22,7 @@
  */
 
 import * as M from './mock.js';
-import { D } from './data.js';
+import { D, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, eliteName } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, heroTipCard, skillTipCard } from './tip.js';
 
@@ -86,13 +86,13 @@ export function mountBattle(container, opts) {
 function buildDom(state, stage, stageId) {
     const wrap = document.createElement('div');
     wrap.className = 'panel battle-panel';
-    const bg = M.stageBgOf(stageId);
+    const bg = stageBgOf(stageId);
     const rounds = D.balance.rounds_per_stage;
     const kindOf = n => D.roundTypes.find(r => r.round_num === n)?.round_type ?? 'normal';
     wrap.innerHTML = `
         <div class="battle-head">
             <div>
-                <div>${L(M.chapterOf(stage.chapter)?.name)} — ${L(M.stageName(stage))}</div>
+                <div>${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}</div>
                 <div class="muted" style="font-size:var(--fs-sm)">
                     ${t('bt.round')} <b class="b-round">1</b> / ${rounds}
                     <span class="rk b-kind"></span>
@@ -178,7 +178,7 @@ function paintRound(state, root) {
 
 /* ───────── 렌더 ───────── */
 
-const enemyName = e => e.grade === 'elite' && e.sin ? M.eliteName(e.sin, e.monsterId) : M.monsterName(e.monsterId);
+const enemyName = e => e.grade === 'elite' && e.sin ? eliteName(e.sin, e.monsterId) : monsterName(e.monsterId);
 const enemyList = state => state.enemies.map(e => L(e.name)).join(', ');
 
 function renderUnits(state, root) {
@@ -192,13 +192,13 @@ function renderUnits(state, root) {
             // 죄종은 상단 테두리 색으로만. 적의 죄종 칩은 남긴다 — 정예의 죄종은 이 판에서 굴려진 정보다
             if (u.sin) n.style.borderTopColor = M.SINS[u.sin]?.color;
             const name = L(u.name);
-            const discSin = u.side === 'enemy' ? (u.sin ?? M.monsterSin(u.monsterId)) : null;
+            const discSin = u.side === 'enemy' ? (u.sin ?? monsterSin(u.monsterId)) : null;
             const dc = discSin ? M.SINS[discSin]?.color : null;
-            const face = u.side === 'enemy' ? M.monsterFace(u.monsterId) : M.heroFace(u.uid);
+            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u.uid);
             const sprite = face
                 ? `<div class="sprite has-face"><img src="${face}" alt="${name}" loading="lazy"></div>`
                 : dc
-                    ? `<div class="sprite disc" style="color:${dc};background:${dc}22;border-color:${dc}66">${L(M.monsterName(u.monsterId)).charAt(0)}</div>`
+                    ? `<div class="sprite disc" style="color:${dc};background:${dc}22;border-color:${dc}66">${L(monsterName(u.monsterId)).charAt(0)}</div>`
                     : `<div class="sprite">${u.glyph}</div>`;
             // 위칸(이름·태그) + 가로형 본문(왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 3줄) — SCREEN_DESIGN §4-2
             // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
@@ -420,7 +420,7 @@ function apply(state, root, opts, ev) {
         }
         case 'card': {   // 도감 카드 — 처치와 별개 판정 (monster_design §8). 리포트에도 찍힌다
             const u = U(ev.u);
-            pushLog(state, root, t('log.card', { name: L(M.monsterName(ev.monsterId)) }));
+            pushLog(state, root, t('log.card', { name: L(monsterName(ev.monsterId)) }));
             if (u) popup(state, u, t('pop.card'), 'card-tag');
             break;
         }

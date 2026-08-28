@@ -25,11 +25,12 @@
 rng.js ──┐
 csv.js   │  (파싱만 — fetch 는 ui/data.js)
          │
-formula.js(balance) ─────────────┐
-hero.js(data) ───────────────────┤
-item.js(data) ──────────┐        │  hero · item · battle 은 **각자 내부에서 createFormula(balance) 를 만든다**
-battle.js(data, itemSystem) ─────┤  (성장 곡선 growthMult · 피해 감소 곱 · strike 를 시뮬과 같은 함수에서 읽기 위해)
-state.js(deps: hero, item, battle, balance, …) ──┘
+formula.js(balance) ──────────────────────┐
+hero.js(data) ────────────────────────────┤
+item.js(data) ──────────┐                 │  hero · item · battle 은 **각자 내부에서 createFormula(balance) 를 만든다**
+skill.js(balance, rows) ┐│                │  (성장 곡선 growthMult · 피해 감소 곱 · strike 를 시뮬과 같은 함수에서 읽기 위해)
+battle.js(data, itemSystem, skillSystem) ─┤  skill.js 는 hero.js 의 `ELEMENTS`(원소 어휘)만 import 한다 — 시스템 주입이 아니다
+state.js(deps: hero, item, battle, skill, balance, …) ──┘
 ```
 
 `ui/data.js:buildSystems` 는 렌더러용으로 `createFormula(balance)` 를 **한 번 더** 만들어 `SYS.formula` 로 내보낸다 — 화면의 감쇠율·저항 상한 표기가 시뮬과 같은 곡선을 쓰게 하기 위한 것이지, 시스템들이 그 인스턴스를 공유하는 것이 아니다(전부 무상태 순수 함수라 같은 결과).
@@ -59,7 +60,7 @@ state.js(deps: hero, item, battle, balance, …) ──┘
 
 ### 2-3. `formula.js` — 피해 계산
 
-`createFormula(balance) → { growthMult, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech }`
+`createFormula(balance) → { growthMult, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech, effectiveCd }`
 입력은 `balance` 하나. 파일에 숫자 리터럴 없음. 규칙의 출처는 battle_design §9 전부(9-0 ~ 9-6).
 
 | 함수 | 시그니처 | 계약 |
@@ -74,6 +75,7 @@ state.js(deps: hero, item, battle, balance, …) ──┘
 | `strike(rng, a, d)` | `→ {hit, dmg, crit}` | 직격 1회. **rng 소비 순서 = 적중 → (적중 시) 치명. 최대 2회** (§5-2) |
 | `indirect(amount)` | `→ int` | 비직격(반사·도트·사망 폭발). 적중·스킬 배율·치명·감소를 받지 않고 흡혈·반사·발동 효과를 **유발하지 않는다**. `dmg_min` 하한만 |
 | `leech(dmg, pct)` | `→ int` | 흡혈 — 직격의 최종 피해에만 비례 |
+| `effectiveCd(cd, period)` | `→ 초` | 실효 쿨 `ceil(cd / period) × period` (§6) — 스킬은 행동 주기에 얹혀 나가므로 쿨이 돌아도 다음 차례까지 기다린다. **엔진은 이 함수를 쓰지 않는다**(틱 루프에서 자연히 생긴다) — 화면 표기·검증이 같은 규칙을 읽게 하려는 것 |
 
 **공격자 `a`** — `{atk, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, bonusPct}`
 **방어자 `d`** — `{def, res:{fire,cold,lightning,poison}, resMaxBonus, dr, lvl}`
@@ -102,10 +104,10 @@ strike(rng, a, d):
 | 필드 | 형태 | 출처(현재) |
 |---|---|---|
 | `balance` | `{key: value}` | balance.csv |
-| `stats` | `[{id}]` 기본 능력치 7종, 순서 = 표시 순서. id = `str, agi, int, vit, luck, ldr, cha` (5번째가 `luck` — 08-26 감각→운) | ⚠ `ui/mock.js:STATS` |
+| `stats` | `[{id, ko, en, abbr, combatStat, dispatch}]` 기본 능력치 7종, 순서 = 표시 순서. id = `str, agi, int, vit, luck, ldr, cha` (5번째가 `luck` — 08-26 감각→운). **hero.js 는 `id` 만 읽는다** | hero_attribute.csv |
 | `sins` | `[sinId]` | ⚠ `ui/mock.js:SINS` 키 |
 | `classes` | `[{id, keyAttr, stage}]` (`stage` = `main` / 확장) | ⚠ `ui/mock.js:CLASSES` |
-| `weaponGroups` | `{id: {period, attackType, variance, …}}` | weapon_group.csv |
+| `weaponGroups` | `{id: {period, damageKind, variance, …}}` | weapon_group.csv |
 | `namePool` | `[{ko,en}]` | ⚠ `ui/mock.js` |
 | `traitPool` | `[{ko,en}]` | ⚠ `ui/mock.js` |
 
@@ -139,6 +141,7 @@ strike(rng, a, d):
 | `action_period` | `(무기군 period 또는 unarmed_period) / attrMult(agi) × (1 − Σaspd_pct/100)`, 하한 0.4 s, 소수 3자리 |
 | `dmg_bonus_pct` | `codex.dmg_pct` 그대로 — 전투 유닛의 `bonusPct` 가 된다 |
 | `gold_find` · `item_find` | `round(Σ접사 × attrMult(luck))` — **곱셈이라 장비가 0이면 0**(§8 곱셈 원칙). **운은 전투 계산 밖**이라 이 둘에만 걸린다 |
+| `atk_pct_sum` | Σ 장비 `atk_pct` (**이미 `atk` 안에 곱해져 있다** — 중복 적용 금지). 전투 중 스킬 버프가 새 곱셈 층이 아니라 **같은 괄호에 덧셈**으로 들어가야 해서(§9-2) `battle.js` 가 그 괄호를 되짚을 수 있도록 따로 낸다 |
 
 **삭제된 출력** — `variance_pct`(편차는 무기 개체에 박혔다) · `accuracy` · `evasion`(명중·회피 폐지) · `magic_defense`.
 전투 계수가 실제로 걸리는 축은 셋뿐 — 힘(물리 공격력) · 지능(마법 공격력) · 민첩(행동 주기). 건강(fhr)은 상태이상 미구현으로 출력하지 않고, 통솔·매력은 계수가 없다.
@@ -154,7 +157,7 @@ strike(rng, a, d):
 | `balance` | | balance.csv |
 | `slots` | `[partId]` 부위 8종 | ⚠ `ui/mock.js:SLOTS` |
 | `sins` | `[sinId]` | ⚠ mock |
-| `weaponGroups` | `{id: {id, ko, en, classes:[cls], twoHanded, period, variance, attackType, stage}}` | weapon_group.csv |
+| `weaponGroups` | `{id: {id, ko, en, classes:[cls], twoHanded, period, variance, damageKind, release}}` — `damageKind ∈ physical\|magic` · `release ∈ main\|expansion`(드롭은 `main` 만) | weapon_group.csv |
 | `elements` | `[elementId]` | ⚠ `ui/mock.js:ELEMENT_IDS` |
 | `itemBases` | `{part: [{ko,en}]}` 무기 외 부위 베이스 이름 | ⚠ `ui/mock.js:ITEM_BASES` |
 | `affixDefs` | `[{stat, scale:'growth'\|'band'\|'flat', min, max, perIlvl?, slots?}]` — `perIlvl` 은 **band 에만**, `slots` 없으면 전 부위 | ⚠ `ui/mock.js:AFFIX_DEFS` |
@@ -195,18 +198,32 @@ strike(rng, a, d):
 
 ### 2-6. `battle.js` — 헤드리스 전투
 
-`createBattleSystem(data)` — 주입 `data`: `balance, monsters(byId), stages(byId), roundTypes [{round_num, round_type}], budgets(byKey), grades(byKey), sins, sinTraits {sin: trait}, commonTraits [trait], itemSystem`.
-`sinTraits` / `commonTraits` 는 ⚠ `ui/mock.js` 출처.
+`createBattleSystem(data)` — 주입 `data`: `balance, monsters(byId), stages(byId), roundTypes [{round_num, round_type}], budgets(byKey), grades(byKey), sins, sinTraits {sin: trait}, commonTraits [trait], itemSystem, skillSystem`.
+`sinTraits` / `commonTraits` 는 ⚠ `ui/mock.js` 출처. `skillSystem` 이 없으면 액티브 없이 기본 공격만 돈다.
 
 | export | 시그니처 | 계약 |
 |---|---|---|
 | `stagePool(stage)` | `→ monsterIdx[]` | 해당 챕터·스테이지의 `spawn_grade === 'normal'` 몬스터 |
 | `stageElement(stage)` | `(stage 행 객체) → elementId` \| `'physical'` | 그 스테이지 몬스터의 `attack_type` 중 physical 이 아닌 **첫 값**. 편성 화면의 "이 스테이지가 요구하는 저항"(§9-8) — 렌더러가 몬스터 테이블을 훑지 않게 여기 둔다 |
 | `makeEnemy(key, monsterId, grade, lvl, extra?)` | `→ 전투 유닛` | 몬스터 → 유닛 변환 규칙 자체가 계약이라 내보낸다(검증이 직접 본다). 아래 |
-| `simulate(partyUnits, stageId, rng)` | `→ result` | `partyUnits = [{uid, combat}]` (`combat` = `computeCombat` 결과). 아래 |
+| `simulate(partyUnits, stageId, rng)` | `→ result` | `partyUnits = [{uid, combat, actives?}]` (`combat` = `computeCombat` 결과, `actives` = 액티브 id 목록 = `skill.activesFor`). **`actives` 가 없거나 비면 기본 공격만 돌고 rng 수열은 스킬 도입 전과 같다.** 아래 |
+
+**드롭 (`onKill`)** — **처치당 최대 1개** (item_design §1 확정 2026-08-27). 판정은 **1회**: `rng()×100 < drop_chance_pct × dropChanceMult × 아이템 드랍률배율` 이면 1개.
+보스(`stage_boss`/`chapter_boss`)는 `boss_guaranteed_drop` 을 하한으로 보장한다. 드롭이 있으면 ilvl 을 1회 굴려 `itemSystem.rollDrop` 을 부른다.
+⚠ 파이프라인의 나머지(ilvl 에 등급 반영 · 희귀도에 매직찬스)는 **미반영** — DEV_PLAN R20.
 
 **전투 유닛 — 몬스터와 파티가 같은 필드 모양이다** (§8-1). `formula.strike` 가 읽는 이름 그대로 쓴다:
 `{key, side, hp, hpMax, atk, atkType, def, res:{fire,cold,lightning,poison}, lvl, resMaxBonus, dr, defIgnore, resReduction, skillMult, bonusPct, crit, critDmg, ls, reflect, period, next}`
+스킬 런타임이 얹은 필드 — 전부 **전투 안에서만** 산다 (세이브에 넣지 않는다):
+
+| 필드 | 계약 |
+|---|---|
+| `atkBase` · `atkPct` | 버프 괄호. `atkBase = atk / (1 + atk_pct_sum/100)` · `atkPct = atk_pct_sum`. 유효 공격력 `atk = atkBase × (1 + (atkPct + Σ버프 atk_pct)/100)` — **새 곱셈 층을 만들지 않는다**(§9-2). 몬스터는 `atkBase = atk` · `atkPct = 0` |
+| `matk` | 회복량의 밑수 = `combat.atk_magic ?? 0`. 몬스터 0 |
+| `basePeriod` | `period` 의 원값. `period = basePeriod × (1 − Σ버프 period_pct/100)` |
+| `actives` | `[{id, def, readyAt}]` — 전투 시작 시 전부 `readyAt = 0`(전부 준비). 몬스터 `[]` |
+| `buffs` | `{skillId: {stat, v, until}}` — 창 하나 = 스킬 하나. **중첩 없음**, 재시전은 `until` 갱신 |
+| `barrier` | `{amt, until, s}` 또는 `null` — HP 밖 흡수 풀 |
 
 | 몬스터(`makeEnemy`) | 값 |
 |---|---|
@@ -214,11 +231,13 @@ strike(rng, a, d):
 | `def` | `defense × grade.def_mult × monster_def_scale` (비율 축) |
 | `res` | `{원소: monster.res_<원소> + grade.res_add}` — **직접 %**. 배율을 받지 않고 등급은 %p 가산만 |
 | `lvl` | `stage.dlvl` — 몬스터마다 두지 않는다 (§9-4) |
+| `dropChanceMult` | `grade.drop_chance_mult` — **굴림 횟수가 아니라 확률 배율**이다 (드롭은 처치당 최대 1개, 아래) |
 | 나머지 | `crit 0` · `critDmg = base_crit_damage_pct` · `defIgnore 0` · `resReduction 0` · `skillMult 1` · `bonusPct 0` · `resMaxBonus 0` · `dr 0` · `ls 0` · `reflect 0` — 영웅 체계의 **부분집합**(§8-1) |
 
 파티 유닛은 `computeCombat` 출력을 그대로 옮긴다 — `bonusPct ← dmg_bonus_pct` · `dr ← damage_reduction`(실효 %) · `res ← res_* 4종` · `lvl ← level`.
 
-**result** — `{won, reason, durationSec, party:[{key, uid, hpMax, period}], timeline:[ev], xpTotal, gold, dust, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item(uid null)], downed:[heroUid], roundsCleared, rounds:[{n, kind, killed:[monsterId], eliteSin}], strikes:{party:{n,miss}, enemy:{n,miss}}}`
+**result** — `{won, reason, durationSec, party:[{key, uid, hpMax, period, actives:[skillId]}], timeline:[ev], xpTotal, gold, dust, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item(uid null)], downed:[heroUid], roundsCleared, rounds:[{n, kind, killed:[monsterId], eliteSin}], strikes:{party:{n,miss}, enemy:{n,miss}}, casts:{skillId:n}}`
+- `casts` = 스킬별 시전 횟수. 타임라인의 `skill` 이벤트 수와 합이 같다
 - `reason` 은 `clear` / `wipe` / `timeout`
 - `strikes` = 직격 시도 수와 빗나간 수. **레벨 부족의 전용 신호**라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 **rng 를 소비하지 않는다**
 - `drops` 의 아이템은 `uid: null` — state.js 가 가방에 넣으며 발급
@@ -229,23 +248,44 @@ strike(rng, a, d):
 | `e` | 필드 | 의미 |
 |---|---|---|
 | `round` | `n, kind, enemies:[{key, monsterId, grade, sin, traits, hpMax, period}]` | 라운드 시작. **그 라운드의 첫 이벤트** |
-| `hit` | `a, d, dmg, crit, dhp` (+ `ahp` 흡혈 시) | 직격 적중. `dhp` = 피격 후 HP |
-| `dodge` | `a, d` | 직격 빗나감 (적중 게이트 실패 — 회피 스탯은 없다. **키 이름은 계약이라 유지**) |
+| `hit` | `a, d, dmg, crit, dhp` (+ `ahp` 흡혈 시 · `s?` 스킬 타격 · `bar?` 배리어 잔량) | 직격 적중. `dhp` = 피격 후 HP. `bar` = 대상이 배리어를 갖고 있었을 때 **흡수 후 잔량** |
+| `dodge` | `a, d` (+ `s?`) | 직격 빗나감 (적중 게이트 실패 — 회피 스탯은 없다. **키 이름은 계약이라 유지**) |
 | `reflect` | `a, d, dmg, ahp` | 비직격 반사. `a` = 반사한 쪽 |
 | `down` | `u` | 전투불능 |
 | `card` | `u, monsterId` | 도감 카드 판정 성공 (처치와 별개) |
+| `skill` | `u, s` | 액티브 시전 — 그 차례의 사건. 뒤따르는 `hit`/`dodge`/`heal`/`buff` 가 같은 `s` 를 단다 |
+| `heal` | `a, d, amt, dhp, s` | 회복. `dhp` = 회복 후 HP |
+| `buff` | `u, s, stat, v, until` (+ `amt` 배리어 총량) | 창 적용 또는 갱신. `until` = 만료 시각(소수 1자리) |
+| `buffEnd` | `u, s` | 창 만료 (그 틱의 행동 처리 **앞에서**) |
 | `end` | `won, reason` | **마지막 이벤트** |
 
 유닛 키: 파티 `p0..`, 적 `e0..`(라운드마다 0부터).
 
-**순서 보장** — ① `t` 는 단조 비감소 ② `round` 가 라운드의 첫 이벤트 ③ `end` 가 마지막 ④ 같은 `t` 안에서는 배열 순서가 곧 발생 순서.
+**순서 보장** — ① `t` 는 단조 비감소 ② `round` 가 라운드의 첫 이벤트 ③ `end` 가 마지막 ④ 같은 `t` 안에서는 배열 순서가 곧 발생 순서(스킬 이벤트도 같다 — `skill` 뒤에 그 시전의 타격·회복·버프가 이어진다).
+
+**스킬 실행 규칙** (정의·선택은 §2-8 `skill.js`, 실행은 여기):
+
+| 규칙 | 내용 |
+|---|---|
+| 발동 | 행동 주기 도래 시 준비된 액티브 중 하나(§2-8 `pickReady`). 없으면 기본 공격. **한 차례에 하나**. 선택은 rng 를 쓰지 않는다 |
+| 쿨 | 시전 순간 `readyAt = t + cool_sec`(실시간 초). 전투 시작 시 전부 준비라 첫 차례는 `priority` 로 갈린다 |
+| 버프 창 | `until = t + duration_sec`. 만료는 매 틱 **행동 앞에서** 일괄 처리(`until ≤ t + EPS`) → `buffEnd`. rng 소비 없음 |
+| `atk_pct` | 상시 % 와 **같은 괄호에 덧셈**(`atkBase`/`atkPct`). 다른 스킬의 같은 stat 은 덧셈, 같은 스킬은 갱신 |
+| `period_pct` | `period = basePeriod × (1 − Σ/100)` — **다음 차례 예약부터**. 진행 중인 `next` 는 안 건드린다. 하한 처리 없음 |
+| `barrier_pct` | `amt = round(대상 hpMax × v/100)`. 피해는 배리어 → HP 순. 재시전은 총량·`until` 을 다시 채우고, 창이 끝나면 남은 것은 사라진다. **흡혈·반사는 배리어가 먹은 몫을 포함한 `dmg`** 에 비례한다(직격이 들어간 사실은 같다) |
+| `taunt` | 창이 켜진 **생존 파티원**이 있으면 적의 단일 대상 선택이 그 유닛(배열 순 첫 번째)으로 고정되고 **타겟 rng 를 쓰지 않는다**. ⚠ 기본 타겟팅(무작위) 위에 얹은 임시 규칙 |
+| 타겟팅 | `enemy_single` 무작위 1 → 같은 대상에 `hits` 회 / `enemy_all` 생존 적 배열 순 전원 각 1회(타겟 rng 0) / `enemy_rotate` 시작점 무작위 → 배열 순으로 돌아가며 `hits` 회(모자라면 겹침) / `enemy_chain` 시작점 무작위 → 전원 각 1회, k번째(0-base) 배율 `mult × (1 − decay/100)^k` |
+| 다단타 | **타격마다 `formula.strike` 1회** — 적중·치명·흡혈·반사·전투불능을 따로 굴린다. 스킬 배율은 `skillMult`, 원소 태그는 `atkType` 에 **그 타격 동안만** 얹고 원복한다(`strike` 시그니처 불변). ⚠ 대상이 쓰러지면 남은 타수는 **버린다**(재지정 없음) · 공격자가 반사로 쓰러지면 중단 |
+| 회복 | `amt = round(matk × mult_pct/100)` 를 생존 아군 전원에게, `hp = min(hpMax, hp + amt)`. rng 소비 없음. 화염 치유 감소는 미구현 |
+| `status` | `skill.csv:status`(결빙 등)는 **코드가 읽지 않는다** — `status_effect.csv` 미발행 |
+| `tags` | `skill.csv:tags`(`\|` 구분 · 최대 2)도 **코드가 읽지 않는다** — 분류용이고 소비자는 전술카드·변형 노드·화면이다 (skill_design §11). `광역`·`단일`·`다단히트` 는 컬럼이 아니라 **`target`·`hits` 에서 파생**한다 |
 
 ### 2-7. `state.js` — 상태 전이
 
 `export const SAVE_VERSION = 3`
 
-`createGameSystem(deps)` — `deps`: `hero, item, battle, balance, equipSlots [{id, part}](착용 위치 9), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_required], bonus:[%], statByNum:{stage_num: statKey}}`.
-`equipSlots` · `codex.bonus` · `codex.statByNum` 은 ⚠ `ui/mock.js` 출처.
+`createGameSystem(deps)` — `deps`: `hero, item, battle, skill, balance, equipSlots [{id, part}](착용 위치 9), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_to_next], bonus:[%], statByNum:{stage_num: statKey}}`.
+`codex.levels`/`codex.bonus` 는 codex_level.csv(`cards_to_next`/`bonus_pct`) · `codex.statByNum` 은 codex_series.csv 출처. `equipSlots` 만 ⚠ `ui/mock.js`.
 
 **모든 함수는 `state` 를 첫 인자로 받고 그 객체를 직접 바꾼다.** 시스템 자체는 무상태. 시각이 필요한 함수는 `now`(ms) 를 받는다.
 
@@ -276,6 +316,46 @@ strike(rng, a, d):
 `strikes` 는 `result.strikes` 의 복사본이고, 옛 리포트에는 없어서 **`null` 일 수 있다** — 렌더러가 그 경우를 다뤄야 한다.
 
 `codexBonus(state)` 의 누적 객체는 **`codex.statByNum` 의 값들에서 만든다**(하드코딩 키 없음) — 계열 배정이 바뀌어도 state.js 를 고칠 필요가 없다. 다만 `computeCombat` 이 읽는 것은 `atk_pct` · `hp_pct` · `dmg_pct` 뿐이라 `acc_pct` 는 계산되고 버려진다 (§2-4).
+
+`partyUnits(state)` 는 `{uid, combat, actives}` 를 만든다 — `actives = skill.activesFor(hero)`. **쿨·창·배리어는 세이브에 없다**(HP 와 같은 취급 — 전투 안에서만 산다).
+
+### 2-8. `skill.js` — 액티브 정의 · 배정 · 발동 선택
+
+`createSkillSystem(data)` — 주입 `data`: `balance`(현재 읽는 키 없음 — 계수는 전부 CSV 행에 있다), `rows`(= `skill.csv` 파싱 행). **실행은 하지 않는다**(§2-6 battle.js) — 유닛의 HP·버프를 만지지 않는다.
+
+| export | 시그니처 | 계약 |
+|---|---|---|
+| `defs` | `{skillId: def}` | 정규화된 정의 |
+| `list` | `[def]` | CSV 순서 |
+| `activesFor(hero)` | `→ [skillId]` | **프로토타입** — `ownerKind === 'job' && ownerId === hero.cls` 인 행 **전부**를 `priority` 오름차순. 고유·무기군·전직 출처가 생기면 이 함수만 바뀐다 |
+| `castable(def, ctx)` | `→ bool` | `ctx = {self, allies}`(allies = 생존 아군, self 포함). 아래 발동 조건 |
+| `pickReady(actives, t, isCastable)` | `→ active \| null` | **순수** — `actives` 를 바꾸지 않고 정렬도 새 배열에서 한다. `readyAt ≤ t + EPS` **이고** 조건이 참인 것 중 `readyAt` 최소 → 동률이면 `priority` → 그래도 동률이면 배열 순 |
+| `EPS` | `1e-9` | 준비·만료 판정 허용 오차 (§5-3) |
+
+**`def`** — `{id, ownerKind, ownerId, kind, target, hits, mult, decay, cool, dur, element, stat, value, cond, condValue, status, priority, name:{ko,en}}`
+`mult`/`decay`/`value` 는 CSV 의 **% 숫자 그대로**(코드에서 `/100`), CSV 의 `-` 는 `null`.
+
+**어휘 사전 — 정의는 CSV · 종류는 코드.** 이 밖의 값은 로드 시 `throw`(미니 DSL 인터프리터를 두지 않는다):
+
+| 컬럼 | 값 |
+|---|---|
+| `owner_kind` | `job` · `advance` · `weapon_group` · `unique` (지금 발행된 행은 전부 `job`) |
+| `owner_id` | 그 출처 안의 id — `owner_kind=job` 이면 직업 id |
+| `kind` | `attack` · `heal` · `buff` |
+| `target` | `enemy_single` · `enemy_all` · `enemy_rotate` · `enemy_chain` · `self` · `party` |
+| `effect_stat` (buff 전용) | `atk_pct` · `barrier_pct` · `period_pct` · `taunt` |
+| `cast_condition` | `-` · `buff_absent` · `ally_hp_below` |
+| `element` | `-` + `hero.js:ELEMENTS` 4종 |
+
+로드 시 그 밖에 던지는 것 — `attack` 인데 `hits < 1` · `buff` 인데 `duration_sec ≤ 0` 또는 `effect_stat` 없음 · `heal` 인데 `mult_pct ≤ 0` · `cool_sec ≤ 0` · `skill_id` 중복 · `owner_kind` 어휘 밖 · `owner_id` 빈 값 · **같은 출처(`owner_kind#owner_id`) 안 `priority` 중복**.
+
+**발동 조건** — 거짓이면 「준비된 것으로 치지 않는다」. 쿨은 그대로 두고 그 차례엔 다른 스킬이나 기본 공격이 나간다.
+
+| `cast_condition` | 참인 때 |
+|---|---|
+| `-` | 항상 |
+| `buff_absent` | 시전자에게 **이 스킬의 창이 없다** |
+| `ally_hp_below` | 생존 아군 중 `hp/hpMax × 100 < cond_value` 인 자가 있다 |
 
 ---
 
@@ -362,8 +442,10 @@ strike(rng, a, d):
 | `item.build`(시작 무기) | 위와 같되 magic 이라 접미 판정을 하지 않는다 |
 | `battle.spawnRound` | 보스: 호위 수 → 호위마다 풀 선택 / 일반: 정예마다 (죄종 → 풀 → 공통 특성 2) → 일반 수 → 일반마다 풀 |
 | `battle.beginRound` | `spawnRound` → 적마다 등장 지연 1회 |
-| `battle.simulate` 루프 | 틱마다 `[...party, ...enemies]` 배열 순서로 `act` → 타겟 1회 → `strike` |
-| `battle.onKill` | 카드 판정 1회 → 드롭 판정 `drop_roll` 회 → 드롭마다 (ilvl 1회 → `rollDrop`) |
+| `battle.simulate` 루프 | 틱마다 **창 만료 처리(소비 없음)** → `[...party, ...enemies]` 배열 순서로 `act` |
+| `battle.act` 기본 공격 | 타겟 1회(**도발 중이면 0회**) → `strike` |
+| `battle.act` 스킬 | 발동 선택 0회 → `enemy_single`: 타겟 1회(도발 무관 — 파티 스킬은 도발 대상이 아니다) → `hits` 회 `strike` / `enemy_rotate`·`enemy_chain`: 시작점 1회 → 타격마다 `strike` / `enemy_all`: 0회 → 대상마다 `strike` / `heal`·`buff`: 0회 |
+| `battle.onKill` | 카드 판정 1회 → **드롭 판정 1회**(처치당 최대 1개, 2026-08-28) → (드롭 시) ilvl 1회 → `rollDrop` |
 | `state.resolveBattle` | `simulate` 가 쓴 rng 를 **이어서** 파티원마다 `grantXp` |
 
 ### 5-3. 결정론에 걸리는 코드 상수 (CSV 가 아니라 코드에 있는 값 — 이식 시 그대로 옮긴다)
@@ -383,6 +465,8 @@ strike(rng, a, d):
 | 선술집 시드 솔트 | `0x5A17` | state.js | |
 | `action_period` 반올림 | 소수 3자리 | hero.js | |
 | 타임라인 `t` 반올림 | 소수 1자리 | battle.js | |
+| `EPS` | `1e-9` | skill.js | 준비(`readyAt ≤ t + EPS`)·만료(`until ≤ t + EPS`) 판정 허용 오차 — 틱 누산이 경계를 미세하게 밑도는 것을 막는다 |
+| 스킬 초기 `readyAt` | 0 | battle.js simulate | 전투 시작 시 전부 준비 — 첫 차례는 `priority` 로 갈린다 |
 
 ### 5-4. 부동소수
 
@@ -402,14 +486,15 @@ strike(rng, a, d):
 
 ## 7. 데이터 계약 — 무엇이 어디서 오는가
 
-`ui/data.js:loadData` 가 fetch 하는 CSV 8개: `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `weapon_group`.
-(`hero_attribute` · `combat_stat` · `equipment_option_override` 는 아직 코드가 읽지 않는다 — 문서용 SSOT)
+`ui/data.js:loadData` 가 fetch 하는 CSV **13개**(`FILES`): `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `codex_series` · `weapon_group` · `skill` · `hero_attribute` · `combat_stat` · `chapter`.
+**이 목록 = `src/data/*.csv` 전부**(`inherited/` 제외)여야 한다 — 읽히지 않는 SSOT 를 두지 않는다. `dev/test.html` 의 `csv:` 단정이 디렉터리 목록과 대조한다 (2026-08-28).
+
+표시 헬퍼도 `ui/data.js` 가 낸다 — `monsterName(id)→{ko,en}` · `monsterFace(id)→path|null` · `monsterSin(id)` · `stageName(row)→{ko,en}` · `stageBgOf(id)` · `chapterOf(chapter)` · `eliteName(sin, baseId)`. mock 에 남은 것은 자산 경로(`FACE_DIR` · `BG_DIR` · `stageBg`)뿐이다.
 
 **⚠ game_logic 이 주입받지만 CSV 가 아니라 `ui/mock.js` 에 있는 것** — UI 는 Phase 2 에서 버려지므로 **이 목록이 이식 차단 항목**이다:
 
 | mock 항목 | 들어가는 곳 | 성격 |
 |---|---|---|
-| `STATS` (기본 능력치 7 id·순서 — `str agi int vit luck ldr cha`) | hero | → `hero_attribute.csv` 로 읽기 전환 |
 | `SINS` 키 목록 | hero · item · battle | → 죄종 테이블(sin_mapping.md 과제) |
 | `CLASSES` (`id, keyAttr, stage`) | hero | → 직업 CSV 신규 |
 | `SLOTS` / `EQUIP_SLOTS` | item / state | → 슬롯 CSV 신규 (부위 8 · 위치 9) |
@@ -419,7 +504,6 @@ strike(rng, a, d):
 | `nm` (이름 조립 규칙) | item.composeName | 데이터 층 함수 — CSV 가 아니라 **이식 대상 코드** |
 | `HERO_NAME_POOL` · `HERO_TRAIT_POOL` | hero | → CSV 신규 |
 | `SIN_TRAITS` · `COMMON_TRAITS` | battle | → 계승 `elite_trait.csv` 연결 |
-| `CODEX_LEVEL_BONUS` · `CODEX_STAT_BY_NUM` | state.codex | → `codex_level.csv` 컬럼 추가 |
 
 ---
 
@@ -435,10 +519,12 @@ strike(rng, a, d):
 6. **가방 용량 산수의 순서** — `equip` 은 실행 전에 `bag − 1 + back.length ≤ inventory_cap` 을 먼저 검사한다 (양손이면 `back` 이 2)
 7. **`closeRun` 은 재정산하지 않는다** — `resolveBattle` 이 출발 시점에 통째로 정산한다는 전제. **파견·탐험(오프라인 진행형)이 들어오면 이 전제가 깨진다** — 그때 `closeRun` 을 재설계한다 (컨셉 락 따름정리 1)
 8. **올릴 수 없는 세이브 버전은 throw** — 이관 가능한 버전(현재 v2)은 `deserialize` 안에서 올리고, 나머지는 던진다. 조용히 버리지 않는다. 잡는 건 렌더러
-9. **`codex_level.csv:cards_required` 는 레벨당 증분** — 누적 아님. 컬럼명만 보면 오해한다
+9. **`codex_level.csv:cards_to_next` 는 레벨당 증분** — 누적 아님 (2026-08-28 `cards_required` 에서 개명 — 이름이 오해를 부르던 자리다)
 10. **`round` 가 라운드의 첫 이벤트** — §2-6 순서 보장
 11. **`res` 는 항상 4원소 객체다** — 몬스터도 `{fire, cold, lightning, poison}` 을 든다(2026-08-26 타입 이원성 해소). `strike` 는 다른 모양을 가정하지 않으므로 정적 타입 언어에서도 인터페이스가 하나다
 12. **`?tab=` 은 `?dev=` 뒤에** — 렌더러 부팅 순서. `startGame()` 이 탭을 원정으로 되돌린다
+13. **스킬 배율·원소 태그는 타격 동안만 유닛 필드에 얹고 원복한다** — `strike` 시그니처는 불변이다. 다단타 도중 예외로 빠져나가면 유닛에 배율이 남으므로, 얹기와 원복은 한 함수(`strikeOnce`) 안에서만 한다
+14. **`actives` 가 비면 rng 수열은 스킬 도입 전과 같다** — 만료 처리·발동 선택·회복·버프는 rng 를 쓰지 않고, 기본 공격 경로는 그대로다. 결정론 단정이 이것을 지킨다
 
 ---
 
@@ -457,4 +543,4 @@ strike(rng, a, d):
 
 ---
 
-*마지막 업데이트: 2026-08-26 (battle_design §9 개정 반영 — §2-3 전면 재작성 · 성장 곡선/개체 굴림/접사 3분류 · 적중 = 레벨 차 · 저항 상한형 · 세이브 v3 이관 · res 이원성 해소) · 2026-08-26 (최초 작성 — 코드 인벤토리에서 계약 추출)*
+*마지막 업데이트: 2026-08-28 (CSV 형태 최적화 — §7 CSV 13·표시 헬퍼 · §2-4/§2-5 `damageKind`/`release` · §2-6 드롭 = 처치당 최대 1개·`dropChanceMult` · §2-7 codex 출처 CSV · §2-8 `ownerKind`/`ownerId` · §5-2 드롭 판정 1회 · §8 항목 9 `cards_to_next`) · 2026-08-28 (액티브 스킬 엔진 — §2-8 skill.js 신설 · §2-6 스킬 실행 규칙·유닛 필드·이벤트 5종·result casts · §2-3 effectiveCd · §2-4 atk_pct_sum · §5-2 rng 순서 · §5-3 EPS·초기 readyAt · §7 CSV 9 · §8 항목 13·14) · 2026-08-26 (battle_design §9 개정 반영 — §2-3 전면 재작성 · 성장 곡선/개체 굴림/접사 3분류 · 적중 = 레벨 차 · 저항 상한형 · 세이브 v3 이관 · res 이원성 해소) · 2026-08-26 (최초 작성 — 코드 인벤토리에서 계약 추출)*

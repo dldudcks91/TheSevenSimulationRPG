@@ -116,5 +116,50 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 
 ⚠ **원본 파일명 오류**: `TheSevenRPG/fastapi/public/assets/sprites/monster_1101.png` 는 이름과 달리 고블린 척후병(1101)이 아니라 **스켈레톤 전사** 그림이다 (`src/assets/inherited/faces/README.md`).
 
+
+## 부록 A — 계승 옵션 치환 기록 (구 `equipment_option_override.csv` · 2026-08-28 폐기)
+
+계승 접사 테이블(`equipment_common_option` · `equipment_prefix` · `equipment_suffix`)의 어느 행을 왜 빼거나 바꿨는지를 적어 두던 34행짜리 CSV 였다.
+**코드가 읽은 적이 없다** — 계승 접사 테이블 자체가 아직 연결되지 않았기 때문이다(DEV_PLAN 부채 #16). 읽히지 않는 SSOT 를 두지 않기로 하면서(src/data/README.md 공통 규약) CSV 를 지우고 기록만 여기로 옮겼다.
+
+**계승 접사 테이블을 실제로 연결할 때**(DEV_PLAN §5-B #7) 본작 접사 CSV 가 이 조치를 흡수한다 — 아래 `exclude` 는 애초에 옮기지 않고, `replace_provisional` 은 옮기면서 새 stat·범위로 적는다. 죄종 배정의 최종 확정은 `sin_mapping.md`.
+
+| 테이블 | 키 | 조치 | 새 stat | 타입 | min | max | 사유 |
+|---|---|---|---|---|---|---|---|
+| `equipment_common_option` | `w04` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (힘) — 2026-08-22 |
+| `equipment_common_option` | `a04` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (힘) — 2026-08-22 |
+| `equipment_common_option` | `h04` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (힘) — 2026-08-22 |
+| `equipment_common_option` | `g04` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (힘) — 2026-08-22 |
+| `equipment_common_option` | `b04` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (힘) — 2026-08-22 |
+| `equipment_common_option` | `w05` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (민첩) — 2026-08-22 |
+| `equipment_common_option` | `a05` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (민첩) — 2026-08-22 |
+| `equipment_common_option` | `h05` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (민첩) — 2026-08-22 |
+| `equipment_common_option` | `g05` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (민첩) — 2026-08-22 |
+| `equipment_common_option` | `b05` | exclude | — | — | — | — | 장비는 기본 능력치를 주지 않는다 (민첩) — 2026-08-22 |
+| `equipment_common_option` | `w14` | exclude | — | — | — | — | 코스트 폐지로 사문화 (G5) — 2026-08-22 |
+| `equipment_common_option` | `a14` | exclude | — | — | — | — | 코스트 폐지로 사문화 (G5) — 2026-08-22 |
+| `equipment_common_option` | `h14` | exclude | — | — | — | — | 코스트 폐지로 사문화 (G5) — 2026-08-22 |
+| `equipment_common_option` | `g14` | exclude | — | — | — | — | 코스트 폐지로 사문화 (G5) — 2026-08-22 |
+| `equipment_common_option` | `b14` | exclude | — | — | — | — | 코스트 폐지로 사문화 (G5) — 2026-08-22 |
+| `equipment_prefix` | `pride\|gloves` | replace_provisional | `crit_damage` | fixed | 10 | 60 | all_stats 폐기 — 오만의 증폭 성격을 치명타 피해로 번역. sin_mapping.md 에서 확정 |
+| `equipment_prefix` | `pride\|boots` | replace_provisional | `fhr` | percentile | 5 | 30 | all_stats 폐기 — 오만의 불가침 성격을 상태이상 회복 속도로 번역 (상태이상 저항은 2026-08-25 삭제 → fhr 로 치환 2026-08-26). sin_mapping.md 에서 확정 |
+| `equipment_suffix` | `pride\|gloves` | replace_provisional | `crit_damage` | fixed | 10 | 60 | all_stats 폐기 — 오만의 증폭 성격을 치명타 피해로 번역. sin_mapping.md 에서 확정 |
+| `equipment_suffix` | `pride\|boots` | replace_provisional | `fhr` | percentile | 5 | 30 | all_stats 폐기 — 오만의 불가침 성격을 상태이상 회복 속도로 번역 (상태이상 저항은 2026-08-25 삭제 → fhr 로 치환 2026-08-26). sin_mapping.md 에서 확정 |
+| `equipment_common_option` | `w03` | exclude | — | — | — | — | 명중 접사 폐지 — 적중은 레벨 차만으로 정해진다 (battle_design 9-4) — 2026-08-26 |
+| `equipment_common_option` | `a03` | exclude | — | — | — | — | 회피 접사 폐지 — 피해 감소와 기대값이 같고 분산만 더한다 (battle_design 9-4) — 2026-08-26 |
+| `equipment_common_option` | `h03` | exclude | — | — | — | — | 회피 접사 폐지 (battle_design 9-4) — 2026-08-26 |
+| `equipment_common_option` | `g03` | exclude | — | — | — | — | 회피 접사 폐지 (battle_design 9-4) — 2026-08-26 |
+| `equipment_common_option` | `b03` | exclude | — | — | — | — | 회피 접사 폐지 (battle_design 9-4) — 2026-08-26 |
+| `equipment_prefix` | `wrath\|boots` | replace_provisional | `atk_speed` | percentile | 5 | 25 | 회피 폐지(9-4) 대체 — 분노의 몰아치는 성격을 행동 주기로 번역. sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_prefix` | `sloth\|gloves` | replace_provisional | `damage_reduction` | percentile | 3 | 15 | 명중 폐지(9-4) 대체 — 나태의 버티는 성격을 피해 감소로 번역(원천별 곱 · 9-3). sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_prefix` | `sloth\|boots` | replace_provisional | `hp_regen` | percentile | 10 | 60 | 회피 폐지(9-4) 대체 — stat_2(defense 감소)는 유지. sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_prefix` | `gluttony\|boots` | replace_provisional | `life_steal` | percentile | 3 | 12 | 회피 폐지(9-4) 대체 — 폭식의 흡수 성격을 흡혈로 번역. sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_prefix` | `lust\|helmet` | replace_provisional | `res_all` | percentile | 5 | 30 | magic_resist 는 전 원소 공통 저항이 되었고 단위가 소재값 -> 직접 %로 바뀌었다 (9-5). 범위를 % 스케일로 환산 — 2026-08-26 |
+| `equipment_suffix` | `wrath\|boots` | replace_provisional | `atk_speed` | percentile | 5 | 25 | 회피 폐지(9-4) 대체 — 분노의 몰아치는 성격을 행동 주기로 번역. sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_suffix` | `sloth\|gloves` | replace_provisional | `damage_reduction` | percentile | 3 | 15 | 명중 폐지(9-4) 대체 — 나태의 버티는 성격을 피해 감소로 번역(원천별 곱 · 9-3). sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_suffix` | `sloth\|boots` | replace_provisional | `hp_regen` | percentile | 10 | 60 | 회피 폐지(9-4) 대체 — stat_2(defense 감소)는 유지. sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_suffix` | `gluttony\|boots` | replace_provisional | `life_steal` | percentile | 3 | 12 | 회피 폐지(9-4) 대체 — 폭식의 흡수 성격을 흡혈로 번역. sin_mapping.md 에서 확정 — 2026-08-26 |
+| `equipment_suffix` | `lust\|helmet` | replace_provisional | `res_all` | percentile | 5 | 30 | magic_resist 는 전 원소 공통 저항이 되었고 단위가 소재값 -> 직접 %로 바뀌었다 (9-5). 범위를 % 스케일로 환산 — 2026-08-26 |
+
 ---
-*마지막 업데이트: 2026-08-23 (게이트 폐지 반영 — G2 결론 유지, 근거만 축소)*
+*마지막 업데이트: 2026-08-28 (부록 A — 구 `equipment_option_override.csv` 34행 이관, CSV 폐기) · 2026-08-23 (게이트 폐지 반영 — G2 결론 유지, 근거만 축소)*
