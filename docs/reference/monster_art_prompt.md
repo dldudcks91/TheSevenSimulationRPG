@@ -1,6 +1,6 @@
 # 몬스터 일러스트 프롬프트 — CH1-1 파멸의 진영
 
-> 기준 배경: `src/assets/inherited/backgrounds/background_stage_101.webp` (계승 포크, 읽기 전용)
+> 기준 배경: `src/assets/art/backgrounds/background_stage_101.webp` (계승 포크, 읽기 전용)
 > 대상: `src/data/monster.csv` 의 chapter=1 · stage_num=1 (4종)
 > 목적: **신규 몬스터 아트를 계승 배경의 팔레트·픽셀 밀도에 맞춰 뽑기 위한 프롬프트 SSOT**
 

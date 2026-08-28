@@ -114,7 +114,7 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 
 부수 정리: 공속 축 Ch1↔Ch2 단절 → `action_period`(초) 통일 · Ch5~7 스테이지보스 플레이스홀더 9종 명명 · Ch2~7 4스테이지 잡몹 0마리 → 챕터당 3종 신설 · dlvl 곡선 Ch5 이후 정체 → 단조 증가 재작성.
 
-⚠ **원본 파일명 오류**: `TheSevenRPG/fastapi/public/assets/sprites/monster_1101.png` 는 이름과 달리 고블린 척후병(1101)이 아니라 **스켈레톤 전사** 그림이다 (`src/assets/inherited/faces/README.md`).
+⚠ **원본 파일명 오류**: `TheSevenRPG/fastapi/public/assets/sprites/monster_1101.png` 는 이름과 달리 고블린 척후병(1101)이 아니라 **스켈레톤 전사** 그림이다 (`src/assets/art/README.md`).
 
 
 ## 부록 A — 계승 옵션 치환 기록 (구 `equipment_option_override.csv` · 2026-08-28 폐기)

@@ -18,9 +18,9 @@ res_max_bonus,최대 저항 증가,Max Resist Bonus,defense,-,pct,1,원소 저�
 damage_reduction,피해 감소,Damage Reduction,defense,-,pct,1,감쇠 뒤에 곱한다. **원천별로 각각 곱한다** — 덧셈이 아니다. 0에 수렴할 뿐 닿지 않아 상한 규칙이 필요 없고 접사 하나의 실효 체력 기여가 항상 일정하다. 방어 곡선과도 곱해지므로 한쪽 몰빵이 손해 (battle_design §9-3)
 reflect_damage,반사 피해,Reflect Damage,defense,-,n,1,받은 최종 피해 x 이 비율을 공격자 HP 에서 직접 뺀다. **비직격** — 감소·치명을 받지 않고 아무것도 유발하지 않는다 (battle_design §9-6)
 life_steal,흡혈,Life Steal,sustain,-,pct,1,직격의 **최종 피해**(감소 후)에 비례해 회복 — 비직격은 흡혈하지 않는다. 런 깊이와 부상 예방 담당
-hp_regen,HP 재생,HP Regen,sustain,-,n,0,시간당 회복 — 행동 주기와 무관하게 실시간. 제한시간 룰의 대상
+hp_regen,HP 재생,HP Regen,sustain,-,n,1,초당 회복 — 행동 주기와 무관하게 실시간(전투 틱마다 누산해 1 이상이 쌓이면 회복). 제한시간 룰의 대상. 출처는 지금 마스터리뿐 — 접사 풀에는 없다 (2026-08-28 구현)
 action_period,행동 주기,Action Period,tempo,agi,sec,1,차례가 오는 간격(초). 공격속도와 캐스팅 속도가 같은 축이다 — 영웅·몬스터 공통 단일 시계
 fhr,상태이상 회복 속도,Status Recovery,tempo,vit,pct,0,걸린 상태이상에서 벗어나는 속도(지속시간 단축). 건강이 미는 계수 — 저항(확률 차단)은 없다: 상태이상은 걸리되 빨리 털어낸다 (2026-08-25 재배정 — 피격 경직 폐지). stat_id 는 계승 나태 갑옷 접사 매핑 유지를 위해 fhr 보존
-cooldown_reduction,쿨타임 감소,Cooldown Reduction,tempo,-,pct,0,표기 쿨 단축 — 실효 쿨 정렬 최적화의 손잡이
+cooldown_reduction,쿨타임 감소,Cooldown Reduction,tempo,-,pct,1,표기 쿨 단축 — 실효 쿨 정렬 최적화의 손잡이. 시전 시 readyAt = t + 표기쿨 × (1 − 값/100). 출처는 지금 마스터리뿐 (2026-08-28 구현)
 item_find,드랍률,Item Find,utility,luck,pct,1,전투 밖 산출 — 전투력 vs 파밍 효율 스왑 축. 운 계수 (2026-08-26 감각→운 재정의)
 gold_find,골드 획득,Gold Find,utility,luck,pct,1,전투 밖 산출 — 운 계수 (2026-08-26)

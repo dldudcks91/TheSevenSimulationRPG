@@ -9,7 +9,7 @@
 | A1 | 순수성 | `src/game_logic/` 에서 `document\|window\|localStorage\|Date\.\|Math\.random` grep | 히트 0. 주석 안의 언급은 제외하고 판정 |
 | A2 | 숫자 리터럴 | `src/game_logic/formula.js` 를 먼저, 그다음 나머지 로직 파일 | 계수는 전부 `B.<key>`. 남은 상수는 INTERFACE §5-3 표에 있는 것뿐 |
 | A3 | 렌더러 한국어 리터럴 | `[가-힣]` grep in `src/ui/app.js` · `src/ui/battle.js` | 히트가 **전부 주석**이어야 한다. 따옴표 · 백틱 안에 한글이 있으면 위반 |
-| A4 | 계승 폴더 | `git status` 에 `src/data/inherited/` · `src/assets/inherited/` 변경이 있나 | 없어야 한다 |
+| A4 | 계승 폴더 | `git status` 에 `src/data/inherited/` · `src/assets/art/backgrounds/` 변경이 있나 (`src/assets/art/faces/` 는 제외 — 활성 편집 폴더) | 없어야 한다 |
 | A5 | mock 잔류 | `ui/data.js:buildSystems` 의 `M.*` 참조 수가 늘었나 | 늘면 이식 차단 목록이 길어진 것 (INTERFACE §7 · 부채 #5) |
 
 ## B. 계약 대조

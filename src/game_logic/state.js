@@ -5,11 +5,13 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v3 (2026-08-26)
+ * 세이브 형식 v4 (2026-08-28)
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
- *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, stats, caps, equipped:{position: itemUid|null}, injuredUntil}],
+ *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, mastery, masteryPoints, stats, caps, equipped:{position: itemUid|null}, injuredUntil}],
+ *     — mastery = {nodeId: rank} 찍은 것만 담는다(0은 안 담는다) · masteryPoints = 남은 포인트.
+ *       죄종·직업 마스터리가 한 풀을 공유한다 (skill_design §1-4). 전직 전용 포인트는 전직 미구현이라 없다
  *     — position = 착용 위치 id. 부위 8종 · 위치 9개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로)
  *   party: [uid], items: {uid: item}, bag: [uid],
  *   progress: {cleared: [stageId]},
@@ -26,13 +28,16 @@
  *     · `heroes[*].stats.sen` → `stats.luck` (키 이름만 바꾸고 값·자리는 유지) · `caps` 동일
  *     · `items[*].affixes` 에서 `stat ∈ {accuracy, evasion}` 제거 — 폐지된 축이라 읽는 곳이 없다
  *     · 무기 `watk` 는 **재굴림하지 않는다** — 편차 없이 굴려진 개체로 그대로 남는다 (개체값은 개체의 역사다)
+ *   v3 → v4 (2026-08-28 — 마스터리 수치층 신설):
+ *     · `heroes[*].mastery = {}` · `masteryPoints = (level − 1) × mastery_point_per_level` 소급 지급
+ *       — 이미 레벨업한 영웅이 안 받고 지나간 몫이다. 랭크는 전부 0 이라 전투 결과는 안 바뀐다
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯 9·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /**
  * @param {object} deps
@@ -104,13 +109,36 @@ export function createGameSystem(deps) {
         return s;
     }
 
+    /**
+     * v3 → v4 — 마스터리 수치층 신설 (skill_design §3-1~§3-4).
+     * 안 받고 지나간 포인트를 레벨에서 역산해 소급 지급한다 — 새로 시작한 영웅과 같은 자리에 서게 한다.
+     */
+    function upgradeV3(s) {
+        for (const h of s.heroes ?? []) {
+            h.mastery = h.mastery ?? {};
+            h.masteryPoints = h.masteryPoints ?? Math.max(0, (h.level ?? 1) - 1) * B.mastery_point_per_level;
+        }
+        s.version = 4;
+        return s;
+    }
+
+    /**
+     * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
+     * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
+     *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
+     */
+    function canLoad(obj) {
+        try { deserialize(obj); return true; } catch { return false; }
+    }
+
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (obj.version !== SAVE_VERSION && obj.version !== 2)
+        if (![SAVE_VERSION, 2, 3].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
+        if (s.version === 3) s = upgradeV3(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -358,13 +386,66 @@ export function createGameSystem(deps) {
         return { ok: true, hero: h };
     }
 
+    /* ── 마스터리 — 찍기 · 롤백 (skill_design §3 · §5) ── */
+
+    /**
+     * 그 영웅의 마스터리 화면 상태 한 덩어리 — 노드마다 현재 랭크·상한·해금 여부·지금 찍을 수 있는가.
+     * 판정 규칙이 렌더러로 새지 않게 여기서 한 번에 낸다(경계 규칙 — 화면은 결과만 그린다).
+     */
+    function masteryState(state, uid) {
+        const h = heroById(state, uid);
+        if (!h) return null;
+        const points = h.masteryPoints ?? 0;
+        return {
+            points,
+            nodes: H.masteryNodesFor(h).map(n => {
+                const rank = h.mastery?.[n.id] ?? 0;
+                const unlocked = h.level >= n.unlockLevel;
+                return {
+                    id: n.id, treeKind: n.treeKind, ownerId: n.ownerId, tier: n.tier, stat: n.stat,
+                    value: n.value, rank, maxRank: n.maxRank, unlockLevel: n.unlockLevel, unlocked,
+                    total: Number((n.value * rank).toFixed(3)),
+                    canLearn: unlocked && rank < n.maxRank && points > 0,
+                };
+            }),
+        };
+    }
+
+    /** 한 랭크 찍는다 — 포인트 1점 소비. 결과 코드는 INTERFACE §3 사전 */
+    function learnMastery(state, uid, nodeId) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        const n = H.masteryById[nodeId];
+        // 그 영웅의 트리에 없는 노드는 「없음」이다 — 다른 죄종·직업의 노드를 남이 찍지 못한다
+        if (!n || !H.masteryNodesFor(h).some(x => x.id === nodeId)) return { ok: false, err: 'missing' };
+        if (h.level < n.unlockLevel) return { ok: false, err: 'locked' };
+        const rank = h.mastery?.[nodeId] ?? 0;
+        if (rank >= n.maxRank) return { ok: false, err: 'maxRank' };
+        if ((h.masteryPoints ?? 0) < 1) return { ok: false, err: 'points' };
+        h.mastery = h.mastery ?? {};
+        h.mastery[nodeId] = rank + 1;
+        h.masteryPoints -= 1;
+        return { ok: true, rank: rank + 1, points: h.masteryPoints };
+    }
+
+    /** 롤백 — **무료 · 수시** (skill_design §5). 찍은 것을 전부 돌려주고 포인트를 되돌린다 */
+    function resetMastery(state, uid) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        const spent = Object.values(h.mastery ?? {}).reduce((a, b) => a + b, 0);
+        h.mastery = {};
+        h.masteryPoints = (h.masteryPoints ?? 0) + spent;
+        return { ok: true, refunded: spent, points: h.masteryPoints };
+    }
+
     return {
-        newGame, serialize, deserialize,
+        newGame, serialize, deserialize, canLoad,
         heroById, heroItems, heroCombat, isInjured,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage,
         toggleParty, tickInjuries,
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernReroll, hire,
+        masteryState, learnMastery, resetMastery,
     };
 }

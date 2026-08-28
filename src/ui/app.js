@@ -33,7 +33,6 @@ import { bindTipNode, hideTip, heroTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, codexStages } from './data.js';
 import { loadSave, writeSave, clearSave } from './storage.js';
 import { makeRng } from '../game_logic/rng.js';
-import { SAVE_VERSION } from '../game_logic/state.js';
 
 const $ = sel => document.querySelector(sel);
 const el = (tag, cls, html) => {
@@ -97,7 +96,7 @@ function stageMinutes(stage) {
 }
 
 /**
- * 몬스터 얼굴 (src/assets/inherited/faces/). 폴백은 죄종 색 원판 + 이름 이니셜 (faces/README 규격).
+ * 몬스터 얼굴 (src/assets/art/faces/). 폴백은 죄종 색 원판 + 이름 이니셜 (faces/README 규격).
  */
 const faceChip = (id, extraCls = '') => {
     const src = monsterFace(id);
@@ -287,7 +286,8 @@ function renderStart(main) {
 
     if (saved) {
         const box = el('div', 'ng-continue');
-        const old = saved.version !== SAVE_VERSION;     // 형식이 다른 세이브는 이어하기 대신 사유를 보여준다
+        // 열 수 있는가는 `deserialize` 가 정한다 — 화면이 버전 숫자로 판정하면 이관 가능한 세이브를 거부한다
+        const old = !SYS.game.canLoad(saved);
         box.innerHTML = `
             <div class="l">${t('ng.hasSave', { t: new Date(saved.savedAt).toLocaleString() })}
                 <small${old ? ' class="down"' : ''}>${old
@@ -933,47 +933,59 @@ function activeSlots(h, title) {
     return p;
 }
 
-function skillCell(node, accent) {
+/**
+ * 마스터리 칸의 축 이름·단위는 **`stat` 에서 파생**한다 (SCREEN_DESIGN §7).
+ * 접사와 같은 채널이면 접사 이름이 그대로 맞고(공격 속도 · 최대 HP · 모든 원소 저항),
+ *   접사 풀 밖(HP 재생 · 쿨타임 감소 · 최대 저항 증가)이면 `combat_stat.csv` 행이 이름과 단위를 든다.
+ * 화면이 노드 이름 사전을 따로 갖지 않는다 — 가지면 CSV 와 갈린다.
+ */
+const statRow = stat => D.combatStats.find(s => s.id === stat);
+
+/**
+ * 칸 하나 — **랭크 0 이어도 값을 찍는다** (§4-1 "값은 항상 찍는다"). 누르면 1랭크.
+ * 잠긴 칸은 랭크 대신 **필요 레벨**을 찍는다 — 잠금은 칸이 설명한다(화면에 티어 어휘를 쓰지 않으므로 그 자리가 없다).
+ */
+function masteryCell(node, accent) {
     if (!node) return `<div class="sk-cell empty"></div>`;
-    const taken = node.r > 0;
-    const full = node.r >= node.max;
-    const style = taken && accent ? ` style="border-color:${accent}"` : '';
+    const fb = statRow(node.stat);
+    const taken = node.rank > 0;
+    const cls = `sk-cell${taken ? ' taken' : ''}${node.rank >= node.maxRank ? ' full' : ''}`
+        + `${node.unlocked ? '' : ' locked'}${node.canLearn ? ' can' : ' dim'}`;
+    const meta = node.unlocked
+        ? `<span class="sk-v">${M.statValue(node.stat, node.total, fb)}</span><span class="sk-r">${node.rank} / ${node.maxRank}</span>`
+        : `<span class="lv">${t('sk.needLv', { lv: node.unlockLevel })}</span>`;
     return `
-        <div class="sk-cell${taken ? ' taken' : ''}${full ? ' full' : ''}${node.locked ? ' locked' : ''}"${style}
-             title="${L(node.n)} — ${node.r} / ${node.max}${node.locked ? t('sk.lockedSuffix') : ''}">
-            <div class="sk-n">${L(node.n)}</div>
-            <div class="sk-r">${node.r} / ${node.max}</div>
+        <div class="${cls}" data-node="${node.id}"${taken && accent ? ` style="border-color:${accent}"` : ''}
+             title="${L(M.affixText(node.stat, node.total, fb))} — ${node.rank} / ${node.maxRank}${node.unlocked ? '' : t('sk.lockedSuffix')}">
+            <div class="sk-n">${L(M.statLabel(node.stat, fb))}</div>
+            <div class="sk-meta">${meta}</div>
         </div>`;
 }
 
 /**
- * 트리 한 판 — **가지를 세로 열로 세운다** (2026-08-28 사용자 지시).
- * 데이터의 행 하나가 가지(무기군·계열) 하나이고 열이 깊이다 (mock.js SKILL_TREES). 옛 화면은 행을 그대로 가로줄로 그려
- * 판이 옆으로 길었고, 판 셋을 세로로 쌓으니 한 화면에 안 들어왔다. 가지를 열로 세우면 판이 좁고 길어져 **셋이 나란히** 선다.
- * 선행 연결선도 같이 세로가 된다 — 깊이 d+1 칸의 `link` 는 여전히 "바로 앞 깊이에 매인다"는 뜻이다.
+ * 마스터리 판 하나 — **위에서 아래로 쌓는다** (2026-08-28 사용자 지시 · SCREEN_DESIGN §7).
+ * 마스터리는 가지가 갈리는 트리가 아니라 쌓는 구조라(skill_design §3-4) **줄 하나가 한 단계**다.
+ * 윗줄이 먼저 열리고 아랫줄일수록 늦게 열린다 — **단계 번호(T1·T2·T3)는 화면에 쓰지 않는다**(내부 어휘다).
+ *   잠금은 칸이 필요 레벨로 말하고, 빈 줄은 점선 프레임이 말한다(설명 문구는 도움말 탭 — ui 원칙 4).
+ * 프레임(3줄 × 3칸)은 CSV 행 수와 무관하게 고정 — 비어 있어도 그려야 어디까지 갈 수 있는지가 보인다.
  */
-function skillBox({ tag, title, sub, grid, accent, locked }) {
+function masteryBox({ tag, title, sub, nodes, accent, onLearn, locked }) {
     const box = el('div', `sk-box${locked ? ' locked' : ''}`);
-    const { rows, cols } = M.SKILL_GRID;
-    const branches = grid ?? Array.from({ length: rows }, () => Array(cols).fill(null));
-    const lines = branches.map(branch => {
+    const { tiers, nodes: perTier } = M.MASTERY_GRID;
+    const rows = [];
+    for (let ti = 1; ti <= tiers; ti++) {
+        const mine = nodes.filter(n => n.tier === ti);
         const cells = [];
-        for (let d = 0; d < cols; d++) {
-            cells.push(skillCell(branch[d], accent));
-            if (d < cols - 1) {
-                const linked = branch[d] && branch[d + 1]?.link;
-                const on = linked && branch[d].r > 0;
-                cells.push(`<div class="sk-conn${linked ? ' has' : ''}${on ? ' on' : ''}" ${on && accent ? `style="background:${accent}"` : ''}></div>`);
-            }
-        }
-        return `<div class="sk-col">${cells.join('')}</div>`;
-    }).join('');
+        for (let i = 0; i < perTier; i++) cells.push(masteryCell(mine[i] ?? null, accent));
+        rows.push(`<div class="sk-row">${cells.join('')}</div>`);
+    }
     box.innerHTML = `
         <div class="sk-box-head">
             <span class="sk-tag">${tag}</span><span class="sk-title">${title}</span>
             ${sub ? `<span class="muted sk-sub">${sub}</span>` : ''}
         </div>
-        <div class="sk-grid">${lines}</div>`;
+        <div class="sk-grid">${rows.join('')}</div>`;
+    if (onLearn) box.querySelectorAll('.sk-cell[data-node]').forEach(c => { c.onclick = () => onLearn(c.dataset.node); });
     return box;
 }
 
@@ -983,13 +995,38 @@ function renderSkill(main) {
     stack.appendChild(heroStrip(pickHero));          // 캐릭터 탭과 같은 자리·같은 띠 — 여기서 영웅을 고른다
     const wrap = el('div', 'cols c-skill');
 
+    // 판정(해금·상한·포인트)은 전부 여기서 온다 — 렌더러는 그리기만 한다 (SCREEN_DESIGN §7)
+    const ms = SYS.game.masteryState(G, h.uid);
+    const spent = ms.nodes.reduce((a, n) => a + n.rank, 0);
+
+    /** 1랭크 찍기 — 거절 사유는 state 가 코드로 낸다 (INTERFACE §3) */
+    const learn = id => {
+        const r = SYS.game.learnMastery(G, h.uid, id);
+        if (r.ok) save();
+        else if (r.err === 'locked') flash('sk.err.locked', { lv: ms.nodes.find(n => n.id === id)?.unlockLevel ?? 0 });
+        else if (r.err === 'maxRank') flash('sk.err.maxRank');
+        else if (r.err === 'points') flash('sk.err.points');
+        render();
+    };
+
     const c1 = el('div');
     const pp = el('div', 'panel');
-    const points = h.level - 1;     // 레벨당 1 — 트리가 목업이라 아직 쓸 곳이 없다
     pp.appendChild(el('h2', '', t('sk.points.h')));
     pp.appendChild(el('div', '', `
-        <div style="font-size:var(--fs-xl);text-align:center;padding:4px 0">${points}
-            <span class="muted" style="font-size:var(--fs-sm)">/ ${points}</span></div>`));
+        <div style="font-size:var(--fs-xl);text-align:center;padding:4px 0">${ms.points}
+            <span class="muted" style="font-size:var(--fs-sm)">/ ${ms.points + spent}</span></div>
+        <div class="muted" style="text-align:center;font-size:var(--fs-xs)">${t('sk.points.left')}</div>`));
+    // 초기화는 **한 번 클릭** — 무료·수시이고 전액 환급이라 되돌릴 수 없는 행동이 아니다 (SCREEN_DESIGN §7)
+    const reset = el('button', 'btn sm', t('sk.reset'));
+    reset.disabled = spent === 0;
+    reset.onclick = () => {
+        const r = SYS.game.resetMastery(G, h.uid);
+        if (r.ok) { flash('sk.reset.done', { n: r.refunded }); save(); }
+        render();
+    };
+    const tools = el('div', 'sk-tools');
+    tools.appendChild(reset);
+    pp.appendChild(tools);
     c1.appendChild(pp);
     c1.appendChild(activeSlots(h));
     wrap.appendChild(c1);
@@ -999,18 +1036,19 @@ function renderSkill(main) {
     const sin = sinName(h.sin);
     const cls = className(h.cls);
     // 판 셋이 나란히 — 옛 화면은 셋을 세로로 쌓아 한 화면에 안 들어왔다 (2026-08-28, SCREEN_DESIGN §7)
-    wrap.appendChild(skillBox({
-        tag: t('sk.tab1'), title: t('sk.sinTree', { sin }),
-        grid: M.SKILL_TREES.sin[h.sin], accent,
+    wrap.appendChild(masteryBox({
+        tag: t('sk.tab1'), title: t('sk.sinTree', { sin }), sub: t('sk.sinTree.sub', { sin }),
+        nodes: ms.nodes.filter(n => n.treeKind === 'sin'), accent, onLearn: learn,
     }));
-    wrap.appendChild(skillBox({
+    wrap.appendChild(masteryBox({
         tag: t('sk.tab2'), title: t('sk.mastery', { cls }), sub: classLine(h.cls),
-        grid: M.SKILL_TREES.mastery[h.cls],
+        nodes: ms.nodes.filter(n => n.treeKind === 'class'), onLearn: learn,
     }));
-    wrap.appendChild(skillBox({
+    // 전직 층은 구현이 없다 — **같은 프레임의 빈 판**으로 자리만 남긴다. 생김새가 갈리면 같은 층으로 안 읽힌다
+    wrap.appendChild(masteryBox({
         tag: t('sk.tab3'), title: t('sk.advTree'),
         sub: advLocked ? t('sk.advLocked', { lv: D.balance.advance_unlock_level, cur: h.level }) : t('sk.advOpen'),
-        grid: null, locked: true,
+        nodes: [], locked: true,
     }));
     stack.appendChild(wrap);
     main.appendChild(stack);
@@ -1178,7 +1216,7 @@ function helpSections() {
                 { h: t('sk.slots.h'), sub: t('sk.slots.sub'), body: [t('sk.cycle.sub'), t('sk.slots.note')] },
                 { h: t('sk.sinTree', { sin }), sub: t('sk.sinTree.sub', { sin }), body: [t('sk.sinTree.missing', { sin })] },
                 { h: t('sk.mastery', { cls }), body: [t('sk.mastery.missing', { cls })] },
-                { h: t('sk.advTree'), body: [L(M.SKILL_TREES.advance.note)] },
+                { h: t('sk.advTree'), body: [t('sk.advTree.missing')] },
             ],
         },
         {

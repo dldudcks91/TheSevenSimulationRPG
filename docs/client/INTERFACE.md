@@ -110,6 +110,7 @@ strike(rng, a, d):
 | `weaponGroups` | `{id: {period, damageKind, variance, …}}` | weapon_group.csv |
 | `namePool` | `[{ko,en}]` | ⚠ `ui/mock.js` |
 | `traitPool` | `[{ko,en}]` | ⚠ `ui/mock.js` |
+| `masteryNodes` | `[mastery_node.csv 행]` — 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 `balance` 에서 읽는다 | mastery_node.csv |
 
 | export | 시그니처 | 계약 |
 |---|---|---|
@@ -118,11 +119,15 @@ strike(rng, a, d):
 | `rollStartParty(rng, n)` | `→ hero[]` | 이름·죄종·직업·특성이 n명 사이에서 겹치지 않는다. 직업은 `stage === 'main'` 만 |
 | `rollCandidates` | = `rollStartParty` | 선술집 후보 |
 | `xpNeeded(level)` | `→ int` | `round(hero_xp_base × level ^ hero_xp_exp)` |
-| `grantXp(hero, amount, rng)` | `→ {uid, from, to, gains}` 또는 `null` | **hero 를 in-place 로 바꾼다**(xp·level·stats). 레벨업마다 축별 `attr_growth_chance_pct` 확률 +1, 히든 상한 `caps` 까지 |
+| `grantXp(hero, amount, rng)` | `→ {uid, from, to, gains, points}` 또는 `null` | **hero 를 in-place 로 바꾼다**(xp·level·stats). 레벨업마다 축별 `attr_growth_chance_pct` 확률 +1, 히든 상한 `caps` 까지. **마스터리 포인트도 여기서 준다** — `points = 오른 레벨 수 × mastery_point_per_level`, `hero.masteryPoints` 에 in-place 가산 |
 | `computeCombat(hero, items, codex={})` | `→ combat` | 순수. 아래 표 |
+| `masteryNodes` · `masteryById` | `[node]` · `{nodeId: node}` | 정규화된 노드. `node = {id, treeKind, ownerId, tier, stat, value, maxRank, unlockLevel}` |
+| `masteryNodesFor(hero)` | `→ [node]` | 그 영웅의 죄종 트리 + 직업 트리. `ownerId === '*'` 는 그 `treeKind` 전부에 걸린다 |
+| `masteryBonus(hero)` | `→ {flat:{stat:v}, dr:[v]}` | 찍은 랭크 × 랭크당 값. `damage_reduction` 만 따로 — 원천별 곱이라 합치면 안 된다 |
 
-**hero 객체** — `{uid, name:{ko,en}, tier, sin, cls, trait:{ko,en}, level, xp, stats:{7}, caps:{7}, equipped:{position: itemUid 또는 null}, injuredUntil: ms 또는 null}`
+**hero 객체** — `{uid, name:{ko,en}, tier, sin, cls, trait:{ko,en}, level, xp, mastery:{nodeId:rank}, masteryPoints, stats:{7}, caps:{7}, equipped:{position: itemUid 또는 null}, injuredUntil: ms 또는 null}`
 `tier` 는 `rare` / `unique`. `caps` 는 히든 상한 — **화면에 보여주지 않는다.**
+`mastery` 는 **찍은 것만** 담는다(랭크 0 은 키가 없다) · `masteryPoints` 는 남은 포인트. 죄종·직업 마스터리가 **한 풀을 공유**한다 (skill_design §1-4).
 
 **`computeCombat` 출력** — 필드가 **있거나 없거나**로 표현되는 것이 있다. `attrMult(v) = 1 + v × attr_bonus_per_point / 100`:
 
@@ -137,11 +142,26 @@ strike(rng, a, d):
 | `res_max_bonus` · `res_reduction` | Σ 접사. 드롭 접사 풀에 아직 없다(유니크·크래프트·낙인의 자리) — **값 0 이 정상** |
 | `damage_reduction` | **실효 %** = `100 × (1 − Π(1 − p/100))`, 소수 3자리. 원천별 곱(§9-3)을 한 숫자로 낸 것 — 시트에도 이 숫자가 찍히고 `strike` 는 `d.dr` 로 한 번만 곱한다 |
 | `def_ignore` · `reflect_damage` · `life_steal` | Σ 접사 |
+| `hp_regen` | Σ — **초당** 회복량. 접사 풀에 없어 출처는 지금 **마스터리뿐**이라 보통 0. 적용은 `battle.js`(틱마다 누산) |
+| `cooldown_reduction` | Σ — 표기 쿨을 줄이는 %. 출처는 지금 **마스터리뿐**. 적용은 `battle.js`(시전 시점에 곱) |
 | `crit_rate` · `crit_damage` | `base_crit_pct` / `base_crit_damage_pct` + Σ 접사. 확률 상한은 `strike` 에서 |
 | `action_period` | `(무기군 period 또는 unarmed_period) / attrMult(agi) × (1 − Σaspd_pct/100)`, 하한 0.4 s, 소수 3자리 |
 | `dmg_bonus_pct` | `codex.dmg_pct` 그대로 — 전투 유닛의 `bonusPct` 가 된다 |
 | `gold_find` · `item_find` | `round(Σ접사 × attrMult(luck))` — **곱셈이라 장비가 0이면 0**(§8 곱셈 원칙). **운은 전투 계산 밖**이라 이 둘에만 걸린다 |
 | `atk_pct_sum` | Σ 장비 `atk_pct` (**이미 `atk` 안에 곱해져 있다** — 중복 적용 금지). 전투 중 스킬 버프가 새 곱셈 층이 아니라 **같은 괄호에 덧셈**으로 들어가야 해서(§9-2) `battle.js` 가 그 괄호를 되짚을 수 있도록 따로 낸다 |
+
+**마스터리는 접사와 같은 채널로 합류한다** (skill_design §3 · 2026-08-28) — `computeCombat` 은 접사를 합산한 뒤 `masteryBonus(hero)` 의 `flat` 을 **같은 누산기에 더하고** `dr` 을 원천 목록에 밀어 넣는다. 그 아래로는 출처를 구분하지 않는다.
+
+| 규칙 | 내용 |
+|---|---|
+| 새 곱셈 층 없음 | 노드는 전부 기존 채널에 덧셈이다 (battle_design §9-2 「괄호는 둘뿐」). `stat` 은 **접사 채널**(`atk_pct`·`hp_pct`·`aspd_pct`·`res_all` …) 또는 **`combat_stat.csv` id** 여야 한다 — 새 채널을 만들지 않는다 |
+| 피해 감소만 예외 | 원천별 곱이라 합치지 않는다 (§9-3). **노드 하나 = 원천 하나** |
+| 랭크 상한 | 계산에서 `maxRank` 로 자른다. 상한 초과는 세이브 손상이므로 조용히 잘라 쓰고, 찍을 때 막는 것은 `state.js` 의 일 |
+| 트리 소속 | `treeKind === 'sin'` 은 `hero.sin`, `'class'` 는 `hero.cls` 와 맞아야 붙는다. `ownerId === '*'` 는 그 종류 전부(T1 공통 3종) |
+| 운 계수 | `gold_find`·`item_find` 는 접사와 **같은 합**에 들어가므로 **운 계수를 함께 받는다** — battle_design §8 의 `전투 능력치 = (장비 + 스킬(마스터리·특화 노드)) × 기본 능력치 계수` 가 그대로다. 마스터리는 **괄호 안**이고 계수는 괄호 전체에 걸린다 |
+| 반응형(T3) | **없다.** 전투 중 사건에 붙어 `hero.js` 가 아니라 `battle.js` 의 몫이고 값도 전부 미정이라 `mastery_node.csv` 에 행이 없다 |
+
+로드 시 던지는 것 — `tree_kind` 어휘 밖 · `owner_id` 가 죄종/직업이 아님 · `tier < 1` · `value_key`/`max_rank_key`/`unlock_key` 가 `balance.csv` 에 없음. **키가 없으면 값이 `undefined` 로 조용히 새므로 즉시 던진다.**
 
 **삭제된 출력** — `variance_pct`(편차는 무기 개체에 박혔다) · `accuracy` · `evasion`(명중·회피 폐지) · `magic_defense`.
 전투 계수가 실제로 걸리는 축은 셋뿐 — 힘(물리 공격력) · 지능(마법 공격력) · 민첩(행동 주기). 건강(fhr)은 상태이상 미구현으로 출력하지 않고, 통솔·매력은 계수가 없다.
@@ -234,7 +254,7 @@ strike(rng, a, d):
 | `dropChanceMult` | `grade.drop_chance_mult` — **굴림 횟수가 아니라 확률 배율**이다 (드롭은 처치당 최대 1개, 아래) |
 | 나머지 | `crit 0` · `critDmg = base_crit_damage_pct` · `defIgnore 0` · `resReduction 0` · `skillMult 1` · `bonusPct 0` · `resMaxBonus 0` · `dr 0` · `ls 0` · `reflect 0` — 영웅 체계의 **부분집합**(§8-1) |
 
-파티 유닛은 `computeCombat` 출력을 그대로 옮긴다 — `bonusPct ← dmg_bonus_pct` · `dr ← damage_reduction`(실효 %) · `res ← res_* 4종` · `lvl ← level`.
+파티 유닛은 `computeCombat` 출력을 그대로 옮긴다 — `bonusPct ← dmg_bonus_pct` · `dr ← damage_reduction`(실효 %) · `res ← res_* 4종` · `lvl ← level` · `regen ← hp_regen` · `cdr ← cooldown_reduction`. **몬스터는 `regen`·`cdr` 이 0** 이다(영웅 체계의 부분집합 §8-1).
 
 **result** — `{won, reason, durationSec, party:[{key, uid, hpMax, period, actives:[skillId]}], timeline:[ev], xpTotal, gold, dust, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item(uid null)], downed:[heroUid], roundsCleared, rounds:[{n, kind, killed:[monsterId], eliteSin}], strikes:{party:{n,miss}, enemy:{n,miss}}, casts:{skillId:n}}`
 - `casts` = 스킬별 시전 횟수. 타임라인의 `skill` 이벤트 수와 합이 같다
@@ -253,6 +273,7 @@ strike(rng, a, d):
 | `reflect` | `a, d, dmg, ahp` | 비직격 반사. `a` = 반사한 쪽 |
 | `down` | `u` | 전투불능 |
 | `card` | `u, monsterId` | 도감 카드 판정 성공 (처치와 별개) |
+| `regen` | `u, amt, dhp` | HP 재생. **정수 1 이상이 쌓인 틱에만** 나온다(초당 값을 틱마다 누산) · 행동 처리 **앞** · rng 소비 없음 |
 | `skill` | `u, s` | 액티브 시전 — 그 차례의 사건. 뒤따르는 `hit`/`dodge`/`heal`/`buff` 가 같은 `s` 를 단다 |
 | `heal` | `a, d, amt, dhp, s` | 회복. `dhp` = 회복 후 HP |
 | `buff` | `u, s, stat, v, until` (+ `amt` 배리어 총량) | 창 적용 또는 갱신. `until` = 만료 시각(소수 1자리) |
@@ -268,7 +289,8 @@ strike(rng, a, d):
 | 규칙 | 내용 |
 |---|---|
 | 발동 | 행동 주기 도래 시 준비된 액티브 중 하나(§2-8 `pickReady`). 없으면 기본 공격. **한 차례에 하나**. 선택은 rng 를 쓰지 않는다 |
-| 쿨 | 시전 순간 `readyAt = t + cool_sec`(실시간 초). 전투 시작 시 전부 준비라 첫 차례는 `priority` 로 갈린다 |
+| 쿨 | 시전 순간 `readyAt = t + cool_sec × max(CD_MIN_MULT, 1 − cdr/100)`(실시간 초). 전투 시작 시 전부 준비라 첫 차례는 `priority` 로 갈린다. `cdr` 은 `combat_stat.csv:cooldown_reduction` — **표기 쿨에 곱**한다 |
+| HP 재생 | 매 틱 `regenAcc += hp_regen × TICK`, 정수부가 1 이상이면 그만큼 회복하고 소수부만 남긴다(`hp = min(hpMax, …)`). **행동 처리 앞**에서 돌고 rng 를 안 쓴다. 소수점을 매 틱 더하면 타임라인이 흘러넘치고 재생기의 정수 HP 와 어긋나서 정수 단위로 끊는다 |
 | 버프 창 | `until = t + duration_sec`. 만료는 매 틱 **행동 앞에서** 일괄 처리(`until ≤ t + EPS`) → `buffEnd`. rng 소비 없음 |
 | `atk_pct` | 상시 % 와 **같은 괄호에 덧셈**(`atkBase`/`atkPct`). 다른 스킬의 같은 stat 은 덧셈, 같은 스킬은 갱신 |
 | `period_pct` | `period = basePeriod × (1 − Σ/100)` — **다음 차례 예약부터**. 진행 중인 `next` 는 안 건드린다. 하한 처리 없음 |
@@ -278,11 +300,11 @@ strike(rng, a, d):
 | 다단타 | **타격마다 `formula.strike` 1회** — 적중·치명·흡혈·반사·전투불능을 따로 굴린다. 스킬 배율은 `skillMult`, 원소 태그는 `atkType` 에 **그 타격 동안만** 얹고 원복한다(`strike` 시그니처 불변). ⚠ 대상이 쓰러지면 남은 타수는 **버린다**(재지정 없음) · 공격자가 반사로 쓰러지면 중단 |
 | 회복 | `amt = round(matk × mult_pct/100)` 를 생존 아군 전원에게, `hp = min(hpMax, hp + amt)`. rng 소비 없음. 화염 치유 감소는 미구현 |
 | `status` | `skill.csv:status`(결빙 등)는 **코드가 읽지 않는다** — `status_effect.csv` 미발행 |
-| `tags` | `skill.csv:tags`(`\|` 구분 · 최대 2)도 **코드가 읽지 않는다** — 분류용이고 소비자는 전술카드·변형 노드·화면이다 (skill_design §11). `광역`·`단일`·`다단히트` 는 컬럼이 아니라 **`target`·`hits` 에서 파생**한다 |
+| `tags` | `skill.js` 가 **정규화·검증**하지만 **전투 로직은 읽지 않는다** — 소비자는 전술카드 조건·변형 노드·화면이다 (§2-8 · skill_design §11) |
 
 ### 2-7. `state.js` — 상태 전이
 
-`export const SAVE_VERSION = 3`
+`export const SAVE_VERSION = 4`
 
 `createGameSystem(deps)` — `deps`: `hero, item, battle, skill, balance, equipSlots [{id, part}](착용 위치 9), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_to_next], bonus:[%], statByNum:{stage_num: statKey}}`.
 `codex.levels`/`codex.bonus` 는 codex_level.csv(`cards_to_next`/`bonus_pct`) · `codex.statByNum` 은 codex_series.csv 출처. `equipSlots` 만 ⚠ `ui/mock.js`.
@@ -293,7 +315,8 @@ strike(rng, a, d):
 |---|---|---|
 | `newGame(seed, candidates, now)` | `→ state` | 후보 = 로스터 = 파티. 각자 시작 무기 1개 착용. 시작 무기 rng = `deriveSeed(seed, 0)` |
 | `serialize(state, now)` | `→ json` | `clone + {version, savedAt}`. 순수 |
-| `deserialize(obj)` | `→ state` **또는 throw** | v3 는 그대로, **v2 는 안에서 v3 로 올린다**(§4). 그 외 버전은 throw. 누락 필드 기본값 보정 |
+| `deserialize(obj)` | `→ state` **또는 throw** | v4 는 그대로, **v2·v3 는 안에서 연쇄로 올린다**(v2→v3→v4, §4). 그 외 버전은 throw. 누락 필드 기본값 보정 |
+| `canLoad(obj)` | `→ bool` | `deserialize` 가 통과하는가. **받아들이는 버전 목록을 두 곳에 두지 않기 위해** 실제로 한 번 돌려 보고 답한다 — 화면이 버전 숫자로 직접 판정하면 이관을 늘릴 때마다 멀쩡한 세이브를 거부하게 된다 |
 | `heroById(state, uid)` · `heroItems(state, h)` · `isInjured(h, now)` | 조회 | |
 | `codexLevel(cards)` · `codexNext(cards)` · `codexMaxLevel()` · `codexBonusAt(lv)` · `codexBonus(state)` | 도감 | `codex.levels` 는 **레벨당 증분**, 여기서 누적한다 |
 | `heroCombat(state, h)` | `→ combat` | `computeCombat(h, 착용품, codexBonus)` |
@@ -311,8 +334,11 @@ strike(rng, a, d):
 | `tavernCandidates(state)` | `→ hero[]` | rng = `deriveSeed(seed ^ 0x5A17, counters.tavern)` — 저장 없이 재현 |
 | `tavernReroll(state)` | `→ {ok}` / `{ok:false, err:'gold'}` | `counters.tavern++` |
 | `hire(state, index)` | `→ {ok, hero}` / `{ok:false, err}` | err: `roster` · `gold` · `missing`. 고용 후 `counters.tavern++` |
+| `masteryState(state, uid)` | `→ {points, nodes:[{id, treeKind, ownerId, tier, stat, value, rank, maxRank, unlockLevel, unlocked, total, canLearn}]}` / `null` | **판정을 여기서 다 낸다** — 화면은 결과만 그린다. 없는 영웅이면 `null` |
+| `learnMastery(state, uid, nodeId)` | `→ {ok, rank, points}` / `{ok:false, err}` | 1랭크 = 1포인트. err: `missing`(영웅 없음 **또는 그 영웅의 트리에 없는 노드**) · `locked` · `maxRank` · `points` |
+| `resetMastery(state, uid)` | `→ {ok, refunded, points}` / `{ok:false, err:'missing'}` | 롤백은 **무료 · 수시** (skill_design §5). 찍은 랭크 합을 전액 환급 |
 
-**report** — `{at, stageId, won, reason, durationSec, gold, dust, xpEach, levelUps:[{uid, from, to, gains}], downed:[uid], drops:[itemUid], discarded, cards:{monsterId:n}, rounds, strikes}`
+**report** — `{at, stageId, won, reason, durationSec, gold, dust, xpEach, levelUps:[{uid, from, to, gains, points}], downed:[uid], drops:[itemUid], discarded, cards:{monsterId:n}, rounds, strikes}`
 `strikes` 는 `result.strikes` 의 복사본이고, 옛 리포트에는 없어서 **`null` 일 수 있다** — 렌더러가 그 경우를 다뤄야 한다.
 
 `codexBonus(state)` 의 누적 객체는 **`codex.statByNum` 의 값들에서 만든다**(하드코딩 키 없음) — 계열 배정이 바뀌어도 state.js 를 고칠 필요가 없다. 다만 `computeCombat` 이 읽는 것은 `atk_pct` · `hp_pct` · `dmg_pct` 뿐이라 `acc_pct` 는 계산되고 버려진다 (§2-4).
@@ -330,9 +356,11 @@ strike(rng, a, d):
 | `activesFor(hero)` | `→ [skillId]` | **프로토타입** — `ownerKind === 'job' && ownerId === hero.cls` 인 행 **전부**를 `priority` 오름차순. 고유·무기군·전직 출처가 생기면 이 함수만 바뀐다 |
 | `castable(def, ctx)` | `→ bool` | `ctx = {self, allies}`(allies = 생존 아군, self 포함). 아래 발동 조건 |
 | `pickReady(actives, t, isCastable)` | `→ active \| null` | **순수** — `actives` 를 바꾸지 않고 정렬도 새 배열에서 한다. `readyAt ≤ t + EPS` **이고** 조건이 참인 것 중 `readyAt` 최소 → 동률이면 `priority` → 그래도 동률이면 배열 순 |
+| `tagsOf(def)` | `→ [tag]` | 그 스킬이 실제로 갖는 태그 전부 — **파생 먼저, 그다음 정의한 것**. 세는 쪽(전술카드·화면)의 유일한 입구 |
+| `TAGS` · `DERIVED_TAGS` · `MAX_TAGS` | `[10]` · `[3]` · `2` | 태그 어휘 13종과 정의 상한 (skill_design §11) |
 | `EPS` | `1e-9` | 준비·만료 판정 허용 오차 (§5-3) |
 
-**`def`** — `{id, ownerKind, ownerId, kind, target, hits, mult, decay, cool, dur, element, stat, value, cond, condValue, status, priority, name:{ko,en}}`
+**`def`** — `{id, ownerKind, ownerId, kind, target, hits, mult, decay, cool, dur, element, stat, value, cond, condValue, status, tags:[], derived:[], priority, name:{ko,en}}`
 `mult`/`decay`/`value` 는 CSV 의 **% 숫자 그대로**(코드에서 `/100`), CSV 의 `-` 는 `null`.
 
 **어휘 사전 — 정의는 CSV · 종류는 코드.** 이 밖의 값은 로드 시 `throw`(미니 DSL 인터프리터를 두지 않는다):
@@ -346,8 +374,11 @@ strike(rng, a, d):
 | `effect_stat` (buff 전용) | `atk_pct` · `barrier_pct` · `period_pct` · `taunt` |
 | `cast_condition` | `-` · `buff_absent` · `ally_hp_below` |
 | `element` | `-` + `hero.js:ELEMENTS` 4종 |
+| `tags` | `-` 또는 `\|` 로 이은 **최대 2개** — `dot` · `shout` · `blessing` · `boost` · `restore` · `curse` · `control` · `transform` · `summon` · `sacrifice` |
 
-로드 시 그 밖에 던지는 것 — `attack` 인데 `hits < 1` · `buff` 인데 `duration_sec ≤ 0` 또는 `effect_stat` 없음 · `heal` 인데 `mult_pct ≤ 0` · `cool_sec ≤ 0` · `skill_id` 중복 · `owner_kind` 어휘 밖 · `owner_id` 빈 값 · **같은 출처(`owner_kind#owner_id`) 안 `priority` 중복**.
+**태그는 13종이고 컬럼에 적는 것은 10종뿐이다** (skill_design §11 확정 2026-08-28). 나머지 셋은 `target`·`hits` 에서 **파생**한다 — `aoe`(`enemy_all`·`enemy_chain`) · `single`(`enemy_single`) · `multihit`(`hits > 1`). `enemy_rotate`(순환)는 타수만큼만 닿으므로 **광역도 단일도 아니다**(§11-2 규칙 3). 파생 가능한 것을 컬럼에 또 적으면 두 곳 관리가 되어 반드시 어긋나므로, `tags` 에 파생 태그를 적으면 **로드가 실패한다**.
+
+로드 시 그 밖에 던지는 것 — `attack` 인데 `hits < 1` · `buff` 인데 `duration_sec ≤ 0` 또는 `effect_stat` 없음 · `heal` 인데 `mult_pct ≤ 0` · `cool_sec ≤ 0` · `skill_id` 중복 · `owner_kind` 어휘 밖 · `owner_id` 빈 값 · **같은 출처(`owner_kind#owner_id`) 안 `priority` 중복** · `tags` 가 3개 이상 · 어휘 밖 태그 · 파생 태그를 적음 · 태그 중복.
 
 **발동 조건** — 거짓이면 「준비된 것으로 치지 않는다」. 쿨은 그대로 두고 그 차례엔 다른 스킬이나 기본 공격이 나간다.
 
@@ -369,20 +400,21 @@ strike(rng, a, d):
 | `bagFull` | 가방 초과 | equip · unequip |
 | `injured` | 부상 중 | toggleParty · canDepart |
 | `full` | 파티 정원 | toggleParty |
-| `locked` · `noParty` | 스테이지 잠김 / 파티 없음 | canDepart |
+| `locked` · `noParty` | 스테이지 잠김 / 파티 없음 · **마스터리 해금 레벨 미달** | canDepart · learnMastery |
 | `gold` · `roster` | 골드 부족 / 로스터 정원 | tavernReroll · hire |
+| `maxRank` · `points` | 랭크 상한 / 마스터리 포인트 부족 | learnMastery |
 
 렌더러는 코드를 i18n 키로 바꿔 보여준다 (`ch.err.<code>` 등). **코드 문자열이 곧 계약** — 바꾸면 i18n 도 깨진다.
 
 ---
 
-## 4. 세이브 스키마 v3
+## 4. 세이브 스키마 v4
 
 ```
 {
-  version: 3, seed: uint32, createdAt: ms, savedAt: ms,
+  version: 4, seed: uint32, createdAt: ms, savedAt: ms,
   resources: { gold, dust, stigma },
-  heroes: [ hero ],                       // §2-4 hero 객체. equipped 키 = 착용 위치 9개
+  heroes: [ hero ],                       // §2-4 hero 객체. equipped 키 = 착용 위치 9개 · mastery {nodeId:rank} · masteryPoints
   party: [ heroUid ],
   items: { itemUid: item },               // §2-5 item 객체
   bag: [ itemUid ],                       // 가방 순서 = 표시 순서
@@ -410,6 +442,16 @@ strike(rng, a, d):
 | 무기 `watk` | **재굴림하지 않는다** — 편차 없이 굴려진 개체로 그대로 남는다(개체값은 개체의 역사다) |
 | `version` | `3` |
 
+**v3 → v4 이관** (2026-08-28 — 마스터리 수치층 신설). `deserialize` 가 v3 를 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `heroes[*].mastery` | 없으면 `{}` — 찍은 것이 없는 상태 |
+| `heroes[*].masteryPoints` | 없으면 `(level − 1) × mastery_point_per_level` **소급 지급**. 이미 레벨업한 영웅이 안 받고 지나간 몫이라 새로 시작한 영웅과 같은 자리에 선다 |
+| `version` | `4` |
+
+- **v2 는 v3 를 거쳐 v4 까지 연쇄로 올라간다** — `upgradeV2` → `upgradeV3` 순으로 통과한다
+- **랭크는 전부 0 이라 이관이 전투 결과를 바꾸지 않는다** — 포인트만 늘어난다
 - **v1 은 계속 throw** — 무기군·슬롯 9·도감 카드로 아이템/도감 스키마가 단절됐다. 하루 된 프로토타입 세이브라 새 게임으로 받는다
 - `lastReport.strikes` 는 v3 이전 리포트에 없다 — 없으면 `null` 로 다룬다 (§2-7)
 - 저장소 키(localStorage) `thesevensim.save` — `ui/storage.js` 만 안다. Phase 2 에서 이 파일만 파일 시스템/클라우드 어댑터로 교체
@@ -466,6 +508,7 @@ strike(rng, a, d):
 | `action_period` 반올림 | 소수 3자리 | hero.js | |
 | 타임라인 `t` 반올림 | 소수 1자리 | battle.js | |
 | `EPS` | `1e-9` | skill.js | 준비(`readyAt ≤ t + EPS`)·만료(`until ≤ t + EPS`) 판정 허용 오차 — 틱 누산이 경계를 미세하게 밑도는 것을 막는다 |
+| `CD_MIN_MULT` | 0.1 | battle.js | 쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로 안 내려간다. 0 이 되면 스킬이 매 차례 나가 예산이 무너진다 |
 | 스킬 초기 `readyAt` | 0 | battle.js simulate | 전투 시작 시 전부 준비 — 첫 차례는 `priority` 로 갈린다 |
 
 ### 5-4. 부동소수
@@ -480,13 +523,14 @@ strike(rng, a, d):
 - 시각 `t` 까지의 이벤트를 배열 순서로 적용한다. 배속·일시정지·건너뛰기는 재생 속도의 문제
 - `round` 이벤트에서 적 유닛을 통째로 다시 만든다 — 그래서 `round` 가 첫 이벤트여야 한다
 - 모르는 `e` 는 무시한다. 모르는 유닛 키도 무시한다 (현재는 **조용히** — [부채 #6](DEV_PLAN.md))
-- Phase 2 재생기는 이 7종 이벤트만 알면 된다. 연출(모션·팝업·로그 문구)은 재생기의 자유
+- Phase 2 재생기는 위 표의 이벤트만 알면 된다. 연출(모션·팝업·로그 문구)은 재생기의 자유
+- ⚠ **현재 재생기(`ui/battle.js`)가 모르는 이벤트** — `heal` · `buff` · `buffEnd` · `regen`. 조용히 무시되므로 화면 HP 가 시뮬과 어긋난다 ([부채 #22](DEV_PLAN.md) · `regen` 은 출처가 마스터리뿐이라 지금은 발생 자체가 없다)
 
 ---
 
 ## 7. 데이터 계약 — 무엇이 어디서 오는가
 
-`ui/data.js:loadData` 가 fetch 하는 CSV **13개**(`FILES`): `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `codex_series` · `weapon_group` · `skill` · `hero_attribute` · `combat_stat` · `chapter`.
+`ui/data.js:loadData` 가 fetch 하는 CSV **14개**(`FILES`): `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `codex_series` · `weapon_group` · `skill` · `hero_attribute` · `combat_stat` · `chapter` · `mastery_node`.
 **이 목록 = `src/data/*.csv` 전부**(`inherited/` 제외)여야 한다 — 읽히지 않는 SSOT 를 두지 않는다. `dev/test.html` 의 `csv:` 단정이 디렉터리 목록과 대조한다 (2026-08-28).
 
 표시 헬퍼도 `ui/data.js` 가 낸다 — `monsterName(id)→{ko,en}` · `monsterFace(id)→path|null` · `monsterSin(id)` · `stageName(row)→{ko,en}` · `stageBgOf(id)` · `chapterOf(chapter)` · `eliteName(sin, baseId)`. mock 에 남은 것은 자산 경로(`FACE_DIR` · `BG_DIR` · `stageBg`)뿐이다.

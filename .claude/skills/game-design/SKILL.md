@@ -30,7 +30,7 @@ user-invocable: true
 4. **큰 틀 대화는 그 층위에** — 아래 작업 규칙 (d).
 5. **수치는 CSV** — 기획서에 **절대 수치 금지**. 허용 표기는 키 참조 `[balance.csv:key]` · 체감 범위 · 공식 변수명 · 테이블 링크뿐 ([src/data/README.md](src/data/README.md) · CLAUDE.md 규칙 2). `⚠제안` = 프로토타입 산식 계수이지 확정이 아니다.
 6. **GAME_DESIGN 은 방향성 문서** — 확정된 방향만. 근거 · 계산 · 대안 기록은 세부 문서로, 미확정은 §10 으로 (GAME_DESIGN.md 머리말).
-7. **계승 데이터는 읽기 전용** — `src/data/inherited/` · `src/assets/inherited/` 는 고치지 않는다. 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 무엇이 무엇을 대체했는지 문서에 남긴다 (CLAUDE.md 규칙 3).
+7. **계승 데이터는 읽기 전용** — `src/data/inherited/` · `src/assets/art/backgrounds/` 는 고치지 않는다. 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 무엇이 무엇을 대체했는지 문서에 남긴다 (CLAUDE.md 규칙 3). `src/assets/art/faces/` 는 신규 아트가 직접 들어가는 활성 폴더라 예외.
 8. **병렬 세션 재읽기** — 아래 작업 규칙 (a).
 9. **이 스킬은 결정을 모른다** — 확정은 GAME_DESIGN §9, 미확정은 §10 이 **유일한 목록**이다. 결정 내용 · 현황 수치를 이 스킬 파일에 적지 않는다. 스킬과 문서가 어긋나면 **문서가 이긴다**.
 

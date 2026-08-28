@@ -14,6 +14,8 @@
  *     → 그래도 동률이면 배열 순. 없으면 기본 공격. **한 차례에 하나**
  *   · 쿨은 실시간 초(battle_design §6) — 전투 시작 시 전부 준비 상태라 첫 차례는 `priority` 로 갈린다
  *   · 발동 조건(§9-3) — 거짓이면 **준비된 것으로 치지 않는다**(쿨은 그대로, 그 차례엔 다른 것이 나간다)
+ *   · 태그(skill_design §11) — `tags` 에 직접 적는 10종(최대 2 · `|` 구분) + `target`·`hits` 에서 **파생**되는 3종.
+ *     정의·검증만 여기서 하고 **전투 로직은 태그를 읽지 않는다** — 소비자는 전술카드 조건 · 변형 노드 · 화면
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   배정 출처: 고유 스킬 풀·무기군 액티브·전직 액티브 36 미확정 → 지금은 직업 행 전부(프로토타입 §9-0).
@@ -33,6 +35,14 @@ const KINDS = ['attack', 'heal', 'buff'];
 const TARGETS = ['enemy_single', 'enemy_all', 'enemy_rotate', 'enemy_chain', 'self', 'party'];
 const EFFECT_STATS = ['atk_pct', 'barrier_pct', 'period_pct', 'taunt'];
 const CONDITIONS = ['buff_absent', 'ally_hp_below'];
+/**
+ * 스킬 태그 13종 — 4 대분류(피해 방식 · 버프 · 디버프 · 기타). skill_design §11 확정 2026-08-28.
+ * `TAGS` 만 CSV 의 `tags` 칸에 적는다. `DERIVED_TAGS` 셋은 `target`·`hits` 가 이미 답을 갖고 있어
+ *   **칸을 먹지 않는다** — 적으면 두 곳 관리가 되어 반드시 어긋나므로 로드 시 던진다 (§11-2 규칙 2).
+ */
+const TAGS = ['dot', 'shout', 'blessing', 'boost', 'restore', 'curse', 'control', 'transform', 'summon', 'sacrifice'];
+const DERIVED_TAGS = ['aoe', 'single', 'multihit'];
+const MAX_TAGS = 2;                   // §11-2 규칙 1 — 세 번째 태그는 변형 노드가 준다
 const NONE = '-';                     // CSV 의 "없음" 표기 — 정규화하면 null
 
 /**
@@ -62,6 +72,7 @@ export function createSkillSystem(data) {
         cond: dash(row.cast_condition),
         condValue: row.cond_value,
         status: dash(row.status),
+        tags: dash(row.tags) === null ? [] : String(row.tags).split('|').map(v => v.trim()).filter(Boolean),
         priority: row.priority,
         name: { ko: row.name_kr, en: row.name_en },
     });
@@ -85,6 +96,24 @@ export function createSkillSystem(data) {
         }
         if (d.kind === 'attack' && !(d.hits >= 1)) bad(`attack 인데 hits ${d.hits}`);
         if (d.kind === 'heal' && !(d.mult > 0)) bad(`heal 인데 mult_pct ${d.mult}`);
+        if (d.tags.length > MAX_TAGS) bad(`tags ${d.tags.length}개 — 최대 ${MAX_TAGS} (§11-2 규칙 1)`);
+        if (new Set(d.tags).size !== d.tags.length) bad(`tags 중복 '${d.tags.join('|')}'`);
+        for (const tg of d.tags) {
+            if (DERIVED_TAGS.includes(tg)) bad(`'${tg}' 는 target·hits 에서 파생된다 — tags 에 적지 않는다 (§11-2 규칙 2)`);
+            if (!TAGS.includes(tg)) bad(`tag '${tg}'`);
+        }
+    }
+
+    /**
+     * 파생 태그 — `target`·`hits` 가 곧 답이다.
+     * `enemy_rotate`(순환)는 타수만큼만 닿으므로 **광역으로 세지 않는다** (§11-2 규칙 3) — 단일도 아니다.
+     */
+    function derivedTagsOf(d) {
+        const out = [];
+        if (d.target === 'enemy_all' || d.target === 'enemy_chain') out.push('aoe');
+        if (d.target === 'enemy_single') out.push('single');
+        if (d.hits > 1) out.push('multihit');
+        return out;
     }
 
     const list = rows.map(normalize);
@@ -92,6 +121,7 @@ export function createSkillSystem(data) {
     const seen = {};                  // 출처(owner_kind#owner_id) 별 priority 중복 검출
     for (const d of list) {
         validate(d);
+        d.derived = derivedTagsOf(d);
         if (defs[d.id]) throw new Error(`skill: ${d.id} — skill_id 중복`);
         defs[d.id] = d;
         const owner = `${d.ownerKind}#${d.ownerId}`;
@@ -141,5 +171,8 @@ export function createSkillSystem(data) {
         return ready[0].a;
     }
 
-    return { defs, list, activesFor, castable, pickReady, EPS };
+    /** 그 스킬이 실제로 갖는 태그 전부 — 파생 먼저, 그다음 정의한 것. 세는 쪽(전술카드·화면)의 유일한 입구 */
+    const tagsOf = def => [...(def?.derived ?? []), ...(def?.tags ?? [])];
+
+    return { defs, list, activesFor, castable, pickReady, tagsOf, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

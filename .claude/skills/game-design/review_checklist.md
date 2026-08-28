@@ -92,7 +92,7 @@ grep -nE "\b[0-9]+%|\b[0-9]+초|\b[0-9]+분|HP [0-9]+|\+[0-9]+" docs/game_design
 - [ ] **교차 링크 양방향** — GAME_DESIGN 쪽(세부 문서 표 · `상세:` 줄)과 세부 문서 쪽(`상위:` 줄)이 둘 다 맞다
 - [ ] **낡은 참조** — 이 결정을 가리키던 다른 문서의 줄이 아직 옛말을 하고 있지 않다
 - [ ] **분량** — GAME_DESIGN 에 근거를 길게 쓰지 않았다. 길어진 부분은 세부 문서로 내렸다
-- [ ] **계승 폴더** — `src/data/inherited/` · `src/assets/inherited/` 를 건드리지 않았다
+- [ ] **계승 폴더** — `src/data/inherited/` · `src/assets/art/backgrounds/` 를 건드리지 않았다 (`src/assets/art/faces/` 는 제외)
 
 ## 8. 남긴 것 · 넘긴 것
 

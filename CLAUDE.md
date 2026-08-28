@@ -62,13 +62,13 @@ TheSevenSimulationRPG/
     ├── game_logic/        # 순수 게임 로직 — 이식 대상                       → game_logic/README.md
     ├── dev/               # test.html — 단정 + 밸런스 캘리브레이션           → dev/README.md
     ├── data/              # CSV SSOT + inherited/ (읽기 전용 포크 25종)       → data/README.md
-    └── assets/inherited/  # 계승 아트 포크 (읽기 전용)                       → assets/inherited/README.md
+    └── assets/art/        # backgrounds/(계승 포크·읽기 전용) + faces/(신규 아트·편집 중)  → assets/art/README.md
 ```
 
 ## 규칙
 1. **기획서는 한국어**, 변경 시 마지막 업데이트 날짜 기재
 2. **수치는 CSV(SSOT)** — 코드 하드코딩 금지, 기획서에 절대 수치 금지 (키 참조 `[balance.csv:key]` 만)
-3. **`src/data/inherited/` · `src/assets/inherited/` 읽기 전용** — 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다
+3. **`src/data/inherited/` · `src/assets/art/backgrounds/` 읽기 전용** — 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다. `src/assets/art/faces/` 는 읽기 전용이 아니다 — 신규 몬스터 아트를 직접 채워 넣는 활성 폴더 (2026-08-28)
 4. **`game_logic` 모듈은 생성자에서 데이터를 주입받는다**
 5. **git 커밋/푸시는 사용자가 명시적으로 요청할 때만**
 6. **다국어 ko/en 나란히** — 렌더러(`app.js`/`battle.js`)에 한국어 리터럴 금지 (세부: [src/ui/README.md](src/ui/README.md))
@@ -77,4 +77,4 @@ TheSevenSimulationRPG/
 경계(export·스키마·rng 순서)를 바꾸면 **INTERFACE.md 먼저**, 화면을 바꾸면 **SCREEN_DESIGN.md 먼저** → [docs/client/DEV_PLAN.md §7](docs/client/DEV_PLAN.md)
 
 ---
-*마지막 업데이트: 2026-08-26 (「시설」 어휘 폐기 → 「파견처」 · 건설·업그레이드 없음 — 가짓수 = 챕터 해금 / 세기 = 배치된 영웅) · 2026-08-26 (게임 정의 개정 — "장비가 주인공" 폐기 · docs/client/ 신설)*
+*마지막 업데이트: 2026-08-28 (`assets/inherited/` → `assets/art/` 리네임 — faces/ 는 읽기 전용 해제, backgrounds/ 는 유지) · 2026-08-26 (「시설」 어휘 폐기 → 「파견처」 · 건설·업그레이드 없음 — 가짓수 = 챕터 해금 / 세기 = 배치된 영웅) · 2026-08-26 (게임 정의 개정 — "장비가 주인공" 폐기 · docs/client/ 신설)*

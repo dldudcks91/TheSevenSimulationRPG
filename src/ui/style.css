@@ -68,7 +68,7 @@ body {
    경로는 이 CSS 파일 기준 상대경로 (src/ui/ → src/assets/) */
 body::before {
     content: ''; position: fixed; inset: 0; z-index: -2;
-    background: url('../assets/inherited/backgrounds/town.webp') center top / cover no-repeat;
+    background: url('../assets/art/backgrounds/town.webp') center top / cover no-repeat;
     image-rendering: pixelated;
     opacity: .62;
 }
@@ -163,7 +163,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .panel.town-bg {
     background:
         linear-gradient(rgba(18,18,30,.90), rgba(18,18,30,.96)),
-        url('../assets/inherited/backgrounds/town.webp') center 34% / cover no-repeat;
+        url('../assets/art/backgrounds/town.webp') center 34% / cover no-repeat;
     image-rendering: pixelated;
     border-color: var(--border-secondary);
 }
@@ -230,14 +230,14 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .passive-box .t { font-size: var(--fs-xs); color: #d09040; letter-spacing: 1px; margin-bottom: 3px; }
 .passive-box .n { font-size: var(--fs-sm); color: var(--text-primary); }
 
-/* 몬스터 얼굴 — 256×256 투명 PNG. 원형 마스크는 CSS가 하고 파일에는 굽지 않는다. 원형은 몬스터 전용 — 영웅은 .hero-face(네모) */
+/* 몬스터 얼굴 — 128×128 정사각 PNG. 원형 마스크는 CSS가 하고 파일에는 굽지 않는다. 원형은 몬스터 전용 — 영웅은 .hero-face(네모) */
 .face {
     display: inline-flex; align-items: center; justify-content: center;
     width: 26px; height: 26px; flex: 0 0 auto;
     background: var(--bg-input); border: 1px solid var(--border-secondary);
     border-radius: 50%; overflow: hidden; vertical-align: middle;
 }
-.face img { width: 118%; height: 118%; object-fit: cover; image-rendering: pixelated; }
+.face img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
 /* 아트가 없는 몬스터 — 죄종 색 원판 + 이니셜 (색은 JS가 인라인으로 준다) */
 .face.none { font-size: var(--fs-xs); font-weight: normal; }
 .face.boss { border-color: var(--text-accent); box-shadow: 0 0 0 1px rgba(224,48,48,.25); }
@@ -692,12 +692,17 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* ───────── 스킬 ───────── */
 
-/* 왼쪽 한 칸(포인트 · 액티브) + 트리 판 셋이 **나란히** (2026-08-28 사용자 지시).
+/* 왼쪽 한 칸(포인트 · 액티브) + 판 셋이 **나란히** (2026-08-28 사용자 지시).
    옛 배치는 판 셋을 세로로 쌓아 한 화면(세로 예산 700)에 한 판 반밖에 안 들어왔다 — 스크롤 없이 셋을 다 보려면 옆으로 세운다.
-   왼쪽 칸은 라벨이 들어가므로 고정 px 대신 minmax 로 최소만 잡는다 */
-.cols.c-skill { grid-template-columns: minmax(186px, .82fr) repeat(3, minmax(0, 1fr)); align-items: stretch; }
+   **폭에 상한을 준다** (2026-08-28 사용자 지시 — 칸 2/3 축소) — 1fr 로 두면 판이 화면 폭을 다 먹어 칸이 함께 커진다.
+   고정 px 이 아니라 minmax 의 위쪽을 잡는 것이라 좁은 화면에서는 그대로 줄어든다 (ui/README 폭 정책).
+   `align-items: start` — 판이 왼쪽 칸 높이에 맞춰 늘어나지 않게 한다(늘어나면 칸이 세로로 부푼다) */
+.cols.c-skill {
+    grid-template-columns: minmax(186px, 264px) repeat(3, minmax(0, 232px));
+    align-items: start; justify-content: start;
+}
 
-/* 트리 한 판 — 판 안에서 가지가 열로 선다 */
+/* 판 하나 */
 .sk-box {
     display: flex; flex-direction: column;
     background: var(--bg-card); border: 1px solid var(--border-primary);
@@ -706,9 +711,10 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .sk-box.locked { opacity: .5; }
 
 /* 좌상단 라벨 — 어떤 트리인지 */
+/* 판 셋의 첫 줄이 같은 높이에서 시작하게 머리 높이를 맞춘다 — 안 맞추면 「나란히」가 깨진다 */
 .sk-box-head {
-    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-    padding-bottom: 7px; margin-bottom: 8px;
+    display: flex; align-items: baseline; align-content: flex-start; gap: 8px; flex-wrap: wrap;
+    min-height: 42px; padding-bottom: 7px; margin-bottom: 8px;
     border-bottom: 1px solid var(--border-dark);
 }
 .sk-tag {
@@ -718,16 +724,17 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .sk-title { font-size: var(--fs-md); }
 .sk-sub { font-size: var(--fs-xs); }
 
-/* 가지 3열 × 깊이 5 — 가지가 세로로 흐른다 (2026-08-28). 칸 폭은 판 폭이 정한다(고정 px 없음),
-   높이만 최소로 잡아 다섯 깊이가 세로 예산 안에 들어가게 한다 */
-.sk-grid { display: flex; flex-direction: row; gap: 9px; flex: 1 1 auto; }
-.sk-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
+/* 칸 폭은 판 폭이 정한다(고정 px 없음) · 높이는 고정이다 — 늘어나면 칸이 세로로 부툁다 (2026-08-28 사용자 지시) */
+/* 마스터리 판 — **줄 하나가 한 단계**다. 위가 먼저 열리고 아래로 갈수록 늦게 열린다 (SCREEN_DESIGN §7) */
+.sk-grid { display: flex; flex-direction: column; gap: 6px; }
+/* 줄은 늘어나지 않는다 — `flex: 1 1 0` 이면 판 높이를 나눠 가져서 칸이 세로로 부푼다 */
+.sk-row { display: flex; flex-direction: row; gap: 6px; }
 
-/* 영어 노드명이 길다("Attack per Missing Health") — 긴 이름은 폰트를 한 단계 줄여 칸 안에서 접히게 한다 */
+/* 영어 노드명이 길다("All Resistances") — 긴 이름은 두 줄에서 접힌다 */
 .sk-cell {
-    flex: 1 1 0; min-height: 60px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    padding: 5px 4px; text-align: center;
+    flex: 1 1 0; min-width: 0; height: 62px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    padding: 3px 3px; text-align: center;
     background: var(--bg-tertiary); border: 1px solid var(--border-primary);
     cursor: pointer;
 }
@@ -746,17 +753,24 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .sk-box.locked .sk-cell.empty { opacity: 1; }
 
 .sk-n {
-    font-size: 10px; line-height: 1.25; word-break: keep-all;
-    overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+    font-size: 10px; line-height: 1.2; word-break: keep-all;
+    overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
 }
 :root[lang="en"] .sk-n, html[lang="en"] .sk-n { font-size: 9px; letter-spacing: -.1px; }
-.sk-r { font-size: var(--fs-xs); color: var(--text-muted); }
+.sk-r { font-size: 9px; color: var(--text-muted); }
 .sk-cell.taken .sk-r { color: var(--text-secondary); }
 
-/* 칸 사이 연결선 — 선행 조건이 있을 때만 그린다. 가지가 세로라 선도 세로다 (2026-08-28) */
-.sk-conn { flex: 0 0 10px; width: 2px; align-self: center; background: transparent; }
-.sk-conn.has { background: var(--border-dark); }
-.sk-conn.on { background: var(--border-highlight); }
+/* 값 줄 — 현재 총합 + 랭크를 한 줄에. 잠긴 칸은 그 자리에 필요 레벨만 찍는다 (단계 번호는 화면에 쓰지 않는다) */
+.sk-meta { display: flex; align-items: baseline; justify-content: center; gap: 5px; line-height: 1.2; }
+/* 현재 총합 — 랭크 0 이어도 찍는다(빈 칸은 「안 재고 있다」로 읽힌다) */
+.sk-v { font-size: 9px; color: var(--color-info); }
+.sk-meta .lv { font-size: 9px; color: var(--color-warning); }
+/* 못 찍는 칸은 손가락 커서를 주지 않는다 — 눌러도 되는 곳만 눌러 보인다 */
+.sk-cell.dim { cursor: default; }
+.sk-cell.dim:hover { background: var(--bg-tertiary); border-color: var(--border-primary); }
+.sk-cell.taken.dim:hover { background: #1b1b2c; }
+.sk-cell.can:hover { background: #23233a; border-color: var(--border-highlight); }
+.sk-tools { display: flex; justify-content: center; margin-top: 8px; }
 
 /* 액티브 슬롯 3개 + 실효 쿨 병기 (battle_design §5·§6) */
 .cycle-line {

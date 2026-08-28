@@ -41,6 +41,8 @@
 import { createFormula } from './formula.js';
 
 const TICK = 0.1;
+/** 쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로는 안 내려간다. 0 이 되면 스킬이 매 차례 나가 예산이 무너진다 (INTERFACE §5-3) */
+const CD_MIN_MULT = 0.1;
 
 /**
  * @param {object} data
@@ -99,6 +101,7 @@ export function createBattleSystem(data) {
             actives: [], buffs: {}, barrier: null,  // 몬스터 액티브는 미구현 (정예 특성과 함께 후속)
             crit: 0, critDmg: B.base_crit_damage_pct, defIgnore: 0, resReduction: 0,
             skillMult: 1, bonusPct: 0, resMaxBonus: 0, dr: 0, ls: 0, reflect: 0,
+            regen: 0, regenAcc: 0, cdr: 0,          // 재생·쿨감소는 영웅 전용 — 몬스터 쪽 배정은 정예 특성과 함께 후속
             expReward: m.exp_reward * g.exp_mult, goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
             ...extra,
         };
@@ -169,6 +172,9 @@ export function createBattleSystem(data) {
                 defIgnore: c.def_ignore, resReduction: c.res_reduction,
                 skillMult: 1, bonusPct: c.dmg_bonus_pct,     // 도감·특효 보정 — strike 가 읽는 이름과 같아야 한다
                 crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
+                // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다. 출처는 지금 마스터리뿐
+                regen: c.hp_regen ?? 0, regenAcc: 0,
+                cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축 % — 시전 시점에 곱한다
                 period: c.action_period, basePeriod: c.action_period,
                 next: i * 0.3,           // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
                 // 전투 시작 시 액티브는 전부 준비(readyAt 0) — 첫 차례는 priority 로 갈린다 (battle_design §6)
@@ -416,7 +422,8 @@ export function createBattleSystem(data) {
                 return;
             }
             const def = sel.def;
-            sel.readyAt = t + def.cool;                     // 쿨은 실시간 초 — 시전 순간부터 (battle_design §6)
+            // 쿨은 실시간 초 — 시전 순간부터 (battle_design §6). 쿨감소는 **표기 쿨에 곱**한다 (combat_stat:cooldown_reduction)
+            sel.readyAt = t + def.cool * Math.max(CD_MIN_MULT, 1 - (u.cdr ?? 0) / 100);
             out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
             timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id });
             if (def.kind === 'attack') castAttack(u, def, foes);
@@ -429,6 +436,18 @@ export function createBattleSystem(data) {
             t += TICK;
             // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
             for (const u of [...party, ...enemies]) if (u.hp > 0) expire(u, t);
+            // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다
+            // (매 틱 소수점을 더하면 타임라인이 흘러넘치고 재생기가 정수 HP 와 어긋난다). rng 를 안 쓴다
+            for (const u of [...party, ...enemies]) {
+                if (u.hp <= 0 || !(u.regen > 0) || u.hp >= u.hpMax) continue;
+                u.regenAcc += u.regen * TICK;
+                const whole = Math.floor(u.regenAcc);
+                if (whole < 1) continue;
+                u.regenAcc -= whole;
+                const amt = Math.min(whole, u.hpMax - u.hp);
+                u.hp += amt;
+                timeline.push({ t: r1(t), e: 'regen', u: u.key, amt, dhp: u.hp });
+            }
             for (const u of [...party, ...enemies]) {
                 if (u.hp <= 0) continue;
                 u.next -= TICK;

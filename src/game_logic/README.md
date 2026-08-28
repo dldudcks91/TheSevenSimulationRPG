@@ -27,4 +27,4 @@
 검증: [`src/dev/README.md`](../dev/README.md)
 
 ---
-*마지막 업데이트: 2026-08-28 (skill.js 신설 등재 · battle.js 에 액티브 실행 추가) · 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*
+*마지막 업데이트: 2026-08-28 (hero.js 에 마스터리 수치층 · state.js 에 포인트 찍기/롤백 · battle.js 에 HP 재생·쿨감소 · skill.js 에 태그 검증) · 2026-08-28 (skill.js 신설 등재 · battle.js 에 액티브 실행 추가) · 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*

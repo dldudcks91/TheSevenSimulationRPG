@@ -153,7 +153,7 @@ const STRINGS = {
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
     'ch.weaponGroup': { ko: '{group} · {cls} 전용', en: '{group} · {cls} only' },
-    'ch.noTrees': { ko: '스킬 트리는 아직 목업이다', en: 'Skill trees are still a mockup' },
+    'ch.noTrees': { ko: '마스터리는 실동작 · 전직 층은 미구현이다', en: 'Mastery is live; the advancement layer is not built yet' },
 
     /* ── 선술집 (실동작) ── */
     'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)' },
@@ -352,9 +352,20 @@ const STRINGS = {
     /* ── 스킬 ── */
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
     'sk.points.note': {
-        ko: '3탭이 <b>포인트 풀을 공유</b>한다. 3택1 같은 선택은 없고, 개성은 "선택"이 아니라 <b>"배분"</b>에서 나온다.',
-        en: 'All 3 tabs <b>share one point pool</b>. No pick-one-of-three — identity comes from <b>allocation</b>, not selection.',
+        ko: '죄종 마스터리와 직업 마스터리가 <b>포인트 풀을 공유</b>한다 — 같은 축이 양쪽에 있어도 중복이 아니라 <b>기회비용이 있는 선택</b>이다.<br>'
+            + '레벨업마다 받고, <b>초기화는 무료·수시</b>다 — 전액 돌려받으므로 잘못 찍어 영웅 하나를 버리는 일이 없다.<br>'
+            + '⚠ 전직 전용 포인트는 별개 풀인데 <b>전직 층이 미구현</b>이라 아직 없다.',
+        en: 'Sin mastery and class mastery <b>share one point pool</b> — the same axis appearing on both sides is not redundancy but a <b>choice with opportunity cost</b>.<br>'
+            + 'You earn points on level-up, and <b>resetting is free and always available</b> — a full refund, so no hero is ever ruined by a bad pick.<br>'
+            + '⚠ Advancement points are a separate pool, absent until the advancement layer exists.',
     },
+    'sk.points.left': { ko: '남은 포인트', en: 'Points left' },
+    'sk.reset': { ko: '초기화', en: 'Reset' },
+    'sk.reset.done': { ko: '{n} 포인트를 돌려받았다', en: 'Refunded {n} points' },
+    'sk.needLv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
+    'sk.err.locked': { ko: 'Lv.{lv} 부터 찍을 수 있다', en: 'Available from Lv.{lv}' },
+    'sk.err.maxRank': { ko: '이미 최대 랭크다', en: 'Already at max rank' },
+    'sk.err.points': { ko: '스킬 포인트가 없다', en: 'No skill points left' },
     'sk.slots.h': { ko: '액티브', en: 'Actives' },
     'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
     'sk.cycle': { ko: '행동 주기', en: 'Action Cycle' },
@@ -378,25 +389,35 @@ const STRINGS = {
     'sk.tab2': { ko: '탭2', en: 'Tab 2' },
     'sk.tab3': { ko: '탭3', en: 'Tab 3' },
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
-    'sk.sinTree.sub': { ko: '죄종에서 옴 — 모든 {sin} 영웅 공유', en: 'From the sin — shared by all {sin} heroes' },
+    'sk.sinTree.sub': { ko: '죄종에서 옴 — 모든 {sin} 영웅 공유', en: 'Shared by all {sin} heroes' },
     'sk.sinTree.missing': {
-        ko: '{sin} 마스터리 <b>미작성</b> — 죄종 마스터리 7종은 sin_mapping.md 에서 접사와 함께 확정된다 (세트 시너지 노드는 전술카드 이관 대기)',
-        en: '{sin} mastery <b>unwritten</b> — all 7 sin masteries are finalized in sin_mapping.md alongside affixes (set synergy nodes await the tactic-card move)',
+        ko: '<b>맨 윗줄은 7죄종이 전부 같다</b> — 죄종마다 다르게 주면 파워가 갈려 약한 죄종 영웅이 로스터에서 버려진다. 바닥을 통일하고 <b>죄종의 개성은 그 아랫줄부터</b> 준다.<br>'
+            + '둘째 줄이 {sin} 만의 축이고, <b>맨 아랫줄(반응형)은 기획이 방향만 정했다</b> — 「~하면 ~한다」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없다.',
+        en: '<b>The top row is identical for all 7 sins</b> — differing power there would strand heroes of the weaker sins on the bench. The floor is shared and <b>each sin\'s identity starts one row down</b>.<br>'
+            + 'The second row is {sin}\'s own axis. <b>The bottom row (reactive) has direction but no numbers</b> — "when X, then Y" scales with trigger frequency, and there is no yardstick for that yet.',
     },
     'sk.mastery': { ko: '{cls} 마스터리', en: '{cls} Mastery' },
     'sk.mastery.missing': {
-        ko: '{cls} 마스터리 <b>미작성</b> — 본편 5직업 × (마스터리+전직) = 트리 10개가 최대 콘텐츠 부채',
-        en: '{cls} mastery <b>unwritten</b> — 5 launch classes × (mastery + advancement) = 10 trees, the largest content debt',
+        ko: '죄종 마스터리와 <b>같은 구조</b>다. <b>전사의 맨 윗줄만 확정</b>(체력 · 모든 저항력 · 공격력)이고 기사·마법사·궁수·사제는 첫 줄부터 비어 있다 — 죄종은 7종이 성격으로 갈리는데 직업 5종이 무엇으로 갈릴지가 먼저다.<br>'
+            + '<b>모든 저항력</b>은 죄종 어디에도 없는 유일한 축이다.',
+        en: 'Same structure as sin mastery. <b>Only the Warrior\'s top row is settled</b> (health · all resistances · attack); Knight, Mage, Archer and Priest are empty from the first row — the 7 sins split by temperament, but what splits 5 classes is still an open question.<br>'
+            + '<b>All resistances</b> is the one axis no sin mastery offers.',
     },
     'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
+    'sk.advTree.missing': {
+        ko: '<b>액티브를 주는 층은 전직 하나</b>다 — 두 마스터리는 전부 패시브다. 전직 3갈래 중 하나를 고르면 그 전직이 액티브 3을 주고, <b>그중 1개를 찍은 것만</b> 칸에 올라 트리의 뿌리가 된다.<br>'
+            + '⚠ 미구현 — 뿌리 45개가 필요해졌고 <b>트리 형태(깊은 트리 vs 얕은 티어)</b>가 미정이라 총량을 못 정한다. 본 프로젝트 최대의 콘텐츠 부채다.',
+        en: '<b>Advancement is the only layer that grants actives</b> — both masteries are purely passive. Picking one of three advancements grants three actives, and <b>only the one you invest in</b> takes the slot and becomes a tree root.<br>'
+            + '⚠ Not built — 45 roots are now required and the <b>tree shape (deep tree vs shallow tiers)</b> is undecided, so the total is unbounded. The project\'s largest content debt.',
+    },
     'sk.advLocked': { ko: 'Lv.{lv} 해금 — 현재 Lv.{cur}', en: 'Unlocks at Lv.{lv} — now Lv.{cur}' },
     'sk.advOpen': { ko: '해금됨', en: 'Unlocked' },
     'sk.lockedSuffix': { ko: ' (잠김)', en: ' (locked)' },
     'sk.grid.note': {
-        ko: '트리 하나 = <b>3행 × 5열</b>. 열은 깊이(왼→오), 행은 병렬 분기 — <b>선이 있으면 왼쪽 칸이 선행 조건</b>이고, 선이 없으면 독립 노드다<br>'
-            + '빈 칸은 기획 미작성 자리다. 노드 이름은 skill_design.md 에 적힌 컨셉만 올렸다',
-        en: 'One tree = <b>3 rows × 5 columns</b>. Columns are depth (left→right), rows are parallel branches — <b>a line means the left node is a prerequisite</b>; no line means independent<br>'
-            + 'Empty cells are unwritten design. Node names only use concepts already in skill_design.md',
+        ko: '마스터리는 가지가 갈리는 트리가 아니라 <b>위에서 아래로 쌓는</b> 구조다 — <b>윗줄이 먼저 열리고 아랫줄일수록 늦게</b> 열린다<br>'
+            + '칸을 누르면 1랭크 오른다. 아직 못 여는 칸에는 <b>필요한 레벨</b>이 적힌다. <b>빈 칸은 기획 미작성 자리</b>이고, 점선 프레임을 남겨 두는 것은 어디까지 갈 수 있는지를 보여주기 위해서다',
+        en: 'Mastery is not a branching tree but <b>stacks from top to bottom</b> — <b>the top row opens first, lower rows later</b><br>'
+            + 'Click a cell to add a rank. Cells you cannot open yet show <b>the level they need</b>. <b>Empty cells are unwritten design</b>; the dashed frame stays so you can see how far this can go',
     },
 
     /* ── 선술집 ── */

@@ -16,6 +16,7 @@ import { loadData, buildSystems, D, FILES } from '../ui/data.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { parseCsv } from '../game_logic/csv.js';
 import { createFormula } from '../game_logic/formula.js';
+import { createSkillSystem } from '../game_logic/skill.js';
 import { SAVE_VERSION } from '../game_logic/state.js';
 
 const out = document.getElementById('out');
@@ -210,7 +211,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'drop_ilvl_spread', 'dust_elite', 'dust_boss', 'rarity_w_magic', 'rarity_w_rare',
         'affix_magic_min', 'affix_magic_max', 'affix_rare_min', 'affix_rare_max', 'suffix_sin_chance_pct', 'salvage_dust_magic', 'salvage_dust_rare',
         'inventory_cap', 'injury_minutes', 'tavern_candidates', 'tavern_hire_cost', 'tavern_reroll_cost', 'start_gold', 'start_dust', 'start_stigma',
-        'codex_card_drop_pct'];
+        'codex_card_drop_pct', 'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level'];
     const missing = need.filter(k => B[k] === undefined);
     if (missing.length) fail(`missing: ${missing.join(', ')}`);
     if (B.offline_cap_hours !== undefined) fail('offline_cap_hours 는 퇴역 키 — 반복 원정은 게임이 켜져 있는 동안만 (08-25)');
@@ -432,12 +433,12 @@ check('newGame: 3명 로스터 = 파티, 각자 직업 전속 무기군 착용, 
     }
     return G.bag.length === 0 && G.resources.gold === B.start_gold;
 });
-check('save: serialize → deserialize 왕복 동일 (v3)', () => {
+check('save: serialize → deserialize 왕복 동일 (v4)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 3;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 4;
 });
-check('save: v2 → v3 이관 — 감각 키가 운으로, 명중/회피 접사가 사라진다 (deserialize 안에서 올린다)', () => {
+check('save: v2 → v4 연쇄 이관 — 감각→운·명중/회피 폐지(v3) 뒤 마스터리 자리(v4)까지 한 번에 올라간다', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v2.version = 2;
     // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
@@ -451,7 +452,8 @@ check('save: v2 → v3 이관 — 감각 키가 운으로, 명중/회피 접사�
     v2.items[itemUid].affixes = [{ stat: 'accuracy', v: 7 }, { stat: 'crit_rate', v: 3 }, { stat: 'evasion', v: 9 }];
 
     const up = SYS.game.deserialize(v2);
-    if (up.version !== 3) fail(`version ${up.version}`);
+    if (up.version !== 4) fail(`version ${up.version}`);
+    for (const h of up.heroes) if (!h.mastery || h.masteryPoints === undefined) fail('v4 자리가 안 생겼다');
     up.heroes.forEach((h, i) => {
         if ('sen' in h.stats || 'sen' in h.caps) fail('sen 키가 남았다');
         if (h.stats.luck !== senValues[i]) fail(`값이 바뀌었다 ${h.stats.luck} ≠ ${senValues[i]}`);
@@ -470,6 +472,17 @@ check('save: 버전 불일치는 거부 (v1 · v99) — v1 은 스키마 단절�
     for (const v of [1, 99]) { try { SYS.game.deserialize({ version: v, heroes: [] }); fail(`v${v} accepted`); } catch (e) { if (e instanceof Fail) throw e; } }
     return true;
 });
+check('save: canLoad 가 deserialize 와 같은 답을 낸다 — 화면이 이관 가능한 세이브를 거부하면 안 된다 (부채 #24)', () => {
+    const cur = SYS.game.serialize(G, NOW);
+    // 이관 가능한 옛 버전은 열려야 한다 — 버전 숫자만 낮춘 세이브로 확인한다
+    for (const v of [2, 3, SAVE_VERSION]) {
+        const s = JSON.parse(JSON.stringify(cur)); s.version = v;
+        if (!SYS.game.canLoad(s)) fail(`v${v} 를 못 연다 — deserialize 는 여는데 canLoad 가 막는다`);
+    }
+    for (const v of [1, 99]) if (SYS.game.canLoad({ version: v, heroes: [] })) fail(`v${v} 를 연다고 답했다`);
+    if (SYS.game.canLoad(null) || SYS.game.canLoad('x')) fail('객체가 아닌 것을 연다고 답했다');
+    return `v2·v3·v${SAVE_VERSION} 열림 · v1·v99 거부`;
+});
 check('save: 크기 < 64KB (빈 게임)', () => { const n = JSON.stringify(SYS.game.serialize(G, NOW)).length; return n < 65536 ? `${n} bytes` : fail(`${n} bytes`); });
 
 /* ── 성장 ── */
@@ -479,6 +492,162 @@ check('xp: 레벨업 시 능력치는 상한까지만', () => {
     const lu = SYS.hero.grantXp(h, 100000, makeRng(3));
     for (const [id, v] of Object.entries(h.stats)) if (v > h.caps[id]) fail(`${id} ${v} > cap ${h.caps[id]}`);
     return lu && lu.to > lu.from && h.level > 5 ? `Lv ${lu.from}→${lu.to}` : fail('no levelup');
+});
+
+/* ── 마스터리 (skill_design §3-1~§3-4 확정 2026-08-28) ── */
+check('csv: mastery_node 22행 — 죄종 T1 공통 3 + T2 확정 16 + 전사 T1 3. T3(반응형)는 아직 없다', () => {
+    if (D.masteryNodes.length !== 22) fail(`${D.masteryNodes.length}행`);
+    const by = {};
+    for (const n of D.masteryNodes) { const k = `${n.tree_kind}${n.tier}`; by[k] = (by[k] ?? 0) + 1; }
+    if (by.sin1 !== 3 || by.sin2 !== 16 || by.class1 !== 3) fail(JSON.stringify(by));
+    // T3 는 전투 중 사건에 붙는 반응형이라 hero.js 가 아니라 battle.js 의 몫 — 값도 전부 미정이다
+    if (D.masteryNodes.some(n => n.tier === 3)) fail('T3 가 CSV 에 들어왔다 — 구현 없이 두면 읽히지 않는 SSOT 가 된다');
+    return `죄종 T1 ${by.sin1} · 죄종 T2 ${by.sin2} · 직업 T1 ${by.class1}`;
+});
+check('mastery_node: 참조하는 balance 키가 전부 실재하고 stat 이 실재하는 채널이다 — 새 채널을 만들지 않는다', () => {
+    const affix = new Set(M.AFFIX_DEFS.map(d => d.stat));
+    const stats = new Set(D.combatStats.map(x => x.id));
+    const sins = new Set(Object.keys(M.SINS));
+    const classes = new Set(M.CLASSES.map(c => c.id));
+    for (const n of D.masteryNodes) {
+        for (const k of ['value_key', 'max_rank_key'])
+            if (typeof B[n[k]] !== 'number') fail(`${n.node_id} ${k}='${n[k]}' 가 balance.csv 에 없다`);
+        if (n.unlock_key !== '-' && typeof B[n.unlock_key] !== 'number') fail(`${n.node_id} unlock_key='${n.unlock_key}'`);
+        if (!affix.has(n.stat) && !stats.has(n.stat)) fail(`${n.node_id} stat '${n.stat}' 은 접사 채널도 전투 능력치도 아니다`);
+        if (n.owner_id !== '*' && !(n.tree_kind === 'sin' ? sins : classes).has(n.owner_id)) fail(`${n.node_id} owner '${n.owner_id}'`);
+    }
+    return `키 ${new Set(D.masteryNodes.map(n => n.value_key)).size}종 · 채널 ${new Set(D.masteryNodes.map(n => n.stat)).size}종`;
+});
+check('mastery: 랭크 0 이면 전투 능력치가 그대로다 — 도입이 기존 결과를 안 건드린다 (회귀)', () => {
+    const h = G.heroes[0];
+    const items = SYS.game.heroItems(G, h);
+    const empty = SYS.hero.computeCombat({ ...h, mastery: {} }, items);
+    const absent = SYS.hero.computeCombat({ ...h, mastery: undefined }, items);
+    if (!eq(empty, absent)) fail('mastery 없음 ≠ 빈 객체');
+    if (empty.hp_regen !== 0 || empty.cooldown_reduction !== 0) fail(`재생 ${empty.hp_regen} · 쿨감소 ${empty.cooldown_reduction}`);
+    return '재생·쿨감소 출처가 마스터리뿐이라 기본값 0';
+});
+check('mastery: 랭크를 찍으면 그 채널이 오른다 — T1 공통 3종은 죄종을 안 가린다', () => {
+    const r = B.mastery_t1_max_rank;
+    let moved = 0;
+    for (const sin of Object.keys(M.SINS)) {
+        const h = { ...G.heroes[0], sin, mastery: {} };
+        const base = SYS.hero.computeCombat(h, []);
+        const up = SYS.hero.computeCombat({ ...h, mastery: { sin_t1_hp: r, sin_t1_atkspeed: r, sin_t1_damage: r } }, []);
+        if (!(up.hp_max > base.hp_max)) fail(`${sin} hp ${base.hp_max} → ${up.hp_max}`);
+        if (!(up.action_period < base.action_period)) fail(`${sin} 주기 ${base.action_period} → ${up.action_period}`);
+        if (!(up.atk_pct_sum > base.atk_pct_sum)) fail(`${sin} 상시% ${base.atk_pct_sum} → ${up.atk_pct_sum}`);
+        moved += 1;
+    }
+    return `${moved} 죄종 전부 동일하게 반응`;
+});
+check('mastery: 남의 트리 노드는 안 붙는다 — 죄종·직업이 다르면 무시한다', () => {
+    const h = { ...G.heroes[0], sin: 'wrath', cls: 'mage' };
+    const dirty = SYS.hero.computeCombat({ ...h, mastery: { sin_pride_t2_dr: 5, cls_warrior_t1_hp: 5 } }, []);
+    const clean = SYS.hero.computeCombat({ ...h, mastery: {} }, []);
+    return eq(dirty, clean) ? '오만 T2 · 전사 T1 둘 다 무시' : fail('다른 죄종·직업 노드가 적용됐다');
+});
+check('mastery: 피해 감소는 원천별 곱이다 — 접사와 합치지 않는다 (battle_design §9-3)', () => {
+    const r = B.mastery_t1_max_rank;
+    const h = { ...G.heroes[0], sin: 'pride', mastery: { sin_pride_t2_dr: r } };
+    const per = B.mastery_pride_t2_dr_pct * r;
+    const only = SYS.hero.computeCombat(h, []);
+    const want = Number((100 * (1 - (1 - per / 100))).toFixed(3));
+    if (Math.abs(only.damage_reduction - want) > 1e-6) fail(`단독 ${only.damage_reduction} ≠ ${want}`);
+    const both = SYS.hero.computeCombat(h, [mkItem('armor', [{ stat: 'damage_reduction', v: 10 }])]);
+    const wantBoth = Number((100 * (1 - (1 - per / 100) * (1 - 0.1))).toFixed(3));
+    if (Math.abs(both.damage_reduction - wantBoth) > 1e-6) fail(`합류 ${both.damage_reduction} ≠ ${wantBoth} (덧셈이면 ${(per + 10).toFixed(3)})`);
+    return `마스터리 ${only.damage_reduction}% · 접사 합류 ${both.damage_reduction}%`;
+});
+check('mastery: 포인트 — 레벨업마다 지급 · 찍으면 1점 소비 · 롤백은 전액 환급 (skill_design §5)', () => {
+    const G2 = SYS.game.newGame(7, cands, NOW);
+    const h = G2.heroes[0];
+    if (h.masteryPoints !== 0) fail(`시작 포인트 ${h.masteryPoints}`);
+    const lu = SYS.hero.grantXp(h, 100000, makeRng(3));
+    const gained = (lu.to - lu.from) * B.mastery_point_per_level;
+    if (h.masteryPoints !== gained) fail(`지급 ${h.masteryPoints} ≠ ${gained}`);
+    if (lu.points !== gained) fail(`보고 ${lu.points} ≠ ${gained}`);
+    const r = SYS.game.learnMastery(G2, h.uid, 'sin_t1_hp');
+    if (!r.ok) fail(r.err);
+    if (h.mastery.sin_t1_hp !== 1 || h.masteryPoints !== gained - 1) fail('소비가 안 맞는다');
+    const back = SYS.game.resetMastery(G2, h.uid);
+    if (!back.ok || back.refunded !== 1 || h.masteryPoints !== gained) fail(JSON.stringify(back));
+    if (Object.keys(h.mastery).length !== 0) fail('롤백 뒤에도 랭크가 남았다');
+    return `Lv ${lu.from}→${lu.to} · +${gained}p · 롤백 전액 환급`;
+});
+check('mastery: 거절 사유 — 해금 전 locked · 상한 maxRank · 포인트 없음 points · 남의 노드 missing', () => {
+    const G2 = SYS.game.newGame(8, cands, NOW);
+    const h = G2.heroes.find(x => x.cls !== 'warrior') ?? G2.heroes[0];
+    h.masteryPoints = 99;
+    if (h.level >= B.mastery_t2_unlock_level) fail('레벨 1 전제가 깨졌다');
+    const t2 = D.masteryNodes.find(n => n.tier === 2 && n.owner_id === h.sin);
+    if (!t2) fail(`${h.sin} 의 T2 노드가 없다`);
+    if (SYS.game.learnMastery(G2, h.uid, t2.node_id).err !== 'locked') fail('locked 아님');
+    if (h.cls !== 'warrior' && SYS.game.learnMastery(G2, h.uid, 'cls_warrior_t1_hp').err !== 'missing') fail('남의 직업 노드가 통과했다');
+    for (let i = 0; i < B.mastery_t1_max_rank; i++) if (!SYS.game.learnMastery(G2, h.uid, 'sin_t1_hp').ok) fail(`랭크 ${i + 1} 실패`);
+    if (SYS.game.learnMastery(G2, h.uid, 'sin_t1_hp').err !== 'maxRank') fail('maxRank 아님');
+    h.masteryPoints = 0;
+    if (SYS.game.learnMastery(G2, h.uid, 'sin_t1_damage').err !== 'points') fail('points 아님');
+    return '네 사유 전부 코드로 나온다';
+});
+check('masteryState: 판정을 한 번에 낸다 — 랭크·상한·해금·찍을 수 있는가 (렌더러로 새지 않는다)', () => {
+    const G2 = SYS.game.newGame(9, cands, NOW);
+    const h = G2.heroes[0];
+    const ms = SYS.game.masteryState(G2, h.uid);
+    if (ms.points !== h.masteryPoints) fail('points 불일치');
+    const t1 = ms.nodes.filter(n => n.tier === 1), t2 = ms.nodes.filter(n => n.tier === 2);
+    if (t1.some(n => !n.unlocked)) fail('T1 이 잠겨 있다');
+    if (t2.some(n => n.unlocked)) fail(`레벨 ${h.level} 인데 T2 가 열려 있다`);
+    if (ms.nodes.some(n => n.canLearn)) fail('포인트 0 인데 찍을 수 있다');
+    if (SYS.game.masteryState(G2, 'h999') !== null) fail('없는 영웅에 null 을 안 낸다');
+    return `${h.cls}/${h.sin} → 노드 ${ms.nodes.length} (T1 ${t1.length} · T2 ${t2.length})`;
+});
+check('save: v3 → v4 이관 — 마스터리 자리 신설 + 안 받고 지나간 포인트 소급 (INTERFACE §4)', () => {
+    const v3 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v3.version = 3;
+    for (const h of v3.heroes) { delete h.mastery; delete h.masteryPoints; h.level = 5; }
+    const up = SYS.game.deserialize(v3);
+    if (up.version !== 4) fail(`version ${up.version}`);
+    const want = 4 * B.mastery_point_per_level;
+    for (const h of up.heroes) {
+        if (!h.mastery || Object.keys(h.mastery).length !== 0) fail('mastery 자리가 비어 있지 않다');
+        if (h.masteryPoints !== want) fail(`포인트 ${h.masteryPoints} ≠ ${want}`);
+    }
+    return `${up.heroes.length}명 · Lv5 → ${want}p 소급`;
+});
+
+/* ── 스킬 태그 (skill_design §11 확정 2026-08-28) ── */
+check('skill: 태그 13종 — 정의 10(최대 2) + 파생 3(target·hits 에서). CSV 값이 전부 어휘 안이다', () => {
+    const S = SYS.skill;
+    if (S.TAGS.length !== 10 || S.DERIVED_TAGS.length !== 3) fail(`정의 ${S.TAGS.length} · 파생 ${S.DERIVED_TAGS.length}`);
+    for (const d of S.list) {
+        if (d.tags.length > S.MAX_TAGS) fail(`${d.id} tags ${d.tags.length}개`);
+        for (const tg of d.tags) if (!S.TAGS.includes(tg)) fail(`${d.id} '${tg}'`);
+        const want = [];
+        if (d.target === 'enemy_all' || d.target === 'enemy_chain') want.push('aoe');
+        if (d.target === 'enemy_single') want.push('single');
+        if (d.hits > 1) want.push('multihit');
+        if (!eq(d.derived, want)) fail(`${d.id} 파생 [${d.derived}] ≠ [${want}]`);
+    }
+    const rot = S.defs.kni_rush;                       // enemy_rotate — 타수만큼만 닿는다 (§11-2 규칙 3)
+    if (S.tagsOf(rot).some(x => x === 'aoe' || x === 'single')) fail('enemy_rotate 가 광역/단일로 셌다');
+    const tagged = S.list.filter(d => d.tags.length).length;
+    return `태그 붙은 스킬 ${tagged}/${S.list.length} · 다단히트 ${S.list.filter(d => d.derived.includes('multihit')).map(d => d.id).join(',')}`;
+});
+check('skill: 파생 태그를 tags 에 적으면 로드가 실패한다 — 두 곳 관리 금지 (§11-2 규칙 2)', () => {
+    const rows = JSON.parse(JSON.stringify(D.skillRows));
+    rows[0].tags = 'single';
+    try { createSkillSystem({ balance: B, rows }); } catch (e) { return `throw — ${String(e.message).slice(0, 50)}`; }
+    return fail('파생 태그가 통과했다');
+});
+check('skill: tags 3개 · 어휘 밖 값 · 중복은 로드가 실패한다 (§11-2 규칙 1)', () => {
+    const mk = v => { const rows = JSON.parse(JSON.stringify(D.skillRows)); rows[0].tags = v; return rows; };
+    for (const v of ['shout|blessing|curse', 'nonsense', 'shout|shout']) {
+        let threw = false;
+        try { createSkillSystem({ balance: B, rows: mk(v) }); } catch (e) { threw = true; }
+        if (!threw) fail(`'${v}' 가 통과했다`);
+    }
+    return '3개 · 어휘 밖 · 중복 전부 throw';
 });
 
 /* ── 장비 ── */
@@ -1076,8 +1245,8 @@ check('simulate: 도발 — taunt 창 동안 적의 단일 대상은 전부 도�
     if (s.bad) fail(`도발 중인데 다른 대상을 때렸다 — ${s.bad}`);
     return `seed ${seed} · 창 ${s.windows}개 · 적 타격 ${s.checked}건 전부 도발자`;
 });
-check('save: 스킬 도입 뒤에도 SAVE_VERSION 3 — 쿨·창·배리어는 전투 안에서만 산다 (INTERFACE §4)', () =>
-    SAVE_VERSION === 3 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 4 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트뿐 (INTERFACE §4)', () =>
+    SAVE_VERSION === 4 || fail(`v${SAVE_VERSION}`));
 
 /* ── 원정 정산 ── */
 check('resolveBattle: 골드·처치·카드·드롭·부상이 상태에 반영', () => {

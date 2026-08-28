@@ -94,3 +94,7 @@ mastery_envy_t3_defshred_flat,1,proposed,1,시기 마스터리 T3-1 — 타격 �
 mastery_sloth_t3_reflect_pct,1,proposed,1,나태 마스터리 T3-1 — 피격 시 [combat_stat.csv:reflect_damage] % · 값(n%) 미정 · 캘리브레이션 대기 (2026-08-28 방향 확정 · 값 미정)
 mastery_gluttony_t3_atkstack_pct,1,proposed,1,폭식 마스터리 T3-1 — 타격할 때마다 물리 공격력 소폭 누적(같은 라운드 내 한정 · 라운드 종료 시 초기화) · 값 미정 · 캘리브레이션 대기 (2026-08-28 방향 확정 · 값 미정)
 mastery_lust_t3_defsteal_flat,1,proposed,1,색욕 마스터리 T3-1 — 타격 시 대상 방어력을 고정치만큼 깎아 자신의 [combat_stat.csv:defense] 로 획득(스틸) · 값 미정 · 캘리브레이션 대기 (2026-08-28 방향 확정 · 값 미정)
+mastery_point_per_level,1,proposed,1,레벨업 1회당 받는 마스터리 포인트 — 죄종·직업 마스터리가 **한 풀을 공유**한다(skill_design §1-4). 전직 전용 포인트는 별개이고 전직 미구현이라 키도 미발행. ⚠ 지급 곡선 자체가 기획 미확정(skill_design §7 「포인트 지급 곡선」)이라 「레벨당 정액」은 임시 형태다 (2026-08-28 마스터리 구현하면서 발행)
+mastery_warrior_t1_hp_pct,1,proposed,1,전사 직업 마스터리 T1 — 랭크당 [combat_stat.csv:hp_max] % · 5랭크 상한 [balance.csv:mastery_t1_max_rank]. 죄종 T1 체력과 같은 채널·같은 값 — 겹치는 것은 의도이고 포인트 풀 공유가 기회비용을 만든다 (skill_design §3-4) (2026-08-28 방향 확정 · 값 미정)
+mastery_warrior_t1_resall_pct,2,proposed,1,전사 직업 마스터리 T1 — 랭크당 원소 저항 4종 동시 %p · 5랭크 상한 [balance.csv:mastery_t1_max_rank]. ⚠ 저항은 상한형이라 [balance.csv:res_cap_base] 대비로 역산해야 한다 — 5랭크 10%p 는 상한의 1/7 을 잡는 임시값 (skill_design §3-4) (2026-08-28 방향 확정 · 값 미정)
+mastery_warrior_t1_atk_pct,2,proposed,1,전사 직업 마스터리 T1 — 랭크당 상시 피해 % · 공식 [1] 의 (1+Σ상시%) 괄호에 덧셈 · 5랭크 상한 [balance.csv:mastery_t1_max_rank]. 죄종 T1 데미지와 같은 채널·같은 값 (skill_design §3-4) (2026-08-28 방향 확정 · 값 미정)

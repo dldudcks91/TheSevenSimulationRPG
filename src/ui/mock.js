@@ -75,7 +75,7 @@ export const HERO_TIER = {
 
 /**
  * 직업 7종 (hero_design §2) — 본편 5 + 확장 2. 확장 직업은 아직 화면에 등장하지 않는다.
- * i18n 을 위해 **id 로 참조**한다 — HEROES.cls / SKILL_TREES.mastery 키가 이 id 를 쓴다.
+ * i18n 을 위해 **id 로 참조**한다 — HEROES.cls · mastery_node.csv 의 owner_id 가 이 id 를 쓴다.
  * 무기군은 여기 적지 않는다 — 직업 전속 배정은 **weapon_group.csv 의 classes 열**이 SSOT 다 (2026-08-25 확정).
  *
  * keyAttr = 이 직업을 미는 기본 능력치. hero_attribute.csv 의 combat_stat 열에서 그대로 나온다
@@ -219,12 +219,22 @@ export const AFFIX_LABELS = {
     item_find: { ko: '드랍률', en: 'Item Find', fmt: 'pct' },
 };
 
-/** 접사 한 줄 — {ko, en}. 단위(%)와 어순은 여기서만 정한다 */
-export const affixText = (stat, v) => {
-    const d = AFFIX_LABELS[stat] ?? { ko: stat, en: stat, fmt: 'n' };
-    const num = `${v >= 0 ? '+' : ''}${v}${d.fmt === 'pct' ? '%' : ''}`;
-    return { ko: `${d.ko} ${num}`, en: `${num} ${d.en}` };
+/**
+ * 접사 한 줄 — {ko, en}. 단위(%)와 어순은 **여기서만** 정한다.
+ * `fallback` = 접사 풀 밖의 축을 그릴 때 쓰는 `{ko, en, fmt}` — 마스터리 노드가 `combat_stat.csv` 행을 넘긴다.
+ *   (접사가 아닌 것을 AFFIX_LABELS 에 밀어 넣지 않으려는 것 — 그러면 접사 사전이 접사 아닌 것을 들게 된다)
+ */
+export const affixText = (stat, v, fallback) => {
+    const d = statLabel(stat, fallback);
+    return { ko: `${d.ko} ${statValue(stat, v, fallback)}`, en: `${statValue(stat, v, fallback)} ${d.en}` };
 };
+
+/** 축 이름만 — {ko, en, fmt}. 이름과 값을 따로 찍는 화면(마스터리 칸)이 문자열을 되파싱하지 않게 한다 */
+export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? { ko: stat, en: stat, fmt: 'n' };
+
+/** 값만 — 부호와 단위는 affixText 와 **같은 규칙**이다 (단위를 붙이는 곳은 이 파일 하나) */
+export const statValue = (stat, v, fallback) =>
+    `${v >= 0 ? '+' : ''}${v}${statLabel(stat, fallback).fmt === 'pct' ? '%' : ''}`;
 
 /** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다. 칸은 착용 **위치**(EQUIP_SLOTS.id) — 반지 두 칸.
  *  2026-08-27 재배치 — 목걸이는 투구 오른쪽 · 장갑은 무기 아래 · 신발은 보조 아래 · 반지는 장갑·신발 아래 (SCREEN_DESIGN §6) */
@@ -354,22 +364,22 @@ export const nm = (preSin, base, sufSin) => {
 
 
 /**
- * 배경 이미지 — TheSevenRPG 계승분 (src/assets/inherited/backgrounds/).
+ * 배경 이미지 — TheSevenRPG 계승분 (src/assets/art/backgrounds/).
  * 파일명이 계승 스테이지 id(101/102/103)를 그대로 쓰므로 stage_id ↔ 배경이 1:1로 붙는다.
  * 원본 PNG는 32bit RGBA라 4장 18MB였다 → **WebP q88로 변환해 888KB** (해상도 무손실, 상세는 같은 폴더 README).
  * ⚠ 104(사탄의 제단)와 챕터 2 이후는 원작에도 없다 — 없는 스테이지는 기존 그라디언트로 폴백한다.
  * 경로는 문서(src/index.html) 기준 상대경로 — JS가 인라인 스타일로 넣기 때문이다.
  */
-export const BG_DIR = './assets/inherited/backgrounds/';
+export const BG_DIR = './assets/art/backgrounds/';
 export const TOWN_BG = BG_DIR + 'town.webp';
 export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
 
 /**
- * 몬스터 얼굴 — 계승 자산(src/assets/inherited/faces/face_<idx>.png).
+ * 몬스터 얼굴 — src/assets/art/faces/monster_<idx>.png.
  * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
-export const FACE_DIR = './assets/inherited/faces/';
+export const FACE_DIR = './assets/art/faces/';
 
 /**
  * 정예 특성 — 계승 elite_trait.csv. en 은 CSV 의 trait_name(영문) 그대로.
@@ -410,77 +420,10 @@ export const COMMON_TRAITS = [
 
 
 /* ═══════════ 스킬 ═══════════ */
-// 독립 트리 3탭, 포인트 풀 공유 (skill_design §1)
-// 노드 이름은 skill_design §2에 적힌 컨셉만 사용. 미작성분은 (미정) 표기 — 기획 선점 금지
+// 화면은 프레임만 갖고 내용은 전부 실데이터다 — 마스터리 노드는 mastery_node.csv,
+//   당하는 값은 balance.csv, 찍은 랭크는 세이브다 (2026-08-28 목업 폐기)
 
-/**
- * 트리 하나 = **3행 × 5열 그리드** (2026-08-22 확정).
- * 열 = 깊이(왼→오 진행), 행 = 병렬 분기. 노드는 정사각형, 왼쪽 칸과 이어질 때만 선을 긋는다.
- *
- * `link: true` = 왼쪽 칸이 선행 조건 (선을 긋는다) / 없으면 독립 노드 (선 없음)
- * `null` = 미작성 칸 — 프레임만 보여주고 비워둔다 (화면이 기획을 선점하지 않는다)
- */
-export const SKILL_GRID = { rows: 3, cols: 5 };
-const _ = null;   // 빈 칸을 짧게
-
-export const SKILL_TREES = {
-    sin: {
-        wrath: [
-            [{ n: { ko: '격노', en: 'Enrage' }, r: 3, max: 5 }, { n: { ko: '치명 강화', en: 'Lethality' }, r: 5, max: 5, link: true }, _, _, _],
-            [{ n: { ko: '잃은 체력 비례 공격력', en: 'Attack per Missing Health' }, r: 2, max: 5 }, _, _, _, _],
-            [_, _, { n: { ko: '분노 접사 수당 치명타 보정', en: 'Crit per Wrath Affix' }, r: 0, max: 3, locked: true }, _, _],
-        ],
-        pride: [
-            [{ n: { ko: '증폭', en: 'Amplify' }, r: 4, max: 5 }, _, _, _, _],
-            [{ n: { ko: '상태이상 면역', en: 'Status Immunity' }, r: 1, max: 3 }, _, _, _, _],
-            [_, _, _, _, _],
-        ],
-        lust: [
-            [{ n: { ko: '흡혈', en: 'Lifesteal' }, r: 5, max: 5 }, { n: { ko: '공속 강화', en: 'Attack Speed Up' }, r: 3, max: 5, link: true }, _, _, _],
-            [_, _, _, _, _],
-            [_, _, _, _, _],
-        ],
-    },
-    // 마스터리는 **직업별**로 따로 있다 (7 + 2N 덧셈 구조, skill_design §4)
-    // 키는 CLASSES 의 id — 무기군 배정은 weapon_group.csv(2026-08-25 직업 전속) 그대로, 무기군마다 독립 분기라 행을 하나씩 쓴다
-    mastery: {
-        warrior: [
-            [{ n: { ko: '둔기 숙련', en: 'Mace Mastery' }, r: 3, max: 5 }, _, _, _, _],
-            [{ n: { ko: '도끼 숙련', en: 'Axe Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [{ n: { ko: '창 숙련', en: 'Spear Mastery' }, r: 0, max: 5 }, { n: { ko: '방어구 숙련', en: 'Armor Mastery' }, r: 2, max: 5 }, _, _, _],
-        ],
-        knight: [
-            [{ n: { ko: '한손검 숙련', en: 'Longsword Mastery' }, r: 4, max: 5 }, _, _, _, _],
-            [{ n: { ko: '양손검 숙련', en: 'Greatsword Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [{ n: { ko: '방어구 숙련', en: 'Armor Mastery' }, r: 3, max: 5 }, _, _, _, _],
-        ],
-        mage: [
-            [{ n: { ko: '완드 숙련', en: 'Wand Mastery' }, r: 2, max: 5 }, _, _, _, _],
-            [{ n: { ko: '스태프 숙련', en: 'Staff Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [_, _, _, _, _],
-        ],
-        archer: [
-            [{ n: { ko: '활 숙련', en: 'Bow Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [{ n: { ko: '석궁 숙련', en: 'Crossbow Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [_, _, _, _, _],
-        ],
-        priest: [
-            [{ n: { ko: '완드 숙련', en: 'Wand Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [{ n: { ko: '스태프 숙련', en: 'Staff Mastery' }, r: 0, max: 5 }, _, _, _, _],
-            [_, _, _, _, _],
-        ],
-    },
-    // 전직 트리는 정체 자체가 미정 — 프레임만 잠긴 채로 보여준다
-    advance: {
-        note: {
-            ko: '전직 트리 — 정체 미작성',
-            en: 'Advancement tree — not yet designed',
-        },
-    },
-};
-
-export const SKILL_POINTS = { total: 24, spent: 21 };
-
+export const MASTERY_GRID = { tiers: 3, nodes: 3 };
 /* ═══════════ 도감 ═══════════ */
 /**
  * 몬스터 도감 — **몬스터 카드 모델** (2026-08-25 확정, monster_design §8). 처치 수 문턱(08-22)을 대체한다.

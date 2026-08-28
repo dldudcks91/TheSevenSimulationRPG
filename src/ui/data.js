@@ -30,6 +30,7 @@ export const D = {
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, twoHanded, period, damageKind, release}}
     weaponGroupList: [],
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
+    masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
 };
 
 /** 조립된 시스템 — hero / item / battle / skill / game */
@@ -37,7 +38,8 @@ export let SYS = null;
 
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
-    'codex_level', 'codex_series', 'weapon_group', 'skill', 'hero_attribute', 'combat_stat', 'chapter'];
+    'codex_level', 'codex_series', 'weapon_group', 'skill', 'hero_attribute', 'combat_stat', 'chapter',
+    'mastery_node'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -45,7 +47,7 @@ export async function loadData(base = './data/') {
         return r.text();
     })));
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
-        weaponGroup, skillRow, heroAttr, combatStat, chapter] = texts.map(parseCsv);
+        weaponGroup, skillRow, heroAttr, combatStat, chapter, masteryNode] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -83,6 +85,7 @@ export async function loadData(base = './data/') {
     }));
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
     D.skillRows = skillRow;
+    D.masteryNodes = masteryNode;
 
     SYS = buildSystems(D);
     return D;
@@ -96,7 +99,7 @@ export const monsterName = id => {
     return r ? { ko: r.monster_name_kr, en: r.monster_name_en } : { ko: '???', en: '???' };
 };
 /** 얼굴 이미지가 있는 몬스터만 경로를 돌려준다 (monster.csv:face) */
-export const monsterFace = id => (D.monsters?.[id]?.face ? `${M.FACE_DIR}face_${id}.png` : null);
+export const monsterFace = id => (D.monsters?.[id]?.face ? `${M.FACE_DIR}monster_${id}.png` : null);
 /** 몬스터 id 앞자리 = 챕터 (1101 → 1챕터) */
 export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wrath';
 /** 챕터 행 — {id, sin, name:{ko,en}} */
@@ -128,7 +131,7 @@ export function buildSystems(d) {
     const sins = Object.keys(M.SINS);
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: M.CLASSES, weaponGroups: d.weaponGroups,
-        namePool: M.HERO_NAME_POOL, traitPool: M.HERO_TRAIT_POOL,
+        namePool: M.HERO_NAME_POOL, traitPool: M.HERO_TRAIT_POOL, masteryNodes: d.masteryNodes ?? [],
     });
     const item = createItemSystem({
         balance: d.balance, slots: M.SLOTS.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: M.ELEMENT_IDS,

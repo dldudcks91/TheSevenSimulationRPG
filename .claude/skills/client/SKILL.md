@@ -31,7 +31,7 @@ user-invocable: true
 4. **수치는 CSV** — 코드에 숫자 리터럴 금지 (CLAUDE.md 규칙 2). CSV 에 못 넣는 결정론 상수는 [INTERFACE.md §5-3](docs/client/INTERFACE.md) 표에 **등재해야** 존재를 인정받는다 (부채 #10).
 5. **기획서에 없는 기능을 만들지 않는다** — 기획이 비면 구현 불가다. 목록은 [DEV_PLAN.md §3-2](docs/client/DEV_PLAN.md) → `/game-design`.
 6. **검증은 브라우저뿐** — 빌드 없음 · node 없음. `dev/test.html` 의 `PASS n/n` 이 통과 기준 ([src/dev/README.md](src/dev/README.md)). 실패 사유는 `fail()` 로 **던진다** — 문자열 반환은 통과로 집계된다.
-7. **계승 폴더는 읽기 전용** — `src/data/inherited/` · `src/assets/inherited/` 는 고치지 않고 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다 (CLAUDE.md 규칙 3).
+7. **계승 폴더는 읽기 전용** — `src/data/inherited/` · `src/assets/art/backgrounds/` 는 고치지 않고 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다 (CLAUDE.md 규칙 3). `src/assets/art/faces/` 는 신규 아트가 직접 들어가는 활성 폴더라 예외.
 8. **폴더 README 는 "뭐가 있나"만** — 현황 · 이력은 DEV_PLAN 으로 ([DEV_PLAN.md §7](docs/client/DEV_PLAN.md) 마지막 줄).
 
 ### 작업 규칙 (프로젝트 공통 — 사용자 지시 2026-08-26)

@@ -28,7 +28,7 @@ SKILL.md 3단계(구현)에서 편다. 코드에서 **실제로 쓰이는 것만
 
 - `src/ui/data.js`(조립) · `src/ui/storage.js`(저장 어댑터)는 이 스킬의 범위가 아니다 → `/client`
 - `mock.js` 는 이중 성격이다 — 표시 사전과 **game_logic 에 주입되는 게임 데이터**가 섞여 있다 ([ARCHITECTURE.md §9](docs/client/ARCHITECTURE.md) · [INTERFACE.md §7](docs/client/INTERFACE.md)). 주입 쪽을 건드리면 `/client` 와 같이 간다
-- `src/data/inherited/` · `src/assets/inherited/` 는 읽기 전용 ([CLAUDE.md](CLAUDE.md) 규칙 3)
+- `src/data/inherited/` · `src/assets/art/backgrounds/` 는 읽기 전용, `src/assets/art/faces/` 는 아니다 ([CLAUDE.md](CLAUDE.md) 규칙 3)
 
 ## 2. 렌더 흐름
 
