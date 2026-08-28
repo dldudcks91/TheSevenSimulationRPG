@@ -9,7 +9,11 @@
  * 로그는 모든 타격을 적는다(누가 → 누구 · 피해 · 쓴 스킬). 누적 데미지는 이벤트의 dmg 를 더한 표시값이다 — 정산이 아니다.
  * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab} 를 돌려주고, 다음 mount 가 opts.resume 으로 받아
  *   그 시각까지 팝업 없이 되감는다 (catchUp).
- * 유닛 카드는 가로형 — 왼쪽 초상(영웅 띠와 같은 얼굴 그림), 오른쪽에 이름 / HP(수치는 바 가운데) / 행동 게이지 / 스킬 쿨 3줄 (SCREEN_DESIGN §4-2).
+ * 유닛 카드는 위칸 + 가로형 본문 — 위칸은 영웅 띠와 같은 배치(왼쪽 태그 / **오른쪽 이름**), 본문은 왼쪽 초상(영웅 띠와 같은 얼굴 그림)과
+ *   오른쪽 HP(수치는 바 가운데) / 행동 게이지 / 스킬 쿨 3줄. **카드 크기는 몬스터·영웅·보스가 전부 같은 고정값**이다 (2026-08-27, SCREEN_DESIGN §4-2).
+ * 스킬 쿨은 **가로 3칸 아이콘**이다 — 이름도 % 도 찍지 않고 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판이 걷히며 보여주고,
+ *   **발동한 칸은 튀면서 스킬 이름이 초상 위로 떠오른다** (2026-08-27 — 「방금 뭘 썼나」는 게이지가 아니라 팝업이 답한다).
+ * 올려놓으면 툴팁 — 카드는 영웅 기본 능력치, 스킬 칸은 그 스킬의 이름 · 표기/실효 쿨 · 설명 (2026-08-28, ui/tip.js).
  * 스킬 쿨 게이지는 **목업** — 스킬 미작성이라 타임라인에 스킬 이벤트가 없다. 영웅의 실제 행동 이벤트마다 슬롯 순으로 준비된 것 하나를
  *   "쓴" 것처럼 리셋만 한다 (mockUseSkill · DEV_PLAN 부채 #13). 결과에는 아무 영향이 없다.
  * 행동 게이지 = 마지막 행동 이후 경과 ÷ 행동 주기. 스킬 쿨 게이지 자리는 남겨 두되 아직 비어 있다(스킬 미작성).
@@ -20,6 +24,7 @@
 import * as M from './mock.js';
 import { D } from './data.js';
 import { t, L } from './i18n.js';
+import { bindTipNode, heroTipCard, skillTipCard } from './tip.js';
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -50,7 +55,7 @@ export function mountBattle(container, opts) {
     state.party = result.party.map(p => {
         const h = heroes.find(x => x.uid === p.uid);
         return {
-            key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls,
+            key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             glyph: M.classGlyph(h?.cls),   // 글리프 표는 mock.js 한 곳 — 영웅 띠·후보 카드와 같은 얼굴
             skills: M.mockActives(h?.cls).map(s => ({ ...s, readyAt: 0 })),   // 쿨 게이지 목업 (부채 #13)
@@ -195,31 +200,38 @@ function renderUnits(state, root) {
                 : dc
                     ? `<div class="sprite disc" style="color:${dc};background:${dc}22;border-color:${dc}66">${L(M.monsterName(u.monsterId)).charAt(0)}</div>`
                     : `<div class="sprite">${u.glyph}</div>`;
-            // 가로형 카드 — 왼쪽 초상, 오른쪽 이름(적: 태그) / HP / 행동 게이지 / 스킬 쿨 3줄 (SCREEN_DESIGN §4-2)
+            // 위칸(이름·태그) + 가로형 본문(왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 3줄) — SCREEN_DESIGN §4-2
+            // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
             const skills = u.skills ? `<div class="cd-list">${u.skills.map(s => `
-                <div class="cd-row" title="${t('bt.cdTitle', { s: s.cd })}"><i></i><span class="cd-n">${L(s.n)}</span><span class="cd-pct">0%</span></div>`).join('')}</div>` : '';
+                <div class="cd-slot"><span class="cd-g">${s.i ?? ''}</span><i class="cd-mask"></i></div>`).join('')}</div>` : '';
             n.innerHTML = `
-                ${sprite}
-                <div class="unit-info">
-                    <div class="unit-head">
-                        <b class="unit-name">${name}</b>
-                        ${u.side === 'enemy' ? `<span class="tags">
-                            ${u.sin ? `<span class="sin-chip" style="color:${M.SINS[u.sin]?.color}">${L(M.SINS[u.sin])}</span>` : ''}
-                            ${u.grade === 'elite' ? `<span class="elite-tag">${t('kind.elite')}</span>` : ''}
-                            ${boss ? `<span class="elite-tag boss-tag">${t(u.grade === 'chapter_boss' ? 'kind.chapterBoss' : 'kind.boss')}</span>` : ''}
-                        </span>` : ''}
+                <div class="unit-band">
+                    ${u.side === 'enemy' ? `<span class="tags">
+                        ${u.sin ? `<span class="sin-chip" style="color:${M.SINS[u.sin]?.color}">${L(M.SINS[u.sin])}</span>` : ''}
+                        ${u.grade === 'elite' ? `<span class="elite-tag">${t('kind.elite')}</span>` : ''}
+                        ${boss ? `<span class="elite-tag boss-tag">${t(u.grade === 'chapter_boss' ? 'kind.chapterBoss' : 'kind.boss')}</span>` : ''}
+                    </span>` : '<span></span>'}
+                    <b class="unit-name">${name}</b>
+                </div>
+                <div class="unit-body">
+                    ${sprite}
+                    <div class="unit-info">
+                        ${u.traits ? `<div class="trait-line" title="${t('bt.traitsTitle')}">${u.traits.map(x => L(x)).join(' · ')}</div>` : ''}
+                        <div class="hp-row">
+                            <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
+                            <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
+                        </div>
+                        <div class="act-row" title="${t('bt.actTitle', { s: u.period.toFixed(2) })}">
+                            <i class="act-fill"></i>
+                        </div>
+                        ${skills}
                     </div>
-                    ${u.traits ? `<div class="trait-line" title="${t('bt.traitsTitle')}">${u.traits.map(x => L(x)).join(' · ')}</div>` : ''}
-                    <div class="hp-row">
-                        <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
-                        <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
-                    </div>
-                    <div class="act-row" title="${t('bt.actTitle', { s: u.period.toFixed(2) })}">
-                        <i class="act-fill"></i>
-                    </div>
-                    ${skills}
                 </div>
                 <div class="pop-layer"></div>`;
+            // 올려놓으면 뜬다 — 카드는 기본 능력치(영웅만), 스킬 칸은 그 스킬 (2026-08-28, ui/tip.js).
+            // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
+            if (u.hero) bindTipNode(n, () => heroTipCard(u.hero));
+            if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => bindTipNode(slot, () => skillTipCard(u.skills[i], u.period)));
             u.node = n;
             side.appendChild(n);
         }
@@ -236,20 +248,35 @@ function refreshUnit(state, u) {
     const act = u.node.querySelector('.act-fill');
     if (act) act.style.width = (u.hp <= 0 ? 0 : clamp01((state.t - u.lastAct) / u.period) * 100) + '%';
     // 스킬 쿨 게이지 (목업 — 부채 #13). 다 찬 줄 = 다음 행동에 나갈 후보
-    if (u.skills) u.node.querySelectorAll('.cd-row').forEach((row, i) => {
+    if (u.skills) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
         const s = u.skills[i];
         const pct = u.hp <= 0 ? 0 : clamp01(1 - (s.readyAt - state.t) / s.cd);
-        row.querySelector('i').style.width = pct * 100 + '%';
-        row.querySelector('.cd-pct').textContent = Math.round(pct * 100) + '%';
-        row.classList.toggle('ready', pct >= 1);
+        slot.querySelector('.cd-mask').style.height = (1 - pct) * 100 + '%';   // 남은 쿨만큼 위에서 덮는다
+        slot.classList.toggle('ready', pct >= 1);
     });
 }
 
-/** 쿨 게이지 목업 — 영웅이 행동할 때 슬롯 순으로 준비된 스킬 하나를 "쓴" 것처럼 리셋하고 그 스킬을 돌려준다. 결과에 영향 없음 (DEV_PLAN 부채 #13) */
-function mockUseSkill(u, t) {
-    const s = u.skills?.find(x => t >= x.readyAt - 1e-9);
-    if (s) s.readyAt = t + s.cd;
-    return s ?? null;
+/**
+ * 쿨 게이지 목업 — 영웅이 행동할 때 슬롯 순으로 준비된 스킬 하나를 "쓴" 것처럼 리셋하고 그 스킬을 돌려준다. 결과에 영향 없음 (DEV_PLAN 부채 #13).
+ * **발동을 보여준다** (2026-08-27) — 쓴 칸이 한 번 튀고 스킬 이름이 초상 위로 떠오른다.
+ * 「무엇이 준비됐나」는 상태라 게이지가 답하지만 「방금 뭘 썼나」는 사건이라 게이지로는 안 보인다 — 피해 숫자와 같은 팝업 층이 답한다.
+ */
+function mockUseSkill(state, u, tSec) {
+    const i = u.skills?.findIndex(x => tSec >= x.readyAt - 1e-9) ?? -1;
+    if (i < 0) return null;
+    const s = u.skills[i];
+    s.readyAt = tSec + s.cd;
+    if (!state.catchUp && u.node) {   // 되감기 중에는 연출을 태우지 않는다
+        const slot = u.node.querySelectorAll('.cd-slot')[i];
+        if (slot) {
+            slot.classList.remove('fire');
+            void slot.offsetWidth;    // 연속 발동에도 애니메이션이 다시 돈다
+            slot.classList.add('fire');
+            state.timeouts.push(setTimeout(() => slot.classList.remove('fire'), 520));
+        }
+    }
+    popup(state, u, L(s.n), 'skill-tag');
+    return s;
 }
 /** 타격 라벨 — 쓴 스킬 이름(목업) 또는 기본 공격. 로그와 누적 데미지가 같은 라벨을 쓴다 */
 const strikeLabel = s => s ? L(s.n) : t('bt.basicAttack');
@@ -347,7 +374,7 @@ function apply(state, root, opts, ev) {
         }
         case 'hit': {
             const a = U(ev.a), d = U(ev.d);
-            const skill = a ? strikeLabel(mockUseSkill(a, ev.t)) : '';
+            const skill = a ? strikeLabel(mockUseSkill(state, a, ev.t)) : '';
             if (a) { a.lastAct = ev.t; if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
@@ -375,7 +402,7 @@ function apply(state, root, opts, ev) {
         }
         case 'dodge': {
             const a = U(ev.a), d = U(ev.d);
-            const skill = a ? strikeLabel(mockUseSkill(a, ev.t)) : '';
+            const skill = a ? strikeLabel(mockUseSkill(state, a, ev.t)) : '';
             if (a) a.lastAct = ev.t;
             if (d) popup(state, d, t('pop.dodge'), 'miss');
             if (a && d) pushLog(state, root, t('log.dodge', { name: L(a.name), target: L(d.name), skill }));

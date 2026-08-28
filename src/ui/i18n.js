@@ -234,6 +234,7 @@ const STRINGS = {
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },
     'exp.cleared': { ko: '클리어', en: 'Cleared' },
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
+    'exp.pick': { ko: '원정', en: 'Expedition' },
     'exp.viewComp': { ko: '구성 보기', en: 'Composition' },
     'exp.eliteR': { ko: 'R{n} 정예', en: 'R{n} Elite' },
     'exp.solo': { ko: ' 단독', en: ' solo' },
@@ -272,7 +273,6 @@ const STRINGS = {
     },
 
     /* ── 영웅 띠 (캐릭터·스킬·선술집 공통 상단, 2026-08-26) — 초상화 + 이름 + 지금 하는 일 ── */
-    'hs.doing.party': { ko: '전투 파티', en: 'In party' },
     'hs.doing.idle': { ko: '대기 중', en: 'Idle' },
     'hs.doing.injured': { ko: '치료 중 · {t}', en: 'Recovering · {t}' },
 
@@ -343,6 +343,11 @@ const STRINGS = {
     'tip.this': { ko: '이 아이템', en: 'This Item' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
+    // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
+    'tip.hero.h': { ko: '영웅', en: 'Hero' },
+    'tip.hero.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
+    'tip.skill.h': { ko: '스킬', en: 'Skill' },
+    'tip.skill.mock': { ko: '스킬 미작성 — 이름·쿨·설명은 자리표시다', en: 'Skills unwritten — name, cooldown and text are placeholders' },
 
     /* ── 스킬 ── */
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
@@ -455,7 +460,6 @@ const STRINGS = {
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '행동 주기 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Action cycle {s}s — acts when the gauge fills' },
     'bt.traitsTitle': { ko: '죄종 고유 1 + 공통 2 — 런타임 랜덤', en: '1 sin trait + 2 common — rolled at runtime' },
-    'bt.cdTitle': { ko: '표기 쿨 {s}초 — 다 차면 다음 행동에 나간다 (목업)', en: 'Cooldown {s}s — fires on the next action when full (mockup)' },
     'bt.tab.dmg': { ko: '누적 데미지', en: 'Damage' },
     'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack' },
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },

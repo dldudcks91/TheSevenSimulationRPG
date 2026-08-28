@@ -28,6 +28,7 @@
    │ now() 는 여기서만 읽는다    │   └───────────────────────────────┘   └────────────────────┘
    └──────────────────────────┘
             ui/i18n.js (STRINGS ko/en · t())      index.html (셸 DOM 5개 + 툴팁 레이어)
+            ui/tip.js  (툴팁 기계장치 · 영웅/스킬 카드 — 두 렌더러 공용)
 ```
 
 ---
@@ -146,9 +147,9 @@ render()
 | `ui/data.js` | 엔진 리소스 로더 + 조립 |
 | `ui/storage.js` | `user://` / `PlayerPrefs` / 파일 어댑터 |
 | `ui/mock.js` 게임 데이터 | **CSV 로 선이관** (이식 전) |
-| `ui/app.js` · `ui/battle.js` · `style.css` · `i18n.js` | 재작성 — [SCREEN_DESIGN.md](SCREEN_DESIGN.md) 가 스펙, `i18n.js:STRINGS` 는 문구 사전으로 계승 |
+| `ui/app.js` · `ui/battle.js` · `ui/tip.js` · `style.css` · `i18n.js` | 재작성 — [SCREEN_DESIGN.md](SCREEN_DESIGN.md) 가 스펙, `i18n.js:STRINGS` 는 문구 사전으로 계승 |
 | `dev/test.js` | 엔진 테스트 — **골든 시드 타임라인 대조**가 핵 ([DEV_PLAN §6](DEV_PLAN.md#6-phase-2--엔진-이식-계획)) |
 
 ---
 
-*마지막 업데이트: 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*
+*마지막 업데이트: 2026-08-28 (`ui/tip.js` 등재 — 툴팁 기계장치를 app.js 에서 분리, 관전 재생기와 공용) · 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*

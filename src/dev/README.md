@@ -18,6 +18,7 @@
 | `?dev=battle` | 즉시 정산 → 리포트 |
 | `?dev=play` | 관전 — `&bt=dmg` 면 우측 탭이 누적 데미지 |
 | `?dev=offline` | 반복 켠 채 껐다 켠 상황 — 런 마무리 배너 |
+| `?dev=form` | 편성 패널이 열린 화면 (지역을 고른 상태) |
 | `?screen=start` | 시작 화면 |
 | `?tab=character` | 캐릭터 탭 |
 
@@ -66,4 +67,4 @@ $h = Get-Content "$env:TEMP\dom.html" -Raw -Encoding UTF8; if ($h -match '<title
 `weapon_atk_base`·`power_growth_per_level`은 28스테이지 전체의 역산값이라 건드리지 않았다 — 이번 손잡이는 전투 시작 시점의 생존 축(HP 대 몬스터 공격력·HP)에 한정된다.
 
 ---
-*마지막 업데이트: 2026-08-27 (전멸 캘리브레이션 해소 — monster_hp_scale·monster_atk_scale·hero_hp_base 조정) · 2026-08-26 (손잡이 표 개정 — 성장 SSOT · K 상수 · 적중 3키 · 헤드리스 DOM 덤프 절차 · 캘리브레이션 재측정) · 2026-08-26 (CLAUDE.md 에서 분리)*
+*마지막 업데이트: 2026-08-28 (단정 추가 — 파티 순서 = 넣은 순서 · party[0] 이 리더) · 2026-08-27 (개발용 URL `?dev=form` 추가 — 편성 패널) · 2026-08-27 (전멸 캘리브레이션 해소 — monster_hp_scale·monster_atk_scale·hero_hp_base 조정) · 2026-08-26 (손잡이 표 개정 — 성장 SSOT · K 상수 · 적중 3키 · 헤드리스 DOM 덤프 절차 · 캘리브레이션 재측정) · 2026-08-26 (CLAUDE.md 에서 분리)*

@@ -341,17 +341,39 @@ export const CLASS_GLYPH = { warrior: '⚔', knight: '⛨', mage: '✦', archer:
 export const classGlyph = cls => CLASS_GLYPH[cls] ?? '⚔';
 /**
  * 관전 스킬 쿨 게이지 **목업** (2026-08-27, DEV_PLAN 부채 #13) — 스킬이 미작성이라 타임라인에 스킬 이벤트가 없다.
- * 직업별 액티브 3 자리표시: 이름 ko/en · 표기 쿨(초). 재생기(battle.js mockUseSkill)가 영웅의 실제 행동 이벤트마다
+ * 직업별 액티브 3 자리표시: 이름 ko/en · 표기 쿨(초) · 아이콘 `i`(관전 쿨 칸이 이름 대신 찍는다) · 설명 `d` ko/en(툴팁 — SCREEN_DESIGN §4-2).
+ * 설명은 **수치를 적지 않는다** — 수치의 SSOT 는 CSV 이고 이 표는 지워질 자리표시다. 재생기(battle.js mockUseSkill)가 영웅의 실제 행동 이벤트마다
  * 슬롯 순으로 준비된 것 하나를 "쓴" 것처럼 리셋만 한다 — 결과에 아무 영향이 없다. 스킬 이벤트가 생기면 이 표는 지운다.
  */
 export const MOCK_ACTIVES = {
-    warrior:     [{ n: { ko: '강타', en: 'Heavy Strike' }, cd: 6 }, { n: { ko: '회전 베기', en: 'Whirlwind' }, cd: 12 }, { n: { ko: '전투 함성', en: 'Battle Cry' }, cd: 20 }],
-    knight:      [{ n: { ko: '방패 치기', en: 'Shield Bash' }, cd: 8 }, { n: { ko: '도발', en: 'Taunt' }, cd: 12 }, { n: { ko: '철벽', en: 'Iron Wall' }, cd: 24 }],
-    mage:        [{ n: { ko: '화염구', en: 'Fireball' }, cd: 5 }, { n: { ko: '냉기 파동', en: 'Frost Wave' }, cd: 10 }, { n: { ko: '번개 폭풍', en: 'Lightning Storm' }, cd: 18 }],
-    archer:      [{ n: { ko: '속사', en: 'Quick Shot' }, cd: 4 }, { n: { ko: '관통 화살', en: 'Piercing Arrow' }, cd: 9 }, { n: { ko: '화살비', en: 'Arrow Rain' }, cd: 16 }],
-    priest:      [{ n: { ko: '치유', en: 'Heal' }, cd: 8 }, { n: { ko: '축복', en: 'Bless' }, cd: 14 }, { n: { ko: '정화', en: 'Purify' }, cd: 20 }],
-    assassin:    [{ n: { ko: '급습', en: 'Ambush' }, cd: 5 }, { n: { ko: '독 바르기', en: 'Envenom' }, cd: 10 }, { n: { ko: '은신', en: 'Vanish' }, cd: 18 }],
-    necromancer: [{ n: { ko: '해골 소환', en: 'Raise Skeleton' }, cd: 10 }, { n: { ko: '생명력 흡수', en: 'Life Drain' }, cd: 8 }, { n: { ko: '저주', en: 'Curse' }, cd: 15 }],
+    warrior: [
+        { n: { ko: '강타', en: 'Heavy Strike' }, cd: 6, i: '⚔', d: { ko: '단일 대상을 세게 내리친다', en: 'A heavy blow on one target' } },
+        { n: { ko: '회전 베기', en: 'Whirlwind' }, cd: 12, i: '🌀', d: { ko: '몸을 돌려 적 전원을 벤다', en: 'Spin and cut every enemy' } },
+        { n: { ko: '전투 함성', en: 'Battle Cry' }, cd: 20, i: '📣', d: { ko: '한동안 아군의 기세를 올린다', en: 'Raises the party for a while' } }],
+    knight: [
+        { n: { ko: '방패 치기', en: 'Shield Bash' }, cd: 8, i: '🛡', d: { ko: '방패로 밀쳐 대상의 다음 행동을 늦춘다', en: 'Shove with the shield, delaying the target' } },
+        { n: { ko: '도발', en: 'Taunt' }, cd: 12, i: '💢', d: { ko: '적의 시선을 자신에게 끌어온다', en: 'Pulls enemy attention onto yourself' } },
+        { n: { ko: '철벽', en: 'Iron Wall' }, cd: 24, i: '⛨', d: { ko: '한동안 받는 피해를 크게 줄인다', en: 'Cuts incoming damage for a while' } }],
+    mage: [
+        { n: { ko: '화염구', en: 'Fireball' }, cd: 5, i: '🔥', d: { ko: '불덩이를 던진다 — 불 피해', en: 'Hurls a ball of flame — fire damage' } },
+        { n: { ko: '냉기 파동', en: 'Frost Wave' }, cd: 10, i: '❄', d: { ko: '적 전원을 얼려 느리게 만든다 — 냉기 피해', en: 'Freezes and slows every enemy — cold damage' } },
+        { n: { ko: '번개 폭풍', en: 'Lightning Storm' }, cd: 18, i: '⚡', d: { ko: '벼락을 연달아 떨어뜨린다 — 전기 피해', en: 'Calls down repeated bolts — lightning damage' } }],
+    archer: [
+        { n: { ko: '속사', en: 'Quick Shot' }, cd: 4, i: '💨', d: { ko: '짧은 쿨로 화살을 빠르게 쏜다', en: 'A fast shot on a short cooldown' } },
+        { n: { ko: '관통 화살', en: 'Piercing Arrow' }, cd: 9, i: '🎯', d: { ko: '적의 방어를 뚫고 꽂힌다', en: 'Punches through the target’s armour' } },
+        { n: { ko: '화살비', en: 'Arrow Rain' }, cd: 16, i: '🏹', d: { ko: '화살을 쏟아부어 적 전원을 때린다', en: 'Rains arrows on every enemy' } }],
+    priest: [
+        { n: { ko: '치유', en: 'Heal' }, cd: 8, i: '✚', d: { ko: '가장 다친 아군의 HP 를 회복한다', en: 'Restores HP to the most wounded ally' } },
+        { n: { ko: '축복', en: 'Bless' }, cd: 14, i: '✨', d: { ko: '한동안 아군의 공격을 강화한다', en: 'Strengthens allied attacks for a while' } },
+        { n: { ko: '정화', en: 'Purify' }, cd: 20, i: '💧', d: { ko: '아군에게 걸린 나쁜 효과를 걷어낸다', en: 'Strips harmful effects from allies' } }],
+    assassin: [
+        { n: { ko: '급습', en: 'Ambush' }, cd: 5, i: '🗡', d: { ko: '허를 찔러 치명타로 꽂는다', en: 'Strikes from surprise for a critical hit' } },
+        { n: { ko: '독 바르기', en: 'Envenom' }, cd: 10, i: '☠', d: { ko: '무기에 독을 발라 지속 피해를 남긴다', en: 'Coats the weapon, leaving damage over time' } },
+        { n: { ko: '은신', en: 'Vanish' }, cd: 18, i: '🌑', d: { ko: '모습을 감춰 적의 표적에서 벗어난다', en: 'Slips out of sight and off enemy targets' } }],
+    necromancer: [
+        { n: { ko: '해골 소환', en: 'Raise Skeleton' }, cd: 10, i: '💀', d: { ko: '해골을 불러 대신 싸우게 한다', en: 'Raises a skeleton to fight for you' } },
+        { n: { ko: '생명력 흡수', en: 'Life Drain' }, cd: 8, i: '🩸', d: { ko: '적의 생명을 빨아 자신을 회복한다', en: 'Drains the enemy to heal yourself' } },
+        { n: { ko: '저주', en: 'Curse' }, cd: 15, i: '🕸', d: { ko: '대상을 약하게 만들어 더 아프게 한다', en: 'Weakens the target so it takes more' } }],
 };
 export const mockActives = cls => MOCK_ACTIVES[cls] ?? MOCK_ACTIVES.warrior;
 

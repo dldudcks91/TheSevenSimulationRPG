@@ -748,6 +748,21 @@ check('toggleParty: 부상자는 못 넣고, 상한을 넘지 못한다', () => 
     return SYS.game.toggleParty(G2, 'hx', NOW).err === 'full';
 });
 
+// 리더 = party[0] = **제일 먼저 넣은 영웅**. 화면이 그 자리에 리더 표시를 붙이므로(SCREEN_DESIGN §4-1)
+// 넣고 빼는 순서가 곧 리더 결정이다 — 로스터 순서로 다시 줄 세우면 안 된다 (2026-08-28)
+check('toggleParty: 파티 순서 = 넣은 순서 · party[0] 이 리더', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    const [a, b, c] = G2.heroes.map(h => h.uid);
+    for (const u of [...G2.party]) SYS.game.toggleParty(G2, u, NOW);       // 비운다
+    if (G2.party.length !== 0) fail('clear');
+    for (const u of [c, a, b]) SYS.game.toggleParty(G2, u, NOW);           // 로스터 순서와 일부러 다르게 넣는다
+    if (!eq(G2.party, [c, a, b])) fail(`order ${G2.party.join(',')}`);
+    SYS.game.toggleParty(G2, c, NOW);                                      // 리더를 빼면 다음 사람이 리더가 된다
+    if (G2.party[0] !== a) fail(`leader after remove ${G2.party[0]}`);
+    SYS.game.toggleParty(G2, c, NOW);                                      // 다시 넣으면 맨 뒤
+    return eq(G2.party, [a, b, c]) || fail(`re-add ${G2.party.join(',')}`);
+});
+
 /* ── 도감 — 카드 모델 ── */
 check('codex: 레벨 = 누적 문턱(codex_level.csv), 카드는 소모되지 않고 최종 레벨에서 멈춘다', () => {
     const cum = D.codexLevels.reduce((a, r) => (a.push((a[a.length - 1] ?? 0) + r), a), []);

@@ -19,12 +19,17 @@
  *   캐릭터 탭 4칸은 같은 폭·높이 — 장비 / 기본 옵션(+현재 스킬 정사각 카드) / 세부 옵션 1 / 세부 옵션 2.
  *   옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (감쇠율은 물리 방어 행에 병기, SCREEN_DESIGN §6).
  *
- * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=dmg 면 누적 데미지 탭) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너)
+ * 2026-08-27 — **원정 편성은 「어디를 갈지 먼저」** (사용자 지시, SCREEN_DESIGN §4-1). 영웅 띠를 상시 노출에서 내리고,
+ *   지역을 누르면 목록 위에 열리는 **편성 패널**(formPanel) 안에 넣었다. 출발 버튼도 스테이지 행에서 그 패널로 옮겼다 —
+ *   행 클릭은 이제 「지역 선택」이다. 패널은 **누를 때만** 뜬다 — 자동으로 열지 않는다 (state.expStage = null 이면 없다).
+ *
+ * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=dmg 면 누적 데미지 탭) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (편성 패널이 열린 상태)
  */
 
 import * as M from './mock.js';
 import { t, L, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
+import { bindTipNode, hideTip, heroTipCard } from './tip.js';
 import { D, SYS, loadData } from './data.js';
 import { loadSave, writeSave, clearSave } from './storage.js';
 import { makeRng } from '../game_logic/rng.js';
@@ -133,6 +138,10 @@ const state = {
     salvageMode: false,
     flash: null,            // {key, params} — 다음 render 한 번만 보인다
     battle: null,           // {result, stageId} — 관전 재생 중인 전투
+    // 편성 패널이 연 스테이지 (SCREEN_DESIGN §4-1) — null 이면 패널이 없다. 지역을 눌러야 열린다(자동으로 열지 않는다)
+    expStage: null,
+    // 반복 의사 — G.run.repeat 은 「진행 중인 런」의 값이라 출발 **전에는** 쓸 곳이 없다. 화면이 들고 있다가 출발할 때 런에 옮긴다
+    expRepeat: false,
 };
 let stopBattle = null;
 
@@ -218,7 +227,7 @@ function startGame() {
     clearSave();
     G = SYS.game.newGame(now() >>> 0, state.candidates, now());
     save();
-    state.screen = 'game'; state.tab = 'expedition'; state.exp = 'idle'; state.confirmOverwrite = false;
+    state.screen = 'game'; state.tab = 'expedition'; state.exp = 'idle'; state.confirmOverwrite = false; state.expStage = null;
     render();
 }
 
@@ -229,7 +238,7 @@ function continueGame() {
     catch (e) { console.warn(e); G = null; return false; }
     SYS.game.tickInjuries(G, now());
     if (SYS.game.closeRun(G, now())) save();      // 반복 원정은 게임이 켜져 있는 동안만 — 꺼진 사이의 런은 마무리 (08-25)
-    state.screen = 'game'; state.tab = 'expedition'; state.exp = 'idle';
+    state.screen = 'game'; state.tab = 'expedition'; state.exp = 'idle'; state.expStage = null;
     return true;
 }
 
@@ -320,6 +329,8 @@ function runBattle(stageId, { instant = false, tab = null } = {}) {
         flash({ locked: 'exp.locked', noParty: 'exp.noParty', injured: 'exp.cantDepart' }[r.err] ?? 'exp.cantDepart');
         state.exp = 'idle'; render(); return;
     }
+    // 반복 의사를 이번 런에 옮긴다 — resolveBattle 은 같은 스테이지 재출발일 때만 옛 값을 잇는다
+    if (G.run && stageId === state.expStage) G.run.repeat = state.expRepeat === true;
     save();
     if (instant) { state.battle = null; state.exp = 'report'; render(); return; }
     // tab — 개발용 ?dev=play&bt=dmg: 우측 탭을 누적 데미지로 열어 헤드리스가 클릭 없이 닿게 한다
@@ -384,15 +395,6 @@ function renderExpIdle(main) {
     const nb = noticeBanner();
     if (nb) main.appendChild(nb);
 
-    /* 파티 = 영웅 띠 (2026-08-27 — 옛 파티·벤치 두 패널을 걷어내고 띠 하나가 그 결정을 든다).
-       클릭 = 파티에 넣고 뺀다(부상자는 거절 → 플래시) · 「지금 하는 일」이 전투 파티 / 대기 · 첫 슬롯은 리더 표시.
-       전투 관전·리포트에는 띠를 두지 않는다 — 전투 화면만 본다 (SCREEN_DESIGN §4-1) */
-    const strip = heroStrip(toggleParty, { leaderUid: G.party[0] ?? null });
-    if (G.party.length === 0) strip.appendChild(el('div', 'down exp-warn', t('exp.noParty')));
-    else if (G.party.map(heroById).some(injured)) strip.appendChild(el('div', 'down exp-warn', t('exp.cantDepart')));
-    if (G.run) strip.appendChild(repeatRow());
-    main.appendChild(strip);
-
     /* 스테이지 — 해금된 챕터까지 보여주고, 다음 챕터 첫 스테이지는 잠긴 채로 예고 */
     const zp = el('div', 'panel');
     zp.appendChild(el('h2', '', t('exp.zones.h')));
@@ -405,7 +407,7 @@ function renderExpIdle(main) {
         const chapterBoss = z.boss_grade === 'chapter_boss';
         const sin = M.chapterOf(z.chapter)?.sin ?? 'wrath';
         const bg = M.stageBgOf(z.stage_id);
-        const row = el('div', `zone${unlocked ? '' : ' locked'}${chapterBoss ? ' boss' : ''}`);
+        const row = el('div', `zone${unlocked ? '' : ' locked'}${chapterBoss ? ' boss' : ''}${z.stage_id === state.expStage ? ' on' : ''}`);
         row.style.borderLeftColor = unlocked ? sinColor(sin) : '';
         if (bg) {
             row.style.backgroundImage = `linear-gradient(90deg, var(--bg-tertiary) 34%, rgba(26,26,42,.55) 68%, rgba(26,26,42,.30)), url('${bg}')`;
@@ -424,7 +426,7 @@ function renderExpIdle(main) {
                 <div class="meta">${t('exp.stageMeta', { lv: z.dlvl, m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</div>
             </div>
             <div>${unlocked
-                ? `<button class="btn ${chapterBoss ? 'primary' : ''} b-go">${t('exp.deploy')}</button>`
+                ? `<span class="zone-pick">${t('exp.pick')}</span>`
                 : `<span class="muted" style="font-size:var(--fs-sm)">${t('exp.locked')}</span>`}</div>
             <details class="zone-more">
                 <summary>${t('exp.viewComp')}</summary>
@@ -440,11 +442,63 @@ function renderExpIdle(main) {
                     </div>
                 </div>
             </details>`;
-        const go = row.querySelector('.b-go');
-        if (go) go.onclick = () => runBattle(z.stage_id);
+        // 행 클릭 = 고른다 → 위에 편성 패널이 열린다. 접이식 「구성 보기」는 선택과 별개다
+        row.querySelector('.zone-more').onclick = ev => ev.stopPropagation();
+        row.onclick = () => {
+            if (!unlocked) { flash('exp.locked'); return; }
+            // 접이식이라 여는 자리와 닫는 자리가 같다 — 같은 지역을 다시 누르면 접힌다 (2026-08-28, 닫기 버튼을 대신한다)
+            if (state.expStage === z.stage_id) { state.expStage = null; render(); return; }
+            state.expStage = z.stage_id;
+            // 반복 의사는 그 스테이지의 런에서 읽어 온다 — 런이 없거나 다른 스테이지면 꺼진 채로 시작
+            state.expRepeat = G.run?.stageId === z.stage_id && G.run.repeat === true;
+            render();
+        };
         zp.appendChild(row);
+        // 고른 행 **바로 아래**로 펼쳐진다 (2026-08-28) — 목록 위에 따로 뜨면 어느 지역의 편성인지 눈이 잇지 못한다
+        if (z.stage_id === state.expStage) zp.appendChild(formPanel(z, sin));
     }
     main.appendChild(zp);
+}
+
+/**
+ * 편성 패널 — 지역을 골랐을 때 **그 행 바로 아래**로 펼쳐진다 (2026-08-28, SCREEN_DESIGN §4-1).
+ * 갈 곳이 정해진 뒤에 누구를 보낼지 정한다: 영웅 띠(클릭 = 파티 토글) + 경고 줄 + 액션 버튼 둘(반복 원정 · 보내기).
+ * 머리도 닫기 버튼도 없다 — 무엇에 딸린 패널인지는 위 행이 말하고, 닫는 것은 그 행을 다시 누르는 것이다.
+ * **크기는 상태에 흔들리지 않는다** — 위 셋이 전부 항상 있는 부품이다.
+ */
+function formPanel(z, sin) {
+    const p = el('div', 'form-panel');
+    p.style.borderLeftColor = sinColor(sin);
+
+    // 머리(제목 · 닫기 버튼)는 두지 않는다 (2026-08-28) — 무엇에 딸린 패널인지는 바로 위 행이 말하고,
+    // 닫는 것은 그 행을 다시 누르는 것이다. 머리가 없으니 패널 높이를 흔들 것도 하나 줄었다
+    /* 파티 = 영웅 띠 (2026-08-27 — 옛 파티·벤치 두 패널을 걷어내고 띠 하나가 그 결정을 든다).
+       클릭 = 파티에 넣고 뺀다(치료 중은 거절 → 플래시) · 파티는 **카드 겉 테두리**로 보이고 위칸 글씨는 대기/치료 중만 (2026-08-28).
+       전투 관전·리포트에는 띠를 두지 않는다 — 전투 화면만 본다 */
+    // 리더 = G.party[0] = **제일 먼저 넣은 영웅** (toggleParty 가 클릭 순서로 push 한다)
+    const strip = heroStrip(toggleParty, { leaderUid: G.party[0] ?? null, flat: true, partyMode: true });
+    // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 패널이 상태에 따라 커졌다 작아진다 (2026-08-28)
+    const warn = G.party.length === 0 ? t('exp.noParty')
+        : G.party.map(heroById).some(injured) ? t('exp.cantDepart') : '';
+    strip.appendChild(el('div', 'down exp-warn', warn));
+    p.appendChild(strip);
+
+    /* 액션 — 같은 크기 버튼 둘. 반복 원정이 옛 별도 줄(repeatRow)에서 여기로 내려왔다 (2026-08-28 사용자 지시):
+       그 줄이 런의 스테이지일 때만 붙어서 패널 크기가 흔들렸다. 버튼은 항상 있으므로 크기가 고정된다 */
+    const actions = el('div', 'form-actions');
+    const rep = el('button', `btn lg toggle${state.expRepeat ? ' on' : ''}`, t('exp.repeat'));
+    rep.onclick = () => {
+        state.expRepeat = !state.expRepeat;
+        // 이 스테이지가 지금 도는 런이면 곧바로 런에도 옮긴다 — 관전의 자동 진행이 이 값을 읽는다
+        if (G.run?.stageId === z.stage_id) { G.run.repeat = state.expRepeat; save(); }
+        render();
+    };
+    const go = el('button', 'btn lg primary', t('exp.deploy'));
+    go.onclick = () => runBattle(z.stage_id);
+    actions.appendChild(rep);
+    actions.appendChild(go);
+    p.appendChild(actions);
+    return p;
 }
 
 /** 반복 원정 토글 — 마지막으로 간 스테이지에 붙는다 */
@@ -457,7 +511,9 @@ function repeatRow() {
         <span class="sub">${stage ? `Ch${stage.chapter}-${stage.stage_num} ${L(M.stageName(stage))}` : ''}</span>`;
     row.querySelector('button').onclick = ev => {
         ev.stopPropagation();
-        G.run.repeat = !on; save(); render();
+        G.run.repeat = !on;
+        if (G.run.stageId === state.expStage) state.expRepeat = G.run.repeat;   // 편성 패널의 버튼과 어긋나지 않게
+        save(); render();
     };
     return row;
 }
@@ -569,26 +625,35 @@ function renderExpReport(main) {
    초상화가 주인공 — 그 아래 이름과 "지금 뭘 하는가"만 적는다. 직업·레벨·죄종은 마우스를 올리면 나온다.
    세 탭이 같은 띠를 쓰므로 어느 탭에서든 로스터가 같은 자리, 같은 순서로 보인다. */
 
-/** 영웅이 지금 하는 일 — 치료 중 > 전투 파티 > 대기. 파견은 미구현이라 아직 대기로 뭉뚱그린다 */
+/**
+ * 영웅이 지금 하는 일 — 치료 중 > 대기. 파견은 미구현이라 아직 대기로 뭉뚱그린다.
+ * **전투 파티는 여기 안 적는다** (2026-08-28 사용자 지시) — 파티는 「하는 일」이 아니라 **고른 것**이라 카드 겉 테두리가 든다.
+ * 그래야 클릭이 고른 티가 나고, 이 줄은 「보낼 수 있는가(대기) / 없는가(치료 중)」만 말하게 된다.
+ */
 function heroDoing(h) {
     if (injured(h)) return { cls: 'down', text: t('hs.doing.injured', { t: fmtDuration(h.injuredUntil - now()) }) };
-    if (G.party.includes(h.uid)) return { cls: 'party', text: t('hs.doing.party') };
     return { cls: 'idle', text: t('hs.doing.idle') };
 }
 
 /**
- * 영웅 띠 패널 — 원정(편성)·캐릭터·스킬·선술집 공통. onPick(hero) 가 카드 클릭. 선택된 영웅(state.heroUid)은 테두리로만 표시한다.
+ * 영웅 띠 패널 — 원정(편성)·캐릭터·스킬·선술집 공통. onPick(hero) 가 카드 클릭.
+ * 표시 둘 — `on` = 지금 보고 있는 영웅(안쪽 하이라이트) · `party` = 전투 파티(겉 테두리, 2026-08-28).
  * 카드 = 초상(카드 전체) + 위칸(왼쪽 지금 하는 일 · 오른쪽 이름) — SCREEN_DESIGN §5 (2026-08-27)
+ * 올려놓으면 기본 능력치 툴팁 (2026-08-28, ui/tip.js heroTipCard)
  * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
+ * flat — 편성 패널처럼 이미 패널 안에 들어갈 때. 패널 껍데기(테두리·배경·여백)를 벗는다
  */
-function heroStrip(onPick, { leaderUid = null } = {}) {
-    const p = el('div', 'panel hs-panel');
-    const strip = el('div', 'hero-strip');
+function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false } = {}) {
+    const p = el('div', flat ? 'hs-panel flat' : 'panel hs-panel');
+    // partyMode — 클릭이 파티 넣고 빼기인 띠(편성). 보낼 수 있는 건 **대기**뿐이라 치료 중인 카드는 안 눌리는 티를 낸다
+    const strip = el('div', `hero-strip${partyMode ? ' party-mode' : ''}`);
     for (const h of G.heroes) {
         const doing = heroDoing(h);
-        const c = el('div', `hs-card${h.uid === state.heroUid ? ' on' : ''}${h.tier === 'unique' ? ' unique' : ''}${injured(h) ? ' downed' : ''}`);
+        // on = 지금 보고 있는 영웅(안쪽 하이라이트) · party = 전투 파티(겉 테두리). 두 표시는 뜻이 달라 겹쳐도 된다
+        const c = el('div', `hs-card${h.uid === state.heroUid ? ' on' : ''}${G.party.includes(h.uid) ? ' party' : ''}${h.tier === 'unique' ? ' unique' : ''}${injured(h) ? ' downed' : ''}`);
         c.style.borderTopColor = sinColor(h.sin);
-        c.title = `${L(h.name)} — ${className(h.cls)} · Lv.${h.level} · ${sinName(h.sin)} · ${L(tierOf(h))}`;
+        // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 — 기본 능력치 7 이 함께 뜬다 (2026-08-28)
+        bindTipNode(c, () => heroTipCard(h));
         c.innerHTML = `
             <div class="hs-band">
                 <span class="hs-doing ${doing.cls}">${doing.text}</span>
@@ -828,30 +893,13 @@ function tipCard(item, headText, hint = '') {
     return c;
 }
 
+// 표시·위치·넘침 보정은 tip.js 가 든다 (2026-08-28). 여기 남은 건 아이템 카드의 **내용**뿐이다
 function bindTip(node, item, equipped, hint) {
-    node.onmouseenter = ev => {
-        const tip = $('#tooltip');
-        tip.innerHTML = '';
-        tip.appendChild(tipCard(item, equipped === undefined ? t('tip.equipped') : t('tip.this'), hint));
-        if (equipped !== undefined) tip.appendChild(tipCard(equipped, t('tip.equipped')));
-        tip.classList.add('show');
-        moveTip(ev);
-    };
-    node.onmousemove = moveTip;
-    node.onmouseleave = hideTip;
+    bindTipNode(node, () => [
+        tipCard(item, equipped === undefined ? t('tip.equipped') : t('tip.this'), hint),
+        equipped !== undefined ? tipCard(equipped, t('tip.equipped')) : null,
+    ]);
 }
-
-function moveTip(ev) {
-    const tip = $('#tooltip');
-    const r = tip.getBoundingClientRect();
-    let x = ev.clientX + 16, y = ev.clientY + 16;
-    if (x + r.width > window.innerWidth - 8) x = ev.clientX - r.width - 16;
-    if (y + r.height > window.innerHeight - 8) y = window.innerHeight - r.height - 8;
-    tip.style.left = Math.max(8, x) + 'px';
-    tip.style.top = Math.max(8, y) + 'px';
-}
-
-function hideTip() { $('#tooltip').classList.remove('show'); }
 
 /* ═══════════ 스킬 ═══════════ */
 
@@ -897,21 +945,27 @@ function skillCell(node, accent) {
         </div>`;
 }
 
+/**
+ * 트리 한 판 — **가지를 세로 열로 세운다** (2026-08-28 사용자 지시).
+ * 데이터의 행 하나가 가지(무기군·계열) 하나이고 열이 깊이다 (mock.js SKILL_TREES). 옛 화면은 행을 그대로 가로줄로 그려
+ * 판이 옆으로 길었고, 판 셋을 세로로 쌓으니 한 화면에 안 들어왔다. 가지를 열로 세우면 판이 좁고 길어져 **셋이 나란히** 선다.
+ * 선행 연결선도 같이 세로가 된다 — 깊이 d+1 칸의 `link` 는 여전히 "바로 앞 깊이에 매인다"는 뜻이다.
+ */
 function skillBox({ tag, title, sub, grid, accent, locked }) {
     const box = el('div', `sk-box${locked ? ' locked' : ''}`);
     const { rows, cols } = M.SKILL_GRID;
-    const safe = grid ?? Array.from({ length: rows }, () => Array(cols).fill(null));
-    const lines = safe.map(row => {
+    const branches = grid ?? Array.from({ length: rows }, () => Array(cols).fill(null));
+    const lines = branches.map(branch => {
         const cells = [];
-        for (let c = 0; c < cols; c++) {
-            cells.push(skillCell(row[c], accent));
-            if (c < cols - 1) {
-                const linked = row[c] && row[c + 1]?.link;
-                const on = linked && row[c].r > 0;
+        for (let d = 0; d < cols; d++) {
+            cells.push(skillCell(branch[d], accent));
+            if (d < cols - 1) {
+                const linked = branch[d] && branch[d + 1]?.link;
+                const on = linked && branch[d].r > 0;
                 cells.push(`<div class="sk-conn${linked ? ' has' : ''}${on ? ' on' : ''}" ${on && accent ? `style="background:${accent}"` : ''}></div>`);
             }
         }
-        return `<div class="sk-line">${cells.join('')}</div>`;
+        return `<div class="sk-col">${cells.join('')}</div>`;
     }).join('');
     box.innerHTML = `
         <div class="sk-box-head">
@@ -939,25 +993,24 @@ function renderSkill(main) {
     c1.appendChild(activeSlots(h));
     wrap.appendChild(c1);
 
-    const c2 = el('div');
     const accent = sinColor(h.sin);
     const advLocked = h.level < D.balance.advance_unlock_level;
     const sin = sinName(h.sin);
     const cls = className(h.cls);
-    c2.appendChild(skillBox({
+    // 판 셋이 나란히 — 옛 화면은 셋을 세로로 쌓아 한 화면에 안 들어왔다 (2026-08-28, SCREEN_DESIGN §7)
+    wrap.appendChild(skillBox({
         tag: t('sk.tab1'), title: t('sk.sinTree', { sin }),
         grid: M.SKILL_TREES.sin[h.sin], accent,
     }));
-    c2.appendChild(skillBox({
+    wrap.appendChild(skillBox({
         tag: t('sk.tab2'), title: t('sk.mastery', { cls }), sub: classLine(h.cls),
         grid: M.SKILL_TREES.mastery[h.cls],
     }));
-    c2.appendChild(skillBox({
+    wrap.appendChild(skillBox({
         tag: t('sk.tab3'), title: t('sk.advTree'),
         sub: advLocked ? t('sk.advLocked', { lv: D.balance.advance_unlock_level, cur: h.level }) : t('sk.advOpen'),
         grid: null, locked: true,
     }));
-    wrap.appendChild(c2);
     stack.appendChild(wrap);
     main.appendChild(stack);
 }
@@ -1185,6 +1238,10 @@ async function boot() {
     if (dev === 'newgame' || (dev === 'battle' && !G)) startGame();
     if (dev === 'battle') runBattle(D.stageOrder[0], { instant: true });
     if (dev === 'play') { if (!G) startGame(); runBattle(D.stageOrder[0], { tab: new URLSearchParams(location.search).get('bt') }); return; }
+    if (dev === 'form') {   // 편성 패널이 열린 상태 — 패널은 클릭으로만 열리므로 헤드리스가 닿을 길을 따로 낸다
+        if (!G) startGame();
+        state.expStage = D.stageOrder[0];
+    }
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
         if (!G.run) SYS.game.resolveBattle(G, D.stageOrder[0], now() - 31 * 60000);

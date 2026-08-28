@@ -311,6 +311,32 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .zone.boss { border-left-color: var(--text-accent); }
 .zone .title { display: flex; align-items: center; gap: 8px; }
 .zone .meta { font-size: var(--fs-sm); color: var(--text-muted); margin-top: 2px; }
+/* 행 클릭 = 고른다 (2026-08-27, SCREEN_DESIGN §4-1) — 출발은 위에 열리는 편성 패널이 든다.
+   커서는 실제로 눌리는 행에만 준다. 잠긴 행은 눌러도 플래시뿐이라 안 준다 */
+.zone:not(.locked) { cursor: pointer; }
+.zone:not(.locked):hover { border-color: var(--border-highlight); }
+.zone.on { border-color: var(--border-highlight); background-color: var(--bg-card); margin-bottom: 0; }
+/* 픽셀아트 배경 위에 얹히므로 제 배경을 갖는다 — 글자 그림자만으로는 불타는 배경에서 안 읽힌다 */
+.zone-pick {
+    font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap;
+    padding: 4px 10px; background: rgba(6,6,12,.74); border: 1px solid var(--border-dark);
+}
+.zone.on .zone-pick { color: var(--text-primary); background: #24243c; border-color: var(--border-highlight); }
+
+/* 편성 패널 — 고른 행 **바로 아래**로 펼쳐진다 (2026-08-28, SCREEN_DESIGN §4-1).
+   목록 위에 따로 뜨면 어느 지역의 편성인지 눈이 잇지 못한다. 왼쪽 굵은 선은 위 행과 같은 죄종 색(JS 가 인라인으로 준다) —
+   그 선이 두 칸을 한 덩어리로 묶는다.
+   **크기는 상태에 흔들리지 않는다**: 머리(제목·닫기)를 아예 두지 않고(무엇에 딸렸는지는 위 행이 말한다),
+   경고는 줄을 항상 잡고, 반복 원정은 별도 줄이 아니라 액션 버튼이다. 닫는 것은 그 행을 다시 누르는 것이다 (2026-08-28) */
+.form-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-highlight); border-top: 0;
+    border-left: 3px solid var(--border-secondary);
+    padding: 11px 12px 12px; margin-bottom: 8px;
+}
+/* 같은 크기 버튼 둘 — 반복 원정 / 보내기 */
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.form-actions .btn.lg { flex: 0 0 auto; min-width: 148px; text-align: center; }
 
 .running {
     background: linear-gradient(var(--bg-tertiary), var(--bg-card));
@@ -382,6 +408,15 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .tip-card .tip-name { font-size: var(--fs-md); word-break: keep-all; margin-bottom: 3px; }
 .tip-card .tip-sub { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 8px; }
 .tip-card .tip-implicit { color: var(--color-info); font-size: var(--fs-xs); margin-bottom: 6px; }
+/* 영웅 툴팁 — 기본 능력치 7 (2026-08-28). 이름 왼쪽 · 값 오른쪽, 두 칸으로 접어 세로를 줄인다 */
+.tip-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; margin-top: 2px; }
+.tip-stat { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--fs-xs); }
+.tip-stat .n { color: var(--text-secondary); }
+.tip-stat .n i { font-style: normal; color: var(--text-muted); margin-left: 4px; }
+.tip-stat b { font-weight: normal; color: var(--text-primary); }
+/* 스킬 툴팁 — 이름 앞 아이콘 · 설명 문단 */
+.tip-sk-ico { margin-right: 7px; }
+.tip-desc { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.55; word-break: keep-all; }
 .tip-card ul { list-style: none; }
 .tip-card li { color: #8fb8ff; }
 .tip-card .tip-sins { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--border-dark); }
@@ -420,7 +455,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* ───────── 전투 관전 ─────────
    상하 대치: 적(위) / 파티(아래)
-   진영 안에서는 유닛이 가로로 나란히 → 유닛 카드는 세로형 */
+   진영 안에서는 유닛이 가로로 나란히. 유닛 카드는 위칸(이름) + 가로형 본문 */
 
 .battle-head {
     display: flex; justify-content: space-between; align-items: flex-start;
@@ -470,37 +505,46 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     background: linear-gradient(90deg, transparent, var(--border-secondary), transparent);
 }
 
-/* 유닛 카드 — 가로형 (2026-08-27 개편 · 참고: Lootun 카드, SCREEN_DESIGN §4-2):
-   왼쪽 초상(§5 얼굴 규격 — 영웅 띠와 같은 그림) · 오른쪽에 이름(적: 태그) / HP 바 / 행동 게이지 / 스킬 쿨 3줄을 세로로.
-   진영 한 줄에 3장이 나란히 선다 — 최소 폭(1280)의 아레나(약 700px)에서 카드 하나 약 220px, 큰 창에서 300px 까지 (라벨이 있는 칸이라 고정 px 없음).
-   flex-wrap 은 기준 폭으로 줄을 나누므로 기준은 200 으로 낮게 두고 max-width 까지 늘린다 — 300 을 기준으로 두면 3장이 2+1 로 접힌다 */
+/* 유닛 카드 — 위칸 + 가로형 본문 (2026-08-27 개편 · 참고: Lootun 카드, SCREEN_DESIGN §4-2):
+   위칸은 영웅 띠(.hs-band)와 같은 배치 — 왼쪽 태그 / 오른쪽 이름. 본문은 왼쪽 초상(§5 얼굴 규격) · 오른쪽에 HP 바 / 행동 게이지 / 스킬 쿨 3줄.
+   **크기는 몬스터·영웅·보스가 전부 같은 고정값** (2026-08-27 사용자 지시) — 진영마다 카드 수가 달라도, 정예 특성 줄이 붙어도,
+   보스여도 같은 박스다. 본문 높이를 초상 칸에 못박고(.unit-body height) 넘치는 내용은 자른다 — 그래야 위아래 두 진영이 같은 격자로 읽힌다.
+   폭 고정 200px 은 화면 폭 정책(라벨 칸 고정 px 금지)의 **의도된 예외**다: 한 진영 최대 3장(party_size_max=3 · wave_monster_max=3)이라
+   하한 폭 1280 의 아레나(약 660px)에 3×200 + 여백이 들어간다. 긴 이름은 위칸에서 말줄임된다 */
 .unit {
-    display: flex; flex-direction: row; align-items: center; gap: 8px;
-    flex: 1 1 200px; max-width: 300px; padding: 6px 8px 6px 6px;
+    /* 세로 2단 — 위칸(태그·이름) / 본문(초상 + 수치) */
+    display: flex; flex-direction: column; gap: 4px;
+    flex: 0 0 200px; width: 200px; padding: 5px 6px 6px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-dark); border-top: 3px solid var(--border-secondary);
-    position: relative; text-align: left;
+    position: relative; text-align: left;   /* overflow 는 주지 않는다 — 피해 팝업이 카드 밖으로 떠오른다 */
     transition: opacity .3s;
 }
+/* 본문 — 왼쪽 초상, 오른쪽 수치 열. 높이는 초상 칸에 못박는다 = 모든 카드가 같은 높이 */
+.unit-body { display: flex; flex-direction: row; align-items: center; gap: 7px; min-width: 0; height: 76px; overflow: hidden; }
 .unit.enemy { border-top-color: #7a3030; }
 .unit.party { border-top-color: #3060a0; }
 .unit.elite { border-color: #6a4a2a; background: #1f1a16; }
 .unit.dead { opacity: .26; filter: grayscale(1); }
-/* 오른쪽 정보 열 — 위에서부터 이름 / (정예 특성) / HP / 행동 게이지 / 스킬 쿨 */
+/* 오른쪽 정보 열 — 위에서부터 (정예 특성) / HP / 행동 게이지 / 스킬 쿨 */
 .unit-info { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.unit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
-.unit-head .unit-name {
-    min-width: 0; font-size: var(--fs-sm); font-weight: normal; line-height: 1.3;
+/* 위칸 — 적 태그(왼쪽) · 이름(오른쪽). 영웅 띠(.hs-band)와 **같은 배치**다 (2026-08-27 — 왼쪽 상태 / 오른쪽 이름) */
+.unit-band {
+    display: flex; align-items: center; justify-content: space-between; gap: 5px;
+    padding: 1px 2px; background: rgba(0,0,0,.32); border-bottom: 1px solid var(--border-dark);
+}
+.unit-band .unit-name {
+    min-width: 0; font-size: var(--fs-sm); font-weight: normal; line-height: 1.35; text-align: right;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 /* 초상 — 정사각 한 칸. 그림 규격은 공통 조각 .hero-face 와 같다(네모 박스 · 직업 글리프). 보스는 한 단 크다 */
 .unit .sprite {
-    flex: 0 0 auto; width: 64px; height: 64px; align-self: center;
-    display: flex; align-items: center; justify-content: center; font-size: 32px;
+    flex: 0 0 auto; width: 76px; height: 76px; align-self: center;
+    display: flex; align-items: center; justify-content: center; font-size: 38px;
     background: var(--bg-input); border: 1px solid var(--border-secondary); overflow: hidden;
 }
-.unit.boss .sprite { width: 80px; height: 80px; font-size: 40px; }
+/* 보스도 같은 크기다 — 카드 크기를 진영·등급 무관 고정으로 못박았다 (2026-08-27). 보스 표시는 태그와 테두리가 든다 */
 /* 얼굴 이미지가 있는 유닛 — 없으면 직업 글리프(영웅) / 죄종 색 원판 + 이니셜(몬스터) */
 .sprite.has-face { background: radial-gradient(circle at 50% 38%, #24243a 0%, var(--bg-input) 100%); }
 .sprite.has-face img {
@@ -542,26 +586,39 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 .unit.enemy .act-fill { background: #b06030; }
 
-/* 스킬 쿨 3줄 — 슬롯 순서 = 동률 시 우선순위. 위에서부터 1·2·3번. HP 바처럼 바 안에 글자(왼쪽 이름 · 오른쪽 %) (2026-08-27).
-   게이지는 목업이다 — 스킬 미작성이라 타임라인에 스킬 이벤트가 없다 (DEV_PLAN 부채 #13) */
-.cd-list { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 1px; }
-.cd-row { position: relative; height: 13px; background: var(--bg-input); border: 1px solid var(--border-dark); }
-.cd-row > i { display: block; height: 100%; width: 0; background: #46639e; transition: width .1s linear; }
-.cd-row .cd-n, .cd-row .cd-pct {
-    position: absolute; top: 0; line-height: 11px;   /* 바 안높이 = 13 − 테두리 2 */
-    font-size: var(--fs-xs); text-shadow: 0 1px 2px #000; pointer-events: none;
+/* 스킬 쿨 3칸 — 슬롯 순서 = 동률 시 우선순위. **왼쪽부터** 1·2·3번 (2026-08-27 세로 3줄 → 가로 3칸).
+   세로로 쌓으면 오른쪽 열의 가로 105px 중 아이콘이 13px 만 쓴다. 눕히면 같은 자리에서 아이콘이 13 → 32px 가 되고
+   세로 예산은 43 → 35 로 오히려 준다. 아이콘이 안 읽히던 건 공간이 없어서가 아니라 배치가 세로였기 때문이다.
+   이름도 % 도 찍지 않는다 — 이름·표기 쿨은 칸의 title 툴팁이 든다 (값을 지운 게 아니라 옮겼다).
+   게이지·아이콘 전부 목업이다 — 스킬 미작성이라 타임라인에 스킬 이벤트가 없다 (DEV_PLAN 부채 #13) */
+.cd-list { width: 100%; display: flex; flex-direction: row; gap: 5px; margin-top: 3px; }
+.cd-slot {
+    flex: 1 1 0; min-width: 0; height: 32px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; line-height: 1; color: var(--text-primary);
+    background: var(--bg-input); border: 1px solid var(--border-dark);
 }
-.cd-n { left: 5px; right: 3em; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cd-pct { right: 5px; color: var(--text-muted); }
+/* 쿨 마스크 — 남은 쿨만큼 위에서 덮는다. 다 걷히면 아이콘이 전부 드러난다 = 준비 완료 */
+.cd-slot .cd-mask {
+    position: absolute; left: 0; right: 0; top: 0; height: 100%;
+    background: rgba(6,6,12,.78); transition: height .1s linear;
+}
 /* 다 찬 스킬 = 다음 행동에 나갈 후보 */
-.cd-row.ready { border-color: var(--color-info); }
-.cd-row.ready > i { background: var(--color-info); }
-.cd-row.ready .cd-n, .cd-row.ready .cd-pct { color: var(--text-primary); }
+.cd-slot.ready { border-color: var(--color-info); box-shadow: inset 0 0 0 1px rgba(70,99,158,.5); }
+/* 발동 — 그 칸이 한 번 튄다. 튀는 건 글리프만 (칸을 키우면 .unit-body 의 고정 높이에 잘린다) */
+.cd-slot.fire { border-color: var(--color-warning); background: #3a2c14; }
+.cd-slot.fire .cd-g { animation: cd-fire .5s ease-out; }
+@keyframes cd-fire {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.45); }
+    100% { transform: scale(1); }
+}
 
 .unit.boss { border-color: #7a2a2a; background: #1f1416; }
 .boss-tag { color: var(--text-accent); }
 .trait-line {
     font-size: 9px; color: #b08850; line-height: 1.4; word-break: keep-all;
+    max-height: 26px; overflow: hidden;   /* 카드 높이가 고정이라 두 줄까지. 전문은 title 툴팁 */
 }
 
 /* 라운드 진행 트랙 — 구조가 고정이라 한눈에 읽힌다 */
@@ -578,7 +635,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 데미지 숫자 — 생성 후 0.9초 뒤 DOM에서 제거 */
 .pop-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .pop {
-    position: absolute; top: 30%; left: 38px; font-size: var(--fs-sm);   /* 왼쪽 초상(64px 칸) 한가운데서 떠오른다 — 패딩 6 + 32 */
+    position: absolute; top: 38%; left: 44px; font-size: var(--fs-sm);   /* 왼쪽 초상(76px 칸) 한가운데서 떠오른다 — 패딩 6 + 38 */
     animation: pop-up .9s ease-out forwards; white-space: nowrap;
     text-shadow: 0 1px 2px #000;
 }
@@ -587,6 +644,12 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .pop.crit { color: var(--color-warning); font-size: var(--fs-lg); }
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
 .pop.card-tag { color: var(--color-info); font-size: var(--fs-xs); }   /* 도감 카드 획득 */
+/* 발동한 스킬 이름 — 피해 숫자(초상 위, top 38%)와 자리를 나눠 카드 가운데 위로 뜬다. 배경 위에서 읽히도록 제 칩을 갖는다 */
+.pop.skill-tag {
+    /* 카드 위에서 시작해 위칸 언저리까지 떠오른다 — 카드에서 완전히 떨어지면 어느 유닛이 쓴 건지 안 붙는다 */
+    top: 12%; left: 50%; font-size: var(--fs-xs); color: #cfe0ff;
+    background: rgba(6,6,12,.72); border: 1px solid #46639e; padding: 1px 6px;
+}
 @keyframes pop-up {
     0% { transform: translate(-50%, 6px); opacity: 0; }
     18% { transform: translate(-50%, -2px); opacity: 1; }
@@ -629,19 +692,23 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* ───────── 스킬 ───────── */
 
-.cols.c-skill { grid-template-columns: 232px 1fr; }
+/* 왼쪽 한 칸(포인트 · 액티브) + 트리 판 셋이 **나란히** (2026-08-28 사용자 지시).
+   옛 배치는 판 셋을 세로로 쌓아 한 화면(세로 예산 700)에 한 판 반밖에 안 들어왔다 — 스크롤 없이 셋을 다 보려면 옆으로 세운다.
+   왼쪽 칸은 라벨이 들어가므로 고정 px 대신 minmax 로 최소만 잡는다 */
+.cols.c-skill { grid-template-columns: minmax(186px, .82fr) repeat(3, minmax(0, 1fr)); align-items: stretch; }
 
-/* 트리 3개를 세로로 쌓는다 — 탭 없이 전부 보인다 */
+/* 트리 한 판 — 판 안에서 가지가 열로 선다 */
 .sk-box {
+    display: flex; flex-direction: column;
     background: var(--bg-card); border: 1px solid var(--border-primary);
-    padding: 12px 14px 13px; margin-bottom: 12px;
+    padding: 10px 11px 11px;
 }
 .sk-box.locked { opacity: .5; }
 
 /* 좌상단 라벨 — 어떤 트리인지 */
 .sk-box-head {
     display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-    padding-bottom: 9px; margin-bottom: 11px;
+    padding-bottom: 7px; margin-bottom: 8px;
     border-bottom: 1px solid var(--border-dark);
 }
 .sk-tag {
@@ -651,16 +718,16 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .sk-title { font-size: var(--fs-md); }
 .sk-sub { font-size: var(--fs-xs); }
 
-/* 3행 × 5열 — 정사각 노드, 오른쪽으로 선 연결 */
-.sk-grid { display: flex; flex-direction: column; gap: 10px; }
-.sk-line { display: flex; align-items: center; }
+/* 가지 3열 × 깊이 5 — 가지가 세로로 흐른다 (2026-08-28). 칸 폭은 판 폭이 정한다(고정 px 없음),
+   높이만 최소로 잡아 다섯 깊이가 세로 예산 안에 들어가게 한다 */
+.sk-grid { display: flex; flex-direction: row; gap: 9px; flex: 1 1 auto; }
+.sk-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
 
-/* 영어 노드명이 길다("Attack per Missing Health") — 정사각 유지하되 한 변을 키우고,
-   긴 이름은 폰트를 한 단계 줄여 카드 안에서 접히게 한다 */
+/* 영어 노드명이 길다("Attack per Missing Health") — 긴 이름은 폰트를 한 단계 줄여 칸 안에서 접히게 한다 */
 .sk-cell {
-    width: 104px; height: 104px; flex: 0 0 auto;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    padding: 6px 7px; text-align: center;
+    flex: 1 1 0; min-height: 60px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    padding: 5px 4px; text-align: center;
     background: var(--bg-tertiary); border: 1px solid var(--border-primary);
     cursor: pointer;
 }
@@ -668,7 +735,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .sk-cell.taken { background: #1b1b2c; }
 .sk-cell.full { box-shadow: inset 0 0 0 1px rgba(255,255,255,.10); }
 .sk-cell.locked { opacity: .6; cursor: not-allowed; }
-/* 미작성 칸 — 3×5 프레임이 보이도록 점선으로 남긴다 (비어 있음을 보여주는 것도 정보다) */
+/* 미작성 칸 — 가지 3 × 깊이 5 프레임이 보이도록 점선으로 남긴다 (비어 있음을 보여주는 것도 정보다) */
 .sk-cell.empty {
     background: rgba(255, 255, 255, .015);
     border: 1px dashed var(--border-primary);
@@ -680,14 +747,14 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 .sk-n {
     font-size: 10px; line-height: 1.25; word-break: keep-all;
-    overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+    overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
 }
 :root[lang="en"] .sk-n, html[lang="en"] .sk-n { font-size: 9px; letter-spacing: -.1px; }
 .sk-r { font-size: var(--fs-xs); color: var(--text-muted); }
 .sk-cell.taken .sk-r { color: var(--text-secondary); }
 
-/* 칸 사이 연결선 — 선행 조건이 있을 때만 그린다 */
-.sk-conn { flex: 0 0 20px; height: 2px; background: transparent; }
+/* 칸 사이 연결선 — 선행 조건이 있을 때만 그린다. 가지가 세로라 선도 세로다 (2026-08-28) */
+.sk-conn { flex: 0 0 10px; width: 2px; align-self: center; background: transparent; }
 .sk-conn.has { background: var(--border-dark); }
 .sk-conn.on { background: var(--border-highlight); }
 
@@ -872,16 +939,25 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
    로스터 상한(7)까지 한 줄에 편다 — 개수를 CSS에 박지 않는다(roster_cap 은 데이터다). flex 로 나눠 갖되 상한폭을 둬서
    영웅이 적을 때 카드가 판넬을 다 먹지 않게 한다 */
 .hs-panel { padding: 10px 12px; }
+/* 편성 패널 안에 들어갈 때 — 패널 안 패널이 되지 않게 껍데기를 벗는다 */
+.hs-panel.flat { padding: 0; background: none; border: 0; }
 .hero-strip { display: flex; flex-wrap: wrap; gap: 8px; }
 .hs-card {
-    flex: 1 1 0; min-width: 96px; max-width: 120px;   /* 2026-08-27 축소 — 화면 대비 너무 컸다. 관전 유닛 카드 폭 상한과 같다 */
+    flex: 1 1 0; min-width: 96px; max-width: 120px;   /* 2026-08-27 축소 — 화면 대비 너무 컸다 (관전 유닛 카드 상한과는 별개다) */
     background: var(--bg-tertiary); border: 1px solid var(--border-dark);
     border-top: 3px solid var(--border-secondary);
     cursor: pointer; position: relative; overflow: hidden;
     container-type: inline-size;   /* 글리프 크기를 카드 폭 기준(cqw)으로 잡는다 */
 }
 .hs-card:hover { border-color: var(--border-highlight); }
+/* 편성 띠 — 파티에 넣을 수 있는 건 **대기**뿐이다. 치료 중은 거절(플래시)이므로 커서로도 미리 말한다.
+   다른 탭에서는 치료 중인 영웅도 눌러서 들여다볼 수 있으므로 이 띠에서만 건다 */
+.hero-strip.party-mode .hs-card.downed { cursor: not-allowed; }
 .hs-card.on { border-color: var(--border-highlight); background: #22223a; box-shadow: inset 0 0 0 1px var(--border-highlight); }
+/* 전투 파티 = **겉 테두리** (2026-08-28 사용자 지시). 옛 화면은 위칸 글씨를 「대기」→「전투 파티」로 바꿨는데,
+   그러면 클릭이 고른 티가 안 나고 그 줄이 「보낼 수 있는가」와 「골랐는가」 두 가지를 겸해 읽혔다.
+   안쪽 하이라이트(.on = 보고 있는 영웅)와 뜻이 달라 겹쳐도 서로 안 먹는다 — 하나는 안, 하나는 밖 */
+.hs-card.party { outline: 2px solid var(--color-info); outline-offset: 1px; }
 .hs-card.unique { border-bottom-color: #6a4a1a; }
 .hs-card.downed { opacity: .62; }
 .hs-card.empty {
@@ -900,10 +976,10 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
     color: var(--text-accent);
 }
 /* 파티 없음 / 출발 불가 경고 — 띠 아래 (옛 파티 패널이 들던 자리) */
-.exp-warn { font-size: var(--fs-xs); margin-top: 9px; }
+/* 경고 줄 — 글자가 없어도 **자리는 잡는다**. 안 그러면 편성 패널이 파티 상태에 따라 커졌다 작아진다 (2026-08-28) */
+.exp-warn { font-size: var(--fs-xs); margin-top: 9px; min-height: 1.35em; line-height: 1.35; }
 /* 지금 하는 일 — 치료 중(빨강) / 전투 파티(파랑) / 대기(회색) */
 .hs-doing { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; line-height: 1.3; }
-.hs-doing.party { color: var(--color-info); }
 .hs-doing.down { color: var(--color-error); }
 
 /* ② 네 칸 — 장비 / 기본 옵션(+현재 스킬) / 세부 옵션 1 / 세부 옵션 2. **같은 폭 · 같은 높이** (2026-08-27).

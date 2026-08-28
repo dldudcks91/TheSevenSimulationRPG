@@ -17,10 +17,10 @@ SKILL.md 4단계에서 편다. 헤드리스 명령의 **원문은 [src/dev/READM
 
 ## 2. 한국어 리터럴 (다국어 위반)
 
-렌더러 두 파일에 한국어 리터럴이 남으면 안 된다. **주석은 제외**해야 하므로 단순 grep 으로는 못 잡는다 — 블록 주석과 줄 주석을 지운 뒤 한글을 찾는다:
+렌더러 세 파일(`app.js` · `battle.js` · `tip.js`)에 한국어 리터럴이 남으면 안 된다. **주석은 제외**해야 하므로 단순 grep 으로는 못 잡는다 — 블록 주석과 줄 주석을 지운 뒤 한글을 찾는다:
 
 ```bash
-for f in src/ui/app.js src/ui/battle.js; do echo "--- $f"; \
+for f in src/ui/app.js src/ui/battle.js src/ui/tip.js; do echo "--- $f"; \
   perl -CSD -0777 -ne 's{/\*.*?\*/}{$&=~tr/\n//cdr}ges; s{//[^\n]*}{}g; my $i=0; for (split /\n/,$_,-1){ $i++; print "$i: $_\n" if /\p{Hangul}/ }' "$f"; done
 ```
 
