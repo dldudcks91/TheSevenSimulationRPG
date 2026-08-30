@@ -13,7 +13,7 @@
  * 2026-08-26 — **인게임 패널에는 설명 문장을 두지 않는다** (사용자 지시). 숫자·상태·오류·버튼·툴팁만 남기고
  *   규칙 문구는 전부 도움말 탭(renderHelp)으로 옮겼다. 새 안내 문장을 패널에 붙이려면 도움말에 넣는다.
  *
- * 2026-08-27 — **영웅 초상은 네모 박스** (heroFace). 관전 유닛 카드와 같은 규격 · 같은 직업 글리프(M.classGlyph).
+ * 2026-08-27 — **영웅 초상은 네모 박스** (heroFace). 관전 유닛 카드와 같은 규격 · 같은 그림(M.heroFace — 이름이 고른다, 2026-08-30).
  *   영웅의 생김새는 어디서나 같다. 원형(.face)은 몬스터 얼굴 전용으로 남는다 (SCREEN_DESIGN §5).
  *   영웅 띠 카드(heroStrip)는 초상이 카드 전체를 채우고, 글자는 위칸(상태 태그 · 이름) 하나로 초상 위에 얹는다.
  *   캐릭터 탭 4칸은 같은 폭·높이 — 장비 / 기본 옵션(+현재 스킬 정사각 카드) / 세부 옵션 1 / 세부 옵션 2.
@@ -118,14 +118,17 @@ const faceChip = (id, extraCls = '') => {
 };
 /**
  * 영웅 초상 — 네모 박스. 관전 유닛 카드의 스프라이트와 같은 규격이다: **영웅의 생김새는 어디서나 같다**
- * (2026-08-27, SCREEN_DESIGN §5). 아직 아트가 없어(M.heroFace 는 전부 null) 직업 글리프가 얼굴이다.
+ * (2026-08-27, SCREEN_DESIGN §5). 어느 그림인지는 `mock.heroFace` 가 **이름에서** 정한다 — 후보는 uid 가 없다.
  * 죄종 색은 카드 상단 테두리가 들고 초상은 색을 갖지 않는다. 크기는 담는 카드의 CSS 가 정한다.
+ *
+ * 글리프를 **밑에 깔고 그림을 그 위에 덮는다** — 고른 얼굴 스타일에 영웅 그림이 없으면 `onerror` 로 img 만
+ *   사라지고 밑의 글리프가 드러난다 (몬스터 얼굴과 같은 규칙 · mock.js FACE_STYLES).
  */
 const heroFace = h => {
-    const src = M.heroFace(h.uid);
+    const src = M.heroFace(h);
     const name = L(h.name);
-    if (src) return `<span class="hero-face"><img src="${src}" alt="${name}"></span>`;
-    return `<span class="hero-face">${M.classGlyph(h.cls)}</span>`;
+    return `<span class="hero-face">${M.classGlyph(h.cls)}${src
+        ? `<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span>`;
 };
 
 /* ═══════════ 화면 상태 ═══════════ */

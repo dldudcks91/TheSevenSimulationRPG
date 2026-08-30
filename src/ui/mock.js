@@ -315,10 +315,29 @@ export const COMBAT_CATS = [
 ];
 
 /**
- * 영웅 초상 — 아직 아트가 없다. 몬스터와 같은 자리(faces/)를 쓰되 파일명만 hero_<uid>.png.
- * 지금은 전부 null → 폴백(네모 박스 + 직업 글리프)이 그려진다. 아트가 들어오면 이 함수 한 줄만 바꾼다.
+ * 영웅 초상 — 몬스터와 같은 자리(`faces/<스타일>/`)에 `hero_<n>.png`. **어느 그림인지는 이름이 정한다.**
+ *
+ * uid 로는 안 된다 — 시작 화면·선술집의 **후보는 아직 uid 가 없고**(고용할 때 발급된다) 그러면 뽑을 때 본 얼굴과
+ *   고용한 뒤의 얼굴이 갈린다. 이름은 굴리는 순간 정해져 끝까지 안 바뀌므로, 후보 카드 · 영웅 띠 · 관전 카드가
+ *   **같은 영웅에게 늘 같은 얼굴**을 준다 (SCREEN_DESIGN §5 「영웅의 생김새는 어디서나 같다」).
+ * 매 렌더 굴리지 않는 이유도 같다 — 다시 그릴 때마다 얼굴이 바뀌면 그건 초상이 아니라 슬롯머신이다.
+ *
+ * 장수(`HERO_FACE_MAX`)를 **스타일이 다 갖출 필요는 없다** — 파일이 없으면 렌더러의 `onerror` 로 img 만 빠지고
+ *   밑에 깔린 직업 글리프가 드러난다 (몬스터 얼굴과 같은 규칙 · FACE_STYLES 참조).
+ * 인자는 `{name}` 을 가진 것이면 된다 — 영웅 객체 · 후보 · 관전 유닛(`battle.js` 가 `h.name` 을 그대로 싣는다).
  */
-export const heroFace = uid => null;   // eslint-disable-line no-unused-vars
+export const HERO_FACE_MAX = 5;
+/** 표시용 안정 해시(FNV-1a) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖) */
+const strHash = s => {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+};
+export const heroFace = hero => {
+    const key = hero?.name?.ko ?? (typeof hero?.name === 'string' ? hero.name : null);
+    if (!key) return null;
+    return `${faceDir()}hero_${1 + strHash(key) % HERO_FACE_MAX}.png`;
+};
 /**
  * 직업 글리프 — 아트가 없는 영웅의 얼굴. **영웅의 생김새는 어디서나 같다** (2026-08-27, SCREEN_DESIGN §5):
  * 영웅 띠 · 후보 카드 · 관전 유닛 카드가 전부 이 표 하나를 읽는다. 표시 사전이라 game_logic 에 주입하지 않는다.

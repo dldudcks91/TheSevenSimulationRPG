@@ -258,12 +258,15 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    기본 크기 64px · 글리프 34px. 크기는 담는 카드가 정한다 — 후보 카드는 줄이고(.ng-head · .tv-cands),
    영웅 띠·관전 유닛 카드는 카드 전체로 키운다(아래 「카드를 채우는 초상」) */
 .hero-face {
+    position: relative;
     display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
     width: 64px; height: 64px; font-size: 34px;
     background: var(--bg-input); border: 1px solid var(--border-secondary);
     overflow: hidden; vertical-align: middle;
 }
-.hero-face img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+/* 그림은 직업 글리프 **위에** 덮는다 — 그 스타일에 영웅 그림이 없으면 `onerror` 로 img 가 빠지고 글리프가 드러난다
+   (.face img 와 같은 규칙 · 2026-08-30 영웅 초상 연결) */
+.hero-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
 
 /* 카드를 채우는 초상 — 영웅 띠 카드(.hs-card .hero-face) (2026-08-27, SCREEN_DESIGN §5).
    정사각으로 카드 전체를 채우고, 아트가 없는 동안 글리프는 카드 폭의 절반 — 자리표시다. 카드 쪽에 container-type 이 있어야 cqw 가 잡힌다.

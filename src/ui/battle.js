@@ -197,7 +197,7 @@ function renderUnits(state, root) {
             const name = L(u.name);
             const discSin = u.side === 'enemy' ? (u.sin ?? monsterSin(u.monsterId)) : null;
             const dc = discSin ? M.SINS[discSin]?.color : null;
-            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u.uid);
+            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u);
             // 아트가 있으면 그 밑에 **이니셜/글리프를 깔아 둔다** — 고른 얼굴 스타일에 그 몬스터 그림이 없으면
             // `onerror` 로 img 만 빠지고 밑에 있던 것이 드러난다 (mock.js FACE_STYLES).
             // ⚠ 밑에 까는 것은 글자뿐이다 — `.sprite.disc`(원형)를 같이 얹으면 아트 있는 유닛이 원형이 된다(관전은 네모다)
