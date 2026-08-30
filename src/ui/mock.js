@@ -42,6 +42,30 @@ export const SINS = {
     pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0' },
 };
 
+/**
+ * 스킬 태그 표시 이름 — 사전의 SSOT 는 `game_logic/skill.js:TAGS` 10종이다 (skill_design §11).
+ * 파생 3종(광역·단일·다단히트)은 `target`·`hits` 가 답을 갖고 있어 CSV 에 안 적히므로 여기에도 없다.
+ * 지금 읽는 곳 — 연구 탭의 전술 조건 (`tactic_option.csv:cond_arg`).
+ */
+export const SKILL_TAGS = {
+    dot: { ko: '도트', en: 'DoT' },
+    shout: { ko: '함성', en: 'Shout' },
+    blessing: { ko: '축복', en: 'Blessing' },
+    boost: { ko: '강화', en: 'Boost' },
+    restore: { ko: '회복', en: 'Restore' },
+    curse: { ko: '저주', en: 'Curse' },
+    control: { ko: '제어', en: 'Control' },
+    transform: { ko: '변신', en: 'Transform' },
+    summon: { ko: '소환', en: 'Summon' },
+    sacrifice: { ko: '희생', en: 'Sacrifice' },
+};
+
+/** 피해 종류 — 직업이 아니라 **무기군**이 정한다 (`weapon_group.csv:damage_kind` · battle_design §2-1) */
+export const DAMAGE_KINDS = {
+    physical: { ko: '물리', en: 'Physical' },
+    magic: { ko: '마법', en: 'Magic' },
+};
+
 // equip_rarity_config.csv 의 color_hex 그대로 — 4단계, **일반(Normal) 등급 없음**
 // item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"
 // 통제 가능성의 계단: 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(낙인으로 죄종 지정) → 유니크(고정)
@@ -376,7 +400,7 @@ export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
  * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
-export const FACE_STYLES = ['pixel16'];
+export const FACE_STYLES = ['pixel16', 'cartoon'];
 const FACE_STORE_KEY = 'thesevensim.faceStyle';
 
 let faceStyleCur = (() => {

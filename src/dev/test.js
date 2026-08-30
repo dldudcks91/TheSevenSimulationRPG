@@ -17,6 +17,7 @@ import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { parseCsv } from '../game_logic/csv.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createSkillSystem } from '../game_logic/skill.js';
+import { createTacticSystem } from '../game_logic/tactic.js';
 import { SAVE_VERSION } from '../game_logic/state.js';
 
 const out = document.getElementById('out');
@@ -434,12 +435,12 @@ check('newGame: 3명 로스터 = 파티, 각자 직업 전속 무기군 착용, 
     }
     return G.bag.length === 0 && G.resources.gold === B.start_gold;
 });
-check('save: serialize → deserialize 왕복 동일 (v5)', () => {
+check('save: serialize → deserialize 왕복 동일 (v6)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 5;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 6;
 });
-check('save: v2 → v5 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5)까지 한 번에 올라간다', () => {
+check('save: v2 → v6 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6)까지 한 번에', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v2.version = 2;
     // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
@@ -456,6 +457,7 @@ check('save: v2 → v5 연쇄 이관 — 감각→운·명중/회피 폐지(v3) 
     if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
     for (const h of up.heroes) if (!h.mastery || h.masteryPoints === undefined) fail('v4 자리가 안 생겼다');
     if (!up.tavern) fail('v5 자리가 안 생겼다');
+    if (!up.tactics || !up.tactics.slots) fail('v6 자리가 안 생겼다');
     up.heroes.forEach((h, i) => {
         if ('sen' in h.stats || 'sen' in h.caps) fail('sen 키가 남았다');
         if (h.stats.luck !== senValues[i]) fail(`값이 바뀌었다 ${h.stats.luck} ≠ ${senValues[i]}`);
@@ -477,13 +479,13 @@ check('save: 버전 불일치는 거부 (v1 · v99) — v1 은 스키마 단절�
 check('save: canLoad 가 deserialize 와 같은 답을 낸다 — 화면이 이관 가능한 세이브를 거부하면 안 된다 (부채 #24)', () => {
     const cur = SYS.game.serialize(G, NOW);
     // 이관 가능한 옛 버전은 열려야 한다 — 버전 숫자만 낮춘 세이브로 확인한다
-    for (const v of [2, 3, 4, SAVE_VERSION]) {
+    for (const v of [2, 3, 4, 5, SAVE_VERSION]) {
         const s = JSON.parse(JSON.stringify(cur)); s.version = v;
         if (!SYS.game.canLoad(s)) fail(`v${v} 를 못 연다 — deserialize 는 여는데 canLoad 가 막는다`);
     }
     for (const v of [1, 99]) if (SYS.game.canLoad({ version: v, heroes: [] })) fail(`v${v} 를 연다고 답했다`);
     if (SYS.game.canLoad(null) || SYS.game.canLoad('x')) fail('객체가 아닌 것을 연다고 답했다');
-    return `v2·v3·v4·v${SAVE_VERSION} 열림 · v1·v99 거부`;
+    return `v2·v3·v4·v5·v${SAVE_VERSION} 열림 · v1·v99 거부`;
 });
 check('save: 크기 < 64KB (빈 게임)', () => { const n = JSON.stringify(SYS.game.serialize(G, NOW)).length; return n < 65536 ? `${n} bytes` : fail(`${n} bytes`); });
 
@@ -613,7 +615,7 @@ check('masteryState: 판정을 한 번에 낸다 — 랭크·상한·해금·찍
     if (SYS.game.masteryState(G2, 'h999') !== null) fail('없는 영웅에 null 을 안 낸다');
     return `${h.cls}/${h.sin} → 노드 ${ms.nodes.length} (T1 ${t1.length} · T2 ${t2.length})`;
 });
-check('save: v3 → v5 이관 — 마스터리 자리 신설 + 안 받고 지나간 포인트 소급 (INTERFACE §4)', () => {
+check('save: v3 → v6 이관 — 마스터리 자리 신설 + 안 받고 지나간 포인트 소급 (INTERFACE §4)', () => {
     const v3 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v3.version = 3;
     for (const h of v3.heroes) { delete h.mastery; delete h.masteryPoints; h.level = 5; }
@@ -632,9 +634,22 @@ check('save: v4 → v5 이관 — 선술집 쿨다운 자리 신설 (열려 있�
     v4.version = 4;
     delete v4.tavern;
     const up = SYS.game.deserialize(v4);
-    if (up.version !== 5) fail(`version ${up.version}`);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
     if (!up.tavern || up.tavern.rerolledAt !== null || up.tavern.hired.length !== 0) fail('tavern 자리가 열린 상태로 안 올라왔다');
     return SYS.game.tavernState(up, NOW).free ? '무료 리롤이 열린 채로 이관' : fail('이관 직후가 쿨다운 중이다');
+});
+
+check('save: v5 → v6 이관 — 파티 전술 자리 신설 (첫 배정은 저장하지 않고 시드가 낸다, INTERFACE §4)', () => {
+    const v5 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v5.version = 5;
+    delete v5.tactics; delete v5.counters.tactic;
+    const up = SYS.game.deserialize(v5);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    if (!up.tactics || Object.keys(up.tactics.slots).length !== 0) fail('tactics 자리가 빈 채로 안 올라왔다');
+    // 옛 세이브도 시드가 같으므로 새로 시작한 판과 **같은 첫 배정**이 나온다
+    const a = SYS.game.tacticState(up).slots.map(x => x.option?.id ?? null);
+    const b = SYS.game.tacticState(G).slots.map(x => x.option?.id ?? null);
+    return eq(a, b) ? `칸 ${a.length} · 첫 배정 동일` : fail('이관이 첫 배정을 흔들었다');
 });
 
 /* ── 스킬 태그 (skill_design §11 확정 2026-08-28) ── */
@@ -1302,8 +1317,8 @@ check('simulate: 도발 — taunt 창 동안 적의 단일 대상은 전부 도�
     if (s.bad) fail(`도발 중인데 다른 대상을 때렸다 — ${s.bad}`);
     return `seed ${seed} · 창 ${s.windows}개 · 적 타격 ${s.checked}건 전부 도발자`;
 });
-check('save: SAVE_VERSION 5 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운뿐 (INTERFACE §4)', () =>
-    SAVE_VERSION === 5 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 6 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · 리롤한 전술 칸뿐 (INTERFACE §4)', () =>
+    SAVE_VERSION === 6 || fail(`v${SAVE_VERSION}`));
 
 /* ── 원정 정산 ── */
 check('report: roundsCleared 를 정산이 싣는다 — 렌더러가 짐작하지 않는다 (INTERFACE §2-7)', () => {
@@ -1463,6 +1478,118 @@ check('tavern: 리롤은 산 칸을 되살린다 — 빈 칸은 다음 리롤에
     if (SYS.game.tavernCandidates(G2)[0] !== null) fail('slot should be empty');
     SYS.game.tavernReroll(G2, NOW);
     return SYS.game.tavernCandidates(G2).every(c => c !== null) || fail('reroll should refill');
+});
+
+/* ── 파티 전술 (tactic_card_design §5 확정 2026-08-30) ── */
+check('csv: tactic_slot 은 1부터 빈틈없이 · 문턱은 오름차순 · 옵션이 칸보다 많다 (리롤할 여지)', () => {
+    const slots = SYS.tactic.slotList;
+    if (slots.length !== D.tacticSlots.length) fail(`칸 ${slots.length} ≠ CSV ${D.tacticSlots.length}행`);
+    slots.forEach((s, i) => { if (s.no !== i + 1) fail(`slot_no ${s.no}`); });
+    for (let i = 1; i < slots.length; i++)
+        if (slots[i].unlockTotalLevel <= slots[i - 1].unlockTotalLevel) fail(`문턱이 안 오른다 (칸 ${slots[i].no})`);
+    if (SYS.tactic.list.length <= slots.length) fail('옵션이 칸보다 많아야 리롤이 성립한다');
+    return `칸 ${slots.length} · 옵션 ${SYS.tactic.list.length} · 문턱 ${slots.map(s => s.unlockTotalLevel).join('/')}`;
+});
+check('tactic: 옵션의 조건 어휘·인자·효과 축을 로드 시 검증한다 — 오타는 조용히 안 넘어간다', () => {
+    const mk = row => () => createTacticSystem({
+        slots: D.tacticSlots, options: [...D.tacticOptions, row], sins: Object.keys(M.SINS),
+        classes: M.CLASSES, weaponGroups: D.weaponGroups, skillSystem: SYS.skill,
+    });
+    const bad = [
+        { option_id: 'x1', cond_kind: 'nope', cond_arg: '-', cond_n: 1, stat: 'atk_pct', value: 1 },
+        { option_id: 'x2', cond_kind: 'affix_sin', cond_arg: 'nosin', cond_n: 1, stat: 'atk_pct', value: 1 },
+        { option_id: 'x3', cond_kind: 'skill_tag', cond_arg: 'notag', cond_n: 1, stat: 'atk_pct', value: 1 },
+        { option_id: 'x4', cond_kind: 'always', cond_arg: 'wrath', cond_n: 0, stat: 'atk_pct', value: 1 },
+        { option_id: 'x5', cond_kind: 'always', cond_arg: '-', cond_n: 0, stat: 'atk_pct', value: 0 },
+    ];
+    for (const row of bad) {
+        let threw = false;
+        try { mk(row)(); } catch { threw = true; }
+        if (!threw) fail(`${row.option_id} 가 통과했다`);
+    }
+    return `${bad.length}종 거부`;
+});
+check('tactic: 칸은 **로스터 합산 레벨**로 열린다 — 파티 3명이 아니라 보유 영웅 전부', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    const total = G2.heroes.reduce((a, h) => a + h.level, 0);
+    const st = SYS.game.tacticState(G2);
+    if (st.totalLevel !== total) fail(`합산 ${st.totalLevel} ≠ ${total}`);
+    if (st.open !== SYS.tactic.openCount(total)) fail('열린 칸 수가 문턱과 안 맞는다');
+    if (st.slots.some(x => !x.open && x.option)) fail('잠긴 칸이 내용을 들고 있다');
+    // 레벨을 올리면 칸이 늘어난다 — 파티에 없는 영웅(벤치)의 레벨도 센다
+    const last = SYS.tactic.slotList[SYS.tactic.slotList.length - 1];
+    G2.heroes[0].level = last.unlockTotalLevel;
+    const st2 = SYS.game.tacticState(G2);
+    if (st2.open !== SYS.tactic.slotCount) fail(`합산 ${st2.totalLevel} 인데 ${st2.open}칸`);
+    return `합산 ${total} → ${st.open}칸 / 합산 ${st2.totalLevel} → ${st2.open}칸`;
+});
+check('tactic: 첫 배정은 시드 결정론이고 칸끼리 안 겹친다 — 리롤이 다른 칸을 흔들지 않는다', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    G2.heroes[0].level = 500;                     // 전 칸 개방
+    const ids = () => SYS.game.tacticState(G2).slots.map(x => x.option.id);
+    const a = ids();
+    if (!eq(a, ids())) fail('같은 상태에서 다른 배정이 나온다');
+    if (new Set(a).size !== a.length) fail(`첫 배정에 중복 ${a.join(',')}`);
+    // 3번 칸을 갈아도 나머지 칸은 그대로다 (통제성 — 인과를 읽을 수 있어야 한다)
+    G2.resources.gold = 999_999;
+    SYS.game.rerollTactic(G2, 3);
+    const b = ids();
+    if (b[2] === a[2]) fail('리롤인데 같은 것이 나왔다');
+    if (!eq(a.filter((_, i) => i !== 2), b.filter((_, i) => i !== 2))) fail('다른 칸이 흔들렸다');
+    if (new Set(b).size !== b.length) fail('리롤이 칸끼리 겹치게 만들었다');
+    return `${a.length}칸 · 3번 ${a[2]} → ${b[2]}`;
+});
+check('tactic: 리롤은 골드를 쓰고 · 모자라면 거절 · 잠긴 칸은 거절 (결과 코드 INTERFACE §3)', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    const cost = SYS.tactic.slotList[0].rerollCost;
+    G2.resources.gold = cost - 1;
+    if (SYS.game.rerollTactic(G2, 1).err !== 'gold') fail('골드 게이트');
+    G2.resources.gold = cost;
+    const r = SYS.game.rerollTactic(G2, 1);
+    if (!r.ok || G2.resources.gold !== 0) fail(`리롤 후 골드 ${G2.resources.gold}`);
+    if (G2.tactics.slots[1] !== r.option.id) fail('세이브에 안 남았다');
+    G2.resources.gold = 999_999;
+    const locked = SYS.tactic.slotList[SYS.tactic.slotList.length - 1].no;
+    if (SYS.game.rerollTactic(G2, locked).err !== 'locked') fail('잠긴 칸이 굴러갔다');
+    if (SYS.game.rerollTactic(G2, 99).err !== 'missing') fail('없는 칸이 굴러갔다');
+    return `칸1 ${cost}G · 잠긴 칸 ${locked} 거절`;
+});
+check('tactic: 조건이 참일 때만 효과가 전투 능력치에 합류한다 · **벤치는 안 받는다** (§1 파티 단위)', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    G2.heroes[0].level = 500;
+    // 조건 없는 옵션(always)만 남기고 나머지 칸은 조건이 거짓인 옵션으로 몰아 확인한다 —
+    // 여기서는 켜진 칸의 효과 합이 그대로 시트에 오르는지만 본다
+    const st = SYS.game.tacticState(G2);
+    const on = st.slots.filter(x => x.open && x.active).map(x => x.option);
+    const bonus = SYS.tactic.bonusOf(on);
+    const h = SYS.game.heroById(G2, G2.party[0]);
+    const withParty = SYS.game.heroCombat(G2, h);
+    const bare = SYS.hero.computeCombat(h, SYS.game.heroItems(G2, h), SYS.game.codexBonus(G2));
+    // 상시 피해 %는 **괄호 안의 합**으로 본다 — 최종 공격력은 반올림돼서 밑수가 작을 때 차이를 삼킨다 (§9-2)
+    const pct = bonus.flat.atk_pct ?? 0;
+    if (withParty.atk_pct_sum - bare.atk_pct_sum !== pct) fail(`상시 피해 % 합류 ${bare.atk_pct_sum} → ${withParty.atk_pct_sum} (기대 +${pct})`);
+    if (withParty.crit_rate - bare.crit_rate !== (bonus.flat.crit_rate ?? 0)) fail('치명타 확률 채널이 안 맞는다');
+    if ((bonus.dr.length > 0) !== (withParty.damage_reduction > bare.damage_reduction)) fail('피해 감소는 원천별 곱으로 들어가야 한다');
+    // 벤치 영웅 — 파티 밖이라 전술이 안 붙는다
+    G2.party = [G2.party[0]];
+    const bench = G2.heroes.find(x => !G2.party.includes(x.uid));
+    const bc = SYS.game.heroCombat(G2, bench);
+    const bbare = SYS.hero.computeCombat(bench, SYS.game.heroItems(G2, bench), SYS.game.codexBonus(G2));
+    if (!eq(bc, bbare)) fail('벤치 영웅이 전술 효과를 받았다');
+    return `켜진 칸 ${on.length} · 상시 피해 % ${bare.atk_pct_sum} → ${withParty.atk_pct_sum}`;
+});
+check('tactic: 조건은 편성에서 확정되는 것만 센다 — 편성을 바꾸면 카운터가 따라 움직인다 (§2-1)', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    G2.heroes[0].level = 500;
+    // 첫 배정이 어느 옵션을 줄지는 시드가 정하므로, 세는 축을 보려면 그 칸에 **직접 꽂는다**
+    const opt = SYS.tactic.list.find(o => o.condKind === 'party_size') ?? fail('풀에 party_size 옵션이 없다');
+    G2.tactics.slots[1] = opt.id;
+    const before = SYS.game.tacticState(G2).slots[0];
+    if (before.have !== G2.party.length) fail(`카운터 ${before.have} ≠ 파티 ${G2.party.length}`);
+    G2.party = [G2.party[0]];
+    const after = SYS.game.tacticState(G2).slots[0];
+    if (after.have !== 1 || after.active) fail(`파티 1명인데 ${after.have} · 켜짐 ${after.active}`);
+    return `파티 ${before.have}명(${before.active ? '켜짐' : '꺼짐'}) → 1명(${after.active ? '켜짐' : '꺼짐'})`;
 });
 
 /* ── 출력 ── */

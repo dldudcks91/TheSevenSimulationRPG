@@ -5,7 +5,7 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v5 (2026-08-30)
+ * 세이브 형식 v6 (2026-08-30)
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
@@ -23,6 +23,9 @@
  *   notice: {kind:'runClosed', stageId, at, seenAt} | null   — 재접속 알림 (배너 1회)
  *   tavern: {rerolledAt: ms|null, hired: [슬롯번호]}         — 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸.
  *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
+ *   tactics: {slots: {칸번호: optionId}}                     — **리롤로 바꾼 칸만** 담는다.
+ *     안 담긴 칸은 시드에서 파생되는 첫 배정이다(tactic.initialAssign) — 선술집 명단과 같은 규칙:
+ *     저장하는 건 「플레이어가 바꾼 것」뿐이고 나머지는 시드가 재현한다
  * }
  *
  * **버전 이관** — v2 부터는 `deserialize` 안에서 올린다 (INTERFACE §4 정책).
@@ -33,6 +36,9 @@
  *   v3 → v4 (2026-08-28 — 마스터리 수치층 신설):
  *     · `heroes[*].mastery = {}` · `masteryPoints = (level − 1) × mastery_point_per_level` 소급 지급
  *       — 이미 레벨업한 영웅이 안 받고 지나간 몫이다. 랭크는 전부 0 이라 전투 결과는 안 바뀐다
+ *   v5 → v6 (2026-08-30 — 파티 전술):
+ *     · `tactics = {slots: {}}` · `counters.tactic = 0` — 칸은 합산 레벨로 이미 열려 있고 첫 배정은 시드가 낸다.
+ *       옛 세이브도 같은 시드를 쓰므로 「새로 시작한 판과 같은 첫 배정」이 그대로 나온다
  *   v4 → v5 (2026-08-30 — 선술집 리롤 쿨다운):
  *     · `tavern` 이 없으면 `{rerolledAt: null, hired: []}` — **쿨다운이 열린 상태**로 올린다.
  *       옛 세이브는 리롤한 적이 없어 기다린 시간을 소급할 근거가 없고, 닫힌 채로 올리면 접속하자마자 골드를 물린다
@@ -42,15 +48,15 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /**
  * @param {object} deps
- *   hero, item, battle, skill — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 9개) / stages(byId) / stageOrder [id...]
+ *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 9개) / stages(byId) / stageOrder [id...]
  *   monsters(byId) / codex {levels:[cards_to_next...](codex_level.csv 레벨순), bonus:[레벨별 %](codex_level.csv:bonus_pct), statByNum:{stage_num: statKey}(codex_series.csv)}
  */
 export function createGameSystem(deps) {
-    const { hero: H, item: I, battle: BT, skill: SK, balance: B } = deps;
+    const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, balance: B } = deps;
     const clone = v => JSON.parse(JSON.stringify(v));
 
     const positions = deps.equipSlots.map(s => s.id);
@@ -82,9 +88,10 @@ export function createGameSystem(deps) {
             heroes: [], party: [], items: {}, bag: [],
             progress: { cleared: [] },
             codexCards: {}, codexKills: {},
-            counters: { hero: 0, item: 0, battle: 0, tavern: 0 },
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0 },
             run: null, lastReport: null, notice: null,
             tavern: { rerolledAt: null, hired: [] },
+            tactics: { slots: {} },
         };
         const rng = makeRng(deriveSeed(state.seed, 0));
         for (const c of candidates) {
@@ -139,6 +146,17 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v5 → v6 — 파티 전술 (tactic_card_design §5).
+     * 리롤한 적이 없는 상태로 올린다 — 칸의 첫 배정은 저장하지 않고 시드에서 나오므로 채울 것이 없다.
+     */
+    function upgradeV5(s) {
+        s.tactics = s.tactics ?? { slots: {} };
+        s.counters.tactic = s.counters.tactic ?? 0;
+        s.version = 6;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -150,16 +168,18 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
         if (s.version === 3) s = upgradeV3(s);
         if (s.version === 4) s = upgradeV4(s);
+        if (s.version === 5) s = upgradeV5(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
         s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
+        s.tactics = s.tactics ?? { slots: {} };
         return s;
     }
 
@@ -214,7 +234,13 @@ export function createGameSystem(deps) {
         return out;
     }
 
-    const heroCombat = (state, h) => H.computeCombat(h, heroItems(state, h), codexBonus(state));
+    /**
+     * 전투 능력치 = 기본 능력치 + 장비 + 도감 + **파티 전술**.
+     * 전술 보너스는 **파티에 든 영웅에게만** 붙는다 (tactic_card_design §1 「파티 단위」) — 조건이 편성을 세는데
+     *   편성 밖 영웅이 그 결과를 받으면 인과가 깨진다. 벤치 영웅의 시트에 안 붙는 것이 맞다.
+     */
+    const heroCombat = (state, h) => H.computeCombat(h, heroItems(state, h), codexBonus(state),
+        state.party.includes(h.uid) ? tacticBonus(state) : null);
 
     /* ── 장비 ── */
 
@@ -426,6 +452,66 @@ export function createGameSystem(deps) {
         return { ok: true, hero: h };
     }
 
+    /* ── 파티 전술 — 칸 해금(합산 레벨) · 리롤 (tactic_card_design §5 확정 2026-08-30) ── */
+
+    /** 해금 기준 = **로스터 전원의 레벨 합.** 파티 3명이 아니라 보유 영웅 전부다 — 벤치를 키워도 칸이 열린다 */
+    const totalLevel = state => state.heroes.reduce((a, h) => a + (h.level ?? 1), 0);
+
+    /** 조건이 세는 대상 = **파티**(편성). 전술은 파티 단위이므로 벤치는 조건에 안 들어간다 */
+    const partyMembers = state => state.party.map(uid => heroById(state, uid)).filter(Boolean)
+        .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h) }));
+
+    /** 첫 배정 — 시드 하나에서 나온다. 리롤 카운터를 안 타므로 **리롤이 다른 칸의 내용을 흔들지 않는다** */
+    const initialAssign = state => TC.initialAssign(makeRng(deriveSeed(state.seed ^ 0x7AC7, 0)));
+
+    /**
+     * 칸의 지금 상태 한 덩어리 — 열렸나 · 무엇이 들었나 · 조건이 몇 / 몇인가 · 리롤 비용.
+     * 판정은 전부 여기서 낸다 (masteryState · tavernState 와 같은 규칙) — 화면은 그리기만 한다.
+     */
+    function tacticState(state) {
+        const total = totalLevel(state);
+        const open = TC.openCount(total);
+        const stored = state.tactics?.slots ?? {};
+        const initial = initialAssign(state);
+        const ctx = TC.contextOf(partyMembers(state));
+        const slots = TC.slotList.map((s, i) => {
+            const opened = s.no <= open;
+            // 저장된 것(리롤한 칸) 우선 · 없으면 첫 배정. 세이브에 없는 옵션 id 는 CSV 가 바뀐 것이라 첫 배정으로 되돌린다
+            const option = opened ? (TC.byId[stored[s.no]] ?? TC.byId[initial[i]] ?? null) : null;
+            const m = option ? TC.measure(option, ctx) : null;
+            return {
+                no: s.no, open: opened, unlockTotalLevel: s.unlockTotalLevel, cost: s.rerollCost,
+                option, have: m?.have ?? 0, need: m?.need ?? 0, active: m?.active ?? false,
+            };
+        });
+        return { totalLevel: total, open, count: TC.slotCount, slots };
+    }
+
+    /** 켜진 칸들의 효과 합 — 접사·마스터리와 **같은 채널** (§2-4). `heroCombat` 이 이걸 받는다 */
+    function tacticBonus(state) {
+        return TC.bonusOf(tacticState(state).slots.filter(s => s.open && s.active).map(s => s.option));
+    }
+
+    /**
+     * 리롤 — 칸 하나의 옵션을 간다. 비용은 칸마다 다르다 (tactic_slot.csv:reroll_cost_gold).
+     * **지금 든 것과 다른 칸에 든 것을 후보에서 뺀다** — 돈을 내고 같은 것이 나오거나 칸끼리 겹치는 일을 막는다.
+     */
+    function rerollTactic(state, slotNo) {
+        const st = tacticState(state);
+        const slot = st.slots.find(s => s.no === slotNo);
+        if (!slot) return { ok: false, err: 'missing' };
+        if (!slot.open) return { ok: false, err: 'locked' };
+        if (state.resources.gold < slot.cost) return { ok: false, err: 'gold' };
+        const held = st.slots.filter(s => s.open && s.option).map(s => s.option.id);
+        state.counters.tactic = (state.counters.tactic ?? 0) + 1;
+        const next = TC.pick(makeRng(deriveSeed(state.seed ^ 0x7AC7, state.counters.tactic)), held);
+        if (!next) return { ok: false, err: 'missing' };      // 풀이 칸보다 많다는 것은 로드 시 검증했다
+        state.resources.gold -= slot.cost;
+        state.tactics = state.tactics ?? { slots: {} };
+        state.tactics.slots[slotNo] = next;
+        return { ok: true, option: TC.byId[next], cost: slot.cost };
+    }
+
     /* ── 마스터리 — 찍기 · 롤백 (skill_design §3 · §5) ── */
 
     /**
@@ -487,5 +573,6 @@ export function createGameSystem(deps) {
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire,
         masteryState, learnMastery, resetMastery,
+        tacticState, tacticBonus, rerollTactic,
     };
 }

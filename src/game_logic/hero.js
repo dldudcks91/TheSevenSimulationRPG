@@ -203,8 +203,10 @@ export function createHeroSystem(data) {
     const attrMult = v => 1 + (v ?? 0) * B.attr_bonus_per_point / 100;
 
     /**
-     * 기본 능력치 + 장비 + 도감 보너스 → 전투 능력치.
+     * 기본 능력치 + 장비 + 도감 보너스 + 파티 전술 → 전투 능력치.
      * items = 착용 중 아이템 배열. codex = {atk_pct, hp_pct, dmg_pct} (없으면 0).
+     * party = 파티 전술의 가산치 `{flat, dr}` (없으면 null) — **파티에 든 영웅에게만** 넘어온다.
+     *   판정(어느 칸이 켜졌나 · 이 영웅이 파티인가)은 state.js 가 하고 여기는 받은 값을 합류시키기만 한다.
      *
      * · **무기가 밑수다** (battle_design §9-1, 08-26 개정) — 다른 슬롯의 고정 공격력을 밑수에 더하지 않는다.
      *   `atk_flat` 은 무기 슬롯 접사만 합산하고, `+피해 %` 는 그 밑수 전체를 곱한다.
@@ -219,7 +221,7 @@ export function createHeroSystem(data) {
      * · **운은 전투 계산 밖**이다 — 드랍률·골드 획득에만 계수로 곱한다 (hero_design §4-1).
      *   장비가 0이면 운도 0을 곱한다 (§8 곱셈 원칙).
      */
-    function computeCombat(hero, items, codex = {}) {
+    function computeCombat(hero, items, codex = {}, party = null) {
         const A = hero.stats;
         const flat = {};                       // 접사 합산 {stat: v}
         const drList = [];                     // 피해 감소는 합치지 않고 원천별로 모은다 (§9-3)
@@ -234,6 +236,9 @@ export function createHeroSystem(data) {
         const mb = masteryBonus(hero);
         for (const k of Object.keys(mb.flat)) flat[k] = (flat[k] ?? 0) + mb.flat[k];
         for (const v of mb.dr) drList.push(v);
+        // 파티 전술도 같은 채널로 합류한다 — 새 곱셈 층을 만들지 않는다 (tactic_card_design §2-4)
+        for (const k of Object.keys(party?.flat ?? {})) flat[k] = (flat[k] ?? 0) + party.flat[k];
+        for (const v of party?.dr ?? []) drList.push(v);
         const f = id => flat[id] ?? 0;
 
         const weapon = items.find(it => it.slot === 'weapon');

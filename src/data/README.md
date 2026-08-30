@@ -42,6 +42,8 @@
 | `hero_attribute.csv` | 7 | 기본 능력치 7종 — 전투 계수(`combat_stat`) + 담당 파견처(`dispatch` — `mine`/`lab`/`forge`/`tavern\|trade`/`-`). 장비로 불변(`balance:attr_equip_bonus = 0`) |
 | `combat_stat.csv` | 25 | 전투 능력치 — 장비·스킬·**마스터리** 파생. **`impl`** = `computeCombat` 이 실제로 내는가(1 = 21종 · 0 = 4종 — 08-28 `hp_regen`·`cooldown_reduction` 구현으로 둘이 넘어왔다). 캐릭터 시트는 `impl=1` 만 그린다 |
 | `mastery_node.csv` | 22 | **마스터리 노드** (skill_design §3 확정 08-28) — 죄종 T1 공통 3(`owner_id=*`) + 죄종 T2 16 + 전사 직업 T1 3. `tree_kind`(sin/class) · `tier` · `stat`(접사 채널 또는 `combat_stat` id) · **값은 `value_key`·`max_rank_key`·`unlock_key` 로 `balance.csv` 를 가리킨다**(수치를 여기 적지 않는다). 표시 이름은 `stat` 에서 파생하므로 컬럼이 없다. T3(반응형)는 값 미정이라 행이 없다 |
+| `tactic_slot.csv` | 7 | **파티 전술의 칸** (tactic_card_design §5 확정 08-30) — `unlock_total_level`(로스터 **합산 레벨** 문턱 · 오름차순) · `reroll_cost_gold`. **칸 수 = 행 수** — 코드가 칸을 세지 않는다 |
+| `tactic_option.csv` | 23 | **파티 전술의 옵션** — 「조건 → 효과」 1행. `cond_kind`(어휘 9종은 `tactic.js`) + `cond_arg`(죄종 / `physical\|magic` / 스킬 태그) + `cond_n` · `stat`(접사 채널 또는 `combat_stat` id) + `value`. 표시 이름은 `stat` 에서 파생하므로 컬럼이 없다(`mastery_node.csv` 와 같은 이유). **행 수 > `tactic_slot.csv` 행 수**여야 리롤이 성립한다 |
 | `codex_level.csv` | 4 | 도감 레벨별 필요 카드 수(**`cards_to_next`** — 누적 아님) + 레벨별 보정 `bonus_pct` |
 | `codex_series.csv` | 4 | 스테이지 번호 → 도감 계열 스탯 (1 공격 / 2 체력 / 3 **명중 — 폐지돼 갈 곳 없음** / 4 피해) |
 
@@ -57,4 +59,4 @@
 - 계승 데이터의 빈 구멍: [inherited_data_gaps.md](../../docs/reference/inherited_data_gaps.md)
 
 ---
-*마지막 업데이트: 2026-08-28 (**`mastery_node.csv` 신설 22행** — 마스터리 T1·T2 수치 노드 · 값은 `balance.csv` 키 참조 · 규약 2건 추가(파생 컬럼 금지 · `_key` 접미사) · `combat_stat.csv` `hp_regen`·`cooldown_reduction` impl 0→1) · 2026-08-28 (`skill.csv:tags` 컴럼 신설 — 영문 id · `|` 구분 최대 2 · 리스트 규약에 등재) · 2026-08-28 (CSV 형태 최적화 — 공통 규약 확정 · `chapter`·`codex_series` 신설 · `equipment_option_override` 폐기 · 13종 전부 로더 연결) · 2026-08-28 (skill.csv 08-27 판 14행으로 재작성 — 코드가 읽는다) · 2026-08-26 (skill.csv 등재 — 전직 액티브 15) · 2026-08-26 (CLAUDE.md 에서 분리)*
+*마지막 업데이트: 2026-08-30 (**`tactic_slot.csv`·`tactic_option.csv` 신설** — 파티 전술. 칸 수 = 행 수 · 옵션 값은 행에 직접(전역 손잡이가 아니라 개별 옵션 수치라 `balance.csv` 키를 만들지 않는다) · 표시 이름 컬럼 없음) · 2026-08-28 (**`mastery_node.csv` 신설 22행** — 마스터리 T1·T2 수치 노드 · 값은 `balance.csv` 키 참조 · 규약 2건 추가(파생 컬럼 금지 · `_key` 접미사) · `combat_stat.csv` `hp_regen`·`cooldown_reduction` impl 0→1) · 2026-08-28 (`skill.csv:tags` 컴럼 신설 — 영문 id · `|` 구분 최대 2 · 리스트 규약에 등재) · 2026-08-28 (CSV 형태 최적화 — 공통 규약 확정 · `chapter`·`codex_series` 신설 · `equipment_option_override` 폐기 · 13종 전부 로더 연결) · 2026-08-28 (skill.csv 08-27 판 14행으로 재작성 — 코드가 읽는다) · 2026-08-26 (skill.csv 등재 — 전직 액티브 15) · 2026-08-26 (CLAUDE.md 에서 분리)*

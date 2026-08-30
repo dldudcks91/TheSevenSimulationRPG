@@ -1243,3 +1243,44 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .help > h3 small { color: var(--text-muted); font-size: var(--fs-xs); margin-left: 7px; }
 .help > .note-body { margin-top: 5px; }
 .help > .note-body + .note-body { margin-top: 7px; }
+
+/* ───────── 연구 탭 — 파티 전술 (2026-08-30 · SCREEN_DESIGN §13) ─────────
+   칸 수는 `tactic_slot.csv` 행 수다 — 격자는 행 수에 맞춰 접히고 잠긴 칸도 자리를 지킨다.
+   칸 폭은 고정 px 이 아니라 `minmax()` — 영어 조건 문장이 한국어보다 길다 (src/ui/README 폭 정책) */
+.rs-head {
+    display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;
+    font-size: var(--fs-sm); color: var(--text-secondary);
+    padding-bottom: 9px; margin-bottom: 11px; border-bottom: 1px solid var(--border-dark);
+}
+.rs-head b { color: var(--text-primary); font-size: var(--fs-md); }
+
+.rs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+
+.rs-cell {
+    display: flex; flex-direction: column; gap: 5px; min-width: 0;
+    padding: 9px 10px 10px;
+    background: var(--bg-tertiary); border: 1px solid var(--border-primary);
+}
+/* 켜짐/꺼짐이 칸의 첫인상 — 켜진 칸만 테두리가 산다 (죄종 색은 쓰지 않는다, 전술은 파티 것이다) */
+.rs-cell.on { background: #1b1b2c; border-color: var(--border-highlight); }
+.rs-cell.off { opacity: .82; }
+.rs-cell.locked {
+    opacity: .6; background: rgba(255, 255, 255, .015);
+    border-style: dashed; justify-content: flex-start;
+}
+
+.rs-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.rs-no { font-size: var(--fs-xs); color: var(--text-muted); }
+.rs-state { font-size: var(--fs-xs); color: var(--text-muted); }
+.rs-cell.on .rs-state { color: var(--color-success); }
+
+.rs-cond {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+    font-size: var(--fs-sm); color: var(--text-secondary); word-break: keep-all;
+}
+/* 조건 카운터 「지금 / 필요」 — 안 보이면 조건이 함정이 된다 (tactic_card_design §4) */
+.rs-cnt { flex: none; font-size: var(--fs-xs); color: var(--text-muted); }
+.rs-cell.on .rs-cnt { color: var(--color-info); }
+.rs-eff { font-size: var(--fs-sm); color: var(--color-info); }
+.rs-lock { font-size: var(--fs-sm); color: var(--color-warning); margin-top: 4px; }
+.rs-roll { align-self: flex-start; margin-top: 3px; }

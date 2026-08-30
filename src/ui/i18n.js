@@ -183,6 +183,7 @@ const STRINGS = {
     'nav.expedition': { ko: '원정', en: 'Expedition' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
     'nav.skill': { ko: '스킬', en: 'Skills' },
+    'nav.research': { ko: '연구', en: 'Research' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
@@ -352,6 +353,43 @@ const STRINGS = {
     'tip.skill.h': { ko: '스킬', en: 'Skill' },
 
     /* ── 스킬 ── */
+    /* ── 연구 탭 — 파티 전술 (2026-08-30 · SCREEN_DESIGN §13) ── */
+    'rs.h': { ko: '파티 전술', en: 'Party Tactics' },
+    'rs.total': { ko: '합산 레벨', en: 'Total Level' },
+    'rs.open': { ko: '열린 칸', en: 'Slots Open' },
+    'rs.next': { ko: '{no}번 칸까지 {n}', en: '{n} more to slot {no}' },
+    'rs.allOpen': { ko: '전부 열렸다', en: 'All slots open' },
+    'rs.slot': { ko: '{n}번 칸', en: 'Slot {n}' },
+    'rs.needLv': { ko: '합산 Lv.{lv}', en: 'Total Lv.{lv}' },
+    'rs.on': { ko: '켜짐', en: 'On' },
+    'rs.off': { ko: '꺼짐', en: 'Off' },
+    'rs.reroll': { ko: '리롤 {g}G', en: 'Reroll {g}G' },
+    'rs.reroll.done': { ko: '{o}', en: '{o}' },
+    'rs.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'rs.err.locked': { ko: '아직 열리지 않은 칸이다', en: 'That slot is not open yet' },
+    'rs.err.missing': { ko: '없는 칸이다', en: 'No such slot' },
+    'rs.note': {
+        ko: '칸은 <b>줍는 것이 아니다</b> — 로스터 전원의 레벨 합이 문턱을 넘을 때마다 하나씩 열리고, '
+            + '칸에 든 옵션은 골드로 다시 굴린다. 리롤에는 <b>지금 든 것과 다른 칸에 든 것이 나오지 않는다</b>.',
+        en: 'Slots are <b>not looted</b> — one opens each time the summed level of your whole roster crosses a threshold, '
+            + 'and the option inside is rerolled with gold. A reroll never returns what this slot or another slot already holds.',
+    },
+    'rs.note.cond': {
+        ko: '조건은 <b>편성에서 확정되는 것</b>만 센다 — 죄종·직업·무기·접사·스킬 태그. '
+            + '전투 중에 변하는 값(현재 HP · 남은 적)은 쓰지 않는다. 효과는 <b>파티에 든 영웅</b>에게만 붙는다.',
+        en: 'Conditions read only what the formation fixes — sins, classes, weapons, affixes, skill tags. '
+            + 'Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.',
+    },
+    'rs.cond.always': { ko: '조건 없음', en: 'No condition' },
+    'rs.cond.party_size': { ko: '파티 {n}명 이상', en: 'Party of {n}+' },
+    'rs.cond.sin_same': { ko: '같은 죄종 {n}명 이상', en: '{n}+ heroes sharing a sin' },
+    'rs.cond.sin_kind': { ko: '죄종 {n}종 이상', en: '{n}+ different sins' },
+    'rs.cond.class_same': { ko: '같은 직업 {n}명 이상', en: '{n}+ heroes sharing a class' },
+    'rs.cond.affix_sin': { ko: '{a} 접사 {n}개 이상', en: '{n}+ {a} affixes' },
+    'rs.cond.two_hand': { ko: '양손 무기 {n}명 이상', en: '{n}+ two-handed weapons' },
+    'rs.cond.damage_kind': { ko: '{a} 무기 {n}명 이상', en: '{n}+ {a} weapons' },
+    'rs.cond.skill_tag': { ko: '{a} 스킬 보유 {n}명 이상', en: '{n}+ heroes with a {a} skill' },
+
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
     'sk.points.note': {
         ko: '죄종 마스터리와 직업 마스터리가 <b>포인트 풀을 공유</b>한다 — 같은 축이 양쪽에 있어도 중복이 아니라 <b>기회비용이 있는 선택</b>이다.<br>'

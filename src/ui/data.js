@@ -12,6 +12,7 @@ import { createHeroSystem } from '../game_logic/hero.js';
 import { createItemSystem } from '../game_logic/item.js';
 import { createBattleSystem } from '../game_logic/battle.js';
 import { createSkillSystem } from '../game_logic/skill.js';
+import { createTacticSystem } from '../game_logic/tactic.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createGameSystem } from '../game_logic/state.js';
 
@@ -31,15 +32,17 @@ export const D = {
     weaponGroupList: [],
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
+    tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
+    tacticOptions: [],        // tactic_option.csv 원시 행 — 「조건 → 효과」 1행 = 옵션 1개
 };
 
-/** 조립된 시스템 — hero / item / battle / skill / game */
+/** 조립된 시스템 — hero / item / battle / skill / tactic / game */
 export let SYS = null;
 
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'hero_attribute', 'combat_stat', 'chapter',
-    'mastery_node'];
+    'mastery_node', 'tactic_slot', 'tactic_option'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -47,7 +50,8 @@ export async function loadData(base = './data/') {
         return r.text();
     })));
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
-        weaponGroup, skillRow, heroAttr, combatStat, chapter, masteryNode] = texts.map(parseCsv);
+        weaponGroup, skillRow, heroAttr, combatStat, chapter, masteryNode,
+        tacticSlot, tacticOption] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -86,6 +90,8 @@ export async function loadData(base = './data/') {
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
     D.skillRows = skillRow;
     D.masteryNodes = masteryNode;
+    D.tacticSlots = tacticSlot;
+    D.tacticOptions = tacticOption;
 
     SYS = buildSystems(D);
     return D;
@@ -155,16 +161,21 @@ export function buildSystems(d) {
     });
     // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다
     const skill = createSkillSystem({ balance: d.balance, rows: d.skillRows ?? [] });
+    // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
+    const tactic = createTacticSystem({
+        slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: M.CLASSES,
+        weaponGroups: d.weaponGroups, skillSystem: skill,
+    });
     const battle = createBattleSystem({
         balance: d.balance, monsters: d.monsters, stages: d.stages, roundTypes: d.roundTypes,
         budgets: d.budgets, grades: d.grades, sins,
         sinTraits: M.SIN_TRAITS, commonTraits: M.COMMON_TRAITS, itemSystem: item, skillSystem: skill,
     });
     const game = createGameSystem({
-        hero, item, battle, skill, balance: d.balance,
+        hero, item, battle, skill, tactic, balance: d.balance,
         equipSlots: M.EQUIP_SLOTS, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
-    return { hero, item, battle, skill, game, formula: createFormula(d.balance) };
+    return { hero, item, battle, skill, tactic, game, formula: createFormula(d.balance) };
 }

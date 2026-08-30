@@ -7,7 +7,7 @@
  * i18n 규약 (2026-08-23): **이 파일에 한국어 리터럴을 쓰지 않는다** (주석 제외).
  *   UI 문구 → i18n.js 의 t(key) / 데이터 문자열 → mock.js 의 {ko, en} 쌍을 L() 로 푼다.
  *
- * 화면 흐름: 시작(새 게임 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 선술집 / 도감 / 도움말
+ * 화면 흐름: 시작(새 게임 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 연구 / 선술집 / 도감 / 도움말
  *   전투 파티는 한 팀만 운용하므로 원정 탭 하나가 세 상태를 갖는다.
  *
  * 2026-08-26 — **인게임 패널에는 설명 문장을 두지 않는다** (사용자 지시). 숫자·상태·오류·버튼·툴팁만 남기고
@@ -23,7 +23,7 @@
  *   지역을 누르면 목록 위에 열리는 **편성 패널**(formPanel) 안에 넣었다. 출발 버튼도 스테이지 행에서 그 패널로 옮겼다 —
  *   행 클릭은 이제 「지역 선택」이다. 패널은 **누를 때만** 뜬다 — 자동으로 열지 않는다 (state.expStage = null 이면 없다).
  *
- * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=dmg 면 누적 데미지 탭) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (편성 패널이 열린 상태)
+ * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=dmg 면 누적 데미지 탭) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (편성 패널이 열린 상태) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태)
  */
 
 import * as M from './mock.js';
@@ -130,7 +130,7 @@ const heroFace = h => {
 
 /* ═══════════ 화면 상태 ═══════════ */
 
-const TABS = ['expedition', 'character', 'skill', 'tavern', 'codex', 'help'];
+const TABS = ['expedition', 'character', 'skill', 'research', 'tavern', 'codex', 'help'];
 
 /* 시작 파티 후보의 기준 시드 — 고정값이라 같은 리롤 횟수면 언제나 같은 3명 (결정론 확인용).
    마스터 시드(전투·드롭)는 확정 시각으로 찍는다 — 플레이마다 다른 전투, 같은 세이브 안에선 같은 전투. */
@@ -206,6 +206,7 @@ function render() {
         expedition: renderExpedition,
         character: renderCharacter,
         skill: renderSkill,
+        research: renderResearch,
         tavern: renderTavern,
         codex: renderCodex,
         help: renderHelp,
@@ -1068,6 +1069,68 @@ function renderSkill(main) {
     main.appendChild(stack);
 }
 
+/* ═══════════ 연구 — 파티 전술 (SCREEN_DESIGN §13) ═══════════
+   칸은 **획득물이 아니다**: 합산 레벨이 칸을 열고, 칸에 든 옵션은 골드로 다시 굴린다 (tactic_card_design §5).
+   판정(열림 · 조건 카운터 · 비용)은 전부 `game.tacticState` 가 실어 온다 — 렌더러는 파티를 세지 않는다. */
+
+/** 조건의 인자 — 죄종 · 피해 종류 · 스킬 태그 셋 중 하나다. 어휘 사전은 mock, 문장 틀은 i18n */
+const condArgName = o =>
+    o.condKind === 'affix_sin' ? sinName(o.condArg)
+        : o.condKind === 'damage_kind' ? L(M.DAMAGE_KINDS[o.condArg])
+            : o.condKind === 'skill_tag' ? L(M.SKILL_TAGS[o.condArg]) : '';
+const condText = o => t(`rs.cond.${o.condKind}`, { n: o.condN, a: condArgName(o) });
+/** 효과 한 줄 — 축 이름·단위는 `stat` 에서 파생한다 (마스터리 칸과 같은 규칙 · §13) */
+const optionEffect = o => L(M.affixText(o.stat, o.value, statRow(o.stat)));
+
+/** 칸 하나 — 잠긴 칸도 그린다(어디까지 열리는지가 보여야 한다 · §13). 무조건 옵션은 카운터를 달지 않는다 */
+function tacticCell(slot, onReroll) {
+    const c = el('div', `rs-cell${slot.open ? (slot.active ? ' on' : ' off') : ' locked'}`);
+    const no = t('rs.slot', { n: slot.no });
+    if (!slot.open) {
+        c.innerHTML = `<div class="rs-top"><span class="rs-no">${no}</span></div>
+            <div class="rs-lock">${t('rs.needLv', { lv: slot.unlockTotalLevel })}</div>`;
+        return c;
+    }
+    const o = slot.option;
+    const counter = o.condKind === 'always' ? '' : `<b class="rs-cnt">${slot.have} / ${slot.need}</b>`;
+    c.innerHTML = `
+        <div class="rs-top"><span class="rs-no">${no}</span>
+            <span class="rs-state">${t(slot.active ? 'rs.on' : 'rs.off')}</span></div>
+        <div class="rs-cond">${condText(o)}${counter}</div>
+        <div class="rs-eff">${optionEffect(o)}</div>`;
+    const b = el('button', 'btn sm rs-roll', t('rs.reroll', { g: slot.cost.toLocaleString() }));
+    b.disabled = G.resources.gold < slot.cost;
+    b.onclick = () => onReroll(slot.no);
+    c.appendChild(b);
+    return c;
+}
+
+function renderResearch(main) {
+    const ts = SYS.game.tacticState(G);
+    const next = ts.slots.find(s => !s.open);
+
+    /** 리롤 — 거절 사유는 state 가 코드로 낸다 (INTERFACE §3) */
+    const reroll = no => {
+        const r = SYS.game.rerollTactic(G, no);
+        if (r.ok) { flash('rs.reroll.done', { o: `${condText(r.option)} → ${optionEffect(r.option)}` }); save(); }
+        else flash(`rs.err.${r.err}`);
+        render();
+    };
+
+    const p = el('div', 'panel');
+    p.appendChild(el('h2', '', t('rs.h')));
+    p.appendChild(el('div', 'rs-head', `
+        <span>${t('rs.total')} <b>${ts.totalLevel}</b></span>
+        <span>${t('rs.open')} <b>${ts.open}</b> <span class="muted">/ ${ts.count}</span></span>
+        <span class="muted">${next
+            ? t('rs.next', { no: next.no, n: next.unlockTotalLevel - ts.totalLevel })
+            : t('rs.allOpen')}</span>`));
+    const grid = el('div', 'rs-grid');
+    for (const slot of ts.slots) grid.appendChild(tacticCell(slot, reroll));
+    p.appendChild(grid);
+    main.appendChild(p);
+}
+
 /* ═══════════ 선술집 ═══════════ */
 
 function renderTavern(main) {
@@ -1241,6 +1304,12 @@ function helpSections() {
             ],
         },
         {
+            title: t('nav.research'),
+            groups: [
+                { h: t('rs.h'), sub: t('rs.open'), body: [t('rs.note'), t('rs.note.cond')] },
+            ],
+        },
+        {
             title: t('nav.tavern'),
             groups: [
                 { h: t('tv.h'), sub: t('tv.sub'), body: [t('tv.tiers.note')] },
@@ -1301,6 +1370,12 @@ async function boot() {
     if (dev === 'form') {   // 편성 패널이 열린 상태 — 패널은 클릭으로만 열리므로 헤드리스가 닿을 길을 따로 낸다
         if (!G) startGame();
         state.expStage = D.stageOrder[0];
+    }
+    if (dev === 'tactics') {   // 전술 칸이 전부 열린 상태 — 칸은 합산 레벨로만 열리므로 헤드리스가 닿을 길을 따로 낸다
+        if (!G) startGame();
+        // 마지막 칸의 문턱을 한 영웅에게 몰아 준다(문턱은 로스터 합산이라 이 한 줄이면 전부 열린다)
+        G.heroes[0].level = SYS.tactic.slotList[SYS.tactic.slotCount - 1].unlockTotalLevel;
+        state.tab = 'research';
     }
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();

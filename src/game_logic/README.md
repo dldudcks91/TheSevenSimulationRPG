@@ -20,6 +20,7 @@
 | `hero.js` | 생성(합 고정·주력 축) · XP/레벨 · 히든 상한 성장 · 전투 능력치 합산 |
 | `item.js` | 드롭 · 시작 무기(직업 전속 무기군) · 착용 규칙 · 분해 |
 | `skill.js` | 액티브 정의 정규화·검증 · 직업 배정 · 발동 선택. **실행은 하지 않는다** (정의는 `skill.csv`, 종류 어휘는 코드) |
+| `tactic.js` | **파티 전술** — 칸 해금(로스터 합산 레벨) · 조건 판정 · 리롤 후보. **무상태**(어느 칸에 무엇이 들었는지는 세이브가 든다) · 정의는 `tactic_slot.csv`·`tactic_option.csv`, 조건 어휘는 코드 |
 | `battle.js` | 헤드리스 시뮬 — 누가 언제 때리는가 + **액티브 실행**(쿨·버프 창·배리어·회복·다단타·광역·도발). 피해 자체는 `formula.js` |
 | `state.js` | 세이브 스키마 · `newGame` / `serialize` / `deserialize` · 모든 상태 전이 |
 
@@ -27,4 +28,4 @@
 검증: [`src/dev/README.md`](../dev/README.md)
 
 ---
-*마지막 업데이트: 2026-08-28 (hero.js 에 마스터리 수치층 · state.js 에 포인트 찍기/롤백 · battle.js 에 HP 재생·쿨감소 · skill.js 에 태그 검증) · 2026-08-28 (skill.js 신설 등재 · battle.js 에 액티브 실행 추가) · 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*
+*마지막 업데이트: 2026-08-30 (tactic.js 신설 등재 — hero.computeCombat 4번째 인자 · state.js 에 칸 해금/리롤) · 2026-08-28 (hero.js 에 마스터리 수치층 · state.js 에 포인트 찍기/롤백 · battle.js 에 HP 재생·쿨감소 · skill.js 에 태그 검증) · 2026-08-28 (skill.js 신설 등재 · battle.js 에 액티브 실행 추가) · 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*

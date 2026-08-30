@@ -19,6 +19,7 @@
 | `?dev=play` | 관전 — `&bt=dmg` 면 우측 탭이 누적 데미지 |
 | `?dev=offline` | 반복 켠 채 껐다 켠 상황 — 런 마무리 배너 |
 | `?dev=form` | 편성 패널이 열린 화면 (지역을 고른 상태) |
+| `?dev=tactics` | 연구 탭 — 전술 칸이 **전부 열린** 상태 (칸은 합산 레벨로만 열려 클릭으로 못 만든다) |
 | `?screen=start` | 시작 화면 |
 | `?tab=character` | 캐릭터 탭 |
 | `?face=<스타일>` | 몬스터 얼굴 아트 스타일 교체 — `src/assets/art/faces/<스타일>/`. 목록은 `ui/mock.js:FACE_STYLES` · localStorage 에 남는다 |
