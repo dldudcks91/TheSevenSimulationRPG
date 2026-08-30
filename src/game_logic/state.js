@@ -5,7 +5,7 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v4 (2026-08-28)
+ * 세이브 형식 v5 (2026-08-30)
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
@@ -21,6 +21,8 @@
  *   run: {stageId, repeat, lastAt, durationSec} | null,
  *   lastReport: {...} | null,
  *   notice: {kind:'runClosed', stageId, at, seenAt} | null   — 재접속 알림 (배너 1회)
+ *   tavern: {rerolledAt: ms|null, hired: [슬롯번호]}         — 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸.
+ *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
  * }
  *
  * **버전 이관** — v2 부터는 `deserialize` 안에서 올린다 (INTERFACE §4 정책).
@@ -31,13 +33,16 @@
  *   v3 → v4 (2026-08-28 — 마스터리 수치층 신설):
  *     · `heroes[*].mastery = {}` · `masteryPoints = (level − 1) × mastery_point_per_level` 소급 지급
  *       — 이미 레벨업한 영웅이 안 받고 지나간 몫이다. 랭크는 전부 0 이라 전투 결과는 안 바뀐다
+ *   v4 → v5 (2026-08-30 — 선술집 리롤 쿨다운):
+ *     · `tavern` 이 없으면 `{rerolledAt: null, hired: []}` — **쿨다운이 열린 상태**로 올린다.
+ *       옛 세이브는 리롤한 적이 없어 기다린 시간을 소급할 근거가 없고, 닫힌 채로 올리면 접속하자마자 골드를 물린다
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯 9·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 /**
  * @param {object} deps
@@ -79,6 +84,7 @@ export function createGameSystem(deps) {
             codexCards: {}, codexKills: {},
             counters: { hero: 0, item: 0, battle: 0, tavern: 0 },
             run: null, lastReport: null, notice: null,
+            tavern: { rerolledAt: null, hired: [] },
         };
         const rng = makeRng(deriveSeed(state.seed, 0));
         for (const c of candidates) {
@@ -123,6 +129,16 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v4 → v5 — 선술집 리롤 쿨다운 (base_expedition_design §2-4).
+     * 옛 세이브는 쿨다운을 걸린 적이 없으므로 **열려 있는 상태**로 올린다(`rerolledAt: null`).
+     */
+    function upgradeV4(s) {
+        s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
+        s.version = 5;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -134,14 +150,16 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
         if (s.version === 3) s = upgradeV3(s);
+        if (s.version === 4) s = upgradeV4(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
+        s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
         return s;
     }
 
@@ -339,6 +357,9 @@ export function createGameSystem(deps) {
             downed: result.downed.slice(), drops, discarded,
             cards: { ...result.cards },
             rounds: result.rounds,
+            // 깬 라운드 수 — 렌더러가 「이겼으면 전부, 아니면 하나 뺀다」로 짐작하던 값이다.
+            // 귀환 룰이 들어오면서 「라운드를 정리한 직후에 철수」가 생겨 그 짐작이 틀릴 수 있다
+            roundsCleared: result.roundsCleared,
             // 빗나감 비율 — 레벨 부족의 전용 신호 (battle_design §9-8). 옛 리포트에는 없을 수 있다(렌더러가 허용)
             strikes: result.strikes ? clone(result.strikes) : null,
         };
@@ -362,18 +383,35 @@ export function createGameSystem(deps) {
     }
     function dismissNotice(state) { state.notice = null; }
 
-    /* ── 선술집 ── */
+    /* ── 선술집 — 명단 · 리롤 쿨다운 (base_expedition_design §2-4 확정 2026-08-26) ── */
 
-    /** 후보 3명 — 시드+카운터에서 매번 같은 3명이 다시 나온다 (저장 불필요) */
+    /**
+     * 명단 — 시드+카운터에서 매번 같은 사람들이 다시 나온다 (명단 자체는 저장하지 않는다).
+     * **고용한 칸은 `null`** — 빈 채로 남고 다음 리롤에 채워진다. 그래서 저장하는 것은 「몇 번 칸을 샀나」뿐이다
+     */
     function tavernCandidates(state) {
         const rng = makeRng(deriveSeed(state.seed ^ 0x5A17, state.counters.tavern));
-        return H.rollCandidates(rng, B.tavern_candidates);
+        const hired = state.tavern?.hired ?? [];
+        return H.rollCandidates(rng, B.tavern_candidates).map((c, i) => (hired.includes(i) ? null : c));
     }
-    function tavernReroll(state) {
-        if (state.resources.gold < B.tavern_reroll_cost) return { ok: false, err: 'gold' };
-        state.resources.gold -= B.tavern_reroll_cost;
+    /** 무료 리롤이 열리는 시각 — 리롤한 적이 없으면 이미 열려 있다. 쿨다운은 **플레이어 행동**에 걸린다(자동 갱신 없음) */
+    function tavernFreeAt(state) {
+        const at = state.tavern?.rerolledAt;
+        return at == null ? 0 : at + B.tavern_refresh_hours * 60 * 60 * 1000;
+    }
+    /** 선술집 화면 상태 한 덩어리 — 판정을 여기서 다 낸다 (masteryState 와 같은 규칙) */
+    function tavernState(state, now) {
+        const freeAt = tavernFreeAt(state);
+        return { candidates: tavernCandidates(state), freeAt, free: now >= freeAt, cost: B.tavern_reroll_cost };
+    }
+    /** 리롤 — 쿨다운이 끝났으면 무료, 아니면 즉시 리롤 비용(골드). 리롤은 명단을 통째로 갈고 쿨다운을 다시 건다 */
+    function tavernReroll(state, now) {
+        const free = now >= tavernFreeAt(state);
+        if (!free && state.resources.gold < B.tavern_reroll_cost) return { ok: false, err: 'gold' };
+        if (!free) state.resources.gold -= B.tavern_reroll_cost;
         state.counters.tavern += 1;
-        return { ok: true };
+        state.tavern = { rerolledAt: now, hired: [] };
+        return { ok: true, free };
     }
     function hire(state, index) {
         if (state.heroes.length >= B.roster_cap) return { ok: false, err: 'roster' };
@@ -382,7 +420,9 @@ export function createGameSystem(deps) {
         if (!c) return { ok: false, err: 'missing' };
         state.resources.gold -= B.tavern_hire_cost;
         const h = addHero(state, clone(c));
-        state.counters.tavern += 1;      // 고용하면 후보가 갈린다 (같은 사람을 두 번 사지 못한다)
+        // 고용한 칸만 빈다 — 명단을 갈지 않는다. 고용이 무료 리롤 우회로가 되면 쿨다운이 무의미해진다 (§2-4)
+        state.tavern = state.tavern ?? { rerolledAt: null, hired: [] };
+        state.tavern.hired.push(index);
         return { ok: true, hero: h };
     }
 
@@ -445,7 +485,7 @@ export function createGameSystem(deps) {
         equipTarget, equip, unequip, salvage,
         toggleParty, tickInjuries,
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
-        tavernCandidates, tavernReroll, hire,
+        tavernCandidates, tavernState, tavernReroll, hire,
         masteryState, learnMastery, resetMastery,
     };
 }

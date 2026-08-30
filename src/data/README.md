@@ -30,7 +30,7 @@
 
 | 파일 | 행 | 내용 |
 |---|---|---|
-| `balance.csv` | 68 | `key,value,status,knob,description_kr`. `status=fixed` 13(기획 확정) / 나머지 `proposed` · `knob=1` 15 = [`src/dev/README.md`](../dev/README.md) 의 밸런스 손잡이 표 |
+| `balance.csv` | 101 | `key,value,status,knob,description_kr`. `status=fixed` 15(기획 확정) / 나머지 `proposed` · `knob=1` 44 = [`src/dev/README.md`](../dev/README.md) 의 밸런스 손잡이 표 (2026-08-30 재집계 — 마스터리 랭크값 29 가 08-28 로 손잡이에 들어왔는데 세지 않고 있었다) |
 | `chapter.csv` | 7 | 챕터 id · 죄종 · 이름 `_kr`/`_en`. 몬스터 id 앞자리 = 챕터 (1101 → 1) |
 | `stage.csv` | 28 | 스테이지 — 이름 `_kr`/`_en` · `bg`(계승 배경 자산 유무) · 타입 / dlvl / 보스 / 보스 등급 |
 | `stage_round.csv` | 9 | 스테이지 내부 라운드 9개 구조 |

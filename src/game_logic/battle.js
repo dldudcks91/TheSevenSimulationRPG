@@ -425,7 +425,8 @@ export function createBattleSystem(data) {
             // 쿨은 실시간 초 — 시전 순간부터 (battle_design §6). 쿨감소는 **표기 쿨에 곱**한다 (combat_stat:cooldown_reduction)
             sel.readyAt = t + def.cool * Math.max(CD_MIN_MULT, 1 - (u.cdr ?? 0) / 100);
             out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
-            timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id });
+            // `ready` = 이 스킬이 다시 준비되는 시각. 재생기가 쿨을 **계산하지 않고** 그리게 하려고 함께 싣는다
+            timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt) });
             if (def.kind === 'attack') castAttack(u, def, foes);
             else if (def.kind === 'heal') castHeal(u, def);
             else castBuff(u, def);
@@ -454,12 +455,15 @@ export function createBattleSystem(data) {
                 if (u.next <= 0) { u.next = u.period; act(u); }
             }
             if (alive(party).length === 0) { out.reason = 'wipe'; break; }
+            // 귀환 룰 — 전투불능자가 하나라도 나오면 그 자리에서 런을 접는다 (연쇄 전멸 방지, base_expedition_design §1-1).
+            // 라운드 정리를 **먼저** 본다 — 마지막 타격과 같은 틱에 쓰러져도 그 라운드의 클리어는 클리어로 남는다
             if (alive(enemies).length === 0) {
                 out.roundsCleared = round;
                 if (round >= rounds) { out.won = true; out.reason = 'clear'; break; }
+                if (alive(party).length < party.length) { out.reason = 'retreat'; break; }
                 round += 1;
                 beginRound();
-            }
+            } else if (alive(party).length < party.length) { out.reason = 'retreat'; break; }
             if (t >= B.battle_timeout_sec) { out.reason = 'timeout'; break; }
         }
         out.durationSec = r1(t);

@@ -12,7 +12,7 @@
 | `storage.js` | localStorage 어댑터 — 저장소를 만지는 **유일한** 파일 |
 | `tip.js` | 툴팁 — **기계장치 한 곳**(표시 · 따라다니기 · 넘침 보정 · 겹친 툴팁 복귀). 두 렌더러가 함께 쓰는 **영웅 카드 · 스킬 카드**도 여기. 아이템 비교 카드는 `app.js` (app 헬퍼를 많이 탄다) |
 | `i18n.js` | 한/영 사전 `STRINGS` + 언어 상태 |
-| `mock.js` | 화면 전용 사전 — 죄종·희귀도 색 · 직업·슬롯 · 아이템 베이스 · 접사 정의 · 마스터리 판 프레임(`MASTERY_GRID` — 티어 3 × 노드 3) · 전투 능력치 **카테고리 라벨**(`COMBAT_CATS`) · 자산 경로(`FACE_DIR`·`BG_DIR`·`stageBg`) · 관전 쿨 게이지 목업(`MOCK_ACTIVES`, DEV_PLAN 부채 #13). **이름 ko/en·얼굴 유무·기본 능력치 7·전투 능력치 25·도감 보정·상태는 2026-08-28 로 CSV 로 나갔다** — 헬퍼는 `data.js` (`monsterName`·`monsterFace`·`monsterSin`·`stageName`·`stageBgOf`·`chapterOf`·`eliteName`) |
+| `mock.js` | 화면 전용 사전 — 죄종·희귀도 색 · 직업·슬롯 · 아이템 베이스 · 접사 정의 · 마스터리 판 프레임(`MASTERY_GRID` — 티어 3 × 노드 3) · 전투 능력치 **카테고리 라벨**(`COMBAT_CATS`) · 자산 경로(`faceDir()`·`BG_DIR`·`stageBg`) · **얼굴 아트 스타일 전환**(`FACE_STYLES`·`setFaceStyle` — 폴더 하나 = 스타일 하나) · 액티브 표시 사전(`SKILL_DISPLAY` — 아이콘·설명만. 이름·쿨은 `skill.csv`). **이름 ko/en·얼굴 유무·기본 능력치 7·전투 능력치 25·도감 보정·상태는 2026-08-28 로 CSV 로 나갔다** — 헬퍼는 `data.js` (`monsterName`·`monsterFace`·`monsterSin`·`stageName`·`stageBgOf`·`chapterOf`·`eliteName`) |
 | `style.css` | 스타일 |
 
 - **공통 영웅 띠** (`app.js heroStrip`) — 캐릭터·스킬·선술집 탭 상단, 원정은 **편성 패널 안**(`formPanel` — 스테이지를 골라야 열린다, `{flat:true}` 로 패널 껍데기를 벗는다)에 같은 띠: 초상(`.hero-face` — 관전 유닛 카드와 같은 네모 박스 · 직업 글리프 `mock.js classGlyph`, [SCREEN_DESIGN §5](../../docs/client/SCREEN_DESIGN.md))이 카드 전체, 그 위 위칸(`.hs-band`)에 지금 하는 일(치료 중 / 전투 파티 / 대기) + 이름. 직업·레벨·죄종·등급은 툴팁

@@ -26,10 +26,10 @@
 | 전투 · 피해 계산 | [battle_design.md](docs/game_design/battle_design.md) §2 행동 주기 · §3 발동 규칙 · §5 액티브 · §6 쿨타임 · §8 전투 능력치 · §8-1 몬스터 · **§9 피해 계산**(§9-1~§9-6) · §9-9 미결 | `combat_stat.csv` · `balance.csv` · `round_budget.csv` | DEV_PLAN §3-3 R1~R8 · R10 |
 | 영웅 · 능력치 · 성장 | [hero_design.md](docs/game_design/hero_design.md) §1 2층 구조 · §2 직업 · §3 정체성 분담 · §4 능력치 · §4-1 기본 능력치 · §4-1-1 미결 · §4-2 불변식 · §5 성장 · §6 미탑재 | `hero_attribute.csv` · `combat_stat.csv` · `balance.csv` | DEV_PLAN §3-3 R7 · R12 |
 | 스킬 · 마스터리 · 전직 | [skill_design.md](docs/game_design/skill_design.md) §0 확정 · §1 구조 · §2 액티브 · §3 마스터리 · §4 전직 특화 · §5 롤백 · **§7 미확정** · §9 직업 액티브 초안 | `skill.csv` (노드 테이블 · 무기군 액티브 · 고유 스킬 풀 · 포인트 키는 **미발행**) | DEV_PLAN §3-2 (스킬 효과) |
-| 아이템 · 접사 · 자원 | [item_design.md](docs/game_design/item_design.md) §1 계승 구조 · §2 변경점 · §2-1 ilvl 스케일링 · §4 이관 · §5 자원 · **§5-3 미확정** | `equipment_option_override.csv` · `weapon_group.csv` · `inherited/` (읽기 전용) | DEV_PLAN §3-2 (크래프트·낙인·유니크) · §3-3 R11 |
+| 아이템 · 접사 · 자원 | [item_design.md](docs/game_design/item_design.md) §1 구조 · §2 변경점 · §2-1 ilvl 스케일링 · §4 이관 · §5 자원 · **§5-3 미확정** | `equipment_option_override.csv` · `weapon_group.csv` · `inherited/` (읽기 전용) | DEV_PLAN §3-2 (크래프트·낙인·유니크) · §3-3 R11 |
 | 전술카드 | [tactic_card_design.md](docs/game_design/tactic_card_design.md) §1 정의 · §1-1 인접 개념 구분 · §2 확정 원칙 · §3 이관 · **§4 미확정** | **미발행** | DEV_PLAN §3-2 (전술카드) · §3-3 R14 |
-| 몬스터 · 스테이지 · 도감 | [monster_design.md](docs/game_design/monster_design.md) §0 계승본에서 바꾼 것 · §1 타입 · §2 공격 타입 · §4 스테이지 구성 · §5 스폰 등급 · §6 정예 특성 · §7 데이터 구조 · §7-1 방어·저항 규칙 · §8 도감 | `monster.csv` · `stage.csv` · `stage_round.csv` · `round_budget.csv` · `spawn_grade.csv` · `codex_level.csv` | DEV_PLAN §3-2 (정예 특성 · 도감 계열 스탯) |
-| 스토리 · 챕터 · 상태이상 | [story_chapter_design.md](docs/game_design/story_chapter_design.md) §1 스토리 · §2 챕터 구조 · §3 상태이상 | 계승 원본 테이블 (`src/data/inherited/`) | DEV_PLAN §3-2 (상태이상) |
+| 몬스터 · 스테이지 · 도감 | [monster_design.md](docs/game_design/monster_design.md) §0 데이터 재작성 · §1 타입 · §2 공격 타입 · §4 스테이지 구성 · §5 스폰 등급 · §6 정예 특성 · §7 데이터 구조 · §7-1 방어·저항 규칙 · §8 도감 | `monster.csv` · `stage.csv` · `stage_round.csv` · `round_budget.csv` · `spawn_grade.csv` · `codex_level.csv` | DEV_PLAN §3-2 (정예 특성 · 도감 계열 스탯) |
+| 스토리 · 챕터 · 상태이상 | [story_chapter_design.md](docs/game_design/story_chapter_design.md) §1 스토리 · §2 챕터 구조 · §3 상태이상 | `src/data/inherited/` | DEV_PLAN §3-2 (상태이상) |
 | 죄종 통일 매핑 | `sin_mapping.md` — **아직 없다.** GAME_DESIGN §1 세부 문서 표에 "(예정)" · §10 큰 틀의 첫 과제 | 미발행 | DEV_PLAN §3-2 (죄종 매핑) |
 
 CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](src/data/README.md).
@@ -54,10 +54,8 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 | `laststory_reference.md` | 마지막이야기(모바일) 전수 조사 — 로스터 없는 단일 캐릭터 방치형 + 무직업 704노드 트리 + 경량 MMO 표본. 자료가 얇아 **부분 조사** |
 | `socket_layer_reference.md` | 장비 2차 층(룬 · 차암 · 주얼 · 젬 · 카드) 참고작 전수 조사. 게임별 분할본은 `socket_layer/` |
 | `rune_concept_lexicon.md` | "룬 같은 개념" 사전 — 신화 · 종교 · TTRPG · 소설 · 만화 · 웹소설에서 뽑은 어휘 후보와 제약 규칙 원형. 분할본은 `rune_concepts/` |
-| `inherited_data_gaps.md` | TheSevenRPG 데이터 포크의 범위와 갭 — 계승했는데 비어 있는 것 |
-| `monster_art_prompt.md` | 몬스터 일러스트 프롬프트 SSOT — 계승 배경의 팔레트·픽셀 밀도에 맞추기 위한 것 |
-
-형제 프로젝트(TheSevenRPG · TheSevenSimulation · TheSevenTactics) 조사는 SKILL.md 작업 규칙 (b) 대로 sonnet 서브에이전트에 맡긴다.
+| `inherited_data_gaps.md` | `src/data/inherited/` 의 범위와 갭 — 테이블은 있는데 비어 있는 것 |
+| `monster_art_prompt.md` | 몬스터 일러스트 프롬프트 SSOT — `backgrounds/` 의 팔레트·픽셀 밀도에 맞추기 위한 것 |
 
 ## 4. 문서 사이의 위계
 

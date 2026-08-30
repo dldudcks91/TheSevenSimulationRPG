@@ -129,6 +129,7 @@ const STRINGS = {
     'rep.retreat': { ko: '철수', en: 'Retreat' },
     'rep.reason.wipe': { ko: '전원 전투불능', en: 'Whole party downed' },
     'rep.reason.timeout': { ko: '제한시간 초과', en: 'Timed out' },
+    'rep.reason.retreat': { ko: '전투불능 발생 — 파티 귀환', en: 'Someone went down — party returned' },
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
     'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
     'rep.roundLine': { ko: '{list} 처치', en: '{list} slain' },
@@ -157,7 +158,9 @@ const STRINGS = {
 
     /* ── 선술집 (실동작) ── */
     'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)' },
-    'tv.reroll': { ko: '후보 교체 ({g} 골드)', en: 'New candidates ({g} gold)' },
+    'tv.reroll': { ko: '즉시 교체 ({g} 골드 · 무료까지 {t})', en: 'Refresh now ({g} gold · free in {t})' },
+    'tv.reroll.free': { ko: '후보 교체 (무료)', en: 'New candidates (free)' },
+    'tv.empty': { ko: '고용함 — 다음 교체에 채워진다', en: 'Hired — refills on next refresh' },
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'tv.err.roster': { ko: '로스터가 가득 찼다 ({cap})', en: 'Roster full ({cap})' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
@@ -347,7 +350,6 @@ const STRINGS = {
     'tip.hero.h': { ko: '영웅', en: 'Hero' },
     'tip.hero.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'tip.skill.h': { ko: '스킬', en: 'Skill' },
-    'tip.skill.mock': { ko: '스킬 미작성 — 이름·쿨·설명은 자리표시다', en: 'Skills unwritten — name, cooldown and text are placeholders' },
 
     /* ── 스킬 ── */
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
@@ -429,8 +431,8 @@ const STRINGS = {
     },
     'tv.uniqueTodo.h': { ko: '유니크 영웅 — 선술집 희귀 등장', en: 'Unique heroes — rare tavern appearances' },
     'tv.uniqueTodo.b': {
-        ko: '명단 주기 갱신에 희귀 등장 — 매력 영웅 배치가 등장 확률·품질을 올린다 (hero_design.md §1)',
-        en: 'Appears rarely on the periodic roster refresh — stationing a high-Charisma hero raises the odds and quality (hero_design.md §1)',
+        ko: '명단·수색 어느 쪽에서도 희귀 등장 — 매력 영웅 배치가 등장 확률·품질을 올린다 (hero_design.md §1)',
+        en: 'Appears rarely in both the roster and searches — stationing a high-Charisma hero raises the odds and quality (hero_design.md §1)',
     },
     'tv.tiers.note': {
         ko: '<b>유니크</b> — 이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용), 로스터에 1명만. 본편 15명(직업별 3)이 상한<br>'
@@ -490,6 +492,10 @@ const STRINGS = {
     'log.hit': { ko: '{name} → {target} <b>{dmg}</b> · {skill}', en: '{name} → {target} <b>{dmg}</b> · {skill}' },
     'log.dodge': { ko: '{name} → {target} <b>빗나감</b> · {skill}', en: '{name} → {target} <b>miss</b> · {skill}' },
     'log.roundStart': { ko: '<b>라운드 {n} ({kind})</b> — {list}', en: '<b>Round {n} ({kind})</b> — {list}' },
+    'log.heal': { ko: '{name} → {target} <b class="heal-t">+{amt}</b> · {skill}', en: '{name} → {target} <b class="heal-t">+{amt}</b> · {skill}' },
+    'log.buff': { ko: '{name} — <b>{skill}</b> 발동', en: '{name} — <b>{skill}</b> up' },
+    'log.barrier': { ko: '{name} — <b>{skill}</b> 방벽 {amt}', en: '{name} — <b>{skill}</b> barrier {amt}' },
+    'log.buffEnd': { ko: '{name} — {skill} 종료', en: '{name} — {skill} ended' },
     'log.crit': { ko: '{name} → {target} <b class="crit-t">{dmg}</b> 치명타! · {skill}', en: '{name} → {target} <b class="crit-t">{dmg}</b> critical! · {skill}' },
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
     'log.card': { ko: '<b>{name} 카드</b> 획득 — 도감', en: '<b>{name} card</b> found — codex' },

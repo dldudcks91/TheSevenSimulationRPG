@@ -119,7 +119,7 @@ strike(rng, a, d):
 | `rollStartParty(rng, n)` | `→ hero[]` | 이름·죄종·직업·특성이 n명 사이에서 겹치지 않는다. 직업은 `stage === 'main'` 만 |
 | `rollCandidates` | = `rollStartParty` | 선술집 후보 |
 | `xpNeeded(level)` | `→ int` | `round(hero_xp_base × level ^ hero_xp_exp)` |
-| `grantXp(hero, amount, rng)` | `→ {uid, from, to, gains, points}` 또는 `null` | **hero 를 in-place 로 바꾼다**(xp·level·stats). 레벨업마다 축별 `attr_growth_chance_pct` 확률 +1, 히든 상한 `caps` 까지. **마스터리 포인트도 여기서 준다** — `points = 오른 레벨 수 × mastery_point_per_level`, `hero.masteryPoints` 에 in-place 가산 |
+| `grantXp(hero, amount, rng)` | `→ {uid, from, to, gains, points}` 또는 `null` | **hero 를 in-place 로 바꾼다**(xp·level·stats). 레벨업마다 축별 `attr_growth_chance_pct` 확률 +1, 히든 상한 `caps` 까지. **마스터리 포인트도 여기서 준다** — `points = 오른 레벨 수 × mastery_point_per_level`, `hero.masteryPoints` 에 in-place 가산. **레벨 상한 `hero_level_cap` 에서 멈추고 `xp = 0` 이 된다** — 상한에 닿은 뒤의 지급은 `null` 을 돌려주고 아무것도 바꾸지 않는다 (⚠ 「50 이후 느린 곡선」은 미반영 — 곡선 숫자는 캘리브레이션 뒤, DEV_PLAN R12) |
 | `computeCombat(hero, items, codex={})` | `→ combat` | 순수. 아래 표 |
 | `masteryNodes` · `masteryById` | `[node]` · `{nodeId: node}` | 정규화된 노드. `node = {id, treeKind, ownerId, tier, stat, value, maxRank, unlockLevel}` |
 | `masteryNodesFor(hero)` | `→ [node]` | 그 영웅의 죄종 트리 + 직업 트리. `ownerId === '*'` 는 그 `treeKind` 전부에 걸린다 |
@@ -258,7 +258,9 @@ strike(rng, a, d):
 
 **result** — `{won, reason, durationSec, party:[{key, uid, hpMax, period, actives:[skillId]}], timeline:[ev], xpTotal, gold, dust, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item(uid null)], downed:[heroUid], roundsCleared, rounds:[{n, kind, killed:[monsterId], eliteSin}], strikes:{party:{n,miss}, enemy:{n,miss}}, casts:{skillId:n}}`
 - `casts` = 스킬별 시전 횟수. 타임라인의 `skill` 이벤트 수와 합이 같다
-- `reason` 은 `clear` / `wipe` / `timeout`
+- `reason` 은 `clear` / **`retreat`** / `wipe` / `timeout`.
+  **귀환 룰** (base_expedition_design §1-1 · 2026-08-30 반영) — 전투불능자가 **하나라도** 나오면 그 자리에서 런을 접고 `retreat` 로 끝난다(연쇄 전멸 방지). 판정 순서는 ① 전멸 ② 라운드 정리(클리어·다음 라운드) ③ 귀환 ④ 제한시간 — **라운드 정리가 귀환보다 앞이라** 마지막 타격과 같은 틱에 쓰러져도 그 라운드의 클리어는 남는다. 그래서 `wipe` 는 **같은 틱에 전원이 쓰러진 경우**에만 나온다
+  ⚠ 이 룰은 런의 길이를 바꾼다 — 캘리브레이션 대역은 이 룰이 들어간 뒤의 값이어야 한다
 - `strikes` = 직격 시도 수와 빗나간 수. **레벨 부족의 전용 신호**라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 **rng 를 소비하지 않는다**
 - `drops` 의 아이템은 `uid: null` — state.js 가 가방에 넣으며 발급
 - **`timeline` 은 세이브에 넣지 않는다.** 리포트만 남긴다
@@ -274,11 +276,11 @@ strike(rng, a, d):
 | `down` | `u` | 전투불능 |
 | `card` | `u, monsterId` | 도감 카드 판정 성공 (처치와 별개) |
 | `regen` | `u, amt, dhp` | HP 재생. **정수 1 이상이 쌓인 틱에만** 나온다(초당 값을 틱마다 누산) · 행동 처리 **앞** · rng 소비 없음 |
-| `skill` | `u, s` | 액티브 시전 — 그 차례의 사건. 뒤따르는 `hit`/`dodge`/`heal`/`buff` 가 같은 `s` 를 단다 |
+| `skill` | `u, s, ready` | 액티브 시전 — 그 차례의 사건. 뒤따르는 `hit`/`dodge`/`heal`/`buff` 가 같은 `s` 를 단다. `ready` = 그 스킬이 **다시 준비되는 시각**(쿨감소가 이미 반영된 값) — 재생기가 쿨을 계산하지 않게 시뮬이 실어 보낸다 |
 | `heal` | `a, d, amt, dhp, s` | 회복. `dhp` = 회복 후 HP |
 | `buff` | `u, s, stat, v, until` (+ `amt` 배리어 총량) | 창 적용 또는 갱신. `until` = 만료 시각(소수 1자리) |
 | `buffEnd` | `u, s` | 창 만료 (그 틱의 행동 처리 **앞에서**) |
-| `end` | `won, reason` | **마지막 이벤트** |
+| `end` | `won, reason` | **마지막 이벤트**. `reason ∈ clear \| retreat \| wipe \| timeout` |
 
 유닛 키: 파티 `p0..`, 적 `e0..`(라운드마다 0부터).
 
@@ -304,7 +306,7 @@ strike(rng, a, d):
 
 ### 2-7. `state.js` — 상태 전이
 
-`export const SAVE_VERSION = 4`
+`export const SAVE_VERSION = 5`
 
 `createGameSystem(deps)` — `deps`: `hero, item, battle, skill, balance, equipSlots [{id, part}](착용 위치 9), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_to_next], bonus:[%], statByNum:{stage_num: statKey}}`.
 `codex.levels`/`codex.bonus` 는 codex_level.csv(`cards_to_next`/`bonus_pct`) · `codex.statByNum` 은 codex_series.csv 출처. `equipSlots` 만 ⚠ `ui/mock.js`.
@@ -315,7 +317,7 @@ strike(rng, a, d):
 |---|---|---|
 | `newGame(seed, candidates, now)` | `→ state` | 후보 = 로스터 = 파티. 각자 시작 무기 1개 착용. 시작 무기 rng = `deriveSeed(seed, 0)` |
 | `serialize(state, now)` | `→ json` | `clone + {version, savedAt}`. 순수 |
-| `deserialize(obj)` | `→ state` **또는 throw** | v4 는 그대로, **v2·v3 는 안에서 연쇄로 올린다**(v2→v3→v4, §4). 그 외 버전은 throw. 누락 필드 기본값 보정 |
+| `deserialize(obj)` | `→ state` **또는 throw** | v5 는 그대로, **v2·v3·v4 는 안에서 연쇄로 올린다**(v2→v3→v4→v5, §4). 그 외 버전은 throw. 누락 필드 기본값 보정 |
 | `canLoad(obj)` | `→ bool` | `deserialize` 가 통과하는가. **받아들이는 버전 목록을 두 곳에 두지 않기 위해** 실제로 한 번 돌려 보고 답한다 — 화면이 버전 숫자로 직접 판정하면 이관을 늘릴 때마다 멀쩡한 세이브를 거부하게 된다 |
 | `heroById(state, uid)` · `heroItems(state, h)` · `isInjured(h, now)` | 조회 | |
 | `codexLevel(cards)` · `codexNext(cards)` · `codexMaxLevel()` · `codexBonusAt(lv)` · `codexBonus(state)` | 도감 | `codex.levels` 는 **레벨당 증분**, 여기서 누적한다 |
@@ -331,14 +333,16 @@ strike(rng, a, d):
 | `resolveBattle(state, stageId, now)` | `→ {ok, result, report}` / `{ok:false, err}` | 전투 rng = `deriveSeed(seed, ++counters.battle)`. 시뮬 → XP(전원 동일) → 골드·가루 → 도감 → 드롭(가방 초과는 `discarded`) → 부상 타이머 → 클리어 → `lastReport` · `run` 갱신 |
 | `closeRun(state, now)` | `→ notice 또는 null` | `run.repeat` 이 켜져 있을 때만: 끄고 `notice` 세팅. **오프라인 재정산 없음** |
 | `dismissNotice(state)` | | |
-| `tavernCandidates(state)` | `→ hero[]` | rng = `deriveSeed(seed ^ 0x5A17, counters.tavern)` — 저장 없이 재현 |
-| `tavernReroll(state)` | `→ {ok}` / `{ok:false, err:'gold'}` | `counters.tavern++` |
-| `hire(state, index)` | `→ {ok, hero}` / `{ok:false, err}` | err: `roster` · `gold` · `missing`. 고용 후 `counters.tavern++` |
+| `tavernCandidates(state)` | `→ (hero\|null)[]` | rng = `deriveSeed(seed ^ 0x5A17, counters.tavern)` — 저장 없이 재현. 길이는 `tavern_candidates`, **고용한 칸은 `null`** |
+| `tavernState(state, now)` | `→ {candidates, freeAt, free, cost}` | 선술집 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`masteryState` 와 같은 규칙). `freeAt` = 무료 리롤이 열리는 시각(리롤한 적이 없으면 `0`) |
+| `tavernReroll(state, now)` | `→ {ok, free}` / `{ok:false, err:'gold'}` | 쿨다운(`tavern_refresh_hours`)이 끝났으면 **무료**, 남았으면 `tavern_reroll_cost` 골드. `counters.tavern++` · `tavern = {rerolledAt: now, hired: []}` — 명단을 통째로 갈고 빈 칸을 되살린다 |
+| `hire(state, index)` | `→ {ok, hero}` / `{ok:false, err}` | err: `roster` · `gold` · `missing`(빈 칸 포함). **`counters.tavern` 을 올리지 않는다** — 산 칸만 `tavern.hired` 에 남고 나머지 명단은 그대로다 (base_expedition_design §2-4: 고용이 무료 리롤 우회로가 되지 않게) |
 | `masteryState(state, uid)` | `→ {points, nodes:[{id, treeKind, ownerId, tier, stat, value, rank, maxRank, unlockLevel, unlocked, total, canLearn}]}` / `null` | **판정을 여기서 다 낸다** — 화면은 결과만 그린다. 없는 영웅이면 `null` |
 | `learnMastery(state, uid, nodeId)` | `→ {ok, rank, points}` / `{ok:false, err}` | 1랭크 = 1포인트. err: `missing`(영웅 없음 **또는 그 영웅의 트리에 없는 노드**) · `locked` · `maxRank` · `points` |
 | `resetMastery(state, uid)` | `→ {ok, refunded, points}` / `{ok:false, err:'missing'}` | 롤백은 **무료 · 수시** (skill_design §5). 찍은 랭크 합을 전액 환급 |
 
-**report** — `{at, stageId, won, reason, durationSec, gold, dust, xpEach, levelUps:[{uid, from, to, gains, points}], downed:[uid], drops:[itemUid], discarded, cards:{monsterId:n}, rounds, strikes}`
+**report** — `{at, stageId, won, reason, durationSec, gold, dust, xpEach, levelUps:[{uid, from, to, gains, points}], downed:[uid], drops:[itemUid], discarded, cards:{monsterId:n}, rounds, roundsCleared, strikes}`
+`roundsCleared` 는 **깬 라운드 수**다 — 렌더러가 「이겼으면 전부, 아니면 하나 뺀다」로 짐작하던 값을 정산이 실어 보낸다(귀환 룰로 「라운드를 정리한 직후 철수」가 생겨 그 짐작이 틀릴 수 있다). 옛 리포트에는 없어서 **`undefined` 일 수 있다** — 렌더러가 그 경우를 다뤄야 한다.
 `strikes` 는 `result.strikes` 의 복사본이고, 옛 리포트에는 없어서 **`null` 일 수 있다** — 렌더러가 그 경우를 다뤄야 한다.
 
 `codexBonus(state)` 의 누적 객체는 **`codex.statByNum` 의 값들에서 만든다**(하드코딩 키 없음) — 계열 배정이 바뀌어도 state.js 를 고칠 필요가 없다. 다만 `computeCombat` 이 읽는 것은 `atk_pct` · `hp_pct` · `dmg_pct` 뿐이라 `acc_pct` 는 계산되고 버려진다 (§2-4).
@@ -408,11 +412,11 @@ strike(rng, a, d):
 
 ---
 
-## 4. 세이브 스키마 v4
+## 4. 세이브 스키마 v5
 
 ```
 {
-  version: 4, seed: uint32, createdAt: ms, savedAt: ms,
+  version: 5, seed: uint32, createdAt: ms, savedAt: ms,
   resources: { gold, dust, stigma },
   heroes: [ hero ],                       // §2-4 hero 객체. equipped 키 = 착용 위치 9개 · mastery {nodeId:rank} · masteryPoints
   party: [ heroUid ],
@@ -424,7 +428,8 @@ strike(rng, a, d):
   counters: { hero, item, battle, tavern },   // uid 발급·시드 파생의 유일한 출처
   run: { stageId, repeat, lastAt, durationSec } | null,
   lastReport: report | null,
-  notice: { kind: 'runClosed', stageId, at, seenAt } | null
+  notice: { kind: 'runClosed', stageId, at, seenAt } | null,
+  tavern: { rerolledAt: ms | null, hired: [ slotIndex ] }   // 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸. 명단 자체는 저장하지 않는다
 }
 ```
 
@@ -450,7 +455,14 @@ strike(rng, a, d):
 | `heroes[*].masteryPoints` | 없으면 `(level − 1) × mastery_point_per_level` **소급 지급**. 이미 레벨업한 영웅이 안 받고 지나간 몫이라 새로 시작한 영웅과 같은 자리에 선다 |
 | `version` | `4` |
 
-- **v2 는 v3 를 거쳐 v4 까지 연쇄로 올라간다** — `upgradeV2` → `upgradeV3` 순으로 통과한다
+**v4 → v5 이관** (2026-08-30 — 선술집 리롤 쿨다운). `deserialize` 가 v4 를 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `tavern` | 없으면 `{rerolledAt: null, hired: []}` — **쿨다운이 열려 있는 상태**로 올린다. 옛 세이브는 리롤한 적이 없으므로 기다린 시간을 소급할 근거가 없고, 닫힌 채로 올리면 접속하자마자 골드를 물린다 |
+| `version` | `5` |
+
+- **v2 는 v3·v4 를 거쳐 v5 까지 연쇄로 올라간다** — `upgradeV2` → `upgradeV3` → `upgradeV4` 순으로 통과한다
 - **랭크는 전부 0 이라 이관이 전투 결과를 바꾸지 않는다** — 포인트만 늘어난다
 - **v1 은 계속 throw** — 무기군·슬롯 9·도감 카드로 아이템/도감 스키마가 단절됐다. 하루 된 프로토타입 세이브라 새 게임으로 받는다
 - `lastReport.strikes` 는 v3 이전 리포트에 없다 — 없으면 `null` 로 다룬다 (§2-7)
@@ -524,7 +536,7 @@ strike(rng, a, d):
 - `round` 이벤트에서 적 유닛을 통째로 다시 만든다 — 그래서 `round` 가 첫 이벤트여야 한다
 - 모르는 `e` 는 무시한다. 모르는 유닛 키도 무시한다 (현재는 **조용히** — [부채 #6](DEV_PLAN.md))
 - Phase 2 재생기는 위 표의 이벤트만 알면 된다. 연출(모션·팝업·로그 문구)은 재생기의 자유
-- ⚠ **현재 재생기(`ui/battle.js`)가 모르는 이벤트** — `heal` · `buff` · `buffEnd` · `regen`. 조용히 무시되므로 화면 HP 가 시뮬과 어긋난다 ([부채 #22](DEV_PLAN.md) · `regen` 은 출처가 마스터리뿐이라 지금은 발생 자체가 없다)
+- **재생기는 12종을 전부 안다** (2026-08-30 — `skill`·`heal`·`buff`·`buffEnd`·`regen` 소비 추가). 스킬 칸의 쿨은 `skill` 이벤트의 `ready` 로만 걷힌다 — 재생기가 쿨을 **계산하지 않는다**
 
 ---
 
@@ -549,6 +561,8 @@ strike(rng, a, d):
 | `HERO_NAME_POOL` · `HERO_TRAIT_POOL` | hero | → CSV 신규 |
 | `SIN_TRAITS` · `COMMON_TRAITS` | battle | → 계승 `elite_trait.csv` 연결 |
 
+`SKILL_DISPLAY`(액티브 아이콘·설명)는 **주입되지 않는다** — `ui/data.js:skillInfo` 가 화면에만 붙이는 표시 사전이라 이식 차단 목록이 아니다. 이름·표기 쿨 같은 게임 데이터는 `skill.csv` 가 든다 (2026-08-30 — `MOCK_ACTIVES` 목업 폐기).
+
 ---
 
 ## 8. 명문화한 암묵 계약
@@ -562,7 +576,7 @@ strike(rng, a, d):
 5. **`atk_physical` / `atk_magic` 은 배타** — 둘 다 있는 경우를 코드가 가정하지 않는다. 물리·마법 혼합 딜(스킬)이 생기면 이 계약을 다시 쓴다
 6. **가방 용량 산수의 순서** — `equip` 은 실행 전에 `bag − 1 + back.length ≤ inventory_cap` 을 먼저 검사한다 (양손이면 `back` 이 2)
 7. **`closeRun` 은 재정산하지 않는다** — `resolveBattle` 이 출발 시점에 통째로 정산한다는 전제. **파견·탐험(오프라인 진행형)이 들어오면 이 전제가 깨진다** — 그때 `closeRun` 을 재설계한다 (컨셉 락 따름정리 1)
-8. **올릴 수 없는 세이브 버전은 throw** — 이관 가능한 버전(현재 v2)은 `deserialize` 안에서 올리고, 나머지는 던진다. 조용히 버리지 않는다. 잡는 건 렌더러
+8. **올릴 수 없는 세이브 버전은 throw** — 이관 가능한 버전(현재 v2·v3·v4)은 `deserialize` 안에서 올리고, 나머지는 던진다. 조용히 버리지 않는다. 잡는 건 렌더러
 9. **`codex_level.csv:cards_to_next` 는 레벨당 증분** — 누적 아님 (2026-08-28 `cards_required` 에서 개명 — 이름이 오해를 부르던 자리다)
 10. **`round` 가 라운드의 첫 이벤트** — §2-6 순서 보장
 11. **`res` 는 항상 4원소 객체다** — 몬스터도 `{fire, cold, lightning, poison}` 을 든다(2026-08-26 타입 이원성 해소). `strike` 는 다른 모양을 가정하지 않으므로 정적 타입 언어에서도 인터페이스가 하나다
@@ -578,13 +592,13 @@ strike(rng, a, d):
 
 | # | 위반 | 위치 |
 |---|---|---|
-| 3 | 실효 쿨 공식(`ceil(cd/cycle)×cycle`, battle_design §6)이 렌더러에만 있음 | ui/app.js |
 | 4 | 예상 소요 시간 집계가 렌더러에 있음 | ui/app.js |
 | 5 | §7 의 mock 잔류 데이터 | ui/mock.js |
 
 해소됨(2026-08-26) — #1 `dmgBonus`↔`bonusPct` 필드명 불일치(이름 통일, 회귀 단정 있음) · #8 `res` 타입 이원성(§8 항목 11).
+해소됨(2026-08-30) — #3 실효 쿨 공식: `ui/app.js` · `ui/tip.js` 의 사본을 `formula.effectiveCd` 로 갈아끼웠다. 이제 공식은 `game_logic` 한 곳에만 있다.
 #2(`codexBonus` 의 `acc_pct` 를 아무도 읽지 않음)는 **코드 결함이 아니라 기획 공백으로 옮겨갔다** — 명중 폐지로 계열 하나가 비었다 ([GAME_DESIGN §10](../game_design/GAME_DESIGN.md)).
 
 ---
 
-*마지막 업데이트: 2026-08-28 (CSV 형태 최적화 — §7 CSV 13·표시 헬퍼 · §2-4/§2-5 `damageKind`/`release` · §2-6 드롭 = 처치당 최대 1개·`dropChanceMult` · §2-7 codex 출처 CSV · §2-8 `ownerKind`/`ownerId` · §5-2 드롭 판정 1회 · §8 항목 9 `cards_to_next`) · 2026-08-28 (액티브 스킬 엔진 — §2-8 skill.js 신설 · §2-6 스킬 실행 규칙·유닛 필드·이벤트 5종·result casts · §2-3 effectiveCd · §2-4 atk_pct_sum · §5-2 rng 순서 · §5-3 EPS·초기 readyAt · §7 CSV 9 · §8 항목 13·14) · 2026-08-26 (battle_design §9 개정 반영 — §2-3 전면 재작성 · 성장 곡선/개체 굴림/접사 3분류 · 적중 = 레벨 차 · 저항 상한형 · 세이브 v3 이관 · res 이원성 해소) · 2026-08-26 (최초 작성 — 코드 인벤토리에서 계약 추출)*
+*마지막 업데이트: 2026-08-30 (**기획↔프로토타입 대조** — §2-6 `skill` 이벤트에 `ready` 추가 · `end.reason` 에 **`retreat`**(귀환 룰 · 판정 순서) · §2-4 `grantXp` 레벨 상한 · §2-7 선술집 3함수 재작성(`tavernState` 신설 · `hire` 가 카운터를 안 올린다) · **§4 세이브 v5**(`tavern` · v4→v5 이관) · §6 재생기가 12종을 전부 안다 · §7 `SKILL_DISPLAY` 는 주입 아님 · §9 부채 #3 해소) · 2026-08-28 (CSV 형태 최적화 — §7 CSV 13·표시 헬퍼 · §2-4/§2-5 `damageKind`/`release` · §2-6 드롭 = 처치당 최대 1개·`dropChanceMult` · §2-7 codex 출처 CSV · §2-8 `ownerKind`/`ownerId` · §5-2 드롭 판정 1회 · §8 항목 9 `cards_to_next`) · 2026-08-28 (액티브 스킬 엔진 — §2-8 skill.js 신설 · §2-6 스킬 실행 규칙·유닛 필드·이벤트 5종·result casts · §2-3 effectiveCd · §2-4 atk_pct_sum · §5-2 rng 순서 · §5-3 EPS·초기 readyAt · §7 CSV 9 · §8 항목 13·14) · 2026-08-26 (battle_design §9 개정 반영 — §2-3 전면 재작성 · 성장 곡선/개체 굴림/접사 3분류 · 적중 = 레벨 차 · 저항 상한형 · 세이브 v3 이관 · res 이원성 해소) · 2026-08-26 (최초 작성 — 코드 인벤토리에서 계약 추출)*

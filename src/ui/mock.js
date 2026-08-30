@@ -302,42 +302,30 @@ export const heroFace = uid => null;   // eslint-disable-line no-unused-vars
 export const CLASS_GLYPH = { warrior: '⚔', knight: '⛨', mage: '✦', archer: '🏹', priest: '✚', assassin: '🗡', necromancer: '☠' };
 export const classGlyph = cls => CLASS_GLYPH[cls] ?? '⚔';
 /**
- * 관전 스킬 쿨 게이지 **목업** (2026-08-27, DEV_PLAN 부채 #13) — 스킬이 미작성이라 타임라인에 스킬 이벤트가 없다.
- * 직업별 액티브 3 자리표시: 이름 ko/en · 표기 쿨(초) · 아이콘 `i`(관전 쿨 칸이 이름 대신 찍는다) · 설명 `d` ko/en(툴팁 — SCREEN_DESIGN §4-2).
- * 설명은 **수치를 적지 않는다** — 수치의 SSOT 는 CSV 이고 이 표는 지워질 자리표시다. 재생기(battle.js mockUseSkill)가 영웅의 실제 행동 이벤트마다
- * 슬롯 순으로 준비된 것 하나를 "쓴" 것처럼 리셋만 한다 — 결과에 아무 영향이 없다. 스킬 이벤트가 생기면 이 표는 지운다.
+ * 액티브의 **표시 사전** (2026-08-30 — `MOCK_ACTIVES` 목업 폐기).
+ * 이름 · 표기 쿨 · 배율 같은 게임 데이터는 `skill.csv` 가 SSOT 이고, 여기 남는 것은 **화면 전용**인 둘뿐이다:
+ *   · `i` 아이콘 — CSV 에 아이콘 컬럼이 없다(자산 경로와 같은 자리라 표시 사전이 든다)
+ *   · `d` 설명 ko/en — `skill.csv:description_kr` 은 **설계 노트**(「전사 ③ 은 기획 미정」처럼)라 플레이어에게 내보낼 문장이 아니다
+ * 설명은 **수치를 적지 않는다** — 수치의 SSOT 는 CSV 다. 아이콘 세트가 흑백 글리프와 컬러 이모지로 섞여 있는 문제는 그대로 남아 있다 (DEV_PLAN 부채 #13).
  */
-export const MOCK_ACTIVES = {
-    warrior: [
-        { n: { ko: '강타', en: 'Heavy Strike' }, cd: 6, i: '⚔', d: { ko: '단일 대상을 세게 내리친다', en: 'A heavy blow on one target' } },
-        { n: { ko: '회전 베기', en: 'Whirlwind' }, cd: 12, i: '🌀', d: { ko: '몸을 돌려 적 전원을 벤다', en: 'Spin and cut every enemy' } },
-        { n: { ko: '전투 함성', en: 'Battle Cry' }, cd: 20, i: '📣', d: { ko: '한동안 아군의 기세를 올린다', en: 'Raises the party for a while' } }],
-    knight: [
-        { n: { ko: '방패 치기', en: 'Shield Bash' }, cd: 8, i: '🛡', d: { ko: '방패로 밀쳐 대상의 다음 행동을 늦춘다', en: 'Shove with the shield, delaying the target' } },
-        { n: { ko: '도발', en: 'Taunt' }, cd: 12, i: '💢', d: { ko: '적의 시선을 자신에게 끌어온다', en: 'Pulls enemy attention onto yourself' } },
-        { n: { ko: '철벽', en: 'Iron Wall' }, cd: 24, i: '⛨', d: { ko: '한동안 받는 피해를 크게 줄인다', en: 'Cuts incoming damage for a while' } }],
-    mage: [
-        { n: { ko: '화염구', en: 'Fireball' }, cd: 5, i: '🔥', d: { ko: '불덩이를 던진다 — 불 피해', en: 'Hurls a ball of flame — fire damage' } },
-        { n: { ko: '냉기 파동', en: 'Frost Wave' }, cd: 10, i: '❄', d: { ko: '적 전원을 얼려 느리게 만든다 — 냉기 피해', en: 'Freezes and slows every enemy — cold damage' } },
-        { n: { ko: '번개 폭풍', en: 'Lightning Storm' }, cd: 18, i: '⚡', d: { ko: '벼락을 연달아 떨어뜨린다 — 전기 피해', en: 'Calls down repeated bolts — lightning damage' } }],
-    archer: [
-        { n: { ko: '속사', en: 'Quick Shot' }, cd: 4, i: '💨', d: { ko: '짧은 쿨로 화살을 빠르게 쏜다', en: 'A fast shot on a short cooldown' } },
-        { n: { ko: '관통 화살', en: 'Piercing Arrow' }, cd: 9, i: '🎯', d: { ko: '적의 방어를 뚫고 꽂힌다', en: 'Punches through the target’s armour' } },
-        { n: { ko: '화살비', en: 'Arrow Rain' }, cd: 16, i: '🏹', d: { ko: '화살을 쏟아부어 적 전원을 때린다', en: 'Rains arrows on every enemy' } }],
-    priest: [
-        { n: { ko: '치유', en: 'Heal' }, cd: 8, i: '✚', d: { ko: '가장 다친 아군의 HP 를 회복한다', en: 'Restores HP to the most wounded ally' } },
-        { n: { ko: '축복', en: 'Bless' }, cd: 14, i: '✨', d: { ko: '한동안 아군의 공격을 강화한다', en: 'Strengthens allied attacks for a while' } },
-        { n: { ko: '정화', en: 'Purify' }, cd: 20, i: '💧', d: { ko: '아군에게 걸린 나쁜 효과를 걷어낸다', en: 'Strips harmful effects from allies' } }],
-    assassin: [
-        { n: { ko: '급습', en: 'Ambush' }, cd: 5, i: '🗡', d: { ko: '허를 찔러 치명타로 꽂는다', en: 'Strikes from surprise for a critical hit' } },
-        { n: { ko: '독 바르기', en: 'Envenom' }, cd: 10, i: '☠', d: { ko: '무기에 독을 발라 지속 피해를 남긴다', en: 'Coats the weapon, leaving damage over time' } },
-        { n: { ko: '은신', en: 'Vanish' }, cd: 18, i: '🌑', d: { ko: '모습을 감춰 적의 표적에서 벗어난다', en: 'Slips out of sight and off enemy targets' } }],
-    necromancer: [
-        { n: { ko: '해골 소환', en: 'Raise Skeleton' }, cd: 10, i: '💀', d: { ko: '해골을 불러 대신 싸우게 한다', en: 'Raises a skeleton to fight for you' } },
-        { n: { ko: '생명력 흡수', en: 'Life Drain' }, cd: 8, i: '🩸', d: { ko: '적의 생명을 빨아 자신을 회복한다', en: 'Drains the enemy to heal yourself' } },
-        { n: { ko: '저주', en: 'Curse' }, cd: 15, i: '🕸', d: { ko: '대상을 약하게 만들어 더 아프게 한다', en: 'Weakens the target so it takes more' } }],
+export const SKILL_DISPLAY = {
+    war_warcry: { i: '📣', d: { ko: '외침으로 파티 전원의 공격을 한동안 끌어올린다', en: 'A shout that lifts the whole party’s attack for a while' } },
+    war_bash: { i: '⚔', d: { ko: '한 대상을 크게 내리친다', en: 'A heavy blow on a single target' } },
+    kni_bulwark: { i: '⛨', d: { ko: '파티 전원에게 피해를 대신 먹는 방벽을 두른다', en: 'Wraps the party in a shield that soaks damage first' } },
+    kni_taunt: { i: '💢', d: { ko: '적의 시선을 자신에게 끌어온다', en: 'Pulls enemy attention onto yourself' } },
+    kni_rush: { i: '🐎', d: { ko: '적들 사이를 돌며 정해진 타수를 나눠 꽂는다', en: 'Rides through the enemies, splitting a fixed number of blows' } },
+    mag_fireball: { i: '🔥', d: { ko: '불덩이를 던진다 — 불 피해', en: 'Hurls a ball of flame — fire damage' } },
+    mag_chain: { i: '⚡', d: { ko: '번개가 적을 타고 옮겨 간다 — 뒤로 갈수록 약해진다', en: 'Lightning leaps from foe to foe, weakening as it goes' } },
+    mag_iceblast: { i: '❄', d: { ko: '한 대상을 얼려 붙인다 — 냉기 피해', en: 'Freezes a single target — cold damage' } },
+    arc_snipe: { i: '🎯', d: { ko: '한 대상을 노려 크게 쏜다', en: 'A single aimed shot for heavy damage' } },
+    arc_multishot: { i: '🏹', d: { ko: '화살을 흩뿌려 적 전원을 맞힌다', en: 'Scatters arrows across every enemy' } },
+    arc_rapid: { i: '💨', d: { ko: '한 대상에게 화살을 연달아 박는다', en: 'Pours repeated arrows into one target' } },
+    pri_haste: { i: '🌬', d: { ko: '파티 전원의 손을 한동안 빠르게 한다', en: 'Quickens the whole party for a while' } },
+    pri_heal: { i: '✚', d: { ko: '파티 전원의 HP 를 되돌린다', en: 'Restores HP to the whole party' } },
+    pri_judgment: { i: '⚖', d: { ko: '한 대상에게 심판을 내린다', en: 'Brings judgment down on one target' } },
 };
-export const mockActives = cls => MOCK_ACTIVES[cls] ?? MOCK_ACTIVES.warrior;
+/** 없는 id 는 빈 칸이 아니라 기본 글리프로 — 스킬이 늘어도 화면이 비지 않는다 */
+export const skillDisplay = id => SKILL_DISPLAY[id] ?? { i: '✦', d: null };
 
 /* ═══════════ 아이템 빌더 ═══════════ */
 /**
@@ -375,11 +363,40 @@ export const TOWN_BG = BG_DIR + 'town.webp';
 export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
 
 /**
- * 몬스터 얼굴 — src/assets/art/faces/monster_<idx>.png.
+ * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster_<idx>.png`.
+ *
+ * **스타일 하나 = 폴더 하나** (2026-08-30). 새 스타일을 넣는 방법은 둘뿐이다:
+ *   ① `faces/` 아래 폴더를 만들고 같은 파일명 규칙(`monster_<idx>.png`)으로 그림을 넣는다
+ *   ② 아래 `FACE_STYLES` 에 그 폴더 이름을 더한다
+ * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `faceDir()` 하나뿐이라서다.
+ * 고르는 순서는 언어와 같다: URL `?face=<스타일>` → localStorage → 목록의 **첫 항목**.
+ * **한 스타일이 전 몬스터를 다 갖출 필요는 없다** — 파일이 없으면 그 자리는 죄종 색 원판 + 이니셜로 떨어진다
+ * (렌더러가 `<img onerror>` 로 받는다). 그리는 중인 스타일로도 게임이 돈다.
+ *
  * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
-export const FACE_DIR = './assets/art/faces/';
+export const FACE_STYLES = ['pixel16'];
+const FACE_STORE_KEY = 'thesevensim.faceStyle';
+
+let faceStyleCur = (() => {
+    const q = new URLSearchParams(location.search).get('face');
+    if (FACE_STYLES.includes(q)) return q;
+    try {
+        const saved = localStorage.getItem(FACE_STORE_KEY);
+        if (FACE_STYLES.includes(saved)) return saved;
+    } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
+    return FACE_STYLES[0];
+})();
+
+export const faceStyle = () => faceStyleCur;
+/** 스타일 전환 — 얼굴은 매 렌더에 경로를 다시 만들므로 호출한 쪽이 render() 하면 그대로 갈린다 */
+export function setFaceStyle(id) {
+    if (!FACE_STYLES.includes(id)) return;
+    faceStyleCur = id;
+    try { localStorage.setItem(FACE_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
+}
+export const faceDir = () => `./assets/art/faces/${faceStyleCur}/`;
 
 /**
  * 정예 특성 — 계승 elite_trait.csv. en 은 CSV 의 trait_name(영문) 그대로.

@@ -11,18 +11,19 @@
  *   그 시각까지 팝업 없이 되감는다 (catchUp).
  * 유닛 카드는 위칸 + 가로형 본문 — 위칸은 영웅 띠와 같은 배치(왼쪽 태그 / **오른쪽 이름**), 본문은 왼쪽 초상(영웅 띠와 같은 얼굴 그림)과
  *   오른쪽 HP(수치는 바 가운데) / 행동 게이지 / 스킬 쿨 3줄. **카드 크기는 몬스터·영웅·보스가 전부 같은 고정값**이다 (2026-08-27, SCREEN_DESIGN §4-2).
- * 스킬 쿨은 **가로 3칸 아이콘**이다 — 이름도 % 도 찍지 않고 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판이 걷히며 보여주고,
+ * 스킬 쿨은 **가로 아이콘 칸**이다 — 이름도 % 도 찍지 않고 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판이 걷히며 보여주고,
  *   **발동한 칸은 튀면서 스킬 이름이 초상 위로 떠오른다** (2026-08-27 — 「방금 뭘 썼나」는 게이지가 아니라 팝업이 답한다).
  * 올려놓으면 툴팁 — 카드는 영웅 기본 능력치, 스킬 칸은 그 스킬의 이름 · 표기/실효 쿨 · 설명 (2026-08-28, ui/tip.js).
- * 스킬 쿨 게이지는 **목업** — 스킬 미작성이라 타임라인에 스킬 이벤트가 없다. 영웅의 실제 행동 이벤트마다 슬롯 순으로 준비된 것 하나를
- *   "쓴" 것처럼 리셋만 한다 (mockUseSkill · DEV_PLAN 부채 #13). 결과에는 아무 영향이 없다.
- * 행동 게이지 = 마지막 행동 이후 경과 ÷ 행동 주기. 스킬 쿨 게이지 자리는 남겨 두되 아직 비어 있다(스킬 미작성).
+ * 스킬 칸은 **실제 시전을 그린다** (2026-08-30 — 목업 폐기): 켜고 끄는 것은 타임라인의 `skill` 이벤트이고, 남은 쿨은 그 이벤트가
+ *   실어 온 `ready`(시뮬이 쓴 실제 쿨)로 걷힌다. 재생기는 쿨을 **계산하지 않는다**. 회복 · 창 · 재생(`heal`·`buff`·`buffEnd`·`regen`)도
+ *   같이 그린다 — 무시하면 화면 HP 가 시뮬과 어긋난다. 아이콘 · 설명만 `mock.js` 표시 사전에서 온다.
+ * 행동 게이지 = 마지막 행동 이후 경과 ÷ 행동 주기.
  *
  * i18n: 표시 문자열은 전부 t()/L() — 이 파일에 한국어 리터럴은 없다 (주석 제외).
  */
 
 import * as M from './mock.js';
-import { D, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, eliteName } from './data.js';
+import { D, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, eliteName, skillInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, heroTipCard, skillTipCard } from './tip.js';
 
@@ -58,7 +59,9 @@ export function mountBattle(container, opts) {
             key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             glyph: M.classGlyph(h?.cls),   // 글리프 표는 mock.js 한 곳 — 영웅 띠·후보 카드와 같은 얼굴
-            skills: M.mockActives(h?.cls).map(s => ({ ...s, readyAt: 0 })),   // 쿨 게이지 목업 (부채 #13)
+            // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
+            skills: (p.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
+            buffs: new Map(),   // 켜져 있는 창 — buff/buffEnd 이벤트가 켜고 끈다
         };
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
@@ -195,15 +198,19 @@ function renderUnits(state, root) {
             const discSin = u.side === 'enemy' ? (u.sin ?? monsterSin(u.monsterId)) : null;
             const dc = discSin ? M.SINS[discSin]?.color : null;
             const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u.uid);
+            // 아트가 있으면 그 밑에 **이니셜/글리프를 깔아 둔다** — 고른 얼굴 스타일에 그 몬스터 그림이 없으면
+            // `onerror` 로 img 만 빠지고 밑에 있던 것이 드러난다 (mock.js FACE_STYLES).
+            // ⚠ 밑에 까는 것은 글자뿐이다 — `.sprite.disc`(원형)를 같이 얹으면 아트 있는 유닛이 원형이 된다(관전은 네모다)
+            const underMark = dc ? L(monsterName(u.monsterId)).charAt(0) : u.glyph;
             const sprite = face
-                ? `<div class="sprite has-face"><img src="${face}" alt="${name}" loading="lazy"></div>`
+                ? `<div class="sprite has-face"${dc ? ` style="color:${dc}"` : ''}>${underMark}<img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
                 : dc
                     ? `<div class="sprite disc" style="color:${dc};background:${dc}22;border-color:${dc}66">${L(monsterName(u.monsterId)).charAt(0)}</div>`
                     : `<div class="sprite">${u.glyph}</div>`;
             // 위칸(이름·태그) + 가로형 본문(왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 3줄) — SCREEN_DESIGN §4-2
             // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
-            const skills = u.skills ? `<div class="cd-list">${u.skills.map(s => `
-                <div class="cd-slot"><span class="cd-g">${s.i ?? ''}</span><i class="cd-mask"></i></div>`).join('')}</div>` : '';
+            const skills = u.skills?.length ? `<div class="cd-list">${u.skills.map(s => `
+                <div class="cd-slot"><span class="cd-g">${s.icon ?? ''}</span><i class="cd-mask"></i></div>`).join('')}</div>` : '';
             n.innerHTML = `
                 <div class="unit-band">
                     ${u.side === 'enemy' ? `<span class="tags">
@@ -247,25 +254,29 @@ function refreshUnit(state, u) {
     // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다
     const act = u.node.querySelector('.act-fill');
     if (act) act.style.width = (u.hp <= 0 ? 0 : clamp01((state.t - u.lastAct) / u.period) * 100) + '%';
-    // 스킬 쿨 게이지 (목업 — 부채 #13). 다 찬 줄 = 다음 행동에 나갈 후보
-    if (u.skills) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
+    // 스킬 쿨 게이지 — 시뮬이 실제로 쓴 쿨(`skill` 이벤트의 firedAt → ready)로 걷는다. 재생기는 쿨을 계산하지 않는다
+    if (u.skills?.length) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
         const s = u.skills[i];
-        const pct = u.hp <= 0 ? 0 : clamp01(1 - (s.readyAt - state.t) / s.cd);
+        const span = Math.max(1e-6, s.readyAt - s.firedAt);
+        const pct = u.hp <= 0 ? 0 : clamp01(1 - (s.readyAt - state.t) / span);
         slot.querySelector('.cd-mask').style.height = (1 - pct) * 100 + '%';   // 남은 쿨만큼 위에서 덮는다
         slot.classList.toggle('ready', pct >= 1);
     });
+    // 켜져 있는 창 — 카드 테두리로만 알린다(칸을 늘리면 카드 크기 고정이 깨진다, SCREEN_DESIGN §4-2)
+    u.node.classList.toggle('buffed', u.hp > 0 && u.buffs?.size > 0);
 }
 
 /**
- * 쿨 게이지 목업 — 영웅이 행동할 때 슬롯 순으로 준비된 스킬 하나를 "쓴" 것처럼 리셋하고 그 스킬을 돌려준다. 결과에 영향 없음 (DEV_PLAN 부채 #13).
- * **발동을 보여준다** (2026-08-27) — 쓴 칸이 한 번 튀고 스킬 이름이 초상 위로 떠오른다.
- * 「무엇이 준비됐나」는 상태라 게이지가 답하지만 「방금 뭘 썼나」는 사건이라 게이지로는 안 보인다 — 피해 숫자와 같은 팝업 층이 답한다.
+ * 시전 연출 — `skill` 이벤트가 왔을 때만 돈다 (2026-08-30 — 재생기가 스스로 쿨을 리셋하던 목업 폐기).
+ * 쓴 칸이 한 번 튀고 스킬 이름이 초상 위로 떠오른다: 「무엇이 준비됐나」는 상태라 게이지가 답하지만
+ * 「방금 뭘 썼나」는 사건이라 게이지로는 안 보인다 — 피해 숫자와 같은 팝업 층이 답한다.
  */
-function mockUseSkill(state, u, tSec) {
-    const i = u.skills?.findIndex(x => tSec >= x.readyAt - 1e-9) ?? -1;
-    if (i < 0) return null;
+function castSkill(state, u, ev) {
+    const i = u.skills?.findIndex(x => x.id === ev.s) ?? -1;
+    if (i < 0) return;
     const s = u.skills[i];
-    s.readyAt = tSec + s.cd;
+    s.firedAt = ev.t;
+    s.readyAt = ev.ready ?? ev.t;   // 준비 시각은 시뮬이 실어 보낸다 (INTERFACE §2-6)
     if (!state.catchUp && u.node) {   // 되감기 중에는 연출을 태우지 않는다
         const slot = u.node.querySelectorAll('.cd-slot')[i];
         if (slot) {
@@ -275,11 +286,10 @@ function mockUseSkill(state, u, tSec) {
             state.timeouts.push(setTimeout(() => slot.classList.remove('fire'), 520));
         }
     }
-    popup(state, u, L(s.n), 'skill-tag');
-    return s;
+    popup(state, u, L(s.name), 'skill-tag');
 }
-/** 타격 라벨 — 쓴 스킬 이름(목업) 또는 기본 공격. 로그와 누적 데미지가 같은 라벨을 쓴다 */
-const strikeLabel = s => s ? L(s.n) : t('bt.basicAttack');
+/** 타격 라벨 — 이벤트가 들고 온 스킬 id(`s`) 의 이름, 없으면 기본 공격. 로그와 누적 데미지가 같은 라벨을 쓴다 */
+const strikeLabel = id => id ? L(skillInfo(id).name) : t('bt.basicAttack');
 
 /* ───────── 누적 데미지 — 이벤트의 dmg 를 더할 뿐이다. 재생기는 계산하지 않는다 (정산은 game_logic) ───────── */
 
@@ -372,9 +382,14 @@ function apply(state, root, opts, ev) {
             pushLog(state, root, t('log.roundStart', { n: ev.n, kind: kindLabel(ev.kind), list: enemyList(state) }));
             break;
         }
+        case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
+            const u = U(ev.u);
+            if (u) { u.lastAct = ev.t; castSkill(state, u, ev); }
+            break;
+        }
         case 'hit': {
             const a = U(ev.a), d = U(ev.d);
-            const skill = a ? strikeLabel(mockUseSkill(state, a, ev.t)) : '';
+            const skill = strikeLabel(ev.s);
             if (a) { a.lastAct = ev.t; if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
@@ -382,7 +397,7 @@ function apply(state, root, opts, ev) {
                 refreshUnit(state, d);
             }
             if (a && d) {
-                // 모든 타격을 적는다 — 누가 → 누구 · 피해 · 쓴 스킬 (스킬명은 목업, 부채 #13)
+                // 모든 타격을 적는다 — 누가 → 누구 · 피해 · 쓴 스킬
                 pushLog(state, root, t(ev.crit ? 'log.crit' : 'log.hit', { name: L(a.name), target: L(d.name), dmg: ev.dmg, skill }));
                 addDmg(state, a, skill, ev.dmg);
                 renderDmg(state, root);
@@ -402,7 +417,7 @@ function apply(state, root, opts, ev) {
         }
         case 'dodge': {
             const a = U(ev.a), d = U(ev.d);
-            const skill = a ? strikeLabel(mockUseSkill(state, a, ev.t)) : '';
+            const skill = strikeLabel(ev.s);
             if (a) a.lastAct = ev.t;
             if (d) popup(state, d, t('pop.dodge'), 'miss');
             if (a && d) pushLog(state, root, t('log.dodge', { name: L(a.name), target: L(d.name), skill }));
@@ -416,6 +431,35 @@ function apply(state, root, opts, ev) {
             const enemy = u.side === 'enemy';
             pushLog(state, root, t(enemy ? 'log.slain' : 'log.downed', { name: L(u.name) }));
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
+            break;
+        }
+        case 'heal': {   // 회복 — 시전자(a)가 대상(d)의 HP 를 올린다. 부호가 반대일 뿐 타격과 같은 자리에 뜬다
+            const a = U(ev.a), d = U(ev.d);
+            if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
+            if (a && d) pushLog(state, root, t('log.heal', { name: L(a.name), target: L(d.name), amt: ev.amt, skill: strikeLabel(ev.s) }));
+            break;
+        }
+        case 'regen': {   // HP 재생 — 조용히 오른다(팝업 없음). 정수 1 이상 쌓인 틱에만 온다
+            const u = U(ev.u);
+            if (u) { u.hp = ev.dhp; refreshUnit(state, u); }
+            break;
+        }
+        case 'buff': {   // 창 적용 · 갱신. 배리어면 총량(amt)도 온다
+            const u = U(ev.u);
+            if (!u) break;
+            u.buffs?.set(ev.s, ev.until);
+            refreshUnit(state, u);
+            // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
+            // 「지금 걸려 있다」는 상태라 카드 테두리가 든다 (SCREEN_DESIGN §4-2)
+            pushLog(state, root, t(ev.amt != null ? 'log.barrier' : 'log.buff', { name: L(u.name), skill: strikeLabel(ev.s), amt: ev.amt }));
+            break;
+        }
+        case 'buffEnd': {
+            const u = U(ev.u);
+            if (!u) break;
+            u.buffs?.delete(ev.s);
+            refreshUnit(state, u);
+            pushLog(state, root, t('log.buffEnd', { name: L(u.name), skill: strikeLabel(ev.s) }));
             break;
         }
         case 'card': {   // 도감 카드 — 처치와 별개 판정 (monster_design §8). 리포트에도 찍힌다

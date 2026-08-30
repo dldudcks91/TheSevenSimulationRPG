@@ -175,10 +175,13 @@ export function createHeroSystem(data) {
      * 단 히든 상한(caps)까지만 — 계승(TheSevenSimulation)의 자동 성장 모델.
      */
     function grantXp(hero, amount, rng) {
+        // 레벨 상한 — 상한에 닿으면 XP 를 쌓지 않는다 (GAME_DESIGN §9 08-26 「레벨 상한 99」).
+        // 남은 XP 를 들고 있어 봐야 쓸 곳이 없고, 세이브에 의미 없는 잔량이 남는다
+        if (hero.level >= B.hero_level_cap) { hero.xp = 0; return null; }
         hero.xp += amount;
         const from = hero.level;
         const gains = {};
-        while (hero.xp >= xpNeeded(hero.level)) {
+        while (hero.level < B.hero_level_cap && hero.xp >= xpNeeded(hero.level)) {
             hero.xp -= xpNeeded(hero.level);
             hero.level += 1;
             for (const id of statIds) {
@@ -188,6 +191,7 @@ export function createHeroSystem(data) {
                 }
             }
         }
+        if (hero.level >= B.hero_level_cap) hero.xp = 0;
         // 마스터리 포인트 — 레벨업 1회당 정액. 지급 곡선 자체가 기획 미확정이라 형태도 임시다 (skill_design §7)
         const points = (hero.level - from) * B.mastery_point_per_level;
         if (points > 0) hero.masteryPoints = (hero.masteryPoints ?? 0) + points;

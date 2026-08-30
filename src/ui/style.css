@@ -232,14 +232,24 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* 몬스터 얼굴 — 128×128 정사각 PNG. 원형 마스크는 CSS가 하고 파일에는 굽지 않는다. 원형은 몬스터 전용 — 영웅은 .hero-face(네모) */
 .face {
+    position: relative;
     display: inline-flex; align-items: center; justify-content: center;
     width: 26px; height: 26px; flex: 0 0 auto;
     background: var(--bg-input); border: 1px solid var(--border-secondary);
     border-radius: 50%; overflow: hidden; vertical-align: middle;
+    font-size: var(--fs-xs);   /* 이니셜 크기 — 아트 유무와 무관하게 담는 칸이 정한다 (.face-init 이 상속) */
 }
-.face img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+/* 이미지는 이니셜 **위에** 덮는다 — 아트가 없는 스타일에서 `onerror` 로 img 가 사라지면 밑에 있던 이니셜이 드러난다.
+   그래서 그리는 중인 스타일로도 화면이 안 빈다 (2026-08-30 스타일 폴더 도입) */
+.face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
 /* 아트가 없는 몬스터 — 죄종 색 원판 + 이니셜 (색은 JS가 인라인으로 준다) */
-.face.none { font-size: var(--fs-xs); font-weight: normal; }
+.face.none { font-weight: normal; }
+/* 이미지 **밑에** 깔리는 같은 이니셜 — 고른 스타일에 그 그림이 없을 때만 드러난다.
+   테두리는 안 물들인다: 아트가 있는 동안 초상은 색을 갖지 않는다 (2026-08-30) */
+.face-init {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: inherit; font-weight: normal;
+}
 .face.boss { border-color: var(--text-accent); box-shadow: 0 0 0 1px rgba(224,48,48,.25); }
 .face.unfound { opacity: .45; border-style: dashed; color: var(--text-muted); }
 
@@ -526,6 +536,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .unit.party { border-top-color: #3060a0; }
 .unit.elite { border-color: #6a4a2a; background: #1f1a16; }
 .unit.dead { opacity: .26; filter: grayscale(1); }
+/* 창이 켜져 있는 동안 — 칸을 늘리지 않고 테두리로만 알린다 (카드 크기 고정, SCREEN_DESIGN §4-2) */
+.unit.buffed { box-shadow: 0 0 0 1px #46639e inset, 0 0 10px -2px #46639e; }
 /* 오른쪽 정보 열 — 위에서부터 (정예 특성) / HP / 행동 게이지 / 스킬 쿨 */
 .unit-info { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 /* 위칸 — 적 태그(왼쪽) · 이름(오른쪽). 영웅 띠(.hs-band)와 **같은 배치**다 (2026-08-27 — 왼쪽 상태 / 오른쪽 이름) */
@@ -540,6 +552,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* 초상 — 정사각 한 칸. 그림 규격은 공통 조각 .hero-face 와 같다(네모 박스 · 직업 글리프). 보스는 한 단 크다 */
 .unit .sprite {
+    position: relative;
     flex: 0 0 auto; width: 76px; height: 76px; align-self: center;
     display: flex; align-items: center; justify-content: center; font-size: 38px;
     background: var(--bg-input); border: 1px solid var(--border-secondary); overflow: hidden;
@@ -548,6 +561,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 얼굴 이미지가 있는 유닛 — 없으면 직업 글리프(영웅) / 죄종 색 원판 + 이니셜(몬스터) */
 .sprite.has-face { background: radial-gradient(circle at 50% 38%, #24243a 0%, var(--bg-input) 100%); }
 .sprite.has-face img {
+    position: absolute; inset: 0;      /* 이니셜 위에 덮는다 — .face 와 같은 이유(아트 없는 스타일 폴백) */
     width: 100%; height: 100%; object-fit: contain;
     image-rendering: pixelated;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,.8));
@@ -644,6 +658,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .pop.crit { color: var(--color-warning); font-size: var(--fs-lg); }
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
 .pop.card-tag { color: var(--color-info); font-size: var(--fs-xs); }   /* 도감 카드 획득 */
+.pop.heal { color: #8fe6a8; }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
 /* 발동한 스킬 이름 — 피해 숫자(초상 위, top 38%)와 자리를 나눠 카드 가운데 위로 뜬다. 배경 위에서 읽히도록 제 칩을 갖는다 */
 .pop.skill-tag {
     /* 카드 위에서 시작해 위칸 언저리까지 떠오른다 — 카드에서 완전히 떨어지면 어느 유닛이 쓴 건지 안 붙는다 */
@@ -681,6 +696,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .battle-log li .t { color: var(--text-muted); margin-right: 8px; font-size: var(--fs-xs); }
 .battle-log li b { font-weight: normal; color: var(--text-primary); }
 .battle-log li b.crit-t { color: var(--color-warning); }
+.battle-log li b.heal-t { color: #8fe6a8; }
 
 /* ───────── 서브 바 / 세그먼트 ───────── */
 
@@ -819,54 +835,61 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* ───────── 도감 ───────── */
 
 /* 스테이지 = 한 줄, 몬스터는 오른쪽으로 쭉 나열.
-   한 챕터(4스테이지)가 한 화면에 들어와야 하므로 행 높이를 최소로 눌렀다 */
+   한 챕터(4스테이지)가 한 화면(폭 정책의 세로 예산 700px)에 들어와야 한다 — 이 제약이 초상 크기의 상한이다 (2026-08-30) */
 .codex-stage {
-    padding: 8px 10px; background: var(--bg-tertiary);
-    border: 1px solid var(--border-dark); margin-bottom: 7px;
+    padding: 6px 10px 7px; background: var(--bg-tertiary);
+    border: 1px solid var(--border-dark); margin-bottom: 5px;
 }
 .codex-stage.locked { opacity: .42; }
 
 .cs-head {
     display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
-    flex-wrap: wrap; margin-bottom: 7px;
+    flex-wrap: wrap; margin-bottom: 6px;
 }
 .cs-title { font-size: var(--fs-sm); }
 .cs-title .muted { margin-right: 4px; }
 .cs-gain { font-size: var(--fs-xs); }
 
 /* 가로 나열 — 몬스터가 늘어나면 이 줄만 가로 스크롤된다 */
-.mon-strip { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: thin; }
+.mon-strip { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
 
-/* 가로형 카드 — 얼굴 왼쪽 / 정보 오른쪽 */
+/* 가로형 카드 — 초상 왼쪽 / 정보 오른쪽. **카드 높이는 초상이 정한다** (2026-08-30, SCREEN_DESIGN §9).
+   초상이 커진 만큼 본문도 넓어야 해서 min-width 를 올렸다 — 하한 폭 1280 에서 4장 + 여백이 들어간다 */
 .mon-card {
-    flex: 1 1 0; min-width: 196px; max-width: 340px;
-    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    flex: 1 1 0; min-width: 190px; max-width: 360px;
+    display: flex; align-items: stretch; gap: 9px; padding: 5px 8px;
     background: var(--bg-card); border: 1px solid var(--border-dark);
     border-left: 2px solid var(--border-secondary);
 }
 .mon-card.boss { border-left-color: var(--text-accent); }
 .mon-card.maxed { border-color: #3a5a3a; border-left-color: var(--color-success); background: #16201a; }
 .mon-card.locked { opacity: .7; }
-.mon-card .face { width: 38px; height: 38px; }
-.mon-card .face img { width: 100%; height: 100%; object-fit: contain; }
+/* 도감의 초상 — 이 화면에서 가장 큰 칸. 원형 마스크는 몬스터 공통 규칙이라 그대로 두고 지름만 키운다 */
+.mon-card .face { width: 72px; height: 72px; font-size: var(--fs-lg); }
+.mon-card .face img { width: 100%; height: 100%; object-fit: cover; }
 
-.mon-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mon-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
 .mon-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
 .mon-name {
-    font-size: var(--fs-xs); line-height: 1.3; word-break: keep-all;
+    flex: 1 1 auto; min-width: 0;
+    font-size: var(--fs-sm); line-height: 1.3; word-break: keep-all;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.mon-name .b-tag { color: var(--text-accent); font-size: 9px; margin-left: 3px; }
-.mon-kills b { font-weight: normal; font-size: var(--fs-md); color: var(--text-primary); }
-.mon-mid { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.mon-next { font-size: 9px; white-space: nowrap; }
-.mon-card .bar { width: 100%; height: 3px; }
+.mon-name .b-tag { color: var(--text-accent); font-size: var(--fs-xs); margin-left: 4px; }
+/* 장수는 줄바꿈하지 않는다 — 영어("0 cards")가 이름과 폭을 다투면 숫자가 두 줄로 접힌다. 줄어드는 쪽은 이름(말줄임)이다 */
+.mon-kills { flex: 0 0 auto; white-space: nowrap; }
+.mon-kills b { font-weight: normal; font-size: var(--fs-lg); color: var(--text-primary); }
+/* 초상이 커지며 생긴 세로 여유로 핍과 「처치 · 다음」을 위아래로 나눈다 — 한 줄에 두면 좁은 칸에서 글자가 잘린다 */
+.mon-mid { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.mon-next { font-size: var(--fs-xs); white-space: nowrap; }
+.mon-card .bar { width: 100%; height: 5px; }
 
 /* 레벨 핍 — 도감 레벨(카드 누적 문턱)을 한눈에 */
-.pips { display: flex; gap: 2px; }
+.pips { display: flex; gap: 3px; }
 .pips .pip {
-    width: 11px; height: 4px; background: var(--bg-input);
-    border: 1px solid var(--border-dark);
+    width: 14px; height: 5px; background: var(--bg-input);
+    /* 안 켜진 핍도 보여야 한다 — 「몇 번 더 올릴 수 있나」가 도감의 목표치다. --border-dark 는 카드 배경에 묻혔다 (2026-08-30) */
+    border: 1px solid var(--border-secondary);
 }
 .pips .pip.on { background: var(--color-success); border-color: var(--color-success); }
 
@@ -1178,6 +1201,11 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 /* 선술집 후보 — 시작 화면 카드의 축소판 */
 .tv-cands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
 .tv-cands .ng-card { padding: 11px 13px 11px; }
+/* 고용한 칸 — 빈 채로 남는다. 카드 자리를 지켜야 명단이 「줄었다」가 아니라 「비었다」로 읽힌다 */
+.tv-cands .tv-empty {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--text-muted); font-size: var(--fs-sm); border-style: dashed; background: none;
+}
 .tv-cands .ng-head .hero-face { width: 40px; height: 40px; font-size: 21px; }
 .tv-cands .ng-name > b { font-size: var(--fs-md); }
 .tv-cands .attr-list { gap: 2px; }

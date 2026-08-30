@@ -99,7 +99,7 @@ export const monsterName = id => {
     return r ? { ko: r.monster_name_kr, en: r.monster_name_en } : { ko: '???', en: '???' };
 };
 /** 얼굴 이미지가 있는 몬스터만 경로를 돌려준다 (monster.csv:face) */
-export const monsterFace = id => (D.monsters?.[id]?.face ? `${M.FACE_DIR}monster_${id}.png` : null);
+export const monsterFace = id => (D.monsters?.[id]?.face ? `${M.faceDir()}monster_${id}.png` : null);
 /** 몬스터 id 앞자리 = 챕터 (1101 → 1챕터) */
 export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wrath';
 /** 챕터 행 — {id, sin, name:{ko,en}} */
@@ -116,6 +116,22 @@ export const codexStages = () => (D.stageList ?? []).map(s => {
         .map(m => ({ id: m.monster_idx }));
     return { id: s.stage_id, chapter: s.chapter, num: s.stage_num, name: stageName(s), monsters: [...normals, { id: s.boss_monster_idx, boss: true }] };
 });
+/**
+ * 액티브 한 줄 — 이름 · 표기 쿨은 `skill.csv`(SSOT), 아이콘 · 설명은 `mock.js` 표시 사전.
+ * 관전 카드 · 스킬 칸 · 툴팁이 같은 한 곳에서 읽는다 (SCREEN_DESIGN §4-2).
+ */
+export const skillInfo = id => {
+    const r = (D.skillRows ?? []).find(x => x.skill_id === id);
+    const disp = M.skillDisplay(id);
+    return {
+        id,
+        name: r ? { ko: r.name_kr, en: r.name_en } : { ko: id, en: id },
+        cd: r ? Number(r.cool_sec) : 0,
+        icon: disp.i,
+        desc: disp.d,
+    };
+};
+
 /**
  * 정예 이름 조립 — ko "분노의 스켈레톤 기사" / en "Wrathful Skeleton Knight".
  * 언어별 어순·조사가 다르므로 조립 규칙은 렌더러가 아니라 **데이터 층**에 둔다 (mock 의 nm() 과 같은 자리).

@@ -30,7 +30,7 @@ import * as M from './mock.js';
 import { t, L, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
 import { bindTipNode, hideTip, heroTipCard } from './tip.js';
-import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, codexStages } from './data.js';
+import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, codexStages, skillInfo } from './data.js';
 import { loadSave, writeSave, clearSave } from './storage.js';
 import { makeRng } from '../game_logic/rng.js';
 
@@ -55,8 +55,14 @@ const combatOf = h => SYS.game.heroCombat(G, h);
 const cycleOf = h => combatOf(h).action_period;
 const xpNext = h => SYS.hero.xpNeeded(h.level);
 const injured = h => G != null && SYS.game.isInjured(h, now());
-/* 실효 쿨 = ceil(표기 쿨 ÷ 행동 주기) × 행동 주기 (battle_design §6) */
-const effectiveCd = (cd, cycle) => Math.ceil(cd / cycle) * cycle;
+/* 실효 쿨 = ceil(표기 쿨 ÷ 행동 주기) × 행동 주기 (battle_design §6) — 공식은 game_logic 소유다 (부채 #3) */
+const effectiveCd = (cd, cycle) => SYS.formula.effectiveCd(cd, cycle);
+/* 그 영웅의 액티브 — 배정은 game_logic(skill.activesFor), 표시(아이콘·설명)는 skillInfo 가 붙인다.
+   칸은 항상 [balance.csv:active_slots] 개다 — 배정이 모자라면 빈 칸으로 남긴다(칸이 줄면 「셋 중 하나가 비었다」가 안 읽힌다) */
+const activeCells = h => {
+    const list = (h ? SYS.skill.activesFor(h) : []).map(skillInfo);
+    return Array.from({ length: D.balance.active_slots }, (_, i) => list[i] ?? null);
+};
 
 const sinColor = id => M.SINS[id]?.color ?? 'var(--text-muted)';
 const sinName = id => L(M.SINS[id]) || id;
@@ -96,13 +102,17 @@ function stageMinutes(stage) {
 }
 
 /**
- * 몬스터 얼굴 (src/assets/art/faces/). 폴백은 죄종 색 원판 + 이름 이니셜 (faces/README 규격).
+ * 몬스터 얼굴 (src/assets/art/faces/<스타일>/). 폴백은 죄종 색 원판 + 이름 이니셜 (faces/README 규격).
+ * 이미지가 있어도 **이니셜을 함께 깐다** — 고른 스타일에 그 몬스터 그림이 없으면 `onerror` 로 img 만 사라지고
+ * 밑의 이니셜이 드러난다 (스타일을 그리는 중에도 화면이 안 빈다, mock.js FACE_STYLES).
  */
+/** 이미지 밑에 까는 폴백 — 테두리·배경은 건드리지 않는다(아트가 있는 동안 초상은 색을 갖지 않는다). 드러나는 건 img 가 빠졌을 때뿐 */
+const faceInit = (name, c) => `<span class="face-init" style="color:${c};background:${c}22">${name.charAt(0)}</span>`;
 const faceChip = (id, extraCls = '') => {
     const src = monsterFace(id);
     const name = L(monsterName(id));
-    if (src) return `<span class="face ${extraCls}" title="${name}"><img src="${src}" alt="${name}" loading="lazy"></span>`;
     const c = sinColor(monsterSin(id));
+    if (src) return `<span class="face ${extraCls}" title="${name}">${faceInit(name, c)}<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`;
     return `<span class="face none ${extraCls}" title="${t('face.noArt', { name })}"
         style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
 };
@@ -521,15 +531,19 @@ function repeatRow() {
 function renderExpReport(main) {
     const R = G.lastReport;
     const stage = D.stages[R.stageId];
-    const verdictCls = R.won ? 'clear' : R.reason === 'timeout' ? 'retreat' : 'lose';
-    const verdictText = R.won ? t('rep.clear') : R.reason === 'timeout' ? t('rep.retreat') : t('rep.defeat');
-    const roundsDone = R.won ? R.rounds.length : Math.max(0, R.rounds.length - 1);
+    // 철수(전투불능 발생 · 시간 초과)와 패배(전멸)를 색으로 가른다 — 철수는 루팅 전량 보존이라 실패가 아니다 (SCREEN_DESIGN §4-3)
+    const withdrew = R.reason === 'timeout' || R.reason === 'retreat';
+    const verdictCls = R.won ? 'clear' : withdrew ? 'retreat' : 'lose';
+    const verdictText = R.won ? t('rep.clear') : withdrew ? t('rep.retreat') : t('rep.defeat');
+    // 깬 라운드 수는 정산이 실어 보낸다 — 옛 리포트(v4 이전)에는 없어서 그때만 짐작한다
+    const roundsDone = R.roundsCleared ?? (R.won ? R.rounds.length : Math.max(0, R.rounds.length - 1));
     const cardEntries = Object.entries(R.cards ?? {});
     const cardTotal = cardEntries.reduce((a, [, n]) => a + n, 0);
     // 빗나감 — 파티 기준. 옛 리포트(v2 이관본)에는 strikes 가 없다
     const ms = R.strikes?.party;
-    const missText = ms?.n
-        ? t('rep.missN', { m: ms.miss, n: ms.n, p: Math.round(100 * ms.miss / ms.n) })
+    // 0 이어도 숫자를 찍는다 — 칸이 비면 "안 재고 있다"로 읽힌다 (SCREEN_DESIGN §4-3). "없음"은 strikes 가 아예 없는 옛 리포트뿐
+    const missText = ms
+        ? t('rep.missN', { m: ms.miss, n: ms.n, p: ms.n ? Math.round(100 * ms.miss / ms.n) : 0 })
         : t('rep.none');
 
     const p = el('div', 'panel');
@@ -748,7 +762,7 @@ function skillCards(h) {
     const wrap = el('div', 'sk-cards-wrap');
     wrap.appendChild(el('div', 'sub-h', `${t('ch.skill.h')}<span class="muted">${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycleOf(h).toFixed(2) })}</b></span>`));
     const grid = el('div', 'sk-cards');
-    (h.actives ?? [null, null, null]).forEach((a, i) => {
+    activeCells(h).forEach((a, i) => {
         const c = el('div', `sk-card${a ? '' : ' vacant'}`);
         c.innerHTML = `<span class="no">${i + 1}</span>${a ? `<span class="ico">${a.icon}</span>` : ''}<span class="nm">${a ? L(a.name) : t('sk.emptySlot')}</span>`;
         grid.appendChild(c);
@@ -914,7 +928,7 @@ function activeSlots(h, title) {
     p.appendChild(el('div', 'cycle-line', `
         ${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycle.toFixed(2) })}</b>`));
     const box = el('div', 'slot-list');
-    (h.actives ?? [null, null, null]).forEach((a, i) => {
+    activeCells(h).forEach((a, i) => {
         const row = el('div', `act-slot${a ? '' : ' empty'}`);
         if (!a) row.innerHTML = `<span class="no">${i + 1}</span><span class="muted">${t('sk.emptySlot')}</span>`;
         else {
@@ -1065,8 +1079,12 @@ function renderTavern(main) {
     const p = el('div', 'panel town-bg');
     p.appendChild(el('h2', '', t('tv.h')));
 
+    // 명단 판정은 전부 game_logic 이 낸다 (SCREEN_DESIGN §8) — 화면은 빈 칸과 쿨다운을 그리기만 한다
+    const T = SYS.game.tavernState(G, now());
     const grid = el('div', 'tv-cands');
-    SYS.game.tavernCandidates(G).forEach((c, i) => {
+    T.candidates.forEach((c, i) => {
+        // 고용한 칸은 빈 채로 남는다 — 다음 리롤에 채워진다 (base_expedition_design §2-4)
+        if (!c) { grid.appendChild(el('div', 'ng-card tv-empty', t('tv.empty'))); return; }
         const card = candidateCard(c, `<button class="btn primary sm b-hire" ${full || G.resources.gold < B.tavern_hire_cost ? 'disabled' : ''}>${t('tv.hire', { g: B.tavern_hire_cost.toLocaleString() })}</button>`);
         card.querySelector('.b-hire').onclick = () => {
             const r = SYS.game.hire(G, i);
@@ -1079,9 +1097,11 @@ function renderTavern(main) {
     p.appendChild(grid);
 
     const tools = el('div', 'tv-tools');
-    const rr = el('button', 'btn', t('tv.reroll', { g: B.tavern_reroll_cost.toLocaleString() }));
-    rr.disabled = G.resources.gold < B.tavern_reroll_cost;
-    rr.onclick = () => { const r = SYS.game.tavernReroll(G); if (!r.ok) flash('tv.err.gold'); else save(); render(); };
+    const rr = el('button', 'btn', T.free
+        ? t('tv.reroll.free')
+        : t('tv.reroll', { g: T.cost.toLocaleString(), t: fmtDuration(T.freeAt - now()) }));
+    rr.disabled = !T.free && G.resources.gold < T.cost;
+    rr.onclick = () => { const r = SYS.game.tavernReroll(G, now()); if (!r.ok) flash('tv.err.gold'); else save(); render(); };
     tools.appendChild(rr);
     p.appendChild(tools);
     stack.appendChild(p);
@@ -1110,10 +1130,11 @@ function monsterCard(m, stage) {
     const src = monsterFace(m.id);
     const name = stage.locked ? '???' : L(monsterName(m.id));
     const c = sinColor(monsterSin(m.id));
+    // 이미지가 있어도 이니셜을 깔아 둔다 — 스타일에 그 그림이 없으면 img 만 빠지고 이니셜이 드러난다 (faceChip 과 같은 규칙)
     const faceHtml = stage.locked
         ? `<span class="face unfound">·</span>`
         : src
-            ? `<span class="face${m.boss ? ' boss' : ''}"><img src="${src}" alt="${name}" loading="lazy"></span>`
+            ? `<span class="face${m.boss ? ' boss' : ''}">${faceInit(name, c)}<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`
             : `<span class="face none${m.boss ? ' boss' : ''}" style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
     const pips = Array.from({ length: maxLv }, (_, i) =>
         `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.cards', { n: cum[i] })}"></span>`).join('');
@@ -1223,7 +1244,7 @@ function helpSections() {
             title: t('nav.tavern'),
             groups: [
                 { h: t('tv.h'), sub: t('tv.sub'), body: [t('tv.tiers.note')] },
-                { h: t('tv.reroll', { g: B.tavern_reroll_cost.toLocaleString() }), body: [t('tv.reroll.note')] },
+                { h: t('tv.reroll.free'), body: [t('tv.reroll.note')] },
                 { h: t('tv.uniqueTodo.h'), body: [t('tv.uniqueTodo.b')] },
             ],
         },

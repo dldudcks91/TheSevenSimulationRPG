@@ -16,7 +16,7 @@
 
 import * as M from './mock.js';
 import { t, L } from './i18n.js';
-import { D } from './data.js';
+import { D, SYS } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
 
@@ -97,7 +97,8 @@ export function heroTipCard(h) {
 /**
  * 스킬 카드 — 아이콘 + 이름 / 표기 쿨 · **실효 쿨**(행동 주기에 맞춰 올림, battle_design §6) / 설명.
  * 실효 쿨은 진짜 파생값이다 — "표기 6초"만 봐서는 주기 2.4초인 영웅이 실제로 7.2초마다 쓴다는 걸 못 읽는다.
- * 설명(`s.d`)은 목업이다 — 스킬 미작성이라 발행된 텍스트가 없다 (DEV_PLAN 부채 #13 · #15).
+ * 이름 · 표기 쿨은 `skill.csv`, 설명은 `mock.js` 표시 사전에서 온다 (`data.js skillInfo`).
+ * @param s      skillInfo 한 줄 — {id, name, cd, icon, desc}
  * @param period 그 유닛의 행동 주기(초). 없으면 실효 쿨 줄을 접는다
  */
 export function skillTipCard(s, period) {
@@ -105,16 +106,15 @@ export function skillTipCard(s, period) {
     const c = el('div', 'tip-card');
     let cdLine = t('sk.base', { s: s.cd });
     if (period > 0) {
-        const eff = Math.ceil(s.cd / period) * period;
+        const eff = SYS.formula.effectiveCd(s.cd, period);   // 공식은 game_logic 소유다 (부채 #3)
         const loss = (eff - s.cd) / s.cd * 100;
         cdLine += ` · <b class="${loss > 0.5 ? 'down' : 'up'}">${t('sk.eff', { s: eff.toFixed(1) })}</b>`
             + (loss > 0.5 ? ` <span class="muted">(+${loss.toFixed(0)}%)</span>` : ` <span class="muted">${t('sk.aligned')}</span>`);
     }
     c.innerHTML = `
         <div class="tip-head">${t('tip.skill.h')}</div>
-        <div class="tip-name"><span class="tip-sk-ico">${s.i ?? ''}</span>${L(s.n)}</div>
+        <div class="tip-name"><span class="tip-sk-ico">${s.icon ?? ''}</span>${L(s.name)}</div>
         <div class="tip-implicit">${cdLine}</div>
-        ${s.d ? `<div class="tip-desc">${L(s.d)}</div>` : ''}
-        <div class="tip-sub" style="margin:6px 0 0">${t('tip.skill.mock')}</div>`;
+        ${s.desc ? `<div class="tip-desc">${L(s.desc)}</div>` : ''}`;
     return c;
 }

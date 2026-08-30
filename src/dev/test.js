@@ -210,7 +210,8 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'hit_base_pct', 'hit_per_level_deficit_pct', 'hit_min_pct',
         'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'drop_ilvl_spread', 'dust_elite', 'dust_boss', 'rarity_w_magic', 'rarity_w_rare',
         'affix_magic_min', 'affix_magic_max', 'affix_rare_min', 'affix_rare_max', 'suffix_sin_chance_pct', 'salvage_dust_magic', 'salvage_dust_rare',
-        'inventory_cap', 'injury_minutes', 'tavern_candidates', 'tavern_hire_cost', 'tavern_reroll_cost', 'start_gold', 'start_dust', 'start_stigma',
+        'inventory_cap', 'injury_minutes', 'tavern_candidates', 'tavern_hire_cost', 'tavern_reroll_cost', 'tavern_refresh_hours', 'start_gold', 'start_dust', 'start_stigma',
+        'hero_level_cap', 'concurrent_expedition_parties', 'active_slots',
         'codex_card_drop_pct', 'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level'];
     const missing = need.filter(k => B[k] === undefined);
     if (missing.length) fail(`missing: ${missing.join(', ')}`);
@@ -433,12 +434,12 @@ check('newGame: 3명 로스터 = 파티, 각자 직업 전속 무기군 착용, 
     }
     return G.bag.length === 0 && G.resources.gold === B.start_gold;
 });
-check('save: serialize → deserialize 왕복 동일 (v4)', () => {
+check('save: serialize → deserialize 왕복 동일 (v5)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 4;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 5;
 });
-check('save: v2 → v4 연쇄 이관 — 감각→운·명중/회피 폐지(v3) 뒤 마스터리 자리(v4)까지 한 번에 올라간다', () => {
+check('save: v2 → v5 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5)까지 한 번에 올라간다', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v2.version = 2;
     // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
@@ -452,8 +453,9 @@ check('save: v2 → v4 연쇄 이관 — 감각→운·명중/회피 폐지(v3) 
     v2.items[itemUid].affixes = [{ stat: 'accuracy', v: 7 }, { stat: 'crit_rate', v: 3 }, { stat: 'evasion', v: 9 }];
 
     const up = SYS.game.deserialize(v2);
-    if (up.version !== 4) fail(`version ${up.version}`);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
     for (const h of up.heroes) if (!h.mastery || h.masteryPoints === undefined) fail('v4 자리가 안 생겼다');
+    if (!up.tavern) fail('v5 자리가 안 생겼다');
     up.heroes.forEach((h, i) => {
         if ('sen' in h.stats || 'sen' in h.caps) fail('sen 키가 남았다');
         if (h.stats.luck !== senValues[i]) fail(`값이 바뀌었다 ${h.stats.luck} ≠ ${senValues[i]}`);
@@ -475,18 +477,27 @@ check('save: 버전 불일치는 거부 (v1 · v99) — v1 은 스키마 단절�
 check('save: canLoad 가 deserialize 와 같은 답을 낸다 — 화면이 이관 가능한 세이브를 거부하면 안 된다 (부채 #24)', () => {
     const cur = SYS.game.serialize(G, NOW);
     // 이관 가능한 옛 버전은 열려야 한다 — 버전 숫자만 낮춘 세이브로 확인한다
-    for (const v of [2, 3, SAVE_VERSION]) {
+    for (const v of [2, 3, 4, SAVE_VERSION]) {
         const s = JSON.parse(JSON.stringify(cur)); s.version = v;
         if (!SYS.game.canLoad(s)) fail(`v${v} 를 못 연다 — deserialize 는 여는데 canLoad 가 막는다`);
     }
     for (const v of [1, 99]) if (SYS.game.canLoad({ version: v, heroes: [] })) fail(`v${v} 를 연다고 답했다`);
     if (SYS.game.canLoad(null) || SYS.game.canLoad('x')) fail('객체가 아닌 것을 연다고 답했다');
-    return `v2·v3·v${SAVE_VERSION} 열림 · v1·v99 거부`;
+    return `v2·v3·v4·v${SAVE_VERSION} 열림 · v1·v99 거부`;
 });
 check('save: 크기 < 64KB (빈 게임)', () => { const n = JSON.stringify(SYS.game.serialize(G, NOW)).length; return n < 65536 ? `${n} bytes` : fail(`${n} bytes`); });
 
 /* ── 성장 ── */
 check('xp: 필요량 단조 증가', () => { for (let l = 1; l < 30; l++) if (SYS.hero.xpNeeded(l + 1) <= SYS.hero.xpNeeded(l)) return false; return true; });
+check('xp: 레벨 상한 hero_level_cap 에서 멈추고 XP 를 더 쌓지 않는다 (GAME_DESIGN §9 08-26 · R12)', () => {
+    const h = JSON.parse(JSON.stringify(G.heroes[0]));
+    SYS.hero.grantXp(h, 1e12, makeRng(3));
+    if (h.level !== B.hero_level_cap) fail(`Lv ${h.level} ≠ ${B.hero_level_cap}`);
+    if (h.xp !== 0) fail(`상한에서 xp ${h.xp} 가 남았다`);
+    // 상한에 닿은 뒤의 지급은 아무 일도 하지 않는다 — 레벨업 결과도 null
+    if (SYS.hero.grantXp(h, 1e9, makeRng(4)) !== null || h.xp !== 0) fail('상한 뒤에도 XP 가 쌓인다');
+    return `Lv ${B.hero_level_cap} 에서 정지`;
+});
 check('xp: 레벨업 시 능력치는 상한까지만', () => {
     const h = JSON.parse(JSON.stringify(G.heroes[0]));
     const lu = SYS.hero.grantXp(h, 100000, makeRng(3));
@@ -602,18 +613,28 @@ check('masteryState: 판정을 한 번에 낸다 — 랭크·상한·해금·찍
     if (SYS.game.masteryState(G2, 'h999') !== null) fail('없는 영웅에 null 을 안 낸다');
     return `${h.cls}/${h.sin} → 노드 ${ms.nodes.length} (T1 ${t1.length} · T2 ${t2.length})`;
 });
-check('save: v3 → v4 이관 — 마스터리 자리 신설 + 안 받고 지나간 포인트 소급 (INTERFACE §4)', () => {
+check('save: v3 → v5 이관 — 마스터리 자리 신설 + 안 받고 지나간 포인트 소급 (INTERFACE §4)', () => {
     const v3 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v3.version = 3;
     for (const h of v3.heroes) { delete h.mastery; delete h.masteryPoints; h.level = 5; }
     const up = SYS.game.deserialize(v3);
-    if (up.version !== 4) fail(`version ${up.version}`);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
     const want = 4 * B.mastery_point_per_level;
     for (const h of up.heroes) {
         if (!h.mastery || Object.keys(h.mastery).length !== 0) fail('mastery 자리가 비어 있지 않다');
         if (h.masteryPoints !== want) fail(`포인트 ${h.masteryPoints} ≠ ${want}`);
     }
     return `${up.heroes.length}명 · Lv5 → ${want}p 소급`;
+});
+
+check('save: v4 → v5 이관 — 선술집 쿨다운 자리 신설 (열려 있는 상태로 올린다, INTERFACE §4)', () => {
+    const v4 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v4.version = 4;
+    delete v4.tavern;
+    const up = SYS.game.deserialize(v4);
+    if (up.version !== 5) fail(`version ${up.version}`);
+    if (!up.tavern || up.tavern.rerolledAt !== null || up.tavern.hired.length !== 0) fail('tavern 자리가 열린 상태로 안 올라왔다');
+    return SYS.game.tavernState(up, NOW).free ? '무료 리롤이 열린 채로 이관' : fail('이관 직후가 쿨다운 중이다');
 });
 
 /* ── 스킬 태그 (skill_design §11 확정 2026-08-28) ── */
@@ -957,6 +978,29 @@ check('simulate: 구조 — round 로 시작, end 로 끝, 라운드 ≤ 9, 편�
     }
     return `${r.reason} r${r.roundsCleared} ${r.durationSec}s`;
 });
+check('simulate: 귀환 룰 — 전투불능자가 하나라도 나오면 그 자리에서 런이 끝난다 (base_expedition §1-1 · 부채 #14)', () => {
+    // 종잇장 파티를 높은 스테이지에 보낸다 — 반드시 누군가 쓰러진다
+    const weak = units().map(u => ({ ...u, combat: { ...u.combat, hp_max: 20, level: 1 } }));
+    let sawRetreat = false;
+    for (let seed = 1; seed <= 8; seed++) {
+        const r = SYS.battle.simulate(weak, 104, makeRng(seed));
+        if (r.reason === 'retreat') sawRetreat = true;
+        // 어떤 사유로 끝났든, 전투불능자가 있는데 계속 싸운 런은 없어야 한다
+        if (r.downed.length > 1 && r.reason !== 'wipe') fail(`${r.reason} — 전투불능 ${r.downed.length}명이 나올 때까지 계속 싸웠다`);
+        const end = r.timeline[r.timeline.length - 1];
+        if (end.e !== 'end' || end.reason !== r.reason) fail('end 이벤트와 reason 이 갈린다');
+    }
+    return sawRetreat ? 'retreat 관측' : fail('전투불능이 나와도 귀환하지 않는다');
+});
+check('simulate: 귀환보다 클리어가 먼저다 — 마지막 타격과 같은 틱에 쓰러져도 클리어는 클리어다', () => {
+    // 압도적인 파티는 전투불능 없이 클리어한다 (귀환 룰이 정상 클리어를 잡아먹지 않는지)
+    const r = SYS.battle.simulate(godUnits(), 101, makeRng(5));
+    return r.won && r.reason === 'clear' && r.downed.length === 0 ? `r${r.roundsCleared} ${r.reason}` : fail(`${r.reason} downed ${r.downed.length}`);
+});
+check('balance: concurrent_expedition_parties 는 코드가 표현할 수 있는 값이어야 한다 (부채 #19)', () =>
+    // state.party / state.run 이 단수 필드라 「동시 원정 1」은 구조로만 지켜진다.
+    // 이 키를 2 로 올리면 코드가 아무 일도 안 하므로, 값이 갈리는 순간 여기서 빨간불이 켜져야 한다
+    B.concurrent_expedition_parties === 1 || fail(`${B.concurrent_expedition_parties} — 동시 원정 >1 은 구현이 없다 (state.party·state.run 이 단수)`));
 check('battle: 몬스터도 영웅과 같은 체계 — res 는 4원소 객체(직접 %)이고 등급은 res_add 로 %p 가산 (§8-1)', () => {
     const id = 1401, m = D.monsters[id], g = D.grades.elite;
     const e = SYS.battle.makeEnemy('e0', id, 'elite', 7);
@@ -1130,6 +1174,19 @@ check('simulate: 스킬 — actives 가 있으면 skill 이벤트와 casts 가 �
     for (const ev of evs) if (!owned.has(ev.s)) fail(`안 가진 스킬을 썼다 ${ev.s}`);
     return Object.entries(r.casts).map(([id, n]) => `${id}×${n}`).join(' · ');
 });
+check('simulate: skill 이벤트가 준비 시각(ready)을 싣는다 — 재생기가 쿨을 계산하지 않는다 (INTERFACE §2-6)', () => {
+    const r = SYS.battle.simulate(skillUnits(), 101, makeRng(5));
+    const casts = r.timeline.filter(e => e.e === 'skill');
+    if (!casts.length) fail('시전이 없다');
+    for (const ev of casts) {
+        if (typeof ev.ready !== 'number') fail(`${ev.s} 에 ready 가 없다`);
+        if (ev.ready <= ev.t) fail(`${ev.s} ready ${ev.ready} ≤ t ${ev.t}`);
+        // 준비까지의 간격 = 표기 쿨 × 쿨감소. 쿨감소가 0 인 기본 파티라 표기 쿨과 같아야 한다
+        const cd = SYS.skill.defs[ev.s].cool;
+        if (Math.abs((ev.ready - ev.t) - cd) > 0.15) fail(`${ev.s} 쿨 ${(ev.ready - ev.t).toFixed(1)} ≠ ${cd}`);
+    }
+    return `${casts.length} casts`;
+});
 check('simulate: 스킬 — 같은 시드 = 같은 타임라인 (actives 포함)', () => {
     const a = SYS.battle.simulate(skillUnits(), 101, makeRng(7));
     const b = SYS.battle.simulate(skillUnits(), 101, makeRng(7));
@@ -1245,10 +1302,18 @@ check('simulate: 도발 — taunt 창 동안 적의 단일 대상은 전부 도�
     if (s.bad) fail(`도발 중인데 다른 대상을 때렸다 — ${s.bad}`);
     return `seed ${seed} · 창 ${s.windows}개 · 적 타격 ${s.checked}건 전부 도발자`;
 });
-check('save: SAVE_VERSION 4 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트뿐 (INTERFACE §4)', () =>
-    SAVE_VERSION === 4 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 5 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운뿐 (INTERFACE §4)', () =>
+    SAVE_VERSION === 5 || fail(`v${SAVE_VERSION}`));
 
 /* ── 원정 정산 ── */
+check('report: roundsCleared 를 정산이 싣는다 — 렌더러가 짐작하지 않는다 (INTERFACE §2-7)', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    const r = SYS.game.resolveBattle(G2, 101, NOW);
+    if (!r.ok) fail(r.err);
+    if (r.report.roundsCleared !== r.result.roundsCleared) fail('결과와 리포트가 갈린다');
+    if (r.report.won && r.report.roundsCleared !== B.rounds_per_stage) fail(`클리어인데 ${r.report.roundsCleared} 라운드`);
+    return `r${r.report.roundsCleared} · ${r.report.reason}`;
+});
 check('resolveBattle: 골드·처치·카드·드롭·부상이 상태에 반영', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
     const gold = G2.resources.gold;
@@ -1349,18 +1414,55 @@ check('closeRun: 반복이 꺼져 있으면 아무것도 안 한다', () => {
 });
 
 /* ── 선술집 ── */
-check('tavern: 후보는 카운터에 결정론, 고용은 골드·상한을 지킨다', () => {
+check('tavern: 후보는 카운터에 결정론, 고용은 골드·상한을 지킨다 · 고용한 칸만 빈다 (base_expedition §2-4)', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
     const a = SYS.game.tavernCandidates(G2), b = SYS.game.tavernCandidates(G2);
     if (!eq(a, b)) fail('nondeterministic');
     G2.resources.gold = B.tavern_hire_cost - 1;
     if (SYS.game.hire(G2, 0).err !== 'gold') fail('gold gate');
-    G2.resources.gold = B.tavern_hire_cost * 10;
+    G2.resources.gold = B.tavern_hire_cost * 100;
     const r = SYS.game.hire(G2, 0);
     if (!r.ok || G2.heroes.length !== 4 || r.hero.uid !== 'h4') fail('hire');
-    if (eq(SYS.game.tavernCandidates(G2), a)) fail('candidates should change after hire');
-    while (G2.heroes.length < B.roster_cap) SYS.game.hire(G2, 0);
-    return SYS.game.hire(G2, 0).err === 'roster';
+    // 고용한 칸만 null 이 되고 **나머지 칸은 그대로**다 — 고용이 무료 리롤 우회로가 되면 쿨다운이 무의미해진다
+    const after = SYS.game.tavernCandidates(G2);
+    if (after[0] !== null) fail('hired slot should be empty');
+    if (!eq(after.slice(1), a.slice(1))) fail('other slots must not change on hire');
+    if (SYS.game.hire(G2, 0).err !== 'missing') fail('empty slot should not be hireable');
+    // 명단이 갈리지 않으므로 정원을 채우려면 **리롤을 끼워야 한다** — 그 자체가 「고용 ≠ 리롤」의 증거다
+    for (let guard = 0; G2.heroes.length < B.roster_cap && guard < 50; guard++)
+        if (!SYS.game.hire(G2, 1).ok) SYS.game.tavernReroll(G2, NOW);
+    if (G2.heroes.length !== B.roster_cap) fail(`로스터 ${G2.heroes.length} — 정원을 못 채웠다`);
+    return SYS.game.hire(G2, 1).err === 'roster';
+});
+check('tavern: 리롤은 쿨다운이 끝나면 무료, 남았으면 골드 — 명단은 저절로 갈리지 않는다 (base_expedition §2-4)', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    G2.resources.gold = B.tavern_reroll_cost * 10;
+    const gold0 = G2.resources.gold;
+    // 리롤한 적이 없으면 이미 열려 있다 (자동 갱신이 없으므로 「기다린 시간」이 없다)
+    const st0 = SYS.game.tavernState(G2, NOW);
+    if (!st0.free) fail('first reroll should be free');
+    const r1 = SYS.game.tavernReroll(G2, NOW);
+    if (!r1.ok || !r1.free || G2.resources.gold !== gold0) fail('free reroll must not charge');
+    // 쿨다운 중 — 즉시 리롤은 골드
+    const st1 = SYS.game.tavernState(G2, NOW);
+    if (st1.free) fail('should be on cooldown');
+    const r2 = SYS.game.tavernReroll(G2, NOW);
+    if (!r2.ok || r2.free || G2.resources.gold !== gold0 - B.tavern_reroll_cost) fail('paid reroll must charge');
+    // 쿨다운이 지나면 다시 무료 (오프라인에도 흐른다 — now 만 앞으로 간다)
+    const later = NOW + B.tavern_refresh_hours * 60 * 60 * 1000;
+    if (!SYS.game.tavernState(G2, later).free) fail('cooldown should expire');
+    // 골드가 없으면 쿨다운 중 리롤은 거절
+    G2.resources.gold = 0;
+    SYS.game.tavernReroll(G2, later);
+    return SYS.game.tavernReroll(G2, later).err === 'gold';
+});
+check('tavern: 리롤은 산 칸을 되살린다 — 빈 칸은 다음 리롤에 채워진다', () => {
+    const G2 = SYS.game.newGame(42, cands, NOW);
+    G2.resources.gold = B.tavern_hire_cost * 100;
+    SYS.game.hire(G2, 0);
+    if (SYS.game.tavernCandidates(G2)[0] !== null) fail('slot should be empty');
+    SYS.game.tavernReroll(G2, NOW);
+    return SYS.game.tavernCandidates(G2).every(c => c !== null) || fail('reroll should refill');
 });
 
 /* ── 출력 ── */

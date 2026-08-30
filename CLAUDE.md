@@ -30,7 +30,6 @@
 **목표 — 좋은 영웅과 좋은 아이템을 얻고, 파티 운영으로 챕터를 진행한다.** 영웅·아이템은 대등한 수집 대상 · 성장마다 기능이 하나씩 열린다 · 재료는 다양한 경로, 아이템은 다방면 획득·업그레이드. 조작이 아니라 빌드·편성·배분 의사결정이 본체 (08-26 — "장비가 주인공(A안)" 폐기).
 
 - **참고작**: Lootun (게임 형태) · Diablo 2 (아이템 철학) — 조사는 [docs/reference/](docs/reference/)
-- **계보**: TheSevenRPG → 아이템·몬스터·스토리 코어 계승 (변경점 [item_design.md](docs/game_design/item_design.md)) / TheSevenSimulation → 영웅 로스터 프레임 계승 (재설계 [hero_design.md](docs/game_design/hero_design.md)). 두 원작의 죄종 매핑이 달라 **통일 매핑(sin_mapping.md)이 첫 SSOT 과제**
 - 메인 기획서: [GAME_DESIGN.md](docs/game_design/GAME_DESIGN.md) — 타겟 니즈 5 · 코어 루프 · 결정 로그
 
 ## 철학
@@ -61,8 +60,8 @@ TheSevenSimulationRPG/
     ├── ui/                # DOM 렌더러 (Phase 2 에서 버려질 레이어)         → ui/README.md
     ├── game_logic/        # 순수 게임 로직 — 이식 대상                       → game_logic/README.md
     ├── dev/               # test.html — 단정 + 밸런스 캘리브레이션           → dev/README.md
-    ├── data/              # CSV SSOT + inherited/ (읽기 전용 포크 25종)       → data/README.md
-    └── assets/art/        # backgrounds/(계승 포크·읽기 전용) + faces/(신규 아트·편집 중)  → assets/art/README.md
+    ├── data/              # CSV SSOT + inherited/ (읽기 전용 25종)       → data/README.md
+    └── assets/art/        # backgrounds/(읽기 전용) + faces/(신규 아트·편집 중)  → assets/art/README.md
 ```
 
 ## 규칙
@@ -77,4 +76,4 @@ TheSevenSimulationRPG/
 경계(export·스키마·rng 순서)를 바꾸면 **INTERFACE.md 먼저**, 화면을 바꾸면 **SCREEN_DESIGN.md 먼저** → [docs/client/DEV_PLAN.md §7](docs/client/DEV_PLAN.md)
 
 ---
-*마지막 업데이트: 2026-08-28 (`assets/inherited/` → `assets/art/` 리네임 — faces/ 는 읽기 전용 해제, backgrounds/ 는 유지) · 2026-08-26 (「시설」 어휘 폐기 → 「파견처」 · 건설·업그레이드 없음 — 가짓수 = 챕터 해금 / 세기 = 배치된 영웅) · 2026-08-26 (게임 정의 개정 — "장비가 주인공" 폐기 · docs/client/ 신설)*
+*마지막 업데이트: 2026-08-30 (**원작 계보 서술 전면 삭제** — 두 전작의 인용과 「계승」 어휘를 걷어내고 본작의 규칙을 직접 서술한다. 실재하는 CSV 경로는 유지) · 2026-08-28 (`assets/inherited/` → `assets/art/` 리네임 — faces/ 는 읽기 전용 해제, backgrounds/ 는 유지) · 2026-08-26 (「시설」 어휘 폐기 → 「파견처」 · 건설·업그레이드 없음 — 가짓수 = 챕터 해금 / 세기 = 배치된 영웅) · 2026-08-26 (게임 정의 개정 — "장비가 주인공" 폐기 · docs/client/ 신설)*
