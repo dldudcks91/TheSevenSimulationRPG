@@ -424,7 +424,12 @@ const FACE_STORE_KEY = 'thesevensim.faceStyle';
 
 let faceStyleCur = (() => {
     const q = new URLSearchParams(location.search).get('face');
-    if (FACE_STYLES.includes(q)) return q;
+    // URL 로 고르면 **그 자리에서 저장한다** — 스타일에는 언어 토글 같은 UI 스위치가 없어서, 저장하지 않으면
+    //   `?face=` 를 매번 다시 붙여야 한다(문서는 「한 번 걸면 계속 그 스타일로 돈다」고 적고 있었다). 2026-08-30 수정
+    if (FACE_STYLES.includes(q)) {
+        try { localStorage.setItem(FACE_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 스타일 */ }
+        return q;
+    }
     try {
         const saved = localStorage.getItem(FACE_STORE_KEY);
         if (FACE_STYLES.includes(saved)) return saved;
