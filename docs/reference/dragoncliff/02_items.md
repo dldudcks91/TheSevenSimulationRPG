@@ -71,7 +71,7 @@ White(Common) → Blue(Rare) → Purple(Epic) → Orange(Legendary) → Red(Anci
   - 스크롤은 **Ancient = 속성 5개 / Ancient-Star = 속성 8개**로 고정
 
 > **Lootun과 정반대 처리다.** Lootun은 `희귀도 = 속성 칸 수`로 직결시켰고([lootun/02_items.md §3](../lootun/02_items.md#3-희귀도--속성-칸-수-양적-계단-공식-2)), Dragon Cliff는 **희귀도를 효과 등급(오렌지/스타 효과 접근권)에 쓰고, 속성 수는 제작 설비(Factory)와 인챈트가 정한다.**
-> → *"속성 칸을 늘리는 권한을 아이템이 갖느냐, 플레이어의 설비가 갖느냐"*는 갈림길. Dragon Cliff는 후자라 **대량 생산 파밍이 성립한다.** 이는 [poe_skillgem_reference.md §5-2](../poe_skillgem_reference.md)가 지적한 "PoE는 그 자리를 아이템레벨이 대신 쥔다"는 세 번째 답과 나란히 놓인다 — **"희귀도 = 파워/효과 등급, 칸 수는 별도 축"**이라는 원리가 Lootun과 대비되는 두 참고작(Dragon Cliff·PoE)에서 반복 확인된다.
+> → *"속성 칸을 늘리는 권한을 아이템이 갖느냐, 플레이어의 설비가 갖느냐"*는 갈림길. Dragon Cliff는 후자라 **대량 생산 파밍이 성립한다.** 이는 [poe1/02_items.md §2](../poe1/02_items.md#2-소켓링크--요약상세는-짝-문서)가 지적한 "PoE1은 그 자리를 아이템레벨이 대신 쥔다"는 세 번째 답과 나란히 놓인다 — **"희귀도 = 파워/효과 등급, 칸 수는 별도 축"**이라는 원리가 Lootun과 대비되는 두 참고작(Dragon Cliff·PoE1)에서 반복 확인된다.
 
 ---
 

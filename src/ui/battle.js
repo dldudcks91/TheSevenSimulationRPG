@@ -61,7 +61,7 @@ export function mountBattle(container, opts) {
             glyph: M.classGlyph(h?.cls),   // 글리프 표는 mock.js 한 곳 — 영웅 띠·후보 카드와 같은 얼굴
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
             skills: (p.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
-            buffs: new Map(),   // 켜져 있는 창 — buff/buffEnd 이벤트가 켜고 끈다
+            buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
         };
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
@@ -209,8 +209,12 @@ function renderUnits(state, root) {
                     : `<div class="sprite">${u.glyph}</div>`;
             // 위칸(이름·태그) + 가로형 본문(왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 3줄) — SCREEN_DESIGN §4-2
             // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
-            const skills = u.skills?.length ? `<div class="cd-list">${u.skills.map(s => `
-                <div class="cd-slot"><span class="cd-g">${s.icon ?? ''}</span><i class="cd-mask"></i></div>`).join('')}</div>` : '';
+            // 칸 수는 언제나 active_slots — 스킬이 둘인 영웅도 셋째 칸이 **빈 채로** 남는다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
+            // 칸이 사라지면 카드마다 줄 길이가 달라져 같은 격자로 안 읽히고, 「스킬이 둘」과 「셋째가 미정」이 구분되지 않는다
+            const slots = u.skills ? Array.from({ length: Math.max(D.balance.active_slots, u.skills.length) }, (_, i) => u.skills[i] ?? null) : [];
+            const skills = slots.length ? `<div class="cd-list">${slots.map(s => s
+                ? `<div class="cd-slot"><span class="cd-g">${s.icon ?? ''}</span><i class="cd-mask"></i></div>`
+                : `<div class="cd-slot empty"></div>`).join('')}</div>` : '';
             n.innerHTML = `
                 <div class="unit-band">
                     ${u.side === 'enemy' ? `<span class="tags">
@@ -234,11 +238,14 @@ function renderUnits(state, root) {
                         ${skills}
                     </div>
                 </div>
+                <div class="buff-row"></div>
                 <div class="pop-layer"></div>`;
             // 올려놓으면 뜬다 — 카드는 기본 능력치(영웅만), 스킬 칸은 그 스킬 (2026-08-28, ui/tip.js).
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero));
-            if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => bindTipNode(slot, () => skillTipCard(u.skills[i], u.period)));
+            if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
+                if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i], u.period));   // 빈 칸은 띄울 것이 없다
+            });
             u.node = n;
             side.appendChild(n);
         }
@@ -257,13 +264,34 @@ function refreshUnit(state, u) {
     // 스킬 쿨 게이지 — 시뮬이 실제로 쓴 쿨(`skill` 이벤트의 firedAt → ready)로 걷는다. 재생기는 쿨을 계산하지 않는다
     if (u.skills?.length) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
         const s = u.skills[i];
+        if (!s) return;                 // 빈 칸 — 걷을 쿨이 없다 (SCREEN_DESIGN §4-2)
         const span = Math.max(1e-6, s.readyAt - s.firedAt);
         const pct = u.hp <= 0 ? 0 : clamp01(1 - (s.readyAt - state.t) / span);
         slot.querySelector('.cd-mask').style.height = (1 - pct) * 100 + '%';   // 남은 쿨만큼 위에서 덮는다
         slot.classList.toggle('ready', pct >= 1);
     });
-    // 켜져 있는 창 — 카드 테두리로만 알린다(칸을 늘리면 카드 크기 고정이 깨진다, SCREEN_DESIGN §4-2)
+    // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
     u.node.classList.toggle('buffed', u.hp > 0 && u.buffs?.size > 0);
+    refreshBuffs(u);
+}
+
+/**
+ * 창 뱃지 줄 — 걸려 있는 창 하나 = 칩 하나. 칩은 그 창을 만든 스킬의 아이콘이고 이름은 `title` 이 든다.
+ * **이로운 창은 초록 · 해로운 창은 빨강** 테두리 — 가르는 것은 창의 값 부호다(`buff` 이벤트의 `v`).
+ * ⚠ 지금 도는 창 4종은 전부 이로워서 빨강은 아직 안 켜진다 (skill.csv · SCREEN_DESIGN §4-2).
+ * 줄은 창이 없어도 **자리를 지킨다** — 높이가 창 개수를 따라 흔들리면 카드 크기 고정이 깨진다.
+ */
+function refreshBuffs(u) {
+    const row = u.node?.querySelector('.buff-row');
+    if (!row) return;
+    const live = u.hp > 0 ? [...(u.buffs ?? new Map())] : [];
+    const sig = live.map(([id, b]) => `${id}:${b?.v ?? 0}`).join('|');
+    if (row.dataset.sig === sig) return;      // 안 바뀌었으면 손대지 않는다 — 매 틱 다시 그리는 자리다
+    row.dataset.sig = sig;
+    row.innerHTML = live.map(([id, b]) => {
+        const info = skillInfo(id);
+        return `<span class="buff-chip ${(b?.v ?? 0) < 0 ? 'bad' : 'good'}" title="${L(info.name)}">${info.icon ?? '+'}</span>`;
+    }).join('');
 }
 
 /**
@@ -447,7 +475,7 @@ function apply(state, root, opts, ev) {
         case 'buff': {   // 창 적용 · 갱신. 배리어면 총량(amt)도 온다
             const u = U(ev.u);
             if (!u) break;
-            u.buffs?.set(ev.s, ev.until);
+            u.buffs?.set(ev.s, { until: ev.until, stat: ev.stat, v: ev.v });
             refreshUnit(state, u);
             // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
             // 「지금 걸려 있다」는 상태라 카드 테두리가 든다 (SCREEN_DESIGN §4-2)

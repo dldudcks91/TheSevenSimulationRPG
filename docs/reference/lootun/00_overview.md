@@ -2,7 +2,7 @@
 
 > 상태: **총조사 완료** (2026-08-24) · v1(1차 조사) 전면 재작성 · **§7 거점 건물 심층조사 v2**(2026-08-26, 26종 전수 확인) · **폴더 3분리 + 스킬·아이템 심화**(2026-08-28)
 > 목적: 본작의 **게임 형태 참고작**(CLAUDE.md)이 스킬·아이템·경제·콘텐츠를 실제로 어떻게 짰는지 확보
-> 짝 문서: [01_skills.md](01_skills.md)(스킬 전수 심화) · [02_items.md](02_items.md)(아이템 구조·옵션 전수 심화). **이 문서는 게임 구조 한 장 + 스킬·아이템을 뺀 나머지 시스템(캐릭터 성장·전투 수치·경제·거점·콘텐츠·설계원리·본작 대조) 전부를 담는다.**
+> 짝 문서: [01_skills.md](01_skills.md)(스킬 전수 심화) · [02_items.md](02_items.md)(아이템 구조·옵션 전수 심화) · [03_buildings.md](03_buildings.md)(거점 건물 26종 전수 심화). **이 문서는 게임 구조 한 장 + 스킬·아이템을 뺀 나머지 시스템(캐릭터 성장·전투 수치·경제·거점·콘텐츠·설계원리·본작 대조) 전부를 담는다.**
 > ⚠ **이 문서(및 짝 문서)의 수치는 전부 Lootun의 수치다.** 본작 SSOT가 아니며 `src/data/*.csv`로 옮기지 말 것
 
 ---
@@ -18,7 +18,7 @@
 | 4 | 아이템 구조 (요약 — 상세는 [02_items.md](02_items.md)) |
 | 5 | 전투 수치 모델 |
 | 6 | 분해·재화 경제 (되먹임 고리) |
-| 7 | 거점 건물 |
+| 7 | 거점 건물 (요약 — 상세는 [03_buildings.md](03_buildings.md)) |
 | 8 | 콘텐츠 루프 |
 | 9 | Lootun이 반복하는 설계 원리 8가지 |
 | 10 | 본작 대조표 + 검토 후보 |
@@ -216,116 +216,27 @@ Profession Hall → Mine(광물) / Forest(약초) / Farm(농작)
 
 ---
 
-## 7. 거점 건물 — 전수 조사 v2 (2026-08-26)
+## 7. 거점 건물 (요약)
 
-> v1(2026-08-24)은 26종 중 약 12종만, 그마저 하이라이트 랭크 위주로 다뤘다. 이번 조사로 **건물 전수(26종) 확인** + **랭크별 효과 재검증** + **§4-5 서술 오류 1건 정정**(Artisan's Hall 해금 체인)을 완료했다.
-> ⚠ Lootun에는 위키가 없다. 대부분 건물의 **정확한 총 랭크 수·랭크별 골드/재료 비용은 게임 클라이언트 툴팁 안에만 있고 외부에 거의 새어나오지 않는다** — 아래 "N/F"(미확인)는 3개 조사가 각각 수십 건씩 검색·페이지 열람을 시도하고도 못 찾은 것으로, **탐색 실패가 아니라 외부에 인덱싱된 정보 자체가 없다**고 판단한다.
+> **상세 전수 조사는 [03_buildings.md](03_buildings.md)로 이관됐다** — 26종 건물별 랭크 효과 · 해금 의존 그래프 · 게이트/보상 분포 · 재화 구조 · 본작 대조. 2026-08-31 재조사로 구 「정체 미상 4종」 중 **3종이 규명**됐고 v2 서술 **7건이 정정**됐다. 여기서는 구조만 요약한다.
 
-### 7-1. 건물 전수 목록 — 26종 [커뮤니티 — Steam 도전과제 "OO 완전 강화" 26개 집계, chaptercheats.com 미러]
-
-Steam 도전과제에 건물마다 "Fully upgrade the X" 1개씩이 있고, 이것이 사실상 유일한 **공식 완전 목록**이다. 도전과제 중 "Upgrade Perfection: 15개 건물 풀업"이 따로 있어 **26종 중 상위 15종만 그 도전과제의 카운트 대상으로 추정**되나 **어느 15종인지는 미확인**이다.
-
-| 분류 | 건물 (7-2~7-8 상세 서술) |
+| 분류 | 건물 |
 |---|---|
 | 제작·개조·경제 (6) | Scrapper · Blacksmith · Artisan's Hall · Gemcutter's Cabin · Alchemist's Hut · Community Project |
-| 성장 상한 트랙 (3) | Keep · Castle · Watchtower |
-| 자동화·로스터 (2) | Barracks · Armoury |
-| 콘텐츠 게이트 (5) | Bounty Board · War Camp · Domain of Agony · Map Room · Ancient Reliquary |
-| 저장 (2) | Item Vault · Hidden Vault |
-| 채집(직업) (4) | Profession Hall · Mine · Forest · Farm |
-| **정체 미상 (4)** | **Expedition · Grand Expedition · Fortress · Pinnacle** |
+| 성장 상한 트랙 (4) | Keep(Paragon) · Castle(Nemesis 하한) · Watchtower(Nemesis 상한) · **Fortress**(정밀 제어) |
+| 자동화·로스터 (2) | Barracks(타겟팅·자동시전) · Armoury(로드아웃) |
+| 콘텐츠 게이트 (8) | Bounty Board · War Camp · Domain of Agony · Map Room · Ancient Reliquary · **Expedition**(레이드) · **Grand Expedition**(미확인) · **Pinnacle**(Endless) |
+| 저장 (2) | Item Vault · Hidden Vault(미확인) |
+| 채집 (4) | Profession Hall · Mine · Forest · Farm |
 
-### 7-2. 초반 건설 순서 [공식 — Deep Dive #5 "Building Upgrades & Professions", 2022-06-04]
-
-```
-Scrapper (최우선 — 분해가 이후 모든 건물의 재료원)
-   → Blacksmith (100골드 + 재료 — 장비 제작·개조)
-   → Barracks (자동 타겟팅·자동 시전)
-   → Profession Hall (Mine/Forest/Farm 해금 — 패시브 채집)
-   → Community Project (재료 기부 → Donation Credits)
-```
-이후 건물(Castle/Watchtower/War Camp/Map Room/Ancient Reliquary/Domain of Agony 등)은 **Deep Dive #5에 아예 언급이 없다** — 전부 2022년 이후 엔드게임 패치로 추가된 것으로 판단. 이 5개는 개별 게이트(다른 건물 랭크, 캐릭터 레벨)를 따를 뿐 하나의 마스터 순서를 따르지 않는다.
-
-### 7-3. 제작·개조·경제 건물군
-
-| 건물 | 확인된 효과 | 출처/신뢰도 |
-|---|---|---|
-| **Scrapper** | 장비를 넣고 분해 → 재료(+대부분 아이템은 분해 시 그 레시피를 함께 해금). **r3 = Auto Scrap Settings 패널** — 아이템 타입별 독립적인 희귀도 문턱 설정, "설정한 희귀도 이하를 전부 자동 분해". 자동 분해는 신규 드롭에만 적용. **r6 = Artisan's Hall(하위 건물) 해금** | [공식] Dev Q&A 스레드 |
-| **Artisan's Hall** | Scrapper r6로 해금되는 별도 건물. **r1 = "Bag Settings"**(보스 상자 자동 개봉). **r5(혹은 r6, 출처 불일치) = Blacksmith에서 Transmute·Imbue·Imprint 사용 가능** | r1: [공식]. r5/r6: [가이드]/[커뮤니티] 2건이 랭크 숫자만 불일치 |
-| **Blacksmith** | r1부터 제작 가능. r2~r5는 순차 해금(개별 랭크당 무엇인지는 **N/F**). 소켓 추가는 소켓 조각 소모, 이미 있는 소켓 수에 비례해 비용 증가. **아이템 레벨 51+는 소켓이 자연 굴림**. 랭크업 비용 통화는 **"Fragment"** | [공식] Dev Q&A + 0.8 패치노트. 정확한 Fragment 수치는 **N/F** |
-| **Gemcutter's Cabin** | **r2 = 소켓 추가 크래프트 해금**. **r3 = 젬 보관 탭** | [공식] |
-| **Alchemist's Hut** | 플라스크 제작. 총 랭크 ≥7 확인. **r7 = Auto Refill** | r7: [공식] 0.9 베타 노트 |
-| **Community Project** | 재료 기부 → Donation Credits. **r2 = Community Passives 해금**. Auto Donation Threshold 존재하나 정확한 해금 랭크는 **N/F** | [공식] |
-
-**⚠ 미해소 충돌 — Community Project ↔ Faction**: 0.8 "Faction Update"(2023-05)로 완전히 별개 엔드게임 시스템("Faction", 4팩션 + 팩션 던전 + 팩션 평판)이 추가됐다. 일부 검색 결과가 "Faction Passives"·"Divine Favour 패시브"를 Community Project의 Donation Credits 패시브와 혼용해서 쓴다. **두 트리가 같은 통화를 공유하는지 확정하지 못했다.**
-
-**Community Project 영구 패시브**(리스펙 불가, 결국 전부 획득 가능): 재료 보관량 1~5 · 기부 크레딧 획득 1~50랭크 · 채집 20초→10초 · Tool Fortune/Tool Luck · Double Scrapping/Double Resources · Luck/Fate/Wealth/Fortune
-
-### 7-4. 성장 상한 트랙 — Keep · Castle · Watchtower
-
-세 건물이 **서로 다른 두 축의 "상한 돌파"를 나눠 맡는다**:
-
-| 건물 | 트랙 | 확인된 효과 |
-|---|---|---|
-| **Keep** | **Paragon**(희귀도 밖 수직 성장) | Paragon 제작 해금 — P1~P10이 속성 랭크 상한을 10→20으로. 실제 크래프트는 Blacksmith UI에서 수행 |
-| **Castle** | **Nemesis** 발생 보장 | r1=최소 2속성 보장 · r2=최소 랭크 4 보장 · r3=Nemesis Infusion 해금 |
-| **Watchtower** | **Nemesis** 품질 상한 | r3=최대 3개 · r5=최대 랭크 8 |
-
-- Castle/Watchtower 이상 랭크(4+)와 정확한 건설·랭크업 비용은 **N/F**
-- **1.3.0.0**: "Transmute Attribute·Imprint Attributes·Reroll Nemesis" 크래프트가 추가 언급 → Nemesis 계열에 Infusion 외 크래프트가 더 있음을 시사하나 소속 건물·랭크는 **N/F**
-
-> **본작 관점**: Lootun은 "상한 돌파"라는 하나의 파워크리프 축을 **건물 3개에 나눠 심었다**. 본작 §10-2 검토 후보에 이 패턴이 있다.
-
-### 7-5. 자동화·로스터 건물
-
-| 건물 | 확인된 효과 | 출처/신뢰도 |
-|---|---|---|
-| **Barracks** | 건설 비용 골드 400. **Tactics**: 타겟팅 4모드(Random/Strongest/Weakest/Round Robin). 쿨다운 스킬별 타겟팅 개별 지정. 상위 랭크=쿨다운 스킬 자동 시전 | [가이드] |
-| **Armoury** | 레벨 20 해금. 로드아웃(파티 장비+플라스크 세트 저장/호출). **랭크당 로드아웃 2슬롯**(2024-03 베타에 1→2 버프) | [가이드]+[공식] |
-
-### 7-6. 콘텐츠 게이트 건물
-
-| 건물 | 확인된 효과 | 출처/신뢰도 |
-|---|---|---|
-| **Bounty Board** | **r1 = Hunt 2번째 슬롯 해금**. Favour 통화의 공급원 | [공식] |
-| **War Camp** | **r1 = Hunt 3번째 슬롯 해금**. Faction 시스템과 연관되나 게이트 여부 미확정 | [공식] |
-| **Domain of Agony** | r4 = "Agony 미션 흑요석 드롭 +50%"(너프 후) — 원래는 미션 슬롯을 팔았다는 뜻. r1~r3 N/F | [공식]-추정 |
-| **Map Room** | 레벨 100 해금(추정). Map Expertise 소프트캡 우회 — 몬스터를 파티 최고 레벨까지 스케일업시켜 저레벨 구맵에서도 Expertise 파밍 지속 | [커뮤니티] |
-| **Ancient Reliquary** | "Reliquary" 버튼=유니크 강화 메뉴. 강화 경험치→강화 포인트(아이템당 최대 4). 상위 티어 Heroic Upgrade는 연계 레이드 Heroic 클리어 요구. r3 비용=코어/파편/룬/글리프 | [공식] |
-| **Item Vault** | r3="Divine Storage" 탭(확신 낮음). **r4 = Item Research**([1.3]) — 드롭 유니크 자동분해→리서치 포인트→사본 제작 | r4: [공식] |
-
-> **Hidden Vault는 Item Vault와 다른 건물.** r2가 "Overload Core" 드롭 게이트라는 언급 있음.
-
-### 7-7. 채집 — Profession Hall
-
-```
-Profession Hall → Mine(광물) / Forest(약초) / Farm(농작)
-```
-기본 20초에 1회 수확 → Community 패시브로 10초까지 단축.
-
-### 7-8. 정체 미상 — Expedition · Grand Expedition · Fortress · Pinnacle
-
-도전과제("완전 강화")로 존재는 확인되나, **기능을 설명하는 출처를 전혀 찾지 못했다.**
-
-### 7-9. 재화·비용 구조
-
-| 통화 | 획득처 | 소모처 |
-|---|---|---|
-| **Fragment** | (미확인) | Blacksmith 랭크업 |
-| **Favour** | 바운티 클리어 | 바운티 리롤/포기, 일부 건물 업그레이드 |
-| **Donation Credits** | Community Project 재료 기부 | Community Passives |
-| **코어/파편/룬/글리프** | 하위 등급 아이템 분해("shatter") | Ancient Reliquary 랭크업 |
-| **Obsidian** | Agony 미션 | Domain of Agony 관련 소모(추정) |
-
-### 7-10. v2에서 바로잡은 것
-
-| # | v1 서술 | v2 정정 | 근거 |
-|---|---|---|---|
-| 1 | "Blacksmith r5 → Artisan's Hall / r6 → Transmute·Imbue·Imprint" | **Scrapper r6이 Artisan's Hall을 해금**하고, **Artisan's Hall 자체의 r5~6**이 Blacksmith에서 세 크래프트를 열게 한다 | [공식] Dev Q&A |
-| 2 | Community Project **r4 = 자동 기부** | 재확인 실패 — 미검증 하향 | 재조사 결과 N/F |
-| 3 | Map Room/Ancient Reliquary/Artisan's Hall "역할 미확인" | 셋 다 해소 | 상기 출처 |
+- **초반은 건물이 건물을 열고, 후반은 콘텐츠가 건물을 연다** — 캐릭터 레벨 게이트는 소수(엔드게임 진입점 1~2개)
+- **낮은 랭크 = 슬롯·수치 / 소수의 「게이트 랭크」 = 기능 해금** — Scrapper r6 · Castle r3 · Watchtower r5 · Item Vault r4
+- **상한 돌파 축 하나를 건물 넷에 나눠 심었다** — 하한(Castle) → 상한(Watchtower) → 정밀 지정(Fortress). 각 칸이 별개 비용(§9 원리 1과 같은 사고)
+- ⚠ **26종 중 로스터 전원의 전투 능력치를 올리는 건물은 하나도 없다.** 파워는 전부 아이템을 통과하고 건물은 **아이템의 천장**을 올릴 뿐이다 — 본작 battle_design.md §9-4 「레벨 = 자격 / 장비 = 세기」와 같은 철학
 
 > **건물이 곧 시스템 해금이다.** 개조 도구도, 자동화도, 드롭 품질(Nemesis)도, 콘텐츠 접근권도 전부 건물 랭크 뒤에 있다.
+
+→ 본작은 **파견처의 건설·업그레이드를 폐기**했다(GAME_DESIGN.md §9 08-26). 이 축의 전체 대조는 [03_buildings.md §11](03_buildings.md).
 
 ---
 
@@ -534,4 +445,4 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 - `lootun_reference.md` 파일 자체는 **삭제**됐다. 저장소 내 상호 참조(`laststory_reference.md`·`dragoncliff/`·`.claude/skills/game-design/doc_map.md`)는 새 경로로 갱신됨
 
 ---
-*마지막 업데이트: 2026-08-28(폴더 3분리 — 스킬·아이템 조사를 01_skills.md/02_items.md로 이관·심화, 이 문서는 개요+비-스킬/아이템 시스템 전담으로 재편) · 2026-08-27(§3 액티브 스킬 47/56 전수 확보) · 2026-08-26(§7 거점 건물 심층조사 v2)*
+*마지막 업데이트: 2026-08-31(**§7 거점 건물을 03_buildings.md 로 이관·심화** — 26종 랭크별 효과 보강 · 구 「정체 미상」 4종 중 3종 규명(Expedition·Fortress·Pinnacle) · 분류 재편(성장 상한 3→4 · 콘텐츠 게이트 5→8) · v2 정정 7건. 이 문서에는 분류표와 요약만 남긴다) · 2026-08-28(폴더 3분리 — 스킬·아이템 조사를 01_skills.md/02_items.md로 이관·심화, 이 문서는 개요+비-스킬/아이템 시스템 전담으로 재편) · 2026-08-27(§3 액티브 스킬 47/56 전수 확보) · 2026-08-26(§7 거점 건물 심층조사 v2)*

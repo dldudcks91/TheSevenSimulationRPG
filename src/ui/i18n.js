@@ -153,6 +153,13 @@ const STRINGS = {
     'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
+    'ch.upgradeMode': { ko: '강화 모드', en: 'Upgrade mode' },
+    'ch.upgradeHint': { ko: '강화 모드: 클릭한 아이템을 골드로 한 단계 올린다 — 3·6·9강에서 옵션 하나의 값이 오른다',
+        en: 'Upgrade mode: clicking an item raises it one step for gold — at +3/+6/+9 one option gains value' },
+    'ch.err.maxUp': { ko: '더는 강화할 수 없다', en: 'Already fully upgraded' },
+    'ch.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'ch.upgraded': { ko: '강화 +{n} · {g}G', en: 'Upgraded to +{n} · {g}G' },
+    'ch.upgraded.affix': { ko: '강화 +{n} · {g}G · {a} {from} → {to}', en: 'Upgraded to +{n} · {g}G · {a} {from} → {to}' },
     'ch.weaponGroup': { ko: '{group} · {cls} 전용', en: '{group} · {cls} only' },
     'ch.noTrees': { ko: '마스터리는 실동작 · 전직 층은 미구현이다', en: 'Mastery is live; the advancement layer is not built yet' },
 
@@ -181,9 +188,12 @@ const STRINGS = {
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
     'nav.expedition': { ko: '원정', en: 'Expedition' },
+    'nav.commission': { ko: '의뢰', en: 'Commissions' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
     'nav.skill': { ko: '스킬', en: 'Skills' },
     'nav.research': { ko: '연구', en: 'Research' },
+    'nav.base': { ko: '거점', en: 'Base' },
+    'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
@@ -195,6 +205,15 @@ const STRINGS = {
     /* ── 도움말 탭 (2026-08-26) ──
        설명 문구는 여기서 새로 쓰지 않는다 — 인게임에서 걷어낸 *.note / *.sub / *.hint 를 같은 키로 재사용한다.
        아래 넷은 그 재사용으로 못 덮는 자리만 채운다: 페이지 제목 · 섹션 제목 하나 · 인게임에서 숫자만 남기며 밀려난 원문 둘. */
+    'todo.badge': { ko: '미착수', en: 'Not started' },
+    'todo.lead': { ko: '기획은 확정됐고 화면이 아직 없다 — 지금 여기서 할 수 있는 일은 없다', en: 'The design is settled; the screen is not built yet — there is nothing to do here yet' },
+    'ex.h': { ko: '탐험', en: 'Exploration' },
+    'ex.todo': {
+        ko: '탐험은 <b>미착수</b> — 1인 배치가 아니라 <b>파티를 꾸려 보내는</b> 활동이다. 원정의 문법(편성 → 출발 → 리포트)을 빌리되 <b>전투가 아니라서 오프라인</b> 쪽에 든다<br>'
+            + '인원 · 산출 · 판정(민첩·건강·통솔)이 미정이다 (base_expedition_design §3-1)',
+        en: 'Exploration is <b>not started</b> — you send <b>a whole party</b>, not one hero to a post. It borrows the expedition grammar (form up → depart → report) but is <b>not combat</b>, so it runs offline<br>'
+            + 'Party size, yield and the checks (Agility · Vitality · Leadership) are undecided (base_expedition_design §3-1)',
+    },
     'help.title': { ko: '도움말', en: 'Help' },
     'help.newgame': { ko: '새 게임', en: 'New Game' },
     'help.exp.party': { ko: '전투 {n}인 — 동시 원정 {m}팀', en: '{n} fighters — {m} expedition at a time' },
@@ -231,8 +250,21 @@ const STRINGS = {
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
     'exp.bench.note': {
-        ko: '파견 화면은 <b>미착수</b> — 파견처 5(영입·교역·연구·제련·채광) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)',
-        en: 'Dispatch screen <b>not started</b> — 5 dispatch posts (recruit · trade · research · smelt · mine) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)',
+        ko: '파견 화면은 <b>미착수</b> — 파견처 5(영입·교역·제련·채광·<b>채집</b>) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)<br>'
+            + '<b>연구는 파견이 아니다</b> — 영웅을 보내지 않고 진행하는 별도 시스템이라 연구 탭이 든다 (2026-08-31 연구소 삭제)<br>'
+            + '보낸 영웅은 잠기지 않는다 — 언제든 불러들이고 <b>흐른 만큼 비례해 받는다</b> (§3-2)',
+        en: 'Dispatch screen <b>not started</b> — 5 posts (recruit · trade · smelt · mine · <b>gather</b>) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)<br>'
+            + '<b>Research is not a dispatch</b> — it runs without sending heroes, so the Research tab owns it (the Lab post was removed 2026-08-31)<br>'
+            + 'Dispatched heroes are never locked — recall any time and receive <b>pro rata for the time elapsed</b> (§3-2)',
+    },
+    'exp.commission.h': { ko: '의뢰', en: 'Commissions' },
+    'exp.commission.note': {
+        ko: '의뢰는 <b>미착수</b> — 특정 보스/던전을 지목하면 그 전장이 열리는 <b>제2의 실시간 전투 채널</b>이다. 원정과 <b>동시에</b> 돌고 관전 대상은 지금 보고 있는 탭이 정한다<br>'
+            + '<b>원정 파티와 인원이 겹칠 수 없다</b> — 로스터를 나눠 쓰는 것이 이 채널의 값이다<br>'
+            + '쿨다운 길이 · 드랍 테이블 재사용 · 첫 해금 시점이 미정이고, 전투를 둘 이상 동시에 도는 구조도 아직 없다 (base_expedition_design §1-3)',
+        en: 'Commissions are <b>not started</b> — naming a boss or dungeon opens that battlefield as a <b>second real-time combat channel</b>. It runs <b>alongside</b> the expedition and the tab you are watching decides what you spectate<br>'
+            + '<b>Its party cannot overlap the expedition party</b> — splitting the roster is the point of the channel<br>'
+            + 'Cooldown, drop-table reuse and the first unlock are undecided, and the engine cannot yet run two battles at once (base_expedition_design §1-3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },
@@ -347,6 +379,9 @@ const STRINGS = {
     'tip.this': { ko: '이 아이템', en: 'This Item' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
+    'tip.up.next': { ko: '강화 +{up} · 다음 {g}G', en: 'Upgrade +{up} · next {g}G' },
+    'tip.up.option': { ko: '{n}강에서 옵션 상승', en: 'option gain at +{n}' },
+    'tip.up.max': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
     // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
     'tip.hero.h': { ko: '영웅', en: 'Hero' },
     'tip.hero.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
@@ -355,6 +390,15 @@ const STRINGS = {
     /* ── 스킬 ── */
     /* ── 연구 탭 — 파티 전술 (2026-08-30 · SCREEN_DESIGN §13) ── */
     'rs.h': { ko: '파티 전술', en: 'Party Tactics' },
+    'rs.research.h': { ko: '연구', en: 'Research' },
+    'rs.research.note': {
+        ko: '연구 탭은 <b>「연구」와 「파티전술」 두 섹션</b>이다 (2026-08-31 개정) — 지금 그리는 것은 파티전술 하나<br>'
+            + '<b>연구</b>는 스킬 노드·레시피 해금을 맡고 채집이 물어온 재료를 쓴다. <b>영웅 파견은 하지 않는다</b> — 옛 연구소(파견처)를 대체한다<br>'
+            + '비용 곡선·해금 순서가 미정이라 미착수 (GAME_DESIGN §9 · skill_design §5)',
+        en: 'The Research tab holds <b>two sections — Research and Party Tactics</b> (revised 2026-08-31); only Party Tactics is drawn today<br>'
+            + '<b>Research</b> unlocks skill nodes and recipes and spends materials brought back by gathering. <b>It sends no heroes</b> — it replaces the old Lab dispatch post<br>'
+            + 'Cost curve and unlock order are undecided, so the section is not started (GAME_DESIGN §9 · skill_design §5)',
+    },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.next': { ko: '{no}번 칸까지 {n}', en: '{n} more to slot {no}' },

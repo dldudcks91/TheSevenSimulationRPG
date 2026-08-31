@@ -70,7 +70,7 @@ export function hideTip() { $tip()?.classList.remove('show'); }
 
 /* ───────── 카드 — 두 렌더러가 함께 쓴다 ───────── */
 
-const classOf = id => M.CLASSES.find(c => c.id === id);
+const classOf = id => D.classes.find(c => c.id === id);
 const tierOf = h => M.HERO_TIER[h.tier] ?? M.HERO_TIER.rare;
 
 /**

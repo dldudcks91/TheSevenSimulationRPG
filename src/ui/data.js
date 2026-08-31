@@ -2,13 +2,18 @@
  * 데이터 로더 + 시스템 조립 — CSV(SSOT)를 fetch 해서 game_logic 시스템들에 **주입**한다.
  *
  * fetch 는 브라우저 API 라 여기(ui/)에 있다. 파싱은 game_logic/csv.js (순수).
- * 이름 ko/en · 얼굴 유무 · 챕터 죄종도 이제 전부 CSV 다 — mock.js 에 남은 것은 화면 전용 사전과 자산 경로뿐이다.
+ * 이름 ko/en · 얼굴 유무 · 챕터 죄종 · 직업 · 장비 부위/위치 · 아이템 베이스 · 접사 정의 · 영웅 이름/특성 풀이
+ *   전부 CSV 다 — mock.js 에 남은 게임 데이터는 죄종(`SINS`)·정예 특성 둘뿐이고 나머지는 화면 전용 사전·자산 경로다.
  * mock.js 의 BALANCE 미러는 폐지했다 — balance.csv 를 직접 읽는다 (한 곳만 고치면 된다).
+ *
+ * ⚠ **CSV 행 순서가 결정론 계약이다** — `slots`(부위) · `itemBases`(부위별) · `affixDefs` · `heroNamePool` ·
+ *   `heroTraitPool` 은 `rng` 가 인덱스를 굴리는 배열이다. 재정렬하면 같은 시드가 다른 게임이 된다 (INTERFACE §5-2).
  */
 
 import * as M from './mock.js';
 import { parseCsv, keyValue, indexBy } from '../game_logic/csv.js';
-import { createHeroSystem } from '../game_logic/hero.js';
+import { createHeroSystem, ELEMENTS } from '../game_logic/hero.js';
+import { createNaming } from '../game_logic/naming.js';
 import { createItemSystem } from '../game_logic/item.js';
 import { createBattleSystem } from '../game_logic/battle.js';
 import { createSkillSystem } from '../game_logic/skill.js';
@@ -34,7 +39,22 @@ export const D = {
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — 「조건 → 효과」 1행 = 옵션 1개
+    slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
+    equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
+    classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
+    itemBases: null,          // item_base.csv — {slot: [{ko,en}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
+    affixDefs: [],            // affix.csv — [{stat, scale, min, max, perIlvl?, slots:[...]}] · CSV 행 순서
+    heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
+    heroTraitPool: [],        // hero_trait.csv — [{ko,en}] · CSV 행 순서
+    csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
+                              //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
+
+/**
+ * 이름 조립기 — 규칙은 `game_logic/naming.js`(이식 대상), 죄종 표시명만 여기서 주입한다.
+ * ⚠ `SINS` 는 아직 CSV 가 아니다 (sin_mapping.md 미확정) — mock 에 남은 3항목 중 하나.
+ */
+const NAMING = createNaming({ sins: M.SINS });
 
 /** 조립된 시스템 — hero / item / battle / skill / tactic / game */
 export let SYS = null;
@@ -42,16 +62,20 @@ export let SYS = null;
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'hero_attribute', 'combat_stat', 'chapter',
-    'mastery_node', 'tactic_slot', 'tactic_option'];
+    'mastery_node', 'tactic_slot', 'tactic_option',
+    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
         if (!r.ok) throw new Error(`data: ${f}.csv ${r.status}`);
         return r.text();
     })));
+    // 원문 보관 — 골든 스냅샷이 파일별 해시를 뜬다 (dev/golden.js). 파싱 전이라 컬럼 추가·행 순서도 걸린다
+    FILES.forEach((f, i) => { D.csvText[f] = texts[i]; });
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
         weaponGroup, skillRow, heroAttr, combatStat, chapter, masteryNode,
-        tacticSlot, tacticOption] = texts.map(parseCsv);
+        tacticSlot, tacticOption,
+        affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -92,6 +116,28 @@ export async function loadData(base = './data/') {
     D.masteryNodes = masteryNode;
     D.tacticSlots = tacticSlot;
     D.tacticOptions = tacticOption;
+    // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
+    // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
+    D.equipSlots = equipSlotRow.slice().sort((a, b) => a.slot_order - b.slot_order)
+        .map(r => ({ id: r.equip_slot_id, part: r.part }));
+    D.slots = equipSlotRow.filter(r => r.part_order !== '-').sort((a, b) => a.part_order - b.part_order)
+        .map(r => ({ id: r.part, ko: r.name_kr, en: r.name_en, icon: r.icon }));
+    // 직업 — CSV 컬럼은 `release`(스테이지와 충돌하지 않는 이름), game_logic 이 읽는 필드는 `stage` 그대로
+    D.classes = classRow.map(r => ({
+        id: r.class_id, keyAttr: r.key_attr, ko: r.name_kr, en: r.name_en,
+        role: { ko: r.role_kr, en: r.role_en }, stage: r.release,
+    }));
+    // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
+    D.itemBases = {};
+    for (const r of itemBaseRow) (D.itemBases[r.slot] ??= []).push({ ko: r.name_kr, en: r.name_en });
+    // 접사 정의 — `perIlvl` 은 `band` 행만 든다 (scale 3분류 계약: item_design §2-1)
+    D.affixDefs = affixRow.map(r => ({
+        stat: r.stat, scale: r.scale, min: r.min, max: r.max,
+        ...(r.scale === 'band' ? { perIlvl: r.per_ilvl } : {}),
+        slots: String(r.slots).split('|'),
+    }));
+    D.heroNamePool = heroNameRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
+    D.heroTraitPool = heroTraitRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
 
     SYS = buildSystems(D);
     return D;
@@ -140,30 +186,27 @@ export const skillInfo = id => {
 
 /**
  * 정예 이름 조립 — ko "분노의 스켈레톤 기사" / en "Wrathful Skeleton Knight".
- * 언어별 어순·조사가 다르므로 조립 규칙은 렌더러가 아니라 **데이터 층**에 둔다 (mock 의 nm() 과 같은 자리).
- * 몬스터 이름이 CSV 로 이사하면서 이 함수도 함께 왔다 — 죄종 접두어만 mock 에서 읽는다.
+ * **조립 규칙 자체는 `game_logic/naming.js`** (이식 대상) — 여기는 몬스터 id → 이름 조회만 맡는다
+ * (`D.monsters` 는 브라우저가 fetch 한 것이라 game_logic 이 볼 수 없다).
  */
-export const eliteName = (sin, baseId) => {
-    const s = M.SINS[sin], b = monsterName(baseId);
-    return { ko: `${s.ko}의 ${b.ko}`, en: `${s.adj} ${b.en}` };
-};
+export const eliteName = (sin, baseId) => NAMING.eliteName(sin, monsterName(baseId));
 
 /** 시스템 조립 — 테스트 페이지도 같은 조립을 쓴다 (데이터만 바꿔 끼울 수 있다) */
 export function buildSystems(d) {
     const sins = Object.keys(M.SINS);
     const hero = createHeroSystem({
-        balance: d.balance, stats: d.heroAttributes, sins, classes: M.CLASSES, weaponGroups: d.weaponGroups,
-        namePool: M.HERO_NAME_POOL, traitPool: M.HERO_TRAIT_POOL, masteryNodes: d.masteryNodes ?? [],
+        balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups,
+        namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
     });
     const item = createItemSystem({
-        balance: d.balance, slots: M.SLOTS.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: M.ELEMENT_IDS,
-        itemBases: M.ITEM_BASES, affixDefs: M.AFFIX_DEFS, composeName: M.nm,
+        balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: ELEMENTS,
+        itemBases: d.itemBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
     });
     // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다
     const skill = createSkillSystem({ balance: d.balance, rows: d.skillRows ?? [] });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
     const tactic = createTacticSystem({
-        slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: M.CLASSES,
+        slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: d.classes,
         weaponGroups: d.weaponGroups, skillSystem: skill,
     });
     const battle = createBattleSystem({
@@ -173,7 +216,7 @@ export function buildSystems(d) {
     });
     const game = createGameSystem({
         hero, item, battle, skill, tactic, balance: d.balance,
-        equipSlots: M.EQUIP_SLOTS, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
+        equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)

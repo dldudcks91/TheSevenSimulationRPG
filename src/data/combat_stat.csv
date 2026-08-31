@@ -16,7 +16,7 @@ res_lightning,전기 저항,Lightning Resist,defense,-,pct,1,attack_type=lightni
 res_poison,독 저항,Poison Resist,defense,-,pct,1,attack_type=poison 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일
 res_max_bonus,최대 저항 증가,Max Resist Bonus,defense,-,pct,1,원소 저항 기본 상한([balance.csv:res_cap_base])을 뚫는 **유일한** 수단 — 절대 상한 [balance.csv:res_cap_absolute] 까지. 상한 근처에서 실효 체력 기여가 커 유니크·크래프트·낙인의 자리 (battle_design §9-5)
 damage_reduction,피해 감소,Damage Reduction,defense,-,pct,1,감쇠 뒤에 곱한다. **원천별로 각각 곱한다** — 덧셈이 아니다. 0에 수렴할 뿐 닿지 않아 상한 규칙이 필요 없고 접사 하나의 실효 체력 기여가 항상 일정하다. 방어 곡선과도 곱해지므로 한쪽 몰빵이 손해 (battle_design §9-3)
-reflect_damage,반사 피해,Reflect Damage,defense,-,n,1,받은 최종 피해 x 이 비율을 공격자 HP 에서 직접 뺀다. **비직격** — 감소·치명을 받지 않고 아무것도 유발하지 않는다 (battle_design §9-6)
+reflect_damage,반사 피해,Reflect Damage,defense,-,pct,1,받은 최종 피해 x 이 비율을 공격자 HP 에서 직접 뺀다. **비직격** — 감소·치명을 받지 않고 아무것도 유발하지 않는다 (battle_design §9-6). fmt 는 pct 다 — battle.js 가 `dmg x reflect / 100` 으로 쓰므로 % 가 맞다 (2026-08-31 정정 — n 이었고 AFFIX_LABELS 의 pct 와 갈려 같은 축이 한 탭에서 `5` 와 `+5%` 로 다르게 찍혔다. 부채 #12)
 life_steal,흡혈,Life Steal,sustain,-,pct,1,직격의 **최종 피해**(감소 후)에 비례해 회복 — 비직격은 흡혈하지 않는다. 런 깊이와 부상 예방 담당
 hp_regen,HP 재생,HP Regen,sustain,-,n,1,초당 회복 — 행동 주기와 무관하게 실시간(전투 틱마다 누산해 1 이상이 쌓이면 회복). 제한시간 룰의 대상. 출처는 지금 마스터리뿐 — 접사 풀에는 없다 (2026-08-28 구현)
 action_period,행동 주기,Action Period,tempo,agi,sec,1,차례가 오는 간격(초). 공격속도와 캐스팅 속도가 같은 축이다 — 영웅·몬스터 공통 단일 시계

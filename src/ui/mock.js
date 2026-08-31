@@ -12,9 +12,15 @@
  * 챕터·스테이지·몬스터 이름 · 몬스터 얼굴 유무 · 기본 능력치 7 · 전투 능력치 25 · 도감 레벨 보정·계열이
  * **전부 CSV 로 나갔다** (`chapter` · `stage` · `monster` · `hero_attribute` · `combat_stat` ·
  * `codex_level` · `codex_series`). 이름·얼굴·배경 헬퍼는 `ui/data.js` 에 있다.
- * game_logic 이 주입받는데 아직 여기 남은 것 — `CLASSES` · `SLOTS`/`EQUIP_SLOTS` · `SINS` · `ELEMENT_IDS` ·
- * `ITEM_BASES` · `AFFIX_DEFS` · `nm` · `HERO_NAME_POOL` · `HERO_TRAIT_POOL` · `SIN_TRAITS` · `COMMON_TRAITS`
- * (이식 차단 목록 — INTERFACE §7 · DEV_PLAN §5-B).
+ *
+ * ── 2026-08-31 CSV 이관 (M7 완료) ──
+ * `CLASSES` · `SLOTS`/`EQUIP_SLOTS` · `ITEM_BASES` · `AFFIX_DEFS` · `HERO_NAME_POOL` · `HERO_TRAIT_POOL` 이
+ * **CSV 로 나갔다** (`class` · `equip_slot` · `item_base` · `affix` · `hero_name` · `hero_trait` —
+ * 로더는 `ui/data.js:D.classes`·`D.slots`/`D.equipSlots`·`D.itemBases`·`D.affixDefs`·`D.heroNamePool`·`D.heroTraitPool`).
+ * `ELEMENT_IDS` 는 삭제 — SSOT 는 `game_logic/hero.js:ELEMENTS` 하나다.
+ * `nm`(이름 조립)은 CSV 가 아니라 **이식 대상 코드**라 `game_logic/naming.js` 로 갔다 (`eliteName` 도 같이).
+ * game_logic 이 주입받는데 아직 여기 남은 것 — `SINS` · `SIN_TRAITS` · `COMMON_TRAITS` 셋뿐
+ * (전부 죄종 매핑 미확정에 걸려 있다 — INTERFACE §7 · DEV_PLAN §5-B).
  *
  * ── i18n 규약 (2026-08-23) ──
  * 표시 문자열은 전부 **{ko, en} 쌍**이다. 화면은 i18n.js 의 L() 로 현재 언어를 고른다.
@@ -98,129 +104,15 @@ export const HERO_TIER = {
 };
 
 /**
- * 직업 7종 (hero_design §2) — 본편 5 + 확장 2. 확장 직업은 아직 화면에 등장하지 않는다.
- * i18n 을 위해 **id 로 참조**한다 — HEROES.cls · mastery_node.csv 의 owner_id 가 이 id 를 쓴다.
- * 무기군은 여기 적지 않는다 — 직업 전속 배정은 **weapon_group.csv 의 classes 열**이 SSOT 다 (2026-08-25 확정).
- *
- * keyAttr = 이 직업을 미는 기본 능력치. hero_attribute.csv 의 combat_stat 열에서 그대로 나온다
- *   (힘→물리 공격력 / 지능→마법 공격력 / 민첩→행동 주기 / 건강→상태이상 회복 속도 / **운→드랍률·골드(전투 밖)** / 통솔·매력→없음).
- *   생성 굴림이 이 축을 밀어 준다 — 지능 7인 마법사가 나오면 플레이어가 인과를 읽을 수 없다.
- *   사제 = 순수 캐스터(마법사와 무기 풀 공유) → 파워 출처는 마법 공격력 = 지능 (battle_design §8, 08-25).
- *   ⚠ 궁수=운은 **이름만 따라간 것**이다 (08-26 감각→운) — 전투 계수가 없는 축이 주력이 됐다.
- *     물리 공격력을 쓰는데 힘이 안 곱해지므로 `str` 재배정이 유력하나 기획 미결 (GAME_DESIGN §10 · hero_design §4-1-1).
- *   ⚠ 기사=건강은 제안 — 건강이 HP 를 떠나 상태이상 회복 속도만 밀게 된 뒤(08-25) 탱커의 주력 축은 미확정.
- *   ⚠ 밀어주는 세기는 제안 — 기획 확정 필요 (2026-08-24)
+ * 직업 · 장비 부위/위치 · 아이템 베이스 · 접사 정의는 **CSV 로 나갔다** (2026-08-31):
+ *   `class.csv` (7행 · CSV 컬럼은 `release`, 로더가 `stage` 로 주입) · `equip_slot.csv` (9행 = 부위 8 + 반지 두 번째 칸)
+ *   `item_base.csv` (7부위 × 4 — 무기는 없다. 무기의 베이스는 무기군 자체 = `weapon_group.csv`)
+ *   `affix.csv` (19행 · `scale` 3분류 · `per_ilvl` 은 `band` 행만)
+ * 읽는 곳은 `ui/data.js`(`D.classes` · `D.slots`/`D.equipSlots` · `D.itemBases` · `D.affixDefs`).
+ * ⚠ 접사·베이스 수치는 여전히 프로토타입 임시값이고 계승 접사 매트릭스(7죄종×슬롯)는 미연결이다.
  */
-export const CLASSES = [
-    { id: 'warrior', keyAttr: 'str', ko: '전사', en: 'Warrior', role: { ko: '근접 물리', en: 'Melee Physical' }, stage: 'main' },
-    { id: 'knight', keyAttr: 'vit', ko: '기사', en: 'Knight', role: { ko: '탱커 · 수호', en: 'Tank · Guardian' }, stage: 'main' },
-    { id: 'mage', keyAttr: 'int', ko: '마법사', en: 'Mage', role: { ko: '마법', en: 'Magic' }, stage: 'main' },
-    { id: 'archer', keyAttr: 'luck', ko: '궁수', en: 'Archer', role: { ko: '원거리 물리', en: 'Ranged Physical' }, stage: 'main' },
-    { id: 'priest', keyAttr: 'int', ko: '사제', en: 'Priest', role: { ko: '지원 · 회복', en: 'Support · Healing' }, stage: 'main' },
-    { id: 'assassin', keyAttr: 'agi', ko: '암살자', en: 'Assassin', role: { ko: '치명 · 속도', en: 'Crit · Speed' }, stage: 'expansion' },
-    { id: 'necromancer', keyAttr: 'int', ko: '네크로맨서', en: 'Necromancer', role: { ko: '소환', en: 'Summoning' }, stage: 'expansion' },
-];
 
-/**
- * 장비 — **부위 8종 · 착용 위치 9개** (반지 ×2, 2026-08-25 확정 — item_design §1 / GAME_DESIGN §5).
- * 드롭·접사·필터는 부위(SLOTS) 단위, 페이퍼돌·equipped 는 위치(EQUIP_SLOTS) 단위다.
- * ⚠ 계승분(equipment_base.csv)은 5부위(weapon/armor/helmet/gloves/boots)뿐이고
- *   접사 매트릭스도 7죄종 × 5부위다. 보조/목걸이/반지 3부위는 계승 데이터가 없다 —
- *   신규 3부위의 베이스·접사 데이터는 미작성 (inherited_data_gaps.md G3-b). 지금은 화면 확인용 목업.
- */
-export const SLOTS = [
-    { id: 'weapon', ko: '무기', en: 'Weapon', icon: '⚔' },
-    { id: 'offhand', ko: '보조', en: 'Off-hand', icon: '🛡' },
-    { id: 'helmet', ko: '투구', en: 'Helmet', icon: '⛑' },
-    { id: 'armor', ko: '갑옷', en: 'Armor', icon: '🧥' },
-    { id: 'gloves', ko: '장갑', en: 'Gloves', icon: '🧤' },
-    { id: 'boots', ko: '신발', en: 'Boots', icon: '👢' },
-    { id: 'amulet', ko: '목걸이', en: 'Amulet', icon: '📿' },
-    { id: 'ring', ko: '반지', en: 'Ring', icon: '💍' },
-];
-/** 착용 위치 9개 — id 는 세이브의 equipped 키, part 는 SLOTS 의 부위 id */
-export const EQUIP_SLOTS = [
-    { id: 'weapon', part: 'weapon' }, { id: 'offhand', part: 'offhand' },
-    { id: 'helmet', part: 'helmet' }, { id: 'armor', part: 'armor' },
-    { id: 'gloves', part: 'gloves' }, { id: 'boots', part: 'boots' },
-    { id: 'amulet', part: 'amulet' }, { id: 'ring1', part: 'ring' }, { id: 'ring2', part: 'ring' },
-];
-
-
-/**
- * 아이템 베이스 — 부위별 기본 이름 풀. 이름 조립은 nm() (죄종 접두 + 베이스 + 죄종 접미).
- * **무기는 여기 없다** — 무기의 베이스는 무기군 자체이고, 직업 전속·한손/양손·행동 주기·공격 타입 전부 weapon_group.csv 가 SSOT 다.
- * ⚠ 계승 equipment_base.csv(5부위)를 아직 연결하지 않았다 — 보조/목걸이/반지 3부위는 계승 데이터가 없다.
- */
-export const ITEM_BASES = {
-    offhand: [
-        { ko: '원형 방패', en: 'Round Shield' }, { ko: '탑 방패', en: 'Tower Shield' },
-        { ko: '견갑', en: 'Spaulder' }, { ko: '버클러', en: 'Buckler' },
-    ],
-    helmet: [
-        { ko: '풀 헬름', en: 'Full Helm' }, { ko: '날개 투구', en: 'Winged Helm' },
-        { ko: '뼈 투구', en: 'Bone Helm' }, { ko: '가죽 모자', en: 'Leather Cap' },
-    ],
-    armor: [
-        { ko: '판금 갑옷', en: 'Plate Mail' }, { ko: '사슬 갑옷', en: 'Chain Mail' },
-        { ko: '가죽 갑옷', en: 'Leather Armor' }, { ko: '유령 갑옷', en: 'Ghost Armor' },
-    ],
-    gloves: [
-        { ko: '건틀릿', en: 'Gauntlets' }, { ko: '사슬 장갑', en: 'Chain Gloves' },
-        { ko: '경장갑', en: 'Light Gauntlets' }, { ko: '가죽 장갑', en: 'Leather Gloves' },
-    ],
-    boots: [
-        { ko: '전투화', en: 'Battle Boots' }, { ko: '사슬 장화', en: 'Chain Boots' },
-        { ko: '중장화', en: 'Heavy Boots' }, { ko: '경장화', en: 'Light Boots' },
-    ],
-    amulet: [
-        { ko: '부적', en: 'Talisman' }, { ko: '금목걸이', en: 'Gold Necklace' },
-        { ko: '눈 목걸이', en: 'Eye Pendant' }, { ko: '시계추 목걸이', en: 'Pendulum Amulet' },
-    ],
-    ring: [
-        { ko: '은반지', en: 'Silver Ring' }, { ko: '인장', en: 'Signet' },
-        { ko: '대식 반지', en: 'Glutton Ring' }, { ko: '시간 반지', en: 'Hourglass Ring' },
-    ],
-};
-
-/**
- * 접사 정의 — stat id + 굴림 범위 + **스케일 분류**. 수치는 임시(⚠) — 계승 접사 매트릭스(7죄종×슬롯)는 미연결.
- * **여기 있는 축은 전부 전투에 실제로 걸린다** — 안 걸리는 접사는 넣지 않는다 (거짓 선택지 금지).
- * slots 가 없으면 전 부위.
- *
- * `scale` (item_design §2-1 · battle_design §9-0) — ilvl 로 어떻게 커지는가:
- *   `growth` 굴림 × power_growth_per_level^(ilvl−1) — 성장 축(공격력·HP flat). 소수 1자리
- *   `band`   굴림 + ilvl × perIlvl — 비율 축(물리 방어). **`perIlvl` 은 여기에만 남는다**
- *   `flat`   굴림 그대로, **ilvl 무관** — % 접사·치명·공속·흡혈·방어 무시·저항·유틸 전부
- *
- * 저항은 소재값이 아니라 **직접 %**(상한형)라 자랄 이유가 없다 (battle_design §9-5) —
- *   전 원소 공통 `res_all` + 원소별 4종이 같은 항에 더해진다.
- * `damage_reduction` 은 **원천별 곱**이라 실효 체력이 개수에 지수로 자란다 — 값을 낮게 유지한다 (item_design §2 주의문).
- * `res_max_bonus` · `res_reduction` 은 축은 살아 있지만 **드롭 접사 풀에 넣지 않는다** — 유니크·크래프트·낙인의 자리.
- */
-export const AFFIX_DEFS = [
-    { stat: 'atk_flat', scale: 'growth', min: 0.3, max: 0.9, slots: ['weapon'] },
-    { stat: 'atk_pct', scale: 'flat', min: 3, max: 8, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
-    { stat: 'hp_flat', scale: 'growth', min: 8, max: 20, slots: ['armor', 'helmet', 'boots', 'offhand', 'amulet', 'ring'] },
-    { stat: 'hp_pct', scale: 'flat', min: 2, max: 5, slots: ['armor', 'helmet', 'amulet'] },
-    { stat: 'def_flat', scale: 'band', min: 2, max: 6, perIlvl: 0.3, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand'] },
-    { stat: 'res_all', scale: 'flat', min: 3, max: 10, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet'] },
-    { stat: 'res_fire', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
-    { stat: 'res_cold', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
-    { stat: 'res_lightning', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
-    { stat: 'res_poison', scale: 'flat', min: 6, max: 20, slots: ['armor', 'helmet', 'gloves', 'boots', 'offhand', 'amulet', 'ring'] },
-    { stat: 'crit_rate', scale: 'flat', min: 2, max: 5, slots: ['weapon', 'gloves', 'ring', 'amulet'] },
-    { stat: 'crit_damage', scale: 'flat', min: 8, max: 18, slots: ['weapon', 'ring', 'amulet'] },
-    { stat: 'aspd_pct', scale: 'flat', min: 2, max: 5, slots: ['weapon', 'gloves', 'boots'] },
-    { stat: 'life_steal', scale: 'flat', min: 1, max: 3, slots: ['weapon', 'ring'] },
-    { stat: 'def_ignore', scale: 'flat', min: 3, max: 8, slots: ['weapon', 'gloves'] },
-    { stat: 'reflect_damage', scale: 'flat', min: 3, max: 8, slots: ['armor', 'offhand'] },
-    { stat: 'damage_reduction', scale: 'flat', min: 2, max: 5, slots: ['armor', 'helmet', 'offhand'] },
-    { stat: 'gold_find', scale: 'flat', min: 5, max: 12, slots: ['boots', 'gloves', 'ring', 'amulet'] },
-    { stat: 'item_find', scale: 'flat', min: 4, max: 10, slots: ['boots', 'gloves', 'ring', 'amulet'] },
-];
-
-/** 접사 표기 — stat id → 이름 + 단위. 단위 붙이기는 렌더러 한 곳(affixText)에서만 */
+/** 접사 표기 — stat id → 이름 + 단위. **화면 전용 사전**이라 CSV 로 가지 않는다 (COMBAT_CATS 와 같은 성격) */
 export const AFFIX_LABELS = {
     atk_flat: { ko: '공격력', en: 'Attack', fmt: 'n' },
     atk_pct: { ko: '공격력', en: 'Attack', fmt: 'pct' },
@@ -260,7 +152,8 @@ export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? {
 export const statValue = (stat, v, fallback) =>
     `${v >= 0 ? '+' : ''}${v}${statLabel(stat, fallback).fmt === 'pct' ? '%' : ''}`;
 
-/** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다. 칸은 착용 **위치**(EQUIP_SLOTS.id) — 반지 두 칸.
+/** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
+ *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
  *  2026-08-27 재배치 — 목걸이는 투구 오른쪽 · 장갑은 무기 아래 · 신발은 보조 아래 · 반지는 장갑·신발 아래 (SCREEN_DESIGN §6) */
 export const PAPERDOLL = [
     [null, 'helmet', 'amulet'],
@@ -270,34 +163,10 @@ export const PAPERDOLL = [
 ];
 
 /* ═══════════ 영웅 생성 풀 ═══════════
-   굴리는 규칙은 game_logic/hero.js 에 있다. 여기는 풀(데이터)만 — CSV 로 이사하면 _kr/_en 컬럼 쌍이 된다. */
-
-/**
- * 이름 풀 — 레어 영웅은 무한 생성이므로 이름도 풀에서 뽑는다 (hero_design §1).
- * 유니크 15명은 고정 명단이라 이 풀에 들어오지 않는다.
- * CSV 로 이사하면 name_kr / name_en 컬럼 쌍이 된다.
- */
-export const HERO_NAME_POOL = [
-    { ko: '아르덴', en: 'Arden' }, { ko: '브리엔', en: 'Brienne' }, { ko: '케이든', en: 'Caden' },
-    { ko: '델피네', en: 'Delphine' }, { ko: '에드릭', en: 'Edric' }, { ko: '피오나', en: 'Fiona' },
-    { ko: '그레이엄', en: 'Graham' }, { ko: '하이델', en: 'Haidel' }, { ko: '이언', en: 'Ian' },
-    { ko: '유디트', en: 'Judith' }, { ko: '키어런', en: 'Kieran' }, { ko: '리오넬', en: 'Lionel' },
-    { ko: '마르고', en: 'Margot' }, { ko: '노엘', en: 'Noel' }, { ko: '오르윈', en: 'Orwin' },
-    { ko: '페린', en: 'Perrin' }, { ko: '퀜틴', en: 'Quentin' }, { ko: '로웨나', en: 'Rowena' },
-    { ko: '세드릭', en: 'Cedric' }, { ko: '테오도르', en: 'Theodore' }, { ko: '우르술라', en: 'Ursula' },
-    { ko: '발렌', en: 'Valen' }, { ko: '위넬', en: 'Wynnel' }, { ko: '이베인', en: 'Yvaine' },
-];
-
-/**
- * 시작 특성 — 영웅 1명당 1개, 반고정 생성의 세 번째 축 (이름 + 메인 죄종 + 시작 특성).
- * ⚠ **효과는 아직 미작성이다** — 지금은 이름표만 굴린다 (hero_design §3 시작특성).
- */
-export const HERO_TRAIT_POOL = [
-    { ko: '다혈질', en: 'Hot-Blooded' }, { ko: '날렵함', en: 'Nimble' }, { ko: '강골', en: 'Sturdy' },
-    { ko: '언변', en: 'Silver Tongue' }, { ko: '탐구심', en: 'Inquisitive' }, { ko: '타고난 지휘관', en: 'Born Commander' },
-    { ko: '침착함', en: 'Composed' }, { ko: '억척스러움', en: 'Tenacious' }, { ko: '예리한 눈', en: 'Keen Eye' },
-    { ko: '무쇠 팔', en: 'Iron Arm' }, { ko: '잔꾀', en: 'Cunning' }, { ko: '신실함', en: 'Devout' },
-];
+   굴리는 규칙은 game_logic/hero.js 에 있고, 풀(데이터)은 **CSV 로 나갔다** (2026-08-31):
+   `hero_name.csv` 24행(레어 영웅은 무한 생성이라 이름도 풀에서 뽑는다 — 유니크 15명은 고정 명단이라 들어오지 않는다) ·
+   `hero_trait.csv` 12행(시작 특성 — ⚠ 효과 미작성, 지금은 이름표만 굴린다. hero_design §3).
+   읽는 곳은 `ui/data.js`(`D.heroNamePool` · `D.heroTraitPool`). */
 
 /**
  * 전투 능력치 카테고리 라벨 — **화면 전용 사전**이라 CSV 로 가지 않는다.
@@ -370,29 +239,12 @@ export const SKILL_DISPLAY = {
 /** 없는 id 는 빈 칸이 아니라 기본 글리프로 — 스킬이 늘어도 화면이 비지 않는다 */
 export const skillDisplay = id => SKILL_DISPLAY[id] ?? { i: '✦', d: null };
 
-/* ═══════════ 아이템 빌더 ═══════════ */
-/**
- * 아이템 이름 — ko "분노의 Base — 오만" / en "Wrathful Base of Pride" (D2 매직/레어 명명).
- * base 는 문자열(양 언어 공통, 계승 영문 베이스명) 또는 {ko, en} (한국어 전용 베이스).
- */
-/** 원소 4종 표시 — id 는 monster.csv:attack_type · combat_stat.csv:res_* 와 같은 어휘 (battle_design §9-5) */
-export const ELEMENT_LABELS = {
-    fire: { ko: '불', en: 'Fire' },
-    cold: { ko: '냉기', en: 'Cold' },
-    lightning: { ko: '전기', en: 'Lightning' },
-    poison: { ko: '독', en: 'Poison' },
-};
-export const ELEMENT_IDS = Object.keys(ELEMENT_LABELS);
+/* 원소 4종 표시 사전(`ELEMENT_LABELS`)은 **삭제했다** (2026-08-31) — `ELEMENT_IDS` 가 유일한 소비자였고
+   그것이 `game_logic/hero.js:ELEMENTS` 로 통합되면서 참조가 0이 됐다. 화면이 원소 이름을 그리게 되면
+   그때 다시 만든다(4줄이다). id 목록의 SSOT 는 `hero.js:ELEMENTS` 하나다. */
 
-export const nm = (preSin, base, sufSin) => {
-    const b = typeof base === 'string' ? { ko: base, en: base } : base;
-    const p = SINS[preSin];
-    return {
-        ko: `${p.ko}의 ${b.ko}${sufSin ? ` — ${SINS[sufSin].ko}` : ''}`,
-        en: `${p.adj} ${b.en}${sufSin ? ` of ${SINS[sufSin].en}` : ''}`,
-    };
-};
-
+/* 아이템 이름 조립(`nm`)은 **이식 대상 코드**라 `game_logic/naming.js:createNaming` 으로 갔다 (2026-08-31).
+   죄종 표시명(SINS)만 여기서 주입된다 — `ui/data.js:NAMING`. */
 
 /**
  * 배경 이미지 — TheSevenRPG 계승분 (src/assets/art/backgrounds/).
@@ -402,6 +254,7 @@ export const nm = (preSin, base, sufSin) => {
  * 경로는 문서(src/index.html) 기준 상대경로 — JS가 인라인 스타일로 넣기 때문이다.
  */
 export const BG_DIR = './assets/art/backgrounds/';
+/** ⚠ 아직 아무 화면도 안 읽는다 — 자산(`town.webp`)은 실재하고 거점 화면이 생기면 여기가 쓰인다 */
 export const TOWN_BG = BG_DIR + 'town.webp';
 export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
 
@@ -419,7 +272,7 @@ export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
  * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
-export const FACE_STYLES = ['pixel16', 'cartoon'];
+export const FACE_STYLES = ['cartoon', 'pixel16'];      // **첫 항목이 기본값이다** — 2026-08-31 cartoon 으로 교체 (사용자 지시)
 const FACE_STORE_KEY = 'thesevensim.faceStyle';
 
 let faceStyleCur = (() => {

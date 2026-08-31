@@ -1,9 +1,9 @@
 /**
- * 아이템 시스템 — 드롭 굴림 / 시작 무기 / 착용 규칙 / 분해.
+ * 아이템 시스템 — 드롭 굴림 / 시작 무기 / 착용 규칙 / 분해 / 강화.
  *
  * 순수 모듈. 데이터는 생성자 주입, 난수는 rng 인자.
  *
- * 아이템 = { uid, slot, rarity, ilvl, name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v}], sins:[sin...],
+ * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v}], sins:[sin...],
  *            group?(무기군 id — weapon_group.csv), twoHanded?, watk?(무기 공격력 굴림값), element?(마법 무기의 원소) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
  *   (CSV 로 이사할 때 stat id 가 곧 combat_stat.csv 의 키가 된다)
@@ -18,6 +18,12 @@
  *
  * **접사 ilvl 스케일링은 3분류다** (item_design §2-1) — 정의의 `scale` 이 정한다:
  *   `growth` 기하 곡선(공격력·HP flat) / `band` 완만한 가산(물리 방어 flat) / `flat` ilvl 무관(% · 저항 · 유틸 전부).
+ *
+ * **강화** (item_design §1 개정 2026-08-31) — 골드를 먹고 `up` 을 올린다. 두 갈래가 서로 다르게 남는다:
+ *   베이스(무기 watk · 방어구 implicit)는 **파생**하고, 3강마다 오르는 접사 값은 **박는다**.
+ *   랜덤한 것은 다시 못 만드니 저장하고, 결정적인 것은 `up` 하나로 언제든 다시 계산한다 — 파생이면
+ *   단계마다 반올림이 쌓이지 않고 드롭 시 굴린 개체값이 원본 그대로 남는다.
+ *   **재굴림은 없다** — 접사의 종류·개수·순서를 강화가 바꾸는 일은 없다. 값만 오른다.
  *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 affixDefs 에서 온다. 계승 접사 매트릭스(7죄종×슬롯)는 아직 연결하지 않았다.
@@ -105,6 +111,7 @@ export function createItemSystem(data) {
         const item = {
             uid: null,
             slot, rarity, ilvl,
+            up: 0,                             // 강화 단계 — 드롭은 굴리지 않는다. 올리는 것은 upgrade 하나뿐
             name: data.composeName(prefix, base, suffix),
             implicit: null,
             affixes: rollAffixes(rng, slot, ilvl, affixCount(rng, rarity)),
@@ -154,5 +161,57 @@ export function createItemSystem(data) {
 
     const salvageDust = item => item.rarity === 'rare' ? B.salvage_dust_rare : B.salvage_dust_magic;
 
-    return { rollDrop, startingWeapon, canEquip, groupOf, groupsFor, salvageDust };
+    /* ── 강화 (item_design §1 개정 2026-08-31) ── */
+
+    /** 베이스 능력치에 먹는 배율 — `up` 하나가 정한다 (원본은 안 건드린다) */
+    const upMult = up => 1 + (up ?? 0) * B.equip_upgrade_base_pct / 100;
+
+    /** 베이스 능력치가 있는 부위인가 — 목걸이·반지는 없어서 옵션 갈래만 받는다 */
+    const hasBase = item => item.watk != null || item.implicit != null;
+
+    const upgradeMax = () => B.equip_upgrade_max;
+
+    /** 다음 한 단계의 골드. 상한이면 null — 비용은 단계마다 기하로 붙는다 */
+    function upgradeCost(item) {
+        const up = item.up ?? 0;
+        if (up >= B.equip_upgrade_max) return null;
+        return Math.round(B.equip_upgrade_gold_base * Math.pow(B.equip_upgrade_gold_growth, up));
+    }
+
+    /**
+     * 강화 1단계 — **in-place**. 상한 검사는 호출자(state.js)가 한다.
+     * 옵션 계단(3·6·9강)에서만 rng 를 **한 번** 쓴다 — 어느 접사가 오를지 고르는 굴림 하나뿐이고,
+     * 접사의 종류·개수·순서는 건드리지 않는다(재굴림 없음).
+     * 값 상승은 그 접사의 `scale` 이 정한 반올림을 따르되 **최소 한 칸은 반드시 오른다**
+     * (growth +0.1 · 나머지 +1) — 비율만 곱하면 값이 작은 접사가 반올림에 먹혀 아무 일도 안 일어난다.
+     */
+    function upgrade(rng, item) {
+        item.up = (item.up ?? 0) + 1;
+        let affix = null;
+        if (item.up % B.equip_upgrade_option_interval === 0 && (item.affixes ?? []).length) {
+            const a = item.affixes[Math.floor(rng() * item.affixes.length)];
+            const def = data.affixDefs.find(d => d.stat === a.stat);
+            const growth = def ? def.scale === 'growth' : !Number.isInteger(a.v);
+            const raised = a.v * (1 + B.equip_upgrade_option_pct / 100);
+            const next = growth ? Math.max(r1(a.v + 0.1), r1(raised)) : Math.max(a.v + 1, Math.round(raised));
+            affix = { stat: a.stat, from: a.v, to: next };
+            a.v = next;
+        }
+        return { up: item.up, affix };
+    }
+
+    /**
+     * 읽기용 사본 — 베이스에 강화 배율을 먹인다. 접사는 값이 이미 박혀 있어 손대지 않는다.
+     * `up` 이 0 이거나 베이스가 없으면 **원본을 그대로** 돌려준다 — 전투·렌더가 매번 부르는 자리라 할당을 아낀다.
+     */
+    function effective(item) {
+        if (!item || !(item.up > 0) || !hasBase(item)) return item;
+        const m = upMult(item.up);
+        const out = { ...item };
+        if (out.watk != null) out.watk = r2(out.watk * m);
+        if (out.implicit) out.implicit = { ...out.implicit, v: r1(out.implicit.v * m) };
+        return out;
+    }
+
+    return { rollDrop, startingWeapon, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeCost, upgrade, effective };
 }

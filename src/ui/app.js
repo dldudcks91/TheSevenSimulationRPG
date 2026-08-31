@@ -82,12 +82,12 @@ const injuryText = h => t('injury.left', { t: fmtDuration(h.injuredUntil - now()
 const injuryChip = h => injured(h) ? `<span class="injury-chip">${injuryText(h)}</span>` : '';
 
 /* 직업 7종 — id 로 참조, 표시는 L() (hero_design §2). 무기군 목록은 weapon_group.csv(D.weaponGroupList)에서 파생 */
-const classDef = id => M.CLASSES.find(c => c.id === id);
+const classDef = id => D.classes.find(c => c.id === id);
 const className = id => L(classDef(id)) || id;
 const classWeapons = id => D.weaponGroupList.filter(g => g.classes.includes(id)).map(g => L(g)).join(' / ');
 const classLine = id => { const c = classDef(id); return c ? `${L(c.role)} · ${classWeapons(id)}` : t('class.unassigned'); };
-const slotDef = id => M.SLOTS.find(s => s.id === id);                                   // 부위
-const posDef = pos => slotDef(M.EQUIP_SLOTS.find(s => s.id === pos)?.part);            // 착용 위치 → 부위 정의
+const slotDef = id => D.slots.find(s => s.id === id);                                   // 부위
+const posDef = pos => slotDef(D.equipSlots.find(s => s.id === pos)?.part);             // 착용 위치 → 부위 정의
 const affixText = a => L(M.affixText(a.stat, a.v));
 
 /* 스테이지 표시 — 수치도 이름도 D.stages(stage.csv) · 조립은 data.js:stageName */
@@ -133,7 +133,9 @@ const heroFace = h => {
 
 /* ═══════════ 화면 상태 ═══════════ */
 
-const TABS = ['expedition', 'character', 'skill', 'research', 'tavern', 'codex', 'help'];
+// 탭 10 — 구현 7 + 미착수 3(의뢰 · 거점 · 탐험). 셋은 기획이 화면까지 확정한 자리라 지도에 자리를 준다
+// (SCREEN_DESIGN §1 개정 2026-08-31). 순서는 그 지도와 같다
+const TABS = ['expedition', 'commission', 'character', 'skill', 'research', 'base', 'explore', 'tavern', 'codex', 'help'];
 
 /* 시작 파티 후보의 기준 시드 — 고정값이라 같은 리롤 횟수면 언제나 같은 3명 (결정론 확인용).
    마스터 시드(전투·드롭)는 확정 시각으로 찍는다 — 플레이마다 다른 전투, 같은 세이브 안에선 같은 전투. */
@@ -148,6 +150,7 @@ const state = {
     slotFilter: null,
     roll: 1, candidates: [], confirmOverwrite: false,
     salvageMode: false,
+    upgradeMode: false,          // 가방 클릭 = 강화 (분해 모드와 배타 — 한 번에 한 뜻만)
     flash: null,            // {key, params} — 다음 render 한 번만 보인다
     battle: null,           // {result, stageId} — 관전 재생 중인 전투
     // 편성 패널이 연 스테이지 (SCREEN_DESIGN §4-1) — null 이면 패널이 없다. 지역을 눌러야 열린다(자동으로 열지 않는다)
@@ -207,6 +210,9 @@ function render() {
     if (state.screen === 'start' || !G) renderStart(main);
     else ({
         expedition: renderExpedition,
+        commission: m => renderTodo(m, 'nav.commission', 'exp.commission.note'),
+        base: m => renderTodo(m, 'nav.base', 'exp.bench.note'),
+        explore: m => renderTodo(m, 'ex.h', 'ex.todo'),
         character: renderCharacter,
         skill: renderSkill,
         research: renderResearch,
@@ -722,7 +728,7 @@ function paperdoll(h) {
 function gearPanel(h) {
     const p = el('div', 'panel');
     const worn = wornItems(h);
-    p.appendChild(el('h2', '', `${t('ch.gear.h')} <small>${t('eq.equipped', { n: worn.length, cap: M.EQUIP_SLOTS.length })}</small>`));
+    p.appendChild(el('h2', '', `${t('ch.gear.h')} <small>${t('eq.equipped', { n: worn.length, cap: D.equipSlots.length })}</small>`));
     p.appendChild(paperdoll(h));
 
     // 접사 죄종 — 세트포인트가 아니라 **태그**다 (세트효과 보류, item_design §4). 수는 "죄종 접사 수" — 접사 시너지 노드의 축
@@ -823,7 +829,7 @@ function detailPanels(h) {
     });
 }
 
-/** ③ 아이템 — 가방. 클릭 = 착용(분해 모드면 분해). 열 수는 창 폭이 정한다 */
+/** ③ 아이템 — 가방. 클릭 = 착용(분해 모드면 분해 · 강화 모드면 강화). 열 수는 창 폭이 정한다 */
 function itemsPanel(h, { showTarget = false } = {}) {
     const p = el('div', 'panel');
     const bagItems = G.bag.map(itemOf).filter(Boolean);
@@ -833,32 +839,49 @@ function itemsPanel(h, { showTarget = false } = {}) {
 
     const tools = el('div', 'items-tools');
     const filter = el('div', 'segmented');
-    for (const f of [{ id: null, label: t('eq.filter.all') }, ...M.SLOTS.map(s => ({ id: s.id, label: s.icon, title: L(s) }))]) {
+    for (const f of [{ id: null, label: t('eq.filter.all') }, ...D.slots.map(s => ({ id: s.id, label: s.icon, title: L(s) }))]) {
         const b = el('button', `btn sm${state.slotFilter === f.id ? ' on' : ''}`, f.label);
         if (f.title) b.title = f.title;
         b.onclick = () => { state.slotFilter = f.id; render(); };
         filter.appendChild(b);
     }
     tools.appendChild(filter);
+    // 두 모드는 배타다 — 클릭 한 번이 「분해」와 「강화」 둘 중 무엇인지 화면에서 하나로 읽혀야 한다
     const sv = el('button', `btn sm toggle${state.salvageMode ? ' on' : ''}`, t('ch.salvageMode'));
-    sv.onclick = () => { state.salvageMode = !state.salvageMode; render(); };
+    sv.onclick = () => { state.salvageMode = !state.salvageMode; state.upgradeMode = false; render(); };
     tools.appendChild(sv);
+    const ug = el('button', `btn sm toggle${state.upgradeMode ? ' on' : ''}`, t('ch.upgradeMode'));
+    ug.onclick = () => { state.upgradeMode = !state.upgradeMode; state.salvageMode = false; render(); };
+    tools.appendChild(ug);
     p.appendChild(tools);
 
-    const grid = el('div', `inv-cells wide${state.salvageMode ? ' salvage' : ''}`);
+    const grid = el('div', `inv-cells wide${state.salvageMode ? ' salvage' : ''}${state.upgradeMode ? ' upgrade' : ''}`);
     for (let i = 0; i < D.balance.inventory_cap; i++) {
         const it = items[i];
         const cell = el('div', `inv-cell${it ? ' filled' : ''}`);
         if (it) {
             cell.style.borderColor = rarity(it.rarity).color;
-            cell.innerHTML = `<span class="inv-icon">${slotDef(it.slot).icon}</span>`;
+            const us = SYS.game.upgradeState(G, it.uid);
+            cell.innerHTML = `<span class="inv-icon">${slotDef(it.slot).icon}</span>`
+                + (us && us.up > 0 ? `<span class="inv-up">+${us.up}</span>` : '')
+                + (state.upgradeMode ? `<span class="inv-cost">${us.cost == null ? 'MAX' : us.cost}</span>` : '');
             if (it.rarity === 'unique') cell.classList.add('shine');
             // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
             const target = SYS.game.equipTarget(h, it);
             const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
             bindTip(cell, it, itemOf(h.equipped[target]), ringHint);
             cell.onclick = () => {
-                if (state.salvageMode) {
+                if (state.upgradeMode) {
+                    const r = SYS.game.upgradeItem(G, it.uid);
+                    if (!r.ok) flash(`ch.err.${r.err}`);
+                    else {
+                        // 어느 옵션이 올랐는지는 굴림이라 말해 주지 않으면 목록을 눈으로 대조해야 한다
+                        if (r.affix) flash('ch.upgraded.affix', { n: r.up, g: r.cost, a: L(M.statLabel(r.affix.stat)),
+                            from: M.statValue(r.affix.stat, r.affix.from), to: M.statValue(r.affix.stat, r.affix.to) });
+                        else flash('ch.upgraded', { n: r.up, g: r.cost });
+                        save();
+                    }
+                } else if (state.salvageMode) {
                     const r = SYS.game.salvage(G, it.uid);
                     if (r.ok) { flash('ch.salvaged', { n: r.dust }); save(); }
                 } else {
@@ -897,15 +920,20 @@ function tipCard(item, headText, hint = '') {
     }
     const sins = item.sins ?? [];
     const g = SYS.item.groupOf(item);            // 무기군 — 직업 전속·행동 주기·공격 타입의 출처 (weapon_group.csv)
+    // 강화한 아이템은 **먹인 값**을 찍는다 — 툴팁 숫자가 캐릭터 시트와 갈리면 안 된다 (SCREEN_DESIGN §6)
+    const eff = SYS.item.effective(item);
+    const us = item.uid ? SYS.game.upgradeState(G, item.uid) : null;
     const sub = [L(rarity(item.rarity)), L(slotDef(item.slot)), `ilvl ${item.ilvl}`];
     if (g) sub.push(t('ch.weaponGroup', { group: L(g), cls: g.classes.map(className).join('/') }));
     if (item.twoHanded) sub.push(t('pd.twoHand'));
     c.innerHTML = `
         <div class="tip-head">${headText}</div>
-        <div class="tip-name" style="color:${rarity(item.rarity).color}">${L(item.name)}</div>
+        <div class="tip-name" style="color:${rarity(item.rarity).color}">${item.up > 0 ? `+${item.up} ` : ''}${L(item.name)}</div>
         <div class="tip-sub">${sub.join(' · ')}</div>
-        ${g ? `<div class="tip-implicit">${t('st.atk')} ${item.watk} (${t(`st.atkType.${item.element ?? g.damageKind}`)}) · ${t('sk.cycleSec', { s: g.period.toFixed(2) })}</div>` : ''}
-        ${item.implicit ? `<div class="tip-implicit">${affixText(item.implicit)}</div>` : ''}
+        ${g ? `<div class="tip-implicit">${t('st.atk')} ${eff.watk} (${t(`st.atkType.${item.element ?? g.damageKind}`)}) · ${t('sk.cycleSec', { s: g.period.toFixed(2) })}</div>` : ''}
+        ${eff.implicit ? `<div class="tip-implicit">${affixText(eff.implicit)}</div>` : ''}
+        ${us ? `<div class="tip-up">${us.cost == null ? t('tip.up.max', { up: us.up })
+            : `${t('tip.up.next', { up: us.up, g: us.cost })}${us.optionAt ? ` · ${t('tip.up.option', { n: us.optionAt })}` : ''}`}</div>` : ''}
         <ul>${(item.affixes ?? []).map(a => `<li>${affixText(a)}</li>`).join('') || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>
         <div class="tip-sins">${sins.map(s => `<span class="sin-tag" style="color:${sinColor(s)};margin-right:4px">${sinName(s)}</span>`).join('')}
             ${hint ? `<span class="muted">${hint}</span>` : ''}</div>`;
@@ -1108,6 +1136,19 @@ function tacticCell(slot, onReroll) {
     return c;
 }
 
+/**
+ * 미착수 탭 — 기획이 확정한 화면인데 아직 안 만든 자리 (SCREEN_DESIGN §1 탭 10).
+ * **안내가 유일한 내용인 탭**이라 §12「설명 문구는 도움말 탭 전용」의 의도된 예외다 — 여기서 안내를 빼면 빈 화면만 남는다.
+ * 같은 문구를 도움말도 쓴다(키를 재사용한다 — 도움말은 문구를 새로 쓰지 않는다).
+ */
+function renderTodo(main, titleKey, noteKey) {
+    const p = el('div', 'panel todo');
+    p.appendChild(el('h2', '', `${t(titleKey)} <small class="todo-badge">${t('todo.badge')}</small>`));
+    p.appendChild(el('div', 'note-body muted', t('todo.lead')));
+    p.appendChild(el('div', 'note-body', t(noteKey)));
+    main.appendChild(p);
+}
+
 function renderResearch(main) {
     const ts = SYS.game.tacticState(G);
     const next = ts.slots.find(s => !s.open);
@@ -1283,6 +1324,7 @@ function helpSections() {
                 { h: t('exp.repeat'), body: [t('exp.repeat.sub')] },
                 { h: t('exp.seg.battle'), body: [t('bt.note')] },
                 { h: t('exp.seg.report'), sub: t('rep.log.sub', rounds), body: [t('rep.contract'), t('rep.injuryNote')] },
+                { h: t('exp.commission.h'), body: [t('exp.commission.note')] },
             ],
         },
         {
@@ -1292,7 +1334,7 @@ function helpSections() {
                 { h: t('eq.sins.h'), body: [t('eq.sins.note')] },
                 { h: t('ch.attr.h'), sub: t('ch.attr.sub'), body: [t('ch.attr.note')] },
                 { h: t('ch.detail.h'), body: [t('ch.detail.note')] },
-                { h: t('ch.items.h'), body: [t('ch.equip.hint'), t('ch.salvageHint'), t('eq.inv.note')] },
+                { h: t('ch.items.h'), body: [t('ch.equip.hint'), t('ch.salvageHint'), t('ch.upgradeHint'), t('eq.inv.note')] },
             ],
         },
         {
@@ -1310,6 +1352,14 @@ function helpSections() {
             title: t('nav.research'),
             groups: [
                 { h: t('rs.h'), sub: t('rs.open'), body: [t('rs.note'), t('rs.note.cond')] },
+                { h: t('rs.research.h'), body: [t('rs.research.note')] },
+            ],
+        },
+        {
+            title: t('nav.base'),
+            groups: [
+                { h: t('exp.bench.h'), body: [t('exp.bench.note')] },
+                { h: t('ex.h'), body: [t('ex.todo')] },
             ],
         },
         {

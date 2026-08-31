@@ -1,7 +1,7 @@
 attr_id,attr_kr,attr_en,abbr,combat_stat,dispatch,description_kr
 str,힘,Strength,STR,atk_physical,mine,물리 공격력 계수 · 파견: 광산(채광) ⚠제안 — 힘 배정·파견처명·산출 미확정
 agi,민첩,Agility,AGI,action_period,-,공격속도·캐스팅 속도 계수 — 두 이름은 같은 축이다 (행동 주기) · 파견: 미정 — 후보: 탐험 판정(파티 합산)
-int,지능,Intelligence,INT,atk_magic,lab,마법 공격력 계수 · 파견: 연구소(기술·레시피 해금)
+int,지능,Intelligence,INT,atk_magic,-,마법 공격력 계수 · 파견: 미정 — 2026-08-31 연구소(파견처) 삭제로 배정을 잃었다. 연구는 영웅 파견 없이 도는 별도 시스템이다 (base_expedition_design §2-2)
 vit,건강,Vitality,VIT,fhr,-,상태이상 회복 속도 계수 (2026-08-25 재배정) — 최대 HP는 담당하지 않는다. 상태이상 저항(확률 차단)은 삭제. 상태이상 미구현이라 현재 실질 휴면 · 파견: 미정 — 후보: 탐험 판정(파티 합산)
 luck,운,Luck,LCK,item_find|gold_find,forge,**전투 계산 밖** — 드랍률·골드 획득 계수 (2026-08-26 감각→운 재정의). 명중·회피 폐지로 감각의 전투 역할이 비어 비전투 전담으로 재정의했다. 전투와 드롭 양쪽에 걸면 어느 파티에나 넣는 게 정답인 우월 능력치가 되어 편성 결정이 사라진다 — 그래서 전투 계수는 주지 않는다 (hero_design §4-1) · 파견: 제련소(제작·강화 성공률/품질)
 ldr,통솔,Leadership,LDR,-,-,전투 계수 없음 — 회복량·파티 보정 2026-08-25 삭제 (회복은 마법 공격력 비례 · 파티 버프는 스킬 효과). ⚠ 전투·파견 둘 다 공백 · 파견: 미정 — 후보: 탐험 판정(파티 합산)

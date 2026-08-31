@@ -5,7 +5,7 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v6 (2026-08-30)
+ * 세이브 형식 v7 (2026-08-31)
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
@@ -17,7 +17,7 @@
  *   progress: {cleared: [stageId]},
  *   codexCards: {monsterId: n}   — 도감 레벨의 출처. 누적 카운트, 소모 없음 (monster_design §8)
  *   codexKills: {monsterId: n}   — 기록만. 레벨의 트리거가 아니다
- *   counters: {hero, item, battle, tavern},
+ *   counters: {hero, item, battle, tavern, tactic, upgrade},
  *   run: {stageId, repeat, lastAt, durationSec} | null,
  *   lastReport: {...} | null,
  *   notice: {kind:'runClosed', stageId, at, seenAt} | null   — 재접속 알림 (배너 1회)
@@ -42,13 +42,17 @@
  *   v4 → v5 (2026-08-30 — 선술집 리롤 쿨다운):
  *     · `tavern` 이 없으면 `{rerolledAt: null, hired: []}` — **쿨다운이 열린 상태**로 올린다.
  *       옛 세이브는 리롤한 적이 없어 기다린 시간을 소급할 근거가 없고, 닫힌 채로 올리면 접속하자마자 골드를 물린다
+ *   v6 → v7 (2026-08-31 — 강화 재정의 R25):
+ *     · `items[*].up = 0` · `counters.upgrade = 0` — 강화한 적이 없는 상태.
+ *       옛 아이템의 watk·implicit·접사 값은 전부 강화 이전 값이라 소급할 것이 없고, up=0 이면 파생 배율이 1이라
+ *       이관이 전투 수치를 흔들지 않는다
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯 9·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /**
  * @param {object} deps
@@ -88,7 +92,7 @@ export function createGameSystem(deps) {
             heroes: [], party: [], items: {}, bag: [],
             progress: { cleared: [] },
             codexCards: {}, codexKills: {},
-            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0 },
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0 },
             run: null, lastReport: null, notice: null,
             tavern: { rerolledAt: null, hired: [] },
             tactics: { slots: {} },
@@ -157,6 +161,18 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v6 → v7 — 장비 강화 (item_design §1 개정 2026-08-31).
+     * ⚠ 이름만 닮았을 뿐 `item.upgrade`(장비 강화)와는 남남이다 — 이쪽은 스키마 버전을 올린다.
+     * 강화한 적이 없는 상태로 올린다: `up = 0` 이면 베이스 배율이 1이라 능력치가 한 칸도 안 움직인다.
+     */
+    function upgradeV6(s) {
+        for (const it of Object.values(s.items ?? {})) it.up = it.up ?? 0;
+        s.counters.upgrade = s.counters.upgrade ?? 0;
+        s.version = 7;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -168,13 +184,14 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
         if (s.version === 3) s = upgradeV3(s);
         if (s.version === 4) s = upgradeV4(s);
         if (s.version === 5) s = upgradeV5(s);
+        if (s.version === 6) s = upgradeV6(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -239,7 +256,7 @@ export function createGameSystem(deps) {
      * 전술 보너스는 **파티에 든 영웅에게만** 붙는다 (tactic_card_design §1 「파티 단위」) — 조건이 편성을 세는데
      *   편성 밖 영웅이 그 결과를 받으면 인과가 깨진다. 벤치 영웅의 시트에 안 붙는 것이 맞다.
      */
-    const heroCombat = (state, h) => H.computeCombat(h, heroItems(state, h), codexBonus(state),
+    const heroCombat = (state, h) => H.computeCombat(h, heroItems(state, h).map(I.effective), codexBonus(state),
         state.party.includes(h.uid) ? tacticBonus(state) : null);
 
     /* ── 장비 ── */
@@ -292,6 +309,43 @@ export function createGameSystem(deps) {
         delete state.items[itemUid];
         state.resources.dust += dust;
         return { ok: true, dust };
+    }
+
+    /* ── 강화 (item_design §1 개정 2026-08-31 — R25) ── */
+
+    /**
+     * 강화 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`tavernState`·`masteryState` 와 같은 규칙).
+     * `optionAt` = 다음 옵션 상승이 걸리는 단계. 얼마가 나가고 무엇이 걸려 있는지를 화면이 계산하지 않는다.
+     */
+    function upgradeState(state, itemUid) {
+        const it = state.items[itemUid];
+        if (!it) return null;
+        const up = it.up ?? 0, max = I.upgradeMax(), cost = I.upgradeCost(it);
+        const next = up + 1;
+        const interval = B.equip_upgrade_option_interval;
+        const optionAt = next <= max ? Math.ceil(next / interval) * interval : null;
+        return {
+            up, max, cost, gold: state.resources.gold,
+            canUpgrade: cost != null && state.resources.gold >= cost,
+            optionAt: optionAt != null && optionAt <= max ? optionAt : null,
+        };
+    }
+
+    /**
+     * 강화 1단계 — 골드를 내고 `up` 을 올린다.
+     * **가방·착용을 가리지 않는다** — 소유물에 하는 일이지 자리에 하는 일이 아니다(분해와 갈리는 지점).
+     * rng 는 강화 전용 스트림이라 전투·선술집·전술 어느 수열과도 안 섞인다 (INTERFACE §5-1).
+     */
+    function upgradeItem(state, itemUid) {
+        const it = state.items[itemUid];
+        if (!it) return { ok: false, err: 'missing' };
+        const cost = I.upgradeCost(it);
+        if (cost == null) return { ok: false, err: 'maxUp' };
+        if (state.resources.gold < cost) return { ok: false, err: 'gold' };
+        state.resources.gold -= cost;
+        const rng = makeRng(deriveSeed(state.seed ^ 0xF0C3, ++state.counters.upgrade));
+        const r = I.upgrade(rng, it);
+        return { ok: true, up: r.up, cost, affix: r.affix };
     }
 
     /* ── 파티 ── */
@@ -566,7 +620,7 @@ export function createGameSystem(deps) {
 
     return {
         newGame, serialize, deserialize, canLoad,
-        heroById, heroItems, heroCombat, isInjured,
+        heroById, heroItems, heroCombat, isInjured, upgradeState, upgradeItem,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage,
         toggleParty, tickInjuries,

@@ -1,0 +1,8 @@
+class_id,key_attr,name_kr,name_en,role_kr,role_en,release,description_kr
+warrior,str,전사,Warrior,근접 물리,Melee Physical,main,-
+knight,vit,기사,Knight,탱커 · 수호,Tank · Guardian,main,⚠ 건강은 제안 — 건강이 HP 를 떠나 상태이상 회복 속도만 밀게 된 뒤(08-25) 탱커의 주력 축은 미확정
+mage,int,마법사,Mage,마법,Magic,main,-
+archer,luck,궁수,Archer,원거리 물리,Ranged Physical,main,⚠ 운은 이름만 따라간 것이다 (08-26 감각→운) — 전투 계수가 없는 축이 주력이 됐다 · 물리 공격력을 쓰는데 힘이 안 곱해지므로 str 재배정이 유력하나 기획 미결 (GAME_DESIGN §10 · hero_design §4-1-1)
+priest,int,사제,Priest,지원 · 회복,Support · Healing,main,사제 = 순수 캐스터(마법사와 무기 풀 공유) → 파워 출처는 마법 공격력 = 지능 (battle_design §8 · 08-25)
+assassin,agi,암살자,Assassin,치명 · 속도,Crit · Speed,expansion,-
+necromancer,int,네크로맨서,Necromancer,소환,Summoning,expansion,-

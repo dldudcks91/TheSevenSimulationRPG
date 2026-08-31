@@ -50,7 +50,9 @@ Image.open(src_png).convert('RGB').save(dst_webp, 'WEBP', quality=88, method=6)
 
 ```
 faces/
-├── pixel16/     ← 스타일 1 (현행 기본) — 16-bit 도트그래픽, 배경 팔레트에 맞춤
+├── cartoon/     ← 스타일 1 (**현행 기본** — 2026-08-31) — 다크 SD 카툰 흉상 (faces/cartoon/README.md)
+│   └── monster_<idx>.png
+├── pixel16/     ← 스타일 2 — 16-bit 도트그래픽, 배경 팔레트에 맞춤
 │   └── monster_<idx>.png
 └── example/     ← **스타일 아님** — 생성용 스타일 앵커 이미지. 게임이 로드하지 않는다 (faces/example/README.md)
 ```
@@ -74,7 +76,7 @@ faces/
 > 폴백 그림이 둘로 갈린다: **원형 이니셜** = `monster.csv:face=0`(그 몬스터는 원래 아트가 없다) · **네모 칸 안 이니셜**(관전) = 그 스타일에만 파일이 없다.
 > 새 스타일을 그릴 때 **무엇이 아직 안 채워졌는지 화면에서 바로 보인다.**
 
-### pixel16 — 현행 기본
+### pixel16 — 스타일 2 (2026-08-31 까지 기본이었다)
 
 TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 떠 보였다 — `docs/reference/monster_art_prompt.md` §0).
 프롬프트 SSOT 의 공통 스타일 블록이 `16-bit pixel art, dark fantasy` 라 폴더 이름을 거기서 땄다.
@@ -104,4 +106,4 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ---
 
-*마지막 업데이트: 2026-08-30 (**faces/ 를 스타일 폴더로** — 현행 아트를 `faces/pixel16/` 로 이동 · `FACE_STYLES` 목록 + `?face=` 로 통째 교체 · 스타일에 없는 그림은 이니셜로 폴백(그리는 중에도 게임이 돈다) · 없는 `face_chapter_1.png` 줄 삭제) · 2026-08-28 (`assets/inherited/` → `assets/art/` 리네임 · faces/ 를 계승 크롭 아트에서 신규 도트그래픽으로 교체, 읽기 전용 해제) · 2026-08-22 (배경 4종 포크 + WebP 변환)*
+*마지막 업데이트: 2026-08-31 (**기본 스타일 = cartoon** — `FACE_STYLES` 의 첫 항목이 기본값이라 순서를 바꿨다(`ui/mock.js`). `?face=` · localStorage 는 그대로 우선한다 — 옛 선택이 저장돼 있으면 그쪽이 이긴다. 사용자 지시) · 2026-08-30 (**faces/ 를 스타일 폴더로** — 현행 아트를 `faces/pixel16/` 로 이동 · `FACE_STYLES` 목록 + `?face=` 로 통째 교체 · 스타일에 없는 그림은 이니셜로 폴백(그리는 중에도 게임이 돈다) · 없는 `face_chapter_1.png` 줄 삭제) · 2026-08-28 (`assets/inherited/` → `assets/art/` 리네임 · faces/ 를 계승 크롭 아트에서 신규 도트그래픽으로 교체, 읽기 전용 해제) · 2026-08-22 (배경 4종 포크 + WebP 변환)*
