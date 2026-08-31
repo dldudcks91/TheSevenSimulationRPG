@@ -81,8 +81,7 @@ drop shadow, background scenery, ground plane, text, watermark, multiple charact
 
 ## 3. 크기 규격 (`monster.csv:size_type`)
 
-`size_type` 은 진형·타겟팅용으로 보존된 컬럼이지만(monster_design.md §7),
-**아트 발주 기준으로는 지금 바로 쓴다.**
+`size_type` 은 **전투에는 안 쓰기로 확정됐다** [2026-08-31, monster_design.md §7] — 진형·타겟팅 대기용 보류가 아니라 **아트 발주 전용 분류로 존치**가 최종 결론이다.
 
 | size_type | 기준 | 캔버스 세로 점유 | CH1-1 해당 |
 |---|---|---|---|
