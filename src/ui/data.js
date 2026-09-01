@@ -2,7 +2,8 @@
  * 데이터 로더 + 시스템 조립 — CSV(SSOT)를 fetch 해서 game_logic 시스템들에 **주입**한다.
  *
  * fetch 는 브라우저 API 라 여기(ui/)에 있다. 파싱은 game_logic/csv.js (순수).
- * 이름 ko/en · 얼굴 유무 · 챕터 죄종 · 직업 · 장비 부위/위치 · 아이템 베이스 · 접사 정의 · 영웅 이름/특성 풀이
+ * 이름 ko/en · 얼굴 유무 · 챕터 죄종 · 직업 · 장비 부위/위치 · 아이템 베이스 · 접사 정의 · 영웅 이름/특성 풀 ·
+ *   스킬 아이콘/설명(2026-09-01) · 스킬 태그 이름(2026-09-01)이
  *   전부 CSV 다 — mock.js 에 남은 게임 데이터는 죄종(`SINS`)·정예 특성 둘뿐이고 나머지는 화면 전용 사전·자산 경로다.
  * mock.js 의 BALANCE 미러는 폐지했다 — balance.csv 를 직접 읽는다 (한 곳만 고치면 된다).
  *
@@ -36,6 +37,7 @@ export const D = {
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
+    skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — 「조건 → 효과」 1행 = 옵션 1개
@@ -61,7 +63,7 @@ export let SYS = null;
 
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
-    'codex_level', 'codex_series', 'weapon_group', 'skill', 'hero_attribute', 'combat_stat', 'chapter',
+    'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait'];
 
@@ -73,7 +75,7 @@ export async function loadData(base = './data/') {
     // 원문 보관 — 골든 스냅샷이 파일별 해시를 뜬다 (dev/golden.js). 파싱 전이라 컬럼 추가·행 순서도 걸린다
     FILES.forEach((f, i) => { D.csvText[f] = texts[i]; });
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
-        weaponGroup, skillRow, heroAttr, combatStat, chapter, masteryNode,
+        weaponGroup, skillRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption,
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow] = texts.map(parseCsv);
 
@@ -114,6 +116,7 @@ export async function loadData(base = './data/') {
     }));
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
     D.skillRows = skillRow;
+    D.skillTagRows = skillTagRow;
     D.masteryNodes = masteryNode;
     D.tacticSlots = tacticSlot;
     D.tacticOptions = tacticOption;
@@ -170,19 +173,28 @@ export const codexStages = () => (D.stageList ?? []).map(s => {
     return { id: s.stage_id, chapter: s.chapter, num: s.stage_num, name: stageName(s), monsters: [...normals, { id: s.boss_monster_idx, boss: true }] };
 });
 /**
- * 액티브 한 줄 — 이름 · 표기 쿨은 `skill.csv`(SSOT), 아이콘 · 설명은 `mock.js` 표시 사전.
+ * 액티브 한 줄 — 이름 · 표기 쿨 · 아이콘 · 설명이 **전부 `skill.csv`** 다 (2026-09-01 mock 표시 사전 폐지).
  * 관전 카드 · 스킬 칸 · 툴팁이 같은 한 곳에서 읽는다 (SCREEN_DESIGN §4-2).
+ * 없는 id 는 빈 칸이 아니라 기본 글리프로 — 스킬이 늘어도 화면이 비지 않는다.
  */
 export const skillInfo = id => {
     const r = (D.skillRows ?? []).find(x => x.skill_id === id);
-    const disp = M.skillDisplay(id);
     return {
         id,
         name: r ? { ko: r.name_kr, en: r.name_en } : { ko: id, en: id },
         cd: r ? Number(r.cool_sec) : 0,
-        icon: disp.i,
-        desc: disp.d,
+        icon: r?.icon ?? '✦',
+        desc: r ? { ko: r.desc_kr, en: r.desc_en } : null,
     };
+};
+
+/**
+ * 스킬 태그 표시 이름 — `skill_tag.csv:name_kr/name_en` 이 SSOT 다 (skill_design §11).
+ * 읽는 곳 — 연구 탭의 전술 조건 (`tactic_option.csv:cond_arg`). 없는 id 는 id 를 그대로 보여 준다(빈 문장 방지).
+ */
+export const skillTagName = id => {
+    const r = (D.skillTagRows ?? []).find(x => x.tag_id === id);
+    return r ? { ko: r.name_kr, en: r.name_en } : { ko: id, en: id };
 };
 
 /**
@@ -195,16 +207,20 @@ export const eliteName = (sin, baseId) => NAMING.eliteName(sin, monsterName(base
 /** 시스템 조립 — 테스트 페이지도 같은 조립을 쓴다 (데이터만 바꿔 끼울 수 있다) */
 export function buildSystems(d) {
     const sins = Object.keys(M.SINS);
+    // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다.
+    // **hero 보다 먼저** 만든다: 영웅이 생성 시 고유 스킬을 굴리려면 후보 id 목록이 먼저 있어야 한다
+    const skill = createSkillSystem({ balance: d.balance, rows: d.skillRows ?? [], tagRows: d.skillTagRows ?? [] });
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups,
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
+        // 고유 스킬 풀 = `skill.csv:innate_pool=1` 인 행(id 만) — hero 는 skill 시스템이 아니라 id 목록을 받는다.
+        // ⚠ 행 순서가 결정론 계약이다 — 풀에서 빼거나 넣으면 같은 시드가 다른 고유를 굴린다 (INTERFACE §5-2)
+        skillPool: skill.list.filter(sk => sk.innatePool).map(sk => sk.id),
     });
     const item = createItemSystem({
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: ELEMENTS,
         itemBases: d.itemBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
     });
-    // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다
-    const skill = createSkillSystem({ balance: d.balance, rows: d.skillRows ?? [] });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
     const tactic = createTacticSystem({
         slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: d.classes,

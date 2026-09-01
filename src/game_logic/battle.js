@@ -16,18 +16,20 @@
  *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 마법 무기 개체의 원소 (§9-5)
  *   · 반사는 비직격 — 감쇠·치명 없이 공격자 HP 를 직접 깎고 아무것도 유발하지 않는다 (§9-6)
  *
- *   · **액티브 스킬**(battle_design §3 · §6 · §7 · skill_design §9) — 정의·배정·선택은 skill.js, **실행이 여기다**:
- *     행동 주기가 도래하면 준비된 액티브 중 하나를 쓰고(한 차례에 하나), 없으면 기본 공격.
- *     쿨은 실시간 초(시전 순간 `readyAt = t + cool`) · 전투 시작 시 전부 준비 → 첫 차례는 priority 로 갈린다.
- *     버프 창도 실시간 초 — 중첩 없이 재시전은 `until` 갱신, 다른 스킬의 같은 스탯은 덧셈.
+ *   · **유닛 생성은 `makeUnit` 하나다** — 영웅도 몬스터도 같은 생성자를 지난다 (§8-1). 몬스터는 `combatFromMonster` 가
+ *     먼저 `computeCombat` 과 **같은 모양**으로 눕혀 준다. 필드가 한 곳에만 있으므로 양쪽 유닛이 갈릴 수 없다.
  *     `atk_pct` 버프는 **새 곱셈 층이 아니라 상시 % 와 같은 괄호에 덧셈**이다 (§9-2 "괄호는 둘뿐") —
  *     그래서 유닛이 `atkBase`(괄호 앞) 와 `atkPct`(괄호 안 Σ 상시 %) 를 따로 든다.
+ *   · **액티브 스킬의 실행은 `skill_runtime.js`** (battle_design §3 · §6 · §7 · skill_design §9) — 정의·배정·선택은 skill.js.
+ *     이 파일에 남는 것은 **전투 진행**이다: 직격 1회(`strikeOnce`) · 타겟팅 · 전투불능 · 라운드 편성 · 정산.
  *     배리어는 HP 밖 흡수 풀이고, 흡혈·반사는 **배리어가 먹은 몫을 포함한 dmg** 에 비례한다(직격이 들어간 사실은 같다).
+ *   · **사건 훅** — `strikeOnce` 가 `hit`/`hitTaken`/`kill` 을, `downed` 가 `down` 을, 런타임이 `cast` 를 발화한다.
+ *     유닛의 `reactions` 가 비면 아무 일도 없다 — 발화 **지점**이 곧 rng 순서 계약이다 (INTERFACE §5-2).
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   타겟팅: 진형·어그로 미확정 → 랜덤. **도발**(taunt 창)은 그 임시 규칙 **위에 얹은** 임시 규칙이다 —
  *     창이 켜진 파티원이 있으면 적의 단일 대상 선택이 그 유닛으로 고정되고 타겟 rng 를 쓰지 않는다 (skill_design §7 미확정).
- *   다단타·순환 중 대상이 쓰러지면 남은 타수를 **버린다**(재지정 없음) — 재지정 규칙 미확정.
+ *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
  *   `skill.csv:status`(결빙 등)는 `status_effect.csv` 가 없어 코드가 읽지 않는다.
  *   전직·마스터리·패시브는 미구현 — 지금 도는 것은 직업 기본 액티브뿐이다 (프로토타입 §9-0).
  *   몬스터의 치명·반사·피해 감소는 0 — 정예 특성(elite_trait.csv)이 붙기 전까지 값이 없다 (§8-1 "몬스터는 부분집합만").
@@ -39,10 +41,9 @@
  */
 
 import { createFormula } from './formula.js';
+import { createHooks, createSkillRuntime } from './skill_runtime.js';
 
 const TICK = 0.1;
-/** 쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로는 안 내려간다. 0 이 되면 스킬이 매 차례 나가 예산이 무너진다 (INTERFACE §5-3) */
-const CD_MIN_MULT = 0.1;
 
 /**
  * @param {object} data
@@ -74,37 +75,76 @@ export function createBattleSystem(data) {
         stageMonsters(stage).find(m => m.attack_type !== 'physical')?.attack_type ?? 'physical';
 
     /**
-     * 몬스터 → 전투 유닛. 영웅과 **같은 필드 모양**을 갖는다 (§8-1) — 대부분의 축은 값이 0인 부분집합.
+     * 전투 유닛 하나 — **영웅도 몬스터도 여기를 지난다** (§8-1). 필드명은 `formula.strike` 가 읽는 이름 그대로다.
+     * `c` 는 `hero.computeCombat` 결과 모양이고, 몬스터는 `combatFromMonster` 가 먼저 같은 모양으로 눕혀 준다 —
+     *   유닛 모양을 두 곳에 적으면 반드시 갈리므로 생성자는 하나뿐이어야 한다.
+     * 버프 괄호 — `atk` 는 이미 Σ 상시 %(`atk_pct_sum`)가 곱해진 값이라, 버프를 **같은 괄호에 더하려면**
+     *   괄호 앞 밑수(`atkBase`)와 괄호 안 합(`atkPct`)을 분리해 둬야 한다 (§9-2).
+     * @param extra 자리·출처가 정하는 것 — `key` · `uid`/`monsterId` · `next` · `actives` · 보상 축
+     */
+    function makeUnit(side, c, extra = {}) {
+        const atk = c.atk_physical ?? c.atk_magic ?? 0;
+        const atkPct = c.atk_pct_sum ?? 0;
+        const matk = c.atk_magic ?? 0;
+        return {
+            side,
+            hp: c.hp_max, hpMax: c.hp_max,
+            atk, atkBase: atk / (1 + atkPct / 100), atkPct,
+            matk,                                    // 회복량의 밑수 (battle_design §9-2)
+            // 회복 밑수도 공격력과 **같은 괄호**를 탄다 — atk_pct 창이 여기도 걸린다 (skill_effects:EFFECTS.atk_pct)
+            matkBase: matk / (1 + atkPct / 100),
+            atkType: c.attack_type,                  // physical 또는 원소 (monster_design §2 · §9-5)
+            def: c.defense,
+            res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
+            lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 dlvl (§9-4)
+            resMaxBonus: c.res_max_bonus, dr: c.damage_reduction,
+            defIgnore: c.def_ignore, resReduction: c.res_reduction,
+            skillMult: 1, bonusPct: c.dmg_bonus_pct, // 도감·특효 보정 — strike 가 읽는 이름과 같아야 한다
+            crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
+            // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
+            regen: c.hp_regen ?? 0, regenAcc: 0,
+            cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축 % — 시전 시점에 곱한다
+            period: c.action_period, basePeriod: c.action_period,
+            next: 0,
+            actives: [], buffs: {}, barrier: null,
+            reactions: [],                           // 사건 훅 등록 자리 (⚠ 지금은 아무도 싣지 않는다)
+            goldFind: c.gold_find, itemFind: c.item_find,
+            ...extra,
+        };
+    }
+
+    /**
+     * 몬스터 소재값 → **`computeCombat` 과 같은 모양**. 영웅 체계의 부분집합이라 없는 축은 0 이다 (§8-1).
      *   hp·공격력 = 소재값 × 등급 배율 × 전역 스케일 (성장 축)
      *   방어      = 소재값 × 등급 배율 × 전역 스케일 (비율 축 — monster_design §7-1 규칙 생성)
      *   저항      = **직접 %** — 배율을 받지 않고 등급은 `spawn_grade.res_add` 로 %p 가산만 한다
+     * ⚠ 원소 공격 몬스터도 값은 `atk_physical` 에 둔다 — 원소는 `attack_type` 이 들고, 마법 공격력은
+     *   **회복의 밑수**라 몬스터에게 없다. `atk_magic` 에 넣으면 matk 가 0 이 아니게 되어 체계가 갈린다.
      */
+    const combatFromMonster = (m, g, lvl) => ({
+        hp_max: Math.round(m.hp * g.hp_mult * B.monster_hp_scale),
+        atk_physical: m.attack * g.atk_mult * B.monster_atk_scale,
+        attack_type: m.attack_type,
+        defense: m.defense * g.def_mult * B.monster_def_scale,
+        res_fire: m.res_fire + g.res_add, res_cold: m.res_cold + g.res_add,
+        res_lightning: m.res_lightning + g.res_add, res_poison: m.res_poison + g.res_add,
+        level: lvl,
+        // 몬스터의 치명·반사·피해 감소·재생·쿨감소는 0 — 정예 특성(elite_trait.csv)이 붙기 전까지 값이 없다
+        res_max_bonus: 0, damage_reduction: 0, def_ignore: 0, res_reduction: 0, dmg_bonus_pct: 0,
+        crit_rate: 0, crit_damage: B.base_crit_damage_pct,
+        life_steal: 0, reflect_damage: 0, hp_regen: 0, cooldown_reduction: 0,
+        action_period: m.action_period, atk_pct_sum: 0,
+    });
+
+    /** 몬스터 → 전투 유닛. 보상 축(경험치·골드·드롭 배율)만 등급에서 따로 얹는다 — 영웅에게 없는 필드다 */
     function makeEnemy(key, monsterId, grade, lvl, extra = {}) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
-        const hp = Math.round(m.hp * g.hp_mult * B.monster_hp_scale);
-        const atk = m.attack * g.atk_mult * B.monster_atk_scale;
-        return {
-            key, side: 'enemy', monsterId, grade,
-            hp, hpMax: hp,
-            atk,
-            // 버프 괄호 — 몬스터는 상시 % 도 마법 공격력도 없다(영웅 체계의 부분집합 §8-1)
-            atkBase: atk, atkPct: 0, matk: 0,
-            atkType: m.attack_type,                 // physical 또는 스테이지 원소 (monster_design §2)
-            def: m.defense * g.def_mult * B.monster_def_scale,
-            res: {
-                fire: m.res_fire + g.res_add, cold: m.res_cold + g.res_add,
-                lightning: m.res_lightning + g.res_add, poison: m.res_poison + g.res_add,
-            },
-            lvl,                                    // 적중률의 레벨 = 스테이지 dlvl (§9-4 — 몬스터마다 두지 않는다)
-            period: m.action_period, basePeriod: m.action_period, next: 0,
-            actives: [], buffs: {}, barrier: null,  // 몬스터 액티브는 미구현 (정예 특성과 함께 후속)
-            crit: 0, critDmg: B.base_crit_damage_pct, defIgnore: 0, resReduction: 0,
-            skillMult: 1, bonusPct: 0, resMaxBonus: 0, dr: 0, ls: 0, reflect: 0,
-            regen: 0, regenAcc: 0, cdr: 0,          // 재생·쿨감소는 영웅 전용 — 몬스터 쪽 배정은 정예 특성과 함께 후속
+        return makeUnit('enemy', combatFromMonster(m, g, lvl), {
+            key, monsterId, grade,
             expReward: m.exp_reward * g.exp_mult, goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
             ...extra,
-        };
+        });
     }
 
     const pickTwo = (rng, arr) => {
@@ -143,8 +183,9 @@ export function createBattleSystem(data) {
     }
 
     /**
-     * @param partyUnits [{uid, combat:{...}, actives?: [skillId]}] — combat = heroSystem.computeCombat 결과,
-     *   actives = 그 영웅이 들고 있는 액티브 id 목록(skill.activesFor). 없거나 비면 기본 공격만 돈다
+     * @param partyUnits [{uid, combat:{...}, actives?: [{id, source}], reactions?: [{on, fn}]}] —
+     *   combat = heroSystem.computeCombat 결과, actives = 그 영웅의 액티브 **인스턴스** 목록(skill.activesFor).
+     *   없거나 비면 기본 공격만 돈다. reactions = 사건 훅 등록(⚠ 지금은 아무도 싣지 않는다)
      * @returns 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      */
     function simulate(partyUnits, stageId, rng) {
@@ -152,41 +193,18 @@ export function createBattleSystem(data) {
         const pool = stagePool(stage);
         const rounds = B.rounds_per_stage;
 
-        // 파티 유닛 — 몬스터와 **같은 필드 모양**이다 (§8-1). 필드명은 formula.strike 가 읽는 이름 그대로
-        const party = partyUnits.map((p, i) => {
-            const c = p.combat;
-            const atk = c.atk_physical ?? c.atk_magic ?? 0;
-            // 버프 괄호 — atk 는 이미 Σ 상시 %(atk_pct_sum)가 곱해진 값이라, 버프를 **같은 괄호에 더하려면**
-            // 괄호 앞 밑수(atkBase)와 괄호 안 합(atkPct)을 분리해 둬야 한다 (§9-2)
-            const atkPct = c.atk_pct_sum ?? 0;
-            return {
-                key: `p${i}`, side: 'party', uid: p.uid,
-                hp: c.hp_max, hpMax: c.hp_max,
-                atk, atkBase: atk / (1 + atkPct / 100), atkPct,
-                matk: c.atk_magic ?? 0,                     // 회복량의 밑수 (battle_design §9-2)
-                atkType: c.attack_type,
-                def: c.defense,
-                res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
-                lvl: c.level,
-                resMaxBonus: c.res_max_bonus, dr: c.damage_reduction,
-                defIgnore: c.def_ignore, resReduction: c.res_reduction,
-                skillMult: 1, bonusPct: c.dmg_bonus_pct,     // 도감·특효 보정 — strike 가 읽는 이름과 같아야 한다
-                crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
-                // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다. 출처는 지금 마스터리뿐
-                regen: c.hp_regen ?? 0, regenAcc: 0,
-                cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축 % — 시전 시점에 곱한다
-                period: c.action_period, basePeriod: c.action_period,
-                next: i * 0.3,           // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
-                // 전투 시작 시 액티브는 전부 준비(readyAt 0) — 첫 차례는 priority 로 갈린다 (battle_design §6)
-                actives: (SK ? p.actives ?? [] : []).map(id => {
-                    const def = SK.defs[id];
-                    if (!def) throw new Error(`battle: 알 수 없는 스킬 ${id}`);
-                    return { id, def, readyAt: 0 };
-                }),
-                buffs: {}, barrier: null,
-                goldFind: c.gold_find, itemFind: c.item_find,
-            };
-        });
+        // 파티 유닛 — 몬스터와 **같은 생성자**를 지난다 (§8-1). 자리가 정하는 것만 extra 로 얹는다
+        const party = partyUnits.map((p, i) => makeUnit('party', p.combat, {
+            key: `p${i}`, uid: p.uid,
+            next: i * 0.3,               // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
+            reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
+            // 전투 시작 시 액티브는 전부 준비(readyAt 0) — 첫 차례는 **1번 칸**이 나간다 (battle_design §6)
+            actives: (SK ? p.actives ?? [] : []).map(a => {
+                const def = SK.resolve(a);
+                if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
+                return { id: a.id, def, readyAt: 0, source: a.source };
+            }),
+        }));
         const avg = k => party.reduce((s, p) => s + (p[k] ?? 0), 0) / Math.max(1, party.length);
         const goldMult = 1 + avg('goldFind') / 100;
         const dropMult = 1 + avg('itemFind') / 100;
@@ -202,20 +220,27 @@ export function createBattleSystem(data) {
         };
 
         let t = 0, round = 1;
-        let enemies = [];
+        // 적 배열은 라운드마다 **갈아 끼운다** — 런타임이 속성으로 읽어야 옛 라운드를 가리키지 않는다 (skill_runtime @param units)
+        const units = { party, enemies: [] };
         let roundLog = null;
         const alive = list => list.filter(u => u.hp > 0);
+        const hooks = createHooks();
+        // 액티브 실행은 런타임 몫 — 전투 하나마다 새로 만든다(모듈 전역 상태 없음)
+        const rt = createSkillRuntime({
+            SK, B, rng, timeline, out, units,
+            strikeOnce, pickTarget, r1, EPS, hooks,
+        });
 
         const beginRound = () => {
             const sp = spawnRound(rng, stage, pool, round);
-            enemies = sp.list;
+            units.enemies = sp.list;
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
-            for (const e of enemies) e.next = 0.4 + rng() * 0.6;
-            roundLog = { n: round, kind: sp.type, killed: [], eliteSin: enemies.find(e => e.grade === 'elite')?.sin ?? null };
+            for (const e of units.enemies) e.next = 0.4 + rng() * 0.6;
+            roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
             out.rounds.push(roundLog);
             timeline.push({
                 t: r1(t), e: 'round', n: round, kind: sp.type,
-                enemies: enemies.map(e => ({
+                enemies: units.enemies.map(e => ({
                     key: e.key, monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? null,
                     traits: e.traits ?? null, hpMax: e.hpMax, period: e.period,
                 })),
@@ -248,36 +273,11 @@ export function createBattleSystem(data) {
             timeline.push({ t: r1(t), e: 'down', u: u.key });
             if (u.side === 'enemy') onKill(u);
             else out.downed.push(u.uid);
+            // 처치 정산(드롭 rng)이 **먼저** 돌아야 훅이 rng 를 써도 순서가 잠긴다 (INTERFACE §5-2)
+            hooks.emit('down', u, { t });
         };
 
-        /* ── 스킬 런타임 — 정의·선택은 skill.js, 실행이 여기다 (skill_design §9-3 · battle_design §7) ── */
-
-        /** 버프 창을 반영해 파생값을 다시 쓴다 — 공격력은 상시 % 와 **같은 괄호에 덧셈**(§9-2), 주기는 배율 감소 */
-        function refreshDerived(u) {
-            let atkAdd = 0, periodAdd = 0;
-            for (const b of Object.values(u.buffs)) {
-                if (b.stat === 'atk_pct') atkAdd += b.v;
-                else if (b.stat === 'period_pct') periodAdd += b.v;
-            }
-            u.atk = u.atkBase * (1 + (u.atkPct + atkAdd) / 100);
-            // 주기는 **다음 차례 예약부터** 걸린다 — 이미 잡힌 u.next 는 건드리지 않는다 (§9-3)
-            u.period = u.basePeriod * (1 - periodAdd / 100);
-        }
-
-        /** 창 만료 — 행동 순회 **앞에서** 처리한다. rng 를 쓰지 않으므로 수열이 밀리지 않는다 */
-        function expire(u, at) {
-            let changed = false;
-            for (const id of Object.keys(u.buffs)) {
-                if (u.buffs[id].until <= at + EPS) {
-                    delete u.buffs[id];
-                    timeline.push({ t: r1(at), e: 'buffEnd', u: u.key, s: id });
-                    changed = true;
-                }
-            }
-            // 배리어도 같은 조건 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3)
-            if (u.barrier && u.barrier.until <= at + EPS) u.barrier = null;
-            if (changed) refreshDerived(u);
-        }
+        /* ── 전투 진행 — 타겟팅 · 직격 1회 · 전투불능 (액티브 실행은 skill_runtime.js) ── */
 
         /** 도발자 — `taunt` 창이 켜진 생존 유닛 중 배열 순 첫 번째 (skill_design §9-2 기사 항) */
         const hasTaunt = list => list.find(p => p.hp > 0 && Object.values(p.buffs).some(b => b.stat === 'taunt')) ?? null;
@@ -335,6 +335,9 @@ export function createBattleSystem(data) {
             if (s) ev.s = s;
             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
             timeline.push(ev);
+            // 사건 훅 — 등록된 반응이 없으면 아무 일도 없다. 핸들러가 rng 를 쓰면 **이 자리에서** 소비한다
+            hooks.emit('hit', u, { t, d: target, dmg, crit, s });
+            hooks.emit('hitTaken', target, { t, a: u, dmg, crit, s });
             // 반사 — 비직격. 감쇠·치명 없이 공격자 HP 를 직접 깎고 흡혈·반사를 유발하지 않는다 (§9-6)
             if (target.reflect > 0 && u.hp > 0) {
                 const back = F.indirect(dmg * target.reflect / 100);
@@ -342,104 +345,17 @@ export function createBattleSystem(data) {
                 timeline.push({ t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp });
                 if (u.hp <= 0) downed(u);
             }
-            if (target.hp <= 0) downed(target);
+            if (target.hp <= 0) { downed(target); hooks.emit('kill', u, { t, d: target }); }
         }
-
-        /**
-         * 공격 스킬의 타겟팅 4종 (skill_design §9-3).
-         * 타격 도중 대상이 쓰러지면 **남은 타수는 버린다** — 재지정 규칙은 미확정(⚠).
-         */
-        function castAttack(u, def, foes) {
-            const mult = def.mult / 100;
-            if (def.target === 'enemy_all') {               // 생존 적 배열 순 전원 각 1회 — 타겟 rng 없음
-                for (const tgt of foes) {
-                    if (u.hp <= 0) break;
-                    if (tgt.hp > 0) strikeOnce(u, tgt, mult, def.element, def.id);
-                }
-                return;
-            }
-            if (def.target === 'enemy_chain') {             // 시작점 무작위 → 배열 순 전원, 순서마다 배율 감쇠
-                const start = Math.floor(rng() * foes.length);
-                for (let k = 0; k < foes.length; k++) {
-                    if (u.hp <= 0) break;
-                    const tgt = foes[(start + k) % foes.length];
-                    if (tgt.hp > 0) strikeOnce(u, tgt, mult * Math.pow(1 - def.decay / 100, k), def.element, def.id);
-                }
-                return;
-            }
-            if (def.target === 'enemy_rotate') {            // 시작점 무작위 → 돌아가며 hits 회 (모자라면 겹친다)
-                const start = Math.floor(rng() * foes.length);
-                for (let k = 0; k < def.hits; k++) {
-                    if (u.hp <= 0) break;
-                    const tgt = foes[(start + k) % foes.length];
-                    if (tgt.hp > 0) strikeOnce(u, tgt, mult, def.element, def.id);
-                }
-                return;
-            }
-            const tgt = pickTarget(u, foes);                // enemy_single — 같은 대상에게 hits 회 (다단타)
-            for (let k = 0; k < def.hits; k++) {
-                if (u.hp <= 0 || tgt.hp <= 0) break;
-                strikeOnce(u, tgt, mult, def.element, def.id);
-            }
-        }
-
-        /** 회복 — 마법 공격력 × 배율을 생존 아군 전원에게. rng 소비 없음 (battle_design §9-2) */
-        function castHeal(u, def) {
-            const amt = Math.round(u.matk * def.mult / 100);
-            const targets = def.target === 'self' ? [u] : alive(u.side === 'party' ? party : enemies);
-            for (const tgt of targets) {
-                tgt.hp = Math.min(tgt.hpMax, tgt.hp + amt);
-                timeline.push({ t: r1(t), e: 'heal', a: u.key, d: tgt.key, amt, dhp: tgt.hp, s: def.id });
-            }
-        }
-
-        /** 버프 창 — 중첩 없음, 같은 스킬 재시전은 `until` 갱신. 배리어는 흡수 풀을 다시 채운다 (battle_design §7) */
-        function castBuff(u, def) {
-            const targets = def.target === 'self' ? [u] : alive(u.side === 'party' ? party : enemies);
-            const until = t + def.dur;
-            for (const tgt of targets) {
-                tgt.buffs[def.id] = { stat: def.stat, v: def.value, until };
-                const ev = { t: r1(t), e: 'buff', u: tgt.key, s: def.id, stat: def.stat, v: def.value, until: r1(until) };
-                if (def.stat === 'barrier_pct') {
-                    const amt = Math.round(tgt.hpMax * def.value / 100);
-                    tgt.barrier = { amt, until, s: def.id };   // 만료는 buffs 쪽 창과 같은 조건으로 본다
-                    ev.amt = amt;
-                }
-                timeline.push(ev);
-                refreshDerived(tgt);
-            }
-        }
-
-        const act = u => {
-            const foes = alive(u.side === 'party' ? enemies : party);
-            if (foes.length === 0) return;
-            // 발동 선택 — rng 를 쓰지 않는다 (battle_design §3). 준비된 것이 없으면 기본 공격
-            const sel = SK && u.actives.length
-                ? SK.pickReady(u.actives, t, a => SK.castable(a.def, { self: u, allies: alive(u.side === 'party' ? party : enemies) }))
-                : null;
-            if (!sel) {
-                strikeOnce(u, pickTarget(u, foes), 1, null);
-                return;
-            }
-            const def = sel.def;
-            // 쿨은 실시간 초 — 시전 순간부터 (battle_design §6). 쿨감소는 **표기 쿨에 곱**한다 (combat_stat:cooldown_reduction)
-            sel.readyAt = t + def.cool * Math.max(CD_MIN_MULT, 1 - (u.cdr ?? 0) / 100);
-            out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
-            // `ready` = 이 스킬이 다시 준비되는 시각. 재생기가 쿨을 **계산하지 않고** 그리게 하려고 함께 싣는다
-            timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt) });
-            if (def.kind === 'attack') castAttack(u, def, foes);
-            else if (def.kind === 'heal') castHeal(u, def);
-            else castBuff(u, def);
-        };
 
         beginRound();
         while (true) {
             t += TICK;
             // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
-            for (const u of [...party, ...enemies]) if (u.hp > 0) expire(u, t);
+            for (const u of [...party, ...units.enemies]) if (u.hp > 0) rt.expire(u, t);
             // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다
             // (매 틱 소수점을 더하면 타임라인이 흘러넘치고 재생기가 정수 HP 와 어긋난다). rng 를 안 쓴다
-            for (const u of [...party, ...enemies]) {
+            for (const u of [...party, ...units.enemies]) {
                 if (u.hp <= 0 || !(u.regen > 0) || u.hp >= u.hpMax) continue;
                 u.regenAcc += u.regen * TICK;
                 const whole = Math.floor(u.regenAcc);
@@ -449,15 +365,15 @@ export function createBattleSystem(data) {
                 u.hp += amt;
                 timeline.push({ t: r1(t), e: 'regen', u: u.key, amt, dhp: u.hp });
             }
-            for (const u of [...party, ...enemies]) {
+            for (const u of [...party, ...units.enemies]) {
                 if (u.hp <= 0) continue;
                 u.next -= TICK;
-                if (u.next <= 0) { u.next = u.period; act(u); }
+                if (u.next <= 0) { u.next = u.period; rt.act(u, t); }
             }
             if (alive(party).length === 0) { out.reason = 'wipe'; break; }
             // 귀환 룰 — 전투불능자가 하나라도 나오면 그 자리에서 런을 접는다 (연쇄 전멸 방지, base_expedition_design §1-1).
             // 라운드 정리를 **먼저** 본다 — 마지막 타격과 같은 틱에 쓰러져도 그 라운드의 클리어는 클리어로 남는다
-            if (alive(enemies).length === 0) {
+            if (alive(units.enemies).length === 0) {
                 out.roundsCleared = round;
                 if (round >= rounds) { out.won = true; out.reason = 'clear'; break; }
                 if (alive(party).length < party.length) { out.reason = 'retreat'; break; }

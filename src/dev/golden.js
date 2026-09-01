@@ -100,9 +100,10 @@ const grewSig = (SYS, G) => {
 
 /**
  * 시작 파티 1개의 지문 — 영웅 3명의 생성 결과와 시작 무기.
- * `hero.drawDistinct`(이름·죄종·직업·특성) · `rollAttributes` · `rollCaps` · `item.startingWeapon` 이
- * 전부 여기 있다. 40런에 중복하지 않고 **시드마다 한 번만** 적는다 (파일 +2KB).
+ * `hero.drawDistinct`(이름·죄종·직업·특성) · `rollAttributes` · `rollCaps` · `rollInnate` ·
+ * `item.startingWeapon` 이 전부 여기 있다. 40런에 중복하지 않고 **시드마다 한 번만** 적는다 (파일 +2KB).
  * 능력치·상한은 **키 이름까지** 적는다 — `hero_attribute.csv` 행 순서가 곧 굴림 순서라 재정렬을 봐야 한다.
+ * 형식: `cls|sin|name|trait|innate|stats|caps|무기`
  */
 function partyFingerprint(SYS, B, NOW, seed) {
     const party = SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max);
@@ -113,6 +114,7 @@ function partyFingerprint(SYS, B, NOW, seed) {
         const w = G.items[h.equipped?.weapon];
         return [
             h.cls, h.sin, h.name?.en ?? '-', h.trait?.en ?? '-',
+            h.innate ?? '-',                          // 고유 스킬(생성 시 1회 굴림) — rng 소비 순서가 여기서 걸린다
             kv(h.stats), kv(h.caps),
             w ? dropSig(w) : '-',
         ].join('|');
@@ -158,6 +160,9 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
         grew: grewSig(SYS, G),                                        // ⚠ resolveBattle **뒤**의 상태 (grantXp)
         tactics,
         drops: res.drops.map(dropSig),
+        // 타임라인 전체의 지문 — 요약 필드가 못 보는 순서·값 변화를 잡는다.
+        // 어디가 깨졌는지는 위 필드들이 말하고 이 값은 「달라졌다」만 말한다
+        tl: csvHash(JSON.stringify(res.timeline)),
     };
 }
 
@@ -229,7 +234,7 @@ export function compareBalance(actual, expected) {
 }
 
 /**
- * 시작 파티 대조 — 영웅 생성(이름·죄종·직업·특성·능력치·상한)과 시작 무기가 한 번에 걸린다.
+ * 시작 파티 대조 — 영웅 생성(이름·죄종·직업·특성·고유 스킬·능력치·상한)과 시작 무기가 한 번에 걸린다.
  * `hero_name.csv`·`hero_trait.csv` 행 순서 뒤집기는 이 대조에서만 잡힌다.
  */
 export function compareParties(actual, expected, limit = 6) {

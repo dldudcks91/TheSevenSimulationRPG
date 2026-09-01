@@ -1,5 +1,5 @@
 /**
- * 영웅 시스템 — 생성(반고정: 이름 + 메인 죄종 + 시작 특성) / XP 성장 / 전투 능력치 계산.
+ * 영웅 시스템 — 생성(반고정: 이름 + 메인 죄종 + 시작 특성 + 고유 스킬) / XP 성장 / 전투 능력치 계산.
  *
  * 순수 모듈 — DOM·저장소·시계·Math.random 접근 없음. 난수는 전부 rng 인자로 주입받는다.
  * 데이터(밸런스 수치·이름 풀·직업 정의)는 생성자에서 주입받는다 (CLAUDE.md 개발 규칙).
@@ -38,6 +38,8 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
+ *   skillPool    — 고유 스킬 후보 id 목록 [skillId...] ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
+ *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
  */
 export function createHeroSystem(data) {
@@ -45,6 +47,7 @@ export function createHeroSystem(data) {
     const F = createFormula(B);        // 성장 곡선(growthMult)을 시뮬과 같은 함수에서 읽는다
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
+    const skillPool = data.skillPool ?? [];
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
 
     /* ── 마스터리 노드 (skill_design §3) — 정의는 CSV · 값은 balance.csv · 랭크는 영웅이 든다 ── */
@@ -138,15 +141,27 @@ export function createHeroSystem(data) {
         Object.fromEntries(statIds.map(id =>
             [id, stats[id] + Math.floor(rng() * (B.hero_attr_max - stats[id] + 1))]));
 
+    /**
+     * 고유 스킬 1개 — 영웅이 태어날 때 딱 한 번 굴린다 (hero_design §1).
+     * ⚠ 프로토타입 풀은 `skill.csv` **전 행**이다 — 고유 전용 행이 아직 없어 직업 액티브를 그대로 빌려 쓴다
+     *   (skill_design §9-0 개정 2026-09-01). 풀이 비면 **rng 를 한 번도 안 쓴다** — 소비 0회가 계약이다.
+     */
+    const rollInnate = rng => (skillPool.length ? skillPool[Math.floor(rng() * skillPool.length)] : null);
+
     /** 레어 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollStartParty 쪽의 일 */
     function rollHero(rng, { sin, cls, name, trait }) {
+        // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 능력치 → 상한 7회 → 고유 1회.
+        // 객체 리터럴 안에서 부르면 평가 순서가 문장으로 안 보여 순서가 조용히 밀린다
         const stats = rollAttributes(rng, keyAttrOf(cls));
+        const caps = rollCaps(rng, stats);
+        const innate = rollInnate(rng);
         return {
             uid: null,               // uid 발급은 state 의 일 (카운터 소유자)
             name, tier: 'rare', sin, cls, trait,
             level: 1, xp: 0,
             mastery: {}, masteryPoints: 0,   // 찍은 랭크 {nodeId: rank} · 남은 포인트 (죄종·직업 공유 풀)
-            stats, caps: rollCaps(rng, stats),
+            innate,                  // 고유 스킬 — 생성 시 확정 · 이후 불변 (hero_design §1 · 프로토타입 풀 = skill.csv 전 행)
+            stats, caps,
             equipped: {},            // 슬롯 초기화는 state 가 slots 정의로 채운다
             injuredUntil: null,
         };
@@ -294,7 +309,7 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollInnate, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus,
     };
 }

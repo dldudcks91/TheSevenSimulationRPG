@@ -35,7 +35,7 @@ import * as M from './mock.js';
 import { t, L, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
 import { bindTipNode, hideTip, heroTipCard } from './tip.js';
-import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, codexStages, skillInfo } from './data.js';
+import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, codexStages, skillInfo, skillTagName } from './data.js';
 import { loadSave, writeSave, clearSave } from './storage.js';
 import { makeRng } from '../game_logic/rng.js';
 
@@ -63,9 +63,10 @@ const injured = h => G != null && SYS.game.isInjured(h, now());
 /* 실효 쿨 = ceil(표기 쿨 ÷ 행동 주기) × 행동 주기 (battle_design §6) — 공식은 game_logic 소유다 (부채 #3) */
 const effectiveCd = (cd, cycle) => SYS.formula.effectiveCd(cd, cycle);
 /* 그 영웅의 액티브 — 배정은 game_logic(skill.activesFor), 표시(아이콘·설명)는 skillInfo 가 붙인다.
+   배정은 인스턴스 `{id, source}` 라 **출처를 화면이 다시 알아내지 않는다** — 「고유」 표시는 source 가 답이다.
    칸은 항상 [balance.csv:active_slots] 개다 — 배정이 모자라면 빈 칸으로 남긴다(칸이 줄면 「셋 중 하나가 비었다」가 안 읽힌다) */
 const activeCells = h => {
-    const list = (h ? SYS.skill.activesFor(h) : []).map(skillInfo);
+    const list = (h ? SYS.skill.activesFor(h) : []).map(a => ({ ...skillInfo(a.id), source: a.source }));
     return Array.from({ length: D.balance.active_slots }, (_, i) => list[i] ?? null);
 };
 
@@ -818,14 +819,18 @@ function attrPanel(h) {
     return p;
 }
 
-/** 현재 스킬 — 액티브 3 을 정사각 카드로. 행동 주기는 소제목 오른쪽. 슬롯 데이터를 읽는 법은 activeSlots 와 같다 */
+/**
+ * 현재 스킬 — 액티브 3 을 정사각 카드로. 행동 주기는 소제목 오른쪽. 슬롯 데이터를 읽는 법은 activeSlots 와 같다.
+ * **고유 스킬**이 실린 칸에는 번호 옆에 표시한다 — 어느 칸인지는 인스턴스의 `source` 가 말한다(화면이 판정하지 않는다).
+ */
 function skillCards(h) {
     const wrap = el('div', 'sk-cards-wrap');
     wrap.appendChild(el('div', 'sub-h', `${t('ch.skill.h')}<span class="muted">${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycleOf(h).toFixed(2) })}</b></span>`));
     const grid = el('div', 'sk-cards');
     activeCells(h).forEach((a, i) => {
-        const c = el('div', `sk-card${a ? '' : ' vacant'}`);
-        c.innerHTML = `<span class="no">${i + 1}</span>${a ? `<span class="ico">${a.icon}</span>` : ''}<span class="nm">${a ? L(a.name) : t('sk.emptySlot')}</span>`;
+        const innate = a?.source === 'innate';
+        const c = el('div', `sk-card${a ? '' : ' vacant'}${innate ? ' innate' : ''}`);
+        c.innerHTML = `<span class="no">${i + 1}${innate ? ` · ${t('sk.innate')}` : ''}</span>${a ? `<span class="ico">${a.icon}</span>` : ''}<span class="nm">${a ? L(a.name) : t('sk.emptySlot')}</span>`;
         grid.appendChild(c);
     });
     wrap.appendChild(grid);
@@ -1015,7 +1020,8 @@ function bindTip(node, item, equipped, hint) {
 /* ═══════════ 스킬 ═══════════ */
 
 /**
- * 액티브 슬롯 3개 (skill_design §3 / battle_design §5). 아직 스킬이 없어 전부 빈 슬롯이다 — 구조만 보인다.
+ * 액티브 슬롯 3개 (skill_design §3 / battle_design §5).
+ * **고유 스킬**(`source === 'innate'`)만 따로 표시한다 — 나머지 칸은 직업 액티브가 임시로 메운 것이라 이름표가 없다 (§9-0).
  */
 function activeSlots(h, title) {
     const cycle = cycleOf(h);
@@ -1025,13 +1031,15 @@ function activeSlots(h, title) {
         ${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycle.toFixed(2) })}</b>`));
     const box = el('div', 'slot-list');
     activeCells(h).forEach((a, i) => {
-        const row = el('div', `act-slot${a ? '' : ' empty'}`);
-        if (!a) row.innerHTML = `<span class="no">${i + 1}</span><span class="muted">${t('sk.emptySlot')}</span>`;
+        const innate = a?.source === 'innate';
+        const row = el('div', `act-slot${a ? '' : ' empty'}${innate ? ' innate' : ''}`);
+        const no = `${i + 1}${innate ? ` · ${t('sk.innate')}` : ''}`;
+        if (!a) row.innerHTML = `<span class="no">${no}</span><span class="muted">${t('sk.emptySlot')}</span>`;
         else {
             const eff = effectiveCd(a.cd, cycle);
             const loss = (eff - a.cd) / a.cd * 100;
             row.innerHTML = `
-                <span class="no">${i + 1}</span><span class="ico">${a.icon}</span>
+                <span class="no">${no}</span><span class="ico">${a.icon}</span>
                 <span class="nm">${L(a.name)}
                     <span class="cd">${t('sk.base', { s: a.cd })} · <b class="${loss > 0.5 ? 'down' : 'up'}">${t('sk.eff', { s: eff.toFixed(1) })}</b>
                         ${loss > 0.5 ? `<span class="muted">(+${loss.toFixed(0)}%)</span>` : `<span class="muted">${t('sk.aligned')}</span>`}</span>
@@ -1170,11 +1178,11 @@ function skillTreeBody() {
    칸은 **획득물이 아니다**: 합산 레벨이 칸을 열고, 칸에 든 옵션은 골드로 다시 굴린다 (tactic_card_design §5).
    판정(열림 · 조건 카운터 · 비용)은 전부 `game.tacticState` 가 실어 온다 — 렌더러는 파티를 세지 않는다. */
 
-/** 조건의 인자 — 죄종 · 피해 종류 · 스킬 태그 셋 중 하나다. 어휘 사전은 mock, 문장 틀은 i18n */
+/** 조건의 인자 — 죄종 · 피해 종류 · 스킬 태그 셋 중 하나다. 스킬 태그 이름은 CSV(skill_tag.csv), 문장 틀은 i18n */
 const condArgName = o =>
     o.condKind === 'affix_sin' ? sinName(o.condArg)
         : o.condKind === 'damage_kind' ? L(M.DAMAGE_KINDS[o.condArg])
-            : o.condKind === 'skill_tag' ? L(M.SKILL_TAGS[o.condArg]) : '';
+            : o.condKind === 'skill_tag' ? L(skillTagName(o.condArg)) : '';
 const condText = o => t(`rs.cond.${o.condKind}`, { n: o.condN, a: condArgName(o) });
 /** 효과 한 줄 — 축 이름·단위는 `stat` 에서 파생한다 (마스터리 칸과 같은 규칙 · §13) */
 const optionEffect = o => L(M.affixText(o.stat, o.value, statRow(o.stat)));

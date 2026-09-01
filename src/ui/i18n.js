@@ -486,6 +486,7 @@ const STRINGS = {
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
+    'sk.innate': { ko: '고유', en: 'Innate' },
     'sk.base': { ko: '표기 {s}초', en: 'Base {s}s' },
     'sk.eff': { ko: '실효 {s}초', en: 'Eff. {s}s' },
     'sk.aligned': { ko: '(정렬 일치)', en: '(aligned)' },

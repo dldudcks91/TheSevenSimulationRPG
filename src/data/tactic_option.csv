@@ -1,23 +1,67 @@
-option_id,cond_kind,cond_arg,cond_n,stat,value,description_kr
-opt_march_atk,always,-,0,atk_pct,3,무조건 — 조건 없는 칸은 리롤의 바닥값이다 (§5-2 「꽝을 만들지 않는다」)
-opt_march_hp,always,-,0,hp_pct,4,무조건 — 최대 HP
-opt_march_def,always,-,0,def_flat,6,무조건 — 물리 방어. 방어는 비율 축이라 성장 곡선을 안 탄다 (battle_design §9-3)
-opt_march_res,always,-,0,res_all,4,무조건 — 원소 저항 4종 동시
-opt_full_party,party_size,-,3,aspd_pct,3,파티가 꽉 찼을 때 — 빈 자리를 두는 편성의 기회비용
-opt_sin_pair,sin_same,-,2,atk_pct,7,같은 죄종 2명 이상 — 죄종 쏠림 편성의 심화 (§2-3 특화 심화)
-opt_sin_trio,sin_same,-,3,crit_damage,15,같은 죄종 3명 — 쏠림의 끝
-opt_sin_spread,sin_kind,-,3,res_all,8,죄종이 서로 다른 3종 이상 — 쏠림의 반대편도 값을 갖는다
-opt_class_pair,class_same,-,2,aspd_pct,4,같은 직업 2명 이상
-opt_affix_wrath,affix_sin,wrath,3,crit_rate,4,파티 착용 장비의 분노 접사 3개 이상 — 죄종 접사를 세는 칸 (§3-1 「초반에 확보 가능해야 한다」)
-opt_affix_pride,affix_sin,pride,3,res_max_bonus,2,오만 접사 3개 이상 — 저항 상한을 뚫는다 (battle_design §9-5)
-opt_affix_greed,affix_sin,greed,3,gold_find,25,탐욕 접사 3개 이상
-opt_affix_envy,affix_sin,envy,3,def_ignore,6,시기 접사 3개 이상
-opt_affix_sloth,affix_sin,sloth,3,cooldown_reduction,5,나태 접사 3개 이상
-opt_affix_gluttony,affix_sin,gluttony,3,hp_regen,2,폭식 접사 3개 이상
-opt_affix_lust,affix_sin,lust,3,life_steal,2,색욕 접사 3개 이상
-opt_magic_line,damage_kind,magic,2,res_reduction,7,마법 무기군 2명 이상 — 원소 쪽 관통
-opt_phys_line,damage_kind,physical,3,def_ignore,5,물리 무기군 3명 — 물리 쪽 관통. 결핍 보정이 아니라 특화 심화다 (§2-3)
-opt_tag_control,skill_tag,control,1,item_find,20,제어 태그 액티브 보유자 1명 이상 — 희소 태그를 센다 (§4 「희소 태그」)
-opt_tag_restore,skill_tag,restore,1,hp_pct,5,회복 태그 보유자 1명 이상
-opt_tag_blessing,skill_tag,blessing,1,damage_reduction,4,축복 태그 보유자 1명 이상 — 피해 감소는 원천별 곱의 한 원천 (battle_design §9-3)
-opt_tag_shout,skill_tag,shout,1,atk_pct,5,함성 태그 보유자 1명 이상
+option_id,grade,cond_kind,cond_arg,cond_n,stat,value,description_kr
+opt_march_atk,common,always,-,0,atk_pct,2,⚠임시 — 이 표 전체가 구조 검증용 자리채움이다. 나중에 더 창의적인 전술로 전부 교체한다 (tactic_card_design §5-7)
+opt_march_atk,magic,always,-,0,atk_pct,3,⚠임시
+opt_march_atk,rare,always,-,0,atk_pct,5,⚠임시
+opt_march_hp,common,always,-,0,hp_pct,3,⚠임시 — 무조건 · 최대 HP
+opt_march_hp,magic,always,-,0,hp_pct,4,⚠임시
+opt_march_hp,rare,always,-,0,hp_pct,6,⚠임시
+opt_march_aspd,common,always,-,0,aspd_pct,2,⚠임시 — 무조건 · 공격속도. 강한 채널이라 등급 폭이 좁다
+opt_march_aspd,magic,always,-,0,aspd_pct,3,⚠임시
+opt_march_aspd,rare,always,-,0,aspd_pct,4,⚠임시
+opt_march_cdr,common,always,-,0,cooldown_reduction,2,⚠임시 — 무조건 · 쿨타임 감소
+opt_march_cdr,magic,always,-,0,cooldown_reduction,3,⚠임시
+opt_march_cdr,rare,always,-,0,cooldown_reduction,4,⚠임시
+opt_march_def,common,always,-,0,def_flat,5,⚠임시 — 무조건 · 물리 방어. 방어는 비율 축이라 성장 곡선을 안 탄다 (battle_design §9-3)
+opt_march_def,magic,always,-,0,def_flat,6,⚠임시
+opt_march_def,rare,always,-,0,def_flat,9,⚠임시
+opt_march_res,common,always,-,0,res_all,3,⚠임시 — 무조건 · 원소 저항 4종 동시
+opt_march_res,magic,always,-,0,res_all,4,⚠임시
+opt_march_res,rare,always,-,0,res_all,6,⚠임시
+opt_sin_pair,common,sin_same,-,2,atk_pct,5,⚠임시 — 영웅 단위 · 같은 죄종 2명 이상. 쏠림 편성의 심화 (§2-3)
+opt_sin_pair,magic,sin_same,-,2,atk_pct,7,⚠임시
+opt_sin_pair,rare,sin_same,-,2,atk_pct,10,⚠임시
+opt_sin_trio,common,sin_same,-,3,crit_damage,12,⚠임시 — 영웅 단위 · 같은 죄종 3명. 쏠림의 끝
+opt_sin_trio,magic,sin_same,-,3,crit_damage,15,⚠임시
+opt_sin_trio,rare,sin_same,-,3,crit_damage,20,⚠임시
+opt_sin_spread,common,sin_kind,-,3,res_all,6,⚠임시 — 영웅 단위 · 죄종 3종 이상. 쏠림의 반대편도 값을 갖는다
+opt_sin_spread,magic,sin_kind,-,3,res_all,8,⚠임시
+opt_sin_spread,rare,sin_kind,-,3,res_all,11,⚠임시
+opt_class_pair,common,class_same,-,2,aspd_pct,3,⚠임시 — 영웅 단위 · 같은 직업 2명 이상
+opt_class_pair,magic,class_same,-,2,aspd_pct,4,⚠임시
+opt_class_pair,rare,class_same,-,2,aspd_pct,6,⚠임시
+opt_class_trio,common,class_same,-,3,cooldown_reduction,4,⚠임시 — 영웅 단위 · 같은 직업 3명
+opt_class_trio,magic,class_same,-,3,cooldown_reduction,5,⚠임시
+opt_class_trio,rare,class_same,-,3,cooldown_reduction,7,⚠임시
+opt_affix_wrath,common,affix_sin,wrath,3,crit_rate,3,⚠임시 — 아이템 단위 · 분노 접사 3개 이상 (§3-1 「초반에 확보 가능해야 한다」)
+opt_affix_wrath,magic,affix_sin,wrath,3,crit_rate,4,⚠임시
+opt_affix_wrath,rare,affix_sin,wrath,3,crit_rate,6,⚠임시
+opt_affix_pride,common,affix_sin,pride,3,res_max_bonus,1,⚠임시 — 아이템 단위 · 오만 접사 3개 이상. 저항 상한을 뚫는 채널이라 폭이 가장 좁다 (battle_design §9-5)
+opt_affix_pride,magic,affix_sin,pride,3,res_max_bonus,2,⚠임시
+opt_affix_pride,rare,affix_sin,pride,3,res_max_bonus,3,⚠임시
+opt_affix_greed,common,affix_sin,greed,3,crit_damage,10,⚠임시 — 아이템 단위 · 탐욕 접사 3개 이상. 경제 효과(gold_find)를 뺀 자리다 — 죄종 성격 배정은 item_design 과 대조 필요 (§5-4)
+opt_affix_greed,magic,affix_sin,greed,3,crit_damage,13,⚠임시
+opt_affix_greed,rare,affix_sin,greed,3,crit_damage,18,⚠임시
+opt_affix_envy,common,affix_sin,envy,3,def_ignore,5,⚠임시 — 아이템 단위 · 시기 접사 3개 이상
+opt_affix_envy,magic,affix_sin,envy,3,def_ignore,6,⚠임시
+opt_affix_envy,rare,affix_sin,envy,3,def_ignore,8,⚠임시
+opt_affix_sloth,common,affix_sin,sloth,3,cooldown_reduction,4,⚠임시 — 아이템 단위 · 나태 접사 3개 이상
+opt_affix_sloth,magic,affix_sin,sloth,3,cooldown_reduction,5,⚠임시
+opt_affix_sloth,rare,affix_sin,sloth,3,cooldown_reduction,7,⚠임시
+opt_affix_gluttony,common,affix_sin,gluttony,3,hp_regen,2,⚠임시 — 아이템 단위 · 폭식 접사 3개 이상
+opt_affix_gluttony,magic,affix_sin,gluttony,3,hp_regen,3,⚠임시
+opt_affix_gluttony,rare,affix_sin,gluttony,3,hp_regen,4,⚠임시
+opt_affix_lust,common,affix_sin,lust,3,life_steal,1,⚠임시 — 아이템 단위 · 색욕 접사 3개 이상. 흡혈은 강한 채널이라 폭이 좁다
+opt_affix_lust,magic,affix_sin,lust,3,life_steal,2,⚠임시
+opt_affix_lust,rare,affix_sin,lust,3,life_steal,3,⚠임시
+opt_tag_control,common,skill_tag,control,1,res_reduction,5,⚠임시 — 스킬 단위 · 제어 태그 보유자 1명 이상. 희소 태그만 센다 (§5-2). 경제 효과(item_find)를 뺀 자리다
+opt_tag_control,magic,skill_tag,control,1,res_reduction,7,⚠임시
+opt_tag_control,rare,skill_tag,control,1,res_reduction,9,⚠임시
+opt_tag_restore,common,skill_tag,restore,1,hp_pct,4,⚠임시 — 스킬 단위 · 회복 태그 보유자 1명 이상
+opt_tag_restore,magic,skill_tag,restore,1,hp_pct,5,⚠임시
+opt_tag_restore,rare,skill_tag,restore,1,hp_pct,7,⚠임시
+opt_tag_blessing,common,skill_tag,blessing,1,damage_reduction,3,⚠임시 — 스킬 단위 · 축복 태그 보유자 1명 이상. 피해 감소는 원천별 곱이라 폭이 좁다 (battle_design §9-3)
+opt_tag_blessing,magic,skill_tag,blessing,1,damage_reduction,4,⚠임시
+opt_tag_blessing,rare,skill_tag,blessing,1,damage_reduction,5,⚠임시
+opt_tag_shout,common,skill_tag,shout,1,atk_pct,4,⚠임시 — 스킬 단위 · 함성 태그 보유자 1명 이상
+opt_tag_shout,magic,skill_tag,shout,1,atk_pct,5,⚠임시
+opt_tag_shout,rare,skill_tag,shout,1,atk_pct,7,⚠임시

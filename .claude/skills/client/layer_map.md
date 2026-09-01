@@ -20,7 +20,11 @@
 | `formula.js` | 피해 계산 — 순수 함수만 | INTERFACE §2-3 · §5-2 | `formula:` |
 | `hero.js` | 생성 · XP/레벨 · 히든 상한 성장 · 전투 능력치 합산 | INTERFACE §2-4 | `combat:` · `xp:` · `시작 파티:` |
 | `item.js` | 드롭 · 시작 무기 · 착용 규칙 · 분해 | INTERFACE §2-5 | `item:` · `equip:` · `salvage:` |
-| `battle.js` | 헤드리스 시뮬 — 누가 언제 때리는가 | INTERFACE §2-6 (타임라인 소비 규칙은 §6) | `simulate:` · `battle:` |
+| `skill.js` | 액티브 정의 정규화·검증 · 배정(인스턴스 `{id, source}`) · 발동 선택 | INTERFACE §2-8 | `skill:` |
+| `skill_effects.js` | 「종류」 등록표 — 공격 대상 · 버프 효과 · 발동 조건 (어휘 = 표의 키) | INTERFACE §2-11 | `runtime:` · `skill: 검증` |
+| `skill_runtime.js` | 액티브 실행 — 시전·쿨·창·배리어·회복·사건 훅 | INTERFACE §2-12 · §2-6 실행 규칙 표 | `runtime:` · `simulate: 스킬` |
+| `tactic.js` | 파티 전술 — 칸 해금 · 조건 판정 · 리롤 후보 | INTERFACE §2-9 | `tactic:` |
+| `battle.js` | 헤드리스 시뮬 — 누가 언제 때리는가 · 유닛 생성 `makeUnit` · 직격·도발·전투불능 · 정산 (액티브 실행은 `skill_runtime.js`) | INTERFACE §2-6 (타임라인 소비 규칙은 §6) | `simulate:` · `battle:` |
 | `state.js` | 세이브 스키마 · 직렬화 · 모든 상태 전이 | INTERFACE §2-7 · §3 · §4 | `save:` · `newGame:` · `resolveBattle:` · `codex:` · `closeRun:` · `tavern:` · `toggleParty:` |
 
 폴더 자체의 계약과 파일별 한 줄 역할은 [src/game_logic/README.md](src/game_logic/README.md).

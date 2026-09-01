@@ -48,23 +48,8 @@ export const SINS = {
     pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0' },
 };
 
-/**
- * 스킬 태그 표시 이름 — 사전의 SSOT 는 `game_logic/skill.js:TAGS` 10종이다 (skill_design §11).
- * 파생 3종(광역·단일·다단히트)은 `target`·`hits` 가 답을 갖고 있어 CSV 에 안 적히므로 여기에도 없다.
- * 지금 읽는 곳 — 연구 탭의 전술 조건 (`tactic_option.csv:cond_arg`).
- */
-export const SKILL_TAGS = {
-    dot: { ko: '도트', en: 'DoT' },
-    shout: { ko: '함성', en: 'Shout' },
-    blessing: { ko: '축복', en: 'Blessing' },
-    boost: { ko: '강화', en: 'Boost' },
-    restore: { ko: '회복', en: 'Restore' },
-    curse: { ko: '저주', en: 'Curse' },
-    control: { ko: '제어', en: 'Control' },
-    transform: { ko: '변신', en: 'Transform' },
-    summon: { ko: '소환', en: 'Summon' },
-    sacrifice: { ko: '희생', en: 'Sacrifice' },
-};
+/* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
+   `src/data/skill_tag.csv` 13행으로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
 
 /** 피해 종류 — 직업이 아니라 **무기군**이 정한다 (`weapon_group.csv:damage_kind` · battle_design §2-1) */
 export const DAMAGE_KINDS = {
@@ -206,31 +191,10 @@ export const heroFace = hero => {
  */
 export const CLASS_GLYPH = { warrior: '⚔', knight: '⛨', mage: '✦', archer: '🏹', priest: '✚', assassin: '🗡', necromancer: '☠' };
 export const classGlyph = cls => CLASS_GLYPH[cls] ?? '⚔';
-/**
- * 액티브의 **표시 사전** (2026-08-30 — `MOCK_ACTIVES` 목업 폐기).
- * 이름 · 표기 쿨 · 배율 같은 게임 데이터는 `skill.csv` 가 SSOT 이고, 여기 남는 것은 **화면 전용**인 둘뿐이다:
- *   · `i` 아이콘 — CSV 에 아이콘 컬럼이 없다(자산 경로와 같은 자리라 표시 사전이 든다)
- *   · `d` 설명 ko/en — `skill.csv:description_kr` 은 **설계 노트**(「전사 ③ 은 기획 미정」처럼)라 플레이어에게 내보낼 문장이 아니다
- * 설명은 **수치를 적지 않는다** — 수치의 SSOT 는 CSV 다. 아이콘 세트가 흑백 글리프와 컬러 이모지로 섞여 있는 문제는 그대로 남아 있다 (DEV_PLAN 부채 #13).
- */
-export const SKILL_DISPLAY = {
-    war_warcry: { i: '📣', d: { ko: '외침으로 파티 전원의 공격을 한동안 끌어올린다', en: 'A shout that lifts the whole party’s attack for a while' } },
-    war_bash: { i: '⚔', d: { ko: '한 대상을 크게 내리친다', en: 'A heavy blow on a single target' } },
-    kni_bulwark: { i: '⛨', d: { ko: '파티 전원에게 피해를 대신 먹는 방벽을 두른다', en: 'Wraps the party in a shield that soaks damage first' } },
-    kni_taunt: { i: '💢', d: { ko: '적의 시선을 자신에게 끌어온다', en: 'Pulls enemy attention onto yourself' } },
-    kni_rush: { i: '🐎', d: { ko: '적들 사이를 돌며 정해진 타수를 나눠 꽂는다', en: 'Rides through the enemies, splitting a fixed number of blows' } },
-    mag_fireball: { i: '🔥', d: { ko: '불덩이를 던진다 — 불 피해', en: 'Hurls a ball of flame — fire damage' } },
-    mag_chain: { i: '⚡', d: { ko: '번개가 적을 타고 옮겨 간다 — 뒤로 갈수록 약해진다', en: 'Lightning leaps from foe to foe, weakening as it goes' } },
-    mag_iceblast: { i: '❄', d: { ko: '한 대상을 얼려 붙인다 — 냉기 피해', en: 'Freezes a single target — cold damage' } },
-    arc_snipe: { i: '🎯', d: { ko: '한 대상을 노려 크게 쏜다', en: 'A single aimed shot for heavy damage' } },
-    arc_multishot: { i: '🏹', d: { ko: '화살을 흩뿌려 적 전원을 맞힌다', en: 'Scatters arrows across every enemy' } },
-    arc_rapid: { i: '💨', d: { ko: '한 대상에게 화살을 연달아 박는다', en: 'Pours repeated arrows into one target' } },
-    pri_haste: { i: '🌬', d: { ko: '파티 전원의 손을 한동안 빠르게 한다', en: 'Quickens the whole party for a while' } },
-    pri_heal: { i: '✚', d: { ko: '파티 전원의 HP 를 되돌린다', en: 'Restores HP to the whole party' } },
-    pri_judgment: { i: '⚖', d: { ko: '한 대상에게 심판을 내린다', en: 'Brings judgment down on one target' } },
-};
-/** 없는 id 는 빈 칸이 아니라 기본 글리프로 — 스킬이 늘어도 화면이 비지 않는다 */
-export const skillDisplay = id => SKILL_DISPLAY[id] ?? { i: '✦', d: null };
+/* 액티브의 표시 사전(`SKILL_DISPLAY`·`skillDisplay`)은 **삭제했다** (2026-09-01) — 아이콘과 설명 ko/en 이
+   `skill.csv` 의 `icon`·`desc_kr`·`desc_en` 컬럼으로 나갔고, 옛 `description_kr`(설계 노트)은 `note` 로 개명했다.
+   읽는 곳은 `ui/data.js:skillInfo` 하나다. 아이콘 세트가 흑백 글리프와 컬러 이모지로 섞여 있는 문제는
+   컬럼이 옮겨졌을 뿐 그대로 남아 있다 (DEV_PLAN 부채 #13). */
 
 /* 원소 4종 표시 사전(`ELEMENT_LABELS`)은 **삭제했다** (2026-08-31) — `ELEMENT_IDS` 가 유일한 소비자였고
    그것이 `game_logic/hero.js:ELEMENTS` 로 통합되면서 참조가 0이 됐다. 화면이 원소 이름을 그리게 되면

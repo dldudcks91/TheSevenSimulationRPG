@@ -5,11 +5,13 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v8 (2026-09-01)
+ * 세이브 형식 v9 (2026-09-01)
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
- *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, mastery, masteryPoints, stats, caps, equipped:{position: itemUid|null}, injuredUntil}],
+ *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, mastery, masteryPoints, innate, stats, caps, equipped:{position: itemUid|null}, injuredUntil}],
+ *     — innate = 고유 스킬 id. **생성 시 한 번 굴리고 이후 불변**이다 (hero_design §1).
+ *       배정은 `skill.activesFor` 가 1번 칸에 싣는다 — 저장하는 건 굴린 결과 하나뿐
  *     — mastery = {nodeId: rank} 찍은 것만 담는다(0은 안 담는다) · masteryPoints = 남은 포인트.
  *       죄종·직업 마스터리가 한 풀을 공유한다 (skill_design §1-4). 전직 전용 포인트는 전직 미구현이라 없다
  *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
@@ -43,6 +45,9 @@
  *   v4 → v5 (2026-08-30 — 선술집 리롤 쿨다운):
  *     · `tavern` 이 없으면 `{rerolledAt: null, hired: []}` — **쿨다운이 열린 상태**로 올린다.
  *       옛 세이브는 리롤한 적이 없어 기다린 시간을 소급할 근거가 없고, 닫힌 채로 올리면 접속하자마자 골드를 물린다
+ *   v8 → v9 (2026-09-01 — 레어 고유 스킬 프로토타입 배정):
+ *     · `heroes[*].innate` — 옛 영웅은 고유 스킬 없이 태어났으므로 **시드에서 소급해 굴린다**
+ *       (전용 스트림 `seed ^ 0x5C11` · 전투 수열과 안 섞인다). 이미 가진 영웅은 건드리지 않는다
  *   v7 → v8 (2026-09-01 — 한손 개념 폐지 · 보조 슬롯 폐지):
  *     · 보조 아이템(착용분 · 가방분)을 **지운다** — 부위 자체가 없어져 돌려줄 자리가 없다
  *     · `equipped.offhand` 키 삭제 · `items[*].twoHanded` 삭제
@@ -57,7 +62,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 /**
  * @param {object} deps
@@ -206,6 +211,18 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v8 → v9 — 레어 고유 스킬 프로토타입 배정 (hero_design §1 · skill_design §9-0 개정 2026-09-01).
+     * 옛 영웅은 고유 스킬 없이 태어났으므로 **시드에서 소급해 굴린다** — 스트림 하나(`seed ^ 0x5C11`, 카운터 0)로
+     * `heroes` 배열 순서대로. 이미 가진 영웅은 건드리지 않는다. 전투 rng 수열과는 섞이지 않는다.
+     */
+    function upgradeV8(s) {
+        const rng = makeRng(deriveSeed((s.seed >>> 0) ^ 0x5C11, 0));
+        for (const h of s.heroes ?? []) if (h.innate == null) h.innate = H.rollInnate(rng);
+        s.version = 9;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -217,7 +234,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -226,6 +243,7 @@ export function createGameSystem(deps) {
         if (s.version === 5) s = upgradeV5(s);
         if (s.version === 6) s = upgradeV6(s);
         if (s.version === 7) s = upgradeV7(s);
+        if (s.version === 8) s = upgradeV8(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -543,9 +561,13 @@ export function createGameSystem(deps) {
     /** 해금 기준 = **로스터 전원의 레벨 합.** 파티 3명이 아니라 보유 영웅 전부다 — 벤치를 키워도 칸이 열린다 */
     const totalLevel = state => state.heroes.reduce((a, h) => a + (h.level ?? 1), 0);
 
-    /** 조건이 세는 대상 = **파티**(편성). 전술은 파티 단위이므로 벤치는 조건에 안 들어간다 */
+    /**
+     * 조건이 세는 대상 = **파티**(편성). 전술은 파티 단위이므로 벤치는 조건에 안 들어간다.
+     * `actives` 는 **스킬 정의**를 넘긴다 — `tactic.contextOf` 의 계약이 정의이고(`tagsOf(def)`),
+     * id 문자열을 넘기면 `skill_tag` 조건 4종이 영원히 0 을 센다 (2026-09-01 회귀 수정 · INTERFACE §2-9)
+     */
     const partyMembers = state => state.party.map(uid => heroById(state, uid)).filter(Boolean)
-        .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h) }));
+        .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h).map(a => SK.resolve(a)).filter(Boolean) }));
 
     /** 첫 배정 — 시드 하나에서 나온다. 리롤 카운터를 안 타므로 **리롤이 다른 칸의 내용을 흔들지 않는다** */
     const initialAssign = state => TC.initialAssign(makeRng(deriveSeed(state.seed ^ 0x7AC7, 0)));

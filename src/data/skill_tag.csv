@@ -1,0 +1,14 @@
+tag_id,category,derived,name_kr,name_en,description_kr
+aoe,damage,1,광역,Area,파생 — target 이 enemy_all 또는 enemy_chain
+single,damage,1,단일,Single,파생 — target 이 enemy_single
+multihit,damage,1,다단히트,Multi-hit,파생 — hits > 1
+dot,damage,0,도트,DoT,틱 피해 (미구현)
+shout,buff,0,함성,Shout,파티 창
+blessing,buff,0,축복,Blessing,파티 창 — 배리어도 여기
+boost,buff,0,강화,Boost,자기 창
+restore,buff,0,회복,Restore,HP 를 되돌린다 — 즉시
+curse,debuff,0,저주,Curse,적의 수치를 깎는다
+control,debuff,0,제어,Control,적의 행동을 막는다
+transform,other,0,변신,Transform,현재 해당 0
+summon,other,0,소환,Summon,현재 해당 0
+sacrifice,other,0,희생,Sacrifice,자기 HP 를 비용으로 낸다
