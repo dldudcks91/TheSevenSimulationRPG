@@ -52,7 +52,6 @@ export function createTacticSystem(data) {
         sin_kind: { arg: null, count: c => new Set(c.sins).size },          // 죄종이 몇 종인가
         class_same: { arg: null, count: c => maxCount(c.classes) },         // 같은 직업이 몇 명까지 겹치나
         affix_sin: { arg: 'sin', count: (c, a) => c.affixSins[a] ?? 0 },    // 파티 착용 장비의 그 죄종 접사 수
-        two_hand: { arg: null, count: c => c.twoHand },                     // 양손 무기를 든 인원
         damage_kind: { arg: 'kind', count: (c, a) => c.damageKind[a] ?? 0 },// 그 피해 종류의 무기를 든 인원
         skill_tag: { arg: 'tag', count: (c, a) => c.tags[a] ?? 0 },         // 그 태그의 액티브를 가진 인원
     };
@@ -104,7 +103,7 @@ export function createTacticSystem(data) {
      * members = [{sin, cls, items:[아이템], actives:[스킬 정의]}] — 모으는 것은 state.js, 세는 규칙은 여기.
      */
     function contextOf(members) {
-        const ctx = { size: members.length, sins: [], classes: [], affixSins: {}, damageKind: {}, tags: {}, twoHand: 0 };
+        const ctx = { size: members.length, sins: [], classes: [], affixSins: {}, damageKind: {}, tags: {} };
         for (const m of members) {
             ctx.sins.push(m.sin);
             ctx.classes.push(m.cls);
@@ -112,10 +111,7 @@ export function createTacticSystem(data) {
             for (const it of m.items ?? []) for (const s of it.sins ?? []) ctx.affixSins[s] = (ctx.affixSins[s] ?? 0) + 1;
             const w = (m.items ?? []).find(it => it.slot === 'weapon');
             const g = w ? WG[w.group] ?? null : null;
-            if (g) {
-                ctx.damageKind[g.damageKind] = (ctx.damageKind[g.damageKind] ?? 0) + 1;
-                if (g.twoHanded) ctx.twoHand += 1;
-            }
+            if (g) ctx.damageKind[g.damageKind] = (ctx.damageKind[g.damageKind] ?? 0) + 1;
             // 태그는 **사람 수**를 센다 — 한 영웅이 같은 태그를 둘 들어도 1이다 (스킬 수를 세면 액티브 3 이 조건을 밀어 버린다)
             const mine = new Set();
             for (const def of m.actives ?? []) for (const tag of (SK?.tagsOf(def) ?? [])) mine.add(tag);

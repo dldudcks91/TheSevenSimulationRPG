@@ -30,7 +30,7 @@ user-invocable: true
 2. **렌더러는 계산도 난수도 하지 않는다** — 상태 `G` 를 읽고 `SYS` 를 부르고 `save()` 한다. 공식이 필요하면 `game_logic/` 에 요청한다(→ `/client`). 렌더러에 남은 공식은 이미 부채로 등재돼 있다 ([DEV_PLAN.md §4](docs/client/DEV_PLAN.md) 부채 #3 · #4) — **새로 만들지 않는다.**
 3. **다국어 ko/en 나란히 — 예외 없음** — `app.js` · `battle.js` 에 한국어 리터럴 금지(주석 제외). UI 문구는 `i18n.js` 의 `STRINGS` 를 `t(key)` 로, 데이터 문자열은 `mock.js` 의 `{ko, en}` 쌍을 `L()` 로 푼다. 이름 조립(어순·조사)은 렌더러가 아니라 데이터 층에 둔다 ([src/ui/README.md](src/ui/README.md)).
 4. **설명 문구는 도움말 탭 전용** — 인게임 패널에는 숫자 · 상태 · 오류 · 버튼 · 툴팁만 둔다. 규칙 문구는 `app.js` 의 `helpSections()` 에 **기존 키를 재사용해** 넣는다 — 도움말은 문구를 새로 쓰지 않는다 (2026-08-26 사용자 지시 · [SCREEN_DESIGN.md §12](docs/client/SCREEN_DESIGN.md)).
-5. **전투 창구는 하나** — 원정 탭 하나가 편성 · 관전 · 리포트 상태를 갖는다. 탭을 늘려 전투를 복제하지 않는다 ([CLAUDE.md](CLAUDE.md) 컨셉 락 따름정리 「전투 창구는 하나」 · [SCREEN_DESIGN.md §1](docs/client/SCREEN_DESIGN.md)). 영웅 띠의 "지금 하는 일"이 접속/오프라인 상태가 앉을 자리다 (§5).
+5. ~~**전투 창구는 하나**~~ — **2026-08-31 의뢰 신설로 개정**: 전투 채널은 원정·의뢰 둘이고 **관전 대상은 유저가 보고 있는 탭**이 정한다 ([CLAUDE.md](CLAUDE.md) 컨셉 락 따름정리 2 · [SCREEN_DESIGN.md §1](docs/client/SCREEN_DESIGN.md)). 그래도 **그 둘 말고 탭을 늘려 전투를 복제하지는 않는다.** 영웅 띠의 "지금 하는 일"이 접속/오프라인 상태가 앉을 자리다 (§5).
 6. **값은 항상 찍는다 · 읽히게 변환한다 · 경고는 문턱 키가 있을 때만**
    - 빈 칸은 "안 재고 있다"로 읽힌다 — 결과가 없어도 숫자를 찍는다 (§4-1 · §4-3)
    - 소재값만 보이면 못 읽는 값은 변환해서 함께 낸다 (감쇠율 · 저항 상한 — §6). 변환은 `SYS.formula.*` 를 부른다
@@ -67,7 +67,7 @@ user-invocable: true
 
 - `src/ui/i18n.js` 의 `STRINGS` 에 키를 추가한다. **ko/en 을 같은 자리에 함께** 쓴다
 - 키는 화면 접두를 따른다 — `nav.` `exp.` `bt.` `rep.` `hs.` `ch.` `eq.` `pd.` `st.` `sk.` `tv.` `cx.` `tip.` `log.` `pop.` `kind.` `ng.` `help.` `res.` `ui.` `time.` `class.` `face.` `injury.` `app.`
-- 오류 문구는 `<탭>.err.<코드>` 로 결과 코드와 짝을 맞춘다 (`ch.err.class` · `ch.err.twoHanded` · `ch.err.bagFull` · `tv.err.gold` · `tv.err.roster`)
+- 오류 문구는 `<탭>.err.<코드>` 로 결과 코드와 짝을 맞춘다 (`ch.err.class` · `ch.err.bagFull` · `tv.err.gold` · `tv.err.roster`). 결과 코드가 사라지면 키도 지운다 — `ch.err.twoHanded` 는 2026-09-01 보조 슬롯 폐지로 삭제됐다
 - 값 안의 `{x}` 는 `t(key, {x: …})` 로 치환된다. 어순이 언어마다 달라도 템플릿이 흡수하므로 **문장을 조각내 이어붙이지 않는다**
 - 도움말에 넣을 문구라면 새 키를 만들지 말고 인게임에서 쓰던 키를 그대로 부른다 (원칙 4)
 

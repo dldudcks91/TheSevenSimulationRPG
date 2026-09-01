@@ -30,7 +30,18 @@
     --fs-md: 15px;
     --fs-lg: 18px;
     --fs-xl: 24px;
+
+    /* 2026-09-01 — 초상 축소 보간. **스타일이 정한다**: 초상은 어디서나 원본보다 작게 그려지는데
+       (구성 칩 26px ~ 시작 후보 카드 152px), 줄이는 방법이 스타일마다 달라야 한다.
+       기본값은 손그림 쪽(보간 켬) — 신호(`<html data-face>`)가 아직 없어도 안전한 쪽으로 떨어진다.
+       SCREEN_DESIGN §5 · 신호는 `mock.js:applyDocumentFace` 가 단다 */
+    --face-render: auto;
 }
+/* 도트그래픽 스타일 — 보간하면 도트가 뭉갠다. 손그림에 이걸 걸면 반대로 픽셀을 건너뛰며
+   샘플링해 선이 끊긴다(512를 26px 칸에 넣으면 20픽셀 중 1픽셀만 남는다).
+   ⚠ 배경 아트(body::before · .arena.has-bg · .panel.town-bg)의 `pixelated` 는 여기와 무관하다 —
+      그쪽은 스타일과 상관없이 늘 픽셀아트다 */
+:root[data-face="pixel16"] { --face-render: pixelated; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -156,7 +167,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .panel {
     background: rgba(22, 22, 36, .93);
     border: 1px solid var(--border-primary);
-    padding: 14px 16px;
+    padding: 10px 16px 11px;   /* 2026-09-01 세로 압축 — 가로 여백은 그대로 (읽기 폭은 안 건드린다) */
 }
 
 /* 선술집 = 거점 아트를 그대로 쓰는 자리 (town.webp 안에 상인 좌판과 7색 깃발이 있다) */
@@ -168,10 +179,13 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     border-color: var(--border-secondary);
 }
 .panel + .panel { margin-top: 14px; }
+/* ⚠ 위 규칙은 **세로로 쌓을 때**의 여백이다. 격자(.cols) 안에서는 둘째 칸부터 위로 14px 밀려
+   **첫 칸(장비)만 높이 서는** 어긋남이 생긴다 — 격자의 간격은 `gap` 이 이미 든다 (2026-09-01 사용자 지시) */
+.cols > .panel + .panel { margin-top: 0; }
 .panel > h2 {
     font-size: var(--fs-md); font-weight: normal; color: var(--text-secondary);
-    letter-spacing: 1px; margin-bottom: 12px;
-    border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;
+    letter-spacing: 1px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-dark); padding-bottom: 6px;
     display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
 }
 .panel > h2 small { text-align: right; }
@@ -241,7 +255,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 /* 이미지는 이니셜 **위에** 덮는다 — 아트가 없는 스타일에서 `onerror` 로 img 가 사라지면 밑에 있던 이니셜이 드러난다.
    그래서 그리는 중인 스타일로도 화면이 안 빈다 (2026-08-30 스타일 폴더 도입) */
-.face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: var(--face-render); }
 /* 아트가 없는 몬스터 — 죄종 색 원판 + 이니셜 (색은 JS가 인라인으로 준다) */
 .face.none { font-weight: normal; }
 /* 이미지 **밑에** 깔리는 같은 이니셜 — 고른 스타일에 그 그림이 없을 때만 드러난다.
@@ -266,7 +280,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 /* 그림은 직업 글리프 **위에** 덮는다 — 그 스타일에 영웅 그림이 없으면 `onerror` 로 img 가 빠지고 글리프가 드러난다
    (.face img 와 같은 규칙 · 2026-08-30 영웅 초상 연결) */
-.hero-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+.hero-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
 
 /* 카드를 채우는 초상 — 영웅 띠 카드(.hs-card .hero-face) (2026-08-27, SCREEN_DESIGN §5).
    정사각으로 카드 전체를 채우고, 아트가 없는 동안 글리프는 카드 폭의 절반 — 자리표시다. 카드 쪽에 container-type 이 있어야 cqw 가 잡힌다.
@@ -525,10 +539,14 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    보스여도 같은 박스다. 본문 높이를 초상 칸에 못박고(.unit-body height) 넘치는 내용은 자른다 — 그래야 위아래 두 진영이 같은 격자로 읽힌다.
    폭 고정 200px 은 화면 폭 정책(라벨 칸 고정 px 금지)의 **의도된 예외**다: 한 진영 최대 3장(party_size_max=3 · wave_monster_max=3)이라
    하한 폭 1280 의 아레나(약 660px)에 3×200 + 여백이 들어간다. 긴 이름은 위칸에서 말줄임된다 */
+/* 칸 = 카드 + 그 아래 창 뱃지 줄 (2026-08-31 사용자 지시). 폭 고정은 카드에서 이 칸으로 올라왔다 —
+   .side 의 flex item 은 이제 카드가 아니라 칸이다. 카드는 창이 걸리든 말든 **옛 크기 그대로**다 */
+.unit-slot { flex: 0 0 200px; width: 200px; display: flex; flex-direction: column; gap: 3px; }
+
 .unit {
     /* 세로 2단 — 위칸(태그·이름) / 본문(초상 + 수치) */
     display: flex; flex-direction: column; gap: 4px;
-    flex: 0 0 200px; width: 200px; padding: 5px 6px 6px;
+    width: 100%; padding: 5px 6px 6px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-dark); border-top: 3px solid var(--border-secondary);
     position: relative; text-align: left;   /* overflow 는 주지 않는다 — 피해 팝업이 카드 밖으로 떠오른다 */
@@ -543,7 +561,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 창이 켜져 있는 동안 — 칸을 늘리지 않고 테두리로만 알린다 (카드 크기 고정, SCREEN_DESIGN §4-2) */
 .unit.buffed { box-shadow: 0 0 0 1px #46639e inset, 0 0 10px -2px #46639e; }
 /* 창 뱃지 줄 — 카드 전체가 「무언가 걸려 있다」를, 이 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2, 2026-08-31).
-   ⚠ 창이 없어도 **높이를 그대로 둔다** — 개수를 따라 흔들리면 카드 크기 고정(진영마다 같은 박스)이 깨진다 */
+   자리는 **카드 밖 · 카드 바로 아래** (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커진다.
+   ⚠ 창이 없어도 **높이를 그대로 둔다** — 개수를 따라 흔들리면 칸 높이가 변해 카드가 위아래로 뛴다 */
 .buff-row { display: flex; flex-direction: row; align-items: center; gap: 3px; height: 18px; overflow: hidden; }
 .buff-chip {
     flex: 0 0 auto; width: 16px; height: 16px;
@@ -578,7 +597,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .sprite.has-face img {
     position: absolute; inset: 0;      /* 이니셜 위에 덮는다 — .face 와 같은 이유(아트 없는 스타일 폴백) */
     width: 100%; height: 100%; object-fit: contain;
-    image-rendering: pixelated;
+    image-rendering: var(--face-render);
     filter: drop-shadow(0 1px 2px rgba(0,0,0,.8));
 }
 /* 몬스터 얼굴 폴백 원판 (원형은 몬스터 전용). 색은 JS 가 인라인으로 준다 */
@@ -730,10 +749,11 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    옛 배치는 판 셋을 세로로 쌓아 한 화면(세로 예산 700)에 한 판 반밖에 안 들어왔다 — 스크롤 없이 셋을 다 보려면 옆으로 세운다.
    **폭에 상한을 준다** (2026-08-28 사용자 지시 — 칸 2/3 축소) — 1fr 로 두면 판이 화면 폭을 다 먹어 칸이 함께 커진다.
    고정 px 이 아니라 minmax 의 위쪽을 잡는 것이라 좁은 화면에서는 그대로 줄어든다 (ui/README 폭 정책).
-   `align-items: start` — 판이 왼쪽 칸 높이에 맞춰 늘어나지 않게 한다(늘어나면 칸이 세로로 부푼다) */
+   **판은 아래로 꽉 찬다** (2026-09-01 사용자 지시 — 옛 `align-items: start` 폐기): 판 셋의 아랫변이 왼쪽 칸과 나란히 맞는다.
+   칸이 같이 부풀지는 않는다 — `.sk-cell` 높이가 62px 로 고정이고 `.sk-row` 가 안 늘어나므로, 남는 자리는 판 안 아래쪽 여백이 된다 */
 .cols.c-skill {
     grid-template-columns: minmax(186px, 264px) repeat(3, minmax(0, 232px));
-    align-items: start; justify-content: start;
+    justify-content: start;
 }
 
 /* 판 하나 */
@@ -927,7 +947,6 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 .pd-cell:hover { background: #1c1c2e; }
 .pd-cell.filled { background: var(--bg-tertiary); }
-.pd-cell.locked { opacity: .35; border-style: dashed; cursor: not-allowed; }
 
 .pd-icon { font-size: 22px; line-height: 1; filter: grayscale(1) brightness(.55); }
 .pd-cell.filled .pd-icon { filter: none; }
@@ -1045,39 +1064,60 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 /* 패널 안의 작은 소제목 — h2 를 또 쓰면 칸이 나뉜 것처럼 보인다 */
 .sub-h {
     font-size: var(--fs-sm); color: var(--text-secondary);
-    margin: 12px 0 7px; padding-top: 9px; border-top: 1px solid var(--border-dark);
+    margin: 9px 0 6px; padding-top: 7px; border-top: 1px solid var(--border-dark);
     display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
 }
 .sub-h .muted { font-size: var(--fs-xs); }
 
 /* ②-2 기본 능력치 막대 — 범위는 [balance.csv:hero_attr_min ~ hero_attr_max] */
-.attr-list { display: grid; gap: 4px; }
-.attr-row { display: grid; grid-template-columns: minmax(0, auto) minmax(38px, 1fr) 24px; gap: 7px; align-items: center; }
-.attr-n { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
+/* **격자는 줄이 아니라 목록이 든다** (2026-09-01 사용자 지시) — 줄마다 자기 격자를 가지면 라벨 열이
+   줄마다 따로 계산돼 **막대 시작점이 들쭉날쭉해진다**(「힘」과 「매력」의 글자 폭이 다르므로).
+   목록이 열을 잡고 줄은 `display: contents` 로 사라져야 일곱 줄이 **같은 x 에서** 시작한다.
+   열 폭은 여전히 내용이 정한다(고정 px 없음 — ko/en 어느 쪽에서도 안 깨진다) */
+.attr-list {
+    display: grid; grid-template-columns: minmax(0, auto) minmax(38px, 1fr) 24px;
+    gap: 3px 7px; align-items: center;
+}
+.attr-row { display: contents; }
+/* 격자 안에 든 줄 아닌 것(범위 표기)은 한 줄을 통째로 쓴다 */
+.attr-range { grid-column: 1 / -1; }
+/* 이름은 왼쪽 · **약어는 막대에 붙는다** (2026-09-01 사용자 지시) — 라벨 칸을 일곱 줄이 공유하므로,
+   약어를 이름 뒤에 그냥 붙이면 이름 길이를 따라 x 가 흔들리고 막대와의 사이에 들쭉날쭉한 틈이 생긴다
+   (영어에서 특히 — `Luck` 과 `Intelligence` 의 차이). 칸을 꽉 쓰고 양끝으로 밀면 약어 열이 **막대 왼쪽 변에 정렬**된다 */
+.attr-n {
+    font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+}
 .attr-bar { height: 7px; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .attr-bar > i { display: block; height: 100%; }
 .attr-v { font-size: var(--fs-sm); text-align: right; }
-.attr-range { font-size: var(--fs-xs); text-align: right; margin-top: 3px; }
+.attr-range { font-size: var(--fs-xs); text-align: right; margin-top: 2px; }
 
 /* 능력치 약어 배지 — 언어 중립(STR/AGI…)이라 한/영 어느 쪽에서도 폭이 같다 */
 .cs-a {
     font-style: normal; font-size: 9px; color: var(--text-muted);
     border: 1px solid var(--border-dark); padding: 0 3px; margin-left: 4px;
-    vertical-align: 1px; letter-spacing: 0;
+    vertical-align: 1px; letter-spacing: 0; flex: 0 0 auto;
 }
 
-/* ②-3·4 세부 옵션 1·2 — 25행을 두 칸에 나눠 스크롤 없이 다 보이는 게 정상 (2026-08-27).
-   flex-basis 는 auto — 목록의 본래 높이가 칸 높이 산정에 들어가야 가장 긴 칸(세부 옵션 2)이 네 칸의 높이를 정한다.
-   (0 이면 목록이 높이 산정에서 빠져 다른 칸 높이에 맞춰 잘리고 스크롤이 생긴다) */
+/* ②-3·4 세부 옵션 1·2 — 21행(impl=1)을 두 칸에 나눠 스크롤 없이 다 보이는 게 정상 (2026-08-27).
+   flex-basis 는 auto — 목록의 본래 높이가 칸 높이 산정에 들어가야 가장 긴 칸이 네 칸의 높이를 정한다.
+   (0 이면 목록이 높이 산정에서 빠져 다른 칸 높이에 맞춰 잘리고 스크롤이 생긴다)
+   ⚠ 가장 긴 칸은 2026-09-01 로 **세부 옵션 1**(13행)이 됐다 — 칸 경계가 '피해 감소' 앞으로 옮겨갔다 (SCREEN_DESIGN §6) */
 .cs-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 4px; }
-.cs-row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 2px 0; }
+.cs-row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 1px 0; }
 .cs-n { font-size: var(--fs-sm); color: var(--text-secondary); }
 .cs-v { font-size: var(--fs-sm); color: var(--text-primary); white-space: nowrap; }
 /* 값이 없는 축 = 다음 장비가 들어올 자리. 지우지 않고 흐리게 남긴다 */
 .cs-row.off .cs-n, .cs-row.off .cs-v { color: var(--text-muted); }
 .cs-row.off .cs-a { opacity: .5; }
+/* 머리 3줄 = 대표값(물리 공격력 · 마법 공격력 · 최대 HP) — 한 단계 키우고 아래에 선 하나 (2026-09-01).
+   제목이 아니라 **선**이다: 카테고리 제목을 두지 않기로 한 08-26 결정을 지키면서 「여기까지가 대표값」만 말한다 */
+.cs-row.lead .cs-n, .cs-row.lead .cs-v { font-size: var(--fs-md); }
+.cs-row.lead .cs-v { font-weight: 700; }
+.cs-row.lead + .cs-row:not(.lead) { border-top: 1px solid var(--border-primary); margin-top: 5px; padding-top: 6px; }
 
-.go-tree { width: 100%; margin-top: 10px; }
+.go-tree { width: 100%; margin-top: 8px; }
 
 /* ②-2 현재 스킬 — 기본 옵션 칸 아래쪽, 액티브 3 을 정사각 카드로 (2026-08-27). 칸 폭을 3등분하므로 고정 px 없음 */
 .sk-cards-wrap { margin-top: auto; }   /* 막대 아래 남는 높이를 먹고 카드 블록을 칸 바닥에 붙인다 */
@@ -1128,15 +1168,16 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
    고정 px 이 아니라 창 폭을 따라간다(폭 정책 — src/ui/README.md). 선술집 명단은 아래 .tv-cands 가 자기 크기를 계속 든다 */
 .ng-head .hero-face { width: clamp(96px, 9.5vw, 152px); height: clamp(96px, 9.5vw, 152px); font-size: clamp(50px, 5vw, 80px); }
 .ng-id { min-width: 0; }
-.ng-name { display: flex; align-items: center; gap: 6px; line-height: 1.3; }
+/* 이름 줄 = 이름 + **등급 칩 + 죄종 칩** (2026-09-01 사용자 지시 — 죄종이 아랫줄에서 올라왔다).
+   칩 둘은 안 줄어들고(`flex-shrink:0`) 긴 이름만 말줄임된다 — 정체성 칩이 잘리면 무엇인지 못 읽는다 */
+.ng-name { display: flex; align-items: center; gap: 6px; line-height: 1.3; flex-wrap: wrap; }
+.ng-name .tier-chip, .ng-name .sin-chip { flex: 0 0 auto; }
 .ng-name > b {
     font-weight: normal; font-size: var(--fs-lg);
     min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .ng-cls { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
 .ng-role { font-size: var(--fs-xs); }
-
-.ng-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 9px; }
 
 .ng-line {
     display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
@@ -1221,25 +1262,83 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .inv-cell { position: relative; }
 .inv-up { position: absolute; top: 1px; right: 2px; font-size: var(--fs-xs); color: var(--color-warning); }
 .inv-cost { position: absolute; bottom: 1px; left: 0; right: 0; text-align: center; font-size: var(--fs-xs); color: var(--text-muted); }
+/* ───────── 창 레이어 (SCREEN_DESIGN §2 · §7) ─────────
+   탭 위에 겹쳐 뜨는 판 하나. 툴팁(z-index 50)보다 아래에 둔다 — 창 안의 스킬 칸에도 툴팁이 떠야 한다.
+   판은 자기 내용 폭을 쓰되 화면을 넘지 않는다(고정 px 금지 · ui/README 폭 정책). 세로가 모자라면 판 안에서만 스크롤한다 */
+.modal-layer {
+    position: fixed; inset: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(6, 6, 12, .72);
+}
+/* ⚠ `display:flex` 는 브라우저 기본 `[hidden]{display:none}` 을 **이긴다** — 이 한 줄이 없으면 창이 닫혀 있어도
+   어두운 판이 화면을 계속 덮는다. 재생기가 `hidden` 으로 여닫는 자리(.battle-log-wrap 등)와 같은 함정이다 */
+.modal-layer[hidden] { display: none; }
+.modal-box {
+    display: flex; flex-direction: column; gap: 12px;
+    max-width: 100%; max-height: 100%; overflow: auto;
+    padding: 14px 16px 16px;
+    background: var(--bg-secondary); border: 1px solid var(--border-highlight);
+    box-shadow: 0 12px 40px -8px #000;
+}
+/* 창 머리 — 왼쪽 제목 / 오른쪽 닫기. 닫는 길 셋 중 **눈에 보이는** 하나다 */
+.modal-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.modal-head h2 { margin: 0; }
+/* 닫기 = **정사각 X** (2026-09-01 사용자 지시). 창이 여럿이 돼도 **모양도 자리도 같다** — 창마다 다르면
+   닫는 법을 창마다 다시 배워야 한다. 글자가 아니라 글리프라 ko/en 에서 폭이 흔들리지 않는다(이름은 title 이 든다) */
+.modal-x {
+    flex: 0 0 auto; width: 28px; height: 28px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--fs-lg); line-height: 1;
+}
+
+/* ───────── 파견 목록 (SCREEN_DESIGN §8) ─────────
+   칸 6 — 선술집 · 상단 · 제련소 · 광산 · 채집 · 탐험. 미착수 칸도 그린다(어디까지 열리는지가 보여야 한다).
+   라벨이 드는 칸이라 고정 px 을 주지 않는다 — minmax 로 접힌다 (ui/README 폭 정책) */
+.dp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.dp-cell {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 9px 11px; cursor: pointer;
+    background: var(--bg-card); border: 1px solid var(--border-primary); border-left: 3px solid var(--border-dark);
+}
+.dp-cell:hover { background: var(--bg-tertiary); }
+/* 열려 있는 칸 — 아래에 그 파견처의 속이 붙어 있다는 표시 */
+.dp-cell.on { border-left-color: var(--border-highlight); background: var(--bg-tertiary); }
+.dp-cell.todo { opacity: .72; }
+.dp-n { font-size: var(--fs-sm); }
+.dp-meta { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); font-style: normal; }
+/* 담당 능력치 — 미정이면 `—` 가 그대로 선다. 빈 칸은 "안 재고 있다"로 읽힌다 (§4-1) */
+.dp-attr { color: var(--text-secondary); font-style: normal; }
+/* 인원 — 파견처는 1인 배치, 탐험만 파티다. 기획의 「탐험은 파견처가 아니다」를 화면에서 드는 표시 (§8) */
+.dp-size { color: var(--text-muted); font-style: normal; border: 1px solid var(--border-dark); padding: 0 4px; }
+.dp-cell .todo-badge { align-self: flex-start; margin-left: 0; }
+
 /* 미착수 탭 — 제목 옆 배지 하나로 「여긴 아직 없다」를 말한다 (SCREEN_DESIGN §1) */
 .todo-badge { font-size: var(--fs-xs); color: var(--color-warning); border: 1px solid var(--color-warning); padding: 0 6px; margin-left: 6px; vertical-align: middle; }
 .panel.todo .note-body { max-width: 70ch; }
-.items-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.items-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+/* 옛 제목 줄이 들던 수치(칸 수 · 장착 대상)가 도구 줄 **오른쪽 끝**으로 옮겨 왔다 (2026-09-01) */
+.items-meta { margin-left: auto; font-size: var(--fs-xs); }
 .pd-cell.filled { cursor: pointer; }
 .pd-cell.filled:hover { background: #2a2a44; }
 
-/* 선술집 후보 — 시작 화면 카드의 축소판 */
-.tv-cands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
-.tv-cands .ng-card { padding: 11px 13px 11px; }
+/* 선술집 후보 — **시작 화면(.ng-row)과 완전히 같은 카드**다 (2026-09-01 사용자 지시 · SCREEN_DESIGN §3 · §8-1).
+   옛 축소 override 넷(카드 패딩 · 초상 40px · 이름 글씨 · 능력치 줄간격)은 전부 걷었다 — 카드가 한 벌이면
+   시작 화면에서 익힌 읽는 법이 여기서 그대로 통한다. 남는 선술집 전용 규칙은 빈 칸과 고용 버튼 둘뿐이다 */
+.tv-cands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 12px; }
 /* 고용한 칸 — 빈 채로 남는다. 카드 자리를 지켜야 명단이 「줄었다」가 아니라 「비었다」로 읽힌다 */
 .tv-cands .tv-empty {
     display: flex; align-items: center; justify-content: center; text-align: center;
     color: var(--text-muted); font-size: var(--fs-sm); border-style: dashed; background: none;
 }
-.tv-cands .ng-head .hero-face { width: 40px; height: 40px; font-size: 21px; }
-.tv-cands .ng-name > b { font-size: var(--fs-md); }
-.tv-cands .attr-list { gap: 2px; }
 .tv-cands .b-hire { width: 100%; margin-top: 9px; }
+/* 수색 칸 — 후보 카드와 **같은 크기**다 (2026-09-01 사용자 지시 · SCREEN_DESIGN §8-1).
+   격자가 늘 3열이라(후보 2 + 수색 1) 폭은 저절로 같고, 높이는 같은 행의 카드가 정한다.
+   내용이 적어 버튼이 위로 붙지 않게 `margin-top:auto` 로 **아래에 앉힌다** — 카드의 고용 버튼과 같은 자리다 */
+.tv-search { display: flex; flex-direction: column; gap: 8px; }
+.tv-search-h { font-size: var(--fs-lg); }
+.tv-search-h .todo-badge { vertical-align: middle; }
+.tv-search-spec { font-size: var(--fs-sm); }
+.tv-search .b-search { width: 100%; margin-top: auto; }
 .tv-tools { display: flex; align-items: center; gap: 10px; }
 
 /* 네비 맨 아래 — 시작 화면으로 (새 게임 / 이어하기) */

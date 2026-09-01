@@ -238,7 +238,6 @@ function renderUnits(state, root) {
                         ${skills}
                     </div>
                 </div>
-                <div class="buff-row"></div>
                 <div class="pop-layer"></div>`;
             // 올려놓으면 뜬다 — 카드는 기본 능력치(영웅만), 스킬 칸은 그 스킬 (2026-08-28, ui/tip.js).
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
@@ -247,7 +246,15 @@ function renderUnits(state, root) {
                 if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i], u.period));   // 빈 칸은 띄울 것이 없다
             });
             u.node = n;
-            side.appendChild(n);
+            // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서
+            // 「몬스터·영웅·보스가 전부 같은 고정 크기」의 그 크기가 달라진다. 칸(.unit-slot)이 카드와 줄을 세로로 물고,
+            // 카드는 창이 걸리든 말든 옛 크기 그대로다 (SCREEN_DESIGN §4-2)
+            const cell = document.createElement('div');
+            cell.className = 'unit-slot';
+            cell.appendChild(n);
+            cell.insertAdjacentHTML('beforeend', '<div class="buff-row"></div>');
+            u.buffRow = cell.lastElementChild;
+            side.appendChild(cell);
         }
     }
 }
@@ -270,7 +277,7 @@ function refreshUnit(state, u) {
         slot.querySelector('.cd-mask').style.height = (1 - pct) * 100 + '%';   // 남은 쿨만큼 위에서 덮는다
         slot.classList.toggle('ready', pct >= 1);
     });
-    // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
+    // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 카드 밖 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
     u.node.classList.toggle('buffed', u.hp > 0 && u.buffs?.size > 0);
     refreshBuffs(u);
 }
@@ -279,10 +286,11 @@ function refreshUnit(state, u) {
  * 창 뱃지 줄 — 걸려 있는 창 하나 = 칩 하나. 칩은 그 창을 만든 스킬의 아이콘이고 이름은 `title` 이 든다.
  * **이로운 창은 초록 · 해로운 창은 빨강** 테두리 — 가르는 것은 창의 값 부호다(`buff` 이벤트의 `v`).
  * ⚠ 지금 도는 창 4종은 전부 이로워서 빨강은 아직 안 켜진다 (skill.csv · SCREEN_DESIGN §4-2).
- * 줄은 창이 없어도 **자리를 지킨다** — 높이가 창 개수를 따라 흔들리면 카드 크기 고정이 깨진다.
+ * 자리는 **카드 밖 · 카드 바로 아래**(`.unit-slot` 의 둘째 줄) — 카드 크기를 건드리지 않는다 (2026-08-31 사용자 지시).
+ * 줄은 창이 없어도 **자리를 지킨다** — 높이가 창 개수를 따라 흔들리면 카드가 위아래로 흔들린다.
  */
 function refreshBuffs(u) {
-    const row = u.node?.querySelector('.buff-row');
+    const row = u.buffRow;   // 카드 밖(.unit-slot 의 둘째 줄)이라 u.node 아래서는 못 찾는다
     if (!row) return;
     const live = u.hp > 0 ? [...(u.buffs ?? new Map())] : [];
     const sig = live.map(([id, b]) => `${id}:${b?.v ?? 0}`).join('|');

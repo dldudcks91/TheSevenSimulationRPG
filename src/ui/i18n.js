@@ -73,6 +73,8 @@ const STRINGS = {
     'ng.roll': { ko: '{n}번째 굴림', en: 'Roll {n}' },
     'ng.reroll': { ko: '다시 굴리기', en: 'Reroll' },
     'ng.start': { ko: '이 셋으로 시작', en: 'Start with these' },
+    /* ⚠ 부르는 곳 0 (2026-09-01) — 후보 카드에서 시작 특성 줄을 걷었다 (SCREEN_DESIGN §3).
+       값(`hero.trait`)은 살아 있고 화면에만 없다. 다시 보이게 할 자리는 영웅 툴팁(§5)이 1순위라 키는 남긴다 */
     'ng.trait': { ko: '시작 특성', en: 'Starting Trait' },
     'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
     'ng.note': {
@@ -149,7 +151,6 @@ const STRINGS = {
     'ch.salvageMode': { ko: '분해 모드', en: 'Salvage mode' },
     'ch.salvageHint': { ko: '분해 모드: 클릭한 아이템을 가루로 만든다', en: 'Salvage mode: clicking an item turns it to dust' },
     'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
-    'ch.err.twoHanded': { ko: '양손 무기 착용 중 — 보조 불가', en: 'Two-hander equipped — no off-hand' },
     'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
@@ -171,6 +172,11 @@ const STRINGS = {
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'tv.err.roster': { ko: '로스터가 가득 찼다 ({cap})', en: 'Roster full ({cap})' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
+    /* 수색 칸 [신설 2026-09-01] — 화면만 있고 동작은 없다(game_logic 에 수색이 없다 · SCREEN_DESIGN §8-1).
+       미착수 안내는 새로 쓰지 않고 `todo.lead` 를 그대로 쓴다 — 미착수 화면의 공통 규칙이다 */
+    'tv.search.h': { ko: '수색', en: 'Search' },
+    'tv.search.go': { ko: '수색 보내기', en: 'Send search' },
+    'tv.search.spec': { ko: '{n}명 · {h}시간', en: '{n} hero · {h}h' },
 
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
@@ -187,7 +193,12 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
+    /* 탭 7 [개정 2026-09-01] — 원정 · 파견 · 의뢰 · 캐릭터 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
+       nav.skill · nav.base · nav.explore · nav.tavern 은 탭에서 빠졌지만 **지우지 않는다**:
+       스킬은 창 제목(§7), 선술집·탐험은 마을의 파견처 칸 라벨(§8), 거점은 도움말이 쓰던 자리를 마을이 물려받으며 유일한 미사용이 됐다.
+       ⚠ 탭 이름은 **마을**(장소)이고 그 안의 칸은 여전히 **파견처**(활동)다 — `dp.*` 키 이름은 그대로 (2026-09-01 사용자 지시). */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
+    'nav.town': { ko: '마을', en: 'Town' },
     'nav.commission': { ko: '의뢰', en: 'Commissions' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
     'nav.skill': { ko: '스킬', en: 'Skills' },
@@ -201,6 +212,18 @@ const STRINGS = {
     'res.dust': { ko: '분해 가루', en: 'Dust' },
     'res.stigma': { ko: '낙인', en: 'Stigma' },
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
+    'ui.close': { ko: '닫기', en: 'Close' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
+
+    /* ── 파견 탭 [신설 2026-09-01] — 파견처 목록 (SCREEN_DESIGN §8) ──
+       선술집 · 탐험은 옛 탭 이름(nav.tavern · nav.explore)을 그대로 쓴다. 여기 넷만 새 이름이다.
+       담당 능력치는 문구가 아니라 `hero_attribute.csv:dispatch` 에서 온다 — 화면이 배정표를 따로 갖지 않는다 */
+    'dp.post.trade': { ko: '상단', en: 'Trading House' },
+    'dp.post.forge': { ko: '제련소', en: 'Smeltery' },
+    'dp.post.mine': { ko: '광산', en: 'Mine' },
+    'dp.post.gather': { ko: '채집', en: 'Gathering' },
+    'dp.solo': { ko: '1인', en: 'Solo' },
+    'dp.party': { ko: '파티', en: 'Party' },
+    'dp.attrTitle': { ko: '담당 능력치', en: 'Governing attribute' },
 
     /* ── 도움말 탭 (2026-08-26) ──
        설명 문구는 여기서 새로 쓰지 않는다 — 인게임에서 걷어낸 *.note / *.sub / *.hint 를 같은 키로 재사용한다.
@@ -314,7 +337,7 @@ const STRINGS = {
 
     /* ── 장비 ── */
     'eq.equipped': { ko: '착용 {n} / {cap}', en: 'Equipped {n} / {cap}' },
-    'eq.twoHand': { ko: '양손 무기라 보조 슬롯이 잠긴다', en: 'Two-hander locks the off-hand slot' },
+    'eq.slots': { ko: '장비는 8칸 — 무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 2. 모든 무기는 양손이라 잠기는 칸이 없다', en: '8 gear slots — weapon, helm, armor, gloves, boots, amulet, 2 rings. Every weapon is two-handed, so no slot is ever locked' },
     'st.atk': { ko: '공격력', en: 'Attack' },
     'st.atkType.physical': { ko: '물리', en: 'Physical' },
     'st.atkType.magic': { ko: '마법', en: 'Magic' },
@@ -339,7 +362,6 @@ const STRINGS = {
         ko: '칸에 마우스를 올리면 <b>착용 중인 장비와 나란히</b> 비교된다. 테두리 색 = 희귀도',
         en: 'Hover a cell to compare it <b>side by side with the equipped item</b>. Border color = rarity',
     },
-    'pd.twoHand': { ko: '양손', en: '2H' },
 
     /* ── 캐릭터 탭 (2026-08-23 개편) — 영웅 띠 / 장비·전체·세부·스킬 4칸 / 아이템 가로 ── */
     'ch.gear.h': { ko: '장비', en: 'Equipment' },
@@ -399,6 +421,15 @@ const STRINGS = {
             + '<b>Research</b> unlocks skill nodes and recipes and spends materials brought back by gathering. <b>It sends no heroes</b> — it replaces the old Lab dispatch post<br>'
             + 'Cost curve and unlock order are undecided, so the section is not started (GAME_DESIGN §9 · skill_design §5)',
     },
+    /* 연구 섹션 [신설 2026-09-01] — ⚠ 내용은 목업이다 (ui/mock.js:RESEARCH · SCREEN_DESIGN §13-1).
+       칸 안의 이름·해금 내용은 데이터 문자열이라 mock 의 {ko,en} 을 L() 이 푼다. 여기 있는 것은 **라벨뿐**.
+       누를 때의 안내는 새로 쓰지 않고 `todo.lead` 를 그대로 부른다 (§11 · 수색 버튼과 같은 처리) */
+    'rs.rs.done': { ko: '완료', en: 'Done' },
+    'rs.rs.progress': { ko: '완료 {n}', en: 'Done {n}' },
+    'rs.rs.mat': { ko: '재료', en: 'Materials' },
+    'rs.rs.cost': { ko: '재료 {m} · {g}G', en: '{m} mat · {g}G' },
+    'rs.rs.go': { ko: '연구', en: 'Research' },
+    'rs.rs.need': { ko: '{name} 먼저', en: 'Needs {name}' },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.next': { ko: '{no}번 칸까지 {n}', en: '{n} more to slot {no}' },
@@ -430,7 +461,6 @@ const STRINGS = {
     'rs.cond.sin_kind': { ko: '죄종 {n}종 이상', en: '{n}+ different sins' },
     'rs.cond.class_same': { ko: '같은 직업 {n}명 이상', en: '{n}+ heroes sharing a class' },
     'rs.cond.affix_sin': { ko: '{a} 접사 {n}개 이상', en: '{n}+ {a} affixes' },
-    'rs.cond.two_hand': { ko: '양손 무기 {n}명 이상', en: '{n}+ two-handed weapons' },
     'rs.cond.damage_kind': { ko: '{a} 무기 {n}명 이상', en: '{n}+ {a} weapons' },
     'rs.cond.skill_tag': { ko: '{a} 스킬 보유 {n}명 이상', en: '{n}+ heroes with a {a} skill' },
 

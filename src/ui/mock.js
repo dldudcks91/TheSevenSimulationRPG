@@ -105,14 +105,14 @@ export const HERO_TIER = {
 
 /**
  * 직업 · 장비 부위/위치 · 아이템 베이스 · 접사 정의는 **CSV 로 나갔다** (2026-08-31):
- *   `class.csv` (7행 · CSV 컬럼은 `release`, 로더가 `stage` 로 주입) · `equip_slot.csv` (9행 = 부위 8 + 반지 두 번째 칸)
+ *   `class.csv` (7행 · CSV 컬럼은 `release`, 로더가 `stage` 로 주입) · `equip_slot.csv` (8행 = 부위 7 + 반지 두 번째 칸 — 2026-09-01 보조 폐지)
  *   `item_base.csv` (7부위 × 4 — 무기는 없다. 무기의 베이스는 무기군 자체 = `weapon_group.csv`)
  *   `affix.csv` (19행 · `scale` 3분류 · `per_ilvl` 은 `band` 행만)
  * 읽는 곳은 `ui/data.js`(`D.classes` · `D.slots`/`D.equipSlots` · `D.itemBases` · `D.affixDefs`).
  * ⚠ 접사·베이스 수치는 여전히 프로토타입 임시값이고 계승 접사 매트릭스(7죄종×슬롯)는 미연결이다.
  */
 
-/** 접사 표기 — stat id → 이름 + 단위. **화면 전용 사전**이라 CSV 로 가지 않는다 (COMBAT_CATS 와 같은 성격) */
+/** 접사 표기 — stat id → 이름 + 단위. **화면 전용 사전**이라 CSV 로 가지 않는다 (`SKILL_DISPLAY` 와 같은 성격) */
 export const AFFIX_LABELS = {
     atk_flat: { ko: '공격력', en: 'Attack', fmt: 'n' },
     atk_pct: { ko: '공격력', en: 'Attack', fmt: 'pct' },
@@ -152,14 +152,14 @@ export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? {
 export const statValue = (stat, v, fallback) =>
     `${v >= 0 ? '+' : ''}${v}${statLabel(stat, fallback).fmt === 'pct' ? '%' : ''}`;
 
-/** 페이퍼돌 배치 — 3열 × 4행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
+/** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
  *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
- *  2026-08-27 재배치 — 목걸이는 투구 오른쪽 · 장갑은 무기 아래 · 신발은 보조 아래 · 반지는 장갑·신발 아래 (SCREEN_DESIGN §6) */
+ *  2026-09-01 재배치 — 보조 슬롯 폐지(한손 개념 폐지)로 위치가 9 → 8 이 되어 4행이 3행으로 줄었다.
+ *  무기 왼쪽 · 갑옷 가운데 · 장갑 오른쪽, 반지 둘이 신발을 감싼다. ⚠ SCREEN_DESIGN §6 갱신은 `/ui` 몫 */
 export const PAPERDOLL = [
     [null, 'helmet', 'amulet'],
-    ['weapon', 'armor', 'offhand'],
-    ['gloves', null, 'boots'],
-    ['ring1', null, 'ring2'],
+    ['weapon', 'armor', 'gloves'],
+    ['ring1', 'boots', 'ring2'],
 ];
 
 /* ═══════════ 영웅 생성 풀 ═══════════
@@ -168,20 +168,13 @@ export const PAPERDOLL = [
    `hero_trait.csv` 12행(시작 특성 — ⚠ 효과 미작성, 지금은 이름표만 굴린다. hero_design §3).
    읽는 곳은 `ui/data.js`(`D.heroNamePool` · `D.heroTraitPool`). */
 
-/**
- * 전투 능력치 카테고리 라벨 — **화면 전용 사전**이라 CSV 로 가지 않는다.
- * 능력치 자체(25종 · id·이름·카테고리·계수·단위·`impl`)는 `combat_stat.csv` 가 SSOT 고
- * 로더(`ui/data.js:D.combatStats`)가 읽는다 — 시트는 `impl=1` 행만 그린다.
- * **기본 능력치와는 다른 층이다** (CLAUDE.md / hero_design §4) — 기본 7종 = 영웅 고유·장비 불변 /
- * 전투 25종 = 장비·스킬이 만든다.
- */
-export const COMBAT_CATS = [
-    { id: 'offense', ko: '공격', en: 'Offense' },
-    { id: 'defense', ko: '방어', en: 'Defense' },
-    { id: 'sustain', ko: '유지', en: 'Sustain' },
-    { id: 'tempo', ko: '템포', en: 'Tempo' },
-    { id: 'utility', ko: '유틸', en: 'Utility' },
-];
+/* 전투 능력치 — 25종(id·이름·카테고리·계수·단위·`impl`·`sheet_order`)은 `combat_stat.csv` 가 SSOT 고
+   로더(`ui/data.js:D.combatStats`)가 읽는다. 시트는 `impl=1` 행을 **`sheet_order` 순**으로 그린다 (SCREEN_DESIGN §6).
+   ⚠ **카테고리 라벨 사전 `COMBAT_CATS` 는 2026-09-01 에 삭제했다** — 캐릭터 탭이 카테고리 제목을 안 그리기로 한
+   08-26 결정 이후 라벨이 화면에 나온 적이 없고, 마지막 용도였던 시트 정렬마저 `sheet_order` 로 넘어가 읽는 곳이 0이 됐다.
+   카테고리 자체는 CSV 의 `category` 컬럼에 남아 있다 — 라벨이 다시 필요해지면 그때 이름을 붙인다.
+   **기본 능력치와는 다른 층이다** (CLAUDE.md / hero_design §4) — 기본 7종 = 영웅 고유·장비 불변 /
+   전투 25종 = 장비·스킬이 만든다. */
 
 /**
  * 영웅 초상 — 몬스터와 같은 자리(`faces/<스타일>/`)에 `hero_<n>.png`. **어느 그림인지는 이름이 정한다.**
@@ -296,6 +289,14 @@ export function setFaceStyle(id) {
     if (!FACE_STYLES.includes(id)) return;
     faceStyleCur = id;
     try { localStorage.setItem(FACE_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
+    applyDocumentFace();
+}
+/** `<html data-face>` 동기화 — CSS 가 **초상 축소 보간**을 스타일별로 가르는 유일한 신호다
+ *  (도트는 끄고 손그림은 켠다 — `style.css` 의 `--face-render` · [SCREEN_DESIGN §5]).
+ *  `i18n.js:applyDocumentLang` 과 같은 패턴이고 같은 자리(`app.js render()`)에서 불린다.
+ *  안 불려도 안전한 쪽으로 떨어진다 — 속성이 없으면 `:root` 의 기본값(보간 켬)이 먹는다. */
+export function applyDocumentFace() {
+    document.documentElement.dataset.face = faceStyleCur;
 }
 export const faceDir = () => `./assets/art/faces/${faceStyleCur}/`;
 
@@ -365,4 +366,33 @@ export const CX_DONE = {
     2: { ko: '방어력 +2%', en: '+2% Defense' },
     3: { ko: '회피율 +2%', en: '+2% Evasion' },
     4: { ko: '공격 속도 +2%', en: '+2% Attack Speed' },
+};
+
+/* ═══════════ 연구 — ⚠ 목업 (SCREEN_DESIGN §13-1, 2026-09-01 사용자 지시) ═══════════
+ * **여기 있는 것은 전부 지어낸 값이다.** 기획이 이름도 비용 곡선도 해금 순서도 안 정했다
+ * (GAME_DESIGN §10 「스킬의 자리」 · base_expedition §2-2 채집 재료는 이름조차 미정).
+ * 그래서 **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
+ * 스킬 트리 목업(SKILL_TREES · SKILL_GRID)이 같은 자리에 있다가 실동작이 오면서 삭제됐다.
+ * 기획이 확정되면 이 상수는 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다 (DEV_PLAN 부채).
+ *
+ * state — done(완료) | open(살 수 있다) | locked(선행 연구가 남았다)
+ * need  — locked 인 칸이 가리키는 선행 연구의 id
+ */
+export const RESEARCH = {
+    /** ⚠ 지어낸 보유량 — 채집 재료는 자원 칸(G.resources)에 존재하지도 않는다 */
+    material: 42,
+    nodes: [
+        { id: 'refine', name: { ko: '재료 정제', en: 'Material Refining' },
+            gain: { ko: '제련소 강화 성공률 +5%', en: '+5% smeltery upgrade success' },
+            state: 'done', mat: 20, gold: 400 },
+        { id: 'wgroup', name: { ko: '무기군 숙련 개방', en: 'Weapon Mastery Unlock' },
+            gain: { ko: '직업 마스터리 아랫줄 1칸', en: 'One more class mastery row' },
+            state: 'open', mat: 35, gold: 900 },
+        { id: 'reroll', name: { ko: '접사 재굴림', en: 'Affix Reroll' },
+            gain: { ko: '가방에서 접사 하나 다시 굴리기', en: 'Reroll one affix from the bag' },
+            state: 'locked', need: 'wgroup', mat: 60, gold: 1600 },
+        { id: 'advance', name: { ko: '전직 특화 개방', en: 'Advancement Unlock' },
+            gain: { ko: '전직 트리 해금 레벨 −5', en: 'Advancement unlock level −5' },
+            state: 'locked', need: 'reroll', mat: 90, gold: 2800 },
+    ],
 };

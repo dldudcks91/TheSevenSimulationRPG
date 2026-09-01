@@ -52,8 +52,10 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 → **[방향 확정 2026-08-21]** 직업 7종 + 무기군 배정 확정 (hero_design.md §2) — 신규 무기군 지팡이·활(본편), 단검·낫?(확장). 마법사 기본 공격 = 지팡이 기본 마법 공격 (battle_design.md §4). 베이스/Implicit/마법 공격 수치 **데이터 작성은 미착수**
 → **[몬스터 측 해결 2026-08-22]** 이 갭에는 **반대편 절반**이 있었다. 몬스터도 마법 공격을 하지 않아 **영웅의 마법방어가 사문화**돼 있었고, `Lich`(마법 극대)·`Imp`(빠른 마법)·`Succubus`(디버프)·`Ghost`(물방↓마방↑) 4개 베이스의 컨셉이 데이터에 존재하지 않았다. `monster.csv:attack_type`(physical/magic) 신설로 해결 — monster_design.md §2, battle_design.md §2-1. **남은 것은 영웅 측 데이터**(지팡이·활 베이스와 Implicit, 마법 피해 수치)뿐이다
 
-### G3-b. 슬롯 개편으로 생긴 신규 갭 (2026-08-21 · 슬롯 수 갱신 2026-08-25)
-부위가 5종 → **8종**, 슬롯이 5 → **9개**(반지 ×2)로 늘었으나(item_design.md) 계승 데이터는 5부위 기준이다.
+### G3-b. 슬롯 개편으로 생긴 신규 갭 (2026-08-21 · 슬롯 수 갱신 2026-08-25 · **보조 폐지 2026-09-01**)
+부위가 5종 → ~~8종~~ **7종**, 슬롯이 5 → ~~9개~~ **8개**(반지 ×2)로 늘었으나(item_design.md) 계승 데이터는 5부위 기준이다.
+
+> **[2026-09-01] 갭이 한 칸 줄었다** — 보조(offhand) 부위가 폐지되면서 아래의 「신규 3부위」는 **목걸이·반지 2부위**가 됐다. 보조 베이스·접사·드롭 경로를 새로 만들 필요가 사라진 것이지, 남은 둘이 채워진 것은 아니다 (GAME_DESIGN §9 · item_design §1).
 - `equipment_base.csv`: 보조/목걸이/반지 **베이스 0개**
 - `equipment_prefix/suffix.csv`: 7죄종 × 5부위 = 35/35 — **신규 3부위 죄종 접사 0개**
 - `equipment_common_option.csv`: 70개 전부 5부위로 태깅 — 신규 3부위 공통 접사 0개
@@ -71,6 +73,23 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 - `equipment_base.cost_size_multiplier`, `equip_rarity_config.base_cost`, common_option의 `cost_reduction` 접사
 → **CSV는 그대로 두고 로직에서 무시**. `cost_reduction` 접사는 드롭 풀에서 제외 필요 (안 하면 죽은 옵션이 굴러나옴)
 → **[해소 2026-08-22] `cost_reduction` 5행을 `equipment_option_override.csv` 에 exclude 등재.** G2 조치와 같은 테이블에서 처리됐다. `cost_size_multiplier`·`base_cost` 컴럼은 계속 무시(무변환 원칙)
+
+### G5-b. 방어구 `sub_group` 축 — 갈래가 있었는데 절반이 폐지된 스탯 위에 있다 (2026-09-01 발견)
+
+`equipment_base.csv` 는 방어구에 **부위마다 서로 다른 2갈래**를 갖고 있다. 지금까지 이 문서에 등재되지 않았다.
+
+| 부위 | `sub_group` 2종 | 가르는 실제 수치 | 상태 |
+|---|---|---|---|
+| 갑옷 | `heavy_armor` / `light_armor` | `base_defense` ↔ `base_magic_defense`<br>(heavy 20/30/40 · mdef 5/8/10 ↔ light 12/18/25 · mdef **15/22/30**) | ⚠ **마법 방어 08-25 폐지** → light 갈래의 근거 소멸 |
+| 투구 | `survival_helm` / `attack_helm` | — | ✅ 축 자체는 살아 있다 |
+| 장갑 | `speed_gloves` / **`accuracy_gloves`** | — | ❌ **명중 폐지**(item_design §2) |
+| 신발 | **`magres_boots`** / **`evasion_boots`** | — | ❌ **회피 폐지** · 마법저항은 원소 저항으로 대체 가능 → **둘 다 죽었다** |
+
+→ **8갈래 중 3개가 폐지된 스탯 위에 서 있고, 신발은 갈래가 통째로 무효다.**
+→ 그 결과 `src/data/item_base.csv`(신규)는 **이름만 4개씩 뽑아 왔고**, `game_logic/item.js` 가 "무기 외 부위의 **베이스 이름 풀**"로 명시한다 — 즉 판금 갑옷과 가죽 갑옷은 **완전히 같은 물건**이다. 무기의 `weapon_group.csv` 에 대응하는 방어구 테이블이 없다.
+→ ⚠ **이름-분류가 D2 원본과 뒤섞여 있다** — `Plate Mail` 이 `light_armor`, `Dusk Shroud` 가 `heavy_armor` 로 분류돼 있어(원본과 정반대) **이름에서 성격을 역산하면 안 된다.**
+→ ⚠ **`Ghost Armor` 는 어휘가 충돌한다** — `Ghost` 는 G3-a 가 이미 적은 대로 **몬스터 베이스(물방↓마방↑)** 이고, 무기 통합옵션에 vs Undead 추가 피해가 있다.
+→ 처리 방향은 **GAME_DESIGN §10 「방어구 갈래 축」·「계승 `equipment_base.csv:sub_group` 의 처리」** — 09-01 에 "직업으로 안 가르되 트레이드오프는 둔다"가 확정됐고(사용자), 이 축을 되살릴지 버리고 새로 짤지는 미확정 (item_design.md §1 방어구 갈래)
 
 ### G6. 1:1 전투 전제 (GAME_DESIGN §9 기재 항목과 동일)
 `stage_info`는 `wave` 컬럼으로 웨이브당 **몬스터 1마리**(monster_idx 단수)를 지정 — 원작이 1:1이었기 때문.
@@ -162,4 +181,4 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 | `equipment_suffix` | `lust\|helmet` | replace_provisional | `res_all` | percentile | 5 | 30 | magic_resist 는 전 원소 공통 저항이 되었고 단위가 소재값 -> 직접 %로 바뀌었다 (9-5). 범위를 % 스케일로 환산 — 2026-08-26 |
 
 ---
-*마지막 업데이트: 2026-08-28 (부록 A — 구 `equipment_option_override.csv` 34행 이관, CSV 폐기) · 2026-08-23 (게이트 폐지 반영 — G2 결론 유지, 근거만 축소)*
+*마지막 업데이트: 2026-09-01 (**G5-b 신설** — 방어구 `sub_group` 축 8갈래 중 3개가 폐지 스탯(명중·회피·마법방어) 위에 있고 신발은 둘 다 무효라는 미등재 공백 · `item_base.csv` 가 이름 풀일 뿐이라는 사실 · `Ghost` 어휘 충돌 / G3-b 「신규 3부위」→ 보조 폐지로 2부위) · 2026-08-28 (부록 A — 구 `equipment_option_override.csv` 34행 이관, CSV 폐기) · 2026-08-23 (게이트 폐지 반영 — G2 결론 유지, 근거만 축소)*

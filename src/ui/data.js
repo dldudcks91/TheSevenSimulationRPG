@@ -32,8 +32,8 @@ export const D = {
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
     chapterList: [],
     heroAttributes: [],       // hero_attribute.csv — [{id, ko, en, abbr, combatStat, dispatch}]
-    combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl}]
-    weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, twoHanded, period, damageKind, release}}
+    combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
+    weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
@@ -100,15 +100,16 @@ export async function loadData(base = './data/') {
         id: r.attr_id, ko: r.attr_kr, en: r.attr_en, abbr: r.abbr,
         combatStat: r.combat_stat, dispatch: r.dispatch,
     }));
-    // 전투 능력치 25종 — `impl` 은 computeCombat 이 실제로 내는가. 시트는 impl=1 만 그린다
+    // 전투 능력치 25종 — `impl` 은 computeCombat 이 실제로 내는가. 시트는 impl=1 만 그린다.
+    // `sheetOrder` 는 **캐릭터 시트의 행 순서**다 — CSV 행 순서가 아니라 이 값이 정한다 (SCREEN_DESIGN §6)
     D.combatStats = combatStat.map(r => ({
         id: r.stat_id, ko: r.stat_kr, en: r.stat_en, cat: r.category,
-        attr: r.attr === '-' ? null : r.attr, fmt: r.fmt, impl: r.impl,
+        attr: r.attr === '-' ? null : r.attr, fmt: r.fmt, impl: r.impl, sheetOrder: r.sheet_order,
     }));
     // 무기군 — CSV 한 행이 곧 무기 베이스다 (이름 ko/en 도 CSV 의 _kr/_en 쌍에서 온다)
     D.weaponGroupList = weaponGroup.map(r => ({
         id: r.group_id, ko: r.group_kr, en: r.group_en,
-        classes: String(r.classes).split('|'), twoHanded: Number(r.hands) === 2,
+        classes: String(r.classes).split('|'),
         period: r.action_period, variance: r.variance_pct, damageKind: r.damage_kind, release: r.release,
     }));
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');

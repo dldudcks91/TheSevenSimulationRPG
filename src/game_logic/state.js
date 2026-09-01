@@ -5,14 +5,15 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v7 (2026-08-31)
+ * 세이브 형식 v8 (2026-09-01)
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
  *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, mastery, masteryPoints, stats, caps, equipped:{position: itemUid|null}, injuredUntil}],
  *     — mastery = {nodeId: rank} 찍은 것만 담는다(0은 안 담는다) · masteryPoints = 남은 포인트.
  *       죄종·직업 마스터리가 한 풀을 공유한다 (skill_design §1-4). 전직 전용 포인트는 전직 미구현이라 없다
- *     — position = 착용 위치 id. 부위 8종 · 위치 9개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로)
+ *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
+ *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
  *   party: [uid], items: {uid: item}, bag: [uid],
  *   progress: {cleared: [stageId]},
  *   codexCards: {monsterId: n}   — 도감 레벨의 출처. 누적 카운트, 소모 없음 (monster_design §8)
@@ -42,21 +43,25 @@
  *   v4 → v5 (2026-08-30 — 선술집 리롤 쿨다운):
  *     · `tavern` 이 없으면 `{rerolledAt: null, hired: []}` — **쿨다운이 열린 상태**로 올린다.
  *       옛 세이브는 리롤한 적이 없어 기다린 시간을 소급할 근거가 없고, 닫힌 채로 올리면 접속하자마자 골드를 물린다
+ *   v7 → v8 (2026-09-01 — 한손 개념 폐지 · 보조 슬롯 폐지):
+ *     · 보조 아이템(착용분 · 가방분)을 **지운다** — 부위 자체가 없어져 돌려줄 자리가 없다
+ *     · `equipped.offhand` 키 삭제 · `items[*].twoHanded` 삭제
+ *     · 무기군 재편 — `sword1h` → `sword2h` · `wand` → `orb` · 창이 기사로 가면서 직업이 안 맞게 된 무기는 가방으로
  *   v6 → v7 (2026-08-31 — 강화 재정의 R25):
  *     · `items[*].up = 0` · `counters.upgrade = 0` — 강화한 적이 없는 상태.
  *       옛 아이템의 watk·implicit·접사 값은 전부 강화 이전 값이라 소급할 것이 없고, up=0 이면 파생 배율이 1이라
  *       이관이 전투 수치를 흔들지 않는다
- *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯 9·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
+ *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /**
  * @param {object} deps
- *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 9개) / stages(byId) / stageOrder [id...]
+ *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
  *   monsters(byId) / codex {levels:[cards_to_next...](codex_level.csv 레벨순), bonus:[레벨별 %](codex_level.csv:bonus_pct), statByNum:{stage_num: statKey}(codex_series.csv)}
  */
 export function createGameSystem(deps) {
@@ -173,6 +178,34 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v7 → v8 — 한손 개념 폐지 · 보조(offhand) 슬롯 폐지 (2026-09-01).
+     * 슬롯이 사라진 물건은 돌려줄 자리가 없으므로 **아이템 자체를 지운다** — 가방에 남기면 영원히 못 끼는 짐이 된다.
+     * ⚠ 직업이 안 맞게 된 무기(창을 든 전사)를 가방으로 되돌리면서 가방이 상한을 넘을 수 있다.
+     *   상한은 새로 얻을 때만 막는 값이라 넘긴 채로 열려도 게임은 성립하고, 분해하면 정상으로 돌아온다.
+     */
+    function upgradeV7(s) {
+        const RENAME = { sword1h: 'sword2h', wand: 'orb' };      // 삭제·개명된 무기군
+        const dead = new Set();
+        for (const [uid, it] of Object.entries(s.items ?? {})) {
+            if (it.slot === 'offhand') { dead.add(uid); continue; }
+            delete it.twoHanded;
+            if (it.slot === 'weapon' && RENAME[it.group]) it.group = RENAME[it.group];
+        }
+        for (const uid of dead) delete s.items[uid];
+        s.bag = (s.bag ?? []).filter(u => !dead.has(u));
+        for (const h of s.heroes ?? []) {
+            delete h.equipped.offhand;                            // 안 지우면 아래 emptyEquip 병합이 되살린다
+            for (const [pos, uid] of Object.entries(h.equipped)) {
+                const it = uid ? s.items[uid] : null;
+                if (!it) { h.equipped[pos] = null; continue; }
+                if (I.canEquip(h, it)) { h.equipped[pos] = null; s.bag.push(uid); }
+            }
+        }
+        s.version = 8;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -184,7 +217,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -192,6 +225,7 @@ export function createGameSystem(deps) {
         if (s.version === 4) s = upgradeV4(s);
         if (s.version === 5) s = upgradeV5(s);
         if (s.version === 6) s = upgradeV6(s);
+        if (s.version === 7) s = upgradeV7(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -267,25 +301,23 @@ export function createGameSystem(deps) {
         return ps.find(p => !hero.equipped[p]) ?? ps[0] ?? null;
     }
 
-    /** 가방 → 착용. 그 위치의 착용품은 가방으로. 양손 무기는 보조를 벗긴다 (가방이 차면 실패). position 은 생략 가능 */
+    /** 가방 → 착용. 그 위치의 착용품은 가방으로 (가방이 차면 실패). position 은 생략 가능.
+     *  양손↔보조 배타는 2026-09-01 한손 개념 폐지로 사라졌다 — 되돌아오는 것은 언제나 그 자리에 있던 하나뿐이다 */
     function equip(state, heroUid, itemUid, position) {
         const h = heroById(state, heroUid), it = state.items[itemUid];
         if (!h || !it || !state.bag.includes(itemUid)) return { ok: false, err: 'missing' };
-        const worn = heroItems(state, h);
-        const why = I.canEquip(h, it, worn);
+        const why = I.canEquip(h, it);
         if (why) return { ok: false, err: why };
         const pos = position && positionsOf(it.slot).includes(position) ? position : equipTarget(h, it);
         if (!pos) return { ok: false, err: 'missing' };
 
         const back = [];
         if (h.equipped[pos]) back.push(h.equipped[pos]);
-        if (it.slot === 'weapon' && it.twoHanded && h.equipped.offhand) back.push(h.equipped.offhand);
         // 가방에서 하나 빠지고 back 만큼 들어온다
         if (state.bag.length - 1 + back.length > B.inventory_cap) return { ok: false, err: 'bagFull' };
 
         state.bag = state.bag.filter(u => u !== itemUid);
         for (const u of back) state.bag.push(u);
-        if (it.slot === 'weapon' && it.twoHanded) h.equipped.offhand = null;
         h.equipped[pos] = itemUid;
         return { ok: true, back, position: pos };
     }

@@ -4,10 +4,13 @@
  * 순수 모듈. 데이터는 생성자 주입, 난수는 rng 인자.
  *
  * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v}], sins:[sin...],
- *            group?(무기군 id — weapon_group.csv), twoHanded?, watk?(무기 공격력 굴림값), element?(마법 무기의 원소) }
+ *            group?(무기군 id — weapon_group.csv), watk?(무기 공격력 굴림값), element?(마법 무기의 원소) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
  *   (CSV 로 이사할 때 stat id 가 곧 combat_stat.csv 의 키가 된다)
  *   무기의 행동 주기·공격 타입·착용 직업은 아이템에 박지 않는다 — 매번 무기군(group)에서 읽는다. SSOT 는 weapon_group.csv.
+ *
+ * **한손 개념은 없다** (2026-09-01) — 전 무기가 양손이라 `twoHanded` 플래그도 보조(offhand) 슬롯도 폐지했다.
+ *   부위는 7종 · 착용 위치는 8개. 무기↔보조 배타 규칙과 양손 공격력 배율(two_hand_atk_mult)이 함께 사라졌다.
  *
  * 세트포인트는 **보류** (item_design.md §4, 2026-08-25) — `sins` 는 접사의 죄종 **목록**(접사 카테고리 · 지역 드롭 편향 ·
  *   낙인 지정의 축)일 뿐 포인트가 아니다. 양손 2포인트 · 메인 죄종 +1 도 같이 보류라 여기 없다.
@@ -34,9 +37,9 @@ import { createFormula } from './formula.js';
 /**
  * @param {object} data
  *   balance      — {key: value}
- *   slots        — 부위 id 목록 (8부위). 드롭은 부위 단위 — 반지는 착용 **위치**가 2개일 뿐 부위는 하나다
+ *   slots        — 부위 id 목록 (7부위). 드롭은 부위 단위 — 반지는 착용 **위치**가 2개일 뿐 부위는 하나다
  *   sins         — 죄종 id 목록
- *   weaponGroups — {id: {id, ko, en, classes:[cls...], twoHanded, period, variance, damageKind, release}}  ← weapon_group.csv
+ *   weaponGroups — {id: {id, ko, en, classes:[cls...], period, variance, damageKind, release}}  ← weapon_group.csv
  *   elements     — 원소 4종 id 목록 (마법 무기 개체가 하나를 든다)
  *   itemBases    — {slot: [{ko,en}...]}  무기 외 부위의 베이스 이름 풀. 무기의 베이스는 무기군 자체다
  *   affixDefs    — [{stat, scale:'growth'|'band'|'flat', min, max, perIlvl?, slots?:[...]}]  slots 없으면 전 부위
@@ -88,12 +91,12 @@ export function createItemSystem(data) {
     /**
      * 부위 고유값(Implicit) — 방어구만 든다 (무기는 watk, 목걸이·반지는 없다).
      * 방어는 **비율 축**이라 성장 곡선을 타지 않는다 (§9-0) — ilvl 완만 가산 + 개체 편차 1회.
-     * ⚠ 보조(offhand) ×1.5 는 코드 상수 (INTERFACE §5-3 — CSV 후보).
+     * 부위별 배수는 없다 — 보조(offhand) ×1.5 는 슬롯 폐지와 함께 삭제 (2026-09-01).
      */
     function implicitFor(rng, slot, ilvl) {
         if (slot === 'weapon' || slot === 'amulet' || slot === 'ring') return null;    // rng 소비 없음
         const eps = (rng() * 2 - 1) * B.armor_def_variance_pct / 100;
-        const base = (B.armor_def_base + ilvl * B.armor_def_per_ilvl) * (slot === 'offhand' ? 1.5 : 1);
+        const base = B.armor_def_base + ilvl * B.armor_def_per_ilvl;
         return { stat: 'def_flat', v: r1(base * (1 + eps)) };
     }
 
@@ -119,11 +122,9 @@ export function createItemSystem(data) {
         };
         if (slot === 'weapon') {
             item.group = base.id;
-            if (base.twoHanded) item.twoHanded = true;
-            // 무기 공격력 = 밑수 × 성장 곡선 × (양손 보상) × 개체 편차. 편차 폭은 무기군 값이 우선 (§9-1)
+            // 무기 공격력 = 밑수 × 성장 곡선 × 개체 편차. 편차 폭은 무기군 값이 우선 (§9-1)
             const eps = (rng() * 2 - 1) * (base.variance ?? B.dmg_variance_pct) / 100;
-            item.watk = r2(B.weapon_atk_base * F.growthMult(ilvl)
-                * (base.twoHanded ? B.two_hand_atk_mult : 1) * (1 + eps));
+            item.watk = r2(B.weapon_atk_base * F.growthMult(ilvl) * (1 + eps));
             // 마법 무기는 **개체**가 원소를 든다 (battle_design §9-5) — 무기군은 종류를, 개체는 상대할 저항을 정한다.
             // 세기가 아니라 대상 선택이라 "무기군 스킬은 개체에 붙지 않는다"(skill_design §3)와 충돌하지 않는다.
             if (base.damageKind === 'magic') item.element = pick(rng, data.elements);
@@ -149,13 +150,13 @@ export function createItemSystem(data) {
     /** 무기군 정의 — 무기가 아니거나 모르는 군이면 null */
     const groupOf = item => (item && item.slot === 'weapon' ? WG[item.group] : null) ?? null;
 
-    /** 착용 가능 판정 — 무기는 직업 전속 무기군(hero_design §2) + 양손/보조 배타. 능력치 게이트는 없다 (착용 제약 = 요구 레벨만) */
-    function canEquip(hero, item, equippedItems) {
+    /** 착용 가능 판정 — 무기는 직업 전속 무기군(hero_design §2)뿐. 능력치 게이트는 없다 (착용 제약 = 요구 레벨만).
+     *  양손/보조 배타는 2026-09-01 한손 개념 폐지로 사라졌다 — 남은 거절 사유는 `class` 하나다 */
+    function canEquip(hero, item) {
         if (item.slot === 'weapon') {
             const g = groupOf(item);
             if (g && !g.classes.includes(hero.cls)) return 'class';
         }
-        if (item.slot === 'offhand' && equippedItems.some(it => it.slot === 'weapon' && it.twoHanded)) return 'twoHanded';
         return null;
     }
 
