@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>The Seven Simulation RPG</title>
+    <!-- 레포 루트 → 게임 진입점. GitHub Pages 를 / (root) 로 배포하므로 여기가 첫 페이지가 된다.
+         로컬(start.bat)은 src/ 를 루트로 띄우므로 이 파일을 거치지 않는다. -->
+    <script>
+        // ?face= · ?lang= · #해시를 잃지 않고 넘긴다 (mock.js 가 URL 에서 읽는다)
+        location.replace('./src/index.html' + location.search + location.hash);
+    </script>
+    <meta http-equiv="refresh" content="0; url=./src/index.html">
+</head>
+<body>
+    <p><a href="./src/index.html">The Seven Simulation RPG 로 이동</a></p>
+</body>
+</html>
