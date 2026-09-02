@@ -115,8 +115,8 @@ const STRINGS = {
     'exp.element': { ko: '원소 {e}', en: 'Element {e}' },
     'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat' },
     'exp.repeat.sub': {
-        ko: '승리하면 같은 곳으로 다시 나간다 · <b>게임이 켜져 있는 동안만</b> 돈다 · 부상·패배·가방 가득이면 멈춘다',
-        en: 'Re-runs the same stage after a win · <b>only while the game is open</b> · stops on injury, defeat, or a full bag',
+        ko: '승리하면 같은 곳으로 다시 나간다 · <b>게임이 켜져 있는 동안만</b> 돈다 · 쓰러진 영웅은 빠진 채로 이어진다 · 패배하면 멈추고 전원 회복한다',
+        en: 'Re-runs the same stage after a win · <b>only while the game is open</b> · anyone who went down sits out the rest · a defeat ends it and everyone recovers',
     },
     'exp.notice.runClosed.h': { ko: '부재 중', en: 'While you were away' },
     'exp.notice.runClosed.body': {
@@ -129,9 +129,10 @@ const STRINGS = {
     /* ── 리포트 (실동작) ── */
     'rep.defeat': { ko: '패배', en: 'Defeat' },
     'rep.retreat': { ko: '철수', en: 'Retreat' },
+    'rep.healed': { ko: '귀환 — 전원 회복', en: 'Returned — everyone recovered' },
     'rep.reason.wipe': { ko: '전원 전투불능', en: 'Whole party downed' },
     'rep.reason.timeout': { ko: '제한시간 초과', en: 'Timed out' },
-    'rep.reason.retreat': { ko: '전투불능 발생 — 파티 귀환', en: 'Someone went down — party returned' },
+
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
     'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
     'rep.roundLine': { ko: '{list} 처치', en: '{list} slain' },
@@ -154,7 +155,6 @@ const STRINGS = {
     'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
-    'ch.upgradeMode': { ko: '강화 모드', en: 'Upgrade mode' },
     'ch.upgradeHint': { ko: '강화 모드: 클릭한 아이템을 골드로 한 단계 올린다 — 3·6·9강에서 옵션 하나의 값이 오른다',
         en: 'Upgrade mode: clicking an item raises it one step for gold — at +3/+6/+9 one option gains value' },
     'ch.err.maxUp': { ko: '더는 강화할 수 없다', en: 'Already fully upgraded' },
@@ -177,13 +177,19 @@ const STRINGS = {
     'tv.search.h': { ko: '수색', en: 'Search' },
     'tv.search.go': { ko: '수색 보내기', en: 'Send search' },
     'tv.search.spec': { ko: '{n}명 · {h}시간', en: '{n} hero · {h}h' },
+    /* 도박장 줄 [신설 2026-09-03 사용자 지시 · SCREEN_DESIGN §8-1] — 이름 하나뿐이다.
+       수치 키도 안내 키도 없다: 발행된 CSV 키가 없고(없는 값을 찍으면 확정으로 읽힌다),
+       `todo.lead`(「기획은 확정됐고 화면이 아직 없다」)는 기획부터 미확정인 이 줄에 맞지 않는다 */
+    'tv.gamble.h': { ko: '도박장', en: 'Gambling den' },
 
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
     'time.m': { ko: '{m}분', en: '{m}m' },
     'time.s': { ko: '{s}초', en: '{s}s' },
     'time.ms': { ko: '{m}분 {s}초', en: '{m}m {s}s' },
-    'injury.left': { ko: '치료 {t} 남음', en: '{t} to recover' },
+    /* 출정 아웃 — 치료 타이머가 폐기되면서(base_expedition_design §1-1, 2026-09-03) 「남은 시간」이 없어졌다.
+       말할 것은 시간이 아니라 **상태와 그 끝**이다: 지금 빠져 있고 돌아오면 낫는다 */
+    'injury.out': { ko: '출정 아웃', en: 'Out for this run' },
 
     /* ── 전투 재생 ── */
     'bt.won': { ko: '승리', en: 'Victory' },
@@ -224,6 +230,36 @@ const STRINGS = {
     'dp.solo': { ko: '1인', en: 'Solo' },
     'dp.party': { ko: '파티', en: 'Party' },
     'dp.attrTitle': { ko: '담당 능력치', en: 'Governing attribute' },
+
+    /* 상단 (SCREEN_DESIGN §8-3) — 제목은 `dp.post.trade` 재사용. ⚠ 수치는 전부 목업이라
+       문구도 「무엇을 읽는 자리인가」만 말한다 (base_expedition_design §2-6) */
+    'td.basic': { ko: '기본상단', en: 'Standing traders' },
+    'td.special': { ko: '특수상단', en: 'Visiting trader' },
+    'td.here': { ko: '와 있다 · 체류 {t}', en: 'Here · {t} left' },
+    'td.away': { ko: '지금은 아무도 없다 · 다음 방문 {t}', en: 'Nobody here · next visit in {t}' },
+    'td.buy': { ko: '사기', en: 'Buy' },
+    'td.stock': { ko: '수량 {n}', en: '{n} in stock' },
+    'td.noEquip': { ko: '장비는 팔지 않는다', en: 'No gear for sale here' },
+
+    /* 제련소 (SCREEN_DESIGN §8-2) — 제목은 `dp.post.forge` 를 그대로 쓴다(파견 목록의 칸 이름과 같은 자리다).
+       `+`강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded*` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
+    'fg.assign': { ko: '배치', en: 'Assigned' },
+    'fg.none': { ko: '배치 없음', en: 'None' },
+    'fg.quality': { ko: '품질', en: 'Quality' },
+    'fg.reassign': { ko: '배치 변경', en: 'Reassign' },
+    'fg.seg.craft': { ko: '제작', en: 'Craft' },
+    'fg.seg.up': { ko: '강화', en: 'Upgrade' },
+    'fg.plus.h': { ko: '+ 강화', en: 'Plus upgrade' },
+    'fg.opt.h': { ko: '옵션강화', en: 'Option upgrade' },
+    'fg.go': { ko: '강화', en: 'Upgrade' },
+    'fg.optGo': { ko: '옵션강화', en: 'Upgrade option' },
+    'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
+    'fg.worn': { ko: '착용 중', en: 'Equipped' },
+    'fg.bag': { ko: '가방', en: 'Bag' },
+    'fg.count': { ko: '장비 {n}', en: '{n} items' },
+    'fg.empty': { ko: '가진 장비가 없다', en: 'You own no gear' },
+    'fg.pick': { ko: '왼쪽에서 장비를 고른다', en: 'Pick an item on the left' },
+    'fg.noAffix': { ko: '붙은 옵션이 없다', en: 'No options on this item' },
 
     /* ── 도움말 탭 (2026-08-26) ──
        설명 문구는 여기서 새로 쓰지 않는다 — 인게임에서 걷어낸 *.note / *.sub / *.hint 를 같은 키로 재사용한다.
@@ -316,7 +352,7 @@ const STRINGS = {
     'rep.none': { ko: '없음', en: 'None' },
     'rep.downedN': { ko: '{n}명', en: '{n}' },
     'rep.levelUp': { ko: '▲ {name} 레벨 {a} → {b}', en: '▲ {name} Level {a} → {b}' },
-    'rep.injuryHead': { ko: '부상 — 치료 중', en: 'Injured — Recovering' },
+    'rep.injuryHead': { ko: '전투불능 — 이 출정 동안 아웃', en: 'Down — out for the rest of this run' },
     'rep.injuryNote': {
         ko: '치료는 방치·오프라인 중에도 진행된다. HP는 귀환 시 무료로 전부 회복됐다',
         en: 'Recovery keeps running while idle or offline. HP was fully restored for free on return',
@@ -333,7 +369,7 @@ const STRINGS = {
 
     /* ── 영웅 띠 (캐릭터·스킬·선술집 공통 상단, 2026-08-26) — 초상화 + 이름 + 지금 하는 일 ── */
     'hs.doing.idle': { ko: '대기 중', en: 'Idle' },
-    'hs.doing.injured': { ko: '치료 중 · {t}', en: 'Recovering · {t}' },
+    'hs.doing.out': { ko: '출정 아웃', en: 'Out for this run' },
 
     /* ── 장비 ── */
     'eq.equipped': { ko: '착용 {n} / {cap}', en: 'Equipped {n} / {cap}' },
@@ -455,13 +491,15 @@ const STRINGS = {
         en: 'Conditions read only what the formation fixes — sins, classes, weapons, affixes, skill tags. '
             + 'Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.',
     },
+    // 전술 옵션 등급 — ⚠ 아이템 희귀도(`mock.js:RARITY`)와 **별개 축**이고 이름만 같다 (tactic_card_design §5-5)
+    'rs.grade.common': { ko: '일반', en: 'Common' },
+    'rs.grade.magic': { ko: '매직', en: 'Magic' },
+    'rs.grade.rare': { ko: '레어', en: 'Rare' },
     'rs.cond.always': { ko: '조건 없음', en: 'No condition' },
-    'rs.cond.party_size': { ko: '파티 {n}명 이상', en: 'Party of {n}+' },
     'rs.cond.sin_same': { ko: '같은 죄종 {n}명 이상', en: '{n}+ heroes sharing a sin' },
     'rs.cond.sin_kind': { ko: '죄종 {n}종 이상', en: '{n}+ different sins' },
     'rs.cond.class_same': { ko: '같은 직업 {n}명 이상', en: '{n}+ heroes sharing a class' },
     'rs.cond.affix_sin': { ko: '{a} 접사 {n}개 이상', en: '{n}+ {a} affixes' },
-    'rs.cond.damage_kind': { ko: '{a} 무기 {n}명 이상', en: '{n}+ {a} weapons' },
     'rs.cond.skill_tag': { ko: '{a} 스킬 보유 {n}명 이상', en: '{n}+ heroes with a {a} skill' },
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
@@ -487,6 +525,11 @@ const STRINGS = {
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
     'sk.innate': { ko: '고유', en: 'Innate' },
+    // 액티브 3칸의 출처 라벨 — 칸은 출처가 정한다 (skill_design §2)
+    'sk.src.weapon_group': { ko: '무기', en: 'Weapon' },
+    'sk.src.advance': { ko: '전직', en: 'Advance' },
+    'sk.emptyWeapon': { ko: '무기 없음', en: 'No weapon' },
+    'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
     'sk.base': { ko: '표기 {s}초', en: 'Base {s}s' },
     'sk.eff': { ko: '실효 {s}초', en: 'Eff. {s}s' },
     'sk.aligned': { ko: '(정렬 일치)', en: '(aligned)' },
@@ -572,12 +615,12 @@ const STRINGS = {
             + '카드가 누적 문턱을 넘을 때마다 도감 레벨이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
             + '카드는 누적이고 소모되지 않는다 · 처치 수는 기록만 · 필요 장수는 codex_level.csv(⚠제안값)<br>'
             + '⚠ 레벨별 보정 %는 <b>화면 확인용 자리표시</b> — codex_level.csv 로 이관 예정. 보스 등급별 차등은 후속<br>'
-            + '얼굴 아트는 Ch1 5종만 존재 — 나머지는 죄종 색 원판 + 이니셜로 폴백한다',
+            + '얼굴 아트는 Ch1 5종만 존재 — 나머지는 이니셜 한 글자로 폴백한다',
         en: 'Slaying a monster has a chance to drop <b>its card</b> ([balance.csv:codex_card_drop_pct], rolled separately from gear). '
             + "Each cumulative card threshold raises the monster's codex level and that stage's stat line — <b>farming pushes the codex</b><br>"
             + 'Cards accumulate and are never spent · kills are only recorded · card requirements live in codex_level.csv (⚠ proposed)<br>'
             + '⚠ Per-level bonus % is a <b>screen-mock placeholder</b> — to be moved into codex_level.csv. Boss-grade scaling comes later<br>'
-            + 'Face art exists for 5 Ch1 monsters only — the rest fall back to a sin-colored disc + initial',
+            + 'Face art exists for 5 Ch1 monsters only — the rest fall back to a single initial',
     },
 
     /* ── 전투 관전 ── */
@@ -595,8 +638,10 @@ const STRINGS = {
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '행동 주기 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Action cycle {s}s — acts when the gauge fills' },
-    'bt.traitsTitle': { ko: '죄종 고유 1 + 공통 2 — 런타임 랜덤', en: '1 sin trait + 2 common — rolled at runtime' },
     'bt.tab.dmg': { ko: '누적 데미지', en: 'Damage' },
+    // 배치 토글 — 버튼은 **바꿀 배치의 이름**을 든다 (2026-09-03 · SCREEN_DESIGN §4-2)
+    'bt.layout.toSplit': { ko: '나눠 보기', en: 'Split view' },
+    'bt.layout.toWide': { ko: '넓게 보기', en: 'Wide view' },
     'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack' },
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
     'bt.dmg.party': { ko: '파티', en: 'Party' },

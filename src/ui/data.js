@@ -40,7 +40,7 @@ export const D = {
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
-    tacticOptions: [],        // tactic_option.csv 원시 행 — 「조건 → 효과」 1행 = 옵션 1개
+    tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
@@ -65,7 +65,7 @@ export let SYS = null;
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option',
-    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait'];
+    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -224,7 +224,13 @@ export function buildSystems(d) {
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
     const tactic = createTacticSystem({
         slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: d.classes,
-        weaponGroups: d.weaponGroups, skillSystem: skill,
+        skillSystem: skill,
+        // 등급 가중치 — 리롤이 옵션과 등급을 같이 굴린다 (tactic_card_design §5-5). 값은 CSV
+        gradeWeights: {
+            common: d.balance.tactic_grade_weight_common,
+            magic: d.balance.tactic_grade_weight_magic,
+            rare: d.balance.tactic_grade_weight_rare,
+        },
     });
     const battle = createBattleSystem({
         balance: d.balance, monsters: d.monsters, stages: d.stages, roundTypes: d.roundTypes,

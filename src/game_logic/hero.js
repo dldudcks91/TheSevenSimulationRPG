@@ -163,7 +163,6 @@ export function createHeroSystem(data) {
             innate,                  // 고유 스킬 — 생성 시 확정 · 이후 불변 (hero_design §1 · 프로토타입 풀 = skill.csv 전 행)
             stats, caps,
             equipped: {},            // 슬롯 초기화는 state 가 slots 정의로 채운다
-            injuredUntil: null,
         };
     }
 

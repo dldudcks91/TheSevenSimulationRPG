@@ -5,12 +5,20 @@
  *   · 배속·일시정지·건너뛰기는 재생 속도의 문제지 결과의 문제가 아니다
  *   · 언어를 바꿔도 같은 타임라인을 다시 재생한다
  *
- * 배치: 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 + 우측 탭(전투 로그 / 누적 데미지) + 아레나 아래 가방(app.js 가 붙인다) (2026-08-27).
+ * 배치: 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 + 아레나 아래 가방(app.js 가 붙인다) (2026-08-27).
+ * **배치가 둘이고 컨트롤의 버튼 하나가 오간다** (2026-09-03 사용자 지시, SCREEN_DESIGN §4-2):
+ *   · **넓게**(기본) — 아레나가 메인 칸 전폭(높이 420 고정) · 로그/누적은 **창**이 든다
+ *   · **나눔**(옛 구조) — 좌 아레나(옛 크기) / 우 딜미터 열 2단 격자 · 판이 그 열에 **상주**한다(창 안 뜸)
+ *   판(로그·누적) DOM 은 **하나뿐이고 집만 옮긴다** — 새로 만들면 쌓아 둔 로그와 스크롤이 날아간다.
+ *   창 규격은 셸의 창과 같되(.modal-layer/.modal-box · 정사각 X · 바깥 클릭 · Esc) **레이어는 재생기 자기 DOM 안**이다 — 두 판은 재생기가 살아 있는 동안 계속 쓰이므로 밖에 두면 mount 마다 넘겨줘야 한다.
+ *   배치는 재생 위치(resume)가 아니라 **취향**이라 app.js 의 `state.btLayout` 이 들고 `opts.layout`/`opts.onLayout` 으로 오간다 — 런이 바뀌어도 남는다.
  * 로그는 모든 타격을 적는다(누가 → 누구 · 피해 · 쓴 스킬). 누적 데미지는 이벤트의 dmg 를 더한 표시값이다 — 정산이 아니다.
- * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab} 를 돌려주고, 다음 mount 가 opts.resume 으로 받아
+ * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab, win} 를 돌려주고(win = 창이 열려 있었나), 다음 mount 가 opts.resume 으로 받아
  *   그 시각까지 팝업 없이 되감는다 (catchUp).
- * 유닛 카드는 위칸 + 가로형 본문 — 위칸은 영웅 띠와 같은 배치(왼쪽 태그 / **오른쪽 이름**), 본문은 왼쪽 초상(영웅 띠와 같은 얼굴 그림)과
- *   오른쪽 HP(수치는 바 가운데) / 행동 게이지 / 스킬 쿨 3줄. **카드 크기는 몬스터·영웅·보스가 전부 같은 고정값**이다 (2026-08-27, SCREEN_DESIGN §4-2).
+ * 유닛 카드 = **왼쪽 초상 + 오른쪽 수치 열**뿐이다 [개정 2026-09-03 사용자 지시] — 이름·죄종 칩·정예/보스 태그를 들던 위칸을 통째로 걷었다.
+ *   등급은 **테두리 색**이 든다(정예 = 노랑 · 보스 = 빨강). 오른쪽 열은 HP(수치는 바 가운데) / 행동 게이지 / 스킬 쿨 칸.
+ *   **몬스터와 영웅의 카드는 이제 같은 물건이다** — 몬스터도 쿨 칸(지금은 전부 빈 칸)과 창 뱃지 줄을 갖는다.
+ *   **카드 크기는 몬스터·영웅·보스가 전부 같은 고정값**이다 (2026-08-27, SCREEN_DESIGN §4-2).
  * 스킬 쿨은 **가로 아이콘 칸**이다 — 이름도 % 도 찍지 않고 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판이 걷히며 보여주고,
  *   **발동한 칸은 튀면서 스킬 이름이 초상 위로 떠오른다** (2026-08-27 — 「방금 뭘 썼나」는 게이지가 아니라 팝업이 답한다).
  * 올려놓으면 툴팁 — 카드는 영웅 기본 능력치, 스킬 칸은 그 스킬의 이름 · 표기/실효 쿨 · 설명 (2026-08-28, ui/tip.js).
@@ -23,7 +31,7 @@
  */
 
 import * as M from './mock.js';
-import { D, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, eliteName, skillInfo } from './data.js';
+import { D, monsterName, monsterFace, stageName, stageBgOf, chapterOf, eliteName, skillInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, heroTipCard, skillTipCard } from './tip.js';
 
@@ -49,7 +57,14 @@ export function mountBattle(container, opts) {
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않는다
-        tab: resume?.tab ?? 'log',
+        // 창 안에서 보고 있는 판 — 창이 닫혀 있어도 남는다. **둘 중 하나로 못박는다**:
+        // ?dev=play&bt=<아무거나> 처럼 모르는 값이 들어오면 두 판이 다 숨어 빈 창이 뜬다 (2026-09-03)
+        tab: resume?.tab === 'dmg' ? 'dmg' : 'log',
+        win: resume?.win === true,   // 창이 열려 있나 (2026-09-03) — 기본은 닫힘
+        // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
+        // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
+        layout: opts.layout === 'split' ? 'split' : 'wide',
+        onKey: null,                 // Esc 리스너 — 정리 함수가 뗀다
     };
 
     // 파티 유닛 — 결과의 party 정보 + 로스터의 표시 정보(이름·죄종·직업)
@@ -58,7 +73,6 @@ export function mountBattle(container, opts) {
         return {
             key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
-            glyph: M.classGlyph(h?.cls),   // 글리프 표는 mock.js 한 곳 — 영웅 띠·후보 카드와 같은 얼굴
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
             skills: (p.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
@@ -66,7 +80,11 @@ export function mountBattle(container, opts) {
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
-    container.appendChild(buildDom(state, stage, stageId));
+    const dom = buildDom(state, stage, stageId);
+    // 원정 탭의 화면 전환(편성·지역 / 전투 관전 / 리포트) — 패널 **위**가 아니라 이 패널 **안** 왼쪽 위에 선다 (2026-09-03 사용자 지시).
+    // 재생기는 그 버튼이 무엇인지 모른다 — app.js 가 만든 노드를 자리에 꽂아 줄 뿐이다
+    if (opts.nav) dom.querySelector('.bh-nav').appendChild(opts.nav);
+    container.appendChild(dom);
     bindControls(state, container, opts);
     // t=0 의 이벤트(첫 라운드 편성)를 먼저 적용해서 첫 프레임부터 적이 서 있게 한다.
     // 재개(resume)면 그 시각까지 조용히 되감는다 — 팝업 없이. 로그·게이지·누적은 다시 쌓인다 (2026-08-27)
@@ -80,7 +98,8 @@ export function mountBattle(container, opts) {
     return () => {
         clearInterval(state.timer); state.timer = null;
         for (const id of state.timeouts) clearTimeout(id);
-        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab };
+        if (state.onKey) document.removeEventListener('keydown', state.onKey);   // 창의 Esc — 재생기 밖에 남기면 mount 마다 쌓인다
+        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, win: state.win };
     };
 }
 
@@ -94,24 +113,29 @@ function buildDom(state, stage, stageId) {
     const kindOf = n => D.roundTypes.find(r => r.round_num === n)?.round_type ?? 'normal';
     wrap.innerHTML = `
         <div class="battle-head">
-            <div>
-                <div>${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}</div>
-                <div class="muted" style="font-size:var(--fs-sm)">
-                    ${t('bt.round')} <b class="b-round">1</b> / ${rounds}
-                    <span class="rk b-kind"></span>
-                    &nbsp;·&nbsp; <span class="b-clock">00:00</span>
-                </div>
+            <div class="bh-top">
+                <div class="bh-nav"></div>
+                <div class="bh-title">${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}</div>
                 <div class="round-track">${
                     Array.from({ length: rounds }, (_, i) => {
                         const n = i + 1, k = kindOf(n);
                         return `<span class="rt ${k}" data-n="${n}" title="${t('bt.rTitle', { n, kind: kindLabel(k) })}">${n}</span>`;
                     }).join('')
                 }</div>
+                <div class="bh-meta muted">
+                    ${t('bt.round')} <b class="b-round">1</b> / ${rounds}
+                    <span class="rk b-kind"></span>
+                    &nbsp;·&nbsp; <span class="b-clock">00:00</span>
+                </div>
             </div>
             <div class="battle-ctrl">
                 ${SPEEDS.map(s => `<button class="btn sm b-speed" data-s="${s}">${t('bt.speed', { n: s })}</button>`).join('')}
                 <button class="btn sm b-pause">${t('bt.pause')}</button>
                 <button class="btn sm b-skip">${t('bt.skip')}</button>
+                <span class="ctrl-div"></span>
+                <button class="btn sm b-layout"></button>
+                <button class="btn sm b-win" data-tab="log">${t('bt.log.h')}</button>
+                <button class="btn sm b-win" data-tab="dmg">${t('bt.tab.dmg')}</button>
             </div>
         </div>
         <div class="battle-body">
@@ -123,10 +147,13 @@ function buildDom(state, stage, stageId) {
                 <div class="side side-party"></div>
                 <div class="battle-result"></div>
             </div>
-            <div class="battle-side">
-                <div class="segmented side-tabs">
-                    <button class="btn sm b-tab" data-tab="log">${t('bt.log.h')}</button>
-                    <button class="btn sm b-tab" data-tab="dmg">${t('bt.tab.dmg')}</button>
+            <div class="battle-side" hidden></div>
+        </div>
+        <div class="modal-layer battle-win" hidden>
+            <div class="modal-box bw-box">
+                <div class="modal-head">
+                    <h2 class="bw-title"></h2>
+                    <button class="btn modal-x bw-x" title="${t('ui.close')}" aria-label="${t('ui.close')}">×</button>
                 </div>
                 <div class="battle-log-wrap pane"><ul class="battle-log"></ul></div>
                 <div class="battle-dmg-wrap pane" hidden></div>
@@ -150,20 +177,63 @@ function bindControls(state, root, opts) {
         state.running = !state.running;
         pause.textContent = state.running ? t('bt.pause') : t('bt.resume');
     };
-    // 우측 탭 — 로그 / 누적 데미지
-    root.querySelectorAll('.b-tab').forEach(b => {
-        b.onclick = () => { state.tab = b.dataset.tab; paintTab(state, root); };
+    // 배치 토글 — 버튼 하나로 옛 구조(나눔)와 지금 구조(넓게)를 오간다 (2026-09-03 사용자 지시, SCREEN_DESIGN §4-2)
+    root.querySelector('.b-layout').onclick = () => {
+        state.layout = state.layout === 'split' ? 'wide' : 'split';
+        opts.onLayout?.(state.layout);   // 취향이라 화면 상태에 남긴다 — 다음 원정에도 이어진다
+        paintLayout(state, root);
+    };
+    // 판 고르기 — 컨트롤의 두 버튼. **배치마다 뜻이 다르다**:
+    //   넓게: 창을 연다/닫는다(같은 판을 다시 누르면 닫힌다 — 여는 자리 = 닫는 자리)
+    //   나눔: 우측 열이 늘 서 있으므로 **판만 고른다** (닫으면 빈 열이 남는다)
+    root.querySelectorAll('.b-win').forEach(b => {
+        b.onclick = () => {
+            if (state.layout !== 'split') state.win = !(state.win && state.tab === b.dataset.tab);
+            state.tab = b.dataset.tab;
+            paintWin(state, root);
+        };
     });
-    paintTab(state, root);
+    // 닫는 길 넷 — 그 버튼 다시 · 정사각 X · 판 바깥 · Esc (셸의 창과 같은 규격, §2). 나눔 배치에는 창이 없어 전부 논다
+    const close = () => { state.win = false; paintWin(state, root); };
+    root.querySelector('.bw-x').onclick = close;
+    const layer = root.querySelector('.battle-win');
+    layer.onclick = e => { if (e.target === layer) close(); };
+    state.onKey = e => { if (e.key === 'Escape' && state.win && state.layout !== 'split') close(); };
+    document.addEventListener('keydown', state.onKey);
+    paintLayout(state, root);
     // 건너뛰기 — 결과는 이미 정산돼 있다. 재생만 멈추고 리포트로 간다
     root.querySelector('.b-skip').onclick = () => { clearInterval(state.timer); opts.onEnd(false); };
 }
 
-function paintTab(state, root) {
-    root.querySelectorAll('.b-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === state.tab));
-    root.querySelector('.battle-log-wrap').hidden = state.tab !== 'log';
-    root.querySelector('.battle-dmg-wrap').hidden = state.tab !== 'dmg';
-    if (state.tab === 'dmg') renderDmg(state, root);
+/**
+ * 배치를 다시 칠한다 (2026-09-03) — 넓게 / 나눔.
+ * **판(로그·누적) DOM 은 하나뿐이고 집만 옮긴다** — 새로 만들면 쌓아 둔 로그 줄과 스크롤이 날아간다.
+ *   넓게 → 창(.bw-box) 안 · 나눔 → 우측 열(.battle-side) 안
+ */
+function paintLayout(state, root) {
+    const split = state.layout === 'split';
+    root.querySelector('.battle-body').classList.toggle('split', split);
+    root.querySelector('.battle-side').hidden = !split;
+    const host = split ? root.querySelector('.battle-side') : root.querySelector('.bw-box');
+    host.append(root.querySelector('.battle-log-wrap'), root.querySelector('.battle-dmg-wrap'));
+    // 버튼은 **바꿀 배치의 이름**을 든다 — 지금 상태를 적으면 누르면 무엇이 되는지가 안 읽힌다
+    root.querySelector('.b-layout').textContent = t(split ? 'bt.layout.toWide' : 'bt.layout.toSplit');
+    paintWin(state, root);
+}
+
+/** 판을 다시 칠한다 — 어느 판 · 창의 열림 여부 · 버튼의 눌린 표시 · 창 머리 이름(판 이름을 그대로 쓴다, 새 문구 없음) */
+function paintWin(state, root) {
+    const split = state.layout === 'split';
+    const shown = split || state.win;   // 나눔 배치에서는 판이 우측 열에 **상주**한다 — 창은 안 뜬다
+    root.querySelector('.battle-win').hidden = split || !state.win;
+    root.querySelectorAll('.b-win').forEach(b => b.classList.toggle('on', shown && b.dataset.tab === state.tab));
+    root.querySelector('.bw-title').textContent = t(state.tab === 'dmg' ? 'bt.tab.dmg' : 'bt.log.h');
+    const log = root.querySelector('.battle-log-wrap'), dmg = root.querySelector('.battle-dmg-wrap');
+    log.hidden = !(shown && state.tab === 'log');
+    dmg.hidden = !(shown && state.tab === 'dmg');
+    if (!dmg.hidden) renderDmg(state, root);
+    // 숨어 있는 동안에도 줄은 쌓인다 — display:none 에서는 scrollTop 이 안 잡히므로 보일 때 맨 아래로 맞춘다
+    if (!log.hidden) log.scrollTop = log.scrollHeight;
 }
 
 function paintRound(state, root) {
@@ -192,42 +262,36 @@ function renderUnits(state, root) {
             const n = document.createElement('div');
             const boss = u.grade === 'stage_boss' || u.grade === 'chapter_boss';
             n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${u.hp <= 0 ? ' dead' : ''}`;
-            // 죄종은 상단 테두리 색으로만. 적의 죄종 칩은 남긴다 — 정예의 죄종은 이 판에서 굴려진 정보다
-            if (u.sin) n.style.borderTopColor = M.SINS[u.sin]?.color;
+            // ⚠ **죄종 테두리색은 걷었다** (2026-09-03 사용자 지시) — 정예의 윗변을 죄종 색으로 칠하던 인라인 스타일이다.
+            // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
+            // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
             const name = L(u.name);
-            const discSin = u.side === 'enemy' ? (u.sin ?? monsterSin(u.monsterId)) : null;
-            const dc = discSin ? M.SINS[discSin]?.color : null;
             const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u);
-            // 아트가 있으면 그 밑에 **이니셜/글리프를 깔아 둔다** — 고른 얼굴 스타일에 그 몬스터 그림이 없으면
-            // `onerror` 로 img 만 빠지고 밑에 있던 것이 드러난다 (mock.js FACE_STYLES).
-            // ⚠ 밑에 까는 것은 글자뿐이다 — `.sprite.disc`(원형)를 같이 얹으면 아트 있는 유닛이 원형이 된다(관전은 네모다)
-            const underMark = dc ? L(monsterName(u.monsterId)).charAt(0) : u.glyph;
+            // 몬스터는 아트가 있어도 그 밑에 **이니셜을 깔아 둔다** — 고른 얼굴 스타일에 그 몬스터 그림이 없으면
+            // `onerror` 로 img 만 빠지고 밑에 있던 글자가 드러난다 (mock.js FACE_STYLES).
+            // ⚠ **영웅은 아무것도 안 깐다** (2026-09-03 사용자 지시) — 직업 글리프(이모지)를 깔던 자리이고,
+            //   영웅 그림이 배경 투명 PNG 라 그림이 있어도 이모지가 비쳐 보였다. 아트가 없으면 빈 칸이다
+            // ⚠ **폴백에서 죄종 색을 걷었다** (2026-09-03 사용자 지시) — 아트 없는 몬스터를 죄종 색 원판으로 칠하던 자리다.
+            //   원판(원형)은 몬스터만 달랐고 색은 죄종을 말했다 — 「카드 형태를 똑같이」·「죄종 안 보이게」 둘 다에 걸린다.
+            //   남긴 것은 **이니셜 글자 하나**뿐이고, 칸은 영웅과 같은 빈 네모다
+            const mark = u.side === 'enemy' ? L(monsterName(u.monsterId)).charAt(0) : '';
             const sprite = face
-                ? `<div class="sprite has-face"${dc ? ` style="color:${dc}"` : ''}>${underMark}<img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
-                : dc
-                    ? `<div class="sprite disc" style="color:${dc};background:${dc}22;border-color:${dc}66">${L(monsterName(u.monsterId)).charAt(0)}</div>`
-                    : `<div class="sprite">${u.glyph}</div>`;
-            // 위칸(이름·태그) + 가로형 본문(왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 3줄) — SCREEN_DESIGN §4-2
+                ? `<div class="sprite has-face">${mark}<img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
+                : `<div class="sprite">${mark}</div>`;
+            // 가로형 본문 하나 — 왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 칸 (2026-09-03 위칸 폐기) — SCREEN_DESIGN §4-2
             // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
             // 칸 수는 언제나 active_slots — 스킬이 둘인 영웅도 셋째 칸이 **빈 채로** 남는다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
             // 칸이 사라지면 카드마다 줄 길이가 달라져 같은 격자로 안 읽히고, 「스킬이 둘」과 「셋째가 미정」이 구분되지 않는다
-            const slots = u.skills ? Array.from({ length: Math.max(D.balance.active_slots, u.skills.length) }, (_, i) => u.skills[i] ?? null) : [];
-            const skills = slots.length ? `<div class="cd-list">${slots.map(s => s
+            // [개정 2026-09-03 사용자 지시] **몬스터도 같은 줄을 그린다** — 옛 규칙(「몬스터는 액티브가 없어 쿨 칸도 없다」)을 폐기한다.
+            // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 지금 전부 빈 칸이다
+            const slots = Array.from({ length: Math.max(D.balance.active_slots, u.skills?.length ?? 0) }, (_, i) => u.skills?.[i] ?? null);
+            const skills = `<div class="cd-list">${slots.map(s => s
                 ? `<div class="cd-slot"><span class="cd-g">${s.icon ?? ''}</span><i class="cd-mask"></i></div>`
-                : `<div class="cd-slot empty"></div>`).join('')}</div>` : '';
+                : `<div class="cd-slot empty"></div>`).join('')}</div>`;
             n.innerHTML = `
-                <div class="unit-band">
-                    ${u.side === 'enemy' ? `<span class="tags">
-                        ${u.sin ? `<span class="sin-chip" style="color:${M.SINS[u.sin]?.color}">${L(M.SINS[u.sin])}</span>` : ''}
-                        ${u.grade === 'elite' ? `<span class="elite-tag">${t('kind.elite')}</span>` : ''}
-                        ${boss ? `<span class="elite-tag boss-tag">${t(u.grade === 'chapter_boss' ? 'kind.chapterBoss' : 'kind.boss')}</span>` : ''}
-                    </span>` : '<span></span>'}
-                    <b class="unit-name">${name}</b>
-                </div>
                 <div class="unit-body">
                     ${sprite}
                     <div class="unit-info">
-                        ${u.traits ? `<div class="trait-line" title="${t('bt.traitsTitle')}">${u.traits.map(x => L(x)).join(' · ')}</div>` : ''}
                         <div class="hp-row">
                             <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
                             <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
@@ -341,7 +405,7 @@ function addDmg(state, u, label, dmg) {
     e.total += dmg;
     e.by.set(label, (e.by.get(label) ?? 0) + dmg);
 }
-/** 누적 데미지 탭 — 파티 / 적 두 묶음. 막대는 묶음 안 최대 기준, % 는 묶음 합 기준. 보이는 동안만 그린다 */
+/** 누적 데미지 판 — 파티 / 적 두 묶음. 막대는 묶음 안 최대 기준, % 는 묶음 합 기준. 보이는 동안만 그린다 */
 function renderDmg(state, root) {
     const box = root.querySelector('.battle-dmg-wrap');
     if (!box || box.hidden) return;
@@ -411,6 +475,10 @@ function apply(state, root, opts, ev) {
             state.enemies = ev.enemies.map(e => ({
                 key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
                 name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: ev.t, node: null,
+                // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
+                //   skills: []  → 쿨 칸이 active_slots 만큼 **빈 채로** 선다 (몬스터 액티브는 아직 없다 — skill.csv 는 영웅 전용)
+                //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
+                skills: [], buffs: new Map(),
             }));
             for (const e of state.enemies) state.units.set(e.key, e);
             renderUnits(state, root);

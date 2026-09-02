@@ -9,7 +9,7 @@
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
- *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, mastery, masteryPoints, innate, stats, caps, equipped:{position: itemUid|null}, injuredUntil}],
+ *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, mastery, masteryPoints, innate, stats, caps, equipped:{position: itemUid|null}}],
  *     — innate = 고유 스킬 id. **생성 시 한 번 굴리고 이후 불변**이다 (hero_design §1).
  *       배정은 `skill.activesFor` 가 1번 칸에 싣는다 — 저장하는 건 굴린 결과 하나뿐
  *     — mastery = {nodeId: rank} 찍은 것만 담는다(0은 안 담는다) · masteryPoints = 남은 포인트.
@@ -26,7 +26,7 @@
  *   notice: {kind:'runClosed', stageId, at, seenAt} | null   — 재접속 알림 (배너 1회)
  *   tavern: {rerolledAt: ms|null, hired: [슬롯번호]}         — 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸.
  *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
- *   tactics: {slots: {칸번호: optionId}}                     — **리롤로 바꾼 칸만** 담는다.
+ *   tactics: {slots: {칸번호: {id, grade}}}                   — **리롤로 바꾼 칸만** 담는다.
  *     안 담긴 칸은 시드에서 파생되는 첫 배정이다(tactic.initialAssign) — 선술집 명단과 같은 규칙:
  *     저장하는 건 「플레이어가 바꾼 것」뿐이고 나머지는 시드가 재현한다
  * }
@@ -45,6 +45,9 @@
  *   v4 → v5 (2026-08-30 — 선술집 리롤 쿨다운):
  *     · `tavern` 이 없으면 `{rerolledAt: null, hired: []}` — **쿨다운이 열린 상태**로 올린다.
  *       옛 세이브는 리롤한 적이 없어 기다린 시간을 소급할 근거가 없고, 닫힌 채로 올리면 접속하자마자 골드를 물린다
+ *   v9 → v10 (2026-09-02 — 전술 옵션 등급 축):
+ *     · `tactics.slots[*]` 가 문자열이면 `{id, grade:'common'}` — 등급이 없던 시절에 굴린 칸이라
+ *       **가장 낮은 등급**으로 받는다. 첫 배정이 언제나 일반인 것과 같은 자리이고, 올려 주면 이관이 파워를 준다
  *   v8 → v9 (2026-09-01 — 레어 고유 스킬 프로토타입 배정):
  *     · `heroes[*].innate` — 옛 영웅은 고유 스킬 없이 태어났으므로 **시드에서 소급해 굴린다**
  *       (전용 스트림 `seed ^ 0x5C11` · 전투 수열과 안 섞인다). 이미 가진 영웅은 건드리지 않는다
@@ -62,7 +65,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 11;
 
 /**
  * @param {object} deps
@@ -223,6 +226,34 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v9 → v10 — 전술 옵션 등급 축 (tactic_card_design §5-5 · 2026-09-02).
+     * 옛 세이브는 칸에 옵션 id 문자열만 들고 있었다. 등급이 없던 시절의 굴림이므로 **가장 낮은 등급**으로 받는다 —
+     * 첫 배정이 언제나 일반인 것과 같은 자리다(§5-5). CSV 에서 사라진 가족은 그대로 두면
+     * `tacticState` 가 첫 배정으로 되돌린다.
+     */
+    function upgradeV9(s) {
+        const slots = s.tactics?.slots ?? {};
+        for (const no of Object.keys(slots)) {
+            const v = slots[no];
+            if (typeof v === 'string') slots[no] = { id: v, grade: TC.GRADES[0] };
+        }
+        s.version = 10;
+        return s;
+    }
+
+    /**
+     * v10 → v11 [2026-09-03] — 치료 타이머 폐기 (base_expedition_design §1-1).
+     * `injuredUntil` 을 걷고 런에 **출정 누적 아웃** 칸을 판다. 옛 세이브의 부상자는 **전부 나은 것으로 본다** —
+     * 새 규칙에서는 마을에 부상자가 존재할 수 없고, 이관이 만들 수 있는 상태 중 규칙에 맞는 것이 그것 하나뿐이다.
+     */
+    function upgradeV10(s) {
+        for (const h of s.heroes) delete h.injuredUntil;
+        if (s.run) s.run.downed = s.run.downed ?? [];
+        s.version = 11;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -234,7 +265,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -244,6 +275,8 @@ export function createGameSystem(deps) {
         if (s.version === 6) s = upgradeV6(s);
         if (s.version === 7) s = upgradeV7(s);
         if (s.version === 8) s = upgradeV8(s);
+        if (s.version === 9) s = upgradeV9(s);
+        if (s.version === 10) s = upgradeV10(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -256,7 +289,20 @@ export function createGameSystem(deps) {
 
     const heroById = (state, uid) => state.heroes.find(h => h.uid === uid);
     const heroItems = (state, h) => Object.values(h.equipped).filter(Boolean).map(uid => state.items[uid]).filter(Boolean);
-    const isInjured = (h, now) => h.injuredUntil != null && h.injuredUntil > now;
+    /**
+     * 착용 무기의 무기군 — **액티브 2번 칸(무기군)의 입력**이다 (skill_design §2 · `skill.activesFor`).
+     * 장비를 아는 층은 여기뿐이라 이 조회도 여기 있다 — `skill.js` 는 아이템을 모른다.
+     * 맨손이면 `null` 이고, 그러면 그 칸이 빈다.
+     */
+    const weaponGroupOf = (state, h) => {
+        const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
+        return w?.group ?? null;
+    };
+    /**
+     * 이번 **출정**에서 아웃됐는가 [2026-09-03 — base_expedition_design §1-1].
+     * 치료 타이머가 없어졌으므로 시계를 안 본다 — 나가 있는 동안만 참이고 마을로 돌아오면(`returnToTown`) 비워진다.
+     */
+    const isOut = (state, uid) => (state.run?.downed ?? []).includes(uid);
 
     /* ── 도감 — 몬스터 카드 모델 (monster_design §8) ── */
 
@@ -404,15 +450,22 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         if (state.party.includes(uid)) { state.party = state.party.filter(u => u !== uid); return { ok: true }; }
-        if (isInjured(h, now)) return { ok: false, err: 'injured' };
+        // 부상 검사는 없다 [2026-09-03] — 마을에 부상자가 없다(귀환하면 전원 회복). 출정 중 아웃은 편성이 아니라 출발이 본다
         if (state.party.length >= B.party_size_max) return { ok: false, err: 'full' };
         state.party.push(uid);
         return { ok: true };
     }
 
-    /** 부상 회복 타이머가 지난 영웅을 정리한다 — 화면을 그리기 전마다 부른다. 오프라인에도 흐르는 유일한 시계 */
-    function tickInjuries(state, now) {
-        for (const h of state.heroes) if (h.injuredUntil != null && h.injuredUntil <= now) h.injuredUntil = null;
+    /**
+     * 마을 귀환 — **이번 출정에서 아웃된 영웅이 전부 회복한다** [2026-09-03 · base_expedition_design §1-1].
+     * 치료 타이머를 대신하는 자리다. 대기가 없으므로 시계를 안 받는다.
+     * 출정이 끝나는 세 자리에서 부른다 — 반복이 이어지지 않을 때 · 전멸 · 재접속(`closeRun`).
+     * @returns {{healed: string[]}} 이번에 나은 영웅 uid (리포트·플래시용)
+     */
+    function returnToTown(state) {
+        const healed = (state.run?.downed ?? []).slice();
+        if (state.run) state.run.downed = [];
+        return { healed };
     }
 
     /* ── 스테이지 · 원정 ── */
@@ -427,14 +480,26 @@ export function createGameSystem(deps) {
     function canDepart(state, stageId, now) {
         if (!stageUnlocked(state, stageId)) return 'locked';
         if (state.party.length === 0) return 'noParty';
-        if (state.party.some(uid => isInjured(heroById(state, uid), now))) return 'injured';
+        // 아웃된 영웅을 빼고 아무도 안 남으면 못 나간다 — 이어지는 반복 런에서만 걸린다 (2026-09-03)
+        if (activeParty(state, stageId).length === 0) return 'noParty';
         return null;
     }
 
+    /**
+     * 이번 런에 **실제로 나가는** 파티 [2026-09-03].
+     * 같은 스테이지를 반복으로 잇는 중이면 이전 런까지 아웃된 영웅을 뺀다. 새 출정이면 전원이 나간다 —
+     * 마을을 떠나는 순간이 곧 회복이기 때문이다 (base_expedition_design §1-1).
+     */
+    const continuing = (state, stageId) => state.run?.stageId === stageId && state.run.repeat === true;
+    const activeParty = (state, stageId) => {
+        const out = continuing(state, stageId) ? (state.run.downed ?? []) : [];
+        return state.party.filter(uid => !out.includes(uid));
+    };
+
     // 액티브는 **전투 안에서만** 산다 — 쿨·창·배리어는 HP 와 같은 취급이라 세이브에 넣지 않는다 (INTERFACE §4)
-    const partyUnits = state => state.party.map(uid => {
+    const partyUnits = (state, uids) => (uids ?? state.party).map(uid => {
         const h = heroById(state, uid);
-        return { uid, combat: heroCombat(state, h), actives: SK.activesFor(h) };
+        return { uid, combat: heroCombat(state, h), actives: SK.activesFor(h, { weaponGroup: weaponGroupOf(state, h) }) };
     });
 
     /**
@@ -448,12 +513,15 @@ export function createGameSystem(deps) {
 
         state.counters.battle += 1;
         const rng = makeRng(deriveSeed(state.seed, state.counters.battle));
-        const result = BT.simulate(partyUnits(state), stageId, rng);
+        // 이어지는 반복이면 이전 런까지 아웃된 영웅을 빼고 나간다 (base_expedition_design §1-1, 2026-09-03)
+        const carry = continuing(state, stageId) ? (state.run.downed ?? []).slice() : [];
+        const going = state.party.filter(uid => !carry.includes(uid));
+        const result = BT.simulate(partyUnits(state, going), stageId, rng);
 
         // 보상 — XP 는 참가 전원 동일 지급 (⚠제안 — 분배 규칙 미확정)
         const xpEach = Math.round(result.xpTotal * B.xp_rate);
         const levelUps = [];
-        for (const uid of state.party) {
+        for (const uid of going) {          // 안 나간 영웅은 XP 를 못 받는다 (2026-09-03)
             const h = heroById(state, uid);
             const lu = H.grantXp(h, xpEach, rng);
             if (lu) levelUps.push(lu);
@@ -473,18 +541,17 @@ export function createGameSystem(deps) {
             drops.push(added.uid);
         }
 
-        // 부상 — 전투불능자만 타이머, 나머지는 귀환 즉시 무료 회복 (HP 는 상태에 없다: 매 전투 최대치 시작)
-        for (const uid of result.downed) {
-            const h = heroById(state, uid);
-            h.injuredUntil = now + B.injury_minutes * 60 * 1000;
-        }
+        // 아웃 — 쓰러진 영웅은 **그 출정 동안** 빠진다. 치료 타이머는 없고 마을로 돌아오면 낫는다
+        // (`returnToTown` · base_expedition_design §1-1, 2026-09-03). HP 는 상태에 없다: 매 전투 최대치 시작
+        const downedSession = [...carry];
+        for (const uid of result.downed) if (!downedSession.includes(uid)) downedSession.push(uid);
 
         if (result.won && !state.progress.cleared.includes(stageId)) state.progress.cleared.push(stageId);
 
         const report = {
             at: now, stageId, won: result.won, reason: result.reason, durationSec: result.durationSec,
             gold: result.gold, dust: result.dust, xpEach, levelUps,
-            downed: result.downed.slice(), drops, discarded,
+            downed: result.downed.slice(), outTotal: downedSession.slice(), party: going.slice(), drops, discarded,
             cards: { ...result.cards },
             rounds: result.rounds,
             // 깬 라운드 수 — 렌더러가 「이겼으면 전부, 아니면 하나 뺀다」로 짐작하던 값이다.
@@ -494,7 +561,11 @@ export function createGameSystem(deps) {
             strikes: result.strikes ? clone(result.strikes) : null,
         };
         state.lastReport = report;
-        state.run = { stageId, repeat: state.run?.stageId === stageId ? state.run.repeat : false, lastAt: now, durationSec: result.durationSec };
+        state.run = {
+            stageId, repeat: state.run?.stageId === stageId ? state.run.repeat : false,
+            lastAt: now, durationSec: result.durationSec,
+            downed: downedSession,      // 이번 **출정** 누적 — 런을 넘어 유지되고 귀환에 비워진다
+        };
         return { ok: true, result, report };
     }
 
@@ -502,12 +573,14 @@ export function createGameSystem(deps) {
      * 재접속 — 반복 원정은 **게임이 켜져 있는 동안만** 돈다 (base_expedition_design §1, 2026-08-25).
      * 꺼져 있던 사이 돌던 런은 마무리된 것으로 본다. 프로토타입은 런을 출발 시점에 통째로 정산하므로(resolveBattle)
      * 남은 미정산분이 없다 — lastReport 가 곧 "진행 중이던 전투까지 정산한" 결과다. 여기서는 반복을 끄고 알림만 남긴다.
-     * 오프라인에 도는 것은 치료 타이머(tickInjuries)뿐 — 파견은 미구현.
+     * 오프라인에 도는 것은 파견뿐이다 — 미구현 (치료 타이머는 2026-09-03 에 폐기됐다).
+     * **재접속은 귀환이다** — 파티가 마을에 있으므로 아웃된 영웅이 전부 낫는다 (base_expedition_design §1-1).
      */
     function closeRun(state, now) {
         const run = state.run;
         if (!run || !run.repeat) return null;
         run.repeat = false;
+        returnToTown(state);
         state.notice = { kind: 'runClosed', stageId: run.stageId, at: run.lastAt, seenAt: now };
         return state.notice;
     }
@@ -567,7 +640,7 @@ export function createGameSystem(deps) {
      * id 문자열을 넘기면 `skill_tag` 조건 4종이 영원히 0 을 센다 (2026-09-01 회귀 수정 · INTERFACE §2-9)
      */
     const partyMembers = state => state.party.map(uid => heroById(state, uid)).filter(Boolean)
-        .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h).map(a => SK.resolve(a)).filter(Boolean) }));
+        .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h, { weaponGroup: weaponGroupOf(state, h) }).map(a => SK.resolve(a)).filter(Boolean) }));
 
     /** 첫 배정 — 시드 하나에서 나온다. 리롤 카운터를 안 타므로 **리롤이 다른 칸의 내용을 흔들지 않는다** */
     const initialAssign = state => TC.initialAssign(makeRng(deriveSeed(state.seed ^ 0x7AC7, 0)));
@@ -584,8 +657,8 @@ export function createGameSystem(deps) {
         const ctx = TC.contextOf(partyMembers(state));
         const slots = TC.slotList.map((s, i) => {
             const opened = s.no <= open;
-            // 저장된 것(리롤한 칸) 우선 · 없으면 첫 배정. 세이브에 없는 옵션 id 는 CSV 가 바뀐 것이라 첫 배정으로 되돌린다
-            const option = opened ? (TC.byId[stored[s.no]] ?? TC.byId[initial[i]] ?? null) : null;
+            // 저장된 것(리롤한 칸) 우선 · 없으면 첫 배정. 세이브에 없는 가족·등급은 CSV 가 바뀐 것이라 첫 배정으로 되돌린다
+            const option = opened ? (TC.optionOf(stored[s.no]) ?? TC.optionOf(initial[i]) ?? null) : null;
             const m = option ? TC.measure(option, ctx) : null;
             return {
                 no: s.no, open: opened, unlockTotalLevel: s.unlockTotalLevel, cost: s.rerollCost,
@@ -603,6 +676,8 @@ export function createGameSystem(deps) {
     /**
      * 리롤 — 칸 하나의 옵션을 간다. 비용은 칸마다 다르다 (tactic_slot.csv:reroll_cost_gold).
      * **지금 든 것과 다른 칸에 든 것을 후보에서 뺀다** — 돈을 내고 같은 것이 나오거나 칸끼리 겹치는 일을 막는다.
+     * 빼는 단위는 **가족**이다 (2026-09-02) — 등급이 달라도 같은 가족이면 같은 stat 이 두 칸에서 곱해진다 (§5-5).
+     * 뽑히는 것은 `{id, grade}` 한 쌍이다 — 리롤은 옵션과 등급을 **같이** 굴린다.
      */
     function rerollTactic(state, slotNo) {
         const st = tacticState(state);
@@ -613,11 +688,11 @@ export function createGameSystem(deps) {
         const held = st.slots.filter(s => s.open && s.option).map(s => s.option.id);
         state.counters.tactic = (state.counters.tactic ?? 0) + 1;
         const next = TC.pick(makeRng(deriveSeed(state.seed ^ 0x7AC7, state.counters.tactic)), held);
-        if (!next) return { ok: false, err: 'missing' };      // 풀이 칸보다 많다는 것은 로드 시 검증했다
+        if (!next) return { ok: false, err: 'missing' };      // 가족이 칸보다 많다는 것은 로드 시 검증했다
         state.resources.gold -= slot.cost;
         state.tactics = state.tactics ?? { slots: {} };
         state.tactics.slots[slotNo] = next;
-        return { ok: true, option: TC.byId[next], cost: slot.cost };
+        return { ok: true, option: TC.optionOf(next), cost: slot.cost };
     }
 
     /* ── 마스터리 — 찍기 · 롤백 (skill_design §3 · §5) ── */
@@ -674,13 +749,13 @@ export function createGameSystem(deps) {
 
     return {
         newGame, serialize, deserialize, canLoad,
-        heroById, heroItems, heroCombat, isInjured, upgradeState, upgradeItem,
+        heroById, heroItems, heroCombat, isOut, upgradeState, upgradeItem,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage,
-        toggleParty, tickInjuries,
+        toggleParty, returnToTown, activeParty,
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire,
         masteryState, learnMastery, resetMastery,
-        tacticState, tacticBonus, rerollTactic,
+        tacticState, tacticBonus, rerollTactic, weaponGroupOf,
     };
 }

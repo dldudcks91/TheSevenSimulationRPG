@@ -130,8 +130,8 @@ strike(rng, a, d):
 | `masteryNodesFor(hero)` | `→ [node]` | 그 영웅의 죄종 트리 + 직업 트리. `ownerId === '*'` 는 그 `treeKind` 전부에 걸린다 |
 | `masteryBonus(hero)` | `→ {flat:{stat:v}, dr:[v]}` | 찍은 랭크 × 랭크당 값. `damage_reduction` 만 따로 — 원천별 곱이라 합치면 안 된다 |
 
-**hero 객체** — `{uid, name:{ko,en}, tier, sin, cls, trait:{ko,en}, innate: skillId, level, xp, mastery:{nodeId:rank}, masteryPoints, stats:{7}, caps:{7}, equipped:{position: itemUid 또는 null}, injuredUntil: ms 또는 null}`
-`innate` 는 **고유 스킬 id** — 생성 시 1회 굴리고 이후 불변(hero_design §1). 액티브 1번 칸이 된다(§2-8 `activesFor`). `skill.csv` 에서 그 행이 지워지면 `activesFor` 가 **빈 고유 칸으로 취급**한다(던지지 않는다).
+**hero 객체** — `{uid, name:{ko,en}, tier, sin, cls, trait:{ko,en}, innate: skillId, level, xp, mastery:{nodeId:rank}, masteryPoints, stats:{7}, caps:{7}, equipped:{position: itemUid 또는 null}}` — `injuredUntil` 은 v11 에서 삭제됐다 (치료 타이머 폐기, 2026-09-03)
+`innate` 는 **고유 스킬 id** — 생성 시 1회 굴리고 이후 불변(hero_design §1). 액티브 **고유 칸**이 된다(§2-8 `activesFor` · 2026-09-03 부터 칸은 번호가 아니라 출처가 정한다). `skill.csv` 에서 그 행이 지워지면 `activesFor` 가 **빈 고유 칸으로 취급**한다(던지지 않는다).
 `skillOrder`(**선택 필드** — 없으면 없는 것) — `[skillId]`, 플레이어가 정한 액티브 칸 순서. 있으면 `activesFor` 가 그 순서를 앞에 둔다(§2-8). 저장은 우선순위 변경 UI 가 생길 때 시작한다 — 기본값이 곧 「없음」이라 이관이 필요 없다 (2026-09-01 자리만).
 `tier` 는 `rare` / `unique`. `caps` 는 히든 상한 — **화면에 보여주지 않는다.**
 `mastery` 는 **찍은 것만** 담는다(랭크 0 은 키가 없다) · `masteryPoints` 는 남은 포인트. 죄종·직업 마스터리가 **한 풀을 공유**한다 (skill_design §1-4).
@@ -288,8 +288,8 @@ strike(rng, a, d):
 
 **result** — `{won, reason, durationSec, party:[{key, uid, hpMax, period, actives:[skillId]}], timeline:[ev], xpTotal, gold, dust, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item(uid null)], downed:[heroUid], roundsCleared, rounds:[{n, kind, killed:[monsterId], eliteSin}], strikes:{party:{n,miss}, enemy:{n,miss}}, casts:{skillId:n}}`
 - `casts` = 스킬별 시전 횟수. 타임라인의 `skill` 이벤트 수와 합이 같다
-- `reason` 은 `clear` / **`retreat`** / `wipe` / `timeout`.
-  **귀환 룰** (base_expedition_design §1-1 · 2026-08-30 반영) — 전투불능자가 **하나라도** 나오면 그 자리에서 런을 접고 `retreat` 로 끝난다(연쇄 전멸 방지). 판정 순서는 ① 전멸 ② 라운드 정리(클리어·다음 라운드) ③ 귀환 ④ 제한시간 — **라운드 정리가 귀환보다 앞이라** 마지막 타격과 같은 틱에 쓰러져도 그 라운드의 클리어는 남는다. 그래서 `wipe` 는 **같은 틱에 전원이 쓰러진 경우**에만 나온다
+- `reason` 은 `clear` / `wipe` / `timeout`. **`retreat` 는 2026-09-03 에 폐기됐다.**
+  **귀환 룰** (base_expedition_design §1-1 · **개정 2026-09-03**) — 전투불능자가 나와도 **런을 접지 않는다.** 남은 인원으로 계속 가고 **전원이 쓰러졌을 때만** `wipe` 로 끝난다. 판정 순서는 ① 전멸 ② 라운드 정리(클리어·다음 라운드) ③ 제한시간. ~~전투불능자가 하나라도 나오면 그 자리에서 철수~~ 는 폐기 — 그래서 `wipe` 가 **패배의 일반형**이 됐다(종전에는 같은 틱 전멸에서만 났다). 쓰러진 영웅은 `result.downed` 에 실려 `state.run.downed`(출정 누적)로 옮겨간다
   ⚠ 이 룰은 런의 길이를 바꾼다 — 캘리브레이션 대역은 이 룰이 들어간 뒤의 값이어야 한다
 - `strikes` = 직격 시도 수와 빗나간 수. **레벨 부족의 전용 신호**라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 **rng 를 소비하지 않는다**
 - `drops` 의 아이템은 `uid: null` — state.js 가 가방에 넣으며 발급
@@ -310,7 +310,7 @@ strike(rng, a, d):
 | `heal` | `a, d, amt, dhp, s` | 회복. `dhp` = 회복 후 HP |
 | `buff` | `u, s, stat, v, until` (+ `amt` 배리어 총량) | 창 적용 또는 갱신. `until` = 만료 시각(소수 1자리) |
 | `buffEnd` | `u, s` | 창 만료 (그 틱의 행동 처리 **앞에서**) |
-| `end` | `won, reason` | **마지막 이벤트**. `reason ∈ clear \| retreat \| wipe \| timeout` |
+| `end` | `won, reason` | **마지막 이벤트**. `reason ∈ clear \| wipe \| timeout` (`retreat` 폐기 2026-09-03) |
 
 유닛 키: 파티 `p0..`, 적 `e0..`(라운드마다 0부터).
 
@@ -337,7 +337,7 @@ strike(rng, a, d):
 
 ### 2-7. `state.js` — 상태 전이
 
-`export const SAVE_VERSION = 9`
+`export const SAVE_VERSION = 11`
 
 `createGameSystem(deps)` — `deps`: `hero, item, battle, skill, tactic, balance, equipSlots [{id, part}](착용 위치 8), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_to_next], bonus:[%], statByNum:{stage_num: statKey}}`.
 `codex.levels`/`codex.bonus` 는 codex_level.csv(`cards_to_next`/`bonus_pct`) · `codex.statByNum` 은 codex_series.csv 출처. `equipSlots` 는 equip_slot.csv 를 `slot_order` 로 정렬한 것(08-31 — mock 잔류 해소).
@@ -350,7 +350,7 @@ strike(rng, a, d):
 | `serialize(state, now)` | `→ json` | `clone + {version, savedAt}`. 순수 |
 | `deserialize(obj)` | `→ state` **또는 throw** | v9 는 그대로, **v2~v8 은 안에서 연쇄로 올린다**(v2→…→v9, §4). 그 외 버전은 throw. 누락 필드 기본값 보정 |
 | `canLoad(obj)` | `→ bool` | `deserialize` 가 통과하는가. **받아들이는 버전 목록을 두 곳에 두지 않기 위해** 실제로 한 번 돌려 보고 답한다 — 화면이 버전 숫자로 직접 판정하면 이관을 늘릴 때마다 멀쩡한 세이브를 거부하게 된다 |
-| `heroById(state, uid)` · `heroItems(state, h)` · `isInjured(h, now)` | 조회 | |
+| `heroById(state, uid)` · `heroItems(state, h)` · `isOut(state, uid)` | 조회 | `isOut` = **이번 출정에서 아웃**됐는가. 시계를 안 본다 — 치료 타이머가 폐기돼(2026-09-03) 「나가 있는 동안 참 / 귀환하면 거짓」 두 상태뿐이다 |
 | `codexLevel(cards)` · `codexNext(cards)` · `codexMaxLevel()` · `codexBonusAt(lv)` · `codexBonus(state)` | 도감 | `codex.levels` 는 **레벨당 증분**, 여기서 누적한다 |
 | `heroCombat(state, h)` | `→ combat` | `computeCombat(h, 착용품, codexBonus, 파티 전술)`. **전술은 `state.party` 에 든 영웅에게만** 넘어간다 — 벤치는 `null` (§2-9). 착용품은 `item.effective` 를 통과해 들어간다 — **강화 배율을 아는 곳은 `item.js` 하나**이고 `hero.computeCombat` 은 `up` 을 모른다 |
 | `equipTarget(hero, item)` | `→ position 또는 null` | 같은 부위의 빈 위치 우선, 없으면 첫 위치 |
@@ -360,7 +360,8 @@ strike(rng, a, d):
 | `upgradeState(state, itemUid)` | `→ {up, max, cost, gold, canUpgrade, optionAt}` / `null` | **판정을 여기서 다 낸다.** `optionAt` = 다음 옵션 상승이 걸리는 단계(없으면 `null`). 없는 아이템이면 `null` |
 | `upgradeItem(state, itemUid)` | `→ {ok, up, cost, affix}` / `{ok:false, err}` | err: `missing` · `maxUp` · `gold`. **가방·착용 가리지 않는다**(`items` 에 있으면 된다) — 강화는 소유물에 하는 일이지 자리에 하는 일이 아니다. `counters.upgrade++` · rng = `deriveSeed(seed ^ 0xF0C3, counters.upgrade)` |
 | `toggleParty(state, uid, now)` | `→ {ok}` / `{ok:false, err}` | err: `missing` · `injured` · `full` |
-| `tickInjuries(state, now)` | 부작용 | 타이머 지난 부상 해제. **오프라인에 흐르는 유일한 시계** |
+| `returnToTown(state)` | 부작용 | `→ {healed: uid[]}`. **마을 귀환 — 아웃된 영웅이 전부 낫는다.** 시계를 안 받는다(대기가 없다). 출정이 끝나는 세 자리에서 부른다: 반복이 안 이어질 때 · 전멸 · `closeRun` |
+| `activeParty(state, stageId)` | 조회 | 이번 런에 **실제로 나가는** uid 목록. 같은 스테이지를 반복으로 잇는 중이면 아웃을 뺀다 — 새 출정이면 전원이다(떠나는 순간이 곧 회복) |
 | `stageUnlocked(state, stageId)` | `→ bool` | 첫 스테이지 또는 직전 클리어 |
 | `canDepart(state, stageId, now)` | `→ null` / `locked` / `noParty` / `injured` | |
 | `resolveBattle(state, stageId, now)` | `→ {ok, result, report}` / `{ok:false, err}` | 전투 rng = `deriveSeed(seed, ++counters.battle)`. 시뮬 → XP(전원 동일) → 골드·가루 → 도감 → 드롭(가방 초과는 `discarded`) → 부상 타이머 → 클리어 → `lastReport` · `run` 갱신 |
@@ -373,9 +374,9 @@ strike(rng, a, d):
 | `masteryState(state, uid)` | `→ {points, nodes:[{id, treeKind, ownerId, tier, stat, value, rank, maxRank, unlockLevel, unlocked, total, canLearn}]}` / `null` | **판정을 여기서 다 낸다** — 화면은 결과만 그린다. 없는 영웅이면 `null` |
 | `learnMastery(state, uid, nodeId)` | `→ {ok, rank, points}` / `{ok:false, err}` | 1랭크 = 1포인트. err: `missing`(영웅 없음 **또는 그 영웅의 트리에 없는 노드**) · `locked` · `maxRank` · `points` |
 | `resetMastery(state, uid)` | `→ {ok, refunded, points}` / `{ok:false, err:'missing'}` | 롤백은 **무료 · 수시** (skill_design §5). 찍은 랭크 합을 전액 환급 |
-| `tacticState(state)` | `→ {totalLevel, open, count, lockedCount, rerollCost, canReroll, slots:[{no, open, unlockTotalLevel, locked, option, have, need, active}]}` | **판정을 여기서 다 낸다** — 해금(로스터 **합산 레벨**) · 조건 카운터(`have / need`) · **잠금** · **전체 리롤 비용**. 안 열린 칸은 `option: null`.<br>⚠ **[개정 2026-09-01 · 구현 전]** 칸의 `cost` 는 사라졌다 — 비용은 칸이 아니라 **잠금 개수**가 정하므로 판 전체에 하나뿐이다(`rerollCost`). `canReroll` 은 「열렸고 안 잠긴 칸이 하나라도 있고 골드가 충분한가」 |
+| `tacticState(state)` | `→ {totalLevel, open, count, lockedCount, rerollCost, canReroll, slots:[{no, open, unlockTotalLevel, locked, option, have, need, active}]}` | **판정을 여기서 다 낸다** — 해금(로스터 **합산 레벨**) · 조건 카운터(`have / need`) · **잠금** · **전체 리롤 비용**. 안 열린 칸은 `option: null`. 칸의 `option` 은 **등급까지 편 옵션**(`{id, grade, condKind, …, value}` — §2-9 `optionOf`)이라 화면과 `bonusOf` 가 등급별 값을 그대로 받는다 (2026-09-02). 세이브가 든 가족이 CSV 에서 사라졌으면 **그 칸만 첫 배정으로 되돌린다**.<br>⚠ **[개정 2026-09-01 · 구현 전]** 칸의 `cost` 는 사라졌다 — 비용은 칸이 아니라 **잠금 개수**가 정하므로 판 전체에 하나뿐이다(`rerollCost`). `canReroll` 은 「열렸고 안 잠긴 칸이 하나라도 있고 골드가 충분한가」 |
 | `tacticBonus(state)` | `→ {flat, dr}` | 켜진 칸들의 효과 합. `heroCombat` 이 파티원에게만 넘긴다 |
-| `rerollTactic(state)` | `→ {ok, rolled:[{no, option}], cost}` / `{ok:false, err}` | ⚠ **[개정 2026-09-01 · 구현 전]** 인자에서 `slotNo` 가 빠졌다 — **열렸고 안 잠긴 칸을 한 번에 전부** 굴린다 (tactic_card_design §5-6). err: `allLocked`(굴릴 칸이 없다 — 전부 잠갔거나 열린 칸이 없다) · `gold`. `counters.tactic++` **1회** · rng = `deriveSeed(seed ^ 0x7AC7, counters.tactic)` **하나로 칸 번호 오름차순 연속 뽑기**(§5-2) · 후보에서 빼는 것 = **잠긴 칸의 옵션 + 굴리기 직전 열린 칸이 들고 있던 옵션 + 이번에 이미 뽑은 것** |
+| `rerollTactic(state, slotNo)` | `→ {ok, option, cost}` / `{ok:false, err}` | **지금 도는 것은 칸별 리롤**이다 — 칸 하나를 굴리고 비용은 `tactic_slot.csv:reroll_cost_gold`. 뽑은 것은 `{id, grade}` 로 세이브에 남고(§4) **후보에서 빼는 것은 열린 칸이 든 가족 id 전부**다 (2026-09-02 — 등급이 달라도 같은 가족이면 같은 옵션이라 두 칸에 못 선다). err: `missing` · `locked`(칸 미해금) · `gold`.<br>⚠ **[개정 2026-09-01 · 구현 전]** 인자에서 `slotNo` 가 빠졌다 — **열렸고 안 잠긴 칸을 한 번에 전부** 굴린다 (tactic_card_design §5-6). err: `allLocked`(굴릴 칸이 없다 — 전부 잠갔거나 열린 칸이 없다) · `gold`. `counters.tactic++` **1회** · rng = `deriveSeed(seed ^ 0x7AC7, counters.tactic)` **하나로 칸 번호 오름차순 연속 뽑기**(§5-2) · 후보에서 빼는 것 = **잠긴 칸의 옵션 + 굴리기 직전 열린 칸이 들고 있던 옵션 + 이번에 이미 뽑은 것** |
 | `toggleTacticLock(state, slotNo)` | `→ {ok, locked}` / `{ok:false, err}` | ⚠ **[신설 2026-09-01 · 구현 전]** 칸 하나의 잠금을 뒤집는다. **무료**이고 rng·카운터를 안 탄다 — 값은 리롤할 때 `rerollCost` 로 치른다. err: `missing`(없는 칸) · `locked`(안 열린 칸은 못 잠근다) |
 
 **report** — `{at, stageId, won, reason, durationSec, gold, dust, xpEach, levelUps:[{uid, from, to, gains, points}], downed:[uid], drops:[itemUid], discarded, cards:{monsterId:n}, rounds, roundsCleared, strikes}`
@@ -384,7 +385,7 @@ strike(rng, a, d):
 
 `codexBonus(state)` 의 누적 객체는 **`codex.statByNum` 의 값들에서 만든다**(하드코딩 키 없음) — 계열 배정이 바뀌어도 state.js 를 고칠 필요가 없다. 다만 `computeCombat` 이 읽는 것은 `atk_pct` · `hp_pct` · `dmg_pct` 뿐이라 `acc_pct` 는 계산되고 버려진다 (§2-4).
 
-`partyUnits(state)` 는 `{uid, combat, actives}` 를 만든다 — `actives = skill.activesFor(hero)`(**인스턴스 `[{id, source}]` · 1번이 고유** — 2026-09-01). `partyMembers(state)`(전술 문맥용)는 **정의**를 넘긴다 — `activesFor(h).map(a => skill.resolve(a))` — `tactic.contextOf` 의 계약이 「actives = 스킬 정의」이기 때문이다. ⚠ 2026-09-01 까지 id 를 넘겨 `skill_tag` 조건 4종이 영원히 0 을 셌다(회귀 단정 있음). **쿨·창·배리어는 세이브에 없다**(HP 와 같은 취급 — 전투 안에서만 산다).
+`partyUnits(state, uids?)` 는 `{uid, combat, actives}` 를 만든다 (`uids` 를 주면 그 인원만 — 아웃을 뺀 `activeParty` 가 들어온다, 2026-09-03) — `actives = skill.activesFor(hero, { weaponGroup: weaponGroupOf(state, hero) })`(**인스턴스 `[{id, source}]` · 고유 → 무기군 → 전직** — 2026-09-03). **무기군을 아는 곳은 `state.js` 뿐이다** — `skill.js` 는 장비를 모르므로 착용 무기의 `group` 을 여기서 넘긴다(`weaponGroupOf(state, hero)` → 맨손이면 `null`, 그러면 그 칸이 빈다). `partyMembers(state)`(전술 문맥용)는 **정의**를 넘긴다 — `activesFor(h).map(a => skill.resolve(a))` — `tactic.contextOf` 의 계약이 「actives = 스킬 정의」이기 때문이다. ⚠ 2026-09-01 까지 id 를 넘겨 `skill_tag` 조건 4종이 영원히 0 을 셌다(회귀 단정 있음). **쿨·창·배리어는 세이브에 없다**(HP 와 같은 취급 — 전투 안에서만 산다).
 
 ### 2-8. `skill.js` — 액티브 정의 · 배정 · 발동 선택
 
@@ -395,7 +396,7 @@ strike(rng, a, d):
 |---|---|---|
 | `defs` | `{skillId: def}` | 정규화된 정의 |
 | `list` | `[def]` | CSV 순서 |
-| `activesFor(hero)` | `→ [{id, source}]` | **[개정 2026-09-01 · 인스턴스]** 배정 단위는 id 가 아니라 **인스턴스**다 — 우선순위 저장 · 전직 1택 · 변형 노드(`override`)가 전부 여기 얹힌다. 순서: 고유(`source: 'innate'`, 정의에 있을 때만) → `ownerKind === 'job' && ownerId === hero.cls` 인 행(`source: 'job'`, `priority` 오름차순) · 중복 id 제거 · `hero.skillOrder`(선택 필드 · §2-4)가 있으면 그 순서를 앞에 → **`active_slots` 개로 자른다.** `innate` 가 없는 입력(스텁)은 직업 행만. 무기군·전직 출처가 생기면 이 함수만 바뀐다 (skill_design §9-0) |
+| `activesFor(hero, ctx)` | `→ [{id, source}]` | **[개정 2026-09-03 · 출처 고정]** **칸을 정하는 것은 출처다** (skill_design §2) — 배운 것 중 셋을 고르는 게 아니라 출처가 셋이고 각각 하나씩 준다. 순서는 **고유 → 무기군 → 전직**이고 그것이 칸 번호다.<br>· **고유** `source:'innate'` — `hero.innate`, 정의에 있을 때만<br>· **무기군** `source:'weapon_group'` — `ctx.weaponGroup` 과 `ownerId` 가 같은 행. **`ctx.weaponGroup` 을 안 넘기면 이 칸은 빈다**(맨손과 구분되지 않는다 — 넘기는 쪽의 책임이다)<br>· **전직** `source:'advance'` — ⚠ **전직 시스템이 없어**(R16) 그 직업의 전직 임시분 중 `priority` 최소 하나를 임시로 싣는다. 전직이 오면 「고른 갈래가 준 3 중 찍은 하나」로 바뀐다<br>· **빈 출처는 자리를 남기지 않는다** — 반환은 든 것만이고 어느 출처인지는 `source` 가 말한다. 3칸 자리로 펴는 것은 화면의 몫이다(`ui/app.js:ACTIVE_SOURCES`)<br>· 같은 id 가 두 출처에서 오면 **앞선 출처만** 남긴다(고유로 굴린 것이 그 직업 전직 임시분과 같을 때) · `hero.skillOrder`(§2-4)가 있으면 그 순서를 앞에 → `active_slots` 개로 자른다 |
 | `resolve(active)` | `→ def \| null` | 인스턴스 → 정의. 지금은 `defs[active.id]`. ⚠ 변형 노드가 오면 `active.override` 를 여기서 덧씌운다 — 소비자(battle · tactic · 화면)는 `defs[id]` 를 직접 찾지 않고 이것만 부른다 (§8 항목 16) |
 | `castable(def, ctx)` | `→ bool` | `ctx = {self, allies}`(allies = 생존 아군, self 포함). 아래 발동 조건 |
 | `pickReady(actives, t, isCastable)` | `→ active \| null` | **순수** — `actives` 를 바꾸지 않고 정렬도 새 배열에서 한다. `readyAt ≤ t + EPS` **이고** 조건이 참인 것 중 `readyAt` 최소 → 동률이면 **배열 순(칸 순서)**. `skill.csv:priority` 는 동률 결정자가 **아니다**(2026-09-01 — 직업 행이 칸에 앉는 기본 순서에만 쓴다 · battle_design §5 「우선순위는 플레이어가 정한다」 · 고유 칸이 1번에 오면서 CSV 값이 출처를 섞어 화면의 「슬롯 순 = 우선순위」와 어긋나던 것을 바로잡았다) |
@@ -437,22 +438,32 @@ strike(rng, a, d):
 
 ### 2-9. `tactic.js` — 파티 전술 정의 · 조건 판정 · 리롤 후보
 
-`createTacticSystem(data)` — 주입 `data`: `slots`(= `tactic_slot.csv` 파싱 행) · `options`(= `tactic_option.csv`) · `sins` · `classes` · `weaponGroups` · `skillSystem`. **무상태** — 어느 칸에 무엇이 들었는지는 세이브가 들고(§4) 이 모듈은 규칙만 낸다.
+`createTacticSystem(data)` — 주입 `data`: `slots`(= `tactic_slot.csv` 파싱 행) · `options`(= `tactic_option.csv`) · `sins` · `classes` · `skillSystem` · `gradeWeights`(= `balance.csv:tactic_grade_weight_*` 셋). **무상태** — 어느 칸에 무엇이 들었는지는 세이브가 들고(§4) 이 모듈은 규칙만 낸다. ~~`weaponGroups`~~ 는 2026-09-02 폐지(`damage_kind` 조건 삭제와 함께).
 
 **칸은 획득물이 아니다** (tactic_card_design §5) — 로스터 **합산 레벨**이 칸을 열고, 칸에 든 옵션은 재화로 간다.
+
+**옵션의 SSOT 는 `(option_id, grade)` 복합키다** (tactic_card_design §5-5 확정 2026-09-01 · 코드 반영 2026-09-02). `option_id` 가 **가족**(조건 · `stat` 을 고정)이고 `grade` 가 **값만** 가른다. 그래서 이 모듈은 두 축을 구분해 부른다:
+
+- **가족** — 「어떤 조건에 어떤 축이 붙나」. 중복 방지 · 첫 배정 · 리롤 후보의 단위는 **전부 가족**이다. 「일반 공격력」과 「레어 공격력」은 같은 옵션이라 두 칸에 못 들어간다 (§5-5 — 등급으로 갈라 세면 같은 stat 이 두 칸에서 곱해진다)
+- **등급** — `common` · `magic` · `rare` **이 순서가 코드 상수**(§5-3). 값이 이 순서로 커지는지 로드 시 검증한다
+- **칸 하나가 드는 것은 `{id, grade}` 한 쌍**이다 — 세이브도 이 모양으로 든다 (§4)
 
 | export | 시그니처 | 결과 |
 |---|---|---|
 | `slotList` · `slotCount` | `[{no, unlockTotalLevel, rerollCost}]` | 칸 수 = CSV 행 수. 로드 시 검증 — `slot_no` 는 1부터 빈틈없이 · 문턱은 오름차순 · **옵션 수 > 칸 수**(아니면 리롤할 여지가 없다) |
-| `list` · `byId` | `[{id, condKind, condArg, condN, stat, value}]` | 로드 시 검증 — `cond_kind` 어휘 · 인자 타입(죄종 / 피해 종류 / 스킬 태그) · `stat` · `value ≠ 0`. 어긋나면 **throw** |
+| `families` · `familyIds` | `[{id, condKind, condArg, condN, stat, grades:{common,magic,rare}}]` | **가족 목록** — 행이 아니라 가족을 센다(66행 → 22가족). 로드 시 검증 — `cond_kind` 어휘 · 인자 타입(죄종 / 스킬 태그) · `stat` · `value != 0` · **가족마다 3등급이 빠짐없이 하나씩** · **가족 안에서 조건·`stat` 이 같다**(등급은 값만 가른다) · **값이 등급 순으로 커진다**. 어긋나면 **throw**.<br>⚠ **가족 수 > 칸 수**여야 한다 — 행 수가 아니다. 66행 22가족 7칸에서 행으로 세면 통과하고, 가족으로 세야 「리롤할 여지」가 실제로 성립한다 |
+| `optionOf(ref)` | `{id, grade}` → `{id, grade, condKind, condArg, condN, stat, value} \| null` | 칸이 든 한 쌍을 옵션 하나로 편다. `measure`·`bonusOf` 가 받는 모양이고, **없는 가족·없는 등급이면 `null`**(CSV 가 바뀐 세이브) |
+| `GRADES` | `['common','magic','rare']` | 등급 어휘 — 이 밖의 값은 로드 시 throw. **순서가 계약**이다 (§5-3) |
 | `openCount(totalLevel)` | `→ n` | 문턱을 넘은 칸 수 |
-| `contextOf(members)` | `→ ctx` | `members = [{sin, cls, items, actives}]` (**`actives` = 스킬 정의** — id 가 아니다. ⚠ 2026-09-01 까지 `state.partyMembers` 가 id 를 넘겨 태그가 0 으로 세어졌다 — 호출 쪽을 고쳤다 · §2-7). 조건이 세는 숫자를 한 번에 뽑는다 — 죄종·직업 분포 · 죄종 접사 수 · 무기 피해 종류 · **스킬 태그별 사람 수**(스킬 수가 아니다). ~~양손 수~~ 는 2026-09-01 폐지 |
+| `contextOf(members)` | `→ ctx` | `members = [{sin, cls, items, actives}]` (**`actives` = 스킬 정의** — id 가 아니다. ⚠ 2026-09-01 까지 `state.partyMembers` 가 id 를 넘겨 태그가 0 으로 세어졌다 — 호출 쪽을 고쳤다 · §2-7). 조건이 세는 숫자를 한 번에 뽑는다 — 죄종·직업 분포 · 죄종 접사 수 · **스킬 태그별 사람 수**(스킬 수가 아니다). ~~양손 수~~ 는 2026-09-01 폐지 · ~~무기 피해 종류~~ 는 2026-09-02 폐지 |
 | `measure(option, ctx)` | `→ {have, need, active}` | 조건 카운터. 화면이 「지금 / 필요」를 찍는다 |
 | `bonusOf(options)` | `→ {flat, dr}` | 접사·마스터리와 **같은 채널**. `damage_reduction` 만 원천별 곱이라 따로 (battle_design §9-3) |
-| `initialAssign(rng)` | `→ [optionId × slotCount]` | 풀을 **통째로 섞어** 앞에서부터 나눠 준다 — 리롤 카운터를 안 타므로 **리롤이 다른 칸을 흔들지 않는다**. 중복 없음 |
-| `pick(rng, exclude)` | `→ optionId \| null` | 리롤 후보. 부르는 쪽이 지금 든 것 + 다른 칸에 든 것을 넘긴다 |
+| `initialAssign(rng)` | `→ [{id, grade:'common'} × slotCount]` | **가족 풀**을 통째로 섞어 앞에서부터 나눠 준다 — 리롤 카운터를 안 타므로 **리롤이 다른 칸을 흔들지 않는다**. 가족 기준이라 중복 없음. **등급은 언제나 `common`** — 시드 운이 초반 격차를 만들지 않는다 (tactic_card_design §5-5 확정) |
+| `pick(rng, excludeIds)` | `→ {id, grade} \| null` | 리롤 후보. 부르는 쪽이 지금 든 것 + 다른 칸에 든 것의 **가족 id** 를 넘긴다. **가족과 등급을 같이 굴린다**(§5-5) — rng 를 **가족 1회 · 등급 1회 순서로 2번** 소비한다 (§5-2) |
 
-**조건 어휘 8종** (`cond_kind` — 이 밖의 값은 로드 시 throw): `always` · `party_size` · `sin_same` · `sin_kind` · `class_same` · `affix_sin`(인자: 죄종) · `damage_kind`(인자: physical/magic) · `skill_tag`(인자: 스킬 태그 10종 — §2-8 `TAGS`). ~~`two_hand`~~ 는 2026-09-01 폐지 — 전 무기가 양손이라 언제나 참이 되어 조건이 아니게 됐다(`tactic_option.csv` 의 `opt_two_hand` 행도 함께 삭제, 옵션 23 → 22).
+**조건 어휘 6종** (`cond_kind` — 이 밖의 값은 로드 시 throw): `always` · `sin_same` · `sin_kind` · `class_same` · `affix_sin`(인자: 죄종) · `skill_tag`(인자: 스킬 태그 10종 — §2-8 `TAGS`).
+- ~~`two_hand`~~ 는 2026-09-01 폐지 — 전 무기가 양손이라 언제나 참이 되어 조건이 아니게 됐다(`tactic_option.csv` 의 `opt_two_hand` 행도 함께 삭제).
+- ~~`party_size`~~ · ~~`damage_kind`~~ 는 2026-09-02 폐지 — tactic_card_design §5-4 가 「파티 인원수 · 무기 종류 조건 폐기」로 확정했고 09-01 임시 풀 교체 때 **CSV 에서 먼저 빠졌다**. 어휘만 코드에 남아 조건 2종이 영원히 못 뜨는 상태였다. `damage_kind` 가 나가면서 `contextOf` 의 무기 피해 종류 집계와 `weaponGroups` 주입도 함께 없어졌다.
 전부 **편성에서 확정되는 값**이다 (tactic_card_design §2-1) — 전투 중에 변하는 축(현재 HP · 남은 적)은 어휘에 없다. **정의는 CSV · 종류는 코드** — 미니 DSL 을 두지 않는다 (§2-8 skill.js 와 같은 규약).
 
 ### 2-10. `naming.js` — 이름 조립 (2026-08-31 신설)
@@ -524,11 +535,11 @@ strike(rng, a, d):
 
 ---
 
-## 4. 세이브 스키마 v9
+## 4. 세이브 스키마 v10
 
 ```
 {
-  version: 9, seed: uint32, createdAt: ms, savedAt: ms,
+  version: 10, seed: uint32, createdAt: ms, savedAt: ms,
   resources: { gold, dust, stigma },
   heroes: [ hero ],                       // §2-4 hero 객체. equipped 키 = 착용 위치 8개 · mastery {nodeId:rank} · masteryPoints · innate(고유 스킬 id) · skillOrder?(선택 — 칸 순서)
   party: [ heroUid ],
@@ -542,12 +553,12 @@ strike(rng, a, d):
   lastReport: report | null,
   notice: { kind: 'runClosed', stageId, at, seenAt } | null,
   tavern: { rerolledAt: ms | null, hired: [ slotIndex ] },  // 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸. 명단 자체는 저장하지 않는다
-  tactics: { slots: { 칸번호: optionId } }   // **리롤로 바꾼 칸만.** 안 담긴 칸은 시드가 내는 첫 배정이다 (§2-9 initialAssign)
+  tactics: { slots: { 칸번호: {id, grade} } }   // **리롤로 바꾼 칸만.** 안 담긴 칸은 시드가 내는 첫 배정이다 (§2-9 initialAssign · 그쪽은 언제나 `common`)
 }
 ```
 
 - **uid 형식** — 영웅 `h{n}`, 아이템 `i{n}`. 발급은 `state.js:addHero / addItem` 만
-- **HP 는 세이브에 없다** — 매 전투 최대치 시작. 부상은 `injuredUntil` 타이머 하나
+- **HP 는 세이브에 없다** — 매 전투 최대치 시작. 전투불능은 `run.downed`(**이번 출정 누적 아웃**) 하나이고 **마을로 돌아오면 비워진다**. 치료 타이머는 2026-09-03 에 폐기됐다 (base_expedition_design §1-1)
 - **타임라인은 세이브에 없다**
 - **버전 정책** — 올릴 수 있는 버전은 `deserialize` 안에서 올리고, 못 올리는 버전은 throw. 렌더러는 throw 를 잡아 시작 화면에 사유를 보여준다 — 이 처리는 렌더러의 책임이지 state.js 의 계약이 아니다
 
@@ -597,15 +608,25 @@ strike(rng, a, d):
 - **전투 rng 수열과 섞이지 않는다** — 전용 솔트 `0x5C11`(§5-1·§5-3). 새 영웅의 고유 스킬은 이 스트림이 아니라 `rollHero` 를 부른 쪽의 rng(시작 후보 = UI 상수 · 선술집 = `^ 0x5A17`)에서 나온다
 - 전투 결과는 바뀐다 — 액티브 구성이 달라지므로 이관 전후 같은 스테이지의 타임라인이 같지 않다. 이것은 이관의 부작용이 아니라 **기능**이다(옛 세이브에 고유 칸을 준다)
 
-**v9 → v10 이관** ⚠ **[계획 2026-09-01 · 구현 전]** (전술 리롤 재설계 — tactic_card_design §5-6. ⚠ 같은 날 고유 스킬 소급 이관이 v9 를 먼저 썼으므로 **이 계획은 v10 으로 밀렸다**). `deserialize` 가 v9 를 받으면 제자리에서 올린다:
+**v9 → v10 이관** (2026-09-02 — 전술 옵션 등급 축 · tactic_card_design §5-5). `deserialize` 가 v9 를 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `tactics.slots[*]` | **문자열이면 `{id: 그 문자열, grade: 'common'}`** — 옛 세이브의 칸은 등급이 없던 시절에 굴린 것이라 **가장 낮은 등급으로 받는다**. 첫 배정이 언제나 `common` 인 것과 같은 자리에 세우는 것이고, 반대로 올려 주면 이관이 공짜로 파워를 준다 |
+| `version` | `10` |
+
+- **가족이 CSV 에서 사라졌으면 그대로 둔다** — `tacticState` 가 못 찾은 칸을 첫 배정으로 되돌리므로(§2-7) 이관이 손댈 필요가 없다. 임시 풀은 통째로 교체될 예정이라(tactic_card_design §5-7) 이 경로는 실제로 열린다
+- 전투 결과는 바뀔 수 있다 — 옛 세이브가 리롤로 넣어 둔 칸의 값이 `common` 값으로 읽힌다. 이관 전 코드는 **모든 칸을 `rare` 값으로** 읽고 있었으므로(가족당 마지막 행만 남던 버그) 내려가는 방향이다
+
+**v10 → v11 이관** ⚠ **[계획 2026-09-01 · 구현 전]** (전술 리롤 재설계 — tactic_card_design §5-6). `deserialize` 가 v10 을 받으면 제자리에서 올린다:
 
 | 대상 | 규칙 |
 |---|---|
 | `tactics.locked` | 없으면 `[]` — **아무 칸도 안 잠긴 상태.** 옛 세이브에는 잠금이라는 개념이 없었으므로 소급할 것이 없다 |
-| `version` | `10` |
+| `version` | `11` |
 
 - **칸의 내용은 안 바뀐다** — `tactics.slots` 는 그대로다. 이관이 들고 있던 옵션을 흔들지 않는다
-- ⚠ **이 절은 계약을 먼저 적어 둔 것이고 코드에는 아직 없다** (DEV_PLAN §3-3). 구현이 오면 이 ⚠ 를 걷는다
+- ⚠ **이 절은 계약을 먼저 적어 둔 것이고 코드에는 아직 없다** (DEV_PLAN §3-3 R28 — 잠금 비용 곡선이 기획 미정이라 막혀 있다). 구현이 오면 이 ⚠ 를 걷는다. ⚠ **버전 번호가 한 칸 밀렸다** — 2026-09-02 등급 축 반영이 v10 을 먼저 썼다
 
 **v7 → v8 이관** (2026-09-01 — 한손 개념 폐지 · 보조 슬롯 폐지). `deserialize` 가 v7 을 받으면 제자리에서 올린다:
 
@@ -669,8 +690,8 @@ strike(rng, a, d):
 | `battle.onKill` | 카드 판정 1회 → **드롭 판정 1회**(처치당 최대 1개, 2026-08-28) → (드롭 시) ilvl 1회 → `rollDrop` |
 | 사건 훅(`reactions`) | 핸들러가 rng 를 쓰면 **발화 지점에서** 소비한다 — `cast` 는 skill 이벤트 뒤 · `hit`/`hitTaken` 은 hit 이벤트 뒤 · `kill` 은 `onKill`(드롭) **뒤** · `down` 은 down 이벤트 뒤. 지금 등록된 핸들러 0 → 소비 0 (2026-09-01) |
 | `state.resolveBattle` | `simulate` 가 쓴 rng 를 **이어서** 파티원마다 `grantXp` |
-| `tactic.initialAssign` | 풀 섞기 — 뒤에서 앞으로 `pool.length − 1` 회. 스트림 = `deriveSeed(seed ^ 0x7AC7, 0)` (**리롤 카운터를 타지 않는다**) |
-| `tactic.pick` | 후보 1회. 스트림 = `deriveSeed(seed ^ 0x7AC7, counters.tactic)` — 선술집(`^ 0x5A17`)과 마찬가지로 전투 스트림과 섞이지 않는다.<br>⚠ **[개정 2026-09-01 · 구현 전] 전체 리롤은 이 스트림 하나로 여러 번 뽑는다** — `counters.tactic` 은 리롤 **1회에 한 번만** 오르고, 그 시드로 만든 rng 하나가 **굴릴 칸을 번호 오름차순으로** 돌며 `pick` 을 연속 호출한다. **이 순회 순서가 계약**이다: 순서를 바꾸면 같은 시드가 다른 판을 낸다 |
+| `tactic.initialAssign` | **가족 풀** 섞기 — 뒤에서 앞으로 `가족 수 − 1` 회. 스트림 = `deriveSeed(seed ^ 0x7AC7, 0)` (**리롤 카운터를 타지 않는다**). 등급은 안 굴린다 — 첫 배정은 언제나 `common` (2026-09-02 · tactic_card_design §5-5) |
+| `tactic.pick` | **가족 1회 → 등급 1회, 이 순서로 2회** (2026-09-02 — 리롤은 옵션과 등급을 같이 굴린다 · tactic_card_design §5-5). 등급은 `tactic_grade_weight_*` 셋의 **가중 추첨**이고 훑는 순서는 `GRADES` 배열 순서(`common` → `magic` → `rare`)다 — **그 순서가 계약**이다. 스트림 = `deriveSeed(seed ^ 0x7AC7, counters.tactic)` — 선술집(`^ 0x5A17`)과 마찬가지로 전투 스트림과 섞이지 않는다.<br>⚠ **[개정 2026-09-01 · 구현 전] 전체 리롤은 이 스트림 하나로 여러 번 뽑는다** — `counters.tactic` 은 리롤 **1회에 한 번만** 오르고, 그 시드로 만든 rng 하나가 **굴릴 칸을 번호 오름차순으로** 돌며 `pick` 을 연속 호출한다. **이 순회 순서가 계약**이다: 순서를 바꾸면 같은 시드가 다른 판을 낸다 |
 
 ### 5-3. 결정론에 걸리는 코드 상수 (CSV 가 아니라 코드에 있는 값 — 이식 시 그대로 옮긴다)
 
@@ -687,6 +708,7 @@ strike(rng, a, d):
 | 합 맞추기 가드 | 500회 | hero.js | |
 | 선술집 시드 솔트 | `0x5A17` | state.js | |
 | 고유 스킬 소급 시드 솔트 | `0x5C11` | state.js | v8→v9 이관 전용 스트림 (§5-1) |
+| 전술 옵션 등급 어휘 `GRADES` | `['common','magic','rare']` | tactic.js | **배열 순서가 가중 추첨의 훑는 순서**다 — 순서를 바꾸면 같은 시드가 다른 등급을 낸다. 값(가중치)은 CSV (2026-09-02) |
 | `action_period` 반올림 | 소수 3자리 | hero.js | |
 | 타임라인 `t` 반올림 | 소수 1자리 | battle.js | |
 | `EPS` | `1e-9` | skill.js | 준비(`readyAt ≤ t + EPS`)·만료(`until ≤ t + EPS`) 판정 허용 오차 — 틱 누산이 경계를 미세하게 밑도는 것을 막는다 |
@@ -736,7 +758,7 @@ strike(rng, a, d):
 | `casts` | `스킬id:시전수` (id 오름차순). **스킬 선택은 rng 를 0회 쓴다** — 다른 어느 필드도 이 로직을 못 본다 |
 | `elites` | 라운드별 `라운드:죄종:특성+특성+특성` (공백 구분). `spawnRound` 의 정예 굴림(죄종 · `pickTwo` 2회)과 `SIN_TRAITS`/`COMMON_TRAITS` 값이 여기 있다 — 특히 `pickTwo` 의 `if (b===a) b=(b+1)%len` 은 다른 곳에서 안 걸린다. 출처는 타임라인 `round` 이벤트(정예를 못 잡으면 `kills` 에 안 남으므로) |
 | `grew` | **`resolveBattle` 뒤** 파티의 `L<레벨 합>/A<능력치 7종 총합>/M<masteryPoints 합>`. `grantXp` 는 `simulate` **다음에** 도는데 전투 결과만 보는 필드는 그 뒤를 못 본다 — 40런에서 레벨업 120회·rng 1,454회가 지문 밖이었다. ⚠ **정수 합만 적는다**(부동소수는 이식자를 ULP 로 고생시킨다) |
-| `tactics` | **열린 칸 전체**를 `번호:옵션id:on\|off`. 켜진 것만 적으면 칸에 무엇이 들었는지가 안 남아, 배정이 바뀌어도 둘 다 조건 미달이면 지문이 침묵한다 |
+| `tactics` | **열린 칸 전체**를 `번호:옵션id:등급:on\|off`. 켜진 것만 적으면 칸에 무엇이 들었는지가 안 남아, 배정이 바뀌어도 둘 다 조건 미달이면 지문이 침묵한다. **등급을 같이 적는 이유도 같다** (2026-09-02) — 값만 다른 같은 가족이라 등급이 빠지면 지문이 안 움직인다 |
 | `tl` | 타임라인 전체의 FNV-1a 해시(`JSON.stringify(timeline)`). 위 요약 필드가 못 보는 **순서·값 변화**를 잡는다 — 어디가 깨졌는지는 위 필드들이 말하고 이 값은 「달라졌다」만 말한다. **결과 불변 리팩터의 잠금장치** (2026-09-01) |
 | `drops[]` | 아래 |
 
@@ -831,4 +853,4 @@ strike(rng, a, d):
 
 ---
 
-*마지막 업데이트: 2026-09-01 (**스킬 구조 재편 B — 행동 + CSV** — §2-8 `pickReady` 동률 = **칸 순서**(CSV `priority` 는 기본 정렬만) · §2-6 회복 밑수 `matk` 가 버프 괄호를 탄다(`matkBase`) · 쿨 바닥 `CD_MIN_MULT` → `balance.csv:skill_cd_floor_mult`(§5-3 행 삭제) · `skill.csv` 에 `icon`·`desc_kr`·`desc_en`·`innate_pool`·`note`(`def` 필드 4) · **`skill_tag.csv` 신설** — 태그 어휘 SSOT(`tagRows` 주입 · §7 CSV 23) · `SKILL_DISPLAY` 삭제 · §2-4 `skillPool` = `innate_pool=1`) · 2026-09-01 (**스킬 구조 재편 — 계약 먼저** [사용자 지시 · 구현 A 진행 중] — §1 그래프에 `skill_effects.js`·`skill_runtime.js` · **§2-11 등록표** · **§2-12 런타임**(사건 훅 5종 · `reactions`) · §2-6 `simulate` 입력이 **인스턴스** `[{id, source}]` · 유닛 필드 `matkBase`·`reactions`·`actives[].source` · **`makeUnit` 하나** · 실행 규칙 표에 사건 훅 행 · §2-7 `partyMembers` 가 정의를 넘긴다(⚠ id 를 넘겨 `skill_tag` 조건이 0 을 세던 버그) · §2-8 어휘 출처 = 표 · `activesFor → [{id, source}]` · `resolve` 신설 · 검증 강화(종류↔대상 정합) · §2-9 `contextOf` 주의 · §2-4 `skillOrder` 선택 필드 · §5-2 훅 rng 규칙 · §5-3 `CD_MIN_MULT` 위치(B 에서 CSV) · §5-5 `tl` 해시 · §8 항목 15·16) · 2026-09-01 (**레어 고유 스킬 프로토타입 배정** [사용자 지시] — §1 조립 그래프(skill.js 를 먼저 · hero 에 `skillPool` id 목록) · §2-4 `skillPool` 주입 · `rollInnate` 신설 · `rollHero` 가 고유를 굴린다 · hero 객체 `innate` · §2-7 `SAVE_VERSION` 9 · `deserialize` v2~v8 연쇄 · `partyUnits` 1번 = innate · §2-8 `balance.active_slots` 읽음 · `activesFor` = 고유 1 + 직업 채움 + 상한 · **§4 세이브 v9**(v8→v9 이관: 시드 소급 · 전용 솔트) · **전술 리롤 계획 이관은 v9 → v10 으로 밀림** · §5-1 소급 스트림 · §5-2 `rollHero` 에 `rollInnate` 1회 · §5-3 솔트 `0x5C11` · §5-5 `parties` 지문에 고유 스킬 · §8 항목 8 버전 범위) · 2026-09-01 (**⚠ 전술 리롤 재설계 — 계약만 먼저, 구현 전** — §2-7 `tacticState` 반환 개정(칸의 `cost` 삭제 → 판 전체의 `rerollCost`·`lockedCount`·`canReroll` · 칸에 `locked`) · `rerollTactic(state)` 에서 `slotNo` 삭제(열렸고 안 잠긴 칸을 한 번에) · **`toggleTacticLock` 신설**(무료 · rng 안 탐) · §3 결과 코드 **`allLocked`** · §5-2 **전체 리롤의 rng 순회 순서가 계약**(카운터는 1회만 오르고 한 스트림으로 칸 번호 오름차순 연속 뽑기) · §4 **세이브 v8 → v9**(`tactics.locked = []`). 비용 곡선은 기획 미정(tactic_card_design §5-6). 사용자 지시) · 2026-09-01 (**한손 개념 폐지 · 보조 슬롯 폐지** — §2-2 `slots` 부위 7 · `weaponGroups` 에서 `twoHanded` 삭제 · §2-5 item 객체에서 `twoHanded` 삭제 · `watk` 공식에서 양손 배율 삭제(`weapon_atk_base` 로 흡수) · 방어구 implicit 에서 보조 ×1.5 삭제 · §2-5 `canEquip` 인자 3 → 2 · §2-7 `equipSlots` 위치 8 · `equip` 의 `back` 은 0~1개 · §2-9 조건 어휘 9 → 8(`two_hand` 폐지) · §3 결과 코드 `twoHanded` 삭제 · **§4 세이브 v8**(v7→v8 이관 4항) · §5-3 코드 상수에서 보조 배율 삭제 · §7 `SLOTS` 부위 7/위치 8 · §8 항목 6) · 2026-08-31 (**강화 신설 — R25** · §2-5 강화 절 신설(베이스는 파생 · 옵션 값은 박는다 · 재굴림 없음) + item 객체에 `up` · exports 4개(`upgradeMax`·`upgradeCost`·`upgrade`·`effective`) · §2-7 `upgradeState`/`upgradeItem` · `heroCombat` 이 `effective` 를 통과시킨다 · §3 결과 코드 `maxUp` · **§4 세이브 v7**(v6→v7 이관: `items[*].up = 0` · `counters.upgrade = 0`) · §5-1 강화 스트림 `^ 0xF0C3` · §5-2 `item.upgrade` 소비 순서) · 2026-08-31 (**골든 사각지대 메우기** — §5-5 재작성: **입력 지문(`meta`)을 출력(`runs`)보다 먼저 대조한다** · `meta.csvHash`(CSV 22종 원문 해시) · `meta.balance`(**전 키** — 손잡이 5키만 보던 판이 밖의 15+ 키를 통과시켰다) · `meta.parties`(시작 파티 10 — 영웅 생성 + 시작 무기) · 런 지문에 `kills`·`casts`·`elites`·`grew`(정산 **후** 성장) 추가 · `tactics` 를 열린 칸 전체로 · 불일치 요약을 맨 앞에 · 키 **합집합** 순회 · 「보장하지 않는 것」 목록. **§5-2 에 `battle.stagePool` 순서 계약 한 줄**(CSV 행 순서가 아니라 `monster_idx` 오름차순 — 해시맵을 쓰면 다른 게임이 된다)) · 2026-08-31 (**골든 시드 스냅샷** — §5-5 신설: `dev/golden.json` 40런(시드 10 × 스테이지 101~104)이 **Phase 2 가 맞춰야 할 대상**이다. 런 생성 절차 · 지문 필드 · 드롭 지문(접사 stat·값·**순서**까지) · `uid` 비포함 · `meta.knobs` 5키 별도 대조. 지문을 바꾸는 변경은 §5-2 와 이 절을 먼저 고친다) · 2026-08-31 (**M7 mock→CSV 이관** — §7 이식 차단 9항목 → 3항목(`SINS`·`SIN_TRAITS`·`COMMON_TRAITS`) · CSV 16→22(`affix`·`item_base`·`equip_slot`·`class`·`hero_name`·`hero_trait`) · **§2-10 `naming.js` 신설**(`nm`·`eliteName` 이 game_logic 으로) · §2-4/§2-5 출처 열 mock→CSV · §2-7 `equipSlots` 출처 · §1 조립 그래프에 naming · §9 부채 #5 축소. **값 불변** — 캘리브레이션 4행·PASS 135/135 그대로) · 2026-08-30 (**파티 전술 신설** — §2-9 `tactic.js`(조건 어휘 9종 · 무상태 · 첫 배정은 섞기) · §2-7 `tacticState`/`tacticBonus`/`rerollTactic` · `heroCombat` 이 파티원에게만 전술을 넘긴다 · §2-4 `computeCombat` 4번째 인자 · **§4 세이브 v6**(`tactics` · `counters.tactic` · v5→v6 이관) · §3 `locked`·`gold` 에 전술 추가 · §5-2 rng 스트림 `^ 0x7AC7` 2줄) · 2026-08-30 (**기획↔프로토타입 대조** — §2-6 `skill` 이벤트에 `ready` 추가 · `end.reason` 에 **`retreat`**(귀환 룰 · 판정 순서) · §2-4 `grantXp` 레벨 상한 · §2-7 선술집 3함수 재작성(`tavernState` 신설 · `hire` 가 카운터를 안 올린다) · **§4 세이브 v5**(`tavern` · v4→v5 이관) · §6 재생기가 12종을 전부 안다 · §7 `SKILL_DISPLAY` 는 주입 아님 · §9 부채 #3 해소) · 2026-08-28 (CSV 형태 최적화 — §7 CSV 13·표시 헬퍼 · §2-4/§2-5 `damageKind`/`release` · §2-6 드롭 = 처치당 최대 1개·`dropChanceMult` · §2-7 codex 출처 CSV · §2-8 `ownerKind`/`ownerId` · §5-2 드롭 판정 1회 · §8 항목 9 `cards_to_next`) · 2026-08-28 (액티브 스킬 엔진 — §2-8 skill.js 신설 · §2-6 스킬 실행 규칙·유닛 필드·이벤트 5종·result casts · §2-3 effectiveCd · §2-4 atk_pct_sum · §5-2 rng 순서 · §5-3 EPS·초기 readyAt · §7 CSV 9 · §8 항목 13·14) · 2026-08-26 (battle_design §9 개정 반영 — §2-3 전면 재작성 · 성장 곡선/개체 굴림/접사 3분류 · 적중 = 레벨 차 · 저항 상한형 · 세이브 v3 이관 · res 이원성 해소) · 2026-08-26 (최초 작성 — 코드 인벤토리에서 계약 추출)*
+*마지막 업데이트: 2026-09-03 (**치료 타이머 폐기 · 귀환 룰 개정** [R36] — §2-7 `isInjured`/`tickInjuries` → **`isOut(state, uid)`/`returnToTown(state)`/`activeParty(state, stageId)`** · `partyUnits(state, uids?)` 2인자 · **§2-6 `reason` 에서 `retreat` 삭제**(전멸일 때만 돌아온다 — `wipe` 가 패배의 일반형이 됐다) · §4 세이브 **v11**(hero 에서 `injuredUntil` 삭제 · `run.downed` 신설 · v10→v11 이관은 옛 부상자를 전부 나은 것으로 본다) · 리포트에 `party`(참가자)·`outTotal`(출정 누적) · `balance.csv:injury_minutes` 폐기. **골든 40런 재촬영**(귀환 룰이 결과를 바꾼다) · 단정 PASS 182/182) · 2026-09-03 (**액티브 3칸 = 출처 고정(고유 · 무기군 · 전직)** [R35] — §2-8 `activesFor(hero, ctx)` 재작성(칸을 출처가 정한다 · `ctx.weaponGroup` 신설 · 빈 출처는 자리를 안 남긴다 · `source` 어휘에 `weapon_group`·`advance` 실사용) · §2-7 `partyUnits`·`partyMembers` 가 무기군을 넘기고 **`weaponGroupOf(state, hero)` export 신설** · §2-4 `innate` 설명 정정. `skill.csv` 는 22행(전직 임시분 14 — `owner_kind` job → **advance** 명칭 교정 · 무기군 8 신설 ⚠임시 · 고유 풀은 전직 임시분만) · 골든 재촬영) · 2026-09-02 (**전술 옵션 등급 축 — `(option_id, grade)` 복합키** [R33] — §2-9 재작성(가족/등급 두 축 · `families`·`familyIds`·`optionOf`·`GRADES` export · `list`·`byId` 폐기 · 로드 검증 3종 추가 · **가족 수 > 칸 수** · `gradeWeights` 주입 · `weaponGroups` 주입 삭제) · **조건 어휘 8 → 6**(`party_size`·`damage_kind` 폐기 — §5-4 확정의 집행) · §2-7 `tacticState` 의 칸이 등급까지 편 옵션을 든다 · `rerollTactic` 이 `{id, grade}` 를 저장하고 후보 제외는 **가족 단위** · **§4 세이브 v10**(v9 문자열 → `{id, grade:'common'}` · **R28 계획은 v11 로 밀림**) · §5-2 `pick` 이 **rng 2회**(가족 → 등급) · `initialAssign` 은 가족 풀만 섞는다 · §5-3 `GRADES` 배열 순서 등재 · §5-5 골든 `tactics` 지문에 등급) · *마지막 업데이트: 2026-09-01 (**스킬 구조 재편 B — 행동 + CSV** — §2-8 `pickReady` 동률 = **칸 순서**(CSV `priority` 는 기본 정렬만) · §2-6 회복 밑수 `matk` 가 버프 괄호를 탄다(`matkBase`) · 쿨 바닥 `CD_MIN_MULT` → `balance.csv:skill_cd_floor_mult`(§5-3 행 삭제) · `skill.csv` 에 `icon`·`desc_kr`·`desc_en`·`innate_pool`·`note`(`def` 필드 4) · **`skill_tag.csv` 신설** — 태그 어휘 SSOT(`tagRows` 주입 · §7 CSV 23) · `SKILL_DISPLAY` 삭제 · §2-4 `skillPool` = `innate_pool=1`) · 2026-09-01 (**스킬 구조 재편 — 계약 먼저** [사용자 지시 · 구현 A 진행 중] — §1 그래프에 `skill_effects.js`·`skill_runtime.js` · **§2-11 등록표** · **§2-12 런타임**(사건 훅 5종 · `reactions`) · §2-6 `simulate` 입력이 **인스턴스** `[{id, source}]` · 유닛 필드 `matkBase`·`reactions`·`actives[].source` · **`makeUnit` 하나** · 실행 규칙 표에 사건 훅 행 · §2-7 `partyMembers` 가 정의를 넘긴다(⚠ id 를 넘겨 `skill_tag` 조건이 0 을 세던 버그) · §2-8 어휘 출처 = 표 · `activesFor → [{id, source}]` · `resolve` 신설 · 검증 강화(종류↔대상 정합) · §2-9 `contextOf` 주의 · §2-4 `skillOrder` 선택 필드 · §5-2 훅 rng 규칙 · §5-3 `CD_MIN_MULT` 위치(B 에서 CSV) · §5-5 `tl` 해시 · §8 항목 15·16) · 2026-09-01 (**레어 고유 스킬 프로토타입 배정** [사용자 지시] — §1 조립 그래프(skill.js 를 먼저 · hero 에 `skillPool` id 목록) · §2-4 `skillPool` 주입 · `rollInnate` 신설 · `rollHero` 가 고유를 굴린다 · hero 객체 `innate` · §2-7 `SAVE_VERSION` 9 · `deserialize` v2~v8 연쇄 · `partyUnits` 1번 = innate · §2-8 `balance.active_slots` 읽음 · `activesFor` = 고유 1 + 직업 채움 + 상한 · **§4 세이브 v9**(v8→v9 이관: 시드 소급 · 전용 솔트) · **전술 리롤 계획 이관은 v9 → v10 으로 밀림** · §5-1 소급 스트림 · §5-2 `rollHero` 에 `rollInnate` 1회 · §5-3 솔트 `0x5C11` · §5-5 `parties` 지문에 고유 스킬 · §8 항목 8 버전 범위) · 2026-09-01 (**⚠ 전술 리롤 재설계 — 계약만 먼저, 구현 전** — §2-7 `tacticState` 반환 개정(칸의 `cost` 삭제 → 판 전체의 `rerollCost`·`lockedCount`·`canReroll` · 칸에 `locked`) · `rerollTactic(state)` 에서 `slotNo` 삭제(열렸고 안 잠긴 칸을 한 번에) · **`toggleTacticLock` 신설**(무료 · rng 안 탐) · §3 결과 코드 **`allLocked`** · §5-2 **전체 리롤의 rng 순회 순서가 계약**(카운터는 1회만 오르고 한 스트림으로 칸 번호 오름차순 연속 뽑기) · §4 **세이브 v8 → v9**(`tactics.locked = []`). 비용 곡선은 기획 미정(tactic_card_design §5-6). 사용자 지시) · 2026-09-01 (**한손 개념 폐지 · 보조 슬롯 폐지** — §2-2 `slots` 부위 7 · `weaponGroups` 에서 `twoHanded` 삭제 · §2-5 item 객체에서 `twoHanded` 삭제 · `watk` 공식에서 양손 배율 삭제(`weapon_atk_base` 로 흡수) · 방어구 implicit 에서 보조 ×1.5 삭제 · §2-5 `canEquip` 인자 3 → 2 · §2-7 `equipSlots` 위치 8 · `equip` 의 `back` 은 0~1개 · §2-9 조건 어휘 9 → 8(`two_hand` 폐지) · §3 결과 코드 `twoHanded` 삭제 · **§4 세이브 v8**(v7→v8 이관 4항) · §5-3 코드 상수에서 보조 배율 삭제 · §7 `SLOTS` 부위 7/위치 8 · §8 항목 6) · 2026-08-31 (**강화 신설 — R25** · §2-5 강화 절 신설(베이스는 파생 · 옵션 값은 박는다 · 재굴림 없음) + item 객체에 `up` · exports 4개(`upgradeMax`·`upgradeCost`·`upgrade`·`effective`) · §2-7 `upgradeState`/`upgradeItem` · `heroCombat` 이 `effective` 를 통과시킨다 · §3 결과 코드 `maxUp` · **§4 세이브 v7**(v6→v7 이관: `items[*].up = 0` · `counters.upgrade = 0`) · §5-1 강화 스트림 `^ 0xF0C3` · §5-2 `item.upgrade` 소비 순서) · 2026-08-31 (**골든 사각지대 메우기** — §5-5 재작성: **입력 지문(`meta`)을 출력(`runs`)보다 먼저 대조한다** · `meta.csvHash`(CSV 22종 원문 해시) · `meta.balance`(**전 키** — 손잡이 5키만 보던 판이 밖의 15+ 키를 통과시켰다) · `meta.parties`(시작 파티 10 — 영웅 생성 + 시작 무기) · 런 지문에 `kills`·`casts`·`elites`·`grew`(정산 **후** 성장) 추가 · `tactics` 를 열린 칸 전체로 · 불일치 요약을 맨 앞에 · 키 **합집합** 순회 · 「보장하지 않는 것」 목록. **§5-2 에 `battle.stagePool` 순서 계약 한 줄**(CSV 행 순서가 아니라 `monster_idx` 오름차순 — 해시맵을 쓰면 다른 게임이 된다)) · 2026-08-31 (**골든 시드 스냅샷** — §5-5 신설: `dev/golden.json` 40런(시드 10 × 스테이지 101~104)이 **Phase 2 가 맞춰야 할 대상**이다. 런 생성 절차 · 지문 필드 · 드롭 지문(접사 stat·값·**순서**까지) · `uid` 비포함 · `meta.knobs` 5키 별도 대조. 지문을 바꾸는 변경은 §5-2 와 이 절을 먼저 고친다) · 2026-08-31 (**M7 mock→CSV 이관** — §7 이식 차단 9항목 → 3항목(`SINS`·`SIN_TRAITS`·`COMMON_TRAITS`) · CSV 16→22(`affix`·`item_base`·`equip_slot`·`class`·`hero_name`·`hero_trait`) · **§2-10 `naming.js` 신설**(`nm`·`eliteName` 이 game_logic 으로) · §2-4/§2-5 출처 열 mock→CSV · §2-7 `equipSlots` 출처 · §1 조립 그래프에 naming · §9 부채 #5 축소. **값 불변** — 캘리브레이션 4행·PASS 135/135 그대로) · 2026-08-30 (**파티 전술 신설** — §2-9 `tactic.js`(조건 어휘 9종 · 무상태 · 첫 배정은 섞기) · §2-7 `tacticState`/`tacticBonus`/`rerollTactic` · `heroCombat` 이 파티원에게만 전술을 넘긴다 · §2-4 `computeCombat` 4번째 인자 · **§4 세이브 v6**(`tactics` · `counters.tactic` · v5→v6 이관) · §3 `locked`·`gold` 에 전술 추가 · §5-2 rng 스트림 `^ 0x7AC7` 2줄) · 2026-08-30 (**기획↔프로토타입 대조** — §2-6 `skill` 이벤트에 `ready` 추가 · `end.reason` 에 **`retreat`**(귀환 룰 · 판정 순서) · §2-4 `grantXp` 레벨 상한 · §2-7 선술집 3함수 재작성(`tavernState` 신설 · `hire` 가 카운터를 안 올린다) · **§4 세이브 v5**(`tavern` · v4→v5 이관) · §6 재생기가 12종을 전부 안다 · §7 `SKILL_DISPLAY` 는 주입 아님 · §9 부채 #3 해소) · 2026-08-28 (CSV 형태 최적화 — §7 CSV 13·표시 헬퍼 · §2-4/§2-5 `damageKind`/`release` · §2-6 드롭 = 처치당 최대 1개·`dropChanceMult` · §2-7 codex 출처 CSV · §2-8 `ownerKind`/`ownerId` · §5-2 드롭 판정 1회 · §8 항목 9 `cards_to_next`) · 2026-08-28 (액티브 스킬 엔진 — §2-8 skill.js 신설 · §2-6 스킬 실행 규칙·유닛 필드·이벤트 5종·result casts · §2-3 effectiveCd · §2-4 atk_pct_sum · §5-2 rng 순서 · §5-3 EPS·초기 readyAt · §7 CSV 9 · §8 항목 13·14) · 2026-08-26 (battle_design §9 개정 반영 — §2-3 전면 재작성 · 성장 곡선/개체 굴림/접사 3분류 · 적중 = 레벨 차 · 저항 상한형 · 세이브 v3 이관 · res 이원성 해소) · 2026-08-26 (최초 작성 — 코드 인벤토리에서 계약 추출)*

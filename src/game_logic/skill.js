@@ -21,9 +21,11 @@
  *     정의·검증만 여기서 하고 **전투 로직은 태그를 읽지 않는다** — 소비자는 전술카드 조건 · 변형 노드 · 화면
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
- *   배정 출처: 고유 칸은 채워졌지만 **고유 전용 행이 아직 없다** — 영웅이 생성 시 skill.csv 전 행에서
- *     하나를 뽑아 온다(hero.rollInnate). 무기군·전직 칸은 그 직업의 액티브가 임시로 메운다 (§9-0).
- *   전사 ③ 은 기획 미정이라 전사만 2개로 돈다 (skill_design §7).
+ *   배정 출처: **칸은 출처가 정한다** (§2 — 고유 / 무기군 / 전직). 2026-09-03 부터 실제로 그렇게 돈다.
+ *     · 고유 — **고유 전용 행이 아직 없다.** 영웅이 생성 시 `innate_pool=1` 행에서 하나를 뽑아 온다(hero.rollInnate)
+ *     · 무기군 — 행은 발행됐지만 **값이 전부 ⚠임시**다 (기획이 수량 8 만 정했다 · §6)
+ *     · 전직 — **전직 시스템이 없다**(R16 미반영). 갈래도 찍기도 없어 그 직업의 전직 임시분 중 `priority` 최소를 싣는다
+ *   그래서 지금 한 영웅의 3칸은 「굴린 고유 + 든 무기 + 직업 고정」이다 — 결정을 내리는 칸(전직)이 아직 없다.
  *   `status` 컬럼(결빙 등)은 `status_effect.csv` 가 없어 **정규화만 하고 아무도 읽지 않는다** (§9-1 규칙 4).
  */
 
@@ -200,17 +202,31 @@ export function createSkillSystem(data) {
      * 배정 단위는 id 가 아니라 **인스턴스** `{id, source}` 다 — 같은 스킬이라도 어디서 왔는지가 화면의 입력이고,
      *   변형 노드가 붙으면 칸마다 덧씌울 것이 생긴다(정의 객체는 공유물이라 손대면 안 된다 — `resolve` 참조).
      * hero 를 통째로 받는 이유: 무기군·전직 출처가 붙어도 이 함수 안만 바뀌게 하려는 것.
+     * @param ctx.weaponGroup 착용 무기의 무기군 id — **아이템을 아는 쪽(state.js)이 넘긴다.** 이 모듈은 장비를 모른다
      * @param hero.skillOrder [skillId] — 플레이어가 정한 칸 순서(선택 필드). 지금은 아무도 싣지 않아 기본 순서가 곧 결과다
      */
-    const activesFor = hero => {
-        const jobs = list
-            .filter(d => d.ownerKind === 'job' && d.ownerId === hero?.cls)
-            .slice()
-            .sort((a, b) => a.priority - b.priority)
-            .map(d => ({ id: d.id, source: 'job' }));
+    const activesFor = (hero, ctx = {}) => {
         // 정의에 없는 id(행이 지워진 옛 세이브)는 **빈 고유 칸**으로 친다 — 던지면 세이브를 못 연다
-        const innate = hero?.innate && defs[hero.innate] ? [{ id: hero.innate, source: 'innate' }] : [];
-        const base = [...innate, ...jobs.filter(a => a.id !== innate[0]?.id)];
+        const innate = hero?.innate && defs[hero.innate] ? { id: hero.innate, source: 'innate' } : null;
+        // 무기군 — **착용 무기가 정한다.** 무기를 바꾸면 이 칸이 바뀌고, 맨손이면 빈 칸이다 (§2)
+        const wg = ctx.weaponGroup
+            ? list.find(d => d.ownerKind === 'weapon_group' && d.ownerId === ctx.weaponGroup) : null;
+        // 전직 — ⚠ 전직 시스템이 없어(R16 미반영 · 해금 레벨 [balance.csv:advance_unlock_level]) **찍기가 없다.**
+        //   그 직업의 전직 임시분(§9 「전직 액티브 15 — 프로토타입 임시분」) 중 `priority` 최소 하나를 임시로 싣는다.
+        //   전직이 오면 이 한 줄이 「고른 갈래가 준 3 중 찍은 하나」로 바뀐다 (§4-2 B안).
+        const adv = list
+            .filter(d => d.ownerKind === 'advance' && d.ownerId === hero?.cls)
+            .slice()
+            .sort((a, b) => a.priority - b.priority)[0] ?? null;
+        // **출처가 칸을 정한다** (§2) — 배운 것 중 셋을 고르는 게 아니라 출처가 셋이고 각각 하나씩 준다.
+        //   비어 있는 출처는 자리를 남기지 않고 빠진다(전투는 든 것만 돌린다). 어느 출처인지는 `source` 가 말한다
+        const base = [
+            innate,
+            wg ? { id: wg.id, source: 'weapon_group' } : null,
+            adv ? { id: adv.id, source: 'advance' } : null,
+        ].filter(Boolean)
+            // 같은 스킬이 두 출처에서 오면(고유로 굴린 것이 그 직업 전직 임시분과 같을 때) 앞선 출처만 남긴다
+            .filter((a, i, all) => all.findIndex(x => x.id === a.id) === i);
         const order = hero?.skillOrder ?? null;
         if (!order) return base.slice(0, B.active_slots);
         // 플레이어가 고른 순서를 앞에 — 목록에 없는 id·중복은 무시하고, 안 적힌 것은 기본 순서대로 뒤에 붙는다

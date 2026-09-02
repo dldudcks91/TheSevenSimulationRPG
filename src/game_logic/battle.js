@@ -370,16 +370,17 @@ export function createBattleSystem(data) {
                 u.next -= TICK;
                 if (u.next <= 0) { u.next = u.period; rt.act(u, t); }
             }
+            // 귀환 룰 [개정 2026-09-03 — base_expedition_design §1-1] — **전멸일 때만 돌아온다.**
+            // 하나가 쓰러져도 런을 접지 않고 남은 인원으로 계속 간다. 쓰러진 영웅은 `out.downed` 에 실려
+            // 그 **출정** 동안 아웃되고(state.js), 마을로 돌아오면 낫는다.
+            // ~~전투불능자가 하나라도 나오면 철수~~ 는 폐기 — 그 룰이 「언제 돌아올까」를 대신 정하고 있었다
             if (alive(party).length === 0) { out.reason = 'wipe'; break; }
-            // 귀환 룰 — 전투불능자가 하나라도 나오면 그 자리에서 런을 접는다 (연쇄 전멸 방지, base_expedition_design §1-1).
-            // 라운드 정리를 **먼저** 본다 — 마지막 타격과 같은 틱에 쓰러져도 그 라운드의 클리어는 클리어로 남는다
             if (alive(units.enemies).length === 0) {
                 out.roundsCleared = round;
                 if (round >= rounds) { out.won = true; out.reason = 'clear'; break; }
-                if (alive(party).length < party.length) { out.reason = 'retreat'; break; }
                 round += 1;
                 beginRound();
-            } else if (alive(party).length < party.length) { out.reason = 'retreat'; break; }
+            }
             if (t >= B.battle_timeout_sec) { out.reason = 'timeout'; break; }
         }
         out.durationSec = r1(t);

@@ -51,12 +51,6 @@ export const SINS = {
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
    `src/data/skill_tag.csv` 13행으로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
 
-/** 피해 종류 — 직업이 아니라 **무기군**이 정한다 (`weapon_group.csv:damage_kind` · battle_design §2-1) */
-export const DAMAGE_KINDS = {
-    physical: { ko: '물리', en: 'Physical' },
-    magic: { ko: '마법', en: 'Magic' },
-};
-
 // equip_rarity_config.csv 의 color_hex 그대로 — 4단계, **일반(Normal) 등급 없음**
 // item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"
 // 통제 가능성의 계단: 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(낙인으로 죄종 지정) → 유니크(고정)
@@ -185,12 +179,10 @@ export const heroFace = hero => {
     if (!key) return null;
     return `${faceDir()}hero_${1 + strHash(key) % HERO_FACE_MAX}.png`;
 };
-/**
- * 직업 글리프 — 아트가 없는 영웅의 얼굴. **영웅의 생김새는 어디서나 같다** (2026-08-27, SCREEN_DESIGN §5):
- * 영웅 띠 · 후보 카드 · 관전 유닛 카드가 전부 이 표 하나를 읽는다. 표시 사전이라 game_logic 에 주입하지 않는다.
- */
-export const CLASS_GLYPH = { warrior: '⚔', knight: '⛨', mage: '✦', archer: '🏹', priest: '✚', assassin: '🗡', necromancer: '☠' };
-export const classGlyph = cls => CLASS_GLYPH[cls] ?? '⚔';
+/* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의
+   자리표시로 이모지(⚔ ⛨ ✦ 🏹 …)를 초상 **밑에 깔던** 방식이다. 영웅 그림이 배경 투명 PNG 이고
+   `object-fit: contain` 이라 그림이 있어도 여백 사이로 이모지가 비쳐 보였다 — 「캐릭터 그림 뒤에 활 같은 이모지」.
+   지금은 아트가 없으면 **빈 칸**이다 (SCREEN_DESIGN §5). 자리표시를 되살리려면 이모지가 아닌 것으로 한다. */
 /* 액티브의 표시 사전(`SKILL_DISPLAY`·`skillDisplay`)은 **삭제했다** (2026-09-01) — 아이콘과 설명 ko/en 이
    `skill.csv` 의 `icon`·`desc_kr`·`desc_en` 컬럼으로 나갔고, 옛 `description_kr`(설계 노트)은 `note` 로 개명했다.
    읽는 곳은 `ui/data.js:skillInfo` 하나다. 아이콘 세트가 흑백 글리프와 컬러 이모지로 섞여 있는 문제는
@@ -342,6 +334,33 @@ export const CX_DONE = {
  * state — done(완료) | open(살 수 있다) | locked(선행 연구가 남았다)
  * need  — locked 인 칸이 가리키는 선행 연구의 id
  */
+/**
+ * 상단 목업 — ⚠ **여기 숫자는 전부 거짓이다** (SCREEN_DESIGN §8-3 · base_expedition_design §2-6).
+ * 기획이 방문 주기 · 체류 · 가격 · 재고를 하나도 안 정했으므로(GAME_DESIGN §10 「상단의 수치 전부」)
+ * **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
+ * 연구 목업(RESEARCH)이 걸어 둔 길과 같고, 확정되면 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다.
+ *
+ * ⚠ **장비는 목록에 없다** — 기획이 「장비는 안 판다」로 닫아 둔 자리다(§5 스코프 가드).
+ */
+export const TRADE = {
+    /** 기본상단 — 상주 · 고정 목록. 「언제 가도 같다」가 요점이라 타이머가 없다 */
+    basic: [
+        { id: 'ore_t1', name: { ko: '구리 광석', en: 'Copper Ore' }, n: 20, gold: 120 },
+        { id: 'ore_t2', name: { ko: '철 광석', en: 'Iron Ore' }, n: 12, gold: 380 },
+        { id: 'dust', name: { ko: '분해 가루', en: 'Salvage Dust' }, n: 40, gold: 60 },
+    ],
+    /** 특수상단 — 방문마다 굴린다. `here` 가 false 면 `t` 는 다음 방문까지 남은 시간이다 */
+    special: {
+        here: true,
+        t: '1시간 12분',
+        who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
+        stock: [
+            { id: 'ore_t5', name: { ko: '흑철 광석', en: 'Blacksteel Ore' }, n: 4, gold: 2400 },
+            { id: 'brand', name: { ko: '낙인', en: 'Brand' }, n: 1, gold: 5000 },
+        ],
+    },
+};
+
 export const RESEARCH = {
     /** ⚠ 지어낸 보유량 — 채집 재료는 자원 칸(G.resources)에 존재하지도 않는다 */
     material: 42,
