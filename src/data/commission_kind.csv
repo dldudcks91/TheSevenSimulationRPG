@@ -1,0 +1,5 @@
+kind_id,form,channel,name_kr,name_en,how_kr,how_en,description_kr
+hunt,count,expedition,사냥,Hunt,원정에서 저절로 센다,Counts itself on expeditions,세는 형 — 의뢰를 받은 뒤 원정에서 죽인 몬스터·정예 수를 센다. 따로 나가지 않는다 (GAME_DESIGN §9 09-03)
+dispatch,count,dispatch,파견 의뢰,Dispatch,파견이 저절로 채운다,Your dispatch posts fill it,세는 형 — 파견처가 물어온 것으로 채워진다. 기존 활동의 여분 회차라는 의뢰의 정체가 가장 곧이 드러나는 칸
+raid,go,realtime,약탈,Raid,파티를 보낸다 · 실시간 전투,Send a party · live battle,가는 형 — 운송 중인 물자를 턴다. 보호의 반대편이고 적은 몬스터가 아니라 영웅 파티다 (base_expedition_design §1-3)
+escort,go,offline,보호,Escort,파티를 보낸다 · 오프라인 전투,Send a party · offline battle,가는 형 — 의뢰인의 상단을 호위한다. 전투가 오프라인에 돌고 결과는 리포트에서 재생한다 (GAME_DESIGN §9 09-03)

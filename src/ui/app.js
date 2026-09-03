@@ -7,7 +7,7 @@
  * i18n 규약 (2026-08-23): **이 파일에 한국어 리터럴을 쓰지 않는다** (주석 제외).
  *   UI 문구 → i18n.js 의 t(key) / 데이터 문자열 → mock.js 의 {ko, en} 쌍을 L() 로 푼다.
  *
- * 화면 흐름: 시작(새 게임 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 연구 / 선술집 / 도감 / 도움말
+ * 화면 흐름: 시작(새 게임 → 프롤로그 5씬 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 연구 / 선술집 / 도감 / 도움말
  *   전투 파티는 한 팀만 운용하므로 원정 탭 하나가 세 상태를 갖는다.
  *
  * 2026-08-26 — **인게임 패널에는 설명 문장을 두지 않는다** (사용자 지시). 숫자·상태·오류·버튼·툴팁만 남기고
@@ -28,7 +28,11 @@
  *   지역을 누르면 목록 위에 열리는 **편성 패널**(formPanel) 안에 넣었다. 출발 버튼도 스테이지 행에서 그 패널로 옮겼다 —
  *   행 클릭은 이제 「지역 선택」이다. 패널은 **누를 때만** 뜬다 — 자동으로 열지 않는다 (state.expStage = null 이면 없다).
  *
- * 개발용 URL: ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판으로 로그 창이 열린 채 · &lay=split 이면 옛 나눔 배치) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (편성 패널이 열린 상태) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태)
+ * 2026-09-03 — **프롤로그**(renderPrologue · SCREEN_DESIGN §3-1). 새 게임을 확정하면 5씬을 넘긴 뒤 원정 탭으로 들어간다.
+ *   세이브는 프롤로그보다 **먼저** 쓰인다(startGame 이 newGame → save 를 끝낸 뒤 화면만 프롤로그로 둔다) — 읽다 닫아도 이어하기로 돌아온다.
+ *   본문은 한국어만 있다(사용자 지시) — i18n 의 pro.* 참조. 개발용 경로는 ?dev=prologue 이고 나머지 dev 경로는 프롤로그를 건너뛴다.
+ *
+ * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판으로 로그 창이 열린 채 · &lay=split 이면 옛 나눔 배치) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (편성 패널이 열린 상태) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태)
  */
 
 import * as M from './mock.js';
@@ -85,6 +89,10 @@ const sinName = id => L(M.SINS[id]) || id;
 const rarity = r => M.RARITY[r] ?? M.RARITY.magic;
 const tierOf = h => M.HERO_TIER[h.tier] ?? M.HERO_TIER.rare;
 const tierChip = h => `<span class="tier-chip" style="color:${tierOf(h).color}" title="${L(tierOf(h).desc)}">${L(tierOf(h))}</span>`;
+/* 영웅의 정체성 색 = **등급** (2026-09-03 사용자 지시 · SCREEN_DESIGN §5). 죄종 색이 앉아 있던 자리를 전부 이것이 받는다 —
+   죄종은 일곱 갈래라 색이 일곱이고 그 일곱이 화면마다 다른 뜻(챕터의 죄종 · 접사의 죄종 · 영웅의 죄종)으로 읽혔다.
+   ⚠ `sinColor` 는 남는다 — 챕터·정예 몬스터·장비 접사의 죄종은 **다른 축**이라 그대로 색을 쓴다 */
+const tierColor = h => tierOf(h).color;
 
 /** 남은 시간 표기 — 시/분/초 */
 function fmtDuration(ms) {
@@ -147,23 +155,34 @@ const heroFace = h => {
     return `<span class="hero-face">${src
         ? `<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span>`;
 };
+/* 스킬 아이콘 그림 — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다 (SCREEN_DESIGN §2 · heroFace 와 같은 문법).
+   파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈다 — 밑에 이모지를 안 깐다(영웅 초상과 같은 이유 · 2026-09-03) */
+const skillImg = s => {
+    const src = M.skillIcon(s?.id);
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
+};
+/* 아이템 그림 — 무기는 무기군, 방어구는 **임시로 부위당 한 장** (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳).
+   그림이 없는 부위(투구·목걸이)는 부위 이모지로 떨어진다 — 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보) */
+const itemImg = it => {
+    const src = M.itemArt(it?.slot, it?.group);
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : (slotDef(it?.slot)?.icon ?? '');
+};
 
 /* ═══════════ 화면 상태 ═══════════ */
 
-// 탭 7 — 구현 6 + 미착수 1(의뢰). 탭이 컨셉 락의 시간축과 맞물린다: 실시간 전투 = 원정·의뢰 / 오프라인 = 파견 하나 /
-// 아이템 정리 = 캐릭터 (SCREEN_DESIGN §1 개정 2026-09-01 사용자 지시). 순서는 그 지도와 같다.
-// 없어진 넷의 행방 — 스킬은 캐릭터 안의 **창**(§7) · 거점·탐험·선술집은 **파견 탭 안의 칸**(§8).
-// `?tab=` 이 죽은 이름을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
-const TABS = ['expedition', 'town', 'commission', 'character', 'research', 'codex', 'help'];
+// 탭 9 — 선술집·강화·상점이 마을에서 나왔다 (SCREEN_DESIGN §1 개정 2026-09-03 사용자 지시). 순서는 그 지도와 같다:
+// 접속해서 누르는 자리(선술집 · 강화 · 상점)가 앞, 보내 놓고 기다리는 자리(마을)가 뒤 — 09-03 파견처 순서의 갈림 그대로.
+// 탭 이름은 활동(강화 · 상점)이고 패널 머리는 장소(제련소 · 상단 — `dp.post.*`)로 남는다 (§8-2 · §8-3).
+// 의뢰 탭은 폐지 — 게시판은 선술집 탭 안이다(§8-1). 스킬은 캐릭터 안의 **창**(§7) · 거점·탐험은 **마을 탭 안의 칸**(§8).
+// `?tab=` 이 죽은 이름(`commission` 포함)을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
+const TABS = ['expedition', 'tavern', 'forge', 'shop', 'town', 'character', 'research', 'codex', 'help'];
 
-/* 파견 목록 — 칸 6 (SCREEN_DESIGN §8). 담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가
-   능력치 → 파견처를 이미 들고 있어서 화면이 배정표를 또 가지면 CSV 와 갈린다. `postAttr()` 가 그 열을 거꾸로 읽는다.
+/* 파견 목록 — 칸 3 (SCREEN_DESIGN §8 개정 2026-09-03: 선술집·제련소·상단은 자기 탭이 됐다).
+   담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
+   화면이 배정표를 또 가지면 CSV 와 갈린다. `postAttr()` 가 그 열을 거꾸로 읽는다.
    ⚠ `explore`(탐험)는 기획에서 **파견처가 아니다**(base_expedition §2-2) — 화면에서만 나란히 선다.
    가르는 것은 인원이고(party:true), 「열린 파견처 수 = 동시 파견 상한」에 탐험은 안 들어간다 (§1) */
 const POSTS = [
-    { id: 'tavern', label: 'nav.tavern', live: true },
-    { id: 'forge', label: 'dp.post.forge', live: true },
-    { id: 'trade', label: 'dp.post.trade', live: true },
     { id: 'mine', label: 'dp.post.mine' },
     { id: 'gather', label: 'dp.post.gather' },
     { id: 'explore', label: 'nav.explore', party: true, note: 'ex.todo' },
@@ -194,8 +213,10 @@ const state = {
     expRepeat: false,
     // 탭 위에 겹쳐 뜨는 창 (SCREEN_DESIGN §2 창 레이어) — null | 'skill'. 한 번에 한 장만 뜬다
     modal: null,
-    // 파견 탭에서 열려 있는 파견처 (§8) — 들어오면 선술집이 골라져 있다. 여기서 실제로 할 수 있는 유일한 일이 고용이라
-    post: 'tavern',
+    // 프롤로그가 보여 주는 씬 번호 (SCREEN_DESIGN §3-1) — 0 부터. 세이브에 안 들어간다
+    proScene: 0,
+    // 마을 탭에서 열려 있는 파견처 (§8) — 들어오면 첫 칸(광산)이 골라져 있다. 비워 두면 첫 화면이 빈다
+    post: 'mine',
 };
 let stopBattle = null;
 
@@ -205,7 +226,8 @@ const flash = (key, params) => { state.flash = { key, params }; };
 /* ═══════════ 셸 ═══════════ */
 
 function renderShell() {
-    const pre = state.screen === 'start';
+    // 프롤로그도 시작 화면과 같은 셸이다 (§3-1) — 탭 바도 자원 띠도 없다. 게임 화면은 'game' 하나뿐
+    const pre = state.screen !== 'game';
     $('#app').classList.toggle('pregame', pre);
 
     const nav = $('.nav');
@@ -232,7 +254,7 @@ function renderShell() {
     langBtn.onclick = () => { setLang(lang() === 'ko' ? 'en' : 'ko'); render(); };
     $('.resources').appendChild(langBtn);
 
-    $('.crumb').textContent = pre ? t('ng.h') : t(`nav.${state.tab}`);
+    $('.crumb').textContent = state.screen === 'prologue' ? t('pro.h') : pre ? t('ng.h') : t(`nav.${state.tab}`);
 }
 
 function render() {
@@ -246,11 +268,14 @@ function render() {
     renderShell();
     const main = $('.main');
     main.innerHTML = '';
-    if (state.screen === 'start' || !G) renderStart(main);
+    if (state.screen === 'prologue' && G) renderPrologue(main);
+    else if (state.screen === 'start' || !G) renderStart(main);
     else ({
         expedition: renderExpedition,
+        tavern: renderTavern,
+        forge: renderForge,
+        shop: renderShop,
         town: renderTown,
-        commission: m => renderTodo(m, 'nav.commission', 'exp.commission.note'),
         character: renderCharacter,
         research: renderResearch,
         codex: renderCodex,
@@ -312,11 +337,17 @@ function segmented(items, current, onPick) {
 /* ═══════════ 새 게임 · 이어하기 ═══════════
    랜덤 영웅 3명 + 무제한 리롤 → 확정하면 그 셋이 곧 로스터·파티. 세이브가 있으면 이어하기가 먼저 보인다. */
 
-function startGame() {
+/**
+ * 새 게임 — 세이브를 먼저 쓰고, `prologue` 를 주면 화면만 프롤로그에 세운다 (SCREEN_DESIGN §3-1).
+ * 기본값이 꺼짐인 이유는 **개발용 경로**다 — ?dev=battle 같은 길이 프롤로그에서 멈추면 헤드리스 검증이 막힌다.
+ */
+function startGame({ prologue = false } = {}) {
     clearSave();
     G = SYS.game.newGame(now() >>> 0, state.candidates, now());
     save();
-    state.screen = 'game'; state.tab = 'expedition'; state.exp = 'idle'; state.confirmOverwrite = false; state.expStage = null;
+    state.screen = prologue ? 'prologue' : 'game';
+    state.proScene = 0;
+    state.tab = 'expedition'; state.exp = 'idle'; state.confirmOverwrite = false; state.expStage = null;
     render();
 }
 
@@ -334,7 +365,7 @@ function continueGame() {
 /** 후보 한 장 — 이 카드가 곧 선택의 전부라 능력치 7종까지 다 편다 */
 function candidateCard(h, extra = '') {
     const c = el('div', 'ng-card');
-    c.style.borderTopColor = sinColor(h.sin);
+    c.style.borderTopColor = tierColor(h);
     const min = D.balance.hero_attr_min, max = D.balance.hero_attr_max;
     const total = D.heroAttributes.reduce((a, s) => a + h.stats[s.id], 0);
     const bars = D.heroAttributes.map(s => {
@@ -342,7 +373,7 @@ function candidateCard(h, extra = '') {
         const pct = Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
         return `<div class="attr-row">
             <span class="attr-n">${L(s)}<i class="cs-a">${s.abbr}</i></span>
-            <span class="attr-bar"><i style="width:${pct}%;background:${sinColor(h.sin)}"></i></span>
+            <span class="attr-bar"><i style="width:${pct}%;background:${tierColor(h)}"></i></span>
             <span class="attr-v">${v}</span>
         </div>`;
     }).join('');
@@ -353,11 +384,11 @@ function candidateCard(h, extra = '') {
         <div class="ng-head">
             ${heroFace(h)}
             <div class="ng-id">
-                <div class="ng-name"><b>${L(h.name)}</b>${tierChip(h)}<span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span></div>
+                <div class="ng-name"><b>${L(h.name)}</b>${tierChip(h)}<span class="sin-chip">${sinName(h.sin)}</span></div>
                 <div class="ng-cls">${className(h.cls)} · Lv.${h.level}</div>
                 <div class="ng-role muted">${classLine(h.cls)}</div>
                 ${innate ? `<div class="ng-skill">
-                    <span class="ico">${innate.icon}</span>
+                    <span class="ico">${skillImg(innate)}</span>
                     <span class="txt"><i class="tag">${t('sk.innate')}</i><b>${L(innate.name)}</b></span>
                 </div>` : ''}
             </div>
@@ -409,7 +440,8 @@ function renderStart(main) {
         saved ? t(state.confirmOverwrite ? 'ng.overwriteConfirm' : 'ng.overwrite') : t('ng.start'));
     start.onclick = () => {
         if (saved && !state.confirmOverwrite) { state.confirmOverwrite = true; render(); return; }
-        startGame();
+        // 파티 확정 = 캐릭터 생성. 여기서만 프롤로그를 지난다 (§3-1) — 이어하기는 안 지난다
+        startGame({ prologue: true });
     };
     actions.appendChild(el('span', 'ng-count muted', t('ng.roll', { n: state.roll })));
     actions.appendChild(reroll);
@@ -465,7 +497,7 @@ function renderExpedition(main) {
                 else { SYS.game.returnToTown(G); save(); state.exp = 'report'; render(); }
             },
         });
-        // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (CLAUDE.md 컨셉 락). 정산은 출발 순간 끝났으므로 여기서 정리해도 이 전투는 안 바뀐다
+        // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 정산은 출발 순간 끝났으므로 여기서 정리해도 이 전투는 안 바뀐다
         main.appendChild(itemsPanel(heroById(state.heroUid), { showTarget: true }));
         return;
     }
@@ -739,6 +771,41 @@ function renderExpReport(main, nav) {
     main.appendChild(cols);
 }
 
+/* ═══════════ 프롤로그 (SCREEN_DESIGN §3-1) ═══════════
+   새 게임 직후 한 번. 5씬을 순서대로 넘기고 마지막에 원정 탭으로 들어간다.
+   이 화면은 SYS 를 부르지 않는다 — 상태는 state.proScene 하나뿐이고 세이브에 안 들어간다.
+   본문 줄바꿈은 문자열이 들고 CSS(.pro-body { white-space: pre-line })가 편다. */
+
+const PRO_SCENES = ['s1', 's2', 's3', 's4', 's5'];
+
+/** 프롤로그를 닫고 게임으로 — 건너뛰기와 마지막 씬이 같은 문을 쓴다 */
+const enterGame = () => { state.screen = 'game'; render(); };
+
+function renderPrologue(main) {
+    const i = Math.min(Math.max(state.proScene, 0), PRO_SCENES.length - 1);
+    const key = PRO_SCENES[i];
+    const last = i === PRO_SCENES.length - 1;
+
+    const wrap = el('div', 'pro-wrap');
+    // 인용과 챕터 줄은 마지막 씬에만 선다 — 본문과 층이 다르다 (§3-1)
+    wrap.innerHTML = `
+        <div class="pro-step muted">${t('pro.step', { n: i + 1, m: PRO_SCENES.length })}</div>
+        <h1 class="pro-h">${t(`pro.${key}.h`)}</h1>
+        <div class="pro-body">${t(`pro.${key}.b`)}</div>
+        ${last ? `<div class="pro-q">${t('pro.s5.q')}</div>
+                 <div class="pro-end">${t('pro.end')}</div>` : ''}`;
+
+    const actions = el('div', 'pro-actions');
+    const skip = el('button', 'btn', t('pro.skip'));
+    skip.onclick = enterGame;
+    const next = el('button', 'btn lg primary', t(last ? 'pro.begin' : 'pro.next'));
+    next.onclick = () => { if (last) enterGame(); else { state.proScene = i + 1; render(); } };
+    actions.appendChild(skip);
+    actions.appendChild(next);
+    wrap.appendChild(actions);
+    main.appendChild(wrap);
+}
+
 /* ═══════════ 공통: 영웅 띠 (캐릭터 · 스킬 · 선술집 상단) ═══════════
    초상화가 주인공 — 그 아래 이름과 "지금 뭘 하는가"만 적는다. 직업·레벨·죄종은 마우스를 올리면 나온다.
    세 탭이 같은 띠를 쓰므로 어느 탭에서든 로스터가 같은 자리, 같은 순서로 보인다. */
@@ -769,7 +836,7 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false }
         const doing = heroDoing(h);
         // on = 지금 보고 있는 영웅(안쪽 하이라이트) · party = 전투 파티(겉 테두리). 두 표시는 뜻이 달라 겹쳐도 된다
         const c = el('div', `hs-card${h.uid === state.heroUid ? ' on' : ''}${G.party.includes(h.uid) ? ' party' : ''}${h.tier === 'unique' ? ' unique' : ''}${isOut(h) ? ' downed' : ''}`);
-        c.style.borderTopColor = sinColor(h.sin);
+        c.style.borderTopColor = tierColor(h);
         // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 — 기본 능력치 7 이 함께 뜬다 (2026-08-28)
         bindTipNode(c, () => heroTipCard(h));
         c.innerHTML = `
@@ -793,7 +860,9 @@ const pickHero = h => { state.heroUid = h.uid; render(); };
    장착·해제·분해가 여기서 실제로 일어난다. */
 
 /** 페이퍼돌 — 신체 위치대로 착용 위치 8개(부위 7종, 반지 ×2). 착용 칸을 누르면 벗는다.
- *  잠기는 칸은 없다 — 보조 슬롯 폐지(2026-09-01)로 양손 배타가 사라졌다 */
+ *  잠기는 칸은 없다 — 보조 슬롯 폐지(2026-09-01)로 양손 배타가 사라졌다.
+ *  빈 칸은 **부위 실루엣**을 배경으로 깔고 이모지를 안 그린다 — 둘을 겹치면 투명 PNG 사이로 비친다.
+ *  그림이 없는 부위(투구·목걸이)만 예전대로 이모지다 (SCREEN_DESIGN §6 · 규칙은 `mock.slotArt` 한 곳) */
 function paperdoll(h) {
     const box = el('div', 'paperdoll');
     for (const row of M.PAPERDOLL) {
@@ -801,9 +870,11 @@ function paperdoll(h) {
             if (!pos) { box.appendChild(el('div', 'pd-gap')); continue; }
             const def = posDef(pos);
             const it = itemOf(h.equipped[pos]);
-            const cell = el('div', `pd-cell${it ? ' filled' : ''}`);
+            const art = it ? null : M.slotArt(def.id);
+            const cell = el('div', `pd-cell${it ? ' filled' : ''}${art ? ' art' : ''}`);
             if (it) cell.style.borderColor = rarity(it.rarity).color;
-            cell.innerHTML = `<div class="pd-icon">${def.icon}</div><div class="pd-label">${L(def)}</div>`;
+            cell.innerHTML = `${art ? `<span class="pd-art"><img src="${art}" alt="" loading="lazy" onerror="this.remove()"></span>`
+                : `<div class="pd-icon">${it ? itemImg(it) : def.icon}</div>`}<div class="pd-label">${L(def)}</div>`;
             if (it) {
                 bindTip(cell, it);
                 cell.onclick = () => {
@@ -852,7 +923,7 @@ function attrPanel(h) {
         const pct = Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
         return `<div class="attr-row">
             <span class="attr-n">${L(s)}<i class="cs-a">${s.abbr}</i></span>
-            <span class="attr-bar"><i style="width:${pct}%;background:${sinColor(h.sin)}"></i></span>
+            <span class="attr-bar"><i style="width:${pct}%;background:${tierColor(h)}"></i></span>
             <span class="attr-v">${v}</span></div>`;
     }).join('') + `<div class="attr-range muted">${t('ch.attr.range', { min, max })}</div>`;
     p.appendChild(box);
@@ -872,7 +943,7 @@ function skillCards(h) {
         const innate = ACTIVE_SOURCES[i] === 'innate';
         const c = el('div', `sk-card${a ? '' : ' vacant'}${innate ? ' innate' : ''}`);
         // 칸 이름은 **출처**다 — 번호만 찍으면 「2번이 왜 비었나」에 화면이 답을 못 한다 (skill_design §2)
-        c.innerHTML = `<span class="no">${i + 1} · ${sourceName(i)}</span>${a ? `<span class="ico">${a.icon}</span>` : ''}<span class="nm">${a ? L(a.name) : emptySlotText(i)}</span>`;
+        c.innerHTML = `<span class="no">${i + 1} · ${sourceName(i)}</span>${a ? `<span class="ico">${skillImg(a)}</span>` : ''}<span class="nm">${a ? L(a.name) : emptySlotText(i)}</span>`;
         grid.appendChild(c);
     });
     wrap.appendChild(grid);
@@ -973,7 +1044,7 @@ function itemsPanel(h, { showTarget = false } = {}) {
         if (it) {
             cell.style.borderColor = rarity(it.rarity).color;
             const us = SYS.game.upgradeState(G, it.uid);
-            cell.innerHTML = `<span class="inv-icon">${slotDef(it.slot).icon}</span>`
+            cell.innerHTML = `<span class="inv-icon">${itemImg(it)}</span>`
                 + (us && us.up > 0 ? `<span class="inv-up">+${us.up}</span>` : '');
             if (it.rarity === 'unique') cell.classList.add('shine');
             // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
@@ -1069,7 +1140,7 @@ function activeSlots(h, title) {
             const eff = effectiveCd(a.cd, cycle);
             const loss = (eff - a.cd) / a.cd * 100;
             row.innerHTML = `
-                <span class="no">${no}</span><span class="ico">${a.icon}</span>
+                <span class="no">${no}</span><span class="ico">${skillImg(a)}</span>
                 <span class="nm">${L(a.name)}
                     <span class="cd">${t('sk.base', { s: a.cd })} · <b class="${loss > 0.5 ? 'down' : 'up'}">${t('sk.eff', { s: eff.toFixed(1) })}</b>
                         ${loss > 0.5 ? `<span class="muted">(+${loss.toFixed(0)}%)</span>` : `<span class="muted">${t('sk.aligned')}</span>`}</span>
@@ -1182,7 +1253,7 @@ function skillTreeBody() {
     c1.appendChild(activeSlots(h));
     wrap.appendChild(c1);
 
-    const accent = sinColor(h.sin);
+    const accent = tierColor(h);
     const advLocked = h.level < D.balance.advance_unlock_level;
     const sin = sinName(h.sin);
     const cls = className(h.cls);
@@ -1327,11 +1398,11 @@ function researchPanel() {
 
 /* ═══════════ 선술집 ═══════════ */
 
-/* ═══════════ 마을 — 오프라인 활동 전부 (SCREEN_DESIGN §8) ═══════════
-   옛 탭 셋(거점 · 탐험 · 선술집)이 여기 모였다. 문법은 §4-1 원정 탭과 **같다**: 목록을 누르면 그 아래에 속이 열린다.
-   새 문법을 만들지 않는다.
+/* ═══════════ 마을 — 보내 놓고 기다리는 오프라인 활동 (SCREEN_DESIGN §8) ═══════════
+   2026-09-03 사용자 지시 — 선술집·제련소·상단이 자기 탭(선술집 · 강화 · 상점)으로 나가고
+   광산 · 채집 · 탐험 셋만 남았다. 문법은 §4-1 원정 탭과 **같다**: 목록을 누르면 그 아래에 속이 열린다.
    ⚠ **탭 이름은 「마을」(장소)이고 그 안의 칸은 여전히 「파견처」(활동)다** (2026-09-01 사용자 지시) —
-   그래서 `dp.*` 키와 `.dp-*` 클래스는 이름을 그대로 둔다. 컨셉 락의 오프라인 활동 이름도 여전히 「파견」이다 */
+   그래서 `dp.*` 키와 `.dp-*` 클래스는 이름을 그대로 둔다. 오프라인 활동의 이름도 여전히 「파견」이다 */
 
 /** 담당 능력치 — `hero_attribute.csv:dispatch` 를 거꾸로 읽는다. 화면은 배정표를 갖지 않는다 (§8) */
 const postAttr = postId => D.heroAttributes.filter(a => (a.dispatch ?? '').split('|').includes(postId));
@@ -1357,16 +1428,17 @@ function renderTown(main) {
     }
     stack.appendChild(list);
 
+    // 남은 셋(광산 · 채집 · 탐험)은 전부 미착수다 (§8 개정 2026-09-03) — 실동작 패널이 나가면서 분기가 없어졌다.
+    // 안내는 **기존 키를 재사용**한다 — 도움말이 쓰던 문구 그대로다 (§11 · ui 원칙 4)
     const open = POSTS.find(x => x.id === state.post) ?? POSTS[0];
-    // 미착수 칸의 안내는 **기존 키를 재사용**한다 — 도움말이 쓰던 문구 그대로다 (§11 · ui 원칙 4)
-    const PANEL = { tavern: tavernPanel, forge: forgePanel, trade: tradePanel };
-    if (open.live) PANEL[open.id](stack);
-    else stack.appendChild(todoPanel(open.label, open.note ?? 'exp.bench.note'));
+    stack.appendChild(todoPanel(open.label, open.note ?? 'exp.bench.note'));
     main.appendChild(stack);
 }
 
-/** 선술집 — 명단 · 고용 (§8-1). 판정은 전부 game_logic 이 낸다 */
-function tavernPanel(stack) {
+/* ═══════════ 선술집 탭 — 명단 · 고용 · 의뢰 게시판 (SCREEN_DESIGN §8-1) ═══════════
+   2026-09-03 사용자 지시 — 마을의 첫 칸에서 자기 탭이 됐다. 09-01 「선술집을 접는 대가」(고용이 한 단계
+   깊어진다)가 이 승격으로 청산됐다. 판정은 전부 game_logic 이 낸다 */
+function renderTavern(main) {
     const B = D.balance;
     const full = G.heroes.length >= B.roster_cap;
     const p = el('div', 'panel town-bg');
@@ -1401,14 +1473,18 @@ function tavernPanel(stack) {
     tools.appendChild(rr);
     p.appendChild(tools);
 
-    // 도박장 줄 (SCREEN_DESIGN §8-1 신설 2026-09-03 사용자 지시) — **이름 + 미착수 배지뿐**이다.
-    // 명단 격자 밖에 두는 이유: 후보 카드와 다른 것이라 같은 격자에 세우면 「셋째 후보」로 읽힌다.
-    // 수치를 안 찍는 것도 클릭이 없는 것도 의도다 — 발행된 CSV 키가 없고 기획도 미확정이라
-    // 값을 찍으면 확정으로, `todo.lead`(「기획은 확정됐고」)를 달면 사실과 다르게 읽힌다.
-    const gam = el('div', 'tv-gamble todo');
-    gam.innerHTML = `<span class="tv-gamble-n">${t('tv.gamble.h')}</span><span class="todo-badge">${t('todo.badge')}</span>`;
-    p.appendChild(gam);
-    stack.appendChild(p);
+    /* 의뢰 게시판 (SCREEN_DESIGN §8-1 이동 2026-09-03 사용자 지시 · 규격은 §14) — 도구 줄 다음, 패널 맨 아래.
+       의뢰 탭이 폐지되면서 게시판이 여기로 들어왔고, 자리는 같은 날 아침 삭제된 도박장 줄의 자리다.
+       명단 격자 밖인 이유는 그 줄과 같다 — 후보 카드와 다른 것이라 같은 격자에 세우면 「후보」로 읽힌다.
+       제목은 옛 탭 라벨(`nav.commission`)이 섹션 제목으로 내려온 것뿐이라 문구를 새로 쓰지 않는다 */
+    const cm = el('div', 'tv-cm');
+    cm.appendChild(el('h3', 'tv-cm-h', `${t('nav.commission')} <small class="todo-badge">${t('todo.badge')}</small>`));
+    const board = el('div', 'cm-board');
+    for (const c of D.commissionList) board.appendChild(commissionCard(c));
+    cm.appendChild(board);
+    p.appendChild(cm);
+
+    main.appendChild(p);
 }
 
 /**
@@ -1432,11 +1508,13 @@ function searchCell() {
 }
 
 /**
- * 제련소 — 제작 · 강화 (SCREEN_DESIGN §8-2 · 기획 base_expedition_design §2-5).
+ * 강화 탭 — 제련소 · 제작 · 강화 (SCREEN_DESIGN §8-2 · 기획 base_expedition_design §2-5).
+ * 2026-09-03 사용자 지시로 마을의 칸에서 자기 탭이 됐다. **탭 이름은 「강화」(활동)이고
+ * 패널 머리는 「제련소」(장소 — `dp.post.forge`)** 로 남는다 — 시설 어휘 변경은 기획 소관이다.
  * 배치 줄 + 세그먼트 2. **지금 실제로 도는 것은 `+`강화 하나**다 — 옵션강화 · 제작 · 배치는
  * `game_logic` 에 없어 미착수 안내를 띄운다 (DEV_PLAN R34). 없는 기능에 가짜 수치를 그리지 않는다.
  */
-function forgePanel(stack) {
+function renderForge(main) {
     const p = el('div', 'panel town-bg');
     p.appendChild(el('h2', '', t('dp.post.forge')));
 
@@ -1469,7 +1547,7 @@ function forgePanel(stack) {
     split.appendChild(up);
 
     p.appendChild(split);
-    stack.appendChild(p);
+    main.appendChild(p);
 }
 
 /** 강화 세그먼트 — 왼쪽 목록(착용 + 가방) · 오른쪽 작업 패널 (SCREEN_DESIGN §8-2) */
@@ -1500,7 +1578,7 @@ function forgeUpgrade(p) {
     for (const x of owned) {
         const u = SYS.game.upgradeState(G, x.uid);
         const row = el('div', `fg-row${state.forgeItem === x.uid ? ' on' : ''}`, `
-            <span class="fg-ic">${slotDef(x.slot).icon}</span>
+            <span class="fg-ic">${itemImg(x)}</span>
             <span class="fg-n" style="color:${rarity(x.rarity).color}">${u.up > 0 ? `+${u.up} ` : ''}${L(x.name)}
                 <small class="fg-sub">${L(slotDef(x.slot))} · ilvl ${x.ilvl} · ${worn.has(x.uid) ? t('fg.worn') : t('fg.bag')}</small></span>
             <span class="fg-up">${u.cost == null ? t('tip.up.max', { up: u.up }) : `+${u.up}`}</span>`);
@@ -1518,7 +1596,7 @@ function forgeUpgrade(p) {
         const eff = SYS.item.effective(it);        // 먹인 값 — 툴팁·캐릭터 시트와 같은 숫자여야 한다 (§6)
         const grp = SYS.item.groupOf(it);
         right.appendChild(el('div', 'fg-head', `
-            <span class="fg-ic">${slotDef(it.slot).icon}</span>
+            <span class="fg-ic">${itemImg(it)}</span>
             <span><span class="fg-title" style="color:${rarity(it.rarity).color}">${us.up > 0 ? `+${us.up} ` : ''}${L(it.name)}</span>
             <span class="fg-meta">${L(rarity(it.rarity))} · ${L(slotDef(it.slot))} · ilvl ${it.ilvl} · ${worn.has(it.uid) ? t('fg.worn') : t('fg.bag')}</span></span>`));
 
@@ -1577,14 +1655,16 @@ function forgeUpgrade(p) {
 }
 
 /**
- * 상단 — 기본상단 · 특수상단 (SCREEN_DESIGN §8-3 · 기획 base_expedition_design §2-6).
+ * 상점 탭 — 상단 · 기본상단 · 특수상단 (SCREEN_DESIGN §8-3 · 기획 base_expedition_design §2-6).
+ * 2026-09-03 사용자 지시로 마을의 칸에서 자기 탭이 됐다 — **탭 이름은 「상점」(활동), 패널 머리는
+ * 「상단」(장소 — `dp.post.trade`)** 으로 강화 탭(§8-2)과 같은 갈림이다.
  * ⚠ **통째로 목업이다** — 방문 주기 · 체류 · 가격 · 재고가 기획에 하나도 없어서(GAME_DESIGN §10)
  * 데이터는 `mock.js:TRADE` 가 들고, 버튼은 누르면 미착수 안내만 낸다. 확정되면 상수와 이 함수를 함께 지운다.
  *
  * **세로 2단인 이유** — 둘은 배타가 아니다(기본상단은 늘 열려 있고 특수상단이 그 위에 얹힌다).
  * 세그먼트로 가르면 상주하는 창구가 클릭 뒤로 숨는다. 제련소(§8-2)가 세그먼트인 것과 갈리는 지점이다.
  */
-function tradePanel(stack) {
+function renderShop(main) {
     const p = el('div', 'panel town-bg');
     p.appendChild(el('h2', '', `${t('dp.post.trade')} <small class="todo-badge">${t('todo.badge')}</small>`));
 
@@ -1607,7 +1687,36 @@ function tradePanel(stack) {
     p.appendChild(spec);
 
     p.appendChild(el('div', 'td-note muted', t('td.noEquip')));
-    stack.appendChild(p);
+    main.appendChild(p);
+}
+
+/**
+ * 의뢰 카드 — 종류 배지가 첫인상이고, 그 아래 「어떻게 도는가」 한 줄이 시간축을 든다 (§14).
+ * 게시판이 서는 자리는 **선술집 탭**이다 (§8-1 이동 2026-09-03) — 옛 의뢰 탭은 폐지됐고
+ * `renderCommission` 도 같이 지웠다. 데이터는 **CSV 두 표**다 — `commission_kind.csv`(종류 4종 ·
+ * 확정 기획)와 `commission.csv`(게시판 행 · ⚠임시 자리채움). **칸 수 = 행 수**로 `tactic_slot` 과
+ * 같은 문법이라 화면이 개수를 박지 않는다.
+ * ⚠ 기능은 아직 없다 — 굴림 · 수락/진행 · 처치 카운터 · 명성 정산이 `game_logic` 에 없어 누르면 안내만 뜬다.
+ * 넷은 하는 일이 완전히 달라서(세는 형 = 받아두면 저절로 / 가는 형 = 파티를 보낸다)
+ * 이름보다 종류가 먼저 읽혀야 한다. **이름·설명은 CSV 의 `_kr`/`_en` 쌍**이라 `L()` 로 푼다.
+ */
+function commissionCard(c) {
+    const k = D.commissionKinds[c.kind];
+    const card = el('div', `cm-card k-${c.kind}`);
+    card.appendChild(el('div', 'cm-kind', L(k)));
+    card.appendChild(el('div', 'cm-how', L(k.how)));
+    card.appendChild(el('div', 'cm-goal', L(c.goal)));
+
+    const rew = el('div', 'cm-rew', `
+        <span class="cm-gold">${c.gold.toLocaleString()} G</span>
+        <span class="cm-fame">${t('cm.fame')} +${c.fame}</span>`);
+    card.appendChild(rew);
+
+    const b = el('button', 'btn sm cm-go', t('cm.accept'));
+    // 미착수 안내는 새 문구가 아니라 도움말·미착수 화면이 쓰던 키 그대로다 (ui 원칙 4 · §11)
+    b.onclick = () => { flash('todo.lead'); render(); };
+    card.appendChild(b);
+    return card;
 }
 
 /** 품목 줄 — 이름 · 수량 · 가격 · [사기]. 살 수 없으면 가격이 빨강 (SCREEN_DESIGN §8-3) */
@@ -1736,18 +1845,26 @@ function helpSections() {
                 { h: t('exp.repeat'), body: [t('exp.repeat.sub')] },
                 { h: t('exp.seg.battle'), body: [t('bt.note')] },
                 { h: t('exp.seg.report'), sub: t('rep.log.sub', rounds), body: [t('rep.contract'), t('rep.injuryNote')] },
+            ],
+        },
+        {
+            // 선술집 = 마을에서 갈라져 나온 섹션 (탭을 되찾았으므로 · SCREEN_DESIGN §12 개정 2026-09-03).
+            // 의뢰 묶음도 원정 섹션에서 여기로 이사했다 — 게시판이 이 탭 안에 서기 때문이다 (§8-1)
+            title: t('nav.tavern'),
+            groups: [
+                { h: t('tv.h'), sub: t('tv.sub'), body: [t('tv.tiers.note')] },
+                { h: t('tv.reroll.free'), body: [t('tv.reroll.note')] },
+                { h: t('tv.uniqueTodo.h'), body: [t('tv.uniqueTodo.b')] },
                 { h: t('exp.commission.h'), body: [t('exp.commission.note')] },
             ],
         },
         {
-            // 파견 = 옛 「거점」 + 「선술집」 두 섹션이 합쳐진 것 (탭이 합쳐졌으므로 · SCREEN_DESIGN §12 개정 2026-09-01)
+            // 마을에 남은 것은 보내 놓고 기다리는 셋(광산 · 채집 · 탐험)뿐이다 (§8 개정 2026-09-03).
+            // 강화 · 상점 탭은 섹션이 없다 — 도움말로 옮겨 둔 문구가 아직 없다(패널의 미착수 배지가 그 일을 한다)
             title: t('nav.town'),
             groups: [
                 { h: t('exp.bench.h'), body: [t('exp.bench.note')] },
                 { h: t('ex.h'), body: [t('ex.todo')] },
-                { h: t('tv.h'), sub: t('tv.sub'), body: [t('tv.tiers.note')] },
-                { h: t('tv.reroll.free'), body: [t('tv.reroll.note')] },
-                { h: t('tv.uniqueTodo.h'), body: [t('tv.uniqueTodo.b')] },
             ],
         },
         {
@@ -1829,6 +1946,13 @@ async function boot() {
     if (new URLSearchParams(location.search).get('screen') === 'start') state.screen = 'start';
     // 관전 배치 — 버튼으로만 바뀌므로 헤드리스가 닿을 길을 따로 낸다 (2026-09-03 · SCREEN_DESIGN §10)
     if (new URLSearchParams(location.search).get('lay') === 'split') state.btLayout = 'split';
+    // 프롤로그는 새 게임 확정 버튼으로만 닿는 화면이라 헤드리스가 들어올 길을 따로 낸다 (SCREEN_DESIGN §10).
+    //   `&s=n` 은 n번째 씬 — 마지막 씬에만 인용·챕터 줄이 서므로 그 상태에도 길이 있어야 한다
+    if (dev === 'prologue') {
+        if (!G) startGame();
+        state.screen = 'prologue';
+        state.proScene = Math.max(0, (Number(new URLSearchParams(location.search).get('s')) || 1) - 1);
+    }
     if (dev === 'newgame' || (dev === 'battle' && !G)) startGame();
     if (dev === 'battle') runBattle(D.stageOrder[0], { instant: true });
     if (dev === 'play') { if (!G) startGame(); runBattle(D.stageOrder[0], { tab: new URLSearchParams(location.search).get('bt') }); return; }
@@ -1847,16 +1971,8 @@ async function boot() {
         G.heroes[0].level = SYS.tactic.slotList[SYS.tactic.slotCount - 1].unlockTotalLevel;
         state.tab = 'research';
     }
-    if (dev === 'trade') {   // 상단이 열린 마을 탭 (SCREEN_DESIGN §8-3 · §10)
-        if (!G) startGame();
-        state.tab = 'town';
-        state.post = 'trade';
-    }
-    if (dev === 'forge') {   // 제련소가 열린 마을 탭 — 파견처는 클릭으로만 열린다 (SCREEN_DESIGN §8-2 · §10)
-        if (!G) startGame();
-        state.tab = 'town';
-        state.post = 'forge';
-    }
+    // `?dev=forge` · `?dev=trade` 는 삭제됐다 (2026-09-03 · SCREEN_DESIGN §10) — 강화·상점이 탭이 되어
+    // `?tab=forge` · `?tab=shop` 이 바로 닿는다. `?dev=*` 는 클릭으로만 만들어지는 상태에 길을 내는 장치다
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
         if (!G.run) SYS.game.resolveBattle(G, D.stageOrder[0], now() - 31 * 60000);

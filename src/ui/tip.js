@@ -27,6 +27,12 @@ const el = (tag, cls, html) => {
     return n;
 };
 
+/* 스킬 아이콘 그림 — `app.js`·`battle.js` 와 같은 규칙 (SCREEN_DESIGN §2 · 규칙은 `mock.skillIcon` 한 곳) */
+const skillImg = s => {
+    const src = M.skillIcon(s?.id);
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
+};
+
 /* ───────── 기계장치 ───────── */
 
 /**
@@ -113,7 +119,7 @@ export function skillTipCard(s, period) {
     }
     c.innerHTML = `
         <div class="tip-head">${t('tip.skill.h')}</div>
-        <div class="tip-name"><span class="tip-sk-ico">${s.icon ?? ''}</span>${L(s.name)}</div>
+        <div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${L(s.name)}</div>
         <div class="tip-implicit">${cdLine}</div>
         ${s.desc ? `<div class="tip-desc">${L(s.desc)}</div>` : ''}`;
     return c;

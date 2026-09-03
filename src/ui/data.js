@@ -39,6 +39,8 @@ export const D = {
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
+    commissionKinds: null,    // commission_kind.csv — {id: {id, form, channel, ko, en, how:{ko,en}}} · form = count(세는 형) | go(가는 형)
+    commissionList: [],       // commission.csv — 게시판 행 (**칸 수 = 행 수** · tactic_slot 과 같은 문법) ⚠임시
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
@@ -64,7 +66,7 @@ export let SYS = null;
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
-    'mastery_node', 'tactic_slot', 'tactic_option',
+    'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node'];
 
 export async function loadData(base = './data/') {
@@ -76,7 +78,7 @@ export async function loadData(base = './data/') {
     FILES.forEach((f, i) => { D.csvText[f] = texts[i]; });
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
         weaponGroup, skillRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
-        tacticSlot, tacticOption,
+        tacticSlot, tacticOption, commissionKind, commissionRow,
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
@@ -120,6 +122,17 @@ export async function loadData(base = './data/') {
     D.masteryNodes = masteryNode;
     D.tacticSlots = tacticSlot;
     D.tacticOptions = tacticOption;
+    // 의뢰 — 두 표가 층을 나눈다. **종류 4종은 확정 기획**(GAME_DESIGN §9 09-03)이고,
+    // 게시판 행(commission)은 ⚠임시다 — 보상·목표가 미정이라 mine_node 와 같은 자리채움이다.
+    // 화면이 종류로 배지·「어떻게 도는가」를 고르므로 kind 를 id 로 색인한다 (SCREEN_DESIGN §14)
+    D.commissionKinds = indexBy(commissionKind.map(r => ({
+        id: r.kind_id, form: r.form, channel: r.channel,
+        ko: r.name_kr, en: r.name_en, how: { ko: r.how_kr, en: r.how_en },
+    })), 'id');
+    D.commissionList = commissionRow.map(r => ({
+        id: r.commission_id, kind: r.kind_id,
+        goal: { ko: r.goal_kr, en: r.goal_en }, gold: r.reward_gold, fame: r.reward_fame,
+    }));
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
     D.equipSlots = equipSlotRow.slice().sort((a, b) => a.slot_order - b.slot_order)

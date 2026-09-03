@@ -92,9 +92,10 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?dev=play` | 관전 — `&bt=log|dmg` 면 **그 판이 열린 채**, `&lay=split` 이면 **나눔 배치**(옛 구조) (2026-09-03) |
 | `?dev=offline` | 반복 켠 채 껐다 켠 상황 — 런 마무리 배너 |
 | `?dev=form` | 편성 패널이 열린 화면 (지역을 고른 상태) |
+| `?dev=prologue` | 프롤로그 (SCREEN_DESIGN §3-1) — `&s=n` 이면 n번째 씬. 마지막 씬(5)만 인용·챕터 줄이 선다 (2026-09-03) |
 | `?dev=tactics` | 연구 탭 — 전술 칸이 **전부 열린** 상태 (칸은 합산 레벨로만 열려 클릭으로 못 만든다) |
 | `?screen=start` | 시작 화면 |
-| `?tab=character` | 캐릭터 탭 |
+| `?tab=<탭>` | 탭 바로 열기 — **탭 9** (2026-09-03): `expedition` · `tavern` · `forge`(강화) · `shop`(상점) · `town` · `character` · `research` · `codex` · `help`. 세이브가 없으면 `?dev=newgame&tab=forge` 처럼 겹쳐 쓴다. ⚠ `?dev=forge` · `?dev=trade` 는 **삭제**됐다 — 강화·상점이 탭이 되어 `?tab=` 이 바로 닿는다 |
 | `?face=<스타일>` | 몬스터 얼굴 아트 스타일 교체 — `src/assets/art/faces/<스타일>/`. 목록은 `ui/mock.js:FACE_STYLES` · localStorage 에 남는다 |
 
 헤드리스 (Edge) — 스크린샷:

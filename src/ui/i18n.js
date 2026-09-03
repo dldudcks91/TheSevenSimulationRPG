@@ -106,6 +106,94 @@ const STRINGS = {
     'ng.overwriteConfirm': { ko: '정말? 한 번 더 누르면 지운다', en: 'Really? Click again to delete' },
     'ng.startWeapon': { ko: '직업 전속 무기군의 무기 1개를 쥐고 시작한다', en: 'Starts with one weapon from a class-exclusive weapon group' },
 
+    /* ── 프롤로그 (2026-09-03 · SCREEN_DESIGN §3-1) ──
+       본문·씬 제목은 **한국어만** 넣는다 (사용자 지시 2026-09-03) — `en` 이 없으면 t() 가 ko 로 폴백하므로
+       영어에서도 한국어 본문이 나온다. 「ko/en 나란히」의 의도된 예외이고 번역은 나중에 채운다 (DEV_PLAN 부채 #30).
+       조작 문구(다음 · 건너뛰기 · 시작한다 · 진행)는 ko/en 둘 다 있다.
+       원문은 docs/game_design/story/prologue.md — 화면이 문장을 새로 쓰지 않는다.
+       줄바꿈은 이스케이프로 들어가고, 펴는 것은 CSS(.pro-body { white-space: pre-line }) 다. */
+    'pro.h': { ko: '프롤로그', en: 'Prologue' },
+    'pro.step': { ko: '{n} / {m}', en: '{n} / {m}' },
+    'pro.next': { ko: '다음', en: 'Next' },
+    'pro.skip': { ko: '건너뛰기', en: 'Skip' },
+    'pro.begin': { ko: '시작한다', en: 'Begin' },
+
+    'pro.s1.h': { ko: '왕좌' },
+    'pro.s1.b': {
+        ko: '지옥에는 왕이 있었다.\n\n'
+            + '바알. 대악마.\n'
+            + '이 땅의 모든 것은 그의 것이었고,\n'
+            + '7개의 감정을 나누어 부하에게 깃들게 했다.\n\n'
+            + '분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n'
+            + '그것은 지옥을 유지하는 균형이었다.',
+    },
+
+    'pro.s2.h': { ko: '배신의 밤' },
+    'pro.s2.b': {
+        ko: '그 밤, 7개의 칼이 등에 꽂혔다.\n\n'
+            + '뒤를 돌아봤다.\n'
+            + '전부 아는 얼굴이었다.\n\n'
+            + '싸웠다.\n'
+            + '하지만 힘의 반이 이미 빠져나간 뒤였다.\n'
+            + '묶여있던 것이 풀려있었다. 누군가가 열쇠를 넘겼다.\n\n'
+            + '밀려난다. 발밑이 무너진다.',
+    },
+
+    'pro.s3.h': { ko: '추락' },
+    'pro.s3.b': {
+        ko: '떨어졌다.\n\n'
+            + '지옥의 빛이 멀어진다.\n'
+            + '힘이 빠져나간다.\n'
+            + '왕좌가, 부하들의 얼굴이, 그 밤의 순서가 — 흐려진다.\n\n'
+            + '누가 칼을 들었는지.\n'
+            + '누가 먼저 등을 돌렸는지.\n'
+            + '7개였는지, 아니었는지.\n\n'
+            + '확실한 건 하나.\n\n'
+            + '배신당했다.\n\n'
+            + '그리고 — 몸에 무언가가 새겨지는 감각.\n'
+            + '뜨겁다. 살이 타는 것 같다.\n'
+            + '낙인이다. 이 추락이 남긴 저주.',
+    },
+
+    'pro.s4.h': { ko: '마을' },
+    'pro.s4.b': {
+        ko: '눈을 떴을 때, 누군가가 물을 먹이고 있었다.\n'
+            + '늙은 인간이다.\n\n'
+            + '몸이 무겁다. 배가 고프다. 숨이 가쁘다.\n'
+            + '전부 처음이다. 전부 불쾌하다.\n\n'
+            + '며칠이 지났다.\n'
+            + '인간들이 음식을 나눠줬다. 자기들도 부족하면서.\n'
+            + '다친 곳을 감싸줬다. 이름도 모르는 자에게.\n\n'
+            + '이해할 수 없다.\n'
+            + '왜 이것들은 나를 살리려 하는가.\n\n'
+            + '지옥에서는 쓰러진 자를 밟고 지나간다.\n'
+            + '약한 것은 버려진다. 그것이 당연하다.\n\n'
+            + '이것들은 당연한 것을 하지 않는다.\n\n'
+            + '이름은 기억한다. 바알.\n'
+            + '왕이었다는 것도. 빼앗겼다는 것도.\n'
+            + '하지만 그 밤이 선명하지 않다.\n'
+            + '7개의 칼. 아는 얼굴들. 무너지는 발밑.\n'
+            + '그 사이의 것들이 — 뒤섞여 있다.',
+    },
+
+    'pro.s5.h': { ko: '불길' },
+    'pro.s5.b': {
+        ko: '그 날 밤, 지평선이 붉어졌다.\n\n'
+            + '불길. 군세. 분노의 기운.\n'
+            + '이 기운을 안다. 잊을 수 없다.\n\n'
+            + '사탄.\n'
+            + '바알이 지옥에서 추방한 놈.\n'
+            + '왕이 바닥에 있다는 걸 감지한 것이다.\n\n'
+            + '마을이 불탄다. 인간들이 비명을 지른다.\n\n'
+            + '바알은 일어섰다.\n'
+            + '마을을 지키려는 게 아니다.\n'
+            + '저놈이 자기를 죽이러 왔으니까 싸우는 것이다.\n\n'
+            + '적어도, 그렇게 생각했다.',
+    },
+    /* 마지막 씬에만 선다 — 본문과 층이 다른 두 줄 (SCREEN_DESIGN §3-1) */
+    'pro.s5.q': { ko: '"꺼져라. 여긴 네 전장이 아니다."' },
+    'pro.end': { ko: 'Chapter 1. 분노 / 불타는 전장' },
+
     /* ── 원정 (실동작) ── */
     'exp.partyFull': { ko: '파티가 찼다', en: 'Party full' },
     'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
@@ -177,11 +265,6 @@ const STRINGS = {
     'tv.search.h': { ko: '수색', en: 'Search' },
     'tv.search.go': { ko: '수색 보내기', en: 'Send search' },
     'tv.search.spec': { ko: '{n}명 · {h}시간', en: '{n} hero · {h}h' },
-    /* 도박장 줄 [신설 2026-09-03 사용자 지시 · SCREEN_DESIGN §8-1] — 이름 하나뿐이다.
-       수치 키도 안내 키도 없다: 발행된 CSV 키가 없고(없는 값을 찍으면 확정으로 읽힌다),
-       `todo.lead`(「기획은 확정됐고 화면이 아직 없다」)는 기획부터 미확정인 이 줄에 맞지 않는다 */
-    'tv.gamble.h': { ko: '도박장', en: 'Gambling den' },
-
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
     'time.m': { ko: '{m}분', en: '{m}m' },
@@ -199,10 +282,12 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 7 [개정 2026-09-01] — 원정 · 파견 · 의뢰 · 캐릭터 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
-       nav.skill · nav.base · nav.explore · nav.tavern 은 탭에서 빠졌지만 **지우지 않는다**:
-       스킬은 창 제목(§7), 선술집·탐험은 마을의 파견처 칸 라벨(§8), 거점은 도움말이 쓰던 자리를 마을이 물려받으며 유일한 미사용이 됐다.
-       ⚠ 탭 이름은 **마을**(장소)이고 그 안의 칸은 여전히 **파견처**(활동)다 — `dp.*` 키 이름은 그대로 (2026-09-01 사용자 지시). */
+    /* 탭 9 [개정 2026-09-03 사용자 지시] — 원정 · 선술집 · 강화 · 상점 · 마을 · 캐릭터 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
+       선술집 · 제련소 · 상단이 마을의 칸에서 자기 탭이 됐다 — 탭 이름은 **활동**(강화 · 상점)이고
+       패널 머리는 **장소**(`dp.post.forge` 제련소 · `dp.post.trade` 상단)로 남는다 (§8-2 · §8-3).
+       nav.commission 은 탭에서 빠졌지만 **지우지 않는다** — 선술집 탭 안 의뢰 게시판의 섹션 제목이다 (§8-1).
+       nav.skill · nav.base · nav.explore 도 탭이 아니다: 스킬은 창 제목(§7), 탐험은 마을의 파견처 칸 라벨(§8),
+       거점은 도움말이 쓰던 자리를 마을이 물려받으며 유일한 미사용이 됐다. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
     'nav.town': { ko: '마을', en: 'Town' },
     'nav.commission': { ko: '의뢰', en: 'Commissions' },
@@ -212,6 +297,8 @@ const STRINGS = {
     'nav.base': { ko: '거점', en: 'Base' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
+    'nav.forge': { ko: '강화', en: 'Upgrade' },
+    'nav.shop': { ko: '상점', en: 'Shop' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
     'res.gold': { ko: '골드', en: 'Gold' },
@@ -220,8 +307,10 @@ const STRINGS = {
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
     'ui.close': { ko: '닫기', en: 'Close' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
 
-    /* ── 파견 탭 [신설 2026-09-01] — 파견처 목록 (SCREEN_DESIGN §8) ──
-       선술집 · 탐험은 옛 탭 이름(nav.tavern · nav.explore)을 그대로 쓴다. 여기 넷만 새 이름이다.
+    /* ── 마을 탭 [개정 2026-09-03] — 파견처 목록은 광산 · 채집 · 탐험 셋 (SCREEN_DESIGN §8) ──
+       탐험은 옛 탭 이름(nav.explore)을 그대로 쓴다.
+       `dp.post.forge`(제련소) · `dp.post.trade`(상단)는 파견처 칸에서 빠졌지만 **지우지 않는다** —
+       강화 · 상점 탭의 패널 머리다(탭 이름은 활동, 패널 머리는 장소 — §8-2 · §8-3).
        담당 능력치는 문구가 아니라 `hero_attribute.csv:dispatch` 에서 온다 — 화면이 배정표를 따로 갖지 않는다 */
     'dp.post.trade': { ko: '상단', en: 'Trading House' },
     'dp.post.forge': { ko: '제련소', en: 'Smeltery' },
@@ -240,6 +329,13 @@ const STRINGS = {
     'td.buy': { ko: '사기', en: 'Buy' },
     'td.stock': { ko: '수량 {n}', en: '{n} in stock' },
     'td.noEquip': { ko: '장비는 팔지 않는다', en: 'No gear for sale here' },
+
+    /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 섹션 제목으로 내려왔다).
+       ⚠ **종류 이름과 「어떻게 도는가」 줄은 여기 없다** — `commission_kind.csv` 의 `_kr`/`_en` 쌍이고
+       화면은 `L()` 로 푼다. 목표·보상도 `commission.csv` 가 든다 (mock 과 CSV 가 겹치면 CSV 만 둔다).
+       남는 것은 데이터가 아닌 **화면 라벨 둘**뿐이다 */
+    'cm.fame': { ko: '명성', en: 'Fame' },
+    'cm.accept': { ko: '수락', en: 'Accept' },
 
     /* 제련소 (SCREEN_DESIGN §8-2) — 제목은 `dp.post.forge` 를 그대로 쓴다(파견 목록의 칸 이름과 같은 자리다).
        `+`강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded*` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
@@ -318,12 +414,14 @@ const STRINGS = {
     },
     'exp.commission.h': { ko: '의뢰', en: 'Commissions' },
     'exp.commission.note': {
-        ko: '의뢰는 <b>미착수</b> — 특정 보스/던전을 지목하면 그 전장이 열리는 <b>제2의 실시간 전투 채널</b>이다. 원정과 <b>동시에</b> 돌고 관전 대상은 지금 보고 있는 탭이 정한다<br>'
-            + '<b>원정 파티와 인원이 겹칠 수 없다</b> — 로스터를 나눠 쓰는 것이 이 채널의 값이다<br>'
-            + '쿨다운 길이 · 드랍 테이블 재사용 · 첫 해금 시점이 미정이고, 전투를 둘 이상 동시에 도는 구조도 아직 없다 (base_expedition_design §1-3)',
-        en: 'Commissions are <b>not started</b> — naming a boss or dungeon opens that battlefield as a <b>second real-time combat channel</b>. It runs <b>alongside</b> the expedition and the tab you are watching decides what you spectate<br>'
-            + '<b>Its party cannot overlap the expedition party</b> — splitting the roster is the point of the channel<br>'
-            + 'Cooldown, drop-table reuse and the first unlock are undecided, and the engine cannot yet run two battles at once (base_expedition_design §1-3)',
+        ko: '의뢰는 게시판에서 골라 받는다 — 종류는 <b>넷</b>이고 하는 일이 서로 다르다 (2026-09-03 확정)<br>'
+            + '<b>받아두면 저절로 되는 것</b> — 사냥(원정에서 죽인 몬스터 수를 센다) · 파견 의뢰(파견이 채운다). 따로 나갈 필요가 없다<br>'
+            + '<b>파티를 보내는 것</b> — 약탈(운송 중인 물자를 턴다 · 실시간 전투) · 보호(상단을 호위한다 · <b>오프라인 전투</b>라 결과는 리포트에서 본다). 둘 다 적이 몬스터가 아니라 <b>영웅 파티</b>다<br>'
+            + '동시에 받을 수 있는 수에 <b>상한</b>이 있다 — 개수와 보상 · 명성 폭 · 쿨다운은 미정이라 <b>화면의 숫자는 전부 임시</b>다 (base_expedition_design §1-3)',
+        en: 'Commissions are picked from a board — there are <b>four kinds</b> and they work differently (settled 2026-09-03)<br>'
+            + '<b>Accept and forget</b> — Hunt (counts monsters you kill on expeditions) and Dispatch (your posts fill it). Nobody has to go out<br>'
+            + '<b>Send a party</b> — Raid (hit a convoy in transit · live battle) and Escort (guard a caravan · an <b>offline battle</b>, so you read the result in the report). Both pit you against <b>hero parties</b>, not monsters<br>'
+            + 'There is a <b>cap</b> on how many you can hold at once — the number, rewards, fame swings and cooldowns are undecided, so <b>every figure on the screen is placeholder</b> (base_expedition_design §1-3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },

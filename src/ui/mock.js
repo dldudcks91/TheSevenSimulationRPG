@@ -167,7 +167,10 @@ export const PAPERDOLL = [
  *   밑에 깔린 직업 글리프가 드러난다 (몬스터 얼굴과 같은 규칙 · FACE_STYLES 참조).
  * 인자는 `{name}` 을 가진 것이면 된다 — 영웅 객체 · 후보 · 관전 유닛(`battle.js` 가 `h.name` 을 그대로 싣는다).
  */
-export const HERO_FACE_MAX = 5;
+/* ⚠ 이 값을 바꾸면 `% HERO_FACE_MAX` 의 나머지가 달라져 **기존 영웅 전원의 얼굴이 다시 배정된다** —
+   세이브에 있는 영웅도 어제와 다른 얼굴이 된다(이름·능력치는 그대로). 아트를 늘릴 때 따라오는 비용이라
+   조용히 올리지 않는다: 5 → 14 는 2026-09-03 사용자 지시로 올린 것이다 (다인종 흉상 9종 추가) */
+export const HERO_FACE_MAX = 14;
 /** 표시용 안정 해시(FNV-1a) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖) */
 const strHash = s => {
     let h = 2166136261;
@@ -179,14 +182,61 @@ export const heroFace = hero => {
     if (!key) return null;
     return `${faceDir()}hero_${1 + strHash(key) % HERO_FACE_MAX}.png`;
 };
+
+/**
+ * 스킬 아이콘 그림 — `src/assets/art/icons/skills/<skill_id>.png` (2026-09-03 · SCREEN_DESIGN §2).
+ *
+ * 제 그림이 있는 스킬은 그것, 없는 스킬은 **id 안정 해시**로 아래 목록에서 하나 — `heroFace` 와 같은 문법이다
+ *   (같은 스킬은 어디서나 같은 그림 · 매 렌더 안 굴린다). 자산이 늘면 이 목록에 파일명만 더한다.
+ * 파일 유무를 fetch 로 묻지 않는 이유도 같다 — 렌더는 동기다. 목록이 실제 폴더와 갈리면 img 가
+ *   `onerror` 로 빠지고 칸이 빈다 — 밑에 이모지를 안 까는 이유는 영웅 초상과 같다(투명 PNG 사이로 비친다).
+ * 얼굴 스타일(`faceDir`)을 안 타는 이유 — 스킬 아이콘은 스타일 폴더가 없는 단일 세트다.
+ */
+export const SKILL_ICON_DIR = './assets/art/icons/skills/';
+export const SKILL_ICON_FILES = ['war_warcry', 'war_bash', 'wg_sword2h', 'wg_axe'];
+export const skillIcon = id => {
+    if (!id) return null;
+    const key = String(id);
+    const file = SKILL_ICON_FILES.includes(key) ? key : SKILL_ICON_FILES[strHash(key) % SKILL_ICON_FILES.length];
+    return SKILL_ICON_DIR + file + '.png';
+};
+/**
+ * 미장착 착용 칸의 부위 실루엣 — `src/assets/art/icons/items/empty/<part>.png` (2026-09-03 · SCREEN_DESIGN §6).
+ *
+ * 축은 **부위**(`equip_slot.csv:part`)라 반지 두 칸(`ring1`·`ring2`)이 같은 그림을 든다.
+ * `skillIcon` 과 달리 **해시 폴백이 없다** — 스킬은 「제 그림은 아니어도 늘 같은 그림」이면 되지만
+ *   부위는 **틀린 그림이 곧 틀린 정보**다(투구 칸에 장화가 뜨면 그 칸을 잘못 읽는다).
+ * 목록에 없는 부위(투구·목걸이)는 `null` 이고, 그 칸은 옛 이모지(`equip_slot.csv:icon`)로 남는다.
+ */
+export const SLOT_ART_DIR = './assets/art/icons/items/empty/';
+export const SLOT_ART_PARTS = ['weapon', 'armor', 'gloves', 'boots', 'ring'];
+export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}${part}.png` : null;
+/**
+ * 아이템 그림 — `src/assets/art/icons/items/` (2026-09-03 · SCREEN_DESIGN §2). **방어구는 임시다.**
+ *
+ * 무기는 제 그림이다 — 무기의 베이스가 곧 무기군이라(`item.group`) `<group_id>.png` 가 정확히 그 무기다.
+ * 방어구는 **부위 하나에 그림 하나**다: 개체가 베이스 id 를 안 들고 다녀서(`item.js:build` 는 이름만 조립한다)
+ *   어느 베이스였는지를 화면이 알 길이 없다. 판금·사슬·가죽·유령 갑옷이 전부 `armor_1.png` 로 나온다.
+ *   파일 이름은 이미 `base_id` 축이라, 개체가 베이스를 들게 되면 아래 표 한 줄만 걷으면 갈아탄다.
+ * 목록에 없는 부위(투구·목걸이)는 `null` 이고 그 칸은 옛 이모지(`equip_slot.csv:icon`)로 떨어진다 —
+ *   `skillIcon` 의 해시 폴백을 안 쓰는 이유는 `slotArt` 와 같다(틀린 그림 = 틀린 정보).
+ */
+export const ITEM_ART_DIR = './assets/art/icons/items/';
+export const ITEM_ART_GROUPS = ['sword2h', 'axe', 'mace', 'spear', 'staff', 'orb', 'bow', 'crossbow'];
+export const ITEM_ART_BY_SLOT = { armor: 'armor_1', boots: 'boots_1', gloves: 'gloves_1', ring: 'ring_1' };   // ⚠ 임시
+export const itemArt = (slot, group) => {
+    if (slot === 'weapon') return ITEM_ART_GROUPS.includes(group) ? `${ITEM_ART_DIR}${group}.png` : null;
+    const file = ITEM_ART_BY_SLOT[slot];
+    return file ? `${ITEM_ART_DIR}${file}.png` : null;
+};
 /* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의
    자리표시로 이모지(⚔ ⛨ ✦ 🏹 …)를 초상 **밑에 깔던** 방식이다. 영웅 그림이 배경 투명 PNG 이고
    `object-fit: contain` 이라 그림이 있어도 여백 사이로 이모지가 비쳐 보였다 — 「캐릭터 그림 뒤에 활 같은 이모지」.
    지금은 아트가 없으면 **빈 칸**이다 (SCREEN_DESIGN §5). 자리표시를 되살리려면 이모지가 아닌 것으로 한다. */
 /* 액티브의 표시 사전(`SKILL_DISPLAY`·`skillDisplay`)은 **삭제했다** (2026-09-01) — 아이콘과 설명 ko/en 이
    `skill.csv` 의 `icon`·`desc_kr`·`desc_en` 컬럼으로 나갔고, 옛 `description_kr`(설계 노트)은 `note` 로 개명했다.
-   읽는 곳은 `ui/data.js:skillInfo` 하나다. 아이콘 세트가 흑백 글리프와 컬러 이모지로 섞여 있는 문제는
-   컬럼이 옮겨졌을 뿐 그대로 남아 있다 (DEV_PLAN 부채 #13). */
+   읽는 곳은 `ui/data.js:skillInfo` 하나다. 아이콘 이모지가 흑백 글리프와 컬러로 섞여 있던 문제는
+   2026-09-03 화면이 그림(`skillIcon` — 위)으로 갈아타며 화면에서는 닫혔다 — 컬럼은 데이터로 남는다. */
 
 /* 원소 4종 표시 사전(`ELEMENT_LABELS`)은 **삭제했다** (2026-08-31) — `ELEMENT_IDS` 가 유일한 소비자였고
    그것이 `game_logic/hero.js:ELEMENTS` 로 통합되면서 참조가 0이 됐다. 화면이 원소 이름을 그리게 되면
@@ -360,6 +410,11 @@ export const TRADE = {
         ],
     },
 };
+
+/* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — `commission_kind.csv`(종류 4종 ·
+   확정 기획)와 `commission.csv`(게시판 행 · ⚠임시 자리채움) 두 표이고 로더는 `ui/data.js:D.commissionKinds`·
+   `D.commissionList` 다. 목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)·연구(RESEARCH)와 갈리는 지점이고,
+   근거는 「mock 과 CSV 가 겹치면 CSV 만 둔다」(SCREEN_DESIGN §14 · DEV_PLAN §5-B). */
 
 export const RESEARCH = {
     /** ⚠ 지어낸 보유량 — 채집 재료는 자원 칸(G.resources)에 존재하지도 않는다 */

@@ -31,7 +31,7 @@
  */
 
 import * as M from './mock.js';
-import { D, monsterName, monsterFace, stageName, stageBgOf, chapterOf, eliteName, skillInfo } from './data.js';
+import { D, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, heroTipCard, skillTipCard } from './tip.js';
 
@@ -39,6 +39,12 @@ const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
 
 const kindLabel = k => t(`kind.${k}`);
+/* 스킬 아이콘 그림 — `app.js:skillImg` 와 같은 규칙이다 (SCREEN_DESIGN §2). 두 파일이 서로를 import 하지
+   않으므로 한 줄을 각자 든다 — 규칙은 `mock.skillIcon` 한 곳이라 갈릴 자리는 없다 */
+const skillImg = s => {
+    const src = M.skillIcon(s?.id);
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
+};
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -251,8 +257,19 @@ function paintRound(state, root) {
 
 /* ───────── 렌더 ───────── */
 
-const enemyName = e => e.grade === 'elite' && e.sin ? eliteName(e.sin, e.monsterId) : monsterName(e.monsterId);
+/* 정예의 죄종 접두 이름(「나태의 고블린 전사」)은 관전에서 안 쓴다 (2026-09-03 사용자 지시) —
+   정예임은 라벨·노란 테두리가 이미 말하고, 접두가 붙으면 같은 몬스터가 다른 이름으로 로그·누적에 흩어진다.
+   조립 규칙(`naming.js:eliteName`)은 살아 있다 — 화면이 안 부를 뿐이다 */
+const enemyName = e => monsterName(e.monsterId);
 const enemyList = state => state.enemies.map(e => L(e.name)).join(', ');
+/* 띠 왼쪽의 신원 한 조각 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 영웅은 레벨·직업, 몬스터는 정예/보스 라벨.
+   일반 몬스터는 빈 채다(테두리 색이 이미 말한다). 라벨은 라운드 종류와 같은 `kind.*` 키를 재사용한다 */
+const clsName = id => { const c = D.classes.find(x => x.id === id); return c ? L(c) : (id ?? ''); };
+const identOf = u => u.side === 'party'
+    ? `Lv.${u.hero?.level ?? 1} · ${clsName(u.cls)}`
+    : (u.grade === 'elite' ? t('kind.elite')
+        : u.grade === 'stage_boss' ? t('kind.boss')
+        : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '');
 
 function renderUnits(state, root) {
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
@@ -261,7 +278,10 @@ function renderUnits(state, root) {
         for (const u of list) {
             const n = document.createElement('div');
             const boss = u.grade === 'stage_boss' || u.grade === 'chapter_boss';
-            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${u.hp <= 0 ? ' dead' : ''}`;
+            // 등급이 카드의 색을 정한다 — 몬스터는 스폰 등급(정예·보스), 영웅은 **영웅 등급**(`tier-*`).
+            // 죄종은 색을 갖지 않는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §5) — 색은 CSS 가 클래스로 든다(인라인 없음)
+            const tier = u.side === 'party' ? ` tier-${u.hero?.tier ?? 'rare'}` : '';
+            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${tier}${u.hp <= 0 ? ' dead' : ''}`;
             // ⚠ **죄종 테두리색은 걷었다** (2026-09-03 사용자 지시) — 정예의 윗변을 죄종 색으로 칠하던 인라인 스타일이다.
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
             // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
@@ -285,13 +305,22 @@ function renderUnits(state, root) {
             // [개정 2026-09-03 사용자 지시] **몬스터도 같은 줄을 그린다** — 옛 규칙(「몬스터는 액티브가 없어 쿨 칸도 없다」)을 폐기한다.
             // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 지금 전부 빈 칸이다
             const slots = Array.from({ length: Math.max(D.balance.active_slots, u.skills?.length ?? 0) }, (_, i) => u.skills?.[i] ?? null);
+            // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
+            // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
             const skills = `<div class="cd-list">${slots.map(s => s
-                ? `<div class="cd-slot"><span class="cd-g">${s.icon ?? ''}</span><i class="cd-mask"></i></div>`
+                ? `<div class="cd-slot"><span class="cd-g">${skillImg(s)}</span><i class="cd-mask"></i></div>`
                 : `<div class="cd-slot empty"></div>`).join('')}</div>`;
+            // 이름 띠 — **양 진영 같다** (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2). 같은 날 아침에 걷었던 위칸의 재도입이고,
+            // 걷은 이유(이름·죄종 칩·정예 태그가 한 줄에 뒤엉킴)는 **이름만 남기는 것**으로 푼다 — 「무엇인가」는 띠 색(등급)이 든다.
+            // 몬스터가 카드에서 이름을 되찾는 자리이기도 하다 — 위칸이 없던 동안은 초상으로만 어느 몬스터인지 구분해야 했다
+            // 이름·신원은 **초상 오른쪽 열의 첫 줄 하나**다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) —
+            // 왼쪽에 무채색 신원(`Lv.n · 직업` / 정예·보스 라벨) · **이름은 오른쪽 끝**. 일반 몬스터는 이름뿐이다
+            const ident = identOf(u);
             n.innerHTML = `
                 <div class="unit-body">
                     ${sprite}
                     <div class="unit-info">
+                        <div class="unit-id">${ident ? `<span class="unit-ident">${ident}</span>` : ''}<span class="unit-name">${name}</span></div>
                         <div class="hp-row">
                             <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
                             <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
@@ -329,9 +358,16 @@ function refreshUnit(state, u) {
     u.node.querySelector('.bar.hp > i').style.width = pct + '%';
     u.node.querySelector('.hp-text').textContent = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
     u.node.classList.toggle('dead', u.hp <= 0);
-    // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다
+    // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다.
+    // 막바지(85%~)부터 밝아진다 (2026-09-03 · SCREEN_DESIGN §4-2).
+    // 「가득」의 순간에만 켜면 안 보인다: 가득 = 곧 행동이라 다음 이벤트가 게이지를 바로 리셋한다(틱 하나짜리 상태).
+    // 0.85 는 연출 문턱이다 — 게임 수치가 아니라 재생기의 자유 (ui_conventions §9)
     const act = u.node.querySelector('.act-fill');
-    if (act) act.style.width = (u.hp <= 0 ? 0 : clamp01((state.t - u.lastAct) / u.period) * 100) + '%';
+    if (act) {
+        const fill = u.hp <= 0 ? 0 : clamp01((state.t - u.lastAct) / u.period);
+        act.style.width = fill * 100 + '%';
+        act.parentElement.classList.toggle('full', fill >= 0.85 && u.hp > 0);
+    }
     // 스킬 쿨 게이지 — 시뮬이 실제로 쓴 쿨(`skill` 이벤트의 firedAt → ready)로 걷는다. 재생기는 쿨을 계산하지 않는다
     if (u.skills?.length) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
         const s = u.skills[i];
@@ -339,7 +375,7 @@ function refreshUnit(state, u) {
         const span = Math.max(1e-6, s.readyAt - s.firedAt);
         const pct = u.hp <= 0 ? 0 : clamp01(1 - (s.readyAt - state.t) / span);
         slot.querySelector('.cd-mask').style.height = (1 - pct) * 100 + '%';   // 남은 쿨만큼 위에서 덮는다
-        slot.classList.toggle('ready', pct >= 1);
+        // 준비 강조(`ready` 파란 테두리)는 2026-09-03 사용자 지시로 삭제 — 마스크가 다 걷힌 것 자체가 준비다
     });
     // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 카드 밖 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
     u.node.classList.toggle('buffed', u.hp > 0 && u.buffs?.size > 0);
@@ -362,7 +398,7 @@ function refreshBuffs(u) {
     row.dataset.sig = sig;
     row.innerHTML = live.map(([id, b]) => {
         const info = skillInfo(id);
-        return `<span class="buff-chip ${(b?.v ?? 0) < 0 ? 'bad' : 'good'}" title="${L(info.name)}">${info.icon ?? '+'}</span>`;
+        return `<span class="buff-chip ${(b?.v ?? 0) < 0 ? 'bad' : 'good'}" title="${L(info.name)}">${skillImg(info)}</span>`;
     }).join('');
 }
 
