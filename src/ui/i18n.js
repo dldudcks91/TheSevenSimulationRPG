@@ -282,43 +282,54 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 9 [개정 2026-09-03 사용자 지시] — 원정 · 선술집 · 강화 · 상점 · 마을 · 캐릭터 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
-       선술집 · 제련소 · 상단이 마을의 칸에서 자기 탭이 됐다 — 탭 이름은 **활동**(강화 · 상점)이고
-       패널 머리는 **장소**(`dp.post.forge` 제련소 · `dp.post.trade` 상단)로 남는다 (§8-2 · §8-3).
+    /* 탭 10 [개정 2026-09-04 사용자 지시] — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
+       마을 탭이 **자원**(1인 배치 — 광산 · 채집)과 **탐험**(파티)으로 갈리면서 `nav.town` 은 삭제됐다.
+       `nav.explore` 는 값이 그대로인 채 **파견처 칸 라벨에서 탭 라벨로 승격**됐다 (§8-4) — `nav.tavern` 과 같은 사례다.
+       탭 이름이 **활동**(강화 · 상점)이고 패널 머리가 **장소**(`dp.post.forge` 제련소 · `dp.post.trade` 상단)인 것은 그대로 (§8-2 · §8-3).
        nav.commission 은 탭에서 빠졌지만 **지우지 않는다** — 선술집 탭 안 의뢰 게시판의 섹션 제목이다 (§8-1).
-       nav.skill · nav.base · nav.explore 도 탭이 아니다: 스킬은 창 제목(§7), 탐험은 마을의 파견처 칸 라벨(§8),
-       거점은 도움말이 쓰던 자리를 마을이 물려받으며 유일한 미사용이 됐다. */
+       nav.skill 도 탭이 아니라 **창 제목**이다 (§7). nav.base(거점)는 여전히 유일한 미사용 키다.
+       아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
-    'nav.town': { ko: '마을', en: 'Town' },
-    'nav.commission': { ko: '의뢰', en: 'Commissions' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
-    'nav.skill': { ko: '스킬', en: 'Skills' },
-    'nav.research': { ko: '연구', en: 'Research' },
-    'nav.base': { ko: '거점', en: 'Base' },
-    'nav.explore': { ko: '탐험', en: 'Exploration' },
-    'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.forge': { ko: '강화', en: 'Upgrade' },
+    'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.shop': { ko: '상점', en: 'Shop' },
+    'nav.resource': { ko: '자원', en: 'Resources' },
+    'nav.explore': { ko: '탐험', en: 'Exploration' },
+    'nav.research': { ko: '연구', en: 'Research' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
+    'nav.commission': { ko: '의뢰', en: 'Commissions' },
+    'nav.skill': { ko: '스킬', en: 'Skills' },
+    'nav.base': { ko: '거점', en: 'Base' },
     'res.gold': { ko: '골드', en: 'Gold' },
     'res.dust': { ko: '분해 가루', en: 'Dust' },
     'res.stigma': { ko: '낙인', en: 'Stigma' },
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
     'ui.close': { ko: '닫기', en: 'Close' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
 
-    /* ── 마을 탭 [개정 2026-09-03] — 파견처 목록은 광산 · 채집 · 탐험 셋 (SCREEN_DESIGN §8) ──
-       탐험은 옛 탭 이름(nav.explore)을 그대로 쓴다.
+    /* ── 자원 탭 [개정 2026-09-04] — 파견처는 **카드 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
+       탐험은 자기 탭(§8-4)으로 나가 이 목록에 없다 — 셋 다 1인 배치라 `dp.party` 를 쓰는 칸이 없다.
+       그래도 **`dp.party` 를 지우지 않는다**: 인원 표기 자체는 계속 찍히고(§8 — 값이 하나뿐이라고 지우면 「안 재고 있다」로 읽힌다),
+       배치가 구현되면 탐험 탭이 같은 문구를 쓴다.
        `dp.post.forge`(제련소) · `dp.post.trade`(상단)는 파견처 칸에서 빠졌지만 **지우지 않는다** —
        강화 · 상점 탭의 패널 머리다(탭 이름은 활동, 패널 머리는 장소 — §8-2 · §8-3).
-       담당 능력치는 문구가 아니라 `hero_attribute.csv:dispatch` 에서 온다 — 화면이 배정표를 따로 갖지 않는다 */
+       담당 능력치는 문구가 아니라 `hero_attribute.csv:dispatch` 에서 온다 — 화면이 배정표를 따로 갖지 않는다.
+       ⚠ **`dp.post.mine` 은 값만 「채광」(활동)으로 바뀌고 키는 옛 장소 id 그대로다** [2026-09-04 사용자 지시] —
+       `hero_attribute.csv:dispatch` 가 `mine` 을 값으로 들고 있어 `postAttr('mine')` 이 그 열을 읽는다.
+       키를 바꾸면 CSV 도 같이 바꿔야 하고, 그건 public 이름 변경이라 별도 승인 사항이다 (CLAUDE.md).
+       ⚠ **`dp.post.log`(벌목)는 기획에 없는 신규 파견처다** — 화면이 기획을 앞서간 의도된 역방향이고 사용자 지시다 (§8) */
     'dp.post.trade': { ko: '상단', en: 'Trading House' },
     'dp.post.forge': { ko: '제련소', en: 'Smeltery' },
-    'dp.post.mine': { ko: '광산', en: 'Mine' },
+    'dp.post.mine': { ko: '채광', en: 'Mining' },
     'dp.post.gather': { ko: '채집', en: 'Gathering' },
+    'dp.post.log': { ko: '벌목', en: 'Logging' },
     'dp.solo': { ko: '1인', en: 'Solo' },
     'dp.party': { ko: '파티', en: 'Party' },
     'dp.attrTitle': { ko: '담당 능력치', en: 'Governing attribute' },
+    // 단계 트랙의 머리 — **라벨 + 개수**뿐이다. 개수는 `D.mineNodes.length` 에서 온다(코드에 7 을 박지 않는다).
+    // 무엇으로 여는가(해금 조건)는 기획 백지라 문구도 만들지 않는다 (§8)
+    'dp.tier': { ko: '단계 {n}', en: '{n} Tiers' },
 
     /* 상단 (SCREEN_DESIGN §8-3) — 제목은 `dp.post.trade` 재사용. ⚠ 수치는 전부 목업이라
        문구도 「무엇을 읽는 자리인가」만 말한다 (base_expedition_design §2-6) */
@@ -722,11 +733,12 @@ const STRINGS = {
     },
 
     /* ── 전투 관전 ── */
-    'bt.round': { ko: '라운드', en: 'Round' },
-    'bt.speed': { ko: '{n}배속', en: '×{n}' },
+    /* `bt.round`(「라운드」 접두)는 2026-09-04 헤드에서 라운드 수치가 삭제되며 부르는 곳이 없어져 지웠다 */
+    /* 배속·건너뛰기 문구는 2026-09-04 헤드 한 줄 개정에서 줄였다 (옛 `{n}배속` · `건너뛰고 리포트만` — SCREEN_DESIGN §4-2) */
+    'bt.speed': { ko: '×{n}', en: '×{n}' },
     'bt.pause': { ko: '일시정지', en: 'Pause' },
     'bt.resume': { ko: '재개', en: 'Resume' },
-    'bt.skip': { ko: '건너뛰고 리포트만', en: 'Skip to Report' },
+    'bt.skip': { ko: '건너뛰기', en: 'Skip' },
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
     'bt.note': {
         ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 재생 속도만 바꾼다. 같은 시드면 오프라인 즉시 계산과 결과가 같으므로, 안 봐도 손해가 없다.<br>'

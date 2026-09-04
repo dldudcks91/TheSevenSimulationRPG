@@ -41,6 +41,7 @@ export const D = {
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
     commissionKinds: null,    // commission_kind.csv — {id: {id, form, channel, ko, en, how:{ko,en}}} · form = count(세는 형) | go(가는 형)
     commissionList: [],       // commission.csv — 게시판 행 (**칸 수 = 행 수** · tactic_slot 과 같은 문법) ⚠임시
+    mineNodes: [],            // mine_node.csv — 채광의 **단계 7** [{id, tier, unlockChapter, ko, en, oreId, oreKo, oreEn, yieldPerHour}] · tier 순 ⚠임시
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
@@ -79,7 +80,7 @@ export async function loadData(base = './data/') {
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
         weaponGroup, skillRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
-        affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow] = texts.map(parseCsv);
+        affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -132,6 +133,15 @@ export async function loadData(base = './data/') {
     D.commissionList = commissionRow.map(r => ({
         id: r.commission_id, kind: r.kind_id,
         goal: { ko: r.goal_kr, en: r.goal_en }, gold: r.reward_gold, fame: r.reward_fame,
+    }));
+    // 채광의 단계 — 화면은 **순서와 이름만** 그린다 (SCREEN_DESIGN §8). tier 가 그 순서다.
+    // ⚠임시 — 표 전체가 구조 검증용 자리채움이라고 CSV 스스로 적어 뒀다(description_kr). 해금 조건(unlock_chapter)은
+    // 기획 백지라 **화면이 그리지 않는다** — 문턱 키가 없으면 문턱을 안 그린다 (§4-1).
+    // 채집·벌목의 같은 표는 아직 없다 — 산출물이 미정이라 만들지 않는다. 생기면 이 한 줄이 둘 더 늘 뿐이다
+    D.mineNodes = mineNodeRow.slice().sort((a, b) => a.tier - b.tier).map(r => ({
+        id: r.mine_id, tier: r.tier, unlockChapter: r.unlock_chapter,
+        ko: r.name_kr, en: r.name_en,
+        oreId: r.ore_id, oreKo: r.ore_name_kr, oreEn: r.ore_name_en, yieldPerHour: r.yield_per_hour,
     }));
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다

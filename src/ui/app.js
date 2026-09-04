@@ -7,8 +7,8 @@
  * i18n 규약 (2026-08-23): **이 파일에 한국어 리터럴을 쓰지 않는다** (주석 제외).
  *   UI 문구 → i18n.js 의 t(key) / 데이터 문자열 → mock.js 의 {ko, en} 쌍을 L() 로 푼다.
  *
- * 화면 흐름: 시작(새 게임 → 프롤로그 5씬 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터 / 스킬 / 연구 / 선술집 / 도감 / 도움말
- *   전투 파티는 한 팀만 운용하므로 원정 탭 하나가 세 상태를 갖는다.
+ * 화면 흐름: 시작(새 게임 → 프롤로그 5씬 / 이어하기) → 원정(편성 → 관전 → 리포트) ⇄ 캐릭터(+스킬 창) / 강화 / 선술집 / 상점 / 자원 / 탐험 / 연구 / 도감 / 도움말
+ *   전투 파티는 한 팀만 운용하므로 원정 탭 하나가 세 상태를 갖는다. 탭 목록·순서의 근거는 TABS 위 주석 (SCREEN_DESIGN §1).
  *
  * 2026-08-26 — **인게임 패널에는 설명 문장을 두지 않는다** (사용자 지시). 숫자·상태·오류·버튼·툴팁만 남기고
  *   규칙 문구는 전부 도움말 탭(renderHelp)으로 옮겼다. 새 안내 문장을 패널에 붙이려면 도움말에 넣는다.
@@ -170,22 +170,30 @@ const itemImg = it => {
 
 /* ═══════════ 화면 상태 ═══════════ */
 
-// 탭 9 — 선술집·강화·상점이 마을에서 나왔다 (SCREEN_DESIGN §1 개정 2026-09-03 사용자 지시). 순서는 그 지도와 같다:
-// 접속해서 누르는 자리(선술집 · 강화 · 상점)가 앞, 보내 놓고 기다리는 자리(마을)가 뒤 — 09-03 파견처 순서의 갈림 그대로.
+// 탭 10 — 마을이 자원·탐험으로 갈렸다 (SCREEN_DESIGN §1 개정 2026-09-04 사용자 지시). 순서는 그 지도와 같다:
+// 원정 → 캐릭터 → 강화가 코어 루프의 **한 동작**이라 앞에 붙어 서고(줍고 → 배분하고 → 올린다 — GAME_DESIGN §3),
+// 보충(선술집 · 상점)이 그 뒤, 맡기고 나가는 둘(자원 · 탐험)이 그 뒤, 그 산출을 먹는 연구가 이어지고, 참조 둘(도감 · 도움말)이 끝이다.
+// 09-03 순서에서 실제로 움직인 것은 **캐릭터 하나(6번 → 2번)** 다 — 나머지는 상대 순서가 유지된 채 마을 자리에 자원·탐험이 들어갔다.
 // 탭 이름은 활동(강화 · 상점)이고 패널 머리는 장소(제련소 · 상단 — `dp.post.*`)로 남는다 (§8-2 · §8-3).
-// 의뢰 탭은 폐지 — 게시판은 선술집 탭 안이다(§8-1). 스킬은 캐릭터 안의 **창**(§7) · 거점·탐험은 **마을 탭 안의 칸**(§8).
-// `?tab=` 이 죽은 이름(`commission` 포함)을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
-const TABS = ['expedition', 'tavern', 'forge', 'shop', 'town', 'character', 'research', 'codex', 'help'];
+// 의뢰 탭은 폐지 — 게시판은 선술집 탭 안이다(§8-1). 스킬은 캐릭터 안의 **창**(§7).
+// `?tab=` 이 죽은 이름(`town` · `commission` · `skill` · `base`)을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
+const TABS = ['expedition', 'character', 'forge', 'tavern', 'shop', 'resource', 'explore', 'research', 'codex', 'help'];
 
-/* 파견 목록 — 칸 3 (SCREEN_DESIGN §8 개정 2026-09-03: 선술집·제련소·상단은 자기 탭이 됐다).
+/* 파견 목록 — **카드 3** (SCREEN_DESIGN §8 개정 2026-09-04 사용자 지시: 채광 · 채집 · 벌목).
    담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
    화면이 배정표를 또 가지면 CSV 와 갈린다. `postAttr()` 가 그 열을 거꾸로 읽는다.
-   ⚠ `explore`(탐험)는 기획에서 **파견처가 아니다**(base_expedition §2-2) — 화면에서만 나란히 선다.
-   가르는 것은 인원이고(party:true), 「열린 파견처 수 = 동시 파견 상한」에 탐험은 안 들어간다 (§1) */
+   ⚠ 탐험은 기획에서 **파견처가 아니고**(base_expedition §2-2) 「열린 파견처 수 = 동시 파견 상한」에도 안 들어간다 —
+   **탭이 되어도 그대로 유효**하다. 09-01 에 「화면에서만 나란히 선다」였던 것이 화면에서도 갈라졌을 뿐이다 (§1 · §8-4).
+   셋 다 1인 배치라 `party` 플래그를 쓰는 항목이 없다 — 인원 표기 자체는 계속 찍는다 (§8).
+   ⚠ **`mine` 은 옛 장소 id 그대로다** — 화면 라벨만 「채광」(활동)이 됐고, `hero_attribute.csv:dispatch` 가
+   `mine` 을 값으로 들고 있어 `postAttr('mine')` 이 그 열을 읽는다. 키 리네임은 CSV 동반 수정이라 별건이다.
+   ⚠ **`log`(벌목)는 기획에 없는 신규 파견처다** — 화면이 기획을 앞서갔다(의도된 역방향 · 사용자 지시 · §8).
+   `tiers` = 단계 표를 든 `D` 필드 이름. **채광만 표가 있다**(`mine_node.csv`) — 채집 · 벌목은 산출물이 기획 백지라
+   표를 지어내지 않고 줄만 그린다(`—`). 표가 생기면 여기 필드 이름만 적으면 붙는다 (§8) */
 const POSTS = [
-    { id: 'mine', label: 'dp.post.mine' },
+    { id: 'mine', label: 'dp.post.mine', tiers: 'mineNodes' },
     { id: 'gather', label: 'dp.post.gather' },
-    { id: 'explore', label: 'nav.explore', party: true, note: 'ex.todo' },
+    { id: 'log', label: 'dp.post.log' },
 ];
 
 /* 시작 파티 후보의 기준 시드 — 고정값이라 같은 리롤 횟수면 언제나 같은 3명 (결정론 확인용).
@@ -215,7 +223,7 @@ const state = {
     modal: null,
     // 프롤로그가 보여 주는 씬 번호 (SCREEN_DESIGN §3-1) — 0 부터. 세이브에 안 들어간다
     proScene: 0,
-    // 마을 탭에서 열려 있는 파견처 (§8) — 들어오면 첫 칸(광산)이 골라져 있다. 비워 두면 첫 화면이 빈다
+    // 자원 탭에서 열려 있는 파견처 (§8) — 들어오면 첫 칸(광산)이 골라져 있다. 비워 두면 첫 화면이 빈다
     post: 'mine',
 };
 let stopBattle = null;
@@ -271,12 +279,14 @@ function render() {
     if (state.screen === 'prologue' && G) renderPrologue(main);
     else if (state.screen === 'start' || !G) renderStart(main);
     else ({
+        // 키 순서 = 탭 바 순서 (TABS) — 읽는 사람이 화면과 대조할 수 있게 맞춰 둔다
         expedition: renderExpedition,
-        tavern: renderTavern,
-        forge: renderForge,
-        shop: renderShop,
-        town: renderTown,
         character: renderCharacter,
+        forge: renderForge,
+        tavern: renderTavern,
+        shop: renderShop,
+        resource: renderResource,
+        explore: renderExplore,
         research: renderResearch,
         codex: renderCodex,
         help: renderHelp,
@@ -1398,41 +1408,87 @@ function researchPanel() {
 
 /* ═══════════ 선술집 ═══════════ */
 
-/* ═══════════ 마을 — 보내 놓고 기다리는 오프라인 활동 (SCREEN_DESIGN §8) ═══════════
-   2026-09-03 사용자 지시 — 선술집·제련소·상단이 자기 탭(선술집 · 강화 · 상점)으로 나가고
-   광산 · 채집 · 탐험 셋만 남았다. 문법은 §4-1 원정 탭과 **같다**: 목록을 누르면 그 아래에 속이 열린다.
-   ⚠ **탭 이름은 「마을」(장소)이고 그 안의 칸은 여전히 「파견처」(활동)다** (2026-09-01 사용자 지시) —
-   그래서 `dp.*` 키와 `.dp-*` 클래스는 이름을 그대로 둔다. 오프라인 활동의 이름도 여전히 「파견」이다 */
+/* ═══════════ 자원 — 보내 놓고 기다리는 채취 (SCREEN_DESIGN §8) ═══════════
+   2026-09-04 사용자 지시 — 탭 이름이 「마을」(장소) → 「자원」(얻는 것)이 되고 탐험이 자기 탭으로 나갔다(§8-4).
+   **같은 날 두 번째 개정 — 가로 칸 목록이 세로 카드 3장(채광 · 채집 · 벌목)이 되고 카드마다 단계 7줄이 선다.**
+   문법은 §4-1 원정 탭과 **같다**: 카드를 누르면 그 아래에 속이 열린다. 3열 격자도 새로 만들지 않는다 —
+   시작 화면(§3)·선술집 명단(§8-1)이 쓰는 `.ng-row`(같은 무게 3열)를 그대로 쓴다.
+   ⚠ **탭 이름만 바뀌고 그 안의 칸은 여전히 「파견처」(활동)다** — 그래서 `dp.*` 키와 `.dp-*` 클래스는 이름을 그대로 둔다.
+   오프라인 활동의 이름도 여전히 「파견」이고, `.town-bg` 는 여러 탭이 공유하는 배경 클래스라 이름을 안 바꾼다 */
 
 /** 담당 능력치 — `hero_attribute.csv:dispatch` 를 거꾸로 읽는다. 화면은 배정표를 갖지 않는다 (§8) */
 const postAttr = postId => D.heroAttributes.filter(a => (a.dispatch ?? '').split('|').includes(postId));
 
-function renderTown(main) {
+/**
+ * 단계 트랙 — **줄 수를 정하는 것은 CSV 표**다 (`mine_node.csv` = 채광의 단계). 코드에 개수를 박지 않는다.
+ * 지금 있는 표는 그 하나뿐이라 세 카드가 같은 길이로 선다 — 채집·벌목은 이름 자리에 `—` 만 찍는다.
+ * **셋 다 그리는 이유**: 트랙을 지우면 「이 파견처는 단계가 없다」로 읽힌다. 구조가 같다는 것이 읽혀야 한다 (§8).
+ * 해금 조건(`unlock_chapter`)은 그리지 않는다 — 무엇으로 여는지가 기획 백지라 문턱 키가 없다 (§4-1).
+ * 채집·벌목의 표가 생기면 `post.tiers` 가 그걸 가리키고 이 함수는 그대로 돈다.
+ */
+function tierTrack(post) {
+    const own = D[post.tiers] ?? [];         // 이 파견처의 표 — 없으면 빈 배열
+    const shape = D.mineNodes ?? [];         // 트랙의 길이·번호를 정하는 표
+    const box = el('div', 'dp-tiers');
+    box.appendChild(el('div', 'dp-tier-h', t('dp.tier', { n: shape.length })));
+    const list = el('ol', 'dp-tier-list');
+    shape.forEach((s, i) => {
+        const n = own[i];
+        const li = el('li', `dp-tier${n ? '' : ' empty'}`);
+        li.innerHTML = `<i class="dp-t-n">${n?.tier ?? s.tier}</i>
+            <span class="dp-t-name">${n ? L({ ko: n.ko, en: n.en }) : '—'}</span>`;
+        list.appendChild(li);
+    });
+    box.appendChild(list);
+    return box;
+}
+
+function renderResource(main) {
     const stack = el('div', 'char-stack');
     // ⚠ 영웅 띠는 두지 않는다 (2026-09-01 사용자 지시 · SCREEN_DESIGN §8) — 로스터 전원이 목록 위에 한 줄로 서면
     // 정작 고를 것(파견처)이 화면 아래로 밀린다. 영웅을 고르는 자리는 파견처를 연 **다음**이다(배치 화면 — 미착수)
 
-    // 파견 목록 — 미착수 칸도 그린다. 어디까지 열리는지가 보여야 하고, 누르면 안내가 뜨므로 「고장」이 아니다 (§8)
-    const list = el('div', 'dp-list');
+    // 파견처 카드 3 — 미착수 카드도 그린다. 어디까지 열리는지가 보여야 하고, 누르면 안내가 뜨므로 「고장」이 아니다 (§8)
+    const row = el('div', 'ng-row');
     for (const post of POSTS) {
         const c = el('div', `dp-cell${post.id === state.post ? ' on' : ''}${post.live ? '' : ' todo'}`);
         const attrs = postAttr(post.id);
-        // 담당 능력치가 미정인 칸(채집 · 탐험)도 자리를 지킨다 — 빈 칸은 "안 재고 있다"로 읽힌다 (§4-1)
+        // 담당 능력치가 미정인 카드(채집 · 벌목)도 자리를 지킨다 — 빈 칸은 "안 재고 있다"로 읽힌다 (§4-1)
         const attr = attrs.length ? attrs.map(a => a.abbr).join(' · ') : '—';
         c.innerHTML = `<span class="dp-n">${t(post.label)}</span>
             <span class="dp-meta"><i class="dp-attr" title="${t('dp.attrTitle')}">${attr}</i>
-            <i class="dp-size">${t(post.party ? 'dp.party' : 'dp.solo')}</i></span>
-            ${post.live ? '' : `<span class="todo-badge">${t('todo.badge')}</span>`}`;
+            <i class="dp-size">${t(post.party ? 'dp.party' : 'dp.solo')}</i></span>`;
+        c.appendChild(tierTrack(post));
+        if (!post.live) c.appendChild(el('span', 'todo-badge', t('todo.badge')));
         c.onclick = () => { state.post = post.id; render(); };
-        list.appendChild(c);
+        row.appendChild(c);
     }
-    stack.appendChild(list);
+    stack.appendChild(row);
 
-    // 남은 셋(광산 · 채집 · 탐험)은 전부 미착수다 (§8 개정 2026-09-03) — 실동작 패널이 나가면서 분기가 없어졌다.
+    // 셋(채광 · 채집 · 벌목) 다 미착수다 (§8 개정 2026-09-04) — 실동작 패널이 나가면서 분기가 없어졌다.
     // 안내는 **기존 키를 재사용**한다 — 도움말이 쓰던 문구 그대로다 (§11 · ui 원칙 4)
     const open = POSTS.find(x => x.id === state.post) ?? POSTS[0];
     stack.appendChild(todoPanel(open.label, open.note ?? 'exp.bench.note'));
     main.appendChild(stack);
+}
+
+/* ═══════════ 탐험 — 파티 파견 (SCREEN_DESIGN §8-4) ═══════════
+   2026-09-04 사용자 지시 — 마을의 마지막 칸에서 자기 탭이 됐다. 가르는 것은 **인원**이다: 자원 탭은 1인 배치, 여기는 파티.
+
+   **지도 아트 한 장 + 미착수 안내** [개정 2026-09-04 사용자 지시] — 같은 날의 「지도를 안 그린다」를 뒤집는다.
+   ⚠ **뒤집힌 것은 그림 한 장뿐이다** — 노드 · 경로 · 판정 4축 · 보상은 여전히 기획 백지라 **아무것도 얹지 않고**,
+      **클릭도 안 받는다**(`.ex-map` 에 핸들러가 없다). 「없는 기능에 가짜 수치를 그리지 않는다」(§8-2)는 그대로 유효하다.
+   **챕터 1 고정** — 자산이 그 하나뿐이다(`mock.js:EXPLORE_MAP_CHAPTERS`). 진행 챕터를 따라가는 규칙은
+      지도의 알맹이와 함께 정해진다 — 렌더러가 진행도로 챕터를 **계산하지 않는다** (ui 원칙 2).
+   문구는 기존 키(`nav.explore` · `ex.todo`)를 그대로 부른다 — 도움말이 쓰던 그 문구다 (§11 · ui 원칙 4) */
+function renderExplore(main) {
+    const map = M.exploreMap(1);
+    if (map) {
+        const box = el('div', 'ex-map');
+        box.style.backgroundImage = `url('${map}')`;
+        main.appendChild(box);
+    }
+    main.appendChild(todoPanel('nav.explore', 'ex.todo'));
 }
 
 /* ═══════════ 선술집 탭 — 명단 · 고용 · 의뢰 게시판 (SCREEN_DESIGN §8-1) ═══════════
@@ -1825,9 +1881,11 @@ function renderCodex(main) {
 /* ═══════════ 도움말 ═══════════
    2026-08-26 사용자 지시 — 인게임 패널에는 설명 문장을 두지 않는다. 규칙·근거·미구현 안내는 전부 이 탭으로 모았다.
    문구를 **새로 쓰지 않는다**: 각 패널이 쓰던 i18n 키를 같은 파라미터로 그대로 렌더한다 (SCREEN_DESIGN §12).
-   한 페이지 스크롤 + 섹션 점프 버튼 6개. 그 외 장식 없음. */
+   한 페이지 스크롤 + 섹션마다 점프 버튼 하나. 그 외 장식 없음. */
 
-/** 섹션 6개 — {title, lead?, groups:[{h, sub?, body:[]}]} */
+/** 섹션 — {title, lead?, groups:[{h, sub?, body:[]}]}. **순서는 탭 순서를 따른다** (§12 개정 2026-09-04):
+    원정 · 캐릭터 · 스킬 · 선술집 · 자원 · 탐험 · 연구 · 도감 · 새 게임.
+    강화 · 상점은 탭이지만 섹션이 없고(옮겨 둔 문구가 없다), 스킬 · 새 게임은 탭이 아니지만 섹션이 있다 */
 function helpSections() {
     const h = heroById(state.heroUid);
     const B = D.balance;
@@ -1848,6 +1906,28 @@ function helpSections() {
             ],
         },
         {
+            title: t('nav.character'),
+            groups: [
+                { h: t('ch.gear.h'), body: [t('eq.slots')] },
+                { h: t('eq.sins.h'), body: [t('eq.sins.note')] },
+                { h: t('ch.attr.h'), sub: t('ch.attr.sub'), body: [t('ch.attr.note')] },
+                { h: t('ch.detail.h'), body: [t('ch.detail.note')] },
+                { h: t('ch.items.h'), body: [t('ch.equip.hint'), t('ch.salvageHint'), t('ch.upgradeHint'), t('eq.inv.note')] },
+            ],
+        },
+        {
+            // 스킬은 탭을 잃고도 섹션으로 남는다 — 게임의 개념이지 탭 이름이 아니고, 여는 자리가 캐릭터 탭 안이라 바로 뒤에 선다 (§12)
+            title: t('nav.skill'),
+            lead: t('sk.grid.note'),
+            groups: [
+                { h: t('sk.points.h'), body: [t('sk.points.note'), t('ch.noTrees')] },
+                { h: t('sk.slots.h'), sub: t('sk.slots.sub'), body: [t('sk.cycle.sub'), t('sk.slots.note')] },
+                { h: t('sk.sinTree', { sin }), sub: t('sk.sinTree.sub', { sin }), body: [t('sk.sinTree.missing', { sin })] },
+                { h: t('sk.mastery', { cls }), body: [t('sk.mastery.missing', { cls })] },
+                { h: t('sk.advTree'), body: [t('sk.advTree.missing')] },
+            ],
+        },
+        {
             // 선술집 = 마을에서 갈라져 나온 섹션 (탭을 되찾았으므로 · SCREEN_DESIGN §12 개정 2026-09-03).
             // 의뢰 묶음도 원정 섹션에서 여기로 이사했다 — 게시판이 이 탭 안에 서기 때문이다 (§8-1)
             title: t('nav.tavern'),
@@ -1859,33 +1939,18 @@ function helpSections() {
             ],
         },
         {
-            // 마을에 남은 것은 보내 놓고 기다리는 셋(광산 · 채집 · 탐험)뿐이다 (§8 개정 2026-09-03).
-            // 강화 · 상점 탭은 섹션이 없다 — 도움말로 옮겨 둔 문구가 아직 없다(패널의 미착수 배지가 그 일을 한다)
-            title: t('nav.town'),
+            // 자원 = 옛 마을 섹션에서 탐험이 빠진 나머지다 (§12 개정 2026-09-04). 남은 것은 벤치(파견 대기) 하나.
+            // 강화 · 상점 탭은 여전히 섹션이 없다 — 도움말로 옮겨 둔 문구가 아직 없다(패널의 미착수 배지가 그 일을 한다)
+            title: t('nav.resource'),
             groups: [
                 { h: t('exp.bench.h'), body: [t('exp.bench.note')] },
+            ],
+        },
+        {
+            // 탐험이 탭이 되면서 섹션도 갈라져 나왔다 (§8-4 · §12 신설 2026-09-04). 문구는 옛 마을 섹션이 쓰던 키 그대로다
+            title: t('nav.explore'),
+            groups: [
                 { h: t('ex.h'), body: [t('ex.todo')] },
-            ],
-        },
-        {
-            title: t('nav.character'),
-            groups: [
-                { h: t('ch.gear.h'), body: [t('eq.slots')] },
-                { h: t('eq.sins.h'), body: [t('eq.sins.note')] },
-                { h: t('ch.attr.h'), sub: t('ch.attr.sub'), body: [t('ch.attr.note')] },
-                { h: t('ch.detail.h'), body: [t('ch.detail.note')] },
-                { h: t('ch.items.h'), body: [t('ch.equip.hint'), t('ch.salvageHint'), t('ch.upgradeHint'), t('eq.inv.note')] },
-            ],
-        },
-        {
-            title: t('nav.skill'),
-            lead: t('sk.grid.note'),
-            groups: [
-                { h: t('sk.points.h'), body: [t('sk.points.note'), t('ch.noTrees')] },
-                { h: t('sk.slots.h'), sub: t('sk.slots.sub'), body: [t('sk.cycle.sub'), t('sk.slots.note')] },
-                { h: t('sk.sinTree', { sin }), sub: t('sk.sinTree.sub', { sin }), body: [t('sk.sinTree.missing', { sin })] },
-                { h: t('sk.mastery', { cls }), body: [t('sk.mastery.missing', { cls })] },
-                { h: t('sk.advTree'), body: [t('sk.advTree.missing')] },
             ],
         },
         {

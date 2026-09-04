@@ -43,7 +43,8 @@
 /* 도트그래픽 스타일 — 보간하면 도트가 뭉갠다. 손그림에 이걸 걸면 반대로 픽셀을 건너뛰며
    샘플링해 선이 끊긴다(512를 26px 칸에 넣으면 20픽셀 중 1픽셀만 남는다).
    ⚠ 배경 아트(body::before · .arena.has-bg · .panel.town-bg)의 `pixelated` 는 여기와 무관하다 —
-      그쪽은 스타일과 상관없이 늘 픽셀아트다 */
+      그쪽은 스타일과 상관없이 늘 픽셀아트다. **단 `.ex-map`(탐험 지도)은 예외** — 같은 폴더에 있어도
+      계승이 아니라 신규 카툰 아트라 보간을 켠다 (2026-09-04) */
 :root[data-face="pixel16"] { --face-render: pixelated; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -498,26 +499,30 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    상하 대치: 적(위) / 파티(아래)
    진영 안에서는 유닛이 가로로 나란히. 유닛 카드는 위칸(이름) + 가로형 본문 */
 
-/* 헤드 두 줄 [재개정 2026-09-03 사용자 지시] — 세로를 한 줄 더 줄여 아레나를 위로 끌어올린다.
-     첫 줄: 화면 전환 · 스테이지 이름 · 라운드 트랙 ─── (밀어내기) ─── 라운드 n/총 · 종류 · 시계
-     둘째 줄: 컨트롤 (오른쪽 끝)
-   옛 배치는 왼쪽이 3줄(전환 / 이름 / 트랙)이라 헤드가 그만큼 두꺼웠다. 이름과 트랙을 전환 버튼 **오른쪽으로** 올리고,
-   오른쪽 아래에 있던 라운드 수치까지 같은 줄 끝으로 보내 **3줄 → 2줄**이 됐다.
-   ⚠ 하한 폭 1280 에서 첫 줄 약 590 + 수치 150 = 740, 둘째 줄 컨트롤 575 — 한 줄에 다 넣으면 1170 이라 안 들어간다.
-     그래서 컨트롤만 따로 내렸다(줄을 더 줄이려면 컨트롤을 손봐야 한다) */
+/* 헤드는 **한 줄** [재개정 2026-09-04 사용자 지시] — 라운드 수치·시계를 걷은 자리로 컨트롤 줄이 통째로 올라왔다.
+     화면 전환 · 스테이지 이름 · 라운드 트랙 ─── (밀어내기) ─── 배속 · 일시정지 · 건너뛰기 │ 배치 · 로그 · 누적
+   「라운드 n / 총 · 종류 · 경과 시계」는 삭제됐다 — 몇 라운드인지는 트랙의 `.now` 가, 종류는 칸 색이,
+   경과 시각은 로그 줄 머리의 타임스탬프가 이미 든다.
+   ⚠ **한 줄에 넣으려고 컨트롤 문구를 줄였다** — 하한 폭 1280 의 메인 칸은 1006 인데 옛 문구(`1배속` · `건너뛰고 리포트만`)
+     로는 1148 이라 안 들어간다. 배속은 `×1`(ko·en 동일) · 건너뛰기는 `건너뛰기 / Skip` 으로 줄이고
+     줄 간격(12 → 10)과 버튼 간격(5 → 4)을 한 단씩 좁혀 맞췄다. 남는 넘침은 스테이지 이름이 말줄임으로 받는다.
+   `flex-wrap` 은 두지 않는다 — 접히면 2줄로 돌아가 이 개정의 목적(가방이 잘리던 것)이 사라진다 */
 .battle-head {
-    display: flex; flex-direction: column; align-items: stretch; gap: 7px;
+    display: flex; flex-direction: column; align-items: stretch;
     padding-bottom: 9px; margin-bottom: 10px;
     border-bottom: 1px solid var(--border-dark);
 }
-.bh-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.bh-top { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: nowrap; }
 .bh-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bh-meta { flex: 0 0 auto; margin-left: auto; font-size: var(--fs-sm); }   /* 오른쪽 끝 — 아래 컨트롤 줄과 같은 변에 선다 */
-.battle-ctrl { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
-.btn.sm.on { border-color: var(--border-highlight); background: #24243c; }
-
-/* 컨트롤 줄의 구분 — 왼쪽은 재생(배속·일시정지·건너뛰기), 오른쪽은 배치·판 고르기 */
+/* 세그먼트는 안 접힌다 — 접히면 헤드가 도로 2줄이 된다 (`.segmented` 기본은 `wrap` 이라 여기서만 끈다) */
+.bh-nav { flex: 0 0 auto; }
+.bh-nav .segmented { flex-wrap: nowrap; }
+/* 컨트롤 — 줄 오른쪽 끝. 재생(배속·일시정지·건너뛰기)과 판 고르기(배치·로그·누적)를 `.ctrl-div` 가 가른다 */
+.battle-ctrl { flex: 0 0 auto; margin-left: auto; display: flex; gap: 4px; flex-wrap: nowrap; }
+/* 한 줄에 여덟 개가 서야 해서 좌우 패딩을 한 단 좁힌다 (다른 화면의 `.btn.sm` 은 그대로) */
+.battle-ctrl .btn.sm { padding: 3px 6px; }
 .ctrl-div { align-self: stretch; width: 1px; margin: 0 4px; background: var(--border-primary); }
+.btn.sm.on { border-color: var(--border-highlight); background: #24243c; }
 
 /* ── 배치 둘 [2026-09-03 사용자 지시] — 컨트롤의 버튼 하나가 오간다 (SCREEN_DESIGN §4-2)
    기본(클래스 없음) = **넓게**: 아레나가 메인 칸 전폭 · 로그/누적은 창
@@ -532,9 +537,9 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    그 자리를 딜미터 열에서 뺏지 않고(열은 300 그대로) **카드를 옛 200/76 으로 되돌려** 맞춘다.
    나눔 배치의 아레나 689 안에 3×200 + 여백 616 이 들어간다 */
 .battle-body.split .unit-slot { flex: 0 0 200px; width: 200px; }
-/* 76 → 84 (2026-09-03) — 이름 줄이 오른쪽 열로 들어오면서 76 에는 안 들어간다(이름 16 + HP 18 + 게이지 9 + 스킬 35 + 간격 ≈ 84).
-   카드 총높이는 위칸 시절 옛 값(≈112)보다 오히려 작다. 초상은 76 그대로 가운데 */
-.battle-body.split .unit-body { height: 84px; }
+/* 76 → 84 → 86 (2026-09-04 — HP 바 18 → 20 을 따라간다) — 이름 줄이 오른쪽 열로 들어오면서 76 에는 안 들어간다
+   (이름 16 + HP 20 + 게이지 9 + 스킬 35 + 간격 ≈ 86). 카드 총높이는 위칸 시절 옛 값(≈112)보다 오히려 작다. 초상은 76 그대로 가운데 */
+.battle-body.split .unit-body { height: 86px; }
 .battle-body.split .unit .sprite { width: 76px; height: 76px; font-size: 38px; }
 .battle-body.split .pop { left: 44px; }   /* 초상 한가운데 — 패딩 6 + 38 */
 /* 우측 딜미터 열 — 높이 예산은 아레나와 같다. 판은 그 안에서만 스크롤한다
@@ -619,10 +624,10 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 이름 + 신원 = **오른쪽 열의 첫 줄 하나** (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 위칸(띠)은 완전히 폐기됐다.
    왼쪽에 무채색 신원(`Lv.n · 직업` / 정예·보스 라벨) · **이름은 오른쪽 끝**(옛 위칸의 「왼쪽 태그 / 오른쪽 이름」 배치).
    일반 몬스터는 이름뿐이라 이름만 오른쪽에 선다. 넘치면 **이름이** 말줄임된다(신원은 고정 조각) */
-/* `margin-bottom: auto` — 이름 줄을 **초상 윗변**에 붙인다 (2026-09-03 사용자 지시). 열이 바닥 정렬(flex-end)이라
-   남는 세로가 전부 이름 위에 쌓여 이름이 카드 가운데에 떠 있었다 — auto 마진이 그 여백을 이름 **아래**로 몬다.
-   수치 묶음(HP·게이지·스킬)은 그대로 바닥 = 초상 아랫변이다. 스킬 칸을 키울 필요가 없어진다 */
-.unit-id { width: 100%; min-width: 0; display: flex; align-items: baseline; gap: 6px; line-height: 1.2; margin-bottom: auto; }
+/* 이름 줄은 **HP 바 바로 위**다 (재개정 2026-09-04 사용자 지시 — 전날의 「초상 윗변」(margin-bottom: auto) 을 물렸다).
+   열이 바닥 정렬(flex-end)이라 이름·HP·게이지·스킬이 한 묶음으로 초상 아랫변에 붙고, 남는 세로는 전부 이름 위에 쌓인다 —
+   이름을 윗변에 떼어 두면 수치 묶음과 붕 떠서 두 덩어리로 읽혔다 (SCREEN_DESIGN §4-2) */
+.unit-id { width: 100%; min-width: 0; display: flex; align-items: baseline; gap: 6px; line-height: 1.2; }
 .unit-ident { flex: 0 0 auto; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 .unit-name {
     margin-left: auto; min-width: 0;
@@ -703,8 +708,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .unit .bar { width: 100%; }
 /* HP 바 — 수치는 바 가운데 (2026-08-27). 바를 글자 높이만큼 키운다 */
 .hp-row { position: relative; width: 100%; }
-/* 15 → 18 (2026-09-03 사용자 지시) — 행동 게이지와 함께 한 단 키웠다. 본문 101 예산 안이다(18+8+32+여백 ≈ 66) */
-.hp-row .bar.hp { height: 18px; }
+/* 15 → 18 → **20** (2026-09-04 사용자 지시 — 한 단 더) — 본문 101 예산 안이다(이름 16 + 20 + 8 + 32 + 여백 ≈ 94) */
+.hp-row .bar.hp { height: 20px; }
 .hp-text {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     font-size: var(--fs-xs); line-height: 1; color: var(--text-primary); text-shadow: 0 1px 2px #000;
@@ -726,9 +731,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     transition: width .1s linear;            /* 틱 간격과 맞춘다 */
 }
 .unit.enemy .act-fill { background: #b06030; }
-/* 가득(막바지 85%~) = 곧 행동한다 — 테두리가 살고 채움이 밝아진다 (2026-09-03 · SCREEN_DESIGN §4-2) */
-.act-row.full { border-color: var(--color-warning); }
-.act-row.full .act-fill { filter: brightness(1.35); }
+/* 막바지(85%~) 발광(.act-row.full)은 **삭제했다** (2026-09-04 사용자 지시) — 인과는 특수효과가 아니라
+   게이지가 실제로 100% 까지 차는 것으로 읽는다. 행동 틱의 100% 표시와 스냅 리셋은 재생기(battle.js refreshUnit)가 든다 */
 
 /* 스킬 쿨 3칸 — 슬롯 순서 = 동률 시 우선순위. **왼쪽부터** 1·2·3번 (2026-08-27 세로 3줄 → 가로 3칸).
    세로로 쌓으면 오른쪽 열의 가로 105px 중 아이콘이 13px 만 쓴다. 눕히면 같은 자리에서 아이콘이 13 → 32px 가 되고
@@ -773,9 +777,10 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 
 /* 라운드 진행 트랙 — 구조가 고정이라 한눈에 읽힌다 */
 /* 트랙이 헤드 첫 줄에 **가로로** 들어왔다 (2026-09-03) — 옛 세로 쌓기용 `margin-top: 6px` 는 걷었다 */
-.round-track { display: flex; flex: 0 0 auto; gap: 3px; }
+.round-track { display: flex; flex: 0 0 auto; gap: 2px; }
+/* 칸 18 → 16 · 간격 3 → 2 [2026-09-04] — 헤드가 한 줄이 되며 가로를 26px 돌려받아야 했다 (한 자리 숫자라 안 넘친다) */
 .round-track .rt {
-    width: 18px; line-height: 16px; text-align: center; font-size: var(--fs-2xs);
+    width: 16px; line-height: 16px; text-align: center; font-size: var(--fs-2xs);
     border: 1px solid var(--border-dark); background: var(--bg-input); color: var(--text-muted);
 }
 .round-track .rt.elite { border-color: #6a4a2a; color: #d09040; }
@@ -1494,8 +1499,11 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 }
 
 /* ───────── 파견 목록 (SCREEN_DESIGN §8) ─────────
-   칸 6 — 선술집 · 상단 · 제련소 · 광산 · 채집 · 탐험. 미착수 칸도 그린다(어디까지 열리는지가 보여야 한다).
-   라벨이 드는 칸이라 고정 px 을 주지 않는다 — minmax 로 접힌다 (ui/README 폭 정책) */
+   [개정 2026-09-04 사용자 지시] **세로 카드 3장** — 채광 · 채집 · 벌목. 미착수 카드도 그린다(어디까지 열리는지가 보여야 한다).
+   **3열 격자는 새로 만들지 않았다** — 시작 화면·선술집이 쓰는 `.ng-row`(같은 무게 3열)를 렌더러가 그대로 쓴다.
+   `.dp-cell` 은 칸에서 **카드**가 됐지만 규칙은 그대로다(세로 flex · 열린 카드 왼쪽 강조선) — 클래스 이름도 안 바꾼다.
+   ⚠ `.dp-list` 는 이 개정으로 **참조가 0** 이 됐다 — 지우지 않고 남긴다(다른 곳에서 쓰는지 확인 전).
+   라벨이 드는 칸이라 고정 px 을 주지 않는다 (ui/README 폭 정책) */
 .dp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .dp-cell {
     display: flex; flex-direction: column; gap: 5px;
@@ -1514,9 +1522,42 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .dp-size { color: var(--text-muted); font-style: normal; border: 1px solid var(--border-dark); padding: 0 4px; }
 .dp-cell .todo-badge { align-self: flex-start; margin-left: 0; }
 
+/* 단계 트랙 — 카드마다 같은 줄 수로 선다 [신설 2026-09-04]. 줄 수는 CSS 가 아니라 CSV 표가 정한다(mine_node.csv).
+   **세 카드 모두 그린다** — 트랙을 지우면 「이 파견처는 단계가 없다」로 읽힌다 (§8) */
+.dp-tiers { border-top: 1px solid var(--border-dark); padding-top: 5px; }
+.dp-tier-h { font-size: var(--fs-2xs); color: var(--text-muted); margin-bottom: 4px; }
+.dp-tier-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.dp-tier { display: flex; align-items: baseline; gap: 6px; font-size: var(--fs-xs); }
+/* 단계 번호 — 칸 안 초소형 라벨이라 --fs-2xs (ui/README 글씨 크기) */
+.dp-t-n {
+    flex: 0 0 auto; min-width: 15px; text-align: center;
+    font-size: var(--fs-2xs); font-style: normal; color: var(--text-muted);
+    border: 1px solid var(--border-dark);
+}
+/* 이름 — 라벨이 드는 칸이라 고정 px 을 주지 않는다. 영어가 길다(`Twisted Root Gallery`) — 넘치면 말줄임 */
+.dp-t-name { flex: 1 1 auto; min-width: 0; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 표가 아직 없는 파견처(채집 · 벌목) — 이름 자리에 `—` 만 선다. 줄은 지우지 않는다 (§4-1) */
+.dp-tier.empty .dp-t-name { color: var(--text-muted); }
+
 /* 미착수 탭 — 제목 옆 배지 하나로 「여긴 아직 없다」를 말한다 (SCREEN_DESIGN §1) */
 .todo-badge { font-size: var(--fs-xs); color: var(--color-warning); border: 1px solid var(--color-warning); padding: 0 6px; margin-left: 6px; vertical-align: middle; }
 .panel.todo .note-body { max-width: 70ch; }
+
+/* 탐험 지도 — 탭 머리에 전폭으로 서는 **아트 한 장** [신설 2026-09-04 사용자 지시 · SCREEN_DESIGN §8-4]
+   ⚠ **클릭을 안 받는다** — 노드·경로가 기획 백지라 손잡이가 없다. `cursor` 도 안 바꾼다(누를 수 있는 것처럼 보이면 안 된다)
+   ⚠ **`image-rendering: pixelated` 를 안 건다** — 계승 배경 4장(`body::before` · `.arena.has-bg` · `.panel.town-bg`)과 달리
+      이건 신규 카툰 아트라 픽셀아트가 아니다. 보간을 꺼 두면 축소할 때 선이 끊긴다 (§5 얼굴 스타일에서 겪은 것과 같은 함정)
+   화면비는 자산 그대로다 — `cover` 가 잘라 내는 곳이 없다. **2752×1211 (2.27:1)** [개정 2026-09-04]:
+   생성 원본은 1536 높이였고 **아래 띠(생성기 워터마크 자리)를 잘라 낸** 것이 이 값이다. 세로가 짧아지면서
+   같은 날 등재했던 **세로 예산 예외가 해소됐다** — 하한 1280×700 에서 지도와 미착수 안내가 함께 선다 (src/ui/README.md) */
+.ex-map {
+    aspect-ratio: 2752 / 1211;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--border-secondary);
+    /* `.panel + .panel` 규칙이 안 걸리는 자리다(지도는 패널이 아니다) — 아래 미착수 패널과의 간격을 여기서 든다 */
+    margin-bottom: 14px;
+}
 .items-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
 /* 옛 제목 줄이 들던 수치(칸 수 · 장착 대상)가 도구 줄 **오른쪽 끝**으로 옮겨 왔다 (2026-09-01) */
 .items-meta { margin-left: auto; font-size: var(--fs-xs); }

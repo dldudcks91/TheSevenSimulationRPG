@@ -169,8 +169,10 @@ export const PAPERDOLL = [
  */
 /* ⚠ 이 값을 바꾸면 `% HERO_FACE_MAX` 의 나머지가 달라져 **기존 영웅 전원의 얼굴이 다시 배정된다** —
    세이브에 있는 영웅도 어제와 다른 얼굴이 된다(이름·능력치는 그대로). 아트를 늘릴 때 따라오는 비용이라
-   조용히 올리지 않는다: 5 → 14 는 2026-09-03 사용자 지시로 올린 것이다 (다인종 흉상 9종 추가) */
-export const HERO_FACE_MAX = 14;
+   조용히 올리지 않는다: 5 → 14 는 2026-09-03 사용자 지시로 올린 것이다 (다인종 흉상 9종 추가).
+   2026-09-04 는 사용자 지시로 여러 번 갈았다: 14 → 1(검투사) → 3(바바리안 변주) → 2 → 5 —
+   지금은 검투사(1) + 바바리안(2) + 무안면 로마군 3종(3~5 · 시트 발주 1차) (faces/cartoon/README) */
+export const HERO_FACE_MAX = 5;
 /** 표시용 안정 해시(FNV-1a) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖) */
 const strHash = s => {
     let h = 2166136261;
@@ -256,6 +258,17 @@ export const BG_DIR = './assets/art/backgrounds/';
 /** ⚠ 아직 아무 화면도 안 읽는다 — 자산(`town.webp`)은 실재하고 거점 화면이 생기면 여기가 쓰인다 */
 export const TOWN_BG = BG_DIR + 'town.webp';
 export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
+
+/**
+ * 탐험 지도 — 챕터 하나에 한 장 (SCREEN_DESIGN §8-4 · 2026-09-04 사용자 지시).
+ *
+ * ⚠ 위 넷과 달리 **계승이 아니라 신규 아트**다 — 같은 폴더에 섞여 있을 뿐이고, **픽셀아트가 아니다.**
+ *   `image-rendering: pixelated` 를 걸면 뭉갠다 (`.ex-map` 이 안 거는 이유 — style.css).
+ * **가진 챕터가 SSOT 를 안 갖는다** — `stage.csv:bg` 같은 열이 없으므로 여기 목록이 자산 재고다
+ *   (`HERO_FACE_MAX` 와 같은 문법). 없는 챕터는 null 이라 화면이 지도 칸째로 빠진다 — 빈 액자를 안 그린다.
+ */
+export const EXPLORE_MAP_CHAPTERS = [1];
+export const exploreMap = ch => (EXPLORE_MAP_CHAPTERS.includes(ch) ? BG_DIR + `explore_chapter_${ch}.webp` : null);
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster_<idx>.png`.

@@ -25,7 +25,8 @@
  * 스킬 칸은 **실제 시전을 그린다** (2026-08-30 — 목업 폐기): 켜고 끄는 것은 타임라인의 `skill` 이벤트이고, 남은 쿨은 그 이벤트가
  *   실어 온 `ready`(시뮬이 쓴 실제 쿨)로 걷힌다. 재생기는 쿨을 **계산하지 않는다**. 회복 · 창 · 재생(`heal`·`buff`·`buffEnd`·`regen`)도
  *   같이 그린다 — 무시하면 화면 HP 가 시뮬과 어긋난다. 아이콘 · 설명만 `mock.js` 표시 사전에서 온다.
- * 행동 게이지 = 마지막 행동 이후 경과 ÷ 행동 주기.
+ * 행동 게이지 = 마지막 행동 이후 경과 ÷ 행동 주기. 행동 이벤트가 온 틱은 **100% 를 먼저 그리고** 다음 틱에
+ *   전환 없이(스냅) 비운다 (2026-09-04) — 이벤트가 게이지를 곧장 리셋하면 「꽉 참」 프레임이 화면에 안 나온다.
  *
  * i18n: 표시 문자열은 전부 t()/L() — 이 파일에 한국어 리터럴은 없다 (주석 제외).
  */
@@ -117,6 +118,10 @@ function buildDom(state, stage, stageId) {
     const bg = stageBgOf(stageId);
     const rounds = D.balance.rounds_per_stage;
     const kindOf = n => D.roundTypes.find(r => r.round_num === n)?.round_type ?? 'normal';
+    /* 헤드는 **한 줄** [재개정 2026-09-04 사용자 지시 · SCREEN_DESIGN §4-2]
+         `.bh-top` — 전환 · 이름 · 라운드 트랙 ─── (밀어내기) ─── `.battle-ctrl`(배속 · 일시정지 · 건너뛰기 │ 배치 · 로그 · 누적)
+       「라운드 n / 총 · 종류 · 경과 시계」(`.bh-meta`)는 삭제됐고, 컨트롤 줄이 그 자리로 올라와 헤드가 2줄 → 1줄이 됐다.
+       아레나와 그 아래 가방이 줄 하나만큼 위로 올라온다(가방이 화면 아래로 잘리던 것) */
     wrap.innerHTML = `
         <div class="battle-head">
             <div class="bh-top">
@@ -128,20 +133,15 @@ function buildDom(state, stage, stageId) {
                         return `<span class="rt ${k}" data-n="${n}" title="${t('bt.rTitle', { n, kind: kindLabel(k) })}">${n}</span>`;
                     }).join('')
                 }</div>
-                <div class="bh-meta muted">
-                    ${t('bt.round')} <b class="b-round">1</b> / ${rounds}
-                    <span class="rk b-kind"></span>
-                    &nbsp;·&nbsp; <span class="b-clock">00:00</span>
+                <div class="battle-ctrl">
+                    ${SPEEDS.map(s => `<button class="btn sm b-speed" data-s="${s}">${t('bt.speed', { n: s })}</button>`).join('')}
+                    <button class="btn sm b-pause">${t('bt.pause')}</button>
+                    <button class="btn sm b-skip">${t('bt.skip')}</button>
+                    <span class="ctrl-div"></span>
+                    <button class="btn sm b-layout"></button>
+                    <button class="btn sm b-win" data-tab="log">${t('bt.log.h')}</button>
+                    <button class="btn sm b-win" data-tab="dmg">${t('bt.tab.dmg')}</button>
                 </div>
-            </div>
-            <div class="battle-ctrl">
-                ${SPEEDS.map(s => `<button class="btn sm b-speed" data-s="${s}">${t('bt.speed', { n: s })}</button>`).join('')}
-                <button class="btn sm b-pause">${t('bt.pause')}</button>
-                <button class="btn sm b-skip">${t('bt.skip')}</button>
-                <span class="ctrl-div"></span>
-                <button class="btn sm b-layout"></button>
-                <button class="btn sm b-win" data-tab="log">${t('bt.log.h')}</button>
-                <button class="btn sm b-win" data-tab="dmg">${t('bt.tab.dmg')}</button>
             </div>
         </div>
         <div class="battle-body">
@@ -242,12 +242,9 @@ function paintWin(state, root) {
     if (!log.hidden) log.scrollTop = log.scrollHeight;
 }
 
+/* 라운드 표시는 **트랙 하나**가 든다 [2026-09-04 사용자 지시] — 「라운드 n / 총 · 종류」 수치와 경과 시계는 삭제됐다.
+   지금 몇 번째인가는 `.now` 강조가, 종류는 칸의 색(정예·보스)이 답한다 (SCREEN_DESIGN §4-2) */
 function paintRound(state, root) {
-    const k = D.roundTypes.find(r => r.round_num === state.round)?.round_type ?? 'normal';
-    root.querySelector('.b-round').textContent = state.round;
-    const kind = root.querySelector('.b-kind');
-    kind.className = `rk b-kind ${k}`;
-    kind.textContent = kindLabel(k);
     root.querySelectorAll('.rt').forEach(n => {
         const v = Number(n.dataset.n);
         n.classList.toggle('done', v < state.round);
@@ -358,15 +355,16 @@ function refreshUnit(state, u) {
     u.node.querySelector('.bar.hp > i').style.width = pct + '%';
     u.node.querySelector('.hp-text').textContent = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
     u.node.classList.toggle('dead', u.hp <= 0);
-    // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다.
-    // 막바지(85%~)부터 밝아진다 (2026-09-03 · SCREEN_DESIGN §4-2).
-    // 「가득」의 순간에만 켜면 안 보인다: 가득 = 곧 행동이라 다음 이벤트가 게이지를 바로 리셋한다(틱 하나짜리 상태).
-    // 0.85 는 연출 문턱이다 — 게임 수치가 아니라 재생기의 자유 (ui_conventions §9)
+    // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다 (SCREEN_DESIGN §4-2 재개정 2026-09-04).
+    // 행동한 틱(u.acted — apply 의 skill/hit/dodge 가 세우고 start 의 틱 루프가 눕힌다)은 **100% 를 그린다** —
+    // 이벤트가 lastAct 를 곧장 리셋하면 「꽉 참」 프레임이 화면에 한 번도 안 나온다(옛 85% 발광이 때우던 구멍).
+    // 리셋(내려가는 변화)은 전환 없이 스냅 — 전환이 걸리면 「비워짐」이 「흘러내림」으로 보인다.
     const act = u.node.querySelector('.act-fill');
     if (act) {
-        const fill = u.hp <= 0 ? 0 : clamp01((state.t - u.lastAct) / u.period);
+        const fill = u.hp <= 0 ? 0 : u.acted ? 1 : clamp01((state.t - u.lastAct) / u.period);
+        act.style.transition = fill < u.actFill ? 'none' : '';
         act.style.width = fill * 100 + '%';
-        act.parentElement.classList.toggle('full', fill >= 0.85 && u.hp > 0);
+        u.actFill = fill;
     }
     // 스킬 쿨 게이지 — 시뮬이 실제로 쓴 쿨(`skill` 이벤트의 firedAt → ready)로 걷는다. 재생기는 쿨을 계산하지 않는다
     if (u.skills?.length) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
@@ -486,9 +484,9 @@ function start(state, root, opts) {
     state.timer = setInterval(() => {
         if (!state.running || state.ended) return;
         state.t += TICK;
-        root.querySelector('.b-clock').textContent = clock(state.t);
         drain(state, root, opts);
-        for (const u of [...state.party, ...state.enemies]) if (u.hp > 0) refreshUnit(state, u);
+        // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
+        for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
     }, TICK * 1000 / state.speed);
 }
 
@@ -524,13 +522,13 @@ function apply(state, root, opts, ev) {
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
             const u = U(ev.u);
-            if (u) { u.lastAct = ev.t; castSkill(state, u, ev); }
+            if (u) { u.lastAct = ev.t; u.acted = true; castSkill(state, u, ev); }
             break;
         }
         case 'hit': {
             const a = U(ev.a), d = U(ev.d);
             const skill = strikeLabel(ev.s);
-            if (a) { a.lastAct = ev.t; if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
+            if (a) { a.lastAct = ev.t; a.acted = true; if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
                 popup(state, d, `-${ev.dmg}`, ev.crit ? 'crit' : (a?.side === 'party' ? 'dmg' : 'dmg-in'));
@@ -558,7 +556,7 @@ function apply(state, root, opts, ev) {
         case 'dodge': {
             const a = U(ev.a), d = U(ev.d);
             const skill = strikeLabel(ev.s);
-            if (a) a.lastAct = ev.t;
+            if (a) { a.lastAct = ev.t; a.acted = true; }
             if (d) popup(state, d, t('pop.dodge'), 'miss');
             if (a && d) pushLog(state, root, t('log.dodge', { name: L(a.name), target: L(d.name), skill }));
             break;
