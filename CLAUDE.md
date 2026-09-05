@@ -35,7 +35,8 @@ Phase 1 = **무빌드 웹**(ES Modules + 순수 DOM/CSS, 서버 없음, CSV, Loc
 ```
 TheSevenSimulationRPG/
 ├── CLAUDE.md
-├── start.bat              # 로컬 서버 (python -m http.server) — ES Modules 는 file:// 에서 막힌다
+├── start.bat              # 로컬 서버 실행 — ES Modules 는 file:// 에서 막힌다
+├── serve.py               # 그 서버 본체 — http.server + `Cache-Control: no-store` (같은 파일명 아트 교체가 캐시로 안 먹던 문제)
 ├── docs/
 │   ├── game_design/       # 게임의 WHAT — GAME_DESIGN.md(메인 · §9 최근 결정 · §10 미확정) + 세부 8종 + DECISION_LOG.md(이력 아카이브 — 평소엔 안 연다)
 │   ├── client/            # 소프트웨어의 HOW — DEV_PLAN(계획·부채) · ARCHITECTURE(구조) · INTERFACE(이식 계약) · SCREEN_DESIGN(화면)
@@ -61,4 +62,4 @@ TheSevenSimulationRPG/
 경계(export·스키마·rng 순서)를 바꾸면 **INTERFACE.md 먼저**, 화면을 바꾸면 **SCREEN_DESIGN.md 먼저** → [docs/client/DEV_PLAN.md §7](docs/client/DEV_PLAN.md)
 
 ---
-*마지막 업데이트: 2026-09-03 (**컨셉 락 해체** — 락 섹션(헤드라인·표·따름정리 셋·미확정 줄)을 「설계의 큰 틀」 포인터 한 단락으로 교체. 계기는 보호 확정(전투가 오프라인에 돈다 — 리포트 재생)으로 헤드라인 「오프라인 = 비전투 전부」와 따름정리 1 이 무너진 것. 옛 조항 내용은 GAME_DESIGN §1-1·§3 에 일반 확정으로 존속 (GAME_DESIGN.md §9 09-03)) · 2026-09-03 (**성장 원칙 · 최종목표 반영** — 개요에 「수평+수직 · 무한 수직 스케일링 없음 · 최종목표 = 스킬트리·파티 조합」 추가, 미확정 줄에 「엔드게임의 형태」 등재 (GAME_DESIGN.md §1 · §9 09-03)) · 2026-09-03 (**게임 정의 헤드라인 반영** — 개요에 새 헤드라인 「디아블로식 아이템 게임을, 그래픽을 최소화한 파티 RPG 형식으로 재해석한다」 추가 (GAME_DESIGN.md §1 · §9 09-03)) · 이전 이력은 [DECISION_LOG.md](docs/game_design/DECISION_LOG.md) §2*
+*마지막 업데이트: 2026-09-05 (**로컬 서버를 `serve.py` 로** — `start.bat` 이 `python -m http.server` 대신 `serve.py`(= http.server + `Cache-Control: no-store`)를 띄운다. 같은 파일명으로 갈아끼운 아트가 브라우저 휴리스틱 캐시 때문에 화면에 안 반영되던 문제. 포트·서빙 루트(`src/`)는 그대로 8777) · 2026-09-03 (**컨셉 락 해체** — 락 섹션(헤드라인·표·따름정리 셋·미확정 줄)을 「설계의 큰 틀」 포인터 한 단락으로 교체. 계기는 보호 확정(전투가 오프라인에 돈다 — 리포트 재생)으로 헤드라인 「오프라인 = 비전투 전부」와 따름정리 1 이 무너진 것. 옛 조항 내용은 GAME_DESIGN §1-1·§3 에 일반 확정으로 존속 (GAME_DESIGN.md §9 09-03)) · 2026-09-03 (**성장 원칙 · 최종목표 반영** — 개요에 「수평+수직 · 무한 수직 스케일링 없음 · 최종목표 = 스킬트리·파티 조합」 추가, 미확정 줄에 「엔드게임의 형태」 등재 (GAME_DESIGN.md §1 · §9 09-03)) · 2026-09-03 (**게임 정의 헤드라인 반영** — 개요에 새 헤드라인 「디아블로식 아이템 게임을, 그래픽을 최소화한 파티 RPG 형식으로 재해석한다」 추가 (GAME_DESIGN.md §1 · §9 09-03)) · 이전 이력은 [DECISION_LOG.md](docs/game_design/DECISION_LOG.md) §2*

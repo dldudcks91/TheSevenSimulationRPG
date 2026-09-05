@@ -4,7 +4,8 @@
 
 ## 검증 방법
 
-1. `start.bat` (로컬 http 서버 — ES Modules 는 `file://` 에서 CORS 로 막힌다)
+1. `start.bat` (로컬 http 서버 = `serve.py` — ES Modules 는 `file://` 에서 CORS 로 막힌다).
+   `serve.py` 는 `http.server` + **`Cache-Control: no-store`** 다 — 아트를 같은 파일명으로 갈아끼웠을 때 브라우저가 옛 그림을 캐시로 계속 쓰던 문제 (2026-09-05). 헤드리스 검증이 `--disk-cache-size=1` 을 주는 것과 같은 목적
 2. `http://localhost:8777/dev/test.html` — game_logic 단정 + 밸런스 캘리브레이션 표
    - 실패 사유는 `fail()` 로 **던진다**. 문자열 반환은 통과로 집계되므로 쓰지 않는다
 
