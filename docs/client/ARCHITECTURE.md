@@ -66,7 +66,7 @@ loadData()            CSV 22개 fetch → D 채움 → SYS 조립  (`ui/data.js:
 rollCandidates()      새 게임 후보 3명 (고정 시드 — 세이브 밖)
 loadSave() → continueGame()
     deserialize (버전 불일치면 catch → G=null → 시작 화면)
-    tickInjuries · closeRun (재접속 런 마무리 → save)
+    closeRun (재접속 런 마무리 → save)   ← tickInjuries 는 v11(치료 타이머 폐기, 2026-09-03)에서 삭제
 ?screen / ?dev / ?tab  개발용 라우팅 (순서 고정 — ?tab 은 마지막)
 render()
 ```
@@ -120,7 +120,7 @@ render()
 | 의존 | 위치 | 비고 |
 |---|---|---|
 | Galmuri · Pretendard 웹폰트 (CDN **2개**) | `index.html` | **유일한 네트워크 의존.** 오프라인이면 폴백 폰트 (하이브리드 폰트 도입 08-27 — DEV_PLAN 부채 #11) |
-| Python `http.server` | `start.bat` | ES Modules 가 `file://` 에서 막혀서 |
+| Python `http.server` | `serve.py` (← `start.bat`) | ES Modules 가 `file://` 에서 막혀서. `serve.py` 는 그걸 얇게 감싸 **`Cache-Control: no-store`** 만 더한다 — 같은 파일명으로 아트를 갈아끼우면 브라우저 휴리스틱 캐시가 옛 그림을 계속 쓴다 (2026-09-05) |
 
 패키지 매니저·빌드 도구·프레임워크 없음.
 

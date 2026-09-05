@@ -405,21 +405,21 @@ const STRINGS = {
     /* 패널 부제는 숫자만 — 설명은 도움말 탭으로 갔다 (원문은 help.exp.party) */
     'exp.leader': { ko: '리더', en: 'Leader' },
     'exp.cantDepart': {
-        ko: '치료 중인 영웅이 있어 이 편성으로는 출발할 수 없다',
-        en: 'A hero is still recovering — this party cannot depart',
+        ko: '이 편성으로는 출발할 수 없다',
+        en: 'This party cannot depart',
     },
     'exp.party.note': {
-        ko: '귀환하면 깎인 HP는 <b>무료·즉시 회복</b> — 비용은 부상(전투불능)의 치료 타이머뿐이다<br>'
+        ko: '귀환하면 깎인 HP도 <b>전투불능도 무료·즉시 회복</b> — 비용은 <b>그 출정 동안 파티가 얇아지는 것</b>이다<br>'
             + '파티 버프는 스탯이 아니라 스킬 효과다 — 통솔의 전투 계수는 없다 (08-25)',
-        en: 'Lost HP is restored <b>free and instantly</b> on return — the only cost is the recovery timer on downed heroes<br>'
+        en: 'Lost HP <b>and downed heroes are restored free and instantly</b> on return — the cost is <b>a thinner party for the rest of the sortie</b><br>'
             + 'Party buffs are skill effects, not a stat — Leadership has no combat coefficient (08-25)',
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
     'exp.bench.note': {
-        ko: '파견 화면은 <b>미착수</b> — 파견처 5(영입·교역·제련·채광·<b>채집</b>) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)<br>'
+        ko: '파견 화면은 <b>미착수</b> — 파견처 6(영입·교역·제련·채광·채집·<b>벌목</b>) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)<br>'
             + '<b>연구는 파견이 아니다</b> — 영웅을 보내지 않고 진행하는 별도 시스템이라 연구 탭이 든다 (2026-08-31 연구소 삭제)<br>'
             + '보낸 영웅은 잠기지 않는다 — 언제든 불러들이고 <b>흐른 만큼 비례해 받는다</b> (§3-2)',
-        en: 'Dispatch screen <b>not started</b> — 5 posts (recruit · trade · smelt · mine · <b>gather</b>) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)<br>'
+        en: 'Dispatch screen <b>not started</b> — 6 posts (recruit · trade · smelt · mining · gathering · <b>logging</b>) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)<br>'
             + '<b>Research is not a dispatch</b> — it runs without sending heroes, so the Research tab owns it (the Lab post was removed 2026-08-31)<br>'
             + 'Dispatched heroes are never locked — recall any time and receive <b>pro rata for the time elapsed</b> (§3-2)',
     },
@@ -446,10 +446,10 @@ const STRINGS = {
     'exp.zones.note': {
         ko: '지역 죄종은 해당 죄종 접사의 드롭 가중치를 올린다 — 타겟 파밍의 축<br>'
             + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다<br>'
-            + '중도 귀환해도 <b>루팅은 전량 보존</b>된다. 비용은 부상 치료 + 미클리어(다음 스테이지 미해금)뿐',
+            + '중도 귀환해도 <b>루팅은 전량 보존</b>된다. 비용은 <b>그 출정 동안 파티가 얇아지는 것</b> + 미클리어(다음 스테이지 미해금)뿐',
         en: "A zone's sin raises the drop weight of that sin's affixes — the axis of target farming<br>"
             + '<b>Fixed structure, random contents</b> — the round layout (elite {e} / boss {b}) is identical for every stage; only monster mixes and elite traits reroll each run<br>'
-            + 'Retreating early <b>keeps all loot</b>. The cost is recovery time plus no-clear (next stage stays locked)',
+            + 'Retreating early <b>keeps all loot</b>. The cost is <b>a thinner party for the rest of the run</b> plus no-clear (next stage stays locked)',
     },
 
     /* ── 원정: 리포트 ── */
@@ -463,8 +463,8 @@ const STRINGS = {
     'rep.levelUp': { ko: '▲ {name} 레벨 {a} → {b}', en: '▲ {name} Level {a} → {b}' },
     'rep.injuryHead': { ko: '전투불능 — 이 출정 동안 아웃', en: 'Down — out for the rest of this run' },
     'rep.injuryNote': {
-        ko: '치료는 방치·오프라인 중에도 진행된다. HP는 귀환 시 무료로 전부 회복됐다',
-        en: 'Recovery keeps running while idle or offline. HP was fully restored for free on return',
+        ko: '기다릴 것이 없다 — <b>마을로 돌아오는 순간</b> 전투불능도 깎인 HP도 전원 무료로 회복됐다',
+        en: 'Nothing to wait for — <b>the moment they reach town</b> both downed heroes and lost HP are restored, free, for everyone',
     },
     'rep.drops.h': { ko: '획득 장비', en: 'Loot' },
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
@@ -768,7 +768,7 @@ const STRINGS = {
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
     'log.card': { ko: '<b>{name} 카드</b> 획득 — 도감', en: '<b>{name} card</b> found — codex' },
     'pop.card': { ko: '카드', en: 'Card' },
-    'log.downed': { ko: '{name} <b>전투 불능</b> — 귀환 시 치료 타이머', en: '{name} <b>downed</b> — recovery timer on return' },
+    'log.downed': { ko: '{name} <b>전투 불능</b> — 이 출정 동안 아웃', en: '{name} <b>downed</b> — out for this run' },
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },

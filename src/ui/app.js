@@ -627,7 +627,7 @@ function formPanel(z, sin) {
     // 머리(제목 · 닫기 버튼)는 두지 않는다 (2026-08-28) — 무엇에 딸린 패널인지는 바로 위 행이 말하고,
     // 닫는 것은 그 행을 다시 누르는 것이다. 머리가 없으니 패널 높이를 흔들 것도 하나 줄었다
     /* 파티 = 영웅 띠 (2026-08-27 — 옛 파티·벤치 두 패널을 걷어내고 띠 하나가 그 결정을 든다).
-       클릭 = 파티에 넣고 뺀다(치료 중은 거절 → 플래시) · 파티는 **카드 겉 테두리**로 보이고 위칸 글씨는 대기/치료 중만 (2026-08-28).
+       클릭 = 파티에 넣고 뺀다(출정 아웃은 거절 → 플래시) · 파티는 **카드 겉 테두리**로 보이고 위칸 글씨는 대기/출정 아웃만 (2026-08-28).
        전투 관전·리포트에는 띠를 두지 않는다 — 전투 화면만 본다 */
     // 리더 = G.party[0] = **제일 먼저 넣은 영웅** (toggleParty 가 클릭 순서로 push 한다)
     const strip = heroStrip(toggleParty, { leaderUid: G.party[0] ?? null, flat: true, partyMode: true });
@@ -821,9 +821,9 @@ function renderPrologue(main) {
    세 탭이 같은 띠를 쓰므로 어느 탭에서든 로스터가 같은 자리, 같은 순서로 보인다. */
 
 /**
- * 영웅이 지금 하는 일 — 치료 중 > 대기. 파견은 미구현이라 아직 대기로 뭉뚱그린다.
+ * 영웅이 지금 하는 일 — 출정 아웃 > 대기. 파견은 미구현이라 아직 대기로 뭉뚱그린다.
  * **전투 파티는 여기 안 적는다** (2026-08-28 사용자 지시) — 파티는 「하는 일」이 아니라 **고른 것**이라 카드 겉 테두리가 든다.
- * 그래야 클릭이 고른 티가 나고, 이 줄은 「보낼 수 있는가(대기) / 없는가(치료 중)」만 말하게 된다.
+ * 그래야 클릭이 고른 티가 나고, 이 줄은 「보낼 수 있는가(대기) / 없는가(출정 아웃)」만 말하게 된다.
  */
 function heroDoing(h) {
     if (isOut(h)) return { cls: 'down', text: t('hs.doing.out') };
@@ -840,7 +840,7 @@ function heroDoing(h) {
  */
 function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false } = {}) {
     const p = el('div', flat ? 'hs-panel flat' : 'panel hs-panel');
-    // partyMode — 클릭이 파티 넣고 빼기인 띠(편성). 보낼 수 있는 건 **대기**뿐이라 치료 중인 카드는 안 눌리는 티를 낸다
+    // partyMode — 클릭이 파티 넣고 빼기인 띠(편성). 보낼 수 있는 건 **대기**뿐이라 출정 아웃인 카드는 안 눌리는 티를 낸다
     const strip = el('div', `hero-strip${partyMode ? ' party-mode' : ''}`);
     for (const h of G.heroes) {
         const doing = heroDoing(h);
