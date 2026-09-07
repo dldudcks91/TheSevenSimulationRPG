@@ -156,14 +156,14 @@ export const PAPERDOLL = [
    전투 25종 = 장비·스킬이 만든다. */
 
 /**
- * 영웅 초상 — 몬스터와 같은 자리(`faces/<스타일>/`)에 `hero_<n>.png`.
+ * 영웅 초상 — 몬스터와 같은 자리(`faces/<스타일>/`)에 `hero_<직업id>_<k>.png` (2026-09-07 직업 분류).
  * **어느 그림인지는 영웅이 태어날 때 굴려 세이브에 박은 `face` 가 정한다** (2026-09-06 사용자 지시).
  *
  * 옛 판은 **이름 해시**였다 — 저장할 자리가 없어서 매번 다시 계산한 것이고, 그래서 두 가지가 따라왔다:
  *   ① 해시가 몰리면 아예 안 나오는 얼굴이 생긴다(실제로 hero_1·3·7 이 그랬다 — DEV_PLAN 부채 #36)
  *   ② 장수를 바꾸면 나머지가 달라져 **기존 영웅 얼굴이 전원 재배정**된다
  * 저장으로 바꾸면서 둘 다 없어졌다. 굴림은 `game_logic/hero.js:rollStartParty` 가 **맨 마지막에 1회**,
- *   저장은 세이브(v12)가, 파일 이름만 여기가 만든다.
+ *   저장은 세이브(v13)가, 파일 이름만 여기가 만든다.
  *
  * 인자는 `{face}` 를 가진 것이면 된다 — 영웅 객체 · 후보(굴리는 순간 face 가 박힌다) · 관전 유닛은 `u.hero`.
  * **`face` 가 없으면 null 이다** — 빈 칸으로 두고 아무것도 안 깐다(직업 글리프 폐지 2026-09-03).
@@ -182,10 +182,17 @@ export const PAPERDOLL = [
    ⚠ 그 시트의 카키(우하단)는 ✦ 워터마크가 **인물 위에** 얹혀 있어 애초에 버린 타일이다. 배경이 아니라
    후드 안쪽 검정 + 카키 테두리를 가로질러서 깨끗한 복원이 안 된다.
    ⚠ **줄이는 방향이라 위 경고가 걸린다** — 세이브에 `face = 10·11` 이 박힌 영웅은 `heroFace` 가 접어서 1·2 를 준다.
-   지금은 검투사(1) + 바바리안(2) + 무안면 로마군 3종(3~5) + 기사 2종(6~7) + 궁수(8) + 외치는 기사(9)
-   (faces/cartoon/README).
-   ⚠ 그래도 **직업 대응은 아니다** — 태어날 때 무작위로 굴리는 번호라 궁수 얼굴이 전사에게 갈 수 있다 */
-export const HERO_FACE_MAX = 9;
+   2026-09-07 사용자 지시로 9 → 10 (사제 1종 추가 — `source_sheet_priest.png` 2번 타일 · 세트 첫 사제 얼굴.
+   늘리는 방향이라 기존 영웅 얼굴은 안 바뀐다).
+   2026-09-07 사용자 지시로 **직업 분류 전환** — 정수 하나(`HERO_FACE_MAX`)를 **직업별 장수 객체(`HERO_FACES`)**로 갈고
+   파일명을 `hero_<직업id>_<k>.png` 로 리네임했다. 세이브의 `face` 도 정수에서 `'<직업id>_<k>'` 문자열이 됐다(v13 —
+   전 영웅 전면 재굴림). 이력은 남긴다: 위 번호(1~10)는 **구 파일명**이고 아래가 새 이름이다.
+   지금은 warrior_1 검투사(구 1) · warrior_2 바바리안(구 2) · warrior_3 백발백염(구 7) ·
+   knight_1~3 무안면 로마군(구 3~5) · knight_4 민머리 기사(구 6) · knight_5 외치는 기사(구 9) ·
+   archer_1 궁수(구 8) · priest_1 사제(구 10) · **마법사는 0장**(faces/cartoon/README).
+   ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
+   풀이 0장인 직업(마법사)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
+export const HERO_FACES = { warrior: 3, knight: 5, mage: 0, archer: 1, priest: 1 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).
  *
  * ⚠ **마무리 섞기(murmur3 finalizer)를 빼면 안 된다** (2026-09-06 버그 수정) — 쓰는 쪽이 전부 `% 개수` 라
@@ -204,9 +211,13 @@ const strHash = s => {
     return h >>> 0;
 };
 export const heroFace = hero => {
-    const n = hero?.face;
-    if (!(n >= 1)) return null;
-    return `${faceDir()}hero_${1 + (Math.floor(n) - 1) % HERO_FACE_MAX}.png`;
+    const id = hero?.face;
+    if (typeof id !== 'string') return null;            // null·옛 정수 → 빈 칸 (v13 이관이 정수를 남기지 않는다 — 방어)
+    const i = id.lastIndexOf('_');
+    const cls = id.slice(0, i), k = Math.floor(+id.slice(i + 1));
+    const m = HERO_FACES[cls] ?? 0;
+    if (!(m >= 1) || !(k >= 1)) return null;
+    return `${faceDir()}hero_${cls}_${1 + (k - 1) % m}.png`;   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
 };
 
 /**
@@ -289,7 +300,7 @@ export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
  * ⚠ 위 넷과 달리 **계승이 아니라 신규 아트**다 — 같은 폴더에 섞여 있을 뿐이고, **픽셀아트가 아니다.**
  *   `image-rendering: pixelated` 를 걸면 뭉갠다 (`.ex-map` 이 안 거는 이유 — style.css).
  * **가진 챕터가 SSOT 를 안 갖는다** — `stage.csv:bg` 같은 열이 없으므로 여기 목록이 자산 재고다
- *   (`HERO_FACE_MAX` 와 같은 문법). 없는 챕터는 null 이라 화면이 지도 칸째로 빠진다 — 빈 액자를 안 그린다.
+ *   (`HERO_FACES` 와 같은 문법). 없는 챕터는 null 이라 화면이 지도 칸째로 빠진다 — 빈 액자를 안 그린다.
  */
 export const EXPLORE_MAP_CHAPTERS = [1];
 export const exploreMap = ch => (EXPLORE_MAP_CHAPTERS.includes(ch) ? BG_DIR + `explore_chapter_${ch}.webp` : null);

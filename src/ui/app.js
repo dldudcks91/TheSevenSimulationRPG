@@ -1881,7 +1881,7 @@ function renderCodex(main) {
    게임이 부르는 그림을 묶음별로 전부 펼친다. 아트를 넣고 확인하려면 지금은 그 그림이 나오는 화면까지 가야 한다 —
    영웅 초상은 이름 해시라 원하는 얼굴을 기다려야 하고, 몬스터는 스테이지가 서야 하며, 아이템은 그 부위가 드롭돼야 본다.
 
-   ⚠ **폴더를 읽는 화면이 아니다.** 목록의 SSOT 는 `mock.js` 의 경로 조립 상수(HERO_FACE_MAX ·
+   ⚠ **폴더를 읽는 화면이 아니다.** 목록의 SSOT 는 `mock.js` 의 경로 조립 상수(HERO_FACES ·
    ITEM_ART_GROUPS · ITEM_ART_BY_SLOT · SLOT_ART_PARTS)와 `monster.csv:face` 다 — 렌더는 동기라 파일 유무를
    물을 수 없다(`skillIcon` 주석과 같은 이유). 코드가 안 부르는 파일(`faces/example/` 시트 · `icons/items/unused/`)은
    게임이 안 쓰므로 여기에도 안 뜬다. 파일이 없으면 `onerror` 로 img 만 빠져 **빈 칸 + 파일명**이 남고,
@@ -1929,9 +1929,12 @@ function renderImagedex(main) {
     const box = el('div', 'ix-body');
     if (state.imgSeg === 'character') {
         const dir = M.faceDir();
+        // 영웅 초상은 **직업 풀**이다 (2026-09-07) — 목록의 SSOT 는 `mock.js:HERO_FACES` 이고 0장인 직업은 타일이 없다.
+        // 이름표는 직업 표시명(`className` — class.csv 의 ko/en) + 풀 안 번호다
         box.innerHTML = artGroup(t('ix.g.hero'), dir,
-            Array.from({ length: M.HERO_FACE_MAX }, (_, i) =>
-                artTile(`${dir}hero_${i + 1}.png`, t('ix.hero', { n: i + 1 }), 'box')))
+            Object.entries(M.HERO_FACES).flatMap(([cls, n]) =>
+                Array.from({ length: n }, (_, i) =>
+                    artTile(`${dir}hero_${cls}_${i + 1}.png`, `${className(cls)} ${i + 1}`, 'box'))))
             // 얼굴을 가진 몬스터만 — `monster.csv:face` 가 SSOT 고 `monsterFace` 가 그 한 줄을 읽는다. idx 순 = 챕터·스테이지 순
             + artGroup(t('ix.g.monster'), dir,
                 Object.values(D.monsters ?? {})

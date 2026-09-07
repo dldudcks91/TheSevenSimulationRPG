@@ -41,17 +41,17 @@ user-invocable: true
 ### 작업 규칙 (프로젝트 공통 — 사용자 지시 2026-08-26)
 
 - **병렬 세션** — `faces/` 는 사용자가 이 세션 밖에서도 시트를 계속 떨어뜨리는 폴더다. 재기 전에 `ls -lt` 로 **어느 시트가 최신인지** 본다. `example/` 의 원본은 덮어쓰지 않는다.
-- **짧은 동의("ㄱ" · "ok")는 직전 메시지에 나열된 항목에만** 적용된다. `HERO_FACE_MAX` 변경(전 영웅 얼굴 재배정)은 "ㄱ" 뒤에도 따로 묻는다.
+- **짧은 동의("ㄱ" · "ok")는 직전 메시지에 나열된 항목에만** 적용된다. `HERO_FACES` 변경(직업별 장수)은 "ㄱ" 뒤에도 따로 묻는다 — **줄이는 방향**은 저장된 얼굴이 접히고, 늘리는 방향도 어느 직업 풀에 넣을지가 배정을 정한다.
 - **커밋 · 푸시는 사용자가 명시적으로 요청할 때만.**
 
 ## 절차
 
 **0. 읽는다**
 
-- [src/assets/art/README.md](src/assets/art/README.md) `faces/` 절 — 폴더 규칙 · 파일명 = `monster_<idx>` / `hero_<n>` · `FACE_STYLES` · 보간 토큰
+- [src/assets/art/README.md](src/assets/art/README.md) `faces/` 절 — 폴더 규칙 · 파일명 = `monster_<idx>` / `hero_<직업id>_<k>`(2026-09-07) · `FACE_STYLES` · 보간 토큰
 - [faces/example/README.md](src/assets/art/faces/example/README.md) — 앵커 목록 · 시트 격자 좌표 · 누끼 이력 · **이 세트가 정의하는 스타일** 절
-- [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) — 키잉 절차 · `HERO_FACE_MAX` 현재값 · 배정 표
-- `src/ui/mock.js` 의 `HERO_FACE_MAX` 실제 값 (README 와 어긋나 있을 수 있다 — 코드가 맞다)
+- [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) — 키잉 절차 · `HERO_FACES` 현재값 · **영웅 파일 매핑 표**(구 번호 → 직업 이름)
+- `src/ui/mock.js` 의 `HERO_FACES` 실제 값 (README 와 어긋나 있을 수 있다 — 코드가 맞다)
 - `ls -lt src/assets/art/faces/example/` — 최신 시트가 무엇인지
 
 **1. 프롬프트를 쓴다** — [prompt_template.md](prompt_template.md) 의 골격에 채운다.
@@ -72,13 +72,13 @@ user-invocable: true
 - 넷이 닮음 → 실루엣 축이 빠진 것(원칙 6)
 - 반드시 **눈으로도 본다** — 몽타주를 만들어 `Read` 한다. 후드 속 얼굴이 검은 void 로 나오는 실패는 수치에 안 잡힌다
 
-**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `example/<설명>.png`(SSOT) + `cartoon/hero_<n>.png`(사본).
+**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `example/<설명>.png`(SSOT) + `cartoon/hero_<직업id>_<k>.png`(사본 · 2026-09-07 직업 분류).
 
 **5. 설치 + 문서**
 
-- `src/ui/mock.js` `HERO_FACE_MAX` 를 새 장수로 — ⚠ **바꾸면 `% HERO_FACE_MAX` 나머지가 달라져 기존 영웅 전원의 얼굴이 재배정된다.** 교체(기존 번호에 덮어쓰기)인지 추가인지 사용자에게 묻는다
+- `src/ui/mock.js` `HERO_FACES[<직업id>]` 를 새 장수로 [개정 2026-09-07] — **늘리는 방향은 무해하다**(얼굴이 세이브에 박혀 있어 기존 영웅은 안 바뀐다). ⚠ **줄이는 방향만** 영향이 있다(범위 밖 저장값은 그 직업 풀 안에서 접힌다). 교체(기존 번호에 덮어쓰기)인지 추가인지 사용자에게 묻는다
 - [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) 의 `hero_*` 절 · [faces/example/README.md](src/assets/art/faces/example/README.md) 의 영웅 표 · 두 문서 꼬리 `*마지막 업데이트*`(최신을 앞에)
-- 보고에는 **실측 표(전/후) · 설치한 파일 · `HERO_FACE_MAX` 변경 여부 · 건너뛴 것**
+- 보고에는 **실측 표(전/후) · 설치한 파일 · `HERO_FACES` 변경 여부 · 건너뛴 것**
 
 ## 자주 막히는 지점 — 실패 패턴 (전부 이 프로젝트에서 실제로 났다)
 

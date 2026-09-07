@@ -283,7 +283,7 @@ function renderUnits(state, root) {
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
             // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
             const name = L(u.name);
-            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u.hero);   // 얼굴 번호는 영웅 객체가 든다 (세이브 v12)
+            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u.hero);   // 얼굴 id 는 영웅 객체가 든다 (세이브 v13)
             // **양쪽 다 밑에 아무것도 안 깐다** — 아트가 없거나 `onerror` 로 빠지면 빈 네모다.
             // ⚠ 영웅은 2026-09-03 (직업 글리프가 배경 투명 PNG 사이로 비쳤다), **몬스터는 2026-09-06** 사용자 지시다.
             //   몬스터에 남아 있던 것은 이름 **이니셜 글자 하나**였고, 같은 이유로 그림 위에 비쳤다.

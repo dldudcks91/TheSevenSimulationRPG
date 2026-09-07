@@ -41,8 +41,10 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   skillPool    — 고유 스킬 후보 id 목록 [skillId...] ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
  *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
- *   heroFaceMax  — 초상 그림 장수(1 이상). **영웅이 태어날 때 얼굴 번호를 굴려 `face` 에 박는다** (2026-09-06).
- *                  로직은 그림을 모른다 — 장수라는 숫자 하나만 받는다. 어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`)
+ *   heroFaces    — **직업별** 초상 장수 `{classId: n}`. **영웅이 태어날 때 제 직업 풀에서 굴려 `face` 에 박는다**
+ *                  (2026-09-07 — 구 `heroFaceMax` 정수 하나를 대체). `face` 는 `'<classId>_<k>'` 문자열이고
+ *                  풀이 0장인 직업은 `null`(초상 없음)이다. 로직은 그림을 모른다 — 직업별 장수 객체만 받고
+ *                  어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`)
  */
 export function createHeroSystem(data) {
     const B = data.balance;
@@ -50,7 +52,7 @@ export function createHeroSystem(data) {
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
     const skillPool = data.skillPool ?? [];
-    const faceMax = Math.max(1, Math.floor(data.heroFaceMax ?? 1));
+    const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
 
     /* ── 마스터리 노드 (skill_design §3) — 정의는 CSV · 값은 balance.csv · 랭크는 영웅이 든다 ── */
@@ -110,10 +112,15 @@ export function createHeroSystem(data) {
     };
 
     /**
-     * 얼굴 번호 1회 — 태어날 때 굴려 영웅에 박고, 그 뒤로 안 바뀐다 (hero_design §1 의 고유 스킬과 같은 층).
+     * 얼굴 1회 — 태어날 때 **제 직업 풀에서** 굴려 영웅에 박고, 그 뒤로 안 바뀐다 (hero_design §1 의 고유 스킬과 같은 층).
      * **화면이 매번 다시 계산하지 않게** 하려고 저장한다 — 렌더러는 전체를 다시 그리므로 그때마다 굴리면 얼굴이 흔들린다.
+     * 결과는 `'<classId>_<k>'` 문자열(k ≥ 1)이고, 그 직업의 그림이 하나도 없으면 `null` = 초상 없음(2026-09-07).
      */
-    const rollFace = rng => 1 + Math.floor(rng() * faceMax);
+    const rollFace = (rng, cls) => {
+        const m = faceCounts[cls] ?? 0;
+        const r = rng();               // 풀 0장이어도 1회 소비 — 직업이 소비 수를 바꾸면 같은 시드가 다른 파티가 된다
+        return m ? `${cls}_${1 + Math.floor(r * m)}` : null;
+    };
 
     /**
      * 기본 능력치 굴림 — **합은 고정, 모양만 굴린다** ([balance.csv:hero_attr_total]).
@@ -167,7 +174,7 @@ export function createHeroSystem(data) {
         return {
             uid: null,               // uid 발급은 state 의 일 (카운터 소유자)
             name, tier: 'rare', sin, cls, trait,
-            face: null,              // 얼굴 번호 — **파티를 굴리는 쪽이 맨 마지막에 박는다** (rollStartParty · 아래 이유)
+            face: null,              // 얼굴 id — **파티를 굴리는 쪽이 맨 마지막에 박는다** (rollStartParty · 아래 이유)
             level: 1, xp: 0,
             mastery: {}, masteryPoints: 0,   // 찍은 랭크 {nodeId: rank} · 남은 포인트 (죄종·직업 공유 풀)
             innate,                  // 고유 스킬 — 생성 시 확정 · 이후 불변 (hero_design §1 · 프로토타입 풀 = skill.csv 전 행)
@@ -178,7 +185,8 @@ export function createHeroSystem(data) {
 
     /**
      * 시작 파티 — 죄종·직업·이름·특성이 셋 사이에서 겹치지 않는다 (같은 카드 3장 방지).
-     * 얼굴도 같은 이유로 겹치지 않는다 — 장수가 인원보다 적을 때만 겹침을 허용한다.
+     * 얼굴은 **겹침 방지를 따로 안 한다** (2026-09-07) — 직업 풀에서 굴리는데 파티 안 직업이 이미 서로 다르므로
+     *   (바로 위 `drawDistinct(mainClasses)`) 다른 풀에서 나온 얼굴끼리는 id 가 겹칠 수 없다.
      *
      * ⚠ **얼굴은 맨 마지막에 굴린다** (2026-09-06) — 능력치·상한·고유 뒤에 두어야 **앞의 소비 순서가 안 밀린다**.
      *   영웅 안에서 굴리면 1번 영웅의 얼굴이 2번 영웅의 능력치를 밀어 **같은 시드가 다른 파티**를 낸다 (INTERFACE §5-2).
@@ -190,11 +198,8 @@ export function createHeroSystem(data) {
         const traits = drawDistinct(rng, data.traitPool, n);
         const party = names.map((name, i) =>
             rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i] }));
-        // 소비는 어느 갈래든 인원수만큼이다 — 갈래가 순서를 바꾸지 않는다
-        const faces = faceMax >= party.length
-            ? drawDistinct(rng, Array.from({ length: faceMax }, (_, i) => i + 1), party.length)
-            : party.map(() => rollFace(rng));
-        party.forEach((h, i) => { h.face = faces[i]; });
+        // 소비는 언제나 인원수만큼 1회씩이다 — 직업 풀이 비어도(마법사) 소비 수는 안 바뀐다
+        party.forEach(h => { h.face = rollFace(rng, h.cls); });
         return party;
     }
 

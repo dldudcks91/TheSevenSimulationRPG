@@ -10,8 +10,9 @@
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
  *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, caps, equipped:{position: itemUid|null}}],
- *     — face = 초상 번호(1..heroFaceMax). **생성 시 한 번 굴리고 이후 불변** — innate 와 같은 층이다 (2026-09-06).
- *       로직은 그림을 모른다 — 번호 하나만 든다. 어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`).
+ *     — face = 초상 id `'<classId>_<k>'` 문자열 | null. **제 직업 풀에서** 생성 시 한 번 굴리고 이후 불변 —
+ *       innate 와 같은 층이다 (2026-09-06 저장형 · 2026-09-07 직업 분류). 풀이 0장인 직업(마법사)은 `null` = 초상 없음.
+ *       로직은 그림을 모른다 — id 하나만 든다. 어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`).
  *       화면이 이름 해시로 매번 다시 계산하던 것을 저장으로 바꾼 것이다 (SCREEN_DESIGN §5 · DEV_PLAN 부채 #36)
  *     — innate = 고유 스킬 id. **생성 시 한 번 굴리고 이후 불변**이다 (hero_design §1).
  *       배정은 `skill.activesFor` 가 1번 칸에 싣는다 — 저장하는 건 굴린 결과 하나뿐
@@ -68,7 +69,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 /**
  * @param {object} deps
@@ -256,11 +257,28 @@ export function createGameSystem(deps) {
         return s;
     }
 
-    /** v11 → v12 — 옛 영웅에게 얼굴 번호를 소급한다 (v8→v9 고유 스킬 소급과 같은 방식 · 전용 스트림이라 다른 수열과 안 섞인다) */
+    /**
+     * v11 → v12 — **버전만 올린다** (2026-09-07 단순화).
+     * 원래는 옛 영웅에게 얼굴 번호를 소급 배정하던 자리였다(전용 스트림 `seed ^ 0xFACE`, 카운터 0).
+     * 그 소급은 **v12 → v13 전면 재굴림에 흡수됐다** — 바로 아래 `upgradeV12` 가 전 영웅의 face 를 조건 없이
+     * 덮어쓰므로 여기서 채워 봐야 곧바로 버려진다. 스트림도 그쪽(카운터 1)으로 옮겼다 (INTERFACE §4 · §5-1).
+     */
     function upgradeV11(s) {
-        const rng = makeRng(deriveSeed((s.seed >>> 0) ^ 0xFACE, 0));
-        for (const h of s.heroes ?? []) if (h.face == null) h.face = H.rollFace(rng);
         s.version = 12;
+        return s;
+    }
+
+    /**
+     * v12 → v13 [2026-09-07 사용자 지시] — 초상을 **직업 분류**로 (파일명 `hero_<classId>_<k>.png`).
+     * `face` 가 정수에서 `'<classId>_<k>'` 문자열로 바뀌었고, 전 영웅을 **제 직업 풀에서 전면 재굴림**한다 —
+     * 조건이 없다(이미 값이 있어도 덮어쓴다). v12 의 정수 얼굴은 **직업과 무관하게** 굴린 번호라 보존할
+     * 개체성이 없고, 직업 일치가 이 개정의 목적 자체다. 전투 결과는 안 바뀐다(표시 전용).
+     * 풀이 0장인 직업(마법사)은 `null` 이 되고 화면이 빈 칸으로 둔다. 전용 스트림이라 다른 수열과 안 섞인다.
+     */
+    function upgradeV12(s) {
+        const rng = makeRng(deriveSeed((s.seed >>> 0) ^ 0xFACE, 1));
+        for (const h of s.heroes ?? []) h.face = H.rollFace(rng, h.cls);
+        s.version = 13;
         return s;
     }
 
@@ -276,7 +294,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -289,6 +307,7 @@ export function createGameSystem(deps) {
         if (s.version === 9) s = upgradeV9(s);
         if (s.version === 10) s = upgradeV10(s);
         if (s.version === 11) s = upgradeV11(s);
+        if (s.version === 12) s = upgradeV12(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;

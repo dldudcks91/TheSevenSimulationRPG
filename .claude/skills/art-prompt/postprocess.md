@@ -84,8 +84,8 @@ for tag, box in TILES.items():
 ## 5. 설치
 
 1. **SSOT** — `faces/example/<설명>.png` (예: `archer_hood_black.png`). 파일명은 내용으로. 시트 원본 `source_sheet_<이름>.png` 도 남긴다
-2. **사본** — `faces/cartoon/hero_<n>.png` 로 복사. `n` 은 `HERO_FACE_MAX` 다음 번호(추가) 또는 교체할 번호
-3. **`src/ui/mock.js` `HERO_FACE_MAX`** — 추가면 올린다. ⚠ 올리면 `% HERO_FACE_MAX` 나머지가 달라져 **기존 영웅 전원의 얼굴이 재배정**된다. 사용자에게 추가/교체를 먼저 묻는다. 몬스터는 `monster_<idx>.png` 라 이 문제가 없다
+2. **사본** — `faces/cartoon/hero_<직업id>_<k>.png` 로 복사 [개정 2026-09-07]. `직업id` 는 `data/class.csv` 의 id(그림이 읽히는 직업), `k` 는 그 직업 풀의 다음 번호(추가) 또는 교체할 번호
+3. **`src/ui/mock.js` `HERO_FACES[<직업id>]`** — 추가면 그 직업의 장수를 올린다. **늘리는 방향은 무해하다** (2026-09-06 저장형 전환 뒤 얼굴은 세이브에 박혀 있다 — 새로 태어나는 영웅의 굴림 범위만 넓어진다). ⚠ **줄이는 방향만** 영향이 있다: 범위를 넘은 저장값은 그 직업 풀 안에서 접힌다. 사용자에게 추가/교체를 먼저 묻는다. 몬스터는 `monster_<idx>.png` 라 직업 축이 없다
 4. **문서** — [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) `hero_*` 절의 장수·출처 · [example/README.md](../../../src/assets/art/faces/example/README.md) 영웅 표에 한 줄 · 두 문서 꼬리 `*마지막 업데이트*` 최신을 앞에
 5. 브라우저 확인 — 서버가 `serve.py`(no-store) 면 새로고침으로 충분. `python -m http.server` 면 같은 파일명 교체가 캐시에 먹힌다 → 하드 리로드
 
