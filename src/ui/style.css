@@ -629,9 +629,11 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     font-size: var(--fs-xs); color: var(--text-muted);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* 이름은 신원보다 **한 단 큰 글씨** (2026-09-07 사용자 지시 — `--fs-sm` → `--fs-md`) —
+   두 줄이 같은 크기면 어느 쪽이 이름인지 색(무채색/본문색)으로만 갈렸다. 카드 높이는 안 변한다(열이 바닥 정렬 · 남는 세로는 이름 위) */
 .unit-name {
     min-width: 0;
-    font-size: var(--fs-sm); color: var(--text-primary);
+    font-size: var(--fs-md); color: var(--text-primary);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* 본문 — 왼쪽 초상, 오른쪽 수치 열. 높이는 초상 칸에 못박는다 = 모든 카드가 같은 높이 */
