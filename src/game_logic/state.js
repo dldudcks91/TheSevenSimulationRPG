@@ -9,7 +9,10 @@
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
- *   heroes: [{uid, name, tier, sin, cls, trait, level, xp, mastery, masteryPoints, innate, stats, caps, equipped:{position: itemUid|null}}],
+ *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, caps, equipped:{position: itemUid|null}}],
+ *     — face = 초상 번호(1..heroFaceMax). **생성 시 한 번 굴리고 이후 불변** — innate 와 같은 층이다 (2026-09-06).
+ *       로직은 그림을 모른다 — 번호 하나만 든다. 어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`).
+ *       화면이 이름 해시로 매번 다시 계산하던 것을 저장으로 바꾼 것이다 (SCREEN_DESIGN §5 · DEV_PLAN 부채 #36)
  *     — innate = 고유 스킬 id. **생성 시 한 번 굴리고 이후 불변**이다 (hero_design §1).
  *       배정은 `skill.activesFor` 가 1번 칸에 싣는다 — 저장하는 건 굴린 결과 하나뿐
  *     — mastery = {nodeId: rank} 찍은 것만 담는다(0은 안 담는다) · masteryPoints = 남은 포인트.
@@ -65,7 +68,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 /**
  * @param {object} deps
@@ -242,14 +245,22 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * v10 → v11 [2026-09-03] — 치료 타이머 폐기 (base_expedition_design §1-1).
-     * `injuredUntil` 을 걷고 런에 **출정 누적 아웃** 칸을 판다. 옛 세이브의 부상자는 **전부 나은 것으로 본다** —
-     * 새 규칙에서는 마을에 부상자가 존재할 수 없고, 이관이 만들 수 있는 상태 중 규칙에 맞는 것이 그것 하나뿐이다.
+     * v10 → v11 [2026-09-03] — 회복 대기 폐기 (base_expedition_design §1-1).
+     * `injuredUntil` 을 걷고 런에 **출정 누적 아웃** 칸을 판다. 옛 세이브에서 대기 중이던 영웅은 **전부 나은 것으로 본다** —
+     * 새 규칙에서는 전투 밖에 쓰러져 있는 영웅이 존재할 수 없고, 이관이 만들 수 있는 상태 중 규칙에 맞는 것이 그것 하나뿐이다.
      */
     function upgradeV10(s) {
         for (const h of s.heroes) delete h.injuredUntil;
         if (s.run) s.run.downed = s.run.downed ?? [];
         s.version = 11;
+        return s;
+    }
+
+    /** v11 → v12 — 옛 영웅에게 얼굴 번호를 소급한다 (v8→v9 고유 스킬 소급과 같은 방식 · 전용 스트림이라 다른 수열과 안 섞인다) */
+    function upgradeV11(s) {
+        const rng = makeRng(deriveSeed((s.seed >>> 0) ^ 0xFACE, 0));
+        for (const h of s.heroes ?? []) if (h.face == null) h.face = H.rollFace(rng);
+        s.version = 12;
         return s;
     }
 
@@ -265,7 +276,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -277,6 +288,7 @@ export function createGameSystem(deps) {
         if (s.version === 8) s = upgradeV8(s);
         if (s.version === 9) s = upgradeV9(s);
         if (s.version === 10) s = upgradeV10(s);
+        if (s.version === 11) s = upgradeV11(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -300,7 +312,7 @@ export function createGameSystem(deps) {
     };
     /**
      * 이번 **출정**에서 아웃됐는가 [2026-09-03 — base_expedition_design §1-1].
-     * 치료 타이머가 없어졌으므로 시계를 안 본다 — 나가 있는 동안만 참이고 마을로 돌아오면(`returnToTown`) 비워진다.
+     * 회복 대기가 없으므로 시계를 안 본다 — 나가 있는 동안만 참이고 전투 밖으로 나오면(`returnToTown`) 비워진다.
      */
     const isOut = (state, uid) => (state.run?.downed ?? []).includes(uid);
 
@@ -450,7 +462,7 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         if (state.party.includes(uid)) { state.party = state.party.filter(u => u !== uid); return { ok: true }; }
-        // 부상 검사는 없다 [2026-09-03] — 마을에 부상자가 없다(귀환하면 전원 회복). 출정 중 아웃은 편성이 아니라 출발이 본다
+        // 편성이 막는 상태는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없다(나오면 전원 회복). 출정 중 아웃은 편성이 아니라 출발이 본다
         if (state.party.length >= B.party_size_max) return { ok: false, err: 'full' };
         state.party.push(uid);
         return { ok: true };
@@ -458,7 +470,7 @@ export function createGameSystem(deps) {
 
     /**
      * 마을 귀환 — **이번 출정에서 아웃된 영웅이 전부 회복한다** [2026-09-03 · base_expedition_design §1-1].
-     * 치료 타이머를 대신하는 자리다. 대기가 없으므로 시계를 안 받는다.
+     * 회복이 실제로 일어나는 유일한 전투 밖 지점이다. 대기가 없으므로 시계를 안 받는다.
      * 출정이 끝나는 세 자리에서 부른다 — 반복이 이어지지 않을 때 · 전멸 · 재접속(`closeRun`).
      * @returns {{healed: string[]}} 이번에 나은 영웅 uid (리포트·플래시용)
      */
@@ -541,7 +553,7 @@ export function createGameSystem(deps) {
             drops.push(added.uid);
         }
 
-        // 아웃 — 쓰러진 영웅은 **그 출정 동안** 빠진다. 치료 타이머는 없고 마을로 돌아오면 낫는다
+        // 아웃 — 쓰러진 영웅은 **그 출정 동안** 빠진다. 대기는 없고 전투 밖으로 나오면 낫는다
         // (`returnToTown` · base_expedition_design §1-1, 2026-09-03). HP 는 상태에 없다: 매 전투 최대치 시작
         const downedSession = [...carry];
         for (const uid of result.downed) if (!downedSession.includes(uid)) downedSession.push(uid);
@@ -573,7 +585,7 @@ export function createGameSystem(deps) {
      * 재접속 — 반복 원정은 **게임이 켜져 있는 동안만** 돈다 (base_expedition_design §1, 2026-08-25).
      * 꺼져 있던 사이 돌던 런은 마무리된 것으로 본다. 프로토타입은 런을 출발 시점에 통째로 정산하므로(resolveBattle)
      * 남은 미정산분이 없다 — lastReport 가 곧 "진행 중이던 전투까지 정산한" 결과다. 여기서는 반복을 끄고 알림만 남긴다.
-     * 오프라인에 도는 것은 파견뿐이다 — 미구현 (치료 타이머는 2026-09-03 에 폐기됐다).
+     * 오프라인에 도는 것은 파견뿐이다 — 미구현 (회복은 오프라인에 돌 것이 없다 — 전투 밖은 이미 전원 회복).
      * **재접속은 귀환이다** — 파티가 마을에 있으므로 아웃된 영웅이 전부 낫는다 (base_expedition_design §1-1).
      */
     function closeRun(state, now) {

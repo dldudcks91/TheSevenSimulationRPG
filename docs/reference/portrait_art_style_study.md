@@ -4,7 +4,7 @@
 > 짝 문서: [monster_art_prompt.md](monster_art_prompt.md) (프롬프트 SSOT) · [src/assets/art/README.md](../../src/assets/art/README.md) (스타일 폴더 규칙)
 > SSOT: **미발행** — 아트 스타일은 확정 행이 없다
 
-> ⚠ **§3~§5 는 전부 제안이다.** 확정된 것은 §1 의 실측값뿐이다. ⚠ 를 떼려면 §9 에 확정 행이 먼저 생겨야 한다
+> ⚠ **§3~§5 · §7 은 전부 제안이다.** 확정된 것은 §1 의 실측값뿐이다. ⚠ 를 떼려면 §9 에 확정 행이 먼저 생겨야 한다
 > §1 의 px 값은 `src/ui/style.css` **실측**이다 — 밸런스 수치가 아니라 화면 규격이라 CSV 대상이 아니다 ([monster_art_prompt.md §3-2](monster_art_prompt.md) 와 같은 성격)
 
 ---
@@ -20,6 +20,7 @@
 | 4 | 판단 ⚠제안 |
 | 5 | §10 에 올릴 과제 후보 |
 | 6 | 출처 |
+| 7 | 이름 있는 스타일 앵커 10종 + 프롬프트 조립법 ⚠제안 [2026-09-06] |
 
 ---
 
@@ -281,4 +282,146 @@ Diablo 2 · Diablo 4 · Path of Exile · Grim Dawn · Last Epoch
 
 ---
 
-*마지막 업데이트: 2026-09-01 (**§4-3 `image-rendering` 반영 완료** — 예고한 대로 스타일 폴더별로 갈리는 값이 됐다(`--face-render`). §1-3 의 「축소에 NEAREST 는 순손실」 진단이 그대로 확인됐다 — 26px 칩에서 20픽셀 중 1픽셀만 남고 있었다) · 2026-08-30 (최초 작성 — 실측 6건 · 유사작 4군 · 스타일 10종 비교 · ③+④ 제안 · §10 후보 4건. **전부 임시 · 확정 행 없음**)*
+## 7. 이름 있는 스타일 앵커 10종 ⚠제안 [조사 2026-09-06]
+
+> §3 이 「계열」 비교표라면, 여기는 그 안에서 **프롬프트에 이름으로 박을 수 있는 앵커** 목록이다. 평가축은 셋 — 7죄악 톤 · 44px 판독(§1-4) · AI 시트 재현성.
+> 기준점은 현행 `faces/cartoon/`(다크 SD 카툰 흉상 · 굵은 외곽선 · Gemini 2×2 초록 시트 · [faces/example/README.md](../../src/assets/art/faces/example/README.md)).
+> §4 의 결론(③ 골격 + ④ 팔레트)을 뒤집지 않는다 — 그 결론을 **실제 토큰**으로 옮긴 것이다. 확정 행은 여전히 없다.
+
+### 7-1. 목록
+
+**A. 현행 카툰 골격을 유지하고 톤만 바꾼다 — 파이프라인 그대로**
+
+| # | 스타일 | 참고 | 맞는 이유 | 위험 |
+|---|---|---|---|---|
+| 1 | **Mignola 잉크** | Hellboy · Mike Mignola | 실루엣 중심이라 작은 칸에서 가장 강함 · 생성기 스타일 토큰이 안정 · Darkest Dungeon 과 Hades 의 아트 디렉터가 둘 다 1순위 영향으로 꼽음 | 얼굴 절반이 검어 **같은 종족 안 개체 식별**이 약해짐 |
+| 2 | **고딕 목판 코믹** | Darkest Dungeon · Chris Bourassa | 뒤러 목판 + Mignola + 미국 코믹 노아르. 7죄악 톤 최적 · §3 ④ 그대로 | 선 굵기가 장마다 흔들림 · 해칭이 축소에서 뭉개짐 |
+| 3 | **스케치 고딕 카툰** | Don't Starve · Klei (Burton · Gorey) | 개발사 표현으로 「신문 만화 스케치 선」 + 큰 머리 + 거의 무채색. 현행 SD 비율과 최근접 · 고블린·해골 잡몹에 특히 | 종이 질감이 다크 네이비 UI 위에서 가벼움 · 「귀엽다」로 기움 |
+| 4 | **코믹-회화 카툰** | Rogue Lords · Cyanide | 악마가 빌런 무리를 이끄는 게임 — 서사 결이 가장 가까움. 카툰 형태 + 코믹 인킹 + 살짝 회화 채색 | 회화 채색이라 시트 간 일관성이 순수 카툰보다 낮음 |
+
+**B. 「그래픽 최소화」(GAME_DESIGN §1) 정의에 가장 붙는 플랫·그래픽 계열**
+
+| # | 스타일 | 참고 | 맞는 이유 | 위험 |
+|---|---|---|---|---|
+| 5 | **플랫 그래픽** | The Banner Saga · Eyvind Earle | 검정이 거의 항상 드는 단순 팔레트 + 고대비 + 각진 형태. [monster_art_prompt.md §1](monster_art_prompt.md) 배경 실측 램프와 같은 논리(목탄·그을음 위에 잉걸불만 점) | 원작 두상이 사실 비율 — **SD 로 바꿔 그려야** 44px 에서 산다 |
+| 6 | **스테인드글라스** | Saga of Sins (보슈 영향) | 납선 = 굵은 외곽선 · 면 = 플랫 · 교회 창 = 7죄악 직결. 그 게임이 이미 7죄악을 이렇게 그렸다 | 유리색이 밝고 채도가 높아 [SCREEN_DESIGN §5](../client/SCREEN_DESIGN.md) 「초상은 색을 갖지 않는다」와 충돌. 그을린 유리로 죽이거나 **보스 28장(§1-6) · 죄종 글리프(§4-3) 자리 한정** |
+| 7 | **비잔틴 이콘** | 금바탕 · 후광 (게임 참고: Gorogoa) | 플랫 · 정면 · 후광 원 = 도감 원형 마스크(§1-5)와 같은 형태. 성인 도상을 죄인으로 뒤집는 아이러니가 죄종 보유 영웅에 맞음 · 생성 재현 매우 안정 | 정면 응시 + 금색이 전원을 같은 얼굴로 만듦. **영웅 전용** — 몬스터엔 불가 |
+| 8 | **중세 사본·목판** | Pentiment · Obsidian | 채색사본 + 독일 목판 · 제한 프레임의 평면 인물. 죄악 분류 자체가 중세 교회 것이라 시대 정합 최고 | 양피지 팔레트가 다크 UI 와 불일치 · 의도적 「어설픈 중세풍」이 루팅 RPG 의 힘 있는 인상과 멀어짐 |
+
+**C. 색과 회화가 들어오는 계열 — 예산·안정성 리스크 큼**
+
+| # | 스타일 | 참고 | 맞는 이유 | 위험 |
+|---|---|---|---|---|
+| 9 | **그래픽 흉상** | Hades · Supergiant · Jen Zee | Mignola 선 + 선명한 색 + 정밀 렌더링. 대화 흉상이 캐릭터 표현의 전부 — 본작 초상과 같은 문법 | 채도·미형으로 기울어 저채도 팔레트와 정면 충돌 · 64~90장(§1-6) 일관성 낮음. 「상업적 상한선」 참고용 |
+| 10 | **cartoony but spooky** | Sunless Sea · Failbetter | 어두운 바탕 위 실루엣 + 강한 단순 색 + 손그림 질감 + 발광 포인트. 개발사 아트 디렉션 글이 그대로 본작 배경 논리 | 질감이 76px 이하에서 뭉개짐 · 빅토리아풍 어휘가 딸려옴 |
+
+**번외 · 탈락**
+
+| 항목 | 정체 |
+|---|---|
+| 보슈 그로테스크 | 화풍이 아니라 **괴물 디자인 어휘**. 보슈가 「7대 죄악의 탁자」를 직접 그렸다 — 색조 변형이 안 통하는 보스 28장(§1-6)의 형태 발상에 쓴다. 렌더링은 1~8 중 하나로 |
+| HoMM3 초상 | 58×64 회화 초상이 완벽히 읽히는 **존재 증명**. §3 ⑫ 「회화는 76px 에서 전멸」의 반례 — 큰 두상 + 어두운 배경 + 강한 대비면 회화도 된다 |
+| Cuphead 러버호스 | **탈락.** 악마와 계약이라는 소재는 맞지만 1930년대 개그 문법이라 루팅 RPG 톤과 안 맞는다 |
+
+### 7-2. 판단 ⚠제안
+
+**1순위 = 1번 Mignola.** §4 결론(③+④)과 같은 방향이면서 프롬프트에 이름 하나로 박히는 가장 안정적인 토큰이고, 검은 그림자 덩어리가 44px 판독을 오히려 돕는다. **2순위 = 5번 Earle 플랫.** 6·7번은 전 초상이 아니라 자리 한정(보스·글리프 / 영웅)으로 따로 본다.
+
+### 7-3. Mignola 가 무엇인가 — 1순위라 따로 적는다
+
+《헬보이》(1993~) 원작자. 「그림자를 선으로 그리지 않고 **검은 덩어리로 칠하는** 화풍」으로 요약된다.
+
+| 특징 | 내용 |
+|---|---|
+| 그림자 = 순검정 면 | 그라디언트·해칭 없이 어두운 부분을 통째로 검정으로. 인물 절반이 검정인 컷이 흔하다 |
+| 각진 단순화 | 턱·눈썹·어깨·주름이 직선과 예각. 둥근 것도 육각형처럼 깎여 **실루엣만으로 읽힌다** |
+| 선이 거의 없다 | 외곽선이 그림자 덩어리에 흡수돼 사라지고, 밝은 면 안쪽 디테일은 최소. 눈은 점 둘이거나 그늘 속 |
+| 플랫하고 탁한 색 | 채색 담당 Dave Stewart — 장면마다 지배색 하나 + 붉은 강조 한 점. 광택 없음 |
+| 소재 | 고딕 · 민담 · 오컬트 · 가톨릭 도상 · 러브크래프트. 정지된 구도, 빈 공간이 많다 |
+
+현행 카툰과의 차이 — 현행은 **균일한 굵은 외곽선 · 플랫 베이스 · 그림자 1단 · 둥근 면의 광택**. Mignola 는 균일 외곽선이 없고, 그림자가 1단이 아니라 검정 면이며, 광택이 없고, 형태가 둥글지 않고 각진다.
+
+현행 민머리 기사(`hero_6`)가 이 화풍이 되면 — 눈두덩·코 아래·목 아래·견갑 안쪽이 전부 순검정 덩어리, 얼굴 한쪽 절반이 그늘, 둥근 두상이 각진 실루엣, 갑옷 광택 소멸, 외곽선이 그림자와 합쳐져 따로 안 보임. 붉은 서코트만 강조색으로 남는다.
+
+### 7-4. 프롬프트 조립 — 스타일 칸 하나만 갈아끼운다
+
+**10줄은 서로 독립이고 한 시트에 한 줄만 쓴다.** 섞으면 평균으로 뭉개져 비교가 안 된다.
+프롬프트는 다섯 칸이고 **[1] 만 바꾸고 [2]~[5] 는 글자 하나 안 바꾼다** — 그래야 결과 차이가 스타일 탓임을 안다.
+
+```
+[1 STYLE]    ← 아래 10줄 중 하나
+[2 FORMAT]   2×2 시트 · 2048² · 초록 배경 · 검정 격자선                (현행 그대로)
+[3 COMPOSE]  흉상 · 두상 ≥ 45% · 상단 12% 비움 · 한 손에 무기         (§4-2)
+[4 PALETTE]  목탄·그을음 램프 · 잉걸불 5% 미만 · 저채도               (monster_art_prompt §1)
+[5 SUBJECT]  인물 묘사 + 레퍼런스 이미지 첨부                          (현행 그대로)
+```
+
+**스타일 줄 10개** (번호는 §7-1):
+
+```
+1  Mike Mignola style, heavy pooled black shadows, angular shapes, flat muted color, minimal linework
+2  Darkest Dungeon style, gothic woodcut comic, thick black ink, hatching, face half in shadow, single dominant hue
+3  Don't Starve style, sketchy newspaper-cartoon ink, big head, near-monochrome, Edward Gorey gothic
+4  Rogue Lords style, clean dark cartoon with comic inking, light painterly shading
+5  Eyvind Earle style, bold graphic flat shapes, high contrast, near-black + two muted tones, angular
+6  dark stained glass window, thick lead lines, flat smoked-glass panes, medieval church icon
+7  Byzantine icon, flat frontal portrait, gold ground, halo, tempera, minimal shading
+8  Pentiment style, medieval illuminated manuscript + German woodcut, flat, parchment, ink outline
+9  Supergiant Games style, Mignola-derived lineart with rich saturated painterly color, dialogue bust
+10 Sunless Sea style, silhouette against darkness, strong simple colors, hand-painted texture, ember glow accent
+```
+
+**규칙 넷**
+
+| 규칙 | 이유 |
+|---|---|
+| 레퍼런스 이미지는 **인물 고정용**으로만 — 현행 기사 PNG 를 첨부하고 「이 인물을 아래 스타일로 다시 그려라」 | 첨부 없이 글로만 묘사하면 인물이 바뀌어 스타일 비교가 안 된다 |
+| **네거티브도 스타일마다 다르다** | 현행 네거티브에 `painterly` · `heavy shadow` 가 있으면 1·2·9·10 번은 그 줄이 죽인다. 스타일 줄을 바꿀 때 그 스타일의 핵심 단어를 네거티브에서 뺀다 |
+| **작가 이름 > 게임 이름** | Mignola · Earle · Gorey 는 이름만으로 먹힌다. Rogue Lords · Pentiment · Saga of Sins 는 생성기가 잘 모른다 — 그 줄들은 뒤의 묘사가 무게를 지므로 묘사를 줄이면 안 된다 |
+| **한 시트 = 한 스타일 = 한 인물** | 시트 하나에 두 스타일이나 두 인물을 섞으면 격자 안에서 서로 번진다. 비교는 시트를 따로 뽑는다 |
+
+**조립 예 — 1번 · 민머리 기사.** 스타일 칸 아래는 다른 후보를 돌릴 때도 그대로 둔다.
+
+```
+STYLE — Mike Mignola style: heavy pooled black shadow shapes, angular simplified
+forms, flat muted color, minimal linework. Shadows are solid black masses, not gradients.
+
+FORMAT — one 2048x2048 sheet, 2x2 grid of four portraits separated by solid black
+grid lines, flat chroma-green background (#00FF00) in every cell, no scenery, no text.
+
+COMPOSITION — bust portrait, head and shoulders and one hand holding a weapon.
+Head fills at least 45% of the cell height, top 12% of the cell left empty,
+nearly frontal with a slight turn, transparent-ready silhouette.
+
+PALETTE — desaturated charcoal grays and soot browns, one ember-red accent under 5%
+of the figure, no bright or saturated colors, no sin color on the character itself.
+
+SUBJECT — redraw the attached character exactly (bald middle-aged knight, gold-rimmed
+pauldrons, red surcoat, scarred face) as four variations: neutral, grim, wounded, shouting.
+```
+
+### 7-5. 검증 절차 — 한 번이면 갈린다
+
+같은 인물(민머리 기사)로 **1·2·5 번 시트 3장**을 뽑는다 → 각 시트의 1번 타일만 잘라 → 44·76px 로 내려 → 현행 카툰(`cartoon/hero_6`) 옆에 나란히 놓는다. **44px 에서 누가 남는지**가 답이다. 통과한 것이 있으면 [monster_art_prompt.md](monster_art_prompt.md) §2 공통 스타일 블록을 그 줄로 재작성한다(§4-2 예고 그대로).
+
+### 7-6. 출처
+
+| 표기 | 소스 | 신뢰도 |
+|---|---|---|
+| **[생성기]** | [Midlibrary — Mike Mignola](https://midlibrary.io/styles/mike-mignola) · [Dataloop — Mignola style](https://dataloop.ai/library/model/kappaneuro_mike-mignola-style/) — 생성기가 이 토큰으로 내놓는 결과 샘플 | ★★ |
+| **[개발사]** | [GameSpot — The Gothic Sensibilities of Darkest Dungeon](https://www.gamespot.com/articles/the-gothic-sensibilities-of-darkest-dungeon/1100-6424880/) · [Dark RPGs — Chris Bourassa 인터뷰](https://darkrpgs.home.blog/2019/10/03/interview-with-chris-bourassa-co-founder-of-red-hook-studios-and-creative-director-of-darkest-dungeon/) — 뒤러 목판 + Mignola + 코믹 노아르 | ★★★ |
+| **[개발사]** | [Game Developer — Don't Starve: A Tim Burton take on Minecraft](https://www.gamedeveloper.com/design/-i-don-t-starve-i-a-tim-burton-take-on-i-minecraft-i-) — 「sketchy newspaper cartoon」 · Burton · Gorey | ★★★ |
+| **[리뷰]** | [Thumb Culture — Rogue Lords](https://www.thumbculture.co.uk/rogue-lords-review) · [Steam — Rogue Lords](https://store.steampowered.com/app/1069690/Rogue_Lords/) — 코믹 + 회화 카툰 · 악마가 빌런을 이끈다 | ★★ |
+| **[분석]** | [Polygon Treehouse — The Banner Saga and Eyvind Earle](https://www.polygon-treehouse.com/blog/2018/3/7/inspiration-corner-eyvind-earle) — 검정 포함 단순 팔레트 · 고대비 | ★★ |
+| **[개발사]** | [Shacknews — Saga of Sins stained glass](https://www.shacknews.com/article/134187/saga-of-sins-stained-glass-window) · [Fextralife — Saga of Sins · Bosch](https://fextralife.com/saga-of-sins-is-a-side-scrolling-rpg-inspired-by-hieronymus-boschs-paintings/) — 7죄악을 스테인드글라스로 | ★★★ |
+| **[분석]** | [AV Club — On the Byzantine Art of Gorogoa](https://www.avclub.com/on-the-byzantine-art-of-gorogoa) · [Wikipedia — Gold ground](https://en.wikipedia.org/wiki/Gold_ground) | ★★ |
+| **[개발사]** | [Game Developer — The art of Pentiment](https://www.gamedeveloper.com/art/deep-dive-the-art-of-pentiment) — 채색사본 + 목판 · 제한 프레임 | ★★★ |
+| **[개발사]** | [Point'n Think — The Art of Hades](https://www.pointnthink.fr/en/the-art-of-hades-en/) · [MCV — Behind the art of Hades](https://mcvuk.com/business-news/behind-the-art-of-hades-we-value-artistic-integrity-and-excellence-in-artistic-craft-at-supergiant-however-were-first-and-foremost-a-game-design-lead-team/) — Jen Zee 가 Mignola 를 출발점으로 | ★★★ |
+| **[개발사]** | [Failbetter — Sunless Sea art direction](https://www.failbettergames.com/news/caverns-measureless-to-man-or-sunless-sea-art-direction) — 「cartoony but spooky」 원문 | ★★★ 원문 |
+| **[자료]** | [Art History Project — Bosch, Table of the Seven Deadly Sins](https://www.arthistoryproject.com/artists/hieronymus-bosch/the-seven-deadly-sins-and-the-four-last-things/) | ★★ |
+| **[자료]** | [Heroes III Wiki — 초상 58×64 규격](https://homm.miraheze.org/wiki/Heroes_from_other_games) · [Cuphead Wiki](https://cuphead.fandom.com/wiki/Cuphead_(video_game)) | ★★ |
+| **[자료]** | [Wikipedia — Mike Mignola](https://en.wikipedia.org/wiki/Mike_Mignola) — §7-3 화풍 정리의 기초 | ★★ |
+
+---
+
+*마지막 업데이트: 2026-09-06 (**§7 신설 — 이름 있는 스타일 앵커 10종 + 프롬프트 조립법** · A 카툰 골격 유지 4종(Mignola · Darkest Dungeon · Don't Starve · Rogue Lords) / B 플랫·그래픽 4종(Earle · 스테인드글라스 · 비잔틴 이콘 · Pentiment) / C 색·회화 2종(Hades · Sunless Sea) + 번외 셋(보슈 어휘 · HoMM3 반례 · Cuphead 탈락). 1순위 Mignola · 2순위 Earle. 조립은 다섯 칸 중 STYLE 칸만 교체, 검증은 같은 기사로 1·2·5 시트 3장을 44px 대조. §3 계열표·§4 결론은 안 건드렸다 — §4 결론을 실제 토큰으로 옮긴 것. 사용자 지시) · 2026-09-01 (**§4-3 `image-rendering` 반영 완료** — 예고한 대로 스타일 폴더별로 갈리는 값이 됐다(`--face-render`). §1-3 의 「축소에 NEAREST 는 순손실」 진단이 그대로 확인됐다 — 26px 칩에서 20픽셀 중 1픽셀만 남고 있었다) · 2026-08-30 (최초 작성 — 실측 6건 · 유사작 4군 · 스타일 10종 비교 · ③+④ 제안 · §10 후보 4건. **전부 임시 · 확정 행 없음**)*

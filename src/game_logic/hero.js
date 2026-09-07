@@ -41,6 +41,8 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   skillPool    — 고유 스킬 후보 id 목록 [skillId...] ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
  *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
+ *   heroFaceMax  — 초상 그림 장수(1 이상). **영웅이 태어날 때 얼굴 번호를 굴려 `face` 에 박는다** (2026-09-06).
+ *                  로직은 그림을 모른다 — 장수라는 숫자 하나만 받는다. 어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`)
  */
 export function createHeroSystem(data) {
     const B = data.balance;
@@ -48,6 +50,7 @@ export function createHeroSystem(data) {
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
     const skillPool = data.skillPool ?? [];
+    const faceMax = Math.max(1, Math.floor(data.heroFaceMax ?? 1));
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
 
     /* ── 마스터리 노드 (skill_design §3) — 정의는 CSV · 값은 balance.csv · 랭크는 영웅이 든다 ── */
@@ -107,6 +110,12 @@ export function createHeroSystem(data) {
     };
 
     /**
+     * 얼굴 번호 1회 — 태어날 때 굴려 영웅에 박고, 그 뒤로 안 바뀐다 (hero_design §1 의 고유 스킬과 같은 층).
+     * **화면이 매번 다시 계산하지 않게** 하려고 저장한다 — 렌더러는 전체를 다시 그리므로 그때마다 굴리면 얼굴이 흔들린다.
+     */
+    const rollFace = rng => 1 + Math.floor(rng() * faceMax);
+
+    /**
      * 기본 능력치 굴림 — **합은 고정, 모양만 굴린다** ([balance.csv:hero_attr_total]).
      * 축마다 독립 균등이면 합이 33↔86까지 벌어져 죽은 카드가 나온다 — 차이는 양이 아니라 모양.
      * 마지막에 직업 주력 축(keyAttr)이 최고치가 되도록 **자리만 바꾼다** (합·분포 불변).
@@ -158,6 +167,7 @@ export function createHeroSystem(data) {
         return {
             uid: null,               // uid 발급은 state 의 일 (카운터 소유자)
             name, tier: 'rare', sin, cls, trait,
+            face: null,              // 얼굴 번호 — **파티를 굴리는 쪽이 맨 마지막에 박는다** (rollStartParty · 아래 이유)
             level: 1, xp: 0,
             mastery: {}, masteryPoints: 0,   // 찍은 랭크 {nodeId: rank} · 남은 포인트 (죄종·직업 공유 풀)
             innate,                  // 고유 스킬 — 생성 시 확정 · 이후 불변 (hero_design §1 · 프로토타입 풀 = skill.csv 전 행)
@@ -166,14 +176,26 @@ export function createHeroSystem(data) {
         };
     }
 
-    /** 시작 파티 — 죄종·직업·이름·특성이 셋 사이에서 겹치지 않는다 (같은 카드 3장 방지) */
+    /**
+     * 시작 파티 — 죄종·직업·이름·특성이 셋 사이에서 겹치지 않는다 (같은 카드 3장 방지).
+     * 얼굴도 같은 이유로 겹치지 않는다 — 장수가 인원보다 적을 때만 겹침을 허용한다.
+     *
+     * ⚠ **얼굴은 맨 마지막에 굴린다** (2026-09-06) — 능력치·상한·고유 뒤에 두어야 **앞의 소비 순서가 안 밀린다**.
+     *   영웅 안에서 굴리면 1번 영웅의 얼굴이 2번 영웅의 능력치를 밀어 **같은 시드가 다른 파티**를 낸다 (INTERFACE §5-2).
+     */
     function rollStartParty(rng, n) {
         const names = drawDistinct(rng, data.namePool, n);
         const sins = drawDistinct(rng, data.sins, n);
         const classes = drawDistinct(rng, mainClasses, n);
         const traits = drawDistinct(rng, data.traitPool, n);
-        return names.map((name, i) =>
+        const party = names.map((name, i) =>
             rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i] }));
+        // 소비는 어느 갈래든 인원수만큼이다 — 갈래가 순서를 바꾸지 않는다
+        const faces = faceMax >= party.length
+            ? drawDistinct(rng, Array.from({ length: faceMax }, (_, i) => i + 1), party.length)
+            : party.map(() => rollFace(rng));
+        party.forEach((h, i) => { h.face = faces[i]; });
+        return party;
     }
 
     /** 선술집 후보 — 시작 파티와 같은 굴림. 겹침 방지도 동일 */
@@ -308,7 +330,7 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollInnate, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus,
     };
 }

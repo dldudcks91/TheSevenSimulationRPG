@@ -236,6 +236,8 @@ export function buildSystems(d) {
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups,
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
+        // 초상 장수 — 로직은 그림을 모르고 **숫자 하나만** 받는다. 영웅이 태어날 때 얼굴 번호를 굴려 세이브에 박는다 (2026-09-06)
+        heroFaceMax: M.HERO_FACE_MAX,
         // 고유 스킬 풀 = `skill.csv:innate_pool=1` 인 행(id 만) — hero 는 skill 시스템이 아니라 id 목록을 받는다.
         // ⚠ 행 순서가 결정론 계약이다 — 풀에서 빼거나 넣으면 같은 시드가 다른 고유를 굴린다 (INTERFACE §5-2)
         skillPool: skill.list.filter(sk => sk.innatePool).map(sk => sk.id),

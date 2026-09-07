@@ -8,7 +8,7 @@
  *
  * 두 부분:
  *   ① 단정 — 결정론 / 직렬화 왕복 / 생성 규칙 / 무기군·슬롯 8 착용 규칙 / 성장 / 원정 정산 / 도감 카드 / 런 마무리 / 선술집
- *   ② 캘리브레이션 — 시작 파티 N개를 굴려 스테이지별 승률·소요·부상 수를 표로 찍는다 (balance.csv 손잡이 조정용)
+ *   ② 캘리브레이션 — 시작 파티 N개를 굴려 스테이지별 승률·소요·전투불능 수를 표로 찍는다 (balance.csv 손잡이 조정용)
  */
 
 import * as M from '../ui/mock.js';
@@ -539,12 +539,23 @@ check('newGame: 3명 로스터 = 파티, 각자 직업 전속 무기군 착용, 
     }
     return G.bag.length === 0 && G.resources.gold === B.start_gold;
 });
-check('save: serialize → deserialize 왕복 동일 (v11)', () => {
+check('hero: 얼굴 번호는 태어날 때 1회 굴려 박힌다 — 범위 안 · 파티 안에서 안 겹침 · 같은 시드면 같은 얼굴', () => {
+    const n = D.balance.party_size_max;
+    const party = SYS.hero.rollStartParty(makeRng(1234), n);
+    if (party.length !== n) fail(`인원 ${party.length}`);
+    for (const h of party) if (!(h.face >= 1)) fail(`얼굴 번호가 없다 (${h.cls})`);
+    // 장수가 인원 이상이면 파티 안에서 안 겹친다 (이름·죄종·직업·특성과 같은 규칙)
+    if (new Set(party.map(h => h.face)).size !== n) fail(`파티 안에서 얼굴이 겹쳤다 ${party.map(h => h.face).join(',')}`);
+    const again = SYS.hero.rollStartParty(makeRng(1234), n);
+    if (!eq(party.map(h => h.face), again.map(h => h.face))) fail('같은 시드인데 얼굴이 다르다');
+    return party.map(h => h.face).join(' · ');
+});
+check('save: serialize → deserialize 왕복 동일 (v12)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 11;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 12;
 });
-check('save: v2 → v11 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 치료 타이머 폐기(v11)까지 한 번에', () => {
+check('save: v2 → v11 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11)까지 한 번에', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v2.version = 2;
     // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
@@ -553,6 +564,7 @@ check('save: v2 → v11 연쇄 이관 — 감각→운·명중/회피 폐지(v3)
         h.stats = Object.fromEntries(Object.entries(h.stats).map(([k, v]) => [k === 'luck' ? 'sen' : k, v]));
         h.caps = Object.fromEntries(Object.entries(h.caps).map(([k, v]) => [k === 'luck' ? 'sen' : k, v]));
         delete h.innate;                 // 안 지우면 이관이 아니라 보존을 검사하게 된다 (v2 에는 고유가 없었다)
+        delete h.face;                   // 같은 이유 — v2 에는 얼굴 번호가 없었다 (v12 에서 생겼다)
         senValues.push(h.stats.sen);
     }
     const itemUid = Object.keys(v2.items)[0];
@@ -564,6 +576,7 @@ check('save: v2 → v11 연쇄 이관 — 감각→운·명중/회피 폐지(v3)
     if (!up.tavern) fail('v5 자리가 안 생겼다');
     if (!up.tactics || !up.tactics.slots) fail('v6 자리가 안 생겼다');
     for (const h of up.heroes) if (!h.innate || !SYS.skill.defs[h.innate]) fail('v9 자리(고유 스킬)가 안 생겼다');
+    for (const h of up.heroes) if (!(h.face >= 1)) fail('v12 자리(얼굴 번호)가 안 생겼다');
     up.heroes.forEach((h, i) => {
         if ('sen' in h.stats || 'sen' in h.caps) fail('sen 키가 남았다');
         if (h.stats.luck !== senValues[i]) fail(`값이 바뀌었다 ${h.stats.luck} ≠ ${senValues[i]}`);
@@ -595,6 +608,24 @@ check('save: v8 → v9 이관 — 고유 스킬 없는 영웅에게 시드에서
     const again = SYS.game.deserialize(mk());
     if (!eq(up.heroes.map(h => h.innate), again.heroes.map(h => h.innate))) fail('같은 입력인데 소급 배정이 달라졌다');
     return up.heroes.map(h => h.innate).join(' · ');
+});
+check('save: v11 → v12 이관 — 얼굴 번호 없는 영웅에게 시드에서 소급 · 이미 가진 것은 유지 · 결정론 (INTERFACE §5-1)', () => {
+    // 영웅 0·1 은 얼굴을 지우고(옛 영웅) 2 는 남긴다 — 이관이 「채우기」이지 「덮어쓰기」가 아님을 본다 (v8→v9 와 같은 규격)
+    const mk = () => {
+        const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+        s.version = 11;
+        delete s.heroes[0].face;
+        delete s.heroes[1].face;
+        return s;
+    };
+    const kept = SYS.game.serialize(G, NOW).heroes[2].face;
+    const up = SYS.game.deserialize(mk());
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    for (const h of up.heroes) if (!(h.face >= 1)) fail(`${h.uid} 의 얼굴 번호가 없다`);
+    if (up.heroes[2].face !== kept) fail('이미 가진 얼굴이 덮어써졌다');
+    const again = SYS.game.deserialize(mk());
+    if (!eq(up.heroes.map(h => h.face), again.heroes.map(h => h.face))) fail('같은 입력인데 소급 배정이 달라졌다');
+    return up.heroes.map(h => h.face).join(' · ');
 });
 check('save: 버전 불일치는 거부 (v1 · v99) — v1 은 스키마 단절이라 이관하지 않는다', () => {
     for (const v of [1, 99]) { try { SYS.game.deserialize({ version: v, heroes: [] }); fail(`v${v} accepted`); } catch (e) { if (e instanceof Fail) throw e; } }
@@ -1939,8 +1970,8 @@ check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다
     return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
 });
 
-check('save: SAVE_VERSION 11 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃**뿐. 치료 타이머는 v11 에서 사라졌다 (INTERFACE §4)', () =>
-    SAVE_VERSION === 11 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 12 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 번호(`face`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 사라졌다 (INTERFACE §4)', () =>
+    SAVE_VERSION === 12 || fail(`v${SAVE_VERSION}`));
 
 /* ── 원정 정산 ── */
 check('report: roundsCleared 를 정산이 싣는다 — 렌더러가 짐작하지 않는다 (INTERFACE §2-7)', () => {
@@ -1951,7 +1982,7 @@ check('report: roundsCleared 를 정산이 싣는다 — 렌더러가 짐작하�
     if (r.report.won && r.report.roundsCleared !== B.rounds_per_stage) fail(`클리어인데 ${r.report.roundsCleared} 라운드`);
     return `r${r.report.roundsCleared} · ${r.report.reason}`;
 });
-check('resolveBattle: 골드·처치·카드·드롭·부상이 상태에 반영', () => {
+check('resolveBattle: 골드·처치·카드·드롭·전투불능이 상태에 반영', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
     const gold = G2.resources.gold;
     const r = SYS.game.resolveBattle(G2, 101, NOW);
@@ -1967,7 +1998,7 @@ check('resolveBattle: 골드·처치·카드·드롭·부상이 상태에 반영
     if (!rp.strikes || !(rp.strikes.party.n >= 1) || !eq(rp.strikes, r.result.strikes)) fail('리포트에 빗나감 집계가 없다 (§9-8)');
     return `${rp.won ? 'WIN' : 'LOSE'} gold+${rp.gold} drops ${rp.drops.length} cards ${Object.values(rp.cards).reduce((a, b) => a + b, 0)} downed ${rp.downed.length}`;
 });
-check('resolveBattle: 잠긴 스테이지는 출발 불가 · 부상 검사는 사라졌다 (2026-09-03)', () => {
+check('resolveBattle: 잠긴 스테이지는 출발 불가 · 편성을 막는 상태 검사는 없다 (2026-09-03)', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
     if (SYS.game.resolveBattle(G2, 102, NOW).err !== 'locked') fail('locked');
     if (!SYS.game.resolveBattle(G2, 101, NOW).ok) fail('출발이 막혔다');
@@ -2011,7 +2042,7 @@ check('closeRun: 재접속은 귀환이다 — 아웃이 전부 낫는다 (2026-
     if (G2.run.repeat !== false) fail('반복이 안 꺼졌다');
     return G2.run.downed.length === 0 || fail('귀환했는데 아웃이 남았다');
 });
-check('toggleParty: 상한을 넘지 못한다 (부상 검사는 2026-09-03 폐기)', () => {
+check('toggleParty: 상한을 넘지 못한다 (편성을 막는 상태 검사는 2026-09-03 폐기)', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
     const uid = G2.party[0];
     SYS.game.toggleParty(G2, uid, NOW);

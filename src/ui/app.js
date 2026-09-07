@@ -63,7 +63,7 @@ const wornItems = h => SYS.game.heroItems(G, h);
 const combatOf = h => SYS.game.heroCombat(G, h);
 const cycleOf = h => combatOf(h).action_period;
 const xpNext = h => SYS.hero.xpNeeded(h.level);
-/* 이번 출정에서 아웃됐는가 — 치료 타이머가 없어져 시계를 안 본다 (base_expedition_design §1-1, 2026-09-03) */
+/* 이번 출정에서 아웃됐는가 — 회복 대기가 없어 시계를 안 본다 (base_expedition_design §1-1) */
 const isOut = h => G != null && SYS.game.isOut(G, h.uid);
 /* 실효 쿨 = ceil(표기 쿨 ÷ 행동 주기) × 행동 주기 (battle_design §6) — 공식은 game_logic 소유다 (부채 #3) */
 const effectiveCd = (cd, cycle) => SYS.formula.effectiveCd(cd, cycle);
@@ -125,23 +125,25 @@ function stageMinutes(stage) {
 }
 
 /**
- * 몬스터 얼굴 (src/assets/art/faces/<스타일>/). 폴백은 죄종 색 원판 + 이름 이니셜 (faces/README 규격).
- * 이미지가 있어도 **이니셜을 함께 깐다** — 고른 스타일에 그 몬스터 그림이 없으면 `onerror` 로 img 만 사라지고
- * 밑의 이니셜이 드러난다 (스타일을 그리는 중에도 화면이 안 빈다, mock.js FACE_STYLES).
+ * 몬스터 얼굴 (src/assets/art/faces/<스타일>/). 아트가 없으면 **빈 원**이다 — 죄종 색 원판만 남고 글자는 없다.
+ *
+ * **밑에 아무것도 깔지 않는다** (2026-09-06 사용자 지시) — 옛 판은 이름 이니셜을 초상 밑에 깔고 그림을 위에 덮어,
+ *   고른 스타일에 그 그림이 없으면 `onerror` 로 img 만 빠지고 글자가 드러나게 했다. 몬스터 그림도 **배경 투명 PNG** 라
+ *   그림이 **있어도** 여백 사이로 글자와 색이 비쳐 보였다 — 영웅 초상이 2026-09-03 에 같은 이유로 글리프를 걷은 것과 같다.
+ *   이름은 `title` 이 계속 든다(칩에는 글씨가 없으므로 호버가 유일한 길이다).
  */
-/** 이미지 밑에 까는 폴백 — 테두리·배경은 건드리지 않는다(아트가 있는 동안 초상은 색을 갖지 않는다). 드러나는 건 img 가 빠졌을 때뿐 */
-const faceInit = (name, c) => `<span class="face-init" style="color:${c};background:${c}22">${name.charAt(0)}</span>`;
 const faceChip = (id, extraCls = '') => {
     const src = monsterFace(id);
     const name = L(monsterName(id));
     const c = sinColor(monsterSin(id));
-    if (src) return `<span class="face ${extraCls}" title="${name}">${faceInit(name, c)}<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`;
+    if (src) return `<span class="face ${extraCls}" title="${name}"><img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`;
     return `<span class="face none ${extraCls}" title="${t('face.noArt', { name })}"
-        style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
+        style="background:${c}22;border-color:${c}66"></span>`;
 };
 /**
  * 영웅 초상 — 네모 박스. 관전 유닛 카드의 스프라이트와 같은 규격이다: **영웅의 생김새는 어디서나 같다**
- * (2026-08-27, SCREEN_DESIGN §5). 어느 그림인지는 `mock.heroFace` 가 **이름에서** 정한다 — 후보는 uid 가 없다.
+ * (2026-08-27, SCREEN_DESIGN §5). 어느 그림인지는 영웅이 **태어날 때 굴려 세이브에 박은 `face`** 가 정한다
+ * (2026-09-06 — 옛 판은 이름 해시였다. `mock.heroFace` · DEV_PLAN 부채 #36).
  * 죄종 색은 카드 상단 테두리가 들고 초상은 색을 갖지 않는다. 크기는 담는 카드의 CSS 가 정한다.
  *
  * 글리프를 **밑에 깔고 그림을 그 위에 덮는다** — 고른 얼굴 스타일에 영웅 그림이 없으면 `onerror` 로 img 만
@@ -170,14 +172,16 @@ const itemImg = it => {
 
 /* ═══════════ 화면 상태 ═══════════ */
 
-// 탭 10 — 마을이 자원·탐험으로 갈렸다 (SCREEN_DESIGN §1 개정 2026-09-04 사용자 지시). 순서는 그 지도와 같다:
+// 탭 11 — 도감 뒤에 이미지 도감이 섰다 (SCREEN_DESIGN §1 개정 2026-09-06 사용자 지시 · §9-1).
+// 그 앞은 탭 10 — 마을이 자원·탐험으로 갈렸다 (§1 개정 2026-09-04). 순서는 그 지도와 같다:
 // 원정 → 캐릭터 → 강화가 코어 루프의 **한 동작**이라 앞에 붙어 서고(줍고 → 배분하고 → 올린다 — GAME_DESIGN §3),
 // 보충(선술집 · 상점)이 그 뒤, 맡기고 나가는 둘(자원 · 탐험)이 그 뒤, 그 산출을 먹는 연구가 이어지고, 참조 둘(도감 · 도움말)이 끝이다.
 // 09-03 순서에서 실제로 움직인 것은 **캐릭터 하나(6번 → 2번)** 다 — 나머지는 상대 순서가 유지된 채 마을 자리에 자원·탐험이 들어갔다.
 // 탭 이름은 활동(강화 · 상점)이고 패널 머리는 장소(제련소 · 상단 — `dp.post.*`)로 남는다 (§8-2 · §8-3).
 // 의뢰 탭은 폐지 — 게시판은 선술집 탭 안이다(§8-1). 스킬은 캐릭터 안의 **창**(§7).
+// 참조 둘이 셋이 됐다 — **이미지 도감**은 자산을 묶음별로 펼치는 조회 화면이라 도감 옆이 제 자리다 (§9-1).
 // `?tab=` 이 죽은 이름(`town` · `commission` · `skill` · `base`)을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
-const TABS = ['expedition', 'character', 'forge', 'tavern', 'shop', 'resource', 'explore', 'research', 'codex', 'help'];
+const TABS = ['expedition', 'character', 'forge', 'tavern', 'shop', 'resource', 'explore', 'research', 'codex', 'imagedex', 'help'];
 
 /* 파견 목록 — **카드 3** (SCREEN_DESIGN §8 개정 2026-09-04 사용자 지시: 채광 · 채집 · 벌목).
    담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
@@ -207,6 +211,7 @@ const state = {
     btLayout: 'wide',       // 관전 배치 — wide | split (2026-09-03 사용자 지시). 세이브 아님
     heroUid: null,
     codexChapter: 1,
+    imgSeg: 'character',    // 이미지 도감 묶음 (SCREEN_DESIGN §9-1) — character | item. 얼굴 스타일은 여기 안 둔다(전역 · mock.js)
     slotFilter: null,
     roll: 1, candidates: [], confirmOverwrite: false,
     salvageMode: false,
@@ -289,6 +294,7 @@ function render() {
         explore: renderExplore,
         research: renderResearch,
         codex: renderCodex,
+        imagedex: renderImagedex,
         help: renderHelp,
     })[state.tab](main);
     if (state.flash) {
@@ -632,7 +638,7 @@ function formPanel(z, sin) {
     // 리더 = G.party[0] = **제일 먼저 넣은 영웅** (toggleParty 가 클릭 순서로 push 한다)
     const strip = heroStrip(toggleParty, { leaderUid: G.party[0] ?? null, flat: true, partyMode: true });
     // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 패널이 상태에 따라 커졌다 작아진다 (2026-08-28)
-    // 부상 경고는 없어졌다 [2026-09-03] — 마을에 부상자가 없으므로 편성이 막히는 경우가 파티 0 하나뿐이다
+    // 상태 경고는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없으므로 편성이 막히는 경우가 파티 0 하나뿐이다
     const warn = G.party.length === 0 ? t('exp.noParty') : '';
     strip.appendChild(el('div', 'down exp-warn', warn));
     p.appendChild(strip);
@@ -1804,7 +1810,7 @@ function stageBonus(stage) {
     return { total, complete };
 }
 
-function monsterCard(m, stage) {
+function monsterCard(m) {
     const cum = codexCum();
     const lv = codexLv(m.cards);
     const maxLv = cum.length;
@@ -1812,18 +1818,16 @@ function monsterCard(m, stage) {
     const prev = lv > 0 ? cum[lv - 1] : 0;
     const pct = next ? Math.min(100, (m.cards - prev) / (next - prev) * 100) : 100;
     const src = monsterFace(m.id);
-    const name = stage.locked ? '???' : L(monsterName(m.id));
+    const name = L(monsterName(m.id));
     const c = sinColor(monsterSin(m.id));
-    // 이미지가 있어도 이니셜을 깔아 둔다 — 스타일에 그 그림이 없으면 img 만 빠지고 이니셜이 드러난다 (faceChip 과 같은 규칙)
-    const faceHtml = stage.locked
-        ? `<span class="face unfound">·</span>`
-        : src
-            ? `<span class="face${m.boss ? ' boss' : ''}">${faceInit(name, c)}<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`
-            : `<span class="face none${m.boss ? ' boss' : ''}" style="color:${c};background:${c}22;border-color:${c}66">${name.charAt(0)}</span>`;
+    // 초상 밑에 아무것도 깔지 않는다 — 아트가 없으면 빈 원이다 (2026-09-06 사용자 지시 · faceChip 과 같은 규칙)
+    const faceHtml = src
+        ? `<span class="face${m.boss ? ' boss' : ''}"><img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`
+        : `<span class="face none${m.boss ? ' boss' : ''}" style="background:${c}22;border-color:${c}66" title="${t('face.noArt', { name })}"></span>`;
     const pips = Array.from({ length: maxLv }, (_, i) =>
         `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.cards', { n: cum[i] })}"></span>`).join('');
     return `
-        <div class="mon-card${m.boss ? ' boss' : ''}${lv === maxLv ? ' maxed' : ''}${stage.locked ? ' locked' : ''}">
+        <div class="mon-card${m.boss ? ' boss' : ''}${lv === maxLv ? ' maxed' : ''}">
             ${faceHtml}
             <div class="mon-body">
                 <div class="mon-top">
@@ -1832,9 +1836,9 @@ function monsterCard(m, stage) {
                 </div>
                 <div class="mon-mid">
                     <span class="pips">${pips}</span>
-                    <span class="mon-next muted">${stage.locked ? '' : `${t('cx.kills', { n: m.kills.toLocaleString() })} · ${next
+                    <span class="mon-next muted">${t('cx.kills', { n: m.kills.toLocaleString() })} · ${next
                         ? `${t('cx.next', { n: next })} <span class="up">+${D.codexBonus[lv] ?? 0}%</span>`
-                        : `<span class="up">${t('cx.max')}</span>`}`}</span>
+                        : `<span class="up">${t('cx.max')}</span>`}</span>
                 </div>
                 <div class="bar"><i style="width:${pct}%"></i></div>
             </div>
@@ -1843,12 +1847,11 @@ function monsterCard(m, stage) {
 
 function renderCodex(main) {
     const ch = chapterOf(state.codexChapter) ?? D.chapterList[0];
-    // 카드·처치 수는 실집계(G.codexCards / G.codexKills), 잠금은 스테이지 해금 상태에서 온다
+    // 카드·처치 수는 실집계(G.codexCards / G.codexKills). **해금은 안 본다** — 전 챕터·전 몬스터를 그대로 그린다 (SCREEN_DESIGN §9, 2026-09-06)
     const stages = codexStages().filter(st => st.chapter === ch.id).map(st => ({
-        ...st, stat: M.CX_STAT[st.num], completion: M.CX_DONE[st.num], locked: !SYS.game.stageUnlocked(G, st.id),
+        ...st, stat: M.CX_STAT[st.num], completion: M.CX_DONE[st.num],
         monsters: st.monsters.map(m => ({ ...m, cards: G.codexCards[m.id] ?? 0, kills: G.codexKills[m.id] ?? 0 })),
     }));
-    const chLocked = stages.every(st => st.locked);
 
     const p = el('div', 'panel');
     p.appendChild(el('h2', '', t('cx.h')));
@@ -1856,25 +1859,95 @@ function renderCodex(main) {
     bar.appendChild(segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}` })), ch.id,
         id => { state.codexChapter = id; render(); }));
     bar.appendChild(el('div', 'muted', `<span style="font-size:var(--fs-xs)">
-        ${chLocked
-            ? `<span class="down">${t('cx.chLocked')}</span>${t('cx.chLockedTail')}`
-            : `${t('cx.sinLabel')} <b style="color:${sinColor(ch.sin)}">${sinName(ch.sin)}</b>`}</span>`));
+        ${t('cx.sinLabel')} <b style="color:${sinColor(ch.sin)}">${sinName(ch.sin)}</b></span>`));
     p.appendChild(bar);
 
     for (const stage of stages) {
         const { total, complete } = stageBonus(stage);
-        const row = el('div', `codex-stage${stage.locked ? ' locked' : ''}`);
+        const row = el('div', 'codex-stage');
         row.innerHTML = `
             <div class="cs-head">
                 <div class="cs-title"><span class="muted">${stage.num}</span> ${L(stage.name)}</div>
-                <div class="cs-gain">${stage.locked
-                    ? `<span class="muted">${t('cx.locked')}</span>`
-                    : `<span class="up">${L(stage.stat)} +${total.toFixed(1)}%</span>
-                       <span class="muted"> · ${t('cx.completion')} ${complete ? `<span class="up">${L(stage.completion)}</span>` : L(stage.completion)}</span>`}</div>
+                <div class="cs-gain"><span class="up">${L(stage.stat)} +${total.toFixed(1)}%</span>
+                    <span class="muted"> · ${t('cx.completion')} ${complete ? `<span class="up">${L(stage.completion)}</span>` : L(stage.completion)}</span></div>
             </div>
-            <div class="mon-strip">${stage.monsters.map(m => monsterCard(m, stage)).join('')}</div>`;
+            <div class="mon-strip">${stage.monsters.map(m => monsterCard(m)).join('')}</div>`;
         p.appendChild(row);
     }
+    main.appendChild(p);
+}
+
+/* ═══════════ 이미지 도감 — 자산 훑기 (SCREEN_DESIGN §9-1 · 신설 2026-09-06 사용자 지시) ═══════════
+   게임이 부르는 그림을 묶음별로 전부 펼친다. 아트를 넣고 확인하려면 지금은 그 그림이 나오는 화면까지 가야 한다 —
+   영웅 초상은 이름 해시라 원하는 얼굴을 기다려야 하고, 몬스터는 스테이지가 서야 하며, 아이템은 그 부위가 드롭돼야 본다.
+
+   ⚠ **폴더를 읽는 화면이 아니다.** 목록의 SSOT 는 `mock.js` 의 경로 조립 상수(HERO_FACE_MAX ·
+   ITEM_ART_GROUPS · ITEM_ART_BY_SLOT · SLOT_ART_PARTS)와 `monster.csv:face` 다 — 렌더는 동기라 파일 유무를
+   물을 수 없다(`skillIcon` 주석과 같은 이유). 코드가 안 부르는 파일(`faces/example/` 시트 · `icons/items/unused/`)은
+   게임이 안 쓰므로 여기에도 안 뜬다. 파일이 없으면 `onerror` 로 img 만 빠져 **빈 칸 + 파일명**이 남고,
+   그 빈 칸이 「이 자산이 비었다」는 신호다 (스타일마다 갖춘 장수가 다르다). */
+
+/** 타일 하나 — 그림 · 쓰임 이름 · 파일명. 마스크는 **게임에서 쓰는 것 그대로**다(네모 = 영웅·아이템 / 원형 = 몬스터 · §5 · §9) */
+const artTile = (src, name, shape) => `
+    <div class="ix-tile">
+        <span class="ix-art ${shape}">${src ? `<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span>
+        <span class="ix-name">${name}</span>
+        <span class="ix-file muted">${src ? src.split('/').pop() : '—'}</span>
+    </div>`;
+
+/** 그룹 하나 — 머리(이름 · 폴더 경로 · 장수) + 타일 격자 */
+const artGroup = (title, dir, tiles) => `
+    <div class="ix-group">
+        <div class="ix-head">
+            <span class="ix-title">${title}</span>
+            <span class="ix-dir muted">${dir}</span>
+            <span class="muted">${t('ix.count', { n: tiles.length })}</span>
+        </div>
+        <div class="ix-grid">${tiles.join('')}</div>
+    </div>`;
+
+function renderImagedex(main) {
+    const p = el('div', 'panel');
+    p.appendChild(el('h2', '', t('ix.h')));
+
+    const bar = el('div', 'sub-bar');
+    bar.appendChild(segmented([
+        { id: 'character', label: t('ix.seg.character') },
+        { id: 'item', label: t('ix.seg.item') },
+    ], state.imgSeg, id => { state.imgSeg = id; render(); }));
+    // 얼굴 스타일 세그먼트는 **캐릭터 묶음에서만** — 아이템 그림은 스타일 폴더를 안 탄다(단일 세트 · mock.js).
+    // 전환은 전역이다(`?face=` · localStorage 와 같은 자리) — 경로 조립이 `faceDir()` 한 곳이라 화면 전용 상태를 두지 않는다
+    if (state.imgSeg === 'character') {
+        const st = el('div', 'ix-style');
+        st.appendChild(el('span', 'muted', t('ix.style')));
+        st.appendChild(segmented(M.FACE_STYLES.map(f => ({ id: f, label: f })), M.faceStyle(),
+            id => { M.setFaceStyle(id); render(); }));
+        bar.appendChild(st);
+    }
+    p.appendChild(bar);
+
+    const box = el('div', 'ix-body');
+    if (state.imgSeg === 'character') {
+        const dir = M.faceDir();
+        box.innerHTML = artGroup(t('ix.g.hero'), dir,
+            Array.from({ length: M.HERO_FACE_MAX }, (_, i) =>
+                artTile(`${dir}hero_${i + 1}.png`, t('ix.hero', { n: i + 1 }), 'box')))
+            // 얼굴을 가진 몬스터만 — `monster.csv:face` 가 SSOT 고 `monsterFace` 가 그 한 줄을 읽는다. idx 순 = 챕터·스테이지 순
+            + artGroup(t('ix.g.monster'), dir,
+                Object.values(D.monsters ?? {})
+                    .filter(m => monsterFace(m.monster_idx))
+                    .sort((a, b) => a.monster_idx - b.monster_idx)
+                    .map(m => artTile(monsterFace(m.monster_idx), L(monsterName(m.monster_idx)), 'round')));
+    } else {
+        box.innerHTML = artGroup(t('ix.g.weapon'), M.ITEM_ART_DIR,
+            M.ITEM_ART_GROUPS.map(g => artTile(M.itemArt('weapon', g), L(D.weaponGroups?.[g] ?? g), 'box')))
+            // ⚠ 부위 하나에 그림 하나 — 개체가 베이스 id 를 안 들고 다녀서다 (mock.js:itemArt · 임시)
+            + artGroup(t('ix.g.armor'), M.ITEM_ART_DIR,
+                Object.keys(M.ITEM_ART_BY_SLOT).map(sl => artTile(M.itemArt(sl), L(slotDef(sl) ?? sl), 'box')))
+            + artGroup(t('ix.g.empty'), M.SLOT_ART_DIR,
+                M.SLOT_ART_PARTS.map(sl => artTile(M.slotArt(sl), L(slotDef(sl) ?? sl), 'box')));
+    }
+    p.appendChild(box);
     main.appendChild(p);
 }
 
@@ -2011,6 +2084,9 @@ async function boot() {
     if (new URLSearchParams(location.search).get('screen') === 'start') state.screen = 'start';
     // 관전 배치 — 버튼으로만 바뀌므로 헤드리스가 닿을 길을 따로 낸다 (2026-09-03 · SCREEN_DESIGN §10)
     if (new URLSearchParams(location.search).get('lay') === 'split') state.btLayout = 'split';
+    // 이미지 도감 묶음 — 세그먼트는 클릭으로만 바뀌므로 헤드리스가 닿을 길을 따로 낸다 (SCREEN_DESIGN §9-1 · §10)
+    const ix = new URLSearchParams(location.search).get('ix');
+    if (ix === 'character' || ix === 'item') state.imgSeg = ix;
     // 프롤로그는 새 게임 확정 버튼으로만 닿는 화면이라 헤드리스가 들어올 길을 따로 낸다 (SCREEN_DESIGN §10).
     //   `&s=n` 은 n번째 씬 — 마지막 씬에만 인용·챕터 줄이 서므로 그 상태에도 길이 있어야 한다
     if (dev === 'prologue') {

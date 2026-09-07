@@ -234,7 +234,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     border: 1px solid currentColor; border-radius: 2px;
 }
 
-/* 부상/치료 — 방치형 계약의 언어("사망" 아님) */
+/* 전투불능 — 방치형 계약의 언어("사망" 아님). 클래스 이름의 injury 는 옛 어휘가 남은 것이다 [09-06] */
 .injury-chip {
     display: inline-block; font-size: var(--fs-xs); color: var(--color-error);
     border: 1px solid currentColor; padding: 0 5px; line-height: 15px; margin-top: 3px;
@@ -260,21 +260,12 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     width: 26px; height: 26px; flex: 0 0 auto;
     background: var(--bg-input); border: 1px solid var(--border-secondary);
     border-radius: 50%; overflow: hidden; vertical-align: middle;
-    font-size: var(--fs-xs);   /* 이니셜 크기 — 아트 유무와 무관하게 담는 칸이 정한다 (.face-init 이 상속) */
 }
-/* 이미지는 이니셜 **위에** 덮는다 — 아트가 없는 스타일에서 `onerror` 로 img 가 사라지면 밑에 있던 이니셜이 드러난다.
-   그래서 그리는 중인 스타일로도 화면이 안 빈다 (2026-08-30 스타일 폴더 도입) */
+/* 칸 안에는 그림 하나뿐이다 — **밑에 아무것도 깔지 않는다** (2026-09-06 사용자 지시).
+   옛 판은 이니셜을 깔고 이미지를 위에 덮었는데, 몬스터 그림도 배경 투명 PNG 라 여백 사이로 글자가 비쳤다 */
 .face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: var(--face-render); }
-/* 아트가 없는 몬스터 — 죄종 색 원판 + 이니셜 (색은 JS가 인라인으로 준다) */
-.face.none { font-weight: normal; }
-/* 이미지 **밑에** 깔리는 같은 이니셜 — 고른 스타일에 그 그림이 없을 때만 드러난다.
-   테두리는 안 물들인다: 아트가 있는 동안 초상은 색을 갖지 않는다 (2026-08-30) */
-.face-init {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: inherit; font-weight: normal;
-}
+/* 아트가 없는 몬스터 — **빈 원**. 죄종 색 배경·테두리만 JS가 인라인으로 준다 (글자 없음) */
 .face.boss { border-color: var(--text-accent); box-shadow: 0 0 0 1px rgba(224,48,48,.25); }
-.face.unfound { opacity: .45; border-style: dashed; color: var(--text-muted); }
 
 /* 영웅 초상 — 네모 박스 (2026-08-27). 관전 유닛 카드의 .sprite 와 같은 그림이다: 영웅의 생김새는 어디서나 같다.
    원형(.face)은 몬스터 전용. 죄종 색은 카드 상단 테두리가 든다 — 초상은 색을 갖지 않는다.
@@ -540,7 +531,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 76 → 84 → 86 (2026-09-04 — HP 바 18 → 20 을 따라간다) — 이름 줄이 오른쪽 열로 들어오면서 76 에는 안 들어간다
    (이름 16 + HP 20 + 게이지 9 + 스킬 35 + 간격 ≈ 86). 카드 총높이는 위칸 시절 옛 값(≈112)보다 오히려 작다. 초상은 76 그대로 가운데 */
 .battle-body.split .unit-body { height: 86px; }
-.battle-body.split .unit .sprite { width: 76px; height: 76px; font-size: 38px; }
+.battle-body.split .unit .sprite { width: 76px; height: 76px; }
 .battle-body.split .pop { left: 44px; }   /* 초상 한가운데 — 패딩 6 + 38 */
 /* 우측 딜미터 열 — 높이 예산은 아레나와 같다. 판은 그 안에서만 스크롤한다
    ⚠ `display:flex` 는 브라우저 기본 `[hidden]{display:none}` 을 **이긴다** — 아래 한 줄이 없으면 넓게 배치에서도 빈 열이 자리를 먹는다
@@ -690,14 +681,14 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     position: relative;
     /* 76 → **101** (2026-09-03 사용자 지시) — 카드 높이(본문 101)를 통째로 쓴다. 정사각이라 가로도 101 이 되고, 그만큼 칸을 226 으로 넓혔다 */
     flex: 0 0 auto; width: 101px; height: 101px; align-self: center;
-    display: flex; align-items: center; justify-content: center; font-size: 50px;
+    display: flex; align-items: center; justify-content: center;
     background: var(--bg-input); border: 1px solid var(--border-secondary); overflow: hidden;
 }
 /* 보스도 같은 크기다 — 카드 크기를 진영·등급 무관 고정으로 못박았다 (2026-08-27). 보스 표시는 태그와 테두리가 든다 */
-/* 얼굴 이미지가 있는 유닛 — 없으면 빈 칸(영웅) / 죄종 색 원판 + 이니셜(몬스터) */
+/* 얼굴 이미지가 있는 유닛 — **없으면 양쪽 다 빈 칸**이다 (영웅 2026-09-03 · 몬스터 2026-09-06 사용자 지시) */
 .sprite.has-face { background: radial-gradient(circle at 50% 38%, #24243a 0%, var(--bg-input) 100%); }
 .sprite.has-face img {
-    position: absolute; inset: 0;      /* 이니셜 위에 덮는다 — .face 와 같은 이유(아트 없는 스타일 폴백) */
+    position: absolute; inset: 0;      /* 칸을 통째로 쓴다 — 밑에 깔린 것이 없다 (.face 와 같은 규칙) */
     width: 100%; height: 100%; object-fit: contain;
     image-rendering: var(--face-render);
     filter: drop-shadow(0 1px 2px rgba(0,0,0,.8));
@@ -996,8 +987,6 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     padding: 6px 10px 7px; background: var(--bg-tertiary);
     border: 1px solid var(--border-dark); margin-bottom: 5px;
 }
-.codex-stage.locked { opacity: .42; }
-
 .cs-head {
     display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
     flex-wrap: wrap; margin-bottom: 6px;
@@ -1019,7 +1008,6 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 .mon-card.boss { border-left-color: var(--text-accent); }
 .mon-card.maxed { border-color: #3a5a3a; border-left-color: var(--color-success); background: #16201a; }
-.mon-card.locked { opacity: .7; }
 /* 도감의 초상 — 이 화면에서 가장 큰 칸. 원형 마스크는 몬스터 공통 규칙이라 그대로 두고 지름만 키운다 */
 .mon-card .face { width: 72px; height: 72px; font-size: var(--fs-lg); }
 .mon-card .face img { width: 100%; height: 100%; object-fit: cover; }
@@ -1048,6 +1036,38 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     border: 1px solid var(--border-secondary);
 }
 .pips .pip.on { background: var(--color-success); border-color: var(--color-success); }
+
+/* ───────── 이미지 도감 (SCREEN_DESIGN §9-1 · 2026-09-06) ─────────
+   자산을 묶음별로 펼치는 조회 화면. 칸 폭은 고정 px 이 아니라 auto-fill + minmax 다 —
+   이름과 파일명이 들어가는 칸이라 영어에서 길어진다 (폭 정책은 src/ui/README.md).
+   마스크는 게임에서 쓰는 것 그대로 — 영웅·아이템은 네모(`box`), 몬스터는 원형(`round`) */
+.ix-style { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); }
+.ix-body { display: flex; flex-direction: column; gap: 10px; }
+.ix-group {
+    padding: 7px 10px 9px; background: var(--bg-tertiary);
+    border: 1px solid var(--border-dark);
+}
+.ix-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+.ix-title { font-size: var(--fs-sm); }
+.ix-dir { font-size: var(--fs-xs); }
+.ix-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 8px; }
+.ix-tile {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 4px; background: var(--bg-card); border: 1px solid var(--border-dark);
+}
+/* 그림 칸 — 게임에서 가장 큰 자리(도감 초상 72px)보다 크게 잡는다. 아트를 확인하러 오는 화면이라
+   여기서까지 작으면 이 탭이 있을 이유가 없다. 그림이 없으면 이 빈 네모가 그대로 남는다 */
+.ix-art {
+    width: 92px; height: 92px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: var(--bg-input); border: 1px solid var(--border-dark);
+}
+.ix-art.round { border-radius: 50%; }
+.ix-art img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
+/* 원형 마스크는 가장자리를 잘라낸다 — 몬스터 카드(.face img)와 같은 cover 라야 도감에서 보이는 그대로다 */
+.ix-art.round img { object-fit: cover; }
+.ix-name { font-size: var(--fs-xs); line-height: 1.25; text-align: center; word-break: keep-all; }
+.ix-file { font-size: var(--fs-xs); line-height: 1.2; text-align: center; word-break: break-all; }
 
 /* ───────── 페이퍼돌 (부위 8종 · 위치 9개, 반지 ×2) ───────── */
 
@@ -1607,7 +1627,7 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 /* 네비 맨 아래 — 시작 화면으로 (새 게임 / 이어하기) */
 .nav .b-newgame { margin-top: auto; color: var(--text-muted); font-size: var(--fs-sm); border-top: 1px solid var(--border-dark); }
 
-/* 편성 줄 — 이름 줄 / 죄종·부상 줄 */
+/* 편성 줄 — 이름 줄 / 죄종·출정 아웃 줄 */
 .party-slot .ps-main { flex: 1; min-width: 0; }
 .party-slot .ps-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .party-slot .ps-leader { font-size: var(--fs-xs); margin-left: auto; }

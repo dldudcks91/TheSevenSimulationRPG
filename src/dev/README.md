@@ -96,7 +96,8 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?dev=prologue` | 프롤로그 (SCREEN_DESIGN §3-1) — `&s=n` 이면 n번째 씬. 마지막 씬(5)만 인용·챕터 줄이 선다 (2026-09-03) |
 | `?dev=tactics` | 연구 탭 — 전술 칸이 **전부 열린** 상태 (칸은 합산 레벨로만 열려 클릭으로 못 만든다) |
 | `?screen=start` | 시작 화면 |
-| `?tab=<탭>` | 탭 바로 열기 — **탭 9** (2026-09-03): `expedition` · `tavern` · `forge`(강화) · `shop`(상점) · `town` · `character` · `research` · `codex` · `help`. 세이브가 없으면 `?dev=newgame&tab=forge` 처럼 겹쳐 쓴다. ⚠ `?dev=forge` · `?dev=trade` 는 **삭제**됐다 — 강화·상점이 탭이 되어 `?tab=` 이 바로 닿는다 |
+| `?tab=<탭>` | 탭 바로 열기 — **탭 11** (2026-09-06): `expedition` · `character` · `forge`(강화) · `tavern` · `shop`(상점) · `resource`(자원) · `explore`(탐험) · `research` · `codex` · `imagedex`(이미지 도감) · `help`. ⚠ 옛 이름 `town` 은 09-04 에 자원·탐험으로 갈리며 **죽었다**(무시하고 원정으로 연다). 세이브가 없으면 `?dev=newgame&tab=forge` 처럼 겹쳐 쓴다. ⚠ `?dev=forge` · `?dev=trade` 는 **삭제**됐다 — 강화·상점이 탭이 되어 `?tab=` 이 바로 닿는다 |
+| `?ix=character\|item` | 이미지 도감의 묶음 (SCREEN_DESIGN §9-1) — `?tab=imagedex&ix=item` 처럼 겹쳐 쓴다 |
 | `?face=<스타일>` | 몬스터 얼굴 아트 스타일 교체 — `src/assets/art/faces/<스타일>/`. 목록은 `ui/mock.js:FACE_STYLES` · localStorage 에 남는다 |
 
 헤드리스 (Edge) — 스크린샷:

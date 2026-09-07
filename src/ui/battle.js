@@ -283,18 +283,14 @@ function renderUnits(state, root) {
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
             // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
             const name = L(u.name);
-            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u);
-            // 몬스터는 아트가 있어도 그 밑에 **이니셜을 깔아 둔다** — 고른 얼굴 스타일에 그 몬스터 그림이 없으면
-            // `onerror` 로 img 만 빠지고 밑에 있던 글자가 드러난다 (mock.js FACE_STYLES).
-            // ⚠ **영웅은 아무것도 안 깐다** (2026-09-03 사용자 지시) — 직업 글리프(이모지)를 깔던 자리이고,
-            //   영웅 그림이 배경 투명 PNG 라 그림이 있어도 이모지가 비쳐 보였다. 아트가 없으면 빈 칸이다
-            // ⚠ **폴백에서 죄종 색을 걷었다** (2026-09-03 사용자 지시) — 아트 없는 몬스터를 죄종 색 원판으로 칠하던 자리다.
-            //   원판(원형)은 몬스터만 달랐고 색은 죄종을 말했다 — 「카드 형태를 똑같이」·「죄종 안 보이게」 둘 다에 걸린다.
-            //   남긴 것은 **이니셜 글자 하나**뿐이고, 칸은 영웅과 같은 빈 네모다
-            const mark = u.side === 'enemy' ? L(monsterName(u.monsterId)).charAt(0) : '';
+            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u.hero);   // 얼굴 번호는 영웅 객체가 든다 (세이브 v12)
+            // **양쪽 다 밑에 아무것도 안 깐다** — 아트가 없거나 `onerror` 로 빠지면 빈 네모다.
+            // ⚠ 영웅은 2026-09-03 (직업 글리프가 배경 투명 PNG 사이로 비쳤다), **몬스터는 2026-09-06** 사용자 지시다.
+            //   몬스터에 남아 있던 것은 이름 **이니셜 글자 하나**였고, 같은 이유로 그림 위에 비쳤다.
+            //   09-03 에 죄종 색 원판을 이미 걷었으므로(「카드 형태를 똑같이」·「죄종 안 보이게」) 이제 폴백은 완전히 빈 칸이다
             const sprite = face
-                ? `<div class="sprite has-face">${mark}<img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
-                : `<div class="sprite">${mark}</div>`;
+                ? `<div class="sprite has-face"><img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
+                : `<div class="sprite"></div>`;
             // 가로형 본문 하나 — 왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 칸 (2026-09-03 위칸 폐기) — SCREEN_DESIGN §4-2
             // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
             // 칸 수는 언제나 active_slots — 스킬이 둘인 영웅도 셋째 칸이 **빈 채로** 남는다 (SCREEN_DESIGN §4-2 개정 2026-08-31).

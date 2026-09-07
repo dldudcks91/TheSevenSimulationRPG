@@ -66,7 +66,7 @@ loadData()            CSV 22개 fetch → D 채움 → SYS 조립  (`ui/data.js:
 rollCandidates()      새 게임 후보 3명 (고정 시드 — 세이브 밖)
 loadSave() → continueGame()
     deserialize (버전 불일치면 catch → G=null → 시작 화면)
-    closeRun (재접속 런 마무리 → save)   ← tickInjuries 는 v11(치료 타이머 폐기, 2026-09-03)에서 삭제
+    closeRun (재접속 런 마무리 → save)   ← tickInjuries 는 v11(2026-09-03)에서 삭제
 ?screen / ?dev / ?tab  개발용 라우팅 (순서 고정 — ?tab 은 마지막)
 render()
 ```
@@ -78,7 +78,7 @@ render()
 **원정 1회**
 ```
 [출발 버튼] → runBattle(stageId)
-  → SYS.game.resolveBattle(G, stageId, now())      정산 완료 (시뮬 + 보상 + 부상 + 리포트)
+  → SYS.game.resolveBattle(G, stageId, now())      정산 완료 (시뮬 + 보상 + 출정 아웃 + 리포트)
   → save()                                          ← 여기서 이미 결과가 확정·저장됨
   → mountBattle(result.timeline)                    관전 = 재생 (건너뛰기 가능)
   → onEnd → 리포트 화면 (또는 반복 ON + 승리면 다음 원정 자동)

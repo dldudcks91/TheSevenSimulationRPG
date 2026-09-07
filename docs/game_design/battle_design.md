@@ -8,7 +8,7 @@
 
 - 파티 `[balance.csv:party_size_max]`인 vs 적 1~`[balance.csv:wave_monster_max]`, 라운드 진행 (원정 = 스테이지 런 — base_expedition_design.md §1)
 - **유저 조작 없음** — 편성·장비·스킬 배분이 입력의 전부
-- 라운드 간 HP 자동 회복 없음 (부상/치료 모델은 base_expedition_design.md §1-1)
+- 라운드 간 HP 자동 회복 없음 — **회복은 전투 안에서만** 일어난다 [09-06] (전투불능 · 회복 모델은 base_expedition_design.md §1-1)
 
 ### 결정론적 시뮬레이션 (기술 원칙)
 

@@ -270,7 +270,7 @@ const STRINGS = {
     'time.m': { ko: '{m}분', en: '{m}m' },
     'time.s': { ko: '{s}초', en: '{s}s' },
     'time.ms': { ko: '{m}분 {s}초', en: '{m}m {s}s' },
-    /* 출정 아웃 — 치료 타이머가 폐기되면서(base_expedition_design §1-1, 2026-09-03) 「남은 시간」이 없어졌다.
+    /* 출정 아웃 — 회복 대기가 없어지면서(base_expedition_design §1-1) 「남은 시간」이 없어졌다.
        말할 것은 시간이 아니라 **상태와 그 끝**이다: 지금 빠져 있고 돌아오면 낫는다 */
     'injury.out': { ko: '출정 아웃', en: 'Out for this run' },
 
@@ -282,7 +282,9 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 10 [개정 2026-09-04 사용자 지시] — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
+    /* 탭 11 [개정 2026-09-06 사용자 지시] — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · **이미지 도감** · 도움말 (SCREEN_DESIGN §1).
+       09-06 에 도감 뒤로 **이미지 도감**(`nav.imagedex` · §9-1)이 들어왔다 — 자산을 묶음별로 펼치는 조회 탭이라 참조 묶음(도감 · 도움말) 안에 선다.
+       [개정 2026-09-04 사용자 지시] 탭 10 — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
        마을 탭이 **자원**(1인 배치 — 광산 · 채집)과 **탐험**(파티)으로 갈리면서 `nav.town` 은 삭제됐다.
        `nav.explore` 는 값이 그대로인 채 **파견처 칸 라벨에서 탭 라벨로 승격**됐다 (§8-4) — `nav.tavern` 과 같은 사례다.
        탭 이름이 **활동**(강화 · 상점)이고 패널 머리가 **장소**(`dp.post.forge` 제련소 · `dp.post.trade` 상단)인 것은 그대로 (§8-2 · §8-3).
@@ -298,6 +300,7 @@ const STRINGS = {
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.research': { ko: '연구', en: 'Research' },
     'nav.codex': { ko: '도감', en: 'Codex' },
+    'nav.imagedex': { ko: '이미지 도감', en: 'Image Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
     'nav.commission': { ko: '의뢰', en: 'Commissions' },
     'nav.skill': { ko: '스킬', en: 'Skills' },
@@ -709,10 +712,8 @@ const STRINGS = {
     /* ── 도감 ── */
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
     'cx.sub': { ko: '카드 {pct}% 드롭 · 레벨별 필요 {list}장 — 스테이지 계열 스탯이 오른다', en: 'Cards drop at {pct}% · {list} per level — raises the stage\'s stat line' },
-    'cx.chLocked': { ko: '미해금 챕터', en: 'Locked chapter' },
-    'cx.chLockedTail': { ko: ' — 도달하면 열린다', en: ' — unlocks when reached' },
+    /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
-    'cx.locked': { ko: '미해금', en: 'Locked' },
     'cx.completion': { ko: '완주', en: 'Completion' },
     'cx.cards': { ko: '{n}장', en: '{n} cards' },
     'cx.next': { ko: '다음 {n}장', en: 'Next at {n}' },
@@ -731,6 +732,21 @@ const STRINGS = {
             + '⚠ Per-level bonus % is a <b>screen-mock placeholder</b> — to be moved into codex_level.csv. Boss-grade scaling comes later<br>'
             + 'Face art exists for 5 Ch1 monsters only — the rest fall back to a single initial',
     },
+
+    /* ── 이미지 도감 (SCREEN_DESIGN §9-1 · 신설 2026-09-06) ──
+       타일에 붙는 것은 **이름과 파일명뿐**이다 — 「무기는 제 그림이고 방어구는 임시다」 같은 규칙은
+       화면 문구가 아니라 §9-1 과 `mock.js` 주석의 내용이다 (§12 설명 문구는 도움말 탭 전용). */
+    'ix.h': { ko: '이미지 도감', en: 'Image Codex' },
+    'ix.seg.character': { ko: '캐릭터', en: 'Characters' },
+    'ix.seg.item': { ko: '아이템', en: 'Items' },
+    'ix.g.hero': { ko: '영웅 초상', en: 'Hero Portraits' },
+    'ix.g.monster': { ko: '몬스터 초상', en: 'Monster Portraits' },
+    'ix.g.weapon': { ko: '무기', en: 'Weapons' },
+    'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
+    'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
+    'ix.count': { ko: '{n}장', en: '{n} images' },
+    'ix.style': { ko: '얼굴 스타일', en: 'Face style' },
+    'ix.hero': { ko: '영웅 {n}', en: 'Hero {n}' },
 
     /* ── 전투 관전 ── */
     /* `bt.round`(「라운드」 접두)는 2026-09-04 헤드에서 라운드 수치가 삭제되며 부르는 곳이 없어져 지웠다 */
