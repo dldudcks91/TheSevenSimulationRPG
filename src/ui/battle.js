@@ -306,14 +306,16 @@ function renderUnits(state, root) {
             // 이름 띠 — **양 진영 같다** (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2). 같은 날 아침에 걷었던 위칸의 재도입이고,
             // 걷은 이유(이름·죄종 칩·정예 태그가 한 줄에 뒤엉킴)는 **이름만 남기는 것**으로 푼다 — 「무엇인가」는 띠 색(등급)이 든다.
             // 몬스터가 카드에서 이름을 되찾는 자리이기도 하다 — 위칸이 없던 동안은 초상으로만 어느 몬스터인지 구분해야 했다
-            // 이름·신원은 **초상 오른쪽 열의 첫 줄 하나**다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) —
-            // 왼쪽에 무채색 신원(`Lv.n · 직업` / 정예·보스 라벨) · **이름은 오른쪽 끝**. 일반 몬스터는 이름뿐이다
+            // 이름·신원은 **두 줄**이다 (개정 2026-09-07 사용자 지시 — 09-03 「첫 줄 하나」 폐기 · SCREEN_DESIGN §4-2) —
+            // 윗줄 = 무채색 신원(`Lv.n · 직업` / 정예·보스 라벨) · 아랫줄 = 이름, 둘 다 **오른쪽 정렬**(재개정 2026-09-07 사용자 지시 — 정렬만 뒤집었다).
+            // 한 줄 합침은 좁은 열(~104px)에서 신원(고정 조각)이 줄을 먼저 먹어 이름이 짜부라졌다.
+            // 일반 몬스터는 윗줄이 **빈 채**로 자리만 잡는다 — 줄 위치·카드 높이가 카드마다 같아야 격자로 읽힌다
             const ident = identOf(u);
             n.innerHTML = `
                 <div class="unit-body">
                     ${sprite}
                     <div class="unit-info">
-                        <div class="unit-id">${ident ? `<span class="unit-ident">${ident}</span>` : ''}<span class="unit-name">${name}</span></div>
+                        <div class="unit-id"><span class="unit-ident">${ident}</span><span class="unit-name">${name}</span></div>
                         <div class="hp-row">
                             <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
                             <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>

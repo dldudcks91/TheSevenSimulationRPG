@@ -189,10 +189,11 @@ export const PAPERDOLL = [
    전 영웅 전면 재굴림). 이력은 남긴다: 위 번호(1~10)는 **구 파일명**이고 아래가 새 이름이다.
    지금은 warrior_1 검투사(구 1) · warrior_2 바바리안(구 2) · warrior_3 백발백염(구 7) ·
    knight_1~3 무안면 로마군(구 3~5) · knight_4 민머리 기사(구 6) · knight_5 외치는 기사(구 9) ·
-   archer_1 궁수(구 8) · priest_1 사제(구 10) · **마법사는 0장**(faces/cartoon/README).
+   archer_1 궁수(구 8) · priest_1~4 사제(구 10 반삭 + 09-07 저녁 신규 셋: 후드 룬 · 흰 두건 · 역병 의사) ·
+   mage_1 마법사(수정구 예언자 — 09-07 밤, 마지막 직업 공백이 닫혔다)(faces/cartoon/README).
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
-   풀이 0장인 직업(마법사)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
-export const HERO_FACES = { warrior: 3, knight: 5, mage: 0, archer: 1, priest: 1 };
+   풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
+export const HERO_FACES = { warrior: 3, knight: 5, mage: 1, archer: 1, priest: 4 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).
  *
  * ⚠ **마무리 섞기(murmur3 finalizer)를 빼면 안 된다** (2026-09-06 버그 수정) — 쓰는 쪽이 전부 `% 개수` 라

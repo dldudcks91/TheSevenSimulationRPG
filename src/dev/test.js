@@ -543,7 +543,7 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
     const n = D.balance.party_size_max;
     const party = SYS.hero.rollStartParty(makeRng(1234), n);
     if (party.length !== n) fail(`인원 ${party.length}`);
-    // 얼굴은 제 직업 풀에서 나온다 — 풀이 0장인 직업(마법사)만 null 이다 (2026-09-07)
+    // 얼굴은 제 직업 풀에서 나온다 — 풀이 0장인 직업(확장 직업)만 null 이다 (2026-09-07 · 본편 5직업은 전부 1장 이상)
     for (const h of party)
         if (h.face !== null && !(typeof h.face === 'string' && h.face.startsWith(h.cls + '_')))
             fail(`얼굴 id 가 직업과 안 맞는다 (${h.cls} → ${h.face})`);
@@ -554,10 +554,10 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
     if (!eq(party.map(h => h.face), again.map(h => h.face))) fail('같은 시드인데 얼굴이 다르다');
     return party.map(h => h.face).join(' · ');
 });
-check('save: serialize → deserialize 왕복 동일 (v13)', () => {
+check('save: serialize → deserialize 왕복 동일 (v14)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 13;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 14;
 });
 check('save: v2 → v11 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11)까지 한 번에', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
@@ -626,13 +626,32 @@ check('save: v12 → v13 이관 — 얼굴을 직업 풀에서 전면 재굴림(
     const up = SYS.game.deserialize(mk());
     if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
     for (const h of up.heroes) {
+        // null 은 풀 0장 직업(확장 직업)만 — 본편 5직업은 전부 1장 이상이라 문자열 id 를 받는다 (2026-09-07 밤)
         if (h.face !== null && !(typeof h.face === 'string' && h.face.startsWith(h.cls + '_')))
             fail(`${h.uid}(${h.cls}) 의 얼굴이 직업 풀에서 안 나왔다 — ${h.face}`);
-        // 풀이 0장인 직업(마법사)은 초상이 없다 — 화면이 빈 칸으로 둔다
-        if (h.cls === 'mage' && h.face !== null) fail(`마법사는 풀 0장이라 null 이어야 한다 — ${h.face}`);
     }
     const again = SYS.game.deserialize(mk());
     if (!eq(up.heroes.map(h => h.face), again.heroes.map(h => h.face))) fail('같은 입력인데 재굴림 결과가 달라졌다');
+    return up.heroes.map(h => `${h.cls}:${h.face}`).join(' · ');
+});
+check('save: v13 → v14 이관 — face=null 만 소급 재굴림 · 가진 얼굴은 유지 · 결정론 (INTERFACE §4)', () => {
+    // v13 세이브 재현 — 마법사 풀이 0장이던 시절의 null 얼굴. 0·1번만 지우고 2번은 남긴다(채우기이지 덮어쓰기가 아니다)
+    const mk = () => {
+        const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+        s.version = 13;
+        s.heroes[0].face = null;
+        s.heroes[1].face = null;
+        return s;
+    };
+    const kept = SYS.game.serialize(G, NOW).heroes[2].face;
+    const up = SYS.game.deserialize(mk());
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    for (const h of up.heroes.slice(0, 2))
+        if (!(typeof h.face === 'string' && h.face.startsWith(h.cls + '_')))
+            fail(`${h.uid}(${h.cls}) 의 null 이 소급되지 않았다 — ${h.face}`);
+    if (up.heroes[2].face !== kept) fail('이미 가진 얼굴이 덮어써졌다');
+    const again = SYS.game.deserialize(mk());
+    if (!eq(up.heroes.map(h => h.face), again.heroes.map(h => h.face))) fail('같은 입력인데 소급 결과가 달라졌다');
     return up.heroes.map(h => `${h.cls}:${h.face}`).join(' · ');
 });
 check('save: 버전 불일치는 거부 (v1 · v99) — v1 은 스키마 단절이라 이관하지 않는다', () => {
@@ -1978,8 +1997,8 @@ check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다
     return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
 });
 
-check('save: SAVE_VERSION 13 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 id(`face` — `<class>_<k>`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 사라졌다 (INTERFACE §4)', () =>
-    SAVE_VERSION === 13 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 14 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 id(`face` — `<class>_<k>`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 사라졌다 (INTERFACE §4)', () =>
+    SAVE_VERSION === 14 || fail(`v${SAVE_VERSION}`));
 
 /* ── 원정 정산 ── */
 check('report: roundsCleared 를 정산이 싣는다 — 렌더러가 짐작하지 않는다 (INTERFACE §2-7)', () => {

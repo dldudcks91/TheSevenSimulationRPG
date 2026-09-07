@@ -69,7 +69,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 /**
  * @param {object} deps
@@ -283,6 +283,20 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v13 → v14 [2026-09-07 밤] — `face = null` 인 영웅만 제 직업 풀에서 굴린다 (INTERFACE §4).
+     * v12→v13 전면 재굴림이 돌던 시점엔 마법사 풀이 0장이라 마법사가 전부 null 을 받았고, 같은 날 밤
+     * 마법사 그림이 들어와 새 마법사만 그림을 받는 간극이 생겼다 — 이 이관이 그 간극을 닫는다.
+     * 「생성 시 1회·불변」은 굴려진 얼굴의 계약이라 null 을 채우는 것은 덮어쓰기가 아니라 처음 굴리는 것이다.
+     * 가진 영웅은 rng 를 소비하지 않는다 — 소비 수 = null 영웅 수 (전용 스트림이라 다른 수열과 안 섞인다).
+     */
+    function upgradeV13(s) {
+        const rng = makeRng(deriveSeed((s.seed >>> 0) ^ 0xFACE, 2));
+        for (const h of s.heroes ?? []) if (h.face == null) h.face = H.rollFace(rng, h.cls);
+        s.version = 14;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -294,7 +308,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -308,6 +322,7 @@ export function createGameSystem(deps) {
         if (s.version === 10) s = upgradeV10(s);
         if (s.version === 11) s = upgradeV11(s);
         if (s.version === 12) s = upgradeV12(s);
+        if (s.version === 13) s = upgradeV13(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;

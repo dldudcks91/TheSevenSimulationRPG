@@ -618,10 +618,19 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 이름 줄은 **HP 바 바로 위**다 (재개정 2026-09-04 사용자 지시 — 전날의 「초상 윗변」(margin-bottom: auto) 을 물렸다).
    열이 바닥 정렬(flex-end)이라 이름·HP·게이지·스킬이 한 묶음으로 초상 아랫변에 붙고, 남는 세로는 전부 이름 위에 쌓인다 —
    이름을 윗변에 떼어 두면 수치 묶음과 붕 떠서 두 덩어리로 읽혔다 (SCREEN_DESIGN §4-2) */
-.unit-id { width: 100%; min-width: 0; display: flex; align-items: baseline; gap: 6px; line-height: 1.2; }
-.unit-ident { flex: 0 0 auto; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+/* 신원·이름 = **두 줄** (개정 2026-09-07 사용자 지시 — 09-03 「한 줄」 폐기 · SCREEN_DESIGN §4-2) —
+   한 줄 합침은 좁은 열(~104px)에서 신원(고정 조각)이 줄을 먼저 먹어 이름이 짜부라졌다.
+   윗줄(신원)은 빈 채도 자리를 잡는다(min-height) — 일반 몬스터와 영웅의 이름·HP 가 같은 높이에 선다 */
+/* 두 줄 다 **오른쪽 정렬** (재개정 2026-09-07 사용자 지시 — 같은 날 아침의 「둘 다 왼쪽 정렬」을 물렸다).
+   카드의 `text-align: left` 를 이 블록에서만 덮는다 — **양 진영 같다**(몬스터의 이름·정예 라벨도 같은 변에 선다) */
+.unit-id { width: 100%; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; text-align: right; }
+.unit-ident {
+    max-width: 100%; min-height: 1.2em;
+    font-size: var(--fs-xs); color: var(--text-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .unit-name {
-    margin-left: auto; min-width: 0;
+    min-width: 0;
     font-size: var(--fs-sm); color: var(--text-primary);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -1341,8 +1350,10 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .ng-head .hero-face { width: clamp(96px, 9.5vw, 152px); height: clamp(96px, 9.5vw, 152px); }
 .ng-id { min-width: 0; display: flex; flex-direction: column; }
 /* 이름 줄 = 이름 + **등급 칩 + 죄종 칩** (2026-09-01 사용자 지시 — 죄종이 아랫줄에서 올라왔다).
-   칩 둘은 안 줄어들고(`flex-shrink:0`) 긴 이름만 말줄임된다 — 정체성 칩이 잘리면 무엇인지 못 읽는다 */
-.ng-name { display: flex; align-items: center; gap: 6px; line-height: 1.3; flex-wrap: wrap; }
+   칩 둘은 안 줄어들고(`flex-shrink:0`) 긴 이름만 말줄임된다 — 정체성 칩이 잘리면 무엇인지 못 읽는다.
+   ⚠ wrap 을 켜면 안 된다 (2026-09-07 버그 수정) — 플렉스는 wrap 이 켜지면 항목을 줄이기 전에 줄바꿈을
+   먼저 택해서, 긴 이름에서 칩이 아랫줄로 밀리고 아래 말줄임이 영영 발동하지 않는다 (SCREEN_DESIGN §3) */
+.ng-name { display: flex; align-items: center; gap: 6px; line-height: 1.3; }
 .ng-name .tier-chip, .ng-name .sin-chip { flex: 0 0 auto; }
 .ng-name > b {
     font-weight: normal; font-size: var(--fs-lg);
