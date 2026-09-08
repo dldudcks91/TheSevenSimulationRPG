@@ -51,6 +51,9 @@ export const L = v =>
     v == null ? '' : (typeof v === 'string' ? v : (v[current] ?? v.ko ?? ''));
 
 /** UI 문구 조회 — 미등록 키는 키 그대로 노출된다 (누락이 화면에서 바로 보이게) */
+/** 그 키가 사전에 있는가 — 어휘가 CSV 에서 오는 자리(버프 `effect_stat`)가 문장을 만들지 말지 고를 때 쓴다 */
+export const has = key => Object.prototype.hasOwnProperty.call(STRINGS, key);
+
 export function t(key, params) {
     const e = STRINGS[key];
     let s = e ? (e[current] ?? e.ko) : key;
@@ -284,8 +287,10 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 11 [개정 2026-09-06 사용자 지시] — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · **이미지 도감** · 도움말 (SCREEN_DESIGN §1).
-       09-06 에 도감 뒤로 **이미지 도감**(`nav.imagedex` · §9-1)이 들어왔다 — 자산을 묶음별로 펼치는 조회 탭이라 참조 묶음(도감 · 도움말) 안에 선다.
+    /* 탭 10 [개정 2026-09-08 사용자 지시] — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
+       09-08 에 **이미지 도감이 도감 안으로 들어가며** `nav.imagedex` 가 삭제됐다 — 탭이 아니라 도감의 **세그먼트 넷 중 셋**이다 (`cx.seg.*` · §9 · §9-1).
+       그래서 이 목록의 탭 수만 11 → 10 으로 줄고 **움직인 탭은 없다** — 도움말이 한 칸 당겨졌을 뿐이다.
+       [개정 2026-09-06 사용자 지시] 탭 11 — 도감 뒤에 이미지 도감이 서던 자리. 09-08 에 되물렸다.
        [개정 2026-09-04 사용자 지시] 탭 10 — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
        마을 탭이 **자원**(1인 배치 — 광산 · 채집)과 **탐험**(파티)으로 갈리면서 `nav.town` 은 삭제됐다.
        `nav.explore` 는 값이 그대로인 채 **파견처 칸 라벨에서 탭 라벨로 승격**됐다 (§8-4) — `nav.tavern` 과 같은 사례다.
@@ -302,7 +307,6 @@ const STRINGS = {
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.research': { ko: '연구', en: 'Research' },
     'nav.codex': { ko: '도감', en: 'Codex' },
-    'nav.imagedex': { ko: '이미지 도감', en: 'Image Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
     'nav.commission': { ko: '의뢰', en: 'Commissions' },
     'nav.skill': { ko: '스킬', en: 'Skills' },
@@ -646,9 +650,64 @@ const STRINGS = {
     'sk.src.advance': { ko: '전직', en: 'Advance' },
     'sk.emptyWeapon': { ko: '무기 없음', en: 'No weapon' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
-    'sk.base': { ko: '표기 {s}초', en: 'Base {s}s' },
-    'sk.eff': { ko: '실효 {s}초', en: 'Eff. {s}s' },
-    'sk.aligned': { ko: '(정렬 일치)', en: '(aligned)' },
+    /* 스킬 툴팁 문장 [전면 개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2]
+       ~~`표기 6초 · 실효 7.2초 (+20%)`~~ 를 버리고 **데이터로 조립한 한 문장**을 낸다.
+       틀은 `kind` × `target` 이 고르고 숫자만 강조색으로 뽑는다. **조각을 이어붙이지 않는다** —
+       ko/en 이 어순이 달라 각 틀이 제 문장을 통째로 든다. {d} 는 아래 수량 구절이 들어가는 자리. */
+    'sk.line.single': {
+        ko: '{n}초마다 적 하나를 강하게 공격해 {d}를 가한다',
+        en: 'Every {n}s, strikes one enemy hard for {d}',
+    },
+    'sk.line.singleN': {
+        ko: '{n}초마다 적 하나를 {h}번 때려 매번 {d}를 가한다',
+        en: 'Every {n}s, hits one enemy {h} times for {d} each',
+    },
+    'sk.line.all': {
+        ko: '{n}초마다 적 전원에게 {d}를 가한다',
+        en: 'Every {n}s, deals {d} to every enemy',
+    },
+    'sk.line.rotate': {
+        ko: '{n}초마다 대상을 옮겨 가며 {h}번 공격해 매번 {d}를 가한다',
+        en: 'Every {n}s, attacks {h} times moving between targets, {d} each',
+    },
+    'sk.line.chain': {
+        ko: '{n}초마다 줄지어 선 적을 꿰뚫어 {d}를 가한다 — 뒤 대상일수록 {k}% 씩 줄어든다',
+        en: 'Every {n}s, pierces enemies in a line for {d} — falling off {k}% per target',
+    },
+    'sk.line.heal': {
+        ko: '{n}초마다 파티 전원의 HP 를 {d} 되돌린다',
+        en: 'Every {n}s, restores {d} to the whole party',
+    },
+    /* ⚠ ko 는 **서술어를 틀에 두지 않는다** — 한국어 조사(을/를)가 앞말 받침을 타는데 {e} 가 무엇으로
+       끝날지 틀이 모른다(「+25%」 → 를 · 「보호막」 → 을). 그래서 ko 효과 구절이 서술어까지 들고,
+       en 은 반대로 틀이 `grants` 를 든다. 언어마다 문장을 쪼개는 자리가 다른 것이 정상이다 */
+    'sk.line.buffParty': {
+        ko: '{n}초마다 파티 전원에게 {s}초간 {e}',
+        en: 'Every {n}s, grants the whole party {e} for {s}s',
+    },
+    'sk.line.buffSelf': {
+        ko: '{n}초마다 {s}초간 자신에게 {e}',
+        en: 'Every {n}s, grants yourself {e} for {s}s',
+    },
+    'sk.line.taunt': {
+        ko: '{n}초마다 {s}초간 적의 공격을 자신에게 끌어모은다',
+        en: 'Every {n}s, draws enemy attacks to yourself for {s}s',
+    },
+    /* 수량 구절 — 공격력을 아는 자리는 **실제 수치**, 모르는 자리(후보 카드)는 **배율**로 접는다.
+       ⚠ 감소·치명 전의 값이다 (game_logic/skill.js:previewOf) */
+    'sk.amt.physical': { ko: '{v} 의 물리 피해', en: '{v} physical damage' },
+    'sk.amt.magic': { ko: '{v} 의 마법 피해', en: '{v} magic damage' },
+    'sk.amt.mult': { ko: '공격력의 {m}% 만큼 피해', en: 'damage equal to {m}% of Attack' },
+    'sk.amt.heal': { ko: '{v} 만큼', en: '{v} HP' },
+    'sk.amt.healMult': { ko: '공격력의 {m}% 만큼', en: 'HP equal to {m}% of Attack' },
+    /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill.csv:effect_stat` 어휘 그대로 */
+    'sk.eff.atk_pct': { ko: '공격력 +{v}% 를 건다', en: '+{v}% Attack' },
+    'sk.eff.period_pct': { ko: '행동 주기 −{v}% 를 건다', en: '−{v}% action cycle' },
+    'sk.eff.barrier_pct': { ko: '최대 HP {v}% 짜리 보호막을 씌운다', en: 'a shield worth {v}% of max HP' },
+    /* 스킬이 실제로 몇 초마다 나가는가 [2026-09-08 사용자 지시] — 목록 줄과 툴팁 문장이 같은 말을 쓴다.
+       ~~`sk.base`(표기 {s}초) · `sk.eff`(실효 {s}초) · `sk.aligned`~~ 는 **병기를 폐기하며 함께 지웠다** —
+       화면에는 실제 적용값 하나만 두고, 주기를 모르는 자리(살 수 있는 후보)는 그 자리에 기본값이 온다 */
+    'sk.every': { ko: '{s}초마다', en: 'Every {s}s' },
     'sk.slots.note': {
         ko: '행동 주기가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>슬롯 순서</b> → 없으면 기본 공격.<br>'
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
@@ -714,6 +773,13 @@ const STRINGS = {
     },
 
     /* ── 도감 ── */
+    /* 세그먼트 넷 [신설 2026-09-08 사용자 지시 — SCREEN_DESIGN §9] — 몬스터(카드 수집)만 이 블록이 든다.
+       나머지 셋(캐릭터 · 아이템 · 스킬)의 문구는 아래 「도감 — 자산 세그먼트」(`ix.*`) 블록이다.
+       `cx.h`(몬스터 도감)는 화면 제목 자리를 `nav.codex` 에 내주고 **도움말 섹션 제목으로만** 남는다 (§12). */
+    'cx.seg.monster': { ko: '몬스터', en: 'Monsters' },
+    'cx.seg.character': { ko: '캐릭터', en: 'Characters' },
+    'cx.seg.item': { ko: '아이템', en: 'Items' },
+    'cx.seg.skill': { ko: '스킬', en: 'Skills' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
     'cx.sub': { ko: '카드 {pct}% 드롭 · 레벨별 필요 {list}장 — 스테이지 계열 스탯이 오른다', en: 'Cards drop at {pct}% · {list} per level — raises the stage\'s stat line' },
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
@@ -737,17 +803,23 @@ const STRINGS = {
             + 'Face art exists for 5 Ch1 monsters only — the rest fall back to a single initial',
     },
 
-    /* ── 이미지 도감 (SCREEN_DESIGN §9-1 · 신설 2026-09-06) ──
+    /* ── 도감 — 자산 세그먼트 (SCREEN_DESIGN §9-1 · 신설 2026-09-06 · 탭 흡수 2026-09-08) ──
        타일에 붙는 것은 **이름과 파일명뿐**이다 — 「무기는 제 그림이고 방어구는 임시다」 같은 규칙은
-       화면 문구가 아니라 §9-1 과 `mock.js` 주석의 내용이다 (§12 설명 문구는 도움말 탭 전용). */
-    'ix.h': { ko: '이미지 도감', en: 'Image Codex' },
-    'ix.seg.character': { ko: '캐릭터', en: 'Characters' },
-    'ix.seg.item': { ko: '아이템', en: 'Items' },
+       화면 문구가 아니라 §9-1 과 `mock.js` 주석의 내용이다 (§12 설명 문구는 도움말 탭 전용).
+       **`ix.` 접두를 그대로 둔다** — 옛 「이미지 도감」 탭이 도감의 세그먼트 셋이 됐을 뿐 이 문구 묶음은 그대로라,
+       접두를 `cx.` 로 갈면 몬스터 카드 문구와 한 이름 공간에 섞여 오히려 어느 세그먼트의 것인지가 안 읽힌다.
+       09-08 삭제 — `ix.h`(탭 제목 · `nav.codex` 가 받는다) · `ix.seg.*`(세그먼트 · `cx.seg.*` 가 받는다) ·
+       `ix.g.monster`(몬스터 초상 묶음 · 몬스터 세그먼트의 카드가 그 일을 한다 — §9). */
     'ix.g.hero': { ko: '영웅 초상', en: 'Hero Portraits' },
-    'ix.g.monster': { ko: '몬스터 초상', en: 'Monster Portraits' },
     'ix.g.weapon': { ko: '무기', en: 'Weapons' },
     'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
     'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
+    /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고, 그 안에
+       전직 액티브 + 그 직업이 드는 무기군의 액티브가 함께 선다. 옛 키 둘(`ix.g.skillClass`·`ix.g.skillWeapon` —
+       `owner_kind` 를 그대로 묶던 이름)은 이 개정으로 삭제됐다.
+       `ix.skillFrom` 은 무기군 액티브의 이름표 — 어순을 템플릿이 들어 렌더러가 문장을 잇지 않게 한다 */
+    'ix.g.skillCls': { ko: '{cls} 스킬', en: '{cls} Skills' },
+    'ix.skillFrom': { ko: '{skill} ({from})', en: '{skill} ({from})' },
     'ix.count': { ko: '{n}장', en: '{n} images' },
     'ix.style': { ko: '얼굴 스타일', en: 'Face style' },
     'ix.hero': { ko: '영웅 {n}', en: 'Hero {n}' },

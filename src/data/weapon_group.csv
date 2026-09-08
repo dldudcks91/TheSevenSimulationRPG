@@ -3,8 +3,10 @@ sword2h,양손검,Greatsword,knight,physical,1.6,15,main,기사 — 느리고 �
 axe,도끼,Axe,warrior,physical,1.6,28,main,전사 — 느리고 한 방 크게. 약점 = 변동 28% 로 운에 휘둘린다 (2026-09-01 변동 25 → 28 · 창이 기사로 가면서 전사 안에서 둔기와 갈린다)
 mace,둔기,Mace,warrior,physical,1.3,22,main,전사 — 빠르고 들쭉날쭉. 약점 = 한 방이 약하다 (2026-09-01 한손 → 양손)
 spear,창,Spear,knight,physical,1.3,10,main,기사 — 빠르고 정확. 약점 = 최대 피해가 낮다 (2026-09-01 전사 → 기사 이관 · 주기 1.5 → 1.3)
-staff,스태프,Staff,mage|priest,magic,1.7,15,main,마법사·사제 공유 — 느린 마법. 기본 공격 = 마법
-orb,오브,Orb,mage|priest,magic,1.3,10,main,마법사·사제 공유 — 빠른 마법. 기본 공격 = 마법 (2026-09-01 완드 → 오브 · 한손 개념 폐지로 이름 교체)
+staff,스태프,Staff,mage,magic,1.7,15,main,마법사 전용 — 느린 마법(높은 데미지). 기본 공격 = 마법 (2026-09-07 사제 전용 무기 신설로 공유 해제 — hero_design §2)
+orb,오브,Orb,mage,magic,1.3,10,main,마법사 전용 — 빠른 마법(높은 공속). 기본 공격 = 마법 (2026-09-01 완드 → 오브 · 2026-09-07 공유 해제)
+crucifix,십자가,Crucifix,priest,magic,1.3,8,main,사제 — 빠른 마법(높은 공속). ⚠제안 수치 — 09-07 확정은 「사제 전용 · 직업마다 높은 공속 하나」까지고 주기·변동은 미발행이었다. 오브(1.3·10)와 같은 주기에 두되 변동을 더 낮춰 「기사·사제가 작다」(hero_design §2)를 지킨다
+bible,성경,Bible,priest,magic,1.7,12,main,사제 — 느린 마법(높은 데미지). ⚠제안 수치 — 스태프(1.7·15)와 같은 주기에 두되 변동을 더 낮췄다. 사제는 지원직이라 「운 나쁜 판」이 파티 생존에 직결한다 (hero_design §2)
 bow,활,Bow,archer,physical,1.4,14,main,궁수 — 석궁과의 차별화 축 미정
 crossbow,석궁,Crossbow,archer,physical,1.8,20,main,궁수 — 활과의 차별화 축 미정
 dagger,쌍단검,Twin Daggers,assassin,physical,0.9,12,expansion,암살자 (확장) — 2026-09-01 단검 → 쌍단검 (한손 개념 폐지)

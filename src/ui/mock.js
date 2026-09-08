@@ -395,14 +395,16 @@ export const MASTERY_GRID = { tiers: 3, nodes: 3 };
 export const CX_STAT = {
     1: { ko: '공격력', en: 'Attack' },
     2: { ko: '체력', en: 'Health' },
-    3: { ko: '명중률', en: 'Accuracy' },
+    // ⚠ 계열 3 은 **미정**이다 — 08-26 명중·회피 폐지로 `codex_series.csv:acc_pct` 가 갈 곳을 잃었고,
+    //    재배정은 GAME_DESIGN §10 대기다. 폐기된 스탯 이름을 유저에게 그리지 않는다 (2026-09-08)
+    3: { ko: '미정', en: 'TBD' },
     4: { ko: '피해량', en: 'Damage' },
 };
 /** 완성 보상 라벨 — 표시 전용(보상 효과 미구현) */
 export const CX_DONE = {
     1: { ko: '치명률 +2%', en: '+2% Crit Rate' },
     2: { ko: '방어력 +2%', en: '+2% Defense' },
-    3: { ko: '회피율 +2%', en: '+2% Evasion' },
+    3: { ko: '미정', en: 'TBD' },                    // ⚠ 회피율도 08-26 폐지분 — 계열 3 과 같은 자리에서 대기 (§10)
     4: { ko: '공격 속도 +2%', en: '+2% Attack Speed' },
 };
 
@@ -443,8 +445,8 @@ export const TRADE = {
     },
 };
 
-/* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — `commission_kind.csv`(종류 4종 ·
-   확정 기획)와 `commission.csv`(게시판 행 · ⚠임시 자리채움) 두 표이고 로더는 `ui/data.js:D.commissionKinds`·
+/* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — `commission_kind.csv`(종류 2종 ·
+   확정 기획 — 09-07 목표형 개정으로 4종 → 2종, DEV_PLAN R45)와 `commission.csv`(게시판 행 · ⚠임시 자리채움) 두 표이고 로더는 `ui/data.js:D.commissionKinds`·
    `D.commissionList` 다. 목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)·연구(RESEARCH)와 갈리는 지점이고,
    근거는 「mock 과 CSV 가 겹치면 CSV 만 둔다」(SCREEN_DESIGN §14 · DEV_PLAN §5-B). */
 
@@ -453,9 +455,12 @@ export const RESEARCH = {
     material: 42,
     nodes: [
         { id: 'refine', name: { ko: '재료 정제', en: 'Material Refining' },
-            gain: { ko: '제련소 강화 성공률 +5%', en: '+5% smeltery upgrade success' },
+            // ⚠ ~~성공률~~ 은 09-03 「강화에 실패·파괴·하락 없음」 확정으로 사라진 축이다 — 운이 미는 것은 **품질** (2026-09-08 정정)
+            gain: { ko: '제련소 강화 품질 +5%', en: '+5% smeltery upgrade quality' },
             state: 'done', mat: 20, gold: 400 },
-        { id: 'wgroup', name: { ko: '무기군 숙련 개방', en: 'Weapon Mastery Unlock' },
+        // ⚠ 이름만 바뀌었다 — ~~무기군 숙련~~ 은 09-07 가 T2 무기군별 서브트리를 폐기하면서 사라졌다(DEV_PLAN R46).
+        //    `id` 는 그대로 둔다 — 아래 `need: 'wgroup'` 이 가리키는 목업 선행 관계만 뜻한다 (2026-09-08)
+        { id: 'wgroup', name: { ko: '직업 마스터리 개방', en: 'Class Mastery Unlock' },
             gain: { ko: '직업 마스터리 아랫줄 1칸', en: 'One more class mastery row' },
             state: 'open', mat: 35, gold: 900 },
         { id: 'reroll', name: { ko: '접사 재굴림', en: 'Affix Reroll' },

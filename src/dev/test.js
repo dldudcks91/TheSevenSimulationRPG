@@ -13,6 +13,8 @@
 
 import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES } from '../ui/data.js';
+import { skillTipCard } from '../ui/tip.js';
+import { setLang } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { parseCsv } from '../game_logic/csv.js';
@@ -52,16 +54,16 @@ const WG = D.weaponGroups;
 
 /* ── 데이터 ── */
 check('csv: 숫자 셀은 숫자로', () => parseCsv('a,b\n1,x\n2.5,\n')[0].a === 1 && parseCsv('a,b\n1,x\n')[0].b === 'x');
-check('csv: monster 112 / stage 28 / weapon_group 10 / codex_level 4 / chapter 7 / codex_series 4 / hero_attribute 7 / combat_stat 25', () =>
-    Object.keys(D.monsters).length === 112 && D.stageList.length === 28 && D.weaponGroupList.length === 10
+check('csv: monster 112 / stage 28 / weapon_group 12 / codex_level 4 / chapter 7 / codex_series 4 / hero_attribute 7 / combat_stat 25', () =>
+    Object.keys(D.monsters).length === 112 && D.stageList.length === 28 && D.weaponGroupList.length === 12
     && D.codexLevels.length === 4 && D.chapterList.length === 7 && Object.keys(D.codexSeries).length === 4
     && D.heroAttributes.length === 7 && D.combatStats.length === 25);
 // 08-27 판 기본 액티브 — 본편 5직업 × 3, 전사 ③ 만 기획 미정이라 14 (skill_design §9-2 · §7)
-check('csv: skill 22행 — 전직 임시분 14(전사 ③ 미정) + 무기군 8 (skill_design §9 · §6)', () => {
+check('csv: skill 24행 — 전직 임시분 14(전사 ③ 미정) + 무기군 10 (skill_design §9 · §6)', () => {
     const n = D.skillRows.length;
     const adv = D.skillRows.filter(r => r.owner_kind === 'advance').length;
     const wg = D.skillRows.filter(r => r.owner_kind === 'weapon_group').length;
-    if (n !== 22 || adv !== 14 || wg !== 8) fail(`${n}행 (전직 ${adv} · 무기군 ${wg})`);
+    if (n !== 24 || adv !== 14 || wg !== 10) fail(`${n}행 (전직 ${adv} · 무기군 ${wg})`);
     // 고유 풀은 **전직 임시분만**이다 — 무기군 행이 풀에 들어가면 굴림 결과가 흔들린다 (§9-0)
     if (D.skillRows.some(r => r.owner_kind === 'weapon_group' && r.innate_pool === 1)) fail('무기군 행이 고유 풀에 있다');
     return `전직 ${adv} · 무기군 ${wg}`;
@@ -303,22 +305,32 @@ check('stage_round: 정예 3·6 / 보스 9', () => eq(D.eliteRounds, [3, 6]) && 
  * 무기군 재편 (2026-09-01) — 한손 개념 폐지 · 한손검 삭제 · 창이 전사 → 기사 · 완드 → 오브.
  * **본편 5직업이 전부 2개씩**이라는 것이 계약이다. 전사는 변동이 크고(22·28) 기사는 작다(10·15) —
  * 직업 성격이 무기에서부터 갈린다. 같은 직업의 두 무기는 행동 주기(1.3 ↔ 1.6)로 갈린다.
+ *
+ * **사제 전용 무기 (2026-09-07 확정 · R46)** — 스태프·오브가 마법사 전용이 되고 사제는 성경·십자가를 든다.
+ * 09-01 이 감수하기로 했던 「사제·마법사 숙련 중복」이 여기서 소멸한다 (hero_design §2).
+ * 그리고 **직업마다 「높은 공속 하나 · 높은 데미지 하나」**가 축 이름으로 확정됐다 — 두 무기의 주기가
+ * 같으면 그 직업은 축이 없다는 뜻이라 아래에서 매 직업 검사한다.
  */
-check('weapon_group: 본편 5직업 × 무기 2개 (2026-09-01 재편) · 스태프/오브 = magic · 전 무기 양손', () => {
+check('weapon_group: 본편 5직업 × 무기 2개 · 사제 전용 성경/십자가(09-07) · 캐스터 무기 = magic · 전 무기 양손', () => {
     const groups = cls => D.weaponGroupList.filter(g => g.classes.includes(cls)).map(g => g.id).sort();
     if (!eq(groups('warrior'), ['axe', 'mace'])) fail(`warrior ${groups('warrior')}`);
     if (!eq(groups('knight'), ['spear', 'sword2h'])) fail(`knight ${groups('knight')}`);
-    if (!eq(groups('mage'), ['orb', 'staff']) || !eq(groups('priest'), ['orb', 'staff'])) fail('caster pool');
+    // 09-07 — 캐스터 풀이 갈렸다. 사제가 스태프·오브를 들면 R46 이 되돌아온 것이다
+    if (!eq(groups('mage'), ['orb', 'staff'])) fail(`mage ${groups('mage')}`);
+    if (!eq(groups('priest'), ['bible', 'crucifix'])) fail(`priest ${groups('priest')}`);
+    if (WG.staff.classes.includes('priest') || WG.orb.classes.includes('priest')) fail('스태프·오브가 아직 사제와 공유다 (09-07 분리)');
+    if (WG.bible.damageKind !== 'magic' || WG.crucifix.damageKind !== 'magic') fail('사제 무기는 마법 채널이다 — 파워 출처가 지능이어야 한다');
     if (!eq(groups('archer'), ['bow', 'crossbow'])) fail(`archer ${groups('archer')}`);
     if (WG.sword1h || WG.wand) fail('sword1h 삭제 · wand → orb 개명 (2026-09-01)');
     if (WG.staff.damageKind !== 'magic' || WG.orb.damageKind !== 'magic' || WG.axe.damageKind !== 'physical') fail('damageKind');
+    if (WG.crucifix.variance >= WG.spear.variance) fail('사제 무기의 변동이 기사보다 크다 — 「기사·사제가 작다」(hero_design §2)');
     if (D.weaponGroupList.some(g => 'twoHanded' in g)) fail('twoHanded 는 퇴역 필드 — 전 무기가 양손이라 표현할 게 없다');
     for (const cls of ['warrior', 'knight', 'mage', 'priest', 'archer']) {
         const gs = groups(cls);
         if (gs.length !== 2) fail(`${cls} 무기 ${gs.length}개 (2여야 한다)`);
         if (WG[gs[0]].period === WG[gs[1]].period) fail(`${cls} 두 무기의 행동 주기가 같다 — 갈릴 근거가 없다`);
     }
-    return `전사 ${groups('warrior')} · 기사 ${groups('knight')}`;
+    return `전사 ${groups('warrior')} · 기사 ${groups('knight')} · 사제 ${groups('priest')}`;
 });
 check('combat_stat.csv: 25행 · 폐지 축 없음 · 저항은 pct · 유틸은 운 계수 (08-26 재설계)', () => {
     const ids = D.combatStats.map(s => s.id);
@@ -579,12 +591,41 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
     if (!eq(party.map(h => h.face), again.map(h => h.face))) fail('같은 시드인데 얼굴이 다르다');
     return party.map(h => h.face).join(' · ');
 });
-check('save: serialize → deserialize 왕복 동일 (v15)', () => {
+check('save: serialize → deserialize 왕복 동일 (v16)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 15;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 16;
 });
-check('save: v2 → v15 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11) · **히든 상한 폐지·등급(v15)**까지 한 번에', () => {
+/**
+ * v15 → v16 (2026-09-07 확정 · 2026-09-08 구현 — 사제 전용 무기 · R46).
+ * 스태프·오브가 마법사 전용이 되면서 **사제가 낀 그 둘**만 사제 짝으로 갈아끼운다.
+ * 벗기지 않는 이유는 **무기가 밑수**라(battle_design §9-1) 맨손 사제는 세기가 통째로 무너지기 때문이다.
+ * 가방에 든 것은 마법사가 쓸 수 있으므로 **그대로 둔다** — 여기가 뒤집히면 마법사의 무기가 사라진다.
+ */
+check('save: v15 → v16 이관 — 사제가 낀 스태프/오브만 성경/십자가로 · 가방 것은 그대로 (R46)', () => {
+    const v15 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v15.version = 15;
+    const h = v15.heroes[0];
+    h.cls = 'priest';
+    const worn = { uid: 'v16_worn', slot: 'weapon', group: 'staff', rarity: 'magic', ilvl: 3, up: 0,
+        watk: 4.44, element: 'fire', name: { ko: '분노의 스태프', en: 'Wrathful Staff' },
+        implicit: null, affixes: [], sins: ['wrath'] };
+    const bagged = { ...worn, uid: 'v16_bag', group: 'orb', name: { ko: '분노의 오브', en: 'Wrathful Orb' } };
+    v15.items[worn.uid] = worn; v15.items[bagged.uid] = bagged;
+    h.equipped.weapon = worn.uid; v15.bag.push(bagged.uid);
+
+    const up = SYS.game.deserialize(v15);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    const w = up.items.v16_worn, b = up.items.v16_bag;
+    if (w.group !== 'bible') fail(`착용 스태프 → ${w.group} (성경이어야 한다 — 주기 축 1.7 대응)`);
+    if (b.group !== 'orb') fail(`가방 오브가 ${b.group} 로 바뀌었다 — 가방은 안 건드린다`);
+    if (w.watk !== 4.44 || w.element !== 'fire') fail('개체 굴림이 재굴림됐다');
+    if (w.name.ko === '분노의 스태프') fail('이름이 옛 베이스 그대로다 — 접사 죄종을 살려 다시 조립해야 한다');
+    if (!w.name.ko.includes('성경')) fail(`이름 ${w.name.ko}`);
+    if (SYS.item.canEquip({ cls: 'priest' }, w)) fail('이관 뒤에도 사제가 못 낀다');
+    return `${w.name.ko} · 가방 ${b.group} 보존`;
+});
+check('save: v2 → v16 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11) · **히든 상한 폐지·등급(v15)** · **사제 무기 분리(v16)**까지 한 번에', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v2.version = 2;
     // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
@@ -718,14 +759,25 @@ check('xp: 레벨업 시 능력치는 **전 영웅 공통 상한**까지만 (개
 });
 
 /* ── 마스터리 (skill_design §3-1~§3-4 확정 2026-08-28) ── */
-check('csv: mastery_node 22행 — 죄종 T1 공통 3 + T2 확정 16 + 전사 T1 3. T3(반응형)는 아직 없다', () => {
-    if (D.masteryNodes.length !== 22) fail(`${D.masteryNodes.length}행`);
+/**
+ * 직업 마스터리 확장 (2026-09-07 확정 · R46) — T1 이 5직업 전부(3 → 15) · T2-3 직업별 칸이 섰다.
+ * **T2-3 은 넷뿐이다** — 궁수 칸(`vs_type_damage`)은 `combat_stat.csv` 에서 impl=0 이라 넣으면
+ * 읽히지 않는 SSOT 가 된다(타입 특효 미구현). 무기 특성 T2-1·T2-2 도 같은 이유로 없다 — DEV_PLAN R46.
+ */
+check('csv: mastery_node 38행 — 죄종 T1 공통 3 + 죄종 T2 16 + 직업 T1 15(5직업×3) + 직업 T2-3 4. T3(반응형)는 아직 없다', () => {
+    if (D.masteryNodes.length !== 38) fail(`${D.masteryNodes.length}행`);
     const by = {};
     for (const n of D.masteryNodes) { const k = `${n.tree_kind}${n.tier}`; by[k] = (by[k] ?? 0) + 1; }
-    if (by.sin1 !== 3 || by.sin2 !== 16 || by.class1 !== 3) fail(JSON.stringify(by));
+    if (by.sin1 !== 3 || by.sin2 !== 16 || by.class1 !== 15 || by.class2 !== 4) fail(JSON.stringify(by));
+    // T1-1 은 5직업 공통 「체력」이다 (skill_design §3-4 확정 09-07) — 하나라도 빠지면 패턴이 무너진다
+    for (const cls of ['warrior', 'knight', 'mage', 'priest', 'archer']) {
+        const t1 = D.masteryNodes.filter(n => n.tree_kind === 'class' && n.owner_id === cls && n.tier === 1);
+        if (t1.length !== 3) fail(`${cls} 직업 T1 ${t1.length}개`);
+        if (!t1.some(n => n.stat === 'hp_pct')) fail(`${cls} T1-1 이 체력이 아니다`);
+    }
     // T3 는 전투 중 사건에 붙는 반응형이라 hero.js 가 아니라 battle.js 의 몫 — 값도 전부 미정이다
     if (D.masteryNodes.some(n => n.tier === 3)) fail('T3 가 CSV 에 들어왔다 — 구현 없이 두면 읽히지 않는 SSOT 가 된다');
-    return `죄종 T1 ${by.sin1} · 죄종 T2 ${by.sin2} · 직업 T1 ${by.class1}`;
+    return `죄종 T1 ${by.sin1} · 죄종 T2 ${by.sin2} · 직업 T1 ${by.class1} · 직업 T2 ${by.class2}`;
 });
 check('mastery_node: 참조하는 balance 키가 전부 실재하고 stat 이 실재하는 채널이다 — 새 채널을 만들지 않는다', () => {
     const affix = new Set(D.affixDefs.map(d => d.stat));
@@ -1334,7 +1386,7 @@ check('equip: 방어구 착용 → 방어력 상승, 해제 → 가방 복귀', 
     const u = SYS.game.unequip(G, h.uid, 'armor');
     return u.ok && G.bag.includes(it.uid) && h.equipped.armor == null;
 });
-check('equip: 다른 직업 전속 무기군은 거부 · 공유 무기군(마법사↔사제)은 허용', () => {
+check('equip: 다른 직업 전속 무기군은 거부 — 캐스터 공유 풀은 2026-09-07 에 갈렸다 (R46)', () => {
     const h = G.heroes[0];
     const rng = makeRng(13);
     let foreign;
@@ -1344,9 +1396,13 @@ check('equip: 다른 직업 전속 무기군은 거부 · 공유 무기군(마�
     G.bag = G.bag.filter(u => u !== foreign.uid); delete G.items[foreign.uid];
     if (r.ok || r.err !== 'class') fail(`foreign ${JSON.stringify(r)}`);
     const priest = { cls: 'priest' }, mage = { cls: 'mage' }, knight = { cls: 'knight' };
-    const wand = { slot: 'weapon', group: 'orb' };        // 마법사·사제 공유 무기군 (구 완드)
-    if (SYS.item.canEquip(priest, wand) !== null || SYS.item.canEquip(mage, wand) !== null) fail('shared caster pool rejected');
-    return SYS.item.canEquip(knight, wand) === 'class';
+    const orb = { slot: 'weapon', group: 'orb' };            // 09-07 부터 마법사 전용 (구 완드)
+    const cross = { slot: 'weapon', group: 'crucifix' };     // 09-07 신설 — 사제 전용
+    if (SYS.item.canEquip(mage, orb) !== null) fail('마법사가 오브를 못 낀다');
+    if (SYS.item.canEquip(priest, orb) !== 'class') fail('사제가 아직 오브를 낀다 — 09-07 분리가 안 됐다');
+    if (SYS.item.canEquip(priest, cross) !== null) fail('사제가 십자가를 못 낀다');
+    if (SYS.item.canEquip(mage, cross) !== 'class') fail('마법사가 십자가를 낀다');
+    return SYS.item.canEquip(knight, orb) === 'class';
 });
 /**
  * 한손 개념 폐지 (2026-09-01) — 「양손 무기가 보조를 벗긴다」 단정이 있던 자리다.
@@ -1575,49 +1631,49 @@ check('skill: 어휘 — owner_kind/kind/target/effect_stat/cast_condition 이 �
     }
     return `${SYS.skill.list.length} defs`;
 });
-check('skill: activesFor — **칸은 출처가 정한다** 고유 / 무기군 / 전직 각 하나 (skill_design §2 · 2026-09-03)', () => {
+/**
+ * 전직 칸 임시 채움 폐기 [사용자 확정 2026-09-08] — 「전직은 **찍은 하나**이고 안 찍었으면 그 칸은 비운다」.
+ * 전직 시스템이 없어(R16) 아무도 못 찍었으므로 **전직 칸은 언제나 비어 있다** — 배정은 최대 둘(고유 · 무기군)이다.
+ * 여기가 다시 `advance` 를 내면 임시 채움이 되살아난 것이다.
+ */
+check('skill: activesFor — **칸은 출처가 정한다** 고유 / 무기군 / 전직(찍은 하나 — 지금은 언제나 빈 칸) (skill_design §2)', () => {
     const srcOf = (hero, ctx) => SYS.skill.activesFor(hero, ctx).map(a => a.source);
     const idsOf = (hero, ctx) => SYS.skill.activesFor(hero, ctx).map(a => a.id);
     const MAIN = D.classes.filter(c => c.stage === 'main').map(c => c.id);
     for (const cls of MAIN) {
-        const adv = SYS.skill.list.filter(d => d.ownerKind === 'advance' && d.ownerId === cls)
-            .slice().sort((a, b) => a.priority - b.priority);
-        if (!adv.length) fail(`${cls} 전직 임시분이 없다`);
-        // ① 맨손 · 고유 없음 — 전직 칸 하나뿐이다. 「출처가 없으면 칸도 없다」
-        const bare = SYS.skill.activesFor({ cls });
-        if (!eq(bare.map(a => a.source), ['advance'])) fail(`${cls} 맨손 출처 ${bare.map(a => a.source)}`);
-        if (bare[0].id !== adv[0].id) fail(`${cls} 전직 칸이 priority 최소가 아니다 (${bare[0].id})`);
-        // ② 무기를 들면 무기군 칸이 생긴다 — 그 무기군 행이 정확히 그 칸이다
+        // ① 맨손 · 고유 없음 — **칸이 하나도 없다.** 전직을 안 찍었으므로 3번 칸도 비어 있다
+        if (SYS.skill.activesFor({ cls }).length !== 0) fail(`${cls} 맨손·고유없음인데 칸이 생겼다`);
+        // ② 무기를 들면 무기군 칸 **하나뿐** — 전직 칸이 따라 붙으면 임시 채움이 되살아난 것이다
         const wgRow = SYS.skill.list.find(d => d.ownerKind === 'weapon_group');
         const withW = SYS.skill.activesFor({ cls }, { weaponGroup: wgRow.ownerId });
-        if (!eq(withW.map(a => a.source), ['weapon_group', 'advance'])) fail(`${cls} 무기 출처 ${withW.map(a => a.source)}`);
+        if (!eq(withW.map(a => a.source), ['weapon_group'])) fail(`${cls} 무기 출처 ${withW.map(a => a.source)}`);
         if (withW[0].id !== wgRow.id) fail(`${cls} 무기군 칸 ${withW[0].id} ≠ ${wgRow.id}`);
-        // ③ 셋 다 있으면 **고유 → 무기군 → 전직** 순서다
+        // ③ 고유 + 무기군 = **둘** · 순서는 고유 → 무기군. 상한(`active_slots`)은 안 넘는다
         const foreign = SYS.skill.list.find(d => d.ownerKind === 'advance' && d.ownerId !== cls).id;
         const full = SYS.skill.activesFor({ cls, innate: foreign }, { weaponGroup: wgRow.ownerId });
-        if (!eq(full.map(a => a.source), ['innate', 'weapon_group', 'advance'])) fail(`${cls} 순서 ${full.map(a => a.source)}`);
+        if (!eq(full.map(a => a.source), ['innate', 'weapon_group'])) fail(`${cls} 순서 ${full.map(a => a.source)}`);
         if (full[0].id !== foreign) fail(`${cls} 고유가 1번 칸이 아니다`);
-        if (full.length !== B.active_slots) fail(`${cls} 칸 ${full.length} ≠ ${B.active_slots}`);
+        if (full.length > B.active_slots) fail(`${cls} 칸 ${full.length} > ${B.active_slots}`);
         // ④ 없는 무기군 · 정의에 없는 고유 — 그 칸만 빈다 (던지지 않는다)
-        if (!eq(srcOf({ cls }, { weaponGroup: 'nope' }), ['advance'])) fail(`${cls} 없는 무기군이 칸을 먹었다`);
+        if (srcOf({ cls }, { weaponGroup: 'nope' }).length !== 0) fail(`${cls} 없는 무기군이 칸을 먹었다`);
         if (!eq(idsOf({ cls, innate: 'nope' }), idsOf({ cls }))) fail(`${cls} 정의 없는 고유가 칸을 먹었다`);
-        // ⑤ 같은 스킬이 두 출처에서 오면 앞선 출처만 — 자기 직업 전직 임시분을 고유로 굴린 경우
-        const own = SYS.skill.activesFor({ cls, innate: adv[0].id }, { weaponGroup: wgRow.ownerId });
-        if (new Set(own.map(a => a.id)).size !== own.length) fail(`${cls} 같은 스킬이 두 칸을 먹었다`);
-        if (own[0].source !== 'innate') fail(`${cls} 중복 제거가 고유를 지웠다`);
+        // ⑤ **어떤 영웅도 `advance` 출처를 못 받는다** — 찍기가 없으므로 (2026-09-08)
+        for (const ctx of [undefined, { weaponGroup: wgRow.ownerId }])
+            if (SYS.skill.activesFor({ cls, innate: foreign }, ctx).some(a => a.source === 'advance'))
+                fail(`${cls} 전직 칸이 찍지도 않았는데 찼다`);
     }
-    return `${MAIN.length}직업 × (고유 · 무기군 · 전직)`;
+    return `${MAIN.length}직업 × (고유 · 무기군) · 전직 칸은 빈다`;
 });
-check('csv: 무기군 액티브는 본편 무기군 8종에 하나씩 있다 — 액티브 2번 칸의 데이터 (skill_design §6)', () => {
+check('csv: 무기군 액티브는 본편 무기군 10종에 하나씩 있다 — 액티브 2번 칸의 데이터 (skill_design §6)', () => {
     const groups = D.weaponGroupList.filter(g => SYS.skill.list.some(d => d.ownerKind === 'weapon_group' && d.ownerId === g.id));
     const rows = SYS.skill.list.filter(d => d.ownerKind === 'weapon_group');
-    if (rows.length !== 8) fail(`무기군 액티브 ${rows.length}행 (기획 수량 8 — §6)`);
+    if (rows.length !== 10) fail(`무기군 액티브 ${rows.length}행 (본편 무기군 10 — §6 · 09-07 사제 2종 신설)`);
     if (new Set(rows.map(d => d.ownerId)).size !== rows.length) fail('한 무기군에 두 행이 있다');
     for (const d of rows) {
         if (!D.weaponGroups[d.ownerId]) fail(`${d.id} 의 무기군 '${d.ownerId}' 가 weapon_group.csv 에 없다`);
         if (d.innatePool) fail(`${d.id} 가 고유 풀에 들어 있다 — 무기군 행은 굴리지 않는다`);
     }
-    // 본편 8종이 전부 채워졌나 — 빠지면 그 무기를 든 영웅만 2칸으로 돈다
+    // 본편 10종이 전부 채워졌나 — 빠지면 그 무기를 든 영웅만 2칸으로 돈다
     const main = D.weaponGroupList.filter(g => !['dagger', 'scythe'].includes(g.id));
     for (const g of main) if (!rows.some(d => d.ownerId === g.id)) fail(`${g.id} 무기군 액티브가 없다`);
     return `${groups.length}/${main.length} 무기군`;
@@ -2032,8 +2088,70 @@ check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다
     return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
 });
 
-check('save: SAVE_VERSION 15 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 id(`face` — `<class>_<k>`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 · **개체별 히든 상한(`caps`)은 v15 에서** 사라졌다 (INTERFACE §4)', () =>
-    SAVE_VERSION === 15 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 16 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 id(`face` — `<class>_<k>`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 · **개체별 히든 상한(`caps`)은 v15 에서** 사라졌다. v16 은 **사제가 낀 스태프·오브의 무기군만** 갈아끼운다 (R46 · INTERFACE §4)', () =>
+    SAVE_VERSION === 16 || fail(`v${SAVE_VERSION}`));
+
+/**
+ * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.
+ * 파생값은 `game_logic/skill.js:previewOf` 가 내고 화면은 문장만 만든다. 여기가 두 층을 다 잡는다.
+ */
+check('skill: previewOf — 실효 쿨 · 한 타 피해 · 모르는 값은 null (SCREEN_DESIGN §4-2)', () => {
+    const def = SYS.skill.defs.war_bash;                       // 공격 · 단일 · 1타 · mult 300
+    // 주기 2.4 · 표기 15초 → 올림(15/2.4)=7 × 2.4 = 16.8
+    const pv = SYS.skill.previewOf(def, { period: 2.4, atk: 400 });
+    if (Math.abs(pv.everySec - 16.8) > 1e-9) fail(`everySec ${pv.everySec}`);
+    if (pv.amount !== Math.round(400 * def.mult / 100)) fail(`amount ${pv.amount}`);
+    if (!(pv.lossPct > 0)) fail(`lossPct ${pv.lossPct}`);
+    // 주기가 정수배면 손실 0 — 실효 = 표기
+    const aligned = SYS.skill.previewOf(def, { period: 3, atk: 400 });
+    if (aligned.everySec !== 15 || Math.abs(aligned.lossPct) > 1e-9) fail(`정렬 ${aligned.everySec}/${aligned.lossPct}`);
+    // 모르는 값은 null — 화면이 그 조각을 접는다(후보 카드는 무기가 없어 둘 다 모른다)
+    const bare = SYS.skill.previewOf(def, {});
+    if (bare.everySec !== null || bare.lossPct !== null || bare.amount !== null) fail(`bare ${JSON.stringify(bare)}`);
+    if (bare.baseSec !== def.cool) fail('baseSec 이 표기 쿨이 아니다');
+    // 버프는 배율이 없다 — 곱할 것이 없으므로 amount 는 null 이다
+    if (SYS.skill.previewOf(SYS.skill.defs.war_warcry, { period: 2.4, atk: 400 }).amount !== null)
+        fail('buff 에 amount 가 났다');
+    return `실효 ${pv.everySec}s · 한 타 ${pv.amount}`;
+});
+check('tip: 스킬 문장 — 24행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {
+    const ctx = { period: 2.4, atk: 400, atkType: 'physical' };
+    let checked = 0;
+    for (const lang of ['ko', 'en']) {
+        setLang(lang);
+        for (const def of SYS.skill.list) {
+            const card = skillTipCard({ id: def.id }, ctx);
+            const line = card?.querySelector('.tip-line');
+            if (!line) fail(`${lang} ${def.id} 문장이 없다 (kind=${def.kind} target=${def.target})`);
+            const txt = line.textContent.trim();
+            if (!txt) fail(`${lang} ${def.id} 문장이 비었다`);
+            if (txt.includes('{') || txt.includes('undefined') || txt.includes('null'))
+                fail(`${lang} ${def.id} 치환이 안 됐다: ${txt}`);
+            // 실효 쿨이 문장에 들어가고 **강조**돼야 한다 — 강조가 빠지면 숫자가 문장에 묻힌다
+            const hl = [...line.querySelectorAll('.tip-hl')].map(n => n.textContent);
+            if (!hl.length) fail(`${lang} ${def.id} 강조된 숫자가 없다`);
+            const every = String(Number(SYS.skill.previewOf(def, ctx).everySec.toFixed(1)));
+            if (!hl.includes(every)) fail(`${lang} ${def.id} 실효 쿨 ${every} 이 강조에 없다 (${hl})`);
+            checked += 1;
+        }
+    }
+    setLang('ko');
+    return `${checked} 문장 (24행 × ko/en)`;
+});
+check('tip: 공격력을 모르면 배율로 접힌다 — 후보 카드 자리 (SCREEN_DESIGN §4-2)', () => {
+    const def = SYS.skill.defs.war_bash;
+    const bare = skillTipCard({ id: def.id }, {}).querySelector('.tip-line').textContent;
+    const full = skillTipCard({ id: def.id }, { period: 2.4, atk: 400, atkType: 'physical' })
+        .querySelector('.tip-line').textContent;
+    if (!bare.includes(String(def.mult))) fail(`배율 ${def.mult} 이 안 보인다: ${bare}`);
+    if (!bare.includes(String(def.cool))) fail(`표기 쿨 ${def.cool} 로 안 접혔다: ${bare}`);
+    if (!full.includes((400 * def.mult / 100).toLocaleString())) fail(`실제 수치가 안 보인다: ${full}`);
+    if (bare === full) fail('아는 자리와 모르는 자리가 같은 문장을 냈다');
+    // 정의에 없는 id 는 던지지 않고 이름만 낸다 (행이 지워진 옛 세이브)
+    const gone = skillTipCard({ id: 'no_such_skill' }, {});
+    if (!gone || gone.querySelector('.tip-line')) fail('없는 스킬에 문장이 났다');
+    return `모름 "${bare}" / 앎 "${full}"`;
+});
 
 /* ── 원정 정산 ── */
 check('report: roundsCleared 를 정산이 싣는다 — 렌더러가 짐작하지 않는다 (INTERFACE §2-7)', () => {

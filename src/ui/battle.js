@@ -81,6 +81,7 @@ export function mountBattle(container, opts) {
             key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
+            atk: p.atk, atkType: p.atkType,   // 툴팁 문장의 피해 — 전투에는 안 쓴다 (INTERFACE §2-6)
             skills: (p.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
         };
@@ -331,7 +332,9 @@ function renderUnits(state, root) {
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero));
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
-                if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i], u.period));   // 빈 칸은 띄울 것이 없다
+                // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
+                if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i],
+                    { period: u.period, atk: u.atk, atkType: u.atkType, source: u.skills[i].source }));
             });
             u.node = n;
             // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서
@@ -456,12 +459,24 @@ function renderDmg(state, root) {
     }).join('');
 }
 
-function popup(state, u, text, cls) {
+/**
+ * 떠오르는 한 줄. `skillId` 를 주면 **텍스트 왼쪽에 그 스킬 아이콘**이 붙는다 (SCREEN_DESIGN §4 · 2026-09-08).
+ * 기본 공격은 `s` 가 없어 아이콘도 없다 — **아이콘의 유무가 「스킬이 나갔다」는 신호**다.
+ * 아이콘만 innerHTML 이고 본문은 텍스트 노드다 — 유닛 이름·수치가 마크업으로 새지 않게 한다.
+ */
+function popup(state, u, text, cls, skillId = null) {
     if (!u?.node || state.catchUp) return;   // 되감기 중에는 팝업을 띄우지 않는다
     const layer = u.node.querySelector('.pop-layer');
     const p = document.createElement('span');
     p.className = `pop ${cls}`;
-    p.textContent = text;
+    const img = skillId ? skillImg(skillInfo(skillId)) : '';
+    if (img) {
+        const ico = document.createElement('i');
+        ico.className = 'pop-ico';
+        ico.innerHTML = img;
+        p.appendChild(ico);
+    }
+    p.appendChild(document.createTextNode(text));
     layer.appendChild(p);
     state.timeouts.push(setTimeout(() => p.remove(), 900));
 }
@@ -529,7 +544,7 @@ function apply(state, root, opts, ev) {
             if (a) { a.lastAct = ev.t; a.acted = true; if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
-                popup(state, d, `-${ev.dmg}`, ev.crit ? 'crit' : (a?.side === 'party' ? 'dmg' : 'dmg-in'));
+                popup(state, d, `-${ev.dmg}`, ev.crit ? 'crit' : (a?.side === 'party' ? 'dmg' : 'dmg-in'), ev.s);
                 refreshUnit(state, d);
             }
             if (a && d) {

@@ -15,8 +15,8 @@
  */
 
 import * as M from './mock.js';
-import { t, L } from './i18n.js';
-import { D, SYS } from './data.js';
+import { t, L, has as STRINGS_HAS } from './i18n.js';
+import { D, SYS, skillTagName } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
 
@@ -101,27 +101,71 @@ export function heroTipCard(h) {
     return c;
 }
 
+/* ───────── 스킬 문장 (SCREEN_DESIGN §4-2 · 전면 개정 2026-09-08) ─────────
+   ~~표기/실효 쿨 두 줄~~ 대신 **데이터로 조립한 한 문장**을 낸다. 파생값(실효 쿨 · 피해)은
+   `game_logic/skill.js:previewOf` 가 내고 여기서는 **문장만** 만든다 — 렌더러는 계산하지 않는다. */
+
+/** 숫자 강조 — 문장에서 눈에 걸려야 하는 값만 감싼다 */
+const hl = v => `<b class="tip-hl">${v}</b>`;
+/** 초 표기 — 7.2 는 그대로, 12.0 은 12 로 (소수점이 붙으면 정밀해 보여 오해를 준다) */
+const sec = v => hl(String(Number(Number(v).toFixed(1))));
+
 /**
- * 스킬 카드 — 아이콘 + 이름 / 표기 쿨 · **실효 쿨**(행동 주기에 맞춰 올림, battle_design §6) / 설명.
- * 실효 쿨은 진짜 파생값이다 — "표기 6초"만 봐서는 주기 2.4초인 영웅이 실제로 7.2초마다 쓴다는 걸 못 읽는다.
- * 이름 · 표기 쿨은 `skill.csv`, 설명은 `mock.js` 표시 사전에서 온다 (`data.js skillInfo`).
- * @param s      skillInfo 한 줄 — {id, name, cd, icon, desc}
- * @param period 그 유닛의 행동 주기(초). 없으면 실효 쿨 줄을 접는다
+ * 수량 구절 — 공격력을 아는 자리는 **실제 수치**, 모르는 자리(후보 카드 — 무기가 없다)는 **배율**로 접는다.
+ * ⚠ 감소·치명 **전**의 값이다 (previewOf 주석) — 툴팁이 약속하는 건 「내가 때리는 세기」다.
  */
-export function skillTipCard(s, period) {
-    if (!s) return null;
-    const c = el('div', 'tip-card');
-    let cdLine = t('sk.base', { s: s.cd });
-    if (period > 0) {
-        const eff = SYS.formula.effectiveCd(s.cd, period);   // 공식은 game_logic 소유다 (부채 #3)
-        const loss = (eff - s.cd) / s.cd * 100;
-        cdLine += ` · <b class="${loss > 0.5 ? 'down' : 'up'}">${t('sk.eff', { s: eff.toFixed(1) })}</b>`
-            + (loss > 0.5 ? ` <span class="muted">(+${loss.toFixed(0)}%)</span>` : ` <span class="muted">${t('sk.aligned')}</span>`);
+function amountPhrase(def, pv, atkType) {
+    const heal = def.kind === 'heal';
+    if (pv?.amount == null) return t(heal ? 'sk.amt.healMult' : 'sk.amt.mult', { m: hl(def.mult) });
+    const v = hl(pv.amount.toLocaleString());
+    return t(heal ? 'sk.amt.heal' : (atkType && atkType !== 'physical' ? 'sk.amt.magic' : 'sk.amt.physical'), { v });
+}
+
+/** 버프 효과 구절 — 이름 + 값만. 어휘에 없는 stat 이면 null(그 문장을 안 만든다) */
+const effectPhrase = def =>
+    (STRINGS_HAS(`sk.eff.${def.stat}`) ? t(`sk.eff.${def.stat}`, { v: hl(def.value) }) : null);
+
+/** 문장 한 줄 — `kind` × `target` 이 틀을 정한다. 틀이 없으면 `null`(설명만 뜬다) */
+function skillLine(def, pv, atkType) {
+    const n = sec(pv?.everySec ?? pv?.baseSec ?? def.cool);
+    if (def.kind === 'attack') {
+        const d = amountPhrase(def, pv, atkType);
+        if (def.target === 'enemy_all') return t('sk.line.all', { n, d });
+        if (def.target === 'enemy_chain') return t('sk.line.chain', { n, d, k: hl(def.decay) });
+        if (def.target === 'enemy_rotate') return t('sk.line.rotate', { n, d, h: hl(def.hits) });
+        return t(def.hits > 1 ? 'sk.line.singleN' : 'sk.line.single', { n, d, h: hl(def.hits) });
     }
+    if (def.kind === 'heal') return t('sk.line.heal', { n, d: amountPhrase(def, pv, atkType) });
+    if (def.kind === 'buff') {
+        const s = sec(def.dur);
+        if (def.stat === 'taunt') return t('sk.line.taunt', { n, s });
+        const e = effectPhrase(def);
+        return e === null ? null : t(def.target === 'party' ? 'sk.line.buffParty' : 'sk.line.buffSelf', { n, s, e });
+    }
+    return null;
+}
+
+/**
+ * 스킬 카드 — 아이콘 + 이름 / **한 문장** / 설명 (SCREEN_DESIGN §4-2).
+ * 머리에는 **출처 칩**(고유·무기·전직)과 **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT)이 선다.
+ * @param s   `.id` 만 있으면 된다 — 정의는 `SYS.skill.defs` 에서 집는다(호출처마다 다른 모양을 받아 왔다)
+ * @param ctx {period, atk, atkType, source} — 모르는 값은 생략한다. 문장이 그 조각을 접는다
+ */
+export function skillTipCard(s, ctx = {}) {
+    if (!s) return null;
+    const def = SYS.skill?.defs?.[s.id] ?? null;
+    const c = el('div', 'tip-card');
+    const name = L(def?.name ?? s.name ?? { ko: s.id, en: s.id });
+    const chips = [];
+    if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
+    for (const tg of (def ? SYS.skill.tagsOf(def) : [])) chips.push(`<i class="tip-chip">${L(skillTagName(tg))}</i>`);
+    // 정의를 못 찾으면(행이 지워진 옛 세이브) 이름만 낸다 — 던지지 않는다
+    const line = def ? skillLine(def, SYS.skill.previewOf(def, ctx), ctx.atkType) : null;
     c.innerHTML = `
         <div class="tip-head">${t('tip.skill.h')}</div>
-        <div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${L(s.name)}</div>
-        <div class="tip-implicit">${cdLine}</div>
-        ${s.desc ? `<div class="tip-desc">${L(s.desc)}</div>` : ''}`;
+        <div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${name}</div>
+        ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
+        ${line ? `<div class="tip-line">${line}</div>` : ''}
+        ${def?.desc ? `<div class="tip-desc">${L(def.desc)}</div>` : ''}`;
     return c;
 }

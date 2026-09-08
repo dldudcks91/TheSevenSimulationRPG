@@ -57,6 +57,9 @@
  *   v8 → v9 (2026-09-01 — 레어 고유 스킬 프로토타입 배정):
  *     · `heroes[*].innate` — 옛 영웅은 고유 스킬 없이 태어났으므로 **시드에서 소급해 굴린다**
  *       (전용 스트림 `seed ^ 0x5C11` · 전투 수열과 안 섞인다). 이미 가진 영웅은 건드리지 않는다
+ *   v15 → v16 (2026-09-07 확정 — 사제 전용 무기 성경·십자가 · R46):
+ *     · 스태프·오브가 마법사 전용이 되어, **사제가 낀** 그 둘만 무기군을 사제 짝으로 갈아끼운다
+ *       (스태프 → 성경 · 오브 → 십자가 — 주기 축이 대응한다). 가방에 든 것은 그대로 둔다
  *   v7 → v8 (2026-09-01 — 한손 개념 폐지 · 보조 슬롯 폐지):
  *     · 보조 아이템(착용분 · 가방분)을 **지운다** — 부위 자체가 없어져 돌려줄 자리가 없다
  *     · `equipped.offhand` 키 삭제 · `items[*].twoHanded` 삭제
@@ -71,7 +74,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 
 /**
  * @param {object} deps
@@ -317,6 +320,27 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v15 → v16 [2026-09-07 확정 · 2026-09-08 구현 — 사제 전용 무기 · R46]
+     * 스태프·오브가 **마법사 전용**이 되면서(hero_design §2) 사제가 낀 그 둘이 착용 규칙을 어기게 됐다.
+     * **벗기지 않고 무기군을 사제 짝으로 갈아끼운다** — 주기 축이 그대로 대응하기 때문이다
+     * (스태프 1.7 느림 → 성경 1.7 · 오브 1.3 빠름 → 십자가 1.3). 벗기는 쪽을 안 고른 이유는
+     * **무기가 밑수**라(battle_design §9-1) 맨손이 된 사제는 세기가 통째로 무너지기 때문이다.
+     * · **착용 중인 것만** 옮긴다 — 가방에 든 스태프·오브는 마법사가 쓸 수 있으므로 그대로 둔다
+     * · 개체 굴림(watk · element · 접사 · 강화)은 안 건드린다 (`item.regroupWeapon`)
+     * · rng 를 쓰지 않는다 — 이관이 굴림을 태우면 같은 시드가 다른 결과를 낸다 (v14 와 같은 규칙)
+     */
+    function upgradeV15(s) {
+        const SWAP = { staff: 'bible', orb: 'crucifix' };
+        for (const h of s.heroes ?? []) {
+            if (h.cls !== 'priest') continue;
+            const it = h.equipped?.weapon ? s.items?.[h.equipped.weapon] : null;
+            if (it && SWAP[it.group]) I.regroupWeapon(it, SWAP[it.group]);
+        }
+        s.version = 16;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -328,7 +352,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -344,6 +368,7 @@ export function createGameSystem(deps) {
         if (s.version === 12) s = upgradeV12(s);
         if (s.version === 13) s = upgradeV13(s);
         if (s.version === 14) s = upgradeV14(s);
+        if (s.version === 15) s = upgradeV15(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;

@@ -65,8 +65,15 @@ const cycleOf = h => combatOf(h).action_period;
 const xpNext = h => SYS.hero.xpNeeded(h.level);
 /* 이번 출정에서 아웃됐는가 — 회복 대기가 없어 시계를 안 본다 (base_expedition_design §1-1) */
 const isOut = h => G != null && SYS.game.isOut(G, h.uid);
-/* 실효 쿨 = ceil(표기 쿨 ÷ 행동 주기) × 행동 주기 (battle_design §6) — 공식은 game_logic 소유다 (부채 #3) */
-const effectiveCd = (cd, cycle) => SYS.formula.effectiveCd(cd, cycle);
+/* 스킬이 **실제로 몇 초마다 나가는가** — 파생은 game_logic 이 낸다 (2026-09-08 · SCREEN_DESIGN §4-2).
+   주기를 아는 자리(영웅)는 실효 쿨, 모르는 자리(살 수 있는 후보 — 무기가 없다)는 **표기 쿨 = 기본값**이 나온다.
+   ~~`표기 6초 · 실효 7.2초 (+20%)` 병기~~ 는 폐기 [사용자 지시] — 화면에는 실제 적용값 하나만 둔다 */
+const everySecOf = (skillId, cycle) => {
+    const pv = SYS.skill.previewOf(SYS.skill.defs[skillId], { period: cycle });
+    return pv === null ? null : (pv.everySec ?? pv.baseSec);
+};
+/* 초 표기 — 7.2 는 그대로, 12.0 은 12 로 (tip.js 와 같은 규칙) */
+const secText = v => t('sk.every', { s: String(Number(Number(v).toFixed(1))) });
 /* 액티브 3칸의 출처 — **칸을 정하는 것은 출처다** (skill_design §2). 순서도 이 배열이 정한다 */
 const ACTIVE_SOURCES = ['innate', 'weapon_group', 'advance'];
 /* 그 영웅의 액티브 — 배정은 game_logic(skill.activesFor), 표시(아이콘·설명)는 skillInfo 가 붙인다.
@@ -174,16 +181,17 @@ const itemImg = it => {
 
 /* ═══════════ 화면 상태 ═══════════ */
 
-// 탭 11 — 도감 뒤에 이미지 도감이 섰다 (SCREEN_DESIGN §1 개정 2026-09-06 사용자 지시 · §9-1).
-// 그 앞은 탭 10 — 마을이 자원·탐험으로 갈렸다 (§1 개정 2026-09-04). 순서는 그 지도와 같다:
+// 탭 10 — **이미지 도감이 도감 안으로 들어갔다** (SCREEN_DESIGN §1 개정 2026-09-08 사용자 지시 · §9 · §9-1).
+// 탭 둘이 도감 하나가 되고 그 안에서 세그먼트 넷(몬스터 · 캐릭터 · 아이템 · 스킬)으로 갈린다 — **움직인 탭은 없고** 도움말이 한 칸 당겨졌다.
+// 그 앞은 탭 11(09-06 이미지 도감 신설) · 탭 10 — 마을이 자원·탐험으로 갈렸다 (§1 개정 2026-09-04). 순서는 그 지도와 같다:
 // 원정 → 캐릭터 → 강화가 코어 루프의 **한 동작**이라 앞에 붙어 서고(줍고 → 배분하고 → 올린다 — GAME_DESIGN §3),
 // 보충(선술집 · 상점)이 그 뒤, 맡기고 나가는 둘(자원 · 탐험)이 그 뒤, 그 산출을 먹는 연구가 이어지고, 참조 둘(도감 · 도움말)이 끝이다.
 // 09-03 순서에서 실제로 움직인 것은 **캐릭터 하나(6번 → 2번)** 다 — 나머지는 상대 순서가 유지된 채 마을 자리에 자원·탐험이 들어갔다.
 // 탭 이름은 활동(강화 · 상점)이고 패널 머리는 장소(제련소 · 상단 — `dp.post.*`)로 남는다 (§8-2 · §8-3).
 // 의뢰 탭은 폐지 — 게시판은 선술집 탭 안이다(§8-1). 스킬은 캐릭터 안의 **창**(§7).
-// 참조 둘이 셋이 됐다 — **이미지 도감**은 자산을 묶음별로 펼치는 조회 화면이라 도감 옆이 제 자리다 (§9-1).
-// `?tab=` 이 죽은 이름(`town` · `commission` · `skill` · `base`)을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
-const TABS = ['expedition', 'character', 'forge', 'tavern', 'shop', 'resource', 'explore', 'research', 'codex', 'imagedex', 'help'];
+// 참조는 다시 둘이다 — 도감과 이미지 도감이 둘 다 「결정을 안 받는 조회 화면」이라 탭을 나눌 갈림이 아니었다 (§9).
+// `?tab=` 이 죽은 이름(`town` · `commission` · `skill` · `base` · `imagedex`)을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
+const TABS = ['expedition', 'character', 'forge', 'tavern', 'shop', 'resource', 'explore', 'research', 'codex', 'help'];
 
 /* 파견 목록 — **카드 3** (SCREEN_DESIGN §8 개정 2026-09-04 사용자 지시: 채광 · 채집 · 벌목).
    담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
@@ -213,7 +221,9 @@ const state = {
     btLayout: 'wide',       // 관전 배치 — wide | split (2026-09-03 사용자 지시). 세이브 아님
     heroUid: null,
     codexChapter: 1,
-    imgSeg: 'character',    // 이미지 도감 묶음 (SCREEN_DESIGN §9-1) — character | item. 얼굴 스타일은 여기 안 둔다(전역 · mock.js)
+    // 도감 세그먼트 (SCREEN_DESIGN §9) — monster | character | item | skill. 09-08 에 이미지 도감이 흡수되며 값이 둘에서 넷이 됐다.
+    // 얼굴 스타일은 여기 안 둔다 — 전역이다(`?face=` · localStorage · mock.js:setFaceStyle)
+    codexSeg: 'monster',
     slotFilter: null,
     roll: 1, candidates: [], confirmOverwrite: false,
     salvageMode: false,
@@ -296,7 +306,6 @@ function render() {
         explore: renderExplore,
         research: renderResearch,
         codex: renderCodex,
-        imagedex: renderImagedex,
         help: renderHelp,
     })[state.tab](main);
     if (state.flash) {
@@ -407,7 +416,8 @@ function candidateCard(h, extra = '') {
                 <div class="ng-role muted">${classLine(h.cls)}</div>
                 ${innate ? `<div class="ng-skill">
                     <span class="ico">${skillImg(innate)}</span>
-                    <span class="txt"><i class="tag">${t('sk.innate')}</i><b>${L(innate.name)}</b></span>
+                    <span class="txt"><i class="tag">${t('sk.innate')}</i><b>${L(innate.name)}</b>
+                        <i class="cd">${secText(everySecOf(innate.id))}</i></span>
                 </div>` : ''}
             </div>
         </div>
@@ -419,7 +429,8 @@ function candidateCard(h, extra = '') {
     //   행동 주기는 안 넘긴다 — 후보는 아직 무기가 없어(시작 무기는 `newGame` 이 준다) 실효 쿨이 뜻을 못 가진다.
     //   시작 화면은 `G` 자체가 없어 `cycleOf` 를 부를 수도 없다 (`heroCombat(G, h)`)
     const skillNode = c.querySelector('.ng-skill');
-    if (skillNode) bindTipNode(skillNode, () => skillTipCard(innate));
+    // 후보는 아직 무기가 없어 주기도 공격력도 모른다 — 문장이 표기 쿨·배율로 접힌다 (SCREEN_DESIGN §4-2)
+    if (skillNode) bindTipNode(skillNode, () => skillTipCard(innate, { source: 'innate' }));
     return c;
 }
 
@@ -954,14 +965,21 @@ function attrPanel(h) {
  * **고유 스킬**이 실린 칸에는 번호 옆에 표시한다 — 어느 칸인지는 인스턴스의 `source` 가 말한다(화면이 판정하지 않는다).
  */
 function skillCards(h) {
+    const cycle = cycleOf(h);
+    const cb = combatOf(h);
+    const tipCtx = { period: cycle, atk: cb.atk_physical ?? cb.atk_magic, atkType: cb.attack_type };
     const wrap = el('div', 'sk-cards-wrap');
-    wrap.appendChild(el('div', 'sub-h', `${t('ch.skill.h')}<span class="muted">${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycleOf(h).toFixed(2) })}</b></span>`));
+    wrap.appendChild(el('div', 'sub-h', `${t('ch.skill.h')}<span class="muted">${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycle.toFixed(2) })}</b></span>`));
     const grid = el('div', 'sk-cards');
     activeCells(h).forEach((a, i) => {
         const innate = ACTIVE_SOURCES[i] === 'innate';
         const c = el('div', `sk-card${a ? '' : ' vacant'}${innate ? ' innate' : ''}`);
         // 칸 이름은 **출처**다 — 번호만 찍으면 「2번이 왜 비었나」에 화면이 답을 못 한다 (skill_design §2)
-        c.innerHTML = `<span class="no">${i + 1} · ${sourceName(i)}</span>${a ? `<span class="ico">${skillImg(a)}</span>` : ''}<span class="nm">${a ? L(a.name) : emptySlotText(i)}</span>`;
+        // 초는 **실제 적용값 하나**다 — 표기 쿨은 화면에 안 둔다 (2026-09-08 · SCREEN_DESIGN §4-2)
+        c.innerHTML = `<span class="no">${i + 1} · ${sourceName(i)}</span>${a ? `<span class="ico">${skillImg(a)}</span>` : ''}`
+            + `<span class="nm">${a ? L(a.name) : emptySlotText(i)}</span>`
+            + (a ? `<span class="cd">${secText(everySecOf(a.id, cycle))}</span>` : '');
+        if (a) bindTipNode(c, () => skillTipCard(a, { ...tipCtx, source: ACTIVE_SOURCES[i] }));
         grid.appendChild(c);
     });
     wrap.appendChild(grid);
@@ -1144,6 +1162,10 @@ function bindTip(node, item, equipped, hint) {
  */
 function activeSlots(h, title) {
     const cycle = cycleOf(h);
+    // 툴팁 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2).
+    // 공격력 키는 무기군이 정한다(물리 ↔ 마법) — 둘 중 있는 쪽을 그대로 넘긴다
+    const cb = combatOf(h);
+    const tipCtx = { period: cycle, atk: cb.atk_physical ?? cb.atk_magic, atkType: cb.attack_type };
     const p = el('div', 'panel');
     p.appendChild(el('h2', '', title ?? t('sk.slots.h')));
     p.appendChild(el('div', 'cycle-line', `
@@ -1155,15 +1177,15 @@ function activeSlots(h, title) {
         const no = `${i + 1} · ${sourceName(i)}`;
         if (!a) row.innerHTML = `<span class="no">${no}</span><span class="muted">${emptySlotText(i)}</span>`;
         else {
-            const eff = effectiveCd(a.cd, cycle);
-            const loss = (eff - a.cd) / a.cd * 100;
+            // 실제로 몇 초마다 나가는가 하나만 — 표기 쿨은 화면에 안 둔다 (SCREEN_DESIGN §4-2)
             row.innerHTML = `
                 <span class="no">${no}</span><span class="ico">${skillImg(a)}</span>
                 <span class="nm">${L(a.name)}
-                    <span class="cd">${t('sk.base', { s: a.cd })} · <b class="${loss > 0.5 ? 'down' : 'up'}">${t('sk.eff', { s: eff.toFixed(1) })}</b>
-                        ${loss > 0.5 ? `<span class="muted">(+${loss.toFixed(0)}%)</span>` : `<span class="muted">${t('sk.aligned')}</span>`}</span>
+                    <span class="cd">${secText(everySecOf(a.id, cycle))}</span>
                 </span>`;
         }
+        // 2026-09-08 — 이 목록에는 툴팁이 없었다. 관전·후보 카드와 **같은 카드**를 붙인다 (SCREEN_DESIGN §4-2)
+        if (a) bindTipNode(row, () => skillTipCard(a, { ...tipCtx, source: ACTIVE_SOURCES[i] }));
         box.appendChild(row);
     });
     p.appendChild(box);
@@ -1825,9 +1847,11 @@ function monsterCard(m) {
     const src = monsterFace(m.id);
     const name = L(monsterName(m.id));
     const c = sinColor(monsterSin(m.id));
-    // 초상 밑에 아무것도 깔지 않는다 — 아트가 없으면 빈 원이다 (2026-09-06 사용자 지시 · faceChip 과 같은 규칙)
+    // 초상 밑에 아무것도 깔지 않는다 — 아트가 없으면 빈 원이다 (2026-09-06 사용자 지시 · faceChip 과 같은 규칙).
+    // **툴팁은 파일명**이다 (2026-09-08 · §9) — 옛 이미지 도감의 「몬스터 초상」 타일이 들고 있던 한 줄이 여기로 왔다.
+    // 같은 그림을 한 탭에서 두 번 그리지 않으면서 「어느 파일이 안 들어왔나」는 남긴다
     const faceHtml = src
-        ? `<span class="face${m.boss ? ' boss' : ''}"><img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`
+        ? `<span class="face${m.boss ? ' boss' : ''}" title="${src.split('/').pop()}"><img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`
         : `<span class="face none${m.boss ? ' boss' : ''}" style="background:${c}22;border-color:${c}66" title="${t('face.noArt', { name })}"></span>`;
     const pips = Array.from({ length: maxLv }, (_, i) =>
         `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.cards', { n: cum[i] })}"></span>`).join('');
@@ -1850,21 +1874,50 @@ function monsterCard(m) {
         </div>`;
 }
 
+/* 세그먼트 넷 — 순서는 SCREEN_DESIGN §9 의 표와 같다. 몬스터만 수집 화면이고 나머지 셋은 자산 훑기다(§9-1) */
+const CODEX_SEGS = ['monster', 'character', 'item', 'skill'];
+
+/**
+ * 도감 (SCREEN_DESIGN §9 · 개정 2026-09-08 사용자 지시 — 「이미지 도감」 탭 흡수).
+ * 세그먼트는 **제목 줄 자리를 같이 쓴다**(`.panel-nav` — §2): 탭 둘을 하나로 합치면서 세로가 한 줄도 안 늘게 하는 자리다.
+ * 챕터 세그먼트는 종전대로 그 아래 서브 바에 선다.
+ */
 function renderCodex(main) {
+    const p = el('div', 'panel');
+    const nav = el('div', 'panel-nav');
+    nav.appendChild(segmented(CODEX_SEGS.map(id => ({ id, label: t(`cx.seg.${id}`) })), state.codexSeg,
+        id => { state.codexSeg = id; render(); }));
+    nav.appendChild(el('h2', '', t('nav.codex')));
+    p.appendChild(nav);
+    ({ monster: codexMonster, character: codexCharacter, item: codexItem, skill: codexSkill })[state.codexSeg](p);
+    main.appendChild(p);
+}
+
+/** 얼굴 스타일 고르개 — 몬스터 · 캐릭터 세그먼트가 같이 쓴다. 전환은 **전역**이다(`?face=` · localStorage 와 같은 자리 — §9-1) */
+function faceStylePicker(box) {
+    box.appendChild(el('span', 'muted', t('ix.style')));
+    box.appendChild(segmented(M.FACE_STYLES.map(f => ({ id: f, label: f })), M.faceStyle(),
+        id => { M.setFaceStyle(id); render(); }));
+    return box;
+}
+
+/** 몬스터 세그먼트 — 카드 수집 (§9). 카드·처치 수는 실집계(G.codexCards / G.codexKills) */
+function codexMonster(p) {
     const ch = chapterOf(state.codexChapter) ?? D.chapterList[0];
-    // 카드·처치 수는 실집계(G.codexCards / G.codexKills). **해금은 안 본다** — 전 챕터·전 몬스터를 그대로 그린다 (SCREEN_DESIGN §9, 2026-09-06)
+    // **해금은 안 본다** — 전 챕터·전 몬스터를 그대로 그린다 (SCREEN_DESIGN §9, 2026-09-06)
     const stages = codexStages().filter(st => st.chapter === ch.id).map(st => ({
         ...st, stat: M.CX_STAT[st.num], completion: M.CX_DONE[st.num],
         monsters: st.monsters.map(m => ({ ...m, cards: G.codexCards[m.id] ?? 0, kills: G.codexKills[m.id] ?? 0 })),
     }));
 
-    const p = el('div', 'panel');
-    p.appendChild(el('h2', '', t('cx.h')));
     const bar = el('div', 'sub-bar');
     bar.appendChild(segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}` })), ch.id,
         id => { state.codexChapter = id; render(); }));
-    bar.appendChild(el('div', 'muted', `<span style="font-size:var(--fs-xs)">
-        ${t('cx.sinLabel')} <b style="color:${sinColor(ch.sin)}">${sinName(ch.sin)}</b></span>`));
+    // 오른쪽에 죄종 + 얼굴 스타일 — 여기가 몬스터 초상을 가장 크게 그리는 화면이라 스타일 고르개가 같이 선다 (§9)
+    const right = el('div', 'ix-style');
+    right.appendChild(el('span', 'muted', `${t('cx.sinLabel')} <b style="color:${sinColor(ch.sin)}">${sinName(ch.sin)}</b>`));
+    faceStylePicker(right);
+    bar.appendChild(right);
     p.appendChild(bar);
 
     for (const stage of stages) {
@@ -1879,22 +1932,29 @@ function renderCodex(main) {
             <div class="mon-strip">${stage.monsters.map(m => monsterCard(m)).join('')}</div>`;
         p.appendChild(row);
     }
-    main.appendChild(p);
 }
 
-/* ═══════════ 이미지 도감 — 자산 훑기 (SCREEN_DESIGN §9-1 · 신설 2026-09-06 사용자 지시) ═══════════
-   게임이 부르는 그림을 묶음별로 전부 펼친다. 아트를 넣고 확인하려면 지금은 그 그림이 나오는 화면까지 가야 한다 —
-   영웅 초상은 이름 해시라 원하는 얼굴을 기다려야 하고, 몬스터는 스테이지가 서야 하며, 아이템은 그 부위가 드롭돼야 본다.
+/* ═══════════ 도감의 자산 세그먼트 — 캐릭터 · 아이템 · 스킬 (SCREEN_DESIGN §9-1) ═══════════
+   신설 2026-09-06 「이미지 도감」 탭 · 도감으로 흡수 2026-09-08 (둘 다 사용자 지시).
+   게임이 부르는 그림을 묶음별로 전부 펼친다. 아트를 넣고 확인하려면 그 그림이 나오는 화면까지 가야 하기 때문이다 —
+   영웅 초상은 제 직업 풀이 뽑혀야 하고, 아이템은 그 부위가 드롭돼야 보고, 스킬 아이콘은 그 스킬을 배워야 뜬다.
 
    ⚠ **폴더를 읽는 화면이 아니다.** 목록의 SSOT 는 `mock.js` 의 경로 조립 상수(HERO_FACES ·
-   ITEM_ART_GROUPS · ITEM_ART_BY_SLOT · SLOT_ART_PARTS)와 `monster.csv:face` 다 — 렌더는 동기라 파일 유무를
-   물을 수 없다(`skillIcon` 주석과 같은 이유). 코드가 안 부르는 파일(`faces/example/` 시트 · `icons/items/unused/`)은
-   게임이 안 쓰므로 여기에도 안 뜬다. 파일이 없으면 `onerror` 로 img 만 빠져 **빈 칸 + 파일명**이 남고,
-   그 빈 칸이 「이 자산이 비었다」는 신호다 (스타일마다 갖춘 장수가 다르다). */
+   ITEM_ART_GROUPS · ITEM_ART_BY_SLOT · SLOT_ART_PARTS · SKILL_ICON_FILES)와 `skill.csv` 다 — 렌더는 동기라
+   파일 유무를 물을 수 없다(`skillIcon` 주석과 같은 이유). 코드가 안 부르는 파일(`faces/example/` 시트 ·
+   `icons/items/unused/`)은 게임이 안 쓰므로 여기에도 안 뜬다. 파일이 없으면 `onerror` 로 img 만 빠져
+   **빈 칸 + 파일명**이 남고, 그 빈 칸이 「이 자산이 비었다」는 신호다 (스타일마다 갖춘 장수가 다르다).
 
-/** 타일 하나 — 그림 · 쓰임 이름 · 파일명. 마스크는 **게임에서 쓰는 것 그대로**다(네모 = 영웅·아이템 / 원형 = 몬스터 · §5 · §9) */
-const artTile = (src, name, shape) => `
-    <div class="ix-tile">
+   ⚠ **몬스터 초상 묶음은 09-08 삭제** — 몬스터 세그먼트의 카드가 전 챕터·전 몬스터를 큰 초상으로 그린다(§9).
+   타일이 들고 있던 파일명 한 줄만 그 카드 초상의 툴팁으로 옮겼다. */
+
+/**
+ * 타일 하나 — 그림 · 쓰임 이름 · 파일명. 마스크는 **게임에서 쓰는 것 그대로**다(네모 = 영웅·아이템·스킬 / 원형 = 몬스터 · §5 · §9).
+ * `attr` 은 타일에 얹을 여분 속성 — **스킬만 쓴다**(`data-skill`). 격자를 문자열로 짓기 때문에 노드가 없어서,
+ * 툴팁은 DOM 이 선 뒤에 이 속성을 찾아 건다 (`codexSkill`).
+ */
+const artTile = (src, name, shape, attr = '') => `
+    <div class="ix-tile" ${attr}>
         <span class="ix-art ${shape}">${src ? `<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span>
         <span class="ix-name">${name}</span>
         <span class="ix-file muted">${src ? src.split('/').pop() : '—'}</span>
@@ -1911,52 +1971,71 @@ const artGroup = (title, dir, tiles) => `
         <div class="ix-grid">${tiles.join('')}</div>
     </div>`;
 
-function renderImagedex(main) {
-    const p = el('div', 'panel');
-    p.appendChild(el('h2', '', t('ix.h')));
-
+/** 캐릭터 세그먼트 — 영웅 초상. 얼굴 스타일 고르개가 여기와 몬스터 세그먼트에 선다 (§9-1) */
+function codexCharacter(p) {
     const bar = el('div', 'sub-bar');
-    bar.appendChild(segmented([
-        { id: 'character', label: t('ix.seg.character') },
-        { id: 'item', label: t('ix.seg.item') },
-    ], state.imgSeg, id => { state.imgSeg = id; render(); }));
-    // 얼굴 스타일 세그먼트는 **캐릭터 묶음에서만** — 아이템 그림은 스타일 폴더를 안 탄다(단일 세트 · mock.js).
-    // 전환은 전역이다(`?face=` · localStorage 와 같은 자리) — 경로 조립이 `faceDir()` 한 곳이라 화면 전용 상태를 두지 않는다
-    if (state.imgSeg === 'character') {
-        const st = el('div', 'ix-style');
-        st.appendChild(el('span', 'muted', t('ix.style')));
-        st.appendChild(segmented(M.FACE_STYLES.map(f => ({ id: f, label: f })), M.faceStyle(),
-            id => { M.setFaceStyle(id); render(); }));
-        bar.appendChild(st);
-    }
+    bar.appendChild(faceStylePicker(el('div', 'ix-style')));
     p.appendChild(bar);
+    const dir = M.faceDir();
+    // 영웅 초상은 **직업 풀**이다 (2026-09-07) — 목록의 SSOT 는 `mock.js:HERO_FACES` 이고 0장인 직업은 타일이 없다.
+    // 이름표는 직업 표시명(`className` — class.csv 의 ko/en) + 풀 안 번호다
+    const box = el('div', 'ix-body');
+    box.innerHTML = artGroup(t('ix.g.hero'), dir,
+        Object.entries(M.HERO_FACES).flatMap(([cls, n]) =>
+            Array.from({ length: n }, (_, i) =>
+                artTile(`${dir}hero_${cls}_${i + 1}.png`, `${className(cls)} ${i + 1}`, 'box'))));
+    p.appendChild(box);
+}
+
+/** 아이템 세그먼트 — 무기 · 방어구/장신구 · 빈 칸 실루엣 (§9-1) */
+function codexItem(p) {
+    const box = el('div', 'ix-body');
+    box.innerHTML = artGroup(t('ix.g.weapon'), M.ITEM_ART_DIR,
+        M.ITEM_ART_GROUPS.map(g => artTile(M.itemArt('weapon', g), L(D.weaponGroups?.[g] ?? g), 'box')))
+        // ⚠ 부위 하나에 그림 하나 — 개체가 베이스 id 를 안 들고 다녀서다 (mock.js:itemArt · 임시)
+        + artGroup(t('ix.g.armor'), M.ITEM_ART_DIR,
+            Object.keys(M.ITEM_ART_BY_SLOT).map(sl => artTile(M.itemArt(sl), L(slotDef(sl) ?? sl), 'box')))
+        + artGroup(t('ix.g.empty'), M.SLOT_ART_DIR,
+            M.SLOT_ART_PARTS.map(sl => artTile(M.slotArt(sl), L(slotDef(sl) ?? sl), 'box')));
+    p.appendChild(box);
+}
+
+/**
+ * 스킬 세그먼트 — `skill.csv` 전 행을 **직업으로 묶는다** (§9-1 개정 2026-09-08 사용자 지시).
+ * 종전 두 묶음(직업 14 / 무기군 10)은 CSV 순이라 화면이 「아이콘 순」으로 읽혔다. 지금은 그룹 하나가 한 직업이고,
+ * 그 안에 **전직 액티브 + 그 직업이 드는 무기군의 액티브**가 함께 선다 — 무기군 ↔ 직업은 `weapon_group.csv:classes`
+ * 가 SSOT 라 화면이 배정표를 따로 갖지 않는다(`classes` 가 여러 직업을 들면 그 스킬은 여러 그룹에 함께 선다).
+ * 행이 0개인 직업은 그룹째 안 선다 — 「0장인 직업은 타일이 없다」(영웅 초상)와 같은 규칙이다.
+ *
+ * 아이콘은 **게임이 부르는 그림 그대로**다: `skillIcon` 은 제 파일이 없으면 해시 폴백으로 남의 그림을 잡는다
+ * (`slotArt`·`itemArt` 와 다르다 — 스킬은 「제 그림은 아니어도 늘 같은 그림」이면 되기 때문).
+ * 그래서 여기서 빈 칸 신호는 그림이 아니라 **파일명 줄**이다 — 파일명이 스킬 id 와 다르면 아직 제 그림이 없다 (§9-1).
+ */
+function codexSkill(p) {
+    const rows = D.skillRows ?? [];
+    // 무기군 액티브는 이름표에 **무기군**을 단다 — 한 그룹 안에서 전직과 섞이므로 어디서 오는지가 이름에서 읽혀야 한다.
+    // 어순은 `ix.skillFrom` 템플릿이 든다 (렌더러가 문장을 잇지 않는다 — ui/README 다국어 규칙)
+    const tile = (r, from) => artTile(M.skillIcon(r.skill_id),
+        from ? t('ix.skillFrom', { skill: L(skillInfo(r.skill_id).name), from }) : L(skillInfo(r.skill_id).name),
+        'box', `data-skill="${r.skill_id}" data-src="${r.owner_kind}"`);
 
     const box = el('div', 'ix-body');
-    if (state.imgSeg === 'character') {
-        const dir = M.faceDir();
-        // 영웅 초상은 **직업 풀**이다 (2026-09-07) — 목록의 SSOT 는 `mock.js:HERO_FACES` 이고 0장인 직업은 타일이 없다.
-        // 이름표는 직업 표시명(`className` — class.csv 의 ko/en) + 풀 안 번호다
-        box.innerHTML = artGroup(t('ix.g.hero'), dir,
-            Object.entries(M.HERO_FACES).flatMap(([cls, n]) =>
-                Array.from({ length: n }, (_, i) =>
-                    artTile(`${dir}hero_${cls}_${i + 1}.png`, `${className(cls)} ${i + 1}`, 'box'))))
-            // 얼굴을 가진 몬스터만 — `monster.csv:face` 가 SSOT 고 `monsterFace` 가 그 한 줄을 읽는다. idx 순 = 챕터·스테이지 순
-            + artGroup(t('ix.g.monster'), dir,
-                Object.values(D.monsters ?? {})
-                    .filter(m => monsterFace(m.monster_idx))
-                    .sort((a, b) => a.monster_idx - b.monster_idx)
-                    .map(m => artTile(monsterFace(m.monster_idx), L(monsterName(m.monster_idx)), 'round')));
-    } else {
-        box.innerHTML = artGroup(t('ix.g.weapon'), M.ITEM_ART_DIR,
-            M.ITEM_ART_GROUPS.map(g => artTile(M.itemArt('weapon', g), L(D.weaponGroups?.[g] ?? g), 'box')))
-            // ⚠ 부위 하나에 그림 하나 — 개체가 베이스 id 를 안 들고 다녀서다 (mock.js:itemArt · 임시)
-            + artGroup(t('ix.g.armor'), M.ITEM_ART_DIR,
-                Object.keys(M.ITEM_ART_BY_SLOT).map(sl => artTile(M.itemArt(sl), L(slotDef(sl) ?? sl), 'box')))
-            + artGroup(t('ix.g.empty'), M.SLOT_ART_DIR,
-                M.SLOT_ART_PARTS.map(sl => artTile(M.slotArt(sl), L(slotDef(sl) ?? sl), 'box')));
-    }
+    box.innerHTML = (D.classes ?? []).map(c => {
+        const tiles = [
+            // 전직이 먼저 · 무기군이 뒤. 각 묶음 안의 순서는 CSV 순(= priority 순)을 그대로 쓴다
+            ...rows.filter(r => r.owner_kind === 'advance' && r.owner_id === c.id).map(r => tile(r)),
+            ...rows.filter(r => r.owner_kind === 'weapon_group'
+                && (D.weaponGroups?.[r.owner_id]?.classes ?? []).includes(c.id))
+                .map(r => tile(r, L(D.weaponGroups[r.owner_id]))),
+        ];
+        return tiles.length ? artGroup(t('ix.g.skillCls', { cls: className(c.id) }), M.SKILL_ICON_DIR, tiles) : '';
+    }).join('');
     p.appendChild(box);
-    main.appendChild(p);
+
+    // 툴팁은 DOM 이 선 **뒤에** 건다 (격자가 문자열이라 노드가 없다). 카드는 캐릭터 탭 · 관전과 같은 것을 그대로 부른다 —
+    // 화면 전용 문구를 새로 쓰지 않는다 (§12 · tip.js:skillTipCard). 전투 맥락(주기 · 공격력)은 없으므로 문장이 그 조각을 접는다
+    for (const n of box.querySelectorAll('[data-skill]'))
+        bindTipNode(n, () => skillTipCard({ id: n.dataset.skill }, { source: n.dataset.src }));
 }
 
 /* ═══════════ 도움말 ═══════════
@@ -2092,9 +2171,10 @@ async function boot() {
     if (new URLSearchParams(location.search).get('screen') === 'start') state.screen = 'start';
     // 관전 배치 — 버튼으로만 바뀌므로 헤드리스가 닿을 길을 따로 낸다 (2026-09-03 · SCREEN_DESIGN §10)
     if (new URLSearchParams(location.search).get('lay') === 'split') state.btLayout = 'split';
-    // 이미지 도감 묶음 — 세그먼트는 클릭으로만 바뀌므로 헤드리스가 닿을 길을 따로 낸다 (SCREEN_DESIGN §9-1 · §10)
-    const ix = new URLSearchParams(location.search).get('ix');
-    if (ix === 'character' || ix === 'item') state.imgSeg = ix;
+    // 도감 세그먼트 — 세그먼트는 클릭으로만 바뀌므로 헤드리스가 닿을 길을 따로 낸다 (SCREEN_DESIGN §9 · §10).
+    // 옛 이름 `?ix=character|item` 은 이미지 도감 탭과 함께 죽었다 (2026-09-08)
+    const cx = new URLSearchParams(location.search).get('cx');
+    if (CODEX_SEGS.includes(cx)) state.codexSeg = cx;
     // 프롤로그는 새 게임 확정 버튼으로만 닿는 화면이라 헤드리스가 들어올 길을 따로 낸다 (SCREEN_DESIGN §10).
     //   `&s=n` 은 n번째 씬 — 마지막 씬에만 인용·챕터 줄이 서므로 그 상태에도 길이 있어야 한다
     if (dev === 'prologue') {

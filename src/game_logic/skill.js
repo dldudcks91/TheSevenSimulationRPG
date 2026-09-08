@@ -30,6 +30,7 @@
  */
 
 import { ELEMENTS } from './hero.js';
+import { createFormula } from './formula.js';
 import {
     KINDS, TARGETS, ATTACK_TARGETS, SUPPORT_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS,
 } from './skill_effects.js';
@@ -60,6 +61,7 @@ const NONE = '-';                     // CSV 의 "없음" 표기 — 정규화�
  */
 export function createSkillSystem(data) {
     const B = data.balance;
+    const F = createFormula(B);      // 실효 쿨 — 화면·검증이 같은 함수를 읽게 한다 (item.js 와 같은 규칙)
     const rows = data.rows ?? [];
     const dash = v => (v === NONE || v === '' || v === undefined || v === null ? null : v);
 
@@ -211,21 +213,21 @@ export function createSkillSystem(data) {
         // 무기군 — **착용 무기가 정한다.** 무기를 바꾸면 이 칸이 바뀌고, 맨손이면 빈 칸이다 (§2)
         const wg = ctx.weaponGroup
             ? list.find(d => d.ownerKind === 'weapon_group' && d.ownerId === ctx.weaponGroup) : null;
-        // 전직 — ⚠ 전직 시스템이 없어(R16 미반영 · 해금 레벨 [balance.csv:advance_unlock_level]) **찍기가 없다.**
-        //   그 직업의 전직 임시분(§9 「전직 액티브 15 — 프로토타입 임시분」) 중 `priority` 최소 하나를 임시로 싣는다.
-        //   전직이 오면 이 한 줄이 「고른 갈래가 준 3 중 찍은 하나」로 바뀐다 (§4-2 B안).
-        const adv = list
-            .filter(d => d.ownerKind === 'advance' && d.ownerId === hero?.cls)
-            .slice()
-            .sort((a, b) => a.priority - b.priority)[0] ?? null;
         // **출처가 칸을 정한다** (§2) — 배운 것 중 셋을 고르는 게 아니라 출처가 셋이고 각각 하나씩 준다.
         //   비어 있는 출처는 자리를 남기지 않고 빠진다(전투는 든 것만 돌린다). 어느 출처인지는 `source` 가 말한다
         const base = [
             innate,
             wg ? { id: wg.id, source: 'weapon_group' } : null,
-            adv ? { id: adv.id, source: 'advance' } : null,
+            // 전직 — **찍은 하나뿐이다. 안 찍었으면 이 칸은 비어 있다** [사용자 확정 2026-09-08 · §2].
+            //   전직 시스템이 없어(R16 미반영 · 해금 레벨 [balance.csv:advance_unlock_level]) 아무도 못 찍었으므로
+            //   **지금은 언제나 빈 칸**이고, 화면은 그 칸을 「전직 전」으로 그린다(`sk.emptyAdvance`).
+            //   ~~그 직업 전직 임시분 중 `priority` 최소 하나를 임시로 싣던 것~~(§9-0 08-27~09-08)은 **폐기**했다 —
+            //   안 찍은 영웅에게 전직 액티브를 주고 있어서 §2 와 정면으로 어긋났다.
+            //   전직이 오면 여기가 「고른 갈래가 준 3 중 찍은 하나」가 된다 (§4-2 B안 — `hero.advance` 를 읽는다).
+            null,
         ].filter(Boolean)
-            // 같은 스킬이 두 출처에서 오면(고유로 굴린 것이 그 직업 전직 임시분과 같을 때) 앞선 출처만 남긴다
+            // 같은 스킬이 두 출처에서 와도 앞선 출처만 남긴다 — 출처가 둘뿐인 지금은 안 걸리지만,
+            //   전직 칸이 열리면 「자기 직업 갈래의 스킬을 고유로 굴린」 경우가 다시 생긴다
             .filter((a, i, all) => all.findIndex(x => x.id === a.id) === i);
         const order = hero?.skillOrder ?? null;
         if (!order) return base.slice(0, B.active_slots);
@@ -275,5 +277,32 @@ export function createSkillSystem(data) {
     /** 그 스킬이 실제로 갖는 태그 전부 — 파생 먼저, 그다음 정의한 것. 세는 쪽(전술카드·화면)의 유일한 입구 */
     const tagsOf = def => [...(def?.derived ?? []), ...(def?.tags ?? [])];
 
-    return { defs, list, activesFor, resolve, castable, pickReady, tagsOf, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
+    /**
+     * 툴팁 미리보기 (SCREEN_DESIGN §4-2 · 2026-09-08) — **화면이 문장을 만들 재료**다.
+     * 공식을 렌더러가 다시 적지 않게 여기서 낸다 (DEV_PLAN 부채 #3 을 늘리지 않는다).
+     *
+     * ⚠ **감소도 치명도 안 태운다** — 방어·저항·피해 감소는 **대상이 정해져야** 나오는 값이라 미리보기가 될 수 없고,
+     *   치명은 굴림이다. 그래서 `amount` 는 `formula.strike` 의 **첫 줄**(공격력 × 스킬 배율)까지이고
+     *   그 뒤 단계는 전투가 낸다. 툴팁이 약속하는 것은 「내가 때리는 세기」이지 「상대가 받는 피해」가 아니다.
+     * ⚠ **버프는 `amount` 가 `null` 이다** — 버프의 세기는 배율이 아니라 `effect_value` 라서 곱할 것이 없다.
+     *
+     * @param def 스킬 정의 (`defs[id]` 또는 `resolve(inst)`)
+     * @param ctx {atk, period} — 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     */
+    const previewOf = (def, ctx = {}) => {
+        if (!def) return null;
+        const period = ctx.period > 0 ? ctx.period : null;
+        const atk = Number.isFinite(ctx.atk) && ctx.atk > 0 ? ctx.atk : null;
+        const everySec = period === null ? null : F.effectiveCd(def.cool, period);
+        return {
+            baseSec: def.cool,
+            everySec,
+            // 실효 쿨이 표기보다 얼마나 밀리는가(%) — 0 이면 주기와 정렬이 맞는다
+            lossPct: everySec === null ? null : (everySec - def.cool) / def.cool * 100,
+            // 한 타 피해(attack) · 회복량(heal). 다단은 **한 타** 값이다 — 총합은 화면이 말하지 않는다
+            amount: atk === null || !(def.mult > 0) ? null : Math.round(atk * def.mult / 100),
+        };
+    };
+
+    return { defs, list, activesFor, resolve, castable, pickReady, tagsOf, previewOf, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

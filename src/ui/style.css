@@ -791,6 +791,21 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .round-track .rt.now { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-highlight); }
 
 /* 데미지 숫자 — 생성 후 0.9초 뒤 DOM에서 제거 */
+/* 스킬 툴팁 문장 (2026-09-08 · SCREEN_DESIGN §4-2) — 수치표 대신 한 문장. 숫자만 강조색으로 뽑는다 */
+.tip-line {
+    margin-top: 6px; font-size: var(--fs-sm); line-height: 1.55; color: var(--text-primary);
+    max-width: 30em;
+}
+.tip-hl { color: var(--color-warning); font-weight: 700; }
+/* 출처 · 태그 칩 — 이름 줄 아래 한 줄. 넘치면 접어 내린다(영어가 길다) */
+.tip-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.tip-chip {
+    font-style: normal; font-size: var(--fs-xs); line-height: 1.5;
+    padding: 0 6px; border-radius: 3px;
+    background: rgba(255,255,255,.06); border: 1px solid var(--border-primary); color: var(--text-secondary);
+}
+.tip-chip.src { color: #cfe0ff; border-color: #46639e; background: rgba(70,99,158,.18); }
+
 .pop-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .pop {
     position: absolute; top: 38%; left: 57px; font-size: var(--fs-sm);   /* 왼쪽 초상(101px 칸) 한가운데서 떠오른다 — 패딩 6 + 50.5 (2026-09-03) */
@@ -803,6 +818,14 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
 .pop.card-tag { color: var(--color-info); font-size: var(--fs-xs); }   /* 도감 카드 획득 */
 .pop.heal { color: #8fe6a8; }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
+/* 피해 팝업의 스킬 아이콘 (2026-09-08) — 숫자 왼쪽. `inline-flex` 로 글자 기준선이 아니라 줄 가운데에 맞춘다.
+   `em` 크기라 치명(fs-lg)에서 숫자와 같이 커진다. 아이콘이 없으면 이 요소 자체가 안 생겨 줄이 안 흔들린다 */
+.pop-ico {
+    display: inline-flex; align-items: center; vertical-align: middle;
+    width: 1.15em; height: 1.15em; margin-right: 3px;
+    filter: drop-shadow(0 1px 2px #000);
+}
+.pop-ico img { width: 100%; height: 100%; object-fit: contain; display: block; }
 /* 발동한 스킬 이름 — 피해 숫자(초상 위, top 38%)와 자리를 나눠 카드 가운데 위로 뜬다. 배경 위에서 읽히도록 제 칩을 갖는다 */
 .pop.skill-tag {
     /* 카드 위에서 시작해 위칸 언저리까지 떠오른다 — 카드에서 완전히 떨어지면 어느 유닛이 쓴 건지 안 붙는다 */
@@ -963,8 +986,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .act-slot .ico { font-size: var(--fs-md); text-align: center; width: 28px; height: 28px; }
 .act-slot .ico img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
 .act-slot .nm { font-size: var(--fs-sm); word-break: keep-all; line-height: 1.3; min-width: 0; }
+/* 실제로 몇 초마다 나가는가 — 값 하나뿐이다 (2026-09-08 병기 폐기로 `.cd b` 규칙도 함께 사라졌다) */
 .act-slot .cd { display: block; font-size: var(--fs-xs); color: var(--text-muted); }
-.act-slot .cd b { font-weight: normal; }
 
 /* ───────── 선술집 ───────── */
 
@@ -1048,10 +1071,11 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 }
 .pips .pip.on { background: var(--color-success); border-color: var(--color-success); }
 
-/* ───────── 이미지 도감 (SCREEN_DESIGN §9-1 · 2026-09-06) ─────────
-   자산을 묶음별로 펼치는 조회 화면. 칸 폭은 고정 px 이 아니라 auto-fill + minmax 다 —
+/* ───────── 도감 — 자산 세그먼트 (SCREEN_DESIGN §9-1 · 2026-09-06 · 도감으로 흡수 2026-09-08) ─────────
+   옛 「이미지 도감」 탭. 자산을 묶음별로 펼치는 조회 화면이고, 09-08 에 도감의 세그먼트 셋(캐릭터 · 아이템 · 스킬)이 됐다 —
+   **클래스 이름은 `.ix-*` 그대로**다(화면의 속이 안 바뀌었다). 칸 폭은 고정 px 이 아니라 auto-fill + minmax 다 —
    이름과 파일명이 들어가는 칸이라 영어에서 길어진다 (폭 정책은 src/ui/README.md).
-   마스크는 게임에서 쓰는 것 그대로 — 영웅·아이템은 네모(`box`), 몬스터는 원형(`round`) */
+   마스크는 게임에서 쓰는 것 그대로 — 영웅·아이템·스킬은 네모(`box`), 몬스터는 원형(`round` — 09-08 이 화면에서는 안 쓰지만 §9 카드가 쓴다) */
 .ix-style { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); }
 .ix-body { display: flex; flex-direction: column; gap: 10px; }
 .ix-group {
@@ -1311,6 +1335,11 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .sk-card .ico img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
 .sk-card .nm { font-size: var(--fs-xs); word-break: keep-all; overflow: hidden; max-width: 100%; }
 .sk-card.vacant .nm { color: var(--text-muted); }
+/* 실제로 몇 초마다 나가는가 (2026-09-08) — 카드가 `aspect-ratio: 1` 이라 줄이 하나 늘면 이름이 밀린다.
+   `--fs-2xs` 로 한 단 낮추고 줄간 여백을 안 준다 */
+.sk-card .cd { font-size: var(--fs-2xs); color: var(--text-muted); line-height: 1.2; }
+/* 후보 카드의 고유 스킬 — 살 수 있는 영웅이라 주기를 모른다. 그 자리에 **기본값**이 온다 (SCREEN_DESIGN §3) */
+.ng-skill .cd { display: block; font-style: normal; font-size: var(--fs-2xs); color: var(--text-muted); }
 
 /* ③ 아이템 — 열 수는 창 폭이 정한다. 데이터는 용량(INV_GRID.cap)만 지킨다 */
 .inv-cells.wide { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }

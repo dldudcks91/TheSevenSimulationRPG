@@ -213,7 +213,10 @@ export function createBattleSystem(data) {
         const timeline = [];
         const out = {
             won: false, reason: null, durationSec: 0,
-            party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period, actives: p.actives.map(a => a.id) })),
+            // atk·atkType 은 **툴팁이 읽는 표시값**이다 (SCREEN_DESIGN §4-2) — 재생기가 스킬 문장의 피해를 조립한다.
+            // 전투에는 안 쓰이고 타임라인에도 안 들어가므로 rng·골든 지문과 무관하다
+            party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
+                atk: p.atk, atkType: p.atkType, actives: p.actives.map(a => a.id) })),
             timeline, xpTotal: 0, gold: 0, dust: 0, kills: {}, cards: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음

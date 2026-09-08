@@ -160,6 +160,22 @@ export function createItemSystem(data) {
         return null;
     }
 
+    /**
+     * 무기군 교체 — **세이브 이관 전용**이다 (`state.js upgradeV15`). 게임 중에는 부르지 않는다.
+     * 개체에 박힌 굴림(watk · element · 접사 · 강화)은 **그대로 두고** 군과 이름만 갈아끼운다 —
+     * 아이템의 세기는 개체 굴림이 들고 있고(§9-1) 무기군은 주기·편차·착용 직업을 가리키는 포인터라,
+     * 포인터만 옮기면 세기를 건드리지 않고 소유 직업을 옮길 수 있다.
+     * 이름은 접사 죄종(`sins`)이 그대로라 **베이스만 바뀐 이름**으로 다시 조립한다.
+     */
+    function regroupWeapon(item, groupId) {
+        const g = WG[groupId];
+        if (!g || item?.slot !== 'weapon') return item;
+        item.group = groupId;
+        const [pre, suf] = item.sins ?? [];
+        if (pre) item.name = data.composeName(pre, g, suf ?? null);
+        return item;
+    }
+
     const salvageDust = item => item.rarity === 'rare' ? B.salvage_dust_rare : B.salvage_dust_magic;
 
     /* ── 강화 (item_design §1 개정 2026-08-31) ── */
@@ -214,5 +230,5 @@ export function createItemSystem(data) {
         return out;
     }
 
-    return { rollDrop, startingWeapon, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeCost, upgrade, effective };
+    return { rollDrop, startingWeapon, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeCost, upgrade, effective };
 }
