@@ -644,7 +644,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    순서가 규칙이다: 진영 기본 → 영웅 등급. 정예·보스는 아래의 **전체 테두리** 규칙(.unit.elite / .unit.boss)이 덮는다 */
 .unit.enemy { border-top-color: #7a3030; }
 .unit.party { border-top-color: #3060a0; }
-/* 영웅 등급 — 색은 `mock.js:HERO_TIER` 와 같은 값(아이템 희귀도의 같은 계단이라 화면에서 같은 뜻으로 읽힌다) */
+/* 영웅 등급 — 색은 `data/hero_tier.csv:color_hex` 가 든다(아이템 희귀도의 같은 계단이라 화면에서 같은 뜻으로 읽힌다) */
 .unit.tier-rare { border-top-color: #FFD700; }
 .unit.tier-unique { border-top-color: #FF8C00; }
 /* 등급 = **테두리 색** [개정 2026-09-03 사용자 지시] — 죄종 칩·정예 태그가 카드에서 걷혔으므로 「정예인가」를 이제 테두리 혼자 든다.
@@ -1785,15 +1785,12 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
     display: flex; flex-direction: column; gap: 5px;
     padding: 9px 9px;
     background: var(--bg-card); border: 1px solid var(--border-dark);
-    /* 종류는 카드의 첫인상이다 — 왼쪽 굵은 변이 넷을 가른다 (§14) */
+    /* 종류는 카드의 첫인상이다 — 왼쪽 굵은 변이 둘을 가른다 (§14) */
     border-left: 3px solid var(--border-dark);
 }
-/* 가는 형(약탈·보호) — 파티를 보내는 쪽. 실시간/오프라인이라 시간축까지 갈린다 */
-.cm-card.k-raid { border-left-color: var(--color-error); }
-.cm-card.k-escort { border-left-color: var(--color-warning); }
-/* 세는 형(사냥·파견 의뢰) — 받아두면 평소 활동이 채운다 */
-.cm-card.k-hunt { border-left-color: var(--color-success); }
-.cm-card.k-dispatch { border-left-color: var(--border-highlight); }
+/* 유형 둘 — 무엇이 목표를 채우는가 (2026-09-07 목표형 개정 · ~~약탈·보호(k-raid·k-escort)~~ 는 탐험으로 이관돼 규칙째 삭제) */
+.cm-card.k-kill { border-left-color: var(--color-success); }
+.cm-card.k-collect { border-left-color: var(--border-highlight); }
 .cm-kind { font-size: var(--fs-sm); }
 /* 배지만으로는 넷의 시간축 차이가 안 읽힌다 — 「어떻게 도는가」가 한 줄로 든다 (§14) */
 .cm-how { font-size: var(--fs-2xs); color: var(--text-muted); word-break: keep-all; }

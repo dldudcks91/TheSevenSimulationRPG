@@ -87,7 +87,9 @@ const sourceName = i => t(i === 0 ? 'sk.innate' : `sk.src.${ACTIVE_SOURCES[i]}`)
 const sinColor = id => M.SINS[id]?.color ?? 'var(--text-muted)';
 const sinName = id => L(M.SINS[id]) || id;
 const rarity = r => M.RARITY[r] ?? M.RARITY.magic;
-const tierOf = h => M.HERO_TIER[h.tier] ?? M.HERO_TIER.rare;
+// 등급 표기 — SSOT 는 `hero_tier.csv` 다 (2026-09-08 R48 · ~~mock.js:HERO_TIER~~ 대체).
+// 3층(매직/레어/유니크) 중 모르는 값이 오면 레어로 떨어뜨린다 — 옛 세이브의 안전망
+const tierOf = h => D.heroTiers.find(t => t.id === h.tier) ?? D.heroTiers.find(t => t.id === 'rare') ?? D.heroTiers[0];
 const tierChip = h => `<span class="tier-chip" style="color:${tierOf(h).color}" title="${L(tierOf(h).desc)}">${L(tierOf(h))}</span>`;
 /* 영웅의 정체성 색 = **등급** (2026-09-03 사용자 지시 · SCREEN_DESIGN §5). 죄종 색이 앉아 있던 자리를 전부 이것이 받는다 —
    죄종은 일곱 갈래라 색이 일곱이고 그 일곱이 화면마다 다른 뜻(챕터의 죄종 · 접사의 죄종 · 영웅의 죄종)으로 읽혔다.
@@ -1755,12 +1757,15 @@ function renderShop(main) {
 /**
  * 의뢰 카드 — 종류 배지가 첫인상이고, 그 아래 「어떻게 도는가」 한 줄이 시간축을 든다 (§14).
  * 게시판이 서는 자리는 **선술집 탭**이다 (§8-1 이동 2026-09-03) — 옛 의뢰 탭은 폐지됐고
- * `renderCommission` 도 같이 지웠다. 데이터는 **CSV 두 표**다 — `commission_kind.csv`(종류 4종 ·
+ * `renderCommission` 도 같이 지웠다. 데이터는 **CSV 두 표**다 — `commission_kind.csv`(유형 둘 ·
  * 확정 기획)와 `commission.csv`(게시판 행 · ⚠임시 자리채움). **칸 수 = 행 수**로 `tactic_slot` 과
  * 같은 문법이라 화면이 개수를 박지 않는다.
  * ⚠ 기능은 아직 없다 — 굴림 · 수락/진행 · 처치 카운터 · 명성 정산이 `game_logic` 에 없어 누르면 안내만 뜬다.
- * 넷은 하는 일이 완전히 달라서(세는 형 = 받아두면 저절로 / 가는 형 = 파티를 보낸다)
- * 이름보다 종류가 먼저 읽혀야 한다. **이름·설명은 CSV 의 `_kr`/`_en` 쌍**이라 `L()` 로 푼다.
+ * **의뢰는 열리지 않는다 — 받아 두는 목표다** [전면 개정 2026-09-07] — ~~넷(사냥·파견·약탈·보호)~~ → **둘**:
+ * 처치(전투가 센다) · 수집(드롭·파견·탐험 산출이 채운다). 「파티를 보내는」 가는 형은 폐지됐고
+ * 약탈·보호는 **탐험**으로 이관됐다 (base_expedition_design §1-3 · DEV_PLAN R45).
+ * 그래도 종류가 이름보다 먼저 읽혀야 한다 — 무엇이 목표를 채우는지가 카드의 첫인상이다.
+ * **이름·설명은 CSV 의 `_kr`/`_en` 쌍**이라 `L()` 로 푼다.
  */
 function commissionCard(c) {
     const k = D.commissionKinds[c.kind];

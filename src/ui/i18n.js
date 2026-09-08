@@ -78,20 +78,22 @@ const STRINGS = {
     'ng.trait': { ko: '시작 특성', en: 'Starting Trait' },
     'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
     'ng.note': {
-        ko: '시작 영웅은 전부 <b>레어</b>다 — 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
-            + '기본 능력치는 축마다 따로 굴리되 <b>합은 [balance.csv:hero_attr_total] 로 고정</b>이다 — '
-            + '세 장의 차이는 양이 아니라 <b>모양</b>이다. 장비로는 1도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
+        ko: '첫 파티는 <b>레어 1 + 매직 2</b>다 — 첫 화면부터 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
+            + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 ([hero_tier.csv:attr_total_min/max] — 매직과 레어의 대역은 <b>겹치지 않는다</b>) — '
+            + '세 장의 차이는 양과 <b>모양</b> 둘이다: 레어는 고르게 나고, 매직은 <b>한 축이 크게 튄다</b>. 장비로는 1도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
+            + '<b>등급은 출발선이지 천장이 아니다</b> — 상한은 [balance.csv:hero_attr_max] 하나로 전 영웅 공통이라 <b>키우면 매직도 같은 곳에 도달한다</b><br>'
             + '최대 HP는 굴리지 않는다 — 전 영웅 [balance.csv:hero_hp_base] 공통 시작<br>'
             + '메인 죄종은 죄종 마스터리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>폐기</b> — 전술카드로 이관 (tactic_card_design.md §4)<br>'
             + '리롤은 <b>무제한·무료</b>다 — 시작 선택을 도박으로 만들지 않는다<br>'
-            + '<b>미확정</b>: 합 70 자체(제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부',
-        en: 'Starting heroes are all <b>Rare</b> — the 15 Uniques are a fixed roster and are not spent at the start<br>'
-            + 'Attributes roll per axis but their <b>total is fixed at [balance.csv:hero_attr_total]</b> — '
-            + 'the three differ in <b>shape</b>, not in amount. Gear never raises them, so what you roll here <b>lasts forever</b><br>'
+            + '<b>미확정</b>: 등급 대역·분포 모양·등장 비중(전부 제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부',
+        en: 'Your first party is <b>1 Rare + 2 Magic</b> — the roster shows its <b>tiers</b> from the first screen. The 15 Uniques are a fixed roster and are not spent at the start<br>'
+            + 'Attributes roll per axis but their <b>total lands in the band its tier sets</b> ([hero_tier.csv:attr_total_min/max] — the Magic and Rare bands <b>never overlap</b>) — '
+            + 'the three differ in amount and in <b>shape</b>: Rare rolls evenly, Magic can <b>spike on one axis</b>. Gear never raises them, so what you roll here <b>lasts forever</b><br>'
+            + '<b>A tier is a starting line, not a ceiling</b> — the cap is a single [balance.csv:hero_attr_max] shared by every hero, so <b>a Magic hero you raise gets to the same place</b><br>'
             + 'Max HP is not rolled — every hero starts at [balance.csv:hero_hp_base]<br>'
             + 'The main sin decides the sin mastery (tab 1) and dispatch aptitude — gear affinity (set points) is <b>dropped</b> — moved to tactic cards (tactic_card_design.md §4)<br>'
             + 'Rerolling is <b>unlimited and free</b> — the opening choice is not a gamble<br>'
-            + '<b>Open</b>: the total itself (a proposed value) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed',
+            + '<b>Open</b>: the tier bands, spread shapes and appearance weights (all proposed values) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed',
     },
 
     /* ── 새 게임 · 세이브 (2026-08-25) ── */
@@ -428,14 +430,16 @@ const STRINGS = {
     },
     'exp.commission.h': { ko: '의뢰', en: 'Commissions' },
     'exp.commission.note': {
-        ko: '의뢰는 게시판에서 골라 받는다 — 종류는 <b>넷</b>이고 하는 일이 서로 다르다 (2026-09-03 확정)<br>'
-            + '<b>받아두면 저절로 되는 것</b> — 사냥(원정에서 죽인 몬스터 수를 센다) · 파견 의뢰(파견이 채운다). 따로 나갈 필요가 없다<br>'
-            + '<b>파티를 보내는 것</b> — 약탈(운송 중인 물자를 턴다 · 실시간 전투) · 보호(상단을 호위한다 · <b>오프라인 전투</b>라 결과는 리포트에서 본다). 둘 다 적이 몬스터가 아니라 <b>영웅 파티</b>다<br>'
-            + '동시에 받을 수 있는 수에 <b>상한</b>이 있다 — 개수와 보상 · 명성 폭 · 쿨다운은 미정이라 <b>화면의 숫자는 전부 임시</b>다 (base_expedition_design §1-3)',
-        en: 'Commissions are picked from a board — there are <b>four kinds</b> and they work differently (settled 2026-09-03)<br>'
-            + '<b>Accept and forget</b> — Hunt (counts monsters you kill on expeditions) and Dispatch (your posts fill it). Nobody has to go out<br>'
-            + '<b>Send a party</b> — Raid (hit a convoy in transit · live battle) and Escort (guard a caravan · an <b>offline battle</b>, so you read the result in the report). Both pit you against <b>hero parties</b>, not monsters<br>'
-            + 'There is a <b>cap</b> on how many you can hold at once — the number, rewards, fame swings and cooldowns are undecided, so <b>every figure on the screen is placeholder</b> (base_expedition_design §1-3)',
+        ko: '의뢰는 <b>받아 두는 목표</b>다 — 전장이 열리지 않는다. 게시판에서 골라 받아 두면 <b>평소 활동 위에 얹혀</b> 저절로 진행된다 (2026-09-07 확정)<br>'
+            + '유형은 <b>둘</b> — <b>처치</b>(「x를 잡아라」 · 돌던 전투가 저절로 센다) · <b>수집</b>(「x를 모아라」 · 드롭과 파견·탐험 산출이 채운다)<br>'
+            + '<b>오프라인에도 진행된다</b> — 자리를 비운 사이에도 목표가 나아간다. 그래서 따로 나갈 파티도, 의뢰만의 전장도 없다<br>'
+            + '<b>수락하면 그 회차가 소진된다</b> — 그래서 「어느 의뢰를 받을까」가 결정이 된다. 명성은 <b>성공했을 때만</b> 오르고 떨어지지 않는다<br>'
+            + '동시에 받을 수 있는 수 · 보상 · 명성 폭은 미정이라 <b>화면의 숫자는 전부 임시</b>다 (base_expedition_design §1-3)',
+        en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b> (settled 2026-09-07)<br>'
+            + 'There are <b>two kinds</b> — <b>Slay</b> ("kill x" · the battles you already run count it) and <b>Collect</b> ("gather x" · drops and dispatch/exploration yields fill it)<br>'
+            + '<b>It advances offline too</b> — the goal moves while you are away. So there is no party to send and no commission-only battlefield<br>'
+            + '<b>Accepting spends that slot</b> — which is what makes "who do I take on" a decision. Fame rises <b>only on success</b> and never falls<br>'
+            + 'How many you can hold at once, the rewards and the fame swings are undecided, so <b>every figure on the screen is placeholder</b> (base_expedition_design §1-3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },

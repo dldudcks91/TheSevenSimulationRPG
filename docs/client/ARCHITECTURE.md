@@ -7,7 +7,7 @@
 ## 1. 한 장 그림
 
 ```
-        src/data/*.csv  (SSOT — 수치·구조 · 22종)      src/ui/mock.js  (표시 사전 + ⚠죄종 3항목 잔류)
+        src/data/*.csv  (SSOT — 수치·구조 · 27종)      src/ui/mock.js  (표시 사전 + ⚠죄종 3항목 잔류)
                      │                                             │
                      ▼ fetch + parseCsv                            │
               ┌──────────────────────────────────────────────────┐ │
@@ -51,7 +51,7 @@
 
 | 전역 | 정체 | 소유 | 가변성 |
 |---|---|---|---|
-| `D` | 로드된 CSV 파생 데이터 **31 필드** — 밸런스(`balance` `balanceRows`) · 전투 소재(`monsters` `stages` `stageList` `stageOrder` `roundTypes` `budgets` `grades` `eliteRounds` `bossRound`) · 도감(`codexLevels` `codexBonus` `codexSeries`) · 챕터(`chapters` `chapterList`) · 능력치(`heroAttributes` `combatStats`) · 무기군(`weaponGroups` `weaponGroupList`) · 스킬·마스터리(`skillRows` `masteryNodes`) · 전술(`tacticSlots` `tacticOptions`) · **장비**(`slots` `equipSlots` `itemBases` `affixDefs`) · **영웅 풀**(`classes` `heroNamePool` `heroTraitPool`) | `ui/data.js` | 부팅 후 읽기 전용 |
+| `D` | 로드된 CSV 파생 데이터 **36 필드** [정정 2026-09-08 — 31 → 36 · CSV 22 → 27 과 같은 원인. 늘어난 것: `commissionKinds` `commissionList` `mineNodes` `skillTagRows` `heroTiers`] — 밸런스(`balance` `balanceRows`) · 전투 소재(`monsters` `stages` `stageList` `stageOrder` `roundTypes` `budgets` `grades` `eliteRounds` `bossRound`) · 도감(`codexLevels` `codexBonus` `codexSeries`) · 챕터(`chapters` `chapterList`) · 능력치(`heroAttributes` `combatStats`) · 무기군(`weaponGroups` `weaponGroupList`) · 스킬·마스터리(`skillRows` `masteryNodes`) · 전술(`tacticSlots` `tacticOptions`) · **장비**(`slots` `equipSlots` `itemBases` `affixDefs`) · **영웅 풀**(`classes` `heroNamePool` `heroTraitPool` `heroTiers`) · 의뢰(`commissionKinds` `commissionList`) · 파견(`mineNodes`) | `ui/data.js` | 부팅 후 읽기 전용 |
 | `SYS` | 조립된 시스템 **7개** (`hero` `item` `battle` `skill` `tactic` `game` `formula`) | `ui/data.js` | 무상태 — 함수 묶음 |
 | `G` | 세이브 상태 (JSON 평문) | `ui/app.js` | **유일한 가변 상태.** `null` 이면 시작 화면 |
 
@@ -62,7 +62,7 @@
 ## 4. 부팅 시퀀스 (`ui/app.js:boot`)
 
 ```
-loadData()            CSV 22개 fetch → D 채움 → SYS 조립  (`ui/data.js:FILES` 가 목록 — src/data/*.csv 전부여야 한다)
+loadData()            CSV 27개 fetch → D 채움 → SYS 조립  (`ui/data.js:FILES` 가 목록 — src/data/*.csv 전부여야 한다)
 rollCandidates()      새 게임 후보 3명 (고정 시드 — 세이브 밖)
 loadSave() → continueGame()
     deserialize (버전 불일치면 catch → G=null → 시작 화면)
@@ -166,4 +166,4 @@ render()
 
 ---
 
-*마지막 업데이트: 2026-08-31 (**전면 대조 — 문서가 08-28 판에 멈춰 있었다.** §1 그림(SYS 5→7 · `skill`·`tactic`·`naming` 누락) · §3 `D` 13→31 필드 · §4 CSV 8→22 · §7 골든 스냅샷 절 신설 · §8 CDN 1→2(부채 #11 과의 모순 해소) · §9 mock 잔류 9→3 + 이관 내역 표 · §10 이식 표에 `naming`·`skill`·`tactic`·골든) · 2026-08-28 (`ui/tip.js` 등재 — 툴팁 기계장치를 app.js 에서 분리, 관전 재생기와 공용) · 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*
+*마지막 업데이트: 2026-09-08 (**낡은 수치 정정 — 문서가 08-31 판에 멈춰 있었다** · 기획↔클라이언트 버전 일치 작업. §1·§4 **CSV 22종 → 27**(`skill_tag`·`mine_node`·`commission_kind`·`commission`·`hero_tier` 다섯이 그 뒤로 들어왔다) · §3 `D` **31 → 36 필드**(같은 원인). 부팅 순서·모듈 목록은 실제 `app.js:boot()` 과 일치해 안 건드렸다 (DEV_PLAN §3-3 R43·R45·R48)) · 2026-08-31 (**전면 대조 — 문서가 08-28 판에 멈춰 있었다.** §1 그림(SYS 5→7 · `skill`·`tactic`·`naming` 누락) · §3 `D` 13→31 필드 · §4 CSV 8→22 · §7 골든 스냅샷 절 신설 · §8 CDN 1→2(부채 #11 과의 모순 해소) · §9 mock 잔류 9→3 + 이관 내역 표 · §10 이식 표에 `naming`·`skill`·`tactic`·골든) · 2026-08-28 (`ui/tip.js` 등재 — 툴팁 기계장치를 app.js 에서 분리, 관전 재생기와 공용) · 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*

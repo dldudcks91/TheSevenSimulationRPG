@@ -267,7 +267,7 @@ check('csv: 로더가 읽는 목록 = src/data/*.csv 전부 — 읽히지 않는
     return `${loaded.length}개 일치`;
 });
 check('balance: 시스템이 쓰는 키가 전부 있다', () => {
-    const need = ['party_size_max', 'roster_cap', 'rounds_per_stage', 'wave_monster_max', 'hero_attr_min', 'hero_attr_max', 'hero_attr_total',
+    const need = ['party_size_max', 'roster_cap', 'rounds_per_stage', 'wave_monster_max', 'hero_attr_min', 'hero_attr_max',
         'hero_hp_base', 'attr_bonus_per_point', 'hero_xp_base', 'hero_xp_exp', 'power_growth_per_level', 'attr_growth_chance_pct', 'xp_rate',
         'unarmed_atk', 'unarmed_period', 'weapon_atk_base', 'armor_def_base', 'armor_def_per_ilvl', 'armor_def_variance_pct',
         'base_crit_pct', 'base_crit_damage_pct', 'dmg_variance_pct', 'monster_hp_scale', 'monster_atk_scale', 'monster_def_scale', 'battle_timeout_sec',
@@ -506,16 +506,41 @@ check('시작 파티: 3명, 죄종·직업·이름 겹침 없음', () => {
     const u = k => new Set(cands.map(c => typeof c[k] === 'object' ? c[k].en : c[k])).size === cands.length;
     return cands.length === B.party_size_max && u('sin') && u('cls') && u('name');
 });
-check('시작 파티: 능력치 합 고정, 범위 준수, 주력 축(class.csv:key_attr)이 최고', () => {
+check('시작 파티: 능력치 합이 **등급 대역** 안 · 범위 준수 · 주력 축(class.csv:key_attr)이 최고', () => {
+    // ⚠ ~~합은 hero_attr_total 하나로 고정~~ 은 09-07 폐지 — 등급이 대역을 정하고 그 안에서 굴린다 (hero_design §1)
     for (const c of cands) {
         const vals = Object.values(c.stats);
-        if (vals.reduce((a, b) => a + b, 0) !== B.hero_attr_total) fail(`sum ${vals.reduce((a, b) => a + b, 0)}`);
+        const sum = vals.reduce((a, b) => a + b, 0);
+        const tier = D.heroTiers.find(t => t.id === c.tier);
+        if (!tier) fail(`등급 '${c.tier}' 가 hero_tier.csv 에 없다`);
+        if (sum < tier.totalMin || sum > tier.totalMax) fail(`${c.tier} sum ${sum} ∉ [${tier.totalMin}·${tier.totalMax}]`);
         if (vals.some(v => v < B.hero_attr_min || v > B.hero_attr_max)) fail('range');
         const key = D.classes.find(x => x.id === c.cls).keyAttr;
         if (c.stats[key] !== Math.max(...vals)) fail(`${c.cls} key ${key}=${c.stats[key]} max=${Math.max(...vals)}`);
-        for (const [id, v] of Object.entries(c.stats)) if (c.caps[id] < v || c.caps[id] > B.hero_attr_max) fail('caps');
+        if ('caps' in c) fail('caps 가 남았다 — 개체별 히든 상한은 09-07 폐지');
     }
-    return true;
+    return `등급 ${cands.map(c => c.tier).join('·')}`;
+});
+check('시작 파티: **레어 1 + 매직 2** — 첫 화면부터 로스터에 층이 보인다 (hero_design §1 확정 2026-09-07)', () => {
+    const got = cands.map(c => c.tier);
+    if (!eq(got, ['rare', 'magic', 'magic'])) fail(`${got.join('·')} ≠ rare·magic·magic`);
+    // 대역이 겹치면 등급이 능력치로 안 읽힌다 — 「겹치지 않는다」가 확정 사항이다
+    const m = D.heroTiers.find(t => t.id === 'magic'), r = D.heroTiers.find(t => t.id === 'rare');
+    if (m.totalMax >= r.totalMin) fail(`대역이 겹친다 매직≤${m.totalMax} · 레어≥${r.totalMin}`);
+    return `rare·magic·magic · 대역 매직[${m.totalMin}·${m.totalMax}] < 레어[${r.totalMin}·${r.totalMax}]`;
+});
+check('영웅 등급: rng 소비 수가 등급에 의존하지 않는다 — 지정이어도 굴림을 태운다 (INTERFACE §5-2)', () => {
+    // 등급 지정(시작 파티)과 등급 굴림(선술집)이 **같은 시드에서 같은 자리를 소비**해야 한다.
+    // 밀리면 이름·직업(등급보다 먼저 뽑힌다)은 같은데 뒤에 오는 고유·얼굴이 어긋난다
+    const forced = SYS.hero.rollStartParty(makeRng(7), 3);
+    const free = SYS.hero.rollCandidates(makeRng(7), 3);
+    for (let i = 0; i < 3; i++) {
+        if (forced[i].name.en !== free[i].name.en) fail(`이름이 밀렸다 ${forced[i].name.en} ≠ ${free[i].name.en}`);
+        if (forced[i].cls !== free[i].cls || forced[i].sin !== free[i].sin) fail('직업·죄종이 밀렸다');
+        if (forced[i].innate !== free[i].innate) fail('고유가 밀렸다 — 등급 굴림이 소비를 바꿨다');
+        if (forced[i].face !== free[i].face) fail(`얼굴이 밀렸다 ${forced[i].face} ≠ ${free[i].face} — 등급 굴림이 소비를 바꿨다`);
+    }
+    return `지정 ${forced.map(h => h.tier).join('·')} vs 굴림 ${free.map(h => h.tier).join('·')} — 소비 동일`;
 });
 check('시작 파티: 같은 시드 = 같은 3명', () => eq(SYS.hero.rollStartParty(makeRng(1), 3), cands));
 check('시작 파티: 고유 스킬 — 생성 시 skill.csv 풀에서 1개 · 정의에 있는 id · 같은 시드 = 같은 스킬 (hero_design §1 프로토타입 2026-09-01)', () => {
@@ -554,21 +579,23 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
     if (!eq(party.map(h => h.face), again.map(h => h.face))) fail('같은 시드인데 얼굴이 다르다');
     return party.map(h => h.face).join(' · ');
 });
-check('save: serialize → deserialize 왕복 동일 (v14)', () => {
+check('save: serialize → deserialize 왕복 동일 (v15)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 14;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 15;
 });
-check('save: v2 → v11 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11)까지 한 번에', () => {
+check('save: v2 → v15 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11) · **히든 상한 폐지·등급(v15)**까지 한 번에', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v2.version = 2;
     // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
     const senValues = [];
     for (const h of v2.heroes) {
         h.stats = Object.fromEntries(Object.entries(h.stats).map(([k, v]) => [k === 'luck' ? 'sen' : k, v]));
-        h.caps = Object.fromEntries(Object.entries(h.caps).map(([k, v]) => [k === 'luck' ? 'sen' : k, v]));
+        // v2 세이브에는 개체별 히든 상한이 있었다 — v15 가 지우는지 보려면 **없던 것을 되살려** 넣어야 한다
+        h.caps = Object.fromEntries(Object.entries(h.stats).map(([k, v]) => [k, v]));
         delete h.innate;                 // 안 지우면 이관이 아니라 보존을 검사하게 된다 (v2 에는 고유가 없었다)
         delete h.face;                   // 같은 이유 — v2 에는 얼굴 번호가 없었다 (v12 에서 생겼다)
+        delete h.tier;                   // v14 까지 생성기는 레어만 냈다 — v15 가 옛 영웅을 레어로 보는지 검사한다
         senValues.push(h.stats.sen);
     }
     const itemUid = Object.keys(v2.items)[0];
@@ -584,9 +611,10 @@ check('save: v2 → v11 연쇄 이관 — 감각→운·명중/회피 폐지(v3)
         if (h.face !== null && !(typeof h.face === 'string' && h.face.startsWith(h.cls + '_')))
             fail(`v13 자리(얼굴 id)가 안 생겼다 (${h.cls} → ${h.face})`);
     up.heroes.forEach((h, i) => {
-        if ('sen' in h.stats || 'sen' in h.caps) fail('sen 키가 남았다');
+        if ('sen' in h.stats) fail('sen 키가 남았다');
         if (h.stats.luck !== senValues[i]) fail(`값이 바뀌었다 ${h.stats.luck} ≠ ${senValues[i]}`);
-        if (typeof h.caps.luck !== 'number') fail('caps 미이관');
+        if ('caps' in h) fail('v15 자리 — caps 가 안 지워졌다 (개체별 히든 상한 폐지)');
+        if (h.tier !== 'rare') fail(`v15 자리 — 옛 영웅은 레어여야 한다 (${h.tier})`);
         if (Object.keys(h.stats).length !== D.heroAttributes.length) fail('키 수가 달라졌다');
     });
     const af = up.items[itemUid].affixes;
@@ -682,11 +710,11 @@ check('xp: 레벨 상한 hero_level_cap 에서 멈추고 XP 를 더 쌓지 않�
     if (SYS.hero.grantXp(h, 1e9, makeRng(4)) !== null || h.xp !== 0) fail('상한 뒤에도 XP 가 쌓인다');
     return `Lv ${B.hero_level_cap} 에서 정지`;
 });
-check('xp: 레벨업 시 능력치는 상한까지만', () => {
+check('xp: 레벨업 시 능력치는 **전 영웅 공통 상한**까지만 (개체별 히든 상한은 09-07 폐지)', () => {
     const h = JSON.parse(JSON.stringify(G.heroes[0]));
     const lu = SYS.hero.grantXp(h, 100000, makeRng(3));
-    for (const [id, v] of Object.entries(h.stats)) if (v > h.caps[id]) fail(`${id} ${v} > cap ${h.caps[id]}`);
-    return lu && lu.to > lu.from && h.level > 5 ? `Lv ${lu.from}→${lu.to}` : fail('no levelup');
+    for (const [id, v] of Object.entries(h.stats)) if (v > B.hero_attr_max) fail(`${id} ${v} > ${B.hero_attr_max}`);
+    return lu && lu.to > lu.from && h.level > 5 ? `Lv ${lu.from}→${lu.to} · 상한 ${B.hero_attr_max}` : fail('no levelup');
 });
 
 /* ── 마스터리 (skill_design §3-1~§3-4 확정 2026-08-28) ── */
@@ -719,8 +747,13 @@ check('mastery: 랭크 0 이면 전투 능력치가 그대로다 — 도입이 �
     const empty = SYS.hero.computeCombat({ ...h, mastery: {} }, items);
     const absent = SYS.hero.computeCombat({ ...h, mastery: undefined }, items);
     if (!eq(empty, absent)) fail('mastery 없음 ≠ 빈 객체');
-    if (empty.hp_regen !== 0 || empty.cooldown_reduction !== 0) fail(`재생 ${empty.hp_regen} · 쿨감소 ${empty.cooldown_reduction}`);
-    return '재생·쿨감소 출처가 마스터리뿐이라 기본값 0';
+    if (empty.cooldown_reduction !== 0) fail(`쿨감소 ${empty.cooldown_reduction}`);
+    // ⚠ **재생만 0 이 아니다** [개정 2026-09-07 — battle_design §8] — 「장비가 0이면 능력치도 0」의 유일한 예외로
+    //   전 영웅이 레벨 곡선 밑수를 갖고 마지막에 건강 계수가 곱해진다. 0 을 기대하면 R43 이 회귀로 잡힌다.
+    const base = B.hp_regen_base_per_level * Math.pow(B.power_growth_per_level, Math.max(1, h.level) - 1);
+    const want = Number((base * (1 + h.stats.vit * B.attr_bonus_per_point / 100)).toFixed(3));
+    if (empty.hp_regen !== want) fail(`재생 ${empty.hp_regen} ≠ 밑수×건강 ${want}`);
+    return `쿨감소 출처는 마스터리뿐이라 0 · 재생은 밑수 ${want} 가 남는다`;
 });
 check('mastery: 랭크를 찍으면 그 채널이 오른다 — T1 공통 3종은 죄종을 안 가린다', () => {
     const r = B.mastery_t1_max_rank;
@@ -1718,6 +1751,8 @@ check('simulate: 배리어 — bar 가 남아 있으면 그 타격은 HP 를 깎
         }
         if (ev.e === 'reflect') hp[ev.d] = ev.ahp;
         if (ev.e === 'heal') hp[ev.d] = ev.dhp;
+        // 재생도 HP 를 움직인다 [09-07 밑수 신설로 전 영웅이 상시 발생] — 안 따라가면 다음 타격에서 추적값이 어긋난다
+        if (ev.e === 'regen') hp[ev.u] = ev.dhp;
     }
     return `seed ${seed} · 배리어가 낀 타격 ${shielded}건`;
 });
@@ -1997,8 +2032,8 @@ check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다
     return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
 });
 
-check('save: SAVE_VERSION 14 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 id(`face` — `<class>_<k>`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 사라졌다 (INTERFACE §4)', () =>
-    SAVE_VERSION === 14 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 15 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 id(`face` — `<class>_<k>`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 · **개체별 히든 상한(`caps`)은 v15 에서** 사라졌다 (INTERFACE §4)', () =>
+    SAVE_VERSION === 15 || fail(`v${SAVE_VERSION}`));
 
 /* ── 원정 정산 ── */
 check('report: roundsCleared 를 정산이 싣는다 — 렌더러가 짐작하지 않는다 (INTERFACE §2-7)', () => {

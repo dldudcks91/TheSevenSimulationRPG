@@ -41,6 +41,9 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   skillPool    — 고유 스킬 후보 id 목록 [skillId...] ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
  *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
+ *   heroTiers    — 영웅 등급 표 [{id, weight, totalMin, totalMax, shape}...] ← `hero_tier.csv` (**행 순서가 굴림 결과를 정한다**).
+ *                  `weight = 0` 인 행은 생성기가 안 뽑는다(유니크는 수작업). 등급을 가르는 것은 **총합 대역과 분포 모양 둘뿐**이다
+ *                  (hero_design §1 확정 2026-09-07). 상한은 등급이 아니라 `[balance.csv:hero_attr_max]` 하나다
  *   heroFaces    — **직업별** 초상 장수 `{classId: n}`. **영웅이 태어날 때 제 직업 풀에서 굴려 `face` 에 박는다**
  *                  (2026-09-07 — 구 `heroFaceMax` 정수 하나를 대체). `face` 는 `'<classId>_<k>'` 문자열이고
  *                  풀이 0장인 직업은 `null`(초상 없음)이다. 로직은 그림을 모른다 — 직업별 장수 객체만 받고
@@ -122,23 +125,71 @@ export function createHeroSystem(data) {
         return m ? `${cls}_${1 + Math.floor(r * m)}` : null;
     };
 
+    /* ── 등급 (hero_design §1 — 3층 확정 2026-09-07 · SSOT: `hero_tier.csv`) ── */
+
+    const tierRows = data.heroTiers ?? [];
+    const rollable = tierRows.filter(t => t.weight > 0);      // 유니크(weight 0)는 수작업이라 굴림 대상이 아니다
+    const tierById = id => tierRows.find(t => t.id === id) ?? null;
+    const defaultTier = () => rollable[0] ?? tierRows[0] ?? null;
+
     /**
-     * 기본 능력치 굴림 — **합은 고정, 모양만 굴린다** ([balance.csv:hero_attr_total]).
-     * 축마다 독립 균등이면 합이 33↔86까지 벌어져 죽은 카드가 나온다 — 차이는 양이 아니라 모양.
-     * 마지막에 직업 주력 축(keyAttr)이 최고치가 되도록 **자리만 바꾼다** (합·분포 불변).
+     * 등급 1회 — **소비는 언제나 정확히 1회다.**
+     * ⚠ 이것이 계약이다 (INTERFACE §5-2) — 소비 수가 등급이나 호출 경로에 의존하면
+     *   선술집에서 등급이 섞여 나올 때 **같은 시드가 다른 결과**를 낸다. 그래서 시작 파티처럼
+     *   등급을 **지정**하는 경우에도 굴림은 그대로 태우고 결과만 버린다
+     *   (`rollFace` 가 「풀이 0장이어도 1회 소비」로 막아 둔 것과 같은 함정).
      */
-    function rollAttributes(rng, favor) {
-        const lo = B.hero_attr_min, hi = B.hero_attr_max, total = B.hero_attr_total;
-        const w = statIds.map(() => rng() ** 2 + 0.04);
+    function rollTier(rng, forced) {
+        const total = rollable.reduce((s, t) => s + t.weight, 0);
+        const x = rng() * total;                              // 강제 지정이어도 굴린다 — 위 계약
+        if (forced) return tierById(forced) ?? defaultTier();
+        let acc = 0;
+        for (const t of rollable) { acc += t.weight; if (x < acc) return t; }
+        return defaultTier();
+    }
+
+    /** 능력치 총합 1회 — 등급이 대역을 정하고 그 안에서 굴린다. 여기도 **소비 1회 고정** */
+    function rollTotal(rng, tier) {
+        const lo = Math.max(B.hero_attr_min * statIds.length, tier?.totalMin ?? 0);
+        const hi = Math.min(B.hero_attr_max * statIds.length, tier?.totalMax ?? lo);
+        return lo + Math.floor(rng() * (Math.max(lo, hi) - lo + 1));
+    }
+
+    /**
+     * 기본 능력치 굴림 — **합은 등급이 정하고 모양만 굴린다** (`hero_tier.csv`).
+     * 축마다 독립 균등이면 합이 33↔86까지 벌어져 죽은 카드가 나온다 — 차이는 양이 아니라 모양.
+     * `shape` 는 그 모양의 손잡이다 — 클수록 가중치가 치우쳐 **한 축이 크게 튄다**(매직),
+     * 1 에 가까울수록 고르게 나서 극값이 드물다(레어 = 정규). hero_design §1 의 「등급을 가르는 축 둘」.
+     * 마지막에 직업 주력 축(keyAttr)이 최고치가 되도록 **자리만 바꾼다** (합·분포 불변).
+     *
+     * ⚠ **rng 소비는 축 수(7)로 고정이다** — 옛 판은 나머지 보정 루프가 `rng()` 로 칸을 골라
+     *   소비 수가 굴림 결과에 의존했다. 총합이 등급마다 달라지는 09-07 개정에서는 그것이 곧
+     *   「등급이 소비 수를 민다」가 되므로 **보정을 결정적으로** 바꿨다 (소수부 큰 축부터 · 동률은 인덱스 순).
+     */
+    function rollAttributes(rng, favor, opts = {}) {
+        const t = opts.total != null ? null : defaultTier();
+        const total = opts.total ?? Math.round(((t?.totalMin ?? 7) + (t?.totalMax ?? 7)) / 2);
+        const shape = opts.shape ?? t?.shape ?? 2;
+        const lo = B.hero_attr_min, hi = B.hero_attr_max;
+        const w = statIds.map(() => rng() ** shape + 0.04);   // 소비 = 축 수. 등급과 무관하다
         const sum = w.reduce((a, b) => a + b, 0);
         const free = total - lo * statIds.length;
-        const v = w.map(x => Math.max(lo, Math.min(hi, lo + Math.round(free * x / sum))));
+        const raw = w.map(x => lo + free * x / sum);
+        const v = raw.map(x => Math.max(lo, Math.min(hi, Math.floor(x))));
 
         let diff = total - v.reduce((a, b) => a + b, 0);
-        for (let guard = 0; diff !== 0 && guard < 500; guard++) {
-            const i = Math.floor(rng() * v.length);
-            if (diff > 0 && v[i] < hi) { v[i]++; diff--; }
-            else if (diff < 0 && v[i] > lo) { v[i]--; diff++; }
+        const order = raw
+            .map((x, i) => [x - Math.floor(x), i])
+            .sort((a, b) => b[0] - a[0] || a[1] - b[1])
+            .map(([, i]) => i);
+        for (let pass = 0; diff !== 0 && pass < hi + 2; pass++) {
+            let moved = false;
+            for (let k = 0; k < order.length && diff !== 0; k++) {
+                const i = order[diff > 0 ? k : order.length - 1 - k];
+                if (diff > 0 && v[i] < hi) { v[i]++; diff--; moved = true; }
+                else if (diff < 0 && v[i] > lo) { v[i]--; diff++; moved = true; }
+            }
+            if (!moved) break;                                // 대역이 [lo*7, hi*7] 밖이면 더 못 민다
         }
         const fi = statIds.indexOf(favor);
         if (fi >= 0) {
@@ -150,35 +201,29 @@ export function createHeroSystem(data) {
     }
 
     /**
-     * 히든 상한선 — 개체별로 [현재값 ~ hero_attr_max] 에서 굴린다 (계승: 히든 성장률/상한선).
-     * 레벨업 성장은 이 상한까지만 간다. 화면에는 절대 보여주지 않는다.
-     */
-    const rollCaps = (rng, stats) =>
-        Object.fromEntries(statIds.map(id =>
-            [id, stats[id] + Math.floor(rng() * (B.hero_attr_max - stats[id] + 1))]));
-
-    /**
      * 고유 스킬 1개 — 영웅이 태어날 때 딱 한 번 굴린다 (hero_design §1).
      * ⚠ 프로토타입 풀은 `skill.csv` **전 행**이다 — 고유 전용 행이 아직 없어 직업 액티브를 그대로 빌려 쓴다
      *   (skill_design §9-0 개정 2026-09-01). 풀이 비면 **rng 를 한 번도 안 쓴다** — 소비 0회가 계약이다.
      */
     const rollInnate = rng => (skillPool.length ? skillPool[Math.floor(rng() * skillPool.length)] : null);
 
-    /** 레어 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollStartParty 쪽의 일 */
-    function rollHero(rng, { sin, cls, name, trait }) {
-        // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 능력치 → 상한 7회 → 고유 1회.
-        // 객체 리터럴 안에서 부르면 평가 순서가 문장으로 안 보여 순서가 조용히 밀린다
-        const stats = rollAttributes(rng, keyAttrOf(cls));
-        const caps = rollCaps(rng, stats);
+    /** 생성 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollParty 쪽의 일 */
+    function rollHero(rng, { sin, cls, name, trait, tier }) {
+        // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 등급 1 → 총합 1 → 능력치 7 → 고유 1 = **언제나 10회**.
+        // 객체 리터럴 안에서 부르면 평가 순서가 문장으로 안 보여 순서가 조용히 밀린다.
+        // ⚠ ~~상한 7회(`rollCaps`)~~ 는 09-07 폐지 — 상한은 개체별이 아니라 `hero_attr_max` 하나다 (§4-3)
+        const t = rollTier(rng, tier);
+        const total = rollTotal(rng, t);
+        const stats = rollAttributes(rng, keyAttrOf(cls), { total, shape: t?.shape });
         const innate = rollInnate(rng);
         return {
             uid: null,               // uid 발급은 state 의 일 (카운터 소유자)
-            name, tier: 'rare', sin, cls, trait,
+            name, tier: t?.id ?? 'rare', sin, cls, trait,
             face: null,              // 얼굴 id — **파티를 굴리는 쪽이 맨 마지막에 박는다** (rollStartParty · 아래 이유)
             level: 1, xp: 0,
             mastery: {}, masteryPoints: 0,   // 찍은 랭크 {nodeId: rank} · 남은 포인트 (죄종·직업 공유 풀)
             innate,                  // 고유 스킬 — 생성 시 확정 · 이후 불변 (hero_design §1 · 프로토타입 풀 = skill.csv 전 행)
-            stats, caps,
+            stats,                   // ~~caps~~ 는 09-07 폐지 — 상한이 전 영웅 공통이라 개체가 들 것이 없다
             equipped: {},            // 슬롯 초기화는 state 가 slots 정의로 채운다
         };
     }
@@ -191,20 +236,29 @@ export function createHeroSystem(data) {
      * ⚠ **얼굴은 맨 마지막에 굴린다** (2026-09-06) — 능력치·상한·고유 뒤에 두어야 **앞의 소비 순서가 안 밀린다**.
      *   영웅 안에서 굴리면 1번 영웅의 얼굴이 2번 영웅의 능력치를 밀어 **같은 시드가 다른 파티**를 낸다 (INTERFACE §5-2).
      */
-    function rollStartParty(rng, n) {
+    function rollParty(rng, n, tiers) {
         const names = drawDistinct(rng, data.namePool, n);
         const sins = drawDistinct(rng, data.sins, n);
         const classes = drawDistinct(rng, mainClasses, n);
         const traits = drawDistinct(rng, data.traitPool, n);
         const party = names.map((name, i) =>
-            rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i] }));
+            rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i] }));
         // 소비는 언제나 인원수만큼 1회씩이다 — 직업 풀이 비어도(마법사) 소비 수는 안 바뀐다
         party.forEach(h => { h.face = rollFace(rng, h.cls); });
         return party;
     }
 
-    /** 선술집 후보 — 시작 파티와 같은 굴림. 겹침 방지도 동일 */
-    const rollCandidates = rollStartParty;
+    /**
+     * 첫 파티의 등급 — **레어 1 + 매직 2** [확정 2026-09-07 사용자] (hero_design §1).
+     * 셋이 같은 등급이면 차이가 굴림 운으로만 나타나는데 등급이 갈리면 **첫 화면부터 로스터에 층이 보이고**
+     * 「매직 둘을 언젠가 레어로 갈아탄다」는 목표가 바로 생긴다. 인원이 늘면 나머지는 굴린다.
+     */
+    const START_TIERS = ['rare', 'magic', 'magic'];
+
+    const rollStartParty = (rng, n) => rollParty(rng, n, START_TIERS);
+
+    /** 선술집 후보 — 시작 파티와 같은 굴림이되 **등급도 굴린다** (첫 파티만 지정이다) */
+    const rollCandidates = (rng, n) => rollParty(rng, n, null);
 
     /* ── 성장 ── */
 
@@ -213,7 +267,10 @@ export function createHeroSystem(data) {
     /**
      * XP 지급 → 레벨업 처리. gains = 이번 지급으로 오른 능력치 {attr: +n}.
      * 능력치는 레벨업마다 축별로 [balance.csv:attr_growth_chance_pct]% 확률로 +1,
-     * 단 히든 상한(caps)까지만 — 계승(TheSevenSimulation)의 자동 성장 모델.
+     * 단 [balance.csv:hero_attr_max] 까지만.
+     * ⚠ ~~개체별 히든 상한(caps)~~ 은 **09-07 폐지** — 상한은 전 영웅 공통 하나이고
+     *   개체차는 시작 굴림(등급별 총합 대역 + 분포 모양)이 만든다. **등급은 출발선이지 천장이 아니다**
+     *   — 키우면 매직도 레어와 같은 곳에 도달한다 (hero_design §4-3). 히든으로 남는 것은 성장률뿐이다.
      */
     function grantXp(hero, amount, rng) {
         // 레벨 상한 — 상한에 닿으면 XP 를 쌓지 않는다 (GAME_DESIGN §9 08-26 「레벨 상한 99」).
@@ -226,7 +283,7 @@ export function createHeroSystem(data) {
             hero.xp -= xpNeeded(hero.level);
             hero.level += 1;
             for (const id of statIds) {
-                if (hero.stats[id] < hero.caps[id] && rng() * 100 < B.attr_growth_chance_pct) {
+                if (hero.stats[id] < B.hero_attr_max && rng() * 100 < B.attr_growth_chance_pct) {
                     hero.stats[id] += 1;
                     gains[id] = (gains[id] ?? 0) + 1;
                 }
@@ -261,6 +318,7 @@ export function createHeroSystem(data) {
      * · **피해 감소는 원천별 곱**이라 (§9-3) 접사를 각각 곱해 **실효 %** 한 숫자로 낸다 — 시트에도 그 숫자가 찍힌다.
      * · **운은 전투 계산 밖**이다 — 드랍률·골드 획득에만 계수로 곱한다 (hero_design §4-1).
      *   장비가 0이면 운도 0을 곱한다 (§8 곱셈 원칙).
+     * · **HP 재생만 밑수를 갖는다** [09-07] — 위 곱셈 원칙의 **유일한 예외**. 최대 HP 시작값과 같은 분류다.
      */
     function computeCombat(hero, items, codex = {}, party = null) {
         const A = hero.stats;
@@ -322,7 +380,13 @@ export function createHeroSystem(data) {
             crit_rate: B.base_crit_pct + f('crit_rate'),
             crit_damage: B.base_crit_damage_pct + f('crit_damage'),
             life_steal: f('life_steal'),
-            hp_regen: f('hp_regen'),                        // 초당 회복 — 행동 주기와 무관한 실시간 (battle.js 가 틱마다 누산)
+            // 초당 회복 — 행동 주기와 무관한 실시간 (battle.js 가 틱마다 누산).
+            // **밑수를 갖는 유일한 축**이다 [확정 2026-09-07 · battle_design §8] — 「장비가 0이면 능력치도 0」의 예외로,
+            // 전 영웅이 레벨 곡선 밑수를 갖고(성장 축 = hero_hp_base 와 같은 기하) 그 위에 접사·마스터리가 얹힌 뒤
+            // **마지막에 건강 계수**를 곱한다. 밑수는 세기가 아니라 생존의 바닥이라 능력치와 무관하게 존재한다.
+            hp_regen: Number(
+                ((B.hp_regen_base_per_level * F.growthMult(hero.level) + f('hp_regen')) * attrMult(A.vit))
+                    .toFixed(3)),
             cooldown_reduction: f('cooldown_reduction'),    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js)
             action_period: Number(period.toFixed(3)),
             dmg_bonus_pct: codex.dmg_pct ?? 0,
@@ -335,7 +399,7 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus,
     };
 }

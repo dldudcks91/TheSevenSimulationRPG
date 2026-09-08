@@ -138,7 +138,7 @@ attack_type = physical | fire | cold | lightning | poison
 
 ## 7. 데이터 구조
 
-### `monster.csv` (112행 · 21컬럼)
+### `monster.csv` (112행 · 22컬럼) [정정 2026-09-08 — 21 → 22 · `face` 열 신설분]
 
 | 컬럼 | 설명 |
 |---|---|
@@ -153,7 +153,8 @@ attack_type = physical | fire | cold | lightning | poison
 | `res_fire` `res_cold` `res_lightning` `res_poison` | **직접 %** — 소재값이 아니다. 등급 배율을 받지 않고 `spawn_grade.csv:res_add` 로 %p 가산만 받는다 (§7-1) |
 | `action_period` | 행동 주기(초) — 영웅과 동일 축 |
 | `exp_reward` | 처치 XP 소재값 — 등급 `spawn_grade.exp_mult` 를 곱해 쓴다 |
-| `monster_name_kr` · `description_kr` · `sprite_key` | 표시용. **이름 ko/en 쌍은 아직 `ui/mock.js MONSTERS` 에 있다** — `monster_name_en` 컬럼으로 이사 예정 |
+| `face` | 초상 아트 보유 플래그(0/1). 1 이면 `assets/art/faces/<스타일>/monster_<idx>.png` 를 그리고 0 이면 빈 칸이다 (`ui/data.js:monsterFace`). **전투에 관여하지 않는다** — `size_type` 과 같은 표시 전용 축이다
+| `monster_name_kr` · `monster_name_en` · `description_kr` | 표시용. **이름 ko/en 쌍의 `ui/mock.js MONSTERS` 이관은 끝났다** [정정 2026-09-08] — `ui/data.js:monsterName` 이 두 컬럼을 직접 읽는다. ~~`sprite_key`~~ 는 실재하지 않는 컬럼이었다 — 그 자리는 `face` 다 |
 
 **몬스터는 영웅과 같은 전투 능력치 체계를 쓴다** [확정 2026-08-26] — 몬스터 방어 200과 영웅 방어 200은 같은 감쇠를 만든다. 기본 능력치 7종만 영웅 전용이고, 몬스터는 전투 능력치를 직접 들되 대부분의 축은 값이 0인 **부분집합**이다. 상세: battle_design.md §8-1
 
@@ -188,4 +189,4 @@ attack_type = physical | fire | cold | lightning | poison
 
 ---
 
-*마지막 업데이트: 2026-08-31 (**`size_type` 전투 미관여 확정** — §0·§7 "진형·타겟팅 대기" 보류를 종결하고 아트 발주 전용 분류로 못박음. item_design.md §1 사이즈 특효 삭제와 한 묶음) · 2026-08-31 (**§7-1 미검증 role 계수·산출 공식 삭제** — CSV·코드 어디에도 없던 죽은 수치였다(08-26 AI 세션이 문서에만 기재, 이후 미구현). 「defense·res 는 08-22 수작업 값」으로 재정의(GAME_DESIGN.md §10 과 동일 취급). `def_curve_k`·원소 대립쌍은 유지) · 2026-08-30 (**원작 계보 서술 전면 삭제** — 두 전작의 인용과 「계승」 어휘를 걷어내고 본작의 규칙을 직접 서술한다. 실재하는 CSV 경로는 유지) · 이전 이력은 [DECISION_LOG.md](DECISION_LOG.md) §2*
+*마지막 업데이트: 2026-09-08 (**§7 데이터 구조 정정 — 문서가 CSV 와 갈려 있었다** — `monster.csv` **21컬럼 → 22**(`face` 열) · 없는 컬럼 ~~`sprite_key`~~ 를 **`face`** 로 교체하고 행을 신설(초상 보유 플래그 · 전투 미관여) · 「이름 ko/en 쌍은 아직 `ui/mock.js MONSTERS` 에 있다 — 이사 예정」 → **이관 완료**(`ui/data.js:monsterName` 이 `monster_name_kr`/`_en` 을 직접 읽는다 · `MONSTERS` 는 존재하지 않는다). ⚠ 이번 대조에서 드러난 것 — 챕터 1 스테이지 2 의 **1202·1203 이 09-06 에 개명**됐는데(~~인간 창병~~ → 인간 궁수 · ~~트롤 돌격병~~ → 인간 기사 · `monster_base` 도 Troll → Human) 아트 문서 셋이 옛 이름을 들고 있었다. 있는 그림에 몬스터를 맞춘 데이터 변경이고 기획 결정이 아니라 §3 베이스 16종은 안 바뀐다) · *마지막 업데이트: 2026-08-31 (**`size_type` 전투 미관여 확정** — §0·§7 "진형·타겟팅 대기" 보류를 종결하고 아트 발주 전용 분류로 못박음. item_design.md §1 사이즈 특효 삭제와 한 묶음) · 2026-08-31 (**§7-1 미검증 role 계수·산출 공식 삭제** — CSV·코드 어디에도 없던 죽은 수치였다(08-26 AI 세션이 문서에만 기재, 이후 미구현). 「defense·res 는 08-22 수작업 값」으로 재정의(GAME_DESIGN.md §10 과 동일 취급). `def_curve_k`·원소 대립쌍은 유지) · 2026-08-30 (**원작 계보 서술 전면 삭제** — 두 전작의 인용과 「계승」 어휘를 걷어내고 본작의 규칙을 직접 서술한다. 실재하는 CSV 경로는 유지) · 이전 이력은 [DECISION_LOG.md](DECISION_LOG.md) §2*

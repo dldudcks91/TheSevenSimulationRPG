@@ -100,10 +100,12 @@ const grewSig = (SYS, G) => {
 
 /**
  * 시작 파티 1개의 지문 — 영웅 3명의 생성 결과와 시작 무기.
- * `hero.drawDistinct`(이름·죄종·직업·특성) · `rollAttributes` · `rollCaps` · `rollInnate` ·
+ * `hero.drawDistinct`(이름·죄종·직업·특성) · **`rollTier`** · `rollAttributes` · `rollInnate` ·
  * `item.startingWeapon` 이 전부 여기 있다. 40런에 중복하지 않고 **시드마다 한 번만** 적는다 (파일 +2KB).
- * 능력치·상한은 **키 이름까지** 적는다 — `hero_attribute.csv` 행 순서가 곧 굴림 순서라 재정렬을 봐야 한다.
- * 형식: `cls|sin|name|trait|innate|stats|caps|무기`
+ * 능력치는 **키 이름까지** 적는다 — `hero_attribute.csv` 행 순서가 곧 굴림 순서라 재정렬을 봐야 한다.
+ * 등급도 적는다 — 첫 파티의 **레어 1 + 매직 2** 와 `hero_tier.csv` 행 순서가 여기서 잠긴다 [2026-09-08].
+ * ~~`rollCaps` · caps~~ 는 09-07 개체별 히든 상한 폐지로 사라졌다 (세이브 v15).
+ * 형식: `cls|sin|name|trait|tier|innate|stats|무기`
  */
 function partyFingerprint(SYS, B, NOW, seed) {
     const party = SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max);
@@ -114,8 +116,9 @@ function partyFingerprint(SYS, B, NOW, seed) {
         const w = G.items[h.equipped?.weapon];
         return [
             h.cls, h.sin, h.name?.en ?? '-', h.trait?.en ?? '-',
+            h.tier ?? '-',                            // 등급 — 09-07 3층. 첫 파티는 레어 1 + 매직 2 가 고정이라 그것도 여기서 걸린다
             h.innate ?? '-',                          // 고유 스킬(생성 시 1회 굴림) — rng 소비 순서가 여기서 걸린다
-            kv(h.stats), kv(h.caps),
+            kv(h.stats),                              // ~~kv(h.caps)~~ — 개체별 히든 상한은 09-07 폐지(v15)
             w ? dropSig(w) : '-',
         ].join('|');
     });

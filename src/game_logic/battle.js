@@ -374,7 +374,9 @@ export function createBattleSystem(data) {
             // 귀환 룰 [개정 2026-09-03 — base_expedition_design §1-1] — **전멸일 때만 돌아온다.**
             // 하나가 쓰러져도 런을 접지 않고 남은 인원으로 계속 간다. 쓰러진 영웅은 `out.downed` 에 실려
             // 그 **출정** 동안 아웃되고(state.js), 마을로 돌아오면 낫는다.
-            // ~~전투불능자가 하나라도 나오면 철수~~ 는 폐기 — 그 룰이 「언제 돌아올까」를 대신 정하고 있었다
+            // ~~전투불능자가 하나라도 나오면 철수~~ 는 폐기 — 그 룰이 편성이 져야 할 무게를 대신 지고 있었다.
+            // ⚠ 09-07 로 이것이 **최종형**이다 — 원정은 켜 놓고 자리를 뜨는 것이라 전멸까지 도는 것이 사양이고,
+            //    추가 브레이크를 만들지 않는다. **결정은 편성이다** (base_expedition_design §1-1 · DEV_PLAN R42)
             if (alive(party).length === 0) { out.reason = 'wipe'; break; }
             if (alive(units.enemies).length === 0) {
                 out.roundsCleared = round;

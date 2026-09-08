@@ -61,26 +61,9 @@ export const RARITY = {
     unique: { ko: '유니크', en: 'Unique', color: '#FF8C00' },
 };
 
-/**
- * 영웅 2층 구조 (hero_design §1) — 아이템 희귀도 계단의 영웅판.
- * 색상은 RARITY의 같은 등급을 그대로 쓴다 (같은 계단이라는 걸 화면에서 읽히게).
- */
-export const HERO_TIER = {
-    unique: {
-        ko: '유니크', en: 'Unique', color: '#FF8C00',
-        desc: {
-            ko: '이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용) · 로스터에 1명만',
-            en: 'Fixed name, class & sin + 1 signature skill (hero-exclusive) · one per roster',
-        },
-    },
-    rare: {
-        ko: '레어', en: 'Rare', color: '#FFD700',
-        desc: {
-            ko: '직업·죄종·특성 전부 굴림 · 고유 스킬은 공용 풀 배정 · 죄종×직업 35칸 담당',
-            en: 'Class, sin & trait all rolled · signature skill from shared pool · covers all 35 sin×class cells',
-        },
-    },
-};
+/* 영웅 등급 표(`HERO_TIER`)는 **`src/data/hero_tier.csv` 로 나갔다** (2026-09-08 · R48) —
+   09-07 매직 신설로 2층 → 3층이 되면서 굴림 대역(총합·분포)이 데이터가 됐고, 이름·색만 mock 에 남기면
+   SSOT 가 둘로 갈린다. 읽는 곳은 `ui/data.js:D.heroTiers` 하나다. */
 
 /**
  * 직업 · 장비 부위/위치 · 아이템 베이스 · 접사 정의는 **CSV 로 나갔다** (2026-08-31):

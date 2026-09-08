@@ -39,7 +39,8 @@ export const D = {
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
-    commissionKinds: null,    // commission_kind.csv — {id: {id, form, channel, ko, en, how:{ko,en}}} · form = count(세는 형) | go(가는 형)
+    heroTiers: [],            // hero_tier.csv — [{id, weight, totalMin, totalMax, shape, color, ko, en, desc:{ko,en}}] · 굴림 SSOT + 화면 표기
+    commissionKinds: null,    // commission_kind.csv — {id: {id, ridesOn, ko, en, how:{ko,en}}} · ridesOn = battle(전투가 센다) | yield(드롭·산출이 채운다)
     commissionList: [],       // commission.csv — 게시판 행 (**칸 수 = 행 수** · tactic_slot 과 같은 문법) ⚠임시
     mineNodes: [],            // mine_node.csv — 채광의 **단계 7** [{id, tier, unlockChapter, ko, en, oreId, oreKo, oreEn, yieldPerHour}] · tier 순 ⚠임시
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
@@ -68,7 +69,7 @@ export let SYS = null;
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
-    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node'];
+    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -80,7 +81,8 @@ export async function loadData(base = './data/') {
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
         weaponGroup, skillRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
-        affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow] = texts.map(parseCsv);
+        affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
+        heroTierRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -123,11 +125,22 @@ export async function loadData(base = './data/') {
     D.masteryNodes = masteryNode;
     D.tacticSlots = tacticSlot;
     D.tacticOptions = tacticOption;
-    // 의뢰 — 두 표가 층을 나눈다. **종류 4종은 확정 기획**(GAME_DESIGN §9 09-03)이고,
+    // 의뢰 — 두 표가 층을 나눈다. **유형 둘은 확정 기획**(GAME_DESIGN §9 09-07 「의뢰는 목표형」)이고,
     // 게시판 행(commission)은 ⚠임시다 — 보상·목표가 미정이라 mine_node 와 같은 자리채움이다.
+    // ⚠ 09-07 전면 개정 — ~~4종(사냥·파견·약탈·보호)~~ 은 「전장을 여는 의뢰」를 전제한 모델이라 통째로 폐기됐다.
+    //   의뢰는 열리지 않고 **받아 두는 목표**라 남는 축은 「어디에 얹히는가」 하나(`ridesOn`)이고,
+    //   ~~`form`(세는 형/가는 형)~~ · ~~`channel`(실시간/오프라인)~~ 은 가는 형이 사라져 축 자체가 소멸했다.
+    //   약탈·보호는 의뢰가 아니라 **탐험의 종류**로 이관됐다 (base_expedition_design §1-3 · §3-1 · DEV_PLAN R45)
     // 화면이 종류로 배지·「어떻게 도는가」를 고르므로 kind 를 id 로 색인한다 (SCREEN_DESIGN §14)
+    // 영웅 등급 — **굴림 파라미터와 화면 표기를 한 표가 든다** (신설 2026-09-08 · R48).
+    // ~~`ui/mock.js:HERO_TIER`~~ 를 대체한다 — 이름·색이 mock 에 있고 대역이 CSV 에 있으면 SSOT 가 둘로 갈린다.
+    // 행 순서가 곧 굴림 순서라 정렬하지 않는다 (INTERFACE §5-2)
+    D.heroTiers = heroTierRow.map(r => ({
+        id: r.tier_id, weight: r.weight, totalMin: r.attr_total_min, totalMax: r.attr_total_max, shape: r.shape,
+        color: r.color_hex, ko: r.name_kr, en: r.name_en, desc: { ko: r.desc_kr, en: r.desc_en },
+    }));
     D.commissionKinds = indexBy(commissionKind.map(r => ({
-        id: r.kind_id, form: r.form, channel: r.channel,
+        id: r.kind_id, ridesOn: r.rides_on,
         ko: r.name_kr, en: r.name_en, how: { ko: r.how_kr, en: r.how_en },
     })), 'id');
     D.commissionList = commissionRow.map(r => ({
@@ -239,6 +252,9 @@ export function buildSystems(d) {
         // 초상 장수 — 로직은 그림을 모르고 **직업별 장수 객체만** 받는다. 영웅이 태어날 때 제 직업 풀에서 굴려 세이브에 박는다
         // (2026-09-06 저장형 · 2026-09-07 직업 분류 — 풀이 0장인 직업은 face = null)
         heroFaces: M.HERO_FACES,
+        // 등급 표 — **행 순서가 결정론 계약이다** (INTERFACE §5-2). weight 0(유니크)은 굴림에서 빠진다.
+        // 등급이 정하는 것은 총합 대역과 분포 모양 둘뿐이고 상한은 전 영웅 공통이다 (hero_design §1 · §4-3)
+        heroTiers: D.heroTiers,
         // 고유 스킬 풀 = `skill.csv:innate_pool=1` 인 행(id 만) — hero 는 skill 시스템이 아니라 id 목록을 받는다.
         // ⚠ 행 순서가 결정론 계약이다 — 풀에서 빼거나 넣으면 같은 시드가 다른 고유를 굴린다 (INTERFACE §5-2)
         skillPool: skill.list.filter(sk => sk.innatePool).map(sk => sk.id),

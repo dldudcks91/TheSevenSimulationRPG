@@ -77,7 +77,8 @@ export function hideTip() { $tip()?.classList.remove('show'); }
 /* ───────── 카드 — 두 렌더러가 함께 쓴다 ───────── */
 
 const classOf = id => D.classes.find(c => c.id === id);
-const tierOf = h => M.HERO_TIER[h.tier] ?? M.HERO_TIER.rare;
+// 등급 표기 — SSOT 는 `hero_tier.csv` 다 (2026-09-08 R48 · ~~mock.js:HERO_TIER~~ 대체 · app.js 와 같은 규칙)
+const tierOf = h => D.heroTiers.find(t => t.id === h.tier) ?? D.heroTiers.find(t => t.id === 'rare') ?? D.heroTiers[0];
 
 /**
  * 영웅 카드 — 이름 / 직업 · 레벨 · 죄종 · 등급 / **기본 능력치 7** (SCREEN_DESIGN §5).

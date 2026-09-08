@@ -9,7 +9,9 @@
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
- *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, caps, equipped:{position: itemUid|null}}],
+ *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, equipped:{position: itemUid|null}}],
+ *     — tier = 매직 | 레어 | 유니크 (`hero_tier.csv`). ~~caps(개체별 히든 상한)~~ 는 **v15 에서 사라졌다** —
+ *       상한이 전 영웅 공통 하나가 되어(hero_design §4-3) 개체가 들 것이 없다
  *     — face = 초상 id `'<classId>_<k>'` 문자열 | null. **제 직업 풀에서** 생성 시 한 번 굴리고 이후 불변 —
  *       innate 와 같은 층이다 (2026-09-06 저장형 · 2026-09-07 직업 분류). 풀이 0장인 직업(마법사)은 `null` = 초상 없음.
  *       로직은 그림을 모른다 — id 하나만 든다. 어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`).
@@ -69,7 +71,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 /**
  * @param {object} deps
@@ -297,6 +299,24 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v14 → v15 [2026-09-07 확정 · 2026-09-08 구현 — 영웅 3층 · 개체별 히든 상한 폐지 · R48]
+     * · `heroes[*].caps` **삭제** — 상한은 `[balance.csv:hero_attr_max]` 하나로 전 영웅 공통이 됐다.
+     *   옛 영웅은 상한이 개체마다 달랐지만 **소급 보정을 하지 않는다** — 낮게 굴렸던 영웅은 상한이
+     *   풀리는 쪽이라 손해가 없고(등급은 출발선이지 천장이 아니다 · hero_design §4-3),
+     *   이미 오른 `stats` 는 그대로 둔다.
+     * · `tier` 가 없던 영웅은 **레어**로 본다 — v14 까지는 생성기가 레어만 냈다(`tier: 'rare'` 고정).
+     *   ⚠ 소급 재굴림을 하지 않는다: 매직은 총합이 낮은 대역이라 옛 영웅을 매직으로 내리면 능력치가 깎인다.
+     */
+    function upgradeV14(s) {
+        for (const h of s.heroes ?? []) {
+            delete h.caps;
+            h.tier = h.tier ?? 'rare';
+        }
+        s.version = 15;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -308,7 +328,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -323,6 +343,7 @@ export function createGameSystem(deps) {
         if (s.version === 11) s = upgradeV11(s);
         if (s.version === 12) s = upgradeV12(s);
         if (s.version === 13) s = upgradeV13(s);
+        if (s.version === 14) s = upgradeV14(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;

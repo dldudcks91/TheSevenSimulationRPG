@@ -1,0 +1,4 @@
+tier_id,weight,attr_total_min,attr_total_max,shape,color_hex,name_kr,name_en,desc_kr,desc_en,description_kr
+magic,70,46,60,2.5,#4169E1,매직,Magic,총합이 낮은 대역 · 분포가 넓어 한 축이 크게 튈 수 있다,Lower stat total · a wider spread so one axis can spike,신설 2026-09-07 — 레어와 **능력치 둘로만** 갈린다(총합 대역 · 분포 모양). ⚠제안 값 — 대역도 shape 도 기획 미발행이다(GAME_DESIGN §10). shape 가 클수록 가중치가 치우쳐 한 축이 크게 튄다 — 「정규와 균등 사이」의 손잡이
+rare,30,64,78,1.0,#FFD700,레어,Rare,총합이 높은 대역 · 정규분포라 극값이 드물고 고르게 난다,Higher stat total · a normal spread so extremes are rare,죄종×직업 35칸을 전담한다. ⚠제안 값 — 대역은 옛 `hero_attr_total`(70 고정)을 가운데 두고 폈다. 매직 대역과 **겹치지 않는다**(60 < 64)는 것이 확정 사항이다 (hero_design §1)
+unique,0,-,-,-,#FF8C00,유니크,Unique,이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용) · 로스터에 1명만,Fixed name class & sin + 1 signature skill (hero-exclusive) · one per roster,**weight 0 = 생성기가 안 뽑는다** — 본편 15명은 수작업이라 굴림 대상이 아니다. 총합·분포는 기획 미정이라 대역 칸이 비어 있다(-) (hero_design §1)
