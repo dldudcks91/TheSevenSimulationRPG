@@ -591,10 +591,10 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
     if (!eq(party.map(h => h.face), again.map(h => h.face))) fail('같은 시드인데 얼굴이 다르다');
     return party.map(h => h.face).join(' · ');
 });
-check('save: serialize → deserialize 왕복 동일 (v16)', () => {
+check('save: serialize → deserialize 왕복 동일 (v17)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 16;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 17;
 });
 /**
  * v15 → v16 (2026-09-07 확정 · 2026-09-08 구현 — 사제 전용 무기 · R46).
@@ -625,7 +625,23 @@ check('save: v15 → v16 이관 — 사제가 낀 스태프/오브만 성경/십
     if (SYS.item.canEquip({ cls: 'priest' }, w)) fail('이관 뒤에도 사제가 못 낀다');
     return `${w.name.ko} · 가방 ${b.group} 보존`;
 });
-check('save: v2 → v16 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11) · **히든 상한 폐지·등급(v15)** · **사제 무기 분리(v16)**까지 한 번에', () => {
+/**
+ * v16 → v17 (2026-09-08 — 「출정 아웃」 폐기 · R54 · GAME_DESIGN §9 09-08).
+ * 세이브가 들던 전투불능 상태(`run.downed` · 리포트의 `outTotal`)가 통째로 없어진다 — 아웃이 런을 넘지 않는다.
+ */
+check('save: v16 → v17 이관 — run.downed 와 리포트 outTotal 을 걷는다 · 반복은 그대로 (R54)', () => {
+    const s16 = SYS.game.serialize(G, NOW);
+    s16.version = 16;
+    s16.run = { stageId: 101, repeat: true, lastAt: NOW, durationSec: 60, downed: [G.party[0]] };
+    s16.lastReport = { at: NOW, stageId: 101, won: false, downed: [G.party[0]], outTotal: [G.party[0]] };
+    const up = SYS.game.deserialize(s16);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    if (up.run.downed !== undefined) fail('run.downed 가 안 걷혔다');
+    if (up.lastReport.outTotal !== undefined) fail('리포트의 outTotal 이 안 걷혔다');
+    if (up.run.repeat !== true) fail('진행 중이던 반복이 꺼졌다 — 이관은 반복을 안 건드린다');
+    return 'downed·outTotal 삭제 · repeat 유지';
+});
+check('save: v2 → v17 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11) · **히든 상한 폐지·등급(v15)** · **사제 무기 분리(v16)**까지 한 번에', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
     v2.version = 2;
     // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
@@ -869,6 +885,38 @@ check('mastery: 거절 사유 — 해금 전 locked · 상한 maxRank · 포인�
     h.masteryPoints = 0;
     if (SYS.game.learnMastery(G2, h.uid, 'sin_t1_damage').err !== 'points') fail('points 아님');
     return '네 사유 전부 코드로 나온다';
+});
+check('mastery: 우클릭 되돌리기 — 1랭크씩 무르고 1포인트씩 돌아온다 · 0 이 되면 키가 사라진다 (INTERFACE §2)', () => {
+    const G2 = SYS.game.newGame(21, cands, NOW);
+    const h = G2.heroes[0];
+    h.masteryPoints = 3;
+    for (let i = 0; i < 2; i++) if (!SYS.game.learnMastery(G2, h.uid, 'sin_t1_hp').ok) fail(`랭크 ${i + 1} 실패`);
+    const one = SYS.game.unlearnMastery(G2, h.uid, 'sin_t1_hp');
+    if (!one.ok || one.rank !== 1 || one.points !== 2) fail(JSON.stringify(one));
+    if (h.mastery.sin_t1_hp !== 1 || h.masteryPoints !== 2) fail('환급이 안 맞는다');
+    const zero = SYS.game.unlearnMastery(G2, h.uid, 'sin_t1_hp');
+    if (!zero.ok || zero.rank !== 0 || zero.points !== 3) fail(JSON.stringify(zero));
+    // 전액 롤백 뒤와 같은 모양이어야 세이브가 두 갈래로 안 갈린다
+    if ('sin_t1_hp' in h.mastery) fail('랭크 0 인데 키가 남았다');
+    if (SYS.game.unlearnMastery(G2, h.uid, 'sin_t1_hp').err !== 'noRank') fail('noRank 아님');
+    if (SYS.game.unlearnMastery(G2, 'h999', 'sin_t1_hp').err !== 'missing') fail('없는 영웅에 missing 아님');
+    if (h.cls !== 'warrior' && SYS.game.unlearnMastery(G2, h.uid, 'cls_warrior_t1_hp').err !== 'missing') fail('남의 직업 노드가 통과했다');
+    return '2 → 1 → 0 · 포인트 1 → 2 → 3 · noRank · missing';
+});
+check('mastery: 해금 레벨이 내려간 칸도 무를 수 있다 — 「찍었는데 못 뺀다」를 만들지 않는다 (INTERFACE §2)', () => {
+    const G2 = SYS.game.newGame(22, cands, NOW);
+    const h = G2.heroes[0];
+    const t2 = D.masteryNodes.find(n => n.tier === 2 && n.owner_id === h.sin);
+    if (!t2) fail(`${h.sin} 의 T2 노드가 없다`);
+    // 해금 레벨까지 올려 찍은 뒤, 레벨을 도로 낮춘다(세이브 이관·기획 개정으로 문턱이 움직일 수 있다)
+    h.level = B.mastery_t2_unlock_level;
+    h.masteryPoints = 1;
+    if (!SYS.game.learnMastery(G2, h.uid, t2.node_id).ok) fail('T2 를 못 찍었다');
+    h.level = 1;
+    if (SYS.game.learnMastery(G2, h.uid, t2.node_id).err !== 'locked') fail('찍기는 여전히 막혀야 한다');
+    const r = SYS.game.unlearnMastery(G2, h.uid, t2.node_id);
+    if (!r.ok || r.rank !== 0) fail(JSON.stringify(r));
+    return `${t2.node_id} — 잠긴 채로도 환급된다`;
 });
 check('masteryState: 판정을 한 번에 낸다 — 랭크·상한·해금·찍을 수 있는가 (렌더러로 새지 않는다)', () => {
     const G2 = SYS.game.newGame(9, cands, NOW);
@@ -2088,8 +2136,8 @@ check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다
     return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
 });
 
-check('save: SAVE_VERSION 16 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **출정 아웃** · **초상 id(`face` — `<class>_<k>`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 에서 · **개체별 히든 상한(`caps`)은 v15 에서** 사라졌다. v16 은 **사제가 낀 스태프·오브의 무기군만** 갈아끼운다 (R46 · INTERFACE §4)', () =>
-    SAVE_VERSION === 16 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 17 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **초상 id(`face` — `<class>_<k>`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다. v16 은 **사제가 낀 스태프·오브의 무기군만** 갈아끼운다 (R46 · INTERFACE §4)', () =>
+    SAVE_VERSION === 17 || fail(`v${SAVE_VERSION}`));
 
 /**
  * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.
@@ -2127,16 +2175,32 @@ check('tip: 스킬 문장 — 24행 전부 문장을 낸다 · 숫자가 강조�
             if (!txt) fail(`${lang} ${def.id} 문장이 비었다`);
             if (txt.includes('{') || txt.includes('undefined') || txt.includes('null'))
                 fail(`${lang} ${def.id} 치환이 안 됐다: ${txt}`);
-            // 실효 쿨이 문장에 들어가고 **강조**돼야 한다 — 강조가 빠지면 숫자가 문장에 묻힌다
+            // 표기 쿨이 문장에 들어가고 **강조**돼야 한다 — 강조가 빠지면 숫자가 문장에 묻힌다.
+            // ⚠ 2026-09-08 2차 개정으로 ~~실효 쿨~~ 이 아니라 **표기 쿨**이다 (SCREEN_DESIGN §4-2 · R56)
             const hl = [...line.querySelectorAll('.tip-hl')].map(n => n.textContent);
             if (!hl.length) fail(`${lang} ${def.id} 강조된 숫자가 없다`);
-            const every = String(Number(SYS.skill.previewOf(def, ctx).everySec.toFixed(1)));
-            if (!hl.includes(every)) fail(`${lang} ${def.id} 실효 쿨 ${every} 이 강조에 없다 (${hl})`);
+            const cool = String(Number(SYS.skill.previewOf(def, ctx).baseSec.toFixed(1)));
+            if (!hl.includes(cool)) fail(`${lang} ${def.id} 표기 쿨 ${cool} 이 강조에 없다 (${hl})`);
             checked += 1;
         }
     }
     setLang('ko');
     return `${checked} 문장 (24행 × ko/en)`;
+});
+check('tip: 스킬의 초는 **행동 주기를 안 탄다** — 공속을 올려도 문장의 숫자가 그대로다 (SCREEN_DESIGN §4-2 · R56)', () => {
+    // 회귀 그물 — 옛 판은 실효 쿨(ceil(쿨 ÷ 주기) × 주기)을 찍어서 공격 속도 마스터리를 찍을 때마다
+    // 쿨 자리의 숫자가 움직였다(「공속을 올리는데 왜 스킬 쿨이 줄어드나」). 다시 그렇게 되면 여기서 걸린다
+    const def = SYS.skill.defs.pri_judgment;
+    const secOf = period => skillTipCard({ id: def.id }, { period, atk: 400, atkType: 'physical' })
+        .querySelector('.tip-line').querySelector('.tip-hl').textContent;
+    const slow = secOf(2.4), fast = secOf(0.8), none = secOf(undefined);
+    if (slow !== fast) fail(`주기 2.4 → ${slow} · 0.8 → ${fast} — 초가 주기를 탔다`);
+    if (slow !== none) fail(`주기를 모르는 자리(${none})와 아는 자리(${slow})가 다르다`);
+    if (Number(slow) !== def.cool) fail(`표기 쿨 ${def.cool} 이 아니라 ${slow} 이 나왔다`);
+    // 실효 쿨 자체는 계약에 남는다 — 엔진 규칙은 안 바뀌었고 화면만 안 쓴다
+    const pv = SYS.skill.previewOf(def, { period: 2.4 });
+    if (!(pv.everySec > pv.baseSec)) fail(`previewOf.everySec 가 사라졌다 (${pv.everySec})`);
+    return `표기 쿨 ${def.cool} 초 고정 · previewOf.everySec ${pv.everySec.toFixed(1)} 는 계약에 살아 있다`;
 });
 check('tip: 공격력을 모르면 배율로 접힌다 — 후보 카드 자리 (SCREEN_DESIGN §4-2)', () => {
     const def = SYS.skill.defs.war_bash;
@@ -2172,7 +2236,7 @@ check('resolveBattle: 골드·처치·카드·드롭·전투불능이 상태에 
     if (Object.keys(G2.codexKills).length === 0) fail('kills');
     if (!eq(G2.codexCards, rp.cards)) fail('cards');
     if (rp.drops.some(u => !G2.bag.includes(u))) fail('drops');
-    for (const uid of rp.downed) if (!G2.run.downed.includes(uid)) fail('출정 아웃 목록에 안 들어갔다');
+    if (G2.run.downed !== undefined) fail('run.downed 가 아직 있다 — 「출정 아웃」은 2026-09-08 폐기(v17)');
     if (rp.won !== G2.progress.cleared.includes(101)) fail('cleared');
     if (G2.counters.battle !== 1 || !G2.run || G2.run.stageId !== 101) fail('counters/run');
     if (!rp.strikes || !(rp.strikes.party.n >= 1) || !eq(rp.strikes, r.result.strikes)) fail('리포트에 빗나감 집계가 없다 (§9-8)');
@@ -2184,43 +2248,47 @@ check('resolveBattle: 잠긴 스테이지는 출발 불가 · 편성을 막는 �
     if (!SYS.game.resolveBattle(G2, 101, NOW).ok) fail('출발이 막혔다');
     return 'locked 만 남았다';
 });
-check('출정 아웃: 이어지는 반복 런에서 빠지고, 귀환하면 전원 회복한다 (base_expedition §1-1)', () => {
+check('「출정 아웃」 폐기: 이어지는 반복 런에도 전원이 나간다 (base_expedition §1-1 개정 2026-09-08)', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
-    // 아웃을 손으로 심는다 — 실제 전투가 누구를 쓰러뜨릴지는 시드에 달렸다
-    SYS.game.resolveBattle(G2, 101, NOW);
-    const victim = G2.party[0];
+    const r1 = SYS.game.resolveBattle(G2, 101, NOW);
+    if (!r1.ok) fail(r1.err);
+    if (r1.report.party.length !== G2.party.length) fail('첫 런부터 인원이 빠졌다');
+    // 옛 규칙이 되살아나면 여기서 걸린다 — 아웃을 심을 칸 자체가 없어야 한다
+    if (G2.run.downed !== undefined) fail('run.downed 가 살아 있다 — 아웃이 런을 넘는다');
     G2.run.repeat = true;
-    G2.run.downed = [victim];
-    if (SYS.game.activeParty(G2, 101).includes(victim)) fail('아웃인데 다음 런에 들어간다');
-    if (SYS.game.activeParty(G2, 101).length !== G2.party.length - 1) fail('아웃이 아닌 영웅까지 빠졌다');
-    if (!SYS.game.isOut(G2, victim)) fail('isOut 이 아웃을 모른다');
-    // 다른 스테이지로 나가는 것은 **새 출정**이라 전원이 나간다
-    if (SYS.game.activeParty(G2, 102).length !== G2.party.length) fail('새 출정인데 아웃이 이어졌다');
-    const healed = SYS.game.returnToTown(G2).healed;
-    if (healed.length !== 1 || healed[0] !== victim) fail('회복 목록이 다르다');
-    if (SYS.game.isOut(G2, victim)) fail('귀환했는데 아직 아웃이다');
-    return '아웃 → 다음 런 제외 → 귀환 회복';
+    const r2 = SYS.game.resolveBattle(G2, 101, NOW + 1000);
+    if (!r2.ok) fail(r2.err);
+    if (r2.report.party.length !== G2.party.length) fail('반복 런에서 인원이 빠졌다');
+    if (r2.report.outTotal !== undefined) fail('리포트에 출정 누적 아웃이 남아 있다');
+    return `반복 런 참가 ${r2.report.party.length}인 (전원)`;
 });
-check('출정 아웃: 반복 런이 이어지면 아웃이 누적되고 XP 도 안 받는다', () => {
+check('「출정 아웃」 폐기: 쓰러진 영웅도 다음 런에서 XP 를 받는다', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
-    SYS.game.resolveBattle(G2, 101, NOW);
-    const victim = G2.party[0];
-    G2.run.repeat = true; G2.run.downed = [victim];
+    const r1 = SYS.game.resolveBattle(G2, 101, NOW);
+    if (!r1.ok) fail(r1.err);
+    if (r1.report.downed.length === 0) return '이 시드는 아무도 안 쓰러졌다 — 참가 인원만 확인';
+    const victim = r1.report.downed[0];
     const xpBefore = SYS.game.heroById(G2, victim).xp;
-    const r = SYS.game.resolveBattle(G2, 101, NOW + 1000);
-    if (!r.ok) fail(r.err);
-    if (r.report.party.includes(victim)) fail('안 나간 영웅이 리포트의 참가자에 있다');
-    if (SYS.game.heroById(G2, victim).xp !== xpBefore) fail('안 나갔는데 XP 를 받았다');
-    if (!G2.run.downed.includes(victim)) fail('아웃이 누적되지 않았다');
-    return `참가 ${r.report.party.length}인 · 누적 아웃 ${G2.run.downed.length}`;
+    G2.run.repeat = true;
+    const r2 = SYS.game.resolveBattle(G2, 101, NOW + 1000);
+    if (!r2.ok) fail(r2.err);
+    if (!r2.report.party.includes(victim)) fail('직전 런에 쓰러진 영웅이 다음 런에 안 나갔다');
+    if (SYS.game.heroById(G2, victim).xp === xpBefore) fail('나갔는데 XP 를 못 받았다');
+    return `직전 런 전투불능 ${r1.report.downed.length}인이 전부 복귀`;
 });
-check('closeRun: 재접속은 귀환이다 — 아웃이 전부 낫는다 (2026-09-03)', () => {
+check('closeRun: 반복만 끈다 — 회복시킬 아웃이 없다 (2026-09-08 개정)', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);
     SYS.game.resolveBattle(G2, 101, NOW);
-    G2.run.repeat = true; G2.run.downed = [G2.party[0]];
+    G2.run.repeat = true;
     SYS.game.closeRun(G2, NOW + 60000);
     if (G2.run.repeat !== false) fail('반복이 안 꺼졌다');
-    return G2.run.downed.length === 0 || fail('귀환했는데 아웃이 남았다');
+    if (G2.notice?.kind !== 'runClosed') fail('알림이 안 남았다');
+    return '반복 off · 알림 runClosed';
+});
+check('삭제된 export 셋은 다시 생기지 않는다 — isOut · activeParty · returnToTown (R54)', () => {
+    const gone = ['isOut', 'activeParty', 'returnToTown'].filter(k => typeof SYS.game[k] === 'function');
+    if (gone.length) fail(`「출정 아웃」과 함께 지운 export 가 되살아났다: ${gone.join(' · ')}`);
+    return '셋 다 없다';
 });
 check('toggleParty: 상한을 넘지 못한다 (편성을 막는 상태 검사는 2026-09-03 폐기)', () => {
     const G2 = SYS.game.newGame(42, cands, NOW);

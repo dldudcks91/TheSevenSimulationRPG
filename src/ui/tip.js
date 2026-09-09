@@ -127,7 +127,8 @@ const effectPhrase = def =>
 
 /** 문장 한 줄 — `kind` × `target` 이 틀을 정한다. 틀이 없으면 `null`(설명만 뜬다) */
 function skillLine(def, pv, atkType) {
-    const n = sec(pv?.everySec ?? pv?.baseSec ?? def.cool);
+    // 표기 쿨 — 실효 쿨은 폐기됐다 (개정 2026-09-08 2차 · SCREEN_DESIGN §4-2). 어느 영웅이 들든 같은 수다
+    const n = sec(pv?.baseSec ?? def.cool);
     if (def.kind === 'attack') {
         const d = amountPhrase(def, pv, atkType);
         if (def.target === 'enemy_all') return t('sk.line.all', { n, d });
@@ -151,6 +152,18 @@ function skillLine(def, pv, atkType) {
  * @param s   `.id` 만 있으면 된다 — 정의는 `SYS.skill.defs` 에서 집는다(호출처마다 다른 모양을 받아 왔다)
  * @param ctx {period, atk, atkType, source} — 모르는 값은 생략한다. 문장이 그 조각을 접는다
  */
+/**
+ * 툴팁이 내는 **문장 한 줄**을 그대로 낸다 — 스킬 창의 액티브 줄이 hover 와 같은 말을 하게 하는 창이다
+ * [2026-09-08 사용자 지시 · SCREEN_DESIGN §7]. 카드와 **같은 함수**(`skillLine`)를 쓰므로 둘이 갈릴 길이 없다.
+ * ⚠ `desc`(고정 설명)는 **안 낸다** — 줄에서 뺐다(같은 지시). 그건 툴팁만 든다.
+ * @returns {string} 틀이 없는 스킬이면 빈 문자열
+ */
+export function skillLineHtml(s, ctx = {}) {
+    const def = SYS.skill?.defs?.[s?.id] ?? null;
+    if (!def) return '';
+    return skillLine(def, SYS.skill.previewOf(def, ctx), ctx.atkType) ?? '';
+}
+
 export function skillTipCard(s, ctx = {}) {
     if (!s) return null;
     const def = SYS.skill?.defs?.[s.id] ?? null;

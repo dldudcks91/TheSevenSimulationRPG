@@ -78,7 +78,7 @@ render()
 **원정 1회**
 ```
 [출발 버튼] → runBattle(stageId)
-  → SYS.game.resolveBattle(G, stageId, now())      정산 완료 (시뮬 + 보상 + 출정 아웃 + 리포트)
+  → SYS.game.resolveBattle(G, stageId, now())      정산 완료 (시뮬 + 보상 + 리포트 — ~~출정 아웃~~ 은 2026-09-08 폐기)
   → save()                                          ← 여기서 이미 결과가 확정·저장됨
   → mountBattle(result.timeline)                    관전 = 재생 (건너뛰기 가능)
   → onEnd → 리포트 화면 (또는 반복 ON + 승리면 다음 원정 자동)
@@ -166,4 +166,4 @@ render()
 
 ---
 
-*마지막 업데이트: 2026-09-08 (**낡은 수치 정정 — 문서가 08-31 판에 멈춰 있었다** · 기획↔클라이언트 버전 일치 작업. §1·§4 **CSV 22종 → 27**(`skill_tag`·`mine_node`·`commission_kind`·`commission`·`hero_tier` 다섯이 그 뒤로 들어왔다) · §3 `D` **31 → 36 필드**(같은 원인). 부팅 순서·모듈 목록은 실제 `app.js:boot()` 과 일치해 안 건드렸다 (DEV_PLAN §3-3 R43·R45·R48)) · 2026-08-31 (**전면 대조 — 문서가 08-28 판에 멈춰 있었다.** §1 그림(SYS 5→7 · `skill`·`tactic`·`naming` 누락) · §3 `D` 13→31 필드 · §4 CSV 8→22 · §7 골든 스냅샷 절 신설 · §8 CDN 1→2(부채 #11 과의 모순 해소) · §9 mock 잔류 9→3 + 이관 내역 표 · §10 이식 표에 `naming`·`skill`·`tactic`·골든) · 2026-08-28 (`ui/tip.js` 등재 — 툴팁 기계장치를 app.js 에서 분리, 관전 재생기와 공용) · 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*
+*마지막 업데이트: 2026-09-08 (**「출정 아웃」 폐기 반영** — §4 흐름도의 `resolveBattle` 줄에서 「출정 아웃」을 걷었다. 정산이 상태에 남기는 전투불능이 없다 (GAME_DESIGN §9 09-08 · DEV_PLAN R54)) · 2026-09-08 (**낡은 수치 정정 — 문서가 08-31 판에 멈춰 있었다** · 기획↔클라이언트 버전 일치 작업. §1·§4 **CSV 22종 → 27**(`skill_tag`·`mine_node`·`commission_kind`·`commission`·`hero_tier` 다섯이 그 뒤로 들어왔다) · §3 `D` **31 → 36 필드**(같은 원인). 부팅 순서·모듈 목록은 실제 `app.js:boot()` 과 일치해 안 건드렸다 (DEV_PLAN §3-3 R43·R45·R48)) · 2026-08-31 (**전면 대조 — 문서가 08-28 판에 멈춰 있었다.** §1 그림(SYS 5→7 · `skill`·`tactic`·`naming` 누락) · §3 `D` 13→31 필드 · §4 CSV 8→22 · §7 골든 스냅샷 절 신설 · §8 CDN 1→2(부채 #11 과의 모순 해소) · §9 mock 잔류 9→3 + 이관 내역 표 · §10 이식 표에 `naming`·`skill`·`tactic`·골든) · 2026-08-28 (`ui/tip.js` 등재 — 툴팁 기계장치를 app.js 에서 분리, 관전 재생기와 공용) · 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*

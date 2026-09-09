@@ -222,7 +222,7 @@ const STRINGS = {
     /* ── 리포트 (실동작) ── */
     'rep.defeat': { ko: '패배', en: 'Defeat' },
     'rep.retreat': { ko: '철수', en: 'Retreat' },
-    'rep.healed': { ko: '귀환 — 전원 회복', en: 'Returned — everyone recovered' },
+    /* ~~'rep.healed'(귀환 — 전원 회복)~~ 은 2026-09-08 삭제 — 전투불능 상자가 **이름만** 적는다 (SCREEN_DESIGN §4-3) */
     'rep.reason.wipe': { ko: '전원 전투불능', en: 'Whole party downed' },
     'rep.reason.timeout': { ko: '제한시간 초과', en: 'Timed out' },
 
@@ -248,8 +248,10 @@ const STRINGS = {
     'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
-    'ch.upgradeHint': { ko: '강화 모드: 클릭한 아이템을 골드로 한 단계 올린다 — 3·6·9강에서 옵션 하나의 값이 오른다',
-        en: 'Upgrade mode: clicking an item raises it one step for gold — at +3/+6/+9 one option gains value' },
+    // 툴팁이 걷은 「{n}강에서 옵션 상승」이 앉는 자리다 (SCREEN_DESIGN §6 개정 2026-09-08 — 조건·규칙 주석은 도움말의 몫).
+    // ⚠ 「강화 모드」는 09-03 에 폐기됐는데 문구만 남아 있었다 — 없는 토글을 찾게 만든다. 자리는 제련소(§8-2) · 간격은 CSV 가 든다
+    'ch.upgradeHint': { ko: '강화는 제련소에서 한다 — 골드로 한 단계씩 올리고, {n}강마다 옵션 하나의 값이 오른다',
+        en: 'Upgrading happens at the forge — one step at a time for gold, and every +{n} one option gains value' },
     'ch.err.maxUp': { ko: '더는 강화할 수 없다', en: 'Already fully upgraded' },
     'ch.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'ch.upgraded': { ko: '강화 +{n} · {g}G', en: 'Upgraded to +{n} · {g}G' },
@@ -275,9 +277,8 @@ const STRINGS = {
     'time.m': { ko: '{m}분', en: '{m}m' },
     'time.s': { ko: '{s}초', en: '{s}s' },
     'time.ms': { ko: '{m}분 {s}초', en: '{m}m {s}s' },
-    /* 출정 아웃 — 회복 대기가 없어지면서(base_expedition_design §1-1) 「남은 시간」이 없어졌다.
-       말할 것은 시간이 아니라 **상태와 그 끝**이다: 지금 빠져 있고 돌아오면 낫는다 */
-    'injury.out': { ko: '출정 아웃', en: 'Out for this run' },
+    /* ~~'injury.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 「출정 아웃」 폐기(GAME_DESIGN §9 09-08 · SCREEN_DESIGN §4-3).
+       아웃이 런을 넘지 않으므로 화면이 그릴 수 있는 시점에 아웃된 영웅이 없다 */
 
     /* ── 전투 재생 ── */
     'bt.won': { ko: '승리', en: 'Victory' },
@@ -368,6 +369,8 @@ const STRINGS = {
     'fg.plus.h': { ko: '+ 강화', en: 'Plus upgrade' },
     'fg.opt.h': { ko: '옵션강화', en: 'Option upgrade' },
     'fg.go': { ko: '강화', en: 'Upgrade' },
+    // 옛 `tip.up.max` — 2026-09-08 에 툴팁의 강화 줄이 죽으면서 **제련소 전용**이 되어 접두를 옮겼다 (문구·인자 동일)
+    'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
     'fg.optGo': { ko: '옵션강화', en: 'Upgrade option' },
     'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
     'fg.worn': { ko: '착용 중', en: 'Equipped' },
@@ -418,9 +421,9 @@ const STRINGS = {
         en: 'This party cannot depart',
     },
     'exp.party.note': {
-        ko: '귀환하면 깎인 HP도 <b>전투불능도 무료·즉시 회복</b> — 비용은 <b>그 출정 동안 파티가 얇아지는 것</b>이다<br>'
+        ko: '런이 끝나면 깎인 HP도 <b>전투불능도 무료·즉시 회복</b> — 비용은 <b>그 런이 얇아지는 것</b>이다 (개정 2026-09-08 — ~~그 출정 동안~~)<br>'
             + '파티 버프는 스탯이 아니라 스킬 효과다 — 통솔의 전투 계수는 없다 (08-25)',
-        en: 'Lost HP <b>and downed heroes are restored free and instantly</b> on return — the cost is <b>a thinner party for the rest of the sortie</b><br>'
+        en: 'Lost HP <b>and downed heroes are restored free and instantly</b> when the run ends — the cost is <b>a thinner party for the rest of that run</b><br>'
             + 'Party buffs are skill effects, not a stat — Leadership has no combat coefficient (08-25)',
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
@@ -472,10 +475,11 @@ const STRINGS = {
     'rep.none': { ko: '없음', en: 'None' },
     'rep.downedN': { ko: '{n}명', en: '{n}' },
     'rep.levelUp': { ko: '▲ {name} 레벨 {a} → {b}', en: '▲ {name} Level {a} → {b}' },
-    'rep.injuryHead': { ko: '전투불능 — 이 출정 동안 아웃', en: 'Down — out for the rest of this run' },
+    /* 상자 머리는 **상태가 아니라 기록**이다 [개정 2026-09-08] — 뒤에 붙던 「이 출정 동안 아웃」이 폐기됐다 */
+    'rep.injuryHead': { ko: '전투불능', en: 'Downed' },
     'rep.injuryNote': {
-        ko: '기다릴 것이 없다 — <b>마을로 돌아오는 순간</b> 전투불능도 깎인 HP도 전원 무료로 회복됐다',
-        en: 'Nothing to wait for — <b>the moment they reach town</b> both downed heroes and lost HP are restored, free, for everyone',
+        ko: '기다릴 것이 없다 — <b>런이 끝나는 순간</b> 전투불능도 깎인 HP도 전원 무료로 회복된다. 다음 런에는 전원이 다시 나간다',
+        en: 'Nothing to wait for — <b>the moment the run ends</b> both downed heroes and lost HP are restored, free. Everyone goes out again on the next run',
     },
     'rep.drops.h': { ko: '획득 장비', en: 'Loot' },
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
@@ -489,10 +493,11 @@ const STRINGS = {
 
     /* ── 영웅 띠 (캐릭터·스킬·선술집 공통 상단, 2026-08-26) — 초상화 + 이름 + 지금 하는 일 ── */
     'hs.doing.idle': { ko: '대기 중', en: 'Idle' },
-    'hs.doing.out': { ko: '출정 아웃', en: 'Out for this run' },
+    /* 원정이 **실제로 도는 동안**만 뜬다 [신설 2026-09-08 사용자 지시] — 파티에 편성만 해 둔 상태는 대기다 (SCREEN_DESIGN §5) */
+    'hs.doing.expedition': { ko: '원정 중', en: 'On expedition' },
+    /* ~~'hs.doing.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 띠의 「지금 하는 일」은 **대기 하나**다 (SCREEN_DESIGN §5) */
 
     /* ── 장비 ── */
-    'eq.equipped': { ko: '착용 {n} / {cap}', en: 'Equipped {n} / {cap}' },
     'eq.slots': { ko: '장비는 8칸 — 무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 2. 모든 무기는 양손이라 잠기는 칸이 없다', en: '8 gear slots — weapon, helm, armor, gloves, boots, amulet, 2 rings. Every weapon is two-handed, so no slot is ever locked' },
     'st.atk': { ko: '공격력', en: 'Attack' },
     'st.atkType.physical': { ko: '물리', en: 'Physical' },
@@ -536,7 +541,6 @@ const STRINGS = {
             + 'No attribute governs Max HP — every hero starts at the same value and grows it only by level and gear',
     },
     'ch.detail.h': { ko: '세부 옵션', en: 'Detailed Stats' },
-    'ch.detail.sub': { ko: '{n} / {total}', en: '{n} / {total}' },
     'ch.detail.hn': { ko: '세부 옵션 {n}', en: 'Detailed Stats {n}' },
     'ch.detail.note': {
         ko: '전투 능력치는 <b>장비와 스킬이 만든다</b>. 값이 <b>—</b> 인 축은 0이 아니라 '
@@ -546,20 +550,24 @@ const STRINGS = {
             + '<b>nothing has touched that axis yet</b>, and an empty axis is where the next item goes.<br>'
             + 'The abbreviation in parentheses is the attribute that scales it. This table mirrors src/data/combat_stat.csv',
     },
-    'ch.skill.h': { ko: '현재 스킬', en: 'Current Skills' },
+    'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
     'ch.skill.go': { ko: '스킬 트리 열기', en: 'Open skill tree' },
     'ch.items.h': { ko: '아이템', en: 'Items' },
     'ch.items.sub': { ko: '{n} / {cap} 칸', en: '{n} / {cap} slots' },
 
     /* ── 툴팁 ── */
-    'tip.empty': { ko: '비어 있음', en: 'Empty' },
     'tip.equipped': { ko: '착용 중', en: 'Equipped' },
     'tip.this': { ko: '이 아이템', en: 'This Item' },
+    // 교체될 자리가 빈 경우 — 옛 판의 「비어 있음」 빈 카드 한 장을 대신하는 하단 힌트 한 줄 (SCREEN_DESIGN §6 개정 2026-09-08)
+    'tip.noneEquipped': { ko: '착용 중 없음', en: 'Nothing equipped' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
+    // 옵션 출처 태그 (2026-09-08 · SCREEN_DESIGN §6) — `affix.csv` 가 통합옵션 풀로 확정돼(GAME_DESIGN §9 09-08)
+    // 지금 뜨는 접사는 전부 이것이다. 죄종 칸 풀이 서는 날 `[분노]` 같은 태그가 같은 자리에 들어간다
+    'tip.src.random': { ko: '랜덤', en: 'Random' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
-    'tip.up.next': { ko: '강화 +{up} · 다음 {g}G', en: 'Upgrade +{up} · next {g}G' },
-    'tip.up.option': { ko: '{n}강에서 옵션 상승', en: 'option gain at +{n}' },
-    'tip.up.max': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
+    // ~~`tip.up.first`·`tip.up.next`~~ 는 2026-09-08 삭제 [사용자 지시] — 툴팁의 강화 줄이 통째로 죽었다.
+    // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
+    // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
     // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
     'tip.hero.h': { ko: '영웅', en: 'Hero' },
     'tip.hero.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
@@ -626,9 +634,11 @@ const STRINGS = {
     'sk.points.note': {
         ko: '죄종 마스터리와 직업 마스터리가 <b>포인트 풀을 공유</b>한다 — 같은 축이 양쪽에 있어도 중복이 아니라 <b>기회비용이 있는 선택</b>이다.<br>'
             + '레벨업마다 받고, <b>초기화는 무료·수시</b>다 — 전액 돌려받으므로 잘못 찍어 영웅 하나를 버리는 일이 없다.<br>'
+            + '한 칸만 물리려면 그 칸을 <b>우클릭</b>한다 — 랭크가 1 줄고 포인트가 1 돌아온다. 잠긴 칸에 찍어 둔 것도 그렇게 뺀다.<br>'
             + '⚠ 전직 전용 포인트는 별개 풀인데 <b>전직 층이 미구현</b>이라 아직 없다.',
         en: 'Sin mastery and class mastery <b>share one point pool</b> — the same axis appearing on both sides is not redundancy but a <b>choice with opportunity cost</b>.<br>'
             + 'You earn points on level-up, and <b>resetting is free and always available</b> — a full refund, so no hero is ever ruined by a bad pick.<br>'
+            + 'To undo just one node, <b>right-click</b> it — one rank comes off and one point comes back. Works on locked nodes you had already invested in.<br>'
             + '⚠ Advancement points are a separate pool, absent until the advancement layer exists.',
     },
     'sk.points.left': { ko: '남은 포인트', en: 'Points left' },
@@ -638,13 +648,17 @@ const STRINGS = {
     'sk.err.locked': { ko: 'Lv.{lv} 부터 찍을 수 있다', en: 'Available from Lv.{lv}' },
     'sk.err.maxRank': { ko: '이미 최대 랭크다', en: 'Already at max rank' },
     'sk.err.points': { ko: '스킬 포인트가 없다', en: 'No skill points left' },
+    'sk.err.noRank': { ko: '아직 찍지 않은 칸이다', en: 'Nothing invested here yet' },
+    // 찍은 칸의 툴팁 꼬리 — 우클릭이 있다는 것 자체가 안 보이면 못 쓴다 (SCREEN_DESIGN §7)
+    'sk.unlearnHint': { ko: ' · 우클릭 = 1랭크 되돌리기', en: ' · Right-click to refund 1 rank' },
     'sk.slots.h': { ko: '액티브', en: 'Actives' },
     'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
     'sk.cycle': { ko: '행동 주기', en: 'Action Cycle' },
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
-    'sk.innate': { ko: '고유', en: 'Innate' },
+    // 출처 셋은 **영웅 / 무기 / 전직** 이다 [2026-09-08 사용자 지시] — ~~고유~~. 액티브 줄·후보 카드·툴팁 칩이 같은 키를 쓴다
+    'sk.innate': { ko: '영웅', en: 'Hero' },
     // 액티브 3칸의 출처 라벨 — 칸은 출처가 정한다 (skill_design §2)
     'sk.src.weapon_group': { ko: '무기', en: 'Weapon' },
     'sk.src.advance': { ko: '전직', en: 'Advance' },
@@ -704,10 +718,11 @@ const STRINGS = {
     'sk.eff.atk_pct': { ko: '공격력 +{v}% 를 건다', en: '+{v}% Attack' },
     'sk.eff.period_pct': { ko: '행동 주기 −{v}% 를 건다', en: '−{v}% action cycle' },
     'sk.eff.barrier_pct': { ko: '최대 HP {v}% 짜리 보호막을 씌운다', en: 'a shield worth {v}% of max HP' },
-    /* 스킬이 실제로 몇 초마다 나가는가 [2026-09-08 사용자 지시] — 목록 줄과 툴팁 문장이 같은 말을 쓴다.
-       ~~`sk.base`(표기 {s}초) · `sk.eff`(실효 {s}초) · `sk.aligned`~~ 는 **병기를 폐기하며 함께 지웠다** —
-       화면에는 실제 적용값 하나만 두고, 주기를 모르는 자리(살 수 있는 후보)는 그 자리에 기본값이 온다 */
-    'sk.every': { ko: '{s}초마다', en: 'Every {s}s' },
+    /* 그 스킬의 **표기 쿨** [개정 2026-09-08 2차 사용자 지시] — 어느 영웅이 들든 같은 수다.
+       ~~`sk.base`·`sk.eff`·`sk.aligned`~~ (1차 폐기) → ~~`sk.every`(`{s}초마다`)~~ → **`sk.cool`**.
+       **말까지 바꾼 이유는 값이 바뀌었기 때문**이다 — 「{s}초마다」는 빈도의 약속인데 표기 쿨은 빈도가 아니다
+       (정렬 대기만큼 뒤에 나간다). 쿨이라고 적으면 참이 된다 */
+    'sk.cool': { ko: '쿨 {s}초', en: 'Cooldown {s}s' },
     'sk.slots.note': {
         ko: '행동 주기가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>슬롯 순서</b> → 없으면 기본 공격.<br>'
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
@@ -860,7 +875,7 @@ const STRINGS = {
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
     'log.card': { ko: '<b>{name} 카드</b> 획득 — 도감', en: '<b>{name} card</b> found — codex' },
     'pop.card': { ko: '카드', en: 'Card' },
-    'log.downed': { ko: '{name} <b>전투 불능</b> — 이 출정 동안 아웃', en: '{name} <b>downed</b> — out for this run' },
+    'log.downed': { ko: '{name} <b>전투 불능</b>', en: '{name} <b>downed</b>' },   // ~~「이 출정 동안 아웃」~~ 2026-09-08 삭제
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },

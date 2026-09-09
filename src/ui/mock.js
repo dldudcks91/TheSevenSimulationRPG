@@ -214,7 +214,7 @@ export const heroFace = hero => {
  * 얼굴 스타일(`faceDir`)을 안 타는 이유 — 스킬 아이콘은 스타일 폴더가 없는 단일 세트다.
  */
 export const SKILL_ICON_DIR = './assets/art/icons/skills/';
-export const SKILL_ICON_FILES = ['war_warcry', 'war_bash', 'wg_sword2h', 'wg_axe'];
+export const SKILL_ICON_FILES = ['war_warcry', 'war_bash', 'wg_sword2h', 'wg_axe', 'pri_judgment'];
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);

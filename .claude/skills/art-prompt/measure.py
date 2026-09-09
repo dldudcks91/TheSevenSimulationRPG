@@ -17,9 +17,9 @@ Anchor reference (measured 2026-09-06, SKILL.md principle 2):
   edge     8-19 %  pixels with colour gradient > 60, inside figure, at 512
 
 Caveats:
-  * hd/sh is calibrated on bare heads and helmets. A HOOD is part of the head
-    silhouette, so hooded figures read 90-97 -- that is normal, not a defect.
-    For hooded sets judge hd/sh by eye against barbarian.png instead.
+  * hd/sh is calibrated on bare heads and helmets. A HOOD -- or a bare SKULL -- is
+    part of the head silhouette, so those read 90-100. That is normal, not a defect.
+    For such sets judge hd/sh by eye against barbarian.png instead.
   * colors below 42 on a flat single-colour hood/cloak set is fine.
 """
 import sys
@@ -110,7 +110,7 @@ def main(argv):
         for path in argv:
             report(path.replace('\\', '/').split('/')[-1][:26], metrics(Image.open(path)))
     print("\n'!' = outside anchor range.  shldr/body -> pad (postprocess.md).  hd/sh -> re-roll.")
-    print("hooded figures: hd/sh 90-97 is normal (hood = head silhouette); judge by eye.")
+    print("hooded figures AND bare skulls: hd/sh 90-100 is normal (it is the head silhouette).")
     print("luma? = opaque dark background, mask unreliable (gladiator_helm.png).")
 
 

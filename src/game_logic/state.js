@@ -74,7 +74,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 17;
 
 /**
  * @param {object} deps
@@ -252,7 +252,8 @@ export function createGameSystem(deps) {
 
     /**
      * v10 → v11 [2026-09-03] — 회복 대기 폐기 (base_expedition_design §1-1).
-     * `injuredUntil` 을 걷고 런에 **출정 누적 아웃** 칸을 판다. 옛 세이브에서 대기 중이던 영웅은 **전부 나은 것으로 본다** —
+     * `injuredUntil` 을 걷고 런에 **출정 누적 아웃** 칸을 판다(⚠ 그 칸은 **v17 에서 다시 사라졌다** — 09-08 「출정 아웃」 폐기).
+     * 옛 세이브에서 대기 중이던 영웅은 **전부 나은 것으로 본다** —
      * 새 규칙에서는 전투 밖에 쓰러져 있는 영웅이 존재할 수 없고, 이관이 만들 수 있는 상태 중 규칙에 맞는 것이 그것 하나뿐이다.
      */
     function upgradeV10(s) {
@@ -341,6 +342,20 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v16 → v17 [2026-09-08] — **「출정 아웃」 폐기** (base_expedition_design §1-1 · GAME_DESIGN §9 09-08).
+     * 아웃이 런을 넘지 않으므로 세이브가 들 전투불능 상태가 하나도 없다 — `run.downed` 와 리포트의
+     * `outTotal` 을 걷는다. 옛 세이브에서 아웃이던 영웅은 **전부 나은 것으로 본다**(v10→v11 이 `injuredUntil`
+     * 을 걷을 때와 같은 논리 — 새 규칙에서 전투 밖에 쓰러져 있는 영웅은 존재할 수 없다).
+     * 진행 중이던 반복(`run.repeat`)은 안 건드린다 — 다음 런에 전원이 나갈 뿐이다. **rng 0회.**
+     */
+    function upgradeV16(s) {
+        if (s.run) delete s.run.downed;
+        if (s.lastReport) delete s.lastReport.outTotal;
+        s.version = 17;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -352,7 +367,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -369,6 +384,7 @@ export function createGameSystem(deps) {
         if (s.version === 13) s = upgradeV13(s);
         if (s.version === 14) s = upgradeV14(s);
         if (s.version === 15) s = upgradeV15(s);
+        if (s.version === 16) s = upgradeV16(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -390,11 +406,8 @@ export function createGameSystem(deps) {
         const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
         return w?.group ?? null;
     };
-    /**
-     * 이번 **출정**에서 아웃됐는가 [2026-09-03 — base_expedition_design §1-1].
-     * 회복 대기가 없으므로 시계를 안 본다 — 나가 있는 동안만 참이고 전투 밖으로 나오면(`returnToTown`) 비워진다.
-     */
-    const isOut = (state, uid) => (state.run?.downed ?? []).includes(uid);
+    /* ~~`isOut(state, uid)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기(base_expedition_design §1-1 개정).
+       아웃은 **그 런 안에서만** 살고 런은 출발 순간 통째로 정산되므로, 전투 밖에 아웃된 영웅이 존재하지 않는다. */
 
     /* ── 도감 — 몬스터 카드 모델 (monster_design §8) ── */
 
@@ -548,17 +561,8 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /**
-     * 마을 귀환 — **이번 출정에서 아웃된 영웅이 전부 회복한다** [2026-09-03 · base_expedition_design §1-1].
-     * 회복이 실제로 일어나는 유일한 전투 밖 지점이다. 대기가 없으므로 시계를 안 받는다.
-     * 출정이 끝나는 세 자리에서 부른다 — 반복이 이어지지 않을 때 · 전멸 · 재접속(`closeRun`).
-     * @returns {{healed: string[]}} 이번에 나은 영웅 uid (리포트·플래시용)
-     */
-    function returnToTown(state) {
-        const healed = (state.run?.downed ?? []).slice();
-        if (state.run) state.run.downed = [];
-        return { healed };
-    }
+    /* ~~`returnToTown(state)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기로 **귀환이 회복할 것이 없다**.
+       회복은 런이 끝나는 순간 자동이고 상태에 남는 것이 없다(HP 는 애초에 세이브에 없다 — INTERFACE §4). */
 
     /* ── 스테이지 · 원정 ── */
 
@@ -571,22 +575,14 @@ export function createGameSystem(deps) {
 
     function canDepart(state, stageId, now) {
         if (!stageUnlocked(state, stageId)) return 'locked';
+        // 파티가 비면 못 나간다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
+        // 아웃이 런을 넘지 않으므로 언제나 전원이 나간다 (base_expedition_design §1-1)
         if (state.party.length === 0) return 'noParty';
-        // 아웃된 영웅을 빼고 아무도 안 남으면 못 나간다 — 이어지는 반복 런에서만 걸린다 (2026-09-03)
-        if (activeParty(state, stageId).length === 0) return 'noParty';
         return null;
     }
 
-    /**
-     * 이번 런에 **실제로 나가는** 파티 [2026-09-03].
-     * 같은 스테이지를 반복으로 잇는 중이면 이전 런까지 아웃된 영웅을 뺀다. 새 출정이면 전원이 나간다 —
-     * 마을을 떠나는 순간이 곧 회복이기 때문이다 (base_expedition_design §1-1).
-     */
-    const continuing = (state, stageId) => state.run?.stageId === stageId && state.run.repeat === true;
-    const activeParty = (state, stageId) => {
-        const out = continuing(state, stageId) ? (state.run.downed ?? []) : [];
-        return state.party.filter(uid => !out.includes(uid));
-    };
+    /* ~~`activeParty(state, stageId)`~~ · ~~`continuing`~~ 은 2026-09-08 삭제 — 「출정 아웃」 폐기.
+       반복으로 잇는 런에도 **전원이 다시 나간다**(런이 끝나면 회복 · base_expedition_design §1-1 개정 09-08). */
 
     // 액티브는 **전투 안에서만** 산다 — 쿨·창·배리어는 HP 와 같은 취급이라 세이브에 넣지 않는다 (INTERFACE §4)
     const partyUnits = (state, uids) => (uids ?? state.party).map(uid => {
@@ -605,15 +601,15 @@ export function createGameSystem(deps) {
 
         state.counters.battle += 1;
         const rng = makeRng(deriveSeed(state.seed, state.counters.battle));
-        // 이어지는 반복이면 이전 런까지 아웃된 영웅을 빼고 나간다 (base_expedition_design §1-1, 2026-09-03)
-        const carry = continuing(state, stageId) ? (state.run.downed ?? []).slice() : [];
-        const going = state.party.filter(uid => !carry.includes(uid));
+        // **전원이 나간다** [개정 2026-09-08 — 「출정 아웃」 폐기]. ~~이어지는 반복이면 이전 런까지 아웃된 영웅을 뺀다~~ 는
+        // 아웃이 런을 넘지 않게 되면서 사라졌다 (base_expedition_design §1-1)
+        const going = state.party.slice();
         const result = BT.simulate(partyUnits(state, going), stageId, rng);
 
         // 보상 — XP 는 참가 전원 동일 지급 (⚠제안 — 분배 규칙 미확정)
         const xpEach = Math.round(result.xpTotal * B.xp_rate);
         const levelUps = [];
-        for (const uid of going) {          // 안 나간 영웅은 XP 를 못 받는다 (2026-09-03)
+        for (const uid of going) {          // 파티 전원 — 09-08 부터 안 나가는 영웅이 없다
             const h = heroById(state, uid);
             const lu = H.grantXp(h, xpEach, rng);
             if (lu) levelUps.push(lu);
@@ -633,17 +629,15 @@ export function createGameSystem(deps) {
             drops.push(added.uid);
         }
 
-        // 아웃 — 쓰러진 영웅은 **그 출정 동안** 빠진다. 대기는 없고 전투 밖으로 나오면 낫는다
-        // (`returnToTown` · base_expedition_design §1-1, 2026-09-03). HP 는 상태에 없다: 매 전투 최대치 시작
-        const downedSession = [...carry];
-        for (const uid of result.downed) if (!downedSession.includes(uid)) downedSession.push(uid);
+        // 아웃 — 쓰러진 영웅은 **그 런의 남은 라운드** 동안만 빠진다(battle.js). 런이 끝나면 회복이라
+        // 상태에 남기는 것이 없다 [개정 2026-09-08 — ~~출정 누적 아웃(`run.downed`)~~ 폐기 · 세이브 v17]
 
         if (result.won && !state.progress.cleared.includes(stageId)) state.progress.cleared.push(stageId);
 
         const report = {
             at: now, stageId, won: result.won, reason: result.reason, durationSec: result.durationSec,
             gold: result.gold, dust: result.dust, xpEach, levelUps,
-            downed: result.downed.slice(), outTotal: downedSession.slice(), party: going.slice(), drops, discarded,
+            downed: result.downed.slice(), party: going.slice(), drops, discarded,   // ~~outTotal(출정 누적)~~ 09-08 폐기
             cards: { ...result.cards },
             rounds: result.rounds,
             // 깬 라운드 수 — 렌더러가 「이겼으면 전부, 아니면 하나 뺀다」로 짐작하던 값이다.
@@ -656,7 +650,7 @@ export function createGameSystem(deps) {
         state.run = {
             stageId, repeat: state.run?.stageId === stageId ? state.run.repeat : false,
             lastAt: now, durationSec: result.durationSec,
-            downed: downedSession,      // 이번 **출정** 누적 — 런을 넘어 유지되고 귀환에 비워진다
+            // ~~downed(출정 누적 아웃)~~ 는 2026-09-08 삭제 — 런을 넘어 유지되는 전투불능이 없다 (세이브 v17)
         };
         return { ok: true, result, report };
     }
@@ -666,13 +660,13 @@ export function createGameSystem(deps) {
      * 꺼져 있던 사이 돌던 런은 마무리된 것으로 본다. 프로토타입은 런을 출발 시점에 통째로 정산하므로(resolveBattle)
      * 남은 미정산분이 없다 — lastReport 가 곧 "진행 중이던 전투까지 정산한" 결과다. 여기서는 반복을 끄고 알림만 남긴다.
      * 오프라인에 도는 것은 파견뿐이다 — 미구현 (회복은 오프라인에 돌 것이 없다 — 전투 밖은 이미 전원 회복).
-     * **재접속은 귀환이다** — 파티가 마을에 있으므로 아웃된 영웅이 전부 낫는다 (base_expedition_design §1-1).
+     * **재접속은 귀환이다** — 09-08 「출정 아웃」 폐기로 ~~아웃된 영웅을 낫게 하는 일~~ 자체가 없어졌고,
+     * 여기서는 반복을 끄고 알림만 남긴다 (base_expedition_design §1-1).
      */
     function closeRun(state, now) {
         const run = state.run;
         if (!run || !run.repeat) return null;
         run.repeat = false;
-        returnToTown(state);
         state.notice = { kind: 'runClosed', stageId: run.stageId, at: run.lastAt, seenAt: now };
         return state.notice;
     }
@@ -829,6 +823,27 @@ export function createGameSystem(deps) {
         return { ok: true, rank: rank + 1, points: h.masteryPoints };
     }
 
+    /**
+     * 한 랭크 무른다 — 포인트 1점 환급. `learnMastery` 의 역방향이다 (skill_design §5 「무료 · 수시」).
+     * **해금 레벨을 보지 않는다** — 찍힌 랭크가 있다는 것 자체가 그때 열려 있었다는 증거이고,
+     * 여기서 다시 보면 「찍었는데 못 뺀다」는 상태가 생긴다(초기화로는 빠지므로 규칙도 갈린다).
+     * 랭크가 0 이 되면 키를 지운다 — 전액 롤백(`resetMastery`) 뒤와 같은 모양이어야 세이브가 두 갈래로 안 갈린다.
+     */
+    function unlearnMastery(state, uid, nodeId) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        const n = H.masteryById[nodeId];
+        // 그 영웅의 트리에 없는 노드는 「없음」이다 — learnMastery 와 같은 판정
+        if (!n || !H.masteryNodesFor(h).some(x => x.id === nodeId)) return { ok: false, err: 'missing' };
+        const rank = h.mastery?.[nodeId] ?? 0;
+        if (rank < 1) return { ok: false, err: 'noRank' };
+        h.mastery = h.mastery ?? {};
+        if (rank === 1) delete h.mastery[nodeId];
+        else h.mastery[nodeId] = rank - 1;
+        h.masteryPoints = (h.masteryPoints ?? 0) + 1;
+        return { ok: true, rank: rank - 1, points: h.masteryPoints };
+    }
+
     /** 롤백 — **무료 · 수시** (skill_design §5). 찍은 것을 전부 돌려주고 포인트를 되돌린다 */
     function resetMastery(state, uid) {
         const h = heroById(state, uid);
@@ -841,13 +856,13 @@ export function createGameSystem(deps) {
 
     return {
         newGame, serialize, deserialize, canLoad,
-        heroById, heroItems, heroCombat, isOut, upgradeState, upgradeItem,
+        heroById, heroItems, heroCombat, upgradeState, upgradeItem,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage,
-        toggleParty, returnToTown, activeParty,
+        toggleParty,
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire,
-        masteryState, learnMastery, resetMastery,
+        masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, rerollTactic, weaponGroupOf,
     };
 }
