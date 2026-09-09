@@ -4,7 +4,8 @@
  * 순수 모듈. 데이터는 생성자 주입, 난수는 rng 인자.
  *
  * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v}], sins:[sin...],
- *            group?(무기군 id — weapon_group.csv), watk?(무기 공격력 굴림값), element?(마법 무기의 원소) }
+ *            group?(무기군 id — weapon_group.csv), watk?(무기 공격력 굴림값), element?(마법 무기의 원소),
+ *            skill?(무기가 담은 액티브 id — 무기만 · 2026-09-09) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
  *   (CSV 로 이사할 때 stat id 가 곧 combat_stat.csv 의 키가 된다)
  *   무기의 행동 주기·공격 타입·착용 직업은 아이템에 박지 않는다 — 매번 무기군(group)에서 읽는다. SSOT 는 weapon_group.csv.
@@ -42,6 +43,9 @@ import { createFormula } from './formula.js';
  *   weaponGroups — {id: {id, ko, en, classes:[cls...], period, variance, damageKind, release}}  ← weapon_group.csv
  *   elements     — 원소 4종 id 목록 (마법 무기 개체가 하나를 든다)
  *   itemBases    — {slot: [{ko,en}...]}  무기 외 부위의 베이스 이름 풀. 무기의 베이스는 무기군 자체다
+ *   classSkills  — **직업별** 액티브 후보 `{classId: [skillId...]}` ← skill.csv (행 순서가 굴림 결과를 정한다).
+ *                  무기가 **개체마다** 그 무기군의 직업 풀에서 하나를 굴려 담는다 (skill_design §12-1 규칙 3).
+ *                  이 모듈은 스킬 시스템을 모른다 — id 목록만 받는다
  *   affixDefs    — [{stat, scale:'growth'|'band'|'flat', min, max, perIlvl?, slots?:[...]}]  slots 없으면 전 부위
  *   composeName  — (prefixSin, base, suffixSin|null) → {ko,en}
  */
@@ -54,6 +58,7 @@ export function createItemSystem(data) {
     const r2 = v => Math.round(v * 100) / 100;
 
     /** 드롭·시작 무기에 쓰는 무기군 = 본편(release=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
+    const classSkills = data.classSkills ?? {};   // {classId: [skillId...]} — 무기가 담을 후보 (skill_design §12)
     const dropGroups = Object.values(WG).filter(g => g.release === 'main');
     const groupsFor = cls => dropGroups.filter(g => g.classes.includes(cls));
 
@@ -103,7 +108,7 @@ export function createItemSystem(data) {
     /**
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
      * rng 소비 순서(계약 — INTERFACE §5-2): 접두 죄종 → (레어) 접미 판정 → (성공 시) 접미 죄종 →
-     *   접사 수 → 접사마다 (정의 선택 → 값) → **개체 굴림 1회** → (마법 무기) 원소
+     *   접사 수 → 접사마다 (정의 선택 → 값) → **개체 굴림 1회** → (마법 무기) 원소 → **(무기) 스킬 1회**
      */
     function build(rng, slot, rarity, ilvl, base) {
         const prefix = pick(rng, data.sins);
@@ -128,6 +133,13 @@ export function createItemSystem(data) {
             // 마법 무기는 **개체**가 원소를 든다 (battle_design §9-5) — 무기군은 종류를, 개체는 상대할 저항을 정한다.
             // 세기가 아니라 대상 선택이라 "무기군 스킬은 개체에 붙지 않는다"(skill_design §3)와 충돌하지 않는다.
             if (base.damageKind === 'magic') item.element = pick(rng, data.elements);
+            // 무기가 담는 액티브 — **개체가 든다** (skill_design §12-1 규칙 3 · 사용자 확정 2026-09-09).
+            //   무기군은 스킬의 **종류를 안 정한다**(§12-1 규칙 2 로 폐기) — 정하는 것은 그 무기군의 **직업**이고,
+            //   같은 도끼라도 개체마다 다른 전사 스킬이 붙는다. 액티브 2번 칸의 입력이다(`skill.activesFor`).
+            // ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다
+            const pool = classSkills[base.classes?.[0]] ?? [];
+            const sr = rng();
+            item.skill = pool.length ? pool[Math.floor(sr * pool.length)] : null;
         } else {
             item.implicit = implicitFor(rng, slot, ilvl);
         }

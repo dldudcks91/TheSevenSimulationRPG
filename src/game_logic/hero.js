@@ -38,8 +38,10 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
- *   skillPool    — 고유 스킬 후보 id 목록 [skillId...] ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
- *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다
+ *   skillPool    — **직업별** 고유 스킬 후보 `{classId: [skillId...]}` ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
+ *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다. **1스킬 = 1직업**(skill_design §12-1
+ *                  확정 2026-09-08)이라 ~~전 행에서 균등~~ 이 아니라 **제 직업 풀**에서 굴린다 —
+ *                  「마법사가 배쉬를 드는 일은 없다」
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
  *   heroTiers    — 영웅 등급 표 [{id, weight, totalMin, totalMax, shape}...] ← `hero_tier.csv` (**행 순서가 굴림 결과를 정한다**).
  *                  `weight = 0` 인 행은 생성기가 안 뽑는다(유니크는 수작업). 등급을 가르는 것은 **총합 대역과 분포 모양 둘뿐**이다
@@ -54,7 +56,7 @@ export function createHeroSystem(data) {
     const F = createFormula(B);        // 성장 곡선(growthMult)을 시뮬과 같은 함수에서 읽는다
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
-    const skillPool = data.skillPool ?? [];
+    const skillPool = data.skillPool ?? {};      // {classId: [skillId...]} — 직업 풀 (skill_design §12)
     const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
 
@@ -206,10 +208,16 @@ export function createHeroSystem(data) {
 
     /**
      * 고유 스킬 1개 — 영웅이 태어날 때 딱 한 번 굴린다 (hero_design §1).
-     * ⚠ 프로토타입 풀은 `skill.csv` **전 행**이다 — 고유 전용 행이 아직 없어 직업 액티브를 그대로 빌려 쓴다
-     *   (skill_design §9-0 개정 2026-09-01). 풀이 비면 **rng 를 한 번도 안 쓴다** — 소비 0회가 계약이다.
+     * 풀은 **그 영웅의 직업 풀** 하나다 [개정 2026-09-09 · skill_design §12-1 규칙 1] —
+     *   ~~`skill.csv` 전 행에서 균등~~(09-01)은 「1스킬 = 1직업」 확정으로 폐기됐다.
+     * ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 직업에 의존하면 같은 시드가 다른 파티를 낸다
+     *   (초상 굴림이 09-07 에 같은 이유로 같은 규칙이 됐다 · INTERFACE §5-2).
      */
-    const rollInnate = rng => (skillPool.length ? skillPool[Math.floor(rng() * skillPool.length)] : null);
+    const rollInnate = (rng, cls) => {
+        const pool = skillPool[cls] ?? [];
+        const r = rng();
+        return pool.length ? pool[Math.floor(r * pool.length)] : null;
+    };
 
     /** 생성 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollParty 쪽의 일 */
     function rollHero(rng, { sin, cls, name, trait, tier }) {
@@ -219,14 +227,14 @@ export function createHeroSystem(data) {
         const t = rollTier(rng, tier);
         const total = rollTotal(rng, t);
         const stats = rollAttributes(rng, keyAttrOf(cls), { total, shape: t?.shape });
-        const innate = rollInnate(rng);
+        const innate = rollInnate(rng, cls);
         return {
             uid: null,               // uid 발급은 state 의 일 (카운터 소유자)
             name, tier: t?.id ?? 'rare', sin, cls, trait,
             face: null,              // 얼굴 id — **파티를 굴리는 쪽이 맨 마지막에 박는다** (rollStartParty · 아래 이유)
             level: 1, xp: 0,
             mastery: {}, masteryPoints: 0,   // 찍은 랭크 {nodeId: rank} · 남은 포인트 (죄종·직업 공유 풀)
-            innate,                  // 고유 스킬 — 생성 시 확정 · 이후 불변 (hero_design §1 · 프로토타입 풀 = skill.csv 전 행)
+            innate,                  // 고유 스킬 — 생성 시 확정 · 이후 불변 (hero_design §1 · 풀 = 그 직업의 스킬 풀)
             stats,                   // ~~caps~~ 는 09-07 폐지 — 상한이 전 영웅 공통이라 개체가 들 것이 없다
             equipped: {},            // 슬롯 초기화는 state 가 slots 정의로 채운다
         };

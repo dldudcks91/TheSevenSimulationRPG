@@ -196,11 +196,13 @@ strike(rng, a, d):
 | `itemBases` | `{part: [{ko,en}]}` 무기 외 부위 베이스 이름 | item_base.csv — **부위별 행 순서가 결정론에 걸린다** |
 | `affixDefs` | `[{stat, scale:'growth'\|'band'\|'flat', min, max, perIlvl?, slots?}]` — `perIlvl` 은 **band 에만**, `slots` 없으면 전 부위 | affix.csv — `per_ilvl` 은 `band` 행만 값이고 로더가 그 행에만 `perIlvl` 키를 넣는다. **행 순서가 `rollAffixes` 의 풀 인덱스에 직결된다** |
 | `composeName` | `(prefixSin, base, suffixSin 또는 null) → {ko,en}` | `game_logic/naming.js:createNaming({sins}).composeName` — §2-10 |
+| `classSkills` | `{classId: [skillId...]}` **직업별 액티브 후보** (2026-09-09 신설) | `skill.csv` 의 `owner_kind=job` 행을 직업으로 묶은 것 — `ui/data.js` 가 만들어 **hero(`skillPool`)와 item 에 같은 표를 넘긴다**. 두 출처(고유 · 무기)가 한 풀에서 가져가기 때문이다 (skill_design §12-1 규칙 3). **행 순서가 결정론에 걸린다** |
 
-**item 객체** — `{uid, slot(part), rarity, ilvl, up, name:{ko,en}, implicit:{stat,v} 또는 null, affixes:[{stat,v}], sins:[sinId], group?, watk?, element?}`
+**item 객체** — `{uid, slot(part), rarity, ilvl, up, name:{ko,en}, implicit:{stat,v} 또는 null, affixes:[{stat,v}], sins:[sinId], group?, watk?, element?, skill?}`
 - `rarity` 는 현재 `magic` / `rare` 만 굴린다
 - `up` = 강화 단계 `0 … equip_upgrade_max`. **드롭이 굴리지 않는다** — 드롭·시작 무기는 언제나 `0` 이고 `upgrade` 만 올린다 (2026-08-31 신설)
-- `group` / `watk` 는 무기만. `element` 는 **마법 무기군 개체**만. ~~`twoHanded`~~ 는 2026-09-01 폐지 — 전 무기가 양손이라 표현할 것이 없다
+- `group` / `watk` / `skill` 은 무기만. `element` 는 **마법 무기군 개체**만. ~~`twoHanded`~~ 는 2026-09-01 폐지 — 전 무기가 양손이라 표현할 것이 없다
+- **`skill` = 그 무기가 담은 액티브 id** [신설 2026-09-09 · skill_design §12-1 규칙 3] — 드롭 시 그 무기군의 **직업 풀**에서 하나를 굴려 개체에 박는다. ~~무기군이 스킬의 종류를 정한다~~(§2-1)는 폐기됐고, 대신 **「전사류 무기에는 전사류 스킬이 붙는다」**가 계약이다: 같은 도끼라도 개체마다 다른 전사 스킬을 든다. 액티브 2번 칸의 입력이고(`skill.activesFor` 의 `ctx.weaponSkill`), 무기를 바꾸면 그 칸이 통째로 바뀐다. 풀이 비는 무기군(확장 직업)은 `null`
 - 무기의 행동 주기·공격 타입·착용 직업은 아이템에 **박지 않는다** — 매번 `weaponGroups[group]` 에서 읽는다
 - `sins` 는 죄종 **태그 목록**이지 포인트가 아니다 — 세트포인트 구조는 폐기됐다(08-26). 스키마는 그대로이고, 태그를 **세는 쪽**이 전술카드 조건이 된다 (tactic_card_design.md)
 
@@ -351,7 +353,7 @@ strike(rng, a, d):
 
 | export | 시그니처 | 결과 |
 |---|---|---|
-| `newGame(seed, candidates, now)` | `→ state` | 후보 = 로스터 = 파티. 각자 시작 무기 1개 착용. 시작 무기 rng = `deriveSeed(seed, 0)` |
+| `newGame(seed, candidates, now)` | `→ state` | 후보 = **로스터**. 각자 시작 무기 1개 착용. 시작 무기 rng = `deriveSeed(seed, 0)`.<br>**`party` 는 빈 배열이다** [개정 2026-09-09 사용자 지시 · SCREEN_DESIGN §5] — ~~로스터 = 파티~~ 폐기. 편성은 플레이어의 결정이라 로직이 대신 하지 않고, `party` 가 넣은 순서 그대로이므로 **처음 고른 영웅이 리더**(`party[0]`)가 된다. ⚠ **전투를 바로 돌리는 쪽**(골든 · `dev/test.js` · `?dev=battle\|play\|offline`)은 `toggleParty` 로 **직접 채워야 한다** — 그 함수는 rng 를 안 쓰므로 로스터 순서로 채우면 옛 결과와 같다 |
 | `serialize(state, now)` | `→ json` | `clone + {version, savedAt}`. 순수 |
 | `deserialize(obj)` | `→ state` **또는 throw** | v9 는 그대로, **v2~v8 은 안에서 연쇄로 올린다**(v2→…→v9, §4). 그 외 버전은 throw. 누락 필드 기본값 보정 |
 | `canLoad(obj)` | `→ bool` | `deserialize` 가 통과하는가. **받아들이는 버전 목록을 두 곳에 두지 않기 위해** 실제로 한 번 돌려 보고 답한다 — 화면이 버전 숫자로 직접 판정하면 이관을 늘릴 때마다 멀쩡한 세이브를 거부하게 된다 |
@@ -402,7 +404,7 @@ strike(rng, a, d):
 |---|---|---|
 | `defs` | `{skillId: def}` | 정규화된 정의 |
 | `list` | `[def]` | CSV 순서 |
-| `activesFor(hero, ctx)` | `→ [{id, source}]` | **[개정 2026-09-03 · 출처 고정]** **칸을 정하는 것은 출처다** (skill_design §2) — 배운 것 중 셋을 고르는 게 아니라 출처가 셋이고 각각 하나씩 준다. 순서는 **고유 → 무기군 → 전직**이고 그것이 칸 번호다.<br>· **고유** `source:'innate'` — `hero.innate`, 정의에 있을 때만<br>· **무기군** `source:'weapon_group'` — `ctx.weaponGroup` 과 `ownerId` 가 같은 행. **`ctx.weaponGroup` 을 안 넘기면 이 칸은 빈다**(맨손과 구분되지 않는다 — 넘기는 쪽의 책임이다)<br>· **전직** `source:'advance'` — ⚠ **전직 시스템이 없어**(R16) 그 직업의 전직 임시분 중 `priority` 최소 하나를 임시로 싣는다. 전직이 오면 「고른 갈래가 준 3 중 찍은 하나」로 바뀐다<br>· **빈 출처는 자리를 남기지 않는다** — 반환은 든 것만이고 어느 출처인지는 `source` 가 말한다. 3칸 자리로 펴는 것은 화면의 몫이다(`ui/app.js:ACTIVE_SOURCES`)<br>· 같은 id 가 두 출처에서 오면 **앞선 출처만** 남긴다(고유로 굴린 것이 그 직업 전직 임시분과 같을 때) · `hero.skillOrder`(§2-4)가 있으면 그 순서를 앞에 → `active_slots` 개로 자른다 |
+| `activesFor(hero, ctx)` | `→ [{id, source}]` | **[개정 2026-09-09 · 1스킬 = 1직업]** **칸을 정하는 것은 출처다** (skill_design §2) — 배운 것 중 셋을 고르는 게 아니라 출처가 셋이고 각각 하나씩 준다. 순서는 **고유 → 무기 → 전직**이고 그것이 칸 번호다. **두 출처(고유 · 무기)가 같은 직업 풀에서 온다** (§12-1 규칙 3).<br>· **고유** `source:'innate'` — `hero.innate`, 정의에 있을 때만. 영웅이 태어날 때 **제 직업 풀**에서 굴린 것이다<br>· **무기** `source:'weapon_group'` — `ctx.weaponSkill` 이 가리키는 정의. **무기 개체가 담은 스킬**이고(`item.skill`), ~~`ctx.weaponGroup` 으로 무기군 전용 행을 찾던 것~~ 은 무기군 고정 폐기로 사라졌다. **`ctx.weaponSkill` 을 안 넘기면 이 칸은 빈다**(맨손과 구분되지 않는다 — 넘기는 쪽의 책임이다). ⚠ **`source` 문자열은 `weapon_group` 그대로다** — 무기군이라는 어휘는 죽었지만 키는 산다(R39 와 같은 취급 · 화면 라벨 `sk.src.weapon_group` 은 이미 「무기」다)<br>· **전직** `source:'advance'` — ⚠ **전직 시스템이 없어**(R16) 찍은 것이 없으므로 **언제나 빈 칸**이다(R52)<br>· **빈 출처는 자리를 남기지 않는다** — 반환은 든 것만이고 어느 출처인지는 `source` 가 말한다. 3칸 자리로 펴는 것은 화면의 몫이다(`ui/app.js:ACTIVE_SOURCES`)<br>· 같은 id 가 두 출처에서 오면 **앞선 출처만** 남긴다 — 두 출처가 한 풀에서 가져가므로 **실제로 일어난다**(전사 풀 5행이면 5분의 1). 그때는 칸이 하나로 준다 · `hero.skillOrder`(§2-4)가 있으면 그 순서를 앞에 → `active_slots` 개로 자른다 |
 | `resolve(active)` | `→ def \| null` | 인스턴스 → 정의. 지금은 `defs[active.id]`. ⚠ 변형 노드가 오면 `active.override` 를 여기서 덧씌운다 — 소비자(battle · tactic · 화면)는 `defs[id]` 를 직접 찾지 않고 이것만 부른다 (§8 항목 16) |
 | `castable(def, ctx)` | `→ bool` | `ctx = {self, allies}`(allies = 생존 아군, self 포함). 아래 발동 조건 |
 | `pickReady(actives, t, isCastable)` | `→ active \| null` | **순수** — `actives` 를 바꾸지 않고 정렬도 새 배열에서 한다. `readyAt ≤ t + EPS` **이고** 조건이 참인 것 중 `readyAt` 최소 → 동률이면 **배열 순(칸 순서)**. `skill.csv:priority` 는 동률 결정자가 **아니다**(2026-09-01 — 직업 행이 칸에 앉는 기본 순서에만 쓴다 · battle_design §5 「우선순위는 플레이어가 정한다」 · 고유 칸이 1번에 오면서 CSV 값이 출처를 섞어 화면의 「슬롯 순 = 우선순위」와 어긋나던 것을 바로잡았다) |
@@ -418,7 +420,7 @@ strike(rng, a, d):
 
 | 컬럼 | 값 |
 |---|---|
-| `owner_kind` | `job` · `advance` · `weapon_group` · `unique` (지금 발행된 행은 전부 `job`) |
+| `owner_kind` | `job` · `advance` · `unique` — **스킬은 직업 · 전직 · 유니크 셋으로 나뉜다** [사용자 확정 2026-09-09]. ~~`weapon_group`~~ 은 무기군 고정 폐기(skill_design §12-1 규칙 2)로 어휘에서 빠졌다. 지금 발행된 행은 전부 `job` 이고 `advance`·`unique` 는 미발행 |
 | `owner_id` | 그 출처 안의 id — `owner_kind=job` 이면 직업 id |
 | `kind` | `attack` · `heal` · `buff` |
 | `target` | `enemy_single` · `enemy_all` · `enemy_rotate` · `enemy_chain` · `self` · `party` |
@@ -541,15 +543,15 @@ strike(rng, a, d):
 
 ---
 
-## 4. 세이브 스키마 v17
+## 4. 세이브 스키마 v18
 
 ```
 {
-  version: 17, seed: uint32, createdAt: ms, savedAt: ms,
+  version: 18, seed: uint32, createdAt: ms, savedAt: ms,
   resources: { gold, dust, stigma },
   heroes: [ hero ],                       // §2-4 hero 객체. equipped 키 = 착용 위치 8개 · mastery {nodeId:rank} · masteryPoints · innate(고유 스킬 id) · face(초상 id `<classId>_<k>` 문자열 | null — **직업 풀에서** 생성 시 1회 굴림 · 이후 불변 · 풀 0장인 직업은 null · v13 2026-09-07) · skillOrder?(선택 — 칸 순서)
-  party: [ heroUid ],
-  items: { itemUid: item },               // §2-5 item 객체 — `up`(강화 단계) 포함, 접사 값은 강화가 박아 둔 값
+  party: [ heroUid ],                     // **편성한 순서 그대로** — `party[0]` 이 리더. 새 게임은 `[]` (2026-09-09)
+  items: { itemUid: item },               // §2-5 item 객체 — `up`(강화 단계) 포함, 접사 값은 강화가 박아 둔 값. **무기는 `skill`(담은 액티브 id)도 든다 — v18**
   bag: [ itemUid ],                       // 가방 순서 = 표시 순서
   progress: { cleared: [ stageId ] },
   codexCards: { monsterId: n },           // 도감 레벨의 출처. 누적, 소모 없음
@@ -636,6 +638,17 @@ strike(rng, a, d):
 - **왜 보존하지 않나** — v12 의 정수 얼굴은 **직업과 무관하게** 굴린 번호다(궁수 얼굴이 전사에게 갔다). 보존할 개체성이 없고, 직업 일치가 이 개정의 목적 자체라 남겨 두면 목적이 무너진다
 - **전투 결과는 안 바뀐다** — 얼굴은 표시 전용이다. 전용 스트림이라 전투·선술집·강화·전술 수열과도 안 섞인다 (§5-1)
 - **마법사는 `null`** — 이 이관이 돌던 시점엔 풀이 0장이라 초상이 없었다(같은 날 밤 1장이 들어와 **v13→v14 가 소급한다** — 아래). 화면은 빈 칸으로 둔다(자리표시를 안 깐다 — SCREEN_DESIGN §5). 그래도 `rollFace` 는 rng 를 1회 소비하므로 **직업 구성이 소비 수를 바꾸지 않는다**
+
+**v17 → v18 이관** (2026-09-09 — 직업 스킬 풀 「1스킬 = 1직업」 · GAME_DESIGN §9 09-08·09-09 · DEV_PLAN R59). `skill.csv` 가 통째로 갈렸다 — 무기군 전용 행 10 이 사라지고 직업 풀이 섰다. `deserialize` 가 v17 을 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `items[*].skill` (무기 · 없는 것만) | 그 무기군의 **직업 풀**에서 채운다. 고르는 자는 `uid` 의 번호를 풀 길이로 나눈 나머지다 — **rng 를 안 쓰면서 개체마다 갈리는** 유일한 축이 uid 다. 풀이 비는 무기군(확장 직업)은 `null` |
+| `heroes[*].innate` (직업 풀 **밖**인 것만) | 같은 규칙으로 갈아끼운다. 옛 굴림은 직업을 안 가려서(09-01 판) 마법사가 `wg_axe` 를 들고 있을 수 있고, 그 행은 이제 정의에 아예 없다. **이미 제 직업 것을 든 영웅은 안 건드린다** — 채우기이지 덮어쓰기가 아니다 |
+| `version` | `18` |
+
+- **rng 를 한 번도 안 쓴다** — 이관이 굴림을 태우면 같은 시드가 다른 결과를 낸다 (v14·v15 와 같은 규칙)
+- ⚠ **전투 결과가 바뀐다** — 액티브 2번 칸의 내용물이 갈리기 때문이다. 이관이 만든 값은 결정적이지만 **새 게임의 굴림과는 다른 분포**다(uid 나머지 vs 균등 굴림). 옛 세이브에 한정된 임시성이고, `regroupWeapon`(v15)이 무기군을 옮긴 뒤라도 **새 무기군의 직업 풀**을 본다
 
 **v16 → v17 이관** (2026-09-08 — 「출정 아웃」 폐기 · GAME_DESIGN §9 09-08 · DEV_PLAN R54). `deserialize` 가 v16 을 받으면 제자리에서 올린다:
 
@@ -754,12 +767,12 @@ strike(rng, a, d):
 |---|---|
 | `formula.strike` | 적중 → (적중 시) 치명. **최대 2회**, 빗나가면 1회. 편차 굴림은 없다(무기 개체에 박혀 있다) |
 | `hero.rollAttributes` | 축별 가중치 7회 → 합 맞추기 루프(가변, 최대 500회) → 자리 바꿈(소비 없음) |
-| `hero.rollHero` | **`rollTier` 1회 → `rollTotal` 1회 → `rollAttributes` 7회 → `rollInnate` 1회** = 언제나 10회 [개정 2026-09-08 · R48]. ~~`rollCaps` 7회~~ 는 삭제(개체별 히든 상한 폐지) · ~~`rollAttributes` 의 나머지 보정 rng~~ 도 삭제(결정적 분배로 교체 — 굴림 결과가 소비 수를 밀면 안 된다). ⚠ **등급을 지정해도 `rollTier` 는 굴림을 태운다** — 소비 수가 등급에 의존하면 선술집에서 같은 시드가 다른 결과를 낸다 |
+| `hero.rollHero` | **`rollTier` 1회 → `rollTotal` 1회 → `rollAttributes` 7회 → `rollInnate` 1회** = 언제나 10회 [개정 2026-09-08 · R48]. `rollInnate` 는 **그 영웅의 직업 풀**에서 굴리고(2026-09-09 · §12-1 규칙 1) **풀이 비어도 1회 소비한다**. ~~`rollCaps` 7회~~ 는 삭제(개체별 히든 상한 폐지) · ~~`rollAttributes` 의 나머지 보정 rng~~ 도 삭제(결정적 분배로 교체 — 굴림 결과가 소비 수를 밀면 안 된다). ⚠ **등급을 지정해도 `rollTier` 는 굴림을 태운다** — 소비 수가 등급에 의존하면 선술집에서 같은 시드가 다른 결과를 낸다 |
 | `hero.rollStartParty` | 이름 n → 죄종 n → 직업 n → 특성 n → `rollHero` n명 → **얼굴 n회**(각자 제 직업 풀에서 1회씩 — **풀이 비어도 1회 소비**, 2026-09-07 개정). ⚠ **얼굴이 맨 뒤인 것이 계약이다** — 영웅 안에서 굴리면 앞 영웅의 얼굴이 뒤 영웅의 능력치를 밀어 같은 시드가 다른 파티를 낸다 |
 | `hero.rollStartParty(n)` | 이름 n → 죄종 n → 직업 n → 특성 n → 영웅 i 마다 `rollHero` → 얼굴 n회(직업 풀 · 풀이 비어도 1회) |
 | `hero.grantXp` | 레벨업 1회당 축별 7회 (상한 미달 축만) |
 | `item.rollDrop` | 부위 → 베이스 → 희귀도 → `build` |
-| `item.build` | 접두 죄종 → (레어) 접미 판정 → (성공 시) 접미 죄종 → 접사 수 → 접사마다 (정의 선택 → 값) → **개체 굴림 1회**(무기 = 공격력 편차 / 방어구 = implicit 편차 / **목걸이·반지 = 소비 없음**) → (마법 무기) 원소 |
+| `item.build` | 접두 죄종 → (레어) 접미 판정 → (성공 시) 접미 죄종 → 접사 수 → 접사마다 (정의 선택 → 값) → **개체 굴림 1회**(무기 = 공격력 편차 / 방어구 = implicit 편차 / **목걸이·반지 = 소비 없음**) → (마법 무기) 원소 → **(무기) 스킬 1회** [신설 2026-09-09]. ⚠ 스킬 굴림은 **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다 |
 | `item.build`(시작 무기) | 위와 같되 magic 이라 접미 판정을 하지 않는다 |
 | `item.upgrade` | 옵션 계단(`up` 이 `equip_upgrade_option_interval` 의 배수)이면 **접사 선택 1회**, 아니면 **0회**. 베이스 갈래는 rng 를 안 쓴다 |
 | `battle.spawnRound` | 보스: 호위 수 → 호위마다 풀 선택 / 일반: 정예마다 (죄종 → 풀 → 공통 특성 2) → 일반 수 → 일반마다 풀 |
@@ -815,7 +828,7 @@ strike(rng, a, d):
 | `csvHash` | `FILES` 27종 **각각의 원문 해시** (FNV-1a 32) [정정 2026-09-08 — 23 → 27] | 어느 **파일**이 달라졌는지를 짚는다. ⚠ **이식 대상이 아니다** — 개발 중 회귀 탐지용. 개행 `\n` 정규화 · BOM 제거 후 센다(`parseCsv` 가 둘 다 무시하므로) |
 | `balance` | `balance.csv` **전 키의 값** | 손잡이 5키만 보던 판(08-31 최초)은 밖의 15+ 키가 지문을 깨는데도 "같다"고 통과시켜 **회귀로 오진하게 만들었다.** 지금은 `키: 옛값 → 새값` 을 최대 8개 찍는다 |
 | `knobs` | 5키(`monster_atk_scale`·`monster_hp_scale`·`hero_hp_base`·`weapon_atk_base`·`power_growth_per_level`) | **대조하지 않는다** — 사람이 읽는 통과 메시지의 문구일 뿐이다 (대조는 `balance` 가 한다) |
-| `parties` | 시드 1~10 의 **시작 파티** — 영웅마다 `cls\|sin\|name.en\|trait.en\|**등급**\|고유 스킬\|능력치 7\|시작 무기(드롭 지문 형식)` [개정 2026-09-08 — `tier` 신설 · ~~히든 상한 7~~ 삭제] | `hero.drawDistinct`(이름·죄종·직업·특성) · **`rollTier`** · `rollAttributes` · **`rollInnate`**(2026-09-01) · `item.startingWeapon` 이 전부 여기 있다. 첫 파티의 **레어 1 + 매직 2** 도 여기서 잠긴다. 이름·특성 풀의 **행 순서**는 여기서만 잡힌다 — 이름은 전투에 안 들어가서 `runs` 가 원리상 못 본다. 40런에 중복하지 않고 시드마다 한 번만 적는다 |
+| `parties` | 시드 1~10 의 **시작 파티** — 영웅마다 `cls\|sin\|name.en\|trait.en\|**등급**\|고유 스킬\|능력치 7\|시작 무기(드롭 지문 형식)` [개정 2026-09-08 — `tier` 신설 · ~~히든 상한 7~~ 삭제] | `hero.drawDistinct`(이름·죄종·직업·특성) · **`rollTier`** · `rollAttributes` · **`rollInnate`**(2026-09-01 · **직업 풀** 2026-09-09) · `item.startingWeapon` 이 전부 여기 있다. 첫 파티의 **레어 1 + 매직 2** 도 여기서 잠긴다. 이름·특성 풀의 **행 순서**는 여기서만 잡힌다 — 이름은 전투에 안 들어가서 `runs` 가 원리상 못 본다. 40런에 중복하지 않고 시드마다 한 번만 적는다 |
 
 #### 런 하나를 만드는 절차 (이 순서가 곧 계약이다)
 
@@ -843,7 +856,7 @@ strike(rng, a, d):
 | `tl` | 타임라인 전체의 FNV-1a 해시(`JSON.stringify(timeline)`). 위 요약 필드가 못 보는 **순서·값 변화**를 잡는다 — 어디가 깨졌는지는 위 필드들이 말하고 이 값은 「달라졌다」만 말한다. **결과 불변 리팩터의 잠금장치** (2026-09-01) |
 | `drops[]` | 아래 |
 
-- 드롭 지문 — `rarity|slot|ilvl|sins|base|element|개체굴림|접사`. **접사는 `stat:v` 를 `;` 로 이어 순서까지 적는다** — `item.rollAffixes` 가 풀에서 뽑는 순서는 여기서만 잡힌다. `base` 는 무기면 무기군 id, 그 외는 영문 이름(= 베이스 인덱스). 개체 굴림은 무기 `w<watk>` · 방어구 `def_flat:v` · 목걸이/반지 `-`(소비 없음). **`meta.parties` 의 시작 무기도 같은 형식**이다
+- 드롭 지문 — `rarity|slot|ilvl|sins|base|element|개체굴림|스킬|접사` [`스킬` 신설 2026-09-09 — 무기가 담은 액티브 id · 무기 외는 `-`]. **접사는 `stat:v` 를 `;` 로 이어 순서까지 적는다** — `item.rollAffixes` 가 풀에서 뽑는 순서는 여기서만 잡힌다. `base` 는 무기면 무기군 id, 그 외는 영문 이름(= 베이스 인덱스). 개체 굴림은 무기 `w<watk>` · 방어구 `def_flat:v` · 목걸이/반지 `-`(소비 없음). **`meta.parties` 의 시작 무기도 같은 형식**이다
 - **`uid` 는 지문에 없다** — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (§8 항목 3)
 - 불일치 보고는 **요약이 맨 앞**이다 (`n/40 런 불일치`). 「1런만 어긋남」과 「40런 전부 어긋남」은 이식 검증에서 원인이 전혀 다른데, 예산을 첫 런이 통째로 먹으면 그 둘을 구분할 수 없다. 런당 최대 2개 × 최대 6런을 보여 준다
 - 대조는 기대값 키가 아니라 **키 합집합**을 돈다 — 지문에 필드를 추가하고 재촬영을 잊으면 그 필드가 무기한 미검증으로 남기 때문이다

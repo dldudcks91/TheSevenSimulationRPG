@@ -246,6 +246,13 @@ export function buildSystems(d) {
     // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다.
     // **hero 보다 먼저** 만든다: 영웅이 생성 시 고유 스킬을 굴리려면 후보 id 목록이 먼저 있어야 한다
     const skill = createSkillSystem({ balance: d.balance, rows: d.skillRows ?? [], tagRows: d.skillTagRows ?? [] });
+    /**
+     * 직업 풀 `{classId: [skillId...]}` — **1스킬 = 1직업** (skill_design §12-1 확정 2026-09-08).
+     * 고유 굴림(hero)과 무기 개체 굴림(item)이 **같은 표**를 본다 — 두 출처가 한 풀에서 가져가기 때문이다(규칙 3).
+     * ⚠ 행 순서가 결정론 계약이다 — 풀에서 빼거나 넣으면 같은 시드가 다른 고유·다른 무기를 낸다 (INTERFACE §5-2)
+     */
+    const classSkills = Object.fromEntries((d.classes ?? []).map(c =>
+        [c.id, skill.list.filter(sk => sk.innatePool && sk.ownerKind === 'job' && sk.ownerId === c.id).map(sk => sk.id)]));
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups,
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
@@ -255,13 +262,14 @@ export function buildSystems(d) {
         // 등급 표 — **행 순서가 결정론 계약이다** (INTERFACE §5-2). weight 0(유니크)은 굴림에서 빠진다.
         // 등급이 정하는 것은 총합 대역과 분포 모양 둘뿐이고 상한은 전 영웅 공통이다 (hero_design §1 · §4-3)
         heroTiers: D.heroTiers,
-        // 고유 스킬 풀 = `skill.csv:innate_pool=1` 인 행(id 만) — hero 는 skill 시스템이 아니라 id 목록을 받는다.
-        // ⚠ 행 순서가 결정론 계약이다 — 풀에서 빼거나 넣으면 같은 시드가 다른 고유를 굴린다 (INTERFACE §5-2)
-        skillPool: skill.list.filter(sk => sk.innatePool).map(sk => sk.id),
+        // 고유 스킬 풀 — **직업별**이다 (skill_design §12-1 규칙 1). hero 는 skill 시스템이 아니라 id 목록을 받는다
+        skillPool: classSkills,
     });
     const item = createItemSystem({
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: ELEMENTS,
         itemBases: d.itemBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
+        // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
+        classSkills,
     });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
     const tactic = createTacticSystem({

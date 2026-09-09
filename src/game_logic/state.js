@@ -23,6 +23,10 @@
  *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
  *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
  *   party: [uid], items: {uid: item}, bag: [uid],
+ *     — party = **편성한 순서 그대로**. `party[0]` 이 리더다. **새 게임은 빈 배열**이다 (2026-09-09)
+ *     — items[*].skill = **무기가 담은 액티브 id** | null (무기만 · v18 신설 2026-09-09).
+ *       드롭 때 그 무기군의 **직업 풀**에서 굴려 개체에 박는다 — 액티브 2번 칸의 입력이다
+ *       (skill_design §12-1 규칙 3 · `skill.activesFor` 의 `ctx.weaponSkill`)
  *   progress: {cleared: [stageId]},
  *   codexCards: {monsterId: n}   — 도감 레벨의 출처. 누적 카운트, 소모 없음 (monster_design §8)
  *   codexKills: {monsterId: n}   — 기록만. 레벨의 트리거가 아니다
@@ -57,6 +61,11 @@
  *   v8 → v9 (2026-09-01 — 레어 고유 스킬 프로토타입 배정):
  *     · `heroes[*].innate` — 옛 영웅은 고유 스킬 없이 태어났으므로 **시드에서 소급해 굴린다**
  *       (전용 스트림 `seed ^ 0x5C11` · 전투 수열과 안 섞인다). 이미 가진 영웅은 건드리지 않는다
+ *   v17 → v18 (2026-09-09 확정 — 직업 스킬 풀 「1스킬 = 1직업」 · R59):
+ *     · `items[*].skill` — 무기 개체가 스킬을 안 들고 있으므로 **그 무기군의 직업 풀에서 채운다**.
+ *       **rng 0회** — 이관이 굴림을 태우면 같은 시드가 다른 결과를 낸다(v14·v15 와 같은 규칙).
+ *       대신 `uid` 로 고르므로 결정적이고 무기마다 갈린다
+ *     · `heroes[*].innate` — 고유가 **제 직업 풀 밖**이면(옛 균등 굴림의 산물 · 지워진 무기군 행) 같은 규칙으로 갈아끼운다
  *   v15 → v16 (2026-09-07 확정 — 사제 전용 무기 성경·십자가 · R46):
  *     · 스태프·오브가 마법사 전용이 되어, **사제가 낀** 그 둘만 무기군을 사제 짝으로 갈아끼운다
  *       (스태프 → 성경 · 오브 → 십자가 — 주기 축이 대응한다). 가방에 든 것은 그대로 둔다
@@ -74,7 +83,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
 /**
  * @param {object} deps
@@ -106,7 +115,13 @@ export function createGameSystem(deps) {
         return it;
     }
 
-    /** 새 게임 — 확정한 시작 파티 3명이 곧 로스터·파티. 각자 직업 전속 무기군의 무기 1개를 쥐고 시작한다 */
+    /**
+     * 새 게임 — 확정한 시작 영웅 3명이 곧 로스터다. 각자 직업 전속 무기군의 무기 1개를 쥐고 시작한다.
+     * **파티는 비어 있다** [사용자 지시 2026-09-09 · SCREEN_DESIGN §5] — ~~로스터가 곧 파티~~ 폐기.
+     *   자동으로 채우면 플레이어가 **편성을 한 번도 안 하고** 첫 원정을 떠나므로 편성이 결정이라는 것을 배울 자리가 없다.
+     *   **처음 고른 영웅이 리더**가 되는 것은 새 규칙이 아니다 — `party` 는 넣은 순서 그대로이고 리더는 `party[0]` 이다.
+     * ⚠ 전투를 바로 돌리는 쪽(골든 · 단정 · `?dev=battle|play|offline`)은 **파티를 직접 채워야 한다** — `toggleParty` 는 rng 를 안 쓴다
+     */
     function newGame(seed, candidates, now) {
         const state = {
             version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
@@ -124,7 +139,6 @@ export function createGameSystem(deps) {
             const h = addHero(state, clone(c));
             const w = addItem(state, I.startingWeapon(rng, h.cls));
             h.equipped.weapon = w.uid;
-            state.party.push(h.uid);
         }
         return state;
     }
@@ -229,7 +243,7 @@ export function createGameSystem(deps) {
      */
     function upgradeV8(s) {
         const rng = makeRng(deriveSeed((s.seed >>> 0) ^ 0x5C11, 0));
-        for (const h of s.heroes ?? []) if (h.innate == null) h.innate = H.rollInnate(rng);
+        for (const h of s.heroes ?? []) if (h.innate == null) h.innate = H.rollInnate(rng, h.cls);
         s.version = 9;
         return s;
     }
@@ -356,6 +370,32 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v17 → v18 [2026-09-09] — **직업 스킬 풀 「1스킬 = 1직업」** (skill_design §12 · GAME_DESIGN §9 09-08·09-09).
+     * `skill.csv` 가 통째로 갈렸다 — 무기군 전용 행 10 이 사라지고 직업 풀이 섰다. 옛 세이브가 드는 것 둘을 맞춘다:
+     *   · **무기 개체의 스킬** — 종전엔 무기가 스킬을 안 들었다(무기군이 정했다). 이제 개체가 든다
+     *   · **영웅의 고유** — 옛 굴림은 직업을 안 가려서 마법사가 `wg_axe` 를 들고 있을 수 있다
+     * **rng 를 쓰지 않는다.** 이관이 굴림을 태우면 같은 시드가 다른 결과를 낸다(v14·v15 와 같은 규칙) —
+     *   대신 `uid` 를 풀 길이로 나눈 나머지로 고른다. 결정적이면서 개체마다 갈린다.
+     * 풀이 비는 무기군(확장 직업)은 `null` 로 둔다 — 그 칸이 비는 것뿐이고 던지지 않는다.
+     */
+    function upgradeV17(s) {
+        const poolOf = cls => SK.list.filter(d => d.ownerKind === 'job' && d.ownerId === cls).map(d => d.id);
+        // uid 는 `h3`·`i12` 라 접두 한 글자를 떼고 번호만 쓴다 — 못 읽으면 0(풀의 첫 행)
+        const numOf = uid => { const n = parseInt(String(uid ?? '').slice(1), 10); return Number.isFinite(n) ? n : 0; };
+        const pickBy = (cls, uid) => { const p = poolOf(cls); return p.length ? p[numOf(uid) % p.length] : null; };
+        for (const it of Object.values(s.items ?? {})) {
+            if (it?.slot !== 'weapon' || it.skill != null) continue;
+            it.skill = pickBy(I.groupOf(it)?.classes?.[0], it.uid);
+        }
+        for (const h of s.heroes ?? []) {
+            if (h.innate && poolOf(h.cls).includes(h.innate)) continue;
+            h.innate = pickBy(h.cls, h.uid);
+        }
+        s.version = 18;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -367,7 +407,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -385,6 +425,7 @@ export function createGameSystem(deps) {
         if (s.version === 14) s = upgradeV14(s);
         if (s.version === 15) s = upgradeV15(s);
         if (s.version === 16) s = upgradeV16(s);
+        if (s.version === 17) s = upgradeV17(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.lastReport = s.lastReport ?? null; s.notice = s.notice ?? null;
@@ -405,6 +446,15 @@ export function createGameSystem(deps) {
     const weaponGroupOf = (state, h) => {
         const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
         return w?.group ?? null;
+    };
+    /**
+     * 착용 무기가 **담은 스킬** — 액티브 2번 칸의 입력이다 [개정 2026-09-09 · skill_design §12-1 규칙 3].
+     * ~~무기군이 스킬을 정하던 것~~(`weaponGroupOf`)을 대체한다 — 이제 스킬은 **무기 개체**에 박혀 있고
+     *   같은 도끼라도 개체마다 다르다. 맨손이거나 옛 무기면 `null` 이고 그러면 그 칸이 빈다.
+     */
+    const weaponSkillOf = (state, h) => {
+        const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
+        return w?.skill ?? null;
     };
     /* ~~`isOut(state, uid)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기(base_expedition_design §1-1 개정).
        아웃은 **그 런 안에서만** 살고 런은 출발 순간 통째로 정산되므로, 전투 밖에 아웃된 영웅이 존재하지 않는다. */
@@ -587,7 +637,7 @@ export function createGameSystem(deps) {
     // 액티브는 **전투 안에서만** 산다 — 쿨·창·배리어는 HP 와 같은 취급이라 세이브에 넣지 않는다 (INTERFACE §4)
     const partyUnits = (state, uids) => (uids ?? state.party).map(uid => {
         const h = heroById(state, uid);
-        return { uid, combat: heroCombat(state, h), actives: SK.activesFor(h, { weaponGroup: weaponGroupOf(state, h) }) };
+        return { uid, combat: heroCombat(state, h), actives: SK.activesFor(h, { weaponSkill: weaponSkillOf(state, h) }) };
     });
 
     /**
@@ -726,7 +776,7 @@ export function createGameSystem(deps) {
      * id 문자열을 넘기면 `skill_tag` 조건 4종이 영원히 0 을 센다 (2026-09-01 회귀 수정 · INTERFACE §2-9)
      */
     const partyMembers = state => state.party.map(uid => heroById(state, uid)).filter(Boolean)
-        .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h, { weaponGroup: weaponGroupOf(state, h) }).map(a => SK.resolve(a)).filter(Boolean) }));
+        .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h, { weaponSkill: weaponSkillOf(state, h) }).map(a => SK.resolve(a)).filter(Boolean) }));
 
     /** 첫 배정 — 시드 하나에서 나온다. 리롤 카운터를 안 타므로 **리롤이 다른 칸의 내용을 흔들지 않는다** */
     const initialAssign = state => TC.initialAssign(makeRng(deriveSeed(state.seed ^ 0x7AC7, 0)));
@@ -863,6 +913,6 @@ export function createGameSystem(deps) {
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire,
         masteryState, learnMastery, unlearnMastery, resetMastery,
-        tacticState, tacticBonus, rerollTactic, weaponGroupOf,
+        tacticState, tacticBonus, rerollTactic, weaponGroupOf, weaponSkillOf,
     };
 }

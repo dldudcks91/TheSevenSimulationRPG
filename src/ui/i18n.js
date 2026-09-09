@@ -561,6 +561,10 @@ const STRINGS = {
     // 교체될 자리가 빈 경우 — 옛 판의 「비어 있음」 빈 카드 한 장을 대신하는 하단 힌트 한 줄 (SCREEN_DESIGN §6 개정 2026-09-08)
     'tip.noneEquipped': { ko: '착용 중 없음', en: 'Nothing equipped' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
+    /* 담은 스킬 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
+       공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 문장은 액티브 줄과 **같은 함수**가 낸다 */
+    'tip.skill': { ko: '담은 스킬', en: 'Skill' },
+    'tip.noSkill': { ko: '담은 스킬 없음', en: 'No skill' },
     // 옵션 출처 태그 (2026-09-08 · SCREEN_DESIGN §6) — `affix.csv` 가 통합옵션 풀로 확정돼(GAME_DESIGN §9 09-08)
     // 지금 뜨는 접사는 전부 이것이다. 죄종 칸 풀이 서는 날 `[분노]` 같은 태그가 같은 자리에 들어간다
     'tip.src.random': { ko: '랜덤', en: 'Random' },
@@ -727,11 +731,13 @@ const STRINGS = {
         ko: '행동 주기가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>슬롯 순서</b> → 없으면 기본 공격.<br>'
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
             + '쿨은 실시간으로 돈다. 쿨이 행동 주기의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
-            + '⚠ 스킬 이름은 <b>기획 미작성</b> — 슬롯 UI 확인용 임시값이다',
+            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, <b>영웅 칸과 무기 칸이 같은 직업 풀</b>에서 하나씩 온다<br>'
+            + '⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>이다 — 지금 값은 임시다',
         en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack.<br>'
             + 'One action per turn. A skill <b>replaces</b> that turn\'s attack and there is no mana — the action itself is the only cost<br>'
             + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of the cycle → <b>CDR affixes</b> are the alignment lever<br>'
-            + '⚠ Skill names are <b>unwritten design</b> — placeholders to exercise the slot UI',
+            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class, and the hero slot and the weapon slot both draw from that class pool<br>'
+            + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
     },
     'sk.tab1': { ko: '탭1', en: 'Tab 1' },
     'sk.tab2': { ko: '탭2', en: 'Tab 2' },
@@ -829,12 +835,11 @@ const STRINGS = {
     'ix.g.weapon': { ko: '무기', en: 'Weapons' },
     'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
     'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
-    /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고, 그 안에
-       전직 액티브 + 그 직업이 드는 무기군의 액티브가 함께 선다. 옛 키 둘(`ix.g.skillClass`·`ix.g.skillWeapon` —
-       `owner_kind` 를 그대로 묶던 이름)은 이 개정으로 삭제됐다.
-       `ix.skillFrom` 은 무기군 액티브의 이름표 — 어순을 템플릿이 들어 렌더러가 문장을 잇지 않게 한다 */
+    /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고 그 안에
+       그 직업의 스킬 전부가 선다 — **1스킬 = 1직업**이라 묶는 일이 `owner_id` 하나로 끝난다(2026-09-09).
+       삭제된 키 셋 — `ix.g.skillClass`·`ix.g.skillWeapon`(09-08 · `owner_kind` 를 그대로 묶던 이름) ·
+       **`ix.skillFrom`**(09-09 · 무기군 액티브의 이름표였는데 무기군 고정 폐기로 이름표 자체가 사라졌다) */
     'ix.g.skillCls': { ko: '{cls} 스킬', en: '{cls} Skills' },
-    'ix.skillFrom': { ko: '{skill} ({from})', en: '{skill} ({from})' },
     'ix.count': { ko: '{n}장', en: '{n} images' },
     'ix.style': { ko: '얼굴 스타일', en: 'Face style' },
     'ix.hero': { ko: '영웅 {n}', en: 'Hero {n}' },

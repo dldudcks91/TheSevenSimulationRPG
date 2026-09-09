@@ -80,8 +80,9 @@ const ACTIVE_SOURCES = ['innate', 'weapon_group', 'advance'];
    **칸은 출처 자리다** — 무기를 안 낀 영웅은 「무기」 칸이 비고, 전직 전이면 「전직」 칸이 빈다.
    배정 순서로 채우면 무기 없는 영웅의 전직 스킬이 무기 칸에 앉아 「무엇이 비었나」가 안 읽힌다 */
 const activeCells = h => {
-    const wg = h && G ? SYS.game.weaponGroupOf(G, h) : null;
-    const list = (h ? SYS.skill.activesFor(h, { weaponGroup: wg }) : [])
+    // 무기 칸의 입력은 **무기 개체가 담은 스킬**이다 [개정 2026-09-09 · skill_design §12-1 규칙 3]
+    const wg = h && G ? SYS.game.weaponSkillOf(G, h) : null;
+    const list = (h ? SYS.skill.activesFor(h, { weaponSkill: wg }) : [])
         .map(a => ({ ...skillInfo(a.id), source: a.source }));
     return ACTIVE_SOURCES.map(src => list.find(a => a.source === src) ?? null);
 };
@@ -850,7 +851,10 @@ function heroDoing(h) {
 
 /**
  * 영웅 띠 패널 — 원정(편성)·캐릭터·스킬·선술집 공통. onPick(hero) 가 카드 클릭.
- * 표시 하나 — `on` = 지금 클릭한 영웅(**파란 겉 테두리**) [개정 2026-09-08 — ~~party 겉 테두리~~ 폐기].
+ * **파란 겉 테두리는 띠마다 뜻이 다르다** [개정 2026-09-09 사용자 지시 · SCREEN_DESIGN §5]:
+ *   편성 띠(`partyMode`)에서는 **파티에 든 영웅**(`party`) · 그 밖의 띠에서는 **지금 클릭한 영웅**(`on`).
+ *   한 띠에 한 뜻만 선다 — 편성에서는 클릭이 곧 편성이라 「본 영웅」 표시가 설 자리가 없고,
+ *   09-08 판은 그 자리에 `heroUid` 를 그려서 **눌러도 아무 변화가 없는 화면**이 돼 있었다.
  * 카드 = 초상(카드 전체) + 위칸(왼쪽 지금 하는 일 · 오른쪽 이름) — SCREEN_DESIGN §5 (2026-08-27)
  * 올려놓으면 기본 능력치 툴팁 (2026-08-28, ui/tip.js heroTipCard)
  * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
@@ -862,9 +866,12 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false }
     const strip = el('div', `hero-strip${partyMode ? ' party-mode' : ''}`);
     for (const h of G.heroes) {
         const doing = heroDoing(h);
-        // on = 지금 보고 있는 영웅(안쪽 하이라이트) · party = 전투 파티(겉 테두리). 두 표시는 뜻이 달라 겹쳐도 된다
-        // 파란 테두리는 **클릭한 영웅**이 든다 — ~~파티 겉 테두리~~ 는 2026-09-08 폐기(SCREEN_DESIGN §5)
-        const c = el('div', `hs-card${h.uid === state.heroUid ? ' on' : ''}${h.tier === 'unique' ? ' unique' : ''}`);
+        // 편성 띠면 **파티 소속**이, 아니면 **클릭한 영웅**이 파란 테두리를 든다 (2026-09-09 · SCREEN_DESIGN §5).
+        //   둘을 한 띠에 같이 걸지 않는다 — 같은 표시가 두 뜻을 겸하면 무엇을 골랐는지 못 읽는다
+        const mark = partyMode
+            ? (G.party.includes(h.uid) ? ' party' : '')
+            : (h.uid === state.heroUid ? ' on' : '');
+        const c = el('div', `hs-card${mark}${h.tier === 'unique' ? ' unique' : ''}`);
         c.style.borderTopColor = tierColor(h);
         // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 — 기본 능력치 7 이 함께 뜬다 (2026-08-28)
         bindTipNode(c, () => heroTipCard(h));
@@ -1121,7 +1128,7 @@ function renderCharacter(main) {
 /* ── 비교 툴팁 ── */
 
 /**
- * 아이템 카드 한 장 — 줄 순서는 **머리글 / 이름 / 소속 / 밑수 / 옵션 / 강화 / 태그** (SCREEN_DESIGN §6).
+ * 아이템 카드 한 장 — 줄 순서는 **머리글 / 이름 / 소속 / 밑수 / 담은 스킬 / 옵션 / 태그** (SCREEN_DESIGN §6).
  * @param hints 하단 힌트. 문자열 하나든 배열이든 받는다 — 반지 칸 · 「착용 중 없음」이 함께 설 수 있다
  */
 function tipCard(item, headText, hints = []) {
@@ -1136,6 +1143,14 @@ function tipCard(item, headText, hints = []) {
     if (g) sub.push(t('ch.weaponGroup', { group: L(g), cls: g.classes.map(className).join('/') }));
     // **강화 줄은 없다** (2026-09-08 사용자 지시 · §6) — 단계는 이름 앞의 `+n` 이 이미 들고, 비용·상한은 제련소(§8-2)의 값이다.
     // 그래서 여기서 `game.upgradeState` 를 안 부른다 — 가방 칸의 `+n` 배지와 제련소는 그대로 부른다
+    // **담은 스킬** — 무기가 액티브 한 칸을 통째로 정한다 [신설 2026-09-09 · skill_design §12-1 규칙 3].
+    //   `watk`·`element` 와 같은 **개체 굴림 결과**라 밑수 묶음에 붙고 접사 목록과는 층이 다르다.
+    //   문장은 액티브 줄·스킬 툴팁과 **같은 함수**가 낸다 — 화면이 문장을 만들지 않는다 (부채 #3 을 안 늘린다).
+    //   전투 맥락(주기·공격력)은 안 넘긴다: 툴팁의 주인은 아이템이지 영웅이 아니라 그 조각을 문장이 접는다
+    //   `skillInfo` 는 없는 id 에도 객체를 주므로(빈 칸 방지 규칙) **정의 유무는 `skill.defs` 로 판정한다** —
+    //   안 그러면 스킬 없는 무기가 이름 자리에 `null` 을 찍는다
+    const sk = g && item.skill && SYS.skill.defs[item.skill] ? skillInfo(item.skill) : null;
+    const skLine = sk ? skillLineHtml({ id: item.skill }) : '';
     const hintTags = [].concat(hints).filter(Boolean).map(x => `<span class="muted">${x}</span>`).join('');
     c.innerHTML = `
         <div class="tip-head">${headText}</div>
@@ -1143,6 +1158,12 @@ function tipCard(item, headText, hints = []) {
         <div class="tip-sub">${sub.join(' · ')}</div>
         ${g ? `<div class="tip-implicit">${t('st.atk')} ${eff.watk} (${t(`st.atkType.${item.element ?? g.damageKind}`)}) · ${t('sk.cycleSec', { s: g.period.toFixed(2) })}</div>` : ''}
         ${eff.implicit ? `<div class="tip-implicit">${affixText(eff.implicit)}</div>` : ''}
+        ${g ? (sk ? `<div class="tip-skill">
+            <div class="hd"><span class="ico">${skillImg({ id: item.skill })}</span>
+                <b>${L(sk.name)}</b><i class="cd">${secText(coolSecOf(item.skill))}</i>
+                <i class="lb">${t('tip.skill')}</i></div>
+            ${skLine ? `<div class="ln">${skLine}</div>` : ''}</div>`
+            : `<div class="tip-skill empty">${t('tip.noSkill')}</div>`) : ''}
         ${/* 출처 태그가 **전부 `[랜덤]`인 것은 렌더러의 판단이 아니라 확정된 데이터 상태**다 —
               `affix.csv` 가 통합옵션(죄종 무관) 풀로 확정돼 굴려지는 접사에 죄종 귀속이 없다
               (GAME_DESIGN §9 09-08 · item_design §1). 죄종 칸 풀이 서면 그때 출처를 데이터에서 읽는다 */''}
@@ -2038,9 +2059,9 @@ function codexItem(p) {
 
 /**
  * 스킬 세그먼트 — `skill.csv` 전 행을 **직업으로 묶는다** (§9-1 개정 2026-09-08 사용자 지시).
- * 종전 두 묶음(직업 14 / 무기군 10)은 CSV 순이라 화면이 「아이콘 순」으로 읽혔다. 지금은 그룹 하나가 한 직업이고,
- * 그 안에 **전직 액티브 + 그 직업이 드는 무기군의 액티브**가 함께 선다 — 무기군 ↔ 직업은 `weapon_group.csv:classes`
- * 가 SSOT 라 화면이 배정표를 따로 갖지 않는다(`classes` 가 여러 직업을 들면 그 스킬은 여러 그룹에 함께 선다).
+ * **[개정 2026-09-09 — 1스킬 = 1직업]** 묶는 일이 `owner_id` 하나로 끝난다. ~~무기군 액티브를 그 직업 그룹에
+ * 함께 세우던 갈래~~ 는 무기군 고정 폐기(skill_design §12-1 규칙 2)로 사라졌다 — 무기는 이제 **직업 풀의 스킬을
+ * 담는 그릇**이라 도감에 따로 설 것이 없다(어느 스킬이 어느 무기에 붙었는지는 그 무기의 툴팁이 답한다).
  * 행이 0개인 직업은 그룹째 안 선다 — 「0장인 직업은 타일이 없다」(영웅 초상)와 같은 규칙이다.
  *
  * 아이콘은 **게임이 부르는 그림 그대로**다: `skillIcon` 은 제 파일이 없으면 해시 폴백으로 남의 그림을 잡는다
@@ -2049,21 +2070,13 @@ function codexItem(p) {
  */
 function codexSkill(p) {
     const rows = D.skillRows ?? [];
-    // 무기군 액티브는 이름표에 **무기군**을 단다 — 한 그룹 안에서 전직과 섞이므로 어디서 오는지가 이름에서 읽혀야 한다.
-    // 어순은 `ix.skillFrom` 템플릿이 든다 (렌더러가 문장을 잇지 않는다 — ui/README 다국어 규칙)
-    const tile = (r, from) => artTile(M.skillIcon(r.skill_id),
-        from ? t('ix.skillFrom', { skill: L(skillInfo(r.skill_id).name), from }) : L(skillInfo(r.skill_id).name),
-        'box', `data-skill="${r.skill_id}" data-src="${r.owner_kind}"`);
+    // 출처 칩은 안 단다 — 그룹 머리가 이미 직업을 말하고, `owner_kind` 는 이제 전부 `job` 이라 더 말해 주는 것이 없다
+    const tile = r => artTile(M.skillIcon(r.skill_id), L(skillInfo(r.skill_id).name), 'box', `data-skill="${r.skill_id}"`);
 
     const box = el('div', 'ix-body');
     box.innerHTML = (D.classes ?? []).map(c => {
-        const tiles = [
-            // 전직이 먼저 · 무기군이 뒤. 각 묶음 안의 순서는 CSV 순(= priority 순)을 그대로 쓴다
-            ...rows.filter(r => r.owner_kind === 'advance' && r.owner_id === c.id).map(r => tile(r)),
-            ...rows.filter(r => r.owner_kind === 'weapon_group'
-                && (D.weaponGroups?.[r.owner_id]?.classes ?? []).includes(c.id))
-                .map(r => tile(r, L(D.weaponGroups[r.owner_id]))),
-        ];
+        // 그룹 안의 순서는 CSV 순(= priority 순)을 그대로 쓴다
+        const tiles = rows.filter(r => r.owner_kind === 'job' && r.owner_id === c.id).map(r => tile(r));
         return tiles.length ? artGroup(t('ix.g.skillCls', { cls: className(c.id) }), M.SKILL_ICON_DIR, tiles) : '';
     }).join('');
     p.appendChild(box);
@@ -2219,17 +2232,24 @@ async function boot() {
         state.proScene = Math.max(0, (Number(new URLSearchParams(location.search).get('s')) || 1) - 1);
     }
     if (dev === 'newgame' || (dev === 'battle' && !G)) startGame();
-    if (dev === 'battle') runBattle(D.stageOrder[0], { instant: true });
+    // 새 게임은 **파티가 비어 있다** [2026-09-09 사용자 지시 · SCREEN_DESIGN §5] — 전투를 바로 도는 개발용 경로는
+    //   편성을 대신 해 준다. 유저 흐름에서는 편성 패널이 그 일을 한다(§4-1). 로스터 순서라 리더도 첫 영웅이다
+    const devParty = () => { if (G && G.party.length === 0) for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, now()); };
+    if (dev === 'battle') { devParty(); runBattle(D.stageOrder[0], { instant: true }); }
     // `&tab=` 을 같이 주면 **관전을 켠 채 그 탭**을 연다 [2026-09-08] — 런이 도는 동안의 다른 탭 화면(예: 영웅 띠의
     // 「원정 중」 라벨 · SCREEN_DESIGN §5)은 이 길이 없으면 헤드리스가 못 닿는다. 관전은 재생 위치를 들고 멈춘다
     if (dev === 'play') {
         if (!G) startGame();
+        devParty();
         runBattle(D.stageOrder[0], { tab: new URLSearchParams(location.search).get('bt') });
         if (!TABS.includes(tab)) return;
     }
     if (dev === 'form') {   // 편성 패널이 열린 상태 — 패널은 클릭으로만 열리므로 헤드리스가 닿을 길을 따로 낸다
         if (!G) startGame();
         state.expStage = D.stageOrder[0];
+        // 파티는 **기본으로 안 채운다** — 새 게임은 빈 편성이고 그것이 이 화면의 첫 상태다 (2026-09-09).
+        //   `&party=full` 이면 채운다: 파티 테두리·리더 표시는 **클릭으로만** 만들어져 헤드리스가 못 닿는다 (§10)
+        if (new URLSearchParams(location.search).get('party') === 'full') devParty();
     }
     if (dev === 'tree') {   // 스킬 창이 열린 캐릭터 탭 — 창은 버튼으로만 열린다 (SCREEN_DESIGN §7 · §10)
         if (!G) startGame();
@@ -2252,6 +2272,7 @@ async function boot() {
     // `?tab=forge` · `?tab=shop` 이 바로 닿는다. `?dev=*` 는 클릭으로만 만들어지는 상태에 길을 내는 장치다
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
+        devParty();
         if (!G.run) SYS.game.resolveBattle(G, D.stageOrder[0], now() - 31 * 60000);
         G.run.repeat = true;
         SYS.game.closeRun(G, now()); save();

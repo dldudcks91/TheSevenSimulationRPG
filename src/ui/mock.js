@@ -214,7 +214,11 @@ export const heroFace = hero => {
  * 얼굴 스타일(`faceDir`)을 안 타는 이유 — 스킬 아이콘은 스타일 폴더가 없는 단일 세트다.
  */
 export const SKILL_ICON_DIR = './assets/art/icons/skills/';
-export const SKILL_ICON_FILES = ['war_warcry', 'war_bash', 'wg_sword2h', 'wg_axe', 'pri_judgment'];
+// [개명 2026-09-09] 셋이 죽은 id 를 달고 있었다 — `war_warcry`·`wg_axe`·`wg_sword2h` 는 직업 스킬 풀 개정으로
+//   스킬 자체가 사라져 **어느 스킬의 그림도 아니게** 됐다. 그림이 가리키는 것을 따라 옮겼다:
+//   뿔나팔+음파 → `war_taunt`(도발) · 교차한 도끼 → `war_doubleswing` · 땅에 꽂힌 검+파문 → `war_quake`(지각균열).
+//   ⚠ 뒤의 둘은 키잉이 날아가 거의 흰색이다 — 재발주는 `/icon-prompt` (SCREEN_DESIGN §9-1)
+export const SKILL_ICON_FILES = ['war_taunt', 'war_bash', 'war_quake', 'war_doubleswing', 'pri_judgment'];
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);

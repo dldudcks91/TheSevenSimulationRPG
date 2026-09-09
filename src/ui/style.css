@@ -454,6 +454,22 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .tip-sk-ico { margin-right: 7px; display: inline-block; width: 22px; height: 22px; vertical-align: middle; }
 .tip-sk-ico img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
 .tip-desc { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.55; word-break: keep-all; }
+/* 담은 스킬 [신설 2026-09-09 · SCREEN_DESIGN §6] — 무기가 액티브 한 칸을 통째로 정하므로 툴팁이 그것을 말한다.
+   밑수(`.tip-implicit`) 바로 아래 · 접사 목록 위. 위아래 얇은 선으로 **개체 굴림 묶음**과 옵션을 가른다.
+   문장(`.ln`)은 액티브 줄(`.act-slot .ln`)과 같은 함수가 낸 것이라 크기도 같은 단으로 맞춘다 */
+.tip-card .tip-skill {
+    margin: 0 0 7px; padding: 6px 0;
+    border-top: 1px solid var(--border-dark); border-bottom: 1px solid var(--border-dark);
+}
+.tip-card .tip-skill .hd { display: flex; align-items: center; gap: 6px; }
+.tip-card .tip-skill .ico { width: 22px; height: 22px; flex: 0 0 auto; }
+.tip-card .tip-skill .ico img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
+.tip-card .tip-skill b { font-size: var(--fs-sm); }
+.tip-card .tip-skill .cd { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+/* 라벨은 **오른쪽 끝**으로 민다 — 이름이 먼저 읽혀야 하고 라벨은 「이게 무슨 줄인가」만 답한다 */
+.tip-card .tip-skill .lb { margin-left: auto; font-size: var(--fs-2xs); color: var(--text-muted); letter-spacing: 1px; }
+.tip-card .tip-skill .ln { margin-top: 4px; font-size: var(--fs-xs); color: var(--text-secondary); line-height: 1.35; word-break: keep-all; }
+.tip-card .tip-skill.empty { color: var(--text-muted); font-size: var(--fs-xs); }
 .tip-card ul { list-style: none; }
 .tip-card li { color: #8fb8ff; }
 /* 옵션 출처 태그 (2026-09-08 · SCREEN_DESIGN §6) — 접사 줄 **앞**에 선다. 지금은 전부 `[랜덤]` 이라
@@ -1320,7 +1336,16 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 /* 전투 파티 = **겉 테두리** (2026-08-28 사용자 지시). 옛 화면은 위칸 글씨를 「대기」→「전투 파티」로 바꿨는데,
    그러면 클릭이 고른 티가 안 나고 그 줄이 「보낼 수 있는가」와 「골랐는가」 두 가지를 겸해 읽혔다.
    안쪽 하이라이트(.on = 보고 있는 영웅)와 뜻이 달라 겹쳐도 서로 안 먹는다 — 하나는 안, 하나는 밖 */
-/* ~~.hs-card.party (전투 파티 겉 테두리)~~ 는 2026-09-08 폐기 — 파티 소속은 카드가 그리지 않는다 */
+/* **되살림 2026-09-09 사용자 지시** (SCREEN_DESIGN §5) — 편성 띠에서만 선다. `.on` 과 **같은 모양**을 쓰는 이유는
+   그것이 이 화면의 「골랐다」 표시이기 때문이다: 편성에서는 `.on` 을 아예 안 걸므로 두 규칙이 한 카드에서 안 만난다.
+   안 고른 카드는 **흐리지 않는다** — 흐림은 이미 「못 누른다」(.downed)의 표시다 */
+.hero-strip.party-mode .hs-card.party {
+    border-color: var(--color-info); background: #22223a;
+    /* `.on` 보다 한 단 굵고 은은한 번짐을 더한다 [사용자 지시 2026-09-09 — 「확실하게 테두리로」] —
+       편성은 이 화면의 유일한 결정이라 표시가 배경에 묻히면 안 된다 */
+    outline: 3px solid var(--color-info); outline-offset: 1px;
+    box-shadow: 0 0 0 1px var(--color-info), 0 0 10px rgba(90, 150, 255, .35);
+}
 .hs-card.unique { border-bottom-color: #6a4a1a; }
 .hs-card.downed { opacity: .62; }
 .hs-card.empty {

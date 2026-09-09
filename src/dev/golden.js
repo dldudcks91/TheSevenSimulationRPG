@@ -46,7 +46,7 @@ export function csvHash(text) {
 
 /**
  * 드롭 1개의 지문 — `rollDrop` → `build` → `rollAffixes` 의 **rng 소비를 전부** 드러낸다.
- *   `rarity|slot|ilvl|sins|base|element|개체굴림|접사`
+ *   `rarity|slot|ilvl|sins|base|element|개체굴림|스킬|접사`
  * **접사는 stat·값·순서를 그대로 적는다** — `rollAffixes` 가 풀에서 뽑는 순서가 바뀌면 여기서만 잡힌다.
  * `uid` 는 넣지 않는다 — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (D-A2).
  * 시작 무기(`item.startingWeapon`)도 **같은 형식**으로 적는다 (`meta.parties`).
@@ -61,6 +61,7 @@ export const dropSig = it => [
     it.watk != null ? `w${it.watk}`               // 개체 굴림 — 무기는 watk
         : it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 방어구는 implicit
             : '-',                                //         목걸이·반지는 소비 없음
+    it.skill ?? '-',                              // 무기가 담은 액티브 — 그 무기군의 직업 풀에서 개체마다 굴린다 (2026-09-09 · skill_design §12-1)
     it.affixes.map(a => `${a.stat}:${a.v}`).join(';') || '-',
 ].join('|');
 
@@ -111,7 +112,9 @@ function partyFingerprint(SYS, B, NOW, seed) {
     const party = SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max);
     const G = SYS.game.newGame(seed, party, NOW);
     const kv = o => Object.entries(o ?? {}).map(([k, v]) => `${k}:${v}`).join(',') || '-';
-    return G.party.map(uid => {
+    // **로스터 순서**로 적는다 [2026-09-09] — `newGame` 이 파티를 안 채우게 되면서(사용자 지시) `G.party` 가 비었다.
+    //   로스터는 넣은 순서 그대로라 **지문은 한 글자도 안 바뀐다**(옛 `G.party` 와 같은 순서 · 같은 영웅)
+    return G.heroes.map(h => h.uid).map(uid => {
         const h = SYS.game.heroById(G, uid);
         const w = G.items[h.equipped?.weapon];
         return [
@@ -131,6 +134,10 @@ function partyFingerprint(SYS, B, NOW, seed) {
 function runFingerprint(SYS, B, NOW, seed, stage) {
     const party = SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max);
     const G = SYS.game.newGame(seed, party, NOW);
+    // 파티를 **로스터 순서로** 채운다 [2026-09-09] — 새 게임은 파티가 비어 있고(사용자 지시) 편성은 플레이어의 몫이다.
+    //   `toggleParty` 는 rng 를 안 쓰고 순서도 옛 `newGame` 이 넣던 것과 같으므로 **런 지문이 안 움직인다**.
+    //   ⚠ **전술 칸을 읽기 전에** 채워야 한다 — 전술 조건이 파티 구성을 센다
+    for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, NOW);
     G.progress.cleared = [101, 102, 103].filter(s => s < stage);      // 해금만 풀어준다 (성장 없음)
 
     // 전술 칸 — `newGame` 직후 상태 그대로 (인위적으로 켜지 않는다, D-A4). 켜진 효과가 전투 수치에 들어가므로
