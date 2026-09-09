@@ -765,6 +765,25 @@ export function createGameSystem(deps) {
         return { ok: true, hero: h };
     }
 
+    /**
+     * 해고 — 로스터에서 지운다. **되돌릴 수 없다** [신설 2026-09-09 사용자 확정 · INTERFACE §2-7].
+     * 막는 것 둘:
+     *   · `equipped` — **장비를 하나라도 걸치고 있으면 못 한다.** 다 벗으면 아이템이 가방에 남으므로
+     *     「해고하면 장비가 어떻게 되나」라는 질문 자체가 생기지 않는다 (사용자 확정).
+     *   · `last` — 마지막 한 명은 못 지운다. 0명이 되면 원정을 못 돌려 골드가 안 들어오고 고용도 못 해 복구가 막힌다.
+     * **반환물은 없다** — 있으면 GAME_DESIGN §10 이 경고한 고용→해고 루프가 열린다(고용은 골드를 받는다).
+     * `party` 에서도 뺀다 — 지운 uid 가 남으면 편성·출발이 유령을 든다. `run` 은 uid 를 안 들어 런 중에도 안전하다.
+     */
+    function dismiss(state, uid) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        if (Object.values(h.equipped ?? {}).some(Boolean)) return { ok: false, err: 'equipped' };
+        if (state.heroes.length <= 1) return { ok: false, err: 'last' };
+        state.party = state.party.filter(u => u !== uid);
+        state.heroes = state.heroes.filter(x => x.uid !== uid);
+        return { ok: true };
+    }
+
     /* ── 파티 전술 — 칸 해금(합산 레벨) · 리롤 (tactic_card_design §5 확정 2026-08-30) ── */
 
     /** 해금 기준 = **로스터 전원의 레벨 합.** 파티 3명이 아니라 보유 영웅 전부다 — 벤치를 키워도 칸이 열린다 */
@@ -911,7 +930,7 @@ export function createGameSystem(deps) {
         equipTarget, equip, unequip, salvage,
         toggleParty,
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
-        tavernCandidates, tavernState, tavernReroll, hire,
+        tavernCandidates, tavernState, tavernReroll, hire, dismiss,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, rerollTactic, weaponGroupOf, weaponSkillOf,
     };

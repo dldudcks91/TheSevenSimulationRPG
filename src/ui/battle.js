@@ -56,7 +56,7 @@ const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math
  * @returns 정리 함수
  */
 export function mountBattle(container, opts) {
-    const { result, stageId, heroes, resume } = opts;
+    const { result, stageId, heroes, resume, form } = opts;
     const stage = D.stages[stageId];
     const state = {
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
@@ -71,6 +71,9 @@ export function mountBattle(container, opts) {
         // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
         // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
         layout: opts.layout === 'split' ? 'split' : 'wide',
+        // 진형 깊이 = 랭크 수 (2026-09-09 · ⚠ 목업 · SCREEN_DESIGN §4-1) — 파티 카드를 미는 폭을 CSS 가 이 값으로 정한다.
+        // 진형을 안 넘겨 준 부름(개발용 라우트 등)은 1 = 한 줄 = **아무도 안 밀린다**
+        formDepth: form?.depth ?? 1,
         onKey: null,                 // Esc 리스너 — 정리 함수가 뗀다
     };
 
@@ -79,6 +82,7 @@ export function mountBattle(container, opts) {
         const h = heroes.find(x => x.uid === p.uid);
         return {
             key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
+            rank: form?.byUid?.[p.uid] ?? 0,   // 진형의 랭크 번호 (0 = 전열) — 카드 자리에만 쓴다 (2026-09-09)
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
             atk: p.atk, atkType: p.atkType,   // 툴팁 문장의 피해 — 전투에는 안 쓴다 (INTERFACE §2-6)
@@ -273,6 +277,9 @@ function renderUnits(state, root) {
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
         const side = root.querySelector(sel);
         side.innerHTML = '';
+        // 진형 (⚠ 목업 · 2026-09-09 · SCREEN_DESIGN §4-1·§4-2) — **파티 줄에만** 깊이를 단다. 적은 진형이 없다.
+        // 깊이 + 랭크 두 값만 넘기고 미는 폭은 CSS 가 든다(수치가 스타일에 산다 — 인라인 없음)
+        if (list === state.party) side.dataset.depth = state.formDepth;
         for (const u of list) {
             const n = document.createElement('div');
             const boss = u.grade === 'stage_boss' || u.grade === 'chapter_boss';
@@ -342,6 +349,8 @@ function renderUnits(state, root) {
             // 카드는 창이 걸리든 말든 옛 크기 그대로다 (SCREEN_DESIGN §4-2)
             const cell = document.createElement('div');
             cell.className = 'unit-slot';
+            // 진형의 자리는 **칸**이 든다 (2026-09-09) — 카드가 아니라 칸을 밀어야 창 뱃지 줄이 카드를 따라간다
+            if (u.side === 'party') cell.dataset.rank = u.rank ?? 0;
             cell.appendChild(n);
             cell.insertAdjacentHTML('beforeend', '<div class="buff-row"></div>');
             u.buffRow = cell.lastElementChild;

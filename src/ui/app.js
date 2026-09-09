@@ -32,6 +32,10 @@
  *   세이브는 프롤로그보다 **먼저** 쓰인다(startGame 이 newGame → save 를 끝낸 뒤 화면만 프롤로그로 둔다) — 읽다 닫아도 이어하기로 돌아온다.
  *   본문은 한국어만 있다(사용자 지시) — i18n 의 pro.* 참조. 개발용 경로는 ?dev=prologue 이고 나머지 dev 경로는 프롤로그를 건너뛴다.
  *
+ * 2026-09-09 — **진형은 ⚠ 목업이다** (formPanel 안 .fm-box · SCREEN_DESIGN §4-1). 템플릿(2·1 / 1·2 / 1·1·1) + 칩 드래그 배치.
+ *   기획이 아직 「위치는 두지 않는다」(skill_design §9-1 규칙 5)라 **값은 화면 상태(state.expForm)에만 산다** —
+ *   세이브(G)에 안 들어가고 SYS.* 를 하나도 안 부른다. 동사를 가른다: **클릭은 소속**(로스터 띠 = 파티 넣고 빼기) · **드래그는 자리**(칩).
+ *
  * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판으로 로그 창이 열린 채 · &lay=split 이면 옛 나눔 배치) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (편성 패널이 열린 상태) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태)
  */
 
@@ -212,6 +216,16 @@ const POSTS = [
    마스터 시드(전투·드롭)는 확정 시각으로 찍는다 — 플레이마다 다른 전투, 같은 세이브 안에선 같은 전투. */
 const ROLL_SEED = 20260824;
 
+/* 진형 템플릿 (⚠ 목업 · SCREEN_DESIGN §4-1) — 키 = 버튼 글자, 값 = 랭크별 정원.
+   정원 합은 전부 3(= balance.csv:party_size_max)이라 파티 전원이 언제나 들어간다.
+   기획 미확정이라 CSV(SSOT)로 안 간다 — 여기 값이 굳으면 확정으로 읽힌다 */
+/* ⚠ Map 이다 — 평범한 객체면 `'3'` 이 **배열 인덱스꼴 키**라 순서가 맨 앞으로 튄다(JS 키 순서 규칙).
+   화면의 아이콘 순서가 곧 이 순서라 삽입 순서를 그대로 지키는 그릇이 필요하다 */
+const FORM_TPLS = new Map([['2-1', [2, 1]], ['1-2', [1, 2]], ['3', [3]]]);
+/* 랭크 수가 라벨을 정한다 — 두 줄이면 전열·후열, **한 줄(3)이면 전열 하나**(뒤가 없으니 나눌 것도 없다).
+   랭크 최대가 둘이라 보드 높이는 두 줄분으로 고정된다 (SCREEN_DESIGN §4-1 · 「패널 크기는 상태에 흔들리지 않는다」 2026-08-28) */
+const FORM_RANK_LABELS = { 1: ['exp.form.front'], 2: ['exp.form.front', 'exp.form.back'] };
+
 const state = {
     screen: 'start',        // start | game
     tab: 'expedition',
@@ -234,6 +248,8 @@ const state = {
     expStage: null,
     // 반복 의사 — G.run.repeat 은 「진행 중인 런」의 값이라 출발 **전에는** 쓸 곳이 없다. 화면이 들고 있다가 출발할 때 런에 옮긴다
     expRepeat: false,
+    // 진형 목업 (SCREEN_DESIGN §4-1) — 템플릿 + 랭크별 uid. 기획 미확정이라 세이브·전투에 안 실린다 (화면 상태뿐)
+    expForm: { tpl: '2-1', ranks: [[], [], []] },
     // 탭 위에 겹쳐 뜨는 창 (SCREEN_DESIGN §2 창 레이어) — null | 'skill'. 한 번에 한 장만 뜬다
     modal: null,
     // 프롤로그가 보여 주는 씬 번호 (SCREEN_DESIGN §3-1) — 0 부터. 세이브에 안 들어간다
@@ -319,7 +335,11 @@ function render() {
  * **닫는 길이 셋**인 이유는 창이 화면을 덮기 때문이다: 닫기 버튼 · 판 바깥 클릭 · `Esc`(bindEsc).
  * 창 안에서 랭크를 찍으면 render() 가 통째로 다시 돌지만 `state.modal` 이 남아 있어 **창은 열린 채**다 (§7).
  */
-const MODALS = { skill: { title: 'nav.skill', body: skillTreeBody } };
+const MODALS = {
+    skill: { title: 'nav.skill', body: skillTreeBody },
+    // 해고 — 되돌릴 수 없어서 두 번 누르게 한다 (SCREEN_DESIGN §3 · §6). 대상 영웅은 캐릭터 탭이 이미 골랐다
+    dismiss: { title: 'ch.dismiss', body: dismissBody },
+};
 
 function renderModal() {
     const layer = $('#modal');
@@ -496,7 +516,8 @@ function runBattle(stageId, { instant = false, tab = null } = {}) {
         state.battle = null; state.exp = 'report'; render(); return;
     }
     // tab — 개발용 ?dev=play&bt=dmg: 로그 창을 누적 데미지 판으로 **열어** 헤드리스가 클릭 없이 닿게 한다 (2026-09-03: 창이 됐으므로 win 도 같이 넘긴다)
-    state.battle = { result: r.result, stageId, resume: tab ? { t: 0, speed: 1, running: true, tab, win: true } : undefined };
+    // form — 진형을 **출발 순간에 찍는다** (2026-09-09). 관전 아레나가 이 값으로 파티 카드를 위아래로 민다
+    state.battle = { result: r.result, stageId, form: formSnapshot(), resume: tab ? { t: 0, speed: 1, running: true, tab, win: true } : undefined };
     state.exp = 'battle';
     render();
 }
@@ -514,6 +535,8 @@ function renderExpedition(main) {
         const { result, stageId } = state.battle;
         stopBattle = mountBattle(main, {
             result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
+            // 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 출발 순간에 찍은 스냅샷이다. 재생기는 이 값으로 **자리만** 민다
+            form: state.battle.form,
             // 관전 배치 — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
             // 재생 위치(resume)가 아니라 **취향**이라 화면 상태가 든다 — 런이 바뀌어도 남고, 세이브에는 안 들어간다
             layout: state.btLayout, onLayout: v => { state.btLayout = v; },
@@ -631,11 +654,191 @@ function renderExpIdle(main, nav) {
     main.appendChild(zp);
 }
 
+/* ═══════════ 진형 (⚠ 목업 — SCREEN_DESIGN §4-1) ═══════════
+   기획이 아직 「위치는 두지 않는다」(skill_design §9-1 규칙 5)라 값은 state.expForm 에만 산다 —
+   세이브(G)·전투(SYS.*)를 하나도 안 건드린다. 기획이 진형을 확정하면 그때 game_logic 으로 이관한다 */
+
+/** 진형을 파티와 맞춘다 — 렌더마다 한 번, 진형 박스를 만들기 직전에 돈다. 반환값은 그 템플릿의 랭크별 정원.
+ *  결정적이고 순서를 보존한다: ① 파티에 없는 uid 를 뺀다 ② 정원 초과분은 **뒤에서부터** 뽑아 대기로 돌린다
+ *  (「나중에 배치된 쪽부터 밀려난다」) ③ 미배치(파티 순서) + 대기를 **앞 랭크부터** 빈 정원에 채운다.
+ *  템플릿 전환은 tpl 만 바꾸고 render() — 재배치는 전부 여기서 일어난다 */
+function reconcileForm() {
+    const f = state.expForm;
+    const caps = FORM_TPLS.get(f.tpl) ?? FORM_TPLS.get('2-1');
+    const ranks = [0, 1, 2].map(i => (f.ranks[i] ?? []).filter(uid => G.party.includes(uid)));
+    const spill = [];
+    for (let i = 0; i < 3; i++) {
+        const cap = caps[i] ?? 0;
+        while (ranks[i].length > cap) spill.push(ranks[i].pop());
+    }
+    const placed = new Set(ranks.flat());
+    const queue = G.party.filter(uid => !placed.has(uid)).concat(spill);
+    for (let i = 0; i < 3 && queue.length; i++) {
+        const cap = caps[i] ?? 0;
+        while (ranks[i].length < cap && queue.length) ranks[i].push(queue.shift());
+    }
+    f.ranks = ranks;
+    return caps;
+}
+
+/** 진형을 관전에 넘길 꼴로 굳힌다 (2026-09-09) — `{byUid: {uid: 랭크 번호}, depth: 랭크 수}`.
+ *  **출발 순간에 한 번** 찍는다: 관전 중에 편성으로 돌아가 템플릿을 바꿔도 재생 중인 전투의 줄은 안 흔들린다
+ *  (전투 결과가 출발 순간의 파티를 담은 것과 같은 이유).
+ *  ⚠ 여전히 화면 상태뿐이다 — 세이브(G)에도 전투 계산(SYS.*)에도 안 실린다. 재생기는 이 값으로 **카드 자리만** 민다 */
+function formSnapshot() {
+    const caps = reconcileForm();
+    const byUid = {};
+    state.expForm.ranks.forEach((list, r) => { for (const uid of list) byUid[uid] = r; });
+    return { byUid, depth: caps.length };
+}
+
+/** 어느 자리에 있나 — `[랭크, 칸]` 또는 못 찾으면 null */
+function formSlotOf(uid) {
+    const ranks = state.expForm.ranks;
+    for (let r = 0; r < 3; r++) { const i = ranks[r].indexOf(uid); if (i >= 0) return [r, i]; }
+    return null;
+}
+
+/**
+ * 놓았다 — 출발지가 둘이라 규칙도 둘이다. 바뀐 게 있으면 true.
+ *   ① **이미 파티인 영웅**(자리 → 자리 · 띠에서 끌어도 같다) — 빈 칸이면 이동, 주인이 있으면 **자리 맞바꿈**
+ *   ② **벤치 영웅**(띠 → 자리) — 주인이 있으면 그 영웅이 **파티에서 나가고**(교체) 그 칸을 차지한다
+ * 파티 소속은 세이브 값이라 `SYS.game.toggleParty` 를 그대로 부른다(띠 클릭과 같은 문). 자리는 화면 상태뿐이다.
+ */
+function formDrop(src, tr, ti) {
+    const ranks = state.expForm.ranks;
+    const target = ranks[tr][ti];                    // undefined = 빈 칸
+    if (target === src.uid) return false;
+    if (G.party.includes(src.uid)) {
+        const from = formSlotOf(src.uid);
+        if (!from) return false;
+        const [fr, fi] = from;
+        if (target === undefined) { ranks[fr].splice(fi, 1); ranks[tr].push(src.uid); }
+        else { ranks[fr][fi] = target; ranks[tr][ti] = src.uid; }
+        return true;
+    }
+    // 벤치에서 왔다 — 자리 주인을 먼저 내보내야 정원이 빈다
+    if (target !== undefined) {
+        if (!SYS.game.toggleParty(G, target, now()).ok) return false;
+        ranks[tr].splice(ti, 1);
+    }
+    const r = SYS.game.toggleParty(G, src.uid, now());
+    if (!r.ok) { flash({ full: 'exp.partyFull' }[r.err] ?? 'exp.partyFull'); return true; }
+    save();
+    ranks[tr].splice(ti, 0, src.uid);                // 앞 랭크부터 채우는 reconcile 대신 **놓은 칸**에 꽂는다
+    return true;
+}
+
+/** 드래그가 방금 끝났나 — 띠 카드는 클릭(소속)도 겸하므로 드래그 뒤의 클릭 한 번을 삼킨다 */
+let formDragEnded = false;
+
+/**
+ * 진형 드래그 = **자리**를 정한다. 잡는 곳이 둘이다 — 로스터 띠 카드(`rank: null`) · 보드에 놓인 영웅.
+ * 4px 를 넘어야 드래그로 친다 — 임계 미만이면 띠 카드의 **클릭(파티 넣고 빼기)이 그대로 산다.**
+ * 고스트는 클론 하나(원본은 자리에 남고 `.drag` 로 흐려진다) · 놓을 자리는 elementFromPoint 로 찾는다.
+ */
+function bindFormDrag(node, src) {
+    node.onpointerdown = ev => {
+        if (ev.button) return;
+        const x0 = ev.clientX, y0 = ev.clientY;
+        const rect = node.getBoundingClientRect();
+        let ghost = null;
+        const move = e => {
+            if (!ghost) {
+                if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 4) return;
+                ghost = node.cloneNode(true);
+                ghost.classList.add('fm-ghost');
+                ghost.style.width = `${rect.width}px`;
+                ghost.style.height = `${rect.height}px`;
+                document.body.appendChild(ghost);
+                node.classList.add('drag');
+            }
+            ghost.style.left = `${e.clientX - (x0 - rect.left)}px`;
+            ghost.style.top = `${e.clientY - (y0 - rect.top)}px`;
+        };
+        const up = e => {
+            node.onpointermove = null; node.onpointerup = null; node.onpointercancel = null;
+            if (node.hasPointerCapture(e.pointerId)) node.releasePointerCapture(e.pointerId);
+            if (!ghost) return;                       // 임계 미만 — 누르기만 했다(띠면 클릭이 이어받는다)
+            ghost.remove();
+            node.classList.remove('drag');
+            formDragEnded = true;                     // 뒤따라 오는 클릭 한 번을 삼킨다
+            setTimeout(() => { formDragEnded = false; }, 0);
+            const tgt = document.elementFromPoint(e.clientX, e.clientY)?.closest('.fm-cell');
+            if (!tgt || tgt === node) return;
+            if (formDrop(src, Number(tgt.dataset.rank), Number(tgt.dataset.idx))) render();
+        };
+        node.setPointerCapture(ev.pointerId);
+        node.onpointermove = move;
+        node.onpointerup = up;
+        node.onpointercancel = up;
+        ev.preventDefault();
+    };
+}
+
+/**
+ * 진형 박스 — 왼쪽에 **정사각 템플릿 아이콘 3개를 가로로**(모양을 점으로 그린다 — 글자가 없어 언어 중립이다),
+ * 오른쪽에 **보드**(랭크 줄 = 라벨 + 칸 · 칸은 영웅 띠 카드와 같은 크기).
+ * 랭크 최대가 둘이라 보드 높이가 두 줄분으로 고정된다 — 한 줄짜리(3)는 가운데에 서고 패널 크기는 안 흔들린다.
+ */
+function formBox() {
+    const caps = reconcileForm();
+    const f = state.expForm;
+    const box = el('div', 'fm-box');
+    box.appendChild(el('div', 'fm-head', `<b>${t('exp.form.h')}</b>`));
+    const main = el('div', 'fm-main');
+
+    /* 왼쪽 — 아이콘 셋을 **가로로** 나란히 (2026-09-09 사용자 지시 — 옛 세로 기둥 폐기).
+       머리줄로 올리지 않고 보드 **옆**에 두는 이유는 세로다: 머리줄에 얹으면 아이콘 높이가 그대로 패널에 더해져
+       보내기 버튼이 화면 밖으로 나간다(실측). 보드 옆이면 세로 비용이 0 이다.
+       셋 중 하나를 고르는 것이라 .toggle(초록 ON/OFF)이 아니라 .on(고른 것)을 쓴다.
+       아이콘은 정원 배열 그대로 점을 찍은 것이라 템플릿을 늘리면 그림도 저절로 따라온다 */
+    const tpls = el('div', 'fm-tpls');
+    for (const [key, shape] of FORM_TPLS) {
+        const b = el('button', `btn fm-tpl${key === f.tpl ? ' on' : ''}`,
+            shape.map(n => `<i>${'<b></b>'.repeat(n)}</i>`).join(''));
+        b.onclick = () => { f.tpl = key; render(); };
+        tpls.appendChild(b);
+    }
+    main.appendChild(tpls);
+
+    /* 보드. 빈 칸은 영웅 얼굴과 같은 크기라 「여기에 끌어다 놓는다」가 크기로 읽힌다.
+       줄은 랭크 수만큼만 그린다 — 보드 높이가 CSS 에서 고정이라 빈 줄을 예약하지 않아도 패널이 안 흔들린다 */
+    const board = el('div', 'fm-board');
+    const labels = FORM_RANK_LABELS[caps.length] ?? [];
+    for (let r = 0; r < caps.length; r++) {
+        const cap = caps[r];
+        const row = el('div', 'fm-row');
+        row.appendChild(el('div', 'fm-label', labels[r] ? t(labels[r]) : ''));
+        const cells = el('div', 'fm-cells');
+        for (let i = 0; i < cap; i++) {
+            const uid = f.ranks[r][i];
+            const h = uid ? heroById(uid) : null;
+            const cell = el('div', `fm-cell${h ? ' filled' : ''}`);
+            cell.dataset.rank = r;
+            cell.dataset.idx = i;
+            if (h) {
+                // 리더 태그는 띠와 같은 키를 쓴다 — 리더는 G.party[0] 이지 진형의 자리가 아니다
+                cell.innerHTML = `<div class="fm-nm">${L(h.name)}</div>${heroFace(h)}`
+                    + (uid === G.party[0] ? `<span class="hs-leader">${t('exp.leader')}</span>` : '');
+                cell.style.borderTopColor = tierColor(h);
+                bindFormDrag(cell, { uid });
+            }
+            cells.appendChild(cell);
+        }
+        row.appendChild(cells);
+        board.appendChild(row);
+    }
+    main.appendChild(board);
+    box.appendChild(main);
+    return box;
+}
+
 /**
  * 편성 패널 — 지역을 골랐을 때 **그 행 바로 아래**로 펼쳐진다 (2026-08-28, SCREEN_DESIGN §4-1).
- * 갈 곳이 정해진 뒤에 누구를 보낼지 정한다: 영웅 띠(클릭 = 파티 토글) + 경고 줄 + 액션 버튼 둘(반복 원정 · 보내기).
+ * 갈 곳이 정해진 뒤에 누구를 보낼지 정한다: 영웅 띠(클릭 = 파티 토글) + 경고 줄 + 진형(⚠ 목업) + 액션 버튼 둘(반복 원정 · 보내기).
  * 머리도 닫기 버튼도 없다 — 무엇에 딸린 패널인지는 위 행이 말하고, 닫는 것은 그 행을 다시 누르는 것이다.
- * **크기는 상태에 흔들리지 않는다** — 위 셋이 전부 항상 있는 부품이다.
+ * **크기는 상태에 흔들리지 않는다** — 위 넷이 전부 항상 있는 부품이다(진형도 랭크 줄을 늘 3줄 그린다).
  */
 function formPanel(z, sin) {
     const p = el('div', 'form-panel');
@@ -653,6 +856,9 @@ function formPanel(z, sin) {
     const warn = G.party.length === 0 ? t('exp.noParty') : '';
     strip.appendChild(el('div', 'down exp-warn', warn));
     p.appendChild(strip);
+
+    /* 진형 (⚠ 목업 · 2026-09-09) — 클릭은 소속(위 띠), **드래그는 자리**(여기). 화면 상태뿐이라 출발에 아무 영향이 없다 */
+    p.appendChild(formBox());
 
     /* 액션 — 같은 크기 버튼 둘. 반복 원정이 옛 별도 줄(repeatRow)에서 여기로 내려왔다 (2026-08-28 사용자 지시):
        그 줄이 런의 스테이지일 때만 붙어서 패널 크기가 흔들렸다. 버튼은 항상 있으므로 크기가 고정된다 */
@@ -860,7 +1066,7 @@ function heroDoing(h) {
  * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
  * flat — 편성 패널처럼 이미 패널 안에 들어갈 때. 패널 껍데기(테두리·배경·여백)를 벗는다
  */
-function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false } = {}) {
+function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, dismissable = false } = {}) {
     const p = el('div', flat ? 'hs-panel flat' : 'panel hs-panel');
     // partyMode — 클릭이 파티 넣고 빼기인 띠(편성). ~~출정 아웃인 카드는 안 눌리는 티를 낸다~~ 는 2026-09-08 폐기(못 넣는 영웅이 없다)
     const strip = el('div', `hero-strip${partyMode ? ' party-mode' : ''}`);
@@ -882,7 +1088,19 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false }
             </div>
             ${heroFace(h)}
             ${h.uid === leaderUid ? `<span class="hs-leader">${t('exp.leader')}</span>` : ''}`;
-        c.onclick = () => onPick(h);
+        /* 해고 — **고른 카드에만** 오른쪽 아래에 뜬다 [2026-09-09 사용자 지시 · SCREEN_DESIGN §5 · §6].
+           `dismissable` 을 준 띠(캐릭터 탭)에서만이다 — 편성 띠는 클릭이 파티 넣고 빼기라 여기에 파괴적 버튼을
+           같이 두면 파티 빼려다 해고하는 사고가 난다. 리더 뱃지는 왼쪽 아래라 자리가 안 겹친다.
+           카드 클릭(선택)까지 올라가지 않게 전파를 끊는다 */
+        if (dismissable && h.uid === state.heroUid) {
+            const out = el('button', 'btn hs-dismiss', t('ch.dismiss'));
+            out.onclick = ev => { ev.stopPropagation(); openModal('dismiss'); };
+            c.appendChild(out);
+        }
+        // 편성 띠에서는 카드를 **진형 보드로 끌어다 놓을 수 있다** (2026-09-09 · SCREEN_DESIGN §4-1).
+        //   동사가 갈린다: 클릭은 소속(넣고 빼기) · 드래그는 자리. 끌면 그 뒤의 클릭 한 번을 삼켜 둘이 겹치지 않는다
+        if (partyMode) bindFormDrag(c, { uid: h.uid });
+        c.onclick = () => { if (!formDragEnded) onPick(h); };
         strip.appendChild(c);
     }
     for (let i = G.heroes.length; i < D.balance.roster_cap; i++) strip.appendChild(el('div', 'hs-card empty', '<span>+</span>'));
@@ -995,9 +1213,56 @@ function skillCards(h) {
     wrap.appendChild(grid);
     const go = el('button', 'btn sm go-tree', t('ch.skill.go'));
     // 탭 이동이 아니라 **창**이다 (SCREEN_DESIGN §7 개정 2026-09-01) — 대상 영웅은 이 탭이 이미 골랐다
+    // ~~해고 버튼~~ 은 2026-09-09 에 **영웅 띠의 고른 카드**로 옮겼다(사용자 지시 · §5) — 이 줄은 다시 버튼 하나다
     go.onclick = () => openModal('skill');
     wrap.appendChild(go);
     return wrap;
+}
+
+/**
+ * 해고 창의 속 — 상태 셋을 한 창이 든다 (SCREEN_DESIGN §6).
+ * **버튼이 상태를 말한다** [개정 2026-09-09 사용자 지시] — 문장은 한 줄, 답하는 길은 버튼이다:
+ *   ① 장비를 걸치고 있다 → 「모든 장비를 해제해야 합니다」 + **[확인] 하나** (할 수 있는 게 닫는 것뿐이라 고를 것이 없다)
+ *   ② 마지막 한 명이다 → 같은 꼴(막힘 + [확인] 하나) — 0명이 되면 복구가 막힌다 (INTERFACE §2-7)
+ *   ③ 다 벗었다 → 「영웅을 해고합니다」 + **[확인] [취소]** (되돌릴 수 없어서 취소가 눈에 보여야 한다 — §3)
+ * ⚠ 옛 판은 막힘 상태에 **버튼이 아예 없어** 창을 X 로만 닫을 수 있었고, 확인 상태에도 취소가 없었다.
+ * 판정은 `game_logic` 의 규칙과 **같은 값을 읽는다** — 화면이 규칙을 다시 쓰지 않는다.
+ */
+function dismissBody() {
+    const h = heroById(state.heroUid);
+    const box = el('div', 'dismiss-box');
+    if (!h) return box;
+    const worn = Object.values(h.equipped ?? {}).filter(Boolean).length;
+    const last = G.heroes.length <= 1;
+    const actions = el('div', 'dismiss-actions');
+    if (worn || last) {
+        // 막힘 — 문장 하나 + 닫는 버튼 하나. `ch.err.last` 는 플래시와 같은 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다)
+        box.appendChild(el('div', 'down', t(worn ? 'ch.dismiss.blocked' : 'ch.err.last')));
+        const ok = el('button', 'btn', t('ui.ok'));
+        ok.onclick = closeModal;
+        actions.appendChild(ok);
+    } else {
+        box.appendChild(el('div', '', t('ch.dismiss.confirm')));
+        // 확인이 파괴적인 쪽이라 위험 색은 여기 남는다 — 취소는 평범한 버튼이다
+        const ok = el('button', 'btn danger', t('ui.ok'));
+        ok.onclick = () => {
+            const name = L(h.name);
+            const r = SYS.game.dismiss(G, h.uid);
+            if (!r.ok) { flash(`ch.err.${r.err}`); render(); return; }
+            // 지운 영웅이 이 탭의 선택이었으므로 선택을 비운다 — 다음 render 가 첫 영웅으로 되돌린다
+            state.heroUid = null;
+            state.modal = null;
+            save();
+            flash('ch.dismissed', { name });
+            render();
+        };
+        const no = el('button', 'btn', t('ui.cancel'));
+        no.onclick = closeModal;
+        actions.appendChild(ok);
+        actions.appendChild(no);
+    }
+    box.appendChild(actions);
+    return box;
 }
 
 /**
@@ -1115,7 +1380,8 @@ function itemsPanel(h, { showTarget = false } = {}) {
 function renderCharacter(main) {
     const h = heroById(state.heroUid);
     const stack = el('div', 'char-stack');
-    stack.appendChild(heroStrip(pickHero));
+    // 해고 버튼은 이 띠에만 뜬다 — 고른 카드의 오른쪽 아래 (SCREEN_DESIGN §5 · 2026-09-09 사용자 지시)
+    stack.appendChild(heroStrip(pickHero, { dismissable: true }));
     const band = el('div', 'cols c-char');
     band.appendChild(gearPanel(h));
     band.appendChild(attrPanel(h));

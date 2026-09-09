@@ -68,7 +68,7 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 ## 4. 문서 사이의 위계
 
 - **게임의 WHAT** = `docs/game_design/` — 이 스킬의 담당
-- **소프트웨어의 HOW** = `docs/client/` — [DEV_PLAN.md](docs/client/DEV_PLAN.md)(계획·부채·현황) · `ARCHITECTURE.md`(구조) · `INTERFACE.md`(이식 계약) · [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md)(화면). 기획이 여기를 고치지 않는다 — `/client` · `/ui` 로 넘긴다
+- **소프트웨어의 HOW** = `docs/client/` — [DEV_PLAN.md](docs/client/DEV_PLAN.md)(계획·부채·현황) · `ARCHITECTURE.md`(구조) · `INTERFACE.md`(이식 계약) · **화면은 셋** — [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md)(규격) · [adr/](docs/client/adr/README.md)(결정) · [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md)(이력). 기획이 여기를 고치지 않는다 — `/client` · `/ui` 로 넘긴다
 - **수치** = `src/data/*.csv` — 기획서는 키 이름만 가리킨다
 - 어느 문서를 먼저 고치는지의 표는 [DEV_PLAN.md](docs/client/DEV_PLAN.md) §7
 

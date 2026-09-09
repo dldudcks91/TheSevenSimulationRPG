@@ -253,6 +253,24 @@ const STRINGS = {
     'ch.upgradeHint': { ko: '강화는 제련소에서 한다 — 골드로 한 단계씩 올리고, {n}강마다 옵션 하나의 값이 오른다',
         en: 'Upgrading happens at the forge — one step at a time for gold, and every +{n} one option gains value' },
     'ch.err.maxUp': { ko: '더는 강화할 수 없다', en: 'Already fully upgraded' },
+    /* 해고 (SCREEN_DESIGN §6 · 2026-09-09) — 창 하나가 세 상태를 든다: 막힘(장비) · 막힘(마지막) · 확인.
+       규칙 설명이 아니라 **상태와 확인**이라 패널이 아닌 창에 선다 (ui 원칙 4) */
+    'ch.dismiss': { ko: '해고', en: 'Dismiss' },
+    /* 문구는 **사용자 지시 그대로**다 [개정 2026-09-09] — 옛 판(「장비를 모두 벗어야 해고할 수 있다 — 착용 {n}」)의
+       착용 수 `{n}` 은 걷었다. 창은 「무엇을 해야 하나」만 말하고, 몇 개가 걸쳐 있는지는 창 뒤 페이퍼돌이 이미 보여 준다.
+       ⚠ 이 두 줄만 **합니다체**다 — 지시 문구를 손대지 않는다. 나머지 문구의 평서체와 갈리는 것은 알고 둔 것이다 */
+    'ch.dismiss.blocked': {
+        ko: '영웅을 해고하려면 모든 장비를 해제해야 합니다.',
+        en: 'All equipment must be unequipped before dismissing this hero.',
+    },
+    /* 오류 키는 결과 코드와 짝을 맞춘다(`<탭>.err.<코드>`) — 창이 미리 막으므로 플래시로는 잘 안 뜨지만,
+       코드가 있으면 문구도 있어야 한다. `last` 는 창 본문도 이 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다) */
+    'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
+    'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
+    /* 확인 문구도 **사용자 지시 그대로** [개정 2026-09-09] — 옛 판(「{name} — 해고하면 되돌릴 수 없다」)의 `{name}` 은 걷었다.
+       누구를 해고하는지는 창을 연 카드가 이미 말하고, 되돌릴 수 없다는 것은 **[취소] 버튼이 눈에 보이는 것**이 든다 */
+    'ch.dismiss.confirm': { ko: '영웅을 해고합니다.', en: 'This hero will be dismissed.' },
+    'ch.dismissed': { ko: '{name} 해고', en: '{name} dismissed' },
     'ch.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'ch.upgraded': { ko: '강화 +{n} · {g}G', en: 'Upgraded to +{n} · {g}G' },
     'ch.upgraded.affix': { ko: '강화 +{n} · {g}G · {a} {from} → {to}', en: 'Upgraded to +{n} · {g}G · {a} {from} → {to}' },
@@ -317,6 +335,10 @@ const STRINGS = {
     'res.stigma': { ko: '낙인', en: 'Stigma' },
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
     'ui.close': { ko: '닫기', en: 'Close' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
+    /* 창 안에서 답하는 버튼 둘 (2026-09-09) — 어느 창이든 같은 말을 쓴다. 「확인」은 **읽었다/한다**,
+       「취소」는 **안 한다**. 창을 그냥 닫는 길(X · 바깥 · Esc)은 그대로 있고, 이 둘은 그것을 **눈에 보이게** 한다 */
+    'ui.ok': { ko: '확인', en: 'OK' },
+    'ui.cancel': { ko: '취소', en: 'Cancel' },
 
     /* ── 자원 탭 [개정 2026-09-04] — 파견처는 **카드 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
        탐험은 자기 탭(§8-4)으로 나가 이 목록에 없다 — 셋 다 1인 배치라 `dp.party` 를 쓰는 칸이 없다.
@@ -416,6 +438,11 @@ const STRINGS = {
     'exp.party.h': { ko: '파티', en: 'Party' },
     /* 패널 부제는 숫자만 — 설명은 도움말 탭으로 갔다 (원문은 help.exp.party) */
     'exp.leader': { ko: '리더', en: 'Leader' },
+    /* 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 라벨뿐이다. 템플릿은 **점 아이콘**이라 글자가 없고 키도 없다.
+       ~~중열~~ 은 2026-09-09 에 삭제 — 3랭크 템플릿(1·1·1)이 「한 줄에 셋」으로 바뀌어 가운데 랭크가 사라졌다 */
+    'exp.form.h': { ko: '진형', en: 'Formation' },
+    'exp.form.front': { ko: '전열', en: 'Front' },
+    'exp.form.back': { ko: '후열', en: 'Back' },
     'exp.cantDepart': {
         ko: '이 편성으로는 출발할 수 없다',
         en: 'This party cannot depart',
@@ -711,6 +738,36 @@ const STRINGS = {
         ko: '{n}초마다 {s}초간 적의 공격을 자신에게 끌어모은다',
         en: 'Every {n}s, draws enemy attacks to yourself for {s}s',
     },
+    /* 2026-09-09 신설 — 직업 스킬 풀 37 이 다 발행되면서 생긴 틀 일곱 (skill_design §12 · DEV_PLAN R61).
+       ⚠ `sk.line.aura` 만 `{n}`(쿨)을 안 든다 — 오오라는 쿨이 없다(§1-5) */
+    'sk.line.healOne': {
+        ko: '{n}초마다 가장 위태로운 아군의 HP 를 {d} 되돌린다',
+        en: 'Every {n}s, restores {d} to the most wounded ally',
+    },
+    'sk.line.guided': {
+        ko: '{n}초마다 방어가 가장 두꺼운 적을 {h}번 때려 매번 {d}를 가한다',
+        en: 'Every {n}s, hits the best-armored enemy {h} times for {d} each',
+    },
+    'sk.line.buffAdjacent': {
+        ko: '{n}초마다 양 옆의 아군에게 {s}초간 {e}',
+        en: 'Every {n}s, grants the allies beside you {e} for {s}s',
+    },
+    'sk.line.debuffAll': {
+        ko: '{n}초마다 적 전원에게 {s}초간 {e}',
+        en: 'Every {n}s, inflicts {e} on every enemy for {s}s',
+    },
+    'sk.line.duel': {
+        ko: '{n}초마다 적 하나를 지목해 라운드가 끝날 때까지 자신만 노리게 한다',
+        en: 'Every {n}s, marks one enemy to attack only you until the round ends',
+    },
+    'sk.line.aura': {
+        ko: '항상 켜져 있다 — 파티 전원에게 {e}',
+        en: 'Always on — {e} for the whole party',
+    },
+    'sk.line.summon': {
+        ko: '{n}초마다 자신의 최대 HP 의 {h}% 를 가진 벽을 세워 적의 공격을 나눠 받는다',
+        en: 'Every {n}s, raises a wall worth {h}% of your max HP that soaks enemy attacks',
+    },
     /* 수량 구절 — 공격력을 아는 자리는 **실제 수치**, 모르는 자리(후보 카드)는 **배율**로 접는다.
        ⚠ 감소·치명 전의 값이다 (game_logic/skill.js:previewOf) */
     'sk.amt.physical': { ko: '{v} 의 물리 피해', en: '{v} physical damage' },
@@ -722,6 +779,15 @@ const STRINGS = {
     'sk.eff.atk_pct': { ko: '공격력 +{v}% 를 건다', en: '+{v}% Attack' },
     'sk.eff.period_pct': { ko: '행동 주기 −{v}% 를 건다', en: '−{v}% action cycle' },
     'sk.eff.barrier_pct': { ko: '최대 HP {v}% 짜리 보호막을 씌운다', en: 'a shield worth {v}% of max HP' },
+    /* 2026-09-09 신설. `.neg` 는 **같은 창을 음수로 쓴 디버프**의 틀이다 — 값은 절댓값으로 들어온다(tip.js) */
+    'sk.eff.guard_pct': { ko: '방어력과 모든 저항 +{v}% 를 건다', en: '+{v}% defense and all resistances' },
+    'sk.eff.hp_max_pct': { ko: '최대 HP +{v}% 를 건다', en: '+{v}% max HP' },
+    'sk.eff.regen_pct': { ko: 'HP 재생 +{v}% 를 건다', en: '+{v}% HP regen' },
+    'sk.eff.dr_pct': { ko: '받는 피해 −{v}% 를 건다', en: '−{v}% damage taken' },
+    'sk.eff.onhit_element': { ko: '기본 공격마다 {v}% 의 추가 피해를 얹는다', en: 'adds a {v}% extra hit on every basic attack' },
+    'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v}% 로 퍼진다', en: 'basic attacks spread to all enemies at {v}%' },
+    'sk.eff.atk_pct.neg': { ko: '공격력 −{v}% 를 건다', en: '−{v}% Attack' },
+    'sk.eff.period_pct.neg': { ko: '행동 주기 +{v}% 를 건다', en: '+{v}% action cycle' },
     /* 그 스킬의 **표기 쿨** [개정 2026-09-08 2차 사용자 지시] — 어느 영웅이 들든 같은 수다.
        ~~`sk.base`·`sk.eff`·`sk.aligned`~~ (1차 폐기) → ~~`sk.every`(`{s}초마다`)~~ → **`sk.cool`**.
        **말까지 바꾼 이유는 값이 바뀌었기 때문**이다 — 「{s}초마다」는 빈도의 약속인데 표기 쿨은 빈도가 아니다

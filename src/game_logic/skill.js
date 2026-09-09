@@ -31,15 +31,19 @@
  *     · 전직 — **전직 시스템이 없다**(R16 미반영). 찍은 것이 없으므로 이 칸은 언제나 빈다(R52)
  *   두 출처가 **같은 직업 풀**에서 오므로 고유와 무기가 같은 스킬일 수 있다 — 그때는 앞선 출처만 남아
  *     칸이 하나로 준다. 겹침 처리는 기획 미발행이라 종전 중복 제거 규칙을 그대로 둔다 (§12-1 규칙 3).
- *   **직업 풀 37 중 22 만 발행됐다** — 오오라 · 소환 · 「라운드 종료까지」 · 도트 · 평타 부여 ·
- *     적에게 거는 창 · 「양 옆의 아군」은 전부 skill_design §7 미결이라 어휘가 없다 (DEV_PLAN R59).
+ *   **직업 풀 37 이 전부 발행됐다** (2026-09-09 · DEV_PLAN R61) — 다만 다섯은 **근사**다:
+ *     오오라(칸 순서 첫 하나를 전투 시작에 자동으로 켠다 — 고르는 화면이 없다) ·
+ *     「라운드 종료까지」(창 999초 + 라운드마다 적 배열이 갈리는 것으로 근사) ·
+ *     「양 옆의 아군」(`party` 배열의 인접 자리 — 위치 개념은 여전히 미확정) ·
+ *     독화살(**도트가 아니라** 원소 추가타 1회 — 틱 피해 채널 미도입) ·
+ *     적 공격력 감소(새 채널이 아니라 **음수 버프 창** [사용자 확정 2026-09-09]). 전부 skill_design §7 이 든다.
  *   `status` 컬럼(결빙 등)은 `status_effect.csv` 가 없어 **정규화만 하고 아무도 읽지 않는다** (§9-1 규칙 4).
  */
 
 import { ELEMENTS } from './hero.js';
 import { createFormula } from './formula.js';
 import {
-    KINDS, TARGETS, ATTACK_TARGETS, SUPPORT_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS,
+    KINDS, TARGETS, ATTACK_TARGETS, SUPPORT_TARGETS, DEBUFF_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS,
 } from './skill_effects.js';
 
 /** 준비·만료 판정 허용 오차 — 틱 누산(0.1 씩 더한 t)이 `readyAt` 을 미세하게 밑도는 것을 막는다 (INTERFACE §5-3) */
@@ -135,12 +139,19 @@ export function createSkillSystem(data) {
         if (!TARGETS.includes(d.target)) bad(`target '${d.target}'`);
         if (d.element !== null && !ELEMENTS.includes(d.element)) bad(`element '${d.element}'`);
         if (d.cond !== null && !CONDITION_IDS.includes(d.cond)) bad(`cast_condition '${d.cond}'`);
-        if (!(d.cool > 0)) bad(`cool_sec ${d.cool}`);
-        if (d.kind === 'buff') {
+        // 쿨 — **오오라만 0 이다**(쿨 없이 상시 · §1-5). 나머지는 양수라야 예산 자가 선다
+        if (d.kind === 'aura') {
+            if (d.cool !== 0) bad(`aura 인데 cool_sec ${d.cool} — 오오라는 쿨이 없다`);
+        } else if (!(d.cool > 0)) {
+            bad(`cool_sec ${d.cool}`);
+        }
+        if (d.kind === 'buff' || d.kind === 'aura') {
             if (d.stat === null || !EFFECT_STATS.includes(d.stat)) bad(`effect_stat '${d.stat}'`);
-            if (!(d.dur > 0)) bad(`buff 인데 duration_sec ${d.dur}`);
+            // 창이냐 상시냐 — buff 는 창(양수 지속), aura 는 창이 아니다(전투 내내 켜져 있다)
+            if (d.kind === 'buff' && !(d.dur > 0)) bad(`buff 인데 duration_sec ${d.dur}`);
+            if (d.kind === 'aura' && d.dur !== 0) bad(`aura 인데 duration_sec ${d.dur} — 오오라는 창이 아니다`);
         } else if (d.stat !== null) {
-            bad(`effect_stat 은 buff 만 쓴다 ('${d.stat}')`);
+            bad(`effect_stat 은 buff·aura 만 쓴다 ('${d.stat}')`);
         }
         // 종류↔대상 짝 — attack 은 적 대상 표에, heal·buff 는 아군 대상에 있어야 한다 (등록표가 곧 어휘)
         if (d.kind === 'attack') {
@@ -148,20 +159,30 @@ export function createSkillSystem(data) {
             if (!(d.hits >= 1)) bad(`attack 인데 hits ${d.hits}`);
             if (!(d.mult > 0)) bad(`attack 인데 mult_pct ${d.mult}`);
             if (d.dur !== 0) bad(`attack 인데 duration_sec ${d.dur} — 창은 buff 만 연다`);
+        } else if (d.kind === 'summon') {
+            // 소환 — `mult_pct` 는 피해 배율이 아니라 **시전자 최대 HP 의 %**(벽의 HP)다 (§12-6)
+            if (d.target !== 'self') bad(`summon 인데 target '${d.target}' — 소환은 시전자 자리에 세운다`);
+            if (d.hits !== 0) bad(`summon 인데 hits ${d.hits}`);
+            if (!(d.mult > 0)) bad(`summon 인데 mult_pct ${d.mult} — 시전자 최대 HP 의 % 다`);
+            if (d.dur !== 0) bad(`summon 인데 duration_sec ${d.dur} — 라운드가 끝날 때 사라진다`);
         } else {
-            if (!SUPPORT_TARGETS.includes(d.target)) bad(`${d.kind} 인데 target '${d.target}' 는 아군 대상이 아니다`);
+            // **buff 만 적에게 걸 수 있다**(디버프 = 음수 값). heal·aura 는 아군 대상뿐이다
+            const okTargets = d.kind === 'buff' ? [...SUPPORT_TARGETS, ...DEBUFF_TARGETS] : SUPPORT_TARGETS;
+            if (!okTargets.includes(d.target)) bad(`${d.kind} 인데 target '${d.target}' 는 쓸 수 없다`);
             if (d.hits !== 0) bad(`${d.kind} 인데 hits ${d.hits} — 타수는 attack 만 쓴다`);
             if (d.kind === 'heal' && !(d.mult > 0)) bad(`heal 인데 mult_pct ${d.mult}`);
-            if (d.kind === 'buff' && d.mult !== 0) bad(`buff 인데 mult_pct ${d.mult} — 버프의 세기는 effect_value 다`);
+            if ((d.kind === 'buff' || d.kind === 'aura') && d.mult !== 0) bad(`${d.kind} 인데 mult_pct ${d.mult} — 세기는 effect_value 다`);
         }
-        // 광역·연쇄는 **대상 수가 타수를 정한다** — hits 를 따로 적으면 두 곳 관리가 된다 (§9-3)
-        if ((d.target === 'enemy_all' || d.target === 'enemy_chain') && d.hits !== 1)
+        // 광역·연쇄는 **대상 수가 타수를 정한다** — hits 를 따로 적으면 두 곳 관리가 된다 (§9-3).
+        //   ⚠ `attack` 에만 건다 — 같은 대상어를 **적에게 거는 창**(참회·속박)도 쓰는데 그쪽은 타수가 0 이다
+        if (d.kind === 'attack' && (d.target === 'enemy_all' || d.target === 'enemy_chain') && d.hits !== 1)
             bad(`${d.target} 인데 hits ${d.hits} — 타수는 대상 수가 정한다`);
-        // 감쇠는 연쇄 전용. 100 이면 두 번째 대상부터 0 이라 연쇄가 아니다
-        if (d.target === 'enemy_chain') {
-            if (!(d.decay >= 0 && d.decay < 100)) bad(`enemy_chain 인데 decay_pct ${d.decay}`);
+        // 감쇠 — 두 대상 표가 쓴다. 뜻이 다르다: 연쇄는 **배율**이 줄고, 최고 방어 다단은 **대상의 방어값**이 준다.
+        //   100 이면 연쇄는 두 번째부터 0 이고 방어는 한 방에 0 이라 둘 다 어긋난다
+        if (d.target === 'enemy_chain' || d.target === 'enemy_highest_def') {
+            if (!(d.decay >= 0 && d.decay < 100)) bad(`${d.target} 인데 decay_pct ${d.decay}`);
         } else if (d.decay !== 0) {
-            bad(`decay_pct 는 enemy_chain 만 쓴다 (${d.decay})`);
+            bad(`decay_pct 는 enemy_chain·enemy_highest_def 만 쓴다 (${d.decay})`);
         }
         // 조건값은 조건이 있을 때만 — ally_hp_below 는 HP 비율(%)이라 0 초과 100 이하다
         if (d.cond === 'ally_hp_below') {
@@ -187,8 +208,10 @@ export function createSkillSystem(data) {
      */
     function derivedTagsOf(d) {
         const out = [];
+        // 피해 태그는 **`attack` 만** 낸다 — 적에게 거는 창(참회·속박)이 `enemy_all` 이라고 광역「피해」는 아니다
+        if (d.kind !== 'attack') return out;
         if (d.target === 'enemy_all' || d.target === 'enemy_chain') out.push('aoe');
-        if (d.target === 'enemy_single') out.push('single');
+        if (d.target === 'enemy_single' || d.target === 'enemy_highest_def') out.push('single');
         if (d.hits > 1) out.push('multihit');
         return out;
     }

@@ -39,7 +39,8 @@ TheSevenSimulationRPG/
 ├── serve.py               # 그 서버 본체 — http.server + `Cache-Control: no-store` (같은 파일명 아트 교체가 캐시로 안 먹던 문제)
 ├── docs/
 │   ├── game_design/       # 게임의 WHAT — GAME_DESIGN.md(메인 · §9 최근 결정 · §10 미확정) + 세부 8종 + DECISION_LOG.md(이력 아카이브 — 평소엔 안 연다)
-│   ├── client/            # 소프트웨어의 HOW — DEV_PLAN(계획·부채) · ARCHITECTURE(구조) · INTERFACE(이식 계약) · SCREEN_DESIGN(화면)
+│   ├── client/            # 소프트웨어의 HOW — DEV_PLAN(계획·부채) · ARCHITECTURE(구조) · INTERFACE(이식 계약)
+│   │                      #   화면은 셋 — SCREEN_DESIGN(규격) · adr/(결정 하나가 파일 하나) · SCREEN_CHANGELOG(이력)
 │   └── reference/         # 참고작 전수 조사 · 형제 프로젝트 분석 · inherited_data_gaps.md
 └── src/
     ├── index.html         # 진입점
@@ -56,10 +57,11 @@ TheSevenSimulationRPG/
 3. **`src/data/inherited/` · `src/assets/art/backgrounds/` 읽기 전용** — 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다. `src/assets/art/faces/` 는 읽기 전용이 아니다 — 신규 몬스터 아트를 직접 채워 넣는 활성 폴더 (2026-08-28)
 4. **`game_logic` 모듈은 생성자에서 데이터를 주입받는다**
 5. **git 커밋/푸시는 사용자가 명시적으로 요청할 때만**
-6. **다국어 ko/en 나란히** — 렌더러(`app.js`/`battle.js`)에 한국어 리터럴 금지 (세부: [src/ui/README.md](src/ui/README.md))
+6. **다국어 ko/en 나란히** — 렌더러(`app.js`/`battle.js`)에 한국어 리터럴 금지. **아이템·스킬 이름은 영어가 원본이고 한글은 직역**(의역 금지 — `Morning Star` → 모닝스타) (세부: [src/ui/README.md](src/ui/README.md) · 규약 본문 [src/data/README.md](src/data/README.md))
 
 검증 방법 · 개발용 URL · 밸런스 손잡이 → [src/dev/README.md](src/dev/README.md)
 경계(export·스키마·rng 순서)를 바꾸면 **INTERFACE.md 먼저**, 화면을 바꾸면 **SCREEN_DESIGN.md 먼저** → [docs/client/DEV_PLAN.md §7](docs/client/DEV_PLAN.md)
+**화면 문서는 셋이다 [2026-09-09]** — 규격 [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md)(**지금**만 적는다) · 결정 [adr/](docs/client/adr/README.md)(**안 고친다** · 뒤집히면 새 ADR 이 대체) · 이력 [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md)(한 줄씩). **규격은 폐기된 것을 안 적고, 근거는 현재 상태를 주장하지 않는다** → [adr/README.md](docs/client/adr/README.md)
 
 ---
-*마지막 업데이트: 2026-09-07 (**의뢰 목표형 개정 반영** — 「설계의 큰 틀」 포인터 단락의 옛 락 조항 인용 중 「관전 구조 = 원정·**실시간 의뢰 탭** 관전」에 대체 표기(09-07 로 **관전은 원정 하나** — 의뢰가 전장을 안 연다). 그리고 **「켜 두면 장비, 꺼 두면 재료」 폐기** [사용자 지시] — **장비 획득 경로를 원정에 묶지 않는다.** 오프라인 활동(탐험 · 약탈 · 보호)에서도 장비가 나온다. 본체는 GAME_DESIGN.md §3 · §9 09-07 · base_expedition_design.md §1-3 · §3-1) · 2026-09-05 (**로컬 서버를 `serve.py` 로** — `start.bat` 이 `python -m http.server` 대신 `serve.py`(= http.server + `Cache-Control: no-store`)를 띄운다. 같은 파일명으로 갈아끼운 아트가 브라우저 휴리스틱 캐시 때문에 화면에 안 반영되던 문제. 포트·서빙 루트(`src/`)는 그대로 8777) · 2026-09-03 (**컨셉 락 해체** — 락 섹션(헤드라인·표·따름정리 셋·미확정 줄)을 「설계의 큰 틀」 포인터 한 단락으로 교체. 계기는 보호 확정(전투가 오프라인에 돈다 — 리포트 재생)으로 헤드라인 「오프라인 = 비전투 전부」와 따름정리 1 이 무너진 것. 옛 조항 내용은 GAME_DESIGN §1-1·§3 에 일반 확정으로 존속 (GAME_DESIGN.md §9 09-03)) · 2026-09-03 (**성장 원칙 · 최종목표 반영** — 개요에 「수평+수직 · 무한 수직 스케일링 없음 · 최종목표 = 스킬트리·파티 조합」 추가, 미확정 줄에 「엔드게임의 형태」 등재 (GAME_DESIGN.md §1 · §9 09-03)) · 2026-09-03 (**게임 정의 헤드라인 반영** — 개요에 새 헤드라인 「디아블로식 아이템 게임을, 그래픽을 최소화한 파티 RPG 형식으로 재해석한다」 추가 (GAME_DESIGN.md §1 · §9 09-03)) · 이전 이력은 [DECISION_LOG.md](docs/game_design/DECISION_LOG.md) §2*
+*마지막 업데이트: 2026-09-09 (**화면 문서 분리 — 규격 / 결정 / 이력** — SCREEN_DESIGN 하나가 셋이 됐다. 283KB 에서 결정 문단 **51건**이 [adr/](docs/client/adr/README.md) 로, 꼬리 이력 **119항목**이 [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md) 로 나가고 **규격 94KB** 가 남는다. 계기는 09-09 전수 대조에서 나온 낡음 6건 — 넷이 **「근거 산문이 현재 상태를 말하려다 낡은」** 유형이라 분리만으로 사라졌다. 폴더 구조 · 규칙 줄 반영 · 본체는 [DEV_PLAN §7](docs/client/DEV_PLAN.md) · [adr/README.md](docs/client/adr/README.md)) · 2026-09-09 (**이름은 영어가 원본 — 한글은 직역** [사용자 확정] — 규칙 6 에 한 줄. 아이템·스킬 이름의 `_kr` 은 `_en` 의 직역이고 의역하지 않는다. 본문은 src/data/README.md 공통 규약 · GAME_DESIGN.md §9 09-09) · 2026-09-07 (**의뢰 목표형 개정 반영** — 「설계의 큰 틀」 포인터 단락의 옛 락 조항 인용 중 「관전 구조 = 원정·**실시간 의뢰 탭** 관전」에 대체 표기(09-07 로 **관전은 원정 하나** — 의뢰가 전장을 안 연다). 그리고 **「켜 두면 장비, 꺼 두면 재료」 폐기** [사용자 지시] — **장비 획득 경로를 원정에 묶지 않는다.** 오프라인 활동(탐험 · 약탈 · 보호)에서도 장비가 나온다. 본체는 GAME_DESIGN.md §3 · §9 09-07 · base_expedition_design.md §1-3 · §3-1) · 2026-09-05 (**로컬 서버를 `serve.py` 로** — `start.bat` 이 `python -m http.server` 대신 `serve.py`(= http.server + `Cache-Control: no-store`)를 띄운다. 같은 파일명으로 갈아끼운 아트가 브라우저 휴리스틱 캐시 때문에 화면에 안 반영되던 문제. 포트·서빙 루트(`src/`)는 그대로 8777) · 2026-09-03 (**컨셉 락 해체** — 락 섹션(헤드라인·표·따름정리 셋·미확정 줄)을 「설계의 큰 틀」 포인터 한 단락으로 교체. 계기는 보호 확정(전투가 오프라인에 돈다 — 리포트 재생)으로 헤드라인 「오프라인 = 비전투 전부」와 따름정리 1 이 무너진 것. 옛 조항 내용은 GAME_DESIGN §1-1·§3 에 일반 확정으로 존속 (GAME_DESIGN.md §9 09-03)) · 2026-09-03 (**성장 원칙 · 최종목표 반영** — 개요에 「수평+수직 · 무한 수직 스케일링 없음 · 최종목표 = 스킬트리·파티 조합」 추가, 미확정 줄에 「엔드게임의 형태」 등재 (GAME_DESIGN.md §1 · §9 09-03)) · 2026-09-03 (**게임 정의 헤드라인 반영** — 개요에 새 헤드라인 「디아블로식 아이템 게임을, 그래픽을 최소화한 파티 RPG 형식으로 재해석한다」 추가 (GAME_DESIGN.md §1 · §9 09-03)) · 이전 이력은 [DECISION_LOG.md](docs/game_design/DECISION_LOG.md) §2*

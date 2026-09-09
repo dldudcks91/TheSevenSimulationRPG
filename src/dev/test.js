@@ -64,10 +64,10 @@ check('csv: monster 112 / stage 28 / weapon_group 12 / codex_level 4 / chapter 7
  * 오오라 · 소환 · 「라운드 종료까지」 · 도트 · 평타 부여 · 적에게 거는 창 · 「양 옆의 아군」은 §7 미결이다 (R59).
  * 여기서 보는 것은 **겹침 없음**과 **직업 밖 출처 없음** 둘이다 — 그 둘이 「1스킬 = 1직업」의 전부다.
  */
-check('csv: skill 22행 — 직업 풀 5직업(전사 5 · 기사 3 · 궁수 3 · 마법사 7 · 사제 4) · 1스킬 = 1직업 (skill_design §12)', () => {
+check('csv: skill 37행 — 직업 풀 5직업(전사 7 · 기사 8 · 궁수 6 · 마법사 8 · 사제 8) · 1스킬 = 1직업 (skill_design §12)', () => {
     const rows = D.skillRows;
-    const want = { warrior: 5, knight: 3, archer: 3, mage: 7, priest: 4 };
-    if (rows.length !== 22) fail(`${rows.length}행`);
+    const want = { warrior: 7, knight: 8, archer: 6, mage: 8, priest: 8 };
+    if (rows.length !== 37) fail(`${rows.length}행`);
     // 어휘에서 무기군이 빠졌다 — 무기는 스킬의 **그릇**이지 출처가 아니다 (§12-1 규칙 2)
     const bad = rows.find(r => r.owner_kind !== 'job');
     if (bad) fail(`${bad.skill_id} owner_kind ${bad.owner_kind} — 지금 발행된 행은 전부 job`);
@@ -84,9 +84,9 @@ check('csv: skill 22행 — 직업 풀 5직업(전사 5 · 기사 3 · 궁수 3 
 });
 // 태그 어휘의 SSOT (2026-09-01 mock→CSV 이관). **행 수·파생 여부가 계약이다** — skill.js 가 derived=1 셋을
 //   `derivedTagsOf` 가 내는 셋과 대조해 던지므로, 여기가 깨지면 스킬 시스템 자체가 로드되지 않는다
-check('csv: skill_tag 13행 — 파생 3(aoe·single·multihit) · 대분류 4 (skill_design §11)', () => {
+check('csv: skill_tag 14행 — 파생 3(aoe·single·multihit) · 대분류 4 (skill_design §11)', () => {
     const rows = D.skillTagRows;
-    if (rows.length !== 13) fail(`${rows.length}행`);
+    if (rows.length !== 14) fail(`${rows.length}행`);
     const derived = rows.filter(r => r.derived === 1).map(r => r.tag_id);
     if (!eq(derived, ['aoe', 'single', 'multihit'])) fail(`파생 [${derived}]`);
     const cats = [...new Set(rows.map(r => r.category))].sort();
@@ -599,6 +599,37 @@ check('newGame: 파티는 비어 있다 — 편성은 플레이어가 한다 · 
     return '빈 파티 · 출발 거절 · 첫 선택 = 리더';
 });
 for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, NOW);
+
+/**
+ * 해고 (INTERFACE §2-7 `dismiss` · SCREEN_DESIGN §6 · 사용자 확정 2026-09-09) —
+ * **별도 상태**에서 돌린다: 로스터에서 영웅을 지우는 파괴적 연산이라 아래 단정들이 쓰는 `G` 를 건드리면 안 된다.
+ */
+check('dismiss: 장비를 걸치면 막고 · 다 벗으면 지우고 · 파티에서도 빠진다 · 마지막 한 명은 못 지운다', () => {
+    const g = SYS.game.newGame(99, SYS.hero.rollCandidates(makeRng(99), B.party_size_max), NOW);
+    const [a] = g.heroes;
+    // 새 게임은 각자 시작 무기를 하나 차고 있다 — 그대로면 막혀야 한다
+    if (!Object.values(a.equipped).some(Boolean)) fail('시작 영웅이 무기를 안 들고 있다 — 전제가 깨졌다');
+    if (SYS.game.dismiss(g, a.uid).err !== 'equipped') fail('장비를 걸쳤는데 해고가 통과했다');
+    // 다 벗기고 · 파티에도 넣어 둔다 (해고가 파티에서도 빼는지 본다)
+    for (const [pos, uid] of Object.entries(a.equipped)) if (uid) SYS.game.unequip(g, a.uid, pos);
+    SYS.game.toggleParty(g, a.uid, NOW);
+    if (!g.party.includes(a.uid)) fail('전제가 깨졌다 — 파티에 안 들어갔다');
+    const before = g.heroes.length;
+    if (!SYS.game.dismiss(g, a.uid).ok) fail('다 벗었는데 해고가 막혔다');
+    if (g.heroes.length !== before - 1) fail('로스터에서 안 지워졌다');
+    if (g.party.includes(a.uid)) fail('해고했는데 파티에 uid 가 남았다 — 편성이 유령을 든다');
+    if (SYS.game.dismiss(g, a.uid).err !== 'missing') fail('이미 지운 영웅이 또 지워진다');
+    // 마지막 한 명 — 나머지를 다 지우고 나면 막혀야 한다
+    for (const h of [...g.heroes]) {
+        if (g.heroes.length <= 1) break;
+        for (const [pos, uid] of Object.entries(h.equipped)) if (uid) SYS.game.unequip(g, h.uid, pos);
+        SYS.game.dismiss(g, h.uid);
+    }
+    if (g.heroes.length !== 1) fail(`마지막 한 명만 남아야 하는데 ${g.heroes.length}명이다`);
+    for (const [pos, uid] of Object.entries(g.heroes[0].equipped)) if (uid) SYS.game.unequip(g, g.heroes[0].uid, pos);
+    if (SYS.game.dismiss(g, g.heroes[0].uid).err !== 'last') fail('마지막 한 명이 지워졌다 — 복구 불능 상태가 만들어진다');
+    return '장비 차단 · 삭제 · 파티 정리 · 마지막 보호';
+});
 /**
  * **파티까지 채운 새 게임** — `newGame` 은 09-09 부터 파티를 안 채운다(편성은 플레이어의 결정 · SCREEN_DESIGN §5).
  * 아래 단정 대부분은 「편성이 끝난 게임」을 전제하므로 그 상태를 한 곳에서 만든다.
@@ -1220,16 +1251,19 @@ check('강화: 비용 곡선 = base × growth^(현재 단계) — 단계마다 �
 });
 
 /* ── 스킬 태그 (skill_design §11 확정 2026-08-28) ── */
-check('skill: 태그 13종 — 정의 10(최대 2) + 파생 3(target·hits 에서). CSV 값이 전부 어휘 안이다', () => {
+check('skill: 태그 14종 — 정의 11(최대 2) + 파생 3(target·hits 에서). CSV 값이 전부 어휘 안이다', () => {
     const S = SYS.skill;
-    if (S.TAGS.length !== 10 || S.DERIVED_TAGS.length !== 3) fail(`정의 ${S.TAGS.length} · 파생 ${S.DERIVED_TAGS.length}`);
+    if (S.TAGS.length !== 11 || S.DERIVED_TAGS.length !== 3) fail(`정의 ${S.TAGS.length} · 파생 ${S.DERIVED_TAGS.length}`);
     for (const d of S.list) {
         if (d.tags.length > S.MAX_TAGS) fail(`${d.id} tags ${d.tags.length}개`);
         for (const tg of d.tags) if (!S.TAGS.includes(tg)) fail(`${d.id} '${tg}'`);
+        // 피해 태그는 **attack 만** 낸다 [2026-09-09] — 적에게 거는 창(참회·속박)도 `enemy_all` 을 쓴다
         const want = [];
-        if (d.target === 'enemy_all' || d.target === 'enemy_chain') want.push('aoe');
-        if (d.target === 'enemy_single') want.push('single');
-        if (d.hits > 1) want.push('multihit');
+        if (d.kind === 'attack') {
+            if (d.target === 'enemy_all' || d.target === 'enemy_chain') want.push('aoe');
+            if (d.target === 'enemy_single' || d.target === 'enemy_highest_def') want.push('single');
+            if (d.hits > 1) want.push('multihit');
+        }
         if (!eq(d.derived, want)) fail(`${d.id} 파생 [${d.derived}] ≠ [${want}]`);
     }
     const rot = S.defs.kni_rush;                       // enemy_rotate — 타수만큼만 닿는다 (§11-2 규칙 3)
@@ -1736,9 +1770,12 @@ function findSeed(pred, mk = skillUnits, stageId = 101) {
 }
 
 check('skill: 어휘 — owner_kind/kind/target/effect_stat/cast_condition 이 사전 안 · 출처마다 priority 유일 (§9-5)', () => {
-    const KIND = ['attack', 'heal', 'buff'];
-    const TGT = ['enemy_single', 'enemy_all', 'enemy_rotate', 'enemy_chain', 'self', 'party'];
-    const STAT = ['atk_pct', 'barrier_pct', 'period_pct', 'taunt'];
+    // 2026-09-09 확장 — 직업 스킬 풀 37 (skill_design §12 · DEV_PLAN R61)
+    const KIND = ['attack', 'heal', 'buff', 'aura', 'summon'];
+    const TGT = ['enemy_single', 'enemy_all', 'enemy_rotate', 'enemy_chain', 'enemy_highest_def',
+        'self', 'party', 'ally_single', 'party_adjacent'];
+    const STAT = ['atk_pct', 'barrier_pct', 'period_pct', 'taunt', 'guard_pct', 'hp_max_pct',
+        'regen_pct', 'dr_pct', 'onhit_element', 'attack_splash', 'duel'];
     const COND = ['buff_absent', 'ally_hp_below'];
     const OWNER = ['job', 'advance', 'unique'];
     const seen = {};
@@ -1746,7 +1783,8 @@ check('skill: 어휘 — owner_kind/kind/target/effect_stat/cast_condition 이 �
         if (!OWNER.includes(d.ownerKind)) fail(`${d.id} owner_kind ${d.ownerKind}`);
         if (!KIND.includes(d.kind)) fail(`${d.id} kind ${d.kind}`);
         if (!TGT.includes(d.target)) fail(`${d.id} target ${d.target}`);
-        if (d.kind === 'buff' ? !STAT.includes(d.stat) : d.stat !== null) fail(`${d.id} effect_stat ${d.stat}`);
+        const wantsStat = d.kind === 'buff' || d.kind === 'aura';   // 오오라도 창의 stat 을 든다
+        if (wantsStat ? !STAT.includes(d.stat) : d.stat !== null) fail(`${d.id} effect_stat ${d.stat}`);
         if (d.cond !== null && !COND.includes(d.cond)) fail(`${d.id} cast_condition ${d.cond}`);
         if (d.element !== null && !ELEMENTS.includes(d.element)) fail(`${d.id} element ${d.element}`);
         const k = `${d.ownerKind}#${d.ownerId}#${d.priority}`;
@@ -2011,12 +2049,26 @@ check('simulate: 도발 — taunt 창 동안 적의 단일 대상은 전부 도�
 /* ── 스킬 런타임 단위 시험 — 전투를 안 돌리고 skill_runtime / skill_effects 를 직접 두드린다 ── */
 
 /** 가짜 유닛 — 런타임이 만지는 필드만 든다(피해 계산은 여기서 안 돈다) */
-const rtUnit = (key, side, extra = {}) => ({
-    key, side, hp: 100, hpMax: 100,
-    atk: 10, atkBase: 10, atkPct: 0, matk: 10, matkBase: 10,
-    period: 1, basePeriod: 1, next: 0, cdr: 0,
-    actives: [], buffs: {}, barrier: null, reactions: [], ...extra,
-});
+const rtUnit = (key, side, extra = {}) => {
+    const u = {
+        key, side, hp: 100, hpMax: 100, hpMaxBase: 100,
+        atk: 10, atkBase: 10, atkPct: 0, matk: 10, matkBase: 10,
+        // 창이 미는 축은 **밑수를 함께** 든다 [2026-09-09] — `refreshDerived` 가 전 효과의 derive 를 돌리므로
+        //   여기가 비면 방어·저항·재생·피해감소 창이 없는 축을 만져 TypeError 가 난다 (battle.js:makeUnit 과 같은 모양)
+        def: 10, defBase: 10,
+        res: { fire: 0, cold: 0, lightning: 0, poison: 0 },
+        resBase: { fire: 0, cold: 0, lightning: 0, poison: 0 },
+        dr: 0, drBase: 0, regen: 0, regenBase: 0, regenAcc: 0,
+        period: 1, basePeriod: 1, next: 0, cdr: 0,
+        actives: [], buffs: {}, barrier: null, reactions: [], ...extra,
+    };
+    // 값만 덮어쓴 축은 **밑수도 따라간다** — 안 그러면 `refreshDerived` 가 밑수 기준으로 값을 되돌려 버린다
+    //   (창이 하나도 없을 때 derive 는 `값 = 밑수` 로 다시 쓰는 것이 정상 동작이다)
+    for (const [v, b] of [['hpMax', 'hpMaxBase'], ['def', 'defBase'], ['dr', 'drBase'], ['regen', 'regenBase']]) {
+        if (extra[v] !== undefined && extra[b] === undefined) u[b] = u[v];
+    }
+    return u;
+};
 /**
  * 가짜 문맥 — `strikeOnce` 는 호출을 **기록만** 하고 `rng` 는 호출 횟수를 센다.
  * 남는 것은 「누구를 · 몇 번 · 어떤 배율로 · rng 를 몇 번 써서」뿐이고, 그게 등록표가 지키는 계약이다.
@@ -2028,6 +2080,10 @@ function fakeRt(party, enemies, opts = {}) {
         SK: SYS.skill, B, rng, timeline: log, out: { casts: {} }, units: { party, enemies },
         strikeOnce: (u, tgt, mult, element, s) => hits.push({ a: u.key, d: tgt.key, mult, element: element ?? null, s: s ?? null }),
         pickTarget: (u, foes) => { count.rng++; return foes[0]; },   // 진짜 pickTarget 도 타겟 rng 를 쓴다
+        // 소환 — 진짜 유닛 생성자는 battle.js 것이라 여기서는 **키와 HP 만** 있는 최소 유닛을 낸다
+        makeSummon: (caster, def) => rtUnit('s0', caster.side, {
+            hp: Math.round(caster.hpMax * def.mult / 100), hpMax: Math.round(caster.hpMax * def.mult / 100), summon: true,
+        }),
         r1: v => Math.round(v * 10) / 10, EPS: SYS.skill.EPS,
         hooks: createHooks(),
     });
@@ -2071,6 +2127,84 @@ check('runtime: enemy_all — 생존 적 전원 각 1회 · 타겟 rng 0회 (ski
     if (count.rng !== 0) fail(`대상을 고르지 않는데 rng 를 ${count.rng}회 썼다`);
     if (!eq(hits.map(h => h.d), ['e0', 'e2'])) fail(`대상 ${hits.map(h => h.d).join(',')}`);
     return 'e0·e2 각 1회 · rng 0회 (쓰러진 e1 은 건너뛴다)';
+});
+/* ── 2026-09-09 신설 — 직업 스킬 풀 37 이 연 어휘 (skill_design §12 · DEV_PLAN R61) ── */
+check('runtime: ally_single — 회복은 **HP 비율 최저** 아군 하나에게 간다 · rng 0회 (사용자 확정 2026-09-09)', () => {
+    // 절대량이 아니라 **비율**이다 — HP 가 큰 탱커가 늘 최저 절대량을 갖는 구도를 피한다
+    const a = rtUnit('p0', 'party', { hp: 90, hpMax: 100 });      // 90%
+    const b = rtUnit('p1', 'party', { hp: 100, hpMax: 300 });     // 33% ← 여기로 가야 한다
+    const c = rtUnit('p2', 'party', { hp: 60, hpMax: 100 });      // 60%
+    const { rt, count } = fakeRt([a, b, c], [rtUnit('e0', 'enemy')]);
+    const before = b.hp;
+    rt.castHeal(a, SYS.skill.defs.pri_cure, 0);
+    if (count.rng !== 0) fail(`대상 선택이 rng 를 ${count.rng}회 썼다 — 결정론이어야 한다`);
+    if (b.hp === before) fail('비율 최저(p1)가 아니라 다른 아군이 회복됐다');
+    if (a.hp !== 90 || c.hp !== 60) fail('단일 회복인데 여럿이 회복됐다');
+    return `p1(33%) 회복 · p0(90%)·p2(60%) 그대로 · rng 0회`;
+});
+check('runtime: party_adjacent — 함성은 **양 옆만** 걸린다 · 자기는 제외 (skill_design §12-3 · 위치는 임시 규칙)', () => {
+    const p = [rtUnit('p0', 'party'), rtUnit('p1', 'party'), rtUnit('p2', 'party'), rtUnit('p3', 'party')];
+    const { rt } = fakeRt(p, [rtUnit('e0', 'enemy')]);
+    rt.castBuff(p[1], SYS.skill.defs.war_shout, 0);
+    const on = p.filter(u => u.buffs.war_shout).map(u => u.key);
+    if (!eq(on, ['p0', 'p2'])) fail(`걸린 대상 [${on}] ≠ [p0,p2]`);
+    // 끝자리는 한쪽만 — 배열 밖을 만지면 undefined 가 섞인다
+    rt.castBuff(p[0], SYS.skill.defs.war_shout, 0);
+    const on0 = p.filter(u => u.buffs.war_shout).map(u => u.key);
+    if (!on0.includes('p1')) fail('끝자리 시전인데 한쪽 이웃도 안 걸렸다');
+    return 'p1 시전 → p0·p2 (자기 제외) · 끝자리는 한쪽만';
+});
+check('runtime: 적에게 거는 창 — 음수 값이 **적 유닛**에 얹히고 공격력이 내려간다 (사용자 확정 2026-09-09 D1)', () => {
+    const u = rtUnit('p0', 'party');
+    const foes = [rtUnit('e0', 'enemy'), rtUnit('e1', 'enemy'), rtUnit('e2', 'enemy', { hp: 0 })];
+    const { rt, count } = fakeRt([u], foes);
+    const def = SYS.skill.defs.pri_penitence;
+    if (!(def.value < 0)) fail(`참회의 effect_value 가 ${def.value} — 디버프는 음수여야 한다`);
+    const before = foes[0].atk;
+    rt.castBuff(u, def, 0);
+    if (count.rng !== 0) fail(`적 전원 대상인데 rng 를 ${count.rng}회 썼다`);
+    if (!foes[0].buffs[def.id] || !foes[1].buffs[def.id]) fail('생존 적 전원에게 안 걸렸다');
+    if (foes[2].buffs[def.id]) fail('쓰러진 적에게도 걸렸다');
+    if (!(foes[0].atk < before)) fail(`공격력이 안 내려갔다 (${before} → ${foes[0].atk})`);
+    if (u.buffs[def.id]) fail('시전자에게도 걸렸다 — 적에게 거는 창이다');
+    return `e0·e1 공격력 ${before} → ${Math.round(foes[0].atk * 10) / 10} · 시전자 무변화`;
+});
+check('runtime: summon — 아군 배열에 유닛이 서고 타임라인에 남는다 (skill_design §12-6 프로즌월)', () => {
+    const u = rtUnit('p0', 'party', { hp: 200, hpMax: 200 });
+    const party = [u];
+    const { rt, log } = fakeRt(party, [rtUnit('e0', 'enemy')]);
+    const def = SYS.skill.defs.mag_frozenwall;
+    rt.castSummon(u, def, 3);
+    if (party.length !== 2) fail(`아군이 ${party.length}명 — 벽이 안 섰다`);
+    const wall = party[1];
+    if (!wall.summon) fail('선 유닛에 summon 표식이 없다');
+    if (wall.hpMax !== Math.round(u.hpMax * def.mult / 100)) fail(`벽 HP ${wall.hpMax} ≠ 시전자 최대 HP × ${def.mult}%`);
+    if (!log.some(e => e.e === 'summon')) fail('타임라인에 summon 이 없다');
+    return `벽 HP ${wall.hpMax} (시전자 ${u.hpMax} × ${def.mult}%) · 대상 풀 ${party.length}명`;
+});
+check('runtime: 평타 부여 — attack_splash 는 전원에게 · onhit_element 는 추가타 1회 (skill_design §12-4·§12-5)', () => {
+    const foes = [rtUnit('e0', 'enemy'), rtUnit('e1', 'enemy')];
+    // 창이 없을 때 — 단일 1타 (종전 수열과 같아야 한다)
+    const plain = rtUnit('p0', 'party');
+    const a = fakeRt([plain], foes);
+    a.rt.basicAttack(plain, 0, foes);
+    if (a.hits.length !== 1) fail(`창이 없는데 ${a.hits.length}타 — 종전 동작이 바뀌었다`);
+    // 관통 사격 — 전원에게, 배율은 창의 값 %
+    const pierce = rtUnit('p0', 'party');
+    const bRt = fakeRt([pierce], foes);
+    bRt.rt.castBuff(pierce, SYS.skill.defs.arc_pierce, 0);
+    bRt.rt.basicAttack(pierce, 0, foes);
+    if (!eq(bRt.hits.map(h => h.d), ['e0', 'e1'])) fail(`관통 대상 [${bRt.hits.map(h => h.d)}]`);
+    const want = SYS.skill.defs.arc_pierce.value / 100;
+    if (bRt.hits.some(h => Math.abs(h.mult - want) > 1e-12)) fail(`관통 배율 ${bRt.hits[0].mult} ≠ ${want}`);
+    // 독화살 — 같은 대상에게 원소 추가타 1회
+    const pois = rtUnit('p0', 'party');
+    const cRt = fakeRt([pois], foes);
+    cRt.rt.castBuff(pois, SYS.skill.defs.arc_poison, 0);
+    cRt.rt.basicAttack(pois, 0, foes);
+    if (cRt.hits.length !== 2) fail(`평타 + 추가타 = 2 여야 한다 (${cRt.hits.length})`);
+    if (cRt.hits[1].element !== 'poison') fail(`추가타 원소 ${cRt.hits[1].element}`);
+    return '평타 1 · 관통 전원 · 독 추가타 1회(poison)';
 });
 check('runtime: period_pct — 창은 period 만 바꾸고 이미 예약된 next 는 안 건드린다 (INTERFACE §2-6)', () => {
     const u = rtUnit('p0', 'party', { period: 2, basePeriod: 2, next: 1.7 });
@@ -2170,7 +2304,12 @@ check('skill: 검증 — kind↔target 불일치 · 광역의 hits>1 · 연쇄 �
     };
     const cases = [
         ['war_bash', { target: 'party' }, 'attack 이 아군 대상'],
-        ['pri_grace', { target: 'enemy_all' }, 'buff 가 적 대상'],
+        // ⚠ `buff` + `enemy_all` 은 **이제 합법**이다 (참회·속박 — 음수 창). 대신 순환·연쇄는 여전히 못 쓴다
+        ['pri_grace', { target: 'enemy_rotate' }, 'buff 가 순환 대상'],
+        ['pri_heal', { target: 'enemy_all' }, 'heal 이 적 대상'],
+        ['kni_might', { cool_sec: 5 }, 'aura 인데 쿨이 있다'],
+        ['kni_might', { duration_sec: 5 }, 'aura 인데 창을 연다'],
+        ['mag_frozenwall', { target: 'party' }, 'summon 이 자기 자리가 아니다'],
         ['pri_grace', { hits: 2 }, 'buff 에 타수'],
         ['pri_grace', { mult_pct: 50 }, 'buff 에 배율'],
         ['war_bash', { duration_sec: 5 }, 'attack 이 창을 연다'],
@@ -2269,7 +2408,7 @@ check('skill: previewOf — 실효 쿨 · 한 타 피해 · 모르는 값은 nul
         fail('buff 에 amount 가 났다');
     return `실효 ${pv.everySec}s · 한 타 ${pv.amount}`;
 });
-check('tip: 스킬 문장 — 24행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {
+check('tip: 스킬 문장 — 37행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {
     const ctx = { period: 2.4, atk: 400, atkType: 'physical' };
     let checked = 0;
     for (const lang of ['ko', 'en']) {
@@ -2286,13 +2425,16 @@ check('tip: 스킬 문장 — 24행 전부 문장을 낸다 · 숫자가 강조�
             // ⚠ 2026-09-08 2차 개정으로 ~~실효 쿨~~ 이 아니라 **표기 쿨**이다 (SCREEN_DESIGN §4-2 · R56)
             const hl = [...line.querySelectorAll('.tip-hl')].map(n => n.textContent);
             if (!hl.length) fail(`${lang} ${def.id} 강조된 숫자가 없다`);
-            const cool = String(Number(SYS.skill.previewOf(def, ctx).baseSec.toFixed(1)));
-            if (!hl.includes(cool)) fail(`${lang} ${def.id} 표기 쿨 ${cool} 이 강조에 없다 (${hl})`);
+            // ⚠ **오오라만 예외** — 쿨이 없어서(§1-5) 문장이 초를 안 말한다. 대신 효과 값이 강조돼 있다
+            if (def.kind !== 'aura') {
+                const cool = String(Number(SYS.skill.previewOf(def, ctx).baseSec.toFixed(1)));
+                if (!hl.includes(cool)) fail(`${lang} ${def.id} 표기 쿨 ${cool} 이 강조에 없다 (${hl})`);
+            }
             checked += 1;
         }
     }
     setLang('ko');
-    return `${checked} 문장 (24행 × ko/en)`;
+    return `${checked} 문장 (37행 × ko/en)`;
 });
 check('tip: 스킬의 초는 **행동 주기를 안 탄다** — 공속을 올려도 문장의 숫자가 그대로다 (SCREEN_DESIGN §4-2 · R56)', () => {
     // 회귀 그물 — 옛 판은 실효 쿨(ceil(쿨 ÷ 주기) × 주기)을 찍어서 공격 속도 마스터리를 찍을 때마다

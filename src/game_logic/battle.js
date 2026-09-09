@@ -43,6 +43,7 @@
 
 import { createFormula } from './formula.js';
 import { createHooks, createSkillRuntime } from './skill_runtime.js';
+import { refreshDerived } from './skill_effects.js';
 
 const TICK = 0.1;
 
@@ -95,15 +96,19 @@ export function createBattleSystem(data) {
             // 회복 밑수도 공격력과 **같은 괄호**를 탄다 — atk_pct 창이 여기도 걸린다 (skill_effects:EFFECTS.atk_pct)
             matkBase: matk / (1 + atkPct / 100),
             atkType: c.attack_type,                  // physical 또는 원소 (monster_design §2 · §9-5)
-            def: c.defense,
+            // 창이 미는 축은 **밑수를 따로 든다** — `refreshDerived` 가 창 합으로 파생값을 다시 쓰고,
+            //   창이 하나도 없을 때 원값으로 돌아갈 자리가 필요해서다 (skill_effects:EFFECTS.derive)
+            def: c.defense, defBase: c.defense,
+            hpMaxBase: c.hp_max,
             res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
+            resBase: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 dlvl (§9-4)
-            resMaxBonus: c.res_max_bonus, dr: c.damage_reduction,
+            resMaxBonus: c.res_max_bonus, dr: c.damage_reduction, drBase: c.damage_reduction,
             defIgnore: c.def_ignore, resReduction: c.res_reduction,
             skillMult: 1, bonusPct: c.dmg_bonus_pct, // 도감·특효 보정 — strike 가 읽는 이름과 같아야 한다
             crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
-            regen: c.hp_regen ?? 0, regenAcc: 0,
+            regen: c.hp_regen ?? 0, regenBase: c.hp_regen ?? 0, regenAcc: 0,
             cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축 % — 시전 시점에 곱한다
             period: c.action_period, basePeriod: c.action_period,
             next: 0,
@@ -112,6 +117,24 @@ export function createBattleSystem(data) {
             goldFind: c.gold_find, itemFind: c.item_find,
             ...extra,
         };
+    }
+
+    /**
+     * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
+     * 행동하지 않으므로 행동 주기도 AI 도 대상 선택도 없다 — `next: Infinity` 라 차례가 영원히 안 온다.
+     * 공격·방어 축은 전부 0 이고 HP 만 든다: **펫 서브시스템을 여는 것이 아니다**(기획 §12-6 이 못박은 구분).
+     * @param caster 시전자 · @param def 스킬 정의(`mult` = 시전자 최대 HP 의 %) · @param key 유닛 키
+     */
+    function makeSummon(caster, def, key) {
+        const hp = Math.max(1, Math.round(caster.hpMax * def.mult / 100));
+        const zero = {
+            hp_max: hp, atk_physical: 0, atk_magic: 0, atk_pct_sum: 0, attack_type: 'physical',
+            defense: 0, res_fire: 0, res_cold: 0, res_lightning: 0, res_poison: 0,
+            level: caster.lvl, res_max_bonus: 0, damage_reduction: 0, def_ignore: 0, res_reduction: 0,
+            dmg_bonus_pct: 0, crit_rate: 0, crit_damage: 0, life_steal: 0, reflect_damage: 0,
+            hp_regen: 0, cooldown_reduction: 0, action_period: 0, gold_find: 0, item_find: 0,
+        };
+        return makeUnit(caster.side, zero, { key, summon: true, summonOf: caster.key, next: Infinity });
     }
 
     /**
@@ -206,6 +229,24 @@ export function createBattleSystem(data) {
                 return { id: a.id, def, readyAt: 0, source: a.source };
             }),
         }));
+        /*
+         * 오오라 — **쿨 없이 상시이고 행동을 안 먹는다** (skill_design §1-5). 그래서 액티브 칸에서 빼고
+         *   전투 시작에 `until: Infinity` 창으로 건다: 창 만료가 영원히 안 걸리므로 상시가 되고,
+         *   `pickReady` 가 안 보므로 차례를 안 먹는다.
+         * **한 번에 하나만** — 켤 것을 고르는 화면이 없어 **칸 순서 첫 오오라**를 켠다 (⚠ 임시 · SCREEN_DESIGN 미작성).
+         * ⚠ 파티원이 각자 다른 오오라를 들면 파티에 둘이 겹친다 — 「하나만」이 지금은 **시전자 단위**다 (기획 §7).
+         */
+        for (const p of party) {
+            const aura = p.actives.find(a => a.def.kind === 'aura');
+            p.actives = p.actives.filter(a => a.def.kind !== 'aura');
+            if (!aura) continue;
+            const targets = aura.def.target === 'self' ? [p] : party;
+            for (const tgt of targets) {
+                tgt.buffs[aura.id] = { stat: aura.def.stat, v: aura.def.value, until: Infinity, element: aura.def.element ?? null, by: p.key };
+            }
+        }
+        for (const p of party) refreshDerived(p);
+
         const avg = k => party.reduce((s, p) => s + (p[k] ?? 0), 0) / Math.max(1, party.length);
         const goldMult = 1 + avg('goldFind') / 100;
         const dropMult = 1 + avg('itemFind') / 100;
@@ -230,12 +271,18 @@ export function createBattleSystem(data) {
         const alive = list => list.filter(u => u.hp > 0);
         const hooks = createHooks();
         // 액티브 실행은 런타임 몫 — 전투 하나마다 새로 만든다(모듈 전역 상태 없음)
+        // 소환 유닛 키 — `p0`(파티) · `e0`(적) 과 겹치지 않는 `s0` 대역. 전투 하나 안에서만 센다
+        let summonSeq = 0;
         const rt = createSkillRuntime({
             SK, B, rng, timeline, out, units,
             strikeOnce, pickTarget, r1, EPS, hooks,
+            makeSummon: (caster, def) => makeSummon(caster, def, `s${summonSeq++}`),
         });
 
         const beginRound = () => {
+            // 소환물은 **라운드가 끝나면 사라진다** (skill_design §12-6). 걷어내는 자리가 여기다 —
+            //   적 배열이 갈리는 것과 같은 시점이라 결투 선언의 지목도 함께 사라진다(창이 적에게 붙어 있었다)
+            for (let i = party.length - 1; i >= 0; i--) if (party[i].summon) party.splice(i, 1);
             const sp = spawnRound(rng, stage, pool, round);
             units.enemies = sp.list;
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
@@ -286,9 +333,18 @@ export function createBattleSystem(data) {
         /** 도발자 — `taunt` 창이 켜진 생존 유닛 중 배열 순 첫 번째 (skill_design §9-2 기사 항) */
         const hasTaunt = list => list.find(p => p.hp > 0 && Object.values(p.buffs).some(b => b.stat === 'taunt')) ?? null;
 
-        /** 단일 대상 선택 — 적 측은 도발이 켜져 있으면 그 유닛으로 고정하고 **타겟 rng 를 쓰지 않는다** */
+        /**
+         * 단일 대상 선택 — 적 측은 **지목**(결투 선언) → **도발** 순으로 고정하고 그때는 **타겟 rng 를 쓰지 않는다**.
+         * 결투가 먼저인 이유: 지목은 그 적 하나에게만 걸리는 개별 계약이고 도발은 적 전체에 거는 광역 규칙이라,
+         *   좁은 쪽이 이기지 않으면 지목이 도발에 늘 먹혀 스킬이 죽는다 (skill_design §12-4).
+         */
         function pickTarget(u, foes) {
             if (u.side === 'enemy') {
+                const duel = Object.values(u.buffs).find(b => b.stat === 'duel');
+                if (duel) {
+                    const marked = party.find(p => p.key === duel.by && p.hp > 0);
+                    if (marked) return marked;
+                }
                 const tn = hasTaunt(party);
                 if (tn) return tn;
             }
@@ -380,7 +436,8 @@ export function createBattleSystem(data) {
             // ~~전투불능자가 하나라도 나오면 철수~~ 는 폐기 — 그 룰이 편성이 져야 할 무게를 대신 지고 있었다.
             // ⚠ 09-07 로 이것이 **최종형**이다 — 원정은 켜 놓고 자리를 뜨는 것이라 전멸까지 도는 것이 사양이고,
             //    추가 브레이크를 만들지 않는다. **결정은 편성이다** (base_expedition_design §1-1 · DEV_PLAN R42)
-            if (alive(party).length === 0) { out.reason = 'wipe'; break; }
+            // ⚠ 소환물은 **전멸 판정에서 뺀다** — 얼음 벽이 서 있다고 전투가 안 끝나면 파티가 전멸해도 안 돌아온다
+            if (alive(party).filter(u => !u.summon).length === 0) { out.reason = 'wipe'; break; }
             if (alive(units.enemies).length === 0) {
                 out.roundsCleared = round;
                 if (round >= rounds) { out.won = true; out.reason = 'clear'; break; }

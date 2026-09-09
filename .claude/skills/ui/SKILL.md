@@ -27,6 +27,9 @@ user-invocable: true
 > 문서 이름 없이 `§` 만 적은 곳은 전부 [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) 의 절이다.
 
 1. **[SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) 를 먼저 고친다** — 화면 작업은 문서가 코드보다 앞선다. DOM·CSS 는 엔진 이식에서 버려지고 문서만 남는다 (SCREEN_DESIGN 머리말 · [DEV_PLAN.md §7](docs/client/DEV_PLAN.md)). **예외 없음.**
+   - **화면 문서는 셋이다 [2026-09-09]** — 규격 [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) · 결정 [adr/](docs/client/adr/README.md)(결정 하나가 파일 하나 · **안 고친다**) · 이력 [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md)(한 줄씩)
+   - **규격은 폐기된 것을 안 적는다** — 「옛 규칙 → 개정」을 SCREEN_DESIGN 에 취소선으로 남기지 않는다. 옛 결정은 그 ADR 에 닫힌 채 남고 새 ADR 이 그것을 대체한다
+   - **근거는 현재 상태를 주장하지 않는다** — ADR 은 쓰인 날의 사실만 말한다. 「지금 4종이다」 같은 개수·목록은 **적지 말고 가리킨다**(`mock.js:SKILL_ICON_FILES`). 2026-09-09 전수 대조에서 나온 낡음 6건 중 **넷이 이 유형**이었다
 2. **렌더러는 계산도 난수도 하지 않는다** — 상태 `G` 를 읽고 `SYS` 를 부르고 `save()` 한다. 공식이 필요하면 `game_logic/` 에 요청한다(→ `/client`). 렌더러에 남은 공식은 이미 부채로 등재돼 있다 ([DEV_PLAN.md §4](docs/client/DEV_PLAN.md) 부채 #3 · #4) — **새로 만들지 않는다.**
 3. **다국어 ko/en 나란히 — 예외 없음** — `app.js` · `battle.js` 에 한국어 리터럴 금지(주석 제외). UI 문구는 `i18n.js` 의 `STRINGS` 를 `t(key)` 로, 데이터 문자열은 `mock.js` 의 `{ko, en}` 쌍을 `L()` 로 푼다. 이름 조립(어순·조사)은 렌더러가 아니라 데이터 층에 둔다 ([src/ui/README.md](src/ui/README.md)).
 4. **설명 문구는 도움말 탭 전용** — 인게임 패널에는 숫자 · 상태 · 오류 · 버튼 · 툴팁만 둔다. 규칙 문구는 `app.js` 의 `helpSections()` 에 **기존 키를 재사용해** 넣는다 — 도움말은 문구를 새로 쓰지 않는다 (2026-08-26 사용자 지시 · [SCREEN_DESIGN.md §12](docs/client/SCREEN_DESIGN.md)). **옵션 표기도 같다** — 유저에게 보이는 옵션 줄은 **이름 + 값**만 찍는다. 「+3강에서 옵션 상승」 같은 조건·규칙 주석은 옵션 줄이 아니라 도움말의 내용이다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §2).
@@ -51,6 +54,7 @@ user-invocable: true
 **0. 읽는다** — 작업 규칙의 mtime 확인을 먼저 하고:
 
 - [SCREEN_DESIGN.md §1](docs/client/SCREEN_DESIGN.md) 화면 지도로 대상 탭을 찾고, 그 탭의 절 전문
+- 그 절 끝의 **「왜 이 모양인가 — 결정 기록」** — 지금 규격이 왜 그런지가 [adr/](docs/client/adr/README.md) 에 있다. **뒤집는 제안을 하기 전에 해당 ADR 을 읽는다** — 버려진 안과 그 근거가 거기 있다
 - 그 절의 **"호출:" 줄** — 렌더러가 부르는 `SYS.*` 함수 목록. 각 함수의 계약은 [INTERFACE.md §2](docs/client/INTERFACE.md) 의 해당 모듈 절
 - [src/ui/README.md](src/ui/README.md) — 파일별 역할 · 다국어 표 · 화면 폭 정책
 - 관전을 만지면 [INTERFACE.md §6](docs/client/INTERFACE.md)(재생기 계약)과 타임라인 이벤트 정의([INTERFACE.md §2-6](docs/client/INTERFACE.md))
@@ -59,9 +63,10 @@ user-invocable: true
 **1. 설계한다 (문서 먼저)**
 
 - 개정안을 **"보여준다 / 결정 / 규칙" 표**로 대화 본문에 제시한다 — SCREEN_DESIGN 각 절이 쓰는 표 형식 그대로. 열이 안 맞으면 그 절의 형식을 따른다(§4-1 은 "영역 / 보여준다 / 결정")
-- 사용자 확인을 받은 뒤 [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) 에 반영한다. 새 화면이면 §1 화면 지도와 §11 미구현 표도 같이 고친다
+- 사용자 확인을 받은 뒤 [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) 에 반영한다. 새 화면이면 §1 화면 지도와 §11 미구현 표도 같이 고친다 — **규격은 새 상태로 덮어쓴다.** 옛 문장에 취소선을 그어 남기지 않는다
 - 절 아래 "호출:" 줄에 새로 부르는 함수를 추가한다. 그 함수가 아직 없으면 구현 전에 `/client`
-- 문서 꼬리 `*마지막 업데이트: 날짜 (내용)*` 는 **최신을 앞에** 붙인다
+- **뒤집을 수 있었던 선택이면 ADR 을 쓴다** — [adr/0000-template.md](docs/client/adr/0000-template.md) 를 복사해 다음 번호로. 옛 결정을 대체하면 그 파일의 **「대체됨」 칸 한 줄만** 고친다(본문은 그날 쓴 그대로 둔다). 그 절 끝 「결정 기록」에 줄을 더한다. 무엇이 ADR 이 되고 안 되는지는 [adr/README.md](docs/client/adr/README.md)
+- 이력은 [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md) 맨 앞에 **한 줄**. SCREEN_DESIGN 꼬리에 이어 붙이지 않는다 — 그 한 줄이 **75KB · 119항목**이 돼서 갈랐다
 
 **2. 문구를 붙인다**
 
@@ -77,7 +82,7 @@ user-invocable: true
 
 **5. 문서 갱신 + 보고**
 
-- [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) 꼬리 · [src/ui/README.md](src/ui/README.md)(정책이나 파일 역할이 바뀌었으면) · [DEV_PLAN.md](docs/client/DEV_PLAN.md) §4(부채가 생기거나 해소되면) · §3-1(현황이 바뀌었으면)
+- [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md) 한 줄 · ADR 을 썼으면 `python docs/client/adr/_build_index.py`(인덱스는 **손으로 고치지 않는다** — 파생 뷰다) · [src/ui/README.md](src/ui/README.md)(정책이나 파일 역할이 바뀌었으면) · [DEV_PLAN.md](docs/client/DEV_PLAN.md) §4(부채가 생기거나 해소되면) · §3-1(현황이 바뀌었으면)
 - 보고에는 **바꾼 것 · ko/en 스크린샷 파일 경로 · 검증 결과 · 열린 질문**. 건너뛴 게 있으면 건너뛰었다고 적는다
 
 ## 자주 막히는 지점
@@ -108,4 +113,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-09-03 (원칙 4 확장 — 옵션 표기는 이름 + 값만, 조건·규칙 주석은 도움말로 — 사용자 지시) · 2026-08-27 (최초 작성)*
+*마지막 업데이트: 2026-09-09 (**화면 문서 분리 반영** — 규격 / 결정(adr/) / 이력(SCREEN_CHANGELOG) 셋으로 갈렸다. 원칙 1 에 **두 금지**(규격은 폐기된 것을 안 적는다 · 근거는 현재 상태를 주장하지 않는다) · 절차 0 에 「결정 기록」 읽기 · 절차 1 에 ADR 쓰기와 이력 한 줄 · 절차 5 갱신 대상 교체. 본체는 [adr/README.md](docs/client/adr/README.md) · [DEV_PLAN §7](docs/client/DEV_PLAN.md)) · 2026-09-03 (원칙 4 확장 — 옵션 표기는 이름 + 값만, 조건·규칙 주석은 도움말로 — 사용자 지시) · 2026-08-27 (최초 작성)*

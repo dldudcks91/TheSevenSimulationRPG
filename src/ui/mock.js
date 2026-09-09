@@ -214,11 +214,14 @@ export const heroFace = hero => {
  * 얼굴 스타일(`faceDir`)을 안 타는 이유 — 스킬 아이콘은 스타일 폴더가 없는 단일 세트다.
  */
 export const SKILL_ICON_DIR = './assets/art/icons/skills/';
-// [개명 2026-09-09] 셋이 죽은 id 를 달고 있었다 — `war_warcry`·`wg_axe`·`wg_sword2h` 는 직업 스킬 풀 개정으로
-//   스킬 자체가 사라져 **어느 스킬의 그림도 아니게** 됐다. 그림이 가리키는 것을 따라 옮겼다:
-//   뿔나팔+음파 → `war_taunt`(도발) · 교차한 도끼 → `war_doubleswing` · 땅에 꽂힌 검+파문 → `war_quake`(지각균열).
-//   ⚠ 뒤의 둘은 키잉이 날아가 거의 흰색이다 — 재발주는 `/icon-prompt` (SCREEN_DESIGN §9-1)
-export const SKILL_ICON_FILES = ['war_taunt', 'war_bash', 'war_quake', 'war_doubleswing', 'pri_judgment'];
+// [전사 세트 2026-09-09] **전사 7 이 제 그림을 갖는다** — 단색 실루엣 시트 한 장에서 잘라 설치했다
+//   (발주·타일 문장은 `.claude/skills/icon-prompt/skill_tiles.md` §3). 09-09 오전의 개명 셋(`war_warcry`·`wg_axe`·
+//   `wg_sword2h` → `war_taunt`·`war_doubleswing`·`war_quake`)은 **그림째 교체**돼 옛 컬러 자산이 남아 있지 않다.
+//   ⚠ 목록의 **길이가 곧 해시 폴백의 나머지**다 — 5 → 8 이 되면서 그림 없는 스킬 29개의 임시 그림이 전부 재배정됐다
+export const SKILL_ICON_FILES = [
+    'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_taunt', 'war_shout', 'war_battleorders',
+    'kni_enchant', 'pri_judgment',
+];
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);

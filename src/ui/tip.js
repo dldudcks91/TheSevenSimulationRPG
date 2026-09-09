@@ -121,9 +121,15 @@ function amountPhrase(def, pv, atkType) {
     return t(heal ? 'sk.amt.heal' : (atkType && atkType !== 'physical' ? 'sk.amt.magic' : 'sk.amt.physical'), { v });
 }
 
-/** 버프 효과 구절 — 이름 + 값만. 어휘에 없는 stat 이면 null(그 문장을 안 만든다) */
-const effectPhrase = def =>
-    (STRINGS_HAS(`sk.eff.${def.stat}`) ? t(`sk.eff.${def.stat}`, { v: hl(def.value) }) : null);
+/**
+ * 버프 효과 구절 — 이름 + 값만. 어휘에 없는 stat 이면 null(그 문장을 안 만든다).
+ * **음수 값은 디버프**다 (참회 · 속박 — 같은 창을 반대로 쓴다). 부호를 문장에 그대로 흘리면
+ *   「공격력 +-25%」가 되므로 절댓값을 넘기고 **`.neg` 틀이 방향을 든다**.
+ */
+const effectPhrase = def => {
+    const key = `sk.eff.${def.stat}${def.value < 0 ? '.neg' : ''}`;
+    return STRINGS_HAS(key) ? t(key, { v: hl(Math.abs(def.value)) }) : null;
+};
 
 /** 문장 한 줄 — `kind` × `target` 이 틀을 정한다. 틀이 없으면 `null`(설명만 뜬다) */
 function skillLine(def, pv, atkType) {
@@ -134,14 +140,32 @@ function skillLine(def, pv, atkType) {
         if (def.target === 'enemy_all') return t('sk.line.all', { n, d });
         if (def.target === 'enemy_chain') return t('sk.line.chain', { n, d, k: hl(def.decay) });
         if (def.target === 'enemy_rotate') return t('sk.line.rotate', { n, d, h: hl(def.hits) });
+        if (def.target === 'enemy_highest_def') return t('sk.line.guided', { n, d, h: hl(def.hits) });
         return t(def.hits > 1 ? 'sk.line.singleN' : 'sk.line.single', { n, d, h: hl(def.hits) });
     }
-    if (def.kind === 'heal') return t('sk.line.heal', { n, d: amountPhrase(def, pv, atkType) });
+    if (def.kind === 'heal') {
+        const d = amountPhrase(def, pv, atkType);
+        return t(def.target === 'ally_single' ? 'sk.line.healOne' : 'sk.line.heal', { n, d });
+    }
+    // 소환 — 세기가 배율이 아니라 **시전자 최대 HP 의 %** 라 수량 구절을 안 쓴다 (skill_design §12-6)
+    if (def.kind === 'summon') return t('sk.line.summon', { n, h: hl(def.mult) });
+    // 오오라 — **쿨이 없다.** 그래서 이 문장만 `{n}` 을 안 든다 (skill_design §1-5)
+    if (def.kind === 'aura') {
+        const e = effectPhrase(def);
+        return e === null ? null : t('sk.line.aura', { e });
+    }
     if (def.kind === 'buff') {
         const s = sec(def.dur);
         if (def.stat === 'taunt') return t('sk.line.taunt', { n, s });
+        // 지목은 창의 길이를 안 말한다 — 「라운드가 끝날 때까지」라 초로 셀 것이 아니다
+        if (def.stat === 'duel') return t('sk.line.duel', { n });
         const e = effectPhrase(def);
-        return e === null ? null : t(def.target === 'party' ? 'sk.line.buffParty' : 'sk.line.buffSelf', { n, s, e });
+        if (e === null) return null;
+        const key = def.target === 'party' ? 'sk.line.buffParty'
+            : def.target === 'party_adjacent' ? 'sk.line.buffAdjacent'
+            : (def.target === 'enemy_all' || def.target === 'enemy_single') ? 'sk.line.debuffAll'
+            : 'sk.line.buffSelf';
+        return t(key, { n, s, e });
     }
     return null;
 }
