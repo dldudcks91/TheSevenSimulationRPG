@@ -236,7 +236,7 @@ const state = {
     // 도감 세그먼트 (SCREEN_DESIGN §9) — monster | character | item | skill. 09-08 에 이미지 도감이 흡수되며 값이 둘에서 넷이 됐다.
     // 얼굴 스타일은 여기 안 둔다 — 전역이다(`?face=` · localStorage · mock.js:setFaceStyle)
     codexSeg: 'monster',
-    slotFilter: null,
+    bagTab: 'equip',              // 가방의 최상위 축 — 'equip' | 'material' (ADR-0055)
     roll: 1, candidates: [], confirmOverwrite: false,
     salvageMode: false,
     forgeSeg: 'up',              // 제련소 세그먼트 — craft | up (SCREEN_DESIGN §8-2)
@@ -585,6 +585,16 @@ function renderExpIdle(main, nav) {
     const nb = noticeBanner();
     if (nb) main.appendChild(nb);
 
+    /* 영웅 띠 — **탭 최상단**이다 [2026-09-09 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0055] — 캐릭터 탭과 같은 자리.
+       옛 판은 띠가 전진 패널 **안**에 있어서, 지역을 고르기 전에는 로스터가 화면에 아예 없었다.
+       클릭 = 파티에 넣고 뺀다(`partyMode` · §5) · 리더 = `G.party[0]`.
+       ⚠ **관전·리포트에는 안 세운다** — 그 둘은 전투 화면만 본다(옛 규칙 유지). 그래서 여기(idle)에만 붙인다.
+       `deployed` — **전진 패널이 열려 있을 때만** 파티 카드가 반투명해진다 [2026-09-09 사용자 지시 · ADR-0058]:
+       그 흐림은 「아래 진형 보드에 내려가 있다」는 뜻이라, 지역을 닫아 보드가 사라지면 **영웅도 위로 돌아온다** */
+    main.appendChild(heroStrip(toggleParty, {
+        leaderUid: G.party[0] ?? null, partyMode: true, deployed: state.expStage != null,
+    }));
+
     /* 스테이지 — 해금된 챕터까지 보여주고, 다음 챕터 첫 스테이지는 잠긴 채로 예고 */
     const zp = el('div', 'panel');
     // 첫 줄 = 왼쪽 화면 전환 · 오른쪽 제목 (2026-09-03) — 옛 제목 줄 자리를 그대로 쓰므로 세로가 안 늘어난다
@@ -681,30 +691,17 @@ function reconcileForm() {
     return caps;
 }
 
-/** 진형을 관전에 넘길 꼴로 굳힌다 (2026-09-09) — `{byUid: {uid: 랭크}, orderByUid: {uid: 가로 차례}, depth: 랭크 수}`.
+/** 진형을 관전에 넘길 꼴로 굳힌다 (2026-09-09) — `{byUid: {uid: 랭크 번호}}` 하나뿐이다.
  *  **출발 순간에 한 번** 찍는다: 관전 중에 편성으로 돌아가 템플릿을 바꿔도 재생 중인 전투의 줄은 안 흔들린다
  *  (전투 결과가 출발 순간의 파티를 담은 것과 같은 이유).
- *
- *  **가로 차례는 「각 랭크를 같은 너비에 고르게 편다」로 나온다** [2026-09-09 사용자 지시] — k 명짜리 랭크의 i 번째는
- *  x = (i + 0.5) / k 에 서고, 전원을 그 x 로 줄 세운 것이 화면 차례다. 수가 적은 랭크가 저절로 **가운데**로 온다:
- *    · 2·1 → 앞 0.25 · **뒤 0.5** · 앞 0.75  = 앞 둘이 양옆, 뒤 하나가 그 사이 (삼각)
- *    · 1·2 → 뒤 0.25 · **앞 0.5** · 뒤 0.75  = 그 뒤집힌 꼴
- *    · 3    → 0.17 · 0.5 · 0.83             = 한 줄이라 파티 순서 그대로
- *  랭크를 **줄이 아니라 세로 어긋남**으로 그리는 화면이라(카드가 한 줄에 선다) 가로 차례까지 정해야 진형이 모양으로 읽힌다.
+ *  ⚠ **자리 계산(가로 차례 · 깊이)은 여기서 안 한다** — 재생기의 `layoutRanks` 가 든다 (2026-09-09 적 진형이 붙으며 합쳤다).
+ *    적은 진형을 몬스터 역할에서 뽑으므로 편성 화면이 관여할 수 없고, 규칙이 둘로 갈리면 두 진영이 다른 모양으로 선다.
  *  ⚠ 여전히 화면 상태뿐이다 — 세이브(G)에도 전투 계산(SYS.*)에도 안 실린다. 재생기는 이 값으로 **카드 자리만** 정한다 */
 function formSnapshot() {
-    const caps = reconcileForm();
+    reconcileForm();
     const byUid = {};
-    const spread = [];
-    state.expForm.ranks.forEach((list, r) => list.forEach((uid, i) => {
-        byUid[uid] = r;
-        spread.push({ uid, r, x: (i + 0.5) / list.length });
-    }));
-    // x 가 같으면 앞 랭크가 먼저다 — 결정적이어야 같은 편성이 늘 같은 그림으로 선다
-    spread.sort((a, b) => a.x - b.x || a.r - b.r);
-    const orderByUid = {};
-    spread.forEach((e, n) => { orderByUid[e.uid] = n; });
-    return { byUid, orderByUid, depth: caps.length };
+    state.expForm.ranks.forEach((list, r) => { for (const uid of list) byUid[uid] = r; });
+    return { byUid };
 }
 
 /** 어느 자리에 있나 — `[랭크, 칸]` 또는 못 찾으면 null */
@@ -799,8 +796,9 @@ function bindFormDrag(node, src) {
 function formBox() {
     const caps = reconcileForm();
     const f = state.expForm;
+    // ⚠ **머리(「진형」)는 없다** [2026-09-09 사용자 지시 · ADR-0060] — 아이콘 셋과 전열/후열 라벨이 이미 무엇인지 말한다.
+    //   제목 줄이 빠지면서 상자가 내용에 딱 맞는다(i18n `exp.form.h` 도 함께 삭제 — 부르는 곳이 0 이 됐다)
     const box = el('div', 'fm-box');
-    box.appendChild(el('div', 'fm-head', `<b>${t('exp.form.h')}</b>`));
     const main = el('div', 'fm-main');
 
     /* 왼쪽 — 아이콘 셋을 **가로로** 나란히 (2026-09-09 사용자 지시 — 옛 세로 기둥 폐기).
@@ -861,19 +859,24 @@ function formPanel(z, sin) {
 
     // 머리(제목 · 닫기 버튼)는 두지 않는다 (2026-08-28) — 무엇에 딸린 패널인지는 바로 위 행이 말하고,
     // 닫는 것은 그 행을 다시 누르는 것이다. 머리가 없으니 패널 높이를 흔들 것도 하나 줄었다
-    /* 파티 = 영웅 띠 (2026-08-27 — 옛 파티·벤치 두 패널을 걷어내고 띠 하나가 그 결정을 든다).
-       클릭 = 파티에 넣고 뺀다(출정 아웃은 거절 → 플래시) · 파티는 **카드 겉 테두리**로 보이고 위칸 글씨는 대기/출정 아웃만 (2026-08-28).
-       전투 관전·리포트에는 띠를 두지 않는다 — 전투 화면만 본다 */
-    // 리더 = G.party[0] = **제일 먼저 넣은 영웅** (toggleParty 가 클릭 순서로 push 한다)
-    const strip = heroStrip(toggleParty, { leaderUid: G.party[0] ?? null, flat: true, partyMode: true });
-    // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 패널이 상태에 따라 커졌다 작아진다 (2026-08-28)
-    // 상태 경고는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없으므로 편성이 막히는 경우가 파티 0 하나뿐이다
-    const warn = G.party.length === 0 ? t('exp.noParty') : '';
-    strip.appendChild(el('div', 'down exp-warn', warn));
-    p.appendChild(strip);
+    /* ⚠ **영웅 띠는 여기 없다** [2026-09-09 사용자 지시 · ADR-0055] — 탭 최상단으로 올라갔다(`renderExpIdle`).
+       이 패널은 이제 **전진에 필요한 것만** 든다: 자리(진형) · 막힌 이유(경고) · 갈 것인가(액션 둘).
+       누구를 보내는지는 위 띠에서 정하고, 여기서는 그 파티를 **어떻게 · 어디로** 보낼지만 정한다 */
+
+    /* **한 줄에 둘** [2026-09-09 사용자 지시 · ADR-0059] — 왼쪽 진형 · 오른쪽 출발.
+       옛 판은 셋(진형 / 경고 / 액션)이 세로로 쌓여 패널이 그만큼 길었고, 진형 오른쪽은 통째로 비어 있었다.
+       액션을 그 빈자리로 올리면 **세로 두 줄(경고 + 액션)이 통째로 사라진다** — 보내기가 화면 안으로 돌아온다 */
+    const row = el('div', 'fp-row');
 
     /* 진형 (⚠ 목업 · 2026-09-09) — 클릭은 소속(위 띠), **드래그는 자리**(여기). 화면 상태뿐이라 출발에 아무 영향이 없다 */
-    p.appendChild(formBox());
+    row.appendChild(formBox());
+
+    /* 오른쪽 칸 — 경고 + 액션. 둘 다 「보낼 수 있나」에 대한 것이라 한 묶음으로 선다 */
+    const side = el('div', 'fp-side');
+    // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 패널이 상태에 따라 커졌다 작아진다 (2026-08-28)
+    // 상태 경고는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없으므로 편성이 막히는 경우가 파티 0 하나뿐이다
+    // 자리는 **액션 바로 위**다 (2026-09-09) — 띠가 위로 가면서, 이 줄이 설명하는 것이 「파티」가 아니라 **「보내기가 막혔다」**가 됐다
+    side.appendChild(el('div', 'down exp-warn', G.party.length === 0 ? t('exp.noParty') : ''));
 
     /* 액션 — 같은 크기 버튼 둘. 반복 원정이 옛 별도 줄(repeatRow)에서 여기로 내려왔다 (2026-08-28 사용자 지시):
        그 줄이 런의 스테이지일 때만 붙어서 패널 크기가 흔들렸다. 버튼은 항상 있으므로 크기가 고정된다 */
@@ -889,7 +892,9 @@ function formPanel(z, sin) {
     go.onclick = () => runBattle(z.stage_id);
     actions.appendChild(rep);
     actions.appendChild(go);
-    p.appendChild(actions);
+    side.appendChild(actions);
+    row.appendChild(side);
+    p.appendChild(row);
     return p;
 }
 
@@ -1081,10 +1086,12 @@ function heroDoing(h) {
  * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
  * flat — 편성 패널처럼 이미 패널 안에 들어갈 때. 패널 껍데기(테두리·배경·여백)를 벗는다
  */
-function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, dismissable = false } = {}) {
+function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, dismissable = false, deployed = false } = {}) {
     const p = el('div', flat ? 'hs-panel flat' : 'panel hs-panel');
     // partyMode — 클릭이 파티 넣고 빼기인 띠(편성). ~~출정 아웃인 카드는 안 눌리는 티를 낸다~~ 는 2026-09-08 폐기(못 넣는 영웅이 없다)
-    const strip = el('div', `hero-strip${partyMode ? ' party-mode' : ''}`);
+    // `deployed` — **아래에 전진 패널이 열려 있나** (2026-09-09 사용자 지시 · ADR-0058). 파티 카드의 반투명은
+    //   「이 영웅은 아래 진형 보드에 내려가 있다」는 뜻이라, 패널이 닫혀 내려갈 곳이 없으면 흐림도 걷힌다
+    const strip = el('div', `hero-strip${partyMode ? ' party-mode' : ''}${deployed ? ' deployed' : ''}`);
     for (const h of G.heroes) {
         const doing = heroDoing(h);
         // 편성 띠면 **파티 소속**이, 아니면 **클릭한 영웅**이 파란 테두리를 든다 (2026-09-09 · SCREEN_DESIGN §5).
@@ -1334,32 +1341,55 @@ function detailPanels(h) {
     });
 }
 
+/**
+ * 재료 격자 — 한 종류가 칸 하나다. 개체가 아니라 **수량**이라 `inventory_cap` 을 안 먹는다 (ADR-0055).
+ * 지금 서는 것은 가루 · 낙인 둘뿐이다 — 광석 · 약초 · 목재는 이름조차 미정이고
+ * 기획의 「크래프트 경제 전부 — 백지」(GAME_DESIGN §10)가 닫혀야 이 격자가 찬다.
+ * 골드는 화폐라 여기 안 선다 — 셸 머리의 자원 줄이 든다.
+ */
+function materialGrid() {
+    const grid = el('div', 'inv-cells wide');
+    const mats = [{ id: 'dust', glyph: '✦' }, { id: 'stigma', glyph: '✥' }];
+    for (const m of mats) {
+        const n = G.resources?.[m.id] ?? 0;
+        const cell = el('div', 'inv-cell filled mat-cell');
+        cell.title = `${t(`res.${m.id}`)} — ${t('ch.bag.count', { n })}`;
+        cell.innerHTML = `<span class="inv-icon">${m.glyph}</span><span class="inv-up">${n}</span>`;
+        grid.appendChild(cell);
+    }
+    return grid;
+}
+
 /** ③ 아이템 — 가방. 클릭 = 착용(분해 모드면 분해 · 강화 모드면 강화). 열 수는 창 폭이 정한다 */
 function itemsPanel(h, { showTarget = false } = {}) {
     const p = el('div', 'panel');
     const bagItems = G.bag.map(itemOf).filter(Boolean);
-    const items = bagItems.filter(i => !state.slotFilter || i.slot === state.slotFilter);
+    const items = bagItems;
     // **제목 줄이 없다** (2026-09-01 사용자 지시) — 아래 가방이 화면 밖으로 밀려 있었고, 「아이템」이라는 글자는
     // 칸 격자가 이미 말하고 있었다. 다만 **수치는 안 지운다**: 칸 수와 (관전에서는) 장착 대상을 도구 줄 오른쪽이 든다
     // (SCREEN_DESIGN §6 · §4-1 「값은 항상 찍는다」). showTarget — 영웅 띠가 없는 관전 화면에서 대상 영웅을 적는다
     const tools = el('div', 'items-tools');
+    // 최상위 축은 **갈래**다 — 부위 필터는 2026-09-09 에 통째로 없앴다 (ADR-0055). 「전체」도 없다:
+    // 장비는 칸 하나 = 개체 하나이고 재료는 칸 하나 = 종류 + 개수라, 둘을 한 격자에 이으면 칸을 두 뜻으로 읽어야 한다
     const filter = el('div', 'segmented');
-    for (const f of [{ id: null, label: t('eq.filter.all') }, ...D.slots.map(s => ({ id: s.id, label: s.icon, title: L(s) }))]) {
-        const b = el('button', `btn sm${state.slotFilter === f.id ? ' on' : ''}`, f.label);
-        if (f.title) b.title = f.title;
-        b.onclick = () => { state.slotFilter = f.id; render(); };
+    for (const f of [{ id: 'equip', label: t('ch.bag.equip') }, { id: 'material', label: t('ch.bag.material') }]) {
+        const b = el('button', `btn sm${state.bagTab === f.id ? ' on' : ''}`, f.label);
+        b.onclick = () => { state.bagTab = f.id; render(); };
         filter.appendChild(b);
     }
     tools.appendChild(filter);
-    // 두 모드는 배타다 — 클릭 한 번이 「분해」와 「강화」 둘 중 무엇인지 화면에서 하나로 읽혀야 한다
-    const sv = el('button', `btn sm toggle${state.salvageMode ? ' on' : ''}`, t('ch.salvageMode'));
-    sv.onclick = () => { state.salvageMode = !state.salvageMode; render(); };
-    tools.appendChild(sv);
+    // 분해 모드는 **장비 탭에만** 산다 — 재료는 분해할 것이 아니다
+    const sv = state.bagTab === 'equip'
+        ? el('button', `btn sm toggle${state.salvageMode ? ' on' : ''}`, t('ch.salvageMode')) : null;
+    if (sv) { sv.onclick = () => { state.salvageMode = !state.salvageMode; render(); }; tools.appendChild(sv); }
     // 강화 모드 토글은 2026-09-03 에 없앴다 — 강화의 자리는 **제련소**(§8-2)다. 갈래가 둘(`+`강화·옵션강화)이라
     // 모드 토글 하나로는 어느 갈래인지 못 고른다. 가방에서 바로 여는 길(우클릭 → 강화)은 나중에 (SCREEN_DESIGN §6)
+    // 칸 수는 **장비 탭의 값**이다 — 재료는 수량이라 `inventory_cap` 을 안 먹는다 (ADR-0055)
     tools.appendChild(el('span', 'items-meta muted',
-        `${t('ch.items.sub', { n: G.bag.length, cap: D.balance.inventory_cap })}${showTarget ? ` · ${t('bt.items.target', { name: L(h.name) })}` : ''}`));
+        `${state.bagTab === 'equip' ? t('ch.items.sub', { n: G.bag.length, cap: D.balance.inventory_cap }) : ''}${showTarget ? `${state.bagTab === 'equip' ? ' · ' : ''}${t('bt.items.target', { name: L(h.name) })}` : ''}`));
     p.appendChild(tools);
+
+    if (state.bagTab === 'material') { p.appendChild(materialGrid()); return p; }
 
     const grid = el('div', `inv-cells wide${state.salvageMode ? ' salvage' : ''}`);
     for (let i = 0; i < D.balance.inventory_cap; i++) {

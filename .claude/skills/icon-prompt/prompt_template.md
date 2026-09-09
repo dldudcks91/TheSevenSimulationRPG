@@ -6,7 +6,8 @@ SKILL.md 1단계에서 편다. **짧게 쓴다** — 앵커 첨부가 스타일(
 
 | 발주 | 첨부 | 이유 |
 |---|---|---|
-| 스킬 아이콘 | `icons/skills/example_1.png` | 이펙트 글리프 문법(음파·충격성·참격 초승달·모션 선) + 난색 그라디언트 수위 |
+| 스킬 아이콘 | `icons/skills/sheet_02_mono_anchor.png` | **단색 실루엣**(외곽선·음영·색 없음) — 2026-09-09 부터 스킬 세트의 앵커다. 타일 문장은 [skill_tiles.md](skill_tiles.md) |
+| 스킬 아이콘 (옛 스타일) | ~~`icons/skills/sheet_01_color.png`~~ | 1차 컬러 카툰. **설치본에서 사라졌다** — 합격선 표(SKILL.md)가 아직 이 시트 기준이라 참고로만 남긴다 |
 | 무기 | `icons/items/examples.png` | 오브젝트 단독 · 대각선 구도 · 강조색 한 점 |
 | 방어구·장신구 | `icons/items/examples_armor.png` | 정면 구도 · 금속 광택 단수 |
 | empty 실루엣 | `icons/items/item_background.png` | 무채색 실루엣의 단순화 수위 |

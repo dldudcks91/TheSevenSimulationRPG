@@ -220,7 +220,10 @@ export const SKILL_ICON_DIR = './assets/art/icons/skills/';
 //   ⚠ 목록의 **길이가 곧 해시 폴백의 나머지**다 — 5 → 8 이 되면서 그림 없는 스킬 29개의 임시 그림이 전부 재배정됐다
 export const SKILL_ICON_FILES = [
     'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_taunt', 'war_shout', 'war_battleorders',
-    'kni_enchant', 'pri_judgment',
+    'kni_smite', 'kni_charge', 'kni_rush', 'kni_duel', 'kni_enchant',
+    'kni_might', 'kni_fanaticism', 'kni_defiance',
+    'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
+    'pri_judgment',
 ];
 export const skillIcon = id => {
     if (!id) return null;

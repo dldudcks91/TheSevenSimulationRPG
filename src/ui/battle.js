@@ -71,9 +71,6 @@ export function mountBattle(container, opts) {
         // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
         // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
         layout: opts.layout === 'split' ? 'split' : 'wide',
-        // 진형 깊이 = 랭크 수 (2026-09-09 · ⚠ 목업 · SCREEN_DESIGN §4-1) — 파티 카드를 미는 폭을 CSS 가 이 값으로 정한다.
-        // 진형을 안 넘겨 준 부름(개발용 라우트 등)은 1 = 한 줄 = **아무도 안 밀린다**
-        formDepth: form?.depth ?? 1,
         onKey: null,                 // Esc 리스너 — 정리 함수가 뗀다
     };
 
@@ -82,8 +79,8 @@ export function mountBattle(container, opts) {
         const h = heroes.find(x => x.uid === p.uid);
         return {
             key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
-            rank: form?.byUid?.[p.uid] ?? 0,   // 진형의 랭크 번호 (0 = 전열) — 카드 자리에만 쓴다 (2026-09-09)
-            order: form?.orderByUid?.[p.uid] ?? 0,   // 진형이 정한 **가로 차례** — 수가 적은 랭크가 가운데로 온다 (2026-09-09)
+            // 진형의 랭크 번호 (0 = 전열) — 카드 자리에만 쓴다 (2026-09-09). 가로 차례는 `layoutRanks` 가 나중에 박는다
+            rank: form?.byUid?.[p.uid] ?? 0,
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
             atk: p.atk, atkType: p.atkType,   // 툴팁 문장의 피해 — 전투에는 안 쓴다 (INTERFACE §2-6)
@@ -274,13 +271,52 @@ const identOf = u => u.side === 'party'
         : u.grade === 'stage_boss' ? t('kind.boss')
         : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '');
 
+/* ───────── 진형 (⚠ 목업 · SCREEN_DESIGN §4-1 · §4-2) ─────────
+   두 진영이 **같은 규칙**으로 선다 (2026-09-09 사용자 지시 — 적도 파티처럼).
+   랭크가 어디서 오는지만 다르다: 파티는 편성 화면이 찍어 보낸 진형, 적은 **몬스터 역할**(`monster.csv:role`). */
+
+/** 뒤에 서는 역할 — 원거리·시전·척후. 나머지(`line`·`heavy`·`elite_line`·`boss`)가 전열이다.
+ *  ⚠ **CSV 로 안 뺀다** — 진형이 기획 미확정(⚠ 목업)이라 `monster.csv` 에 컬럼을 늘리면 확정으로 읽힌다.
+ *    파티 쪽 템플릿(`app.js:FORM_TPLS`)을 화면에 둔 것과 같은 이유고, 진형이 확정되면 둘이 함께 CSV 로 간다. */
+const ENEMY_BACK_ROLES = new Set(['ranged', 'caster', 'skirmish']);
+const enemyRank = id => (ENEMY_BACK_ROLES.has(D.monsters?.[id]?.role) ? 1 : 0);
+
+/**
+ * 진영 하나의 자리를 정한다 — 각 유닛에 **가로 차례**(`u.order`)를 박고 **깊이**(랭크 수)를 돌려준다.
+ *
+ * 가로 차례는 「각 랭크를 같은 너비에 고르게 편다」로 나온다 [2026-09-09 사용자 지시] — k 명짜리 랭크의 i 번째가
+ * `x = (i + 0.5) / k` 에 서고, 전원을 그 x 로 줄 세운 것이 화면 차례다. **수가 적은 랭크가 저절로 가운데로 온다**:
+ *   · 2·1 → 앞 0.25 · **뒤 0.5** · 앞 0.75  = 앞 둘이 양옆, 뒤 하나가 그 사이 (삼각)
+ *   · 1·2 → 뒤 0.25 · **앞 0.5** · 뒤 0.75  = 그 뒤집힌 꼴
+ * 랭크를 **줄이 아니라 세로 어긋남**으로 그리는 화면이라(카드가 진영마다 한 줄에 선다 — 두 줄은 1280 에서 세로가 모자란다)
+ * 가로 차례까지 정해야 진형이 모양으로 읽힌다.
+ *
+ * ⚠ **깊이는 정원이 아니라 실제로 찬 랭크 수**다 — 한 랭크에 다 몰리면(전원 근접인 적 · 템플릿 3) 1 이 되고,
+ *   그러면 CSS 규칙이 하나도 안 걸려 **아무도 안 밀린다.** 있지도 않은 후열 때문에 전열이 올라가 있는 그림을 막는다.
+ */
+function layoutRanks(list) {
+    const byRank = new Map();
+    for (const u of list) {
+        const r = u.rank ?? 0;
+        if (!byRank.has(r)) byRank.set(r, []);
+        byRank.get(r).push(u);
+    }
+    if (byRank.size <= 1) { list.forEach((u, i) => { u.order = i; }); return 1; }
+    const spread = [];
+    for (const [r, members] of byRank) members.forEach((u, i) => spread.push({ u, r, x: (i + 0.5) / members.length }));
+    // x 가 같으면 앞 랭크가 먼저다 — 결정적이어야 같은 편성이 늘 같은 그림으로 선다
+    spread.sort((a, b) => a.x - b.x || a.r - b.r);
+    spread.forEach((e, n) => { e.u.order = n; });
+    return Math.max(...byRank.keys()) + 1;
+}
+
 function renderUnits(state, root) {
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
         const side = root.querySelector(sel);
         side.innerHTML = '';
-        // 진형 (⚠ 목업 · 2026-09-09 · SCREEN_DESIGN §4-1·§4-2) — **파티 줄에만** 깊이를 단다. 적은 진형이 없다.
-        // 깊이 + 랭크 두 값만 넘기고 미는 폭은 CSS 가 든다(수치가 스타일에 산다 — 인라인 없음)
-        if (list === state.party) side.dataset.depth = state.formDepth;
+        // 진형 — **양 진영 같다** (2026-09-09 사용자 지시). 깊이와 랭크만 넘기고 미는 폭·방향은 CSS 가 든다
+        // (수치가 스타일에 산다). 방향은 진영이 정한다 — 전열은 언제나 VS 쪽이라 위 진영과 아래 진영이 서로 뒤집힌다
+        side.dataset.depth = layoutRanks(list);
         for (const u of list) {
             const n = document.createElement('div');
             const boss = u.grade === 'stage_boss' || u.grade === 'chapter_boss';
@@ -351,12 +387,10 @@ function renderUnits(state, root) {
             const cell = document.createElement('div');
             cell.className = 'unit-slot';
             // 진형의 자리는 **칸**이 든다 (2026-09-09) — 카드가 아니라 칸을 밀어야 창 뱃지 줄이 카드를 따라간다.
-            // 세로(어긋남)는 `data-rank` 를 보고 CSS 가, 가로(차례)는 flex `order` 가 든다 — DOM 순서는 파티 순서 그대로 남는다
+            // 세로(어긋남)는 `data-rank` 를 보고 CSS 가, 가로(차례)는 flex `order` 가 든다 — DOM 순서는 진영 배열 그대로 남는다
             // (로그·누적 데미지가 읽는 순서와 갈리지 않게). ⚠ `order` 는 색·크기 같은 디자인 상수가 아니라 **유닛마다 다른 값**이라 인라인이다
-            if (u.side === 'party') {
-                cell.dataset.rank = u.rank ?? 0;
-                cell.style.order = u.order ?? 0;
-            }
+            cell.dataset.rank = u.rank ?? 0;
+            cell.style.order = u.order ?? 0;
             cell.appendChild(n);
             cell.insertAdjacentHTML('beforeend', '<div class="buff-row"></div>');
             u.buffRow = cell.lastElementChild;
@@ -537,6 +571,7 @@ function apply(state, root, opts, ev) {
             state.enemies = ev.enemies.map(e => ({
                 key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
                 name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: ev.t, node: null,
+                rank: enemyRank(e.monsterId),   // 진형 — 몬스터 **역할**이 정한다 (2026-09-09 · 아래 ENEMY_BACK_ROLES)
                 // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
                 //   skills: []  → 쿨 칸이 active_slots 만큼 **빈 채로** 선다 (몬스터 액티브는 아직 없다 — skill.csv 는 영웅 전용)
                 //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다

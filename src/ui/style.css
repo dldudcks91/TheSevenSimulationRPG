@@ -38,8 +38,12 @@
        **보드 높이는 랭크 최대(둘) 기준으로 고정**이라 템플릿을 바꿔도 패널이 안 흔들린다
        (「패널 크기는 상태에 흔들리지 않는다」 2026-08-28). 한 줄짜리(3)는 그 안에서 가운데에 선다.
        ⚠ 이 값을 키우면 보드가 그 2배로 자라 편성 패널이 세로 예산 700 밖으로 나간다 — 보내기 버튼이 접힌다 */
-    --fm-slot: 96px;
+    --fm-slot: 84px;
     --fm-board-h: calc(var(--fm-slot) * 2 + 7px);
+    /* 칸이 놓이는 **축의 폭** — 정원 최대(3칸)만큼 늘 잡아 둔다 (2026-09-09).
+       랭크마다 칸 수가 달라도 이 폭 안에서 **가운데 정렬**되므로 2·1 이면 뒤 하나가 앞 둘 사이에 온다 —
+       관전 아레나가 「수가 적은 랭크를 가운데」로 세우는 것(ADR-0053)과 같은 그림이 편성에서도 보인다 */
+    --fm-axis: calc(var(--fm-slot) * 3 + 14px);
 
     /* 2026-09-01 — 초상 축소 보간. **스타일이 정한다**: 초상은 어디서나 원본보다 작게 그려지는데
        (구성 칩 26px ~ 시작 후보 카드 152px), 줄이는 방법이 스타일마다 달라야 한다.
@@ -378,11 +382,17 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    그 빈 줄의 높이를 `min-height` 가 잡는다 — 안 잡으면 템플릿을 바꿀 때 패널이 커졌다 작아져
    「패널 크기는 상태에 흔들리지 않는다」(2026-08-28)가 깨진다.
    라벨 칸에 고정 px 를 안 쓴다 — 영어(Front/Mid/Back)가 한국어보다 길다 */
-.fm-box { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-dark); }
-.fm-head { font-size: var(--fs-sm); margin-bottom: 8px; }
-/* 왼쪽 = 템플릿 아이콘 · 오른쪽 = 보드. 아이콘은 **위로 붙인다** — 가운데로 맞추면 머리줄(「진형」)에서 떨어져
-   무엇에 딸린 버튼인지 눈이 안 잇는다 */
-.fm-main { display: flex; align-items: flex-start; gap: 16px; }
+/* 상자는 **내용에 딱 맞는다** [2026-09-09 사용자 지시 · ADR-0060] — 여백도 구분선도 제목 줄도 없다.
+   ⚠ 옛 값(`margin-top`·`padding-top`·`border-top`)은 띠가 이 상자 **위**에 있던 시절 그것과 가르던 선이고,
+     띠가 탭 최상단으로 올라가면서(ADR-0055) 위에 아무것도 없게 됐다. 그때 넣었던 `.form-panel > .fm-box:first-child`
+     예외는 ADR-0059 로 상자가 `.fp-row` 안으로 들어가며 **선택자가 안 맞게 됐다** — 규칙째 걷는 쪽으로 닫는다.
+   ~~`.fm-head`(「진형」 제목 줄)~~ 도 같이 삭제 — 아이콘 셋과 전열/후열 라벨이 이미 무엇인지 말한다 */
+.fm-box { margin: 0; padding: 0; }
+/* 왼쪽 = 템플릿 아이콘 · 오른쪽 = 보드. 덩어리는 **패널 왼쪽에 붙는다**
+   [재개정 2026-09-09 사용자 지시 · ADR-0059 — 같은 날의 「가운데로」(ADR-0057)를 물렸다]:
+   비어 있던 오른쪽 자리를 **출발 칸**이 받으므로 진형은 왼쪽에 서는 것이 맞다.
+   아이콘은 **세로 가운데** — 보드가 두 줄이라 위로 붙이면 아이콘 아래가 텅 빈다 */
+.fm-main { display: flex; align-items: center; gap: 20px; }
 
 /* 템플릿 = 정사각 아이콘, **가로 배치** (2026-09-09 사용자 지시 — 옛 세로 기둥 폐기).
    보드 옆에 두어 세로 비용이 0 이다 — 머리줄에 얹으면 아이콘 높이가 패널에 더해져 보내기가 접힌다(실측).
@@ -407,8 +417,16 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
     gap: 7px; min-width: 0; height: var(--fm-board-h);
 }
 .fm-row { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; height: var(--fm-slot); }
-.fm-label { flex: 0 0 auto; min-width: 3.6em; font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; }
-.fm-cells { display: flex; gap: 7px; min-width: 0; height: 100%; }
+/* 라벨은 **칸 쪽으로 붙인다**(오른쪽 정렬) — 칸이 가운데로 모이면서 왼쪽에 떨어져 있으면 어느 줄의 이름인지 눈이 안 잇는다.
+   폭은 `em` 이라 영어(Front/Back)가 길어져도 안 깨진다 (고정 px 금지) */
+.fm-label {
+    flex: 0 0 auto; min-width: 3.6em; text-align: right;
+    font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap;
+}
+/* 칸은 **정원 최대(3칸) 폭의 축 위에서 가운데 정렬**된다 (2026-09-09 · ADR-0057) —
+   2·1 이면 앞 둘이 양옆, 뒤 하나가 그 사이에 와서 **진형이 모양으로 읽힌다**(관전 아레나와 같은 그림 · ADR-0053).
+   폭을 늘 3칸으로 잡아 두므로 템플릿을 바꿔도 축이 안 흔들린다 */
+.fm-cells { display: flex; justify-content: center; gap: 7px; width: var(--fm-axis); height: 100%; }
 
 /* 칸은 정사각이고 높이를 줄에서 받는다 — 영웅 띠 카드와 같은 크기라
    빈 칸이 「여기에 영웅을 놓는다」로 크기만으로 읽힌다 */
@@ -438,7 +456,18 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .fm-ghost { position: fixed; z-index: 45; pointer-events: none; cursor: grabbing; opacity: .9; }
 
 /* 같은 크기 버튼 둘 — 반복 원정 / 보내기 */
-.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+/* 전진 패널의 속 = **한 줄에 둘** [2026-09-09 사용자 지시 · ADR-0059] — 왼쪽 진형 · 오른쪽 출발 칸.
+   옛 판은 진형 / 경고 / 액션이 세로로 쌓여 그만큼 길었고 진형 오른쪽은 비어 있었다.
+   액션을 그 빈자리로 올리면 세로 두 줄이 통째로 사라진다 — 보내기가 화면 안으로 돌아온다 */
+.fp-row { display: flex; align-items: center; gap: 16px; }
+/* 오른쪽 칸 — 경고 + 버튼 둘. `auto` 여백이 진형과 이 칸 사이의 남는 폭을 전부 먹어 버튼이 오른쪽 끝에 선다.
+   내용은 **세로 가운데** — 진형 보드(두 줄)와 눈높이를 맞춘다 */
+.fp-side {
+    margin-left: auto; flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+}
+/* 세로로 쌓이던 시절의 윗 여백을 걷는다 — 이제 제 칸 안에서 경고 줄 바로 밑이다 */
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .form-actions .btn.lg { flex: 0 0 auto; min-width: 148px; text-align: center; }
 
 .running {
@@ -681,22 +710,38 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 .side-enemy { align-items: flex-end; }
 .side-party { align-items: flex-start; }
 
-/* 진형이 파티 카드를 **살짝** 위아래로 민다 (⚠ 목업 · 2026-09-09 사용자 지시 · SCREEN_DESIGN §4-1·§4-2).
-   전열은 VS 쪽으로, 후열은 그 반대로 — 「누가 앞에 섰나」를 자리가 든다. 값은 화면 상태뿐이라 전투 계산과는 무관하다.
+/* 진형이 카드를 **살짝** 위아래로 민다 — **양 진영 다** (⚠ 목업 · 2026-09-09 사용자 지시 · SCREEN_DESIGN §4-1·§4-2).
+   전열은 VS 쪽으로, 후열은 그 반대로 — 「누가 앞에 섰나」를 자리가 든다. 랭크가 어디서 오는지만 진영마다 다르다
+   (파티 = 편성 진형 · 적 = `monster.csv:role`). 전투 계산은 어느 쪽도 진형을 모른다.
+   ⚠ **방향이 진영마다 뒤집힌다** — 「전열 = VS 쪽」은 하나인데 파티는 아래 진영이고 적은 위 진영이라, 같은 랭크 0 이
+     파티에선 **위로**, 적에선 **아래로** 간다. 이 뒤집힘이 없으면 적의 전열이 뒤로 물러선 그림이 된다.
    ⚠ **`top` 이지 `margin`/`transform` 이 아니다** — 칸은 이미 `position: relative` 라 흐름을 안 건드리고(줄 높이가 그대로다),
      `transform` 과 달리 새 컨테이닝 블록도 안 만든다(카드 안 팝업 · 툴팁이 쓰던 기준이 그대로 남는다).
-   ⚠ **미는 쪽은 랭크 수를 축으로 대칭**이다 — 파티 줄의 무게중심이 안 움직여야 「두 진영 사이 99px」(2026-09-08)이 한쪽만 좁아지지 않는다.
-     한 줄짜리(3)는 규칙이 없어 0 — 진형을 안 쓰던 때와 같은 자리다.
-   ⚠ **상한은 여기다** — 실측 여유가 아레나 테두리 안쪽 21px(1280 창)이라 창 뱃지 줄이 아레나 밖으로 나가기 전 한계가 ±half 다.
-     `--form-step` 을 올릴 땐 1280 창에서 후열의 뱃지 줄을 다시 찍는다 */
-.side-party { --form-step: 18px; }
+   ⚠ **미는 쪽은 랭크 수를 축으로 대칭**이다 — 줄의 무게중심이 안 움직여야 「두 진영 사이 99px」(2026-09-08)이 한쪽만 좁아지지 않는다.
+     깊이 1(한 랭크에 다 몰림)은 규칙이 하나도 안 걸려 0 — 진형을 안 쓰던 때와 같은 자리다.
+   ⚠ **상한이 있다 — 창 뱃지 줄이 아레나를 넘는 지점** (1280×700 실측 · 2026-09-09):
+     여유 = `11 - (step - 18) / 2` px. 18 → 11px · 30 → 5px · **40 → 0px(딱 닿는다 = 지금 값이자 한계)** · 44 → -2px(밖) · 58 → -9px(밖).
+     양 진영이 대칭으로 먹으므로 적 후열의 위쪽 여유도 같은 식이다. 올릴 땐 1280 창에서 **양쪽 후열의 뱃지 줄**을 같이 찍는다.
+   ⚠ **「후열만」 내리지 않는다** — 비용을 아래쪽 혼자 물어서 실측 +26px 에 벌써 6px 밖으로 나갔다(대칭이면 같은 벌어짐에 여유 5px).
+     대칭이 같은 세로 예산으로 **두 배를 벌린다.** */
+/* ⚠ **카드 높이의 절반(58px)은 이 아레나에 안 들어간다** (1280×700 실측 2026-09-09) — 두 길 다 막힌다:
+     대칭이면 진영 간격을 step 만큼 먹어 99 → 41px(09-08 에 「빡빡하다」고 벌리기 전 값)이 되고 뱃지가 9px 밖으로,
+     후열만 내리면 아래쪽 혼자 물어 38px 밖으로 나간다. VS 여백을 12 로 되돌려 자리를 만들면 **두 진영이 15px 겹친다.**
+     1600×900 에서는 여유 55px 로 넉넉하다 — 하한 폭 1280 의 아레나 높이(430)가 유일한 제약이다 */
+.side { --form-step: 40px; }
+/* 아래 진영(파티) — 전열이 위 */
 .side-party[data-depth="2"] .unit-slot[data-rank="0"] { top: calc(var(--form-step) / -2); }
 .side-party[data-depth="2"] .unit-slot[data-rank="1"] { top: calc(var(--form-step) / 2); }
 .side-party[data-depth="3"] .unit-slot[data-rank="0"] { top: calc(var(--form-step) * -1); }
 .side-party[data-depth="3"] .unit-slot[data-rank="2"] { top: var(--form-step); }
+/* 위 진영(적) — 같은 규칙을 부호만 뒤집어 쓴다. 전열이 아래 */
+.side-enemy[data-depth="2"] .unit-slot[data-rank="0"] { top: calc(var(--form-step) / 2); }
+.side-enemy[data-depth="2"] .unit-slot[data-rank="1"] { top: calc(var(--form-step) / -2); }
+.side-enemy[data-depth="3"] .unit-slot[data-rank="0"] { top: var(--form-step); }
+.side-enemy[data-depth="3"] .unit-slot[data-rank="2"] { top: calc(var(--form-step) * -1); }
 /* ⚠ **나눔 배치는 덜 민다** — 「나눔 배치는 안 벌린다」(2026-09-08 · .divider)와 같은 이유다:
    그쪽 아레나는 높이가 `clamp(280px,38vh,360px)` 라 벌리기 전에 이미 뱃지가 12px 밖으로 나가 있다(선행 버그) */
-.battle-body.split .side-party { --form-step: 10px; }
+.battle-body.split .side { --form-step: 10px; }
 
 /* VS 선 — **두 진영 사이의 간격을 이 여백이 정한다** (2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2).
    아레나가 내용을 세로 가운데 정렬하므로 이 한 값이 **VS 선을 축으로 위아래를 대칭으로** 민다.
@@ -1420,19 +1465,15 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 .hero-strip.party-mode .hs-card.downed { cursor: not-allowed; }
 /* 클릭한 영웅 — **파란 겉 테두리**가 여기로 옮겨 왔다 (2026-09-08 사용자 지시 · SCREEN_DESIGN §5) */
 .hs-card.on { border-color: var(--border-highlight); background: #22223a; outline: 2px solid var(--color-info); outline-offset: 1px; }
-/* 전투 파티 = **겉 테두리** (2026-08-28 사용자 지시). 옛 화면은 위칸 글씨를 「대기」→「전투 파티」로 바꿨는데,
-   그러면 클릭이 고른 티가 안 나고 그 줄이 「보낼 수 있는가」와 「골랐는가」 두 가지를 겸해 읽혔다.
-   안쪽 하이라이트(.on = 보고 있는 영웅)와 뜻이 달라 겹쳐도 서로 안 먹는다 — 하나는 안, 하나는 밖 */
-/* **되살림 2026-09-09 사용자 지시** (SCREEN_DESIGN §5) — 편성 띠에서만 선다. `.on` 과 **같은 모양**을 쓰는 이유는
-   그것이 이 화면의 「골랐다」 표시이기 때문이다: 편성에서는 `.on` 을 아예 안 걸므로 두 규칙이 한 카드에서 안 만난다.
-   안 고른 카드는 **흐리지 않는다** — 흐림은 이미 「못 누른다」(.downed)의 표시다 */
-.hero-strip.party-mode .hs-card.party {
-    border-color: var(--color-info); background: #22223a;
-    /* `.on` 보다 한 단 굵고 은은한 번짐을 더한다 [사용자 지시 2026-09-09 — 「확실하게 테두리로」] —
-       편성은 이 화면의 유일한 결정이라 표시가 배경에 묻히면 안 된다 */
-    outline: 3px solid var(--color-info); outline-offset: 1px;
-    box-shadow: 0 0 0 1px var(--color-info), 0 0 10px rgba(90, 150, 255, .35);
-}
+/* 전투 파티 = **반투명** [개정 2026-09-09 사용자 지시 · SCREEN_DESIGN §5 · ADR-0056] —
+   파란 겉 테두리(테두리 색 + 3px 아웃라인 + 번짐)를 통째로 걷고 **흐림 하나**가 그 뜻을 든다.
+   띠가 탭 최상단으로 올라간 뒤(ADR-0055) 파티 영웅은 **아래 진형 보드에도 같이 서 있다** —
+   그래서 위 카드의 흐림이 「이 영웅은 아래(전투)에 내려가 있다」로 읽힌다. 자리를 옮긴 표시지 못 쓰는 표시가 아니다.
+   ⚠ 테두리를 안 쓰므로 `.on`(다른 띠의 「보고 있는 영웅」)과 표시가 겹칠 일이 없다 — 편성 띠는 `.on` 을 안 건다 */
+   ⚠ **전진 패널이 열려 있을 때만 흐려진다** [2026-09-09 사용자 지시 · ADR-0058] — 「내려가 있다」는 **내려갈 곳이 있을 때만** 참이다.
+     지역을 닫으면(`.deployed` 가 빠진다) 파티 영웅도 선명하게 돌아온다 */
+.hero-strip.party-mode.deployed .hs-card.party { opacity: .5; }
+.hero-strip.party-mode.deployed .hs-card.party:hover { opacity: .72; }
 .hs-card.unique { border-bottom-color: #6a4a1a; }
 .hs-card.downed { opacity: .62; }
 .hs-card.empty {
@@ -1464,7 +1505,9 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 }
 /* 파티 없음 / 출발 불가 경고 — 띠 아래 (옛 파티 패널이 들던 자리) */
 /* 경고 줄 — 글자가 없어도 **자리는 잡는다**. 안 그러면 편성 패널이 파티 상태에 따라 커졌다 작아진다 (2026-08-28) */
-.exp-warn { font-size: var(--fs-xs); margin-top: 9px; min-height: 1.35em; line-height: 1.35; }
+/* 세로 쌓기 시절의 윗 여백을 걷는다 (2026-09-09 · ADR-0059) — 이제 오른쪽 칸(.fp-side)의 첫 줄이라 gap 이 간격을 준다.
+   ⚠ **줄은 여전히 항상 잡는다**(min-height) — 글자가 있고 없고에 따라 버튼이 위아래로 뛰면 안 된다 */
+.exp-warn { font-size: var(--fs-xs); min-height: 1.35em; line-height: 1.35; }
 /* 지금 하는 일 — 출정 아웃(빨강) / 전투 파티(파랑) / 대기(회색) */
 .hs-doing {
     font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; line-height: 1.3;
@@ -1774,6 +1817,9 @@ details.zone-more > summary:hover { color: var(--text-secondary); border-color: 
 /* 강화 모드 — 클릭이 골드를 쓰므로 칸에 비용을 적는다 (SCREEN_DESIGN §6) */
 .inv-cell { position: relative; }
 .inv-up { position: absolute; top: 1px; right: 2px; font-size: var(--fs-xs); color: var(--color-warning); }
+/* 재료 칸의 오른쪽 위 숫자는 **개수**다 — 강화 단계(+N)와 색을 갈라 둔다 (ADR-0055) */
+.mat-cell { cursor: default; }
+.mat-cell .inv-up { color: var(--text-primary); font-weight: 700; }
 /* ───────── 창 레이어 (SCREEN_DESIGN §2 · §7) ─────────
    탭 위에 겹쳐 뜨는 판 하나. 툴팁(z-index 50)보다 아래에 둔다 — 창 안의 스킬 칸에도 툴팁이 떠야 한다.
    판은 자기 내용 폭을 쓰되 화면을 넘지 않는다(고정 px 금지 · ui/README 폭 정책). 세로가 모자라면 판 안에서만 스크롤한다 */

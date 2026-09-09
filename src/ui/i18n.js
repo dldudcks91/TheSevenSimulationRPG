@@ -242,6 +242,10 @@ const STRINGS = {
 
     /* ── 캐릭터 (실동작) ── */
     'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제', en: 'Click an item = equip · click a worn slot = unequip' },
+    // 가방의 최상위 축 — 부위가 아니라 갈래다. 「전체」는 없다 (ADR-0055)
+    'ch.bag.equip': { ko: '장비', en: 'Gear' },
+    'ch.bag.material': { ko: '재료', en: 'Materials' },
+    'ch.bag.count': { ko: '{n}개', en: '×{n}' },
     'ch.salvageMode': { ko: '분해 모드', en: 'Salvage mode' },
     'ch.salvageHint': { ko: '분해 모드: 클릭한 아이템을 가루로 만든다', en: 'Salvage mode: clicking an item turns it to dust' },
     'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
@@ -438,9 +442,9 @@ const STRINGS = {
     'exp.party.h': { ko: '파티', en: 'Party' },
     /* 패널 부제는 숫자만 — 설명은 도움말 탭으로 갔다 (원문은 help.exp.party) */
     'exp.leader': { ko: '리더', en: 'Leader' },
-    /* 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 라벨뿐이다. 템플릿은 **점 아이콘**이라 글자가 없고 키도 없다.
-       ~~중열~~ 은 2026-09-09 에 삭제 — 3랭크 템플릿(1·1·1)이 「한 줄에 셋」으로 바뀌어 가운데 랭크가 사라졌다 */
-    'exp.form.h': { ko: '진형', en: 'Formation' },
+    /* 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — **랭크 라벨 둘뿐**이다. 템플릿은 **점 아이콘**이라 글자가 없고 키도 없다.
+       ~~중열~~ 은 2026-09-09 에 삭제 — 3랭크 템플릿(1·1·1)이 「한 줄에 셋」으로 바뀌어 가운데 랭크가 사라졌다.
+       ~~`exp.form.h`(「진형」)~~ 도 2026-09-09 삭제 [사용자 지시 · ADR-0060] — 제목 줄을 걷어 상자를 내용에 맞췄다 */
     'exp.form.front': { ko: '전열', en: 'Front' },
     'exp.form.back': { ko: '후열', en: 'Back' },
     'exp.cantDepart': {
