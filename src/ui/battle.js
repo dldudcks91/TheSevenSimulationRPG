@@ -275,11 +275,10 @@ const identOf = u => u.side === 'party'
    두 진영이 **같은 규칙**으로 선다 (2026-09-09 사용자 지시 — 적도 파티처럼).
    랭크가 어디서 오는지만 다르다: 파티는 편성 화면이 찍어 보낸 진형, 적은 **몬스터 역할**(`monster.csv:role`). */
 
-/** 뒤에 서는 역할 — 원거리·시전·척후. 나머지(`line`·`heavy`·`elite_line`·`boss`)가 전열이다.
- *  ⚠ **CSV 로 안 뺀다** — 진형이 기획 미확정(⚠ 목업)이라 `monster.csv` 에 컬럼을 늘리면 확정으로 읽힌다.
- *    파티 쪽 템플릿(`app.js:FORM_TPLS`)을 화면에 둔 것과 같은 이유고, 진형이 확정되면 둘이 함께 CSV 로 간다. */
-const ENEMY_BACK_ROLES = new Set(['ranged', 'caster', 'skirmish']);
-const enemyRank = id => (ENEMY_BACK_ROLES.has(D.monsters?.[id]?.role) ? 1 : 0);
+/** 적의 랭크 — **`monster_role.csv` 가 SSOT 다** [2026-09-09 진형 확정으로 CSV 이관].
+ *  ~~화면이 `ENEMY_BACK_ROLES` 집합을 들고 있던 것~~ 은 폐기: 같은 규칙을 전투(`battle.js:rankOfRole`)도 읽으므로
+ *  두 곳에 적으면 화면과 계산이 갈린다. 모르는 역할은 전열(0) — 계산 쪽과 같은 낙하 규칙이다. */
+const enemyRank = id => D.monsterRoles?.[D.monsters?.[id]?.role]?.rank ?? 0;
 
 /**
  * 진영 하나의 자리를 정한다 — 각 유닛에 **가로 차례**(`u.order`)를 박고 **깊이**(랭크 수)를 돌려준다.
@@ -571,7 +570,7 @@ function apply(state, root, opts, ev) {
             state.enemies = ev.enemies.map(e => ({
                 key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
                 name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: ev.t, node: null,
-                rank: enemyRank(e.monsterId),   // 진형 — 몬스터 **역할**이 정한다 (2026-09-09 · 아래 ENEMY_BACK_ROLES)
+                rank: enemyRank(e.monsterId),   // 진형 — 몬스터 **역할**이 정한다 (`monster_role.csv`)
                 // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
                 //   skills: []  → 쿨 칸이 active_slots 만큼 **빈 채로** 선다 (몬스터 액티브는 아직 없다 — skill.csv 는 영웅 전용)
                 //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다

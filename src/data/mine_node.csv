@@ -1,8 +1,8 @@
 mine_id,tier,unlock_chapter,name_kr,name_en,ore_id,ore_name_kr,ore_name_en,yield_per_hour,description_kr
-ember_pit,1,1,잿불 갱도,Ember Pit,ore_t1,구리,Copper,60,⚠임시 — 이 표 전체가 구조 검증용 자리채움이다. 단계는 열리는 순서만 정하고 선택은 레시피가 만든다 (base_expedition_design §2-5)
-twisted_root,2,2,뒤틀린 뿌리갱,Twisted Root Gallery,ore_t2,철,Iron,40,⚠임시
-sandgold,3,3,모래금 광상,Sandgold Placer,ore_t3,강철,Steel,26,⚠임시
-glacier_rift,4,4,빙하 균열,Glacier Rift,ore_t4,은,Silver,17,⚠임시
-abyss_shaft,5,5,심연 수직갱,Abyss Shaft,ore_t5,흑철,Blacksteel,11,⚠임시
-palace_quarry,6,6,궁전 지하 채석장,Palace Quarry,ore_t6,미스릴,Mithril,7,⚠임시
-ruin_deep,7,7,폐허 심층,Ruin Deep,ore_t7,오리하르콘,Orichalcum,4,⚠임시
+ember_pit,1,1,잿불 갱도,Ember Pit,ore_t1,구리,Copper,60,⚠임시 — 값(이름·수량)은 구조 검증용 임시값이다. 이름 규칙 셋(단계 n = 챕터 n 의 지역 · 거기서 나는 것 · 누구나 아는 단어)은 base_expedition_design §2-1. 단계는 열리는 순서만 정하고 무엇을 캘지는 레시피가 만든다
+twisted_root,2,2,뒤틀린 뿌리 갱도,Twisted Root Mine,ore_t2,철,Iron,40,⚠임시 — 늪철은 숲과 습지의 뿌리층 아래에 생긴다
+sandgold,3,3,금모래 벌,Golden Sands,ore_t3,사금,Placer Gold,26,⚠임시 — 마른 모래 퇴적층에서 골라낸다. ⚠ 화폐 골드와 겹치지 않게 「금」이 아니라 사금이다
+glacier_rift,4,4,빙하 균열,Glacier Rift,ore_t4,은,Silver,17,⚠임시 — ⚠ 셋 중 근거가 가장 약하다. 빙하가 깎아 드러낸 암맥이라는 해석에 기댄다
+abyss_shaft,5,5,심연 갱도,Abyss Mine,ore_t5,수은,Quicksilver,11,⚠임시 — 진사는 열수 광상이라 동굴계에 있다. 침식(챕터 5 상태이상)의 독성과도 맞는다
+palace_quarry,6,6,궁전 지하 광맥,Palace Undervein,ore_t6,미스릴,Mithril,7,⚠임시 — 신화의 금속. ⚠ id 는 옛 이름(quarry)이고 표시 이름과 다르다
+ruin_deep,7,7,폐허 깊은 곳,Ruin Deep,ore_t7,오리하르콘,Orichalcum,4,⚠임시 — 신화의 금속

@@ -161,7 +161,7 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
         rounds: res.rounds.length, cleared: res.roundsCleared,
         sec: res.durationSec,
         downed,
-        gold: res.gold, dust: res.dust, xp: res.xpTotal, xpEach: rp.xpEach,
+        gold: res.gold, xp: res.xpTotal, xpEach: rp.xpEach,          // ~~dust~~ 2026-09-09 폐기 — 처치가 가루를 안 뱉는다
         events: res.timeline.length,                                  // 타임라인 구조 변화 감지
         strikes: `${res.strikes.party.n}/${res.strikes.party.miss} · ${res.strikes.enemy.n}/${res.strikes.enemy.miss}`,
         cards: numMapSig(res.cards),

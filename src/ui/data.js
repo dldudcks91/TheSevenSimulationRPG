@@ -42,7 +42,9 @@ export const D = {
     heroTiers: [],            // hero_tier.csv — [{id, weight, totalMin, totalMax, shape, color, ko, en, desc:{ko,en}}] · 굴림 SSOT + 화면 표기
     commissionKinds: null,    // commission_kind.csv — {id: {id, ridesOn, ko, en, how:{ko,en}}} · ridesOn = battle(전투가 센다) | yield(드롭·산출이 채운다)
     commissionList: [],       // commission.csv — 게시판 행 (**칸 수 = 행 수** · tactic_slot 과 같은 문법) ⚠임시
-    mineNodes: [],            // mine_node.csv — 채광의 **단계 7** [{id, tier, unlockChapter, ko, en, oreId, oreKo, oreEn, yieldPerHour}] · tier 순 ⚠임시
+    mineNodes: [],            // mine_node.csv — 채광의 **단계 7** [{id, tier, unlockChapter, ko, en, yieldId, yieldKo, yieldEn, yieldPerHour}] · tier 순 ⚠임시
+    gatherNodes: [],          // gather_node.csv — 채집의 **단계 7** · 같은 모양이고 산출물만 약초다 (yieldKo/yieldEn) · tier 순 ⚠임시
+    logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
@@ -52,6 +54,9 @@ export const D = {
     affixDefs: [],            // affix.csv — [{stat, scale, min, max, perIlvl?, slots:[...]}] · CSV 행 순서
     heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
     heroTraitPool: [],        // hero_trait.csv — [{ko,en}] · CSV 행 순서
+    searchStories: [],        // search_story.csv 원시 행 — 수색 진행 문구. 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다)
+    searchMeetings: [],       // search_meeting.csv 원시 행 — 수색 만남(소문 · 질문). ⚠ 행 순서가 굴림 순서다
+    searchAnswers: [],        // search_answer.csv 원시 행 — 만남의 답. `need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
@@ -69,7 +74,8 @@ export let SYS = null;
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
-    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier'];
+    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
+    'gather_node', 'log_node'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -82,7 +88,9 @@ export async function loadData(base = './data/') {
         weaponGroup, skillRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
-        heroTierRow] = texts.map(parseCsv);
+        heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
+        searchMeetingRow, searchAnswerRow,
+        gatherNodeRow, logNodeRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -151,11 +159,17 @@ export async function loadData(base = './data/') {
     // ⚠임시 — 표 전체가 구조 검증용 자리채움이라고 CSV 스스로 적어 뒀다(description_kr). 해금 조건(unlock_chapter)은
     // 기획 백지라 **화면이 그리지 않는다** — 문턱 키가 없으면 문턱을 안 그린다 (§4-1).
     // 채집·벌목의 같은 표는 아직 없다 — 산출물이 미정이라 만들지 않는다. 생기면 이 한 줄이 둘 더 늘 뿐이다
-    D.mineNodes = mineNodeRow.slice().sort((a, b) => a.tier - b.tier).map(r => ({
-        id: r.mine_id, tier: r.tier, unlockChapter: r.unlock_chapter,
+    // 표 셋은 **같은 모양**이고 컬럼 이름만 갈린다(`ore_*` / `herb_*` / `timber_*` — base_expedition §2-1).
+    // 조립에서 산출물 이름을 **한 이름(`yield*`)으로 모은다** — 그래야 화면이 파견처별 분기를 안 갖는다.
+    const tierNodes = (rows, idKey, outKey) => rows.slice().sort((a, b) => a.tier - b.tier).map(r => ({
+        id: r[idKey], tier: r.tier, unlockChapter: r.unlock_chapter,
         ko: r.name_kr, en: r.name_en,
-        oreId: r.ore_id, oreKo: r.ore_name_kr, oreEn: r.ore_name_en, yieldPerHour: r.yield_per_hour,
+        yieldId: r[`${outKey}_id`], yieldKo: r[`${outKey}_name_kr`], yieldEn: r[`${outKey}_name_en`],
+        yieldPerHour: r.yield_per_hour,
     }));
+    D.mineNodes = tierNodes(mineNodeRow, 'mine_id', 'ore');
+    D.gatherNodes = tierNodes(gatherNodeRow, 'gather_id', 'herb');
+    D.logNodes = tierNodes(logNodeRow, 'log_id', 'timber');
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
     D.equipSlots = equipSlotRow.slice().sort((a, b) => a.slot_order - b.slot_order)
@@ -178,6 +192,21 @@ export async function loadData(base = './data/') {
     }));
     D.heroNamePool = heroNameRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
     D.heroTraitPool = heroTraitRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
+    // 수색 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
+    // 여기서 가공하면 구조가 두 곳에 생긴다. 무결성 검증은 state.js 가 로드 시 한다
+    D.searchStories = searchStoryRow;
+    // 만남 — 원시 행 그대로. 두 컬럼(`need_sin` 누가 갔나 → 보인다 · `hit_sin` 누굴 만났나 → 먹힌다)이 규칙 전부라
+    // 여기서 가공할 것이 없다. 무결성 검증은 state.js 가 로드 시 한다
+    D.searchMeetings = searchMeetingRow;
+    D.searchAnswers = searchAnswerRow;
+    // 진형 — 적의 자리(`monster.csv:role` → rank)와 파티 템플릿의 정원. 둘 다 규칙이라 CSV 가 SSOT 다
+    //   (2026-09-09 진형 확정 — 종전엔 `ui/battle.js:ENEMY_BACK_ROLES` 와 `app.js:FORM_TPLS` 에 박혀 있었다)
+    D.monsterRoles = Object.fromEntries(monsterRoleRow.map(r => [r.role, { rank: r.rank, ko: r.name_kr, en: r.name_en }]));
+    D.formationTemplates = Object.fromEntries(formationTplRow.map(r =>
+        [r.tpl_id, { front: r.front, back: r.back, ko: r.name_kr, en: r.name_en }]));
+    // ⚠ **행 순서는 따로 들고 간다** — `Object.keys` 는 `'3'` 같은 정수형 키를 맨 앞으로 끌어올려서
+    //   CSV 의 첫 행(기본값 `2-1`)을 못 준다. 「첫 행이 기본값」은 표가 정하는 규칙이라 배열로 보존한다
+    D.formationTplOrder = formationTplRow.map(r => r.tpl_id);
 
     SYS = buildSystems(D);
     return D;
@@ -286,11 +315,19 @@ export function buildSystems(d) {
         balance: d.balance, monsters: d.monsters, stages: d.stages, roundTypes: d.roundTypes,
         budgets: d.budgets, grades: d.grades, sins,
         sinTraits: M.SIN_TRAITS, commonTraits: M.COMMON_TRAITS, itemSystem: item, skillSystem: skill,
+        monsterRoles: d.monsterRoles ?? {},        // 적의 랭크 — 진형 (battle_design §3-1)
     });
     const game = createGameSystem({
         hero, item, battle, skill, tactic, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
+        // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
+        sins, searchStories: d.searchStories ?? [],
+        searchMeetings: d.searchMeetings ?? [], searchAnswers: d.searchAnswers ?? [],
+        // 진형 — 템플릿의 정원. 첫 행이 기본값이다(`formation_template.csv` 행 순서가 곧 화면 순서)
+        formationTemplates: d.formationTemplates ?? {},
+        formationTplOrder: d.formationTplOrder ?? [],
+        defaultFormationTpl: (d.formationTplOrder ?? [])[0],
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     return { hero, item, battle, skill, tactic, game, formula: createFormula(d.balance) };

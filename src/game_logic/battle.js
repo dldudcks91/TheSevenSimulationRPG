@@ -28,8 +28,9 @@
  *     유닛의 `reactions` 가 비면 아무 일도 없다 — 발화 **지점**이 곧 rng 순서 계약이다 (INTERFACE §5-2).
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
- *   타겟팅: 진형·어그로 미확정 → 랜덤. **도발**(taunt 창)은 그 임시 규칙 **위에 얹은** 임시 규칙이다 —
- *     창이 켜진 파티원이 있으면 적의 단일 대상 선택이 그 유닛으로 고정되고 타겟 rng 를 쓰지 않는다 (skill_design §7 미확정).
+ *   ~~타겟팅: 진형·어그로 미확정 → 랜덤~~ **확정 2026-09-09** — 대상 선택은 **전열 우선(하드 게이트)**이다:
+ *     전열 생존자가 있으면 후열은 대상이 안 되고, 전열이 전멸해야 뒤가 열린다 (battle_design §3-1).
+ *     우선순위는 **좁은 계약부터** — 지목(결투) → 도발 → 전열 → 무작위. 앞의 둘은 진형을 무시한다.
  *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
  *   `skill.csv:status`(결빙 등)는 `status_effect.csv` 가 없어 코드가 읽지 않는다.
  *   전직·마스터리·패시브는 미구현 — 지금 도는 것은 직업 기본 액티브뿐이다 (프로토타입 §9-0).
@@ -52,12 +53,17 @@ const TICK = 0.1;
  *   balance, monsters(byId), stages(byId), roundTypes [{round_num, round_type}],
  *   budgets(byKey: normal/elite/stage_boss/chapter_boss), grades(byKey), sins [...],
  *   sinTraits {sin: trait}, commonTraits [trait...], itemSystem,
- *   skillSystem — skill.js (정의·발동 선택). 없으면 액티브 없이 기본 공격만 돈다
+ *   skillSystem — skill.js (정의·발동 선택). 없으면 액티브 없이 기본 공격만 돈다,
+ *   monsterRoles {role: {rank}} — `monster_role.csv`. **적의 자리**를 정한다 (진형 확정 2026-09-09).
+ *     모르는 역할은 **전열(0)** 로 떨어뜨린다 — 빠뜨린 몬스터가 뒤에 숨어 무적이 되는 것보다 앞에 서는 편이 안전하다
  */
 export function createBattleSystem(data) {
     const B = data.balance;
     const F = createFormula(B);
     const SK = data.skillSystem ?? null;
+    // 적의 랭크 — `monster.csv:role` → `monster_role.csv:rank` (0 전열 · 1 후열). 화면이 들고 있던 규칙을 CSV 로 올린 것이다
+    const ROLES = data.monsterRoles ?? {};
+    const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
 
@@ -134,7 +140,9 @@ export function createBattleSystem(data) {
             dmg_bonus_pct: 0, crit_rate: 0, crit_damage: 0, life_steal: 0, reflect_damage: 0,
             hp_regen: 0, cooldown_reduction: 0, action_period: 0, gold_find: 0, item_find: 0,
         };
-        return makeUnit(caster.side, zero, { key, summon: true, summonOf: caster.key, next: Infinity });
+        // ⚠ **소환물은 전열에 선다** [임시 2026-09-09] — 벽의 목적이 대상 풀 희석인데 후열에 세우면
+        //   전열 우선(§3-1) 아래에서 아무도 안 때려 존재가 사라진다. **자리는 기획 미확정**이다 (GAME_DESIGN §10 「소환 벽의 자리」)
+        return makeUnit(caster.side, zero, { key, summon: true, summonOf: caster.key, next: Infinity, rank: 0 });
     }
 
     /**
@@ -166,6 +174,7 @@ export function createBattleSystem(data) {
         const g = data.grades[grade];
         return makeUnit('enemy', combatFromMonster(m, g, lvl), {
             key, monsterId, grade,
+            rank: rankOfRole(m.role),        // 진형 — 역할이 자리를 정한다 (battle_design §3-1)
             expReward: m.exp_reward * g.exp_mult, goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
             ...extra,
         });
@@ -220,6 +229,7 @@ export function createBattleSystem(data) {
         // 파티 유닛 — 몬스터와 **같은 생성자**를 지난다 (§8-1). 자리가 정하는 것만 extra 로 얹는다
         const party = partyUnits.map((p, i) => makeUnit('party', p.combat, {
             key: `p${i}`, uid: p.uid,
+            rank: p.rank ?? 0,           // 진형 — 편성이 정한 자리 (state.formationState · 배치가 없으면 전열)
             next: i * 0.3,               // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
             reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
             // 전투 시작 시 액티브는 전부 준비(readyAt 0) — 첫 차례는 **1번 칸**이 나간다 (battle_design §6)
@@ -258,11 +268,22 @@ export function createBattleSystem(data) {
             // 전투에는 안 쓰이고 타임라인에도 안 들어가므로 rng·골든 지문과 무관하다
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
                 atk: p.atk, atkType: p.atkType, actives: p.actives.map(a => a.id) })),
-            timeline, xpTotal: 0, gold: 0, dust: 0, kills: {}, cards: {}, drops: [], downed: [],
+            timeline, xpTotal: 0, gold: 0, kills: {}, cards: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
+            // 기여 집계 — 영웅별 가한/받은 피해와 처치 수. 리포트가 「누가 얼마나 했나」를 그린다 (SCREEN_DESIGN §4-3).
+            // 아래 `contrib` 맵이 세고 전투가 끝나면 여기로 옮긴다. **rng 를 안 쓰고 타임라인에도 안 들어간다** —
+            // 세는 것뿐이라 전투 결과도 골든 수열도 안 건드린다 (`strikes` 와 같은 취급)
+            contrib: [],
         };
+
+        /* 기여 — **전투 시작 시점의 파티 전원**으로 자리를 미리 잡는다. 0 인 영웅도 줄이 서야
+           「안 나갔다」와 「못 때렸다」가 갈린다 (SCREEN_DESIGN §4-3).
+           ⚠ **소환물은 안 센다** — 행동하지 않아 가한 피해가 없고(`next: Infinity`), 얼음 벽이 맞은 것을
+              주인이 맞은 것으로 적으면 「받은 피해」가 그 영웅의 사실이 아니게 된다 (skill_design §12-6) */
+        const contrib = new Map(party.map(p => [p.uid, { uid: p.uid, dealt: 0, taken: 0, kills: 0 }]));
+        const credit = u => (u.side === 'party' && !u.summon) ? (contrib.get(u.uid) ?? null) : null;
 
         let t = 0, round = 1;
         // 적 배열은 라운드마다 **갈아 끼운다** — 런타임이 속성으로 읽어야 옛 라운드를 가리키지 않는다 (skill_runtime @param units)
@@ -303,8 +324,9 @@ export function createBattleSystem(data) {
             out.kills[e.monsterId] = (out.kills[e.monsterId] ?? 0) + 1;
             out.xpTotal += e.expReward;
             out.gold += Math.round(e.expReward * e.goldMult * B.gold_rate * goldMult);
-            if (e.grade === 'elite') out.dust += B.dust_elite;
-            if (e.grade === 'stage_boss' || e.grade === 'chapter_boss') out.dust += B.dust_boss;
+            // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
+            // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
+            // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)
             // 도감 카드 — 장비 드롭과 별개 판정 [balance.csv:codex_card_drop_pct]. 등급별 차등은 후속 (monster_design §8)
             if (rng() * 100 < B.codex_card_drop_pct) {
                 out.cards[e.monsterId] = (out.cards[e.monsterId] ?? 0) + 1;
@@ -330,6 +352,16 @@ export function createBattleSystem(data) {
 
         /* ── 전투 진행 — 타겟팅 · 직격 1회 · 전투불능 (액티브 실행은 skill_runtime.js) ── */
 
+        /**
+         * 전열만 남긴다 — 전열 생존자가 없으면 받은 목록 그대로다(후열이 곧 최전선이 된다).
+         * 랭크가 없는 유닛은 **전열(0)** 로 본다 — 자리를 못 받은 유닛이 뒤에 숨어 무적이 되면 안 된다.
+         */
+        const frontOf = foes => {
+            const front = foes.filter(f => (f.rank ?? 0) === 0);
+            return front.length ? front : foes;
+        };
+        const pickFrom = pool => pool[Math.floor(rng() * pool.length)];
+
         /** 도발자 — `taunt` 창이 켜진 생존 유닛 중 배열 순 첫 번째 (skill_design §9-2 기사 항) */
         const hasTaunt = list => list.find(p => p.hp > 0 && Object.values(p.buffs).some(b => b.stat === 'taunt')) ?? null;
 
@@ -348,7 +380,10 @@ export function createBattleSystem(data) {
                 const tn = hasTaunt(party);
                 if (tn) return tn;
             }
-            return foes[Math.floor(rng() * foes.length)];   // 타겟팅 미확정 → 랜덤
+            // **전열 우선 — 하드 게이트** [확정 2026-09-09 사용자 지시 · battle_design §3-1].
+            //   전열(rank 0) 생존자가 하나라도 있으면 **후열은 대상이 되지 않는다**. 전열이 전멸해야 뒤가 열린다.
+            //   굴림은 여전히 **1회**다 — 바뀐 것은 모집단뿐이라 rng 소비 수열이 안 밀린다 (INTERFACE §5-2)
+            return pickFrom(frontOf(foes));
         }
 
         /** 피해 적용 — 배리어(HP 밖 흡수 풀)가 먼저 먹고 남은 몫만 HP 를 깎는다 */
@@ -386,6 +421,10 @@ export function createBattleSystem(data) {
             }
             const shield = target.barrier;
             applyDamage(target, dmg);
+            // 기여 — **감쇠 후 최종 피해**를 센다. 배리어가 먹은 몫도 포함이라 관전의 누적 데미지 판과 같은 값이다
+            const cA = credit(u), cD = credit(target);
+            if (cA) cA.dealt += dmg;
+            if (cD) cD.taken += dmg;
             const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg, crit, dhp: target.hp };
             // 흡혈 — 직격의 최종 피해에만 비례 (§9-6). 배리어가 먹은 몫도 포함한다 (직격이 들어간 사실은 같다)
             if (u.ls > 0 && u.hp > 0) {
@@ -403,9 +442,15 @@ export function createBattleSystem(data) {
                 const back = F.indirect(dmg * target.reflect / 100);
                 u.hp = Math.max(0, u.hp - back);
                 timeline.push({ t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp });
-                if (u.hp <= 0) downed(u);
+                if (cD) cD.dealt += back;                       // 반사도 **가한 피해**다 — 때린 쪽이 아니라 되받은 쪽의 몫
+                if (cA) cA.taken += back;
+                if (u.hp <= 0) { if (cD && u.side !== 'party') cD.kills += 1; downed(u); }
             }
-            if (target.hp <= 0) { downed(target); hooks.emit('kill', u, { t, d: target }); }
+            if (target.hp <= 0) {
+                if (cA && target.side !== 'party') cA.kills += 1;   // **적을 쓰러뜨린 것**만 센다
+                downed(target);
+                hooks.emit('kill', u, { t, d: target });
+            }
         }
 
         beginRound();
@@ -447,6 +492,8 @@ export function createBattleSystem(data) {
             if (t >= B.battle_timeout_sec) { out.reason = 'timeout'; break; }
         }
         out.durationSec = r1(t);
+        // 정수로 낸다 — 리포트가 그대로 찍는 값이고, 부동소수 꼬리는 이식 대조에서 잡음이 된다
+        out.contrib = [...contrib.values()].map(c => ({ ...c, dealt: Math.round(c.dealt), taken: Math.round(c.taken) }));
         timeline.push({ t: r1(t), e: 'end', won: out.won, reason: out.reason });
         return out;
     }

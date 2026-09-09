@@ -54,7 +54,9 @@ export const ATTACK_TARGETS = {
     },
     /** 순환 — 시작점만 굴리고(rng 1회) 배열 순으로 돌아가며 `hits` 회. 대상이 모자라면 같은 대상에 겹친다 */
     enemy_rotate: (rt, u, def, foes) => {
-        const start = Math.floor(rt.rng() * foes.length);
+        // 시작점은 **고르는 행위**라 전열 우선을 탄다 (battle_design §3-1 개정 2026-09-09) —
+        //   `pickTarget` 이 굴림 1회를 그대로 쓰므로 소비 수열은 안 밀린다. 도는 것은 배열 전체다
+        const start = foes.indexOf(rt.pickTarget(u, foes));
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0) break;
             const tgt = foes[(start + k) % foes.length];
@@ -77,9 +79,9 @@ export const ATTACK_TARGETS = {
             tgt.def = Math.max(0, tgt.def * (1 - def.decay / 100));
         }
     },
-    /** 연쇄 — 시작점만 굴리고(rng 1회) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다 */
+    /** 연쇄 — 시작점만 굴리고(rng 1회 · **전열 우선**) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다 */
     enemy_chain: (rt, u, def, foes) => {
-        const start = Math.floor(rt.rng() * foes.length);
+        const start = foes.indexOf(rt.pickTarget(u, foes));   // 시작점만 고른다 — 전열 우선 (§3-1)
         for (let k = 0; k < foes.length; k++) {
             if (u.hp <= 0) break;
             const tgt = foes[(start + k) % foes.length];

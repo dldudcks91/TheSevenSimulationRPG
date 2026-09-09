@@ -201,6 +201,7 @@ const STRINGS = {
 
     /* ── 원정 (실동작) ── */
     'exp.partyFull': { ko: '파티가 찼다', en: 'Party full' },
+    'exp.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
     'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
@@ -228,11 +229,8 @@ const STRINGS = {
 
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
     'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
-    'rep.roundLine': { ko: '{list} 처치', en: '{list} slain' },
-    'rep.roundNone': { ko: '처치 없음', en: 'No kills' },
     'rep.again': { ko: '같은 곳으로 다시', en: 'Run it again' },
     'rep.toIdle': { ko: '편성으로', en: 'Back to party' },
-    'rep.gainsNone': { ko: '능력치 변화 없음', en: 'no attribute change' },
     'rep.cards': { ko: '도감 카드', en: 'Codex cards' },
     'rep.cardsNone': { ko: '없음', en: 'None' },
     'rep.cardLevelUp': { ko: '{name} 도감 Lv.{lv}', en: '{name} codex Lv.{lv}' },
@@ -270,6 +268,7 @@ const STRINGS = {
     /* 오류 키는 결과 코드와 짝을 맞춘다(`<탭>.err.<코드>`) — 창이 미리 막으므로 플래시로는 잘 안 뜨지만,
        코드가 있으면 문구도 있어야 한다. `last` 는 창 본문도 이 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다) */
     'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
+    'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
     'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
     /* 확인 문구도 **사용자 지시 그대로** [개정 2026-09-09] — 옛 판(「{name} — 해고하면 되돌릴 수 없다」)의 `{name}` 은 걷었다.
        누구를 해고하는지는 창을 연 카드가 이미 말하고, 되돌릴 수 없다는 것은 **[취소] 버튼이 눈에 보이는 것**이 든다 */
@@ -289,11 +288,39 @@ const STRINGS = {
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'tv.err.roster': { ko: '로스터가 가득 찼다 ({cap})', en: 'Roster full ({cap})' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
-    /* 수색 칸 [신설 2026-09-01] — 화면만 있고 동작은 없다(game_logic 에 수색이 없다 · SCREEN_DESIGN §8-1).
-       미착수 안내는 새로 쓰지 않고 `todo.lead` 를 그대로 쓴다 — 미착수 화면의 공통 규칙이다 */
+    /* 수색 칸 [신설 2026-09-01 · **실동작 2026-09-09** — SCREEN_DESIGN §8-1 · ADR-0062].
+       ⚠ 진행 중 이야기 문장은 여기 없다 — `search_story.csv` 가 든다(막 수·죄종 필터가 굴림의 입력이라
+       표시 문구가 아니라 게임 데이터다). 화면은 `searchState().beats[].text` 를 `L()` 로 풀 뿐이다 */
     'tv.search.h': { ko: '수색', en: 'Search' },
     'tv.search.go': { ko: '수색 보내기', en: 'Send search' },
     'tv.search.spec': { ko: '{n}명 · {h}시간', en: '{n} hero · {h}h' },
+    'tv.search.pick': { ko: '보낼 영웅', en: 'Who goes' },
+    'tv.search.noHero': { ko: '대기 중인 영웅이 없다 — 원정 파티는 못 보낸다', en: 'Nobody on the bench — party members stay home' },
+    'tv.search.out': { ko: '수색 중 · {name}', en: 'Searching · {name}' },
+    'tv.search.left': { ko: '남은 시간 {t}', en: '{t} left' },
+    'tv.search.odds': { ko: '레어 {r}% · 같은 죄종 {e}%', en: 'Rare {r}% · same sin {e}%' },
+    'tv.search.done': { ko: '수색 완료', en: 'Search complete' },
+    'tv.search.cancel': { ko: '취소', en: 'Cancel' },
+    'tv.search.drop': { ko: '돌려보내기', en: 'Send away' },
+    'tv.search.sent': { ko: '{name} 수색 출발', en: '{name} sets out' },
+    'tv.search.canceled': { ko: '수색을 취소했다', en: 'Search called off' },
+    'tv.search.dropped': { ko: '{name} 을(를) 돌려보냈다', en: 'Sent {name} away' },
+    'tv.err.busy': { ko: '이미 수색 중이다', en: 'A search is already out' },
+    'tv.err.party': { ko: '원정 파티는 보낼 수 없다', en: "Party members can't be sent" },
+    'tv.err.missing': { ko: '영웅을 찾을 수 없다', en: 'Hero not found' },
+    'tv.err.none': { ko: '나간 수색이 없다', en: 'No search is out' },
+    'tv.err.notDone': { ko: '아직 안 돌아왔다', en: 'Not back yet' },
+    /* 만남 [신설 2026-09-09 · ADR-0068] — 소문 · 질문 · 답 문장은 전부 `search_meeting.csv`·`search_answer.csv` 다.
+       여기 있는 것은 **그 문장을 감싸는 라벨**뿐이다 (문구가 굴림의 입력이라 사전이 아니라 게임 데이터다) */
+    'tv.search.rumor': { ko: '소문', en: 'Word going around' },
+    'tv.search.met': { ko: '만났다', en: 'You meet someone' },
+    'tv.search.key': { ko: '{sin} 전용 — 보내서 열렸다', en: '{sin} only — opened by who you sent' },
+    'tv.search.picked': { ko: '이렇게 답했다', en: 'You answered' },
+    'tv.search.cut': { ko: '고용비 {n}% 깎았다', en: 'Hire cost cut {n}%' },
+    'tv.search.cutAll': { ko: '고용비를 안 받는다', en: 'They ask for nothing' },
+    'tv.search.cutNone': { ko: '값은 그대로다', en: 'Full price' },
+    'tv.err.answered': { ko: '이미 답했다', en: 'Already answered' },
+    'tv.err.notOpen': { ko: '아직 만나지 않았다', en: 'You have not met them yet' },
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
     'time.m': { ko: '{m}분', en: '{m}m' },
@@ -485,6 +512,7 @@ const STRINGS = {
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
     'exp.pick': { ko: '원정', en: 'Expedition' },
     'exp.viewComp': { ko: '구성 보기', en: 'Composition' },
+    'exp.foes': { ko: '적 구성', en: 'Enemies' },
     'exp.eliteR': { ko: 'R{n} 정예', en: 'R{n} Elite' },
     'exp.solo': { ko: ' 단독', en: ' solo' },
     'exp.escorts': { ko: ' + 호위 1~2', en: ' + 1–2 escorts' },
@@ -514,8 +542,23 @@ const STRINGS = {
     },
     'rep.drops.h': { ko: '획득 장비', en: 'Loot' },
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
+    'rep.drops.none': { ko: '떨어진 장비 없음', en: 'No loot' },
     'rep.salvage': { ko: '분해', en: 'Salvage' },
-    'rep.log.h': { ko: '전투 경과', en: 'Battle Summary' },
+
+    /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
+    'rep.list.h': { ko: '원정 기록', en: 'Runs' },
+    'rep.list.sub': { ko: '{n}판', en: '{n} runs' },
+    'rep.ago.now': { ko: '방금', en: 'just now' },
+    'rep.ago.m': { ko: '{n}분 전', en: '{n}m ago' },
+    'rep.ago.h': { ko: '{n}시간 전', en: '{n}h ago' },
+    'rep.ago.d': { ko: '{n}일 전', en: '{n}d ago' },
+    'rep.contrib.h': { ko: '기여', en: 'Contribution' },
+    'rep.contrib.hero': { ko: '영웅', en: 'Hero' },
+    'rep.contrib.dealt': { ko: '가한 피해', en: 'Damage dealt' },
+    'rep.contrib.taken': { ko: '받은 피해', en: 'Damage taken' },
+    'rep.contrib.kills': { ko: '처치', en: 'Kills' },
+    'rep.contrib.total': { ko: '합계', en: 'Total' },
+    'rep.live': { ko: '재생 중 {a} / {b}', en: 'Playing {a} / {b}' },
     'rep.log.sub': { ko: '정예 {e} / 보스 {b}', en: 'Elite {e} / Boss {b}' },
     'rep.contract': {
         ko: '방치형 계약 — 자리를 비워도 로스터는 파괴되지 않는다. 사건은 리포트 안에서 완결',
@@ -526,6 +569,8 @@ const STRINGS = {
     'hs.doing.idle': { ko: '대기 중', en: 'Idle' },
     /* 원정이 **실제로 도는 동안**만 뜬다 [신설 2026-09-08 사용자 지시] — 파티에 편성만 해 둔 상태는 대기다 (SCREEN_DESIGN §5) */
     'hs.doing.expedition': { ko: '원정 중', en: 'On expedition' },
+    /* 수색 중 [신설 2026-09-09] — 나가 있으면 편성이 막히므로(state.js:toggleParty) 띠가 그 이유를 든다 */
+    'hs.doing.search': { ko: '수색 중', en: 'On a search' },
     /* ~~'hs.doing.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 띠의 「지금 하는 일」은 **대기 하나**다 (SCREEN_DESIGN §5) */
 
     /* ── 장비 ── */
@@ -901,7 +946,7 @@ const STRINGS = {
        접두를 `cx.` 로 갈면 몬스터 카드 문구와 한 이름 공간에 섞여 오히려 어느 세그먼트의 것인지가 안 읽힌다.
        09-08 삭제 — `ix.h`(탭 제목 · `nav.codex` 가 받는다) · `ix.seg.*`(세그먼트 · `cx.seg.*` 가 받는다) ·
        `ix.g.monster`(몬스터 초상 묶음 · 몬스터 세그먼트의 카드가 그 일을 한다 — §9). */
-    'ix.g.hero': { ko: '영웅 초상', en: 'Hero Portraits' },
+    'ix.g.heroCls': { ko: '{cls} 초상', en: '{cls} Portraits' },   // 직업 하나가 묶음 하나 (ADR-0066) — ~~ix.g.hero~~ 대체
     'ix.g.weapon': { ko: '무기', en: 'Weapons' },
     'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
     'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },

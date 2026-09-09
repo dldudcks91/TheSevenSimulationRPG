@@ -223,7 +223,10 @@ export const SKILL_ICON_FILES = [
     'kni_smite', 'kni_charge', 'kni_rush', 'kni_duel', 'kni_enchant',
     'kni_might', 'kni_fanaticism', 'kni_defiance',
     'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
-    'pri_judgment',
+    'mag_fireball', 'mag_iceblast', 'mag_frostnova', 'mag_lightning',
+    'mag_chain', 'mag_focus', 'mag_frozenwall', 'mag_inferno',
+    'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
+    'pri_penitence', 'pri_bind', 'pri_haste',
 ];
 export const skillIcon = id => {
     if (!id) return null;
@@ -436,11 +439,14 @@ export const CX_DONE = {
  *
  * ⚠ **장비는 목록에 없다** — 기획이 「장비는 안 판다」로 닫아 둔 자리다(§5 스코프 가드).
  */
+/* ⚠ **`ore_*` 의 이름은 `mine_node.csv` 가 SSOT 다** [2026-09-10] — 여기 이름이 갈리면 같은 id 가 화면 두 곳에서
+   다르게 불린다(실제로 `ore_t5` 가 「흑철」로 남아 있었다). 재고 구성·가격만 목업이고 **이름은 표에서 베낀다.**
+   상단 재고가 CSV 로 나가면 이 주의는 사라진다 (「mock 과 CSV 가 겹치면 CSV 만」 — DEV_PLAN §5-B) */
 export const TRADE = {
     /** 기본상단 — 상주 · 고정 목록. 「언제 가도 같다」가 요점이라 타이머가 없다 */
     basic: [
-        { id: 'ore_t1', name: { ko: '구리 광석', en: 'Copper Ore' }, n: 20, gold: 120 },
-        { id: 'ore_t2', name: { ko: '철 광석', en: 'Iron Ore' }, n: 12, gold: 380 },
+        { id: 'ore_t1', name: { ko: '구리', en: 'Copper' }, n: 20, gold: 120 },
+        { id: 'ore_t2', name: { ko: '철', en: 'Iron' }, n: 12, gold: 380 },
         { id: 'dust', name: { ko: '분해 가루', en: 'Salvage Dust' }, n: 40, gold: 60 },
     ],
     /** 특수상단 — 방문마다 굴린다. `here` 가 false 면 `t` 는 다음 방문까지 남은 시간이다 */
@@ -449,7 +455,7 @@ export const TRADE = {
         t: '1시간 12분',
         who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
         stock: [
-            { id: 'ore_t5', name: { ko: '흑철 광석', en: 'Blacksteel Ore' }, n: 4, gold: 2400 },
+            { id: 'ore_t5', name: { ko: '수은', en: 'Quicksilver' }, n: 4, gold: 2400 },
             { id: 'brand', name: { ko: '낙인', en: 'Brand' }, n: 1, gold: 5000 },
         ],
     },

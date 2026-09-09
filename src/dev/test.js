@@ -289,11 +289,14 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'base_crit_pct', 'base_crit_damage_pct', 'dmg_variance_pct', 'monster_hp_scale', 'monster_atk_scale', 'monster_def_scale', 'battle_timeout_sec',
         'def_curve_k', 'dmg_min', 'crit_cap_pct', 'res_cap_base', 'res_cap_absolute',
         'hit_base_pct', 'hit_per_level_deficit_pct', 'hit_min_pct',
-        'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'drop_ilvl_spread', 'dust_elite', 'dust_boss', 'rarity_w_magic', 'rarity_w_rare',
+        'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'drop_ilvl_spread', 'rarity_w_magic', 'rarity_w_rare',
         'affix_magic_min', 'affix_magic_max', 'affix_rare_min', 'affix_rare_max', 'suffix_sin_chance_pct', 'salvage_dust_magic', 'salvage_dust_rare',
         'equip_upgrade_max', 'equip_upgrade_option_interval', 'equip_upgrade_base_pct', 'equip_upgrade_option_pct',
         'equip_upgrade_gold_base', 'equip_upgrade_gold_growth',
         'inventory_cap', 'tavern_candidates', 'tavern_hire_cost', 'tavern_reroll_cost', 'tavern_refresh_hours', 'start_gold', 'start_dust', 'start_stigma',
+        'tavern_search_slots', 'tavern_search_hours',
+        'tavern_search_rare_base_pct', 'tavern_search_rare_per_cha_pct', 'tavern_search_rare_cap_pct', 'tavern_search_sin_echo_pct',
+        'tavern_search_meet_at_pct', 'tavern_search_meet_hit_pct', 'tavern_search_meet_key_pct',
         'hero_level_cap', 'concurrent_expedition_parties', 'active_slots', 'skill_cd_floor_mult',
         'codex_card_drop_pct', 'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level',
         'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare'];
@@ -664,10 +667,10 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
     if (!eq(party.map(h => h.face), again.map(h => h.face))) fail('같은 시드인데 얼굴이 다르다');
     return party.map(h => h.face).join(' · ');
 });
-check('save: serialize → deserialize 왕복 동일 (v18)', () => {
+check('save: serialize → deserialize 왕복 동일 (v21)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 18;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 21;
 });
 /**
  * v15 → v16 (2026-09-07 확정 · 2026-09-08 구현 — 사제 전용 무기 · R46).
@@ -710,9 +713,139 @@ check('save: v16 → v17 이관 — run.downed 와 리포트 outTotal 을 걷는
     const up = SYS.game.deserialize(s16);
     if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
     if (up.run.downed !== undefined) fail('run.downed 가 안 걷혔다');
-    if (up.lastReport.outTotal !== undefined) fail('리포트의 outTotal 이 안 걷혔다');
+    // v20 이관이 `lastReport` 를 `reports[]` 로 옮긴다 — 걷혔는지는 그 목록의 첫 칸에서 본다
+    if (up.reports[0].outTotal !== undefined) fail('리포트의 outTotal 이 안 걷혔다');
     if (up.run.repeat !== true) fail('진행 중이던 반복이 꺼졌다 — 이관은 반복을 안 건드린다');
     return 'downed·outTotal 삭제 · repeat 유지';
+});
+/**
+ * v18 → v19 (2026-09-09 — 처치는 가루를 안 뱉는다 · R63 · item_design §5-3).
+ * 리포트의 가루 칸은 걷고, **이미 번 가루는 안 건드린다** — 공급원이 분해 하나로 줄었을 뿐이다.
+ */
+/* ── 진형 (battle_design §3-1 확정 2026-09-09 · 부채 #37 해소) ── */
+/**
+ * 「앞에 있는 유닛부터 때린다」의 **뼈대 셋** — 자리가 정해지는 규칙 · 전투가 그 자리를 읽는 것 · 하드 게이트.
+ * 이 셋 중 하나라도 되돌아가면 진형은 다시 그림이 된다.
+ */
+check('formation: 파티 순서대로 전열부터 찬다 · 템플릿이 정원을 정한다 (진형 2026-09-09)', () => {
+    const G2 = newGameP(31, cands, NOW);
+    const f = SYS.game.formationState(G2);
+    if (!eq(f.caps, [2, 1])) fail(`기본 템플릿 정원 ${f.caps}`);
+    if (!eq(f.ranks[0], G2.party.slice(0, 2))) fail(`전열 ${f.ranks[0]}`);
+    if (!eq(f.ranks[1], G2.party.slice(2, 3))) fail(`후열 ${f.ranks[1]}`);
+    // 템플릿을 바꾸면 정원이 갈리고 재배치가 따라온다
+    if (!SYS.game.setFormation(G2, '1-2').ok) fail('setFormation 1-2');
+    const g = SYS.game.formationState(G2);
+    if (!eq(g.caps, [1, 2])) fail(`1-2 정원 ${g.caps}`);
+    if (g.ranks[0].length !== 1 || g.ranks[1].length !== 2) fail(`재배치 ${g.ranks[0].length}/${g.ranks[1].length}`);
+    // 모두 앞 — 후열이 없다
+    SYS.game.setFormation(G2, '3');
+    if (SYS.game.formationState(G2).ranks[1].length !== 0) fail('템플릿 3 에 후열이 남았다');
+    if (SYS.game.setFormation(G2, 'nope').err !== 'missing') fail('없는 템플릿이 통과했다');
+    return '2-1 → 1-2 → 3 재배치';
+});
+check('formation: 전투 유닛이 자리를 들고 간다 — partyUnits.rank (진형 2026-09-09)', () => {
+    const G2 = newGameP(32, cands, NOW);
+    SYS.game.setFormation(G2, '2-1');
+    const ranks = G2.party.map(uid => SYS.game.rankOf(G2, uid));
+    if (!eq(ranks, [0, 0, 1])) fail(`rank ${ranks}`);
+    // 자리를 바꾸면 유닛이 든 값도 바뀐다 — 화면 상태가 아니라 세이브가 답이다
+    const back = SYS.game.formationState(G2).ranks[1][0];
+    if (!SYS.game.placeFormation(G2, back, 0).ok) fail('placeFormation');
+    if (SYS.game.rankOf(G2, back) !== 0) fail('옮긴 영웅이 전열이 아니다');
+    // 세이브를 한 바퀴 돌려도 자리가 남는다 (v20 — 종전엔 화면 상태라 새로고침에 사라졌다)
+    const back2 = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW))));
+    if (SYS.game.rankOf(back2, back) !== 0) fail('세이브 왕복에서 자리가 사라졌다');
+    return `rank ${ranks} · 왕복 보존`;
+});
+check('formation: 전열이 살아 있으면 후열은 안 맞는다 — 하드 게이트 (battle_design §3-1)', () => {
+    const G2 = newGameP(33, cands, NOW);
+    SYS.game.setFormation(G2, '2-1');
+    const backUid = SYS.game.formationState(G2).ranks[1][0];
+    const r = SYS.game.resolveBattle(G2, 101, NOW);
+    if (!r.ok) fail(`resolveBattle ${r.err}`);
+    // 후열 영웅이 맞은 시점마다, 그 직전까지 전열이 하나라도 살아 있었으면 계약 위반이다
+    const idxOf = uid => G2.party.indexOf(uid);
+    const frontKeys = SYS.game.formationState(G2).ranks[0].map(u => `p${idxOf(u)}`);
+    const backKey = `p${idxOf(backUid)}`;
+    const hp = {};
+    for (const ev of r.result.timeline) {
+        if (ev.e === 'round') { for (const k of [...frontKeys, backKey]) hp[k] = 1; continue; }
+        if (ev.e === 'down' && hp[ev.u] !== undefined) hp[ev.u] = 0;
+        if (ev.e !== 'hit' || ev.d !== backKey) continue;   // `d` = 맞은 쪽 (battle.js:413)
+        if (frontKeys.some(k => hp[k] === 1)) fail(`전열이 살아 있는데 후열(${backKey})이 맞았다 — t=${ev.t}`);
+    }
+    return '후열 피격은 전열 전멸 뒤에만';
+});
+check('save: v18 → v19 이관 — 리포트의 dust 는 걷고 resources.dust 는 남긴다 (R63)', () => {
+    const s18 = SYS.game.serialize(G, NOW);
+    s18.version = 18;
+    s18.resources = { ...s18.resources, dust: 77 };
+    s18.lastReport = { at: NOW, stageId: 101, won: true, gold: 100, dust: 9, xpEach: 10, levelUps: [], downed: [] };
+    const up = SYS.game.deserialize(s18);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    if (up.reports[0].dust !== undefined) fail('리포트의 dust 가 안 걷혔다');   // v20 이 목록으로 옮겼다
+    if (up.resources.dust !== 77) fail(`번 가루가 사라졌다 — ${up.resources.dust} (소급 회수는 「자리 비워도 안전」을 깬다)`);
+    return '리포트 dust 삭제 · 보유 가루 77 보존';
+});
+/**
+ * v20 → v21 — **리포트는 목록이다** (SCREEN_DESIGN §4-3 · ADR-0063 · R68).
+ * 있던 리포트 하나가 배열의 첫 자리로 가고 옛 키는 사라진다. `contrib` 은 **안 채운다** —
+ * 지나간 전투를 다시 돌릴 수 없고, 0 으로 지어내면 화면이 「못 때렸다」로 읽는다.
+ */
+check('save: v20 → v21 이관 — lastReport 한 칸이 reports 목록의 첫 자리가 된다 (R68)', () => {
+    const s20 = SYS.game.serialize(G, NOW);
+    s20.version = 20;
+    delete s20.reports;
+    s20.lastReport = { at: NOW, stageId: 101, won: true, gold: 100, xpEach: 10, levelUps: [], downed: [], drops: [] };
+    const up = SYS.game.deserialize(s20);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    if (up.lastReport !== undefined) fail('옛 lastReport 키가 안 걷혔다');
+    if (!Array.isArray(up.reports) || up.reports.length !== 1) fail(`reports 가 목록이 아니다 — ${JSON.stringify(up.reports)}`);
+    if (up.reports[0].gold !== 100) fail('옮긴 리포트가 그 리포트가 아니다');
+    if (up.reports[0].contrib != null) fail('옛 리포트에 기여를 지어냈다 — 이관은 안 채운다');
+    // 리포트가 아예 없던 세이브는 **빈 목록**이 정확한 초기 상태다
+    const s20b = SYS.game.serialize(G, NOW);
+    s20b.version = 20; delete s20b.reports; delete s20b.lastReport;
+    if (SYS.game.deserialize(s20b).reports.length !== 0) fail('리포트가 없던 세이브가 빈 목록이 안 됐다');
+    return '첫 자리로 이동 · contrib 은 null · 없으면 빈 목록';
+});
+/**
+ * 리포트 목록의 상한 — [balance.csv:report_keep] (R68).
+ * **회귀 그물**: 상한을 넘겨 돌려 보고 **최신이 맨 앞**이며 **오래된 것부터 밀려나는지**를 본다.
+ * 반복 원정이 밤새 돌면 이 두 규칙이 세이브 크기를 정한다.
+ */
+check('resolveBattle: 리포트는 목록에 쌓이고 상한을 넘으면 오래된 것부터 밀려난다 (R68)', () => {
+    const keep = D.balance.report_keep;
+    if (!(keep >= 1)) fail('balance.csv:report_keep 이 없다');
+    const G2 = newGameP(4242, cands, NOW);
+    for (let i = 0; i < keep + 3; i++) {
+        const r = SYS.game.resolveBattle(G2, 101, NOW + i * 1000);
+        if (!r.ok) fail(`resolveBattle #${i} ${r.err}`);
+    }
+    if (G2.reports.length !== keep) fail(`상한을 안 지킨다 — ${G2.reports.length} / ${keep}`);
+    if (G2.reports[0].at !== NOW + (keep + 2) * 1000) fail('최신이 맨 앞이 아니다');
+    for (let i = 1; i < G2.reports.length; i++) {
+        if (!(G2.reports[i].at < G2.reports[i - 1].at)) fail(`목록 순서가 최신 → 과거가 아니다 (${i})`);
+    }
+    return `${keep + 3}판 → ${keep}칸 · 최신이 앞`;
+});
+/**
+ * 처치는 가루를 안 뱉는다 (2026-09-09 확정 · item_design §5-3 · R63).
+ * **회귀 그물** — 정예·보스가 도는 전투를 한 판 돌려 결과·리포트 어디에도 가루 칸이 없고
+ * 보유 가루가 한 톨도 안 는 것을 본다. 옛 규칙이 되살아나면 여기서 빨간불이 뜬다.
+ */
+check('battle: 처치가 가루를 안 뱉는다 — 결과·리포트에 칸이 없고 보유량이 그대로 (R63)', () => {
+    const G2 = newGameP(1234, cands, NOW);
+    const before = G2.resources.dust;
+    const r = SYS.game.resolveBattle(G2, 101, NOW);
+    if (!r.ok) fail(`resolveBattle ${r.err}`);
+    if (r.result.dust !== undefined) fail(`결과에 dust 가 남아 있다 — ${r.result.dust}`);
+    if (r.report.dust !== undefined) fail(`리포트에 dust 가 남아 있다 — ${r.report.dust}`);
+    if (G2.resources.dust !== before) fail(`처치로 가루가 늘었다 — ${before} → ${G2.resources.dust}`);
+    const kills = Object.values(r.result.kills).reduce((a, b) => a + b, 0);
+    if (!kills) fail('처치가 0이라 검사가 성립하지 않는다');
+    return `처치 ${kills} · 가루 ${before} 그대로`;
 });
 check('save: v2 → v17 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11) · **히든 상한 폐지·등급(v15)** · **사제 무기 분리(v16)**까지 한 번에', () => {
     const v2 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
@@ -1816,9 +1949,12 @@ check('skill: activesFor — 칸은 출처가 정한다 · 고유 / 무기(개�
         if (!eq(full.map(a => a.source), ['innate', 'weapon_group'])) fail(`${cls} 순서 ${full.map(a => a.source)}`);
         if (full[0].id !== pool[0].id) fail(`${cls} 고유가 1번 칸이 아니다`);
         if (full.length > B.active_slots) fail(`${cls} 칸 ${full.length} > ${B.active_slots}`);
-        // ④ **두 출처가 같은 스킬이면 칸이 하나로 준다** — 한 풀에서 둘이 가져가므로 실제로 일어난다 (§12-1 규칙 3)
+        // ④ **두 출처가 같은 스킬이어도 칸은 둘이다** [사용자 지시 2026-09-09 · ~~중복 제거~~ 폐기].
+        //   한 풀에서 둘이 가져가므로 실제로 일어난다(§12-1 규칙 3). 칸은 출처 자리라 겹쳐도 각자 선다 —
+        //   걷어내면 화면의 「무기」 칸이 비어 맨손과 구분이 안 됐다. **회귀 그물**이다
         const same = SYS.skill.activesFor({ cls, innate: pool[0].id }, { weaponSkill: pool[0].id });
-        if (!eq(same.map(a => a.source), ['innate'])) fail(`${cls} 겹쳤는데 칸이 둘이다 ${same.map(a => a.source)}`);
+        if (!eq(same.map(a => a.source), ['innate', 'weapon_group'])) fail(`${cls} 겹쳤다고 칸이 줄었다 ${same.map(a => a.source)}`);
+        if (!eq(same.map(a => a.id), [pool[0].id, pool[0].id])) fail(`${cls} 겹친 칸의 스킬이 다르다 ${same.map(a => a.id)}`);
         // ⑤ 없는 스킬 id · 정의에 없는 고유 — 그 칸만 빈다 (던지지 않는다)
         if (srcOf({ cls }, { weaponSkill: 'nope' }).length !== 0) fail(`${cls} 없는 스킬이 무기 칸을 먹었다`);
         if (!eq(idsOf({ cls, innate: 'nope' }), idsOf({ cls }))) fail(`${cls} 정의 없는 고유가 칸을 먹었다`);
@@ -2382,8 +2518,8 @@ check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다
     return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
 });
 
-check('save: SAVE_VERSION 18 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 (R59 · INTERFACE §4)', () =>
-    SAVE_VERSION === 18 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 21 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 (R59 · INTERFACE §4)', () =>
+    SAVE_VERSION === 21 || fail(`v${SAVE_VERSION}`));
 
 /**
  * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.
@@ -2490,6 +2626,41 @@ check('resolveBattle: 골드·처치·카드·드롭·전투불능이 상태에 
     if (G2.counters.battle !== 1 || !G2.run || G2.run.stageId !== 101) fail('counters/run');
     if (!rp.strikes || !(rp.strikes.party.n >= 1) || !eq(rp.strikes, r.result.strikes)) fail('리포트에 빗나감 집계가 없다 (§9-8)');
     return `${rp.won ? 'WIN' : 'LOSE'} gold+${rp.gold} drops ${rp.drops.length} cards ${Object.values(rp.cards).reduce((a, b) => a + b, 0)} downed ${rp.downed.length}`;
+});
+/**
+ * 기여 집계 — 영웅별 가한/받은 피해와 처치 수 (SCREEN_DESIGN §4-3 · ADR-0063 · R68).
+ * **타임라인이 정답지다** — 재생기가 이벤트를 더해 그리는 누적 데미지 판(§4-2)과 같은 값이어야
+ * 관전과 리포트가 서로 다른 말을 하지 않는다. `hit`(직격)과 `reflect`(반사) 둘을 판정 쪽/맞은 쪽으로 갈라 더한다.
+ */
+check('battle: contrib 이 타임라인과 같은 값을 낸다 — 파티 전원 · 가한/받은/처치 (R68)', () => {
+    const G2 = newGameP(777, cands, NOW);
+    const r = SYS.game.resolveBattle(G2, 101, NOW);
+    if (!r.ok) fail(`resolveBattle ${r.err}`);
+    const res = r.result, c = res.contrib;
+    if (!Array.isArray(c)) fail('결과에 contrib 이 없다');
+    // 파티 전원이 자리를 갖는다 — 0 이어도 줄이 서야 「안 나갔다」와 「못 때렸다」가 갈린다
+    if (c.length !== G2.party.length || G2.party.some(uid => !c.some(x => x.uid === uid)))
+        fail(`파티 전원이 안 들어 있다 — ${c.length} / ${G2.party.length}`);
+    // 소환물(`s0` 대역)은 uid 가 없으므로 애초에 자리가 없다
+    const keyOf = {};                                    // 유닛 키 → 파티 uid
+    for (const p of res.party) keyOf[p.key] = p.uid;
+    const dealt = {}, taken = {};
+    const add = (o, uid, v) => { if (uid) o[uid] = (o[uid] ?? 0) + v; };
+    for (const ev of res.timeline) {
+        if (ev.e === 'hit') { add(dealt, keyOf[ev.a], ev.dmg); add(taken, keyOf[ev.d], ev.dmg); }
+        // 반사 — `a` 가 되받은 쪽이다 (battle.js 의 reflect 이벤트)
+        if (ev.e === 'reflect') { add(dealt, keyOf[ev.a], ev.dmg); add(taken, keyOf[ev.d], ev.dmg); }
+    }
+    for (const x of c) {
+        if (x.dealt !== Math.round(dealt[x.uid] ?? 0)) fail(`가한 피해가 타임라인과 다르다 (${x.uid}: ${x.dealt} ≠ ${Math.round(dealt[x.uid] ?? 0)})`);
+        if (x.taken !== Math.round(taken[x.uid] ?? 0)) fail(`받은 피해가 타임라인과 다르다 (${x.uid}: ${x.taken} ≠ ${Math.round(taken[x.uid] ?? 0)})`);
+    }
+    // 처치 합 = 잡은 몬스터 수. 파티가 못 잡은 라운드는 없으므로 둘이 정확히 맞는다
+    const kills = c.reduce((a, x) => a + x.kills, 0);
+    const slain = Object.values(res.kills).reduce((a, b) => a + b, 0);
+    if (kills !== slain) fail(`처치 합이 다르다 — contrib ${kills} · kills ${slain}`);
+    if (!eq(r.report.contrib, res.contrib)) fail('리포트가 결과의 기여를 그대로 안 실었다');
+    return `${c.length}명 · 가한 합 ${c.reduce((a, x) => a + x.dealt, 0)} · 처치 ${kills}`;
 });
 check('resolveBattle: 잠긴 스테이지는 출발 불가 · 편성을 막는 상태 검사는 없다 (2026-09-03)', () => {
     const G2 = newGameP(42, cands, NOW);
@@ -2661,6 +2832,277 @@ check('tavern: 리롤은 산 칸을 되살린다 — 빈 칸은 다음 리롤에
     if (SYS.game.tavernCandidates(G2)[0] !== null) fail('slot should be empty');
     SYS.game.tavernReroll(G2, NOW);
     return SYS.game.tavernCandidates(G2).every(c => c !== null) || fail('reroll should refill');
+});
+
+/* ── 수색 (base_expedition_design §2-4 · 구현 2026-09-09 · ADR-0062) ── */
+const SPAN = () => B.tavern_search_hours * 60 * 60 * 1000;
+/** 파티가 **빈** 새 게임 — 수색은 대기 영웅만 보내므로 `newGameP`(전원 편성)를 쓰면 보낼 사람이 없다 */
+const newGameS = seed => SYS.game.newGame(seed, cands, NOW);
+const SIN_IDS = Object.keys(M.SINS);
+
+check('csv: search_story 는 막마다 공통(-) 행을 갖고 phase_order 는 1부터 연속 (state.js 로드 검증과 같은 규칙)', () => {
+    const rows = D.searchStories;
+    if (!rows.length) fail('행이 없다');
+    const order = new Map();
+    for (const r of rows) {
+        if (!r.story_id || !r.phase || !r.text_kr || !r.text_en) fail(`빈 칸: ${r.story_id}`);
+        if (r.sin !== '-' && !SIN_IDS.includes(r.sin)) fail(`죄종 '${r.sin}' (${r.story_id})`);
+        const had = order.get(r.phase);
+        if (had !== undefined && had !== r.phase_order) fail(`${r.phase} 의 phase_order 가 둘이다`);
+        order.set(r.phase, r.phase_order);
+    }
+    const list = [...order.entries()].sort((a, b) => a[1] - b[1]);
+    list.forEach(([id, n], i) => { if (n !== i + 1) fail(`phase_order 가 연속이 아니다 (${id} = ${n})`); });
+    // 공통 행이 없는 막이 있으면 그 죄종에서 후보가 비어 「막마다 굴림 1회」가 깨진다
+    for (const [id] of list) if (!rows.some(r => r.phase === id && r.sin === '-')) fail(`${id} 에 공통(-) 행이 없다`);
+    return `막 ${list.length} · ${rows.length}행`;
+});
+check('search: 대기 영웅만 보낸다 — 파티원 거절 · 동시 1건 · 나가면 대기 목록에서 빠진다 (§2-4)', () => {
+    const g = newGameS(42);
+    const st0 = SYS.game.searchState(g, NOW);
+    if (st0.out || st0.ready.length !== g.heroes.length) fail(`대기 ${st0.ready.length}`);
+    SYS.game.toggleParty(g, g.heroes[0].uid, NOW);
+    if (SYS.game.searchState(g, NOW).ready.includes(g.heroes[0].uid)) fail('파티원이 대기에 남았다');
+    if (SYS.game.searchSend(g, g.heroes[0].uid, NOW).err !== 'party') fail('파티원은 못 보낸다');
+    if (SYS.game.searchSend(g, 'nope', NOW).err !== 'missing') fail('없는 영웅');
+    if (!SYS.game.searchSend(g, g.heroes[1].uid, NOW).ok) fail('보내기 실패');
+    if (SYS.game.searchSend(g, g.heroes[2].uid, NOW).err !== 'busy') fail('동시 1건');
+    const st = SYS.game.searchState(g, NOW);
+    return (st.out && st.ready.length === 0 && st.sent.uid === g.heroes[1].uid && !st.done) || fail('나간 상태');
+});
+check('search: 결과는 저장 없이 재현된다 — 같은 세이브를 다시 열어도 같은 영웅·같은 이야기 (스트림 0x5EA7)', () => {
+    const g = newGameS(42);
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    const a = SYS.game.searchState(g, NOW + SPAN());
+    const b = SYS.game.searchState(SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)))), NOW + SPAN());
+    if (!eq(a.result, b.result)) fail('결과가 재현되지 않는다');
+    if (!eq(a.beats.map(x => x.id), b.beats.map(x => x.id))) fail('이야기가 재현되지 않는다');
+    // 세이브가 드는 것은 「누가 · 언제 · 몇 번째 · 그때의 죄종·매력」뿐이다 — 결과도 이야기도 안 담긴다
+    const keys = Object.keys(g.search).sort();
+    return eq(keys, ['answer', 'cha', 'heroUid', 'no', 'sin', 'startedAt']) || fail(`세이브 필드 ${keys}`);
+});
+check('search: 이야기는 소요 시간을 막 수로 균등분할해 하나씩 열린다 · 결과는 끝에만 보인다 (ADR-0062)', () => {
+    const g = newGameS(7);
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    const span = SPAN(), n = SYS.game.searchState(g, NOW).beats.length;
+    if (n < 1) fail('막이 없다');
+    const open = at => SYS.game.searchState(g, at).beats.filter(x => x.open).length;
+    if (open(NOW) !== 1) fail(`출발 직후 열린 막 ${open(NOW)} — 첫 막은 바로 열린다`);
+    for (let i = 1; i < n; i++) {
+        const at = NOW + Math.round(span * i / n);
+        if (open(at - 1) !== i || open(at) !== i + 1) fail(`막 ${i + 1} 이 제때 안 열린다`);
+    }
+    if (SYS.game.searchState(g, NOW + span - 1).result !== null) fail('끝나기 전에 결과가 보인다');
+    return SYS.game.searchState(g, NOW + span).result !== null || fail('끝났는데 결과가 없다');
+});
+check('search: 매력이 레어 확률을 민다 — 상한을 넘지 않는다 (tavern_search_rare_* 세 키)', () => {
+    const N = 200, span = SPAN();
+    const rareOf = cha => {
+        const g = newGameS(4242);
+        const h = g.heroes[0];
+        let rare = 0;
+        for (let i = 0; i < N; i++) {
+            h.stats.cha = cha;
+            SYS.game.searchSend(g, h.uid, NOW);
+            if (SYS.game.searchState(g, NOW + span).result.tier === 'rare') rare++;
+            SYS.game.searchDrop(g);
+        }
+        return rare / N * 100;
+    };
+    const want = cha => Math.min(B.tavern_search_rare_cap_pct,
+        B.tavern_search_rare_base_pct + cha * B.tavern_search_rare_per_cha_pct);
+    const lo = rareOf(B.hero_attr_min), hi = rareOf(B.hero_attr_max);
+    if (hi <= lo) fail(`매력이 안 밀다 (낮음 ${lo}% · 높음 ${hi}%)`);
+    if (Math.abs(lo - want(B.hero_attr_min)) > 12) fail(`낮은 매력 ${lo}% ≠ 기대 ${want(B.hero_attr_min)}%`);
+    if (Math.abs(hi - want(B.hero_attr_max)) > 12) fail(`높은 매력 ${hi}% ≠ 기대 ${want(B.hero_attr_max)}%`);
+    return `매력 ${B.hero_attr_min} → ${lo.toFixed(0)}% · ${B.hero_attr_max} → ${hi.toFixed(0)}% (표본 ${N})`;
+});
+check('search: 죄종 메아리 — 결과가 보낸 영웅의 죄종으로 쏠린다 (tavern_search_sin_echo_pct)', () => {
+    const N = 200, span = SPAN();
+    const g = newGameS(555);
+    const h = g.heroes[0];
+    let same = 0;
+    for (let i = 0; i < N; i++) {
+        SYS.game.searchSend(g, h.uid, NOW);
+        if (SYS.game.searchState(g, NOW + span).result.sin === h.sin) same++;
+        SYS.game.searchDrop(g);
+    }
+    // 기대 = echo + (1 − echo) × 1/죄종수. 메아리가 0 이면 균등(1/7)이라 그 둘이 갈리는지를 본다
+    const e = B.tavern_search_sin_echo_pct / 100;
+    const want = (e + (1 - e) / SIN_IDS.length) * 100;
+    const got = same / N * 100;
+    if (Math.abs(got - want) > 12) fail(`같은 죄종 ${got.toFixed(0)}% ≠ 기대 ${want.toFixed(0)}%`);
+    return `같은 죄종 ${got.toFixed(0)}% (균등이면 ${(100 / SIN_IDS.length).toFixed(0)}%)`;
+});
+check('search: 수령은 골드·정원을 지키고 칸을 비운다 · 버리기는 다시 보낼 수 있게 한다 (§2-4)', () => {
+    const g = newGameS(42);
+    const span = SPAN();
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    if (SYS.game.searchTake(g, NOW).err !== 'notDone') fail('안 끝났는데 수령됐다');
+    g.resources.gold = B.tavern_hire_cost - 1;
+    if (SYS.game.searchTake(g, NOW + span).err !== 'gold') fail('골드 검사');
+    g.resources.gold = B.tavern_hire_cost * 100;
+    const want = SYS.game.searchState(g, NOW + span).result;
+    const r = SYS.game.searchTake(g, NOW + span);
+    if (!r.ok || g.heroes.length !== 4) fail('수령 실패');
+    if (r.hero.name.ko !== want.name.ko || r.hero.tier !== want.tier) fail('보여준 것과 다른 사람이 왔다');
+    if (g.search !== null) fail('수령했는데 칸이 안 비었다');
+    if (SYS.game.searchTake(g, NOW + span).err !== 'none') fail('빈 칸 수령');
+    if (SYS.game.searchDrop(g).err !== 'none') fail('빈 칸 버리기');
+    // 버리기 — 다시 보내면 번호가 올라 **다른 결과**가 나온다
+    SYS.game.searchSend(g, g.heroes[1].uid, NOW);
+    const first = SYS.game.searchState(g, NOW + span).result;
+    if (!SYS.game.searchDrop(g).ok || g.search !== null) fail('버리기 실패');
+    SYS.game.searchSend(g, g.heroes[1].uid, NOW);
+    return SYS.game.searchState(g, NOW + span).result.name.ko !== first.name.ko || fail('다시 보냈는데 같은 결과');
+});
+check('search: 나가 있는 영웅은 편성도 해고도 막힌다 — 마을에 없기 때문이다', () => {
+    const g = newGameS(42);
+    const uid = g.heroes[0].uid;
+    SYS.game.searchSend(g, uid, NOW);
+    if (SYS.game.toggleParty(g, uid, NOW).err !== 'searching') fail('편성이 안 막혔다');
+    if (SYS.game.dismiss(g, uid).err !== 'searching') fail('해고가 안 막혔다');
+    SYS.game.searchDrop(g);
+    return SYS.game.toggleParty(g, uid, NOW).ok || fail('버렸는데도 편성이 막힌다');
+});
+check('save: 수색은 세이브 버전을 안 올렸다 — 필드가 없는 세이브도 그대로 열린다', () => {
+    const g = newGameS(42);
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    const raw = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
+    delete raw.search; delete raw.counters.search;          // 수색이 없던 시절의 세이브 모양
+    const back = SYS.game.deserialize(raw);
+    if (back.version !== SAVE_VERSION) fail(`버전이 움직였다 (${back.version})`);
+    return (back.search === null && back.counters.search === 0) || fail('기본값 보정이 안 걸렸다');
+});
+
+/* ── 수색 만남 (ADR-0068 · 2026-09-09) ── */
+const MEET_AT = () => Math.round(SPAN() * B.tavern_search_meet_at_pct / 100);
+
+check('csv: search_meeting/answer 무결성 — 만남마다 공통(-) 답이 있고 답이 가리키는 만남이 실재한다', () => {
+    const mt = D.searchMeetings, an = D.searchAnswers;
+    if (!mt.length || !an.length) fail('행이 없다');
+    const ids = new Set(mt.map(m => m.meeting_id));
+    if (ids.size !== mt.length) fail('meeting_id 중복');
+    if (new Set(an.map(a => a.answer_id)).size !== an.length) fail('answer_id 중복');
+    for (const m of mt) {
+        if (!SIN_IDS.includes(m.sin)) fail(`죄종 '${m.sin}' (${m.meeting_id})`);
+        if (!m.rumor_kr || !m.rumor_en || !m.prompt_kr || !m.prompt_en) fail(`빈 문구 ${m.meeting_id}`);
+        const rows = an.filter(a => a.meeting_id === m.meeting_id);
+        if (!rows.length) fail(`${m.meeting_id} 에 답이 없다`);
+        // 공통 답이 없으면 그 죄종을 안 보낸 판에서 고를 것이 0개가 된다
+        if (!rows.some(a => a.need_sin === '-')) fail(`${m.meeting_id} 에 공통(-) 답이 없다`);
+        // 소문을 읽으면 맞힐 수 있어야 한다 — 만난 죄종에 먹히는 **공통** 답이 하나는 있어야 한다
+        if (!rows.some(a => a.need_sin === '-' && a.hit_sin === m.sin)) fail(`${m.meeting_id} — 읽어서 맞힐 답이 없다`);
+    }
+    for (const a of an) {
+        if (!ids.has(a.meeting_id)) fail(`없는 만남 '${a.meeting_id}' (${a.answer_id})`);
+        if (a.need_sin !== '-' && !SIN_IDS.includes(a.need_sin)) fail(`need_sin '${a.need_sin}'`);
+        if (!SIN_IDS.includes(a.hit_sin)) fail(`hit_sin '${a.hit_sin}'`);
+        if (!a.answer_kr || !a.answer_en) fail(`빈 문구 ${a.answer_id}`);
+    }
+    return `만남 ${mt.length} · 답 ${an.length}`;
+});
+check('search: 소문은 거짓이 아니다 — 보내기 전에 본 죄종이 실제로 만나는 사람이다 (ADR-0068)', () => {
+    const g = newGameS(42);
+    const before = SYS.game.searchState(g, NOW).rumor;
+    if (!before) fail('소문이 없다');
+    // 누굴 보내든 같은 사람을 만난다 — 만남은 **회차 번호**가 정하지 보낸 사람이 정하지 않는다
+    for (const uid of [g.heroes[0].uid, g.heroes[1].uid]) {
+        const g2 = newGameS(42);
+        SYS.game.searchSend(g2, uid, NOW);
+        const after = SYS.game.searchState(g2, NOW + MEET_AT()).rumor;
+        if (after.id !== before.id || after.sin !== before.sin) fail(`보낸 사람이 만남을 바꿨다 (${before.id} → ${after.id})`);
+    }
+    return `${before.id} (${before.sin})`;
+});
+check('search: 만남은 tavern_search_meet_at_pct 지점에 열린다 · 답은 그 전엔 거절된다', () => {
+    const g = newGameS(42);
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    const at = MEET_AT();
+    if (SYS.game.searchState(g, NOW + at - 1).meetOpen) fail('너무 일찍 열렸다');
+    if (!SYS.game.searchState(g, NOW + at).meetOpen) fail('제때 안 열렸다');
+    const list = SYS.game.searchState(g, NOW + at).answers;
+    if (!list.length) fail('열린 답이 없다');
+    if (SYS.game.searchAnswer(g, list[0].id, NOW).err !== 'notOpen') fail('만나기 전에 답이 됐다');
+    if (!SYS.game.searchAnswer(g, list[0].id, NOW + at).ok) fail('답이 안 된다');
+    if (SYS.game.searchAnswer(g, list[0].id, NOW + at).err !== 'answered') fail('두 번 답했다');
+    return true;
+});
+check('search: 맞는 죄종을 보내면 답이 하나 더 열린다 — 그 답이 전액을 깎는다 (ADR-0068 두 층)', () => {
+    const g = newGameS(42);
+    const meet = SYS.game.searchState(g, NOW).rumor;
+    const at = MEET_AT();
+    // 보낸 영웅의 죄종을 만남에 맞춰 준다 — 로스터 3명이 그 죄종을 가졌다는 보장이 없다
+    const h = g.heroes[0];
+    h.sin = meet.sin;
+    SYS.game.searchSend(g, h.uid, NOW);
+    const opened = SYS.game.searchState(g, NOW + at).answers;
+    const key = opened.filter(a => a.key);
+    if (key.length !== 1) fail(`열쇠 답 ${key.length}개 — 맞는 죄종을 보냈으면 정확히 하나여야 한다`);
+    const r = SYS.game.searchAnswer(g, key[0].id, NOW + at);
+    if (!r.ok || r.discountPct !== B.tavern_search_meet_key_pct) fail(`할인 ${r.discountPct}%`);
+    // 안 맞는 죄종을 보내면 그 답은 **보이지도 않는다**
+    const g2 = newGameS(42);
+    const other = SIN_IDS.find(x => x !== meet.sin);
+    g2.heroes[0].sin = other;
+    SYS.game.searchSend(g2, g2.heroes[0].uid, NOW);
+    if (SYS.game.searchState(g2, NOW + at).answers.some(a => a.key)) fail('안 맞는 죄종에게 열쇠 답이 보였다');
+    return `${meet.sin} → 열쇠 ${r.discountPct}%`;
+});
+check('search: 소문만 읽어도 절반은 깎는다 · 빗나간 답은 0 이고 **벌은 없다**', () => {
+    const g = newGameS(42);
+    const meet = SYS.game.searchState(g, NOW).rumor;
+    const at = MEET_AT();
+    const other = SIN_IDS.find(x => x !== meet.sin);
+    g.heroes[0].sin = other;                       // 열쇠 답이 안 열리는 판
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    const rows = D.searchAnswers.filter(a => a.meeting_id === meet.id && a.need_sin === '-');
+    const hit = rows.find(a => a.hit_sin === meet.sin), miss = rows.find(a => a.hit_sin !== meet.sin);
+    if (!hit || !miss) fail('맞는 답과 빗나간 답이 둘 다 있어야 한다');
+    const g2 = newGameS(42); g2.heroes[0].sin = other; SYS.game.searchSend(g2, g2.heroes[0].uid, NOW);
+    if (SYS.game.searchAnswer(g2, miss.answer_id, NOW + at).discountPct !== 0) fail('빗나갔는데 깎였다');
+    if (SYS.game.searchAnswer(g, hit.answer_id, NOW + at).discountPct !== B.tavern_search_meet_hit_pct) fail('맞혔는데 안 깎였다');
+    // 빗나가도 결과는 그대로 온다 — 벌이 아니라 「깎을 기회를 안 쓴 것」이다
+    const span = SPAN();
+    g2.resources.gold = B.tavern_hire_cost * 10;
+    const took = SYS.game.searchTake(g2, NOW + span);
+    return (took.ok && took.cost === B.tavern_hire_cost) || fail(`빗나간 답의 값 ${took.cost}`);
+});
+check('search: 답은 **결과 영웅을 안 바꾼다** — 고용비만 깎는다 (rng 스트림이 갈려 있다)', () => {
+    const at = MEET_AT(), span = SPAN();
+    const mk = () => { const g = newGameS(42); SYS.game.searchSend(g, g.heroes[0].uid, NOW); return g; };
+    const base = SYS.game.searchState(mk(), NOW + span).result;
+    const g = mk();
+    const list = SYS.game.searchState(g, NOW + at).answers;
+    SYS.game.searchAnswer(g, list[list.length - 1].id, NOW + at);
+    const after = SYS.game.searchState(g, NOW + span).result;
+    return eq(base, after) || fail('답이 결과를 바꿨다 — 만남 스트림이 결과 굴림을 밀고 있다');
+});
+check('search: 답을 안 해도 수령된다 — 정가일 뿐 벌이 없다 (OSRS 무해 소멸 · 방치형 계약 ③)', () => {
+    const g = newGameS(42);
+    const span = SPAN();
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    g.resources.gold = B.tavern_hire_cost * 10;
+    const gold0 = g.resources.gold;
+    const r = SYS.game.searchTake(g, NOW + span);
+    if (!r.ok) fail(`수령 실패 ${r.err}`);
+    if (r.cost !== B.tavern_hire_cost) fail(`값 ${r.cost} ≠ 정가`);
+    return g.resources.gold === gold0 - B.tavern_hire_cost || fail('정가가 안 나갔다');
+});
+check('search: 열쇠 답이면 고용비가 실제로 그만큼 덜 나간다', () => {
+    const g = newGameS(42);
+    const meet = SYS.game.searchState(g, NOW).rumor;
+    const at = MEET_AT(), span = SPAN();
+    g.heroes[0].sin = meet.sin;
+    SYS.game.searchSend(g, g.heroes[0].uid, NOW);
+    const key = SYS.game.searchState(g, NOW + at).answers.find(a => a.key);
+    SYS.game.searchAnswer(g, key.id, NOW + at);
+    g.resources.gold = B.tavern_hire_cost * 10;
+    const gold0 = g.resources.gold;
+    const want = Math.round(B.tavern_hire_cost * (100 - B.tavern_search_meet_key_pct) / 100);
+    const r = SYS.game.searchTake(g, NOW + span);
+    if (!r.ok || r.cost !== want) fail(`값 ${r.cost} ≠ ${want}`);
+    return g.resources.gold === gold0 - want || fail('깎인 값이 안 나갔다');
 });
 
 /* ── 파티 전술 (tactic_card_design §5 확정 2026-08-30) ── */
