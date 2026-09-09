@@ -681,15 +681,30 @@ function reconcileForm() {
     return caps;
 }
 
-/** 진형을 관전에 넘길 꼴로 굳힌다 (2026-09-09) — `{byUid: {uid: 랭크 번호}, depth: 랭크 수}`.
+/** 진형을 관전에 넘길 꼴로 굳힌다 (2026-09-09) — `{byUid: {uid: 랭크}, orderByUid: {uid: 가로 차례}, depth: 랭크 수}`.
  *  **출발 순간에 한 번** 찍는다: 관전 중에 편성으로 돌아가 템플릿을 바꿔도 재생 중인 전투의 줄은 안 흔들린다
  *  (전투 결과가 출발 순간의 파티를 담은 것과 같은 이유).
- *  ⚠ 여전히 화면 상태뿐이다 — 세이브(G)에도 전투 계산(SYS.*)에도 안 실린다. 재생기는 이 값으로 **카드 자리만** 민다 */
+ *
+ *  **가로 차례는 「각 랭크를 같은 너비에 고르게 편다」로 나온다** [2026-09-09 사용자 지시] — k 명짜리 랭크의 i 번째는
+ *  x = (i + 0.5) / k 에 서고, 전원을 그 x 로 줄 세운 것이 화면 차례다. 수가 적은 랭크가 저절로 **가운데**로 온다:
+ *    · 2·1 → 앞 0.25 · **뒤 0.5** · 앞 0.75  = 앞 둘이 양옆, 뒤 하나가 그 사이 (삼각)
+ *    · 1·2 → 뒤 0.25 · **앞 0.5** · 뒤 0.75  = 그 뒤집힌 꼴
+ *    · 3    → 0.17 · 0.5 · 0.83             = 한 줄이라 파티 순서 그대로
+ *  랭크를 **줄이 아니라 세로 어긋남**으로 그리는 화면이라(카드가 한 줄에 선다) 가로 차례까지 정해야 진형이 모양으로 읽힌다.
+ *  ⚠ 여전히 화면 상태뿐이다 — 세이브(G)에도 전투 계산(SYS.*)에도 안 실린다. 재생기는 이 값으로 **카드 자리만** 정한다 */
 function formSnapshot() {
     const caps = reconcileForm();
     const byUid = {};
-    state.expForm.ranks.forEach((list, r) => { for (const uid of list) byUid[uid] = r; });
-    return { byUid, depth: caps.length };
+    const spread = [];
+    state.expForm.ranks.forEach((list, r) => list.forEach((uid, i) => {
+        byUid[uid] = r;
+        spread.push({ uid, r, x: (i + 0.5) / list.length });
+    }));
+    // x 가 같으면 앞 랭크가 먼저다 — 결정적이어야 같은 편성이 늘 같은 그림으로 선다
+    spread.sort((a, b) => a.x - b.x || a.r - b.r);
+    const orderByUid = {};
+    spread.forEach((e, n) => { orderByUid[e.uid] = n; });
+    return { byUid, orderByUid, depth: caps.length };
 }
 
 /** 어느 자리에 있나 — `[랭크, 칸]` 또는 못 찾으면 null */

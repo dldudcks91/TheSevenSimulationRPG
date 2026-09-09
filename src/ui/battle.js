@@ -83,6 +83,7 @@ export function mountBattle(container, opts) {
         return {
             key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
             rank: form?.byUid?.[p.uid] ?? 0,   // 진형의 랭크 번호 (0 = 전열) — 카드 자리에만 쓴다 (2026-09-09)
+            order: form?.orderByUid?.[p.uid] ?? 0,   // 진형이 정한 **가로 차례** — 수가 적은 랭크가 가운데로 온다 (2026-09-09)
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
             atk: p.atk, atkType: p.atkType,   // 툴팁 문장의 피해 — 전투에는 안 쓴다 (INTERFACE §2-6)
@@ -349,8 +350,13 @@ function renderUnits(state, root) {
             // 카드는 창이 걸리든 말든 옛 크기 그대로다 (SCREEN_DESIGN §4-2)
             const cell = document.createElement('div');
             cell.className = 'unit-slot';
-            // 진형의 자리는 **칸**이 든다 (2026-09-09) — 카드가 아니라 칸을 밀어야 창 뱃지 줄이 카드를 따라간다
-            if (u.side === 'party') cell.dataset.rank = u.rank ?? 0;
+            // 진형의 자리는 **칸**이 든다 (2026-09-09) — 카드가 아니라 칸을 밀어야 창 뱃지 줄이 카드를 따라간다.
+            // 세로(어긋남)는 `data-rank` 를 보고 CSS 가, 가로(차례)는 flex `order` 가 든다 — DOM 순서는 파티 순서 그대로 남는다
+            // (로그·누적 데미지가 읽는 순서와 갈리지 않게). ⚠ `order` 는 색·크기 같은 디자인 상수가 아니라 **유닛마다 다른 값**이라 인라인이다
+            if (u.side === 'party') {
+                cell.dataset.rank = u.rank ?? 0;
+                cell.style.order = u.order ?? 0;
+            }
             cell.appendChild(n);
             cell.insertAdjacentHTML('beforeend', '<div class="buff-row"></div>');
             u.buffRow = cell.lastElementChild;
