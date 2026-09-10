@@ -469,9 +469,11 @@ const STRINGS = {
     'exp.party.h': { ko: '파티', en: 'Party' },
     /* 패널 부제는 숫자만 — 설명은 도움말 탭으로 갔다 (원문은 help.exp.party) */
     'exp.leader': { ko: '리더', en: 'Leader' },
-    /* 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — **랭크 라벨 둘뿐**이다. 템플릿은 **점 아이콘**이라 글자가 없고 키도 없다.
+    /* 진형 (SCREEN_DESIGN §4-1) — 칸 이름 + **랭크 라벨 둘**. 템플릿은 **점 아이콘**이라 글자가 없고 키도 없다.
        ~~중열~~ 은 2026-09-09 에 삭제 — 3랭크 템플릿(1·1·1)이 「한 줄에 셋」으로 바뀌어 가운데 랭크가 사라졌다.
-       ~~`exp.form.h`(「진형」)~~ 도 2026-09-09 삭제 [사용자 지시 · ADR-0060] — 제목 줄을 걷어 상자를 내용에 맞췄다 */
+       `exp.form.h` 는 2026-09-09 에 지웠다가 **2026-09-10 되살렸다** [사용자 지시 · ADR-0079 가 ADR-0060 을 대체] —
+       패널이 세 칸이 되면서 칸마다 이름이 서야 어디까지가 무엇인지 읽힌다 */
+    'exp.form.h': { ko: '진형', en: 'Formation' },
     'exp.form.front': { ko: '전열', en: 'Front' },
     'exp.form.back': { ko: '후열', en: 'Back' },
     'exp.cantDepart': {
@@ -511,11 +513,7 @@ const STRINGS = {
     'exp.cleared': { ko: '클리어', en: 'Cleared' },
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
     'exp.pick': { ko: '원정', en: 'Expedition' },
-    'exp.viewComp': { ko: '구성 보기', en: 'Composition' },
     'exp.foes': { ko: '적 구성', en: 'Enemies' },
-    'exp.eliteR': { ko: 'R{n} 정예', en: 'R{n} Elite' },
-    'exp.solo': { ko: ' 단독', en: ' solo' },
-    'exp.escorts': { ko: ' + 호위 1~2', en: ' + 1–2 escorts' },
     'exp.zones.note': {
         ko: '지역 죄종은 해당 죄종 접사의 드롭 가중치를 올린다 — 타겟 파밍의 축<br>'
             + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다<br>'
@@ -583,6 +581,9 @@ const STRINGS = {
     'st.atkType.lightning': { ko: '전기', en: 'Lightning' },
     'st.atkType.poison': { ko: '독', en: 'Poison' },
     'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated' },
+    // 초당 공격속도 — **축이 아니라 표기**다. 축은 `combat_stat.csv:action_period`(행동 주기) 하나고
+    // 아이템 툴팁만 그 역수를 찍는다 (주기는 클수록 느려 이름과 방향이 거꾸로 읽힌다 · ADR-0081)
+    'st.atkSpeed': { ko: '공격 속도', en: 'Attack Speed' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'log.reflect': { ko: '{name} 의 반사 — {target} 에게 {dmg}', en: '{name} reflects {dmg} to {target}' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
@@ -949,6 +950,17 @@ const STRINGS = {
     'ix.g.heroCls': { ko: '{cls} 초상', en: '{cls} Portraits' },   // 직업 하나가 묶음 하나 (ADR-0066) — ~~ix.g.hero~~ 대체
     'ix.g.weapon': { ko: '무기', en: 'Weapons' },
     'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
+    /* 무기 베이스 — **CSV 가 없어 이름이 여기 있다** (2026-09-10 · 임시). `weapon_base` 테이블이 서면 이 여덟 줄은
+       걷고 `L(row)` 가 받는다. 이름의 SSOT 는 지금 `docs/game_design/item_design.md` §1 「이름 — 9군」 표다.
+       **영어가 원본이고 한글은 직역**이다 (CLAUDE.md 규칙 6). */
+    'ix.g.weaponBase': { ko: '양손검 베이스 (id 대기)', en: 'Greatsword Bases (awaiting ids)' },
+    'ix.b.long_sword': { ko: '롱 소드', en: 'Long Sword' },
+    'ix.b.claymore': { ko: '클레이모어', en: 'Claymore' },
+    'ix.b.highland_blade': { ko: '하이랜드 블레이드', en: 'Highland Blade' },
+    'ix.b.bastard_sword': { ko: '바스타드 소드', en: 'Bastard Sword' },
+    'ix.b.balrog_blade': { ko: '발록 블레이드', en: 'Balrog Blade' },
+    'ix.b.zweihander': { ko: '츠바이핸더', en: 'Zweihander' },
+    'ix.b.colossus_blade': { ko: '콜로서스 블레이드', en: 'Colossus Blade' },
     'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
     /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고 그 안에
        그 직업의 스킬 전부가 선다 — **1스킬 = 1직업**이라 묶는 일이 `owner_id` 하나로 끝난다(2026-09-09).

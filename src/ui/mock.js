@@ -114,6 +114,14 @@ export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? {
 export const statValue = (stat, v, fallback) =>
     `${v >= 0 ? '+' : ''}${v}${statLabel(stat, fallback).fmt === 'pct' ? '%' : ''}`;
 
+/**
+ * 밑수 값만 — `statValue` 와 같되 **부호를 안 붙인다**. 접사의 `+` 는 「얼마를 더한다」라 뜻을 들지만
+ * 밑수는 「이 아이템이 가진 값」이라 더할 대상이 없다 (아이템 툴팁의 메인 옵션 줄 — SCREEN_DESIGN §6).
+ * 단위(%)는 여전히 이 파일 하나가 붙인다.
+ */
+export const baseValue = (stat, v, fallback) =>
+    `${v}${statLabel(stat, fallback).fmt === 'pct' ? '%' : ''}`;
+
 /** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
  *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
  *  2026-09-01 재배치 — 보조 슬롯 폐지(한손 개념 폐지)로 위치가 9 → 8 이 되어 4행이 3행으로 줄었다.
@@ -177,6 +185,28 @@ export const PAPERDOLL = [
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
    풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
 export const HERO_FACES = { warrior: 3, knight: 5, mage: 1, archer: 1, priest: 4 };
+
+/**
+ * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
+ * **그림 한 장의 이름이지 영웅의 이름이 아니다** — 굴려서 이 얼굴을 받은 평범한 영웅은 제 이름(`hero_name.csv` 풀)을
+ *   그대로 쓴다. 이 이름이 읽히는 자리는 지금 **도감 캐릭터 세그먼트의 타일 하나**뿐이다.
+ * **왜 이름을 붙이나** — 나중에 **유니크가 이 얼굴을 가져가기 위해서**다. 이름이 붙은 초상은 「굴려서 나오는 얼굴」이 아니라
+ *   정해진 개체의 얼굴이 된다. 그 개체 테이블(유니크 영웅)은 아직 없다 — 이름만 먼저 박아 둔 것이다.
+ * **없으면 없는 대로다** — 이름이 안 붙은 초상은 여기 줄이 없고, 도감 타일은 **풀 번호**로 남는다 (`codexCharacter`).
+ * ⚠ **`hero_name.csv` 와 다른 층이다** — 그쪽은 영웅이 태어날 때 굴리는 **이름 풀**(n01…)이고 얼굴과 아무 관계가 없다.
+ *   같은 이름이 양쪽에 있으면 안 된다는 규칙은 없지만, 지금은 겹치지 않는다.
+ * ⚠ **목록의 SSOT 는 위 `HERO_FACES` 다** — 여기 줄이 그 장수를 넘어도 도감은 안 그린다(범위 안만 돈다).
+ *   영어가 원본이고 한글이 음역인 넷(Maximus · Barbarian · Odysseus · Hannibal)과 **한국어가 원본인 하나**(검황 —
+ *   영어 `Sword Emperor` 가 직역)가 섞여 있다.
+ */
+export const HERO_FACE_NAMES = {
+    warrior_1: { ko: '막시무스', en: 'Maximus' },          // 검투사
+    warrior_2: { ko: '바바리안', en: 'Barbarian' },        // 바바리안
+    warrior_3: { ko: '검황', en: 'Sword Emperor' },        // 백발백염
+    knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
+    knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
+    // knight_2 · knight_3 · knight_4 는 이름 없이 번호로 둔다 (2026-09-10 사용자 지시 — 「나중에 안 쓸 듯」)
+};
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).
  *
  * ⚠ **마무리 섞기(murmur3 finalizer)를 빼면 안 된다** (2026-09-06 버그 수정) — 쓰는 쪽이 전부 `% 개수` 라
@@ -258,8 +288,35 @@ export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}$
 export const ITEM_ART_DIR = './assets/art/icons/items/';
 export const ITEM_ART_GROUPS = ['sword2h', 'axe', 'mace', 'spear', 'staff', 'orb', 'bow', 'crossbow'];
 export const ITEM_ART_BY_SLOT = { armor: 'armor_1', boots: 'boots_1', gloves: 'gloves_1', ring: 'ring_1' };   // ⚠ 임시
-export const itemArt = (slot, group) => {
-    if (slot === 'weapon') return ITEM_ART_GROUPS.includes(group) ? `${ITEM_ART_DIR}${group}.png` : null;
+/**
+ * 무기 베이스 그림 — `icons/items/unused/sword2h/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). **양손검만 있다.**
+ *
+ * ⚠ **파일명이 id 가 아니다.** 무기 베이스는 기획 확정(무기군당 7 · `item_design.md` §1)이지만 `weapon_base` CSV 가
+ *   아직 없다(DEV_PLAN R62 — 대역 경계 · 수치 미발행). 그래서 **개체가 어느 베이스인지는 아무 데도 안 적혀 있다.**
+ * 그런데도 그림은 고를 수 있다 — **uid 해시**로 7장 중 하나를 잡는다(`itemArt`). 스킬 아이콘의 해시 폴백과 같은 문법이고,
+ *   계약도 같다: **uid 는 세이브에 남으므로 한 개체는 평생 같은 검으로 보인다** (다시 그려도 · 껐다 켜도 안 바뀐다).
+ * ⚠ **rng 를 한 발도 안 쓴다** — 그리는 시각의 해시라 `game_logic` 의 난수 수열에 안 닿는다(골든 스냅샷 불변).
+ *   「랜덤하게 보이게」를 `Math.random()` 으로 하면 **다시 그릴 때마다 검이 바뀐다** — 그래서 안 쓴다.
+ * ⚠ **이름은 안 따라온다** — 아이템 이름 · 툴팁은 여전히 「양손검」이다(`item.js:build` 가 무기군을 그대로 base 로 쓴다).
+ *   그림과 이름이 어긋나는 것을 **알고 켠 것**이고, `weapon_base` 가 서면 굴림이 `game_logic` 으로 옮겨 가며 둘이 붙는다.
+ * 이름 표시(도감)는 `i18n:ix.b.<stem>` 이 든다 — CSV 가 없어 `L()` 로 읽을 데이터 행이 없기 때문이고, 이것도 **임시**다.
+ * 목록 순서 = 대역 순(기본 → ①-A · ①-B → ②-A · ②-B → ③-A · ③-B) — `item_design.md` §1 「이름 — 9군」 표의 행 순서다.
+ */
+export const WEAPON_BASE_DIR = './assets/art/icons/items/unused/sword2h/';
+export const WEAPON_BASE_STEMS = ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'];
+export const weaponBaseArt = stem => WEAPON_BASE_STEMS.includes(stem) ? `${WEAPON_BASE_DIR}${stem}.png` : null;
+/** 베이스 그림이 있는 무기군 — 지금은 양손검 하나다. 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
+const WEAPON_BASE_GROUPS = ['sword2h'];
+export const itemArt = (slot, group, uid) => {
+    if (slot === 'weapon') {
+        // 개체(uid)가 있고 그 무기군에 베이스 그림이 있으면 **베이스 그림**, 아니면 무기군 그림.
+        // 도감의 「무기」 묶음은 uid 없이 부르므로 거기서는 무기군 그림 그대로다 (재고를 보는 자리다 · §9-1)
+        if (uid && WEAPON_BASE_GROUPS.includes(group))
+            // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
+            //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
+            return `${WEAPON_BASE_DIR}${WEAPON_BASE_STEMS[strHash(`${uid}:${group}`) % WEAPON_BASE_STEMS.length]}.png`;
+        return ITEM_ART_GROUPS.includes(group) ? `${ITEM_ART_DIR}${group}.png` : null;
+    }
     const file = ITEM_ART_BY_SLOT[slot];
     return file ? `${ITEM_ART_DIR}${file}.png` : null;
 };

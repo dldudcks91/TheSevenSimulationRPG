@@ -100,6 +100,7 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?dev=prologue` | 프롤로그 (SCREEN_DESIGN §3-1) — `&s=n` 이면 n번째 씬. 마지막 씬(5)만 인용·챕터 줄이 선다 (2026-09-03) |
 | `?dev=tree` | **스킬 창이 열린** 캐릭터 탭 — 창은 버튼으로만 열린다. 영웅 0 에게 포인트 [balance.csv:mastery_t1_max_rank] 를 주고 **한 칸을 미리 찍어 둔다** (2026-09-08) — 새 게임은 포인트가 0 이라 창의 결정 둘(찍기 · **우클릭 되돌리기**)에 못 닿았다 |
 | `?dev=tactics` | 연구 탭 — 전술 칸이 **전부 열린** 상태 (칸은 합산 레벨로만 열려 클릭으로 못 만든다) |
+| `?dev=tip` | **아이템 툴팁이 떠 있는** 캐릭터 탭 (2026-09-10) — 툴팁은 hover 로만 뜬다. 한 런을 정산해 **주운 것을 다 입히고** 한 번 더 정산해 **가방에 비교 상대가 있는 물건**을 남긴다(새 게임은 몸에 무기 하나뿐이라 비교 두 장에 못 닿는다). `&i=n` 이면 n번째 찬 칸(기본 1 — 가방에 무엇이 떨어질지는 시드가 정하므로 무기 칸을 골라 잡는 유일한 길) · `&t=doll` 이면 페이퍼돌 칸(한 장) |
 | `?screen=start` | 시작 화면 |
 | `?tab=<탭>` | 탭 바로 열기 — **탭 10** (2026-09-08): `expedition` · `character` · `forge`(강화) · `tavern` · `shop`(상점) · `resource`(자원) · `explore`(탐험) · `research` · `codex` · `help`. ⚠ 옛 이름 둘은 **죽었다**(무시하고 원정으로 연다) — `town`(09-04 자원·탐험으로 갈림) · `imagedex`(09-08 도감에 흡수 — SCREEN_DESIGN §9). 세이브가 없으면 `?dev=newgame&tab=forge` 처럼 겹쳐 쓴다. ⚠ `?dev=forge` · `?dev=trade` 는 **삭제**됐다 — 강화·상점이 탭이 되어 `?tab=` 이 바로 닿는다 |
 | `?cx=monster\|character\|item\|skill` | 도감의 세그먼트 (SCREEN_DESIGN §9 · §9-1) — `?tab=codex&cx=skill` 처럼 겹쳐 쓴다. 기본값 `monster`. ⚠ 옛 이름 `?ix=character\|item` 은 09-08 에 이미지 도감 탭과 함께 죽었다 |

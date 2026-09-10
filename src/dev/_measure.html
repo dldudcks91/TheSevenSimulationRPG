@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><title>measure</title>
+<style>html,body{margin:0}#f{height:700px;border:0}</style>
+<iframe id="f" src="about:blank"></iframe><pre id="out">running</pre>
+<script>
+const q = new URL(location.href).searchParams;
+const f = document.getElementById('f');
+f.style.width = (q.get('w') || 1280) + 'px';
+f.src = q.get('u') || '/index.html?dev=play&lang=ko';
+f.onload = () => setTimeout(() => {
+  const d = f.contentDocument, L = [];
+  const r = el => { const b = el.getBoundingClientRect(); return {t:+b.top.toFixed(1),b:+b.bottom.toFixed(1)}; };
+  const arena = d.querySelector('.arena'); if (!arena) { out.textContent='no .arena'; return; }
+  const A = r(arena), dv = r(d.querySelector('.divider')), vs = (dv.t + dv.b) / 2;
+  L.push('arena ' + JSON.stringify(A) + '  VS center=' + vs);
+  for (const c of ['side-enemy','side-party']) {
+    const side = d.querySelector('.' + c); if (!side) continue;
+    const slots = [...side.querySelectorAll('.unit-slot')];
+    const front = slots.filter(s => (s.dataset.rank|0) === 0).map(s => r(s.querySelector('.unit') || s));
+    const all = slots.map(s => ({rank: s.dataset.rank, top: getComputedStyle(s).top, ...r(s.querySelector('.unit') || s)}));
+    const near = c === 'side-enemy' ? Math.max(...front.map(x=>x.b)) : Math.min(...front.map(x=>x.t));
+    L.push(c + ' depth=' + side.dataset.depth + '  전열↔VS = ' + Math.abs(vs - near).toFixed(1) + 'px');
+    all.forEach(a => L.push('   rank=' + a.rank + ' top=' + a.top + ' card=' + a.t + '..' + a.b));
+    const bf = [...side.querySelectorAll('.buff-row')].map(r);
+    if (bf.length) L.push('   뱃지 여유 = ' + (c === 'side-enemy' ? (Math.min(...bf.map(x=>x.t)) - A.t) : (A.b - Math.max(...bf.map(x=>x.b)))).toFixed(1) + 'px');
+  }
+  const ec = [...d.querySelectorAll('.side-enemy .unit-slot')].filter(s=>(s.dataset.rank|0)===0).map(s=>r(s.querySelector('.unit')||s));
+  const pc = [...d.querySelectorAll('.side-party .unit-slot')].filter(s=>(s.dataset.rank|0)===0).map(s=>r(s.querySelector('.unit')||s));
+  if (ec.length && pc.length) L.push('GAP 전열↔전열 = ' + (Math.min(...pc.map(x=>x.t)) - Math.max(...ec.map(x=>x.b))).toFixed(1));
+  out.textContent = L.join('\n');
+}, 2500);
+</script>

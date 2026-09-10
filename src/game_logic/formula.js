@@ -100,6 +100,14 @@ export function createFormula(balance) {
     const leech = (dmg, pct) => Math.round(dmg * (pct ?? 0) / 100);
 
     /**
+     * 초당 공격속도 — **행동 주기의 역수**다. 주기(초/1회)는 클수록 느려서 화면에서 방향이 거꾸로 읽히므로,
+     * 아이템 툴팁은 이 변환값을 찍는다(감쇠율·저항 상한과 같은 자리 — 소재값만으로는 못 읽는 값을 변환해 낸다).
+     * ⚠ **새 축이 아니다** — 축은 `combat_stat.csv:action_period` 하나고 이것은 그 값을 뒤집은 표기다.
+     * 전투는 이 함수를 쓰지 않는다(틱 루프가 주기를 그대로 쓴다) — 화면과 검증이 같은 규칙을 읽게 하려고 여기 둔다.
+     */
+    const attacksPerSec = period => (period > 0 ? 1 / period : 0);
+
+    /**
      * 실효 쿨 (battle_design §6) — 스킬은 **행동 주기에 얹혀** 나가므로 쿨이 돌아도 다음 차례까지 기다린다.
      * `ceil(쿨 / 주기) × 주기` — 쿨이 주기의 정수배면 손실 0. 엔진은 이 함수를 쓰지 않는다(틱 루프에서
      * 자연히 생긴다) — 화면 표기와 검증이 같은 규칙을 읽게 하려고 여기 둔다.
@@ -108,6 +116,6 @@ export function createFormula(balance) {
 
     return {
         growthMult, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
-        hitChance, strike, indirect, leech, effectiveCd,
+        hitChance, strike, indirect, leech, attacksPerSec, effectiveCd,
     };
 }

@@ -63,7 +63,7 @@ state.js(deps: hero, item, battle, skill, balance, …) ──┘
 
 ### 2-3. `formula.js` — 피해 계산
 
-`createFormula(balance) → { growthMult, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech, effectiveCd }`
+`createFormula(balance) → { growthMult, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech, attacksPerSec, effectiveCd }`
 입력은 `balance` 하나. 파일에 숫자 리터럴 없음. 규칙의 출처는 battle_design §9 전부(9-0 ~ 9-6).
 
 | 함수 | 시그니처 | 계약 |
@@ -78,6 +78,7 @@ state.js(deps: hero, item, battle, skill, balance, …) ──┘
 | `strike(rng, a, d)` | `→ {hit, dmg, crit}` | 직격 1회. **rng 소비 순서 = 적중 → (적중 시) 치명. 최대 2회** (§5-2) |
 | `indirect(amount)` | `→ int` | 비직격(반사·도트·사망 폭발). 적중·스킬 배율·치명·감소를 받지 않고 흡혈·반사·발동 효과를 **유발하지 않는다**. `dmg_min` 하한만 |
 | `leech(dmg, pct)` | `→ int` | 흡혈 — 직격의 최종 피해에만 비례 |
+| `attacksPerSec(period)` | `→ 회/초` | 초당 공격속도 `1 / period` (`period ≤ 0` 이면 0). **축이 아니라 표기**다 — 축은 `combat_stat.csv:action_period` 하나고 아이템 툴팁만 역수를 찍는다(주기는 클수록 느려 이름과 방향이 거꾸로 읽힌다 · [SCREEN_DESIGN §6](SCREEN_DESIGN.md) · ADR-0081). **엔진은 이 함수를 쓰지 않는다** — `mitigation`·`resCap` 과 같은 자리(소재값만으로는 못 읽는 값의 변환) |
 | `effectiveCd(cd, period)` | `→ 초` | 실효 쿨 `ceil(cd / period) × period` (§6) — 스킬은 행동 주기에 얹혀 나가므로 쿨이 돌아도 다음 차례까지 기다린다. **엔진은 이 함수를 쓰지 않는다**(틱 루프에서 자연히 생긴다) — 화면 표기·검증이 같은 규칙을 읽게 하려는 것 |
 
 **공격자 `a`** — `{atk, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, bonusPct}`

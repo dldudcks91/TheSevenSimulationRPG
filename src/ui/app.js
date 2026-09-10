@@ -157,16 +157,6 @@ const faceChip = (id, extraCls = '') => {
         style="background:${c}22;border-color:${c}66"></span>`;
 };
 /**
- * 적 한 짝 — **초상 + 이름**. 원정 「구성 보기」가 쓴다 (§4-1 · 2026-09-10 사용자 지시).
- * 옛 판은 얼굴 칩들을 늘어놓고 이름은 그 뒤에 쉼표로 **한 덩어리**로 붙여서, 어느 얼굴이 어느 이름인지 짝이 안 지어졌다.
- * `bossTag` 를 주면 보스다 — 초상 테두리가 붉어지고(`.face.boss`) 이름 뒤에 태그가 붙는다.
- */
-const foeChip = (id, bossTag = '') => `
-    <span class="foe${bossTag ? ' boss' : ''}">
-        ${faceChip(id, bossTag ? 'boss' : '')}
-        <span class="foe-n">${L(monsterName(id))}${bossTag ? `<span class="b-tag">${bossTag}</span>` : ''}</span>
-    </span>`;
-/**
  * 적 칸 — **정사각**. 전진 패널의 적 구성이 쓴다 (§4-1 · 2026-09-10 사용자 지시).
  * 원형(`faceChip`)이 아닌 이유는 **오른쪽 진형 칸과 같은 크기·같은 모양으로 마주 놓기** 위해서다 —
  * 몬스터를 정사각으로 그리는 자리는 이미 있다(관전 유닛 카드 · ADR-0022 「몬스터 카드 = 영웅 카드」).
@@ -204,10 +194,12 @@ const skillImg = s => {
     const src = M.skillIcon(s?.id);
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
 };
-/* 아이템 그림 — 무기는 무기군, 방어구는 **임시로 부위당 한 장** (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳).
-   그림이 없는 부위(투구·목걸이)는 부위 이모지로 떨어진다 — 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보) */
+/* 아이템 그림 — 방어구는 **임시로 부위당 한 장** (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳).
+   무기는 무기군 그림이되 **양손검만 베이스 7장 중 하나**를 든다 — `uid` 를 넘기는 이유가 그것이고, 고르는 것은
+   `mock.js` 다(uid 해시 · rng 아님 · 개체마다 고정). 그림이 없는 부위(투구·목걸이)는 부위 이모지로 떨어진다 —
+   부위는 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보). 양손검이 예외인 것은 **일곱 다 양손검이라서**다 */
 const itemImg = it => {
-    const src = M.itemArt(it?.slot, it?.group);
+    const src = M.itemArt(it?.slot, it?.group, it?.uid);
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : (slotDef(it?.slot)?.icon ?? '');
 };
 
@@ -678,13 +670,9 @@ function renderExpIdle(main, nav) {
             row.style.backgroundImage = `linear-gradient(90deg, var(--bg-tertiary) 34%, rgba(26,26,42,.55) 68%, rgba(26,26,42,.30)), url('${bg}')`;
             row.classList.add('has-bg');
         }
-        const pool = SYS.battle.stagePool(z);
-        const bossLabel = chapterBoss ? t('kind.chapterBoss') : t('kind.boss');
-        const bossTail = chapterBoss ? t('exp.solo') : t('exp.escorts');
-        // 접이식은 **고른 행에 안 붙는다** [2026-09-10 · ADR-0078] — 바로 아래 전진 패널의 적 구성 칸이
-        // 같은 것을 이미 펴 놓았다. 안 고른 행(잠긴 행 포함)에는 남는다: 패널은 고른 행에만 열리므로
-        // 거기가 **미리 보는 유일한 길**이다 (「어디까지 가야 하는지가 보여야 한다」 · ADR-0067)
-        const picked = z.stage_id === state.expStage;
+        /* ⚠ **접이식 「구성 보기」는 없다** [2026-09-10 사용자 지시 · ADR-0080] — 행은 이제 제목 줄과 부제 줄뿐이라
+           **모든 행이 같은 높이**이고, 골라도 그 높이가 안 바뀐다(옛 판은 고른 행에서만 접이식이 빠져 행이 줄었다).
+           등장 몬스터는 아래로 내려오는 전진 패널의 적 구성 칸이 든다 (ADR-0078) */
         row.innerHTML = `
             <div>
                 <div class="title">
@@ -696,22 +684,7 @@ function renderExpIdle(main, nav) {
             </div>
             <div>${unlocked
                 ? `<span class="zone-pick">${t('exp.pick')}</span>`
-                : `<span class="muted" style="font-size:var(--fs-sm)">${t('exp.locked')}</span>`}</div>
-            ${picked ? '' : `<details class="zone-more">
-                <summary>${t('exp.viewComp')}</summary>
-                <div class="note-body">
-                    <div class="foe-row">
-                        ${pool.map(id => foeChip(id)).join('')}
-                        ${foeChip(z.boss_monster_idx, bossLabel)}
-                    </div>
-                    <div class="round-plan">
-                        ${D.eliteRounds.map(n => `<span class="rk elite">${t('exp.eliteR', { n })}</span>`).join('')}
-                        <span class="rk boss">R${D.bossRound} ${bossLabel}${bossTail}</span>
-                    </div>
-                </div>
-            </details>`}`;
-        // 행 클릭 = 고른다 → 위에 편성 패널이 열린다. 접이식 「구성 보기」는 선택과 별개다
-        row.querySelector('.zone-more')?.addEventListener('click', ev => ev.stopPropagation());
+                : `<span class="muted" style="font-size:var(--fs-sm)">${t('exp.locked')}</span>`}</div>`;
         row.onclick = () => {
             if (!unlocked) { flash('exp.locked'); return; }
             // 접이식이라 여는 자리와 닫는 자리가 같다 — 같은 지역을 다시 누르면 접힌다 (2026-08-28, 닫기 버튼을 대신한다)
@@ -835,16 +808,22 @@ function bindFormDrag(node, src) {
 function formBox() {
     const f = formState();
     const caps = f.caps;
-    // ⚠ **머리(「진형」)는 없다** [2026-09-09 사용자 지시 · ADR-0060] — 아이콘 셋과 전열/후열 라벨이 이미 무엇인지 말한다.
-    //   제목 줄이 빠지면서 상자가 내용에 딱 맞는다(i18n `exp.form.h` 도 함께 삭제 — 부르는 곳이 0 이 됐다)
+    /* 머리(「진형」)가 **돌아왔다** [2026-09-10 사용자 지시 · ADR-0079 가 ADR-0060 을 대체].
+       걷었던 근거(「아이콘과 전열/후열 라벨이 이미 말한다」)는 이 상자가 패널의 유일한 내용이던 시절 것이다 —
+       패널이 세 칸(적 구성 · 진형 · 출발)이 된 지금은 **칸마다 이름이 서야 어디까지가 무엇인지** 읽힌다.
+       ⚠ 이름은 상자 **위**가 아니라 **왼쪽 열의 맨 위**에 얹는다 [2026-09-10 사용자 지시 · ADR-0080] —
+         위에 얹으면 그 줄 높이가 패널에 그대로 더해져 창이 세로로 커졌다. 왼쪽 열(아이콘 셋)은 보드보다
+         한참 짧아 **위쪽이 비어 있으므로**, 거기에 얹으면 세로 비용이 0 이고 보드와 같은 줄에 선다 */
     const box = el('div', 'fm-box');
     const main = el('div', 'fm-main');
 
-    /* 왼쪽 — 아이콘 셋을 **가로로** 나란히 (2026-09-09 사용자 지시 — 옛 세로 기둥 폐기).
-       머리줄로 올리지 않고 보드 **옆**에 두는 이유는 세로다: 머리줄에 얹으면 아이콘 높이가 그대로 패널에 더해져
+    /* 왼쪽 열 — **이름 + 템플릿 아이콘**. 아이콘은 **가로로** 나란히 (2026-09-09 사용자 지시 — 옛 세로 기둥 폐기).
+       보드 **옆**에 두는 이유는 세로다: 머리줄로 올리면 아이콘 높이가 그대로 패널에 더해져
        보내기 버튼이 화면 밖으로 나간다(실측). 보드 옆이면 세로 비용이 0 이다.
        셋 중 하나를 고르는 것이라 .toggle(초록 ON/OFF)이 아니라 .on(고른 것)을 쓴다.
        아이콘은 정원 배열 그대로 점을 찍은 것이라 템플릿을 늘리면 그림도 저절로 따라온다 */
+    const side = el('div', 'fm-side');
+    side.appendChild(el('div', 'fm-h', t('exp.form.h')));
     const tpls = el('div', 'fm-tpls');
     for (const key of f.templates) {
         const shape = f.shapes[key] ?? [];
@@ -854,7 +833,8 @@ function formBox() {
         b.onclick = () => { SYS.game.setFormation(G, key); save(); render(); };   // 자리는 세이브 값이다 (2026-09-09)
         tpls.appendChild(b);
     }
-    main.appendChild(tpls);
+    side.appendChild(tpls);
+    main.appendChild(side);
 
     /* 보드. 빈 칸은 영웅 얼굴과 같은 크기라 「여기에 끌어다 놓는다」가 크기로 읽힌다.
        줄은 랭크 수만큼만 그린다 — 보드 높이가 CSS 에서 고정이라 빈 줄을 예약하지 않아도 패널이 안 흔들린다 */
@@ -1691,7 +1671,8 @@ function renderCharacter(main) {
 /* ── 비교 툴팁 ── */
 
 /**
- * 아이템 카드 한 장 — 줄 순서는 **머리글 / 이름 / 소속 / 밑수 / 담은 스킬 / 옵션 / 태그** (SCREEN_DESIGN §6).
+ * 아이템 카드 한 장 — 줄 순서는 **머리글 / 이름 / 소속 / 메인 옵션 / 옵션 / 담은 스킬 / 힌트**
+ * (SCREEN_DESIGN §6 · 개정 2026-09-10 [ADR-0081] — 메인 옵션이 커지고 담은 스킬이 카드 바닥으로 내려갔다).
  * @param hints 하단 힌트. 문자열 하나든 배열이든 받는다 — 반지 칸 · 「착용 중 없음」이 함께 설 수 있다
  */
 function tipCard(item, headText, hints = []) {
@@ -1715,23 +1696,42 @@ function tipCard(item, headText, hints = []) {
     const sk = g && item.skill && SYS.skill.defs[item.skill] ? skillInfo(item.skill) : null;
     const skLine = sk ? skillLineHtml({ id: item.skill }) : '';
     const hintTags = [].concat(hints).filter(Boolean).map(x => `<span class="muted">${x}</span>`).join('');
+    // **메인 옵션 — 밑수 하나가 한 행이다** [개정 2026-09-10 사용자 지시 · ADR-0081].
+    //   이름 왼쪽 · 값 오른쪽이라 두 카드(이 아이템 ↔ 착용 중)의 값이 **같은 x 에 선다** — 비교가 이 툴팁의 일이다.
+    //   부호는 안 붙인다(`M.baseValue`) — 접사의 `+` 는 「얼마를 더한다」지만 밑수는 더할 대상이 없다.
+    const baseRow = (name, value, note) =>
+        `<div class="r"><span class="n">${name}${note ? `<i>${note}</i>` : ''}</span><b>${value}</b></div>`;
+    const baseRows = [];
+    if (g) {
+        // 공격력의 **이름은 무기군이 정한다**(물리 ↔ 마법) — 그 이름의 SSOT 는 `combat_stat.csv` 다.
+        // 원소는 마법 무기 **개체**가 든 값이라 이름 옆 주석으로 붙인다 — 「마법 공격력 (마법)」은 같은 말을 두 번 한다
+        const atkStat = statRow(g.damageKind === 'physical' ? 'atk_physical' : 'atk_magic');
+        baseRows.push(baseRow(atkStat ? L(atkStat) : t('st.atk'), eff.watk,
+            item.element ? t(`st.atkType.${item.element}`) : ''));
+        // 주기(초/1회)는 **클수록 느려** 이름과 방향이 거꾸로 읽힌다 → **초당 공격속도**로 뒤집어 낸다.
+        // 축은 여전히 `combat_stat.csv:action_period` 하나고(세부 옵션 2 가 그 행을 그대로 든다) 변환은 `formula` 가 한다
+        baseRows.push(baseRow(t('st.atkSpeed'), SYS.formula.attacksPerSec(g.period).toFixed(2)));
+    }
+    if (eff.implicit) baseRows.push(baseRow(L(M.statLabel(eff.implicit.stat)),
+        M.baseValue(eff.implicit.stat, eff.implicit.v)));
     c.innerHTML = `
         <div class="tip-head">${headText}</div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${item.up > 0 ? `+${item.up} ` : ''}${L(item.name)}</div>
         <div class="tip-sub">${sub.join(' · ')}</div>
-        ${g ? `<div class="tip-implicit">${t('st.atk')} ${eff.watk} (${t(`st.atkType.${item.element ?? g.damageKind}`)}) · ${t('sk.cycleSec', { s: g.period.toFixed(2) })}</div>` : ''}
-        ${eff.implicit ? `<div class="tip-implicit">${affixText(eff.implicit)}</div>` : ''}
+        ${baseRows.length ? `<div class="tip-base">${baseRows.join('')}</div>` : ''}
+        ${/* 출처 태그가 **전부 `[랜덤]`인 것은 렌더러의 판단이 아니라 확정된 데이터 상태**다 —
+              `affix.csv` 가 통합옵션(죄종 무관) 풀로 확정돼 굴려지는 접사에 죄종 귀속이 없다
+              (GAME_DESIGN §9 09-08 · item_design §1). 죄종 칸 풀이 서면 그때 출처를 데이터에서 읽는다 */''}
+        <ul>${(item.affixes ?? []).map(a => `<li><i class="tip-src">${t('tip.src.random')}</i>${affixText(a)}</li>`).join('')
+            || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>
+        ${/* **담은 스킬은 카드 바닥이다** [개정 2026-09-10 사용자 지시 · ADR-0081] — 옛 자리(밑수 바로 아래)에서는
+              문장 한 줄이 접사 목록을 아래로 밀어 「이 아이템의 수치」가 카드 중간부터 시작했다 */''}
         ${g ? (sk ? `<div class="tip-skill">
             <div class="hd"><span class="ico">${skillImg({ id: item.skill })}</span>
                 <b>${L(sk.name)}</b><i class="cd">${secText(coolSecOf(item.skill))}</i>
                 <i class="lb">${t('tip.skill')}</i></div>
             ${skLine ? `<div class="ln">${skLine}</div>` : ''}</div>`
             : `<div class="tip-skill empty">${t('tip.noSkill')}</div>`) : ''}
-        ${/* 출처 태그가 **전부 `[랜덤]`인 것은 렌더러의 판단이 아니라 확정된 데이터 상태**다 —
-              `affix.csv` 가 통합옵션(죄종 무관) 풀로 확정돼 굴려지는 접사에 죄종 귀속이 없다
-              (GAME_DESIGN §9 09-08 · item_design §1). 죄종 칸 풀이 서면 그때 출처를 데이터에서 읽는다 */''}
-        <ul>${(item.affixes ?? []).map(a => `<li><i class="tip-src">${t('tip.src.random')}</i>${affixText(a)}</li>`).join('')
-            || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>
         ${hintTags ? `<div class="tip-sins">${hintTags}</div>` : ''}`;
     return c;
 }
@@ -2726,12 +2726,14 @@ function codexCharacter(p) {
     // 영웅 초상은 **직업 풀**이다 (2026-09-07) — 목록의 SSOT 는 `mock.js:HERO_FACES`.
     // **직업 하나가 묶음 하나**다 (ADR-0066) — 순서는 `class.csv` 행 순이고 **빈 묶음은 안 그린다**.
     //   스킬 세그먼트(`codexSkill`)와 **같은 문법**이다: 한 화면에서 두 세그먼트가 다르게 묶이지 않는다.
-    //   타일 이름은 **풀 번호만** — 직업은 그룹 머리가 이미 말한다(스킬 타일이 출처 칩을 뗀 것과 같은 이유)
+    //   타일 이름은 **초상 이름**(`mock.js:HERO_FACE_NAMES`)이고, 이름이 안 붙은 초상만 **풀 번호**로 남는다
+    //   (ADR-0081). 직업은 어느 쪽이든 안 적는다 — 그룹 머리가 이미 말한다(스킬 타일이 출처 칩을 뗀 것과 같은 이유).
+    //   ⚠ 번호가 사라지는 것이 아니다 — 셋째 열의 파일명(`hero_warrior_1.png`)이 그 번호를 계속 든다
     const box = el('div', 'ix-body');
     box.innerHTML = (D.classes ?? []).map(c => {
         const n = M.HERO_FACES[c.id] ?? 0;
         const tiles = Array.from({ length: n }, (_, i) =>
-            artTile(`${dir}hero_${c.id}_${i + 1}.png`, `${i + 1}`, 'box'));
+            artTile(`${dir}hero_${c.id}_${i + 1}.png`, L(M.HERO_FACE_NAMES[`${c.id}_${i + 1}`]) || `${i + 1}`, 'box'));
         return tiles.length ? artGroup(t('ix.g.heroCls', { cls: className(c.id) }), dir, tiles) : '';
     }).join('');
     p.appendChild(box);
@@ -2742,6 +2744,11 @@ function codexItem(p) {
     const box = el('div', 'ix-body');
     box.innerHTML = artGroup(t('ix.g.weapon'), M.ITEM_ART_DIR,
         M.ITEM_ART_GROUPS.map(g => artTile(M.itemArt('weapon', g), L(D.weaponGroups?.[g] ?? g), 'box')))
+        // 무기 베이스 — **여기는 재고를 보는 자리**라 7장을 전부 편다(uid 가 없으니 `weaponBaseArt` 를 직접 부른다).
+        //    실제 드롭은 개체마다 이 중 하나를 든다 (mock.js:itemArt · uid 해시 · §9-1)
+        + artGroup(t('ix.g.weaponBase'), M.WEAPON_BASE_DIR,
+            //    확장자를 뗀다 — 베이스 이름이 길어 `.png` 가 붙으면 칸에서 두 줄이 된다 (스킬 세그먼트와 같은 처방 · ADR-0075)
+            M.WEAPON_BASE_STEMS.map(s => artTile(M.weaponBaseArt(s), t(`ix.b.${s}`), 'box', '', true)))
         // ⚠ 부위 하나에 그림 하나 — 개체가 베이스 id 를 안 들고 다녀서다 (mock.js:itemArt · 임시)
         + artGroup(t('ix.g.armor'), M.ITEM_ART_DIR,
             Object.keys(M.ITEM_ART_BY_SLOT).map(sl => artTile(M.itemArt(sl), L(slotDef(sl) ?? sl), 'box')))
@@ -3012,6 +3019,19 @@ async function boot() {
         }
         state.tab = 'tavern'; save();
     }
+    /* 툴팁 확인용 — **가방도 몸도 찬 캐릭터 탭**. 새 게임은 가방이 비어 있고 몸에는 무기 하나뿐이라
+       이 툴팁의 가장 넓은 모양(**비교 두 장**)에 닿을 수가 없다 — 교체될 자리가 비면 둘째 카드를 안 세운다 (§6).
+       한 런을 정산해 **주운 것을 다 입히고**, 한 번 더 정산해 **가방에 비교 상대가 있는 물건**을 남긴다.
+       카드를 실제로 띄우는 것은 render() 뒤다 — 툴팁은 hover 로만 뜬다 */
+    if (dev === 'tip') {
+        if (!G) startGame();
+        devParty();
+        const uid0 = G.heroes[0].uid;
+        runBattle(D.stageOrder[0], { instant: true });
+        for (const iuid of [...G.bag]) SYS.game.equip(G, uid0, iuid);   // 거절되는 것(직업 전속 등)은 가방에 남는다
+        runBattle(D.stageOrder[0], { instant: true });
+        state.tab = 'character';
+    }
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
         devParty();
@@ -3022,6 +3042,17 @@ async function boot() {
     // ?tab= 은 dev 분기 **뒤에** 건다 — startGame() 이 탭을 원정으로 되돌리므로 앞에 두면 먹히지 않는다
     if (TABS.includes(tab)) state.tab = tab;
     render();
+    /* 툴팁은 **hover 로만** 뜬다 — 헤드리스가 못 닿는 상태라 길을 따로 낸다 (SCREEN_DESIGN §10 · §6 툴팁 규격).
+       `render()` **뒤에** 걸린다: 카드는 `bindTipNode` 가 붙인 `mouseenter` 가 만들고, 그 핸들러는 render 마다 새로 붙는다.
+       기본은 **가방 첫 칸**(비교 두 장 — 이 툴팁의 가장 넓은 모양) · `&t=doll` 이면 페이퍼돌 무기 칸(한 장) */
+    if (dev === 'tip') {
+        const q = new URLSearchParams(location.search);
+        // `&i=n` — n번째 찬 칸(1부터). 가방에 무엇이 떨어질지는 시드가 정하므로 **무기 칸을 골라 잡는 유일한 길**이다
+        const list = document.querySelectorAll(q.get('t') === 'doll' ? '.pd-cell.filled[data-tip]' : '.inv-cell.filled[data-tip]');
+        const node = list[Math.max(1, Number(q.get('i')) || 1) - 1];
+        // 커서 자리는 왼쪽 위 — 카드 두 장(최대 640px)이 접힘 보정 없이 그대로 펴진다
+        node?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
+    }
     // 원정 시계 — 화면과 무관하게 앱이 든다 (ADR-0074). render() 가 걷는 것들과 달리 **끄지 않는다**
     setInterval(expTick, EXP_TICK_MS);
 }
