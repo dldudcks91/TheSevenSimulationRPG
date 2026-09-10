@@ -83,7 +83,9 @@ export function mountBattle(container, opts) {
             rank: form?.byUid?.[p.uid] ?? 0,
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
-            atk: p.atk, atkType: p.atkType,   // 툴팁 문장의 피해 — 전투에는 안 쓴다 (INTERFACE §2-6)
+            atk: p.atk, matk: p.matk, atkType: p.atkType,   // 툴팁 문장의 피해·회복량 — 전투에는 안 쓴다 (INTERFACE §2-6)
+            // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
+            stats: p.stats ?? null,
             skills: (p.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
         };
@@ -376,8 +378,9 @@ function renderUnits(state, root) {
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero));
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
+                // 회복량의 밑수 `matk` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출)
                 if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i],
-                    { period: u.period, atk: u.atk, atkType: u.atkType, source: u.skills[i].source }));
+                    { period: u.period, atk: u.atk, matk: u.matk, hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, source: u.skills[i].source }));
             });
             u.node = n;
             // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서

@@ -10,7 +10,9 @@
  *
  *   적중률   = clamp(hit_base_pct − 부족레벨 × hit_per_level_deficit_pct, hit_min_pct, hit_base_pct)
  *              **레벨 차만이 정한다** — 명중·회피 스탯은 폐지됐다 (§9-4). 오버레벨 초과 이득 없음
- *   타격피해 = 공격력 × 스킬 배율 × (1 + 조건부 합%) × 치명 배수
+ *   타격피해 = (공격력 × 스킬 배율 + 능력치 항) × (1 + 조건부 합%) × 치명 배수 × 추가 피해 배수
+ *              능력치 항(`flat`)은 배율에 곱하지 않고 더한다 — 곱이 아니라 합 (§9-2 · 2026-09-10)
+ *              추가 피해는 확률이 있는 스킬 타격만 치명 뒤에 한 번 더 굴린다 — 치명과 겹친다 (§9-2 · 2026-09-10)
  *              **타격 편차 없음** — 편차는 무기 개체가 드롭될 때 한 번 굴려 watk 에 박혀 있다 (§9-1)
  *   물리     × (1 − 방어값/(방어값 + def_curve_k))     K 는 **상수**다 — 공격자 레벨 무관 (§9-3)
  *   원소     × (1 − 적용저항/100)                       저항은 소재값이 아니라 **직접 %**, 상한형 (§9-5)
@@ -66,19 +68,30 @@ export function createFormula(balance) {
             B.hit_min_pct, B.hit_base_pct);
 
     /**
-     * 직격 1회. rng 는 반드시 두 번 이 순서로 쓴다 — 적중 → 치명 (빗나가면 한 번만).
+     * 직격 1회. rng 는 이 순서로 쓴다 — 적중 → 치명 → (추가 피해 확률이 있는 타격만) 추가 피해.
+     * 빗나가면 한 번 · 확률이 0 인 적중은 두 번 · 확률이 있는 적중은 세 번이다 (INTERFACE §5-2 · 2026-09-10).
      * 순서를 바꾸면 같은 시드가 다른 전투가 되므로 이식 대조가 깨진다.
      *
-     * @param a 공격자 {atk, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, bonusPct}
+     * @param a 공격자 {atk, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, bonusPct, flat, procChance, procMult}
+     *          `flat`·`procChance`·`procMult` 는 **스킬 타격만** 싣는다(battle.strikeOnce) — 없으면 0 이라 기본 공격은 종전과 같다
      * @param d 방어자 {def, res:{fire,cold,lightning,poison}, resMaxBonus, dr, lvl} — res 는 **항상 객체**(몬스터도)
      */
     function strike(rng, a, d) {
-        if (rng() * 100 >= hitChance(a.lvl, d.lvl)) return { hit: false, dmg: 0, crit: false };
+        if (rng() * 100 >= hitChance(a.lvl, d.lvl)) return { hit: false, dmg: 0, crit: false, proc: false };
 
-        let v = a.atk * (a.skillMult ?? 1);                        // 스킬 배율 (기본 공격 = 1)
+        // 능력치 항은 배율에 곱하지 않고 **더한다** (§9-2 「곱이 아니라 합」 · 2026-09-10) — 무기가 약해도 능력치가 제 몫을 한다.
+        //   그래서 공격력이 0 이어도 능력치 항만큼은 들어간다
+        let v = a.atk * (a.skillMult ?? 1) + (a.flat ?? 0);                        // 스킬 배율 (기본 공격 = 1) + 능력치 항
         v *= 1 + (a.bonusPct ?? 0) / 100;                          // 조건부 합% — 특효·도감·버프 덧셈
         const crit = rng() * 100 < Math.min(a.crit ?? 0, B.crit_cap_pct);
         if (crit) v *= (a.critDmg ?? 100) / 100;
+        // 확률로 터지는 추가 피해 — 치명과 **따로 굴려 겹친다**(치명 상한과 무관 · §9-2). 확률이 있는 타격만 굴린다:
+        //   기본 공격은 확률이 0 이라 굴림을 안 태우므로 수열이 종전과 같다 (INTERFACE §5-2)
+        let proc = false;
+        if ((a.procChance ?? 0) > 0) {
+            proc = rng() * 100 < Math.min(a.procChance, 100);
+            if (proc) v *= (a.procMult ?? 100) / 100;
+        }
 
         if (a.atkType === 'physical') {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
@@ -87,11 +100,11 @@ export function createFormula(balance) {
             v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - (a.resReduction ?? 0), d.resMaxBonus ?? 0) / 100;
         }
         v *= 1 - (d.dr ?? 0) / 100;
-        return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit };
+        return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
     }
 
     /**
-     * 비직격 — 반사·도트·사망 폭발 (§9-6). 적중·스킬 배율·치명·감소를 **받지 않고**,
+     * 비직격 — 반사·도트·사망 폭발 (§9-6). 적중·스킬 배율·치명·추가 피해·감소를 **받지 않고**,
      * 흡혈·반사·타격 발동 효과를 **유발하지 않는다**. 반사가 반사를 부르지 않는 것이 이 규칙의 요점.
      */
     const indirect = amount => Math.max(B.dmg_min, Math.round(amount));

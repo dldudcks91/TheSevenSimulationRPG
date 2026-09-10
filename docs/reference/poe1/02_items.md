@@ -54,7 +54,243 @@
 ### 1-3. 유니크 아이템 — 고정 접사 + 소켓·링크는 개별 지정
 
 - 유니크는 **랜덤이 아니라 그 아이템 전용의 확정된 접사 목록**을 가진다. 일부 항목(예: 피해 범위, 방어치)은 구간 롤이 남아있는 경우가 있다[추정 — D2 유니크 구조와 유사한 패턴으로 다수 아이템에서 관찰되나 PoE1 1차 문서로 재확인은 못함]
-- 유니크는 일반 접사 풀에는 없는 조합(넉백+생명흡수 동시 등)을 갖는 경우가 흔하다는 것은 D2([diablo2/02_items.md §5-1](../diablo2/02_items.md#5-1-구조--고정-스탯--일부-가변-롤))와 같은 원리 — PoE1 도 마찬가지로 "일반 접사로는 원리적으로 재현 불가능한 조합"이 유니크 존재 이유 중 하나다[추정]
+- 유니크는 일반 접사 풀에는 없는 조합(넉백+생명흡수 동시 등)을 갖는 경우가 흔하다는 것은 D2([diablo2/02_items.md §5-1](../diablo2/02_items.md#5-1-구조--고정-스탯--일부-가변-롤))와 같은 원리 — PoE1 도 마찬가지로 "일반 접사로는 원리적으로 재현 불가능한 조합"이 유니크 존재 이유 중 하나다[추정]. 실제 예시는 §1-5 참조 — 조사 결과 "넉백+생명흡수 동시" 조합을 갖는 현재판 유니크는 확인하지 못했고(§1-5 는 대신 다른 유형의 "불가능한 조합" 5종을 확보했다), 대신 §1-5 의 Soul Taker(도끼) 가 "마나 부족이 근접 공격을 막지 못한다"는 규칙-예외형 조합을 보여준다
+
+---
+
+## 1-4. 핵심 접사군 실제 티어 사다리 (2026-09-10 실측)
+
+> **출처**: **PathOfBuilding**(오프라인 빌드 플래너, GGG 클라이언트 데이터 파일을 자동 추출·유지보수하는 오픈소스 도구) `dev` 브랜치 `src/Data/ModExplicit.lua`(2026-09-10 조회 시점 최신 커밋, 3.29 기준)를 직접 파싱해 확보했다. GGG 공식 사이트 원문은 아니지만 클라이언트 데이터를 그대로 추출하는 자동화 파이프라인이라 이 절 전체를 **[가이드/구조화추출]**로 표기한다. "요구 ilvl"은 해당 티어가 접사 풀에 들어오기 위한 최소 아이템 레벨(§1-2 원리와 동일한 게이팅)이다. `poedb.tw`는 개별 아이템 종류(반지·투구 등) 페이지에서 접사 계산기가 JS 로 늦게 렌더링돼 직접 크롤로는 확보하지 못했고, 대신 이 절은 PathOfBuilding 원시 데이터로 대체 확보했다.
+
+### 1-4-1. 생명력 — Prefix, "Hale~Prime" 13티어
+
+> **정정**: 조사 요청 시 예시로 든 "of the Whale" 계열은 순수 생명력 접사가 아니다 — "Whale's"는 실제로는 방어구+에너지실드+생명력을 동시에 주는 별도 하이브리드 접사군(`LocalBaseArmourAndEnergyShieldAndLife`)의 최고 티어 이름이다. 순수 생명력 Prefix 는 형용사형 이름(Hale→Prime)을 쓴다.
+
+| 티어 | 접사명 | 수치 | 요구 ilvl |
+|---|---|---|---|
+| 1(최저) | Hale | +3~9 | 1 |
+| 2 | Healthy | +10~24 | 5 |
+| 3 | Sanguine | +25~39 | 11 |
+| 4 | Stalwart | +40~54 | 18 |
+| 5 | Stout | +55~69 | 24 |
+| 6 | Robust | +70~84 | 30 |
+| 7 | Rotund | +85~99 | 36 |
+| 8 | Virile | +100~114 | 44 |
+| 9 | Athlete's | +115~129 | 54 |
+| 10 | Fecund | +130~144 | 64 |
+| 11 | Vigorous | +145~159 | 73 |
+| 12 | Rapturous | +160~174 | 81 |
+| 13(최고) | Prime | +175~189 | 86 |
+
+### 1-4-2. 원소 저항 3종 — Suffix, 8티어(화/냉/전)
+
+> §1-2 가 예시로 든 "+41~45%, ilvl82"는 [검색합성] 추정치였다. 이번 실측으로는 **8티어 체계**이고, 최고 티어는 **+46~48%(ilvl84)**, 그 바로 아래(7티어)가 **+42~45%(ilvl72)** 다 — "82"라는 ilvl 자체는 이 접사군에 존재하지 않는다. 속성마다 임계 ilvl 이 미묘하게 갈린다는 §1-2 의 결론은 아래 표(2티어~4티어 구간)로 재확인된다.
+
+| 티어 | 화염(Fire) | 냉기(Cold) | 전기(Lightning) | 수치 | 요구 ilvl(화/냉/전) |
+|---|---|---|---|---|---|
+| 1 | of the Whelpling | of the Inuit | of the Cloud | +6~11% | 1 / 1 / 1 |
+| 2 | of the Salamander | of the Seal | of the Squall | +12~17% | 12 / 14 / 13 |
+| 3 | of the Drake | of the Penguin | of the Storm | +18~23% | 24 / 26 / 25 |
+| 4 | of the Kiln | of the Yeti | of the Thunderhead | +24~29% | 36 / 38 / 37 |
+| 5 | of the Furnace | of the Walrus | of the Tempest | +30~35% | 48 / 50 / 49 |
+| 6 | of the Volcano | of the Polar Bear | of the Maelstrom | +36~41% | 60 / 60 / 60 |
+| 7 | of the Magma | of the Ice | of the Lightning | +42~45% | 72 / 72 / 72 |
+| 8(최고) | of Tzteosh | of Haast | of Ephij | +46~48% | 84 / 84 / 84 |
+
+> (참고) 카오스 저항은 별도 6티어 체계로 최고 +31~35%·ilvl81 — 기존 §1-2 "카오스 저항 최고 티어는 ilvl81"이라는 서술과 정확히 일치해 이번 조사로 교차 검증됐다.
+
+### 1-4-3. 최대 마나 — Prefix, 13티어
+
+| 티어 | 접사명 | 수치 | 요구 ilvl |
+|---|---|---|---|
+| 1(최저) | Beryl | +15~19 | 1 |
+| 2 | Cobalt | +20~24 | 11 |
+| 3 | Azure | +25~29 | 17 |
+| 4 | Sapphire | +30~34 | 23 |
+| 5 | Cerulean | +35~39 | 29 |
+| 6 | Aqua | +40~44 | 35 |
+| 7 | Opalescent | +45~49 | 42 |
+| 8 | Gentian | +50~54 | 51 |
+| 9 | Chalybeous | +55~59 | 60 |
+| 10 | Mazarine | +60~64 | 69 |
+| 11 | Blue | +65~68 | 75 |
+| 12 | Zaffre | +69~73 | 81 |
+| 13(최고) | Ultramarine | +74~78 | 85 |
+
+### 1-4-4. 이동속도 — 부츠 전용 Prefix, 6티어
+
+| 티어 | 접사명 | 수치 | 요구 ilvl |
+|---|---|---|---|
+| 1(최저) | Runner's | 10% | 1 |
+| 2 | Sprinter's | 15% | 15 |
+| 3 | Stallion's | 20% | 30 |
+| 4 | Gazelle's | 25% | 40 |
+| 5 | Cheetah's | 30% | 55 |
+| 6(최고) | Hellion's | 35% | 86 |
+
+### 1-4-5. 주문 피해% — Prefix(캐스터 무기·장신구), 5티어
+
+| 티어 | 접사명 | 수치 | 요구 ilvl |
+|---|---|---|---|
+| 1(최저) | Chanter's | 3~7% | 5 |
+| 2 | Mage's | 8~12% | 20 |
+| 3 | Sorcerer's | 13~17% | 38 |
+| 4 | Thaumaturgist's | 18~22% | 56 |
+| 5(최고) | Wizard's | 23~26% | 76 |
+
+### 1-4-6. 공격 속도% — 무기 Suffix, 8티어
+
+| 티어 | 접사명 | 수치 | 요구 ilvl |
+|---|---|---|---|
+| 1(최저) | of Skill | 5~7% | 1 |
+| 2 | of Ease | 8~10% | 11 |
+| 3 | of Mastery | 11~13% | 22 |
+| 4 | of Renown | 14~16% | 30 |
+| 5 | of Acclaim | 17~19% | 37 |
+| 6 | of Fame | 20~22% | 45 |
+| 7 | of Infamy | 23~25% | 60 |
+| 8(최고) | of Celebration | 26~27% | 77 |
+
+### 1-4-7. 물리 피해% — 무기 Prefix, 8티어(정확도 동반형 기준)
+
+> 검·도끼·발톱·활 등 정확도 굴림을 겸하는 무기군 기준. **정확도가 없는 무기군**(예: 순수 둔기 계열 일부)은 별도 계열(`LocalPhysicalDamagePercent`)을 쓰며 수치가 훨씬 높다 — 40~49%(ilvl1) → 170~179%(ilvl83)의 8티어. 같은 "물리 피해%"라는 이름 아래 무기군마다 완전히 다른 두 수치 계열이 공존한다.
+
+| 티어 | 접사명 | 수치 | 요구 ilvl |
+|---|---|---|---|
+| 1(최저) | Squire's | 15~19% | 1 |
+| 2 | Journeyman's | 20~24% | 11 |
+| 3 | Reaver's | 25~34% | 23 |
+| 4 | Mercenary's | 35~44% | 35 |
+| 5 | Champion's | 45~54% | 46 |
+| 6 | Conqueror's | 55~64% | 60 |
+| 7 | Emperor's | 65~74% | 73 |
+| 8(최고) | Dictator's | 75~79% | 83 |
+
+### 1-4-8. 방어구/회피/에너지실드 % 증가 — 방어구 Prefix, 8티어(3계열 값 동일 구조)
+
+| 티어 | 방어구(Armour) | 회피(Evasion) | 에너지실드(ES) | 수치 | 요구 ilvl(방어/회피/ES) |
+|---|---|---|---|---|---|
+| 1(최저) | Reinforced | Shade's | Protective | +15~26%(ES 는 11~28%) | 3 / 3 / 3 |
+| 2 | Layered | Ghost's | Strong-Willed | +27~42% | 17 / 19 / 18 |
+| 3 | Lobstered | Spectre's | Resolute | +43~55% | 29 / 30 / 30 |
+| 4 | Buttressed | Wraith's | Fearless | +56~67% | 42 / 44 / 44 |
+| 5 | Thickened | Phantasm's | Dauntless | +68~79% | 60 / 60 / 60 |
+| 6 | Girded | Nightmare's | Indomitable | +80~91% | 72 / 72 / 72 |
+| 7 | Impregnable | Mirage's | Unassailable | +92~100% | 84 / 84 / 84 |
+| 8(최고) | Impenetrable | Illusion's | Unfaltering | +101~110% | 86 / 86 / 86 |
+
+---
+
+## 1-5. 유니크 아이템 실제 예시 5종 — 접사 풀로 불가능한 조합
+
+> 아래는 전부 PathOfBuilding `src/Data/Uniques/*.lua`(GGG 클라이언트 유니크 아이템 정의를 그대로 추출)에서 확인한 **현재판(Variant: Current) 효과 전문**이다[가이드/구조화추출]. 괄호 범위는 게임 내에서 아이템 레벨에 따라 구간 롤된다. 무기 1·방어구 2·장신구 2 로 구성했다.
+
+**Kaom's Heart**(Glorious Plate — 방어구·바디아머)
+```
+Has no Sockets
++1000 to maximum Life
+```
+일반 방어구는 예외 없이 소켓 슬롯을 갖는다(§2). "소켓 0개 강제"와 "생명력 접사 상한(13티어 중 최고 +175~189, §1-4-1)의 5배를 넘는 고정치"를 동시에 주는 조합은 일반 접사 풀 자체에 존재할 수 없다.
+
+**The Baron**(Close Helmet — 방어구·투구)
+```
++2 to Level of Socketed Minion Gems
+Minions have (10-20)% increased maximum Life
+Half of your Strength is added to your Minions
++1 to maximum number of Raised Zombies per 500 Strength
+With at least 1000 Strength, (1.5-2)% of Damage dealt by your Raised Zombies is Leeched to you as Life
+```
+플레이어 자신의 힘(Strength) 스탯을 소환수에게 그대로 이전하는 변환 메커니즘 — 일반 접사는 "내 스탯"과 "소환수 스탯"을 잇는 조합을 만들 수 없다.
+
+**Headhunter**(Leather Belt — 장신구·벨트)
+```
++(40-55) to Strength
++(40-55) to Dexterity
++(50-60) to maximum Life
+(20-30)% increased Damage with Hits against Rare monsters
+When you Kill a Rare monster, you gain its Modifiers for 60 seconds
+```
+레어 몬스터를 처치하면 그 몬스터 전용 수식어(몹 전용 모드)를 60초간 그대로 복사해 온다 — PoE1 전체 접사 풀을 통틀어 유일한 "몬스터 모드 강탈" 메커니즘이라, 대체 불가능한 사례로 항상 꼽힌다.
+
+**Yoke of Suffering**(Onyx Amulet — 장신구·목걸이)
+```
++(10-16) to all Attributes
++(10-20)% to Fire Resistance
++(10-20)% to Cold Resistance
++(20-40)% to Lightning Resistance
+30% reduced Duration of Ailments on Enemies
+(5-10)% chance to Shock
+Enemies take (5-10)% increased Damage for each type of Ailment you have inflicted on them
+Your Elemental Damage can Shock
+```
+"적에게 걸린 상태이상 종류 수"라는 카운터를 대미지 증가 배율로 직접 참조하는 조건부 스케일링 — 고정 범위 롤만 있는 일반 접사 문법에는 없는 형태다.
+
+**Soul Taker**(Siege Axe — 무기·도끼)
+```
+(140-180)% increased Physical Damage
+Adds 30 to 40 Physical Damage
+(25-35)% increased Attack Speed
++(20-25)% to Cold Resistance
+Your Physical Damage can Chill
+Insufficient Mana doesn't prevent your Melee Attacks
+Eat (2-4) Souls when you Kill a Rare or Unique Enemy with this Weapon
+```
+"마나가 부족해도 근접 공격 자체는 막히지 않는다"는 것은 일반 게임 규칙(마나 부족 시 공격 불가)을 뒤집는 규칙-예외형 접사 — 일반 무기 접사 풀에는 이런 예외 규정이 없다.
+
+---
+
+## 1-6. 에센스 실제 목록(강제 접사 실측)
+
+> **Deafening**(T7 — 20개 감정 계열의 최고 일반 티어) 기준, **반지(Ring)** 아이템에 강제되는 접사의 실제 수치다[가이드/구조화추출]. 계열 이름은 T1(Whispering)→T7(Deafening) 순으로 이름만 바뀌고 강제되는 접사의 종류는 유지된 채 수치만 오른다(§4-2 기존 서술과 일치).
+
+| 에센스 | 강제 접사(Ring 기준) | 실제 수치 |
+|---|---|---|
+| Deafening Essence of Greed | 생명 재생 | 초당 생명력 48.1~64 재생 |
+| Deafening Essence of Hatred | 냉기 피해 증가% | +31~34% |
+| Deafening Essence of Contempt | 물리 피해 추가 | Adds 10~11 to 16~17 |
+| Deafening Essence of Doubt | 회피 수치 | +151~180 |
+| Deafening Essence of Dread | 방어구 수치 | +201~300 |
+| Deafening Essence of Rage | 힘(Strength) | +51~58 |
+| Deafening Essence of Torment | 번개 피해 추가 | Adds 4~8 to 71~76 |
+| Deafening Essence of Woe | 최대 에너지실드 | +44~47 |
+| Deafening Essence of Zeal | 시전 속도 증가% | +15~16% |
+| Deafening Essence of Misery | 마나 재생 속도 증가% | +70~76% |
+
+> **정정**: 조사 요청 예시("Essence of Greed → 생명력 흡수")는 부정확한 추정이었다 — 실제로 Greed 계열이 강제하는 것은 **생명력 흡수(Leech)가 아니라 생명력 재생(Regeneration)**이다.
+
+**T8 특수 에센스 4종** — 20개 감정 계열과 별개로, 부위마다 **일반 접사 풀에 아예 없는 전용 효과**를 하나씩 강제한다(나머지 접사는 마찬가지로 랜덤)[가이드/구조화추출]:
+
+| 에센스 | 예시 부위 | 강제 효과 |
+|---|---|---|
+| Essence of Hysteria | Body Armour | 25% increased Area of Effect |
+| Essence of Insanity | Bow/Claw | Triggers Level 20 Spectral Spirits when Equipped |
+| Essence of Horror | Amulet | (15-25)% chance to Crush on Hit |
+| Essence of Delirium | Amulet | (6-7)% Chance to Block Spell Damage |
+
+> 기존 §4-2 "티어 5~8 에센스는 Chaos Orb 처럼 이미 Rare 인 아이템에도 사용 가능"의 "8티어"는 20개 감정 계열의 연장이 아니라 **이 4종(Hysteria/Insanity/Horror/Delirium)을 가리키는 것으로 재확인**됐다 — 감정 계열 자체는 T1~T7(Whispering~Deafening)까지만 존재한다.
+
+---
+
+## 1-7. 화석(Fossil) 실제 목록 + 가중치 수식
+
+> 12종 목록은 `poedb.tw` 개별 화석 페이지 직접 조회로 확보했다[가이드]. 그중 5종은 "기술적 설명" 절에 있는 **정확한 배수 문구**까지 직접 인용으로 확보했다(§7 N/F 정정 대상 — 나머지는 화석 쌍의 대칭 구조로 미루어 추정만 했다).
+
+| 화석 | 가중·차단 태그 | 대표 효과 |
+|---|---|---|
+| **Scorched Fossil**[가이드 — 직접 인용] | 화염 태그 ×10, 냉기 태그 ×0(완전 차단) | More Fire modifiers / No Cold modifiers |
+| **Frigid Fossil**[추정 — 대칭 구조] | 냉기 태그 가중, 화염 태그 차단(정확한 배수 미확인) | More Cold modifiers / No Fire modifiers |
+| **Metallic Fossil**[가이드 — 직접 인용] | 번개 태그 ×10, 물리 태그 ×0, 출혈 태그 ×0 | More Lightning modifiers / No Physical modifiers |
+| **Jagged Fossil**[추정] | 물리 태그 가중, 카오스 태그 차단(정확한 배수 미확인) | More Physical modifiers / No Chaos modifiers |
+| **Aberrant Fossil**[추정] | 카오스 태그 가중, 번개 태그 차단(정확한 배수 미확인) | More Chaos modifiers / No Lightning modifiers |
+| **Pristine Fossil**[가이드 — 직접 인용] | 생명 태그 ×10, 방어 태그 ×0, `flat_life_regen` 태그 ×0.1 | More Life modifiers / No Defence modifiers |
+| **Dense Fossil**[추정 — 대칭 구조] | 방어 태그 가중, 생명 태그 차단(정확한 배수 미확인) | More Defence modifiers / No Life modifiers |
+| **Corroded Fossil**[추정] | 상태이상(물리·카오스 계열) 태그 가중, 원소 태그 차단(정확한 배수 미확인) | More Ailment modifiers / No Elemental modifiers |
+| **Prismatic Fossil**[추정] | 원소 태그 가중, 상태이상 태그 차단(정확한 배수 미확인) | More Elemental modifiers / No Ailment modifiers |
+| **Aetheric Fossil**[가이드 — 직접 인용] | 캐스터 태그 ×10, 공격 태그 ×0.15(완전 차단이 아니라 15%로 감소) | More Caster modifiers / Fewer Attack modifiers |
+| **Serrated Fossil**[추정 — 대칭 구조] | 공격 태그 가중, 캐스터 태그 부분 감소(정확한 배수 미확인) | More Attack modifiers / Fewer Caster modifiers |
+| **Bound Fossil**[가이드 — 직접 인용] | 소환수·오라·저주 태그 각각 ×10(차단 없음) | More Minion, Aura or Curse modifiers |
+
+> **가중치 수식 확보**[가이드 — poedb.tw 기술 설명절 직접 인용]: 화석은 태그별 스폰 가중치에 **고정 배수**를 곱하는 방식으로 작동한다 — **완전 차단 = ×0**, **대폭 증가 = ×10**, 그리고 "Fewer"라는 문구를 쓰는 화석(Aetheric 등)은 차단이 아니라 **×0.15~×0.1 같은 소수 배수로 부분 감소**시킨다. 기존 §7 이 "음의 가중치"라 표현했던 것은 부정확했다 — 실제로는 항상 양수 배수(0 이상)이고, 0/10 이분법도 아니다(Pristine 의 `flat_life_regen` 태그는 ×0.1). **다만 이 배수를 5종(Scorched/Metallic/Pristine/Aetheric/Bound)만 직접 확인했고, 나머지 7종은 짝을 이루는 화석의 대칭 구조로 추정한 것**이라 완전 해소는 아니다.
 
 ---
 
@@ -115,21 +351,21 @@ PoE1 은 **골드 같은 단일 화폐가 없고(3.25 Currency Exchange 이전),
 | **Regal Orb** | Magic → Rare 로 승급하되 **기존 접사를 유지**하고 접사 1개를 추가 굴림 |
 | **Exalted Orb** | 기존 접사를 유지한 채 **접사를 1개 추가**(자리가 남아 있을 때만). 고가치 토큰 |
 | **Divine Orb** | 접사는 유지하고 **수치 값만 재굴림**(최고치를 노리는 마지막 단계). 최근 엔드게임 표준 거래 단위로 Exalted Orb 를 대체하는 추세[검색합성] |
-| **Vaal Orb** | 부패(§01_skills §1-4·02_items §1-3과 연동) — 젬뿐 아니라 장비·주얼·플라스크에도 적용되며, 결과는 아이템군마다 다른 확률표를 가진다(정확한 일반 장비용 6갈래 확률표는 이번 조사에서 완전히 확보하지 못함, §7 N/F) |
+| **Vaal Orb** | 부패(§01_skills §1-4·02_items §1-3과 연동) — 젬뿐 아니라 장비·주얼·플라스크에도 적용되며, 결과는 아이템군마다 다른 확률표를 가진다. **일반 장비(비-젬) 기준으로는 4갈래가 동일 가중(약 25%씩)**으로 확인됐다[가이드 — Maxroll.gg 「Corruption Explained」 직접 인용, 2026-09-10 재조사]: ① 무작위 코럽트 임플리시트 부여 ② 소켓 1개 이상을 흰 소켓으로 전환 ③ 무작위 6접사 레어로 강제 재굴림("brick") ④ 무변화. 일부 유니크는 이 넷 대신 "다른 유니크로 변형"이라는 5번째 갈래를 갖는다[가이드] — 이 경우 4갈래 확률표가 그대로 적용되지 않는다(개별 유니크마다 다름, 세부는 N/F) |
 
 > **확률 vs 결정**의 구도는 [socket_layer/02_diablo4_poe1.md §6 설계 원리](../socket_layer/02_diablo4_poe1.md#6-설계-원리)가 이미 "보장 경로 병존"(벤치 1,500 Fusing 같은 결정적 천장)이라는 이름으로 정리해 뒀다 — 이 문서의 §4-2·§4-3 이 그 "결정 쪽" 절반을 채운다.
 
 ### 4-2. 에센스 — 확정 접사를 보장하는 중간 단계
 
 - 모든 에센스는 **Normal 장비를 Rare 로 승급시키면서, 그 에센스가 지정한 접사 1개를 강제로 확정 부여**한다[검색합성] — 나머지 접사는 랜덤으로 채워진다는 점에서 "타겟 알케미 오브"에 가깝다
-- **티어 1~4 에센스**는 사실상 업그레이드된 Orb of Alchemy 역할(Scoured, 즉 접사 없는 상태에만 사용 가능)이고, **티어 5~8 에센스**는 Chaos Orb 처럼 이미 Rare 인 아이템에도 사용 가능하다[검색합성]
+- **티어 1~4 에센스**는 사실상 업그레이드된 Orb of Alchemy 역할(Scoured, 즉 접사 없는 상태에만 사용 가능)이고, **티어 5~8 에센스**는 Chaos Orb 처럼 이미 Rare 인 아이템에도 사용 가능하다[검색합성] — **정정(2026-09-10, §1-6)**: 실측 결과 20개 감정 계열은 T1(Whispering)~T7(Deafening)까지만 있고, 여기서 말하는 "8티어"는 그 연장이 아니라 감정 계열과 무관한 특수 에센스 4종(Hysteria/Insanity/Horror/Delirium)을 가리킨다. T1~T7 내부에서 정확히 몇 티어부터 이미 Rare 인 아이템에 쓸 수 있는지는 여전히 미확인(§7 N/F)
 - **부패 에센스(Corrupted Essence)** — 감옥에 갇힌 몬스터가 들고 있는 Greater 에센스를 풀어주기 전 Vaal Orb 로 부패시키면 생성. **예측 불가능하지만 강력한 모드를 강제**한다는 점에서 "도박형 에센스"[검색합성]
 
 ### 4-3. 화석(Fossil) + 공명석(Resonator) — 태그 가중 조작
 
 - 화석은 특정 **태그(예: 피해·방어·캐스터 등)의 접사 등장 확률을 가중**하거나 특정 태그를 **차단(block)**하는 소모품이다. **공명석(Resonator)에 소켓해서** 함께 사용한다[검색합성]
 - 공명석은 소켓 수 **1~4개** 4종이 있고, 여러 화석을 동시에 꽂아 **조건을 조합**할 수 있다 — "이 태그는 가중, 저 태그는 차단"을 겹쳐 **타겟 리포징(targeted reforging)**에 가장 가까운 결정도를 낸다[검색합성]
-- **정확한 가중치 수식("음의 가중치"로 특정 태그를 완전 차단하는 정도의 세부 계산)은 이번 조사에서 확보하지 못했다**(N/F, §7)
+- **정정(2026-09-10, §1-7)**: 가중치 수식은 poedb.tw 기술 설명절에서 5종 확인했다 — "음의 가중치"가 아니라 **태그별 스폰 가중치에 고정 배수(×0 차단·×10 대폭 증가·×0.1~0.15 부분 감소)를 곱하는 방식**이다. 나머지 7종의 정확한 배수는 대칭 구조 추정만 가능(N/F, §7)
 
 ### 4-4. 크래프팅 벤치(Crafting Bench) — 결정적 접사 부여
 
@@ -179,6 +415,9 @@ PoE1 은 **골드 같은 단일 화폐가 없고(3.25 Currency Exchange 이전),
 
 **가이드**
 - Maxroll.gg — 3.28 Mirage 패치노트(Exceptional 서포트·Coin), Vaal Orb 부패 확률 가이드(짝 문서 경유 인용)
+- **(2026-09-10 신규) PathOfBuilding**(`github.com/PathOfBuildingCommunity/PathOfBuilding`, `dev` 브랜치) — `src/Data/ModExplicit.lua`(접사 티어 전체 사다리, §1-4)·`src/Data/Uniques/*.lua`(유니크 현재판 효과 전문, §1-5)·`src/Data/Essence.lua`(에센스 20계열+특수 4종의 강제 접사 실제 수치, §1-6)를 직접 다운로드해 파싱. GGG 클라이언트 데이터 파일을 자동 추출·유지보수하는 오픈소스 빌드 플래너로, 원문 자체는 아니나 사람이 옮겨 적은 요약이 아니라 게임 데이터 그대로라 이 문서군에서 가장 정밀한 수치 출처다
+- **(2026-09-10 신규) poedb.tw** — Fossil 목록·개별 화석 페이지(`/us/Fossil`, `/us/Scorched_Fossil` 등)의 "기술적 설명" 절 직접 인용으로 화석 5종의 정확한 태그 가중 배수를 확보(§1-7). 단, `/us/Rings`·`/us/Amulets` 등 아이템 종류별 "ModifiersCalc" 위젯은 JS 지연 렌더링이라 WebFetch 로는 확보 못함(§1-4 는 대신 PathOfBuilding 원시 데이터로 대체)
+- **(2026-09-10 신규) Maxroll.gg — 「Corruption Explained」**(`/poe/resources/corruption`) 직접 인용 — 일반 장비 대상 Vaal Orb 4갈래 동일 가중 확인(§4-1)
 
 **검색합성(WebSearch, 원문 미확보 — 교차 확인된 것만 채택)**
 - 희귀도 4단·접사 개수 상한표, ilvl-접사 티어 관계, 화폐 오브 기능 개관(Chaos/Exalted/Divine/Regal/Alchemy/Vaal), 에센스·화석·크래프팅 벤치 구조, 공식 트레이드 사이트 동작 방식, 스탠다드 리그 이관 규칙
@@ -187,12 +426,12 @@ PoE1 은 **골드 같은 단일 화폐가 없고(3.25 Currency Exchange 이전),
 
 | 항목 | 상태 |
 |---|---|
-| **일반 장비(비-젬)에 대한 Vaal Orb 정확한 결과 확률표** | 젬 부패 확률(4갈래 각 25%)은 짝 문서로 확인했으나, 장비·주얼·플라스크용 결과 확률표는 PoE1/PoE2 결과가 뒤섞여 확정 못함 |
-| **화석의 태그 가중치 정확한 수식("음의 가중치"로 특정 태그를 차단하는 정도)** | 구조(가중·차단)만 확인, 계산식은 미확인 |
 | **크래프팅 벤치 레시피의 현행 해금 방식** | 과거의 "마스터 시스템"이 폐지된 이후 현재 레시피가 어떻게 해금되는지 정확한 규칙 미확인 |
 | **스탠다드 리그 이관 규칙의 1차(공식) 근거** | 다수 커뮤니티 소스가 일관 서술하나 GGG 공식 문서 직접 인용은 확보 못함 |
 | **주얼의 접사 상한 "최대 4(접두2+접미2)"가 모든 주얼 종류(일반/어비스/클러스터)에 공통인지** | 일반 주얼 기준으로만 확인, 특수 주얼(어비스·클러스터)의 접사 상한은 [socket_layer §2-2](../socket_layer/02_diablo4_poe1.md#2-2-주얼-jewel)에 별도 서술이 있어 완전히 같은 규칙인지 교차 검증은 못함 |
-| **에센스 티어 1~4/5~8 구분의 정확한 티어 경계와 각 티어의 정확한 확정 접사 목록** | 구조(전자=Scoured 전용, 후자=Chaos Orb 겸용)만 확인, 티어별 세부 목록은 미확인 |
+| **일부 유니크의 Vaal Orb "다른 유니크로 변형" 5번째 갈래의 개별 확률** | 존재 자체는 확인(§4-1, 2026-09-10)했으나, 이 갈래가 있는 유니크마다 기존 4갈래(각 25%)를 어떻게 재배분하는지 개별 수치는 미확인 |
+| **에센스 T1(Whispering)~T7(Deafening) 구간 안에서 "Scoured 전용"과 "이미 Rare 인 아이템에도 사용 가능"을 가르는 정확한 임계 티어** | 2026-09-10 재조사로 "T5~8 이 Chaos Orb 처럼 작동한다"던 기존 서술의 "8"은 20개 감정 계열과 무관한 특수 에센스 4종(Hysteria/Insanity/Horror/Delirium)을 가리키는 것으로 정정했다(§1-6) — 다만 T1~T7 20개 계열 **내부**에서 정확히 몇 티어부터 이미 Rare 인 아이템에 쓸 수 있는지는 여전히 미확인 |
+| **화석 12종 중 7종(Frigid/Jagged/Aberrant/Dense/Corroded/Prismatic/Serrated)의 정확한 태그 가중 배수** | 나머지 5종(Scorched/Metallic/Pristine/Aetheric/Bound, §1-7)은 poedb.tw 기술 설명절 직접 인용으로 배수(×0/×10/×0.1/×0.15)를 확보했으나, 이 7종은 짝을 이루는 화석과의 대칭 구조로 추정만 했고 직접 인용은 확보 못함 |
 
 ---
-*마지막 업데이트: 2026-08-31 (폴더 3분리 — `poe_skillgem_reference.md` §3 을 이관·심화. 희귀도 4단 접사 상한표, ilvl-접사 티어 관계, 스킬 젬의 인벤토리·트레이딩 관점 신규 정리, 화폐 오브·에센스·화석·크래프팅 벤치 4계열 신규 확보, 공식 트레이드 사이트·스탠다드 리그 이관 메커니즘 정리)*
+*마지막 업데이트: 2026-09-10 (실제 접사 티어표·유니크 예시·에센스/화석 실제 수치 보강 — §1-4~§1-7 신설. PathOfBuilding 클라이언트 데이터로 핵심 접사 8군의 티어 전체 사다리(생명력·원소저항 3종·마나·이동속도·주문피해%·공격속도%·물리피해%·방어구계열%) 확보, 유니크 5종(Kaom's Heart·The Baron·Headhunter·Yoke of Suffering·Soul Taker) 효과 전문 인용, 에센스 20+4계열 강제 접사 실제 수치, 화석 12종 목록에 5종은 정확한 태그 가중 배수(×0/×10/×0.1/×0.15)까지 확보. §7 N/F 중 Vaal Orb 일반 장비 확률표·화석 가중 수식 2건을 해소해 표에서 제거, 에센스 티어 경계 서술 정정) · 2026-08-31 (폴더 3분리 — `poe_skillgem_reference.md` §3 을 이관·심화. 희귀도 4단 접사 상한표, ilvl-접사 티어 관계, 스킬 젬의 인벤토리·트레이딩 관점 신규 정리, 화폐 오브·에센스·화석·크래프팅 벤치 4계열 신규 확보, 공식 트레이드 사이트·스탠다드 리그 이관 메커니즘 정리)*

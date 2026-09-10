@@ -90,7 +90,8 @@ render()
 
 `src/index.html` 의 뼈대는 고정이다. 렌더러는 이 자리들만 채운다.
 
-- `.brand` · `.topbar`(안에 `.crumb` · `.resources`) · `.nav` · `.main` · `#tooltip`
+- `#stage`(한 장 · 1600×800) 안에 `.brand` · `.topbar`(안에 `.crumb` · `.resources`) · `.nav` · `.main` · `#tooltip` · `#modal`
+- 마우스 좌표로 붙는 것(툴팁 · 진형 드래그 고스트)은 `tip.js:stagePoint` 를 거친다 — 한 장이 `transform` 으로 통째로 줄고 늘기 때문이다 (ADR-0087)
 - 새 상시 요소가 필요하면 여기에 자리를 만들고 [SCREEN_DESIGN.md §2](docs/client/SCREEN_DESIGN.md) 공통 셸 표에 행을 추가한다
 - 폰트 두 벌은 `<head>` 의 CDN 링크. 오프라인 폴백은 CSS 변수의 폴백 스택이 담당한다
 

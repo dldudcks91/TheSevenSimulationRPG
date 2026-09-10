@@ -13,9 +13,9 @@
 | § | 내용 |
 |---|---|
 | 0 | 조사 방법과 신뢰도 |
-| 1 | 스킬 젬 = 파밍 접점 구조 |
+| 1 | 스킬 젬 = 파밍 접점 구조 (+ 1-8·1-9 대표 스킬 젬·서포트 젬 실제 수치) |
 | 2 | 패시브 스킬 트리 — 노드 4종 구조 |
-| 3 | 어센던시 — 7클래스×3갈래 실제 명단 |
+| 3 | 어센던시 — 7클래스×3갈래 실제 명단 (+ 3-5 대표 노드 실제 수치 7종) |
 | 4 | 스킬 구성 3층 종합 |
 | 5 | 본작에 시사하는 점 |
 | 6 | 출처 · 미확인(N/F) 총괄 |
@@ -25,6 +25,8 @@
 ## 0. 조사 방법과 신뢰도
 
 [00_overview.md §0](00_overview.md#0-조사-방법과-신뢰도)와 동일한 신뢰도 표기(**[공식]·[가이드]·[검색합성]·[커뮤니티]·[추정]·N/F**)와 **PoE2 오염 배제 원칙**을 그대로 쓴다. 이번 심화의 핵심 신규 출처는 **어센던시 페이지 재확인(21개 클래스 전량)**과 **Maxroll 패시브 트리 가이드 직접 WebFetch(마스터리·키스톤 정의)**다.
+
+**2026-09-10 추가 심화(§1-8·1-9·3-5)의 신규 출처는 `poedb.tw`**(게임 클라이언트 데이터를 리그마다 직접 추출해 공개하는 커뮤니티 DB, GGG 비공식 — 신뢰도 등급은 Maxroll과 같은 **[가이드]** 티어로 분류)다. WebFetch 는 페이지를 요약 모델에 통과시켜 표를 추출하므로, **행이 어긋나는 추출 오차가 종종 발생**한다 — 이번 조사에서도 일부 필드(예: Vulnerability 마나 소모)가 레벨에 따라 비단조(non-monotonic)로 나와 신뢰 못하고 N/F 처리했다. 반대로 여러 필드가 서로 비례하는 내적 정합성(예: Essence Drain 의 히트/DoT 배율이 세 레벨 모두 정확히 일치)이 확인된 표는 [가이드]로 채택했다.
 
 ---
 
@@ -108,6 +110,105 @@ PoE1 은 스킬 전체를 파밍화하지 않았다. **액티브(스킬 젬)만 
 - 패시브 트리는 **되돌리는 게 기본값이 아니다** — §2-4 참조. **공식 가이드조차** "substantially divergent build를 원하면 리스펙 대신 새 캐릭터를 만들라"고 명시한다[공식] — **패시브는 "결정"으로 설계돼 있다.**
 
 > **PoE1 자체가 이미 "파밍이 필요한 층"과 "안정적 진행 접점으로 둬도 되는 층"을 나눠 놓았다.** 스킬 전부를 루팅 대상으로 만든 게 아니라, **가장 자주 갈아엎고 조합을 실험하는 층(액티브)만 루팅화**하고, **캐릭터의 정체성 뼈대(패시브·어센던시)는 진행 보상 + 유상 환불로 "결정성"을 지켰다.**
+
+### 1-8. 대표 액티브 스킬 젬 실제 수치 — 레벨 1/10/20 스냅샷
+
+> 아키타입별 대표 스킬 젬 7종을 poedb.tw 에서 확인해 레벨 1/10/20(가능한 경우 21) 스냅샷을 만들었다. 출처·신뢰도는 §0 추가분 참조.
+
+**근접 공격형 — Cyclone(채널링 스핀 공격)**
+
+| 항목 | Lv1 | Lv10 | Lv20 | Lv21(부패) |
+|---|---|---|---|---|
+| 피해 효율(Damage Effectiveness) | 81.6% | 114% | 150% | 153.6% |
+| 마나 소모 | 2 | 3 | 3 | 3 |
+| 반경 | 16 | 16 | 16 | 16 |
+| 재사용 대기시간 | 없음 | 없음 | 없음 | 없음 |
+| 요구 레벨 / Str / Dex | 28 / 29 / 42 | 50 / 49 / 71 | 70 / 68 / 98 | — |
+
+[가이드 — poedb.tw] 기본 공격속도는 기본값의 300%, 이동속도 20~30% 감소가 채널링 내내 함께 적용된다.
+
+**투사체 스킬 — Fireball**
+
+| 항목 | Lv1 | Lv10 | Lv20 |
+|---|---|---|---|
+| 기반 피해(최소-최대) | 9-14 | 157-236 | 1883-2825 |
+| 마나 소모 | 5 | 11 | 20 |
+| 폭발 반경 | 1.0m | 1.4m | 1.8m |
+| 발사체 속도 | 10.4m/s(전 레벨 동일) | | |
+| 요구 레벨 / Int | 1 / 0 | 32 / 75 | 70 / 155 |
+
+[가이드/검색합성 — poedb.tw] 시전 시간 0.75초·치명타 확률 5%·점화 확률 25%는 전 레벨 고정. **레벨20 기반 피해(1883-2825)는 WebFetch 단일 추출값이며, 교차검증용 WebSearch 는 PoE2 자료만 반환해 PoE1 수치로 재확인하지 못했다** — 자릿수가 이례적으로 커 보여 참고용으로만 싣되, §6-2 N/F 로도 등재한다.
+
+**지속시전/채널링 — Righteous Fire**
+
+| 항목 | Lv1 | Lv10 | Lv20 |
+|---|---|---|---|
+| 자신 피해(초당, 최대생명력 대비) | 90% | 90% | 90% |
+| 적 피해(초당, 최대생명력 대비) | 70% | 70% | 70% |
+| 추가 주문 피해 | +20% | +29% | +39% |
+| 마나 소모 | 없음(토글, 예약 없음) | 없음 | 없음 |
+| 요구 레벨 / Str / Int | 16 / 18 / 26 | 46 / 46 / 66 | 70 / 68 / 98 |
+
+[가이드 — poedb.tw] 최대 에너지 실드의 70%/초 만큼 자신+적 모두에게 추가 피해가 붙는다. 냉각시간(재시전 제한) 0.30초. 반경은 1.8~2.3m 구간에서 레벨별로 증가하나 정확한 레벨별 값은 미확인(N/F).
+
+**소환수 — Raise Zombie**
+
+| 항목 | Lv1 | Lv10 | Lv20 |
+|---|---|---|---|
+| 최대 소환 수 | 3 | 4 | 6 |
+| 좀비 생명력 보너스 | +0% | +18% | +38% |
+| 마나 소모 | 9 | 18 | 28 |
+| 요구 레벨 / Int | 1 / 0 | 32 / 75 | 70 / 155 |
+
+[가이드 — poedb.tw] 좀비 자체의 근접 피해량은 젬 툴팁에 직접 노출되지 않고 몬스터 레벨 기반 스탯으로 별도 계산된다 — 젬 레벨이 정하는 것은 생명력 보너스·최대 소환 수·"기본 공격력 100%" 배율뿐이다(좀비 원 피해 수치 자체는 N/F). 시전 시간 0.85초 고정.
+
+**오라 — Hatred**
+
+| 항목 | Lv1 | Lv10 | Lv20 | Lv21(부패) |
+|---|---|---|---|---|
+| 물리→냉기 추가 피해 | 30% | 34% | 39% | 40% |
+| 마나 예약(Reservation) | 50% | 50% | 50% | 50% |
+| 범위 | 60m | 60.9m | 61.9m | 62m |
+| 요구 레벨 / Dex / Int | 24 / 37 / 25 | 50 / 71 / 49 | 70 / 98 / 68 | 72 / — / — |
+
+[가이드 — poedb.tw] 재사용 제한 1.20초(즉시 재시전 가능한 오라 특성상 사실상 무의미). **레벨이 올라도 마나 예약률은 고정 50%**고, 오르는 건 부여 피해%뿐이다 — "오라는 예약, 액티브는 마나"라는 PoE1 자원 이원화가 수치로 확인되는 지점.
+
+**저주 — Vulnerability**
+
+| 항목 | Lv1 | Lv10 | Lv20 |
+|---|---|---|---|
+| 받는 물리 피해 증가 | 15% | 22% | 30% |
+| 명중 시 출혈 부여 확률 | 25% | 25% | 25% |
+| 지속시간 | 8초 | 9.8초 | 11.8초 |
+| 요구 레벨 / Str / Int | 24 / 37 / 25 | 50 / 71 / 49 | 70 / 98 / 68 |
+
+[가이드 — poedb.tw, 물리 피해 증가%·출혈 확률·지속시간] 세 값은 서로 단조 증가해 정합적이라 채택. **마나 소모·사거리는 추출값이 레벨과 무관하게 뒤섞여 나와(예: 마나 16→49→33) 단조성이 깨졌다 — 신뢰 못해 표에서 뺐고 N/F 로 남긴다**(§6-2).
+
+**지속피해(DoT) — Essence Drain**
+
+| 항목 | Lv1 | Lv10 | Lv20 |
+|---|---|---|---|
+| DoT 카오스 피해(초당) | 40.7 | 499.8 | 2729.1 |
+| 히트 피해(최소-최대) | 12-18 | 144-216 | 786-1179 |
+| 지속시간 | 3.8초 | 3.8초 | 3.8초 |
+| 마나 소모 | 8 | 16 | 23 |
+| 요구 레벨 / Int / Dex | 12 / 21 / 14 | 44 / 63 / 44 | 70 / 98 / 68 |
+
+[가이드 — poedb.tw] 시전 시간 0.70초·AoE 반경 8·추가 피해 효과(Effectiveness) 160%는 전 레벨 고정. **히트 피해 평균 대비 DoT 배율이 Lv1·10·20 세 레벨 모두 약 2.78배로 정확히 일치**해 — 다른 젬보다 추출 신뢰도가 높다고 판단했다.
+
+### 1-9. 서포트 젬 실제 배율 — 레벨1 vs 레벨20 비교
+
+| 서포트 젬 | Lv1 효과 | Lv20 효과 | 마나 배율 | 연산 구분 |
+|---|---|---|---|---|
+| **Added Fire Damage Support** | 물리 피해의 25% 를 추가 화염 피해로 | 39% | 120%(전 레벨 고정) | 가산(Added Damage — 다른 "increased" 소스와 합연산) |
+| **Melee Physical Damage Support** | 근접 물리 피해 30% **more** | 49% **more** | 130%(전 레벨 고정) | **More(곱연산)** — 부수 효과로 공격 속도 10% 감소 |
+| **Faster Attacks Support** | 공격 속도 20% **increased** | 44% **increased**(+품질 최대 10%p) | 110%(전 레벨 고정) | **Increased(합연산)** |
+| **Elemental Focus Support** | 원소 피해 20% **more** | 34% **more** | 130%(전 레벨 고정) | **More(곱연산)** — 페널티: 상태이상(점화·감전·빙결 등) 부여 불가, 전 레벨 고정 |
+| **Increased Area of Effect Support** | 범위 30% **increased** | 49% **increased** | 130%(전 레벨 고정) | **Increased(합연산)** |
+
+[가이드 — poedb.tw] **More(곱연산) 계열은 Melee Physical Damage·Elemental Focus 2종, Increased(합연산) 계열은 Faster Attacks·Increased Area of Effect 2종**으로 명확히 갈린다 — 젬 문구 자체가 "more"/"increased" 단어를 그대로 쓰므로 이 구분은 사실상 [공식] 문구 수준의 신뢰도다. "More" 서포트는 다른 "Increased" 소스들과 곱연산되어 같은 %라도 실전 배율이 더 크다는 것이 PoE1 피해 계산의 핵심 문법이다.
+
+> **마나 배율(Mana Multiplier)은 5종 모두 젬 레벨과 무관하게 고정**이다 — 서포트가 강해질수록 자원 비용이 함께 느는 게 아니라, "이 서포트를 달았다"는 조립 결정 자체에 고정 비용이 붙는 구조다.
 
 ---
 
@@ -199,6 +300,23 @@ PoE1 은 스킬 전체를 파밍화하지 않았다. **액티브(스킬 젬)만 
 
 > **파밍(임시 대여)과 소유(영구 자산)를 어센던시 하나로 가르는 처리**다 — §1-6 "롤백해도 젬은 유지된다"와 반대 방향의 사례로, "얻는 방식에 따라 그 산출물이 임시냐 영구냐가 갈린다"는 원리를 한 번 더 보여준다.
 
+### 3-5. 어센던시 대표 노드 실제 수치 7종 — 클래스별 1개씩
+
+> §3-1 명단에서 7원류 클래스마다 대표 갈래 하나씩을 골라, 그 갈래의 노터블 노드 하나씩을 효과 전문 그대로 인용한다. 출처는 poedb.tw 각 어센던시 페이지(WebFetch 직접 추출, [가이드]). **PoE1 은 어센던시 트리를 리그마다 개편**하므로 여기 인용된 노드는 **조사 시점(2026-09, 패치 3.29 기준)의 최신 명단**이고, 과거 버전에 있던 동계열 노드(예: Necromancer 의 구 버전 Mistress of Sacrifice·Bone Barrier, Assassin 의 구 버전 Mistwalker·Unstable Infusion)와 이름이 다를 수 있다는 점을 유의 — 두 클래스 모두 여러 리그에 걸쳐 트리 리워크를 거쳤다.
+
+| 원류 클래스 | 어센던시 | 대표 노드 | 효과 전문[가이드 — poedb.tw] |
+|---|---|---|---|
+| Duelist | **Slayer** | Endless Hunger | "20% of Overkill Damage is Leeched as Life / 20% increased Attack Speed while Leeching / Cannot be Stunned while Leeching / You are Unaffected by Bleeding while Leeching" |
+| Shadow | **Assassin** | Knife in the Back | "100% more Critical Strike Chance against Enemies that are not on Low Life / +100% to Critical Strike Multiplier against Enemies that are on Low Life / Critical Strikes have Culling Strike" |
+| Marauder | **Juggernaut** | Unstoppable | "10% increased Movement Speed / Cannot be Stunned / Action Speed cannot be modified to below Base Value / Movement Speed cannot be modified to below Base Value" |
+| Witch | **Necromancer** | Commander of Darkness | "Auras from your Skills grant 3% increased Attack and Cast Speed to you and Allies / You and nearby Allies deal 30% increased Damage / You and nearby Allies have +30% to Elemental Resistances" |
+| Ranger | **Deadeye** | Far Shot | "Projectiles gain Damage as they travel farther, dealing up to 30% more Damage with Hits and Ailments / Projectile Barrages have no spread" |
+| Templar | **Hierophant** | Divine Guidance | "30% increased maximum Mana / 10% of Damage is taken from Mana before Life" |
+| Scion | **Ascendant** | (구조형 예시 — Occultist 슬롯) | "You can apply an additional Curse / 10% increased Effect of your Curses / Regenerate 1.5% of Energy Shield per second / Cannot Be Stunned while you have Energy Shield" |
+
+- **Scion 의 Ascendant 는 단일 고정 노드셋이 아니라 다른 6원류 클래스의 어센던시를 "슬롯 3개"에 나눠 담는 메타 구조**다 — Marauder/Ranger/Witch/Duelist/Templar/Shadow 각각에서 3갈래 중 하나씩을 골라 담을 수 있고, 표의 행은 그중 "Witch 계열(Occultist) 슬롯을 선택했을 때"의 예시다[가이드]. §3-1 이 이미 정리한 "씬만 예외" 구조의 실제 노드 단위 구현이 이것이다.
+- **7개 노드 모두 "수치업 + 규칙 변형"이 함께 있는 복합형**이다(§2-2 키스톤 관찰과 같은 결) — 예를 들어 Endless Hunger 는 생명흡수%(수치)와 "리치 중 기절 면역"(규칙 변형)이 한 노드에 같이 있다. **일반 패시브 노터블보다 어센던시 노드가 한 단계 더 압축적으로 여러 효과를 묶는다**는 것이 7개 교차 확인의 공통점이다.
+
 ---
 
 ## 4. 스킬 구성 3층 종합
@@ -245,6 +363,7 @@ PoE1 은 스킬 전체를 파밍화하지 않았다. **액티브(스킬 젬)만 
 - Maxroll.gg — 3.28 Mirage 패치노트 요약(Exceptional 서포트·Coin 시스템), 젬 부패(Vaal Orb) 가이드
 - rpgstash — PoE 3.29 Luminary 어센던시 가이드(씬 2→3 확장 경위, 용병 영구 소유 규칙)
 - 짝 문서 [socket_layer/02_diablo4_poe1.md](../socket_layer/02_diablo4_poe1.md) — 소켓·링크·젬 색·서포트 젬 부패 메커니즘 원출처 전량(GGG 3.29.0 패치노트, maxroll, poedb 등)
+- **poedb.tw(2026-09-10 추가)** — 대표 액티브 스킬 젬 7종(Cyclone·Fireball·Righteous Fire·Raise Zombie·Hatred·Vulnerability·Essence Drain)의 레벨별 수치표, 서포트 젬 5종(Added Fire Damage·Melee Physical Damage·Faster Attacks·Elemental Focus·Increased Area of Effect)의 레벨1/20 배율표, 어센던시 대표 노드 7종(Slayer·Assassin·Juggernaut·Necromancer·Deadeye·Hierophant·Ascendant)의 효과 전문 — 전부 WebFetch 직접 추출(§1-8·1-9·3-5)
 
 **검색합성(WebSearch, 원문 미확보 — 교차 확인된 것만 채택)**
 - 젬 레벨업 조건·리롤 레시피, 마스터리 세부 동작(클러스터 공유), 리스펙 비용(Orb of Regret 1개/5개), 키스톤 개별 효과(Resolute Technique·Eldritch Battery·Point Blank·Acrobatics·Lethe Shade), 어센던시 씬 확장 이력, 용병 시스템, 스킬 젬 총 종수
@@ -259,6 +378,12 @@ PoE1 은 스킬 전체를 파밍화하지 않았다. **액티브(스킬 젬)만 
 | **어센던시 페이지 "20개" 표기가 실제로 3.29 반영 지연인지의 확정 근거** | 시차로 추정되나(§3-2), GGG의 공식 확인은 확보 못함 |
 | **주얼 소켓 정확한 총수(21개)** | 검색합성 1건뿐 — [socket_layer §9 미확인9](../socket_layer/02_diablo4_poe1.md)의 "위키 차단으로 기억 기반" 항목과 마찬가지로 원문 미확인 |
 | **어센던시 획득 순서와 캠페인 진행의 정확한 레벨 임계** | 미궁 4단계 각각이 요구하는 캐릭터 레벨 등 세부는 이번 조사 범위 밖 |
+| **Fireball 레벨20 기반 피해(1883-2825)의 정확한 값** | poedb.tw WebFetch 단일 추출값. 자릿수가 이례적으로 커 교차검증(WebSearch)을 시도했으나 PoE2 자료만 반환돼 PoE1 수치로 재확인 못함(§1-8) |
+| **Vulnerability 의 정확한 마나 소모·사거리 레벨별 값** | 추출값이 레벨과 무관하게 뒤섞여(마나 16→49→33 등) 단조성이 깨져 표에서 제외(§1-8). 물리 피해%·출혈 확률·지속시간은 정합적이라 채택 |
+| **Raise Zombie 좀비 자체의 근접 피해량** | 젬 툴팁에 직접 노출되지 않고 몬스터 레벨 기반 스탯으로 별도 계산되는 구조라, 젬 레벨별 수치 자체가 존재하지 않을 가능성이 높음(§1-8) |
+| **Righteous Fire 반경의 정확한 레벨별 증가값** | "1.8~2.3m 구간에서 증가"까지만 확인, 레벨별 세부 수치는 미확인(§1-8) |
+| **어센던시 대표 노드 7종이 3.29 기준 "현재" 명단인지** | Necromancer(Commander of Darkness)·Assassin(Knife in the Back)은 과거 여러 리그에 걸쳐 트리가 개편된 클래스라, 구버전에 있던 동계열 노드(Mistress of Sacrifice·Mistwalker 등)와 인용 시점이 어긋날 가능성을 배제 못함(§3-5) |
+| **서포트 젬 5종의 정확한 마나 배율이 최신 패치에서도 동일한지** | poedb.tw 단일 시점 추출값. 과거 패치 이력과 대조한 교차검증은 하지 못함(§1-9) |
 
 ### 6-3. 오염 기록
 
@@ -268,4 +393,4 @@ PoE1 은 스킬 전체를 파밍화하지 않았다. **액티브(스킬 젬)만 
 | **키스톤·어센던시 검색 결과 다수** | PoE2 전용 빌드 가이드(Deadeye/Pathfinder 비교, PoE2 전용 챌린지 구조 등)가 매 검색마다 섞임 | PoE1 원작 어휘로 재검증 후 채택분만 인용 |
 
 ---
-*마지막 업데이트: 2026-08-31 (폴더 3분리 — `poe_skillgem_reference.md` §2+§4 를 이관·심화. 패시브 트리 마스터리 노드 신규 확인, 키스톤 실제 예시 7종, 어센던시 21개 전량 명단과 "20개" 표기 시차 특정, 씬 3번째 갈래 Luminary(3.29 신규)·용병 시스템 반영)*
+*마지막 업데이트: 2026-09-10 (대표 스킬 젬·서포트 젬·어센던시 노드 실제 수치 보강 — §1-8 액티브 스킬 젬 7종(Cyclone·Fireball·Righteous Fire·Raise Zombie·Hatred·Vulnerability·Essence Drain) 레벨1/10/20 스냅샷, §1-9 서포트 젬 5종 레벨1↔20 배율(More/Increased 구분 포함), §3-5 어센던시 대표 노드 7종(클래스당 1개) 효과 전문. 신규 출처 poedb.tw. Fireball 고레벨 피해·Vulnerability 마나·사거리 등 추출 신뢰도가 낮은 필드는 N/F로 분리) · 2026-08-31 (폴더 3분리 — `poe_skillgem_reference.md` §2+§4 를 이관·심화. 패시브 트리 마스터리 노드 신규 확인, 키스톤 실제 예시 7종, 어센던시 21개 전량 명단과 "20개" 표기 시차 특정, 씬 3번째 갈래 Luminary(3.29 신규)·용병 시스템 반영)*

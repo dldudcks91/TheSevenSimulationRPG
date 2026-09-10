@@ -46,10 +46,11 @@ export function csvHash(text) {
 
 /**
  * 드롭 1개의 지문 — `rollDrop` → `build` → `rollAffixes` 의 **rng 소비를 전부** 드러낸다.
- *   `rarity|slot|ilvl|sins|base|element|개체굴림|스킬|접사`
+ *   `rarity|slot|ilvl|sins|base|baseId|element|개체굴림|스킬|접사`
  * **접사는 stat·값·순서를 그대로 적는다** — `rollAffixes` 가 풀에서 뽑는 순서가 바뀌면 여기서만 잡힌다.
  * `uid` 는 넣지 않는다 — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (D-A2).
  * 시작 무기(`item.startingWeapon`)도 **같은 형식**으로 적는다 (`meta.parties`).
+ * `baseId` [신설 2026-09-10] — 무기군에 세부 베이스 풀이 있으면 그 굴림. 없는 무기군·무기 아닌 부위는 `-`
  */
 export const dropSig = it => [
     it.rarity,
@@ -57,6 +58,7 @@ export const dropSig = it => [
     it.ilvl,
     it.sins.join('+'),
     it.group ?? it.name.en,                       // 무기는 무기군 id · 그 외는 베이스 이름(영문)이 곧 베이스 인덱스다
+    it.baseId ?? '-',                             // 무기 베이스 세부 굴림 — 풀이 있는 무기군만(weapon_base.csv)
     it.element ?? '-',                            // 마법 무기만 원소를 굴린다
     it.watk != null ? `w${it.watk}`               // 개체 굴림 — 무기는 watk
         : it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 방어구는 implicit

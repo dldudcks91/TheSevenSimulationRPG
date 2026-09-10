@@ -857,6 +857,7 @@ export function createGameSystem(deps) {
             const h = heroById(state, uid);
             return {
                 uid, combat: heroCombat(state, h),
+                stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
                 actives: SK.activesFor(h, { weaponSkill: weaponSkillOf(state, h) }),
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
             };

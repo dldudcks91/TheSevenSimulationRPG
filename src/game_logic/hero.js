@@ -19,8 +19,9 @@
  *   값이 전부 미정이라 아직 없다. 노드 정의는 `mastery_node.csv`, 랭크당 값은 `balance.csv` 다.
  *   ⚠ **포인트 지급 곡선은 기획 미확정**(skill_design §7) — `mastery_point_per_level` 은 임시 형태다.
  *
- * 전투 계수가 실제로 걸리는 축은 셋뿐 — 힘(물리 공격력) · 지능(마법 공격력) · 민첩(행동 주기).
- *   건강(fhr)은 상태이상 미구현으로 휴면 · 통솔·매력은 계수 없음 · **운은 전투 계산 밖**이다
+ * 전투 계수가 실제로 걸리는 축은 둘뿐 [개정 2026-09-10 · battle_design §8 · DEV_PLAN R72] — 민첩(행동 주기) ·
+ *   건강(**레벨 성장분의 최대 HP**). ~~힘(물리 공격력) · 지능(마법 공격력)~~ 은 **스킬 계수**로 옮겨갔고(skill.js scaleDef ·
+ *   battle_design §9-1) ~~건강(HP 재생)~~ 은 계수를 잃었다. 통솔·매력은 전투 스탯 계수 없음 · **운은 전투 계산 밖**이다
  *   (드랍률·골드 획득 계수 — hero_design §4-1 감각→운 개정 2026-08-26).
  */
 
@@ -326,11 +327,12 @@ export function createHeroSystem(data) {
      *   `atk_flat` 은 무기 슬롯 접사만 합산하고, `+피해 %` 는 그 밑수 전체를 곱한다.
      *   무기 개체 공격력(watk)에는 드롭 시 굴린 편차가 이미 박혀 있다 — 타격마다 굴리지 않는다.
      * · 공격 타입은 직업이 아니라 **무기군**이 정한다 (battle_design §2-1 — 스태프·오브 = magic). 맨손은 physical.
-     *   사제가 마법사와 무기 풀을 공유하므로 사제의 파워 출처 = 마법 공격력 = 지능이 여기서 성립한다.
+     *   ~~사제의 파워 출처 = 마법 공격력 = 지능~~ 은 09-10 에 깨졌다 — 공격력은 순수 무기 밑수이고 지능은 스킬 계수로 간다 (§9-1).
      * · **원소는 무기 개체가 든다** (§9-5) — 마법 무기군이면 그 무기의 element 가 공격 타입이다.
      * · **저항은 소재값이 아니라 직접 %다** (§9-5) — `res_all` + 원소별 접사. 상한은 전투에서 적용된다
      *   (formula.appliedResist) — 여기서는 원값을 그대로 내고, 상한을 뚫는 `res_max_bonus` 를 따로 낸다.
      * · **최대 HP 는 성장 축**이라 레벨이 기하 곡선을 탄다 (§9-0 · hero_design §5). 방어는 비율 축이라 타지 않는다.
+ *   **그 성장분만 건강 계수를 탄다** [확정 2026-09-10 · hero_design §4-1] — 레벨 1 은 전 영웅이 같다(몬스터 앵커링 기준점 유지).
      * · **피해 감소는 원천별 곱**이라 (§9-3) 접사를 각각 곱해 **실효 %** 한 숫자로 낸다 — 시트에도 그 숫자가 찍힌다.
      * · **운은 전투 계산 밖**이다 — 드랍률·골드 획득에만 계수로 곱한다 (hero_design §4-1).
      *   장비가 0이면 운도 0을 곱한다 (§8 곱셈 원칙).
@@ -363,14 +365,18 @@ export function createHeroSystem(data) {
         const base = weapon
             ? weapon.watk + (weapon.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0)
             : B.unarmed_atk;
+        // 공격력 = **순수 무기 밑수** [개정 2026-09-10 · battle_design §9-1] — ~~`attrMult(magic ? int : str) ×`~~ 는 걷었다.
+        //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
         const atk = Math.round(
-            attrMult(magic ? A.int : A.str)
-            * base
+            base
             * (1 + f('atk_pct') / 100)
             * (1 + (codex.atk_pct ?? 0) / 100));
 
+        // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
+        //   레벨 1 에서 성장분이 0 이라 몬스터 앵커링 기준점(`hero_hp_base`)이 안 흔들린다 (battle_design §8)
+        const hpGrowth = B.hero_hp_base * F.growthMult(hero.level) - B.hero_hp_base;
         const hpMax = Math.round(
-            (B.hero_hp_base * F.growthMult(hero.level) + f('hp_flat'))
+            (B.hero_hp_base + hpGrowth * attrMult(A.vit) + f('hp_flat'))
             * (1 + f('hp_pct') / 100)
             * (1 + (codex.hp_pct ?? 0) / 100));
 
@@ -398,10 +404,11 @@ export function createHeroSystem(data) {
             life_steal: f('life_steal'),
             // 초당 회복 — 행동 주기와 무관한 실시간 (battle.js 가 틱마다 누산).
             // **밑수를 갖는 유일한 축**이다 [확정 2026-09-07 · battle_design §8] — 「장비가 0이면 능력치도 0」의 예외로,
-            // 전 영웅이 레벨 곡선 밑수를 갖고(성장 축 = hero_hp_base 와 같은 기하) 그 위에 접사·마스터리가 얹힌 뒤
-            // **마지막에 건강 계수**를 곱한다. 밑수는 세기가 아니라 생존의 바닥이라 능력치와 무관하게 존재한다.
+            // 전 영웅이 레벨 곡선 밑수를 갖고(성장 축 = hero_hp_base 와 같은 기하) 그 위에 접사·마스터리가 얹힌다.
+            // 밑수는 세기가 아니라 생존의 바닥이라 능력치와 무관하게 존재한다. ~~마지막에 건강 계수를 곱한다~~ 는
+            // **2026-09-10 폐기** — 건강은 HP 성장분으로 옮겨갔다 (hero_design §4-1 · DEV_PLAN R72).
             hp_regen: Number(
-                ((B.hp_regen_base_per_level * F.growthMult(hero.level) + f('hp_regen')) * attrMult(A.vit))
+                (B.hp_regen_base_per_level * F.growthMult(hero.level) + f('hp_regen'))
                     .toFixed(3)),
             cooldown_reduction: f('cooldown_reduction'),    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js)
             action_period: Number(period.toFixed(3)),

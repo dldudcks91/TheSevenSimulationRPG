@@ -10,7 +10,9 @@
  *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cool × 쿨감소`. 전투 시작 시 전부 준비 상태다
  *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 스킬의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
- *   · 회복 밑수는 마법 공격력 (battle_design §9-2) — rng 소비 없음
+ *   · 회복 밑수는 마법 공격력 (battle_design §9-2) — rng 소비 없음. 능력치 항(`flat`)은 배율에 안 곱하고 더한다
+ *   · **스킬 계수** (skill_design §13 · 2026-09-10) — 시전 순간 `SK.scaleDef(def, u.stats)` 로 실효 정의를 한 번 만들고
+ *     대상 표·회복·버프·소환이 전부 그것을 읽는다. 쿨은 원값이다(`cool_sec` 은 슬롯이 못 민다 — §13-1)
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   사건 훅(`reactions`)은 **발화 지점만** 있고 등록하는 소비자가 아직 없다 — 마스터리 T3 자리 (skill_design §5).
@@ -39,7 +41,8 @@ export function createHooks() {
  *   out         — 전투 결과 (여기서는 `casts` 만 센다)
  *   units       — `{party, enemies}`. **`enemies` 는 라운드마다 갈아 끼워지는 속성**이라
  *                 런타임은 항상 `ctx.units.enemies` 를 읽는다(변수로 복사해 두면 옛 라운드를 가리킨다)
- *   strikeOnce  — `(u, target, mult, element, s)` 직격 1회. 기본 공격과 스킬 타격이 같은 함수를 쓴다
+ *   strikeOnce  — `(u, target, mult, element, s, sk?)` 직격 1회. 기본 공격과 스킬 타격이 같은 함수를 쓴다.
+ *                 `sk = {flat, procChance, procMult}` 는 스킬 타격만 넘긴다(공격 대상 표) — 기본 공격은 안 넘긴다
  *   pickTarget  — `(u, foes)` 단일 대상 선택 (도발·결투 규칙을 아는 쪽은 battle.js 다)
  *   makeSummon  — `(caster, def)` 소환 유닛 하나. **유닛 생성자는 battle.js 것**이라 만드는 일을 그쪽에 맡긴다
  *   r1          — 타임라인 시각 반올림 (소수 1자리 · INTERFACE §5-3)
@@ -99,9 +102,12 @@ export function createSkillRuntime(ctx) {
         }
     }
 
-    /** 회복 — 마법 공격력 × 배율. 대상은 `targetsOf` 가 정한다. rng 소비 없음 (battle_design §9-2) */
+    /**
+     * 회복 — 마법 공격력 × 배율 **+ 능력치 항**. 대상은 `targetsOf` 가 정한다. rng 소비 없음 (battle_design §9-2).
+     * `def` 는 `scaleDef` 를 지난 실효 정의다 — 원시 정의가 와도 `flat` 은 0 으로 읽는다 (2026-09-10)
+     */
     function castHeal(u, def, t) {
-        const amt = Math.round(u.matk * def.mult / 100);
+        const amt = Math.round(u.matk * def.mult / 100 + (def.flat ?? 0));
         const targets = targetsOf(u, def);
         for (const tgt of targets) {
             tgt.hp = Math.min(tgt.hpMax, tgt.hp + amt);
@@ -113,6 +119,7 @@ export function createSkillRuntime(ctx) {
      * 버프 창 — 중첩 없음, 같은 스킬 재시전은 `until` 갱신. 창 밖에 만들 것이 있는 효과는 표의 `apply` 가 한다.
      * **적에게도 건다** — `target` 이 `enemy_*` 면 음수 값의 디버프다 [사용자 확정 2026-09-09].
      * 창에 함께 싣는 둘 — `element`(평타 부여가 무슨 원소로 때리나) · `by`(지목한 자가 누구인가).
+     * `def` 는 `scaleDef` 를 지난 실효 정의다 — 창의 `v`·`until` 이 능력치로 민 값이다 (2026-09-10)
      */
     function castBuff(u, def, t) {
         const targets = targetsOf(u, def);
@@ -123,6 +130,14 @@ export function createSkillRuntime(ctx) {
             EFFECTS[def.stat]?.apply?.(rt, tgt, def, until, ev);
             timeline.push(ev);
             refreshDerived(tgt);
+        }
+        // 결투 — 지목과 **같은 until** 으로 **시전자 자신**에게 받는 피해 감소 창을 연다 (skill_design §13-5 · 2026-09-10).
+        //   새 채널이 아니라 `effect_value` 를 `dr_pct` 창으로 쓴다 — 창은 유닛마다 따로 들어서 같은 스킬 id 를 키로 써도 안 겹친다.
+        //   창 길이는 지목과 같은 999초지만 **라운드가 바뀌면 `battle.beginRound` 가 닫는다** — 지목이 적 배열과 함께 사라지는 그 시점이다
+        if (def.stat === 'duel' && targets.length > 0) {
+            u.buffs[def.id] = { stat: 'dr_pct', v: def.value, until, element: null, by: u.key };
+            timeline.push({ t: r1(t), e: 'buff', u: u.key, s: def.id, stat: 'dr_pct', v: def.value, until: r1(until) });
+            refreshDerived(u);
         }
     }
 
@@ -191,10 +206,13 @@ export function createSkillRuntime(ctx) {
         // `ready` = 이 스킬이 다시 준비되는 시각. 재생기가 쿨을 **계산하지 않고** 그리게 하려고 함께 싣는다
         timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt) });
         hooks.emit('cast', u, { t, def });
-        if (def.kind === 'attack') ATTACK_TARGETS[def.target](rt, u, def, foes);
-        else if (def.kind === 'heal') castHeal(u, def, t);
-        else if (def.kind === 'summon') castSummon(u, def, t);
-        else castBuff(u, def, t);   // buff — 아군 창도 적에게 거는 창도 여기다 (aura 는 액티브 칸에 없다)
+        // 실효 정의 — **시전 순간 시전자 능력치로 한 번** 민다 (skill_design §13 · 2026-09-10). 전투와 설명창이 같은 함수다.
+        //   쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
+        const eff = SK.scaleDef(def, u.stats ?? null);
+        if (def.kind === 'attack') ATTACK_TARGETS[def.target](rt, u, eff, foes);
+        else if (def.kind === 'heal') castHeal(u, eff, t);
+        else if (def.kind === 'summon') castSummon(u, eff, t);
+        else castBuff(u, eff, t);   // buff — 아군 창도 적에게 거는 창도 여기다 (aura 는 액티브 칸에 없다)
     }
 
     /**

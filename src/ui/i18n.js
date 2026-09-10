@@ -223,7 +223,7 @@ const STRINGS = {
     /* ── 리포트 (실동작) ── */
     'rep.defeat': { ko: '패배', en: 'Defeat' },
     'rep.retreat': { ko: '철수', en: 'Retreat' },
-    /* ~~'rep.healed'(귀환 — 전원 회복)~~ 은 2026-09-08 삭제 — 전투불능 상자가 **이름만** 적는다 (SCREEN_DESIGN §4-3) */
+    /* ~~'rep.healed'(귀환 — 전원 회복)~~ 은 2026-09-08 삭제 — 전투불능은 **기록**이라 뒤에 붙일 말이 없다 (SCREEN_DESIGN §4-3) */
     'rep.reason.wipe': { ko: '전원 전투불능', en: 'Whole party downed' },
     'rep.reason.timeout': { ko: '제한시간 초과', en: 'Timed out' },
 
@@ -514,6 +514,12 @@ const STRINGS = {
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
     'exp.pick': { ko: '원정', en: 'Expedition' },
     'exp.foes': { ko: '적 구성', en: 'Enemies' },
+    /* 출정 창의 칸 이름 둘 [2026-09-10 사용자 지시 · ADR-0084] — 「적 구성」·「진형」과 **같은 규격**으로 선다.
+       `exp.heroes.h` 는 창 안으로 들어온 영웅 띠의 이름이다 — 탭 최상단에 있던 시절엔 이름이 없었다(패널의 첫 줄이라
+       무엇인지 물을 것이 없었다). 창 안에서는 네 칸이 나란히 서므로 칸마다 이름이 있어야 경계가 읽힌다.
+       `exp.go.h` 는 반복 원정 · 보내기 두 버튼이 든 칸의 이름이다 */
+    'exp.heroes.h': { ko: '캐릭터 선택', en: 'Heroes' },
+    'exp.go.h': { ko: '출정 방식', en: 'Departure' },
     'exp.zones.note': {
         ko: '지역 죄종은 해당 죄종 접사의 드롭 가중치를 올린다 — 타겟 파밍의 축<br>'
             + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다<br>'
@@ -531,9 +537,7 @@ const STRINGS = {
     'rep.downed': { ko: '전투 불능', en: 'Downed' },
     'rep.none': { ko: '없음', en: 'None' },
     'rep.downedN': { ko: '{n}명', en: '{n}' },
-    'rep.levelUp': { ko: '▲ {name} 레벨 {a} → {b}', en: '▲ {name} Level {a} → {b}' },
-    /* 상자 머리는 **상태가 아니라 기록**이다 [개정 2026-09-08] — 뒤에 붙던 「이 출정 동안 아웃」이 폐기됐다 */
-    'rep.injuryHead': { ko: '전투불능', en: 'Downed' },
+    /* ~~'rep.levelUp'~~ · ~~'rep.injuryHead'~~ 은 2026-09-10 삭제 — 레벨업과 전투불능이 **기여 표의 영웅 줄**로 들어갔다 (ADR-0086) */
     'rep.injuryNote': {
         ko: '기다릴 것이 없다 — <b>런이 끝나는 순간</b> 전투불능도 깎인 HP도 전원 무료로 회복된다. 다음 런에는 전원이 다시 나간다',
         en: 'Nothing to wait for — <b>the moment the run ends</b> both downed heroes and lost HP are restored, free. Everyone goes out again on the next run',
@@ -556,6 +560,8 @@ const STRINGS = {
     'rep.contrib.taken': { ko: '받은 피해', en: 'Damage taken' },
     'rep.contrib.kills': { ko: '처치', en: 'Kills' },
     'rep.contrib.total': { ko: '합계', en: 'Total' },
+    /* 영웅 줄의 레벨업 — 초상 오른쪽 이름 아래 (ADR-0086). 이름은 그 줄이 이미 들어서 안 적는다 */
+    'rep.contrib.levelUp': { ko: '▲ Lv.{a} → {b}', en: '▲ Lv.{a} → {b}' },
     'rep.live': { ko: '재생 중 {a} / {b}', en: 'Playing {a} / {b}' },
     'rep.log.sub': { ko: '정예 {e} / 보스 {b}', en: 'Elite {e} / Boss {b}' },
     'rep.contract': {
@@ -748,26 +754,34 @@ const STRINGS = {
     /* 스킬 툴팁 문장 [전면 개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2]
        ~~`표기 6초 · 실효 7.2초 (+20%)`~~ 를 버리고 **데이터로 조립한 한 문장**을 낸다.
        틀은 `kind` × `target` 이 고르고 숫자만 강조색으로 뽑는다. **조각을 이어붙이지 않는다** —
-       ko/en 이 어순이 달라 각 틀이 제 문장을 통째로 든다. {d} 는 아래 수량 구절이 들어가는 자리. */
+       ko/en 이 어순이 달라 각 틀이 제 문장을 통째로 든다. {d} 는 아래 수량 구절이 들어가는 자리.
+       [2026-09-10 · ADR-0089] 숫자 자리(`{d}` `{h}` `{k}` `{s}` `{v}` `{c}` `{x}`)는 **단위까지** 들고, Alt 를 누르는 동안
+       괄호 식이 값 뒤에 따라 붙는다 — 그래서 틀은 단위를 안 든다(`{s}초간` → `{s} 동안` · `{h}번` → `{h}`) */
     'sk.line.single': {
         ko: '{n}초마다 적 하나를 강하게 공격해 {d}를 가한다',
         en: 'Every {n}s, strikes one enemy hard for {d}',
     },
     'sk.line.singleN': {
-        ko: '{n}초마다 적 하나를 {h}번 때려 매번 {d}를 가한다',
-        en: 'Every {n}s, hits one enemy {h} times for {d} each',
+        ko: '{n}초마다 적 하나를 {h} 때려 매번 {d}를 가한다',
+        en: 'Every {n}s, hits one enemy {h} for {d} each',
     },
     'sk.line.all': {
         ko: '{n}초마다 적 전원에게 {d}를 가한다',
         en: 'Every {n}s, deals {d} to every enemy',
     },
+    /* 광역 약화 [2026-09-10 · ADR-0089] — `enemy_all` 인데 감쇠가 있으면 **주 대상만 온전**하다(멀티샷 · skill_design §13).
+       감쇠가 없는 광역은 위 틀 그대로다 */
+    'sk.line.allDecay': {
+        ko: '{n}초마다 적 전원을 맞혀 주 대상에게 {d}를 가한다 — 나머지 적은 {k} 덜 받는다',
+        en: 'Every {n}s, hits every enemy — {d} to the main target, {k} less to the rest',
+    },
     'sk.line.rotate': {
-        ko: '{n}초마다 대상을 옮겨 가며 {h}번 공격해 매번 {d}를 가한다',
-        en: 'Every {n}s, attacks {h} times moving between targets, {d} each',
+        ko: '{n}초마다 대상을 옮겨 가며 {h} 공격해 매번 {d}를 가한다',
+        en: 'Every {n}s, attacks {h} moving between targets, {d} each',
     },
     'sk.line.chain': {
-        ko: '{n}초마다 줄지어 선 적을 꿰뚫어 {d}를 가한다 — 뒤 대상일수록 {k}% 씩 줄어든다',
-        en: 'Every {n}s, pierces enemies in a line for {d} — falling off {k}% per target',
+        ko: '{n}초마다 줄지어 선 적을 꿰뚫어 {d}를 가한다 — 뒤 대상일수록 {k} 씩 줄어든다',
+        en: 'Every {n}s, pierces enemies in a line for {d} — falling off {k} per target',
     },
     'sk.line.heal': {
         ko: '{n}초마다 파티 전원의 HP 를 {d} 되돌린다',
@@ -777,16 +791,16 @@ const STRINGS = {
        끝날지 틀이 모른다(「+25%」 → 를 · 「보호막」 → 을). 그래서 ko 효과 구절이 서술어까지 들고,
        en 은 반대로 틀이 `grants` 를 든다. 언어마다 문장을 쪼개는 자리가 다른 것이 정상이다 */
     'sk.line.buffParty': {
-        ko: '{n}초마다 파티 전원에게 {s}초간 {e}',
-        en: 'Every {n}s, grants the whole party {e} for {s}s',
+        ko: '{n}초마다 파티 전원에게 {s} 동안 {e}',
+        en: 'Every {n}s, grants the whole party {e} for {s}',
     },
     'sk.line.buffSelf': {
-        ko: '{n}초마다 {s}초간 자신에게 {e}',
-        en: 'Every {n}s, grants yourself {e} for {s}s',
+        ko: '{n}초마다 {s} 동안 자신에게 {e}',
+        en: 'Every {n}s, grants yourself {e} for {s}',
     },
     'sk.line.taunt': {
-        ko: '{n}초마다 {s}초간 적의 공격을 자신에게 끌어모은다',
-        en: 'Every {n}s, draws enemy attacks to yourself for {s}s',
+        ko: '{n}초마다 {s} 동안 적의 공격을 자신에게 끌어모은다',
+        en: 'Every {n}s, draws enemy attacks to yourself for {s}',
     },
     /* 2026-09-09 신설 — 직업 스킬 풀 37 이 다 발행되면서 생긴 틀 일곱 (skill_design §12 · DEV_PLAN R61).
        ⚠ `sk.line.aura` 만 `{n}`(쿨)을 안 든다 — 오오라는 쿨이 없다(§1-5) */
@@ -794,50 +808,66 @@ const STRINGS = {
         ko: '{n}초마다 가장 위태로운 아군의 HP 를 {d} 되돌린다',
         en: 'Every {n}s, restores {d} to the most wounded ally',
     },
+    /* 가이디드 애로우 — **단타 + 방어 감소** [개정 2026-09-10 · ADR-0089] — ~~{h}번 때려 매번~~ 다단은 1단계 스킬 변경으로 단타가 됐다.
+       {k} = 그 적의 방어를 깎는 비율(`decay_pct`) — 대상 방어에 영구히 쌓인다 */
     'sk.line.guided': {
-        ko: '{n}초마다 방어가 가장 두꺼운 적을 {h}번 때려 매번 {d}를 가한다',
-        en: 'Every {n}s, hits the best-armored enemy {h} times for {d} each',
+        ko: '{n}초마다 방어가 가장 두꺼운 적에게 {d}를 가하고 그 적의 방어를 {k} 깎는다',
+        en: 'Every {n}s, deals {d} to the best-armored enemy and strips {k} of its defense',
     },
     'sk.line.buffAdjacent': {
-        ko: '{n}초마다 양 옆의 아군에게 {s}초간 {e}',
-        en: 'Every {n}s, grants the allies beside you {e} for {s}s',
+        ko: '{n}초마다 양 옆의 아군에게 {s} 동안 {e}',
+        en: 'Every {n}s, grants the allies beside you {e} for {s}',
     },
     'sk.line.debuffAll': {
-        ko: '{n}초마다 적 전원에게 {s}초간 {e}',
-        en: 'Every {n}s, inflicts {e} on every enemy for {s}s',
+        ko: '{n}초마다 적 전원에게 {s} 동안 {e}',
+        en: 'Every {n}s, inflicts {e} on every enemy for {s}',
     },
+    /* 듀얼 — 그동안 **시전자가 받는 피해 감소** [2026-09-10 · ADR-0089] — {v} = `effect_value`(지목과 같은 끝을 가진 창) */
     'sk.line.duel': {
-        ko: '{n}초마다 적 하나를 지목해 라운드가 끝날 때까지 자신만 노리게 한다',
-        en: 'Every {n}s, marks one enemy to attack only you until the round ends',
+        ko: '{n}초마다 적 하나를 지목해 라운드가 끝날 때까지 자신만 노리게 한다 — 그동안 받는 피해 −{v}',
+        en: 'Every {n}s, marks one enemy to attack only you until the round ends — −{v} damage taken meanwhile',
     },
     'sk.line.aura': {
         ko: '항상 켜져 있다 — 파티 전원에게 {e}',
         en: 'Always on — {e} for the whole party',
     },
+    /* 소환 — {d} = 벽의 HP [개정 2026-09-10 · ADR-0089] — ~~최대 HP 의 {h}%~~ 를 값으로 바꿨다(능력치 항이 더해져 % 한 줄로 안 읽힌다).
+       값을 모르면 {d} 가 식(`(최대 HP × 80% + INT × 0)`)이 된다 */
     'sk.line.summon': {
-        ko: '{n}초마다 자신의 최대 HP 의 {h}% 를 가진 벽을 세워 적의 공격을 나눠 받는다',
-        en: 'Every {n}s, raises a wall worth {h}% of your max HP that soaks enemy attacks',
+        ko: '{n}초마다 {d} 의 HP 를 가진 벽을 세워 적의 공격을 나눠 받는다',
+        en: 'Every {n}s, raises a wall with {d} HP that soaks enemy attacks',
     },
-    /* 수량 구절 — 공격력을 아는 자리는 **실제 수치**, 모르는 자리(후보 카드)는 **배율**로 접는다.
-       ⚠ 감소·치명 전의 값이다 (game_logic/skill.js:previewOf) */
+    /* 확률로 터지는 추가 피해 [2026-09-10 · ADR-0089] — 공격 문장 **뒤에 서는 완결된 둘째 문장**이다(차지 · 라이트닝 · 체인 라이트닝).
+       공격 틀마다 변형을 두면 틀이 두 배가 되고, 조각을 이으면 ko/en 어순이 깨진다. {c} = 확률 · {x} = 배수(%) */
+    'sk.line.proc': {
+        ko: '타격마다 {c} 확률로 피해가 {x} 가 된다',
+        en: 'Each hit has a {c} chance to deal {x} damage',
+    },
+    /* 수량 구절 — 값을 아는 자리는 **실제 수치**(`{v}`), 모르는 자리(도감 · 후보 카드)는 **식**(`{f}`)으로 접는다 [식 2026-09-10 · ADR-0089].
+       `{v}` 에는 Alt 를 누르는 동안 괄호 식이 따라 붙는다 — 틀은 그걸 모른다. ⚠ 감소·치명·추가 피해 전의 값이다 (game_logic/skill.js:previewOf)
+       ~~`sk.amt.mult` · `sk.amt.healMult`(「공격력의 {m}%」)~~ → 식 모양 `sk.amt.fx` · `sk.amt.healFx` — 회복의 밑수는 마법 공격력이라 옛 문구가 틀렸었다 */
     'sk.amt.physical': { ko: '{v} 의 물리 피해', en: '{v} physical damage' },
     'sk.amt.magic': { ko: '{v} 의 마법 피해', en: '{v} magic damage' },
-    'sk.amt.mult': { ko: '공격력의 {m}% 만큼 피해', en: 'damage equal to {m}% of Attack' },
+    'sk.amt.fx': { ko: '{f} 만큼 피해', en: 'damage equal to {f}' },
     'sk.amt.heal': { ko: '{v} 만큼', en: '{v} HP' },
-    'sk.amt.healMult': { ko: '공격력의 {m}% 만큼', en: 'HP equal to {m}% of Attack' },
-    /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill.csv:effect_stat` 어휘 그대로 */
-    'sk.eff.atk_pct': { ko: '공격력 +{v}% 를 건다', en: '+{v}% Attack' },
-    'sk.eff.period_pct': { ko: '행동 주기 −{v}% 를 건다', en: '−{v}% action cycle' },
-    'sk.eff.barrier_pct': { ko: '최대 HP {v}% 짜리 보호막을 씌운다', en: 'a shield worth {v}% of max HP' },
+    'sk.amt.healFx': { ko: '{f} 만큼', en: 'HP equal to {f}' },
+    /* 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다(Alt 의 괄호 식이 값 바로 뒤에 서게). 초는 `time.s` · % 는 기호 그대로 */
+    'sk.u.times': { ko: '{v}번', en: '{v} times' },
+    /* 각주 — 기본 설명창 바닥 한 줄. 괄호를 붙일 수 있는 숫자가 있을 때만 선다 (SCREEN_DESIGN §2 「스킬 설명창 규격」) */
+    'sk.altHint': { ko: 'Alt 계산식', en: 'Alt: formula' },
+    /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill.csv:effect_stat` 어휘 그대로 · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
+    'sk.eff.atk_pct': { ko: '공격력 +{v} 를 건다', en: '+{v} Attack' },
+    'sk.eff.period_pct': { ko: '행동 주기 −{v} 를 건다', en: '−{v} action cycle' },
+    'sk.eff.barrier_pct': { ko: '최대 HP {v} 짜리 보호막을 씌운다', en: 'a shield worth {v} of max HP' },
     /* 2026-09-09 신설. `.neg` 는 **같은 창을 음수로 쓴 디버프**의 틀이다 — 값은 절댓값으로 들어온다(tip.js) */
-    'sk.eff.guard_pct': { ko: '방어력과 모든 저항 +{v}% 를 건다', en: '+{v}% defense and all resistances' },
-    'sk.eff.hp_max_pct': { ko: '최대 HP +{v}% 를 건다', en: '+{v}% max HP' },
-    'sk.eff.regen_pct': { ko: 'HP 재생 +{v}% 를 건다', en: '+{v}% HP regen' },
-    'sk.eff.dr_pct': { ko: '받는 피해 −{v}% 를 건다', en: '−{v}% damage taken' },
-    'sk.eff.onhit_element': { ko: '기본 공격마다 {v}% 의 추가 피해를 얹는다', en: 'adds a {v}% extra hit on every basic attack' },
-    'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v}% 로 퍼진다', en: 'basic attacks spread to all enemies at {v}%' },
-    'sk.eff.atk_pct.neg': { ko: '공격력 −{v}% 를 건다', en: '−{v}% Attack' },
-    'sk.eff.period_pct.neg': { ko: '행동 주기 +{v}% 를 건다', en: '+{v}% action cycle' },
+    'sk.eff.guard_pct': { ko: '방어력과 모든 저항 +{v} 를 건다', en: '+{v} defense and all resistances' },
+    'sk.eff.hp_max_pct': { ko: '최대 HP +{v} 를 건다', en: '+{v} max HP' },
+    'sk.eff.regen_pct': { ko: 'HP 재생 +{v} 를 건다', en: '+{v} HP regen' },
+    'sk.eff.dr_pct': { ko: '받는 피해 −{v} 를 건다', en: '−{v} damage taken' },
+    'sk.eff.onhit_element': { ko: '기본 공격마다 {v} 의 추가 피해를 얹는다', en: 'adds a {v} extra hit on every basic attack' },
+    'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v} 로 퍼진다', en: 'basic attacks spread to all enemies at {v}' },
+    'sk.eff.atk_pct.neg': { ko: '공격력 −{v} 를 건다', en: '−{v} Attack' },
+    'sk.eff.period_pct.neg': { ko: '행동 주기 +{v} 를 건다', en: '+{v} action cycle' },
     /* 그 스킬의 **표기 쿨** [개정 2026-09-08 2차 사용자 지시] — 어느 영웅이 들든 같은 수다.
        ~~`sk.base`·`sk.eff`·`sk.aligned`~~ (1차 폐기) → ~~`sk.every`(`{s}초마다`)~~ → **`sk.cool`**.
        **말까지 바꾼 이유는 값이 바뀌었기 때문**이다 — 「{s}초마다」는 빈도의 약속인데 표기 쿨은 빈도가 아니다
@@ -953,7 +983,7 @@ const STRINGS = {
     /* 무기 베이스 — **CSV 가 없어 이름이 여기 있다** (2026-09-10 · 임시). `weapon_base` 테이블이 서면 이 여덟 줄은
        걷고 `L(row)` 가 받는다. 이름의 SSOT 는 지금 `docs/game_design/item_design.md` §1 「이름 — 9군」 표다.
        **영어가 원본이고 한글은 직역**이다 (CLAUDE.md 규칙 6). */
-    'ix.g.weaponBase': { ko: '양손검 베이스 (id 대기)', en: 'Greatsword Bases (awaiting ids)' },
+    'ix.g.weaponBase': { ko: '{group} 베이스 (id 대기)', en: '{group} Bases (awaiting ids)' },
     'ix.b.long_sword': { ko: '롱 소드', en: 'Long Sword' },
     'ix.b.claymore': { ko: '클레이모어', en: 'Claymore' },
     'ix.b.highland_blade': { ko: '하이랜드 블레이드', en: 'Highland Blade' },
@@ -961,6 +991,13 @@ const STRINGS = {
     'ix.b.balrog_blade': { ko: '발록 블레이드', en: 'Balrog Blade' },
     'ix.b.zweihander': { ko: '츠바이핸더', en: 'Zweihander' },
     'ix.b.colossus_blade': { ko: '콜로서스 블레이드', en: 'Colossus Blade' },
+    'ix.b.hatchet': { ko: '해칫', en: 'Hatchet' },
+    'ix.b.axe': { ko: '액스', en: 'Axe' },
+    'ix.b.tomahawk': { ko: '토마호크', en: 'Tomahawk' },
+    'ix.b.great_axe': { ko: '그레이트 액스', en: 'Great Axe' },
+    'ix.b.berserker_axe': { ko: '버서커 액스', en: 'Berserker Axe' },
+    'ix.b.battle_axe': { ko: '배틀 액스', en: 'Battle Axe' },
+    'ix.b.decapitator': { ko: '데카피테이터', en: 'Decapitator' },
     'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
     /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고 그 안에
        그 직업의 스킬 전부가 선다 — **1스킬 = 1직업**이라 묶는 일이 `owner_id` 하나로 끝난다(2026-09-09).

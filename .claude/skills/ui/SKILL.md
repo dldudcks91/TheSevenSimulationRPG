@@ -15,7 +15,7 @@ user-invocable: true
 - 관전 연출을 바꾼다 (`src/ui/battle.js` — 타임라인 재생기)
 - 도움말 탭을 손본다 ([SCREEN_DESIGN.md §12](docs/client/SCREEN_DESIGN.md))
 - 다국어 문구(i18n)를 추가·수정한다 (`src/ui/i18n.js`)
-- 스타일 · 폰트 · 화면 폭 정책을 바꾼다 (`src/ui/style.css` · [src/ui/README.md](src/ui/README.md))
+- 스타일 · 폰트 · 화면 크기 정책을 바꾼다 (`src/ui/style.css` · [src/ui/README.md](src/ui/README.md))
 - [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) 를 개정한다
 - 정보 표시를 설계한다 — 어떤 값을 어떤 형태로 읽히게 할지
 - 화면 목업을 제안한다
@@ -39,7 +39,7 @@ user-invocable: true
    - 소재값만 보이면 못 읽는 값은 변환해서 함께 낸다 (감쇠율 · 저항 상한 — §6). 변환은 `SYS.formula.*` 를 부른다
    - 문턱을 정하는 CSV 키가 없으면 경고를 넣지 않는다 (§4-1). 문턱은 기획이 먼저 정한다
 7. **되돌릴 수 없는 행동은 두 번 누르게 한다** (§3).
-8. **화면 폭 정책의 SSOT 는 [src/ui/README.md](src/ui/README.md)** — 상한 · 하한 · 세로 예산 · 영어 길이 배수가 거기 있다. 라벨이 들어가는 칸은 **고정 px 금지**(`minmax()` / `clamp()`). 그 수치를 이 스킬에도 SCREEN_DESIGN 에도 복제하지 않는다.
+8. **화면 크기 정책의 SSOT 는 [src/ui/README.md](src/ui/README.md)** — 한 장(1600×800) · 배율 · 영어 길이 배수가 거기 있다. 라벨이 들어가는 칸은 **고정 px 금지**(`minmax()` / `clamp()`). 그 수치를 이 스킬에도 SCREEN_DESIGN 에도 복제하지 않는다.
 9. **항상 전체 다시 그림** — 부분 갱신 없음 ([ARCHITECTURE.md §5](docs/client/ARCHITECTURE.md)). 이 단순함을 깨는 최적화를 제안하지 않는다.
 10. **문구 · 계열 · 라벨은 기획 결정** — 기획이 비어 화면이 죽은 축을 그리는 경우(§9)에도 라벨을 임의로 바꾸지 않는다 → `/game-design`.
 
@@ -56,7 +56,7 @@ user-invocable: true
 - [SCREEN_DESIGN.md §1](docs/client/SCREEN_DESIGN.md) 화면 지도로 대상 탭을 찾고, 그 탭의 절 전문
 - 그 절 끝의 **「왜 이 모양인가 — 결정 기록」** — 지금 규격이 왜 그런지가 [adr/](docs/client/adr/README.md) 에 있다. **뒤집는 제안을 하기 전에 해당 ADR 을 읽는다** — 버려진 안과 그 근거가 거기 있다
 - 그 절의 **"호출:" 줄** — 렌더러가 부르는 `SYS.*` 함수 목록. 각 함수의 계약은 [INTERFACE.md §2](docs/client/INTERFACE.md) 의 해당 모듈 절
-- [src/ui/README.md](src/ui/README.md) — 파일별 역할 · 다국어 표 · 화면 폭 정책
+- [src/ui/README.md](src/ui/README.md) — 파일별 역할 · 다국어 표 · 화면 크기 정책
 - 관전을 만지면 [INTERFACE.md §6](docs/client/INTERFACE.md)(재생기 계약)과 타임라인 이벤트 정의([INTERFACE.md §2-6](docs/client/INTERFACE.md))
 - 화면과 문서가 어긋나 있는 자리인지 확인 — §7 은 목표 상태만 적혀 있고 화면은 미반영이다
 
@@ -90,7 +90,7 @@ user-invocable: true
 - **도감 탭이 죽은 축을 그린다** (§9) — 라벨이 가리키는 축은 폐지됐는데 화면에는 남아 있다. 문구를 임의로 바꾸지 않는다. 계열 재배정은 기획 결정 → `/game-design`
 - **스킬 탭이 옛 구조를 그린다** (§7) — 문서의 표가 **목표 상태**고 화면은 미반영이다. "버그"로 보고 고치지 말고 개정 범위를 먼저 확인한다
 - **물리 스테이지도 원소 칸을 찍는다** (§4-1) — 칸이 사라지면 "아직 안 정해졌다"로 읽힌다. 숨기지 않는 쪽이 결정이다
-- **영어가 길어 칸이 넘친다** — 폭 정책과 길이 배수는 [src/ui/README.md](src/ui/README.md). 라벨 칸에 고정 px 을 주면 영어에서 깨진다
+- **영어가 길어 칸이 넘친다** — 크기 정책과 길이 배수는 [src/ui/README.md](src/ui/README.md). 라벨 칸에 고정 px 을 주면 영어에서 깨진다
 - **폰트는 CDN 의존** — 오프라인이면 폴백 폰트로 떨어진다 ([ARCHITECTURE.md §8](docs/client/ARCHITECTURE.md) · [DEV_PLAN.md §4](docs/client/DEV_PLAN.md) 부채 #11). 헤드리스 스크린샷에서 글꼴이 달라 보이는 원인도 이것이다
 - **`?tab=` 은 `?dev=` 뒤에 걸린다** (§10 · [INTERFACE.md §8](docs/client/INTERFACE.md)) — 앞에 두면 `startGame()` 이 탭을 원정으로 되돌려 먹히지 않는다
 - **툴팁 넘침 보정은 이미 있다** — `moveTip` 이 화면 밖으로 나가면 반대쪽으로 접는다. 새로 짜지 않는다

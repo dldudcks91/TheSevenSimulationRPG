@@ -36,6 +36,7 @@ export const D = {
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
+    weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 sword2h·axe 뿐
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
@@ -57,6 +58,8 @@ export const D = {
     searchStories: [],        // search_story.csv 원시 행 — 수색 진행 문구. 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다)
     searchMeetings: [],       // search_meeting.csv 원시 행 — 수색 만남(소문 · 질문). ⚠ 행 순서가 굴림 순서다
     searchAnswers: [],        // search_answer.csv 원시 행 — 만남의 답. `need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)
+    heroUniqueCandidates: [], // hero_unique_candidates.csv 원시 행 — 유니크 영웅 후보 풀(hero_design §1). ⚠임시 —
+                              //   `status`(confirmed/proposed) 대부분이 proposed. 아직 소비하는 화면·로직 없음(2026-09-10 논의 자료)
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
@@ -75,7 +78,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
-    'gather_node', 'log_node'];
+    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -90,7 +93,7 @@ export async function loadData(base = './data/') {
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
-        gatherNodeRow, logNodeRow] = texts.map(parseCsv);
+        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -128,6 +131,11 @@ export async function loadData(base = './data/') {
         period: r.action_period, variance: r.variance_pct, damageKind: r.damage_kind, release: r.release,
     }));
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
+    // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
+    //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
+    //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
+    D.weaponBases = {};
+    for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en });
     D.skillRows = skillRow;
     D.skillTagRows = skillTagRow;
     D.masteryNodes = masteryNode;
@@ -199,6 +207,9 @@ export async function loadData(base = './data/') {
     // 여기서 가공할 것이 없다. 무결성 검증은 state.js 가 로드 시 한다
     D.searchMeetings = searchMeetingRow;
     D.searchAnswers = searchAnswerRow;
+    // 유니크 영웅 후보 풀 — 원시 행 그대로. ⚠임시(hero_design §1) — 개체 테이블이 없어 아직 아무도 안 읽는다.
+    // status(confirmed/proposed)로 실제 채택 여부를 가른다. 2026-09-10 논의 자료 — commission.csv 와 같은 자리채움
+    D.heroUniqueCandidates = heroUniqueCandidateRow;
     // 진형 — 적의 자리(`monster.csv:role` → rank)와 파티 템플릿의 정원. 둘 다 규칙이라 CSV 가 SSOT 다
     //   (2026-09-09 진형 확정 — 종전엔 `ui/battle.js:ENEMY_BACK_ROLES` 와 `app.js:FORM_TPLS` 에 박혀 있었다)
     D.monsterRoles = Object.fromEntries(monsterRoleRow.map(r => [r.role, { rank: r.rank, ko: r.name_kr, en: r.name_en }]));
@@ -274,7 +285,10 @@ export function buildSystems(d) {
     const sins = Object.keys(M.SINS);
     // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다.
     // **hero 보다 먼저** 만든다: 영웅이 생성 시 고유 스킬을 굴리려면 후보 id 목록이 먼저 있어야 한다
-    const skill = createSkillSystem({ balance: d.balance, rows: d.skillRows ?? [], tagRows: d.skillTagRows ?? [] });
+    // attributes — 스케일링 슬롯 attr 의 어휘(hero_attribute.csv). 로드 검증이 오타를 잡는다 (skill_design §13-1 · 2026-09-10 R72)
+    const skill = createSkillSystem({
+        balance: d.balance, rows: d.skillRows ?? [], tagRows: d.skillTagRows ?? [], attributes: d.heroAttributes ?? [],
+    });
     /**
      * 직업 풀 `{classId: [skillId...]}` — **1스킬 = 1직업** (skill_design §12-1 확정 2026-09-08).
      * 고유 굴림(hero)과 무기 개체 굴림(item)이 **같은 표**를 본다 — 두 출처가 한 풀에서 가져가기 때문이다(규칙 3).
@@ -296,7 +310,7 @@ export function buildSystems(d) {
     });
     const item = createItemSystem({
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: ELEMENTS,
-        itemBases: d.itemBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
+        itemBases: d.itemBases, weaponBases: d.weaponBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
         // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
         classSkills,
     });

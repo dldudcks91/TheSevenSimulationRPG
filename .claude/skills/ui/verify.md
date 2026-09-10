@@ -38,7 +38,8 @@ for f in src/ui/app.js src/ui/battle.js src/ui/tip.js; do echo "--- $f"; \
 
 ## 4. 스크린샷 — ko/en 둘 다
 
-- [src/dev/README.md](src/dev/README.md) 의 스크린샷 명령에 `--window-size=1280,700` 을 더해 찍는다 (하한 폭 · 세로 예산 기준 — 수치 근거는 [src/ui/README.md](src/ui/README.md))
+- [src/dev/README.md](src/dev/README.md) 의 스크린샷 명령에 `--window-size=1600,800` 을 더해 찍는다 (기준 한 장 · 배율 1 — 수치 근거는 [src/ui/README.md](src/ui/README.md))
+- 배율 확인은 `--window-size=1280,700` · `1920,1080` 으로 한 번씩 — 한 장이 통째로 줄고 느는지(가운데 · 비율 그대로 · 가장자리 배경 · 툴팁이 커서 옆)
 - 같은 화면을 `?lang=ko` 와 `?lang=en` 두 번 찍는다. 영어는 같은 내용이 더 길어 칸이 넘친다
 - 화면에는 개발용 URL 로 도달한다(`?screen=` · `?dev=` · `?tab=`) — 클릭이 필요하면 그 화면에 도달 경로가 없다는 뜻이다. `?tab=` 은 `?dev=` 뒤
 - 출력 파일은 저장소 밖(임시 폴더)에 두고 **보고에 경로를 적는다**
@@ -57,6 +58,6 @@ for f in src/ui/app.js src/ui/battle.js src/ui/tip.js; do echo "--- $f"; \
 - 인게임 패널에 설명 문장이 새로 들어가지 않았는가 (§12)
 - 되돌릴 수 없는 버튼이 한 번에 눌리지 않는가 (§3)
 - 툴팁이 화면 밖으로 나가지 않는가
-- 하한 폭에서 가로 스크롤이 생기지 않는가 ([src/ui/README.md](src/ui/README.md))
+- 기준 한 장(1600×800)에서 가로 스크롤이 생기지 않는가 ([src/ui/README.md](src/ui/README.md))
 - 문구가 `t()` / `L()` 을 거쳤는가 — 언어 토글을 눌러 확인한다
 - 고친 절의 "보여준다 / 결정 / 규칙" 표와 화면이 일치하는가. 어긋나면 **문서를 먼저** 고친다

@@ -11,6 +11,8 @@
  * skill_design.md / battle_design.md 확정 규칙:
  *   · 공격 대상 4종(skill_design §9-3) — 단일 다단 · 광역 전원 · 순환 · 연쇄 감쇠.
  *     시작점을 굴리는 둘(순환·연쇄)은 rng 를 **정확히 1회** 쓴다 — 발화 순서가 곧 계약이다 (INTERFACE §5-2)
+ *   · **스킬 타격은 능력치 항·추가 피해를 싣는다** (skill_design §13 · 2026-09-10) — 핸들러가 받는 `def` 는 `scaleDef` 를 지난
+ *     실효 정의이고 타격마다 `{flat, procChance, procMult}` 를 `rt.strikeOnce` 에 넘긴다. 광역(`enemy_all`)은 `decay` 가 있으면 **주 대상 밖**이 약해진다
  *   · 버프 창(battle_design §7) — 중첩 없음. 같은 stat 의 서로 다른 창은 **덧셈**이고 파생값을 다시 쓴다
  *   · `atk_pct` 는 새 곱셈 층이 아니라 상시 % 와 **같은 괄호에 덧셈**이다 (battle_design §9-2 「괄호는 둘뿐」).
  *     회복 밑수(`matk`)도 같은 괄호를 탄다 — 공격 창이 회복만 비껴가면 같은 괄호가 아니다
@@ -32,6 +34,12 @@
 export const KINDS = ['attack', 'heal', 'buff', 'aura', 'summon'];
 
 /**
+ * 스킬 타격이 `strike` 에 싣는 셋 — 능력치 항 · 추가 피해 확률 · 배수 (battle_design §9-2 · 2026-09-10).
+ * `def` 가 `scaleDef` 를 안 지난 원시 정의여도 `flat` 은 0 으로 읽는다. 기본 공격은 이것을 안 만든다
+ */
+const skillHit = def => ({ flat: def.flat ?? 0, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0 });
+
+/**
  * 공격 대상 4종 — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
  * @param rt   skill_runtime 이 만든 런타임 — `rng` · `strikeOnce` · `pickTarget` 을 쓴다
  * @param u    시전자 · @param def 스킬 정의 · @param foes **생존** 적 배열(호출자가 걸러 준다)
@@ -40,16 +48,27 @@ export const ATTACK_TARGETS = {
     /** 단일 다단 — 대상을 한 번 고르고 `hits` 회. 대상이 쓰러지면 남은 타수는 버린다 */
     enemy_single: (rt, u, def, foes) => {
         const tgt = rt.pickTarget(u, foes);
+        const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
-            rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id);
+            rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id, sk);
         }
     },
-    /** 광역 — 생존 적 배열 순 전원에게 각 1회. 대상을 고르지 않으므로 **타겟 rng 를 쓰지 않는다** */
+    /**
+     * 광역 — 생존 적 배열 순 전원에게 각 1회. 대상을 고르지 않으므로 **타겟 rng 를 쓰지 않는다**.
+     * **광역 약화** [2026-09-10 · skill_design §13-5 멀티샷] — `decay > 0` 이면 **주 대상**만 배율 그대로이고 나머지는 `decay` 만큼 준다.
+     *   주 대상 = 전열 생존자 중 배열 첫 번째(전열이 비면 생존자 첫 번째) — 고르는 굴림이 없어 **rng 0회** 그대로다.
+     *   전열 판정은 battle.js `frontOf` 와 같은 규칙이다(랭크가 없으면 전열). `decay = 0` 이면 종전과 똑같다
+     */
     enemy_all: (rt, u, def, foes) => {
+        const sk = skillHit(def);
+        const primary = def.decay > 0
+            ? (foes.find(f => f.hp > 0 && (f.rank ?? 0) === 0) ?? foes.find(f => f.hp > 0) ?? null)
+            : null;
+        const weak = (def.mult / 100) * (1 - def.decay / 100);
         for (const tgt of foes) {
             if (u.hp <= 0) break;
-            if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id);
+            if (tgt.hp > 0) rt.strikeOnce(u, tgt, primary === null || tgt === primary ? def.mult / 100 : weak, def.element, def.id, sk);
         }
     },
     /** 순환 — 시작점만 굴리고(rng 1회) 배열 순으로 돌아가며 `hits` 회. 대상이 모자라면 같은 대상에 겹친다 */
@@ -57,10 +76,11 @@ export const ATTACK_TARGETS = {
         // 시작점은 **고르는 행위**라 전열 우선을 탄다 (battle_design §3-1 개정 2026-09-09) —
         //   `pickTarget` 이 굴림 1회를 그대로 쓰므로 소비 수열은 안 밀린다. 도는 것은 배열 전체다
         const start = foes.indexOf(rt.pickTarget(u, foes));
+        const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0) break;
             const tgt = foes[(start + k) % foes.length];
-            if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id);
+            if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id, sk);
         }
     },
     /**
@@ -71,9 +91,10 @@ export const ATTACK_TARGETS = {
     enemy_highest_def: (rt, u, def, foes) => {
         let tgt = foes[0];
         for (const f of foes) if (f.def > tgt.def) tgt = f;
+        const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
-            rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id);
+            rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id, sk);
             // 방어 감소는 **밑수까지** 깎는다 — 창이 다시 파생돼도 되돌아오지 않게 (guard_pct 와 같은 축이다)
             tgt.defBase = Math.max(0, tgt.defBase * (1 - def.decay / 100));
             tgt.def = Math.max(0, tgt.def * (1 - def.decay / 100));
@@ -82,10 +103,11 @@ export const ATTACK_TARGETS = {
     /** 연쇄 — 시작점만 굴리고(rng 1회 · **전열 우선**) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다 */
     enemy_chain: (rt, u, def, foes) => {
         const start = foes.indexOf(rt.pickTarget(u, foes));   // 시작점만 고른다 — 전열 우선 (§3-1)
+        const sk = skillHit(def);
         for (let k = 0; k < foes.length; k++) {
             if (u.hp <= 0) break;
             const tgt = foes[(start + k) % foes.length];
-            if (tgt.hp > 0) rt.strikeOnce(u, tgt, (def.mult / 100) * Math.pow(1 - def.decay / 100, k), def.element, def.id);
+            if (tgt.hp > 0) rt.strikeOnce(u, tgt, (def.mult / 100) * Math.pow(1 - def.decay / 100, k), def.element, def.id, sk);
         }
     },
 };
@@ -163,7 +185,8 @@ export const EFFECTS = {
     //   attack_splash  기본 공격이 단일 → 광역 (관통 사격) — 그때 배율이 창의 값 % 가 된다
     onhit_element: {},
     attack_splash: {},
-    // 지목 — 소비자는 battle.js 의 타겟팅이다. 창은 **지목당한 적**이 들고 `by` 에 시전자 key 가 실린다
+    // 지목 — 소비자는 battle.js 의 타겟팅이다. 창은 **지목당한 적**이 들고 `by` 에 시전자 key 가 실린다.
+    //   시전자 쪽은 `skill_runtime.castBuff` 가 같은 until 의 `dr_pct` 창을 연다(effect_value = 받는 피해 감소 % · 2026-09-10)
     duel: {},
     taunt: {},
 };

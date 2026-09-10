@@ -24,9 +24,13 @@
  *   안 그리는 화면에서 **순서가 유일한 구조 신호**인데 그 순서가 암묵값(CSV 행 순서)이었다.
  *   머리 3줄(물리 공격력 · 마법 공격력 · 최대 HP)이 대표값이고, 칸은 「피해 감소」 앞에서 갈린다.
  *
- * 2026-08-27 — **원정 편성은 「어디를 갈지 먼저」** (사용자 지시, SCREEN_DESIGN §4-1). 영웅 띠를 상시 노출에서 내리고,
- *   지역을 누르면 목록 위에 열리는 **편성 패널**(formPanel) 안에 넣었다. 출발 버튼도 스테이지 행에서 그 패널로 옮겼다 —
- *   행 클릭은 이제 「지역 선택」이다. 패널은 **누를 때만** 뜬다 — 자동으로 열지 않는다 (state.expStage = null 이면 없다).
+ * 2026-08-27 — **원정 편성은 「어디를 갈지 먼저」** (사용자 지시, SCREEN_DESIGN §4-1). 행 클릭은 「지역 선택」이고,
+ *   출발 버튼은 스테이지 행이 아니라 그 뒤에 열리는 편성 화면이 든다. **누를 때만** 뜬다 — 자동으로 열지 않는다.
+ *
+ * 2026-09-10 — **편성은 창이 됐다** (사용자 지시, SCREEN_DESIGN §4-1 · ADR-0084). 접이식 전진 패널(formPanel)이
+ *   **탭 위에 겹쳐 뜨는 출정 창**(MODALS.depart · departHead/departBody)으로 옮겨 갔다. 속은 이름 붙은 칸 넷 —
+ *   **캐릭터 선택**(영웅 띠가 창 안으로 들어왔다) · 적 구성 · 진형 · 출정 방식. 닫는 길은 창 공통 셋(X · 바깥 · Esc).
+ *   같은 날 **탭 최상단의 띠를 걷었다**(ADR-0085) — 원정에서 로스터가 서는 자리는 창 안 하나이고, 탭은 스테이지 목록만 든다.
  *
  * 2026-09-03 — **프롤로그**(renderPrologue · SCREEN_DESIGN §3-1). 새 게임을 확정하면 5씬을 넘긴 뒤 원정 탭으로 들어간다.
  *   세이브는 프롤로그보다 **먼저** 쓰인다(startGame 이 newGame → save 를 끝낸 뒤 화면만 프롤로그로 둔다) — 읽다 닫아도 이어하기로 돌아온다.
@@ -38,13 +42,13 @@
  *   정원·템플릿은 `formation_template.csv`, 규칙은 `game.formationState`/`setFormation`/`placeFormation` 이 든다.
  *   동사는 그대로 갈린다: **클릭은 소속**(로스터 띠 = 파티 넣고 빼기) · **드래그는 자리**(칩).
  *
- * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태) / ?dev=live (재생이 도는 채로 리포트 — 기여 표가 실시간으로 찬다 · &at=n 이면 n초부터) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판으로 로그 창이 열린 채 · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (편성 패널이 열린 상태) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태)
+ * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태) / ?dev=live (재생이 도는 채로 리포트 — 기여 표가 실시간으로 찬다 · &at=n 이면 n초부터) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판으로 로그 창이 열린 채 · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (출정 창이 열린 상태 · &open=0 이면 창을 닫은 목록) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태)
  */
 
 import * as M from './mock.js';
 import { t, L, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
-import { bindTipNode, hideTip, heroTipCard, skillTipCard, skillLineHtml } from './tip.js';
+import { bindTipNode, hideTip, heroTipCard, skillTipCard, skillLineHtml, stagePoint } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageBgOf, chapterOf, codexStages, skillInfo, skillTagName } from './data.js';
 import { loadSave, writeSave, clearSave } from './storage.js';
 import { makeRng } from '../game_logic/rng.js';
@@ -195,11 +199,12 @@ const skillImg = s => {
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
 };
 /* 아이템 그림 — 방어구는 **임시로 부위당 한 장** (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳).
-   무기는 무기군 그림이되 **양손검만 베이스 7장 중 하나**를 든다 — `uid` 를 넘기는 이유가 그것이고, 고르는 것은
-   `mock.js` 다(uid 해시 · rng 아님 · 개체마다 고정). 그림이 없는 부위(투구·목걸이)는 부위 이모지로 떨어진다 —
-   부위는 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보). 양손검이 예외인 것은 **일곱 다 양손검이라서**다 */
+   무기는 무기군 그림이되 **양손검·도끼는 베이스 7장 중 하나**를 든다. 개체가 `weapon_base.csv` 로 실제 그 베이스를
+   굴렸으면(`item.baseId` · 2026-09-10 · game_logic/item.js) **그 그림**이고, 이름도 같은 베이스로 이미 붙어 있다 —
+   그림과 이름이 어긋나지 않는다. `baseId` 가 없는 옛 개체(이 기능 전에 드롭된 것)만 `uid` 해시로 예전처럼 고른다.
+   그림이 없는 부위(투구·목걸이)는 부위 이모지로 떨어진다 — 부위는 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보) */
 const itemImg = it => {
-    const src = M.itemArt(it?.slot, it?.group, it?.uid);
+    const src = M.itemArt(it?.slot, it?.group, it?.uid, it?.baseId);
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : (slotDef(it?.slot)?.icon ?? '');
 };
 
@@ -367,6 +372,11 @@ const MODALS = {
     skill: { title: 'nav.skill', body: skillTreeBody },
     // 해고 — 되돌릴 수 없어서 두 번 누르게 한다 (SCREEN_DESIGN §3 · §6). 대상 영웅은 캐릭터 탭이 이미 골랐다
     dismiss: { title: 'ch.dismiss', body: dismissBody },
+    /* 출정 — 스테이지를 누르면 뜨는 창 [2026-09-10 사용자 지시 · ADR-0084 · SCREEN_DESIGN §4-1].
+       옛 접이식 전진 패널이 통째로 이 창이 됐다. `head` 를 주는 첫 창이다 — 제목이 i18n 키 하나가 아니라
+       **고른 스테이지의 신원**(죄종 · Ch-스테이지 이름 · 위험도 · 소요 · 원소)이기 때문이다:
+       접이식이 바로 위 행에 붙어 말하던 「어느 지역의 편성인가」를 창에서는 머리가 든다 */
+    depart: { head: departHead, body: departBody, cls: 'depart-box' },
 };
 
 function renderModal() {
@@ -375,9 +385,11 @@ function renderModal() {
     layer.hidden = !m;
     layer.innerHTML = '';
     if (!m) return;
-    const box = el('div', 'modal-box');
+    // `cls` — 판 크기를 창이 정한다(안 주면 내용 폭). 로그 창(.bw-box)이 같은 자리에서 쓰던 장치다
+    const box = el('div', `modal-box${m.cls ? ` ${m.cls}` : ''}`);
     const head = el('div', 'modal-head');
-    head.appendChild(el('h2', '', t(m.title)));
+    // `head` 를 주면 제목 줄을 통째로 갈아 끼운다 — 안 주면 i18n 키 하나가 든다(창 대부분이 이쪽이다)
+    head.appendChild(m.head ? m.head() : el('h2', '', t(m.title)));
     // 닫기는 **정사각 X 하나**다 — 모든 창에 같은 모양·같은 자리 (2026-09-01 사용자 지시 · SCREEN_DESIGN §2).
     // 글리프는 언어를 안 타므로 `ui.close` 는 title 로 간다 — 문구가 사라진 게 아니라 자리를 옮겼다
     const x = el('button', 'btn modal-x', '×');
@@ -388,8 +400,12 @@ function renderModal() {
     box.appendChild(head);
     box.appendChild(m.body());
     layer.appendChild(box);
-    // 판 **바깥**을 눌렀을 때만 닫는다 — 판 안의 클릭이 올라와도 닫히면 랭크 한 번 찍고 창이 사라진다
-    layer.onclick = e => { if (e.target === layer) closeModal(); };
+    /* 판 **바깥**을 눌렀을 때만 닫는다 — 판 안의 클릭이 올라와도 닫히면 랭크 한 번 찍고 창이 사라진다.
+       ⚠ **누른 자리와 뗀 자리가 둘 다 바깥**이어야 한다 [2026-09-10] — 클릭 하나만 보면 **판 안에서 시작한 드래그**가
+       바깥에서 끝났을 때 창이 닫힌다(진형 드래그가 빗나가면 창째 사라졌다). 시작점을 기억해 두고 둘을 맞춰 본다 */
+    let downOnLayer = false;
+    layer.onpointerdown = e => { downOnLayer = e.target === layer; };
+    layer.onclick = e => { if (e.target === layer && downOnLayer) closeModal(); };
 }
 
 const closeModal = () => { state.modal = null; render(); };
@@ -483,8 +499,9 @@ function candidateCard(h, extra = '') {
     //   행동 주기는 안 넘긴다 — 후보는 아직 무기가 없어(시작 무기는 `newGame` 이 준다) 실효 쿨이 뜻을 못 가진다.
     //   시작 화면은 `G` 자체가 없어 `cycleOf` 를 부를 수도 없다 (`heroCombat(G, h)`)
     const skillNode = c.querySelector('.ng-skill');
-    // 후보는 아직 무기가 없어 주기도 공격력도 모른다 — 문장이 표기 쿨·배율로 접힌다 (SCREEN_DESIGN §4-2)
-    if (skillNode) bindTipNode(skillNode, () => skillTipCard(innate, { source: 'innate' }));
+    // 후보는 아직 무기가 없어 주기도 공격력도 모른다 — 피해 자리가 **식**으로 접힌다. 능력치는 안다 — 슬롯이 미는
+    //   나머지 숫자(타수 · 효과값 · 지속 …)는 값을 찍는다 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089)
+    if (skillNode) bindTipNode(skillNode, () => skillTipCard(innate, { source: 'innate', stats: h.stats }));
     return c;
 }
 
@@ -631,17 +648,12 @@ function renderExpIdle(main, nav) {
     const nb = noticeBanner();
     if (nb) main.appendChild(nb);
 
-    /* 영웅 띠 — **탭 최상단**이다 [2026-09-09 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0055] — 캐릭터 탭과 같은 자리.
-       옛 판은 띠가 전진 패널 **안**에 있어서, 지역을 고르기 전에는 로스터가 화면에 아예 없었다.
-       클릭 = 파티에 넣고 뺀다(`partyMode` · §5) · 리더 = `G.party[0]`.
-       ⚠ **관전·리포트에는 안 세운다** — 그 둘은 전투 화면만 본다(옛 규칙 유지). 그래서 여기(idle)에만 붙인다.
-       `deployed` — **전진 패널이 열려 있을 때만** 파티 카드가 반투명해진다 [2026-09-09 사용자 지시 · ADR-0058]:
-       그 흐림은 「아래 진형 보드에 내려가 있다」는 뜻이라, 지역을 닫아 보드가 사라지면 **영웅도 위로 돌아온다** */
-    main.appendChild(heroStrip(toggleParty, {
-        leaderUid: G.party[0] ?? null, partyMode: true, deployed: state.expStage != null,
-    }));
-
-    /* 스테이지 — **고른 챕터 하나**만 (ADR-0067). 그 안의 잠긴 스테이지도 그린다 */
+    /* ⚠ **영웅 띠는 여기 없다** [2026-09-10 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0085 가 ADR-0055 를 대체].
+       원정에서 로스터가 서는 자리는 **출정 창 안** 하나다(`departBody`). 탭 최상단에 두던 판을 걷은 이유는
+       거기서 **아무 결정도 안 끝나기 때문**이다 — 갈 곳이 안 정해진 편성은 결정이 아니고, 창이 그 둘(누구를 · 어디로)을
+       한 판에서 받는다. 걷힌 만큼 이 화면은 **스테이지 목록 하나**가 된다 — 「어디를 갈지 먼저」(2026-08-27)의 원형이다.
+       ⚠ 관전·리포트에 안 세우던 옛 규칙은 그대로다 — 그 둘은 전투 화면만 본다.
+       스테이지 — **고른 챕터 하나**만 (ADR-0067). 그 안의 잠긴 스테이지도 그린다 */
     const zp = el('div', 'panel');
     // 첫 줄 = 왼쪽 화면 전환 · 오른쪽 제목 (2026-09-03) — 옛 제목 줄 자리를 그대로 쓰므로 세로가 안 늘어난다
     const zh = el('div', 'panel-nav');
@@ -685,18 +697,18 @@ function renderExpIdle(main, nav) {
             <div>${unlocked
                 ? `<span class="zone-pick">${t('exp.pick')}</span>`
                 : `<span class="muted" style="font-size:var(--fs-sm)">${t('exp.locked')}</span>`}</div>`;
+        /* 행 클릭 = **출정 창을 연다** [2026-09-10 사용자 지시 · ADR-0084] — 옛 접이식 토글을 걷었다.
+           같은 행을 다시 눌러 접던 규칙(2026-08-28)은 창의 **닫는 길 셋**(X · 바깥 · Esc · §2)이 대신하므로
+           여기서는 여는 일만 한다. `state.expStage` 는 남는다 — 창을 닫아도 고른 행의 표시(`.zone.on`)가 이어진다 */
         row.onclick = () => {
             if (!unlocked) { flash('exp.locked'); return; }
-            // 접이식이라 여는 자리와 닫는 자리가 같다 — 같은 지역을 다시 누르면 접힌다 (2026-08-28, 닫기 버튼을 대신한다)
-            if (state.expStage === z.stage_id) { state.expStage = null; render(); return; }
             state.expStage = z.stage_id;
             // 반복 의사는 그 스테이지의 런에서 읽어 온다 — 런이 없거나 다른 스테이지면 꺼진 채로 시작
             state.expRepeat = G.run?.stageId === z.stage_id && G.run.repeat === true;
+            state.modal = 'depart';
             render();
         };
         zp.appendChild(row);
-        // 고른 행 **바로 아래**로 펼쳐진다 (2026-08-28) — 목록 위에 따로 뜨면 어느 지역의 편성인지 눈이 잇지 못한다
-        if (z.stage_id === state.expStage) zp.appendChild(formPanel(z, sin));
     }
     main.appendChild(zp);
 }
@@ -760,25 +772,33 @@ let formDragEnded = false;
  * 진형 드래그 = **자리**를 정한다. 잡는 곳이 둘이다 — 로스터 띠 카드(`rank: null`) · 보드에 놓인 영웅.
  * 4px 를 넘어야 드래그로 친다 — 임계 미만이면 띠 카드의 **클릭(파티 넣고 빼기)이 그대로 산다.**
  * 고스트는 클론 하나(원본은 자리에 남고 `.drag` 로 흐려진다) · 놓을 자리는 elementFromPoint 로 찾는다.
+ * **고스트는 한 장(`#stage`) 안에 선다** (ADR-0087) — 크기 · 위치 · 잡은 점 오프셋은 **한 장 단위**(`stagePoint`)다.
+ * 4px 임계와 elementFromPoint 는 **창 좌표 그대로**다 — 손이 움직인 거리와 브라우저의 판정이라 배율로 바꾸지 않는다.
  */
 function bindFormDrag(node, src) {
     node.onpointerdown = ev => {
         if (ev.button) return;
         const x0 = ev.clientX, y0 = ev.clientY;
-        const rect = node.getBoundingClientRect();
+        const r0 = node.getBoundingClientRect();
+        const p0 = stagePoint(ev), n0 = stagePoint({ clientX: r0.left, clientY: r0.top });
+        const dx = p0.x - n0.x, dy = p0.y - n0.y;       // 잡은 점 − 카드 왼쪽 위 (한 장 단위)
         let ghost = null;
         const move = e => {
             if (!ghost) {
                 if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < 4) return;
+                // 드래그가 시작되면 툴팁을 접는다 [2026-09-10] — 포인터 캡처가 걸린 동안에도 `onmousemove`(moveTip)가
+                // 캡처 노드로 되돌아와 카드가 끌리는 내내 툴팁이 커서를 따라다녔다. 끄는 손이 읽을 것을 달고 다닐 이유가 없다
+                hideTip();
                 ghost = node.cloneNode(true);
                 ghost.classList.add('fm-ghost');
-                ghost.style.width = `${rect.width}px`;
-                ghost.style.height = `${rect.height}px`;
-                document.body.appendChild(ghost);
+                ghost.style.width = `${node.offsetWidth}px`;
+                ghost.style.height = `${node.offsetHeight}px`;
+                $('#stage').appendChild(ghost);
                 node.classList.add('drag');
             }
-            ghost.style.left = `${e.clientX - (x0 - rect.left)}px`;
-            ghost.style.top = `${e.clientY - (y0 - rect.top)}px`;
+            const p = stagePoint(e);
+            ghost.style.left = `${p.x - dx}px`;
+            ghost.style.top = `${p.y - dy}px`;
         };
         const up = e => {
             node.onpointermove = null; node.onpointerup = null; node.onpointercancel = null;
@@ -869,14 +889,54 @@ function formBox() {
     return box;
 }
 
-/**
- * 편성 패널 — 지역을 골랐을 때 **그 행 바로 아래**로 펼쳐진다 (2026-08-28, SCREEN_DESIGN §4-1).
- * 갈 곳이 정해진 뒤에 누구를 보낼지 정한다: 영웅 띠(클릭 = 파티 토글) + 경고 줄 + 진형(⚠ 목업) + 액션 버튼 둘(반복 원정 · 보내기).
- * 머리도 닫기 버튼도 없다 — 무엇에 딸린 패널인지는 위 행이 말하고, 닫는 것은 그 행을 다시 누르는 것이다.
- * **크기는 상태에 흔들리지 않는다** — 위 넷이 전부 항상 있는 부품이다(진형도 랭크 줄을 늘 3줄 그린다).
- */
-/** 적 구성 — 전진 패널 **맨 왼쪽** [2026-09-10 사용자 지시 · §4-1 · ADR-0078].
- *  이 스테이지에서 기다리는 것들을 **정사각 칸으로 가로 한 줄** 편다 — 칸 크기는 **오른쪽 진형 칸과 같은 `--fm-slot`** 이고,
+/* ═══════════ 출정 창 (SCREEN_DESIGN §4-1 · ADR-0084 · ADR-0088) ═══════════
+   스테이지 행을 누르면 **탭 위에 겹쳐 뜨는 창**이다 — 옛 접이식 전진 패널(2026-08-28~2026-09-10)이 통째로 옮겨 왔다.
+   속은 **이름 붙은 칸 넷이 2×2** 로 선다 (ADR-0088):
+     위 줄   = **캐릭터 선택 ↔ 적 구성** — 누구를 보내나 ↔ 누구와 싸우나(마주 선다)
+     아래 줄 = **진형 → 출정 방식** — 어떻게 세우나 → 갈까
+   **크기는 상태에 흔들리지 않는다** — 넷이 전부 항상 있는 부품이고, 판 폭은 `.depart-box` 가 못박는다. */
+
+/** 창 머리 — **고른 스테이지의 신원**. 접이식이던 시절엔 바로 위 행이 말하던 것이라 패널에 머리가 없었는데
+ *  (2026-08-28 「머리 통째로 삭제」), 창은 목록에서 떨어져 뜨므로 **여기가 그 자리를 이어받는다** (ADR-0084).
+ *  줄 하나에 죄종 칩 · Ch-스테이지 이름 · 잔글씨로 위험도/소요/원소 — **스테이지 행이 찍던 것과 같은 값**이다. */
+function departHead() {
+    const z = D.stages[state.expStage];
+    const sin = chapterOf(z.chapter)?.sin ?? 'wrath';
+    const h = el('h2', 'dw-title');
+    h.innerHTML = `
+        <span class="sin-chip" style="color:${sinColor(sin)}">${sinName(sin)}</span>
+        <span>Ch${z.chapter}-${z.stage_num} ${L(stageName(z))}</span>
+        <small>${t('exp.stageMeta', { lv: z.dlvl, m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</small>`;
+    return h;
+}
+
+/** 출정 방식 — 경고 줄 + 같은 크기 버튼 둘. 반복 원정은 별도 줄이 아니라 **버튼**이다 (2026-08-28 사용자 지시):
+ *  옛 줄은 「런의 스테이지일 때만」 붙어서 칸 크기가 흔들렸다. 버튼은 항상 있으므로 크기가 고정된다. */
+function goBox(z) {
+    const side = el('div', 'fp-side');
+    side.appendChild(el('div', 'dw-h', t('exp.go.h')));
+    // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 칸이 상태에 따라 커졌다 작아진다 (2026-08-28)
+    // 상태 경고는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없으므로 막히는 경우가 파티 0 하나뿐이다
+    side.appendChild(el('div', 'down exp-warn', G.party.length === 0 ? t('exp.noParty') : ''));
+
+    const actions = el('div', 'form-actions');
+    const rep = el('button', `btn lg toggle${state.expRepeat ? ' on' : ''}`, t('exp.repeat'));
+    rep.onclick = () => {
+        state.expRepeat = !state.expRepeat;
+        // 이 스테이지가 지금 도는 런이면 곧바로 런에도 옮긴다 — 관전의 자동 진행이 이 값을 읽는다
+        if (G.run?.stageId === z.stage_id) { G.run.repeat = state.expRepeat; save(); }
+        render();
+    };
+    const go = el('button', 'btn lg primary', t('exp.deploy'));
+    // 출발하면 창은 할 일이 끝났다 — 안 닫으면 관전 화면 위에 편성 창이 그대로 떠 있는다
+    go.onclick = () => { state.modal = null; runBattle(z.stage_id); };
+    actions.appendChild(rep);
+    actions.appendChild(go);
+    side.appendChild(actions);
+    return side;
+}
+/** 적 구성 — 창의 **위 줄 오른쪽 · 파티 띠 오른쪽** [2026-09-10 사용자 지시 · §4-1 · ADR-0088].
+ *  이 스테이지에서 기다리는 것들을 **정사각 칸으로 가로 한 줄** 편다 — 칸 크기는 **진형 칸과 같은 `--fm-slot`** 이고,
  *  이름은 안 적고 `title` 이 든다 (「칸에는 글씨가 없으므로 호버가 유일한 길이다」 · 2026-09-06 규칙 그대로).
  *  **클릭이 없는 읽는 자리**다 — 고르는 것은 위 스테이지 행이 이미 했다.
  *  「이건 적이다」를 글자로 안 써도 되는 것은 **원형이 몬스터**이기 때문이지만(§5), 칸 이름 한 줄은 둔다:
@@ -893,53 +953,36 @@ function foeBox(z) {
     return box;
 }
 
-function formPanel(z, sin) {
-    const p = el('div', 'form-panel');
-    p.style.borderLeftColor = sinColor(sin);
+/**
+ * 창의 속 — **이름 붙은 칸 넷이 격자 하나에 2×2** 로 선다 (ADR-0088). 갈 곳은 위 목록에서 이미 골랐고, 여기서 **누구를 · 어떻게** 보낼지 정한다.
+ *   위 줄   ① **캐릭터 선택** ↔ ② **적 구성** — 누구를 보내나 ↔ 누구와 싸우나(마주 선다)
+ *   아래 줄 ③ **진형** → ④ **출정 방식** — 어떻게 세우나 → 갈까. 진형이 띠 **바로 아래**라 띠 카드를 끌어내리는 거리가 짧다
+ *   ① 영웅 띠가 **창 안으로 들어왔다** [2026-09-10 사용자 지시 · ADR-0084 · ADR-0085 가 ADR-0055 를 대체].
+ *      원정에서 띠가 서는 자리는 **여기 하나다** — 탭 최상단에 두던 판은 걷었다(거기서는 아무 결정도 안 끝난다 · ADR-0085).
+ *      `deployed: true` — 바로 아래에 진형 보드가 있으므로 파티 카드의 반투명(「내려가 있다」 · ADR-0058)이 참이 된다.
+ *   칸 넷이 **격자의 직접 자식**이다 — 줄마다 감싸면 세로 구분선이 두 줄을 관통하지 못한다.
+ *   가림막은 클래스가 세운다 — 오른쪽 열 `dw-c2` · 아래 줄 `dw-r2` (style.css `.dw-body`).
+ */
+function departBody() {
+    const z = D.stages[state.expStage];
+    const body = el('div', 'dw-body');
 
-    // 머리(제목 · 닫기 버튼)는 두지 않는다 (2026-08-28) — 무엇에 딸린 패널인지는 바로 위 행이 말하고,
-    // 닫는 것은 그 행을 다시 누르는 것이다. 머리가 없으니 패널 높이를 흔들 것도 하나 줄었다
-    /* ⚠ **영웅 띠는 여기 없다** [2026-09-09 사용자 지시 · ADR-0055] — 탭 최상단으로 올라갔다(`renderExpIdle`).
-       이 패널은 이제 **전진에 필요한 것만** 든다: 자리(진형) · 막힌 이유(경고) · 갈 것인가(액션 둘).
-       누구를 보내는지는 위 띠에서 정하고, 여기서는 그 파티를 **어떻게 · 어디로** 보낼지만 정한다 */
+    /* ① 캐릭터 선택 — 클릭은 소속(파티에 넣고 빼기) · 드래그는 자리(아래 보드로 끌어다 놓는다) */
+    const hb = el('div', 'dw-block');
+    hb.appendChild(el('div', 'dw-h', t('exp.heroes.h')));
+    hb.appendChild(heroStrip(toggleParty, {
+        leaderUid: G.party[0] ?? null, flat: true, partyMode: true, deployed: true,
+    }));
+    body.appendChild(hb);
 
-    /* **한 줄에 셋** [2026-09-10 사용자 지시 · ADR-0078 — ADR-0059 의 「둘」을 늘렸다] —
-       **맨 왼쪽 적 구성** · 가운데 진형 · 오른쪽 출발. 줄이 왼쪽에서 오른쪽으로
-       **「누구와 싸우나 → 어떻게 세우나 → 갈까」** 로 읽힌다.
-       ADR-0059 가 액션을 진형 오른쪽 빈자리로 올려 세로 두 줄을 없앤 것은 그대로다 */
-    const row = el('div', 'fp-row');
-
-    /* 적 구성 — 「어디를 갈지」를 고른 직후에 **누가 기다리는지**를 같은 자리에서 읽는다 */
-    row.appendChild(foeBox(z));
-
-    /* 진형 (⚠ 목업 · 2026-09-09) — 클릭은 소속(위 띠), **드래그는 자리**(여기). 화면 상태뿐이라 출발에 아무 영향이 없다 */
-    row.appendChild(formBox());
-
-    /* 오른쪽 칸 — 경고 + 액션. 둘 다 「보낼 수 있나」에 대한 것이라 한 묶음으로 선다 */
-    const side = el('div', 'fp-side');
-    // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 패널이 상태에 따라 커졌다 작아진다 (2026-08-28)
-    // 상태 경고는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없으므로 편성이 막히는 경우가 파티 0 하나뿐이다
-    // 자리는 **액션 바로 위**다 (2026-09-09) — 띠가 위로 가면서, 이 줄이 설명하는 것이 「파티」가 아니라 **「보내기가 막혔다」**가 됐다
-    side.appendChild(el('div', 'down exp-warn', G.party.length === 0 ? t('exp.noParty') : ''));
-
-    /* 액션 — 같은 크기 버튼 둘. 반복 원정이 옛 별도 줄(repeatRow)에서 여기로 내려왔다 (2026-08-28 사용자 지시):
-       그 줄이 런의 스테이지일 때만 붙어서 패널 크기가 흔들렸다. 버튼은 항상 있으므로 크기가 고정된다 */
-    const actions = el('div', 'form-actions');
-    const rep = el('button', `btn lg toggle${state.expRepeat ? ' on' : ''}`, t('exp.repeat'));
-    rep.onclick = () => {
-        state.expRepeat = !state.expRepeat;
-        // 이 스테이지가 지금 도는 런이면 곧바로 런에도 옮긴다 — 관전의 자동 진행이 이 값을 읽는다
-        if (G.run?.stageId === z.stage_id) { G.run.repeat = state.expRepeat; save(); }
-        render();
-    };
-    const go = el('button', 'btn lg primary', t('exp.deploy'));
-    go.onclick = () => runBattle(z.stage_id);
-    actions.appendChild(rep);
-    actions.appendChild(go);
-    side.appendChild(actions);
-    row.appendChild(side);
-    p.appendChild(row);
-    return p;
+    const foe = foeBox(z), form = formBox(), go = goBox(z);
+    foe.classList.add('dw-c2');               // ② 적 구성 — 위 줄 오른쪽 · 읽는 자리다(클릭 없음)
+    form.classList.add('dw-r2');              // ③ 진형 — 아래 줄 왼쪽 · 자리는 세이브 값이고 전투가 읽는다 (2026-09-09)
+    go.classList.add('dw-c2', 'dw-r2');       // ④ 출정 방식 — 아래 줄 오른쪽 · 경고 + 반복 원정 + 보내기
+    body.appendChild(foe);
+    body.appendChild(form);
+    body.appendChild(go);
+    return body;
 }
 
 /** 반복 원정 토글 — 마지막으로 간 스테이지에 붙는다 */
@@ -983,7 +1026,7 @@ const verdictOf = R => {
 
 /** 런 목록 — 최신이 맨 위. 줄 클릭이 오른쪽 상세를 바꾼다. 세그먼트는 이 패널 왼쪽 위에 선다 (ADR-0016) */
 function runListPanel(list, idx, nav) {
-    const p = el('div', 'panel');
+    const p = el('div', 'panel rep-runs');     // 높이는 오른쪽 상세가 정한다 — 목록은 받은 높이를 채우고 안에서 스크롤 (ADR-0086)
     p.innerHTML = `<div class="panel-nav"></div>
         <h2>${t('rep.list.h')} <small>${t('rep.list.sub', { n: list.length })}</small></h2>`;
     if (nav) p.querySelector('.panel-nav').appendChild(nav);
@@ -1009,17 +1052,23 @@ function runListPanel(list, idx, nav) {
     return p;
 }
 
-/** 획득 장비 — **가방 칸과 같은 그림 · 같은 테두리 · 같은 비교 툴팁**(§6). 분해는 모드를 켜야 먹는다 (§3) */
+/** 획득 장비 — **가방 칸과 같은 그림 · 같은 테두리 · 같은 비교 툴팁**(§6). 분해는 모드를 켜야 먹는다 (§3)
+ *  **자리가 런마다 같다** (ADR-0086) — 격자는 한 줄 높이로 못박히고 「없음」도 그 안에 선다. 버린 수는 머리 줄 안으로 */
 function dropSection(p, R) {
     const head = el('h2', '', `<span>${t('rep.drops.h')} <small>${t('rep.drops.sub', { n: R.drops.length })}</small></span>`);
     p.appendChild(head);
-    if (R.discarded) p.appendChild(el('div', 'down rep-note', t('rep.discarded', { n: R.discarded })));
-    if (!R.drops.length) { p.appendChild(el('div', 'muted rep-note rep-cut', t('rep.drops.none'))); return; }
-    // 분해 모드 — 되돌릴 수 없는 행동이라 클릭 하나로는 안 되게 한다 (§3 · 가방과 같은 문법)
-    const sv = el('button', `btn sm toggle${state.repSalvage ? ' on' : ''}`, t('ch.salvageMode'));
+    const tail = el('span', 'rep-h-tail');
+    if (R.discarded) tail.appendChild(el('small', 'down', t('rep.discarded', { n: R.discarded })));
+    // 분해 모드 — 되돌릴 수 없는 행동이라 클릭 하나로는 안 되게 한다 (§3 · 가방과 같은 문법).
+    //   장비가 없는 런에도 **자리는 잡는다**(안 보일 뿐) — 버튼 높이만큼 머리 줄이 흔들리지 않게
+    const sv = el('button', `btn sm toggle${state.repSalvage ? ' on' : ''}${R.drops.length ? '' : ' void'}`, t('ch.salvageMode'));
     sv.onclick = () => { state.repSalvage = !state.repSalvage; render(); };
-    head.appendChild(sv);
-    const grid = el('div', `inv-cells wide rep-cut${state.repSalvage ? ' salvage' : ''}`);
+    tail.appendChild(sv);
+    head.appendChild(tail);
+    const box = el('div', 'rep-drops rep-cut');
+    p.appendChild(box);
+    if (!R.drops.length) { box.appendChild(el('div', 'muted rep-note', t('rep.drops.none'))); return; }
+    const grid = el('div', `inv-cells wide${state.repSalvage ? ' salvage' : ''}`);
     for (const uid of R.drops) {
         const d = itemOf(uid);
         // 가방을 떠난 것은 **흐리게** 남는다 — 분해했으면 빈 칸(정의가 사라졌다) · 착용 중이면 그림째 흐리게.
@@ -1040,7 +1089,7 @@ function dropSection(p, R) {
         };
         grid.appendChild(cell);
     }
-    p.appendChild(grid);
+    box.appendChild(grid);
 }
 
 /**
@@ -1050,8 +1099,10 @@ function dropSection(p, R) {
  * 「가한」·「받은」은 **같은 폭 · 같은 모양**이고, **막대 폭이 곧 점유율**이다 — 칸 전체가 100%(= 파티 합계).
  *   최대값을 기준으로 그리면 1등이 언제나 꽉 차서 **막대와 옆의 숫자가 서로 다른 말을 한다**(41%인데 가득 찬 막대).
  * 정렬은 가한 피해 내림차순 — 재생 중에는 앞서는 순서가 그대로 뒤바뀐다(누가 앞서나가 보인다).
+ * **영웅에게 일어난 일도 이름 칸이 든다** (ADR-0086) — 이름 아래 레벨업 `▲ Lv.a → b` · 쓰러졌으면 초상이 회색.
+ *   줄 높이는 초상이 정하므로 표시가 붙어도 표가 안 자란다. `marks` = `{ up: Map(uid → {from, to}), down: Set(uid) }`
  */
-function contribRowsHtml(list) {
+function contribRowsHtml(list, marks) {
     const rows = [...list].sort((a, b) => b.dealt - a.dealt);
     const sum = k => rows.reduce((a, c) => a + Math.round(c[k]), 0);
     const sumD = sum('dealt'), sumT = sum('taken');
@@ -1068,8 +1119,9 @@ function contribRowsHtml(list) {
         <span>${t('rep.contrib.kills')}</span></div>`;
     const body = rows.map(c => {
         const h = heroById(c.uid);
+        const lu = marks.up.get(c.uid), down = marks.down.has(c.uid);
         return `<div class="ct-row">
-            <span class="n">${h ? heroFace(h) : ''}<b>${h ? L(h.name) : '—'}</b></span>
+            <span class="n${down ? ' dead' : ''}"${down ? ` title="${t('rep.downed')}"` : ''}>${h ? heroFace(h) : ''}<span class="nm"><b>${h ? L(h.name) : '—'}</b>${lu ? `<em class="up">${t('rep.contrib.levelUp', { a: lu.from, b: lu.to })}</em>` : ''}</span></span>
             ${cell('dealt', Math.round(c.dealt), sumD)}
             ${cell('taken', Math.round(c.taken), sumT)}
             <span class="v">${c.kills}</span></div>`;
@@ -1080,16 +1132,28 @@ function contribRowsHtml(list) {
         <span class="d"><b>${sumD.toLocaleString()}</b></span>
         <span class="d"><b>${sumT.toLocaleString()}</b></span>
         <span class="v">${sum('kills')}</span></div>`;
-    return head + body + total;
+    // 빈자리 — 파티 정원까지 **줄만 잡는다**. 인원이 적은 런만 표가 짧아지면 상세가 런마다 흔들린다 (ADR-0086)
+    const pad = `<div class="ct-row pad"><span class="n"><span class="hero-face"></span></span><span></span><span></span><span></span></div>`
+        .repeat(Math.max(0, D.balance.party_size_max - rows.length));
+    return head + body + pad + total;
 }
 
-/** 기여 — `live` 면 표가 재생 시각을 따라 찬다 (§4-3 · ADR-0072) */
+/** 영웅 줄에 붙는 표시 — 정산본에서 읽는다. 레벨업은 uid → {from, to} · 전투불능은 uid 집합 (ADR-0086) */
+const marksOf = R => ({
+    up: new Map((R.levelUps ?? []).map(lu => [lu.uid, lu])),
+    down: new Set(R.downed ?? []),
+});
+
+/** 기여 — `live` 면 표가 재생 시각을 따라 찬다 (§4-3 · ADR-0072)
+ *  집계가 아예 없는 옛 리포트(v20 이하 이관본)는 **자리만 잡고 안 그린다** — 0 을 지어내면 「못 때렸다」로 읽히고,
+ *  상자를 빼면 그 런만 상세가 짧아진다 (ADR-0086) */
 function contribSection(p, R, live) {
-    p.appendChild(el('h2', '', `<span>${t('rep.contrib.h')}</span><span class="rep-live"></span>`));
-    const box = el('div', 'rep-ct rep-cut');
-    box.innerHTML = contribRowsHtml(R.contrib);
+    const has = !!R.contrib?.length;
+    p.appendChild(el('h2', has ? '' : 'void', `<span>${t('rep.contrib.h')}</span><span class="rep-live"></span>`));
+    const box = el('div', `rep-ct rep-cut${has ? '' : ' void'}`);
+    box.innerHTML = contribRowsHtml(R.contrib ?? [], marksOf(R));
     p.appendChild(box);
-    if (live) startReportLive(box, p.querySelector('.rep-live'));
+    if (has && live) startReportLive(box, p.querySelector('.rep-live'), R);
 }
 
 /* ═══ 진행 중인 런 — **리포트가 곧 관전이다** (SCREEN_DESIGN §4-3 · ADR-0072) ═══
@@ -1102,11 +1166,14 @@ function contribSection(p, R, live) {
 let stopRepLive = null;
 let repLivePaint = null;      // 앱 시계가 부르는 다시 그리기 — 리포트가 떠 있을 때만 걸린다 (ADR-0074)
 
-function startReportLive(box, badge) {
+function startReportLive(box, badge, R) {
     const B = state.battle, res = B.result, tl = res.timeline, end = res.durationSec;
     const uidOf = Object.fromEntries(res.party.map(u => [u.key, u.uid]));
     const tally = new Map(res.party.map(u => [u.uid, { uid: u.uid, dealt: 0, taken: 0, kills: 0 }]));
     const lastHit = {};        // 유닛 키 → 마지막으로 그를 때린 유닛 키. `down` 이벤트에는 킬러가 없다
+    // 영웅 줄의 표시도 재생 시각을 따른다 (ADR-0086) — 회색은 **그 영웅이 쓰러지는 이벤트를 지난 순간**,
+    //   레벨업은 **재생 끝**(정산이 런 끝에 준다). 끝나기 전부터 최종값을 걸면 표가 재생보다 앞서 말한다
+    const final = marksOf(R), downNow = new Set();
     let i = 0, cur = B.resume?.t ?? 0;      // 재생 시각. 이름을 `t` 로 두면 i18n 의 `t()` 를 가린다
 
     const apply = ev => {
@@ -1116,14 +1183,15 @@ function startReportLive(box, badge) {
             if (a) a.dealt += ev.dmg;
             if (d) d.taken += ev.dmg;
             lastHit[ev.d] = ev.a;
-        } else if (ev.e === 'down' && !uidOf[ev.u]) {      // **적이 쓰러진 것만** 센다
-            const k = tally.get(uidOf[lastHit[ev.u]]);
+        } else if (ev.e === 'down') {
+            if (uidOf[ev.u]) { downNow.add(uidOf[ev.u]); return; }   // 파티가 쓰러졌다 — 초상이 회색이 되고 처치로는 안 센다
+            const k = tally.get(uidOf[lastHit[ev.u]]);                // **적이 쓰러진 것만** 처치로 센다
             if (k) k.kills += 1;
         }
     };
     const consumeTo = until => { while (i < tl.length && tl[i].t <= until) apply(tl[i++]); };
     const paint = () => {
-        box.innerHTML = contribRowsHtml([...tally.values()]);
+        box.innerHTML = contribRowsHtml([...tally.values()], { up: cur < end ? new Map() : final.up, down: downNow });
         if (badge) badge.textContent = cur < end
             ? t('rep.live', { a: fmtDuration(cur * 1000), b: fmtDuration(end * 1000) }) : '';
     };
@@ -1200,33 +1268,24 @@ function reportDetail(R, live) {
         </div>`;
 
     dropSection(p, R);
-    // 기여 — 집계가 아예 없는 옛 리포트(v20 이하 이관본)는 **상자를 안 그린다**. 0 을 지어내면 「못 때렸다」로 읽힌다
-    if (R.contrib?.length) contribSection(p, R, live);
+    // 기여 — 레벨업 · 전투불능도 **이 표의 영웅 줄**이 든다 (ADR-0086). 상세 아래에 따로 서던 줄과 상자는
+    //   런마다 상세 높이를 흔들었다. 레벨업은 **레벨만** 적는다(ADR-0073 — 오른 능력치는 체감이 없어 보상으로 읽히면 안 된다)
+    contribSection(p, R, live);
 
-    // 레벨업 — **레벨만 적는다** (§4-3 · ADR-0073). 오른 능력치 나열은 2026-09-10 삭제:
-    //   전투에 먹는 축도 1%/점이라 체감이 없고 통솔은 쓰는 곳이 아예 없다 — 보상이 아닌 것을 보상으로 읽히게 했다
-    for (const lu of R.levelUps) {
-        const h = heroById(lu.uid);
-        p.appendChild(el('div', '', `<div class="up" style="font-size:var(--fs-sm);margin-bottom:8px">
-            ${t('rep.levelUp', { name: L(h?.name), a: lu.from, b: lu.to })}</div>`));
-    }
-    // 도감 카드 — 루팅 리포트에 찍히는 사건 (monster_design §8). 이번 카드로 레벨이 올랐으면 같이 알린다
-    if (cardEntries.length) {
-        const lines = cardEntries.map(([id, n]) => {
-            const total = G.codexCards[id] ?? 0;
-            const up = SYS.game.codexLevel(total) > SYS.game.codexLevel(total - n);
-            const name = L(monsterName(Number(id)));
-            return `${name}${n > 1 ? ` ×${n}` : ''}${up ? ` <span class="up">▲ ${t('rep.cardLevelUp', { name, lv: SYS.game.codexLevel(total) })}</span>` : ''}`;
-        });
-        p.appendChild(el('div', '', `<div style="font-size:var(--fs-sm);margin-bottom:8px"><span class="muted">${t('rep.cards')}</span> &nbsp;${lines.join(', ')}</div>`));
-    }
-    if (R.downed.length) {
-        const inj = el('div', 'injury-box');
-        inj.innerHTML = `
-            <div class="t">${t('rep.injuryHead')}</div>
-            ${R.downed.map(uid => { const h = heroById(uid); return `<div class="r"><span>${L(h?.name)}</span></div>`; }).join('')}`;   // 이름만 — 상태 꼬리는 2026-09-08 삭제 (SCREEN_DESIGN §4-3)
-        p.appendChild(inj);
-    }
+    // 도감 카드 — 루팅 리포트에 찍히는 사건 (monster_design §8). 이번 카드로 레벨이 올랐으면 같이 알린다.
+    //   **줄은 늘 선다**(없으면 「없음」) · 한 줄에서 끊고 전체는 호버가 든다 — 종류가 많은 런만 두 줄이 되면 상세가 흔들린다 (ADR-0086)
+    const cards = cardEntries.map(([id, n]) => {
+        const total = G.codexCards[id] ?? 0;
+        const lv = SYS.game.codexLevel(total);
+        const name = L(monsterName(Number(id)));
+        const head = `${name}${n > 1 ? ` ×${n}` : ''}`;
+        const up = lv > SYS.game.codexLevel(total - n) ? `▲ ${t('rep.cardLevelUp', { name, lv })}` : '';
+        return { html: up ? `${head} <span class="up">${up}</span>` : head, text: up ? `${head} ${up}` : head };
+    });
+    const cardLine = el('div', 'rep-cards',
+        `<span class="muted">${t('rep.cards')}</span> &nbsp;${cards.length ? cards.map(c => c.html).join(', ') : t('rep.cardsNone')}`);
+    if (cards.length) cardLine.title = cards.map(c => c.text).join(', ');
+    p.appendChild(cardLine);
 
     // 액션 — **고른 줄의 스테이지로** 다시 나간다 (§4-3)
     const actions = el('div', 'report-actions');
@@ -1447,7 +1506,8 @@ function attrPanel(h) {
 function skillCards(h) {
     const cycle = cycleOf(h);
     const cb = combatOf(h);
-    const tipCtx = { period: cycle, atk: cb.atk_physical ?? cb.atk_magic, atkType: cb.attack_type };
+    // 설명창의 숫자 자리 재료 — 밑수 셋(공격 · 회복 · 벽)과 **능력치**(스킬 계수 · ADR-0089). 전투가 시전 순간 읽는 것과 같은 `h.stats` 다
+    const tipCtx = { period: cycle, atk: cb.atk_physical ?? cb.atk_magic, matk: cb.atk_magic, hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
     const wrap = el('div', 'sk-cards-wrap');
     // 소제목은 이름뿐이다 (2026-09-08 사용자 지시) — 행동 주기는 **세부 옵션 2 의 제 행**이 든다
     // (`combat_stat.csv:action_period` · sheet_order 21). §4-1 「값은 항상 찍는다」는 그 행이 지킨다
@@ -1765,7 +1825,8 @@ function activeSlots(h, title) {
     // 툴팁 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2).
     // 공격력 키는 무기군이 정한다(물리 ↔ 마법) — 둘 중 있는 쪽을 그대로 넘긴다
     const cb = combatOf(h);
-    const tipCtx = { period: cycle, atk: cb.atk_physical ?? cb.atk_magic, atkType: cb.attack_type };
+    // 밑수 셋 + 능력치 — 캐릭터 탭 카드와 같은 맥락이다 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089)
+    const tipCtx = { period: cycle, atk: cb.atk_physical ?? cb.atk_magic, matk: cb.atk_magic, hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
     const p = el('div', 'panel');
     p.appendChild(el('h2', '', title ?? t('sk.slots.h')));
     p.appendChild(el('div', 'cycle-line', `
@@ -2744,11 +2805,13 @@ function codexItem(p) {
     const box = el('div', 'ix-body');
     box.innerHTML = artGroup(t('ix.g.weapon'), M.ITEM_ART_DIR,
         M.ITEM_ART_GROUPS.map(g => artTile(M.itemArt('weapon', g), L(D.weaponGroups?.[g] ?? g), 'box')))
-        // 무기 베이스 — **여기는 재고를 보는 자리**라 7장을 전부 편다(uid 가 없으니 `weaponBaseArt` 를 직접 부른다).
-        //    실제 드롭은 개체마다 이 중 하나를 든다 (mock.js:itemArt · uid 해시 · §9-1)
-        + artGroup(t('ix.g.weaponBase'), M.WEAPON_BASE_DIR,
-            //    확장자를 뗀다 — 베이스 이름이 길어 `.png` 가 붙으면 칸에서 두 줄이 된다 (스킬 세그먼트와 같은 처방 · ADR-0075)
-            M.WEAPON_BASE_STEMS.map(s => artTile(M.weaponBaseArt(s), t(`ix.b.${s}`), 'box', '', true)))
+        // 무기 베이스 — **여기는 재고를 보는 자리**라 무기군마다 7장을 전부 편다(uid 가 없으니 `weaponBaseArt` 를 직접 부른다).
+        //    실제 드롭은 개체마다 이 중 하나를 든다 (mock.js:itemArt · uid 해시 · §9-1). 무기군 하나 = 묶음 하나(ADR-0066 문법과 동일)
+        + Object.keys(M.WEAPON_BASE_STEMS).map(g =>
+            artGroup(t('ix.g.weaponBase', { group: L(D.weaponGroups?.[g] ?? g) }), `${M.WEAPON_BASE_DIR}${g}/`,
+                //    확장자를 뗀다 — 베이스 이름이 길어 `.png` 가 붙으면 칸에서 두 줄이 된다 (스킬 세그먼트와 같은 처방 · ADR-0075)
+                M.WEAPON_BASE_STEMS[g].map(s => artTile(M.weaponBaseArt(g, s), t(`ix.b.${s}`), 'box', '', true)))
+          ).join('')
         // ⚠ 부위 하나에 그림 하나 — 개체가 베이스 id 를 안 들고 다녀서다 (mock.js:itemArt · 임시)
         + artGroup(t('ix.g.armor'), M.ITEM_ART_DIR,
             Object.keys(M.ITEM_ART_BY_SLOT).map(sl => artTile(M.itemArt(sl), L(slotDef(sl) ?? sl), 'box')))
@@ -2906,9 +2969,25 @@ function renderHelp(main) {
     main.appendChild(wrap);
 }
 
+/* ═══════════ 한 장 ═══════════ */
+
+/** 화면은 1600×800 한 장이다 — 창에 맞춰 **통째로** 줄이고 늘린다 (SCREEN_DESIGN §2 · ADR-0087).
+ *  한 장의 크기는 CSS(`#stage`)가 든다 — 여기는 읽기만 한다 */
+function fitStage() {
+    const st = document.getElementById('stage');
+    if (!st) return;
+    const w = st.offsetWidth, h = st.offsetHeight;
+    const s = Math.min(window.innerWidth / w, window.innerHeight / h);
+    const x = Math.round((window.innerWidth - w * s) / 2), y = Math.round((window.innerHeight - h * s) / 2);
+    st.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+}
+
 /* ═══════════ 부팅 ═══════════ */
 
 async function boot() {
+    // 한 장을 창에 맞춘다 — **G 가 없어도** 먼저(시작 화면도 한 장이다) · 창 크기가 바뀔 때마다 다시 (ADR-0087)
+    fitStage();
+    window.addEventListener('resize', fitStage);
     await loadData();
     state.candidates = rollCandidates();
     if (loadSave()) continueGame();
@@ -2955,14 +3034,17 @@ async function boot() {
         runBattle(D.stageOrder[0], { tab: new URLSearchParams(location.search).get('bt') });
         if (!TABS.includes(tab)) return;
     }
-    if (dev === 'form') {   // 편성 패널이 열린 상태 — 패널은 클릭으로만 열리므로 헤드리스가 닿을 길을 따로 낸다
+    if (dev === 'form') {   // **출정 창**이 열린 상태 — 창은 클릭으로만 열리므로 헤드리스가 닿을 길을 따로 낸다 (2026-09-10 · ADR-0084)
         if (!G) startGame();
         state.expStage = D.stageOrder[0];
+        state.modal = 'depart';
         /* `&stage=<id>` — **다른 챕터의 패널**에 닿는 길 (2026-09-10 · §10). 후반 스테이지는 해금 전이라
            클릭이 거절되는데, 적 구성 칸(ADR-0078)의 몬스터 이름은 챕터마다 길어져
            **폭이 넘치는지는 그 화면에서만 보인다**(가장 긴 이름은 Ch7-4). 챕터도 같이 옮겨야 그 행이 그려진다 */
         const want = Number(new URLSearchParams(location.search).get('stage'));
         if (D.stages[want]) { state.expStage = want; state.expChapter = D.stages[want].chapter; }
+        // `&open=0` — **창을 닫은 채** 목록만 본다. 창이 화면을 덮으므로 뒤의 스테이지 목록(§4-1)에 닿을 길이 따로 필요하다
+        if (new URLSearchParams(location.search).get('open') === '0') state.modal = null;
         // 파티는 **기본으로 안 채운다** — 새 게임은 빈 편성이고 그것이 이 화면의 첫 상태다 (2026-09-09).
         //   `&party=full` 이면 채운다: 파티 테두리·리더 표시는 **클릭으로만** 만들어져 헤드리스가 못 닿는다 (§10)
         if (new URLSearchParams(location.search).get('party') === 'full') devParty();

@@ -289,32 +289,42 @@ export const ITEM_ART_DIR = './assets/art/icons/items/';
 export const ITEM_ART_GROUPS = ['sword2h', 'axe', 'mace', 'spear', 'staff', 'orb', 'bow', 'crossbow'];
 export const ITEM_ART_BY_SLOT = { armor: 'armor_1', boots: 'boots_1', gloves: 'gloves_1', ring: 'ring_1' };   // ⚠ 임시
 /**
- * 무기 베이스 그림 — `icons/items/unused/sword2h/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). **양손검만 있다.**
+ * 무기 베이스 그림 — `icons/items/unused/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 양손검 · 도끼 둘.
  *
  * ⚠ **파일명이 id 가 아니다.** 무기 베이스는 기획 확정(무기군당 7 · `item_design.md` §1)이지만 `weapon_base` CSV 가
  *   아직 없다(DEV_PLAN R62 — 대역 경계 · 수치 미발행). 그래서 **개체가 어느 베이스인지는 아무 데도 안 적혀 있다.**
- * 그런데도 그림은 고를 수 있다 — **uid 해시**로 7장 중 하나를 잡는다(`itemArt`). 스킬 아이콘의 해시 폴백과 같은 문법이고,
- *   계약도 같다: **uid 는 세이브에 남으므로 한 개체는 평생 같은 검으로 보인다** (다시 그려도 · 껐다 켜도 안 바뀐다).
+ * 그런데도 그림은 고를 수 있다 — **uid 해시**로 그 무기군의 7장 중 하나를 잡는다(`itemArt`). 스킬 아이콘의 해시
+ *   폴백과 같은 문법이고, 계약도 같다: **uid 는 세이브에 남으므로 한 개체는 평생 같은 무기로 보인다** (다시 그려도 · 껐다 켜도 안 바뀐다).
  * ⚠ **rng 를 한 발도 안 쓴다** — 그리는 시각의 해시라 `game_logic` 의 난수 수열에 안 닿는다(골든 스냅샷 불변).
- *   「랜덤하게 보이게」를 `Math.random()` 으로 하면 **다시 그릴 때마다 검이 바뀐다** — 그래서 안 쓴다.
- * ⚠ **이름은 안 따라온다** — 아이템 이름 · 툴팁은 여전히 「양손검」이다(`item.js:build` 가 무기군을 그대로 base 로 쓴다).
+ *   「랜덤하게 보이게」를 `Math.random()` 으로 하면 **다시 그릴 때마다 무기가 바뀐다** — 그래서 안 쓴다.
+ * ⚠ **이름은 안 따라온다** — 아이템 이름 · 툴팁은 여전히 무기군 이름이다(`item.js:build` 가 무기군을 그대로 base 로 쓴다).
  *   그림과 이름이 어긋나는 것을 **알고 켠 것**이고, `weapon_base` 가 서면 굴림이 `game_logic` 으로 옮겨 가며 둘이 붙는다.
  * 이름 표시(도감)는 `i18n:ix.b.<stem>` 이 든다 — CSV 가 없어 `L()` 로 읽을 데이터 행이 없기 때문이고, 이것도 **임시**다.
  * 목록 순서 = 대역 순(기본 → ①-A · ①-B → ②-A · ②-B → ③-A · ③-B) — `item_design.md` §1 「이름 — 9군」 표의 행 순서다.
  */
-export const WEAPON_BASE_DIR = './assets/art/icons/items/unused/sword2h/';
-export const WEAPON_BASE_STEMS = ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'];
-export const weaponBaseArt = stem => WEAPON_BASE_STEMS.includes(stem) ? `${WEAPON_BASE_DIR}${stem}.png` : null;
-/** 베이스 그림이 있는 무기군 — 지금은 양손검 하나다. 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
-const WEAPON_BASE_GROUPS = ['sword2h'];
-export const itemArt = (slot, group, uid) => {
+export const WEAPON_BASE_DIR = './assets/art/icons/items/unused/';
+/** 베이스 그림이 있는 무기군 → 그 7장의 파일 stem. 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
+export const WEAPON_BASE_STEMS = {
+    sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
+    axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator'],
+};
+export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}.png` : null;
+/**
+ * `baseId` 가 있으면(2026-09-10 · `weapon_base.csv` 로 실제 굴린 개체 — `item.baseId`) **그 그림을 그대로** 쓴다 —
+ * 이름과 그림이 같은 베이스를 가리키게 된다. 없으면(구 세이브 · 베이스 풀이 아직 없는 무기군) **uid 해시**로 옛날처럼 고른다.
+ */
+export const itemArt = (slot, group, uid, baseId) => {
     if (slot === 'weapon') {
-        // 개체(uid)가 있고 그 무기군에 베이스 그림이 있으면 **베이스 그림**, 아니면 무기군 그림.
+        // 그 무기군에 베이스 그림이 있으면 **베이스 그림**, 아니면 무기군 그림.
         // 도감의 「무기」 묶음은 uid 없이 부르므로 거기서는 무기군 그림 그대로다 (재고를 보는 자리다 · §9-1)
-        if (uid && WEAPON_BASE_GROUPS.includes(group))
-            // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
-            //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
-            return `${WEAPON_BASE_DIR}${WEAPON_BASE_STEMS[strHash(`${uid}:${group}`) % WEAPON_BASE_STEMS.length]}.png`;
+        const stems = WEAPON_BASE_STEMS[group];
+        if (stems) {
+            if (baseId && stems.includes(baseId)) return `${WEAPON_BASE_DIR}${group}/${baseId}.png`;
+            if (uid)
+                // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
+                //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
+                return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}.png`;
+        }
         return ITEM_ART_GROUPS.includes(group) ? `${ITEM_ART_DIR}${group}.png` : null;
     }
     const file = ITEM_ART_BY_SLOT[slot];

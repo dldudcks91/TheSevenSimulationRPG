@@ -38,6 +38,13 @@
  *     독화살(**도트가 아니라** 원소 추가타 1회 — 틱 피해 채널 미도입) ·
  *     적 공격력 감소(새 채널이 아니라 **음수 버프 창** [사용자 확정 2026-09-09]). 전부 skill_design §7 이 든다.
  *   `status` 컬럼(결빙 등)은 `status_effect.csv` 가 없어 **정규화만 하고 아무도 읽지 않는다** (§9-1 규칙 4).
+ *
+ * **스킬 계수 — 능력치가 스킬을 민다** (skill_design §13 확정 2026-09-10 · DEV_PLAN R72):
+ *   `skill.csv` 의 스케일링 슬롯 셋(`scaleN_field`·`scaleN_attr`·`scaleN_coef`)이 「어느 항을 · 어느 능력치가 · 1당 얼마」를 든다.
+ *   계산은 `scaleDef` **한 곳**이다 — 전투(skill_runtime · battle 의 오오라)와 설명창(`previewOf`)이 같은 함수를 읽어 둘이 갈릴 자리가 없다.
+ *   · `mult_pct` 는 배율에 더하지 않는다 — `flat` 으로 따로 내고 `공격력 × 배율` 에 더한다 (battle_design §9-2 「곱이 아니라 합」)
+ *   · 나머지는 값의 **크기**에 더하고 부호를 지킨다 · 타수는 버림 · 슬롯이 민 감쇠는 [balance.csv:skill_decay_cap_pct] 에서 멈춘다
+ *   ⚠ 계수는 전부 0 이다 — 축만 정했고 크기는 밸런스 몫이라, 지금은 `scaleDef` 가 원값을 그대로 돌려준다 (§13-3)
  */
 
 import { ELEMENTS } from './hero.js';
@@ -66,17 +73,33 @@ const MAX_TAGS = 2;                   // §11-2 규칙 1 — 세 번째 태그�
 const NONE = '-';                     // CSV 의 "없음" 표기 — 정규화하면 null
 
 /**
+ * 스케일링 슬롯이 밀 수 있는 항 — **CSV 컬럼명 → 정의(def)의 키** (skill_design §13-1 · 2026-09-10).
+ *   슬롯의 `field` 에는 컬럼명을 그대로 쓰는 것이 CSV 규약이고, 이 표가 그 컬럼이 정규화된 뒤의 이름을 안다.
+ *   `mult_pct` 는 배율(`mult`)에 더하지 않는다 — `flat` 으로 따로 낸다(`scaleDef`). `cool_sec` 은 열지 않았다(§13-1)
+ */
+const SCALE_FIELDS = {
+    mult_pct: 'mult', hits: 'hits', effect_value: 'value', duration_sec: 'dur',
+    decay_pct: 'decay', proc_chance_pct: 'procChance', proc_mult_pct: 'procMult',
+};
+const SCALE_FIELD_IDS = Object.keys(SCALE_FIELDS);
+/** 미리보기 `amount` 의 밑수 — 공격은 공격력 · 회복은 마법 공격력 · 소환은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
+const AMOUNT_BASIS = { attack: 'atk', heal: 'matk', summon: 'hpMax' };
+
+/**
  * @param {object} data
- *   balance — balance.csv 를 {key: value} 로 눕힌 것. `active_slots` 를 읽는다 — 칸 수 상한
+ *   balance — balance.csv 를 {key: value} 로 눕힌 것. `active_slots` 를 읽는다 — 칸 수 상한 · `skill_decay_cap_pct` — 슬롯이 민 감쇠의 상한
  *             (스킬 계수 자체는 전부 skill.csv 행에 있다)
  *   rows    — skill.csv 파싱 행 배열 (csv.js:parseCsv 결과)
  *   tagRows — skill_tag.csv 파싱 행 배열. 태그 어휘의 SSOT — 비면 던진다(태그 없는 스킬 시스템은 없다)
+ *   attributes — hero_attribute.csv 로드 결과 [{id}] — 스케일링 슬롯 `attr` 의 어휘 (2026-09-10).
+ *                비어 있는데 슬롯을 채운 행이 있으면 던진다(검증할 어휘가 없으면 오타가 조용히 0 으로 샌다)
  */
 export function createSkillSystem(data) {
     const B = data.balance;
     const F = createFormula(B);      // 실효 쿨 — 화면·검증이 같은 함수를 읽게 한다 (item.js 와 같은 규칙)
     const rows = data.rows ?? [];
     const dash = v => (v === NONE || v === '' || v === undefined || v === null ? null : v);
+    const attrIds = (data.attributes ?? []).map(a => a.id);   // 스케일링 슬롯 attr 의 어휘 — hero_attribute.csv (2026-09-10)
 
     /* ── 태그 어휘 — `skill_tag.csv` 가 SSOT (skill_design §11) ── */
     const tagRows = data.tagRows ?? [];
@@ -97,6 +120,27 @@ export function createSkillSystem(data) {
     if (DERIVED_TAGS.slice().sort().join('|') !== DERIVED_TAG_IDS.slice().sort().join('|'))
         throw new Error(`skill_tag: derived=1 이 [${DERIVED_TAGS}] 인데 derivedTagsOf 는 [${DERIVED_TAG_IDS}] 를 낸다`);
 
+    /** 스케일링 슬롯 원시 셋 — `scale1_*` 부터 컬럼이 있는 데까지 (skill_design §13-1). 빈 슬롯(`-`)도 든다 */
+    const slotsOf = row => {
+        const out = [];
+        for (let n = 1; row[`scale${n}_field`] !== undefined; n++)
+            out.push({ n, field: row[`scale${n}_field`], attr: row[`scale${n}_attr`], coef: row[`scale${n}_coef`] });
+        return out;
+    };
+    /** 감쇠를 쓰는 정의인가 — 연쇄 · 최고 방어 다단 · **광역 공격**(적에게 거는 광역 창은 아니다 · 2026-09-10) */
+    const usesDecayOf = d => d.target === 'enemy_chain' || d.target === 'enemy_highest_def'
+        || (d.kind === 'attack' && d.target === 'enemy_all');
+    /** 그 정의에 그 항이 있는가 — 없는 항을 미는 슬롯은 조용히 무시되므로 로드에서 막는다 (§13-1) */
+    const slotFits = (d, field) => ({
+        mult_pct: d.kind === 'attack' || d.kind === 'heal' || d.kind === 'summon',
+        hits: d.kind === 'attack',
+        effect_value: d.kind === 'buff' || d.kind === 'aura',
+        duration_sec: d.kind === 'buff',
+        decay_pct: usesDecayOf(d),
+        proc_chance_pct: d.kind === 'attack' && d.procChance > 0,
+        proc_mult_pct: d.kind === 'attack' && d.procChance > 0,
+    })[field] === true;
+
     /** 정의 1행 정규화 — %는 CSV 의 숫자 그대로 두고(코드에서 /100), 없음은 null */
     const normalize = row => ({
         id: row.skill_id,
@@ -107,6 +151,9 @@ export function createSkillSystem(data) {
         hits: row.hits,
         mult: row.mult_pct,
         decay: row.decay_pct,
+        // 확률로 터지는 추가 피해 — 확률 % · 배수 % (battle_design §9-2 · 2026-09-10). 확률이 0 이면 없다
+        procChance: row.proc_chance_pct,
+        procMult: row.proc_mult_pct,
         cool: row.cool_sec,
         dur: row.duration_sec,
         element: dash(row.element),
@@ -116,6 +163,8 @@ export function createSkillSystem(data) {
         condValue: row.cond_value,
         status: dash(row.status),
         tags: dash(row.tags) === null ? [] : String(row.tags).split('|').map(v => v.trim()).filter(Boolean),
+        // 스케일링 슬롯 — **채운 것만** `{field, attr, coef}` (skill_design §13-1). `-` 슬롯은 빠진다
+        scales: slotsOf(row).filter(s => s.field !== NONE).map(({ field, attr, coef }) => ({ field, attr, coef })),
         priority: row.priority,
         name: { ko: row.name_kr, en: row.name_en },
         // 화면이 읽는 것 — 아이콘·설명도 CSV 가 SSOT 다 (2026-09-01 `mock.js:SKILL_DISPLAY` 폐지)
@@ -177,12 +226,42 @@ export function createSkillSystem(data) {
         //   ⚠ `attack` 에만 건다 — 같은 대상어를 **적에게 거는 창**(참회·속박)도 쓰는데 그쪽은 타수가 0 이다
         if (d.kind === 'attack' && (d.target === 'enemy_all' || d.target === 'enemy_chain') && d.hits !== 1)
             bad(`${d.target} 인데 hits ${d.hits} — 타수는 대상 수가 정한다`);
-        // 감쇠 — 두 대상 표가 쓴다. 뜻이 다르다: 연쇄는 **배율**이 줄고, 최고 방어 다단은 **대상의 방어값**이 준다.
-        //   100 이면 연쇄는 두 번째부터 0 이고 방어는 한 방에 0 이라 둘 다 어긋난다
-        if (d.target === 'enemy_chain' || d.target === 'enemy_highest_def') {
+        // 감쇠 — 세 대상 표가 쓴다. 뜻이 다르다: 연쇄는 **배율**이 줄고, 최고 방어 다단은 **대상의 방어값**이 주고,
+        //   광역 공격은 **주 대상 밖의 배율**이 준다(멀티샷 광역 약화 · skill_design §13-5 · 2026-09-10).
+        //   100 이면 연쇄는 두 번째부터 0 · 방어는 한 방에 0 · 광역은 주 대상 하나만 맞아 셋 다 어긋난다
+        if (usesDecayOf(d)) {
             if (!(d.decay >= 0 && d.decay < 100)) bad(`${d.target} 인데 decay_pct ${d.decay}`);
         } else if (d.decay !== 0) {
-            bad(`decay_pct 는 enemy_chain·enemy_highest_def 만 쓴다 (${d.decay})`);
+            bad(`decay_pct 는 enemy_chain·enemy_highest_def·광역 공격(enemy_all) 만 쓴다 (${d.decay})`);
+        }
+        // 확률로 터지는 추가 피해 — 확률과 배수는 **한 쌍**이다 (battle_design §9-2 · 2026-09-10).
+        //   확률이 0 인데 배수가 적혀 있으면 어느 쪽이 참인지 두 곳을 봐야 하므로 막는다. 배수 100 미만은 「추가」가 아니다
+        if (!(d.procChance >= 0 && d.procChance <= 100)) bad(`proc_chance_pct ${d.procChance} — 0~100`);
+        if (d.procChance > 0) {
+            if (d.kind !== 'attack') bad(`proc_chance_pct ${d.procChance} — 추가 피해는 attack 만 쓴다 (${d.kind})`);
+            if (!(d.procMult >= 100)) bad(`proc_chance_pct ${d.procChance} 인데 proc_mult_pct ${d.procMult} — 100 이상이어야 한다`);
+        } else if (d.procMult !== 0) {
+            bad(`proc_chance_pct 가 0 인데 proc_mult_pct ${d.procMult} — 두 곳 관리 금지`);
+        }
+        // 결투 — effect_value 는 **시전자가 받는 피해 감소 %** 다 (skill_design §13-5 · 2026-09-10). 음수면 받는 피해가 는다
+        if (d.stat === 'duel' && !(d.value >= 0)) bad(`duel 인데 effect_value ${d.value} — 시전자 피해 감소 %라 0 이상`);
+        // 스케일링 슬롯 (skill_design §13-1 · 2026-09-10) — 「어느 항을 · 어느 능력치가 · 1당 얼마」.
+        //   채운 슬롯의 coef 0 은 **합법**이다(축만 정하고 크기는 밸런스 몫 — §13-3). 빈 슬롯은 `- · - · 0` 이다
+        const seenField = new Set();
+        for (const s of slotsOf(row)) {
+            const at = `scale${s.n}`;
+            if ((s.field === NONE) !== (s.attr === NONE)) bad(`${at} field '${s.field}' · attr '${s.attr}' — 둘 다 '-' 이거나 둘 다 채운다`);
+            if (typeof s.coef !== 'number' || !(s.coef >= 0)) bad(`${at}_coef '${s.coef}' — 0 이상의 숫자`);
+            if (s.field === NONE) {
+                if (s.coef !== 0) bad(`${at} 가 비었는데 coef ${s.coef}`);
+                continue;
+            }
+            if (!SCALE_FIELD_IDS.includes(s.field)) bad(`${at}_field '${s.field}' — 밀 수 있는 항이 아니다`);
+            if (attrIds.length === 0) bad(`${at}_attr — attributes(hero_attribute.csv) 주입이 없어 검증할 수 없다`);
+            if (!attrIds.includes(s.attr)) bad(`${at}_attr '${s.attr}' — hero_attribute 에 없다`);
+            if (seenField.has(s.field)) bad(`${at}_field '${s.field}' 가 두 번 — 한 항은 한 슬롯이다`);
+            seenField.add(s.field);
+            if (!slotFits(d, s.field)) bad(`${at}_field '${s.field}' — ${d.kind}·${d.target} 에는 그 항이 없다`);
         }
         // 조건값은 조건이 있을 때만 — ally_hp_below 는 HP 비율(%)이라 0 초과 100 이하다
         if (d.cond === 'ally_hp_below') {
@@ -312,31 +391,92 @@ export function createSkillSystem(data) {
     const tagsOf = def => [...(def?.derived ?? []), ...(def?.tags ?? [])];
 
     /**
+     * **스킬 계수 공용 계산** (skill_design §13 · battle_design §9-2 · 2026-09-10 R72) — 전투와 미리보기가 **같은 함수**를 쓴다.
+     * 반환은 `def` 의 얕은 복사본에 실효 `hits`·`value`·`dur`·`decay`·`procChance`·`procMult` 와 `flat` 을 덧씌운 것이다.
+     *   · `mult_pct` — **배율에 더하지 않는다.** `flat` 으로 따로 내고 공격은 `공격력 × 배율 + flat` · 회복은 `마법 공격력 × 배율 + flat` ·
+     *     소환은 `시전자 최대 HP × 배율 + flat` 이 된다. 곱이면 무기와 능력치 중 한쪽이 낮을 때 다른 쪽까지 죽는다
+     *   · `hits` — 버림(정수 타수). 공격은 1 아래로 안 내려간다
+     *   · `effect_value`·`duration_sec`·확률·배수 — **크기에 더하고 부호를 지킨다.** 음수 디버프(페니턴스·바인드)가 슬롯에 밀려 약해지면 안 된다
+     *   · `decay_pct` — 슬롯이 민 몫만 [balance.csv:skill_decay_cap_pct] 에서 멈춘다. CSV 원값은 로드 검증(100 미만)이 따로 본다
+     * **순수** — rng 0 · 입력을 바꾸지 않는다. 몬스터·소환처럼 능력치가 없으면(`stats` null) 합이 전부 0 이라 원값 그대로다.
+     * ⚠ 계수가 지금 전부 0 이라 결과는 언제나 원값이다 — 축만 정했고 크기는 밸런스 몫이다 (§13-3)
+     * @param def 스킬 정의 · @param stats 기본 능력치 `{str, agi, int, vit, luck, ldr, cha}` 또는 null
+     */
+    function scaleDef(def, stats) {
+        if (!def) return null;
+        const sum = {};
+        for (const s of def.scales ?? []) sum[s.field] = (sum[s.field] ?? 0) + (stats?.[s.attr] ?? 0) * s.coef;
+        // 크기에 더하고 부호 유지 — raw 0 은 + 쪽이다
+        const grow = (raw, field) => (raw < 0 ? -(-raw + (sum[field] ?? 0)) : raw + (sum[field] ?? 0));
+        const hits = Math.floor(def.hits + (sum.hits ?? 0));
+        const decayAdd = sum.decay_pct ?? 0;
+        return {
+            ...def,
+            hits: def.kind === 'attack' ? Math.max(1, hits) : hits,
+            value: grow(def.value, 'effect_value'),
+            dur: grow(def.dur, 'duration_sec'),
+            // 원값보다 낮아지지는 않는다 — 상한은 **슬롯이 민 몫**에만 건다 (원값이 상한보다 큰 CSV 가 와도 조용히 깎이지 않게)
+            decay: decayAdd > 0 ? Math.max(def.decay, Math.min(def.decay + decayAdd, B.skill_decay_cap_pct)) : def.decay,
+            procChance: grow(def.procChance ?? 0, 'proc_chance_pct'),
+            procMult: grow(def.procMult ?? 0, 'proc_mult_pct'),
+            flat: sum.mult_pct ?? 0,
+        };
+    }
+
+    /**
      * 툴팁 미리보기 (SCREEN_DESIGN §4-2 · 2026-09-08) — **화면이 문장을 만들 재료**다.
      * 공식을 렌더러가 다시 적지 않게 여기서 낸다 (DEV_PLAN 부채 #3 을 늘리지 않는다).
      *
      * ⚠ **감소도 치명도 안 태운다** — 방어·저항·피해 감소는 **대상이 정해져야** 나오는 값이라 미리보기가 될 수 없고,
-     *   치명은 굴림이다. 그래서 `amount` 는 `formula.strike` 의 **첫 줄**(공격력 × 스킬 배율)까지이고
+     *   치명은 굴림이다. 그래서 `amount` 는 `formula.strike` 의 **첫 줄**(공격력 × 스킬 배율 + 능력치 항)까지이고
      *   그 뒤 단계는 전투가 낸다. 툴팁이 약속하는 것은 「내가 때리는 세기」이지 「상대가 받는 피해」가 아니다.
      * ⚠ **버프는 `amount` 가 `null` 이다** — 버프의 세기는 배율이 아니라 `effect_value` 라서 곱할 것이 없다.
+     *   대신 **`parts`** 가 슬롯이 미는 항마다 「원값 · 실효값 · 어느 능력치가 얼마나」를 낸다 [2026-09-10 · R72] —
+     *   설명창(2단계)이 이 모양을 그대로 읽는다. 실효값은 전투와 **같은 함수**(`scaleDef`)에서 온다.
      *
      * @param def 스킬 정의 (`defs[id]` 또는 `resolve(inst)`)
-     * @param ctx {atk, period} — 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     * @param ctx {atk, matk, hpMax, period, stats} — 전부 선택. 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     *   · `amount` 의 밑수 — attack `atk` · heal `matk` · summon `hpMax`
+     *   · `stats` — 기본 능력치 7종. **`mult_pct` 슬롯이 있는데 없으면** `amount` 는 `null` 이다(고정 항을 모르는 피해는 틀린 숫자다)
+     * @returns {{baseSec, everySec, lossPct, amount, parts}} — `parts.amount`(mult > 0 인 attack·heal·summon) ·
+     *   `parts.{hits, value, dur, decay, procChance, procMult}`(그 항에 슬롯이 1개 이상일 때만) (INTERFACE §2-8)
      */
     const previewOf = (def, ctx = {}) => {
         if (!def) return null;
         const period = ctx.period > 0 ? ctx.period : null;
-        const atk = Number.isFinite(ctx.atk) && ctx.atk > 0 ? ctx.atk : null;
+        const stats = ctx.stats ?? null;
+        const eff = scaleDef(def, stats);
+        const termsOf = field => (def.scales ?? []).filter(s => s.field === field).map(s => ({ attr: s.attr, coef: s.coef }));
+        const parts = {};
+        // 한 타 피해 · 회복량 · 벽 HP = 밑수 × 배율 + 고정 항 — 고정 항을 모르면(슬롯이 있는데 stats 가 없다) 숫자를 내지 않는다
+        const basis = AMOUNT_BASIS[def.kind] ?? null;
+        let amount = null;
+        if (basis !== null && def.mult > 0) {
+            const terms = termsOf('mult_pct');
+            const base = Number.isFinite(ctx[basis]) && ctx[basis] >= 0 ? ctx[basis] : null;
+            amount = base === null || (terms.length > 0 && stats === null) ? null : Math.round(base * def.mult / 100 + eff.flat);
+            parts.amount = { value: amount, basis, pct: def.mult, terms };
+        }
+        // 슬롯이 미는 나머지 항 — 그 항에 슬롯이 하나라도 있을 때만 키가 선다(coef 0 인 항도 terms 에 든다)
+        for (const [field, key] of Object.entries(SCALE_FIELDS)) {
+            if (field === 'mult_pct') continue;               // 배율 항은 위 `parts.amount` 가 든다
+            const terms = termsOf(field);
+            if (terms.length === 0) continue;
+            // 확률은 100 에서 자른다 — `strike` 가 그 상한으로 굴리므로 설명창의 120% 는 틀린 숫자다. `raw`·`scaleDef` 는 안 자른다
+            const value = stats === null ? null : (key === 'procChance' ? Math.min(eff[key], 100) : eff[key]);
+            parts[key] = { value, raw: def[key], terms };
+        }
         const everySec = period === null ? null : F.effectiveCd(def.cool, period);
         return {
             baseSec: def.cool,
             everySec,
             // 실효 쿨이 표기보다 얼마나 밀리는가(%) — 0 이면 주기와 정렬이 맞는다
             lossPct: everySec === null ? null : (everySec - def.cool) / def.cool * 100,
-            // 한 타 피해(attack) · 회복량(heal). 다단은 **한 타** 값이다 — 총합은 화면이 말하지 않는다
-            amount: atk === null || !(def.mult > 0) ? null : Math.round(atk * def.mult / 100),
+            // 한 타 피해(attack) · 회복량(heal) · 벽 HP(summon) — **고정 항 포함**. 다단은 **한 타** 값이다 — 총합은 화면이 말하지 않는다
+            amount,
+            parts,
         };
     };
 
-    return { defs, list, activesFor, resolve, castable, pickReady, tagsOf, previewOf, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
+    return { defs, list, activesFor, resolve, castable, pickReady, tagsOf, scaleDef, previewOf, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

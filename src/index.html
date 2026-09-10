@@ -9,19 +9,22 @@
     <link rel="stylesheet" href="./ui/style.css">
 </head>
 <body>
-    <div id="app">
-        <div class="brand">THE <b>SEVEN</b></div>
-        <div class="topbar">
-            <div class="crumb"></div>
-            <div class="resources"></div>
+    <!-- 한 장 — 화면은 1600×800 한 장이고 창에 맞춰 통째로 줄이고 늘린다 (ADR-0087 · 크기는 style.css 의 #stage) -->
+    <div id="stage">
+        <div id="app">
+            <div class="brand">THE <b>SEVEN</b></div>
+            <div class="topbar">
+                <div class="crumb"></div>
+                <div class="resources"></div>
+            </div>
+            <nav class="nav"></nav>
+            <main class="main"></main>
         </div>
-        <nav class="nav"></nav>
-        <main class="main"></main>
-    </div>
 
-    <div id="tooltip" class="tooltip"></div>
-    <!-- 창 레이어 — 탭 위에 겹쳐 뜨는 판 하나 (SCREEN_DESIGN §2). 지금 쓰는 곳은 스킬 트리(§7) 뿐이다 -->
-    <div id="modal" class="modal-layer" hidden></div>
+        <div id="tooltip" class="tooltip"></div>
+        <!-- 창 레이어 — 탭 위에 겹쳐 뜨는 판 하나 (SCREEN_DESIGN §2). 쓰는 곳은 스킬 트리(§7) · 해고(§6) · 출정(§4-1) -->
+        <div id="modal" class="modal-layer" hidden></div>
+    </div>
 
     <script type="module" src="./ui/app.js"></script>
 </body>

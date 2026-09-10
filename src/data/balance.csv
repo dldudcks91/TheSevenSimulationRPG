@@ -8,6 +8,7 @@ wave_monster_max,3,fixed,0,라운드당 몬스터 전역 상한 — round_budget
 advance_unlock_level,30,fixed,0,전직 해금 레벨 (GAME_DESIGN §9 · 전직 3갈래 skill_design §4)
 active_slots,3,fixed,0,액티브 칸 수 — 고유 · 무기군 · 전직 각 하나 (GAME_DESIGN §9 08-26 「액티브 3」 · skill_design §2). 첫 칸은 생성 시 굴린 고유 스킬 · 나머지는 직업 액티브로 채운다(프로토타입 §9-0 개정 2026-09-01)
 skill_cd_floor_mult,0.1,proposed,1,쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로 안 내려간다. 0 이면 스킬이 매 차례 나가 예산이 무너진다 (2026-09-01 코드 상수 CD_MIN_MULT 이관 · battle_design §6)
+skill_decay_cap_pct,90,proposed,0,스케일링 슬롯이 민 감쇠(decay_pct)의 상한(%) — 연쇄 배율 감쇠·광역 약화·방어 감소가 민첩으로 100 에 닿으면 두 번째 대상부터 0 이 되거나 방어가 한 방에 사라진다. 슬롯이 더한 뒤에만 건다 — CSV 원값은 skill.js 의 0 이상 100 미만 검증 그대로다. crit_cap_pct 와 같은 안전 상한이라 손잡이(knob)가 아니다 (skill_design §13-5 · DEV_PLAN R72) (2026-09-10 R72 발행)
 hero_level_cap,99,fixed,0,영웅 레벨 상한 — 상한에 닿으면 XP 를 더 쌓지 않는다. 「50 이후 느린 곡선」은 미반영(곡선 숫자는 후속 캘리브레이션 — GAME_DESIGN §9 08-26) (2026-08-30 발행)
 hero_attr_min,1,fixed,0,영웅 기본 능력치 최소값 — 7종 공통 (2026-08-22 확정)
 hero_attr_max,20,fixed,0,영웅 기본 능력치 최대값 — **전 영웅 공통 상한 하나**다. ~~히든 상한선은 이 값 이하에서 개체별로 굴림~~ 은 2026-09-07 폐지(rollCaps 삭제 · 세이브 v15) — 개체차는 시작 굴림(등급별 총합 대역 + 분포 모양 · hero_tier.csv)이 만들고 상한이 만들지 않는다. 「등급은 출발선이지 천장이 아니다」 (hero_design §4-3) (2026-08-22 확정)
