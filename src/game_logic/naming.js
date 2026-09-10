@@ -18,13 +18,15 @@ export function createNaming(data) {
     /** base 는 문자열(양 언어 공통) 또는 {ko, en} — 무기군 정의도 ko/en 을 갖고 있어 그대로 들어온다 */
     const pair = base => (typeof base === 'string' ? { ko: base, en: base } : base);
 
-    /** 아이템 이름 — ko "분노의 Base — 오만" / en "Wrathful Base of Pride" (D2 매직/레어 명명) */
+    /** 아이템 이름 — 태그 형식 "[죄종1][죄종2] Base" — ko/en 동형 (2026-09-11 개정 · 사용자 지시).
+     *  대괄호는 죄종 표시명 그대로(`adj` 형용사 아님) — 태그라 언어별 조사·전치사가 없다.
+     *  매직 등급(`sufSin` 없음)은 대괄호가 하나뿐이다 — 조건부로 빈 칸을 만들지 않는다. */
     const composeName = (preSin, base, sufSin) => {
         const b = pair(base);
-        const p = S[preSin];
+        const tag = sin => `[${S[sin].ko}]`, tagEn = sin => `[${S[sin].en}]`;
         return {
-            ko: `${p.ko}의 ${b.ko}${sufSin ? ` — ${S[sufSin].ko}` : ''}`,
-            en: `${p.adj} ${b.en}${sufSin ? ` of ${S[sufSin].en}` : ''}`,
+            ko: `${tag(preSin)}${sufSin ? tag(sufSin) : ''} ${b.ko}`,
+            en: `${tagEn(preSin)}${sufSin ? tagEn(sufSin) : ''} ${b.en}`,
         };
     };
 

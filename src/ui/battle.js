@@ -7,8 +7,8 @@
  *
  * 배치: 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 + 아레나 아래 가방(app.js 가 붙인다) (2026-08-27).
  * **배치가 둘이고 컨트롤의 버튼 하나가 오간다** (2026-09-03 사용자 지시, SCREEN_DESIGN §4-2):
- *   · **넓게**(기본) — 아레나가 메인 칸 전폭(높이 420 고정) · 로그/누적은 **창**이 든다
- *   · **나눔**(옛 구조) — 좌 아레나(옛 크기) / 우 딜미터 열 2단 격자 · 판이 그 열에 **상주**한다(창 안 뜸)
+ *   · **넓게**(기본) — 아레나 폭 1184 · 판 가운데(비 2.33 · ADR-0091) · 로그/누적은 **창**이 든다
+ *   · **나눔** — 좌 아레나(열을 뺀 폭 · 비 2.33 · 넓게와 같은 카드) / 우 로그 열 · 판이 그 열에 **상주**한다(창 안 뜸) (2026-09-11 · ADR-0093)
  *   판(로그·누적) DOM 은 **하나뿐이고 집만 옮긴다** — 새로 만들면 쌓아 둔 로그와 스크롤이 날아간다.
  *   창 규격은 셸의 창과 같되(.modal-layer/.modal-box · 정사각 X · 바깥 클릭 · Esc) **레이어는 재생기 자기 DOM 안**이다 — 두 판은 재생기가 살아 있는 동안 계속 쓰이므로 밖에 두면 mount 마다 넘겨줘야 한다.
  *   배치는 재생 위치(resume)가 아니라 **취향**이라 app.js 의 `state.btLayout` 이 들고 `opts.layout`/`opts.onLayout` 으로 오간다 — 런이 바뀌어도 남는다.
@@ -68,7 +68,7 @@ export function mountBattle(container, opts) {
         // ?dev=play&bt=<아무거나> 처럼 모르는 값이 들어오면 두 판이 다 숨어 빈 창이 뜬다 (2026-09-03)
         tab: resume?.tab === 'dmg' ? 'dmg' : 'log',
         win: resume?.win === true,   // 창이 열려 있나 (2026-09-03) — 기본은 닫힘
-        // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
+        // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 1184 가운데 + 로그 창) / 'split'(아레나 비 2.33 + 우측 로그 열 · 2026-09-11 ADR-0093).
         // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
         layout: opts.layout === 'split' ? 'split' : 'wide',
         onKey: null,                 // Esc 리스너 — 정리 함수가 뗀다
@@ -93,9 +93,6 @@ export function mountBattle(container, opts) {
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
     const dom = buildDom(state, stage, stageId);
-    // 원정 탭의 화면 전환(편성·지역 / 전투 관전 / 리포트) — 패널 **위**가 아니라 이 패널 **안** 왼쪽 위에 선다 (2026-09-03 사용자 지시).
-    // 재생기는 그 버튼이 무엇인지 모른다 — app.js 가 만든 노드를 자리에 꽂아 줄 뿐이다
-    if (opts.nav) dom.querySelector('.bh-nav').appendChild(opts.nav);
     container.appendChild(dom);
     bindControls(state, container, opts);
     // t=0 의 이벤트(첫 라운드 편성)를 먼저 적용해서 첫 프레임부터 적이 서 있게 한다.
@@ -124,13 +121,13 @@ function buildDom(state, stage, stageId) {
     const rounds = D.balance.rounds_per_stage;
     const kindOf = n => D.roundTypes.find(r => r.round_num === n)?.round_type ?? 'normal';
     /* 헤드는 **한 줄** [재개정 2026-09-04 사용자 지시 · SCREEN_DESIGN §4-2]
-         `.bh-top` — 전환 · 이름 · 라운드 트랙 ─── (밀어내기) ─── `.battle-ctrl`(배속 · 일시정지 · 건너뛰기 │ 배치 · 로그 · 누적)
+         `.bh-top` — 이름 · 라운드 트랙 ─── (밀어내기) ─── `.battle-ctrl`(배속 · 일시정지 · 건너뛰기 │ 배치 · 로그 · 누적)
+       화면 전환 세그먼트는 여기 없다 — 상단바에 선다 (2026-09-11 · ADR-0094)
        「라운드 n / 총 · 종류 · 경과 시계」(`.bh-meta`)는 삭제됐고, 컨트롤 줄이 그 자리로 올라와 헤드가 2줄 → 1줄이 됐다.
        아레나와 그 아래 가방이 줄 하나만큼 위로 올라온다(가방이 화면 아래로 잘리던 것) */
     wrap.innerHTML = `
         <div class="battle-head">
             <div class="bh-top">
-                <div class="bh-nav"></div>
                 <div class="bh-title">${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}</div>
                 <div class="round-track">${
                     Array.from({ length: rounds }, (_, i) => {

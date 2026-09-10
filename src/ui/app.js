@@ -326,6 +326,7 @@ function renderShell() {
     $('.resources').appendChild(langBtn);
 
     $('.crumb').textContent = state.screen === 'prologue' ? t('pro.h') : pre ? t('ng.h') : t(`nav.${state.tab}`);
+    $('.tab-seg').innerHTML = '';   // 탭 세그먼트 자리 — 채우는 것은 탭 렌더러다 (§2 · 지금은 원정만)
 }
 
 function render() {
@@ -576,24 +577,28 @@ function runBattle(stageId, { instant = false, tab = null } = {}) {
 }
 
 function renderExpedition(main) {
-    // 화면 전환(편성·지역 / 전투 관전 / 리포트) — 패널 **위**의 줄이 아니라 **첫 패널 안** 왼쪽 위에 선다 (2026-09-03 사용자 지시).
-    // 줄 하나가 통째로 사라지므로 아래 패널이 그만큼 올라온다
-    const expNav = () => segmented([
+    // 화면 전환(편성·지역 / 전투 관전 / 리포트)은 **상단바** crumb 오른쪽에 선다 [2026-09-11 사용자 지시 · ADR-0094 가 ADR-0016 을 대체].
+    // 세 화면이 같은 자리를 쓴다. `state.exp` 가 확정된 뒤에 부른다 — 고른 칸 표시가 실제 화면과 어긋나지 않게
+    const expNav = () => $('.tab-seg').appendChild(segmented([
         { id: 'idle', label: t('exp.seg.idle') },
         { id: 'battle', label: t('exp.seg.battle'), disabled: !state.battle },
         { id: 'report', label: t('exp.seg.report'), disabled: !G.reports.length },
-    ], state.exp, id => { state.exp = id; render(); });
+    ], state.exp, id => { state.exp = id; render(); }));
 
     if (state.exp === 'battle' && state.battle) {
+        expNav();
         const { result, stageId } = state.battle;
-        stopBattle = mountBattle(main, {
+        /* 관전 화면 한 장 [2026-09-11 사용자 지시 · ADR-0095] — 전투 판 + 가방이 메인 세로를 채운다.
+           넓게 배치면 아레나가 남는 세로를 먹고 가방 아랫변이 탭 내비 「새 게임」 줄 아랫변에 붙는다 (style.css `.bt-page`) */
+        const page = el('div', 'bt-page');
+        main.appendChild(page);
+        stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
             // 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 출발 순간에 찍은 스냅샷이다. 재생기는 이 값으로 **자리만** 민다
             form: state.battle.form,
             // 관전 배치 — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
             // 재생 위치(resume)가 아니라 **취향**이라 화면 상태가 든다 — 런이 바뀌어도 남고, 세이브에는 안 들어간다
             layout: state.btLayout, onLayout: v => { state.btLayout = v; },
-            nav: expNav(),   // 재생기가 자기 헤드 왼쪽 위(.bh-nav)에 꽂는다
             onEnd: auto => {
                 if (auto && G.run?.repeat && result.won) runBattle(stageId);
                 // 반복이 안 이어지면 출정이 끝난 것이다 — ~~아웃된 영웅을 낫게 하는 일~~ 은 2026-09-08 폐기(§1-1 개정)
@@ -601,12 +606,16 @@ function renderExpedition(main) {
             },
         });
         // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 정산은 출발 순간 끝났으므로 여기서 정리해도 이 전투는 안 바뀐다
-        main.appendChild(itemsPanel(heroById(state.heroUid), { showTarget: true }));
+        // 칸 · 그림은 §6 보다 한 단 크다 (`.bt-bag` · ADR-0095) — 캐릭터 탭의 가방은 그대로다
+        const bag = itemsPanel(heroById(state.heroUid), { showTarget: true });
+        bag.classList.add('bt-bag');
+        page.appendChild(bag);
         return;
     }
-    if (state.exp === 'report' && G.reports.length) return renderExpReport(main, expNav());
+    if (state.exp === 'report' && G.reports.length) { expNav(); return renderExpReport(main); }
     state.exp = 'idle';
-    renderExpIdle(main, expNav());
+    expNav();
+    renderExpIdle(main);
 }
 
 /** 파티에 넣고 뺀다 — 편성 화면 영웅 띠의 클릭 (2026-08-27, 옛 파티·벤치 행을 띠가 대신한다) */
@@ -644,7 +653,7 @@ function expChapter() {
     return (next ?? unlocked[unlocked.length - 1])?.chapter ?? ids[0];
 }
 
-function renderExpIdle(main, nav) {
+function renderExpIdle(main) {
     const nb = noticeBanner();
     if (nb) main.appendChild(nb);
 
@@ -654,12 +663,9 @@ function renderExpIdle(main, nav) {
        한 판에서 받는다. 걷힌 만큼 이 화면은 **스테이지 목록 하나**가 된다 — 「어디를 갈지 먼저」(2026-08-27)의 원형이다.
        ⚠ 관전·리포트에 안 세우던 옛 규칙은 그대로다 — 그 둘은 전투 화면만 본다.
        스테이지 — **고른 챕터 하나**만 (ADR-0067). 그 안의 잠긴 스테이지도 그린다 */
+    // 제목 줄이 없다 [2026-09-11 사용자 지시 · ADR-0094] — 화면 전환은 상단바로 올라갔고, 「원정 지역」은 crumb · 챕터 줄 · 행이 이미 말한다.
+    // 패널의 첫 줄은 챕터 세그먼트다 (`exp.zones.h` 는 도움말이 계속 부른다)
     const zp = el('div', 'panel');
-    // 첫 줄 = 왼쪽 화면 전환 · 오른쪽 제목 (2026-09-03) — 옛 제목 줄 자리를 그대로 쓰므로 세로가 안 늘어난다
-    const zh = el('div', 'panel-nav');
-    if (nav) zh.appendChild(nav);
-    zh.appendChild(el('h2', '', t('exp.zones.h')));
-    zp.appendChild(zh);
     /* 챕터 세그먼트 — **한 챕터가 한 화면**이다 [2026-09-09 사용자 지시 · ADR-0067 · 도감 몬스터 세그먼트와 같은 문법(§9)].
        **전 챕터가 선다** — 잠긴 챕터도 눌러 볼 수 있다. 이 절이 원래부터 잠긴 스테이지를 그리는 근거
        (「어디까지 가야 하는지가 보여야 한다」)를 챕터 단위로 넓힌 것이고, 막는 자리는 **보내기**(`canDepart`) 하나다.
@@ -1024,12 +1030,10 @@ const verdictOf = R => {
     };
 };
 
-/** 런 목록 — 최신이 맨 위. 줄 클릭이 오른쪽 상세를 바꾼다. 세그먼트는 이 패널 왼쪽 위에 선다 (ADR-0016) */
-function runListPanel(list, idx, nav) {
+/** 런 목록 — 최신이 맨 위. 줄 클릭이 오른쪽 상세를 바꾼다. 화면 전환 세그먼트는 상단바에 선다 (ADR-0094) */
+function runListPanel(list, idx) {
     const p = el('div', 'panel rep-runs');     // 높이는 오른쪽 상세가 정한다 — 목록은 받은 높이를 채우고 안에서 스크롤 (ADR-0086)
-    p.innerHTML = `<div class="panel-nav"></div>
-        <h2>${t('rep.list.h')} <small>${t('rep.list.sub', { n: list.length })}</small></h2>`;
-    if (nav) p.querySelector('.panel-nav').appendChild(nav);
+    p.innerHTML = `<h2>${t('rep.list.h')} <small>${t('rep.list.sub', { n: list.length })}</small></h2>`;
     const box = el('div', 'rep-list');
     list.forEach((R, i) => {
         const v = verdictOf(R);
@@ -1299,7 +1303,7 @@ function reportDetail(R, live) {
     return p;
 }
 
-function renderExpReport(main, nav) {
+function renderExpReport(main) {
     const list = G.reports;
     // 고른 줄 — 목록이 줄면(상한에 밀려 나가면) 맨 위로 되돌린다
     const idx = Math.min(Math.max(0, state.repRun ?? 0), list.length - 1);
@@ -1309,7 +1313,7 @@ function renderExpReport(main, nav) {
     const live = !!state.battle && state.battle.at === R.at
         && (state.battle.resume?.t ?? 0) < state.battle.result.durationSec;
     const cols = el('div', 'cols c-side');
-    cols.appendChild(runListPanel(list, idx, nav));
+    cols.appendChild(runListPanel(list, idx));
     cols.appendChild(reportDetail(R, live));
     main.appendChild(cols);
 }
@@ -1443,7 +1447,10 @@ function paperdoll(h) {
             cell.innerHTML = `${art ? `<span class="pd-art"><img src="${art}" alt="" loading="lazy" onerror="this.remove()"></span>`
                 : `<div class="pd-icon">${it ? itemImg(it) : def.icon}</div>`}<div class="pd-label">${L(def)}</div>`;
             if (it) {
-                bindTip(cell, it, { head: 'tip.equipped' });   // 이 칸의 것은 실제로 착용 중이다 (§6 머리글)
+                // 실제로 착용 중이라 담은 스킬 줄도 **h 의 실제 능력치 기준**으로 낸다 (2026-09-11 사용자 지시)
+                const cb = combatOf(h);
+                const skCtx = { period: cycleOf(h), atk: cb.atk_physical ?? cb.atk_magic, matk: cb.atk_magic, hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
+                bindTip(cell, it, { head: 'tip.equipped', ctx: skCtx });   // 이 칸의 것은 실제로 착용 중이다 (§6 머리글)
                 cell.onclick = () => {
                     const r = SYS.game.unequip(G, h.uid, pos);
                     if (!r.ok) flash(`ch.err.${r.err}`); else save();
@@ -1696,7 +1703,10 @@ function itemsPanel(h, { showTarget = false } = {}) {
             // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
             const target = SYS.game.equipTarget(h, it);
             const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
-            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: ringHint });
+            // compare 카드는 **지금 착용 중인 물건**이라(§6) 담은 스킬 줄도 h 의 실제 능력치로 낸다 — item(가방·미착용)은 그대로 접힌 식
+            const cb = combatOf(h);
+            const skCtx = { period: cycleOf(h), atk: cb.atk_physical ?? cb.atk_magic, matk: cb.atk_magic, hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
+            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: ringHint, compareCtx: skCtx });
             cell.onclick = () => {
                 if (state.salvageMode) {
                     const r = SYS.game.salvage(G, it.uid);
@@ -1734,8 +1744,10 @@ function renderCharacter(main) {
  * 아이템 카드 한 장 — 줄 순서는 **머리글 / 이름 / 소속 / 메인 옵션 / 옵션 / 담은 스킬 / 힌트**
  * (SCREEN_DESIGN §6 · 개정 2026-09-10 [ADR-0081] — 메인 옵션이 커지고 담은 스킬이 카드 바닥으로 내려갔다).
  * @param hints 하단 힌트. 문자열 하나든 배열이든 받는다 — 반지 칸 · 「착용 중 없음」이 함께 설 수 있다
+ * @param skCtx 담은 스킬 줄의 계산 맥락(`{period,atk,matk,hpMax,atkType,stats}`) — **실제로 착용 중인 카드에만** 넘긴다.
+ *   생략하면 식이 접힌 채 나온다(주인이 없는 아이템 — 방금 주운 드롭 · 아직 안 낀 후보). 2026-09-11 사용자 지시.
  */
-function tipCard(item, headText, hints = []) {
+function tipCard(item, headText, hints = [], skCtx) {
     if (!item) return null;                      // 빈 카드는 안 세운다 (§6 개정 2026-09-08 — 아래 bindTip)
     const c = el('div', 'tip-card');
     // 죄종은 **이름이 든다** — `composeName` 이 「분노의 둔기 — 오만」으로 접두·접미를 다 싣는다 (2026-09-08 사용자 지시).
@@ -1750,11 +1762,12 @@ function tipCard(item, headText, hints = []) {
     // **담은 스킬** — 무기가 액티브 한 칸을 통째로 정한다 [신설 2026-09-09 · skill_design §12-1 규칙 3].
     //   `watk`·`element` 와 같은 **개체 굴림 결과**라 밑수 묶음에 붙고 접사 목록과는 층이 다르다.
     //   문장은 액티브 줄·스킬 툴팁과 **같은 함수**가 낸다 — 화면이 문장을 만들지 않는다 (부채 #3 을 안 늘린다).
-    //   전투 맥락(주기·공격력)은 안 넘긴다: 툴팁의 주인은 아이템이지 영웅이 아니라 그 조각을 문장이 접는다
+    //   전투 맥락(주기·공격력)은 **착용 중인 카드에만** 넘긴다(`skCtx`) — 그 밖(드롭·후보)은 주인이 없어
+    //   그 조각을 문장이 접는다 [2026-09-09 원 결정 · 2026-09-11 「착용 중이면 실제값」으로 개정 · 사용자 지시]
     //   `skillInfo` 는 없는 id 에도 객체를 주므로(빈 칸 방지 규칙) **정의 유무는 `skill.defs` 로 판정한다** —
     //   안 그러면 스킬 없는 무기가 이름 자리에 `null` 을 찍는다
     const sk = g && item.skill && SYS.skill.defs[item.skill] ? skillInfo(item.skill) : null;
-    const skLine = sk ? skillLineHtml({ id: item.skill }) : '';
+    const skLine = sk ? skillLineHtml({ id: item.skill }, skCtx ?? {}) : '';
     const hintTags = [].concat(hints).filter(Boolean).map(x => `<span class="muted">${x}</span>`).join('');
     // **메인 옵션 — 밑수 하나가 한 행이다** [개정 2026-09-10 사용자 지시 · ADR-0081].
     //   이름 왼쪽 · 값 오른쪽이라 두 카드(이 아이템 ↔ 착용 중)의 값이 **같은 x 에 선다** — 비교가 이 툴팁의 일이다.
@@ -1805,12 +1818,14 @@ function tipCard(item, headText, hints = []) {
  * @param opts.compare 비교 상대. **`null`(교체될 자리가 빔)이면 둘째 카드를 안 세우고** 하단 힌트 한 줄로 접는다 —
  *                     「비어 있음」 넉 자에 툴팁 폭의 절반이 빈 상자로 서 있었다. `undefined` 면 비교 자체를 안 한다
  * @param opts.hints   하단 힌트(반지 칸 등)
+ * @param opts.ctx        `item` 카드의 담은 스킬 계산 맥락 — **`item` 이 실제로 착용 중일 때만** 준다(paperdoll)
+ * @param opts.compareCtx `compare` 카드의 계산 맥락 — `compare` 는 언제나 착용 중인 것이라(§6) 있으면 준다(itemsPanel)
  */
-function bindTip(node, item, { head = 'tip.this', compare, hints = [] } = {}) {
+function bindTip(node, item, { head = 'tip.this', compare, hints = [], ctx, compareCtx } = {}) {
     const foot = [].concat(hints, compare === null ? t('tip.noneEquipped') : []);
     bindTipNode(node, () => [
-        tipCard(item, t(head), foot),
-        compare ? tipCard(compare, t('tip.equipped')) : null,
+        tipCard(item, t(head), foot, ctx),
+        compare ? tipCard(compare, t('tip.equipped'), [], compareCtx) : null,
     ]);
 }
 

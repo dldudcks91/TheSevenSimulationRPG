@@ -115,12 +115,12 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
 /* 한 장 (2026-09-10 · ADR-0087) — 화면은 **1600×800 한 장**이다. 크기의 SSOT 는 아래 `#stage` 한 곳이고
    `app.js:fitStage` 가 창에 맞춰 통째로 줄이고 늘린다(`transform`). 그래서 **창 크기를 읽는 단위(vw · vh · 미디어 쿼리)를 안 쓴다** —
    그것들은 한 장이 아니라 실제 창을 봐서 창마다 한 장 안의 크기가 흔들린다. 정책은 src/ui/README.md 「화면 크기 정책」.
-   nav 는 영어 라벨("Expedition")이 들어가야 해서 172 → 188. */
+   nav 폭 330 은 **메인이 줄어든 만큼**이다(아래 `.main` 의 zoom · ADR-0090) — 영어 라벨("Expedition")이 드는 하한 188 을 넉넉히 넘는다. */
 html, body { height: 100%; overflow: hidden; }
 #stage { position: absolute; left: 0; top: 0; width: 1600px; height: 800px; transform-origin: 0 0; }
 #app {
     display: grid;
-    grid-template-columns: 188px 1fr;
+    grid-template-columns: 330px 1fr;
     grid-template-rows: 48px 1fr;
     grid-template-areas: "brand topbar" "nav main";
     height: 100%;
@@ -148,6 +148,10 @@ html, body { height: 100%; overflow: hidden; }
     border-bottom: 1px solid var(--border-primary);
 }
 .topbar .crumb { color: var(--text-secondary); font-size: var(--fs-sm); }
+/* 탭 세그먼트 — crumb 바로 오른쪽 · 탭 안의 화면 전환 (2026-09-11 · ADR-0094). 비면 자리를 안 잡아 자원 줄은 오른쪽 끝 그대로다 */
+.tab-seg { margin-right: auto; }
+.tab-seg:empty { display: none; }
+.tab-seg .segmented { flex-wrap: nowrap; }
 .resources { display: flex; gap: 18px; font-size: var(--fs-sm); }
 .resources span b { color: var(--text-primary); margin-left: 6px; }
 .resources span { color: var(--text-muted); }
@@ -176,6 +180,11 @@ html, body { height: 100%; overflow: hidden; }
 }
 
 .main { grid-area: main; overflow-y: auto; padding: 20px; }
+/* 메인은 한 번 더 줄인다 (2026-09-10 · ADR-0090) — 칸(1270×752) 안에서 내용이 1411×836 으로 레이아웃되고 90% 로 선다.
+   **모든 탭이 같은 비율**이고 줄어든 폭은 위 `#app` 첫 열(nav)이 갖는다. 배율은 세로가 정한다 — 752 ÷ 가장 긴 탭(캐릭터 834).
+   `transform` 이 아니라 `zoom` — 칸 폭 안에서 레이아웃이 설계 크기로 돈다. 메인 안에는 마우스 좌표 코드가 없다(툴팁 = 한 장 직속 · 진형 드래그 = #modal).
+   내비가 없는 화면(pregame — 시작 · 프롤로그)은 안 줄인다. 값과 대가는 src/ui/README.md 「화면 크기 정책」 */
+#app:not(.pregame) > .main { zoom: .9; }
 
 /* ───────── 공통 조각 ───────── */
 
@@ -787,9 +796,6 @@ html, body { height: 100%; overflow: hidden; }
 }
 .bh-top { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: nowrap; }
 .bh-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 세그먼트는 안 접힌다 — 접히면 헤드가 도로 2줄이 된다 (`.segmented` 기본은 `wrap` 이라 여기서만 끈다) */
-.bh-nav { flex: 0 0 auto; }
-.bh-nav .segmented { flex-wrap: nowrap; }
 /* 컨트롤 — 줄 오른쪽 끝. 재생(배속·일시정지·건너뛰기)과 판 고르기(배치·로그·누적)를 `.ctrl-div` 가 가른다 */
 .battle-ctrl { flex: 0 0 auto; margin-left: auto; display: flex; gap: 4px; flex-wrap: nowrap; }
 /* 한 줄에 여덟 개가 서야 해서 좌우 패딩을 한 단 좁힌다 (다른 화면의 `.btn.sm` 은 그대로) */
@@ -798,23 +804,15 @@ html, body { height: 100%; overflow: hidden; }
 .btn.sm.on { border-color: var(--border-highlight); background: #24243c; }
 
 /* ── 배치 둘 [2026-09-03 사용자 지시] — 컨트롤의 버튼 하나가 오간다 (SCREEN_DESIGN §4-2)
-   기본(클래스 없음) = **넓게**: 아레나가 메인 칸 전폭 · 로그/누적은 창
-   `.split`              = **나눔**(옛 구조): 좌 아레나(옛 크기) / 우 딜미터 열 2단 격자
+   기본(클래스 없음) = **넓게**: 아레나 폭 1184 · 판 가운데(비 2.33 · ADR-0091) · 로그/누적은 창
+   `.split`          = **나눔**: 좌 아레나(열을 뺀 폭 · 비 2.33 · 넓게와 같은 카드) / 우 로그 열 (2026-09-11 · ADR-0093)
    ⚠ 두 배치가 **같은 뼈대**를 쓴다 — 판(.pane) DOM 은 하나뿐이고 JS 가 집만 옮긴다(쌓인 로그를 안 버리려고) */
 .battle-body.split {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 25%); gap: 14px; align-items: stretch;
 }
-/* 옛 아레나 크기로 되돌린다 — 넓게의 화면비 고정을 **끄고** 옛 min-height 규칙을 되살린다(선택자가 한 단 위라 이긴다) */
-.battle-body.split .arena { aspect-ratio: auto; min-height: 304px; }
-/* **카드도 옛 크기로 줄인다** [2026-09-03 사용자 지시] — 아레나가 좁아지면 226 짜리 카드 3장이 두 줄로 접힌다.
-   그 자리를 딜미터 열에서 뺏지 않고(열은 300 그대로) **카드를 옛 200/76 으로 되돌려** 맞춘다.
-   나눔 배치의 아레나 689 안에 3×200 + 여백 616 이 들어간다 */
-.battle-body.split .unit-slot { flex: 0 0 200px; width: 200px; }
-/* 76 → 84 → 86 (2026-09-04 — HP 바 18 → 20 을 따라간다) — 이름 줄이 오른쪽 열로 들어오면서 76 에는 안 들어간다
-   (이름 16 + HP 20 + 게이지 9 + 스킬 35 + 간격 ≈ 86). 카드 총높이는 위칸 시절 옛 값(≈112)보다 오히려 작다. 초상은 76 그대로 가운데 */
-.battle-body.split .unit-body { height: 86px; }
-.battle-body.split .unit .sprite { width: 76px; height: 76px; }
-.battle-body.split .pop { left: 44px; }   /* 초상 한가운데 — 패딩 6 + 38 */
+/* 나눔 배치 — 폭은 격자 칸이 정하고 높이는 **비 2.33** 이 정한다(넓게 배치는 비를 안 지키고 남는 세로를 먹는다 · ADR-0095).
+   카드 · 진형 간격은 넓게와 같다 — 옛 축소 규칙(아레나 304 · 카드 200/76 · step 10 · VS 12)은 걷었다 (2026-09-11 · ADR-0093) */
+.battle-body.split .arena { aspect-ratio: 2.33; }
 /* 우측 딜미터 열 — 높이 예산은 아레나와 같다. 판은 그 안에서만 스크롤한다
    ⚠ `display:flex` 는 브라우저 기본 `[hidden]{display:none}` 을 **이긴다** — 아래 한 줄이 없으면 넓게 배치에서도 빈 열이 자리를 먹는다
       (.modal-layer 와 같은 함정이다) */
@@ -822,6 +820,19 @@ html, body { height: 100%; overflow: hidden; }
    옛 `max-height: clamp(280px,38vh,360px)` 은 아레나보다 짧게 끊겨 아랫변이 어긋났다 */
 .battle-side { display: flex; flex-direction: column; min-height: 0; }
 .battle-side[hidden] { display: none; }
+
+/* 관전 화면 한 장 [2026-09-11 사용자 지시 · ADR-0095] — 전투 판 + 가방(`.bt-page`)이 메인 세로를 채운다.
+   넓게 배치면 전투 판 → `.battle-body` → 아레나가 **남는 세로**를 넘겨받고 가방은 제 높이로 맨 아래에 선다.
+   나눔 배치는 흐른다 — 아레나가 비 2.33 이라 채울 세로가 없다.
+   **가방 아랫변 = 탭 내비 「새 게임」 아랫변** — 내비는 배율을 안 타고 아래 여백이 12 라, 이 화면만 메인 아래 여백을 12 / .9(메인 배율 · ADR-0090)로 둔다 */
+.main:has(> .bt-page) { padding-bottom: calc(12px / .9); }
+.bt-page { height: 100%; display: flex; flex-direction: column; }
+.bt-page > .battle-panel:has(> .battle-body:not(.split)) { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.battle-panel > .battle-body:not(.split) { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+/* 관전의 가방은 칸 · 그림이 §6 보다 한 단 크다 — 칸은 **70칸이 3줄에 드는 가장 큰 폭**(판 안 1337 · 간격 4 → 24열 · 한 변 약 52).
+   한 단 더 키우면 23열 · 4줄이 되어 아레나가 한 줄만큼 준다. 캐릭터 탭(§6)은 그대로다 — 그쪽은 세로 여유가 2px 다 */
+.bt-bag .inv-cells.wide { grid-template-columns: repeat(auto-fill, minmax(51px, 1fr)); }
+.bt-bag .inv-icon { width: 40px; height: 40px; }
 
 .arena {
     /* 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 (2026-08-27 좌우 대치를 시도했다가 사용자 지시로 상하 복귀) */
@@ -836,7 +847,11 @@ html, body { height: 100%; overflow: hidden; }
        ⚠ 폭을 따라 높이도 커진다: 1280 창 1001 × 430 · 1600 창 1340 × 575. 09-03 오전에 같은 이유로 `aspect-ratio` 를 걷었던 적이 있다 —
          그때 문제는 비 자체가 아니라 「높이가 같이 커지는 것」이었고, 이번엔 그걸 알고 택했다.
        옛 `clamp(280px, 38vh, 360px)` 의 뷰포트 비례는 안 되살렸다 — 폭이 전폭으로 정해진 마당에 세로만 창 높이를 따라가면 아레나가 창마다 흔들린다 */
-    padding: 14px 12px; aspect-ratio: 2.33; min-height: 350px;
+    padding: 14px 12px; min-height: 350px;
+    /* **판 전폭 · 남는 세로** [2026-09-11 사용자 지시 · ADR-0095 가 ADR-0091(폭 1184 · 가운데)을 대체] — 넓게 배치는 **비를 안 지킨다**.
+       높이는 세로 flex 인 `.battle-body` 가 넘겨 주는 나머지다(아래 「관전 화면 한 장」) — 헤드나 가방이 자라면 아레나가 받는다.
+       나눔 배치는 비 2.33 을 그대로 든다(`.battle-body.split .arena`). 위 주석의 420 · 2.33 은 이 줄 이전 이야기다 (src/ui/README.md 크기 정책) */
+    flex: 1 1 0;
     background: radial-gradient(ellipse at center, #17171f 0%, var(--bg-input) 100%);
     border: 1px solid var(--border-dark);
     position: relative;
@@ -889,9 +904,6 @@ html, body { height: 100%; overflow: hidden; }
 .side-party .unit-slot[data-rank="2"] { top: calc(var(--form-step) * 2); }
 .side-enemy .unit-slot[data-rank="1"] { top: calc(var(--form-step) * -1); }         /* 위 진영 → 위로 */
 .side-enemy .unit-slot[data-rank="2"] { top: calc(var(--form-step) * -2); }
-/* ⚠ **나눔 배치는 덜 민다** — 「나눔 배치는 안 벌린다」(2026-09-08 · .divider)와 같은 이유다:
-   그쪽 아레나는 높이가 `clamp(280px,38vh,360px)` 라 벌리기 전에 이미 뱃지가 12px 밖으로 나가 있다(선행 버그) */
-.battle-body.split .side { --form-step: 10px; }
 
 /* VS 선 — **두 진영 사이의 간격을 이 여백이 정한다** (2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2).
    아레나가 내용을 세로 가운데 정렬하므로 이 한 값이 **VS 선을 축으로 위아래를 대칭으로** 민다.
@@ -905,11 +917,6 @@ html, body { height: 100%; overflow: hidden; }
     display: flex; align-items: center; gap: 12px;
     margin: 38px 0; font-size: var(--fs-xs); letter-spacing: 2px;
 }
-/* ⚠ **나눔 배치는 안 벌린다** — 그쪽 아레나는 높이가 `clamp(280px,38vh,360px)` 라 여유가 없다.
-   실측(1280×700): 넓게 430px 은 벌린 뒤에도 뱃지 줄이 **21px 안쪽**이지만, 나눔 280px 은
-   **벌리기 전에 이미 뱃지가 12px 밖으로 나가 있다**(선행 버그 — 이 개정과 무관하다).
-   여기서 같이 벌리면 더 밀리므로 옛 값을 유지한다 */
-.battle-body.split .divider { margin: 12px 0; }
 .divider::before, .divider::after {
     content: ''; flex: 1; height: 1px;
     background: linear-gradient(90deg, transparent, var(--border-secondary), transparent);

@@ -39,7 +39,7 @@ render()
   stopBattle?()             재생 중이면 먼저 정리
   applyDocumentLang()       <html lang> · <title> 동기화
   SYS.game.tickInjuries(G)  + state.heroUid 유효성 보정
-  renderShell()             탭 내비 · crumb · 자원 · 언어 토글
+  renderShell()             탭 내비 · crumb · 탭 세그먼트 자리 비우기 · 자원 · 언어 토글
   main.innerHTML = ''  →  render<탭>(main)
   state.flash 가 있으면 .flash 한 줄을 prepend 하고 지운다
   hideTip()
@@ -90,7 +90,8 @@ render()
 
 `src/index.html` 의 뼈대는 고정이다. 렌더러는 이 자리들만 채운다.
 
-- `#stage`(한 장 · 1600×800) 안에 `.brand` · `.topbar`(안에 `.crumb` · `.resources`) · `.nav` · `.main` · `#tooltip` · `#modal`
+- `#stage`(한 장 · 1600×800) 안에 `.brand` · `.topbar`(안에 `.crumb` · `.tab-seg` · `.resources`) · `.nav` · `.main` · `#tooltip` · `#modal`
+- `.tab-seg` 는 탭 안의 화면 전환 세그먼트 자리다 — `renderShell` 이 매 렌더 비우고 탭 렌더러가 채운다(지금은 원정만 · ADR-0094)
 - 마우스 좌표로 붙는 것(툴팁 · 진형 드래그 고스트)은 `tip.js:stagePoint` 를 거친다 — 한 장이 `transform` 으로 통째로 줄고 늘기 때문이다 (ADR-0087)
 - 새 상시 요소가 필요하면 여기에 자리를 만들고 [SCREEN_DESIGN.md §2](docs/client/SCREEN_DESIGN.md) 공통 셸 표에 행을 추가한다
 - 폰트 두 벌은 `<head>` 의 CDN 링크. 오프라인 폴백은 CSS 변수의 폴백 스택이 담당한다
