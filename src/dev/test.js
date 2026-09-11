@@ -803,7 +803,7 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
 check('save: serialize → deserialize 왕복 동일 (v22)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 23;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 24;
 });
 /**
  * v15 → v16 (2026-09-07 확정 · 2026-09-08 구현 — 사제 전용 무기 · R46).
@@ -2167,6 +2167,47 @@ check('salvage: 가방에서 사라지고 가루가 는다', () => {
     return r.ok && !G.bag.includes(uid) && !G.items[uid] && G.resources.dust === before + r.dust;
 });
 
+/**
+ * 보관 두 칸 [신설 2026-09-11 · v24 · item_design §1 · GAME_DESIGN §9].
+ * 드롭은 인벤토리에만 쌓이고 창고는 **유저가 옮긴 것만** 든다. 창고에서도 **바로 장착·분해**된다.
+ */
+check('창고: 인벤토리 ↔ 창고 왕복 — 총량이 안 변하고 제자리로 돌아온다 (v24)', () => {
+    const { g, it } = upgradeFixture(mkItem('gloves', [{ stat: 'crit_pct', v: 5 }]));
+    const total = () => g.bag.length + g.stash.length;
+    const n0 = total();
+    const a = SYS.game.moveToStash(g, it.uid);
+    if (!a.ok) fail(`toStash ${a.err}`);
+    if (!(g.stash.includes(it.uid) && !g.bag.includes(it.uid))) fail('창고로 안 갔다');
+    const b = SYS.game.moveToBag(g, it.uid);
+    if (!b.ok) fail(`toBag ${b.err}`);
+    return g.bag.includes(it.uid) && !g.stash.includes(it.uid) && total() === n0;
+});
+
+check('창고: 창고에서 바로 장착된다 — 교체품은 창고로 돌아간다 (v24 · item_design §1)', () => {
+    const { g, it } = upgradeFixture(mkItem('gloves', [{ stat: 'crit_pct', v: 5 }]));
+    const h = g.heroes[0];
+    const worn = mkItem('gloves', [{ stat: 'crit_pct', v: 1 }]);
+    worn.uid = 'iWorn'; g.items[worn.uid] = worn; h.equipped.gloves = worn.uid;
+    if (!SYS.game.moveToStash(g, it.uid).ok) fail('창고로 못 옮겼다');
+    const r = SYS.game.equip(g, h.uid, it.uid);
+    if (!r.ok) fail(`equip ${r.err}`);
+    // 교체품은 **꺼낸 쪽**(창고)으로 — 인벤이 차 있어도 창고 장착이 막히지 않는다
+    return h.equipped.gloves === it.uid && g.stash.includes(worn.uid) && !g.bag.includes(worn.uid);
+});
+
+check('save: v23 → v24 이관 — 인벤 상한을 넘는 뒤쪽이 창고로 · 아이템이 안 사라진다', () => {
+    const cap = B.inventory_cap;
+    const v23 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v23.version = 23;
+    delete v23.stash;
+    v23.bag = Array.from({ length: cap + 4 }, (_, i) => `iMig${i}`);
+    const up = SYS.game.deserialize(v23);
+    if (up.version !== 24) fail(`v${up.version}`);
+    if (up.bag.length !== cap) fail(`bag ${up.bag.length}`);
+    if (up.stash.length !== 4) fail(`stash ${up.stash.length}`);
+    return up.bag[0] === 'iMig0' && up.stash[0] === `iMig${cap}`;
+});
+
 /* ── 전투 ── */
 const units = () => G.party.map(uid => ({ uid, combat: SYS.game.heroCombat(G, SYS.game.heroById(G, uid)) }));
 /**
@@ -3333,8 +3374,8 @@ check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다
     return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
 });
 
-check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** (R59 · INTERFACE §4)', () =>
-    SAVE_VERSION === 23 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** (R59 · INTERFACE §4)', () =>
+    SAVE_VERSION === 24 || fail(`v${SAVE_VERSION}`));
 
 /**
  * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.

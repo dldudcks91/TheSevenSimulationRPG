@@ -94,7 +94,7 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 23;
+export const SAVE_VERSION = 24;
 
 /**
  * @param {object} deps
@@ -205,7 +205,7 @@ export function createGameSystem(deps) {
         const state = {
             version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
             resources: { gold: B.start_gold, dust: B.start_dust, stigma: B.start_stigma },
-            heroes: [], party: [], items: {}, bag: [],
+            heroes: [], party: [], items: {}, bag: [], stash: [],
             progress: { cleared: [] },
             codexCards: {}, codexKills: {},
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0 },
@@ -559,6 +559,17 @@ export function createGameSystem(deps) {
         return s;
     }
 
+    /** v23 → v24 — 보관이 둘이 된다(인벤토리 + 창고 · item_design §1).
+     *  옛 가방을 앞에서부터 `inventory_cap` 개만 남기고 **넘치는 뒤쪽을 창고로** 옮긴다.
+     *  아이템은 하나도 안 사라진다 · rng 를 안 쓴다 (INTERFACE §4 v23 → v24) */
+    function upgradeV23(s) {
+        const bag = s.bag ?? [];
+        s.bag = bag.slice(0, B.inventory_cap);
+        s.stash = [...(s.stash ?? []), ...bag.slice(B.inventory_cap)];
+        s.version = 24;
+        return s;
+    }
+
     /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
@@ -571,7 +582,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -595,12 +606,14 @@ export function createGameSystem(deps) {
         if (s.version === 20) s = upgradeV20(s);
         if (s.version === 21) s = upgradeV21(s);
         if (s.version === 22) s = upgradeV22(s);
+        if (s.version === 23) s = upgradeV23(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
         s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
         s.tactics = s.tactics ?? { slots: {} };
         // 수색 — 없으면 「한 적이 없다」가 정확한 초기 상태라 **버전을 안 올린다** (INTERFACE §4 · 2026-09-09)
+        s.stash = s.stash ?? [];       // 창고 — v24. 없던 세이브는 빈 채로 열린다
         s.search = s.search ?? null;
         if (s.search) s.search.answer = s.search.answer ?? null;   // 만남 이전에 나간 수색 (2026-09-09)
         s.counters.search = s.counters.search ?? 0;
@@ -695,9 +708,15 @@ export function createGameSystem(deps) {
 
     /** 가방 → 착용. 그 위치의 착용품은 가방으로 (가방이 차면 실패). position 은 생략 가능.
      *  양손↔보조 배타는 2026-09-01 한손 개념 폐지로 사라졌다 — 되돌아오는 것은 언제나 그 자리에 있던 하나뿐이다 */
+    /** 그 아이템이 어느 보관함에 있나 — 인벤토리(`bag`) / 창고(`stash`) / 없음(null) [v24] */
+    const holderOf = (state, uid) =>
+        state.bag.includes(uid) ? 'bag' : (state.stash ?? []).includes(uid) ? 'stash' : null;
+    const capOf = (where) => where === 'bag' ? B.inventory_cap : B.stash_cap;
+
     function equip(state, heroUid, itemUid, position) {
         const h = heroById(state, heroUid), it = state.items[itemUid];
-        if (!h || !it || !state.bag.includes(itemUid)) return { ok: false, err: 'missing' };
+        const from = h && it ? holderOf(state, itemUid) : null;
+        if (!from) return { ok: false, err: 'missing' };
         const why = I.canEquip(h, it);
         if (why) return { ok: false, err: why };
         const pos = position && positionsOf(it.slot).includes(position) ? position : equipTarget(h, it);
@@ -705,13 +724,16 @@ export function createGameSystem(deps) {
 
         const back = [];
         if (h.equipped[pos]) back.push(h.equipped[pos]);
-        // 가방에서 하나 빠지고 back 만큼 들어온다
-        if (state.bag.length - 1 + back.length > B.inventory_cap) return { ok: false, err: 'bagFull' };
+        // **교체품은 꺼낸 쪽으로 돌아간다** [v24] — 창고에서 낌 것을 인벤으로 돌려보내면
+        // 인벤이 찼을 때 거절이 나서 「창고에서 바로 장착」(item_design §1)이 깨진다. 칸 수는 그대로다
+        const list = from === 'bag' ? state.bag : state.stash;
+        if (list.length - 1 + back.length > capOf(from)) return { ok: false, err: from === 'bag' ? 'bagFull' : 'stashFull' };
 
-        state.bag = state.bag.filter(u => u !== itemUid);
-        for (const u of back) state.bag.push(u);
+        const rest = list.filter(u => u !== itemUid);
+        for (const u of back) rest.push(u);
+        if (from === 'bag') state.bag = rest; else state.stash = rest;
         h.equipped[pos] = itemUid;
-        return { ok: true, back, position: pos };
+        return { ok: true, back, position: pos, from };
     }
 
     function unequip(state, heroUid, position) {
@@ -727,12 +749,32 @@ export function createGameSystem(deps) {
     /** 분해 — 가방 아이템을 몬스터 가루로 */
     function salvage(state, itemUid) {
         const it = state.items[itemUid];
-        if (!it || !state.bag.includes(itemUid)) return { ok: false, err: 'missing' };
+        const from = it ? holderOf(state, itemUid) : null;   // 창고 것도 분해된다 [v24 · item_design §1]
+        if (!from) return { ok: false, err: 'missing' };
         const dust = I.salvageDust(it);
-        state.bag = state.bag.filter(u => u !== itemUid);
+        if (from === 'bag') state.bag = state.bag.filter(u => u !== itemUid);
+        else state.stash = state.stash.filter(u => u !== itemUid);
         delete state.items[itemUid];
         state.resources.dust += dust;
-        return { ok: true, dust };
+        return { ok: true, dust, from };
+    }
+
+    /** 인벤토리 → 창고 [v24]. 받는 쪽이 차 있으면 `stashFull` */
+    function moveToStash(state, itemUid) {
+        if (holderOf(state, itemUid) !== 'bag') return { ok: false, err: 'missing' };
+        if (state.stash.length >= B.stash_cap) return { ok: false, err: 'stashFull' };
+        state.bag = state.bag.filter(u => u !== itemUid);
+        state.stash.push(itemUid);
+        return { ok: true };
+    }
+
+    /** 창고 → 인벤토리 [v24]. 받는 쪽이 차 있으면 `bagFull` */
+    function moveToBag(state, itemUid) {
+        if (holderOf(state, itemUid) !== 'stash') return { ok: false, err: 'missing' };
+        if (state.bag.length >= B.inventory_cap) return { ok: false, err: 'bagFull' };
+        state.stash = state.stash.filter(u => u !== itemUid);
+        state.bag.push(itemUid);
+        return { ok: true };
     }
 
     /* ── 강화 (item_design §1 개정 2026-08-31 — R25) ── */
@@ -1401,7 +1443,7 @@ export function createGameSystem(deps) {
         newGame, serialize, deserialize, canLoad,
         heroById, heroItems, heroCombat, upgradeState, upgradeItem,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
-        equipTarget, equip, unequip, salvage,
+        equipTarget, equip, unequip, salvage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire, dismiss,

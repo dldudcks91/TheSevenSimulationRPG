@@ -117,7 +117,8 @@ render()
 `src/ui/battle.js` 는 **타임라인 소비자**다 — 계약은 [INTERFACE.md §6](docs/client/INTERFACE.md), 이벤트 정의는 [INTERFACE.md §2-6](docs/client/INTERFACE.md).
 
 - HP 는 이벤트가 실어 온 값을 그대로 쓴다. 재생기는 계산하지 않는다
-- `mountBattle(container, opts)` 가 정리 함수를 돌려준다. 렌더러는 그걸 `stopBattle` 에 담아 다음 `render()` 첫 줄에서 부른다. 정리 함수는 재생 위치 `{t, speed, running, tab, win}` 를 돌려주고(`win` = 로그 창이 열려 있었나, 2026-09-03), 렌더러가 `state.battle.resume` 에 담아 다음 mount 의 `opts.resume` 으로 넘긴다 — 재렌더(가방 클릭 · 언어 전환)에도 재생이 이어진다 (2026-08-27)
+- `mountBattle(container, opts)` 가 정리 함수를 돌려준다. 렌더러는 그걸 `stopBattle` 에 담아 다음 `render()` 첫 줄에서 부른다. 정리 함수는 재생 위치 `{t, speed, running, tab, win, wall, auto}` 를 돌려주고(`win` = 로그 창이 열려 있었나, 2026-09-03 · `wall` = 마지막으로 시각을 민 실제 시각 · `auto` = 결과 띠가 다음 런을 세던 중, 2026-09-11), 렌더러가 `state.battle.resume` 에 담아 다음 mount 의 `opts.resume` 으로 넘긴다 — 재렌더(가방 클릭 · 언어 전환)에도 재생이 이어진다 (2026-08-27)
+- **시각은 실제로 흐른 시간 × 배속이다** — 눈금 수로 밀지 않는다(브라우저가 숨긴 탭의 눈금을 늦춘다). 재생기는 `opts.now` 로 시각을 읽고 공백이 `opts.frozenMs` 를 넘으면 밀지 않는다. 브라우저 탭이 숨으면 앱이 재생기를 걷고 앱 시계(`expTick`)가 민다 — 숨긴 탭은 그리지 않는다 ([ADR-0102](docs/client/adr/0102-숨긴-브라우저-탭도-켜져-있는-것이다-JS-가-멈춘-공백은-꺼진-것이다.md))
 - 배속 · 일시정지 · 건너뛰기는 **재생 속도의 문제**지 결과의 문제가 아니다. 결과는 출발 순간 이미 정산·저장됐다 ([ARCHITECTURE.md §5](docs/client/ARCHITECTURE.md))
 - 연출(모션 · 팝업 · 로그 문구)은 재생기의 자유다. 다만 **이벤트 해석을 바꾸는 것은 계약 변경**이다 → [INTERFACE.md](docs/client/INTERFACE.md) 먼저 · `/client`
 - 모르는 이벤트·유닛 키는 지금 조용히 무시된다 ([DEV_PLAN.md §4](docs/client/DEV_PLAN.md) 부채 #6)

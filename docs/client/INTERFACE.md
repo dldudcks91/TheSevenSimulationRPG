@@ -617,7 +617,8 @@ strike(rng, a, d):
 |---|---|---|
 | `missing` | 대상 없음 / 가방에 없음 | equip · unequip · salvage · toggleParty · hire · **upgradeItem** · **dismiss** · **searchSend** |
 | `class` | 직업 전속 무기군 아님 | equip |
-| `bagFull` | 가방 초과 | equip · unequip |
+| `bagFull` | **인벤토리** 초과 | equip · unequip · **moveToBag** |
+| **`stashFull`** | **창고 초과** | **moveToStash** (2026-09-11) |
 | `full` | 파티 정원 | toggleParty |
 | `locked` · `noParty` | 스테이지 잠김 / 파티 없음 · **마스터리 해금 레벨 미달** · **전술 칸 미해금** | canDepart · learnMastery · rerollTactic |
 | `gold` · `roster` | 골드 부족 / 로스터 정원 | tavernReroll · hire · **rerollTactic**(`gold`) · **upgradeItem**(`gold`) · **searchTake** |
@@ -635,18 +636,20 @@ strike(rng, a, d):
 
 ---
 
-## 4. 세이브 스키마 v23
+## 4. 세이브 스키마 v24
 
 ```
 {
-  version: 23, seed: uint32, createdAt: ms, savedAt: ms,
+  version: 24, seed: uint32, createdAt: ms, savedAt: ms,
   resources: { gold, dust, stigma },      // `dust` 는 남는다 — **분해**가 여전히 뱉는다(item_design §5-3 「분해가 뱉는 재료」는 백지). 사라진 것은 **처치** 공급원뿐이다 (v19)
   heroes: [ hero ],                       // §2-4 hero 객체. equipped 키 = 착용 위치 8개 · mastery {nodeId:rank} · masteryPoints · innate(고유 스킬 id) · face(초상 id `<classId>_<k>` 문자열 | null — **직업 풀에서** 생성 시 1회 굴림 · 이후 불변 · 풀 0장인 직업은 null · v13 2026-09-07) · skillOrder?(선택 — 칸 순서)
   party: [ heroUid ],                     // **편성한 순서 그대로** — `party[0]` 이 리더. 새 게임은 `[]` (2026-09-09)
   formation: { tpl, ranks: [[uid...],[uid...]] },   // **진형 — v20**. `tpl` = `formation_template.csv:tpl_id` · `ranks[0]` 전열 · `ranks[1]` 후열.
                                           //   전투가 읽는다(「앞부터 때린다」의 「앞」) · 정규화는 소속을 바꾸는 쪽이 한다 (§2-7)
   items: { itemUid: item },               // §2-5 item 객체 — `up`(강화 단계) 포함, 접사 값은 강화가 박아 둔 값. **무기는 `skill`(담은 액티브 id)도 든다 — v18** · **접사는 출처 `src` 를 든다 — v23**
-  bag: [ itemUid ],                       // 가방 순서 = 표시 순서
+  bag: [ itemUid ],                       // **인벤토리** — 순서 = 표시 순서. 드롭이 쌓이는 쪽이고 상한은 `[balance.csv:inventory_cap]`
+  stash: [ itemUid ],                     // **창고 — v24**. 플레이어가 직접 옮긴 것만 든다 · 상한 `[balance.csv:stash_cap]`
+                                          //   창고에서도 **장착 · 분해 · 강화가 그대로** 된다(꺼내는 단계가 없다 — item_design §1)
   progress: { cleared: [ stageId ] },     // **v22** — 필드 모양은 그대로. 챕터보스 스테이지가 x04 → x05 로 옮겨 가 옛 x04 클리어를 x05 에 소급한다 (아래)
   codexCards: { monsterId: n },           // 도감 레벨의 출처. 누적, 소모 없음
   codexKills: { monsterId: n },           // 기록만
@@ -736,6 +739,18 @@ strike(rng, a, d):
 - **왜 보존하지 않나** — v12 의 정수 얼굴은 **직업과 무관하게** 굴린 번호다(궁수 얼굴이 전사에게 갔다). 보존할 개체성이 없고, 직업 일치가 이 개정의 목적 자체라 남겨 두면 목적이 무너진다
 - **전투 결과는 안 바뀐다** — 얼굴은 표시 전용이다. 전용 스트림이라 전투·선술집·강화·전술 수열과도 안 섞인다 (§5-1)
 - **마법사는 `null`** — 이 이관이 돌던 시점엔 풀이 0장이라 초상이 없었다(같은 날 밤 1장이 들어와 **v13→v14 가 소급한다** — 아래). 화면은 빈 칸으로 둔다(자리표시를 안 깐다 — SCREEN_DESIGN §5). 그래도 `rollFace` 는 rng 를 1회 소비하므로 **직업 구성이 소비 수를 바꾸지 않는다**
+
+**v23 → v24 이관** (2026-09-11 — **보관이 둘이 된다: 인벤토리 + 창고** · item_design §1 · GAME_DESIGN §9 · 사용자 확정). `deserialize` 가 v23 을 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `stash` | **신설.** 없으면 `[]` |
+| `bag` | 앞에서부터 `[balance.csv:inventory_cap]` 개만 남기고 **넘치는 뒤쪽을 `stash` 로 옮긴다** — 순서가 표시 순서라 「앞」이 유저가 최근에 본 자리다 |
+| `version` | `24` |
+
+- **rng 를 한 번도 안 쓴다** — 이관이 굴림을 태우면 같은 시드가 다른 결과를 낸다 (v14·v15 와 같은 규칙)
+- **아이템은 하나도 안 사라진다** — 옛 상한(70)이 두 칸 합(`inventory_cap` + `stash_cap`)보다 작아 전부 자리를 받는다. 그보다 큰 세이브가 있어도 **넘긴 채로 열린다** — 상한은 **새로 얻을 때만** 막는 값이다(§7 「가방 용량 산수의 순서」와 같은 규칙)
+- ⚠ **전투 결과는 안 바뀐다** — 보관 위치는 전투 입력이 아니다
 
 **v22 → v23 이관** (2026-09-11 — **무기 옵션은 세 층이다** · item_design §1 「무기 옵션」 · 사용자 지시 · DEV_PLAN R78). 접사가 출처 `src` 를 들게 됐고 무기는 고정 옵션 · 죄종 칸을 받는다. `deserialize` 가 v22 를 받으면 제자리에서 올린다:
 

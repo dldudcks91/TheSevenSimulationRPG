@@ -242,12 +242,16 @@ const STRINGS = {
     'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제', en: 'Click an item = equip · click a worn slot = unequip' },
     // 가방의 최상위 축 — 부위가 아니라 갈래다. 「전체」는 없다 (ADR-0055)
     'ch.bag.equip': { ko: '장비', en: 'Gear' },
+    // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
+    'ch.bag.stash': { ko: '창고', en: 'Stash' },
+    'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
     'ch.bag.material': { ko: '재료', en: 'Materials' },
     'ch.bag.count': { ko: '{n}개', en: '×{n}' },
     'ch.salvageMode': { ko: '분해 모드', en: 'Salvage mode' },
     'ch.salvageHint': { ko: '분해 모드: 클릭한 아이템을 가루로 만든다', en: 'Salvage mode: clicking an item turns it to dust' },
     'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
-    'ch.err.bagFull': { ko: '가방이 가득 찼다', en: 'Bag is full' },
+    'ch.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
+    'ch.err.stashFull': { ko: '창고가 가득 찼다', en: 'Stash is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
     // 툴팁이 걷은 「{n}강에서 옵션 상승」이 앉는 자리다 (SCREEN_DESIGN §6 개정 2026-09-08 — 조건·규칙 주석은 도움말의 몫).

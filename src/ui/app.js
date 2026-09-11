@@ -334,6 +334,8 @@ function renderShell() {
 }
 
 function render() {
+    // 숨긴 탭은 그리지 않는다 — 보는 사람이 없다. 시계는 앱이 계속 밀고, 돌아오는 순간 한 번 그린다(`onVisibility` · ADR-0102)
+    if (document.hidden) return;
     // 관전 중 재렌더(가방 클릭 · 언어 전환 · 세그먼트 이동)면 재생 위치를 받아 뒀다가 다음 mount 에 넘긴다 — 처음부터 다시 틀지 않는다 (2026-08-27)
     if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
     stopRepLive?.();      // 리포트의 실시간 표도 같은 자리에서 끈다 (재생 위치는 state.battle.resume 에 남는다)
@@ -561,8 +563,12 @@ function renderStart(main) {
 /* ═══════════ 원정 (편성 · 전투 · 리포트) ═══════════ */
 
 /** 원정 1회 — 정산은 즉시, 관전은 재생. instant 면 재생을 건너뛰고 리포트로 */
-function runBattle(stageId, { instant = false, tab = null } = {}) {
-    const r = SYS.game.resolveBattle(G, stageId, now());
+/**
+ * 출발 — `at` 은 출발 시각(기본 지금), `resume` 은 새 런의 재생 위치.
+ * 앱 시계가 반복을 한 눈금 안에서 이어 세울 때 둘을 넘긴다 — 앞 런이 끝난 순간에 출발했고, 배속 · 판 · 창을 잇는다 (ADR-0102)
+ */
+function runBattle(stageId, { instant = false, tab = null, at = null, resume = null } = {}) {
+    const r = SYS.game.resolveBattle(G, stageId, at ?? now());
     if (!r.ok) {
         flash({ locked: 'exp.locked', noParty: 'exp.noParty' }[r.err] ?? 'exp.cantDepart');
         state.exp = 'idle'; render(); return;
@@ -578,7 +584,11 @@ function runBattle(stageId, { instant = false, tab = null } = {}) {
     }
     // tab — 개발용 ?dev=play&bt=dmg: 로그 창을 누적 데미지 판으로 **열어** 헤드리스가 클릭 없이 닿게 한다 (2026-09-03: 창이 됐으므로 win 도 같이 넘긴다)
     // form — 진형을 **출발 순간에 찍는다** (2026-09-09). 관전 아레나가 이 값으로 파티 카드를 위아래로 민다
-    state.battle = { result: r.result, at: r.report.at, stageId, form: formSnapshot(), resume: tab ? { t: 0, speed: 1, running: true, tab, win: true } : undefined };
+    // 옛 런의 재생기는 여기서 걷는다 — 두면 다음 render() 첫 줄이 **그 재생 위치를 새 런에 덮어써** 새 런이 옛 런이 끝난 시각부터
+    //   재생됐다(2026-09-11 실측 — 앞 194초를 건너뛰었다 · ADR-0102). 이어 받을 것(배속 · 판 · 창)은 부르는 쪽이 `resume` 으로 넘긴다
+    if (stopBattle) { stopBattle(); stopBattle = null; }
+    state.battle = { result: r.result, at: r.report.at, stageId, form: formSnapshot(),
+        resume: resume ?? (tab ? { t: 0, speed: 1, running: true, tab, win: true } : undefined) };
     state.exp = 'battle';
     render();
 }
@@ -606,10 +616,14 @@ function renderExpedition(main) {
             // 관전 배치 — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
             // 재생 위치(resume)가 아니라 **취향**이라 화면 상태가 든다 — 런이 바뀌어도 남고, 세이브에는 안 들어간다
             layout: state.btLayout, onLayout: v => { state.btLayout = v; },
+            now, frozenMs: FROZEN_GAP_MS,   // 시각은 실제로 흐른 시간이 민다 · 문턱을 넘은 공백은 밀지 않는다 (ADR-0102)
             onEnd: auto => {
-                if (auto && G.run?.repeat && result.won) runBattle(stageId);
+                // 재생기를 먼저 걷는다 — 반복으로 이어지는 런은 배속 · 판 · 창을 잇고 시각만 0 에서 시작한다 (§4 · ADR-0102)
+                const pos = stopBattle ? stopBattle() : state.battle?.resume;
+                stopBattle = null;
+                if (auto && G.run?.repeat && result.won) runBattle(stageId, { resume: { ...pos, t: 0, wall: now(), auto: false } });
                 // 반복이 안 이어지면 출정이 끝난 것이다 — ~~아웃된 영웅을 낫게 하는 일~~ 은 2026-09-08 폐기(§1-1 개정)
-                else { save(); state.exp = 'report'; render(); }
+                else { if (state.battle) state.battle.resume = { ...pos, auto: false }; save(); state.exp = 'report'; render(); }
             },
         });
         // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 정산은 출발 순간 끝났으므로 여기서 정리해도 이 전투는 안 바뀐다
@@ -1101,7 +1115,8 @@ function dropSection(p, R) {
         // 가방을 떠난 것은 **흐리게** 남는다 — 분해했으면 빈 칸(정의가 사라졌다) · 착용 중이면 그림째 흐리게.
         // 「그 런이 준 것」은 지난 사실이라 목록에서 빼지 않는다 (§4-3)
         if (!d) { grid.appendChild(el('div', 'inv-cell gone')); continue; }
-        const inBag = G.bag.includes(uid);
+        // 창고도 「가지고 있다」다 [2026-09-11 v24] — 옮겼을 뿐인 것을 흐린 칸으로 찍으면 거짓말이 된다
+        const inBag = !!SYS.game.holderOf(G, uid);
         const cell = el('div', `inv-cell filled${inBag ? '' : ' gone'}`);
         cell.style.borderColor = rarity(d.rarity).color;
         const us = SYS.game.upgradeState(G, uid);
@@ -1236,30 +1251,89 @@ function startReportLive(box, badge, R) {
     stopRepLive = () => { repLivePaint = null; stopRepLive = null; };
 }
 
-/* ═══ 원정 시계 — **화면이 아니라 앱이 든다** (SCREEN_DESIGN §4 · ADR-0074) ═══
-   출발한 런은 어느 탭에 있든 계속 간다. 옛 구조는 시계를 관전 재생기가 들고 있어서 `render()` 가 재생기를
+/* ═══ 원정 시계 — **화면이 아니라 앱이 든다** (SCREEN_DESIGN §4 · ADR-0074 · ADR-0102) ═══
+   출발한 런은 어느 탭에 있든 — 브라우저 탭을 숨겨 둬도 — 계속 간다. 옛 구조는 시계를 관전 재생기가 들고 있어서 `render()` 가 재생기를
    걷으면(다른 탭으로 이동) 시각도 같이 멈췄다 — 캐릭터 탭에서 장비를 갈아입히는 동안 원정이 얼었다.
-   정산은 출발 순간 끝났으므로(resolveBattle) 여기서 흐르는 것은 **연출의 시각**뿐이다 — 결과는 안 바뀐다. */
-const EXP_TICK_MS = 200;      // 5fps — 백그라운드에서 미는 것은 숫자 하나(재생 시각)뿐이다
+   정산은 출발 순간 끝났으므로(resolveBattle) 여기서 흐르는 것은 **연출의 시각**뿐이다 — 결과는 안 바뀐다.
+   시각은 **실제로 흐른 시간 × 배속**이다 (ADR-0102) — 눈금 수로 밀면 브라우저가 숨긴 탭의 눈금을 늦출 때(1분에 한 번까지) 원정도 같이 멎는다. */
+const EXP_TICK_MS = 200;      // 5fps — 백그라운드에서 미는 것은 숫자 하나(재생 시각)뿐이다. 간격은 그리는 빈도지 시각의 단위가 아니다
+/* 「멈췄다」의 문턱 — 앱 시계가 이만큼 넘게 한 번도 안 불렸으면 그 사이 JS 가 통째로 멈춰 있었다(PC 절전 · 브라우저 절전 탭).
+   크롬이 숨긴 탭의 눈금을 늦추는 최대 간격이 1분이라 그 두 배를 둔다 — **게임 수치가 아니라 브라우저 사정**이라 CSV 가 아니다 (ADR-0102) */
+const FROZEN_GAP_MS = 2 * 60 * 1000;
+let beatAt = null;            // 앱 시계가 마지막으로 불린 실제 시각 — 멈춤은 이 박동의 공백으로 잰다
 
 function expTick() {
-    // 관전이 떠 있으면 **재생기가 시계다** — 애니메이션이 그 눈금 위에 사니 이쪽이 물러난다
+    const at = now();
+    const gap = beatAt == null ? 0 : at - beatAt;
+    beatAt = at;
+    // 멈췄다 깨어났다 — 게임을 껐다 켠 것과 같이 본다 (ADR-0102). 재생기가 먼저 깨어나도 그쪽은 공백을 밀지 않고 여기로 미룬다
+    if (gap > FROZEN_GAP_MS) { closeFrozenRun(at); return; }
+    // 관전이 떠 있으면 **재생기가 시계다** — 애니메이션이 그 눈금 위에 산다. 브라우저 탭이 숨으면 재생기를 걷으므로(`onVisibility`)
+    //   숨긴 탭의 시계는 언제나 이쪽이다
     if (!G || state.screen !== 'game' || stopBattle) return;
+    // 한 눈금에 런이 끝나면 **남은 시간을 다음 런으로 넘긴다** — 숨긴 탭은 1분에 한 번 깨므로 안 넘기면 런마다 그만큼 샌다.
+    //   다음 런은 앞 런이 끝난 순간에 출발한 것으로 친다(`runBattle` 의 `at`)
+    for (;;) {
+        const B = state.battle;
+        if (!B) return;
+        const end = B.result.durationSec;
+        const r = B.resume ?? { t: 0, speed: 1, running: true, tab: 'log', win: false };
+        // 유저가 세워 둔 것 — 시계를 멈추는 것은 이것 하나다. 세워 둔 동안에도 박자는 민다(다시 틀 때 그 시간이 한꺼번에 흐르지 않게)
+        if (r.running === false) { B.resume = { ...r, wall: at }; return; }
+        if (r.t >= end && !r.auto) return;   // 끝난 런. `auto` = 결과 띠가 다음 런을 세던 도중에 걷혔다 — 이어서 세운다
+        const speed = r.speed ?? 1;
+        const tNow = r.t + Math.max(0, at - (r.wall ?? at)) / 1000 * speed;
+        B.resume = { ...r, t: Math.min(end, tNow), wall: at, auto: false };
+        repLivePaint?.();                    // 리포트를 보고 있으면 기여 표가 그만큼 찬다 (§4-3)
+        if (tNow < end) return;
+        // 끝 — 관전의 `onEnd` 와 **같은 규칙**이다. 어느 탭에서 끝났든 반복 원정이면 다음 런이 출발한다
+        if (G.run?.repeat && B.result.won) {
+            const endedAt = at - (tNow - end) / speed * 1000;   // 이 런이 실제로 끝난 순간 = 다음 런이 출발한 순간
+            runBattle(B.stageId, { at: endedAt, resume: { ...r, t: 0, wall: endedAt, auto: false } });
+            // 관전이 섰으면 재생기가 시계다 · 출발이 거절됐으면 멈춘다 · 길이 0 인 런은 한 눈금에 하나만(끝없이 돌지 않게)
+            if (stopBattle || state.battle === B || !(state.battle?.result.durationSec > 0)) return;
+            continue;
+        }
+        save();
+        // 보고 있던 화면을 뺏지 않는다 — 리포트로 옮기는 것은 **관전을 보고 있었을 때만**이다.
+        // 편성을 열어 둔 사람은 편성에 남는다 (닫힌 원정 탭이면 다음에 들어올 때 리포트가 서 있다)
+        if (state.exp === 'battle') state.exp = 'report';
+        render();
+        return;
+    }
+}
+
+/**
+ * 멈췄다 깨어났다 — 앱 시계가 `FROZEN_GAP_MS` 넘게 안 불렸다. 그 사이 JS 가 통째로 멈춰 있었다(PC 절전 · 브라우저 절전 탭).
+ * **게임을 껐다 켠 것과 같이 본다** [2026-09-11 사용자 승인 · ADR-0102] — 진행 중이던 런까지만 마무리하고 반복을 끈다
+ * (`closeRun` · 재접속 알림). 공백을 따라잡아 런을 몰아 돌리지 않는다. 진행 중인 런이 없으면 할 일이 없다
+ */
+function closeFrozenRun(at) {
+    if (!G || state.screen !== 'game') return;
     const B = state.battle;
     if (!B) return;
-    const end = B.result.durationSec;
+    const mounted = !!stopBattle;
+    if (mounted) { B.resume = stopBattle(); stopBattle = null; }   // 관전이 떠 있었으면 그 자리가 곧 멈춘 자리다
     const r = B.resume ?? { t: 0, speed: 1, running: true, tab: 'log', win: false };
-    if (r.running === false) return;    // 유저가 세워 둔 것 — 시계를 멈추는 것은 이것 하나다
-    if (r.t >= end) return;
-    B.resume = { ...r, t: Math.min(end, r.t + (EXP_TICK_MS / 1000) * (r.speed ?? 1)) };
-    repLivePaint?.();                   // 리포트를 보고 있으면 기여 표가 그만큼 찬다 (§4-3)
-    if (B.resume.t < end) return;
-    // 끝 — 관전의 `onEnd` 와 **같은 규칙**이다. 어느 탭에서 끝났든 반복 원정이면 다음 런이 출발한다
-    if (G.run?.repeat && B.result.won) { runBattle(B.stageId); return; }
+    const end = B.result.durationSec;
+    if (r.t >= end && !r.auto) { if (mounted) render(); return; }  // 이미 끝난 런 — 걷은 관전만 다시 세운다
+    B.resume = { ...r, t: end, wall: at, auto: false };            // 진행 중이던 런은 끝난 것으로 — 정산은 출발 순간 끝났다
+    SYS.game.closeRun(G, at);
+    if (G.run?.stageId === state.expStage) state.expRepeat = false;   // 편성 창의 반복 버튼과 어긋나지 않게 (repeatRow 와 같은 규칙)
     save();
-    // 보고 있던 화면을 뺏지 않는다 — 리포트로 옮기는 것은 **관전을 보고 있었을 때만**이다.
-    // 편성을 열어 둔 사람은 편성에 남는다 (닫힌 원정 탭이면 다음에 들어올 때 리포트가 서 있다)
-    if (state.exp === 'battle') state.exp = 'report';
+    // 관전을 보고 있었으면 재접속처럼 **편성**으로 — 부재 중 알림이 거기 선다. 다른 화면은 뺏지 않는다
+    if (state.exp === 'battle') state.exp = 'idle';
+    render();
+}
+
+/* 브라우저 탭을 숨기고 돌아올 때 (SCREEN_DESIGN §4 · ADR-0102) — 숨으면 관전 재생기를 걷어 앱 시계에 넘기고, 돌아오면 시계를 먼저
+   따라잡힌 뒤 한 번 그린다. 따라잡은 뒤에 그려야 관전이 그 시각까지 **조용히** 되감아 선다 — 먼저 그리면 첫 눈금이 밀린 사건을 팝업째 쏟는다 */
+function onVisibility() {
+    if (document.hidden) {
+        if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
+        return;
+    }
+    expTick();
     render();
 }
 
@@ -1489,7 +1563,6 @@ function paperdoll(h) {
 
 function gearPanel(h) {
     const p = el('div', 'panel');
-    p.dataset.keep = 'char-gear';   // 칸이 박스 안 스크롤 자리가 됐다 — 다시 그려도 위치가 남는다 (ADR-0101 · §2 「박스」)
     const worn = wornItems(h);
     p.appendChild(el('h2', '', t('ch.gear.h')));
     p.appendChild(paperdoll(h));
@@ -1514,7 +1587,6 @@ function gearPanel(h) {
 /** ②-2 기본 옵션 — 기본 능력치 7 막대 + 그 아래 현재 스킬(액티브 3, 정사각 카드). 옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (2026-08-27) */
 function attrPanel(h) {
     const p = el('div', 'panel');
-    p.dataset.keep = 'char-attr';   // 내용(401)이 칸(283)보다 길다 — 스킬 블록 · [스킬 트리 열기] 는 스크롤 아래다 (ADR-0101)
     p.appendChild(el('h2', '', t('ch.attr.h')));
     const min = D.balance.hero_attr_min, max = D.balance.hero_attr_max;
     const box = el('div', 'attr-list');
@@ -1653,7 +1725,6 @@ function detailPanels(h) {
         const p = el('div', 'panel');
         p.appendChild(el('h2', '', t('ch.detail.hn', { n: pi + 1 })));
         const list = el('div', 'cs-scroll');
-        list.dataset.keep = `char-cs${pi + 1}`;   // 13행 · 8행이 칸(283)에 안 들어간다 — 스크롤 위치를 되찾는다 (ADR-0101)
         list.innerHTML = rows.map(s => {
             const has = c[s.id] !== undefined;
             const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: resCap })}</span>`
@@ -1687,38 +1758,57 @@ function materialGrid() {
 }
 
 /** ③ 아이템 — 가방. 클릭 = 착용(분해 모드면 분해 · 강화 모드면 강화). 열 수는 창 폭이 정한다 */
+/** 보관 — **왼쪽 창고 / 오른쪽 인벤토리 두 칸** [2026-09-11 사용자 확정 · SCREEN_DESIGN §6 · item_design §1].
+ *  장비 탭이면 두 칸이 나란히 서고, **재료 탭이면 한 칸**이 전폭을 쓴다 — 재료는 수량이라 창고 개념이 없다 (ADR-0055).
+ *  드롭이 쌓이는 곳은 인벤토리 하나뿐이고(압력은 그쪽이 든다) 창고는 **유저가 옮긴 것만** 든다 */
 function itemsPanel(h, { showTarget = false } = {}) {
-    const p = el('div', 'panel bag');     // 칸 · 그림 크기는 관전 · 캐릭터 탭이 같다 (style.css `.bag` · ADR-0097)
-    const bagItems = G.bag.map(itemOf).filter(Boolean);
-    const items = bagItems;
-    // **제목 줄이 없다** (2026-09-01 사용자 지시) — 아래 가방이 화면 밖으로 밀려 있었고, 「아이템」이라는 글자는
-    // 칸 격자가 이미 말하고 있었다. 다만 **수치는 안 지운다**: 칸 수와 (관전에서는) 장착 대상을 도구 줄 오른쪽이 든다
-    // (SCREEN_DESIGN §6 · §4-1 「값은 항상 찍는다」). showTarget — 영웅 띠가 없는 관전 화면에서 대상 영웅을 적는다
-    const tools = el('div', 'items-tools');
-    // 최상위 축은 **갈래**다 — 부위 필터는 2026-09-09 에 통째로 없앴다 (ADR-0055). 「전체」도 없다:
-    // 장비는 칸 하나 = 개체 하나이고 재료는 칸 하나 = 종류 + 개수라, 둘을 한 격자에 이으면 칸을 두 뜻으로 읽어야 한다
-    const filter = el('div', 'segmented');
-    for (const f of [{ id: 'equip', label: t('ch.bag.equip') }, { id: 'material', label: t('ch.bag.material') }]) {
-        const b = el('button', `btn sm${state.bagTab === f.id ? ' on' : ''}`, f.label);
-        b.onclick = () => { state.bagTab = f.id; render(); };
-        filter.appendChild(b);
+    if (state.bagTab === 'material') {
+        const p = el('div', 'panel bag');
+        p.appendChild(storageTools(h, 'bag', { showTarget, material: true }));
+        p.appendChild(materialGrid());
+        return p;
     }
-    tools.appendChild(filter);
-    // 분해 모드는 **장비 탭에만** 산다 — 재료는 분해할 것이 아니다
-    const sv = state.bagTab === 'equip'
-        ? el('button', `btn sm toggle${state.salvageMode ? ' on' : ''}`, t('ch.salvageMode')) : null;
-    if (sv) { sv.onclick = () => { state.salvageMode = !state.salvageMode; render(); }; tools.appendChild(sv); }
-    // 강화 모드 토글은 2026-09-03 에 없앴다 — 강화의 자리는 **제련소**(§8-2)다. 갈래가 둘(`+`강화·옵션강화)이라
-    // 모드 토글 하나로는 어느 갈래인지 못 고른다. 가방에서 바로 여는 길(우클릭 → 강화)은 나중에 (SCREEN_DESIGN §6)
-    // 칸 수는 **장비 탭의 값**이다 — 재료는 수량이라 `inventory_cap` 을 안 먹는다 (ADR-0055)
+    const row = el('div', 'bag-row');
+    row.appendChild(storagePanel(h, 'stash', {}));
+    row.appendChild(storagePanel(h, 'bag', { showTarget }));
+    return row;
+}
+
+/** 도구 줄 — 이름 + (인벤토리 쪽에만) 갈래 탭 · 분해 모드 + 칸 수. 관전에서는 장착 대상도 (§6 · §4-2) */
+function storageTools(h, where, { showTarget = false, material = false } = {}) {
+    const tools = el('div', 'items-tools');
+    tools.appendChild(el('span', 'items-name', t(where === 'stash' ? 'ch.bag.stash' : 'ch.bag.inv')));
+    // 갈래(장비/재료)와 분해 모드는 **한 벌만** 둔다 — 두 칸에 같이 걸리는 축이라 칸마다 두면 어느 쪽 것인지 읽을 수 없다
+    if (where === 'bag') {
+        const filter = el('div', 'segmented');
+        for (const f of [{ id: 'equip', label: t('ch.bag.equip') }, { id: 'material', label: t('ch.bag.material') }]) {
+            const b = el('button', `btn sm${state.bagTab === f.id ? ' on' : ''}`, f.label);
+            b.onclick = () => { state.bagTab = f.id; render(); };
+            filter.appendChild(b);
+        }
+        tools.appendChild(filter);
+        if (!material) {
+            const sv = el('button', `btn sm toggle${state.salvageMode ? ' on' : ''}`, t('ch.salvageMode'));
+            sv.onclick = () => { state.salvageMode = !state.salvageMode; render(); };
+            tools.appendChild(sv);
+        }
+    }
+    const n = where === 'stash' ? (G.stash ?? []).length : G.bag.length;
+    const cap = where === 'stash' ? D.balance.stash_cap : D.balance.inventory_cap;
     tools.appendChild(el('span', 'items-meta muted',
-        `${state.bagTab === 'equip' ? t('ch.items.sub', { n: G.bag.length, cap: D.balance.inventory_cap }) : ''}${showTarget ? `${state.bagTab === 'equip' ? ' · ' : ''}${t('bt.items.target', { name: L(h.name) })}` : ''}`));
-    p.appendChild(tools);
+        `${material ? '' : t('ch.items.sub', { n, cap })}${showTarget ? `${material ? '' : ' · '}${t('bt.items.target', { name: L(h.name) })}` : ''}`));
+    return tools;
+}
 
-    if (state.bagTab === 'material') { p.appendChild(materialGrid()); return p; }
-
+/** 보관 한 칸 — `where` 가 'stash' 면 창고, 'bag' 이면 인벤토리. 칸 수는 그 칸의 상한이 정한다 */
+function storagePanel(h, where, { showTarget = false } = {}) {
+    const p = el('div', `panel bag ${where === 'stash' ? 'store-stash' : 'store-bag'}`);
+    p.appendChild(storageTools(h, where, { showTarget }));
+    const uids = where === 'stash' ? (G.stash ?? []) : G.bag;
+    const items = uids.map(itemOf).filter(Boolean);
+    const cap = where === 'stash' ? D.balance.stash_cap : D.balance.inventory_cap;
     const grid = el('div', `inv-cells wide${state.salvageMode ? ' salvage' : ''}`);
-    for (let i = 0; i < D.balance.inventory_cap; i++) {
+    for (let i = 0; i < cap; i++) {
         const it = items[i];
         const cell = el('div', `inv-cell${it ? ' filled' : ''}`);
         if (it) {
@@ -1730,15 +1820,19 @@ function itemsPanel(h, { showTarget = false } = {}) {
             // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
             const target = SYS.game.equipTarget(h, it);
             const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
-            // compare 카드는 **지금 착용 중인 물건**이라(§6) 담은 스킬 줄도 h 의 실제 능력치로 낸다 — item(가방·미착용)은 그대로 접힌 식
             const cb = combatOf(h);
             const skCtx = { period: cycleOf(h), atk: cb.atk_physical ?? cb.atk_magic, matk: cb.atk_magic, hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
             bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: ringHint, compareCtx: skCtx });
-            cell.onclick = () => {
-                if (state.salvageMode) {
+            cell.onclick = (e) => {
+                // **Ctrl + 클릭 = 반대편으로** [2026-09-11 사용자 확정] — 창고 ↔ 인벤토리. Mac 은 Cmd 가 같은 자리다
+                if (e.ctrlKey || e.metaKey) {
+                    const r = where === 'stash' ? SYS.game.moveToBag(G, it.uid) : SYS.game.moveToStash(G, it.uid);
+                    if (!r.ok) flash(`ch.err.${r.err}`); else save();
+                } else if (state.salvageMode) {
                     const r = SYS.game.salvage(G, it.uid);
                     if (r.ok) { flash('ch.salvaged', { n: r.dust }); save(); }
                 } else {
+                    // 창고에서도 **바로** 장착된다 — 꺼내는 단계가 없다 (item_design §1)
                     const r = SYS.game.equip(G, h.uid, it.uid);
                     if (!r.ok) flash(`ch.err.${r.err}`); else save();
                 }
@@ -2503,7 +2597,8 @@ function forgeUpgrade(p) {
     // 착용 판정 — 어느 영웅이든 끼고 있으면 착용이다. 강화는 **소유물에 하는 일**이라 둘 다 대상이다
     const worn = new Set();
     for (const h of G.heroes) for (const uid of Object.values(h.equipped ?? {})) if (uid) worn.add(uid);
-    const owned = [...new Set([...worn, ...G.bag])].map(itemOf).filter(Boolean)
+    // 창고 것도 강화 대상이다 [2026-09-11 v24 · item_design §1] — 창고에서 바로 장착되는 이상 강화도 같아야 한다
+    const owned = [...new Set([...worn, ...G.bag, ...(G.stash ?? [])])].map(itemOf).filter(Boolean)
         .filter(x => !state.forgeFilter || x.slot === state.forgeFilter);
 
     const work = el('div', 'fg-work');
@@ -3214,6 +3309,8 @@ async function boot() {
     }
     // 원정 시계 — 화면과 무관하게 앱이 든다 (ADR-0074). render() 가 걷는 것들과 달리 **끄지 않는다**
     setInterval(expTick, EXP_TICK_MS);
+    // 브라우저 탭을 숨기고 돌아올 때 — 숨긴 탭의 시계는 앱 시계 하나다 (ADR-0102)
+    document.addEventListener('visibilitychange', onVisibility);
 }
 
 boot().catch(e => {

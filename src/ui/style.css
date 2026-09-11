@@ -856,12 +856,18 @@ html, body { height: 100%; overflow: hidden; }
 .battle-panel > .battle-body { flex: 1 1 0; min-height: 0; }
 .battle-panel > .battle-body:not(.split) { display: flex; flex-direction: column; }
 /* 가방은 칸 · 그림이 한 단 크다 — **관전과 캐릭터 탭이 같은 크기**다(`.bag` = `itemsPanel` 의 패널 · ADR-0097).
-   칸 · 그림 크기는 **안 바뀐다** [2026-09-11 사용자 지시] — 가로 **24열 · 한 변 52 · 그림 40**(판 안 1337 · 간격 4).
-     09-11 에 4줄을 만들려고 18열 · 칸 70 · 그림 54 로 키웠던 것을 **둘 다 되돌렸다** — 「가로에 24칸이 들어가도록」.
-   ⚠ **줄 수는 칸 수가 정한다** — 격자는 `inventory_cap` 개를 그리므로 24열에서 70칸이면 3줄이다(마지막 줄 22칸).
-     4줄이 되려면 칸 수가 73 이상이어야 한다(24 × 4 = 96) — 그건 `balance.csv:inventory_cap` 이지 CSS 가 아니다 */
-.bag .inv-cells.wide { grid-template-columns: repeat(auto-fill, minmax(51px, 1fr)); }
+   **보관은 두 칸이다** [2026-09-11 사용자 확정] — 왼쪽 창고 · 오른쪽 인벤토리가 나란히 서고 **각각 12열 × 3줄**이다.
+   열 수를 `auto-fill` 이 아니라 **12 로 박는다** — 칸 수(`stash_cap` · `inventory_cap`)가 줄 수를 정하고 폭은 칸이 나눠 갖는다.
+   판 안 1337 을 두 칸이 나누면(사이 14) 한 칸 661 · 12열 + 간격 11 → **한 변 약 51.5** 로 09-11 이전(52)과 같다 */
+.bag-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+/* ⚠ 격자 안의 둘째 패널에도 `.panel + .panel` 의 세로 마진이 붙는다 — 열이 나란한데 **위 마진이 행 높이에 더해져**
+   관전(flex 부모)은 227, 캐릭터 탭(grid 부모)은 눌려 218.9 로 **두 화면 크기가 갈렸다**(ADR-0097 「두 탭이 같은 크기」 위반 · 09-11 실측).
+   `.cols` 가 이미 같은 예외를 갖고 있다 — 새 컨테이너에도 같은 줄이 필요하다 */
+.bag-row > .panel + .panel { margin-top: 0; }
+.bag .inv-cells.wide { grid-template-columns: repeat(12, minmax(0, 1fr)); }
 .bag .inv-icon { width: 40px; height: 40px; }
+/* 칸 이름 — 「창고」 / 「인벤토리」. 도구 줄 맨 왼쪽에 서고 나머지(탭 · 분해 모드 · 칸 수)가 그 오른쪽이다 */
+.items-name { font-size: var(--fs-sm); color: var(--text-secondary); margin-right: 2px; white-space: nowrap; }
 
 .arena {
     /* 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 (2026-08-27 좌우 대치를 시도했다가 사용자 지시로 상하 복귀) */
@@ -924,25 +930,17 @@ html, body { height: 100%; overflow: hidden; }
        `battle.js` 는 여전히 `data-depth` 를 찍지만 **읽는 CSS 는 없다** — 진형 깊이를 눈으로 볼 수 있게 남긴 표시다.
    ⚠ **상한이 있다 — 창 뱃지 줄이 아레나를 넘는 지점** (1280×700 실측 · 2026-09-10 재측):
      후열이 혼자 물러서므로 봉투는 `여백 + step` 이 정한다 — **`여백 + step ≤ 59.5`**(= 아레나 반높이 214 − VS 상자 반 9.5 − 카드 116 − 뱃지 줄 29).
-     지금 값 38 + 21 = 59 → 여유 **0.5px**. step 을 올리려면 여백을 같은 만큼 내려야 하고, 그러면 간격이 그 두 배로 좁아진다.
-   ⚠ **카드 칸 배율 .95** (2026-09-11 · 아래 `--unit-zoom`) 뒤로 카드 · 뱃지 줄이 5% 작게 서서 이 봉투는 그만큼 헐거워졌다 —
-     식의 116 · 29 는 배율 전 설계 크기다. step 은 배율로 나눠 되돌리므로 21 그대로다. */
+     지금 값 38 + 21 = 59 → 여유 **0.5px**. step 을 올리려면 여백을 같은 만큼 내려야 하고, 그러면 간격이 그 두 배로 좁아진다. */
 /* 40 → 28 → **21px** (2026-09-10 사용자 지시·지적) — 두 번 깎였다. 한 번은 간격을 벌리는 값으로,
    한 번은 **전열을 한 선에 세우는 값**으로. 후자가 더 먹는다: 옛 규칙에서 후열은 `step/2` 만 물러섰는데 이제 `step` 을 통째로 물러서므로
    같은 봉투에 들어가는 step 이 절반이 된다. 21 은 그 제약 아래에서 **간격 95px 을 지키는 최대값**이다
    (`여백 38 + step 21 = 59 ≤ 59.5`). ⚠ 신설 당시 값은 18 이었다 — 아직 그보다 크다. */
 .side { --form-step: 21px; }
-/* 카드 칸의 배율 — **5% 작게** (2026-09-11 사용자 지시 「영웅과 몬스터 크기를 지금 크기에서 약 5% 작게」 · 값의 SSOT 는 src/ui/README 크기 정책).
-   카드 · 초상 · 수치 열 · 글자 · 창 뱃지 줄 · 카드 안 팝업이 **같은 비로** 준다 — 숫자를 하나씩 깎지 않는다(ADR-0099 의 창 배율과 같은 이유).
-   ⚠ `zoom` 은 **그 칸에 걸린 `top` 까지** 줄인다(실측 18.9 → 17.95px) — 진형 step 은 크기가 아니라 자리라서 아래 네 줄이 배율로 **나눠 되돌린다**.
-   카드 사이 간격(`.side` 의 gap)과 VS 여백(`.divider`)은 칸 밖이라 안 준다 */
-.side { --unit-zoom: .95; }
-/* 전열(랭크 0)은 규칙이 없다 = `top: 0`. 후열만 **VS 반대쪽으로** 물러선다 — 방향은 진영이 뒤집는다.
-   `/ var(--unit-zoom)` 은 칸의 배율을 되돌리는 몫이다 — 안 나누면 물러서는 거리도 5% 준다(2026-09-11) */
-.side-party .unit-slot[data-rank="1"] { top: calc(var(--form-step) / var(--unit-zoom)); }        /* 아래 진영 → 아래로 */
-.side-party .unit-slot[data-rank="2"] { top: calc(var(--form-step) * 2 / var(--unit-zoom)); }
-.side-enemy .unit-slot[data-rank="1"] { top: calc(var(--form-step) * -1 / var(--unit-zoom)); }   /* 위 진영 → 위로 */
-.side-enemy .unit-slot[data-rank="2"] { top: calc(var(--form-step) * -2 / var(--unit-zoom)); }
+/* 전열(랭크 0)은 규칙이 없다 = `top: 0`. 후열만 **VS 반대쪽으로** 물러선다 — 방향은 진영이 뒤집는다 */
+.side-party .unit-slot[data-rank="1"] { top: var(--form-step); }                    /* 아래 진영 → 아래로 */
+.side-party .unit-slot[data-rank="2"] { top: calc(var(--form-step) * 2); }
+.side-enemy .unit-slot[data-rank="1"] { top: calc(var(--form-step) * -1); }         /* 위 진영 → 위로 */
+.side-enemy .unit-slot[data-rank="2"] { top: calc(var(--form-step) * -2); }
 
 /* VS 선 — **두 진영 사이의 간격을 이 여백이 정한다** (2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2).
    아레나가 내용을 세로 가운데 정렬하므로 이 한 값이 **VS 선을 축으로 위아래를 대칭으로** 민다.
@@ -973,8 +971,7 @@ html, body { height: 100%; overflow: hidden; }
    오른쪽 수치 열의 폭(약 104)을 그대로 지키려고 칸을 그만큼만 늘렸다 — 「살짝」의 실제 값이 26px 다 */
 /* 칸 = 카드 뿐이다 (2026-09-03 사용자 지시) — 뱃지 줄은 아래에서 **흐름 밖**(absolute)으로 나갔다.
    줄이 흐름에 있으면 창이 없을 때도 26px 를 잡아, 카드가 그 띠 위에 **떠 보였다**(적 진영은 아래 정렬이라 VS 에서 더 밀려났다) */
-/* 배율 — 위 `.side` 의 `--unit-zoom` (2026-09-11). 226 은 **설계 크기**이고 화면에는 메인 .9 × .95 로 선다 */
-.unit-slot { flex: 0 0 226px; width: 226px; position: relative; display: flex; flex-direction: column; zoom: var(--unit-zoom); }
+.unit-slot { flex: 0 0 226px; width: 226px; position: relative; display: flex; flex-direction: column; }
 
 .unit {
     /* 이름 띠 + 본문 (2026-09-03 사용자 지시로 위칸 재도입 — SCREEN_DESIGN §4-2) */
@@ -1644,12 +1641,8 @@ html, body { height: 100%; overflow: hidden; }
    셋째 행이 `minmax(0, auto)` 인 이유 — 세로가 모자라면 네 칸은 하한(아래 `.cols.c-char > .panel`)을 지키고 **가방이 줄어**
    가방 칸이 가방 안에서 스크롤한다. 격자는 제 크기 행(띠 · 가방)을 먼저 채우고 1fr 에 나머지를 준다 */
 .char-stack { display: grid; grid-template-rows: auto 1fr minmax(0, auto); gap: 14px; }
-.char-stack > .bag { display: flex; flex-direction: column; min-height: 0; }
-/* **가방은 제 높이(4줄)를 받는다** [2026-09-11 사용자 지시 · ADR-0101 이 ADR-0097 의 반대 방향을 대체] —
-   옛 `flex: 1 1 auto; min-height: 0; overflow-y: auto` 는 「모자라면 **가방이** 줄어 칸이 가방 안에서 스크롤한다」였다.
-   그 규칙이 살아 있으면 가방이 4줄을 못 받고 3줄 높이에서 안쪽 스크롤이 된다(09-11 실측 175 / 294).
-   양보하는 쪽은 이제 네 칸이다(위 `.cols.c-char > .panel` 의 `overflow-y`) */
-.char-stack > .bag > .inv-cells { flex: 0 0 auto; }
+.char-stack > .bag, .char-stack > .bag-row > .bag { display: flex; flex-direction: column; min-height: 0; }
+.char-stack > .bag > .inv-cells, .char-stack > .bag-row > .bag > .inv-cells { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 
 /* ① 영웅 띠 — 원정 편성·캐릭터·스킬·선술집 공통 상단 (2026-08-26 · 2026-08-27 개편 · 2026-08-27 원정 편성 추가). 초상이 카드 전체를 채우는 정사각이고,
    글자는 초상 위에 얹는 위칸 하나다: 왼쪽 = 지금 하는 일(색 태그) · 오른쪽 = 이름 (SCREEN_DESIGN §5).
@@ -1727,18 +1720,11 @@ html, body { height: 100%; overflow: hidden; }
 
 /* ② 네 칸 — 장비 / 기본 옵션(+현재 스킬) / 세부 옵션 1 / 세부 옵션 2. **같은 폭 · 같은 높이** (2026-08-27).
    폭은 1fr × 4 (최소 창 1280 에서 칸당 약 245px — 페이퍼돌 3×60 이 들어간다), 높이는 grid stretch 가 가장 큰 칸에 맞춘다 */
-/* `min-height: 0` 은 **네 칸이 가방 아래로 줄어들게 하는 장치**다 [2026-09-11 · ADR-0101] — 이 줄이 없으면
-   바깥 격자(`.char-stack`)가 이 항목의 내용 하한(401)을 1fr 행의 바닥으로 잡아 가방이 제 높이를 못 받는다.
-   칸 안의 `overflow-y` 만으로는 안 된다 — 붙들고 있는 것은 칸이 아니라 **칸들을 담은 이 격자**다 (09-11 실측) */
-.cols.c-char { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; min-height: 0; }
-/* **하한이 없다 · 모자라면 칸이 스크롤한다** [2026-09-11 사용자 지시 · ADR-0101 이 ADR-0097 의 하한 412 를 대체] —
-   가방이 4줄로 자란 몫(130px)을 이 네 칸이 낸다. 옛 412 는 「가장 긴 칸의 내용(약 401)보다 크게」 잡은 값이었다.
-   ⚠ `overflow-y: auto` 가 **칸의 min-content 를 0 으로 만드는 장치**다 — 없으면 내용 하한 401 이 격자의 1fr 행을 붙들어
-     가방이 제 높이를 못 받고 **가방 칸이 가방 안에서** 스크롤한다(09-11 오전의 모양. `min-height: 0` 만으로는 안 된다).
-   실측 283 = 박스 802 − 띠 142 − 단 사이 28 − 가방 349. 내용이 그보다 긴 칸(기본 옵션 401 · 장비 330)은 아래쪽이 칸 안 스크롤로 들어간다 —
-   스크롤 위치는 `data-keep` 이 들고(app.js) 막대는 안 그린다(§2).
-   ⚠ 되돌릴 때 — `min-height: 412px` 로 바꾸고 `overflow-y` 를 걷는다 (옛 근거는 ADR-0097) */
-.cols.c-char > .panel { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+.cols.c-char { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; }
+/* 높이 하한 [2026-09-08 사용자 지시 「조금만 더 늘려」 · 430 → 412 2026-09-11 · ADR-0097] — 종전엔 가장 큰 칸(세부 옵션 1)이 정한 379px 이었다(실측).
+   412 는 가방이 관전 크기(칸 52)로 커지며 **박스 안에 드는 값**이다 — 가장 긴 칸의 내용(약 401)보다 크다.
+   ⚠ 이 값은 **세로 예산을 직접 깎는다** — 모자라면 가방 칸이 가방 안에서 스크롤한다 (위 `.char-stack`) */
+.cols.c-char > .panel { display: flex; flex-direction: column; min-height: 412px; }
 
 /* 패널 안의 작은 소제목 — h2 를 또 쓰면 칸이 나뉜 것처럼 보인다 */
 .sub-h {

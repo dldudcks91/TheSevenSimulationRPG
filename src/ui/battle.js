@@ -13,8 +13,11 @@
  *   창 규격은 셸의 창과 같되(.modal-layer/.modal-box · 정사각 X · 바깥 클릭 · Esc) **레이어는 재생기 자기 DOM 안**이다 — 두 판은 재생기가 살아 있는 동안 계속 쓰이므로 밖에 두면 mount 마다 넘겨줘야 한다.
  *   배치는 재생 위치(resume)가 아니라 **취향**이라 app.js 의 `state.btLayout` 이 들고 `opts.layout`/`opts.onLayout` 으로 오간다 — 런이 바뀌어도 남는다.
  * 로그는 모든 타격을 적는다(누가 → 누구 · 피해 · 쓴 스킬). 누적 데미지는 이벤트의 dmg 를 더한 표시값이다 — 정산이 아니다.
- * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab, win} 를 돌려주고(win = 창이 열려 있었나), 다음 mount 가 opts.resume 으로 받아
+ * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab, win, wall, auto} 를 돌려주고(win = 창이 열려 있었나), 다음 mount 가 opts.resume 으로 받아
  *   그 시각까지 팝업 없이 되감는다 (catchUp).
+ * **시각은 실제로 흐른 시간 × 배속이다** (2026-09-11 · ADR-0102) — 눈금 수로 밀지 않는다. 브라우저가 숨긴 탭의 눈금을 늦추기 때문이다.
+ *   시계는 `opts.now` 로 읽고(wall = 마지막으로 시각을 민 실제 시각), 공백이 `opts.frozenMs` 를 넘으면 JS 가 멈춰 있었던 것이라 밀지 않는다.
+ *   auto = 결과 띠가 다음 런을 세던 중 — 그 도중에 걷히면 앱 시계가 이어서 세운다. 숨긴 탭에서는 앱이 이 재생기를 걷는다.
  * 유닛 카드 = **왼쪽 초상 + 오른쪽 수치 열**뿐이다 [개정 2026-09-03 사용자 지시] — 이름·죄종 칩·정예/보스 태그를 들던 위칸을 통째로 걷었다.
  *   등급은 **테두리 색**이 든다(정예 = 노랑 · 보스 = 빨강). 오른쪽 열은 HP(수치는 바 가운데) / 행동 게이지 / 스킬 쿨 칸.
  *   **몬스터와 영웅의 카드는 이제 같은 물건이다** — 몬스터도 쿨 칸과 창 뱃지 줄을 갖는다 — 칸은 등급이 연 만큼 차고(`round` 이벤트의 `actives` · 2026-09-11 R79 후속) 나머지는 빈 칸이다.
@@ -51,7 +54,8 @@ const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math
 
 /**
  * @param container  붙일 곳
- * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto) }
+ * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto), now(), frozenMs }
+ *   now = 실제 시각(ms)을 읽는 시계 · frozenMs = 「멈췄다」의 문턱 — 둘 다 앱이 넘긴다 (ADR-0102)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 재생이 끝나고 사용자가 넘어갈 때 / 반복 자동 진행 시.
  * @returns 정리 함수
  */
@@ -61,6 +65,9 @@ export function mountBattle(container, opts) {
     const state = {
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
+        // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
+        wall: resume?.wall ?? opts.now(),
+        auto: false,             // 결과 띠가 다음 런을 세는 중 — 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않는다
@@ -108,7 +115,8 @@ export function mountBattle(container, opts) {
         clearInterval(state.timer); state.timer = null;
         for (const id of state.timeouts) clearTimeout(id);
         if (state.onKey) document.removeEventListener('keydown', state.onKey);   // 창의 Esc — 재생기 밖에 남기면 mount 마다 쌓인다
-        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, win: state.win };
+        // wall · auto (ADR-0102) — 앱 시계가 이 자리에서 이어 민다: 마지막으로 시각을 민 실제 시각 · 결과 띠가 다음 런을 세던 중이었나
+        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, win: state.win, wall: state.wall, auto: state.auto };
     };
 }
 
@@ -175,6 +183,7 @@ function buildDom(state, stage, stageId) {
 function bindControls(state, root, opts) {
     root.querySelectorAll('.b-speed').forEach(b => {
         b.onclick = () => {
+            step(state, root, opts);   // 지난 눈금 이후 흐른 시간은 옛 배속으로 친다 (ADR-0102)
             state.speed = Number(b.dataset.s);
             root.querySelectorAll('.b-speed').forEach(x => x.classList.toggle('on', x === b));
             if (!state.ended) start(state, root, opts);
@@ -184,6 +193,7 @@ function bindControls(state, root, opts) {
     const pause = root.querySelector('.b-pause');
     pause.textContent = state.running ? t('bt.pause') : t('bt.resume');
     pause.onclick = () => {
+        step(state, root, opts);       // 세우기 직전까지 흐른 시간은 친다 — 다시 틀 때는 세워 둔 시간이 안 흐른다(step 이 박자를 민다)
         state.running = !state.running;
         pause.textContent = state.running ? t('bt.pause') : t('bt.resume');
     };
@@ -544,13 +554,23 @@ function pushLog(state, root, text) {
 
 function start(state, root, opts) {
     clearInterval(state.timer);
-    state.timer = setInterval(() => {
-        if (!state.running || state.ended) return;
-        state.t += TICK;
-        drain(state, root, opts);
-        // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
-        for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
-    }, TICK * 1000 / state.speed);
+    state.timer = setInterval(() => step(state, root, opts), TICK * 1000 / state.speed);
+}
+
+/**
+ * 한 눈금 — 지난 눈금 이후 **실제로 흐른 시간 × 배속**만큼 시각을 민다 (SCREEN_DESIGN §4 · ADR-0102).
+ * 눈금 수로 밀면 브라우저가 눈금을 늦출 때 시각도 같이 느려진다 — 눈금 간격(TICK)은 그리는 빈도일 뿐이다.
+ * 공백이 문턱(`opts.frozenMs`)을 넘으면 JS 가 멈춰 있었던 것이다 — 그 공백은 **밀지 않는다**.
+ * 꺼진 것으로 마무리하는 판단은 앱 시계 한 곳이 한다(`app.js:closeFrozenRun`)
+ */
+function step(state, root, opts) {
+    const at = opts.now(), gap = at - state.wall;
+    state.wall = at;   // 세워 둔 동안에도 민다 — 다시 틀 때 세워 둔 시간이 한꺼번에 흐르지 않게
+    if (!state.running || state.ended || !(gap > 0) || gap > opts.frozenMs) return;
+    state.t += gap / 1000 * state.speed;
+    drain(state, root, opts);
+    // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
+    for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
 }
 
 /** 현재 시각까지의 이벤트를 전부 적용한다 */
@@ -695,8 +715,13 @@ function showResult(state, root, opts, won) {
     box.classList.add('show');
     box.querySelector('.b-report').onclick = () => opts.onEnd(false);
     if (auto) {
-        let left = 3;
+        state.auto = true;       // 세는 중 — 여기서 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
+        let left = 3, beat = opts.now();
         const tick = () => {
+            // 멈췄다 깨어났으면 다음 런을 세우지 않는다 — 꺼져 있던 것이다. 마무리는 앱 시계가 한다 (ADR-0102)
+            const at = opts.now();
+            if (at - beat > opts.frozenMs) return;
+            beat = at;
             box.querySelector('.b-next').textContent = t('bt.nextRun', { s: left });
             if (left <= 0) { opts.onEnd(true); return; }
             left -= 1;
