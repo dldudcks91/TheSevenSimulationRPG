@@ -95,6 +95,26 @@ export const AFFIX_LABELS = {
     damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', fmt: 'pct' },
     gold_find: { ko: '골드 획득', en: 'Gold Find', fmt: 'pct' },
     item_find: { ko: '드랍률', en: 'Item Find', fmt: 'pct' },
+    // ── 무기 옵션 (item_design §1 「무기 옵션」 · 2026-09-11 R78) — 죄종 칸 · 통합옵션 표가 쓰는 축.
+    //    `res_reduction` 은 combat_stat.csv 이름과 같게 둔다 — 마스터리 칸도 이 사전을 먼저 읽는다
+    res_reduction: { ko: '저항 감소', en: 'Resist Reduction', fmt: 'pct' },
+    atk_down_phys_pct: { ko: '타격 시 대상 물리 공격력 감소', en: 'Physical Attack Down on Hit', fmt: 'pct' },
+    atk_down_mag_pct: { ko: '타격 시 대상 마법 공격력 감소', en: 'Magic Attack Down on Hit', fmt: 'pct' },
+    dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', fmt: 'pct' },
+    crushing_blow_pct: { ko: '강타 (현재 체력)', en: 'Crushing Blow (Current HP)', fmt: 'pct' },
+    magic_find: { ko: '매직아이템 획득', en: 'Magic Find', fmt: 'pct' },
+    vs_normal_dmg: { ko: '일반 대상 추가 피해', en: 'Damage vs Normal', fmt: 'pct' },
+    vs_demon_dmg: { ko: '데몬 대상 추가 피해', en: 'Damage vs Demon', fmt: 'pct' },
+    vs_undead_dmg: { ko: '언데드 대상 추가 피해', en: 'Damage vs Undead', fmt: 'pct' },
+    vs_elite_dmg: { ko: '정예·보스 대상 추가 피해', en: 'Damage vs Elites & Bosses', fmt: 'pct' },
+    vs_front_dmg: { ko: '전열 대상 추가 피해', en: 'Damage vs Front Row', fmt: 'pct' },
+    vs_back_dmg: { ko: '후열 대상 추가 피해', en: 'Damage vs Back Row', fmt: 'pct' },
+    def_down_pct: { ko: '타격 시 대상 방어력 감소', en: 'Defense Shred on Hit', fmt: 'pct' },
+    fire_dmg_pct: { ko: '불 피해', en: 'Fire Damage', fmt: 'pct' },
+    cold_dmg_pct: { ko: '냉기 피해', en: 'Cold Damage', fmt: 'pct' },
+    lightning_dmg_pct: { ko: '전기 피해', en: 'Lightning Damage', fmt: 'pct' },
+    poison_dmg_pct: { ko: '독 피해', en: 'Poison Damage', fmt: 'pct' },
+    res_down_pct: { ko: '타격 시 대상 원소 저항 감소', en: 'Resist Shred on Hit', fmt: 'pct' },
 };
 
 /**
@@ -289,7 +309,9 @@ export const ITEM_ART_DIR = './assets/art/icons/items/';
 export const ITEM_ART_GROUPS = ['sword2h', 'axe', 'mace', 'spear', 'staff', 'orb', 'bow', 'crossbow'];
 export const ITEM_ART_BY_SLOT = { armor: 'armor_1', boots: 'boots_1', gloves: 'gloves_1', ring: 'ring_1' };   // ⚠ 임시
 /**
- * 무기 베이스 그림 — `icons/items/unused/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 양손검 · 도끼 둘.
+ * 무기 베이스 그림 — `icons/items/unused/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 양손검 · 도끼 · 둔기 · 창 · 활 다섯.
+ *   다섯 모두 `weapon_base.csv` 행이 서서 새 개체는 `baseId` 를 들고(아래 `itemArt`) 이름도 그 베이스다 (둔기 · 창 · 활 2026-09-11).
+ *   아래 문단(uid 해시)은 **`baseId` 없는 옛 개체의 폴백**으로만 산다.
  *
  * ⚠ **파일명이 id 가 아니다.** 무기 베이스는 기획 확정(무기군당 7 · `item_design.md` §1)이지만 `weapon_base` CSV 가
  *   아직 없다(DEV_PLAN R62 — 대역 경계 · 수치 미발행). 그래서 **개체가 어느 베이스인지는 아무 데도 안 적혀 있다.**
@@ -307,6 +329,10 @@ export const WEAPON_BASE_DIR = './assets/art/icons/items/unused/';
 export const WEAPON_BASE_STEMS = {
     sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
     axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator'],
+    // ⚠ 무기군마다 id · 순서가 `weapon_base.csv` 와 같아야 한다 — 두 벌이라, 어긋난 베이스는 제 그림 대신 uid 해시 그림을 들어 이름과 갈린다 (단정: dev/test.js)
+    mace: ['club', 'flanged_mace', 'reinforced_mace', 'battle_hammer', 'legendary_mallet', 'war_club', 'ogre_maul'],
+    spear: ['pike', 'thresher', 'giant_thresher', 'halberd', 'cryptic_axe', 'lance', 'war_pike'],
+    bow: ['short_bow', 'long_bow', 'great_bow', 'rune_bow', 'diamond_bow', 'gothic_bow', 'hydra_bow'],
 };
 export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}.png` : null;
 /**
@@ -354,9 +380,12 @@ export const itemArt = (slot, group, uid, baseId) => {
  * 경로는 문서(src/index.html) 기준 상대경로 — JS가 인라인 스타일로 넣기 때문이다.
  */
 export const BG_DIR = './assets/art/backgrounds/';
-/** ⚠ 아직 아무 화면도 안 읽는다 — 자산(`town.webp`)은 실재하고 거점 화면이 생기면 여기가 쓰인다 */
-export const TOWN_BG = BG_DIR + 'town.webp';
-export const stageBg = id => BG_DIR + `background_stage_${id}.webp`;
+/** 계승 4장의 **워터마크 띠를 잘라 낸 사본** — 화면은 이쪽을 읽는다 [2026-09-11 사용자 지시].
+ *  원본 오른쪽 아래에 생성기 ✦ 가 박혀 있어 아레나 비율에 따라 드러났다. 레시피 · 근거는 assets/art/README.md 「backgrounds_clean/」 */
+export const BG_CLEAN_DIR = './assets/art/backgrounds_clean/';
+/** ⚠ 아직 아무 화면도 안 읽는다 — 자산(`town.webp`)은 실재하고 거점 화면이 생기면 여기가 쓰인다 (CSS 는 같은 사본을 직접 건다) */
+export const TOWN_BG = BG_CLEAN_DIR + 'town.webp';
+export const stageBg = id => BG_CLEAN_DIR + `background_stage_${id}.webp`;
 
 /**
  * 탐험 지도 — 챕터 하나에 한 장 (SCREEN_DESIGN §8-4 · 2026-09-04 사용자 지시).
@@ -471,7 +500,8 @@ export const MASTERY_GRID = { tiers: 3, nodes: 3 };
  * 챕터 이름·죄종은 `chapter.csv` (ui/data.js:D.chapterList · chapterOf).
  */
 
-/** 스테이지 번호별 계열 라벨 — 계열 자체는 codex_series.csv, 여기는 표시 문구뿐. 스테이지 목록은 ui/data.js:codexStages() 가 stage.csv 에서 만든다 */
+/** 스테이지 번호별 계열 라벨 — 계열 자체는 codex_series.csv, 여기는 표시 문구뿐. 스테이지 목록은 ui/data.js:codexStages() 가 stage.csv 에서 만든다.
+ *  **5(챕터보스 단독 스테이지)는 키가 없다** — codex_series.csv 에도 행이 없고 배정은 기획 미정이다(GAME_DESIGN §10). 화면이 빈 칸으로 그린다 (2026-09-11) */
 export const CX_STAT = {
     1: { ko: '공격력', en: 'Attack' },
     2: { ko: '체력', en: 'Health' },

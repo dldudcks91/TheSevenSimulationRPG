@@ -509,7 +509,7 @@ const STRINGS = {
             + 'How many you can hold at once, the rewards and the fame swings are undecided, so <b>every figure on the screen is placeholder</b> (base_expedition_design §1-3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
-    'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드', en: '1 run = 1 stage · {r} rounds' },
+    'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드 (챕터의 마지막 스테이지는 챕터보스 단독 1라운드)', en: '1 run = 1 stage · {r} rounds (the last stage of each chapter is one round against the chapter boss alone)' },
     'exp.cleared': { ko: '클리어', en: 'Cleared' },
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
     'exp.pick': { ko: '원정', en: 'Expedition' },
@@ -522,10 +522,10 @@ const STRINGS = {
     'exp.go.h': { ko: '출정 방식', en: 'Departure' },
     'exp.zones.note': {
         ko: '지역 죄종은 해당 죄종 접사의 드롭 가중치를 올린다 — 타겟 파밍의 축<br>'
-            + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다<br>'
+            + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 챕터의 마지막 스테이지를 뺀 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다. <b>마지막 스테이지는 챕터보스 하나와 싸우는 1라운드</b>다<br>'
             + '중도 귀환해도 <b>루팅은 전량 보존</b>된다. 비용은 <b>그 출정 동안 파티가 얇아지는 것</b> + 미클리어(다음 스테이지 미해금)뿐',
         en: "A zone's sin raises the drop weight of that sin's affixes — the axis of target farming<br>"
-            + '<b>Fixed structure, random contents</b> — the round layout (elite {e} / boss {b}) is identical for every stage; only monster mixes and elite traits reroll each run<br>'
+            + '<b>Fixed structure, random contents</b> — the round layout (elite {e} / boss {b}) is identical for every stage but the last of each chapter; only monster mixes and elite traits reroll each run. <b>The last stage is a single round against the chapter boss</b><br>'
             + 'Retreating early <b>keeps all loot</b>. The cost is <b>a thinner party for the rest of the run</b> plus no-clear (next stage stays locked)',
     },
 
@@ -648,9 +648,10 @@ const STRINGS = {
        공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 문장은 액티브 줄과 **같은 함수**가 낸다 */
     'tip.skill': { ko: '담은 스킬', en: 'Skill' },
     'tip.noSkill': { ko: '담은 스킬 없음', en: 'No skill' },
-    // 옵션 출처 태그 (2026-09-08 · SCREEN_DESIGN §6) — `affix.csv` 가 통합옵션 풀로 확정돼(GAME_DESIGN §9 09-08)
-    // 지금 뜨는 접사는 전부 이것이다. 죄종 칸 풀이 서는 날 `[분노]` 같은 태그가 같은 자리에 들어간다
+    // 옵션 출처 태그 (SCREEN_DESIGN §6 · ADR-0100) — 셋이다: 고정(그 부위면 무조건) · 죄종 이름(죄종 칸 — 문구는 `mock.js:SINS`) · 랜덤(통합옵션).
+    // 출처가 없는 옛 접사는 랜덤으로 찍는다 (2026-09-08 신설 · 2026-09-11 셋으로 — R78)
     'tip.src.random': { ko: '랜덤', en: 'Random' },
+    'tip.src.fixed': { ko: '고정', en: 'Fixed' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
     // ~~`tip.up.first`·`tip.up.next`~~ 는 2026-09-08 삭제 [사용자 지시] — 툴팁의 강화 줄이 통째로 죽었다.
     // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
@@ -980,10 +981,10 @@ const STRINGS = {
     'ix.g.heroCls': { ko: '{cls} 초상', en: '{cls} Portraits' },   // 직업 하나가 묶음 하나 (ADR-0066) — ~~ix.g.hero~~ 대체
     'ix.g.weapon': { ko: '무기', en: 'Weapons' },
     'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
-    /* 무기 베이스 — **CSV 가 없어 이름이 여기 있다** (2026-09-10 · 임시). `weapon_base` 테이블이 서면 이 여덟 줄은
-       걷고 `L(row)` 가 받는다. 이름의 SSOT 는 지금 `docs/game_design/item_design.md` §1 「이름 — 9군」 표다.
+    /* 무기 베이스 — 도감 타일 이름 (2026-09-10 · 둔기 · 창 · 활 2026-09-11). ⚠ **`weapon_base.csv` 와 같은 이름이 두 벌이다** —
+       다섯 무기군 전부 CSV 행이 섰으므로 도감이 `L(row)` 로 읽게 되면 이 줄들은 걷는다. 그때까지 CSV 와 **글자까지 같게** 둔다.
        **영어가 원본이고 한글은 직역**이다 (CLAUDE.md 규칙 6). */
-    'ix.g.weaponBase': { ko: '{group} 베이스 (id 대기)', en: '{group} Bases (awaiting ids)' },
+    'ix.g.weaponBase': { ko: '{group} 베이스', en: '{group} Bases' },
     'ix.b.long_sword': { ko: '롱 소드', en: 'Long Sword' },
     'ix.b.claymore': { ko: '클레이모어', en: 'Claymore' },
     'ix.b.highland_blade': { ko: '하이랜드 블레이드', en: 'Highland Blade' },
@@ -998,6 +999,27 @@ const STRINGS = {
     'ix.b.berserker_axe': { ko: '버서커 액스', en: 'Berserker Axe' },
     'ix.b.battle_axe': { ko: '배틀 액스', en: 'Battle Axe' },
     'ix.b.decapitator': { ko: '데카피테이터', en: 'Decapitator' },
+    'ix.b.club': { ko: '클럽', en: 'Club' },
+    'ix.b.flanged_mace': { ko: '플랜지드 메이스', en: 'Flanged Mace' },
+    'ix.b.reinforced_mace': { ko: '리인포스드 메이스', en: 'Reinforced Mace' },
+    'ix.b.battle_hammer': { ko: '배틀 해머', en: 'Battle Hammer' },
+    'ix.b.legendary_mallet': { ko: '레전더리 맬릿', en: 'Legendary Mallet' },
+    'ix.b.war_club': { ko: '워 클럽', en: 'War Club' },
+    'ix.b.ogre_maul': { ko: '오우거 몰', en: 'Ogre Maul' },
+    'ix.b.pike': { ko: '파이크', en: 'Pike' },
+    'ix.b.thresher': { ko: '스레셔', en: 'Thresher' },
+    'ix.b.giant_thresher': { ko: '자이언트 스레셔', en: 'Giant Thresher' },
+    'ix.b.halberd': { ko: '할버드', en: 'Halberd' },
+    'ix.b.cryptic_axe': { ko: '크립틱 액스', en: 'Cryptic Axe' },
+    'ix.b.lance': { ko: '랜스', en: 'Lance' },
+    'ix.b.war_pike': { ko: '워 파이크', en: 'War Pike' },
+    'ix.b.short_bow': { ko: '숏 보우', en: 'Short Bow' },
+    'ix.b.long_bow': { ko: '롱 보우', en: 'Long Bow' },
+    'ix.b.great_bow': { ko: '그레이트 보우', en: 'Great Bow' },
+    'ix.b.rune_bow': { ko: '룬 보우', en: 'Rune Bow' },
+    'ix.b.diamond_bow': { ko: '다이아몬드 보우', en: 'Diamond Bow' },
+    'ix.b.gothic_bow': { ko: '고딕 보우', en: 'Gothic Bow' },
+    'ix.b.hydra_bow': { ko: '하이드라 보우', en: 'Hydra Bow' },
     'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
     /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고 그 안에
        그 직업의 스킬 전부가 선다 — **1스킬 = 1직업**이라 묶는 일이 `owner_id` 하나로 끝난다(2026-09-09).

@@ -15,9 +15,10 @@
 
 import { makeRng } from '../game_logic/rng.js';
 
-/** 스냅샷 범위 — 캘리브레이션(시드 20 × 4스테이지)과 **같은 조건**이라 두 표가 서로를 설명한다 (D-A3) */
+/** 스냅샷 범위 — 캘리브레이션(시드 20 × 같은 5스테이지)과 **같은 조건**이라 두 표가 서로를 설명한다 (D-A3).
+ *  105 = 챕터보스 단독 1라운드의 표본 (2026-09-11 · R75 — ~~101~104~~) */
 export const GOLDEN_SEEDS = 10;
-export const GOLDEN_STAGES = [101, 102, 103, 104];
+export const GOLDEN_STAGES = [101, 102, 103, 104, 105];
 
 /**
  * 사람이 읽는 요약용 손잡이 5키 — **대조는 `meta.balance` 전 키가 한다.**
@@ -46,7 +47,7 @@ export function csvHash(text) {
 
 /**
  * 드롭 1개의 지문 — `rollDrop` → `build` → `rollAffixes` 의 **rng 소비를 전부** 드러낸다.
- *   `rarity|slot|ilvl|sins|base|baseId|element|개체굴림|스킬|접사`
+ *   `rarity|slot|ilvl|sins|base|baseId|element|개체굴림|스킬|접사` — 접사 한 줄은 `출처/stat:값` (출처 신설 2026-09-11 R78)
  * **접사는 stat·값·순서를 그대로 적는다** — `rollAffixes` 가 풀에서 뽑는 순서가 바뀌면 여기서만 잡힌다.
  * `uid` 는 넣지 않는다 — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (D-A2).
  * 시작 무기(`item.startingWeapon`)도 **같은 형식**으로 적는다 (`meta.parties`).
@@ -59,12 +60,12 @@ export const dropSig = it => [
     it.sins.join('+'),
     it.group ?? it.name.en,                       // 무기는 무기군 id · 그 외는 베이스 이름(영문)이 곧 베이스 인덱스다
     it.baseId ?? '-',                             // 무기 베이스 세부 굴림 — 풀이 있는 무기군만(weapon_base.csv)
-    it.element ?? '-',                            // 마법 무기만 원소를 굴린다
+    it.element ?? '-',                            // R80(2026-09-11) 부터 언제나 '-' — 생성 때 원소를 안 굴린다. 되살아나면 지문이 갈려 잡힌다
     it.watk != null ? `w${it.watk}`               // 개체 굴림 — 무기는 watk
         : it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 방어구는 implicit
             : '-',                                //         목걸이·반지는 소비 없음
     it.skill ?? '-',                              // 무기가 담은 액티브 — 그 무기군의 직업 풀에서 개체마다 굴린다 (2026-09-09 · skill_design §12-1)
-    it.affixes.map(a => `${a.stat}:${a.v}`).join(';') || '-',
+    it.affixes.map(a => `${a.src ?? '-'}/${a.stat}:${a.v}`).join(';') || '-',   // 출처(고정 · 죄종 · 랜덤)도 적는다 — 층이 바뀐 회귀를 잡는다 (2026-09-11 R78)
 ].join('|');
 
 /** `{정수키: n}` 을 순서가 흔들리지 않는 문자열로 — 처치 카드 · 처치 수 */
@@ -140,7 +141,7 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
     //   `toggleParty` 는 rng 를 안 쓰고 순서도 옛 `newGame` 이 넣던 것과 같으므로 **런 지문이 안 움직인다**.
     //   ⚠ **전술 칸을 읽기 전에** 채워야 한다 — 전술 조건이 파티 구성을 센다
     for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, NOW);
-    G.progress.cleared = [101, 102, 103].filter(s => s < stage);      // 해금만 풀어준다 (성장 없음)
+    G.progress.cleared = GOLDEN_STAGES.filter(s => s < stage);      // 해금만 풀어준다 (성장 없음) — 101~104 는 옛 [101,102,103] 판과 같은 목록
 
     // 전술 칸 — `newGame` 직후 상태 그대로 (인위적으로 켜지 않는다, D-A4). 켜진 효과가 전투 수치에 들어가므로
     // 지문에 남겨야 나중에 달라졌을 때 원인을 읽을 수 있다. 전술은 자기 rng 스트림이라 전투 수열과 안 섞인다.

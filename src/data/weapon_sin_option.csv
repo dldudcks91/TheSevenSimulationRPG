@@ -1,0 +1,13 @@
+sin,applies_to,stat,scale,min,max,description_kr
+wrath,all,crit_damage,flat,4,9,분노 — 치명타 피해(낮은 값 · 치명 배수를 귀하게 둔다) ⚠제안 수치 (item_design §1 「무기 옵션」 · 2026-09-11 R78)
+sloth,all,aspd_pct,flat,2,5,나태 — 공격속도 증가 ⚠제안 수치
+lust,all,life_steal,flat,1,3,색욕 — 흡혈 ⚠제안 수치
+envy,physical,def_ignore,flat,3,8,시기(물리 무기) — 방어력 무시 % ⚠제안 수치
+envy,mage,res_reduction,flat,3,8,시기(마법사 무기) — 원소 저항 무시 %p · 그 타격의 원소에 걸린다 ⚠제안 수치
+envy,priest,atk_down_phys_pct,flat,5,10,시기(사제 무기) — 타격 시 대상 물리 공격력 감소 % · 물리 공격 몬스터에만 · 물리/마법은 드롭 때 1회 ⚠제안 수치
+envy,priest,atk_down_mag_pct,flat,5,10,시기(사제 무기) — 타격 시 대상 마법 공격력 감소 % · 원소 공격 몬스터에만 ⚠제안 수치
+pride,all,dmg_per_level_pct,fine,0.2,0.5,오만 — 영웅 레벨당 데미지 +% · 상시 괄호 ⚠임시 수치
+gluttony,all,crushing_blow_pct,flat,1,3,폭식 — 강타: 맞기 직전 대상 현재 체력 × % 고정 피해 · 직격만 · 치명·방어·저항 무관 ⚠제안 수치
+greed,all,magic_find,flat,5,15,탐욕 — 매직아이템 획득확률 · 레어 가중치 × (1 + 파티 평균) · 셋 중 하나 ⚠제안 수치
+greed,all,gold_find,flat,5,12,탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
+greed,all,item_find,flat,4,10,탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치

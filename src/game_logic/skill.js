@@ -323,6 +323,8 @@ export function createSkillSystem(data) {
         const innate = hero?.innate && defs[hero.innate] ? { id: hero.innate, source: 'innate' } : null;
         // 무기 — **무기 개체가 든 스킬**이다 (§12-1 규칙 3). 무기를 바꾸면 이 칸이 바뀌고 맨손이면 빈 칸이다
         const wg = ctx.weaponSkill && defs[ctx.weaponSkill] ? defs[ctx.weaponSkill] : null;
+        // 셋째 칸 — **몬스터 보스가 쓰는 자리**다 [신설 2026-09-11 · R79 · monster_design §5-1]. 영웅 경로는 이것을 안 넘긴다
+        const third = ctx.thirdSkill && defs[ctx.thirdSkill] ? defs[ctx.thirdSkill] : null;
         // **출처가 칸을 정한다** (§2) — 배운 것 중 셋을 고르는 게 아니라 출처가 셋이고 각각 하나씩 준다.
         //   비어 있는 출처는 자리를 남기지 않고 빠진다(전투는 든 것만 돌린다). 어느 출처인지는 `source` 가 말한다
         const base = [
@@ -334,7 +336,10 @@ export function createSkillSystem(data) {
             //   ~~그 직업 전직 임시분 중 `priority` 최소 하나를 임시로 싣던 것~~(§9-0 08-27~09-08)은 **폐기**했다 —
             //   안 찍은 영웅에게 전직 액티브를 주고 있어서 §2 와 정면으로 어긋났다.
             //   전직이 오면 여기가 「고른 갈래가 준 3 중 찍은 하나」가 된다 (§4-2 B안 — `hero.advance` 를 읽는다).
-            null,
+            //   ⚠ **`ctx.thirdSkill` 을 넘기면 그 id 가 이 칸에 앉는다** [신설 2026-09-11 · R79] — 몬스터의 **보스 칸**이고
+            //   그 몬스터 직업 풀에서 스폰 때 굴린 것이다 (skill_design §2 · monster_design §5-1). **영웅 경로는 동작이 안 바뀐다.**
+            //   ⚠ 그 칸이 전직 칸인지 고유 둘째인지는 기획 미정(GAME_DESIGN §10)이라 `source` 는 잠정적으로 `advance` 그대로다.
+            third ? { id: third.id, source: 'advance' } : null,
         ].filter(Boolean);
         // ~~같은 스킬이 두 출처에서 오면 앞선 출처만 남긴다~~ **폐기 2026-09-09** [사용자 지시].
         //   **칸은 출처 자리다**(§2) — 출처가 둘이면 칸도 둘이고, 그 둘에 같은 스킬이 앉는 것도 칸이다.

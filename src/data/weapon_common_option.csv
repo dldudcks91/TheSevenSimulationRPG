@@ -1,0 +1,14 @@
+family,stat,applies_to,scale,min,max,description_kr
+crit_rate,crit_rate,all,flat,2,5,무기 공통 — 치명타 확률 증가 ⚠제안 수치 (item_design §1 「무기 옵션」 · 2026-09-11 R78)
+vs_type,vs_normal_dmg,all,flat,6,15,무기 공통 — 일반(Normal) 대상 추가 피해 · 조건부 괄호 ⚠제안 수치
+vs_type,vs_demon_dmg,all,flat,6,15,무기 공통 — 데몬(Demon) 대상 추가 피해 · 조건부 괄호 ⚠제안 수치
+vs_type,vs_undead_dmg,all,flat,6,15,무기 공통 — 언데드(Undead) 대상 추가 피해 · 조건부 괄호 ⚠제안 수치
+vs_grade,vs_elite_dmg,all,flat,6,15,무기 공통 — 정예·보스 대상 추가 피해 · 조건부 괄호 ⚠제안 수치
+vs_rank,vs_front_dmg,all,flat,5,12,무기 공통 — 전열 대상 추가 피해 · 조건부 괄호 ⚠제안 수치
+vs_rank,vs_back_dmg,all,flat,5,12,무기 공통 — 후열 대상 추가 피해 · 조건부 괄호 ⚠제안 수치
+def_down,def_down_pct,physical,flat,5,12,물리 무기 — 타격 시 대상 방어력 감소 % · 파티 공유 · 겹치지 않고 센 값 하나 + 시간 갱신 ⚠제안 수치
+ele_dmg,fire_dmg_pct,magic,flat,6,15,마법 무기 — 불 피해 증가 % · 그 타격이 불일 때 · 조건부 괄호 ⚠제안 수치
+ele_dmg,cold_dmg_pct,magic,flat,6,15,마법 무기 — 냉기 피해 증가 % ⚠제안 수치
+ele_dmg,lightning_dmg_pct,magic,flat,6,15,마법 무기 — 전기 피해 증가 % ⚠제안 수치
+ele_dmg,poison_dmg_pct,magic,flat,6,15,마법 무기 — 독 피해 증가 % ⚠제안 수치
+res_down,res_down_pct,magic,flat,3,8,마법 무기 — 타격 시 그 원소의 대상 저항 감소 %p · 영웅끼리 중첩 · 같은 영웅은 시간 갱신 ⚠제안 수치

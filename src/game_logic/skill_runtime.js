@@ -63,8 +63,10 @@ export function createSkillRuntime(ctx) {
         let changed = false;
         for (const id of Object.keys(u.buffs)) {
             if (u.buffs[id].until <= at + EPS) {
+                // `quiet` = 무기 옵션 창(타격 시 디버프 · R78) — 열 때 이벤트를 안 냈으므로 닫을 때도 안 낸다(재생기는 `s` 로 스킬 이름을 찾는다)
+                const quiet = u.buffs[id].quiet;
                 delete u.buffs[id];
-                timeline.push({ t: r1(at), e: 'buffEnd', u: u.key, s: id });
+                if (!quiet) timeline.push({ t: r1(at), e: 'buffEnd', u: u.key, s: id });
                 changed = true;
             }
         }

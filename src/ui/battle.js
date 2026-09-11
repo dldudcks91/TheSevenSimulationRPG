@@ -17,7 +17,7 @@
  *   그 시각까지 팝업 없이 되감는다 (catchUp).
  * 유닛 카드 = **왼쪽 초상 + 오른쪽 수치 열**뿐이다 [개정 2026-09-03 사용자 지시] — 이름·죄종 칩·정예/보스 태그를 들던 위칸을 통째로 걷었다.
  *   등급은 **테두리 색**이 든다(정예 = 노랑 · 보스 = 빨강). 오른쪽 열은 HP(수치는 바 가운데) / 행동 게이지 / 스킬 쿨 칸.
- *   **몬스터와 영웅의 카드는 이제 같은 물건이다** — 몬스터도 쿨 칸(지금은 전부 빈 칸)과 창 뱃지 줄을 갖는다.
+ *   **몬스터와 영웅의 카드는 이제 같은 물건이다** — 몬스터도 쿨 칸과 창 뱃지 줄을 갖는다 — 칸은 등급이 연 만큼 차고(`round` 이벤트의 `actives` · 2026-09-11 R79 후속) 나머지는 빈 칸이다.
  *   **카드 크기는 몬스터·영웅·보스가 전부 같은 고정값**이다 (2026-08-27, SCREEN_DESIGN §4-2).
  * 스킬 쿨은 **가로 아이콘 칸**이다 — 이름도 % 도 찍지 않고 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판이 걷히며 보여주고,
  *   **발동한 칸은 튀면서 스킬 이름이 초상 위로 떠오른다** (2026-08-27 — 「방금 뭘 썼나」는 게이지가 아니라 팝업이 답한다).
@@ -32,7 +32,7 @@
  */
 
 import * as M from './mock.js';
-import { D, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo } from './data.js';
+import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, heroTipCard, skillTipCard } from './tip.js';
 
@@ -118,8 +118,10 @@ function buildDom(state, stage, stageId) {
     const wrap = document.createElement('div');
     wrap.className = 'panel battle-panel';
     const bg = stageBgOf(stageId);
-    const rounds = D.balance.rounds_per_stage;
-    const kindOf = n => D.roundTypes.find(r => r.round_num === n)?.round_type ?? 'normal';
+    // 라운드 트랙은 **그 스테이지의 세트**를 그린다 — 챕터보스 스테이지는 보스 칸 하나다 (battle.stageRounds · 2026-09-11)
+    const roundRows = SYS.battle.stageRounds(stage);
+    const rounds = roundRows.length;
+    const kindOf = n => roundRows.find(r => r.round_num === n)?.round_type ?? 'normal';
     /* 헤드는 **한 줄** [재개정 2026-09-04 사용자 지시 · SCREEN_DESIGN §4-2]
          `.bh-top` — 이름 · 라운드 트랙 ─── (밀어내기) ─── `.battle-ctrl`(배속 · 일시정지 · 건너뛰기 │ 배치 · 로그 · 누적)
        화면 전환 세그먼트는 여기 없다 — 상단바에 선다 (2026-09-11 · ADR-0094)
@@ -339,7 +341,7 @@ function renderUnits(state, root) {
             // 칸 수는 언제나 active_slots — 스킬이 둘인 영웅도 셋째 칸이 **빈 채로** 남는다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
             // 칸이 사라지면 카드마다 줄 길이가 달라져 같은 격자로 안 읽히고, 「스킬이 둘」과 「셋째가 미정」이 구분되지 않는다
             // [개정 2026-09-03 사용자 지시] **몬스터도 같은 줄을 그린다** — 옛 규칙(「몬스터는 액티브가 없어 쿨 칸도 없다」)을 폐기한다.
-            // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 지금 전부 빈 칸이다
+            // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 등급이 연 만큼(`spawn_grade.csv:skill_slots`) 차고 나머지가 빈 칸이다 [2026-09-11 R79 후속 — 그 전엔 전부 비어 있었다]
             const slots = Array.from({ length: Math.max(D.balance.active_slots, u.skills?.length ?? 0) }, (_, i) => u.skills?.[i] ?? null);
             // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
             // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
@@ -572,9 +574,13 @@ function apply(state, root, opts, ev) {
                 name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: ev.t, node: null,
                 rank: enemyRank(e.monsterId),   // 진형 — 몬스터 **역할**이 정한다 (`monster_role.csv`)
                 // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
-                //   skills: []  → 쿨 칸이 active_slots 만큼 **빈 채로** 선다 (몬스터 액티브는 아직 없다 — skill.csv 는 영웅 전용)
+                //   skills      → **시뮬이 실어 온 그 목록**(`round` 이벤트의 `actives` — 파티의 `result.party[].actives` 와 같은 모양) [개정 2026-09-11 R79 후속 · 사용자 지적].
+                //                 ⚠ 옛 판은 `skills: []` 로 비웠다(「몬스터 액티브는 아직 없다」) — R79 로 몬스터가 스킬을 쓰게 된 뒤에도 남아 칸이 빈 채였고,
+                //                 `castSkill` 이 칸에서 못 찾아 적의 `skill` 이벤트(칸 번쩍임 · 이름 팝업)를 **조용히 흘렸다**
                 //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
-                skills: [], buffs: new Map(),
+                atk: e.atk, matk: e.matk, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량 · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
+                skills: (e.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
+                buffs: new Map(),
             }));
             for (const e of state.enemies) state.units.set(e.key, e);
             renderUnits(state, root);

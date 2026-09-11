@@ -164,6 +164,20 @@ export const EFFECTS = {
             for (const k of Object.keys(u.res)) u.res[k] = u.resBase[k] + sum;
         },
     },
+    // ── 무기 옵션 창 둘 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **스킬 행은 쓰지 않는다**(`battle.strikeOnce` 가 타격 시 건다).
+    //   `guard_pct` 와 **같은 축**(방어값 · 저항)을 밀므로 guard 의 창 합까지 함께 다시 쓴다 — 표 순서상 guard 뒤라 마지막에 쓴 값이 둘을 다 든다
+    // 방어값 % — 물리 무기 통합옵션 「타격 시 대상 방어력 감소」(음수)
+    def_pct: {
+        derive: (u, sum) => { u.def = u.defBase * (1 + (sum + buffSumOf(u, 'guard_pct')) / 100); },
+    },
+    // 원소 하나의 저항 %p — 마법 무기 통합옵션 「타격 시 그 원소의 대상 저항 감소」(음수). 창이 든 `element` 칸만 민다
+    res_elem: {
+        derive: u => {
+            const guard = buffSumOf(u, 'guard_pct');
+            for (const k of Object.keys(u.res)) u.res[k] = u.resBase[k] + guard;
+            for (const b of Object.values(u.buffs)) if (b.stat === 'res_elem' && b.element in u.res) u.res[b.element] += b.v;
+        },
+    },
     // 최대 HP 창 — 열릴 때 늘어난 만큼 현재 HP 도 올리고(apply), 닫힐 때 넘친 HP 를 깎는다(derive)
     hp_max_pct: {
         derive: (u, sum) => {
@@ -215,4 +229,39 @@ export function refreshDerived(u) {
         for (const b of Object.values(u.buffs)) if (b.stat === stat) sum += b.v;
         h.derive(u, sum);
     }
+}
+
+/** 한 유닛의 한 stat 창 합 — guard 와 같은 축을 미는 무기 옵션 창(`def_pct` · `res_elem`)이 guard 몫까지 함께 다시 쓸 때 쓴다 */
+function buffSumOf(u, stat) {
+    let s = 0;
+    for (const b of Object.values(u.buffs)) if (b.stat === stat) s += b.v;
+    return s;
+}
+
+/**
+ * 무기 옵션의 타격 시 창 셋 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — `battle.strikeOnce` 가 적중 직후 부른다.
+ * **rng 0 · 타임라인 이벤트 없음** — 창에 `quiet` 을 달아 만료도 조용하다(`skill_runtime.expire`).
+ *   방어력 감소 · 공격력 감소 = **겹치지 않는다** — 대상의 창 하나에 센 값만 남고 시간만 갱신된다
+ *   원소 저항 감소 = **영웅끼리 중첩** — 공격자 · 원소마다 창이 따로 서고, 같은 영웅의 재타격은 시간만 갱신한다
+ *   공격력 감소는 **공격 타입이 맞는 대상**에만 — 물리 감소 = 물리 공격 · 마법 감소 = 원소 공격
+ * @param u 공격자 · @param fx 공격자의 무기 옵션 묶음(`hero.computeCombat:option_fx`) · @param d 대상 · @param type 그 타격의 공격 타입
+ * @param t 지금 시각(초) · @param sec `{def, res, atk}` 창 길이 — [balance.csv:weapon_def_down_sec] · `weapon_res_down_sec` · `weapon_atk_down_sec`
+ * @returns 창이 하나라도 섰는가
+ */
+export function weaponOnHit(u, fx, d, type, t, sec) {
+    let changed = false;
+    const strongest = (key, stat, pct, dur) => {
+        const cur = d.buffs[key];
+        d.buffs[key] = { stat, v: cur ? Math.min(cur.v, -pct) : -pct, until: t + dur, element: null, by: u.key, quiet: true };
+        changed = true;
+    };
+    if (fx.defDown > 0) strongest('wx:def_down', 'def_pct', fx.defDown, sec.def);
+    const atkDown = d.atkType === 'physical' ? fx.atkDownPhys : fx.atkDownMag;
+    if (atkDown > 0) strongest('wx:atk_down', 'atk_pct', atkDown, sec.atk);
+    if (fx.resDown > 0 && type !== 'physical' && type in d.res) {
+        d.buffs[`wx:res_down:${u.key}:${type}`] = { stat: 'res_elem', v: -fx.resDown, until: t + sec.res, element: type, by: u.key, quiet: true };
+        changed = true;
+    }
+    if (changed) refreshDerived(d);
+    return changed;
 }

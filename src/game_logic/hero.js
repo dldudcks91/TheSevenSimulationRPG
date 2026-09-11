@@ -328,7 +328,8 @@ export function createHeroSystem(data) {
      *   무기 개체 공격력(watk)에는 드롭 시 굴린 편차가 이미 박혀 있다 — 타격마다 굴리지 않는다.
      * · 공격 타입은 직업이 아니라 **무기군**이 정한다 (battle_design §2-1 — 스태프·오브 = magic). 맨손은 physical.
      *   ~~사제의 파워 출처 = 마법 공격력 = 지능~~ 은 09-10 에 깨졌다 — 공격력은 순수 무기 밑수이고 지능은 스킬 계수로 간다 (§9-1).
-     * · **원소는 무기 개체가 든다** (§9-5) — 마법 무기군이면 그 무기의 element 가 공격 타입이다.
+     * · ~~**원소는 무기 개체가 든다** — 마법 무기군이면 그 무기의 element 가 공격 타입이다~~ → **[폐기 2026-09-11 · 사용자 지시 · R80]**
+     *   원소는 **관련 옵션이 붙었을 때만** 생기고 그 옵션이 아직 없으므로 `attack_type` 은 **언제나 `physical`** 이다 (§2-1 · §9-5).
      * · **저항은 소재값이 아니라 직접 %다** (§9-5) — `res_all` + 원소별 접사. 상한은 전투에서 적용된다
      *   (formula.appliedResist) — 여기서는 원값을 그대로 내고, 상한을 뚫는 `res_max_bonus` 를 따로 낸다.
      * · **최대 HP 는 성장 축**이라 레벨이 기하 곡선을 탄다 (§9-0 · hero_design §5). 방어는 비율 축이라 타지 않는다.
@@ -339,6 +340,9 @@ export function createHeroSystem(data) {
      * · **HP 재생만 밑수를 갖는다** [09-07] — 위 곱셈 원칙의 **유일한 예외**. 최대 HP 시작값과 같은 분류다.
      */
     function computeCombat(hero, items, codex = {}, party = null) {
+        // ⚠ **몬스터도 이 함수를 지난다** [2026-09-11 · R79 · battle_design §8-1 · monster_design §5-1] — `battle.js:makeEnemy` 가
+        //   `{stats, level: dlvl, cls, innate}` 모양을 넘긴다. `mastery` 가 없으면 랭크 0 이라 마스터리 몫은 0 이고,
+        //   `codex`·`party` 도 안 넘어온다. 몬스터 전용으로 남는 것은 호출한 쪽의 세 줄(몸값 합류 · 전역 배율 · attack_type 덮기)뿐이다.
         const A = hero.stats;
         const flat = {};                       // 접사 합산 {stat: v}
         const drList = [];                     // 피해 감소는 합치지 않고 원천별로 모은다 (§9-3)
@@ -362,14 +366,17 @@ export function createHeroSystem(data) {
         const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
         const magic = group?.damageKind === 'magic';
         // 밑수 = 무기 개체 공격력 + 무기 슬롯 접사의 고정 공격력. 맨손이면 unarmed_atk
+        //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
         const base = weapon
             ? weapon.watk + (weapon.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0)
             : B.unarmed_atk;
+        // 상시 괄호 = Σ 공격력 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
+        const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level;
         // 공격력 = **순수 무기 밑수** [개정 2026-09-10 · battle_design §9-1] — ~~`attrMult(magic ? int : str) ×`~~ 는 걷었다.
         //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
         const atk = Math.round(
             base
-            * (1 + f('atk_pct') / 100)
+            * (1 + atkPctSum / 100)
             * (1 + (codex.atk_pct ?? 0) / 100));
 
         // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
@@ -387,9 +394,29 @@ export function createHeroSystem(data) {
 
         const resAll = f('res_all');
         const luckMult = attrMult(A.luck);
+        // 무기 옵션이 여는 축 한 묶음 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **전투 능력치가 아니다**(combat_stat 행 없음 · 시트에 안 선다).
+        //   소비자는 battle.js 뿐이다(조건부 % · 타격 시 창 · 강타 · 매직아이템 획득확률). 전부 0 이면 null 이라 전투가 한 번도 안 읽는다
+        const fx = {
+            vs: { normal: f('vs_normal_dmg'), demon: f('vs_demon_dmg'), undead: f('vs_undead_dmg') },
+            vsElite: f('vs_elite_dmg'), vsFront: f('vs_front_dmg'), vsBack: f('vs_back_dmg'),
+            ele: Object.fromEntries(ELEMENTS.map(e => [e, f(`${e}_dmg_pct`)])),
+            defDown: f('def_down_pct'), resDown: f('res_down_pct'),
+            atkDownPhys: f('atk_down_phys_pct'), atkDownMag: f('atk_down_mag_pct'),
+            crush: f('crushing_blow_pct'),
+            // 운 계수는 드랍률 · 골드와 같은 취급이다 (⚠제안 — item_design §1 「무기 옵션」)
+            magicFind: Math.round(f('magic_find') * luckMult),
+        };
+        const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
+            fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
-            attack_type: magic ? (weapon?.element ?? ELEMENTS[0]) : 'physical',
+            // **원소 옵션이 없는 마법 무기의 기본 공격은 물리다** [개정 2026-09-11 · 사용자 지시 · R80 · battle_design §2-1 · §9-5]
+            //   ~~magic ? (weapon.element ?? ELEMENTS[0]) : physical~~ 폐기 — 생성 때 원소를 굴리지 않으므로(item.js build) 들 원소가 없다.
+            //   ⚠ 바뀌는 것은 **무엇에 깎이나**뿐이다 — 마법 무기의 세기 채널(`atk_magic` = 회복의 밑수)은 그대로고,
+            //   깎임만 저항(§9-5)에서 방어 곡선(§9-3)으로 옮겨간다. 그래서 08-26 「원소 없는 마법 공격은 없다」도 그대로 선다.
+            //   평타에 원소를 얹는 것은 **평타 부여 스킬**(인챈트 계열 · 미구현)의 몫이고, 어느 옵션이 원소를 주는지는 기획 미정(GAME_DESIGN §10).
+            //   ⚠ **몬스터는 이 값을 덮는다** — 원소를 정하는 것은 스테이지다(`monster.csv:attack_type` · monster_design §2 · battle.js makeEnemy)
+            attack_type: 'physical',
             level: hero.level,                 // 적중률의 공격자 레벨 (§9-4)
             hp_max: hpMax,
             defense: f('def_flat'),
@@ -417,7 +444,8 @@ export function createHeroSystem(data) {
             item_find: Math.round(f('item_find') * luckMult),
             // Σ 상시 피해 % — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면
             // (battle_design §9-2 "괄호는 둘뿐") 그 괄호 안의 합을 따로 알아야 한다 (battle.js atkBase/atkPct)
-            atk_pct_sum: f('atk_pct'),
+            atk_pct_sum: atkPctSum,
+            option_fx: anyFx ? fx : null,
         };
     }
 

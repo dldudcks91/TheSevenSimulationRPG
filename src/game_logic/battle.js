@@ -4,9 +4,11 @@
  * 같은 입력 + 같은 시드 = 같은 타임라인 (엔진 이식 후 대조 검증의 기준).
  *
  * battle_design.md 확정 규칙 (그대로 반영):
- *   · 9라운드 / 정예 3·6 / 보스 9 — 라운드 구조는 stage_round.csv, 편성은 round_budget.csv
+ *   · 라운드 구조는 **스테이지가 고르는 세트** — stage.csv:round_set → stage_round.csv. 보통 스테이지는 9라운드(정예 3·6 / 보스 9),
+ *     챕터보스 스테이지는 **보스 1라운드**다 (base_expedition_design §1-2 개정 2026-09-11). 편성은 round_budget.csv
  *   · 행동 주기 단일 축 (공격/캐스팅 같은 시계), 한 차례에 하나
- *   · 몬스터 소재값(monster.csv) × 등급 배율(spawn_grade.csv)
+ *   · **몬스터도 영웅과 같은 모양이다** — 직업 · 기본 능력치 7종 · 고유 스킬 · 장비 (monster_design §5-1 · 사용자 지시 2026-09-11).
+ *     ~~몬스터 소재값(monster.csv) × 등급 배율(spawn_grade.csv)~~ 은 폐기 — `hp`·`attack`·`action_period` 컬럼이 없어졌다
  *   · 용어는 "사망"이 아니라 **전투불능** — 라운드 사이 회복 없음. 회복은 전투 안에서만 일어나고
  *     전투 밖으로 나오면 전원 즉시·무료 회복이다 [2026-09-06, base_expedition_design §1-1]
  *
@@ -14,11 +16,13 @@
  *   · **몬스터는 영웅과 같은 전투 능력치 체계를 쓴다** (§8-1) — 같은 `strike` 에 같은 모양의 유닛이 양쪽으로 들어간다.
  *     몬스터 방어 200과 영웅 방어 200은 정확히 같은 감쇠를 만든다. 저항은 양쪽 다 **4원소 객체 · 직접 %**
  *   · 적중은 **레벨 차 0/1 게이트** (§9-4) — 영웅은 자기 레벨, 몬스터는 스테이지 dlvl. 빗나가면 흡혈·반사도 유발되지 않는다
- *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 마법 무기 개체의 원소 (§9-5)
+ *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 **물리** — 마법 무기의 원소는 관련 옵션이 붙었을 때만 생긴다
+ *     (§2-1 · §9-5 · 개정 2026-09-11 · R80). 그래서 몬스터의 `attack_type` 은 `computeCombat` 결과를 **덮는다**
  *   · 반사는 비직격 — 감쇠·치명 없이 공격자 HP 를 직접 깎고 아무것도 유발하지 않는다 (§9-6)
  *
- *   · **유닛 생성은 `makeUnit` 하나다** — 영웅도 몬스터도 같은 생성자를 지난다 (§8-1). 몬스터는 `combatFromMonster` 가
- *     먼저 `computeCombat` 과 **같은 모양**으로 눕혀 준다. 필드가 한 곳에만 있으므로 양쪽 유닛이 갈릴 수 없다.
+ *   · **유닛 생성은 `makeUnit` 하나다** — 영웅도 몬스터도 같은 생성자를 지난다 (§8-1). 그리고 **전투 능력치를 만드는 함수도 하나다**
+ *     [개정 2026-09-11 · R79] — ~~`combatFromMonster`~~ 는 삭제되고 몬스터도 `heroSystem.computeCombat` 을 지난다.
+ *     필드 이름이 같아서가 아니라 **같은 함수라서** 같다 — 양쪽 유닛이 갈릴 수 없다.
  *     `atk_pct` 버프는 **새 곱셈 층이 아니라 상시 % 와 같은 괄호에 덧셈**이다 (§9-2 "괄호는 둘뿐") —
  *     그래서 유닛이 `atkBase`(괄호 앞) 와 `atkPct`(괄호 안 Σ 상시 %) 를 따로 든다.
  *   · **액티브 스킬의 실행은 `skill_runtime.js`** (battle_design §3 · §6 · §7 · skill_design §9) — 정의·배정·선택은 skill.js.
@@ -36,26 +40,37 @@
  *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
  *   `skill.csv:status`(결빙 등)는 `status_effect.csv` 가 없어 코드가 읽지 않는다.
  *   전직·마스터리·패시브는 미구현 — 지금 도는 것은 직업 기본 액티브뿐이다 (프로토타입 §9-0).
- *   몬스터의 치명·반사·피해 감소는 0 — 정예 특성(elite_trait.csv)이 붙기 전까지 값이 없다 (§8-1 "몬스터는 부분집합만").
+ *   ~~몬스터의 치명·반사·피해 감소는 0~~ → **[폐기 2026-09-11 · D2 사용자 확정]** 몬스터도 **영웅과 같은 밑수**를 받는다
+ *     (기본 치명 확률 · HP 재생 밑수) — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다.
+ *     반사·피해 감소는 여전히 접사·정예 특성이 붙을 때만 값이 생긴다. ⚠ battle_design §8-1 출처 표의
+ *     「치명·재생은 정예 특성이 얹는다」와 부딪히는 것을 알고 택했다 (DEV_PLAN R79).
  *   도감 카드: 처치마다 장비 드롭과 **별개로** 카드 판정 (monster_design §8) — 결과 cards 와 타임라인 'card' 이벤트.
  *
- *   · **드롭 = 처치당 최대 1개** (item_design §1 확정 2026-08-27) — 판정은 1회이고 등급은 굴림 횟수가 아니라
- *     확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 파이프라인의 나머지(ilvl 에 등급 반영 · 희귀도에
- *     매직찬스)는 아직 미반영 (DEV_PLAN R20).
+ *   · **드롭 = 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · item_design §1 2단계]. **처치당 최대 1개**(08-27)는
+ *     그대로이고 판정도 1회 · 등급은 확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 바뀐 것은 **무엇이 떨어지나** —
+ *     판정 뒤 **입은 부위 중 하나**를 골라 그 아이템을 그대로 낸다. 파이프라인 3~6단계(ilvl · 희귀도 · 접사 · 개체 굴림)는
+ *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = `dlvl + gear_ilvl_add`(굴림 없음) ·
+ *     희귀도 = 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고, 파티의 매직찬스가 **적 장비도 좋게 한다**
+ *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
  */
 
 import { createFormula } from './formula.js';
+// 원소 어휘만 가져온다 — 시스템 주입이 아니다 (skill.js 와 같은 취급 · INTERFACE §1)
+import { ELEMENTS } from './hero.js';
 import { createHooks, createSkillRuntime } from './skill_runtime.js';
-import { refreshDerived } from './skill_effects.js';
+import { refreshDerived, weaponOnHit } from './skill_effects.js';
 
 const TICK = 0.1;
 
 /**
  * @param {object} data
- *   balance, monsters(byId), stages(byId), roundTypes [{round_num, round_type}],
+ *   balance, monsters(byId), stages(byId), roundSets {round_set: [{round_num, round_type}]} (세트마다 round_num 순),
  *   budgets(byKey: normal/elite/stage_boss/chapter_boss), grades(byKey), sins [...],
  *   sinTraits {sin: trait}, commonTraits [trait...], itemSystem,
  *   skillSystem — skill.js (정의·발동 선택). 없으면 액티브 없이 기본 공격만 돈다,
+ *   heroSystem — hero.js. **몬스터도 `computeCombat` 을 지난다** (§8-1 「계산이 한 곳」 · 신설 2026-09-11 R79),
+ *   classSkills {classId: [skillId]} — 보스 셋째 스킬 칸의 후보 풀. item·hero 에 넘기는 **같은 표**다 (신설 2026-09-11 R79),
+ *   slots [partId] — 장비 부위 어휘. `monster.csv:wear_slots` 검증에만 쓴다 (신설 2026-09-11 R79),
  *   monsterRoles {role: {rank}} — `monster_role.csv`. **적의 자리**를 정한다 (진형 확정 2026-09-09).
  *     모르는 역할은 **전열(0)** 로 떨어뜨린다 — 빠뜨린 몬스터가 뒤에 숨어 무적이 되는 것보다 앞에 서는 편이 안전하다
  */
@@ -63,11 +78,37 @@ export function createBattleSystem(data) {
     const B = data.balance;
     const F = createFormula(B);
     const SK = data.skillSystem ?? null;
+    const HS = data.heroSystem ?? null;            // 몬스터도 computeCombat 을 지난다 (R79)
+    const CLASS_SKILLS = data.classSkills ?? {};   // 보스 셋째 칸의 후보 풀 (R79)
+    if (!HS) throw new Error('battle: heroSystem 이 없다 — 몬스터도 computeCombat 을 지난다 (INTERFACE §2-6)');
     // 적의 랭크 — `monster.csv:role` → `monster_role.csv:rank` (0 전열 · 1 후열). 화면이 들고 있던 규칙을 CSV 로 올린 것이다
     const ROLES = data.monsterRoles ?? {};
     const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
+
+    /** 입는 부위 — `monster.csv:wear_slots` 를 `|` 로 가른다. **이 순서가 장비 굴림 순서**다 (INTERFACE §5-2) */
+    const wearSlots = m => String(m.wear_slots ?? '').split('|').filter(Boolean);
+
+    /*
+     * 몬스터 모양 검증 — **로드에서 멈춘다** (`roundSets` 검사와 같은 이유 · 2026-09-11 R79). 오타가 조용히 새면
+     *   빈 스킬 풀 · 없는 무기군 · 알 수 없는 부위가 되어 전투 도중에 터지거나 조용히 칸이 빈다.
+     */
+    {
+        const PARTS = new Set(data.slots ?? []);
+        for (const m of Object.values(data.monsters)) {
+            const at = m.monster_idx;
+            if (!(m.cls in CLASS_SKILLS)) throw new Error(`battle: 몬스터 ${at} 의 직업 '${m.cls}' 를 모른다`);
+            if (!data.itemSystem.groupOf({ slot: 'weapon', group: m.weapon_group })) throw new Error(`battle: 몬스터 ${at} 의 무기군 '${m.weapon_group}' 를 모른다`);
+            if (m.innate_skill !== '-' && SK && !SK.defs[m.innate_skill]) throw new Error(`battle: 몬스터 ${at} 의 고유 스킬 '${m.innate_skill}' 를 모른다`);
+            const ws = wearSlots(m);
+            if (!ws.includes('weapon')) throw new Error(`battle: 몬스터 ${at} 의 wear_slots 에 weapon 이 없다 — 무기가 밑수다`);
+            if (PARTS.size) for (const s of ws) if (!PARTS.has(s)) throw new Error(`battle: 몬스터 ${at} 의 wear_slots 부위 '${s}' 를 모른다`);
+        }
+        for (const g of Object.values(data.grades)) {
+            if (!(g.skill_slots >= 1)) throw new Error(`battle: 등급 ${g.grade} 의 skill_slots 가 없다 (spawn_grade.csv)`);
+        }
+    }
 
     const stageMonsters = stage => Object.values(data.monsters)
         .filter(m => m.chapter === stage.chapter && m.stage_num === stage.stage_num);
@@ -85,8 +126,19 @@ export function createBattleSystem(data) {
         stageMonsters(stage).find(m => m.attack_type !== 'physical')?.attack_type ?? 'physical';
 
     /**
+     * 스테이지의 라운드 줄 — `stage.csv:round_set` 이 `stage_round.csv` 의 세트 하나를 고른다 (base_expedition_design §1-2 · 2026-09-11).
+     * **라운드 수 = 그 세트의 행 수**다 — 전역 라운드 수 키(~~`rounds_per_stage`~~)는 없다. 챕터보스 스테이지는 보스 한 줄뿐이다.
+     * 화면(라운드 트랙 · 예상 소요 · 리포트 총수)도 이것을 부른다 — 렌더러가 세트를 고르면 규칙이 화면 층에 샌다 (`stageElement` 와 같은 이유)
+     */
+    const stageRounds = stage => data.roundSets[stage.round_set];
+    // 세트가 없는 스테이지는 **로드에서 멈춘다** — 전투 도중에 라운드가 비면 원인이 안 읽힌다
+    for (const st of Object.values(data.stages)) {
+        if (!stageRounds(st)?.length) throw new Error(`battle: 스테이지 ${st.stage_id} 의 round_set '${st.round_set}' 가 stage_round.csv 에 없다`);
+    }
+
+    /**
      * 전투 유닛 하나 — **영웅도 몬스터도 여기를 지난다** (§8-1). 필드명은 `formula.strike` 가 읽는 이름 그대로다.
-     * `c` 는 `hero.computeCombat` 결과 모양이고, 몬스터는 `combatFromMonster` 가 먼저 같은 모양으로 눕혀 준다 —
+     * `c` 는 `hero.computeCombat` 결과다 — **몬스터도 같은 함수를 지난다**(2026-09-11 R79 · `makeEnemy`) —
      *   유닛 모양을 두 곳에 적으면 반드시 갈리므로 생성자는 하나뿐이어야 한다.
      * 버프 괄호 — `atk` 는 이미 Σ 상시 %(`atk_pct_sum`)가 곱해진 값이라, 버프를 **같은 괄호에 더하려면**
      *   괄호 앞 밑수(`atkBase`)와 괄호 안 합(`atkPct`)을 분리해 둬야 한다 (§9-2).
@@ -123,7 +175,11 @@ export function createBattleSystem(data) {
             actives: [], buffs: {}, barrier: null,
             reactions: [],                           // 사건 훅 등록 자리 (⚠ 지금은 아무도 싣지 않는다)
             goldFind: c.gold_find, itemFind: c.item_find,
-            // 기본 능력치 — **영웅만** 든다(`partyUnits[].stats` → extra). 몬스터·소환은 null = 스킬 계수 0 (skill.js scaleDef · 2026-09-10)
+            // 무기 옵션 묶음 [2026-09-11 · R78] — 조건부 % · 타격 시 창 · 강타 · 매직아이템 획득확률. 없으면 null(몬스터·소환·옵션 없는 영웅)
+            //   `strikeOnce` 는 `fx` 가 있을 때만 읽는다 — 타격마다 아이템을 훑지 않게 전투 시작에 한 번 묶어 둔다
+            fx: c.option_fx ?? null, magicFind: c.option_fx?.magicFind ?? 0,
+            // 기본 능력치 — 영웅은 `partyUnits[].stats`, **몬스터는 `monster.csv` 의 7컬럼**이 extra 로 들어온다 (2026-09-11 R79).
+            //   기본값 null 은 **소환**의 몫이다 — null = 스킬 계수 0 (skill.js scaleDef · 2026-09-10)
             stats: null,
             // 스킬 타격 전용 — `strikeOnce` 가 그 타격 동안만 얹고 원복한다(능력치 항 · 추가 피해 확률·배수). 평소 0
             flat: 0, procChance: 0, procMult: 0,
@@ -152,37 +208,65 @@ export function createBattleSystem(data) {
     }
 
     /**
-     * 몬스터 소재값 → **`computeCombat` 과 같은 모양**. 영웅 체계의 부분집합이라 없는 축은 0 이다 (§8-1).
-     *   hp·공격력 = 소재값 × 등급 배율 × 전역 스케일 (성장 축)
-     *   방어      = 소재값 × 등급 배율 × 전역 스케일 (비율 축 — monster_design §7-1 규칙 생성)
-     *   저항      = **직접 %** — 배율을 받지 않고 등급은 `spawn_grade.res_add` 로 %p 가산만 한다
-     * ⚠ 원소 공격 몬스터도 값은 `atk_physical` 에 둔다 — 원소는 `attack_type` 이 들고, 마법 공격력은
-     *   **회복의 밑수**라 몬스터에게 없다. `atk_magic` 에 넣으면 matk 가 0 이 아니게 되어 체계가 갈린다.
+     * 몬스터 → 전투 유닛. **영웅과 같은 함수를 지난다** [전면 개정 2026-09-11 · R79 · 사용자 지시 ·
+     *   monster_design §5-1 · battle_design §8-1]. ~~`combatFromMonster`~~ 는 삭제됐다 —
+     *   필드 이름을 맞추는 것이 아니라 **같은 `computeCombat` 을 부른다**. 그래서 「계산이 한 곳」이 문자 그대로 성립하고
+     *   이식 대조도 한 함수로 양쪽을 검증한다.
+     *
+     * 입력 = **레벨과 무관한 모양**(직업 · 기본 능력치 7 · 고유 스킬) + **스폰 때 굴린 장비**.
+     *   크기는 던전 레벨과 등급이 장비로 준다 — ~~소재값 × 등급 배율~~ 은 컬럼째 없어졌다(`hp`·`attack`·`action_period`).
+     * 몬스터 전용으로 남는 것은 세 줄뿐이다:
+     *   ① **몸값 합류** — `defense` · `res_*` 는 몸이 들고 장비가 그 **위에** 더한다 [사용자 확정 · monster_design §7].
+     *      도감이 저항을 공략 정보로 적고(§8) 굴린 장비로 판마다 요동치면 「이 원소를 막았나」가 안 읽히기 때문이다(§9-5)
+     *   ② **몬스터 전용 전역 배율** — 합계에 곱한다(캘리브레이션 조절값). 등급 세기는 `hp_mult` 하나만 남았다 —
+     *      **HP 는 장비에서 안 오기 때문**이다(영웅 체계에서 HP 는 레벨이 준다). ~~`atk_mult`·`def_mult`·`res_add`~~ 퇴역
+     *   ③ **`attack_type` 덮기** — 원소를 정하는 것은 **스테이지**다 (monster_design §2). `computeCombat` 은 R80 으로 언제나 `physical` 을 낸다
+     *
+     * ⚠ 치명·재생 **밑수도 영웅과 같이 받는다** [D2 사용자 확정 2026-09-11] — 특수 분기를 두지 않는 것이 목적이라
+     *   `crit_rate`·`hp_regen` 을 0 으로 덮지 않는다. 마법 무기를 낀 몬스터는 `atk_magic`(= matk)을 갖는다(monster_design §5-1 이 인정).
+     * 보상 축(경험치·골드·드롭 배율)은 영웅에게 없는 필드라 등급에서 따로 얹는다.
+     * @param gear 그 몬스터가 **입고 있는** 아이템 배열 (`item.rollGear` 결과). 비면 맨몸이다 — 검증에서 한 마리만 만들 때 쓴다
+     * @param extra `thirdSkill` 은 여기서 꺼내 스킬 칸으로 보내고 나머지는 유닛에 그대로 얹는다
      */
-    const combatFromMonster = (m, g, lvl) => ({
-        hp_max: Math.round(m.hp * g.hp_mult * B.monster_hp_scale),
-        atk_physical: m.attack * g.atk_mult * B.monster_atk_scale,
-        attack_type: m.attack_type,
-        defense: m.defense * g.def_mult * B.monster_def_scale,
-        res_fire: m.res_fire + g.res_add, res_cold: m.res_cold + g.res_add,
-        res_lightning: m.res_lightning + g.res_add, res_poison: m.res_poison + g.res_add,
-        level: lvl,
-        // 몬스터의 치명·반사·피해 감소·재생·쿨감소는 0 — 정예 특성(elite_trait.csv)이 붙기 전까지 값이 없다
-        res_max_bonus: 0, damage_reduction: 0, def_ignore: 0, res_reduction: 0, dmg_bonus_pct: 0,
-        crit_rate: 0, crit_damage: B.base_crit_damage_pct,
-        life_steal: 0, reflect_damage: 0, hp_regen: 0, cooldown_reduction: 0,
-        action_period: m.action_period, atk_pct_sum: 0,
-    });
-
-    /** 몬스터 → 전투 유닛. 보상 축(경험치·골드·드롭 배율)만 등급에서 따로 얹는다 — 영웅에게 없는 필드다 */
-    function makeEnemy(key, monsterId, grade, lvl, extra = {}) {
+    function makeEnemy(key, monsterId, grade, lvl, gear = [], extra = {}) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
-        return makeUnit('enemy', combatFromMonster(m, g, lvl), {
-            key, monsterId, grade,
+        const { thirdSkill = null, ...rest } = extra;
+        const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
+        // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
+        const c = HS.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill }, gear);
+        c.defense += m.defense;                                             // ①
+        for (const el of ELEMENTS) c[`res_${el}`] += m[`res_${el}`];        // ①
+        c.hp_max = Math.round(c.hp_max * g.hp_mult * B.monster_hp_scale);   // ②
+        if (c.atk_physical !== undefined) c.atk_physical *= B.monster_atk_scale;
+        if (c.atk_magic !== undefined) c.atk_magic *= B.monster_atk_scale;
+        c.defense *= B.monster_def_scale;
+        c.attack_type = m.attack_type;                                      // ③
+        /*
+         * 스킬 칸 — **등급이 연다** (skill_design §2 · monster_design §5-1): 일반 = 고유 1 · 정예 = + 낀 무기가 든 스킬 ·
+         *   보스 = + 셋째 칸. **칸은 출처 자리**라 「있는 것 중 앞에서 n개」가 아니다 — 그래서 열리지 않은 출처를
+         *   `activesFor` 에 **넘기지 않는다**(고유가 비었다고 무기 스킬이 1번 칸으로 올라오면 안 된다).
+         */
+        const slots = g.skill_slots;
+        // ⚠ `activesFor` 는 **인스턴스**(`{id, source}`)를 낸다 — 파티 경로와 같이 **정의를 풀고 `readyAt` 을 얹어야** 한다.
+        //   안 풀면 `skill.castable(def, …)` 이 undefined 를 읽는다 (INTERFACE §2-6 「전투 유닛」 actives 행)
+        const acts = SK ? SK.activesFor({ innate: m.innate_skill }, {
+            weaponSkill: slots >= 2 ? gear.find(it => it.slot === 'weapon')?.skill : null,
+            thirdSkill: slots >= 3 ? thirdSkill : null,
+        }).map(a => {
+            const def = SK.resolve(a);
+            if (!def) throw new Error(`battle: 몬스터 ${monsterId} 의 알 수 없는 스킬 ${a?.id ?? a}`);
+            return { id: a.id, def, readyAt: 0, source: a.source };
+        }) : [];
+        return makeUnit('enemy', c, {
+            key, monsterId, grade, gear,
             rank: rankOfRole(m.role),        // 진형 — 역할이 자리를 정한다 (battle_design §3-1)
+            monsterType: m.monster_type,     // 종족(Normal/Demon/Undead) — 무기 옵션 vs 종족이 읽는다 (R78)
+            cls: m.cls,                      // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
+            stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef)
+            actives: acts,
             expReward: m.exp_reward * g.exp_mult, goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
-            ...extra,
+            ...rest,
         });
     }
 
@@ -193,17 +277,29 @@ export function createBattleSystem(data) {
         return [arr[a], arr[b]];
     };
 
-    /** 라운드 편성 — 구조는 고정(stage_round), 내용물은 예산(round_budget) 안에서 랜덤 */
-    function spawnRound(rng, stage, pool, n) {
-        const type = data.roundTypes.find(r => r.round_num === n)?.round_type ?? 'normal';
+    /**
+     * 라운드 편성 — 구조는 그 스테이지의 세트(stage_round), 내용물은 예산(round_budget) 안에서 랜덤.
+     * 챕터보스 스테이지는 일반몹 풀이 비어 있지만 호위 예산이 0 이라 `pick` 을 한 번도 안 부른다 — 호위 수 굴림(1회)은 그대로 돈다
+     *
+     * **2단이다** [개정 2026-09-11 · R79 · INTERFACE §5-2]:
+     *   **1단 편성** — 누가 나오나. 굴림 순서·횟수가 **종전과 같다**
+     *   **2단 장비·스킬** — 편성이 확정된 뒤 목록 순서로 유닛마다 `rollGear` 한 벌 + (보스면) 셋째 스킬 1회
+     *
+     * ⚠ **1단이 2단보다 앞인 것이 계약이다** — 장비 굴림이 편성 굴림을 밀면 같은 시드가 다른 편성을 낸다
+     *   (`rollFace` 를 맨 뒤에 두는 것 · `searchRoll` 의 「결과를 먼저, 이야기를 뒤에」와 같은 규칙).
+     * ⚠ **전역 상한도 1단에서 자른다** — 잘릴 유닛의 장비를 굴리면 수열이 편성 상한에 종속된다.
+     * @param magicFind 파티 평균 매직아이템 획득확률 % — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
+     */
+    function spawnRound(rng, stage, pool, n, magicFind = 0) {
+        const type = stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
         const budgetKey = type === 'boss' ? stage.boss_grade : type;
         const bd = data.budgets[budgetKey];
         const pick = () => pool[Math.floor(rng() * pool.length)];
         const between = (lo, hi) => lo + Math.floor(rng() * (hi - lo + 1));
-        const list = [];
-        let k = 0;
-        const add = (id, grade, extra) => list.push(makeEnemy(`e${k++}`, id, grade, stage.dlvl, extra));
+        const specs = [];
+        const add = (id, grade, extra) => specs.push({ id, grade, extra });
 
+        /* ── 1단 편성 (굴림 순서·횟수 불변) ── */
         if (type === 'boss') {
             add(stage.boss_monster_idx, stage.boss_grade);
             const escorts = between(bd.escort_min, bd.escort_max);
@@ -218,7 +314,30 @@ export function createBattleSystem(data) {
             for (let i = 0; i < normals; i++) add(pick(), 'normal');
         }
         // 전역 상한 [balance.csv:wave_monster_max] — 어떤 편성도 넘지 못한다
-        return { type, list: list.slice(0, B.wave_monster_max) };
+        const kept = specs.slice(0, B.wave_monster_max);
+
+        /* ── 2단 장비·스킬 ── */
+        const list = kept.map((s, k) => {
+            const m = data.monsters[s.id];
+            const g = data.grades[s.grade];
+            // 아이템 레벨은 **굴리지 않는다** — 던전 레벨 + 등급 가산이다 (item_design §1 3단계 · 사용자 확정 2026-09-11)
+            const gear = data.itemSystem.rollGear(rng, {
+                slots: wearSlots(m),
+                ilvl: stage.dlvl + g.gear_ilvl_add,
+                magicFind,
+                rareBonusPct: g.gear_rare_bonus_pct,
+                weaponGroup: m.weapon_group,
+            });
+            // 셋째 칸 — 보스만. ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙)
+            let thirdSkill = null;
+            if (g.skill_slots >= 3) {
+                const cp = CLASS_SKILLS[m.cls] ?? [];
+                const tr = rng();
+                thirdSkill = cp.length ? cp[Math.floor(tr * cp.length)] : null;
+            }
+            return makeEnemy(`e${k}`, s.id, s.grade, stage.dlvl, gear, { ...s.extra, thirdSkill });
+        });
+        return { type, list };
     }
 
     /**
@@ -230,7 +349,7 @@ export function createBattleSystem(data) {
     function simulate(partyUnits, stageId, rng) {
         const stage = data.stages[stageId];
         const pool = stagePool(stage);
-        const rounds = B.rounds_per_stage;
+        const rounds = stageRounds(stage).length;      // 그 세트의 행 수 — 챕터보스 스테이지는 1 (2026-09-11)
 
         // 파티 유닛 — 몬스터와 **같은 생성자**를 지난다 (§8-1). 자리가 정하는 것만 extra 로 얹는다
         const party = partyUnits.map((p, i) => makeUnit('party', p.combat, {
@@ -253,22 +372,31 @@ export function createBattleSystem(data) {
          * **한 번에 하나만** — 켤 것을 고르는 화면이 없어 **칸 순서 첫 오오라**를 켠다 (⚠ 임시 · SCREEN_DESIGN 미작성).
          * ⚠ 파티원이 각자 다른 오오라를 들면 파티에 둘이 겹친다 — 「하나만」이 지금은 **시전자 단위**다 (기획 §7).
          */
-        for (const p of party) {
-            const aura = p.actives.find(a => a.def.kind === 'aura');
-            p.actives = p.actives.filter(a => a.def.kind !== 'aura');
-            if (!aura) continue;
-            const targets = aura.def.target === 'self' ? [p] : party;
-            // 오오라의 세기도 **시전자 능력치로 민 값**이다 — 걸 때 한 번 (skill.js scaleDef · 2026-09-10)
-            const eff = SK.scaleDef(aura.def, p.stats);
-            for (const tgt of targets) {
-                tgt.buffs[aura.id] = { stat: aura.def.stat, v: eff.value, until: Infinity, element: aura.def.element ?? null, by: p.key };
+        // **적도 같은 규칙이다** [2026-09-11 · R79] — 몬스터가 스킬 칸을 갖게 되어 오오라를 들 수 있다(기사 무기를 낀 정예 · 기사 고유).
+        //   그래서 이 루프를 배열 하나를 받는 함수로 두고 파티는 여기서 한 번, 적은 **라운드마다** `beginRound` 가 부른다.
+        //   안 빼면 오오라가 쿨 0 액티브가 되어 **매 차례 시전만 반복**한다. rng 를 안 쓴다 · 이벤트를 안 낸다(파티와 같다)
+        const applyAuras = side => {
+            for (const p of side) {
+                const aura = p.actives.find(a => a.def.kind === 'aura');
+                p.actives = p.actives.filter(a => a.def.kind !== 'aura');
+                if (!aura) continue;
+                const targets = aura.def.target === 'self' ? [p] : side;
+                // 오오라의 세기도 **시전자 능력치로 민 값**이다 — 걸 때 한 번 (skill.js scaleDef · 2026-09-10)
+                const eff = SK.scaleDef(aura.def, p.stats);
+                for (const tgt of targets) {
+                    tgt.buffs[aura.id] = { stat: aura.def.stat, v: eff.value, until: Infinity, element: aura.def.element ?? null, by: p.key };
+                }
             }
-        }
-        for (const p of party) refreshDerived(p);
+            for (const p of side) refreshDerived(p);
+        };
+        applyAuras(party);
 
         const avg = k => party.reduce((s, p) => s + (p[k] ?? 0), 0) / Math.max(1, party.length);
         const goldMult = 1 + avg('goldFind') / 100;
         const dropMult = 1 + avg('itemFind') / 100;
+        const magicFind = avg('magicFind');            // 매직아이템 획득확률 % — 드롭의 레어 가중치에 곱한다 (item_design §1 「무기 옵션」 · R78)
+        // 무기 옵션 타격 시 창의 길이 (R78) — 전투 시작에 한 번 묶는다
+        const windowSec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec };
 
         const timeline = [];
         const out = {
@@ -329,8 +457,12 @@ export function createBattleSystem(data) {
                 }
                 if (closed) refreshDerived(p);
             }
-            const sp = spawnRound(rng, stage, pool, round);
+            // 매직찬스는 **스폰 굴림**에 걸린다 [2026-09-11 · R79] — 장비 희귀도가 여기서 정해지기 때문이다.
+            //   ⚠ 딸린 것 — 파티의 매직아이템 획득확률이 **적 장비도 좋게 한다**(사용자가 알고 택한 「이스터에그」)
+            const sp = spawnRound(rng, stage, pool, round, magicFind);
             units.enemies = sp.list;
+            // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
+            applyAuras(units.enemies);
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
             for (const e of units.enemies) e.next = 0.4 + rng() * 0.6;
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
@@ -340,6 +472,11 @@ export function createBattleSystem(data) {
                 enemies: units.enemies.map(e => ({
                     key: e.key, monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? null,
                     traits: e.traits ?? null, hpMax: e.hpMax, period: e.period,
+                    // 표시값 [2026-09-11 · R79 후속 · INTERFACE §2-6] — 재생기가 적 카드의 스킬 칸(`actives` = id · 칸 순서 = 출처 자리)과
+                    //   그 툴팁 문장(피해·회복량 · 스킬 계수)을 그린다. `out.party[]` 의 같은 이름 필드와 같은 모양이고 전투에는 안 쓰인다.
+                    //   ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 는 0
+                    atk: e.atk, matk: e.matk, atkType: e.atkType, stats: e.stats ? { ...e.stats } : null,
+                    actives: e.actives.map(a => a.id),
                 })),
             });
         };
@@ -361,15 +498,25 @@ export function createBattleSystem(data) {
             // 확률 배율(spawn_grade.drop_chance_mult)이다 — 판정은 **1회**. 보스는 최소 1개 보장
             let got = rng() * 100 < B.drop_chance_pct * e.dropChanceMult * dropMult ? 1 : 0;
             if ((e.grade === 'stage_boss' || e.grade === 'chapter_boss') && got < B.boss_guaranteed_drop) got = B.boss_guaranteed_drop;
+            /*
+             * **떨어지는 것은 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · 사용자 지시 · item_design §1 2단계].
+             *   여기서 아이템을 만들지 않는다 — 부위 · ilvl · 희귀도 · 접사 · 개체 굴림은 **스폰 때** 이미 돌았다(`spawnRound`).
+             *   남은 굴림은 **입은 부위 중 하나를 고르는 1회**뿐이고, 그것이 「드롭 부위 편향의 단위」의 답이다 — 단위는 **입은 것**이다.
+             * ⚠ 맨몸 몬스터는 판정이 성공해도 낼 것이 없다 — 아무것도 굴리지 않고 넘어간다.
+             */
             for (let i = 0; i < got; i++) {
-                const ilvl = stage.dlvl + Math.floor(rng() * B.drop_ilvl_spread);
-                out.drops.push(data.itemSystem.rollDrop(rng, ilvl));
+                const worn = e.gear ?? [];
+                if (!worn.length) break;
+                out.drops.push(worn[Math.floor(rng() * worn.length)]);
             }
         };
 
         const downed = u => {
             timeline.push({ t: r1(t), e: 'down', u: u.key });
-            if (u.side === 'enemy') onKill(u);
+            // 적의 **소환 벽은 처치가 아니다** [2026-09-11 · R79] — 몬스터 행이 없어 골드·경험치·카드·드롭 어느 것도 정의되지 않는다.
+            //   R79 로 몬스터가 스킬 칸을 갖게 되어 처음 생긴 경로다(챕터보스 고유 `mag_frozenwall` 등). onKill 을 안 지나므로 **rng 도 안 쓴다**.
+            //   ⚠ 파티 쪽 벽이 uid 없이 `out.downed` 에 실리는 것은 이 변경 **전부터** 있던 동작이라 손대지 않았다 (DEV_PLAN R79 보고)
+            if (u.side === 'enemy') { if (!u.summon) onKill(u); }
             else out.downed.push(u.uid);
             // 처치 정산(드롭 rng)이 **먼저** 돌아야 훅이 rng 를 써도 순서가 잠긴다 (INTERFACE §5-2)
             hooks.emit('down', u, { t });
@@ -423,24 +570,39 @@ export function createBattleSystem(data) {
         }
 
         /**
+         * 무기 옵션의 조건부 추가 피해 % — **조건부 괄호에 덧셈**이다 (battle_design §9-2 · item_design §1 「무기 옵션」 · R78).
+         *   vs 종족(`monster.csv:monster_type`) · vs 등급(normal 이 아니면 정예 · 보스) · vs 열(`rank` 0 전열 · 1 후열) · 원소(그 타격의 공격 타입)
+         */
+        const condPct = (fx, d, type) =>
+            (fx.vs[String(d.monsterType ?? '').toLowerCase()] ?? 0)
+            + (d.grade && d.grade !== 'normal' ? fx.vsElite : 0)
+            + (d.rank === 0 ? fx.vsFront : d.rank === 1 ? fx.vsBack : 0)
+            + (type !== 'physical' ? (fx.ele[type] ?? 0) : 0);
+
+        /**
          * 직격 1회 — 기본 공격과 스킬 타격이 **같은 함수**를 쓴다.
          * 스킬 배율·원소 태그·**스킬 타격 필드**(`sk`)는 `strike` 시그니처를 건드리지 않으려고 **그 타격 동안만** 유닛에 얹고 원복한다.
          * `s`(스킬 id)·`proc`(추가 피해가 터졌다)·`bar`(배리어 잔량)는 해당될 때만 붙는다 — 기본 공격의 이벤트 모양·rng 수열은 그대로다.
          * @param sk `{flat, procChance, procMult}` — **스킬 타격만** 넘긴다(skill_effects 공격 대상 표). 기본 공격은 안 넘겨 전부 0 이다
          */
         function strikeOnce(u, target, mult, element, s, sk = null) {
-            const mult0 = u.skillMult, type0 = u.atkType, flat0 = u.flat, chance0 = u.procChance, pmult0 = u.procMult;
+            const mult0 = u.skillMult, type0 = u.atkType, flat0 = u.flat, chance0 = u.procChance, pmult0 = u.procMult, bonus0 = u.bonusPct;
+            const fx = u.fx;                                 // 무기 옵션 묶음 — 없으면 null (R78)
+            const hitType = element || u.atkType;            // 그 타격의 공격 타입 — 원소 조건 · 저항 감소 창이 읽는다
             u.skillMult = mult;
             if (element) u.atkType = element;               // 원소 태그가 있는 스킬은 무기 원소를 무시한다 (§9-5)
             u.flat = sk?.flat ?? 0;                          // 능력치 항 — 배율에 안 곱하고 더한다 (battle_design §9-2 · 2026-09-10)
             u.procChance = sk?.procChance ?? 0;              // 확률로 터지는 추가 피해 — 확률이 0 이면 strike 가 굴리지 않는다
             u.procMult = sk?.procMult ?? 0;
+            // 조건부 추가 피해 — vs 종족 · 등급 · 열 · 원소를 **조건부 괄호에 덧셈**으로 그 타격 동안만 얹는다 (battle_design §9-2 · R78). rng 0
+            if (fx) u.bonusPct = bonus0 + condPct(fx, target, hitType);
             const { hit, dmg, crit, proc } = F.strike(rng, u, target);
             u.skillMult = mult0;
             u.atkType = type0;
             u.flat = flat0;
             u.procChance = chance0;
             u.procMult = pmult0;
+            u.bonusPct = bonus0;
 
             const tally = out.strikes[u.side === 'party' ? 'party' : 'enemy'];
             tally.n += 1;
@@ -452,12 +614,16 @@ export function createBattleSystem(data) {
                 return;
             }
             const shield = target.barrier;
-            applyDamage(target, dmg);
+            // 강타 — **맞기 직전 대상의 현재 체력** × % 를 그 타격에 더한다. 치명 · 방어 · 저항을 받지 않는 고정 피해 (battle_design §9 · R78). rng 0
+            const cb = fx?.crush > 0 ? Math.round(target.hp * fx.crush / 100) : 0;
+            const total = dmg + cb;
+            applyDamage(target, total);
             // 기여 — **감쇠 후 최종 피해**를 센다. 배리어가 먹은 몫도 포함이라 관전의 누적 데미지 판과 같은 값이다
             const cA = credit(u), cD = credit(target);
-            if (cA) cA.dealt += dmg;
-            if (cD) cD.taken += dmg;
-            const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg, crit, dhp: target.hp };
+            if (cA) cA.dealt += total;
+            if (cD) cD.taken += total;
+            const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: total, crit, dhp: target.hp };
+            if (cb) ev.cb = cb;                              // 강타 몫 — 강타가 들어간 타격에만 키가 선다(`dmg` 는 합 · 흡혈 · 반사는 강타 몫을 안 먹는다)
             // 흡혈 — 직격의 최종 피해에만 비례 (§9-6). 배리어가 먹은 몫도 포함한다 (직격이 들어간 사실은 같다)
             if (u.ls > 0 && u.hp > 0) {
                 u.hp = Math.min(u.hpMax, u.hp + F.leech(dmg, u.ls));
@@ -467,6 +633,8 @@ export function createBattleSystem(data) {
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
             timeline.push(ev);
+            // 타격 시 창 — 무기 옵션의 방어력 · 저항 · 공격력 감소 (skill_effects.weaponOnHit · R78). rng 0 · 이벤트 없음(`quiet`)
+            if (fx && target.hp > 0) weaponOnHit(u, fx, target, hitType, t, windowSec);
             // 사건 훅 — 등록된 반응이 없으면 아무 일도 없다. 핸들러가 rng 를 쓰면 **이 자리에서** 소비한다
             hooks.emit('hit', u, { t, d: target, dmg, crit, s, proc });
             hooks.emit('hitTaken', target, { t, a: u, dmg, crit, s, proc });
@@ -480,7 +648,7 @@ export function createBattleSystem(data) {
                 if (u.hp <= 0) { if (cD && u.side !== 'party') cD.kills += 1; downed(u); }
             }
             if (target.hp <= 0) {
-                if (cA && target.side !== 'party') cA.kills += 1;   // **적을 쓰러뜨린 것**만 센다
+                if (cA && target.side !== 'party' && !target.summon) cA.kills += 1;   // **적을 쓰러뜨린 것**만 센다 — 적의 소환 벽은 몬스터가 아니다 (R79)
                 downed(target);
                 hooks.emit('kill', u, { t, d: target });
             }
@@ -516,7 +684,9 @@ export function createBattleSystem(data) {
             //    추가 브레이크를 만들지 않는다. **결정은 편성이다** (base_expedition_design §1-1 · DEV_PLAN R42)
             // ⚠ 소환물은 **전멸 판정에서 뺀다** — 얼음 벽이 서 있다고 전투가 안 끝나면 파티가 전멸해도 안 돌아온다
             if (alive(party).filter(u => !u.summon).length === 0) { out.reason = 'wipe'; break; }
-            if (alive(units.enemies).length === 0) {
+            // 적의 소환 벽도 **클리어 판정에서 뺀다** [2026-09-11 · R79] — 바로 위 전멸 판정과 같은 규칙이다: 행동하지 않는 벽이 서 있다고
+            //   라운드가 안 끝나면 안 된다. 벽은 다음 라운드의 적 배열 교체(`units.enemies = sp.list`)로 함께 사라진다
+            if (alive(units.enemies).filter(u => !u.summon).length === 0) {
                 out.roundsCleared = round;
                 if (round >= rounds) { out.won = true; out.reason = 'clear'; break; }
                 round += 1;
@@ -532,5 +702,5 @@ export function createBattleSystem(data) {
     }
 
     // makeEnemy 는 검증(dev/test.js)이 몬스터→유닛 변환 규칙을 직접 볼 수 있도록 함께 내보낸다 — stagePool 과 같은 이유
-    return { simulate, stagePool, stageElement, makeEnemy };
+    return { simulate, stagePool, stageElement, stageRounds, makeEnemy };
 }

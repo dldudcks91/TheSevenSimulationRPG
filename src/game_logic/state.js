@@ -85,13 +85,16 @@
  *     · `items[*].up = 0` · `counters.upgrade = 0` — 강화한 적이 없는 상태.
  *       옛 아이템의 watk·implicit·접사 값은 전부 강화 이전 값이라 소급할 것이 없고, up=0 이면 파생 배율이 1이라
  *       이관이 전투 수치를 흔들지 않는다
+ *   v21 → v22 (2026-09-11 — 챕터 5스테이지 · R75):
+ *     · `progress.cleared` — 챕터보스 스테이지(`boss_grade = chapter_boss`)의 **직전 스테이지를 깼으면 그것도 깬 것으로** 소급한다.
+ *       옛 세이브에선 그 직전 자리가 챕터보스 자리였다. 안 올리면 해금(직전 클리어)이 다음 챕터를 통째로 잠근다. rng 0회
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 21;
+export const SAVE_VERSION = 23;
 
 /**
  * @param {object} deps
@@ -518,6 +521,45 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * v21 → v22 [2026-09-11] — **챕터는 5스테이지다** (base_expedition_design §1-2 · 사용자 지시 · R75).
+     * 챕터보스가 4스테이지에서 **5스테이지(보스 단독 1라운드)** 로 옮겨 가고 4스테이지에 새 스테이지보스가 섰다.
+     * 해금이 「직전 스테이지 클리어」라 옛 세이브는 새 챕터보스 스테이지를 깬 기록이 없어 **다음 챕터가 통째로 잠긴다.**
+     * 옛 세이브에서 챕터보스를 잡은 증거는 **그 직전 자리(옛 챕터보스 자리)를 깬 기록**이다 — 그러면 챕터보스 스테이지도 깬 것으로 둔다.
+     * 스테이지 번호 산술을 안 쓴다 — `boss_grade` 와 `stageOrder` 만 본다. **rng 0회.**
+     * 리포트 · 런 · 알림의 `stageId` 는 **옮기지 않는다** — 그 런은 9라운드짜리 옛 자리에서 돈 것이라,
+     * 보스 단독 스테이지로 고쳐 적으면 라운드 수가 거짓이 된다 (INTERFACE §4).
+     */
+    function upgradeV21(s) {
+        const order = deps.stageOrder;
+        const cleared = s.progress?.cleared;
+        if (cleared) order.forEach((id, i) => {
+            if (i === 0 || deps.stages[id]?.boss_grade !== 'chapter_boss') return;
+            if (cleared.includes(order[i - 1]) && !cleared.includes(id)) cleared.push(id);
+        });
+        s.version = 22;
+        return s;
+    }
+
+    /**
+     * v22 → v23 [2026-09-11] — **무기 옵션은 세 층이다** (item_design §1 「무기 옵션」 · 사용자 지시 · R78).
+     * 접사가 **출처(`src`)** 를 들게 됐다 — `fixed`(고정 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션).
+     *   · **이미 붙은 접사는 그대로 두고 `random` 표를 붙인다** — 가진 것을 다시 굴리지 않는다(개체값은 개체의 역사다 · v2 · v17 과 같은 규칙)
+     *   · **무기는 고정 옵션과 죄종 칸을 규칙대로 채운다** — `item.legacyWeaponLayers` 가 **굴림 없이** uid 로 고른다(v17 의 스킬 소급과 같은 방식).
+     *     옛 무기도 새 무기와 같은 층을 갖게 하려는 것이고, 옛 통합옵션의 개수는 줄이지 않는다
+     * **rng 0회.** 방어구 · 장신구는 출처 표만 붙는다 — 부위 개편은 후속이다(사용자 지시).
+     */
+    function upgradeV22(s) {
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it) continue;
+            for (const a of it.affixes ?? []) a.src = a.src ?? 'random';
+            if (it.slot === 'weapon' && !(it.affixes ?? []).some(a => a.src !== 'random'))
+                it.affixes = [...I.legacyWeaponLayers(it), ...(it.affixes ?? [])];
+        }
+        s.version = 23;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -529,7 +571,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -551,6 +593,8 @@ export function createGameSystem(deps) {
         if (s.version === 18) s = upgradeV18(s);
         if (s.version === 19) s = upgradeV19(s);
         if (s.version === 20) s = upgradeV20(s);
+        if (s.version === 21) s = upgradeV21(s);
+        if (s.version === 22) s = upgradeV22(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
@@ -789,13 +833,32 @@ export function createGameSystem(deps) {
     /**
      * 한 명을 그 랭크로 옮긴다 (편성 화면의 드래그). 정원이 찼으면 **그 랭크의 마지막 하나와 자리를 바꾼다** —
      * 거절하면 플레이어가 "왜 안 되지"를 읽을 수 없고, 밀어내면 누가 밀렸는지가 안 보인다. 맞바꿈이 둘 다 답한다.
+     * `idx` 를 주면 **그 칸**이 목적지다 [2026-09-11 사용자 지시 · SCREEN_DESIGN §4-1] — 주인이 있으면 **그 주인과** 맞바꾸고
+     * (같은 랭크 안에서도), 비었으면 그 랭크 끝으로 간다. 칸은 늘 앞부터 차므로(`normalizeFormation`) 빈 칸은 끝에만 있다.
+     * 칸을 안 받던 판은 후열 영웅을 전열 첫 칸에 끌어도 전열 **마지막**과 바뀌었고, 같은 랭크 안에서는 아무 일이 없었다.
      */
-    function placeFormation(state, uid, rank) {
+    function placeFormation(state, uid, rank, idx) {
         if (!state.party.includes(uid)) return { ok: false, err: 'missing' };
         const f = normalizeFormation(state);
         const caps = formCaps(f.tpl);
         if (!(rank >= 0 && rank < caps.length)) return { ok: false, err: 'missing' };
         const from = f.ranks.findIndex(list => list.includes(uid));
+        if (idx !== undefined) {
+            if (!(Number.isInteger(idx) && idx >= 0 && idx < caps[rank])) return { ok: false, err: 'missing' };
+            const owner = f.ranks[rank][idx];
+            if (owner === uid) return { ok: true, swapped: null };
+            if (owner === undefined) {
+                if (from === rank) return { ok: true, swapped: null };   // 같은 랭크의 빈 칸 — 앞부터 차므로 옮겨도 같은 자리다
+                if (from >= 0) f.ranks[from] = f.ranks[from].filter(u => u !== uid);
+                f.ranks[rank].push(uid);
+                normalizeFormation(state);
+                return { ok: true, swapped: null };
+            }
+            if (from >= 0) f.ranks[from][f.ranks[from].indexOf(uid)] = owner;   // 주인은 내가 있던 칸으로
+            f.ranks[rank][idx] = uid;
+            normalizeFormation(state);
+            return { ok: true, swapped: owner };
+        }
         if (from === rank) return { ok: true, swapped: null };
         let swapped = null;
         if (f.ranks[rank].length >= caps[rank]) {

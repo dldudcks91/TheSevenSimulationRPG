@@ -13,7 +13,7 @@
 
 import * as M from './mock.js';
 import { parseCsv, keyValue, indexBy } from '../game_logic/csv.js';
-import { createHeroSystem, ELEMENTS } from '../game_logic/hero.js';
+import { createHeroSystem } from '../game_logic/hero.js';
 import { createNaming } from '../game_logic/naming.js';
 import { createItemSystem } from '../game_logic/item.js';
 import { createBattleSystem } from '../game_logic/battle.js';
@@ -25,7 +25,8 @@ import { createGameSystem } from '../game_logic/state.js';
 /** 로드된 데이터 — 렌더러는 수치를 여기서 읽는다 (D.balance.party_size_max 처럼) */
 export const D = {
     balance: null, monsters: null, stages: null, stageList: [], stageOrder: [],
-    roundTypes: [], budgets: null, grades: null, eliteRounds: [], bossRound: 0,
+    roundSets: {},            // stage_round.csv — {round_set: [{round_num, round_type}]} · 스테이지가 stage.csv:round_set 으로 하나를 고른다
+    budgets: null, grades: null, eliteRounds: [], bossRound: 0,   // eliteRounds · bossRound = 첫 스테이지 세트의 배치(도움말 표기)
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
     codexLevels: [],          // codex_level.csv — 레벨순 cards_to_next (레벨당 증분)
     codexBonus: [],           // codex_level.csv — 레벨순 bonus_pct
@@ -36,7 +37,7 @@ export const D = {
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
-    weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 sword2h·axe 뿐
+    weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 sword2h·axe·mace·spear·bow
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
@@ -52,7 +53,9 @@ export const D = {
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
     itemBases: null,          // item_base.csv — {slot: [{ko,en}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
-    affixDefs: [],            // affix.csv — [{stat, scale, min, max, perIlvl?, slots:[...]}] · CSV 행 순서
+    affixDefs: [],            // affix.csv — [{stat, scale, min, max, perIlvl?, slots:[...]}] · CSV 행 순서 · **무기는 안 쓴다**(R78)
+    weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, appliesTo, stat, scale, min, max}] · 무기 죄종 칸 후보 · CSV 행 순서 (2026-09-11 R78)
+    weaponCommonOptions: [],  // weapon_common_option.csv — [{family, stat, appliesTo, scale, min, max}] · 무기 통합옵션 후보 · CSV 행 순서 (R78)
     heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
     heroTraitPool: [],        // hero_trait.csv — [{ko,en}] · CSV 행 순서
     searchStories: [],        // search_story.csv 원시 행 — 수색 진행 문구. 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다)
@@ -78,7 +81,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
-    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base'];
+    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -93,7 +96,7 @@ export async function loadData(base = './data/') {
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
-        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow] = texts.map(parseCsv);
+        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -101,11 +104,17 @@ export async function loadData(base = './data/') {
     D.stageList = stage.slice().sort((a, b) => a.stage_id - b.stage_id);
     D.stages = indexBy(D.stageList, 'stage_id');
     D.stageOrder = D.stageList.map(s => s.stage_id);
-    D.roundTypes = roundRows;
+    // 라운드 세트 — `stage_round.csv` 는 세트(`round_set`)마다 라운드 줄을 든다. 스테이지가 `stage.csv:round_set` 으로 하나를 고르고
+    //   라운드 수는 그 세트의 행 수다 (2026-09-11 — 챕터보스 스테이지는 보스 1라운드 · base_expedition_design §1-2)
+    D.roundSets = {};
+    for (const r of roundRows) (D.roundSets[r.round_set] ??= []).push({ round_num: r.round_num, round_type: r.round_type });
+    for (const rows of Object.values(D.roundSets)) rows.sort((a, b) => a.round_num - b.round_num);
     D.budgets = indexBy(budget, 'budget_key');
     D.grades = indexBy(grade, 'grade');
-    D.eliteRounds = roundRows.filter(r => r.round_type === 'elite').map(r => r.round_num);
-    D.bossRound = roundRows.find(r => r.round_type === 'boss')?.round_num ?? D.balance.rounds_per_stage;
+    // 도움말이 적는 「보통 스테이지」의 배치 — **첫 스테이지의 세트**에서 읽는다. 세트 이름을 코드가 박지 않는다
+    const baseRounds = D.roundSets[D.stageList[0]?.round_set] ?? [];
+    D.eliteRounds = baseRounds.filter(r => r.round_type === 'elite').map(r => r.round_num);
+    D.bossRound = baseRounds.find(r => r.round_type === 'boss')?.round_num ?? baseRounds.length;
     const codexByLevel = codexLevel.slice().sort((a, b) => a.level - b.level);
     D.codexLevels = codexByLevel.map(r => r.cards_to_next);
     D.codexBonus = codexByLevel.map(r => r.bonus_pct);
@@ -136,6 +145,10 @@ export async function loadData(base = './data/') {
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
     D.weaponBases = {};
     for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en });
+    // 무기 옵션 표 둘 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — 무기는 고정 1 + 죄종 칸 + 통합옵션을 받고 `affix.csv` 를 안 쓴다.
+    //   `applies_to` = `all` · damage_kind · 직업 id — 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
+    D.weaponSinOptions = weaponSinOptionRow.map(r => ({ sin: r.sin, appliesTo: r.applies_to, stat: r.stat, scale: r.scale, min: r.min, max: r.max }));
+    D.weaponCommonOptions = weaponCommonOptionRow.map(r => ({ family: r.family, stat: r.stat, appliesTo: r.applies_to, scale: r.scale, min: r.min, max: r.max }));
     D.skillRows = skillRow;
     D.skillTagRows = skillTagRow;
     D.masteryNodes = masteryNode;
@@ -240,7 +253,7 @@ export const chapterOf = ch => D.chapters?.[ch] ?? null;
 export const stageName = row => ({ ko: row.stage_name_kr, en: row.stage_name_en ?? row.stage_name_kr });
 /** 스테이지 배경 — 계승 자산이 있는 스테이지만(stage.csv:bg). 경로 조립은 mock(자산 경로) */
 export const stageBgOf = id => (D.stages?.[id]?.bg ? M.stageBg(id) : null);
-/** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) 3 + 보스 1. 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다 */
+/** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) + 보스 1. 챕터보스 스테이지는 **보스 하나뿐**이다(2026-09-11). 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다 */
 export const codexStages = () => (D.stageList ?? []).map(s => {
     const normals = Object.values(D.monsters ?? {})
         .filter(m => m.chapter === s.chapter && m.stage_num === s.stage_num && m.spawn_grade === 'normal')
@@ -309,8 +322,10 @@ export function buildSystems(d) {
         skillPool: classSkills,
     });
     const item = createItemSystem({
-        balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, elements: ELEMENTS,
+        // ~~elements~~ 는 2026-09-11 R80 으로 주입 목록에서 빠졌다 — 마법 무기 원소 굴림이 사라져 item.js 가 원소 어휘를 안 읽는다
+        balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups,
         itemBases: d.itemBases, weaponBases: d.weaponBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
+        weaponSinOptions: d.weaponSinOptions ?? [], weaponCommonOptions: d.weaponCommonOptions ?? [],   // 무기 옵션 표 둘 (R78)
         // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
         classSkills,
     });
@@ -326,10 +341,14 @@ export function buildSystems(d) {
         },
     });
     const battle = createBattleSystem({
-        balance: d.balance, monsters: d.monsters, stages: d.stages, roundTypes: d.roundTypes,
+        balance: d.balance, monsters: d.monsters, stages: d.stages, roundSets: d.roundSets,
         budgets: d.budgets, grades: d.grades, sins,
         sinTraits: M.SIN_TRAITS, commonTraits: M.COMMON_TRAITS, itemSystem: item, skillSystem: skill,
         monsterRoles: d.monsterRoles ?? {},        // 적의 랭크 — 진형 (battle_design §3-1)
+        // 몬스터도 영웅과 같은 경로로 전투 능력치를 얻는다 (2026-09-11 R79 · battle_design §8-1 · monster_design §5-1) —
+        //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스 셋째 칸의 후보 풀(hero·item 과 같은 표)
+        //   이고 `slots` 는 `monster.csv:wear_slots` 어휘 검증용이다
+        heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
     });
     const game = createGameSystem({
         hero, item, battle, skill, tactic, balance: d.balance,

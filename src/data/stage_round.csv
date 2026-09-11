@@ -1,10 +1,11 @@
-round_num,round_type,description_kr
-1,normal,일반 라운드
-2,normal,일반 라운드
-3,elite,정예 라운드
-4,normal,일반 라운드
-5,normal,일반 라운드
-6,elite,정예 라운드
-7,normal,일반 라운드
-8,normal,일반 라운드
-9,boss,보스 라운드 — 등급은 stage.csv 의 boss_grade 가 결정
+round_set,round_num,round_type,description_kr
+standard,1,normal,일반 라운드
+standard,2,normal,일반 라운드
+standard,3,elite,정예 라운드
+standard,4,normal,일반 라운드
+standard,5,normal,일반 라운드
+standard,6,elite,정예 라운드
+standard,7,normal,일반 라운드
+standard,8,normal,일반 라운드
+standard,9,boss,보스 라운드 — 등급은 stage.csv 의 boss_grade 가 결정
+boss_only,1,boss,챕터보스 단독 — 일반·정예 라운드 없이 보스 하나와 싸우는 1라운드 (2026-09-11 · base_expedition_design §1-2)
