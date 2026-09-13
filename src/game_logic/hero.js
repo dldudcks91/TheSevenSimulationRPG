@@ -204,6 +204,7 @@ export function createHeroSystem(data) {
             for (let i = 1; i < v.length; i++) if (v[i] > v[top]) top = i;
             if (top !== fi) { const x = v[fi]; v[fi] = v[top]; v[top] = x; }
         }
+
         return Object.fromEntries(statIds.map((id, i) => [id, v[i]]));
     }
 
@@ -315,7 +316,23 @@ export function createHeroSystem(data) {
 
     /* ── 전투 능력치 (계수는 전부 balance.csv ⚠제안 키) ── */
 
-    const attrMult = v => 1 + (v ?? 0) * B.attr_bonus_per_point / 100;
+    /**
+     * 기본 능력치 계수 — **축마다 형태가 다르다** (2026-09-13 확정 · hero_design §4-1).
+     *   계수 = (`mult_base_pct` + 능력치 × `mult_per_point_pct`) / 100
+     *   대부분 축은 `100 + 1n` 이라 옛 `1 + n × attr_bonus_per_point/100` 과 같은 값을 낸다.
+     *   **건강만 `10 + 5n`** 이다 — 곱해지는 대상이 HP 성장분이라 성질이 다르다.
+     *     건강 18 에서 계수 1.0 (기준선) · 건강 9 에서 0.55 → 만렙 격차 1.77 배.
+     *   값은 전부 `hero_attribute.csv` 에 있다. 바꿀 때 이 파일이 아니라 CSV 를 고친다.
+     */
+    const attrCoef = Object.fromEntries(data.stats.map(s => [s.id, {
+        base: Number(s.multBasePct ?? 100),
+        per: Number(s.multPerPointPct ?? B.attr_bonus_per_point),
+    }]));
+    const attrMult = (id, v) => {
+        const c = attrCoef[id];
+        if (!c) throw new Error(`attrMult: 축 '${id}' 가 hero_attribute.csv 에 없다`);
+        return (c.base + (v ?? 0) * c.per) / 100;
+    };
 
     /**
      * 기본 능력치 + 장비 + 도감 보너스 + 파티 전술 → 전투 능력치.
@@ -381,19 +398,27 @@ export function createHeroSystem(data) {
 
         // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
         //   레벨 1 에서 성장분이 0 이라 몬스터 앵커링 기준점(`hero_hp_base`)이 안 흔들린다 (battle_design §8)
-        const hpGrowth = B.hero_hp_base * F.growthMult(hero.level) - B.hero_hp_base;
+        //
+        // 2026-09-13 개정 — 성장분을 **레벨업 상승분의 누적합**으로 다시 정의했다 (hero_design §4-1).
+        //   레벨 N 상승분 = `hero_hp_base` × (R−1) × R^N × 건강 계수
+        //   그 Σ(n=2..N) 을 닫으면 아래 한 줄이 된다 (등비수열 합 · (R−1) 이 약분돼 사라진다):
+        //     성장분 = `hero_hp_base` × (R^(N+1) − R²)
+        //   레벨 1 에서 R²−R² = 0 이라 앵커는 그대로다. 유저에게 보이는 것은 식이 아니라
+        //   레벨업 팝업의 상승분 한 숫자이고, 그 값은 hpMax(새)−hpMax(옛) 로 낸다(반올림 정합).
+        const R = B.power_growth_per_level;
+        const hpGrowth = B.hero_hp_base * (Math.pow(R, hero.level + 1) - R * R);
         const hpMax = Math.round(
-            (B.hero_hp_base + hpGrowth * attrMult(A.vit) + f('hp_flat'))
+            (B.hero_hp_base + hpGrowth * attrMult('vit', A.vit) + f('hp_flat'))
             * (1 + f('hp_pct') / 100)
             * (1 + (codex.hp_pct ?? 0) / 100));
 
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
-            / attrMult(A.agi)
+            / attrMult('agi', A.agi)
             * (1 - f('aspd_pct') / 100));
 
         const resAll = f('res_all');
-        const luckMult = attrMult(A.luck);
+        const luckMult = attrMult('luck', A.luck);
         // 무기 옵션이 여는 축 한 묶음 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **전투 능력치가 아니다**(combat_stat 행 없음 · 시트에 안 선다).
         //   소비자는 battle.js 뿐이다(조건부 % · 타격 시 창 · 강타 · 매직아이템 획득확률). 전부 0 이면 null 이라 전투가 한 번도 안 읽는다
         const fx = {

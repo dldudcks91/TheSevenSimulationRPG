@@ -126,6 +126,8 @@ export async function loadData(base = './data/') {
     D.heroAttributes = heroAttr.map(r => ({
         id: r.attr_id, ko: r.attr_kr, en: r.attr_en, abbr: r.abbr,
         combatStat: r.combat_stat, dispatch: r.dispatch,
+        // 계수 = (mult_base_pct + 능력치 × mult_per_point_pct) / 100 — **축마다 다르다** (2026-09-13)
+        multBasePct: r.mult_base_pct, multPerPointPct: r.mult_per_point_pct,
     }));
     // 전투 능력치 25종 — `impl` 은 computeCombat 이 실제로 내는가. 시트는 impl=1 만 그린다.
     // `sheetOrder` 는 **캐릭터 시트의 행 순서**다 — CSV 행 순서가 아니라 이 값이 정한다 (SCREEN_DESIGN §6)
