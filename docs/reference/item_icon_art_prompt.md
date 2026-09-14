@@ -75,7 +75,7 @@
 
 > Gemini Gem 의 「지침(Instructions)」 칸에 넣는 본문이다. 한 번 넣으면 대화마다 다시 설명하지 않는다.
 > **참조 이미지 첨부**: Gem 의 지식(Knowledge) 파일로 `src/assets/art/faces/example/knight_1_young_blond.png` ·
-> `skeleton_soldier.png` 두 장을 올린다 ([example/README](../../src/assets/art/faces/example/README.md) 「쓰는 법」 — `chef`·`bard` 는 올리지 않는다).
+> `skeleton_soldier.png` 두 장을 올린다 ([source/README](../../src/assets/art/faces/source/README.md) 「쓰는 법」 — `chef`·`bard` 는 올리지 않는다).
 
 ---
 
@@ -245,7 +245,7 @@ helmet_1 풀 헬름 · helmet_2 날개 투구 · helmet_3 뼈 투구 · helmet_4
 
 ## 5. 누끼 — 마젠타를 쓰는 이유
 
-[example/README](../../src/assets/art/faces/example/README.md) 「누끼 작업 메모」의 사고를 반복하지 않기 위한 변경이다.
+[source/README](../../src/assets/art/faces/source/README.md) 「누끼 작업 메모」의 사고를 반복하지 않기 위한 변경이다.
 
 기사 시트는 배경이 **회색(밝기 65)** 으로 나왔고 판금 갑옷의 중간톤이 사실상 같은 값이라,
 외곽선에 틈이 있으면 flood fill 이 갑옷 안으로 새어 **노년 기사의 견갑이 통째로 파였다.**

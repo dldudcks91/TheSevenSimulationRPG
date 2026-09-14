@@ -1,14 +1,14 @@
 # postprocess — 격자 절단 · 키잉 · 여백 정규화 · 설치
 
-SKILL.md 4~5단계에서 편다. 키잉의 **원리와 이력은 [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) · [example/README.md](../../../src/assets/art/faces/example/README.md) 가 SSOT** — 여기는 그대로 돌릴 수 있는 코드와 그 문서에 없는 규칙(74% 패딩)만 적는다.
+SKILL.md 4~5단계에서 편다. 키잉의 **원리와 이력은 [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) · [source/README.md](../../../src/assets/art/faces/source/README.md) 가 SSOT** — 여기는 그대로 돌릴 수 있는 코드와 그 문서에 없는 규칙(74% 패딩)만 적는다.
 
 ## 0. 어떤 절차인지 먼저 가른다
 
 | 원본 배경 | 절차 | 문서 |
 |---|---|---|
 | **초록 `#00FF00`** (현행 Gem 발주) | 아래 §2 키잉 | 여기 |
-| 회색 단색 (옛 기사·해골 시트) | 중성 회색 flood fill + barrier 7px 팽창 | example/README.md 「누끼 작업 메모」 |
-| 어두운 텍스처 (검투사 시트) | **미해결** — 외곽선이 배경보다 어두워 기존 판정식이 안 통한다 | example/README.md ⚠ 절 |
+| 회색 단색 (옛 기사·해골 시트) | 중성 회색 flood fill + barrier 7px 팽창 | source/README.md 「누끼 작업 메모」 |
+| 어두운 텍스처 (검투사 시트) | **미해결** — 외곽선이 배경보다 어두워 기존 판정식이 안 통한다 | source/README.md ⚠ 절 |
 | 흰 배경 / 체커보드 | 아이콘 절차 | src/assets/art/README.md `icons/` |
 
 ## 1. 시트 격자 좌표 (2048² · 2×2 · 검정 격자선)
@@ -61,7 +61,7 @@ python - <<'X'
 import sys; sys.path.insert(0,'.claude/skills/art-prompt')
 from align_faces import build, SPEC
 for n in SPEC:
-    img, idx = build(n); img.save('src/assets/art/faces/cartoon/monster_%d.png' % idx)
+    img, idx = build(n); img.save('src/assets/art/faces/cartoon/monster/%d.png' % idx)
 X
 ```
 
@@ -98,21 +98,21 @@ def normalize(img, target=0.74, S=512):
 ## 4. 한 번에 — 시트 → 4장
 
 ```python
-sheet = Image.open('src/assets/art/faces/example/source_sheet_<이름>.png').convert('RGBA')
+sheet = Image.open('src/assets/art/faces/source/source_sheet_<이름>.png').convert('RGBA')
 for tag, box in TILES.items():
     if tag == 'BR': continue                            # 워터마크
     out = normalize(key_green(sheet.crop(box)))
-    out.save('src/assets/art/faces/example/<설명>_%s.png' % tag)   # SSOT — 내용으로 이름
+    out.save('src/assets/art/faces/source/<설명>_%s.png' % tag)   # SSOT — 내용으로 이름
 ```
 
 이어서 `python .claude/skills/art-prompt/measure.py <만든 파일들>` 로 `shldr` 가 73~75 에 앉았는지 확인한다. `hd/sh` 는 이 단계로 안 바뀐다(불변량).
 
 ## 5. 설치
 
-1. **SSOT** — `faces/example/<설명>.png` (예: `archer_hood_black.png`). 파일명은 내용으로. 시트 원본 `source_sheet_<이름>.png` 도 남긴다
-2. **사본** — `faces/cartoon/hero_<직업id>_<k>.png` 로 복사 [개정 2026-09-07]. `직업id` 는 `data/class.csv` 의 id(그림이 읽히는 직업), `k` 는 그 직업 풀의 다음 번호(추가) 또는 교체할 번호
-3. **`src/ui/mock.js` `HERO_FACES[<직업id>]`** — 추가면 그 직업의 장수를 올린다. **늘리는 방향은 무해하다** (2026-09-06 저장형 전환 뒤 얼굴은 세이브에 박혀 있다 — 새로 태어나는 영웅의 굴림 범위만 넓어진다). ⚠ **줄이는 방향만** 영향이 있다: 범위를 넘은 저장값은 그 직업 풀 안에서 접힌다. 사용자에게 추가/교체를 먼저 묻는다. 몬스터는 `monster_<idx>.png` 라 직업 축이 없다
-4. **문서** — [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) `hero_*` 절의 장수·출처 · [example/README.md](../../../src/assets/art/faces/example/README.md) 영웅 표에 한 줄 · 두 문서 꼬리 `*마지막 업데이트*` 최신을 앞에
+1. **SSOT** — `faces/source/<설명>.png` (예: `archer_hood_black.png`). 파일명은 내용으로. 시트 원본 `source_sheet_<이름>.png` 도 남긴다
+2. **사본** — `faces/cartoon/hero/<직업id>_<k>.png` 로 복사 [개정 2026-09-07]. `직업id` 는 `data/class.csv` 의 id(그림이 읽히는 직업), `k` 는 그 직업 풀의 다음 번호(추가) 또는 교체할 번호
+3. **`src/ui/mock.js` `HERO_FACES[<직업id>]`** — 추가면 그 직업의 장수를 올린다. **늘리는 방향은 무해하다** (2026-09-06 저장형 전환 뒤 얼굴은 세이브에 박혀 있다 — 새로 태어나는 영웅의 굴림 범위만 넓어진다). ⚠ **줄이는 방향만** 영향이 있다: 범위를 넘은 저장값은 그 직업 풀 안에서 접힌다. 사용자에게 추가/교체를 먼저 묻는다. 몬스터는 `monster/<idx>.png` 라 직업 축이 없다
+4. **문서** — [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) `hero_*` 절의 장수·출처 · [source/README.md](../../../src/assets/art/faces/source/README.md) 영웅 표에 한 줄 · 두 문서 꼬리 날짜(날짜만)
 5. 브라우저 확인 — 서버가 `serve.py`(no-store) 면 새로고침으로 충분. `python -m http.server` 면 같은 파일명 교체가 캐시에 먹힌다 → 하드 리로드
 
 ## 6. 크롭·스케일로 못 고치는 것 (다시)
@@ -126,4 +126,4 @@ for tag, box in TILES.items():
 | 후드 속이 검은 구멍 | ✕ 재발주 (그 타일만) |
 
 ---
-*마지막 업데이트: 2026-09-10 (**§3-0 신설 — 몬스터는 원형 마스크라 얼굴로 맞춘다** · 어깨폭 74% 는 영웅(사각 `contain`) 전용으로 축소. 계기는 인간 3종 설치 뒤 「좌우가 안 맞고 크기도 제각각」 지적 — 실측해 보니 여섯 장이 **오른쪽으로 8~35px** 밀려 있었고 머리폭이 206~283 으로 벌어져 있었다. 자동 검출 셋(알파 머리폭 · 밝은 얼굴 · 눈 검출)이 각각 머리카락·뼈색 투구·화살통에 걸려 실패해서, **격자를 읽어 표에 박는** `align_faces.py` 로 갔다) · 2026-09-06 (최초 작성 — 74% 패딩 규칙 신설 · README 09-03 「여백 걷기」 와의 충돌 명시)*
+*마지막 업데이트: 2026-09-14*

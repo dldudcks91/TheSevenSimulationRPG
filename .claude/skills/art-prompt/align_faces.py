@@ -10,13 +10,14 @@ SPEC 한 줄 = 시트 · 타일 crop · 512 정규화 타일에서 읽은 눈 �
     import sys; sys.path.insert(0, '.claude/skills/art-prompt')
     from align_faces import build, SPEC
     for n in SPEC:
-        img, idx = build(n); img.save('src/assets/art/faces/cartoon/monster_%d.png' % idx)
+        img, idx = build(n); img.save('src/assets/art/faces/cartoon/monster/%d.png' % idx)
     X
 """
 import numpy as np
 from PIL import Image
 
-SHEETS = {'human': 'source_sheet_human_wraith.png', 'skel': 'source_sheet_skeleton_2.png'}
+SHEETS = {'human': 'source_sheet_human_wraith.png', 'skel': 'source_sheet_skeleton_2.png', 'satan': 'source_sheet_satan.png',
+          'leviathan': 'source_sheet_leviathan.png'}
 
 #                              sheet    tile crop                 ex   ey     k    idx   dx   dy
 SPEC = {
@@ -26,10 +27,12 @@ SPEC = {
  'skeleton_nasal_helm'     : ('skel',  (0, 0, 1013, 1013),       283, 265, 1.060, 1301,  14,  35),
  'skeleton_bare_quiver'    : ('skel',  (1035, 0, 2048, 1013),    316, 272, 1.060, 1302,  46,  55),
  'skeleton_greathelm_plume': ('skel',  (0, 1035, 1013, 2048),    310, 280, 1.039, 1303,  40,  56),
+ 'satan_horns_chain'       : ('satan', (0, 0, 504, 504),         340, 228, 1.20, 1900,  50,  38),
+ 'leviathan_skull_fangs'   : ('leviathan', (0, 0, 504, 504),     345, 206, 1.05, 2900,  24,  25),
 }
 EYE = (256, 215)     # 눈 중심이 앉을 자리 (dx/dy 를 더하면 실효 y ≈ 240)
 S = 512
-ART = 'src/assets/art/faces/example/'
+ART = 'src/assets/art/faces/source/'
 
 
 def key_green(tile):

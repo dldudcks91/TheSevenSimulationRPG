@@ -1,5 +1,5 @@
 /**
- * 아이템 시스템 — 드롭 굴림 / 시작 무기 / 착용 규칙 / 분해 / 강화.
+ * 아이템 시스템 — 드롭 굴림 / 시작 장비(무기 · 갑옷) / 착용 규칙 / 분해 / 강화.
  *
  * 순수 모듈. 데이터는 생성자 주입, 난수는 rng 인자.
  *
@@ -12,8 +12,8 @@
  *   무기의 행동 주기·공격 타입·착용 직업은 아이템에 박지 않는다 — 매번 무기군(group)에서 읽는다. SSOT 는 weapon_group.csv.
  *
  * **접사는 출처(`src`)를 든다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — `fixed`(고정 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션).
- *   **무기는 세 층을 정해진 개수로 받는다** — 고정 1 + 죄종 칸(이름의 죄종마다 1 — 매직 1 · 레어 2) + 통합옵션
- *   [balance.csv:weapon_common_opt_magic · weapon_common_opt_rare]. 무기는 `affix.csv` 를 안 쓴다 — 죄종 칸은 `weapon_sin_option.csv`,
+ *   **무기는 세 층을 정해진 개수로 받는다** — 고정 1 + 죄종 칸(이름의 죄종마다 1 — 일반 0 · 매직 1 · 레어 2) + 통합옵션
+ *   [balance.csv:weapon_common_opt_normal · weapon_common_opt_magic · weapon_common_opt_rare]. 무기는 `affix.csv` 를 안 쓴다 — 죄종 칸은 `weapon_sin_option.csv`,
  *   통합옵션은 `weapon_common_option.csv` 에서 온다. 무기 외 부위는 종전 그대로(`affix.csv` 한 풀 · 전부 `random`).
  *
  * **한손 개념은 없다** (2026-09-01) — 전 무기가 양손이라 `twoHanded` 플래그도 보조(offhand) 슬롯도 폐지했다.
@@ -97,17 +97,22 @@ export function createItemSystem(data) {
     const appliesTo = (row, g) => row.appliesTo === 'all' || row.appliesTo === g.damageKind || (g.classes ?? []).includes(row.appliesTo);
 
     /**
-     * 희귀도 — 가중치 1회. **매직아이템 획득확률은 레어 가중치에 곱한다** [2026-09-11 · R78 · item_design §1 「무기 옵션」].
+     * 희귀도 — 가중치 1회. **훑는 순서는 일반 → 매직 → 레어**다 [일반 신설 2026-09-14 · R86 · item_design §1].
+     * **매직아이템 획득확률은 레어 가중치에 곱한다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — 일반·매직 가중치는 안 건드린다.
      * `magicFind` 는 파티 평균 % 이고 0 이면 종전과 같다 — 굴림 수는 언제나 1회다
      */
     const rollRarity = (rng, magicFind = 0) => {
-        const wm = B.rarity_w_magic, wr = B.rarity_w_rare * (1 + magicFind / 100);
-        return rng() * (wm + wr) < wm ? 'magic' : 'rare';
+        const wn = B.rarity_w_normal, wm = B.rarity_w_magic, wr = B.rarity_w_rare * (1 + magicFind / 100);
+        const x = rng() * (wn + wm + wr);
+        return x < wn ? 'normal' : x < wn + wm ? 'magic' : 'rare';
     };
 
+    /** 희귀도별 키 고르기 — 일반은 **제 키**를 따로 든다(값은 CSV · 죄종 칸만 없고 개수는 매직과 같은 수로 시작 · 2026-09-14 · R86) */
+    const byRarity = (rarity, normal, magic, rare) => rarity === 'rare' ? rare : rarity === 'normal' ? normal : magic;
+
     const affixCount = (rng, rarity) => {
-        const lo = rarity === 'rare' ? B.affix_rare_min : B.affix_magic_min;
-        const hi = rarity === 'rare' ? B.affix_rare_max : B.affix_magic_max;
+        const lo = byRarity(rarity, B.affix_normal_min, B.affix_magic_min, B.affix_rare_min);
+        const hi = byRarity(rarity, B.affix_normal_max, B.affix_magic_max, B.affix_rare_max);
         return lo + Math.floor(rng() * (hi - lo + 1));
     };
 
@@ -155,7 +160,7 @@ export function createItemSystem(data) {
         // 통합옵션 — **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 종족 ×3 이 행 수만큼 비중을 먹지 않게). 한 무기에 같은 종류는 한 번
         const rows = commonOpts.filter(r => appliesTo(r, g));
         const families = [...new Set(rows.map(r => r.family))];      // 첫 등장 순 = CSV 행 순서
-        const n = rarity === 'rare' ? B.weapon_common_opt_rare : B.weapon_common_opt_magic;
+        const n = byRarity(rarity, B.weapon_common_opt_normal, B.weapon_common_opt_magic, B.weapon_common_opt_rare);
         for (let i = 0; i < n; i++) {
             const fr = rng(), sr = rng(), vr = rng();
             if (!families.length) continue;
@@ -181,17 +186,19 @@ export function createItemSystem(data) {
 
     /**
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
-     * rng 소비 순서(계약 — INTERFACE §5-2): 접두 죄종 → (레어) 접미 죄종 →
+     * opts.avoidSkill = (무기) 스킬 풀에서 뺄 id — 시작 무기가 그 영웅의 고유 스킬과 겹치지 않게 (2026-09-14 · R86). 빼도 소비 수는 같다.
+     * rng 소비 순서(계약 — INTERFACE §5-2): (매직·레어) 접두 죄종 → (레어) 접미 죄종 →
      *   **(무기) 옵션 세 층**(`weaponOptions`) / (무기 외) 접사 수 → 접사마다 (정의 선택 → 값) →
      *   **(무기) 베이스 1회** [신설 2026-09-10] → **개체 굴림 1회** → **(무기) 스킬 1회**
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
      */
-    function build(rng, slot, rarity, ilvl, base) {
-        const prefix = pick(rng, data.sins);
-        // 죄종 수는 희귀도가 정한다 — 매직 1 · 레어 2 (item_design §1 확정 2026-09-11 · 계승 TheSevenRPG 규칙 채택).
+    function build(rng, slot, rarity, ilvl, base, opts = {}) {
+        // 죄종 수는 희귀도가 정한다 — 일반 0 · 매직 1 · 레어 2 (item_design §1 확정 2026-09-11 · 계승 TheSevenRPG 규칙 채택 · 일반 2026-09-14 R86).
+        //   **일반은 접두도 굴리지 않는다** — 레어가 접미를 한 번 더 굴리는 것과 같은 규칙이다(희귀도가 소비 수를 정한다 · INTERFACE §5-2).
         //   ~~레어 접미 확률 판정(suffix_sin_chance_pct)~~ 은 08-25 초반 루프의 임시값이라 걷었다 — 판정 rng 1회가 함께 빠졌다
+        const prefix = rarity === 'normal' ? null : pick(rng, data.sins);
         const suffix = rarity === 'rare' ? pick(rng, data.sins.filter(s => s !== prefix)) : null;
-        const sins = suffix ? [prefix, suffix] : [prefix];
+        const sins = [prefix, suffix].filter(Boolean);
         const item = {
             uid: null,
             slot, rarity, ilvl,
@@ -205,7 +212,7 @@ export function createItemSystem(data) {
         };
         if (slot === 'weapon') {
             item.group = base.id;
-            // 무기 베이스 — 이름이 실제로 갈리는 무기군만 풀이 있다(weapon_base.csv · 지금 양손검·도끼·둔기·창·활).
+            // 무기 베이스 — 이름이 실제로 갈리는 무기군만 풀이 있다(weapon_base.csv · 지금 본편 열 전부 — 스태프·오브·십자가·성경·석궁 2026-09-14 · 확장 둘은 없다).
             //   드롭되는 레벨·성격(A/B/C)은 아직 안 갈라 **대역 전부에서 균등 굴림**이다(item_design §1 대역 경계 미정).
             // ⚠ **풀이 비어도 1회 소비한다** — 스킬 굴림과 같은 이유로, 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다
             const bases = data.weaponBases?.[base.id] ?? [];
@@ -229,7 +236,11 @@ export function createItemSystem(data) {
             // ⚠ **낀 사람의 직업을 안 본다** [09-10 장착 개방] — 도끼는 전사 풀, 스태프는 마법사 풀에서 굴린다.
             //   전사가 스태프를 끼면 무기 칸에 마법사 스킬이 선다 (skill_design §2 · §12-1 규칙 2·3).
             // ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다
-            const pool = classSkills[base.classes?.[0]] ?? [];
+            // `opts.avoidSkill` — 그 id 를 풀에서 뺀다(시작 무기 ↔ 고유 스킬 · 2026-09-14 사용자 지시 · R86). 빼도 **소비는 1회 그대로**고,
+            //   빼서 풀이 비면(한 개짜리 풀) 원래 풀에서 굴린다 — 지금 본편 직업 풀은 전부 여러 개라 이 분기는 안 탄다
+            const full = classSkills[base.classes?.[0]] ?? [];
+            const kept = opts.avoidSkill ? full.filter(s => s !== opts.avoidSkill) : full;
+            const pool = kept.length ? kept : full;
             const sr = rng();
             item.skill = pool.length ? pool[Math.floor(sr * pool.length)] : null;
         } else {
@@ -273,12 +284,22 @@ export function createItemSystem(data) {
         return rollGear(rng, { slots: [slot], ilvl, magicFind: opts.magicFind ?? 0 })[0];
     }
 
-    /** 시작 무기 — **그 직업의 스킬이 붙는 무기군**에서 ilvl 1 매직 1개 (무기가 밑수라 빈손이면 세기가 성립하지 않는다).
+    /** 시작 무기 — **그 직업의 스킬이 붙는 무기군**에서 ilvl 1 **일반** 1개 (무기가 밑수라 빈손이면 세기가 성립하지 않는다).
+     *  ~~매직~~ → 일반 [2026-09-14 사용자 확정 · R86 · hero_design §1] — 시작 장비는 일반 무기 + 일반 갑옷이다.
+     *  `avoidSkill` = 그 영웅의 고유 스킬 — 무기가 **같은 스킬을 담지 않는다**(액티브 두 칸에 한 스킬이 서지 않게). 소비 수는 같다.
      *  09-10 장착 개방 뒤에도 시작만은 자기 직업 무기로 준다 — 첫 무기 칸에 제 직업 스킬이 서야 직업이 무엇인지 읽힌다.
      *  갈아 끼우는 것은 자유다(`canEquip` 은 아무것도 거절하지 않는다). */
-    function startingWeapon(rng, cls) {
+    function startingWeapon(rng, cls, avoidSkill = null) {
         const gs = groupsFor(cls);
-        return build(rng, 'weapon', 'magic', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups));
+        return build(rng, 'weapon', 'normal', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups), { avoidSkill });
+    }
+
+    /** 시작 갑옷 — ilvl 1 **일반** 1개 [신설 2026-09-14 사용자 확정 · R86]. 베이스는 갑옷 풀에서 균등 1회 → `build`.
+     *  ⚠ 직업 맞춤이 없다 — 갑옷군(중갑 · 경갑 · 로브)과 직업을 잇는 데이터가 아직 없다(GAME_DESIGN §10 갑옷군) */
+    function startingArmor(rng) {
+        const base = pick(rng, data.itemBases.armor ?? []);
+        if (!base) throw new Error('item: startingArmor — 갑옷 베이스가 없다');
+        return build(rng, 'armor', 'normal', 1, base);
     }
 
     /**
@@ -330,6 +351,7 @@ export function createItemSystem(data) {
         return item;
     }
 
+    // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루 자체가 item_design §5 백지)
     const salvageDust = item => item.rarity === 'rare' ? B.salvage_dust_rare : B.salvage_dust_magic;
 
     /* ── 강화 (item_design §1 개정 2026-08-31) ── */
@@ -384,5 +406,5 @@ export function createItemSystem(data) {
         return out;
     }
 
-    return { rollDrop, rollGear, startingWeapon, legacyWeaponLayers, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeCost, upgrade, effective };
+    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeCost, upgrade, effective };
 }

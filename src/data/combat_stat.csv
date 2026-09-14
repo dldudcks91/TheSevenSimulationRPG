@@ -8,7 +8,7 @@ res_reduction,저항 감소,Resist Reduction,offense,-,pct,1,7,**원소 전용**
 vs_type_damage,타입 특효,Type Damage,offense,-,pct,0,8,Normal/Demon/Undead 대상 추가 피해 — **조건부 괄호**에 덧셈으로 들어간다. 조건부 괄호는 상시 괄호와 곱해진다. 무기 슬롯 전속 (battle_design §9-2)
 vs_size_damage,사이즈 특효,Size Damage,offense,-,pct,0,9,소/중/대(size_type) 대상 추가 피해 — 조건부 괄호에 덧셈. ⚠ **존치 미결** — 종족은 스테이지 단위로 예측되지만 사이즈는 대상마다 갈려 인과를 읽기 어렵다 (battle_design §9-9)
 vs_status_damage,상태이상 대상 피해,Damage vs Ailing,offense,-,pct,0,10,상태이상에 걸린 대상에게 추가 피해 — 조건부 괄호에 덧셈. **상태이상별로 쪼개지 않는다**(불리언 하나). 부여 수단이 생기기 전까지 접사 풀에 넣지 않는다 (battle_design §9-2)
-hp_max,최대 HP,Max HP,defense,vit,n,1,3,전투불능 판정 기준. 레벨 1 값 [balance.csv:hero_hp_base] 전 영웅 공통 고정 — 레벨 1 값은 기본 능력치와 무관. **레벨 성장분만 건강 계수를 탄다**(09-10 확정 · 코드는 성장분에 곱한다(R72) · 기획상 붙는 위치는 미결). 레벨 성장은 [balance.csv:power_growth_per_level] 곡선을 탄다
+hp_max,최대 HP,Max HP,defense,vit,n,1,3,전투불능 판정 기준. 레벨 1 값 [balance.csv:hero_hp_base] 전 영웅 공통 고정 — 레벨 1 값은 기본 능력치와 무관. **레벨 성장분만 건강 계수를 탄다**(09-10 확정 · 2026-09-14 레벨업 상승분에 곱한다로 확정 · R84). ~~레벨 성장은 [balance.csv:power_growth_per_level] 곡선을 탄다~~ → 레벨 성장은 10레벨 구간 직선의 누적합이다 [balance.csv:hero_hp_band_levels] · hero_hp_band{b}_unit
 defense,물리 방어,Physical Defense,defense,-,n,1,11,attack_type=physical 피해의 감쇠 소재값 — 감쇠율 = 방어값/(방어값 + [balance.csv:def_curve_k]). K는 **상수**(롤 방식)라 실효 체력이 방어에 선형이다. 면역 없음·상한 규칙 없음. **성장 축이 아니라 비율 축** (battle_design §9-3)
 res_fire,불 저항,Fire Resist,defense,-,pct,1,12,attack_type=fire 피해를 이 **%만큼 직접** 줄인다(소재값 아님). 전 원소 공통 접사(res_all)가 네 항에 함께 더해진다. 상한 [balance.csv:res_cap_base] + res_max_bonus · 절대 상한 [balance.csv:res_cap_absolute] · **하한 없음**(음수 = 피해 증폭)
 res_cold,냉기 저항,Cold Resist,defense,-,pct,1,13,attack_type=cold 피해를 이 %만큼 직접 줄인다 — 규칙은 res_fire 와 동일

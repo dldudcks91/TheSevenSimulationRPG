@@ -1,6 +1,8 @@
 /**
  * 전투 시뮬레이터 — **헤드리스**. 파티·스테이지·시드를 받아 결과와 타임라인을 돌려준다.
- * 화면(ui/battle.js)은 이 타임라인을 재생만 한다 — 관전으로 본 전투와 즉시 계산이 갈릴 수 없다.
+ * **런은 라운드 단위로 계산한다** [2026-09-14 · R89 · base_expedition_design §1-1] — `createRun().next()` 한 번이 라운드 하나이고,
+ *   라운드 사이에서만 부르는 쪽이 그 순간의 파티(장비 · 레벨)를 넣을 수 있다. 보상(경험치 · 골드 · 도감 · 드롭)은 **이긴 라운드의 몫만** 결과에 들어간다.
+ * 화면(ui/battle.js)은 이 타임라인을 시간에 맞춰 옮길 뿐이다 — 인자 없이 끝까지 이어 부르면 `simulate` 와 같다.
  * 같은 입력 + 같은 시드 = 같은 타임라인 (엔진 이식 후 대조 검증의 기준).
  *
  * battle_design.md 확정 규칙 (그대로 반영):
@@ -15,7 +17,7 @@
  *   · 피해 계산은 formula.js — battle_design §9 (적중 게이트 → 타격 피해 → 감소). 이 파일은 **누가 언제 때리는가**만 본다
  *   · **몬스터는 영웅과 같은 전투 능력치 체계를 쓴다** (§8-1) — 같은 `strike` 에 같은 모양의 유닛이 양쪽으로 들어간다.
  *     몬스터 방어 200과 영웅 방어 200은 정확히 같은 감쇠를 만든다. 저항은 양쪽 다 **4원소 객체 · 직접 %**
- *   · 적중은 **레벨 차 0/1 게이트** (§9-4) — 영웅은 자기 레벨, 몬스터는 스테이지 dlvl. 빗나가면 흡혈·반사도 유발되지 않는다
+ *   · 적중은 **레벨 차 0/1 게이트** (§9-4) — 영웅은 자기 레벨, 몬스터는 스테이지 레벨(올린 레벨 · 기본 dlvl). 빗나가면 흡혈·반사도 유발되지 않는다
  *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 **물리** — 마법 무기의 원소는 관련 옵션이 붙었을 때만 생긴다
  *     (§2-1 · §9-5 · 개정 2026-09-11 · R80). 그래서 몬스터의 `attack_type` 은 `computeCombat` 결과를 **덮는다**
  *   · 반사는 비직격 — 감쇠·치명 없이 공격자 HP 를 직접 깎고 아무것도 유발하지 않는다 (§9-6)
@@ -44,12 +46,12 @@
  *     (기본 치명 확률 · HP 재생 밑수) — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다.
  *     반사·피해 감소는 여전히 접사·정예 특성이 붙을 때만 값이 생긴다. ⚠ battle_design §8-1 출처 표의
  *     「치명·재생은 정예 특성이 얹는다」와 부딪히는 것을 알고 택했다 (DEV_PLAN R79).
- *   도감 카드: 처치마다 장비 드롭과 **별개로** 카드 판정 (monster_design §8) — 결과 cards 와 타임라인 'card' 이벤트.
+ *   도감 카드: 처치마다 장비 드롭과 **별개로** 카드 판정 (monster_design §8) — 결과 `cards` 에만 든다(라운드를 이기면 조용히 · 타임라인 이벤트 없음 · R89).
  *
  *   · **드롭 = 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · item_design §1 2단계]. **처치당 최대 1개**(08-27)는
  *     그대로이고 판정도 1회 · 등급은 확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 바뀐 것은 **무엇이 떨어지나** —
  *     판정 뒤 **입은 부위 중 하나**를 골라 그 아이템을 그대로 낸다. 파이프라인 3~6단계(ilvl · 희귀도 · 접사 · 개체 굴림)는
- *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = `dlvl + gear_ilvl_add`(굴림 없음) ·
+ *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = `스테이지 레벨 + gear_ilvl_add`(굴림 없음) ·
  *     희귀도 = 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고, 파티의 매직찬스가 **적 장비도 좋게 한다**
  *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
  */
@@ -57,7 +59,7 @@
 import { createFormula } from './formula.js';
 // 원소 어휘만 가져온다 — 시스템 주입이 아니다 (skill.js 와 같은 취급 · INTERFACE §1)
 import { ELEMENTS } from './hero.js';
-import { createHooks, createSkillRuntime } from './skill_runtime.js';
+import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js';
 import { refreshDerived, weaponOnHit } from './skill_effects.js';
 
 const TICK = 0.1;
@@ -162,7 +164,7 @@ export function createBattleSystem(data) {
             hpMaxBase: c.hp_max,
             res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             resBase: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
-            lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 dlvl (§9-4)
+            lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 레벨 (§9-4 · R87)
             resMaxBonus: c.res_max_bonus, dr: c.damage_reduction, drBase: c.damage_reduction,
             defIgnore: c.def_ignore, resReduction: c.res_reduction,
             skillMult: 1, bonusPct: c.dmg_bonus_pct, // 도감·특효 보정 — strike 가 읽는 이름과 같아야 한다
@@ -186,6 +188,13 @@ export function createBattleSystem(data) {
             ...extra,
         };
     }
+
+    /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
+       HP · 창 · 배리어 · 행동 예약 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
+    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atk', 'atkBase', 'atkPct', 'matk', 'matkBase', 'atkType',
+        'def', 'defBase', 'res', 'resBase', 'lvl', 'resMaxBonus', 'dr', 'drBase', 'defIgnore', 'resReduction',
+        'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod',
+        'goldFind', 'itemFind', 'fx', 'magicFind', 'stats'];
 
     /**
      * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
@@ -265,7 +274,9 @@ export function createBattleSystem(data) {
             cls: m.cls,                      // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
             stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef)
             actives: acts,
-            expReward: m.exp_reward * g.exp_mult, goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
+            // 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이 같으면 몬스터가 달라도 같다. `exp_coef` 는 몬스터별 조정 칸 (monster_design §7 · R85)
+            expReward: B.monster_xp_base * B.monster_xp_growth ** (lvl - 1) * g.exp_mult * m.exp_coef,
+            goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
             ...rest,
         });
     }
@@ -289,8 +300,9 @@ export function createBattleSystem(data) {
      *   (`rollFace` 를 맨 뒤에 두는 것 · `searchRoll` 의 「결과를 먼저, 이야기를 뒤에」와 같은 규칙).
      * ⚠ **전역 상한도 1단에서 자른다** — 잘릴 유닛의 장비를 굴리면 수열이 편성 상한에 종속된다.
      * @param magicFind 파티 평균 매직아이템 획득확률 % — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
+     * @param level 몬스터 레벨 = **이번 런의 스테이지 레벨** — 안 주면 기본 레벨 `dlvl` (2026-09-14 · R87)
      */
-    function spawnRound(rng, stage, pool, n, magicFind = 0) {
+    function spawnRound(rng, stage, pool, n, magicFind = 0, level = stage.dlvl) {
         const type = stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
         const budgetKey = type === 'boss' ? stage.boss_grade : type;
         const bd = data.budgets[budgetKey];
@@ -323,7 +335,7 @@ export function createBattleSystem(data) {
             // 아이템 레벨은 **굴리지 않는다** — 던전 레벨 + 등급 가산이다 (item_design §1 3단계 · 사용자 확정 2026-09-11)
             const gear = data.itemSystem.rollGear(rng, {
                 slots: wearSlots(m),
-                ilvl: stage.dlvl + g.gear_ilvl_add,
+                ilvl: level + g.gear_ilvl_add,
                 magicFind,
                 rareBonusPct: g.gear_rare_bonus_pct,
                 weaponGroup: m.weapon_group,
@@ -335,19 +347,28 @@ export function createBattleSystem(data) {
                 const tr = rng();
                 thirdSkill = cp.length ? cp[Math.floor(tr * cp.length)] : null;
             }
-            return makeEnemy(`e${k}`, s.id, s.grade, stage.dlvl, gear, { ...s.extra, thirdSkill });
+            return makeEnemy(`e${k}`, s.id, s.grade, level, gear, { ...s.extra, thirdSkill });
         });
         return { type, list };
     }
 
     /**
+     * 런 하나 — **라운드 단위로 진행한다** [2026-09-14 · R89 · base_expedition_design §1-1].
+     *   `next()` 한 번 = 라운드 하나를 끝까지 계산한다(이기거나 · 전멸하거나 · 시간이 끝나거나). 다음 라운드는 **부를 때 연다** —
+     *   그래서 라운드와 라운드 사이에 부르는 쪽(정산)이 끼어들 자리가 생긴다. 이어서 부르기만 하면 한 번에 끝까지 돈 것과
+     *   **한 글자도 안 다르다** — `simulate` 가 그렇게 돈다(rng 소비 순서 불변 · INTERFACE §5-2).
      * @param partyUnits [{uid, combat:{...}, actives?: [{id, source}], reactions?: [{on, fn}]}] —
      *   combat = heroSystem.computeCombat 결과, actives = 그 영웅의 액티브 **인스턴스** 목록(skill.activesFor).
      *   없거나 비면 기본 공격만 돈다. reactions = 사건 훅 등록(⚠ 지금은 아무도 싣지 않는다)
-     * @returns 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
+     * @param level 이번 런의 스테이지 레벨(`state.stageLevelState` — 올린 레벨) · 안 주면 기본 레벨 `dlvl`
+     * @returns `{ next, result, ended }` — `next()` = 라운드 하나의 요약(이미 끝났으면 null) · `result` = 라운드마다 자라는 결과 + 타임라인.
+     *   타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      */
-    function simulate(partyUnits, stageId, rng) {
+    function createRun(partyUnits, stageId, rng, level) {
         const stage = data.stages[stageId];
+        // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
+        //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
+        const stageLevel = level ?? stage.dlvl;
         const pool = stagePool(stage);
         const rounds = stageRounds(stage).length;      // 그 세트의 행 수 — 챕터보스 스테이지는 1 (2026-09-11)
 
@@ -358,13 +379,16 @@ export function createBattleSystem(data) {
             rank: p.rank ?? 0,           // 진형 — 편성이 정한 자리 (state.formationState · 배치가 없으면 전열)
             next: i * 0.3,               // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
             reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
-            // 전투 시작 시 액티브는 전부 준비(readyAt 0) — 첫 차례는 **1번 칸**이 나간다 (battle_design §6)
+            // 칸 순서 = 출처 자리. 첫 준비 시각은 바로 아래에서 쿨 한 바퀴로 박는다 (R89)
             actives: (SK ? p.actives ?? [] : []).map(a => {
                 const def = SK.resolve(a);
                 if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
                 return { id: a.id, def, readyAt: 0, source: a.source };
             }),
         }));
+        // 스킬은 **쿨부터 돈다** [개정 2026-09-14 · R89 · battle_design §6] — 전투 시작 0초에서 한 바퀴 뒤에 처음 쓴다.
+        //   시전 뒤의 쿨과 같은 식이다(`cooldownSec` · 쿨감소 반영). rng 0 · 곧바로 쓰는 스킬은 「전투 시작 시 발동」 태그로 따로 연다(GAME_DESIGN §10 · 미구현)
+        for (const p of party) for (const a of p.actives) a.readyAt = cooldownSec(B, p, a.def);
         /*
          * 오오라 — **쿨 없이 상시이고 행동을 안 먹는다** (skill_design §1-5). 그래서 액티브 칸에서 빼고
          *   전투 시작에 `until: Infinity` 창으로 건다: 창 만료가 영원히 안 걸리므로 상시가 되고,
@@ -391,10 +415,18 @@ export function createBattleSystem(data) {
         };
         applyAuras(party);
 
-        const avg = k => party.reduce((s, p) => s + (p[k] ?? 0), 0) / Math.max(1, party.length);
-        const goldMult = 1 + avg('goldFind') / 100;
-        const dropMult = 1 + avg('itemFind') / 100;
-        const magicFind = avg('magicFind');            // 매직아이템 획득확률 % — 드롭의 레어 가중치에 곱한다 (item_design §1 「무기 옵션」 · R78)
+        // 파티 평균 — **라운드 경계에서 다시 잰다**(갈아입기 · R89). 소환물은 안 센다(경계에는 벽이 아직 서 있을 수 있다 · 전투 시작에는 없다)
+        const avg = k => {
+            const list = party.filter(p => !p.summon);
+            return list.reduce((s, p) => s + (p[k] ?? 0), 0) / Math.max(1, list.length);
+        };
+        let goldMult, dropMult, magicFind;
+        const measureParty = () => {
+            goldMult = 1 + avg('goldFind') / 100;
+            dropMult = 1 + avg('itemFind') / 100;
+            magicFind = avg('magicFind');            // 매직아이템 획득확률 % — 드롭의 레어 가중치에 곱한다 (item_design §1 「무기 옵션」 · R78)
+        };
+        measureParty();
         // 무기 옵션 타격 시 창의 길이 (R78) — 전투 시작에 한 번 묶는다
         const windowSec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec };
 
@@ -402,10 +434,13 @@ export function createBattleSystem(data) {
         const out = {
             won: false, reason: null, durationSec: 0,
             // atk·matk·atkType 은 **툴팁이 읽는 표시값**이다 (SCREEN_DESIGN §4-2) — 재생기가 스킬 문장의 피해·회복량을 조립한다.
-            // stats 는 기본 능력치의 **복사본**이다(설명창이 스킬 계수를 풀어 쓴다 · 2026-09-10) — 정산(grantXp)이 전투 뒤에 능력치를 올린다.
+            // stats 는 기본 능력치의 **복사본**이다(설명창이 스킬 계수를 풀어 쓴다 · 2026-09-10). ~~정산(grantXp)이 전투 뒤에 능력치를 올린다~~ —
+            // 09-14 로 레벨업이 능력치를 안 올려(R83) 복사의 원래 이유는 사라졌다.
             // 전투에는 안 쓰이고 타임라인에도 안 들어가므로 rng·골든 지문과 무관하다
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
-                atk: p.atk, matk: p.matk, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null, actives: p.actives.map(a => a.id) })),
+                atk: p.atk, matk: p.matk, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null, actives: p.actives.map(a => a.id),
+                ready: p.actives.map(a => r1(a.readyAt)) })),   // 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89)
+            // 보상 칸(xpTotal · gold · kills · cards · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
             timeline, xpTotal: 0, gold: 0, kills: {}, cards: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
@@ -422,6 +457,20 @@ export function createBattleSystem(data) {
               주인이 맞은 것으로 적으면 「받은 피해」가 그 영웅의 사실이 아니게 된다 (skill_design §12-6) */
         const contrib = new Map(party.map(p => [p.uid, { uid: p.uid, dealt: 0, taken: 0, kills: 0 }]));
         const credit = u => (u.side === 'party' && !u.summon) ? (contrib.get(u.uid) ?? null) : null;
+        /** 지금까지의 기여 — 정수로 낸다(리포트가 그대로 찍는 값이고, 부동소수 꼬리는 이식 대조에서 잡음이 된다) */
+        const contribNow = () => [...contrib.values()].map(c => ({ ...c, dealt: Math.round(c.dealt), taken: Math.round(c.taken) }));
+
+        /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
+           결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
+        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, cards: {}, drops: [] });
+        let loot = newLoot();
+        const bank = () => {
+            out.xpTotal += loot.xp;
+            out.gold += loot.gold;
+            for (const [id, n] of Object.entries(loot.kills)) out.kills[id] = (out.kills[id] ?? 0) + n;
+            for (const [id, n] of Object.entries(loot.cards)) out.cards[id] = (out.cards[id] ?? 0) + n;
+            out.drops.push(...loot.drops);
+        };
 
         let t = 0, round = 1;
         // 적 배열은 라운드마다 **갈아 끼운다** — 런타임이 속성으로 읽어야 옛 라운드를 가리키지 않는다 (skill_runtime @param units)
@@ -459,10 +508,12 @@ export function createBattleSystem(data) {
             }
             // 매직찬스는 **스폰 굴림**에 걸린다 [2026-09-11 · R79] — 장비 희귀도가 여기서 정해지기 때문이다.
             //   ⚠ 딸린 것 — 파티의 매직아이템 획득확률이 **적 장비도 좋게 한다**(사용자가 알고 택한 「이스터에그」)
-            const sp = spawnRound(rng, stage, pool, round, magicFind);
+            const sp = spawnRound(rng, stage, pool, round, magicFind, stageLevel);
             units.enemies = sp.list;
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
             applyAuras(units.enemies);
+            // 적 스킬도 **쿨부터 돈다** [2026-09-14 · R89 · battle_design §6] — 등장한 순간부터 한 바퀴. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
+            for (const e of units.enemies) for (const a of e.actives) a.readyAt = t + cooldownSec(B, e, a.def);
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
             for (const e of units.enemies) e.next = 0.4 + rng() * 0.6;
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
@@ -477,22 +528,24 @@ export function createBattleSystem(data) {
                     //   ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 는 0
                     atk: e.atk, matk: e.matk, atkType: e.atkType, stats: e.stats ? { ...e.stats } : null,
                     actives: e.actives.map(a => a.id),
+                    ready: e.actives.map(a => r1(a.readyAt)),   // 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89)
                 })),
             });
         };
 
         const onKill = e => {
-            roundLog.killed.push(e.monsterId);
-            out.kills[e.monsterId] = (out.kills[e.monsterId] ?? 0) + 1;
-            out.xpTotal += e.expReward;
-            out.gold += Math.round(e.expReward * e.goldMult * B.gold_rate * goldMult);
+            roundLog.killed.push(e.monsterId);                    // 사실의 기록 — 진 라운드에서 잡은 것도 남는다
+            // 아래 보상은 전부 **라운드 몫**이다 — 이기면 결과로 옮기고 지면 버린다 (R89)
+            loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
+            loot.xp += e.expReward;
+            loot.gold += Math.round(e.expReward * e.goldMult * B.gold_rate * goldMult);
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
             // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
             // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)
             // 도감 카드 — 장비 드롭과 별개 판정 [balance.csv:codex_card_drop_pct]. 등급별 차등은 후속 (monster_design §8)
+            //   카드는 **라운드를 이기면 조용히** 들어온다 — 처치 순간 알리는 `card` 이벤트는 없다 [삭제 2026-09-14 · R89 · 사용자 지시]
             if (rng() * 100 < B.codex_card_drop_pct) {
-                out.cards[e.monsterId] = (out.cards[e.monsterId] ?? 0) + 1;
-                timeline.push({ t: r1(t), e: 'card', u: e.key, monsterId: e.monsterId });
+                loot.cards[e.monsterId] = (loot.cards[e.monsterId] ?? 0) + 1;
             }
             // 드롭 판정 — **처치당 최대 1개** (item_design §1 확정 08-27). 등급은 굴림 횟수가 아니라
             // 확률 배율(spawn_grade.drop_chance_mult)이다 — 판정은 **1회**. 보스는 최소 1개 보장
@@ -507,7 +560,7 @@ export function createBattleSystem(data) {
             for (let i = 0; i < got; i++) {
                 const worn = e.gear ?? [];
                 if (!worn.length) break;
-                out.drops.push(worn[Math.floor(rng() * worn.length)]);
+                loot.drops.push(worn[Math.floor(rng() * worn.length)]);
             }
         };
 
@@ -654,53 +707,139 @@ export function createBattleSystem(data) {
             }
         }
 
-        beginRound();
-        while (true) {
-            t += TICK;
-            // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
-            for (const u of [...party, ...units.enemies]) if (u.hp > 0) rt.expire(u, t);
-            // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다
-            // (매 틱 소수점을 더하면 타임라인이 흘러넘치고 재생기가 정수 HP 와 어긋난다). rng 를 안 쓴다
-            for (const u of [...party, ...units.enemies]) {
-                if (u.hp <= 0 || !(u.regen > 0) || u.hp >= u.hpMax) continue;
-                u.regenAcc += u.regen * TICK;
-                const whole = Math.floor(u.regenAcc);
-                if (whole < 1) continue;
-                u.regenAcc -= whole;
-                const amt = Math.min(whole, u.hpMax - u.hp);
-                u.hp += amt;
-                timeline.push({ t: r1(t), e: 'regen', u: u.key, amt, dhp: u.hp });
+        let started = false, ended = false;
+        /** 런을 닫는다 — 끝 시각 · 기여를 굳히고 `end` 이벤트를 낸다. 전멸 · 시간 초과 · 마지막 라운드 클리어 셋이 여기로 온다 */
+        const finish = reason => {
+            out.reason = reason;
+            out.durationSec = r1(t);
+            out.contrib = contribNow();
+            timeline.push({ t: r1(t), e: 'end', won: out.won, reason: out.reason });
+            ended = true;
+        };
+        /**
+         * 라운드 하나의 요약 — `n` 번째 라운드가 `t` 초에 끝났다 · 이겼나(`cleared`) · 런이 끝났나(`ended`) ·
+         * **그 라운드의 몫**(`xp` · `gold` · `kills` · `cards` · `drops` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
+         */
+        const summary = cleared => {
+            const s = {
+                n: round, t: r1(t), cleared, ended, ...(cleared ? loot : newLoot()),
+                alive: party.filter(u => !u.summon && u.hp > 0).map(u => u.uid), contrib: contribNow(),
+            };
+            loot = newLoot();
+            return s;
+        };
+
+        /* 갈아입기 [2026-09-14 · R89 · INTERFACE §2-6 createRun] — 라운드 경계에서 **그 순간의 파티**를 받아 **바뀐 영웅만** 다시 입힌다.
+           같은지는 입력(`combat` · `stats` · 스킬 칸)으로 가른다 — 같으면 손대지 않아야 인자 없이 이어 부른 것과 한 글자도 안 다르다.
+           지키는 것: 현재 HP(새 최대치로 자른다) · 창 · 배리어 · 행동 예약 · 남은 스킬의 쿨. **새로 생긴 스킬은 지금부터 한 바퀴** (battle_design §6) */
+        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(a => a.id)]);
+        const worn = new Map(partyUnits.map(p => [p.uid, { sig: sigOf(p), combat: p.combat }]));
+        function refit(updates) {
+            const changed = [];
+            for (const p of updates) {
+                const u = party.find(x => x.uid === p.uid && !x.summon);
+                const was = worn.get(p.uid);
+                // 쓰러진 영웅은 그 런 끝까지 빠진다 — 새로 입혀도 안 일어난다. 나간 인원 밖의 영웅은 안 읽는다(원정 중엔 인원이 잠겨 있다)
+                if (!u || !was || u.hp <= 0) continue;
+                const sig = sigOf(p);
+                if (sig === was.sig) continue;
+                worn.set(p.uid, { sig, combat: p.combat });
+                const fresh = makeUnit('party', p.combat, { stats: p.stats ?? null });
+                // 적이 깎은 영구 방어(가이디드 애로우는 `defBase` 를 깎는다)는 **비율로** 잇는다 — 갈아입기가 디버프를 씻는 길이 되지 않게
+                const cut = was.combat.defense > 0 ? u.defBase / was.combat.defense : 1;
+                for (const k of REFIT_FIELDS) u[k] = fresh[k];
+                u.defBase *= cut;
+                const prev = new Map(u.actives.map(a => [a.id, a.readyAt]));
+                u.actives = (SK ? p.actives ?? [] : []).map(a => {
+                    const def = SK.resolve(a);
+                    if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
+                    return { id: a.id, def, readyAt: prev.has(a.id) ? prev.get(a.id) : t + cooldownSec(B, u, def), source: a.source };
+                });
+                // 오오라는 다시 건다 — 이 영웅이 건 상시 창(`until: Infinity`)을 먼저 걷는다
+                for (const x of party) for (const [id, b] of Object.entries(x.buffs)) if (b.by === u.key && b.until === Infinity) delete x.buffs[id];
+                changed.push(u);
             }
-            for (const u of [...party, ...units.enemies]) {
-                if (u.hp <= 0) continue;
-                u.next -= TICK;
-                if (u.next <= 0) { u.next = u.period; rt.act(u, t); }
+            if (!changed.length) return;
+            // 칸에 오오라가 남아 있는 것은 방금 갈아입은 영웅뿐이다 · 끝에서 전원의 파생값을 다시 쓴다(HP 가 새 최대치로 잘린다)
+            applyAuras(party);
+            for (const u of changed) {
+                timeline.push({
+                    t: r1(t), e: 'refit', u: u.key, hpMax: u.hpMax, dhp: u.hp, period: u.period,
+                    atk: u.atk, matk: u.matk, atkType: u.atkType, stats: u.stats ? { ...u.stats } : null,
+                    actives: u.actives.map(a => a.id), ready: u.actives.map(a => r1(a.readyAt)),
+                });
             }
-            // 귀환 룰 [개정 2026-09-03 — base_expedition_design §1-1] — **전멸일 때만 돌아온다.**
-            // 하나가 쓰러져도 런을 접지 않고 남은 인원으로 계속 간다. 쓰러진 영웅은 `out.downed` 에 실려
-            // 그 **출정** 동안 아웃되고(state.js), 마을로 돌아오면 낫는다.
-            // ~~전투불능자가 하나라도 나오면 철수~~ 는 폐기 — 그 룰이 편성이 져야 할 무게를 대신 지고 있었다.
-            // ⚠ 09-07 로 이것이 **최종형**이다 — 원정은 켜 놓고 자리를 뜨는 것이라 전멸까지 도는 것이 사양이고,
-            //    추가 브레이크를 만들지 않는다. **결정은 편성이다** (base_expedition_design §1-1 · DEV_PLAN R42)
-            // ⚠ 소환물은 **전멸 판정에서 뺀다** — 얼음 벽이 서 있다고 전투가 안 끝나면 파티가 전멸해도 안 돌아온다
-            if (alive(party).filter(u => !u.summon).length === 0) { out.reason = 'wipe'; break; }
-            // 적의 소환 벽도 **클리어 판정에서 뺀다** [2026-09-11 · R79] — 바로 위 전멸 판정과 같은 규칙이다: 행동하지 않는 벽이 서 있다고
-            //   라운드가 안 끝나면 안 된다. 벽은 다음 라운드의 적 배열 교체(`units.enemies = sp.list`)로 함께 사라진다
-            if (alive(units.enemies).filter(u => !u.summon).length === 0) {
-                out.roundsCleared = round;
-                if (round >= rounds) { out.won = true; out.reason = 'clear'; break; }
+            measureParty();
+        }
+
+        /**
+         * 라운드 하나를 끝까지 — 이기면 **멈추고** 요약을 낸다. 다음 라운드는 다음 호출이 연다.
+         * @param updates 둘째 호출부터 — **그 순간의 파티**(`partyUnits` 모양). 바뀐 영웅만 갈아입는다(`refit`) · 안 주면 그대로 잇는다
+         */
+        function next(updates) {
+            if (ended) return null;
+            if (!started) { started = true; beginRound(); }
+            else {
+                if (updates) refit(updates);
+                // 다음 라운드를 연다 — 한 번에 돌던 판의 「클리어 직후 같은 틱」 자리 그대로다(편성 → 시간 초과 판정 순서 불변)
                 round += 1;
                 beginRound();
+                if (t >= B.battle_timeout_sec) { finish('timeout'); return summary(false); }
             }
-            if (t >= B.battle_timeout_sec) { out.reason = 'timeout'; break; }
+            while (true) {
+                t += TICK;
+                // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
+                for (const u of [...party, ...units.enemies]) if (u.hp > 0) rt.expire(u, t);
+                // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다
+                // (매 틱 소수점을 더하면 타임라인이 흘러넘치고 재생기가 정수 HP 와 어긋난다). rng 를 안 쓴다
+                for (const u of [...party, ...units.enemies]) {
+                    if (u.hp <= 0 || !(u.regen > 0) || u.hp >= u.hpMax) continue;
+                    u.regenAcc += u.regen * TICK;
+                    const whole = Math.floor(u.regenAcc);
+                    if (whole < 1) continue;
+                    u.regenAcc -= whole;
+                    const amt = Math.min(whole, u.hpMax - u.hp);
+                    u.hp += amt;
+                    timeline.push({ t: r1(t), e: 'regen', u: u.key, amt, dhp: u.hp });
+                }
+                for (const u of [...party, ...units.enemies]) {
+                    if (u.hp <= 0) continue;
+                    u.next -= TICK;
+                    if (u.next <= 0) { u.next = u.period; rt.act(u, t); }
+                }
+                // 귀환 룰 [개정 2026-09-03 — base_expedition_design §1-1] — **전멸일 때만 돌아온다.**
+                // 하나가 쓰러져도 런을 접지 않고 남은 인원으로 계속 간다. 쓰러진 영웅은 `out.downed` 에 실려
+                // 그 **출정** 동안 아웃되고(state.js), 마을로 돌아오면 낫는다.
+                // ~~전투불능자가 하나라도 나오면 철수~~ 는 폐기 — 그 룰이 편성이 져야 할 무게를 대신 지고 있었다.
+                // ⚠ 09-07 로 이것이 **최종형**이다 — 원정은 켜 놓고 자리를 뜨는 것이라 전멸까지 도는 것이 사양이고,
+                //    추가 브레이크를 만들지 않는다. **결정은 편성이다** (base_expedition_design §1-1 · DEV_PLAN R42)
+                // ⚠ 소환물은 **전멸 판정에서 뺀다** — 얼음 벽이 서 있다고 전투가 안 끝나면 파티가 전멸해도 안 돌아온다
+                if (alive(party).filter(u => !u.summon).length === 0) { finish('wipe'); return summary(false); }
+                // 적의 소환 벽도 **클리어 판정에서 뺀다** [2026-09-11 · R79] — 바로 위 전멸 판정과 같은 규칙이다: 행동하지 않는 벽이 서 있다고
+                //   라운드가 안 끝나면 안 된다. 벽은 다음 라운드의 적 배열 교체(`units.enemies = sp.list`)로 함께 사라진다
+                if (alive(units.enemies).filter(u => !u.summon).length === 0) {
+                    out.roundsCleared = round;
+                    bank();                              // 이긴 라운드의 몫 — 결과로 옮긴다 (R89)
+                    if (round >= rounds) { out.won = true; finish('clear'); return summary(true); }
+                    return summary(true);            // 다음 라운드는 다음 `next()` 가 연다
+                }
+                if (t >= B.battle_timeout_sec) { finish('timeout'); return summary(false); }
+            }
         }
-        out.durationSec = r1(t);
-        // 정수로 낸다 — 리포트가 그대로 찍는 값이고, 부동소수 꼬리는 이식 대조에서 잡음이 된다
-        out.contrib = [...contrib.values()].map(c => ({ ...c, dealt: Math.round(c.dealt), taken: Math.round(c.taken) }));
-        timeline.push({ t: r1(t), e: 'end', won: out.won, reason: out.reason });
-        return out;
+
+        return { next, result: out, get ended() { return ended; } };
+    }
+
+    /**
+     * 런 하나를 **한 번에 끝까지** — `createRun` 을 끝날 때까지 이어 부른다. 전투 결과만 보는 쪽(단정 · 캘리브레이션)이 쓴다.
+     * @returns 결과 + 타임라인 (`createRun` 의 `result` 와 같은 모양)
+     */
+    function simulate(partyUnits, stageId, rng, level) {
+        const run = createRun(partyUnits, stageId, rng, level);
+        while (run.next()?.ended === false);
+        return run.result;
     }
 
     // makeEnemy 는 검증(dev/test.js)이 몬스터→유닛 변환 규칙을 직접 볼 수 있도록 함께 내보낸다 — stagePool 과 같은 이유
-    return { simulate, stagePool, stageElement, stageRounds, makeEnemy };
+    return { simulate, createRun, stagePool, stageElement, stageRounds, makeEnemy };
 }

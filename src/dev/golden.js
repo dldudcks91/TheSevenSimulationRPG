@@ -50,7 +50,7 @@ export function csvHash(text) {
  *   `rarity|slot|ilvl|sins|base|baseId|element|개체굴림|스킬|접사` — 접사 한 줄은 `출처/stat:값` (출처 신설 2026-09-11 R78)
  * **접사는 stat·값·순서를 그대로 적는다** — `rollAffixes` 가 풀에서 뽑는 순서가 바뀌면 여기서만 잡힌다.
  * `uid` 는 넣지 않는다 — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (D-A2).
- * 시작 무기(`item.startingWeapon`)도 **같은 형식**으로 적는다 (`meta.parties`).
+ * 시작 장비(`item.startingWeapon` · `item.startingArmor`)도 **같은 형식**으로 적는다 (`meta.parties`).
  * `baseId` [신설 2026-09-10] — 무기군에 세부 베이스 풀이 있으면 그 굴림. 없는 무기군·무기 아닌 부위는 `-`
  */
 export const dropSig = it => [
@@ -103,13 +103,13 @@ const grewSig = (SYS, G) => {
 };
 
 /**
- * 시작 파티 1개의 지문 — 영웅 3명의 생성 결과와 시작 무기.
+ * 시작 파티 1개의 지문 — 영웅 3명의 생성 결과와 시작 장비(무기 · 갑옷).
  * `hero.drawDistinct`(이름·죄종·직업·특성) · **`rollTier`** · `rollAttributes` · `rollInnate` ·
- * `item.startingWeapon` 이 전부 여기 있다. 40런에 중복하지 않고 **시드마다 한 번만** 적는다 (파일 +2KB).
+ * `item.startingWeapon` · `item.startingArmor` 가 전부 여기 있다. 40런에 중복하지 않고 **시드마다 한 번만** 적는다 (파일 +2KB).
  * 능력치는 **키 이름까지** 적는다 — `hero_attribute.csv` 행 순서가 곧 굴림 순서라 재정렬을 봐야 한다.
- * 등급도 적는다 — 첫 파티의 **레어 1 + 매직 2** 와 `hero_tier.csv` 행 순서가 여기서 잠긴다 [2026-09-08].
+ * 등급도 적는다 — 첫 파티의 **레어 1 + 매직 1 + 일반 1** 과 `hero_tier.csv` 행 순서가 여기서 잠긴다 [2026-09-08 · 일반 2026-09-14].
  * ~~`rollCaps` · caps~~ 는 09-07 개체별 히든 상한 폐지로 사라졌다 (세이브 v15).
- * 형식: `cls|sin|name|trait|tier|innate|stats|무기`
+ * 형식: `cls|sin|name|trait|tier|innate|stats|무기|갑옷` — 갑옷 신설 2026-09-14(R86 · 시작 장비 = 일반 무기 + 일반 갑옷)
  */
 function partyFingerprint(SYS, B, NOW, seed) {
     const party = SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max);
@@ -120,12 +120,14 @@ function partyFingerprint(SYS, B, NOW, seed) {
     return G.heroes.map(h => h.uid).map(uid => {
         const h = SYS.game.heroById(G, uid);
         const w = G.items[h.equipped?.weapon];
+        const a = G.items[h.equipped?.armor];         // 시작 갑옷 — 2026-09-14 R86
         return [
             h.cls, h.sin, h.name?.en ?? '-', h.trait?.en ?? '-',
-            h.tier ?? '-',                            // 등급 — 09-07 3층. 첫 파티는 레어 1 + 매직 2 가 고정이라 그것도 여기서 걸린다
+            h.tier ?? '-',                            // 등급 — 09-14 4층. 첫 파티는 레어 1 + 매직 1 + 일반 1 이 고정이라 그것도 여기서 걸린다
             h.innate ?? '-',                          // 고유 스킬(생성 시 1회 굴림) — rng 소비 순서가 여기서 걸린다
             kv(h.stats),                              // ~~kv(h.caps)~~ — 개체별 히든 상한은 09-07 폐지(v15)
             w ? dropSig(w) : '-',
+            a ? dropSig(a) : '-',
         ].join('|');
     });
 }
@@ -164,7 +166,9 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
         rounds: res.rounds.length, cleared: res.roundsCleared,
         sec: res.durationSec,
         downed,
-        gold: res.gold, xp: res.xpTotal, xpEach: rp.xpEach,          // ~~dust~~ 2026-09-09 폐기 — 처치가 가루를 안 뱉는다
+        gold: res.gold, xp: res.xpTotal,                              // ~~dust~~ 2026-09-09 폐기 — 처치가 가루를 안 뱉는다
+        // 영웅별 받은 경험치 — 파티 자리 순 `a|b|c` [2026-09-14 · R89 — ~~xpEach(전원 동일)~~]. 쓰러진 영웅은 그 뒤 라운드 몫이 없어 서로 다르다
+        xpBy: G.party.map(uid => rp.xp?.[uid] ?? 0).join('|'),
         events: res.timeline.length,                                  // 타임라인 구조 변화 감지
         strikes: `${res.strikes.party.n}/${res.strikes.party.miss} · ${res.strikes.enemy.n}/${res.strikes.enemy.miss}`,
         cards: numMapSig(res.cards),

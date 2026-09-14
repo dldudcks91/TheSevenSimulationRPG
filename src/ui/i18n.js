@@ -202,11 +202,24 @@ const STRINGS = {
     /* ── 원정 (실동작) ── */
     'exp.partyFull': { ko: '파티가 찼다', en: 'Party full' },
     'exp.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
+    'exp.running': { ko: '원정 중이다 — 철수해야 파티 · 진형을 바꾸거나 새로 출발할 수 있다', en: 'An expedition is under way — retreat to change the party or formation, or to set out again' },
     'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
     /* 스테이지 원소 — 어느 저항을 챙겨야 하는지의 신호 (battle_design §9-8) */
     'exp.element': { ko: '원소 {e}', en: 'Element {e}' },
+    /* 위험도 조절 — 출정 창 출정 방식 칸 (SCREEN_DESIGN §4-1 · ADR-0104 · R87). 기호 버튼의 뜻은 title 이 든다 */
+    'exp.level.h': { ko: '위험도', en: 'Danger' },
+    'exp.level.range': { ko: '{min} ~ {max}', en: '{min} ~ {max}' },
+    'exp.level.tip': {
+        ko: '클리어한 스테이지 중 가장 높은 레벨까지 올릴 수 있다 · 올리면 몬스터 · 몬스터가 입은 장비와 드롭의 아이템 레벨 · 경험치 · 골드가 함께 오른다 · 비용 없이 언제든 되돌린다',
+        en: 'Raise it up to the highest level among cleared stages · raising it lifts the monsters, the item level of their gear and drops, XP and gold · revert anytime for free',
+    },
+    'exp.level.base': { ko: '기본 레벨로', en: 'Back to base level' },
+    'exp.level.down': { ko: '1 내리기', en: 'Lower by 1' },
+    'exp.level.up': { ko: '1 올리기', en: 'Raise by 1' },
+    'exp.level.max': { ko: '최대로', en: 'To maximum' },
+    'exp.err.range': { ko: '그 위험도로는 바꿀 수 없다', en: 'That danger level is out of range' },
     'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat' },
     'exp.repeat.sub': {
         ko: '승리하면 같은 곳으로 다시 나간다 · <b>게임이 켜져 있는 동안만</b> 돈다 · 쓰러진 영웅은 빠진 채로 이어진다 · 패배하면 멈추고 전원 회복한다',
@@ -214,8 +227,8 @@ const STRINGS = {
     },
     'exp.notice.runClosed.h': { ko: '부재 중', en: 'While you were away' },
     'exp.notice.runClosed.body': {
-        ko: '반복 원정은 게임이 켜져 있을 때만 돈다 — {stage} 런은 진행 중이던 전투까지 정산하고 마무리됐다. 결과는 마지막 리포트에 있다',
-        en: 'Auto-repeat only runs while the game is open — the {stage} run settled up to the battle in progress and ended. The result is in the last report',
+        ko: '원정은 게임이 켜져 있을 때만 돈다 — {stage} 원정은 진행 중이던 라운드를 잃고 멈췄다. 이긴 라운드까지의 보상은 마지막 리포트에 있다',
+        en: 'Expeditions only run while the game is open — the {stage} expedition stopped and lost the round in progress. Rewards from the rounds you won are in the last report',
     },
     'exp.notice.report': { ko: '리포트 보기', en: 'View report' },
     'exp.notice.dismiss': { ko: '확인', en: 'OK' },
@@ -226,6 +239,9 @@ const STRINGS = {
     /* ~~'rep.healed'(귀환 — 전원 회복)~~ 은 2026-09-08 삭제 — 전투불능은 **기록**이라 뒤에 붙일 말이 없다 (SCREEN_DESIGN §4-3) */
     'rep.reason.wipe': { ko: '전원 전투불능', en: 'Whole party downed' },
     'rep.reason.timeout': { ko: '제한시간 초과', en: 'Timed out' },
+    'rep.reason.retreat': { ko: '철수', en: 'Retreated' },
+    'rep.reason.closed': { ko: '게임이 꺼져 끊겼다', en: 'Cut off — the game was closed' },
+    'rep.running': { ko: '진행 중', en: 'In progress' },
 
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
     'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
@@ -273,6 +289,7 @@ const STRINGS = {
        코드가 있으면 문구도 있어야 한다. `last` 는 창 본문도 이 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다) */
     'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
     'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
+    'ch.err.running': { ko: '원정에 나간 영웅이다 — 철수해야 해고할 수 있다', en: 'That hero is on an expedition — retreat first' },
     'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
     /* 확인 문구도 **사용자 지시 그대로** [개정 2026-09-09] — 옛 판(「{name} — 해고하면 되돌릴 수 없다」)의 `{name}` 은 걷었다.
        누구를 해고하는지는 창을 연 카드가 이미 말하고, 되돌릴 수 없다는 것은 **[취소] 버튼이 눈에 보이는 것**이 든다 */
@@ -524,6 +541,8 @@ const STRINGS = {
        `exp.go.h` 는 반복 원정 · 보내기 두 버튼이 든 칸의 이름이다 */
     'exp.heroes.h': { ko: '캐릭터 선택', en: 'Heroes' },
     'exp.go.h': { ko: '출정 방식', en: 'Departure' },
+    /* 출정 창 아래 줄 오른쪽 칸의 이름 [2026-09-14 사용자 지시 · ADR-0105] — 이 스테이지의 입장 텍스트가 든다(stage.csv:story_kr/_en) */
+    'exp.story.h': { ko: '이야기', en: 'Story' },
     'exp.zones.note': {
         ko: '지역 죄종은 해당 죄종 접사의 드롭 가중치를 올린다 — 타겟 파밍의 축<br>'
             + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 챕터의 마지막 스테이지를 뺀 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다. <b>마지막 스테이지는 챕터보스 하나와 싸우는 1라운드</b>다<br>'
@@ -536,7 +555,6 @@ const STRINGS = {
     /* ── 원정: 리포트 ── */
     'rep.clear': { ko: '클리어', en: 'Cleared' },
     'rep.xp': { ko: '경험치', en: 'XP' },
-    'rep.xpEach': { ko: '각 {n}', en: '{n} each' },
     'rep.rounds': { ko: '라운드', en: 'Rounds' },
     'rep.downed': { ko: '전투 불능', en: 'Downed' },
     'rep.none': { ko: '없음', en: 'None' },
@@ -566,7 +584,8 @@ const STRINGS = {
     'rep.contrib.total': { ko: '합계', en: 'Total' },
     /* 영웅 줄의 레벨업 — 초상 오른쪽 이름 아래 (ADR-0086). 이름은 그 줄이 이미 들어서 안 적는다 */
     'rep.contrib.levelUp': { ko: '▲ Lv.{a} → {b}', en: '▲ Lv.{a} → {b}' },
-    'rep.live': { ko: '재생 중 {a} / {b}', en: 'Playing {a} / {b}' },
+    'rep.live': { ko: '진행 중 {a}', en: 'In progress {a}' },
+    'rep.contrib.xp': { ko: '경험치 {n}', en: '{n} XP' },
     'rep.log.sub': { ko: '정예 {e} / 보스 {b}', en: 'Elite {e} / Boss {b}' },
     'rep.contract': {
         ko: '방치형 계약 — 자리를 비워도 로스터는 파괴되지 않는다. 사건은 리포트 안에서 완결',
@@ -985,8 +1004,8 @@ const STRINGS = {
     'ix.g.heroCls': { ko: '{cls} 초상', en: '{cls} Portraits' },   // 직업 하나가 묶음 하나 (ADR-0066) — ~~ix.g.hero~~ 대체
     'ix.g.weapon': { ko: '무기', en: 'Weapons' },
     'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
-    /* 무기 베이스 — 도감 타일 이름 (2026-09-10 · 둔기 · 창 · 활 2026-09-11). ⚠ **`weapon_base.csv` 와 같은 이름이 두 벌이다** —
-       다섯 무기군 전부 CSV 행이 섰으므로 도감이 `L(row)` 로 읽게 되면 이 줄들은 걷는다. 그때까지 CSV 와 **글자까지 같게** 둔다.
+    /* 무기 베이스 — 도감 타일 이름 (2026-09-10 · 둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14). ⚠ **`weapon_base.csv` 와 같은 이름이 두 벌이다** —
+       본편 열 무기군 전부 CSV 행이 섰으므로 도감이 `L(row)` 로 읽게 되면 이 줄들은 걷는다. 그때까지 CSV 와 **글자까지 같게** 둔다.
        **영어가 원본이고 한글은 직역**이다 (CLAUDE.md 규칙 6). */
     'ix.g.weaponBase': { ko: '{group} 베이스', en: '{group} Bases' },
     'ix.b.long_sword': { ko: '롱 소드', en: 'Long Sword' },
@@ -1024,6 +1043,41 @@ const STRINGS = {
     'ix.b.diamond_bow': { ko: '다이아몬드 보우', en: 'Diamond Bow' },
     'ix.b.gothic_bow': { ko: '고딕 보우', en: 'Gothic Bow' },
     'ix.b.hydra_bow': { ko: '하이드라 보우', en: 'Hydra Bow' },
+    'ix.b.short_staff': { ko: '숏 스태프', en: 'Short Staff' },
+    'ix.b.long_staff': { ko: '롱 스태프', en: 'Long Staff' },
+    'ix.b.gnarled_staff': { ko: '날드 스태프', en: 'Gnarled Staff' },
+    'ix.b.gothic_staff': { ko: '고딕 스태프', en: 'Gothic Staff' },
+    'ix.b.elder_staff': { ko: '엘더 스태프', en: 'Elder Staff' },
+    'ix.b.rune_staff': { ko: '룬 스태프', en: 'Rune Staff' },
+    'ix.b.archon_staff': { ko: '아콘 스태프', en: 'Archon Staff' },
+    'ix.b.eagle_orb': { ko: '이글 오브', en: 'Eagle Orb' },
+    'ix.b.heavenly_stone': { ko: '헤븐리 스톤', en: 'Heavenly Stone' },
+    'ix.b.demon_heart': { ko: '데몬 하트', en: 'Demon Heart' },
+    'ix.b.sacred_globe': { ko: '세이크리드 글로브', en: 'Sacred Globe' },
+    'ix.b.eldritch_orb': { ko: '엘드리치 오브', en: 'Eldritch Orb' },
+    'ix.b.swirling_crystal': { ko: '스월링 크리스탈', en: 'Swirling Crystal' },
+    'ix.b.dimensional_shard': { ko: '디멘셔널 샤드', en: 'Dimensional Shard' },
+    'ix.b.scepter': { ko: '셉터', en: 'Scepter' },
+    'ix.b.divine_scepter': { ko: '디바인 셉터', en: 'Divine Scepter' },
+    'ix.b.caduceus': { ko: '카두케우스', en: 'Caduceus' },
+    'ix.b.rune_scepter': { ko: '룬 셉터', en: 'Rune Scepter' },
+    'ix.b.mighty_scepter': { ko: '마이티 셉터', en: 'Mighty Scepter' },
+    'ix.b.grand_scepter': { ko: '그랜드 셉터', en: 'Grand Scepter' },
+    'ix.b.seraph_rod': { ko: '세라프 로드', en: 'Seraph Rod' },
+    'ix.b.psalter': { ko: '솔터', en: 'Psalter' },
+    'ix.b.breviary': { ko: '브리비어리', en: 'Breviary' },
+    'ix.b.missal': { ko: '미설', en: 'Missal' },
+    'ix.b.lectern_bible': { ko: '렉턴 바이블', en: 'Lectern Bible' },
+    'ix.b.great_bible': { ko: '그레이트 바이블', en: 'Great Bible' },
+    'ix.b.wicked_bible': { ko: '위키드 바이블', en: 'Wicked Bible' },
+    'ix.b.apocrypha': { ko: '아포크리파', en: 'Apocrypha' },
+    'ix.b.crossbow': { ko: '크로스보우', en: 'Crossbow' },
+    'ix.b.light_crossbow': { ko: '라이트 크로스보우', en: 'Light Crossbow' },
+    'ix.b.chu_ko_nu': { ko: '추코누', en: 'Chu-Ko-Nu' },
+    'ix.b.heavy_crossbow': { ko: '헤비 크로스보우', en: 'Heavy Crossbow' },
+    'ix.b.ballista': { ko: '발리스타', en: 'Ballista' },
+    'ix.b.demon_crossbow': { ko: '데몬 크로스보우', en: 'Demon Crossbow' },
+    'ix.b.colossus_crossbow': { ko: '콜로서스 크로스보우', en: 'Colossus Crossbow' },
     'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
     /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고 그 안에
        그 직업의 스킬 전부가 선다 — **1스킬 = 1직업**이라 묶는 일이 `owner_id` 하나로 끝난다(2026-09-09).
@@ -1040,13 +1094,13 @@ const STRINGS = {
     'bt.speed': { ko: '×{n}', en: '×{n}' },
     'bt.pause': { ko: '일시정지', en: 'Pause' },
     'bt.resume': { ko: '재개', en: 'Resume' },
-    'bt.skip': { ko: '건너뛰기', en: 'Skip' },
+    'bt.retreat': { ko: '철수', en: 'Retreat' },   // ~~건너뛰기~~ 2026-09-14 — 진행 중 라운드를 버리고 원정을 끝낸다 (R89)
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
     'bt.note': {
-        ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 재생 속도만 바꾼다. 같은 시드면 오프라인 즉시 계산과 결과가 같으므로, 안 봐도 손해가 없다.<br>'
-            + '중도 귀환해도 여기까지의 루팅은 <b>전량 보존</b>된다.',
-        en: 'Watching is allowed but <b>never required</b> — speed only changes playback. With the same seed the offline instant calculation gives the same result, so skipping loses nothing.<br>'
-            + 'Retreating early <b>keeps all loot</b> earned so far.',
+        ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 라운드는 시작할 때 계산되고 <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
+            + '<b>철수</b>하면 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남는다. 게임을 끄면 원정도 그 자리에서 끊긴다.',
+        en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Each round is computed when it starts and <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
+            + '<b>Retreat</b> drops the round in progress and keeps what the won rounds gave. Closing the game cuts the expedition off on the spot.',
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '행동 주기 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Action cycle {s}s — acts when the gauge fills' },
@@ -1068,8 +1122,6 @@ const STRINGS = {
     'log.buffEnd': { ko: '{name} — {skill} 종료', en: '{name} — {skill} ended' },
     'log.crit': { ko: '{name} → {target} <b class="crit-t">{dmg}</b> 치명타! · {skill}', en: '{name} → {target} <b class="crit-t">{dmg}</b> critical! · {skill}' },
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
-    'log.card': { ko: '<b>{name} 카드</b> 획득 — 도감', en: '<b>{name} card</b> found — codex' },
-    'pop.card': { ko: '카드', en: 'Card' },
     'log.downed': { ko: '{name} <b>전투 불능</b>', en: '{name} <b>downed</b>' },   // ~~「이 출정 동안 아웃」~~ 2026-09-08 삭제
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
     'pop.slain': { ko: '처치', en: 'Slain' },

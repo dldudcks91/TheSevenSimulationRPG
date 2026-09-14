@@ -7,7 +7,7 @@ user-invocable: true
 
 # icon-prompt — 아이콘 발주 · 절단 · 실측 · 설치
 
-당신은 TheSevenSimulationRPG 의 **아이콘 아트 발주자**입니다. 그림은 사용자가 Gemini 로 뽑고, 당신은 **프롬프트를 쓰고 · 시트를 자르고 · 재서 게임에 꽂는다.** 스타일의 SSOT 는 **원본 시트 3장**(`icons/skills/sheet_02_mono_anchor.png` · `icons/items/examples.png` · `examples_armor.png` — 게임이 안 읽는 앵커)이고, 합격선은 취향이 아니라 **설치본 17장 + empty 5장의 실측값**(2026-09-07)이다. 초상은 [/art-prompt](../art-prompt/SKILL.md) — 구도 실측·초록 키잉이 완전히 다른 절차다.
+당신은 TheSevenSimulationRPG 의 **아이콘 아트 발주자**입니다. 그림은 사용자가 Gemini 로 뽑고, 당신은 **프롬프트를 쓰고 · 시트를 자르고 · 재서 게임에 꽂는다.** 스타일의 SSOT 는 **원본 시트 3장**(`icons/skills/source/sheet_02_mono_anchor.png` · `icons/items/source/examples.png` · `examples_armor.png` — 게임이 안 읽는 앵커)이고, 합격선은 취향이 아니라 **설치본 17장 + empty 5장의 실측값**(2026-09-07)이다. 초상은 [/art-prompt](../art-prompt/SKILL.md) — 구도 실측·초록 키잉이 완전히 다른 절차다.
 
 ## 언제 사용
 
@@ -36,11 +36,12 @@ user-invocable: true
 6. **파일명 = id 가 계약이다.** 스킬 = `skill.csv:skill_id` · 무기 = `weapon_group.csv:group_id` · 방어구 = `item_base.csv:base_id` · empty = `equip_slot.csv:part`. 화면은 CSV 만 보고 경로를 조립한다(`ui/mock.js`). **발주 전에 id 를 확정**하고 타일 순서 = id 순서로 적는다.
 7. **40~64px 가독이 최종 시험이다.** 실제 칸은 28~44px (관전 쿨 32 · 스킬 창 28 · 카드 40 · 시작 화면 44). 수치가 다 통과해도 **40px 몽타주를 만들어 눈으로 본다** — 가는 선·뭉개지는 실루엣은 수치에 안 잡힌다.
 
-### 작업 규칙 (프로젝트 공통)
+### 작업 규칙
+
+공통 규칙(병렬 세션 · 조사는 sonnet 서브에이전트 · 짧은 동의 · 커밋)은 [CLAUDE.md](../../../CLAUDE.md) 「작업 규칙」. 이 스킬에만 걸리는 것:
 
 - **병렬 세션** — 시트는 사용자가 이 세션 밖에서도 떨어뜨린다. 재기 전에 `ls -lt` 로 최신을 확인. 앵커 원본 시트 3장은 덮어쓰지 않는다
-- **짧은 동의("ㄱ" · "ok")는 직전 메시지에 나열된 항목에만** 적용된다. `mock.js` 목록 변경은 "ㄱ" 뒤에도 따로 확인
-- **커밋 · 푸시는 사용자가 명시적으로 요청할 때만**
+- **`mock.js` 목록 변경은 "ㄱ" 뒤에도 따로 확인**
 
 ## 절차
 
@@ -53,7 +54,7 @@ user-invocable: true
 
 **1. 프롬프트를 쓴다** — [prompt_template.md](prompt_template.md) 골격에 채운다. 앵커 지정 → 문법 블록(아이템/스킬/empty) → 금지어 표 대조 → 타일 순서 = id 순서.
 
-**2. 사용자가 뽑는다** — 시트를 `icons/skills/` 또는 `icons/items/` 에 원본으로 받는다 (게임이 안 읽는 파일 — README 에 그렇게 기록).
+**2. 사용자가 뽑는다** — 시트를 `icons/skills/source/` 또는 `icons/items/source/` 에 원본으로 받는다 (게임이 안 읽는 파일 — README 에 그렇게 기록).
 
 **3. 자른다** — `python .claude/skills/icon-prompt/cut.py <시트> --grid 3x3 --out <폴더>` → 흰/체커보드 자동 감지, 격자 십자 제거, 하이라이트 보존 누끼, 0.88 정규화까지 한 번에. 산출물을 `Read` 로 **눈 확인**.
 
@@ -65,9 +66,9 @@ user-invocable: true
 
 **5. 설치 + 문서**
 
-- 타일을 id 파일명으로 복사 — `icons/skills/<skill_id>.png` / `icons/items/<group_id|base_id>.png` / `icons/items/empty/<part>.png`. 어느 id 에도 안 붙는 여분은 `icons/items/unused/`
+- 타일을 id 파일명으로 복사 — `icons/skills/<skill_id>.png` / `icons/items/<group_id>.png` / 방어구·장신구 베이스는 `icons/items/item_base/<base_id>.png`(`mock.js:ITEM_BASE_ART_DIR`) / `icons/items/empty/<part>.png` / 무기 베이스는 `icons/items/weapon_base/<group_id>/<base_id>.png`(`weapon_base.csv` 행 + `mock.js:WEAPON_BASE_STEMS` 줄이 서야 게임이 읽는다). 어느 id 에도 안 붙는 여분은 `icons/items/unused/`
 - `src/ui/mock.js` 목록 갱신 — 스킬은 `SKILL_ICON_FILES` 에 추가(⚠ **길이가 변하면 그림 없는 스킬 전체의 해시 폴백이 재배정**된다 — 무해하지만 보고에 적는다) · 무기는 `ITEM_ART_GROUPS` · 방어구는 `ITEM_ART_BY_SLOT`(⚠ 임시 표 — 부위당 한 장, 개체가 base_id 를 들면 걷는다) · empty 는 `SLOT_ART_PARTS`. 투구·목걸이는 지금 이모지 폴백이라 **그림 + 목록 추가가 세트**다
-- [art/README.md](../../../src/assets/art/README.md) — 채워진 것/빈 것 표 · 해당 절 · 꼬리 `*마지막 업데이트*` (최신을 앞에)
+- [art/README.md](../../../src/assets/art/README.md) — 채워진 것/빈 것 표 · 해당 절(**지금 상태**만 — 파일 · 검수 통과 여부 · 남은 일. 발주 경위와 실측 표는 보고에) · 꼬리 날짜(날짜만)
 - 보고에는 **실측 표 · 설치 파일 목록 · mock.js 변경 여부 · 건너뛴 것**
 
 ## 자주 막히는 지점 — 실패 패턴
@@ -103,4 +104,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-09-09 ([skill_tiles.md](skill_tiles.md) 신설 — 직업 스킬 풀 37개(`skill_design.md §12`)의 **타일 문장**을 모으는 자리. 전사 7 확정. ⚠ 그 세트는 **2차 시트의 단색 실루엣**으로 가므로 이 문서의 스킬 합격선(색 수 110~160 · 경계 12~21%)과 앵커 표(`sheet_01_color.png`)가 안 맞는다 — 단색 합격선 재정의는 미착수) · 2026-09-07 (최초 작성 — 설치본 17장 + empty 5장 실측(색 수·경계밀도·외곽선·0.88 프레이밍)으로 합격선을 세우고, README 누끼 규칙을 cut.py 로 실행 가능하게 옮겨 원본 시트 3장 전부에서 설치본 재현을 검증. 발주 프롬프트는 미문서화 상태였어서 앵커 실측에서 역산. 사용자 지시)*
+*마지막 업데이트: 2026-09-14*

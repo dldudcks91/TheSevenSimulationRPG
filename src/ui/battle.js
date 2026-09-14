@@ -1,8 +1,9 @@
 /**
- * 전투 관전 화면 — **재생기**. 전투는 game_logic/battle.js 가 이미 끝까지 계산했고,
- * 여기서는 그 타임라인을 시간에 맞춰 화면에 옮길 뿐이다.
- *   · 관전으로 본 전투와 즉시 정산(건너뛰기·부재 정산)이 갈릴 수 없다 — 같은 결과를 보는 두 창구다
- *   · 배속·일시정지·건너뛰기는 재생 속도의 문제지 결과의 문제가 아니다
+ * 전투 관전 화면 — **재생기**. 전투는 game_logic/battle.js 가 **라운드 단위로** 계산하고(라운드가 시작할 때 그 라운드를 끝까지),
+ * 여기서는 그 타임라인을 시간에 맞춰 화면에 옮길 뿐이다 [개정 2026-09-14 · R89].
+ *   · 타임라인은 라운드마다 자란다 — 시각을 밀기 전에 `opts.onTime(t)` 을 부르면 앱이 끝난 라운드를 정산하고 다음 라운드를 붙인다.
+ *     재생기는 정산하지 않는다 — 배열 끝에 닿으면 다음 라운드가 붙을 때까지 기다린다
+ *   · 배속·일시정지는 진행 속도의 문제지 결과의 문제가 아니다. **철수**(옛 건너뛰기)는 결과를 바꾼다 — 그래서 앱(`opts.onRetreat`)이 한다
  *   · 언어를 바꿔도 같은 타임라인을 다시 재생한다
  *
  * 배치: 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 + 아레나 아래 가방(app.js 가 붙인다) (2026-08-27).
@@ -54,7 +55,7 @@ const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math
 
 /**
  * @param container  붙일 곳
- * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto), now(), frozenMs }
+ * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto), onTime(t), onRetreat(), now(), frozenMs }
  *   now = 실제 시각(ms)을 읽는 시계 · frozenMs = 「멈췄다」의 문턱 — 둘 다 앱이 넘긴다 (ADR-0102)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 재생이 끝나고 사용자가 넘어갈 때 / 반복 자동 진행 시.
  * @returns 정리 함수
@@ -93,7 +94,8 @@ export function mountBattle(container, opts) {
             atk: p.atk, matk: p.matk, atkType: p.atkType,   // 툴팁 문장의 피해·회복량 — 전투에는 안 쓴다 (INTERFACE §2-6)
             // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
             stats: p.stats ?? null,
-            skills: (p.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
+            // 스킬은 쿨부터 돈다 — 첫 준비 시각은 결과가 싣는다(`party[].ready` · R89). 칸은 덮인 채로 출발한다
+            skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: p.ready?.[i] ?? 0, firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
         };
     });
@@ -148,7 +150,7 @@ function buildDom(state, stage, stageId) {
                 <div class="battle-ctrl">
                     ${SPEEDS.map(s => `<button class="btn sm b-speed" data-s="${s}">${t('bt.speed', { n: s })}</button>`).join('')}
                     <button class="btn sm b-pause">${t('bt.pause')}</button>
-                    <button class="btn sm b-skip">${t('bt.skip')}</button>
+                    <button class="btn sm b-skip">${t('bt.retreat')}</button>
                     <span class="ctrl-div"></span>
                     <button class="btn sm b-layout"></button>
                     <button class="btn sm b-win" data-tab="log">${t('bt.log.h')}</button>
@@ -221,8 +223,8 @@ function bindControls(state, root, opts) {
     state.onKey = e => { if (e.key === 'Escape' && state.win && state.layout !== 'split') close(); };
     document.addEventListener('keydown', state.onKey);
     paintLayout(state, root);
-    // 건너뛰기 — 결과는 이미 정산돼 있다. 재생만 멈추고 리포트로 간다
-    root.querySelector('.b-skip').onclick = () => { clearInterval(state.timer); opts.onEnd(false); };
+    // 철수 [개정 2026-09-14 · R89 — 옛 건너뛰기] — 진행 중이던 라운드를 버리고 원정을 끝낸다. 결과가 바뀌는 일이라 앱이 한다(`state.retreatRun`)
+    root.querySelector('.b-skip').onclick = () => { clearInterval(state.timer); opts.onRetreat(); };
 }
 
 /**
@@ -568,6 +570,7 @@ function step(state, root, opts) {
     state.wall = at;   // 세워 둔 동안에도 민다 — 다시 틀 때 세워 둔 시간이 한꺼번에 흐르지 않게
     if (!state.running || state.ended || !(gap > 0) || gap > opts.frozenMs) return;
     state.t += gap / 1000 * state.speed;
+    opts.onTime?.(state.t);    // 끝난 라운드를 정산하고 다음 라운드를 붙인다 — 붙은 뒤에 적용해야 경계 너머 사건이 한 눈금 늦지 않는다 (R89)
     drain(state, root, opts);
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
     for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
@@ -599,7 +602,8 @@ function apply(state, root, opts, ev) {
                 //                 `castSkill` 이 칸에서 못 찾아 적의 `skill` 이벤트(칸 번쩍임 · 이름 팝업)를 **조용히 흘렸다**
                 //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
                 atk: e.atk, matk: e.matk, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량 · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
-                skills: (e.actives ?? []).map(id => ({ ...skillInfo(id), readyAt: 0, firedAt: 0 })),
+                // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
+                skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: e.ready?.[i] ?? ev.t, firedAt: ev.t })),
                 buffs: new Map(),
             }));
             for (const e of state.enemies) state.units.set(e.key, e);
@@ -688,10 +692,14 @@ function apply(state, root, opts, ev) {
             pushLog(state, root, t('log.buffEnd', { name: L(u.name), skill: strikeLabel(ev.s) }));
             break;
         }
-        case 'card': {   // 도감 카드 — 처치와 별개 판정 (monster_design §8). 리포트에도 찍힌다
+        // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)
+        case 'refit': {   // 라운드 경계에서 갈아입었다 (R89) — 최대 HP · 스킬 칸 · 표시값을 새로 받는다. 남은 스킬은 쿨 표시를 잇는다
             const u = U(ev.u);
-            pushLog(state, root, t('log.card', { name: L(monsterName(ev.monsterId)) }));
-            if (u) popup(state, u, t('pop.card'), 'card-tag');
+            if (!u) break;
+            const had = new Map((u.skills ?? []).map(s => [s.id, s]));
+            Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atk: ev.atk, matk: ev.matk, atkType: ev.atkType, stats: ev.stats ?? null });
+            u.skills = (ev.actives ?? []).map((id, i) => had.get(id) ?? { ...skillInfo(id), readyAt: ev.ready?.[i] ?? ev.t, firedAt: ev.t });
+            renderUnits(state, root);
             break;
         }
         case 'end': {

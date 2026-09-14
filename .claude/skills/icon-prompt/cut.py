@@ -6,9 +6,9 @@ usage:
 numpy + PIL only -- scipy is installed here but its DLLs fail to load (2026-09-07).
 
 Handles every sheet background observed so far (measured 2026-09-07):
-  * plain white                      (icons/skills/example_1.png      : ~255)
-  * baked fake checkerboard          (icons/items/examples.png        : 193/236)
-  * checkerboard + black cross lines (icons/items/examples_armor.png  : 207/255)
+  * plain white                      (icons/skills/example_1.png             : ~255)
+  * baked fake checkerboard          (icons/items/source/examples.png        : 193/236)
+  * checkerboard + black cross lines (icons/items/source/examples_armor.png  : 207/255)
 The checkerboard is PAINTED PIXELS (alpha is all 255) -- Gemini's rendering of a
 "transparent background" request. Ask for solid white instead; both still work here.
 

@@ -32,15 +32,11 @@ user-invocable: true
 5. **기획서에 없는 기능을 만들지 않는다** — 기획이 비면 구현 불가다. 목록은 [DEV_PLAN.md §3-2](docs/client/DEV_PLAN.md) → `/game-design`.
 6. **검증은 브라우저뿐** — 빌드 없음 · node 없음. `dev/test.html` 의 `PASS n/n` 이 통과 기준 ([src/dev/README.md](src/dev/README.md)). 실패 사유는 `fail()` 로 **던진다** — 문자열 반환은 통과로 집계된다.
 7. **계승 폴더는 읽기 전용** — `src/data/inherited/` · `src/assets/art/backgrounds/` 는 고치지 않고 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다 (CLAUDE.md 규칙 3). `src/assets/art/faces/` 는 신규 아트가 직접 들어가는 활성 폴더라 예외.
-8. **폴더 README 는 "뭐가 있나"만** — 현황 · 이력은 DEV_PLAN 으로 ([DEV_PLAN.md §7](docs/client/DEV_PLAN.md) 마지막 줄).
+8. **폴더 README 는 "뭐가 있나"만** — 현황은 DEV_PLAN 으로, 실측 · 이력은 커밋과 보고로 ([DEV_PLAN.md §7](docs/client/DEV_PLAN.md)).
 
-### 작업 규칙 (프로젝트 공통 — 사용자 지시 2026-08-26)
+### 작업 규칙
 
-- **병렬 세션** — 사용자는 같은 저장소에서 Claude 세션을 여러 개 동시에 돌린다. 기획서 · CSV 를 인용하거나 패치하기 전에 `ls -la --time-style=long-iso` 로 mtime 을 보고, 세션 시작 이후 바뀐 파일은 다시 읽는다. 패치는 정확한 old 문자열 매칭으로만(다른 세션의 변경을 덮어쓰지 않는다). 커밋 전 `git status` 에 내가 안 만진 파일이 있으면 그건 다른 세션의 작업이다.
-- **문서 · 형제 프로젝트 조사는 `model: "sonnet"` 서브에이전트**로 돌린다 — 직접 grep 으로 메인 컨텍스트를 태우지 않는다. 형제 프로젝트 경로(TheSevenRPG · TheSevenSimulation · TheSevenTactics)는 세션의 additional working directories 안에서만.
-- **큰 구현(파일 5개 이상 또는 다단계)** 은 결정 목록(D1~Dn)과 검증 절차를 담은 `PLAN.md` 를 scratchpad 에 쓰고 `model: "opus"` 서브에이전트에 실행을 맡긴다. 파일이 겹치지 않게 단계를 나눈다. 메인은 diff 검수 + 사용자 보고.
-- **짧은 동의("ㄱ" · "ok")는 직전 메시지에 나열된 항목에만** 적용된다. public 이름 변경 · 스키마 변경 · 다운스트림 파일 동반 수정 · 의미 변화는 "ㄱ" 뒤에도 따로 묻는다: "이걸 하려면 X 도 같이 바꿔야 하는데, OK?"
-- **커밋 · 푸시는 사용자가 명시적으로 요청할 때만.**
+공통 규칙(병렬 세션 · 조사는 sonnet 서브에이전트 · 서브에이전트는 상황 판단 · 짧은 동의 · 커밋)은 [CLAUDE.md](CLAUDE.md) 「작업 규칙」 — 여기 옮겨 적지 않는다.
 
 ## 절차
 
@@ -68,7 +64,7 @@ user-invocable: true
 - 추가할 단정
 - 파급 — [DEV_PLAN.md §7](docs/client/DEV_PLAN.md) 표로 "먼저 고칠 문서"를 짚는다
 
-큰 작업이면 작업 규칙의 PLAN → opus 방식으로 나눈다.
+큰 작업을 에이전트로 나눌지는 [CLAUDE.md](CLAUDE.md) 작업 규칙 「서브에이전트는 상황 판단」.
 
 ### 3. 문서 먼저
 
@@ -91,10 +87,10 @@ user-invocable: true
 
 ### 6. 문서 갱신 + 보고
 
-- [DEV_PLAN.md](docs/client/DEV_PLAN.md) — §3-1 현황 · §3-3 R 상태 · §4 부채(생겼거나 해소됐으면)
+- [DEV_PLAN.md](docs/client/DEV_PLAN.md) — §3-1 현황 · §3-3 R 행(**한 줄** — 번호 · 제목 · 날짜 · 상태 · 근거) · §4 부채(생겼거나 해소됐으면)
 - [INTERFACE.md](docs/client/INTERFACE.md) — 계약이 바뀌었으면
 - 폴더 README (`src/*/README.md`) — 파일의 **역할**이 바뀌었을 때만
-- 각 문서 꼬리의 `*마지막 업데이트: …*` 에 날짜와 내용을 앞에 붙인다
+- 고친 문서 꼬리의 `*마지막 업데이트: …*` **날짜만** 갈아 끼운다 — 무엇을 바꿨는지는 커밋 메시지에 ([DEV_PLAN.md §7](docs/client/DEV_PLAN.md))
 
 보고에 담을 것: 바꾼 것 · 검증 결과(`PASS n/n` 원문 그대로) · 열린 질문. **스킵한 게 있으면 스킵했다고 적는다.**
 
@@ -149,4 +145,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-08-27 (최초 작성)*
+*마지막 업데이트: 2026-09-14*

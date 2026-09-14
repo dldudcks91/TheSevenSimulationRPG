@@ -32,7 +32,7 @@
 |---|---|---|
 | `backgrounds/` | 진짜 픽셀아트, 다크 판타지, 잉걸불 강조 | **읽기 전용** (CLAUDE.md 규칙 3) |
 | `faces/pixel16/` | "16-bit 도트그래픽" 이라 이름 붙은 8장 | **실은 픽셀아트가 아니다** (§1-2) |
-| `faces/example/` | 클린 카툰 흉상 앵커 14장 | 게임이 로드하지 않는 스타일 기준 이미지 |
+| `faces/example/` (현 `faces/source/`) | 클린 카툰 흉상 앵커 14장 | 게임이 로드하지 않는 스타일 기준 이미지 |
 
 `example/` 과 `pixel16/` 은 **서로 다른 시각 언어**이고, 어느 쪽이 본작의 얼굴인지 정한 문서가 없다.
 
@@ -285,7 +285,7 @@ Diablo 2 · Diablo 4 · Path of Exile · Grim Dawn · Last Epoch
 ## 7. 이름 있는 스타일 앵커 10종 ⚠제안 [조사 2026-09-06]
 
 > §3 이 「계열」 비교표라면, 여기는 그 안에서 **프롬프트에 이름으로 박을 수 있는 앵커** 목록이다. 평가축은 셋 — 7죄악 톤 · 44px 판독(§1-4) · AI 시트 재현성.
-> 기준점은 현행 `faces/cartoon/`(다크 SD 카툰 흉상 · 굵은 외곽선 · Gemini 2×2 초록 시트 · [faces/example/README.md](../../src/assets/art/faces/example/README.md)).
+> 기준점은 현행 `faces/cartoon/`(다크 SD 카툰 흉상 · 굵은 외곽선 · Gemini 2×2 초록 시트 · [faces/source/README.md](../../src/assets/art/faces/source/README.md)).
 > §4 의 결론(③ 골격 + ④ 팔레트)을 뒤집지 않는다 — 그 결론을 **실제 토큰**으로 옮긴 것이다. 확정 행은 여전히 없다.
 
 ### 7-1. 목록

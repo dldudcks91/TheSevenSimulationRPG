@@ -263,11 +263,11 @@ export function createHeroSystem(data) {
     }
 
     /**
-     * 첫 파티의 등급 — **레어 1 + 매직 2** [확정 2026-09-07 사용자] (hero_design §1).
+     * 첫 파티의 등급 — **레어 1 + 매직 1 + 일반 1** [개정 2026-09-14 사용자 확정 · ~~레어 1 + 매직 2~~ 09-07] (hero_design §1).
      * 셋이 같은 등급이면 차이가 굴림 운으로만 나타나는데 등급이 갈리면 **첫 화면부터 로스터에 층이 보이고**
-     * 「매직 둘을 언젠가 레어로 갈아탄다」는 목표가 바로 생긴다. 인원이 늘면 나머지는 굴린다.
+     * 「아래 둘을 언젠가 위로 갈아탄다」는 목표가 바로 생긴다. 인원이 늘면 나머지는 굴린다.
      */
-    const START_TIERS = ['rare', 'magic', 'magic'];
+    const START_TIERS = ['rare', 'magic', 'normal'];
 
     const rollStartParty = (rng, n) => rollParty(rng, n, START_TIERS);
 
@@ -283,12 +283,11 @@ export function createHeroSystem(data) {
     const xpNeeded = level => Math.round(B.hero_xp_base * Math.pow(level, B.hero_xp_exp));
 
     /**
-     * XP 지급 → 레벨업 처리. gains = 이번 지급으로 오른 능력치 {attr: +n}.
-     * 능력치는 레벨업마다 축별로 [balance.csv:attr_growth_chance_pct]% 확률로 +1,
-     * 단 [balance.csv:hero_attr_max] 까지만.
-     * ⚠ ~~개체별 히든 상한(caps)~~ 은 **09-07 폐지** — 상한은 전 영웅 공통 하나이고
-     *   개체차는 시작 굴림(등급별 총합 대역 + 분포 모양)이 만든다. **등급은 출발선이지 천장이 아니다**
-     *   — 키우면 매직도 레어와 같은 곳에 도달한다 (hero_design §4-3). 히든으로 남는 것은 성장률뿐이다.
+     * XP 지급 → 레벨업 처리.
+     * **기본 능력치는 안 바꾼다** [2026-09-14 사용자 확정 · hero_design §4-3 · R83] — 태어날 때 굴린 값이 평생 간다.
+     *   ~~레벨업마다 축별 [balance.csv:attr_growth_chance_pct]% 확률로 +1~~ 은 폐지됐다 — 7축을 공통 상한으로 모아
+     *   만렙에서 개체차를 지웠다. 등급 차이는 이제 끝까지 간다.
+     * `gains` 는 언제나 `{}` 이고 `rng` 는 소비하지 않는다 — 둘 다 계약 모양으로만 남는다 (INTERFACE §2-4 · §5-2).
      */
     function grantXp(hero, amount, rng) {
         // 레벨 상한 — 상한에 닿으면 XP 를 쌓지 않는다 (GAME_DESIGN §9 08-26 「레벨 상한 99」).
@@ -296,22 +295,15 @@ export function createHeroSystem(data) {
         if (hero.level >= B.hero_level_cap) { hero.xp = 0; return null; }
         hero.xp += amount;
         const from = hero.level;
-        const gains = {};
         while (hero.level < B.hero_level_cap && hero.xp >= xpNeeded(hero.level)) {
             hero.xp -= xpNeeded(hero.level);
             hero.level += 1;
-            for (const id of statIds) {
-                if (hero.stats[id] < B.hero_attr_max && rng() * 100 < B.attr_growth_chance_pct) {
-                    hero.stats[id] += 1;
-                    gains[id] = (gains[id] ?? 0) + 1;
-                }
-            }
         }
         if (hero.level >= B.hero_level_cap) hero.xp = 0;
         // 마스터리 포인트 — 레벨업 1회당 정액. 지급 곡선 자체가 기획 미확정이라 형태도 임시다 (skill_design §7)
         const points = (hero.level - from) * B.mastery_point_per_level;
         if (points > 0) hero.masteryPoints = (hero.masteryPoints ?? 0) + points;
-        return hero.level > from ? { uid: hero.uid, from, to: hero.level, gains, points } : null;
+        return hero.level > from ? { uid: hero.uid, from, to: hero.level, gains: {}, points } : null;
     }
 
     /* ── 전투 능력치 (계수는 전부 balance.csv ⚠제안 키) ── */
@@ -320,8 +312,7 @@ export function createHeroSystem(data) {
      * 기본 능력치 계수 — **축마다 형태가 다르다** (2026-09-13 확정 · hero_design §4-1).
      *   계수 = (`mult_base_pct` + 능력치 × `mult_per_point_pct`) / 100
      *   대부분 축은 `100 + 1n` 이라 옛 `1 + n × attr_bonus_per_point/100` 과 같은 값을 낸다.
-     *   **건강만 `10 + 5n`** 이다 — 곱해지는 대상이 HP 성장분이라 성질이 다르다.
-     *     건강 18 에서 계수 1.0 (기준선) · 건강 9 에서 0.55 → 만렙 격차 1.77 배.
+     *   **건강만 모양이 다르다** — 곱해지는 대상이 HP 레벨업 상승분이라 계수가 1 보다 작은 쪽에서 시작한다.
      *   값은 전부 `hero_attribute.csv` 에 있다. 바꿀 때 이 파일이 아니라 CSV 를 고친다.
      */
     const attrCoef = Object.fromEntries(data.stats.map(s => [s.id, {
@@ -333,6 +324,23 @@ export function createHeroSystem(data) {
         if (!c) throw new Error(`attrMult: 축 '${id}' 가 hero_attribute.csv 에 없다`);
         return (c.base + (v ?? 0) * c.per) / 100;
     };
+
+    /**
+     * 최대 HP 의 레벨 성장 — **10레벨 구간마다 직선** [확정 2026-09-14 사용자 · hero_design §4-1 · battle_design §8 · R84].
+     *   레벨 n 으로 오를 때 상승분 = `hero_hp_band{b}_unit` × 건강 계수 · 구간 b = floor((n−1) / `hero_hp_band_levels`) + 1
+     *   구간 단위는 **건강 계수 1.0 기준** 상승분이다. HP 는 `power_growth_per_level` 을 **읽지 않는다** —
+     *   ~~`hero_hp_base × (R^(N+1) − R²)`~~(R82) 는 곱셈이라 만렙을 늘리는 구간에서 불어났다.
+     * `hpUnitSum[level]` = 레벨 1 에서 그 레벨까지 오른 단위의 합. **생성할 때 만렙까지 한 번** 만든다 —
+     *   구간 키가 만렙을 못 덮으면 전투 중이 아니라 **여기서** 던진다.
+     */
+    if (!(B.hero_hp_band_levels > 0)) throw new Error(`hero: balance.csv 의 hero_hp_band_levels 가 없거나 0 이하다`);
+    const hpUnitSum = [0, 0];
+    for (let n = 2; n <= B.hero_level_cap; n++) {
+        const band = Math.floor((n - 1) / B.hero_hp_band_levels) + 1;
+        const unit = B[`hero_hp_band${band}_unit`];
+        if (typeof unit !== 'number') throw new Error(`hero: balance.csv 에 'hero_hp_band${band}_unit' 이 없다 — 만렙 ${B.hero_level_cap} 까지 HP 구간을 덮어야 한다`);
+        hpUnitSum[n] = hpUnitSum[n - 1] + unit;
+    }
 
     /**
      * 기본 능력치 + 장비 + 도감 보너스 + 파티 전술 → 전투 능력치.
@@ -349,7 +357,7 @@ export function createHeroSystem(data) {
      *   원소는 **관련 옵션이 붙었을 때만** 생기고 그 옵션이 아직 없으므로 `attack_type` 은 **언제나 `physical`** 이다 (§2-1 · §9-5).
      * · **저항은 소재값이 아니라 직접 %다** (§9-5) — `res_all` + 원소별 접사. 상한은 전투에서 적용된다
      *   (formula.appliedResist) — 여기서는 원값을 그대로 내고, 상한을 뚫는 `res_max_bonus` 를 따로 낸다.
-     * · **최대 HP 는 성장 축**이라 레벨이 기하 곡선을 탄다 (§9-0 · hero_design §5). 방어는 비율 축이라 타지 않는다.
+     * · **최대 HP 는 레벨이 키운다** — ~~기하 곡선(§9-0)~~ 이 아니라 **10레벨 구간 직선의 누적합**이다 [2026-09-14 · R84]. 방어는 비율 축이라 레벨을 안 탄다.
  *   **그 성장분만 건강 계수를 탄다** [확정 2026-09-10 · hero_design §4-1] — 레벨 1 은 전 영웅이 같다(몬스터 앵커링 기준점 유지).
      * · **피해 감소는 원천별 곱**이라 (§9-3) 접사를 각각 곱해 **실효 %** 한 숫자로 낸다 — 시트에도 그 숫자가 찍힌다.
      * · **운은 전투 계산 밖**이다 — 드랍률·골드 획득에만 계수로 곱한다 (hero_design §4-1).
@@ -397,18 +405,13 @@ export function createHeroSystem(data) {
             * (1 + (codex.atk_pct ?? 0) / 100));
 
         // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
-        //   레벨 1 에서 성장분이 0 이라 몬스터 앵커링 기준점(`hero_hp_base`)이 안 흔들린다 (battle_design §8)
-        //
-        // 2026-09-13 개정 — 성장분을 **레벨업 상승분의 누적합**으로 다시 정의했다 (hero_design §4-1).
-        //   레벨 N 상승분 = `hero_hp_base` × (R−1) × R^N × 건강 계수
-        //   그 Σ(n=2..N) 을 닫으면 아래 한 줄이 된다 (등비수열 합 · (R−1) 이 약분돼 사라진다):
-        //     성장분 = `hero_hp_base` × (R^(N+1) − R²)
-        //   레벨 1 에서 R²−R² = 0 이라 앵커는 그대로다. 유저에게 보이는 것은 식이 아니라
-        //   레벨업 팝업의 상승분 한 숫자이고, 그 값은 hpMax(새)−hpMax(옛) 로 낸다(반올림 정합).
-        const R = B.power_growth_per_level;
-        const hpGrowth = B.hero_hp_base * (Math.pow(R, hero.level + 1) - R * R);
+        //   성장분 = **구간 단위의 누적합**(`hpUnitSum`) × 건강 계수 [확정 2026-09-14 · R84]. 레벨 1 에서 누적합이 0 이라
+        //   몬스터 앵커링 기준점(`hero_hp_base`)이 안 흔들린다 (battle_design §8). 레벨업 팝업의 상승분은 hpMax(새)−hpMax(옛) 로 낸다(반올림 정합)
+        //   ⚠ 몬스터도 여기를 지난다 — `stage.csv:dlvl` 이 만렙을 넘으면 구간이 없어 던진다
+        const units = hpUnitSum[hero.level];
+        if (units === undefined) throw new Error(`hero: 레벨 ${hero.level} 은 HP 구간 밖이다(1 ~ 만렙 ${B.hero_level_cap}) — 몬스터면 stage.csv:dlvl 이 만렙을 넘었다`);
         const hpMax = Math.round(
-            (B.hero_hp_base + hpGrowth * attrMult('vit', A.vit) + f('hp_flat'))
+            (B.hero_hp_base + units * attrMult('vit', A.vit) + f('hp_flat'))
             * (1 + f('hp_pct') / 100)
             * (1 + (codex.hp_pct ?? 0) / 100));
 

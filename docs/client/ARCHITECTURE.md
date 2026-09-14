@@ -66,7 +66,7 @@ loadData()            CSV 27개 fetch → D 채움 → SYS 조립  (`ui/data.js:
 rollCandidates()      새 게임 후보 3명 (고정 시드 — 세이브 밖)
 loadSave() → continueGame()
     deserialize (버전 불일치면 catch → G=null → 시작 화면)
-    closeRun (재접속 런 마무리 → save)   ← tickInjuries 는 v11(2026-09-03)에서 삭제
+    closeRun (재접속 — 원정을 끊는다 → save)   ← tickInjuries 는 v11(2026-09-03)에서 삭제
 ?screen / ?dev / ?tab  개발용 라우팅 (순서 고정 — ?tab 은 마지막)
 render()
 ```
@@ -77,13 +77,17 @@ render()
 
 **원정 1회**
 ```
-[출발 버튼] → runBattle(stageId)
-  → SYS.game.resolveBattle(G, stageId, now())      정산 완료 (시뮬 + 보상 + 리포트 — ~~출정 아웃~~ 은 2026-09-08 폐기)
-  → save()                                          ← 여기서 이미 결과가 확정·저장됨
-  → mountBattle(result.timeline)                    관전 = 재생 (건너뛰기 가능)
-  → onEnd → 리포트 화면 (또는 반복 ON + 승리면 다음 원정 자동)
+[출발 버튼] → SYS.game.departRun(G, stageId, …)     첫 라운드 계산(battle.createRun) · 보상 없음 · 리포트 자리(진행 중)
+  → save()
+  → 관전(mountBattle — 그 라운드의 타임라인 재생) 또는 다른 탭 — 시계는 앱이 든다
+  → 시계가 라운드 끝 시각에 닿으면 SYS.game.advanceRun(G, …)
+       이긴 라운드 정산(드롭 · XP · 골드 · 도감 카드 · 처치 수) → save()
+       → 다음 라운드를 그 순간의 장비 · 레벨로 계산(바뀐 영웅은 타임라인의 refit)
+  → 마지막 라운드 끝 · 전멸 · 시간 초과 = 원정 끝 → 리포트 확정 (반복 ON + 승리면 다음 원정 자동)
+  → [철수] = SYS.game.retreatRun · 게임 종료(재접속 · 멈춘 공백) = closeRun
+       진행 중이던 라운드는 버린다 · 반복을 끈다 → save()
 ```
-관전 중 게임이 꺼져도 잃는 것이 없다 — "런은 출발 시점에 통째로 정산"의 실체.
+게임이 꺼져도 **이긴 라운드의 보상은 이미 저장돼 있다** — 잃는 것은 진행 중이던 라운드 하나다. 켤 때 남은 라운드를 마무리하지 않는다(껐다 켜기가 가속 수단이 된다). `resolveBattle` 은 개발 · 테스트용 즉시 계산으로 남는다 — 라운드마다 정산을 끝까지 한 번에 돈다.
 
 **장착 1회**
 ```
@@ -166,4 +170,4 @@ render()
 
 ---
 
-*마지막 업데이트: 2026-09-11 (**§7 골든 범위 40 → 50런** — 챕터 5스테이지 · DEV_PLAN R75) · 2026-09-08 (**「출정 아웃」 폐기 반영** — §4 흐름도의 `resolveBattle` 줄에서 「출정 아웃」을 걷었다. 정산이 상태에 남기는 전투불능이 없다 (GAME_DESIGN §9 09-08 · DEV_PLAN R54)) · 2026-09-08 (**낡은 수치 정정 — 문서가 08-31 판에 멈춰 있었다** · 기획↔클라이언트 버전 일치 작업. §1·§4 **CSV 22종 → 27**(`skill_tag`·`mine_node`·`commission_kind`·`commission`·`hero_tier` 다섯이 그 뒤로 들어왔다) · §3 `D` **31 → 36 필드**(같은 원인). 부팅 순서·모듈 목록은 실제 `app.js:boot()` 과 일치해 안 건드렸다 (DEV_PLAN §3-3 R43·R45·R48)) · 2026-08-31 (**전면 대조 — 문서가 08-28 판에 멈춰 있었다.** §1 그림(SYS 5→7 · `skill`·`tactic`·`naming` 누락) · §3 `D` 13→31 필드 · §4 CSV 8→22 · §7 골든 스냅샷 절 신설 · §8 CDN 1→2(부채 #11 과의 모순 해소) · §9 mock 잔류 9→3 + 이관 내역 표 · §10 이식 표에 `naming`·`skill`·`tactic`·골든) · 2026-08-28 (`ui/tip.js` 등재 — 툴팁 기계장치를 app.js 에서 분리, 관전 재생기와 공용) · 2026-08-27 (§3 `D` 필드 보충 — `stageList` · `weaponGroupList` 누락) · 2026-08-26 (최초 작성)*
+*마지막 업데이트: 2026-09-14*

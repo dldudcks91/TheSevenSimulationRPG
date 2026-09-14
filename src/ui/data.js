@@ -37,7 +37,7 @@ export const D = {
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
-    weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 sword2h·axe·mace·spear·bow
+    weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 본편 열 전부(staff·orb·crucifix·bible·crossbow 2026-09-14) · 확장 dagger·scythe 는 없다
     skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
@@ -246,13 +246,15 @@ export const monsterName = id => {
     return r ? { ko: r.monster_name_kr, en: r.monster_name_en } : { ko: '???', en: '???' };
 };
 /** 얼굴 이미지가 있는 몬스터만 경로를 돌려준다 (monster.csv:face) */
-export const monsterFace = id => (D.monsters?.[id]?.face ? `${M.faceDir()}monster_${id}.png` : null);
+export const monsterFace = id => (D.monsters?.[id]?.face ? `${M.faceDir()}monster/${id}.png` : null);
 /** 몬스터 id 앞자리 = 챕터 (1101 → 1챕터) */
 export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wrath';
 /** 챕터 행 — {id, sin, name:{ko,en}} */
 export const chapterOf = ch => D.chapters?.[ch] ?? null;
 /** 스테이지 이름 — stage.csv 의 _kr/_en 쌍 */
 export const stageName = row => ({ ko: row.stage_name_kr, en: row.stage_name_en ?? row.stage_name_kr });
+/** 스테이지 이야기 — stage.csv 의 story_kr/story_en 쌍 (출정 창 「이야기」 칸 · SCREEN_DESIGN §4-1 · ADR-0105). 영어가 비면 한국어 */
+export const stageStory = row => ({ ko: row.story_kr ?? '', en: row.story_en || row.story_kr || '' });
 /** 스테이지 배경 — 계승 자산이 있는 스테이지만(stage.csv:bg). 경로 조립은 mock(자산 경로) */
 export const stageBgOf = id => (D.stages?.[id]?.bg ? M.stageBg(id) : null);
 /** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) + 보스 1. 챕터보스 스테이지는 **보스 하나뿐**이다(2026-09-11). 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다 */

@@ -27,11 +27,11 @@
  *     — items[*].skill = **무기가 담은 액티브 id** | null (무기만 · v18 신설 2026-09-09).
  *       드롭 때 그 무기군의 **직업 풀**에서 굴려 개체에 박는다 — 액티브 2번 칸의 입력이다
  *       (skill_design §12-1 규칙 3 · `skill.activesFor` 의 `ctx.weaponSkill`)
- *   progress: {cleared: [stageId]},
+ *   progress: {cleared: [stageId], levelUp: {stageId: n}},   // levelUp = 스테이지별 올린 양 — 없으면 {} (2026-09-14 · R87 · 버전 무변경)
  *   codexCards: {monsterId: n}   — 도감 레벨의 출처. 누적 카운트, 소모 없음 (monster_design §8)
  *   codexKills: {monsterId: n}   — 기록만. 레벨의 트리거가 아니다
  *   counters: {hero, item, battle, tavern, tactic, upgrade, search},
- *   run: {stageId, repeat, lastAt, durationSec} | null,
+ *   run: {stageId, repeat, lastAt, durationSec, active} | null,   // active = 원정이 도는 중(v25 · R89) — 불러온 세이브에 서 있으면 끊긴 원정이다
  *   reports: [{...}]             — 리포트 목록. **최신이 맨 앞**이고 [balance.csv:report_keep] 개까지 남는다 (v21).
  *     반복 원정은 이기는 동안 런을 잇는데, 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3)
  *   notice: {kind:'runClosed', stageId, at, seenAt} | null   — 재접속 알림 (배너 1회)
@@ -88,13 +88,15 @@
  *   v21 → v22 (2026-09-11 — 챕터 5스테이지 · R75):
  *     · `progress.cleared` — 챕터보스 스테이지(`boss_grade = chapter_boss`)의 **직전 스테이지를 깼으면 그것도 깬 것으로** 소급한다.
  *       옛 세이브에선 그 직전 자리가 챕터보스 자리였다. 안 올리면 해금(직전 클리어)이 다음 챕터를 통째로 잠근다. rng 0회
+ *   v24 → v25 (2026-09-14 — 원정 보상은 라운드 승리 순간 · R89):
+ *     · `reports[*].xpEach`(전원 동일) → `xp: {uid: n}`(영웅별) — 옛 리포트는 그때 전원이 같은 양을 받았으므로 `party` 마다 옮긴다 · `run.active = false`. rng 0
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 24;
+export const SAVE_VERSION = 25;
 
 /**
  * @param {object} deps
@@ -195,7 +197,8 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 새 게임 — 확정한 시작 영웅 3명이 곧 로스터다. 각자 직업 전속 무기군의 무기 1개를 쥐고 시작한다.
+     * 새 게임 — 확정한 시작 영웅 3명이 곧 로스터다. 각자 **일반 무기 + 일반 갑옷**을 입고 시작한다 [개정 2026-09-14 · R86 · hero_design §1] —
+     *   무기는 제 직업 스킬이 붙는 무기군이고 **그 영웅의 고유 스킬과 같은 스킬을 담지 않는다**.
      * **파티는 비어 있다** [사용자 지시 2026-09-09 · SCREEN_DESIGN §5] — ~~로스터가 곧 파티~~ 폐기.
      *   자동으로 채우면 플레이어가 **편성을 한 번도 안 하고** 첫 원정을 떠나므로 편성이 결정이라는 것을 배울 자리가 없다.
      *   **처음 고른 영웅이 리더**가 되는 것은 새 규칙이 아니다 — `party` 는 넣은 순서 그대로이고 리더는 `party[0]` 이다.
@@ -206,7 +209,7 @@ export function createGameSystem(deps) {
             version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
             resources: { gold: B.start_gold, dust: B.start_dust, stigma: B.start_stigma },
             heroes: [], party: [], items: {}, bag: [], stash: [],
-            progress: { cleared: [] },
+            progress: { cleared: [], levelUp: {} },   // levelUp = 스테이지별 **올린 양** — 안 올린 스테이지는 안 적는다 (2026-09-14 · R87)
             codexCards: {}, codexKills: {},
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0 },
             run: null, reports: [], notice: null,
@@ -219,8 +222,11 @@ export function createGameSystem(deps) {
         const rng = makeRng(deriveSeed(state.seed, 0));
         for (const c of candidates) {
             const h = addHero(state, clone(c));
-            const w = addItem(state, I.startingWeapon(rng, h.cls));
+            // 영웅마다 무기 → 갑옷 — **이 순서가 계약이다**(INTERFACE §5-2). 무기 스킬 풀에서 고유 스킬을 빼도 소비 수는 같다
+            const w = addItem(state, I.startingWeapon(rng, h.cls, h.innate));
             h.equipped.weapon = w.uid;
+            const a = addItem(state, I.startingArmor(rng));
+            h.equipped.armor = a.uid;
         }
         return state;
     }
@@ -570,6 +576,20 @@ export function createGameSystem(deps) {
         return s;
     }
 
+    /** v24 → v25 — **원정 보상은 라운드를 이긴 순간 들어온다** (base_expedition_design §1-1 · R89 · INTERFACE §4 v24 → v25).
+     *  경험치가 영웅마다 달라져(쓰러진 영웅은 그 뒤 라운드 몫이 없다) 리포트의 「전원 동일」 한 숫자(`xpEach`)가 영웅별 `xp` 로 바뀐다 —
+     *  옛 리포트는 그때 전원이 같은 양을 받았으므로 `party` 의 영웅마다 그 값을 옮기는 것이 사실이다.
+     *  `run.active` 는 `false` — 옛 런은 출발 순간 정산이 끝나 끊을 원정이 없다. rng 0 */
+    function upgradeV24(s) {
+        for (const R of s.reports ?? []) {
+            R.xp = R.xp ?? Object.fromEntries((R.party ?? []).map(uid => [uid, R.xpEach ?? 0]));
+            delete R.xpEach;
+        }
+        if (s.run) s.run.active = false;
+        s.version = 25;
+        return s;
+    }
+
     /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
@@ -582,7 +602,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -607,6 +627,7 @@ export function createGameSystem(deps) {
         if (s.version === 21) s = upgradeV21(s);
         if (s.version === 22) s = upgradeV22(s);
         if (s.version === 23) s = upgradeV23(s);
+        if (s.version === 24) s = upgradeV24(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
@@ -614,6 +635,7 @@ export function createGameSystem(deps) {
         s.tactics = s.tactics ?? { slots: {} };
         // 수색 — 없으면 「한 적이 없다」가 정확한 초기 상태라 **버전을 안 올린다** (INTERFACE §4 · 2026-09-09)
         s.stash = s.stash ?? [];       // 창고 — v24. 없던 세이브는 빈 채로 열린다
+        s.progress.levelUp = s.progress.levelUp ?? {};   // 스테이지 레벨 — 없으면 「아무것도 안 올렸다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R87)
         s.search = s.search ?? null;
         if (s.search) s.search.answer = s.search.answer ?? null;   // 만남 이전에 나간 수색 (2026-09-09)
         s.counters.search = s.counters.search ?? 0;
@@ -643,7 +665,7 @@ export function createGameSystem(deps) {
         return w?.skill ?? null;
     };
     /* ~~`isOut(state, uid)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기(base_expedition_design §1-1 개정).
-       아웃은 **그 런 안에서만** 살고 런은 출발 순간 통째로 정산되므로, 전투 밖에 아웃된 영웅이 존재하지 않는다. */
+       아웃은 **그 런 안에서만** 산다(전투 유닛의 HP 0) — 전투 밖에 아웃된 영웅이 존재하지 않는다. */
 
     /* ── 도감 — 몬스터 카드 모델 (monster_design §8) ── */
 
@@ -866,6 +888,7 @@ export function createGameSystem(deps) {
 
     /** 템플릿 교체 — 정원이 바뀌므로 재배치가 따라온다 */
     function setFormation(state, tpl) {
+        if (state.run?.active) return { ok: false, err: 'running' };   // 원정 중엔 진형이 잠긴다 — 바꾸는 것은 새 원정이다 (R89)
         if (!FT[tpl]) return { ok: false, err: 'missing' };
         (state.formation ?? (state.formation = { tpl, ranks: [[], []] })).tpl = tpl;
         normalizeFormation(state);
@@ -880,6 +903,7 @@ export function createGameSystem(deps) {
      * 칸을 안 받던 판은 후열 영웅을 전열 첫 칸에 끌어도 전열 **마지막**과 바뀌었고, 같은 랭크 안에서는 아무 일이 없었다.
      */
     function placeFormation(state, uid, rank, idx) {
+        if (state.run?.active) return { ok: false, err: 'running' };   // 원정 중엔 자리도 잠긴다 (R89)
         if (!state.party.includes(uid)) return { ok: false, err: 'missing' };
         const f = normalizeFormation(state);
         const caps = formCaps(f.tpl);
@@ -918,6 +942,8 @@ export function createGameSystem(deps) {
     function toggleParty(state, uid, now) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
+        // 원정 중엔 인원이 잠긴다 — **넣기도 빼기도** [2026-09-14 · R89 · 사용자 확정]. 인원이 바뀌는 것은 새 원정이다
+        if (state.run?.active) return { ok: false, err: 'running' };
         if (state.party.includes(uid)) {
             state.party = state.party.filter(u => u !== uid);
             normalizeFormation(state);                    // 뺀 자리를 뒤가 메운다 (진형 2026-09-09)
@@ -945,11 +971,41 @@ export function createGameSystem(deps) {
     }
 
     function canDepart(state, stageId, now) {
+        // 원정이 도는 중이면 어느 스테이지도 못 나간다 — 철수해야 새로 출발한다 (R89)
+        if (state.run?.active) return 'running';
         if (!stageUnlocked(state, stageId)) return 'locked';
         // 파티가 비면 못 나간다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
         // 아웃이 런을 넘지 않으므로 언제나 전원이 나간다 (base_expedition_design §1-1)
         if (state.party.length === 0) return 'noParty';
         return null;
+    }
+
+    /**
+     * 스테이지 레벨 [신설 2026-09-14 · R87 · base_expedition_design §1-4] — **플레이어가 만지는 숫자는 이것 하나**이고 몬스터 레벨이 곧 이 값이다.
+     *   `base` = `stage.csv:dlvl` · `max` = **클리어한 스테이지의 기본 레벨 중 최고**(키가 없다 — 클리어 기록에서 파생) ·
+     *   `level` = 기본 레벨 + 올린 양(`progress.levelUp`)을 `[base, max]` 로 자른 값.
+     *   올린 스테이지는 상한 이하라 그걸 깨도 상한이 안 오른다 — 그래서 기본 레벨만 봐도 「클리어한 최고 레벨」이다.
+     *   **해금 조건이 없다** — 처음부터 열려 있다(사용자 09-14 · 나중에 연구로 넣는다). 아무것도 안 깼으면 `max = base` 라 못 올린다.
+     *   세이브에는 **올린 양**을 둔다 — 기본 레벨이 다시 깔려도 어긋나지 않게. 상한을 넘는 기록은 읽을 때 자른다. rng 를 안 쓴다
+     */
+    function stageLevelState(state, stageId) {
+        const st = deps.stages[stageId];
+        if (!st) return null;
+        const base = st.dlvl;
+        const cap = state.progress.cleared.reduce((m, id) => Math.max(m, deps.stages[id]?.dlvl ?? 0), 0);
+        const max = Math.max(base, cap);
+        return { base, max, level: Math.min(max, base + (state.progress.levelUp?.[stageId] ?? 0)) };
+    }
+
+    /** 스테이지 레벨을 바꾼다 — 비용 없음 · 되돌리기 자유. 기본 레벨로 돌리면 기록을 지운다(안 올린 스테이지는 적지 않는다) */
+    function setStageLevel(state, stageId, level) {
+        const s = stageLevelState(state, stageId);
+        if (!s) return { ok: false, err: 'missing' };
+        if (!Number.isInteger(level) || level < s.base || level > s.max) return { ok: false, err: 'range' };
+        state.progress.levelUp = state.progress.levelUp ?? {};
+        if (level === s.base) delete state.progress.levelUp[stageId];
+        else state.progress.levelUp[stageId] = level - s.base;
+        return { ok: true, level };
     }
 
     /* ~~`activeParty(state, stageId)`~~ · ~~`continuing`~~ 은 2026-09-08 삭제 — 「출정 아웃」 폐기.
@@ -969,88 +1025,158 @@ export function createGameSystem(deps) {
         });
     };
 
+    /* ── 원정 — **라운드 단위로 진행한다** [2026-09-14 · R89 · base_expedition_design §1-1 · 사용자 확정] ──
+       출발(`departRun`)이 첫 라운드를 계산하고, 진행 시각이 그 라운드의 끝에 닿을 때마다 `advanceRun` 이 **이긴 라운드만** 정산한 뒤
+       다음 라운드를 **그 순간의 장비 · 레벨로** 계산한다 — 보상이 들어오는 시각이 곧 라운드가 끝나는 시각이다.
+       ~~런은 출발 시점에 통째로 정산된다 — 관전은 재생일 뿐~~ 은 폐기: 드롭이 실시간이 아니었고(출발 순간 가방에 다 들어갔다)
+       건너뛰기 → 다시 출발로 원정을 몇 초에 하나씩 돌릴 수 있었다.
+       런 핸들은 **세이브에 안 든다** — 전투 안의 HP · 쿨 · 창과 같은 취급이다. 게임이 꺼지면 그 원정은 끊긴다(`closeRun`) */
+
+    /** 리포트의 레벨업 — 영웅마다 한 줄로 합친다(`from` = 원정 전 · `to` = 지금) */
+    const mergeLevelUp = (list, lu) => {
+        const had = list.find(x => x.uid === lu.uid);
+        if (!had) { list.push({ ...lu, gains: {} }); return; }
+        had.to = lu.to;
+        had.points = (had.points ?? 0) + (lu.points ?? 0);
+    };
+
     /**
-     * 전투 1회 — 시뮬 → 결과를 상태에 반영 → 리포트.
-     * 시드는 마스터 시드 + 전투 카운터에서 파생된다: 같은 세이브에서 다음 전투는 언제 돌려도 같다.
-     * 런은 출발 시점에 통째로 정산된다 — 관전은 재생일 뿐이라 게임이 꺼져도 잃는 것이 없다.
+     * 출발 — 런을 열고 **첫 라운드까지 계산**한다. **보상은 하나도 안 준다** — 라운드의 보상은 그 라운드가 끝나는 시각에 `advanceRun` 이 준다.
+     * 시드는 마스터 시드 + 전투 카운터에서 파생된다: 같은 세이브에서 다음 원정은 언제 돌려도 같다(도중에 장비를 안 바꾸면).
+     * 리포트는 **지금 목록 맨 앞에 선다** — `reason: null` 이 「진행 중」이고 라운드를 이길 때마다 찬다.
+     * @returns `{ok, run, report}` — `run` = 핸들 `{stageId, report, result, segEnd, done}` (INTERFACE §2-7)
      */
-    function resolveBattle(state, stageId, now) {
+    function departRun(state, stageId, now) {
         const why = canDepart(state, stageId, now);
         if (why) return { ok: false, err: why };
 
         state.counters.battle += 1;
         const rng = makeRng(deriveSeed(state.seed, state.counters.battle));
-        // **전원이 나간다** [개정 2026-09-08 — 「출정 아웃」 폐기]. ~~이어지는 반복이면 이전 런까지 아웃된 영웅을 뺀다~~ 는
-        // 아웃이 런을 넘지 않게 되면서 사라졌다 (base_expedition_design §1-1)
+        // **전원이 나간다** [개정 2026-09-08 — 「출정 아웃」 폐기] (base_expedition_design §1-1). 원정 중엔 인원이 잠긴다(`running` · R89)
         const going = state.party.slice();
-        const result = BT.simulate(partyUnits(state, going), stageId, rng);
-
-        // 보상 — XP 는 참가 전원 동일 지급 (⚠제안 — 분배 규칙 미확정)
-        const xpEach = Math.round(result.xpTotal * B.xp_rate);
-        const levelUps = [];
-        for (const uid of going) {          // 파티 전원 — 09-08 부터 안 나가는 영웅이 없다
-            const h = heroById(state, uid);
-            const lu = H.grantXp(h, xpEach, rng);
-            if (lu) levelUps.push(lu);
-        }
-        state.resources.gold += result.gold;
-        // ~~`state.resources.dust += result.dust`~~ 는 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
-        // (item_design §5-3 확정). 가루의 공급원은 **분해** 하나다(`salvage`)
-        for (const [id, n] of Object.entries(result.kills)) state.codexKills[id] = (state.codexKills[id] ?? 0) + n;
-        for (const [id, n] of Object.entries(result.cards)) state.codexCards[id] = (state.codexCards[id] ?? 0) + n;
-
-        // 드롭 → 가방. 가득 차면 버린다 (개수는 리포트에 남긴다)
-        const drops = [];
-        let discarded = 0;
-        for (const it of result.drops) {
-            if (state.bag.length >= B.inventory_cap) { discarded++; continue; }
-            const added = addItem(state, it);
-            state.bag.push(added.uid);
-            drops.push(added.uid);
-        }
-
-        // 아웃 — 쓰러진 영웅은 **그 런의 남은 라운드** 동안만 빠진다(battle.js). 런이 끝나면 회복이라
-        // 상태에 남기는 것이 없다 [개정 2026-09-08 — ~~출정 누적 아웃(`run.downed`)~~ 폐기 · 세이브 v17]
-
-        if (result.won && !state.progress.cleared.includes(stageId)) state.progress.cleared.push(stageId);
+        // 몬스터 레벨 = **이 스테이지의 지금 레벨**(올린 양 포함 · 2026-09-14 R87). rng 를 안 쓰므로 수열이 안 밀린다
+        const level = stageLevelState(state, stageId).level;
+        const battle = BT.createRun(partyUnits(state, going), stageId, rng, level);
 
         const report = {
-            at: now, stageId, won: result.won, reason: result.reason, durationSec: result.durationSec,
-            gold: result.gold, xpEach, levelUps,          // ~~dust~~ 09-09 폐기 — 처치는 가루를 안 뱉는다
-            downed: result.downed.slice(), party: going.slice(), drops, discarded,   // ~~outTotal(출정 누적)~~ 09-08 폐기
-            cards: { ...result.cards },
-            rounds: result.rounds,
-            // 깬 라운드 수 — 렌더러가 「이겼으면 전부, 아니면 하나 뺀다」로 짐작하던 값이다.
-            // 귀환 룰이 들어오면서 「라운드를 정리한 직후에 철수」가 생겨 그 짐작이 틀릴 수 있다
-            roundsCleared: result.roundsCleared,
-            // 빗나감 비율 — 레벨 부족의 전용 신호 (battle_design §9-8). 옛 리포트에는 없을 수 있다(렌더러가 허용)
-            strikes: result.strikes ? clone(result.strikes) : null,
-            // 기여 — 영웅별 가한/받은 피해와 처치 수 (SCREEN_DESIGN §4-3). 렌더러가 타임라인을 다시 더하지 않게
-            // **정산이 실어 보낸다** — 리포트에는 타임라인이 없고(세이브에 안 든다) 화면은 계산하지 않는다
-            contrib: result.contrib ? clone(result.contrib) : null,
+            at: now, stageId, level, won: false, reason: null, durationSec: 0,   // reason null = 진행 중
+            gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
+            downed: [], party: going.slice(), drops: [], discarded: 0, cards: {},
+            rounds: [], roundsCleared: 0,
+            // 빗나감 · 기여는 **0 에서 자리를 잡는다** — 첫 라운드부터 리포트의 실시간 표가 선다 (SCREEN_DESIGN §4-3)
+            strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
+            contrib: going.map(uid => ({ uid, dealt: 0, taken: 0, kills: 0 })),
         };
         // 목록의 맨 앞에 넣고 상한만큼만 남긴다 — 오래된 런부터 밀려난다 (v21)
         state.reports.unshift(report);
         if (state.reports.length > B.report_keep) state.reports.length = B.report_keep;
         state.run = {
             stageId, repeat: state.run?.stageId === stageId ? state.run.repeat : false,
-            lastAt: now, durationSec: result.durationSec,
-            // ~~downed(출정 누적 아웃)~~ 는 2026-09-08 삭제 — 런을 넘어 유지되는 전투불능이 없다 (세이브 v17)
+            lastAt: now, durationSec: 0, active: true,
         };
-        return { ok: true, result, report };
+        const pending = battle.next();
+        return { ok: true, report, run: { stageId, report, result: battle.result, segEnd: pending.t, done: false, battle, rng, party: going, pending } };
     }
 
     /**
-     * 재접속 — 반복 원정은 **게임이 켜져 있는 동안만** 돈다 (base_expedition_design §1, 2026-08-25).
-     * 꺼져 있던 사이 돌던 런은 마무리된 것으로 본다. 프로토타입은 런을 출발 시점에 통째로 정산하므로(resolveBattle)
-     * 남은 미정산분이 없다 — `reports[0]` 이 곧 "진행 중이던 전투까지 정산한" 결과다. 여기서는 반복을 끄고 알림만 남긴다.
-     * 오프라인에 도는 것은 파견뿐이다 — 미구현 (회복은 오프라인에 돌 것이 없다 — 전투 밖은 이미 전원 회복).
-     * **재접속은 귀환이다** — 09-08 「출정 아웃」 폐기로 ~~아웃된 영웅을 낫게 하는 일~~ 자체가 없어졌고,
-     * 여기서는 반복을 끄고 알림만 남긴다 (base_expedition_design §1-1).
+     * 라운드 넘기기 — 진행 시각이 `run.segEnd` 에 닿았을 때 부른다.
+     *   ① 끝난 라운드를 정산한다 — **이긴 라운드만**: 골드 → 도감(처치 · 카드) → 드롭(인벤토리 · 넘치면 그 순간 버린다) →
+     *      **경험치 = 그 라운드 처치 XP 합 × xp_rate 를 그 순간 살아 있는 영웅마다**(쓰러진 영웅은 그 라운드 몫이 없다) → 마지막 라운드면 클리어.
+     *      진 라운드(전멸 · 시간 초과)는 보상 없이 런을 닫는다
+     *   ② 런이 안 끝났으면 **다음 라운드를 그 순간의 장비 · 레벨로** 계산한다 — `partyUnits` 를 다시 만들어 넘기고 바뀐 영웅만 갈아입는다
+     */
+    function advanceRun(state, run, now) {
+        if (!run || run.done) return { ok: false, err: 'done' };
+        const s = run.pending, R = run.report, res = run.result;
+        if (s.cleared) {
+            state.resources.gold += s.gold;
+            R.gold += s.gold;
+            // ~~처치가 뱉는 가루~~ 는 2026-09-09 삭제 — 가루의 공급원은 **분해** 하나다(`salvage` · item_design §5-3)
+            for (const [id, n] of Object.entries(s.kills)) state.codexKills[id] = (state.codexKills[id] ?? 0) + n;
+            for (const [id, n] of Object.entries(s.cards)) {
+                state.codexCards[id] = (state.codexCards[id] ?? 0) + n;
+                R.cards[id] = (R.cards[id] ?? 0) + n;
+            }
+            for (const it of s.drops) {
+                if (state.bag.length >= B.inventory_cap) { R.discarded++; continue; }
+                const added = addItem(state, it);
+                state.bag.push(added.uid);
+                R.drops.push(added.uid);
+            }
+            // 경험치 — **그 순간 살아 있는 영웅만** 같은 양을 받는다 (사용자 확정 2026-09-14). 레벨업은 다음 라운드부터 전투에 먹는다(②)
+            const xpEach = Math.round(s.xp * B.xp_rate);
+            for (const uid of s.alive) {
+                const h = heroById(state, uid);
+                if (!h) continue;
+                const lu = H.grantXp(h, xpEach, run.rng);
+                R.xp[uid] = (R.xp[uid] ?? 0) + xpEach;
+                if (lu) mergeLevelUp(R.levelUps, lu);
+            }
+        }
+        // 사실의 기록 — 소요 · 라운드 · 빗나감 · 기여 · 전투불능은 **정산한 라운드 끝**까지 (진 라운드도 끝까지 싸운 것이라 들어간다)
+        R.durationSec = s.t;
+        R.rounds = clone(res.rounds);
+        R.roundsCleared = res.roundsCleared;
+        R.strikes = clone(res.strikes);
+        R.contrib = clone(s.contrib);
+        R.downed = res.downed.slice();
+        if (state.run) state.run.durationSec = s.t;
+
+        if (s.ended) {
+            R.won = res.won;
+            R.reason = res.reason;
+            if (res.won && !state.progress.cleared.includes(run.stageId)) state.progress.cleared.push(run.stageId);
+            run.done = true;
+            if (state.run) state.run.active = false;
+            return { ok: true, round: s, done: true };
+        }
+        run.pending = run.battle.next(partyUnits(state, run.party));
+        run.segEnd = run.pending.t;
+        return { ok: true, round: s, done: false };
+    }
+
+    /** 도는 원정을 끊는다 — 진행 중이던 라운드는 **없던 것**이다(보상 없음 · 리포트는 마지막으로 정산한 라운드 끝 그대로). 반복도 끈다. 끊었으면 true */
+    function cutRun(state, reason) {
+        const run = state.run;
+        if (!run?.active) return false;
+        run.active = false;
+        run.repeat = false;
+        const R = state.reports.find(r => r.at === run.lastAt && r.reason === null);
+        if (R) R.reason = reason;
+        return true;
+    }
+
+    /** 철수 — 관전의 옛 「건너뛰기」 자리다 (R89). 진행 중이던 라운드는 버리고 원정을 끝낸다 · 이긴 라운드의 보상은 이미 들어가 있다 */
+    function retreatRun(state, run, now) {
+        if (!run || run.done) return { ok: false, err: 'done' };
+        run.done = true;
+        cutRun(state, 'retreat');
+        return { ok: true, report: run.report };
+    }
+
+    /**
+     * 개발 · 검증용 **즉시 계산** — 출발한 뒤 라운드를 끝까지 같은 `now` 로 넘긴다(장비를 안 바꾸므로 라운드 사이에 들어가는 것은 레벨업뿐이다).
+     * 골든 · 단정 · 캘리브레이션 · `?dev=battle` 이 쓴다. **게임 화면은 안 쓴다** — 화면은 `departRun` → `advanceRun` 을 시간에 맞춰 부른다
+     */
+    function resolveBattle(state, stageId, now) {
+        const d = departRun(state, stageId, now);
+        if (!d.ok) return d;
+        while (!advanceRun(state, d.run, now).done);
+        return { ok: true, result: d.run.result, report: d.report };
+    }
+
+    /**
+     * 재접속 · 멈춤 — **원정은 게임이 켜져 있는 동안만 돈다** (base_expedition_design §1 · 2026-08-25).
+     * 도는 원정이 있으면 **끊는다** [개정 2026-09-14 · R89 · 사용자 확정] — 진행 중이던 라운드는 버리고(리포트 `closed`) 반복을 끈다.
+     *   ~~꺼져 있던 사이 돌던 런은 마무리된 것으로 본다~~ 는 폐기 — 남은 라운드를 마무리해 주면 껐다 켜기로 원정을 무한히 빨리 돌릴 수 있다.
+     * 끊었거나 반복이 켜져 있었으면 재접속 알림을 남긴다. 오프라인에 도는 것은 파견뿐이다 — 미구현
      */
     function closeRun(state, now) {
         const run = state.run;
-        if (!run || !run.repeat) return null;
+        if (!run) return null;
+        const repeat = run.repeat === true;
+        const cut = cutRun(state, 'closed');
+        if (!cut && !repeat) return null;
         run.repeat = false;
         state.notice = { kind: 'runClosed', stageId: run.stageId, at: run.lastAt, seenAt: now };
         return state.notice;
@@ -1113,6 +1239,8 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         // **수색을 먼저 본다** — 나가 있는 사람에게 「장비를 벗어라」라고 하면 벗어도 안 되는 길로 보내게 된다
+        // 원정에 나간 영웅은 못 지운다 — 원정 중엔 인원이 잠겨 있다 (R89)
+        if (state.run?.active && state.party.includes(uid)) return { ok: false, err: 'running' };
         if (state.search?.heroUid === uid) return { ok: false, err: 'searching' };
         if (Object.values(h.equipped ?? {}).some(Boolean)) return { ok: false, err: 'equipped' };
         if (state.heroes.length <= 1) return { ok: false, err: 'last' };
@@ -1445,7 +1573,7 @@ export function createGameSystem(deps) {
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
-        stageUnlocked, canDepart, resolveBattle, closeRun, dismissNotice,
+        stageUnlocked, canDepart, stageLevelState, setStageLevel, departRun, advanceRun, retreatRun, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire, dismiss,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
         masteryState, learnMastery, unlearnMastery, resetMastery,

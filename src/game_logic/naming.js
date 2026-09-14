@@ -20,9 +20,11 @@ export function createNaming(data) {
 
     /** 아이템 이름 — 태그 형식 "[죄종1][죄종2] Base" — ko/en 동형 (2026-09-11 개정 · 사용자 지시).
      *  대괄호는 죄종 표시명 그대로(`adj` 형용사 아님) — 태그라 언어별 조사·전치사가 없다.
-     *  매직 등급(`sufSin` 없음)은 대괄호가 하나뿐이다 — 조건부로 빈 칸을 만들지 않는다. */
+     *  매직 등급(`sufSin` 없음)은 대괄호가 하나뿐이다 — 조건부로 빈 칸을 만들지 않는다.
+     *  일반 등급(`preSin` 도 없음 · 2026-09-14 · R86)은 대괄호 없이 베이스 이름뿐이다. */
     const composeName = (preSin, base, sufSin) => {
         const b = pair(base);
+        if (!preSin) return { ko: b.ko, en: b.en };   // 무기군 정의가 통째로 이름이 되지 않게 두 칸만 옮긴다
         const tag = sin => `[${S[sin].ko}]`, tagEn = sin => `[${S[sin].en}]`;
         return {
             ko: `${tag(preSin)}${sufSin ? tag(sufSin) : ''} ${b.ko}`,

@@ -43,11 +43,9 @@ user-invocable: true
 9. **항상 전체 다시 그림** — 부분 갱신 없음 ([ARCHITECTURE.md §5](docs/client/ARCHITECTURE.md)). 이 단순함을 깨는 최적화를 제안하지 않는다.
 10. **문구 · 계열 · 라벨은 기획 결정** — 기획이 비어 화면이 죽은 축을 그리는 경우(§9)에도 라벨을 임의로 바꾸지 않는다 → `/game-design`.
 
-### 작업 규칙 (프로젝트 공통 — 사용자 지시 2026-08-26)
+### 작업 규칙
 
-- **병렬 세션** — 사용자는 같은 저장소에서 Claude 세션을 여러 개 동시에 돌린다. 기획서 · CSV 를 인용하거나 패치하기 전에 `ls -la --time-style=long-iso` 로 mtime 을 보고, 세션 시작 이후 바뀐 파일은 다시 읽는다. 패치는 정확한 old 문자열 매칭으로만(다른 세션의 변경을 덮어쓰지 않는다). 커밋 전 `git status` 에 내가 안 만진 파일이 있으면 그건 다른 세션의 작업이다.
-- **짧은 동의("ㄱ" · "ok")는 직전 메시지에 나열된 항목에만** 적용된다. public 이름 변경 · 스키마 변경 · 다운스트림 파일 동반 수정 · 의미 변화는 "ㄱ" 뒤에도 따로 묻는다: "이걸 하려면 X 도 같이 바꿔야 하는데, OK?"
-- **커밋 · 푸시는 사용자가 명시적으로 요청할 때만.**
+공통 규칙(병렬 세션 · 조사는 sonnet 서브에이전트 · 서브에이전트는 상황 판단 · 짧은 동의 · 커밋)은 [CLAUDE.md](CLAUDE.md) 「작업 규칙」 — 여기 옮겨 적지 않는다.
 
 ## 절차
 
@@ -66,7 +64,7 @@ user-invocable: true
 - 사용자 확인을 받은 뒤 [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md) 에 반영한다. 새 화면이면 §1 화면 지도와 §11 미구현 표도 같이 고친다 — **규격은 새 상태로 덮어쓴다.** 옛 문장에 취소선을 그어 남기지 않는다
 - 절 아래 "호출:" 줄에 새로 부르는 함수를 추가한다. 그 함수가 아직 없으면 구현 전에 `/client`
 - **뒤집을 수 있었던 선택이면 ADR 을 쓴다** — [adr/0000-template.md](docs/client/adr/0000-template.md) 를 복사해 다음 번호로. 옛 결정을 대체하면 그 파일의 **「대체됨」 칸 한 줄만** 고친다(본문은 그날 쓴 그대로 둔다). 그 절 끝 「결정 기록」에 줄을 더한다. 무엇이 ADR 이 되고 안 되는지는 [adr/README.md](docs/client/adr/README.md)
-- 이력은 [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md) 맨 앞에 **한 줄**. SCREEN_DESIGN 꼬리에 이어 붙이지 않는다 — 그 한 줄이 **75KB · 119항목**이 돼서 갈랐다
+- 이력은 [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md) 맨 앞에 **한 줄**(대략 300바이트 — [DEV_PLAN.md §7](docs/client/DEV_PLAN.md)). SCREEN_DESIGN 꼬리에 이어 붙이지 않는다 — 그 한 줄이 **75KB · 119항목**이 돼서 갈랐다
 
 **2. 문구를 붙인다**
 
@@ -82,7 +80,7 @@ user-invocable: true
 
 **5. 문서 갱신 + 보고**
 
-- [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md) 한 줄 · ADR 을 썼으면 `python docs/client/adr/_build_index.py`(인덱스는 **손으로 고치지 않는다** — 파생 뷰다) · [src/ui/README.md](src/ui/README.md)(정책이나 파일 역할이 바뀌었으면) · [DEV_PLAN.md](docs/client/DEV_PLAN.md) §4(부채가 생기거나 해소되면) · §3-1(현황이 바뀌었으면)
+- [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md) 한 줄 · ADR 을 썼으면 `python docs/client/adr/_build_index.py`(인덱스는 **손으로 고치지 않는다** — 파생 뷰다) · [src/ui/README.md](src/ui/README.md)(정책이나 파일 역할이 바뀌었으면 — **규칙만** 적고 실측 수치는 보고에) · [DEV_PLAN.md](docs/client/DEV_PLAN.md) §4(부채가 생기거나 해소되면) · §3-1(현황이 바뀌었으면)
 - 보고에는 **바꾼 것 · ko/en 스크린샷 파일 경로 · 검증 결과 · 열린 질문**. 건너뛴 게 있으면 건너뛰었다고 적는다
 
 ## 자주 막히는 지점
@@ -113,4 +111,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-09-09 (**화면 문서 분리 반영** — 규격 / 결정(adr/) / 이력(SCREEN_CHANGELOG) 셋으로 갈렸다. 원칙 1 에 **두 금지**(규격은 폐기된 것을 안 적는다 · 근거는 현재 상태를 주장하지 않는다) · 절차 0 에 「결정 기록」 읽기 · 절차 1 에 ADR 쓰기와 이력 한 줄 · 절차 5 갱신 대상 교체. 본체는 [adr/README.md](docs/client/adr/README.md) · [DEV_PLAN §7](docs/client/DEV_PLAN.md)) · 2026-09-03 (원칙 4 확장 — 옵션 표기는 이름 + 값만, 조건·규칙 주석은 도움말로 — 사용자 지시) · 2026-08-27 (최초 작성)*
+*마지막 업데이트: 2026-09-14*

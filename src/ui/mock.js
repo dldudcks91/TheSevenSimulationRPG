@@ -51,10 +51,11 @@ export const SINS = {
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
    `src/data/skill_tag.csv` 13행으로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
 
-// equip_rarity_config.csv 의 color_hex 그대로 — 4단계, **일반(Normal) 등급 없음**
-// item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"
-// 통제 가능성의 계단: 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(낙인으로 죄종 지정) → 유니크(고정)
+// 매직~유니크는 equip_rarity_config.csv 의 color_hex 그대로 — **5단계** [일반 신설 2026-09-14 · 사용자 확정 · R86]
+// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · 랜덤옵션은 붙는다 · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
+// 통제 가능성의 계단: 일반(죄종 없음) → 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(낙인으로 죄종 지정) → 유니크(고정)
 export const RARITY = {
+    normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
     magic: { ko: '매직', en: 'Magic', color: '#4169E1' },
     rare: { ko: '레어', en: 'Rare', color: '#FFD700' },
     craft: { ko: '크래프트', en: 'Craft', color: '#22C55E' },
@@ -167,7 +168,7 @@ export const PAPERDOLL = [
    전투 25종 = 장비·스킬이 만든다. */
 
 /**
- * 영웅 초상 — 몬스터와 같은 자리(`faces/<스타일>/`)에 `hero_<직업id>_<k>.png` (2026-09-07 직업 분류).
+ * 영웅 초상 — 몬스터와 같은 스타일 폴더(`faces/<스타일>/`)의 `hero/<직업id>_<k>.png` (2026-09-07 직업 분류 · 하위 폴더 2026-09-14).
  * **어느 그림인지는 영웅이 태어날 때 굴려 세이브에 박은 `face` 가 정한다** (2026-09-06 사용자 지시).
  *
  * 옛 판은 **이름 해시**였다 — 저장할 자리가 없어서 매번 다시 계산한 것이고, 그래서 두 가지가 따라왔다:
@@ -189,7 +190,7 @@ export const PAPERDOLL = [
    2026-09-06 사용자 지시로 7 → 8 (인간 궁수 1종 추가 — 세트에서 처음으로 원거리 직업이 읽히는 얼굴이다),
    같은 날 8 → 9 (외치는 기사 1종 추가). 같은 날 9 → 11 로 올렸다가 **사용자 지시로 되돌렸다** —
    「레인저는 `hero_8` 하나만」이 지시였는데 궁수 시트의 갈색·청회 후드 2타일이 `hero_10..11` 로 더 들어가 있었다.
-   게임 사본만 지웠고 원본 타일은 `../example/archer_hood_brown · archer_hood_slate` 로 남는다.
+   게임 사본만 지웠고 원본 타일은 `faces/source/archer_hood_brown · archer_hood_slate` 로 남는다.
    ⚠ 그 시트의 카키(우하단)는 ✦ 워터마크가 **인물 위에** 얹혀 있어 애초에 버린 타일이다. 배경이 아니라
    후드 안쪽 검정 + 카키 테두리를 가로질러서 깨끗한 복원이 안 된다.
    ⚠ **줄이는 방향이라 위 경고가 걸린다** — 세이브에 `face = 10·11` 이 박힌 영웅은 `heroFace` 가 접어서 1·2 를 준다.
@@ -251,7 +252,7 @@ export const heroFace = hero => {
     const cls = id.slice(0, i), k = Math.floor(+id.slice(i + 1));
     const m = HERO_FACES[cls] ?? 0;
     if (!(m >= 1) || !(k >= 1)) return null;
-    return `${faceDir()}hero_${cls}_${1 + (k - 1) % m}.png`;   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
+    return `${faceDir()}hero/${cls}_${1 + (k - 1) % m}.png`;   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
 };
 
 /**
@@ -308,9 +309,10 @@ export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}$
 export const ITEM_ART_DIR = './assets/art/icons/items/';
 export const ITEM_ART_GROUPS = ['sword2h', 'axe', 'mace', 'spear', 'staff', 'orb', 'bow', 'crossbow'];
 export const ITEM_ART_BY_SLOT = { armor: 'armor_1', boots: 'boots_1', gloves: 'gloves_1', ring: 'ring_1' };   // ⚠ 임시
+export const ITEM_BASE_ART_DIR = './assets/art/icons/items/item_base/';   // 방어구 · 장신구 그림 — 파일명 = item_base.csv:base_id
 /**
- * 무기 베이스 그림 — `icons/items/unused/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 양손검 · 도끼 · 둔기 · 창 · 활 다섯.
- *   다섯 모두 `weapon_base.csv` 행이 서서 새 개체는 `baseId` 를 들고(아래 `itemArt`) 이름도 그 베이스다 (둔기 · 창 · 활 2026-09-11).
+ * 무기 베이스 그림 — `icons/items/weapon_base/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 본편 열 전부.
+ *   열 모두 `weapon_base.csv` 행이 서서 새 개체는 `baseId` 를 들고(아래 `itemArt`) 이름도 그 베이스다 (둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14).
  *   아래 문단(uid 해시)은 **`baseId` 없는 옛 개체의 폴백**으로만 산다.
  *
  * ⚠ **파일명이 id 가 아니다.** 무기 베이스는 기획 확정(무기군당 7 · `item_design.md` §1)이지만 `weapon_base` CSV 가
@@ -324,7 +326,7 @@ export const ITEM_ART_BY_SLOT = { armor: 'armor_1', boots: 'boots_1', gloves: 'g
  * 이름 표시(도감)는 `i18n:ix.b.<stem>` 이 든다 — CSV 가 없어 `L()` 로 읽을 데이터 행이 없기 때문이고, 이것도 **임시**다.
  * 목록 순서 = 대역 순(기본 → ①-A · ①-B → ②-A · ②-B → ③-A · ③-B) — `item_design.md` §1 「이름 — 9군」 표의 행 순서다.
  */
-export const WEAPON_BASE_DIR = './assets/art/icons/items/unused/';
+export const WEAPON_BASE_DIR = './assets/art/icons/items/weapon_base/';
 /** 베이스 그림이 있는 무기군 → 그 7장의 파일 stem. 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
 export const WEAPON_BASE_STEMS = {
     sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
@@ -333,6 +335,11 @@ export const WEAPON_BASE_STEMS = {
     mace: ['club', 'flanged_mace', 'reinforced_mace', 'battle_hammer', 'legendary_mallet', 'war_club', 'ogre_maul'],
     spear: ['pike', 'thresher', 'giant_thresher', 'halberd', 'cryptic_axe', 'lance', 'war_pike'],
     bow: ['short_bow', 'long_bow', 'great_bow', 'rune_bow', 'diamond_bow', 'gothic_bow', 'hydra_bow'],
+    staff: ['short_staff', 'long_staff', 'gnarled_staff', 'gothic_staff', 'elder_staff', 'rune_staff', 'archon_staff'],
+    orb: ['eagle_orb', 'heavenly_stone', 'demon_heart', 'sacred_globe', 'eldritch_orb', 'swirling_crystal', 'dimensional_shard'],
+    crucifix: ['scepter', 'divine_scepter', 'caduceus', 'rune_scepter', 'mighty_scepter', 'grand_scepter', 'seraph_rod'],
+    bible: ['psalter', 'breviary', 'missal', 'lectern_bible', 'great_bible', 'wicked_bible', 'apocrypha'],
+    crossbow: ['crossbow', 'light_crossbow', 'chu_ko_nu', 'heavy_crossbow', 'ballista', 'demon_crossbow', 'colossus_crossbow'],
 };
 export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}.png` : null;
 /**
@@ -354,7 +361,7 @@ export const itemArt = (slot, group, uid, baseId) => {
         return ITEM_ART_GROUPS.includes(group) ? `${ITEM_ART_DIR}${group}.png` : null;
     }
     const file = ITEM_ART_BY_SLOT[slot];
-    return file ? `${ITEM_ART_DIR}${file}.png` : null;
+    return file ? `${ITEM_BASE_ART_DIR}${file}.png` : null;
 };
 /* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의
    자리표시로 이모지(⚔ ⛨ ✦ 🏹 …)를 초상 **밑에 깔던** 방식이다. 영웅 그림이 배경 투명 PNG 이고
@@ -399,10 +406,10 @@ export const EXPLORE_MAP_CHAPTERS = [1];
 export const exploreMap = ch => (EXPLORE_MAP_CHAPTERS.includes(ch) ? BG_DIR + `explore_chapter_${ch}.webp` : null);
 
 /**
- * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster_<idx>.png`.
+ * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.png` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.png`.
  *
  * **스타일 하나 = 폴더 하나** (2026-08-30). 새 스타일을 넣는 방법은 둘뿐이다:
- *   ① `faces/` 아래 폴더를 만들고 같은 파일명 규칙(`monster_<idx>.png`)으로 그림을 넣는다
+ *   ① `faces/` 아래 폴더를 만들고 같은 경로 규칙(`monster/<idx>.png` · `hero/<직업id>_<k>.png`)으로 그림을 넣는다
  *   ② 아래 `FACE_STYLES` 에 그 폴더 이름을 더한다
  * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `faceDir()` 하나뿐이라서다.
  * 고르는 순서는 언어와 같다: URL `?face=<스타일>` → localStorage → 목록의 **첫 항목**.

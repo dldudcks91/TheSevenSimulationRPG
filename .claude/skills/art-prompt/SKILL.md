@@ -7,13 +7,13 @@ user-invocable: true
 
 # art-prompt — 초상 발주 · 실측 · 설치
 
-당신은 TheSevenSimulationRPG 의 **초상 아트 발주자**입니다. 그림은 사용자가 Gemini(Gem)로 뽑고, 당신은 **프롬프트를 쓰고 · 산출물을 재고 · 후처리해 게임에 꽂는다.** 스타일의 SSOT 는 문서가 아니라 **앵커 이미지 두 장**([faces/example/](src/assets/art/faces/example/README.md) 의 `gladiator_helm.png` · `barbarian.png`)이고, 합격선은 취향이 아니라 **그 두 장의 실측값**이다.
+당신은 TheSevenSimulationRPG 의 **초상 아트 발주자**입니다. 그림은 사용자가 Gemini(Gem)로 뽑고, 당신은 **프롬프트를 쓰고 · 산출물을 재고 · 후처리해 게임에 꽂는다.** 스타일의 SSOT 는 문서가 아니라 **앵커 이미지 두 장**([faces/source/](src/assets/art/faces/source/README.md) 의 `gladiator_helm.png` · `barbarian.png`)이고, 합격선은 취향이 아니라 **그 두 장의 실측값**이다.
 
 ## 언제 사용
 
 - 영웅·몬스터 초상을 새로 발주한다 / 재발주한다
 - 산출물이 "크다 · 작다 · 꽉 찬다 · 몸이 높다 · 너무 섬세하다 · 너무 단순하다" — 원인을 재서 갈라야 한다
-- 시트를 잘라 누끼 → 여백 정규화 → `cartoon/hero_N.png` 로 설치한다
+- 시트를 잘라 누끼 → 여백 정규화 → `cartoon/hero/<직업id>_<k>.png` 로 설치한다
 - 프롬프트에 색을 지정한다 (초록 배경 키잉과 부딪히는지 확인이 필요하다)
 
 **여기서 하지 않는 것** — 화면이 초상을 어떤 칸에 어떤 보간으로 그리느냐는 `/ui` 소관([SCREEN_DESIGN.md §5](docs/client/SCREEN_DESIGN.md) · `--face-render`). 어떤 몬스터·영웅이 얼굴을 갖느냐(`monster.csv:face`)는 기획 소관(`/game-design`). 스킬·아이템 아이콘은 초상과 누끼 절차가 달라 [src/assets/art/README.md](src/assets/art/README.md) 의 해당 절을 직접 따른다.
@@ -38,11 +38,12 @@ user-invocable: true
 5. **크롭·스케일로 고칠 수 있는 것과 없는 것을 먼저 가른다.** 어깨폭·몸 시작은 여백 패딩으로 잡힌다(원칙 2 표의 첫 두 줄). **머리폭/어깨폭은 어떤 변환으로도 안 변한다** — 어깨를 줄이려 축소하면 머리도 같이 줄어 제자리다. 이 값이 틀리면 프롬프트를 고쳐 다시 뽑는다.
 6. **한 세트 안에서 실루엣 축은 하나다.** 투구를 벗기면 머리 모양이, 후드를 씌우면 후드 모양이, 무기를 빼면 어깨 장비가 넷을 가른다. **축을 뺄 때는 대체 축을 같이 넣는다** — 안 넣으면 넷이 같은 사람으로 나온다. 44px 에서 갈리는 것은 실루엣뿐이다([portrait_art_style_study.md §1-4](docs/reference/portrait_art_style_study.md)).
 
-### 작업 규칙 (프로젝트 공통 — 사용자 지시 2026-08-26)
+### 작업 규칙
 
-- **병렬 세션** — `faces/` 는 사용자가 이 세션 밖에서도 시트를 계속 떨어뜨리는 폴더다. 재기 전에 `ls -lt` 로 **어느 시트가 최신인지** 본다. `example/` 의 원본은 덮어쓰지 않는다.
-- **짧은 동의("ㄱ" · "ok")는 직전 메시지에 나열된 항목에만** 적용된다. `HERO_FACES` 변경(직업별 장수)은 "ㄱ" 뒤에도 따로 묻는다 — **줄이는 방향**은 저장된 얼굴이 접히고, 늘리는 방향도 어느 직업 풀에 넣을지가 배정을 정한다.
-- **커밋 · 푸시는 사용자가 명시적으로 요청할 때만.**
+공통 규칙(병렬 세션 · 조사는 sonnet 서브에이전트 · 짧은 동의 · 커밋)은 [CLAUDE.md](CLAUDE.md) 「작업 규칙」. 이 스킬에만 걸리는 것:
+
+- **병렬 세션** — `faces/` 는 사용자가 이 세션 밖에서도 시트를 계속 떨어뜨리는 폴더다. 재기 전에 `ls -lt` 로 **어느 시트가 최신인지** 본다. `source/` 의 원본은 덮어쓰지 않는다.
+- **`HERO_FACES` 변경(직업별 장수)은 "ㄱ" 뒤에도 따로 묻는다** — **줄이는 방향**은 저장된 얼굴이 접히고, 늘리는 방향도 어느 직업 풀에 넣을지가 배정을 정한다.
 - ⚠ **프롬프트는 언제나 「전문」으로 준다** [사용자 지시 2026-09-06 · **09-08 재지시**] — 한 단어만 고쳤어도 **붙여넣기 가능한 완성본 전체**를 코드블록 하나에 다시 적는다.
   **금지** — 「소재 줄을 이렇게 바꾸세요」 · diff · 조각 · 「위 프롬프트에서 N번만」 · 선택지 두 개를 나열하고 고르라고 하기.
   바뀐 곳은 코드블록 **뒤에** 한두 문장으로만 적는다. 사용자는 Gem 채팅에 바로 붙여넣는다 — 조각을 주면 사용자가 조립해야 한다.
@@ -51,11 +52,11 @@ user-invocable: true
 
 **0. 읽는다**
 
-- [src/assets/art/README.md](src/assets/art/README.md) `faces/` 절 — 폴더 규칙 · 파일명 = `monster_<idx>` / `hero_<직업id>_<k>`(2026-09-07) · `FACE_STYLES` · 보간 토큰
-- [faces/example/README.md](src/assets/art/faces/example/README.md) — 앵커 목록 · 시트 격자 좌표 · 누끼 이력 · **이 세트가 정의하는 스타일** 절
+- [src/assets/art/README.md](src/assets/art/README.md) `faces/` 절 — 폴더 규칙 · 파일명 = `monster/<idx>` / `hero/<직업id>_<k>`(2026-09-07 · 폴더 분리 2026-09-14) · `FACE_STYLES` · 보간 토큰
+- [faces/source/README.md](src/assets/art/faces/source/README.md) — 앵커 목록 · 시트 격자 좌표 · 누끼 이력 · **이 세트가 정의하는 스타일** 절
 - [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) — 키잉 절차 · `HERO_FACES` 현재값 · **영웅 파일 매핑 표**(구 번호 → 직업 이름)
 - `src/ui/mock.js` 의 `HERO_FACES` 실제 값 (README 와 어긋나 있을 수 있다 — 코드가 맞다)
-- `ls -lt src/assets/art/faces/example/` — 최신 시트가 무엇인지
+- `ls -lt src/assets/art/faces/source/` — 최신 시트가 무엇인지
 
 **1. 프롬프트를 쓴다** — [prompt_template.md](prompt_template.md) 의 골격에 채운다.
 
@@ -66,7 +67,7 @@ user-invocable: true
 - **보내기 전에 줄을 센다** — 지시문 8줄 · 부정문 2개를 넘으면 그 초과분이 앵커를 밀어낸다. 재발주 때도 **지시를 더하지 말고** §1-2 사다리에서 한 줄만 가져온다
 - **내보낼 때는 `[ ]` 를 다 채운 전문 한 덩어리** — 첨부할 앵커 파일명을 코드블록 위에 한 줄로 적고, 코드블록 하나로 끝낸다(작업 규칙)
 
-**2. 사용자가 뽑는다** — 시트를 `faces/example/source_sheet_<이름>.png` 로 받는다. 워터마크 타일은 보지 않는다.
+**2. 사용자가 뽑는다** — 시트를 `faces/source/source_sheet_<이름>.png` 로 받는다. 워터마크 타일은 보지 않는다.
 
 **3. 잰다** — `python .claude/skills/art-prompt/measure.py --sheet <시트>` (시트 통째) 또는 파일 단위. 출력의 `!` 가 앵커 밖이다.
 
@@ -76,12 +77,12 @@ user-invocable: true
 - 넷이 닮음 → 실루엣 축이 빠진 것(원칙 6)
 - 반드시 **눈으로도 본다** — 몽타주를 만들어 `Read` 한다. 후드 속 얼굴이 검은 void 로 나오는 실패는 수치에 안 잡힌다
 
-**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `example/<설명>.png`(SSOT) + `cartoon/hero_<직업id>_<k>.png`(사본 · 2026-09-07 직업 분류).
+**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `source/<설명>.png`(SSOT) + `cartoon/hero/<직업id>_<k>.png`(사본 · 2026-09-07 직업 분류).
 
 **5. 설치 + 문서**
 
 - `src/ui/mock.js` `HERO_FACES[<직업id>]` 를 새 장수로 [개정 2026-09-07] — **늘리는 방향은 무해하다**(얼굴이 세이브에 박혀 있어 기존 영웅은 안 바뀐다). ⚠ **줄이는 방향만** 영향이 있다(범위 밖 저장값은 그 직업 풀 안에서 접힌다). 교체(기존 번호에 덮어쓰기)인지 추가인지 사용자에게 묻는다
-- [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) 의 `hero_*` 절 · [faces/example/README.md](src/assets/art/faces/example/README.md) 의 영웅 표 · 두 문서 꼬리 `*마지막 업데이트*`(최신을 앞에)
+- [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) 의 `hero_*` 절 · [faces/source/README.md](src/assets/art/faces/source/README.md) 의 영웅 표 · 두 문서 꼬리 날짜(날짜만)
 - 보고에는 **실측 표(전/후) · 설치한 파일 · `HERO_FACES` 변경 여부 · 건너뛴 것**
 
 ## 자주 막히는 지점 — 실패 패턴 (전부 이 프로젝트에서 실제로 났다)
@@ -120,4 +121,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-09-08 (**지시문 감량** [사용자 지시] — 「무리한 명령을 내려서 우리가 가진 그림과 비슷하게 안 나온다」. 원칙 1 을 「첨부가 지시를 이긴다」로 다시 쓰고 **8줄 · 부정문 2개** 예산을 박았다. 프롬프트의 구도·해부 지시는 지우지 않고 prompt_template §1-2 **복구 사다리**로 내렸다 — 실측이 틀렸을 때만 한 줄씩 되살린다. 실패 패턴에 「우리 그림과 안 닮는다」 행 추가) · 2026-09-06 (최초 작성 — 팔라딘·궁수 발주 세션의 실측값(어깨폭 71~75% · 몸 시작 78~89% · 두상 57~67% · 머리폭/어깨폭 70~73% · 색 42~62 · 경계 8~19%)과 실패 패턴 13종, 키잉 안전 색 판정을 스킬로 묶음. 사용자 지시)*
+*마지막 업데이트: 2026-09-14*

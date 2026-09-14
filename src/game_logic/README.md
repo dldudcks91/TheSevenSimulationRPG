@@ -31,4 +31,4 @@
 검증: [`src/dev/README.md`](../dev/README.md)
 
 ---
-*마지막 업데이트: 2026-09-01 (**skill_effects.js · skill_runtime.js 신설 등재** — 어휘·실행을 등록표 하나로, 액티브 실행을 battle.js 밖으로. battle.js 는 유닛 생성 `makeUnit` 하나 · INTERFACE §2-11·§2-12) · 2026-08-31 (**item.js 에 강화 추가** — 베이스는 `up` 으로 파생하고 3강마다 오르는 접사 값만 박는다 · INTERFACE §2-5) · 2026-08-31 (**naming.js 신설 등재** — `ui/mock.js:nm` · `ui/data.js:eliteName` 의 조립 규칙이 이식 대상으로 넘어왔다. `ui/data.js:eliteName` 은 몬스터 id → 이름 조회만 남는다) · 2026-08-30 (tactic.js 신설 등재 — hero.computeCombat 4번째 인자 · state.js 에 칸 해금/리롤) · 2026-08-28 (hero.js 에 마스터리 수치층 · state.js 에 포인트 찍기/롤백 · battle.js 에 HP 재생·쿨감소 · skill.js 에 태그 검증) · 2026-08-28 (skill.js 신설 등재 · battle.js 에 액티브 실행 추가) · 2026-08-26 (formula.js 역할 문구를 battle_design §9 개정에 맞춤) · 2026-08-26 (구현 현황 → docs/client/DEV_PLAN.md 로 이관)*
+*마지막 업데이트: 2026-09-14*

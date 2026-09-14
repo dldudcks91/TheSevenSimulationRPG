@@ -16,7 +16,7 @@
 | **§9** | **결정 로그 — 최근분(09-01~)만.** 무엇이 정해졌는가 | **항상** |
 | **§10** | **미확정 과제** — 큰 틀 / 시스템 / 수치·밸런스 | **항상** |
 
-**[신설 09-03] [DECISION_LOG.md](docs/game_design/DECISION_LOG.md)** — §9 의 아카이브(§1 = 09-01 이전 결정 90행 · §2 = 문서별 개정 이력). **옛 결정의 근거를 찾을 때만 연다** — 평소 절차에서는 열지 않는다(70KB).
+**[신설 09-03] [DECISION_LOG.md](docs/game_design/DECISION_LOG.md)** — §9 의 아카이브(§1 = §9 에서 넘어온 결정 · §2 = 문서별 개정 이력 · §3 = §9 를 한 줄로 줄이기 전 원문). **옛 결정의 근거를 찾을 때만 연다** — 평소 절차에서는 열지 않는다.
 
 ## 2. 주제 → 문서 → CSV → 코드
 
@@ -68,9 +68,9 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 ## 4. 문서 사이의 위계
 
 - **게임의 WHAT** = `docs/game_design/` — 이 스킬의 담당
-- **소프트웨어의 HOW** = `docs/client/` — [DEV_PLAN.md](docs/client/DEV_PLAN.md)(계획·부채·현황) · `ARCHITECTURE.md`(구조) · `INTERFACE.md`(이식 계약) · **화면은 셋** — [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md)(규격) · [adr/](docs/client/adr/README.md)(결정) · [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md)(이력). 기획이 여기를 고치지 않는다 — `/client` · `/ui` 로 넘긴다
+- **소프트웨어의 HOW** = `docs/client/` — [DEV_PLAN.md](docs/client/DEV_PLAN.md)(계획·부채·현황) · `ARCHITECTURE.md`(구조) · `INTERFACE.md`(이식 계약) · **화면은 셋** — [SCREEN_DESIGN.md](docs/client/SCREEN_DESIGN.md)(규격) · [adr/](docs/client/adr/README.md)(결정) · [SCREEN_CHANGELOG.md](docs/client/SCREEN_CHANGELOG.md)(이력) · [DEV_LOG.md](docs/client/DEV_LOG.md)(클라이언트 이력 아카이브 — 평소엔 안 연다). 기획이 여기를 고치지 않는다 — `/client` · `/ui` 로 넘긴다
 - **수치** = `src/data/*.csv` — 기획서는 키 이름만 가리킨다
 - 어느 문서를 먼저 고치는지의 표는 [DEV_PLAN.md](docs/client/DEV_PLAN.md) §7
 
 ---
-*마지막 업데이트: 2026-09-03 (**DECISION_LOG.md 등재** — GAME_DESIGN §9 가 최근분만 두게 되면서 아카이브 문서가 생겼다. 평소 열지 않는 문서로 표기 · 컨셉 락 해체(09-03) 반영으로 참고작 행의 「락과 충돌」 서술 정정) · 2026-08-31 (`idleguildmaster/` 행 추가 — 신규 조사 3문서. 소재가 본작과 가장 겹치는데 오프라인 전투·병렬 파티로 **컨셉 락 따름정리 1·2·3 의 정면 반례**가 된다 · 클래스 72종의 스킬 재사용 3.58배가 「45뿌리 감당 가능성」에 숫자로 답한다 · 희귀도·접사 없이 레시피 3층 지목으로 타겟 파밍을 만든다 · **동명 게임 5종 구분 필수**) · 2026-08-31 (`wow/` 행 추가 — `wow_reference.md` 폐기 후 폴더 3분리 이관, 13클래스 40전문화(디바우러 신규)·히어로탤런트 전클래스 명단·Apex탤런트·시즌2 티어세트·크레스트 트랙 신규 반영) · 2026-08-31 (`poe1/` 행 추가 — `poe_skillgem_reference.md` 폐기 후 폴더 3분리 이관, 스킬 젬=파밍 접점 구조·패시브 트리 마스터리 노드·어센던시 21개 전량 명단 신규 반영) · 2026-08-31 (`melvoridle/` 행 추가 — `melvoridle_reference.md` 폐기 후 폴더 3분리 이관, 오프라인 계산 전문 유지·마스터리 풀 적립률 확정치·세트보너스 없음 신규 반영) · 2026-08-31 (`lostark/` 행 추가 — `lostark_reference.md` 폐기 후 폴더 3분리 이관, 아크그리드·엘릭서초월 흡수 신규 반영) · 2026-08-31 (`laststory/` 행 갱신 — `laststory_reference.md` 폐기 후 폴더 3분리 이관) · 2026-08-28 (`eso/` 행 추가 — `eso_reference.md` 폐기 후 폴더 3분리 이관) · 2026-08-28 (`dungeonvillage2/` 행 추가) · 2026-08-28 (`diablo4/` 행 추가) · 2026-08-28 (`aion/` 행 추가) · 2026-08-27 (최초 작성)*
+*마지막 업데이트: 2026-09-14*
