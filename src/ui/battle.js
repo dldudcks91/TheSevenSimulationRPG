@@ -158,7 +158,7 @@ function buildDom(state, stage, stageId) {
         </div>
         <div class="battle-body">
             <div class="arena${bg ? ' has-bg' : ''}"${bg
-                ? ` style="background-image:linear-gradient(rgba(10,10,10,.42),rgba(10,10,10,.78)),url('${bg}')"`
+                ? ` style="background-image:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.78)),url('${bg}')"`
                 : ''}>
                 <div class="side side-enemy"></div>
                 <div class="divider"><span class="muted">VS</span></div>
