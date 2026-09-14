@@ -2,18 +2,18 @@
    팔레트는 형제 프로젝트(TheSevenRPG / TheSevenSimulation)와 공유 */
 
 :root {
-    --bg-primary: #0a0a12;
-    --bg-secondary: #12121e;
-    --bg-tertiary: #1a1a2a;
-    --bg-card: #161624;
-    --bg-input: #0e0e1a;
-    --border-primary: #303048;
-    --border-secondary: #484868;
-    --border-highlight: #6868a0;
-    --border-dark: #18182a;
-    --text-primary: #e8e8f0;
-    --text-secondary: #a0a0c0;
-    --text-muted: #606080;
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #141414;
+    --bg-tertiary: #1c1c1c;
+    --bg-card: #181818;
+    --bg-input: #0e0e0e;
+    --border-primary: #343434;
+    --border-secondary: #4e4e4e;
+    --border-highlight: #707070;
+    --border-dark: #1e1e1e;
+    --text-primary: #e8e8e8;
+    --text-secondary: #a4a4a4;
+    --text-muted: #666666;
     --text-accent: #e03030;
     --color-success: #40d870;
     --color-warning: #f8b830;
@@ -110,8 +110,8 @@ body::before {
 body::after {
     content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background:
-        radial-gradient(ellipse at 50% 22%, rgba(10,10,18,.10) 0%, rgba(10,10,18,.68) 72%),
-        linear-gradient(180deg, rgba(10,10,18,.18) 0%, rgba(10,10,18,.55) 55%, rgba(10,10,18,.90) 100%);
+        radial-gradient(ellipse at 50% 22%, rgba(10,10,10,.10) 0%, rgba(10,10,10,.68) 72%),
+        linear-gradient(180deg, rgba(10,10,10,.18) 0%, rgba(10,10,10,.55) 55%, rgba(10,10,10,.90) 100%);
 }
 
 button { font-family: inherit; font-size: inherit; color: inherit; cursor: pointer; }
@@ -135,7 +135,7 @@ html, body { height: 100%; overflow: hidden; }
 .brand {
     grid-area: brand;
     display: flex; align-items: center; padding: 0 16px;
-    background: rgba(18, 18, 30, .90);
+    background: rgba(20, 20, 20, .90);
     border-right: 1px solid var(--border-primary);
     border-bottom: 1px solid var(--border-primary);
     /* 브랜드 워드마크만 비트맵 픽셀 폰트 유지 — 안티에일리어싱을 꺼야 픽셀이 또렷하다.
@@ -150,7 +150,7 @@ html, body { height: 100%; overflow: hidden; }
     grid-area: topbar;
     display: flex; align-items: center; justify-content: space-between;
     gap: 24px; padding: 0 20px;
-    background: rgba(18, 18, 30, .90);
+    background: rgba(20, 20, 20, .90);
     border-bottom: 1px solid var(--border-primary);
 }
 .topbar .crumb { color: var(--text-secondary); font-size: var(--fs-sm); }
@@ -166,7 +166,7 @@ html, body { height: 100%; overflow: hidden; }
 
 .nav {
     grid-area: nav;
-    background: rgba(18, 18, 30, .90);
+    background: rgba(20, 20, 20, .90);
     border-right: 1px solid var(--border-primary);
     padding: 12px 0;
     display: flex; flex-direction: column; gap: 2px;
@@ -206,7 +206,7 @@ html, body { height: 100%; overflow: hidden; }
 
 /* 패널은 살짝 비쳐서 배경 텍스처가 숨쉬되, 글자 대비는 유지한다 */
 .panel {
-    background: rgba(22, 22, 36, .93);
+    background: rgba(24, 24, 24, .93);
     border: 1px solid var(--border-primary);
     padding: 10px 16px 11px;   /* 2026-09-01 세로 압축 — 가로 여백은 그대로 (읽기 폭은 안 건드린다) */
 }
@@ -214,7 +214,7 @@ html, body { height: 100%; overflow: hidden; }
 /* 선술집 = 거점 아트를 그대로 쓰는 자리 (town.webp 안에 상인 좌판과 7색 깃발이 있다) — 전역 배경과 같은 사본(`backgrounds_clean/`) */
 .panel.town-bg {
     background:
-        linear-gradient(rgba(18,18,30,.90), rgba(18,18,30,.96)),
+        linear-gradient(rgba(20,20,20,.90), rgba(20,20,20,.96)),
         url('../assets/art/backgrounds_clean/town.webp') center 34% / cover no-repeat;
     image-rendering: pixelated;
     border-color: var(--border-secondary);
@@ -248,7 +248,7 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-tertiary); border: 1px solid var(--border-secondary);
     padding: 7px 14px; color: var(--text-primary);
 }
-.btn:hover { border-color: var(--border-highlight); background: #22223a; }
+.btn:hover { border-color: var(--border-highlight); background: #242424; }
 .btn.primary { background: #3a1414; border-color: #7a2a2a; color: #ffb0b0; }
 .btn.primary:hover { background: #4a1a1a; border-color: var(--text-accent); }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
@@ -379,9 +379,9 @@ html, body { height: 100%; overflow: hidden; }
 /* 픽셀아트 배경 위에 얹히므로 제 배경을 갖는다 — 글자 그림자만으로는 불타는 배경에서 안 읽힌다 */
 .zone-pick {
     font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap;
-    padding: 4px 10px; background: rgba(6,6,12,.74); border: 1px solid var(--border-dark);
+    padding: 4px 10px; background: rgba(6,6,6,.74); border: 1px solid var(--border-dark);
 }
-.zone.on .zone-pick { color: var(--text-primary); background: #24243c; border-color: var(--border-highlight); }
+.zone.on .zone-pick { color: var(--text-primary); background: #262626; border-color: var(--border-highlight); }
 
 /* ───────── 출정 창 (SCREEN_DESIGN §4-1 · ADR-0084 · ADR-0088) ─────────
    스테이지 행을 누르면 **탭 위에 겹쳐 뜨는 창**이다 — 접이식 전진 패널(`.form-panel` · 2026-08-28~2026-09-10)을 걷었다.
@@ -449,7 +449,7 @@ html, body { height: 100%; overflow: hidden; }
     width: 46px; height: 46px; padding: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
 }
-.fm-tpl.on { border-color: var(--border-highlight); background: #24243c; }
+.fm-tpl.on { border-color: var(--border-highlight); background: #262626; }
 .fm-tpl i { display: flex; gap: 4px; }
 .fm-tpl b { width: 7px; height: 7px; background: var(--text-muted); border-radius: 1px; }
 .fm-tpl.on b { background: var(--text-accent); }
@@ -603,7 +603,7 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-tertiary); border: 1px solid var(--border-dark);
     padding: 8px 10px; cursor: pointer; position: relative;
 }
-.inv-item:hover { border-color: var(--border-highlight); background: #1e1e30; }
+.inv-item:hover { border-color: var(--border-highlight); background: #1f1f1f; }
 .inv-item .n { font-size: var(--fs-sm); word-break: keep-all; }
 .inv-item .s { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 2px; }
 
@@ -829,7 +829,7 @@ html, body { height: 100%; overflow: hidden; }
 /* 한 줄에 여덟 개가 서야 해서 좌우 패딩을 한 단 좁힌다 (다른 화면의 `.btn.sm` 은 그대로) */
 .battle-ctrl .btn.sm { padding: 3px 6px; }
 .ctrl-div { align-self: stretch; width: 1px; margin: 0 4px; background: var(--border-primary); }
-.btn.sm.on { border-color: var(--border-highlight); background: #24243c; }
+.btn.sm.on { border-color: var(--border-highlight); background: #262626; }
 
 /* ── 배치 둘 [2026-09-03 사용자 지시] — 컨트롤의 버튼 하나가 오간다 (SCREEN_DESIGN §4-2)
    기본(클래스 없음) = **넓게**: 아레나 판 전폭(ADR-0095) · 로그/누적은 창
@@ -887,7 +887,7 @@ html, body { height: 100%; overflow: hidden; }
        높이는 세로 flex 인 `.battle-body` 가 넘겨 주는 나머지다(아래 「관전 화면 한 장」) — 헤드나 가방이 자라면 아레나가 받는다.
        나눔 배치도 같은 높이를 받고 폭만 로그 열을 뺀 나머지다(ADR-0097). 위 주석의 420 · 2.33 은 이 줄 이전 이야기다 (src/ui/README.md 크기 정책) */
     flex: 1 1 0;
-    background: radial-gradient(ellipse at center, #17171f 0%, var(--bg-input) 100%);
+    background: radial-gradient(ellipse at center, #181818 0%, var(--bg-input) 100%);
     border: 1px solid var(--border-dark);
     position: relative;
 }
@@ -903,7 +903,7 @@ html, body { height: 100%; overflow: hidden; }
 /* 가장자리를 어둡게 눌러 유닛 카드가 배경에서 떠 보이게 한다 */
 .arena.has-bg::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 42%, rgba(6,6,12,.72) 100%);
+    background: radial-gradient(ellipse at center, transparent 42%, rgba(6,6,6,.72) 100%);
 }
 .arena > * { position: relative; z-index: 1; }
 
@@ -1069,7 +1069,7 @@ html, body { height: 100%; overflow: hidden; }
 }
 /* 보스도 같은 크기다 — 카드 크기를 진영·등급 무관 고정으로 못박았다 (2026-08-27). 보스 표시는 태그와 테두리가 든다 */
 /* 얼굴 이미지가 있는 유닛 — **없으면 양쪽 다 빈 칸**이다 (영웅 2026-09-03 · 몬스터 2026-09-06 사용자 지시) */
-.sprite.has-face { background: radial-gradient(circle at 50% 38%, #24243a 0%, var(--bg-input) 100%); }
+.sprite.has-face { background: radial-gradient(circle at 50% 38%, #262626 0%, var(--bg-input) 100%); }
 .sprite.has-face img {
     position: absolute; inset: 0;      /* 칸을 통째로 쓴다 — 밑에 깔린 것이 없다 (.face 와 같은 규칙) */
     width: 100%; height: 100%; object-fit: contain;
@@ -1127,7 +1127,7 @@ html, body { height: 100%; overflow: hidden; }
 /* 쿨 마스크 — 남은 쿨만큼 위에서 덮는다. 다 걷히면 아이콘이 전부 드러난다 = 준비 완료 */
 .cd-slot .cd-mask {
     position: absolute; left: 0; right: 0; top: 0; height: 100%;
-    background: rgba(6,6,12,.78); transition: height .1s linear;
+    background: rgba(6,6,6,.78); transition: height .1s linear;
 }
 /* 빈 칸 — 액티브가 셋을 못 채운 영웅의 남은 자리. 칸 수는 언제나 active_slots 다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
    칸이 사라지면 카드마다 줄 길이가 달라져 위아래 두 진영이 같은 격자로 안 읽힌다 */
@@ -1211,7 +1211,7 @@ html, body { height: 100%; overflow: hidden; }
 .pop.skill-tag {
     /* 카드 위에서 시작해 위칸 언저리까지 떠오른다 — 카드에서 완전히 떨어지면 어느 유닛이 쓴 건지 안 붙는다 */
     top: 12%; left: 50%; font-size: var(--fs-xs); color: #cfe0ff;
-    background: rgba(6,6,12,.72); border: 1px solid #46639e; padding: 1px 6px;
+    background: rgba(6,6,6,.72); border: 1px solid #46639e; padding: 1px 6px;
 }
 @keyframes pop-up {
     0% { transform: translate(-50%, 6px); opacity: 0; }
@@ -1325,8 +1325,8 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-tertiary); border: 1px solid var(--border-primary);
     cursor: pointer;
 }
-.sk-cell:hover { background: #1e1e30; border-color: var(--border-highlight); }
-.sk-cell.taken { background: #1b1b2c; }
+.sk-cell:hover { background: #1f1f1f; border-color: var(--border-highlight); }
+.sk-cell.taken { background: #1c1c1c; }
 .sk-cell.full { box-shadow: inset 0 0 0 1px rgba(255,255,255,.10); }
 .sk-cell.locked { opacity: .6; cursor: not-allowed; }
 /* 미작성 칸 — 가지 3 × 깊이 5 프레임이 보이도록 점선으로 남긴다 (비어 있음을 보여주는 것도 정보다) */
@@ -1355,8 +1355,8 @@ html, body { height: 100%; overflow: hidden; }
 /* 못 찍는 칸은 손가락 커서를 주지 않는다 — 눌러도 되는 곳만 눌러 보인다 */
 .sk-cell.dim { cursor: default; }
 .sk-cell.dim:hover { background: var(--bg-tertiary); border-color: var(--border-primary); }
-.sk-cell.taken.dim:hover { background: #1b1b2c; }
-.sk-cell.can:hover { background: #23233a; border-color: var(--border-highlight); }
+.sk-cell.taken.dim:hover { background: #1c1c1c; }
+.sk-cell.can:hover { background: #252525; border-color: var(--border-highlight); }
 .sk-tools { display: flex; justify-content: center; margin-top: 8px; }
 
 /* 액티브 슬롯 3개 + 실효 쿨 병기 (battle_design §5·§6) */
@@ -1564,7 +1564,7 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-input); border: 2px solid var(--border-dark);
     position: relative; cursor: pointer;
 }
-.pd-cell:hover { background: #1c1c2e; }
+.pd-cell:hover { background: #1d1d1d; }
 .pd-cell.filled { background: var(--bg-tertiary); }
 
 .pd-icon { font-size: 22px; line-height: 1; filter: grayscale(1) brightness(.55); }
@@ -1616,7 +1616,7 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-tertiary); border-width: 2px; cursor: pointer;
     box-shadow: none;
 }
-.inv-cell.filled:hover { background: #23233a; }
+.inv-cell.filled:hover { background: #252525; }
 .inv-icon { font-size: 20px; line-height: 1; }
 
 /* 유니크는 은은하게 빛난다 */
@@ -1663,7 +1663,7 @@ html, body { height: 100%; overflow: hidden; }
    다른 탭에서는 아웃된 영웅도 눌러서 들여다볼 수 있으므로 이 띠에서만 건다 */
 .hero-strip.party-mode .hs-card.downed { cursor: not-allowed; }
 /* 클릭한 영웅 — **파란 겉 테두리**가 여기로 옮겨 왔다 (2026-09-08 사용자 지시 · SCREEN_DESIGN §5) */
-.hs-card.on { border-color: var(--border-highlight); background: #22223a; outline: 2px solid var(--color-info); outline-offset: 1px; }
+.hs-card.on { border-color: var(--border-highlight); background: #242424; outline: 2px solid var(--color-info); outline-offset: 1px; }
 /* 전투 파티 = **반투명** [개정 2026-09-09 사용자 지시 · SCREEN_DESIGN §5 · ADR-0056] —
    파란 겉 테두리(테두리 색 + 3px 아웃라인 + 번짐)를 통째로 걷고 **흐림 하나**가 그 뜻을 든다.
    띠가 탭 최상단으로 올라간 뒤(ADR-0055) 파티 영웅은 **아래 진형 보드에도 같이 서 있다** —
@@ -1848,7 +1848,7 @@ html, body { height: 100%; overflow: hidden; }
 .ng-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 
 .ng-card {
-    background: rgba(22, 22, 36, .93);
+    background: rgba(24, 24, 24, .93);
     border: 1px solid var(--border-primary);
     border-top: 3px solid var(--border-secondary);
     padding: 14px 16px 13px;
@@ -1976,7 +1976,7 @@ html, body { height: 100%; overflow: hidden; }
 .ng-continue {
     max-width: 760px; margin: 0 auto 16px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    border: 1px solid var(--border-secondary); background: rgba(22, 22, 36, .93); padding: 10px 14px;
+    border: 1px solid var(--border-secondary); background: rgba(24, 24, 24, .93); padding: 10px 14px;
 }
 .ng-continue .l { font-size: var(--fs-sm); color: var(--text-secondary); }
 .ng-continue .l small { display: block; color: var(--text-muted); font-size: var(--fs-xs); }
@@ -2015,7 +2015,7 @@ html, body { height: 100%; overflow: hidden; }
 .battle-result {
     display: none; position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
     z-index: 3; align-items: center; gap: 12px;
-    background: rgba(12, 12, 20, .92); border: 1px solid var(--border-secondary); padding: 8px 14px;
+    background: rgba(13, 13, 13, .92); border: 1px solid var(--border-secondary); padding: 8px 14px;
 }
 .battle-result.show { display: flex; }
 .battle-result .verdict { font-size: var(--fs-lg); letter-spacing: 1px; }
@@ -2036,7 +2036,7 @@ html, body { height: 100%; overflow: hidden; }
 .modal-layer {
     position: fixed; inset: 0; z-index: 40;
     display: flex; align-items: center; justify-content: center; padding: 20px;
-    background: rgba(6, 6, 12, .72);
+    background: rgba(6, 6, 6, .72);
 }
 /* ⚠ `display:flex` 는 브라우저 기본 `[hidden]{display:none}` 을 **이긴다** — 이 한 줄이 없으면 창이 닫혀 있어도
    어두운 판이 화면을 계속 덮는다. 재생기가 `hidden` 으로 여닫는 자리(.battle-log-wrap 등)와 같은 함정이다 */
@@ -2150,7 +2150,7 @@ html, body { height: 100%; overflow: hidden; }
 /* 옛 제목 줄이 들던 수치(칸 수 · 장착 대상)가 도구 줄 **오른쪽 끝**으로 옮겨 왔다 (2026-09-01) */
 .items-meta { margin-left: auto; font-size: var(--fs-xs); }
 .pd-cell.filled { cursor: pointer; }
-.pd-cell.filled:hover { background: #2a2a44; }
+.pd-cell.filled:hover { background: #2c2c2c; }
 
 /* 선술집 후보 — 시작 화면(.ng-row)과 **완전히 같은 카드**다 [개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §3 · §8-1].
    ~~크기만 줄인다~~(2026-09-03)를 걷고 09-01 의 「완전히 같은 카드」로 돌아왔다 — 영웅을 고르는 일은 두 화면이 같고,
@@ -2301,7 +2301,7 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-tertiary); border: 1px solid var(--border-primary);
 }
 /* 켜짐/꺼짐이 칸의 첫인상 — 켜진 칸만 테두리가 산다 (죄종 색은 쓰지 않는다, 전술은 파티 것이다) */
-.rs-cell.on { background: #1b1b2c; border-color: var(--border-highlight); }
+.rs-cell.on { background: #1c1c1c; border-color: var(--border-highlight); }
 .rs-cell.off { opacity: .82; }
 .rs-cell.locked {
     opacity: .6; background: rgba(255, 255, 255, .015);

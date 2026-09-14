@@ -704,7 +704,7 @@ function renderExpIdle(main) {
         const row = el('div', `zone${unlocked ? '' : ' locked'}${chapterBoss ? ' boss' : ''}${z.stage_id === state.expStage ? ' on' : ''}`);
         row.style.borderLeftColor = unlocked ? sinColor(sin) : '';
         if (bg) {
-            row.style.backgroundImage = `linear-gradient(90deg, var(--bg-tertiary) 34%, rgba(26,26,42,.55) 68%, rgba(26,26,42,.30)), url('${bg}')`;
+            row.style.backgroundImage = `linear-gradient(90deg, var(--bg-tertiary) 34%, rgba(28,28,28,.55) 68%, rgba(28,28,28,.30)), url('${bg}')`;
             row.classList.add('has-bg');
         }
         /* ⚠ **접이식 「구성 보기」는 없다** [2026-09-10 사용자 지시 · ADR-0080] — 행은 이제 제목 줄과 부제 줄뿐이라
