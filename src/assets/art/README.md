@@ -12,7 +12,7 @@
 | `background_stage_101.webp` | Ch1-1 파멸의 진영 |
 | `background_stage_102.webp` | Ch1-2 핏빛 교전지대 |
 | `background_stage_103.webp` | Ch1-3 원한의 묘지 |
-| `town.webp` | 앱 전역 배경 + 선술집 패널 |
+| `town.webp` | 앱 전역 배경 (한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110) |
 | `explore_chapter_1.webp` | **탐험 탭 — 챕터 1 지도** ⚠ **계승이 아니다** (아래) |
 
 파일명의 숫자는 계승 `stage_info.csv` 의 stage_id 다 — 스테이지와 배경이 id로 1:1 대응한다.
@@ -118,7 +118,7 @@ Image.open(src_png).convert('RGB').save(dst_webp, 'WEBP', quality=88, method=6)
 
 ## backgrounds_clean/ — 계승 배경에서 워터마크 띠를 잘라 낸 사본 [신설 2026-09-11 사용자 지시]
 
-**화면이 읽는 배경은 이 폴더다** — `ui/mock.js:BG_CLEAN_DIR`(`stageBg`) · `ui/style.css`(`body::before` · `.panel.town-bg`). 파일명은 `backgrounds/` 계승 4장과 같다(스테이지 id 1:1 그대로).
+**화면이 읽는 배경은 이 폴더다** — `ui/mock.js:BG_CLEAN_DIR`(`stageBg`) · `ui/style.css`(`#stage::before`). 파일명은 `backgrounds/` 계승 4장과 같다(스테이지 id 1:1 그대로).
 
 | 파일 | 원본 → 사본 | 용량 |
 |---|---|---|

@@ -350,7 +350,7 @@ export function createHeroSystem(data) {
      *
      * · **무기가 밑수다** (battle_design §9-1, 08-26 개정) — 다른 슬롯의 고정 공격력을 밑수에 더하지 않는다.
      *   `atk_flat` 은 무기 슬롯 접사만 합산하고, `+피해 %` 는 그 밑수 전체를 곱한다.
-     *   무기 개체 공격력(watk)에는 드롭 시 굴린 편차가 이미 박혀 있다 — 타격마다 굴리지 않는다.
+     *   **공격력은 범위 `{min, max}` 다** [2026-09-14 · R90] — 무기 피해 범위(`formula.weaponDamage` · 무기군 × ilvl × 강화)의 양끝이고 직격마다 전투가 굴린다.
      * · 공격 타입은 직업이 아니라 **무기군**이 정한다 (battle_design §2-1 — 스태프·오브 = magic). 맨손은 physical.
      *   ~~사제의 파워 출처 = 마법 공격력 = 지능~~ 은 09-10 에 깨졌다 — 공격력은 순수 무기 밑수이고 지능은 스킬 계수로 간다 (§9-1).
      * · ~~**원소는 무기 개체가 든다** — 마법 무기군이면 그 무기의 element 가 공격 타입이다~~ → **[폐기 2026-09-11 · 사용자 지시 · R80]**
@@ -390,28 +390,31 @@ export function createHeroSystem(data) {
         const weapon = items.find(it => it.slot === 'weapon');
         const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
         const magic = group?.damageKind === 'magic';
-        // 밑수 = 무기 개체 공격력 + 무기 슬롯 접사의 고정 공격력. 맨손이면 unarmed_atk
+        // 밑수 = **무기 피해 범위**(양끝 · 무기군 × ilvl × 강화에서 파생 · R90) + 무기 슬롯 접사의 고정 공격력(양끝에 같이). 맨손이면 양끝 모두 unarmed_atk
         //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
-        const base = weapon
-            ? weapon.watk + (weapon.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0)
-            : B.unarmed_atk;
+        const range = weapon ? F.weaponDamage(weapon.ilvl, group, weapon.up) : { min: B.unarmed_atk, max: B.unarmed_atk };
+        const atkFlat = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0);
         // 상시 괄호 = Σ 공격력 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
         const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level;
         // 공격력 = **순수 무기 밑수** [개정 2026-09-10 · battle_design §9-1] — ~~`attrMult(magic ? int : str) ×`~~ 는 걷었다.
         //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
-        const atk = Math.round(
-            base
+        //   양끝마다 같은 괄호 둘을 곱하고 반올림한다 — 범위 안의 굴림은 전투(formula.strike)가 한다 (R90)
+        const scaleAtk = end => Math.round(
+            (end + atkFlat)
             * (1 + atkPctSum / 100)
             * (1 + (codex.atk_pct ?? 0) / 100));
+        const atk = { min: scaleAtk(range.min), max: scaleAtk(range.max) };
 
         // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
         //   성장분 = **구간 단위의 누적합**(`hpUnitSum`) × 건강 계수 [확정 2026-09-14 · R84]. 레벨 1 에서 누적합이 0 이라
         //   몬스터 앵커링 기준점(`hero_hp_base`)이 안 흔들린다 (battle_design §8). 레벨업 팝업의 상승분은 hpMax(새)−hpMax(옛) 로 낸다(반올림 정합)
         //   ⚠ 몬스터도 여기를 지난다 — `stage.csv:dlvl` 이 만렙을 넘으면 구간이 없어 던진다
+        //   ⚠ **레벨 1 바탕만 몬스터가 따로다** [2026-09-14 사용자 지시 · R91 · monster_design §5] — `battle.js:makeEnemy` 가
+        //   `hpBase` 로 `monster_hp_base` 를 넘긴다. 영웅은 안 넘기므로 `hero_hp_base` 다. 성장분 · 장비 몫은 같은 식이다
         const units = hpUnitSum[hero.level];
         if (units === undefined) throw new Error(`hero: 레벨 ${hero.level} 은 HP 구간 밖이다(1 ~ 만렙 ${B.hero_level_cap}) — 몬스터면 stage.csv:dlvl 이 만렙을 넘었다`);
         const hpMax = Math.round(
-            (B.hero_hp_base + units * attrMult('vit', A.vit) + f('hp_flat'))
+            ((hero.hpBase ?? B.hero_hp_base) + units * attrMult('vit', A.vit) + f('hp_flat'))
             * (1 + f('hp_pct') / 100)
             * (1 + (codex.hp_pct ?? 0) / 100));
 

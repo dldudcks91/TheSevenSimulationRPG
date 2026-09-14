@@ -4,7 +4,7 @@
  * 순수 모듈. 데이터는 생성자 주입, 난수는 rng 인자.
  *
  * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v,src}], sins:[sin...],
- *            group?(무기군 id — weapon_group.csv), watk?(무기 공격력 굴림값),
+ *            group?(무기군 id — weapon_group.csv),
  *            skill?(무기가 담은 액티브 id — 무기만 · 2026-09-09),
  *            baseId?(무기 베이스 id — weapon_base.csv · 그 무기군에 베이스 풀이 있을 때만 · 2026-09-10) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
@@ -19,22 +19,21 @@
  * **한손 개념은 없다** (2026-09-01) — 전 무기가 양손이라 `twoHanded` 플래그도 보조(offhand) 슬롯도 폐지했다.
  *   부위는 7종 · 착용 위치는 8개. 무기↔보조 배타 규칙과 양손 공격력 배율(two_hand_atk_mult)이 함께 사라졌다.
  *
- * 세트포인트는 **보류** (item_design.md §4, 2026-08-25) — `sins` 는 접사의 죄종 **목록**(접사 카테고리 · 지역 드롭 편향 ·
- *   낙인 지정의 축)일 뿐 포인트가 아니다. 양손 2포인트 · 메인 죄종 +1 도 같이 보류라 여기 없다.
+ * 세트포인트는 **보류** (item_design.md §4, 2026-08-25) — `sins` 는 접사의 죄종 **목록**(접사 카테고리 · 전술카드가 세는 대상 —
+ *   ~~지역 드롭 편향~~ 08-27 · ~~낙인 지정~~ 2026-09-15 에 사라졌다)일 뿐 포인트가 아니다. 양손 2포인트 · 메인 죄종 +1 도 같이 보류라 여기 없다.
  *
- * **개체 굴림** (item_design §2 · battle_design §9-1, 08-26) — 편차는 타격마다가 아니라 **드롭 시 한 번** 굴려
- *   개체에 박는다. 무기는 공격력(watk, 무기군 편차 폭), 방어구는 부위 고유 방어력(전역 폭 하나).
- *   같은 등급·같은 ilvl 이라도 개체차가 영구히 남아 "잘 뜬 것을 찾는" 파밍 성격이 생긴다.
+ * **개체 굴림** (item_design §2, 08-26) — **방어구 고유 방어력만** 드롭 시 한 번 굴려 개체에 박는다(전역 폭 하나).
+ *   ~~무기는 공격력(watk, 무기군 편차 폭)~~ 은 **2026-09-14 폐지**(R90 · battle_design §9-1) — 무기 피해는 **최소 ~ 최대 범위**이고
+ *   무기군 × ilvl × 강화 단계가 정한다(`weaponDamage` — 박지 않고 파생). 범위 안의 굴림은 직격마다 전투(formula.strike)가 한다.
  *
  * **접사 ilvl 스케일링은 3분류다** (item_design §2-1) — 정의의 `scale` 이 정한다:
  *   `growth` 기하 곡선(공격력·HP flat) / `band` 완만한 가산(물리 방어 flat) / `flat` ilvl 무관(% · 저항 · 유틸 전부).
  *   무기 옵션 표에만 `fine` 이 하나 더 있다 — `flat` 과 같되 **소수 1자리**다(레벨당 데미지처럼 1 보다 작은 값 · 2026-09-11).
  *
- * **강화** (item_design §1 개정 2026-08-31) — 골드를 먹고 `up` 을 올린다. 두 갈래가 서로 다르게 남는다:
- *   베이스(무기 watk · 방어구 implicit)는 **파생**하고, 3강마다 오르는 접사 값은 **박는다**.
- *   랜덤한 것은 다시 못 만드니 저장하고, 결정적인 것은 `up` 하나로 언제든 다시 계산한다 — 파생이면
- *   단계마다 반올림이 쌓이지 않고 드롭 시 굴린 개체값이 원본 그대로 남는다.
- *   **재굴림은 없다** — 접사의 종류·개수·순서를 강화가 바꾸는 일은 없다. 값만 오른다.
+ * **강화** (item_design §7-2 개정 2026-09-15 · R95) — 골드를 먹고 `up` 을 올린다. **올리는 것은 베이스 능력치 하나다**:
+ *   베이스(무기 피해 범위 · 방어구 implicit)는 `up` 하나로 **파생**한다 — 단계마다 반올림이 쌓이지 않고 드롭 시 굴린 개체값이 원본 그대로 남는다.
+ *   ~~3강마다 접사 하나의 값을 올려 박는다~~ 는 R95 퇴역 — 강화는 접사를 **전혀** 안 건드리고 rng 를 안 쓴다.
+ *   **목걸이 · 반지는 강화하지 않는다** — 베이스가 없다(`baseless`). 옛 세이브에 남은 `up` 은 그대로 두고, 파생할 것이 없어 무해하다.
  *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 affixDefs · 무기 옵션 표에서 온다. 방어구 · 장신구의 죄종 칸은 아직 없다(부위 개편은 후속 — 사용자 지시).
@@ -68,7 +67,6 @@ export function createItemSystem(data) {
     const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
     const r1 = v => Math.round(v * 10) / 10;
-    const r2 = v => Math.round(v * 100) / 100;
 
     /** 드롭·시작 무기에 쓰는 무기군 = 본편(release=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
     const classSkills = data.classSkills ?? {};   // {classId: [skillId...]} — 무기가 담을 후보 (skill_design §12)
@@ -100,9 +98,11 @@ export function createItemSystem(data) {
      * 희귀도 — 가중치 1회. **훑는 순서는 일반 → 매직 → 레어**다 [일반 신설 2026-09-14 · R86 · item_design §1].
      * **매직아이템 획득확률은 레어 가중치에 곱한다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — 일반·매직 가중치는 안 건드린다.
      * `magicFind` 는 파티 평균 % 이고 0 이면 종전과 같다 — 굴림 수는 언제나 1회다
+     * `weights` `{normal, magic, rare}` 를 주면 드롭 가중치 대신 그것으로 굴린다 — **제작**이 제 가중치를 넘긴다 [2026-09-15 · R96 · item_design §7-1]
      */
-    const rollRarity = (rng, magicFind = 0) => {
-        const wn = B.rarity_w_normal, wm = B.rarity_w_magic, wr = B.rarity_w_rare * (1 + magicFind / 100);
+    const rollRarity = (rng, magicFind = 0, weights = null) => {
+        const w = weights ?? { normal: B.rarity_w_normal, magic: B.rarity_w_magic, rare: B.rarity_w_rare };
+        const wn = w.normal, wm = w.magic, wr = w.rare * (1 + magicFind / 100);
         const x = rng() * (wn + wm + wr);
         return x < wn ? 'normal' : x < wn + wm ? 'magic' : 'rare';
     };
@@ -172,13 +172,16 @@ export function createItemSystem(data) {
         return out;
     }
 
+    /** 베이스 능력치가 없는 부위 — 무기(피해 범위)도 방어구(고유값)도 아닌 둘. 고유값 굴림과 강화가 같은 판정을 쓴다 (R95) */
+    const baseless = slot => slot === 'amulet' || slot === 'ring';
+
     /**
-     * 부위 고유값(Implicit) — 방어구만 든다 (무기는 watk, 목걸이·반지는 없다).
+     * 부위 고유값(Implicit) — 방어구만 든다 (무기는 피해 범위 — 파생 `weaponDamage` · 목걸이·반지는 없다).
      * 방어는 **비율 축**이라 성장 곡선을 타지 않는다 (§9-0) — ilvl 완만 가산 + 개체 편차 1회.
      * 부위별 배수는 없다 — 보조(offhand) ×1.5 는 슬롯 폐지와 함께 삭제 (2026-09-01).
      */
     function implicitFor(rng, slot, ilvl) {
-        if (slot === 'weapon' || slot === 'amulet' || slot === 'ring') return null;    // rng 소비 없음
+        if (slot === 'weapon' || baseless(slot)) return null;    // rng 소비 없음
         const eps = (rng() * 2 - 1) * B.armor_def_variance_pct / 100;
         const base = B.armor_def_base + ilvl * B.armor_def_per_ilvl;
         return { stat: 'def_flat', v: r1(base * (1 + eps)) };
@@ -189,7 +192,7 @@ export function createItemSystem(data) {
      * opts.avoidSkill = (무기) 스킬 풀에서 뺄 id — 시작 무기가 그 영웅의 고유 스킬과 겹치지 않게 (2026-09-14 · R86). 빼도 소비 수는 같다.
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직·레어) 접두 죄종 → (레어) 접미 죄종 →
      *   **(무기) 옵션 세 층**(`weaponOptions`) / (무기 외) 접사 수 → 접사마다 (정의 선택 → 값) →
-     *   **(무기) 베이스 1회** [신설 2026-09-10] → **개체 굴림 1회** → **(무기) 스킬 1회**
+     *   **(무기) 베이스 1회** [신설 2026-09-10] → **(방어구) 개체 굴림 1회** → **(무기) 스킬 1회** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
      */
     function build(rng, slot, rarity, ilvl, base, opts = {}) {
@@ -222,9 +225,8 @@ export function createItemSystem(data) {
                 item.baseId = wbase.id;
                 item.name = data.composeName(prefix, wbase, suffix);  // 이름은 베이스 이름으로 다시 조립 — 무기군 이름을 덮는다
             }
-            // 무기 공격력 = 밑수 × 성장 곡선 × 개체 편차. 편차 폭은 무기군 값이 우선 (§9-1)
-            const eps = (rng() * 2 - 1) * (base.variance ?? B.dmg_variance_pct) / 100;
-            item.watk = r2(B.weapon_atk_base * F.growthMult(ilvl) * (1 + eps));
+            // ~~무기 공격력 = 밑수 × 성장 곡선 × 개체 편차~~ **2026-09-14 폐지 · R90** (battle_design §9-1) — 무기 피해는 박지 않는다.
+            //   범위는 무기군 × ilvl × 강화 단계가 정하고(`weaponDamage` · formula.weaponDamage) **rng 소비 1회가 빠졌다**(INTERFACE §5-2)
             // ~~마법 무기는 개체가 원소를 든다~~ **폐기 2026-09-11 · 사용자 지시 · R80** (battle_design §2-1 · §9-5 · item_design §2)
             //   원소는 **관련 옵션이 붙었을 때만** 생긴다 — 생성 때 따로 굴리지 않고 드롭의 무작위성은 옵션 굴림이 든다.
             //   그래서 `element` 키가 아예 없고 **마법 무기에서 rng 소비 1회가 빠졌다**(INTERFACE §5-2).
@@ -254,9 +256,10 @@ export function createItemSystem(data) {
      * 몬스터가 **입고 있는** 장비가 이것이고, 처치 드롭은 그중 하나가 **그대로** 나간다(2단계 = 입은 부위 중 하나).
      * rng 소비 순서(계약 — INTERFACE §5-2): 부위 배열 순서대로 — 베이스(무기는 `weaponGroup` 을 주면 **0회**) → 희귀도 1 → `build`.
      *   ⚠ **부위 배열 순서가 계약이다** — 같은 부위 묶음이라도 순서가 바뀌면 같은 시드가 다른 한 벌을 낸다.
-     * @param opts `{slots, ilvl, magicFind?, rareBonusPct?, weaponGroup?}`
+     * @param opts `{slots, ilvl, magicFind?, rareBonusPct?, weaponGroup?, rarityWeights?}`
      *   · `magicFind` 파티 평균 % · `rareBonusPct` 등급이 미는 레어 가중 %(`spawn_grade.csv:gear_rare_bonus_pct`) — **둘은 같은 채널**이다
      *   · `weaponGroup` 무기군 고정. 몬스터는 제 무기군(`monster.csv:weapon_group`)을 들고, 안 주면 본편 무기군에서 굴린다
+     *   · `rarityWeights` 희귀도 가중치 `{normal, magic, rare}` — 제작이 넘긴다(없으면 드롭 가중치 · 굴림 수 불변 · R96)
      */
     function rollGear(rng, opts) {
         const { slots, ilvl } = opts;
@@ -268,7 +271,7 @@ export function createItemSystem(data) {
                 ? (opts.weaponGroup ? WG[opts.weaponGroup] : pick(rng, dropGroups))
                 : pick(rng, data.itemBases[slot]);
             if (!base) throw new Error(`item: rollGear 부위 '${slot}' 의 베이스가 없다`);
-            out.push(build(rng, slot, rollRarity(rng, rareBonus), ilvl, base));
+            out.push(build(rng, slot, rollRarity(rng, rareBonus, opts.rarityWeights), ilvl, base));
         }
         return out;
     }
@@ -337,10 +340,11 @@ export function createItemSystem(data) {
 
     /**
      * 무기군 교체 — **세이브 이관 전용**이다 (`state.js upgradeV15`). 게임 중에는 부르지 않는다.
-     * 개체에 박힌 굴림(watk · element · 접사 · 강화)은 **그대로 두고** 군과 이름만 갈아끼운다 —
+     * 개체에 박힌 굴림(접사 · 강화 · ~~watk~~ R90 삭제 · ~~element~~ R80)은 **그대로 두고** 군과 이름만 갈아끼운다 —
      * 아이템의 세기는 개체 굴림이 들고 있고(§9-1) 무기군은 주기·편차·착용 직업을 가리키는 포인터라,
      * 포인터만 옮기면 세기를 건드리지 않고 소유 직업을 옮길 수 있다.
      * 이름은 접사 죄종(`sins`)이 그대로라 **베이스만 바뀐 이름**으로 다시 조립한다.
+     * ⚠ R90 부터 무기 피해 범위의 **폭**은 무기군이 정한다 — 군을 옮기면 폭이 따라 바뀐다.
      */
     function regroupWeapon(item, groupId) {
         const g = WG[groupId];
@@ -351,60 +355,49 @@ export function createItemSystem(data) {
         return item;
     }
 
-    // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루 자체가 item_design §5 백지)
+    // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루는 제작 재료 — item_design §7-1 · 반환량은 §5-3 미정)
     const salvageDust = item => item.rarity === 'rare' ? B.salvage_dust_rare : B.salvage_dust_magic;
 
-    /* ── 강화 (item_design §1 개정 2026-08-31) ── */
+    /* ── 강화 (item_design §7-2 개정 2026-09-15 · R95) ── */
 
-    /** 베이스 능력치에 먹는 배율 — `up` 하나가 정한다 (원본은 안 건드린다) */
-    const upMult = up => 1 + (up ?? 0) * B.equip_upgrade_base_pct / 100;
-
-    /** 베이스 능력치가 있는 부위인가 — 목걸이·반지는 없어서 옵션 갈래만 받는다 */
-    const hasBase = item => item.watk != null || item.implicit != null;
+    /**
+     * 무기 피해 범위 `{min, max}` — **파생**이다 [신설 2026-09-14 · R90 · battle_design §9-1]. 무기가 아니면 null.
+     * 강화 배율까지 든 값이다 — 식은 `formula.weaponDamage` 하나다(전투는 hero.computeCombat 이 같은 함수를 부른다).
+     * 무기군을 모르면 전역 폭(`dmg_variance_pct`)으로 낸다 — 전투 쪽과 같은 규칙
+     */
+    const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, WG[item.group] ?? null, item.up) : null);
 
     const upgradeMax = () => B.equip_upgrade_max;
 
-    /** 다음 한 단계의 골드. 상한이면 null — 비용은 단계마다 기하로 붙는다 */
+    /** 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화하지 않는다 (item_design §7-2 · R95). 부위만 본다 */
+    const upgradeable = item => !baseless(item?.slot);
+
+    /** 다음 한 단계의 골드. 상한이거나 강화 대상이 아니면 null — 비용은 단계마다 기하로 붙는다 */
     function upgradeCost(item) {
         const up = item.up ?? 0;
-        if (up >= B.equip_upgrade_max) return null;
+        if (!upgradeable(item) || up >= B.equip_upgrade_max) return null;
         return Math.round(B.equip_upgrade_gold_base * Math.pow(B.equip_upgrade_gold_growth, up));
     }
 
     /**
-     * 강화 1단계 — **in-place**. 상한 검사는 호출자(state.js)가 한다.
-     * 옵션 계단(3·6·9강)에서만 rng 를 **한 번** 쓴다 — 어느 접사가 오를지 고르는 굴림 하나뿐이고,
-     * 접사의 종류·개수·순서는 건드리지 않는다(재굴림 없음).
-     * 값 상승은 그 접사의 `scale` 이 정한 반올림을 따르되 **최소 한 칸은 반드시 오른다**
-     * (growth +0.1 · 나머지 +1) — 비율만 곱하면 값이 작은 접사가 반올림에 먹혀 아무 일도 안 일어난다.
+     * 강화 1단계 — **in-place**. 상한 · 부위 검사는 호출자(state.js)가 한다.
+     * **rng 를 안 쓰고 접사를 건드리지 않는다** — 베이스는 `up` 에서 파생하므로 올릴 것이 `up` 하나뿐이다.
+     * ~~3강마다 접사 하나의 값을 올린다~~ 는 2026-09-15 퇴역 (R95 — 옵션 쪽 성장은 크래프트 · item_design §7-3)
      */
-    function upgrade(rng, item) {
+    function upgrade(item) {
         item.up = (item.up ?? 0) + 1;
-        let affix = null;
-        if (item.up % B.equip_upgrade_option_interval === 0 && (item.affixes ?? []).length) {
-            const a = item.affixes[Math.floor(rng() * item.affixes.length)];
-            const def = data.affixDefs.find(d => d.stat === a.stat);
-            const growth = def ? def.scale === 'growth' : !Number.isInteger(a.v);
-            const raised = a.v * (1 + B.equip_upgrade_option_pct / 100);
-            const next = growth ? Math.max(r1(a.v + 0.1), r1(raised)) : Math.max(a.v + 1, Math.round(raised));
-            affix = { stat: a.stat, from: a.v, to: next };
-            a.v = next;
-        }
-        return { up: item.up, affix };
+        return { up: item.up };
     }
 
     /**
-     * 읽기용 사본 — 베이스에 강화 배율을 먹인다. 접사는 값이 이미 박혀 있어 손대지 않는다.
-     * `up` 이 0 이거나 베이스가 없으면 **원본을 그대로** 돌려준다 — 전투·렌더가 매번 부르는 자리라 할당을 아낀다.
+     * 읽기용 사본 — **방어구 고유값**에 강화 배율을 먹인다. 접사는 값이 이미 박혀 있어 손대지 않는다.
+     * `up` 이 0 이거나 고유값이 없으면(무기 · 목걸이 · 반지) **원본을 그대로** 돌려준다 — 전투·렌더가 매번 부르는 자리라 할당을 아낀다.
+     * 무기 피해는 사본에 안 싣는다 — `weaponDamage` 가 `up` 을 받아 따로 낸다 (R90)
      */
     function effective(item) {
-        if (!item || !(item.up > 0) || !hasBase(item)) return item;
-        const m = upMult(item.up);
-        const out = { ...item };
-        if (out.watk != null) out.watk = r2(out.watk * m);
-        if (out.implicit) out.implicit = { ...out.implicit, v: r1(out.implicit.v * m) };
-        return out;
+        if (!item || !(item.up > 0) || !item.implicit) return item;
+        return { ...item, implicit: { ...item.implicit, v: r1(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeCost, upgrade, effective };
+    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage };
 }

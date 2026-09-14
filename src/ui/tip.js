@@ -6,10 +6,12 @@
  * `build()` 가 붙일 노드를 돌려준다.
  *
  * 다만 **영웅 카드 · 스킬 카드는 여기 둔다**: 두 렌더러가 같은 카드를 띄우기 때문이다(영웅 띠 ↔ 관전 유닛 카드).
+ * 몬스터 카드(관전 적 카드 · 2026-09-14)도 여기 있다 — 영웅 카드와 몸통이 하나다(유닛 카드 · ADR-0114).
+ * 그 몸통의 줄 조립(`attrRowsHtml` · `sheetRowsHtml`)은 **캐릭터 탭의 기본 옵션 · 세부 옵션도 부른다** — 두 자리가 한 표기다.
  * 아이템 비교 카드는 `app.js` 에 남는다 — 희귀도 · 접사 · 무기군처럼 app 쪽 헬퍼를 많이 타서 옮기면 그게 따라온다.
  *
- * **Alt 계산식 상태도 여기 든다** (2026-09-10 · SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089) — 누르는 동안만 켜지고,
- * 떠 있는 **스킬 카드만** 그 자리에서 다시 그린다. 스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 안 본다.
+ * **Alt 상태도 여기 든다** (2026-09-10 · SCREEN_DESIGN §2 · ADR-0089 · ADR-0114) — 누르는 동안만 켜지고,
+ * 떠 있는 **`data-alt` 카드**(스킬 카드 · 유닛 카드)만 그 자리에서 다시 그린다. 스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 안 본다.
  *
  * **겹쳐 붙은 툴팁** — 관전 유닛 카드(영웅) 안에 스킬 칸이 들어 있다. 칸에서 나가 카드로 돌아올 때
  * `mouseenter` 는 다시 안 뜨므로(자식에서 부모로 돌아오는 건 진입이 아니다) 여기서 조상의 툴팁을 되살린다.
@@ -41,56 +43,94 @@ const skillImg = s => {
 /**
  * node 위에 올리면 build() 가 만든 카드를 띄운다.
  * @param build () => Node | Node[]
+ * @param anchor true 면 커서가 아니라 **node 옆**에 선다 — 유닛 카드(관전 · 출정 창 띠)만 준다.
+ *   크고 오래 읽는 카드라 커서를 따라가면 읽는 동안 흔들린다 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0120)
  */
-export function bindTipNode(node, build) {
+export function bindTipNode(node, build, { anchor = false } = {}) {
     node.dataset.tip = '1';
     node._tipBuild = build;
-    node.onmouseenter = ev => showTip(build(), ev);
+    node._tipAnchor = anchor;
+    node.onmouseenter = ev => showTip(build(), ev, anchor ? node : null);
     node.onmousemove = moveTip;
     node.onmouseleave = ev => {
         const up = node.parentElement?.closest('[data-tip]');
-        if (up?._tipBuild && ev.relatedTarget && up.contains(ev.relatedTarget)) showTip(up._tipBuild(), ev);
+        // 카드 속 칸(스킬)에서 카드로 돌아오면 카드의 툴팁이 **카드의 자리 규칙**으로 다시 선다
+        if (up?._tipBuild && ev.relatedTarget && up.contains(ev.relatedTarget)) showTip(up._tipBuild(), ev, up._tipAnchor ? up : null);
         else hideTip();
     };
 }
 
-function showTip(content, ev) {
+/** 지금 뜬 툴팁이 붙은 노드 — `null` 이면 커서를 따른다 (ADR-0120) */
+let anchorNode = null;
+
+function showTip(content, ev, anchor = null) {
     const tip = $tip();
     if (!tip) return;
     tip.innerHTML = '';
     for (const n of [].concat(content)) if (n) tip.appendChild(n);
     tip.classList.add('show');
+    anchorNode = anchor;
     moveTip(ev);
 }
 
 /**
- * 창 좌표 → **한 장 좌표** (SCREEN_DESIGN §2 · ADR-0087). 화면은 `#stage` 한 장이 `transform` 으로 통째로 줄고 늘므로,
- * 마우스의 `clientX/Y` 를 그대로 `left/top` 에 넣으면 배율만큼 어긋난다 — 한 장의 실제 사각형으로 되돌린다.
+ * 창 좌표 → **한 장 좌표** (SCREEN_DESIGN §2 · ADR-0087 · ADR-0109). 화면은 `#stage` 한 장이 `transform` 으로 통째로 줄고 늘고
+ * (터치 기기의 세로 창에서는 90° 눕고), 마우스의 `clientX/Y` 를 그대로 `left/top` 에 넣으면 그만큼 어긋난다 —
+ * `app.js:fitStage` 가 건 행렬을 **그대로 뒤집어** 되돌린다(회전도 함께 풀린다 · `#stage` 는 왼쪽 위 0,0 · `transform-origin: 0 0`).
+ * ⚠ 창 사각형(`getBoundingClientRect`)을 옮길 때는 모서리 둘을 각각 바꿔 작은 쪽 · 큰 쪽을 고른다 — 눕힌 한 장에서는 창의 왼쪽 위가 한 장의 왼쪽 위가 아니다.
  * `#stage` 가 없으면(dev/test.html 이 이 파일을 import 한다) 창 좌표 그대로다. **부를 때만** DOM 을 읽는다.
  * @returns {{x:number, y:number, s:number, w:number, h:number}} x·y = 한 장 안의 점 · s = 배율 · w·h = 한 장 크기
  */
 export function stagePoint(ev) {
     const st = document.getElementById('stage');
     if (!st) return { x: ev.clientX, y: ev.clientY, s: 1, w: window.innerWidth, h: window.innerHeight };
-    const r = st.getBoundingClientRect();
-    const s = r.width / st.offsetWidth;
-    return { x: (ev.clientX - r.left) / s, y: (ev.clientY - r.top) / s, s, w: st.offsetWidth, h: st.offsetHeight };
+    const t = getComputedStyle(st).transform;
+    const m = t === 'none' ? new DOMMatrix() : new DOMMatrix(t);
+    const p = m.inverse().transformPoint(new DOMPoint(ev.clientX, ev.clientY));
+    return { x: p.x, y: p.y, s: Math.hypot(m.a, m.b), w: st.offsetWidth, h: st.offsetHeight };
 }
 
-/** 커서를 따라다니되 **한 장** 밖으로 나가면 반대쪽으로 접는다 — 좌표 · 크기는 전부 한 장 단위다(`stagePoint`) */
+/**
+ * 노드의 창 사각형 → **한 장 좌표** 사각형. 모서리 둘을 각각 옮겨 작은 쪽 · 큰 쪽을 고른다 — 눕힌 한 장(ADR-0109)에서는
+ * 창의 왼쪽 위가 한 장의 왼쪽 위가 아니다 (위 `stagePoint` 의 ⚠)
+ */
+function stageRect(node) {
+    const b = node.getBoundingClientRect();
+    const a = stagePoint({ clientX: b.left, clientY: b.top }), z = stagePoint({ clientX: b.right, clientY: b.bottom });
+    return { left: Math.min(a.x, z.x), right: Math.max(a.x, z.x), top: Math.min(a.y, z.y), w: a.w, h: a.h };
+}
+
+/**
+ * 커서를 따라다니되 **한 장** 밖으로 나가면 반대쪽으로 접는다 — 좌표 · 크기는 전부 한 장 단위다(`stagePoint`).
+ * 앵커가 있으면(유닛 카드 · ADR-0120) 커서 대신 **그 카드 옆**에 선다 — 오른쪽, 넘치면 왼쪽 · 윗변은 카드 윗변 · 아래로 넘치면 올린다.
+ * 카드가 다시 그려져 앵커가 문서에서 빠졌으면 커서로 돌아간다
+ */
 export function moveTip(ev) {
     const tip = $tip();
     if (!tip) return;
-    const p = stagePoint(ev);
     const tw = tip.offsetWidth, th = tip.offsetHeight;   // 배율 전 크기 = 한 장 단위
-    let x = p.x + 16, y = p.y + 16;
-    if (x + tw > p.w - 8) x = p.x - tw - 16;
-    if (y + th > p.h - 8) y = p.h - th - 8;
+    let x, y, w, h;
+    if (anchorNode?.isConnected) {
+        const r = stageRect(anchorNode);
+        ({ w, h } = r);
+        // 쪽은 **카드 자리만** 보고 정한다 — 화면이 더 넓게 남은 쪽. 툴팁 폭으로 정하면 Alt 로 넓어지는 순간 반대쪽으로 튄다(실측).
+        //   왼쪽에 서면 카드 쪽 변(오른변)을 붙인 채 바깥으로 자란다 · 그래도 넘치면 한 장 안으로 민다
+        x = w - r.right >= r.left ? r.right + 8 : r.left - tw - 8;
+        y = r.top;
+        if (x + tw > w - 8) x = w - tw - 8;
+    } else {
+        if (!ev) return;
+        const p = stagePoint(ev);
+        ({ w, h } = p);
+        x = p.x + 16; y = p.y + 16;
+        if (x + tw > w - 8) x = p.x - tw - 16;
+    }
+    if (y + th > h - 8) y = h - th - 8;
     tip.style.left = Math.max(8, x) + 'px';
     tip.style.top = Math.max(8, y) + 'px';
 }
 
-export function hideTip() { $tip()?.classList.remove('show'); }
+export function hideTip() { anchorNode = null; $tip()?.classList.remove('show'); }
 
 /* ───────── 카드 — 두 렌더러가 함께 쓴다 ───────── */
 
@@ -98,25 +138,155 @@ const classOf = id => D.classes.find(c => c.id === id);
 // 등급 표기 — SSOT 는 `hero_tier.csv` 다 (2026-09-08 R48 · ~~mock.js:HERO_TIER~~ 대체 · app.js 와 같은 규칙)
 const tierOf = h => D.heroTiers.find(t => t.id === h.tier) ?? D.heroTiers.find(t => t.id === 'rare') ?? D.heroTiers[0];
 
+/* ───────── 유닛 카드 — 영웅 · 몬스터 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114) ─────────
+   몸통은 **캐릭터 탭의 두 표기 그대로**다 — 왼쪽 「기본 옵션」 막대 줄 · Alt 를 누르는 동안 오른쪽 「세부 옵션」 행.
+   줄 조립은 **여기 한 곳**이고 캐릭터 탭(app.js attrPanel · detailPanels)도 이것을 부른다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 */
+
 /**
- * 영웅 카드 — 이름 / 직업 · 레벨 · 죄종 · 등급 / **기본 능력치 7** (SCREEN_DESIGN §5).
- * 옛 `title` 속성(직업·Lv·죄종·등급)이 들던 것에 능력치를 더한 것이다 — 값이 늘어 한 줄에 안 들어간다.
- * 능력치는 `h.stats` 에서 그대로 읽는다. 파생 전투치(HP·공격력 등)는 여기서 계산하지 않는다 — 캐릭터 탭의 몫이다.
+ * 세부 옵션 머리 — 대표값 몇 줄을 굵게 찍고 그 아래 간격을 둔다 (`sheet_order` 1..N · 구분선은 2026-09-15 사용자 지시로 걷었다).
+ * 물리·마법 공격력 중 **하나는 늘 꺼져 있다**(무기 종류가 정한다) — 지우지 않는 것이 결정이다: 회색으로 남은
+ * 그 자리가 「내 빌드가 어느 쪽인가」를 말한다 (SCREEN_DESIGN §6, 2026-09-01).
  */
-export function heroTipCard(h) {
+const DETAIL_LEAD = 3;
+
+/** 상한이 걸리는 저항 4행 — 값만으로는 "몇 %까지 의미가 있나"를 못 읽는다 (battle_design §9-5) */
+const RES_ROWS = ['res_fire', 'res_cold', 'res_lightning', 'res_poison'];
+
+/** 전투 능력치 표기 — 단위 붙이기는 여기 한 곳에서만 */
+const fmtCombat = (def, v) => v === undefined ? '—'
+    : typeof v === 'object' ? rangeText(v)          // 공격력 두 줄은 범위 {min, max} (R90 · ADR-0108)
+    : def.fmt === 'pct' ? `${Math.round(v * 10) / 10}%`
+    : def.fmt === 'sec' ? t('sk.cycleSec', { s: v.toFixed(2) })
+    : String(v);
+
+/** 세부 옵션의 행 — impl=0 은 computeCombat 이 내지 않는 축이라 안 그린다 · 순서는 sheet_order 하나가 정한다 (combat_stat.csv) */
+export const sheetStats = () => D.combatStats.filter(s => s.impl).sort((a, b) => a.sheetOrder - b.sheetOrder);
+
+/**
+ * 세부 옵션 행 — 캐릭터 탭 세부 옵션 1·2 와 유닛 툴팁 오른쪽 열이 같이 쓴다.
+ * 방어 소재값 → 감쇠율 · 저항 → 현재 상한은 `formula` 가 낸다 — 같은 곡선을 두 번 구현하지 않는다 (battle_design §9-8).
+ * @param rows `sheetStats()` 전체 또는 그 조각
+ * @param c    computeCombat 모양 — 영웅 `game.heroCombat` · 몬스터 `round` 이벤트의 `sheet`. 없으면 전 행이 흐린 `—`
+ */
+export function sheetRowsHtml(rows, c) {
+    const resCap = SYS.formula.resCap(c?.res_max_bonus ?? 0);
+    return rows.map(s => {
+        const v = c?.[s.id];
+        const has = v !== undefined;
+        const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: resCap })}</span>`
+            : s.id === 'defense' && has ? ` <span class="muted">${t('st.mitigation', { p: Math.round(SYS.formula.mitigation(v) * 100) })}</span>` : '';
+        // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
+        //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
+        const shown = s.id === 'defense' && has ? Math.round(v) : v;
+        return `<div class="cs-row${has ? '' : ' off'}${s.sheetOrder <= DETAIL_LEAD ? ' lead' : ''}">
+            <span class="cs-n">${L(s)}</span>
+            <span class="cs-v">${fmtCombat(s, shown)}${extra}</span></div>`;
+    }).join('');
+}
+
+/**
+ * 기본 옵션 줄 — `.attr-list` 격자 **안에** 들어갈 일곱 줄 (캐릭터 탭 기본 옵션 · 유닛 툴팁 왼쪽 열).
+ * 막대 폭은 범위 `hero_attr_min ~ hero_attr_max` 안의 자리다 — 표시 비율이지 전투 계산이 아니다.
+ * 범위 숫자 줄(`1 ~ 20`)은 안 찍는다 — 막대 폭이 이미 그 자리를 말한다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6).
+ * @param color 막대 색(CSS 값) — 영웅은 등급 색 · 몬스터는 카드 윗변 색
+ */
+export function attrRowsHtml(stats, color) {
+    const min = D.balance.hero_attr_min, max = D.balance.hero_attr_max;
+    return D.heroAttributes.map(s => {
+        const v = stats?.[s.id];
+        const pct = v === undefined ? 0 : Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
+        return `<div class="attr-row">
+            <span class="attr-n">${L(s)}<i class="cs-a">${s.abbr}</i></span>
+            <span class="attr-bar"><i style="width:${pct}%;background:${color}"></i></span>
+            <span class="attr-v">${v ?? '—'}</span></div>`;
+    }).join('');
+}
+
+/**
+ * 세부 옵션을 두 쪽으로 가르는 자리 — '피해 감소' 앞에서 끊는다 (SCREEN_DESIGN §6, 2026-09-01).
+ * 1 = 대표 3 + 공격 + 물리 방어 + 저항 4 + 최대 저항 증가(때리고 막는 밑수) / 2 = 피해 감소부터 끝(부가 효과).
+ * 저항 4행과 그 상한을 움직이는 `res_max_bonus` 는 한 쪽에 둔다 — 값 뒤에 같은 상한이 붙는 묶음이라 갈리면 상한이 두 번 나온다.
+ * 캐릭터 탭의 두 패널과 유닛 툴팁의 두 열이 **같은 자리에서** 끊는다 (ADR-0115)
+ */
+const DETAIL_SPLIT_AT = 'damage_reduction';
+/** 세부 옵션 두 쪽 — `[1쪽 행, 2쪽 행]` (캐릭터 탭 세부 옵션 1 · 2 · 유닛 툴팁 오른쪽 두 열) */
+export const sheetPages = () => {
+    const rows = sheetStats();
+    const cut = rows.findIndex(s => s.id === DETAIL_SPLIT_AT);
+    return [rows.slice(0, cut), rows.slice(cut)];
+};
+
+/**
+ * 유닛 카드 뼈대 — 머리(이름 · 소속 — 부르는 쪽이 만든다) + 몸통. 왼쪽 열 = 기본 옵션 막대 + **대표값 3줄**(Alt 와 무관하게 선다 · ADR-0119).
+ * **Alt 를 누르는 동안만** 오른쪽에 세부 옵션 두 열이 서고 각주가 걷힌다 — 두 열은 캐릭터 탭 세부 옵션 1 · 2 와 같은 자리에서 끊고 열 이름도 같되,
+ * 대표값 3줄은 왼쪽 열이 들므로 **빼고** 찍는다(나란히 두 번 서지 않게). 한 열로 이으면 스무 줄이 넘어 카드가 아레나를 세로로 덮었다 (ADR-0115).
+ * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 `_rebuild` 로 **같은 인자로** 다시 만든다 — 스킬 카드와 같은 장치다.
+ * @param color 막대 색 = 윗변 색(CSS 값)
+ * @param cls   카드에 더할 클래스 — 어두운 등급 색이면 `bar-lift`(막대만 밝힌다 · style.css)
+ */
+function unitCard(head, stats, color, sheet, rebuild, cls = '') {
+    const c = el('div', `tip-card unit${altHeld ? ' alt' : ''}${cls ? ` ${cls}` : ''}`);
+    c.dataset.alt = '1';
+    c._rebuild = rebuild;
+    c.style.setProperty('--unit-line', color);   // 윗변 3px — 관전 카드 · 띠 카드의 윗변과 같은 색이라 어느 카드의 툴팁인지 잇는다
+    const isLead = s => s.sheetOrder <= DETAIL_LEAD;
+    const pages = altHeld ? sheetPages().map((rows, i) => `
+            <div class="tip-unit-col">
+                <div class="tip-col-h">${t('ch.detail.hn', { n: i + 1 })}</div>
+                <div class="tip-sheet">${sheetRowsHtml(rows.filter(s => !isLead(s)), sheet)}</div>
+            </div>`).join('') : '';
+    c.innerHTML = `${head}
+        <div class="tip-unit">
+            <div class="tip-unit-col">
+                <div class="tip-col-h">${t('ch.attr.h')}</div>
+                <div class="attr-list">${attrRowsHtml(stats, color)}</div>
+                <div class="tip-sheet tip-lead">${sheetRowsHtml(sheetStats().filter(isLead), sheet)}</div>
+            </div>${pages}
+        </div>
+        ${altHeld ? '' : `<div class="tip-foot">${t('tip.unit.altHint')}</div>`}`;
+    return c;
+}
+
+/**
+ * 영웅 카드 — 이름 / 직업 · 레벨 · 죄종 · 등급 / 기본 옵션 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5).
+ * 능력치는 `h.stats` 에서 그대로 읽는다. 세부 옵션은 **부르는 쪽이 넘긴다** — `game.heroCombat` 은 상태 `G` 가 있어야 하는데 이 파일은 `G` 를 모른다.
+ * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
+ */
+export function heroTipCard(h, combat = null) {
     if (!h) return null;
     const tier = tierOf(h);
     const sin = M.SINS[h.sin];
     const cls = classOf(h.cls);
     const sub = [cls ? L(cls) : h.cls, t('tip.hero.lv', { n: h.level }), sin ? L(sin) : h.sin, L(tier)];
-    const c = el('div', 'tip-card');
-    c.innerHTML = `
-        <div class="tip-head">${t('tip.hero.h')}</div>
+    // 머리글(「영웅」)은 없다 — 이름 색 · 소속 줄이 이미 말한다 (ADR-0115)
+    const head = `
         <div class="tip-name" style="color:${tier.color}">${L(h.name)}</div>
-        <div class="tip-sub">${sub.join(' · ')}</div>
-        <div class="tip-stats">${D.heroAttributes.map(s => `
-            <div class="tip-stat"><span class="n">${L(s)}<i>${s.abbr}</i></span><b>${h.stats?.[s.id] ?? '—'}</b></div>`).join('')}</div>`;
-    return c;
+        <div class="tip-sub">${sub.join(' · ')}</div>`;
+    return unitCard(head, h.stats, tier.color, combat, () => heroTipCard(h, combat));
+}
+
+/** 스폰 등급 → 라벨 키 — 일반도 적는다(카드 이름 줄의 신원은 일반을 비우지만 툴팁은 값을 항상 찍는다) */
+const GRADE_KEY = { normal: 'kind.normal', elite: 'kind.elite', stage_boss: 'kind.boss', chapter_boss: 'kind.chapterBoss' };
+/** 몬스터 막대 색 = **카드 윗변 색** — 관전 카드가 등급으로 칠하는 토큰 그대로다(style.css `.unit.enemy` · `.unit.elite` · `.unit.boss`) */
+const GRADE_LINE = { normal: 'var(--enemy-line)', elite: 'var(--color-warning)', stage_boss: 'var(--boss-line)', chapter_boss: 'var(--boss-line)' };
+
+/**
+ * 몬스터 카드 — 이름 / 직업 · 등급 / 기본 옵션 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2).
+ * 기본 능력치는 `round` 이벤트의 `stats`(monster.csv 의 7 칸), 세부 옵션은 같은 이벤트의 `sheet`(R94) 그대로다 — 렌더러는 계산하지 않는다.
+ * **레벨은 안 적는다** — 몬스터 레벨 = 그 런의 위험도이고 출정 창이 이미 든다.
+ * @param u 재생기의 적 유닛 `{monsterId, name, grade, stats, sheet}`
+ */
+export function monsterTipCard(u) {
+    if (!u) return null;
+    const cls = classOf(D.monsters?.[u.monsterId]?.cls);
+    const sub = [cls ? L(cls) : null, GRADE_KEY[u.grade] ? t(GRADE_KEY[u.grade]) : null].filter(Boolean);
+    // 머리글(「몬스터」)은 없다 — 소속 줄(직업 · 등급)이 이미 말한다 (ADR-0115)
+    const head = `
+        <div class="tip-name">${L(u.name)}</div>
+        ${sub.length ? `<div class="tip-sub">${sub.join(' · ')}</div>` : ''}`;
+    // 어두운 등급 색(일반 `--enemy-line` · 보스 `--boss-line`)은 막대만 밝힌다 — 검은 막대 바탕에 묻힌다. 정예(노랑)는 그대로 (2026-09-15 · SCREEN_DESIGN §2)
+    const lift = u.grade === 'elite' ? '' : 'bar-lift';
+    return unitCard(head, u.stats, GRADE_LINE[u.grade] ?? GRADE_LINE.normal, u.sheet ?? null, () => monsterTipCard(u), lift);
 }
 
 /* ───────── 스킬 문장 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · 전면 개정 2026-09-08 · 숫자 자리 셋 2026-09-10) ─────────
@@ -129,6 +299,12 @@ const hl = v => `<b class="tip-hl">${v}</b>`;
 const num = v => String(Number(Number(v).toFixed(1)));
 /** 쿨 자리 — 괄호가 안 붙는다(능력치가 미는 슬롯이 없다) */
 const sec = v => hl(num(v));
+/**
+ * 범위 표기 `{min, max}` — 양끝이 다르면 `st.range`(「1,200~1,800」) · 같으면 한 수 (R90 · SCREEN_DESIGN §2 · §6 · ADR-0108).
+ * 무기 피해 · 스킬 피해 · 회복량이 쓴다 — 캐릭터 시트 · 아이템 툴팁 · 제련소도 같은 함수를 부른다(app.js)
+ */
+export const rangeText = r => (r.min === r.max ? r.min.toLocaleString()
+    : t('st.range', { a: r.min.toLocaleString(), b: r.max.toLocaleString() }));
 
 /** 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다. 틀이 `{s}초간` 처럼 단위를 들면 Alt 의 식이 값과 단위 사이에 끼인다 */
 const UNIT = {
@@ -161,16 +337,17 @@ function slot({ raw, part, unit = UNIT.none, head, show = num }, R) {
         + part.terms.map(x => ` + ${abbrOf(x.attr)} × ${wrap(String(x.coef))}`).join('') + ')';
     // 값 없음 — 식이 숫자 자리를 **대신**한다. 흐리게 두지 않고 식 속 숫자를 강조한다(흐리면 문장의 강조가 쿨 하나만 남는다)
     if (part.value == null) return unit(fx(hl));
-    const v = unit(hl(show(Math.abs(part.value))));
+    // 피해 · 회복량은 범위 객체 `{min, max}` 로 온다(R90) — 절댓값을 안 씌우고 `show` 가 범위를 푼다
+    const v = unit(hl(show(typeof part.value === 'object' ? part.value : Math.abs(part.value))));
     if (!part.terms.length) return v;
     R.fx = true;
     return R.alt ? `${v} <span class="tip-fx">${fx(x => x)}</span>` : v;
 }
 
-/** 피해 · 회복량 · 벽 HP 자리 — 식의 첫 항이 `밑수 이름 × 배율%` 다 */
+/** 피해 · 회복량 · 벽 HP 자리 — 식의 첫 항이 `밑수 이름 × 배율%` 다 · 값은 범위 `{min, max}`(벽은 양끝이 같아 한 수 · R90) */
 const amountSlot = (part, R) => slot({
     part,
-    show: v => v.toLocaleString(),
+    show: rangeText,
     head: wrap => `${BASIS_NAME[part.basis]?.() ?? part.basis} × ${wrap(num(part.pct))}%`,
 }, R);
 
@@ -255,7 +432,7 @@ function skillLines(def, pv, atkType, R) {
 
 /* ───────── Alt 계산식 — 누르는 동안만 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089) ─────────
    토글이 아니다 — 켜 둔 것을 잊으면 모든 설명창이 식으로 부푼다. 떠 있는 설명창도 **즉시** 바꾼다
-   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **스킬 카드뿐** — 영웅 · 아이템 카드는 그대로다.
+   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **`data-alt` 카드** — 스킬 카드(식) · 유닛 카드(세부 옵션 열 · 2026-09-14). 아이템 카드는 그대로다.
    스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 **안 본다** — 판 안에 셋이 나란히 서서 식이 붙으면 세 줄이 같이 부푼다 */
 let altHeld = false;
 /** 마지막 마우스 위치 — 다시 그린 카드의 높이가 달라져도 넘침 보정이 맞게 `moveTip` 을 한 번 더 부른다 */
@@ -266,9 +443,11 @@ function setAlt(on) {
     altHeld = on;
     const tip = $tip();
     if (!tip?.classList.contains('show')) return;
-    const cards = tip.querySelectorAll('.tip-card[data-sk-card]');
-    for (const c of cards) c.replaceWith(skillTipCard(c._skill.s, c._skill.ctx));
-    if (cards.length && lastMove) moveTip(lastMove);
+    // 다시 그리는 카드 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114). 제 인자를 쥔 `_rebuild` 로 같은 카드를 새로 만든다
+    const cards = tip.querySelectorAll('.tip-card[data-alt]');
+    for (const c of cards) c.replaceWith(c._rebuild());
+    // 카드 옆에 붙은 툴팁(ADR-0120)은 마우스 위치 없이도 다시 놓인다 — 넓어진 카드가 넘치면 왼쪽 · 위로 옮긴다
+    if (cards.length && (anchorNode || lastMove)) moveTip(lastMove);
 }
 
 // Alt 만 기본 동작을 막는다 — 막지 않으면 떼는 순간 브라우저 메뉴로 포커스가 넘어간다.
@@ -282,7 +461,7 @@ window.addEventListener('mousemove', ev => { lastMove = ev; }, { passive: true }
  * 툴팁이 내는 **문장**을 그대로 낸다 — 스킬 창의 액티브 줄 · 아이템 툴팁의 담은 스킬 줄이 hover 와 같은 말을 하게 하는 창이다
  * [2026-09-08 사용자 지시 · SCREEN_DESIGN §7]. 카드와 **같은 함수**(`skillLines`)를 쓰므로 둘이 갈릴 길이 없다.
  * ⚠ **Alt 를 안 본다** — 기본 · 값 없음 두 상태만 탄다 (ADR-0089). 추가 피해 문장은 줄바꿈으로 가른다.
- * ⚠ `desc`(고정 설명)는 **안 낸다** — 줄에서 뺐다(같은 지시). 그건 툴팁만 든다.
+ * ⚠ `desc`(고정 설명)는 **안 낸다** — 줄에서 뺐다(같은 지시). 설명창도 2026-09-15 에 뗐다(ADR-0118).
  * @returns {string} 틀이 없는 스킬이면 빈 문자열
  */
 export function skillLineHtml(s, ctx = {}) {
@@ -292,22 +471,25 @@ export function skillLineHtml(s, ctx = {}) {
 }
 
 /**
- * 스킬 카드 — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 설명 / 「Alt 계산식」 각주 (SCREEN_DESIGN §2 「스킬 설명창 규격」).
- * 머리에는 **출처 칩**(고유·무기·전직)과 **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT)이 선다.
- * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 **같은 인자로** 다시 만든다 — 그래서 카드가 제 인자를 든다(`_skill`).
+ * 스킬 카드 — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주 (SCREEN_DESIGN §2 「스킬 설명창 규격」).
+ * 머리에는 **출처 칩**(영웅·무기·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **능력치 칩**이 선다.
+ * 능력치 칩은 스케일링 슬롯(`def.scales`)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
+ * 고정 설명(`def.desc`)은 **안 낸다** — 문장이 같은 말을 값까지 넣어 한다(같은 ADR).
+ * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 **같은 인자로** 다시 만든다 — 그래서 카드가 제 인자를 쥔 `_rebuild` 를 든다(유닛 카드와 같은 장치).
  * @param s   `.id` 만 있으면 된다 — 정의는 `SYS.skill.defs` 에서 집는다(호출처마다 다른 모양을 받아 왔다)
- * @param ctx {period, atk, matk, hpMax, atkType, stats, source} — 모르는 값은 생략한다. 그 숫자 자리가 식으로 접힌다
+ * @param ctx {period, atkMin, atkMax, matkMin, matkMax, hpMax, atkType, stats, source} — 모르는 값은 생략한다. 그 숫자 자리가 식으로 접힌다
  */
 export function skillTipCard(s, ctx = {}) {
     if (!s) return null;
     const def = SYS.skill?.defs?.[s.id] ?? null;
     const c = el('div', 'tip-card');
-    c.dataset.skCard = '1';
-    c._skill = { s, ctx };
+    c.dataset.alt = '1';
+    c._rebuild = () => skillTipCard(s, ctx);
     const name = L(def?.name ?? s.name ?? { ko: s.id, en: s.id });
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
     for (const tg of (def ? SYS.skill.tagsOf(def) : [])) chips.push(`<i class="tip-chip">${L(skillTagName(tg))}</i>`);
+    for (const at of new Set((def?.scales ?? []).map(x => x.attr))) chips.push(`<i class="tip-chip attr">${abbrOf(at)}</i>`);
     // 정의를 못 찾으면(행이 지워진 옛 세이브) 이름만 낸다 — 던지지 않는다
     const R = { alt: altHeld, fx: false };
     const lines = def ? skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, R) : null;
@@ -316,7 +498,6 @@ export function skillTipCard(s, ctx = {}) {
         <div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${name}</div>
         ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
         ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}
-        ${def?.desc ? `<div class="tip-desc">${L(def.desc)}</div>` : ''}
         ${R.fx && !R.alt ? `<div class="tip-foot">${t('sk.altHint')}</div>` : ''}`;
     return c;
 }

@@ -22,9 +22,9 @@
 | `item.js` | 드롭 · 시작 무기(직업 전속 무기군) · 착용 규칙 · 분해 · **강화**(베이스 파생 · 3강마다 옵션 값) |
 | `skill.js` | 액티브 정의 정규화·검증 · **배정(인스턴스 `{id, source}`)** · 발동 선택. **실행은 하지 않는다** — 정의는 `skill.csv`, 어휘는 `skill_effects.js` 의 표 |
 | `skill_effects.js` | **「종류」 등록표** — 공격 대상 4 · 버프 효과 4 · 발동 조건 2. 종류 하나 = 등록 한 번(어휘와 실행이 같은 표를 읽는다). 상태·rng 없음 |
-| `skill_runtime.js` | **액티브 실행** — 시전 · 쿨 · 창 · 배리어 · 회복 · 사건 훅(`reactions`). `battle.simulate` 가 전투마다 만든다(전역 상태 없음) |
+| `skill_runtime.js` | **액티브 실행** — 시전 · 쿨 · 창 · 배리어 · 회복 · 사건 훅(`reactions`). `battle.createRun` 이 런마다 만든다(전역 상태 없음) |
 | `tactic.js` | **파티 전술** — 칸 해금(로스터 합산 레벨) · 조건 판정 · 리롤 후보. **무상태**(어느 칸에 무엇이 들었는지는 세이브가 든다) · 정의는 `tactic_slot.csv`·`tactic_option.csv`(**`(option_id, grade)` 복합키** — 가족과 등급 두 축), 조건 어휘·등급 어휘는 코드 |
-| `battle.js` | 헤드리스 시뮬 — 누가 언제 때리는가 · 유닛 생성(`makeUnit` 하나 — 몬스터도 같은 생성자) · 직격·도발·전투불능 · 라운드·정산. 액티브 실행은 `skill_runtime.js` 에 맡긴다. 피해 자체는 `formula.js` |
+| `battle.js` | 헤드리스 시뮬 — **런을 라운드 단위로 계산한다**(`createRun` — 라운드 사이에 정산 · 갈아입기가 끼어든다 · `simulate` 는 끝까지 이어 부른 것) · 누가 언제 때리는가 · 유닛 생성(`makeUnit` 하나 — 몬스터도 같은 생성자) · 직격·도발·전투불능 · 이긴 라운드의 몫. 보상 지급은 `state.js`(`advanceRun`), 액티브 실행은 `skill_runtime.js`, 피해 자체는 `formula.js` |
 | `state.js` | 세이브 스키마 · `newGame` / `serialize` / `deserialize` · 모든 상태 전이 |
 
 조립은 `ui/data.js:buildSystems` 한 곳 — 테스트(`dev/test.js`)도 같은 조립을 쓴다.

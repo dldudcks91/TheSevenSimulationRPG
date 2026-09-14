@@ -14,14 +14,14 @@
 import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES } from '../ui/data.js';
 import { skillTipCard } from '../ui/tip.js';
-import { setLang } from '../ui/i18n.js';
+import { setLang, t as i18nT } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { parseCsv } from '../game_logic/csv.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createSkillSystem } from '../game_logic/skill.js';
 import { ATTACK_TARGETS, refreshDerived, weaponOnHit } from '../game_logic/skill_effects.js';
-import { createSkillRuntime, createHooks } from '../game_logic/skill_runtime.js';
+import { createSkillRuntime, createHooks, cooldownSec } from '../game_logic/skill_runtime.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
 import { SAVE_VERSION } from '../game_logic/state.js';
 import {
@@ -367,14 +367,14 @@ check('csv: 로더가 읽는 목록 = src/data/*.csv 전부 — 읽히지 않는
 });
 check('balance: 시스템이 쓰는 키가 전부 있다', () => {
     const need = ['party_size_max', 'roster_cap', 'wave_monster_max', 'hero_attr_min', 'hero_attr_max',
-        'hero_hp_base', 'hero_hp_band_levels', 'attr_bonus_per_point', 'hero_xp_base', 'hero_xp_exp', 'power_growth_per_level', 'attr_growth_chance_pct', 'xp_rate', 'monster_xp_base', 'monster_xp_growth',
+        'hero_hp_base', 'monster_hp_base', 'hero_hp_band_levels', 'attr_bonus_per_point', 'hero_xp_base', 'hero_xp_exp', 'power_growth_per_level', 'attr_growth_chance_pct', 'xp_rate', 'monster_xp_base', 'monster_xp_growth',
         'unarmed_atk', 'unarmed_period', 'weapon_atk_base', 'armor_def_base', 'armor_def_per_ilvl', 'armor_def_variance_pct',
         'base_crit_pct', 'base_crit_damage_pct', 'dmg_variance_pct', 'monster_hp_scale', 'monster_atk_scale', 'monster_def_scale', 'battle_timeout_sec',
         'def_curve_k', 'dmg_min', 'crit_cap_pct', 'res_cap_base', 'res_cap_absolute',
         'hit_base_pct', 'hit_per_level_deficit_pct', 'hit_min_pct',
-        'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'rarity_w_normal', 'rarity_w_magic', 'rarity_w_rare',
+        'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'rarity_w_normal', 'rarity_w_magic', 'rarity_w_rare', 'make_rarity_w_normal', 'make_rarity_w_magic', 'make_rarity_w_rare',
         'affix_normal_min', 'affix_normal_max', 'affix_magic_min', 'affix_magic_max', 'affix_rare_min', 'affix_rare_max', 'weapon_common_opt_normal', 'weapon_common_opt_magic', 'weapon_common_opt_rare', 'weapon_fixed_atk_pct_min', 'weapon_fixed_atk_pct_max', 'weapon_def_down_sec', 'weapon_res_down_sec', 'weapon_atk_down_sec', 'salvage_dust_magic', 'salvage_dust_rare',
-        'equip_upgrade_max', 'equip_upgrade_option_interval', 'equip_upgrade_base_pct', 'equip_upgrade_option_pct',
+        'equip_upgrade_max', 'equip_upgrade_base_pct',
         'equip_upgrade_gold_base', 'equip_upgrade_gold_growth',
         'inventory_cap', 'tavern_candidates', 'tavern_hire_cost', 'tavern_reroll_cost', 'tavern_refresh_hours', 'start_gold', 'start_dust', 'start_stigma',
         'tavern_search_slots', 'tavern_search_hours',
@@ -489,7 +489,7 @@ check('combat_stat.csv: sheet_order 1~25 유일 · 머리 3 = 물공·마공·�
     if (new Set(orders).size !== 25) fail(`중복 ${orders.length - new Set(orders).size}개`);
     if (Math.min(...orders) !== 1 || Math.max(...orders) !== 25) fail(`범위 ${Math.min(...orders)}~${Math.max(...orders)}`);
     const seq = D.combatStats.slice().sort((a, b) => a.sheetOrder - b.sheetOrder);
-    // 머리 3 = 대표값 — 시트가 여기까지 굵게 찍고 선을 긋는다 (app.js:DETAIL_LEAD)
+    // 머리 3 = 대표값 — 시트가 여기까지 굵게 찍고 선을 긋는다 (tip.js:DETAIL_LEAD — 캐릭터 탭 · 유닛 툴팁이 같이 쓴다)
     const lead = seq.slice(0, 3).map(s => s.id).join();
     if (lead !== 'atk_physical,atk_magic,hp_max') fail(`머리 3: ${lead}`);
     const drawn = seq.filter(s => s.impl === 1).map(s => s.id);
@@ -497,7 +497,7 @@ check('combat_stat.csv: sheet_order 1~25 유일 · 머리 3 = 물공·마공·�
     // 저항 4행과 그 상한을 움직이는 축은 한 묶음 — 칸 경계가 이 사이로 들어오면 상한이 두 칸에서 두 번 나온다
     const res = drawn.slice(drawn.indexOf('res_fire'), drawn.indexOf('res_fire') + 5).join();
     if (res !== 'res_fire,res_cold,res_lightning,res_poison,res_max_bonus') fail(`저항 묶음: ${res}`);
-    // 칸 경계 = app.js:DETAIL_SPLIT_AT ('damage_reduction') — 13 / 8
+    // 칸 경계 = tip.js:DETAIL_SPLIT_AT ('damage_reduction') — 13 / 8 · 캐릭터 탭 두 패널 · 유닛 툴팁 두 열이 같이 쓴다(sheetPages)
     const cut = drawn.indexOf('damage_reduction');
     if (cut !== 13) fail(`세부 옵션 1 이 ${cut}행 (13 이어야 한다)`);
     return `21행 · 세부 옵션 1 ${cut} / 2 ${drawn.length - cut}`;
@@ -574,13 +574,13 @@ check('formula: 원소 저항은 상한형 — res_cap_base 에서 잘리고 최
     return `${B.res_cap_base}% → 절대 ${B.res_cap_absolute}%`;
 });
 check('formula: 저항은 하한이 없다 — 음수 저항은 피해를 증폭한다 (§9-5)', () => {
-    const a = { atk: 100, atkType: 'fire', crit: 0, critDmg: 100, lvl: 5 };
+    const a = { atkMin: 100, atkMax: 100, atkType: 'fire', crit: 0, critDmg: 100, lvl: 5 };
     const amp = F.strike(seqRng([0, 0.99]), a, { res: { fire: -50 }, lvl: 5 }).dmg;
-    if (!(amp > a.atk)) fail(`증폭되지 않았다 ${amp}`);
-    return `저항 −50% → ${amp} (공격력 ${a.atk})`;
+    if (!(amp > a.atkMax)) fail(`증폭되지 않았다 ${amp}`);
+    return `저항 −50% → ${amp} (공격력 ${a.atkMax})`;
 });
 check('formula: 저항 감소는 %p 가감 — 관통이라는 별도 규칙이 아니다 (§9-5)', () => {
-    const a = { atk: 100, atkType: 'cold', crit: 0, critDmg: 100, lvl: 5, resReduction: 30 };
+    const a = { atkMin: 100, atkMax: 100, atkType: 'cold', crit: 0, critDmg: 100, lvl: 5, resReduction: 30 };
     const dmg = F.strike(seqRng([0, 0.99]), a, { res: { cold: 30 }, lvl: 5 }).dmg;
     return dmg === 100 ? '저항 30 − 감소 30 → 무저항' : fail(`${dmg}`);
 });
@@ -604,11 +604,16 @@ check('formula: 성장 곡선 growthMult — n=1 에서 1, 1당 power_growth_per
     if (Math.abs(F.growthMult(11) - Math.pow(B.power_growth_per_level, 10)) > 1e-9) fail('n=11');
     return `ilvl 10 → ×${F.growthMult(10).toFixed(2)} · 챕터(ilvl 8) → ×${F.growthMult(8).toFixed(2)}`;
 });
-check('formula: strike 의 rng 소비 = 적중 → 치명 (빗나가면 1회) — 편차 굴림 삭제 (§5-2 계약)', () => {
-    const a = { atk: 100, atkType: 'physical', crit: 50, critDmg: 200, lvl: 5 };
+check('formula: strike 의 rng 소비 = 적중 → 피해 → 치명 (빗나가면 1회) — 피해 굴림은 적중 뒤 · 치명 앞 (§5-2 계약 · R90)', () => {
+    const a = { atkMin: 100, atkMax: 100, atkType: 'physical', crit: 50, critDmg: 200, lvl: 5 };
     const hit = seqRng([0, 0.99]);
     const r1 = F.strike(hit, a, { def: 0, lvl: 5 });
-    if (!r1.hit || hit.n !== 2) fail(`적중 시 ${hit.n}회 (2 이어야)`);
+    if (!r1.hit || hit.n !== 3) fail(`적중 시 ${hit.n}회 (3 이어야)`);
+    // 자리 — 둘째 굴림이 피해 · 셋째가 치명이다. 뒤바뀌면 아래 두 판의 결과가 서로 바뀐다
+    const low = F.strike(seqRng([0, 0, 0.99]), { ...a, atkMax: 200 }, { def: 0, lvl: 5 });
+    if (low.dmg !== 100 || low.crit) fail(`피해 굴림 0 · 치명 굴림 0.99 → ${low.dmg} crit ${low.crit} (100 · false 여야)`);
+    const high = F.strike(seqRng([0, 0.99, 0]), { ...a, atkMax: 200 }, { def: 0, lvl: 5 });
+    if (high.dmg !== 199 * 2 || !high.crit) fail(`피해 굴림 0.99 · 치명 굴림 0 → ${high.dmg} crit ${high.crit} (398 · true 여야)`);
     const miss = seqRng([0.99, 0.0]);
     const r2 = F.strike(miss, a, { def: 0, lvl: 99 });      // 레벨 부족 → 적중률 하한
     if (r2.hit || miss.n !== 1) fail(`빗나감 시 ${miss.n}회 (1 이어야)`);
@@ -619,29 +624,29 @@ check('formula: strike 의 rng 소비 = 적중 → 치명 (빗나가면 1회) �
  * 추가 피해 · 능력치 항 [2026-09-10 · battle_design §9-2 · INTERFACE §5-2 · R72] — rng 소비 수를 **세는 rng** 로 잠근다.
  * 기본 공격은 확률이 0 이라 수열이 종전과 같아야 한다 — 그게 깨지면 골든 40런이 통째로 흔들린다.
  */
-check('formula: strike rng 소비 — 빗나감 1 · 적중(추가 피해 확률 0) 2 · 적중(확률 > 0) 3 · 터지면 배수가 치명과 곱해진다 (§5-2 · R72)', () => {
-    const a = { atk: 100, atkType: 'physical', crit: 0, critDmg: 200, lvl: 5 };
+check('formula: strike rng 소비 — 빗나감 1 · 적중(추가 피해 확률 0) 3 · 적중(확률 > 0) 4 · 터지면 배수가 치명과 곱해진다 (§5-2 · R72 · 피해 굴림 R90)', () => {
+    const a = { atkMin: 100, atkMax: 100, atkType: 'physical', crit: 0, critDmg: 200, lvl: 5 };
     const miss = seqRng([0.99, 0, 0]);
     const m = F.strike(miss, { ...a, procChance: 50, procMult: 300 }, { def: 0, lvl: 99 });
     if (m.hit || miss.n !== 1 || m.proc !== false) fail(`빗나감 ${miss.n}회 · proc ${m.proc} (1회 · false 여야)`);
     const plain = seqRng([0, 0.99, 0]);
     const p = F.strike(plain, a, { def: 0, lvl: 5 });
-    if (!p.hit || plain.n !== 2 || p.proc !== false) fail(`확률 0 적중 ${plain.n}회 · proc ${p.proc} (2회 · false 여야)`);
+    if (!p.hit || plain.n !== 3 || p.proc !== false) fail(`확률 0 적중 ${plain.n}회 · proc ${p.proc} (3회 · false 여야)`);
     const rolled = seqRng([0, 0.99, 0.99]);
     const r = F.strike(rolled, { ...a, procChance: 50, procMult: 300 }, { def: 0, lvl: 5 });
-    if (!r.hit || rolled.n !== 3 || r.proc !== false || r.dmg !== 100) fail(`확률 50 적중(안 터짐) ${rolled.n}회 · proc ${r.proc} · dmg ${r.dmg} (3회 · false · 100 이어야)`);
+    if (!r.hit || rolled.n !== 4 || r.proc !== false || r.dmg !== 100) fail(`확률 50 적중(안 터짐) ${rolled.n}회 · proc ${r.proc} · dmg ${r.dmg} (4회 · false · 100 이어야)`);
     const both = seqRng([0, 0, 0]);
     const x = F.strike(both, { ...a, crit: 50, procChance: 50, procMult: 300 }, { def: 0, lvl: 5 });
-    if (both.n !== 3 || !x.crit || !x.proc || x.dmg !== 100 * 2 * 3) fail(`치명+추가 ${both.n}회 · crit ${x.crit} · proc ${x.proc} · dmg ${x.dmg} (600 이어야)`);
+    if (both.n !== 4 || !x.crit || !x.proc || x.dmg !== 100 * 2 * 3) fail(`치명+추가 ${both.n}회 · crit ${x.crit} · proc ${x.proc} · dmg ${x.dmg} (4회 · 600 이어야)`);
     // 확률 > 100 은 100 에서 자른다 — 0.9999 굴림도 터진다
     const capped = seqRng([0, 0.99, 0.9999]);
     if (!F.strike(capped, { ...a, procChance: 250, procMult: 200 }, { def: 0, lvl: 5 }).proc) fail('확률 250 인데 0.9999 에서 안 터졌다 — 100 에서 자르지 않는다');
-    return '빗나감 1 · 확률 0 적중 2 · 확률 > 0 적중 3 · 치명 ×2 · 추가 ×3 = ×6';
+    return '빗나감 1 · 확률 0 적중 3 · 확률 > 0 적중 4 · 치명 ×2 · 추가 ×3 = ×6';
 });
 check('formula: strike 능력치 항 — 배율에 안 곱하고 더한다 · 공격력 0 이어도 flat > 0 이면 피해가 난다 (battle_design §9-2 · R72)', () => {
-    const a = { atk: 100, atkType: 'physical', crit: 0, critDmg: 100, lvl: 5 };
+    const a = { atkMin: 100, atkMax: 100, atkType: 'physical', crit: 0, critDmg: 100, lvl: 5 };
     const dmg = (patch, bonus = 0) => F.strike(seqRng([0, 0.99]), { ...a, ...patch, bonusPct: bonus }, { def: 0, lvl: 5 }).dmg;
-    if (dmg({ atk: 0, flat: 40 }) !== 40) fail(`atk 0 · flat 40 → ${dmg({ atk: 0, flat: 40 })}`);
+    if (dmg({ atkMin: 0, atkMax: 0, flat: 40 }) !== 40) fail(`atk 0 · flat 40 → ${dmg({ atkMin: 0, atkMax: 0, flat: 40 })}`);
     if (dmg({ skillMult: 2, flat: 30 }) !== 230) fail(`100 × 2 + 30 → ${dmg({ skillMult: 2, flat: 30 })} (260 이면 flat 이 배율에 곱해졌다)`);
     if (dmg({ skillMult: 2, flat: 30 }, 50) !== 345) fail(`(100 × 2 + 30) × 1.5 → ${dmg({ skillMult: 2, flat: 30 }, 50)}`);
     if (dmg({}) !== 100) fail('flat 이 없으면 종전과 같아야 한다');
@@ -649,7 +654,7 @@ check('formula: strike 능력치 항 — 배율에 안 곱하고 더한다 · �
 });
 check('formula: 치명 상한 crit_cap_pct — 넘겨도 전타 치명이 되지 않는다', () => {
     const rng = makeRng(5);
-    const a = { atk: 100, atkType: 'physical', crit: 9999, critDmg: 200, lvl: 5 };
+    const a = { atkMin: 100, atkMax: 100, atkType: 'physical', crit: 9999, critDmg: 200, lvl: 5 };
     let crits = 0;
     for (let i = 0; i < 400; i++) if (F.strike(rng, a, { def: 0, lvl: 5 }).crit) crits++;
     if (crits === 400) fail('상한 미적용');
@@ -657,24 +662,63 @@ check('formula: 치명 상한 crit_cap_pct — 넘겨도 전타 치명이 되지
 });
 check('formula: 비직격은 감쇠·치명을 받지 않는다 (§9-6)', () =>
     F.indirect(50) === 50 && F.indirect(0) === B.dmg_min && F.leech(200, 10) === 20);
-check('formula: 직격 — 타격 편차가 없어 시드와 무관하게 같은 숫자가 나오고 감쇠가 그대로 곱해진다', () => {
-    const a = { atk: 1000, atkType: 'physical', crit: 0, critDmg: 100, lvl: 5 };
+check('formula: 직격 — 양끝이 같으면 시드와 무관하게 같은 숫자가 나오고 감쇠가 그대로 곱해진다 (범위 굴림은 아래 단정 · R90)', () => {
+    const a = { atkMin: 1000, atkMax: 1000, atkType: 'physical', crit: 0, critDmg: 100, lvl: 5 };
     const flat = F.strike(makeRng(11), a, { def: 0, lvl: 5 }).dmg;
     if (flat !== 1000) fail(`무방어 ${flat}`);
     const half = F.strike(makeRng(11), a, { def: B.def_curve_k, lvl: 5 }).dmg;
     if (half !== 500) fail(`D=K 에서 ${half} (500 이어야)`);
-    for (let s = 0; s < 30; s++) if (F.strike(makeRng(s), a, { def: 0, lvl: 5 }).dmg !== 1000) fail('타격마다 편차가 남아 있다');
+    for (let s = 0; s < 30; s++) if (F.strike(makeRng(s), a, { def: 0, lvl: 5 }).dmg !== 1000) fail('양끝이 같은데 숫자가 흔들린다');
     return true;
 });
+/**
+ * 무기 피해 범위 [2026-09-14 · R90 · battle_design §9-1] — 적중한 직격마다 공격력 범위 양끝 사이를 **한 번** 굴린다.
+ * 기대값이 가운데에 모이는 것 · 범위 × 배율을 안 벗어나는 것 · 양끝이 같아도 굴림을 소비하는 것을 같이 잠근다.
+ */
+check('formula: 피해 굴림 — 직격 피해는 범위 × 배율 안 · 많이 굴린 평균 ≈ 가운데 · 양끝이 같아도 굴림 1회 (battle_design §9-1 · R90)', () => {
+    const a = { atkMin: 100, atkMax: 200, atkType: 'physical', crit: 0, critDmg: 100, lvl: 5, skillMult: 1.5 };
+    const rng = makeRng(17);
+    let sum = 0, n = 0, lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < 4000; i++) {
+        const r = F.strike(rng, a, { def: 0, lvl: 5 });
+        if (!r.hit) continue;
+        if (r.dmg < 150 || r.dmg > 300) fail(`범위 밖 ${r.dmg} ∉ [150, 300] (100~200 × 1.5)`);
+        sum += r.dmg; n++; lo = Math.min(lo, r.dmg); hi = Math.max(hi, r.dmg);
+    }
+    if (n < 1000) fail(`적중 표본 부족 ${n}`);
+    const mean = sum / n;
+    if (Math.abs(mean - 225) > 225 * 0.02) fail(`평균 ${mean.toFixed(1)} — 가운데 225 에서 2% 넘게 벗어났다`);
+    if (!(hi - lo > 100)) fail(`폭이 안 퍼진다 ${lo}~${hi} — 굴림이 안 걸린다`);
+    // 양끝이 같아도 굴림은 소비된다 — 소비 수가 무기에 의존하면 같은 시드가 다른 전투를 낸다
+    const same = seqRng([0, 0.5, 0.99]);
+    F.strike(same, { ...a, atkMin: 150, atkMax: 150 }, { def: 0, lvl: 5 });
+    if (same.n !== 3) fail(`양끝이 같은 적중 ${same.n}회 (3 이어야)`);
+    return `100~200 × 1.5 → ${lo}~${hi} · 평균 ${mean.toFixed(1)} (가운데 225 · 적중 ${n})`;
+});
+check('formula: weaponDamage — 가운데 × (1 ∓ 폭) × 강화 배율을 한 번 반올림 · 최소 ≥ 1 · 최대 ≥ 최소 · 무기군을 모르면 전역 폭 (INTERFACE §2-3 · R90)', () => {
+    for (const g of Object.values(WG)) for (const ilvl of [1, 10, 40]) for (const up of [0, 3]) {
+        const d = F.weaponDamage(ilvl, g, up);
+        const mid = B.weapon_atk_base * F.growthMult(ilvl), w = g.variance / 100, m = F.upgradeMult(up);
+        const want = { min: Math.max(1, Math.round(mid * (1 - w) * m)), max: 0 };
+        want.max = Math.max(want.min, Math.round(mid * (1 + w) * m));
+        if (!eq(d, want)) fail(`${g.id} ilvl ${ilvl} +${up} → ${JSON.stringify(d)} ≠ ${JSON.stringify(want)}`);
+        if (!Number.isInteger(d.min) || d.min < 1 || d.max < d.min) fail(`${g.id} 양끝 규칙 ${d.min}~${d.max}`);
+    }
+    const bare = F.weaponDamage(10, null), mid = B.weapon_atk_base * F.growthMult(10);
+    if (bare.max !== Math.round(mid * (1 + B.dmg_variance_pct / 100))) fail(`무기군 없음 → ${JSON.stringify(bare)} (dmg_variance_pct 여야)`);
+    if (F.upgradeMult(0) !== 1 || Math.abs(F.upgradeMult(2) - (1 + 2 * B.equip_upgrade_base_pct / 100)) > 1e-12) fail('upgradeMult');
+    const axe = F.weaponDamage(1, WG.axe);
+    return `axe ilvl1 ${axe.min}~${axe.max} · 무기군 없음 ilvl10 ${bare.min}~${bare.max}`;
+});
 check('formula: 조건부 피해 %(bonusPct)가 타격에 곱해진다 · 스킬 배율은 기본 1', () => {
-    const a = { atk: 100, atkType: 'physical', crit: 0, critDmg: 100, lvl: 5 };
+    const a = { atkMin: 100, atkMax: 100, atkType: 'physical', crit: 0, critDmg: 100, lvl: 5 };
     if (F.strike(seqRng([0, 0.99]), { ...a, bonusPct: 50 }, { def: 0, lvl: 5 }).dmg !== 150) fail('bonusPct');
     if (F.strike(seqRng([0, 0.99]), { ...a, skillMult: 2 }, { def: 0, lvl: 5 }).dmg !== 200) fail('skillMult');
     if (F.strike(seqRng([0, 0.99]), a, { def: 0, lvl: 5 }).dmg !== 100) fail('기본값');
     return true;
 });
 check('formula: 최종 피해 하한 dmg_min — 감쇠가 아무리 커도 0이 되지 않는다', () => {
-    const a = { atk: 1, atkType: 'fire', crit: 0, critDmg: 100, lvl: 5 };
+    const a = { atkMin: 1, atkMax: 1, atkType: 'fire', crit: 0, critDmg: 100, lvl: 5 };
     return F.strike(seqRng([0, 0.99]), a, { res: { fire: 1e6 }, lvl: 5 }).dmg === B.dmg_min;
 });
 
@@ -841,7 +885,24 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
 check('save: serialize → deserialize 왕복 동일 (v22)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 24;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 26;
+});
+check('save: v25 → v26 이관 — 무기의 watk 를 지운다 · 피해 범위는 무기군 · ilvl · 강화의 파생 · 다른 아이템은 그대로 (INTERFACE §4 · R90)', () => {
+    const v25 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v25.version = 25;
+    const wUid = Object.keys(v25.items).find(k => v25.items[k].slot === 'weapon');
+    const aUid = Object.keys(v25.items).find(k => v25.items[k].slot !== 'weapon');
+    if (!wUid || !aUid) fail('픽스처 — 무기 · 무기 아닌 아이템이 둘 다 있어야 한다');
+    v25.items[wUid].watk = 9.87;                     // 옛 개체값 — 이관이 지워야 한다
+    const before = JSON.parse(JSON.stringify(v25.items[aUid]));
+    const up = SYS.game.deserialize(v25);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    const w = up.items[wUid];
+    if ('watk' in w) fail('watk 가 남았다');
+    const d = SYS.item.weaponDamage(w);
+    if (!eq(d, F.weaponDamage(w.ilvl, WG[w.group], w.up))) fail(`피해 범위 ${JSON.stringify(d)} 가 무기군 · ilvl · 강화의 파생이 아니다`);
+    if (!eq(up.items[aUid], before)) fail('무기 아닌 아이템이 바뀌었다');
+    return `${w.group} ilvl ${w.ilvl} → ${d.min}~${d.max} · watk 삭제`;
 });
 /**
  * v15 → v16 (2026-09-07 확정 · 2026-09-08 구현 — 사제 전용 무기 · R46).
@@ -866,7 +927,8 @@ check('save: v15 → v16 이관 — 사제가 낀 스태프/오브만 성경/십
     const w = up.items.v16_worn, b = up.items.v16_bag;
     if (w.group !== 'bible') fail(`착용 스태프 → ${w.group} (성경이어야 한다 — 주기 축 1.7 대응)`);
     if (b.group !== 'orb') fail(`가방 오브가 ${b.group} 로 바뀌었다 — 가방은 안 건드린다`);
-    if (w.watk !== 4.44 || w.element !== 'fire') fail('개체 굴림이 재굴림됐다');
+    if (w.element !== 'fire') fail('개체 굴림이 재굴림됐다');
+    if ('watk' in w) fail('v26 자리 — 옛 watk 가 안 지워졌다 (무기 피해는 파생 · R90)');
     if (w.name.ko === '분노의 스태프') fail('이름이 옛 베이스 그대로다 — 접사 죄종을 살려 다시 조립해야 한다');
     if (!w.name.ko.includes('성경')) fail(`이름 ${w.name.ko}`);
     if (SYS.item.canEquip({ cls: 'priest' }, w)) fail('이관 뒤에도 사제가 못 낀다');
@@ -1158,7 +1220,9 @@ check('save: v2 → v17 연쇄 이관 — 감각→운·명중/회피 폐지(v3)
     if (up.items[itemUid].slot === 'weapon' && af[0]?.src !== 'fixed') fail(`v23 자리 — 옛 무기에 고정 옵션이 안 붙었다 ${JSON.stringify(af)}`);
     // 무기 개체값은 재굴림하지 않는다
     const w = Object.values(up.items).find(it => it.slot === 'weapon');
-    if (w.watk !== Object.values(v2.items).find(it => it.uid === w.uid).watk) fail('watk 가 재굴림됐다');
+    // ~~watk 보존~~ → v26 에서 **지워진다** — 무기 피해는 무기군 · ilvl · 강화에서 파생한다 (R90)
+    if ('watk' in w) fail('v26 자리 — watk 가 안 지워졌다');
+    if (!SYS.item.weaponDamage(w)) fail('옛 무기의 피해 범위가 파생되지 않는다');
     return `${up.heroes.length}명 · 접사 ${af.length}개 잔존`;
 });
 check('save: v8 → v9 이관 — 고유 스킬 없는 영웅에게 시드에서 소급 배정 · 이미 가진 것은 유지 · 결정론 (INTERFACE §4)', () => {
@@ -1538,7 +1602,7 @@ check('save: v6 → v7 이관 — 강화 단계 신설. up=0 이면 배율이 1�
     return eq(before, after) ? `아이템 ${Object.keys(up.items).length}개 up=0 · 전투 수치 동일` : fail('이관이 전투 수치를 흔들었다');
 });
 
-/* ── 강화 (item_design §1 개정 2026-08-31 · R25) ── */
+/* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95) ── */
 
 /** 강화 시험용 판 — 가방에 아이템 하나를 넣고 골드를 넉넉히 준다 (본판 G 를 흔들지 않는다) */
 function upgradeFixture(item) {
@@ -1577,44 +1641,51 @@ check('강화: 없는 아이템은 `missing` · 강화는 가방·착용을 가�
     return r.ok && g.items[worn].up === 1 ? '착용 중인 무기도 강화된다' : fail(JSON.stringify(r));
 });
 
-check('강화: 옵션 상승은 [balance.csv:equip_upgrade_option_interval] 단계마다 **한 번만** 걸린다', () => {
-    const { g, it } = upgradeFixture(mkItem('gloves', [{ stat: 'crit_pct', v: 5 }, { stat: 'hp_pct', v: 3 }]));
-    const at = [];
-    for (let i = 0; i < B.equip_upgrade_max; i++) { const r = SYS.game.upgradeItem(g, it.uid); if (r.affix) at.push(r.up); }
-    const want = [];
-    for (let n = B.equip_upgrade_option_interval; n <= B.equip_upgrade_max; n += B.equip_upgrade_option_interval) want.push(n);
-    return eq(at, want) ? `옵션 상승 ${at.join('·')}강` : fail(`${at.join('·')} ≠ ${want.join('·')}`);
-});
-
-check('강화: **재굴림 없음** — 접사의 종류·개수·순서는 그대로이고 값만 오른다 (item_design §1)', () => {
+check('강화: **옵션을 건드리지 않는다** — +[balance.csv:equip_upgrade_max] 까지 올려도 접사의 종류·개수·순서·값이 그대로다 (item_design §7-2 · R95)', () => {
     const { g, it } = upgradeFixture(mkItem('armor', [{ stat: 'crit_pct', v: 5 }, { stat: 'hp_pct', v: 3 }, { stat: 'res_fire', v: 7 }]));
-    const before = it.affixes.map(a => a.stat);
-    const v0 = it.affixes.map(a => a.v);
-    for (let i = 0; i < B.equip_upgrade_max; i++) SYS.game.upgradeItem(g, it.uid);
-    const after = it.affixes.map(a => a.stat);
-    if (!eq(before, after)) fail(`접사 목록이 바뀌었다: ${before} → ${after}`);
-    const v1 = it.affixes.map(a => a.v);
-    if (v1.some((v, i) => v < v0[i])) fail('값이 내려간 접사가 있다');
-    if (!v1.some((v, i) => v > v0[i])) fail('오른 접사가 하나도 없다');
-    return `${before.join('·')} · ${v0.join('/')} → ${v1.join('/')}`;
+    const before = JSON.stringify(it.affixes);
+    for (let i = 0; i < B.equip_upgrade_max; i++) {
+        const r = SYS.game.upgradeItem(g, it.uid);
+        if (!r.ok) fail(`${i + 1}단계 ${r.err}`);
+        if ('affix' in r) fail('결과에 affix 가 남아 있다 — 옵션 계단은 퇴역했다');
+    }
+    const after = JSON.stringify(it.affixes);
+    return after === before ? `+${it.up} · 접사 ${it.affixes.length}개 그대로` : fail(`${before} → ${after}`);
 });
 
-check('강화: 옵션 값은 **최소 한 칸** 오른다 — 값이 작은 접사가 반올림에 먹히지 않는다', () => {
-    // v=1 짜리 정수 접사는 비율만 곱하면(+20%) 반올림으로 제자리에 남는다
-    const { g, it } = upgradeFixture(mkItem('boots', [{ stat: 'crit_pct', v: 1 }]));
-    for (let i = 0; i < B.equip_upgrade_option_interval; i++) SYS.game.upgradeItem(g, it.uid);
-    return it.affixes[0].v >= 2 ? `1 → ${it.affixes[0].v}` : fail(`값이 안 올랐다: ${it.affixes[0].v}`);
+check('강화: 목걸이 · 반지는 강화하지 않는다 — `noBase` · 비용 null · 옛 세이브의 up 은 그대로 (item_design §7-2 · R95)', () => {
+    const out = [];
+    for (const slot of ['amulet', 'ring']) {
+        const { g, it } = upgradeFixture(mkItem(slot, [{ stat: 'gold_find', v: 5 }], { up: 2 }));   // 옛 규칙으로 +2 까지 올린 장신구
+        const gold = g.resources.gold;
+        if (SYS.item.upgradeable(it)) fail(`${slot} 이 강화 대상이다`);
+        if (SYS.item.upgradeCost(it) !== null) fail(`${slot} 에 비용이 있다`);
+        const s = SYS.game.upgradeState(g, it.uid);
+        if (s.upgradeable || s.canUpgrade || s.cost !== null) fail(`${slot} state ${JSON.stringify(s)}`);
+        const r = SYS.game.upgradeItem(g, it.uid);
+        if (r.ok || r.err !== 'noBase') fail(`${slot} ${JSON.stringify(r)}`);
+        if (it.up !== 2 || g.resources.gold !== gold) fail(`${slot} 거절했는데 상태가 바뀌었다`);
+        out.push(slot);
+    }
+    for (const slot of ['weapon', 'helmet', 'armor', 'gloves', 'boots'])
+        if (!SYS.item.upgradeable({ slot })) fail(`${slot} 이 강화 대상이 아니다`);
+    return `${out.join('·')} 거절 · 무기 · 방어구 4부위는 대상`;
 });
 
-check('강화: 베이스는 **파생이다** — 원본 watk 는 안 바뀌고 effective 만 배율을 먹인다 (개체 굴림 보존)', () => {
+check('강화: 베이스는 **파생이다** — 무기 피해 범위는 up 으로 다시 계산되고 아이템에 박히지 않는다 (R25 · R90)', () => {
     const w = SYS.item.startingWeapon(makeRng(11), 'warrior');
     const { g, it } = upgradeFixture(w);
-    const raw = it.watk;
+    const before = SYS.item.weaponDamage(it);
+    const keys = Object.keys(it).sort().join(',');
     for (let i = 0; i < 4; i++) SYS.game.upgradeItem(g, it.uid);
-    if (it.watk !== raw) fail(`원본이 바뀌었다: ${raw} → ${it.watk}`);
-    const want = Math.round(raw * (1 + 4 * B.equip_upgrade_base_pct / 100) * 100) / 100;
-    const got = SYS.item.effective(it).watk;
-    return Math.abs(got - want) < 1e-9 ? `watk ${raw} → +4강 ${got}` : fail(`${got} ≠ ${want}`);
+    if ('watk' in it) fail('무기에 공격력 값이 박혔다 — 범위는 파생이다');
+    if (Object.keys(it).sort().join(',') !== keys) fail('강화가 아이템에 새 필드를 박았다');
+    const got = SYS.item.weaponDamage(it);
+    const want = F.weaponDamage(it.ilvl, WG[it.group], 4);
+    if (!eq(got, want)) fail(`${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`);
+    if (!(got.max > before.max)) fail(`+4강인데 최대 피해가 안 올랐다 ${before.max} → ${got.max}`);
+    if (SYS.item.effective(it) !== it) fail('무기는 사본에 먹일 고유값이 없다 — effective 가 원본을 돌려줘야 한다');
+    return `${before.min}~${before.max} → +4강 ${got.min}~${got.max}`;
 });
 
 check('강화: up=0 이면 effective 가 **원본 객체 그대로**다 (매 렌더·매 전투가 부르는 자리라 할당을 아낀다)', () => {
@@ -1628,23 +1699,24 @@ check('강화: 전투 능력치가 실제로 오른다 — heroCombat 이 effect
     const g = newGameP(7, cands, NOW);
     g.resources.gold = 1e9;
     const h = g.heroes[0], w = g.items[h.equipped.weapon];
-    const atkOf = c => c.atk_physical ?? c.atk_magic;            // 채널 키는 무기군이 정한다 (§2-4)
+    const atkOf = c => (c.atk_physical ?? c.atk_magic).max;      // 채널 키는 무기군이 정한다 (§2-4) · 값은 범위 — 최대 끝으로 본다 (R90)
     const atk0 = atkOf(SYS.game.heroCombat(g, h));
     for (let i = 0; i < B.equip_upgrade_max; i++) SYS.game.upgradeItem(g, w.uid);
     const atk1 = atkOf(SYS.game.heroCombat(g, h));
     return atk1 > atk0 ? `공격력 ${atk0} → ${atk1} (+${B.equip_upgrade_max}강)` : fail(`안 올랐다: ${atk0} → ${atk1}`);
 });
 
-check('강화: 같은 시드 = 같은 결과 — 강화 스트림은 전투·선술집·전술과 안 섞인다 (INTERFACE §5-1)', () => {
-    const run = () => {
-        const { g, it } = upgradeFixture(mkItem('armor', [{ stat: 'crit_pct', v: 5 }, { stat: 'hp_pct', v: 3 }, { stat: 'res_fire', v: 7 }]));
-        g.seed = 12345;
+check('강화: rng 를 안 쓴다 — 시드가 달라도 같은 결과 · `counters.upgrade` 가 안 오른다 (R95 · INTERFACE §5-1)', () => {
+    const run = seed => {
+        const { g, it } = upgradeFixture(mkItem('armor', [{ stat: 'crit_pct', v: 5 }, { stat: 'hp_pct', v: 3 }, { stat: 'res_fire', v: 7 }], { implicit: { stat: 'def_flat', v: 10 } }));
+        g.seed = seed;
+        const c0 = g.counters.upgrade;
         const log = [];
-        for (let i = 0; i < B.equip_upgrade_max; i++) log.push(JSON.stringify(SYS.game.upgradeItem(g, it.uid).affix ?? null));
-        return log.join('|');
+        for (let i = 0; i < B.equip_upgrade_max; i++) log.push(JSON.stringify(SYS.game.upgradeItem(g, it.uid)));
+        if (g.counters.upgrade !== c0) fail(`counters.upgrade ${c0} → ${g.counters.upgrade}`);
+        return log.join('|') + JSON.stringify(SYS.item.effective(it));
     };
-    const a = run();
-    return a === run() ? '9단계 동일' : fail('같은 시드가 다른 결과를 냈다');
+    return run(12345) === run(777) ? `${B.equip_upgrade_max}단계 · 시드 둘 동일` : fail('시드가 강화 결과를 바꿨다');
 });
 
 check('강화: 드롭·시작 무기는 up=0 으로 나온다 — 강화는 굴림이 아니다', () => {
@@ -1660,6 +1732,127 @@ check('강화: 비용 곡선 = base × growth^(현재 단계) — 단계마다 �
     if (costs.some((c, i) => i && c <= costs[i - 1])) fail(`곡선이 안 오른다: ${costs.join('·')}`);
     if (costs[0] !== B.equip_upgrade_gold_base) fail(`+1강 비용 ${costs[0]}`);
     return `${costs.join(' · ')} (합 ${costs.reduce((a, b) => a + b, 0)}G)`;
+});
+
+/* ── 제작 (item_design §7-1 확정 2026-09-15 · R96) ── */
+
+/** 제작 시험용 판 — 모든 레벨대의 광석 · 목재와 가루를 무기 레시피의 k 배만큼 쥔다 (본판 G 를 흔들지 않는다) */
+function makeFixture(k = 1) {
+    const g = newGameP(7, cands, NOW);
+    const r = D.makeRecipes.weapon;
+    for (const b of SYS.game.makeBands()) { g.materials[b.ore] = r.ore * k; g.materials[b.timber] = r.timber * k; }
+    g.resources.dust = r.dust * k;
+    return g;
+}
+
+check('make: 레시피는 부위 전부 — 광석 · 목재 · 가루가 모두 1 이상 (보완재 · 원정 쪽 입력 — item_design §5-1 · §7-1)', () => {
+    const parts = D.slots.map(s => s.id);
+    for (const p of parts) {
+        const r = D.makeRecipes[p];
+        if (!r) fail(`${p} 레시피가 없다`);
+        if (!(r.ore >= 1 && r.timber >= 1 && r.dust >= 1)) fail(`${p} ${JSON.stringify(r)}`);
+    }
+    return `${parts.length}부위`;
+});
+
+check('make: 레벨대 = 챕터 — stage.csv 가 정하고 1 부터 빈틈 없이 잇는다 · 재료는 그 단계의 광석 · 목재 (item_design §7-1 · base_expedition §2-1)', () => {
+    const bands = SYS.game.makeBands();
+    if (bands.length !== D.chapterList.length) fail(`레벨대 ${bands.length} ≠ 챕터 ${D.chapterList.length}`);
+    let lo = 1;
+    for (const b of bands) {
+        if (b.lo !== lo) fail(`레벨대 ${b.band} 시작 ${b.lo} ≠ ${lo}`);
+        const top = Math.max(...D.stageList.filter(s => s.chapter === b.band).map(s => s.dlvl));
+        if (b.hi !== top) fail(`레벨대 ${b.band} 끝 ${b.hi} ≠ ${top}`);
+        if (D.mineNodes.find(n => n.tier === b.band)?.yieldId !== b.ore) fail(`레벨대 ${b.band} 광석 ${b.ore}`);
+        if (D.logNodes.find(n => n.tier === b.band)?.yieldId !== b.timber) fail(`레벨대 ${b.band} 목재 ${b.timber}`);
+        lo = b.hi + 1;
+    }
+    return bands.map(b => `${b.lo}~${b.hi}`).join(' · ');
+});
+
+check('make: 재료가 모자라면 `materials` — 재료 · 가방 · 카운터가 안 움직인다', () => {
+    const g = makeFixture(1);
+    const b = SYS.game.makeBands()[0];
+    g.materials[b.ore] -= 1;
+    const snap = JSON.stringify([g.materials, g.resources, g.bag, g.counters]);
+    if (SYS.game.makeState(g, 'weapon', b.band).canMake) fail('모자란데 canMake');
+    const r = SYS.game.makeItem(g, 'weapon', b.band);
+    if (r.ok || r.err !== 'materials') fail(JSON.stringify(r));
+    return JSON.stringify([g.materials, g.resources, g.bag, g.counters]) === snap ? '광석 하나 모자람 → 거절' : fail('거절했는데 상태가 바뀌었다');
+});
+
+check('make: 만들면 재료를 레시피만큼 내고 인벤토리 끝에 하나 — 고른 부위 · 레벨대 안 ilvl · 일반/매직/레어 · 강화 0 (item_design §7-1)', () => {
+    const got = [];
+    for (const b of SYS.game.makeBands()) for (const part of D.slots.map(s => s.id)) {
+        const g = makeFixture(0);
+        const r0 = D.makeRecipes[part];
+        g.materials[b.ore] = r0.ore; g.materials[b.timber] = r0.timber; g.resources.dust = r0.dust;
+        const bag0 = g.bag.length, c0 = g.counters.make;
+        const r = SYS.game.makeItem(g, part, b.band);
+        if (!r.ok) fail(`${part} 레벨대 ${b.band} ${r.err}`);
+        const it = g.items[r.uid];
+        if (it.slot !== part) fail(`부위 ${it.slot} ≠ ${part}`);
+        if (!(it.ilvl >= b.lo && it.ilvl <= b.hi)) fail(`ilvl ${it.ilvl} 가 ${b.lo}~${b.hi} 밖`);
+        if (!['normal', 'magic', 'rare'].includes(it.rarity)) fail(`희귀도 ${it.rarity}`);
+        if (it.up !== 0) fail(`up ${it.up}`);
+        if (g.bag.length !== bag0 + 1 || g.bag[g.bag.length - 1] !== r.uid) fail('인벤토리 끝에 안 들어갔다');
+        if (g.materials[b.ore] !== 0 || g.materials[b.timber] !== 0 || g.resources.dust !== 0) fail('재료를 레시피만큼 안 냈다');
+        if (g.counters.make !== c0 + 1) fail(`counters.make ${c0} → ${g.counters.make}`);
+        got.push(it.rarity[0]);
+    }
+    return `${got.length}회 · ${got.join('')}`;
+});
+
+check('make: 인벤토리가 차 있으면 `bagFull` — 재료를 안 낸다', () => {
+    const g = makeFixture(1);
+    const b = SYS.game.makeBands()[0];
+    while (g.bag.length < B.inventory_cap) g.bag.push(`iFake${g.bag.length}`);
+    const snap = JSON.stringify([g.materials, g.resources.dust, g.counters.make]);
+    const r = SYS.game.makeItem(g, 'weapon', b.band);
+    if (r.ok || r.err !== 'bagFull') fail(JSON.stringify(r));
+    return JSON.stringify([g.materials, g.resources.dust, g.counters.make]) === snap ? '가득 참 → 거절 · 재료 그대로' : fail('거절했는데 재료가 줄었다');
+});
+
+check('make: 없는 부위 · 레벨대는 `missing` · 상태는 null', () => {
+    const g = makeFixture(1);
+    if (SYS.game.makeState(g, 'offhand', 1) !== null) fail('없는 부위에 상태가 섰다');
+    const r = SYS.game.makeItem(g, 'weapon', 99);
+    return r.err === 'missing' ? true : fail(JSON.stringify(r));
+});
+
+check('make: 같은 시드 · 같은 회차 = 같은 장비 — 제작 스트림은 전투와 안 섞인다 (INTERFACE §5-1)', () => {
+    const run = () => {
+        const g = makeFixture(3);
+        const bands = SYS.game.makeBands();
+        const b = bands[2] ?? bands[0];
+        const uids = [0, 1, 2].map(() => SYS.game.makeItem(g, 'weapon', b.band).uid);
+        return { s: JSON.stringify(uids.map(u => g.items[u])), battle: g.counters.battle };
+    };
+    const a = run(), c = run();
+    if (a.s !== c.s) fail('같은 시드가 다른 장비를 냈다');
+    return a.battle === 0 ? '3회 동일 · counters.battle 0' : fail(`counters.battle ${a.battle}`);
+});
+
+check('make: 희귀도 가중치는 [balance.csv:make_rarity_w_*] — 드롭 가중치와 따로다 (item_design §7-1)', () => {
+    const S2 = buildSystems({ ...D, balance: { ...B, make_rarity_w_normal: 0, make_rarity_w_magic: 0, make_rarity_w_rare: 1, rarity_w_rare: 0 } });
+    const g = S2.game.newGame(7, cands, NOW);
+    const b = S2.game.makeBands()[0], r0 = D.makeRecipes.armor;
+    g.materials[b.ore] = r0.ore * 5; g.materials[b.timber] = r0.timber * 5; g.resources.dust = r0.dust * 5;
+    const got = [0, 1, 2, 3, 4].map(() => g.items[S2.game.makeItem(g, 'armor', b.band).uid].rarity);
+    if (got.some(x => x !== 'rare')) fail(`제작 ${got.join('·')} — 제작 가중치를 안 읽는다`);
+    for (let i = 1; i <= 20; i++) if (S2.item.rollDrop(makeRng(i), 5).rarity === 'rare') fail('드롭이 제작 가중치를 읽는다');
+    return '제작 5 전부 레어 · 드롭 20 레어 0';
+});
+
+check('save: 제작 재료 · counters.make 가 왕복한다 — 없는 옛 세이브는 {} · 0 으로 열린다 (버전 무변경 · INTERFACE §4 · R96)', () => {
+    const g = makeFixture(2);
+    SYS.game.makeItem(g, 'ring', SYS.game.makeBands()[0].band);
+    const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))));
+    if (!eq(back.materials, g.materials) || back.counters.make !== g.counters.make) fail('왕복이 재료를 흔들었다');
+    const old = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
+    delete old.materials; delete old.counters.make;
+    const up = SYS.game.deserialize(old);
+    return eq(up.materials, {}) && up.counters.make === 0 && up.version === SAVE_VERSION ? '왕복 · 옛 세이브 기본값' : fail(JSON.stringify([up.materials, up.counters.make]));
 });
 
 /* ── 스킬 태그 (skill_design §11 확정 2026-08-28) ── */
@@ -1745,7 +1938,7 @@ check('combat: 무기가 공격력을 올린다', () => {
     const h = G.heroes[0];
     const naked = SYS.hero.computeCombat(h, []);
     const armed = SYS.hero.computeCombat(h, [G.items[h.equipped.weapon]]);
-    const atk = c => c.atk_physical ?? c.atk_magic;
+    const atk = c => (c.atk_physical ?? c.atk_magic).max;   // 범위 — 최대 끝으로 본다 (R90)
     return atk(armed) > atk(naked) ? `${atk(naked)} → ${atk(armed)}` : false;
 });
 /*
@@ -1768,11 +1961,11 @@ check('combat: 무기군이 물리/마법을 정하지만 attack_type 은 언제
     const n = SYS.hero.computeCombat(h, []);
     if (n.attack_type !== 'physical') fail('unarmed not physical');
     if (c.action_period > WG[staff.group].period) fail('period from group');
-    return `${staff.group} → atk_magic ${c.atk_magic} · atkType ${c.attack_type}`;
+    return `${staff.group} → atk_magic ${c.atk_magic.min}~${c.atk_magic.max} · atkType ${c.attack_type}`;
 });
 check('combat: 무기가 밑수다 — 무기 접사의 고정 공격력만 오르고 장갑의 것은 안 오른다 (§9-1)', () => {
     const h = G.heroes[0];
-    const atk = c => c.atk_physical ?? c.atk_magic;
+    const atk = c => (c.atk_physical ?? c.atk_magic).max;   // 범위 — 최대 끝으로 본다 (R90)
     const w = { ...G.items[h.equipped.weapon], affixes: [] };
     const base = atk(SYS.hero.computeCombat(h, [w]));
     const wPlus = { ...w, affixes: [{ stat: 'atk_flat', v: 5 }] };
@@ -1781,11 +1974,11 @@ check('combat: 무기가 밑수다 — 무기 접사의 고정 공격력만 오�
     if (!(armed > base)) fail(`무기 접사가 안 걸린다 ${base} → ${armed}`);
     if (atk(SYS.hero.computeCombat(h, [w, gloves])) !== base) fail('무기 외 슬롯의 고정 공격력이 밑수에 더해졌다');
     // 상시 피해 %는 밑수 전체를 곱한다 (반올림 알갱이를 피하려고 큰 밑수로 본다)
-    const big = { ...w, watk: 100, affixes: [] };
+    const big = { ...w, ilvl: 60, affixes: [] };            // ~~watk 100~~ — 무기 피해는 파생이라 ilvl 로 키운다 (R90)
     const b100 = atk(SYS.hero.computeCombat(h, [big]));
     const p100 = atk(SYS.hero.computeCombat(h, [{ ...big, affixes: [{ stat: 'atk_pct', v: 100 }] }]));
     if (Math.abs(p100 - 2 * b100) > 1) fail(`atk_pct 가 밑수를 곱하지 않는다 ${b100} → ${p100}`);
-    return `밑수 ${base} · 무기접사 +5 → ${armed} · watk100 +100% → ${b100}→${p100}`;
+    return `밑수 ${base} · 무기접사 +5 → ${armed} · ilvl60 +100% → ${b100}→${p100}`;
 });
 check('combat: 원소 저항은 직접 % — res_all + 원소별 접사, 최대 저항 증가·저항 감소는 따로 낸다 (§9-5)', () => {
     const armor = mkItem('armor', [{ stat: 'res_all', v: 7 }, { stat: 'res_fire', v: 5 }]);
@@ -1822,7 +2015,7 @@ check('combat: 운은 전투 밖 — 장비가 0이면 0, 접사가 있으면 �
     if (geared.gold_find <= 10 || geared.item_find <= 10) fail(`운 계수 미적용 ${geared.gold_find}/${geared.item_find}`);
     // 운은 전투 축에 손대지 않는다
     const lowLuck = SYS.hero.computeCombat({ ...h, stats: { ...h.stats, luck: 1 } }, []);
-    if (lowLuck.atk_physical !== bare.atk_physical || lowLuck.hp_max !== bare.hp_max) fail('운이 전투 능력치를 흔든다');
+    if (!eq(lowLuck.atk_physical, bare.atk_physical) || lowLuck.hp_max !== bare.hp_max) fail('운이 전투 능력치를 흔든다');
     return `luck20 · 접사 10 → 골드 획득 ${geared.gold_find}`;
 });
 /**
@@ -1836,7 +2029,7 @@ check('combat: 공격력은 순수 무기 밑수 — 힘·지능만 다른 두 �
     const staff = SYS.item.startingWeapon(makeRng(2), 'mage');
     const lo = { ...h, stats: { ...h.stats, str: 1, int: 1 } };
     const hi = { ...h, stats: { ...h.stats, str: 20, int: 20 } };
-    const atk = c => c.atk_physical ?? c.atk_magic;
+    const atk = c => { const r = c.atk_physical ?? c.atk_magic; return `${r.min}~${r.max}`; };   // 범위 — 양끝을 같이 본다 (R90)
     for (const items of [[w], [staff], []]) {
         const a = atk(SYS.hero.computeCombat(lo, items)), b = atk(SYS.hero.computeCombat(hi, items));
         if (a !== b) fail(`${items[0]?.group ?? '맨손'} 힘·지능 1 → ${a} · 20 → ${b} — 능력치가 아직 곱해진다`);
@@ -1944,42 +2137,35 @@ check('item: rollGear — 등급 레어 가중(gear_rare_bonus_pct)이 매직찬
     if (!eq(a, b)) fail('rareBonusPct 와 magicFind 가 다른 채널이다');
     return `레어 ${(lo * 100).toFixed(1)}% → ${(hi * 100).toFixed(1)}% (+250)`;
 });
-check('item: 무기 공격력은 개체 굴림 — 같은 ilvl 도 서로 다르고 편차 폭 안에 있다 (§9-1 · R2·R10)', () => {
+check('item: 무기 피해는 범위이고 파생이다 — 같은 무기군 · 같은 ilvl 이면 같은 범위 · 아이템에 박히지 않는다 · 양끝 정수 (battle_design §9-1 · R90)', () => {
     const rng = makeRng(41);
     const ILVL = 10;
     const byGroup = {};
+    let n = 0;
     for (let i = 0; i < 400; i++) {
         const it = SYS.item.rollDrop(rng, ILVL);
         if (it.slot !== 'weapon') continue;
-        const g = WG[it.group];
-        const nominal = B.weapon_atk_base * Math.pow(B.power_growth_per_level, ILVL - 1);
-        const v = g.variance ?? B.dmg_variance_pct;
-        if (it.watk < nominal * (1 - v / 100) - 1e-6 || it.watk > nominal * (1 + v / 100) + 1e-6)
-            fail(`${it.group} watk ${it.watk} ∉ ${nominal.toFixed(2)} ±${v}%`);
-        if (Math.abs(it.watk * 100 - Math.round(it.watk * 100)) > 1e-6) fail(`소수 2자리가 아니다: ${it.watk}`);
-        (byGroup[it.group] ??= []).push(it.watk);
+        n++;
+        if ('watk' in it) fail(`${it.group} 에 watk 가 박혔다 — 무기 피해는 파생이다`);
+        const d = SYS.item.weaponDamage(it);
+        const mid = B.weapon_atk_base * Math.pow(B.power_growth_per_level, ILVL - 1);
+        const v = (WG[it.group].variance ?? B.dmg_variance_pct) / 100;
+        if (d.min !== Math.max(1, Math.round(mid * (1 - v))) || d.max !== Math.max(d.min, Math.round(mid * (1 + v))))
+            fail(`${it.group} ${d.min}~${d.max} ≠ round(${mid.toFixed(2)} × (1 ∓ ${v}))`);
+        if (!Number.isInteger(d.min) || !Number.isInteger(d.max) || d.min < 1 || d.max < d.min) fail(`양끝 규칙 ${d.min}~${d.max}`);
+        const key = `${d.min}~${d.max}`;
+        if (byGroup[it.group] && byGroup[it.group] !== key) fail(`${it.group} 같은 ilvl 인데 범위가 갈린다 ${byGroup[it.group]} vs ${key}`);
+        byGroup[it.group] = key;
     }
-    const groups = Object.entries(byGroup).filter(([, l]) => l.length >= 3);
-    if (!groups.length) fail('무기 표본 부족');
-    if (!groups.some(([, l]) => new Set(l).size > 1)) fail('개체차가 없다 — 편차가 개체에 박히지 않았다');
-    const [gid, list] = groups[0];
-    return `${gid} ${list.length}개 · ${Math.min(...list)} ~ ${Math.max(...list)}`;
+    if (n < 10) fail(`무기 표본 부족 ${n}`);
+    if (SYS.item.weaponDamage(mkItem('boots', [])) !== null) fail('무기가 아닌데 범위가 났다');
+    return Object.entries(byGroup).map(([g, k]) => `${g} ${k}`).join(' · ');
 });
-check('item: 무기 공격력은 성장 곡선을 탄다 — ilvl 이 오르면 대역이 통째로 올라간다 (§9-0)', () => {
-    const lo = [], hi = [];
-    const rng = makeRng(43);
-    for (let i = 0; i < 600; i++) {
-        const it = SYS.item.rollDrop(rng, 1);
-        if (it.slot === 'weapon' && it.group === 'mace') lo.push(it.watk);
-    }
-    const rng2 = makeRng(43);
-    for (let i = 0; i < 600; i++) {
-        const it = SYS.item.rollDrop(rng2, 20);
-        if (it.slot === 'weapon' && it.group === 'mace') hi.push(it.watk);
-    }
-    if (!lo.length || !hi.length) fail(`표본 ${lo.length}/${hi.length}`);
-    if (!(Math.min(...hi) > Math.max(...lo))) fail(`대역이 겹친다 ${Math.max(...lo)} vs ${Math.min(...hi)}`);
-    return `mace ilvl1 ≤${Math.max(...lo)} · ilvl20 ≥${Math.min(...hi)}`;
+check('item: 무기 피해 범위는 성장 곡선을 탄다 — ilvl 이 오르면 대역이 통째로 올라간다 (§9-0 · R90)', () => {
+    const mace = { slot: 'weapon', group: 'mace', up: 0 };
+    const lo = SYS.item.weaponDamage({ ...mace, ilvl: 1 }), hi = SYS.item.weaponDamage({ ...mace, ilvl: 20 });
+    if (!(hi.min > lo.max)) fail(`대역이 겹친다 ilvl1 ${lo.min}~${lo.max} vs ilvl20 ${hi.min}~${hi.max}`);
+    return `mace ilvl1 ${lo.min}~${lo.max} · ilvl20 ${hi.min}~${hi.max}`;
 });
 check('item: 방어구 고유값도 개체 굴림 — armor_def_variance_pct 안. 부위별 배수는 없다 (보조 ×1.5 는 슬롯과 함께 폐지, 2026-09-01)', () => {
     const rng = makeRng(47);
@@ -2151,6 +2337,9 @@ check('equip: 방어구 착용 → 방어력 상승, 해제 → 가방 복귀', 
     do { it = SYS.item.rollDrop(rng, 3); } while (it.slot !== 'armor');
     it.uid = 'test_armor'; G.items[it.uid] = it; G.bag.push(it.uid);
     const h = G.heroes[0];
+    // 시작 장비가 갑옷을 입고 있다(R86) — **벗긴 상태**를 기준으로 삼는다. 다른 갑옷으로 갈아입을 때의 증감은 굴림 운이라
+    //   이 단정이 볼 것이 아니다(R90 로 드롭 수열이 밀리자 굴린 갑옷이 시작 갑옷보다 약하게 나와 드러났다)
+    if (h.equipped.armor) { const off = SYS.game.unequip(G, h.uid, 'armor'); if (!off.ok) fail(`시작 갑옷 해제 ${off.err}`); }
     const before = SYS.game.heroCombat(G, h).defense;
     const r = SYS.game.equip(G, h.uid, it.uid);
     if (!r.ok) fail(`equip ${r.err}`);
@@ -2270,7 +2459,7 @@ check('save: v23 → v24 이관 — 인벤 상한을 넘는 뒤쪽이 창고로 
     delete v23.stash;
     v23.bag = Array.from({ length: cap + 4 }, (_, i) => `iMig${i}`);
     const up = SYS.game.deserialize(v23);
-    if (up.version !== 24) fail(`v${up.version}`);
+    if (up.version !== SAVE_VERSION) fail(`v${up.version}`);
     if (up.bag.length !== cap) fail(`bag ${up.bag.length}`);
     if (up.stash.length !== 4) fail(`stash ${up.stash.length}`);
     return up.bag[0] === 'iMig0' && up.stash[0] === `iMig${cap}`;
@@ -2284,12 +2473,31 @@ const units = () => G.party.map(uid => ({ uid, combat: SYS.game.heroCombat(G, SY
  */
 const godUnits = (lvl = 50) => units().map(u => ({
     uid: u.uid,
-    combat: { ...u.combat, atk_physical: 2000, atk_magic: undefined, attack_type: 'physical', hp_max: 100000, level: lvl },
+    combat: { ...u.combat, atk_physical: { min: 2000, max: 2000 }, atk_magic: undefined, attack_type: 'physical', hp_max: 100000, level: lvl },
 }));
+/** 공격력 범위에 배수 — 테스트 파티를 세게 만든다 (R90 — 공격력은 `{min, max}`) */
+const scaleRange = (r, k) => ({ min: (r?.min ?? 1) * k, max: (r?.max ?? 1) * k });
 check('simulate: 같은 시드 = 같은 타임라인', () => {
     const a = SYS.battle.simulate(units(), 101, makeRng(5));
     const b = SYS.battle.simulate(units(), 101, makeRng(5));
     return eq(a, b) && a.timeline.length > 10 ? `${a.timeline.length} events` : false;
+});
+check('simulate: 직격마다 피해를 굴린다 — 같은 라운드 · 같은 공격자 · 같은 대상의 기본 공격(치명 · 추가 · 강타 없음)도 피해가 갈린다 (battle_design §9-1 · R90)', () => {
+    // 무기 옵션을 걷는다 — 타격 시 창(방어 감소 등)이 대상 방어를 흔들면 굴림 없이도 피해가 갈려 이 단정이 헛돈다
+    const r = SYS.battle.simulate(units().map(u => ({ ...u, combat: { ...u.combat, option_fx: null } })), 101, makeRng(5));
+    const groups = new Map();
+    let round = 0;
+    for (const ev of r.timeline) {
+        if (ev.e === 'round') round = ev.n;
+        if (ev.e !== 'hit' || !ev.a.startsWith('p') || ev.s || ev.crit || ev.proc || ev.cb) continue;
+        const k = `${round}:${ev.a}>${ev.d}`;
+        if (!groups.has(k)) groups.set(k, new Set());
+        groups.get(k).add(ev.dmg);
+    }
+    if (!groups.size) fail('파티 기본 공격 표본이 없다');
+    const varied = [...groups.values()].filter(s => s.size > 1).length;
+    if (!varied) fail(`같은 공격자 · 같은 대상의 피해가 전부 한 값이다 — 굴림이 안 걸린다 (${groups.size}쌍)`);
+    return `${groups.size}쌍 중 ${varied}쌍이 갈린다`;
 });
 check('simulate: 다른 시드 = 다른 전투', () => !eq(SYS.battle.simulate(units(), 101, makeRng(5)).timeline, SYS.battle.simulate(units(), 101, makeRng(6)).timeline));
 /** 무기 옵션 묶음 — 전부 0 인 판을 깔고 시험할 축만 얹는다 (hero.computeCombat:option_fx 모양 · R78) */
@@ -2329,7 +2537,7 @@ check('battle: 강타 — 맞기 직전 현재 체력 × % 가 hit.cb 로 서고
 check('battle: 타격 시 창 — 방어 · 공격 감소는 센 값 하나 · 저항 감소는 영웅끼리 중첩 · 타입이 맞아야 공격 감소 (skill_effects.weaponOnHit · R78)', () => {
     const sec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec };
     const d = SYS.battle.makeEnemy('e0', 1101, 'normal', 2);      // 물리 공격 몬스터
-    const def0 = d.def, res0 = d.res.fire, atk0 = d.atk;
+    const def0 = d.def, res0 = d.res.fire, atk0 = d.atkMax;
     const p0 = { key: 'p0' }, p1 = { key: 'p1' };
     weaponOnHit(p0, { ...FX0, defDown: 10 }, d, 'physical', 1, sec);
     weaponOnHit(p1, { ...FX0, defDown: 20 }, d, 'physical', 1.5, sec);
@@ -2342,11 +2550,11 @@ check('battle: 타격 시 창 — 방어 · 공격 감소는 센 값 하나 · �
     if (d.res.fire !== res0 - 10) fail(`불 저항 ${res0} → ${d.res.fire} (두 영웅 -10 이어야 한다)`);
     if (d.res.cold !== d.resBase.cold) fail('다른 원소 저항이 깎였다');
     weaponOnHit(p0, { ...FX0, atkDownMag: 30 }, d, 'fire', 4, sec);
-    if (d.atk !== atk0) fail('물리 공격 몬스터에 마법 공격력 감소가 걸렸다');
+    if (d.atkMax !== atk0) fail('물리 공격 몬스터에 마법 공격력 감소가 걸렸다');
     weaponOnHit(p0, { ...FX0, atkDownPhys: 30 }, d, 'fire', 4, sec);
-    if (Math.abs(d.atk - atk0 * (1 - 30 / 100)) > 1e-9) fail(`공격력 ${atk0} → ${d.atk}`);
+    if (Math.abs(d.atkMax - atk0 * (1 - 30 / 100)) > 1e-9) fail(`공격력 ${atk0} → ${d.atkMax}`);
     if (Object.values(d.buffs).some(b => !b.quiet)) fail('조용하지 않은 창');
-    return `def ${def0.toFixed(1)}→${d.def.toFixed(1)} · fire ${res0}→${d.res.fire} · atk ${atk0.toFixed(1)}→${d.atk.toFixed(1)}`;
+    return `def ${def0.toFixed(1)}→${d.def.toFixed(1)} · fire ${res0}→${d.res.fire} · atk ${atk0.toFixed(1)}→${d.atkMax.toFixed(1)}`;
 });
 check('battle: 타격 시 창은 조용하다 — wx: 창은 buff/buffEnd 이벤트를 안 낸다 · 같은 시드 = 같은 전투 (R78)', () => {
     const fx = { ...FX0, defDown: 10, resDown: 5, atkDownPhys: 10, atkDownMag: 10 };
@@ -2359,13 +2567,13 @@ check('battle: 타격 시 창은 조용하다 — wx: 창은 buff/buffEnd 이벤
 check('hero: 오만 레벨당 데미지 — 영웅 레벨 × 값이 상시 괄호(atk_pct_sum)에 더해진다 (R78)', () => {
     const h = SYS.hero.rollHero(makeRng(7), { sin: 'pride', cls: 'warrior', name: { ko: 'x', en: 'x' }, trait: { ko: 't', en: 't' } });
     h.level = 10;
-    const w = mkItem('weapon', [], { group: 'axe', watk: 100 });
+    const w = mkItem('weapon', [], { group: 'axe', ilvl: 60, up: 0 });   // ~~watk 100~~ — 반올림 알갱이를 피하려고 ilvl 로 키운다 (R90)
     const base = SYS.hero.computeCombat(h, [w]);
     const pride = SYS.hero.computeCombat(h, [{ ...w, affixes: [{ stat: 'dmg_per_level_pct', v: 0.5, src: 'pride' }] }]);
     if (pride.atk_pct_sum !== base.atk_pct_sum + 5) fail(`atk_pct_sum ${base.atk_pct_sum} → ${pride.atk_pct_sum}`);
-    if (!(pride.atk_physical > base.atk_physical)) fail('공격력이 안 올랐다');
+    if (!(pride.atk_physical.max > base.atk_physical.max)) fail('공격력이 안 올랐다');
     if (base.option_fx !== null) fail('옵션 없는 무기인데 option_fx 가 null 이 아니다');
-    return `atk ${base.atk_physical} → ${pride.atk_physical}`;
+    return `atk ${base.atk_physical.min}~${base.atk_physical.max} → ${pride.atk_physical.min}~${pride.atk_physical.max}`;
 });
 check('simulate: 구조 — round 로 시작, end 로 끝, 라운드 ≤ 그 스테이지의 세트, 편성 ≤ wave_monster_max', () => {
     const r = SYS.battle.simulate(units(), 101, makeRng(5));
@@ -2419,7 +2627,8 @@ check('battle: 몬스터는 computeCombat 을 지난다 — 다른 것은 몸값
     const gear = SYS.item.rollGear(makeRng(4), { slots: ['weapon', 'armor'], ilvl: 5, weaponGroup: m.weapon_group });
     const e = SYS.battle.makeEnemy('e0', id, 'elite', lvl, gear);
     const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
-    const c = SYS.hero.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill }, gear);
+    // 입력의 `hpBase` — 몬스터의 레벨 1 HP 바탕은 영웅과 갈린다 (R91 · 아래 「레벨 1 HP 바탕」 단정)
+    const c = SYS.hero.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill, hpBase: B.monster_hp_base }, gear);
     // ① 몸값 — res 는 4원소 객체(직접 %)이고 몸값 위에 장비가 얹힌다
     if (typeof e.res !== 'object' || e.res === null) fail('res 가 객체가 아니다');
     for (const el of ELEMENTS) {
@@ -2430,7 +2639,9 @@ check('battle: 몬스터는 computeCombat 을 지난다 — 다른 것은 몸값
     if (e.hp !== Math.round(c.hp_max * g.hp_mult * B.monster_hp_scale)) fail(`hp ${e.hp}`);
     if (Math.abs(e.def - (c.defense + m.defense) * B.monster_def_scale) > 1e-9) fail(`def ${e.def}`);
     const atk0 = c.atk_physical ?? c.atk_magic;
-    if (Math.abs(e.atk - atk0 * B.monster_atk_scale * (1 + e.atkPct / 100) / (1 + e.atkPct / 100)) > 1e-6) fail(`atk ${e.atk}`);
+    // 공격력은 범위다 — 전역 배율이 양끝에 같이 곱해진다 (R90)
+    if (Math.abs(e.atkMin - atk0.min * B.monster_atk_scale) > 1e-6) fail(`atkMin ${e.atkMin} ≠ ${atk0.min} × monster_atk_scale`);
+    if (Math.abs(e.atkMax - atk0.max * B.monster_atk_scale) > 1e-6) fail(`atkMax ${e.atkMax} ≠ ${atk0.max} × monster_atk_scale`);
     // ③ attack_type — 원소를 정하는 것은 스테이지다 (computeCombat 은 R80 으로 언제나 physical 을 낸다)
     if (c.attack_type !== 'physical') fail('computeCombat 이 physical 이 아니다 — R80 미반영');
     if (e.atkType !== m.attack_type) fail(`atkType ${e.atkType} ≠ ${m.attack_type}`);
@@ -2456,12 +2667,12 @@ check('battle: 몬스터가 장비를 낀다 — 부위는 wear_slots · 무기�
     if (armed.gear.length !== slots.length) fail(`gear ${armed.gear.length} ≠ ${slots.length}`);
     armed.gear.forEach((it, i) => { if (it.slot !== slots[i]) fail(`자리 ${i} ${it.slot} ≠ ${slots[i]}`); });
     if (armed.gear[0].group !== m.weapon_group) fail(`무기군 ${armed.gear[0].group} ≠ ${m.weapon_group}`);
-    if (!(armed.atk > bare.atk)) fail(`장비가 공격력을 안 낸다 ${bare.atk} → ${armed.atk}`);
+    if (!(armed.atkMax > bare.atkMax)) fail(`장비가 공격력을 안 낸다 ${bare.atkMax} → ${armed.atkMax}`);
     if (!(armed.def > bare.def)) fail(`장비가 방어를 안 낸다 ${bare.def} → ${armed.def}`);
     // 주기도 무기군이 낸다 — 맨몸은 unarmed_period 다 (영웅과 같은 식)
     if (!(armed.period !== bare.period)) fail('주기가 무기군을 안 탄다');
     if (bare.gear.length !== 0) fail('맨몸인데 gear 가 있다');
-    return `${slots.length}부위 · atk ${bare.atk.toFixed(1)} → ${armed.atk.toFixed(1)} · def ${bare.def.toFixed(1)} → ${armed.def.toFixed(1)}`;
+    return `${slots.length}부위 · atk ${bare.atkMax.toFixed(1)} → ${armed.atkMax.toFixed(1)} · def ${bare.def.toFixed(1)} → ${armed.def.toFixed(1)}`;
 });
 /*
  * **스킬 칸은 등급이 연다** [R79 · skill_design §2 · monster_design §5-1] — 일반 1(고유) · 정예 2(+ 낀 무기의 스킬) ·
@@ -2490,12 +2701,12 @@ check('battle: 마법 무기를 낀 몬스터는 마법 공격력을 든다 — 
     if (!mage) fail('마법 무기 몬스터가 없다');
     const gear = SYS.item.rollGear(makeRng(21), { slots: ['weapon'], ilvl: 8, weaponGroup: mage.weapon_group });
     const e = SYS.battle.makeEnemy('e0', mage.monster_idx, 'normal', 8, gear);
-    if (!(e.matk > 0)) fail(`matk ${e.matk} — 마법 무기인데 0 이다`);
+    if (!(e.matkMin > 0 && e.matkMax >= e.matkMin)) fail(`matk ${e.matkMin}~${e.matkMax} — 마법 무기인데 0 이다`);
     // 물리 무기 몬스터는 0 이다
     const phys = Object.values(D.monsters).find(m => WG[m.weapon_group].damageKind === 'physical');
     const pg = SYS.item.rollGear(makeRng(21), { slots: ['weapon'], ilvl: 8, weaponGroup: phys.weapon_group });
-    if (SYS.battle.makeEnemy('e0', phys.monster_idx, 'normal', 8, pg).matk !== 0) fail('물리 무기인데 matk 가 있다');
-    return `${mage.monster_idx} ${mage.weapon_group} matk ${e.matk}`;
+    if (SYS.battle.makeEnemy('e0', phys.monster_idx, 'normal', 8, pg).matkMax !== 0) fail('물리 무기인데 matk 가 있다');
+    return `${mage.monster_idx} ${mage.weapon_group} matk ${e.matkMin}~${e.matkMax}`;
 });
 check('battle: stageElement — 스테이지 원소를 로직이 정한다 (편성 화면 표기 §9-8)', () => {
     if (SYS.battle.stageElement(D.stages[101]) !== 'physical') fail('101');
@@ -2555,13 +2766,12 @@ check('simulate: 오버레벨이면 빗나감이 사라진다 — 적정 레벨�
     if (!(under.strikes.party.miss > 0)) fail(`레벨 1 파티가 dlvl ${D.stages[401].dlvl} 에서 하나도 안 빗나갔다`);
     return `Lv50@dlvl2 = 0회 · Lv1@dlvl${D.stages[401].dlvl} = ${under.strikes.party.miss}회`;
 });
-check('simulate: 도감 카드는 처치의 부분집합, 타임라인 card 이벤트와 일치', () => {
+// ~~타임라인 card 이벤트와 일치~~ — R89 로 card 이벤트가 사라졌다: 카드는 라운드를 이긴 순간 **조용히** 들어온다(INTERFACE §2-6)
+check('simulate: 도감 카드는 처치의 부분집합 · 타임라인에 card 이벤트가 없다 — 카드는 라운드를 이긴 순간 조용히 들어온다 (R89 D11)', () => {
     let seen = 0;
     for (let seed = 1; seed <= 10; seed++) {
         const r = SYS.battle.simulate(units(), 101, makeRng(seed));
-        const evCards = {};
-        for (const ev of r.timeline) if (ev.e === 'card') evCards[ev.monsterId] = (evCards[ev.monsterId] ?? 0) + 1;
-        if (!eq(evCards, r.cards)) fail(`seed ${seed} timeline≠cards`);
+        if (r.timeline.some(ev => ev.e === 'card')) fail(`seed ${seed} — card 이벤트가 되살아났다`);
         for (const [id, n] of Object.entries(r.cards)) { if (n > (r.kills[id] ?? 0)) fail(`seed ${seed} cards > kills`); seen += n; }
     }
     return seen > 0 ? `${seen} cards / 10 runs` : fail('no card in 10 runs (drop pct?)');
@@ -2806,7 +3016,7 @@ check('simulate: 스킬 — 파티 actives 가 비면 파티는 시전하지 않
  *   재생기는 적의 `skill` 이벤트를 **그 라운드 이벤트가 실어 온 칸**에서 찾고, 없으면 조용히 흘린다 —
  *   옛 판은 이 필드가 없어 재생기가 `skills: []` 로 비웠고, R79 로 몬스터가 스킬을 쓰게 된 뒤에도 칸이 빈 채였다.
  *   ① 적의 시전은 **전부 제 칸 안**이다(재생기가 찾을 수 있다) ② 1번 칸은 고유 · 칸 수는 등급이 연 수 이하
- *   ③ 툴팁 표시값(`atk`·`matk`·`atkType`·`stats`)이 실린다 — 파티의 `result.party[]` 와 같은 모양
+ *   ③ 툴팁 표시값(`atkMin`·`atkMax`·`matkMin`·`matkMax`·`atkType`·`stats` — 범위 R90)이 실린다 — 파티의 `result.party[]` 와 같은 모양
  */
 check('simulate: round 이벤트가 적의 스킬 칸(actives)과 툴팁 표시값을 싣는다 — 적의 시전은 전부 제 칸 안이다 (INTERFACE §2-6 · R79 후속)', () => {
     const AXES = ['str', 'agi', 'int', 'vit', 'luck', 'ldr', 'cha'];
@@ -2825,7 +3035,8 @@ check('simulate: round 이벤트가 적의 스킬 칸(actives)과 툴팁 표시�
                     if (e.actives[0] !== m.innate_skill) fail(`${tag} 1번 칸 ${e.actives[0]} ≠ 고유 ${m.innate_skill}`);
                     if (!(e.actives.length >= 1 && e.actives.length <= g.skill_slots)) fail(`${tag} ${e.grade} 칸 ${e.actives.length} — 1..${g.skill_slots} 밖`);
                     if (e.atkType !== m.attack_type) fail(`${tag} atkType ${e.atkType} ≠ ${m.attack_type}`);
-                    if (!(e.atk > 0) || typeof e.matk !== 'number') fail(`${tag} atk ${e.atk} · matk ${e.matk}`);
+                    if (!(e.atkMin > 0 && e.atkMax >= e.atkMin) || typeof e.matkMin !== 'number' || typeof e.matkMax !== 'number')
+                        fail(`${tag} atk ${e.atkMin}~${e.atkMax} · matk ${e.matkMin}~${e.matkMax}`);
                     for (const k of AXES) if (e.stats?.[k] !== m[k]) fail(`${tag} stats.${k} ${e.stats?.[k]} ≠ ${m[k]}`);
                     if (e.actives.length >= 2) multi++;
                     if (e.actives.length >= 3) third++;
@@ -2910,7 +3121,10 @@ check('simulate: 도발 — taunt 창 동안 적의 단일 대상(기본 공격 
         let checked = 0, windows = 0, bad = null;
         for (const ev of r.timeline) {
             tr.feed(ev);
-            if (ev.e === 'buff' && ev.stat === 'taunt') { open.set(ev.u, ev.s); windows++; continue; }
+            // 창은 **파티 도발자만** 연다 [2026-09-14 · R91 에서 드러남] — 이 단정은 적의 타격만 재고, 적을 묶는 것은 파티의 도발이다.
+            //   R79 로 몬스터 전사도 도발을 쓰는데 옛 판은 그 창까지 열어 「적 e2 가 p0 을 때렸다(도발자 e0)」를 위반으로 셌다.
+            //   몬스터 HP 가 바뀌어 탐색 시드가 몬스터 도발이 끼는 런으로 옮겨가며 처음 걸렸다 — 로직이 아니라 단정의 구멍이다
+            if (ev.e === 'buff' && ev.stat === 'taunt') { if (ev.u.startsWith('p')) { open.set(ev.u, ev.s); windows++; } continue; }
             if (!open.size) continue;
             if (ev.e === 'buffEnd' && open.get(ev.u) === ev.s) { open.delete(ev.u); continue; }
             if (ev.e === 'down' && open.has(ev.u)) { open.delete(ev.u); continue; }
@@ -2939,7 +3153,7 @@ check('simulate: 도발 — taunt 창 동안 적의 단일 대상(기본 공격 
 const rtUnit = (key, side, extra = {}) => {
     const u = {
         key, side, hp: 100, hpMax: 100, hpMaxBase: 100,
-        atk: 10, atkBase: 10, atkPct: 0, matk: 10, matkBase: 10,
+        atkMin: 10, atkMax: 10, atkMinBase: 10, atkMaxBase: 10, atkPct: 0, matkMin: 10, matkMax: 10, matkMinBase: 10, matkMaxBase: 10,
         // 창이 미는 축은 **밑수를 함께** 든다 [2026-09-09] — `refreshDerived` 가 전 효과의 derive 를 돌리므로
         //   여기가 비면 방어·저항·재생·피해감소 창이 없는 축을 만져 TypeError 가 난다 (battle.js:makeUnit 과 같은 모양)
         def: 10, defBase: 10,
@@ -3108,7 +3322,7 @@ check('battle: 결투의 시전자 피해 감소 창은 라운드가 바뀌면 �
     return fail('시드 1~40 에서 결투 뒤 라운드를 넘긴 피격이 없다 — 단정이 아무것도 못 봤다');
 });
 /* ── 2026-09-09 신설 — 직업 스킬 풀 37 이 연 어휘 (skill_design §12 · DEV_PLAN R61) ── */
-check('runtime: ally_single — 회복은 **HP 비율 최저** 아군 하나에게 간다 · rng 0회 (사용자 확정 2026-09-09)', () => {
+check('runtime: ally_single — 회복은 **HP 비율 최저** 아군 하나에게 간다 · 대상 선택 rng 0회 — 쓰는 것은 회복량 굴림 1회뿐 (사용자 확정 2026-09-09 · R90)', () => {
     // 절대량이 아니라 **비율**이다 — HP 가 큰 탱커가 늘 최저 절대량을 갖는 구도를 피한다
     const a = rtUnit('p0', 'party', { hp: 90, hpMax: 100 });      // 90%
     const b = rtUnit('p1', 'party', { hp: 100, hpMax: 300 });     // 33% ← 여기로 가야 한다
@@ -3116,10 +3330,29 @@ check('runtime: ally_single — 회복은 **HP 비율 최저** 아군 하나에�
     const { rt, count } = fakeRt([a, b, c], [rtUnit('e0', 'enemy')]);
     const before = b.hp;
     rt.castHeal(a, SYS.skill.defs.pri_cure, 0);
-    if (count.rng !== 0) fail(`대상 선택이 rng 를 ${count.rng}회 썼다 — 결정론이어야 한다`);
+    if (count.rng !== 1) fail(`rng ${count.rng}회 — 회복량 굴림 1회뿐이어야 한다(대상 선택은 결정론 · R90)`);
     if (b.hp === before) fail('비율 최저(p1)가 아니라 다른 아군이 회복됐다');
     if (a.hp !== 90 || c.hp !== 60) fail('단일 회복인데 여럿이 회복됐다');
-    return `p1(33%) 회복 · p0(90%)·p2(60%) 그대로 · rng 0회`;
+    return `p1(33%) 회복 · p0(90%)·p2(60%) 그대로 · rng 1회(회복량 굴림)`;
+});
+check('runtime: 회복량은 시전마다 한 번 굴린다 — matkMin ~ matkMax 사이 · 대상 전원 같은 양 · rng 1회 (battle_design §9-1 · INTERFACE §2-6 · R90)', () => {
+    const def = SYS.skill.defs.pri_heal;
+    const amtAt = roll => {
+        const a = rtUnit('p0', 'party', { hp: 10, hpMax: 100000, matkMin: 100, matkMax: 300, matkMinBase: 100, matkMaxBase: 300 });
+        const b = rtUnit('p1', 'party', { hp: 10, hpMax: 100000 });
+        const { rt, count, log } = fakeRt([a, b], [rtUnit('e0', 'enemy')], { roll });
+        rt.castHeal(a, def, 0);
+        const heals = log.filter(e => e.e === 'heal');
+        if (!heals.length) fail(`roll ${roll} — 회복 이벤트가 없다`);
+        if (count.rng !== 1) fail(`roll ${roll} — rng ${count.rng}회 (1 이어야)`);
+        if (new Set(heals.map(e => e.amt)).size > 1) fail(`대상마다 양이 다르다 ${heals.map(e => e.amt)}`);
+        return heals[0].amt;
+    };
+    const lo = amtAt(0), hi = amtAt(0.999999);
+    const want = m => Math.round(m * def.mult / 100);
+    if (lo !== want(100)) fail(`굴림 0 → ${lo} ≠ ${want(100)}`);
+    if (Math.abs(hi - want(300)) > 1) fail(`굴림 1 → ${hi} ≠ ${want(300)}`);
+    return `${def.id} · 굴림 0 → ${lo} · 굴림 1 → ${hi}`;
 });
 check('runtime: party_adjacent — 함성은 **양 옆만** 걸린다 · 자기는 제외 (skill_design §12-3 · 위치는 임시 규칙)', () => {
     const p = [rtUnit('p0', 'party'), rtUnit('p1', 'party'), rtUnit('p2', 'party'), rtUnit('p3', 'party')];
@@ -3139,14 +3372,14 @@ check('runtime: 적에게 거는 창 — 음수 값이 **적 유닛**에 얹히�
     const { rt, count } = fakeRt([u], foes);
     const def = SYS.skill.defs.pri_penitence;
     if (!(def.value < 0)) fail(`참회의 effect_value 가 ${def.value} — 디버프는 음수여야 한다`);
-    const before = foes[0].atk;
+    const before = foes[0].atkMax;
     rt.castBuff(u, def, 0);
     if (count.rng !== 0) fail(`적 전원 대상인데 rng 를 ${count.rng}회 썼다`);
     if (!foes[0].buffs[def.id] || !foes[1].buffs[def.id]) fail('생존 적 전원에게 안 걸렸다');
     if (foes[2].buffs[def.id]) fail('쓰러진 적에게도 걸렸다');
-    if (!(foes[0].atk < before)) fail(`공격력이 안 내려갔다 (${before} → ${foes[0].atk})`);
+    if (!(foes[0].atkMax < before)) fail(`공격력이 안 내려갔다 (${before} → ${foes[0].atkMax})`);
     if (u.buffs[def.id]) fail('시전자에게도 걸렸다 — 적에게 거는 창이다');
-    return `e0·e1 공격력 ${before} → ${Math.round(foes[0].atk * 10) / 10} · 시전자 무변화`;
+    return `e0·e1 공격력 ${before} → ${Math.round(foes[0].atkMax * 10) / 10} · 시전자 무변화`;
 });
 check('runtime: summon — 아군 배열에 유닛이 서고 타임라인에 남는다 (skill_design §12-6 프로즌월)', () => {
     const u = rtUnit('p0', 'party', { hp: 200, hpMax: 200 });
@@ -3396,7 +3629,44 @@ check('skill: scaleDef 계수 주입 — mult_pct 는 flat · hits 버림 · 음
     if (JSON.stringify(S.defs.war_bash) !== before) fail('scaleDef 가 정의를 바꿨다');
     return `bash flat 20 · rush hits ${e('kni_rush').hits} · penitence ${e('pri_penitence').value} · grace ${e('pri_grace').dur}s · chain decay ${e('mag_chain').decay}(상한) · charge 확률 ${e('kni_charge').procChance}`;
 });
-check('battle: makeEnemy 유닛의 전투 안 필드 초기값 — 창·배리어·훅·장비는 비고 보상 축은 등급에서 온다 (§8-1 · R79)', () => {
+/*
+ * **몬스터의 레벨 1 HP 바탕은 영웅과 따로다** [2026-09-14 사용자 지시 · R91 · monster_design §5 · battle_design §8].
+ *   맨몸 · 레벨 1 이면 성장분도 장비 HP 도 0 이라 바탕이 그대로 드러난다 — 몬스터는 등급 배율 · 전역 배율만 곱해진다.
+ *   영웅 쪽(레벨 1 = hero_hp_base)은 「최대 HP 레벨 성장」 단정이 본다. 키가 빠지면 `hpBase` 가 undefined 라 영웅 값으로 조용히 떨어지므로
+ *   **값으로** 대조한다(키 존재는 balance 키 목록 단정이 본다)
+ */
+check('battle: 몬스터 레벨 1 HP = monster_hp_base × 등급 배율 × 전역 배율 — 영웅 hero_hp_base 와 갈린다 (R91)', () => {
+    for (const grade of ['normal', 'elite']) {
+        const e = SYS.battle.makeEnemy('e0', 1101, grade, 1);
+        const want = Math.round(B.monster_hp_base * D.grades[grade].hp_mult * B.monster_hp_scale);
+        if (e.hp !== want || e.hpMax !== want) fail(`${grade} hp ${e.hp} / ${e.hpMax} ≠ ${want}`);
+    }
+    return `normal ${SYS.battle.makeEnemy('e0', 1101, 'normal', 1).hp} (바탕 ${B.monster_hp_base} · 영웅 ${B.hero_hp_base})`;
+});
+/*
+ * **적의 세부 능력치 복사본 `sheet`** [2026-09-14 · R94 · INTERFACE §2-6 `round` · SCREEN_DESIGN §2 「유닛 툴팁 규격」].
+ *   유닛 툴팁이 Alt 로 펴는 표시값이라 **전투 유닛이 쓰는 값과 한 글자도 달라서는 안 된다** — 몸값 · 등급 배율 · 전역 배율까지 먹은 값이다.
+ *   전투 내부용 둘(`option_fx` · `atk_pct_sum`)이 새어 나오면 타임라인이 부풀고 이식 계약이 흐려진다
+ */
+check('battle: 적의 세부 능력치 sheet — 전투 유닛과 같은 값 · round 이벤트가 싣는다 · 내부용 둘은 없다 (R94)', () => {
+    const id = 1401, m = D.monsters[id];
+    const gear = SYS.item.rollGear(makeRng(4), { slots: ['weapon', 'armor'], ilvl: 5, weaponGroup: m.weapon_group });
+    const e = SYS.battle.makeEnemy('e0', id, 'elite', 7, gear);
+    const s = e.sheet;
+    if (!s) fail('makeEnemy 유닛에 sheet 가 없다');
+    if (s.hp_max !== e.hpMax || s.defense !== e.def || s.action_period !== e.period) fail(`hp ${s.hp_max}/${e.hpMax} · def ${s.defense}/${e.def} · 주기 ${s.action_period}/${e.period}`);
+    for (const el of ELEMENTS) if (s[`res_${el}`] !== e.res[el]) fail(`res ${el} ${s[`res_${el}`]} ≠ ${e.res[el]}`);
+    const atk = s.atk_physical ?? s.atk_magic;
+    if (atk.min !== e.atkMin || atk.max !== e.atkMax) fail(`공격력 ${atk.min}~${atk.max} ≠ ${e.atkMin}~${e.atkMax}`);
+    if (s.crit_rate !== e.crit || s.damage_reduction !== e.dr || s.attack_type !== e.atkType) fail('치명 · 피해 감소 · 공격 타입이 유닛과 다르다');
+    if ('option_fx' in s || 'atk_pct_sum' in s) fail('전투 내부용 필드가 sheet 로 새어 나왔다');
+    const r = SYS.battle.simulate(units(), 101, makeRng(1));
+    const round = r.timeline.find(ev => ev.e === 'round');
+    const bad = round.enemies.find(x => !x.sheet || x.sheet.hp_max !== x.hpMax || x.sheet.action_period !== x.period);
+    if (bad) fail(`round 이벤트의 ${bad.key} sheet 가 비었거나 hpMax · period 와 다르다`);
+    return `${Object.keys(s).length}키 · round 적 ${round.enemies.length}명 전부 sheet`;
+});
+check('battle: makeEnemy 유닛의 전투 안 필드 초기값 —창·배리어·훅·장비는 비고 보상 축은 등급에서 온다 (§8-1 · R79)', () => {
     const id = 1401, grade = 'elite', lvl = 7;
     const m = D.monsters[id], g = D.grades[grade];
     const e = SYS.battle.makeEnemy('e0', id, grade, lvl);
@@ -3410,7 +3680,10 @@ check('battle: makeEnemy 유닛의 전투 안 필드 초기값 — 창·배리�
     for (const [k, v] of Object.entries(want)) if (e[k] !== v) fail(`${k}: ${e[k]} ≠ ${v}`);
     if (e.hpMax !== e.hp) fail(`hpMax ${e.hpMax} ≠ hp ${e.hp}`);
     if (e.basePeriod !== e.period) fail('basePeriod ≠ period');
-    if (Math.abs(e.atkBase * (1 + e.atkPct / 100) - e.atk) > 1e-6) fail(`atkBase ${e.atkBase} · atkPct ${e.atkPct} 가 atk ${e.atk} 를 못 만든다`);
+    for (const k of ['Min', 'Max']) {
+        if (Math.abs(e[`atk${k}Base`] * (1 + e.atkPct / 100) - e[`atk${k}`]) > 1e-6)
+            fail(`atk${k}Base ${e[`atk${k}Base`]} · atkPct ${e.atkPct} 가 atk${k} ${e[`atk${k}`]} 를 못 만든다`);
+    }
     if (!eq(e.buffs, {}) || e.barrier !== null || !eq(e.reactions, []) || !eq(e.gear, []))
         fail('전투 안에서만 사는 필드의 초기값이 다르다');
     if (!eq(e.stats, { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha })) fail('stats 가 monster.csv 7컬럼이 아니다');
@@ -3432,33 +3705,33 @@ check('battle: 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이
     return `${a.monster_idx}(${a.chapter}장) = ${b.monster_idx}(${b.chapter}장) = ${xa.toFixed(2)} @Lv${lvl} · Lv${lvl + 1} ×${B.monster_xp_growth}`;
 });
 check('runtime: refreshDerived — 같은 stat 의 창은 덧셈이고 창이 사라지면 원값이 돌아온다 (battle_design §9-2)', () => {
-    const u = rtUnit('p0', 'party', { atk: 200, atkBase: 100, atkPct: 100 });   // 상시 % 100 이 이미 곱해진 상태
+    const u = rtUnit('p0', 'party', { atkMin: 200, atkMax: 400, atkMinBase: 100, atkMaxBase: 200, atkPct: 100 });   // 상시 % 100 이 이미 곱해진 상태 · 양끝 둘 다 (R90)
     u.buffs = { a: { stat: 'atk_pct', v: 25, until: 9 }, b: { stat: 'atk_pct', v: 15, until: 9 } };
     refreshDerived(u);
-    if (u.atk !== 100 * (1 + (100 + 40) / 100)) fail(`두 창이 덧셈이 아니다 (${u.atk})`);
+    if (u.atkMin !== 100 * (1 + (100 + 40) / 100) || u.atkMax !== 200 * (1 + (100 + 40) / 100)) fail(`두 창이 덧셈이 아니다 (${u.atkMin}~${u.atkMax})`);
     u.buffs = {};
     refreshDerived(u);
-    if (u.atk !== 200) fail(`창이 사라졌는데 ${u.atk}`);
-    return '상시 100% + 창 25% + 창 15% → 240 · 창 제거 → 200 (같은 괄호 덧셈)';
+    if (u.atkMin !== 200 || u.atkMax !== 400) fail(`창이 사라졌는데 ${u.atkMin}~${u.atkMax}`);
+    return '상시 100% + 창 25% + 창 15% → 240~480 · 창 제거 → 200~400 (같은 괄호 덧셈 · 양끝)';
 });
 /**
  * 회복 밑수도 **같은 괄호**를 탄다 (2026-09-01). 옛 판은 `atk` 만 다시 써서 함성(atk_pct) 아래에서
  * 치유의 빛만 밑수가 그대로였다 — 「괄호는 둘뿐」인데 회복만 괄호 밖에 있던 셈이다.
  */
-check('runtime: atk_pct 창은 회복 밑수(matk)도 같은 괄호로 올린다 (battle_design §9-2)', () => {
-    const u = rtUnit('p0', 'party', { atk: 100, atkBase: 100, atkPct: 0, matk: 100, matkBase: 100 });
+check('runtime: atk_pct 창은 회복 밑수(matkMin·matkMax)도 같은 괄호로 올린다 (battle_design §9-2 · 범위 R90)', () => {
+    const u = rtUnit('p0', 'party', { atkMin: 100, atkMax: 100, atkMinBase: 100, atkMaxBase: 100, atkPct: 0, matkMin: 100, matkMax: 200, matkMinBase: 100, matkMaxBase: 200 });
     u.buffs = { x: { stat: 'atk_pct', v: 25, until: 9 } };
     refreshDerived(u);
-    if (u.matk !== 125) fail(`창 25% 인데 matk ${u.matk}`);
-    if (u.atk !== 125) fail(`atk ${u.atk}`);
+    if (u.matkMin !== 125 || u.matkMax !== 250) fail(`창 25% 인데 matk ${u.matkMin}~${u.matkMax}`);
+    if (u.atkMin !== 125 || u.atkMax !== 125) fail(`atk ${u.atkMin}~${u.atkMax}`);
     u.buffs = {};
     refreshDerived(u);
-    if (u.matk !== 100) fail(`창이 사라졌는데 matk ${u.matk}`);
-    return 'matk 100 → 125(창 25%) → 100(창 제거) · atk 와 같은 괄호';
+    if (u.matkMin !== 100 || u.matkMax !== 200) fail(`창이 사라졌는데 matk ${u.matkMin}~${u.matkMax}`);
+    return 'matk 100~200 → 125~250(창 25%) → 100~200(창 제거) · 공격력과 같은 괄호';
 });
 
-check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** (R59 · INTERFACE §4)', () =>
-    SAVE_VERSION === 24 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** · **v25 는 리포트의 경험치를 영웅별 `xp` 로 가르고 `run.active` 를 더한다(원정은 라운드 단위 — 런 핸들은 세이브에 안 든다 · R89)** · **v26 은 무기의 `watk` 를 지운다(무기 피해는 범위이고 파생 — R90)** (R59 · INTERFACE §4)', () =>
+    SAVE_VERSION === 26 || fail(`v${SAVE_VERSION}`));
 
 /**
  * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.
@@ -3468,12 +3741,13 @@ check('skill: previewOf — 실효 쿨 · 한 타 피해(고정 항 포함) · p
     const def = SYS.skill.defs.war_bash;                       // 공격 · 단일 · 1타 · mult 300 · 슬롯 mult_pct·str
     const stats = { ...G.heroes[0].stats };
     // 주기 2.4 · 표기 15초 → 올림(15/2.4)=7 × 2.4 = 16.8
-    const pv = SYS.skill.previewOf(def, { period: 2.4, atk: 400, stats });
+    const pv = SYS.skill.previewOf(def, { period: 2.4, atkMin: 400, atkMax: 600, stats });
     if (Math.abs(pv.everySec - 16.8) > 1e-9) fail(`everySec ${pv.everySec}`);
-    if (pv.amount !== Math.round(400 * def.mult / 100)) fail(`amount ${pv.amount}`);
+    // 밑수는 범위다 — amount 도 양끝마다 계산한 {min, max} (R90)
+    if (!eq(pv.amount, { min: Math.round(400 * def.mult / 100), max: Math.round(600 * def.mult / 100) })) fail(`amount ${JSON.stringify(pv.amount)}`);
     if (!(pv.lossPct > 0)) fail(`lossPct ${pv.lossPct}`);
     // 주기가 정수배면 손실 0 — 실효 = 표기
-    const aligned = SYS.skill.previewOf(def, { period: 3, atk: 400, stats });
+    const aligned = SYS.skill.previewOf(def, { period: 3, atkMin: 400, atkMax: 400, stats });
     if (aligned.everySec !== 15 || Math.abs(aligned.lossPct) > 1e-9) fail(`정렬 ${aligned.everySec}/${aligned.lossPct}`);
     // parts.amount — 밑수 · 배율 · 항(coef 0 인 항도 terms 에 든다) · 슬롯이 없는 항은 키가 없다
     const pa = pv.parts.amount;
@@ -3481,7 +3755,9 @@ check('skill: previewOf — 실효 쿨 · 한 타 피해(고정 항 포함) · p
     if (!eq(pa.terms, def.scales.filter(s => s.field === 'mult_pct').map(s => ({ attr: s.attr, coef: s.coef })))) fail(`terms ${JSON.stringify(pa.terms)}`);
     if (Object.keys(pv.parts).some(k => k !== 'amount')) fail(`슬롯이 없는 항의 키가 섰다 ${Object.keys(pv.parts)}`);
     // mult_pct 슬롯이 있는데 stats 가 없으면 amount 는 null — 고정 항을 모르는 피해는 틀린 숫자다
-    const noStats = SYS.skill.previewOf(def, { period: 2.4, atk: 400 });
+    const noStats = SYS.skill.previewOf(def, { period: 2.4, atkMin: 400, atkMax: 400 });
+    // 양끝 중 하나라도 모르면 숫자를 안 낸다 — 반쪽 범위는 틀린 숫자다 (R90)
+    if (SYS.skill.previewOf(def, { period: 2.4, atkMin: 400, stats }).amount !== null) fail('최대 끝을 모르는데 amount 가 났다');
     if (noStats.amount !== null || noStats.parts.amount.value !== null) fail(`stats 없는데 amount ${noStats.amount}`);
     // 모르는 값은 null — 화면이 그 조각을 접는다(후보 카드는 무기가 없어 둘 다 모른다)
     const bare = SYS.skill.previewOf(def, {});
@@ -3492,19 +3768,22 @@ check('skill: previewOf — 실효 쿨 · 한 타 피해(고정 항 포함) · p
     rows.find(r => r.skill_id === 'war_bash').scale1_coef = 2;
     const S2 = createSkillSystem({ balance: B, rows, tagRows: D.skillTagRows, attributes: D.heroAttributes });
     const wantFlat = Math.round(400 * def.mult / 100 + stats.str * 2);
-    if (S2.previewOf(S2.defs.war_bash, { atk: 400, stats }).amount !== wantFlat) fail(`고정 항 amount ≠ ${wantFlat}`);
+    if (S2.previewOf(S2.defs.war_bash, { atkMin: 400, atkMax: 400, stats }).amount?.min !== wantFlat) fail(`고정 항 amount ≠ ${wantFlat}`);
     // 버프는 배율이 없다 — amount 는 null · 슬롯이 미는 항만 parts 에 선다(value · dur)
     const grace = SYS.skill.defs.pri_grace;
-    const pg = SYS.skill.previewOf(grace, { period: 2.4, atk: 400, stats });
+    const pg = SYS.skill.previewOf(grace, { period: 2.4, atkMin: 400, atkMax: 400, stats });
     if (pg.amount !== null || pg.parts.amount) fail('buff 에 amount 가 났다');
     if (!pg.parts.value || pg.parts.value.raw !== grace.value || pg.parts.value.value !== grace.value) fail(`parts.value ${JSON.stringify(pg.parts.value)}`);
     if (!pg.parts.dur || pg.parts.dur.raw !== grace.dur || !eq(pg.parts.dur.terms, [{ attr: 'vit', coef: 0 }])) fail(`parts.dur ${JSON.stringify(pg.parts.dur)}`);
     if (SYS.skill.previewOf(grace, { period: 2.4 }).parts.value.value !== null) fail('stats 없는데 parts.value.value 가 났다');
     // 회복 밑수는 마법 공격력 · 소환은 최대 HP
     const heal = SYS.skill.defs.pri_heal, wall = SYS.skill.defs.mag_frozenwall;
-    if (SYS.skill.previewOf(heal, { atk: 999, matk: 100, stats }).amount !== Math.round(100 * heal.mult / 100)) fail('회복 amount 가 matk 를 안 탄다');
+    if (!eq(SYS.skill.previewOf(heal, { atkMin: 999, atkMax: 999, matkMin: 100, matkMax: 150, stats }).amount,
+        { min: Math.round(100 * heal.mult / 100), max: Math.round(150 * heal.mult / 100) })) fail('회복 amount 가 matk 범위를 안 탄다');
     if (SYS.skill.previewOf(wall, { hpMax: 500, stats }).parts.amount.basis !== 'hpMax') fail('소환 밑수가 hpMax 가 아니다');
-    return `실효 ${pv.everySec}s · 한 타 ${pv.amount} · 고정 항 ${wantFlat} · parts ${Object.keys(pg.parts).join('/')}(그레이스)`;
+    const wa = SYS.skill.previewOf(wall, { hpMax: 500, stats }).amount;
+    if (!wa || wa.min !== wa.max) fail(`벽 HP 는 한 점이어야 한다 ${JSON.stringify(wa)}`);
+    return `실효 ${pv.everySec}s · 한 타 ${pv.amount.min}~${pv.amount.max} · 고정 항 ${wantFlat} · parts ${Object.keys(pg.parts).join('/')}(그레이스)`;
 });
 check('skill: previewOf 확률은 100 에서 자른다 — parts.procChance.value ≤ 100 · raw 는 원값 · scaleDef 는 안 자른다 (strike 와 같은 상한 · R72 후속)', () => {
     const rows = JSON.parse(JSON.stringify(D.skillRows));
@@ -3514,16 +3793,16 @@ check('skill: previewOf 확률은 100 에서 자른다 — parts.procChance.valu
     const stats = { str: 10, agi: 10, int: 10, vit: 10, luck: 6, ldr: 10, cha: 10 };
     const raw = def.procChance, pushed = raw + stats.luck * 20;
     if (!(pushed > 100)) fail(`전제 — 민 확률 ${pushed} 가 100 을 안 넘는다`);
-    const pc = S.previewOf(def, { atk: 100, stats }).parts.procChance;
+    const pc = S.previewOf(def, { atkMin: 100, atkMax: 100, stats }).parts.procChance;
     if (!pc || pc.value !== 100) fail(`parts.procChance.value ${pc?.value} (100 이어야)`);
     if (pc.raw !== raw) fail(`raw ${pc.raw} ≠ 원값 ${raw}`);
     if (S.scaleDef(def, stats).procChance !== pushed) fail(`scaleDef 가 잘랐다 ${S.scaleDef(def, stats).procChance} ≠ ${pushed}`);
-    const low = S.previewOf(def, { atk: 100, stats: { ...stats, luck: 1 } }).parts.procChance.value;
+    const low = S.previewOf(def, { atkMin: 100, atkMax: 100, stats: { ...stats, luck: 1 } }).parts.procChance.value;
     if (low !== raw + 20) fail(`100 아래는 그대로여야 한다 ${low} ≠ ${raw + 20}`);
     return `원값 ${raw} · 민 값 ${pushed} → 설명창 ${pc.value} · 운 1 이면 ${low}`;
 });
 check('tip: 스킬 문장 — 37행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {
-    const ctx = { period: 2.4, atk: 400, atkType: 'physical' };
+    const ctx = { period: 2.4, atkMin: 400, atkMax: 400, atkType: 'physical' };
     let checked = 0;
     for (const lang of ['ko', 'en']) {
         setLang(lang);
@@ -3554,7 +3833,7 @@ check('tip: 스킬의 초는 **행동 주기를 안 탄다** — 공속을 올�
     // 회귀 그물 — 옛 판은 실효 쿨(ceil(쿨 ÷ 주기) × 주기)을 찍어서 공격 속도 마스터리를 찍을 때마다
     // 쿨 자리의 숫자가 움직였다(「공속을 올리는데 왜 스킬 쿨이 줄어드나」). 다시 그렇게 되면 여기서 걸린다
     const def = SYS.skill.defs.pri_judgment;
-    const secOf = period => skillTipCard({ id: def.id }, { period, atk: 400, atkType: 'physical' })
+    const secOf = period => skillTipCard({ id: def.id }, { period, atkMin: 400, atkMax: 400, atkType: 'physical' })
         .querySelector('.tip-line').querySelector('.tip-hl').textContent;
     const slow = secOf(2.4), fast = secOf(0.8), none = secOf(undefined);
     if (slow !== fast) fail(`주기 2.4 → ${slow} · 0.8 → ${fast} — 초가 주기를 탔다`);
@@ -3569,7 +3848,7 @@ check('tip: 값을 모르면 식으로 접힌다 — 후보 카드 · 도감 자
     const def = SYS.skill.defs.war_bash;
     const bare = skillTipCard({ id: def.id }, {}).querySelector('.tip-line').textContent;
     // 공격력을 아는 자리는 **능력치도 안다** — mult_pct 슬롯이 있는데 stats 가 없으면 previewOf 가 숫자를 안 낸다 (R72)
-    const full = skillTipCard({ id: def.id }, { period: 2.4, atk: 400, atkType: 'physical', stats: { ...G.heroes[0].stats } })
+    const full = skillTipCard({ id: def.id }, { period: 2.4, atkMin: 400, atkMax: 400, atkType: 'physical', stats: { ...G.heroes[0].stats } })
         .querySelector('.tip-line').textContent;
     if (!bare.includes(String(def.mult))) fail(`배율 ${def.mult} 이 안 보인다: ${bare}`);
     // 식은 슬롯의 능력치 약어를 든다 — `(공격력 × 300% + STR × 0)` (계수 0 인 항도 찍는다)
@@ -3583,10 +3862,29 @@ check('tip: 값을 모르면 식으로 접힌다 — 후보 카드 · 도감 자
     if (!gone || gone.querySelector('.tip-line')) fail('없는 스킬에 문장이 났다');
     return `모름 "${bare}" / 앎 "${full}"`;
 });
+check('tip: 피해 · 회복량은 범위로 찍힌다 — 양끝이 다르면 「최소~최대」 · 같으면 한 수 · ko/en (SCREEN_DESIGN §2 · ADR-0108 · R90)', () => {
+    const def = SYS.skill.defs.war_bash;
+    const stats = { ...G.heroes[0].stats };
+    const lineOf = ctx => skillTipCard({ id: def.id }, { period: 2.4, atkType: 'physical', stats, ...ctx }).querySelector('.tip-line').textContent;
+    const lo = Math.round(400 * def.mult / 100), hi = Math.round(600 * def.mult / 100);
+    const shown = [];
+    try {
+        for (const lang of ['ko', 'en']) {
+            setLang(lang);
+            const want = i18nT('st.range', { a: lo.toLocaleString(), b: hi.toLocaleString() });
+            const ranged = lineOf({ atkMin: 400, atkMax: 600 });
+            if (!ranged.includes(want)) fail(`${lang} 범위 ${want} 가 안 보인다: ${ranged}`);
+            const single = lineOf({ atkMin: 400, atkMax: 400 });
+            if (single.includes(want) || !single.includes(lo.toLocaleString())) fail(`${lang} 양끝이 같은데 한 수가 아니다: ${single}`);
+            shown.push(want);
+        }
+    } finally { setLang('ko'); }
+    return shown.join(' · ');
+});
 check('tip: 숫자 자리 셋 — 기본 · Alt 를 누르는 동안 값 + 괄호 식 · 값 없음 · 추가 피해는 둘째 문장 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089)', () => {
     // 차지 — 피해(mult_pct · STR)와 확률(proc_chance_pct · LCK)에 슬롯이 있고 배수에는 없다. 추가 피해 문장이 선다
     const def = SYS.skill.defs.kni_charge;
-    const ctx = { period: 2.4, atk: 400, atkType: 'physical', stats: { ...G.heroes[0].stats } };
+    const ctx = { period: 2.4, atkMin: 400, atkMax: 400, atkType: 'physical', stats: { ...G.heroes[0].stats } };
     const alt = on => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { key: 'Alt' }));
     const base = skillTipCard({ id: def.id }, ctx);
     const nLines = base.querySelectorAll('.tip-line').length;
@@ -3749,7 +4047,7 @@ check('battle: 적의 소환 벽은 처치가 아니고 클리어를 막지 않�
     let one = null;
     for (const mul of [1, 2, 4, 8]) {
         const mk = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', atk_magic: undefined,
-            atk_physical: (u.combat.atk_physical ?? u.combat.atk_magic ?? 1) * mul } }));
+            atk_physical: scaleRange(u.combat.atk_physical ?? u.combat.atk_magic, mul) } }));
         for (let seed = 1; seed <= 40 && !one; seed++) {
             const x = SYS.battle.simulate(mk(), 105, makeRng(seed));
             if ([...wallsOf(x)].some(k => downOf(x, k))) one = { seed, mul, r: x };
@@ -3762,7 +4060,12 @@ check('battle: 적의 소환 벽은 처치가 아니고 클리어를 막지 않�
     for (const k of Object.keys(r.kills)) if (!D.monsters[k]) fail(`kills 에 몬스터가 아닌 키 ${k}`);
     for (const k of Object.keys(r.cards)) if (!D.monsters[k]) fail(`cards 에 몬스터가 아닌 키 ${k}`);
     const walls = wallsOf(r);
-    if (r.timeline.some(ev => ev.e === 'card' && walls.has(ev.u))) fail('벽이 카드를 떨어뜨렸다');
+    // 벽이 처치 · 카드로 새지 않는다 — **몬스터** 쓰러짐(벽 제외)만 처치가 되고(보스 단독 1라운드라 이겼을 때만 들어온다 · R89) 카드는 처치를 못 넘는다.
+    //   ~~타임라인 card 이벤트의 주인이 벽인가~~ 는 R89 로 card 이벤트가 없어져 **영원히 통과하던 줄**이라 갈아 끼웠다
+    const monsterDowns = r.timeline.filter(ev => ev.e === 'down' && ev.u.startsWith('e') && !walls.has(ev.u)).length;
+    const banked = Object.values(r.kills).reduce((x, y) => x + y, 0);
+    if (banked !== (r.won ? monsterDowns : 0)) fail(`처치 ${banked} ≠ 몬스터 쓰러짐 ${monsterDowns}(won ${r.won}) — 벽이 처치로 샜다`);
+    for (const [id, n] of Object.entries(r.cards)) if (n > (r.kills[id] ?? 0)) fail(`카드 ${id} ${n} > 처치 ${r.kills[id] ?? 0} — 벽이 카드를 떨어뜨렸다`);
     const credited = r.contrib.reduce((x, c) => x + c.kills, 0), killed = Object.values(r.kills).reduce((x, y) => x + y, 0);
     if (credited !== killed) fail(`기여 처치 ${credited} ≠ 처치 ${killed} — 벽을 한쪽만 셌다`);
     // ② 센 파티 — 벽이 선 채로 보스가 쓰러진 판. 끝나는 시각 = 보스가 쓰러진 시각이어야 한다. 세기를 올려 가며 찾고 표본 수를 같이 낸다
@@ -3770,7 +4073,7 @@ check('battle: 적의 소환 벽은 처치가 아니고 클리어를 막지 않�
     let two = null;
     for (const mul of [4, 8, 16, 32, 64]) {
         const mk = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', atk_magic: undefined,
-            atk_physical: (u.combat.atk_physical ?? u.combat.atk_magic ?? 1) * mul } }));
+            atk_physical: scaleRange(u.combat.atk_physical ?? u.combat.atk_magic, mul) } }));
         let summoned = 0, wins = 0, standing = 0;
         for (let seed = 1; seed <= 40; seed++) {
             const x = SYS.battle.simulate(mk(), 105, makeRng(seed));
@@ -3799,7 +4102,7 @@ check('battle: 적의 오오라는 시전되지 않는다 — 라운드 시작�
     const holders = Object.values(D.monsters).filter(m => auras.has(m.innate_skill));
     if (!holders.length) fail('오오라를 고유로 든 몬스터가 없다 — 이 단정이 아무것도 안 잰다');
     const strong = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', atk_magic: undefined,
-        atk_physical: (u.combat.atk_physical ?? u.combat.atk_magic ?? 1) * 16 } }));
+        atk_physical: scaleRange(u.combat.atk_physical ?? u.combat.atk_magic, 16) } }));
     let enemyCasts = 0, runs = 0;
     for (const st of D.stageList) {
         if (isBossOnly(st)) continue;
@@ -3860,10 +4163,14 @@ check('battle: contrib 이 타임라인과 같은 값을 낸다 — 파티 전�
         if (x.dealt !== Math.round(dealt[x.uid] ?? 0)) fail(`가한 피해가 타임라인과 다르다 (${x.uid}: ${x.dealt} ≠ ${Math.round(dealt[x.uid] ?? 0)})`);
         if (x.taken !== Math.round(taken[x.uid] ?? 0)) fail(`받은 피해가 타임라인과 다르다 (${x.uid}: ${x.taken} ≠ ${Math.round(taken[x.uid] ?? 0)})`);
     }
-    // 처치 합 = 잡은 몬스터 수. 파티가 못 잡은 라운드는 없으므로 둘이 정확히 맞는다
+    // 처치 합 = 쓰러뜨린 몬스터 수 — **진 라운드의 처치도 든다**(사실의 기록 · `rounds[].killed` 와 같다).
+    //   보상 칸 `kills` 는 **이긴 라운드의 몫만** 센다(R89) — 그래서 그쪽은 기여 처치를 넘지 못하고, 런을 이겼을 때만 같다.
+    //   ~~`kills` 와 정확히 같다~~ 는 R89 이전 전제였다 — R90 로 수열이 밀려 이 시드의 마지막 라운드가 지면서 드러났다
     const kills = c.reduce((a, x) => a + x.kills, 0);
-    const slain = Object.values(res.kills).reduce((a, b) => a + b, 0);
-    if (kills !== slain) fail(`처치 합이 다르다 — contrib ${kills} · kills ${slain}`);
+    const slain = res.rounds.reduce((a, rd) => a + (rd.killed?.length ?? 0), 0);
+    if (kills !== slain) fail(`처치 합이 다르다 — contrib ${kills} · 라운드 처치 ${slain}`);
+    const banked = Object.values(res.kills).reduce((a, b) => a + b, 0);
+    if (banked > kills || (res.won && banked !== kills)) fail(`보상 처치 ${banked} 가 기여 처치 ${kills} 와 안 맞는다 (won ${res.won})`);
     if (!eq(r.report.contrib, res.contrib)) fail('리포트가 결과의 기여를 그대로 안 실었다');
     return `${c.length}명 · 가한 합 ${c.reduce((a, x) => a + x.dealt, 0)} · 처치 ${kills}`;
 });
@@ -3985,6 +4292,358 @@ check('closeRun: 반복이 꺼져 있으면 아무것도 안 한다', () => {
     const G2 = newGameP(42, cands, NOW);
     SYS.game.resolveBattle(G2, 101, NOW);
     return SYS.game.closeRun(G2, NOW + 3_600_000) === null && G2.notice === null;
+});
+
+/* ── 원정 — 라운드 단위 [2026-09-14 · R89 · base_expedition_design §1-5 · INTERFACE §2-6 createRun · §2-7 departRun/advanceRun] ──
+   보상은 라운드를 이긴 순간 들어오고, 라운드는 시작할 때 계산되며, 원정 중에 편성을 바꿔도 도는 원정은 나간 인원 그대로이고(R92), 끊긴 라운드는 없던 것이다.
+   전투 쪽(`createRun`)과 상태 쪽(`departRun` · `advanceRun` · `retreatRun` · `closeRun`)을 따로 본다 — 앞은 규칙, 뒤는 정산 */
+const tenth = v => Math.round(v * 10) / 10;       // battle.js r1 과 같은 자릿수
+const sortedJson = o => JSON.stringify(Object.entries(o).sort());
+
+check('createRun: 라운드마다 「그 순간의 파티」를 다시 넘겨도 바뀐 것이 없으면 simulate 와 한 글자도 안 다르다 (R89 · INTERFACE §8 항목 18)', () => {
+    let rounds = 0;
+    for (const [mk, stage] of [[skillUnits, 101], [skillUnits, 103], [godUnits, 104]]) {
+        for (let seed = 1; seed <= 5; seed++) {
+            const want = SYS.battle.simulate(mk(), stage, makeRng(seed));
+            const bare = SYS.battle.createRun(mk(), stage, makeRng(seed));
+            while (bare.next()?.ended === false);
+            if (!eq(bare.result, want)) fail(`${stage} seed ${seed} — 인자 없이 이어 부른 결과가 simulate 와 다르다`);
+            // 매 라운드 **새로 만든** 같은 파티 — state.advanceRun 이 언제나 이 길로 부른다(같으면 갈아입지 않아야 한다)
+            const run = SYS.battle.createRun(mk(), stage, makeRng(seed));
+            let s = run.next(); rounds++;
+            while (s && !s.ended) { s = run.next(mk()); rounds++; }
+            if (!eq(run.result, want)) fail(`${stage} seed ${seed} — 같은 파티를 다시 넘겼는데 결과가 갈렸다 (refit ${run.result.timeline.filter(ev => ev.e === 'refit').length})`);
+        }
+    }
+    return `3 조합 × 시드 5 · 라운드 ${rounds}`;
+});
+
+check('createRun: 보상은 이긴 라운드만 — 진 라운드의 처치 · 카드 · 드롭 · 골드 · XP 는 버린다 · 이긴 라운드 합 = 결과 (R89 D1)', () => {
+    let lost = 0, thrown = 0, won = 0;
+    const plus = (a, b) => { for (const [k, n] of Object.entries(b)) a[k] = (a[k] ?? 0) + n; return a; };
+    for (const [mk, stage] of [[units, 101], [units, 102], [units, 103], [godUnits, 101]]) {
+        for (let seed = 1; seed <= 12; seed++) {
+            const run = SYS.battle.createRun(mk(), stage, makeRng(seed));
+            const sum = { xp: 0, gold: 0, kills: {}, cards: {}, drops: [] }, clearedN = new Set();
+            for (let s = run.next(); s; s = s.ended ? null : run.next()) {
+                if (s.cleared) {
+                    clearedN.add(s.n);
+                    sum.xp += s.xp; sum.gold += s.gold; plus(sum.kills, s.kills); plus(sum.cards, s.cards); sum.drops.push(...s.drops);
+                    continue;
+                }
+                lost++;
+                if (s.xp || s.gold || s.drops.length || Object.keys(s.kills).length || Object.keys(s.cards).length)
+                    fail(`${stage} seed ${seed} 라운드 ${s.n} — 진 라운드인데 몫이 있다 ${JSON.stringify({ xp: s.xp, gold: s.gold, drops: s.drops.length, kills: s.kills })}`);
+            }
+            const r = run.result;
+            if (sum.xp !== r.xpTotal || sum.gold !== r.gold || !eq(sum.drops, r.drops) || sortedJson(sum.kills) !== sortedJson(r.kills) || sortedJson(sum.cards) !== sortedJson(r.cards))
+                fail(`${stage} seed ${seed} — 이긴 라운드 합 ≠ 결과 (xp ${sum.xp}/${r.xpTotal} · gold ${sum.gold}/${r.gold} · drops ${sum.drops.length}/${r.drops.length})`);
+            // 처치 순간의 사실(적의 down)과 대조 — 이긴 라운드의 몬스터 쓰러짐 = 처치 · 진 라운드의 쓰러짐은 버렸다 (소환 벽 키는 `s` 로 시작한다)
+            let n = 0;
+            const downs = {};
+            for (const ev of r.timeline) { if (ev.e === 'round') n = ev.n; else if (ev.e === 'down' && ev.u.startsWith('e')) downs[n] = (downs[n] ?? 0) + 1; }
+            const kept = Object.entries(downs).filter(([k]) => clearedN.has(+k)).reduce((x, [, v]) => x + v, 0);
+            const killed = Object.values(r.kills).reduce((x, y) => x + y, 0);
+            if (kept !== killed) fail(`${stage} seed ${seed} — 이긴 라운드의 몬스터 쓰러짐 ${kept} ≠ 처치 ${killed}`);
+            thrown += Object.entries(downs).filter(([k]) => !clearedN.has(+k)).reduce((x, [, v]) => x + v, 0);
+            if (r.won) won++;
+        }
+    }
+    if (!lost) fail('진 라운드가 하나도 없다 — 표본 없음');
+    if (!thrown) fail('진 라운드에서 쓰러진 몬스터가 없다 — 「버린다」를 한 번도 못 봤다');
+    if (!won) fail('클리어한 런이 없다 — 마지막 라운드를 이긴 쪽 표본 없음');
+    return `진 라운드 ${lost} · 버린 처치 ${thrown} · 클리어 런 ${won}`;
+});
+
+check('createRun: 스킬은 쿨부터 돈다 — 파티는 0초 + 쿨 · 적은 등장 라운드 시작 + 쿨 · 첫 시전은 그 뒤 (R89 D6 · battle_design §6)', () => {
+    let party = 0, enemy = 0, casts = 0;
+    for (let seed = 1; seed <= 4; seed++) {
+        const us = skillUnits();
+        const r = SYS.battle.simulate(us, 103, makeRng(seed));
+        const firstCast = (key, id, from, to) => r.timeline.find((ev, i) => i >= from && i < to && ev.e === 'skill' && ev.u === key && ev.s === id);
+        r.party.forEach((p, i) => p.actives.forEach((id, j) => {
+            const want = tenth(cooldownSec(B, { cdr: us[i].combat.cooldown_reduction ?? 0 }, SYS.skill.defs[id]));
+            if (Math.abs(p.ready[j] - want) > 0.05 || ((SYS.skill.defs[id].cool ?? 0) > 0 && !(p.ready[j] > 0)))
+                fail(`seed ${seed} ${p.key} ${id} — 첫 준비 ${p.ready[j]} ≠ 0초 + 쿨 ${want}`);
+            party++;
+            const c = firstCast(p.key, id, 0, r.timeline.length);
+            if (c) { casts++; if (c.t < p.ready[j] - 0.05) fail(`seed ${seed} ${p.key} ${id} — ${c.t}초에 썼는데 준비는 ${p.ready[j]}`); }
+        }));
+        const starts = r.timeline.flatMap((ev, i) => ev.e === 'round' ? [i] : []);
+        starts.forEach((i, k) => {
+            const ev = r.timeline[i], to = starts[k + 1] ?? r.timeline.length;
+            for (const e of ev.enemies) (e.actives ?? []).forEach((id, j) => {
+                const cool = SYS.skill.defs[id].cool ?? 0, gap = e.ready[j] - ev.t;
+                // 적의 쿨감소는 이벤트에 없다 — 바닥(skill_cd_floor_mult) ~ 쿨 사이면 「등장 시각 + 쿨」이다
+                if (gap < cool * B.skill_cd_floor_mult - 0.15 || gap > cool + 0.15)
+                    fail(`seed ${seed} 라운드 ${ev.n} ${e.key} ${id} — 첫 준비 ${e.ready[j]} (등장 ${ev.t} · 쿨 ${cool})`);
+                enemy++;
+                const c = firstCast(e.key, id, i, to);
+                if (c) { casts++; if (c.t < e.ready[j] - 0.05) fail(`seed ${seed} 라운드 ${ev.n} ${e.key} ${id} — ${c.t}초에 썼는데 준비는 ${e.ready[j]}`); }
+            });
+        });
+    }
+    if (!party || !enemy || !casts) fail(`표본 부족 — 파티 칸 ${party} · 적 칸 ${enemy} · 시전 ${casts}`);
+    return `파티 칸 ${party} · 적 칸 ${enemy} · 첫 시전 ${casts}`;
+});
+
+check('createRun: 라운드 경계의 갈아입기 — 바뀐 영웅만 · 현재 HP 유지(새 최대치로 자름) · 남은 스킬은 쿨 그대로 · 새 스킬은 그 순간부터 한 바퀴 · advanceRun 이 그 순간의 영웅을 넘긴다 (R89 D3 · D4 · D5)', () => {
+    // ① HP — 첫 라운드에 HP 가 한 번도 안 움직인 후열(p2)을 골라 「갈아입기 직전 HP = 옛 최대치」를 안다
+    const base = () => godUnits().map((u, i) => ({ ...u, rank: i === 2 ? 1 : 0 }));
+    const touched = (tl, k) => tl.some(ev => !['skill', 'summon', 'round', 'end'].includes(ev.e) && (ev.d === k || ev.u === k || (ev.a === k && ev.ahp != null)));
+    let hpSeed = null;
+    for (let seed = 1; seed <= 20 && hpSeed === null; seed++) {
+        const run = SYS.battle.createRun(base(), 101, makeRng(seed));
+        const s = run.next();
+        if (s.cleared && !s.ended && !touched(run.result.timeline, 'p2')) hpSeed = seed;
+    }
+    if (hpSeed === null) fail('첫 라운드에 HP 가 안 움직인 후열이 없다 — ① 표본 없음 (시드 1~20)');
+    const hpCase = mult => {
+        const run = SYS.battle.createRun(base(), 101, makeRng(hpSeed));
+        run.next();
+        const old = run.result.party[2].hpMax;
+        run.next(base().map((u, i) => i === 2 ? { ...u, combat: { ...u.combat, hp_max: Math.round(u.combat.hp_max * mult) } } : u));
+        const tl = run.result.timeline, fits = tl.filter(ev => ev.e === 'refit');
+        if (fits.length !== 1 || fits[0].u !== 'p2') fail(`×${mult} — 갈아입은 영웅이 p2 하나가 아니다 [${fits.map(f => f.u).join(',')}]`);
+        // 경계의 순서 — refit 뒤에는 결투 창 닫기(buffEnd)만 오고 곧 다음 라운드의 round 다 (§2-6 순서 보장 ②)
+        const after = tl.slice(tl.indexOf(fits[0]) + 1).find(ev => ev.e !== 'buffEnd');
+        if (after?.e !== 'round') fail(`×${mult} — refit 다음이 round 가 아니다 (${after?.e})`);
+        return { old, ev: fits[0] };
+    };
+    const up = hpCase(2), down = hpCase(0.25);
+    if (up.ev.hpMax !== up.old * 2 || up.ev.dhp !== up.old) fail(`최대치 ×2 — hpMax ${up.old} → ${up.ev.hpMax} · HP ${up.ev.dhp} (옛 최대치 ${up.old} 그대로여야)`);
+    if (!(down.ev.hpMax < down.old) || down.ev.dhp !== down.ev.hpMax) fail(`최대치 ×0.25 — HP ${down.ev.dhp} 가 새 최대치 ${down.ev.hpMax} 로 안 잘렸다`);
+
+    // ② 스킬 — 첫 라운드를 넘긴 판에서 p0 에게 새 스킬 하나를 얹는다
+    const kit = () => { const s = skillUnits(); return godUnits().map((u, i) => ({ ...u, actives: s[i].actives })); };
+    let two = null;
+    for (let seed = 1; seed <= 20 && !two; seed++) {
+        const run = SYS.battle.createRun(kit(), 101, makeRng(seed));
+        if (run.next().ended) continue;
+        const tl = run.result.timeline, had = run.result.party[0];
+        // 갈아입기 직전의 준비 시각 — 마지막 시전의 ready, 안 썼으면 첫 준비
+        const readyNow = Object.fromEntries(had.actives.map((id, j) => {
+            const last = tl.findLast(ev => ev.e === 'skill' && ev.u === 'p0' && ev.s === id);
+            return [id, last ? last.ready : had.ready[j]];
+        }));
+        const add = Object.values(SYS.skill.defs).find(df => df.kind !== 'aura' && (df.cool ?? 0) > 0 && !had.actives.includes(df.id));
+        const nextUnits = kit().map((u, i) => i === 0 ? { ...u, actives: [...u.actives, { id: add.id, source: 'advance' }] } : u);
+        run.next(nextUnits);
+        const fits = tl.filter(ev => ev.e === 'refit');
+        if (fits.length !== 1 || fits[0].u !== 'p0') fail(`seed ${seed} — 갈아입은 영웅이 p0 하나가 아니다 [${fits.map(f => f.u).join(',')}]`);
+        const ev = fits[0];
+        for (const id of had.actives) {
+            const j = ev.actives.indexOf(id);
+            if (j < 0 || Math.abs(ev.ready[j] - readyNow[id]) > 0.05) fail(`seed ${seed} ${id} — 남은 스킬의 준비 ${readyNow[id]} → ${ev.ready[j]} (쿨이 다시 돌았다)`);
+        }
+        const j = ev.actives.indexOf(add.id);
+        const want = tenth(ev.t + cooldownSec(B, { cdr: nextUnits[0].combat.cooldown_reduction ?? 0 }, add));
+        if (j < 0 || Math.abs(ev.ready[j] - want) > 0.15) fail(`seed ${seed} 새 스킬 ${add.id} — 준비 ${ev.ready[j]} ≠ 갈아입은 시각 ${ev.t} + 쿨 = ${want}`);
+        two = { seed, add: add.id, kept: had.actives.length };
+    }
+    if (!two) fail('첫 라운드를 넘긴 판이 없다 — ② 표본 없음');
+
+    // ③ 상태 쪽 — 첫 라운드가 도는 동안 레벨을 올리면(원정 중 레벨업 · 장비 교체와 같은 길) 둘째 라운드 경계에서 갈아입는다.
+    //   같은 세이브에서 안 올린 쌍둥이와 비교한다 — 첫 라운드 XP 로 레벨업한 영웅도 갈아입으므로 refit 유무가 아니라 **최대치**를 본다
+    let three = null;
+    for (let seed = 1; seed <= 30 && !three; seed++) {
+        const A = newGameP(seed, cands, NOW), Bg = newGameP(seed, cands, NOW);
+        const da = SYS.game.departRun(A, 101, NOW), db = SYS.game.departRun(Bg, 101, NOW);
+        const s = db.run.pending, uid = db.report.party.find(u => s.alive.includes(u));
+        if (!s.cleared || s.ended || !uid) continue;
+        const i = db.report.party.indexOf(uid), key = db.run.result.party[i].key;
+        SYS.game.heroById(Bg, uid).level += 10;
+        SYS.game.advanceRun(A, da.run, NOW); SYS.game.advanceRun(Bg, db.run, NOW);
+        const fitB = db.run.result.timeline.find(ev => ev.e === 'refit' && ev.u === key);
+        const fitA = da.run.result.timeline.find(ev => ev.e === 'refit' && ev.u === key);
+        const hpA = fitA ? fitA.hpMax : da.run.result.party[i].hpMax;
+        if (!fitB) fail(`seed ${seed} — 첫 라운드 중 레벨을 올렸는데 둘째 라운드 경계에 refit 이 없다 (advanceRun 이 옛 영웅을 넘겼다)`);
+        if (!(fitB.hpMax > hpA)) fail(`seed ${seed} — 레벨 +10 인데 최대치 ${hpA} → ${fitB.hpMax}`);
+        three = { seed, hpA, hpB: fitB.hpMax };
+    }
+    if (!three) fail('첫 라운드를 이기고 넘긴 원정이 없다 — ③ 표본 없음 (시드 1~30)');
+    return `① seed ${hpSeed} HP ${up.old} 유지(×2) · 자름(×0.25) ② seed ${two.seed} 남은 스킬 ${two.kept} 유지 · 새 ${two.add} ③ seed ${three.seed} 최대치 ${three.hpA} → ${three.hpB}`;
+});
+
+check('advanceRun: 이긴 라운드의 경험치는 그 순간 살아 있는 영웅만 — 쓰러진 영웅은 그 런 끝까지 몫이 없다 (R89 D2)', () => {
+    let sample = 0, rounds = 0;
+    for (let seed = 1; seed <= 30 && sample < 3; seed++) {
+        const G2 = newGameP(seed, cands, NOW);
+        const d = SYS.game.departRun(G2, 101, NOW);
+        if (!d.ok) fail(`seed ${seed} depart ${d.err}`);
+        const R = d.report, out = new Set();
+        for (;;) {
+            const before = { ...R.xp };
+            const a = SYS.game.advanceRun(G2, d.run, NOW);
+            const s = a.round, each = s.cleared ? Math.round(s.xp * B.xp_rate) : 0;
+            rounds++;
+            for (const uid of out) if (s.alive.includes(uid)) fail(`seed ${seed} — 쓰러졌던 ${uid} 가 라운드 ${s.n} 끝에 살아 있다`);
+            for (const uid of R.party) {
+                const live = s.alive.includes(uid), want = before[uid] + (live ? each : 0);
+                if (!live) out.add(uid);
+                if (R.xp[uid] !== want) fail(`seed ${seed} 라운드 ${s.n} ${uid} — xp ${before[uid]} → ${R.xp[uid]} (기대 ${want} · 살아 있음 ${live} · 이김 ${s.cleared})`);
+            }
+            if (s.cleared && each > 0 && s.alive.length < R.party.length) sample++;
+            if (a.done) break;
+        }
+    }
+    if (!sample) fail('쓰러진 영웅이 있는 채로 이긴 라운드가 없다 — 표본 없음 (시드 1~30)');
+    return `쓰러진 채 이긴 라운드 ${sample} · 정산 ${rounds}`;
+});
+
+check('원정 중 편성 — 인원 넣기 · 빼기 · 진형 · 자리 · 새 출발이 열린다 · 지금 싸우는 영웅만 해고 · 수색이 막힌다 · 끝나면 풀린다 (R92 · R89 D7 대체)', () => {
+    const G2 = newGameP(42, cands, NOW);
+    const extra = SYS.game.tavernCandidates(G2)[0];
+    G2.counters.hero++; extra.uid = 'hx'; G2.heroes.push(extra);
+    const [a, b] = G2.party;
+    const d = SYS.game.departRun(G2, 101, NOW);
+    if (!d.ok) fail(`depart ${d.err}`);
+    const going = G2.party.slice();
+    if (!eq(SYS.game.runParty(G2), going)) fail(`싸우는 영웅 ${JSON.stringify(SYS.game.runParty(G2))} — 나간 인원이어야`);
+    if (SYS.game.canDepart(G2, 101, NOW) !== null) fail(`원정 중 출발 판정 ${SYS.game.canDepart(G2, 101, NOW)}`);
+    const tries = {
+        '빼기': () => SYS.game.toggleParty(G2, a, NOW),
+        '넣기': () => SYS.game.toggleParty(G2, 'hx', NOW),
+        '진형': () => SYS.game.setFormation(G2, '1-2'),
+        '자리': () => SYS.game.placeFormation(G2, b, 0, 0),
+    };
+    for (const [k, f] of Object.entries(tries)) { const r = f(); if (!r.ok) fail(`원정 중 ${k} — ${r.err}`); }
+    // 뺀 영웅도 그 원정이 끝날 때까지 싸운다 — 해고 · 수색이 막힌다. 새로 넣은 영웅은 안 싸운다
+    if (!eq(SYS.game.runParty(G2), going)) fail('편성을 바꿨더니 싸우는 영웅이 따라 바뀌었다');
+    const fired = SYS.game.dismiss(G2, a).err;
+    if (fired !== 'running') fail(`파티에서 뺀 채 싸우는 영웅의 해고 — ${fired} (running 이어야)`);
+    if (SYS.game.searchState(G2, NOW).ready.includes(a)) fail('싸우는 영웅이 수색 후보에 섰다');
+    const sent = SYS.game.searchSend(G2, a, NOW).err;
+    if (sent !== 'party') fail(`싸우는 영웅의 수색 — ${sent} (party 여야)`);
+    while (!SYS.game.advanceRun(G2, d.run, NOW).done);
+    if (SYS.game.runParty(G2).length) fail(`끝났는데 싸우는 영웅 ${JSON.stringify(SYS.game.runParty(G2))}`);
+    if (SYS.game.dismiss(G2, a).err === 'running') fail('끝났는데 해고가 running');
+    return `편성 ${Object.keys(tries).length}가지 열림 · 싸우는 ${going.length}명 해고 · 수색 막힘 · 끝나면 풀림`;
+});
+
+check('원정 중에 편성을 바꿔도 도는 원정은 나간 인원 · 전술 조건 그대로다 — 안 바꾼 원정과 전투가 한 글자도 안 다르다 (R92)', () => {
+    const mk = seed => { const g = newGameP(seed, cands, NOW); for (const h of g.heroes) h.level = B.hero_level_cap; return g; };
+    // 한 명을 빼면 전술이 달라지는 편성을 고른다 — 안 그러면 「나간 인원으로 센다」가 안 걸린다
+    let seed = 0;
+    for (let s = 1; s <= 40 && !seed; s++) {
+        const g = mk(s);
+        if (JSON.stringify(SYS.game.tacticBonus(g)) !== JSON.stringify(SYS.game.tacticBonus(g, g.party.slice(1)))) seed = s;
+    }
+    if (!seed) fail('한 명을 빼면 전술이 달라지는 편성이 없다 — 표본 없음 (시드 1~40)');
+    const fight = edit => {
+        const g = mk(seed);
+        const d = SYS.game.departRun(g, 101, NOW);
+        if (!d.ok) fail(`seed ${seed} depart ${d.err}`);
+        edit?.(g);
+        let bounds = 0;
+        while (!SYS.game.advanceRun(g, d.run, NOW).done) bounds++;
+        return { tl: JSON.stringify(d.run.result.timeline), bounds };
+    };
+    const plain = fight();
+    const edited = fight(g => {
+        const f = SYS.game.formationState(g);
+        if (!SYS.game.toggleParty(g, g.party[0], NOW).ok) fail('원정 중 빼기가 거절됐다');
+        if (!SYS.game.setFormation(g, f.templates.find(x => x !== f.tpl)).ok) fail('원정 중 진형이 거절됐다');
+    });
+    if (plain.bounds < 1) fail('라운드가 하나뿐이라 갈아입기 경계가 없다');
+    if (edited.tl !== plain.tl) fail('편성을 바꿨더니 도는 원정의 전투가 바뀌었다 — 인원 · 전술을 편성에서 읽었다');
+    return `seed ${seed} · 라운드 경계 ${plain.bounds} · 전투 동일`;
+});
+
+/** 첫 라운드를 이겨 정산했고, 계산해 둔 둘째 라운드도 이기면 골드가 들어올 원정 — 끊기 · 철수 단정이 쓴다 */
+const midRun = () => {
+    for (let seed = 1; seed <= 40; seed++) {
+        const G2 = newGameP(seed, cands, NOW), gold0 = G2.resources.gold;
+        const d = SYS.game.departRun(G2, 101, NOW);
+        if (!d.ok) fail(`seed ${seed} depart ${d.err}`);
+        const a = SYS.game.advanceRun(G2, d.run, NOW + 1000);
+        if (!a.done && a.round.cleared && a.round.gold > 0 && d.run.pending.cleared && d.run.pending.gold > 0) return { seed, G2, d, gold0 };
+    }
+    return null;
+};
+const settledSnap = (G2, R) => JSON.stringify({ r: G2.resources, bag: G2.bag, ck: G2.codexKills, cc: G2.codexCards, h: G2.heroes.map(h => [h.uid, h.level, h.xp]), rep: { ...R, reason: null } });
+
+check('closeRun: 도는 원정을 끊는다 — 진행 중 라운드는 없던 것 · 이긴 라운드 보상은 남는다 · 반복 off · 리포트 closed (R89 D8 · D13)', () => {
+    const m = midRun();
+    if (!m) fail('둘째 라운드도 골드를 줄 원정이 없다 — 표본 없음 (시드 1~40)');
+    const { G2, d } = m;
+    G2.run.repeat = true;
+    const snap = settledSnap(G2, d.report);
+    const n = SYS.game.closeRun(G2, NOW + 3_600_000);
+    if (n?.kind !== 'runClosed' || n.stageId !== 101) fail(`알림 ${JSON.stringify(n)}`);
+    if (d.report.reason !== 'closed') fail(`리포트 판정 ${d.report.reason}`);
+    if (G2.run.active !== false || G2.run.repeat !== false) fail(`active ${G2.run.active} · repeat ${G2.run.repeat}`);
+    if (settledSnap(G2, d.report) !== snap) fail('끊었는데 자원 · 가방 · 도감 · 경험치 · 리포트가 움직였다 — 진행 중 라운드를 정산했다');
+    if (G2.resources.gold !== m.gold0 + d.report.gold || d.report.roundsCleared < 1) fail(`이긴 라운드의 보상이 없다 — 골드 ${m.gold0} → ${G2.resources.gold} · 리포트 ${d.report.gold}`);
+    if (SYS.game.canDepart(G2, 101, NOW) !== null) fail('끊었는데 출발이 막혀 있다');
+    return `seed ${m.seed} · 이긴 라운드 ${d.report.roundsCleared} · 골드 +${d.report.gold} 남음 · 버린 라운드 골드 ${d.run.pending.gold}`;
+});
+
+check('retreatRun: 철수 — 진행 중 라운드는 버리고 이긴 라운드 보상은 남는다 · 반복 off · 리포트 retreat · 끝난 원정은 다시 안 움직인다 (R89 D10 · D13)', () => {
+    const m = midRun();
+    if (!m) fail('둘째 라운드도 골드를 줄 원정이 없다 — 표본 없음 (시드 1~40)');
+    const { G2, d } = m;
+    G2.run.repeat = true;
+    const snap = settledSnap(G2, d.report);
+    const r = SYS.game.retreatRun(G2, d.run, NOW + 2000);
+    if (!r.ok || r.report !== d.report) fail(`retreat ${r.err}`);
+    if (d.report.reason !== 'retreat') fail(`리포트 판정 ${d.report.reason}`);
+    if (G2.run.active !== false || G2.run.repeat !== false || d.run.done !== true) fail(`active ${G2.run.active} · repeat ${G2.run.repeat} · done ${d.run.done}`);
+    if (settledSnap(G2, d.report) !== snap) fail('철수했는데 자원 · 가방 · 도감 · 경험치 · 리포트가 움직였다 — 진행 중 라운드를 정산했다');
+    if (G2.resources.gold !== m.gold0 + d.report.gold) fail(`이긴 라운드의 골드가 자원에 없다 — ${m.gold0} → ${G2.resources.gold} · 리포트 ${d.report.gold}`);
+    if (SYS.game.retreatRun(G2, d.run, NOW).err !== 'done' || SYS.game.advanceRun(G2, d.run, NOW).err !== 'done') fail('끝난 원정이 또 움직였다');
+    SYS.game.closeRun(G2, NOW + 3000);
+    if (d.report.reason !== 'retreat') fail(`철수한 원정을 closeRun 이 다시 끊었다 — ${d.report.reason}`);
+    return `seed ${m.seed} · 이긴 라운드 ${d.report.roundsCleared} · 골드 +${d.report.gold} 남음 · 버린 라운드 골드 ${d.run.pending.gold}`;
+});
+
+check('departRun: 원정 중에 보내면 도는 원정을 끊고 나간다 — 철수와 같다 · 새 리포트가 맨 앞 · 끊긴 원정의 핸들은 done 이고 새 원정을 안 건드린다 (R92)', () => {
+    const m = midRun();
+    if (!m) fail('둘째 라운드도 골드를 줄 원정이 없다 — 표본 없음 (시드 1~40)');
+    const { G2, d } = m;
+    G2.run.repeat = true;
+    const snap = settledSnap(G2, d.report), battles = G2.counters.battle;
+    const e = SYS.game.departRun(G2, 101, NOW + 2000);
+    if (!e.ok) fail(`원정 중 출발 ${e.err}`);
+    if (d.report.reason !== 'retreat') fail(`끊긴 원정의 판정 ${d.report.reason}`);
+    if (settledSnap(G2, d.report) !== snap) fail('끊었는데 자원 · 가방 · 도감 · 경험치 · 옛 리포트가 움직였다 — 진행 중 라운드를 정산했다');
+    if (G2.reports[0] !== e.report || G2.reports[1] !== d.report || e.report.reason !== null) fail('새 리포트가 맨 앞(진행 중) · 끊긴 리포트가 그 뒤여야');
+    if (G2.run.active !== true || G2.run.lastAt !== NOW + 2000 || G2.run.repeat !== false || G2.counters.battle !== battles + 1) fail(`새 원정 active ${G2.run.active} · lastAt ${G2.run.lastAt} · repeat ${G2.run.repeat} · 전투 ${battles} → ${G2.counters.battle}`);
+    const after = settledSnap(G2, e.report);
+    if (SYS.game.advanceRun(G2, d.run, NOW + 9_000_000).err !== 'done' || SYS.game.retreatRun(G2, d.run, NOW + 3000).err !== 'done') fail('끊긴 원정의 핸들이 또 움직였다');
+    if (settledSnap(G2, e.report) !== after || e.report.reason !== null || G2.run.active !== true) fail('끊긴 원정의 핸들이 새 원정을 건드렸다');
+    if (!SYS.game.advanceRun(G2, e.run, NOW + 9_000_000).ok) fail('새 원정이 안 넘어간다');
+    return `seed ${m.seed} · 끊긴 원정 이긴 라운드 ${d.report.roundsCleared} · 버린 라운드 골드 ${d.run.pending.gold}`;
+});
+
+check('save: v24 → v25 이관 — 리포트의 전원 동일 xpEach 가 영웅별 xp 로 · 옛 런은 도는 원정이 아니다 (R89 · INTERFACE §4)', () => {
+    const s24 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    s24.version = 24;
+    s24.reports = [{ at: NOW, stageId: 101, won: true, reason: 'clear', gold: 5, xpEach: 7, party: ['ha', 'hb'], levelUps: [], downed: [], drops: [] }];
+    s24.run = { stageId: 101, repeat: true, lastAt: NOW, durationSec: 30 };
+    const up = SYS.game.deserialize(s24);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    if (!eq(up.reports[0].xp, { ha: 7, hb: 7 })) fail(`xp ${JSON.stringify(up.reports[0].xp)}`);
+    if ('xpEach' in up.reports[0]) fail('xpEach 가 안 걷혔다');
+    if (up.run.active !== false) fail(`run.active ${up.run.active} — 옛 런을 도는 원정으로 읽으면 closeRun 이 멀쩡한 리포트를 끊는다`);
+    // 이관한 세이브를 열어도 끊을 원정이 없다 — 반복만 꺼지고 옛 리포트의 판정은 그대로다
+    SYS.game.closeRun(up, NOW + 1000);
+    if (up.reports[0].reason !== 'clear' || up.run.repeat !== false) fail(`열자마자 판정 ${up.reports[0].reason} · repeat ${up.run.repeat}`);
+    return 'xp {ha:7, hb:7} · xpEach 없음 · active false · 판정 clear 유지';
+});
+
+check('원정 결정론 — 같은 세이브면 resolveBattle 두 번이 같고, departRun + advanceRun 을 손으로 이어도 같다 (R89 · INTERFACE §5-2)', () => {
+    let steps = 0;
+    for (const seed of [3, 42]) {
+        const a = newGameP(seed, cands, NOW), b = newGameP(seed, cands, NOW), c = newGameP(seed, cands, NOW);
+        const ra = SYS.game.resolveBattle(a, 101, NOW), rb = SYS.game.resolveBattle(b, 101, NOW);
+        if (!ra.ok || !eq(ra.report, rb.report) || !eq(ra.result, rb.result)) fail(`seed ${seed} — 같은 세이브인데 resolveBattle 이 갈렸다`);
+        const d = SYS.game.departRun(c, 101, NOW);
+        do steps++; while (!SYS.game.advanceRun(c, d.run, NOW).done);
+        if (!eq(d.report, ra.report) || !eq(d.run.result, ra.result)) fail(`seed ${seed} — 손으로 이은 리포트 · 결과가 resolveBattle 과 다르다`);
+        if (!eq(SYS.game.serialize(c, NOW), SYS.game.serialize(a, NOW))) fail(`seed ${seed} — 손으로 이은 세이브가 resolveBattle 과 다르다`);
+    }
+    return `시드 2 · 라운드 넘기기 ${steps}`;
 });
 
 /* ── 선술집 ── */

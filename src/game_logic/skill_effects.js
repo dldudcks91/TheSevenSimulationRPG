@@ -15,7 +15,7 @@
  *     실효 정의이고 타격마다 `{flat, procChance, procMult}` 를 `rt.strikeOnce` 에 넘긴다. 광역(`enemy_all`)은 `decay` 가 있으면 **주 대상 밖**이 약해진다
  *   · 버프 창(battle_design §7) — 중첩 없음. 같은 stat 의 서로 다른 창은 **덧셈**이고 파생값을 다시 쓴다
  *   · `atk_pct` 는 새 곱셈 층이 아니라 상시 % 와 **같은 괄호에 덧셈**이다 (battle_design §9-2 「괄호는 둘뿐」).
- *     회복 밑수(`matk`)도 같은 괄호를 탄다 — 공격 창이 회복만 비껴가면 같은 괄호가 아니다
+ *     회복 밑수(`matkMin`·`matkMax`)도 같은 괄호를 탄다 — 공격 창이 회복만 비껴가면 같은 괄호가 아니다 · 범위 양끝마다 (R90)
  *   · `period_pct` 는 **다음 차례 예약부터** 걸린다 — 이미 잡힌 `next` 는 건드리지 않는다 (INTERFACE §2-6)
  *   · 발동 조건(skill_design §9-3) — 거짓이면 **준비된 것으로 치지 않는다**(쿨은 그대로, 그 차례엔 다른 것이 나간다)
  *
@@ -139,12 +139,13 @@ export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...SUPPORT_T
  */
 export const EFFECTS = {
     // 상시 % 와 같은 괄호에 덧셈 — 새 곱셈 층이 아니다 (battle_design §9-2).
-    // 회복 밑수(matk)도 **같은 괄호**를 탄다 — 공격 창이 회복만 비껴가면 힐러의 창이 반쪽이 된다
+    // 회복 밑수(matkMin·matkMax)도 **같은 괄호**를 탄다 — 공격 창이 회복만 비껴가면 힐러의 창이 반쪽이 된다
+    // 공격력 · 회복 밑수는 **범위**다 — 양끝에 같은 배율을 곱한다 (R90)
     atk_pct: {
         derive: (u, sum) => {
             const mult = 1 + (u.atkPct + sum) / 100;
-            u.atk = u.atkBase * mult;
-            u.matk = u.matkBase * mult;
+            u.atkMin = u.atkMinBase * mult; u.atkMax = u.atkMaxBase * mult;
+            u.matkMin = u.matkMinBase * mult; u.matkMax = u.matkMaxBase * mult;
         },
     },
     // 주기는 다음 차례 예약부터 — 이미 잡힌 u.next 는 건드리지 않는다 (INTERFACE §2-6)

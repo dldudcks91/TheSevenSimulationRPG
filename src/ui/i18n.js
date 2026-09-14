@@ -111,6 +111,34 @@ const STRINGS = {
     'ng.overwriteConfirm': { ko: '정말? 한 번 더 누르면 지운다', en: 'Really? Click again to delete' },
     'ng.startWeapon': { ko: '직업 전속 무기군의 무기 1개를 쥐고 시작한다', en: 'Starts with one weapon from a class-exclusive weapon group' },
 
+    // 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112) — 버튼 글자가 곧 상태다
+    'cl.signIn': { ko: 'Google 로그인', en: 'Sign in with Google' },
+    'cl.st.checking': { ko: '☁ 확인 중', en: '☁ Checking' },
+    'cl.st.on': { ko: '☁ 연결됨', en: '☁ Connected' },
+    'cl.st.saving': { ko: '☁ 저장 중', en: '☁ Saving' },
+    'cl.st.error': { ko: '☁ 연결 실패', en: '☁ Offline' },
+    'cl.st.conflict': { ko: '☁ 세이브 선택', en: '☁ Choose save' },
+    'cl.h': { ko: '클라우드 세이브', en: 'Cloud Save' },
+    'cl.account': { ko: '계정', en: 'Account' },
+    'cl.cloudAt': { ko: '클라우드 사본', en: 'Cloud copy' },
+    'cl.never': { ko: '없음', en: 'None' },
+    'cl.pushNow': { ko: '지금 올리기', en: 'Upload now' },
+    'cl.signOut': { ko: '로그아웃', en: 'Sign out' },
+    'cl.pushed': { ko: '클라우드에 올렸다', en: 'Uploaded to the cloud' },
+    'cl.upToDate': { ko: '클라우드 사본이 최신이다', en: 'The cloud copy is up to date' },
+    'cl.err.network': { ko: '클라우드에 연결하지 못했다', en: 'Could not reach the cloud' },
+    'cl.err.signIn': { ko: '로그인하지 못했다', en: 'Sign-in failed' },
+    'cl.err.tooLarge': { ko: '세이브가 너무 커서 올리지 못했다', en: 'The save is too large to upload' },
+    'cl.pick.h': { ko: '어느 세이브로 이어할까', en: 'Which save to continue?' },
+    'cl.pick.cloud': { ko: '클라우드', en: 'Cloud' },
+    'cl.pick.local': { ko: '이 브라우저', en: 'This browser' },
+    'cl.pick.at': { ko: '{t} 저장', en: 'Saved {t}' },
+    'cl.pick.none': { ko: '세이브 없음', en: 'No save' },
+    'cl.pick.use': { ko: '이 세이브로 이어하기', en: 'Continue with this save' },
+    'cl.pick.confirm': { ko: '한 번 더 누르면 다른 쪽을 덮어쓴다', en: 'Click again to overwrite the other' },
+    'cl.frozen.h': { ko: '다른 탭에서 게임이 열렸다', en: 'The game is open in another tab' },
+    'cl.frozen.reload': { ko: '이 탭에서 이어하기', en: 'Continue in this tab' },
+
     /* ── 프롤로그 (2026-09-03 · SCREEN_DESIGN §3-1) ──
        본문·씬 제목은 **한국어만** 넣는다 (사용자 지시 2026-09-03) — `en` 이 없으면 t() 가 ko 로 폴백하므로
        영어에서도 한국어 본문이 나온다. 「ko/en 나란히」의 의도된 예외이고 번역은 나중에 채운다 (DEV_PLAN 부채 #30).
@@ -202,7 +230,6 @@ const STRINGS = {
     /* ── 원정 (실동작) ── */
     'exp.partyFull': { ko: '파티가 찼다', en: 'Party full' },
     'exp.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
-    'exp.running': { ko: '원정 중이다 — 철수해야 파티 · 진형을 바꾸거나 새로 출발할 수 있다', en: 'An expedition is under way — retreat to change the party or formation, or to set out again' },
     'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
@@ -241,7 +268,6 @@ const STRINGS = {
     'rep.reason.timeout': { ko: '제한시간 초과', en: 'Timed out' },
     'rep.reason.retreat': { ko: '철수', en: 'Retreated' },
     'rep.reason.closed': { ko: '게임이 꺼져 끊겼다', en: 'Cut off — the game was closed' },
-    'rep.running': { ko: '진행 중', en: 'In progress' },
 
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
     'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
@@ -270,11 +296,13 @@ const STRINGS = {
     'ch.err.stashFull': { ko: '창고가 가득 찼다', en: 'Stash is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
-    // 툴팁이 걷은 「{n}강에서 옵션 상승」이 앉는 자리다 (SCREEN_DESIGN §6 개정 2026-09-08 — 조건·규칙 주석은 도움말의 몫).
-    // ⚠ 「강화 모드」는 09-03 에 폐기됐는데 문구만 남아 있었다 — 없는 토글을 찾게 만든다. 자리는 제련소(§8-2) · 간격은 CSV 가 든다
-    'ch.upgradeHint': { ko: '강화는 제련소에서 한다 — 골드로 한 단계씩 올리고, {n}강마다 옵션 하나의 값이 오른다',
-        en: 'Upgrading happens at the forge — one step at a time for gold, and every +{n} one option gains value' },
+    // 툴팁이 걷은 강화 규칙 문구가 앉는 자리다 (SCREEN_DESIGN §6 개정 2026-09-08 — 조건·규칙 주석은 도움말의 몫).
+    // ⚠ 「강화 모드」는 09-03 에 폐기됐는데 문구만 남아 있었다 — 없는 토글을 찾게 만든다. 자리는 제련소(§8-2).
+    // 2026-09-15 — 옵션 계단이 퇴역해(R95) 「{n}강마다 옵션」을 걷고 목걸이 · 반지의 강화 없음을 넣었다 (ADR-0125)
+    'ch.upgradeHint': { ko: '강화는 제련소에서 한다 — 골드로 한 단계씩 베이스 능력치를 올린다. 목걸이 · 반지는 강화하지 않는다',
+        en: 'Upgrading happens at the Smeltery — one step at a time for gold, raising the base stat. Amulets and rings cannot be upgraded' },
     'ch.err.maxUp': { ko: '더는 강화할 수 없다', en: 'Already fully upgraded' },
+    'ch.err.noBase': { ko: '베이스 능력치가 없어 강화할 수 없다', en: 'Nothing to upgrade — this item has no base stat' },
     /* 해고 (SCREEN_DESIGN §6 · 2026-09-09) — 창 하나가 세 상태를 든다: 막힘(장비) · 막힘(마지막) · 확인.
        규칙 설명이 아니라 **상태와 확인**이라 패널이 아닌 창에 선다 (ui 원칙 4) */
     'ch.dismiss': { ko: '해고', en: 'Dismiss' },
@@ -289,7 +317,7 @@ const STRINGS = {
        코드가 있으면 문구도 있어야 한다. `last` 는 창 본문도 이 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다) */
     'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
     'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
-    'ch.err.running': { ko: '원정에 나간 영웅이다 — 철수해야 해고할 수 있다', en: 'That hero is on an expedition — retreat first' },
+    'ch.err.running': { ko: '지금 원정에서 싸우는 영웅이다 — 그 원정이 끝나야 해고할 수 있다', en: 'That hero is fighting on an expedition — wait until it ends' },
     'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
     /* 확인 문구도 **사용자 지시 그대로** [개정 2026-09-09] — 옛 판(「{name} — 해고하면 되돌릴 수 없다」)의 `{name}` 은 걷었다.
        누구를 해고하는지는 창을 연 카드가 이미 말하고, 되돌릴 수 없다는 것은 **[취소] 버튼이 눈에 보이는 것**이 든다 */
@@ -297,7 +325,6 @@ const STRINGS = {
     'ch.dismissed': { ko: '{name} 해고', en: '{name} dismissed' },
     'ch.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'ch.upgraded': { ko: '강화 +{n} · {g}G', en: 'Upgraded to +{n} · {g}G' },
-    'ch.upgraded.affix': { ko: '강화 +{n} · {g}G · {a} {from} → {to}', en: 'Upgraded to +{n} · {g}G · {a} {from} → {to}' },
     'ch.weaponGroup': { ko: '{group} · {cls} 전용', en: '{group} · {cls} only' },
     'ch.noTrees': { ko: '마스터리는 실동작 · 전직 층은 미구현이다', en: 'Mastery is live; the advancement layer is not built yet' },
 
@@ -433,26 +460,31 @@ const STRINGS = {
     'cm.accept': { ko: '수락', en: 'Accept' },
 
     /* 제련소 (SCREEN_DESIGN §8-2) — 제목은 `dp.post.forge` 를 그대로 쓴다(파견 목록의 칸 이름과 같은 자리다).
-       `+`강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded*` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
+       칸 셋 = 제작 · 강화 · 크래프트 (ADR-0124). 강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
     'fg.assign': { ko: '배치', en: 'Assigned' },
     'fg.none': { ko: '배치 없음', en: 'None' },
     'fg.quality': { ko: '품질', en: 'Quality' },
     'fg.reassign': { ko: '배치 변경', en: 'Reassign' },
-    'fg.seg.craft': { ko: '제작', en: 'Craft' },
+    'fg.seg.make': { ko: '제작', en: 'Smith' },
     'fg.seg.up': { ko: '강화', en: 'Upgrade' },
-    'fg.plus.h': { ko: '+ 강화', en: 'Plus upgrade' },
-    'fg.opt.h': { ko: '옵션강화', en: 'Option upgrade' },
+    'fg.seg.craft': { ko: '크래프트', en: 'Craft' },
     'fg.go': { ko: '강화', en: 'Upgrade' },
     // 옛 `tip.up.max` — 2026-09-08 에 툴팁의 강화 줄이 죽으면서 **제련소 전용**이 되어 접두를 옮겼다 (문구·인자 동일)
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
-    'fg.optGo': { ko: '옵션강화', en: 'Upgrade option' },
     'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
     'fg.worn': { ko: '착용 중', en: 'Equipped' },
     'fg.bag': { ko: '가방', en: 'Bag' },
     'fg.count': { ko: '장비 {n}', en: '{n} items' },
     'fg.empty': { ko: '가진 장비가 없다', en: 'You own no gear' },
     'fg.pick': { ko: '왼쪽에서 장비를 고른다', en: 'Pick an item on the left' },
-    'fg.noAffix': { ko: '붙은 옵션이 없다', en: 'No options on this item' },
+    'fg.noBase': { ko: '강화 없음', en: 'No upgrade' },
+    // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
+    'fg.make.band': { ko: 'Lv {lo}–{hi}', en: 'Lv {lo}–{hi}' },
+    'fg.make.go': { ko: '만들기', en: 'Make' },
+    'fg.made': { ko: '제작 — {name}', en: 'Made — {name}' },
+    'fg.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
+    'fg.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
+    'fg.err.missing': { ko: '없는 부위 · 레벨대다', en: 'Unknown slot or level band' },
 
     /* ── 도움말 탭 (2026-08-26) ──
        설명 문구는 여기서 새로 쓰지 않는다 — 인게임에서 걷어낸 *.note / *.sub / *.hint 를 같은 키로 재사용한다.
@@ -584,7 +616,6 @@ const STRINGS = {
     'rep.contrib.total': { ko: '합계', en: 'Total' },
     /* 영웅 줄의 레벨업 — 초상 오른쪽 이름 아래 (ADR-0086). 이름은 그 줄이 이미 들어서 안 적는다 */
     'rep.contrib.levelUp': { ko: '▲ Lv.{a} → {b}', en: '▲ Lv.{a} → {b}' },
-    'rep.live': { ko: '진행 중 {a}', en: 'In progress {a}' },
     'rep.contrib.xp': { ko: '경험치 {n}', en: '{n} XP' },
     'rep.log.sub': { ko: '정예 {e} / 보스 {b}', en: 'Elite {e} / Boss {b}' },
     'rep.contract': {
@@ -603,6 +634,8 @@ const STRINGS = {
     /* ── 장비 ── */
     'eq.slots': { ko: '장비는 8칸 — 무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 2. 모든 무기는 양손이라 잠기는 칸이 없다', en: '8 gear slots — weapon, helm, armor, gloves, boots, amulet, 2 rings. Every weapon is two-handed, so no slot is ever locked' },
     'st.atk': { ko: '공격력', en: 'Attack' },
+    // 범위 표기 — 무기 피해 · 스킬 피해 · 회복량 (R90 · SCREEN_DESIGN §2 · §6 · ADR-0108). 양끝이 같으면 이 틀을 안 쓰고 한 수만 찍는다
+    'st.range': { ko: '{a}~{b}', en: '{a}–{b}' },
     'st.atkType.physical': { ko: '물리', en: 'Physical' },
     'st.atkType.magic': { ko: '마법', en: 'Magic' },
     'st.atkType.fire': { ko: '불', en: 'Fire' },
@@ -634,7 +667,6 @@ const STRINGS = {
     'ch.gear.h': { ko: '장비', en: 'Equipment' },
     'ch.attr.h': { ko: '기본 옵션', en: 'Basic Stats' },
     'ch.attr.sub': { ko: '장비 불변', en: 'Gear-immutable' },
-    'ch.attr.range': { ko: '{min} ~ {max}', en: '{min} ~ {max}' },
     'ch.attr.note': {
         ko: '기본 능력치 7종은 <b>영웅이 갖고 태어난다</b> — 장비는 단 1도 올리지 않는다 '
             + '([balance.csv:attr_equip_bonus] = 0).<br>'
@@ -680,8 +712,9 @@ const STRINGS = {
     // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
     // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
     // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
-    'tip.hero.h': { ko: '영웅', en: 'Hero' },
+    // ~~tip.hero.h · tip.monster.h~~ (「영웅」 · 「몬스터」 머리글) 는 2026-09-15 삭제 — 유닛 툴팁은 머리글이 없다 (ADR-0115)
     'tip.hero.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
+    'tip.unit.altHint': { ko: 'Alt 세부 옵션', en: 'Alt: detailed stats' },   // 유닛 툴팁 각주 — 열 이름은 캐릭터 탭 키(ch.attr.h · ch.detail.h) 재사용 (ADR-0114)
     'tip.skill.h': { ko: '스킬', en: 'Skill' },
 
     /* ── 스킬 ── */

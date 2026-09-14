@@ -10,7 +10,7 @@
  *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **처음엔 쿨부터 돈다**(첫 준비 시각은 battle.js 가 같은 식으로 박는다 · R89)
  *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 스킬의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
- *   · 회복 밑수는 마법 공격력 (battle_design §9-2) — rng 소비 없음. 능력치 항(`flat`)은 배율에 안 곱하고 더한다
+ *   · 회복 밑수는 마법 공격력 **범위** (battle_design §9-1 · §9-2) — **시전마다 양을 한 번 굴린다**(rng 1회 · R90). 능력치 항(`flat`)은 배율에 안 곱하고 더한다
  *   · **스킬 계수** (skill_design §13 · 2026-09-10) — 시전 순간 `SK.scaleDef(def, u.stats)` 로 실효 정의를 한 번 만들고
  *     대상 표·회복·버프·소환이 전부 그것을 읽는다. 쿨은 원값이다(`cool_sec` 은 슬롯이 못 민다 — §13-1)
  *
@@ -45,7 +45,7 @@ export function cooldownSec(B, u, def) {
  * @param {object} ctx  전투 하나의 문맥 — 전부 `battle.simulate` 가 넘긴다
  *   SK          — skill.js (발동 선택 `pickReady` · 조건 `castable`). 없으면 액티브 없이 기본 공격만 돈다
  *   B           — balance.csv — [balance.csv:skill_cd_floor_mult] 쿨 바닥을 읽는다
- *   rng         — 주입 난수. 이 파일이 쓰는 곳은 공격 대상 표의 시작점 굴림뿐이다
+ *   rng         — 주입 난수. 이 파일이 쓰는 곳은 공격 대상 표의 시작점 굴림과 회복량 굴림(R90)이다
  *   timeline    — 재생용 이벤트 배열 (제자리에 push)
  *   out         — 전투 결과 (여기서는 `casts` 만 센다)
  *   units       — `{party, enemies}`. **`enemies` 는 라운드마다 갈아 끼워지는 속성**이라
@@ -112,11 +112,13 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * 회복 — 마법 공격력 × 배율 **+ 능력치 항**. 대상은 `targetsOf` 가 정한다. rng 소비 없음 (battle_design §9-2).
+     * 회복 — 마법 공격력 **굴림** × 배율 **+ 능력치 항**. 대상은 `targetsOf` 가 정한다(결정론). **rng 1회** —
+     * 시전 한 번에 한 번 굴려 대상 전원이 같은 양을 받는다 (battle_design §9-1 · §9-2 · R90).
      * `def` 는 `scaleDef` 를 지난 실효 정의다 — 원시 정의가 와도 `flat` 은 0 으로 읽는다 (2026-09-10)
      */
     function castHeal(u, def, t) {
-        const amt = Math.round(u.matk * def.mult / 100 + (def.flat ?? 0));
+        const matk = u.matkMin + rng() * (u.matkMax - u.matkMin);   // 회복량 굴림 — 대상 선택 앞 · 양끝이 같아도 1회 (R90)
+        const amt = Math.round(matk * def.mult / 100 + (def.flat ?? 0));
         const targets = targetsOf(u, def);
         for (const tgt of targets) {
             tgt.hp = Math.min(tgt.hpMax, tgt.hp + amt);

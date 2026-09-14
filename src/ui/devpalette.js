@@ -23,8 +23,8 @@ const KEY = 'devPalette';
 /** 사다리 단수 — style.css 의 `--surface-N` 개수와 맞춘다 */
 const STEPS = 8;
 
-/** 패널 알파 4종 — `--chrome-alpha` 기준으로 나머지가 얼마씩 위인지가 고정이다 */
-const ALPHAS = ['chrome-alpha', 'panel-alpha', 'panel-alpha-soft', 'panel-alpha-deep'];
+/** 패널 알파 3종 — `--chrome-alpha` 기준으로 나머지가 얼마씩 위인지가 고정이다 */
+const ALPHAS = ['chrome-alpha', 'panel-alpha', 'panel-alpha-soft'];
 
 /** 슬라이더 정의 — id · 라벨 · 상한 · 상태를 읽고 쓰는 법 */
 const SLIDERS = [

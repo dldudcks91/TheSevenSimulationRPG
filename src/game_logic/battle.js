@@ -26,7 +26,7 @@
  *     [개정 2026-09-11 · R79] — ~~`combatFromMonster`~~ 는 삭제되고 몬스터도 `heroSystem.computeCombat` 을 지난다.
  *     필드 이름이 같아서가 아니라 **같은 함수라서** 같다 — 양쪽 유닛이 갈릴 수 없다.
  *     `atk_pct` 버프는 **새 곱셈 층이 아니라 상시 % 와 같은 괄호에 덧셈**이다 (§9-2 "괄호는 둘뿐") —
- *     그래서 유닛이 `atkBase`(괄호 앞) 와 `atkPct`(괄호 안 Σ 상시 %) 를 따로 든다.
+ *     그래서 유닛이 `atkMinBase`·`atkMaxBase`(괄호 앞 — 범위 양끝 · R90) 와 `atkPct`(괄호 안 Σ 상시 %) 를 따로 든다.
  *   · **액티브 스킬의 실행은 `skill_runtime.js`** (battle_design §3 · §6 · §7 · skill_design §9) — 정의·배정·선택은 skill.js.
  *     이 파일에 남는 것은 **전투 진행**이다: 직격 1회(`strikeOnce`) · 타겟팅 · 전투불능 · 라운드 편성 · 정산.
  *     배리어는 HP 밖 흡수 풀이고, 흡혈·반사는 **배리어가 먹은 몫을 포함한 dmg** 에 비례한다(직격이 들어간 사실은 같다).
@@ -63,6 +63,8 @@ import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js
 import { refreshDerived, weaponOnHit } from './skill_effects.js';
 
 const TICK = 0.1;
+/** 공격력이 없는 쪽의 범위 — 소환 · 마법 무기가 아닌 쪽의 회복 밑수 (R90) */
+const NO_DMG = Object.freeze({ min: 0, max: 0 });
 
 /**
  * @param {object} data
@@ -142,21 +144,23 @@ export function createBattleSystem(data) {
      * 전투 유닛 하나 — **영웅도 몬스터도 여기를 지난다** (§8-1). 필드명은 `formula.strike` 가 읽는 이름 그대로다.
      * `c` 는 `hero.computeCombat` 결과다 — **몬스터도 같은 함수를 지난다**(2026-09-11 R79 · `makeEnemy`) —
      *   유닛 모양을 두 곳에 적으면 반드시 갈리므로 생성자는 하나뿐이어야 한다.
-     * 버프 괄호 — `atk` 는 이미 Σ 상시 %(`atk_pct_sum`)가 곱해진 값이라, 버프를 **같은 괄호에 더하려면**
-     *   괄호 앞 밑수(`atkBase`)와 괄호 안 합(`atkPct`)을 분리해 둬야 한다 (§9-2).
+     * 버프 괄호 — 공격력 양끝(`atkMin`·`atkMax` · 범위 R90)은 이미 Σ 상시 %(`atk_pct_sum`)가 곱해진 값이라, 버프를 **같은 괄호에 더하려면**
+     *   괄호 앞 밑수(`atkMinBase`·`atkMaxBase`)와 괄호 안 합(`atkPct`)을 분리해 둬야 한다 (§9-2).
      * @param extra 자리·출처가 정하는 것 — `key` · `uid`/`monsterId` · `next` · `actives` · 보상 축
      */
     function makeUnit(side, c, extra = {}) {
-        const atk = c.atk_physical ?? c.atk_magic ?? 0;
+        // 공격력은 **범위 양끝**이다 [2026-09-14 · R90 · battle_design §9-1] — `formula.strike` 가 직격마다 그 사이를 굴린다
+        const atk = c.atk_physical ?? c.atk_magic ?? NO_DMG;
         const atkPct = c.atk_pct_sum ?? 0;
-        const matk = c.atk_magic ?? 0;
+        const matk = c.atk_magic ?? NO_DMG;
+        const bracket = 1 + atkPct / 100;
         return {
             side,
             hp: c.hp_max, hpMax: c.hp_max,
-            atk, atkBase: atk / (1 + atkPct / 100), atkPct,
-            matk,                                    // 회복량의 밑수 (battle_design §9-2)
+            atkMin: atk.min, atkMax: atk.max, atkMinBase: atk.min / bracket, atkMaxBase: atk.max / bracket, atkPct,
+            matkMin: matk.min, matkMax: matk.max,    // 회복량의 밑수 — 시전마다 그 사이를 굴린다 (battle_design §9-1 · skill_runtime.castHeal)
             // 회복 밑수도 공격력과 **같은 괄호**를 탄다 — atk_pct 창이 여기도 걸린다 (skill_effects:EFFECTS.atk_pct)
-            matkBase: matk / (1 + atkPct / 100),
+            matkMinBase: matk.min / bracket, matkMaxBase: matk.max / bracket,
             atkType: c.attack_type,                  // physical 또는 원소 (monster_design §2 · §9-5)
             // 창이 미는 축은 **밑수를 따로 든다** — `refreshDerived` 가 창 합으로 파생값을 다시 쓰고,
             //   창이 하나도 없을 때 원값으로 돌아갈 자리가 필요해서다 (skill_effects:EFFECTS.derive)
@@ -191,7 +195,7 @@ export function createBattleSystem(data) {
 
     /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
        HP · 창 · 배리어 · 행동 예약 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
-    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atk', 'atkBase', 'atkPct', 'matk', 'matkBase', 'atkType',
+    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'resMaxBonus', 'dr', 'drBase', 'defIgnore', 'resReduction',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod',
         'goldFind', 'itemFind', 'fx', 'magicFind', 'stats'];
@@ -205,7 +209,7 @@ export function createBattleSystem(data) {
     function makeSummon(caster, def, key) {
         const hp = Math.max(1, Math.round(caster.hpMax * def.mult / 100 + (def.flat ?? 0)));
         const zero = {
-            hp_max: hp, atk_physical: 0, atk_magic: 0, atk_pct_sum: 0, attack_type: 'physical',
+            hp_max: hp, atk_physical: NO_DMG, atk_magic: NO_DMG, atk_pct_sum: 0, attack_type: 'physical',
             defense: 0, res_fire: 0, res_cold: 0, res_lightning: 0, res_poison: 0,
             level: caster.lvl, res_max_bonus: 0, damage_reduction: 0, def_ignore: 0, res_reduction: 0,
             dmg_bonus_pct: 0, crit_rate: 0, crit_damage: 0, life_steal: 0, reflect_damage: 0,
@@ -232,7 +236,7 @@ export function createBattleSystem(data) {
      *   ③ **`attack_type` 덮기** — 원소를 정하는 것은 **스테이지**다 (monster_design §2). `computeCombat` 은 R80 으로 언제나 `physical` 을 낸다
      *
      * ⚠ 치명·재생 **밑수도 영웅과 같이 받는다** [D2 사용자 확정 2026-09-11] — 특수 분기를 두지 않는 것이 목적이라
-     *   `crit_rate`·`hp_regen` 을 0 으로 덮지 않는다. 마법 무기를 낀 몬스터는 `atk_magic`(= matk)을 갖는다(monster_design §5-1 이 인정).
+     *   `crit_rate`·`hp_regen` 을 0 으로 덮지 않는다. 마법 무기를 낀 몬스터는 `atk_magic`(= matkMin·matkMax)을 갖는다(monster_design §5-1 이 인정).
      * 보상 축(경험치·골드·드롭 배율)은 영웅에게 없는 필드라 등급에서 따로 얹는다.
      * @param gear 그 몬스터가 **입고 있는** 아이템 배열 (`item.rollGear` 결과). 비면 맨몸이다 — 검증에서 한 마리만 만들 때 쓴다
      * @param extra `thirdSkill` 은 여기서 꺼내 스킬 칸으로 보내고 나머지는 유닛에 그대로 얹는다
@@ -243,12 +247,15 @@ export function createBattleSystem(data) {
         const { thirdSkill = null, ...rest } = extra;
         const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
         // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
-        const c = HS.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill }, gear);
+        // 입력에서 다른 것은 **레벨 1 HP 바탕** 하나다 — 영웅 `hero_hp_base` 대신 `monster_hp_base` [2026-09-14 사용자 지시 · R91 · monster_design §5]
+        const c = HS.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill, hpBase: B.monster_hp_base }, gear);
         c.defense += m.defense;                                             // ①
         for (const el of ELEMENTS) c[`res_${el}`] += m[`res_${el}`];        // ①
         c.hp_max = Math.round(c.hp_max * g.hp_mult * B.monster_hp_scale);   // ②
-        if (c.atk_physical !== undefined) c.atk_physical *= B.monster_atk_scale;
-        if (c.atk_magic !== undefined) c.atk_magic *= B.monster_atk_scale;
+        // 공격력은 범위다 — 전역 배율은 양끝에 같이 곱한다 (R90)
+        for (const k of ['atk_physical', 'atk_magic']) {
+            if (c[k] !== undefined) c[k] = { min: c[k].min * B.monster_atk_scale, max: c[k].max * B.monster_atk_scale };
+        }
         c.defense *= B.monster_def_scale;
         c.attack_type = m.attack_type;                                      // ③
         /*
@@ -267,8 +274,15 @@ export function createBattleSystem(data) {
             if (!def) throw new Error(`battle: 몬스터 ${monsterId} 의 알 수 없는 스킬 ${a?.id ?? a}`);
             return { id: a.id, def, readyAt: 0, source: a.source };
         }) : [];
+        // 세부 능력치 복사본 [2026-09-14 · R94 · INTERFACE §2-6 `round`] — 유닛 툴팁이 Alt 로 펴는 **표시값**이다(SCREEN_DESIGN §2).
+        //   위 ①②③ 까지 먹은 값 그대로이고 전투 내부용 둘(`option_fx` 묶음 · `atk_pct_sum` 괄호 합)만 뺀다.
+        //   전투는 이것을 안 읽는다(유닛 필드가 따로 있다) · rng 0
+        const sheet = { ...c };
+        delete sheet.option_fx;
+        delete sheet.atk_pct_sum;
+        for (const k of ['atk_physical', 'atk_magic']) if (sheet[k]) sheet[k] = { ...sheet[k] };
         return makeUnit('enemy', c, {
-            key, monsterId, grade, gear,
+            key, monsterId, grade, gear, sheet,
             rank: rankOfRole(m.role),        // 진형 — 역할이 자리를 정한다 (battle_design §3-1)
             monsterType: m.monster_type,     // 종족(Normal/Demon/Undead) — 무기 옵션 vs 종족이 읽는다 (R78)
             cls: m.cls,                      // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
@@ -433,12 +447,12 @@ export function createBattleSystem(data) {
         const timeline = [];
         const out = {
             won: false, reason: null, durationSec: 0,
-            // atk·matk·atkType 은 **툴팁이 읽는 표시값**이다 (SCREEN_DESIGN §4-2) — 재생기가 스킬 문장의 피해·회복량을 조립한다.
+            // atkMin·atkMax·matkMin·matkMax·atkType 은 **툴팁이 읽는 표시값**이다(범위 R90) (SCREEN_DESIGN §4-2) — 재생기가 스킬 문장의 피해·회복량을 조립한다.
             // stats 는 기본 능력치의 **복사본**이다(설명창이 스킬 계수를 풀어 쓴다 · 2026-09-10). ~~정산(grantXp)이 전투 뒤에 능력치를 올린다~~ —
             // 09-14 로 레벨업이 능력치를 안 올려(R83) 복사의 원래 이유는 사라졌다.
             // 전투에는 안 쓰이고 타임라인에도 안 들어가므로 rng·골든 지문과 무관하다
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
-                atk: p.atk, matk: p.matk, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null, actives: p.actives.map(a => a.id),
+                atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null, actives: p.actives.map(a => a.id),
                 ready: p.actives.map(a => r1(a.readyAt)) })),   // 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89)
             // 보상 칸(xpTotal · gold · kills · cards · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
             timeline, xpTotal: 0, gold: 0, kills: {}, cards: {}, drops: [], downed: [],
@@ -526,9 +540,10 @@ export function createBattleSystem(data) {
                     // 표시값 [2026-09-11 · R79 후속 · INTERFACE §2-6] — 재생기가 적 카드의 스킬 칸(`actives` = id · 칸 순서 = 출처 자리)과
                     //   그 툴팁 문장(피해·회복량 · 스킬 계수)을 그린다. `out.party[]` 의 같은 이름 필드와 같은 모양이고 전투에는 안 쓰인다.
                     //   ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 는 0
-                    atk: e.atk, matk: e.matk, atkType: e.atkType, stats: e.stats ? { ...e.stats } : null,
+                    atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ? { ...e.stats } : null,
                     actives: e.actives.map(a => a.id),
                     ready: e.actives.map(a => r1(a.readyAt)),   // 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89)
+                    sheet: { ...e.sheet },   // 세부 능력치 복사본 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 · 전투는 안 읽는다)
                 })),
             });
         };
@@ -739,7 +754,7 @@ export function createBattleSystem(data) {
             for (const p of updates) {
                 const u = party.find(x => x.uid === p.uid && !x.summon);
                 const was = worn.get(p.uid);
-                // 쓰러진 영웅은 그 런 끝까지 빠진다 — 새로 입혀도 안 일어난다. 나간 인원 밖의 영웅은 안 읽는다(원정 중엔 인원이 잠겨 있다)
+                // 쓰러진 영웅은 그 런 끝까지 빠진다 — 새로 입혀도 안 일어난다. 나간 인원 밖의 영웅은 안 읽는다(인원은 나갈 때 굳는다 — 원정 중에 편성을 바꿔도 도는 원정은 그대로다 · R92)
                 if (!u || !was || u.hp <= 0) continue;
                 const sig = sigOf(p);
                 if (sig === was.sig) continue;
@@ -765,7 +780,7 @@ export function createBattleSystem(data) {
             for (const u of changed) {
                 timeline.push({
                     t: r1(t), e: 'refit', u: u.key, hpMax: u.hpMax, dhp: u.hp, period: u.period,
-                    atk: u.atk, matk: u.matk, atkType: u.atkType, stats: u.stats ? { ...u.stats } : null,
+                    atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, atkType: u.atkType, stats: u.stats ? { ...u.stats } : null,
                     actives: u.actives.map(a => a.id), ready: u.actives.map(a => r1(a.readyAt)),
                 });
             }

@@ -47,6 +47,7 @@ export const D = {
     mineNodes: [],            // mine_node.csv — 채광의 **단계 7** [{id, tier, unlockChapter, ko, en, yieldId, yieldKo, yieldEn, yieldPerHour}] · tier 순 ⚠임시
     gatherNodes: [],          // gather_node.csv — 채집의 **단계 7** · 같은 모양이고 산출물만 약초다 (yieldKo/yieldEn) · tier 순 ⚠임시
     logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
+    makeRecipes: {},          // make_recipe.csv — {part: {ore, timber, dust}} · 제작 필요량 ⚠임시 (item_design §7-1 · R96)
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
@@ -81,7 +82,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
-    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option'];
+    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -96,7 +97,7 @@ export async function loadData(base = './data/') {
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
-        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow] = texts.map(parseCsv);
+        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -193,6 +194,8 @@ export async function loadData(base = './data/') {
     D.mineNodes = tierNodes(mineNodeRow, 'mine_id', 'ore');
     D.gatherNodes = tierNodes(gatherNodeRow, 'gather_id', 'herb');
     D.logNodes = tierNodes(logNodeRow, 'log_id', 'timber');
+    // 제작 레시피 — 부위마다 광석 · 목재 · 가루 필요량(item_design §7-1 · R96). 어느 단계의 재료인지는 레벨대가 정한다(state.js makeBands)
+    D.makeRecipes = Object.fromEntries(makeRecipeRow.map(r => [r.part, { ore: r.ore_units, timber: r.timber_units, dust: r.dust_units }]));
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
     D.equipSlots = equipSlotRow.slice().sort((a, b) => a.slot_order - b.slot_order)
@@ -253,8 +256,10 @@ export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wra
 export const chapterOf = ch => D.chapters?.[ch] ?? null;
 /** 스테이지 이름 — stage.csv 의 _kr/_en 쌍 */
 export const stageName = row => ({ ko: row.stage_name_kr, en: row.stage_name_en ?? row.stage_name_kr });
-/** 스테이지 이야기 — stage.csv 의 story_kr/story_en 쌍 (출정 창 「이야기」 칸 · SCREEN_DESIGN §4-1 · ADR-0105). 영어가 비면 한국어 */
-export const stageStory = row => ({ ko: row.story_kr ?? '', en: row.story_en || row.story_kr || '' });
+/** 스테이지 이야기 — stage.csv 의 story_kr/story_en 쌍 (출정 창 「이야기」 칸 · SCREEN_DESIGN §4-1 · ADR-0105). 영어가 비면 한국어.
+ *  줄바꿈은 셀 안의 `\n` 두 글자다(CSV 는 한 행이 한 줄이다) — 여기서 실제 줄바꿈으로 바꾸고 `.dw-story-text` 의 pre-line 이 편다 */
+const storyLines = s => String(s ?? '').replace(/\\n/g, '\n');
+export const stageStory = row => ({ ko: storyLines(row.story_kr), en: storyLines(row.story_en || row.story_kr) });
 /** 스테이지 배경 — 계승 자산이 있는 스테이지만(stage.csv:bg). 경로 조립은 mock(자산 경로) */
 export const stageBgOf = id => (D.stages?.[id]?.bg ? M.stageBg(id) : null);
 /** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) + 보스 1. 챕터보스 스테이지는 **보스 하나뿐**이다(2026-09-11). 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다 */
@@ -365,6 +370,8 @@ export function buildSystems(d) {
         formationTemplates: d.formationTemplates ?? {},
         formationTplOrder: d.formationTplOrder ?? [],
         defaultFormationTpl: (d.formationTplOrder ?? [])[0],
+        // 제작 — 레시피와 재료 단계 표. 레벨대 = 챕터(stages) · 재료 = 그 tier 의 산출물 (item_design §7-1 · R96)
+        makeRecipes: d.makeRecipes ?? {}, mineNodes: d.mineNodes ?? [], logNodes: d.logNodes ?? [],
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     return { hero, item, battle, skill, tactic, game, formula: createFormula(d.balance) };

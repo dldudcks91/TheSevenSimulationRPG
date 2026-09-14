@@ -41,7 +41,6 @@ render()
   SYS.game.tickInjuries(G)  + state.heroUid 유효성 보정
   renderShell()             탭 내비 · crumb · 탭 세그먼트 자리 비우기 · 자원 · 언어 토글
   main.innerHTML = ''  →  render<탭>(main)
-  state.flash 가 있으면 .flash 한 줄을 prepend 하고 지운다
   hideTip()
 ```
 
@@ -52,7 +51,7 @@ render()
 ## 3. 전역과 화면 상태
 
 - `D`(CSV 파생) · `SYS`(시스템 묶음) · `G`(세이브 상태) 세 전역 — 정의는 [ARCHITECTURE.md §3](docs/client/ARCHITECTURE.md). `G` 가 `null` 이면 시작 화면
-- 화면 상태는 `app.js` 의 `state` 객체 하나다 (`screen` · `tab` · `exp` · `heroUid` · `codexChapter` · `slotFilter` · `roll` · `candidates` · `confirmOverwrite` · `salvageMode` · `flash` · `battle`). **세이브에 들어가지 않는다** — 새 화면 상태도 여기 붙인다
+- 화면 상태는 `app.js` 의 `state` 객체 하나다 (`screen` · `tab` · `exp` · `heroUid` · `codexChapter` · `slotFilter` · `roll` · `candidates` · `confirmOverwrite` · `salvageMode` · `battle`). **세이브에 들어가지 않는다** — 새 화면 상태도 여기 붙인다
 - 시계는 `now()` = `Date.now()`. **UI 층에서만 읽어** 로직에 `now` 인자로 넘긴다
 - 난수는 `makeRng(seed)` 를 만들어 넘길 뿐, 렌더러가 굴리지 않는다 (시작 후보는 `ROLL_SEED` 고정 시드 — 같은 리롤 횟수면 같은 후보)
 
@@ -71,8 +70,8 @@ render()
 | 부품 | 모양 | 규약 |
 |---|---|---|
 | `segmented(items, current, onPick)` | `items = [{id, label, disabled?}]` | `.segmented` 안의 `btn sm`(현재는 `on`). 탭 안의 상태 전환에 쓴다 — 원정 세그먼트 · 도감 챕터 · 도움말 점프 |
-| `flash(key, params)` | i18n 키 | `state.flash` 에 담기만 한다. 다음 `render()` 가 한 번 보여주고 지운다. **문자열을 직접 넣지 않는다** |
-| `heroStrip(onPick)` | `.panel.hs-panel` > `.hero-strip` > `.hs-card` | 캐릭터·스킬·선술집이 **같은 띠, 같은 자리, 같은 순서**로 쓴다. 카드 = 초상 + 이름 + `heroDoing(h)`(치료 중 > 전투 파티 > 대기). 직업·레벨·죄종·등급은 `title` 툴팁. 빈 칸은 `D.balance.roster_cap` 까지 |
+| `flash(key, params)` | i18n 키 | 상단바의 `#toast` 에 **곧장** 한 줄을 세운다 — `render()` 와 무관하게 `TOAST_MS` 뒤 사라지고, 새 플래시는 떠 있는 것을 갈아 끼운다(ADR-0113). 부른 뒤 `render()` 를 불러도 안 지워진다. **문자열을 직접 넣지 않는다** |
+| `heroStrip(onPick)` | `.panel.hs-panel` > `.hero-strip` > `.hs-card` | 캐릭터·스킬·선술집이 **같은 띠, 같은 자리, 같은 순서**로 쓴다. 카드 = 초상 + 이름 + `heroDoing(h)`(치료 중 > 전투 파티 > 대기). 올려놓으면 유닛 툴팁(`tip.js:heroTipCard`) — `tip: false` 면 안 뜬다(캐릭터 탭 · ADR-0116). 빈 칸은 `D.balance.roster_cap` 까지 |
 | `heroDoing(h)` | `{cls, text}` | 파견이 생기면 파견지가 여기 들어온다 ([SCREEN_DESIGN.md §5](docs/client/SCREEN_DESIGN.md)) |
 | `bindTip(node, item, equipped, hint)` | | `#tooltip` 에 `tipCard` 를 붙인다. `equipped` 를 주면 비교 두 장. 위치·넘침 보정은 `moveTip`, 해제는 `hideTip` |
 | `helpSections()` | `[{title, lead?, groups:[{h, sub?, body:[]}]}]` | 도움말 본문. **기존 `t()` 키를 재사용**하고 파라미터도 인게임과 같은 값(`D.balance.*` · `D.eliteRounds` · `D.bossRound` · `D.codexLevels`)을 넣는다 |
@@ -90,8 +89,9 @@ render()
 
 `src/index.html` 의 뼈대는 고정이다. 렌더러는 이 자리들만 채운다.
 
-- `#stage`(한 장 · 1600×800) 안에 `.brand` · `.topbar`(안에 `.crumb` · `.tab-seg` · `.resources`) · `.nav` · `.main` · `#tooltip` · `#modal`
+- `#stage`(한 장 · 1600×800) 안에 `.brand` · `.topbar`(안에 `.crumb` · `.tab-seg` · `.resources` · `#toast`) · `.nav` · `.main` · `#tooltip` · `#modal`
 - `.tab-seg` 는 탭 안의 화면 전환 세그먼트 자리다 — `renderShell` 이 매 렌더 비우고 탭 렌더러가 채운다(지금은 원정만 · ADR-0094)
+- `#toast` 는 플래시 자리다 — `flash()` 만 채우고 `renderShell` · `render()` 는 안 건드린다. 상단바 안이라 메인 배율을 안 타고, `z-index` 가 창 레이어 위 · 툴팁 아래다 (ADR-0113)
 - 마우스 좌표로 붙는 것(툴팁 · 진형 드래그 고스트)은 `tip.js:stagePoint` 를 거친다 — 한 장이 `transform` 으로 통째로 줄고 늘기 때문이다 (ADR-0087)
 - **탭 내용은 박스다** (ADR-0097) — 탭 렌더러는 루트에 `.page` 를 단다. 그러면 메인이 스크롤을 멈추고 루트가 남는 세로를 받는다. 넘치는 자리는 머리 아래 본문 `.box-body`, 판을 쌓은 탭이면 `.page-stack` 의 마지막 `.fill`. **다시 그려도 스크롤을 되찾을 자리**에는 `data-keep` 이름을 준다(`render()` 가 되찾는다 · 탭 · 세그먼트마다 다른 이름). 박스가 아닌 화면은 원정 편성·지역 · 시작 · 프롤로그뿐이다
 - 새 상시 요소가 필요하면 여기에 자리를 만들고 [SCREEN_DESIGN.md §2](docs/client/SCREEN_DESIGN.md) 공통 셸 표에 행을 추가한다

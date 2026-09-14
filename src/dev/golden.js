@@ -61,9 +61,8 @@ export const dropSig = it => [
     it.group ?? it.name.en,                       // 무기는 무기군 id · 그 외는 베이스 이름(영문)이 곧 베이스 인덱스다
     it.baseId ?? '-',                             // 무기 베이스 세부 굴림 — 풀이 있는 무기군만(weapon_base.csv)
     it.element ?? '-',                            // R80(2026-09-11) 부터 언제나 '-' — 생성 때 원소를 안 굴린다. 되살아나면 지문이 갈려 잡힌다
-    it.watk != null ? `w${it.watk}`               // 개체 굴림 — 무기는 watk
-        : it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 방어구는 implicit
-            : '-',                                //         목걸이·반지는 소비 없음
+    it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 개체 굴림 — 방어구 implicit 뿐이다
+        : '-',                                    //         무기(R90 — 피해 범위는 굴리지 않고 무기군 · ilvl · 강화에서 파생) · 목걸이·반지는 소비 없음
     it.skill ?? '-',                              // 무기가 담은 액티브 — 그 무기군의 직업 풀에서 개체마다 굴린다 (2026-09-09 · skill_design §12-1)
     it.affixes.map(a => `${a.src ?? '-'}/${a.stat}:${a.v}`).join(';') || '-',   // 출처(고정 · 죄종 · 랜덤)도 적는다 — 층이 바뀐 회귀를 잡는다 (2026-09-11 R78)
 ].join('|');

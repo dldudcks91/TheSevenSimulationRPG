@@ -9,6 +9,7 @@
  * {
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
+ *   materials: {yieldId: n}   — 제작 재료(광석 · 목재 — 산출물 id 가 키). 없으면 {} · 버전 무변경 (2026-09-15 · R96)
  *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, equipped:{position: itemUid|null}}],
  *     — tier = 매직 | 레어 | 유니크 (`hero_tier.csv`). ~~caps(개체별 히든 상한)~~ 는 **v15 에서 사라졌다** —
  *       상한이 전 영웅 공통 하나가 되어(hero_design §4-3) 개체가 들 것이 없다
@@ -30,7 +31,7 @@
  *   progress: {cleared: [stageId], levelUp: {stageId: n}},   // levelUp = 스테이지별 올린 양 — 없으면 {} (2026-09-14 · R87 · 버전 무변경)
  *   codexCards: {monsterId: n}   — 도감 레벨의 출처. 누적 카운트, 소모 없음 (monster_design §8)
  *   codexKills: {monsterId: n}   — 기록만. 레벨의 트리거가 아니다
- *   counters: {hero, item, battle, tavern, tactic, upgrade, search},
+ *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make},   // upgrade 는 R95(2026-09-15)부터 안 오른다 — 강화가 rng 를 안 쓴다 · make = 제작 회차(R96 · 없으면 0)
  *   run: {stageId, repeat, lastAt, durationSec, active} | null,   // active = 원정이 도는 중(v25 · R89) — 불러온 세이브에 서 있으면 끊긴 원정이다
  *   reports: [{...}]             — 리포트 목록. **최신이 맨 앞**이고 [balance.csv:report_keep] 개까지 남는다 (v21).
  *     반복 원정은 이기는 동안 런을 잇는데, 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3)
@@ -90,13 +91,15 @@
  *       옛 세이브에선 그 직전 자리가 챕터보스 자리였다. 안 올리면 해금(직전 클리어)이 다음 챕터를 통째로 잠근다. rng 0회
  *   v24 → v25 (2026-09-14 — 원정 보상은 라운드 승리 순간 · R89):
  *     · `reports[*].xpEach`(전원 동일) → `xp: {uid: n}`(영웅별) — 옛 리포트는 그때 전원이 같은 양을 받았으므로 `party` 마다 옮긴다 · `run.active = false`. rng 0
+ *   v25 → v26 (2026-09-14 — 무기 피해는 최소 ~ 최대 범위 · R90):
+ *     · `items[*].watk` 를 지운다 — 무기 피해는 무기군 · ilvl · 강화에서 파생한다(formula.weaponDamage). 옛 무기는 같은 조건의 범위로 돌아간다. rng 0
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 25;
+export const SAVE_VERSION = 26;
 
 /**
  * @param {object} deps
@@ -105,6 +108,7 @@ export const SAVE_VERSION = 25;
  *   sins [죄종 id...] — 수색 이야기의 `sin` 컬럼 검증에만 쓴다
  *   searchStories — `search_story.csv` 파싱 행. **막의 어휘도 순서도 코드에 없다** — 아래 `searchPhases` 참조
  *   searchMeetings / searchAnswers — `search_meeting.csv` · `search_answer.csv` 파싱 행 (만남 · 답)
+ *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · mineNodes / logNodes — 재료 단계 표 [{id, tier, yieldId, …}] (제작 · R96)
  */
 export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, balance: B } = deps;
@@ -208,10 +212,11 @@ export function createGameSystem(deps) {
         const state = {
             version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
             resources: { gold: B.start_gold, dust: B.start_dust, stigma: B.start_stigma },
+            materials: {},   // 제작 재료(광석 · 목재) — 파견이 채운다(미구현 · R96)
             heroes: [], party: [], items: {}, bag: [], stash: [],
             progress: { cleared: [], levelUp: {} },   // levelUp = 스테이지별 **올린 양** — 안 올린 스테이지는 안 적는다 (2026-09-14 · R87)
             codexCards: {}, codexKills: {},
-            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0 },
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0 },
             run: null, reports: [], notice: null,
             tavern: { rerolledAt: null, hired: [] },
             search: null,
@@ -429,7 +434,7 @@ export function createGameSystem(deps) {
      * (스태프 1.7 느림 → 성경 1.7 · 오브 1.3 빠름 → 십자가 1.3). 벗기는 쪽을 안 고른 이유는
      * **무기가 밑수**라(battle_design §9-1) 맨손이 된 사제는 세기가 통째로 무너지기 때문이다.
      * · **착용 중인 것만** 옮긴다 — 가방에 든 스태프·오브는 마법사가 쓸 수 있으므로 그대로 둔다
-     * · 개체 굴림(watk · element · 접사 · 강화)은 안 건드린다 (`item.regroupWeapon`)
+     * · 개체 굴림(접사 · 강화 · ~~watk~~ R90 · ~~element~~ R80)은 안 건드린다 (`item.regroupWeapon`)
      * · rng 를 쓰지 않는다 — 이관이 굴림을 태우면 같은 시드가 다른 결과를 낸다 (v14 와 같은 규칙)
      */
     function upgradeV15(s) {
@@ -590,6 +595,15 @@ export function createGameSystem(deps) {
         return s;
     }
 
+    /** v25 → v26 — **무기 피해는 최소 ~ 최대 범위이고 파생이다** (battle_design §9-1 · R90 · INTERFACE §4 v25 → v26).
+     *  드롭 때 굴려 박던 무기 개체 공격력(`watk`)이 사라진다 — 범위는 무기군 · 아이템 레벨 · 강화 단계에서 매번 다시 계산한다.
+     *  옛 무기는 **같은 조건의 범위로 돌아간다**(잘 뜬 개체도 못 뜬 개체도 · 사용자 확인 2026-09-14). rng 0 */
+    function upgradeV25(s) {
+        for (const it of Object.values(s.items ?? {})) if (it) delete it.watk;
+        s.version = 26;
+        return s;
+    }
+
     /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
@@ -602,7 +616,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -628,6 +642,7 @@ export function createGameSystem(deps) {
         if (s.version === 22) s = upgradeV22(s);
         if (s.version === 23) s = upgradeV23(s);
         if (s.version === 24) s = upgradeV24(s);
+        if (s.version === 25) s = upgradeV25(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
@@ -639,6 +654,9 @@ export function createGameSystem(deps) {
         s.search = s.search ?? null;
         if (s.search) s.search.answer = s.search.answer ?? null;   // 만남 이전에 나간 수색 (2026-09-09)
         s.counters.search = s.counters.search ?? 0;
+        // 제작 재료 · 회차 — 없으면 「가진 재료가 없다 · 만든 적이 없다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R96)
+        s.materials = s.materials ?? {};
+        s.counters.make = s.counters.make ?? 0;
         return s;
     }
 
@@ -716,9 +734,11 @@ export function createGameSystem(deps) {
      * 전투 능력치 = 기본 능력치 + 장비 + 도감 + **파티 전술**.
      * 전술 보너스는 **파티에 든 영웅에게만** 붙는다 (tactic_card_design §1 「파티 단위」) — 조건이 편성을 세는데
      *   편성 밖 영웅이 그 결과를 받으면 인과가 깨진다. 벤치 영웅의 시트에 안 붙는 것이 맞다.
+     * `party` = 그 「파티」 — 기본은 편성이고 **원정은 나간 인원**을 넘긴다 [2026-09-14 · R92]. 원정 중에도 편성을 바꾸므로
+     *   편성을 읽으면 도는 원정의 전술이 라운드 경계에서 흔들린다
      */
-    const heroCombat = (state, h) => H.computeCombat(h, heroItems(state, h).map(I.effective), codexBonus(state),
-        state.party.includes(h.uid) ? tacticBonus(state) : null);
+    const heroCombat = (state, h, party = state.party) => H.computeCombat(h, heroItems(state, h).map(I.effective), codexBonus(state),
+        party.includes(h.uid) ? tacticBonus(state, party) : null);
 
     /* ── 장비 ── */
 
@@ -799,41 +819,121 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /* ── 강화 (item_design §1 개정 2026-08-31 — R25) ── */
+    /* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95) ── */
 
     /**
      * 강화 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`tavernState`·`masteryState` 와 같은 규칙).
-     * `optionAt` = 다음 옵션 상승이 걸리는 단계. 얼마가 나가고 무엇이 걸려 있는지를 화면이 계산하지 않는다.
+     * `upgradeable` = 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화 대상이 아니다(`cost` 도 null).
+     * 얼마가 나가고 무엇이 걸려 있는지를 화면이 계산하지 않는다. ~~optionAt~~ 은 옵션 계단과 함께 퇴역 (R95)
      */
     function upgradeState(state, itemUid) {
         const it = state.items[itemUid];
         if (!it) return null;
         const up = it.up ?? 0, max = I.upgradeMax(), cost = I.upgradeCost(it);
-        const next = up + 1;
-        const interval = B.equip_upgrade_option_interval;
-        const optionAt = next <= max ? Math.ceil(next / interval) * interval : null;
         return {
             up, max, cost, gold: state.resources.gold,
+            upgradeable: I.upgradeable(it),
             canUpgrade: cost != null && state.resources.gold >= cost,
-            optionAt: optionAt != null && optionAt <= max ? optionAt : null,
         };
     }
 
     /**
-     * 강화 1단계 — 골드를 내고 `up` 을 올린다.
+     * 강화 1단계 — 골드를 내고 `up` 을 올린다. 거절은 `missing` → `noBase` → `maxUp` → `gold` 순으로 본다.
      * **가방·착용을 가리지 않는다** — 소유물에 하는 일이지 자리에 하는 일이 아니다(분해와 갈리는 지점).
-     * rng 는 강화 전용 스트림이라 전투·선술집·전술 어느 수열과도 안 섞인다 (INTERFACE §5-1).
+     * **rng 를 안 쓴다** (R95) — 옵션 계단이 사라져 굴릴 것이 없다. `counters.upgrade` 도 더 오르지 않는다 (INTERFACE §5-1).
      */
     function upgradeItem(state, itemUid) {
         const it = state.items[itemUid];
         if (!it) return { ok: false, err: 'missing' };
+        if (!I.upgradeable(it)) return { ok: false, err: 'noBase' };
         const cost = I.upgradeCost(it);
         if (cost == null) return { ok: false, err: 'maxUp' };
         if (state.resources.gold < cost) return { ok: false, err: 'gold' };
         state.resources.gold -= cost;
-        const rng = makeRng(deriveSeed(state.seed ^ 0xF0C3, ++state.counters.upgrade));
-        const r = I.upgrade(rng, it);
-        return { ok: true, up: r.up, cost, affix: r.affix };
+        const r = I.upgrade(it);
+        return { ok: true, up: r.up, cost };
+    }
+
+    /* ── 제작 (item_design §7-1 확정 2026-09-15 — R96) ── */
+
+    /**
+     * 레시피 — 부위마다 광석 · 목재 · 가루 필요량(`make_recipe.csv`). **셋 다 1 이상이어야 한다** — 생성 때 검증한다:
+     *   · 광석 · 목재가 둘 다 들어가야 **보완재**다 — 한쪽이 다른 쪽을 대신하지 못해 채광 · 벌목의 통화 비중복이 산다 (item_design §5-1)
+     *   · 가루가 들어가야 **원정 쪽 입력**이 있다 — 파견 재료만으로는 못 만든다 (item_design §7-1)
+     */
+    const recipes = deps.makeRecipes ?? {};
+    (() => {
+        const bad = why => { throw new Error(`make_recipe: ${why}`); };
+        const parts = new Set(deps.equipSlots.map(s => s.part));
+        for (const [part, r] of Object.entries(recipes)) {
+            if (!parts.has(part)) bad(`없는 부위 '${part}'`);
+            if (!(r.ore >= 1 && r.timber >= 1 && r.dust >= 1)) bad(`${part} — 광석 · 목재 · 가루는 모두 1 이상이어야 한다 (${r.ore} · ${r.timber} · ${r.dust})`);
+        }
+    })();
+    const MAKE_WEIGHTS = { normal: B.make_rarity_w_normal, magic: B.make_rarity_w_magic, rare: B.make_rarity_w_rare };
+
+    /**
+     * 레벨대 = 챕터 — **stage.csv 가 정한다.** 레벨대 n 의 ilvl 은 (챕터 n−1 의 최고 스테이지 레벨, 챕터 n 의 최고 스테이지 레벨] 이고 첫 레벨대는 1 부터다.
+     * 재료는 **그 단계**의 광석(`mine_node.csv`) · 목재(`log_node.csv`) — 단계 n = 챕터 n 의 지역 (base_expedition §2-1).
+     * 두 표 중 하나라도 그 단계가 없으면 그 레벨대는 목록에 없다
+     */
+    const makeBandList = (() => {
+        const top = new Map();
+        for (const s of Object.values(deps.stages ?? {})) top.set(s.chapter, Math.max(top.get(s.chapter) ?? 0, s.dlvl));
+        const out = [];
+        let lo = 1;
+        for (const ch of [...top.keys()].sort((a, b) => a - b)) {
+            const hi = top.get(ch);
+            const ore = (deps.mineNodes ?? []).find(n => n.tier === ch);
+            const timber = (deps.logNodes ?? []).find(n => n.tier === ch);
+            if (ore && timber && hi >= lo) out.push({ band: ch, lo, hi, ore: ore.yieldId, timber: timber.yieldId });
+            lo = hi + 1;
+        }
+        return out;
+    })();
+
+    /** 제작 레벨대 목록 — 부위 · 상태와 무관하다. 화면의 고르기 칸이 이 순서로 선다 */
+    const makeBands = () => makeBandList.map(b => ({ ...b }));
+
+    /**
+     * 제작 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`upgradeState` 와 같은 규칙).
+     * `cost` = [{kind: 'ore'|'timber'|'dust', id, need, have}] — 광석 · 목재의 `id` 는 산출물 id · 가루는 null.
+     * `err` = 지금 누르면 나올 거절(`materials` → `bagFull` 순) 또는 null. 없는 부위 · 레벨대면 null
+     */
+    function makeState(state, part, band) {
+        const r = recipes[part], b = makeBandList.find(x => x.band === band);
+        if (!r || !b) return null;
+        const mats = state.materials ?? {};
+        const cost = [
+            { kind: 'ore', id: b.ore, need: r.ore, have: mats[b.ore] ?? 0 },
+            { kind: 'timber', id: b.timber, need: r.timber, have: mats[b.timber] ?? 0 },
+            { kind: 'dust', id: null, need: r.dust, have: state.resources.dust },
+        ];
+        const err = cost.some(c => c.have < c.need) ? 'materials'
+            : state.bag.length >= B.inventory_cap ? 'bagFull' : null;
+        return { part, band, lo: b.lo, hi: b.hi, cost, canMake: err === null, err };
+    }
+
+    /**
+     * 제작 1회 — 재료를 내고 장비 하나를 **인벤토리 끝**에 넣는다. 거절은 `missing` → `materials` → `bagFull` 순이고 거절이면 아무것도 안 바뀐다.
+     * rng 는 제작 전용 스트림(`seed ^ 0xC4AF` · `counters.make` 선증가) — 전투 · 선술집 · 전술 수열과 안 섞인다 (INTERFACE §5-1).
+     * 소비: **ilvl 1회**(레벨대 안 균등 — ⚠제안 · GAME_DESIGN §10 「제작의 남은 설계」) → `item.rollGear` 한 벌(부위 하나 · 희귀도는 제작 가중치) (INTERFACE §5-2)
+     */
+    function makeItem(state, part, band) {
+        const s = makeState(state, part, band);
+        if (!s) return { ok: false, err: 'missing' };
+        if (s.err) return { ok: false, err: s.err };
+        state.materials = state.materials ?? {};
+        for (const c of s.cost) {
+            if (c.kind === 'dust') state.resources.dust -= c.need;
+            else state.materials[c.id] -= c.need;
+        }
+        const rng = makeRng(deriveSeed(state.seed ^ 0xC4AF, ++state.counters.make));
+        const ilvl = s.lo + Math.floor(rng() * (s.hi - s.lo + 1));
+        const [it] = I.rollGear(rng, { slots: [part], ilvl, rarityWeights: MAKE_WEIGHTS });
+        addItem(state, it);
+        state.bag.push(it.uid);
+        return { ok: true, uid: it.uid };
     }
 
     /* ── 진형 ── */
@@ -888,7 +988,6 @@ export function createGameSystem(deps) {
 
     /** 템플릿 교체 — 정원이 바뀌므로 재배치가 따라온다 */
     function setFormation(state, tpl) {
-        if (state.run?.active) return { ok: false, err: 'running' };   // 원정 중엔 진형이 잠긴다 — 바꾸는 것은 새 원정이다 (R89)
         if (!FT[tpl]) return { ok: false, err: 'missing' };
         (state.formation ?? (state.formation = { tpl, ranks: [[], []] })).tpl = tpl;
         normalizeFormation(state);
@@ -903,7 +1002,6 @@ export function createGameSystem(deps) {
      * 칸을 안 받던 판은 후열 영웅을 전열 첫 칸에 끌어도 전열 **마지막**과 바뀌었고, 같은 랭크 안에서는 아무 일이 없었다.
      */
     function placeFormation(state, uid, rank, idx) {
-        if (state.run?.active) return { ok: false, err: 'running' };   // 원정 중엔 자리도 잠긴다 (R89)
         if (!state.party.includes(uid)) return { ok: false, err: 'missing' };
         const f = normalizeFormation(state);
         const caps = formCaps(f.tpl);
@@ -942,8 +1040,7 @@ export function createGameSystem(deps) {
     function toggleParty(state, uid, now) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
-        // 원정 중엔 인원이 잠긴다 — **넣기도 빼기도** [2026-09-14 · R89 · 사용자 확정]. 인원이 바뀌는 것은 새 원정이다
-        if (state.run?.active) return { ok: false, err: 'running' };
+        // 원정 중에도 넣고 뺀다 [2026-09-14 · R92 · 사용자 지시] — 도는 원정은 나간 인원 그대로 싸우고(`runParty`), 바꾼 인원은 다음 원정부터다
         if (state.party.includes(uid)) {
             state.party = state.party.filter(u => u !== uid);
             normalizeFormation(state);                    // 뺀 자리를 뒤가 메운다 (진형 2026-09-09)
@@ -971,8 +1068,7 @@ export function createGameSystem(deps) {
     }
 
     function canDepart(state, stageId, now) {
-        // 원정이 도는 중이면 어느 스테이지도 못 나간다 — 철수해야 새로 출발한다 (R89)
-        if (state.run?.active) return 'running';
+        // 원정이 도는 중이어도 막지 않는다 — 보내면 `departRun` 이 그 원정을 끊는다 (R92)
         if (!stageUnlocked(state, stageId)) return 'locked';
         // 파티가 비면 못 나간다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
         // 아웃이 런을 넘지 않으므로 언제나 전원이 나간다 (base_expedition_design §1-1)
@@ -1013,11 +1109,12 @@ export function createGameSystem(deps) {
 
     // 액티브는 **전투 안에서만** 산다 — 쿨·창·배리어는 HP 와 같은 취급이라 세이브에 넣지 않는다 (INTERFACE §4)
     const partyUnits = (state, uids) => {
-        const byUid = formationState(state).byUid;        // 자리 — 전투가 「앞」을 읽는 유일한 입력 (진형 2026-09-09)
-        return (uids ?? state.party).map(uid => {
+        const byUid = formationState(state).byUid;        // 자리 — 전투가 「앞」을 읽는 유일한 입력 (진형 2026-09-09) · 둘째 라운드부터는 안 읽힌다(`refit`)
+        const list = uids ?? state.party;
+        return list.map(uid => {
             const h = heroById(state, uid);
             return {
-                uid, combat: heroCombat(state, h),
+                uid, combat: heroCombat(state, h, list),  // 전술 조건도 이 인원으로 센다 — 원정은 나간 인원이다 (R92)
                 stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
                 actives: SK.activesFor(h, { weaponSkill: weaponSkillOf(state, h) }),
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
@@ -1040,6 +1137,20 @@ export function createGameSystem(deps) {
         had.points = (had.points ?? 0) + (lu.points ?? 0);
     };
 
+    /** 도는 원정의 리포트 — 판정이 아직 없고(`reason: null`) 그 원정이 나간 시각의 것. 도는 원정이 없으면 null */
+    const liveReport = state => state.run?.active ? state.reports.find(r => r.at === state.run.lastAt && r.reason === null) ?? null : null;
+
+    /** 끝났거나 **끊긴** 원정의 핸들인가 — 끊기(새 출발 · `closeRun`)는 핸들 없이 리포트 판정만 세운다 (R92) */
+    const runOver = run => !run || run.done || run.report.reason !== null;
+
+    /**
+     * 지금 싸우는 영웅 — 도는 원정이 나갈 때의 인원 [신설 2026-09-14 · R92]. 원정 중에도 편성을 바꾸므로 `state.party` 와 다를 수 있다 —
+     * 파티에서 뺀 영웅도 그 원정이 끝날 때까지 싸우고, 새로 넣은 영웅은 안 싸운다. 해고 · 수색이 이것으로 막는다. 도는 원정이 없으면 `[]`
+     */
+    function runParty(state) {
+        return liveReport(state)?.party.slice() ?? [];
+    }
+
     /**
      * 출발 — 런을 열고 **첫 라운드까지 계산**한다. **보상은 하나도 안 준다** — 라운드의 보상은 그 라운드가 끝나는 시각에 `advanceRun` 이 준다.
      * 시드는 마스터 시드 + 전투 카운터에서 파생된다: 같은 세이브에서 다음 원정은 언제 돌려도 같다(도중에 장비를 안 바꾸면).
@@ -1049,10 +1160,14 @@ export function createGameSystem(deps) {
     function departRun(state, stageId, now) {
         const why = canDepart(state, stageId, now);
         if (why) return { ok: false, err: why };
+        // 도는 원정이 있으면 **먼저 끊는다** — 철수와 같다(진행 중이던 라운드는 없던 것 · 리포트 `retreat` · 반복 off) [2026-09-14 · R92 · 사용자 지시].
+        //   보상은 이긴 라운드에만 들어오므로 끊고 다시 보내는 것이 가속 수단이 안 된다. 옛 핸들은 리포트 판정이 서서 `done` 으로 거절된다
+        cutRun(state, 'retreat');
 
         state.counters.battle += 1;
         const rng = makeRng(deriveSeed(state.seed, state.counters.battle));
-        // **전원이 나간다** [개정 2026-09-08 — 「출정 아웃」 폐기] (base_expedition_design §1-1). 원정 중엔 인원이 잠긴다(`running` · R89)
+        // **전원이 나간다** [개정 2026-09-08 — 「출정 아웃」 폐기] (base_expedition_design §1-1). 이 인원이 핸들의 `party` 로 굳는다 —
+        //   원정 중에 편성을 바꿔도 도는 원정은 이 인원 · 이 인원의 전술로 싸운다 (R92)
         const going = state.party.slice();
         // 몬스터 레벨 = **이 스테이지의 지금 레벨**(올린 양 포함 · 2026-09-14 R87). rng 를 안 쓰므로 수열이 안 밀린다
         const level = stageLevelState(state, stageId).level;
@@ -1063,7 +1178,7 @@ export function createGameSystem(deps) {
             gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
             downed: [], party: going.slice(), drops: [], discarded: 0, cards: {},
             rounds: [], roundsCleared: 0,
-            // 빗나감 · 기여는 **0 에서 자리를 잡는다** — 첫 라운드부터 리포트의 실시간 표가 선다 (SCREEN_DESIGN §4-3)
+            // 빗나감 · 기여는 **0 에서 자리를 잡는다** — 첫 라운드 전에 끊겨도 리포트가 빈 칸 없이 선다 (SCREEN_DESIGN §4-3)
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
             contrib: going.map(uid => ({ uid, dealt: 0, taken: 0, kills: 0 })),
         };
@@ -1086,7 +1201,7 @@ export function createGameSystem(deps) {
      *   ② 런이 안 끝났으면 **다음 라운드를 그 순간의 장비 · 레벨로** 계산한다 — `partyUnits` 를 다시 만들어 넘기고 바뀐 영웅만 갈아입는다
      */
     function advanceRun(state, run, now) {
-        if (!run || run.done) return { ok: false, err: 'done' };
+        if (runOver(run)) return { ok: false, err: 'done' };
         const s = run.pending, R = run.report, res = run.result;
         if (s.cleared) {
             state.resources.gold += s.gold;
@@ -1139,16 +1254,16 @@ export function createGameSystem(deps) {
     function cutRun(state, reason) {
         const run = state.run;
         if (!run?.active) return false;
+        const R = liveReport(state);
         run.active = false;
         run.repeat = false;
-        const R = state.reports.find(r => r.at === run.lastAt && r.reason === null);
         if (R) R.reason = reason;
         return true;
     }
 
     /** 철수 — 관전의 옛 「건너뛰기」 자리다 (R89). 진행 중이던 라운드는 버리고 원정을 끝낸다 · 이긴 라운드의 보상은 이미 들어가 있다 */
     function retreatRun(state, run, now) {
-        if (!run || run.done) return { ok: false, err: 'done' };
+        if (runOver(run)) return { ok: false, err: 'done' };
         run.done = true;
         cutRun(state, 'retreat');
         return { ok: true, report: run.report };
@@ -1239,8 +1354,8 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         // **수색을 먼저 본다** — 나가 있는 사람에게 「장비를 벗어라」라고 하면 벗어도 안 되는 길로 보내게 된다
-        // 원정에 나간 영웅은 못 지운다 — 원정 중엔 인원이 잠겨 있다 (R89)
-        if (state.run?.active && state.party.includes(uid)) return { ok: false, err: 'running' };
+        // 지금 싸우는 영웅은 못 지운다 — 도는 원정의 인원이다. 파티에서 뺐어도 그 원정이 끝날 때까지다 (R89 · R92)
+        if (runParty(state).includes(uid)) return { ok: false, err: 'running' };
         if (state.search?.heroUid === uid) return { ok: false, err: 'searching' };
         if (Object.values(h.equipped ?? {}).some(Boolean)) return { ok: false, err: 'equipped' };
         if (state.heroes.length <= 1) return { ok: false, err: 'last' };
@@ -1323,11 +1438,12 @@ export function createGameSystem(deps) {
      */
     function searchState(state, now) {
         const s = state.search ?? null;
+        const fighting = runParty(state);
         const head = {
             hours: B.tavern_search_hours, slots: B.tavern_search_slots, cost: B.tavern_hire_cost,
             echoPct: B.tavern_search_sin_echo_pct,
-            // 안 나가 있을 때 보낼 수 있는 사람 — **원정 파티만 뺀다**(전투 밖에 쓰러져 있는 영웅이 없다 · §1-1)
-            ready: s ? [] : state.heroes.filter(h => !state.party.includes(h.uid)).map(h => h.uid),
+            // 안 나가 있을 때 보낼 수 있는 사람 — **원정 파티와 지금 싸우는 영웅만 뺀다**(전투 밖에 쓰러져 있는 영웅이 없다 · §1-1 · R92)
+            ready: s ? [] : state.heroes.filter(h => !state.party.includes(h.uid) && !fighting.includes(h.uid)).map(h => h.uid),
             out: !!s, hero: null, sent: null, startedAt: 0, endsAt: 0, remainMs: 0, done: false,
             beats: [], result: null, rarePct: 0, canHire: false, err: null,
             rumor: null, meetAt: 0, meetOpen: false, answers: [], answer: null, discountPct: 0,
@@ -1371,7 +1487,7 @@ export function createGameSystem(deps) {
         if (state.search) return { ok: false, err: 'busy' };
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
-        if (state.party.includes(uid)) return { ok: false, err: 'party' };
+        if (state.party.includes(uid) || runParty(state).includes(uid)) return { ok: false, err: 'party' };   // 지금 싸우는 영웅도 원정 파티다 (R92)
         state.counters.search += 1;
         state.search = { heroUid: uid, startedAt: now, no: state.counters.search, sin: h.sin, cha: h.stats?.cha ?? 0, answer: null };
         return { ok: true, endsAt: now + searchMs() };
@@ -1434,11 +1550,11 @@ export function createGameSystem(deps) {
     const totalLevel = state => state.heroes.reduce((a, h) => a + (h.level ?? 1), 0);
 
     /**
-     * 조건이 세는 대상 = **파티**(편성). 전술은 파티 단위이므로 벤치는 조건에 안 들어간다.
+     * 조건이 세는 대상 = **파티**(기본은 편성 · 원정은 나간 인원을 넘긴다 · R92). 전술은 파티 단위이므로 벤치는 조건에 안 들어간다.
      * `actives` 는 **스킬 정의**를 넘긴다 — `tactic.contextOf` 의 계약이 정의이고(`tagsOf(def)`),
      * id 문자열을 넘기면 `skill_tag` 조건 4종이 영원히 0 을 센다 (2026-09-01 회귀 수정 · INTERFACE §2-9)
      */
-    const partyMembers = state => state.party.map(uid => heroById(state, uid)).filter(Boolean)
+    const partyMembers = (state, party = state.party) => party.map(uid => heroById(state, uid)).filter(Boolean)
         .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), actives: SK.activesFor(h, { weaponSkill: weaponSkillOf(state, h) }).map(a => SK.resolve(a)).filter(Boolean) }));
 
     /** 첫 배정 — 시드 하나에서 나온다. 리롤 카운터를 안 타므로 **리롤이 다른 칸의 내용을 흔들지 않는다** */
@@ -1448,12 +1564,12 @@ export function createGameSystem(deps) {
      * 칸의 지금 상태 한 덩어리 — 열렸나 · 무엇이 들었나 · 조건이 몇 / 몇인가 · 리롤 비용.
      * 판정은 전부 여기서 낸다 (masteryState · tavernState 와 같은 규칙) — 화면은 그리기만 한다.
      */
-    function tacticState(state) {
+    function tacticState(state, party = state.party) {
         const total = totalLevel(state);
         const open = TC.openCount(total);
         const stored = state.tactics?.slots ?? {};
         const initial = initialAssign(state);
-        const ctx = TC.contextOf(partyMembers(state));
+        const ctx = TC.contextOf(partyMembers(state, party));
         const slots = TC.slotList.map((s, i) => {
             const opened = s.no <= open;
             // 저장된 것(리롤한 칸) 우선 · 없으면 첫 배정. 세이브에 없는 가족·등급은 CSV 가 바뀐 것이라 첫 배정으로 되돌린다
@@ -1468,8 +1584,8 @@ export function createGameSystem(deps) {
     }
 
     /** 켜진 칸들의 효과 합 — 접사·마스터리와 **같은 채널** (§2-4). `heroCombat` 이 이걸 받는다 */
-    function tacticBonus(state) {
-        return TC.bonusOf(tacticState(state).slots.filter(s => s.open && s.active).map(s => s.option));
+    function tacticBonus(state, party = state.party) {
+        return TC.bonusOf(tacticState(state, party).slots.filter(s => s.open && s.active).map(s => s.option));
     }
 
     /**
@@ -1569,11 +1685,11 @@ export function createGameSystem(deps) {
 
     return {
         newGame, serialize, deserialize, canLoad,
-        heroById, heroItems, heroCombat, upgradeState, upgradeItem,
+        heroById, heroItems, heroCombat, upgradeState, upgradeItem, makeBands, makeState, makeItem,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
-        stageUnlocked, canDepart, stageLevelState, setStageLevel, departRun, advanceRun, retreatRun, resolveBattle, closeRun, dismissNotice,
+        stageUnlocked, canDepart, runParty, stageLevelState, setStageLevel, departRun, advanceRun, retreatRun, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire, dismiss,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
         masteryState, learnMastery, unlearnMastery, resetMastery,

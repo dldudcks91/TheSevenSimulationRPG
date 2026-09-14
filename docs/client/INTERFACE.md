@@ -64,34 +64,37 @@ state.js(deps: hero, item, battle, skill, balance, …) ──┘
 
 ### 2-3. `formula.js` — 피해 계산
 
-`createFormula(balance) → { growthMult, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech, attacksPerSec, effectiveCd }`
+`createFormula(balance) → { growthMult, upgradeMult, weaponDamage, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech, attacksPerSec, effectiveCd }`
 입력은 `balance` 하나. 파일에 숫자 리터럴 없음. 규칙의 출처는 battle_design §9 전부(9-0 ~ 9-6).
 
 | 함수 | 시그니처 | 계약 |
 |---|---|---|
 | `growthMult(n)` | `→ ≥1` | `power_growth_per_level ^ (max(1, n) − 1)` — **성장 축의 유일한 곡선**(§9-0). 레벨과 ilvl 이 같은 곡선을 탄다. `n < 1` 은 1로 막는다 |
+| `upgradeMult(up)` | `→ ≥1` | `1 + up × equip_upgrade_base_pct/100` — **강화 배율**(베이스 능력치 = 무기 피해 양끝 · 방어구 고유값). `item.js` 에 있던 식을 옮겼다 [2026-09-14 · R90] — 무기 피해를 `hero.computeCombat` 도 파생해야 해서 한 곳에 둔다 |
+| `weaponDamage(ilvl, group, up=0)` | `→ {min, max}` | **무기 피해 범위** [신설 2026-09-14 · R90 · battle_design §9-1] — **굴림이 아니라 파생**이다. `mid = weapon_atk_base × growthMult(ilvl)` · `w = (group?.variance ?? dmg_variance_pct)/100` · `min = max(1, round(mid × (1 − w) × upgradeMult(up)))` · `max = max(min, round(mid × (1 + w) × upgradeMult(up)))` — **반올림은 곱을 다 한 뒤 한 번 · 표기 = 계산**. 같은 무기군 · 같은 ilvl · 같은 `up` 이면 같은 범위다. 소비자는 `item.weaponDamage`(화면) · `hero.computeCombat`(전투) 둘 |
 | `mitigation(D)` | `→ 0~1` | `D / (D + def_curve_k)`. **레벨 인자 없음 — K 는 상수다**(§9-3). `D ≤ 0` 이면 0. 1에 닿지 않는다(면역 없음) |
 | `physicalDefense(def, defIgnorePct=0)` | `→ ≥0` | `max(0, def × (1 − ignore/100))` — 방어 무시는 **곡선에 넣기 전** 소재값을 깎는다(감쇠율의 %가 아니다) |
 | `resCap(resMaxBonus=0)` | `→ %` | `min(res_cap_base + resMaxBonus, res_cap_absolute)` — 기본 상한을 뚫는 유일한 수단이 최대 저항 증가, 그 위에 절대 상한 |
 | `appliedResist(res, resMaxBonus=0)` | `→ %` | `min(res, resCap(resMaxBonus))` — **상한만 있고 하한은 없다.** 음수 저항 = 피해 증폭 (§9-5) |
 | `reductionMult(pcts)` | `→ 0~1` | `Π (1 − p/100)` — 피해 감소는 **원천별 곱**이다(§9-3). 빈 배열은 1 |
 | `hitChance(attackerLevel, defenderLevel)` | `→ %` | `clamp(hit_base_pct − max(0, dLvl − aLvl) × hit_per_level_deficit_pct, hit_min_pct, hit_base_pct)` — **레벨 차 하나가 정한다**(§9-4). 오버레벨 초과 이득 없음 |
-| `strike(rng, a, d)` | `→ {hit, dmg, crit, proc}` | 직격 1회. **rng 소비 순서 = 적중 → (적중 시) 치명 → (추가 피해 확률이 있는 타격만) 추가 피해. 최대 3회** — 확률이 0 인 타격(기본 공격 전부)은 최대 2회로 종전과 같다 (§5-2) [추가 피해 2026-09-10 · R72] |
+| `strike(rng, a, d)` | `→ {hit, dmg, crit, proc}` | 직격 1회. **rng 소비 순서 = 적중 → (적중 시) 피해 → 치명 → (추가 피해 확률이 있는 타격만) 추가 피해. 최대 4회** — 빗나감 1회 · 확률 0 인 적중(기본 공격 전부) 3회 · 확률 > 0 인 적중 4회 (§5-2) [추가 피해 2026-09-10 · R72 · **피해 굴림 2026-09-14 · R90**] |
 | `indirect(amount)` | `→ int` | 비직격(반사·도트·사망 폭발). 적중·스킬 배율·치명·감소를 받지 않고 흡혈·반사·발동 효과를 **유발하지 않는다**. `dmg_min` 하한만 |
 | `leech(dmg, pct)` | `→ int` | 흡혈 — 직격의 최종 피해에만 비례 |
 | `attacksPerSec(period)` | `→ 회/초` | 초당 공격속도 `1 / period` (`period ≤ 0` 이면 0). **축이 아니라 표기**다 — 축은 `combat_stat.csv:action_period` 하나고 아이템 툴팁만 역수를 찍는다(주기는 클수록 느려 이름과 방향이 거꾸로 읽힌다 · [SCREEN_DESIGN §6](SCREEN_DESIGN.md) · ADR-0081). **엔진은 이 함수를 쓰지 않는다** — `mitigation`·`resCap` 과 같은 자리(소재값만으로는 못 읽는 값의 변환) |
 | `effectiveCd(cd, period)` | `→ 초` | 실효 쿨 `ceil(cd / period) × period` (§6) — 스킬은 행동 주기에 얹혀 나가므로 쿨이 돌아도 다음 차례까지 기다린다. **엔진은 이 함수를 쓰지 않는다**(틱 루프에서 자연히 생긴다) — 화면 표기·검증이 같은 규칙을 읽게 하려는 것 |
 
-**공격자 `a`** — `{atk, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, bonusPct, flat, procChance, procMult}` — 뒤의 셋은 **스킬 타격만** 싣는다(없으면 0 · `battle.strikeOnce` 가 그 타격 동안만 얹는다 · §8 항목 13). `flat` = 능력치 항(§2-8 `scaleDef`) · `procChance`/`procMult` = 확률로 터지는 추가 피해의 확률 %·배수 % [2026-09-10 · R72]
+**공격자 `a`** — `{atkMin, atkMax, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, bonusPct, flat, procChance, procMult}` — **`atkMin`/`atkMax` = 공격력 범위의 양끝**(버프 괄호까지 탄 실효값 · ~~`atk`~~ R90). 적중하면 그 사이를 **연속 균등으로 한 번** 굴린다 · 양끝이 같아도 굴림을 소비한다(소비 수가 무기에 의존하면 같은 시드가 다른 전투를 낸다) [2026-09-14 · R90] — 뒤의 셋은 **스킬 타격만** 싣는다(없으면 0 · `battle.strikeOnce` 가 그 타격 동안만 얹는다 · §8 항목 13). `flat` = 능력치 항(§2-8 `scaleDef`) · `procChance`/`procMult` = 확률로 터지는 추가 피해의 확률 %·배수 % [2026-09-10 · R72]
 **방어자 `d`** — `{def, res:{fire,cold,lightning,poison}, resMaxBonus, dr, lvl}`
 `res` 는 **항상 객체다 — 몬스터도**(§8 항목 11). `dr` 은 호출자가 이미 원천별 곱으로 합쳐 온 **실효 %** 한 숫자다.
 
 ```
 strike(rng, a, d):
   rng()×100 ≥ hitChance(a.lvl, d.lvl)  →  {hit:false, dmg:0, crit:false, proc:false}      ← rng ①  (여기서 끝, 1회 소비)
-  v = (a.atk × (skillMult ?? 1) + (flat ?? 0)) × (1 + (bonusPct ?? 0)/100)                     ← 타격 편차 없음 (무기 개체에 박혀 있다)
-  crit = rng()×100 < min(a.crit ?? 0, crit_cap_pct);  crit 이면 v ×= (critDmg ?? 100)/100    ← rng ②
-  (procChance ?? 0) > 0 이면 proc = rng()×100 < min(procChance, 100);  proc 이면 v ×= procMult/100   ← rng ③ (확률 0 이면 굴리지 않는다)
+  atk = a.atkMin + rng()×(a.atkMax − a.atkMin)                                               ← rng ②  피해 굴림 (연속 균등 · 양끝이 같아도 1회 · R90)
+  v = (atk × (skillMult ?? 1) + (flat ?? 0)) × (1 + (bonusPct ?? 0)/100)
+  crit = rng()×100 < min(a.crit ?? 0, crit_cap_pct);  crit 이면 v ×= (critDmg ?? 100)/100    ← rng ③
+  (procChance ?? 0) > 0 이면 proc = rng()×100 < min(procChance, 100);  proc 이면 v ×= procMult/100   ← rng ④ (확률 0 이면 굴리지 않는다)
   physical → v ×= 1 − mitigation(physicalDefense(d.def, a.defIgnore))
   원소     → v ×= 1 − appliedResist((d.res[a.atkType] ?? 0) − (a.resReduction ?? 0), d.resMaxBonus)/100
   공통     → v ×= 1 − (d.dr ?? 0)/100
@@ -99,9 +102,9 @@ strike(rng, a, d):
 ```
 
 - 저항 감소는 관통이라는 별도 규칙이 아니라 **저항값에 음수를 더하는 것**이다 (§9-5) — 그래서 상한 계산 앞에 들어간다
-- **능력치 항(`flat`)은 배율에 곱하지 않고 `공격력 × 배율` 에 더한다** — 곱이면 무기와 능력치 중 한쪽이 낮을 때 다른 쪽까지 죽는다(battle_design §9-2 「곱이 아니라 합」). 그래서 `atk` 가 0 이어도 `flat > 0` 이면 피해가 난다 [2026-09-10 · R72]
+- **능력치 항(`flat`)은 배율에 곱하지 않고 `공격력 × 배율` 에 더한다** — 곱이면 무기와 능력치 중 한쪽이 낮을 때 다른 쪽까지 죽는다(battle_design §9-2 「곱이 아니라 합」). 그래서 굴린 공격력이 0 이어도 `flat > 0` 이면 피해가 난다 [2026-09-10 · R72]
 - **추가 피해는 치명과 따로 굴려 겹친다** — 둘 다 터지면 곱이고 치명 상한(`crit_cap_pct`)과 무관하다. **직격에만** 붙는다 — `indirect`(반사·도트)는 받지 않는다 [2026-09-10 · R72]
-- 옛 `hitChance(acc, eva)` · `defenseAgainst(defender, atkType, ignore)` 는 **삭제됐다**(명중·회피 폐지 · 저항은 곡선을 타지 않는다). 옛 `strike` 의 편차 굴림도 없다
+- 옛 `hitChance(acc, eva)` · `defenseAgainst(defender, atkType, ignore)` 는 **삭제됐다**(명중·회피 폐지 · 저항은 곡선을 타지 않는다). ~~옛 `strike` 의 편차 굴림도 없다~~ → **피해 굴림이 돌아왔다** [2026-09-14 · R90] — 옛 편차(`± variance`)가 아니라 **공격력 범위 양끝 사이의 균등 굴림**이고 자리는 적중 뒤 · 치명 앞이다
 
 ### 2-4. `hero.js` — 영웅
 
@@ -115,7 +118,7 @@ strike(rng, a, d):
 | `stats` | `[{id, ko, en, abbr, combatStat, dispatch}]` 기본 능력치 7종, 순서 = 표시 순서. id = `str, agi, int, vit, luck, ldr, cha` (5번째가 `luck` — 08-26 감각→운). **hero.js 는 `id` 만 읽는다** | hero_attribute.csv |
 | `sins` | `[sinId]` | ⚠ `ui/mock.js:SINS` 키 |
 | `classes` | `[{id, keyAttr, stage}]` (`stage` = `main` / 확장) | class.csv — **CSV 컬럼은 `release`**, 로더가 `stage` 로 주입한다(`stage` 는 스테이지와 충돌하는 이름이라 `weapon_group.csv` 와 같은 어휘를 쓴다). **행 순서 = 표시 순서** |
-| `weaponGroups` | `{id: {period, damageKind, variance, …}}` | weapon_group.csv |
+| `weaponGroups` | `{id: {period, damageKind, variance, …}}` — `variance` = **타격 범위 폭 %**(무기 피해 범위의 양끝 · R90) | weapon_group.csv |
 | `namePool` | `[{ko,en}]` | hero_name.csv — **행 순서가 결정론에 걸린다**(`drawDistinct` 가 인덱스를 굴린다) |
 | `traitPool` | `[{ko,en}]` | hero_trait.csv — 행 순서 동일 |
 | `masteryNodes` | `[mastery_node.csv 행]` — 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 `balance` 에서 읽는다 | mastery_node.csv |
@@ -150,10 +153,10 @@ strike(rng, a, d):
 
 | 필드 | 계약 |
 |---|---|
-| `atk_physical` **또는** `atk_magic` | **둘 중 하나만 존재.** 무기군 `damageKind === 'magic'` 이면 `atk_magic`, 아니면 `atk_physical`. 맨손 = physical.<br>**무기가 밑수다**(§9-1) — `round( 밑수 × (1+atk_pct_sum/100) × (1+codex.atk_pct/100) )`(`atk_pct_sum` 은 아래 행 — 오만 칸의 레벨당 데미지가 같은 괄호에 든다 · 2026-09-11 R78) — ~~`attrMult(int 또는 str) ×`~~ **2026-09-10 제거**(R72 · 능력치는 스킬 쪽 덧셈 항으로 옮겨갔다 — §2-8 `scaleDef` · battle_design §9-1), 밑수 = `watk + 무기 슬롯 **자신의** 접사 atk_flat 합`(맨손이면 `unarmed_atk`). **다른 슬롯의 `atk_flat` 은 더하지 않는다** · ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다 |
+| `atk_physical` **또는** `atk_magic` | **둘 중 하나만 존재.** 무기군 `damageKind === 'magic'` 이면 `atk_magic`, 아니면 `atk_physical`. 맨손 = physical.<br>**값은 범위 `{min, max}` 다** [개정 2026-09-14 · R90]. **무기가 밑수다**(§9-1) — 양끝마다 `round( 밑수 × (1+atk_pct_sum/100) × (1+codex.atk_pct/100) )`(`atk_pct_sum` 은 아래 행 — 오만 칸의 레벨당 데미지가 같은 괄호에 든다 · 2026-09-11 R78) — ~~`attrMult(int 또는 str) ×`~~ **2026-09-10 제거**(R72 · 능력치는 스킬 쪽 덧셈 항으로 옮겨갔다 — §2-8 `scaleDef` · battle_design §9-1), 밑수 = `formula.weaponDamage(ilvl, 무기군, up)` 의 양끝 + 무기 슬롯 **자신의** 접사 atk_flat 합(양끝에 같이 · ~~`watk`~~ R90 삭제)(맨손이면 양끝 모두 `unarmed_atk`). **다른 슬롯의 `atk_flat` 은 더하지 않는다** · ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다 |
 | `attack_type` | **언제나 `physical`** [개정 2026-09-11 · R80 · battle_design §2-1 · §9-5] — ~~마법 무기 개체의 `element`(없으면 `ELEMENTS[0]`)~~ 는 폐기됐다. 무기의 원소는 **관련 옵션이 붙었을 때만** 생기고 그 옵션이 아직 없으므로, 원소 없는 마법 무기의 기본 공격은 **물리로 친다**(방어력에 깎인다). ⚠ 바뀌는 것은 **무엇에 깎이나**뿐 — 세기 채널(`atk_magic` = 회복의 밑수)은 그대로다. 평타에 원소를 얹는 것은 **평타 부여 스킬**(인챈트 계열 · 미구현)의 몫이다. ⚠ **몬스터는 이 값을 덮는다** — `monster.csv:attack_type`(스테이지 원소 · monster_design §2)이 이긴다 (§2-6) |
 | `level` | 적중률의 공격자 레벨 (§9-4). 감쇠 곡선은 레벨을 쓰지 않는다 |
-| `hp_max` | `round( (hero_hp_base + hpUnitSum[level] × attrMult(vit) + Σhp_flat) × (1+Σhp_pct/100) × (1+codex.hp_pct/100) )` — **레벨 성장은 10레벨 구간 직선의 누적합이고 그 성장분만 건강을 탄다** [개정 2026-09-14 · R84 · hero_design §4-1]. `hpUnitSum[L] = Σ(n=2..L) hero_hp_band{b}_unit` · `b = floor((n−1) / hero_hp_band_levels) + 1`. ~~`(hero_hp_base × growthMult(level) − hero_hp_base)`~~(R72) · ~~`hero_hp_base × (R^(N+1) − R²)`~~(R82) 폐기 — **HP 는 `power_growth_per_level` 을 읽지 않는다**. 레벨 1 은 누적합이 0 → **전 영웅이 같다**(몬스터 앵커링 기준점 유지 · battle_design §8). ⚠ 레벨이 `1 ~ hero_level_cap` 밖이면 **던진다** — 몬스터는 `stage.csv:dlvl` 을 넘기므로 스테이지 레벨이 만렙을 넘으면 안 된다 |
+| `hp_max` | `round( (hpBase + hpUnitSum[level] × attrMult(vit) + Σhp_flat) × (1+Σhp_pct/100) × (1+codex.hp_pct/100) )` — **레벨 성장은 10레벨 구간 직선의 누적합이고 그 성장분만 건강을 탄다** [개정 2026-09-14 · R84 · hero_design §4-1]. `hpUnitSum[L] = Σ(n=2..L) hero_hp_band{b}_unit` · `b = floor((n−1) / hero_hp_band_levels) + 1`. ~~`(hero_hp_base × growthMult(level) − hero_hp_base)`~~(R72) · ~~`hero_hp_base × (R^(N+1) − R²)`~~(R82) 폐기 — **HP 는 `power_growth_per_level` 을 읽지 않는다**. 레벨 1 은 누적합이 0 → **바탕이 그대로 드러난다** — 영웅은 전원 같다. **`hpBase` = 입력 `hero.hpBase` · 없으면 `hero_hp_base`** [2026-09-14 · R91] — 영웅은 안 넘기고 **몬스터는 `battle.makeEnemy` 가 `monster_hp_base` 를 넘긴다**(몬스터의 레벨 1 바탕이 영웅과 갈린다 · monster_design §5 · battle_design §8). ⚠ 레벨이 `1 ~ hero_level_cap` 밖이면 **던진다** — 몬스터는 `stage.csv:dlvl` 을 넘기므로 스테이지 레벨이 만렙을 넘으면 안 된다 |
 | `defense` | Σ`def_flat` (방어구 implicit + 접사). 비율 축이라 곡선을 타지 않는다 |
 | `res_fire` · `res_cold` · `res_lightning` · `res_poison` | `res_all + res_<원소>` — **직접 %**, 능력치 계수 없음. 상한은 여기서 걸지 않는다(전투에서 `appliedResist`) |
 | `res_max_bonus` · `res_reduction` | Σ 접사. 드롭 접사 풀에 아직 없다(유니크·크래프트·낙인의 자리) — **값 0 이 정상** |
@@ -165,7 +168,7 @@ strike(rng, a, d):
 | `action_period` | `(무기군 period 또는 unarmed_period) / attrMult(agi) × (1 − Σaspd_pct/100)`, 하한 0.4 s, 소수 3자리 |
 | `dmg_bonus_pct` | `codex.dmg_pct` 그대로 — 전투 유닛의 `bonusPct` 가 된다 |
 | `gold_find` · `item_find` | `round(Σ접사 × attrMult(luck))` — **곱셈이라 장비가 0이면 0**(§8 곱셈 원칙). **운은 전투 계산 밖**이라 이 둘에만 걸린다 |
-| `atk_pct_sum` | Σ `atk_pct` **+ Σ`dmg_per_level_pct` × `level`** (**이미 `atk` 안에 곱해져 있다** — 중복 적용 금지). 오만 칸의 레벨당 데미지는 상시 괄호다 [2026-09-11 · R78 · item_design §1 「무기 옵션」]. 전투 중 스킬 버프가 새 곱셈 층이 아니라 **같은 괄호에 덧셈**으로 들어가야 해서(§9-2) `battle.js` 가 그 괄호를 되짚을 수 있도록 따로 낸다 |
+| `atk_pct_sum` | Σ `atk_pct` **+ Σ`dmg_per_level_pct` × `level`** (**이미 공격력 양끝에 곱해져 있다** — 중복 적용 금지). 오만 칸의 레벨당 데미지는 상시 괄호다 [2026-09-11 · R78 · item_design §1 「무기 옵션」]. 전투 중 스킬 버프가 새 곱셈 층이 아니라 **같은 괄호에 덧셈**으로 들어가야 해서(§9-2) `battle.js` 가 그 괄호를 되짚을 수 있도록 따로 낸다 |
 | `option_fx` | **장비 옵션이 여는 조건부 · 타격 시 · 전투 밖 축 한 묶음** [신설 2026-09-11 · R78] — 전부 0 이면 `null`. `{vs:{normal,demon,undead}, vsElite, vsFront, vsBack, ele:{fire,cold,lightning,poison}, defDown, resDown, atkDownPhys, atkDownMag, crush, magicFind}` — 각각 Σ 접사(`vs_normal_dmg`·`vs_demon_dmg`·`vs_undead_dmg` · `vs_elite_dmg` · `vs_front_dmg`·`vs_back_dmg` · `<원소>_dmg_pct` · `def_down_pct` · `res_down_pct` · `atk_down_phys_pct`·`atk_down_mag_pct` · `crushing_blow_pct`) · `magicFind = round(Σmagic_find × attrMult(luck))`. **`combat_stat.csv` 행이 아니다** — 시트에 안 서고(impl 대조 단정의 제외 목록) 소비자는 `battle.js` 뿐이다 |
 
 **마스터리는 접사와 같은 채널로 합류한다** (skill_design §3 · 2026-08-28) — `computeCombat` 은 접사를 합산한 뒤 `masteryBonus(hero)` 의 `flat` 을 **같은 누산기에 더하고** `dr` 을 원천 목록에 밀어 넣는다. 그 아래로는 출처를 구분하지 않는다.
@@ -181,7 +184,7 @@ strike(rng, a, d):
 
 로드 시 던지는 것 — `tree_kind` 어휘 밖 · `owner_id` 가 죄종/직업이 아님 · `tier < 1` · `value_key`/`max_rank_key`/`unlock_key` 가 `balance.csv` 에 없음. **키가 없으면 값이 `undefined` 로 조용히 새므로 즉시 던진다.**
 
-**삭제된 출력** — `variance_pct`(편차는 무기 개체에 박혔다) · `accuracy` · `evasion`(명중·회피 폐지) · `magic_defense`.
+**삭제된 출력** — `variance_pct`(폭은 무기군 정의가 든다 — R90 부터 「타격 범위 폭」이고 공격력 양끝에 이미 들어 있다) · `accuracy` · `evasion`(명중·회피 폐지) · `magic_defense`.
 전투 계수가 실제로 걸리는 축은 둘뿐이다 [개정 2026-09-10 · R72] — 민첩(행동 주기) · 건강(**레벨 성장분의 최대 HP**). ~~힘(물리 공격력) · 지능(마법 공격력)~~ 은 **스킬 계수**로 옮겨갔고(§2-8 `scaleDef` · battle_design §9-1) ~~건강(HP 재생)~~ 은 계수를 잃었다. 운은 전투 밖(드랍률·골드) · 통솔·매력은 전투 스탯 계수가 없다(스킬 계수는 있다).
 
 `computeCombat(hero, items, codex, party)` — 4번째 인자 `party` 는 **파티 전술의 가산치** `{flat, dr}` 다(§2-9). 없으면 `null`. 마스터리와 **같은 자리에서 같은 채널로** 합류하고, 이 줄 아래로는 출처를 구분하지 않는다. 판정(어느 칸이 켜졌나 · 이 영웅이 파티인가)은 `state.js` 가 한다.
@@ -207,10 +210,10 @@ strike(rng, a, d):
 | `composeName` | `(prefixSin, base, suffixSin 또는 null) → {ko,en}` | `game_logic/naming.js:createNaming({sins}).composeName` — §2-10 |
 | `classSkills` | `{classId: [skillId...]}` **직업별 액티브 후보** (2026-09-09 신설) | `skill.csv` 의 `owner_kind=job` 행을 직업으로 묶은 것 — `ui/data.js` 가 만들어 **hero(`skillPool`)와 item 에 같은 표를 넘긴다**. 두 출처(고유 · 무기)가 한 풀에서 가져가기 때문이다 (skill_design §12-1 규칙 3). **행 순서가 결정론에 걸린다** |
 
-**item 객체** — `{uid, slot(part), rarity, ilvl, up, name:{ko,en}, implicit:{stat,v} 또는 null, affixes:[{stat,v,src}], sins:[sinId], group?, watk?, skill?, baseId?}`
+**item 객체** — `{uid, slot(part), rarity, ilvl, up, name:{ko,en}, implicit:{stat,v} 또는 null, affixes:[{stat,v,src}], sins:[sinId], group?, skill?, baseId?}` — ~~`watk`~~ 는 **v26 에서 삭제**(무기 피해는 박지 않고 파생한다 · R90)
 - `rarity` 는 `normal` / `magic` / `rare` 를 굴린다 [`normal` 신설 2026-09-14 · R86] — 옛 세이브에는 `normal` 이 없어 이관할 것이 없다(세이브 버전 무변경)
 - `up` = 강화 단계 `0 … equip_upgrade_max`. **드롭이 굴리지 않는다** — 드롭·시작 장비는 언제나 `0` 이고 `upgrade` 만 올린다 (2026-08-31 신설)
-- `group` / `watk` / `skill` / `baseId` 는 무기만. ~~`element` 는 **마법 무기군 개체**만~~ → **[폐기 2026-09-11 · R80] 생성 때 원소를 굴리지 않는다** — 새 아이템에 `element` 키가 없고 굴림 1회가 빠졌다(§5-2). **옛 세이브의 값은 죽은 필드로 남는다** — 읽는 곳이 없어져 무해하고 세이브 버전을 올리지 않았다(R77 선례). 원소는 **관련 옵션이 붙었을 때만** 생기고 어느 옵션이 주는지는 미정(GAME_DESIGN §10). ~~`twoHanded`~~ 는 2026-09-01 폐지 — 전 무기가 양손이라 표현할 것이 없다
+- `group` / `skill` / `baseId` 는 무기만. ~~`element` 는 **마법 무기군 개체**만~~ → **[폐기 2026-09-11 · R80] 생성 때 원소를 굴리지 않는다** — 새 아이템에 `element` 키가 없고 굴림 1회가 빠졌다(§5-2). **옛 세이브의 값은 죽은 필드로 남는다** — 읽는 곳이 없어져 무해하고 세이브 버전을 올리지 않았다(R77 선례). 원소는 **관련 옵션이 붙었을 때만** 생기고 어느 옵션이 주는지는 미정(GAME_DESIGN §10). ~~`twoHanded`~~ 는 2026-09-01 폐지 — 전 무기가 양손이라 표현할 것이 없다
 - **`skill` = 그 무기가 담은 액티브 id** [신설 2026-09-09 · skill_design §12-1 규칙 3] — 드롭 시 그 무기군의 **직업 풀**에서 하나를 굴려 개체에 박는다. ~~무기군이 스킬의 종류를 정한다~~(§2-1)는 폐기됐고, 대신 **「전사류 무기에는 전사류 스킬이 붙는다」**가 계약이다: 같은 도끼라도 개체마다 다른 전사 스킬을 든다. 액티브 2번 칸의 입력이고(`skill.activesFor` 의 `ctx.weaponSkill`), 무기를 바꾸면 그 칸이 통째로 바뀐다. 풀이 비는 무기군(확장 직업)은 `null`
 - **`baseId` = 그 무기군의 세부 베이스 id** [신설 2026-09-10 · `weapon_base.csv`] — 드롭 시 그 무기군에 베이스 풀이 있으면 하나를 굴려 박는다. 있으면 **`name` 도 그 베이스 이름으로 다시 조립된다**(무기군 이름을 덮는다) — 화면의 그림도 같은 `baseId` 를 우선해 그 베이스 그림을 보여준다(`ui/mock.js:itemArt`), 그림과 이름이 어긋나지 않는다. 풀이 없는 무기군(확장 둘 — `dagger` · `scythe` · 2026-09-14)은 `undefined` — 무기군 이름 그대로. ⚠ **아직 대역·A/B/C 축을 안 갈라 균등 굴림이다** — 실제 드롭 레벨·성격 가중은 `weapon_base` 의 수치가 발행돼야 한다(DEV_PLAN R62)
 - 무기의 행동 주기·공격 타입·착용 직업은 아이템에 **박지 않는다** — 매번 `weaponGroups[group]` 에서 읽는다
@@ -219,11 +222,11 @@ strike(rng, a, d):
 - **`src` = 접사의 출처** [신설 2026-09-11 · R78 · 세이브 v23] — `fixed`(고정 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션). **배열 순서가 곧 표시 순서**다(고정 → 죄종 칸 → 통합 — SCREEN_DESIGN §6 · ADR-0100). 무기 외 부위는 전부 `random`
 - **무기는 세 층을 정해진 개수로 받는다** — 고정 1(`atk_pct`) + 죄종 칸(`sins` 마다 1 — `weaponSinOptions`) + 통합옵션(`weapon_common_opt_magic` / `_rare` 개 — `weaponCommonOptions` · 같은 `family` 는 한 번). **무기는 `affixDefs` 를 안 쓴다** — `affix.csv` 에 `weapon` 슬롯이 없고 `atk_flat` 은 퇴역했다 (아래 「무기 옵션」)
 
-**개체 굴림** — 편차는 타격마다가 아니라 **드롭 시 한 번** 굴려 개체에 박는다 (§9-1 · item_design §2). `ε = (rng()×2 − 1) × 폭/100`:
+**개체 굴림** — **방어구 고유값만** 드롭 시 한 번 굴려 개체에 박는다 (item_design §2). `ε = (rng()×2 − 1) × 폭/100`. **무기 피해는 굴리지 않는다** [개정 2026-09-14 · R90 · battle_design §9-1] — 범위는 무기군 × ilvl × `up` 에서 **파생**하고(`formula.weaponDamage` · `item.weaponDamage`) 직격마다 그 사이를 굴린다(§2-3 `strike`):
 
 | 부위 | 값 | 편차 폭 |
 |---|---|---|
-| 무기 `watk` | `round2( weapon_atk_base × growthMult(ilvl) × (1+ε) )` — **소수 2자리**(정수로 반올림하면 밑수 대역이 뭉개진다). ~~양손 배율~~ 은 2026-09-01 `weapon_atk_base` 로 흡수 | 무기군 정의의 `variance`(= `weapon_group.csv:variance_pct`), 없으면 `balance.csv:dmg_variance_pct` |
+| ~~무기 `watk`~~ | **[삭제 2026-09-14 · R90]** ~~`round2( weapon_atk_base × growthMult(ilvl) × (1+ε) )`~~ — 굴림 1회가 빠졌다(§5-2). 무기 피해는 `formula.weaponDamage` 가 파생한다(§2-3) · 폭은 같은 칸(`weapon_group.csv:variance_pct` · 없으면 `balance.csv:dmg_variance_pct`)이 **타격 범위 폭**으로 뜻을 옮겼다 | — |
 | 방어구 implicit `def_flat` | `round1( (armor_def_base + ilvl × armor_def_per_ilvl) × (1+ε) )` — 방어는 비율 축이라 **성장 곡선을 타지 않는다**. ~~보조 ×1.5~~ 는 슬롯과 함께 폐지 (2026-09-01) | `armor_def_variance_pct` (전역 하나) |
 | 목걸이 · 반지 | implicit 없음 — **rng 소비도 없다** | — |
 
@@ -248,35 +251,37 @@ strike(rng, a, d):
 
 `appliesTo` 판정 = `'all'` · 무기군 `damageKind` 와 같다 · 무기군 `classes` 에 든 직업 id — 셋 중 하나면 붙는다.
 
-**강화** (item_design §1 개정 2026-08-31 — R25). 골드를 먹고 `up` 을 1 올린다. **두 갈래가 서로 다른 방식으로 남는다**:
+**강화** (item_design §7-2 — R25 · **개정 2026-09-15 R95**). 골드를 먹고 `up` 을 1 올린다. **올리는 것은 베이스 능력치 하나다**:
 
 | 갈래 | 규칙 | 저장 |
 |---|---|---|
-| 베이스 능력치 | 무기 `watk` · 방어구 implicit `def_flat` 에 `× (1 + up × equip_upgrade_base_pct/100)` | **파생** — 원값은 안 건드린다 |
-| 옵션(접사) 값 | `up` 이 `equip_upgrade_option_interval` 의 배수가 될 때마다(3·6·9) **보유 접사 중 랜덤 1개**의 값을 `× (1 + equip_upgrade_option_pct/100)` | **박는다** — `affixes[i].v` 를 직접 고친다 |
+| 베이스 능력치 | 무기 피해 양끝(`formula.weaponDamage` 가 `up` 을 받는다 · R90) · 방어구 implicit `def_flat` 에 `× formula.upgradeMult(up)` = `1 + up × equip_upgrade_base_pct/100` | **파생** — 원값은 안 건드린다 · 무기는 원값 자체가 없다(R90) |
+| ~~옵션(접사) 값~~ | **[퇴역 2026-09-15 · R95]** ~~3·6·9강마다 보유 접사 중 랜덤 1개의 값을 올린다(`equip_upgrade_option_interval` · `equip_upgrade_option_pct`)~~ — 옵션 계단과 두 키가 사라졌다(옵션 쪽 성장은 크래프트 — item_design §7-3). **옛 규칙으로 이미 오른 값은 그대로 남는다** — 박힌 값이라 되돌릴 근거가 세이브에 없고, 되돌리면 이관이 장비를 약하게 만든다 | — |
 
-- **랜덤한 것은 박고, 결정적인 것은 파생한다.** 어느 접사가 뽑히느냐는 rng 라 다시 못 만들지만(그래서 세이브에 남아야 한다), 베이스 배율은 `up` 하나로 언제든 다시 계산된다 — 파생이면 단계마다 반올림이 쌓이지 않고 드롭 시 굴린 **개체값이 그대로 보존**된다(§2-5 개체 굴림)
-- **재굴림은 없다** — 접사의 **종류·개수·순서**는 강화가 절대 안 바꾼다. 값만 오른다 (item_design §1)
-- 값 상승은 그 접사의 `scale` 이 정한 반올림을 그대로 따르고 **최소 한 칸은 반드시 오른다** (`growth` = +0.1 · 나머지 = +1) — 비율만 곱하면 값이 작은 접사가 반올림에 먹혀 "강화했는데 아무 일도 안 일어난다"가 된다
-- **베이스가 없는 부위(목걸이·반지)도 강화된다** — 옵션 갈래만 받는다. 부위 제한은 기획에 없다(⚠ 미정 — DEV_PLAN §3-3 R25)
-- **실패는 없다** — 기획에 없는 규칙은 만들지 않는다. 제련소(파견처)의 「성공률/품질」 계수는 파견 미구현이라 아직 어디에도 안 걸린다
+- **강화는 파생만 한다** [2026-09-15 · R95] — `up` 하나가 베이스 배율을 정하고 아이템에 새로 박히는 값이 없다. **rng 를 쓰지 않는다** — ~~랜덤한 것은 박고, 결정적인 것은 파생한다~~ 의 「랜덤한 것」(접사 선택)이 없어졌다. 파생이라 단계마다 반올림이 쌓이지 않고 드롭 시 굴린 **개체값이 그대로 보존**된다(§2-5 개체 굴림) · **무기 피해가 그 극단이다** [2026-09-14 · R90] — 박을 개체값이 아예 없어 무기군 · ilvl · `up` 셋으로 언제든 다시 계산된다
+- **재굴림은 없다** — 접사의 **종류·개수·순서·값**을 강화가 절대 안 바꾼다 (item_design §7-2)
+- ~~값 상승은 그 접사의 `scale` 이 정한 반올림을 따르고 최소 한 칸은 반드시 오른다~~ — R95 퇴역(옵션 계단과 함께)
+- **목걸이 · 반지는 강화하지 않는다** [2026-09-15 · R95 · item_design §7-2] — ~~베이스가 없는 부위도 강화된다 — 옵션 갈래만 받는다~~. 베이스 능력치가 없는 부위 = 무기 외에 고유값을 안 굴리는 두 부위(`item.js:baseless` — `implicitFor` 와 같은 판정). `upgradeable` 이 `false` · `upgradeCost` 가 `null` · `upgradeItem` 이 `noBase`. **옛 세이브에서 이미 오른 `up` 은 그대로 둔다** — 파생할 베이스가 없어 전투 수치에 닿지 않는다(`effective` 가 원본을 돌려준다). 세이브 버전 무변경
+- **실패는 없다** — 기획에 없는 규칙은 만들지 않는다. ~~제련소(파견처)의 「성공률/품질」 계수~~ — 운 배치가 무엇을 미는지는 R95 로 대상이 사라져 미정이다(GAME_DESIGN §10 「제작의 남은 설계」)
 
 | export | 시그니처 | 계약 |
 |---|---|---|
 | `rollDrop(rng, ilvl, opts?)` | `→ item` | 부위 균등 → 베이스 → 희귀도(가중치 — `normal` → `magic` → `rare` 순으로 훑는다 · R86) → `build`(§5-2 순서). `up = 0`. **`opts.magicFind`**(파티 평균 %)가 있으면 **레어 가중치 × (1 + magicFind/100)** — 굴림 수 불변 · 없거나 0 이면 종전과 같다 [2026-09-11 · R78] |
-| `rollGear(rng, opts)` | `→ [item]` | **한 벌** [신설 2026-09-11 · R79]. `opts = {slots:[partId], ilvl, magicFind?, rareBonusPct?, weaponGroup?}`. `slots` **배열 순서대로** 부위마다 하나씩 만든다 — 베이스 → 희귀도 → `build`(§5-2). `weaponGroup` 을 주면 무기 베이스를 **굴리지 않고** 그 무기군으로 고정한다(몬스터가 제 무기군을 든다). `rareBonusPct` 는 `magicFind` 와 **같은 채널**로 레어 가중치에 더해 곱한다(`spawn_grade.csv:gear_rare_bonus_pct` — 등급이 희귀도를 미는 자리 · item_design §1 4단계). `up = 0` |
+| `rollGear(rng, opts)` | `→ [item]` | **한 벌** [신설 2026-09-11 · R79]. `opts = {slots:[partId], ilvl, magicFind?, rareBonusPct?, weaponGroup?, rarityWeights?}`. `slots` **배열 순서대로** 부위마다 하나씩 만든다 — 베이스 → 희귀도 → `build`(§5-2). `weaponGroup` 을 주면 무기 베이스를 **굴리지 않고** 그 무기군으로 고정한다(몬스터가 제 무기군을 든다). `rareBonusPct` 는 `magicFind` 와 **같은 채널**로 레어 가중치에 더해 곱한다(`spawn_grade.csv:gear_rare_bonus_pct` — 등급이 희귀도를 미는 자리 · item_design §1 4단계). **`rarityWeights`** `{normal, magic, rare}` 를 주면 희귀도를 그 가중치로 굴린다 — **제작**이 제 가중치(`make_rarity_w_*`)를 넘기는 자리다 [신설 2026-09-15 · R96] · 안 주면 드롭 가중치(`rarity_w_*`) · **굴림 수 불변**. `up = 0` |
 | `startingWeapon(rng, cls, avoidSkill?)` | `→ item` | ilvl 1 · **normal** [개정 2026-09-14 · ~~magic~~ · R86] · 그 직업의 스킬이 붙는 무기군(본편만). **`avoidSkill`(그 영웅의 고유 스킬)을 스킬 풀에서 뺀다** — 한 스킬이 액티브 두 칸에 서지 않게. 빼도 **소비는 1회 그대로**이고 빼서 풀이 비면 원래 풀에서 굴린다. `up = 0` |
 | `startingArmor(rng)` | `→ item` | **신설 2026-09-14 · R86** — ilvl 1 · **normal** · 갑옷 베이스 균등 1회 → `build`. ⚠ **직업 맞춤 없음** — 갑옷군(중갑 · 경갑 · 로브)과 직업을 잇는 데이터가 아직 없다. `up = 0` |
 | `legacyWeaponLayers(item)` | `→ [affix]` | **세이브 이관 전용**(§4 v22 → v23). 옛 무기의 고정 옵션 · 죄종 칸을 **rng 없이** 만든다 — 행 = `(uid 번호 + 칸 순번) % 후보 수` · 값 = 범위의 가운데(`scale` 반올림). 무기가 아니거나 무기군을 모르면 `[]` [2026-09-11 · R78] |
 | `canEquip(hero, item)` | `→ null` / `class` | 무기 = 직업 전속 무기군 검사. **능력치 게이트 없음**. 2026-09-01 — 인자 3 → 2, 거절 사유 `twoHanded` 폐지(보조 슬롯 삭제) |
 | `groupOf(item)` | `→ 무기군 정의 또는 null` | |
 | `groupsFor(cls)` | `→ 무기군 정의[]` | 본편(`stage === 'main'`) 무기군만 |
-| `regroupWeapon(item, groupId)` | `→ item` | **세이브 이관 전용** (§4 v15→v16). 개체 굴림(`watk`·접사·`up` · ~~`element`~~ R80 폐기)은 두고 **`group` 과 `name` 만** 갈아끼운다. 게임 중에는 부르지 않는다 — 무기군은 드롭 때 정해지고 안 바뀐다 |
+| `regroupWeapon(item, groupId)` | `→ item` | **세이브 이관 전용** (§4 v15→v16). 개체 굴림(접사·`up` · ~~`watk`~~ R90 삭제 · ~~`element`~~ R80 폐기)은 두고 **`group` 과 `name` 만** 갈아끼운다. ⚠ R90 부터 무기 피해 범위의 **폭**은 무기군이 정하므로 군을 옮기면 폭이 따라 바뀐다. 게임 중에는 부르지 않는다 — 무기군은 드롭 때 정해지고 안 바뀐다 |
 | `salvageDust(item)` | `→ int` | 희귀도별. **`normal` 은 기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 `magic` 값을 따른다. **강화 단계는 반환량에 안 들어간다** (기획 없음) |
 | `upgradeMax()` | `→ int` | `equip_upgrade_max` |
-| `upgradeCost(item)` | `→ int 또는 null` | 다음 한 단계의 골드. 상한이면 `null`. `round(base × growth^up)` |
-| `upgrade(rng, item)` | `→ {up, affix: {stat, from, to} 또는 null}` | **in-place.** 옵션 계단이 아니면 `rng` 를 **한 번도 안 쓴다** |
-| `effective(item)` | `→ item` | 베이스에 강화 배율을 먹인 **읽기용 사본**. `up === 0` 이거나 베이스가 없으면 **원본을 그대로** 돌려준다(할당 없음) |
+| `upgradeable(item)` | `→ bool` | **베이스 능력치가 있는 부위인가** [신설 2026-09-15 · R95] — 목걸이 · 반지면 `false`(강화 없음 · item_design §7-2). **부위만 본다** — `up` · 희귀도는 안 본다 |
+| `upgradeCost(item)` | `→ int 또는 null` | 다음 한 단계의 골드. 상한이거나 **`upgradeable` 이 아니면** `null` [R95]. `round(base × growth^up)` |
+| `upgrade(item)` | `→ {up}` | **in-place** · `up` 을 1 올린다. **rng 를 안 쓰고 접사를 안 건드린다** [개정 2026-09-15 · R95 — ~~`upgrade(rng, item)` → `{up, affix}`~~ · 옵션 계단 퇴역]. 상한 · 부위 검사는 호출자(`state.upgradeItem`)가 한다 |
+| `effective(item)` | `→ item` | **방어구 고유값**에 강화 배율을 먹인 **읽기용 사본**. `up === 0` 이거나 고유값이 없으면(**무기** · 목걸이 · 반지) **원본을 그대로** 돌려준다(할당 없음) — 무기 피해는 사본에 안 싣고 `weaponDamage` 가 `up` 을 받아 따로 낸다(R90) |
+| `weaponDamage(item)` | `→ {min, max} \| null` | **무기 피해 범위** [신설 2026-09-14 · R90] = `formula.weaponDamage(item.ilvl, weaponGroups[item.group], item.up)` — **강화까지 든 값**이다. 무기가 아니면 `null`. 화면(툴팁 · 비교)이 부른다 — 전투는 `hero.computeCombat` 이 같은 formula 함수를 직접 부른다 |
 ### 2-6. `battle.js` — 헤드리스 전투
 
 `createBattleSystem(data)` — 주입 `data`: `balance, monsters(byId), stages(byId), roundSets {round_set: [{round_num, round_type}]}, budgets(byKey), grades(byKey), sins, sinTraits {sin: trait}, commonTraits [trait], itemSystem, skillSystem, heroSystem, classSkills {classId: [skillId]}, slots [partId]`.
@@ -290,7 +295,7 @@ strike(rng, a, d):
 | `stageRounds(stage)` | `(stage 행 객체) → [{round_num, round_type}]` | 그 스테이지의 라운드 줄 = `roundSets[stage.round_set]`(round_num 순). **라운드 수 = 길이.** 챕터보스 스테이지는 `boss` 한 줄뿐이다(base_expedition_design §1-2). 화면의 라운드 트랙 · 예상 소요 · 리포트 총수도 이것을 부른다 — 렌더러가 세트를 직접 고르지 않게 여기 둔다(`stageElement` 와 같은 이유 · 2026-09-11 R75) |
 | `stageElement(stage)` | `(stage 행 객체) → elementId` \| `'physical'` | 그 스테이지 몬스터의 `attack_type` 중 physical 이 아닌 **첫 값**. 편성 화면의 "이 스테이지가 요구하는 저항"(§9-8) — 렌더러가 몬스터 테이블을 훑지 않게 여기 둔다 |
 | `makeEnemy(key, monsterId, grade, lvl, gear?, extra?)` | `→ 전투 유닛` | 몬스터 → 유닛 변환 규칙 자체가 계약이라 내보낸다(검증이 직접 본다). `gear` = 그 몬스터가 **입고 있는 아이템 배열**(`rollGear` 결과 · 생략하면 `[]` = 맨몸) [신설 2026-09-11 · R79]. 아래 |
-| `createRun(partyUnits, stageId, rng, level?)` | `→ run {next(partyUnits?), result, ended}` | **런 하나를 라운드 단위로** [신설 2026-09-14 · R89 · base_expedition_design §1-1]. `next()` 한 번 = 라운드 하나를 끝까지 계산한다 — **이기면 멈추고** 요약을 낸다(다음 라운드는 다음 호출이 연다) · 전멸 · 시간 초과 · 마지막 라운드 클리어면 런이 닫힌다(`end` 이벤트) · 닫힌 뒤엔 `null`.<br>**요약** = `{n, t, cleared, ended, xp, gold, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item], alive:[uid], contrib}` — 보상 필드(`xp` = 그 라운드 처치 XP 합 · `gold` · `kills` · `cards` · `drops`)는 **그 라운드를 이겼을 때만** 값이 있다(진 라운드는 0 · 빈 값) · `alive` = 그 순간 살아 있는 파티 영웅 uid · `contrib` = 그 시각까지의 기여(`result.contrib` 모양). `result` 는 `simulate` 결과와 같은 모양이고 **라운드마다 자란다**(타임라인 포함 · `durationSec` · `contrib` 은 닫힐 때 굳는다).<br>**`next(partyUnits)`** — 둘째 호출부터 **그 순간의 파티**(`partyUnits` 와 같은 모양)를 받는다. 영웅의 `combat` · `stats` · `actives` 가 직전 것과 **다를 때만** 그 유닛을 갈아입힌다(`refit` 이벤트) — 같으면 아무 일도 없고 rng · 타임라인이 인자를 안 준 것과 같다. 갈아입히는 규칙: **현재 HP 유지**(새 최대치로 자른다) · 창 · 배리어 · 행동 예약(`next`) 유지 · 남은 스킬은 쿨 그대로 · **새로 생긴 스킬은 그 순간부터 쿨 한 바퀴** · 오오라는 다시 건다 · 적이 깎은 영구 방어(`defBase`)는 비율로 잇는다 · 파티 평균(골드 · 드롭 · 매직찬스 배율)도 다시 잰다. **쓰러진 영웅은 안 갈아입힌다**(그 런 끝까지 빠진다). 인원 · 자리(`rank`)는 안 읽는다 — 원정 중엔 잠겨 있다(§2-7 `running`). **인자 없이 이어 부르면 `simulate` 와 한 글자도 안 다르다** |
+| `createRun(partyUnits, stageId, rng, level?)` | `→ run {next(partyUnits?), result, ended}` | **런 하나를 라운드 단위로** [신설 2026-09-14 · R89 · base_expedition_design §1-1]. `next()` 한 번 = 라운드 하나를 끝까지 계산한다 — **이기면 멈추고** 요약을 낸다(다음 라운드는 다음 호출이 연다) · 전멸 · 시간 초과 · 마지막 라운드 클리어면 런이 닫힌다(`end` 이벤트) · 닫힌 뒤엔 `null`.<br>**요약** = `{n, t, cleared, ended, xp, gold, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item], alive:[uid], contrib}` — 보상 필드(`xp` = 그 라운드 처치 XP 합 · `gold` · `kills` · `cards` · `drops`)는 **그 라운드를 이겼을 때만** 값이 있다(진 라운드는 0 · 빈 값) · `alive` = 그 순간 살아 있는 파티 영웅 uid · `contrib` = 그 시각까지의 기여(`result.contrib` 모양). `result` 는 `simulate` 결과와 같은 모양이고 **라운드마다 자란다**(타임라인 포함 · `durationSec` · `contrib` 은 닫힐 때 굳는다).<br>**`next(partyUnits)`** — 둘째 호출부터 **그 순간의 파티**(`partyUnits` 와 같은 모양)를 받는다. 영웅의 `combat` · `stats` · `actives` 가 직전 것과 **다를 때만** 그 유닛을 갈아입힌다(`refit` 이벤트) — 같으면 아무 일도 없고 rng · 타임라인이 인자를 안 준 것과 같다. 갈아입히는 규칙: **현재 HP 유지**(새 최대치로 자른다) · 창 · 배리어 · 행동 예약(`next`) 유지 · 남은 스킬은 쿨 그대로 · **새로 생긴 스킬은 그 순간부터 쿨 한 바퀴** · 오오라는 다시 건다 · 적이 깎은 영구 방어(`defBase`)는 비율로 잇는다 · 파티 평균(골드 · 드롭 · 매직찬스 배율)도 다시 잰다. **쓰러진 영웅은 안 갈아입힌다**(그 런 끝까지 빠진다). 인원 · 자리(`rank`)는 안 읽는다 — 원정 중에 편성을 바꿔도 도는 원정은 나갈 때의 인원 그대로다(§2-7 `departRun` · `runParty`). **인자 없이 이어 부르면 `simulate` 와 한 글자도 안 다르다** |
 | `simulate(partyUnits, stageId, rng, level?)` | `→ result` | **한 번에 끝까지** — `createRun` 을 끝날 때까지 인자 없이 이어 부른 것이다(검증 · 캘리브레이션용 · 게임 흐름은 `state.departRun`/`advanceRun` 이 `createRun` 을 직접 쓴다 · R89). **`level`** = 이번 런의 **스테이지 레벨**(몬스터 레벨) [신설 2026-09-14 · R87 · base_expedition_design §1-4] — 안 주면 `stage.dlvl`. 적 생성 레벨 · 장비 아이템 레벨 · 처치 XP · 적중이 **이 값 하나**를 읽는다. **스폰의 굴림 횟수는 안 바뀐다**(편성 굴림은 레벨을 안 보고 · 장비 굴림 수는 아이템 레벨과 무관하다) — 그래서 같은 시드면 첫 라운드 편성이 같다. ⚠ **전투 중 수열은 갈린다** — 적중률이 레벨 차를 따르고 빗나간 타격은 치명 · 추가 피해를 굴리지 않는다(`formula.strike`). `partyUnits = [{uid, combat, stats?, actives?, reactions?}]` (`combat` = `computeCombat` 결과, `stats` = **기본 능력치 7종**(`hero.stats` — 스킬 계수가 읽는다 · 없으면 `null` = 계수 0 취급 · 2026-09-10 R72), `actives` = **인스턴스** `[{id, source}]` = `skill.activesFor` — 정의는 `skill.resolve` 로 푼다 · `reactions` = `[{on, fn}]` 사건 훅 핸들러, ⚠ 소비자 없음 — 2026-09-01). **`actives` 가 없거나 비면 기본 공격만 돌고 rng 수열은 스킬 도입 전과 같다.** 아래 |
 
 **드롭 (`onKill`) — 떨어지는 것은 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · item_design §1 2단계 · monster_design §5-1]. **처치당 최대 1개**(확정 2026-08-27)는 그대로이고 바뀐 것은 **무엇이 떨어지나**다.
@@ -300,14 +305,14 @@ strike(rng, a, d):
 **파이프라인 3~6단계는 스폰으로 옮겨갔다** — ilvl(**스테이지 레벨**(`simulate` 의 `level` · 기본 `dlvl`) `+ grade.gear_ilvl_add` · **굴림 없음**) · 희귀도(`magicFind + grade.gear_rare_bonus_pct`) · 접사 · 개체 굴림이 전부 `spawnRound` 에서 돈다(§5-2). 그래서 **등급 반영이 해소됐다** — ~~DEV_PLAN R20 미반영~~. **매직찬스는 스폰 굴림에 걸린다** — 전투 시작 때 굳힌 파티 평균 `magicFind` 가 `rollGear` 로 간다. ⚠ **딸린 것 — 파티의 매직아이템 획득확률이 적 장비도 좋게 한다**(즉 적이 세진다). 사용자가 알고 택한 것이다 [2026-09-11 · 「이스터에그」].
 
 **전투 유닛 — 몬스터와 파티가 같은 필드 모양이다** (§8-1). `formula.strike` 가 읽는 이름 그대로 쓴다:
-`{key, side, hp, hpMax, atk, atkType, def, res:{fire,cold,lightning,poison}, lvl, resMaxBonus, dr, defIgnore, resReduction, skillMult, bonusPct, crit, critDmg, ls, reflect, period, next}`
+`{key, side, hp, hpMax, atkMin, atkMax, atkType, def, res:{fire,cold,lightning,poison}, lvl, resMaxBonus, dr, defIgnore, resReduction, skillMult, bonusPct, crit, critDmg, ls, reflect, period, next}`
 스킬 런타임이 얹은 필드 — 전부 **전투 안에서만** 산다 (세이브에 넣지 않는다):
 
 | 필드 | 계약 |
 |---|---|
-| `atkBase` · `atkPct` | 버프 괄호. `atkBase = atk / (1 + atk_pct_sum/100)` · `atkPct = atk_pct_sum`. 유효 공격력 `atk = atkBase × (1 + (atkPct + Σ버프 atk_pct)/100)` — **새 곱셈 층을 만들지 않는다**(§9-2). ⚠ **몬스터도 `atkPct` 를 든다** [2026-09-11 · R79] — 낀 무기의 고정 옵션(`atk_pct`)과 오만 칸이 같은 괄호에 들어간다 |
-| `matk` | 회복량의 밑수 = `combat.atk_magic ?? 0`. ⚠ **마법 무기를 낀 몬스터는 0 이 아니다** [2026-09-11 · R79 · monster_design §5-1] — 소환은 0 |
-| `matkBase` | `matk / (1 + atk_pct_sum/100)` — 회복 밑수의 괄호 앞 값. 유효 `matk = matkBase × (1 + (atkPct + Σ버프 atk_pct)/100)` — `atk` 와 **같은 괄호**(2026-09-01). 마법 무기를 낀 몬스터는 0 이 아니다(위) · 소환 0 |
+| `atkMinBase` · `atkMaxBase` · `atkPct` | 버프 괄호 — **양끝마다** [개정 2026-09-14 · R90 — ~~`atk`~~ · ~~`atkBase`~~]. `atkMinBase = combat.atk_*.min / (1 + atk_pct_sum/100)`(`Max` 도 같다) · `atkPct = atk_pct_sum`. 유효 공격력 `atkMin = atkMinBase × (1 + (atkPct + Σ버프 atk_pct)/100)`(`atkMax` 도 같다) — **새 곱셈 층을 만들지 않는다**(§9-2). ⚠ **몬스터도 `atkPct` 를 든다** [2026-09-11 · R79] — 낀 무기의 고정 옵션(`atk_pct`)과 오만 칸이 같은 괄호에 들어간다 |
+| `matkMin` · `matkMax` | 회복량의 밑수 — 범위 양끝 = `combat.atk_magic ?? {min: 0, max: 0}` [개정 2026-09-14 · R90 · ~~`matk`~~]. 시전마다 그 사이를 굴린다(아래 「회복」 행). ⚠ **마법 무기를 낀 몬스터는 0 이 아니다** [2026-09-11 · R79 · monster_design §5-1] — 소환은 0 |
+| `matkMinBase` · `matkMaxBase` | 양끝마다 `/ (1 + atk_pct_sum/100)` — 회복 밑수의 괄호 앞 값. 유효 `matkMin = matkMinBase × (1 + (atkPct + Σ버프 atk_pct)/100)`(`Max` 도 같다) — 공격력과 **같은 괄호**(2026-09-01). 마법 무기를 낀 몬스터는 0 이 아니다(위) · 소환 0 |
 | `basePeriod` | `period` 의 원값. `period = basePeriod × (1 − Σ버프 period_pct/100)` |
 | `hpMaxBase` · `defBase` · `resBase` · `drBase` · `regenBase` | 창이 미는 축의 **원값** [신설 2026-09-09]. `refreshDerived` 가 창 합으로 값을 다시 쓰고 **창이 없으면 밑수로 되돌린다** — 그래서 `hpMax`·`def`·`res`·`dr`·`regen` 을 직접 대입하는 코드는 밑수도 같이 옮겨야 한다(안 그러면 다음 파생에서 되돌아간다). `resBase` 는 4원소 객체 |
 | `summon` · `summonOf` | 소환 유닛 표식과 시전자 key [신설 2026-09-09]. **`side` 는 시전자와 같다**(파티 배열에 들어간다) — 그래서 적의 대상 굴림 모집단이 커진다. ⚠ **전멸 판정에서는 뺀다**(`alive(party).filter(u => !u.summon)`) · 라운드가 바뀌면 `beginRound` 가 걷어낸다 · 행동은 `next: Infinity` 로 막는다 · ⚠ **적도 소환한다** [2026-09-11 · R79] — 벽은 시전자 쪽 배열(`units.enemies`)에 서고 **클리어 판정에서도 빠진다**(전멸 판정과 같은 규칙) · 적 벽을 쓰러뜨려도 `onKill` 을 안 지난다(처치 · 기여 처치 수 아님 · rng 0) · 적 벽은 다음 라운드의 적 배열 교체로 사라진다. ⚠ 파티 벽이 쓰러지면 `result.downed` 에 uid 없이 실린다 — R79 **이전부터** 있던 동작이고 미수정(DEV_PLAN R79 보고) |
@@ -321,11 +326,11 @@ strike(rng, a, d):
 
 | 몬스터(`makeEnemy`) | 값 [전면 개정 2026-09-11 · R79] |
 |---|---|
-| **전투 능력치 전부** | `heroSystem.computeCombat({stats, level: lvl, cls, innate}, gear)` — **영웅과 같은 함수**다. `stats` = `monster.csv` 의 기본 능력치 7종(몬스터마다 고정) · `gear` = 스폰 때 굴린 장비. ~~`monster.csv` 소재값 × `spawn_grade` 배율~~ 은 폐기(`hp`·`attack`·`action_period` **컬럼째 삭제**) — HP 는 `hero_hp_base` × 레벨 성장 × 건강, 공격력은 **무기 밑수**, 주기는 **무기군 / 민첩**이 낸다 |
+| **전투 능력치 전부** | `heroSystem.computeCombat({stats, level: lvl, cls, innate}, gear)` — **영웅과 같은 함수**다. `stats` = `monster.csv` 의 기본 능력치 7종(몬스터마다 고정) · `gear` = 스폰 때 굴린 장비. ~~`monster.csv` 소재값 × `spawn_grade` 배율~~ 은 폐기(`hp`·`attack`·`action_period` **컬럼째 삭제**) — HP 는 `monster_hp_base`(입력 `hpBase` — 레벨 1 바탕만 영웅과 갈린다 · R91) + 레벨 성장분 × 건강, 공격력은 **무기 밑수**, 주기는 **무기군 / 민첩**이 낸다 |
 | `def` · `res` | **몸값 + 장비** [D3] — `monster.csv:defense` · `res_*` 를 `computeCombat` 결과에 **더한다**(장비가 그 위에 얹힌다). 몸에 남긴 이유는 도감이 저항을 공략 정보로 적고(§8-1) 「이 원소를 막았나」가 판마다 요동치면 안 되기 때문이다(§9-5). `grade.def_mult` · `grade.res_add` 는 **퇴역**(등급의 세기는 장비가 낸다) |
-| 전역 배율 | `hp` `× grade.hp_mult × monster_hp_scale` · `atk` `× monster_atk_scale` · `def` `× monster_def_scale` — **합계에** 곱한다(캘리브레이션 조절값의 역할이 그것이다). `grade.hp_mult` 만 남은 이유는 **HP 가 장비에서 안 오기 때문**이다 — 빼면 보스가 호위와 같은 체력이 된다(monster_design §5-1 이 미리 짚은 자리). ~~`grade.atk_mult`~~ 는 퇴역 |
+| 전역 배율 | `hp` `× grade.hp_mult × monster_hp_scale` · 공격력 양끝 `× monster_atk_scale`(R90) · `def` `× monster_def_scale` — **합계에** 곱한다(캘리브레이션 조절값의 역할이 그것이다). `grade.hp_mult` 만 남은 이유는 **HP 가 장비에서 안 오기 때문**이다 — 빼면 보스가 호위와 같은 체력이 된다(monster_design §5-1 이 미리 짚은 자리). ~~`grade.atk_mult`~~ 는 퇴역 |
 | `atkType` | **`monster.csv:attack_type` 이 이긴다** — `computeCombat` 의 `attack_type`(R80 으로 언제나 `physical`)을 덮는다. 원소는 **스테이지가 정한다**(monster_design §2) — 영웅과 다른 유일한 축이다 |
-| `matk` | **마법 무기를 낀 몬스터는 `atk_magic` 을 갖는다**(= `matk` ≠ 0) [개정 2026-09-11] — ~~원소 공격 몬스터도 값은 `atk_physical` 에 둔다~~ 는 폐기. monster_design §5-1 이 「마법 무기를 낀 몬스터는 마법 공격력(회복의 바탕값)을 갖게 된다」로 인정한 것이다. 회복 스킬은 고유 후보에서 걸러 두므로 쓰이지 않는다 |
+| `matkMin` · `matkMax` | **마법 무기를 낀 몬스터는 `atk_magic` 을 갖는다**(= 양끝 ≠ 0) [개정 2026-09-11] — ~~원소 공격 몬스터도 값은 `atk_physical` 에 둔다~~ 는 폐기. monster_design §5-1 이 「마법 무기를 낀 몬스터는 마법 공격력(회복의 바탕값)을 갖게 된다」로 인정한 것이다. 회복 스킬은 고유 후보에서 걸러 두므로 쓰이지 않는다 |
 | `stats` · `actives` · `fx` | **영웅과 같다** — `stats` = 기본 능력치 7종(스킬 계수가 읽는다) · `actives` = `skill.activesFor` 가 만든 칸(등급이 수를 정한다, 아래) · `fx` = 낀 무기의 옵션 묶음(조건부 % · 타격 시 창 · 강타 · 매직찬스). ⚠ **몬스터도 강타를 때린다** — 폭식 무기를 끼면 그 값이 산다 |
 | `crit` · `regen` | **영웅과 같은 밑수를 받는다** [D2 사용자 확정 2026-09-11] — `crit = base_crit_pct + 장비` · `regen = hp_regen_base_per_level × growthMult(lvl) + 장비`. ~~몬스터는 0~~ 은 폐기 — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다. ⚠ battle_design §8-1 출처 표의 「치명·재생은 정예 특성이 얹는다」와 부딪히는 것을 알고 택했다 |
 | 스킬 칸 수 | `grade.skill_slots` — 일반 1(고유) · 정예 2(+ **낀 무기가 든 스킬**) · 보스 3(+ 직업 풀에서 스폰 때 굴린 것) [신설 2026-09-11 · skill_design §2 · monster_design §5-1]. ⚠ 보스 셋째 칸의 정체는 미정(GAME_DESIGN §10) |
@@ -339,8 +344,8 @@ strike(rng, a, d):
 파티 유닛은 `computeCombat` 출력을 그대로 옮긴다 — `bonusPct ← dmg_bonus_pct` · `dr ← damage_reduction`(실효 %) · `res ← res_* 4종` · `lvl ← level` · `regen ← hp_regen` · `cdr ← cooldown_reduction`. **몬스터도 같다** [개정 2026-09-11 · R79] — ~~몬스터는 `regen`·`cdr` 이 0~~ 은 폐기(같은 함수를 지나므로 밑수도 장비분도 그대로 온다 · 위 표 `crit`·`regen` 행). **`stats` 는 몬스터도 든다** — 영웅은 `partyUnits[].stats`, 몬스터는 `monster.csv` 의 7컬럼이다(~~몬스터·소환은 `null`~~ → **소환만 `null`**).
 **유닛 생성은 `makeUnit(side, combatLike, extra)` 하나다** (2026-09-01) — 그리고 **`combatLike` 를 만드는 함수도 하나다** [개정 2026-09-11 · R79]: ~~`combatFromMonster(m, grade, lvl)`~~ **삭제**되고 몬스터도 `heroSystem.computeCombat` 을 지난다. 필드 이름이 같아서가 아니라 **같은 함수라서** 같다 — §8-1 의 「계산이 한 곳」이 문자 그대로 성립하고, 이식 대조도 한 함수로 양쪽을 검증한다. 몬스터 전용으로 남는 것은 **①몸값 합류(`defense`·`res_*`) ②전역 배율 ③`attack_type` 덮기** 셋뿐이고 셋 다 위 표에 있다. `makeEnemy` export 는 그 셋까지 지난 결과를 낸다.
 
-**result** — `{won, reason, durationSec, party:[{key, uid, hpMax, period, atk, matk, atkType, stats, actives:[skillId], ready:[초]}], timeline:[ev], xpTotal, gold, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item(uid null)], downed:[heroUid], roundsCleared, rounds:[{n, kind, killed:[monsterId], eliteSin}], strikes:{party:{n,miss}, enemy:{n,miss}}, contrib:[{uid, dealt, taken, kills}], casts:{skillId:n}}`
-- `party[].stats` = **전투 시작 시점 기본 능력치의 복사본**(`partyUnits[].stats` 가 없으면 `null`) — 설명창이 스킬 계수를 풀어 쓰는 표시값이다. `atk`·`matk`·`atkType` 과 같은 취급이라 rng·타임라인·골든과 무관하다(`matk` = 회복 스킬 설명창의 밑수 · 2026-09-10 추가) · 복사본인 이유는 정산(`grantXp`)이 전투 **뒤에** 능력치를 올리기 때문이다 [2026-09-10 · R72]
+**result** — `{won, reason, durationSec, party:[{key, uid, hpMax, period, atkMin, atkMax, matkMin, matkMax, atkType, stats, actives:[skillId], ready:[초]}], timeline:[ev], xpTotal, gold, kills:{monsterId:n}, cards:{monsterId:n}, drops:[item(uid null)], downed:[heroUid], roundsCleared, rounds:[{n, kind, killed:[monsterId], eliteSin}], strikes:{party:{n,miss}, enemy:{n,miss}}, contrib:[{uid, dealt, taken, kills}], casts:{skillId:n}}`
+- `party[].stats` = **전투 시작 시점 기본 능력치의 복사본**(`partyUnits[].stats` 가 없으면 `null`) — 설명창이 스킬 계수를 풀어 쓰는 표시값이다. `atkMin`·`atkMax`·`matkMin`·`matkMax`·`atkType` 과 같은 취급이라 rng·타임라인·골든과 무관하다(`matkMin`/`matkMax` = 회복 스킬 설명창의 밑수 · 2026-09-10 추가 · 범위 R90) · 복사본인 이유는 정산(`grantXp`)이 전투 **뒤에** 능력치를 올리기 때문이다 [2026-09-10 · R72]
 - `casts` = 스킬별 시전 횟수. 타임라인의 `skill` 이벤트 수와 합이 같다
 - `reason` 은 `clear` / `wipe` / `timeout`. **`retreat` 는 2026-09-03 에 폐기됐다.**
   **귀환 룰** (base_expedition_design §1-1 · **개정 2026-09-03** · 아웃 단위 개정 2026-09-08) — 전투불능자가 나와도 **런을 접지 않는다.** 아웃은 **그 런 안에서만** 유효하다 — 다음 반복 런에는 전원이 다시 나간다. 남은 인원으로 계속 가고 **전원이 쓰러졌을 때만** `wipe` 로 끝난다. 판정 순서는 ① 전멸 ② 라운드 정리(클리어·다음 라운드) ③ 제한시간. ~~전투불능자가 하나라도 나오면 그 자리에서 철수~~ 는 폐기 — 그래서 `wipe` 가 **패배의 일반형**이 됐다(종전에는 같은 틱 전멸에서만 났다). 쓰러진 영웅은 `result.downed` 에 실려 `state.run.downed`(출정 누적)로 옮겨간다
@@ -356,12 +361,12 @@ strike(rng, a, d):
 
 | `e` | 필드 | 의미 |
 |---|---|---|
-| `round` | `n, kind, enemies:[{key, monsterId, grade, sin, traits, hpMax, period, atk, matk, atkType, stats, actives, ready}]` | 라운드 시작. **그 라운드의 첫 이벤트** · `ready` = 그 적 스킬들의 첫 준비 시각(등장 시각 + 쿨 · 칸 순서 · R89) · `atk`·`matk`·`atkType`·`stats`·`actives` 는 **재생기의 표시값**이다 [2026-09-11 · R79 후속 · 사용자 지적] — `actives` = 그 적의 스킬 id 배열(칸 순서 = 출처 자리 · 고유 → 무기 → 셋째 · 등급이 연 칸만), 나머지는 스킬 툴팁 문장(피해·회복량 · 스킬 계수)의 재료다. `party[]` 의 같은 이름 필드와 **같은 모양**이고 전투에는 안 쓰인다. ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 소비는 0 |
+| `round` | `n, kind, enemies:[{key, monsterId, grade, sin, traits, hpMax, period, atkMin, atkMax, matkMin, matkMax, atkType, stats, actives, ready, sheet}]` | 라운드 시작. **그 라운드의 첫 이벤트** · `ready` = 그 적 스킬들의 첫 준비 시각(등장 시각 + 쿨 · 칸 순서 · R89) · `atkMin`·`atkMax`·`matkMin`·`matkMax`·`atkType`·`stats`·`actives` 는 **재생기의 표시값**이다(범위 R90) [2026-09-11 · R79 후속 · 사용자 지적] — `actives` = 그 적의 스킬 id 배열(칸 순서 = 출처 자리 · 고유 → 무기 → 셋째 · 등급이 연 칸만), 나머지는 스킬 툴팁 문장(피해·회복량 · 스킬 계수)의 재료다. `party[]` 의 같은 이름 필드와 **같은 모양**이고 전투에는 안 쓰인다. **`sheet`** = 그 적의 **세부 능력치 복사본** [2026-09-14 · R94] — `makeEnemy` 가 몸값 · 등급 배율 · 전역 배율 · `attack_type` 덮기까지 먹인 `computeCombat` 출력에서 전투 내부용 둘(`option_fx` · `atk_pct_sum`)을 뺀 것(공격력 범위 객체는 복사한다)이고 유닛 툴팁의 세부 옵션(SCREEN_DESIGN §2 「유닛 툴팁 규격」)이 읽는다 · `makeEnemy` 유닛도 같은 `sheet` 를 든다. ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 소비는 0 |
 | `hit` | `a, d, dmg, crit, dhp` (+ `ahp` 흡혈 시 · `s?` 스킬 타격 · `proc?` 추가 피해가 터졌을 때만 `true` · `bar?` 배리어 잔량 · `cb?` 강타 몫 — `dmg` 에 이미 들었다 · R78) | 직격 적중. `dhp` = 피격 후 HP. `bar` = 대상이 배리어를 갖고 있었을 때 **흡수 후 잔량**. `proc` 은 **터진 타격에만** 붙는다(안 터지면 키가 없다 · 2026-09-10 R72) |
 | `dodge` | `a, d` (+ `s?`) | 직격 빗나감 (적중 게이트 실패 — 회피 스탯은 없다. **키 이름은 계약이라 유지**) |
 | `reflect` | `a, d, dmg, ahp` | 비직격 반사. `a` = 반사한 쪽 |
 | `down` | `u` | 전투불능 |
-| `refit` | `u, hpMax, dhp, period, atk, matk, atkType, stats, actives, ready` | **라운드 경계에서 영웅을 갈아입혔다** [신설 2026-09-14 · R89] — 원정 중 바꾼 장비 · 레벨 · 스킬 트리가 그 영웅의 전투 능력치를 바꿨을 때만 나온다(`createRun.next(partyUnits)`). 다음 라운드의 `round` 이벤트 **앞**이다(결투 창을 닫는 `buffEnd` 보다도 앞). `dhp` = 갈아입은 뒤 HP(현재 HP 유지 · 새 최대치로 자름) · `actives`/`ready` = 새 스킬 칸과 준비 시각(남은 스킬은 쿨 그대로 · 새 스킬은 이 순간부터 한 바퀴) · 나머지는 `party[]` 의 같은 이름 표시값. rng 0 |
+| `refit` | `u, hpMax, dhp, period, atkMin, atkMax, matkMin, matkMax, atkType, stats, actives, ready` | **라운드 경계에서 영웅을 갈아입혔다** [신설 2026-09-14 · R89] — 원정 중 바꾼 장비 · 레벨 · 스킬 트리가 그 영웅의 전투 능력치를 바꿨을 때만 나온다(`createRun.next(partyUnits)`). 다음 라운드의 `round` 이벤트 **앞**이다(결투 창을 닫는 `buffEnd` 보다도 앞). `dhp` = 갈아입은 뒤 HP(현재 HP 유지 · 새 최대치로 자름) · `actives`/`ready` = 새 스킬 칸과 준비 시각(남은 스킬은 쿨 그대로 · 새 스킬은 이 순간부터 한 바퀴) · 나머지는 `party[]` 의 같은 이름 표시값. rng 0 |
 | `regen` | `u, amt, dhp` | HP 재생. **정수 1 이상이 쌓인 틱에만** 나온다(초당 값을 틱마다 누산) · 행동 처리 **앞** · rng 소비 없음 |
 | `skill` | `u, s, ready` | 액티브 시전 — 그 차례의 사건. 뒤따르는 `hit`/`dodge`/`heal`/`buff` 가 같은 `s` 를 단다. `ready` = 그 스킬이 **다시 준비되는 시각**(쿨감소가 이미 반영된 값) — 재생기가 쿨을 계산하지 않게 시뮬이 실어 보낸다 |
 | `heal` | `a, d, amt, dhp, s` | 회복. `dhp` = 회복 후 HP |
@@ -383,7 +388,7 @@ strike(rng, a, d):
 | 쿨 | 시전 순간 `readyAt = t + cool_sec × max([balance.csv:skill_cd_floor_mult], 1 − cdr/100)`(실시간 초 — 바닥은 2026-09-01 코드 상수 `CD_MIN_MULT` 에서 CSV 키로). **처음엔 쿨부터 돈다** — 파티는 전투 시작, 적은 등장 시각부터 한 바퀴 뒤에 처음 쓴다(같은 식 `skill_runtime.cooldownSec` · R89). `cdr` 은 `combat_stat.csv:cooldown_reduction` — **표기 쿨에 곱**한다 |
 | HP 재생 | 매 틱 `regenAcc += hp_regen × TICK`, 정수부가 1 이상이면 그만큼 회복하고 소수부만 남긴다(`hp = min(hpMax, …)`). **행동 처리 앞**에서 돌고 rng 를 안 쓴다. 소수점을 매 틱 더하면 타임라인이 흘러넘치고 재생기의 정수 HP 와 어긋나서 정수 단위로 끊는다 |
 | 버프 창 | `until = t + duration_sec`. 만료는 매 틱 **행동 앞에서** 일괄 처리(`until ≤ t + EPS`) → `buffEnd`. rng 소비 없음 |
-| `atk_pct` | 상시 % 와 **같은 괄호에 덧셈**(`atkBase`/`atkPct`). 다른 스킬의 같은 stat 은 덧셈, 같은 스킬은 갱신. **회복 밑수 `matk` 도 같은 괄호**(`matkBase` · 2026-09-01) — 함성 아래의 사제는 때리는 만큼 낫는다 |
+| `atk_pct` | 상시 % 와 **같은 괄호에 덧셈**(`atkMinBase`·`atkMaxBase`/`atkPct` — 양끝 둘 다 · R90). 다른 스킬의 같은 stat 은 덧셈, 같은 스킬은 갱신. **회복 밑수 `matkMin`·`matkMax` 도 같은 괄호**(`matkMinBase`·`matkMaxBase` · 2026-09-01) — 함성 아래의 사제는 때리는 만큼 낫는다 |
 | `period_pct` | `period = basePeriod × (1 − Σ/100)` — **다음 차례 예약부터**. 진행 중인 `next` 는 안 건드린다. 하한 처리 없음 |
 | `barrier_pct` | `amt = round(대상 hpMax × v/100)`. 피해는 배리어 → HP 순. 재시전은 총량·`until` 을 다시 채우고, 창이 끝나면 남은 것은 사라진다. **흡혈·반사는 배리어가 먹은 몫을 포함한 `dmg`** 에 비례한다(직격이 들어간 사실은 같다) |
 | `taunt` | 창이 켜진 **생존 파티원**이 있으면 적의 단일 대상 선택이 그 유닛(배열 순 첫 번째)으로 고정되고 **타겟 rng 를 쓰지 않는다**. ⚠ 기본 타겟팅(무작위) 위에 얹은 임시 규칙 |
@@ -392,16 +397,16 @@ strike(rng, a, d):
 | `duel` | 지목 창(적)을 열 때 **시전자에게** 같은 `until` 의 `dr_pct` 창(`v = eff.value` — 기사 자신이 받는 피해 감소 %)을 함께 걸고 `buff` 이벤트를 하나 더 낸다. 창 키는 같은 스킬 id(창은 유닛마다 따로 든다). **라운드가 바뀌면 `beginRound` 가 시전자 창을 닫는다** — 소환물을 걷고 지목이 적 배열과 함께 사라지는 바로 그 시점이다(창이 999초라 만료로는 안 닫힌다) · rng 0 · 닫을 때 **기존 `buffEnd`** 를 낸다(만료와 같은 모양이라 재생기가 칩을 걷는다 · 그 라운드의 `round` 이벤트보다 앞) [2026-09-10 · R72 후속] |
 | 타겟팅 | `enemy_single` 무작위 1 → 같은 대상에 `hits` 회 / `enemy_all` 생존 적 배열 순 전원 각 1회(타겟 rng 0) — **`decay > 0` 이면 주 대상**(전열 생존자 중 배열 첫 번째 · 전열이 비면 생존자 첫 번째 · rng 0)만 `mult` 그대로이고 나머지는 `mult × (1 − decay/100)` [2026-09-10 · R72 멀티샷] / `enemy_rotate` 시작점 무작위 → 배열 순으로 돌아가며 `hits` 회(모자라면 겹침) / `enemy_chain` 시작점 무작위 → 전원 각 1회, k번째(0-base) 배율 `mult × (1 − decay/100)^k` |
 | 다단타 | **타격마다 `formula.strike` 1회** — 적중·치명·흡혈·반사·전투불능을 따로 굴린다. 스킬 배율은 `skillMult`, 원소 태그는 `atkType` 에 **그 타격 동안만** 얹고 원복한다(`strike` 시그니처 불변). **스킬 타격은 `{flat, procChance, procMult}` 도 같은 방식으로 얹는다** — 기본 공격(평타 부여 추가타 포함)은 0 이다 [2026-09-10]. ⚠ 대상이 쓰러지면 남은 타수는 **버린다**(재지정 없음) · 공격자가 반사로 쓰러지면 중단 |
-| 회복 | `amt = round(matk × mult_pct/100 + flat)`(`flat` = 능력치 항 — §2-8 `scaleDef` · 2026-09-10) 를 생존 아군 전원에게, `hp = min(hpMax, hp + amt)`. `matk` 는 **버프 괄호를 탄 값**(위 `atk_pct` 행 · battle_design §9-2 「회복 = 마법 공격력 × 배율」). rng 소비 없음. 화염 치유 감소는 미구현 |
+| 회복 | `matk = matkMin + rng()×(matkMax − matkMin)` — **시전 한 번에 1회 · 대상 선택 앞** [2026-09-14 · R90 · battle_design §9-1] → `amt = round(matk × mult_pct/100 + flat)`(`flat` = 능력치 항 — §2-8 `scaleDef` · 2026-09-10) 를 대상 전원에게 **같은 양**으로, `hp = min(hpMax, hp + amt)`. 양끝은 **버프 괄호를 탄 값**(위 `atk_pct` 행 · battle_design §9-2 「회복 = 마법 공격력 × 배율」). **rng 1회**(대상 풀은 결정론 그대로). 화염 치유 감소는 미구현 · **배리어는 굴리지 않는다**(대상 최대 HP 비율 — 무기 피해를 안 쓴다 · 사용자 확인 2026-09-14) |
 | 사건 훅 | `cast`(skill 이벤트 push 직후 · 시전자) · `hit`(hit 이벤트 push 직후 · 공격자) · `hitTaken`(같은 자리 · 피격자) · `kill`(`downed(target)` **뒤** · 공격자 — 드롭 rng 가 먼저 돈다) · `down`(쓰러진 유닛). `unit.reactions` 의 `{on, fn}` 을 **배열 순**으로 부른다. 핸들러가 rng 를 쓰면 **그 자리에서** 소비한다(§5-2). 등록이 없으면 rng·타임라인 불변 — 골든이 이것을 잠근다 (2026-09-01) |
 | `status` | `skill.csv:status`(결빙 등)는 **코드가 읽지 않는다** — `status_effect.csv` 미발행 |
 | `tags` | `skill.js` 가 **정규화·검증**하지만 **전투 로직은 읽지 않는다** — 소비자는 전술카드 조건·변형 노드·화면이다 (§2-8 · skill_design §11) |
 
 ### 2-7. `state.js` — 상태 전이
 
-`export const SAVE_VERSION = 25`  [v25 = **원정 보상은 라운드 승리 순간** — 리포트 경험치가 영웅별(`xp`) · `run.active` · R89 · 2026-09-14] [v24 = **보관이 둘이다**(인벤토리 + 창고) · 2026-09-11] [v23 = **무기 옵션 세 층** · R78 · 2026-09-11] [v22 = **챕터는 5스테이지다** — 클리어 기록 소급 · R75 · 2026-09-11] [v21 = **리포트는 목록이다** · R68 · 2026-09-09] [v20 = **진형이 실물이 된다** · R67 · 2026-09-09] [v19 = **처치 가루 폐지** · R63 · 2026-09-09] [v18 = 직업 스킬 풀 · R59 · 2026-09-09] [v17 = **「출정 아웃」 폐기** · R54 · 2026-09-08] [v16 = 사제 전용 무기 · R46 · 2026-09-08] [정정 2026-09-08 — 문서가 v11 에서 멈춰 있었다. 같은 문서 §4 는 이미 v15 이관을 적고 있어 자기모순이었다]
+`export const SAVE_VERSION = 26`  [v26 = **무기 피해는 범위이고 파생이다** — 무기 `watk` 삭제 · R90 · 2026-09-14] [v25 = **원정 보상은 라운드 승리 순간** — 리포트 경험치가 영웅별(`xp`) · `run.active` · R89 · 2026-09-14] [v24 = **보관이 둘이다**(인벤토리 + 창고) · 2026-09-11] [v23 = **무기 옵션 세 층** · R78 · 2026-09-11] [v22 = **챕터는 5스테이지다** — 클리어 기록 소급 · R75 · 2026-09-11] [v21 = **리포트는 목록이다** · R68 · 2026-09-09] [v20 = **진형이 실물이 된다** · R67 · 2026-09-09] [v19 = **처치 가루 폐지** · R63 · 2026-09-09] [v18 = 직업 스킬 풀 · R59 · 2026-09-09] [v17 = **「출정 아웃」 폐기** · R54 · 2026-09-08] [v16 = 사제 전용 무기 · R46 · 2026-09-08] [정정 2026-09-08 — 문서가 v11 에서 멈춰 있었다. 같은 문서 §4 는 이미 v15 이관을 적고 있어 자기모순이었다]
 
-`createGameSystem(deps)` — `deps`: `hero, item, battle, skill, tactic, balance, equipSlots [{id, part}](착용 위치 8), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_to_next], bonus:[%], statByNum:{stage_num: statKey}}`, **`sins [죄종 id]`** · **`searchStories`**(= `search_story.csv` 파싱 행) [신설 2026-09-09 — 수색].
+`createGameSystem(deps)` — `deps`: `hero, item, battle, skill, tactic, balance, equipSlots [{id, part}](착용 위치 8), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_to_next], bonus:[%], statByNum:{stage_num: statKey}}`, **`sins [죄종 id]`** · **`searchStories`**(= `search_story.csv` 파싱 행) [신설 2026-09-09 — 수색]. **`makeRecipes`** `{part: {ore, timber, dust}}`(= `make_recipe.csv`) · **`mineNodes`** · **`logNodes`**(= `mine_node.csv` · `log_node.csv` 를 tier 순으로 편 행 `{id, tier, yieldId, …}`) [신설 2026-09-15 — 제작 · R96]. 레시피는 생성 때 검증한다 — **광석 · 목재 · 가루가 모두 1 이상**이 아니거나 없는 부위면 throw (보완재 · 원정 쪽 입력 — item_design §5-1 · §7-1).
 **만남 표도 같은 자리에서 검증한다** [신설 2026-09-09] — `searchMeetings`(`search_meeting.csv`) · `searchAnswers`(`search_answer.csv`)도 주입이고, `meeting_id`·`answer_id` 유일 · `sin`/`hit_sin` 이 죄종 · `need_sin` 이 `-` 또는 죄종 · 답이 가리키는 만남이 실재 · 문구 비지 않음 · **만남마다 공통(`-`) 답이 최소 하나**(없으면 그 죄종을 안 보낸 판에서 고를 것이 0개가 된다)를 어기면 throw.
 **컬럼 둘이 서로 다른 질문에 답한다** — `need_sin` = **누가 갔나**(그 답이 **보이는가**) · `hit_sin` = **누굴 만났나**(그 답이 **먹히는가**). 규칙은 이 둘이 전부다.
 
@@ -418,27 +423,31 @@ strike(rng, a, d):
 | `canLoad(obj)` | `→ bool` | `deserialize` 가 통과하는가. **받아들이는 버전 목록을 두 곳에 두지 않기 위해** 실제로 한 번 돌려 보고 답한다 — 화면이 버전 숫자로 직접 판정하면 이관을 늘릴 때마다 멀쩡한 세이브를 거부하게 된다 |
 | `heroById(state, uid)` · `heroItems(state, h)` | 조회 | ~~`isOut(state, uid)`~~ 는 **2026-09-08 삭제** — 「출정 아웃」 폐기로(GAME_DESIGN §9 09-08) **전투 밖에 아웃된 영웅이 존재하지 않는다.** 아웃은 런 안에서만 살고 런은 출발 순간 통째로 정산되므로, 상태가 답할 수 있는 질문이 아니다 (R54) |
 | `codexLevel(cards)` · `codexNext(cards)` · `codexMaxLevel()` · `codexBonusAt(lv)` · `codexBonus(state)` | 도감 | `codex.levels` 는 **레벨당 증분**, 여기서 누적한다 |
-| `heroCombat(state, h)` | `→ combat` | `computeCombat(h, 착용품, codexBonus, 파티 전술)`. **전술은 `state.party` 에 든 영웅에게만** 넘어간다 — 벤치는 `null` (§2-9). 착용품은 `item.effective` 를 통과해 들어간다 — **강화 배율을 아는 곳은 `item.js` 하나**이고 `hero.computeCombat` 은 `up` 을 모른다 |
+| `heroCombat(state, h, party?)` | `→ combat` | `computeCombat(h, 착용품, codexBonus, 파티 전술)`. **전술은 `party`(기본 `state.party`)에 든 영웅에게만** 넘어가고 조건도 그 `party` 로 센다 — 벤치는 `null` (§2-9). **원정은 나간 인원을 넘긴다**(`partyUnits`) — 원정 중에 편성을 바꿔도 도는 원정의 전술이 안 흔들린다 [R92]. 착용품은 `item.effective` 를 통과해 들어간다 — **강화 배율을 아는 곳은 `item.js` 하나**이고 `hero.computeCombat` 은 `up` 을 모른다 |
 | `equipTarget(hero, item)` | `→ position 또는 null` | 같은 부위의 빈 위치 우선, 없으면 첫 위치 |
 | `equip(state, heroUid, itemUid, position?)` | `→ {ok, back:[uid], position}` / `{ok:false, err}` | err: `missing` · `class` · `bagFull`. **`back` 은 언제나 0~1개** — 양손↔보조 배타가 사라져 둘이 돌아오는 경우가 없다 (2026-09-01) |
 | `unequip(state, heroUid, position)` | `→ {ok}` / `{ok:false, err}` | err: `missing` · `bagFull` |
 | `salvage(state, itemUid)` | `→ {ok, dust}` / `{ok:false, err}` | err: `missing`. 가방 아이템만 |
-| `upgradeState(state, itemUid)` | `→ {up, max, cost, gold, canUpgrade, optionAt}` / `null` | **판정을 여기서 다 낸다.** `optionAt` = 다음 옵션 상승이 걸리는 단계(없으면 `null`). 없는 아이템이면 `null` |
-| `upgradeItem(state, itemUid)` | `→ {ok, up, cost, affix}` / `{ok:false, err}` | err: `missing` · `maxUp` · `gold`. **가방·착용 가리지 않는다**(`items` 에 있으면 된다) — 강화는 소유물에 하는 일이지 자리에 하는 일이 아니다. `counters.upgrade++` · rng = `deriveSeed(seed ^ 0xF0C3, counters.upgrade)` |
-| `toggleParty(state, uid, now)` | `→ {ok}` / `{ok:false, err}` | err: `missing` · `full` · **`running`**(원정 중 — **넣기도 빼기도** 막는다 · 인원이 바뀌는 것은 새 원정이다 · R89 · base_expedition_design §1-1) · **`searching`**(수색 나가 있다 — 마을에 없으므로 편성할 수 없다 · 신설 2026-09-09). 넣을 때만 본다 — 뺄 때는 검사가 없다(나가 있는 영웅은 애초에 파티에 못 들어간다). (~~`injured`~~ 는 2026-09-03 에 검사 자체가 사라졌다 — 계약 문서에만 남아 있던 것을 09-06 에 지웠다) |
+| `upgradeState(state, itemUid)` | `→ {up, max, cost, gold, upgradeable, canUpgrade}` / `null` | **판정을 여기서 다 낸다.** `upgradeable` = 베이스 능력치가 있는 부위인가(목걸이 · 반지 = `false` — `cost` 도 `null`) [R95]. ~~`optionAt`~~ 은 **R95 퇴역**(옵션 계단이 없다). 없는 아이템이면 `null` |
+| `upgradeItem(state, itemUid)` | `→ {ok, up, cost}` / `{ok:false, err}` | err: `missing` · **`noBase`**(R95) · `maxUp` · `gold` — **이 순서로 본다.** **가방·착용 가리지 않는다**(`items` 에 있으면 된다) — 강화는 소유물에 하는 일이지 자리에 하는 일이 아니다. **rng 를 안 쓴다** [R95] — ~~`counters.upgrade++` · rng = `deriveSeed(seed ^ 0xF0C3, counters.upgrade)`~~ · ~~`affix`~~ |
+| **`makeBands()`** | `→ [{band, lo, hi, ore, timber}]` | **제작 레벨대** [신설 2026-09-15 · R96 · item_design §7-1]. 레벨대 = 챕터 — `lo`~`hi` = (챕터 n−1 의 최고 `stage.csv:dlvl`, 챕터 n 의 최고 `dlvl`] · 첫 레벨대는 1 부터. `ore` · `timber` = **그 단계**의 산출물 id(`mine_node` · `log_node` 의 tier = 챕터). 둘 중 하나라도 그 단계가 없으면 그 레벨대는 목록에 없다. 상태를 안 본다 |
+| **`makeState(state, part, band)`** | `→ {part, band, lo, hi, cost:[{kind, id, need, have}], canMake, err}` / `null` | **판정을 여기서 다 낸다** [신설 R96]. `kind` ∈ `ore` · `timber` · `dust` · `id` = 산출물 id(가루는 `null`) · `need` = `make_recipe.csv` 의 그 부위 칸 · `have` = `materials[id]`(가루는 `resources.dust`). `err` = 지금 누르면 나올 거절(`materials` → `bagFull` 순) 또는 `null`. 없는 부위 · 레벨대면 `null` |
+| **`makeItem(state, part, band)`** | `→ {ok, uid}` / `{ok:false, err}` | **제작 1회** [신설 R96]. err: `missing` · `materials` · `bagFull` — 이 순서로 보고 **거절이면 아무것도 안 바뀐다.** 통과하면 재료를 레시피만큼 내고 `counters.make++` · rng = `deriveSeed(seed ^ 0xC4AF, counters.make)` → **ilvl 1회**(`lo`~`hi` 균등 ⚠제안 · GAME_DESIGN §10 「제작의 남은 설계」) → `item.rollGear(rng, {slots:[part], ilvl, rarityWeights})`(가중치 = `make_rarity_w_*`) → `addItem` 으로 uid → **인벤토리 끝**에 넣는다. `up = 0` · 실패 없음(item_design §7) |
+| `toggleParty(state, uid, now)` | `→ {ok}` / `{ok:false, err}` | **원정 중에도 넣고 뺀다** — 도는 원정은 나간 인원 그대로 싸운다(`runParty` · R92). err: `missing` · `full` · **`searching`**(수색 나가 있다 — 마을에 없으므로 편성할 수 없다 · 신설 2026-09-09). 넣을 때만 본다 — 뺄 때는 검사가 없다(나가 있는 영웅은 애초에 파티에 못 들어간다). (~~`injured`~~ 는 2026-09-03 에 검사 자체가 사라졌다 — 계약 문서에만 남아 있던 것을 09-06 에 지웠다) |
 | `formationState(state)` | `→ {tpl, caps, ranks, byUid, templates, shapes}` | **읽기 전용 · 순수하다** — 진형(§4 `formation`). `caps` = 랭크별 정원 · `ranks[r]` = 그 랭크의 uid 배열 · `byUid[uid]` = 랭크 번호 · `templates` = **표의 행 순서**(⚠ `Object.keys` 는 `'3'` 같은 정수형 키를 앞으로 끌어올려 첫 행을 못 준다) · `shapes[tpl]` = 그 템플릿의 정원. 신설 2026-09-09 |
-| `setFormation(state, tpl)` | `→ {ok}` / `{ok:false, err}` | err: `missing`(표에 없는 템플릿) · **`running`**(원정 중 — 진형이 잠긴다 · R89). 정원이 갈리므로 재배치가 따라온다. 신설 2026-09-09 |
-| `placeFormation(state, uid, rank, idx?)` | `→ {ok, swapped}` / `{ok:false, err}` | err: `missing`(파티 밖 · 없는 랭크 · **정원 밖 칸**) · **`running`**(원정 중 · R89). **`idx` 를 주면 그 칸이 목적지다** [2026-09-11 · 편성 드래그 · SCREEN_DESIGN §4-1] — 주인이 있으면 **그 주인과** 맞바꾸고(같은 랭크 안에서도 · `swapped` = 그 주인), 비었으면 그 랭크 끝으로 간다(칸은 늘 앞부터 차서 빈 칸은 랭크 끝에만 있다 · `swapped` = `null`). **`idx` 를 안 주면** 정원이 찼을 때 **그 랭크의 마지막 하나와 맞바꾼다**(`swapped` = 밀려난 uid · 아니면 `null`). rng 를 안 쓴다. 신설 2026-09-09 |
+| `setFormation(state, tpl)` | `→ {ok}` / `{ok:false, err}` | err: `missing`(표에 없는 템플릿). 원정 중에도 바꾼다 — 도는 원정은 자리를 다시 안 읽는다(§2-6 `createRun` · R92). 정원이 갈리므로 재배치가 따라온다. 신설 2026-09-09 |
+| `placeFormation(state, uid, rank, idx?)` | `→ {ok, swapped}` / `{ok:false, err}` | err: `missing`(파티 밖 · 없는 랭크 · **정원 밖 칸**). 원정 중에도 옮긴다(R92). **`idx` 를 주면 그 칸이 목적지다** [2026-09-11 · 편성 드래그 · SCREEN_DESIGN §4-1] — 주인이 있으면 **그 주인과** 맞바꾸고(같은 랭크 안에서도 · `swapped` = 그 주인), 비었으면 그 랭크 끝으로 간다(칸은 늘 앞부터 차서 빈 칸은 랭크 끝에만 있다 · `swapped` = `null`). **`idx` 를 안 주면** 정원이 찼을 때 **그 랭크의 마지막 하나와 맞바꾼다**(`swapped` = 밀려난 uid · 아니면 `null`). rng 를 안 쓴다. 신설 2026-09-09 |
 | `rankOf(state, uid)` | `→ 0 \| 1` | 그 영웅의 자리. 배치가 없으면 **전열(0)** — 자리를 못 받은 유닛이 뒤에 숨지 않는다. 신설 2026-09-09 |
 | ~~`returnToTown(state)`~~ | — | **2026-09-08 삭제** (R54). 「출정 아웃」이 없어져 **귀환이 회복할 것이 없다** — 회복은 런이 끝나는 순간 자동이고 상태에 남는 것이 없다. 호출하던 세 자리(반복 미이어짐 · 전멸 · `closeRun`)에서 함께 걷었다 |
 | ~~`activeParty(state, stageId)`~~ | — | **2026-09-08 삭제** (R54). 아웃이 런을 넘지 않으므로 **언제나 `state.party` 전원**이 나간다 — 뺄 명단이 없다 |
 | `stageUnlocked(state, stageId)` | `→ bool` | 첫 스테이지 또는 직전 클리어 |
 | `stageLevelState(state, stageId)` | `→ {base, max, level}` / `null` | **스테이지 레벨** [신설 2026-09-14 · R87 · base_expedition_design §1-4] — **판정을 여기서 다 낸다.** `base` = `stage.csv:dlvl` · `max` = **클리어한 스테이지의 기본 레벨 중 최고**(키가 없다 — `progress.cleared` 에서 파생 · 아무것도 안 깼거나 그 스테이지가 더 높으면 `base`) · `level` = `base + progress.levelUp[stageId]` 를 `[base, max]` 로 자른 값. 올린 스테이지는 상한 이하라 **그걸 깨도 상한이 안 오른다** — 그래서 기본 레벨만 봐도 「클리어한 최고 레벨」이다. **해금 조건이 없다** — 처음부터 열려 있다(사용자 09-14 · 나중에 연구로 넣는다 · base_expedition_design §1-4). 없는 스테이지면 `null` · rng 를 안 쓴다 |
 | `setStageLevel(state, stageId, level)` | `→ {ok, level}` / `{ok:false, err}` | err: `missing`(없는 스테이지) · `range`(정수가 아니거나 `[base, max]` 밖). **올린 양을 적는다** — 기본 레벨로 돌리면 기록을 지운다(안 올린 스테이지는 적지 않는다). 비용 없음 · 되돌리기 자유 · rng 를 안 쓴다. 신설 2026-09-14 · R87 |
-| `canDepart(state, stageId, now)` | `→ null` / `locked` / `noParty` / **`running`** | **`running`** = 원정이 도는 중(`run.active`) — 철수해야 새로 출발한다 [R89] · ~~`injured`~~ 없음 — 아웃된 영웅을 뺀 파티가 비면 `noParty` 로 떨어진다 (2026-09-03) |
-| `departRun(state, stageId, now)` | `→ {ok, run, report}` / `{ok:false, err}` | **출발** [신설 2026-09-14 · R89 · base_expedition_design §1-1]. err = `canDepart`. 전투 rng = `deriveSeed(seed, ++counters.battle)` · 몬스터 레벨 = `stageLevelState(state, stageId).level` · 나가는 인원 = 그 순간의 `state.party`. `battle.createRun` 을 열고 **첫 라운드까지 계산**한다 — **보상은 하나도 안 준다.** 리포트는 **지금 목록 맨 앞에 선다**(`reason: null` = 진행 중 · 보상 칸은 0) · `run = {stageId, repeat, lastAt: now, durationSec: 0, active: true}`.<br>**핸들** `run` = `{stageId, report, result, segEnd, done}` — `result` = `createRun` 의 결과(타임라인 · 라운드마다 자란다) · **`segEnd` = 지금 계산된 라운드가 끝나는 시각**(재생 시각이 여기 닿으면 `advanceRun`) · `done` = 정산이 끝났나(마지막 라운드 · 철수 · 끊김). **핸들은 세이브에 안 든다** — 전투 안의 HP · 쿨 · 창과 같은 취급이다. 게임이 꺼지면 사라지고 `closeRun` 이 끊는다 |
-| `advanceRun(state, run, now)` | `→ {ok, round, done}` / `{ok:false, err:'done'}` | **라운드 넘기기** [신설 2026-09-14 · R89] — 재생(또는 앱 시계)이 `run.segEnd` 에 닿았을 때 부른다. ① **끝난 라운드를 정산한다 — 이긴 라운드만**: 골드 → 도감(처치 · 카드) → 드롭(가방 · 넘치면 `discarded`) → **경험치 = 그 라운드 처치 XP 합 × `xp_rate` 를 그 순간 살아 있는 영웅마다**(`grantXp` · 쓰러진 영웅은 없음) → 마지막 라운드면 클리어 기록. 진 라운드(전멸 · 시간 초과)는 보상 없이 런을 닫는다. 리포트를 그 자리에서 누적으로 채운다. ② 런이 안 끝났으면 **다음 라운드를 계산한다 — 그 순간의 장비 · 레벨로**(`partyUnits(state, 나간 인원)` 을 새로 만들어 `createRun.next` 에 넘긴다 · 바뀐 영웅만 `refit`). 끝났으면 `run.done = true` · `state.run.active = false`. `round` = 정산한 라운드의 요약(§2-6 `createRun`) |
-| `retreatRun(state, run, now)` | `→ {ok, report}` / `{ok:false, err:'done'}` | **철수** [신설 2026-09-14 · R89 · 관전의 옛 「건너뛰기」 자리] — 원정을 그 자리에서 끝낸다. **진행 중이던 라운드는 없던 것이다**(보상 없음 · 이미 계산된 그 라운드의 사건도 리포트에 안 들어간다) · 이긴 라운드의 보상은 이미 들어가 있다. 리포트 `reason: 'retreat'` · `run.active = false` · **반복도 끈다** |
+| `canDepart(state, stageId, now)` | `→ null` / `locked` / `noParty` | **원정이 도는 중이어도 막지 않는다** — 보내면 `departRun` 이 그 원정을 끊는다 [R92] · ~~`injured`~~ 없음 — 아웃된 영웅을 뺀 파티가 비면 `noParty` 로 떨어진다 (2026-09-03) |
+| `runParty(state)` | `→ uid[]` | **지금 싸우는 영웅** [신설 2026-09-14 · R92] — 도는 원정(`run.active`)이 나갈 때의 인원(판정이 아직 없는 그 원정 리포트의 `party`) · 도는 원정이 없으면 `[]`. 원정 중에도 편성을 바꾸므로 **`state.party` 와 다를 수 있다**. `dismiss`(`running`) · `searchSend`(`party`) · `searchState.ready` 가 이것으로 막고, 영웅 띠의 「원정 중」이 이것을 읽는다 · rng 를 안 쓴다 |
+| `departRun(state, stageId, now)` | `→ {ok, run, report}` / `{ok:false, err}` | **출발** [신설 2026-09-14 · R89 · base_expedition_design §1-1]. err = `canDepart` — 거절이면 아무것도 안 건드린다. **원정이 도는 중이면 먼저 끊는다** — `retreatRun` 과 같다(진행 중이던 라운드는 없던 것 · 그 리포트 `reason: 'retreat'` · 반복 off · 옛 핸들은 이후 `done`) [R92]. 전투 rng = `deriveSeed(seed, ++counters.battle)` · 몬스터 레벨 = `stageLevelState(state, stageId).level` · 나가는 인원 = 그 순간의 `state.party` — 핸들의 `party` 로 굳어 **라운드마다의 `partyUnits` · 전술 조건이 이 인원을 쓴다**(R92). `battle.createRun` 을 열고 **첫 라운드까지 계산**한다 — **보상은 하나도 안 준다.** 리포트는 **지금 목록 맨 앞에 선다**(`reason: null` = 진행 중 · 보상 칸은 0) · `run = {stageId, repeat, lastAt: now, durationSec: 0, active: true}`.<br>**핸들** `run` = `{stageId, report, result, segEnd, done}` — `result` = `createRun` 의 결과(타임라인 · 라운드마다 자란다) · **`segEnd` = 지금 계산된 라운드가 끝나는 시각**(재생 시각이 여기 닿으면 `advanceRun`) · `done` = 정산이 끝났나(마지막 라운드 · 철수 · 끊김). **핸들은 세이브에 안 든다** — 전투 안의 HP · 쿨 · 창과 같은 취급이다. 게임이 꺼지면 사라지고 `closeRun` 이 끊는다 |
+| `advanceRun(state, run, now)` | `→ {ok, round, done}` / `{ok:false, err:'done'}` | **라운드 넘기기** [신설 2026-09-14 · R89] — 끝났거나 **끊긴** 원정의 핸들(리포트 판정이 섰다 — 새 출발 · 철수 · `closeRun`)이면 `done` 이다 [R92]. 재생(또는 앱 시계)이 `run.segEnd` 에 닿았을 때 부른다. ① **끝난 라운드를 정산한다 — 이긴 라운드만**: 골드 → 도감(처치 · 카드) → 드롭(가방 · 넘치면 `discarded`) → **경험치 = 그 라운드 처치 XP 합 × `xp_rate` 를 그 순간 살아 있는 영웅마다**(`grantXp` · 쓰러진 영웅은 없음) → 마지막 라운드면 클리어 기록. 진 라운드(전멸 · 시간 초과)는 보상 없이 런을 닫는다. 리포트를 그 자리에서 누적으로 채운다. ② 런이 안 끝났으면 **다음 라운드를 계산한다 — 그 순간의 장비 · 레벨로**(`partyUnits(state, 나간 인원)` 을 새로 만들어 `createRun.next` 에 넘긴다 · 바뀐 영웅만 `refit`). 끝났으면 `run.done = true` · `state.run.active = false`. `round` = 정산한 라운드의 요약(§2-6 `createRun`) |
+| `retreatRun(state, run, now)` | `→ {ok, report}` / `{ok:false, err:'done'}` | **철수** [신설 2026-09-14 · R89 · 관전의 옛 「건너뛰기」 자리] — 원정을 그 자리에서 끝낸다(끊긴 핸들이면 `done` — 지금 도는 다른 원정을 안 건드린다 · R92). **진행 중이던 라운드는 없던 것이다**(보상 없음 · 이미 계산된 그 라운드의 사건도 리포트에 안 들어간다) · 이긴 라운드의 보상은 이미 들어가 있다. 리포트 `reason: 'retreat'` · `run.active = false` · **반복도 끈다** |
 | `resolveBattle(state, stageId, now)` | `→ {ok, result, report}` / `{ok:false, err}` | **개발 · 검증용 즉시 계산** [개정 2026-09-14 · R89] — `departRun` 한 뒤 `advanceRun` 을 끝날 때까지 **같은 `now` 로** 이어 부른 것이다(장비를 안 바꾸므로 라운드 사이에 들어가는 것은 레벨업뿐이다). 골든 · 단정 · 캘리브레이션 · `?dev=battle` 이 쓴다. **게임 화면은 안 쓴다** |
 | `closeRun(state, now)` | `→ notice 또는 null` | **끊기** [개정 2026-09-14 · R89] — 재접속 · 멈춤(JS 가 오래 멈췄다)에서 부른다. `run.active` 면 **그 원정을 끊는다**(진행 중이던 라운드는 버리고 리포트 `reason: 'closed'`). 반복도 끈다. 끊었거나 반복이 켜져 있었으면 `notice` 를 세팅해 돌려주고, 아니면 `null`. **남은 라운드를 마무리하지 않는다** — 마무리해 주면 껐다 켜기로 원정을 무한히 빨리 돌릴 수 있다(§8 항목 7) |
 | `dismissNotice(state)` | | |
@@ -446,9 +455,9 @@ strike(rng, a, d):
 | `tavernState(state, now)` | `→ {candidates, freeAt, free, cost}` | 선술집 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`masteryState` 와 같은 규칙). `freeAt` = 무료 리롤이 열리는 시각(리롤한 적이 없으면 `0`) |
 | `tavernReroll(state, now)` | `→ {ok, free}` / `{ok:false, err:'gold'}` | 쿨다운(`tavern_refresh_hours`)이 끝났으면 **무료**, 남았으면 `tavern_reroll_cost` 골드. `counters.tavern++` · `tavern = {rerolledAt: now, hired: []}` — 명단을 통째로 갈고 빈 칸을 되살린다 |
 | `hire(state, index)` | `→ {ok, hero}` / `{ok:false, err}` | err: `roster` · `gold` · `missing`(빈 칸 포함). **`counters.tavern` 을 올리지 않는다** — 산 칸만 `tavern.hired` 에 남고 나머지 명단은 그대로다 (base_expedition_design §2-4: 고용이 무료 리롤 우회로가 되지 않게) |
-| `dismiss(state, uid)` | `→ {ok}` / `{ok:false, err}` | **해고 — 로스터에서 지운다. 되돌릴 수 없다** [신설 2026-09-09 사용자 확정]. err: `missing` · **`running`**(원정에 나간 영웅 — 인원이 잠겨 있다 · R89) · **`searching`**(수색 나가 있다 — **`equipped` 보다 먼저 본다**: 나가 있는 사람에게 「장비를 벗어라」라고 하면 벗어도 안 되는 길로 보내게 된다 · 신설 2026-09-09) · **`equipped`**(장비를 하나라도 걸치고 있다 — 다 벗어야 가능) · **`last`**(마지막 한 명은 못 지운다 — 0명이 되면 원정을 못 돌려 골드가 안 들어와 복구가 막힌다).<br>**반환물은 없다** — 골드도 재료도 안 준다. `hire` 가 `tavern_hire_cost` 를 받으므로 반환이 있으면 GAME_DESIGN §10 이 경고한 **고용→해고 루프**가 열린다.<br>딸린 정리 하나 — **`party` 에서도 뺀다**(지운 영웅의 uid 가 남으면 편성·출발이 유령을 든다). `run` 은 영웅 uid 를 안 들고 `lastReport` 는 이름을 `h?.name` 으로 읽으므로 **런 중에도 안전하다** |
-| `searchState(state, now)` | `→ {hours, slots, cost, echoPct, ready:[uid], out, hero, sent, startedAt, endsAt, remainMs, done, beats, result, rarePct, canHire, err, rumor, meetAt, meetOpen, answers, answer, discountPct}` | ⚠ **[신설 2026-09-09 — 수색 실동작]** 수색 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙).<br>· `ready` = **안 나가 있을 때** 보낼 수 있는 영웅(= 원정 파티가 아닌 로스터 전원). 나가 있으면 `[]`<br>· `hero` = 지금 로스터에 있는 그 사람(표시용) · `sent` = `{uid, sin, cha}` **보낼 때 박은 스냅샷**. **둘을 섞지 않는다** — 수색 중 레벨업하면 `hero.stats.cha` 는 오르지만 결과를 정한 것은 `sent.cha` 다<br>· `beats` = `[{id, at, open, text:{ko,en}}]` — **막마다 하나**. `at` 은 `startedAt + 소요 × i / 막수`(첫 막은 `startedAt`), `open` 은 `now ≥ at`. 문구는 `search_story.csv` 에서 온다<br>· `result` = **`done` 일 때만** 후보 1명, 아니면 `null`. `rarePct` = 그 매력이 산 레어 확률 · `err` = `done` 인데 못 받는 사유(`roster` · `gold`)<br>· ⚠ **[만남 · 신설 2026-09-09 · ADR-0068]** `rumor` = `{id, sin, rumor:{ko,en}, prompt:{ko,en}}`. **안 나가 있으면 다음 회차의 만남**(= 소문 — 보내기 전에 알려준다) · 나가 있으면 이번 회차의 것<br>· `meetAt` = 만남이 열리는 시각(`startedAt + 소요 × meet_at_pct/100`) · `meetOpen` = `now ≥ meetAt`<br>· `answers` = **아직 안 답했을 때만** 채워진다 — `[{id, key, text:{ko,en}}]`. `key` 는 **보낸 영웅의 죄종이 연 답**인가(화면이 그 이유를 찍는다)<br>· `answer` = 고른 답(같은 모양) 또는 `null` · `discountPct` = 그 답이 깎는 % · **`cost` 는 그 할인이 반영된 값**이다 |
-| `searchSend(state, uid, now)` | `→ {ok, endsAt}` / `{ok:false, err}` | 대기 영웅 하나를 내보낸다. err: `busy`(이미 나가 있거나 결과가 남아 있다 — **동시 1건의 실제 집행자**) · `missing` · `party`(원정 파티는 못 보낸다). `counters.search++` 하고 `search = {heroUid, startedAt, no, sin, cha}` 를 박는다 — **판정 입력을 보낼 때 함께 저장하는 것이 계약**이다 |
+| `dismiss(state, uid)` | `→ {ok}` / `{ok:false, err}` | **해고 — 로스터에서 지운다. 되돌릴 수 없다** [신설 2026-09-09 사용자 확정]. err: `missing` · **`running`**(**지금 싸우는 영웅** — `runParty` 에 든다 · 파티에서 뺐어도 그 원정이 끝날 때까지 · R89 · R92) · **`searching`**(수색 나가 있다 — **`equipped` 보다 먼저 본다**: 나가 있는 사람에게 「장비를 벗어라」라고 하면 벗어도 안 되는 길로 보내게 된다 · 신설 2026-09-09) · **`equipped`**(장비를 하나라도 걸치고 있다 — 다 벗어야 가능) · **`last`**(마지막 한 명은 못 지운다 — 0명이 되면 원정을 못 돌려 골드가 안 들어와 복구가 막힌다).<br>**반환물은 없다** — 골드도 재료도 안 준다. `hire` 가 `tavern_hire_cost` 를 받으므로 반환이 있으면 GAME_DESIGN §10 이 경고한 **고용→해고 루프**가 열린다.<br>딸린 정리 하나 — **`party` 에서도 뺀다**(지운 영웅의 uid 가 남으면 편성·출발이 유령을 든다). `run` 은 영웅 uid 를 안 들고 `lastReport` 는 이름을 `h?.name` 으로 읽으므로 **런 중에도 안전하다** |
+| `searchState(state, now)` | `→ {hours, slots, cost, echoPct, ready:[uid], out, hero, sent, startedAt, endsAt, remainMs, done, beats, result, rarePct, canHire, err, rumor, meetAt, meetOpen, answers, answer, discountPct}` | ⚠ **[신설 2026-09-09 — 수색 실동작]** 수색 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙).<br>· `ready` = **안 나가 있을 때** 보낼 수 있는 영웅(= 원정 파티도 아니고 **지금 싸우지도 않는**(`runParty`) 로스터 전원 · R92). 나가 있으면 `[]`<br>· `hero` = 지금 로스터에 있는 그 사람(표시용) · `sent` = `{uid, sin, cha}` **보낼 때 박은 스냅샷**. **둘을 섞지 않는다** — 수색 중 레벨업하면 `hero.stats.cha` 는 오르지만 결과를 정한 것은 `sent.cha` 다<br>· `beats` = `[{id, at, open, text:{ko,en}}]` — **막마다 하나**. `at` 은 `startedAt + 소요 × i / 막수`(첫 막은 `startedAt`), `open` 은 `now ≥ at`. 문구는 `search_story.csv` 에서 온다<br>· `result` = **`done` 일 때만** 후보 1명, 아니면 `null`. `rarePct` = 그 매력이 산 레어 확률 · `err` = `done` 인데 못 받는 사유(`roster` · `gold`)<br>· ⚠ **[만남 · 신설 2026-09-09 · ADR-0068]** `rumor` = `{id, sin, rumor:{ko,en}, prompt:{ko,en}}`. **안 나가 있으면 다음 회차의 만남**(= 소문 — 보내기 전에 알려준다) · 나가 있으면 이번 회차의 것<br>· `meetAt` = 만남이 열리는 시각(`startedAt + 소요 × meet_at_pct/100`) · `meetOpen` = `now ≥ meetAt`<br>· `answers` = **아직 안 답했을 때만** 채워진다 — `[{id, key, text:{ko,en}}]`. `key` 는 **보낸 영웅의 죄종이 연 답**인가(화면이 그 이유를 찍는다)<br>· `answer` = 고른 답(같은 모양) 또는 `null` · `discountPct` = 그 답이 깎는 % · **`cost` 는 그 할인이 반영된 값**이다 |
+| `searchSend(state, uid, now)` | `→ {ok, endsAt}` / `{ok:false, err}` | 대기 영웅 하나를 내보낸다. err: `busy`(이미 나가 있거나 결과가 남아 있다 — **동시 1건의 실제 집행자**) · `missing` · `party`(원정 파티 · **지금 싸우는 영웅**(`runParty`)은 못 보낸다 · R92). `counters.search++` 하고 `search = {heroUid, startedAt, no, sin, cha}` 를 박는다 — **판정 입력을 보낼 때 함께 저장하는 것이 계약**이다 |
 | `searchTake(state, now)` | `→ {ok, hero, cost}` / `{ok:false, err}` | 수령(고용) — 밑값은 명단과 같고(`tavern_hire_cost`) **만남에서 고른 답이 거기서 깎는다**. err: `none`(나간 수색이 없다) · `notDone` · `roster` · `gold`(**깎인 값** 기준). 받으면 `search = null` 이라 칸이 비고 다시 보낼 수 있다 |
 | `searchAnswer(state, answerId, now)` | `→ {ok, discountPct, cost}` / `{ok:false, err}` | ⚠ **[신설 2026-09-09 · ADR-0068]** 만남에 답한다 — **되돌릴 수 없고 한 번뿐**이다. err: `none` · `answered`(이미 답했다) · `notOpen`(아직 `meetAt` 전) · `missing`(지금 열려 있지 않은 답).<br>**고용비만 깎는다** — 결과 영웅은 답과 무관하게 이미 시드가 정했으므로 **언제 답하든 같은 사람이 온다**. 두 층: 만난 죄종에 맞는 답(`hit_sin`)이면 `tavern_search_meet_hit_pct` · 그 위에 보낸 영웅이 연 답(`need_sin ≠ '-'`)이면 `tavern_search_meet_key_pct`.<br>**시간 제한이 없다** — `meetAt` 부터 **수령할 때까지** 언제든이고, 안 답하고 수령해도 정가일 뿐 벌이 없다(OSRS 가 랜덤 이벤트의 강제 페널티를 「Optional Randoms」로 걷어낸 것과 같은 규칙 · 방치형 계약 ③) |
 | `searchDrop(state)` | `→ {ok}` / `{ok:false, err:'none'}` | 취소 · 버리기 — 나가 있으면 취소, 결과가 와 있으면 돌려보낸다. **이 문이 없으면 로스터가 찼을 때 칸이 영원히 막힌다**(결과는 수령할 때까지 남으므로). 다시 보내면 `counters.search` 가 올라 **다른 결과**가 나오고, 오가는 값이 없으므로 되풀이해도 얻는 것이 없다 — 치르는 것은 그 시간뿐이다 |
@@ -456,8 +465,8 @@ strike(rng, a, d):
 | `learnMastery(state, uid, nodeId)` | `→ {ok, rank, points}` / `{ok:false, err}` | 1랭크 = 1포인트. err: `missing`(영웅 없음 **또는 그 영웅의 트리에 없는 노드**) · `locked` · `maxRank` · `points` |
 | `unlearnMastery(state, uid, nodeId)` | `→ {ok, rank, points}` / `{ok:false, err}` | ⚠ **[신설 2026-09-08]** `learnMastery` 의 역방향 — 1랭크 = 1포인트 **환급**. 랭크가 0 이 되면 `mastery` 에서 키를 지운다(전액 롤백 뒤와 같은 모양). err: `missing`(영웅 없음 **또는 그 영웅의 트리에 없는 노드**) · `noRank`(찍은 랭크가 없다).<br>**해금 레벨을 보지 않는다** — 찍은 뒤 해금 조건이 사라질 길은 없고, 봐 봐야 「찍었는데 못 뺀다」만 만든다 |
 | `resetMastery(state, uid)` | `→ {ok, refunded, points}` / `{ok:false, err:'missing'}` | 롤백은 **무료 · 수시** (skill_design §5). 찍은 랭크 합을 전액 환급 |
-| `tacticState(state)` | `→ {totalLevel, open, count, lockedCount, rerollCost, canReroll, slots:[{no, open, unlockTotalLevel, locked, option, have, need, active}]}` | **판정을 여기서 다 낸다** — 해금(로스터 **합산 레벨**) · 조건 카운터(`have / need`) · **잠금** · **전체 리롤 비용**. 안 열린 칸은 `option: null`. 칸의 `option` 은 **등급까지 편 옵션**(`{id, grade, condKind, …, value}` — §2-9 `optionOf`)이라 화면과 `bonusOf` 가 등급별 값을 그대로 받는다 (2026-09-02). 세이브가 든 가족이 CSV 에서 사라졌으면 **그 칸만 첫 배정으로 되돌린다**.<br>⚠ **[개정 2026-09-01 · 구현 전]** 칸의 `cost` 는 사라졌다 — 비용은 칸이 아니라 **잠금 개수**가 정하므로 판 전체에 하나뿐이다(`rerollCost`). `canReroll` 은 「열렸고 안 잠긴 칸이 하나라도 있고 골드가 충분한가」 |
-| `tacticBonus(state)` | `→ {flat, dr}` | 켜진 칸들의 효과 합. `heroCombat` 이 파티원에게만 넘긴다 |
+| `tacticState(state, party?)` | `→ {totalLevel, open, count, lockedCount, rerollCost, canReroll, slots:[{no, open, unlockTotalLevel, locked, option, have, need, active}]}` | `party` = 조건이 세는 인원(기본 `state.party` · 원정은 나간 인원을 넘긴다 · R92). **판정을 여기서 다 낸다** — 해금(로스터 **합산 레벨**) · 조건 카운터(`have / need`) · **잠금** · **전체 리롤 비용**. 안 열린 칸은 `option: null`. 칸의 `option` 은 **등급까지 편 옵션**(`{id, grade, condKind, …, value}` — §2-9 `optionOf`)이라 화면과 `bonusOf` 가 등급별 값을 그대로 받는다 (2026-09-02). 세이브가 든 가족이 CSV 에서 사라졌으면 **그 칸만 첫 배정으로 되돌린다**.<br>⚠ **[개정 2026-09-01 · 구현 전]** 칸의 `cost` 는 사라졌다 — 비용은 칸이 아니라 **잠금 개수**가 정하므로 판 전체에 하나뿐이다(`rerollCost`). `canReroll` 은 「열렸고 안 잠긴 칸이 하나라도 있고 골드가 충분한가」 |
+| `tacticBonus(state, party?)` | `→ {flat, dr}` | 켜진 칸들의 효과 합 — 조건은 `party`(기본 `state.party`)로 센다. `heroCombat` 이 파티원에게만 넘긴다 |
 | `rerollTactic(state, slotNo)` | `→ {ok, option, cost}` / `{ok:false, err}` | **지금 도는 것은 칸별 리롤**이다 — 칸 하나를 굴리고 비용은 `tactic_slot.csv:reroll_cost_gold`. 뽑은 것은 `{id, grade}` 로 세이브에 남고(§4) **후보에서 빼는 것은 열린 칸이 든 가족 id 전부**다 (2026-09-02 — 등급이 달라도 같은 가족이면 같은 옵션이라 두 칸에 못 선다). err: `missing` · `locked`(칸 미해금) · `gold`.<br>⚠ **[개정 2026-09-01 · 구현 전]** 인자에서 `slotNo` 가 빠졌다 — **열렸고 안 잠긴 칸을 한 번에 전부** 굴린다 (tactic_card_design §5-6). err: `allLocked`(굴릴 칸이 없다 — 전부 잠갔거나 열린 칸이 없다) · `gold`. `counters.tactic++` **1회** · rng = `deriveSeed(seed ^ 0x7AC7, counters.tactic)` **하나로 칸 번호 오름차순 연속 뽑기**(§5-2) · 후보에서 빼는 것 = **잠긴 칸의 옵션 + 굴리기 직전 열린 칸이 들고 있던 옵션 + 이번에 이미 뽑은 것** |
 | `toggleTacticLock(state, slotNo)` | `→ {ok, locked}` / `{ok:false, err}` | ⚠ **[신설 2026-09-01 · 구현 전]** 칸 하나의 잠금을 뒤집는다. **무료**이고 rng·카운터를 안 탄다 — 값은 리롤할 때 `rerollCost` 로 치른다. err: `missing`(없는 칸) · `locked`(안 열린 칸은 못 잠근다) |
 
@@ -526,14 +535,14 @@ strike(rng, a, d):
 | `ally_hp_below` | 생존 아군 중 `hp/hpMax × 100 < cond_value` 인 자가 있다 |
 
 **미리보기 `previewOf(def, ctx)`** [신설 2026-09-08 · **`parts` 2026-09-10 R72**] — 설명창이 문장을 만들 재료다. 렌더러는 계산하지 않는다(DEV_PLAN 부채 #3). **감소·치명·추가 피해는 안 태운다** — 대상이 정해져야 나오거나 굴림이다. **2단계(설명창)가 이 모양을 그대로 쓴다.**
-`ctx = {atk, matk, hpMax, period, stats}` — 전부 선택. 모르는 값의 조각은 `null` 로 낸다.
+`ctx = {atkMin, atkMax, matkMin, matkMax, hpMax, period, stats}` — 전부 선택 [밑수 범위 2026-09-14 · R90 — ~~`atk`·`matk`~~]. 모르는 값의 조각은 `null` 로 낸다.
 
 | 필드 | 계약 |
 |---|---|
 | `baseSec` | 표기 쿨 `def.cool` |
 | `everySec` · `lossPct` | 실효 쿨 `formula.effectiveCd(cool, period)` · 표기 대비 밀린 % — `period` 를 모르면 `null` |
-| `amount` | 한 타 피해(attack · 밑수 `ctx.atk`) · 회복량(heal · `ctx.matk`) · 벽 HP(summon · `ctx.hpMax`) = `round(밑수 × mult/100 + flat)` — **고정 항 포함**. 밑수가 유한한 수 ≥ 0 이 아니거나 · **`mult_pct` 슬롯이 있는데 `stats` 가 없으면** `null`. buff·aura 는 언제나 `null`. 다단은 **한 타** 값 |
-| `parts.amount` | `mult > 0` 인 attack·heal·summon 에만 — `{value, basis: 'atk'\|'matk'\|'hpMax', pct: def.mult, terms: [{attr, coef}]}` · `value` 는 `amount` 와 같다 · `terms` = `mult_pct` 슬롯(coef 0 도 넣는다 · 슬롯이 없으면 `[]`) |
+| `amount` | **`{min, max}`** [개정 2026-09-14 · R90] — 한 타 피해(attack · 밑수 `ctx.atkMin`~`ctx.atkMax`) · 회복량(heal · `ctx.matkMin`~`ctx.matkMax`) · 벽 HP(summon · `ctx.hpMax` — 양끝이 같다) = 양끝마다 `round(밑수 × mult/100 + flat)` — **고정 항 포함**. 밑수 양끝 중 하나라도 유한한 수 ≥ 0 이 아니거나 · **`mult_pct` 슬롯이 있는데 `stats` 가 없으면** `null`. buff·aura 는 언제나 `null`. 다단은 **한 타** 값 |
+| `parts.amount` | `mult > 0` 인 attack·heal·summon 에만 — `{value, basis: 'atk'\|'matk'\|'hpMax', pct: def.mult, terms: [{attr, coef}]}` · `value` 는 `amount` 와 같다(같은 객체 — `{min, max}` 또는 `null`) · `basis` 는 밑수의 **이름**이다(ctx 필드 이름이 아니다 · R90) · `terms` = `mult_pct` 슬롯(coef 0 도 넣는다 · 슬롯이 없으면 `[]`) |
 | `parts.hits` · `parts.value` · `parts.dur` · `parts.decay` · `parts.procChance` · `parts.procMult` | **그 field 에 슬롯이 1개 이상일 때만** 키가 있다(`hits` ← `hits` · `value` ← `effect_value` · `dur` ← `duration_sec` · `decay` ← `decay_pct` · `procChance` ← `proc_chance_pct` · `procMult` ← `proc_mult_pct`) — `{value, raw, terms: [{attr, coef}]}` · `value` = `scaleDef` 의 실효값(`stats` 가 없으면 `null` · **`procChance` 의 `value` 는 100 에서 자른다** — `strike` 가 그 상한으로 굴리므로 120% 는 틀린 숫자다. `raw` 는 원값 · `scaleDef` 는 안 자른다 [2026-09-10]) · `raw` = CSV 원값 · `terms` 는 coef 0 인 항도 넣는다 |
 
 ---
@@ -615,7 +624,7 @@ strike(rng, a, d):
 | `targetsOf(u, def)` | heal·buff·aura 가 공유하는 대상 풀 — §2-11 `SUPPORT_TARGETS`·`DEBUFF_TARGETS` 규칙 그대로. **rng 0회** |
 | `castSummon(u, def, t)` | `ctx.makeSummon` 이 만든 유닛을 **아군 배열에 push** 하고 `summon` 이벤트를 남긴다. 벽 HP = `max(1, round(시전자 hpMax × def.mult/100 + def.flat))`(`flat` = 능력치 항 · 2026-09-10) |
 | `expire(u, t)` | 창·배리어 만료(`until ≤ t + EPS`) → `buffEnd`(**`quiet` 창은 안 낸다** — 무기 옵션 창 · R78) → 바뀌었으면 `refreshDerived` |
-| `castHeal(u, def, t)` · `castBuff(u, def, t)` | §2-6 회복·버프 창 행. 배리어는 `EFFECTS.barrier_pct.apply`. `def` 는 **`scaleDef` 를 지난 실효 정의**다(`flat`·실효 `value`·`dur`) — 원시 정의를 넘겨도 `flat` 은 0 으로 읽는다. `castBuff` 는 `duel` 이면 시전자에게 같은 `until` 의 `dr_pct` 창도 연다(§2-6 `duel` 행 · 2026-09-10 R72) |
+| `castHeal(u, def, t)` · `castBuff(u, def, t)` | §2-6 회복·버프 창 행. **`castHeal` 은 rng 1회**(회복량 굴림 · 대상 선택 앞 · R90). 배리어는 `EFFECTS.barrier_pct.apply`. `def` 는 **`scaleDef` 를 지난 실효 정의**다(`flat`·실효 `value`·`dur`) — 원시 정의를 넘겨도 `flat` 은 0 으로 읽는다. `castBuff` 는 `duel` 이면 시전자에게 같은 `until` 의 `dr_pct` 창도 연다(§2-6 `duel` 행 · 2026-09-10 R72) |
 | `alive(list)` · `alliesOf(u)` · `foesOf(u)` | 진영 조회 |
 | `createHooks()` | `{ emit(name, unit, payload) }` — `unit.reactions` 의 `{on, fn}` 을 **배열 순**으로 부른다. 핸들러 시그니처는 **`fn(unit, payload)`**(`payload` 에 `t` 와 사건별 필드 — §2-6 「사건 훅」 행). 발화 지점·순서는 §5-2 |
 | (런타임 객체 `rt`) | `act`·`expire`·`castHeal`·`castBuff`·`castSummon`·`basicAttack`·`targetsOf`·`buffSum`·`alive`·`alliesOf`·`foesOf` 에 더해 **`rng`·`strikeOnce`·`pickTarget`** 도 같은 객체에 싣는다 — 등록표(§2-11)의 대상 핸들러가 `rt.*` 만 보고 battle.js 를 import 하지 않게 하는 이음매 |
@@ -628,9 +637,9 @@ strike(rng, a, d):
 
 | 코드 | 뜻 | 내는 곳 |
 |---|---|---|
-| `missing` | 대상 없음 / 가방에 없음 | equip · unequip · salvage · toggleParty · hire · **upgradeItem** · **dismiss** · **searchSend** · **setStageLevel** |
+| `missing` | 대상 없음 / 가방에 없음 | equip · unequip · salvage · toggleParty · hire · **upgradeItem** · **dismiss** · **searchSend** · **setStageLevel** · **makeItem**(없는 부위 · 레벨대) |
 | `class` | 직업 전속 무기군 아님 | equip |
-| `bagFull` | **인벤토리** 초과 | equip · unequip · **moveToBag** |
+| `bagFull` | **인벤토리** 초과 | equip · unequip · **moveToBag** · **makeItem** |
 | **`stashFull`** | **창고 초과** | **moveToStash** (2026-09-11) |
 | `full` | 파티 정원 | toggleParty |
 | `locked` · `noParty` | 스테이지 잠김 / 파티 없음 · **마스터리 해금 레벨 미달** · **전술 칸 미해금** | canDepart · learnMastery · rerollTactic |
@@ -640,37 +649,40 @@ strike(rng, a, d):
 | `maxRank` · `points` | 랭크 상한 / 마스터리 포인트 부족 | learnMastery |
 | `noRank` | **뺄 랭크가 없다** — 랭크 0 인 노드를 되돌리려 했다 ⚠ [신설 2026-09-08] | unlearnMastery |
 | `maxUp` | 강화 상한(`equip_upgrade_max`) 도달 | upgradeItem |
+| **`noBase`** | **베이스 능력치가 없는 부위**(목걸이 · 반지) — 강화 대상이 아니다 [신설 2026-09-15 · R95] | **upgradeItem** |
+| **`materials`** | **제작 재료가 모자란다** — 광석 · 목재 · 가루 중 하나라도 레시피에 못 미친다 [신설 2026-09-15 · R96] | **makeItem** |
 | **`range`** | **스테이지 레벨이 기본 레벨 ~ 상한 밖**이거나 정수가 아니다 [신설 2026-09-14 · R87] | **setStageLevel** |
 | **`searching`** | **수색 나가 있다** — 마을에 없으므로 편성도 해고도 안 된다 [신설 2026-09-09] | **toggleParty** · **dismiss** |
 | **`busy`** · **`party`** | 이미 나간 수색이 있다 / 원정 파티는 못 보낸다 [신설 2026-09-09] | **searchSend** |
 | **`none`** · **`notDone`** | 나간 수색이 없다 / 아직 안 돌아왔다 [신설 2026-09-09] | **searchTake** · **searchDrop**(`none`) |
 | **`answered`** · **`notOpen`** | 이미 답했다 / 아직 만나지 않았다 [신설 2026-09-09] | **searchAnswer** |
-| **`running`** | **원정이 도는 중** — 인원 · 진형이 잠기고 새로 출발할 수 없다(철수해야 한다) [신설 2026-09-14 · R89] | **canDepart** · **departRun** · **toggleParty** · **setFormation** · **placeFormation** · **dismiss** |
-| **`done`** | 그 원정은 이미 정산이 끝났다(마지막 라운드 · 철수 · 끊김) [신설 2026-09-14 · R89] | **advanceRun** · **retreatRun** |
+| **`running`** | **지금 싸우는 영웅**이다(`runParty`) — 도는 원정의 인원이라 지울 수 없다 [신설 2026-09-14 · R89 · R92] | **dismiss** |
+| **`done`** | 그 원정은 이미 끝났다(마지막 라운드 · 철수 · 끊김 · 새 출발이 끊었다) [신설 2026-09-14 · R89] | **advanceRun** · **retreatRun** |
 
 렌더러는 코드를 i18n 키로 바꿔 보여준다 (`ch.err.<code>` 등). **코드 문자열이 곧 계약** — 바꾸면 i18n 도 깨진다.
 
 ---
 
-## 4. 세이브 스키마 v25
+## 4. 세이브 스키마 v26
 
 ```
 {
-  version: 25, seed: uint32, createdAt: ms, savedAt: ms,
-  resources: { gold, dust, stigma },      // `dust` 는 남는다 — **분해**가 여전히 뱉는다(item_design §5-3 「분해가 뱉는 재료」는 백지). 사라진 것은 **처치** 공급원뿐이다 (v19)
+  version: 26, seed: uint32, createdAt: ms, savedAt: ms,
+  resources: { gold, dust, stigma },      // `dust` = **분해** 산출 · **제작 재료**(item_design §7-1 · 2026-09-15). 처치는 안 뱉는다 (v19)
+  materials: { yieldId: n },              // **제작 재료 — 광석 · 목재** [2026-09-15 · R96 · 버전 무변경 — 아래]. 키 = 산출물 id(`mine_node.csv:ore_id` · `log_node.csv:timber_id`). 공급은 파견이 한다(미구현) — 지금은 `?dev=mats` 만 채운다
   heroes: [ hero ],                       // §2-4 hero 객체. equipped 키 = 착용 위치 8개 · mastery {nodeId:rank} · masteryPoints · innate(고유 스킬 id) · face(초상 id `<classId>_<k>` 문자열 | null — **직업 풀에서** 생성 시 1회 굴림 · 이후 불변 · 풀 0장인 직업은 null · v13 2026-09-07) · skillOrder?(선택 — 칸 순서)
   party: [ heroUid ],                     // **편성한 순서 그대로** — `party[0]` 이 리더. 새 게임은 `[]` (2026-09-09)
   formation: { tpl, ranks: [[uid...],[uid...]] },   // **진형 — v20**. `tpl` = `formation_template.csv:tpl_id` · `ranks[0]` 전열 · `ranks[1]` 후열.
                                           //   전투가 읽는다(「앞부터 때린다」의 「앞」) · 정규화는 소속을 바꾸는 쪽이 한다 (§2-7)
-  items: { itemUid: item },               // §2-5 item 객체 — `up`(강화 단계) 포함, 접사 값은 강화가 박아 둔 값. **무기는 `skill`(담은 액티브 id)도 든다 — v18** · **접사는 출처 `src` 를 든다 — v23**
+  items: { itemUid: item },               // §2-5 item 객체 — `up`(강화 단계) 포함 · **무기 `watk` 없음 — v26**(피해 범위는 파생 · R90), 접사 값은 강화가 박아 둔 값. **무기는 `skill`(담은 액티브 id)도 든다 — v18** · **접사는 출처 `src` 를 든다 — v23**
   bag: [ itemUid ],                       // **인벤토리** — 순서 = 표시 순서. 드롭이 쌓이는 쪽이고 상한은 `[balance.csv:inventory_cap]`
   stash: [ itemUid ],                     // **창고 — v24**. 플레이어가 직접 옮긴 것만 든다 · 상한 `[balance.csv:stash_cap]`
                                           //   창고에서도 **장착 · 분해 · 강화가 그대로** 된다(꺼내는 단계가 없다 — item_design §1)
   progress: { cleared: [ stageId ], levelUp: { stageId: n } },   // **v22** — `cleared` 모양은 그대로. **`levelUp`** = 스테이지별 **올린 양**(2026-09-14 · R87 · 버전 무변경 — 아래). 챕터보스 스테이지가 x04 → x05 로 옮겨 가 옛 x04 클리어를 x05 에 소급한다 (아래)
   codexCards: { monsterId: n },           // 도감 레벨의 출처. 누적, 소모 없음
   codexKills: { monsterId: n },           // 기록만
-  counters: { hero, item, battle, tavern, tactic, upgrade, search },   // uid 발급·시드 파생의 유일한 출처
-  run: { stageId, repeat, lastAt, durationSec, active } | null,   // **`active` — v25** = 원정이 도는 중(인원 · 진형 잠금). 런 핸들(전투 안의 상태)은 세이브에 없으므로 **불러온 세이브에 `active` 가 서 있으면 그 원정은 끊긴 것이다**(`closeRun`)
+  counters: { hero, item, battle, tavern, tactic, upgrade, search, make },   // uid 발급·시드 파생의 유일한 출처 · upgrade 는 R95(2026-09-15)부터 안 오른다 — 자리만 남는다 · **make** = 제작 스트림의 회차(R96 · 없으면 0)
+  run: { stageId, repeat, lastAt, durationSec, active } | null,   // **`active` — v25** = 원정이 도는 중. 런 핸들(전투 안의 상태)은 세이브에 없으므로 **불러온 세이브에 `active` 가 서 있으면 그 원정은 끊긴 것이다**(`closeRun`)
   reports: [ report ],                    // **리포트 목록 — v21**. 최신이 맨 앞 · 상한 [balance.csv:report_keep] · 새 게임은 `[]`
                                           //   반복 원정은 이기는 동안 런을 잇는데 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3 · ADR-0063)
   notice: { kind: 'runClosed', stageId, at, seenAt } | null,
@@ -683,6 +695,7 @@ strike(rng, a, d):
 - **uid 형식** — 영웅 `h{n}`, 아이템 `i{n}`. 발급은 `state.js:addHero / addItem` 만
 - **`search` 는 버전을 안 올리고 들어왔다** [2026-09-09] — 필드가 없으면 `null`(= 수색을 한 적이 없다)이고 **그것이 정확한 초기 상태**라 이관이 소급할 판단이 하나도 없다. `deserialize` 끝의 기본값 보정 두 줄(`search ?? null` · `counters.search ?? 0`)이 곧 이관이다. ⚠ v5 의 `tavern` 은 달랐다 — 「쿨다운이 열린 상태로 올린다」는 **판단**이 필요해서 이관 절이 있어야 했다. 판단이 있으면 절을 쓰고 없으면 안 쓴다
 - **`progress.levelUp` 도 버전을 안 올리고 들어왔다** [2026-09-14 · R87] — 없으면 `{}`(= 아무 스테이지도 안 올렸다)이고 그것이 정확한 초기 상태다. **레벨이 아니라 올린 양**을 두는 까닭은 기본 레벨(`stage.csv:dlvl`)이 다시 깔려도 어긋나지 않게이다. 읽는 쪽(`stageLevelState`)이 `[base, max]` 로 자르므로 상한을 넘는 기록은 조용히 줄어든다 — 쓰는 쪽(`setStageLevel`)은 애초에 범위 밖을 거절한다
+- **`materials` · `counters.make` 도 버전을 안 올리고 들어왔다** [2026-09-15 · R96] — 없으면 `{}` · `0`(= 가진 재료가 없다 · 만든 적이 없다)이고 그것이 정확한 초기 상태다. `deserialize` 끝의 기본값 보정 두 줄이 곧 이관이다
 - **`search.sin`·`search.cha` 는 스냅샷이다** — 보낼 때의 값이 결과를 정한다. 나간 뒤에 그 영웅이 레벨업해도 결과가 뒤바뀌면 안 되기 때문이고, 그래서 판정 입력이 세이브에 든다
 - **HP 는 세이브에 없다** — 매 전투 최대치 시작. ~~전투불능은 `run.downed`(이번 출정 누적 아웃) 하나~~ 는 **2026-09-08 삭제**(v17) — 아웃은 **그 런 안에서만** 살고 런은 출발 순간 통째로 정산되므로 **세이브가 들 전투불능 상태가 하나도 없다.** 회복 대기도, 누적 아웃도 없다 (base_expedition_design §1-1)
 - **타임라인은 세이브에 없다**
@@ -694,7 +707,7 @@ strike(rng, a, d):
 |---|---|
 | `heroes[*].stats` · `caps` | 키 `sen` → `luck`. **값도 자리(키 순서)도 그대로** — 순서가 흔들리면 표시 순서와 직렬화 결과가 갈린다 |
 | `items[*].affixes` | `stat ∈ {accuracy, evasion}` 인 접사 **제거**. 폐지된 축이라 읽는 곳이 없다 |
-| 무기 `watk` | **재굴림하지 않는다** — 편차 없이 굴려진 개체로 그대로 남는다(개체값은 개체의 역사다) |
+| 무기 `watk` | **재굴림하지 않는다** — 편차 없이 굴려진 개체로 그대로 남는다(개체값은 개체의 역사다) · v26 에서 지워진다(R90) |
 | `version` | `3` |
 
 **v3 → v4 이관** (2026-08-28 — 마스터리 수치층 신설). `deserialize` 가 v3 를 받으면 제자리에서 올린다:
@@ -756,6 +769,17 @@ strike(rng, a, d):
 - **왜 보존하지 않나** — v12 의 정수 얼굴은 **직업과 무관하게** 굴린 번호다(궁수 얼굴이 전사에게 갔다). 보존할 개체성이 없고, 직업 일치가 이 개정의 목적 자체라 남겨 두면 목적이 무너진다
 - **전투 결과는 안 바뀐다** — 얼굴은 표시 전용이다. 전용 스트림이라 전투·선술집·강화·전술 수열과도 안 섞인다 (§5-1)
 - **마법사는 `null`** — 이 이관이 돌던 시점엔 풀이 0장이라 초상이 없었다(같은 날 밤 1장이 들어와 **v13→v14 가 소급한다** — 아래). 화면은 빈 칸으로 둔다(자리표시를 안 깐다 — SCREEN_DESIGN §5). 그래도 `rollFace` 는 rng 를 1회 소비하므로 **직업 구성이 소비 수를 바꾸지 않는다**
+
+**v25 → v26 이관** (2026-09-14 — **무기 피해는 최소 ~ 최대 범위이고 파생이다** · battle_design §9-1 · GAME_DESIGN §9 · 사용자 확정 · DEV_PLAN R90). 드롭 때 굴려 박던 무기 개체 공격력이 사라진다. `deserialize` 가 v25 를 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `items[*].watk` | **지운다.** 무기 피해는 `formula.weaponDamage(ilvl, 무기군, up)` 로 매번 파생한다 — 옛 무기는 **같은 무기군 · 같은 ilvl · 같은 강화의 범위로 돌아간다**(잘 뜬 개체도 못 뜬 개체도 · 사용자 확인 2026-09-14) |
+| `version` | `26` |
+
+- **rng 0회** · ⚠ **전투 결과가 바뀐다** — 옛 무기의 세기가 개체값에서 그 조건의 범위로 옮겨 가고, 직격마다 피해를 굴린다
+- 옛 무기의 `atk_flat` 접사(R78 이전)는 **그대로 남아 양끝에 같이 더해진다**
+- v2 → v3 · v6 → v7 · v15 → v16 표의 「`watk` 보존」 행은 **그 시점의 기록**이다 — v26 까지 연쇄로 올라오면 결국 지워진다
 
 **v24 → v25 이관** (2026-09-14 — **원정 보상은 라운드를 이긴 순간 들어온다** · base_expedition_design §1-1 · GAME_DESIGN §9 · 사용자 확정 · DEV_PLAN R89). 경험치가 영웅마다 달라져(쓰러진 영웅은 그 뒤 라운드 몫이 없다) 리포트의 「전원 동일」 한 숫자가 못 담는다. `deserialize` 가 v24 를 받으면 제자리에서 올린다:
 
@@ -860,7 +884,7 @@ strike(rng, a, d):
 |---|---|
 | 사제가 **착용 중인** `staff` / `orb` | 무기군을 **`bible` / `crucifix`** 로 갈아끼운다(`item.regroupWeapon`). 주기 축이 그대로 대응한다 — 스태프 1.7 느림 → 성경 1.7 · 오브 1.3 빠름 → 십자가 1.3. **벗기지 않는다**: 무기가 밑수라(battle_design §9-1) 맨손이 된 사제는 세기가 통째로 무너진다 |
 | **가방**에 든 `staff` / `orb` | **안 건드린다.** 마법사가 그대로 쓸 수 있으므로 옮기면 마법사의 무기를 뺏는 것이 된다 |
-| 개체 굴림(`watk` · `element` · `affixes` · `up`) | **보존.** 세기는 개체가 들고 무기군은 주기·편차·착용 직업을 가리키는 포인터라, 포인터만 옮기면 세기를 안 건드리고 소유 직업을 옮길 수 있다 |
+| 개체 굴림(`watk` · `element` · `affixes` · `up`) | **보존**(`watk` 는 v26 에서 지워진다 · R90). 세기는 개체가 들고 무기군은 주기·편차·착용 직업을 가리키는 포인터라, 포인터만 옮기면 세기를 안 건드리고 소유 직업을 옮길 수 있다 |
 | `name` | 접사 죄종(`sins`)을 살려 **베이스만 갈아** 다시 조립한다 (§2-10 `composeName`) |
 | `version` | `16` |
 
@@ -934,6 +958,7 @@ strike(rng, a, d):
 - **v1 은 계속 throw** — 무기군·슬롯·도감 카드로 아이템/도감 스키마가 단절됐다. 하루 된 프로토타입 세이브라 새 게임으로 받는다
 - `reports[*].strikes` 는 v3 이전 리포트에 없다 — 없으면 `null` 로 다룬다 (§2-7). `contrib` 은 v20 이하 이관본에 없다(같은 규칙)
 - 저장소 키(localStorage) `thesevensim.save` — `ui/storage.js` 만 안다. Phase 2 에서 이 파일만 파일 시스템/클라우드 어댑터로 교체
+- **클라우드 사본** [2026-09-14 · ADR-0112] — 로그인하면 **이 절의 세이브 그대로**를 Firestore `saves/<uid>` 에 문자열로 둔다(봉투 `{rev, savedAt, version, data}` — `data` = 세이브 JSON). 스키마 · 버전 정책은 바뀌지 않는다 — 봉투는 `ui/cloud.js` 가, 이 브라우저가 마지막으로 맞춘 사본의 기록(`thesevensim.cloud` = `{uid, rev, savedAt}`)은 `ui/storage.js` 가 든다. `game_logic` 은 둘 다 모른다
 
 ---
 
@@ -948,7 +973,8 @@ strike(rng, a, d):
 | 선술집 후보 | `deriveSeed(seed ^ 0x5A17, counters.tavern)` | state.tavernCandidates |
 | 수색 결과 · 이야기 | `deriveSeed(seed ^ 0x5EA7, search.no)` | state.searchRoll — **저장하지 않는다.** 같은 세이브를 다시 열면 같은 영웅과 같은 이야기가 나온다 (신설 2026-09-09) |
 | 수색 만남 | `deriveSeed(seed ^ 0x11EE, no)` | state.searchMeetingOf — **결과 스트림과 갈라 두었다.** 회차 번호 하나로 정해지므로 **보내기 전에도 알 수 있고**(그것이 「소문」이 거짓이 아닌 이유), 결과 굴림의 소비 순서를 안 민다 (신설 2026-09-09 · ADR-0068) |
-| 장비 강화 | `deriveSeed(seed ^ 0xF0C3, counters.upgrade)` | state.upgradeItem — 전투·선술집·전술 어느 수열과도 안 섞인다 |
+| ~~장비 강화~~ | ~~`deriveSeed(seed ^ 0xF0C3, counters.upgrade)`~~ | **[퇴역 2026-09-15 · R95]** 강화가 rng 를 안 쓴다 — 옵션 계단이 사라졌다. `counters.upgrade` 는 세이브에 남지만 더 오르지 않고, 솔트 `0xF0C3` 은 **재사용하지 않는다**(옛 세이브의 카운터와 새 스트림이 겹치지 않게) |
+| **제작** | `deriveSeed(seed ^ 0xC4AF, counters.make)` (선증가) | state.makeItem [신설 2026-09-15 · R96] — 전투 · 선술집 · 전술 수열과 안 섞인다. 거절이면 스트림을 안 연다 |
 | 얼굴 소급 (v11→v12 이관) | `deriveSeed(seed ^ 0xFACE, 0)` | state.upgradeV11 — **옛 영웅에게만.** 새 영웅의 얼굴은 `rollStartParty` 를 부른 쪽의 rng 에서 나온다 [신설 2026-09-06 · **v13 이관에 흡수 2026-09-07** — 이 스트림은 더 안 돈다] |
 | 얼굴 전면 재굴림 (v12→v13 이관) | `deriveSeed(seed ^ 0xFACE, 1)` | state.upgradeV12 — **전 영웅 · `heroes` 배열 순서.** 직업 풀에서 다시 굴린다(조건 없음) [신설 2026-09-07] |
 | 얼굴 `null` 소급 (v13→v14 이관) | `deriveSeed(seed ^ 0xFACE, 2)` | state.upgradeV13 — **`face == null` 인 영웅만** · `heroes` 배열 순서 · 가진 영웅은 소비 0 [신설 2026-09-07 밤] |
@@ -960,7 +986,7 @@ strike(rng, a, d):
 
 | 위치 | 순서 |
 |---|---|
-| `formula.strike` | 적중 → (적중 시) 치명 → **(적중했고 추가 피해 확률이 있는 타격만) 추가 피해**. 빗나감 1회 · 확률 0 인 적중 2회 · 확률 > 0 인 적중 3회 [추가 피해 2026-09-10 · R72]. 편차 굴림은 없다(무기 개체에 박혀 있다). **기본 공격은 확률이 언제나 0** 이라 수열이 종전과 같다 — 추가 피해를 가진 스킬(지금 차지 · 라이트닝 · 체인 라이트닝)의 타격만 한 번씩 더 굴린다 |
+| `formula.strike` | 적중 → (적중 시) **피해** → 치명 → **(적중했고 추가 피해 확률이 있는 타격만) 추가 피해**. 빗나감 1회 · 확률 0 인 적중 3회 · 확률 > 0 인 적중 4회 [추가 피해 2026-09-10 · R72 · **피해 굴림 2026-09-14 · R90** — 적중한 직격마다 1회 늘었다 · 양끝이 같아도 소비 · ~~편차 굴림은 없다(무기 개체에 박혀 있다)~~]. **기본 공격은 확률이 언제나 0** 이라 수열이 종전과 같다 — 추가 피해를 가진 스킬(지금 차지 · 라이트닝 · 체인 라이트닝)의 타격만 한 번씩 더 굴린다 |
 | `hero.rollAttributes` | 축별 가중치 7회 → 합 맞추기 루프(가변, 최대 500회) → 자리 바꿈(소비 없음) |
 | `hero.rollHero` | **`rollTier` 1회 → `rollTotal` 1회 → `rollAttributes` 7회 → `rollInnate` 1회** = 언제나 10회 [개정 2026-09-08 · R48]. `rollInnate` 는 **그 영웅의 직업 풀**에서 굴리고(2026-09-09 · §12-1 규칙 1) **풀이 비어도 1회 소비한다**. ~~`rollCaps` 7회~~ 는 삭제(개체별 히든 상한 폐지) · ~~`rollAttributes` 의 나머지 보정 rng~~ 도 삭제(결정적 분배로 교체 — 굴림 결과가 소비 수를 밀면 안 된다). ⚠ **등급을 지정해도 `rollTier` 는 굴림을 태운다** — 소비 수가 등급에 의존하면 선술집에서 같은 시드가 다른 결과를 낸다 |
 | `hero.rollStartParty` | 이름 n → 죄종 n → 직업 n → 특성 n → `rollHero` n명 → **얼굴 n회**(각자 제 직업 풀에서 1회씩 — **풀이 비어도 1회 소비**, 2026-09-07 개정). ⚠ **얼굴이 맨 뒤인 것이 계약이다** — 영웅 안에서 굴리면 앞 영웅의 얼굴이 뒤 영웅의 능력치를 밀어 같은 시드가 다른 파티를 낸다 |
@@ -970,15 +996,16 @@ strike(rng, a, d):
 | `state.searchRoll` | **등급 1회**(매력이 민 레어 확률) → **`rollCandidates(rng, 1, [tier])` 10회** → **죄종 메아리 1회** → **막마다 1회**(`search_story.csv` 의 막 수 — 지금 3) = 막 셋이면 **15회** [신설 2026-09-09].<br>**결과를 먼저 굴리고 이야기를 뒤에 둔다** — 이야기 행이나 막을 늘려도 **나온 영웅이 안 바뀐다**(`rollFace` 를 맨 마지막에 두는 것과 같은 이유). 막을 늘리면 그 뒤의 소비만 는다.<br>죄종 메아리는 굴린 영웅의 `sin` 을 **덮어쓴다** — 죄종은 능력치·고유 굴림의 입력이 아니라(주력 축은 직업이 정한다) 덮어써도 앞의 소비가 안 밀린다.<br>막의 후보는 **공통(`-`) + 그 죄종** 행이고 **CSV 행 순서가 인덱스 순서**다 |
 | `item.rollDrop` | **부위 1회** → `rollGear` 한 벌(아래) — 즉 부위 → 베이스 → 희귀도 → `build` [정리 2026-09-11 · R79 — 뒤 셋을 `rollGear` 에 위임했고 **수열은 종전과 같다**]. **`magicFind` 는 레어 가중치만 바꾸고 굴림은 1회 그대로**(R78). ⚠ **게임 경로에서는 더 안 불린다** — 처치 드롭이 「입고 있던 장비」로 바뀌어(R79) 부위를 굴리지 않는다. 검증·골든이 파이프라인 전체를 한 입구로 재는 자리로 남는다 |
 | `item.rollGear` | **부위 배열 순서대로** 부위마다: 베이스(무기는 `weaponGroup` 을 주면 **0회** · 안 주면 무기군 1회 / 무기 외 1회) → **희귀도 1회**(`magicFind + rareBonusPct` 가 레어 가중치에 곱한다) → `build` [신설 2026-09-11 · R79]. ⚠ **부위 배열 순서가 계약이다** — 몬스터는 `monster.csv:wear_slots` 를 그 순서로 넘긴다 |
-| `item.build` | **(매직 · 레어) 접두 죄종** [일반은 0회 — 2026-09-14 · R86] → **(레어) 접미 죄종** [개정 2026-09-11 · R77 — ~~(레어) 접미 판정 → (성공 시) 접미 죄종~~ · 죄종 수는 희귀도가 정한다(매직 1 · 레어 2) — 판정 1회가 빠졌다] → **(무기) 옵션 세 층** [2026-09-11 · R78 — 고정 값 1 → 죄종마다 (행 1 → 값 1) → 통합옵션마다 (종류 1 → 변형 1 → 값 1) · 후보가 비어도 소비 수 불변 · §2-5 「무기 옵션」] / **(무기 외)** 접사 수 → 접사마다 (정의 선택 → 값) → **(무기) 베이스 1회** [신설 2026-09-10] → **개체 굴림 1회**(무기 = 공격력 편차 / 방어구 = implicit 편차 / **목걸이·반지 = 소비 없음**) → ~~(마법 무기) 원소~~ **[삭제 2026-09-11 · R80 — 생성 때 원소를 굴리지 않는다. 마법 무기에서 소비 1회가 빠진다]** → **(무기) 스킬 1회** [신설 2026-09-09 · `opts.avoidSkill` 로 풀을 좁혀도 1회 — 2026-09-14]. ⚠ 베이스·스킬 굴림은 **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다. 베이스 굴림은 **균등**(대역 가중 없음 — 수치 미발행) |
+| `item.build` | **(매직 · 레어) 접두 죄종** [일반은 0회 — 2026-09-14 · R86] → **(레어) 접미 죄종** [개정 2026-09-11 · R77 — ~~(레어) 접미 판정 → (성공 시) 접미 죄종~~ · 죄종 수는 희귀도가 정한다(매직 1 · 레어 2) — 판정 1회가 빠졌다] → **(무기) 옵션 세 층** [2026-09-11 · R78 — 고정 값 1 → 죄종마다 (행 1 → 값 1) → 통합옵션마다 (종류 1 → 변형 1 → 값 1) · 후보가 비어도 소비 수 불변 · §2-5 「무기 옵션」] / **(무기 외)** 접사 수 → 접사마다 (정의 선택 → 값) → **(무기) 베이스 1회** [신설 2026-09-10] → **개체 굴림**(방어구 = implicit 편차 1회 / **무기 · 목걸이 · 반지 = 소비 없음** — ~~무기 = 공격력 편차~~ **2026-09-14 삭제 · R90** · 무기에서 소비 1회가 빠졌다) → ~~(마법 무기) 원소~~ **[삭제 2026-09-11 · R80 — 생성 때 원소를 굴리지 않는다. 마법 무기에서 소비 1회가 빠진다]** → **(무기) 스킬 1회** [신설 2026-09-09 · `opts.avoidSkill` 로 풀을 좁혀도 1회 — 2026-09-14]. ⚠ 베이스·스킬 굴림은 **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다. 베이스 굴림은 **균등**(대역 가중 없음 — 수치 미발행) |
 | `state.newGame`(시작 장비) | 영웅마다 **무기 → 갑옷** [개정 2026-09-14 · R86 — ~~시작 무기 하나 · magic 이라 접미 죄종을 굴리지 않는다~~]. 무기 = 무기군 1회 → `build`(normal — 죄종 0회 · 스킬은 고유 스킬을 뺀 풀에서 1회) · 갑옷 = 베이스 1회 → `build`(normal — 죄종 0회 → 접사 수 → 접사마다 (정의 → 값) → implicit 1회) |
-| `item.upgrade` | 옵션 계단(`up` 이 `equip_upgrade_option_interval` 의 배수)이면 **접사 선택 1회**, 아니면 **0회**. 베이스 갈래는 rng 를 안 쓴다 |
+| `item.upgrade` | **0회** [개정 2026-09-15 · R95] — ~~옵션 계단이면 접사 선택 1회~~ · 옵션 계단 퇴역. 베이스는 파생이다 |
+| `state.makeItem` | **ilvl 1회**(레벨대 `lo`~`hi` 균등) → `item.rollGear` 한 벌 — 부위 하나: 베이스(무기 = 무기군 1 / 무기 외 = 베이스 1) → **희귀도 1**(`make_rarity_w_*`) → `build` [신설 2026-09-15 · R96]. 거절이면 **0회**(스트림을 안 열고 `counters.make` 불변) |
 | `battle.spawnRound` | **2단이다** [개정 2026-09-11 · R79]. **1단 편성**(종전 그대로 · 순서·횟수 불변) — 보스: 호위 수 → 호위마다 풀 선택 / 일반: 정예마다 (죄종 → 풀 → 공통 특성 2) → 일반 수 → 일반마다 풀. **2단 장비·스킬** — 편성이 확정된 뒤 **목록 순서로** 유닛마다: `wear_slots` 로 `itemSystem.rollGear` 한 벌 → (`grade.skill_slots ≥ 3` 이면) **셋째 스킬 1회**(그 몬스터 직업 풀 · 풀이 비어도 1회 소비).<br>⚠ **1단이 2단보다 앞인 것이 계약이다** — 장비 굴림이 편성 굴림을 밀면 같은 시드가 다른 편성을 낸다(`rollFace` 를 맨 뒤에 두는 것과 같은 이유 · `state.searchRoll` 의 「결과를 먼저, 이야기를 뒤에」와 같은 규칙).<br>⚠ **소비 수가 처치 수가 아니라 스폰 수를 따라간다** — 드롭이 안 나와도 몬스터는 장비를 입고 있다 (item_design §1 「몬스터 장비를 언제 굴리나」) |
 | ⚠ `battle.stagePool` **순서** | `pool[Math.floor(rng × 3)]` 이 이 배열의 인덱스를 쓰므로 **순서 자체가 계약이다.** JS 에서 그 순서는 CSV 행 순서가 아니라 **`monster_idx` 오름차순** — `D.monsters` 가 정수 키 객체라 `Object.values` 가 정수 키를 강제로 오름차순 열거한다. 지금은 `monster.csv` 가 idx 순으로 쓰여 있어 **우연히 일치**할 뿐이다. **엔진에서 해시맵(순서 불정)을 쓰면 다른 게임이 된다** — 이식할 때 `monster_idx` 로 명시 정렬하라 (2026-08-31) |
 | `battle.beginRound` | `spawnRound` → **적의 오오라 적용(rng 0 · R79)** → **적 스킬 첫 준비 시각(rng 0 · R89)** → 적마다 등장 지연 1회. 둘째 라운드부터는 그 앞에 **경계의 갈아입기**(`refit` · rng 0 · 바뀐 영웅만)가 돈다 |
 | `battle.createRun` 루프 (`simulate` 는 이것을 끝까지) | 틱마다 **창 만료 처리(소비 없음)** → `[...party, ...enemies]` 배열 순서로 `act` |
 | `battle.act` 기본 공격 [확정 2026-09-08 · 확장 2026-09-09] | 타겟 1회(**도발·지목 중이면 0회**) → `strike`. 대상은 **전열 생존자 중 균등 무작위**이고 전열이 전멸해야 후열이 열린다 — 영웅·몬스터 양쪽이 같은 규칙이다 [개정 2026-09-09 · ~~생존 적 중 균등 무작위~~ 폐기 · battle_design.md §3-1]. ⚠ **소비 횟수는 안 바뀐다** — 모집단이 좁아질 뿐이라 수열이 안 밀린다. 다만 **고른 결과가 달라져 골든은 재촬영**이다.<br>⚠ **평타 부여 창이 켜지면 소비가 는다** — `attack_splash` 는 타겟 굴림 **0회** + 적 수만큼 `strike`, `onhit_element` 는 때린 대상마다 `strike` 를 **한 번 더**. 창이 없을 때의 수열은 종전과 같다 |
-| `battle.act` 스킬 | 발동 선택 0회 → `enemy_single`: 타겟 1회(도발 무관 — 파티 스킬은 도발 대상이 아니다) → `hits` 회 `strike` / `enemy_rotate`·`enemy_chain`: 시작점 1회(**`pickTarget` 을 지난다 — 전열 우선** · 2026-09-09 개정. 도는 것은 배열 전체다) → 타격마다 `strike` / `enemy_all`: 0회(감쇠가 있어도 **주 대상은 결정론** — 2026-09-10) → 대상마다 `strike` / **`enemy_highest_def`: 0회**(방어 최대 = 결정론) → `hits` 회 `strike` / `heal`·`buff`·`aura`·`summon`: 0회.<br>⚠ **소환은 굴림을 안 쓰지만 모집단을 바꾼다** [2026-09-09] — 벽이 파티 배열에 서면 적의 타겟 굴림이 `foes.length` 가 커진 상태로 돌아 **그 뒤 수열이 통째로 달라진다**. 벽은 라운드 끝에 사라진다. ⚠ **여러 대상을 때리는 스킬은 대상마다 `strike` 를 부른다** — 적중·치명을 대상마다 따로 굴리는 것이 계약이고, 그래서 **타격 rng 소비가 대상 수에 종속**된다 [확정 2026-09-08 · battle_design.md §3-1]. ⚠ **타수 슬롯(`hits`)이 능력치로 오르면 `strike` 소비도 는다** — 계수가 0 인 동안은 불변이다 [2026-09-10 · skill_design §13-4] |
+| `battle.act` 스킬 | 발동 선택 0회 → `enemy_single`: 타겟 1회(도발 무관 — 파티 스킬은 도발 대상이 아니다) → `hits` 회 `strike` / `enemy_rotate`·`enemy_chain`: 시작점 1회(**`pickTarget` 을 지난다 — 전열 우선** · 2026-09-09 개정. 도는 것은 배열 전체다) → 타격마다 `strike` / `enemy_all`: 0회(감쇠가 있어도 **주 대상은 결정론** — 2026-09-10) → 대상마다 `strike` / **`enemy_highest_def`: 0회**(방어 최대 = 결정론) → `hits` 회 `strike` / **`heal`: 회복량 굴림 1회**(대상 수와 무관 · 대상 선택 앞 · R90) / `buff`·`aura`·`summon`: 0회.<br>⚠ **소환은 굴림을 안 쓰지만 모집단을 바꾼다** [2026-09-09] — 벽이 파티 배열에 서면 적의 타겟 굴림이 `foes.length` 가 커진 상태로 돌아 **그 뒤 수열이 통째로 달라진다**. 벽은 라운드 끝에 사라진다. ⚠ **여러 대상을 때리는 스킬은 대상마다 `strike` 를 부른다** — 적중·치명을 대상마다 따로 굴리는 것이 계약이고, 그래서 **타격 rng 소비가 대상 수에 종속**된다 [확정 2026-09-08 · battle_design.md §3-1]. ⚠ **타수 슬롯(`hits`)이 능력치로 오르면 `strike` 소비도 는다** — 계수가 0 인 동안은 불변이다 [2026-09-10 · skill_design §13-4] |
 | `battle.onKill` | **판정은 처치 순간 · 결과 반영은 라운드 승리 순간**(R89 — 소비 순서 불변) · 카드 판정 1회 → **드롭 판정 1회**(처치당 최대 1개, 2026-08-28) → (드롭 시) **입은 부위 선택 1회** [개정 2026-09-11 · R79 — ~~ilvl 1회 → `rollDrop`~~ 삭제]. 떨어지는 것은 **스폰 때 이미 만들어진 그 몬스터의 장비 한 점**이라 여기서 아이템을 만들지 않는다. ilvl 굴림도 없다(스테이지 레벨 `+ grade.gear_ilvl_add` · 굴림 없음). ⚠ **적의 소환 벽은 처치가 아니다** — `onKill` 을 안 지나므로 **rng 0** · 골드·경험치·카드·드롭 없음 (R79 — 몬스터가 소환 스킬을 쓰게 되며 생긴 경로) |
 | 사건 훅(`reactions`) | 핸들러가 rng 를 쓰면 **발화 지점에서** 소비한다 — `cast` 는 skill 이벤트 뒤 · `hit`/`hitTaken` 은 hit 이벤트 뒤 · `kill` 은 `onKill`(드롭) **뒤** · `down` 은 down 이벤트 뒤. 지금 등록된 핸들러 0 → 소비 0 (2026-09-01) |
 | `state.advanceRun` | 그 원정의 rng 를 **이어서** — 끝난 라운드를 이겼으면 살아 있는 영웅마다 `grantXp`(0회) → 다음 라운드 `createRun.next`(전투 수열이 거기서 계속된다). `departRun` 은 첫 라운드까지 · `resolveBattle` 은 이것을 끝까지 돈다 [개정 2026-09-14 · R89] |
@@ -993,7 +1020,8 @@ strike(rng, a, d):
 | 파티 첫 차례 엇갈림 | `i × 0.3` s | battle.js simulate | |
 | 적 등장 지연 | `0.4 + rng × 0.6` s | battle.js beginRound | rng 소비 |
 | 행동 주기 하한 | 0.4 s | hero.js computeCombat | |
-| `watk` 반올림 | 소수 2자리 | item.js build | 밑수가 2.3 대역이라 정수 반올림이면 뭉개진다 |
+| ~~`watk` 반올림~~ → 무기 피해 양끝 반올림 | **정수** · 최소 하한 1 · 최대 ≥ 최소 | formula.weaponDamage | 가운데 × (1 ∓ 폭) × 강화 배율을 곱한 **뒤 한 번** — 표기 = 계산 [2026-09-14 · R90 · ~~소수 2자리 · item.js build~~] |
+| 공격력 양끝 반올림 | 정수 | hero.js computeCombat | (무기 양끝 + atk_flat) × 괄호 둘을 곱한 뒤 양끝마다 |
 | growth 축 접사 · 방어구 implicit 반올림 | 소수 1자리 (하한 0.1) | item.js rollAffixes · implicitFor | band·flat 접사는 정수(하한 1) |
 | `damage_reduction` 반올림 | 소수 3자리 | hero.js computeCombat | 원천별 곱의 실효 % |
 | 능력치 가중치 | `rng² + 0.04` | hero.js rollAttributes | 분포 모양 |
@@ -1019,6 +1047,10 @@ strike(rng, a, d):
 - 파일 — `src/dev/golden.json` (지문) · `src/dev/golden.js` (생성·대조). **둘 다 이식 대상이 아니다** — `dev/` 는 검증 도구라 엔진 쪽 언어로 다시 쓴다. 맞춰야 하는 것은 **JSON 의 값**이지 이 코드가 아니다
 - 범위 — 시드 1~10 × 스테이지 101~105 = **50 런** [개정 2026-09-11 — 챕터 5스테이지 · ~~101~104 = 40 런~~ · R75]. 캘리브레이션(시드 20 × 같은 5스테이지)과 **같은 조건**이라 두 표가 서로를 설명한다. 105 가 **챕터보스 단독 1라운드**의 표본이다
 - **R86 재촬영** [2026-09-14] — 영웅 등급 4층(대역 · 가중치 · 첫 파티 레어 1 + 매직 1 + 일반 1) · 장비 희귀도 3갈래(일반 · 매직 · 레어 — 몬스터가 입는 장비도 탄다) · **시작 장비 일반 무기 + 일반 갑옷**(무기 스킬은 고유를 뺀 풀)으로 **50런 전부**가 갈렸다. 입력 지문 — `csvHash` 2(`balance`·`hero_tier`) · `balance` 6키(`rarity_w_magic`·`rarity_w_rare` 값 · `rarity_w_normal`·`affix_normal_min`·`affix_normal_max`·`weapon_common_opt_normal` 신설) · `parties` 30명 전부(형식 끝에 **시작 갑옷** 칸이 붙었다). 재촬영 뒤 **50런 · 드롭 19 · 이벤트 92708** · ⚠ 같은 날 R85(처치 XP) 재촬영이 먼저 있었다
+- **R89 재촬영** [2026-09-14] — 원정이 라운드 단위가 되며(**스킬은 쿨부터** · 이긴 라운드의 XP 가 그 순간 들어와 **레벨업이 런 도중에 먹는다** · 진 라운드의 몫은 버린다 · `card` 이벤트 삭제 · 지문 `xpEach` → `xpBy`) **50런 전부**가 갈렸다. 소비 규칙은 그대로이고(`createRun` 을 같은 파티로 이어 부르면 `simulate` 와 같다 — 단정) 첫 시전이 한 바퀴 늦어 수열이 갈린 것이다. ⚠ **같은 재촬영에 병렬 세션의 CSV 변경이 섞였다** — 입력 지문 `csvHash` 3(`monster`·`stage`·`weapon_base`) · `parties` 14명(시작 무기 베이스 이름) · `balance` 불변. 재촬영 뒤 **50런 · 드롭 24 · 이벤트 89214**
+- **R90 재촬영** [2026-09-14] — 무기 피해가 최소 ~ 최대 범위가 되며(**무기 드롭의 개체 굴림 1회 삭제** · **적중한 직격마다 피해 굴림 1회** · **회복 시전마다 1회** · 드롭 지문의 무기 개체 굴림 칸 `w<watk>` → `-`) **50런 전부**가 갈렸다. 입력 지문 — `csvHash` 1(`balance` — `weapon_atk_base` · `dmg_variance_pct` 설명문만 · 값 불변) · `balance` 값 불변 · `parties` 30명 전부(시작 무기 지문 칸 + 무기 굴림이 빠져 뒤따르는 시작 갑옷 굴림이 밀렸다). 재촬영 뒤 **50런 · 드롭 21 · 이벤트 75283** · R89 재촬영(같은 날)의 **바로 뒤**다
+- **R95 재촬영** [2026-09-15] — 강화가 베이스 능력치만 올리게 되며(옵션 계단 퇴역) **입력 지문만** 움직였다 — `csvHash` 1(`balance`) · `balance` 2키 삭제(`equip_upgrade_option_interval` · `equip_upgrade_option_pct`). **50런 · `parties` 는 한 필드도 안 바뀌었다** — 강화는 골든 밖이다(50런이 강화를 안 부른다)
+- **R96 재촬영** [2026-09-15] — 제작이 들어오며 **입력 지문만** 움직였다 — `csvHash` 2(`balance` · `make_recipe` 신규) · `balance` 3키 신설(`make_rarity_w_*`). **50런 · `parties` 는 불변이다** — `rollGear` 는 `rarityWeights` 를 안 주면 종전 가중치로 굴리고, 50런이 제작을 안 부른다
 
 #### 입력 지문 (`meta`) — **출력보다 먼저 대조한다**
 
@@ -1057,7 +1089,7 @@ strike(rng, a, d):
 | `tl` | 타임라인 전체의 FNV-1a 해시(`JSON.stringify(timeline)`). 위 요약 필드가 못 보는 **순서·값 변화**를 잡는다 — 어디가 깨졌는지는 위 필드들이 말하고 이 값은 「달라졌다」만 말한다. **결과 불변 리팩터의 잠금장치** (2026-09-01) |
 | `drops[]` | 아래 |
 
-- 드롭 지문 — `rarity|slot|ilvl|sins|base|baseId|element|개체굴림|스킬|접사` [`baseId` 신설 2026-09-10 — 무기 베이스 세부 굴림 · 풀 없는 무기군/무기 외 부위는 `-`. `스킬` 신설 2026-09-09 — 무기가 담은 액티브 id · 무기 외는 `-`]. **접사는 `출처/stat:v` 를 `;` 로 이어 순서까지 적는다**(출처 신설 2026-09-11 R78 — 층이 바뀐 회귀를 잡는다) — `item.rollAffixes` 가 풀에서 뽑는 순서는 여기서만 잡힌다. `base` 는 무기면 무기군 id, 그 외는 영문 이름(= 베이스 인덱스). 개체 굴림은 무기 `w<watk>` · 방어구 `def_flat:v` · 목걸이/반지 `-`(소비 없음). **`meta.parties` 의 시작 무기도 같은 형식**이다
+- 드롭 지문 — `rarity|slot|ilvl|sins|base|baseId|element|개체굴림|스킬|접사` [`baseId` 신설 2026-09-10 — 무기 베이스 세부 굴림 · 풀 없는 무기군/무기 외 부위는 `-`. `스킬` 신설 2026-09-09 — 무기가 담은 액티브 id · 무기 외는 `-`]. **접사는 `출처/stat:v` 를 `;` 로 이어 순서까지 적는다**(출처 신설 2026-09-11 R78 — 층이 바뀐 회귀를 잡는다) — `item.rollAffixes` 가 풀에서 뽑는 순서는 여기서만 잡힌다. `base` 는 무기면 무기군 id, 그 외는 영문 이름(= 베이스 인덱스). 개체 굴림은 방어구 `def_flat:v` · **무기** · 목걸이/반지 `-`(무기는 R90 부터 굴리지 않는다 — 피해 범위는 무기군 · ilvl · `up` 에서 파생하므로 지문의 다른 칸이 이미 든다 · ~~`w<watk>`~~). **`meta.parties` 의 시작 무기도 같은 형식**이다
 - **`uid` 는 지문에 없다** — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (§8 항목 3)
 - 불일치 보고는 **요약이 맨 앞**이다 (`n/40 런 불일치`). 「1런만 어긋남」과 「40런 전부 어긋남」은 이식 검증에서 원인이 전혀 다른데, 예산을 첫 런이 통째로 먹으면 그 둘을 구분할 수 없다. 런당 최대 2개 × 최대 6런을 보여 준다
 - 대조는 기대값 키가 아니라 **키 합집합**을 돈다 — 지문에 필드를 추가하고 재촬영을 잊으면 그 필드가 무기한 미검증으로 남기 때문이다
@@ -1124,7 +1156,7 @@ strike(rng, a, d):
 2. **전투 루프의 rng 순서** — §5-2. 리팩터링으로 호출 순서가 바뀌면 회귀다
 3. **uid 발급은 state.js 만** — `rollHero` / `rollDrop` 은 `uid: null`. 다른 모듈이 `counters` 를 만지지 않는다
 4. **`grantXp` 는 in-place** — 호출자는 state 안의 hero 참조를 그대로 넘긴다. 복사본을 넘기면 성장이 사라진다
-5. **`atk_physical` / `atk_magic` 은 배타** — 둘 다 있는 경우를 코드가 가정하지 않는다. 물리·마법 혼합 딜(스킬)이 생기면 이 계약을 다시 쓴다
+5. **`atk_physical` / `atk_magic` 은 배타 · 값은 범위 `{min, max}`** [범위 2026-09-14 · R90] — 둘 다 있는 경우를 코드가 가정하지 않는다. 물리·마법 혼합 딜(스킬)이 생기면 이 계약을 다시 쓴다
 6. **가방 용량 산수의 순서** — `equip` 은 실행 전에 `bag − 1 + back.length ≤ inventory_cap` 을 먼저 검사한다 (`back` 은 그 자리에 있던 하나뿐 — 2026-09-01 배타 폐지로 2가 되는 경우가 사라졌다)
 7. **`closeRun` 은 정산하지 않고 끊는다** [개정 2026-09-14 · R89] — 진행 중이던 라운드는 버리고(보상 없음), 이긴 라운드의 보상은 이미 `advanceRun` 이 넣어 두었다. **남은 라운드를 마무리해 주지 않는 것이 계약이다** — 마무리해 주면 껐다 켜기로 원정을 무한히 빨리 돌릴 수 있다(사용자 확정). 런 핸들은 세이브에 없으므로 불러온 세이브의 `run.active` 는 곧 끊긴 원정이다. **파견·탐험(오프라인 진행형)이 들어오면** 그때 `closeRun` 을 다시 설계한다 (GAME_DESIGN §3)
 8. **올릴 수 없는 세이브 버전은 throw** — 이관 가능한 버전(현재 v2~v8)은 `deserialize` 안에서 올리고, 나머지는 던진다. 조용히 버리지 않는다. 잡는 건 렌더러
@@ -1133,7 +1165,7 @@ strike(rng, a, d):
 11. **`res` 는 항상 4원소 객체다** — 몬스터도 `{fire, cold, lightning, poison}` 을 든다(2026-08-26 타입 이원성 해소). `strike` 는 다른 모양을 가정하지 않으므로 정적 타입 언어에서도 인터페이스가 하나다
 12. **`?tab=` 은 `?dev=` 뒤에** — 렌더러 부팅 순서. `startGame()` 이 탭을 원정으로 되돌린다
 13. **스킬 배율·원소 태그·스킬 타격 필드(`flat`·`procChance`·`procMult` — 2026-09-10)는 타격 동안만 유닛 필드에 얹고 원복한다** — `strike` 시그니처는 불변이다. 다단타 도중 예외로 빠져나가면 유닛에 배율이 남으므로, 얹기와 원복은 한 함수(`strikeOnce`) 안에서만 한다
-14. **`actives` 가 비면 rng 수열은 스킬 도입 전과 같다** — 만료 처리·발동 선택·회복·버프는 rng 를 쓰지 않고, 기본 공격 경로는 그대로다. 결정론 단정이 이것을 지킨다
+14. **`actives` 가 비면 rng 수열은 스킬 도입 전과 같다** — 만료 처리·발동 선택·버프는 rng 를 쓰지 않고(회복은 R90 부터 시전마다 양 굴림 1회 — 스킬이 없으면 시전도 없다), 기본 공격 경로는 그대로다. 결정론 단정이 이것을 지킨다
 15. **`buffs`·`reactions` 는 삽입 순서를 유지하는 맵/배열이다** — `buffEnd` 이벤트 순서 · 도발자 선택(배열 순 첫째) · 파생값 재계산 · 훅 발화가 그 순서를 탄다. JS 객체의 문자열 키 순서에 기대고 있으므로 **이식 언어에서 해시맵을 쓰면 다른 타임라인이 된다**(`stagePool` 과 같은 종류 · 2026-09-01)
 16. **배정 단위는 스킬 인스턴스다** — `activesFor` 가 `{id, source}` 를 내고 소비자는 `skill.resolve` 로 정의를 얻는다. 정의를 `defs[id]` 로 직접 찾는 코드를 새로 만들지 않는다 — 변형 노드(`override`)가 오면 그 코드는 전부 우회로가 된다 (2026-09-01)
 17. **도발은 타겟 rng 를 소비하지 않는다** — 도발이 켜져 있으면 굴리지 않고 고정한다(§5-2). ⚠ **도발 세부(도발자가 여럿일 때 누구·복귀 조건)는 기획 미확정이지만, rng 소비 0 을 유지하는 안 중에서만 고른다** — 「도발자 중 무작위」를 채택하면 소비 수열이 바뀌어 §5-5 골든 스냅샷을 다시 찍어야 한다 (GAME_DESIGN §10 · battle_design.md §3-1)
@@ -1156,4 +1188,4 @@ strike(rng, a, d):
 
 ---
 
-*마지막 업데이트: 2026-09-14*
+*마지막 업데이트: 2026-09-15*

@@ -84,6 +84,8 @@ const SCALE_FIELDS = {
 const SCALE_FIELD_IDS = Object.keys(SCALE_FIELDS);
 /** 미리보기 `amount` 의 밑수 — 공격은 공격력 · 회복은 마법 공격력 · 소환은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
 const AMOUNT_BASIS = { attack: 'atk', heal: 'matk', summon: 'hpMax' };
+/** 밑수의 양끝 — 공격 · 회복은 범위(`atkMin`~`atkMax` · `matkMin`~`matkMax` · R90), 벽은 한 점(`hpMax`) */
+const basisEnds = (basis, ctx) => (basis === 'hpMax' ? [ctx.hpMax, ctx.hpMax] : [ctx[`${basis}Min`], ctx[`${basis}Max`]]);
 
 /**
  * @param {object} data
@@ -440,8 +442,8 @@ export function createSkillSystem(data) {
      *   설명창(2단계)이 이 모양을 그대로 읽는다. 실효값은 전투와 **같은 함수**(`scaleDef`)에서 온다.
      *
      * @param def 스킬 정의 (`defs[id]` 또는 `resolve(inst)`)
-     * @param ctx {atk, matk, hpMax, period, stats} — 전부 선택. 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
-     *   · `amount` 의 밑수 — attack `atk` · heal `matk` · summon `hpMax`
+     * @param ctx {atkMin, atkMax, matkMin, matkMax, hpMax, period, stats} — 전부 선택. 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     *   · `amount` 의 밑수 — attack `atkMin`~`atkMax` · heal `matkMin`~`matkMax` · summon `hpMax` — **양끝마다 계산해 `{min, max}` 로 낸다**(R90)
      *   · `stats` — 기본 능력치 7종. **`mult_pct` 슬롯이 있는데 없으면** `amount` 는 `null` 이다(고정 항을 모르는 피해는 틀린 숫자다)
      * @returns {{baseSec, everySec, lossPct, amount, parts}} — `parts.amount`(mult > 0 인 attack·heal·summon) ·
      *   `parts.{hits, value, dur, decay, procChance, procMult}`(그 항에 슬롯이 1개 이상일 때만) (INTERFACE §2-8)
@@ -458,8 +460,11 @@ export function createSkillSystem(data) {
         let amount = null;
         if (basis !== null && def.mult > 0) {
             const terms = termsOf('mult_pct');
-            const base = Number.isFinite(ctx[basis]) && ctx[basis] >= 0 ? ctx[basis] : null;
-            amount = base === null || (terms.length > 0 && stats === null) ? null : Math.round(base * def.mult / 100 + eff.flat);
+            // 밑수는 범위다(R90) — 양끝이 다 알려져야 숫자를 낸다. 한쪽이라도 모르면 식으로 접힌다
+            const ends = basisEnds(basis, ctx);
+            const known = ends.every(v => Number.isFinite(v) && v >= 0);
+            amount = !known || (terms.length > 0 && stats === null) ? null
+                : { min: Math.round(ends[0] * def.mult / 100 + eff.flat), max: Math.round(ends[1] * def.mult / 100 + eff.flat) };
             parts.amount = { value: amount, basis, pct: def.mult, terms };
         }
         // 슬롯이 미는 나머지 항 — 그 항에 슬롯이 하나라도 있을 때만 키가 선다(coef 0 인 항도 terms 에 든다)
@@ -477,7 +482,7 @@ export function createSkillSystem(data) {
             everySec,
             // 실효 쿨이 표기보다 얼마나 밀리는가(%) — 0 이면 주기와 정렬이 맞는다
             lossPct: everySec === null ? null : (everySec - def.cool) / def.cool * 100,
-            // 한 타 피해(attack) · 회복량(heal) · 벽 HP(summon) — **고정 항 포함**. 다단은 **한 타** 값이다 — 총합은 화면이 말하지 않는다
+            // 한 타 피해(attack) · 회복량(heal) · 벽 HP(summon) — **고정 항 포함** · `{min, max}`(R90). 다단은 **한 타** 값이다 — 총합은 화면이 말하지 않는다
             amount,
             parts,
         };

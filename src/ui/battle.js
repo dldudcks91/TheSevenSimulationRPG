@@ -25,7 +25,7 @@
  *   **카드 크기는 몬스터·영웅·보스가 전부 같은 고정값**이다 (2026-08-27, SCREEN_DESIGN §4-2).
  * 스킬 쿨은 **가로 아이콘 칸**이다 — 이름도 % 도 찍지 않고 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판이 걷히며 보여주고,
  *   **발동한 칸은 튀면서 스킬 이름이 초상 위로 떠오른다** (2026-08-27 — 「방금 뭘 썼나」는 게이지가 아니라 팝업이 답한다).
- * 올려놓으면 툴팁 — 카드는 영웅 기본 능력치, 스킬 칸은 그 스킬의 이름 · 표기/실효 쿨 · 설명 (2026-08-28, ui/tip.js).
+ * 올려놓으면 툴팁 — 카드는 유닛 툴팁(기본 옵션 · Alt 로 세부 옵션 — 영웅 · 몬스터 · ADR-0114), 스킬 칸은 그 스킬의 이름 · 표기/실효 쿨 · 설명 (2026-08-28, ui/tip.js).
  * 스킬 칸은 **실제 시전을 그린다** (2026-08-30 — 목업 폐기): 켜고 끄는 것은 타임라인의 `skill` 이벤트이고, 남은 쿨은 그 이벤트가
  *   실어 온 `ready`(시뮬이 쓴 실제 쿨)로 걷힌다. 재생기는 쿨을 **계산하지 않는다**. 회복 · 창 · 재생(`heal`·`buff`·`buffEnd`·`regen`)도
  *   같이 그린다 — 무시하면 화면 HP 가 시뮬과 어긋난다. 아이콘 · 설명만 `mock.js` 표시 사전에서 온다.
@@ -38,7 +38,7 @@
 import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo } from './data.js';
 import { t, L } from './i18n.js';
-import { bindTipNode, heroTipCard, skillTipCard } from './tip.js';
+import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard } from './tip.js';
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -64,6 +64,7 @@ export function mountBattle(container, opts) {
     const { result, stageId, heroes, resume, form } = opts;
     const stage = D.stages[stageId];
     const state = {
+        combatOf: opts.combatOf ?? null,   // 영웅 툴팁의 세부 옵션 — `game.heroCombat(G, h)` 는 앱이 든다(재생기는 G 를 모른다 · ADR-0114)
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
         // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
@@ -91,7 +92,7 @@ export function mountBattle(container, opts) {
             rank: form?.byUid?.[p.uid] ?? 0,
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
-            atk: p.atk, matk: p.matk, atkType: p.atkType,   // 툴팁 문장의 피해·회복량 — 전투에는 안 쓴다 (INTERFACE §2-6)
+            atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType,   // 툴팁 문장의 피해·회복량(범위 · R90) — 전투에는 안 쓴다 (INTERFACE §2-6)
             // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
             stats: p.stats ?? null,
             // 스킬은 쿨부터 돈다 — 첫 준비 시각은 결과가 싣는다(`party[].ready` · R89). 칸은 덮인 채로 출발한다
@@ -384,14 +385,17 @@ function renderUnits(state, root) {
                     </div>
                 </div>
                 <div class="pop-layer"></div>`;
-            // 올려놓으면 뜬다 — 카드는 기본 능력치(영웅만), 스킬 칸은 그 스킬 (2026-08-28, ui/tip.js).
+            // 올려놓으면 뜬다 — 카드는 **유닛 툴팁**(기본 옵션 · Alt 로 세부 옵션 · SCREEN_DESIGN §2 · ADR-0114), 스킬 칸은 그 스킬 (ui/tip.js).
+            // 영웅의 세부 옵션은 앱이 넘긴 `combatOf`(= game.heroCombat) · 몬스터는 `round` 이벤트의 `sheet`. 소환물(벽)은 둘 다 아니라 안 뜬다.
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
-            if (u.hero) bindTipNode(n, () => heroTipCard(u.hero));
+            // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
+            if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null), { anchor: true });
+            else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u), { anchor: true });
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
-                // 회복량의 밑수 `matk` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출)
+                // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
                 if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i],
-                    { period: u.period, atk: u.atk, matk: u.matk, hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, source: u.skills[i].source }));
+                    { period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, source: u.skills[i].source }));
             });
             u.node = n;
             // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서
@@ -601,7 +605,8 @@ function apply(state, root, opts, ev) {
                 //                 ⚠ 옛 판은 `skills: []` 로 비웠다(「몬스터 액티브는 아직 없다」) — R79 로 몬스터가 스킬을 쓰게 된 뒤에도 남아 칸이 빈 채였고,
                 //                 `castSkill` 이 칸에서 못 찾아 적의 `skill` 이벤트(칸 번쩍임 · 이름 팝업)를 **조용히 흘렸다**
                 //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
-                atk: e.atk, matk: e.matk, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량 · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
+                atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량(범위 · R90) · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
+                sheet: e.sheet ?? null,   // 세부 능력치 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 「유닛 툴팁 규격」)
                 // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
                 skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: e.ready?.[i] ?? ev.t, firedAt: ev.t })),
                 buffs: new Map(),
@@ -697,7 +702,7 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u);
             if (!u) break;
             const had = new Map((u.skills ?? []).map(s => [s.id, s]));
-            Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atk: ev.atk, matk: ev.matk, atkType: ev.atkType, stats: ev.stats ?? null });
+            Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atkMin: ev.atkMin, atkMax: ev.atkMax, matkMin: ev.matkMin, matkMax: ev.matkMax, atkType: ev.atkType, stats: ev.stats ?? null });
             u.skills = (ev.actives ?? []).map((id, i) => had.get(id) ?? { ...skillInfo(id), readyAt: ev.ready?.[i] ?? ev.t, firedAt: ev.t });
             renderUnits(state, root);
             break;
