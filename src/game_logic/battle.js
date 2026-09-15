@@ -13,6 +13,9 @@
  *     ~~몬스터 소재값(monster.csv) × 등급 배율(spawn_grade.csv)~~ 은 폐기 — `hp`·`attack`·`action_period` 컬럼이 없어졌다
  *   · 용어는 "사망"이 아니라 **전투불능** — 라운드 사이 회복 없음. 회복은 전투 안에서만 일어나고
  *     전투 밖으로 나오면 전원 즉시·무료 회복이다 [2026-09-06, base_expedition_design §1-1]
+ *   · **물약** [2026-09-15 · R103 · 칸마다 물약 R104 · battle_design §7-1] — 파티가 같이 쓰는 칸이고 **런 하나 안에서만** 산다(`createRun` 의 `potions` —
+ *     칸 하나에 물약 하나 · 앞 칸부터. 스테이지마다 다시 차는 것은 부르는 쪽이 런을 새로 열기 때문이다). HP 비율이 [balance.csv:potion_use_hp_pct] 밑인 영웅이
+ *     **차례를 안 쓰고 앞 칸부터** 마신다 · 영웅마다 [balance.csv:potion_cooldown_sec] · 그 칸 물약의 정해진 양 · rng 0 · 몬스터는 안 마신다
  *
  *   · 피해 계산은 formula.js — battle_design §9 (적중 게이트 → 타격 피해 → 감소). 이 파일은 **누가 언제 때리는가**만 본다
  *   · **몬스터는 영웅과 같은 전투 능력치 체계를 쓴다** (§8-1) — 같은 `strike` 에 같은 모양의 유닛이 양쪽으로 들어간다.
@@ -375,11 +378,16 @@ export function createBattleSystem(data) {
      *   combat = heroSystem.computeCombat 결과, actives = 그 영웅의 액티브 **인스턴스** 목록(skill.activesFor).
      *   없거나 비면 기본 공격만 돈다. reactions = 사건 훅 등록(⚠ 지금은 아무도 싣지 않는다)
      * @param level 이번 런의 스테이지 레벨(`state.stageLevelState` — 올린 레벨) · 안 주면 기본 레벨 `dlvl`
+     * @param potions 이 런의 물약 칸 `[{id, heal}]` — **앞 칸부터** · 칸 수 [balance.csv:potion_slot_max] 이하 · `null` = 빈 목록. 이 런 안에서만 산다 (battle_design §7-1 · R104).
+     *   빈 목록이면 물약 단계가 아예 안 돌아 rng · 타임라인이 인자를 안 준 것과 같다
      * @returns `{ next, result, ended }` — `next()` = 라운드 하나의 요약(이미 끝났으면 null) · `result` = 라운드마다 자라는 결과 + 타임라인.
      *   타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      */
-    function createRun(partyUnits, stageId, rng, level) {
+    function createRun(partyUnits, stageId, rng, level, potions = null) {
         const stage = data.stages[stageId];
+        const potionSlots = potions ?? [];
+        if (!Array.isArray(potionSlots) || potionSlots.length > B.potion_slot_max || potionSlots.some(p => !(p?.id && p.heal >= 0)))
+            throw new Error(`battle: 물약 칸 ${JSON.stringify(potions)} — [{id, heal}] 이고 칸 수 ${B.potion_slot_max} 이하여야 한다 (INTERFACE §2-6)`);
         // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
         //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
         const stageLevel = level ?? stage.dlvl;
@@ -393,6 +401,7 @@ export function createBattleSystem(data) {
             rank: p.rank ?? 0,           // 진형 — 편성이 정한 자리 (state.formationState · 배치가 없으면 전열)
             next: i * 0.3,               // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
             reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
+            potionReadyAt: 0,            // 제 물약이 다시 준비되는 시각 — **준비 상태로 출발한다**(스킬과 같은 규칙 · R103). 갈아입기(`refit`)가 안 건드린다
             // 칸 순서 = 출처 자리. **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 첫 준비 시각 0.
             //   동시 준비는 칸 순서라(`SK.pickReady`) 첫 차례는 1번 칸이다. rng 0
             actives: (SK ? p.actives ?? [] : []).map(a => {
@@ -478,6 +487,9 @@ export function createBattleSystem(data) {
             // 아래 `contrib` 맵이 세고 전투가 끝나면 여기로 옮긴다. **rng 를 안 쓰고 타임라인에도 안 들어간다** —
             // 세는 것뿐이라 전투 결과도 골든 수열도 안 건드린다 (`strikes` 와 같은 취급)
             contrib: [],
+            // 이 런의 물약 칸 [2026-09-15 · R103 · 모양 R104] — 재생기가 칸의 첫 상태를 그린다: `max` = 칸 수 · `slots` = 찬 칸(앞 칸부터 · 나머지는 빈 채 출발) ·
+            //   `used` = 마신 수(`potion` 이벤트 수와 같다). 물약 없는 런도 칸은 선다(`slots: []`)
+            potion: { max: B.potion_slot_max, slots: potionSlots.map(p => ({ id: p.id, heal: p.heal })), used: 0 },
         };
 
         /* 기여 — **전투 시작 시점의 파티 전원**으로 자리를 미리 잡는다. 0 인 영웅도 줄이 서야
@@ -515,6 +527,32 @@ export function createBattleSystem(data) {
             strikeOnce, pickTarget, r1, EPS, hooks,
             makeSummon: (caster, def) => makeSummon(caster, def, `s${summonSeq++}`),
         });
+
+        /* 물약 [2026-09-15 · R103 · battle_design §7-1] — 칸은 **파티가 같이 쓰고 이 런 안에서만** 산다: 여기서 차고 라운드 사이에는 안 찬다.
+           틱마다 HP 재생 **뒤** · 행동 순회 **앞**에 한 번 본다 — 조건에 걸린 영웅이 **차례를 안 쓰고** 마신다(`next` 불변).
+           대상 = 살아 있는 파티 영웅(소환 제외) 중 HP 비율이 [balance.csv:potion_use_hp_pct] 밑이고 제 물약 쿨이 끝난 사람.
+           순서 = HP 비율 낮은 순 · 같으면 **파티 배열 순** — 동점을 배열 순으로 명시 비교한다(엔진의 정렬 안정성에 기대지 않는다 · INTERFACE §5-3).
+           **칸 하나에 물약 하나 · 앞 칸부터 마신다** [R104 사용자 지시] — 먼저 마시는 영웅이 앞의 찬 칸을 받는다. 칸은 런 안에서 다시 안 차므로
+           「앞의 찬 칸」은 늘 방금 마신 칸의 다음이다. 그 칸 물약의 정해진 양을 채우고(최대치에서 자른다) 쿨은 [balance.csv:potion_cooldown_sec] 이다. **rng 를 안 쓴다** ·
+           ⚠ 화염 치유 감소는 미구현이다(`skill_runtime.castHeal` 과 같은 처지) */
+        let potionLeft = potionSlots.length;
+        let potionNext = 0;
+        const drinkPotions = () => {
+            const want = party
+                .map((u, i) => ({ u, i }))
+                .filter(({ u }) => !u.summon && u.hp > 0 && u.hp / u.hpMax * 100 < B.potion_use_hp_pct && u.potionReadyAt <= t + EPS);
+            want.sort((a, b) => (a.u.hp / a.u.hpMax - b.u.hp / b.u.hpMax) || (a.i - b.i));
+            for (const { u } of want) {
+                if (potionLeft <= 0) break;
+                const i = potionNext++;
+                const slot = potionSlots[i];
+                potionLeft -= 1;
+                out.potion.used += 1;
+                u.hp = Math.min(u.hpMax, u.hp + slot.heal);
+                u.potionReadyAt = t + B.potion_cooldown_sec;
+                timeline.push({ t: r1(t), e: 'potion', u: u.key, s: slot.id, i, amt: slot.heal, dhp: u.hp, left: potionLeft });
+            }
+        };
 
         const beginRound = () => {
             // 소환물은 **라운드가 끝나면 사라진다** (skill_design §12-6). 걷어내는 자리가 여기다 —
@@ -708,7 +746,8 @@ export function createBattleSystem(data) {
             const cA = credit(u), cD = credit(target);
             if (cA) cA.dealt += total;
             if (cD) cD.taken += total;
-            const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: total, crit, dhp: target.hp };
+            // `ty` — 그 타격의 피해 종류(`hitType`). 표시용이다 — 관전 로그가 피해 숫자를 종류 색으로 칠한다 (INTERFACE §2-6 · SCREEN_DESIGN §4-2)
+            const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: total, crit, dhp: target.hp, ty: hitType };
             if (cb) ev.cb = cb;                              // 강타 몫 — 강타가 들어간 타격에만 키가 선다(`dmg` 는 합 · 흡혈 · 반사는 강타 몫을 안 먹는다)
             // 흡혈 — 직격의 최종 피해에만 비례 (§9-6). 배리어가 먹은 몫도 포함한다 (직격이 들어간 사실은 같다)
             if (u.ls > 0 && u.hp > 0) {
@@ -848,6 +887,8 @@ export function createBattleSystem(data) {
                     u.hp += amt;
                     timeline.push({ t: r1(t), e: 'regen', u: u.key, amt, dhp: u.hp });
                 }
+                // 물약 — 재생 **뒤** · 행동 **앞** (R103 · 위 `drinkPotions`). 물약이 없거나 칸이 빈 런은 안 돈다
+                if (potionLeft > 0) drinkPotions();
                 for (const u of [...party, ...units.enemies]) {
                     if (u.hp <= 0) continue;
                     u.next -= TICK;
@@ -880,8 +921,8 @@ export function createBattleSystem(data) {
      * 런 하나를 **한 번에 끝까지** — `createRun` 을 끝날 때까지 이어 부른다. 전투 결과만 보는 쪽(단정 · 캘리브레이션)이 쓴다.
      * @returns 결과 + 타임라인 (`createRun` 의 `result` 와 같은 모양)
      */
-    function simulate(partyUnits, stageId, rng, level) {
-        const run = createRun(partyUnits, stageId, rng, level);
+    function simulate(partyUnits, stageId, rng, level, potions = null) {
+        const run = createRun(partyUnits, stageId, rng, level, potions);
         while (run.next()?.ended === false);
         return run.result;
     }

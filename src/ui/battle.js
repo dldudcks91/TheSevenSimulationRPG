@@ -35,7 +35,7 @@
  */
 
 import * as M from './mock.js';
-import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo } from './data.js';
+import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard } from './tip.js';
 
@@ -54,10 +54,13 @@ const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math
 
 /**
  * @param container  붙일 곳
- * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto), onTime(t), onRetreat(), now(), frozenMs }
+ * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto), onOver(), onTime(t), onRetreat(), now(), frozenMs }
+ *   onOver() = 재생이 런의 끝에 닿았다(결과 띠가 선 순간 · 되감기로 선 끝은 안 부른다) — 앱이 상단 세그먼트의 관전 칸을 「전투 종료」로 바꾼다 (ADR-0147)
  *   now = 실제 시각(ms)을 읽는 시계 · frozenMs = 「멈췄다」의 문턱 — 둘 다 앱이 넘긴다 (ADR-0102)
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 재생이 끝나고 사용자가 넘어갈 때 / 반복 자동 진행 시.
+ *   onRetry() = 패배한 결과 띠의 [다시 도전] — 같은 스테이지로 다시 보내는 것은 앱이다. 안 넘기면 버튼이 안 선다 (ADR-0138)
+ *   onNext() = 반복 없이 이긴 결과 띠의 [다음 스테이지] — 어디가 다음인지 · 보내는 것은 앱이다. 안 넘기면(마지막 스테이지) 버튼이 안 선다 (ADR-0141)
  * @returns 정리 함수
  */
 export function mountBattle(container, opts) {
@@ -81,6 +84,9 @@ export function mountBattle(container, opts) {
         // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 판 전폭 · 로그 · 누적 없음 · ADR-0130) / 'split'(아레나 + 우측 로그 열 · ADR-0093).
         // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
         layout: opts.layout === 'split' ? 'split' : 'wide',
+        // 물약 칸 — **파티가 같이 쓰고 칸 하나에 물약 하나**. 결과가 칸 수와 찬 칸을 싣고(`result.potion`) `potion` 이벤트가 마신 칸 번호(`i`)를 준다 (R104 · ADR-0148).
+        //   물약 없이 도는 런도 칸은 전부 빈 채 선다 — 값은 항상 찍는다 (SCREEN_DESIGN §4-1)
+        potion: { max: result.potion?.max ?? 0, slots: (result.potion?.slots ?? []).map(s => ({ id: s.id, heal: s.heal, full: true })) },
     };
 
     // 파티 유닛 — 결과의 party 정보 + 로스터의 표시 정보(이름·죄종·직업)
@@ -166,6 +172,7 @@ function buildDom(state, stage, stageId) {
                 <div class="side side-enemy"></div>
                 <div class="divider"><span class="muted">VS</span></div>
                 <div class="side side-party"></div>
+                <div class="p-belt b-belt">${potionBeltHtml(state.potion)}</div>
                 <div class="battle-result"></div>
             </div>
             <div class="battle-side" hidden>
@@ -250,6 +257,31 @@ function paintPane(state, root) {
 
 /* 라운드 표시는 **트랙 하나**가 든다 [2026-09-04 사용자 지시] — 「라운드 n / 총 · 종류」 수치와 경과 시계는 삭제됐다.
    지금 몇 번째인가는 `.now` 강조가, 종류는 칸의 색(정예·보스)이 답한다 (SCREEN_DESIGN §4-2) */
+/**
+ * 물약 칸 한 줄 (R104 · ADR-0148) — 아레나 왼쪽 아래 구석. 찬 칸 = 그 물약 그림(`mock.potionArt` · 그림이 없으면 테두리만) · 빈 칸 = 점선.
+ * 재생기는 세지 않는다 — 어느 칸이 비었나는 이벤트의 `i` 가 준다
+ */
+function potionBeltHtml(p) {
+    return Array.from({ length: p.max }, (_, i) => {
+        const s = p.slots[i];
+        const info = s?.full ? potionInfo(s.id) : null;
+        const src = info ? M.potionArt(s.id) : null;
+        const tip = info ? t('bt.potion.slot', { name: L(info.name), n: s.heal }) : t('bt.potion.empty');
+        return `<span class="p-slot${info ? ' full' : ''}" data-i="${i}" title="${tip}">${src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''}</span>`;
+    }).join('');
+}
+/** 물약 칸을 다시 칠한다 — `fired` = 방금 마신 칸이면 한 번 번쩍인다(되감기 중에는 안 번쩍인다 · 스킬 칸의 `fire` 와 같은 520ms) */
+function paintPotion(state, root, fired = -1) {
+    const belt = root.querySelector('.b-belt');
+    if (!belt) return;
+    belt.innerHTML = potionBeltHtml(state.potion);
+    if (fired < 0 || state.catchUp) return;
+    const slot = belt.querySelector(`.p-slot[data-i="${fired}"]`);
+    if (!slot) return;
+    slot.classList.add('fire');
+    state.timeouts.push(setTimeout(() => slot.classList.remove('fire'), 520));
+}
+
 function paintRound(state, root) {
     root.querySelectorAll('.rt').forEach(n => {
         const v = Number(n.dataset.n);
@@ -322,12 +354,18 @@ function renderUnits(state, root) {
         for (const u of list) {
             const n = document.createElement('div');
             const boss = u.grade === 'stage_boss' || u.grade === 'chapter_boss';
-            // 등급이 카드의 색을 정한다 — 몬스터는 스폰 등급(정예·보스), 영웅은 **영웅 등급**(`tier-*`).
-            // 죄종은 색을 갖지 않는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §5) — 색은 CSS 가 클래스로 든다(인라인 없음)
-            const tier = u.side === 'party' ? ` tier-${u.hero?.tier ?? 'rare'}` : '';
+            // 등급이 카드의 색을 정한다 — 몬스터는 스폰 등급(정예·보스), 영웅은 **영웅 등급**(`hero_tier.csv:color_hex`).
+            // 죄종은 색을 갖지 않는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §5) — 몬스터 등급 색은 CSS 가 클래스로 든다.
+            // 영웅 등급 색은 **CSV 에서 읽어 변수(`--tier-line`)로 건다** (2026-09-15) — CSS 에 등급마다 줄을 박아 뒀더니 09-14 에 생긴 `normal`
+            //   (그리고 `magic`)은 줄이 없어 진영색 파랑으로 떨어졌다. 띠 카드(app.js `tierColor`) · 유닛 툴팁(tip.js `--unit-line`)과 같은 출처다
+            //   모르는 등급은 `rare` 로 — 두 곳의 `tierOf` 와 같은 폴백이다(영웅이 없는 파티 유닛도 옛 `tier-rare` 그대로)
+            const tierLine = u.side === 'party'
+                ? (D.heroTiers.find(r => r.id === (u.hero?.tier ?? 'rare')) ?? D.heroTiers.find(r => r.id === 'rare'))?.color
+                : null;
             // `click` = 누르면 장착 대상이 되는 영웅 카드 · `on` = 지금 장착 대상 (ADR-0137)
             const pick = u.hero && state.onPickHero ? ` click${u.hero.uid === state.pickedUid ? ' on' : ''}` : '';
-            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${tier}${pick}${u.hp <= 0 ? ' dead' : ''}`;
+            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${pick}${u.hp <= 0 ? ' dead' : ''}`;
+            if (tierLine) n.style.setProperty('--tier-line', tierLine);   // ⚠ 색은 데이터 값이라 인라인이다 — 규칙(어느 변을 칠하나)은 CSS 가 든다
             // ⚠ **죄종 테두리색은 걷었다** (2026-09-03 사용자 지시) — 정예의 윗변을 죄종 색으로 칠하던 인라인 스타일이다.
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
             // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
@@ -483,43 +521,50 @@ function castSkill(state, u, ev) {
     }
     popup(state, u, L(s.name), 'skill-tag');
 }
-/** 타격 라벨 — 이벤트가 들고 온 스킬 id(`s`) 의 이름, 없으면 기본 공격. 로그와 누적 데미지가 같은 라벨을 쓴다 */
+/** 타격 라벨(`strikeLabel`) — 이벤트가 들고 온 스킬 id(`s`) 의 이름, 없으면 기본 공격. 로그가 쓴다 — 누적 데미지는 id 로 쌓고 그릴 때 같은 이름을 붙인다 */
 /** 칸의 첫 준비 시각 — 시뮬이 실은 값 그대로 · `null` 은 안 켜진 오오라라 **늘 덮는다**(Infinity) · 값이 없으면 `dflt` (INTERFACE §2-6 · R98) */
 const slotReady = (r, dflt) => r === null ? Infinity : (r ?? dflt);
 const strikeLabel = id => id ? L(skillInfo(id).name) : t('bt.basicAttack');
 
 /* ───────── 누적 데미지 — 이벤트의 dmg 를 더할 뿐이다. 재생기는 계산하지 않는다 (정산은 game_logic) ───────── */
 
-/** 파티는 유닛 키, 적은 종류(몬스터 id + 죄종)로 묶는다 — 라운드마다 새로 서는 같은 몬스터가 한 줄에 쌓인다 */
-const dmgKey = u => u.side === 'party' ? u.key : `e:${u.monsterId}:${u.sin ?? ''}`;
+/** **영웅만** 쌓는다 — 판이 영웅만 든다 (SCREEN_DESIGN §4-2 · ADR-0149). 줄의 키는 **id** 다 — 스킬 id · 기본 공격 `basic` · 반사 `reflect`.
+    이름은 그릴 때 붙인다 — 칸 순서로 줄을 세우려면 스킬 id 가 있어야 한다. 항목이 유닛을 들어 그 영웅의 스킬 칸을 읽는다(갈아입기 `refit` 는 같은 유닛에 덮어쓴다) */
 function dmgEntry(state, u) {
-    const k = dmgKey(u);
-    if (!state.dmg.has(k)) state.dmg.set(k, { name: u.name, side: u.side, total: 0, by: new Map() });
-    return state.dmg.get(k);
+    if (!state.dmg.has(u.key)) state.dmg.set(u.key, { name: u.name, unit: u, total: 0, by: new Map() });
+    return state.dmg.get(u.key);
 }
-function addDmg(state, u, label, dmg) {
+function addDmg(state, u, id, dmg) {
+    if (u.side !== 'party') return;
     const e = dmgEntry(state, u);
     e.total += dmg;
-    e.by.set(label, (e.by.get(label) ?? 0) + dmg);
+    e.by.set(id, (e.by.get(id) ?? 0) + dmg);
 }
-/** 누적 데미지 판 — 파티 / 적 두 묶음. 막대는 묶음 안 최대 기준, % 는 묶음 합 기준. 보이는 동안만 그린다 */
+/** 누적 데미지 판 — 영웅마다 머리 줄(합계 · 파티 합 안 % · 막대는 파티 안 최대 기준) 아래에 한 줄씩(아이콘 · 이름 · 피해). 보이는 동안만 그린다 */
 function renderDmg(state, root) {
     const box = root.querySelector('.battle-dmg-wrap');
     if (!box || box.hidden) return;
-    const groups = [['party', t('bt.dmg.party')], ['enemy', t('bt.dmg.enemy')]];
-    box.innerHTML = groups.map(([side, title]) => {
-        const rows = [...state.dmg.values()].filter(e => e.side === side).sort((a, b) => b.total - a.total);
-        const sum = rows.reduce((a, e) => a + e.total, 0);
-        const max = rows[0]?.total || 1;
-        return `<div class="dmg-group">${title}</div>` + (rows.length ? rows.map(e => `
-            <div class="dmg-row ${side}">
-                <div class="dmg-head"><span class="dmg-n">${L(e.name)}</span>
-                    <span class="dmg-v">${e.total.toLocaleString()} <span class="muted">${sum ? Math.round(e.total / sum * 100) : 0}%</span></span></div>
-                <div class="bar dmg"><i style="width:${e.total / max * 100}%"></i></div>
-                ${e.by.size ? `<div class="dmg-by">${[...e.by.entries()].sort((a, b) => b[1] - a[1]).map(([l, v]) => `${l} <b>${v.toLocaleString()}</b>`).join(' · ')}</div>` : ''}
-            </div>`).join('') : `<div class="dmg-row"><span class="muted">—</span></div>`);
-    }).join('');
+    const rows = [...state.dmg.values()].sort((a, b) => b.total - a.total);
+    const sum = rows.reduce((a, e) => a + e.total, 0);
+    const max = rows[0]?.total || 1;
+    box.innerHTML = rows.length ? rows.map(e => `
+        <div class="dmg-row">
+            <div class="dmg-head"><span class="dmg-n">${L(e.name)}</span>
+                <span class="dmg-v">${e.total.toLocaleString()} <span class="muted">${sum ? Math.round(e.total / sum * 100) : 0}%</span></span></div>
+            <div class="bar dmg"><i style="width:${e.total / max * 100}%"></i></div>
+            <div class="dmg-sks">${dmgLines(e).map(([id, v]) => `
+                <div class="dmg-sk"><i class="dmg-ico">${dmgIcon(id)}</i><span class="dmg-skn">${dmgName(id)}</span><span class="dmg-skv">${v.toLocaleString()}</span></div>`).join('')}</div>
+        </div>`).join('') : `<div class="dmg-row"><span class="muted">—</span></div>`;
 }
+/** 줄 순서 — 기본 공격 → 그 영웅 카드의 스킬 칸 순(칸에서 빠진 스킬은 그 뒤) → 반사. 피해 큰 순이면 숫자가 오를 때마다 줄이 자리를 바꾼다 */
+function dmgLines(e) {
+    const slots = (e.unit.skills ?? []).map(s => s.id);
+    const rank = id => id === 'basic' ? -1 : id === 'reflect' ? Infinity : (slots.includes(id) ? slots.indexOf(id) : slots.length);
+    return [...e.by.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
+}
+/* 기본 공격은 스킬 그림이 없어 **무기 칸 실루엣**을 든다 · 반사는 그림이 없다 */
+const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : skillImg(skillInfo(id));
+const dmgName = id => id === 'basic' ? t('bt.basicAttack') : id === 'reflect' ? t('bt.reflectLabel') : L(skillInfo(id).name);
 
 /**
  * 떠오르는 한 줄. `skillId` 를 주면 **텍스트 왼쪽에 그 스킬 아이콘**이 붙는다 (SCREEN_DESIGN §4 · 2026-09-08).
@@ -635,8 +680,9 @@ function apply(state, root, opts, ev) {
             }
             if (a && d) {
                 // 모든 타격을 적는다 — 누가 → 누구 · 피해 · 쓴 스킬
-                pushLog(state, root, t(ev.crit ? 'log.crit' : 'log.hit', { name: L(a.name), target: L(d.name), dmg: ev.dmg, skill }), a.side);
-                addDmg(state, a, skill, ev.dmg);
+                // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
+                pushLog(state, root, t('log.hit', { name: L(a.name), target: L(d.name), dmg: ev.dmg, skill, ty: ev.ty ?? '' }), a.side);
+                addDmg(state, a, ev.s ?? 'basic', ev.dmg);
                 renderDmg(state, root);
             }
             break;
@@ -647,7 +693,7 @@ function apply(state, root, opts, ev) {
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
                 pushLog(state, root, t('log.reflect', { name: L(a.name), target: L(d.name), dmg: ev.dmg }), a.side);   // 반사의 주체는 되받아 친 쪽
-                addDmg(state, a, t('bt.reflectLabel'), ev.dmg);
+                addDmg(state, a, 'reflect', ev.dmg);
                 renderDmg(state, root);
             }
             break;
@@ -675,6 +721,16 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
             if (a && d) pushLog(state, root, t('log.heal', { name: L(a.name), target: L(d.name), amt: ev.amt, skill: strikeLabel(ev.s) }), a.side);
+            break;
+        }
+        case 'potion': {   // 물약 — 앞의 찬 칸(`i`)이 비고 그 영웅 HP 가 오른다 (R104 · ADR-0148).
+            //   **자동이라 앞에 `skill` 이벤트가 없다** — 회복과 같은 자리 · 같은 색으로 팝업을 띄우고 로그 한 줄을 남긴다
+            const u = U(ev.u);
+            if (u) { u.hp = ev.dhp; popup(state, u, `+${ev.amt}`, 'heal'); refreshUnit(state, u); }
+            const slot = state.potion.slots[ev.i];
+            if (slot) slot.full = false;
+            paintPotion(state, root, ev.i);
+            if (u) pushLog(state, root, t('log.potion', { name: L(u.name), amt: ev.amt, left: ev.left }), u.side);
             break;
         }
         case 'regen': {   // HP 재생 — 조용히 오른다(팝업 없음). 정수 1 이상 쌓인 틱에만 온다
@@ -721,21 +777,33 @@ function apply(state, root, opts, ev) {
             clearInterval(state.timer);
             pushLog(state, root, t(ev.won ? 'log.end.win' : 'log.end.lose'));
             showResult(state, root, opts, ev.won);
+            // 재생이 끝에 닿았다고 앱에 알린다 — 상단 세그먼트의 관전 칸이 「전투 종료」로 바뀐다 (ADR-0147).
+            //   되감아 선 끝(재개 mount)은 알리지 않는다 — 앱은 넘긴 재생 위치로 이미 안다
+            if (!state.catchUp) opts.onOver?.();
             break;
         }
     }
 }
 
-/** 재생이 끝나면 아레나 위에 결과 띠 — 반복이 켜져 있으면 잠깐 세고 다음 원정으로 */
+/** 재생이 끝나면 아레나 위에 결과 띠 — 반복이 켜져 있으면 잠깐 세고 다음 원정으로 · 반복 없이 이기면 [다음 스테이지](ADR-0141) · 패배면 [다시 도전]이 선다 (ADR-0138) */
 function showResult(state, root, opts, won) {
     const box = root.querySelector('.battle-result');
     const auto = won && opts.repeat === true;
+    const retry = !won && typeof opts.onRetry === 'function';
+    // 반복이 세는 띠에는 안 단다 — 세는 동안 누를 버튼이 둘이 된다 (ADR-0141)
+    const next = won && !auto && typeof opts.onNext === 'function';
     box.innerHTML = `
         <span class="${won ? 'up' : 'down'} verdict">${t(won ? 'bt.won' : 'bt.lost')}</span>
         ${auto ? `<span class="muted b-next"></span>` : ''}
-        <button class="btn primary sm b-report">${t('bt.toReport')}</button>`;
+        <button class="btn primary sm b-report">${t('bt.toReport')}</button>
+        ${next ? `<button class="btn sm b-stage-next">${t('bt.nextStage')}</button>` : ''}
+        ${retry ? `<button class="btn sm b-retry">${t('bt.retry')}</button>` : ''}`;
     box.classList.add('show');
     box.querySelector('.b-report').onclick = () => opts.onEnd(false);
+    // 같은 스테이지로 곧바로 다시 보낸다 — 출발은 앱이 한다(재생기는 계산하지 않는다)
+    if (retry) box.querySelector('.b-retry').onclick = () => opts.onRetry();
+    // 다음 스테이지로 곧바로 보낸다 — 어디가 다음인지도 출발도 앱이 정한다
+    if (next) box.querySelector('.b-stage-next').onclick = () => opts.onNext();
     if (auto) {
         state.auto = true;       // 세는 중 — 여기서 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
         let left = 3, beat = opts.now();

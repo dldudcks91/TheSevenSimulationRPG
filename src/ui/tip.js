@@ -11,7 +11,7 @@
  * 아이템 비교 카드는 `app.js` 에 남는다 — 희귀도 · 접사 · 무기군처럼 app 쪽 헬퍼를 많이 타서 옮기면 그게 따라온다.
  *
  * **Alt 상태도 여기 든다** (2026-09-10 · SCREEN_DESIGN §2 · ADR-0089 · ADR-0114) — 누르는 동안만 켜지고,
- * 떠 있는 **`data-alt` 카드**(스킬 카드 · 유닛 카드)만 그 자리에서 다시 그린다. 스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 안 본다.
+ * 떠 있는 **`data-alt` 를 단 것**(스킬 카드 · 유닛 카드 · 아이템 카드의 스킬 칸 — ADR-0139)만 그 자리에서 다시 그린다. 스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 안 본다.
  *
  * **겹쳐 붙은 툴팁** — 관전 유닛 카드(영웅) 안에 스킬 칸이 들어 있다. 칸에서 나가 카드로 돌아올 때
  * `mouseenter` 는 다시 안 뜨므로(자식에서 부모로 돌아오는 건 진입이 아니다) 여기서 조상의 툴팁을 되살린다.
@@ -372,7 +372,11 @@ function amountPhrase(def, part, atkType, R) {
     const heal = def.kind === 'heal';
     const d = amountSlot(part, R);
     if (part.value == null) return t(heal ? 'sk.amt.healFx' : 'sk.amt.fx', { f: d });
-    return t(heal ? 'sk.amt.heal' : (atkType && atkType !== 'physical' ? 'sk.amt.magic' : 'sk.amt.physical'), { v: d });
+    if (heal) return t('sk.amt.heal', { v: d });
+    // 피해 종류 = 그 타격이 상대하는 방어 — **스킬의 원소 태그가 먼저**고 없으면 쓰는 이의 공격 타입이다 (전투 `strikeOnce` 와 같은 순서 · battle_design §2-1).
+    //   원소는 이름으로 말한다 — 「마법 피해」는 없다. 공격 타입만 보면 09-11 뒤 원소 스킬까지 「물리 피해」로 찍힌다 (2026-09-15)
+    const type = def.element ?? atkType;
+    return type && type !== 'physical' ? t('sk.amt.elem', { v: d, e: t(`st.atkType.${type}`) }) : t('sk.amt.physical', { v: d });
 }
 
 /**
@@ -444,7 +448,7 @@ function skillLines(def, pv, atkType, R) {
 
 /* ───────── Alt 계산식 — 누르는 동안만 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089) ─────────
    토글이 아니다 — 켜 둔 것을 잊으면 모든 설명창이 식으로 부푼다. 떠 있는 설명창도 **즉시** 바꾼다
-   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **`data-alt` 카드** — 스킬 카드(식) · 유닛 카드(세부 옵션 열 · 2026-09-14). 아이템 카드는 그대로다.
+   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **`data-alt` 를 단 것** — 스킬 카드(식) · 유닛 카드(세부 옵션 열 · 2026-09-14) · 아이템 카드의 스킬 칸(식 · 2026-09-15 ADR-0139). 아이템 카드의 나머지는 그대로다.
    스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 **안 본다** — 판 안에 셋이 나란히 서서 식이 붙으면 세 줄이 같이 부푼다 */
 let altHeld = false;
 /** 마지막 마우스 위치 — 다시 그린 카드의 높이가 달라져도 넘침 보정이 맞게 `moveTip` 을 한 번 더 부른다 */
@@ -455,8 +459,9 @@ function setAlt(on) {
     altHeld = on;
     const tip = $tip();
     if (!tip?.classList.contains('show')) return;
-    // 다시 그리는 카드 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114). 제 인자를 쥔 `_rebuild` 로 같은 카드를 새로 만든다
-    const cards = tip.querySelectorAll('.tip-card[data-alt]');
+    // 다시 그리는 것 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114) · 아이템 툴팁의 스킬 칸(ADR-0139 — 카드가 아니라 칸이다).
+    //   제 인자를 쥔 `_rebuild` 로 같은 것을 새로 만든다
+    const cards = tip.querySelectorAll('[data-alt]');
     for (const c of cards) c.replaceWith(c._rebuild());
     // 카드 옆에 붙은 툴팁(ADR-0120)은 마우스 위치 없이도 다시 놓인다 — 넓어진 카드가 넘치면 왼쪽 · 위로 옮긴다
     if (cards.length && (anchorNode || lastMove)) moveTip(lastMove);
@@ -470,7 +475,7 @@ window.addEventListener('blur', () => setAlt(false));
 window.addEventListener('mousemove', ev => { lastMove = ev; }, { passive: true });
 
 /**
- * 툴팁이 내는 **문장**을 그대로 낸다 — 스킬 창의 액티브 줄 · 아이템 툴팁의 담은 스킬 줄이 hover 와 같은 말을 하게 하는 창이다
+ * 툴팁이 내는 **문장**을 그대로 낸다 — 스킬 창의 액티브 줄이 hover 와 같은 말을 하게 하는 창이다(아이템 툴팁의 스킬 칸은 2026-09-15 부터 몸통째 `skillTipSection` 을 부른다 · ADR-0139)
  * [2026-09-08 사용자 지시 · SCREEN_DESIGN §7]. 카드와 **같은 함수**(`skillLines`)를 쓰므로 둘이 갈릴 길이 없다.
  * ⚠ **Alt 를 안 본다** — 기본 · 값 없음 두 상태만 탄다 (ADR-0089). 추가 피해 문장은 줄바꿈으로 가른다.
  * ⚠ `desc`(고정 설명)는 **안 낸다** — 줄에서 뺐다(같은 지시). 설명창도 2026-09-15 에 뗐다(ADR-0118).
@@ -483,20 +488,42 @@ export function skillLineHtml(s, ctx = {}) {
 }
 
 /**
- * 스킬 카드 — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주 (SCREEN_DESIGN §2 「스킬 설명창 규격」).
- * 머리에는 **출처 칩**(영웅·무기·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **능력치 칩**이 선다.
- * 능력치 칩은 스케일링 슬롯(`def.scales`)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
- * 고정 설명(`def.desc`)은 **안 낸다** — 문장이 같은 말을 값까지 넣어 한다(같은 ADR).
+ * 스킬 카드 — 머리글 「스킬」 + **몸통**(`skillBodyHtml`) (SCREEN_DESIGN §2 「스킬 설명창 규격」).
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 **같은 인자로** 다시 만든다 — 그래서 카드가 제 인자를 쥔 `_rebuild` 를 든다(유닛 카드와 같은 장치).
  * @param s   `.id` 만 있으면 된다 — 정의는 `SYS.skill.defs` 에서 집는다(호출처마다 다른 모양을 받아 왔다)
  * @param ctx {period, atkMin, atkMax, matkMin, matkMax, hpMax, atkType, stats, source} — 모르는 값은 생략한다. 그 숫자 자리가 식으로 접힌다
  */
 export function skillTipCard(s, ctx = {}) {
     if (!s) return null;
-    const def = SYS.skill?.defs?.[s.id] ?? null;
     const c = el('div', 'tip-card');
     c.dataset.alt = '1';
     c._rebuild = () => skillTipCard(s, ctx);
+    c.innerHTML = `<div class="tip-head">${t('tip.skill.h')}</div>${skillBodyHtml(s, ctx)}`;
+    return c;
+}
+
+/**
+ * 아이템 툴팁의 스킬 칸 — 스킬 카드의 **몸통 그대로**이고 머리글만 없다 [2026-09-15 사용자 지시 · SCREEN_DESIGN §6 · ADR-0139].
+ * 칸도 `data-alt` 를 들어 Alt 를 누르면 **이 칸만** 다시 선다 — 밑수 · 옵션에는 괄호 식이 없다.
+ * 출처 칩은 부르는 쪽이 `ctx.source` 를 안 넘겨 안 선다 — 무기 카드 안이라 출처가 이미 섰다
+ */
+export function skillTipSection(s, ctx = {}) {
+    const n = el('div', 'tip-skill');
+    n.dataset.alt = '1';
+    n._rebuild = () => skillTipSection(s, ctx);
+    n.innerHTML = skillBodyHtml(s, ctx);
+    return n;
+}
+
+/**
+ * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주.
+ * 스킬 카드와 아이템 툴팁의 스킬 칸이 **같이 부른다** — 한쪽만 고쳐지지 않게 몸통은 여기 하나다 (ADR-0139).
+ * 칩은 **출처 칩**(영웅·무기·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **능력치 칩**이다.
+ * 능력치 칩은 스케일링 슬롯(`def.scales`)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
+ * 고정 설명(`def.desc`)은 **안 낸다** — 문장이 같은 말을 값까지 넣어 한다(같은 ADR).
+ */
+function skillBodyHtml(s, ctx) {
+    const def = SYS.skill?.defs?.[s.id] ?? null;
     const name = L(def?.name ?? s.name ?? { ko: s.id, en: s.id });
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
@@ -505,11 +532,9 @@ export function skillTipCard(s, ctx = {}) {
     // 정의를 못 찾으면(행이 지워진 옛 세이브) 이름만 낸다 — 던지지 않는다
     const R = { alt: altHeld, fx: false };
     const lines = def ? skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, R) : null;
-    c.innerHTML = `
-        <div class="tip-head">${t('tip.skill.h')}</div>
+    return `
         <div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${name}</div>
         ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
         ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}
         ${R.fx && !R.alt ? `<div class="tip-foot">${t('sk.altHint')}</div>` : ''}`;
-    return c;
 }

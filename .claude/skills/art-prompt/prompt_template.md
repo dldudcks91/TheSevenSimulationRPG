@@ -1,11 +1,13 @@
 # prompt_template — 발주 프롬프트 골격 · 금지어 · 안전 색
 
-SKILL.md 1단계에서 편다.
+SKILL.md 1단계에서 편다 — 스케치(1-S)는 §0~§5, 세부(1-D)는 §6. 둘 다 §2 금지어 · §3 안전 색이 걸린다.
 
 > **지시문이 늘면 앵커의 지분이 준다.** 생성기는 첨부한 그림과 쓴 글을 **경쟁시킨다** — 글이 이긴 만큼 우리 세트에서 멀어진다.
 > 그래서 기본값은 **지시문 8줄 · 부정문 2개**이고, 나머지는 §1-2 에서 **실측이 틀렸을 때 한 줄씩 되살린다.** [사용자 지시 2026-09-08]
 
 ## 0. 첨부
+
+앵커(아래 표의 `gladiator_helm` · `barbarian`)는 **Gem 에 붙어 있다** [2026-09-15 사용자] — 스케치 모드는 채팅에 첨부 안내를 적지 않는다. 이 표는 **어느 앵커가 무엇을 나르는지**, 그리고 채팅에 **더 붙일 그림**(같은 종족 · 세부 모드의 스케치)을 고를 때 본다.
 
 | 인물 | 첨부 | 이유 |
 |---|---|---|
@@ -17,7 +19,7 @@ SKILL.md 1단계에서 편다.
 ⚠ **무기·손이 들어간 앵커는 붙이지 않는다** — `skeleton_soldier` · `skeleton_archer` 처럼 손에 무기를 든 옛 그림을 붙이면 그 구도가 따라온다.
 **첨부가 곧 스타일 지시다** — 붙일 그림을 고르는 데 시간을 쓰고, 글로 설명하는 데는 쓰지 않는다.
 
-## 1. 골격 — 기본형 (지시문 8줄). **앵커를 첨부했으면 무조건 이 판**
+## 1. 스케치 골격 — 기본형 (지시문 8줄)
 
 ⚠ **사용자에게 줄 때는 `[ ]` 를 다 채운 전문을 코드블록 하나로 준다** — 조각·diff·「이 줄만 바꾸세요」 금지(SKILL.md 작업 규칙).
 
@@ -30,9 +32,9 @@ green #00FF00 background, no text anywhere. Nothing on the characters may be
 bright or saturated green. Leave background margin on all sides — the figures
 must not touch an edge.
 
-[소재 — 1~2줄. 원형 + 넷을 가르는 축 한 줄. 필요하면 소재 고유의 hex 2~3개]
+[소재 — 1~2줄. 원형 + 넷을 가르는 축 한 줄. 색은 비운다]
 
-1. [변주 — 실루엣 한 마디 + 강조색 hex]
+1. [변주 — 실루엣 한 마디]
 2. [변주]
 3. [변주]
 4. [변주 — 가장 덜 중요한 것. 워터마크 자리]
@@ -45,6 +47,8 @@ must not touch an edge.
 **부정문은 통틀어 2개까지** — `no text` · `no saturated green` 이 이미 둘이다. 부정문은 잘 안 지켜지면서 그 대상을 화면에 불러온다(「no cracks」가 금 간 두개골을 부른다).
 
 **넣으면 안 되는 것** — 디테일 수치 제한(`3 tones` · `under ten colors`) · 「사실적」을 암시하는 단어(`realistic` · `adult proportion` · `head no more than a third`).
+
+**색은 비운다** [2026-09-14 사용자] — hex 를 쓰지 않는다. 사용자가 정한 컨셉 색만 단어로 남긴다(「붉은 데몬」 · 「청동」). 뽑을 때마다 달라지는 것이 스케치의 목적이다 — 넷이 같은 색으로 몰려 나올 때만 재발주에서 hex 를 되살린다.
 
 ## 1-2. 안 닮게 나왔을 때 — 한 번에 한 줄만 되살린다
 
@@ -135,7 +139,7 @@ The hood shape is the only thing that tells the four apart.
 
 **해골 (언데드)**
 ```
-Four undead skeletons risen from a graveyard, bone #cfc4a0 over dark steel #5a6270.
+Four undead skeletons risen from a graveyard, bone over dark steel.
 What sits on the head is the only thing that tells the four apart.
 ```
 ⚠ 해골은 `hd/sh` 가 90~100 으로 나온다 — **두개골이 곧 실루엣**이라 후드 인물과 같은 예외다. 이 숫자로 재발주하지 않는다.
@@ -148,11 +152,37 @@ What sits on the head is the only thing that tells the four apart.
 ## 5. 타일 배치 — 넷을 가르는 축
 
 - **한 세트 = 축 하나.** 판금은 머리 모양, 맨머리는 머리카락, 후드는 후드 형태(뾰족/둥글고 뒤로/낮고 평평/비대칭). 축이 둘 이상이면 세트가 흩어지고, 없으면 같은 사람이 넷 나온다
-- **타일 한 줄은 한 마디** — 실루에을 하나 + hex 하나. 두 줄을 넘으면 그 타일이 앵커를 이긴다(§1)
-- **강조색은 타일마다 다르게, hex 로.** 안 정하면 넷이 같은 진홍으로 나온다
-- **같은 인물의 색 변형 4종**을 원하면 얼굴·자세를 고정하고 후드/망토 색만 hex 로 갈라 준다(색상환을 벌린다 — 검정 · 적갈 · 청회 · 카키)
+- **타일 한 줄은 한 마디** — 실루엣 하나. 두 줄을 넘으면 그 타일이 앵커를 이긴다(§1)
+- **색은 비운다**(§1) — 넷이 같은 색으로 몰려 나오면 그때 재발주에서 타일마다 hex 를 되살린다
+- 사용자가 **같은 인물의 색 변형 4종**을 요구하면 얼굴·자세를 고정하고 후드/망토 색만 hex 로 갈라 준다(색상환을 벌린다 — 검정 · 적갈 · 청회 · 카키)
 - **4번 = 버릴 변주.** 우하단이 워터마크 자리다
 - 나이 변주는 `early twenties / thirties / forties / sixties` 정도로. 「할머니」를 빼 달라는 지시가 있었으므로(2026-09-06) 노년 여성은 사용자 확인 없이 넣지 않는다
 
+## 6. 세부 골격 — 가져온 스케치를 디벨롭한다 (첫 판 · 아직 안 돌려 봤다)
+
+SKILL.md 1-D. **대화로 「고칠 것」을 정한 뒤에** 채운다. 첨부는 사용자가 고른 스케치 한 장이다 — 시트에서 골랐으면 그 칸을 잘라([postprocess.md §1](postprocess.md) 격자 좌표) `source/` 에 두고 파일명을 코드블록 위에 적는다.
+
+```
+Develop the attached sketch. Keep this character exactly as drawn — same face,
+same silhouette, same colors, same bust framing — in the style of the reference
+portraits.
+
+2048x2048 sheet, 2x2 grid, four bust portraits of this same character, thin black
+gridlines, solid pure green #00FF00 background, no text anywhere. Nothing on the
+character may be bright or saturated green. Leave background margin on all
+sides — the figure must not touch an edge.
+
+Change only this:
+- [고칠 것 — 대화에서 정한 것 한 줄씩]
+```
+
+- **지킬 것은 적지 않는다** — 첫 문단의 `Keep ... exactly` 한 번이면 된다. 얼굴 · 실루엣 · 색을 글로 다시 묘사하면 그 글이 스케치와 경쟁한다(SKILL.md 원칙 1)
+- **정밀함은 「고칠 것」에 쓴다** — 한 줄에 하나, 어디를 어떻게 바꾸는지. 줄 수는 대화에서 정한 만큼이다
+- **디테일 단어를 넣지 않는다** — 그림은 지금 수준 그대로다. §2 금지어가 그대로 걸린다
+- 색을 **바꾸는** 줄만 hex 로 적는다 — §3 판정값 확인
+- 스케치 실측이 틀린 지표가 있으면 §1-2 사다리의 줄을 「고칠 것」에 넣는다. `hd/sh` 는 여기서도 안 고쳐질 수 있다(SKILL.md 원칙 5)
+- 뽑는 장수 · 모양이 대화에서 달라지면 두 번째 문단을 고친다
+- ⚠ **첫 결과를 재서 이 절을 고친다** — 특히 첫 문단이 스케치를 얼마나 지키는지
+
 ---
-*마지막 업데이트: 2026-09-14*
+*마지막 업데이트: 2026-09-15*

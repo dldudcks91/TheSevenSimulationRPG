@@ -48,6 +48,7 @@ export const D = {
     gatherNodes: [],          // gather_node.csv — 채집의 **단계 7** · 같은 모양이고 산출물만 약초다 (yieldKo/yieldEn) · tier 순 ⚠임시
     logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
     makeRecipes: {},          // make_recipe.csv — {part: {ore, timber, dust}} · 제작 필요량 ⚠임시 (item_design §7-1 · R96)
+    potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, craftable, startOwned}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103)
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
@@ -82,7 +83,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
-    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe'];
+    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -97,7 +98,7 @@ export async function loadData(base = './data/') {
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
-        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow] = texts.map(parseCsv);
+        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -196,6 +197,11 @@ export async function loadData(base = './data/') {
     D.logNodes = tierNodes(logNodeRow, 'log_id', 'timber');
     // 제작 레시피 — 부위마다 광석 · 목재 · 가루 필요량(item_design §7-1 · R96). 어느 단계의 재료인지는 레벨대가 정한다(state.js makeBands)
     D.makeRecipes = Object.fromEntries(makeRecipeRow.map(r => [r.part, { ore: r.ore_units, timber: r.timber_units, dust: r.dust_units }]));
+    // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
+    D.potions = potionRow.map(r => ({
+        id: r.potion_id, kind: r.kind, tier: r.tier, ko: r.name_kr, en: r.name_en,
+        heal: r.heal, craftGold: r.craft_gold, craftable: r.craftable === 1, startOwned: r.start_owned === 1,
+    }));
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
     D.equipSlots = equipSlotRow.slice().sort((a, b) => a.slot_order - b.slot_order)
@@ -318,6 +324,12 @@ export const skillInfo = id => {
     };
 };
 
+/** 물약 한 줄 — 이름 · 회복량 · 단계가 **전부 `potion.csv`** 다 (R103). 없는 id 는 null — 표에서 사라진 물약이 세이브에 남을 수 있다 */
+export const potionInfo = id => {
+    const p = (D.potions ?? []).find(x => x.id === id);
+    return p ? { id, name: { ko: p.ko, en: p.en }, heal: p.heal, tier: p.tier, kind: p.kind } : null;
+};
+
 /**
  * 스킬 태그 표시 이름 — `skill_tag.csv:name_kr/name_en` 이 SSOT 다 (skill_design §11).
  * 읽는 곳 — 연구 탭의 전술 조건 (`tactic_option.csv:cond_arg`). 없는 id 는 id 를 그대로 보여 준다(빈 문장 방지).
@@ -404,6 +416,8 @@ export function buildSystems(d) {
         defaultFormationTpl: (d.formationTplOrder ?? [])[0],
         // 제작 — 레시피와 재료 단계 표. 레벨대 = 챕터(stages) · 재료 = 그 tier 의 산출물 (item_design §7-1 · R96)
         makeRecipes: d.makeRecipes ?? {}, mineNodes: d.mineNodes ?? [], logNodes: d.logNodes ?? [],
+        // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)
+        potions: d.potions ?? [],
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     return { hero, item, battle, skill, tactic, game, formula: createFormula(d.balance) };

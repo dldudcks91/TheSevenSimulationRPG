@@ -297,6 +297,15 @@ export const SLOT_ART_DIR = './assets/art/icons/items/empty/';
 export const SLOT_ART_PARTS = ['weapon', 'armor', 'gloves', 'boots', 'ring'];
 export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}${part}.png` : null;
 /**
+ * 물약 그림 — `src/assets/art/icons/items/potion/<potion_id>.png` (2026-09-15 · R104 · SCREEN_DESIGN §4-2 · §8-2 · ADR-0148).
+ *
+ * 축은 `potion.csv:potion_id` 다. **그림은 사용자가 준다** — 받으면 id 를 목록에 한 줄. 목록에 없는 물약은 `null` 이고 칸은 테두리만 선다.
+ * `slotArt` 와 같은 이유로 해시 폴백이 없다 — 틀린 그림이 곧 틀린 정보다(마이너 칸에 슈퍼 병이 뜨면 회복량을 잘못 읽는다).
+ */
+export const POTION_ART_DIR = './assets/art/icons/items/potion/';
+export const POTION_ART_IDS = [];
+export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}${id}.png` : null;
+/**
  * 아이템 그림 — `src/assets/art/icons/items/` (2026-09-03 · SCREEN_DESIGN §2). **방어구는 임시다.**
  *
  * 무기는 제 그림이다 — 무기의 베이스가 곧 무기군이라(`item.group`) `<group_id>.png` 가 정확히 그 무기다.
@@ -525,16 +534,6 @@ export const CX_DONE = {
     4: { ko: '공격 속도 +2%', en: '+2% Attack Speed' },
 };
 
-/* ═══════════ 연구 — ⚠ 목업 (SCREEN_DESIGN §13-1, 2026-09-01 사용자 지시) ═══════════
- * **여기 있는 것은 전부 지어낸 값이다.** 기획이 이름도 비용 곡선도 해금 순서도 안 정했다
- * (GAME_DESIGN §10 「스킬의 자리」 · base_expedition §2-2 채집 재료는 이름조차 미정).
- * 그래서 **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
- * 스킬 트리 목업(SKILL_TREES · SKILL_GRID)이 같은 자리에 있다가 실동작이 오면서 삭제됐다.
- * 기획이 확정되면 이 상수는 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다 (DEV_PLAN 부채).
- *
- * state — done(완료) | open(살 수 있다) | locked(선행 연구가 남았다)
- * need  — locked 인 칸이 가리키는 선행 연구의 id
- */
 /**
  * 상단 목업 — ⚠ **여기 숫자는 전부 거짓이다** (SCREEN_DESIGN §8-3 · base_expedition_design §2-6).
  * 기획이 방문 주기 · 체류 · 가격 · 재고를 하나도 안 정했으므로(GAME_DESIGN §10 「상단의 수치 전부」)
@@ -570,24 +569,71 @@ export const TRADE = {
    `D.commissionList` 다. 목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)·연구(RESEARCH)와 갈리는 지점이고,
    근거는 「mock 과 CSV 가 겹치면 CSV 만 둔다」(SCREEN_DESIGN §14 · DEV_PLAN §5-B). */
 
+/* ═══════════ 연구 — ⚠ 목업 (SCREEN_DESIGN §13-1 · ADR-0145, 2026-09-15 사용자 지시) ═══════════
+ * **가지 8 구조만 섰다** — 원정 · 탐험 · 제련소 · 선술집 · 상단 · 자원 · 도감 · 파티 전술. 가지끼리 서로 잠그지 않는다.
+ * 노드의 이름 · 여는 것 · 비용 · 여는 조건은 기획이 안 정했다 → **노드는 자리표시**다(이름 = 가지 이름 + 번호 · 여는 것 = 「미정」).
+ * 그래서 **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
+ * 기획이 확정되면 이 상수는 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다 (DEV_PLAN §4 #27).
+ *
+ * branches[].key — 가지 이름의 i18n 키. 탭 · 파견처 이름을 그대로 빌린다(제련소 · 상단은 탭 이름이 아니라 시설 이름 — §13-1)
+ * nodes          — 위에서 아래로. 선행(`need`)은 같은 가지의 **바로 위 노드**뿐이다
+ * state          — done(완료) | open(살 수 있다) | locked(위 노드가 남았다)
+ * name · gain    — 없으면 화면이 자리표시(「가지 이름 + 번호」 · 「미정」)를 찍는다
+ * mat · gold     — ⚠ 지어낸 값
+ */
+const RS_COST = [{ mat: 20, gold: 400 }, { mat: 35, gold: 900 }, { mat: 60, gold: 1600 }];
+/* 카드 머리의 건물 그림 — ⚠ **단색 실루엣 목업**이다(가지마다 그릴 아트가 없다 · SCREEN_DESIGN §13-1 · ADR-0146).
+   viewBox 64×48 · 채움은 CSS 의 currentColor(글자색을 따라 테마를 탄다). 아트가 오면 이 표만 이미지로 갈아 끼운다 */
+const rsSvg = body => `<svg viewBox="0 0 64 48" aria-hidden="true">${body}</svg>`;
+const RS_ART = {
+    // 원정 — 성문(탑 둘 · 아치 문 · 깃발)
+    expedition: rsSvg('<path fill-rule="evenodd" d="M6 46V12h4v4h3v-4h4v4h3v-4h4v10h16V12h4v4h3v-4h4v4h3v-4h4v34ZM26 46V36a6 6 0 0 1 12 0v10Z"/><path d="M50 12V1h1.4v11ZM51.4 1.2 60 4l-8.6 2.8Z"/>'),
+    // 탐험 — 언덕 위 망루
+    explore: rsSvg('<path d="M2 46c8-8 18-12 30-12s22 4 30 12Z"/><path d="M27 35 29 15h6l2 20Z"/><path d="M24 15h16l-8-9Z"/><path d="M31.4 6V0h1.2v6ZM32.6 .4 39 2.2l-6.4 1.8Z"/>'),
+    // 제련소 — 작업장 + 굴뚝 + 화로 입
+    forge: rsSvg('<path fill-rule="evenodd" d="M4 46V26l15-10 15 10v20ZM14 46v-9h10v9Z"/><path d="M44 30V8h7v22Z"/><path fill-rule="evenodd" d="M36 46V28h24v18ZM42 46v-6a6 6 0 0 1 12 0v6Z"/><circle cx="47" cy="4" r="2.6"/><circle cx="53" cy="1.8" r="1.8"/>'),
+    // 선술집 — 박공집 + 매단 간판
+    tavern: rsSvg('<path fill-rule="evenodd" d="M6 46V24L24 10l18 14v22ZM19 46V35h10v11Z"/><path d="M42 20h16v2H42Z"/><path d="M47 22h1.2v3H47ZM54 22h1.2v3H54ZM45 25h12v9H45Z"/>'),
+    // 상단 — 짐마차
+    trade: rsSvg('<path d="M12 33V21c0-6 8-10 19-10s19 4 19 10v12Z"/><path d="M8 33h46v4H8Z"/><path fill-rule="evenodd" d="M18 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path fill-rule="evenodd" d="M44 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path d="M54 34h9v2h-9Z"/>'),
+    // 자원 — 산 + 갱도 입구(버팀목)
+    resource: rsSvg('<path fill-rule="evenodd" d="M1 46 22 13l8 10 9-9 24 32ZM24 46V37a8 8 0 0 1 16 0v9Z"/><path d="M22.5 46V34h2.5v12ZM39 46V34h2.5v12ZM21.5 32h21v2.5h-21Z"/>'),
+    // 도감 — 기둥 선 서고
+    codex: rsSvg('<path d="M4 17 32 4l28 13Z"/><path d="M6 19h52v3H6Z"/><path d="M10 23h5v18h-5ZM22 23h5v18h-5ZM37 23h5v18h-5ZM49 23h5v18h-5Z"/><path d="M4 42h56v4H4Z"/>'),
+    // 파티 전술 — 작전 천막 + 깃발
+    tactics: rsSvg('<path fill-rule="evenodd" d="M4 46 32 11l28 35ZM26 46l6-13 6 13Z"/><path d="M31.3 11V1h1.4v10ZM32.7 1.2 42 4l-9.3 2.8Z"/>'),
+};
+const rsBranch = (id, key, first = {}) => {
+    const nodes = [];
+    RS_COST.forEach((cost, i) => {
+        const up = nodes[i - 1];
+        nodes.push({
+            id: `${id}_${i + 1}`, n: i + 1, ...cost,
+            state: !up || up.state === 'done' ? 'open' : 'locked',
+            need: up?.id,
+            ...(up ? {} : first),
+        });
+    });
+    return { id, key, art: RS_ART[id], nodes };
+};
+
 export const RESEARCH = {
-    /** ⚠ 지어낸 보유량 — 채집 재료는 자원 칸(G.resources)에 존재하지도 않는다 */
+    /** ⚠ 지어낸 보유량 — 채집 재료(약초)는 자원 칸(G.resources)에 아직 없다 */
     material: 42,
-    nodes: [
-        { id: 'refine', name: { ko: '재료 정제', en: 'Material Refining' },
-            // ⚠ ~~성공률~~ 은 09-03 「강화에 실패·파괴·하락 없음」 확정으로 사라진 축이다 — 운이 미는 것은 **품질** (2026-09-08 정정)
-            gain: { ko: '제련소 강화 품질 +5%', en: '+5% smeltery upgrade quality' },
-            state: 'done', mat: 20, gold: 400 },
-        // ⚠ 이름만 바뀌었다 — ~~무기군 숙련~~ 은 09-07 가 T2 무기군별 서브트리를 폐기하면서 사라졌다(DEV_PLAN R46).
-        //    `id` 는 그대로 둔다 — 아래 `need: 'wgroup'` 이 가리키는 목업 선행 관계만 뜻한다 (2026-09-08)
-        { id: 'wgroup', name: { ko: '직업 마스터리 개방', en: 'Class Mastery Unlock' },
-            gain: { ko: '직업 마스터리 아랫줄 1칸', en: 'One more class mastery row' },
-            state: 'open', mat: 35, gold: 900 },
-        { id: 'reroll', name: { ko: '접사 재굴림', en: 'Affix Reroll' },
-            gain: { ko: '가방에서 접사 하나 다시 굴리기', en: 'Reroll one affix from the bag' },
-            state: 'locked', need: 'wgroup', mat: 60, gold: 1600 },
-        { id: 'advance', name: { ko: '전직 특화 개방', en: 'Advancement Unlock' },
-            gain: { ko: '전직 트리 해금 레벨 −5', en: 'Advancement unlock level −5' },
-            state: 'locked', need: 'reroll', mat: 90, gold: 2800 },
+    branches: [
+        // 원정 1 만 내용이 섰다 — 던전 레벨 조절(GAME_DESIGN §9 09-14 「나중에 연구로 옮긴다」). 화면 이름은 출정 창의 「위험도」를 따른다.
+        // 지금 처음부터 열려 있으므로 완료로 선다
+        rsBranch('expedition', 'nav.expedition', {
+            state: 'done',
+            name: { ko: '위험도 조절', en: 'Danger Level' },
+            gain: { ko: '스테이지마다 위험도를 올린다', en: 'Raise the danger of each stage' },
+        }),
+        rsBranch('explore', 'nav.explore'),
+        rsBranch('forge', 'dp.post.forge'),
+        rsBranch('tavern', 'nav.tavern'),
+        rsBranch('trade', 'dp.post.trade'),
+        rsBranch('resource', 'nav.resource'),
+        rsBranch('codex', 'nav.codex'),
+        rsBranch('tactics', 'rs.h'),
     ],
 };

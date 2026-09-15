@@ -17,6 +17,7 @@ user-invocable: true
 - 결정 로그 기재 — 같은 문서 §9
 - 기획 ↔ 코드 반영 대조 — [DEV_PLAN.md](docs/client/DEV_PLAN.md) §3-3 (기획 개정 반영 대장)
 - 기획 전체 리뷰 · 모순 찾기 · 전수 점검 → **리뷰 모드**
+- `/qa` 기획 모드의 판정을 받았을 때 — 판정 표를 논의 재료로 쓴다. §10 에 올리는 것은 사용자가 채택한 것만
 - 참고작 · 형제 프로젝트 조사 — [docs/reference/](docs/reference/)
 
 ## 핵심 원칙

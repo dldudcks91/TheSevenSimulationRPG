@@ -78,6 +78,9 @@ weapon_res_down_sec,2.5,proposed,0,마법 무기 타격 시 대상 원소 저항
 weapon_atk_down_sec,2.5,proposed,0,사제 무기 시기 칸 — 타격 시 대상 공격력 감소 창 길이(초) — 겹치지 않는다 ⚠제안 (2026-09-11 R78)
 salvage_dust_magic,2,proposed,0,매직 분해 → 가루 (2026-08-25 초반 루프 구현하면서 발생)
 salvage_dust_rare,5,proposed,0,레어 분해 → 가루 (2026-08-25 초반 루프 구현하면서 발생)
+potion_slot_max,4,proposed,1,물약 칸 — 원정 파티가 같이 쓰는 칸 수 · 스테이지(런)를 시작할 때마다 이만큼 다시 찬다 · 챕터보스 스테이지도 같다 · 사용자 지정 임시값 [신설 2026-09-15 · battle_design §7-1 · R103]
+potion_use_hp_pct,50,proposed,1,물약을 마시는 HP 비율 % — 살아 있는 영웅의 HP 비율이 이 값 미만이면 자동으로 마신다 · 차례를 안 쓴다 · 조건 조절 옵션은 나중(GAME_DESIGN §10) [신설 2026-09-15 · R103]
+potion_cooldown_sec,4,proposed,1,물약 쿨타임(초) — 영웅마다 · 원정 시작 때 준비 상태 · 한 영웅이 한순간에 칸을 다 비우지 않게 한다 · 사용자 3~5초 [신설 2026-09-15 · R103]
 make_rarity_w_normal,60,proposed,0,제작 희귀도 가중치 — 일반 [신설 2026-09-15 사용자 지시 · item_design §7-1 · R96] — 드롭(rarity_w_*)과 따로 쥔다 · 훑는 순서는 일반 → 매직 → 레어
 make_rarity_w_magic,30,proposed,0,제작 희귀도 가중치 — 매직 [신설 2026-09-15 사용자 지시 · R96]
 make_rarity_w_rare,10,proposed,0,제작 희귀도 가중치 — 레어 [신설 2026-09-15 사용자 지시 · R96] · 제련소 운 배치가 이 가중치를 미는지는 미정(GAME_DESIGN §10)

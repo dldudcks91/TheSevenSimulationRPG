@@ -404,7 +404,8 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'tavern_search_meet_at_pct', 'tavern_search_meet_hit_pct', 'tavern_search_meet_key_pct',
         'hero_level_cap', 'concurrent_expedition_parties', 'active_slots', 'skill_cd_floor_mult', 'skill_decay_cap_pct',
         'codex_card_drop_pct', 'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level',
-        'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare'];
+        'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare',
+        'potion_slot_max', 'potion_use_hp_pct', 'potion_cooldown_sec'];
     const missing = need.filter(k => B[k] === undefined);
     if (missing.length) fail(`missing: ${missing.join(', ')}`);
     if (B.offline_cap_hours !== undefined) fail('offline_cap_hours 는 퇴역 키 — 반복 원정은 게임이 켜져 있는 동안만 (08-25)');
@@ -910,6 +911,14 @@ check('newGame: 시작 무기 스킬은 고유 스킬을 뺀 풀에서 굴린다
     SYS.item.startingWeapon(ra, 'warrior'); SYS.item.startingWeapon(rb, 'warrior', a.skill);
     if (ra() !== rb()) fail('avoidSkill 이 rng 소비 수를 바꿨다');
     return `영웅 ${n}명 · 겹침 0`;
+});
+check('newGame: 마이너 힐링 포션을 갖고 시작한다 — potion.csv:start_owned 행 · 칸은 그 물약이 앞 칸부터 · 나머지 칸은 빈다 (item_design §7-4 · R103 · R104)', () => {
+    const start = D.potions.filter(p => p.startOwned);
+    if (!start.length) fail('start_owned 행이 없다');
+    if (!eq(G.potions, start.map(p => p.id))) fail(`potions ${JSON.stringify(G.potions)} ≠ ${start.map(p => p.id)}`);
+    const want = start.map(p => p.id).slice(0, B.potion_slot_max);
+    const ps = SYS.game.potionState(G);
+    return eq(ps.loadout, want) ? `${start.map(p => p.en).join(' · ')} · 칸 ${ps.loadout.length} / ${ps.slotMax}` : fail(`칸 ${JSON.stringify(ps.loadout)} ≠ ${want}`);
 });
 check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 풀**(`<cls>_<k>`) 또는 null(풀 0장) · 파티 안에서 안 겹침 · 같은 시드면 같은 얼굴', () => {
     const n = D.balance.party_size_max;
@@ -1899,6 +1908,112 @@ check('save: 제작 재료 · counters.make 가 왕복한다 — 없는 옛 세�
     return eq(up.materials, {}) && up.counters.make === 0 && up.version === SAVE_VERSION ? '왕복 · 옛 세이브 기본값' : fail(JSON.stringify([up.materials, up.counters.make]));
 });
 
+/* ── 물약 (battle_design §7-1 · item_design §7-4 확정 2026-09-15 · R103) ── */
+
+check('potion: 표 — 힐링 포션 5단계 · 영어 원본 이름(Diablo 2) · 회복량은 단계마다 커진다 · 지금 제작은 라이트 하나 · 시작은 마이너 (item_design §7-4)', () => {
+    const rows = D.potions;
+    const want = ['Minor Healing Potion', 'Light Healing Potion', 'Healing Potion', 'Greater Healing Potion', 'Super Healing Potion'];
+    if (!eq(rows.map(p => p.en), want)) fail(`이름 ${rows.map(p => p.en).join(' · ')}`);
+    rows.forEach((p, i) => {
+        if (p.kind !== 'heal' || p.tier !== i + 1) fail(`${p.id} kind ${p.kind} tier ${p.tier}`);
+        if (i && !(p.heal > rows[i - 1].heal)) fail(`${p.id} 회복량 ${p.heal} ≤ 앞 단계`);
+        if (!p.ko) fail(`${p.id} 한글 이름`);
+    });
+    // ⚠ 둘 다 **지금의** 사용자 지시다 — 해금 조건(연구 또는 챕터)이 서면 이 두 줄을 고친다 (GAME_DESIGN §10 「물약의 남은 설계」)
+    const open = rows.filter(p => p.craftable).map(p => p.id), start = rows.filter(p => p.startOwned).map(p => p.id);
+    if (!eq(open, ['light_healing'])) fail(`제작 열린 단계 ${open}`);
+    if (!eq(start, ['minor_healing'])) fail(`시작 물약 ${start}`);
+    return rows.map(p => `${p.ko} ${p.heal}`).join(' · ');
+});
+
+check('potion: 표가 틀리면 로드에서 멈춘다 — 모르는 종류 · 단계 빈틈 · 회복량 역전 · id 중복 (state.js · INTERFACE §2-7)', () => {
+    const tryLoad = potions => { try { buildSystems({ ...D, potions }); return null; } catch (e) { return String(e.message); } };
+    const base = D.potions;
+    const cases = [
+        ['종류', base.map((p, i) => (i === 2 ? { ...p, kind: 'damage' } : p)), '모르는 종류'],
+        ['단계', base.map((p, i) => (i === 3 ? { ...p, tier: 9 } : p)), '단계'],
+        ['회복량', base.map((p, i) => (i === 1 ? { ...p, heal: 1 } : p)), '회복량'],
+        ['id', base.map((p, i) => (i === 4 ? { ...p, id: base[0].id } : p)), 'id'],
+    ];
+    for (const [name, rows, word] of cases) {
+        const msg = tryLoad(rows);
+        if (!msg || !msg.includes(word)) fail(`${name} — ${msg ?? '안 멈췄다'}`);
+    }
+    const ok = tryLoad(base);
+    return ok === null ? '넷 다 멈춤 · 원본은 통과' : fail(`원본이 멈췄다 — ${ok}`);
+});
+
+/** 물약 시험용 판 — 본판 G 를 흔들지 않는다 */
+const potionFixture = (gold = 0) => {
+    const g = newGameP(11, cands, NOW);
+    g.resources.gold = gold;
+    return g;
+};
+
+check('potion: potionState 가 판정을 다 낸다 — 가진 것 owned · 안 열린 것 locked · 골드가 모자라면 gold · 칸은 가진 순서대로 앞 칸부터 · 칸 수에서 자른다 (INTERFACE §2-7 · R104)', () => {
+    const light = D.potions.find(p => p.craftable);
+    const g = potionFixture(light.craftGold - 1);
+    const s = SYS.game.potionState(g);
+    const by = id => s.list.find(x => x.id === id);
+    if (by('minor_healing').err !== 'owned' || !by('minor_healing').owned) fail(`마이너 ${JSON.stringify(by('minor_healing'))}`);
+    if (by('healing').err !== 'locked' || by('healing').canMake) fail(`힐링 ${JSON.stringify(by('healing'))}`);
+    if (by(light.id).err !== 'gold' || by(light.id).canMake) fail(`라이트 ${JSON.stringify(by(light.id))}`);
+    if (!eq(s.loadout, ['minor_healing'])) fail(`칸 ${JSON.stringify(s.loadout)}`);
+    if (s.slotMax !== B.potion_slot_max || s.useHpPct !== B.potion_use_hp_pct || s.cooldownSec !== B.potion_cooldown_sec) fail('balance 값이 아니다');
+    g.resources.gold = light.craftGold;
+    if (!SYS.game.potionState(g).list.find(x => x.id === light.id).canMake) fail('골드가 딱 맞는데 못 만든다');
+    // 칸은 단계가 아니라 **얻은 순서**를 따르고 칸 수에서 자른다 — 단계 역순으로 다 가진 판
+    g.potions = D.potions.map(p => p.id).reverse();
+    const cut = SYS.game.potionState(g).loadout;
+    if (!eq(cut, g.potions.slice(0, B.potion_slot_max))) fail(`얻은 순서 · 칸 수 자르기 ${JSON.stringify(cut)}`);
+    return s.list.map(x => `${x.id}:${x.err ?? 'ok'}`).join(' · ') + ` · 칸 ${cut.length} / ${B.potion_slot_max}`;
+});
+
+check('potion: 만들면 골드를 내고 목록 끝에 · 다음 빈 칸에 든다 · 거절(missing → owned → locked → gold)이면 아무것도 안 바뀐다 · rng · 카운터 불변 (INTERFACE §2-7)', () => {
+    const light = D.potions.find(p => p.craftable);
+    const g = potionFixture(light.craftGold);
+    const snap = () => JSON.stringify([g.resources, g.potions, g.counters]);
+    for (const [id, err] of [['nope', 'missing'], ['minor_healing', 'owned'], ['healing', 'locked']]) {
+        const before = snap();
+        const r = SYS.game.makePotion(g, id);
+        if (r.ok || r.err !== err) fail(`${id} → ${JSON.stringify(r)} (기대 ${err})`);
+        if (snap() !== before) fail(`${id} 거절인데 상태가 바뀌었다`);
+    }
+    const c0 = JSON.stringify(g.counters);
+    const r = SYS.game.makePotion(g, light.id);
+    if (!r.ok || r.id !== light.id || r.cost !== light.craftGold) fail(JSON.stringify(r));
+    if (g.resources.gold !== 0) fail(`골드 ${g.resources.gold}`);
+    if (g.potions[g.potions.length - 1] !== light.id) fail(`목록 ${g.potions}`);
+    if (JSON.stringify(g.counters) !== c0) fail('카운터가 움직였다');
+    const lo2 = SYS.game.potionState(g).loadout;
+    if (!eq(lo2, ['minor_healing', light.id])) fail(`칸 ${JSON.stringify(lo2)} — 새 물약이 다음 빈 칸에 안 들었다`);
+    if (SYS.game.makePotion(g, light.id).err !== 'owned') fail('두 번째 제작이 owned 로 안 막힌다');
+    g.potions = ['minor_healing'];
+    g.resources.gold = light.craftGold - 1;
+    const poor = snap();
+    if (SYS.game.makePotion(g, light.id).err !== 'gold' || snap() !== poor) fail('골드 부족 거절이 상태를 바꿨다');
+    return `${light.en} ${light.craftGold}G → 칸 ${lo2.join(' · ')}`;
+});
+
+check('save: potions 가 왕복한다 — 없는 옛 세이브는 시작 물약으로 열린다 · 표에서 사라진 id 는 로드가 안 지우고 칸이 건너뛴다 (버전 무변경 · INTERFACE §4 · R103)', () => {
+    const light = D.potions.find(p => p.craftable);
+    const g = potionFixture(light.craftGold);
+    SYS.game.makePotion(g, light.id);
+    const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))));
+    if (!eq(back.potions, g.potions)) fail(`왕복 ${back.potions}`);
+    const old = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
+    delete old.potions;
+    const up = SYS.game.deserialize(old);
+    const start = D.potions.filter(p => p.startOwned).map(p => p.id);
+    if (!eq(up.potions, start) || up.version !== SAVE_VERSION) fail(`옛 세이브 ${JSON.stringify(up.potions)} v${up.version}`);
+    const ghost = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
+    ghost.potions = ['gone_potion', 'minor_healing'];
+    const gg = SYS.game.deserialize(ghost);
+    if (!eq(gg.potions, ['gone_potion', 'minor_healing'])) fail('로드가 모르는 id 를 지웠다');
+    const lo = SYS.game.potionState(gg).loadout;
+    return eq(lo, ['minor_healing']) ? '왕복 · 옛 세이브 = 시작 물약 · 모르는 id 건너뜀' : fail(`모르는 id 가 칸을 흔들었다 — ${JSON.stringify(lo)}`);
+});
+
 /* ── 스킬 태그 (skill_design §11 확정 2026-08-28) ── */
 check('skill: 태그 14종 — 정의 11(최대 2) + 파생 3(target·hits 에서). CSV 값이 전부 어휘 안이다', () => {
     const S = SYS.skill;
@@ -2461,6 +2576,23 @@ check('equip: 반지 ×2 — 빈 칸부터 채우고, 셋째는 1번 칸을 교�
     const d = SYS.game.equip(G, h.uid, rings[0].uid, 'ring2');      // 위치 지정 착용
     return d.ok && d.position === 'ring2' && h.equipped.ring2 === rings[0].uid;
 });
+check('equip: heroCombatIf 「이 아이템을 끼면」 = 실제로 낀 뒤의 heroCombat · 원본 불변 · 남이 낀 것은 그 몸에서 뺀 셈 (INTERFACE §2-7 · 2026-09-15)', () => {
+    const g = newGameP(7, cands, NOW);
+    const [a, b] = g.heroes;
+    const wb = b.equipped.weapon ?? fail('fixture: 시작 무기가 없다');
+    const J = x => JSON.stringify(x);
+    if (J(SYS.game.heroCombatIf(g, a, a.equipped.weapon)) !== J(SYS.game.heroCombat(g, a))) fail('이미 낀 무기인데 heroCombat 과 다르다');
+    const worn = J(SYS.game.heroCombatIf(g, a, wb));             // b 가 끼고 있는 채로 묻는다
+    if (!SYS.game.unequip(g, b.uid, 'weapon').ok) fail('fixture: 무기를 못 벗긴다');
+    const snap = J(g);
+    const inBag = J(SYS.game.heroCombatIf(g, a, wb));
+    if (J(g) !== snap) fail('원본 상태가 바뀌었다');
+    if (inBag !== worn) fail('남이 낀 것을 그 몸에서 안 뺐다');
+    if (inBag === J(SYS.game.heroCombat(g, a))) fail('fixture: 무기를 바꿔도 값이 같다 — 비교가 헛돈다');
+    if (!SYS.game.equip(g, a.uid, wb).ok) fail('fixture: 무기를 못 낀다');
+    const got = J(SYS.game.heroCombat(g, a));
+    return inBag === got ? `${a.cls} ← ${b.cls} 무기 · 낀 뒤 값과 같다` : fail(`다르다: ${inBag} ≠ ${got}`);
+});
 check('salvage: 가방에서 사라지고 가루가 는다', () => {
     const before = G.resources.dust;
     const uid = G.bag[0];
@@ -2544,6 +2676,111 @@ check('simulate: 직격마다 피해를 굴린다 — 같은 라운드 · 같은
     return `${groups.size}쌍 중 ${varied}쌍이 갈린다`;
 });
 check('simulate: 다른 시드 = 다른 전투', () => !eq(SYS.battle.simulate(units(), 101, makeRng(5)).timeline, SYS.battle.simulate(units(), 101, makeRng(6)).timeline));
+
+/* ── 물약 — 전투 (battle_design §7-1 · INTERFACE §2-6 · R103) ── */
+check('simulate: 물약은 차례를 안 쓰고 rng 를 안 쓴다 — 회복량 0 인 물약 칸을 넣으면 potion 이벤트만 끼고 나머지 타임라인은 한 글자도 안 다르다 · null · 빈 목록은 인자를 안 준 것과 같다 · 칸 수를 넘거나 모양이 틀리면 멈춘다 (INTERFACE §5-2 · §2-6 · R104)', () => {
+    const bare = SYS.battle.simulate(units(), 101, makeRng(5));
+    for (const none of [null, []]) if (!eq(bare, SYS.battle.simulate(units(), 101, makeRng(5), undefined, none))) fail(`${JSON.stringify(none)} 이 인자 없음과 다르다`);
+    if (!eq(bare.potion, { max: B.potion_slot_max, slots: [], used: 0 })) fail(`물약 없는 런의 result.potion — ${JSON.stringify(bare.potion)}`);
+    const Z = Array.from({ length: B.potion_slot_max }, () => ({ id: 'test_zero', heal: 0 }));
+    const zero = SYS.battle.simulate(units(), 101, makeRng(5), undefined, Z);
+    const drinks = zero.timeline.filter(ev => ev.e === 'potion');
+    if (!drinks.length) fail('회복량 0 물약을 한 번도 안 마셨다 — 시험이 헛돈다');
+    if (!eq(zero.timeline.filter(ev => ev.e !== 'potion'), bare.timeline)) fail('물약이 차례 · rng · 다른 사건을 바꿨다');
+    if (zero.potion.used !== drinks.length || zero.potion.max !== B.potion_slot_max || !eq(zero.potion.slots, Z)) fail(`result.potion ${JSON.stringify(zero.potion)}`);
+    const stops = arg => { try { SYS.battle.simulate(units(), 101, makeRng(5), undefined, arg); return false; } catch (e) { return true; } };
+    if (!stops([...Z, Z[0]])) fail('칸 수를 넘는 목록이 안 멈췄다');
+    if (!stops([{ id: 'test_zero' }])) fail('회복량 없는 칸이 안 멈췄다');
+    if (!stops({ id: 'test_zero', heal: 0 })) fail('목록이 아닌 옛 모양이 안 멈췄다');
+    return `마심 ${drinks.length} · 나머지 ${bare.timeline.length} 이벤트 동일`;
+});
+
+check('simulate: 물약 순서 — HP 비율 낮은 순 · 같으면 파티 배열 순이 앞 칸부터 · 조건 밑(미만)에서만 (battle_design §7-1 · INTERFACE §5-3 · R104)', () => {
+    const P = { id: 'test_zero', heal: 0 };
+    // 조건 101% — 첫 틱에 전원이 조건 밑이다(가득 찬 HP = 100%). 동점이라 파티 순으로 칸만큼만 마신다
+    const S1 = buildSystems({ ...D, balance: { ...B, potion_use_hp_pct: 101, potion_slot_max: 2, potion_cooldown_sec: 1000 } });
+    const first = S1.battle.simulate(units(), 101, makeRng(5), undefined, [P, P]).timeline.filter(ev => ev.e === 'potion');
+    if (!eq(first.map(ev => ev.u), ['p0', 'p1'])) fail(`동점 순서 ${first.map(ev => `${ev.u}@${ev.t}`).join(' ')}`);
+    if (!eq(first.map(ev => ev.left), [1, 0]) || !eq(first.map(ev => ev.i), [0, 1]) || first[1].t !== first[0].t) fail(`칸 ${first.map(ev => `${ev.i}→${ev.left}`)} · 시각 ${first.map(ev => ev.t)}`);
+    // 조건 0% — 누구도 미만이 될 수 없다
+    const S0 = buildSystems({ ...D, balance: { ...B, potion_use_hp_pct: 0 } });
+    if (S0.battle.simulate(units(), 101, makeRng(5), undefined, [P]).timeline.some(ev => ev.e === 'potion')) fail('조건 0% 인데 마셨다');
+    // HP 비율 순 — 칸이 넉넉하고 쿨이 0 이면 매 틱 조건 밑의 전원이 마신다: 같은 틱 안의 순서가 HP 비율 오름차순이어야 한다.
+    //   회복량 0 이라 `dhp` 가 곧 마시기 전 HP 이고, `units()` 는 스킬이 없어 최대 HP 가 흔들리지 않는다
+    const SR = buildSystems({ ...D, balance: { ...B, potion_use_hp_pct: 101, potion_slot_max: 1e6, potion_cooldown_sec: 0 } });
+    const rr = SR.battle.simulate(units(), 101, makeRng(5), undefined, Array.from({ length: 3000 }, () => P));
+    const hpMax = Object.fromEntries(rr.party.map(p => [p.key, p.hpMax]));
+    const byT = new Map();
+    for (const ev of rr.timeline) if (ev.e === 'potion') { if (!byT.has(ev.t)) byT.set(ev.t, []); byT.get(ev.t).push(ev); }
+    let pairs = 0, strict = 0;
+    for (const evs of byT.values()) {
+        for (let i = 1; i < evs.length; i++) {
+            const a = evs[i - 1], b = evs[i];
+            const ra = a.dhp / hpMax[a.u], rb = b.dhp / hpMax[b.u];
+            if (ra > rb) fail(`t=${a.t} ${a.u}(${ra.toFixed(3)}) 가 ${b.u}(${rb.toFixed(3)}) 보다 먼저 마셨다`);
+            if (ra === rb && a.u > b.u) fail(`t=${a.t} 동점인데 ${a.u} 가 ${b.u} 보다 먼저 마셨다`);
+            pairs++;
+            if (ra < rb) strict++;
+        }
+    }
+    if (!strict) fail(`같은 틱에서 HP 비율이 갈린 표본이 없다(${pairs}쌍) — 시험이 헛돈다`);
+    return `동점 p0 → p1 · 같은 틱 ${pairs}쌍 중 비율이 갈린 ${strict}쌍`;
+});
+
+check('simulate: 물약 — 런 하나에 찬 칸 수만큼 · 앞 칸부터 그 칸의 물약 · 라운드 사이에 안 찬다 · 영웅마다 쿨 · 쓰러진 영웅 · 적 · 소환은 안 마신다 · 최대치에서 자른다 (battle_design §7-1 · R104)', () => {
+    // 칸마다 다른 물약 — 표의 앞 단계부터 칸 수만큼(회복량이 칸마다 달라 「그 칸의 물약」이 갈린다)
+    const S = D.potions.slice(0, B.potion_slot_max).map(p => ({ id: p.id, heal: p.heal }));
+    let total = 0, clipped = 0, multi = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+        const r = SYS.battle.simulate(units(), 101, makeRng(seed), undefined, S);
+        const evs = r.timeline.filter(ev => ev.e === 'potion');
+        if (evs.length > S.length) fail(`seed ${seed} 마심 ${evs.length} > 찬 칸 ${S.length}`);
+        if (r.potion.used !== evs.length) fail(`seed ${seed} used ${r.potion.used} ≠ ${evs.length}`);
+        if (evs.length >= 2) multi++;
+        const hpMax = Object.fromEntries(r.party.map(p => [p.key, p.hpMax]));
+        const lastAt = {}, down = new Set();
+        let left = S.length;
+        for (const ev of r.timeline) {
+            if (ev.e === 'down') down.add(ev.u);
+            if (ev.e !== 'potion') continue;
+            if (!(ev.u in hpMax)) fail(`seed ${seed} 파티 영웅이 아닌 ${ev.u} 가 마셨다`);
+            if (down.has(ev.u)) fail(`seed ${seed} 쓰러진 ${ev.u} 가 마셨다`);
+            const i = S.length - left;
+            left -= 1;
+            if (ev.left !== left || ev.i !== i) fail(`seed ${seed} 칸 ${ev.i} · 남은 ${ev.left} ≠ 칸 ${i} · 남은 ${left} — 앞 칸부터가 아니거나 칸이 라운드 사이에 찼거나 둘이 한 칸을 썼다`);
+            if (ev.amt !== S[i].heal || ev.s !== S[i].id) fail(`seed ${seed} 칸 ${i} 의 물약이 아니다 ${JSON.stringify(ev)}`);
+            if (ev.dhp > hpMax[ev.u]) fail(`seed ${seed} ${ev.u} HP ${ev.dhp} > 최대 ${hpMax[ev.u]}`);
+            if (ev.dhp === hpMax[ev.u]) clipped++;
+            if (lastAt[ev.u] !== undefined && ev.t - lastAt[ev.u] < B.potion_cooldown_sec - 0.05) fail(`seed ${seed} ${ev.u} 쿨 ${lastAt[ev.u]} → ${ev.t}`);
+            lastAt[ev.u] = ev.t;
+        }
+        total += evs.length;
+    }
+    if (!total) fail('20판 동안 한 번도 안 마셨다 — 시험이 헛돈다');
+    if (!multi) fail('20판 동안 둘째 칸까지 간 판이 없다 — 앞 칸부터를 못 잰다');
+    return `20판 마심 ${total} · 둘째 칸 이상 ${multi}판 · 최대치에서 잘린 ${clipped}`;
+});
+
+check('departRun: 칸은 런을 열 때 가진 물약이 얻은 순서대로 앞 칸부터 찬다 — 원정 도중에 만든 물약은 다음 런부터 다음 빈 칸에 · 다음 런은 다시 찬 칸에서 (battle_design §7-1 · R103 · R104)', () => {
+    const light = D.potions.find(p => p.craftable);
+    const g = newGameP(5, cands, NOW);
+    g.resources.gold = light.craftGold;
+    const ids = p => (p?.slots ?? []).map(s => s.id);
+    const d1 = SYS.game.departRun(g, 101, NOW);
+    if (!d1.ok) fail(d1.err);
+    const p1 = d1.run.result.potion;
+    if (!eq(ids(p1), ['minor_healing']) || p1.max !== B.potion_slot_max) fail(`첫 런 ${JSON.stringify(p1)}`);
+    if (!SYS.game.makePotion(g, light.id).ok) fail('원정 중 제작이 막혔다');
+    while (!SYS.game.advanceRun(g, d1.run, NOW).done);
+    if (!eq(ids(d1.run.result.potion), ['minor_healing'])) fail('도는 런의 칸이 바뀌었다');
+    const d2 = SYS.game.departRun(g, 101, NOW);
+    if (!d2.ok) fail(d2.err);
+    const p2 = d2.run.result.potion;
+    if (!eq(ids(p2), ['minor_healing', light.id]) || p2.max !== B.potion_slot_max) fail(`다음 런 ${JSON.stringify(p2)}`);
+    const firstLeft = d2.run.result.timeline.find(ev => ev.e === 'potion')?.left;
+    if (firstLeft !== undefined && firstLeft !== p2.slots.length - 1) fail(`다음 런의 첫 물약 뒤 칸 ${firstLeft} — 앞 런에서 줄어든 채 넘어왔다`);
+    return `첫 런 마이너 ${p1.used}병 → 다음 런 칸 ${ids(p2).join(' · ')} (${p2.slots.length} / ${p2.max})`;
+});
 /** 무기 옵션 묶음 — 전부 0 인 판을 깔고 시험할 축만 얹는다 (hero.computeCombat:option_fx 모양 · R78) */
 const FX0 = { vs: { normal: 0, demon: 0, undead: 0 }, vsElite: 0, vsFront: 0, vsBack: 0, ele: { fire: 0, cold: 0, lightning: 0, poison: 0 }, defDown: 0, resDown: 0, atkDownPhys: 0, atkDownMag: 0, crush: 0, magicFind: 0 };
 check('battle: 무기 옵션 조건부 % — 대상의 종족 · 열이 맞을 때만 조건부 괄호에 더해진다 (battle_design §9-2 · R78)', () => {

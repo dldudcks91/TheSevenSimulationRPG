@@ -381,6 +381,8 @@ const STRINGS = {
     'bt.won': { ko: '승리', en: 'Victory' },
     'bt.lost': { ko: '패배', en: 'Defeat' },
     'bt.toReport': { ko: '리포트 보기', en: 'View report' },
+    'bt.retry': { ko: '다시 도전', en: 'Retry' },   // 패배한 결과 띠에만 선다 (SCREEN_DESIGN §4-2 · ADR-0138)
+    'bt.nextStage': { ko: '다음 스테이지', en: 'Next stage' },   // 반복 없이 이긴 결과 띠에만 선다 (SCREEN_DESIGN §4-2 · ADR-0141)
     'bt.nextRun': { ko: '다음 원정 {s}초 후', en: 'Next run in {s}s' },
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
@@ -485,6 +487,17 @@ const STRINGS = {
     'fg.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
     'fg.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
     'fg.err.missing': { ko: '없는 부위 · 레벨대다', en: 'Unknown slot or level band' },
+    // 물약 칸 (R103 · ADR-0142) — 이름 · 회복량은 `potion.csv` · 판정은 `game.potionState`
+    'fg.err.owned': { ko: '이미 가진 물약이다', en: 'You already own it' },
+    'fg.err.locked': { ko: '아직 만들 수 없다', en: 'Not craftable yet' },
+    'fg.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'fg.potion.loaded': { ko: '물약 칸', en: 'Potion slots' },
+    'fg.potion.tip': { ko: '{name} · 회복 {n}', en: '{name} · Heals {n}' },
+    'fg.potion.empty': { ko: '빈 칸', en: 'Empty slot' },
+    'fg.potion.slotTitle': { ko: '스테이지마다 다시 찬다', en: 'Refills every stage' },
+    'fg.potion.heal': { ko: '회복 {n}', en: 'Heals {n}' },
+    'fg.potion.owned': { ko: '가짐', en: 'Owned' },
+    'fg.potion.locked': { ko: '잠김', en: 'Locked' },
 
     /* ── 도움말 탭 (2026-08-26) ──
        설명 문구는 여기서 새로 쓰지 않는다 — 인게임에서 걷어낸 *.note / *.sub / *.hint 를 같은 키로 재사용한다.
@@ -513,7 +526,10 @@ const STRINGS = {
 
     /* ── 원정: 편성 · 지역 ── */
     'exp.seg.idle': { ko: '편성 · 지역', en: 'Party · Zones' },
+    /* 관전 칸의 이름은 원정 상태를 따른다 — 없음 `exp.seg.battle`(도움말 제목도 이것) · 도는 중 `live` · 끝남 `over` (SCREEN_DESIGN §4 · ADR-0147) */
     'exp.seg.battle': { ko: '전투 관전', en: 'Spectate' },
+    'exp.seg.live': { ko: '전투 중', en: 'In Battle' },
+    'exp.seg.over': { ko: '전투 종료', en: 'Battle Over' },
     'exp.seg.report': { ko: '리포트', en: 'Report' },
     'exp.oneParty': {
         ko: '전투 파티는 한 팀 — 원정이 곧 전투다. 세 상태가 한 탭 안에서 이어진다',
@@ -563,9 +579,7 @@ const STRINGS = {
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드 (챕터의 마지막 스테이지는 챕터보스 단독 1라운드)', en: '1 run = 1 stage · {r} rounds (the last stage of each chapter is one round against the chapter boss alone)' },
-    'exp.cleared': { ko: '클리어', en: 'Cleared' },
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
-    'exp.pick': { ko: '원정', en: 'Expedition' },
     'exp.foes': { ko: '적 구성', en: 'Enemies' },
     /* 출정 창의 칸 이름 둘 [2026-09-10 사용자 지시 · ADR-0084] — 「적 구성」·「진형」과 **같은 규격**으로 선다.
        `exp.heroes.h` 는 창 안으로 들어온 영웅 띠의 이름이다 — 탭 최상단에 있던 시절엔 이름이 없었다(패널의 첫 줄이라
@@ -705,10 +719,10 @@ const STRINGS = {
     // 교체될 자리가 빈 경우 — 옛 판의 「비어 있음」 빈 카드 한 장을 대신하는 하단 힌트 한 줄 (SCREEN_DESIGN §6 개정 2026-09-08)
     'tip.noneEquipped': { ko: '착용 중 없음', en: 'Nothing equipped' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
-    /* 담은 스킬 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
-       공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 문장은 액티브 줄과 **같은 함수**가 낸다 */
-    'tip.skill': { ko: '담은 스킬', en: 'Skill' },
-    'tip.noSkill': { ko: '담은 스킬 없음', en: 'No skill' },
+    /* 스킬 칸 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
+       공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 칸은 스킬 설명창 몸통 그대로라 문구도 설명창 키를 쓴다.
+       ~~`tip.skill`~~(「담은 스킬」 라벨)은 2026-09-15 삭제 [사용자 지시 · ADR-0139] */
+    'tip.noSkill': { ko: '스킬 없음', en: 'No skill' },
     // 옵션 출처 태그 (SCREEN_DESIGN §6 · ADR-0100) — 셋이다: 고정(그 부위면 무조건) · 죄종 이름(죄종 칸 — 문구는 `mock.js:SINS`) · 랜덤(통합옵션).
     // 출처가 없는 옛 접사는 랜덤으로 찍는다 (2026-09-08 신설 · 2026-09-11 셋으로 — R78)
     'tip.src.random': { ko: '랜덤', en: 'Random' },
@@ -727,15 +741,16 @@ const STRINGS = {
     'rs.h': { ko: '파티 전술', en: 'Party Tactics' },
     'rs.research.h': { ko: '연구', en: 'Research' },
     'rs.research.note': {
-        ko: '연구 탭은 <b>「연구」와 「파티전술」 두 섹션</b>이다 (2026-08-31 개정) — 지금 그리는 것은 파티전술 하나<br>'
-            + '<b>연구</b>는 스킬 노드·레시피 해금을 맡고 채집이 물어온 재료를 쓴다. <b>영웅 파견은 하지 않는다</b> — 옛 연구소(파견처)를 대체한다<br>'
-            + '비용 곡선·해금 순서가 미정이라 미착수 (GAME_DESIGN §9 · skill_design §5)',
-        en: 'The Research tab holds <b>two sections — Research and Party Tactics</b> (revised 2026-08-31); only Party Tactics is drawn today<br>'
-            + '<b>Research</b> unlocks skill nodes and recipes and spends materials brought back by gathering. <b>It sends no heroes</b> — it replaces the old Lab dispatch post<br>'
-            + 'Cost curve and unlock order are undecided, so the section is not started (GAME_DESIGN §9 · skill_design §5)',
+        ko: '연구 탭은 <b>「연구」와 「파티 전술」 두 작업</b>이고 위쪽 탭으로 가른다<br>'
+            + '<b>연구</b>는 <b>가지 8</b>(원정 · 탐험 · 제련소 · 선술집 · 상단 · 자원 · 도감 · 파티 전술)이다. 노드를 찍어 열고, <b>가지끼리는 서로 잠그지 않는다</b>. 영웅 파견은 하지 않는다<br>'
+            + '노드의 내용 · 비용 · 여는 조건이 미정이라 미착수 — 지금 보이는 노드는 자리표시다',
+        en: 'The Research tab holds <b>two jobs — Research and Party Tactics</b>, split by tabs at the top<br>'
+            + '<b>Research</b> has <b>eight branches</b> (Expedition · Exploration · Smeltery · Tavern · Trading House · Resources · Codex · Party Tactics). Nodes open one by one, and <b>no branch locks another</b>. It sends no heroes<br>'
+            + 'Node contents, costs and unlock conditions are undecided, so it is not started — the nodes shown are placeholders',
     },
-    /* 연구 섹션 [신설 2026-09-01] — ⚠ 내용은 목업이다 (ui/mock.js:RESEARCH · SCREEN_DESIGN §13-1).
-       칸 안의 이름·해금 내용은 데이터 문자열이라 mock 의 {ko,en} 을 L() 이 푼다. 여기 있는 것은 **라벨뿐**.
+    /* 연구 [신설 2026-09-01 · 가지 8 2026-09-15 ADR-0145] — ⚠ 노드는 목업이다 (ui/mock.js:RESEARCH · SCREEN_DESIGN §13-1).
+       노드의 이름·여는 것은 데이터 문자열이라 mock 의 {ko,en} 을 L() 이 푼다. 여기 있는 것은 **라벨뿐**이고,
+       이름이 안 정해진 노드는 `rs.rs.slot` 이 「가지 이름 + 번호」로 조립한다(가지 이름은 기존 탭 · 파견처 키).
        누를 때의 안내는 새로 쓰지 않고 `todo.lead` 를 그대로 부른다 (§11 · 수색 버튼과 같은 처리) */
     'rs.rs.done': { ko: '완료', en: 'Done' },
     'rs.rs.progress': { ko: '완료 {n}', en: 'Done {n}' },
@@ -743,6 +758,12 @@ const STRINGS = {
     'rs.rs.cost': { ko: '재료 {m} · {g}G', en: '{m} mat · {g}G' },
     'rs.rs.go': { ko: '연구', en: 'Research' },
     'rs.rs.need': { ko: '{name} 먼저', en: 'Needs {name}' },
+    'rs.rs.slot': { ko: '{b} {n}', en: '{b} {n}' },
+    'rs.rs.tbd': { ko: '미정', en: 'TBD' },
+    'rs.rs.locked': { ko: '잠김', en: 'Locked' },
+    // ⚠ 배치 비교 토글 (§13-1 · 2026-09-15) — 세로 · 가로 중 하나로 정해지면 키도 함께 지운다
+    'rs.rs.layout.col': { ko: '세로', en: 'Vertical' },
+    'rs.rs.layout.row': { ko: '가로', en: 'Horizontal' },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.next': { ko: '{no}번 칸까지 {n}', en: '{n} more to slot {no}' },
@@ -909,7 +930,7 @@ const STRINGS = {
        `{v}` 에는 Alt 를 누르는 동안 괄호 식이 따라 붙는다 — 틀은 그걸 모른다. ⚠ 감소·치명·추가 피해 전의 값이다 (game_logic/skill.js:previewOf)
        ~~`sk.amt.mult` · `sk.amt.healMult`(「공격력의 {m}%」)~~ → 식 모양 `sk.amt.fx` · `sk.amt.healFx` — 회복의 밑수는 마법 공격력이라 옛 문구가 틀렸었다 */
     'sk.amt.physical': { ko: '{v} 의 물리 피해', en: '{v} physical damage' },
-    'sk.amt.magic': { ko: '{v} 의 마법 피해', en: '{v} magic damage' },
+    'sk.amt.elem': { ko: '{v} 의 {e} 피해', en: '{v} {e} damage' },   // {e} = 원소 이름 `st.atkType.*` — 「마법 피해」는 없다(마법 공격은 반드시 원소를 갖는다 · battle_design §2-1)
     'sk.amt.fx': { ko: '{f} 만큼 피해', en: 'damage equal to {f}' },
     'sk.amt.heal': { ko: '{v} 만큼', en: '{v} HP' },
     'sk.amt.healFx': { ko: '{f} 만큼', en: 'HP equal to {f}' },
@@ -1132,7 +1153,9 @@ const STRINGS = {
     'bt.speed': { ko: '×{n}', en: '×{n}' },
     'bt.pause': { ko: '일시정지', en: 'Pause' },
     'bt.resume': { ko: '재개', en: 'Resume' },
-    'bt.retreat': { ko: '철수', en: 'Retreat' },   // ~~건너뛰기~~ 2026-09-14 — 진행 중 라운드를 버리고 원정을 끝낸다 (R89)
+    'bt.retreat': { ko: '철수', en: 'Retreat' },
+    'bt.potion.empty': { ko: '빈 칸', en: 'Empty slot' },
+    'bt.potion.slot': { ko: '{name} · 회복 {n}', en: '{name} · Heals {n}' },   // 아레나 구석의 물약 칸 (R104 · ADR-0148)   // ~~건너뛰기~~ 2026-09-14 — 진행 중 라운드를 버리고 원정을 끝낸다 (R89)
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
     'bt.note': {
         ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 라운드는 시작할 때 계산되고 <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
@@ -1148,21 +1171,19 @@ const STRINGS = {
     'bt.layout.toWide': { ko: '넓게 보기', en: 'Wide view' },
     'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack' },
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
-    'bt.dmg.party': { ko: '파티', en: 'Party' },
-    'bt.dmg.enemy': { ko: '적', en: 'Enemies' },
     // 로그 탭 — 줄의 **주체**(그 일을 한 쪽)로 거른다 (2026-09-15 · SCREEN_DESIGN §4-2)
     'bt.logf.all': { ko: '전체', en: 'All' },
     'bt.logf.party': { ko: '우리', en: 'Party' },
     'bt.logf.enemy': { ko: '적', en: 'Enemies' },
     'bt.items.target': { ko: '장착 대상 {name}', en: 'equip target {name}' },
-    'log.hit': { ko: '{name} → {target} <b>{dmg}</b> · {skill}', en: '{name} → {target} <b>{dmg}</b> · {skill}' },
+    'log.hit': { ko: '{name} → {target} <b class="dt-{ty}">{dmg}</b> · {skill}', en: '{name} → {target} <b class="dt-{ty}">{dmg}</b> · {skill}' },
     'log.dodge': { ko: '{name} → {target} <b>빗나감</b> · {skill}', en: '{name} → {target} <b>miss</b> · {skill}' },
     'log.roundStart': { ko: '<b>라운드 {n} ({kind})</b> — {list}', en: '<b>Round {n} ({kind})</b> — {list}' },
     'log.heal': { ko: '{name} → {target} <b class="heal-t">+{amt}</b> · {skill}', en: '{name} → {target} <b class="heal-t">+{amt}</b> · {skill}' },
     'log.buff': { ko: '{name} — <b>{skill}</b> 발동', en: '{name} — <b>{skill}</b> up' },
+    'log.potion': { ko: '{name} — 물약 <b class="heal-t">+{amt}</b> · 남은 {left}', en: '{name} — potion <b class="heal-t">+{amt}</b> · {left} left' },
     'log.barrier': { ko: '{name} — <b>{skill}</b> 방벽 {amt}', en: '{name} — <b>{skill}</b> barrier {amt}' },
     'log.buffEnd': { ko: '{name} — {skill} 종료', en: '{name} — {skill} ended' },
-    'log.crit': { ko: '{name} → {target} <b class="crit-t">{dmg}</b> 치명타! · {skill}', en: '{name} → {target} <b class="crit-t">{dmg}</b> critical! · {skill}' },
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
     'log.downed': { ko: '{name} <b>전투 불능</b>', en: '{name} <b>downed</b>' },   // ~~「이 출정 동안 아웃」~~ 2026-09-08 삭제
     'pop.dodge': { ko: '빗나감', en: 'MISS' },

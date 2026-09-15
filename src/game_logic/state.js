@@ -10,6 +10,7 @@
  *   version, seed, createdAt, savedAt,
  *   resources: {gold, dust, stigma},
  *   materials: {yieldId: n}   — 제작 재료(광석 · 목재 — 산출물 id 가 키). 없으면 {} · 버전 무변경 (2026-09-15 · R96)
+ *   potions: [potionId]       — 만든 물약(`potion.csv` id · 닳지 않는다 · 순서 = 얻은 순서 = 칸 순서 — R104). 새 게임 = `start_owned` 행 · 없으면 그 목록 · 버전 무변경 (2026-09-15 · R103)
  *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, equipped:{position: itemUid|null}}],
  *     — tier = 매직 | 레어 | 유니크 (`hero_tier.csv`). ~~caps(개체별 히든 상한)~~ 는 **v15 에서 사라졌다** —
  *       상한이 전 영웅 공통 하나가 되어(hero_design §4-3) 개체가 들 것이 없다
@@ -109,6 +110,7 @@ export const SAVE_VERSION = 26;
  *   searchStories — `search_story.csv` 파싱 행. **막의 어휘도 순서도 코드에 없다** — 아래 `searchPhases` 참조
  *   searchMeetings / searchAnswers — `search_meeting.csv` · `search_answer.csv` 파싱 행 (만남 · 답)
  *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · mineNodes / logNodes — 재료 단계 표 [{id, tier, yieldId, …}] (제작 · R96)
+ *   potions [{id, kind, tier, ko, en, heal, craftGold, craftable, startOwned}] (potion.csv 행 순서) — 물약 단계 표 (battle_design §7-1 · item_design §7-4 · R103)
  */
 export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, balance: B } = deps;
@@ -213,6 +215,7 @@ export function createGameSystem(deps) {
             version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
             resources: { gold: B.start_gold, dust: B.start_dust, stigma: B.start_stigma },
             materials: {},   // 제작 재료(광석 · 목재) — 파견이 채운다(미구현 · R96)
+            potions: startPotions(),   // 만든 물약 — 새 게임은 `potion.csv:start_owned` 행을 갖고 시작한다 (R103 · 사용자 지시)
             heroes: [], party: [], items: {}, bag: [], stash: [],
             progress: { cleared: [], levelUp: {} },   // levelUp = 스테이지별 **올린 양** — 안 올린 스테이지는 안 적는다 (2026-09-14 · R87)
             codexCards: {}, codexKills: {},
@@ -657,6 +660,8 @@ export function createGameSystem(deps) {
         // 제작 재료 · 회차 — 없으면 「가진 재료가 없다 · 만든 적이 없다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R96)
         s.materials = s.materials ?? {};
         s.counters.make = s.counters.make ?? 0;
+        // 만든 물약 — 없으면 **시작 물약**으로 연다. 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R103)
+        s.potions = Array.isArray(s.potions) ? s.potions : startPotions();
         return s;
     }
 
@@ -746,6 +751,22 @@ export function createGameSystem(deps) {
     function equipTarget(hero, item) {
         const ps = positionsOf(item.slot);
         return ps.find(p => !hero.equipped[p]) ?? ps[0] ?? null;
+    }
+
+    /**
+     * **「이 아이템을 끼면」** 전투 능력치 [2026-09-15 · INTERFACE §2-7] — 아이템 툴팁의 스킬 칸이 숫자를 **그 무기를 낀 영웅 기준**으로 낸다.
+     * 자리는 `equipTarget` 이 고른다(가방 칸 클릭이 끼울 그 자리). 원본은 안 건드린다 — 영웅 · 상태의 얕은 사본으로 `heroCombat` 을 부른다.
+     * 전술 조건도 사본으로 센다: 무기가 바뀌면 죄종 수 · 스킬 태그가 바뀌어 칸이 켜지고 꺼질 수 있다.
+     * 다른 영웅이 그 아이템을 끼고 있으면 그 사본에서 뺀다 — 한 개체가 두 몸에 서지 않는다
+     */
+    function heroCombatIf(state, h, itemUid) {
+        const it = state.items[itemUid];
+        const pos = it && !Object.values(h.equipped).includes(itemUid) ? equipTarget(h, it) : null;
+        if (!pos) return heroCombat(state, h);
+        const off = x => Object.values(x.equipped).includes(itemUid)
+            ? { ...x, equipped: Object.fromEntries(Object.entries(x.equipped).map(([p, u]) => [p, u === itemUid ? null : u])) } : x;
+        const me = { ...h, equipped: { ...h.equipped, [pos]: itemUid } };
+        return heroCombat({ ...state, heroes: state.heroes.map(x => x.uid === h.uid ? me : off(x)) }, me);
     }
 
     /** 가방 → 착용. 그 위치의 착용품은 가방으로 (가방이 차면 실패). position 은 생략 가능.
@@ -934,6 +955,83 @@ export function createGameSystem(deps) {
         addItem(state, it);
         state.bag.push(it.uid);
         return { ok: true, uid: it.uid };
+    }
+
+    /* ── 물약 (battle_design §7-1 · item_design §7-4 확정 2026-09-15 — R103) ──
+       칸(스테이지당 개수)과 영웅별 쿨은 **전투 안에서만** 산다(battle.js). 세이브가 드는 것은 **만든 물약 id 목록** 하나다 —
+       만든 물약은 닳지 않고 **물약 하나가 칸 하나**다 — 런을 열 때마다 **얻은 순서대로 앞 칸부터** 찬다(R104). 제작은 지금 골드만 먹고 rng 를 안 쓴다 */
+
+    /** 물약 종류 어휘 — 전투가 효과를 아는 종류만 둔다. 모르는 종류가 표에 오면 **로드에서 멈춘다**(조용히 새지 않게) */
+    const POTION_KINDS = ['heal'];
+    const potionRows = deps.potions ?? [];
+    (() => {
+        const bad = why => { throw new Error(`potion: ${why}`); };
+        const seen = new Set();
+        const lastTier = new Map(), lastHeal = new Map();
+        for (const p of potionRows) {
+            if (!p.id || seen.has(p.id)) bad(`id '${p.id}'`);
+            seen.add(p.id);
+            if (!POTION_KINDS.includes(p.kind)) bad(`${p.id} — 모르는 종류 '${p.kind}'`);
+            // 같은 종류 안에서 단계는 1 부터 연속이고 회복량은 단계마다 커진다 — 단계 이름(마이너 → 슈퍼)이 회복량의 순서와 어긋나지 않게 (item_design §7-4)
+            const want = (lastTier.get(p.kind) ?? 0) + 1;
+            if (p.tier !== want) bad(`${p.id} — ${p.kind} 의 단계 ${p.tier} ≠ ${want}`);
+            if (!(p.heal > (lastHeal.get(p.kind) ?? 0))) bad(`${p.id} — 회복량 ${p.heal} 이 앞 단계보다 크지 않다`);
+            lastTier.set(p.kind, p.tier);
+            lastHeal.set(p.kind, p.heal);
+            if (!(p.craftGold >= 0)) bad(`${p.id} — craft_gold ${p.craftGold}`);
+            if (!p.ko || !p.en) bad(`${p.id} — 이름 ko/en 이 비었다`);
+        }
+    })();
+    const potionById = id => potionRows.find(p => p.id === id) ?? null;
+    /** 시작 물약 — `start_owned` 행(행 순서). 새 게임과 **물약이 없던 옛 세이브**가 같은 목록으로 연다 (INTERFACE §4) */
+    const startPotions = () => potionRows.filter(p => p.startOwned).map(p => p.id);
+
+    /**
+     * 칸에 드는 물약 — 가진 물약을 **얻은 순서대로 앞 칸부터** `[{id, heal}]` · 칸 수 [balance.csv:potion_slot_max] 에서 자른다 · 없으면 빈 목록 (R104 · battle_design §7-1).
+     * 표에서 사라진 id 는 건너뛴다(로드가 지우지 않는다 · INTERFACE §4). `departRun` 이 전투에 넘기는 것이 이것이다
+     */
+    function potionLoadout(state) {
+        const slots = [];
+        for (const id of state.potions ?? []) {
+            const p = potionById(id);
+            if (!p) continue;
+            if (slots.length >= B.potion_slot_max) break;
+            slots.push({ id: p.id, heal: p.heal });
+        }
+        return slots;
+    }
+
+    /**
+     * 물약 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`makeState` · `upgradeState` 와 같은 규칙).
+     * `err` = 지금 누르면 나올 거절(`owned` → `locked` → `gold` 순) 또는 null.
+     * `craftable` 은 ⚠ 임시 칸이다 — 단계가 열리는 조건(연구 또는 챕터)은 기획 미정이다 (GAME_DESIGN §10 「물약의 남은 설계」)
+     */
+    function potionState(state) {
+        const owned = new Set(state.potions ?? []);
+        const gold = state.resources.gold;
+        const list = potionRows.map(p => {
+            const err = owned.has(p.id) ? 'owned' : !p.craftable ? 'locked' : gold < p.craftGold ? 'gold' : null;
+            return { id: p.id, kind: p.kind, tier: p.tier, heal: p.heal, cost: p.craftGold, owned: owned.has(p.id), craftable: p.craftable, canMake: err === null, err };
+        });
+        return {
+            slotMax: B.potion_slot_max, useHpPct: B.potion_use_hp_pct, cooldownSec: B.potion_cooldown_sec,
+            loadout: potionLoadout(state).map(s => s.id), list,
+        };
+    }
+
+    /**
+     * 물약 제작 1회 — 골드를 내고 `potions` 끝에 넣는다. 거절은 `missing` → `owned` → `locked` → `gold` 순이고 거절이면 아무것도 안 바뀐다.
+     * **rng 를 안 쓰고 카운터도 안 올린다** — `counters.make` 는 장비 제작 스트림의 회차라 여기서 올리면 다음 장비 제작이 밀린다 (INTERFACE §5-1).
+     * 원정 중에도 만든다 — 도는 런의 칸은 안 바뀌고 다음 런부터 **다음 빈 칸**에 든다(`departRun` · R104)
+     */
+    function makePotion(state, potionId) {
+        const p = potionById(potionId);
+        if (!p) return { ok: false, err: 'missing' };
+        const { err } = potionState(state).list.find(x => x.id === potionId);
+        if (err) return { ok: false, err };
+        state.resources.gold -= p.craftGold;
+        (state.potions ??= []).push(p.id);
+        return { ok: true, id: p.id, cost: p.craftGold };
     }
 
     /* ── 진형 ── */
@@ -1171,7 +1269,8 @@ export function createGameSystem(deps) {
         const going = state.party.slice();
         // 몬스터 레벨 = **이 스테이지의 지금 레벨**(올린 양 포함 · 2026-09-14 R87). rng 를 안 쓰므로 수열이 안 밀린다
         const level = stageLevelState(state, stageId).level;
-        const battle = BT.createRun(partyUnits(state, going), stageId, rng, level);
+        // 물약 — **이 런을 열 때** 가진 물약이 얻은 순서대로 앞 칸부터 찬다. 원정 도중에 만든 물약은 다음 런부터 든다 (battle_design §7-1 · R104). rng 0
+        const battle = BT.createRun(partyUnits(state, going), stageId, rng, level, potionLoadout(state));
 
         const report = {
             at: now, stageId, level, won: false, reason: null, durationSec: 0,   // reason null = 진행 중
@@ -1698,7 +1797,7 @@ export function createGameSystem(deps) {
 
     return {
         newGame, serialize, deserialize, canLoad,
-        heroById, heroItems, heroCombat, upgradeState, upgradeItem, makeBands, makeState, makeItem,
+        heroById, heroItems, heroCombat, heroCombatIf, upgradeState, upgradeItem, makeBands, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
