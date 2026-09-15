@@ -502,8 +502,7 @@ html, body { height: 100%; overflow: hidden; }
 
 /* ───────── 출정 창 (SCREEN_DESIGN §4-1 · ADR-0084 · ADR-0088) ─────────
    스테이지 행을 누르면 **탭 위에 겹쳐 뜨는 창**이다 — 접이식 전진 패널(`.form-panel` · 2026-08-28~2026-09-10)을 걷었다.
-   껍데기(어두운 판 · 가운데 · 정사각 X)는 셸의 창(.modal-layer/.modal-box)을 **그대로** 쓰고 여기서는 크기만 정한다 —
-   로그 창(.bw-box)이 같은 자리에서 쓰는 장치다.
+   껍데기(어두운 판 · 가운데 · 정사각 X)는 셸의 창(.modal-layer/.modal-box)을 **그대로** 쓰고 여기서는 크기만 정한다.
    **폭을 못박는 이유**는 판 크기를 내용에 맡기면 상태가 크기를 흔들기 때문이다: 경고 줄의 글자가 있고 없고에 따라
    출정 칸 폭이 바뀌면 창이 통째로 넓어졌다 좁아졌다 한다(「크기는 상태에 흔들리지 않는다」 · 2026-08-28 사용자 지시).
    폭은 1180 → 1280 → **1520** [2026-09-10 사용자 지시 — 「탭 자체를 더 키워라」]. 판 여백은 창 공통(12/14)보다 넉넉하게 준다 — 칸이 넷이다.
@@ -789,8 +788,28 @@ html, body { height: 100%; overflow: hidden; }
    오른쪽 열 폭은 내용이 정한다(영어가 길다). 비교 두 장(640)을 전제한 툴팁 상한도 이 카드에서는 푼다 */
 .tip-card.unit.alt { width: auto; }
 .tooltip:has(> .tip-card.unit.alt) { max-width: none; }
-.tip-unit { display: grid; grid-template-columns: minmax(278px, 1fr); grid-auto-flow: column; grid-auto-columns: max-content; align-items: start; }
-.tip-unit-col + .tip-unit-col { margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--border-dark); }
+/* 자리는 격자가 정한다 [개정 2026-09-15 사용자 지시 · ADR-0126] — 세부 옵션 1 · 2 가 기본 옵션 열의 **바깥쪽**에 선다:
+   카드 오른쪽에 선 툴팁은 [기본][1][2] · 왼쪽에 선 툴팁(`grow-left`)은 [1][2][기본]. 기본 열은 Alt 를 눌러도 제자리다(DOM 순서는 그대로).
+   이름 · 소속 줄은 없다(ADR-0129) — 한 줄짜리 격자다.
+   세부 옵션 두 열은 **같은 폭** — `1fr 1fr` 이고 카드는 내용 폭으로 재므로 더 긴 열의 폭을 둘이 똑같이 갖는다.
+   열 사이 선은 **틈 한가운데의 가짜 요소**다 — 열의 테두리 · 여백으로 그으면 첫 열과 나머지 열의 안쪽 폭이 여백만큼 달라져 「같은 폭」이 깨진다.
+   `stretch` — 선이 가장 긴 열 높이까지 내려간다 */
+.tip-unit { display: grid; grid-template-columns: minmax(278px, 1fr); column-gap: 33px; align-items: stretch; }
+.tip-unit-col { grid-row: 1; grid-column: 1; position: relative; }
+.tip-card.unit.alt .tip-unit { grid-template-columns: minmax(278px, auto) 1fr 1fr; }
+.tip-card.unit.alt .tip-unit-col.d1 { grid-column: 2; }
+.tip-card.unit.alt .tip-unit-col.d2 { grid-column: 3; }
+.tip-card.unit.alt.grow-left .tip-unit { grid-template-columns: 1fr 1fr minmax(278px, auto); }
+.tip-card.unit.alt.grow-left .tip-unit-col.base { grid-column: 3; }
+.tip-card.unit.alt.grow-left .tip-unit-col.d1 { grid-column: 1; }
+.tip-card.unit.alt.grow-left .tip-unit-col.d2 { grid-column: 2; }
+/* 선은 격자에서 **첫 열이 아닌** 열의 왼쪽 틈에 선다 — 오른쪽에 선 카드는 1 · 2 앞, 왼쪽에 선 카드는 2 · 기본 앞 */
+.tip-card.unit.alt .tip-unit-col.d1::before,
+.tip-card.unit.alt .tip-unit-col.d2::before,
+.tip-card.unit.alt.grow-left .tip-unit-col.base::before {
+    content: ''; position: absolute; left: -17px; top: 0; bottom: 0; border-left: 1px solid var(--border-dark);
+}
+.tip-card.unit.alt.grow-left .tip-unit-col.d1::before { content: none; }
 .tip-col-h { font-size: var(--fs-xs); color: var(--text-muted); margin: 4px 0 5px; }
 /* 개정 2026-09-15 [사용자 지시 · ADR-0119 · ADR-0120 · SCREEN_DESIGN §2 「유닛 툴팁 규격」]
    ① 윗변 3px = 막대 색(`--unit-line` — 렌더러가 카드에 건다) — 관전 카드 · 띠 카드의 윗변(3px)과 같은 문법이다.
@@ -800,7 +819,9 @@ html, body { height: 100%; overflow: hidden; }
    ④ 대표값 3줄(`.tip-lead`)은 막대 아래 윗선 하나로 가른다 — Alt 와 무관하게 선다
    ⑤ 어두운 등급 색(몬스터 일반 · 보스 — `--enemy-line` · `--boss-line`)은 막대만 밝힌다 — 검은 막대 바탕에 묻혔다.
       색 값을 새로 만들지 않고 같은 토큰을 밝혀 윗변과 같은 색 계열로 남긴다 */
-.tip-card.unit { border-top: 3px solid var(--unit-line, var(--border-secondary)); margin-top: -1px; line-height: 1.4; }
+/* ⑥ `zoom: .85` — 카드 전체(글씨 · 막대 · 폭)를 한 단 줄인다 [2026-09-15 사용자 지시 「너무 크다」 · 값은 src/ui/README.md 크기 정책].
+      창(`#tooltip`)이 아니라 **카드**에 건다 — 창의 `left/top` 은 `moveTip` 이 한 장 좌표로 넣는 값이다 */
+.tip-card.unit { border-top: 3px solid var(--unit-line, var(--border-secondary)); margin-top: -1px; line-height: 1.4; zoom: .85; }
 .tip-unit .cs-row { gap: 20px; }
 .tip-lead { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--border-dark); }
 .tip-card.unit.bar-lift .attr-bar > i { filter: brightness(1.8); }
@@ -1200,12 +1221,12 @@ html, body { height: 100%; overflow: hidden; }
    ⚠ **줄은 흐름 밖이다** (2026-09-03 사용자 지시) — 옛 판은 칸의 둘째 행이라 창이 없어도 26px 를 잡았고,
    그래서 카드가 빈 띠 위에 떠 보였다. `absolute` 라 **칸 높이 = 카드 높이**이고 창 개수가 카드를 못 흔든다
    (「높이를 그대로 둔다」가 지키려던 것 — 카드가 위아래로 안 뛰는 것 — 을 자리를 안 잡는 쪽으로 지킨다).
-   자리는 **카드의 바깥쪽**이다: 아래 진영(파티)은 카드 밑, 위 진영(적)은 카드 위 — 양쪽 다 VS 쪽 간격을 안 벌린다 */
+   자리는 **양 진영 다 화면 기준 카드 밑**이다 [2026-09-15 사용자 지시 · ADR-0128] — 흐름 밖이라 어느 쪽에 두든 카드 자리는 안 움직인다.
+   적의 줄은 VS 쪽 여백에 얹힌다(옛 판은 위 진영만 카드 위 · 오른쪽 정렬이었다) */
 .buff-row {
     position: absolute; left: 0; right: 0; top: 100%; margin-top: 3px;
     display: flex; flex-direction: row; align-items: center; gap: 3px; height: 26px; overflow: hidden;
 }
-.side-enemy .buff-row { top: auto; bottom: 100%; margin: 0 0 3px; justify-content: flex-end; }
 .buff-chip {
     flex: 0 0 auto; width: 24px; height: 24px;
     display: inline-flex; align-items: center; justify-content: center;
@@ -1385,17 +1406,12 @@ html, body { height: 100%; overflow: hidden; }
     100% { transform: translate(-50%, -30px); opacity: 0; }
 }
 
-/* 로그 창 — 컨트롤의 버튼 둘이 여는 창 (2026-09-03, 옛 우측 열 폐기 · SCREEN_DESIGN §4-2).
-   규격(어두운 판 · 가운데 · 정사각 X)은 셸의 창(.modal-layer/.modal-box)을 **그대로** 쓰고 여기서는 크기만 정한다.
-   판 크기를 내용에 맡기면 로그가 쌓일 때마다 창이 커졌다 작아졌다 해서 읽는 자리가 흔들린다 — 그래서 고정이다.
-   ⚠ .modal-box 의 `overflow:auto` 를 덮어 끈다 — 안 끄면 판이 아니라 창 자체가 스크롤한다 */
-.bw-box { width: min(720px, 100%); height: min(560px, 100%); overflow: hidden; }
-/* 판(로그 · 누적) — 창 안(넓게)이든 우측 열 안(나눔)이든 **같은 생김새**다. 집만 바뀐다 */
-.bw-box .pane, .battle-side .pane {
+/* 판(로그 · 누적) — **나눔 배치의 우측 열에만** 선다 (SCREEN_DESIGN §4-2 · ADR-0130). 넓게 배치에는 판이 없다 */
+.battle-side .pane {
     flex: 1 1 0; min-height: 0; overflow-y: auto;
     background: var(--bg-input); border: 1px solid var(--border-dark); padding: 8px 11px;
 }
-.bw-box .pane[hidden], .battle-side .pane[hidden] { display: none; }
+.battle-side .pane[hidden] { display: none; }
 /* 누적 데미지 — 유닛별 가한 피해 합계. 파티 / 적 두 묶음, 막대는 묶음 안 최대 기준, % 는 묶음 합 기준 */
 .dmg-group { font-size: var(--fs-xs); letter-spacing: 1px; color: var(--text-muted); margin: 2px 0 6px; }
 .dmg-row + .dmg-group { margin-top: 14px; }
@@ -1414,6 +1430,11 @@ html, body { height: 100%; overflow: hidden; }
 .battle-log li b { font-weight: normal; color: var(--text-primary); }
 .battle-log li b.crit-t { color: var(--color-warning); }
 .battle-log li b.heal-t { color: var(--heal-fg); }
+/* 로그 탭 — 전체 · 우리 · 적 (SCREEN_DESIGN §4-2 · ADR-0131). 줄은 다 쌓여 있고 목록의 `data-f` 가 주체가 다른 줄을 숨긴다 */
+.log-filter { flex: none; margin-bottom: 6px; }
+.log-filter[hidden] { display: none; }
+.battle-log[data-f="party"] li[data-side="enemy"],
+.battle-log[data-f="enemy"] li[data-side="party"] { display: none; }
 
 /* ───────── 서브 바 / 세그먼트 ───────── */
 
@@ -1901,6 +1922,15 @@ html, body { height: 100%; overflow: hidden; }
 }
 .sub-h .muted { font-size: var(--fs-xs); }
 
+/* ②-2 레벨 · 경험치 — 기본 옵션 칸 맨 위, 능력치 막대 위 (2026-09-15 · SCREEN_DESIGN §6 · ADR-0129).
+   막대는 **칸 폭 전부 · 능력치 막대(.attr-bar 7px)보다 얇다** — 시작 x 와 두께가 달라야 여덟째 능력치로 안 읽힌다.
+   능력치 막대와는 **선 없이 간격**으로만 가른다 — 이 칸의 선은 액티브 스킬 소제목 윗선 하나다 */
+.ch-xp { margin-bottom: 10px; }
+.ch-xp-line { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.ch-lv { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.ch-xp-n { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.ch-xp .bar { height: 5px; }
+
 /* ②-2 기본 능력치 막대 — 범위는 [balance.csv:hero_attr_min ~ hero_attr_max] */
 /* **격자는 줄이 아니라 목록이 든다** (2026-09-01 사용자 지시) — 줄마다 자기 격자를 가지면 라벨 열이
    줄마다 따로 계산돼 **막대 시작점이 들쭉날쭉해진다**(「힘」과 「매력」의 글자 폭이 다르므로).
@@ -2219,8 +2249,7 @@ html, body { height: 100%; overflow: hidden; }
 .modal-box {
     display: flex; flex-direction: column; gap: 10px;
     max-width: 100%; max-height: 100%; overflow: auto;
-    /* 14/16 → 12/14 [2026-09-09] — 스킬 창이 세로 예산 700 에서 몇 px 넘쳐 스크롤이 생겼다. 창 공통 규격이라
-       로그 창도 함께 좁아지지만 그쪽은 `.bw-box` 가 크기를 못박아 두어 영향이 없다 */
+    /* 14/16 → 12/14 [2026-09-09] — 스킬 창이 세로 예산 700 에서 몇 px 넘쳐 스크롤이 생겼다. 창 공통 규격이다 */
     padding: 12px 14px 14px;
     background: var(--bg-secondary); border: 1px solid var(--border-highlight);
     box-shadow: 0 12px 40px -8px #000;

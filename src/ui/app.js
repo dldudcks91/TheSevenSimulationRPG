@@ -46,14 +46,14 @@
  *   로컬 저장(save)은 그대로 · 클라우드는 모아서 통째로(cloudPush) · 갈리면 선택 창 · 다른 탭이 쓰면 멈춤 창(freeze).
  *   Firebase 는 cloud.js 만 만진다. 개발용 경로 ?dev=cloud (계정 창 · &c=pick 선택 창 · &c=frozen 멈춤 창)
  *
- * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태 · &live=1 이면 그 위에 원정을 하나 더 띄운 채) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판으로 로그 창이 열린 채 · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (출정 창이 열린 상태 · &open=0 이면 창을 닫은 목록) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태) / ?dev=mats (제작 재료를 쥔 제련소)
+ * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태 · &live=1 이면 그 위에 원정을 하나 더 띄운 채) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판을 고른 채(보이는 것은 나눔 배치뿐) · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채 · &logf=party|enemy 면 로그를 그 주체로 거른 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (출정 창이 열린 상태 · &open=0 이면 창을 닫은 목록) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태) / ?dev=mats (제작 재료를 쥔 제련소)
  */
 
 import * as M from './mock.js';
 import { t, L, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
 import { bindTipNode, hideTip, heroTipCard, skillTipCard, skillLineHtml, stagePoint, rangeText, attrRowsHtml, sheetRowsHtml, sheetPages } from './tip.js';
-import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageStory, stageBgOf, chapterOf, codexStages, skillInfo, skillTagName } from './data.js';
+import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageStory, fillStory, stageBgOf, chapterOf, codexStages, skillInfo, skillTagName } from './data.js';
 import { loadSave, writeSave, clearSave, loadCloudLink, writeCloudLink, clearCloudLink, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
 import { makeRng } from '../game_logic/rng.js';
@@ -857,9 +857,9 @@ function frozenBody() {
  * 출발 — **라운드 단위로 진행한다** [2026-09-14 · R89 · SCREEN_DESIGN §4]. `departRun` 이 첫 라운드를 계산하고 보상은 아직 없다 —
  * 라운드가 끝나는 시각에 시각을 미는 쪽(관전 재생기 · 앱 시계)이 `advanceBattle` 로 정산한다. instant(개발용)는 재생 없이 끝까지 계산하고 리포트로.
  * `at` 은 출발 시각(기본 지금), `resume` 은 새 런의 재생 위치.
- * 앱 시계가 반복을 한 눈금 안에서 이어 세울 때 둘을 넘긴다 — 앞 런이 끝난 순간에 출발했고, 배속 · 판 · 창을 잇는다 (ADR-0102)
+ * 앱 시계가 반복을 한 눈금 안에서 이어 세울 때 둘을 넘긴다 — 앞 런이 끝난 순간에 출발했고, 배속 · 판을 잇는다 (ADR-0102)
  */
-function runBattle(stageId, { instant = false, tab = null, at = null, resume = null } = {}) {
+function runBattle(stageId, { instant = false, tab = null, logf = null, at = null, resume = null } = {}) {
     const r = instant ? SYS.game.resolveBattle(G, stageId, at ?? now()) : SYS.game.departRun(G, stageId, at ?? now());
     if (!r.ok) {
         // 도는 원정은 거절 사유가 아니다 — `departRun` 이 끊고 나간다 (R92). 거절이면 도는 원정도 그대로다
@@ -871,13 +871,13 @@ function runBattle(stageId, { instant = false, tab = null, at = null, resume = n
     if (G.run && stageId === state.expStage) G.run.repeat = state.expRepeat === true;
     save();
     if (instant) { state.battle = null; state.repSel = null; state.exp = 'report'; render(); return; }
-    // tab — 개발용 ?dev=play&bt=dmg: 로그 창을 누적 데미지 판으로 **열어** 헤드리스가 클릭 없이 닿게 한다 (2026-09-03: 창이 됐으므로 win 도 같이 넘긴다)
+    // tab — 개발용 ?dev=play&bt=dmg: 우측 열의 판을 누적 데미지로 **골라** 헤드리스가 클릭 없이 닿게 한다(보이는 것은 `&lay=split` 일 때 · ADR-0130)
     // form — 진형을 **출발 순간에 찍는다** (2026-09-09). 관전 아레나가 이 값으로 파티 카드를 위아래로 민다
     // 옛 런의 재생기는 여기서 걷는다 — 두면 다음 render() 첫 줄이 **그 재생 위치를 새 런에 덮어써** 새 런이 옛 런이 끝난 시각부터
-    //   재생됐다(2026-09-11 실측 — 앞 194초를 건너뛰었다 · ADR-0102). 이어 받을 것(배속 · 판 · 창)은 부르는 쪽이 `resume` 으로 넘긴다
+    //   재생됐다(2026-09-11 실측 — 앞 194초를 건너뛰었다 · ADR-0102). 이어 받을 것(배속 · 판)은 부르는 쪽이 `resume` 으로 넘긴다
     if (stopBattle) { stopBattle(); stopBattle = null; }
     state.battle = { run: r.run, result: r.run.result, stageId, form: formSnapshot(),
-        resume: resume ?? (tab ? { t: 0, speed: 1, running: true, tab, win: true } : undefined) };
+        resume: resume ?? (tab || logf ? { t: 0, speed: 1, running: true, tab, logf } : undefined) };
     state.exp = 'battle';
     render();
 }
@@ -903,7 +903,7 @@ function renderExpedition(main) {
             combatOf,   // 영웅 툴팁의 세부 옵션 — 캐릭터 탭과 같은 game.heroCombat (SCREEN_DESIGN §2 「유닛 툴팁 규격」)
             // 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 출발 순간에 찍은 스냅샷이다. 재생기는 이 값으로 **자리만** 민다
             form: state.battle.form,
-            // 관전 배치 — 'wide'(아레나 전폭 + 로그 창) / 'split'(옛 구조: 좁은 아레나 + 우측 딜미터 열).
+            // 관전 배치 — 'wide'(아레나 전폭 · 로그 · 누적 없음) / 'split'(아레나 + 우측 딜미터 열 · ADR-0130).
             // 재생 위치(resume)가 아니라 **취향**이라 화면 상태가 든다 — 런이 바뀌어도 남고, 세이브에는 안 들어간다
             layout: state.btLayout, onLayout: v => { state.btLayout = v; },
             now, frozenMs: FROZEN_GAP_MS,   // 시각은 실제로 흐른 시간이 민다 · 문턱을 넘은 공백은 밀지 않는다 (ADR-0102)
@@ -921,7 +921,7 @@ function renderExpedition(main) {
                 save(); state.repSel = null; state.exp = 'report'; render();
             },
             onEnd: auto => {
-                // 재생기를 먼저 걷는다 — 반복으로 이어지는 런은 배속 · 판 · 창을 잇고 시각만 0 에서 시작한다 (§4 · ADR-0102)
+                // 재생기를 먼저 걷는다 — 반복으로 이어지는 런은 배속 · 판을 잇고 시각만 0 에서 시작한다 (§4 · ADR-0102)
                 const pos = stopBattle ? stopBattle() : state.battle?.resume;
                 stopBattle = null;
                 if (auto && G.run?.repeat && result.won) runBattle(stageId, { resume: { ...pos, t: 0, wall: now(), auto: false } });
@@ -1349,14 +1349,15 @@ function foeBox(z) {
 }
 
 /** 이야기 — 창의 **아래 줄 오른쪽 · 적 구성 아래** [2026-09-14 사용자 지시 · §4-1 · ADR-0105].
- *  이 스테이지의 **입장 텍스트**(`stage.csv:story_kr/_en`)를 찍는 **읽는 자리**다 — 클릭이 없다.
+ *  이 스테이지의 **이야기 글**(`stage.csv:story_kr/_en`)을 찍는 **읽는 자리**다 — 클릭이 없다.
  *  **글 길이가 창을 흔들지 않는다** — 칸이 크기 격리(`.dw-story`)라 열 폭은 적 구성이, 줄 높이는 진형이 정한다.
- *  글은 데이터라 `textContent` 로 넣는다 */
+ *  글은 데이터라 `textContent` 로 넣는다. 이름 자리(`{m:…}` · `{leader}`)는 `data.js:fillStory` 가 푼다 — 리더 = 파티 첫 슬롯 [2026-09-15] */
 function storyBox(z) {
     const box = el('div', 'dw-story');
     box.appendChild(el('div', 'dw-h', t('exp.story.h')));
     const p = el('p', 'dw-story-text');
-    p.textContent = L(stageStory(z));
+    const leader = heroById(G?.party?.[0]);
+    p.textContent = fillStory(L(stageStory(z)), lang(), { leader: leader ? leader.name : null, fallback: t('exp.story.noLeader') });
     box.appendChild(p);
     return box;
 }
@@ -1647,7 +1648,7 @@ function expTick() {
     for (;;) {
         const B = state.battle;
         if (!B) return;
-        const r = B.resume ?? { t: 0, speed: 1, running: true, tab: 'log', win: false };
+        const r = B.resume ?? { t: 0, speed: 1, running: true, tab: 'log' };
         // 유저가 세워 둔 것 — 시계를 멈추는 것은 이것 하나다. 세워 둔 동안에도 박자는 민다(다시 틀 때 그 시간이 한꺼번에 흐르지 않게)
         if (r.running === false) { B.resume = { ...r, wall: at }; return; }
         if (r.t >= runEnd(B) && !r.auto) return;   // 끝난 런. `auto` = 결과 띠가 다음 런을 세던 도중에 걷혔다 — 이어서 세운다
@@ -1686,7 +1687,7 @@ function closeFrozenRun(at) {
     if (!B) return;
     const mounted = !!stopBattle;
     if (mounted) { B.resume = stopBattle(); stopBattle = null; }   // 관전이 떠 있었으면 그 자리가 곧 멈춘 자리다
-    const r = B.resume ?? { t: 0, speed: 1, running: true, tab: 'log', win: false };
+    const r = B.resume ?? { t: 0, speed: 1, running: true, tab: 'log' };
     if (B.run.done && !r.auto) { if (mounted) render(); return; }  // 이미 끝난 런 — 걷은 관전만 다시 세운다
     // 진행 중이던 원정은 **끊는다** [개정 2026-09-14 · R89] — 멈춘 공백을 따라잡아 마무리하지 않는다(진행 중 라운드는 버린다).
     //   끝난 런이 다음 런을 세던 중(`auto`)이었으면 반복만 끈다
@@ -1963,16 +1964,33 @@ function gearPanel(h) {
     return p;
 }
 
-/** ②-2 기본 옵션 — 기본 능력치 7 막대 + 그 아래 현재 스킬(액티브 3, 정사각 카드). 옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (2026-08-27) */
+/** ②-2 기본 옵션 — 맨 위 레벨 · 경험치 + 기본 능력치 7 막대 + 그 아래 현재 스킬(액티브 3, 정사각 카드). 옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (2026-08-27) */
 function attrPanel(h) {
     const p = el('div', 'panel');
     p.appendChild(el('h2', '', t('ch.attr.h')));
+    p.appendChild(xpBlock(h));
     const box = el('div', 'attr-list');
     // 줄 조립은 유닛 툴팁과 같은 함수다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 (tip.js · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114)
     box.innerHTML = attrRowsHtml(h.stats, tierColor(h));
     p.appendChild(box);
     p.appendChild(skillCards(h));
     return p;
+}
+
+/**
+ * 레벨 · 경험치 — 기본 옵션 칸 맨 위, 능력치 막대 위 (2026-09-15 · SCREEN_DESIGN §6 · ADR-0129).
+ * 막대 폭은 `현재 / 필요` 의 표시 비율이다(능력치 막대와 같은 종류 — 전투 계산이 아니다).
+ * **만렙이면 숫자 대신 MAX · 막대는 가득** — 줄을 걷으면 만렙 영웅을 고를 때만 아래 막대 · 스킬이 한 줄 올라가 칸이 흔들린다
+ */
+function xpBlock(h) {
+    const atCap = h.level >= D.balance.hero_level_cap;
+    const need = xpNext(h);
+    const pct = atCap ? 100 : Math.max(0, Math.min(100, h.xp / need * 100));
+    const text = atCap ? t('ch.xp.max') : t('ch.xp', { a: h.xp.toLocaleString(), b: need.toLocaleString() });
+    const box = el('div', 'ch-xp');
+    box.innerHTML = `<div class="ch-xp-line"><span class="ch-lv">${t('ch.lv', { n: h.level })}</span><span class="ch-xp-n">${text}</span></div>`
+        + `<div class="bar xp"><i style="width:${pct}%"></i></div>`;
+    return box;
 }
 
 /**
@@ -3612,7 +3630,12 @@ async function boot() {
         // `&rep=1` — **반복 원정을 켠 채** 출발한다 [2026-09-10]. 반복은 전진 패널의 토글로만 켜져서
         //   「런이 끝나면 다음 런이 저절로 선다」(ADR-0074)에 헤드리스가 못 닿았다 (§10 · ?dev=form 과 같은 장치)
         if (new URLSearchParams(location.search).get('rep') === '1') state.expRepeat = true;
-        runBattle(D.stageOrder[0], { tab: new URLSearchParams(location.search).get('bt') });
+        // `&stage=<id>` — **그 스테이지의 관전** [2026-09-15 · §10] — 오오라를 든 기사 몬스터는 2장부터라(ADR-0127) 첫 스테이지로는 못 본다.
+        //   후반 스테이지는 해금 전이라 출발이 거절되므로 앞 스테이지를 순서대로 클리어 처리하고 보낸다(`?dev=form&lvl` 과 같은 장치)
+        const wantPlay = Number(new URLSearchParams(location.search).get('stage'));
+        const playId = D.stages[wantPlay] ? wantPlay : D.stageOrder[0];
+        for (const id of D.stageOrder) { if (id === playId) break; if (!G.progress.cleared.includes(id)) G.progress.cleared.push(id); }
+        runBattle(playId, { tab: new URLSearchParams(location.search).get('bt'), logf: new URLSearchParams(location.search).get('logf') });
         // `&tip=e|p` — **첫 적 카드 / 첫 영웅 카드의 툴팁**이 뜬 관전 [2026-09-14 · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §10]. 툴팁은 hover 로만 뜨고,
         //   적 카드는 `round` 이벤트가 재생기에 들어간 뒤에 서므로 여기서는 아직 없다 — 설 때까지 기다렸다 한 번 올린다.
         //   `&alt=1` 이면 올린 뒤 **Alt 를 누른 채**로 둔다 — 세부 옵션 열도 누르는 동안만 서서 헤드리스가 못 닿는다(tip.js 의 keydown 을 그대로 탄다)

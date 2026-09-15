@@ -58,7 +58,7 @@ state.js(deps: hero, item, battle, skill, balance, …) ──┘
 
 | export | 시그니처 | 계약 |
 |---|---|---|
-| `parseCsv(text)` | `string → object[]` | 첫 줄 = 헤더. BOM 제거. 빈 줄 무시. **숫자로 읽히는 셀은 Number 로 변환**(빈 셀은 빈 문자열). 쉼표/따옴표 이스케이프 **없음** — CSV 셀에 쉼표를 넣지 않는 것이 데이터 계약이다 |
+| `parseCsv(text)` | `string → object[]` | 첫 줄 = 헤더. BOM 제거. 빈 줄 무시. **한 행 = 한 줄**(셀 안 줄바꿈 없음 — 줄바꿈이 필요한 글은 `\n` 두 글자). **숫자로 읽히는 셀은 Number 로 변환**(빈 셀은 빈 문자열). **쉼표가 든 셀은 큰따옴표로 감싼다** — 셀 안의 큰따옴표는 `""` · 따옴표로 **시작하는** 셀만 감싼 셀이다(셀 가운데의 `"` 는 글자 그대로) [개정 2026-09-15 — ~~쉼표/따옴표 이스케이프 없음~~ · 스토리 글이 쉼표를 쓴다]. 이식 엔진의 리더도 같은 문법(RFC 4180 에서 셀 안 줄바꿈만 뺀 것)으로 읽는다 |
 | `keyValue(rows)` | `→ {key: value}` | `balance.csv` 전용 (`key,value,description`) |
 | `indexBy(rows, col)` | `→ {rows[col]: row}` | 같은 키가 둘이면 뒤가 이긴다 |
 
@@ -316,9 +316,9 @@ strike(rng, a, d):
 | `basePeriod` | `period` 의 원값. `period = basePeriod × (1 − Σ버프 period_pct/100)` |
 | `hpMaxBase` · `defBase` · `resBase` · `drBase` · `regenBase` | 창이 미는 축의 **원값** [신설 2026-09-09]. `refreshDerived` 가 창 합으로 값을 다시 쓰고 **창이 없으면 밑수로 되돌린다** — 그래서 `hpMax`·`def`·`res`·`dr`·`regen` 을 직접 대입하는 코드는 밑수도 같이 옮겨야 한다(안 그러면 다음 파생에서 되돌아간다). `resBase` 는 4원소 객체 |
 | `summon` · `summonOf` | 소환 유닛 표식과 시전자 key [신설 2026-09-09]. **`side` 는 시전자와 같다**(파티 배열에 들어간다) — 그래서 적의 대상 굴림 모집단이 커진다. ⚠ **전멸 판정에서는 뺀다**(`alive(party).filter(u => !u.summon)`) · 라운드가 바뀌면 `beginRound` 가 걷어낸다 · 행동은 `next: Infinity` 로 막는다 · ⚠ **적도 소환한다** [2026-09-11 · R79] — 벽은 시전자 쪽 배열(`units.enemies`)에 서고 **클리어 판정에서도 빠진다**(전멸 판정과 같은 규칙) · 적 벽을 쓰러뜨려도 `onKill` 을 안 지난다(처치 · 기여 처치 수 아님 · rng 0) · 적 벽은 다음 라운드의 적 배열 교체로 사라진다. ⚠ 파티 벽이 쓰러지면 `result.downed` 에 uid 없이 실린다 — R79 **이전부터** 있던 동작이고 미수정(DEV_PLAN R79 보고) |
-| `actives` | `[{id, def, readyAt, source}]` — **쿨부터 돈다** [개정 2026-09-14 · R89 · battle_design §6] — 파티는 `readyAt = cooldownSec`(전투 시작 0초 기준) · 적은 `readyAt = 등장 라운드 시작 시각 + cooldownSec` · 원정 중 새로 생긴 스킬은 갈아입은 시각 + `cooldownSec`(§2-12). `source` 는 배정 출처(`innate`/`weapon_group`/`advance`) — 화면 라벨용, 전투는 읽지 않는다. ⚠ **몬스터도 든다** [2026-09-11 · R79] — 칸 수는 `grade.skill_slots`(일반 1 · 정예 2 · 보스 3) · 소환 `[]`. ⚠ **적의 오오라도 칸에서 뺀다** — 파티와 같은 `applyAuras` 가 **라운드 시작에**(`beginRound` · `units.enemies` 교체 직후) `until: Infinity` 창으로 건다(대상 = `self` 면 자신 · 아니면 그 적 배열 · rng 0 · 이벤트 없음). 안 빼면 쿨 0 액티브가 되어 매 차례 시전만 반복한다 |
+| `actives` | `[{id, def, readyAt, source}]` — **쿨부터 돈다** [개정 2026-09-14 · R89 · battle_design §6] — 파티는 `readyAt = cooldownSec`(전투 시작 0초 기준) · 적은 `readyAt = 등장 라운드 시작 시각 + cooldownSec` · 원정 중 새로 생긴 스킬은 갈아입은 시각 + `cooldownSec`(§2-12). `source` 는 배정 출처(`innate`/`weapon_group`/`advance`) — 화면 라벨용, 전투는 읽지 않는다. ⚠ **몬스터도 든다** [2026-09-11 · R79] — 칸 수는 `grade.skill_slots`(일반 1 · 정예 2 · 보스 3) · 소환 `[]`. ⚠ **적의 오오라도 칸에서 뺀다** — 파티와 같은 `applyAuras` 가 **라운드 시작에**(`beginRound` · `units.enemies` 교체 직후) `until: Infinity` 창으로 건다(대상 = `self` 면 자신 · 아니면 그 적 배열 · rng 0). 안 빼면 쿨 0 액티브가 되어 매 차례 시전만 반복한다. **오오라 창은 이벤트로 낸다** [2026-09-15 · R98] — 아래 이벤트 표 `buff`. **칸 표시** — 오오라를 뺄 때 빼기 전 칸 순서(`slotIds`)와 켠 오오라 id(`auraOn`)를 유닛에 남긴다. 결과 `party[]` · `round` · `refit` 의 `actives`/`ready` 가 이것을 읽는다(표시값 · 전투는 안 읽는다 · 오오라가 없는 유닛은 둘 다 없다 · 갈아입으면 비우고 다시 잰다) |
 | `reactions` | `[{on, fn}]` — 사건 훅 핸들러 (§2-12). 기본 `[]`. ⚠ 등록하는 소비자가 아직 없다 — 마스터리 T3(반응 패시브)의 자리 (2026-09-01) |
-| `buffs` | `{skillId: {stat, v, until, element, by}}` — 창 하나 = 스킬 하나. **중첩 없음**, 재시전은 `until` 갱신. `element`(평타 부여가 때릴 원소) · `by`(건 자의 key — 지목이 읽는다)는 2026-09-09 신설. **`until: Infinity` 는 오오라**(만료가 영원히 안 걸린다) · `v` 가 **음수면 디버프**(적에게 건 창) · **`quiet: true` = 무기 옵션 창**(키 `wx:…` — 열 때도 닫을 때도 이벤트를 안 낸다 · 2026-09-11 R78) |
+| `buffs` | `{skillId: {stat, v, until, element, by}}` — 창 하나 = 스킬 하나. **중첩 없음**, 재시전은 `until` 갱신. `element`(평타 부여가 때릴 원소) · `by`(건 자의 key — 지목이 읽는다)는 2026-09-09 신설. **`until: Infinity` 는 오오라**(만료가 영원히 안 걸린다 · 이벤트에서는 `until: null` · R98) · `v` 가 **음수면 디버프**(적에게 건 창) · **`quiet: true` = 무기 옵션 창**(키 `wx:…` — 열 때도 닫을 때도 이벤트를 안 낸다 · 2026-09-11 R78) |
 | `barrier` | `{amt, until, s}` 또는 `null` — HP 밖 흡수 풀 |
 | `stats` | 기본 능력치 7종 `{str, agi, int, vit, luck, ldr, cha}` — 영웅은 `partyUnits[].stats`, **몬스터는 `monster.csv` 의 7컬럼**(몬스터마다 고정 · 2026-09-11 R79). **소환만 `null`**. 시전 순간 `skill.scaleDef(def, u.stats)` 가 읽는다(`null` = 계수 0) [2026-09-10 · R72] |
 | `flat` · `procChance` · `procMult` | `strike` 가 읽는 **스킬 타격 전용** 필드 — `strikeOnce` 가 그 타격 동안만 얹고 원복한다(§8 항목 13). 평소 0 [2026-09-10 · R72] |
@@ -354,29 +354,29 @@ strike(rng, a, d):
 - `contrib` = **파티 영웅별 기여** — 가한 피해 · 받은 피해 · 처치 수 [신설 2026-09-09 · R68]. 전투 시작 시점의 **파티 전원**이 자리를 갖고(0 이어도 줄이 선다) 순서는 파티 순서다. 「가한 피해」는 **감쇠 후 최종 피해**이고 배리어가 먹은 몫도 든다 — 관전의 누적 데미지 판(§6)이 이벤트의 `dmg` 를 더한 값과 **같은 값**이다. **반사는 되받은 쪽의 가한 피해**로 세고, 처치는 **적을 쓰러뜨린 것**만 센다(적의 소환 벽은 안 센다 · R79). ⚠ **소환물은 안 센다** — 행동하지 않아 가한 피해가 없고, 소환물이 맞은 것은 주인이 맞은 것이 아니다. `strikes` 와 같이 **rng 를 소비하지 않고 타임라인에도 안 들어간다**
 - `drops` 의 아이템은 `uid: null` — state.js 가 가방에 넣으며 발급
 - **`xpTotal` · `gold` · `kills` · `cards` · `drops` 는 이긴 라운드의 몫만 센다** [개정 2026-09-14 · R89] — 진 라운드(전멸 · 시간 초과)에서 잡은 몬스터는 `rounds[].killed` · `contrib` 에만 남는다(사실의 기록). 카드 · 드롭 **판정 굴림은 처치 순간 그대로** 돌아 rng 순서가 안 바뀐다 — 라운드 몫으로 모아 두었다가 이기면 결과에 넣는다
-- `party[].ready` = 그 영웅 스킬들의 **첫 준비 시각**(칸 순서 · 소수 1자리) [신설 2026-09-14 · R89] — 재생기가 쿨 칸을 덮인 채로 시작하게 한다(재생기는 쿨을 계산하지 않는다)
+- `party[].ready` = 그 영웅 스킬들의 **첫 준비 시각**(칸 순서 · 소수 1자리) [신설 2026-09-14 · R89] — 재생기가 쿨 칸을 덮인 채로 시작하게 한다(재생기는 쿨을 계산하지 않는다) · **오오라도 제 칸에 선다** [2026-09-15 · R98] — `party[].actives` 는 오오라를 빼기 **전** 칸 순서이고, 오오라 칸의 `ready` 는 **켜진 오오라 `0`**(쿨이 없다 — 늘 준비) · **안 켜진 오오라 `null`**(한 번에 하나 — 칸 순서 첫 오오라만 켜진다). 전투는 이 두 배열을 안 읽는다(유닛의 `actives` 는 오오라를 뺀 목록 그대로 · 아래 「전투 유닛」 `actives` 행)
 - **`timeline` 은 세이브에 넣지 않는다.** 리포트만 남긴다
 
 **타임라인 이벤트** — 전부 `{t, e, …}`. `t` = 초, 소수 첫째 자리 반올림.
 
 | `e` | 필드 | 의미 |
 |---|---|---|
-| `round` | `n, kind, enemies:[{key, monsterId, grade, sin, traits, hpMax, period, atkMin, atkMax, matkMin, matkMax, atkType, stats, actives, ready, sheet}]` | 라운드 시작. **그 라운드의 첫 이벤트** · `ready` = 그 적 스킬들의 첫 준비 시각(등장 시각 + 쿨 · 칸 순서 · R89) · `atkMin`·`atkMax`·`matkMin`·`matkMax`·`atkType`·`stats`·`actives` 는 **재생기의 표시값**이다(범위 R90) [2026-09-11 · R79 후속 · 사용자 지적] — `actives` = 그 적의 스킬 id 배열(칸 순서 = 출처 자리 · 고유 → 무기 → 셋째 · 등급이 연 칸만), 나머지는 스킬 툴팁 문장(피해·회복량 · 스킬 계수)의 재료다. `party[]` 의 같은 이름 필드와 **같은 모양**이고 전투에는 안 쓰인다. **`sheet`** = 그 적의 **세부 능력치 복사본** [2026-09-14 · R94] — `makeEnemy` 가 몸값 · 등급 배율 · 전역 배율 · `attack_type` 덮기까지 먹인 `computeCombat` 출력에서 전투 내부용 둘(`option_fx` · `atk_pct_sum`)을 뺀 것(공격력 범위 객체는 복사한다)이고 유닛 툴팁의 세부 옵션(SCREEN_DESIGN §2 「유닛 툴팁 규격」)이 읽는다 · `makeEnemy` 유닛도 같은 `sheet` 를 든다. ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 소비는 0 |
+| `round` | `n, kind, enemies:[{key, monsterId, grade, sin, traits, hpMax, period, atkMin, atkMax, matkMin, matkMax, atkType, stats, actives, ready, sheet}]` | 라운드 시작. **그 라운드의 첫 이벤트** · `ready` = 그 적 스킬들의 첫 준비 시각(등장 시각 + 쿨 · 칸 순서 · R89 — 오오라 칸은 켜진 것 `0` · 안 켜진 것 `null` · R98) · `atkMin`·`atkMax`·`matkMin`·`matkMax`·`atkType`·`stats`·`actives` 는 **재생기의 표시값**이다(범위 R90) [2026-09-11 · R79 후속 · 사용자 지적] — `actives` = 그 적의 스킬 id 배열(칸 순서 = 출처 자리 · 고유 → 무기 → 셋째 · 등급이 연 칸만), 나머지는 스킬 툴팁 문장(피해·회복량 · 스킬 계수)의 재료다. `party[]` 의 같은 이름 필드와 **같은 모양**이고 전투에는 안 쓰인다. **`sheet`** = 그 적의 **세부 능력치 복사본** [2026-09-14 · R94] — `makeEnemy` 가 몸값 · 등급 배율 · 전역 배율 · `attack_type` 덮기까지 먹인 `computeCombat` 출력에서 전투 내부용 둘(`option_fx` · `atk_pct_sum`)을 뺀 것(공격력 범위 객체는 복사한다)이고 유닛 툴팁의 세부 옵션(SCREEN_DESIGN §2 「유닛 툴팁 규격」)이 읽는다 · `makeEnemy` 유닛도 같은 `sheet` 를 든다. ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 소비는 0 |
 | `hit` | `a, d, dmg, crit, dhp` (+ `ahp` 흡혈 시 · `s?` 스킬 타격 · `proc?` 추가 피해가 터졌을 때만 `true` · `bar?` 배리어 잔량 · `cb?` 강타 몫 — `dmg` 에 이미 들었다 · R78) | 직격 적중. `dhp` = 피격 후 HP. `bar` = 대상이 배리어를 갖고 있었을 때 **흡수 후 잔량**. `proc` 은 **터진 타격에만** 붙는다(안 터지면 키가 없다 · 2026-09-10 R72) |
 | `dodge` | `a, d` (+ `s?`) | 직격 빗나감 (적중 게이트 실패 — 회피 스탯은 없다. **키 이름은 계약이라 유지**) |
 | `reflect` | `a, d, dmg, ahp` | 비직격 반사. `a` = 반사한 쪽 |
 | `down` | `u` | 전투불능 |
-| `refit` | `u, hpMax, dhp, period, atkMin, atkMax, matkMin, matkMax, atkType, stats, actives, ready` | **라운드 경계에서 영웅을 갈아입혔다** [신설 2026-09-14 · R89] — 원정 중 바꾼 장비 · 레벨 · 스킬 트리가 그 영웅의 전투 능력치를 바꿨을 때만 나온다(`createRun.next(partyUnits)`). 다음 라운드의 `round` 이벤트 **앞**이다(결투 창을 닫는 `buffEnd` 보다도 앞). `dhp` = 갈아입은 뒤 HP(현재 HP 유지 · 새 최대치로 자름) · `actives`/`ready` = 새 스킬 칸과 준비 시각(남은 스킬은 쿨 그대로 · 새 스킬은 이 순간부터 한 바퀴) · 나머지는 `party[]` 의 같은 이름 표시값. rng 0 |
+| `refit` | `u, hpMax, dhp, period, atkMin, atkMax, matkMin, matkMax, atkType, stats, actives, ready` | **라운드 경계에서 영웅을 갈아입혔다** [신설 2026-09-14 · R89] — 원정 중 바꾼 장비 · 레벨 · 스킬 트리가 그 영웅의 전투 능력치를 바꿨을 때만 나온다(`createRun.next(partyUnits)`). 다음 라운드의 `round` 이벤트 **앞**이다(결투 창을 닫는 `buffEnd` 보다도 앞). `dhp` = 갈아입은 뒤 HP(현재 HP 유지 · 새 최대치로 자름) · `actives`/`ready` = 새 스킬 칸과 준비 시각(남은 스킬은 쿨 그대로 · 새 스킬은 이 순간부터 한 바퀴 · 오오라 칸은 `party[].ready` 와 같은 규칙 · R98) · 나머지는 `party[]` 의 같은 이름 표시값. rng 0 |
 | `regen` | `u, amt, dhp` | HP 재생. **정수 1 이상이 쌓인 틱에만** 나온다(초당 값을 틱마다 누산) · 행동 처리 **앞** · rng 소비 없음 |
 | `skill` | `u, s, ready` | 액티브 시전 — 그 차례의 사건. 뒤따르는 `hit`/`dodge`/`heal`/`buff` 가 같은 `s` 를 단다. `ready` = 그 스킬이 **다시 준비되는 시각**(쿨감소가 이미 반영된 값) — 재생기가 쿨을 계산하지 않게 시뮬이 실어 보낸다 |
 | `heal` | `a, d, amt, dhp, s` | 회복. `dhp` = 회복 후 HP |
-| `buff` | `u, s, stat, v, until` (+ `amt` 배리어 총량) | 창 적용 또는 갱신. `until` = 만료 시각(소수 1자리). **결투(`duel`)는 둘을 낸다** — 지목당한 적의 창과 시전자 자신의 `dr_pct` 창(같은 `s`·`until` · 2026-09-10 R72) |
-| `buffEnd` | `u, s` | 창 만료 (그 틱의 행동 처리 **앞에서**) · 결투 시전자 창이 라운드 경계에서 닫힐 때(그 라운드의 `round` 이벤트 바로 앞 · 2026-09-10) |
+| `buff` | `u, s, stat, v, until` (+ `amt` 배리어 총량) | 창 적용 또는 갱신. `until` = 만료 시각(소수 1자리). **오오라** [2026-09-15 · R98] — `until: null`(만료 없음) · 시전(`skill`) 없이 선다 · 받는 유닛마다 하나 · 자리는 **`round` 바로 뒤**다: 파티 것(첫 라운드 = 전투 시작에 건 창 · 갈아입기로 다시 건 창 = 다음 라운드) → 그 라운드 적의 것 순. **결투(`duel`)는 둘을 낸다** — 지목당한 적의 창과 시전자 자신의 `dr_pct` 창(같은 `s`·`until` · 2026-09-10 R72) |
+| `buffEnd` | `u, s` | 창 만료 (그 틱의 행동 처리 **앞에서**) · 결투 시전자 창이 라운드 경계에서 닫힐 때(그 라운드의 `round` 이벤트 바로 앞 · 2026-09-10) · 갈아입기로 사라진 오오라(다음 `round` 바로 뒤 — 다시 건 오오라의 `buff` 보다 앞 · R98) |
 | `end` | `won, reason` | **마지막 이벤트**. `reason ∈ clear \| wipe \| timeout` (`retreat` 폐기 2026-09-03) |
 
 유닛 키: 파티 `p0..`, 적 `e0..`(라운드마다 0부터).
 
-**순서 보장** — ① `t` 는 단조 비감소 ② `round` 가 라운드의 첫 이벤트(그 앞에 붙는 것은 경계의 `refit` · 결투 창 `buffEnd` 뿐) ③ `end` 가 마지막 ④ 같은 `t` 안에서는 배열 순서가 곧 발생 순서(스킬 이벤트도 같다 — `skill` 뒤에 그 시전의 타격·회복·버프가 이어진다).
+**순서 보장** — ① `t` 는 단조 비감소 ② `round` 가 라운드의 첫 이벤트(그 앞에 붙는 것은 경계의 `refit` · 결투 창 `buffEnd` 뿐 — 오오라 창의 `buffEnd` · `buff` 는 `round` **뒤**다 · R98) ③ `end` 가 마지막 ④ 같은 `t` 안에서는 배열 순서가 곧 발생 순서(스킬 이벤트도 같다 — `skill` 뒤에 그 시전의 타격·회복·버프가 이어진다).
 **`card` 이벤트는 없다** [삭제 2026-09-14 · R89] — 도감 카드는 라운드를 이긴 순간 **조용히** 들어온다(결과 `cards` · 리포트). 처치 순간 알릴 것이 없다. **타임라인은 라운드마다 자란다** — `createRun` 은 다음 라운드를 부를 때 붙인다(§6).
 
 **스킬 실행 규칙** (정의·선택은 §2-8 `skill.js`, 실행은 여기):

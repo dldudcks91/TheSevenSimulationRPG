@@ -260,6 +260,38 @@ export const stageName = row => ({ ko: row.stage_name_kr, en: row.stage_name_en 
  *  줄바꿈은 셀 안의 `\n` 두 글자다(CSV 는 한 행이 한 줄이다) — 여기서 실제 줄바꿈으로 바꾸고 `.dw-story-text` 의 pre-line 이 편다 */
 const storyLines = s => String(s ?? '').replace(/\\n/g, '\n');
 export const stageStory = row => ({ ko: storyLines(row.story_kr), en: storyLines(row.story_en || row.story_kr) });
+
+/* ── 이야기 자리표시자 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-1] ──
+   이름을 글에 박지 않는다 — 보스 이름의 SSOT 는 monster.csv, 영웅 이름은 세이브다.
+   `{m:<monster_idx>}` = 그 몬스터 이름 · `{leader}` = 파티 리더(첫 슬롯) 이름.
+   `{m:1150|이/가}` 처럼 조사 쌍(받침 있을 때/없을 때)을 붙이면 앞말 받침을 보고 고른다 — `으로/로` 는 ㄹ 받침이면 `로`.
+   한국어는 이름을 「」로 감싼다. 리더가 없으면(빈 파티) 대체 문구를 괄호 없이 넣는다 */
+export const STORY_TOKEN = /\{(?:m:(\d+)|(leader))(?:\|([^{}|/]+)\/([^{}|/]+))?\}/g;
+
+/** 조사 쌍에서 앞말 받침에 맞는 쪽 — 끝 글자가 한글 음절이 아니면 받침 없음으로 친다 */
+export const pickJosa = (word, withJong, withoutJong) => {
+    const c = String(word).trim().slice(-1).charCodeAt(0);
+    const jong = c >= 0xAC00 && c <= 0xD7A3 ? (c - 0xAC00) % 28 : 0;
+    if (jong === 0) return withoutJong;
+    return withJong === '으로' && jong === 8 ? withoutJong : withJong;   // ㄹ 받침(8)은 「로」
+};
+
+/** 이야기 글의 자리표시자를 푼다 — `leader` 는 {ko, en} 이름 쌍(없으면 null) · `fallback` 은 현재 언어로 풀린 대체 문구 */
+export function fillStory(text, lang, { leader = null, fallback = '' } = {}) {
+    return String(text).replace(STORY_TOKEN, (tok, idx, isLeader, withJong, withoutJong) => {
+        let name;
+        let bracket = lang === 'ko';
+        if (isLeader) {
+            if (leader) name = leader[lang] ?? leader.ko;
+            else { name = fallback; bracket = false; }
+        } else if (D.monsters?.[idx]) {
+            const n = monsterName(idx);
+            name = n[lang] ?? n.ko;
+        } else return tok;                                  // 없는 번호는 그대로 드러낸다 — 단정이 잡는다
+        const shown = bracket ? `「${name}」` : name;
+        return withJong ? shown + pickJosa(name, withJong, withoutJong) : shown;
+    });
+}
 /** 스테이지 배경 — 계승 자산이 있는 스테이지만(stage.csv:bg). 경로 조립은 mock(자산 경로) */
 export const stageBgOf = id => (D.stages?.[id]?.bg ? M.stageBg(id) : null);
 /** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) + 보스 1. 챕터보스 스테이지는 **보스 하나뿐**이다(2026-09-11). 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다 */

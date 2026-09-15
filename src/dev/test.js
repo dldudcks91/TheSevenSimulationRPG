@@ -12,7 +12,7 @@
  */
 
 import * as M from '../ui/mock.js';
-import { loadData, buildSystems, D, FILES } from '../ui/data.js';
+import { loadData, buildSystems, D, FILES, fillStory, pickJosa, STORY_TOKEN } from '../ui/data.js';
 import { skillTipCard } from '../ui/tip.js';
 import { setLang, t as i18nT } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
@@ -54,6 +54,28 @@ const WG = D.weaponGroups;
 
 /* ── 데이터 ── */
 check('csv: 숫자 셀은 숫자로', () => parseCsv('a,b\n1,x\n2.5,\n')[0].a === 1 && parseCsv('a,b\n1,x\n')[0].b === 'x');
+check('csv: 따옴표로 감싼 셀은 쉼표를 품는다 · "" 는 따옴표 하나 · 가운데 따옴표는 글자 (2026-09-15)', () => {
+    const r = parseCsv('a,b,c\n"x, y",2,"say ""hi"""\n5 "in",,z\n');
+    return r[0].a === 'x, y' && r[0].b === 2 && r[0].c === 'say "hi"' && r[1].a === '5 "in"' && r[1].b === '' && r[1].c === 'z';
+});
+check('이야기: 조사 쌍은 받침을 본다 · ㄹ 받침은 「로」 · 한국어는 「」 · 빈 파티는 대체 문구 (2026-09-15)', () =>
+    pickJosa('아바돈', '이', '가') === '이' && pickJosa('사탄', '과', '와') === '과' && pickJosa('발리', '은', '는') === '는'
+    && pickJosa('아르길', '으로', '로') === '로' && pickJosa('몰록', '으로', '로') === '으로' && pickJosa('Lilith', '이', '가') === '가'
+    && fillStory('{leader|이/가} 섰다', 'ko', { leader: { ko: '발렌', en: 'Valen' } }) === '「발렌」이 섰다'
+    && fillStory('{leader} stood', 'en', { leader: { ko: '발렌', en: 'Valen' } }) === 'Valen stood'
+    && fillStory('{leader|이/가} 섰다', 'ko', { leader: null, fallback: '용병 하나' }) === '용병 하나가 섰다');
+check('stage.csv: 이야기의 이름 자리표시자는 있는 몬스터를 가리키고 괄호가 닫힌다 (2026-09-15)', () => {
+    const bad = [];
+    for (const st of D.stageList) for (const col of ['story_kr', 'story_en']) {
+        const rest = String(st[col] ?? '').replace(STORY_TOKEN, (tok, idx) => {
+            if (idx && !D.monsters[idx]) bad.push(`${st.stage_id} ${tok}`);
+            return '';
+        });
+        if (/[{}]/.test(rest)) bad.push(`${st.stage_id} ${col}: 모르는 자리표시자`);
+    }
+    if (bad.length) fail(bad.join(' · '));
+    return `${D.stageList.length}스테이지 · 이상 없음`;
+});
 check('csv: monster 119 / stage 35 / weapon_group 12 / codex_level 4 / chapter 7 / codex_series 4 / hero_attribute 7 / combat_stat 25', () =>
     Object.keys(D.monsters).length === 119 && D.stageList.length === 35 && D.weaponGroupList.length === 12
     && D.codexLevels.length === 4 && D.chapterList.length === 7 && Object.keys(D.codexSeries).length === 4
@@ -3056,8 +3078,10 @@ check('simulate: round 이벤트가 적의 스킬 칸(actives)과 툴팁 표시�
 });
 check('simulate: 버프 창 — 창 길이 = duration · 재시전은 중첩 없이 until 갱신 · 만료마다 buffEnd (battle_design §7)', () => {
     // 버프는 직업 풀의 뒤쪽 자리라 배정(고유 · 무기)으로는 드물다 — 사제 킷을 손으로 십는다
-    const { seed, r } = findSeed(x => x.timeline.some(ev => ev.e === 'buff'), () => clsUnits('priest'));
-    const first = r.timeline.find(ev => ev.e === 'buff');
+    // 오오라 창(`until: null` · R98)은 창 길이가 없다 — 적의 오오라가 첫 buff 로 설 수 있어 뺀다
+    const timed = ev => ev.e === 'buff' && ev.until !== null;
+    const { seed, r } = findSeed(x => x.timeline.some(timed), () => clsUnits('priest'));
+    const first = r.timeline.find(timed);
     const def = SYS.skill.defs[first.s];
     const own = r.timeline.filter(ev => (ev.e === 'buff' || ev.e === 'buffEnd') && ev.u === first.u && ev.s === first.s);
     let open = null, ends = 0, refresh = 0;
@@ -4118,6 +4142,78 @@ check('battle: 적의 오오라는 시전되지 않는다 — 라운드 시작�
     }
     return `${runs}판 · 적 시전 ${enemyCasts}건 · 오오라 시전 0 · 고유 보유 ${holders.map(m => m.monster_idx).join(',')}`;
 });
+/*
+ * **오오라가 관전에 보인다** [2026-09-15 · R98 · INTERFACE §2-6 · ADR-0127] — 전투는 그대로 두고 **표시값과 이벤트만** 더했다:
+ *   칸 표시(`party[]` · `round` 적 · `refit` 의 `actives`/`ready`)는 오오라를 빼기 전 칸 순서 · 켜진 오오라 `0` · 안 켜진 오오라 `null`,
+ *   오오라 창은 `round` 바로 뒤의 `buff`(`until: null` · 시전 없이 · 받는 유닛마다).
+ */
+check('battle: 오오라는 제 칸에 서고 창은 round 바로 뒤 buff 로 선다 — 켜진 오오라 ready 0 · 안 켜진 오오라 null · until null · 적도 같다 (INTERFACE §2-6 · R98)', () => {
+    const on = SYS.skill.defs.kni_might, off = SYS.skill.defs.kni_fanaticism;
+    const hit = SYS.skill.list.find(d => d.kind === 'attack' && d.ownerKind === 'job' && d.ownerId === 'knight');
+    // p0 = 공격 · 오오라 둘 — 켜지는 것은 칸 순서 첫 오오라(on)뿐이다
+    const kit = [{ id: hit.id, source: 'innate' }, { id: on.id, source: 'weapon_group' }, { id: off.id, source: 'advance' }];
+    const r = SYS.battle.simulate(godUnits().map((u, i) => i === 0 ? { ...u, actives: kit } : u), 101, makeRng(3));
+    const p0 = r.party[0];
+    if (!eq(p0.actives, kit.map(a => a.id))) fail(`칸 순서 [${p0.actives}] ≠ [${kit.map(a => a.id)}] — 오오라를 뺀 목록을 실었다`);
+    if (!(p0.ready[0] > 0) || p0.ready[1] !== 0 || p0.ready[2] !== null) fail(`ready ${JSON.stringify(p0.ready)} — 공격 > 0 · 켜진 오오라 0 · 안 켜진 오오라 null 이어야`);
+    const tl = r.timeline;
+    if (tl.some(ev => ev.e === 'skill' && (ev.s === on.id || ev.s === off.id))) fail('오오라를 시전했다');
+    const i0 = tl.findIndex(ev => ev.e === 'round');
+    if (tl.slice(0, i0).some(ev => ev.e === 'buff')) fail('첫 round 앞에 buff 가 섰다 — 순서 보장 ②');
+    const lead = [];
+    for (let j = i0 + 1; tl[j]?.e === 'buff' && tl[j].until === null; j++) lead.push(tl[j]);
+    const mine = lead.filter(ev => ev.u.startsWith('p') && ev.s === on.id);
+    const keys = r.party.map(p => p.key);
+    if (!eq(mine.map(ev => ev.u), keys)) fail(`${on.id} 창 [${mine.map(ev => ev.u)}] ≠ 파티 [${keys}] — 첫 round 바로 뒤여야`);
+    if (mine.some(ev => ev.stat !== on.stat || ev.v !== on.value)) fail(`창 ${JSON.stringify(mine[0])} — stat ${on.stat} · v ${on.value} 이어야`);
+    if (tl.some(ev => ev.e === 'buff' && ev.s === off.id)) fail('안 켜진 오오라가 창을 냈다');
+    if (tl.filter(ev => ev.e === 'buff' && ev.until === null && ev.u.startsWith('p')).length !== keys.length) fail('파티 오오라 창이 첫 라운드 말고도 섰다');
+    // 적 — 켠 오오라마다 그 라운드 round 바로 뒤에 시전자의 창이 선다
+    let enemy = 0;
+    for (const st of D.stageList) {
+        if (isBossOnly(st)) continue;
+        const rr = SYS.battle.simulate(godUnits(), st.stage_id, makeRng(1));
+        rr.timeline.forEach((ev, i) => {
+            if (ev.e !== 'round') return;
+            const after = [];
+            for (let j = i + 1; rr.timeline[j]?.e === 'buff' && rr.timeline[j].until === null; j++) after.push(rr.timeline[j]);
+            for (const e of ev.enemies) {
+                const k = e.ready.indexOf(0);
+                if (k < 0) continue;
+                if (SYS.skill.defs[e.actives[k]].kind !== 'aura') fail(`${st.stage_id} ${e.key} — 준비 0 인 칸 ${e.actives[k]} 이 오오라가 아니다`);
+                if (!after.some(b => b.u === e.key && b.s === e.actives[k])) fail(`${st.stage_id} 라운드 ${ev.n} ${e.key} — 켜진 오오라 ${e.actives[k]} 의 창이 round 바로 뒤에 없다`);
+                enemy++;
+            }
+        });
+    }
+    if (!enemy) fail('오오라를 켠 적이 없다 — 적 쪽 표본 없음');
+    return `p0 ready [${p0.ready}] · 파티 창 ${mine.length} · 적 오오라 ${enemy}`;
+});
+check('createRun: 갈아입기로 오오라가 바뀌면 다음 round 바로 뒤에 옛 창을 닫고(buffEnd) 새 창을 연다(buff) — refit 의 오오라 칸도 같은 규칙 (INTERFACE §2-6 · R98)', () => {
+    const was = SYS.skill.defs.kni_might, now = SYS.skill.defs.kni_defiance;
+    const withAura = id => godUnits().map((u, i) => i === 0 ? { ...u, actives: [{ id, source: 'innate' }] } : u);
+    for (let seed = 1; seed <= 20; seed++) {
+        const run = SYS.battle.createRun(withAura(was.id), 101, makeRng(seed));
+        if (run.next().ended) continue;
+        run.next(withAura(now.id));
+        const tl = run.result.timeline;
+        const fi = tl.findIndex(ev => ev.e === 'refit' && ev.u === 'p0');
+        if (fi < 0) fail(`seed ${seed} — 오오라를 갈았는데 refit 이 없다`);
+        if (!eq(tl[fi].actives, [now.id]) || tl[fi].ready[0] !== 0) fail(`refit 칸 [${tl[fi].actives}] · ready [${tl[fi].ready}] — [${now.id}] · [0] 이어야`);
+        const ri = tl.findIndex((ev, i) => i > fi && ev.e === 'round');
+        const lead = [];
+        for (let j = ri + 1; tl[j]?.e === 'buffEnd' || (tl[j]?.e === 'buff' && tl[j].until === null); j++) lead.push(tl[j]);
+        const keys = run.result.party.map(p => p.key);
+        const mine = ev => ev.u.startsWith('p');
+        const ends = lead.filter(ev => mine(ev) && ev.e === 'buffEnd' && ev.s === was.id).map(ev => ev.u);
+        const opens = lead.filter(ev => mine(ev) && ev.e === 'buff' && ev.s === now.id).map(ev => ev.u);
+        if (!eq(ends, keys)) fail(`seed ${seed} 닫힌 ${was.id} [${ends}] ≠ 파티 [${keys}]`);
+        if (!eq(opens, keys)) fail(`seed ${seed} 열린 ${now.id} [${opens}] ≠ 파티 [${keys}]`);
+        if (lead.findIndex(ev => ev.e === 'buff') < lead.findLastIndex(ev => ev.e === 'buffEnd')) fail(`seed ${seed} — 다시 건 buff 가 닫는 buffEnd 보다 앞섰다`);
+        return `seed ${seed} · round 뒤 ${was.id} 닫힘 ${ends.length} → ${now.id} 열림 ${opens.length}`;
+    }
+    return fail('첫 라운드를 넘긴 판이 없다 (시드 1~20)');
+});
 check('battle: result.party[].stats — 정산 경로가 기본 능력치를 싣고 전투 시작 시점의 복사본이다 (INTERFACE §2-6 · R72)', () => {
     const G2 = newGameP(42, cands, NOW);
     const snap = Object.fromEntries(G2.party.map(uid => [uid, { ...SYS.game.heroById(G2, uid).stats }]));
@@ -4362,6 +4458,8 @@ check('createRun: 스킬은 쿨부터 돈다 — 파티는 0초 + 쿨 · 적은 
         const r = SYS.battle.simulate(us, 103, makeRng(seed));
         const firstCast = (key, id, from, to) => r.timeline.find((ev, i) => i >= from && i < to && ev.e === 'skill' && ev.u === key && ev.s === id);
         r.party.forEach((p, i) => p.actives.forEach((id, j) => {
+            // 오오라 칸은 쿨이 없다 — 켜진 것 0 · 안 켜진 것 null (R98 · 「오오라는 제 칸에 서고」 단정)
+            if (SYS.skill.defs[id].kind === 'aura') { if (p.ready[j] !== 0 && p.ready[j] !== null) fail(`seed ${seed} ${p.key} 오오라 ${id} — 준비 ${p.ready[j]}`); return; }
             const want = tenth(cooldownSec(B, { cdr: us[i].combat.cooldown_reduction ?? 0 }, SYS.skill.defs[id]));
             if (Math.abs(p.ready[j] - want) > 0.05 || ((SYS.skill.defs[id].cool ?? 0) > 0 && !(p.ready[j] > 0)))
                 fail(`seed ${seed} ${p.key} ${id} — 첫 준비 ${p.ready[j]} ≠ 0초 + 쿨 ${want}`);
@@ -4373,6 +4471,7 @@ check('createRun: 스킬은 쿨부터 돈다 — 파티는 0초 + 쿨 · 적은 
         starts.forEach((i, k) => {
             const ev = r.timeline[i], to = starts[k + 1] ?? r.timeline.length;
             for (const e of ev.enemies) (e.actives ?? []).forEach((id, j) => {
+                if (SYS.skill.defs[id].kind === 'aura') { if (e.ready[j] !== 0 && e.ready[j] !== null) fail(`seed ${seed} 라운드 ${ev.n} ${e.key} 오오라 ${id} — 준비 ${e.ready[j]}`); return; }
                 const cool = SYS.skill.defs[id].cool ?? 0, gap = e.ready[j] - ev.t;
                 // 적의 쿨감소는 이벤트에 없다 — 바닥(skill_cd_floor_mult) ~ 쿨 사이면 「등장 시각 + 쿨」이다
                 if (gap < cool * B.skill_cd_floor_mult - 0.15 || gap > cool + 0.15)

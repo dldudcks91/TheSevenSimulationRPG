@@ -97,6 +97,9 @@
    "weapon_atk_down_sec": 2.5,
    "salvage_dust_magic": 2,
    "salvage_dust_rare": 5,
+   "make_rarity_w_normal": 60,
+   "make_rarity_w_magic": 30,
+   "make_rarity_w_rare": 10,
    "equip_upgrade_max": 9,
    "equip_upgrade_base_pct": 5,
    "equip_upgrade_gold_base": 200,
@@ -170,9 +173,9 @@
    "tactic_grade_weight_rare": 5
   },
   "csvHash": {
-   "balance": "015ef47b",
+   "balance": "7bcc2e82",
    "monster": "5c8272ea",
-   "stage": "6f656a54",
+   "stage": "540d1003",
    "stage_round": "d33dc84e",
    "round_budget": "40e036af",
    "spawn_grade": "e9be9bfe",
@@ -207,7 +210,8 @@
    "hero_unique_candidates": "82ea05df",
    "weapon_base": "cf9a3ecf",
    "weapon_sin_option": "73a5e8d6",
-   "weapon_common_option": "b713feba"
+   "weapon_common_option": "b713feba",
+   "make_recipe": "9a21279d"
   },
   "tacticsNote": "newGame 직후 상태 그대로 — 전술 칸을 인위적으로 켜지 않는다 (런마다 tactics 에 열린 칸 전체 `번호:옵션:등급:on|off`)",
   "parties": {

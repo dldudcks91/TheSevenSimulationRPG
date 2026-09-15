@@ -8,13 +8,12 @@
  *
  * 배치: 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 + 아레나 아래 가방(app.js 가 붙인다) (2026-08-27).
  * **배치가 둘이고 컨트롤의 버튼 하나가 오간다** (2026-09-03 사용자 지시, SCREEN_DESIGN §4-2):
- *   · **넓게**(기본) — 아레나 폭 1184 · 판 가운데(비 2.33 · ADR-0091) · 로그/누적은 **창**이 든다
- *   · **나눔** — 좌 아레나(열을 뺀 폭 · 비 2.33 · 넓게와 같은 카드) / 우 로그 열 · 판이 그 열에 **상주**한다(창 안 뜸) (2026-09-11 · ADR-0093)
- *   판(로그·누적) DOM 은 **하나뿐이고 집만 옮긴다** — 새로 만들면 쌓아 둔 로그와 스크롤이 날아간다.
- *   창 규격은 셸의 창과 같되(.modal-layer/.modal-box · 정사각 X · 바깥 클릭 · Esc) **레이어는 재생기 자기 DOM 안**이다 — 두 판은 재생기가 살아 있는 동안 계속 쓰이므로 밖에 두면 mount 마다 넘겨줘야 한다.
+ *   · **넓게**(기본) — 아레나가 판 전폭이다. 로그 · 누적은 **없다** — 컨트롤의 두 판 버튼은 흐린 채 안 눌린다 (2026-09-15 · ADR-0130 — 옛 로그 창 폐기)
+ *   · **나눔** — 좌 아레나(열을 뺀 폭 · 넓게와 같은 카드) / 우 로그 열 · 두 버튼이 그 열의 판을 고른다 (2026-09-11 · ADR-0093)
+ *   판(로그·누적) DOM 은 우측 열 안에 **늘 있다** — 넓게 배치에서는 열만 숨고 줄은 계속 쌓인다(새로 만들면 쌓아 둔 로그와 스크롤이 날아간다).
  *   배치는 재생 위치(resume)가 아니라 **취향**이라 app.js 의 `state.btLayout` 이 들고 `opts.layout`/`opts.onLayout` 으로 오간다 — 런이 바뀌어도 남는다.
- * 로그는 모든 타격을 적는다(누가 → 누구 · 피해 · 쓴 스킬). 누적 데미지는 이벤트의 dmg 를 더한 표시값이다 — 정산이 아니다.
- * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab, win, wall, auto} 를 돌려주고(win = 창이 열려 있었나), 다음 mount 가 opts.resume 으로 받아
+ * 로그는 모든 타격을 적는다(누가 → 누구 · 피해 · 쓴 스킬). 로그 판 위의 탭 셋(전체 · 우리 · 적)이 **줄의 주체**로 거른다 — 줄은 다 쌓고 CSS 가 숨긴다 (ADR-0131). 누적 데미지는 이벤트의 dmg 를 더한 표시값이다 — 정산이 아니다.
+ * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab, logf, wall, auto} 를 돌려주고(tab = 우측 열에서 고른 판 · logf = 로그를 거른 주체), 다음 mount 가 opts.resume 으로 받아
  *   그 시각까지 팝업 없이 되감는다 (catchUp).
  * **시각은 실제로 흐른 시간 × 배속이다** (2026-09-11 · ADR-0102) — 눈금 수로 밀지 않는다. 브라우저가 숨긴 탭의 눈금을 늦추기 때문이다.
  *   시계는 `opts.now` 로 읽고(wall = 마지막으로 시각을 민 실제 시각), 공백이 `opts.frozenMs` 를 넘으면 JS 가 멈춰 있었던 것이라 밀지 않는다.
@@ -73,14 +72,13 @@ export function mountBattle(container, opts) {
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않는다
-        // 창 안에서 보고 있는 판 — 창이 닫혀 있어도 남는다. **둘 중 하나로 못박는다**:
-        // ?dev=play&bt=<아무거나> 처럼 모르는 값이 들어오면 두 판이 다 숨어 빈 창이 뜬다 (2026-09-03)
+        // 우측 열에서 보고 있는 판 — 넓게 배치로 가 있어도 남는다. **둘 중 하나로 못박는다**:
+        // ?dev=play&bt=<아무거나> 처럼 모르는 값이 들어오면 두 판이 다 숨어 빈 열이 선다 (2026-09-03)
         tab: resume?.tab === 'dmg' ? 'dmg' : 'log',
-        win: resume?.win === true,   // 창이 열려 있나 (2026-09-03) — 기본은 닫힘
-        // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 1184 가운데 + 로그 창) / 'split'(아레나 비 2.33 + 우측 로그 열 · 2026-09-11 ADR-0093).
+        logf: ['party', 'enemy'].includes(resume?.logf) ? resume.logf : 'all',   // 로그를 거른 주체 — all | party | enemy (ADR-0131)
+        // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 판 전폭 · 로그 · 누적 없음 · ADR-0130) / 'split'(아레나 + 우측 로그 열 · ADR-0093).
         // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
         layout: opts.layout === 'split' ? 'split' : 'wide',
-        onKey: null,                 // Esc 리스너 — 정리 함수가 뗀다
     };
 
     // 파티 유닛 — 결과의 party 정보 + 로스터의 표시 정보(이름·죄종·직업)
@@ -96,7 +94,8 @@ export function mountBattle(container, opts) {
             // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
             stats: p.stats ?? null,
             // 스킬은 쿨부터 돈다 — 첫 준비 시각은 결과가 싣는다(`party[].ready` · R89). 칸은 덮인 채로 출발한다
-            skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: p.ready?.[i] ?? 0, firedAt: 0 })),
+            // 오오라도 제 칸에 선다 — 켜진 오오라는 준비 `0`(늘 걷힌 칸) · 안 켜진 오오라는 `null`(늘 덮인 칸) (R98 · ADR-0127)
+            skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(p.ready?.[i], 0), firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
         };
     });
@@ -117,9 +116,8 @@ export function mountBattle(container, opts) {
     return () => {
         clearInterval(state.timer); state.timer = null;
         for (const id of state.timeouts) clearTimeout(id);
-        if (state.onKey) document.removeEventListener('keydown', state.onKey);   // 창의 Esc — 재생기 밖에 남기면 mount 마다 쌓인다
         // wall · auto (ADR-0102) — 앱 시계가 이 자리에서 이어 민다: 마지막으로 시각을 민 실제 시각 · 결과 띠가 다음 런을 세던 중이었나
-        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, win: state.win, wall: state.wall, auto: state.auto };
+        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, logf: state.logf, wall: state.wall, auto: state.auto };
     };
 }
 
@@ -154,8 +152,8 @@ function buildDom(state, stage, stageId) {
                     <button class="btn sm b-skip">${t('bt.retreat')}</button>
                     <span class="ctrl-div"></span>
                     <button class="btn sm b-layout"></button>
-                    <button class="btn sm b-win" data-tab="log">${t('bt.log.h')}</button>
-                    <button class="btn sm b-win" data-tab="dmg">${t('bt.tab.dmg')}</button>
+                    <button class="btn sm b-pane" data-tab="log">${t('bt.log.h')}</button>
+                    <button class="btn sm b-pane" data-tab="dmg">${t('bt.tab.dmg')}</button>
                 </div>
             </div>
         </div>
@@ -168,14 +166,8 @@ function buildDom(state, stage, stageId) {
                 <div class="side side-party"></div>
                 <div class="battle-result"></div>
             </div>
-            <div class="battle-side" hidden></div>
-        </div>
-        <div class="modal-layer battle-win" hidden>
-            <div class="modal-box bw-box">
-                <div class="modal-head">
-                    <h2 class="bw-title"></h2>
-                    <button class="btn modal-x bw-x" title="${t('ui.close')}" aria-label="${t('ui.close')}">×</button>
-                </div>
+            <div class="battle-side" hidden>
+                <div class="segmented log-filter">${['all', 'party', 'enemy'].map(f => `<button class="btn sm b-logf" data-f="${f}">${t(`bt.logf.${f}`)}</button>`).join('')}</div>
                 <div class="battle-log-wrap pane"><ul class="battle-log"></ul></div>
                 <div class="battle-dmg-wrap pane" hidden></div>
             </div>
@@ -206,23 +198,19 @@ function bindControls(state, root, opts) {
         opts.onLayout?.(state.layout);   // 취향이라 화면 상태에 남긴다 — 다음 원정에도 이어진다
         paintLayout(state, root);
     };
-    // 판 고르기 — 컨트롤의 두 버튼. **배치마다 뜻이 다르다**:
-    //   넓게: 창을 연다/닫는다(같은 판을 다시 누르면 닫힌다 — 여는 자리 = 닫는 자리)
-    //   나눔: 우측 열이 늘 서 있으므로 **판만 고른다** (닫으면 빈 열이 남는다)
-    root.querySelectorAll('.b-win').forEach(b => {
+    // 판 고르기 — 컨트롤의 두 버튼은 **나눔 배치에서만** 눌린다: 우측 열의 판을 고른다 (ADR-0130).
+    //   넓게 배치에서는 `disabled` 로 흐리게 선다 — 판이 없는데 눌릴 것처럼 보이면 거짓 신호다
+    root.querySelectorAll('.b-pane').forEach(b => {
         b.onclick = () => {
-            if (state.layout !== 'split') state.win = !(state.win && state.tab === b.dataset.tab);
+            if (state.layout !== 'split') return;
             state.tab = b.dataset.tab;
-            paintWin(state, root);
+            paintPane(state, root);
         };
     });
-    // 닫는 길 넷 — 그 버튼 다시 · 정사각 X · 판 바깥 · Esc (셸의 창과 같은 규격, §2). 나눔 배치에는 창이 없어 전부 논다
-    const close = () => { state.win = false; paintWin(state, root); };
-    root.querySelector('.bw-x').onclick = close;
-    const layer = root.querySelector('.battle-win');
-    layer.onclick = e => { if (e.target === layer) close(); };
-    state.onKey = e => { if (e.key === 'Escape' && state.win && state.layout !== 'split') close(); };
-    document.addEventListener('keydown', state.onKey);
+    // 로그 거르기 — **줄의 주체**로 전체 · 우리 · 적 (ADR-0131). 줄은 그대로 두고 목록의 `data-f` 만 바꾼다
+    root.querySelectorAll('.b-logf').forEach(b => {
+        b.onclick = () => { state.logf = b.dataset.f; paintPane(state, root); };
+    });
     paintLayout(state, root);
     // 철수 [개정 2026-09-14 · R89 — 옛 건너뛰기] — 진행 중이던 라운드를 버리고 원정을 끝낸다. 결과가 바뀌는 일이라 앱이 한다(`state.retreatRun`)
     root.querySelector('.b-skip').onclick = () => { clearInterval(state.timer); opts.onRetreat(); };
@@ -230,31 +218,30 @@ function bindControls(state, root, opts) {
 
 /**
  * 배치를 다시 칠한다 (2026-09-03) — 넓게 / 나눔.
- * **판(로그·누적) DOM 은 하나뿐이고 집만 옮긴다** — 새로 만들면 쌓아 둔 로그 줄과 스크롤이 날아간다.
- *   넓게 → 창(.bw-box) 안 · 나눔 → 우측 열(.battle-side) 안
+ *   넓게 → 우측 열이 숨고 판 버튼 둘이 흐려진다 · 나눔 → 우측 열이 서고 버튼이 판을 고른다 (ADR-0130)
+ * 판(로그·누적) DOM 은 열 안에 늘 있다 — 숨어 있는 동안에도 줄은 쌓인다
  */
 function paintLayout(state, root) {
     const split = state.layout === 'split';
     root.querySelector('.battle-body').classList.toggle('split', split);
     root.querySelector('.battle-side').hidden = !split;
-    const host = split ? root.querySelector('.battle-side') : root.querySelector('.bw-box');
-    host.append(root.querySelector('.battle-log-wrap'), root.querySelector('.battle-dmg-wrap'));
+    root.querySelectorAll('.b-pane').forEach(b => { b.disabled = !split; });
     // 버튼은 **바꿀 배치의 이름**을 든다 — 지금 상태를 적으면 누르면 무엇이 되는지가 안 읽힌다
     root.querySelector('.b-layout').textContent = t(split ? 'bt.layout.toWide' : 'bt.layout.toSplit');
-    paintWin(state, root);
+    paintPane(state, root);
 }
 
-/** 판을 다시 칠한다 — 어느 판 · 창의 열림 여부 · 버튼의 눌린 표시 · 창 머리 이름(판 이름을 그대로 쓴다, 새 문구 없음) */
-function paintWin(state, root) {
+/** 판을 다시 칠한다 — 어느 판 · 버튼의 눌린 표시 · 로그 탭(거른 주체). 넓게 배치에서는 둘 다 숨고 눌린 표시도 없다 */
+function paintPane(state, root) {
     const split = state.layout === 'split';
-    const shown = split || state.win;   // 나눔 배치에서는 판이 우측 열에 **상주**한다 — 창은 안 뜬다
-    root.querySelector('.battle-win').hidden = split || !state.win;
-    root.querySelectorAll('.b-win').forEach(b => b.classList.toggle('on', shown && b.dataset.tab === state.tab));
-    root.querySelector('.bw-title').textContent = t(state.tab === 'dmg' ? 'bt.tab.dmg' : 'bt.log.h');
+    root.querySelectorAll('.b-pane').forEach(b => b.classList.toggle('on', split && b.dataset.tab === state.tab));
     const log = root.querySelector('.battle-log-wrap'), dmg = root.querySelector('.battle-dmg-wrap');
-    log.hidden = !(shown && state.tab === 'log');
-    dmg.hidden = !(shown && state.tab === 'dmg');
+    log.hidden = !(split && state.tab === 'log');
+    dmg.hidden = !(split && state.tab === 'dmg');
     if (!dmg.hidden) renderDmg(state, root);
+    root.querySelector('.log-filter').hidden = log.hidden;   // 탭은 로그 판에만 선다 — 누적 데미지 판은 이미 파티 / 적 두 묶음이다
+    root.querySelectorAll('.b-logf').forEach(b => b.classList.toggle('on', b.dataset.f === state.logf));
+    root.querySelector('.battle-log').dataset.f = state.logf;
     // 숨어 있는 동안에도 줄은 쌓인다 — display:none 에서는 scrollTop 이 안 잡히므로 보일 때 맨 아래로 맞춘다
     if (!log.hidden) log.scrollTop = log.scrollHeight;
 }
@@ -437,8 +424,9 @@ function refreshUnit(state, u) {
     if (u.skills?.length) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
         const s = u.skills[i];
         if (!s) return;                 // 빈 칸 — 걷을 쿨이 없다 (SCREEN_DESIGN §4-2)
+        // 오오라 칸 (R98 · ADR-0127) — 켜진 오오라는 준비 `0` 이라 아래 식이 늘 걷힌 칸을 낸다 · 안 켜진 오오라는 `Infinity` 라 늘 덮는다
         const span = Math.max(1e-6, s.readyAt - s.firedAt);
-        const pct = u.hp <= 0 ? 0 : clamp01(1 - (s.readyAt - state.t) / span);
+        const pct = u.hp <= 0 || s.readyAt === Infinity ? 0 : clamp01(1 - (s.readyAt - state.t) / span);
         slot.querySelector('.cd-mask').style.height = (1 - pct) * 100 + '%';   // 남은 쿨만큼 위에서 덮는다
         // 준비 강조(`ready` 파란 테두리)는 2026-09-03 사용자 지시로 삭제 — 마스크가 다 걷힌 것 자체가 준비다
     });
@@ -490,6 +478,8 @@ function castSkill(state, u, ev) {
     popup(state, u, L(s.name), 'skill-tag');
 }
 /** 타격 라벨 — 이벤트가 들고 온 스킬 id(`s`) 의 이름, 없으면 기본 공격. 로그와 누적 데미지가 같은 라벨을 쓴다 */
+/** 칸의 첫 준비 시각 — 시뮬이 실은 값 그대로 · `null` 은 안 켜진 오오라라 **늘 덮는다**(Infinity) · 값이 없으면 `dflt` (INTERFACE §2-6 · R98) */
+const slotReady = (r, dflt) => r === null ? Infinity : (r ?? dflt);
 const strikeLabel = id => id ? L(skillInfo(id).name) : t('bt.basicAttack');
 
 /* ───────── 누적 데미지 — 이벤트의 dmg 를 더할 뿐이다. 재생기는 계산하지 않는다 (정산은 game_logic) ───────── */
@@ -547,12 +537,18 @@ function popup(state, u, text, cls, skillId = null) {
     state.timeouts.push(setTimeout(() => p.remove(), 900));
 }
 
-function pushLog(state, root, text) {
+/* 로그 한 줄 — `side` = 그 줄의 **주체**(party / enemy · 라운드 시작 · 종료는 sys). 로그 탭(전체 · 우리 · 적)이 이 값으로 거른다 (ADR-0131).
+   줄은 다 쌓고 목록의 `data-f` 에 따라 CSS 가 숨긴다 — 탭을 바꿔도 다시 그리지 않아 스크롤과 쌓인 줄이 남는다.
+   남기는 줄 수는 **주체마다** 센다 — 한 목록에서 세면 파티 셋의 줄이 적의 줄을 밀어내 「적」 탭에 몇 줄만 남는다 */
+const LOG_KEEP = 60;
+function pushLog(state, root, text, side = 'sys') {
     const ul = root.querySelector('.battle-log');
     const li = document.createElement('li');
+    li.dataset.side = side;
     li.innerHTML = `<span class="t">${clock(state.t)}</span> ${text}`;
     ul.appendChild(li);
-    while (ul.children.length > 60) ul.firstChild.remove();
+    const same = ul.querySelectorAll(`li[data-side="${side}"]`);
+    for (let i = 0; i < same.length - LOG_KEEP; i++) same[i].remove();
     ul.parentElement.scrollTop = ul.parentElement.scrollHeight;
 }
 
@@ -608,7 +604,7 @@ function apply(state, root, opts, ev) {
                 atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량(범위 · R90) · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
                 sheet: e.sheet ?? null,   // 세부 능력치 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 「유닛 툴팁 규격」)
                 // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
-                skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: e.ready?.[i] ?? ev.t, firedAt: ev.t })),
+                skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t })),
                 buffs: new Map(),
             }));
             for (const e of state.enemies) state.units.set(e.key, e);
@@ -633,7 +629,7 @@ function apply(state, root, opts, ev) {
             }
             if (a && d) {
                 // 모든 타격을 적는다 — 누가 → 누구 · 피해 · 쓴 스킬
-                pushLog(state, root, t(ev.crit ? 'log.crit' : 'log.hit', { name: L(a.name), target: L(d.name), dmg: ev.dmg, skill }));
+                pushLog(state, root, t(ev.crit ? 'log.crit' : 'log.hit', { name: L(a.name), target: L(d.name), dmg: ev.dmg, skill }), a.side);
                 addDmg(state, a, skill, ev.dmg);
                 renderDmg(state, root);
             }
@@ -644,7 +640,7 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
-                pushLog(state, root, t('log.reflect', { name: L(a.name), target: L(d.name), dmg: ev.dmg }));
+                pushLog(state, root, t('log.reflect', { name: L(a.name), target: L(d.name), dmg: ev.dmg }), a.side);   // 반사의 주체는 되받아 친 쪽
                 addDmg(state, a, t('bt.reflectLabel'), ev.dmg);
                 renderDmg(state, root);
             }
@@ -655,7 +651,7 @@ function apply(state, root, opts, ev) {
             const skill = strikeLabel(ev.s);
             if (a) { a.lastAct = ev.t; a.acted = true; }
             if (d) popup(state, d, t('pop.dodge'), 'miss');
-            if (a && d) pushLog(state, root, t('log.dodge', { name: L(a.name), target: L(d.name), skill }));
+            if (a && d) pushLog(state, root, t('log.dodge', { name: L(a.name), target: L(d.name), skill }), a.side);
             break;
         }
         case 'down': {
@@ -664,14 +660,15 @@ function apply(state, root, opts, ev) {
             u.hp = 0;
             refreshUnit(state, u);
             const enemy = u.side === 'enemy';
-            pushLog(state, root, t(enemy ? 'log.slain' : 'log.downed', { name: L(u.name) }));
+            // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
+            pushLog(state, root, t(enemy ? 'log.slain' : 'log.downed', { name: L(u.name) }), enemy ? 'party' : 'enemy');
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
             break;
         }
         case 'heal': {   // 회복 — 시전자(a)가 대상(d)의 HP 를 올린다. 부호가 반대일 뿐 타격과 같은 자리에 뜬다
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
-            if (a && d) pushLog(state, root, t('log.heal', { name: L(a.name), target: L(d.name), amt: ev.amt, skill: strikeLabel(ev.s) }));
+            if (a && d) pushLog(state, root, t('log.heal', { name: L(a.name), target: L(d.name), amt: ev.amt, skill: strikeLabel(ev.s) }), a.side);
             break;
         }
         case 'regen': {   // HP 재생 — 조용히 오른다(팝업 없음). 정수 1 이상 쌓인 틱에만 온다
@@ -686,15 +683,17 @@ function apply(state, root, opts, ev) {
             refreshUnit(state, u);
             // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
             // 「지금 걸려 있다」는 상태라 카드 테두리가 든다 (SCREEN_DESIGN §4-2)
-            pushLog(state, root, t(ev.amt != null ? 'log.barrier' : 'log.buff', { name: L(u.name), skill: strikeLabel(ev.s), amt: ev.amt }));
+            // 오오라(`until: null`)는 로그에 안 적는다 — 전투 시작 · 적의 라운드마다 받는 유닛 수만큼 같은 줄이 쌓인다. 뱃지가 든다 (R98 · ADR-0127)
+            if (ev.until !== null) pushLog(state, root, t(ev.amt != null ? 'log.barrier' : 'log.buff', { name: L(u.name), skill: strikeLabel(ev.s), amt: ev.amt }), u.side);
             break;
         }
         case 'buffEnd': {
             const u = U(ev.u);
             if (!u) break;
+            const aura = u.buffs?.get(ev.s)?.until === null;   // 오오라 창이 닫힐 때도 로그를 안 쓴다 (R98)
             u.buffs?.delete(ev.s);
             refreshUnit(state, u);
-            pushLog(state, root, t('log.buffEnd', { name: L(u.name), skill: strikeLabel(ev.s) }));
+            if (!aura) pushLog(state, root, t('log.buffEnd', { name: L(u.name), skill: strikeLabel(ev.s) }), u.side);
             break;
         }
         // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)
@@ -703,7 +702,11 @@ function apply(state, root, opts, ev) {
             if (!u) break;
             const had = new Map((u.skills ?? []).map(s => [s.id, s]));
             Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atkMin: ev.atkMin, atkMax: ev.atkMax, matkMin: ev.matkMin, matkMax: ev.matkMax, atkType: ev.atkType, stats: ev.stats ?? null });
-            u.skills = (ev.actives ?? []).map((id, i) => had.get(id) ?? { ...skillInfo(id), readyAt: ev.ready?.[i] ?? ev.t, firedAt: ev.t });
+            // 오오라 칸(준비 `0` · `null`)은 갈아입기로 켜짐 · 꺼짐이 바뀔 수 있어 옛 칸을 잇지 않고 새로 받는다 (R98)
+            u.skills = (ev.actives ?? []).map((id, i) => {
+                const r = ev.ready?.[i];
+                return (r !== 0 && r !== null && had.get(id)) || { ...skillInfo(id), readyAt: slotReady(r, ev.t), firedAt: ev.t };
+            });
             renderUnits(state, root);
             break;
         }

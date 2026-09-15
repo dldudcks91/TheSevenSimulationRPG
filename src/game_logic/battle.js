@@ -412,22 +412,32 @@ export function createBattleSystem(data) {
          */
         // **적도 같은 규칙이다** [2026-09-11 · R79] — 몬스터가 스킬 칸을 갖게 되어 오오라를 들 수 있다(기사 무기를 낀 정예 · 기사 고유).
         //   그래서 이 루프를 배열 하나를 받는 함수로 두고 파티는 여기서 한 번, 적은 **라운드마다** `beginRound` 가 부른다.
-        //   안 빼면 오오라가 쿨 0 액티브가 되어 **매 차례 시전만 반복**한다. rng 를 안 쓴다 · 이벤트를 안 낸다(파티와 같다)
+        //   안 빼면 오오라가 쿨 0 액티브가 되어 **매 차례 시전만 반복**한다. rng 를 안 쓴다
+        // **보이게 한다** [2026-09-15 · R98 · SCREEN_DESIGN §4-2 · ADR-0127] — 창은 전투를 위해 여기서 걸고, 화면에 줄 것은 따로 남긴다:
+        //   ① 칸 표시 — 빼기 **전** 칸 순서(`slotIds`)와 켠 오오라(`auraOn`)를 유닛에 남긴다(`slotView` 가 읽는다 · 전투는 안 읽는다)
+        //   ② 창 이벤트 — 반환값(`buff` 이벤트 모양 · `t` 없음)을 부르는 쪽이 **다음 `round` 이벤트 바로 뒤**에 낸다(`auraQueue`).
+        //      `round` 가 라운드의 첫 이벤트라는 순서 보장(INTERFACE §2-6 ②)을 지키고, 적 카드는 `round` 가 와야 재생기에 선다
         const applyAuras = side => {
+            const applied = [];
             for (const p of side) {
                 const aura = p.actives.find(a => a.def.kind === 'aura');
-                p.actives = p.actives.filter(a => a.def.kind !== 'aura');
                 if (!aura) continue;
+                p.slotIds = p.actives.map(a => a.id);
+                p.auraOn = aura.id;
+                p.actives = p.actives.filter(a => a.def.kind !== 'aura');
                 const targets = aura.def.target === 'self' ? [p] : side;
                 // 오오라의 세기도 **시전자 능력치로 민 값**이다 — 걸 때 한 번 (skill.js scaleDef · 2026-09-10)
                 const eff = SK.scaleDef(aura.def, p.stats);
                 for (const tgt of targets) {
                     tgt.buffs[aura.id] = { stat: aura.def.stat, v: eff.value, until: Infinity, element: aura.def.element ?? null, by: p.key };
+                    applied.push({ e: 'buff', u: tgt.key, s: aura.id, stat: aura.def.stat, v: eff.value, until: null });
                 }
             }
             for (const p of side) refreshDerived(p);
+            return applied;
         };
-        applyAuras(party);
+        // 오오라 창 이벤트의 대기열 — 파티 것(전투 시작 · 갈아입기)이 쌓였다가 다음 `round` 바로 뒤에 나간다 (R98)
+        const auraQueue = applyAuras(party);
 
         // 파티 평균 — **라운드 경계에서 다시 잰다**(갈아입기 · R89). 소환물은 안 센다(경계에는 벽이 아직 서 있을 수 있다 · 전투 시작에는 없다)
         const avg = k => {
@@ -444,6 +454,13 @@ export function createBattleSystem(data) {
         // 무기 옵션 타격 시 창의 길이 (R78) — 전투 시작에 한 번 묶는다
         const windowSec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec };
 
+        /** 칸 표시값 [2026-09-15 · R98 · INTERFACE §2-6] — 칸 순서 그대로의 스킬 id(`actives`)와 첫 준비 시각(`ready`).
+         *  오오라도 제 칸에 선다: 켜진 오오라 `0`(쿨이 없다) · 안 켜진 오오라 `null`. 결과 `party[]` · `round` · `refit` 이 같이 쓴다 · 전투는 안 읽는다 */
+        const slotView = u => {
+            const ids = u.slotIds ?? u.actives.map(a => a.id);
+            const at = new Map(u.actives.map(a => [a.id, a.readyAt]));
+            return { actives: ids, ready: ids.map(id => at.has(id) ? r1(at.get(id)) : id === u.auraOn ? 0 : null) };
+        };
         const timeline = [];
         const out = {
             won: false, reason: null, durationSec: 0,
@@ -452,8 +469,8 @@ export function createBattleSystem(data) {
             // 09-14 로 레벨업이 능력치를 안 올려(R83) 복사의 원래 이유는 사라졌다.
             // 전투에는 안 쓰이고 타임라인에도 안 들어가므로 rng·골든 지문과 무관하다
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
-                atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null, actives: p.actives.map(a => a.id),
-                ready: p.actives.map(a => r1(a.readyAt)) })),   // 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89)
+                atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null,
+                ...slotView(p) })),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             // 보상 칸(xpTotal · gold · kills · cards · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
             timeline, xpTotal: 0, gold: 0, kills: {}, cards: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [], casts: {},
@@ -525,7 +542,8 @@ export function createBattleSystem(data) {
             const sp = spawnRound(rng, stage, pool, round, magicFind, stageLevel);
             units.enemies = sp.list;
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
-            applyAuras(units.enemies);
+            //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
+            const enemyAuras = applyAuras(units.enemies);
             // 적 스킬도 **쿨부터 돈다** [2026-09-14 · R89 · battle_design §6] — 등장한 순간부터 한 바퀴. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
             for (const e of units.enemies) for (const a of e.actives) a.readyAt = t + cooldownSec(B, e, a.def);
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
@@ -541,11 +559,13 @@ export function createBattleSystem(data) {
                     //   그 툴팁 문장(피해·회복량 · 스킬 계수)을 그린다. `out.party[]` 의 같은 이름 필드와 같은 모양이고 전투에는 안 쓰인다.
                     //   ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — rng 는 0
                     atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ? { ...e.stats } : null,
-                    actives: e.actives.map(a => a.id),
-                    ready: e.actives.map(a => r1(a.readyAt)),   // 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89)
+                    ...slotView(e),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
                     sheet: { ...e.sheet },   // 세부 능력치 복사본 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 · 전투는 안 읽는다)
                 })),
             });
+            // 오오라 창 이벤트 [2026-09-15 · R98] — `round` 바로 뒤 · 파티 몫(전투 시작 · 갈아입기) 먼저, 이 라운드 적의 것 다음.
+            //   창은 이미 걸려 있다 — 이벤트만 낸다(rng 0 · 전투 결과 불변)
+            for (const ev of [...auraQueue.splice(0), ...enemyAuras]) timeline.push({ t: r1(t), ...ev });
         };
 
         const onKill = e => {
@@ -751,6 +771,7 @@ export function createBattleSystem(data) {
         const worn = new Map(partyUnits.map(p => [p.uid, { sig: sigOf(p), combat: p.combat }]));
         function refit(updates) {
             const changed = [];
+            const removed = [];   // 갈아입기로 걷힌 오오라 창 `{u, s}` — 다시 안 걸린 것은 다음 `round` 뒤에 `buffEnd` 로 닫는다 (R98)
             for (const p of updates) {
                 const u = party.find(x => x.uid === p.uid && !x.summon);
                 const was = worn.get(p.uid);
@@ -770,20 +791,32 @@ export function createBattleSystem(data) {
                     if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
                     return { id: a.id, def, readyAt: prev.has(a.id) ? prev.get(a.id) : t + cooldownSec(B, u, def), source: a.source };
                 });
+                // 칸 표시도 새로 잰다 — 새 칸에 오오라가 있으면 아래 `applyAuras` 가 다시 남긴다 (R98)
+                u.slotIds = null;
+                u.auraOn = null;
                 // 오오라는 다시 건다 — 이 영웅이 건 상시 창(`until: Infinity`)을 먼저 걷는다
-                for (const x of party) for (const [id, b] of Object.entries(x.buffs)) if (b.by === u.key && b.until === Infinity) delete x.buffs[id];
+                for (const x of party) for (const [id, b] of Object.entries(x.buffs)) {
+                    if (b.by !== u.key || b.until !== Infinity) continue;
+                    delete x.buffs[id];
+                    removed.push({ u: x.key, s: id });
+                }
                 changed.push(u);
             }
             if (!changed.length) return;
             // 칸에 오오라가 남아 있는 것은 방금 갈아입은 영웅뿐이다 · 끝에서 전원의 파생값을 다시 쓴다(HP 가 새 최대치로 잘린다)
-            applyAuras(party);
+            const applied = applyAuras(party);
             for (const u of changed) {
                 timeline.push({
                     t: r1(t), e: 'refit', u: u.key, hpMax: u.hpMax, dhp: u.hp, period: u.period,
                     atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, atkType: u.atkType, stats: u.stats ? { ...u.stats } : null,
-                    actives: u.actives.map(a => a.id), ready: u.actives.map(a => r1(a.readyAt)),
+                    ...slotView(u),
                 });
             }
+            // 오오라 창 이벤트 (R98) — **다음 `round` 바로 뒤**에 나간다(`auraQueue` · 순서 보장 ②).
+            //   걷힌 것 중 다시 안 걸린 것은 닫고(`buffEnd`), 다시 건 것은 연다(`buff`) — 닫기가 먼저다
+            const again = new Set(applied.map(a => `${a.u}|${a.s}`));
+            for (const r of removed) if (!again.has(`${r.u}|${r.s}`)) auraQueue.push({ e: 'buffEnd', u: r.u, s: r.s });
+            auraQueue.push(...applied);
             measureParty();
         }
 

@@ -253,6 +253,7 @@
 | R95 | 강화 = 베이스 능력치만 — 옵션 계단(`equip_upgrade_option_interval` · `equip_upgrade_option_pct`) 퇴역 · 목걸이 · 반지 강화 없음 · 옵션강화 폐기 · 옛 값은 그대로 | 09-15 | ✅ 09-15 · PASS 299/299 · 단정 교체 2 · 신설 1 · 삭제 1 · 골든 입력 지문만 재촬영(50런 불변) · 세이브 버전 · 전투 rng 수열 불변 · 화면 — 옵션강화 블록 삭제 · 목걸이 · 반지 「강화 없음」(ADR-0125) · 도움말 `ch.upgradeHint` 에서 옵션 계단 문구를 걷었다 | GAME_DESIGN §9 09-15 · item_design §7-2 · base_expedition §2-5 · INTERFACE §2-5 · §3 · §5-1 · §5-2 |
 | R96 | 제작 — 부위 · 레벨대 선택 → 광석 · 목재 · 가루 → 희귀도 굴림(`make_rarity_w_*`) · `make_recipe.csv` 신설 · 재료 재고 | 09-15 | ✅ 09-15 · PASS 308/308 · 단정 신설 9 · 골든 입력 지문만 재촬영(50런 불변) · 세이브 버전 무변경(`materials` · `counters.make` 기본값) · 전용 스트림 `^ 0xC4AF` · 화면 제작 칸 + `?dev=mats` · ⚠ 광석 · 목재 공급(파견) 없음 · 레벨대 해금 없음 · 대역 안 ilvl 균등(⚠제안) | GAME_DESIGN §9 09-15 · item_design §7-1 · base_expedition §2-1 · §2-5 · INTERFACE §2-5 · §2-7 · §3 · §4 · §5-1 · §5-2 · SCREEN_DESIGN §8-2 |
 | R97 | 크래프트 — 매직 + 전용 옵션 하나 · **이번엔 화면 자리만** | 09-15 | ⏸️ 로직(풀 · 비용 · 결과 규칙) 기획 대기 · 화면 자리 ✅ 09-15(제련소 세 칸 — ADR-0124) | GAME_DESIGN §9 09-15 · item_design §7-3 · SCREEN_DESIGN §8-2 |
+| R98 | 관전에 오오라가 보인다 — 칸 표시값(결과 `party[]` · `round` 적 · `refit` 의 `actives`/`ready` 에 오오라 칸: 켜짐 `0` · 꺼짐 `null`) · 오오라 창 `buff`(`until: null`) · 갈아입기로 사라진 오오라 `buffEnd` — 둘 다 `round` 바로 뒤 · 전투 계산 · rng 불변 | 09-15 | ✅ 09-15 · PASS 311/311 · 단정 신설 2 · 기존 단정 2 조정(첫 buff · 첫 준비 시각에서 오오라를 뺀다) · 골든 재촬영(events · tl 만 · 28/50런) | SCREEN_DESIGN §4-2 · ADR-0127 · INTERFACE §2-6 |
 
 ---
 

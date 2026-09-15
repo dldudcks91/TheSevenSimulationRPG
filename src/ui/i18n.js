@@ -575,6 +575,8 @@ const STRINGS = {
     'exp.go.h': { ko: '출정 방식', en: 'Departure' },
     /* 출정 창 아래 줄 오른쪽 칸의 이름 [2026-09-14 사용자 지시 · ADR-0105] — 이 스테이지의 입장 텍스트가 든다(stage.csv:story_kr/_en) */
     'exp.story.h': { ko: '이야기', en: 'Story' },
+    /* 이야기 글의 `{leader}` 가 빈 파티에서 받는 대체 문구 [2026-09-15] — 괄호 없이 들어가고 뒤 조사는 이 말의 받침을 탄다 · en 은 문장 첫머리에 온다 */
+    'exp.story.noLeader': { ko: '용병 하나', en: 'A mercenary' },
     'exp.zones.note': {
         ko: '지역 죄종은 해당 죄종 접사의 드롭 가중치를 올린다 — 타겟 파밍의 축<br>'
             + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 챕터의 마지막 스테이지를 뺀 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다. <b>마지막 스테이지는 챕터보스 하나와 싸우는 1라운드</b>다<br>'
@@ -688,6 +690,10 @@ const STRINGS = {
             + '<b>nothing has touched that axis yet</b>, and an empty axis is where the next item goes.<br>'
             + 'The abbreviation in parentheses is the attribute that scales it. This table mirrors src/data/combat_stat.csv',
     },
+    // 기본 옵션 칸 맨 위 — 레벨 · 경험치 한 줄 (2026-09-15 · SCREEN_DESIGN §6 · ADR-0129)
+    'ch.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
+    'ch.xp': { ko: '경험치 {a} / {b}', en: 'XP {a} / {b}' },
+    'ch.xp.max': { ko: 'MAX', en: 'MAX' },
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
     'ch.skill.go': { ko: '스킬 트리 열기', en: 'Open skill tree' },
     'ch.items.h': { ko: '아이템', en: 'Items' },
@@ -713,7 +719,6 @@ const STRINGS = {
     // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
     // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
     // ~~tip.hero.h · tip.monster.h~~ (「영웅」 · 「몬스터」 머리글) 는 2026-09-15 삭제 — 유닛 툴팁은 머리글이 없다 (ADR-0115)
-    'tip.hero.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'tip.unit.altHint': { ko: 'Alt 세부 옵션', en: 'Alt: detailed stats' },   // 유닛 툴팁 각주 — 열 이름은 캐릭터 탭 키(ch.attr.h · ch.detail.h) 재사용 (ADR-0114)
     'tip.skill.h': { ko: '스킬', en: 'Skill' },
 
@@ -1145,6 +1150,10 @@ const STRINGS = {
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
     'bt.dmg.party': { ko: '파티', en: 'Party' },
     'bt.dmg.enemy': { ko: '적', en: 'Enemies' },
+    // 로그 탭 — 줄의 **주체**(그 일을 한 쪽)로 거른다 (2026-09-15 · SCREEN_DESIGN §4-2)
+    'bt.logf.all': { ko: '전체', en: 'All' },
+    'bt.logf.party': { ko: '우리', en: 'Party' },
+    'bt.logf.enemy': { ko: '적', en: 'Enemies' },
     'bt.items.target': { ko: '장착 대상 {name}', en: 'equip target {name}' },
     'log.hit': { ko: '{name} → {target} <b>{dmg}</b> · {skill}', en: '{name} → {target} <b>{dmg}</b> · {skill}' },
     'log.dodge': { ko: '{name} → {target} <b>빗나감</b> · {skill}', en: '{name} → {target} <b>miss</b> · {skill}' },
