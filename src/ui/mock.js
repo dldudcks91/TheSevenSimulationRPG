@@ -49,11 +49,11 @@ export const SINS = {
 };
 
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
-   `src/data/skill_tag.csv` 13행으로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
+   `src/data/skill_tag.csv`(14행 — 2026-09-08 오오라 추가)로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
 
 // 매직~유니크는 equip_rarity_config.csv 의 color_hex 그대로 — **5단계** [일반 신설 2026-09-14 · 사용자 확정 · R86]
 // ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · 랜덤옵션은 붙는다 · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
-// 통제 가능성의 계단: 일반(죄종 없음) → 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(낙인으로 죄종 지정) → 유니크(고정)
+// 통제 가능성의 계단: 일반(죄종 없음) → 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(매직 + 전용 옵션 하나 — 2026-09-15 · ~~낙인으로 죄종 지정~~) → 유니크(고정)
 export const RARITY = {
     normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
     magic: { ko: '매직', en: 'Magic', color: '#4169E1' },
@@ -456,7 +456,7 @@ export const faceDir = () => `./assets/art/faces/${faceStyleCur}/`;
 
 /**
  * 정예 특성 — 계승 elite_trait.csv. en 은 CSV 의 trait_name(영문) 그대로.
- * 죄종 고유 1 + 공통 2 로 정예가 조립된다 (840 변형).
+ * 죄종 고유 1 + 공통 2 로 정예가 조립된다 — ⚠ 공통은 계승 16 중 10 만 옮겼고(840 변형은 기획의 16 기준) 효과는 아직 없다 · 이름표만 굴린다 (monster_design §6).
  */
 export const SIN_TRAITS = {
     wrath: { ko: '격분', en: 'Frenzy' },
@@ -488,7 +488,7 @@ export const COMMON_TRAITS = [
 /*
  * 죄종 세트효과 — **보류** (item_design.md §4, 2026-08-25). 세트포인트·브레이크포인트 3/6/9·세트 보너스 표는
  * 화면에서 내렸다. 설계안은 문서에, 원본 값은 계승 equipment_set_bonus.csv 에 그대로 남아 있다.
- * 접사의 죄종은 이름(nm)과 태그로만 보인다 — 접사 카테고리 · 지역 드롭 편향 · 낙인 지정의 축.
+ * 접사의 죄종은 이름(nm)과 태그로만 보인다 — 파티 전술이 세는 축이다 (~~지역 드롭 편향~~ 2026-08-27 폐기 · ~~낙인 지정~~ 2026-09-15 소멸).
  */
 
 

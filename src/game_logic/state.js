@@ -788,7 +788,7 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /** 분해 — 가방 아이템을 몬스터 가루로 */
+    /** 분해 — 가방 · 창고 아이템을 몬스터 가루로 (착용 중인 것은 `missing`) */
     function salvage(state, itemUid) {
         const it = state.items[itemUid];
         const from = it ? holderOf(state, itemUid) : null;   // 창고 것도 분해된다 [v24 · item_design §1]
@@ -1364,6 +1364,19 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
+    /**
+     * 로스터 순서 맞바꾸기 — 캐릭터 탭 영웅 띠의 드래그 [신설 2026-09-15 사용자 지시 · INTERFACE §2-7 · SCREEN_DESIGN §5 · ADR-0136].
+     * 순서를 읽는 곳은 **표시뿐**이다(영웅 띠 · 수색 후보) — 파티 · 리더(`party[0]`) · 진형은 따로 들고 있어 안 흔들린다.
+     * 그래서 원정 중 · 수색 중에도 막을 것이 없다. 같은 영웅이면 바꿀 것이 없어 그대로 통과한다
+     */
+    function swapHeroes(state, uidA, uidB) {
+        const i = state.heroes.findIndex(h => h.uid === uidA);
+        const j = state.heroes.findIndex(h => h.uid === uidB);
+        if (i < 0 || j < 0) return { ok: false, err: 'missing' };
+        [state.heroes[i], state.heroes[j]] = [state.heroes[j], state.heroes[i]];
+        return { ok: true };
+    }
+
     /* ── 수색 — 대기 영웅 하나가 후보를 물어온다 (base_expedition_design §2-4 · 구현 2026-09-09) ──
        명단이 흐름이라면 수색은 통제다. **파견 슬롯을 먹지 않는다** — 선술집 하위 기능이다.
        저장하는 것은 「누가 · 언제 · 몇 번째」뿐이고 결과와 이야기는 시드에서 재현한다 (명단과 같은 문법).
@@ -1690,7 +1703,7 @@ export function createGameSystem(deps) {
         equipTarget, equip, unequip, salvage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         stageUnlocked, canDepart, runParty, stageLevelState, setStageLevel, departRun, advanceRun, retreatRun, resolveBattle, closeRun, dismissNotice,
-        tavernCandidates, tavernState, tavernReroll, hire, dismiss,
+        tavernCandidates, tavernState, tavernReroll, hire, dismiss, swapHeroes,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, rerollTactic, weaponGroupOf, weaponSkillOf,

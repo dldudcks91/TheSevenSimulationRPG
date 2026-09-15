@@ -280,7 +280,7 @@ const state = {
     // 도감 세그먼트 (SCREEN_DESIGN §9) — monster | character | item | skill. 09-08 에 이미지 도감이 흡수되며 값이 둘에서 넷이 됐다.
     // 얼굴 스타일은 여기 안 둔다 — 전역이다(`?face=` · localStorage · mock.js:setFaceStyle)
     codexSeg: 'monster',
-    bagTab: 'equip',              // 가방의 최상위 축 — 'equip' | 'material' (ADR-0055)
+    bagTab: 'equip',              // 가방의 최상위 축 — 'equip' | 'material' (ADR-0133)
     roll: 1, candidates: [], confirmOverwrite: false,
     salvageMode: false,
     // 리포트 (SCREEN_DESIGN §4-3 · ADR-0063) — 왼쪽 목록에서 고른 줄(0 = 최신)과 그 화면 전용 분해 모드.
@@ -301,7 +301,7 @@ const state = {
     modal: null,
     // 프롤로그가 보여 주는 씬 번호 (SCREEN_DESIGN §3-1) — 0 부터. 세이브에 안 들어간다
     proScene: 0,
-    // 자원 탭에서 열려 있는 파견처 (§8) — 들어오면 첫 칸(광산)이 골라져 있다. 비워 두면 첫 화면이 빈다
+    // 자원 탭에서 열려 있는 파견처 (§8) — 들어오면 첫 칸(채광)이 골라져 있다. 비워 두면 첫 화면이 빈다
     post: 'mine',
     // 선택 창에서 한 번 누른 쪽 — 'cloud' | 'local' | null. 두 번째 누름이 덮어쓰기를 확정한다 (SCREEN_DESIGN §2-1)
     cloudArm: null,
@@ -901,6 +901,9 @@ function renderExpedition(main) {
         stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
             combatOf,   // 영웅 툴팁의 세부 옵션 — 캐릭터 탭과 같은 game.heroCombat (SCREEN_DESIGN §2 「유닛 툴팁 규격」)
+            // 장착 대상 — 영웅 카드를 누르면 그 영웅으로 바뀐다 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137].
+            //   아래 보관 칸의 장착 · 비교가 그 영웅을 향한다. 다시 그려도 재생은 resume 으로 이어진다(가방 칸 클릭과 같은 길)
+            pickedUid: state.heroUid, onPickHero: uid => { state.heroUid = uid; render(); },
             // 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 출발 순간에 찍은 스냅샷이다. 재생기는 이 값으로 **자리만** 민다
             form: state.battle.form,
             // 관전 배치 — 'wide'(아레나 전폭 · 로그 · 누적 없음) / 'split'(아레나 + 우측 딜미터 열 · ADR-0130).
@@ -1100,16 +1103,22 @@ function formDrop(src, tr, ti) {
 /** 드래그가 방금 끝났나 — 띠 카드와 보드 칸은 클릭(소속)도 겸하므로 드래그 뒤의 클릭 한 번을 삼킨다 */
 let formDragEnded = false;
 
+/** 진형 드래그 = **자리**를 정한다. 잡는 곳이 둘이다 — 로스터 띠 카드(`rank: null`) · 보드에 놓인 영웅. 놓을 곳은 보드 칸이다 */
+function bindFormDrag(node, src) {
+    bindCardDrag(node, '.fm-cell', tgt => formDrop(src, Number(tgt.dataset.rank), Number(tgt.dataset.idx)));
+}
+
 /**
- * 진형 드래그 = **자리**를 정한다. 잡는 곳이 둘이다 — 로스터 띠 카드(`rank: null`) · 보드에 놓인 영웅.
- * 4px 를 넘어야 드래그로 친다 — 임계 미만이면 **클릭(파티 넣고 빼기 · 띠 카드와 보드 칸 둘 다)이 그대로 산다.**
+ * 카드 드래그 — 진형(위)과 캐릭터 탭 띠의 순서 맞바꾸기(ADR-0136)가 **같은 손**을 쓴다. `sel` = 놓을 수 있는 칸 · `onDrop(칸)` 이 true 면 다시 그린다.
+ * 4px 를 넘어야 드래그로 친다 — 임계 미만이면 **클릭(파티 넣고 빼기 · 영웅 고르기)이 그대로 산다.**
+ * **카드 안의 버튼(해고)에서 누른 것은 드래그로 잡지 않는다** — 버튼의 클릭은 버튼의 것이다 (2026-09-15).
  * 고스트는 **감싸개 + 클론 하나**(원본은 자리에 남고 `.drag` 로 흐려진다 · 왜 감싸개인지는 아래 ①②) · 놓을 자리는 elementFromPoint 로 찾는다.
  * **고스트는 한 장(`#stage`) 안에 선다** (ADR-0087) — 크기 · 위치 · 잡은 점 오프셋은 **한 장 단위**(`stagePoint`)다.
  * 4px 임계와 elementFromPoint 는 **창 좌표 그대로**다 — 손이 움직인 거리와 브라우저의 판정이라 배율로 바꾸지 않는다.
  */
-function bindFormDrag(node, src) {
+function bindCardDrag(node, sel, onDrop) {
     node.onpointerdown = ev => {
-        if (ev.button) return;
+        if (ev.button || ev.target.closest('button')) return;
         const x0 = ev.clientX, y0 = ev.clientY;
         const r0 = node.getBoundingClientRect();
         // 카드 사각형 — 모서리 둘을 한 장 좌표로 바꿔 작은 쪽 · 큰 쪽을 고른다. 눕힌 한 장(ADR-0109)에서는 창의 왼쪽 위가 카드의 왼쪽 위가 아니다
@@ -1151,9 +1160,9 @@ function bindFormDrag(node, src) {
             node.classList.remove('drag');
             formDragEnded = true;                     // 뒤따라 오는 클릭 한 번을 삼킨다
             setTimeout(() => { formDragEnded = false; }, 0);
-            const tgt = document.elementFromPoint(e.clientX, e.clientY)?.closest('.fm-cell');
+            const tgt = document.elementFromPoint(e.clientX, e.clientY)?.closest(sel);
             if (!tgt || tgt === node) return;
-            if (formDrop(src, Number(tgt.dataset.rank), Number(tgt.dataset.idx))) render();
+            if (onDrop(tgt)) render();
         };
         node.setPointerCapture(ev.pointerId);
         node.onpointermove = move;
@@ -1852,8 +1861,9 @@ function heroDoing(h) {
  * 올려놓으면 기본 능력치 툴팁 (2026-08-28, ui/tip.js heroTipCard) — `tip: false` 면 안 뜬다(캐릭터 탭 · 2026-09-15 · ADR-0116)
  * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
  * flat — 편성 패널처럼 이미 패널 안에 들어갈 때. 패널 껍데기(테두리·배경·여백)를 벗는다
+ * reorder — 카드를 끌어 다른 카드에 놓으면 두 영웅의 로스터 자리를 맞바꾼다 (캐릭터 탭 · 2026-09-15 · ADR-0136)
  */
-function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, dismissable = false, deployed = false, tip = true } = {}) {
+function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, dismissable = false, deployed = false, tip = true, reorder = false } = {}) {
     const p = el('div', flat ? 'hs-panel flat' : 'panel hs-panel');
     // partyMode — 클릭이 파티 넣고 빼기인 띠(편성). ~~출정 아웃인 카드는 안 눌리는 티를 낸다~~ 는 2026-09-08 폐기(못 넣는 영웅이 없다)
     // `deployed` — **아래에 전진 패널이 열려 있나** (2026-09-09 사용자 지시 · ADR-0058). 파티 카드의 반투명은
@@ -1868,6 +1878,7 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
             : (h.uid === state.heroUid ? ' on' : '');
         const c = el('div', `hs-card${mark}${h.tier === 'unique' ? ' unique' : ''}`);
         c.style.borderTopColor = tierColor(h);
+        c.dataset.uid = h.uid;   // 순서 맞바꾸기의 놓을 곳 — 빈 칸(+)은 uid 가 없어 놓을 곳이 아니다 (ADR-0136)
         // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 (2026-08-28) — 유닛 툴팁: 기본 옵션 · Alt 로 세부 옵션 (SCREEN_DESIGN §2 · §5)
         //   `tip: false` 면 안 건다 — 캐릭터 탭은 같은 값이 바로 아래 네 칸에 있고 뜬 카드가 그 칸을 덮는다 (2026-09-15 사용자 지시 · ADR-0116)
         //   유닛 툴팁은 **카드 옆**에 선다 — 관전 카드와 같은 규칙 (2026-09-15 · ADR-0120)
@@ -1891,6 +1902,9 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
         // 편성 띠에서는 카드를 **진형 보드로 끌어다 놓을 수 있다** (2026-09-09 · SCREEN_DESIGN §4-1).
         //   동사가 갈린다: 클릭은 소속(넣고 빼기) · 드래그는 자리. 끌면 그 뒤의 클릭 한 번을 삼켜 둘이 겹치지 않는다
         if (partyMode) bindFormDrag(c, { uid: h.uid });
+        // 캐릭터 탭 띠는 끌어서 **다른 카드에 놓으면 두 영웅의 자리를 맞바꾼다** [2026-09-15 사용자 지시 · SCREEN_DESIGN §5 · ADR-0136].
+        //   순서는 세이브 값(`G.heroes`)이라 출정 창 띠도 같은 순서로 선다. 동사는 편성 띠와 같게 갈린다 — 클릭은 고르기 · 드래그는 자리
+        else if (reorder) bindCardDrag(c, '.hs-card[data-uid]', tgt => swapRoster(h.uid, tgt.dataset.uid));
         c.onclick = () => { if (!formDragEnded) onPick(h); };
         strip.appendChild(c);
     }
@@ -1899,6 +1913,12 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
     return p;
 }
 const pickHero = h => { state.heroUid = h.uid; render(); };
+/** 띠 순서 맞바꾸기 — 캐릭터 탭 띠의 드래그 (ADR-0136). 고른 영웅은 uid 로 들고 있어 자리가 바뀌어도 그대로 따라간다 */
+const swapRoster = (a, b) => {
+    const r = SYS.game.swapHeroes(G, a, b);
+    if (!r.ok) flash(`ch.err.${r.err}`); else save();
+    return true;
+};
 
 /* ═══════════ 캐릭터 ═══════════
    세로 3단: ① 영웅 띠 ② 같은 폭·높이의 4칸 — 장비 / 기본 옵션(+현재 스킬 카드) / 세부 옵션 1 / 세부 옵션 2 (2026-08-27) ③ 아이템(가로 전폭).
@@ -2102,9 +2122,9 @@ function detailPanels(h) {
 }
 
 /**
- * 재료 격자 — 한 종류가 칸 하나다. 개체가 아니라 **수량**이라 `inventory_cap` 을 안 먹는다 (ADR-0055).
- * 지금 서는 것은 가루 · 낙인 둘뿐이다 — 광석 · 약초 · 목재는 이름조차 미정이고
- * 기획의 「크래프트 경제 전부 — 백지」(GAME_DESIGN §10)가 닫혀야 이 격자가 찬다.
+ * 재료 격자 — 한 종류가 칸 하나다. 개체가 아니라 **수량**이라 `inventory_cap` 을 안 먹는다 (ADR-0133).
+ * 지금 서는 것은 가루 · 낙인 둘뿐이다 — 광석 · 목재(2026-09-15 제작 재료 · R96)는 제련소 제작 칸의 레시피 줄에만
+ * 보이고 이 격자에는 아직 칸이 없다 · 약초는 소모처(연구) · 공급(파견)이 둘 다 코드에 없다.
  * 골드는 화폐라 여기 안 선다 — 셸 머리의 자원 줄이 든다.
  */
 function materialGrid() {
@@ -2122,7 +2142,7 @@ function materialGrid() {
 
 /** ③ 아이템 — 가방. 클릭 = 착용(분해 모드면 분해 · 강화 모드면 강화). 열 수는 창 폭이 정한다 */
 /** 보관 — **왼쪽 창고 / 오른쪽 인벤토리 두 칸** [2026-09-11 사용자 확정 · SCREEN_DESIGN §6 · item_design §1].
- *  장비 탭이면 두 칸이 나란히 서고, **재료 탭이면 한 칸**이 전폭을 쓴다 — 재료는 수량이라 창고 개념이 없다 (ADR-0055).
+ *  장비 탭이면 두 칸이 나란히 서고, **재료 탭이면 한 칸**이 전폭을 쓴다 — 재료는 수량이라 창고 개념이 없다 (ADR-0133).
  *  드롭이 쌓이는 곳은 인벤토리 하나뿐이고(압력은 그쪽이 든다) 창고는 **유저가 옮긴 것만** 든다 */
 function itemsPanel(h, { showTarget = false } = {}) {
     if (state.bagTab === 'material') {
@@ -2213,7 +2233,8 @@ function renderCharacter(main) {
     const stack = el('div', 'char-stack page');
     // 해고 버튼은 이 띠에만 뜬다 — 고른 카드의 오른쪽 아래 (SCREEN_DESIGN §5 · 2026-09-09 사용자 지시)
     // 툴팁은 안 건다 — 고른 영웅의 값은 바로 아래 네 칸이 든다 (2026-09-15 사용자 지시 · ADR-0116)
-    stack.appendChild(heroStrip(pickHero, { dismissable: true, tip: false }));
+    // 끌어서 다른 카드에 놓으면 두 영웅의 자리를 맞바꾼다 (2026-09-15 사용자 지시 · ADR-0136)
+    stack.appendChild(heroStrip(pickHero, { dismissable: true, tip: false, reorder: true }));
     const band = el('div', 'cols c-char');
     band.appendChild(gearPanel(h));
     band.appendChild(attrPanel(h));

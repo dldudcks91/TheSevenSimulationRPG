@@ -81,20 +81,20 @@ const STRINGS = {
     'ng.trait': { ko: '시작 특성', en: 'Starting Trait' },
     'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
     'ng.note': {
-        ko: '첫 파티는 <b>레어 1 + 매직 2</b>다 — 첫 화면부터 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
-            + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 ([hero_tier.csv:attr_total_min/max] — 매직과 레어의 대역은 <b>겹치지 않는다</b>) — '
-            + '세 장의 차이는 양과 <b>모양</b> 둘이다: 레어는 고르게 나고, 매직은 <b>한 축이 크게 튄다</b>. 장비로는 1도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
-            + '<b>등급은 출발선이지 천장이 아니다</b> — 상한은 [balance.csv:hero_attr_max] 하나로 전 영웅 공통이라 <b>키우면 매직도 같은 곳에 도달한다</b><br>'
+        ko: '첫 파티는 <b>레어 1 + 매직 1 + 일반 1</b>이다 — 첫 화면부터 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
+            + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 ([hero_tier.csv:attr_total_min/max] — 등급끼리 대역이 <b>겹칠 수 있다</b>) — '
+            + '세 장의 차이는 양과 <b>모양</b> 둘이다: 레어 · 일반은 고르게 나고, 매직은 <b>한 축이 크게 튈 수 있다</b>. 장비로도 레벨업으로도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
+            + '<b>등급 차이는 끝까지 간다</b> — 상한은 [balance.csv:hero_attr_max] 하나로 전 영웅 공통이지만 레벨업으로 능력치가 안 올라 <b>굴린 모양이 곧 그 영웅의 끝</b>이다<br>'
             + '최대 HP는 굴리지 않는다 — 전 영웅 [balance.csv:hero_hp_base] 공통 시작<br>'
-            + '메인 죄종은 죄종 마스터리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>폐기</b> — 전술카드로 이관 (tactic_card_design.md §4)<br>'
+            + '메인 죄종은 죄종 마스터리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>폐기</b> — 파티 전술로 이관 (tactic_card_design.md §4)<br>'
             + '리롤은 <b>무제한·무료</b>다 — 시작 선택을 도박으로 만들지 않는다<br>'
             + '<b>미확정</b>: 등급 대역·분포 모양·등장 비중(전부 제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부',
-        en: 'Your first party is <b>1 Rare + 2 Magic</b> — the roster shows its <b>tiers</b> from the first screen. The 15 Uniques are a fixed roster and are not spent at the start<br>'
-            + 'Attributes roll per axis but their <b>total lands in the band its tier sets</b> ([hero_tier.csv:attr_total_min/max] — the Magic and Rare bands <b>never overlap</b>) — '
-            + 'the three differ in amount and in <b>shape</b>: Rare rolls evenly, Magic can <b>spike on one axis</b>. Gear never raises them, so what you roll here <b>lasts forever</b><br>'
-            + '<b>A tier is a starting line, not a ceiling</b> — the cap is a single [balance.csv:hero_attr_max] shared by every hero, so <b>a Magic hero you raise gets to the same place</b><br>'
+        en: 'Your first party is <b>1 Rare + 1 Magic + 1 Normal</b> — the roster shows its <b>tiers</b> from the first screen. The 15 Uniques are a fixed roster and are not spent at the start<br>'
+            + 'Attributes roll per axis but their <b>total lands in the band its tier sets</b> ([hero_tier.csv:attr_total_min/max] — tier bands <b>may overlap</b>) — '
+            + 'the three differ in amount and in <b>shape</b>: Rare and Normal roll evenly, Magic can <b>spike on one axis</b>. Neither gear nor level-ups raise them, so what you roll here <b>lasts forever</b><br>'
+            + '<b>The tier gap lasts to the end</b> — the cap is a single [balance.csv:hero_attr_max] shared by every hero, but level-ups never raise attributes, so <b>the shape you roll is where that hero ends</b><br>'
             + 'Max HP is not rolled — every hero starts at [balance.csv:hero_hp_base]<br>'
-            + 'The main sin decides the sin mastery (tab 1) and dispatch aptitude — gear affinity (set points) is <b>dropped</b> — moved to tactic cards (tactic_card_design.md §4)<br>'
+            + 'The main sin decides the sin mastery (tab 1) and dispatch aptitude — gear affinity (set points) is <b>dropped</b> — moved to party tactics (tactic_card_design.md §4)<br>'
             + 'Rerolling is <b>unlimited and free</b> — the opening choice is not a gamble<br>'
             + '<b>Open</b>: the tier bands, spread shapes and appearance weights (all proposed values) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed',
     },
@@ -282,7 +282,7 @@ const STRINGS = {
 
     /* ── 캐릭터 (실동작) ── */
     'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제', en: 'Click an item = equip · click a worn slot = unequip' },
-    // 가방의 최상위 축 — 부위가 아니라 갈래다. 「전체」는 없다 (ADR-0055)
+    // 가방의 최상위 축 — 부위가 아니라 갈래다. 「전체」는 없다 (ADR-0133)
     'ch.bag.equip': { ko: '장비', en: 'Gear' },
     // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
     'ch.bag.stash': { ko: '창고', en: 'Stash' },
@@ -653,10 +653,10 @@ const STRINGS = {
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
     'eq.sins.note': {
-        ko: '착용 장비에 붙은 접사의 죄종 — 접사 카테고리 · 지역 드롭 편향 · 낙인 지정의 축이다<br>'
-            + '<b>죄종 세트효과는 폐기</b> — 전술카드로 이관됐다 (tactic_card_design.md §4, 08-26)',
-        en: 'Sins of the affixes on worn gear — the axis of affix categories, zone drop bias, and stigma targeting<br>'
-            + '<b>Sin set effects are dropped</b> — they moved to tactic cards (tactic_card_design.md §4, 08-26)',
+        ko: '착용 장비의 죄종 — 아이템 이름에 붙은 죄종 태그(접두 · 접미)다. <b>파티 전술</b>이 이 수를 센다<br>'
+            + '<b>죄종 세트효과는 폐기</b> — 파티 전술로 이관됐다 (tactic_card_design.md §4, 08-26)',
+        en: 'Sins on worn gear — the sin tags in item names (prefix and suffix). <b>Party tactics</b> count them<br>'
+            + '<b>Sin set effects are dropped</b> — they moved to party tactics (tactic_card_design.md §4, 08-26)',
     },
     'eq.sins.none': { ko: '접사 없음', en: 'No affixes' },
     'eq.filter.all': { ko: '전체', en: 'All' },
@@ -763,9 +763,9 @@ const STRINGS = {
             + 'and the option inside is rerolled with gold. A reroll never returns what this slot or another slot already holds.',
     },
     'rs.note.cond': {
-        ko: '조건은 <b>편성에서 확정되는 것</b>만 센다 — 죄종·직업·무기·접사·스킬 태그. '
+        ko: '조건은 <b>편성에서 확정되는 것</b>만 센다 — 죄종·직업·장비의 죄종·스킬 태그. '
             + '전투 중에 변하는 값(현재 HP · 남은 적)은 쓰지 않는다. 효과는 <b>파티에 든 영웅</b>에게만 붙는다.',
-        en: 'Conditions read only what the formation fixes — sins, classes, weapons, affixes, skill tags. '
+        en: 'Conditions read only what the formation fixes — sins, classes, gear sins, skill tags. '
             + 'Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.',
     },
     // 전술 옵션 등급 — ⚠ 아이템 희귀도(`mock.js:RARITY`)와 **별개 축**이고 이름만 같다 (tactic_card_design §5-5)
@@ -936,15 +936,15 @@ const STRINGS = {
        (정렬 대기만큼 뒤에 나간다). 쿨이라고 적으면 참이 된다 */
     'sk.cool': { ko: '쿨 {s}초', en: 'Cooldown {s}s' },
     'sk.slots.note': {
-        ko: '행동 주기가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>슬롯 순서</b> → 없으면 기본 공격.<br>'
+        ko: '행동 주기가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격.<br>'
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
             + '쿨은 실시간으로 돈다. 쿨이 행동 주기의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
-            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, <b>영웅 칸과 무기 칸이 같은 직업 풀</b>에서 하나씩 온다<br>'
+            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 무기 칸은 <b>그 무기군이 지정한 직업의 풀</b>에서 온다<br>'
             + '⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>이다 — 지금 값은 임시다',
         en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack.<br>'
             + 'One action per turn. A skill <b>replaces</b> that turn\'s attack and there is no mana — the action itself is the only cost<br>'
             + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of the cycle → <b>CDR affixes</b> are the alignment lever<br>'
-            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class, and the hero slot and the weapon slot both draw from that class pool<br>'
+            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the weapon slot from <b>the pool of the class its weapon group names</b><br>'
             + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
     },
     'sk.tab1': { ko: '탭1', en: 'Tab 1' },

@@ -851,6 +851,28 @@ check('dismiss: 장비를 걸치면 막고 · 다 벗으면 지우고 · 파티�
     return '장비 차단 · 삭제 · 파티 정리 · 마지막 보호';
 });
 /**
+ * 로스터 순서 맞바꾸기 (INTERFACE §2-7 `swapHeroes` · SCREEN_DESIGN §5 · ADR-0136 · 2026-09-15) — 캐릭터 탭 띠의 드래그.
+ * 순서만 바뀌고 **파티 · 리더 · 진형은 안 따라온다** — 따라오면 띠를 줄 세우려다 리더가 바뀐다. 별도 상태에서 돌린다
+ */
+check('swapHeroes: 로스터 두 자리만 맞바꾼다 — 파티 · 리더 · 진형은 그대로 · 없는 영웅은 missing · 거절은 아무것도 안 바꾼다', () => {
+    const g = SYS.game.newGame(99, SYS.hero.rollCandidates(makeRng(99), B.party_size_max), NOW);
+    if (g.heroes.length < 2) fail(`전제가 깨졌다 — 영웅이 ${g.heroes.length}명이다`);
+    for (const h of g.heroes) SYS.game.toggleParty(g, h.uid, NOW);
+    const ids = () => JSON.stringify(g.heroes.map(h => h.uid));
+    const order = g.heroes.map(h => h.uid);
+    const party = JSON.stringify(g.party), form = JSON.stringify(SYS.game.formationState(g).byUid);
+    const a = order[0], b = order[order.length - 1];
+    if (!SYS.game.swapHeroes(g, a, b).ok) fail('맞바꾸기가 거절됐다');
+    const want = [...order]; want[0] = b; want[want.length - 1] = a;
+    if (ids() !== JSON.stringify(want)) fail(`순서 ${ids()} — 기대 ${JSON.stringify(want)}`);
+    if (JSON.stringify(g.party) !== party) fail('파티 순서가 따라 바뀌었다 — 리더가 흔들린다');
+    if (JSON.stringify(SYS.game.formationState(g).byUid) !== form) fail('진형 자리가 따라 바뀌었다');
+    if (!SYS.game.swapHeroes(g, a, a).ok || ids() !== JSON.stringify(want)) fail('같은 영웅끼리의 맞바꾸기가 순서를 흔들었다');
+    if (SYS.game.swapHeroes(g, a, 'nobody').err !== 'missing') fail('없는 영웅과의 맞바꾸기가 통과했다');
+    if (ids() !== JSON.stringify(want)) fail('거절된 맞바꾸기가 순서를 건드렸다');
+    return `${order.length}명 · 첫 ↔ 끝 · 파티 · 진형 불변 · missing`;
+});
+/**
  * **파티까지 채운 새 게임** — `newGame` 은 09-09 부터 파티를 안 채운다(편성은 플레이어의 결정 · SCREEN_DESIGN §5).
  * 아래 단정 대부분은 「편성이 끝난 게임」을 전제하므로 그 상태를 한 곳에서 만든다.
  * **로스터 순서**로 넣으므로 옛 `newGame` 이 만들던 파티와 같고 `toggleParty` 는 rng 를 안 쓴다.
@@ -4155,7 +4177,8 @@ check('battle: 오오라는 제 칸에 서고 창은 round 바로 뒤 buff 로 �
     const r = SYS.battle.simulate(godUnits().map((u, i) => i === 0 ? { ...u, actives: kit } : u), 101, makeRng(3));
     const p0 = r.party[0];
     if (!eq(p0.actives, kit.map(a => a.id))) fail(`칸 순서 [${p0.actives}] ≠ [${kit.map(a => a.id)}] — 오오라를 뺀 목록을 실었다`);
-    if (!(p0.ready[0] > 0) || p0.ready[1] !== 0 || p0.ready[2] !== null) fail(`ready ${JSON.stringify(p0.ready)} — 공격 > 0 · 켜진 오오라 0 · 안 켜진 오오라 null 이어야`);
+    // 공격 칸도 0 이다 — 스킬은 준비 상태로 출발한다 (R100). 켜진 오오라와 가르는 것은 null 인 안 켜진 오오라뿐이다
+    if (p0.ready[0] !== 0 || p0.ready[1] !== 0 || p0.ready[2] !== null) fail(`ready ${JSON.stringify(p0.ready)} — 공격 0(R100) · 켜진 오오라 0 · 안 켜진 오오라 null 이어야`);
     const tl = r.timeline;
     if (tl.some(ev => ev.e === 'skill' && (ev.s === on.id || ev.s === off.id))) fail('오오라를 시전했다');
     const i0 = tl.findIndex(ev => ev.e === 'round');
@@ -4178,9 +4201,10 @@ check('battle: 오오라는 제 칸에 서고 창은 round 바로 뒤 buff 로 �
             const after = [];
             for (let j = i + 1; rr.timeline[j]?.e === 'buff' && rr.timeline[j].until === null; j++) after.push(rr.timeline[j]);
             for (const e of ev.enemies) {
-                const k = e.ready.indexOf(0);
+                // 켜진 오오라 = 칸 순서 첫 오오라 · 준비 0. 첫 라운드는 공격 칸도 준비 0(라운드 시작 0초 · R100)이라 준비 값으로는 못 가른다
+                const k = (e.actives ?? []).findIndex(id => SYS.skill.defs[id].kind === 'aura');
                 if (k < 0) continue;
-                if (SYS.skill.defs[e.actives[k]].kind !== 'aura') fail(`${st.stage_id} ${e.key} — 준비 0 인 칸 ${e.actives[k]} 이 오오라가 아니다`);
+                if (e.ready[k] !== 0) fail(`${st.stage_id} ${e.key} — 켜진 오오라 ${e.actives[k]} 의 준비 ${e.ready[k]} ≠ 0`);
                 if (!after.some(b => b.u === e.key && b.s === e.actives[k])) fail(`${st.stage_id} 라운드 ${ev.n} ${e.key} — 켜진 오오라 ${e.actives[k]} 의 창이 round 바로 뒤에 없다`);
                 enemy++;
             }
@@ -4451,8 +4475,8 @@ check('createRun: 보상은 이긴 라운드만 — 진 라운드의 처치 · �
     return `진 라운드 ${lost} · 버린 처치 ${thrown} · 클리어 런 ${won}`;
 });
 
-check('createRun: 스킬은 쿨부터 돈다 — 파티는 0초 + 쿨 · 적은 등장 라운드 시작 + 쿨 · 첫 시전은 그 뒤 (R89 D6 · battle_design §6)', () => {
-    let party = 0, enemy = 0, casts = 0;
+check('createRun: 스킬은 준비 상태로 출발한다 — 파티는 0초 · 적은 등장 라운드 시작 · 쿨 한 바퀴가 돌기 전에 첫 시전이 나온다 (R100 · battle_design §6)', () => {
+    let party = 0, enemy = 0, casts = 0, early = 0;
     for (let seed = 1; seed <= 4; seed++) {
         const us = skillUnits();
         const r = SYS.battle.simulate(us, 103, makeRng(seed));
@@ -4460,30 +4484,31 @@ check('createRun: 스킬은 쿨부터 돈다 — 파티는 0초 + 쿨 · 적은 
         r.party.forEach((p, i) => p.actives.forEach((id, j) => {
             // 오오라 칸은 쿨이 없다 — 켜진 것 0 · 안 켜진 것 null (R98 · 「오오라는 제 칸에 서고」 단정)
             if (SYS.skill.defs[id].kind === 'aura') { if (p.ready[j] !== 0 && p.ready[j] !== null) fail(`seed ${seed} ${p.key} 오오라 ${id} — 준비 ${p.ready[j]}`); return; }
-            const want = tenth(cooldownSec(B, { cdr: us[i].combat.cooldown_reduction ?? 0 }, SYS.skill.defs[id]));
-            if (Math.abs(p.ready[j] - want) > 0.05 || ((SYS.skill.defs[id].cool ?? 0) > 0 && !(p.ready[j] > 0)))
-                fail(`seed ${seed} ${p.key} ${id} — 첫 준비 ${p.ready[j]} ≠ 0초 + 쿨 ${want}`);
+            if (p.ready[j] !== 0) fail(`seed ${seed} ${p.key} ${id} — 첫 준비 ${p.ready[j]} ≠ 0초`);
             party++;
             const c = firstCast(p.key, id, 0, r.timeline.length);
-            if (c) { casts++; if (c.t < p.ready[j] - 0.05) fail(`seed ${seed} ${p.key} ${id} — ${c.t}초에 썼는데 준비는 ${p.ready[j]}`); }
+            if (!c) return;
+            casts++;
+            // 옛 규칙(쿨부터 돈다 · R89)이면 나올 수 없는 시각 — 쿨 한 바퀴가 돌기 전의 첫 시전
+            if (c.t < cooldownSec(B, { cdr: us[i].combat.cooldown_reduction ?? 0 }, SYS.skill.defs[id]) - 0.05) early++;
         }));
         const starts = r.timeline.flatMap((ev, i) => ev.e === 'round' ? [i] : []);
         starts.forEach((i, k) => {
             const ev = r.timeline[i], to = starts[k + 1] ?? r.timeline.length;
             for (const e of ev.enemies) (e.actives ?? []).forEach((id, j) => {
                 if (SYS.skill.defs[id].kind === 'aura') { if (e.ready[j] !== 0 && e.ready[j] !== null) fail(`seed ${seed} 라운드 ${ev.n} ${e.key} 오오라 ${id} — 준비 ${e.ready[j]}`); return; }
-                const cool = SYS.skill.defs[id].cool ?? 0, gap = e.ready[j] - ev.t;
-                // 적의 쿨감소는 이벤트에 없다 — 바닥(skill_cd_floor_mult) ~ 쿨 사이면 「등장 시각 + 쿨」이다
-                if (gap < cool * B.skill_cd_floor_mult - 0.15 || gap > cool + 0.15)
-                    fail(`seed ${seed} 라운드 ${ev.n} ${e.key} ${id} — 첫 준비 ${e.ready[j]} (등장 ${ev.t} · 쿨 ${cool})`);
+                if (Math.abs(e.ready[j] - ev.t) > 0.05) fail(`seed ${seed} 라운드 ${ev.n} ${e.key} ${id} — 첫 준비 ${e.ready[j]} ≠ 등장 라운드 시작 ${ev.t}`);
                 enemy++;
                 const c = firstCast(e.key, id, i, to);
-                if (c) { casts++; if (c.t < e.ready[j] - 0.05) fail(`seed ${seed} 라운드 ${ev.n} ${e.key} ${id} — ${c.t}초에 썼는데 준비는 ${e.ready[j]}`); }
+                if (!c) return;
+                casts++;
+                // 적의 쿨감소는 이벤트에 없다 — 바닥(skill_cd_floor_mult) 배수보다 먼저 썼으면 확실히 한 바퀴 전이다
+                if (c.t - ev.t < (SYS.skill.defs[id].cool ?? 0) * B.skill_cd_floor_mult - 0.05) early++;
             });
         });
     }
-    if (!party || !enemy || !casts) fail(`표본 부족 — 파티 칸 ${party} · 적 칸 ${enemy} · 시전 ${casts}`);
-    return `파티 칸 ${party} · 적 칸 ${enemy} · 첫 시전 ${casts}`;
+    if (!party || !enemy || !casts || !early) fail(`표본 부족 — 파티 칸 ${party} · 적 칸 ${enemy} · 시전 ${casts} · 쿨 한 바퀴 전 시전 ${early}`);
+    return `파티 칸 ${party} · 적 칸 ${enemy} · 첫 시전 ${casts} · 쿨 한 바퀴 전 ${early}`;
 });
 
 check('createRun: 라운드 경계의 갈아입기 — 바뀐 영웅만 · 현재 HP 유지(새 최대치로 자름) · 남은 스킬은 쿨 그대로 · 새 스킬은 그 순간부터 한 바퀴 · advanceRun 이 그 순간의 영웅을 넘긴다 (R89 D3 · D4 · D5)', () => {

@@ -393,16 +393,14 @@ export function createBattleSystem(data) {
             rank: p.rank ?? 0,           // 진형 — 편성이 정한 자리 (state.formationState · 배치가 없으면 전열)
             next: i * 0.3,               // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
             reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
-            // 칸 순서 = 출처 자리. 첫 준비 시각은 바로 아래에서 쿨 한 바퀴로 박는다 (R89)
+            // 칸 순서 = 출처 자리. **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 첫 준비 시각 0.
+            //   동시 준비는 칸 순서라(`SK.pickReady`) 첫 차례는 1번 칸이다. rng 0
             actives: (SK ? p.actives ?? [] : []).map(a => {
                 const def = SK.resolve(a);
                 if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
                 return { id: a.id, def, readyAt: 0, source: a.source };
             }),
         }));
-        // 스킬은 **쿨부터 돈다** [개정 2026-09-14 · R89 · battle_design §6] — 전투 시작 0초에서 한 바퀴 뒤에 처음 쓴다.
-        //   시전 뒤의 쿨과 같은 식이다(`cooldownSec` · 쿨감소 반영). rng 0 · 곧바로 쓰는 스킬은 「전투 시작 시 발동」 태그로 따로 연다(GAME_DESIGN §10 · 미구현)
-        for (const p of party) for (const a of p.actives) a.readyAt = cooldownSec(B, p, a.def);
         /*
          * 오오라 — **쿨 없이 상시이고 행동을 안 먹는다** (skill_design §1-5). 그래서 액티브 칸에서 빼고
          *   전투 시작에 `until: Infinity` 창으로 건다: 창 만료가 영원히 안 걸리므로 상시가 되고,
@@ -544,8 +542,8 @@ export function createBattleSystem(data) {
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
             const enemyAuras = applyAuras(units.enemies);
-            // 적 스킬도 **쿨부터 돈다** [2026-09-14 · R89 · battle_design §6] — 등장한 순간부터 한 바퀴. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
-            for (const e of units.enemies) for (const a of e.actives) a.readyAt = t + cooldownSec(B, e, a.def);
+            // 적 스킬도 **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 등장 라운드 시작 시각에 곧바로 쓴다. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
+            for (const e of units.enemies) for (const a of e.actives) a.readyAt = t;
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
             for (const e of units.enemies) e.next = 0.4 + rng() * 0.6;
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };

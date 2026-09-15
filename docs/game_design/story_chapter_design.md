@@ -1,6 +1,6 @@
 # 스토리 · 챕터 설계
 
-> SSOT: `src/data/inherited/chapter_info.csv` · `src/data/inherited/status_effect.csv`
+> SSOT: `src/data/chapter.csv`(챕터 이름 · 죄종 — 2026-08-28 계승 `chapter_info.csv` 를 대체) · 상태이상은 계승 `src/data/inherited/status_effect.csv`(읽기 전용 · 코드 미연결)
 > **정본 = TheSevenTactics 최신본** [확정 2026-09-14 사용자] — 전체 라인 [story/story_line.md](story/story_line.md) · 프롤로그 [story/prologue.md](story/prologue.md) · 챕터 원고 [story/ch1_wrath.md](story/ch1_wrath.md) ~ [story/ch7_pride.md](story/ch7_pride.md)
 
 ---

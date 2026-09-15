@@ -790,7 +790,7 @@ html, body { height: 100%; overflow: hidden; }
 .tooltip:has(> .tip-card.unit.alt) { max-width: none; }
 /* 자리는 격자가 정한다 [개정 2026-09-15 사용자 지시 · ADR-0126] — 세부 옵션 1 · 2 가 기본 옵션 열의 **바깥쪽**에 선다:
    카드 오른쪽에 선 툴팁은 [기본][1][2] · 왼쪽에 선 툴팁(`grow-left`)은 [1][2][기본]. 기본 열은 Alt 를 눌러도 제자리다(DOM 순서는 그대로).
-   이름 · 소속 줄은 없다(ADR-0129) — 한 줄짜리 격자다.
+   이름 · 소속 줄은 없다(ADR-0134) — 한 줄짜리 격자다.
    세부 옵션 두 열은 **같은 폭** — `1fr 1fr` 이고 카드는 내용 폭으로 재므로 더 긴 열의 폭을 둘이 똑같이 갖는다.
    열 사이 선은 **틈 한가운데의 가짜 요소**다 — 열의 테두리 · 여백으로 그으면 첫 열과 나머지 열의 안쪽 폭이 여백만큼 달라져 「같은 폭」이 깨진다.
    `stretch` — 선이 가장 긴 열 높이까지 내려간다 */
@@ -1209,6 +1209,10 @@ html, body { height: 100%; overflow: hidden; }
    그래서 옛 갈색(#6a4a2a)을 걷고 눈에 띄는 노랑으로 올린다. 배경 색조는 그대로 — 색이 둘 다 바뀌면 정예가 다른 카드로 보인다 */
 .unit.elite { border-color: var(--color-warning); background: var(--elite-bg-unit); }
 .unit.dead { opacity: .26; filter: grayscale(1); }
+/* 장착 대상 — 영웅 카드를 누르면 아래 보관 칸이 그 영웅을 향한다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137).
+   표시는 영웅 띠의 고른 카드(.hs-card.on)와 같은 **파란 겉 테두리**다 — 테두리 색은 등급이 들고 있어 아웃라인이 그 바깥에 선다 */
+.unit.click { cursor: pointer; }
+.unit.on { outline: 2px solid var(--color-info); outline-offset: 1px; }
 /* ⚠ **`.unit.buffed` 의 테두리·발광은 걷었다** (2026-09-03 사용자 지시) — 창이 켜지면 카드 전체에 파란 안쪽 선 +
    바깥 글로우를 두르던 자리다. 카드 테두리는 이미 **등급**을 말하고 있어(일반/정예/보스) 거기에 창까지 얹으면
    같은 변이 두 가지를 말한다. 「무언가 걸려 있다」도 아래 뱃지 줄이 이미 든다 — 줄이 곧 개수이자 종류다.
@@ -2232,7 +2236,7 @@ html, body { height: 100%; overflow: hidden; }
 /* 강화 모드 — 클릭이 골드를 쓰므로 칸에 비용을 적는다 (SCREEN_DESIGN §6) */
 .inv-cell { position: relative; }
 .inv-up { position: absolute; top: 1px; right: 2px; font-size: var(--fs-xs); color: var(--color-warning); }
-/* 재료 칸의 오른쪽 위 숫자는 **개수**다 — 강화 단계(+N)와 색을 갈라 둔다 (ADR-0055) */
+/* 재료 칸의 오른쪽 위 숫자는 **개수**다 — 강화 단계(+N)와 색을 갈라 둔다 (ADR-0133) */
 .mat-cell { cursor: default; }
 .mat-cell .inv-up { color: var(--text-primary); font-weight: 700; }
 /* ───────── 창 레이어 (SCREEN_DESIGN §2 · §7) ─────────

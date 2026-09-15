@@ -7,7 +7,7 @@
  *
  * battle_design.md / skill_design.md 확정 규칙:
  *   · 한 차례에 하나 (battle_design §3) — 준비된 것이 없으면 기본 공격. 발동 선택은 rng 를 쓰지 않는다
- *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **처음엔 쿨부터 돈다**(첫 준비 시각은 battle.js 가 같은 식으로 박는다 · R89)
+ *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **처음엔 준비 상태다**(전투 시작 · 등장 — battle.js 가 박는다 · R100) · 원정 도중 새로 생긴 스킬만 첫 준비 시각에 같은 식을 쓴다
  *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 스킬의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
  *   · 회복 밑수는 마법 공격력 **범위** (battle_design §9-1 · §9-2) — **시전마다 양을 한 번 굴린다**(rng 1회 · R90). 능력치 항(`flat`)은 배율에 안 곱하고 더한다
@@ -33,7 +33,7 @@ export function createHooks() {
 }
 
 /**
- * 쿨 한 바퀴의 길이(초) — 시전 뒤의 `readyAt` 과 **첫 준비 시각**(전투 시작 · 등장 · 갈아입기)이 같은 식을 쓴다 [2026-09-14 · R89].
+ * 쿨 한 바퀴의 길이(초) — 시전 뒤의 `readyAt` 과 **원정 도중 새로 생긴 스킬의 첫 준비 시각**(갈아입기)이 같은 식을 쓴다 [2026-09-14 · R89 · 개정 2026-09-15 R100 — 전투 시작 · 등장은 준비 상태로 출발해 안 쓴다].
  * 쿨감소는 **표기 쿨에 곱**하고(combat_stat:cooldown_reduction) [balance.csv:skill_cd_floor_mult] 배수 밑으로는 안 내려간다 —
  * 0 이면 스킬이 매 차례 나가 예산이 무너진다 (battle_design §6)
  */

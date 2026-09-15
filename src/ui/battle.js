@@ -56,6 +56,7 @@ const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math
  * @param container  붙일 곳
  * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto), onTime(t), onRetreat(), now(), frozenMs }
  *   now = 실제 시각(ms)을 읽는 시계 · frozenMs = 「멈췄다」의 문턱 — 둘 다 앱이 넘긴다 (ADR-0102)
+ *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 재생이 끝나고 사용자가 넘어갈 때 / 반복 자동 진행 시.
  * @returns 정리 함수
  */
@@ -64,6 +65,7 @@ export function mountBattle(container, opts) {
     const stage = D.stages[stageId];
     const state = {
         combatOf: opts.combatOf ?? null,   // 영웅 툴팁의 세부 옵션 — `game.heroCombat(G, h)` 는 앱이 든다(재생기는 G 를 모른다 · ADR-0114)
+        pickedUid: opts.pickedUid ?? null, onPickHero: opts.onPickHero ?? null,   // 장착 대상 고르기 — 선택은 앱의 화면 상태다 (ADR-0137)
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
         // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
@@ -93,7 +95,7 @@ export function mountBattle(container, opts) {
             atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType,   // 툴팁 문장의 피해·회복량(범위 · R90) — 전투에는 안 쓴다 (INTERFACE §2-6)
             // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
             stats: p.stats ?? null,
-            // 스킬은 쿨부터 돈다 — 첫 준비 시각은 결과가 싣는다(`party[].ready` · R89). 칸은 덮인 채로 출발한다
+            // 첫 준비 시각은 결과가 싣는다(`party[].ready`). 스킬은 준비 상태로 출발해 칸은 걷힌 채 선다 (R100)
             // 오오라도 제 칸에 선다 — 켜진 오오라는 준비 `0`(늘 걷힌 칸) · 안 켜진 오오라는 `null`(늘 덮인 칸) (R98 · ADR-0127)
             skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(p.ready?.[i], 0), firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
@@ -323,7 +325,9 @@ function renderUnits(state, root) {
             // 등급이 카드의 색을 정한다 — 몬스터는 스폰 등급(정예·보스), 영웅은 **영웅 등급**(`tier-*`).
             // 죄종은 색을 갖지 않는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §5) — 색은 CSS 가 클래스로 든다(인라인 없음)
             const tier = u.side === 'party' ? ` tier-${u.hero?.tier ?? 'rare'}` : '';
-            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${tier}${u.hp <= 0 ? ' dead' : ''}`;
+            // `click` = 누르면 장착 대상이 되는 영웅 카드 · `on` = 지금 장착 대상 (ADR-0137)
+            const pick = u.hero && state.onPickHero ? ` click${u.hero.uid === state.pickedUid ? ' on' : ''}` : '';
+            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${tier}${pick}${u.hp <= 0 ? ' dead' : ''}`;
             // ⚠ **죄종 테두리색은 걷었다** (2026-09-03 사용자 지시) — 정예의 윗변을 죄종 색으로 칠하던 인라인 스타일이다.
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
             // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
@@ -378,6 +382,8 @@ function renderUnits(state, root) {
             // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null), { anchor: true });
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u), { anchor: true });
+            // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
+            if (u.hero && state.onPickHero) n.onclick = () => state.onPickHero(u.hero.uid);
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
                 // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
