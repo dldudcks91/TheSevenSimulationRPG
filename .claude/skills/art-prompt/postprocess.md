@@ -93,6 +93,21 @@ def normalize(img, target=0.74, S=512):
 
 세로가 512 를 넘으면(`nh > S`) 인물이 세로로 긴 것 — 위를 자르지 말고 `target` 을 낮춰 다시 맞춘 뒤 보고한다.
 
+## 3-1. ⚠ 어깨가 넓은 영웅은 **얼굴(눈)로** 앉힌다 (2026-09-16)
+
+`hd/sh` 가 앵커 대역(70~73) 밖으로 넓으면 74% 는 그만큼 **얼굴을 작게** 만든다 — 네모 칸 `contain` 이라 그 차이가
+같은 줄에서 「혼자 뒤로 물러난」 것으로 읽힌다(`mage_2` 눈 사이 76px · `mage_3` 67px 대 설치본 중앙값 89px).
+그럴 때만 74% 를 버리고 **눈 사이 89px · 눈높이 y 235 · 눈 중점 x 315**(512² 기준)로 앉힌다 — 어깨는 결과로 정해지고
+아래가 잘리는 것이 정상이다. 눈은 침식 3px 로 선화를 지우면 검은 두 덩이만 남아 자동으로 잡힌다.
+
+```python
+python .claude/skills/art-prompt/align_hero_faces.py           # 실측만
+python .claude/skills/art-prompt/align_hero_faces.py --write   # source/hero + cartoon/hero 에 설치
+```
+
+새 장을 이 기준으로 앉히면 그 파일의 `SPEC` 에 `(시트이름, source/hero 이름, cartoon/hero 이름)` 한 줄을 더한다.
+기준값의 근거와 어느 장이 이 기준인지는 [faces/source/README.md](../../../src/assets/art/faces/source/README.md) 「영웅을 얼굴로 앉힌다」.
+
 ⚠ **[src/assets/art/README.md](../../../src/assets/art/README.md) 「영웅 초상 여백 정규화 (09-03)」 는 반대 방향(여백을 걷어 칸을 채운다)이다.** 그 규칙은 지금은 삭제된 09-03 세트(가로 57~88%)를 위한 것이었고, 현행 5장(검투사·바바리안·로마군)은 그 절차 없이 71~75% 에 앉아 있다. **현행 기준은 74% 고정이다** — README 의 그 절은 갱신 대상(미수행 · 2026-09-06).
 
 ## 4. 한 번에 — 시트 → 4장
@@ -126,4 +141,4 @@ for tag, box in TILES.items():
 | 후드 속이 검은 구멍 | ✕ 재발주 (그 타일만) |
 
 ---
-*마지막 업데이트: 2026-09-14*
+*마지막 업데이트: 2026-09-16*

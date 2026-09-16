@@ -3,6 +3,7 @@
 > 기준 배경: `src/assets/art/backgrounds/pixel/background_stage_101.webp` (계승 포크 · 손 안 댄 원본은 `source/pixel/`, 읽기 전용)
 > 대상: `src/data/monster.csv` 의 chapter=1 · stage_num=1 (4종)
 > 목적: **신규 몬스터 아트를 계승 배경의 팔레트·픽셀 밀도에 맞춰 뽑기 위한 프롬프트 SSOT**
+> ⚠ **이 문서는 도트 전신 시절의 것이다** [2026-09-16] — 지금 돌고 있는 카툰 흉상 발주의 원문은 [monster_portrait_prompts.md](monster_portrait_prompts.md) 에 챕터별로 쌓는다.
 
 ---
 
