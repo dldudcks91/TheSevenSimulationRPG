@@ -94,13 +94,19 @@
  *     · `reports[*].xpEach`(전원 동일) → `xp: {uid: n}`(영웅별) — 옛 리포트는 그때 전원이 같은 양을 받았으므로 `party` 마다 옮긴다 · `run.active = false`. rng 0
  *   v25 → v26 (2026-09-14 — 무기 피해는 최소 ~ 최대 범위 · R90):
  *     · `items[*].watk` 를 지운다 — 무기 피해는 무기군 · ilvl · 강화에서 파생한다(formula.weaponDamage). 옛 무기는 같은 조건의 범위로 돌아간다. rng 0
+ *   v27 → v28 (2026-09-16 — 방어구 고유값이 부위 배수 · 갑옷군 배수 · 10레벨 구간 직선으로 · R107):
+ *     · `items[*].implicit.v` 를 **지금 공식의 바탕값**으로 다시 앉힌다(`item.baseImplicit`) — 옛 공식(9.5 + ilvl × 0.15)이 새 대역의 1/5 라 그냥 두면 옛 방어구만 종잇장이 된다.
+ *       개체 편차는 못 살린다(다시 굴리면 rng 순서가 깨진다) · 옛 갑옷은 `group` 이 없어 갑옷군 배수 1.0(경갑 자리)으로 앉는다. rng 0
+ *   v26 → v27 (2026-09-16 — 장비 옵션은 소수를 두지 않는다 · 사용자 지시):
+ *     · `items[*].implicit.v` · `items[*].affixes[*].v` 를 반올림한다. 옛 아이템만 소수로 남는 것을 막는다.
+ *       **오만 「레벨당 데미지 +%」(`dmg_per_level_pct`)는 건드리지 않는다** — 1 보다 작은 값이 본질이라 값 대역부터 다시 정할 자리다. rng 0
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 
-export const SAVE_VERSION = 26;
+export const SAVE_VERSION = 28;
 
 /**
  * @param {object} deps
@@ -608,6 +614,36 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * 장비 옵션은 소수를 두지 않는다 [2026-09-16 · 사용자 지시] — 이미 저장된 값을 정수로 올린다.
+     * `fine` 한 행(오만 「레벨당 데미지 +%」)만 빼고 반올림한다 — 1 보다 작은 값이 그 옵션의 본질이라
+     * 정수로 올리면 만렙 기여가 2~5배로 뛴다. 값 대역을 다시 정할 때 같이 처리한다 (item.js `valueOf`)
+     */
+    function upgradeV26(s) {
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it) continue;
+            if (it.implicit) it.implicit.v = Math.max(1, Math.round(it.implicit.v));
+            for (const a of it.affixes ?? []) if (a.stat !== 'dmg_per_level_pct') a.v = Math.max(1, Math.round(a.v));
+        }
+        s.version = 27;
+        return s;
+    }
+
+    /**
+     * 방어구 고유값이 **부위 배수 × 갑옷군 배수 × 10레벨 구간 직선**이 됐다 [2026-09-16 사용자 확정 · R107 · item_design §1].
+     * 옛 값은 `armor_def_base(9.5) + ilvl × armor_def_per_ilvl(0.15)` 이라 새 대역의 1/5 수준이다 — 그대로 두면
+     * 옛 방어구만 쓸모가 없어지므로 지금 공식의 바탕값으로 앉힌다. 개체 편차는 버린다(다시 굴리면 rng 순서가 깨진다). rng 0
+     */
+    function upgradeV27(s) {
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it?.implicit) continue;
+            const v = I.baseImplicit(it);
+            if (v !== null) it.implicit.v = v;
+        }
+        s.version = 28;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -619,7 +655,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -646,6 +682,8 @@ export function createGameSystem(deps) {
         if (s.version === 23) s = upgradeV23(s);
         if (s.version === 24) s = upgradeV24(s);
         if (s.version === 25) s = upgradeV25(s);
+        if (s.version === 26) s = upgradeV26(s);
+        if (s.version === 27) s = upgradeV27(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;

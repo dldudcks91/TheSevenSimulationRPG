@@ -372,6 +372,7 @@ function render() {
     if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
     applyDocumentLang();
     M.applyDocumentFace();
+    M.applyDocumentBg();
     if (G) {
         if (!heroById(state.heroUid)) state.heroUid = G.heroes[0]?.uid ?? null;
     }
@@ -3749,11 +3750,15 @@ function renderHelp(main) {
 /** 화면은 1600×800 한 장이다 — 창에 맞춰 **통째로** 줄이고 늘린다 (SCREEN_DESIGN §2 · ADR-0087).
  *  한 장의 크기는 CSS(`#stage`)가 든다 — 여기는 읽기만 한다.
  *  **터치 기기에서 창이 세로로 길면 시계 방향 90° 눕힌다** (ADR-0109) — 폰을 가로로 돌려 본다. PC 는 창을 세로로 좁혀도 안 눕는다.
+ *  **창은 보이는 만큼이다** (ADR-0153) — 모바일 브라우저 바가 덮은 자리를 뺀 `visualViewport` 로 잰다. 배율도 눕힘 판정도 그 값 하나다.
  *  좌표를 되돌리는 쪽(`tip.js:stagePoint`)은 여기서 건 행렬을 그대로 뒤집는다 — 공식을 두 벌 두지 않는다 */
 function fitStage() {
     const st = document.getElementById('stage');
     if (!st) return;
-    const w = st.offsetWidth, h = st.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+    // 창은 **보이는 만큼**이다 (ADR-0153) — `innerWidth/Height` 는 모바일 브라우저 바가 덮어도 안 줄고 창 resize 도 안 온다
+    const vv = window.visualViewport;
+    const w = st.offsetWidth, h = st.offsetHeight;
+    const W = vv ? vv.width : window.innerWidth, H = vv ? vv.height : window.innerHeight;
     if (H > W && matchMedia('(pointer: coarse)').matches) {
         const s = Math.min(W / h, H / w);
         // rotate(90deg) 는 한 장을 원점 왼쪽으로 넘긴다 — 눕힌 폭(h × s)만큼 오른쪽으로 되민다
@@ -3772,6 +3777,8 @@ async function boot() {
     // 한 장을 창에 맞춘다 — **G 가 없어도** 먼저(시작 화면도 한 장이다) · 창 크기가 바뀔 때마다 다시 (ADR-0087)
     fitStage();
     window.addEventListener('resize', fitStage);
+    // 브라우저 바가 오르내리면 보이는 창만 바뀌고 창 resize 는 안 온다 (ADR-0153)
+    window.visualViewport?.addEventListener('resize', fitStage);
     await loadData();
     state.candidates = rollCandidates();
     // 전에 로그인해 둔 브라우저면 클라우드와 먼저 맞춘다 — 받은 사본이 있으면 그것을 연다 (SCREEN_DESIGN §2-1 · ADR-0112)

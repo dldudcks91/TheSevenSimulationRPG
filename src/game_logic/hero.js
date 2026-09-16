@@ -37,6 +37,7 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   sins         — 죄종 id 목록
  *   classes      — 직업 정의 [{id, keyAttr, stage}...]
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
+ *   armorGroups  — {id: {defMult, aspdPct, cdrPct, ...}} ← armor_group.csv. **갑옷 칸이** 공속·쿨감을 정한다 (2026-09-16 · R107)
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
  *   skillPool    — **직업별** 고유 스킬 후보 `{classId: [skillId...]}` ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
@@ -418,10 +419,13 @@ export function createHeroSystem(data) {
             * (1 + f('hp_pct') / 100)
             * (1 + (codex.hp_pct ?? 0) / 100));
 
+        // 갑옷군이 공속·쿨감을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — **갑옷 칸 하나만** 본다(09-07 적용 범위).
+        //   중갑은 음수(느려진다) · 경갑은 양수 · 로브는 0 이고 쿨감을 든다. 숙련(마스터리)이 그 위에 얹혀 중갑의 손해를 되산다
+        const armorGroup = (data.armorGroups ?? {})[items.find(it => it?.slot === 'armor')?.group] ?? null;
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
             / attrMult('agi', A.agi)
-            * (1 - f('aspd_pct') / 100));
+            * (1 - (f('aspd_pct') + (armorGroup?.aspdPct ?? 0)) / 100));
 
         const resAll = f('res_all');
         const luckMult = attrMult('luck', A.luck);
@@ -468,7 +472,7 @@ export function createHeroSystem(data) {
             hp_regen: Number(
                 (B.hp_regen_base_per_level * F.growthMult(hero.level) + f('hp_regen'))
                     .toFixed(3)),
-            cooldown_reduction: f('cooldown_reduction'),    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js)
+            cooldown_reduction: f('cooldown_reduction') + (armorGroup?.cdrPct ?? 0),    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js) · 로브가 여기 얹힌다 (R107)
             action_period: Number(period.toFixed(3)),
             dmg_bonus_pct: codex.dmg_pct ?? 0,
             gold_find: Math.round(f('gold_find') * luckMult),

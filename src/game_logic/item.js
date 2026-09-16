@@ -64,6 +64,7 @@ import { createFormula } from './formula.js';
 export function createItemSystem(data) {
     const B = data.balance;
     const WG = data.weaponGroups;
+    const AG = data.armorGroups ?? {};   // armor_group.csv — 갑옷군 3갈래 (2026-09-16 · R107)
     const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
     const r1 = v => Math.round(v * 10) / 10;
@@ -118,13 +119,14 @@ export function createItemSystem(data) {
 
     /**
      * 값 하나 — 정의의 `scale` 이 정한다 (item_design §2-1):
-     *   growth — 굴림 × growthMult(ilvl), 소수 1자리 (밑수가 2.3 대역이라 정수로 반올림하면 뭉개진다)
+     *   growth — 굴림 × growthMult(ilvl), 정수 [2026-09-16 사용자 지시 — 장비 옵션은 소수를 두지 않는다]
      *   band   — 굴림 + ilvl × perIlvl, 정수 (비율 축은 완만하게만 오른다)
      *   flat   — 굴림 그대로, 정수. **ilvl 무관** — % 접사가 곡선을 타면 곱셈층이 두 번 자라 후반이 폭주한다
-     *   fine   — flat 과 같되 소수 1자리. **무기 옵션 표에만** 있다(레벨당 데미지처럼 1 보다 작은 값 · 2026-09-11)
+     *   fine   — flat 과 같되 소수 1자리. **소수가 남은 유일한 자리**다 — 오만 「레벨당 데미지 +%」(0.2~0.5) 한 행뿐이고,
+     *            정수로 올리면 만렙 기여가 2~5배로 뛰어 값 대역부터 다시 정해야 한다 (2026-09-16 보류 · GAME_DESIGN §10)
      */
     const valueOf = (d, roll, ilvl) =>
-        d.scale === 'growth' ? Math.max(0.1, r1(roll * F.growthMult(ilvl)))
+        d.scale === 'growth' ? Math.max(1, Math.round(roll * F.growthMult(ilvl)))
             : d.scale === 'band' ? Math.max(1, Math.round(roll + ilvl * (d.perIlvl ?? 0)))
                 : d.scale === 'fine' ? Math.max(0.1, r1(roll))
                     : Math.max(1, Math.round(roll));
@@ -177,14 +179,19 @@ export function createItemSystem(data) {
 
     /**
      * 부위 고유값(Implicit) — 방어구만 든다 (무기는 피해 범위 — 파생 `weaponDamage` · 목걸이·반지는 없다).
-     * 방어는 **비율 축**이라 성장 곡선을 타지 않는다 (§9-0) — ilvl 완만 가산 + 개체 편차 1회.
-     * 부위별 배수는 없다 — 보조(offhand) ×1.5 는 슬롯 폐지와 함께 삭제 (2026-09-01).
+     * 방어는 **비율 축**이라 곱셈 곡선을 타지 않는다 (§9-0) — ~~ilvl 완만 가산~~ → **10레벨 구간 직선**(2026-09-16 · R107) + 개체 편차 1회.
+     * **부위 배수가 생겼다** [2026-09-16 사용자 확정] — 갑옷 2.0 · 투구 1.0 · 장갑 0.6 · 신발 0.6(`armor_def_slot_*`).
+     *   ~~부위별 배수는 없다~~(2026-09-01 보조 슬롯 폐지 때의 서술)를 대체한다.
+     * **갑옷군 배수는 갑옷 칸에만** 걸린다 [09-07 적용 범위 확정] — 중갑 1.6 · 경갑 1.0 · 로브 0.5(`armor_group.csv:def_mult`).
+     * 값은 **정수**다 [2026-09-16 사용자 지시] — 표기 = 계산.
      */
-    function implicitFor(rng, slot, ilvl) {
+    function implicitFor(rng, slot, ilvl, group = null) {
         if (slot === 'weapon' || baseless(slot)) return null;    // rng 소비 없음
         const eps = (rng() * 2 - 1) * B.armor_def_variance_pct / 100;
-        const base = B.armor_def_base + ilvl * B.armor_def_per_ilvl;
-        return { stat: 'def_flat', v: r1(base * (1 + eps)) };
+        const slotMult = B[`armor_def_slot_${slot}`];
+        if (typeof slotMult !== 'number') throw new Error(`item: balance.csv 에 'armor_def_slot_${slot}' 이 없다`);
+        const gm = group ? (AG[group]?.defMult ?? 1) : 1;
+        return { stat: 'def_flat', v: Math.max(1, Math.round(F.armorDefense(ilvl, slotMult, gm) * (1 + eps))) };
     }
 
     /**
@@ -246,7 +253,10 @@ export function createItemSystem(data) {
             const sr = rng();
             item.skill = pool.length ? pool[Math.floor(sr * pool.length)] : null;
         } else {
-            item.implicit = implicitFor(rng, slot, ilvl);
+            // 갑옷군 — **갑옷 칸만** 든다 (item_base.csv:group · 09-07 「적용 범위 = 갑옷 한 칸」).
+            //   무기의 `group`(무기군)과 같은 필드를 쓴다 — 슬롯이 둘을 가른다
+            if (base?.group) item.group = base.group;
+            item.implicit = implicitFor(rng, slot, ilvl, base?.group ?? null);
         }
         return item;
     }
@@ -393,11 +403,24 @@ export function createItemSystem(data) {
      * 읽기용 사본 — **방어구 고유값**에 강화 배율을 먹인다. 접사는 값이 이미 박혀 있어 손대지 않는다.
      * `up` 이 0 이거나 고유값이 없으면(무기 · 목걸이 · 반지) **원본을 그대로** 돌려준다 — 전투·렌더가 매번 부르는 자리라 할당을 아낀다.
      * 무기 피해는 사본에 안 싣는다 — `weaponDamage` 가 `up` 을 받아 따로 낸다 (R90)
+     * 강화까지 먹인 값도 **정수**다 [2026-09-16] — 무기 피해 양끝과 같은 규칙(곱을 다 한 뒤 한 번 반올림).
      */
     function effective(item) {
         if (!item || !(item.up > 0) || !item.implicit) return item;
-        return { ...item, implicit: { ...item.implicit, v: r1(item.implicit.v * F.upgradeMult(item.up)) } };
+        return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage };
+    /**
+     * 세이브 이관용 — 방어구 고유값을 **지금 공식의 바탕값**으로 다시 낸다 (2026-09-16 · R107).
+     * 개체 편차는 못 살린다(다시 굴리면 rng 순서가 깨진다) — 편차 없는 가운데 값으로 앉힌다. **rng 0**
+     */
+    const baseImplicit = item => {
+        if (!item || item.slot === 'weapon' || baseless(item.slot)) return null;
+        const slotMult = B[`armor_def_slot_${item.slot}`];
+        if (typeof slotMult !== 'number') return null;
+        const gm = item.group ? (AG[item.group]?.defMult ?? 1) : 1;
+        return Math.max(1, Math.round(F.armorDefense(item.ilvl, slotMult, gm)));
+    };
+
+    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
 }

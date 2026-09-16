@@ -149,13 +149,20 @@
        기본값은 손그림 쪽(보간 켬) — 신호(`<html data-face>`)가 아직 없어도 안전한 쪽으로 떨어진다.
        SCREEN_DESIGN §5 · 신호는 `mock.js:applyDocumentFace` 가 단다 */
     --face-render: auto;
+
+    /* 2026-09-16 — 배경 축소 보간. 초상과 같은 문법이다: **정식 배경이 일러스트**라 `auto` 가 안전한 쪽이고
+       (신호 `<html data-bg>` 가 없어도 붓질의 선이 안 끊긴다), 도트 스타일만 아래에서 뒤집는다.
+       신호는 `mock.js:applyDocumentBg` 가 단다 · ADR-0152 */
+    --bg-render: auto;
 }
 /* 도트그래픽 스타일 — 보간하면 도트가 뭉갠다. 손그림에 이걸 걸면 반대로 픽셀을 건너뛰며
    샘플링해 선이 끊긴다(512를 26px 칸에 넣으면 20픽셀 중 1픽셀만 남는다).
-   ⚠ 배경 아트(#stage::before · .arena.has-bg)의 `pixelated` 는 여기와 무관하다 —
-      그쪽은 스타일과 상관없이 늘 픽셀아트다. **단 `.ex-map`(탐험 지도)은 예외** — 같은 폴더에 있어도
-      계승이 아니라 신규 카툰 아트라 보간을 켠다 (2026-09-04) */
+   ⚠ 배경 아트의 `pixelated` 는 여기가 아니라 **형제 토큰 `--bg-render`** 가 든다 [2026-09-16 — 배경도 스타일을 탄다].
+      ⚠ 스타일을 안 타는 자리 둘 — `#stage::before`(거점)는 계승 도트 한 벌뿐이라 `pixelated` 를 박고,
+      `.ex-map`(탐험 지도)은 신규 카툰 아트라 아예 안 건다 (2026-09-04) */
 :root[data-face="pixel16"] { --face-render: pixelated; }
+/* 도트 스타일 — 보간하면 도트가 뭉갠다. 기본값(일러스트)은 반대로 켜 둬야 축소할 때 선이 안 끊긴다(초상에서 겪은 것과 같은 함정) */
+:root[data-bg="pixel"] { --bg-render: pixelated; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -202,11 +209,14 @@ body {
    **한 장(#stage) 안에 깐다** [2026-09-14 사용자 지시 · ADR-0107] — 창 전체(`body` · `position: fixed`)에 `cover` 로 깔면
    크기가 한 장이 아니라 창을 따라, 세로로 긴 모바일에서 그림만 크게 확대됐다. 한 장 바깥 가장자리는 `body` 의 바닥색이다.
    경로는 이 CSS 파일 기준 상대경로 (src/ui/ → src/assets/)
-   **읽는 것은 워터마크 띠를 잘라 낸 사본이다** (`backgrounds_clean/` · 2026-09-11 사용자 지시) — 원본은 오른쪽 아래에 생성기 ✦ 가 박혀 있어
-   창 비율에 따라 드러났다. 레시피 · 근거는 src/assets/art/README.md 「backgrounds_clean/」 */
+   **읽는 것은 워터마크 띠를 잘라 낸 사본이다** (2026-09-11 사용자 지시) — 원본은 오른쪽 아래에 생성기 ✦ 가 박혀 있어
+   창 비율에 따라 드러났다. 레시피 · 근거는 src/assets/art/README.md 「backgrounds/」
+   ⚠ **거점은 배경 스타일을 안 탄다** — 도트 한 벌뿐이라 `pixel/` 을 직접 박았고, 그래서 보간도
+   `--bg-render` 가 아니라 `pixelated` 고정이다. ⚠ 정식 배경이 일러스트가 된 뒤로 **거점만 도트로 남아 있다** —
+   거점 일러스트가 나오면 이 두 줄을 같이 고친다 (`mock.js:TOWN_BG` 도 같은 경로를 박는다 · ADR-0152) */
 #stage::before {
     content: ''; position: absolute; inset: 0; z-index: -2;
-    background: url('../assets/art/backgrounds_clean/town.webp') center top / cover no-repeat;
+    background: url('../assets/art/backgrounds/pixel/town.webp') center top / cover no-repeat;
     image-rendering: pixelated;
     opacity: var(--art-opacity);
 }
@@ -495,7 +505,7 @@ html, body { height: 100%; overflow: hidden; }
     margin-bottom: 8px;
 }
 /* 69.3% = 잘라 낸 사본(2752×1360)에서 원본(×1536)의 60% 와 **같은 띠**가 보이는 값 — 행 그림은 안 바뀐다 (2026-09-11 · 아래 `.arena.has-bg`) */
-.zone.has-bg { background-size: cover; background-position: center 69.3%; image-rendering: pixelated; }
+.zone.has-bg { background-size: cover; background-position: center 69.3%; image-rendering: var(--bg-render); }
 .zone.locked { opacity: .45; }
 .zone.boss { border-left-color: var(--text-accent); }
 .zone .title { display: flex; align-items: center; gap: 8px; }
@@ -1096,13 +1106,13 @@ html, body { height: 100%; overflow: hidden; }
     border: 1px solid var(--border-dark);
     position: relative;
 }
-/* 스테이지 배경 = TheSevenRPG 계승 픽셀아트에서 **아래 워터마크 띠를 잘라 낸 사본** (2752×1360 · `backgrounds_clean/`). 없는 스테이지는 위 그라디언트로 폴백
+/* 스테이지 배경 = **아래 워터마크 띠를 잘라 낸 사본** (`backgrounds/<스타일>/` — 계승 도트는 2752×1360, 신규 아트는 1376×615). 없는 스테이지는 위 그라디언트로 폴백
    [2026-09-11 사용자 지시] 원본(2752×1536)은 오른쪽 아래에 생성기 ✦ 가 박혀 있다. 넓게 보기(비 약 2.66)는 `cover` 가 아래를 12% 잘라
-   우연히 가렸고, 나눔 보기(약 1.97)는 3% 만 잘려 드러났다 — CSS 로 가리지 않고 그림에서 뺐다 (src/assets/art/README.md 「backgrounds_clean/」) */
+   우연히 가렸고, 나눔 보기(약 1.97)는 3% 만 잘려 드러났다 — CSS 로 가리지 않고 그림에서 뺐다 (src/assets/art/README.md 「backgrounds/」) */
 .arena.has-bg {
     background-size: cover;
     background-position: center 95.2%;      /* = 원본의 62% 와 같은 띠 — 넓게 보기 구도는 그대로다. 나눔 보기는 사본의 세로가 다 보인다 */
-    image-rendering: pixelated;             /* 픽셀아트라 보간하면 뭉갠다 */
+    image-rendering: var(--bg-render);      /* 도트는 보간하면 뭉개지고 일러스트는 안 하면 선이 끊긴다 — 스타일이 정한다 */
     border-color: var(--border-secondary);
 }
 /* 가장자리를 어둡게 눌러 유닛 카드가 배경에서 떠 보이게 한다 */
@@ -2377,7 +2387,7 @@ html, body { height: 100%; overflow: hidden; }
 
 /* 탐험 지도 — 탭 머리에 전폭으로 서는 **아트 한 장** [신설 2026-09-04 사용자 지시 · SCREEN_DESIGN §8-4]
    ⚠ **클릭을 안 받는다** — 노드·경로가 기획 백지라 손잡이가 없다. `cursor` 도 안 바꾼다(누를 수 있는 것처럼 보이면 안 된다)
-   ⚠ **`image-rendering: pixelated` 를 안 건다** — 계승 배경 4장(`#stage::before` · `.arena.has-bg`)과 달리
+   ⚠ **`image-rendering` 을 아예 안 건다** — 스테이지·거점 배경(`--bg-render` · `#stage::before`)과 달리
       이건 신규 카툰 아트라 픽셀아트가 아니다. 보간을 꺼 두면 축소할 때 선이 끊긴다 (§5 얼굴 스타일에서 겪은 것과 같은 함정)
    화면비는 자산 그대로다 — `cover` 가 잘라 내는 곳이 없다. **2752×1211 (2.27:1)** [개정 2026-09-04]:
    생성 원본은 1536 높이였고 **아래 띠(생성기 워터마크 자리)를 잘라 낸** 것이 이 값이다. 세로가 짧아지면서

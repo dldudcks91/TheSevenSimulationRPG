@@ -64,14 +64,15 @@ state.js(deps: hero, item, battle, skill, balance, …) ──┘
 
 ### 2-3. `formula.js` — 피해 계산
 
-`createFormula(balance) → { growthMult, upgradeMult, weaponDamage, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech, attacksPerSec, effectiveCd }`
+`createFormula(balance) → { growthMult, upgradeMult, weaponDamage, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult, hitChance, strike, indirect, leech, attacksPerSec, effectiveCd }`
 입력은 `balance` 하나. 파일에 숫자 리터럴 없음. 규칙의 출처는 battle_design §9 전부(9-0 ~ 9-6).
 
 | 함수 | 시그니처 | 계약 |
 |---|---|---|
-| `growthMult(n)` | `→ ≥1` | `power_growth_per_level ^ (max(1, n) − 1)` — **성장 축의 유일한 곡선**(§9-0). 레벨과 ilvl 이 같은 곡선을 탄다. `n < 1` 은 1로 막는다 |
+| `growthMult(n)` | `→ ≥1` | `power_growth_per_level ^ (max(1, n) − 1)` — **곱셈 곡선**(§9-0). ~~성장 축의 유일한 곡선~~ → 09-14 최대 HP · 09-15 무기 피해 · **09-16 방어구 고유값**이 차례로 떠나 지금 이 곡선을 타는 것은 **HP flat 접사 · HP 재생 바탕값**뿐이다. `n < 1` 은 1로 막는다 |
 | `upgradeMult(up)` | `→ ≥1` | `1 + up × equip_upgrade_base_pct/100` — **강화 배율**(베이스 능력치 = 무기 피해 양끝 · 방어구 고유값). `item.js` 에 있던 식을 옮겼다 [2026-09-14 · R90] — 무기 피해를 `hero.computeCombat` 도 파생해야 해서 한 곳에 둔다 |
-| `weaponDamage(ilvl, group, up=0)` | `→ {min, max}` | **무기 피해 범위** [신설 2026-09-14 · R90 · battle_design §9-1] — **굴림이 아니라 파생**이다. `mid = weapon_atk_base × growthMult(ilvl)` · `w = (group?.variance ?? dmg_variance_pct)/100` · `min = max(1, round(mid × (1 − w) × upgradeMult(up)))` · `max = max(min, round(mid × (1 + w) × upgradeMult(up)))` — **반올림은 곱을 다 한 뒤 한 번 · 표기 = 계산**. 같은 무기군 · 같은 ilvl · 같은 `up` 이면 같은 범위다. 소비자는 `item.weaponDamage`(화면) · `hero.computeCombat`(전투) 둘 |
+| `weaponDamage(ilvl, group, up=0)` | `→ {min, max}` | **무기 피해 범위** [신설 2026-09-14 · R90 · battle_design §9-1] — **굴림이 아니라 파생**이다. `mid = weapon_atk_base + 구간 단위 누적합(ilvl)` [개정 2026-09-15 · R105 — ~~× growthMult(ilvl)~~] · `w = (group?.variance ?? dmg_variance_pct)/100` · `min = max(1, round(mid × (1 − w) × upgradeMult(up)))` · `max = max(min, round(mid × (1 + w) × upgradeMult(up)))` — **반올림은 곱을 다 한 뒤 한 번 · 표기 = 계산**. 같은 무기군 · 같은 ilvl · 같은 `up` 이면 같은 범위다. 소비자는 `item.weaponDamage`(화면) · `hero.computeCombat`(전투) 둘 |
+| `armorDefense(ilvl, slotMult, groupMult=1)` | `→ ≥0` | **방어구 부위 고유 방어력의 바탕값** [신설 2026-09-16 · R108 · item_design §1] — `구간 단위 누적합(ilvl) × slotMult × groupMult`. `slotMult` = `armor_def_slot_{부위}`(갑옷 2.0 · 투구 1.0 · 장갑 0.6 · 신발 0.6) · `groupMult` = `armor_group.csv:def_mult`(중갑 1.6 · 경갑 1.0 · 로브 0.5 — **갑옷 칸에만**). 개체 편차와 반올림은 부르는 쪽(`item.implicitFor`)이 한다 |
 | `mitigation(D)` | `→ 0~1` | `D / (D + def_curve_k)`. **레벨 인자 없음 — K 는 상수다**(§9-3). `D ≤ 0` 이면 0. 1에 닿지 않는다(면역 없음) |
 | `physicalDefense(def, defIgnorePct=0)` | `→ ≥0` | `max(0, def × (1 − ignore/100))` — 방어 무시는 **곡선에 넣기 전** 소재값을 깎는다(감쇠율의 %가 아니다) |
 | `resCap(resMaxBonus=0)` | `→ %` | `min(res_cap_base + resMaxBonus, res_cap_absolute)` — 기본 상한을 뚫는 유일한 수단이 최대 저항 증가, 그 위에 절대 상한 |
@@ -234,10 +235,10 @@ strike(rng, a, d):
 
 | scale | 값 | 해당 |
 |---|---|---|
-| `growth` | `max(0.1, round1(roll × growthMult(ilvl)))` — 소수 1자리 | `hp_flat` (옛 무기의 `atk_flat`) |
+| `growth` | `max(1, round(roll × growthMult(ilvl)))` — **정수** [개정 2026-09-16 · R107 — 소수 1자리였다] | `hp_flat` (옛 무기의 `atk_flat`) |
 | `band` | `max(1, round(roll + ilvl × perIlvl))` — 정수 | `def_flat` |
 | `flat` | `max(1, round(roll))` — 정수, **ilvl 무관** | 나머지 전부 (% · 저항 · 유틸) |
-| `fine` | `max(0.1, round1(roll))` — 소수 1자리, **ilvl 무관** [2026-09-11 · R78] | **무기 옵션 표에만** — 오만 `dmg_per_level_pct` |
+| `fine` | `max(0.1, round1(roll))` — 소수 1자리, **ilvl 무관** [2026-09-11 · R78] · **소수가 남은 유일한 자리** [2026-09-16 · R107 — 1 보다 작은 값이 본질이라 정수로 올리면 만렙 기여가 2~5배. 값 대역은 GAME_DESIGN §10] | **무기 옵션 표에만** — 오만 `dmg_per_level_pct` |
 
 같은 stat 은 한 아이템에 두 번 붙지 않는다 — 정의 풀에서 뽑으면 제거한다. `slots` 가 그 부위를 포함하는 정의만 풀에 들어간다(**무기는 이 풀을 안 쓴다** — 아래 「무기 옵션」 · 2026-09-11 R78).
 
@@ -410,7 +411,7 @@ strike(rng, a, d):
 
 ### 2-7. `state.js` — 상태 전이
 
-`export const SAVE_VERSION = 26`  [v26 = **무기 피해는 범위이고 파생이다** — 무기 `watk` 삭제 · R90 · 2026-09-14] [v25 = **원정 보상은 라운드 승리 순간** — 리포트 경험치가 영웅별(`xp`) · `run.active` · R89 · 2026-09-14] [v24 = **보관이 둘이다**(인벤토리 + 창고) · 2026-09-11] [v23 = **무기 옵션 세 층** · R78 · 2026-09-11] [v22 = **챕터는 5스테이지다** — 클리어 기록 소급 · R75 · 2026-09-11] [v21 = **리포트는 목록이다** · R68 · 2026-09-09] [v20 = **진형이 실물이 된다** · R67 · 2026-09-09] [v19 = **처치 가루 폐지** · R63 · 2026-09-09] [v18 = 직업 스킬 풀 · R59 · 2026-09-09] [v17 = **「출정 아웃」 폐기** · R54 · 2026-09-08] [v16 = 사제 전용 무기 · R46 · 2026-09-08] [정정 2026-09-08 — 문서가 v11 에서 멈춰 있었다. 같은 문서 §4 는 이미 v15 이관을 적고 있어 자기모순이었다]
+`export const SAVE_VERSION = 28`  [v28 = **방어구 고유값이 부위 배수 · 갑옷군 배수 · 10레벨 구간 직선으로** — `implicit.v` 재계산 · R108 · 2026-09-16] [v27 = **장비 옵션은 소수를 두지 않는다** — `implicit.v` · 접사 값 반올림(`fine` 한 행 제외) · R107 · 2026-09-16] [v26 = **무기 피해는 범위이고 파생이다** — 무기 `watk` 삭제 · R90 · 2026-09-14] [v25 = **원정 보상은 라운드 승리 순간** — 리포트 경험치가 영웅별(`xp`) · `run.active` · R89 · 2026-09-14] [v24 = **보관이 둘이다**(인벤토리 + 창고) · 2026-09-11] [v23 = **무기 옵션 세 층** · R78 · 2026-09-11] [v22 = **챕터는 5스테이지다** — 클리어 기록 소급 · R75 · 2026-09-11] [v21 = **리포트는 목록이다** · R68 · 2026-09-09] [v20 = **진형이 실물이 된다** · R67 · 2026-09-09] [v19 = **처치 가루 폐지** · R63 · 2026-09-09] [v18 = 직업 스킬 풀 · R59 · 2026-09-09] [v17 = **「출정 아웃」 폐기** · R54 · 2026-09-08] [v16 = 사제 전용 무기 · R46 · 2026-09-08] [정정 2026-09-08 — 문서가 v11 에서 멈춰 있었다. 같은 문서 §4 는 이미 v15 이관을 적고 있어 자기모순이었다]
 
 `createGameSystem(deps)` — `deps`: `hero, item, battle, skill, tactic, balance, equipSlots [{id, part}](착용 위치 8), stages(byId), stageOrder [id], monsters(byId), codex {levels:[cards_to_next], bonus:[%], statByNum:{stage_num: statKey}}`, **`sins [죄종 id]`** · **`searchStories`**(= `search_story.csv` 파싱 행) [신설 2026-09-09 — 수색]. **`makeRecipes`** `{part: {ore, timber, dust}}`(= `make_recipe.csv`) · **`mineNodes`** · **`logNodes`**(= `mine_node.csv` · `log_node.csv` 를 tier 순으로 편 행 `{id, tier, yieldId, …}`) [신설 2026-09-15 — 제작 · R96]. 레시피는 생성 때 검증한다 — **광석 · 목재 · 가루가 모두 1 이상**이 아니거나 없는 부위면 throw (보완재 · 원정 쪽 입력 — item_design §5-1 · §7-1). **`potions`** `[{id, kind, tier, ko, en, heal, craftGold, craftable, startOwned}]`(= `potion.csv` 행 순서) [신설 2026-09-15 — 물약 · R103]. 이 표도 생성 때 검증한다 — `id` 유일 · `kind` 는 `heal` 하나(모르는 종류는 멈춘다) · 같은 종류 안에서 `tier` 는 1 부터 연속 · `heal` 은 단계마다 커진다 · `craftGold ≥ 0` · 이름 ko/en 이 비지 않는다 — 어기면 throw.
 **만남 표도 같은 자리에서 검증한다** [신설 2026-09-09] — `searchMeetings`(`search_meeting.csv`) · `searchAnswers`(`search_answer.csv`)도 주입이고, `meeting_id`·`answer_id` 유일 · `sin`/`hit_sin` 이 죄종 · `need_sin` 이 `-` 또는 죄종 · 답이 가리키는 만남이 실재 · 문구 비지 않음 · **만남마다 공통(`-`) 답이 최소 하나**(없으면 그 죄종을 안 보낸 판에서 고를 것이 0개가 된다)를 어기면 throw.
@@ -674,11 +675,11 @@ strike(rng, a, d):
 
 ---
 
-## 4. 세이브 스키마 v26
+## 4. 세이브 스키마 v28
 
 ```
 {
-  version: 26, seed: uint32, createdAt: ms, savedAt: ms,
+  version: 28, seed: uint32, createdAt: ms, savedAt: ms,
   resources: { gold, dust, stigma },      // `dust` = **분해** 산출 · **제작 재료**(item_design §7-1 · 2026-09-15). 처치는 안 뱉는다 (v19)
   materials: { yieldId: n },              // **제작 재료 — 광석 · 목재** [2026-09-15 · R96 · 버전 무변경 — 아래]. 키 = 산출물 id(`mine_node.csv:ore_id` · `log_node.csv:timber_id`). 공급은 파견이 한다(미구현) — 지금은 `?dev=mats` 만 채운다
   potions: [ potionId ],                  // **만든 물약** [2026-09-15 · R103 · 버전 무변경 — 아래]. 닳지 않는다 · 순서 = 얻은 순서 = **칸 순서**(앞 칸부터 · R104) · 새 게임은 `potion.csv:start_owned = 1` 행. **칸 수와 쿨은 세이브에 없다**(전투 안에서만 산다)
@@ -782,6 +783,29 @@ strike(rng, a, d):
 - **왜 보존하지 않나** — v12 의 정수 얼굴은 **직업과 무관하게** 굴린 번호다(궁수 얼굴이 전사에게 갔다). 보존할 개체성이 없고, 직업 일치가 이 개정의 목적 자체라 남겨 두면 목적이 무너진다
 - **전투 결과는 안 바뀐다** — 얼굴은 표시 전용이다. 전용 스트림이라 전투·선술집·강화·전술 수열과도 안 섞인다 (§5-1)
 - **마법사는 `null`** — 이 이관이 돌던 시점엔 풀이 0장이라 초상이 없었다(같은 날 밤 1장이 들어와 **v13→v14 가 소급한다** — 아래). 화면은 빈 칸으로 둔다(자리표시를 안 깐다 — SCREEN_DESIGN §5). 그래도 `rollFace` 는 rng 를 1회 소비하므로 **직업 구성이 소비 수를 바꾸지 않는다**
+
+**v27 → v28 이관** (2026-09-16 — **방어구 고유값이 부위 배수 · 갑옷군 배수 · 10레벨 구간 직선으로** · 사용자 확정 · item_design §1 · DEV_PLAN R108). 옛 공식(`armor_def_base 9.5 + ilvl × armor_def_per_ilvl 0.15`)은 새 대역의 1/5 수준이라 그냥 두면 옛 방어구만 종잇장이 된다. `deserialize` 가 v27 을 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `items[*].implicit.v` | **지금 공식의 바탕값으로 다시 앉힌다** (`item.baseImplicit`) — 부위 기준값(구간 직선) × `armor_def_slot_{부위}` × 갑옷군 `def_mult`. **개체 편차는 버린다**(다시 굴리면 rng 순서가 깨진다) |
+| `items[*].group` | **안 넣는다** — 옛 갑옷은 갑옷군이 없어 배수 1.0(경갑 자리)으로 앉는다 |
+| `version` | `28` |
+
+- **rng 0회** · ⚠ **전투 결과가 바뀐다** — 방어력이 대역째 올라간다(ilvl 50 갑옷 17 → 100 근처)
+- 필드는 늘지 않는다. **새로 드롭되는 갑옷만** `group`(갑옷군 id)을 든다 — 무기의 `group`(무기군)과 같은 필드이고 슬롯이 둘을 가른다
+
+**v26 → v27 이관** (2026-09-16 — **장비 옵션은 소수를 두지 않는다** · 사용자 지시 · DEV_PLAN R107). 새로 구르는 값은 `item.js:valueOf` · `implicitFor` · `effective` 가 정수로 내지만, 이미 저장된 아이템만 소수로 남는다. `deserialize` 가 v26 을 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `items[*].implicit.v` | **반올림**(하한 1) — 방어구 고유 방어력 |
+| `items[*].affixes[*].v` | **반올림**(하한 1). 단 `stat === 'dmg_per_level_pct'` 는 **건드리지 않는다** |
+| `version` | `27` |
+
+- **rng 0회** · ⚠ **전투 결과가 바뀐다** — 소수였던 방어력 · 체력 접사가 최대 0.5 움직인다
+- **`fine` 한 행만 소수로 남는다** — 오만 「레벨당 데미지 +%」(`weapon_sin_option.csv` · 0.2~0.5)는 1 보다 작은 값이 본질이라, 정수로 올리면 만렙 기여가 2~5배로 뛴다. 값 대역을 다시 정할 때 같이 처리한다 (GAME_DESIGN §10)
+- 필드는 늘지도 줄지도 않는다 — **값의 표현만 바뀐다**
 
 **v25 → v26 이관** (2026-09-14 — **무기 피해는 최소 ~ 최대 범위이고 파생이다** · battle_design §9-1 · GAME_DESIGN §9 · 사용자 확정 · DEV_PLAN R90). 드롭 때 굴려 박던 무기 개체 공격력이 사라진다. `deserialize` 가 v25 를 받으면 제자리에서 올린다:
 
@@ -1035,7 +1059,8 @@ strike(rng, a, d):
 | 행동 주기 하한 | 0.4 s | hero.js computeCombat | |
 | ~~`watk` 반올림~~ → 무기 피해 양끝 반올림 | **정수** · 최소 하한 1 · 최대 ≥ 최소 | formula.weaponDamage | 가운데 × (1 ∓ 폭) × 강화 배율을 곱한 **뒤 한 번** — 표기 = 계산 [2026-09-14 · R90 · ~~소수 2자리 · item.js build~~] |
 | 공격력 양끝 반올림 | 정수 | hero.js computeCombat | (무기 양끝 + atk_flat) × 괄호 둘을 곱한 뒤 양끝마다 |
-| growth 축 접사 · 방어구 implicit 반올림 | 소수 1자리 (하한 0.1) | item.js rollAffixes · implicitFor | band·flat 접사는 정수(하한 1) |
+| 구간 직선 누적합 표의 상한 `ILVL_CAP` = 120 · 구간 키 상한 `MAX_BAND` = 8 | 그 위 ilvl 은 마지막 칸을 쓴다 | formula.js bandTable | 아이템 레벨은 `spawn_grade.csv:gear_ilvl_add` 로 만렙 위로 올라간다 (2026-09-16 · R108) |
+| growth 축 접사 · 방어구 implicit · 강화 적용값 반올림 | **정수 (하한 1)** [개정 2026-09-16 · R107 — 소수 1자리였다] | item.js rollAffixes · implicitFor · effective | band·flat 접사도 정수(하한 1) · `fine` 만 소수 1자리로 남는다 |
 | `damage_reduction` 반올림 | 소수 3자리 | hero.js computeCombat | 원천별 곱의 실효 % |
 | 능력치 가중치 | `rng² + 0.04` | hero.js rollAttributes | 분포 모양 |
 | 합 맞추기 가드 | 500회 | hero.js | |
@@ -1135,10 +1160,10 @@ strike(rng, a, d):
 
 ## 7. 데이터 계약 — 무엇이 어디서 오는가
 
-`ui/data.js:loadData` 가 fetch 하는 CSV **40개**(`FILES`) [재집계 2026-09-15 — 이 수는 잘 낡는다. 옛 「32개」는 `gather_node`·`log_node`·`hero_unique_candidates` 신설분이 이미 빠져 있었다]: `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `codex_series` · `weapon_group` · `skill` · **`skill_tag`**(2026-09-01) · `hero_attribute` · `combat_stat` · `chapter` · `mastery_node` · `tactic_slot` · `tactic_option` · **`commission_kind`** · **`commission`** · `affix` · `item_base` · `equip_slot` · `class` · `hero_name` · `hero_trait` · **`mine_node`** · **`hero_tier`**(2026-09-08 · R48) · **`search_story`**(2026-09-09 — 수색 진행 문구. **막의 어휘도 순서도 이 표가 든다**) · **`monster_role`**(2026-09-09 — 역할 → **랭크**. 적의 자리다) · **`formation_template`**(2026-09-09 — 파티 진형의 정원. **첫 행이 기본값**이고 행 순서가 화면 순서다) · **`search_meeting`**·**`search_answer`**(2026-09-09 — 수색 만남 · 답. **`need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)** 두 컬럼이 규칙 전부다) · **`gather_node`**·**`log_node`**(2026-09-10 — 채집·벌목 단계 7, `mine_node` 와 같은 모양) · **`hero_unique_candidates`**(2026-09-10 — 유니크 영웅 후보 풀 ⚠임시 · 아직 아무도 안 읽는다) · **`weapon_base`**(2026-09-10 신설 — 무기군별 세부 베이스 7종 이름. **아직 `sword2h`·`axe`·`mace`·`spear`·`bow` 뿐**(뒤의 셋 2026-09-11) · §2-5 · §5-2) · **`weapon_sin_option`**·**`weapon_common_option`**(2026-09-11 · R78) · **`make_recipe`**(2026-09-15 · R96) · **`potion`**(2026-09-15 — 물약 단계 표 · R103).
+`ui/data.js:loadData` 가 fetch 하는 CSV **41개**(`FILES`) [재집계 2026-09-15 — 이 수는 잘 낡는다. 옛 「32개」는 `gather_node`·`log_node`·`hero_unique_candidates` 신설분이 이미 빠져 있었다]: `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `codex_series` · `weapon_group` · `skill` · **`skill_tag`**(2026-09-01) · `hero_attribute` · `combat_stat` · `chapter` · `mastery_node` · `tactic_slot` · `tactic_option` · **`commission_kind`** · **`commission`** · `affix` · `item_base` · `equip_slot` · `class` · `hero_name` · `hero_trait` · **`mine_node`** · **`hero_tier`**(2026-09-08 · R48) · **`search_story`**(2026-09-09 — 수색 진행 문구. **막의 어휘도 순서도 이 표가 든다**) · **`monster_role`**(2026-09-09 — 역할 → **랭크**. 적의 자리다) · **`formation_template`**(2026-09-09 — 파티 진형의 정원. **첫 행이 기본값**이고 행 순서가 화면 순서다) · **`search_meeting`**·**`search_answer`**(2026-09-09 — 수색 만남 · 답. **`need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)** 두 컬럼이 규칙 전부다) · **`gather_node`**·**`log_node`**(2026-09-10 — 채집·벌목 단계 7, `mine_node` 와 같은 모양) · **`hero_unique_candidates`**(2026-09-10 — 유니크 영웅 후보 풀 ⚠임시 · 아직 아무도 안 읽는다) · **`weapon_base`**(2026-09-10 신설 — 무기군별 세부 베이스 7종 이름. **아직 `sword2h`·`axe`·`mace`·`spear`·`bow` 뿐**(뒤의 셋 2026-09-11) · §2-5 · §5-2) · **`weapon_sin_option`**·**`weapon_common_option`**(2026-09-11 · R78) · **`make_recipe`**(2026-09-15 · R96) · **`potion`**(2026-09-15 — 물약 단계 표 · R103) · **`armor_group`**(2026-09-16 신설 — 갑옷군 3갈래(중갑·경갑·로브) · 방어 배수 · 공속 · 쿨감 · R108).
 **이 목록 = `src/data/*.csv` 전부**(`inherited/` 제외)여야 한다 — 읽히지 않는 SSOT 를 두지 않는다. `dev/test.html` 의 `csv:` 단정이 디렉터리 목록과 대조한다 (2026-08-28).
 
-표시 헬퍼도 `ui/data.js` 가 낸다 — `monsterName(id)→{ko,en}` · `monsterFace(id)→path|null` · `monsterSin(id)` · `stageName(row)→{ko,en}` · `stageBgOf(id)` · `chapterOf(chapter)` · `eliteName(sin, baseId)`. mock 에 남은 것은 자산 경로(`faceDir()` · `FACE_STYLES`/`setFaceStyle` · `BG_DIR`/`TOWN_BG` · `stageBg`)와 화면 전용 사전뿐이다.
+표시 헬퍼도 `ui/data.js` 가 낸다 — `monsterName(id)→{ko,en}` · `monsterFace(id)→path|null` · `monsterSin(id)` · `stageName(row)→{ko,en}` · `stageBgOf(id)` · `chapterOf(chapter)` · `eliteName(sin, baseId)`. mock 에 남은 것은 자산 경로(`faceDir()` · `FACE_STYLES`/`setFaceStyle` · `bgDir()` · `BG_STYLES`/`setBgStyle` · `BG_DIR`/`TOWN_BG` · `stageBg`)와 화면 전용 사전뿐이다.
 
 **⚠ game_logic 이 주입받지만 CSV 가 아니라 `ui/mock.js` 에 있는 것** — UI 는 Phase 2 에서 버려지므로 **이 목록이 이식 차단 항목**이다. 2026-08-31 M7 이관으로 **9항목 → 3항목**이 됐고, 남은 셋은 전부 **죄종 매핑 미확정**(GAME_DESIGN §10 `sin_mapping.md`) 하나에 걸려 있다:
 
@@ -1206,4 +1231,4 @@ strike(rng, a, d):
 
 ---
 
-*마지막 업데이트: 2026-09-15*
+*마지막 업데이트: 2026-09-16*

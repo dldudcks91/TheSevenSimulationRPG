@@ -1,11 +1,11 @@
-"""Portrait metrics vs the anchor set (faces/source/gladiator_helm.png, barbarian.png).
+"""Portrait metrics vs the anchor set (faces/source/anchors/gladiator_helm.png, barbarian.png).
 
 usage:
   python .claude/skills/art-prompt/measure.py <png> [<png> ...]
   python .claude/skills/art-prompt/measure.py --sheet <2048x2048 2x2 green sheet.png>
 
 Accepts transparent RGBA crops (cartoon/hero/<class>_<k>.png), green-background originals
-(source/*.png) or a whole 2048 2x2 sheet (--sheet; BR tile is the watermark slot).
+(source/hero|monster/*.png) or a whole 2048 2x2 sheet (--sheet; BR tile is the watermark slot).
 Output is ASCII only -- the Windows console is cp949.
 
 Anchor reference (measured 2026-09-06, SKILL.md principle 2):

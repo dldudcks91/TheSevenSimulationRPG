@@ -39,6 +39,7 @@
 | `spawn_grade.csv` | 4 | 등급 — 세기 칸은 **`hp_mult` 하나**(~~atk/def/res_add~~ 2026-09-11 퇴역 — 장비가 낸다) · 장비 `gear_ilvl_add`·`gear_rare_bonus_pct` · 스킬 칸 `skill_slots`(1/2/3/3) · 보상 exp/gold/**`drop_chance_mult`**. 스킬 칸 밖의 축은 등급순 단조 증가 |
 | `monster.csv` | 119 | 몬스터 — 이름 `_kr`/`_en` · `face` · 분류 · **영웅과 같은 모양**(직업 `cls` · 기본 능력치 7 · `innate_skill` · `weapon_group` · `wear_slots` — 2026-09-11 · **값은 ⚠임시**) · 몸값 `defense` · 저항 4원소 직접 % · 처치 XP 계수 `exp_coef`(몬스터별 조정 칸 — XP 는 몬스터 레벨이 정한다 · 2026-09-14 R85). ~~`hp`·`attack`·`action_period` 소재값~~ · ~~`exp_reward` 소재값~~ 은 삭제 — 장비·레벨이 낸다 |
 | `weapon_group.csv` | 10 | 무기군(본편 8 + 확장 2) — 직업 전속(5직업 × 2) · **전부 양손**(2026-09-01 한손 개념 폐지로 `hands` 컬럼 삭제) · **`damage_kind`**(physical/magic) · 행동 주기 · 변동% · **`release`**(main/expansion) |
+| `armor_group.csv` | 3 | **갑옷군** — 중갑 · 경갑 · 로브 [신설 2026-09-16 · R108 · item_design §1]. `classes` = 숙련(마스터리)이 붙는 직업(**하드 게이트가 아니다** — 누구나 입는다) · `def_mult` 방어 배수(1.6 / 1.0 / 0.5) · `aspd_pct` 공속(중갑 −10 · 경갑 +5) · `cdr_pct` 쿨감(로브 15) · `release`. **갑옷 칸에만 걸린다**(09-07 적용 범위 확정 — 투구·장갑·신발은 갑옷군이 없다) |
 | `skill.csv` | 37 | **직업 스킬 풀 5직업**(전사 7 · 기사 8 · 궁수 6 · 마법사 8 · 사제 8 — `owner_kind=job` · `owner_id` = 직업 id). **1스킬 = 1직업**이고 직업 사이에 안 겹친다 [사용자 확정 2026-09-08 · skill_design §12]. ~~무기군 전용 10행~~ 은 **무기군 고정 폐기**로 삭제됐다(2026-09-09) — 무기는 스킬의 **그릇**이라 제 행을 갖지 않고, 드롭 때 그 무기군의 **직업 풀**에서 하나를 굴려 `item.skill` 에 담는다. **기획 37 전부 발행**(2026-09-09 · DEV_PLAN R61 — ~~37 중 22만~~) · 다섯은 근사다(오오라 자동 켜기 · 「라운드 종료까지」 · 「양 옆의 아군」 · 독화살 · 적 공격력 감소 — skill_design §12-8). — **`owner_kind,owner_id`** 가 출처(`job`/`advance`/`unique` — `weapon_group` 은 2026-09-09 어휘에서 삭제) · 종류·타겟·타수·배율·감쇠·쿨·지속·원소·버프 스탯·발동 조건·`status`(코드 미독)·**`tags`(영문 id · `\|` 구분 최대 2 — `skill.js` 가 검증하고 전투는 안 읽는다. skill_design §11)**·우선순위 · **`icon`·`desc_kr`·`desc_en`**(플레이어 표시) · **`innate_pool`**(0/1 — 고유 풀 소속. 지금은 전 행이 1) · **`note`**(설계 노트 — 플레이어에게 안 보인다) · **`proc_chance_pct`·`proc_mult_pct`**(확률로 터지는 추가 피해 — 확률 %·배수 % · 기본 0 · `decay_pct` 바로 뒤 컬럼 · 확률 > 0 이면 `attack` 이고 배수 ≥ 100 · 확률 0 이면 배수 0 · 2026-09-10 R72) · **`scale1~3_field`·`_attr`·`_coef`**(스케일링 슬롯 셋 — `field` ∈ `mult_pct`·`hits`·`effect_value`·`duration_sec`·`decay_pct`·`proc_chance_pct`·`proc_mult_pct` · `attr` = `hero_attribute.csv` id · `coef` = 능력치 1당 더해지는 값(≥ 0) · 빈 슬롯은 `- · - · 0` · 한 행에 같은 field 두 번 금지. **계산은 `skill.js:scaleDef` 한 곳** — `mult_pct` 는 배율에 안 더하고 결과에 더한다 · 슬롯이 민 감쇠의 상한은 `[balance.csv:skill_decay_cap_pct]` — skill_design §13-1 · 2026-09-10 R72) | **액티브 3칸은 출처가 정한다**(고유 · 무기 · 전직 — skill_design §2). **두 출처(고유 · 무기)가 직업 풀에서 하나씩** 가져간다 — 고유는 **영웅 직업**의 풀에서 생성 시, 무기는 **그 무기군이 지정한 직업**의 풀에서 드롭 시 굴린다(§12-1 규칙 2 · 3 — 2026-09-10). ⚠ **행 순서가 결정론에 걸린다**(INTERFACE §5-2).
 | `skill_tag.csv` | 14 | **스킬 태그 어휘** — `tag_id` · 대분류 4(`damage`/`buff`/`debuff`/`other`) · `derived`(0/1 — 파생 3종 `aoe`/`single`/`multihit`) · 이름 ko/en. `skill.js` 가 어휘로 · `tactic_option.csv` 의 `skill_tag` 인자 · 화면 이름표 (skill_design §11 · 2026-09-01 — 종전 코드 배열) |
 | `hero_attribute.csv` | 7 | 기본 능력치 7종 — 전투 계수(`combat_stat`) + 담당 파견처(`dispatch` — `mine`/`gather`/`log`/`forge`/`tavern\|trade`/`-` · ~~`lab`~~ 은 2026-08-31 연구소 삭제로 사라졌다). 장비로 불변(`balance:attr_equip_bonus = 0`) |
@@ -77,7 +78,7 @@
 
 ## `inherited/` — TheSevenRPG 포크 25종 · **읽기 전용**
 
-스키마 무변환, 재동기화 가능. `src/assets/art/backgrounds/` (4종) 도 같은 규칙 — 규격·재동기화는 그쪽 README. `src/assets/art/faces/` 는 신규 아트가 직접 들어가는 활성 폴더라 이 규칙에서 제외 (assets/art/README.md).
+스키마 무변환, 재동기화 가능. `src/assets/art/backgrounds/source/pixel/` 에 남은 **계승 원본 셋**(101 · 102 · `town`) 도 같은 규칙 — 규격·재동기화는 그쪽 README. `src/assets/art/` 의 나머지(`backgrounds/` 설치본 · `faces/` · `icons/`)는 신규 아트가 직접 들어가는 활성 폴더라 이 규칙에서 제외 (assets/art/README.md).
 
 계승분을 바꿔야 하면 **수정하지 말고** 이 폴더(`src/data/`)에 신규 테이블을 만들어 **대체**하고, 무엇이 무엇을 대체했는지 문서에 남긴다.
 
@@ -85,4 +86,4 @@
 - 계승 데이터의 빈 구멍: [inherited_data_gaps.md](../../docs/reference/inherited_data_gaps.md)
 
 ---
-*마지막 업데이트: 2026-09-15*
+*마지막 업데이트: 2026-09-16*

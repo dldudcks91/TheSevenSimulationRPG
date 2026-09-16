@@ -76,9 +76,75 @@ D2의 베이스 아이템은 **부위(무기/방어구/장신구) → 카테고�
 | 투구(Helm) | 캡 → 풀 헬름 → 크라운 | qlvl 1 → 15 → 29 | — → 41 → 55 | 방어 3–5 → 23–26 → 25–45 | 12 → 30 → 50 |
 | 방패(Shield) | 버클러 → 카이트 실드 → 타워 실드 | 1 → 15 → 22 | 12 → 47 → 75 | 방어 4–6 → 16–18 → 22–25, 블록 팔라딘 30%→38%→54%(직업군별 상이) | 12 → 30 → 60 |
 | 장갑(Gloves) | 레더 글러브 → 건틀릿 | qlvl 3 → 27 | — → 60 | 방어 2–3 → 12–15 | 12 → 24 |
-| 벨트·부츠 | (N/F — 개별 표 미확보) | — | — | — | — |
+| 신발(Boots) | 부츠 → 체인 부츠 → 그리브스 | — | — → 30 → 70 | (방어 N/F) | — |
+| 벨트 | (N/F — 개별 표 미확보 · 본작에 슬롯 없음) | — | — | — | — |
 
-([Arreat]★★★ `normal/armor.shtml` · `normal/helms.shtml` · `normal/shields.shtml` · `normal/gloves.shtml`) — 방패는 **방어치와 별개로 직업군별 블록률이 다르게 붙는 유일한 방어구**다(팔라딘 > 아마존/어쌔신/바바리안 > 드루이드/네크로맨서/소서리스 순, [Arreat]★★★). 벨트·부츠는 이번 조사에서 원문 표를 직접 확보하지 못해 N/F로 남긴다 — 다만 구조적으로 갑옷·투구와 동일한 3단(요구Lv·요구힘·방어·내구도) 패턴을 따를 것으로 추정된다(타 부위와의 일관성에 근거한 추정이며, 벨트는 추가로 **인벤토리 포션 칸 수**를 결정하는 고유 기능을 가진다는 것이 D2 공통 상식이나 이 세션에서 1차 원문으로 재확인하지는 못했다, N/F).
+([Arreat]★★★ `normal/armor.shtml` · `normal/helms.shtml` · `normal/shields.shtml` · `normal/gloves.shtml`) — 방패는 **방어치와 별개로 직업군별 블록률이 다르게 붙는 유일한 방어구**다(팔라딘 > 아마존/어쌔신/바바리안 > 드루이드/네크로맨서/소서리스 순, [Arreat]★★★). ~~벨트·부츠는 이번 조사에서 원문 표를 직접 확보하지 못해 N/F로 남긴다~~ → **부츠는 2026-09-16 에 §1-2-1 로 전수 확보했다**(벨트는 본작에 슬롯이 없어 그대로 N/F) — 다만 구조적으로 갑옷·투구와 동일한 3단(요구Lv·요구힘·방어·내구도) 패턴을 따를 것으로 추정된다(타 부위와의 일관성에 근거한 추정이며, 벨트는 추가로 **인벤토리 포션 칸 수**를 결정하는 고유 기능을 가진다는 것이 D2 공통 상식이나 이 세션에서 1차 원문으로 재확인하지는 못했다, N/F).
+
+### 1-2-1. 방어구 베이스 전수 — 4부위 승급 사슬 [신설 2026-09-16]
+
+위 §1-2 는 부위당 1계열만 실었고 부츠가 N/F 였다. 원문에서 **갑옷·투구·장갑·신발 4부위의 전 계열**을 다시 받아 채운다([Arreat]★★★ `normal|exceptional|elite/` 의 `armor.shtml` · `helms.shtml` · `gloves.shtml` · `boots.shtml`). 방패·벨트는 본작에 해당 슬롯이 없어 제외했다.
+
+**한 줄이 한 계열의 승급 사슬**이다 — Normal 개체가 Exceptional·Elite 로 이름을 바꿔 다시 나온다(§2-2). 요구힘은 `Normal → Exceptional → Elite` 순.
+
+#### 갑옷(Body Armor) — 15계열 × 3티어 = 45종
+
+| # | Normal | Exceptional | Elite | 요구힘 |
+|---|---|---|---|---|
+| 1 | Quilted Armor | Ghost Armor | Dusk Shroud | 12 → 38 → 77 |
+| 2 | Leather Armor | Serpentskin Armor | Wyrmhide | 15 → 43 → 84 |
+| 3 | Hard Leather Armor | Demonhide Armor | Scarab Husk | 20 → 50 → 95 |
+| 4 | Studded Leather | Trellised Armor | Wire Fleece | 27 → 61 → 111 |
+| 5 | Ring Mail | Linked Mail | Diamond Mail | 36 → 74 → 131 |
+| 6 | Scale Mail | Tigulated Mail | Loricated Mail | 44 → 86 → 149 |
+| 7 | Breast Plate | Cuirass | Great Hauberk | 30 → 65 → 118 |
+| 8 | Chain Mail | Mesh Armor | Boneweave | 48 → 92 → 158 |
+| 9 | Splint Mail | Russet Armor | Balrog Skin | 51 → 97 → 165 |
+| 10 | Light Plate | Mage Plate | Archon Plate | 41 → 55 → 103 |
+| 11 | Field Plate | Sharktooth Armor | Kraken Shell | 55 → 103 → 174 |
+| 12 | Plate Mail | Templar Coat | Hellforge Plate | 65 → 118 → 196 |
+| 13 | Gothic Plate | Embossed Plate | Lacquered Plate | 70 → 125 → 208 |
+| 14 | Full Plate Mail | Chaos Armor | Shadow Plate | 80 → 140 → 230 |
+| 15 | Ancient Armor | Ornate Plate | Sacred Armor | 100 → 170 → 232 |
+
+#### 투구(Helm) — 8계열 × 3티어 = 24종
+
+| Normal | Exceptional | Elite | 요구힘 |
+|---|---|---|---|
+| Cap | War Hat | Shako | — → 20 → 50 |
+| Skull Cap | Sallet | Hydraskull | 15 → 43 → 84 |
+| Helm | Casque | Armet | 26 → 59 → 109 |
+| Full Helm | Basinet | Giant Conch | 41 → 82 → 142 |
+| Great Helm | Winged Helm | Spired Helm | 63 → 115 → 192 |
+| Mask | Death Mask | Demonhead | 23 → 55 → 102 |
+| Crown | Grand Crown | Corona | 55 → 103 → 174 |
+| Bone Helm | Grim Helm | Bone Visage | 25 → 58 → 106 |
+
+직업 전용 머리 장비(바바리안 헬름 · 드루이드 펠트)는 이 표 밖의 별도 계열이다([Arreat]★★★).
+
+#### 장갑(Gloves) — 5계열 × 3티어 = 15종
+
+| Normal | Exceptional | Elite | 요구힘 |
+|---|---|---|---|
+| Leather Gloves | Demonhide Gloves | Bramble Mitts | — → 20 → 50 |
+| Heavy Gloves | Sharkskin Gloves | Vampirebone Gloves | — → 20 → 50 |
+| Chain Gloves | Heavy Bracers | Vambraces | 25 → 58 → 106 |
+| Light Gauntlets | Battle Gauntlets | Crusader Gauntlets | 45 → 88 → 151 |
+| Gauntlets | War Gauntlets | Ogre Gauntlets | 60 → 110 → 185 |
+
+#### 신발(Boots) — 5계열 × 3티어 = 15종
+
+| Normal | Exceptional | Elite | 요구힘 |
+|---|---|---|---|
+| Boots | Demonhide Boots | Wyrmhide Boots | — → 20 → 50 |
+| Heavy Boots | Sharkskin Boots | Scarabshell Boots | 18 → 47 → 91 |
+| Chain Boots | Mesh Boots | Boneweave Boots | 30 → 65 → 118 |
+| Light Plated Boots | Battle Boots | Mirrored Boots | 50 → 95 → 163 |
+| Greaves | War Boots | Myrmidon Greaves | 70 → 125 → 208 |
+
+- **요구힘이 곧 무게 사다리다** — 갑옷은 12(Quilted Armor)에서 232(Sacred Armor)까지 한 줄로 이어지고, 재질 어휘(가죽 → 메일 → 플레이트)가 그 순서와 어긋나지 않는다. 부위마다 계열 수가 다른 것(갑옷 15 · 투구 8 · 장갑 5 · 신발 5)도 D2 의 설계다
+- ⚠ **Light / Medium / Heavy 분류는 이 표에 없다** — D2 의 무게 3분류는 착용 그래픽용이라 게임 파일(`armor.txt`)에 있고 Arreat Summit 표에는 안 실린다. **재질 이름으로 역산하지 말 것** — 같은 경고가 [inherited_data_gaps.md](../inherited_data_gaps.md) §G5-b 에도 있다(계승 CSV 는 `Plate Mail` 을 `light_armor`, `Dusk Shroud` 를 `heavy_armor` 로 **원본과 반대로** 배정해 뒀다)
+- Exceptional·Elite 는 Normal 의 강화판 재탕이 아니라 **전혀 다른 이름의 개별 아이템**이다(§1-1 무기와 같은 원칙) — 같은 줄에 있어도 이름이 이어지지 않는 계열이 많다(`Splint Mail → Russet Armor → Balrog Skin`)
 
 ### 1-3. 장신구 — 반지·목걸이
 
@@ -432,7 +498,7 @@ G1은 "ilvl 41+ 상한"만 적었는데, 이번에 **1–25 / 26–40 / 41+ 3구
 `diablo.fandom.com`(현행)·`purediablo.com`(`/diablo-2/item-generation`·`/diablo-2/prefixes` 모두 403)·`diablo2.diablowiki.net`·`thanatosrealms.com`(500)은 이번 조사에서도 직접 열람이 막혀 배제했다. 검색 스니펫으로 노출된 범위만 [커뮤니티] 등급으로 보조 인용했다.
 
 ### N/F(미확인) 총괄
-- **벨트·부츠의 Normal 베이스 전체 표** — 갑옷/투구/방패/장갑은 확보했으나 이 둘은 원문 페이지를 직접 열지 못함
+- ~~**벨트·부츠의 Normal 베이스 전체 표**~~ → **해소 2026-09-16** — 부츠는 §1-2-1 로 3티어 전수 확보(갑옷·투구·장갑도 Exceptional·Elite 까지 확장). **벨트만 남는다**(본작에 슬롯이 없어 우선순위 없음)
 - **레어 아이템의 정확한 접사 개수 확률 분포** — "2~6개 사이"라는 정성적 합의는 확인했으나, ilvl/qlvl별 정확한 확률표(크래프트처럼 확정 테이블인지 아닌지 포함)는 1차 자료로 확인 못함
 - **Normal 난이도에서 몬스터 레벨과 지역 레벨의 정확한 상호작용 규칙**(챔피언/유니크 가산치가 Normal에도 동일 적용되는지 등)
 - **소켓 개수 브라켓의 아이템 타입별 전수표**(§8-3의 4개 예시 외 나머지 전 부위) 및 룬워드별 최소 요구 소켓을 만족하는 정확한 ilvl 임계값
@@ -442,4 +508,4 @@ G1은 "ilvl 41+ 상한"만 적었는데, 이번에 **1–25 / 26–40 / 41+ 3구
 - **Reign of the Warlock 신규 세트(Bane's Garments·Horazon's Splendor)의 완전한 수치표** — maxroll 요약에서 항목명·발동 피스 수는 확보했으나 개별 아이템의 전체 스탯 나열은 확보 못함
 
 ---
-*마지막 업데이트: 2026-08-28 (최초 작성 — 베이스 아이템 분류·품질 3축 구분(베이스 품질/개체 품질/희귀도)·접사 티어 사다리 4종·세트 이원 보너스(Green/Gold)·유니크 3종 실 옵션·크래프트 ilvl 공식과 접사 확정표·ilvl-난이도 관계·소켓 브라켓 세분화·D2R 2.4~Reign of the Warlock(2026) 아이템 구조 변경 총정리)*
+*마지막 업데이트: 2026-09-16 (§1-2-1 방어구 베이스 전수 신설 — 갑옷 15계열·투구 8·장갑 5·신발 5 × Normal/Exceptional/Elite 99종 · 부츠 N/F 해소) · 2026-08-28 (최초 작성 — 베이스 아이템 분류·품질 3축 구분(베이스 품질/개체 품질/희귀도)·접사 티어 사다리 4종·세트 이원 보너스(Green/Gold)·유니크 3종 실 옵션·크래프트 ilvl 공식과 접사 확정표·ilvl-난이도 관계·소켓 브라켓 세분화·D2R 2.4~Reign of the Warlock(2026) 아이템 구조 변경 총정리)*

@@ -35,6 +35,7 @@ export const D = {
     chapterList: [],
     heroAttributes: [],       // hero_attribute.csv — [{id, ko, en, abbr, combatStat, dispatch}]
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
+    armorGroups: null,        // armor_group.csv — {id: {id, ko, en, classes, defMult, aspdPct, cdrPct, release}} · 갑옷군 3갈래 (2026-09-16 · R107)
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
     weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 본편 열 전부(staff·orb·crucifix·bible·crossbow 2026-09-14) · 확장 dagger·scythe 는 없다
@@ -83,7 +84,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
-    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion'];
+    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -98,7 +99,7 @@ export async function loadData(base = './data/') {
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
-        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow] = texts.map(parseCsv);
+        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -144,6 +145,13 @@ export async function loadData(base = './data/') {
         period: r.action_period, variance: r.variance_pct, damageKind: r.damage_kind, release: r.release,
     }));
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
+    // 갑옷군 — **갑옷 칸에만** 걸린다(09-07). 방어 배수 · 공속 · 쿨감을 든다 (2026-09-16 사용자 확정 · R107)
+    D.armorGroupList = armorGroupRow.map(r => ({
+        id: r.group_id, ko: r.group_kr, en: r.group_en,
+        classes: String(r.classes).split('|'),
+        defMult: r.def_mult, aspdPct: r.aspd_pct, cdrPct: r.cdr_pct, release: r.release,
+    }));
+    D.armorGroups = indexBy(D.armorGroupList, 'id');
     // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
     //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
@@ -215,7 +223,10 @@ export async function loadData(base = './data/') {
     }));
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};
-    for (const r of itemBaseRow) (D.itemBases[r.slot] ??= []).push({ ko: r.name_kr, en: r.name_en });
+    //   갑옷은 `group`(갑옷군)과 `tierMin`(티어가 열리는 ilvl)을 같이 든다 — 나머지 부위는 group 이 null (2026-09-16 · R107)
+    for (const r of itemBaseRow) (D.itemBases[r.slot] ??= []).push({
+        ko: r.name_kr, en: r.name_en, group: r.group || null, tierMin: Number(r.tier_min_ilvl) || 1,
+    });
     // 접사 정의 — `perIlvl` 은 `band` 행만 든다 (scale 3분류 계약: item_design §2-1)
     D.affixDefs = affixRow.map(r => ({
         stat: r.stat, scale: r.scale, min: r.min, max: r.max,
@@ -298,7 +309,8 @@ export function fillStory(text, lang, { leader = null, fallback = '' } = {}) {
         return withJong ? shown + pickJosa(name, withJong, withoutJong) : shown;
     });
 }
-/** 스테이지 배경 — 계승 자산이 있는 스테이지만(stage.csv:bg). 경로 조립은 mock(자산 경로) */
+/** 스테이지 배경 — `stage.csv:bg` 가 **자리를 연다**. ⚠ 그것은 스타일 폴더의 재고가 아니다 —
+ *  고른 스타일에 그림이 없으면 404 가 한 번 나고 CSS 그라디언트가 보인다. 경로 조립은 mock(`bgDir`) */
 export const stageBgOf = id => (D.stages?.[id]?.bg ? M.stageBg(id) : null);
 /** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) + 보스 1. 챕터보스 스테이지는 **보스 하나뿐**이다(2026-09-11). 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다 */
 export const codexStages = () => (D.stageList ?? []).map(s => {
@@ -363,7 +375,7 @@ export function buildSystems(d) {
     const classSkills = Object.fromEntries((d.classes ?? []).map(c =>
         [c.id, skill.list.filter(sk => sk.innatePool && sk.ownerKind === 'job' && sk.ownerId === c.id).map(sk => sk.id)]));
     const hero = createHeroSystem({
-        balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups,
+        balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
         // 초상 장수 — 로직은 그림을 모르고 **직업별 장수 객체만** 받는다. 영웅이 태어날 때 제 직업 풀에서 굴려 세이브에 박는다
         // (2026-09-06 저장형 · 2026-09-07 직업 분류 — 풀이 0장인 직업은 face = null)
@@ -376,7 +388,7 @@ export function buildSystems(d) {
     });
     const item = createItemSystem({
         // ~~elements~~ 는 2026-09-11 R80 으로 주입 목록에서 빠졌다 — 마법 무기 원소 굴림이 사라져 item.js 가 원소 어휘를 안 읽는다
-        balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups,
+        balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
         itemBases: d.itemBases, weaponBases: d.weaponBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
         weaponSinOptions: d.weaponSinOptions ?? [], weaponCommonOptions: d.weaponCommonOptions ?? [],   // 무기 옵션 표 둘 (R78)
         // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)

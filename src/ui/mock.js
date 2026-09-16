@@ -190,7 +190,7 @@ export const PAPERDOLL = [
    2026-09-06 사용자 지시로 7 → 8 (인간 궁수 1종 추가 — 세트에서 처음으로 원거리 직업이 읽히는 얼굴이다),
    같은 날 8 → 9 (외치는 기사 1종 추가). 같은 날 9 → 11 로 올렸다가 **사용자 지시로 되돌렸다** —
    「레인저는 `hero_8` 하나만」이 지시였는데 궁수 시트의 갈색·청회 후드 2타일이 `hero_10..11` 로 더 들어가 있었다.
-   게임 사본만 지웠고 원본 타일은 `faces/source/archer_hood_brown · archer_hood_slate` 로 남는다.
+   게임 사본만 지웠고 원본 타일은 `faces/source/hero/archer_hood_brown · archer_hood_slate` 로 남는다.
    ⚠ 그 시트의 카키(우하단)는 ✦ 워터마크가 **인물 위에** 얹혀 있어 애초에 버린 타일이다. 배경이 아니라
    후드 안쪽 검정 + 카키 테두리를 가로질러서 깨끗한 복원이 안 된다.
    ⚠ **줄이는 방향이라 위 경고가 걸린다** — 세이브에 `face = 10·11` 이 박힌 영웅은 `heroFace` 가 접어서 1·2 를 준다.
@@ -389,19 +389,60 @@ export const itemArt = (slot, group, uid, baseId) => {
    죄종 표시명(SINS)만 여기서 주입된다 — `ui/data.js:NAMING`. */
 
 /**
- * 배경 이미지 — TheSevenRPG 계승분 (src/assets/art/backgrounds/).
- * 파일명이 계승 스테이지 id(101/102/103)를 그대로 쓰므로 stage_id ↔ 배경이 1:1로 붙는다.
- * 원본 PNG는 32bit RGBA라 4장 18MB였다 → **WebP q88로 변환해 888KB** (해상도 무손실, 상세는 같은 폴더 README).
- * ⚠ 104(사탄의 제단)와 챕터 2 이후는 원작에도 없다 — 없는 스테이지는 기존 그라디언트로 폴백한다.
+ * 배경 이미지 — `src/assets/art/backgrounds/<스타일>/background_stage_<id>.webp`.
+ * 파일이름이 스테이지 id(101/102/…)를 그대로 쓰므로 stage_id ↔ 배경이 1:1로 붙는다.
+ *
+ * **스타일 하나 = 폴더 하나** [2026-09-16 사용자 지시 · `faces/` 와 같은 규칙]. 새 스타일을 넣는 방법은 둘뿐이다:
+ *   ① `backgrounds/` 아래 폴더를 만들고 같은 이름 규칙(`background_stage_<id>.webp`)으로 그림을 넣는다
+ *   ② 아래 `BG_STYLES` 에 그 폴더 이름을 더한다
+ * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `bgDir()` 하나뿐이라서다.
+ * 고르는 순서는 얼굴과 같다: URL `?bg=<스타일>` → localStorage → 목록의 **첫 항목**.
+ * **한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 그림이 없으면 그 자리는 그라디언트로 떨어진다.
+ *   그리는 중인 스타일로도 게임이 돈다 (⚠ 자리를 여는 것은 `stage.csv:bg` 지 폴더 재고가 아니다 — `ui/data.js:stageBgOf`.
+ *   `bg=1` 인데 그 스타일에 파일이 없으면 404 가 한 번 난다).
+ *
+ * ⚠ **읽는 것은 워터마크 띠를 잘라 낸 사본이다** [2026-09-11 사용자 지시] — 원본 오른쪽 아래에 생성기 ✦ 가 박혀 있어
+ *   아레나 비율에 따라 드러났다. 손 안 댄 원본은 `backgrounds/source/<스타일>/` 이고 레시피는 `assets/art/README.md`.
  * 경로는 문서(src/index.html) 기준 상대경로 — JS가 인라인 스타일로 넣기 때문이다.
  */
 export const BG_DIR = './assets/art/backgrounds/';
-/** 계승 4장의 **워터마크 띠를 잘라 낸 사본** — 화면은 이쪽을 읽는다 [2026-09-11 사용자 지시].
- *  원본 오른쪽 아래에 생성기 ✦ 가 박혀 있어 아레나 비율에 따라 드러났다. 레시피 · 근거는 assets/art/README.md 「backgrounds_clean/」 */
-export const BG_CLEAN_DIR = './assets/art/backgrounds_clean/';
-/** ⚠ 아직 아무 화면도 안 읽는다 — 자산(`town.webp`)은 실재하고 거점 화면이 생기면 여기가 쓰인다 (CSS 는 같은 사본을 직접 건다) */
-export const TOWN_BG = BG_CLEAN_DIR + 'town.webp';
-export const stageBg = id => BG_CLEAN_DIR + `background_stage_${id}.webp`;
+export const BG_STYLES = ['illustrate', 'pixel'];   // **첫 항목이 기본값이다** — 정식 배경은 일러스트다 [2026-09-16 사용자 지시 · ADR-0152]
+const BG_STORE_KEY = 'thesevensim.bgStyle';
+
+let bgStyleCur = (() => {
+    const q = new URLSearchParams(location.search).get('bg');
+    // `?face=` 와 같이 **그 자리에서 저장한다** — 스타일에는 UI 스위치가 없어서, 저장하지 않으면 매번 다시 붙여야 한다
+    if (BG_STYLES.includes(q)) {
+        try { localStorage.setItem(BG_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 스타일 */ }
+        return q;
+    }
+    try {
+        const saved = localStorage.getItem(BG_STORE_KEY);
+        if (BG_STYLES.includes(saved)) return saved;
+    } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
+    return BG_STYLES[0];
+})();
+
+export const bgStyle = () => bgStyleCur;
+/** 스타일 전환 — 배경은 매 렌더에 경로를 다시 만들므로 호출한 쪽이 render() 하면 그대로 갈린다 */
+export function setBgStyle(id) {
+    if (!BG_STYLES.includes(id)) return;
+    bgStyleCur = id;
+    try { localStorage.setItem(BG_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
+    applyDocumentBg();
+}
+/** `<html data-bg>` 동기화 — CSS 가 **배경 축소 보간**을 스타일별로 가르는 유일한 신호다
+ *  (도트는 끄고 일러스트는 켠다 — `style.css` 의 `--bg-render`). `applyDocumentFace` 와 같은 패턴이고 같은 자리(`app.js render()`)에서 불린다.
+ *  안 불려도 안전한 쪽으로 떨어진다 — 속성이 없으면 `:root` 의 기본값(`auto`)이 먹어 정식 배경(일러스트)의 선이 안 끊긴다. */
+export function applyDocumentBg() {
+    document.documentElement.dataset.bg = bgStyleCur;
+}
+export const bgDir = () => `${BG_DIR}${bgStyleCur}/`;
+/** ⚠ 아직 아무 화면도 안 읽는다 — 자산(`town.webp`)은 실재하고 거점 화면이 생기면 여기가 쓰인다.
+ *  **거점 그림은 스타일을 안 탄다** — 도트 한 벌뿐이라 `pixel/` 을 박았다 (CSS `#stage::before` 도 같은 경로를 직접 건다).
+ *  ⚠ 정식 배경이 일러스트가 된 뒤로 **거점만 도트로 남아 있다** — 거점 일러스트가 나오면 `bgDir()` 로 돌린다 (ADR-0152 「열린 것」) */
+export const TOWN_BG = BG_DIR + 'pixel/town.webp';
+export const stageBg = id => bgDir() + `background_stage_${id}.webp`;
 
 /**
  * 탐험 지도 — 챕터 하나에 한 장 (SCREEN_DESIGN §8-4 · 2026-09-04 사용자 지시).

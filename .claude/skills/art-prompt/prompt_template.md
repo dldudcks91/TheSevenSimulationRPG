@@ -11,9 +11,9 @@ SKILL.md 1단계에서 편다 — 스케치(1-S)는 §0~§5, 세부(1-D)는 §6.
 
 | 인물 | 첨부 | 이유 |
 |---|---|---|
-| 갑옷 · 투구 | `faces/source/gladiator_helm.png` | 외곽선 굵기 · 음영 단수 · 닫힌 투구의 눈높이 |
-| 맨머리 · 맨몸 · 후드 · 천 | `faces/source/barbarian.png` | 두상 비율 65% · 어깨폭 75% — SD 구도의 실측 기준 |
-| 같은 종족이 이미 있다 | 그 그림도 함께 (해골이면 `skeleton_plain`) | 종족 고유의 골격·색을 나른다 |
+| 갑옷 · 투구 | `faces/source/anchors/gladiator_helm.png` | 외곽선 굵기 · 음영 단수 · 닫힌 투구의 눈높이 |
+| 맨머리 · 맨몸 · 후드 · 천 | `faces/source/anchors/barbarian.png` | 두상 비율 65% · 어깨폭 75% — SD 구도의 실측 기준 |
+| 같은 종족이 이미 있다 | 그 그림도 함께 (해골이면 `monster/skeleton_plain`) | 종족 고유의 골격·색을 나른다 |
 | 애매하면 | 둘 다 | 해가 없다 |
 
 ⚠ **무기·손이 들어간 앵커는 붙이지 않는다** — `skeleton_soldier` · `skeleton_archer` 처럼 손에 무기를 든 옛 그림을 붙이면 그 구도가 따라온다.

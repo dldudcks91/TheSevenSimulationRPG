@@ -1,7 +1,7 @@
 monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,monster_type,monster_base,attack_type,spawn_grade,role,cls,str,agi,int,vit,luck,ldr,cha,innate_skill,weapon_group,wear_slots,size_type,defense,res_fire,res_cold,res_lightning,res_poison,exp_coef,description_kr
 1101,1,1,고블린 척후병,Goblin Scout,1,Demon,Goblin,physical,normal,skirmish,archer,3,14,3,4,5,4,5,arc_snipe,bow,weapon|armor|boots,1,34,15,15,15,15,1,파멸의 진영 선봉 잡병
 1102,1,1,고블린 전사,Goblin Warrior,1,Demon,Goblin,physical,normal,line,warrior,7,12,3,5,3,4,5,war_bash,mace,weapon|armor|helmet,1,47,15,15,15,15,1,무기를 든 정규 고블린 병사
-1103,1,1,오크 전사,Orc Warrior,1,Demon,Orc,physical,normal,heavy,knight,15,7,3,16,3,4,5,kni_smite,sword2h,weapon|armor|helmet|gloves,2,72,15,15,15,15,1,강력한 한 방의 오크 전사
+1103,1,1,고블린 주술사,Goblin Shaman,1,Demon,Goblin,physical,normal,caster,priest,3,11,8,5,3,4,5,pri_judgment,crucifix,weapon|armor|amulet,1,20,15,15,15,15,1,짐승 두개골을 뒤집어쓴 고블린 주술사
 1150,1,1,아바돈,Abaddon,1,Demon,Orc,physical,stage_boss,boss,warrior,10,7,3,10,3,15,5,war_doubleswing,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,63,15,15,15,15,1,파멸의 군주 — 무저갱의 왕
 1201,1,2,인간 보병,Human Footman,1,Normal,Human,physical,normal,line,warrior,8,10,3,6,3,4,5,war_quake,mace,weapon|armor|helmet,1,49,16,16,16,16,1,검과 방패의 정규 병사
 1202,1,2,인간 궁수,Human Archer,1,Normal,Human,physical,normal,ranged,archer,3,12,3,4,8,4,5,arc_rapid,bow,weapon|armor|gloves,1,35,16,16,16,16,1,활을 든 원거리 병사
@@ -16,17 +16,17 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,monster_type,
 1403,1,4,청동 수호상,Bronze Guardian,0,Demon,Gargoyle,fire,normal,elite_line,knight,11,12,3,14,3,10,5,kni_duel,spear,weapon|armor|helmet|ring,3,53,26,7,19,19,1,몰록의 우상과 같은 청동으로 떠낸 신전 문지기 — 누구도 지나가지 못한다
 1450,1,4,몰록,Moloch,0,Demon,Gargoyle,fire,stage_boss,boss,mage,3,6,10,10,3,15,5,mag_inferno,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,67,26,7,19,19,1,사탄의 문지기 — 아이를 태우던 청동 우상을 깨고 나온 불의 심복
 1900,1,5,사탄,Satan,1,Demon,Gargoyle,fire,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,67,26,7,19,19,1,분노의 왕 — 가장 먼저 추방된 자
-2101,2,1,독늑대 척후,Venomwolf Scout,0,Normal,Wolf,physical,normal,skirmish,archer,3,19,3,4,6,4,5,arc_guided,bow,weapon|armor|boots,1,37,20,20,20,20,1,독에 변형된 날렵한 늑대
-2102,2,1,도마뱀 저주사,Lizardman Curser,0,Normal,Lizardman,poison,normal,caster,priest,3,12,11,9,3,4,5,pri_grace,crucifix,weapon|armor|amulet,1,25,20,20,8,28,1,독 주술의 원거리 마법형
-2103,2,1,도마뱀 돌격병,Lizardman Charger,0,Normal,Lizardman,physical,normal,heavy,knight,12,10,3,15,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,79,20,20,20,20,1,독에 의해 비대해진 거대 도마뱀
-2150,2,1,사마엘,Samael,0,Normal,Lizardman,physical,stage_boss,boss,warrior,10,9,3,10,3,15,5,war_battleorders,mace,weapon|helmet|armor|gloves|boots|amulet|ring,2,69,20,20,20,20,1,독의 지배자 — 죽음의 천사
-2201,2,2,서큐버스 유혹마,Succubus Temptress,0,Demon,Succubus,poison,normal,caster,archer,3,11,3,5,8,4,5,arc_pierce,bow,weapon|armor|amulet,2,25,22,22,9,30,1,시기심을 부추기는 디버프형
-2202,2,2,서큐버스 독술사,Succubus Poisoner,0,Demon,Succubus,poison,normal,caster,archer,3,11,3,5,8,4,5,arc_poison,bow,weapon|armor|amulet,1,25,22,22,9,30,1,독안개 마법 원거리 공격
-2203,2,2,오크 탈취자,Orc Plunderer,0,Demon,Orc,physical,normal,heavy,knight,13,7,3,16,3,4,5,kni_fanaticism,sword2h,weapon|armor|helmet|gloves,2,81,22,22,22,22,1,남의 힘을 탐내 변형된 야만 전사
-2250,2,2,아비주,Abyzou,0,Demon,Succubus,poison,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_snipe,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,71,22,22,9,30,1,시기의 어머니 — 타인을 시기하여 저주하는 악마
-2301,2,3,수목 원혼,Tree Wraith,0,Undead,Ghost,cold,normal,caster,mage,3,10,9,2,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,1,26,9,32,23,23,1,나무에 깃든 원한의 영혼
-2302,2,3,울부짖는 유령,Wailing Ghost,0,Undead,Ghost,cold,normal,caster,mage,3,10,9,2,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,26,9,32,23,23,1,시기의 울음소리 저주 디버프형
-2303,2,3,뿌리 좀비,Root Zombie,0,Undead,Zombie,physical,normal,heavy,knight,11,4,3,18,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,2,83,23,23,23,23,1,썩은 뿌리에 얽힌 거대 시체
+2101,2,1,오크 전사,Orc Warrior,1,Demon,Orc,physical,normal,line,warrior,11,9,3,8,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,50,20,20,20,20,1,철투구를 쓴 오크 정규병
+2102,2,1,오크 궁수,Orc Archer,1,Demon,Orc,physical,normal,ranged,archer,3,13,3,6,9,4,5,arc_guided,bow,weapon|armor|gloves,2,40,20,20,20,20,1,후드를 뒤집어쓴 오크 사수
+2103,2,1,오크 주술사,Orc Shaman,1,Demon,Orc,poison,normal,caster,priest,3,11,10,7,3,4,5,pri_grace,crucifix,weapon|armor|amulet,2,26,20,20,8,28,1,짐승 두개골 관을 쓴 오크 주술사
+2150,2,1,라합,Rahab,1,Demon,Orc,physical,stage_boss,boss,warrior,10,9,3,12,3,15,5,war_battleorders,mace,weapon|helmet|armor|gloves|boots|amulet|ring,3,69,20,20,20,20,1,잊힌 바다의 군주 — 레비아탄과 같이 불리던 이름
+2201,2,2,도마뱀 사냥꾼,Lizardman Hunter,0,Normal,Lizardman,physical,normal,skirmish,archer,3,14,3,5,9,4,5,arc_poison,bow,weapon|armor|boots,1,42,22,22,22,22,1,남의 둥지를 노리는 독화살 사수
+2202,2,2,도마뱀 저주사,Lizardman Curser,0,Normal,Lizardman,poison,normal,caster,priest,3,12,11,9,3,4,5,pri_bind,crucifix,weapon|armor|amulet,1,25,22,22,9,30,1,독 주술로 숨을 막는 무리의 주술사
+2203,2,2,도마뱀 돌격병,Lizardman Charger,0,Normal,Lizardman,physical,normal,heavy,knight,12,10,3,15,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,81,22,22,22,22,1,비대해진 몸으로 밀어붙이는 거대 도마뱀
+2250,2,2,아비주,Abyzou,0,Normal,Lizardman,physical,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_snipe,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,71,22,22,22,22,1,시기의 어머니 — 깨어나지 않는 알을 품는 자
+2301,2,3,숲마을 시체,Villager Corpse,0,Undead,Zombie,physical,normal,line,warrior,10,5,3,14,3,4,5,war_quake,mace,weapon|armor|helmet,2,60,23,23,23,23,1,뿌리에 삼켜진 마을에서 흙을 헤집고 일어선 시체
+2302,2,3,뿌리 시체,Root Corpse,0,Undead,Zombie,physical,normal,heavy,knight,11,4,3,18,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,2,83,23,23,23,23,1,썩은 뿌리에 얽힌 거대 시체
+2303,2,3,이끼에 얽힌 해골,Mossbound Skeleton,0,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,7,10,4,5,arc_pierce,bow,weapon|armor|gloves,1,47,23,23,23,23,1,이끼에 덮인 채 활을 겨누는 해골
 2350,2,3,밴시,Banshee,0,Undead,Ghost,cold,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_frostnova,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,73,9,32,23,23,1,부패한 곡성 — 죽음을 예고하는 울음
 2401,2,4,심연의 유혹마,Abyssal Temptress,0,Demon,Succubus,poison,normal,caster,archer,3,11,3,3,7,4,5,arc_rapid,bow,weapon|armor|amulet,2,26,24,24,10,33,1,심연 입구를 지키는 유혹의 마녀
 2402,2,4,심연 오크 병사,Abyssal Orc Soldier,0,Demon,Orc,physical,normal,line,warrior,10,9,3,10,3,4,5,war_bash,axe,weapon|armor|helmet,2,55,24,24,24,24,1,레비아탄의 심연을 지키는 오크 병사

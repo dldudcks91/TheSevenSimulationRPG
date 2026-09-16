@@ -48,13 +48,13 @@ TheSevenSimulationRPG/
     ├── game_logic/        # 순수 게임 로직 — 이식 대상                       → game_logic/README.md
     ├── dev/               # test.html — 단정 + 밸런스 캘리브레이션           → dev/README.md
     ├── data/              # CSV SSOT + inherited/ (읽기 전용 25종)       → data/README.md
-    └── assets/art/        # backgrounds/(읽기 전용) + faces/(신규 아트·편집 중)  → assets/art/README.md
+    └── assets/art/        # backgrounds/<스타일>/ · faces/<스타일>/ · icons/ (전부 신규 아트·편집 중)  → assets/art/README.md
 ```
 
 ## 규칙
 1. **기획서는 한국어**, 변경 시 꼬리의 마지막 업데이트 **날짜만** 갈아 끼운다 — 무엇을 바꿨는지는 커밋 메시지
 2. **수치는 CSV(SSOT)** — 코드 하드코딩 금지, 기획서에 절대 수치 금지 (키 참조 `[balance.csv:key]` 만)
-3. **`src/data/inherited/` · `src/assets/art/backgrounds/` 읽기 전용** — 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다. `src/assets/art/faces/` 는 읽기 전용이 아니다 — 신규 몬스터 아트를 직접 채워 넣는 활성 폴더 (2026-08-28)
+3. **`src/data/inherited/` · `src/assets/art/backgrounds/source/pixel/` 의 계승 원본 셋(101 · 102 · `town`) 읽기 전용** — 바꿔야 하면 `src/data/` 에 신규 테이블로 **대체**하고 문서에 남긴다. **`src/assets/art/` 의 나머지는 읽기 전용이 아니다** — 배경 설치본(`backgrounds/<스타일>/`) · 얼굴 · 아이콘은 신규 아트를 직접 채워 넣는 활성 폴더 (2026-08-28 · 배경이 스타일 폴더로 갈리며 범위 개정 2026-09-16)
 4. **`game_logic` 모듈은 생성자에서 데이터를 주입받는다**
 5. **git 커밋/푸시는 사용자가 명시적으로 요청할 때만**
 6. **다국어 ko/en 나란히** — 렌더러(`app.js`/`battle.js`)에 한국어 리터럴 금지. **아이템·스킬 이름은 영어가 원본이고 한글은 직역**(의역 금지 — `Morning Star` → 모닝스타) (세부: [src/ui/README.md](src/ui/README.md) · 규약 본문 [src/data/README.md](src/data/README.md))
@@ -73,4 +73,4 @@ TheSevenSimulationRPG/
 - **짧은 동의(「ㄱ」 · 「ok」)의 범위**는 글로벌 CLAUDE.md, **커밋 · 푸시**는 위 규칙 5
 
 ---
-*마지막 업데이트: 2026-09-15*
+*마지막 업데이트: 2026-09-16*

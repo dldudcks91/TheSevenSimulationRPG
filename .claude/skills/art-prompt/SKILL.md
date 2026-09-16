@@ -7,7 +7,7 @@ user-invocable: true
 
 # art-prompt — 초상 발주 · 실측 · 설치
 
-당신은 TheSevenSimulationRPG 의 **초상 아트 발주자**입니다. 그림은 사용자가 Gemini(Gem)로 뽑고, 당신은 **프롬프트를 쓰고 · 산출물을 재고 · 후처리해 게임에 꽂는다.** 스타일의 SSOT 는 문서가 아니라 **앵커 이미지 두 장**([faces/source/](src/assets/art/faces/source/README.md) 의 `gladiator_helm.png` · `barbarian.png`)이고, 합격선은 취향이 아니라 **그 두 장의 실측값**이다.
+당신은 TheSevenSimulationRPG 의 **초상 아트 발주자**입니다. 그림은 사용자가 Gemini(Gem)로 뽑고, 당신은 **프롬프트를 쓰고 · 산출물을 재고 · 후처리해 게임에 꽂는다.** 스타일의 SSOT 는 문서가 아니라 **앵커 이미지 두 장**([faces/source/anchors/](src/assets/art/faces/source/README.md) 의 `gladiator_helm.png` · `barbarian.png`)이고, 합격선은 취향이 아니라 **그 두 장의 실측값**이다.
 
 ## 언제 사용
 
@@ -67,10 +67,10 @@ user-invocable: true
 **0. 읽는다**
 
 - [src/assets/art/README.md](src/assets/art/README.md) `faces/` 절 — 폴더 규칙 · 파일명 = `monster/<idx>` / `hero/<직업id>_<k>`(2026-09-07 · 폴더 분리 2026-09-14) · `FACE_STYLES` · 보간 토큰
-- [faces/source/README.md](src/assets/art/faces/source/README.md) — 앵커 목록 · 시트 격자 좌표 · 누끼 이력 · **이 세트가 정의하는 스타일** 절
+- [faces/source/README.md](src/assets/art/faces/source/README.md) — 앵커 목록 · 시트 격자 좌표 · 누끼 이력 · **이 세트가 정의하는 스타일** 절. **폴더는 넷이다** [2026-09-16] — `anchors/`(합격선의 SSOT 3장) · `sheets/`(자르기 전 원본 시트) · `hero/` · `monster/`
 - [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) — 키잉 절차 · `HERO_FACES` 현재값 · **영웅 파일 매핑 표**(구 번호 → 직업 이름)
 - `src/ui/mock.js` 의 `HERO_FACES` 실제 값 (README 와 어긋나 있을 수 있다 — 코드가 맞다)
-- `ls -lt src/assets/art/faces/source/` — 최신 시트가 무엇인지
+- `ls -lt src/assets/art/faces/source/sheets/` — 최신 시트가 무엇인지
 
 **1. 모드를 가르고 프롬프트를 쓴다** — 스케치를 가져왔으면 세부, 컨셉만 있으면 스케치(위 「두 모드」).
 
@@ -92,7 +92,7 @@ user-invocable: true
 - 색을 **바꾸는** 줄만 hex 로 적고 §3 표에서 키잉 판정값이 40 미만인지 확인한다
 - **내보낼 때는 전문 한 덩어리** — 첨부할 스케치 파일명을 코드블록 위에 한 줄로 적고, 코드블록 하나로 끝낸다(작업 규칙)
 
-**2. 사용자가 뽑는다** — 시트를 `faces/source/source_sheet_<이름>.png` 로 받는다. 워터마크 타일은 보지 않는다.
+**2. 사용자가 뽑는다** — 시트를 `faces/source/sheets/source_sheet_<이름>.png` 로 받는다. 사용자는 폴더 밖(`source/` 루트)에 Gem 기본 이름으로 떨어뜨리므로 **거둬서 이름을 붙이고 `sheets/` 로 내린다**. 워터마크 타일은 보지 않는다.
 
 **3. 잰다** — `python .claude/skills/art-prompt/measure.py --sheet <시트>` (시트 통째) 또는 파일 단위. 출력의 `!` 가 앵커 밖이다.
 
@@ -102,7 +102,7 @@ user-invocable: true
 - 넷이 닮음 → 실루엣 축이 빠진 것(원칙 6)
 - 반드시 **눈으로도 본다** — 몽타주를 만들어 `Read` 한다. 후드 속 얼굴이 검은 void 로 나오는 실패는 수치에 안 잡힌다
 
-**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `source/<설명>.png`(SSOT) + `cartoon/hero/<직업id>_<k>.png`(사본 · 2026-09-07 직업 분류).
+**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `source/hero/<설명>.png`(SSOT · 몬스터면 `source/monster/`) + `cartoon/hero/<직업id>_<k>.png`(사본 · 2026-09-07 직업 분류).
 
 **5. 설치 + 문서**
 

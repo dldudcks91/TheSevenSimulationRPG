@@ -19,7 +19,8 @@
  *   공통     × (1 − 피해감소%)                          원천별 곱은 호출자가 reductionMult 로 합쳐 온다
  *   최종피해 = max(dmg_min, round(…))
  *
- * 성장 축은 곡선 하나뿐이다 — growthMult (§9-0). 레벨과 ilvl 이 같은 곡선을 탄다.
+ * 성장 축은 둘이다 (§9-0) — **구간 직선**(무기 피해 · 방어구 고유값 · 최대 HP)과 **곱셈 곡선**(growthMult — HP flat 접사 · HP 재생 바탕값).
+ * 09-14 최대 HP · 09-15 무기 피해 · 09-16 방어구 고유값이 차례로 곱셈 축을 떠났다.
  */
 
 export function createFormula(balance) {
@@ -28,10 +29,44 @@ export function createFormula(balance) {
 
     /**
      * 성장 축의 유일한 곡선 (§9-0) — `power_growth_per_level ^ (n − 1)`.
-     * 타는 것: 무기 피해 범위(ilvl) · 공격력/HP flat 접사(ilvl) · HP 재생 밑수(레벨). ~~영웅 최대 HP~~ 는 09-14 구간 직선으로 떠났다(R84).
-     * 타지 않는 것: 방어·저항(비율 축) · 모든 % 접사 · 치명 · 공속 (곡선 밖).
+     * 타는 것: HP flat 접사(ilvl) · HP 재생 밑수(레벨)**뿐이다**.
+     *   ~~영웅 최대 HP~~ 09-14 구간 직선으로 떠났다(R84) · ~~무기 피해 범위~~ 09-15(R105) · ~~방어구 고유값~~ 09-16(R107).
+     * 타지 않는 것: 저항(비율 축) · 모든 % 접사 · 치명 · 공속 (곡선 밖).
      */
     const growthMult = n => Math.pow(B.power_growth_per_level, Math.max(1, n ?? 1) - 1);
+
+    /**
+     * 구간 직선의 누적합 표 [2026-09-16 · R107] — 레벨 1 값에서 시작해 **10레벨 구간마다 정해진 단위**를 더한다.
+     * 무기 피해(09-15 확정)와 방어구 고유 방어력(09-16 확정)이 같은 모양을 쓴다 — `hero.js` 의 최대 HP(09-14)까지 셋이 한 규칙이다.
+     * **생성할 때 한 번** 만든다(전투·드롭이 매번 부르는 자리라 루프를 남기지 않는다) · 구간 키가 없으면 여기서 던진다.
+     * `ILVL_CAP` 을 넘는 레벨은 마지막 칸을 쓴다 — 아이템 레벨은 만렙 위로 `spawn_grade.csv:gear_ilvl_add` 만큼 더 올라간다.
+     */
+    const ILVL_CAP = 120;                 // 결정론 상수 — INTERFACE §5-3
+    const MAX_BAND = 8;                   // 구간 키는 8 까지 발행돼 있다 · 그 위는 8 번을 계속 쓴다
+    function bandTable(l1, prefix, levels) {
+        if (!(levels > 0)) throw new Error(`formula: balance.csv 의 ${prefix}_levels 가 없거나 0 이하다`);
+        if (typeof l1 !== 'number') throw new Error(`formula: ${prefix} 의 레벨 1 값이 없다`);
+        const t = [0, l1];
+        for (let n = 2; n <= ILVL_CAP; n++) {
+            const b = Math.min(MAX_BAND, Math.floor((n - 1) / levels) + 1);
+            const u = B[`${prefix}${b}_unit`];
+            if (typeof u !== 'number') throw new Error(`formula: balance.csv 에 '${prefix}${b}_unit' 이 없다`);
+            t[n] = t[n - 1] + u;
+        }
+        return t;
+    }
+    const atIlvl = (t, n) => t[Math.min(ILVL_CAP, Math.max(1, Math.round(n ?? 1)))];
+    const weaponMidTable = bandTable(B.weapon_atk_base, 'weapon_atk_band', B.weapon_atk_band_levels);
+    const armorDefTable = bandTable(B.armor_def_l1, 'armor_def_band', B.armor_def_band_levels);
+
+    /**
+     * 방어구 부위 고유 방어력의 **바탕값** [2026-09-16 사용자 확정 · item_design §1] — 굴림 전 값이다.
+     *   부위 기준값(구간 직선) × 부위 배수(`armor_def_slot_*`) × 갑옷군 배수(`armor_group.csv:def_mult`)
+     * 갑옷군은 **갑옷 칸에만** 있다(09-07) — 투구·장갑·신발은 `groupMult` 가 1 이다.
+     * 개체 편차와 반올림은 부르는 쪽(`item.implicitFor`)이 한다 — 여기는 바탕만 낸다.
+     */
+    const armorDefense = (ilvl, slotMult, groupMult = 1) =>
+        atIlvl(armorDefTable, ilvl) * (slotMult ?? 0) * (groupMult ?? 1);
 
     /**
      * 강화 배율 — `+`강화 단계 하나가 베이스 능력치(무기 피해 양끝 · 방어구 고유값)에 곱하는 값 (item_design §1 · R25).
@@ -41,13 +76,14 @@ export function createFormula(balance) {
 
     /**
      * 무기 피해 범위 [2026-09-14 · R90 · battle_design §9-1] — **굴림이 아니라 파생**이다. 같은 무기군 · 같은 ilvl · 같은 강화면 같은 범위.
-     *   가운데 = weapon_atk_base × growthMult(ilvl) · 양끝 = 가운데 × (1 ∓ 폭/100) × 강화 배율 → **반올림은 곱을 다 한 뒤 한 번**(표기 = 계산).
+     *   가운데 = weapon_atk_base + 구간 단위 누적합(ilvl) [2026-09-15 확정 · R105 — ~~× growthMult(ilvl)~~ 곱셈 축을 떠났다]
+     *   양끝 = 가운데 × (1 ∓ 폭/100) × 강화 배율 → **반올림은 곱을 다 한 뒤 한 번**(표기 = 계산).
      *   폭 = 무기군 `variance`(weapon_group.csv:variance_pct) · 없으면 dmg_variance_pct. 최소 ≥ 1 · 최대 ≥ 최소 (INTERFACE §5-3).
      *   범위 안의 굴림은 `strike` 가 직격마다 한다 — 여기는 양끝만 낸다.
      * @param group 무기군 정의(모르면 null — 전역 폭) · @returns {{min: number, max: number}}
      */
     function weaponDamage(ilvl, group, up = 0) {
-        const mid = B.weapon_atk_base * growthMult(ilvl);
+        const mid = atIlvl(weaponMidTable, ilvl);
         const w = (group?.variance ?? B.dmg_variance_pct) / 100;
         const m = upgradeMult(up);
         const min = Math.max(1, Math.round(mid * (1 - w) * m));
@@ -152,7 +188,7 @@ export function createFormula(balance) {
     const effectiveCd = (cd, period) => Math.ceil(cd / period) * period;
 
     return {
-        growthMult, upgradeMult, weaponDamage, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
+        growthMult, upgradeMult, weaponDamage, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
         hitChance, strike, indirect, leech, attacksPerSec, effectiveCd,
     };
 }

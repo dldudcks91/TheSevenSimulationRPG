@@ -98,18 +98,18 @@ def normalize(img, target=0.74, S=512):
 ## 4. 한 번에 — 시트 → 4장
 
 ```python
-sheet = Image.open('src/assets/art/faces/source/source_sheet_<이름>.png').convert('RGBA')
+sheet = Image.open('src/assets/art/faces/source/sheets/source_sheet_<이름>.png').convert('RGBA')
 for tag, box in TILES.items():
     if tag == 'BR': continue                            # 워터마크
     out = normalize(key_green(sheet.crop(box)))
-    out.save('src/assets/art/faces/source/<설명>_%s.png' % tag)   # SSOT — 내용으로 이름
+    out.save('src/assets/art/faces/source/hero/<설명>_%s.png' % tag)   # SSOT — 내용으로 이름 (몬스터면 monster/)
 ```
 
 이어서 `python .claude/skills/art-prompt/measure.py <만든 파일들>` 로 `shldr` 가 73~75 에 앉았는지 확인한다. `hd/sh` 는 이 단계로 안 바뀐다(불변량).
 
 ## 5. 설치
 
-1. **SSOT** — `faces/source/<설명>.png` (예: `archer_hood_black.png`). 파일명은 내용으로. 시트 원본 `source_sheet_<이름>.png` 도 남긴다
+1. **SSOT** — `faces/source/hero/<설명>.png`(영웅) · `faces/source/monster/<설명>.png`(몬스터). 파일명은 내용으로(예: `archer_hood_black.png`). 시트 원본은 `faces/source/sheets/source_sheet_<이름>.png` 로 남긴다 [폴더 분리 2026-09-16 — 앵커는 `anchors/`]
 2. **사본** — `faces/cartoon/hero/<직업id>_<k>.png` 로 복사 [개정 2026-09-07]. `직업id` 는 `data/class.csv` 의 id(그림이 읽히는 직업), `k` 는 그 직업 풀의 다음 번호(추가) 또는 교체할 번호
 3. **`src/ui/mock.js` `HERO_FACES[<직업id>]`** — 추가면 그 직업의 장수를 올린다. **늘리는 방향은 무해하다** (2026-09-06 저장형 전환 뒤 얼굴은 세이브에 박혀 있다 — 새로 태어나는 영웅의 굴림 범위만 넓어진다). ⚠ **줄이는 방향만** 영향이 있다: 범위를 넘은 저장값은 그 직업 풀 안에서 접힌다. 사용자에게 추가/교체를 먼저 묻는다. 몬스터는 `monster/<idx>.png` 라 직업 축이 없다
 4. **문서** — [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) `hero_*` 절의 장수·출처 · [source/README.md](../../../src/assets/art/faces/source/README.md) 영웅 표에 한 줄 · 두 문서 꼬리 날짜(날짜만)
