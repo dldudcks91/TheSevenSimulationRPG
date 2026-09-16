@@ -202,10 +202,12 @@ export const PAPERDOLL = [
    지금은 warrior_1 검투사(구 1) · warrior_2 바바리안(구 2) · warrior_3 백발백염(구 7) ·
    knight_1~3 무안면 로마군(구 3~5) · knight_4 민머리 기사(구 6) · knight_5 외치는 기사(구 9) ·
    archer_1 궁수(구 8) · priest_1~4 사제(구 10 반삭 + 09-07 저녁 신규 셋: 후드 룬 · 흰 두건 · 역병 의사) ·
-   mage_1 마법사(수정구 예언자 — 09-07 밤, 마지막 직업 공백이 닫혔다)(faces/cartoon/README).
+   mage_1 마법사(수정구 예언자 — 09-07 밤, 마지막 직업 공백이 닫혔다) ·
+   mage_2 포세이돈(청록 장발·수염 노인) · mage_3 노스트라다무스(황도 기호 로브 · 회백 장발 노인)
+   — 2026-09-16 사용자 지시로 mage 1 → 3. 늘리는 방향이라 기존 영웅 얼굴은 안 바뀐다(faces/cartoon/README).
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
    풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
-export const HERO_FACES = { warrior: 3, knight: 5, mage: 1, archer: 1, priest: 4 };
+export const HERO_FACES = { warrior: 3, knight: 5, mage: 3, archer: 1, priest: 4 };
 
 /**
  * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
@@ -226,6 +228,8 @@ export const HERO_FACE_NAMES = {
     warrior_3: { ko: '검황', en: 'Sword Emperor' },        // 백발백염
     knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
+    mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
+    mage_3: { ko: '노스트라다무스', en: 'Nostradamus' },   // 황도 기호 로브 노인
     // knight_2 · knight_3 · knight_4 는 이름 없이 번호로 둔다 (2026-09-10 사용자 지시 — 「나중에 안 쓸 듯」)
 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).

@@ -62,10 +62,10 @@ attack_type = physical | fire | cold | lightning | poison
 - **[2026-08-26 개정] 몬스터 저항은 원소별로 갈린다.** 같은 날 오전의 "`resist` 단일 소재값 = 4원소 공통" 을 폐기했다. 공통 단일값이면 **마법 무기 개체가 굴리는 원소가 아무 일도 하지 않아** 원소 4종을 만든 이유가 사라진다 — "여긴 냉기 저항이 높으니 화염 무기로"라는 결정이 성립하려면 몬스터 쪽에 차등이 있어야 한다
 - **저항은 소재값이 아니라 직접 %다** — 영웅과 같은 규칙(상한형, 하한 없음)을 쓴다. battle_design.md §9-5 · §8-1
 
-## 3. 베이스 16종 (monster_base)
+## 3. 베이스 17종 (monster_base)
 
 - **Normal (6)**: Wolf(고속 딜러) · Yeti(강타) · Troll(방어) · Lizardman(균형) · Golem(극단 방어) · Human(균형 전사)
-- **Demon (5)**: Imp(빠른 마법) · Goblin(집단) · Succubus(디버프) · Gargoyle(방어) · Orc(강타)
+- **Demon (6)**: Imp(빠른 마법) · Goblin(집단) · Succubus(디버프) · Gargoyle(방어) · Orc(강타) · **Naga(뱀족 — 레비아탄의 수하 · 2-4)** [신설 2026-09-16]
 - **Undead (5)**: Skeleton(밸런스) · Zombie(느린 고체력) · Ghost(물방↓마방↑) · Vampire(흡혈) · Lich(마법 극대)
 
 **베이스 = 내부 분류**(스탯 성향·attack_type 기본값·드롭 기준), **인스턴스 = 챕터별 고유 이름·외형** — 같은 Skeleton도 챕터마다 다른 존재로 보이게.
@@ -256,4 +256,4 @@ attack_type = physical | fire | cold | lightning | poison
 
 ---
 
-*마지막 업데이트: 2026-09-15*
+*마지막 업데이트: 2026-09-16*

@@ -30,7 +30,7 @@ SPEC = {
  'skeleton_greathelm_plume': ('skel',  (0, 1035, 1013, 2048),    310, 280, 1.039, 1303,  40,  56),
  'satan_horns_chain'       : ('satan', (0, 0, 504, 504),         340, 228, 1.20, 1900,  50,  38),
  'leviathan_skull_fangs'   : ('leviathan', (0, 0, 504, 504),     345, 206, 1.05, 2900,  24,  25),
- 'goblin_skull_helm'       : ('goblin_shaman', (0, 0, 507, 507), 295, 217, 1.30, 1103,   0,   8),
+ 'goblin_skull_helm'       : ('goblin_shaman', (0, 0, 507, 507), 295, 217, 0.95, 1103,  36,  17),
  'orc_helm_pauldron'       : ('orc_troop', (0, 0, 1014, 1014),   256, 212, 1.30, 2101,   0,   0),
  'orc_hood_quiver'         : ('orc_troop', (1034, 0, 2048, 1014),296, 212, 1.30, 2102,   0,   0),
  'orc_skull_crown'         : ('orc_troop', (0, 1034, 1014, 2048),284, 215, 1.15, 2103,   0,   0),
