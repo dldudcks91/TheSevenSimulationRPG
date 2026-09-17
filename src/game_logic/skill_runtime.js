@@ -38,7 +38,7 @@ export function createHooks() {
  * 0 이면 스킬이 매 차례 나가 예산이 무너진다 (battle_design §6)
  */
 export function cooldownSec(B, u, def) {
-    return (def.cool ?? 0) * Math.max(B.skill_cd_floor_mult, 1 - (u.cdr ?? 0) / 100);
+    return (def.cool ?? 0) * Math.max(B.skill_cd_floor_mult, 1 - (u.cdr ?? 0));      // 쿨감소는 비율 (R111)
 }
 
 /**
@@ -118,7 +118,7 @@ export function createSkillRuntime(ctx) {
      */
     function castHeal(u, def, t) {
         const matk = u.matkMin + rng() * (u.matkMax - u.matkMin);   // 회복량 굴림 — 대상 선택 앞 · 양끝이 같아도 1회 (R90)
-        const amt = Math.round(matk * def.mult / 100 + (def.flat ?? 0));
+        const amt = Math.round(matk * def.mult + (def.flat ?? 0));     // 배율은 비율 (R111)
         const targets = targetsOf(u, def);
         for (const tgt of targets) {
             tgt.hp = Math.min(tgt.hpMax, tgt.hp + amt);
@@ -179,7 +179,7 @@ export function createSkillRuntime(ctx) {
 
     /**
      * 기본 공격 — **평타 부여 창이 여기서 읽힌다** (skill_design §12-4·§12-5 인챈트 · 관통 사격 · 독화살).
-     *   `attack_splash`  단일 → 광역. 그때 배율이 창의 값 % 다 (창이 없으면 1배 단일)
+     *   `attack_splash`  단일 → 광역. 그때 배율이 창의 값(비율)이다 (창이 없으면 1배 단일)
      *   `onhit_element`  때린 대상마다 원소 추가타 1회. **스킬 타격에는 안 붙는다**
      * ⚠ 창이 켜지면 타격 수가 늘어 rng 소비도 는다 — 창이 없을 때의 수열은 종전과 **완전히 같다**
      */
@@ -188,13 +188,13 @@ export function createSkillRuntime(ctx) {
         const targets = splash > 0 ? foes.slice() : [ctx.pickTarget(u, foes)];
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
-            ctx.strikeOnce(u, tgt, splash > 0 ? splash / 100 : 1, null);
+            ctx.strikeOnce(u, tgt, splash > 0 ? splash : 1, null);
         }
         const oh = onhitOf(u);
         if (!oh) return;
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
-            ctx.strikeOnce(u, tgt, oh.v / 100, oh.element, oh.id);
+            ctx.strikeOnce(u, tgt, oh.v, oh.element, oh.id);
         }
     }
 

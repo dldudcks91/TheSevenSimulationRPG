@@ -199,6 +199,7 @@ faces/
 id 가 아니다. 스타일로 쓰려면 id 로 이름을 바꿔 새 폴더의 `monster/` · `hero/` 에 넣고 `FACE_STYLES` 에 등록한다.
 
 **파일명 규칙은 스타일이 달라도 같다** — `monster/<idx>.png`(숫자는 `src/data/monster.csv` 의 `monster_idx`) · `hero/<직업id>_<k>.png`(장수는 `mock.js:HERO_FACES`).
+**정예 전용 초상은 `monster/<idx>_elite.png`** [2026-09-17] — 있는 몬스터만 `monster.csv:face_elite = 1` 이다. 파일 존재를 찔러보지 않고 **그 컬럼이 결정한다** — 0 이면 정예도 기본 `<idx>.png` 를 그대로 쓴다.
 그래서 폴더만 갈아 끼우면 얼굴이 통째로 바뀐다.
 
 ### 새 스타일 넣는 법 — 두 단계
@@ -350,16 +351,18 @@ Gemini 가 투명 배경 지시를 무시하고 흰 배경으로 굽는다(초�
 
 ```
 icons/items/
-├── axe.png · mace.png · spear.png · sword2h.png      ┐ 파일명 = weapon_group.csv 의 group_id
-├── bow.png · crossbow.png · staff.png · orb.png      ┘
+│   (무기군 그림 8장은 2026-09-17 삭제 — 베이스 그림이 그 자리를 든다 · 사용자 지시)
 ├── empty/
-│   └── weapon.png · armor.png · gloves.png · boots.png · ring.png  ← 파일명 = equip_slot.csv 의 part
-├── item_base/          ← 방어구 · 장신구 — 파일명 = item_base.csv 의 base_id [폴더 2026-09-14]
-│   └── armor_1.png · boots_1.png · gloves_1.png · ring_1.png
+│   └── weapon · helmet · armor · gloves · boots · amulet · ring .png  ← 파일명 = equip_slot.csv 의 part (부위 7종 전부)
+├── item_base/          ← 방어구 · 장신구 — 파일명 = item_base.csv 의 base_id [폴더 2026-09-14 · 베이스 축 2026-09-17]
+│   └── armor_cloth · armor_robe_1~3 · armor_light_1~3 · armor_heavy_1~3 .png      ← 갑옷 10종
+│       helmet_cloth · helmet_tiara_1~3 · helmet_leather_1~3 · helmet_plate_1~3 .png ← 투구 10종 [2026-09-17]
+│       (옛 부위당 한 장 armor_1 · boots_1 · gloves_1 · ring_1 은 2026-09-17 삭제)
 ├── source/             ← 원본 시트 — **게임이 안 읽는다** [폴더 2026-09-14]
 │   ├── examples.png        ← 무기 원본 시트(3×3)
 │   ├── examples_armor.png  ← 방어구 원본 시트(2×2)
-│   ├── item_background.png ← 미장착 실루엣 원본 시트(십자 5종)
+│   ├── item_background.png ← 미장착 실루엣 **구판** 시트(십자 5종 · 2026-09-17 교체로 비사용)
+│   ├── Gemini_Generated_Image_ (2).png ← 미장착 실루엣 원본 시트(4×6 = 24칸 · 어두운 칸 배경) [2026-09-17]
 │   ├── sheet_sword2h_bases.png ← 양손검 베이스 원본 시트(3×3 · 7칸)
 │   ├── sheet_axe_bases.png     ← 도끼 베이스 원본 시트(3×3 · 7칸)
 │   ├── sheet_mace_bases.png    ← 둔기 베이스 원본 시트(3×3 · 7칸)
@@ -407,7 +410,7 @@ icons/items/
 
 **파일명 = 그 장비를 정하는 CSV 의 id** — `icons/skills/` 의 `skill_id`, 초상의 `monster/<idx>` 와 같은 문법이다.
 갈리는 것은 **무기와 방어구의 SSOT 가 다르다**는 점뿐이다: 무기는 착용 단위가 무기군이라 `weapon_group.csv:group_id`,
-방어구는 `item_base.csv:base_id`(폴더 `item_base/` — `mock.js:ITEM_BASE_ART_DIR`). 두 네임스페이스는 겹치지 않는다(`axe` ↔ `armor_1`).
+방어구는 `item_base.csv:base_id`(폴더 `item_base/` — `mock.js:ITEM_BASE_ART_DIR`). 두 네임스페이스는 겹치지 않는다(`hatchet` ↔ `armor_cloth`).
 
 `unused/` · `source/` 를 폴더로 가른 이유는 `faces/source/` 와 같다 — **파일명이 id 가 아니기 때문**이다. `unused/` 에는 지금 `wand.png` 하나뿐이다.
 완드는 `weapon_group.csv` 의 어느 행도 아니다(2026-09-01 「완드 → 오브」 개명으로 자리가 사라졌다). id 가 생기면 위로 올린다.
@@ -423,6 +426,7 @@ icons/items/
 | 무기군 `release=expansion` | — | `dagger` · `scythe` |
 | **무기 베이스** (본편 70 — 무기군 10 × 7) | 양손검·도끼·둔기·창·활 7종씩 = `weapon_base/sword2h·axe·mace·spear·bow/`(**id 있음 · 실사용** — 뒤의 셋 2026-09-11) · 스태프·오브·십자가·성경 7종씩 = `weapon_base/staff·orb·crucifix·bible/`(**id 있음 · 실사용** — 2026-09-14) · 석궁 7종 = `weapon_base/crossbow/`(**id 있음 · 실사용** — 2026-09-14) | — |
 | 방어구 6부위 × 4종 | `armor_1` `boots_1` `gloves_1` `ring_1` | `helmet_*` · `amulet_*` 전부 · 나머지 부위의 `_2`~`_4` |
+| **빈 칸 실루엣** (부위 7) | 7종 전부 — `empty/` [2026-09-17 통째 교체] | — |
 
 방어구는 부위마다 4종인데 그려진 것은 **판금 계열 `_1` 하나씩**이다 — 사슬·가죽·유령 계열은 아직 없다.
 `boots_1`(전투화)·`ring_1`(은반지)은 그림이 판금 장화·붉은 보석 반지라 **이름과 완전히 같지는 않다** — `_1` = 중장 계열이라는 축으로 붙였다.
@@ -449,37 +453,48 @@ icons/items/
 - **재발주 처방** — 양손검: 「blade at least one third as wide as the guard is long, thick heavy blade」 · 가는 검(롱 소드 · 클레이모어)도 굵게. 활: 「thick chunky bow limbs, each limb as wide as the grip wrap」 · 「no thin separate string — omit it or draw it thick」 · 검은 몸체(룬 · 고딕)에 「bright rim highlight along the dark limb」 · 설치본 `bow.png` 를 굵기 기준으로 첨부 · 롱 보우는 숏 보우와 **형태로** 가른다
 - 파일마다 생김새의 출처 · 실측 표 · 발주 중 수정 이력은 [DEV_LOG.md §4](../../../docs/client/DEV_LOG.md)
 
-### `potion/` — 물약 그림 [신설 2026-09-15 · 그림 대기]
+### `potion/` — 물약 그림 [신설 2026-09-15 · **티어 5종은 대기 · 칸 배경은 찼다** 2026-09-17]
 
 ```
 icons/items/potion/
-└── (비었다 — 사용자가 준다) minor_healing · light_healing · healing · greater_healing · super_healing .png   ← 파일명 = potion.csv 의 potion_id
+├── slot.png   ← **칸 배경 실루엣** — id 가 아니다(칸 넷이 같은 한 장) [2026-09-17]
+└── (대기) minor_healing · light_healing · healing · greater_healing · super_healing .png   ← 파일명 = potion.csv 의 potion_id
 ```
 
 관전 아레나의 물약 칸 · 제련소 물약 머리 줄이 읽는다([SCREEN_DESIGN §4-2 · §8-2](../../../docs/client/SCREEN_DESIGN.md) · ADR-0148). **칸 한 변이 28px** 이라 장비 칸(40px)보다 작다 — 병의 윤곽이 굵어야 읽힌다. 규격은 아래 「규격」과 같다.
 **목록에 적어야 뜬다** — `mock.js:POTION_ART_IDS` 에 id 한 줄. 목록에 없는 물약은 칸이 테두리만 선다 · 해시 폴백을 안 쓰는 이유는 `empty/` 와 같다(틀린 그림 = 틀린 정보 — 마이너 칸에 슈퍼 병이 뜨면 회복량을 잘못 읽는다).
 
+**칸 배경은 그 규칙 밖이다** [2026-09-17 사용자 지시] — `slot.png` 한 장을 **칸 넷이 다 든다**. `potionArt` 가 축이 「어느 물약인가」라 틀리면 회복량을 잘못 읽는 반면, 이쪽은 **「여기에 물약이 들어간다」는 칸의 말**이라 티어를 안 가린다 (`empty/` 의 부위 실루엣과 같은 자리 · 조립은 `mock.js:POTION_SLOT_ART`). 찬 칸과 빈 칸은 **진하기**가 가른다 — 빈 칸 `.3` · 찬 칸 `.8` (28px 칸에서 테두리 실선/점선만으로는 덜 읽힌다). 티어 그림이 오면 찬 칸이 제 그림으로 바뀌고 이 배경은 빈 칸에만 남는다.
+
+원본은 `source/Gemini_Generated_Image_ (2).png` 의 **r4c6** — 그 칸에는 Gemini ✦ 워터마크가 같이 들어 있었다. 병과 **안 닿아**(가로로 11px 떨어진 별개 연결요소) 지우개질 없이 **덩어리째 안 담는 것**으로 걷혔다 — 병 픽셀은 원본 그대로다. 코르크 마개(322px)는 병과 붙어 있어 같이 남긴다 — 크기로 거르면 마개가 날아간다.
+
 ### `empty/` — 미장착 슬롯의 부위 실루엣 [신설 2026-09-03]
 
 ```
 icons/items/empty/
-├── weapon.png · armor.png · gloves.png · boots.png · ring.png   ← 파일명 = equip_slot.csv 의 part
-└── (helmet · amulet 은 아직 그림이 없다)
+└── weapon · helmet · armor · gloves · boots · amulet · ring .png   ← 파일명 = equip_slot.csv 의 part
+                                                             (부위 7종 전부 찼다 — 2026-09-17)
 ```
 
 여기만 **축이 부위**(`equip_slot.csv:part`)다 — 위쪽 파일들이 `group_id`/`base_id` 인 것과 갈린다.
 그래서 반지 두 칸(`ring1`·`ring2`)이 같은 그림 하나를 든다. 폴더를 가른 이유가 이것이다: 같은 폴더에 두면
 `gloves.png`(부위)와 `gloves_1.png`(베이스)가 나란히 서서 **어느 축인지 파일명만 봐서는 못 읽는다.**
 
-원본은 `source/item_background.png` — 5종이 격자가 아니라 **십자로** 놓여 있어 칸 격자 대신 연결요소로 잘랐다.
+원본은 `source/Gemini_Generated_Image_ (2).png` — **4×6 = 24칸** 중 7칸을 부위로 썼다 [2026-09-17 · 이전 5종을 통째로 교체].
 그림은 채도가 없는 회색이고, 화면에서 옅게 까는 것은 **CSS 가** 한다(`opacity`) — 파일에 굽지 않는다.
 
+**이 시트만 누끼 절차가 다르다 — 배경이 어둡다.** 아래 「누끼」 절의 체커보드 팔로 읽기는 여기서 못 쓴다
+(둥근 칸 타일과 바깥 판이 **다른 어둠**이라 flood fill 이 타일을 그림으로 삼킨다). 대신 **밝기로** 갈랐다:
+그림 = 밝기 96 초과(판 29~33 · 타일 48~55 · 타일 베벨 72~79 · 아이콘 몸 200+) · 칸 경계는 **밝은 획이 없는 빈 골**에서 찾고
+(균등 분할은 옆 칸 아이콘을 건드려 조각을 끌고 온다) · 둘러싸인 어두운 주머니는 25px 이상이면 배경이다(반지 구멍 · 갑옷 목 파임 · 손가락 사이).
+그 뒤 침식 · 3px 색 번짐 · 페더 · 0.88 정규화는 `cut.py` 와 같다.
+
 **해시 폴백을 쓰지 않는다** — 스킬 아이콘은 「제 그림은 아니어도 늘 같은 그림」이면 되지만, 부위는
-**틀린 그림이 곧 틀린 정보**다(투구 칸에 장화가 뜨면 그 칸을 잘못 읽는다). 목록에 없는 부위는 옛 이모지로 남는다.
+**틀린 그림이 곧 틀린 정보**다(투구 칸에 장화가 뜨면 그 칸을 잘못 읽는다). 목록에 없는 부위는 옛 이모지로 남지만, 2026-09-17 로 **부위 7종이 다 차서** 빈 칸이 이모지로 떨어지는 일은 없다.
 
 ### 규격 — `icons/skills/` 와 같다
 
-- 512×512 RGBA · **투명 배경** · 75~215KB
+- 512×512 RGBA · **투명 배경** · 46~215KB (빈 칸 실루엣 7종이 46~73KB — 명암이 부드럽게 이어져 평면 음영보다 무겁다)
 - **bbox 장변 = 512 × 0.88, 중앙 정렬.** 기존 스킬 4종의 실측(0.88~0.90)에 맞춘 값이다 — 원본 시트에서 창이 크게, 완드가 작게 그려져 있어도 화면에서는 같은 무게로 읽힌다
 - **40~64px 에서 읽혀야 한다** (스킬 아이콘과 같은 근거 — 실제 칸이 그 크기다)
 
@@ -498,10 +513,10 @@ icons/items/empty/
 | 세트 | 어디에 | 조립하는 곳 |
 |---|---|---|
 | `empty/<part>.png` | **캐릭터 탭 페이퍼돌의 빈 칸** (SCREEN_DESIGN §6) | `ui/mock.js:slotArt` |
-| `<group_id>.png` (무기 8) | **착용 칸 · 가방 칸 · 제련소 목록·머리** (SCREEN_DESIGN §2) — `item.group` 이 곧 파일명이라 **제 그림이다**. ⚠ **본편 열 전부 베이스 그림이 서서 실칸에서는 안 쓰인다** — 아래 베이스 7장이 대신 뜬다. 무기군 그림은 **도감 「무기」 줄에만** 남았다 | `ui/mock.js:itemArt` |
+| ~~`<group_id>.png` (무기 8)~~ **삭제 2026-09-17** | **착용 칸 · 가방 칸 · 제련소 목록·머리** (SCREEN_DESIGN §2) — `item.group` 이 곧 파일명이라 **제 그림이다**. ⚠ **본편 열 전부 베이스 그림이 서서 실칸에서는 안 쓰인다** — 아래 베이스 7장이 대신 뜬다. 무기군 그림은 **도감 「무기」 줄에만** 남았다 | `ui/mock.js:itemArt` |
 | `weapon_base/<group>/*.png` (본편 열 무기군 베이스 각 7) | 같은 칸들 — **개체마다 제 무기군의 7장 중 하나** [2026-09-10 · 둔기·창·활 2026-09-11 · 스태프·오브·십자가·성경·석궁 2026-09-14]. 개체가 든 `baseId` 의 그림이다(`weapon_base.csv` 가 드롭 때 굴린다 · **이름도 그 베이스**). `baseId` 가 없는 옛 개체만 **`uid`+무기군 해시**로 고른다 — **rng 가 아니라** 그리는 시각의 해시라 골든이 안 움직이고, uid 가 세이브에 남으므로 **한 개체는 평생 같은 무기**다. ⚠ 해시로 고른 옛 개체는 이름·툴팁이 무기군 이름이라 **그림과 이름이 어긋난다** | `ui/mock.js:itemArt` (`WEAPON_BASE_STEMS` — 무기군별 맵) |
-| `item_base/<base_id>.png` (방어구 4) | 같은 칸들. ⚠ **임시로 부위당 한 장** — 개체가 `base_id` 를 안 들고 다녀(`item.js:build` 는 이름만 조립한다) 판금·사슬·가죽·유령 갑옷이 전부 `armor_1.png` 로 나온다. 개체가 베이스를 들게 되면 `itemArt` 의 부위→파일 표 한 줄만 걷는다 | `ui/mock.js:itemArt` (`ITEM_ART_BY_SLOT`) |
-| 투구 · 목걸이 | **그림이 없다** — 착용·가방·제련소·미장착 전부 `equip_slot.csv:icon` 이모지로 떨어진다 | — |
+| `item_base/<base_id>.png` (갑옷 10 · 투구 10) | 같은 칸들 — **개체가 든 `baseId` 의 그림** [2026-09-17]. 드롭 때 굴린 베이스 id 를 개체가 들고(`item.js:build`) 화면은 그대로 읽어, 퀼티드와 더스크 슈라우드가 다른 그림이다. ⚠ **옛 세이브의 방어구는 `baseId` 가 없어** 이모지로 떨어진다 — 새로 먹는 것부터 그림이 붙는다 | `ui/mock.js:itemArt` (`ITEM_BASE_ART_IDS`) |
+| 장갑 · 신발 · 목걸이 · 반지 | **아이템 그림이 없다** — 착용·가방·제련소가 `equip_slot.csv:icon` 이모지로 떨어진다. **미장착 칸은 2026-09-17 로 그림이 생겼다**(위 `empty/` 줄) | — |
 
 ⚠ 화면에서 이 그림들은 **`<img>` 로 들어간다. CSS `background: url()` 이 아니다** — 상대 경로를 커스텀 프로퍼티에
 담으면 `style.css` 기준(`/ui/assets/…`)으로 풀려 404 가 난다. 실제로 그렇게 짰다가 칸이 통째로 비었다.
@@ -509,4 +524,4 @@ icons/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-09-16*
+*마지막 업데이트: 2026-09-17*

@@ -24,6 +24,9 @@
  *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 **물리** — 마법 무기의 원소는 관련 옵션이 붙었을 때만 생긴다
  *     (§2-1 · §9-5 · 개정 2026-09-11 · R80). 그래서 몬스터의 `attack_type` 은 `computeCombat` 결과를 **덮는다**
  *   · 반사는 비직격 — 감쇠·치명 없이 공격자 HP 를 직접 깎고 아무것도 유발하지 않는다 (§9-6)
+ *   · **물리 경직** [2026-09-17 · R110 · §2-3] — 물리 직격으로 줄어든 HP 가 최대 HP 의 [balance.csv:stagger_hp_pct](비율) 이상이면
+ *     [balance.csv:stagger_sec] × (1 − 타격 회복 비율) 만큼 **행동 차례만** 늦춘다(쿨은 돈다 · 다시 걸리면 끝 시각만 새로 · 양쪽 같은 규칙 · rng 0).
+ *     ⚠ 타격 회복(`fhr`)의 출처 · 상한은 기획 미정이다 (GAME_DESIGN §10 「경직 · 상태이상 개편의 남은 칸」)
  *
  *   · **유닛 생성은 `makeUnit` 하나다** — 영웅도 몬스터도 같은 생성자를 지난다 (§8-1). 그리고 **전투 능력치를 만드는 함수도 하나다**
  *     [개정 2026-09-11 · R79] — ~~`combatFromMonster`~~ 는 삭제되고 몬스터도 `heroSystem.computeCombat` 을 지난다.
@@ -156,7 +159,7 @@ export function createBattleSystem(data) {
         const atk = c.atk_physical ?? c.atk_magic ?? NO_DMG;
         const atkPct = c.atk_pct_sum ?? 0;
         const matk = c.atk_magic ?? NO_DMG;
-        const bracket = 1 + atkPct / 100;
+        const bracket = 1 + atkPct;                  // Σ 상시 피해는 비율 (R111)
         return {
             side,
             hp: c.hp_max, hpMax: c.hp_max,
@@ -178,9 +181,11 @@ export function createBattleSystem(data) {
             crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
             regen: c.hp_regen ?? 0, regenBase: c.hp_regen ?? 0, regenAcc: 0,
-            cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축 % — 시전 시점에 곱한다
+            cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축(비율) — 시전 시점에 곱한다
             period: c.action_period, basePeriod: c.action_period,
             next: 0,
+            // 물리 경직 (battle_design §2-3 · R110) — 타격 회복(비율)이 경직 시간을 줄이고, `stagUntil` 은 경직이 끝나는 시각이다(`stagger`)
+            fhr: c.fhr ?? 0, stagUntil: 0,
             actives: [], buffs: {}, barrier: null,
             reactions: [],                           // 사건 훅 등록 자리 (⚠ 지금은 아무도 싣지 않는다)
             goldFind: c.gold_find, itemFind: c.item_find,
@@ -197,20 +202,20 @@ export function createBattleSystem(data) {
     }
 
     /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
-       HP · 창 · 배리어 · 행동 예약 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
+       HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
     const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'resMaxBonus', 'dr', 'drBase', 'defIgnore', 'resReduction',
-        'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod',
+        'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod', 'fhr',
         'goldFind', 'itemFind', 'fx', 'magicFind', 'stats'];
 
     /**
      * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
      * 행동하지 않으므로 행동 주기도 AI 도 대상 선택도 없다 — `next: Infinity` 라 차례가 영원히 안 온다.
      * 공격·방어 축은 전부 0 이고 HP 만 든다: **펫 서브시스템을 여는 것이 아니다**(기획 §12-6 이 못박은 구분).
-     * @param caster 시전자 · @param def 스킬 정의(`mult` = 시전자 최대 HP 의 % · `flat` = 능력치 항 — 런타임이 `scaleDef` 를 지난 것을 넘긴다) · @param key 유닛 키
+     * @param caster 시전자 · @param def 스킬 정의(`mult` = 시전자 최대 HP 의 비율 · `flat` = 능력치 항 — 런타임이 `scaleDef` 를 지난 것을 넘긴다) · @param key 유닛 키
      */
     function makeSummon(caster, def, key) {
-        const hp = Math.max(1, Math.round(caster.hpMax * def.mult / 100 + (def.flat ?? 0)));
+        const hp = Math.max(1, Math.round(caster.hpMax * def.mult + (def.flat ?? 0)));
         const zero = {
             hp_max: hp, atk_physical: NO_DMG, atk_magic: NO_DMG, atk_pct_sum: 0, attack_type: 'physical',
             defense: 0, res_fire: 0, res_cold: 0, res_lightning: 0, res_poison: 0,
@@ -316,7 +321,7 @@ export function createBattleSystem(data) {
      * ⚠ **1단이 2단보다 앞인 것이 계약이다** — 장비 굴림이 편성 굴림을 밀면 같은 시드가 다른 편성을 낸다
      *   (`rollFace` 를 맨 뒤에 두는 것 · `searchRoll` 의 「결과를 먼저, 이야기를 뒤에」와 같은 규칙).
      * ⚠ **전역 상한도 1단에서 자른다** — 잘릴 유닛의 장비를 굴리면 수열이 편성 상한에 종속된다.
-     * @param magicFind 파티 평균 매직아이템 획득확률 % — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
+     * @param magicFind 파티 평균 매직아이템 획득확률(비율) — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
      * @param level 몬스터 레벨 = **이번 런의 스테이지 레벨** — 안 주면 기본 레벨 `dlvl` (2026-09-14 · R87)
      */
     function spawnRound(rng, stage, pool, n, magicFind = 0, level = stage.dlvl) {
@@ -453,9 +458,9 @@ export function createBattleSystem(data) {
         };
         let goldMult, dropMult, magicFind;
         const measureParty = () => {
-            goldMult = 1 + avg('goldFind') / 100;
-            dropMult = 1 + avg('itemFind') / 100;
-            magicFind = avg('magicFind');            // 매직아이템 획득확률 % — 드롭의 레어 가중치에 곱한다 (item_design §1 「무기 옵션」 · R78)
+            goldMult = 1 + avg('goldFind');          // 셋 다 비율 (R111)
+            dropMult = 1 + avg('itemFind');
+            magicFind = avg('magicFind');            // 매직아이템 획득확률 — 드롭의 레어 가중치에 곱한다 (item_design §1 「무기 옵션」 · R78)
         };
         measureParty();
         // 무기 옵션 타격 시 창의 길이 (R78) — 전투 시작에 한 번 묶는다
@@ -540,7 +545,7 @@ export function createBattleSystem(data) {
         const drinkPotions = () => {
             const want = party
                 .map((u, i) => ({ u, i }))
-                .filter(({ u }) => !u.summon && u.hp > 0 && u.hp / u.hpMax * 100 < B.potion_use_hp_pct && u.potionReadyAt <= t + EPS);
+                .filter(({ u }) => !u.summon && u.hp > 0 && u.hp / u.hpMax < B.potion_use_hp_pct && u.potionReadyAt <= t + EPS);
             want.sort((a, b) => (a.u.hp / a.u.hpMax - b.u.hp / b.u.hpMax) || (a.i - b.i));
             for (const { u } of want) {
                 if (potionLeft <= 0) break;
@@ -615,12 +620,12 @@ export function createBattleSystem(data) {
             // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)
             // 도감 카드 — 장비 드롭과 별개 판정 [balance.csv:codex_card_drop_pct]. 등급별 차등은 후속 (monster_design §8)
             //   카드는 **라운드를 이기면 조용히** 들어온다 — 처치 순간 알리는 `card` 이벤트는 없다 [삭제 2026-09-14 · R89 · 사용자 지시]
-            if (rng() * 100 < B.codex_card_drop_pct) {
+            if (rng() < B.codex_card_drop_pct) {      // 확률은 비율 (R111)
                 loot.cards[e.monsterId] = (loot.cards[e.monsterId] ?? 0) + 1;
             }
             // 드롭 판정 — **처치당 최대 1개** (item_design §1 확정 08-27). 등급은 굴림 횟수가 아니라
             // 확률 배율(spawn_grade.drop_chance_mult)이다 — 판정은 **1회**. 보스는 최소 1개 보장
-            let got = rng() * 100 < B.drop_chance_pct * e.dropChanceMult * dropMult ? 1 : 0;
+            let got = rng() < B.drop_chance_pct * e.dropChanceMult * dropMult ? 1 : 0;
             if ((e.grade === 'stage_boss' || e.grade === 'chapter_boss') && got < B.boss_guaranteed_drop) got = B.boss_guaranteed_drop;
             /*
              * **떨어지는 것은 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · 사용자 지시 · item_design §1 2단계].
@@ -694,6 +699,23 @@ export function createBattleSystem(data) {
         }
 
         /**
+         * 물리 경직 [2026-09-17 · R110 · battle_design §2-3] — **행동 차례만** 늦춘다. 스킬 쿨(`readyAt` 은 절대 시각) · 창 · 재생 · 물약은 그대로 돈다
+         *   (쿨까지 멈추는 것은 스턴이다). 길이는 [balance.csv:stagger_sec] 고정 × (1 − 타격 회복) — 피해에 비례하지 않고, 0 이하면 면역이다.
+         *   타격 회복은 **비율**이다(0.5 = 50% · R111 단위 규약 — `/ 100` 을 붙이지 않는다).
+         * 멈추는 방법은 **행동 예약(`next`)을 미는 것**이다 — 틱을 건너뛰면 같은 틱에 먼저 행동한 유닛과 아직 안 한 유닛의 경직이 한 틱 갈리지만,
+         *   예약을 밀면 배열 순서와 무관하게 차례가 정확히 그만큼 늦는다.
+         * 경직 중에 다시 걸리면 **끝나는 시각만 새로 잡는다**(남은 시간에 더하지 않는다) — 그래서 옛 끝과 새 끝의 차이만 민다. rng 0
+         */
+        function stagger(u) {
+            const dur = B.stagger_sec * Math.max(0, 1 - u.fhr);
+            if (!(dur > 0)) return;
+            const end = t + dur;
+            u.next += end - Math.max(u.stagUntil, t);
+            u.stagUntil = end;
+            timeline.push({ t: r1(t), e: 'stagger', u: u.key, until: r1(end) });
+        }
+
+        /**
          * 무기 옵션의 조건부 추가 피해 % — **조건부 괄호에 덧셈**이다 (battle_design §9-2 · item_design §1 「무기 옵션」 · R78).
          *   vs 종족(`monster.csv:monster_type`) · vs 등급(normal 이 아니면 정예 · 보스) · vs 열(`rank` 0 전열 · 1 후열) · 원소(그 타격의 공격 타입)
          */
@@ -739,8 +761,9 @@ export function createBattleSystem(data) {
             }
             const shield = target.barrier;
             // 강타 — **맞기 직전 대상의 현재 체력** × % 를 그 타격에 더한다. 치명 · 방어 · 저항을 받지 않는 고정 피해 (battle_design §9 · R78). rng 0
-            const cb = fx?.crush > 0 ? Math.round(target.hp * fx.crush / 100) : 0;
+            const cb = fx?.crush > 0 ? Math.round(target.hp * fx.crush) : 0;
             const total = dmg + cb;
+            const hpBefore = target.hp;
             applyDamage(target, total);
             // 기여 — **감쇠 후 최종 피해**를 센다. 배리어가 먹은 몫도 포함이라 관전의 누적 데미지 판과 같은 값이다
             const cA = credit(u), cD = credit(target);
@@ -758,6 +781,10 @@ export function createBattleSystem(data) {
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
             timeline.push(ev);
+            // 물리 경직 (battle_design §2-3 · R110) — **물리 직격으로 실제로 줄어든 HP**(배리어 몫 빼고 · 강타 몫 넣고)가 최대 HP 의 비율 이상일 때만.
+            //   원소 타격은 경직 대신 상태이상의 몫이다. 소환은 차례가 없다 · 쓰러진 대상은 멈출 차례가 없다. 이벤트는 그 `hit` 바로 뒤다
+            if (hitType === 'physical' && target.hp > 0 && !target.summon
+                && hpBefore - target.hp >= target.hpMax * B.stagger_hp_pct) stagger(target);
             // 타격 시 창 — 무기 옵션의 방어력 · 저항 · 공격력 감소 (skill_effects.weaponOnHit · R78). rng 0 · 이벤트 없음(`quiet`)
             if (fx && target.hp > 0) weaponOnHit(u, fx, target, hitType, t, windowSec);
             // 사건 훅 — 등록된 반응이 없으면 아무 일도 없다. 핸들러가 rng 를 쓰면 **이 자리에서** 소비한다
@@ -765,7 +792,7 @@ export function createBattleSystem(data) {
             hooks.emit('hitTaken', target, { t, a: u, dmg, crit, s, proc });
             // 반사 — 비직격. 감쇠·치명 없이 공격자 HP 를 직접 깎고 흡혈·반사를 유발하지 않는다 (§9-6)
             if (target.reflect > 0 && u.hp > 0) {
-                const back = F.indirect(dmg * target.reflect / 100);
+                const back = F.indirect(dmg * target.reflect);
                 u.hp = Math.max(0, u.hp - back);
                 timeline.push({ t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp });
                 if (cD) cD.dealt += back;                       // 반사도 **가한 피해**다 — 때린 쪽이 아니라 되받은 쪽의 몫

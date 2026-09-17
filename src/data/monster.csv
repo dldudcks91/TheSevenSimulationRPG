@@ -1,120 +1,120 @@
-monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,monster_type,monster_base,attack_type,spawn_grade,role,cls,str,agi,int,vit,luck,ldr,cha,innate_skill,weapon_group,wear_slots,size_type,defense,res_fire,res_cold,res_lightning,res_poison,exp_coef,description_kr
-1101,1,1,고블린 척후병,Goblin Scout,1,Demon,Goblin,physical,normal,skirmish,archer,3,14,3,4,5,4,5,arc_snipe,bow,weapon|armor|boots,1,34,15,15,15,15,1,파멸의 진영 선봉 잡병
-1102,1,1,고블린 전사,Goblin Warrior,1,Demon,Goblin,physical,normal,line,warrior,7,12,3,5,3,4,5,war_bash,mace,weapon|armor|helmet,1,47,15,15,15,15,1,무기를 든 정규 고블린 병사
-1103,1,1,고블린 주술사,Goblin Shaman,1,Demon,Goblin,physical,normal,caster,priest,3,11,8,5,3,4,5,pri_judgment,crucifix,weapon|armor|amulet,1,20,15,15,15,15,1,짐승 두개골을 뒤집어쓴 고블린 주술사
-1150,1,1,아바돈,Abaddon,1,Demon,Orc,physical,stage_boss,boss,warrior,10,7,3,10,3,15,5,war_doubleswing,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,63,15,15,15,15,1,파멸의 군주 — 무저갱의 왕
-1201,1,2,인간 보병,Human Footman,1,Normal,Human,physical,normal,line,warrior,8,10,3,6,3,4,5,war_quake,mace,weapon|armor|helmet,1,49,16,16,16,16,1,검과 방패의 정규 병사
-1202,1,2,인간 궁수,Human Archer,1,Normal,Human,physical,normal,ranged,archer,3,12,3,4,8,4,5,arc_rapid,bow,weapon|armor|gloves,1,35,16,16,16,16,1,활을 든 원거리 병사
-1203,1,2,인간 기사,Human Knight,1,Normal,Human,physical,normal,heavy,knight,14,5,3,16,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,1,74,16,16,16,16,1,판금 갑옷의 중장 기사
-1250,1,2,레기온,Legion,0,Normal,Human,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,65,16,16,16,16,1,천의 목소리 — 천 개의 분노가 깃든 자
-1301,1,3,스켈레톤 전사,Skeleton Warrior,1,Undead,Skeleton,physical,normal,line,warrior,9,10,3,9,3,4,5,war_taunt,mace,weapon|armor|helmet,1,50,18,18,18,18,1,묘지에서 일어난 해골 병사
-1302,1,3,스켈레톤 궁수,Skeleton Archer,1,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,7,10,4,5,arc_multishot,bow,weapon|armor|gloves,1,40,18,18,18,18,1,뼈활을 다루는 해골 궁수
-1303,1,3,스켈레톤 기사,Skeleton Knight,1,Undead,Skeleton,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_rush,sword2h,weapon|armor|helmet|gloves,2,76,18,18,18,18,1,해골 말을 탄 기마 전사
-1350,1,3,둘라한,Dullahan,1,Undead,Skeleton,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_shout,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,66,18,18,18,18,1,머리 없는 전쟁귀
-1401,1,4,화염 광신도,Flame Zealot,0,Demon,Imp,fire,normal,caster,mage,3,14,9,7,3,4,5,mag_fireball,orb,weapon|armor|amulet,1,24,26,7,19,19,1,분노를 신앙으로 받아들여 제 몸에 불을 붙인 임프
-1402,1,4,임프 제사장,Imp Priest,0,Demon,Imp,fire,normal,caster,priest,3,14,9,7,3,4,5,pri_judgment,crucifix,weapon|armor|amulet,2,24,26,7,19,19,1,누구를 화로에 넣을지 판결하는 몰록 교단의 사제
-1403,1,4,청동 수호상,Bronze Guardian,0,Demon,Gargoyle,fire,normal,elite_line,knight,11,12,3,14,3,10,5,kni_duel,spear,weapon|armor|helmet|ring,3,53,26,7,19,19,1,몰록의 우상과 같은 청동으로 떠낸 신전 문지기 — 누구도 지나가지 못한다
-1450,1,4,몰록,Moloch,0,Demon,Gargoyle,fire,stage_boss,boss,mage,3,6,10,10,3,15,5,mag_inferno,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,67,26,7,19,19,1,사탄의 문지기 — 아이를 태우던 청동 우상을 깨고 나온 불의 심복
-1900,1,5,사탄,Satan,1,Demon,Gargoyle,fire,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,67,26,7,19,19,1,분노의 왕 — 가장 먼저 추방된 자
-2101,2,1,오크 전사,Orc Warrior,1,Demon,Orc,physical,normal,line,warrior,11,9,3,8,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,50,20,20,20,20,1,철투구를 쓴 오크 정규병
-2102,2,1,오크 궁수,Orc Archer,1,Demon,Orc,physical,normal,ranged,archer,3,13,3,6,9,4,5,arc_guided,bow,weapon|armor|gloves,2,40,20,20,20,20,1,후드를 뒤집어쓴 오크 사수
-2103,2,1,오크 주술사,Orc Shaman,1,Demon,Orc,poison,normal,caster,priest,3,11,10,7,3,4,5,pri_grace,crucifix,weapon|armor|amulet,2,26,20,20,8,28,1,짐승 두개골 관을 쓴 오크 주술사
-2150,2,1,라합,Rahab,1,Demon,Orc,physical,stage_boss,boss,warrior,10,9,3,12,3,15,5,war_battleorders,mace,weapon|helmet|armor|gloves|boots|amulet|ring,3,69,20,20,20,20,1,잊힌 바다의 군주 — 레비아탄과 같이 불리던 이름
-2201,2,2,도마뱀 사냥꾼,Lizardman Hunter,0,Normal,Lizardman,physical,normal,skirmish,archer,3,14,3,5,9,4,5,arc_poison,bow,weapon|armor|boots,1,42,22,22,22,22,1,남의 둥지를 노리는 독화살 사수
-2202,2,2,도마뱀 저주사,Lizardman Curser,0,Normal,Lizardman,poison,normal,caster,priest,3,12,11,9,3,4,5,pri_bind,crucifix,weapon|armor|amulet,1,25,22,22,9,30,1,독 주술로 숨을 막는 무리의 주술사
-2203,2,2,도마뱀 돌격병,Lizardman Charger,0,Normal,Lizardman,physical,normal,heavy,knight,12,10,3,15,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,81,22,22,22,22,1,비대해진 몸으로 밀어붙이는 거대 도마뱀
-2250,2,2,아비주,Abyzou,0,Normal,Lizardman,physical,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_snipe,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,71,22,22,22,22,1,시기의 어머니 — 깨어나지 않는 알을 품는 자
-2301,2,3,숲마을 시체,Villager Corpse,0,Undead,Zombie,physical,normal,line,warrior,10,5,3,14,3,4,5,war_quake,mace,weapon|armor|helmet,2,60,23,23,23,23,1,뿌리에 삼켜진 마을에서 흙을 헤집고 일어선 시체
-2302,2,3,뿌리 시체,Root Corpse,0,Undead,Zombie,physical,normal,heavy,knight,11,4,3,18,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,2,83,23,23,23,23,1,썩은 뿌리에 얽힌 거대 시체
-2303,2,3,이끼에 얽힌 해골,Mossbound Skeleton,0,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,7,10,4,5,arc_pierce,bow,weapon|armor|gloves,1,47,23,23,23,23,1,이끼에 덮인 채 활을 겨누는 해골
-2350,2,3,밴시,Banshee,0,Undead,Ghost,cold,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_frostnova,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,73,9,32,23,23,1,부패한 곡성 — 죽음을 예고하는 울음
-2401,2,4,나가 전사,Naga Warrior,0,Demon,Naga,physical,normal,line,warrior,10,9,3,10,3,4,5,war_leap,axe,weapon|armor|helmet,2,55,24,24,24,24,1,레비아탄의 연못을 지키는 뱀족 병사
-2402,2,4,나가 주술사,Naga Shaman,0,Demon,Naga,poison,normal,caster,priest,3,11,10,7,3,4,5,pri_penitence,bible,weapon|armor|amulet,2,26,24,24,10,33,1,적의 힘을 빼앗는 뱀족 주술사
-2403,2,4,나가 마법사,Naga Mage,0,Demon,Naga,poison,normal,caster,mage,3,10,10,9,3,4,5,mag_focus,orb,weapon|armor|amulet,2,26,24,24,10,33,1,독 안개를 부리는 뱀족 마법사
-2450,2,4,베파르,Vepar,0,Demon,Succubus,poison,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_multishot,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,74,24,24,10,33,1,심연의 물을 다스리는 공작 — 상처를 썩게 하는 자
-2900,2,5,레비아탄,Leviathan,1,Demon,Gargoyle,physical,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_bash,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,74,24,24,24,24,1,시기의 심연에서 올라온 괴물
-3101,3,1,사막 도마뱀 약탈자,Desert Lizardman Raider,0,Normal,Lizardman,physical,normal,skirmish,archer,3,13,3,4,8,4,5,arc_pierce,bow,weapon|armor|boots,1,40,25,25,25,25,1,폐허의 보물 사냥꾼
-3102,3,1,사막 도마뱀 주술사,Desert Lizardman Shaman,0,Normal,Lizardman,poison,normal,caster,priest,3,12,10,4,3,4,5,pri_haste,crucifix,weapon|armor|amulet,1,27,25,25,10,35,1,모래 마법 원거리
-3103,3,1,사암 골렘,Sandstone Golem,0,Normal,Golem,physical,normal,heavy,knight,12,3,3,17,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,2,86,25,25,25,25,1,폐허에서 깨어난 거대 석상
-3150,3,1,다곤,Dagon,0,Normal,Golem,physical,stage_boss,boss,warrior,10,2,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,75,25,25,25,25,1,모래에 묻힌 신 — 반인반어 고대 신
-3201,3,2,해골 수호병,Skeleton Guard,0,Undead,Skeleton,physical,normal,line,warrior,7,10,3,8,3,4,5,war_leap,mace,weapon|armor|helmet,1,58,27,27,27,27,1,묘지 수호 근접 전사
-3202,3,2,해골 석궁병,Skeleton Arbalist,0,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,6,8,4,5,arc_snipe,bow,weapon|armor|gloves,1,47,27,27,27,27,1,지하묘지 함정 지킴이
-3203,3,2,뱀파이어 귀족,Vampire Noble,0,Undead,Vampire,physical,normal,elite_line,knight,13,9,3,15,3,10,5,kni_rush,spear,weapon|armor|helmet|ring,2,61,27,27,27,27,1,지하묘지의 흡혈 지배자
-3250,3,2,카론,Charon,0,Undead,Skeleton,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,77,27,27,27,27,1,탐욕의 뱃사공 — 대가 없이는 건너지 못한다
-3301,3,3,황금 임프,Golden Imp,0,Demon,Imp,fire,normal,caster,mage,3,14,11,7,3,4,5,mag_focus,orb,weapon|armor|amulet,1,28,39,11,28,28,1,보물고의 마법 수비수
-3302,3,3,고블린 약탈병,Goblin Looter,0,Demon,Goblin,physical,normal,skirmish,archer,3,14,3,8,8,4,5,arc_rapid,bow,weapon|armor|boots,1,42,28,28,28,28,1,잔꾀형 보물 약탈자
-3303,3,3,고블린 금고지기,Goblin Vaultkeeper,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,14,3,4,5,kni_duel,spear,weapon|armor|helmet|gloves,2,90,28,28,28,28,1,황금 갑옷의 거대 고블린 대장
-3350,3,3,메피스토펠레스,Mephistopheles,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_shout,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,79,28,28,28,28,1,황금의 거래자 — 영혼 거래의 아이콘
-3401,3,4,황금궁 임프,Palace Imp,0,Demon,Imp,fire,normal,caster,mage,3,14,11,7,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,1,29,41,12,30,30,1,황금궁 회랑을 밝히는 임프 마법사
-3402,3,4,금위 고블린,Gilded Guard Goblin,0,Demon,Goblin,physical,normal,line,warrior,8,12,3,9,3,4,5,war_battleorders,mace,weapon|armor|helmet,1,60,30,30,30,30,1,맘몬의 금고를 지키는 정규 위병
-3403,3,4,고블린 근위대장,Goblin Guard Captain,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,92,30,30,30,30,1,황금 근위대를 지휘하는 고블린
-3450,3,4,플루토스,Plutus,0,Demon,Goblin,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_bash,mace,weapon|helmet|armor|gloves|boots|amulet|ring,2,80,30,30,30,30,1,탐욕자들의 원을 지키는 자 — 황금궁의 문을 막아선 늑대 악마
-3900,3,5,맘몬,Mammon,0,Demon,Gargoyle,physical,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,80,30,30,30,30,1,탐욕의 왕 — 황금 왕국의 지배자
-4101,4,1,서리 원혼,Frost Wraith,0,Undead,Ghost,cold,normal,caster,mage,3,10,9,2,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,29,12,42,30,30,1,냉기 마법의 얼어붙은 영혼
-4102,4,1,동결 곡성귀,Frozen Wailer,0,Undead,Ghost,cold,normal,caster,mage,3,10,9,2,3,4,5,mag_frostnova,orb,weapon|armor|amulet,1,29,12,42,30,30,1,빙결 저주 디버프형
-4103,4,1,빙결 좀비,Frostbitten Zombie,0,Undead,Zombie,physical,normal,heavy,knight,11,4,3,18,3,4,5,kni_fanaticism,sword2h,weapon|armor|helmet|gloves,2,93,30,30,30,30,1,얼음에 묻혀있던 거대 시체
-4150,4,1,유키온나,Yuki-onna,0,Undead,Ghost,cold,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_focus,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,81,12,42,30,30,1,동토의 설녀 — 눈보라 속 유령 여인
-4201,4,2,서리 고블린 병사,Frost Goblin Soldier,0,Demon,Goblin,physical,normal,line,warrior,8,12,3,9,3,4,5,war_quake,mace,weapon|armor|helmet,1,62,32,32,32,32,1,빙하 요새 경비병
-4202,4,2,얼음 임프,Ice Imp,0,Demon,Imp,cold,normal,caster,mage,3,14,11,7,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,1,30,13,44,32,32,1,냉기 마법 원거리
-4203,4,2,고블린 빙하대장,Goblin Glacier Chief,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_defiance,spear,weapon|armor|helmet|gloves,2,95,32,32,32,32,1,얼음 갑옷의 거대 고블린 대장
-4250,4,2,아스타로스,Astaroth,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,83,32,32,32,32,1,빙하의 태공 — 게으름과 허영의 악마
-4301,4,3,예티 척후,Yeti Scout,0,Normal,Yeti,physical,normal,skirmish,archer,3,10,3,7,9,4,5,arc_multishot,crossbow,weapon|armor|boots,2,45,33,33,33,33,1,설인 정찰병
-4302,4,3,예티 투석병,Yeti Slinger,0,Normal,Yeti,physical,normal,ranged,archer,3,10,3,7,11,4,5,arc_guided,crossbow,weapon|armor|gloves,2,52,33,33,33,33,1,얼음 덩이를 던지는 원거리
-4303,4,3,트롤 빙하거인,Troll Glacier Giant,0,Normal,Troll,physical,normal,heavy,knight,10,5,3,15,3,4,5,kni_smite,sword2h,weapon|armor|helmet|gloves,3,97,33,33,33,33,1,얼어붙은 피부의 거대 트롤
-4350,4,3,파주주,Pazuzu,0,Normal,Troll,physical,stage_boss,boss,warrior,10,4,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,85,33,33,33,33,1,얼어붙은 바람왕 — 동토에 영원히 얼어붙은 자
-4401,4,4,동결 임프,Frozen Imp,0,Demon,Imp,cold,normal,caster,mage,3,14,11,7,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,31,14,49,35,35,1,동결왕좌의 냉기를 관리하는 임프
-4402,4,4,왕좌 고블린 위병,Throne Goblin Sentry,0,Demon,Goblin,physical,normal,line,warrior,8,12,3,9,3,4,5,war_shout,mace,weapon|armor|helmet,1,65,35,35,35,35,1,벨페고르의 옥좌를 지키는 위병
-4403,4,4,고블린 동결기사,Goblin Frost Knight,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_charge,spear,weapon|armor|helmet|gloves,2,99,35,35,35,35,1,서리 갑주를 두른 고블린 기사
-4450,4,4,힙노스,Hypnos,0,Demon,Imp,cold,stage_boss,boss,mage,3,11,10,10,3,15,5,mag_frostnova,orb,weapon|helmet|armor|gloves|boots|amulet|ring,2,87,14,49,35,35,1,잠의 신 — 깨어 있는 자를 끝나지 않는 잠에 빠뜨린다
-4900,4,5,벨페고르,Belphegor,0,Demon,Gargoyle,cold,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,87,14,49,35,35,1,나태의 왕 — 모든 것이 멈추기를 원하는 자
-5101,5,1,부식 좀비,Corroded Zombie,0,Undead,Zombie,physical,normal,line,warrior,5,5,3,13,3,4,5,war_battleorders,axe,weapon|armor|helmet,2,66,35,35,35,35,1,삼켜진 시체가 움직이는 형태
-5102,5,1,리치 수행자,Lich Acolyte,0,Undead,Lich,poison,normal,caster,priest,3,10,11,4,3,4,5,pri_regen,bible,weapon|armor|amulet,2,31,35,35,14,50,1,심연의 마법을 다루는 하급 리치
-5103,5,1,부식 리치,Corroded Lich,0,Undead,Lich,poison,normal,elite_line,knight,13,8,3,11,3,10,5,kni_rush,sword2h,weapon|armor|helmet|ring,2,69,35,35,14,50,1,부식 마법을 다루는 상급 리치
-5150,5,1,오르쿠스,Orcus,0,Undead,Lich,poison,stage_boss,boss,archer,3,8,3,10,10,15,5,arc_multishot,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,3,88,35,35,14,50,1,탐식의 문지기 — 저승을 관장하는 죽음의 군주
-5201,5,2,동굴 예티,Cave Yeti,0,Normal,Yeti,physical,normal,line,warrior,11,8,3,6,3,4,5,war_bash,axe,weapon|armor|helmet,2,67,37,37,37,37,1,동굴에 서식하는 예티
-5202,5,2,바위 골렘,Rock Golem,0,Normal,Golem,physical,normal,line,warrior,8,4,3,9,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,67,37,37,37,37,1,살아있는 미로의 돌 파수꾼
-5203,5,2,거대 골렘,Giant Golem,0,Normal,Golem,physical,normal,heavy,knight,10,3,3,13,3,4,5,kni_duel,sword2h,weapon|armor|helmet|gloves,3,102,37,37,37,37,1,심연의 핵심을 지키는 고대 골렘
-5250,5,2,탈로스,Talos,0,Normal,Golem,physical,stage_boss,boss,warrior,10,2,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,89,37,37,37,37,1,맥동하는 미로의 수호자 — 쉬지 않고 도는 청동 거인
-5301,5,3,가고일 주술사,Gargoyle Shaman,0,Demon,Gargoyle,lightning,normal,caster,priest,3,9,8,6,3,4,5,pri_penitence,bible,weapon|armor|amulet,2,32,38,38,54,15,1,심연 입구에서 저주를 뱉는 석상
-5302,5,3,오크 포식자,Orc Devourer,0,Demon,Orc,physical,normal,heavy,knight,12,7,3,10,3,4,5,kni_might,sword2h,weapon|armor|helmet|gloves,2,104,38,38,38,38,1,모든 것을 탐하는 오크
-5303,5,3,악마 가고일,Demon Gargoyle,0,Demon,Gargoyle,physical,normal,elite_line,knight,10,7,3,13,3,10,5,kni_fanaticism,sword2h,weapon|armor|helmet|ring,3,72,38,38,38,38,1,심연의 최심부 가고일
-5350,5,3,베히모스,Behemoth,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,91,38,38,38,38,1,소화의 심연 지배자 — 삼키기를 멈추지 않는 대식의 짐승
-5401,5,4,연회장 가고일,Banquet Gargoyle,0,Demon,Gargoyle,physical,normal,line,warrior,8,7,3,9,3,4,5,war_taunt,axe,weapon|armor|helmet,2,70,40,40,40,40,1,연회장 기둥에 붙은 석상 파수꾼
-5402,5,4,오크 대식가,Orc Glutton,0,Demon,Orc,physical,normal,line,warrior,11,9,3,8,3,4,5,war_shout,axe,weapon|armor|helmet,2,70,40,40,40,40,1,연회에 참석한 오크 폭식자
-5403,5,4,대가고일 집사,Grand Gargoyle Butler,0,Demon,Gargoyle,physical,normal,heavy,knight,10,6,3,13,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,3,106,40,40,40,40,1,연회를 준비하는 거대 가고일
-5450,5,4,케르베로스,Cerberus,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_battleorders,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,93,40,40,40,40,1,탐식자들의 원을 지키는 세 머리 개 — 연회의 문지기
-5900,5,5,바알제붑,Beelzebub,0,Demon,Gargoyle,physical,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_bash,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,93,40,40,40,40,1,폭식의 왕 — 모든 것을 삼키는 심연의 군주
-6101,6,1,서큐버스 유혹자,Succubus Seductress,0,Demon,Succubus,fire,normal,caster,mage,3,10,10,9,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,2,34,58,16,41,41,1,타락한 정원의 유혹 마녀
-6102,6,1,화염 임프,Flame Imp,0,Demon,Imp,fire,normal,caster,mage,3,14,9,6,3,4,5,mag_fireball,orb,weapon|armor|amulet,1,34,58,16,41,41,1,정원을 지키는 임프 마법사
-6103,6,1,대임프 사제,Grand Imp Priest,0,Demon,Imp,fire,normal,elite_line,priest,3,12,11,13,3,10,5,pri_bind,crucifix,weapon|armor|helmet|ring,2,74,58,16,41,41,1,타락 의식을 집행하는 사제
-6150,6,1,릴리스,Lilith,0,Demon,Succubus,fire,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_inferno,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,94,58,16,41,41,1,부패한 정원의 지배자 — 최초의 유혹
-6201,6,2,뱀파이어 후작,Vampire Marquis,0,Undead,Vampire,physical,normal,line,warrior,9,10,3,10,3,4,5,war_doubleswing,mace,weapon|armor|helmet,2,72,42,42,42,42,1,회랑을 떠도는 흡혈 귀족
-6202,6,2,유혹의 유령,Ghost of Temptation,0,Undead,Ghost,cold,normal,caster,mage,3,10,8,3,3,4,5,mag_focus,orb,weapon|armor|amulet,1,34,17,59,42,42,1,유혹의 속삭임으로 현혹하는 유령
-6203,6,2,뱀파이어 백작,Vampire Count,0,Undead,Vampire,physical,normal,elite_line,knight,13,9,3,15,3,10,5,kni_smite,spear,weapon|armor|helmet|ring,3,75,42,42,42,42,1,회랑의 지배자 흡혈 백작
-6250,6,2,카밀라,Carmilla,0,Undead,Vampire,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,95,42,42,42,42,1,유혹의 회랑 주인 — 손님을 놓아주지 않는 여백작
-6301,6,3,도마뱀 근위병,Lizardman Guard,0,Normal,Lizardman,physical,normal,line,warrior,7,11,3,5,3,4,5,war_leap,mace,weapon|armor|helmet,2,73,43,43,43,43,1,왕좌를 지키는 근위 전사
-6302,6,3,트롤 집행자,Troll Executioner,0,Normal,Troll,physical,normal,heavy,knight,12,5,3,14,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,2,111,43,43,43,43,1,욕망의 왕좌 집행관
-6303,6,3,도마뱀 대장,Lizardman Captain,0,Normal,Lizardman,physical,normal,elite_line,knight,10,10,3,10,3,10,5,kni_rush,spear,weapon|armor|helmet|ring,2,76,43,43,43,43,1,근위대 대장
-6350,6,3,그렌델,Grendel,0,Normal,Troll,physical,stage_boss,boss,warrior,10,4,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,97,43,43,43,43,1,욕망의 왕좌 수호자 — 연회를 시기해 찾아오는 괴물
-6401,6,4,침실의 서큐버스,Chamber Succubus,0,Demon,Succubus,poison,normal,caster,archer,3,11,3,9,10,4,5,arc_guided,bow,weapon|armor|amulet,2,35,45,45,18,63,1,아스모데우스의 침실을 지키는 유혹마
-6402,6,4,시종 임프,Attendant Imp,0,Demon,Imp,poison,normal,caster,archer,3,14,3,5,9,4,5,arc_pierce,bow,weapon|armor|amulet,1,35,45,45,18,63,1,침실 시중을 드는 임프
-6403,6,4,대서큐버스 시녀장,Grand Succubus Matron,0,Demon,Succubus,poison,normal,heavy,priest,3,11,11,14,3,4,5,pri_judgment,bible,weapon|armor|helmet|gloves,2,113,45,45,18,63,1,침실 시녀들을 이끄는 대서큐버스
-6450,6,4,나아마,Naamah,0,Demon,Succubus,poison,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_poison,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,99,45,45,18,63,1,유혹의 여왕 — 아스모데우스의 짝
-6900,6,5,아스모데우스,Asmodeus,0,Demon,Gargoyle,poison,chapter_boss,boss,archer,3,7,3,10,10,15,5,arc_multishot,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,3,99,45,45,18,63,1,색욕의 왕 — 욕망에 잠식된 궁전의 지배자
-7101,7,1,가고일 천상병,Gargoyle Celestial,0,Demon,Gargoyle,physical,normal,line,warrior,7,7,3,7,3,4,5,war_shout,axe,weapon|armor|helmet,2,75,46,46,46,46,1,천상의 계단을 지키는 가고일
-7102,7,1,오크 성기사,Orc Paladin,0,Demon,Orc,physical,normal,heavy,knight,12,7,3,10,3,4,5,kni_duel,sword2h,weapon|armor|helmet|gloves,2,115,46,46,46,46,1,타락한 성기사 오크
-7103,7,1,가고일 대장,Gargoyle Captain,0,Demon,Gargoyle,physical,normal,elite_line,knight,11,7,3,12,3,10,5,kni_might,sword2h,weapon|armor|helmet|ring,3,79,46,46,46,46,1,가고일 부대 지휘관
-7150,7,1,아자젤,Azazel,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_battleorders,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,101,46,46,46,46,1,천상의 계단 수호자 — 하늘에서 쫓겨난 타락천사
-7201,7,2,신전 골렘,Temple Golem,0,Normal,Golem,physical,normal,line,warrior,8,4,3,9,3,4,5,war_bash,axe,weapon|armor|helmet,2,76,47,47,47,47,1,무너진 신전의 석상 파수꾼
-7202,7,2,예티 순례자,Yeti Pilgrim,0,Normal,Yeti,physical,normal,line,warrior,11,8,3,6,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,76,47,47,47,47,1,신전을 떠도는 설인
-7203,7,2,고대 골렘,Ancient Golem,0,Normal,Golem,physical,normal,elite_line,knight,11,4,3,14,3,10,5,kni_fanaticism,sword2h,weapon|armor|helmet|ring,3,80,47,47,47,47,1,신성한 힘이 오염된 고대 골렘
-7250,7,2,골리앗,Goliath,0,Normal,Golem,physical,stage_boss,boss,warrior,10,2,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,102,47,47,47,47,1,무너진 신전의 수호자 — 제 키를 믿었던 거인
-7301,7,3,리치 왕,Lich King,0,Undead,Lich,lightning,normal,caster,mage,3,10,9,4,3,4,5,mag_frozenwall,staff,weapon|armor|amulet,2,37,49,49,68,19,1,언데드 군단의 리치 왕
-7302,7,3,뱀파이어 공작,Vampire Duke,0,Undead,Vampire,physical,normal,elite_line,knight,9,9,3,13,3,10,5,kni_defiance,spear,weapon|armor|helmet|ring,2,81,49,49,49,49,1,왕좌를 노리는 흡혈 공작
-7303,7,3,대리치,Archlich,0,Undead,Lich,lightning,normal,elite_line,knight,12,8,3,11,3,10,5,kni_smite,sword2h,weapon|armor|helmet|ring,3,81,49,49,68,19,1,오만의 마법을 다루는 대리치
-7350,7,3,아스클레피오스,Asclepius,0,Undead,Lich,lightning,stage_boss,boss,mage,3,7,10,10,3,15,5,mag_lightning,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,103,49,49,68,19,1,오만의 왕좌 수호자 — 죽은 자를 되살려 신의 노여움을 산 자
-7401,7,4,옥좌의 주문석상,Throne Spellstone,0,Demon,Gargoyle,lightning,normal,caster,mage,3,9,9,8,3,4,5,mag_chain,staff,weapon|armor|amulet,2,38,50,50,70,20,1,빈 옥좌에 새겨진 주문을 읊는 석상
-7402,7,4,타락 오크 근위,Fallen Orc Guard,0,Demon,Orc,physical,normal,line,warrior,11,9,3,8,3,4,5,war_leap,axe,weapon|armor|helmet,2,79,50,50,50,50,1,루시퍼를 따랐던 근위 오크
-7403,7,4,대가고일 옥좌지기,Grand Gargoyle Thronekeeper,0,Demon,Gargoyle,physical,normal,heavy,knight,10,6,3,13,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,3,120,50,50,50,50,1,옥좌를 떠나지 못하는 거대 석상
-7450,7,4,벨리알,Belial,0,Demon,Gargoyle,lightning,stage_boss,boss,mage,3,6,10,10,3,15,5,mag_focus,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,105,50,50,70,20,1,루시퍼 다음으로 창조된 자 — 빈 옥좌 곁을 떠나지 않는다
-7900,7,5,루시퍼,Lucifer,0,Demon,Gargoyle,lightning,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,105,50,50,70,20,1,오만의 왕 — 스스로를 신이라 칭하다 추락한 자
+monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,monster_type,monster_base,attack_type,spawn_grade,role,cls,str,agi,int,vit,luck,ldr,cha,innate_skill,weapon_group,wear_slots,size_type,defense,res_fire,res_cold,res_lightning,res_poison,exp_coef,description_kr
+1101,1,1,고블린 척후병,Goblin Scout,1,1,Demon,Goblin,physical,normal,skirmish,archer,3,14,3,4,5,4,5,arc_snipe,bow,weapon|armor|boots,1,34,0.15,0.15,0.15,0.15,1,파멸의 진영 선봉 잡병
+1102,1,1,고블린 전사,Goblin Warrior,1,1,Demon,Goblin,physical,normal,line,warrior,7,12,3,5,3,4,5,war_bash,mace,weapon|armor|helmet,1,47,0.15,0.15,0.15,0.15,1,무기를 든 정규 고블린 병사
+1103,1,1,고블린 주술사,Goblin Shaman,1,1,Demon,Goblin,physical,normal,caster,priest,3,11,8,5,3,4,5,pri_judgment,crucifix,weapon|armor|amulet,1,20,0.15,0.15,0.15,0.15,1,짐승 두개골을 뒤집어쓴 고블린 주술사
+1150,1,1,아바돈,Abaddon,1,0,Demon,Orc,physical,stage_boss,boss,warrior,10,7,3,10,3,15,5,war_doubleswing,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,63,0.15,0.15,0.15,0.15,1,파멸의 군주 — 무저갱의 왕
+1201,1,2,인간 보병,Human Footman,1,0,Normal,Human,physical,normal,line,warrior,8,10,3,6,3,4,5,war_quake,mace,weapon|armor|helmet,1,49,0.16,0.16,0.16,0.16,1,검과 방패의 정규 병사
+1202,1,2,인간 궁수,Human Archer,1,0,Normal,Human,physical,normal,ranged,archer,3,12,3,4,8,4,5,arc_rapid,bow,weapon|armor|gloves,1,35,0.16,0.16,0.16,0.16,1,활을 든 원거리 병사
+1203,1,2,인간 기사,Human Knight,1,0,Normal,Human,physical,normal,heavy,knight,14,5,3,16,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,1,74,0.16,0.16,0.16,0.16,1,판금 갑옷의 중장 기사
+1250,1,2,레기온,Legion,0,0,Normal,Human,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,65,0.16,0.16,0.16,0.16,1,천의 목소리 — 천 개의 분노가 깃든 자
+1301,1,3,스켈레톤 병사,Skeleton Soldier,0,0,Undead,Skeleton,physical,normal,line,warrior,9,10,3,9,3,4,5,war_taunt,mace,weapon|armor|helmet,1,50,0.18,0.18,0.18,0.18,1,묘지에서 일어난 해골 병사
+1302,1,3,스켈레톤 병사,Skeleton Soldier,0,0,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,7,10,4,5,arc_multishot,bow,weapon|armor|gloves,1,40,0.18,0.18,0.18,0.18,1,뼈활을 다루는 해골 궁수
+1303,1,3,스켈레톤 병사,Skeleton Soldier,0,0,Undead,Skeleton,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_rush,sword2h,weapon|armor|helmet|gloves,2,76,0.18,0.18,0.18,0.18,1,해골 말을 탄 기마 전사
+1350,1,3,둘라한,Dullahan,1,0,Undead,Skeleton,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_shout,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,66,0.18,0.18,0.18,0.18,1,머리 없는 전쟁귀
+1401,1,4,화염 광신도,Flame Zealot,0,0,Demon,Imp,fire,normal,caster,mage,3,14,9,7,3,4,5,mag_fireball,orb,weapon|armor|amulet,1,24,0.26,0.07,0.19,0.19,1,분노를 신앙으로 받아들여 제 몸에 불을 붙인 임프
+1402,1,4,임프 제사장,Imp Priest,0,0,Demon,Imp,fire,normal,caster,priest,3,14,9,7,3,4,5,pri_judgment,crucifix,weapon|armor|amulet,2,24,0.26,0.07,0.19,0.19,1,누구를 화로에 넣을지 판결하는 몰록 교단의 사제
+1403,1,4,청동 수호상,Bronze Guardian,0,0,Demon,Gargoyle,fire,normal,elite_line,knight,11,12,3,14,3,10,5,kni_duel,spear,weapon|armor|helmet|ring,3,53,0.26,0.07,0.19,0.19,1,몰록의 우상과 같은 청동으로 떠낸 신전 문지기 — 누구도 지나가지 못한다
+1450,1,4,몰록,Moloch,0,0,Demon,Gargoyle,fire,stage_boss,boss,mage,3,6,10,10,3,15,5,mag_inferno,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,67,0.26,0.07,0.19,0.19,1,사탄의 문지기 — 아이를 태우던 청동 우상을 깨고 나온 불의 심복
+1900,1,5,사탄,Satan,1,0,Demon,Gargoyle,fire,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,67,0.26,0.07,0.19,0.19,1,분노의 왕 — 가장 먼저 추방된 자
+2101,2,1,오크 전사,Orc Warrior,1,0,Demon,Orc,physical,normal,line,warrior,11,9,3,8,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,50,0.2,0.2,0.2,0.2,1,철투구를 쓴 오크 정규병
+2102,2,1,오크 궁수,Orc Archer,1,0,Demon,Orc,physical,normal,ranged,archer,3,13,3,6,9,4,5,arc_guided,bow,weapon|armor|gloves,2,40,0.2,0.2,0.2,0.2,1,후드를 뒤집어쓴 오크 사수
+2103,2,1,오크 주술사,Orc Shaman,1,0,Demon,Orc,poison,normal,caster,priest,3,11,10,7,3,4,5,pri_grace,crucifix,weapon|armor|amulet,2,26,0.2,0.2,0.08,0.28,1,짐승 두개골 관을 쓴 오크 주술사
+2150,2,1,라합,Rahab,1,0,Demon,Orc,physical,stage_boss,boss,warrior,10,9,3,12,3,15,5,war_battleorders,mace,weapon|helmet|armor|gloves|boots|amulet|ring,3,69,0.2,0.2,0.2,0.2,1,잊힌 바다의 군주 — 레비아탄과 같이 불리던 이름
+2201,2,2,도마뱀 사냥꾼,Lizardman Hunter,0,0,Normal,Lizardman,physical,normal,skirmish,archer,3,14,3,5,9,4,5,arc_poison,bow,weapon|armor|boots,1,42,0.22,0.22,0.22,0.22,1,남의 둥지를 노리는 독화살 사수
+2202,2,2,도마뱀 저주사,Lizardman Curser,0,0,Normal,Lizardman,poison,normal,caster,priest,3,12,11,9,3,4,5,pri_bind,crucifix,weapon|armor|amulet,1,25,0.22,0.22,0.09,0.3,1,독 주술로 숨을 막는 무리의 주술사
+2203,2,2,도마뱀 돌격병,Lizardman Charger,0,0,Normal,Lizardman,physical,normal,heavy,knight,12,10,3,15,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,81,0.22,0.22,0.22,0.22,1,비대해진 몸으로 밀어붙이는 거대 도마뱀
+2250,2,2,아비주,Abyzou,0,0,Normal,Lizardman,physical,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_snipe,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,71,0.22,0.22,0.22,0.22,1,시기의 어머니 — 깨어나지 않는 알을 품는 자
+2301,2,3,숲마을 시체,Villager Corpse,0,0,Undead,Zombie,physical,normal,line,warrior,10,5,3,14,3,4,5,war_quake,mace,weapon|armor|helmet,2,60,0.23,0.23,0.23,0.23,1,뿌리에 삼켜진 마을에서 흙을 헤집고 일어선 시체
+2302,2,3,뿌리 시체,Root Corpse,0,0,Undead,Zombie,physical,normal,heavy,knight,11,4,3,18,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,2,83,0.23,0.23,0.23,0.23,1,썩은 뿌리에 얽힌 거대 시체
+2303,2,3,이끼에 얽힌 해골,Mossbound Skeleton,0,0,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,7,10,4,5,arc_pierce,bow,weapon|armor|gloves,1,47,0.23,0.23,0.23,0.23,1,이끼에 덮인 채 활을 겨누는 해골
+2350,2,3,밴시,Banshee,0,0,Undead,Ghost,cold,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_frostnova,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,73,0.09,0.32,0.23,0.23,1,부패한 곡성 — 죽음을 예고하는 울음
+2401,2,4,나가 전사,Naga Warrior,0,0,Demon,Naga,physical,normal,line,warrior,10,9,3,10,3,4,5,war_leap,axe,weapon|armor|helmet,2,55,0.24,0.24,0.24,0.24,1,레비아탄의 연못을 지키는 뱀족 병사
+2402,2,4,나가 주술사,Naga Shaman,0,0,Demon,Naga,poison,normal,caster,priest,3,11,10,7,3,4,5,pri_penitence,bible,weapon|armor|amulet,2,26,0.24,0.24,0.1,0.33,1,적의 힘을 빼앗는 뱀족 주술사
+2403,2,4,나가 마법사,Naga Mage,0,0,Demon,Naga,poison,normal,caster,mage,3,10,10,9,3,4,5,mag_focus,orb,weapon|armor|amulet,2,26,0.24,0.24,0.1,0.33,1,독 안개를 부리는 뱀족 마법사
+2450,2,4,베파르,Vepar,0,0,Demon,Succubus,poison,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_multishot,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,74,0.24,0.24,0.1,0.33,1,심연의 물을 다스리는 공작 — 상처를 썩게 하는 자
+2900,2,5,레비아탄,Leviathan,1,0,Demon,Gargoyle,physical,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_bash,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,74,0.24,0.24,0.24,0.24,1,시기의 심연에서 올라온 괴물
+3101,3,1,사막 도마뱀 약탈자,Desert Lizardman Raider,0,0,Normal,Lizardman,physical,normal,skirmish,archer,3,13,3,4,8,4,5,arc_pierce,bow,weapon|armor|boots,1,40,0.25,0.25,0.25,0.25,1,폐허의 보물 사냥꾼
+3102,3,1,사막 도마뱀 주술사,Desert Lizardman Shaman,0,0,Normal,Lizardman,poison,normal,caster,priest,3,12,10,4,3,4,5,pri_haste,crucifix,weapon|armor|amulet,1,27,0.25,0.25,0.1,0.35,1,모래 마법 원거리
+3103,3,1,사암 골렘,Sandstone Golem,0,0,Normal,Golem,physical,normal,heavy,knight,12,3,3,17,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,2,86,0.25,0.25,0.25,0.25,1,폐허에서 깨어난 거대 석상
+3150,3,1,다곤,Dagon,0,0,Normal,Golem,physical,stage_boss,boss,warrior,10,2,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,75,0.25,0.25,0.25,0.25,1,모래에 묻힌 신 — 반인반어 고대 신
+3201,3,2,스켈레톤 전사,Skeleton Warrior,1,1,Undead,Skeleton,physical,normal,line,warrior,7,10,3,8,3,4,5,war_leap,mace,weapon|armor|helmet,1,58,0.27,0.27,0.27,0.27,1,묘지 수호 근접 전사
+3202,3,2,스켈레톤 궁수,Skeleton Archer,1,1,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,6,8,4,5,arc_snipe,bow,weapon|armor|gloves,1,47,0.27,0.27,0.27,0.27,1,지하묘지 함정 지킴이
+3203,3,2,스켈레톤 기사,Skeleton Knight,1,1,Undead,Skeleton,physical,normal,elite_line,knight,13,9,3,15,3,10,5,kni_rush,spear,weapon|armor|helmet|ring,2,61,0.27,0.27,0.27,0.27,1,지하묘지를 지키는 스켈레톤 기사
+3250,3,2,카론,Charon,0,0,Undead,Skeleton,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,77,0.27,0.27,0.27,0.27,1,탐욕의 뱃사공 — 대가 없이는 건너지 못한다
+3301,3,3,황금 임프,Golden Imp,0,0,Demon,Imp,fire,normal,caster,mage,3,14,11,7,3,4,5,mag_focus,orb,weapon|armor|amulet,1,28,0.39,0.11,0.28,0.28,1,보물고의 마법 수비수
+3302,3,3,고블린 약탈병,Goblin Looter,0,0,Demon,Goblin,physical,normal,skirmish,archer,3,14,3,8,8,4,5,arc_rapid,bow,weapon|armor|boots,1,42,0.28,0.28,0.28,0.28,1,잔꾀형 보물 약탈자
+3303,3,3,고블린 금고지기,Goblin Vaultkeeper,0,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,14,3,4,5,kni_duel,spear,weapon|armor|helmet|gloves,2,90,0.28,0.28,0.28,0.28,1,황금 갑옷의 거대 고블린 대장
+3350,3,3,메피스토펠레스,Mephistopheles,0,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_shout,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,79,0.28,0.28,0.28,0.28,1,황금의 거래자 — 영혼 거래의 아이콘
+3401,3,4,황금궁 임프,Palace Imp,0,0,Demon,Imp,fire,normal,caster,mage,3,14,11,7,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,1,29,0.41,0.12,0.3,0.3,1,황금궁 회랑을 밝히는 임프 마법사
+3402,3,4,금위 고블린,Gilded Guard Goblin,0,0,Demon,Goblin,physical,normal,line,warrior,8,12,3,9,3,4,5,war_battleorders,mace,weapon|armor|helmet,1,60,0.3,0.3,0.3,0.3,1,맘몬의 금고를 지키는 정규 위병
+3403,3,4,고블린 근위대장,Goblin Guard Captain,0,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,92,0.3,0.3,0.3,0.3,1,황금 근위대를 지휘하는 고블린
+3450,3,4,플루토스,Plutus,0,0,Demon,Goblin,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_bash,mace,weapon|helmet|armor|gloves|boots|amulet|ring,2,80,0.3,0.3,0.3,0.3,1,탐욕자들의 원을 지키는 자 — 황금궁의 문을 막아선 늑대 악마
+3900,3,5,맘몬,Mammon,0,0,Demon,Gargoyle,physical,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,80,0.3,0.3,0.3,0.3,1,탐욕의 왕 — 황금 왕국의 지배자
+4101,4,1,서리 원혼,Frost Wraith,0,0,Undead,Ghost,cold,normal,caster,mage,3,10,9,2,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,29,0.12,0.42,0.3,0.3,1,냉기 마법의 얼어붙은 영혼
+4102,4,1,동결 곡성귀,Frozen Wailer,0,0,Undead,Ghost,cold,normal,caster,mage,3,10,9,2,3,4,5,mag_frostnova,orb,weapon|armor|amulet,1,29,0.12,0.42,0.3,0.3,1,빙결 저주 디버프형
+4103,4,1,빙결 좀비,Frostbitten Zombie,0,0,Undead,Zombie,physical,normal,heavy,knight,11,4,3,18,3,4,5,kni_fanaticism,sword2h,weapon|armor|helmet|gloves,2,93,0.3,0.3,0.3,0.3,1,얼음에 묻혀있던 거대 시체
+4150,4,1,유키온나,Yuki-onna,0,0,Undead,Ghost,cold,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_focus,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,81,0.12,0.42,0.3,0.3,1,동토의 설녀 — 눈보라 속 유령 여인
+4201,4,2,서리 고블린 병사,Frost Goblin Soldier,0,0,Demon,Goblin,physical,normal,line,warrior,8,12,3,9,3,4,5,war_quake,mace,weapon|armor|helmet,1,62,0.32,0.32,0.32,0.32,1,빙하 요새 경비병
+4202,4,2,얼음 임프,Ice Imp,0,0,Demon,Imp,cold,normal,caster,mage,3,14,11,7,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,1,30,0.13,0.44,0.32,0.32,1,냉기 마법 원거리
+4203,4,2,고블린 빙하대장,Goblin Glacier Chief,0,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_defiance,spear,weapon|armor|helmet|gloves,2,95,0.32,0.32,0.32,0.32,1,얼음 갑옷의 거대 고블린 대장
+4250,4,2,아스타로스,Astaroth,0,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,83,0.32,0.32,0.32,0.32,1,빙하의 태공 — 게으름과 허영의 악마
+4301,4,3,예티 척후,Yeti Scout,0,0,Normal,Yeti,physical,normal,skirmish,archer,3,10,3,7,9,4,5,arc_multishot,crossbow,weapon|armor|boots,2,45,0.33,0.33,0.33,0.33,1,설인 정찰병
+4302,4,3,예티 투석병,Yeti Slinger,0,0,Normal,Yeti,physical,normal,ranged,archer,3,10,3,7,11,4,5,arc_guided,crossbow,weapon|armor|gloves,2,52,0.33,0.33,0.33,0.33,1,얼음 덩이를 던지는 원거리
+4303,4,3,트롤 빙하거인,Troll Glacier Giant,0,0,Normal,Troll,physical,normal,heavy,knight,10,5,3,15,3,4,5,kni_smite,sword2h,weapon|armor|helmet|gloves,3,97,0.33,0.33,0.33,0.33,1,얼어붙은 피부의 거대 트롤
+4350,4,3,파주주,Pazuzu,0,0,Normal,Troll,physical,stage_boss,boss,warrior,10,4,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,85,0.33,0.33,0.33,0.33,1,얼어붙은 바람왕 — 동토에 영원히 얼어붙은 자
+4401,4,4,동결 임프,Frozen Imp,0,0,Demon,Imp,cold,normal,caster,mage,3,14,11,7,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,31,0.14,0.49,0.35,0.35,1,동결왕좌의 냉기를 관리하는 임프
+4402,4,4,왕좌 고블린 위병,Throne Goblin Sentry,0,0,Demon,Goblin,physical,normal,line,warrior,8,12,3,9,3,4,5,war_shout,mace,weapon|armor|helmet,1,65,0.35,0.35,0.35,0.35,1,벨페고르의 옥좌를 지키는 위병
+4403,4,4,고블린 동결기사,Goblin Frost Knight,0,0,Demon,Goblin,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_charge,spear,weapon|armor|helmet|gloves,2,99,0.35,0.35,0.35,0.35,1,서리 갑주를 두른 고블린 기사
+4450,4,4,힙노스,Hypnos,0,0,Demon,Imp,cold,stage_boss,boss,mage,3,11,10,10,3,15,5,mag_frostnova,orb,weapon|helmet|armor|gloves|boots|amulet|ring,2,87,0.14,0.49,0.35,0.35,1,잠의 신 — 깨어 있는 자를 끝나지 않는 잠에 빠뜨린다
+4900,4,5,벨페고르,Belphegor,0,0,Demon,Gargoyle,cold,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,87,0.14,0.49,0.35,0.35,1,나태의 왕 — 모든 것이 멈추기를 원하는 자
+5101,5,1,부식 좀비,Corroded Zombie,0,0,Undead,Zombie,physical,normal,line,warrior,5,5,3,13,3,4,5,war_battleorders,axe,weapon|armor|helmet,2,66,0.35,0.35,0.35,0.35,1,삼켜진 시체가 움직이는 형태
+5102,5,1,리치 수행자,Lich Acolyte,0,0,Undead,Lich,poison,normal,caster,priest,3,10,11,4,3,4,5,pri_regen,bible,weapon|armor|amulet,2,31,0.35,0.35,0.14,0.5,1,심연의 마법을 다루는 하급 리치
+5103,5,1,부식 리치,Corroded Lich,0,0,Undead,Lich,poison,normal,elite_line,knight,13,8,3,11,3,10,5,kni_rush,sword2h,weapon|armor|helmet|ring,2,69,0.35,0.35,0.14,0.5,1,부식 마법을 다루는 상급 리치
+5150,5,1,오르쿠스,Orcus,0,0,Undead,Lich,poison,stage_boss,boss,archer,3,8,3,10,10,15,5,arc_multishot,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,3,88,0.35,0.35,0.14,0.5,1,탐식의 문지기 — 저승을 관장하는 죽음의 군주
+5201,5,2,동굴 예티,Cave Yeti,0,0,Normal,Yeti,physical,normal,line,warrior,11,8,3,6,3,4,5,war_bash,axe,weapon|armor|helmet,2,67,0.37,0.37,0.37,0.37,1,동굴에 서식하는 예티
+5202,5,2,바위 골렘,Rock Golem,0,0,Normal,Golem,physical,normal,line,warrior,8,4,3,9,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,67,0.37,0.37,0.37,0.37,1,살아있는 미로의 돌 파수꾼
+5203,5,2,거대 골렘,Giant Golem,0,0,Normal,Golem,physical,normal,heavy,knight,10,3,3,13,3,4,5,kni_duel,sword2h,weapon|armor|helmet|gloves,3,102,0.37,0.37,0.37,0.37,1,심연의 핵심을 지키는 고대 골렘
+5250,5,2,탈로스,Talos,0,0,Normal,Golem,physical,stage_boss,boss,warrior,10,2,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,89,0.37,0.37,0.37,0.37,1,맥동하는 미로의 수호자 — 쉬지 않고 도는 청동 거인
+5301,5,3,가고일 주술사,Gargoyle Shaman,0,0,Demon,Gargoyle,lightning,normal,caster,priest,3,9,8,6,3,4,5,pri_penitence,bible,weapon|armor|amulet,2,32,0.38,0.38,0.54,0.15,1,심연 입구에서 저주를 뱉는 석상
+5302,5,3,오크 포식자,Orc Devourer,0,0,Demon,Orc,physical,normal,heavy,knight,12,7,3,10,3,4,5,kni_might,sword2h,weapon|armor|helmet|gloves,2,104,0.38,0.38,0.38,0.38,1,모든 것을 탐하는 오크
+5303,5,3,악마 가고일,Demon Gargoyle,0,0,Demon,Gargoyle,physical,normal,elite_line,knight,10,7,3,13,3,10,5,kni_fanaticism,sword2h,weapon|armor|helmet|ring,3,72,0.38,0.38,0.38,0.38,1,심연의 최심부 가고일
+5350,5,3,베히모스,Behemoth,0,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,91,0.38,0.38,0.38,0.38,1,소화의 심연 지배자 — 삼키기를 멈추지 않는 대식의 짐승
+5401,5,4,연회장 가고일,Banquet Gargoyle,0,0,Demon,Gargoyle,physical,normal,line,warrior,8,7,3,9,3,4,5,war_taunt,axe,weapon|armor|helmet,2,70,0.4,0.4,0.4,0.4,1,연회장 기둥에 붙은 석상 파수꾼
+5402,5,4,오크 대식가,Orc Glutton,0,0,Demon,Orc,physical,normal,line,warrior,11,9,3,8,3,4,5,war_shout,axe,weapon|armor|helmet,2,70,0.4,0.4,0.4,0.4,1,연회에 참석한 오크 폭식자
+5403,5,4,대가고일 집사,Grand Gargoyle Butler,0,0,Demon,Gargoyle,physical,normal,heavy,knight,10,6,3,13,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,3,106,0.4,0.4,0.4,0.4,1,연회를 준비하는 거대 가고일
+5450,5,4,케르베로스,Cerberus,0,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_battleorders,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,93,0.4,0.4,0.4,0.4,1,탐식자들의 원을 지키는 세 머리 개 — 연회의 문지기
+5900,5,5,바알제붑,Beelzebub,0,0,Demon,Gargoyle,physical,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_bash,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,93,0.4,0.4,0.4,0.4,1,폭식의 왕 — 모든 것을 삼키는 심연의 군주
+6101,6,1,서큐버스 유혹자,Succubus Seductress,0,0,Demon,Succubus,fire,normal,caster,mage,3,10,10,9,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,2,34,0.58,0.16,0.41,0.41,1,타락한 정원의 유혹 마녀
+6102,6,1,화염 임프,Flame Imp,0,0,Demon,Imp,fire,normal,caster,mage,3,14,9,6,3,4,5,mag_fireball,orb,weapon|armor|amulet,1,34,0.58,0.16,0.41,0.41,1,정원을 지키는 임프 마법사
+6103,6,1,대임프 사제,Grand Imp Priest,0,0,Demon,Imp,fire,normal,elite_line,priest,3,12,11,13,3,10,5,pri_bind,crucifix,weapon|armor|helmet|ring,2,74,0.58,0.16,0.41,0.41,1,타락 의식을 집행하는 사제
+6150,6,1,릴리스,Lilith,0,0,Demon,Succubus,fire,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_inferno,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,94,0.58,0.16,0.41,0.41,1,부패한 정원의 지배자 — 최초의 유혹
+6201,6,2,뱀파이어 후작,Vampire Marquis,0,0,Undead,Vampire,physical,normal,line,warrior,9,10,3,10,3,4,5,war_doubleswing,mace,weapon|armor|helmet,2,72,0.42,0.42,0.42,0.42,1,회랑을 떠도는 흡혈 귀족
+6202,6,2,유혹의 유령,Ghost of Temptation,0,0,Undead,Ghost,cold,normal,caster,mage,3,10,8,3,3,4,5,mag_focus,orb,weapon|armor|amulet,1,34,0.17,0.59,0.42,0.42,1,유혹의 속삭임으로 현혹하는 유령
+6203,6,2,뱀파이어 백작,Vampire Count,0,0,Undead,Vampire,physical,normal,elite_line,knight,13,9,3,15,3,10,5,kni_smite,spear,weapon|armor|helmet|ring,3,75,0.42,0.42,0.42,0.42,1,회랑의 지배자 흡혈 백작
+6250,6,2,카밀라,Carmilla,0,0,Undead,Vampire,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,95,0.42,0.42,0.42,0.42,1,유혹의 회랑 주인 — 손님을 놓아주지 않는 여백작
+6301,6,3,도마뱀 근위병,Lizardman Guard,0,0,Normal,Lizardman,physical,normal,line,warrior,7,11,3,5,3,4,5,war_leap,mace,weapon|armor|helmet,2,73,0.43,0.43,0.43,0.43,1,왕좌를 지키는 근위 전사
+6302,6,3,트롤 집행자,Troll Executioner,0,0,Normal,Troll,physical,normal,heavy,knight,12,5,3,14,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,2,111,0.43,0.43,0.43,0.43,1,욕망의 왕좌 집행관
+6303,6,3,도마뱀 대장,Lizardman Captain,0,0,Normal,Lizardman,physical,normal,elite_line,knight,10,10,3,10,3,10,5,kni_rush,spear,weapon|armor|helmet|ring,2,76,0.43,0.43,0.43,0.43,1,근위대 대장
+6350,6,3,그렌델,Grendel,0,0,Normal,Troll,physical,stage_boss,boss,warrior,10,4,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,97,0.43,0.43,0.43,0.43,1,욕망의 왕좌 수호자 — 연회를 시기해 찾아오는 괴물
+6401,6,4,침실의 서큐버스,Chamber Succubus,0,0,Demon,Succubus,poison,normal,caster,archer,3,11,3,9,10,4,5,arc_guided,bow,weapon|armor|amulet,2,35,0.45,0.45,0.18,0.63,1,아스모데우스의 침실을 지키는 유혹마
+6402,6,4,시종 임프,Attendant Imp,0,0,Demon,Imp,poison,normal,caster,archer,3,14,3,5,9,4,5,arc_pierce,bow,weapon|armor|amulet,1,35,0.45,0.45,0.18,0.63,1,침실 시중을 드는 임프
+6403,6,4,대서큐버스 시녀장,Grand Succubus Matron,0,0,Demon,Succubus,poison,normal,heavy,priest,3,11,11,14,3,4,5,pri_judgment,bible,weapon|armor|helmet|gloves,2,113,0.45,0.45,0.18,0.63,1,침실 시녀들을 이끄는 대서큐버스
+6450,6,4,나아마,Naamah,0,0,Demon,Succubus,poison,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_poison,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,99,0.45,0.45,0.18,0.63,1,유혹의 여왕 — 아스모데우스의 짝
+6900,6,5,아스모데우스,Asmodeus,0,0,Demon,Gargoyle,poison,chapter_boss,boss,archer,3,7,3,10,10,15,5,arc_multishot,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,3,99,0.45,0.45,0.18,0.63,1,색욕의 왕 — 욕망에 잠식된 궁전의 지배자
+7101,7,1,가고일 천상병,Gargoyle Celestial,0,0,Demon,Gargoyle,physical,normal,line,warrior,7,7,3,7,3,4,5,war_shout,axe,weapon|armor|helmet,2,75,0.46,0.46,0.46,0.46,1,천상의 계단을 지키는 가고일
+7102,7,1,오크 성기사,Orc Paladin,0,0,Demon,Orc,physical,normal,heavy,knight,12,7,3,10,3,4,5,kni_duel,sword2h,weapon|armor|helmet|gloves,2,115,0.46,0.46,0.46,0.46,1,타락한 성기사 오크
+7103,7,1,가고일 대장,Gargoyle Captain,0,0,Demon,Gargoyle,physical,normal,elite_line,knight,11,7,3,12,3,10,5,kni_might,sword2h,weapon|armor|helmet|ring,3,79,0.46,0.46,0.46,0.46,1,가고일 부대 지휘관
+7150,7,1,아자젤,Azazel,0,0,Demon,Gargoyle,physical,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_battleorders,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,101,0.46,0.46,0.46,0.46,1,천상의 계단 수호자 — 하늘에서 쫓겨난 타락천사
+7201,7,2,신전 골렘,Temple Golem,0,0,Normal,Golem,physical,normal,line,warrior,8,4,3,9,3,4,5,war_bash,axe,weapon|armor|helmet,2,76,0.47,0.47,0.47,0.47,1,무너진 신전의 석상 파수꾼
+7202,7,2,예티 순례자,Yeti Pilgrim,0,0,Normal,Yeti,physical,normal,line,warrior,11,8,3,6,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,76,0.47,0.47,0.47,0.47,1,신전을 떠도는 설인
+7203,7,2,고대 골렘,Ancient Golem,0,0,Normal,Golem,physical,normal,elite_line,knight,11,4,3,14,3,10,5,kni_fanaticism,sword2h,weapon|armor|helmet|ring,3,80,0.47,0.47,0.47,0.47,1,신성한 힘이 오염된 고대 골렘
+7250,7,2,골리앗,Goliath,0,0,Normal,Golem,physical,stage_boss,boss,warrior,10,2,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,102,0.47,0.47,0.47,0.47,1,무너진 신전의 수호자 — 제 키를 믿었던 거인
+7301,7,3,리치 왕,Lich King,0,0,Undead,Lich,lightning,normal,caster,mage,3,10,9,4,3,4,5,mag_frozenwall,staff,weapon|armor|amulet,2,37,0.49,0.49,0.68,0.19,1,언데드 군단의 리치 왕
+7302,7,3,뱀파이어 공작,Vampire Duke,0,0,Undead,Vampire,physical,normal,elite_line,knight,9,9,3,13,3,10,5,kni_defiance,spear,weapon|armor|helmet|ring,2,81,0.49,0.49,0.49,0.49,1,왕좌를 노리는 흡혈 공작
+7303,7,3,대리치,Archlich,0,0,Undead,Lich,lightning,normal,elite_line,knight,12,8,3,11,3,10,5,kni_smite,sword2h,weapon|armor|helmet|ring,3,81,0.49,0.49,0.68,0.19,1,오만의 마법을 다루는 대리치
+7350,7,3,아스클레피오스,Asclepius,0,0,Undead,Lich,lightning,stage_boss,boss,mage,3,7,10,10,3,15,5,mag_lightning,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,103,0.49,0.49,0.68,0.19,1,오만의 왕좌 수호자 — 죽은 자를 되살려 신의 노여움을 산 자
+7401,7,4,옥좌의 주문석상,Throne Spellstone,0,0,Demon,Gargoyle,lightning,normal,caster,mage,3,9,9,8,3,4,5,mag_chain,staff,weapon|armor|amulet,2,38,0.5,0.5,0.7,0.2,1,빈 옥좌에 새겨진 주문을 읊는 석상
+7402,7,4,타락 오크 근위,Fallen Orc Guard,0,0,Demon,Orc,physical,normal,line,warrior,11,9,3,8,3,4,5,war_leap,axe,weapon|armor|helmet,2,79,0.5,0.5,0.5,0.5,1,루시퍼를 따랐던 근위 오크
+7403,7,4,대가고일 옥좌지기,Grand Gargoyle Thronekeeper,0,0,Demon,Gargoyle,physical,normal,heavy,knight,10,6,3,13,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,3,120,0.5,0.5,0.5,0.5,1,옥좌를 떠나지 못하는 거대 석상
+7450,7,4,벨리알,Belial,0,0,Demon,Gargoyle,lightning,stage_boss,boss,mage,3,6,10,10,3,15,5,mag_focus,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,105,0.5,0.5,0.7,0.2,1,루시퍼 다음으로 창조된 자 — 빈 옥좌 곁을 떠나지 않는다
+7900,7,5,루시퍼,Lucifer,0,0,Demon,Gargoyle,lightning,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,105,0.5,0.5,0.7,0.2,1,오만의 왕 — 스스로를 신이라 칭하다 추락한 자

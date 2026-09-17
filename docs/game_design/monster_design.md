@@ -193,7 +193,7 @@ attack_type = physical | fire | cold | lightning | poison
 | `attack_type` | §2 — `physical` 또는 스테이지 원소 (`fire`/`cold`/`lightning`/`poison`) |
 | `spawn_grade` | 등장 기본 등급 (정예는 런타임 생성이라 행 없음) |
 | `role` | skirmish / line / ranged / caster / heavy / elite_line / boss |
-| `size_type` | 소/중/대 — **전투 미관여 확정 [2026-08-31]**. `role`·`type` 두 축이 이미 몬스터 차별화(방어 성향·vs 접사)를 맡고 있어 사이즈까지 전투 축으로 쓰면 축 중복이다(item_design.md §1 사이즈 특효 삭제와 한 묶음). 아트 발주(몬스터 일러스트 캔버스 크기) 전용 — `docs/reference/monster_art_prompt.md` §3 |
+| `size_type` | 소/중/대 — **전투 미관여 확정 [2026-08-31]**. `role`·`type` 두 축이 이미 몬스터 차별화(방어 성향·vs 접사)를 맡고 있어 사이즈까지 전투 축으로 쓰면 축 중복이다(item_design.md §1 사이즈 특효 삭제와 한 묶음 · **2026-09-17 사이즈 특효 축 삭제로 재검토도 닫혔다** — GAME_DESIGN.md §9). 아트 발주(몬스터 일러스트 캔버스 크기) 전용 — `docs/reference/monster_art_prompt.md` §3 |
 | `cls` | **직업** — `class.csv` 의 본편 5(`warrior`/`knight`/`mage`/`archer`/`priest`). 정하는 것은 **스킬 풀과 무기군**이고 자리는 `role` 이 정한다(겸하지 않는다 · §5-1) [신설 2026-09-11] |
 | `str` `agi` `int` `vit` `luck` `ldr` `cha` | **기본 능력치 7종** — 영웅은 굴리고 **몬스터는 고정**. 대역은 영웅과 같다(`hero_attr_min`~`hero_attr_max`). 지금 전투로 나가는 것은 **`vit`(HP 성장분) · `agi`(행동 주기)** 둘뿐이고 나머지 다섯은 **스킬 계수**의 입력이다(계수가 전부 0 이라 아직 값이 안 읽힌다) [신설 2026-09-11 · battle_design §8-1] |
 | `innate_skill` | **고유 스킬 1** — `skill.csv` id. 그 `cls` 의 풀에서 고르고 **몬스터마다 고정**이다. 풀은 **영웅과 공유**한다 (skill_design §2). `-` 면 빈 고유 칸 [신설 2026-09-11] |
@@ -256,4 +256,4 @@ attack_type = physical | fire | cold | lightning | poison
 
 ---
 
-*마지막 업데이트: 2026-09-16*
+*마지막 업데이트: 2026-09-17*

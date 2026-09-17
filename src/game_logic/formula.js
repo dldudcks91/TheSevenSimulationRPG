@@ -6,17 +6,20 @@
  *
  * 계수는 전부 balance.csv — 이 파일에 숫자 리터럴을 쓰지 않는다.
  *
+ * **퍼센트는 비율로 든다** [2026-09-17 · R111 · src/data/README.md 단위 규약] — 5% = `0.05` · 배율 150% = `1.5`.
+ *   CSV 의 `_pct` 이름은 그대로지만 값은 비율이고, 이 파일은 `/ 100` 을 하지 않는다. 화면이 찍을 때만 100 을 곱한다.
+ *
  * 직격 1회 = 적중 게이트 → 타격 피해 → 감소 (§9-2 ~ §9-5)
  *
- *   적중률   = clamp(hit_base_pct − 부족레벨 × hit_per_level_deficit_pct, hit_min_pct, hit_base_pct)
+ *   적중률   = clamp(hit_base_pct − 부족레벨 × hit_per_level_deficit_pct, hit_min_pct, hit_base_pct)   (비율)
  *              **레벨 차만이 정한다** — 명중·회피 스탯은 폐지됐다 (§9-4). 오버레벨 초과 이득 없음
  *   타격피해 = (공격력 × 스킬 배율 + 능력치 항) × (1 + 조건부 합%) × 치명 배수 × 추가 피해 배수
  *              능력치 항(`flat`)은 배율에 곱하지 않고 더한다 — 곱이 아니라 합 (§9-2 · 2026-09-10)
  *              추가 피해는 확률이 있는 스킬 타격만 치명 뒤에 한 번 더 굴린다 — 치명과 겹친다 (§9-2 · 2026-09-10)
  *              **공격력은 범위를 굴린다** — 적중하면 공격력 범위의 양끝(atkMin~atkMax) 사이를 한 번 균등 굴림 (§9-1 · R90)
  *   물리     × (1 − 방어값/(방어값 + def_curve_k))     K 는 **상수**다 — 공격자 레벨 무관 (§9-3)
- *   원소     × (1 − 적용저항/100)                       저항은 소재값이 아니라 **직접 %**, 상한형 (§9-5)
- *   공통     × (1 − 피해감소%)                          원천별 곱은 호출자가 reductionMult 로 합쳐 온다
+ *   원소     × (1 − 적용저항)                           저항은 소재값이 아니라 **직접 비율**, 상한형 (§9-5)
+ *   공통     × (1 − 피해감소)                           원천별 곱은 호출자가 reductionMult 로 합쳐 온다
  *   최종피해 = max(dmg_min, round(…))
  *
  * 성장 축은 둘이다 (§9-0) — **구간 직선**(무기 피해 · 방어구 고유값 · 최대 HP)과 **곱셈 곡선**(growthMult — HP flat 접사 · HP 재생 바탕값).
@@ -26,6 +29,20 @@
 export function createFormula(balance) {
     const B = balance;
     const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+    /**
+     * 퍼센트 반올림 [2026-09-17 · R111 · item_design §2-1] — 비율을 **1% 단위**(소수 둘째 자리)로 자른다.
+     * `fine` 은 0.1% 단위다 — 오만 「레벨당 데미지」 한 행(1 보다 작은 % 가 본질 · 값 대역 대기 — GAME_DESIGN §10).
+     * 장비 옵션 값과 운 계수를 먹인 드롭 보정이 쓴다 — 표기(1% 단위) = 계산이 되게 한다.
+     */
+    const PCT_STEP = 100;                 // 결정론 상수 — INTERFACE §5-3 (1% = 비율 0.01)
+    const PCT_FINE_STEP = 1000;           // 결정론 상수 — INTERFACE §5-3 (0.1% = 비율 0.001)
+    const roundPct = (v, fine = false) => {
+        const k = fine ? PCT_FINE_STEP : PCT_STEP;
+        return Math.round(v * k) / k;
+    };
+    /** 장비 옵션의 퍼센트 값 — 반올림하고 **한 칸(1% · fine 은 0.1%) 아래로는 안 내려간다**(옛 정수 규칙의 하한 1 과 같은 자리) */
+    const pctOption = (v, fine = false) => Math.max(1 / (fine ? PCT_FINE_STEP : PCT_STEP), roundPct(v, fine));
 
     /**
      * 성장 축의 유일한 곡선 (§9-0) — `power_growth_per_level ^ (n − 1)`.
@@ -72,19 +89,19 @@ export function createFormula(balance) {
      * 강화 배율 — `+`강화 단계 하나가 베이스 능력치(무기 피해 양끝 · 방어구 고유값)에 곱하는 값 (item_design §1 · R25).
      * item.js 에 있던 식을 여기로 옮겼다 [2026-09-14 · R90] — 무기 피해 범위를 hero.computeCombat 도 파생해야 해서 한 곳에 둔다
      */
-    const upgradeMult = up => 1 + (up ?? 0) * B.equip_upgrade_base_pct / 100;
+    const upgradeMult = up => 1 + (up ?? 0) * B.equip_upgrade_base_pct;
 
     /**
      * 무기 피해 범위 [2026-09-14 · R90 · battle_design §9-1] — **굴림이 아니라 파생**이다. 같은 무기군 · 같은 ilvl · 같은 강화면 같은 범위.
      *   가운데 = weapon_atk_base + 구간 단위 누적합(ilvl) [2026-09-15 확정 · R105 — ~~× growthMult(ilvl)~~ 곱셈 축을 떠났다]
-     *   양끝 = 가운데 × (1 ∓ 폭/100) × 강화 배율 → **반올림은 곱을 다 한 뒤 한 번**(표기 = 계산).
-     *   폭 = 무기군 `variance`(weapon_group.csv:variance_pct) · 없으면 dmg_variance_pct. 최소 ≥ 1 · 최대 ≥ 최소 (INTERFACE §5-3).
+     *   양끝 = 가운데 × (1 ∓ 폭) × 강화 배율 → **반올림은 곱을 다 한 뒤 한 번**(표기 = 계산).
+     *   폭(비율) = 무기군 `variance`(weapon_group.csv:variance_pct) · 없으면 dmg_variance_pct. 최소 ≥ 1 · 최대 ≥ 최소 (INTERFACE §5-3).
      *   범위 안의 굴림은 `strike` 가 직격마다 한다 — 여기는 양끝만 낸다.
      * @param group 무기군 정의(모르면 null — 전역 폭) · @returns {{min: number, max: number}}
      */
     function weaponDamage(ilvl, group, up = 0) {
         const mid = atIlvl(weaponMidTable, ilvl);
-        const w = (group?.variance ?? B.dmg_variance_pct) / 100;
+        const w = group?.variance ?? B.dmg_variance_pct;
         const m = upgradeMult(up);
         const min = Math.max(1, Math.round(mid * (1 - w) * m));
         return { min, max: Math.max(min, Math.round(mid * (1 + w) * m)) };
@@ -101,22 +118,22 @@ export function createFormula(balance) {
     }
 
     /** 곡선에 넣을 물리 방어값 — 방어 무시는 **곡선 앞** 소재값을 비율로 깎는다 (감쇠율의 %가 아니다) */
-    const physicalDefense = (def, defIgnorePct = 0) => Math.max(0, (def ?? 0) * (1 - (defIgnorePct ?? 0) / 100));
+    const physicalDefense = (def, defIgnorePct = 0) => Math.max(0, (def ?? 0) * (1 - (defIgnorePct ?? 0)));
 
-    /** 현재 저항 상한(%) — 기본 상한을 뚫는 유일한 수단이 최대 저항 증가, 그 위에 절대 상한 (§9-5) */
+    /** 현재 저항 상한(비율) — 기본 상한을 뚫는 유일한 수단이 최대 저항 증가, 그 위에 절대 상한 (§9-5) */
     const resCap = (resMaxBonus = 0) => Math.min(B.res_cap_base + (resMaxBonus ?? 0), B.res_cap_absolute);
 
-    /** 적용 저항(%) — 상한만 있고 **하한은 없다.** 음수 저항 = 피해 증폭 (§9-5) */
+    /** 적용 저항(비율) — 상한만 있고 **하한은 없다.** 음수 저항 = 피해 증폭 (§9-5) */
     const appliedResist = (res, resMaxBonus = 0) => Math.min(res ?? 0, resCap(resMaxBonus));
 
     /**
      * 피해 감소 — **원천별로 각각 곱한다** (§9-3). 덧셈이 아니다.
      * 몇 개를 쌓아도 0에 수렴할 뿐 닿지 않아 상한 규칙이 필요 없고, 접사 하나의 실효 체력 기여가 항상 일정하다.
      */
-    const reductionMult = pcts => (pcts ?? []).reduce((m, p) => m * (1 - (p ?? 0) / 100), 1);
+    const reductionMult = pcts => (pcts ?? []).reduce((m, p) => m * (1 - (p ?? 0)), 1);
 
     /**
-     * 적중률(%) — **레벨 차 하나로 정해진다** (§9-4). 명중·회피 스탯 폐지.
+     * 적중률(비율) — **레벨 차 하나로 정해진다** (§9-4). 명중·회피 스탯 폐지.
      * 오버레벨은 hit_base_pct 에서 멈추고(초과 이득 없음), 아무리 모자라도 hit_min_pct 는 맞는다.
      * 적정 레벨에서는 분산이 0 — 분산은 언더레벨 도전을 자발적으로 택했을 때만 생긴다.
      */
@@ -134,7 +151,7 @@ export function createFormula(balance) {
      * @param d 방어자 {def, res:{fire,cold,lightning,poison}, resMaxBonus, dr, lvl} — res 는 **항상 객체**(몬스터도)
      */
     function strike(rng, a, d) {
-        if (rng() * 100 >= hitChance(a.lvl, d.lvl)) return { hit: false, dmg: 0, crit: false, proc: false };
+        if (rng() >= hitChance(a.lvl, d.lvl)) return { hit: false, dmg: 0, crit: false, proc: false };
 
         // 능력치 항은 배율에 곱하지 않고 **더한다** (§9-2 「곱이 아니라 합」 · 2026-09-10) — 무기가 약해도 능력치가 제 몫을 한다.
         //   그래서 공격력이 0 이어도 능력치 항만큼은 들어간다
@@ -142,24 +159,24 @@ export function createFormula(balance) {
         //   양끝이 같아도 소비한다 — 소비 수가 무기에 의존하면 같은 시드가 다른 전투를 낸다
         const atk = a.atkMin + rng() * (a.atkMax - a.atkMin);
         let v = atk * (a.skillMult ?? 1) + (a.flat ?? 0);                          // 스킬 배율 (기본 공격 = 1) + 능력치 항
-        v *= 1 + (a.bonusPct ?? 0) / 100;                          // 조건부 합% — 특효·도감·버프 덧셈
-        const crit = rng() * 100 < Math.min(a.crit ?? 0, B.crit_cap_pct);
-        if (crit) v *= (a.critDmg ?? 100) / 100;
+        v *= 1 + (a.bonusPct ?? 0);                                // 조건부 합(비율) — 특효·도감·버프 덧셈
+        const crit = rng() < Math.min(a.crit ?? 0, B.crit_cap_pct);
+        if (crit) v *= a.critDmg ?? 1;
         // 확률로 터지는 추가 피해 — 치명과 **따로 굴려 겹친다**(치명 상한과 무관 · §9-2). 확률이 있는 타격만 굴린다:
         //   기본 공격은 확률이 0 이라 굴림을 안 태우므로 수열이 종전과 같다 (INTERFACE §5-2)
         let proc = false;
         if ((a.procChance ?? 0) > 0) {
-            proc = rng() * 100 < Math.min(a.procChance, 100);
-            if (proc) v *= (a.procMult ?? 100) / 100;
+            proc = rng() < Math.min(a.procChance, 1);
+            if (proc) v *= a.procMult ?? 1;
         }
 
         if (a.atkType === 'physical') {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
         } else {
             // 저항 감소는 관통이라는 별도 규칙이 아니라 저항값에 음수를 더하는 것이다 (§9-5)
-            v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - (a.resReduction ?? 0), d.resMaxBonus ?? 0) / 100;
+            v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - (a.resReduction ?? 0), d.resMaxBonus ?? 0);
         }
-        v *= 1 - (d.dr ?? 0) / 100;
+        v *= 1 - (d.dr ?? 0);
         return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
     }
 
@@ -169,8 +186,8 @@ export function createFormula(balance) {
      */
     const indirect = amount => Math.max(B.dmg_min, Math.round(amount));
 
-    /** 흡혈 — 직격의 최종 피해에만 비례한다 */
-    const leech = (dmg, pct) => Math.round(dmg * (pct ?? 0) / 100);
+    /** 흡혈 — 직격의 최종 피해에만 비례한다 (`pct` 는 비율) */
+    const leech = (dmg, pct) => Math.round(dmg * (pct ?? 0));
 
     /**
      * 초당 공격속도 — **행동 주기의 역수**다. 주기(초/1회)는 클수록 느려서 화면에서 방향이 거꾸로 읽히므로,
@@ -188,7 +205,7 @@ export function createFormula(balance) {
     const effectiveCd = (cd, period) => Math.ceil(cd / period) * period;
 
     return {
-        growthMult, upgradeMult, weaponDamage, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
+        roundPct, pctOption, growthMult, upgradeMult, weaponDamage, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
         hitChance, strike, indirect, leech, attacksPerSec, effectiveCd,
     };
 }

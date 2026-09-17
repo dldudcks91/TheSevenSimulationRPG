@@ -1171,6 +1171,8 @@ const STRINGS = {
     'bt.layout.toWide': { ko: '넓게 보기', en: 'Wide view' },
     'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack' },
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
+    // 물리 경직 칩의 이름 — 칩에 올리면 뜬다 (R110 · SCREEN_DESIGN §4-2 · ADR-0154)
+    'bt.stagger': { ko: '경직', en: 'Stagger' },
     // 로그 탭 — 줄의 **주체**(그 일을 한 쪽)로 거른다 (2026-09-15 · SCREEN_DESIGN §4-2)
     'bt.logf.all': { ko: '전체', en: 'All' },
     'bt.logf.party': { ko: '우리', en: 'Party' },

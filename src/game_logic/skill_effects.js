@@ -18,6 +18,7 @@
  *     회복 밑수(`matkMin`·`matkMax`)도 같은 괄호를 탄다 — 공격 창이 회복만 비껴가면 같은 괄호가 아니다 · 범위 양끝마다 (R90)
  *   · `period_pct` 는 **다음 차례 예약부터** 걸린다 — 이미 잡힌 `next` 는 건드리지 않는다 (INTERFACE §2-6)
  *   · 발동 조건(skill_design §9-3) — 거짓이면 **준비된 것으로 치지 않는다**(쿨은 그대로, 그 차례엔 다른 것이 나간다)
+ *   · **배율 · 감쇠 · 효과값 · 조건값은 비율이다** [2026-09-17 · R111] — 310% = `3.1` · 25% = `0.25`. 여기서 `/ 100` 을 하지 않는다
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   `taunt` 는 derive 도 apply 도 없는 **표식**이다 — 소비자가 battle.js 의 타겟팅(도발자 고정)이라
@@ -51,7 +52,7 @@ export const ATTACK_TARGETS = {
         const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
-            rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id, sk);
+            rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
         }
     },
     /**
@@ -65,10 +66,10 @@ export const ATTACK_TARGETS = {
         const primary = def.decay > 0
             ? (foes.find(f => f.hp > 0 && (f.rank ?? 0) === 0) ?? foes.find(f => f.hp > 0) ?? null)
             : null;
-        const weak = (def.mult / 100) * (1 - def.decay / 100);
+        const weak = def.mult * (1 - def.decay);
         for (const tgt of foes) {
             if (u.hp <= 0) break;
-            if (tgt.hp > 0) rt.strikeOnce(u, tgt, primary === null || tgt === primary ? def.mult / 100 : weak, def.element, def.id, sk);
+            if (tgt.hp > 0) rt.strikeOnce(u, tgt, primary === null || tgt === primary ? def.mult : weak, def.element, def.id, sk);
         }
     },
     /** 순환 — 시작점만 굴리고(rng 1회) 배열 순으로 돌아가며 `hits` 회. 대상이 모자라면 같은 대상에 겹친다 */
@@ -80,7 +81,7 @@ export const ATTACK_TARGETS = {
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0) break;
             const tgt = foes[(start + k) % foes.length];
-            if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id, sk);
+            if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
         }
     },
     /**
@@ -94,10 +95,10 @@ export const ATTACK_TARGETS = {
         const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
-            rt.strikeOnce(u, tgt, def.mult / 100, def.element, def.id, sk);
+            rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
             // 방어 감소는 **밑수까지** 깎는다 — 창이 다시 파생돼도 되돌아오지 않게 (guard_pct 와 같은 축이다)
-            tgt.defBase = Math.max(0, tgt.defBase * (1 - def.decay / 100));
-            tgt.def = Math.max(0, tgt.def * (1 - def.decay / 100));
+            tgt.defBase = Math.max(0, tgt.defBase * (1 - def.decay));
+            tgt.def = Math.max(0, tgt.def * (1 - def.decay));
         }
     },
     /** 연쇄 — 시작점만 굴리고(rng 1회 · **전열 우선**) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다 */
@@ -107,7 +108,7 @@ export const ATTACK_TARGETS = {
         for (let k = 0; k < foes.length; k++) {
             if (u.hp <= 0) break;
             const tgt = foes[(start + k) % foes.length];
-            if (tgt.hp > 0) rt.strikeOnce(u, tgt, (def.mult / 100) * Math.pow(1 - def.decay / 100, k), def.element, def.id, sk);
+            if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult * Math.pow(1 - def.decay, k), def.element, def.id, sk);
         }
     },
 };
@@ -143,25 +144,25 @@ export const EFFECTS = {
     // 공격력 · 회복 밑수는 **범위**다 — 양끝에 같은 배율을 곱한다 (R90)
     atk_pct: {
         derive: (u, sum) => {
-            const mult = 1 + (u.atkPct + sum) / 100;
+            const mult = 1 + u.atkPct + sum;
             u.atkMin = u.atkMinBase * mult; u.atkMax = u.atkMaxBase * mult;
             u.matkMin = u.matkMinBase * mult; u.matkMax = u.matkMaxBase * mult;
         },
     },
     // 주기는 다음 차례 예약부터 — 이미 잡힌 u.next 는 건드리지 않는다 (INTERFACE §2-6)
-    period_pct: { derive: (u, sum) => { u.period = u.basePeriod * (1 - sum / 100); } },
+    period_pct: { derive: (u, sum) => { u.period = u.basePeriod * (1 - sum); } },
     // HP 밖 흡수 풀 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3)
     barrier_pct: {
         apply: (rt, tgt, def, until, ev) => {
-            const amt = Math.round(tgt.hpMax * def.value / 100);
+            const amt = Math.round(tgt.hpMax * def.value);
             tgt.barrier = { amt, until, s: def.id };
             ev.amt = amt;
         },
     },
-    // 방어값 % + 전 저항 %p 를 **함께** 민다 — 전사 외침. 한 행이 채널 하나만 들어서 둘을 한 효과로 묶었다
+    // 방어값 비율 + 전 저항(같은 비율을 더한다)을 **함께** 민다 — 전사 외침. 한 행이 채널 하나만 들어서 둘을 한 효과로 묶었다
     guard_pct: {
         derive: (u, sum) => {
-            u.def = u.defBase * (1 + sum / 100);
+            u.def = u.defBase * (1 + sum);
             for (const k of Object.keys(u.res)) u.res[k] = u.resBase[k] + sum;
         },
     },
@@ -169,7 +170,7 @@ export const EFFECTS = {
     //   `guard_pct` 와 **같은 축**(방어값 · 저항)을 밀므로 guard 의 창 합까지 함께 다시 쓴다 — 표 순서상 guard 뒤라 마지막에 쓴 값이 둘을 다 든다
     // 방어값 % — 물리 무기 통합옵션 「타격 시 대상 방어력 감소」(음수)
     def_pct: {
-        derive: (u, sum) => { u.def = u.defBase * (1 + (sum + buffSumOf(u, 'guard_pct')) / 100); },
+        derive: (u, sum) => { u.def = u.defBase * (1 + sum + buffSumOf(u, 'guard_pct')); },
     },
     // 원소 하나의 저항 %p — 마법 무기 통합옵션 「타격 시 그 원소의 대상 저항 감소」(음수). 창이 든 `element` 칸만 민다
     res_elem: {
@@ -182,26 +183,26 @@ export const EFFECTS = {
     // 최대 HP 창 — 열릴 때 늘어난 만큼 현재 HP 도 올리고(apply), 닫힐 때 넘친 HP 를 깎는다(derive)
     hp_max_pct: {
         derive: (u, sum) => {
-            u.hpMax = Math.round(u.hpMaxBase * (1 + sum / 100));
+            u.hpMax = Math.round(u.hpMaxBase * (1 + sum));
             if (u.hp > u.hpMax) u.hp = u.hpMax;
         },
         apply: (rt, tgt, def, until, ev) => {
-            const add = Math.round(tgt.hpMaxBase * def.value / 100);
+            const add = Math.round(tgt.hpMaxBase * def.value);
             tgt.hp += add;
             ev.amt = add;
         },
     },
     // HP 재생 창 — 09-07 확정 구조(레벨 곡선 밑수)에 **얹는다**. 밑수가 0 이면 아무 일도 없다
-    regen_pct: { derive: (u, sum) => { u.regen = u.regenBase * (1 + sum / 100); } },
+    regen_pct: { derive: (u, sum) => { u.regen = u.regenBase * (1 + sum); } },
     // 받는 피해 감소 — 감쇠 뒤 곱이고 원천별로 각각 곱한다 (battle_design §9-3). 방어·저항과 채널이 다르다
     dr_pct: { derive: (u, sum) => { u.dr = u.drBase + sum; } },
     // 평타 부여 둘 — derive 도 apply 도 없는 **표식**이다. 소비자는 skill_runtime 의 기본 공격 분기다
     //   onhit_element  원소 추가타 1회 (인챈트 · 독화살) — 창이 든 `element` 로 때린다
-    //   attack_splash  기본 공격이 단일 → 광역 (관통 사격) — 그때 배율이 창의 값 % 가 된다
+    //   attack_splash  기본 공격이 단일 → 광역 (관통 사격) — 그때 배율이 창의 값(비율)이 된다
     onhit_element: {},
     attack_splash: {},
     // 지목 — 소비자는 battle.js 의 타겟팅이다. 창은 **지목당한 적**이 들고 `by` 에 시전자 key 가 실린다.
-    //   시전자 쪽은 `skill_runtime.castBuff` 가 같은 until 의 `dr_pct` 창을 연다(effect_value = 받는 피해 감소 % · 2026-09-10)
+    //   시전자 쪽은 `skill_runtime.castBuff` 가 같은 until 의 `dr_pct` 창을 연다(effect_value = 받는 피해 감소 비율 · 2026-09-10)
     duel: {},
     taunt: {},
 };
@@ -214,7 +215,7 @@ export const EFFECT_STATS = Object.keys(EFFECTS);
  */
 export const CONDITIONS = {
     buff_absent: (def, ctx) => !(ctx.self.buffs && ctx.self.buffs[def.id]),
-    ally_hp_below: (def, ctx) => (ctx.allies ?? []).some(a => a.hp > 0 && a.hp / a.hpMax * 100 < def.condValue),
+    ally_hp_below: (def, ctx) => (ctx.allies ?? []).some(a => a.hp > 0 && a.hp / a.hpMax < def.condValue),
 };
 
 export const CONDITION_IDS = Object.keys(CONDITIONS);

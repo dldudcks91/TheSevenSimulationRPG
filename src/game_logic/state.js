@@ -100,18 +100,22 @@
  *   v26 → v27 (2026-09-16 — 장비 옵션은 소수를 두지 않는다 · 사용자 지시):
  *     · `items[*].implicit.v` · `items[*].affixes[*].v` 를 반올림한다. 옛 아이템만 소수로 남는 것을 막는다.
  *       **오만 「레벨당 데미지 +%」(`dmg_per_level_pct`)는 건드리지 않는다** — 1 보다 작은 값이 본질이라 값 대역부터 다시 정할 자리다. rng 0
+ *   v28 → v29 (2026-09-17 — 퍼센트는 비율로 · R111 · 사용자 지시):
+ *     · `items[*].affixes[*].v` 중 **퍼센트 채널**(`item.pctStat`)을 100 으로 나눈다 — 5 → 0.05. 고정값(`hp_flat` · `def_flat` · `atk_flat`)과
+ *       `implicit.v`(방어력)는 그대로다. 오만 「레벨당 데미지」도 퍼센트라 같이 나눈다(0.3 → 0.003 · 동작은 같다). rng 0
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
 
 import { makeRng, deriveSeed } from './rng.js';
+import { createFormula } from './formula.js';
 
-export const SAVE_VERSION = 28;
+export const SAVE_VERSION = 29;
 
 /**
  * @param {object} deps
  *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
- *   monsters(byId) / codex {levels:[cards_to_next...](codex_level.csv 레벨순), bonus:[레벨별 %](codex_level.csv:bonus_pct), statByNum:{stage_num: statKey}(codex_series.csv)}
+ *   monsters(byId) / codex {levels:[cards_to_next...](codex_level.csv 레벨순), bonus:[레벨별 보정 — 비율](codex_level.csv:bonus_pct), statByNum:{stage_num: statKey}(codex_series.csv)}
  *   sins [죄종 id...] — 수색 이야기의 `sin` 컬럼 검증에만 쓴다
  *   searchStories — `search_story.csv` 파싱 행. **막의 어휘도 순서도 코드에 없다** — 아래 `searchPhases` 참조
  *   searchMeetings / searchAnswers — `search_meeting.csv` · `search_answer.csv` 파싱 행 (만남 · 답)
@@ -120,6 +124,9 @@ export const SAVE_VERSION = 28;
  */
 export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, balance: B } = deps;
+    const F = createFormula(B);                 // 퍼센트 반올림(`roundPct`) — 세이브 이관이 쓴다 (R111)
+    /** v29 전 세이브의 퍼센트 눈금 — 5% 를 `5` 로 들었다. **이관 전용** 결정론 상수 (INTERFACE §4 · §5-3 · R111) */
+    const LEGACY_PCT = 100;
     const clone = v => JSON.parse(JSON.stringify(v));
 
     const positions = deps.equipSlots.map(s => s.id);
@@ -567,13 +574,16 @@ export function createGameSystem(deps) {
      *   · **무기는 고정 옵션과 죄종 칸을 규칙대로 채운다** — `item.legacyWeaponLayers` 가 **굴림 없이** uid 로 고른다(v17 의 스킬 소급과 같은 방식).
      *     옛 무기도 새 무기와 같은 층을 갖게 하려는 것이고, 옛 통합옵션의 개수는 줄이지 않는다
      * **rng 0회.** 방어구 · 장신구는 출처 표만 붙는다 — 부위 개편은 후속이다(사용자 지시).
+     * ⚠ **이 시점의 세이브는 옛 눈금(0~100)이다** [2026-09-17 · R111] — `legacyWeaponLayers` 는 지금 CSV(비율)로 값을 내므로
+     *   퍼센트 채널을 옛 눈금으로 되돌려 붙인다. 안 그러면 v27 의 정수화가 0.05 를 1(= 1%)로 올리고 v29 가 한 번 더 나눈다
      */
     function upgradeV22(s) {
+        const legacyScale = a => (I.pctStat(a.stat) ? { ...a, v: F.roundPct(a.v * LEGACY_PCT, true) } : a);
         for (const it of Object.values(s.items ?? {})) {
             if (!it) continue;
             for (const a of it.affixes ?? []) a.src = a.src ?? 'random';
             if (it.slot === 'weapon' && !(it.affixes ?? []).some(a => a.src !== 'random'))
-                it.affixes = [...I.legacyWeaponLayers(it), ...(it.affixes ?? [])];
+                it.affixes = [...I.legacyWeaponLayers(it).map(legacyScale), ...(it.affixes ?? [])];
         }
         s.version = 23;
         return s;
@@ -644,6 +654,23 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * 퍼센트는 비율로 든다 [2026-09-17 · 사용자 지시 · R111 · src/data/README.md 단위 규약] — 저장된 접사 값의 눈금을 옮긴다.
+     * **퍼센트 채널만** 나눈다(`item.pctStat` — 옵션 표의 `growth` · `band` 행과 옛 `atk_flat` 이 아니면 전부).
+     * `implicit.v`(방어구 고유 방어력)는 고정값이라 그대로다. 오만 「레벨당 데미지」(`fine`)도 나눈다 — 눈금만 바뀌고 전투 결과는 같다.
+     * 부동소수 꼬리는 0.1% 단위로 자른다(옛 값이 정수 또는 소수 1자리라 잃는 것이 없다). rng 0
+     */
+    function upgradeV28(s) {
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it) continue;
+            for (const a of it.affixes ?? []) {
+                if (I.pctStat(a.stat) && typeof a.v === 'number') a.v = F.roundPct(a.v / LEGACY_PCT, true);
+            }
+        }
+        s.version = 29;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -655,7 +682,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -684,6 +711,7 @@ export function createGameSystem(deps) {
         if (s.version === 25) s = upgradeV25(s);
         if (s.version === 26) s = upgradeV26(s);
         if (s.version === 27) s = upgradeV27(s);
+        if (s.version === 28) s = upgradeV28(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
@@ -752,7 +780,7 @@ export function createGameSystem(deps) {
         return null;
     }
     const codexMaxLevel = () => deps.codex.levels.length;
-    /** 레벨 lv 까지의 누적 보정 % (codex_level.csv:bonus_pct) */
+    /** 레벨 lv 까지의 누적 보정 — 비율 (codex_level.csv:bonus_pct · R111) */
     const codexBonusAt = lv => deps.codex.bonus.slice(0, lv).reduce((a, b) => a + b, 0);
 
     /**
@@ -1526,7 +1554,7 @@ export function createGameSystem(deps) {
        CSV 는 대역과 모양만 들고 「좋은 쪽」이 어디인지는 말하지 않는다 (INTERFACE §5-3) */
     const SEARCH_TIER_HI = 'rare', SEARCH_TIER_LO = 'magic';
 
-    /** 매력이 미는 것 — **레어 확률(%) 하나**다. 상한이 있어 매력만으로 확정에 닿지 않는다 */
+    /** 매력이 미는 것 — **레어 확률(비율) 하나**다. 상한이 있어 매력만으로 확정에 닿지 않는다 */
     const searchRarePct = cha => Math.min(B.tavern_search_rare_cap_pct,
         B.tavern_search_rare_base_pct + (cha ?? 0) * B.tavern_search_rare_per_cha_pct);
 
@@ -1542,7 +1570,7 @@ export function createGameSystem(deps) {
     };
 
     /**
-     * 고른 답이 깎는 고용비(%) — **두 층이다** (ADR-0068).
+     * 고른 답이 깎는 고용비(비율) — **두 층이다** (ADR-0068).
      *   · 만난 사람의 죄종에 **맞는 답**(`hit_sin`)이면 `meet_hit_pct` — 소문이 죄종을 알려주므로 **읽으면 누구나** 얻는다
      *   · 그 위에 **보낸 영웅이 연 답**(`need_sin ≠ '-'`)이면 `meet_key_pct` — 맞는 사람을 보낸 **준비의 보상**이다
      * 안 맞는 답은 0 이다. **어느 쪽도 벌이 아니다** — 정가가 바닥이고 답은 거기서 깎기만 한다.
@@ -1551,8 +1579,8 @@ export function createGameSystem(deps) {
         if (!meeting || !ans || ans.hit_sin !== meeting.sin) return 0;
         return ans.need_sin === '-' ? B.tavern_search_meet_hit_pct : B.tavern_search_meet_key_pct;
     }
-    const searchCost = pct => Math.round(B.tavern_hire_cost * (100 - pct) / 100);
-    const searchMeetAt = startedAt => startedAt + Math.round(searchMs() * B.tavern_search_meet_at_pct / 100);
+    const searchCost = pct => Math.round(B.tavern_hire_cost * (1 - pct));          // 할인은 비율 (R111)
+    const searchMeetAt = startedAt => startedAt + Math.round(searchMs() * B.tavern_search_meet_at_pct);
     /** 화면이 그대로 그릴 수 있는 모양으로 편다 — `key` 는 「보낸 영웅이 연 답인가」(화면이 그 이유를 찍는다) */
     const answerView = a => a && ({ id: a.answer_id, key: a.need_sin !== '-', text: { ko: a.answer_kr, en: a.answer_en } });
     /** 소문 — **죄종을 숨기지 않는다.** 화제를 화면에 그대로 띄우는 것이 이 기능의 전제다 (ADR-0068) */
@@ -1569,9 +1597,9 @@ export function createGameSystem(deps) {
      */
     function searchRoll(state, snap) {
         const rng = makeRng(deriveSeed(state.seed ^ 0x5EA7, snap.no));
-        const tier = rng() * 100 < searchRarePct(snap.cha) ? SEARCH_TIER_HI : SEARCH_TIER_LO;
+        const tier = rng() < searchRarePct(snap.cha) ? SEARCH_TIER_HI : SEARCH_TIER_LO;
         const [hero] = H.rollCandidates(rng, 1, [tier]);
-        if (rng() * 100 < B.tavern_search_sin_echo_pct && snap.sin) hero.sin = snap.sin;
+        if (rng() < B.tavern_search_sin_echo_pct && snap.sin) hero.sin = snap.sin;
         const story = searchPhases.map(ph => {
             const pool = storyPool(ph, snap.sin);
             return pool[Math.floor(rng() * pool.length)];        // 후보가 빌 수 없다 — 로드 검증이 막았다

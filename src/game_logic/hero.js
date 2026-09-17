@@ -5,10 +5,11 @@
  * 데이터(밸런스 수치·이름 풀·직업 정의)는 생성자에서 주입받는다 (CLAUDE.md 개발 규칙).
  *
  * 전투 능력치 = ( 장비(베이스 + Implicit + 접사) + 스킬 ) × 기본 능력치 계수 (battle_design §8).
- *   **곱셈이라 장비가 0이면 능력치도 0을 곱한다** — "레벨 = 진입 자격 / 장비 = 세기"의 수치적 표현.
- *   ⚠ 계수 **함수의 형태**는 아직 미확정이다 (hero_design §4-1-1 — 분포부터 정해야 한다).
- *   현재 형태는 `1 + 능력치 × [balance.csv:attr_bonus_per_point] / 100` 프로토타입 임시식이고,
- *   모든 계수는 balance.csv 의 ⚠제안 키에서 온다 — 확정되면 이 파일이 아니라 CSV 를 고친다.
+ *   ~~곱셈이라 장비가 0이면 능력치도 0을 곱한다~~ — 2026-09-10 폐기(능력치가 스킬의 덧셈 항으로 옮겨갔다 · battle_design §9-1).
+ *   계수는 `hero_attribute.csv` 의 `mult_base_pct + 능력치 × mult_per_point_pct`(비율 — 2026-09-17 R111)다.
+ *   모든 계수는 CSV 의 ⚠제안 값이다 — 확정되면 이 파일이 아니라 CSV 를 고친다.
+ *
+ * **퍼센트는 비율이다** [2026-09-17 · R111] — 접사 · 마스터리 · 전술 · 도감이 넣는 % 채널과 여기서 내는 % 능력치가 전부 0.05 = 5% 눈금이다.
  *
  * `computeCombat` 은 Σ 상시 피해 %(`atk_pct_sum`)를 따로도 낸다 — 전투 중 스킬 버프가 **새 곱셈 층이 아니라
  *   같은 괄호에 덧셈**으로 들어가야 해서(battle_design §9-2) battle.js 가 그 괄호를 다시 쓸 수 있어야 한다.
@@ -311,19 +312,19 @@ export function createHeroSystem(data) {
 
     /**
      * 기본 능력치 계수 — **축마다 형태가 다르다** (2026-09-13 확정 · hero_design §4-1).
-     *   계수 = (`mult_base_pct` + 능력치 × `mult_per_point_pct`) / 100
-     *   대부분 축은 `100 + 1n` 이라 옛 `1 + n × attr_bonus_per_point/100` 과 같은 값을 낸다.
+     *   계수 = `mult_base_pct` + 능력치 × `mult_per_point_pct` — 둘 다 **비율**이다(2026-09-17 R111 · ~~`/ 100`~~)
+     *   대부분 축은 `1 + 0.01n` 이라 옛 `1 + n × attr_bonus_per_point` 과 같은 값을 낸다.
      *   **건강만 모양이 다르다** — 곱해지는 대상이 HP 레벨업 상승분이라 계수가 1 보다 작은 쪽에서 시작한다.
      *   값은 전부 `hero_attribute.csv` 에 있다. 바꿀 때 이 파일이 아니라 CSV 를 고친다.
      */
     const attrCoef = Object.fromEntries(data.stats.map(s => [s.id, {
-        base: Number(s.multBasePct ?? 100),
+        base: Number(s.multBasePct ?? 1),
         per: Number(s.multPerPointPct ?? B.attr_bonus_per_point),
     }]));
     const attrMult = (id, v) => {
         const c = attrCoef[id];
         if (!c) throw new Error(`attrMult: 축 '${id}' 가 hero_attribute.csv 에 없다`);
-        return (c.base + (v ?? 0) * c.per) / 100;
+        return c.base + (v ?? 0) * c.per;
     };
 
     /**
@@ -362,8 +363,8 @@ export function createHeroSystem(data) {
  *   **그 성장분만 건강 계수를 탄다** [확정 2026-09-10 · hero_design §4-1] — 레벨 1 은 전 영웅이 같다(몬스터 앵커링 기준점 유지).
      * · **피해 감소는 원천별 곱**이라 (§9-3) 접사를 각각 곱해 **실효 %** 한 숫자로 낸다 — 시트에도 그 숫자가 찍힌다.
      * · **운은 전투 계산 밖**이다 — 드랍률·골드 획득에만 계수로 곱한다 (hero_design §4-1).
-     *   장비가 0이면 운도 0을 곱한다 (§8 곱셈 원칙).
-     * · **HP 재생만 밑수를 갖는다** [09-07] — 위 곱셈 원칙의 **유일한 예외**. 최대 HP 시작값과 같은 분류다.
+     *   접사가 0이면 운도 0을 곱한다(곱이다) · 결과는 1% 단위로 자른다(`formula.roundPct` · R111).
+     * · **HP 재생만 밑수를 갖는다** [09-07] — 최대 HP 시작값과 같은 분류다(생존의 바닥이지 세기가 아니다).
      */
     function computeCombat(hero, items, codex = {}, party = null) {
         // ⚠ **몬스터도 이 함수를 지난다** [2026-09-11 · R79 · battle_design §8-1 · monster_design §5-1] — `battle.js:makeEnemy` 가
@@ -402,8 +403,8 @@ export function createHeroSystem(data) {
         //   양끝마다 같은 괄호 둘을 곱하고 반올림한다 — 범위 안의 굴림은 전투(formula.strike)가 한다 (R90)
         const scaleAtk = end => Math.round(
             (end + atkFlat)
-            * (1 + atkPctSum / 100)
-            * (1 + (codex.atk_pct ?? 0) / 100));
+            * (1 + atkPctSum)
+            * (1 + (codex.atk_pct ?? 0)));
         const atk = { min: scaleAtk(range.min), max: scaleAtk(range.max) };
 
         // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
@@ -416,8 +417,8 @@ export function createHeroSystem(data) {
         if (units === undefined) throw new Error(`hero: 레벨 ${hero.level} 은 HP 구간 밖이다(1 ~ 만렙 ${B.hero_level_cap}) — 몬스터면 stage.csv:dlvl 이 만렙을 넘었다`);
         const hpMax = Math.round(
             ((hero.hpBase ?? B.hero_hp_base) + units * attrMult('vit', A.vit) + f('hp_flat'))
-            * (1 + f('hp_pct') / 100)
-            * (1 + (codex.hp_pct ?? 0) / 100));
+            * (1 + f('hp_pct'))
+            * (1 + (codex.hp_pct ?? 0)));
 
         // 갑옷군이 공속·쿨감을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — **갑옷 칸 하나만** 본다(09-07 적용 범위).
         //   중갑은 음수(느려진다) · 경갑은 양수 · 로브는 0 이고 쿨감을 든다. 숙련(마스터리)이 그 위에 얹혀 중갑의 손해를 되산다
@@ -425,7 +426,7 @@ export function createHeroSystem(data) {
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
             / attrMult('agi', A.agi)
-            * (1 - (f('aspd_pct') + (armorGroup?.aspdPct ?? 0)) / 100));
+            * (1 - (f('aspd_pct') + (armorGroup?.aspdPct ?? 0))));
 
         const resAll = f('res_all');
         const luckMult = attrMult('luck', A.luck);
@@ -439,7 +440,7 @@ export function createHeroSystem(data) {
             atkDownPhys: f('atk_down_phys_pct'), atkDownMag: f('atk_down_mag_pct'),
             crush: f('crushing_blow_pct'),
             // 운 계수는 드랍률 · 골드와 같은 취급이다 (⚠제안 — item_design §1 「무기 옵션」)
-            magicFind: Math.round(f('magic_find') * luckMult),
+            magicFind: F.roundPct(f('magic_find') * luckMult),
         };
         const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind].some(v => v !== 0);
@@ -457,10 +458,11 @@ export function createHeroSystem(data) {
             defense: f('def_flat'),
             ...Object.fromEntries(ELEMENTS.map(e => [`res_${e}`, resAll + f(`res_${e}`)])),
             res_max_bonus: f('res_max_bonus'),  // 저항 기본 상한을 뚫는 유일한 수단 (§9-5)
-            res_reduction: f('res_reduction'),  // 상대 저항을 %p 로 깎는다 — 관통이 아니라 음수 가산
+            res_reduction: f('res_reduction'),  // 상대 저항을 비율만큼 깎는다 — 관통이 아니라 음수 가산
             def_ignore: f('def_ignore'),
             reflect_damage: f('reflect_damage'),
-            damage_reduction: Number((100 * (1 - F.reductionMult(drList))).toFixed(3)),
+            // 원천별 곱의 실효값(비율) — 옛 %(소수 3자리)와 같은 정밀도라 5자리다
+            damage_reduction: Number((1 - F.reductionMult(drList)).toFixed(5)),
             crit_rate: B.base_crit_pct + f('crit_rate'),
             crit_damage: B.base_crit_damage_pct + f('crit_damage'),
             life_steal: f('life_steal'),
@@ -473,11 +475,14 @@ export function createHeroSystem(data) {
                 (B.hp_regen_base_per_level * F.growthMult(hero.level) + f('hp_regen'))
                     .toFixed(3)),
             cooldown_reduction: f('cooldown_reduction') + (armorGroup?.cdrPct ?? 0),    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js) · 로브가 여기 얹힌다 (R107)
+            // 타격 회복 — 물리 경직 시간을 줄인다 (battle_design §2-3 · R110 · battle.js stagger). **비율**이다(0.5 = 50% · R111 단위 규약).
+            //   ⚠ 출처(접사 · 마스터리)와 상한은 기획 미정이라(GAME_DESIGN §10) 지금은 모두 0 이다 — 합산 채널만 열어 둔다
+            fhr: f('fhr'),
             action_period: Number(period.toFixed(3)),
             dmg_bonus_pct: codex.dmg_pct ?? 0,
-            gold_find: Math.round(f('gold_find') * luckMult),
-            item_find: Math.round(f('item_find') * luckMult),
-            // Σ 상시 피해 % — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면
+            gold_find: F.roundPct(f('gold_find') * luckMult),
+            item_find: F.roundPct(f('item_find') * luckMult),
+            // Σ 상시 피해(비율) — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면
             // (battle_design §9-2 "괄호는 둘뿐") 그 괄호 안의 합을 따로 알아야 한다 (battle.js atkBase/atkPct)
             atk_pct_sum: atkPctSum,
             option_fx: anyFx ? fx : null,

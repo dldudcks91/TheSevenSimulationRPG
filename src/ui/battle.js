@@ -30,6 +30,8 @@
  *   같이 그린다 — 무시하면 화면 HP 가 시뮬과 어긋난다. 아이콘 · 설명만 `mock.js` 표시 사전에서 온다.
  * 행동 게이지 = 마지막 행동 이후 경과 ÷ 행동 주기. 행동 이벤트가 온 틱은 **100% 를 먼저 그리고** 다음 틱에
  *   전환 없이(스냅) 비운다 (2026-09-04) — 이벤트가 게이지를 곧장 리셋하면 「꽉 참」 프레임이 화면에 안 나온다.
+ * **물리 경직**(`stagger` · R110 · ADR-0154) — 끝 시각까지 창 뱃지 줄 끝에 옅은 빨간 멈춤 칩이 서고, 그동안 행동 게이지가 선다
+ *   (경직으로 선 시간을 경과에서 뺀다 — 시뮬이 행동 예약을 그만큼 밀었다). 로그 · 팝업은 없다 — 적이 판마다 수십 번 걸린다.
  *
  * i18n: 표시 문자열은 전부 t()/L() — 이 파일에 한국어 리터럴은 없다 (주석 제외).
  */
@@ -50,6 +52,14 @@ const skillImg = s => {
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
 };
 const clamp01 = v => Math.max(0, Math.min(1, v));
+/* 물리 경직 (R110 · SCREEN_DESIGN §4-2 · ADR-0154) — 유닛은 마지막 행동 이후의 경직 창 `stalls [{from, to}]` 를 든다(`stagger` 이벤트가 쌓고 행동이 비운다).
+   창은 행동을 넘지 않는다 — 시뮬이 행동 예약을 끝 시각 뒤로 밀기 때문이다(INTERFACE §2-6 「경직」). 계산이 아니라 이벤트 시각을 빼는 표시값이다 */
+/** 마지막 행동 이후 경직으로 선 시간 — 행동 게이지가 그만큼 덜 찬다 */
+const stalledFor = (u, now) => (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, u.lastAct)), 0);
+/** 지금 경직 중인가 — 창 뱃지 줄의 칩이 이것을 본다 */
+const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity) > now;
+/** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다) */
+const markActed = (u, at) => { u.lastAct = at; u.acted = true; u.stalls = []; };
 const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 /**
@@ -105,6 +115,7 @@ export function mountBattle(container, opts) {
             // 오오라도 제 칸에 선다 — 켜진 오오라는 준비 `0`(늘 걷힌 칸) · 안 켜진 오오라는 `null`(늘 덮인 칸) (R98 · ADR-0127)
             skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(p.ready?.[i], 0), firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
+            stalls: [],         // 마지막 행동 이후의 경직 창 — stagger 이벤트가 쌓는다 (R110 · ADR-0154)
         };
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
@@ -258,7 +269,9 @@ function paintPane(state, root) {
 /* 라운드 표시는 **트랙 하나**가 든다 [2026-09-04 사용자 지시] — 「라운드 n / 총 · 종류」 수치와 경과 시계는 삭제됐다.
    지금 몇 번째인가는 `.now` 강조가, 종류는 칸의 색(정예·보스)이 답한다 (SCREEN_DESIGN §4-2) */
 /**
- * 물약 칸 한 줄 (R104 · ADR-0148) — 아레나 왼쪽 아래 구석. 찬 칸 = 그 물약 그림(`mock.potionArt` · 그림이 없으면 테두리만) · 빈 칸 = 점선.
+ * 물약 칸 한 줄 (R104 · ADR-0148) — 아레나 왼쪽 아래 구석. 찬 칸 = 그 물약 그림(`mock.potionArt`) · 빈 칸 = 점선.
+ * **그림이 없는 칸은 병 실루엣이 깔린다** [2026-09-17 사용자 지시] — 칸 넷이 같은 한 장(`mock.POTION_SLOT_ART`)이고
+ *   티어를 안 가린다(「여기에 물약이 들어간다」는 칸의 말이다). 찬 칸은 진하게 · 빈 칸은 옅게 — 진하기는 CSS 가 든다.
  * 재생기는 세지 않는다 — 어느 칸이 비었나는 이벤트의 `i` 가 준다
  */
 function potionBeltHtml(p) {
@@ -267,7 +280,9 @@ function potionBeltHtml(p) {
         const info = s?.full ? potionInfo(s.id) : null;
         const src = info ? M.potionArt(s.id) : null;
         const tip = info ? t('bt.potion.slot', { name: L(info.name), n: s.heal }) : t('bt.potion.empty');
-        return `<span class="p-slot${info ? ' full' : ''}" data-i="${i}" title="${tip}">${src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''}</span>`;
+        const img = src ? `<img src="${src}" alt="" onerror="this.remove()">`
+            : `<img class="p-bg" src="${M.POTION_SLOT_ART}" alt="" onerror="this.remove()">`;
+        return `<span class="p-slot${info ? ' full' : ''}" data-i="${i}" title="${tip}">${img}</span>`;
     }).join('');
 }
 /** 물약 칸을 다시 칠한다 — `fired` = 방금 마신 칸이면 한 번 번쩍인다(되감기 중에는 안 번쩍인다 · 스킬 칸의 `fire` 와 같은 520ms) */
@@ -370,7 +385,7 @@ function renderUnits(state, root) {
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
             // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
             const name = L(u.name);
-            const face = u.side === 'enemy' ? monsterFace(u.monsterId) : M.heroFace(u.hero);   // 얼굴 id 는 영웅 객체가 든다 (세이브 v13)
+            const face = u.side === 'enemy' ? monsterFace(u.monsterId, u.grade) : M.heroFace(u.hero);   // 얼굴 id 는 영웅 객체가 든다 (세이브 v13)
             // **양쪽 다 밑에 아무것도 안 깐다** — 아트가 없거나 `onerror` 로 빠지면 빈 네모다.
             // ⚠ 영웅은 2026-09-03 (직업 글리프가 배경 투명 PNG 사이로 비쳤다), **몬스터는 2026-09-06** 사용자 지시다.
             //   몬스터에 남아 있던 것은 이름 **이니셜 글자 하나**였고, 같은 이유로 그림 위에 비쳤다.
@@ -457,9 +472,10 @@ function refreshUnit(state, u) {
     // 행동한 틱(u.acted — apply 의 skill/hit/dodge 가 세우고 start 의 틱 루프가 눕힌다)은 **100% 를 그린다** —
     // 이벤트가 lastAct 를 곧장 리셋하면 「꽉 참」 프레임이 화면에 한 번도 안 나온다(옛 85% 발광이 때우던 구멍).
     // 리셋(내려가는 변화)은 전환 없이 스냅 — 전환이 걸리면 「비워짐」이 「흘러내림」으로 보인다.
+    // **경직된 동안은 선다** (R110 · ADR-0154) — 경직으로 선 시간을 경과에서 뺀다. 시뮬이 행동 예약을 그만큼 밀었으므로 다시 차오른 끝에 행동한다
     const act = u.node.querySelector('.act-fill');
     if (act) {
-        const fill = u.hp <= 0 ? 0 : u.acted ? 1 : clamp01((state.t - u.lastAct) / u.period);
+        const fill = u.hp <= 0 ? 0 : u.acted ? 1 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
         act.style.transition = fill < u.actFill ? 'none' : '';
         act.style.width = fill * 100 + '%';
         u.actFill = fill;
@@ -476,7 +492,7 @@ function refreshUnit(state, u) {
     });
     // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 카드 밖 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
     u.node.classList.toggle('buffed', u.hp > 0 && u.buffs?.size > 0);
-    refreshBuffs(u);
+    refreshBuffs(u, state.t);
 }
 
 /**
@@ -485,18 +501,21 @@ function refreshUnit(state, u) {
  * ⚠ 지금 도는 창 4종은 전부 이로워서 빨강은 아직 안 켜진다 (skill.csv · SCREEN_DESIGN §4-2).
  * 자리는 **카드 밖 · 카드 바로 아래**(`.unit-slot` 의 둘째 줄) — 카드 크기를 건드리지 않는다 (2026-08-31 사용자 지시).
  * 줄은 창이 없어도 **자리를 지킨다** — 높이가 창 개수를 따라 흔들리면 카드가 위아래로 흔들린다.
+ * **물리 경직**도 칩 하나다 (R110 · ADR-0154) — 옅은 빨간 테두리 + 멈춤 표시(그림 없음 · CSS 가 그린다) · 끝 시각까지.
+ *   **줄 끝**에 선다 — 0.5초씩 켜졌다 꺼지므로 앞에 두면 스킬 칩들이 그때마다 옆으로 밀린다.
  */
-function refreshBuffs(u) {
+function refreshBuffs(u, now) {
     const row = u.buffRow;   // 카드 밖(.unit-slot 의 둘째 줄)이라 u.node 아래서는 못 찾는다
     if (!row) return;
     const live = u.hp > 0 ? [...(u.buffs ?? new Map())] : [];
-    const sig = live.map(([id, b]) => `${id}:${b?.v ?? 0}`).join('|');
+    const stag = u.hp > 0 && staggered(u, now);
+    const sig = live.map(([id, b]) => `${id}:${b?.v ?? 0}`).join('|') + (stag ? '|stagger' : '');
     if (row.dataset.sig === sig) return;      // 안 바뀌었으면 손대지 않는다 — 매 틱 다시 그리는 자리다
     row.dataset.sig = sig;
     row.innerHTML = live.map(([id, b]) => {
         const info = skillInfo(id);
         return `<span class="buff-chip ${(b?.v ?? 0) < 0 ? 'bad' : 'good'}" title="${L(info.name)}">${skillImg(info)}</span>`;
-    }).join('');
+    }).join('') + (stag ? `<span class="buff-chip stagger" title="${t('bt.stagger')}"></span>` : '');
 }
 
 /**
@@ -657,6 +676,7 @@ function apply(state, root, opts, ev) {
                 // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
                 skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t })),
                 buffs: new Map(),
+                stalls: [],   // 경직 창 (R110 · ADR-0154)
             }));
             for (const e of state.enemies) state.units.set(e.key, e);
             renderUnits(state, root);
@@ -666,13 +686,13 @@ function apply(state, root, opts, ev) {
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
             const u = U(ev.u);
-            if (u) { u.lastAct = ev.t; u.acted = true; castSkill(state, u, ev); }
+            if (u) { markActed(u, ev.t); castSkill(state, u, ev); }
             break;
         }
         case 'hit': {
             const a = U(ev.a), d = U(ev.d);
             const skill = strikeLabel(ev.s);
-            if (a) { a.lastAct = ev.t; a.acted = true; if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
+            if (a) { markActed(a, ev.t); if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
                 popup(state, d, `-${ev.dmg}`, ev.crit ? 'crit' : (a?.side === 'party' ? 'dmg' : 'dmg-in'), ev.s);
@@ -701,9 +721,20 @@ function apply(state, root, opts, ev) {
         case 'dodge': {
             const a = U(ev.a), d = U(ev.d);
             const skill = strikeLabel(ev.s);
-            if (a) { a.lastAct = ev.t; a.acted = true; }
+            if (a) markActed(a, ev.t);
             if (d) popup(state, d, t('pop.dodge'), 'miss');
             if (a && d) pushLog(state, root, t('log.dodge', { name: L(a.name), target: L(d.name), skill }), a.side);
+            break;
+        }
+        case 'stagger': {   // 물리 경직 (R110) — 끝 시각까지 창 뱃지 줄에 칩 하나 · 그동안 행동 게이지가 선다. 로그 · 팝업은 없다 (SCREEN_DESIGN §4-2 · ADR-0154)
+            const u = U(ev.u);
+            if (!u) break;
+            // 경직 중에 또 걸리면 **끝만 새로** — 시뮬이 행동 예약을 미는 방식과 같다 (INTERFACE §2-6 「경직」)
+            u.stalls = u.stalls ?? [];
+            const w = u.stalls[u.stalls.length - 1];
+            if (w && ev.t < w.to) w.to = ev.until;
+            else u.stalls.push({ from: ev.t, to: ev.until });
+            refreshUnit(state, u);
             break;
         }
         case 'down': {

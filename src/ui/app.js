@@ -213,11 +213,11 @@ const skillImg = s => {
     const src = M.skillIcon(s?.id);
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
 };
-/* 아이템 그림 — 방어구는 **임시로 부위당 한 장** (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳).
-   무기는 무기군 그림이되 **양손검·도끼는 베이스 7장 중 하나**를 든다. 개체가 `weapon_base.csv` 로 실제 그 베이스를
+/* 아이템 그림 — 무기 · 방어구 둘 다 **개체가 든 `baseId` 의 그림**이다 (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳 · 방어구 2026-09-17).
+   무기는 그 무기군의 베이스 7장 중 하나를 든다. 개체가 `weapon_base.csv` 로 실제 그 베이스를
    굴렸으면(`item.baseId` · 2026-09-10 · game_logic/item.js) **그 그림**이고, 이름도 같은 베이스로 이미 붙어 있다 —
    그림과 이름이 어긋나지 않는다. `baseId` 가 없는 옛 개체(이 기능 전에 드롭된 것)만 `uid` 해시로 예전처럼 고른다.
-   그림이 없는 부위(투구·목걸이)는 부위 이모지로 떨어진다 — 부위는 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보) */
+   그림이 없는 부위·베이스(투구 · 장갑 · 신발 · 장신구)는 부위 이모지로 떨어진다 — 부위는 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보) */
 const itemImg = it => {
     const src = M.itemArt(it?.slot, it?.group, it?.uid, it?.baseId);
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : (slotDef(it?.slot)?.icon ?? '');
@@ -1968,7 +1968,7 @@ const swapRoster = (a, b) => {
 /** 페이퍼돌 — 신체 위치대로 착용 위치 8개(부위 7종, 반지 ×2). 착용 칸을 누르면 벗는다.
  *  잠기는 칸은 없다 — 보조 슬롯 폐지(2026-09-01)로 양손 배타가 사라졌다.
  *  빈 칸은 **부위 실루엣**을 배경으로 깔고 이모지를 안 그린다 — 둘을 겹치면 투명 PNG 사이로 비친다.
- *  그림이 없는 부위(투구·목걸이)만 예전대로 이모지다 (SCREEN_DESIGN §6 · 규칙은 `mock.slotArt` 한 곳) */
+ *  2026-09-17 로 **부위 7종이 다 찼다** — 빈 칸이 이모지로 떨어지는 일은 이제 없다 (SCREEN_DESIGN §6 · 규칙은 `mock.slotArt` 한 곳) */
 function paperdoll(h) {
     const box = el('div', 'paperdoll');
     for (const row of M.PAPERDOLL) {
@@ -2067,7 +2067,7 @@ function skillCards(h) {
     const tipCtx = { period: cycle, ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
     const wrap = el('div', 'sk-cards-wrap');
     // 소제목은 이름뿐이다 (2026-09-08 사용자 지시) — 행동 주기는 **세부 옵션 2 의 제 행**이 든다
-    // (`combat_stat.csv:action_period` · sheet_order 21). §4-1 「값은 항상 찍는다」는 그 행이 지킨다
+    // (`combat_stat.csv:action_period` · sheet_order 20). §4-1 「값은 항상 찍는다」는 그 행이 지킨다
     wrap.appendChild(el('div', 'sub-h', t('ch.skill.h')));
     const grid = el('div', 'sk-cards');
     activeCells(h).forEach((a, i) => {
@@ -2148,7 +2148,7 @@ const rangeCtx = cb => {
     return { atkMin: atk?.min, atkMax: atk?.max, matkMin: cb.atk_magic?.min, matkMax: cb.atk_magic?.max };
 };
 
-/** ②-3·4 세부 옵션 1·2 — 전투 능력치 21(impl=1)을 두 칸에 나눠 스크롤 없이. 물리 방어 행은 감쇠율을 병기한다 */
+/** ②-3·4 세부 옵션 1·2 — 전투 능력치 22(impl=1 · 09-17 타격 회복 추가)를 두 칸에 나눠 스크롤 없이. 물리 방어 행은 감쇠율을 병기한다 */
 function detailPanels(h) {
     const c = combatOf(h);
     // 두 쪽으로 끊는 자리(피해 감소 앞) · 행 목록 · 줄 조립은 유닛 툴팁의 두 열과 같은 함수다 (tip.js:sheetPages · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0115)
@@ -2960,8 +2960,8 @@ function meetBlock(S) {
     if (S.answer) {
         box.appendChild(el('div', 'tv-ans picked', L(S.answer.text)));
         box.appendChild(el('div', `tv-meet-cut${S.discountPct ? ' up' : ' muted'}`,
-            S.discountPct >= 100 ? t('tv.search.cutAll')
-                : S.discountPct > 0 ? t('tv.search.cut', { n: S.discountPct })
+            S.discountPct >= 1 ? t('tv.search.cutAll')             // 할인은 비율 — 1 = 전액 (R111)
+                : S.discountPct > 0 ? t('tv.search.cut', { n: M.pctNum(S.discountPct) })
                     : t('tv.search.cutNone')));
         return box;
     }
@@ -2987,7 +2987,7 @@ function searchCell(side) {
     if (S.done && S.result) {
         const last = S.beats[S.beats.length - 1];
         const card = candidateCard(S.result, `
-            <button class="btn primary sm b-take"${S.canHire ? '' : ' disabled'}>${S.discountPct >= 100 ? t('tv.search.cutAll') : t('tv.hire', { g: S.cost.toLocaleString() })}</button>
+            <button class="btn primary sm b-take"${S.canHire ? '' : ' disabled'}>${S.discountPct >= 1 ? t('tv.search.cutAll') : t('tv.hire', { g: S.cost.toLocaleString() })}</button>
             <button class="btn sm b-drop">${t('tv.search.drop')}</button>`);
         // ⚠ `.tv-search`(flex + gap) 를 붙이면 카드 안쪽 간격이 벌어 같은 행의 후보 카드까지 높이가 밀린다
         card.classList.add('tv-search-res');
@@ -3019,7 +3019,7 @@ function searchCell(side) {
         c.appendChild(el('div', 'tv-search-who', t('tv.search.out', { name: S.hero ? L(S.hero.name) : '—' })));
         c.appendChild(el('div', 'tv-search-spec muted', t('tv.search.left', { t: fmtDuration(S.remainMs) })));
         // 보내고 나면 왜 그 사람을 보냈는지가 화면에서 사라지는 것을 막는다 (§4-1 「값은 항상 찍는다」)
-        c.appendChild(el('div', 'tv-search-odds muted', t('tv.search.odds', { r: S.rarePct, e: S.echoPct })));
+        c.appendChild(el('div', 'tv-search-odds muted', t('tv.search.odds', { r: M.pctNum(S.rarePct), e: M.pctNum(S.echoPct) })));
         const log = el('div', 'tv-story');
         // **열린 막만 그린다** — 안 열린 줄의 자리를 미리 잡으면 이야기가 아니라 진행 막대가 된다
         for (const b of S.beats) if (b.open) log.appendChild(el('p', '', L(b.text)));
@@ -3179,6 +3179,7 @@ function forgeMake(p) {
  * 물약 칸 — 제작 탭의 오른쪽 갈래 (SCREEN_DESIGN §8-2 · 기획 item_design §7-4 · R103).
  * 판정(가짐 · 잠김 · 골드 부족)은 `game.potionState` 가 낸다 — 렌더러는 세지 않는다.
  * 머리 줄은 **물약 칸**이다 — 관전 아레나와 같은 칸(찬 칸 = 그 물약 · 빈 칸 = 점선 · R104 · ADR-0148).
+ * 그림이 없는 칸은 병 실루엣이 깔린다 — 규칙은 `battle.js:potionBeltHtml` 과 같다 (2026-09-17).
  * 「스테이지마다 다시 찬다」는 규칙 문구라 머리 글자의 툴팁에만 둔다 (§12)
  */
 function forgePotion(p) {
@@ -3188,7 +3189,9 @@ function forgePotion(p) {
         const info = ps.loadout[i] ? potionInfo(ps.loadout[i]) : null;
         const src = info ? M.potionArt(info.id) : null;
         const tip = info ? t('fg.potion.tip', { name: L(info.name), n: info.heal }) : t('fg.potion.empty');
-        return `<span class="p-slot${info ? ' full' : ''}" title="${tip}">${src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
+        const img = src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">`
+            : `<img class="p-bg" src="${M.POTION_SLOT_ART}" alt="" loading="lazy" onerror="this.remove()">`;
+        return `<span class="p-slot${info ? ' full' : ''}" title="${tip}">${img}</span>`;
     }).join('');
     col.appendChild(el('div', 'fg-poth', `<span title="${t('fg.potion.slotTitle')}">${t('fg.potion.loaded')}</span><span class="p-belt">${belt}</span>`));
     for (const row of ps.list) {
@@ -3431,7 +3434,7 @@ function monsterCard(m) {
                 <div class="mon-mid">
                     <span class="pips">${pips}</span>
                     <span class="mon-next muted">${t('cx.kills', { n: m.kills.toLocaleString() })} · ${next
-                        ? `${t('cx.next', { n: next })} <span class="up">+${D.codexBonus[lv] ?? 0}%</span>`
+                        ? `${t('cx.next', { n: next })} <span class="up">+${M.pctNum(D.codexBonus[lv] ?? 0)}%</span>`
                         : `<span class="up">${t('cx.max')}</span>`}</span>
                 </div>
                 <div class="bar"><i style="width:${pct}%"></i></div>
@@ -3458,8 +3461,11 @@ function renderCodex(main) {
     main.appendChild(p);
 }
 
-/** 얼굴 스타일 고르개 — 몬스터 · 캐릭터 세그먼트가 같이 쓴다. 전환은 **전역**이다(`?face=` · localStorage 와 같은 자리 — §9-1) */
+/** 얼굴 스타일 고르개 — 몬스터 · 캐릭터 세그먼트가 같이 쓴다. 전환은 **전역**이다(`?face=` · localStorage 와 같은 자리 — §9-1).
+ *  **스타일이 하나면 안 선다** [2026-09-17] — `pixel16` 폴더가 사라져 목록이 `cartoon` 하나가 됐고,
+ *  고를 것이 없는 세그먼트는 누를 수 없는 버튼 하나로 남는다. 폴더를 더하면 저절로 다시 선다 */
 function faceStylePicker(box) {
+    if (M.FACE_STYLES.length < 2) return box;
     box.appendChild(el('span', 'muted', t('ix.style')));
     box.appendChild(segmented(M.FACE_STYLES.map(f => ({ id: f, label: f })), M.faceStyle(),
         id => { M.setFaceStyle(id); render(); }));
@@ -3494,7 +3500,7 @@ function codexMonster(p) {
         // 계열이 없는 스테이지(챕터보스 단독 5스테이지)는 보정 칸이 **빈 칸**이다 — 계열 배정이 기획 미정이라(GAME_DESIGN §10)
         //   라벨을 지어내지 않는다. 합산도 안 되므로(`codexBonus` 가 그 스테이지 번호를 건너뛴다) 숫자도 안 찍는다 (2026-09-11)
         const gain = stage.stat
-            ? `<span class="up">${L(stage.stat)} +${total.toFixed(1)}%</span>
+            ? `<span class="up">${L(stage.stat)} +${(total * 100).toFixed(1)}%</span>
                     <span class="muted"> · ${t('cx.completion')} ${complete ? `<span class="up">${L(stage.completion)}</span>` : L(stage.completion)}</span>`
             : '<span class="muted">—</span>';
         row.innerHTML = `
@@ -3513,7 +3519,7 @@ function codexMonster(p) {
    영웅 초상은 제 직업 풀이 뽑혀야 하고, 아이템은 그 부위가 드롭돼야 보고, 스킬 아이콘은 그 스킬을 배워야 뜬다.
 
    ⚠ **폴더를 읽는 화면이 아니다.** 목록의 SSOT 는 `mock.js` 의 경로 조립 상수(HERO_FACES ·
-   ITEM_ART_GROUPS · ITEM_ART_BY_SLOT · SLOT_ART_PARTS · SKILL_ICON_FILES)와 `skill.csv` 다 — 렌더는 동기라
+   WEAPON_BASE_STEMS · ITEM_BASE_ART_IDS · SLOT_ART_PARTS · SKILL_ICON_FILES)와 `skill.csv` 다 — 렌더는 동기라
    파일 유무를 물을 수 없다(`skillIcon` 주석과 같은 이유). 코드가 안 부르는 파일(`faces/source/` · `icons/items/source/` · `icons/skills/source/` 원본 시트 ·
    `icons/items/unused/`)은 게임이 안 쓰므로 여기에도 안 뜬다. 파일이 없으면 `onerror` 로 img 만 빠져
    **빈 칸 + 파일명**이 남고, 그 빈 칸이 「이 자산이 비었다」는 신호다 (스타일마다 갖춘 장수가 다르다).
@@ -3548,9 +3554,13 @@ const artGroup = (title, dir, tiles) => `
 
 /** 캐릭터 세그먼트 — 영웅 초상. 얼굴 스타일 고르개가 여기와 몬스터 세그먼트에 선다 (§9-1) */
 function codexCharacter(p) {
-    const bar = el('div', 'sub-bar');
-    bar.appendChild(faceStylePicker(el('div', 'ix-style')));
-    p.appendChild(bar);
+    // 고르개가 비면 줄을 아예 안 세운다 [2026-09-17] — `.sub-bar` 는 비어 있어도 `margin-bottom` 을 먹는다
+    const styleBox = faceStylePicker(el('div', 'ix-style'));
+    if (styleBox.childNodes.length) {
+        const bar = el('div', 'sub-bar');
+        bar.appendChild(styleBox);
+        p.appendChild(bar);
+    }
     const dir = M.faceDir();
     // 영웅 초상은 **직업 풀**이다 (2026-09-07) — 목록의 SSOT 는 `mock.js:HERO_FACES`.
     // **직업 하나가 묶음 하나**다 (ADR-0066) — 순서는 `class.csv` 행 순이고 **빈 묶음은 안 그린다**.
@@ -3569,12 +3579,21 @@ function codexCharacter(p) {
     p.appendChild(box);
 }
 
-/** 아이템 세그먼트 — 무기 · 방어구/장신구 · 빈 칸 실루엣 (§9-1) */
+/** 베이스 id → 이름 — `item_base.csv` 행에서 찾는다 (도감 방어구 묶음 · 2026-09-17) */
+const itemBaseName = id => {
+    for (const rows of Object.values(D.itemBases ?? {})) {
+        const row = rows.find(b => b.id === id);
+        if (row) return L(row);
+    }
+    return id;
+};
+
+/** 아이템 세그먼트 — 무기 베이스 · 방어구 베이스 · 빈 칸 실루엣 (§9-1) */
 function codexItem(p) {
     const box = el('div', 'ix-body box-body');
     box.dataset.keep = 'codex:item';
-    box.innerHTML = artGroup(t('ix.g.weapon'), M.ITEM_ART_DIR,
-        M.ITEM_ART_GROUPS.map(g => artTile(M.itemArt('weapon', g), L(D.weaponGroups?.[g] ?? g), 'box')))
+    // ~~무기군 그림 묶음~~ 은 2026-09-17 삭제 — 무기군 그림 8장이 사라졌다(베이스 그림이 그 자리를 든다)
+    box.innerHTML = ''
         // 무기 베이스 — **여기는 재고를 보는 자리**라 무기군마다 7장을 전부 편다(uid 가 없으니 `weaponBaseArt` 를 직접 부른다).
         //    실제 드롭은 개체마다 이 중 하나를 든다 (mock.js:itemArt · uid 해시 · §9-1). 무기군 하나 = 묶음 하나(ADR-0066 문법과 동일)
         + Object.keys(M.WEAPON_BASE_STEMS).map(g =>
@@ -3582,9 +3601,9 @@ function codexItem(p) {
                 //    확장자를 뗀다 — 베이스 이름이 길어 `.png` 가 붙으면 칸에서 두 줄이 된다 (스킬 세그먼트와 같은 처방 · ADR-0075)
                 M.WEAPON_BASE_STEMS[g].map(s => artTile(M.weaponBaseArt(g, s), t(`ix.b.${s}`), 'box', '', true)))
           ).join('')
-        // ⚠ 부위 하나에 그림 하나 — 개체가 베이스 id 를 안 들고 다녀서다 (mock.js:itemArt · 임시)
+        // 방어구 베이스 — 그림이 있는 id 만 편다 (mock.js:ITEM_BASE_ART_IDS · 2026-09-17 갑옷 10장)
         + artGroup(t('ix.g.armor'), M.ITEM_BASE_ART_DIR,
-            Object.keys(M.ITEM_ART_BY_SLOT).map(sl => artTile(M.itemArt(sl), L(slotDef(sl) ?? sl), 'box')))
+            M.ITEM_BASE_ART_IDS.map(id => artTile(`${M.ITEM_BASE_ART_DIR}${id}.png`, itemBaseName(id), 'box', '', true)))
         + artGroup(t('ix.g.empty'), M.SLOT_ART_DIR,
             M.SLOT_ART_PARTS.map(sl => artTile(M.slotArt(sl), L(slotDef(sl) ?? sl), 'box')));
     p.appendChild(box);
@@ -3708,7 +3727,7 @@ function helpSections() {
         {
             title: t('nav.codex'),
             groups: [
-                { h: t('cx.h'), sub: t('cx.sub', { pct: B.codex_card_drop_pct, list: D.codexLevels.join(' · ') }), body: [t('cx.note')] },
+                { h: t('cx.h'), sub: t('cx.sub', { pct: M.pctNum(B.codex_card_drop_pct), list: D.codexLevels.join(' · ') }), body: [t('cx.note')] },
             ],
         },
         {

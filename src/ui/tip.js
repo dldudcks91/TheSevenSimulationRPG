@@ -174,10 +174,10 @@ const DETAIL_LEAD = 3;
 /** 상한이 걸리는 저항 4행 — 값만으로는 "몇 %까지 의미가 있나"를 못 읽는다 (battle_design §9-5) */
 const RES_ROWS = ['res_fire', 'res_cold', 'res_lightning', 'res_poison'];
 
-/** 전투 능력치 표기 — 단위 붙이기는 여기 한 곳에서만 */
+/** 전투 능력치 표기 — 단위 붙이기는 여기 한 곳에서만 · `pct` 는 비율로 와서 찍을 때만 100 을 곱한다(소수 1자리 · R111) */
 const fmtCombat = (def, v) => v === undefined ? '—'
     : typeof v === 'object' ? rangeText(v)          // 공격력 두 줄은 범위 {min, max} (R90 · ADR-0108)
-    : def.fmt === 'pct' ? `${Math.round(v * 10) / 10}%`
+    : def.fmt === 'pct' ? `${Math.round(M.pctNum(v) * 10) / 10}%`
     : def.fmt === 'sec' ? t('sk.cycleSec', { s: v.toFixed(2) })
     : String(v);
 
@@ -195,7 +195,7 @@ export function sheetRowsHtml(rows, c) {
     return rows.map(s => {
         const v = c?.[s.id];
         const has = v !== undefined;
-        const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: resCap })}</span>`
+        const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: M.pctNum(resCap) })}</span>`
             : s.id === 'defense' && has ? ` <span class="muted">${t('st.mitigation', { p: Math.round(SYS.formula.mitigation(v) * 100) })}</span>` : '';
         // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
         //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
@@ -318,7 +318,8 @@ const sec = v => hl(num(v));
 export const rangeText = r => (r.min === r.max ? r.min.toLocaleString()
     : t('st.range', { a: r.min.toLocaleString(), b: r.max.toLocaleString() }));
 
-/** 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다. 틀이 `{s}초간` 처럼 단위를 들면 Alt 의 식이 값과 단위 사이에 끼인다 */
+/** 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다. 틀이 `{s}초간` 처럼 단위를 들면 Alt 의 식이 값과 단위 사이에 끼인다.
+ *  `pct` 자리의 숫자(원값 · 실효값 · 계수)는 **비율**로 온다 — `slot` 이 찍기 전에 100 을 곱한다(`M.pctNum` · R111) */
 const UNIT = {
     none: v => v,
     pct: v => `${v}%`,
@@ -344,13 +345,15 @@ const abbrOf = id => D.heroAttributes?.find(a => a.id === id)?.abbr ?? id;
  * @param R      렌더 상태 `{alt, fx}` — 괄호를 붙일 수 있는 자리를 만나면 `fx = true`(각주를 세울지 카드가 본다)
  */
 function slot({ raw, part, unit = UNIT.none, head, show = num }, R) {
-    if (!part) return unit(hl(show(raw)));
-    const fx = wrap => `(${head ? head(wrap) : wrap(num(Math.abs(part.raw)))}`
-        + part.terms.map(x => ` + ${abbrOf(x.attr)} × ${wrap(String(x.coef))}`).join('') + ')';
+    // 퍼센트 자리는 비율로 온다 — 숫자만 100 을 곱해 찍는다(범위 객체는 퍼센트 자리에 오지 않는다 · R111)
+    const k = unit === UNIT.pct ? M.pctNum : v => v;
+    if (!part) return unit(hl(show(k(raw))));
+    const fx = wrap => `(${head ? head(wrap) : wrap(num(k(Math.abs(part.raw))))}`
+        + part.terms.map(x => ` + ${abbrOf(x.attr)} × ${wrap(String(k(x.coef)))}`).join('') + ')';
     // 값 없음 — 식이 숫자 자리를 **대신**한다. 흐리게 두지 않고 식 속 숫자를 강조한다(흐리면 문장의 강조가 쿨 하나만 남는다)
     if (part.value == null) return unit(fx(hl));
     // 피해 · 회복량은 범위 객체 `{min, max}` 로 온다(R90) — 절댓값을 안 씌우고 `show` 가 범위를 푼다
-    const v = unit(hl(show(typeof part.value === 'object' ? part.value : Math.abs(part.value))));
+    const v = unit(hl(show(typeof part.value === 'object' ? part.value : k(Math.abs(part.value)))));
     if (!part.terms.length) return v;
     R.fx = true;
     return R.alt ? `${v} <span class="tip-fx">${fx(x => x)}</span>` : v;
@@ -360,7 +363,7 @@ function slot({ raw, part, unit = UNIT.none, head, show = num }, R) {
 const amountSlot = (part, R) => slot({
     part,
     show: rangeText,
-    head: wrap => `${BASIS_NAME[part.basis]?.() ?? part.basis} × ${wrap(num(part.pct))}%`,
+    head: wrap => `${BASIS_NAME[part.basis]?.() ?? part.basis} × ${wrap(num(M.pctNum(part.pct)))}%`,   // 배율은 비율로 온다 (R111)
 }, R);
 
 /**

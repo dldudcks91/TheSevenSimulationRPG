@@ -55,7 +55,7 @@ export const D = {
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
-    itemBases: null,          // item_base.csv — {slot: [{ko,en}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
+    itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
     affixDefs: [],            // affix.csv — [{stat, scale, min, max, perIlvl?, slots:[...]}] · CSV 행 순서 · **무기는 안 쓴다**(R78)
     weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, appliesTo, stat, scale, min, max}] · 무기 죄종 칸 후보 · CSV 행 순서 (2026-09-11 R78)
     weaponCommonOptions: [],  // weapon_common_option.csv — [{family, stat, appliesTo, scale, min, max}] · 무기 통합옵션 후보 · CSV 행 순서 (R78)
@@ -129,7 +129,7 @@ export async function loadData(base = './data/') {
     D.heroAttributes = heroAttr.map(r => ({
         id: r.attr_id, ko: r.attr_kr, en: r.attr_en, abbr: r.abbr,
         combatStat: r.combat_stat, dispatch: r.dispatch,
-        // 계수 = (mult_base_pct + 능력치 × mult_per_point_pct) / 100 — **축마다 다르다** (2026-09-13)
+        // 계수 = mult_base_pct + 능력치 × mult_per_point_pct (둘 다 비율 · R111) — **축마다 다르다** (2026-09-13)
         multBasePct: r.mult_base_pct, multPerPointPct: r.mult_per_point_pct,
     }));
     // 전투 능력치 25종 — `impl` 은 computeCombat 이 실제로 내는가. 시트는 impl=1 만 그린다.
@@ -224,8 +224,9 @@ export async function loadData(base = './data/') {
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};
     //   갑옷은 `group`(갑옷군)과 `tierMin`(티어가 열리는 ilvl)을 같이 든다 — 나머지 부위는 group 이 null (2026-09-16 · R107)
+    //   `id` 는 개체가 어느 베이스인지 박는 축이다 — 드롭이 `item.baseId` 로 들고 화면 그림도 이 id 를 본다 (2026-09-17 · INTERFACE 「item 객체」)
     for (const r of itemBaseRow) (D.itemBases[r.slot] ??= []).push({
-        ko: r.name_kr, en: r.name_en, group: r.group || null, tierMin: Number(r.tier_min_ilvl) || 1,
+        id: r.base_id, ko: r.name_kr, en: r.name_en, group: r.group || null, tierMin: Number(r.tier_min_ilvl) || 1,
     });
     // 접사 정의 — `perIlvl` 은 `band` 행만 든다 (scale 3분류 계약: item_design §2-1)
     D.affixDefs = affixRow.map(r => ({
@@ -265,8 +266,16 @@ export const monsterName = id => {
     const r = D.monsters?.[id];
     return r ? { ko: r.monster_name_kr, en: r.monster_name_en } : { ko: '???', en: '???' };
 };
-/** 얼굴 이미지가 있는 몬스터만 경로를 돌려준다 (monster.csv:face) */
-export const monsterFace = id => (D.monsters?.[id]?.face ? `${M.faceDir()}monster/${id}.png` : null);
+/** 얼굴 이미지가 있는 몬스터만 경로를 돌려준다 (monster.csv:face).
+ *  **정예는 제 초상을 가질 수 있다** [2026-09-17] — `monster.csv:face_elite` 가 1 이면 `<idx>_elite.png`,
+ *  아니면 기본 `<idx>.png` 로 떨어진다. 파일이 있는지 찔러보지 않는다 — `face` 가 이미 같은 꼴이고,
+ *  개발 서버가 `no-store` 라 404 폴백은 매 렌더마다 요청을 다시 쓴다 */
+export const monsterFace = (id, grade = 'normal') => {
+    const r = D.monsters?.[id];
+    if (!r?.face) return null;
+    const v = grade === 'elite' && r.face_elite ? '_elite' : '';
+    return `${M.faceDir()}monster/${id}${v}.png`;
+};
 /** 몬스터 id 앞자리 = 챕터 (1101 → 1챕터) */
 export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wrath';
 /** 챕터 행 — {id, sin, name:{ko,en}} */

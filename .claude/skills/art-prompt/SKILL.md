@@ -108,7 +108,8 @@ user-invocable: true
 
 - `src/ui/mock.js` `HERO_FACES[<직업id>]` 를 새 장수로 [개정 2026-09-07] — **늘리는 방향은 무해하다**(얼굴이 세이브에 박혀 있어 기존 영웅은 안 바뀐다). ⚠ **줄이는 방향만** 영향이 있다(범위 밖 저장값은 그 직업 풀 안에서 접힌다). 교체(기존 번호에 덮어쓰기)인지 추가인지 사용자에게 묻는다
 - [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) 의 `hero_*` 절 · [faces/source/README.md](src/assets/art/faces/source/README.md) 의 영웅 표 · 두 문서 꼬리 날짜(날짜만)
-- 보고에는 **실측 표(전/후) · 설치한 파일 · `HERO_FACES` 변경 여부 · 건너뛴 것**
+- ⚠ **몬스터를 건드렸으면 챕터 시트를 다시 찍는다** [2026-09-17 사용자 지시] — `python .claude/skills/art-prompt/build_chapter_sheets.py`. `faces/source/chapters/ch<챕터>_st<스테이지>.png` 는 **그 스테이지 한 판(일반 3 + 보스 1)** 이라 초상을 넣거나 빼거나 다른 스테이지로 옮기면 바로 낡는다. 설치 · 교체 · 삭제 · `monster.csv` 의 스테이지 이동 모두 해당한다 → [chapters/README.md](src/assets/art/faces/source/chapters/README.md)
+- 보고에는 **실측 표(전/후) · 설치한 파일 · `HERO_FACES` 변경 여부 · 다시 찍은 챕터 시트 · 건너뛴 것**
 
 ## 자주 막히는 지점 — 실패 패턴 (전부 이 프로젝트에서 실제로 났다)
 
@@ -136,6 +137,7 @@ user-invocable: true
 | [prompt_template.md](prompt_template.md) | 1단계 — 스케치: **기본형 골격(8줄)** · **§1-2 복구 사다리** · 원형 블록 · 타일 배치 / 세부: **§6 디벨롭 골격** / 공통: 금지어 표 · 키잉 안전 색 표 |
 | [measure.py](measure.py) | 3단계 — 실측 스크립트. 앵커 합격선 내장. ASCII 출력(콘솔이 cp949) |
 | [postprocess.md](postprocess.md) | 4~5단계 — 격자 좌표 · 키잉 코드 · 74% 패딩 · 설치 · README 갱신 자리 |
+| [build_chapter_sheets.py](build_chapter_sheets.py) | 5단계 — **몬스터를 건드린 뒤** 챕터 시트(`faces/source/chapters/`)를 `monster.csv` 기준으로 다시 찍는다. 인자 없으면 전부 · `1 3` 이면 그 스테이지만 · `--prune` 은 아트가 0 이 된 장을 지운다 |
 
 ## 다음 추천 행동
 
@@ -146,4 +148,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-09-15*
+*마지막 업데이트: 2026-09-17*

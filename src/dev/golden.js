@@ -52,6 +52,8 @@ export function csvHash(text) {
  * `uid` 는 넣지 않는다 — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (D-A2).
  * 시작 장비(`item.startingWeapon` · `item.startingArmor`)도 **같은 형식**으로 적는다 (`meta.parties`).
  * `baseId` [신설 2026-09-10] — 무기군에 세부 베이스 풀이 있으면 그 굴림. 없는 무기군·무기 아닌 부위는 `-`
+ *   ⚠ 방어구도 2026-09-17 부터 `baseId` 를 들지만 **이 칸은 무기만 적는다** — 방어구 베이스는 앞의 `base` 칸(영문 이름)이
+ *   이미 들고 있어 지문에 새 정보가 없고, 적으면 옛 golden.json 이 통째로 어긋난다
  */
 export const dropSig = it => [
     it.rarity,
@@ -59,7 +61,7 @@ export const dropSig = it => [
     it.ilvl,
     it.sins.join('+'),
     it.group ?? it.name.en,                       // 무기는 무기군 id · 그 외는 베이스 이름(영문)이 곧 베이스 인덱스다
-    it.baseId ?? '-',                             // 무기 베이스 세부 굴림 — 풀이 있는 무기군만(weapon_base.csv)
+    it.slot === 'weapon' ? (it.baseId ?? '-') : '-',   // 무기 베이스 세부 굴림 — 풀이 있는 무기군만(weapon_base.csv)
     it.element ?? '-',                            // R80(2026-09-11) 부터 언제나 '-' — 생성 때 원소를 안 굴린다. 되살아나면 지문이 갈려 잡힌다
     it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 개체 굴림 — 방어구 implicit 뿐이다
         : '-',                                    //         무기(R90 — 피해 범위는 굴리지 않고 무기군 · ilvl · 강화에서 파생) · 목걸이·반지는 소비 없음

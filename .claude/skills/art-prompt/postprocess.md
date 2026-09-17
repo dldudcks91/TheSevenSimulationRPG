@@ -128,7 +128,8 @@ for tag, box in TILES.items():
 2. **사본** — `faces/cartoon/hero/<직업id>_<k>.png` 로 복사 [개정 2026-09-07]. `직업id` 는 `data/class.csv` 의 id(그림이 읽히는 직업), `k` 는 그 직업 풀의 다음 번호(추가) 또는 교체할 번호
 3. **`src/ui/mock.js` `HERO_FACES[<직업id>]`** — 추가면 그 직업의 장수를 올린다. **늘리는 방향은 무해하다** (2026-09-06 저장형 전환 뒤 얼굴은 세이브에 박혀 있다 — 새로 태어나는 영웅의 굴림 범위만 넓어진다). ⚠ **줄이는 방향만** 영향이 있다: 범위를 넘은 저장값은 그 직업 풀 안에서 접힌다. 사용자에게 추가/교체를 먼저 묻는다. 몬스터는 `monster/<idx>.png` 라 직업 축이 없다
 4. **문서** — [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) `hero_*` 절의 장수·출처 · [source/README.md](../../../src/assets/art/faces/source/README.md) 영웅 표에 한 줄 · 두 문서 꼬리 날짜(날짜만)
-5. 브라우저 확인 — 서버가 `serve.py`(no-store) 면 새로고침으로 충분. `python -m http.server` 면 같은 파일명 교체가 캐시에 먹힌다 → 하드 리로드
+5. **챕터 시트 다시 찍기(몬스터만)** — `python .claude/skills/art-prompt/build_chapter_sheets.py`. `faces/source/chapters/` 가 `cartoon/monster/` 의 거울이라 **초상을 넣은 · 지운 · 옮긴 스테이지가 그대로 낡는다**. 스테이지를 옮겼으면 **양쪽**(떠난 스테이지 · 도착한 스테이지)이 다시 찍힌다 — 인자 없이 돌리면 전부 훑는다
+6. 브라우저 확인 — 서버가 `serve.py`(no-store) 면 새로고침으로 충분. `python -m http.server` 면 같은 파일명 교체가 캐시에 먹힌다 → 하드 리로드
 
 ## 6. 크롭·스케일로 못 고치는 것 (다시)
 
@@ -141,4 +142,4 @@ for tag, box in TILES.items():
 | 후드 속이 검은 구멍 | ✕ 재발주 (그 타일만) |
 
 ---
-*마지막 업데이트: 2026-09-16*
+*마지막 업데이트: 2026-09-17*

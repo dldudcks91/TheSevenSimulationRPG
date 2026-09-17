@@ -143,7 +143,7 @@ export function createSkillSystem(data) {
         proc_mult_pct: d.kind === 'attack' && d.procChance > 0,
     })[field] === true;
 
-    /** 정의 1행 정규화 — %는 CSV 의 숫자 그대로 두고(코드에서 /100), 없음은 null */
+    /** 정의 1행 정규화 — %·배율은 CSV 의 **비율** 그대로(2026-09-17 R111 · 310% = 3.1), 없음은 null */
     const normalize = row => ({
         id: row.skill_id,
         ownerKind: row.owner_kind,
@@ -153,7 +153,7 @@ export function createSkillSystem(data) {
         hits: row.hits,
         mult: row.mult_pct,
         decay: row.decay_pct,
-        // 확률로 터지는 추가 피해 — 확률 % · 배수 % (battle_design §9-2 · 2026-09-10). 확률이 0 이면 없다
+        // 확률로 터지는 추가 피해 — 확률 · 배수 둘 다 비율 (battle_design §9-2 · 2026-09-10). 확률이 0 이면 없다
         procChance: row.proc_chance_pct,
         procMult: row.proc_mult_pct,
         cool: row.cool_sec,
@@ -211,7 +211,7 @@ export function createSkillSystem(data) {
             if (!(d.mult > 0)) bad(`attack 인데 mult_pct ${d.mult}`);
             if (d.dur !== 0) bad(`attack 인데 duration_sec ${d.dur} — 창은 buff 만 연다`);
         } else if (d.kind === 'summon') {
-            // 소환 — `mult_pct` 는 피해 배율이 아니라 **시전자 최대 HP 의 %**(벽의 HP)다 (§12-6)
+            // 소환 — `mult_pct` 는 피해 배율이 아니라 **시전자 최대 HP 의 비율**(벽의 HP)이다 (§12-6)
             if (d.target !== 'self') bad(`summon 인데 target '${d.target}' — 소환은 시전자 자리에 세운다`);
             if (d.hits !== 0) bad(`summon 인데 hits ${d.hits}`);
             if (!(d.mult > 0)) bad(`summon 인데 mult_pct ${d.mult} — 시전자 최대 HP 의 % 다`);
@@ -230,23 +230,23 @@ export function createSkillSystem(data) {
             bad(`${d.target} 인데 hits ${d.hits} — 타수는 대상 수가 정한다`);
         // 감쇠 — 세 대상 표가 쓴다. 뜻이 다르다: 연쇄는 **배율**이 줄고, 최고 방어 다단은 **대상의 방어값**이 주고,
         //   광역 공격은 **주 대상 밖의 배율**이 준다(멀티샷 광역 약화 · skill_design §13-5 · 2026-09-10).
-        //   100 이면 연쇄는 두 번째부터 0 · 방어는 한 방에 0 · 광역은 주 대상 하나만 맞아 셋 다 어긋난다
+        //   1(= 100%) 이면 연쇄는 두 번째부터 0 · 방어는 한 방에 0 · 광역은 주 대상 하나만 맞아 셋 다 어긋난다
         if (usesDecayOf(d)) {
-            if (!(d.decay >= 0 && d.decay < 100)) bad(`${d.target} 인데 decay_pct ${d.decay}`);
+            if (!(d.decay >= 0 && d.decay < 1)) bad(`${d.target} 인데 decay_pct ${d.decay} — 비율 0 이상 1 미만`);
         } else if (d.decay !== 0) {
             bad(`decay_pct 는 enemy_chain·enemy_highest_def·광역 공격(enemy_all) 만 쓴다 (${d.decay})`);
         }
         // 확률로 터지는 추가 피해 — 확률과 배수는 **한 쌍**이다 (battle_design §9-2 · 2026-09-10).
-        //   확률이 0 인데 배수가 적혀 있으면 어느 쪽이 참인지 두 곳을 봐야 하므로 막는다. 배수 100 미만은 「추가」가 아니다
-        if (!(d.procChance >= 0 && d.procChance <= 100)) bad(`proc_chance_pct ${d.procChance} — 0~100`);
+        //   확률이 0 인데 배수가 적혀 있으면 어느 쪽이 참인지 두 곳을 봐야 하므로 막는다. 배수 1(= 100%) 미만은 「추가」가 아니다
+        if (!(d.procChance >= 0 && d.procChance <= 1)) bad(`proc_chance_pct ${d.procChance} — 비율 0~1`);
         if (d.procChance > 0) {
             if (d.kind !== 'attack') bad(`proc_chance_pct ${d.procChance} — 추가 피해는 attack 만 쓴다 (${d.kind})`);
-            if (!(d.procMult >= 100)) bad(`proc_chance_pct ${d.procChance} 인데 proc_mult_pct ${d.procMult} — 100 이상이어야 한다`);
+            if (!(d.procMult >= 1)) bad(`proc_chance_pct ${d.procChance} 인데 proc_mult_pct ${d.procMult} — 1(= 100%) 이상이어야 한다`);
         } else if (d.procMult !== 0) {
             bad(`proc_chance_pct 가 0 인데 proc_mult_pct ${d.procMult} — 두 곳 관리 금지`);
         }
-        // 결투 — effect_value 는 **시전자가 받는 피해 감소 %** 다 (skill_design §13-5 · 2026-09-10). 음수면 받는 피해가 는다
-        if (d.stat === 'duel' && !(d.value >= 0)) bad(`duel 인데 effect_value ${d.value} — 시전자 피해 감소 %라 0 이상`);
+        // 결투 — effect_value 는 **시전자가 받는 피해 감소(비율)** 다 (skill_design §13-5 · 2026-09-10). 음수면 받는 피해가 는다
+        if (d.stat === 'duel' && !(d.value >= 0)) bad(`duel 인데 effect_value ${d.value} — 시전자 피해 감소라 0 이상`);
         // 스케일링 슬롯 (skill_design §13-1 · 2026-09-10) — 「어느 항을 · 어느 능력치가 · 1당 얼마」.
         //   채운 슬롯의 coef 0 은 **합법**이다(축만 정하고 크기는 밸런스 몫 — §13-3). 빈 슬롯은 `- · - · 0` 이다
         const seenField = new Set();
@@ -265,9 +265,9 @@ export function createSkillSystem(data) {
             seenField.add(s.field);
             if (!slotFits(d, s.field)) bad(`${at}_field '${s.field}' — ${d.kind}·${d.target} 에는 그 항이 없다`);
         }
-        // 조건값은 조건이 있을 때만 — ally_hp_below 는 HP 비율(%)이라 0 초과 100 이하다
+        // 조건값은 조건이 있을 때만 — ally_hp_below 는 HP 비율이라 0 초과 1 이하다
         if (d.cond === 'ally_hp_below') {
-            if (!(d.condValue > 0 && d.condValue <= 100)) bad(`ally_hp_below 인데 cond_value ${d.condValue}`);
+            if (!(d.condValue > 0 && d.condValue <= 1)) bad(`ally_hp_below 인데 cond_value ${d.condValue} — 비율 0 초과 1 이하`);
         } else if (d.condValue !== 0) {
             bad(`cond_value 는 ally_hp_below 만 쓴다 (${d.condValue})`);
         }
@@ -464,7 +464,7 @@ export function createSkillSystem(data) {
             const ends = basisEnds(basis, ctx);
             const known = ends.every(v => Number.isFinite(v) && v >= 0);
             amount = !known || (terms.length > 0 && stats === null) ? null
-                : { min: Math.round(ends[0] * def.mult / 100 + eff.flat), max: Math.round(ends[1] * def.mult / 100 + eff.flat) };
+                : { min: Math.round(ends[0] * def.mult + eff.flat), max: Math.round(ends[1] * def.mult + eff.flat) };
             parts.amount = { value: amount, basis, pct: def.mult, terms };
         }
         // 슬롯이 미는 나머지 항 — 그 항에 슬롯이 하나라도 있을 때만 키가 선다(coef 0 인 항도 terms 에 든다)
@@ -472,16 +472,16 @@ export function createSkillSystem(data) {
             if (field === 'mult_pct') continue;               // 배율 항은 위 `parts.amount` 가 든다
             const terms = termsOf(field);
             if (terms.length === 0) continue;
-            // 확률은 100 에서 자른다 — `strike` 가 그 상한으로 굴리므로 설명창의 120% 는 틀린 숫자다. `raw`·`scaleDef` 는 안 자른다
-            const value = stats === null ? null : (key === 'procChance' ? Math.min(eff[key], 100) : eff[key]);
+            // 확률은 1(= 100%) 에서 자른다 — `strike` 가 그 상한으로 굴리므로 설명창의 120% 는 틀린 숫자다. `raw`·`scaleDef` 는 안 자른다
+            const value = stats === null ? null : (key === 'procChance' ? Math.min(eff[key], 1) : eff[key]);
             parts[key] = { value, raw: def[key], terms };
         }
         const everySec = period === null ? null : F.effectiveCd(def.cool, period);
         return {
             baseSec: def.cool,
             everySec,
-            // 실효 쿨이 표기보다 얼마나 밀리는가(%) — 0 이면 주기와 정렬이 맞는다
-            lossPct: everySec === null ? null : (everySec - def.cool) / def.cool * 100,
+            // 실효 쿨이 표기보다 얼마나 밀리는가(비율 · R111) — 0 이면 주기와 정렬이 맞는다
+            lossPct: everySec === null ? null : (everySec - def.cool) / def.cool,
             // 한 타 피해(attack) · 회복량(heal) · 벽 HP(summon) — **고정 항 포함** · `{min, max}`(R90). 다단은 **한 타** 값이다 — 총합은 화면이 말하지 않는다
             amount,
             parts,

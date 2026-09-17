@@ -28,7 +28,8 @@
  *
  * **접사 ilvl 스케일링은 3분류다** (item_design §2-1) — 정의의 `scale` 이 정한다:
  *   `growth` 기하 곡선(공격력·HP flat) / `band` 완만한 가산(물리 방어 flat) / `flat` ilvl 무관(% · 저항 · 유틸 전부).
- *   무기 옵션 표에만 `fine` 이 하나 더 있다 — `flat` 과 같되 **소수 1자리**다(레벨당 데미지처럼 1 보다 작은 값 · 2026-09-11).
+ *   무기 옵션 표에만 `fine` 이 하나 더 있다 — `flat` 과 같되 **0.1% 단위**다(레벨당 데미지처럼 1% 보다 작은 값 · 2026-09-11).
+ *   **`flat` · `fine` 값은 비율이다** [2026-09-17 · R111] — 5% = `0.05`. `growth` · `band` 는 고정값이라 정수 그대로다.
  *
  * **강화** (item_design §7-2 개정 2026-09-15 · R95) — 골드를 먹고 `up` 을 올린다. **올리는 것은 베이스 능력치 하나다**:
  *   베이스(무기 피해 범위 · 방어구 implicit)는 `up` 하나로 **파생**한다 — 단계마다 반올림이 쌓이지 않고 드롭 시 굴린 개체값이 원본 그대로 남는다.
@@ -47,7 +48,8 @@ import { createFormula } from './formula.js';
  *   slots        — 부위 id 목록 (7부위). 드롭은 부위 단위 — 반지는 착용 **위치**가 2개일 뿐 부위는 하나다
  *   sins         — 죄종 id 목록
  *   weaponGroups — {id: {id, ko, en, classes:[cls...], period, variance, damageKind, release}}  ← weapon_group.csv
- *   itemBases    — {slot: [{ko,en}...]}  무기 외 부위의 베이스 이름 풀. 무기의 베이스는 무기군 자체다
+ *   itemBases    — {slot: [{id,ko,en,group,tierMin}...]}  무기 외 부위의 베이스 풀. 무기의 베이스는 무기군 자체다
+ *                  `id` 는 `item_base.csv:base_id` — 드롭이 `item.baseId` 에 박는다 (2026-09-17)
  *   weaponBases  — {groupId: [{id,ko,en}...]}  무기군별 세부 베이스 풀(weapon_base.csv) — **아직 일부 무기군뿐**.
  *                  풀이 있는 무기군만 드롭 때 하나를 굴려 이름·그림을 그 베이스로 좁힌다(2026-09-10). 없으면 무기군 이름 그대로
  *   classSkills  — **직업별** 액티브 후보 `{classId: [skillId...]}` ← skill.csv (행 순서가 굴림 결과를 정한다).
@@ -67,7 +69,6 @@ export function createItemSystem(data) {
     const AG = data.armorGroups ?? {};   // armor_group.csv — 갑옷군 3갈래 (2026-09-16 · R107)
     const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
-    const r1 = v => Math.round(v * 10) / 10;
 
     /** 드롭·시작 무기에 쓰는 무기군 = 본편(release=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
     const classSkills = data.classSkills ?? {};   // {classId: [skillId...]} — 무기가 담을 후보 (skill_design §12)
@@ -98,12 +99,12 @@ export function createItemSystem(data) {
     /**
      * 희귀도 — 가중치 1회. **훑는 순서는 일반 → 매직 → 레어**다 [일반 신설 2026-09-14 · R86 · item_design §1].
      * **매직아이템 획득확률은 레어 가중치에 곱한다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — 일반·매직 가중치는 안 건드린다.
-     * `magicFind` 는 파티 평균 % 이고 0 이면 종전과 같다 — 굴림 수는 언제나 1회다
+     * `magicFind` 는 파티 평균(비율)이고 0 이면 종전과 같다 — 굴림 수는 언제나 1회다
      * `weights` `{normal, magic, rare}` 를 주면 드롭 가중치 대신 그것으로 굴린다 — **제작**이 제 가중치를 넘긴다 [2026-09-15 · R96 · item_design §7-1]
      */
     const rollRarity = (rng, magicFind = 0, weights = null) => {
         const w = weights ?? { normal: B.rarity_w_normal, magic: B.rarity_w_magic, rare: B.rarity_w_rare };
-        const wn = w.normal, wm = w.magic, wr = w.rare * (1 + magicFind / 100);
+        const wn = w.normal, wm = w.magic, wr = w.rare * (1 + magicFind);
         const x = rng() * (wn + wm + wr);
         return x < wn ? 'normal' : x < wn + wm ? 'magic' : 'rare';
     };
@@ -121,15 +122,23 @@ export function createItemSystem(data) {
      * 값 하나 — 정의의 `scale` 이 정한다 (item_design §2-1):
      *   growth — 굴림 × growthMult(ilvl), 정수 [2026-09-16 사용자 지시 — 장비 옵션은 소수를 두지 않는다]
      *   band   — 굴림 + ilvl × perIlvl, 정수 (비율 축은 완만하게만 오른다)
-     *   flat   — 굴림 그대로, 정수. **ilvl 무관** — % 접사가 곡선을 타면 곱셈층이 두 번 자라 후반이 폭주한다
-     *   fine   — flat 과 같되 소수 1자리. **소수가 남은 유일한 자리**다 — 오만 「레벨당 데미지 +%」(0.2~0.5) 한 행뿐이고,
-     *            정수로 올리면 만렙 기여가 2~5배로 뛰어 값 대역부터 다시 정해야 한다 (2026-09-16 보류 · GAME_DESIGN §10)
+     *   flat   — 굴림 그대로, **1% 단위**(비율 · `formula.pctOption`). **ilvl 무관** — % 접사가 곡선을 타면 곱셈층이 두 번 자라 후반이 폭주한다
+     *            [2026-09-17 · R111] ~~정수~~ — 퍼센트가 비율로 옮겨 가며 「정수」가 「1% 단위」가 됐다(플레이어가 보는 눈금은 같다)
+     *   fine   — flat 과 같되 **0.1% 단위**. 1% 보다 작은 값이 남은 유일한 자리다 — 오만 「레벨당 데미지 +%」 한 행뿐이고,
+     *            1% 단위로 올리면 만렙 기여가 2~5배로 뛰어 값 대역부터 다시 정해야 한다 (2026-09-16 보류 · 09-17 사용자 대기 · GAME_DESIGN §10)
      */
     const valueOf = (d, roll, ilvl) =>
         d.scale === 'growth' ? Math.max(1, Math.round(roll * F.growthMult(ilvl)))
             : d.scale === 'band' ? Math.max(1, Math.round(roll + ilvl * (d.perIlvl ?? 0)))
-                : d.scale === 'fine' ? Math.max(0.1, r1(roll))
-                    : Math.max(1, Math.round(roll));
+                : F.pctOption(roll, d.scale === 'fine');
+
+    /**
+     * 퍼센트 채널인가 [2026-09-17 · R111] — 세이브 이관(v28 → v29)이 옛 값(0~100 눈금)을 비율로 옮길 때 가른다.
+     * 고정값 채널 = 옵션 표의 `growth` · `band` 행 + 옛 무기의 `atk_flat`(R78 에 표에서 빠졌다). **나머지는 전부 퍼센트다**
+     */
+    const flatStats = new Set([...(data.affixDefs ?? []), ...sinOpts, ...commonOpts]
+        .filter(d => d.scale === 'growth' || d.scale === 'band').map(d => d.stat).concat('atk_flat'));
+    const pctStat = stat => !flatStats.has(stat);
 
     /** 접사 n개 (무기 외 부위) — 같은 stat 이 두 번 붙지 않는다. 출처는 전부 `random`(affix.csv = 통합옵션 풀 · 09-08) */
     function rollAffixes(rng, slot, ilvl, n) {
@@ -150,7 +159,7 @@ export function createItemSystem(data) {
     function weaponOptions(rng, g, sins, rarity, ilvl) {
         const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
         // 고정 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 고정 옵션)
-        const out = [{ stat: 'atk_pct', v: Math.max(1, Math.round(lo + rng() * (hi - lo))), src: 'fixed' }];
+        const out = [{ stat: 'atk_pct', v: F.pctOption(lo + rng() * (hi - lo)), src: 'fixed' }];
         // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(탐욕 셋 · 시기-사제 둘) 그중 하나를 굴린다
         for (const sin of sins) {
             const rows = sinOpts.filter(r => r.sin === sin && appliesTo(r, g));
@@ -187,7 +196,7 @@ export function createItemSystem(data) {
      */
     function implicitFor(rng, slot, ilvl, group = null) {
         if (slot === 'weapon' || baseless(slot)) return null;    // rng 소비 없음
-        const eps = (rng() * 2 - 1) * B.armor_def_variance_pct / 100;
+        const eps = (rng() * 2 - 1) * B.armor_def_variance_pct;
         const slotMult = B[`armor_def_slot_${slot}`];
         if (typeof slotMult !== 'number') throw new Error(`item: balance.csv 에 'armor_def_slot_${slot}' 이 없다`);
         const gm = group ? (AG[group]?.defMult ?? 1) : 1;
@@ -256,6 +265,9 @@ export function createItemSystem(data) {
             // 갑옷군 — **갑옷 칸만** 든다 (item_base.csv:group · 09-07 「적용 범위 = 갑옷 한 칸」).
             //   무기의 `group`(무기군)과 같은 필드를 쓴다 — 슬롯이 둘을 가른다
             if (base?.group) item.group = base.group;
+            // 베이스 id — **무기와 같은 필드**(`baseId`)다 [2026-09-17]. 베이스는 rollGear 가 이미 굴렸고(소비 불변)
+            //   여기서는 이름만 쓰던 것을 id 로 같이 남긴다 — 화면이 베이스마다 다른 그림을 고를 수 있게 된다(ui/mock.js:itemArt)
+            if (base?.id) item.baseId = base.id;
             item.implicit = implicitFor(rng, slot, ilvl, base?.group ?? null);
         }
         return item;
@@ -267,7 +279,7 @@ export function createItemSystem(data) {
      * rng 소비 순서(계약 — INTERFACE §5-2): 부위 배열 순서대로 — 베이스(무기는 `weaponGroup` 을 주면 **0회**) → 희귀도 1 → `build`.
      *   ⚠ **부위 배열 순서가 계약이다** — 같은 부위 묶음이라도 순서가 바뀌면 같은 시드가 다른 한 벌을 낸다.
      * @param opts `{slots, ilvl, magicFind?, rareBonusPct?, weaponGroup?, rarityWeights?}`
-     *   · `magicFind` 파티 평균 % · `rareBonusPct` 등급이 미는 레어 가중 %(`spawn_grade.csv:gear_rare_bonus_pct`) — **둘은 같은 채널**이다
+     *   · `magicFind` 파티 평균(비율) · `rareBonusPct` 등급이 미는 레어 가중(비율 · `spawn_grade.csv:gear_rare_bonus_pct`) — **둘은 같은 채널**이다
      *   · `weaponGroup` 무기군 고정. 몬스터는 제 무기군(`monster.csv:weapon_group`)을 들고, 안 주면 본편 무기군에서 굴린다
      *   · `rarityWeights` 희귀도 가중치 `{normal, magic, rare}` — 제작이 넘긴다(없으면 드롭 가중치 · 굴림 수 불변 · R96)
      */
@@ -288,7 +300,7 @@ export function createItemSystem(data) {
 
     /**
      * 드롭 1개 — 부위 균등, 희귀도 가중치, ilvl 은 호출자가 준다.
-     * `opts.magicFind` = 파티 평균 매직아이템 획득확률 % — 레어 가중치에 곱한다(없으면 0 · 굴림 수 불변 · 2026-09-11 R78)
+     * `opts.magicFind` = 파티 평균 매직아이템 획득확률(비율) — 레어 가중치에 곱한다(없으면 0 · 굴림 수 불변 · 2026-09-11 R78)
      * ⚠ **게임 경로에서는 더 안 불린다** [2026-09-11 · R79] — 처치 드롭이 「입고 있던 장비」로 바뀌어 부위를 굴리지 않는다.
      *   검증·골든이 파이프라인 전체(부위 → 베이스 → 희귀도 → `build`)를 한 입구로 재는 자리로 남는다. **수열은 종전과 같다.**
      */
@@ -319,6 +331,7 @@ export function createItemSystem(data) {
      * 옛 무기에 채울 고정 옵션 · 죄종 칸 — **세이브 이관 전용**이다 (`state.js upgradeV22` · 2026-09-11 R78). 게임 중에는 부르지 않는다.
      * **rng 를 쓰지 않는다** — 행은 uid 번호로 고르고(v17 의 스킬 소급과 같은 방식) 값은 **범위의 가운데**다.
      * 같은 세이브를 두 번 열면 같은 결과이고, 가진 접사는 건드리지 않는다(호출자가 뒤에 붙인다).
+     * ⚠ 값은 **지금 눈금(비율)** 이다 [2026-09-17 · R111] — v22 세이브는 옛 눈금(0~100)이라 부르는 쪽이 맞춰 넣는다(`upgradeV22`)
      */
     function legacyWeaponLayers(item) {
         const g = WG[item?.group];
@@ -326,7 +339,7 @@ export function createItemSystem(data) {
         const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
         const num = Number.isFinite(n) ? n : 0;
         const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
-        const out = [{ stat: 'atk_pct', v: Math.max(1, Math.round((lo + hi) / 2)), src: 'fixed' }];
+        const out = [{ stat: 'atk_pct', v: F.pctOption((lo + hi) / 2), src: 'fixed' }];
         (item.sins ?? []).forEach((sin, i) => {
             const rows = sinOpts.filter(r => r.sin === sin && appliesTo(r, g));
             if (!rows.length) return;
@@ -422,5 +435,5 @@ export function createItemSystem(data) {
         return Math.max(1, Math.round(F.armorDefense(item.ilvl, slotMult, gm)));
     };
 
-    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
+    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
 }

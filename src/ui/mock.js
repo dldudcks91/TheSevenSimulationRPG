@@ -131,17 +131,28 @@ export const affixText = (stat, v, fallback) => {
 /** 축 이름만 — {ko, en, fmt}. 이름과 값을 따로 찍는 화면(마스터리 칸)이 문자열을 되파싱하지 않게 한다 */
 export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? { ko: stat, en: stat, fmt: 'n' };
 
+/**
+ * 퍼센트 숫자 — 값은 **비율**(0.05)로 오고 **찍을 때만** 100 을 곱한다 [2026-09-17 · R111 · src/data/README.md 단위 규약].
+ * 곱한 뒤의 부동소수 꼬리(`7.000000000000001`)는 소수 둘째 자리에서 자른다 — 오만 「레벨당 데미지」(0.3%)가 가장 잘다.
+ * 화면 곳곳의 `%` 표기가 이것을 쓴다 (app.js · tip.js)
+ */
+export const pctNum = v => Number((v * 100).toFixed(2));
+
 /** 값만 — 부호와 단위는 affixText 와 **같은 규칙**이다 (단위를 붙이는 곳은 이 파일 하나) */
-export const statValue = (stat, v, fallback) =>
-    `${v >= 0 ? '+' : ''}${v}${statLabel(stat, fallback).fmt === 'pct' ? '%' : ''}`;
+export const statValue = (stat, v, fallback) => {
+    const pct = statLabel(stat, fallback).fmt === 'pct';
+    return `${v >= 0 ? '+' : ''}${pct ? pctNum(v) : v}${pct ? '%' : ''}`;
+};
 
 /**
  * 밑수 값만 — `statValue` 와 같되 **부호를 안 붙인다**. 접사의 `+` 는 「얼마를 더한다」라 뜻을 들지만
  * 밑수는 「이 아이템이 가진 값」이라 더할 대상이 없다 (아이템 툴팁의 메인 옵션 줄 — SCREEN_DESIGN §6).
  * 단위(%)는 여전히 이 파일 하나가 붙인다.
  */
-export const baseValue = (stat, v, fallback) =>
-    `${v}${statLabel(stat, fallback).fmt === 'pct' ? '%' : ''}`;
+export const baseValue = (stat, v, fallback) => {
+    const pct = statLabel(stat, fallback).fmt === 'pct';
+    return `${pct ? pctNum(v) : v}${pct ? '%' : ''}`;
+};
 
 /** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
  *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
@@ -295,10 +306,11 @@ export const skillIcon = id => {
  * 축은 **부위**(`equip_slot.csv:part`)라 반지 두 칸(`ring1`·`ring2`)이 같은 그림을 든다.
  * `skillIcon` 과 달리 **해시 폴백이 없다** — 스킬은 「제 그림은 아니어도 늘 같은 그림」이면 되지만
  *   부위는 **틀린 그림이 곧 틀린 정보**다(투구 칸에 장화가 뜨면 그 칸을 잘못 읽는다).
- * 목록에 없는 부위(투구·목걸이)는 `null` 이고, 그 칸은 옛 이모지(`equip_slot.csv:icon`)로 남는다.
+ * 목록에 없는 부위는 `null` 이고, 그 칸은 옛 이모지(`equip_slot.csv:icon`)로 남는다 —
+ *   2026-09-17 로 **부위 7종이 다 찼다**(투구·목걸이가 이모지에서 그림으로).
  */
 export const SLOT_ART_DIR = './assets/art/icons/items/empty/';
-export const SLOT_ART_PARTS = ['weapon', 'armor', 'gloves', 'boots', 'ring'];
+export const SLOT_ART_PARTS = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'amulet', 'ring'];
 export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}${part}.png` : null;
 /**
  * 물약 그림 — `src/assets/art/icons/items/potion/<potion_id>.png` (2026-09-15 · R104 · SCREEN_DESIGN §4-2 · §8-2 · ADR-0148).
@@ -310,19 +322,31 @@ export const POTION_ART_DIR = './assets/art/icons/items/potion/';
 export const POTION_ART_IDS = [];
 export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}${id}.png` : null;
 /**
- * 아이템 그림 — `src/assets/art/icons/items/` (2026-09-03 · SCREEN_DESIGN §2). **방어구는 임시다.**
+ * 물약 **칸**의 배경 실루엣 — 칸 넷 전부가 같은 한 장을 든다 [2026-09-17 사용자 지시].
  *
- * 무기는 제 그림이다 — 무기의 베이스가 곧 무기군이라(`item.group`) `<group_id>.png` 가 정확히 그 무기다.
- * 방어구는 **부위 하나에 그림 하나**다: 개체가 베이스 id 를 안 들고 다녀서(`item.js:build` 는 이름만 조립한다)
- *   어느 베이스였는지를 화면이 알 길이 없다. 판금·사슬·가죽·유령 갑옷이 전부 `armor_1.png` 로 나온다.
- *   파일 이름은 이미 `base_id` 축이라, 개체가 베이스를 들게 되면 아래 표 한 줄만 걷으면 갈아탄다.
- * 목록에 없는 부위(투구·목걸이)는 `null` 이고 그 칸은 옛 이모지(`equip_slot.csv:icon`)로 떨어진다 —
- *   `skillIcon` 의 해시 폴백을 안 쓰는 이유는 `slotArt` 와 같다(틀린 그림 = 틀린 정보).
+ * `potionArt` 와 축이 다르다 — 저쪽은 **어느 물약인가**(id 마다 제 그림 · 틀리면 회복량을 잘못 읽는다),
+ *   이쪽은 **여기에 물약이 들어간다**는 칸의 말이라 티어를 안 가린다. `slotArt` 의 부위 실루엣과 같은 자리다.
+ * 그래서 파일명이 id 가 아니다 — `potion.csv` 에 `slot` 이라는 id 는 없고, 앞으로도 겹치지 않는다.
  */
-export const ITEM_ART_DIR = './assets/art/icons/items/';
-export const ITEM_ART_GROUPS = ['sword2h', 'axe', 'mace', 'spear', 'staff', 'orb', 'bow', 'crossbow'];
-export const ITEM_ART_BY_SLOT = { armor: 'armor_1', boots: 'boots_1', gloves: 'gloves_1', ring: 'ring_1' };   // ⚠ 임시
-export const ITEM_BASE_ART_DIR = './assets/art/icons/items/item_base/';   // 방어구 · 장신구 그림 — 파일명 = item_base.csv:base_id
+export const POTION_SLOT_ART = `${POTION_ART_DIR}slot.png`;
+/**
+ * 방어구 · 장신구 그림 — `icons/items/item_base/<base_id>.png` (2026-09-03 · **베이스 축으로 개정 2026-09-17** · SCREEN_DESIGN §2).
+ *
+ * 축은 `item_base.csv:base_id` 다 — 개체가 드롭 때 그 id 를 들고(`item.js:build` · INTERFACE 「item 객체」) 화면은 그대로 읽는다.
+ *   그래서 퀼티드와 더스크 슈라우드가 **다른 그림**이다. 옛 「부위당 한 장」 표(`ITEM_ART_BY_SLOT`)와
+ *   무기군 그림(`<group_id>.png` · `ITEM_ART_GROUPS`)은 2026-09-17 에 걷었다 — 파일 12장도 같이 지웠다(사용자 지시).
+ * 목록에 없는 베이스(투구 · 장갑 · 신발 · 장신구 전부)는 `null` 이고 그 칸은 부위 이모지(`equip_slot.csv:icon`)로 떨어진다 —
+ *   해시 폴백을 안 쓰는 이유는 `slotArt` · `potionArt` 와 같다(틀린 그림 = 틀린 정보).
+ * ⚠ **옛 세이브의 방어구는 `baseId` 가 없다** — 그 개체들도 이모지로 떨어진다(새로 먹는 것부터 그림이 붙는다).
+ */
+export const ITEM_BASE_ART_DIR = './assets/art/icons/items/item_base/';   // 파일명 = item_base.csv:base_id
+/** 그림이 있는 베이스 id — 그림이 오면 여기 한 줄 (`POTION_ART_IDS` 와 같은 문법) */
+export const ITEM_BASE_ART_IDS = ['armor_cloth', 'armor_robe_1', 'armor_robe_2', 'armor_robe_3',
+    'armor_light_1', 'armor_light_2', 'armor_light_3', 'armor_heavy_1', 'armor_heavy_2', 'armor_heavy_3',
+    // 투구 10 [2026-09-17] — 갈래 3(티아라 · 가죽 · 플레이트) × 티어 3 + 시작 하나 (item_design 「투구 갈래」)
+    'helmet_cloth', 'helmet_tiara_1', 'helmet_tiara_2', 'helmet_tiara_3',
+    'helmet_leather_1', 'helmet_leather_2', 'helmet_leather_3',
+    'helmet_plate_1', 'helmet_plate_2', 'helmet_plate_3'];
 /**
  * 무기 베이스 그림 — `icons/items/weapon_base/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 본편 열 전부.
  *   열 모두 `weapon_base.csv` 행이 서서 새 개체는 `baseId` 를 들고(아래 `itemArt`) 이름도 그 베이스다 (둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14).
@@ -371,10 +395,10 @@ export const itemArt = (slot, group, uid, baseId) => {
                 //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
                 return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}.png`;
         }
-        return ITEM_ART_GROUPS.includes(group) ? `${ITEM_ART_DIR}${group}.png` : null;
+        return null;   // 무기군 그림 8장은 2026-09-17 삭제 — 베이스 풀이 없는 무기군은 부위 이모지로 떨어진다
     }
-    const file = ITEM_ART_BY_SLOT[slot];
-    return file ? `${ITEM_BASE_ART_DIR}${file}.png` : null;
+    // 방어구 · 장신구 — 개체가 든 베이스의 그림. 그림이 없는 베이스는 `null` → 부위 이모지 (2026-09-17)
+    return baseId && ITEM_BASE_ART_IDS.includes(baseId) ? `${ITEM_BASE_ART_DIR}${baseId}.png` : null;
 };
 /* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의
    자리표시로 이모지(⚔ ⛨ ✦ 🏹 …)를 초상 **밑에 깔던** 방식이다. 영웅 그림이 배경 투명 PNG 이고
@@ -473,7 +497,8 @@ export const exploreMap = ch => (EXPLORE_MAP_CHAPTERS.includes(ch) ? BG_DIR + `e
  * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
-export const FACE_STYLES = ['cartoon', 'pixel16'];      // **첫 항목이 기본값이다** — 2026-08-31 cartoon 으로 교체 (사용자 지시)
+export const FACE_STYLES = ['cartoon'];      // **첫 항목이 기본값이다**. ~~`pixel16`~~ 은 폴더째 사라져 2026-09-17 에 뺐다 —
+// 목록이 하나면 도감의 고르개가 안 선다(app.js:faceStylePicker). 폴더를 새로 채우면 여기에 한 줄 더하는 것으로 되살아난다
 const FACE_STORE_KEY = 'thesevensim.faceStyle';
 
 let faceStyleCur = (() => {
