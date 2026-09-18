@@ -370,6 +370,8 @@ html, body { height: 100%; overflow: hidden; }
 }
 .panel > h2 small { text-align: right; }
 .panel > h2 small { color: var(--text-muted); font-size: var(--fs-xs); letter-spacing: 0; }
+/* 기본 옵션 제목의 죄종 칩 [2026-09-18 · ADR-0166] — 제목의 자간이 칩 글자까지 벌리지 않게 되돌린다 (small 과 같은 이유) */
+.panel > h2 .sin-chip { letter-spacing: 0; }
 
 .cols { display: grid; gap: 14px; }
 .cols.c2 { grid-template-columns: 1fr 1fr; }
@@ -482,6 +484,11 @@ html, body { height: 100%; overflow: hidden; }
     margin-left: auto; min-width: 0; max-width: 100%; flex: 0 0 auto;   /* 이름은 절대 안 줄어든다 (2026-09-09) */
     font-size: var(--fs-sm); font-weight: normal; line-height: 1.3;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* 위칸의 레벨 — 이름 바로 뒤 [2026-09-18 · ADR-0165]. 이름과 같이 **안 줄어든다** — 줄어드는 쪽은 「하는 일」 하나다 */
+.hs-lv {
+    flex: 0 0 auto; font-size: var(--fs-xs); color: var(--text-muted);
+    line-height: 1.3; white-space: nowrap;
 }
 
 
@@ -2109,7 +2116,8 @@ html, body { height: 100%; overflow: hidden; }
 }
 .login-page::before {
     content: ''; position: absolute; inset: 0; z-index: -2;
-    background: url('../assets/art/backgrounds/login.webp') center / cover no-repeat;
+    /* 거점(`#stage::before`)과 같이 스타일 폴더를 직접 박는다 — 로그인은 설정 이전이라 기본값 `illustrate` 고정 (2026-09-18) */
+    background: url('../assets/art/backgrounds/illustrate/background_stage_101.webp') center / cover no-repeat;
 }
 .login-page::after {
     content: ''; position: absolute; inset: 0; z-index: -1;

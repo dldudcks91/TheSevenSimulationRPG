@@ -25,7 +25,11 @@ SHEETS = {'human': 'source_sheet_human_wraith.png', 'skel': 'source_sheet_skelet
           'goblin_troop_2': 'source_sheet_goblin_troop_2.png', 'goblin_elite': 'source_sheet_goblin_elite.png',
           'skel_soldier': 'source_sheet_skeleton_soldier.png',
           'skel_soldier_2': 'source_sheet_skeleton_soldier_2.png',
+          'skel_soldier_3': 'source_sheet_skeleton_soldier_3.png',
           'legion': 'source_sheet_legion.png'}
+
+# 흰 배경으로 구워져 온 원본 — 초록 키잉이 안 먹는다(d=0 이라 전면이 불투명). 절차는 src/assets/art/README.md 「누끼」
+WHITE_BG = {'skel_soldier_3'}
 
 #                              sheet    tile crop                 ex   ey     k    idx   dx   dy
 SPEC = {
@@ -42,10 +46,12 @@ SPEC = {
  'goblin_helm_dark'        : ('goblin_troop_2', (1035, 0, 2048, 1013),    333.5, 245.7, 1.046, 1102, 70, 16),
  'goblin_skull_helm_dark'  : ('goblin_troop_2', (0, 1035, 1013, 2048),    296.8, 246.1, 1.037, 1103, 58, 20),
  'goblin_feather_skull_elite': ('goblin_elite', (0, 1035, 1013, 2048),   296.8, 246.1, 1.037, '1103_elite', 58, 20),   # 정예 — 기본판과 같은 구도라 같은 값 · 1-1 정예는 주술사뿐이라 1 · 2번 타일은 안 쓴다
- # 1-3 은 스켈레톤 병사 하나뿐이라 세 자리가 **같은 그림**이다 (2026-09-18 사용자 지시 — 시트 1번 타일)
- 'skeleton_bare_chainmail_1301': ('skel_soldier_2', (0, 0, 506, 506),    329.5, 266.5, 1.122, 1301, 47, 30),
- 'skeleton_bare_chainmail_1302': ('skel_soldier_2', (0, 0, 506, 506),    329.5, 266.5, 1.122, 1302, 47, 30),
- 'skeleton_bare_chainmail_1303': ('skel_soldier_2', (0, 0, 506, 506),    329.5, 266.5, 1.122, 1303, 47, 30),
+ # 1-3 은 스켈레톤 병사 하나뿐이라 세 자리가 **같은 그림**이다 (2026-09-18 사용자 지시)
+ # 3차 판은 시트가 아니라 흰 배경 단일 초상 · 2차 판의 두개골을 그대로 두고 몸만 갈비뼈로 바꾼 편집본이라
+ # 눈 중점(303, 245)이 2차 판과 같고 배율이 1.0 이다
+ 'skeleton_bare_ribcage_1301': ('skel_soldier_3', (0, 0, 2048, 2048),   303.0, 245.0, 1.0, 1301, 47, 30),
+ 'skeleton_bare_ribcage_1302': ('skel_soldier_3', (0, 0, 2048, 2048),   303.0, 245.0, 1.0, 1302, 47, 30),
+ 'skeleton_bare_ribcage_1303': ('skel_soldier_3', (0, 0, 2048, 2048),   303.0, 245.0, 1.0, 1303, 47, 30),
  'orc_helm_tusk_pauldron'  : ('orc_troop_2', (0, 0, 506, 506),   317, 217, 1.35, 2101,   0,   4),
  'orc_hood_braid_quiver'   : ('orc_troop_2', (518, 0, 1024, 506),309, 220, 1.31, 2102,   0,   4),
  'orc_coral_skull_crown'   : ('orc_troop_2', (0, 518, 506, 1024),309, 214, 1.22, 2103,   0,   4),
@@ -72,6 +78,32 @@ def key_green(tile):
     return Image.fromarray(a.astype(np.uint8))
 
 
+def key_white(tile):
+    """흰 배경 원본 누끼 — near-white 판정 + 테두리 flood fill + 닫힌 흰 포켓(300px 이상) 제거.
+    투명 픽셀의 흰 RGB 가 번지지 않게 여기서 premultiplied 로 S 까지 줄여 돌려준다(build 의 resize 는 그대로 통과)."""
+    a = np.array(tile.convert('RGBA')).astype(int)
+    rgb = a[:, :, :3]
+    m = Image.fromarray((((rgb.min(2) >= 225) & (rgb.max(2) - rgb.min(2) <= 18)).astype(np.uint8)) * 255).copy()
+    W, H = m.size
+    for xy in [(x, 0) for x in range(W)] + [(x, H - 1) for x in range(W)] + [(0, y) for y in range(H)] + [(W - 1, y) for y in range(H)]:
+        if m.getpixel(xy) == 255:
+            ImageDraw.floodfill(m, xy, 128)                 # 가장자리에 닿은 흰색 = 바깥 배경
+    while True:                                             # 테두리와 안 닿는 흰 포켓 — 300px 이상이면 배경, 작으면 하이라이트라 남긴다
+        mm = np.array(m); ys, xs = np.where(mm == 255)
+        if len(ys) == 0:
+            break
+        x, y = int(xs[0]), int(ys[0]); n0 = int((mm == 255).sum())
+        ImageDraw.floodfill(m, (x, y), 64)
+        if n0 - int((np.array(m) == 255).sum()) >= 300:
+            ImageDraw.floodfill(m, (x, y), 128)
+    al = np.where(np.array(m) == 128, 0., 255.)
+    a[:, :, 3] = (al + np.roll(al, 1, 0) + np.roll(al, -1, 0) + np.roll(al, 1, 1) + np.roll(al, -1, 1)) / 5   # 경계 1px 페더
+    ca = a.astype(float); f = ca[:, :, 3:4] / 255
+    pm = Image.fromarray(np.concatenate([ca[:, :, :3] * f, ca[:, :, 3:4]], 2).astype(np.uint8)).resize((S, S), Image.LANCZOS)
+    p = np.array(pm).astype(float); a2 = np.maximum(p[:, :, 3:4], 1)
+    return Image.fromarray(np.concatenate([np.clip(p[:, :, :3] * 255 / a2, 0, 255), p[:, :, 3:4]], 2).astype(np.uint8))
+
+
 def fill_holes(tile, box):
     a = np.array(tile)
     m = Image.fromarray(np.where(a[:, :, 3] < 250, 255, 0).astype(np.uint8)).copy()   # fromarray 그대로면 floodfill 이 안 먹는다(Pillow 11 · 읽기 전용 버퍼)
@@ -91,7 +123,8 @@ def fill_holes(tile, box):
 def build(name, eye=EYE):
     sheet_key, box, ex, ey, k, idx, dx, dy = SPEC[name]
     sheet = Image.open(ART + SHEETS[sheet_key]).convert('RGBA')
-    tile = key_green(sheet.crop(box)).resize((S, S), Image.LANCZOS)   # 좌표를 읽은 공간
+    keyer = key_white if sheet_key in WHITE_BG else key_green
+    tile = keyer(sheet.crop(box)).resize((S, S), Image.LANCZOS)   # 좌표를 읽은 공간
     if name in FILL:
         tile = fill_holes(tile, FILL[name])
     n = round(S * k)

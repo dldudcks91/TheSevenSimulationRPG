@@ -106,6 +106,7 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?flash=<i18n 키>` | **플래시가 떠 있는 화면** (SCREEN_DESIGN §2 · ADR-0113) — `?dev=` · `?tab=` 에 겹쳐 쓴다(예: `?dev=newgame&tab=tavern&flash=tv.hired` · 창 위는 `?dev=tree&flash=sk.err.points`). `{name}` 에는 로스터 첫 영웅. 기본은 멈춰 선다(스크린샷) · `&hold=0` 이면 제 시간에 사라진다(덤프로 확인) · ⚠ `?dev=play` 는 `&tab=` 을 줄 때만 닿는다 |
 | `?tab=<탭>` | 탭 바로 열기 — **탭 10** (2026-09-08): `expedition` · `character` · `forge`(강화) · `tavern` · `shop`(상점) · `resource`(자원) · `explore`(탐험) · `research` · `codex` · `help`. ⚠ 옛 이름 둘은 **죽었다**(무시하고 원정으로 연다) — `town`(09-04 자원·탐험으로 갈림) · `imagedex`(09-08 도감에 흡수 — SCREEN_DESIGN §9). 세이브가 없으면 `?dev=newgame&tab=forge` 처럼 겹쳐 쓴다. ⚠ `?dev=forge` · `?dev=trade` 는 **삭제**됐다 — 강화·상점이 탭이 되어 `?tab=` 이 바로 닿는다. **`&fg=make\|up\|craft`** 는 제련소의 작업 탭을 고른 채 연다 (2026-09-15 · ADR-0142) · **`&rs=research\|tactics`** 는 연구 탭의 위쪽 탭을 고른 채 연다 (2026-09-15 · ADR-0145) · **`&rsl=col\|row`** 는 연구의 배치(세로 · 가로)를 고른 채 연다 (2026-09-15 · ⚠ 비교용 — 하나로 정해지면 걷는다) |
 | `?cx=monster\|character\|item\|skill` | 도감의 세그먼트 (SCREEN_DESIGN §9 · §9-1) — `?tab=codex&cx=skill` 처럼 겹쳐 쓴다. 기본값 `monster`. ⚠ 옛 이름 `?ix=character\|item` 은 09-08 에 이미지 도감 탭과 함께 죽었다 |
+| `?cxg=normal\|elite` | 도감 몬스터 카드의 **초상 등급** (SCREEN_DESIGN §9 · ADR-0167) — `?tab=codex&cxg=elite` 처럼 겹쳐 쓴다. 기본값 `normal`. 정예 전용 초상(`monster.csv:face_elite` 가 1)이 있는 몬스터만 얼굴이 갈린다 |
 | `?face=<스타일>` | 몬스터 얼굴 아트 스타일 교체 — `src/assets/art/faces/<스타일>/`. 목록은 `ui/mock.js:FACE_STYLES` · localStorage 에 남는다 |
 | `?bg=<스타일>` | **스테이지 배경 아트 스타일 교체** [2026-09-16] — `src/assets/art/backgrounds/<스타일>/`. 목록은 `ui/mock.js:BG_STYLES`(**`illustrate` 정식** · `pixel` 비교용 · ADR-0152) · `?face=` 와 같이 localStorage 에 남는다. ⚠ 그 스타일에 그림이 없는 스테이지는 그라디언트로 떨어진다(두 스타일 다 챕터 1~3 뿐) · **거점 배경 · 탐험 지도는 스타일을 안 탄다** |
 
@@ -196,4 +197,4 @@ $h = Get-Content "$env:TEMP\dom.html" -Raw -Encoding UTF8; if ($h -match '<title
 옛 측정표(2026-08-27 ~ 09-10)는 [DEV_LOG.md §3](../../docs/client/DEV_LOG.md) 로 옮겼다 — 새로 재면 이 절을 **갈아 끼운다**(옛 표를 「직전 측정」으로 남기지 않는다 · [DEV_PLAN.md §7](../../docs/client/DEV_PLAN.md)).
 
 ---
-*마지막 업데이트: 2026-09-17*
+*마지막 업데이트: 2026-09-18*

@@ -283,6 +283,9 @@ const state = {
     // 도감 세그먼트 (SCREEN_DESIGN §9) — monster | character | item | skill. 09-08 에 이미지 도감이 흡수되며 값이 둘에서 넷이 됐다.
     // 얼굴 스타일은 여기 안 둔다 — 전역이다(`?face=` · localStorage · mock.js:setFaceStyle)
     codexSeg: 'monster',
+    // 도감 몬스터 세그먼트가 그리는 초상의 등급 (SCREEN_DESIGN §9 · ADR-0167) — normal | elite.
+    // 고르개 하나가 **전 카드를 한 번에** 뒤집는다 · 정예 전용 초상이 있는 몬스터만 얼굴이 갈린다(`monster.csv:face_elite`) · 세이브 아님
+    codexGrade: 'normal',
     bagTab: 'equip',              // 가방의 최상위 축 — 'equip' | 'material' (ADR-0133)
     roll: 1, candidates: [], confirmOverwrite: false,
     salvageMode: false,
@@ -1973,10 +1976,13 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
         //   `tip: false` 면 안 건다 — 캐릭터 탭은 같은 값이 바로 아래 네 칸에 있고 뜬 카드가 그 칸을 덮는다 (2026-09-15 사용자 지시 · ADR-0116)
         //   유닛 툴팁은 **카드 옆**에 선다 — 관전 카드와 같은 규칙 (2026-09-15 · ADR-0120)
         if (tip) bindTipNode(c, () => heroTipCard(h, combatOf(h)), { anchor: true });
+        // 위칸 오른쪽은 **이름 + 레벨**이다 [2026-09-18 사용자 지시 · ADR-0165] — 레벨이 이름 뒤에 붙고 두 띠가 같다.
+        //   줄어드는 쪽은 여전히 「하는 일」 하나다 — 레벨은 두세 글자라 줄일 것이 없다
         c.innerHTML = `
             <div class="hs-band">
                 <span class="hs-doing ${doing.cls}">${doing.text}</span>
                 <b class="hs-name">${L(h.name)}</b>
+                <span class="hs-lv">${t('ch.lv', { n: h.level })}</span>
             </div>
             ${heroFace(h)}
             ${h.uid === leaderUid ? `<span class="hs-leader">${t('exp.leader')}</span>` : ''}`;
@@ -2077,7 +2083,9 @@ function gearPanel(h) {
 /** ②-2 기본 옵션 — 맨 위 레벨 · 경험치 + 기본 능력치 7 막대 + 그 아래 현재 스킬(액티브 3, 정사각 카드). 옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (2026-08-27) */
 function attrPanel(h) {
     const p = el('div', 'panel');
-    p.appendChild(el('h2', '', t('ch.attr.h')));
+    // 제목 오른쪽 끝에 **죄종 칩** [2026-09-18 사용자 지시 · ADR-0166] — 글자 · 테두리가 그 죄종 색(후보 카드 칩과 같은 문법 · ADR-0155).
+    //   `.panel > h2` 가 이미 space-between 이라 제목을 span 으로 감싸면 칩이 오른쪽 끝에 선다
+    p.appendChild(el('h2', '', `<span>${t('ch.attr.h')}</span><span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span>`));
     p.appendChild(xpBlock(h));
     const box = el('div', 'attr-list');
     // 줄 조립은 유닛 툴팁과 같은 함수다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 (tip.js · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114)
@@ -3454,14 +3462,15 @@ function stageBonus(stage) {
     return { total, complete };
 }
 
-function monsterCard(m) {
+/** 카드 하나 — `grade` 는 초상만 가른다(수치는 몬스터 하나의 집계다 · ADR-0167) */
+function monsterCard(m, grade) {
     const cum = codexCum();
     const lv = codexLv(m.cards);
     const maxLv = cum.length;
     const next = cum[lv] ?? null;
     const prev = lv > 0 ? cum[lv - 1] : 0;
     const pct = next ? Math.min(100, (m.cards - prev) / (next - prev) * 100) : 100;
-    const src = monsterFace(m.id);
+    const src = monsterFace(m.id, grade);
     const name = L(monsterName(m.id));
     const c = sinColor(monsterSin(m.id));
     // 초상 밑에 아무것도 깔지 않는다 — 아트가 없으면 빈 원이다 (2026-09-06 사용자 지시 · faceChip 과 같은 규칙).
@@ -3493,6 +3502,8 @@ function monsterCard(m) {
 
 /* 세그먼트 넷 — 순서는 SCREEN_DESIGN §9 의 표와 같다. 몬스터만 수집 화면이고 나머지 셋은 자산 훑기다(§9-1) */
 const CODEX_SEGS = ['monster', 'character', 'item', 'skill'];
+/** 몬스터 카드의 초상 등급 — 라벨은 관전 카드가 쓰는 `kind.*` 를 그대로 부른다 (ADR-0167 · 문구를 새로 안 쓴다) */
+const CODEX_GRADES = ['normal', 'elite'];
 
 /**
  * 도감 (SCREEN_DESIGN §9 · 개정 2026-09-08 사용자 지시 — 「이미지 도감」 탭 흡수).
@@ -3536,6 +3547,10 @@ function codexMonster(p) {
     // 오른쪽에 죄종 + 얼굴 스타일 — 여기가 몬스터 초상을 가장 크게 그리는 화면이라 스타일 고르개가 같이 선다 (§9)
     const right = el('div', 'ix-style');
     right.appendChild(el('span', 'muted', `${t('cx.sinLabel')} <b style="color:${sinColor(ch.sin)}">${sinName(ch.sin)}</b>`));
+    // 일반 / 정예 — **전 카드가 한 번에** 갈리고, 바뀌는 것은 초상뿐이다 (ADR-0167).
+    //   전용 초상이 없는 몬스터 · 보스는 두 쪽이 같은 얼굴이다(`monsterFace` 가 기본으로 떨어뜨린다)
+    right.appendChild(segmented(CODEX_GRADES.map(id => ({ id, label: t(`kind.${id}`) })), state.codexGrade,
+        id => { state.codexGrade = id; render(); }));
     faceStylePicker(right);
     bar.appendChild(right);
     p.appendChild(bar);
@@ -3557,7 +3572,7 @@ function codexMonster(p) {
                 <div class="cs-title"><span class="muted">${stage.num}</span> ${L(stage.name)}</div>
                 <div class="cs-gain">${gain}</div>
             </div>
-            <div class="mon-strip">${stage.monsters.map(m => monsterCard(m)).join('')}</div>`;
+            <div class="mon-strip">${stage.monsters.map(m => monsterCard(m, state.codexGrade)).join('')}</div>`;
         body.appendChild(row);
     }
 }
@@ -3876,6 +3891,9 @@ async function boot() {
     // 옛 이름 `?ix=character|item` 은 이미지 도감 탭과 함께 죽었다 (2026-09-08)
     const cx = new URLSearchParams(location.search).get('cx');
     if (CODEX_SEGS.includes(cx)) state.codexSeg = cx;
+    // 초상 등급도 고르개(클릭)로만 바뀐다 — 같은 이유로 길을 낸다 (ADR-0167)
+    const cxg = new URLSearchParams(location.search).get('cxg');
+    if (CODEX_GRADES.includes(cxg)) state.codexGrade = cxg;
     // 프롤로그는 새 게임 확정 버튼으로만 닿는 화면이라 헤드리스가 들어올 길을 따로 낸다 (SCREEN_DESIGN §10).
     //   `&s=n` 은 n번째 씬 — 마지막 씬에만 인용·챕터 줄이 서므로 그 상태에도 길이 있어야 한다
     if (dev === 'prologue') {

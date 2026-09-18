@@ -352,13 +352,18 @@ function slot({ raw, part, unit = UNIT.none, head, show = num, term }, R) {
     const k = unit === UNIT.pct ? M.pctNum : v => v;
     if (!part) return unit(hl(show(k(raw))));
     const back = term ?? ((x, wrap) => ` + ${abbrOf(x.attr)} × ${wrap(String(k(x.coef)))}`);
+    // 계수 0 인 슬롯은 값에 아무것도 안 더한다 — 식에서 뺀다(`+ VIT × 0` 은 잡음이다 · 밸런스가 채우면 다시 선다).
+    //   뒤 항을 넘겨받은 자리(피해 · 회복 · 벽)는 계수 칸을 안 읽으므로 거르지 않는다 (ADR-0164)
+    const terms = term ? part.terms : part.terms.filter(x => x.coef !== 0);
     const fx = wrap => `(${head ? head(wrap) : wrap(num(k(Math.abs(part.raw))))}`
-        + part.terms.map(x => back(x, wrap)).join('') + ')';
+        + terms.map(x => back(x, wrap)).join('') + ')';
+    // 항이 다 빠지면 괄호 안이 원값 하나라 식이 아니다 — 슬롯이 없는 자리와 같이 찍는다(첫 항이 따로 있는 자리는 제외)
+    if (!head && !terms.length) return unit(hl(show(k(Math.abs(part.value ?? part.raw)))));
     // 값 없음 — 식이 숫자 자리를 **대신**한다. 흐리게 두지 않고 식 속 숫자를 강조한다(흐리면 문장의 강조가 쿨 하나만 남는다)
     if (part.value == null) return unit(fx(hl));
     // 피해 · 회복량은 범위 객체 `{min, max}` 로 온다(R90) — 절댓값을 안 씌우고 `show` 가 범위를 푼다
     const v = unit(hl(show(typeof part.value === 'object' ? part.value : k(Math.abs(part.value)))));
-    if (!part.terms.length) return v;
+    if (!terms.length) return v;
     R.fx = true;
     return R.alt ? `${v} <span class="tip-fx">${fx(x => x)}</span>` : v;
 }

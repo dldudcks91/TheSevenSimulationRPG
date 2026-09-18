@@ -9,10 +9,10 @@
 
 | 자리 | 쓰는 곳 |
 |---|---|
-| `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 15장(Ch1~Ch3 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] |
+| `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 15장(Ch1~Ch3 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] · `background_stage_101.webp` 은 **로그인 첫 화면 배경도 겸한다** — 로그인은 스타일 설정 이전이라 CSS 가 이 폴더를 직접 박는다(거점 `pixel/town.webp` 와 같은 예외 · 2026-09-18 사용자 지시) |
 | `pixel/` | **스테이지 배경 설치본 — 도트 스타일** 15장(Ch1~Ch3) + `town.webp`(앱 전역 배경 · 한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110). **비교용으로 남긴다**(`?bg=pixel`) · 거점 배경은 스타일을 안 타고 늘 여기서 읽는다 |
 | `explore_chapter_1.webp` | **탐험 탭 — 챕터 1 지도** ⚠ 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
-| `login.webp` | **로그인 첫 화면 전용 배경** — 원본 `source/illustrate/Gemini_Generated_Image_vrizszvrizszvriz.png`을 크롭 없이 RGB WebP q92로 설치. 로그인 뒤 화면에서는 읽지 않는다 |
+| `login.webp` | **지금은 아무도 안 읽는다** [2026-09-18 사용자 지시] — 로그인 화면이 스테이지 1-1 그림(`illustrate/background_stage_101.webp`)을 그대로 깔게 바뀌었다. 원본은 `source/illustrate/Gemini_Generated_Image_v1efev1efev1efev.png`(성벽에 일곱 깃발)이고, 크롭 없이 RGB WebP q92 로 설치해 둔 사본이 남아 있다 |
 | `source/pixel/` · `source/illustrate/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 워터마크 띠를 잘라 만든다 (아래) |
 
 파일명의 숫자는 `stage.csv` 의 stage_id 다 — 스테이지와 배경이 id로 1:1 대응한다.
@@ -528,4 +528,4 @@ icons/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-09-17*
+*마지막 업데이트: 2026-09-18*

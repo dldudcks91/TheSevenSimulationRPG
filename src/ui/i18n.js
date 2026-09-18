@@ -919,7 +919,7 @@ const STRINGS = {
         en: 'Always on — {e} for the whole party',
     },
     /* 소환 — {d} = 벽의 HP [개정 2026-09-10 · ADR-0089] — ~~최대 HP 의 {h}%~~ 를 값으로 바꿨다(능력치 항이 더해져 % 한 줄로 안 읽힌다).
-       값을 모르면 {d} 가 식(`(최대 HP × 80% + INT × 0)`)이 된다 */
+       값을 모르면 {d} 가 식(`(최대 HP × 80% × INT)`)이 된다 (뒤 항은 ADR-0164 로 `× 약어`) */
     'sk.line.summon': {
         ko: '{n}초마다 {d} 의 HP 를 가진 벽을 세워 적의 공격을 나눠 받는다',
         en: 'Every {n}s, raises a wall with {d} HP that soaks enemy attacks',
