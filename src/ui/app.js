@@ -2037,10 +2037,12 @@ function paperdoll(h) {
             if (it) cell.style.borderColor = rarity(it.rarity).color;
             // 칸에는 글자가 없다 [2026-09-15 사용자 지시 · ADR-0122] — 부위는 실루엣이, 찬 칸은 그림과 툴팁이 말한다.
             //   부위 이름은 **빈 칸만** `title` 로 든다 — 찬 칸에 달면 아이템 툴팁 위에 브라우저 기본 툴팁이 겹친다
-            //   **예외 하나 — 아이템 레벨**이 찬 칸 오른쪽 아래에 선다 [2026-09-18 사용자 지시 · ADR-0168]:
-            //   그림도 칸 자리도 대신 말해 주지 못하는 개체값이라, 가방 칸과 견주려면 여기도 들어야 한다
+            //   **예외 — 찬 칸은 가방 칸과 같은 모서리 배지 둘**을 든다 [2026-09-18 사용자 지시]: 오른쪽 위 강화 `+n`(ADR-0169 · 0 이면 안 선다) ·
+            //   오른쪽 아래 아이템 레벨(ADR-0168). 둘 다 그림도 칸 자리도 대신 말해 주지 못하는 개체값이라, 가방 칸과 견주려면 여기도 들어야 한다
+            const us = it ? SYS.game.upgradeState(G, it.uid) : null;
             cell.innerHTML = (art ? `<span class="pd-art"><img src="${art}" alt="" loading="lazy" onerror="this.remove()"></span>`
                 : `<div class="pd-icon">${it ? itemImg(it) : def.icon}</div>`)
+                + (us && us.up > 0 ? `<span class="pd-up">+${us.up}</span>` : '')
                 + (it ? `<span class="pd-lv">${t('ch.itemLv', { n: it.ilvl })}</span>` : '');
             cell.setAttribute('aria-label', L(def));
             if (!it) cell.title = L(def);

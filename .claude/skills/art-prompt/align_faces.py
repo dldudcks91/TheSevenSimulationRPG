@@ -10,7 +10,7 @@ monster_idx 자리에 `'3201_elite'` 처럼 문자열을 넣으면 그 이름으
     python - <<'X'
     import sys; sys.path.insert(0, '.claude/skills/art-prompt')
     from align_faces import build, SPEC
-    for n in SPEC:
+    for n in (*SPEC, *READY):
         img, idx = build(n); img.save('src/assets/art/faces/cartoon/monster/%s.png' % idx)
     X
 """
@@ -46,12 +46,8 @@ SPEC = {
  'goblin_helm_dark'        : ('goblin_troop_2', (1035, 0, 2048, 1013),    333.5, 245.7, 1.046, 1102, 70, 16),
  'goblin_skull_helm_dark'  : ('goblin_troop_2', (0, 1035, 1013, 2048),    296.8, 246.1, 1.037, 1103, 58, 20),
  'goblin_feather_skull_elite': ('goblin_elite', (0, 1035, 1013, 2048),   296.8, 246.1, 1.037, '1103_elite', 58, 20),   # 정예 — 기본판과 같은 구도라 같은 값 · 1-1 정예는 주술사뿐이라 1 · 2번 타일은 안 쓴다
- # 1-3 은 스켈레톤 병사 하나뿐이라 세 자리가 **같은 그림**이다 (2026-09-18 사용자 지시)
- # 3차 판은 시트가 아니라 흰 배경 단일 초상 · 2차 판의 두개골을 그대로 두고 몸만 갈비뼈로 바꾼 편집본이라
- # 눈 중점(303, 245)이 2차 판과 같고 배율이 1.0 이다
+ # 1301 은 기준 맨몸 해골. 1302·1303 은 아래 READY 에 든 생성 변주다.
  'skeleton_bare_ribcage_1301': ('skel_soldier_3', (0, 0, 2048, 2048),   303.0, 245.0, 1.0, 1301, 47, 30),
- 'skeleton_bare_ribcage_1302': ('skel_soldier_3', (0, 0, 2048, 2048),   303.0, 245.0, 1.0, 1302, 47, 30),
- 'skeleton_bare_ribcage_1303': ('skel_soldier_3', (0, 0, 2048, 2048),   303.0, 245.0, 1.0, 1303, 47, 30),
  'orc_helm_tusk_pauldron'  : ('orc_troop_2', (0, 0, 506, 506),   317, 217, 1.35, 2101,   0,   4),
  'orc_hood_braid_quiver'   : ('orc_troop_2', (518, 0, 1024, 506),309, 220, 1.31, 2102,   0,   4),
  'orc_coral_skull_crown'   : ('orc_troop_2', (0, 518, 506, 1024),309, 214, 1.22, 2103,   0,   4),
@@ -61,12 +57,19 @@ SPEC = {
  'skeleton_bloodied_greathelm': ('skel_el', (0, 1035, 1013, 2048), 317.0, 255.1, 1.004, '3203_elite', 50, 30),  # 정예 — 3203 에 맞춤
  'dullahan_skull_in_hand'  : ('dullahan', (516, 0, 1024, 508),  169.0, 285.5, 1.25, 1350, -31,  35),  # 머리를 손에 든 구도 — 두개골을 왼쪽에 둬야 빈 목·척추가 원 안에 든다
 }
+# 이미 투명 배경으로 생성된 단일 초상 — (원본 파일, 설치 크기, 설치 위치, monster idx).
+# 크기·위치는 1301 의 두개골 크기와 눈높이를 기준으로 화면에서 맞췄다.
+READY = {
+ 'skeleton_bare_longskull_1302': ('skeleton_bare_longskull.png', 486, (13, 26), 1302),
+ 'skeleton_bare_roundskull_1303': ('skeleton_bare_roundskull.png', 461, (25, 51), 1303),
+}
 # 인물 안에 갇힌 초록(발광 등)이 키잉에 뚫린 자리를 메운다 — 512 타일 좌표 상자 안에서, 바깥 배경과 이어지지 않고
 # 빨강·파랑이 남아 있는(max(r,b) >= 60) 반투명만. 배경 초록(r·b ≈ 0~25)이 이빨 사이처럼 갇힌 틈은 그대로 비운다
 FILL = {'goblin_feather_skull_elite': (395, 30, 480, 160)}   # 지팡이 두개골 입속 룬 빛
 EYE = (256, 215)     # 눈 중심이 앉을 자리 (dx/dy 를 더하면 실효 y ≈ 240)
 S = 512
 ART = 'src/assets/art/faces/source/sheets/'   # 원본 시트 — 2026-09-16 정리로 sheets/ 아래로 내려갔다
+READY_ART = 'src/assets/art/faces/source/monster/'
 
 
 def key_green(tile):
@@ -121,6 +124,17 @@ def fill_holes(tile, box):
 
 
 def build(name, eye=EYE):
+    if name in READY:
+        filename, n, xy, idx = READY[name]
+        tile = Image.open(READY_ART + filename).convert('RGBA')
+        ca = np.array(tile).astype(float); al = ca[:, :, 3:4] / 255
+        pm = Image.fromarray(np.concatenate([ca[:, :, :3] * al, ca[:, :, 3:4]], 2).astype(np.uint8))
+        pm = np.array(pm.resize((n, n), Image.LANCZOS)).astype(float)
+        a2 = np.maximum(pm[:, :, 3:4], 1)
+        fitted = Image.fromarray(np.concatenate([np.clip(pm[:, :, :3] * 255 / a2, 0, 255), pm[:, :, 3:4]], 2).astype(np.uint8))
+        canvas = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+        canvas.alpha_composite(fitted, xy)
+        return canvas, idx
     sheet_key, box, ex, ey, k, idx, dx, dy = SPEC[name]
     sheet = Image.open(ART + SHEETS[sheet_key]).convert('RGBA')
     keyer = key_white if sheet_key in WHITE_BG else key_green
