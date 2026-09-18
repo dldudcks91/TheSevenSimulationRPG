@@ -11,10 +11,10 @@
  * skill_design.md / battle_design.md 확정 규칙:
  *   · 공격 대상 4종(skill_design §9-3) — 단일 다단 · 광역 전원 · 순환 · 연쇄 감쇠.
  *     시작점을 굴리는 둘(순환·연쇄)은 rng 를 **정확히 1회** 쓴다 — 발화 순서가 곧 계약이다 (INTERFACE §5-2)
- *   · **스킬 타격은 능력치 항·추가 피해를 싣는다** (skill_design §13 · 2026-09-10) — 핸들러가 받는 `def` 는 `scaleDef` 를 지난
- *     실효 정의이고 타격마다 `{flat, procChance, procMult}` 를 `rt.strikeOnce` 에 넘긴다. 광역(`enemy_all`)은 `decay` 가 있으면 **주 대상 밖**이 약해진다
+ *   · **스킬 타격은 능력치 계수·추가 피해를 싣는다** (skill_design §13 · 2026-09-10 · 계수 곱 2026-09-18) — 핸들러가 받는 `def` 는 `scaleDef` 를 지난
+ *     실효 정의이고 타격마다 `{statMult, procChance, procMult}` 를 `rt.strikeOnce` 에 넘긴다. 광역(`enemy_all`)은 `decay` 가 있으면 **주 대상 밖**이 약해진다
  *   · 버프 창(battle_design §7) — 중첩 없음. 같은 stat 의 서로 다른 창은 **덧셈**이고 파생값을 다시 쓴다
- *   · `atk_pct` 는 새 곱셈 층이 아니라 상시 % 와 **같은 괄호에 덧셈**이다 (battle_design §9-2 「괄호는 둘뿐」).
+ *   · `atk_pct` 는 새 곱셈 층이 아니라 **데미지 % 괄호에 덧셈**이다 (battle_design §9-1 · 괄호 하나 2026-09-18).
  *     회복 밑수(`matkMin`·`matkMax`)도 같은 괄호를 탄다 — 공격 창이 회복만 비껴가면 같은 괄호가 아니다 · 범위 양끝마다 (R90)
  *   · `period_pct` 는 **다음 차례 예약부터** 걸린다 — 이미 잡힌 `next` 는 건드리지 않는다 (INTERFACE §2-6)
  *   · 발동 조건(skill_design §9-3) — 거짓이면 **준비된 것으로 치지 않는다**(쿨은 그대로, 그 차례엔 다른 것이 나간다)
@@ -31,14 +31,16 @@
  *   `aura`   — 쿨 없이 상시 · 한 번에 하나 · **행동을 안 먹는다** (skill_design §1-5). 액티브 칸에서 빠져
  *              전투 시작에 `until: Infinity` 창으로 걸린다 — 켜는 주체는 battle.js 다
  *   `summon` — **HP 를 가진 유닛**을 세운다 (skill_design §12-6 프로즌월). 행동하지 않고 대상 풀에만 들어간다
+ *   `call`   — **불러내기** — 시전자의 무리(`band`) 중 서 있지 않은 것을 **한 번에 전부** 세운다 (skill_design §12-9 · 2026-09-18).
+ *              벽과 달리 진짜 몬스터다 · **몬스터 전용**(`owner_kind = monster`) · 세우는 일은 battle.js(`callBand`)가 한다
  */
-export const KINDS = ['attack', 'heal', 'buff', 'aura', 'summon'];
+export const KINDS = ['attack', 'heal', 'buff', 'aura', 'summon', 'call'];
 
 /**
- * 스킬 타격이 `strike` 에 싣는 셋 — 능력치 항 · 추가 피해 확률 · 배수 (battle_design §9-2 · 2026-09-10).
- * `def` 가 `scaleDef` 를 안 지난 원시 정의여도 `flat` 은 0 으로 읽는다. 기본 공격은 이것을 안 만든다
+ * 스킬 타격이 `strike` 에 싣는 셋 — 능력치 계수 · 추가 피해 확률 · 배수 (battle_design §9-2 · 2026-09-10 · 계수 곱 2026-09-18).
+ * `def` 가 `scaleDef` 를 안 지난 원시 정의여도 `statMult` 는 1 로 읽는다. 기본 공격은 이것을 안 만든다(메인 스탯 계수를 쓴다)
  */
-const skillHit = def => ({ flat: def.flat ?? 0, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0 });
+const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0 });
 
 /**
  * 공격 대상 4종 — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
@@ -144,7 +146,9 @@ export const EFFECTS = {
     // 공격력 · 회복 밑수는 **범위**다 — 양끝에 같은 배율을 곱한다 (R90)
     atk_pct: {
         derive: (u, sum) => {
-            const mult = 1 + u.atkPct + sum;
+            // 괄호 안의 지금 합 — `strike` 가 타격마다 조건부 % 를 이 괄호에 끼울 때 읽는다 (battle_design §9-1 · 2026-09-18)
+            u.dmgPct = u.atkPct + sum;
+            const mult = 1 + u.dmgPct;
             u.atkMin = u.atkMinBase * mult; u.atkMax = u.atkMaxBase * mult;
             u.matkMin = u.matkMinBase * mult; u.matkMax = u.matkMaxBase * mult;
         },
@@ -216,6 +220,9 @@ export const EFFECT_STATS = Object.keys(EFFECTS);
 export const CONDITIONS = {
     buff_absent: (def, ctx) => !(ctx.self.buffs && ctx.self.buffs[def.id]),
     ally_hp_below: (def, ctx) => (ctx.allies ?? []).some(a => a.hp > 0 && a.hp / a.hpMax < def.condValue),
+    // 무리 중 서 있지 않은 것(아직 안 나왔거나 쓰러진 것)이 있다 — 불러내기(`call`)의 조건 (2026-09-18 · INTERFACE §2-8).
+    //   무리가 없는 유닛은 늘 거짓이다 — 소환사 규칙이 안 걸린 판에서는 이 스킬이 안 나간다
+    band_missing: (def, ctx) => (ctx.self.band ?? []).some(m => !m.called || m.hp <= 0),
 };
 
 export const CONDITION_IDS = Object.keys(CONDITIONS);

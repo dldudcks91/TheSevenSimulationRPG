@@ -35,7 +35,8 @@ const el = (tag, cls, html) => {
 /* 스킬 아이콘 그림 — `app.js`·`battle.js` 와 같은 규칙 (SCREEN_DESIGN §2 · 규칙은 `mock.skillIcon` 한 곳) */
 const skillImg = s => {
     const src = M.skillIcon(s?.id);
-    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
+    // 제 그림이 없는 스킬은 **검은 칸** — 남의 그림을 안 빌린다 (2026-09-18 · ADR-0162). 스킬이 없는 칸(`s` 없음)은 그대로 빈다
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : s?.id ? '<i class="sk-noart"></i>' : '';
 };
 
 /* ───────── 기계장치 ───────── */
@@ -191,11 +192,12 @@ export const sheetStats = () => D.combatStats.filter(s => s.impl).sort((a, b) =>
  * @param c    computeCombat 모양 — 영웅 `game.heroCombat` · 몬스터 `round` 이벤트의 `sheet`. 없으면 전 행이 흐린 `—`
  */
 export function sheetRowsHtml(rows, c) {
-    const resCap = SYS.formula.resCap(c?.res_max_bonus ?? 0);
+    // 저항 행의 상한 = 기본 + 최대 저항 증가 + **그 원소의** 최대 저항 증가(투구 시기 칸 · `res_max_el` · 2026-09-18) — 곡선은 `formula.resCap` 하나다
+    const resCap = id => SYS.formula.resCap(c?.res_max_bonus ?? 0, c?.res_max_el?.[id.slice(4)] ?? 0);   // `res_fire` → `fire`
     return rows.map(s => {
         const v = c?.[s.id];
         const has = v !== undefined;
-        const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: M.pctNum(resCap) })}</span>`
+        const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: M.pctNum(resCap(s.id)) })}</span>`
             : s.id === 'defense' && has ? ` <span class="muted">${t('st.mitigation', { p: Math.round(SYS.formula.mitigation(v) * 100) })}</span>` : '';
         // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
         //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
@@ -342,14 +344,16 @@ const abbrOf = id => D.heroAttributes?.find(a => a.id === id)?.abbr ?? id;
  * @param o.unit `UNIT.*`
  * @param o.head 식의 첫 항 `wrap => html` — 기본은 원값의 절댓값. 피해 · 회복 · 벽은 `밑수 × 배율%`
  * @param o.show 값 표기 — 기본 `num`
+ * @param o.term 식의 뒤 항 `(term, wrap) => html` — 기본은 더하는 슬롯의 ` + 약어 × 계수`. 피해 · 회복 · 벽은 ` × 약어`(능력치 계수를 곱한다 · ADR-0164)
  * @param R      렌더 상태 `{alt, fx}` — 괄호를 붙일 수 있는 자리를 만나면 `fx = true`(각주를 세울지 카드가 본다)
  */
-function slot({ raw, part, unit = UNIT.none, head, show = num }, R) {
+function slot({ raw, part, unit = UNIT.none, head, show = num, term }, R) {
     // 퍼센트 자리는 비율로 온다 — 숫자만 100 을 곱해 찍는다(범위 객체는 퍼센트 자리에 오지 않는다 · R111)
     const k = unit === UNIT.pct ? M.pctNum : v => v;
     if (!part) return unit(hl(show(k(raw))));
+    const back = term ?? ((x, wrap) => ` + ${abbrOf(x.attr)} × ${wrap(String(k(x.coef)))}`);
     const fx = wrap => `(${head ? head(wrap) : wrap(num(k(Math.abs(part.raw))))}`
-        + part.terms.map(x => ` + ${abbrOf(x.attr)} × ${wrap(String(k(x.coef)))}`).join('') + ')';
+        + part.terms.map(x => back(x, wrap)).join('') + ')';
     // 값 없음 — 식이 숫자 자리를 **대신**한다. 흐리게 두지 않고 식 속 숫자를 강조한다(흐리면 문장의 강조가 쿨 하나만 남는다)
     if (part.value == null) return unit(fx(hl));
     // 피해 · 회복량은 범위 객체 `{min, max}` 로 온다(R90) — 절댓값을 안 씌우고 `show` 가 범위를 푼다
@@ -364,6 +368,7 @@ const amountSlot = (part, R) => slot({
     part,
     show: rangeText,
     head: wrap => `${BASIS_NAME[part.basis]?.() ?? part.basis} × ${wrap(num(M.pctNum(part.pct)))}%`,   // 배율은 비율로 온다 (R111)
+    term: x => ` × ${abbrOf(x.attr)}`,   // 능력치 계수는 곱이다 — 계수 모양이 전역 하나라 숫자를 안 찍는다 (ADR-0164 · battle_design §9-2)
 }, R);
 
 /**
@@ -428,6 +433,8 @@ function skillLines(def, pv, atkType, R) {
     }
     // 소환 — 벽의 HP 가 `시전자 최대 HP × 배율 + 능력치 항` 이다 (skill_design §12-6). 피해가 아니라 구절 없이 자리만 쓴다
     if (def.kind === 'summon') return P.amount ? [t('sk.line.summon', { n, d: amountSlot(P.amount, R) })] : null;
+    // 불러내기 — 몬스터 전용 (skill_design §12-9 · 2026-09-18). 세기가 없다 — 누구를 부르나는 편성이 정한다
+    if (def.kind === 'call') return [t('sk.line.call', { n })];
     // 오오라 — **쿨이 없다.** 그래서 이 문장만 `{n}` 을 안 든다 (skill_design §1-5)
     if (def.kind === 'aura') {
         const e = effectPhrase(def, P, R);

@@ -1,4 +1,11 @@
-group_id,group_kr,group_en,classes,def_mult,aspd_pct,cdr_pct,release,description_kr
-heavy,중갑,Heavy Armor,warrior|knight,1.6,-0.1,0,main,방어력 크게 + 공격속도 손해 — 숙련(공속)이 그 손해를 되산다 (2026-09-16 사용자 확정 · item_design §1)
-light,경갑,Light Armor,archer,1.0,0.05,0,main,방어력 중간 + 공격속도 — 아무것도 안 깎이는 중립 자리 · 숙련은 체력 (2026-09-16 사용자 확정)
-robe,로브,Robe,mage|priest,0.5,0,0.15,main,방어력 낮게 + 쿨타임 감소 — 숙련은 방어력 (2026-09-16 사용자 확정)
+group_id,slot,group_kr,group_en,classes,def_mult,aspd_pct,cdr_pct,release,description_kr
+heavy,armor,중갑,Heavy Armor,warrior|knight,1.6,-0.1,0,main,방어력 크게 + 공격속도 손해 — 숙련(공속)이 그 손해를 되산다 (2026-09-16 사용자 확정 · item_design §1)
+light,armor,경갑,Light Armor,archer,1.0,0.05,0,main,방어력 중간 + 공격속도 — 아무것도 안 깎이는 중립 자리 · 숙련은 체력 (2026-09-16 사용자 확정)
+robe,armor,로브,Robe,mage|priest,0.5,0,0.15,main,방어력 낮게 + 쿨타임 감소 — 숙련은 방어력 (2026-09-16 사용자 확정)
+plate,helmet,플레이트,Plate,-,1,0,0,main,투구 갈래 — 방어 계수만 가른다(공속·쿨감 거래 없음 · 숙련 없음) · 갑옷 부위를 1 로 놓고 0.5 = 투구 부위 몫 그대로 (2026-09-17 사용자 확정 · item_design §1 「투구 갈래」)
+leather,helmet,가죽,Leather,-,0.4,0,0,main,투구 갈래 — 갑옷 부위를 1 로 놓고 0.2 → 투구 부위 배수 위에서 0.4 (2026-09-17 사용자 확정)
+tiara,helmet,티아라,Tiara,-,0.2,0,0,main,투구 갈래 — 갑옷 부위를 1 로 놓고 0.1 → 투구 부위 배수 위에서 0.2 (2026-09-17 사용자 확정)
+leather,gloves,가죽,Leather,-,0.333,0,0,main,장갑 갈래 — 건틀릿의 3분의 1(갑옷 부위를 1 로 놓고 0.1) · ⚠ 갈래 고정값(가죽 공격 속도)은 사용자 보류 (2026-09-18 · item_design §1 「장갑 갈래」)
+gauntlet,gloves,건틀릿,Gauntlet,-,1,0,0,main,장갑 갈래 — 장갑 부위 몫 그대로(갑옷 부위를 1 로 놓고 0.3) · ⚠ 갈래 고정값(피해 감소 %)은 사용자 보류 (2026-09-18)
+leather,boots,가죽,Leather,-,0.333,0,0,main,신발 갈래 — 그리브스의 3분의 1 · 갈래 고정값 없음(방어 계수뿐) (2026-09-18 사용자 확정 · item_design §1 「신발 갈래」)
+greaves,boots,그리브스,Greaves,-,1,0,0,main,신발 갈래 — 신발 부위 몫 그대로 (2026-09-18 사용자 확정)

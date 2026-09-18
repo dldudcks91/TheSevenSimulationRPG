@@ -3,7 +3,7 @@
  *
  * 하는 일은 셋 — Google 로그인 · 세이브 사본 올리기 · 받기. **세이브 형식은 모른다** — 받은 객체를 JSON 문자열 하나로
  *   `saves/<uid>` 문서에 넣고 뺄 뿐이다(Firestore 는 배열 안 배열을 못 담는다 — `formation.ranks`).
- * SDK 는 **처음 부를 때** CDN 에서 불러온다 — 로그인하지 않은 브라우저에는 네트워크 의존이 생기지 않는다.
+ * SDK 는 **처음 부를 때** CDN 에서 불러온다 — 게임 진입 시 Google 인증을 확인한다.
  * 결과는 `{ ok: true, … }` / `{ ok: false, err }` — err: 'network' · 'signIn' · 'conflict' · 'tooLarge'. 던지지 않는다.
  *
  * 문서 봉투: `{ rev, savedAt, version, data }` — `rev` 는 올릴 때마다 1 씩 오르는 저장 번호다.
@@ -32,7 +32,13 @@ function sdk() {
 }
 
 const fail = (err, e) => { if (e) console.warn(`cloud: ${err}`, e); return { ok: false, err }; };
-const userOf = u => (u ? { uid: u.uid, email: u.email ?? '' } : null);
+const userOf = u => (u?.providerData?.some(p => p.providerId === 'google.com') ? { uid: u.uid, email: u.email ?? '' } : null);
+
+/** 다른 탭의 로그아웃·계정 변경도 진입 조건에 반영한다. */
+export async function watchUser(listener) {
+    const { A, auth } = await sdk();
+    return A.onAuthStateChanged(auth, u => listener(userOf(u)));
+}
 const unwrap = d => ({ rev: d.rev, savedAt: d.savedAt, version: d.version, save: JSON.parse(d.data) });
 
 /** 미리 불러 둔다 — 로그인 창은 클릭 직후에 떠야 브라우저가 막지 않는다(버튼에 마우스가 올라오면 부른다) */

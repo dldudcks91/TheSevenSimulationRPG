@@ -10,7 +10,8 @@
  *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **처음엔 준비 상태다**(전투 시작 · 등장 — battle.js 가 박는다 · R100) · 원정 도중 새로 생긴 스킬만 첫 준비 시각에 같은 식을 쓴다
  *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 스킬의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
- *   · 회복 밑수는 마법 공격력 **범위** (battle_design §9-1 · §9-2) — **시전마다 양을 한 번 굴린다**(rng 1회 · R90). 능력치 항(`flat`)은 배율에 안 곱하고 더한다
+ *   · 회복 밑수는 마법 공격력 **범위** (battle_design §9-1 · §9-2) — **시전마다 양을 한 번 굴린다**(rng 1회 · R90). 능력치 계수(`statMult`)를 곱한다(2026-09-18 — ~~능력치 항 `flat` 을 더한다~~).
+ *     받는 쪽의 **체력 회복 +%**(갑옷 나태 · 2026-09-18)가 그 대상만 늘린다
  *   · **스킬 계수** (skill_design §13 · 2026-09-10) — 시전 순간 `SK.scaleDef(def, u.stats)` 로 실효 정의를 한 번 만들고
  *     대상 표·회복·버프·소환이 전부 그것을 읽는다. 쿨은 원값이다(`cool_sec` 은 슬롯이 못 민다 — §13-1)
  *
@@ -51,9 +52,11 @@ export function cooldownSec(B, u, def) {
  *   units       — `{party, enemies}`. **`enemies` 는 라운드마다 갈아 끼워지는 속성**이라
  *                 런타임은 항상 `ctx.units.enemies` 를 읽는다(변수로 복사해 두면 옛 라운드를 가리킨다)
  *   strikeOnce  — `(u, target, mult, element, s, sk?)` 직격 1회. 기본 공격과 스킬 타격이 같은 함수를 쓴다.
- *                 `sk = {flat, procChance, procMult}` 는 스킬 타격만 넘긴다(공격 대상 표) — 기본 공격은 안 넘긴다
+ *                 `sk = {statMult, procChance, procMult}` 는 스킬 타격만 넘긴다(공격 대상 표) — 기본 공격은 안 넘긴다(메인 스탯 계수)
  *   pickTarget  — `(u, foes)` 단일 대상 선택 (도발·결투 규칙을 아는 쪽은 battle.js 다)
  *   makeSummon  — `(caster, def)` 소환 유닛 하나. **유닛 생성자는 battle.js 것**이라 만드는 일을 그쪽에 맡긴다
+ *   callBand    — `(caster, t) → {units: [표시값], then: [이벤트]}` 불러내기 — 시전자의 무리 중 서 있지 않은 것을 전부 세운다(2026-09-18 · INTERFACE §2-13).
+ *                 적 배열 · 오오라 · 보상 표식을 아는 쪽이 battle.js 라 세우는 일을 그쪽에 맡긴다
  *   r1          — 타임라인 시각 반올림 (소수 1자리 · INTERFACE §5-3)
  *   EPS         — 준비·만료 판정 허용 오차
  *   hooks       — createHooks() 결과
@@ -112,17 +115,19 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * 회복 — 마법 공격력 **굴림** × 배율 **+ 능력치 항**. 대상은 `targetsOf` 가 정한다(결정론). **rng 1회** —
+     * 회복 — 마법 공격력 **굴림** × 배율 **× 능력치 계수**. 대상은 `targetsOf` 가 정한다(결정론). **rng 1회** —
      * 시전 한 번에 한 번 굴려 대상 전원이 같은 양을 받는다 (battle_design §9-1 · §9-2 · R90).
-     * `def` 는 `scaleDef` 를 지난 실효 정의다 — 원시 정의가 와도 `flat` 은 0 으로 읽는다 (2026-09-10)
+     * `def` 는 `scaleDef` 를 지난 실효 정의다 — 원시 정의가 와도 `statMult` 는 1 로 읽는다 (2026-09-18 — ~~`+ flat`~~)
      */
     function castHeal(u, def, t) {
         const matk = u.matkMin + rng() * (u.matkMax - u.matkMin);   // 회복량 굴림 — 대상 선택 앞 · 양끝이 같아도 1회 (R90)
-        const amt = Math.round(matk * def.mult + (def.flat ?? 0));     // 배율은 비율 (R111)
+        const amt = Math.round(matk * def.mult * (def.statMult ?? 1));  // 배율은 비율 (R111) · 능력치 계수는 곱 (2026-09-18)
         const targets = targetsOf(u, def);
         for (const tgt of targets) {
-            tgt.hp = Math.min(tgt.hpMax, tgt.hp + amt);
-            timeline.push({ t: r1(t), e: 'heal', a: u.key, d: tgt.key, amt, dhp: tgt.hp, s: def.id });
+            // 받는 쪽의 체력 회복 +%(갑옷 나태 · 2026-09-18) — 그 대상만 늘어난다 · 이벤트의 `amt` 가 받은 양이다. 0 이면 종전과 같다(rng 0)
+            const got = tgt.recv ? Math.round(amt * (1 + tgt.recv)) : amt;
+            tgt.hp = Math.min(tgt.hpMax, tgt.hp + got);
+            timeline.push({ t: r1(t), e: 'heal', a: u.key, d: tgt.key, amt: got, dhp: tgt.hp, s: def.id });
         }
     }
 
@@ -165,6 +170,19 @@ export function createSkillRuntime(ctx) {
         timeline.push({ t: r1(t), e: 'summon', u: u.key, d: unit.key, s: def.id, hpMax: unit.hpMax });
     }
 
+    /**
+     * 불러내기 — **몬스터 전용** (skill_design §12-9 · INTERFACE §2-13 · 2026-09-18). 시전자의 무리(`band`) 중
+     *   서 있지 않은 것(아직 안 나왔거나 쓰러진 것)을 **한 번에 전부** 세운다 — 벽(`castSummon`)과 달리 **진짜 몬스터**다.
+     *   세우는 일은 battle.js(`callBand`)가 하고 여기는 이벤트만 남긴다. 발동 조건 `band_missing` 이 빈 부름을 막는다 · rng 0
+     */
+    function castCall(u, def, t) {
+        const { units, then } = ctx.callBand(u, t);
+        if (!units.length) return;
+        timeline.push({ t: r1(t), e: 'call', u: u.key, s: def.id, units });
+        // 새로 선 유닛의 오오라 창 — `call` 뒤에 낸다(재생기는 카드가 서야 창을 단다 · `round` 뒤의 오오라와 같은 규칙)
+        for (const ev of then) timeline.push({ t: r1(t), ...ev });
+    }
+
     /** 창 합 — 같은 stat 의 창을 더한다(버프 규칙과 같은 덧셈) */
     const buffSum = (u, stat) => {
         let sum = 0;
@@ -182,10 +200,12 @@ export function createSkillRuntime(ctx) {
      *   `attack_splash`  단일 → 광역. 그때 배율이 창의 값(비율)이다 (창이 없으면 1배 단일)
      *   `onhit_element`  때린 대상마다 원소 추가타 1회. **스킬 타격에는 안 붙는다**
      * ⚠ 창이 켜지면 타격 수가 늘어 rng 소비도 는다 — 창이 없을 때의 수열은 종전과 **완전히 같다**
+     * @param forced 대상을 정해 준다 — **반격**이 때린 쪽을 넘긴다(battle.strikeOnce · 2026-09-18). 주면 타겟 굴림(`pickTarget`)을 **안 쓴다** ·
+     *   광역 창이 켜져 있으면 평타처럼 적 전원이다(「반격은 평타와 모든 로직이 같다」 · 사용자)
      */
-    function basicAttack(u, t, foes) {
+    function basicAttack(u, t, foes, forced = null) {
         const splash = buffSum(u, 'attack_splash');
-        const targets = splash > 0 ? foes.slice() : [ctx.pickTarget(u, foes)];
+        const targets = splash > 0 ? foes.slice() : [forced ?? ctx.pickTarget(u, foes)];
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
             ctx.strikeOnce(u, tgt, splash > 0 ? splash : 1, null);
@@ -219,10 +239,12 @@ export function createSkillRuntime(ctx) {
         hooks.emit('cast', u, { t, def });
         // 실효 정의 — **시전 순간 시전자 능력치로 한 번** 민다 (skill_design §13 · 2026-09-10). 전투와 설명창이 같은 함수다.
         //   쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
-        const eff = SK.scaleDef(def, u.stats ?? null);
+        //   능력치 계수는 몬스터가 안 탄다 — `noStatMult`(보류 · 2026-09-18 · GAME_DESIGN §10)
+        const eff = SK.scaleDef(def, u.stats ?? null, { noStatMult: u.noStatMult });
         if (def.kind === 'attack') ATTACK_TARGETS[def.target](rt, u, eff, foes);
         else if (def.kind === 'heal') castHeal(u, eff, t);
         else if (def.kind === 'summon') castSummon(u, eff, t);
+        else if (def.kind === 'call') castCall(u, eff, t);
         else castBuff(u, eff, t);   // buff — 아군 창도 적에게 거는 창도 여기다 (aura 는 액티브 칸에 없다)
     }
 
@@ -232,7 +254,7 @@ export function createSkillRuntime(ctx) {
      */
     const rt = {
         rng, strikeOnce: ctx.strikeOnce, pickTarget: ctx.pickTarget,
-        alive, alliesOf, foesOf, act, expire, castHeal, castBuff, castSummon, basicAttack, targetsOf, buffSum,
+        alive, alliesOf, foesOf, act, expire, castHeal, castBuff, castSummon, castCall, basicAttack, targetsOf, buffSum,
     };
     return rt;
 }

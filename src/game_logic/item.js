@@ -6,7 +6,7 @@
  * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v,src}], sins:[sin...],
  *            group?(무기군 id — weapon_group.csv),
  *            skill?(무기가 담은 액티브 id — 무기만 · 2026-09-09),
- *            baseId?(무기 베이스 id — weapon_base.csv · 그 무기군에 베이스 풀이 있을 때만 · 2026-09-10) }
+ *            baseId?(베이스 id — 무기는 weapon_base.csv(그 무기군에 풀이 있을 때만 · 2026-09-10) · 방어구 · 장신구는 item_base.csv(2026-09-17)) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
  *   (CSV 로 이사할 때 stat id 가 곧 combat_stat.csv 의 키가 된다)
  *   무기의 행동 주기·공격 타입·착용 직업은 아이템에 박지 않는다 — 매번 무기군(group)에서 읽는다. SSOT 는 weapon_group.csv.
@@ -14,7 +14,11 @@
  * **접사는 출처(`src`)를 든다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — `fixed`(고정 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션).
  *   **무기는 세 층을 정해진 개수로 받는다** — 고정 1 + 죄종 칸(이름의 죄종마다 1 — 일반 0 · 매직 1 · 레어 2) + 통합옵션
  *   [balance.csv:weapon_common_opt_normal · weapon_common_opt_magic · weapon_common_opt_rare]. 무기는 `affix.csv` 를 안 쓴다 — 죄종 칸은 `weapon_sin_option.csv`,
- *   통합옵션은 `weapon_common_option.csv` 에서 온다. 무기 외 부위는 종전 그대로(`affix.csv` 한 풀 · 전부 `random`).
+ *   통합옵션은 `weapon_common_option.csv` 에서 온다.
+ *   **방어구 네 부위도 같은 세 층이다** [2026-09-18 · 사용자 확정 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 고정 「방어력 +%」 1 + 죄종 칸 +
+ *   공통옵션 [balance.csv:armor_common_opt_normal · armor_common_opt_magic · armor_common_opt_rare]. 죄종 칸은 `armor_sin_option.csv`
+ *   (장갑만 ⚠임시로 `weapon_sin_option.csv` 를 그대로 읽는다), 공통옵션은 `armor_common_option.csv`(투구는 갈래별 풀).
+ *   `affix.csv` 한 풀(전부 `random`)을 쓰는 것은 **목걸이 · 반지**뿐이다.
  *
  * **한손 개념은 없다** (2026-09-01) — 전 무기가 양손이라 `twoHanded` 플래그도 보조(offhand) 슬롯도 폐지했다.
  *   부위는 7종 · 착용 위치는 8개. 무기↔보조 배타 규칙과 양손 공격력 배율(two_hand_atk_mult)이 함께 사라졌다.
@@ -22,9 +26,13 @@
  * 세트포인트는 **보류** (item_design.md §4, 2026-08-25) — `sins` 는 접사의 죄종 **목록**(접사 카테고리 · 전술카드가 세는 대상 —
  *   ~~지역 드롭 편향~~ 08-27 · ~~낙인 지정~~ 2026-09-15 에 사라졌다)일 뿐 포인트가 아니다. 양손 2포인트 · 메인 죄종 +1 도 같이 보류라 여기 없다.
  *
- * **개체 굴림** (item_design §2, 08-26) — **방어구 고유 방어력만** 드롭 시 한 번 굴려 개체에 박는다(전역 폭 하나).
+ * **개체 굴림은 없다** [2026-09-18 · 사용자 확정 · item_design §1 「부위 고유 방어력」] — ~~방어구 고유 방어력만 드롭 시 한 번 굴려 개체에 박는다~~.
+ *   방어구 고유값은 레벨 · 부위 · 갈래가 정한 값 그대로이고 개체 사이의 차이는 고정 옵션 「방어력 +%」 한 줄이 든다.
  *   ~~무기는 공격력(watk, 무기군 편차 폭)~~ 은 **2026-09-14 폐지**(R90 · battle_design §9-1) — 무기 피해는 **최소 ~ 최대 범위**이고
  *   무기군 × ilvl × 강화 단계가 정한다(`weaponDamage` — 박지 않고 파생). 범위 안의 굴림은 직격마다 전투(formula.strike)가 한다.
+ *
+ * **베이스는 티어가 고른다** [2026-09-18 · 사용자 확정 · item_design §1 「베이스」] — 무기 외 부위의 베이스 후보는 그 ilvl 에서 열린
+ *   (`tierMin ≤ ilvl`) **가장 높은 티어의 행**뿐이다. 방어구는 시작 칸 → Normal → Exceptional → Elite 로 형상이 바뀌고 그 안의 갈래는 균등이다.
  *
  * **접사 ilvl 스케일링은 3분류다** (item_design §2-1) — 정의의 `scale` 이 정한다:
  *   `growth` 기하 곡선(공격력·HP flat) / `band` 완만한 가산(물리 방어 flat) / `flat` ilvl 무관(% · 저항 · 유틸 전부).
@@ -37,7 +45,8 @@
  *   **목걸이 · 반지는 강화하지 않는다** — 베이스가 없다(`baseless`). 옛 세이브에 남은 `up` 은 그대로 두고, 파생할 것이 없어 무해하다.
  *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
- *   주입된 affixDefs · 무기 옵션 표에서 온다. 방어구 · 장신구의 죄종 칸은 아직 없다(부위 개편은 후속 — 사용자 지시).
+ *   주입된 affixDefs · 무기 옵션 표 · 방어구 옵션 표에서 온다. 목걸이 · 반지의 죄종 칸은 아직 없다(기획 미정 — GAME_DESIGN §10).
+ *   ⚠ 장갑의 공통옵션 풀은 옛 `affix.csv` 장갑 풀을 옮긴 임시다(기획 미정 · 2026-09-18 사용자 보류) · 장갑 갈래 고정값도 보류다.
  */
 
 import { createFormula } from './formula.js';
@@ -61,14 +70,33 @@ import { createFormula } from './formula.js';
  *                         한 죄종 · 한 무기군에 행이 여럿이면 그중 하나를 굴린다 · **행 순서가 결정론 계약**
  *   weaponCommonOptions — [{family, stat, appliesTo, scale, min, max}] ← weapon_common_option.csv — 통합옵션 후보 (2026-09-11 · R78).
  *                         종류(`family`)를 먼저 뽑고 그 안에서 변형(행)을 고른다 · **행 순서가 결정론 계약**
+ *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, …}}} ← armor_group.csv — **부위 → 갈래** (갑옷군 2026-09-16 · 투구 · 장갑 · 신발 2026-09-18).
+ *                  고유 방어력의 갈래 계수(`defMult`)를 여기서 읽는다 — 갈래 id 는 부위마다 겹친다(`leather`)
+ *   armorSinOptions    — [{slot, sin, stat, scale, min, max, perIlvl?}] ← armor_sin_option.csv — 방어구 죄종 칸 후보 (2026-09-18).
+ *                         한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다 · **장갑 행은 없다**(`SIN_FROM_WEAPON`) · **행 순서가 결정론 계약**
+ *   armorCommonOptions — [{slot, group, family, stat, scale, min, max, perIlvl?}] ← armor_common_option.csv — 방어구 공통옵션 후보 (2026-09-18).
+ *                         `group` = `all` 또는 그 부위의 갈래 id · **행 순서가 결정론 계약**
  *   composeName  — (prefixSin, base, suffixSin|null) → {ko,en}
  */
 export function createItemSystem(data) {
     const B = data.balance;
     const WG = data.weaponGroups;
-    const AG = data.armorGroups ?? {};   // armor_group.csv — 갑옷군 3갈래 (2026-09-16 · R107)
+    const AG = data.armorGroups ?? {};   // armor_group.csv — {slot: {groupId: def}} · 갑옷군 3 (2026-09-16 · R107) + 투구 · 장갑 · 신발 갈래 (2026-09-18)
+    /** 그 부위의 갈래 정의 — 갈래가 없거나(시작 칸) 모르면 null. 갈래 id 는 부위마다 겹치므로 **부위와 함께** 찾는다 */
+    const groupDef = (slot, group) => (group ? AG[slot]?.[group] ?? null : null);
     const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
+
+    /** 베이스 능력치가 없는 부위 — 무기(피해 범위)도 방어구(고유값)도 아닌 둘. 고유값 굴림과 강화가 같은 판정을 쓴다 (R95) */
+    const baseless = slot => slot === 'amulet' || slot === 'ring';
+    /** 방어구 네 부위(갑옷 · 투구 · 장갑 · 신발) — 고유 방어력을 갖고 옵션 세 층을 받는 부위 (2026-09-18) */
+    const isArmor = slot => !!slot && slot !== 'weapon' && !baseless(slot);
+    /**
+     * **무기 죄종 표를 그대로 읽는 부위** — 장갑 [2026-09-17 사용자 ⚠임시 · item_design §1 「장갑 행 = 무기 행을 그대로 쓴다」].
+     * 장갑에는 무기 갈래(물리 · 마법사 · 사제)가 없어 `appliesTo` 를 보지 않는다 — 그 죄종의 **모든 행**이 후보다(시기 넷 · 탐욕 셋 중 하나).
+     * 구조 상수라 CSV 가 아니라 여기 둔다(INTERFACE §5-3). 장갑 죄종 칸이 기획되면 `armor_sin_option.csv` 에 행을 넣고 여기서 뺀다
+     */
+    const SIN_FROM_WEAPON = new Set(['gloves']);
 
     /** 드롭·시작 무기에 쓰는 무기군 = 본편(release=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
     const classSkills = data.classSkills ?? {};   // {classId: [skillId...]} — 무기가 담을 후보 (skill_design §12)
@@ -93,6 +121,44 @@ export function createItemSystem(data) {
         }
         for (const r of sinOpts) if (!data.sins.includes(r.sin)) throw new Error(`item: weapon_sin_option 죄종 '${r.sin}'`);
     }
+
+    /* ── 방어구 옵션 표 (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 2026-09-18) ── */
+    const armorSinOpts = data.armorSinOptions ?? [];
+    const armorCommonOpts = data.armorCommonOptions ?? [];
+    const ARMOR_SLOTS = (data.slots ?? []).filter(isArmor);
+    // 로드 검증 — 무기 표와 같은 이유로 즉시 던진다. 게다가 **부위마다 일곱 죄종이 다 차 있어야 한다** — 한 칸이 비면
+    //   그 죄종을 굴린 방어구의 칸이 조용히 비고(소비는 그대로) 아무도 모른다. 장갑은 무기 표를 읽으므로 행이 없어야 한다
+    {
+        for (const [name, rows] of [['armor_sin_option', armorSinOpts], ['armor_common_option', armorCommonOpts]]) {
+            for (const r of rows) {
+                if (!ARMOR_SLOTS.includes(r.slot)) throw new Error(`item: ${name} ${r.stat} slot '${r.slot}' 은 방어구 부위가 아니다`);
+                if (!SCALES.includes(r.scale)) throw new Error(`item: ${name} ${r.stat} scale '${r.scale}'`);
+                if (!(r.max >= r.min)) throw new Error(`item: ${name} ${r.stat} 범위 ${r.min}~${r.max}`);
+                if (r.scale === 'band' && typeof r.perIlvl !== 'number') throw new Error(`item: ${name} ${r.stat} band 행에 per_ilvl 이 없다`);
+            }
+        }
+        for (const r of armorSinOpts) {
+            if (!data.sins.includes(r.sin)) throw new Error(`item: armor_sin_option 죄종 '${r.sin}'`);
+            if (SIN_FROM_WEAPON.has(r.slot)) throw new Error(`item: armor_sin_option 에 ${r.slot} 행이 있다 — ${r.slot} 은 무기 죄종 표를 읽는다`);
+            // 반격은 반격을 부른다(평타와 같은 규칙 · INTERFACE §2-6) — 한 출처가 1 이면 양쪽이 끝없이 되받아 친다
+            if (r.stat === 'counter_chance' && !(r.max < 1)) throw new Error(`item: armor_sin_option counter_chance max ${r.max} — 1 미만이어야 한다`);
+        }
+        for (const slot of ARMOR_SLOTS) {
+            if (SIN_FROM_WEAPON.has(slot)) continue;
+            for (const sin of data.sins)
+                if (!armorSinOpts.some(r => r.slot === slot && r.sin === sin)) throw new Error(`item: armor_sin_option 에 ${slot} · ${sin} 행이 없다`);
+        }
+        for (const r of armorCommonOpts)
+            if (r.group !== 'all' && !groupDef(r.slot, r.group)) throw new Error(`item: armor_common_option ${r.stat} group '${r.group}' 은 ${r.slot} 의 갈래가 아니다`);
+        for (const slot of ARMOR_SLOTS)
+            if (!armorCommonOpts.some(r => r.slot === slot)) throw new Error(`item: armor_common_option 에 ${slot} 행이 없다`);
+    }
+    /** 방어구 죄종 칸 후보 — 그 부위 · 그 죄종의 행. 장갑은 무기 표의 그 죄종 행 **전부**(무기 갈래를 안 본다 · ⚠임시) */
+    const armorSinRows = (slot, sin) => (SIN_FROM_WEAPON.has(slot)
+        ? sinOpts.filter(r => r.sin === sin)
+        : armorSinOpts.filter(r => r.slot === slot && r.sin === sin));
+    /** 방어구 공통옵션 후보 — 그 부위이고 `all` 이거나 그 아이템의 갈래인 행. **갈래가 없는 시작 칸은 그 부위의 모든 행**이다 */
+    const armorCommonRows = (slot, group) => armorCommonOpts.filter(r => r.slot === slot && (!group || r.group === 'all' || r.group === group));
     /** 그 무기군에 이 행이 붙는가 — `all` · damageKind · 직업 id 중 하나가 맞으면. 시기 칸이 물리 / 마법사 / 사제로 갈리는 자리다 */
     const appliesTo = (row, g) => row.appliesTo === 'all' || row.appliesTo === g.damageKind || (g.classes ?? []).includes(row.appliesTo);
 
@@ -136,11 +202,11 @@ export function createItemSystem(data) {
      * 퍼센트 채널인가 [2026-09-17 · R111] — 세이브 이관(v28 → v29)이 옛 값(0~100 눈금)을 비율로 옮길 때 가른다.
      * 고정값 채널 = 옵션 표의 `growth` · `band` 행 + 옛 무기의 `atk_flat`(R78 에 표에서 빠졌다). **나머지는 전부 퍼센트다**
      */
-    const flatStats = new Set([...(data.affixDefs ?? []), ...sinOpts, ...commonOpts]
+    const flatStats = new Set([...(data.affixDefs ?? []), ...sinOpts, ...commonOpts, ...armorSinOpts, ...armorCommonOpts]
         .filter(d => d.scale === 'growth' || d.scale === 'band').map(d => d.stat).concat('atk_flat'));
     const pctStat = stat => !flatStats.has(stat);
 
-    /** 접사 n개 (무기 외 부위) — 같은 stat 이 두 번 붙지 않는다. 출처는 전부 `random`(affix.csv = 통합옵션 풀 · 09-08) */
+    /** 접사 n개 (**목걸이 · 반지** — 무기 R78 · 방어구 2026-09-18 은 세 층) — 같은 stat 이 두 번 붙지 않는다. 출처는 전부 `random`(affix.csv = 통합옵션 풀 · 09-08) */
     function rollAffixes(rng, slot, ilvl, n) {
         const pool = data.affixDefs.filter(d => !d.slots || d.slots.includes(slot));
         const out = [];
@@ -183,32 +249,61 @@ export function createItemSystem(data) {
         return out;
     }
 
-    /** 베이스 능력치가 없는 부위 — 무기(피해 범위)도 방어구(고유값)도 아닌 둘. 고유값 굴림과 강화가 같은 판정을 쓴다 (R95) */
-    const baseless = slot => slot === 'amulet' || slot === 'ring';
+    /**
+     * 방어구 옵션 세 층 [2026-09-18 · 사용자 확정 · item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 네 부위 같은 틀] — 순서가 곧 표시 순서(고정 → 죄종 칸 → 공통).
+     * rng 소비(계약 — INTERFACE §5-2): **무기와 같은 모양** — 고정 값 1 → 죄종마다 (행 1 → 값 1) → 공통옵션마다 (종류 1 → 변형 1 → 값 1).
+     * ⚠ **후보가 비어도 소비 수는 같다** — 부위 · 갈래 · 표 내용이 소비 수를 바꾸면 같은 시드가 다른 드롭을 낸다.
+     *   고정 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 — 합산은 `hero.computeCombat` 이 아이템마다 한다
+     */
+    function armorOptions(rng, slot, group, sins, rarity, ilvl) {
+        const lo = B.armor_fixed_def_pct_min, hi = B.armor_fixed_def_pct_max;
+        const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + rng() * (hi - lo)), src: 'fixed' }];
+        // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(탐욕 셋 · 투구 시기 원소 넷 · 장갑 시기 넷) 그중 하나를 굴린다
+        for (const sin of sins) {
+            const rows = armorSinRows(slot, sin);
+            const pr = rng(), vr = rng();
+            if (!rows.length) continue;
+            const d = rows[Math.floor(pr * rows.length)];
+            out.push({ stat: d.stat, v: valueOf(d, d.min + vr * (d.max - d.min), ilvl), src: sin });
+        }
+        // 공통옵션 — **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 종족 ×3 이 행 수만큼 비중을 먹지 않게). 한 아이템에 같은 종류는 한 번
+        const rows = armorCommonRows(slot, group);
+        const families = [...new Set(rows.map(r => r.family))];      // 첫 등장 순 = CSV 행 순서
+        const n = byRarity(rarity, B.armor_common_opt_normal, B.armor_common_opt_magic, B.armor_common_opt_rare);
+        for (let i = 0; i < n; i++) {
+            const fr = rng(), sr = rng(), vr = rng();
+            if (!families.length) continue;
+            const fam = families.splice(Math.floor(fr * families.length), 1)[0];
+            const variants = rows.filter(r => r.family === fam);
+            const d = variants[Math.floor(sr * variants.length)];
+            out.push({ stat: d.stat, v: valueOf(d, d.min + vr * (d.max - d.min), ilvl), src: 'random' });
+        }
+        return out;
+    }
 
     /**
      * 부위 고유값(Implicit) — 방어구만 든다 (무기는 피해 범위 — 파생 `weaponDamage` · 목걸이·반지는 없다).
-     * 방어는 **비율 축**이라 곱셈 곡선을 타지 않는다 (§9-0) — ~~ilvl 완만 가산~~ → **10레벨 구간 직선**(2026-09-16 · R107) + 개체 편차 1회.
-     * **부위 배수가 생겼다** [2026-09-16 사용자 확정] — 갑옷 2.0 · 투구 1.0 · 장갑 0.6 · 신발 0.6(`armor_def_slot_*`).
-     *   ~~부위별 배수는 없다~~(2026-09-01 보조 슬롯 폐지 때의 서술)를 대체한다.
-     * **갑옷군 배수는 갑옷 칸에만** 걸린다 [09-07 적용 범위 확정] — 중갑 1.6 · 경갑 1.0 · 로브 0.5(`armor_group.csv:def_mult`).
+     * 방어는 **비율 축**이라 곱셈 곡선을 타지 않는다 (§9-0) — ~~ilvl 완만 가산~~ → **10레벨 구간 직선**(2026-09-16 · R107).
+     * **부위 배수** [2026-09-16 사용자 확정] — 갑옷 2.0 · 투구 1.0 · 장갑 0.6 · 신발 0.6(`armor_def_slot_*`).
+     * **갈래 계수는 부위마다** [개정 2026-09-18 — ~~갑옷군 배수는 갑옷 칸에만~~] — 갑옷 중갑 1.6 · 경갑 1.0 · 로브 0.5 /
+     *   투구 플레이트 1 · 가죽 0.4 · 티아라 0.2 / 장갑 · 신발 1 · 가죽 1/3 (`armor_group.csv:def_mult` · 시작 칸은 갈래가 없어 1).
+     * ~~개체 편차 1회~~ **2026-09-18 폐지** — 개체차는 고정 옵션 「방어력 +%」가 든다. **rng 를 안 쓴다**.
      * 값은 **정수**다 [2026-09-16 사용자 지시] — 표기 = 계산.
      */
-    function implicitFor(rng, slot, ilvl, group = null) {
-        if (slot === 'weapon' || baseless(slot)) return null;    // rng 소비 없음
-        const eps = (rng() * 2 - 1) * B.armor_def_variance_pct;
+    function implicitFor(slot, ilvl, group = null) {
+        if (!isArmor(slot)) return null;
         const slotMult = B[`armor_def_slot_${slot}`];
         if (typeof slotMult !== 'number') throw new Error(`item: balance.csv 에 'armor_def_slot_${slot}' 이 없다`);
-        const gm = group ? (AG[group]?.defMult ?? 1) : 1;
-        return { stat: 'def_flat', v: Math.max(1, Math.round(F.armorDefense(ilvl, slotMult, gm) * (1 + eps))) };
+        const gm = groupDef(slot, group)?.defMult ?? 1;
+        return { stat: 'def_flat', v: Math.max(1, Math.round(F.armorDefense(ilvl, slotMult, gm))) };
     }
 
     /**
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
      * opts.avoidSkill = (무기) 스킬 풀에서 뺄 id — 시작 무기가 그 영웅의 고유 스킬과 겹치지 않게 (2026-09-14 · R86). 빼도 소비 수는 같다.
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직·레어) 접두 죄종 → (레어) 접미 죄종 →
-     *   **(무기) 옵션 세 층**(`weaponOptions`) / (무기 외) 접사 수 → 접사마다 (정의 선택 → 값) →
-     *   **(무기) 베이스 1회** [신설 2026-09-10] → **(방어구) 개체 굴림 1회** → **(무기) 스킬 1회** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
+     *   **(무기) 옵션 세 층**(`weaponOptions`) / **(방어구) 옵션 세 층**(`armorOptions` · 2026-09-18) / (목걸이 · 반지) 접사 수 → 접사마다 (정의 선택 → 값) →
+     *   **(무기) 베이스 1회** [신설 2026-09-10] → **(무기) 스킬 1회** · ~~(방어구) 개체 굴림 1회~~ **2026-09-18 삭제** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
      */
     function build(rng, slot, rarity, ilvl, base, opts = {}) {
@@ -224,9 +319,10 @@ export function createItemSystem(data) {
             up: 0,                             // 강화 단계 — 드롭은 굴리지 않는다. 올리는 것은 upgrade 하나뿐
             name: data.composeName(prefix, base, suffix),
             implicit: null,
-            // 무기는 세 층(R78) · 그 밖은 affix.csv 한 풀 — 둘 다 베이스 · 개체 굴림보다 **앞**에서 굴린다 (§5-2)
+            // 무기(R78) · 방어구(2026-09-18)는 세 층 · 목걸이 · 반지는 affix.csv 한 풀 — 셋 다 베이스 · 스킬 굴림보다 **앞**에서 굴린다 (§5-2)
             affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, rarity, ilvl)
-                : rollAffixes(rng, slot, ilvl, affixCount(rng, rarity)),
+                : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, rarity, ilvl)
+                    : rollAffixes(rng, slot, ilvl, affixCount(rng, rarity)),
             sins,
         };
         if (slot === 'weapon') {
@@ -262,15 +358,26 @@ export function createItemSystem(data) {
             const sr = rng();
             item.skill = pool.length ? pool[Math.floor(sr * pool.length)] : null;
         } else {
-            // 갑옷군 — **갑옷 칸만** 든다 (item_base.csv:group · 09-07 「적용 범위 = 갑옷 한 칸」).
-            //   무기의 `group`(무기군)과 같은 필드를 쓴다 — 슬롯이 둘을 가른다
+            // 방어구 갈래 — 네 부위가 든다 (item_base.csv:group · 갑옷군 2026-09-16 · 투구 2026-09-17 · 장갑 · 신발 2026-09-18). 시작 칸은 없다.
+            //   무기의 `group`(무기군)과 같은 필드를 쓴다 — 슬롯이 둘을 가른다(갈래 id 는 부위마다 겹친다 — `leather`)
             if (base?.group) item.group = base.group;
             // 베이스 id — **무기와 같은 필드**(`baseId`)다 [2026-09-17]. 베이스는 rollGear 가 이미 굴렸고(소비 불변)
             //   여기서는 이름만 쓰던 것을 id 로 같이 남긴다 — 화면이 베이스마다 다른 그림을 고를 수 있게 된다(ui/mock.js:itemArt)
             if (base?.id) item.baseId = base.id;
-            item.implicit = implicitFor(rng, slot, ilvl, base?.group ?? null);
+            item.implicit = implicitFor(slot, ilvl, base?.group ?? null);     // rng 0 — 개체 편차 폐지 (2026-09-18)
         }
         return item;
+    }
+
+    /**
+     * 그 ilvl 에서 뜨는 베이스 후보 [2026-09-18 · 사용자 확정 · item_design §1 「베이스 — 시작 1 + 갈래 3 × 티어 3」] —
+     * 열린(`tierMin ≤ ilvl`) 행 중 **`tierMin` 이 가장 높은 행들**만이다. 방어구는 그 티어의 갈래 셋(투구 · 갑옷) · 둘(장갑 · 신발)이고
+     * 시작 칸(클로스 · 부츠)은 ilvl 이 첫 티어 아래일 때만 뜬다. 목걸이 · 반지는 전부 1 이라 전 행이다. **행 순서는 CSV 그대로**(결정론)
+     */
+    function tierBases(slot, ilvl) {
+        const open = (data.itemBases[slot] ?? []).filter(b => (b.tierMin ?? 1) <= ilvl);
+        const top = Math.max(...open.map(b => b.tierMin ?? 1));
+        return open.filter(b => (b.tierMin ?? 1) === top);
     }
 
     /**
@@ -289,9 +396,10 @@ export function createItemSystem(data) {
         const out = [];
         for (const slot of slots) {
             // 무기군을 지정받으면 굴리지 않는다 — 그 몬스터가 어느 무기를 드는지는 데이터가 정한다(드롭 편향의 단위)
+            // 무기 외는 **그 ilvl 의 티어 행**에서 굴린다(2026-09-18) — 후보만 좁고 소비는 1회 그대로다
             const base = slot === 'weapon'
                 ? (opts.weaponGroup ? WG[opts.weaponGroup] : pick(rng, dropGroups))
-                : pick(rng, data.itemBases[slot]);
+                : pick(rng, tierBases(slot, ilvl));
             if (!base) throw new Error(`item: rollGear 부위 '${slot}' 의 베이스가 없다`);
             out.push(build(rng, slot, rollRarity(rng, rareBonus, opts.rarityWeights), ilvl, base));
         }
@@ -319,10 +427,11 @@ export function createItemSystem(data) {
         return build(rng, 'weapon', 'normal', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups), { avoidSkill });
     }
 
-    /** 시작 갑옷 — ilvl 1 **일반** 1개 [신설 2026-09-14 사용자 확정 · R86]. 베이스는 갑옷 풀에서 균등 1회 → `build`.
+    /** 시작 갑옷 — ilvl 1 **일반** 1개 [신설 2026-09-14 사용자 확정 · R86]. 베이스는 **ilvl 1 의 티어 행**에서 1회 → `build`.
+     *  ilvl 1 은 첫 티어 아래라 후보가 **클로스 아머 하나**다 [2026-09-18 · 티어 게이트] — 소비는 1회 그대로다.
      *  ⚠ 직업 맞춤이 없다 — 갑옷군(중갑 · 경갑 · 로브)과 직업을 잇는 데이터가 아직 없다(GAME_DESIGN §10 갑옷군) */
     function startingArmor(rng) {
-        const base = pick(rng, data.itemBases.armor ?? []);
+        const base = pick(rng, tierBases('armor', 1));
         if (!base) throw new Error('item: startingArmor — 갑옷 베이스가 없다');
         return build(rng, 'armor', 'normal', 1, base);
     }
@@ -342,6 +451,26 @@ export function createItemSystem(data) {
         const out = [{ stat: 'atk_pct', v: F.pctOption((lo + hi) / 2), src: 'fixed' }];
         (item.sins ?? []).forEach((sin, i) => {
             const rows = sinOpts.filter(r => r.sin === sin && appliesTo(r, g));
+            if (!rows.length) return;
+            const d = rows[(num + i) % rows.length];
+            out.push({ stat: d.stat, v: valueOf(d, (d.min + d.max) / 2, item.ilvl), src: sin });
+        });
+        return out;
+    }
+
+    /**
+     * 옛 방어구에 채울 고정 옵션 · 죄종 칸 — **세이브 이관 전용**이다 (`state.js upgradeV29` · 2026-09-18). 게임 중에는 부르지 않는다.
+     * `legacyWeaponLayers` 와 **같은 규칙** — rng 를 안 쓰고 행은 uid 번호로 고르며 값은 **범위의 가운데**다(지금 눈금 · 비율).
+     * 방어구가 아니면 `[]`. 가진 접사는 건드리지 않는다(호출자가 뒤에 붙인다)
+     */
+    function legacyArmorLayers(item) {
+        if (!isArmor(item?.slot)) return [];
+        const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
+        const num = Number.isFinite(n) ? n : 0;
+        const lo = B.armor_fixed_def_pct_min, hi = B.armor_fixed_def_pct_max;
+        const out = [{ stat: 'armor_def_pct', v: F.pctOption((lo + hi) / 2), src: 'fixed' }];
+        (item.sins ?? []).forEach((sin, i) => {
+            const rows = armorSinRows(item.slot, sin);
             if (!rows.length) return;
             const d = rows[(num + i) % rows.length];
             out.push({ stat: d.stat, v: valueOf(d, (d.min + d.max) / 2, item.ilvl), src: sin });
@@ -424,16 +553,15 @@ export function createItemSystem(data) {
     }
 
     /**
-     * 세이브 이관용 — 방어구 고유값을 **지금 공식의 바탕값**으로 다시 낸다 (2026-09-16 · R107).
-     * 개체 편차는 못 살린다(다시 굴리면 rng 순서가 깨진다) — 편차 없는 가운데 값으로 앉힌다. **rng 0**
+     * 세이브 이관용 — 방어구 고유값을 **지금 공식의 바탕값**으로 다시 낸다 (2026-09-16 · R107 · v27 → v28 · v29 → v30).
+     * 2026-09-18 부터 **새 드롭과 같은 값**이다 — 개체 편차가 폐지돼 바탕값이 곧 고유값이다(`implicitFor` 와 같은 식 · 부위 갈래 계수 포함). **rng 0**
      */
     const baseImplicit = item => {
-        if (!item || item.slot === 'weapon' || baseless(item.slot)) return null;
+        if (!item || !isArmor(item.slot)) return null;
         const slotMult = B[`armor_def_slot_${item.slot}`];
         if (typeof slotMult !== 'number') return null;
-        const gm = item.group ? (AG[item.group]?.defMult ?? 1) : 1;
-        return Math.max(1, Math.round(F.armorDefense(item.ilvl, slotMult, gm)));
+        return implicitFor(item.slot, item.ilvl, item.group ?? null).v;
     };
 
-    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
+    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
 }

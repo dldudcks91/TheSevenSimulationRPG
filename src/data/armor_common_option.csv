@@ -1,0 +1,37 @@
+slot,group,family,stat,scale,min,max,per_ilvl,description_kr
+armor,all,ele_res,res_fire,flat,0.06,0.2,-,갑옷 공통 — 원소 저항(넷 중 하나) · 불 ⚠제안 수치 (item_design §1 「갑옷 옵션」 · 2026-09-16)
+armor,all,ele_res,res_cold,flat,0.06,0.2,-,갑옷 공통 — 원소 저항 · 냉기 ⚠제안 수치
+armor,all,ele_res,res_lightning,flat,0.06,0.2,-,갑옷 공통 — 원소 저항 · 전기 ⚠제안 수치
+armor,all,ele_res,res_poison,flat,0.06,0.2,-,갑옷 공통 — 원소 저항 · 독 ⚠제안 수치
+armor,all,vs_type_dr,vs_normal_dr,flat,0.04,0.1,-,갑옷 공통 — 일반(Normal) 적에게 받는 피해 감소(셋 중 하나) · 조건부 셋은 더한 뒤 한 원천으로 곱한다 ⚠제안 수치
+armor,all,vs_type_dr,vs_demon_dr,flat,0.04,0.1,-,갑옷 공통 — 데몬(Demon) 적에게 받는 피해 감소 ⚠제안 수치
+armor,all,vs_type_dr,vs_undead_dr,flat,0.04,0.1,-,갑옷 공통 — 언데드(Undead) 적에게 받는 피해 감소 ⚠제안 수치
+armor,all,vs_grade_dr,vs_elite_dr,flat,0.04,0.1,-,갑옷 공통 — 정예·보스에게 받는 피해 감소 ⚠제안 수치
+armor,all,vs_rank_dr,vs_front_dr,flat,0.04,0.1,-,갑옷 공통 — 전열 적에게 받는 피해 감소(둘 중 하나) ⚠제안 수치
+armor,all,vs_rank_dr,vs_back_dr,flat,0.04,0.1,-,갑옷 공통 — 후열 적에게 받는 피해 감소 ⚠제안 수치
+armor,all,xp,xp_gain_pct,flat,0.05,0.12,-,갑옷 공통 — 경험치 획득 증가(낀 영웅 본인 몫) ⚠제안 수치
+helmet,plate,ele_res,res_fire,flat,0.06,0.2,-,투구 플레이트 — 원소 저항(넷 중 하나) · 불 ⚠제안 수치 (item_design §1 「투구 옵션」 · 2026-09-17)
+helmet,plate,ele_res,res_cold,flat,0.06,0.2,-,투구 플레이트 — 원소 저항 · 냉기 ⚠제안 수치
+helmet,plate,ele_res,res_lightning,flat,0.06,0.2,-,투구 플레이트 — 원소 저항 · 전기 ⚠제안 수치
+helmet,plate,ele_res,res_poison,flat,0.06,0.2,-,투구 플레이트 — 원소 저항 · 독 ⚠제안 수치
+helmet,plate,dr_flat,dr_flat,growth,0.15,0.25,-,투구 플레이트 — 절대값 피해 감소(모든 감소 뒤에 뺀다 · 아이템 레벨 따라 자란다) ⚠제안 수치 — 아이템 레벨 50 에서 3~4 · 70 에서 8~14
+helmet,leather,aspd,aspd_pct,flat,0.02,0.05,-,투구 가죽 — 공격 속도 ⚠제안 수치
+helmet,leather,crit_rate,crit_rate,flat,0.02,0.05,-,투구 가죽 — 치명타 확률 ⚠제안 수치
+helmet,tiara,cdr,cooldown_reduction,flat,0.03,0.08,-,투구 티아라 — 스킬 쿨타임 감소 ⚠제안 수치 · ⚠ 「데미지 +%」는 사용자 재논의라 풀에 없다 (2026-09-18)
+helmet,all,xp,xp_gain_pct,flat,0.05,0.12,-,투구 세 갈래 공통 — 경험치 획득 증가(본인 몫) ⚠제안 수치
+gloves,all,atk_pct,atk_pct,flat,0.03,0.08,-,장갑 ⚠임시 — 옛 affix.csv 장갑 풀을 그대로 옮겼다(공통옵션 기획 미정 · 2026-09-18 사용자 「패스」) · 한 stat 이 한 종류
+gloves,all,def_flat,def_flat,band,2,6,0.3,장갑 ⚠임시 — 옛 풀 · 방어력 +수치
+gloves,all,res_all,res_all,flat,0.03,0.1,-,장갑 ⚠임시 — 옛 풀 · 모든 원소 저항
+gloves,all,res_fire,res_fire,flat,0.06,0.2,-,장갑 ⚠임시 — 옛 풀 · 불 저항
+gloves,all,res_cold,res_cold,flat,0.06,0.2,-,장갑 ⚠임시 — 옛 풀 · 냉기 저항
+gloves,all,res_lightning,res_lightning,flat,0.06,0.2,-,장갑 ⚠임시 — 옛 풀 · 전기 저항
+gloves,all,res_poison,res_poison,flat,0.06,0.2,-,장갑 ⚠임시 — 옛 풀 · 독 저항
+gloves,all,crit_rate,crit_rate,flat,0.02,0.05,-,장갑 ⚠임시 — 옛 풀 · 치명타 확률
+gloves,all,aspd_pct,aspd_pct,flat,0.02,0.05,-,장갑 ⚠임시 — 옛 풀 · 공격 속도
+gloves,all,def_ignore,def_ignore,flat,0.03,0.08,-,장갑 ⚠임시 — 옛 풀 · 방어 무시
+gloves,all,gold_find,gold_find,flat,0.05,0.12,-,장갑 ⚠임시 — 옛 풀 · 골드 획득
+gloves,all,item_find,item_find,flat,0.04,0.1,-,장갑 ⚠임시 — 옛 풀 · 아이템 드랍확률
+boots,all,freeze_dur,freeze_dur_reduction,flat,0.1,0.25,-,신발 공통 — 빙결 시간 감소 % · ⚠ 상태이상 기계가 없어 지금은 효과가 없다 ⚠제안 수치 (item_design §1 신발 공통옵션 · 2026-09-18)
+boots,all,poison_dur,poison_dur_reduction,flat,0.1,0.25,-,신발 공통 — 중독 시간 감소 % · ⚠ 효과 없음(같은 이유) ⚠제안 수치
+boots,all,hp,hp_flat,growth,8,20,-,신발 공통 — 체력 + ⚠제안 수치 (옛 affix hp_flat 과 같은 대역)
+boots,all,xp,xp_gain_pct,flat,0.05,0.12,-,신발 공통 — 경험치 획득 증가(본인 몫) ⚠제안 수치

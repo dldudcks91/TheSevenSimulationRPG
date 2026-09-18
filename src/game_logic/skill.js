@@ -60,7 +60,8 @@ const EPS = 1e-9;
 // 스킬은 **직업 · 전직 · 유니크** 셋으로 나뉜다 [사용자 확정 2026-09-09 · skill_design §12].
 //   ~~`weapon_group`~~ 은 무기군 고정 폐기(§12-1 규칙 2)로 어휘에서 빠졌다 — 무기는 스킬의 **그릇**이지 출처가 아니다.
 //   지금 발행된 행은 전부 `job`(37 중 엔진 어휘로 도는 22) · `advance`·`unique` 는 미발행이다
-const OWNER_KINDS = ['job', 'advance', 'unique'];
+// `monster` = **몬스터 전용** [2026-09-18 · skill_design §12-9] — 영웅 고유 풀 · 무기 스킬 · 보스 셋째 칸은 전부 `job` 행만 읽어 여기 안 든다
+const OWNER_KINDS = ['job', 'advance', 'unique', 'monster'];
 // kind · target · effect_stat · cast_condition 은 skill_effects.js 등록표의 키를 그대로 쓴다 (import 참조)
 /**
  * 스킬 태그 — 목록 자체는 `skill_tag.csv`(주입 `tagRows`)가 든다. 여기 남는 것은 **코드가 아는 두 가지**뿐:
@@ -216,6 +217,12 @@ export function createSkillSystem(data) {
             if (d.hits !== 0) bad(`summon 인데 hits ${d.hits}`);
             if (!(d.mult > 0)) bad(`summon 인데 mult_pct ${d.mult} — 시전자 최대 HP 의 % 다`);
             if (d.dur !== 0) bad(`summon 인데 duration_sec ${d.dur} — 라운드가 끝날 때 사라진다`);
+        } else if (d.kind === 'call') {
+            // 불러내기 — 누구를 부르나는 편성(무리 · spawn_rule.js)이 정하고 세기는 그 몬스터가 든다. 스킬 행이 드는 것은 쿨뿐이다 (§12-9)
+            if (d.ownerKind !== 'monster') bad(`call 인데 owner_kind '${d.ownerKind}' — 불러내기는 몬스터 전용이다`);
+            if (d.target !== 'self') bad(`call 인데 target '${d.target}' — 시전자의 무리를 세운다`);
+            if (d.hits !== 0 || d.mult !== 0 || d.dur !== 0) bad(`call 인데 hits ${d.hits} · mult_pct ${d.mult} · duration_sec ${d.dur} — 셋 다 0`);
+            if (d.cond !== 'band_missing') bad(`call 인데 cast_condition '${d.cond}' — band_missing 이어야 빈 부름이 안 나간다`);
         } else {
             // **buff 만 적에게 걸 수 있다**(디버프 = 음수 값). heal·aura 는 아군 대상뿐이다
             const okTargets = d.kind === 'buff' ? [...SUPPORT_TARGETS, ...DEBUFF_TARGETS] : SUPPORT_TARGETS;
@@ -279,6 +286,8 @@ export function createSkillSystem(data) {
         }
         // 표시 컬럼 — 화면은 이제 CSV 만 읽으므로 비면 빈 칸·빈 툴팁이 그대로 그려진다 (mock 표시 사전 폐지)
         if (row.innate_pool !== 0 && row.innate_pool !== 1) bad(`innate_pool ${row.innate_pool} — 0 또는 1`);
+        // 몬스터 전용은 영웅 고유 풀에 들지 않는다 — 풀은 `job` 행만 읽지만 칸이 1 이면 뜻이 두 곳에서 갈린다 (§12-9)
+        if (d.ownerKind === 'monster' && row.innate_pool !== 0) bad(`owner_kind monster 인데 innate_pool ${row.innate_pool} — 몬스터 전용은 0`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
     }
@@ -399,20 +408,30 @@ export function createSkillSystem(data) {
 
     /**
      * **스킬 계수 공용 계산** (skill_design §13 · battle_design §9-2 · 2026-09-10 R72) — 전투와 미리보기가 **같은 함수**를 쓴다.
-     * 반환은 `def` 의 얕은 복사본에 실효 `hits`·`value`·`dur`·`decay`·`procChance`·`procMult` 와 `flat` 을 덧씌운 것이다.
-     *   · `mult_pct` — **배율에 더하지 않는다.** `flat` 으로 따로 내고 공격은 `공격력 × 배율 + flat` · 회복은 `마법 공격력 × 배율 + flat` ·
-     *     소환은 `시전자 최대 HP × 배율 + flat` 이 된다. 곱이면 무기와 능력치 중 한쪽이 낮을 때 다른 쪽까지 죽는다
+     * 반환은 `def` 의 얕은 복사본에 실효 `hits`·`value`·`dur`·`decay`·`procChance`·`procMult` 와 `statMult` 를 덧씌운 것이다.
+     *   · `mult_pct` — **배율에 더하지 않는다.** 그 슬롯 능력치의 계수(`formula.statCoef`)를 `statMult` 로 내고 공격은 `공격력 × 배율 × statMult` ·
+     *     회복은 `마법 공격력 × 배율 × statMult` · 소환은 `시전자 최대 HP × 배율 × statMult` 가 된다 [2026-09-18 · battle_design §9-2 —
+     *     ~~`flat` 으로 더한다(곱이 아니라 합 · 09-10)~~ 폐기]. 슬롯의 `coef` 칸은 안 읽는다 — 계수 모양은 전역 하나다. 복리라 0 이 안 된다
+     *   · `opt.noStatMult` — 계수를 1 로 둔다(**몬스터** — 보류 · GAME_DESIGN §10 「몬스터의 능력치 계수」)
      *   · `hits` — 버림(정수 타수). 공격은 1 아래로 안 내려간다
      *   · `effect_value`·`duration_sec`·확률·배수 — **크기에 더하고 부호를 지킨다.** 음수 디버프(페니턴스·바인드)가 슬롯에 밀려 약해지면 안 된다
      *   · `decay_pct` — 슬롯이 민 몫만 [balance.csv:skill_decay_cap_pct] 에서 멈춘다. CSV 원값은 로드 검증(100 미만)이 따로 본다
      * **순수** — rng 0 · 입력을 바꾸지 않는다. 몬스터·소환처럼 능력치가 없으면(`stats` null) 합이 전부 0 이라 원값 그대로다.
      * ⚠ 계수가 지금 전부 0 이라 결과는 언제나 원값이다 — 축만 정했고 크기는 밸런스 몫이다 (§13-3)
-     * @param def 스킬 정의 · @param stats 기본 능력치 `{str, agi, int, vit, luck, ldr, cha}` 또는 null
+     * @param def 스킬 정의 · @param stats 기본 능력치 `{str, agi, int, vit, luck, ldr, cha}` 또는 null · @param opt `{noStatMult}`
      */
-    function scaleDef(def, stats) {
+    function scaleDef(def, stats, opt = {}) {
         if (!def) return null;
         const sum = {};
-        for (const s of def.scales ?? []) sum[s.field] = (sum[s.field] ?? 0) + (stats?.[s.attr] ?? 0) * s.coef;
+        let statMult = 1;
+        for (const s of def.scales ?? []) {
+            // 데미지 슬롯은 더하지 않고 그 능력치의 계수를 곱한다 (2026-09-18) — 능력치를 모르면 1
+            if (s.field === 'mult_pct') {
+                if (stats && !opt.noStatMult) statMult *= F.statCoef(stats[s.attr]);
+                continue;
+            }
+            sum[s.field] = (sum[s.field] ?? 0) + (stats?.[s.attr] ?? 0) * s.coef;
+        }
         // 크기에 더하고 부호 유지 — raw 0 은 + 쪽이다
         const grow = (raw, field) => (raw < 0 ? -(-raw + (sum[field] ?? 0)) : raw + (sum[field] ?? 0));
         const hits = Math.floor(def.hits + (sum.hits ?? 0));
@@ -426,7 +445,7 @@ export function createSkillSystem(data) {
             decay: decayAdd > 0 ? Math.max(def.decay, Math.min(def.decay + decayAdd, B.skill_decay_cap_pct)) : def.decay,
             procChance: grow(def.procChance ?? 0, 'proc_chance_pct'),
             procMult: grow(def.procMult ?? 0, 'proc_mult_pct'),
-            flat: sum.mult_pct ?? 0,
+            statMult,
         };
     }
 
@@ -435,14 +454,15 @@ export function createSkillSystem(data) {
      * 공식을 렌더러가 다시 적지 않게 여기서 낸다 (DEV_PLAN 부채 #3 을 늘리지 않는다).
      *
      * ⚠ **감소도 치명도 안 태운다** — 방어·저항·피해 감소는 **대상이 정해져야** 나오는 값이라 미리보기가 될 수 없고,
-     *   치명은 굴림이다. 그래서 `amount` 는 `formula.strike` 의 **첫 줄**(공격력 × 스킬 배율 + 능력치 항)까지이고
+     *   치명은 굴림이다. 그래서 `amount` 는 `formula.strike` 의 **첫 줄**(데미지 × 스킬 배율 × 능력치 계수 · 2026-09-18)까지이고
      *   그 뒤 단계는 전투가 낸다. 툴팁이 약속하는 것은 「내가 때리는 세기」이지 「상대가 받는 피해」가 아니다.
      * ⚠ **버프는 `amount` 가 `null` 이다** — 버프의 세기는 배율이 아니라 `effect_value` 라서 곱할 것이 없다.
      *   대신 **`parts`** 가 슬롯이 미는 항마다 「원값 · 실효값 · 어느 능력치가 얼마나」를 낸다 [2026-09-10 · R72] —
      *   설명창(2단계)이 이 모양을 그대로 읽는다. 실효값은 전투와 **같은 함수**(`scaleDef`)에서 온다.
      *
      * @param def 스킬 정의 (`defs[id]` 또는 `resolve(inst)`)
-     * @param ctx {atkMin, atkMax, matkMin, matkMax, hpMax, period, stats} — 전부 선택. 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     * @param ctx {atkMin, atkMax, matkMin, matkMax, hpMax, period, stats, noStatMult} — 전부 선택. 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     *   · `noStatMult` — 몬스터(능력치 계수 보류 · 2026-09-18) — 전투와 같은 규칙으로 `scaleDef` 에 넘긴다
      *   · `amount` 의 밑수 — attack `atkMin`~`atkMax` · heal `matkMin`~`matkMax` · summon `hpMax` — **양끝마다 계산해 `{min, max}` 로 낸다**(R90)
      *   · `stats` — 기본 능력치 7종. **`mult_pct` 슬롯이 있는데 없으면** `amount` 는 `null` 이다(고정 항을 모르는 피해는 틀린 숫자다)
      * @returns {{baseSec, everySec, lossPct, amount, parts}} — `parts.amount`(mult > 0 인 attack·heal·summon) ·
@@ -452,19 +472,20 @@ export function createSkillSystem(data) {
         if (!def) return null;
         const period = ctx.period > 0 ? ctx.period : null;
         const stats = ctx.stats ?? null;
-        const eff = scaleDef(def, stats);
+        const eff = scaleDef(def, stats, { noStatMult: ctx.noStatMult });
         const termsOf = field => (def.scales ?? []).filter(s => s.field === field).map(s => ({ attr: s.attr, coef: s.coef }));
         const parts = {};
-        // 한 타 피해 · 회복량 · 벽 HP = 밑수 × 배율 + 고정 항 — 고정 항을 모르면(슬롯이 있는데 stats 가 없다) 숫자를 내지 않는다
+        // 한 타 피해 · 회복량 · 벽 HP = 밑수 × 배율 × 능력치 계수 — 계수를 모르면(슬롯이 있는데 stats 가 없다) 숫자를 내지 않는다
         const basis = AMOUNT_BASIS[def.kind] ?? null;
         let amount = null;
         if (basis !== null && def.mult > 0) {
-            const terms = termsOf('mult_pct');
+            // 곱하는 능력치의 목록 — 계수를 안 타는 몬스터(`noStatMult`)는 비운다(식에 뒤 항이 안 선다 · ADR-0164)
+            const terms = ctx.noStatMult ? [] : termsOf('mult_pct');
             // 밑수는 범위다(R90) — 양끝이 다 알려져야 숫자를 낸다. 한쪽이라도 모르면 식으로 접힌다
             const ends = basisEnds(basis, ctx);
             const known = ends.every(v => Number.isFinite(v) && v >= 0);
             amount = !known || (terms.length > 0 && stats === null) ? null
-                : { min: Math.round(ends[0] * def.mult + eff.flat), max: Math.round(ends[1] * def.mult + eff.flat) };
+                : { min: Math.round(ends[0] * def.mult * eff.statMult), max: Math.round(ends[1] * def.mult * eff.statMult) };
             parts.amount = { value: amount, basis, pct: def.mult, terms };
         }
         // 슬롯이 미는 나머지 항 — 그 항에 슬롯이 하나라도 있을 때만 키가 선다(coef 0 인 항도 terms 에 든다)

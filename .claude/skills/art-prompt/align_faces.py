@@ -22,13 +22,17 @@ SHEETS = {'human': 'source_sheet_human_wraith.png', 'skel': 'source_sheet_skelet
           'orc_troop': 'source_sheet_orc_troop.png', 'orc_boss': 'source_sheet_orc_boss.png', 'orc_troop_2': 'source_sheet_orc_troop_2.png',
           'skel3': 'source_sheet_skeleton_3.png',
           'skel_el': 'source_sheet_skeleton_elite.png', 'dullahan': 'source_sheet_dullahan.png',
-          'goblin_troop_2': 'source_sheet_goblin_troop_2.png', 'goblin_elite': 'source_sheet_goblin_elite.png'}
+          'goblin_troop_2': 'source_sheet_goblin_troop_2.png', 'goblin_elite': 'source_sheet_goblin_elite.png',
+          'skel_soldier': 'source_sheet_skeleton_soldier.png',
+          'skel_soldier_2': 'source_sheet_skeleton_soldier_2.png',
+          'legion': 'source_sheet_legion.png'}
 
 #                              sheet    tile crop                 ex   ey     k    idx   dx   dy
 SPEC = {
- 'wraith_topknot_soldier'  : ('human', (8, 8, 505, 505),         284, 197, 1.05, 1201,  32, -17),
+ 'wraith_topknot_soldier'  : ('human', (8, 8, 505, 505),         284, 197, 1.25, 1201,  13,   6),   # 09-18 — 궁수·기사에 맞춤(눈 사이 79 → 93 · 눈높이 202 → 226)
  'wraith_masked_archer'    : ('human', (519, 8, 1016, 505),      293, 190, 1.25, 1202,  30,  -2),
  'wraith_bald_captain'     : ('human', (8, 519, 505, 1016),      313, 190, 1.20, 1203,  48,   9),
+ 'legion_banner_longhair'  : ('legion', (0, 0, 1012, 1012),      316.2, 215.7, 1.32, 1250,  44,  11),   # 09-18 — 1-2 보스 · 병사 셋과 눈 사이 94 · 눈높이 226
  'skeleton_nasal_helm'     : ('skel',  (0, 0, 1013, 1013),       283, 265, 1.060, 3201,  14,  35),
  'skeleton_bare_quiver'    : ('skel',  (1035, 0, 2048, 1013),    316, 272, 1.060, 3202,  46,  55),
  'skeleton_greathelm_plume': ('skel',  (0, 1035, 1013, 2048),    310, 280, 1.039, 3203,  40,  56),
@@ -37,9 +41,11 @@ SPEC = {
  'goblin_cloak_longear_dark': ('goblin_troop_2', (0, 0, 1013, 1013),       327.4, 252.9, 1.118, 1101, 60,  5),   # 09-17 — 옛 1101 과 눈 자리·눈 사이를 맞췄다
  'goblin_helm_dark'        : ('goblin_troop_2', (1035, 0, 2048, 1013),    333.5, 245.7, 1.046, 1102, 70, 16),
  'goblin_skull_helm_dark'  : ('goblin_troop_2', (0, 1035, 1013, 2048),    296.8, 246.1, 1.037, 1103, 58, 20),
- 'goblin_scar_leather_elite': ('goblin_elite', (0, 0, 1013, 1013),        327.4, 252.9, 1.118, '1101_elite', 60,  5),   # 정예 — 기본판과 같은 구도라 같은 값
- 'goblin_spiked_helm_elite': ('goblin_elite', (1035, 0, 2048, 1013),     333.5, 245.7, 1.046, '1102_elite', 70, 16),
- 'goblin_feather_skull_elite': ('goblin_elite', (0, 1035, 1013, 2048),   296.8, 246.1, 1.037, '1103_elite', 58, 20),
+ 'goblin_feather_skull_elite': ('goblin_elite', (0, 1035, 1013, 2048),   296.8, 246.1, 1.037, '1103_elite', 58, 20),   # 정예 — 기본판과 같은 구도라 같은 값 · 1-1 정예는 주술사뿐이라 1 · 2번 타일은 안 쓴다
+ # 1-3 은 스켈레톤 병사 하나뿐이라 세 자리가 **같은 그림**이다 (2026-09-18 사용자 지시 — 시트 1번 타일)
+ 'skeleton_bare_chainmail_1301': ('skel_soldier_2', (0, 0, 506, 506),    329.5, 266.5, 1.122, 1301, 47, 30),
+ 'skeleton_bare_chainmail_1302': ('skel_soldier_2', (0, 0, 506, 506),    329.5, 266.5, 1.122, 1302, 47, 30),
+ 'skeleton_bare_chainmail_1303': ('skel_soldier_2', (0, 0, 506, 506),    329.5, 266.5, 1.122, 1303, 47, 30),
  'orc_helm_tusk_pauldron'  : ('orc_troop_2', (0, 0, 506, 506),   317, 217, 1.35, 2101,   0,   4),
  'orc_hood_braid_quiver'   : ('orc_troop_2', (518, 0, 1024, 506),309, 220, 1.31, 2102,   0,   4),
  'orc_coral_skull_crown'   : ('orc_troop_2', (0, 518, 506, 1024),309, 214, 1.22, 2103,   0,   4),

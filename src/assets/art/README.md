@@ -12,6 +12,7 @@
 | `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 15장(Ch1~Ch3 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] |
 | `pixel/` | **스테이지 배경 설치본 — 도트 스타일** 15장(Ch1~Ch3) + `town.webp`(앱 전역 배경 · 한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110). **비교용으로 남긴다**(`?bg=pixel`) · 거점 배경은 스타일을 안 타고 늘 여기서 읽는다 |
 | `explore_chapter_1.webp` | **탐험 탭 — 챕터 1 지도** ⚠ 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
+| `login.webp` | **로그인 첫 화면 전용 배경** — 원본 `source/illustrate/Gemini_Generated_Image_vrizszvrizszvriz.png`을 크롭 없이 RGB WebP q92로 설치. 로그인 뒤 화면에서는 읽지 않는다 |
 | `source/pixel/` · `source/illustrate/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 워터마크 띠를 잘라 만든다 (아래) |
 
 파일명의 숫자는 `stage.csv` 의 stage_id 다 — 스테이지와 배경이 id로 1:1 대응한다.
@@ -357,6 +358,9 @@ icons/items/
 ├── item_base/          ← 방어구 · 장신구 — 파일명 = item_base.csv 의 base_id [폴더 2026-09-14 · 베이스 축 2026-09-17]
 │   └── armor_cloth · armor_robe_1~3 · armor_light_1~3 · armor_heavy_1~3 .png      ← 갑옷 10종
 │       helmet_cloth · helmet_tiara_1~3 · helmet_leather_1~3 · helmet_plate_1~3 .png ← 투구 10종 [2026-09-17]
+│       gloves_cloth · gloves_leather_1~3 · gloves_gauntlet_1~3 .png                ← 장갑 7종 [2026-09-18]
+│       boots_start · boots_leather_1~3 · boots_greaves_1~3 .png                    ← 신발 7종 [2026-09-18]
+│       ring_1~3 · amulet_1~3 .png                                                  ← 장신구 6종 [2026-09-18 · 스케치 발주]
 │       (옛 부위당 한 장 armor_1 · boots_1 · gloves_1 · ring_1 은 2026-09-17 삭제)
 ├── source/             ← 원본 시트 — **게임이 안 읽는다** [폴더 2026-09-14]
 │   ├── examples.png        ← 무기 원본 시트(3×3)
@@ -515,8 +519,8 @@ icons/items/empty/
 | `empty/<part>.png` | **캐릭터 탭 페이퍼돌의 빈 칸** (SCREEN_DESIGN §6) | `ui/mock.js:slotArt` |
 | ~~`<group_id>.png` (무기 8)~~ **삭제 2026-09-17** | **착용 칸 · 가방 칸 · 제련소 목록·머리** (SCREEN_DESIGN §2) — `item.group` 이 곧 파일명이라 **제 그림이다**. ⚠ **본편 열 전부 베이스 그림이 서서 실칸에서는 안 쓰인다** — 아래 베이스 7장이 대신 뜬다. 무기군 그림은 **도감 「무기」 줄에만** 남았다 | `ui/mock.js:itemArt` |
 | `weapon_base/<group>/*.png` (본편 열 무기군 베이스 각 7) | 같은 칸들 — **개체마다 제 무기군의 7장 중 하나** [2026-09-10 · 둔기·창·활 2026-09-11 · 스태프·오브·십자가·성경·석궁 2026-09-14]. 개체가 든 `baseId` 의 그림이다(`weapon_base.csv` 가 드롭 때 굴린다 · **이름도 그 베이스**). `baseId` 가 없는 옛 개체만 **`uid`+무기군 해시**로 고른다 — **rng 가 아니라** 그리는 시각의 해시라 골든이 안 움직이고, uid 가 세이브에 남으므로 **한 개체는 평생 같은 무기**다. ⚠ 해시로 고른 옛 개체는 이름·툴팁이 무기군 이름이라 **그림과 이름이 어긋난다** | `ui/mock.js:itemArt` (`WEAPON_BASE_STEMS` — 무기군별 맵) |
-| `item_base/<base_id>.png` (갑옷 10 · 투구 10) | 같은 칸들 — **개체가 든 `baseId` 의 그림** [2026-09-17]. 드롭 때 굴린 베이스 id 를 개체가 들고(`item.js:build`) 화면은 그대로 읽어, 퀼티드와 더스크 슈라우드가 다른 그림이다. ⚠ **옛 세이브의 방어구는 `baseId` 가 없어** 이모지로 떨어진다 — 새로 먹는 것부터 그림이 붙는다 | `ui/mock.js:itemArt` (`ITEM_BASE_ART_IDS`) |
-| 장갑 · 신발 · 목걸이 · 반지 | **아이템 그림이 없다** — 착용·가방·제련소가 `equip_slot.csv:icon` 이모지로 떨어진다. **미장착 칸은 2026-09-17 로 그림이 생겼다**(위 `empty/` 줄) | — |
+| `item_base/<base_id>.png` (갑옷 10 · 투구 10 · 장갑 7 · 신발 7 · 반지 3 · 목걸이 3) | 같은 칸들 — **개체가 든 `baseId` 의 그림** [2026-09-17]. 드롭 때 굴린 베이스 id 를 개체가 들고(`item.js:build`) 화면은 그대로 읽어, 퀼티드와 더스크 슈라우드가 다른 그림이다. ⚠ **옛 세이브의 방어구는 `baseId` 가 없어** 이모지로 떨어진다 — 새로 먹는 것부터 그림이 붙는다 | `ui/mock.js:itemArt` (`ITEM_BASE_ART_IDS`) |
+| 반지 · 목걸이의 **넷째 이름**(`ring_4` · `amulet_4`) | **아이템 그림이 없다** — 착용·가방·제련소가 `equip_slot.csv:icon` 이모지로 떨어진다. **미장착 칸은 2026-09-17 로 그림이 생겼다**(위 `empty/` 줄) | — |
 
 ⚠ 화면에서 이 그림들은 **`<img>` 로 들어간다. CSS `background: url()` 이 아니다** — 상대 경로를 커스텀 프로퍼티에
 담으면 `style.css` 기준(`/ui/assets/…`)으로 풀려 404 가 난다. 실제로 그렇게 짰다가 칸이 통째로 비었다.

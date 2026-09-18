@@ -77,8 +77,8 @@ export const RARITY = {
 
 /** 접사 표기 — stat id → 이름 + 단위. **화면 전용 사전**이라 CSV 로 가지 않는다 (`SKILL_DISPLAY` 와 같은 성격) */
 export const AFFIX_LABELS = {
-    atk_flat: { ko: '공격력', en: 'Attack', fmt: 'n' },
-    atk_pct: { ko: '공격력', en: 'Attack', fmt: 'pct' },
+    atk_flat: { ko: '데미지', en: 'Damage', fmt: 'n' },
+    atk_pct: { ko: '데미지', en: 'Damage', fmt: 'pct' },
     hp_flat: { ko: '최대 HP', en: 'Max HP', fmt: 'n' },
     hp_pct: { ko: '최대 HP', en: 'Max HP', fmt: 'pct' },
     def_flat: { ko: '물리 방어', en: 'Physical Defense', fmt: 'n' },
@@ -99,8 +99,8 @@ export const AFFIX_LABELS = {
     // ── 무기 옵션 (item_design §1 「무기 옵션」 · 2026-09-11 R78) — 죄종 칸 · 통합옵션 표가 쓰는 축.
     //    `res_reduction` 은 combat_stat.csv 이름과 같게 둔다 — 마스터리 칸도 이 사전을 먼저 읽는다
     res_reduction: { ko: '저항 감소', en: 'Resist Reduction', fmt: 'pct' },
-    atk_down_phys_pct: { ko: '타격 시 대상 물리 공격력 감소', en: 'Physical Attack Down on Hit', fmt: 'pct' },
-    atk_down_mag_pct: { ko: '타격 시 대상 마법 공격력 감소', en: 'Magic Attack Down on Hit', fmt: 'pct' },
+    atk_down_phys_pct: { ko: '타격 시 대상 물리 데미지 감소', en: 'Physical Damage Down on Hit', fmt: 'pct' },
+    atk_down_mag_pct: { ko: '타격 시 대상 마법 데미지 감소', en: 'Magic Damage Down on Hit', fmt: 'pct' },
     dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', fmt: 'pct' },
     crushing_blow_pct: { ko: '강타 (현재 체력)', en: 'Crushing Blow (Current HP)', fmt: 'pct' },
     magic_find: { ko: '매직아이템 획득', en: 'Magic Find', fmt: 'pct' },
@@ -116,6 +116,30 @@ export const AFFIX_LABELS = {
     lightning_dmg_pct: { ko: '전기 피해', en: 'Lightning Damage', fmt: 'pct' },
     poison_dmg_pct: { ko: '독 피해', en: 'Poison Damage', fmt: 'pct' },
     res_down_pct: { ko: '타격 시 대상 원소 저항 감소', en: 'Resist Shred on Hit', fmt: 'pct' },
+    // ── 방어구 옵션 (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 신발 행 · 2026-09-18) — 고정 · 죄종 칸 · 공통옵션 표가 쓰는 축.
+    //    `fhr` · `cooldown_reduction` 은 combat_stat.csv 이름과 같게 둔다(마스터리 칸도 이 사전을 먼저 읽는다)
+    armor_def_pct: { ko: '물리 방어', en: 'Physical Defense', fmt: 'pct' },           // 고정 — 그 장비 자신의 고유 방어력에만 곱한다
+    fhr: { ko: '타격 회복', en: 'Hit Recovery', fmt: 'pct' },
+    cooldown_reduction: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'pct' },
+    hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', fmt: 'pct' },
+    def_per_level: { ko: '레벨당 물리 방어', en: 'Physical Defense per Level', fmt: 'n' },
+    hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', fmt: 'n' },
+    aspd_per_level_pct: { ko: '레벨당 공격 속도', en: 'Attack Speed per Level', fmt: 'pct' },
+    counter_chance: { ko: '반격 확률', en: 'Counter Chance', fmt: 'pct' },
+    res_max_fire: { ko: '최대 불 저항', en: 'Max Fire Resist', fmt: 'pct' },
+    res_max_cold: { ko: '최대 냉기 저항', en: 'Max Cold Resist', fmt: 'pct' },
+    res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', fmt: 'pct' },
+    res_max_poison: { ko: '최대 독 저항', en: 'Max Poison Resist', fmt: 'pct' },
+    dr_flat: { ko: '피해 감소 (고정)', en: 'Damage Reduction (Flat)', fmt: 'n' },
+    vs_normal_dr: { ko: '일반 적에게 받는 피해 감소', en: 'Damage Reduction vs Normal', fmt: 'pct' },
+    vs_demon_dr: { ko: '데몬에게 받는 피해 감소', en: 'Damage Reduction vs Demon', fmt: 'pct' },
+    vs_undead_dr: { ko: '언데드에게 받는 피해 감소', en: 'Damage Reduction vs Undead', fmt: 'pct' },
+    vs_elite_dr: { ko: '정예·보스에게 받는 피해 감소', en: 'Damage Reduction vs Elites & Bosses', fmt: 'pct' },
+    vs_front_dr: { ko: '전열 적에게 받는 피해 감소', en: 'Damage Reduction vs Front Row', fmt: 'pct' },
+    vs_back_dr: { ko: '후열 적에게 받는 피해 감소', en: 'Damage Reduction vs Back Row', fmt: 'pct' },
+    xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', fmt: 'pct' },
+    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct' },
+    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct' },
 };
 
 /**
@@ -250,8 +274,8 @@ export const HERO_FACE_NAMES = {
  *   아래 3비트가 거의 안 섞이고, 그러면 **닿지 않는 값이 생긴다.**
  *   실제로 `HERO_FACE_MAX` 를 7 → 8 로 올린 날 이름 24개가 얼굴 5종에만 몰렸다(hero_1·3·7 은 어떤 이름으로도 안 나왔다).
  *   홀수 개수(5·7)에서는 나머지가 32비트 전체를 끌어써서 안 드러나던 결함이다 — 개수에 기대지 않도록 해시 쪽을 고쳤다.
- * ⚠ **영웅 얼굴은 더 이상 이 해시를 안 쓴다** (2026-09-06 저장형 전환) — 지금 쓰는 곳은 `skillIcon` 하나이고,
- *   그 목록도 4개(2의 거듭제곱)라 마무리 섞기가 그대로 필요하다. */
+ * ⚠ **영웅 얼굴은 더 이상 이 해시를 안 쓴다** (2026-09-06 저장형 전환) · **스킬 그림도 안 쓴다** (2026-09-18 · ADR-0162 — 그림 없는 스킬은 검은 칸).
+ *   지금 쓰는 곳은 `itemArt` 의 옛 무기 개체(`baseId` 없음) 하나다. 마무리 섞기는 그대로 필요하다 — 나머지를 가르는 개수가 무엇이든 아래 비트만 쓰이지 않게. */
 const strHash = s => {
     let h = 2166136261;
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -273,8 +297,8 @@ export const heroFace = hero => {
 /**
  * 스킬 아이콘 그림 — `src/assets/art/icons/skills/<skill_id>.png` (2026-09-03 · SCREEN_DESIGN §2).
  *
- * 제 그림이 있는 스킬은 그것, 없는 스킬은 **id 안정 해시**로 아래 목록에서 하나 — `heroFace` 와 같은 문법이다
- *   (같은 스킬은 어디서나 같은 그림 · 매 렌더 안 굴린다). 자산이 늘면 이 목록에 파일명만 더한다.
+ * 제 그림이 있는 스킬은 그것, **없는 스킬은 `null`** — 그리는 쪽(`skillImg` 셋)이 **검은 칸**을 깐다 [2026-09-18 사용자 지시 · ADR-0162].
+ *   ~~id 안정 해시로 목록에서 하나~~ 는 폐기 — 남의 그림은 틀린 정보다(부위 실루엣 `slotArt` 와 같은 이유). 자산이 늘면 이 목록에 파일명만 더한다.
  * 파일 유무를 fetch 로 묻지 않는 이유도 같다 — 렌더는 동기다. 목록이 실제 폴더와 갈리면 img 가
  *   `onerror` 로 빠지고 칸이 빈다 — 밑에 이모지를 안 까는 이유는 영웅 초상과 같다(투명 PNG 사이로 비친다).
  * 얼굴 스타일(`faceDir`)을 안 타는 이유 — 스킬 아이콘은 스타일 폴더가 없는 단일 세트다.
@@ -283,7 +307,7 @@ export const SKILL_ICON_DIR = './assets/art/icons/skills/';
 // [전사 세트 2026-09-09] **전사 7 이 제 그림을 갖는다** — 단색 실루엣 시트 한 장에서 잘라 설치했다
 //   (발주·타일 문장은 `.claude/skills/icon-prompt/skill_tiles.md` §3). 09-09 오전의 개명 셋(`war_warcry`·`wg_axe`·
 //   `wg_sword2h` → `war_taunt`·`war_doubleswing`·`war_quake`)은 **그림째 교체**돼 옛 컬러 자산이 남아 있지 않다.
-//   ⚠ 목록의 **길이가 곧 해시 폴백의 나머지**다 — 5 → 8 이 되면서 그림 없는 스킬 29개의 임시 그림이 전부 재배정됐다
+//   목록에 없는 스킬은 검은 칸이다(2026-09-18 · ADR-0162 — 해시 폴백 폐기)
 export const SKILL_ICON_FILES = [
     'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_taunt', 'war_shout', 'war_battleorders',
     'kni_smite', 'kni_charge', 'kni_rush', 'kni_duel', 'kni_enchant',
@@ -297,8 +321,7 @@ export const SKILL_ICON_FILES = [
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);
-    const file = SKILL_ICON_FILES.includes(key) ? key : SKILL_ICON_FILES[strHash(key) % SKILL_ICON_FILES.length];
-    return SKILL_ICON_DIR + file + '.png';
+    return SKILL_ICON_FILES.includes(key) ? SKILL_ICON_DIR + key + '.png' : null;
 };
 /**
  * 미장착 착용 칸의 부위 실루엣 — `src/assets/art/icons/items/empty/<part>.png` (2026-09-03 · SCREEN_DESIGN §6).
@@ -346,7 +369,14 @@ export const ITEM_BASE_ART_IDS = ['armor_cloth', 'armor_robe_1', 'armor_robe_2',
     // 투구 10 [2026-09-17] — 갈래 3(티아라 · 가죽 · 플레이트) × 티어 3 + 시작 하나 (item_design 「투구 갈래」)
     'helmet_cloth', 'helmet_tiara_1', 'helmet_tiara_2', 'helmet_tiara_3',
     'helmet_leather_1', 'helmet_leather_2', 'helmet_leather_3',
-    'helmet_plate_1', 'helmet_plate_2', 'helmet_plate_3'];
+    'helmet_plate_1', 'helmet_plate_2', 'helmet_plate_3',
+    // 장갑 7 · 신발 7 [2026-09-18] — 갈래 2(가죽 · 건틀릿 / 가죽 · 그리브스) × 티어 3 + 시작 하나 (item_design 「장갑 갈래」 · 「신발 갈래」)
+    'gloves_cloth', 'gloves_leather_1', 'gloves_leather_2', 'gloves_leather_3',
+    'gloves_gauntlet_1', 'gloves_gauntlet_2', 'gloves_gauntlet_3',
+    'boots_start', 'boots_leather_1', 'boots_leather_2', 'boots_leather_3',
+    'boots_greaves_1', 'boots_greaves_2', 'boots_greaves_3',
+    // 장신구 6 [2026-09-18] — 반지 3 · 목걸이 3 (베이스 이름은 아직 옛 임시 풀이다 — item_design 장신구 갈래 미정)
+    'ring_1', 'ring_2', 'ring_3', 'amulet_1', 'amulet_2', 'amulet_3'];
 /**
  * 무기 베이스 그림 — `icons/items/weapon_base/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 본편 열 전부.
  *   열 모두 `weapon_base.csv` 행이 서서 새 개체는 `baseId` 를 들고(아래 `itemArt`) 이름도 그 베이스다 (둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14).
@@ -589,7 +619,7 @@ export const MASTERY_GRID = { tiers: 3, nodes: 3 };
 /** 스테이지 번호별 계열 라벨 — 계열 자체는 codex_series.csv, 여기는 표시 문구뿐. 스테이지 목록은 ui/data.js:codexStages() 가 stage.csv 에서 만든다.
  *  **5(챕터보스 단독 스테이지)는 키가 없다** — codex_series.csv 에도 행이 없고 배정은 기획 미정이다(GAME_DESIGN §10). 화면이 빈 칸으로 그린다 (2026-09-11) */
 export const CX_STAT = {
-    1: { ko: '공격력', en: 'Attack' },
+    1: { ko: '데미지', en: 'Damage' },
     2: { ko: '체력', en: 'Health' },
     // ⚠ 계열 3 은 **미정**이다 — 08-26 명중·회피 폐지로 `codex_series.csv:acc_pct` 가 갈 곳을 잃었고,
     //    재배정은 GAME_DESIGN §10 대기다. 폐기된 스탯 이름을 유저에게 그리지 않는다 (2026-09-08)

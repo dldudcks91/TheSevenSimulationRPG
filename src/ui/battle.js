@@ -49,7 +49,8 @@ const kindLabel = k => t(`kind.${k}`);
    않으므로 한 줄을 각자 든다 — 규칙은 `mock.skillIcon` 한 곳이라 갈릴 자리는 없다 */
 const skillImg = s => {
     const src = M.skillIcon(s?.id);
-    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
+    // 제 그림이 없는 스킬은 **검은 칸** — 남의 그림을 안 빌린다 (2026-09-18 · ADR-0162). 스킬이 없는 칸(`s` 없음)은 그대로 빈다
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : s?.id ? '<i class="sk-noart"></i>' : '';
 };
 const clamp01 = v => Math.max(0, Math.min(1, v));
 /* 물리 경직 (R110 · SCREEN_DESIGN §4-2 · ADR-0154) — 유닛은 마지막 행동 이후의 경직 창 `stalls [{from, to}]` 를 든다(`stagger` 이벤트가 쌓고 행동이 비운다).
@@ -441,7 +442,8 @@ function renderUnits(state, root) {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
                 // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
                 if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i],
-                    { period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, source: u.skills[i].source }));
+                    { period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, source: u.skills[i].source,
+                      noStatMult: u.side === 'enemy' }));   // 몬스터는 능력치 계수 보류 — 전투(`battle.makeEnemy`)와 같은 규칙 (SCREEN_DESIGN §2 · ADR-0164)
             });
             u.node = n;
             // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서
@@ -656,32 +658,59 @@ function drain(state, root, opts) {
     }
 }
 
+/** 적 카드 한 장의 상태 — `round` 의 `enemies` 와 `call`(불러내기 · ADR-0161)의 `units` 가 **같은 모양**이라 한 곳에서 만든다 (INTERFACE §2-6).
+ *  @param at 그 카드가 선 시각 — 행동 게이지의 기준 · 스킬 칸의 첫 준비 시각 */
+const enemyEntry = (e, at) => ({
+    key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
+    name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: at, node: null,
+    rank: enemyRank(e.monsterId),   // 진형 — 몬스터 **역할**이 정한다 (`monster_role.csv`)
+    // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
+    //   skills      → **시뮬이 실어 온 그 목록**(`round` 이벤트의 `actives` — 파티의 `result.party[].actives` 와 같은 모양) [개정 2026-09-11 R79 후속 · 사용자 지적].
+    //                 ⚠ 옛 판은 `skills: []` 로 비웠다(「몬스터 액티브는 아직 없다」) — R79 로 몬스터가 스킬을 쓰게 된 뒤에도 남아 칸이 빈 채였고,
+    //                 `castSkill` 이 칸에서 못 찾아 적의 `skill` 이벤트(칸 번쩍임 · 이름 팝업)를 **조용히 흘렸다**
+    //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
+    atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량(범위 · R90) · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
+    sheet: e.sheet ?? null,   // 세부 능력치 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 「유닛 툴팁 규격」)
+    // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
+    skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], at), firedAt: at })),
+    buffs: new Map(),
+    stalls: [],   // 경직 창 (R110 · ADR-0154)
+});
+
 function apply(state, root, opts, ev) {
     const U = k => state.units.get(k);
     switch (ev.e) {
         case 'round': {
             state.round = ev.n;
             for (const e of state.enemies) state.units.delete(e.key);
-            state.enemies = ev.enemies.map(e => ({
-                key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
-                name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: ev.t, node: null,
-                rank: enemyRank(e.monsterId),   // 진형 — 몬스터 **역할**이 정한다 (`monster_role.csv`)
-                // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
-                //   skills      → **시뮬이 실어 온 그 목록**(`round` 이벤트의 `actives` — 파티의 `result.party[].actives` 와 같은 모양) [개정 2026-09-11 R79 후속 · 사용자 지적].
-                //                 ⚠ 옛 판은 `skills: []` 로 비웠다(「몬스터 액티브는 아직 없다」) — R79 로 몬스터가 스킬을 쓰게 된 뒤에도 남아 칸이 빈 채였고,
-                //                 `castSkill` 이 칸에서 못 찾아 적의 `skill` 이벤트(칸 번쩍임 · 이름 팝업)를 **조용히 흘렸다**
-                //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
-                atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량(범위 · R90) · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
-                sheet: e.sheet ?? null,   // 세부 능력치 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 「유닛 툴팁 규격」)
-                // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
-                skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t })),
-                buffs: new Map(),
-                stalls: [],   // 경직 창 (R110 · ADR-0154)
-            }));
+            state.enemies = ev.enemies.map(e => enemyEntry(e, ev.t));
             for (const e of state.enemies) state.units.set(e.key, e);
             renderUnits(state, root);
             paintRound(state, root);
             pushLog(state, root, t('log.roundStart', { n: ev.n, kind: kindLabel(ev.kind), list: enemyList(state) }));
+            break;
+        }
+        case 'call': {   // 불러내기 (2026-09-18 · ADR-0161) — 처음 부른 무리는 카드로 서고, 쓰러졌던 무리는 **제 카드가 다시 산다**(새 카드 없음)
+            let grew = false;
+            for (const e of ev.units) {
+                const old = U(e.key);
+                if (!old) {
+                    const u = enemyEntry(e, ev.t);
+                    state.enemies.push(u);
+                    state.units.set(u.key, u);
+                    grew = true;
+                    continue;
+                }
+                // 되살아남 — 시뮬과 같다: HP 가득 · 창은 오오라(`until: null`)만 남는다 · 경직 창 비움 · 스킬은 부른 시각에 준비 (INTERFACE §2-6 `call`)
+                Object.assign(old, { hp: e.hpMax, hpMax: e.hpMax, lastAct: ev.t, stalls: [] });
+                for (const [id, b] of [...old.buffs]) if (b.until !== null) old.buffs.delete(id);
+                old.skills = (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t }));
+                refreshUnit(state, old);
+            }
+            // 카드가 늘었으면 진형 줄을 다시 세운다(라운드 시작과 같은 함수) — 되살아남만이면 자리 그대로다
+            if (grew) renderUnits(state, root);
+            const a = U(ev.u);
+            if (a) pushLog(state, root, t('log.call', { name: L(a.name), skill: strikeLabel(ev.s), list: ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', ') }), a.side);
             break;
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
@@ -716,6 +745,12 @@ function apply(state, root, opts, ev) {
                 addDmg(state, a, 'reflect', ev.dmg);
                 renderDmg(state, root);
             }
+            break;
+        }
+        case 'counter': {   // 반격 (2026-09-18 · ADR-0158) — 맞은 쪽(u)이 때린 쪽(d)에게 되받아 친다. 뒤에 그 타격 이벤트(기본 공격)가 잇는다
+            const u = U(ev.u), d = U(ev.d);
+            if (u) popup(state, u, t('pop.counter'), 'counter');
+            if (u && d) pushLog(state, root, t('log.counter', { name: L(u.name), target: L(d.name) }), u.side);   // 주체는 반격한 쪽 (반사와 같은 자리)
             break;
         }
         case 'dodge': {

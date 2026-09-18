@@ -42,6 +42,7 @@
     --text-secondary: #e3e3e3;
     --text-muted: #aaaaaa;
     --text-accent: #e03030;
+    --google-blue: #4285f4;
     --color-success: #40d870;
     --color-warning: #f8b830;
     --color-error: #f04040;
@@ -1357,6 +1358,8 @@ html, body { height: 100%; overflow: hidden; }
    `.cd-g` 는 발동 연출(`cd-fire`)이 튀게 하는 상자라 그림도 그 안에 든다 */
 .cd-slot .cd-g { display: block; width: 100%; height: 100%; }
 .cd-slot .cd-g img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
+/* 제 그림이 없는 스킬 = 검은 칸 (2026-09-18 사용자 지시 · ADR-0162) — 스킬 그림을 그리는 칸 전부가 같은 한 줄을 쓴다 (`skillImg` 셋) */
+.sk-noart { display: block; width: 100%; height: 100%; background: #000; border-radius: inherit; }
 /* 쿨 마스크 — 남은 쿨만큼 위에서 덮는다. 다 걷히면 아이콘이 전부 드러난다 = 준비 완료 */
 .cd-slot .cd-mask {
     position: absolute; left: 0; right: 0; top: 0; height: 100%;
@@ -1432,6 +1435,7 @@ html, body { height: 100%; overflow: hidden; }
 .pop.dmg-in { color: var(--dmg-in); }
 .pop.crit { color: var(--color-warning); font-size: var(--fs-lg); }
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
+.pop.counter { color: var(--color-warning); font-size: var(--fs-xs); }            /* 반격 — 반격한 카드의 글자 (ADR-0158) */
 .pop.heal { color: var(--heal-fg); }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
 /* 피해 팝업의 스킬 아이콘 (2026-09-08) — 숫자 왼쪽. `inline-flex` 로 글자 기준선이 아니라 줄 가운데에 맞춘다.
    `em` 크기라 치명(fs-lg)에서 숫자와 같이 커진다. 아이콘이 없으면 이 요소 자체가 안 생겨 줄이 안 흔들린다 */
@@ -2079,8 +2083,6 @@ html, body { height: 100%; overflow: hidden; }
    사유는 `title` 이 들고, **찍는** 자리는 스킬 트리 창 목록(`.act-slot.empty`)이다 (SCREEN_DESIGN §6 · §7).
    빈 것을 말하는 것은 파선 테두리다 — 페이퍼돌 빈 칸 · `.act-slot.empty` 와 같은 문법 */
 .sk-card.vacant { border-style: dashed; opacity: .55; }
-/* 후보 카드의 고유 스킬 — 살 수 있는 영웅이라 주기를 모른다. 그 자리에 **기본값**이 온다 (SCREEN_DESIGN §3) */
-.ng-skill .cd { display: block; font-style: normal; font-size: var(--fs-2xs); color: var(--text-muted); }
 
 /* ③ 아이템 — 열 수는 창 폭이 정한다. 데이터는 용량(INV_GRID.cap)만 지킨다 */
 .inv-cells.wide { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
@@ -2091,6 +2093,49 @@ html, body { height: 100%; overflow: hidden; }
 
 #app.pregame { grid-template-areas: "brand topbar" "main main"; }
 #app.pregame .nav { display: none; }
+
+/* 로그인 첫 화면은 브랜드와 Google 로그인 한 가지 행동만 가운데 둔다. */
+#app.login-gate {
+    display: block;
+}
+#app.login-gate > .brand,
+#app.login-gate > .topbar,
+#app.login-gate > .nav { display: none; }
+#app.login-gate > .main { width: 100%; height: 100%; padding: 0; overflow: hidden; }
+.login-page {
+    position: relative; isolation: isolate;
+    width: 100%; height: 100%;
+    display: grid; place-items: center;
+}
+.login-page::before {
+    content: ''; position: absolute; inset: 0; z-index: -2;
+    background: url('../assets/art/backgrounds/login.webp') center / cover no-repeat;
+}
+.login-page::after {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    background: rgba(var(--surface-0-rgb), .38);
+}
+.login-card {
+    width: 360px; text-align: center;
+}
+.login-logo {
+    margin-bottom: 34px;
+    font-family: var(--font-display); font-size: 38px; font-weight: normal; letter-spacing: 3px;
+}
+.login-logo b { color: var(--text-accent); }
+.login-error {
+    margin-bottom: 12px; color: var(--color-warning); font-size: var(--fs-sm);
+}
+.login-google {
+    width: 100%; min-height: 54px; padding: 0 20px;
+    display: grid; grid-template-columns: 28px 1fr 28px; align-items: center; gap: 10px;
+    border: 1px solid var(--border-highlight); background: var(--text-primary); color: var(--bg-primary);
+    font: inherit; font-weight: 600; cursor: pointer; transition: transform .14s ease, filter .14s ease;
+}
+.login-google:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(.92); }
+.login-google:active:not(:disabled) { transform: translateY(0); }
+.login-google:disabled { cursor: wait; opacity: .68; }
+.login-google-mark { color: var(--google-blue); font-family: Arial, sans-serif; font-size: var(--fs-lg); font-weight: 700; }
 
 .ng-wrap {
     max-width: 1060px; margin: 0 auto;
@@ -2151,19 +2196,25 @@ html, body { height: 100%; overflow: hidden; }
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .ng-cls { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
-/* 역할/무기군 줄 — **언제나 두 줄 자리를 잡는다** (2026-09-03). 한국어는 한 줄, 영어는 직업에 따라 두 줄이라
-   (「Ranged Physical · Bow / Crossbow」) 접히는 카드만 키가 커져 세 장이 어긋났다. 자리를 늘 비워 두면
-   카드 높이가 언어·직업과 무관해지고, 그래야 아래 스킬 칸을 마음껏 키울 수 있다 */
-.ng-role { font-size: var(--fs-xs); line-height: 1.35; min-height: calc(2 * 1.35em); margin-top: 1.35em; }
-/* ↑ **한 줄 내린다** (2026-09-08 사용자 지시) — 직업 줄(`Warrior · Lv.1`)과 붙어 있으면 정체성 두 줄과
-   역할 줄이 넉 줄 한 덩어리로 읽힌다. 한 줄 비워 「이 영웅이 누구인가」와 「무엇을 하는가」를 가른다 */
-/* 고유 스킬 칸 — 네모 아이콘 + 이름. 능력치 막대 위·정체성 줄 아래다 (§3).
-   **칸은 나중에 들어올 스킬 이미지의 자리다** (2026-09-03 사용자 지시) — 지금 든 이모지는 임시이고,
-   크기는 그림이 들어와도 읽히도록 44px 로 잡았다. 오른쪽 열 합(**칩 줄 20** + 이름 23 + 직업 18 + 역할 2줄 33 + 여백 6 + 44 ≒ 144)이
-   초상 clamp 하한(121)보다 커졌다 [2026-09-08 — 칩 줄이 생겼다]. 좁은 창에서는 **오른쪽 열이 카드 높이를 정한다** */
-.ng-skill { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; min-width: 0; }
+/* 역할/무기군 줄 — **직업 줄 바로 아래에 붙는다** [2026-09-18 사용자 지시 · ADR-0156]. 제 줄 수만 쓴다 —
+   영어는 다섯 직업 중 셋이 두 줄로 접히는데(「Ranged Physical · Bow / Crossbow」) 두 줄이어도 오른쪽 열이 초상 높이 안에
+   든다(아래 스킬 칸이 낮아서 · ADR-0159). 열이 초상보다 짧으면 머리 높이는 늘 초상이 정해 세 장이 어긋나지 않는다 */
+.ng-role { font-size: var(--fs-xs); line-height: 1.35; }
+/* 영어만 **이름 · 직업 · 역할 줄 간격을 좁힌다** [2026-09-18 · ADR-0160] — 스킬 그림이 49px 로 커져, 역할이 두 줄인
+   카드(다섯 직업 중 셋)는 이대로면 열이 초상보다 약 12px 길다. 칩 줄 · 이름 사이 4px 는 건드리지 않는다(09-08 지시).
+   한국어는 역할이 한 줄이라 그림을 키워도 빈 자리가 남는다 — 좁히지 않는다 */
+html[lang="en"] .ng-name { line-height: 1.1; }
+html[lang="en"] .ng-cls { line-height: 1.2; }
+html[lang="en"] .ng-role { line-height: 1.2; }
+/* 고유 스킬 칸 — 네모 아이콘 + 이름. 능력치 막대 위·정체성 줄 아래다 (§3). 쿨은 툴팁이 들고 출처 글자(「영웅」)는 없다 (ADR-0163 · 0159).
+   **칸은 나중에 들어올 스킬 이미지의 자리다** (2026-09-03 사용자 지시) — 위 여백 0 (ADR-0159).
+   **그림 38px = 두 줄로 접힌 스킬 이름의 높이**(줄 상자 18.75px × 2) [2026-09-18 · ADR-0163] — 가장 긴 이름(프레이어 오브
+   리제너레이션)에서도 글이 그림보다 크지 않다. 칸 높이는 글이 아니라 그림이 정한다.
+   **그림 아랫변 = 초상 아랫변** [ADR-0156] — `margin-top: auto` 가 칸을 열 바닥으로 밀고, 열은 초상 높이로
+   늘어난다(`.ng-head` stretch). 아래 정렬이라 글이 그림보다 커져도 그림이 선을 지킨다 */
+.ng-skill { display: flex; align-items: flex-end; gap: 8px; margin-top: auto; min-width: 0; }
 .ng-skill .ico {
-    flex: 0 0 auto; width: 44px; height: 44px; display: grid; place-items: center;
+    flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-items: center;
     background: var(--bg-secondary); border: 1px solid var(--border-dark); border-radius: 3px;
     font-size: var(--fs-xl); line-height: 1;
     overflow: hidden;   /* 그림이 들어오면 칸을 넘지 않는다 */
@@ -2171,7 +2222,6 @@ html, body { height: 100%; overflow: hidden; }
 /* 그림이 칸을 통째로 채운다 — 2026-09-03 부터 실제로 그림이 들어온다 (SCREEN_DESIGN §2 · app.js:skillImg) */
 .ng-skill .ico img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
 .ng-skill .txt { min-width: 0; line-height: 1.25; }
-.ng-skill .tag { display: block; font-style: normal; font-size: var(--fs-xs); color: var(--text-accent); }
 .ng-skill b { font-weight: normal; font-size: var(--fs-sm); word-break: keep-all; }
 
 .ng-line {

@@ -74,6 +74,8 @@ let G = null;                          // 세이브의 실체. null 이면 시�
 const now = () => Date.now();          // 시계는 UI 층에서만 읽는다
 // 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 클라우드 올리기를 멈춘다(멈춤 창 · SCREEN_DESIGN §2-1 · ADR-0112)
 let frozen = false;
+let authenticated = false;
+let unlockBoot = null;
 function save() { if (G && !frozen) writeSave(SYS.game.serialize(G, now())); }
 
 const heroById = uid => G?.heroes.find(h => h.uid === uid);
@@ -211,7 +213,8 @@ const heroFace = h => {
    파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈다 — 밑에 이모지를 안 깐다(영웅 초상과 같은 이유 · 2026-09-03) */
 const skillImg = s => {
     const src = M.skillIcon(s?.id);
-    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '';
+    // 제 그림이 없는 스킬은 **검은 칸** — 남의 그림을 안 빌린다 (2026-09-18 · ADR-0162). 스킬이 없는 칸(`s` 없음)은 그대로 빈다
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : s?.id ? '<i class="sk-noart"></i>' : '';
 };
 /* 아이템 그림 — 무기 · 방어구 둘 다 **개체가 든 `baseId` 의 그림**이다 (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳 · 방어구 2026-09-17).
    무기는 그 무기군의 베이스 7장 중 하나를 든다. 개체가 `weapon_base.csv` 로 실제 그 베이스를
@@ -333,6 +336,7 @@ function renderShell() {
     // 프롤로그도 시작 화면과 같은 셸이다 (§3-1) — 탭 바도 자원 띠도 없다. 게임 화면은 'game' 하나뿐
     const pre = state.screen !== 'game';
     $('#app').classList.toggle('pregame', pre);
+    $('#app').classList.toggle('login-gate', !authenticated);
 
     const nav = $('.nav');
     nav.innerHTML = '';
@@ -355,13 +359,13 @@ function renderShell() {
         <span>${t('res.dust')}<b data-res="dust">${r.dust}</b></span>
         <span>${t('res.stigma')}<b data-res="stigma">${r.stigma}</b></span>`;
 
-    $('.resources').appendChild(cloudBtn());   // 계정 버튼 — 언어 토글 앞 · 시작 화면도 같은 자리 (SCREEN_DESIGN §2-1)
+    if (authenticated) $('.resources').appendChild(cloudBtn());
     const langBtn = el('button', 'btn sm lang-btn', t('ui.langBtn'));
     langBtn.onclick = () => { setLang(lang() === 'ko' ? 'en' : 'ko'); render(); };
     $('.resources').appendChild(langBtn);
     mountDevPalette($('.resources'));   // ⚙ — 배경 · 글자 색을 눈으로 맞추는 개발 장치
 
-    $('.crumb').textContent = state.screen === 'prologue' ? t('pro.h') : pre ? t('ng.h') : t(`nav.${state.tab}`);
+    $('.crumb').textContent = !authenticated ? t('cl.signIn') : state.screen === 'prologue' ? t('pro.h') : pre ? t('ng.h') : t(`nav.${state.tab}`);
     $('.tab-seg').innerHTML = '';   // 탭 세그먼트 자리 — 채우는 것은 탭 렌더러다 (§2 · 지금은 원정만)
 }
 
@@ -381,7 +385,8 @@ function render() {
     // 박스 안 스크롤 위치 — 다시 그려도 남는다 (SCREEN_DESIGN §2 「박스」 · ADR-0097). 박스는 매번 새로 서므로 `data-keep` 이름으로 되찾는다
     const kept = new Map([...main.querySelectorAll('[data-keep]')].map(n => [n.dataset.keep, n.scrollTop]));
     main.innerHTML = '';
-    if (state.screen === 'prologue' && G) renderPrologue(main);
+    if (!authenticated) renderLogin(main);
+    else if (state.screen === 'prologue' && G) renderPrologue(main);
     else if (state.screen === 'start' || !G) renderStart(main);
     else ({
         // 키 순서 = 탭 바 순서 (TABS) — 읽는 사람이 화면과 대조할 수 있게 맞춰 둔다
@@ -484,6 +489,7 @@ function segmented(items, current, onPick) {
  * 기본값이 꺼짐인 이유는 **개발용 경로**다 — ?dev=battle 같은 길이 프롤로그에서 멈추면 헤드리스 검증이 막힌다.
  */
 function startGame({ prologue = false } = {}) {
+    if (!authenticated) return;
     clearSave();
     G = SYS.game.newGame(now() >>> 0, state.candidates, now());
     save();
@@ -494,6 +500,7 @@ function startGame({ prologue = false } = {}) {
 }
 
 function continueGame() {
+    if (!authenticated) return false;
     const saved = loadSave();
     if (!saved) return false;
     try { G = SYS.game.deserialize(saved); }
@@ -522,18 +529,18 @@ function candidateCard(h, extra = '') {
     // 액티브 3칸 중 **고유 하나만** 싣는다 (§3) — 2·3번 칸은 직업이 정하므로 직업 줄이 이미 답한다.
     //   어느 칸이 고유인지는 인스턴스의 `source` 가 말한다 — 화면이 「1번 칸」이라고 판정하지 않는다
     const innate = activeCells(h).find(a => a?.source === 'innate') ?? null;
+    // 죄종 칩만 그 죄종 색이다 (SCREEN_DESIGN §3 · ADR-0155) — 윗변 · 막대는 등급 색 그대로(ADR-0023)
     c.innerHTML = `
         <div class="ng-head">
             ${heroFace(h)}
             <div class="ng-id">
-                <div class="ng-chips">${tierChip(h)}<span class="sin-chip">${sinName(h.sin)}</span></div>
+                <div class="ng-chips">${tierChip(h)}<span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span></div>
                 <div class="ng-name"><b>${L(h.name)}</b></div>
                 <div class="ng-cls">${className(h.cls)} · Lv.${h.level}</div>
                 <div class="ng-role muted">${classLine(h.cls)}</div>
                 ${innate ? `<div class="ng-skill">
                     <span class="ico">${skillImg(innate)}</span>
-                    <span class="txt"><i class="tag">${t('sk.innate')}</i><b>${L(innate.name)}</b>
-                        <i class="cd">${secText(coolSecOf(innate.id))}</i></span>
+                    <span class="txt"><b>${L(innate.name)}</b></span>
                 </div>` : ''}
             </div>
         </div>
@@ -542,7 +549,8 @@ function candidateCard(h, extra = '') {
         <div class="ng-line"><span>${t('ng.total')}</span><b>${total}</b></div>
         ${extra}`;
     // 툴팁은 관전·캐릭터 탭과 **같은 카드**다 (이름 · 칩 · 문장) — 카드 본문은 아이콘과 이름만 든다.
-    //   `source` 는 안 넘긴다 — 줄의 `영웅` 태그가 출처를 글자로 이미 든다(출처 칩이 같은 말을 두 번 한다 · ADR-0121).
+    //   `source` 는 안 넘긴다 — 후보 카드는 출처를 글자로도 칩으로도 안 적는다(카드에 서는 스킬은 고유 하나뿐이라
+    //   영웅 스킬로 읽힌다 · ADR-0159 — ADR-0121 의 「글자로 안 선 자리엔 칩」의 예외).
     //   행동 주기는 안 넘긴다 — 후보는 아직 무기가 없어(시작 무기는 `newGame` 이 준다) 실효 쿨이 뜻을 못 가진다.
     //   시작 화면은 `G` 자체가 없어 `cycleOf` 를 부를 수도 없다 (`heroCombat(G, h)`)
     const skillNode = c.querySelector('.ng-skill');
@@ -550,6 +558,22 @@ function candidateCard(h, extra = '') {
     //   나머지 숫자(타수 · 효과값 · 지속 …)는 값을 찍는다 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089)
     if (skillNode) bindTipNode(skillNode, () => skillTipCard(innate, { stats: h.stats }));
     return c;
+}
+
+function renderLogin(main) {
+    const page = el('section', 'login-page');
+    const card = el('div', 'login-card');
+    card.appendChild(el('h1', 'login-logo', 'THE<b>SEVEN</b>'));
+    if (cloud.err) card.appendChild(el('div', 'login-error', t(`cl.err.${cloud.err}`)));
+    const button = el('button', 'login-google login-required');
+    button.innerHTML = `<span class="login-google-mark">G</span><span>${t(cloud.busy ? 'cl.st.checking' : 'cl.signIn')}</span>`;
+    button.disabled = cloud.busy;
+    button.setAttribute('aria-busy', String(cloud.busy));
+    button.onpointerenter = () => CLOUD.warm();
+    button.onclick = cloudSignIn;
+    card.appendChild(button);
+    page.appendChild(card);
+    main.appendChild(page);
 }
 
 function renderStart(main) {
@@ -629,6 +653,7 @@ function cloudBtn() {
 function setCloud(status) {
     cloud.status = status;
     if (status !== 'error') cloud.err = null;
+    if (!authenticated) { render(); return; }
     $('.cloud-btn')?.replaceWith(cloudBtn());
     if (state.modal === 'cloud' || state.modal === 'cloudPick') renderModal();
 }
@@ -681,8 +706,8 @@ function linkAccount(remote, { booting }) {
 
 /** 켤 때 — 전에 로그인해 둔 브라우저면 계정을 복원하고 클라우드와 맞춘 **뒤에** 세이브를 연다 */
 async function cloudResume() {
-    if (!loadCloudLink()) return;
-    cloud.status = 'checking';
+    cloud.busy = true;
+    setCloud('checking');
     const steps = (async () => {
         const u = await CLOUD.restoreUser();
         if (!u.ok || !u.user) return u;
@@ -690,7 +715,11 @@ async function cloudResume() {
     })();
     // 상한을 넘으면 늦게 온 결과는 버린다 — 이미 연 세이브 위에 받은 사본을 쓰면 옛 상태가 클라우드를 덮는다
     const late = new Promise(res => setTimeout(() => res({ ok: false, err: 'network' }), CLOUD_BOOT_WAIT_MS));
-    applyResume(await Promise.race([steps, late]), { booting: true });
+    const result = await Promise.race([steps, late]);
+    cloud.busy = false;
+    applyResume(result, { booting: true });
+    if (result.ok && result.user) authenticated = true;
+    render();
 }
 
 /** 복원 결과를 건다 — 켤 때 · 다시 붙을 때(`cloudTick`) · 로그인 버튼이 같이 쓴다 */
@@ -751,18 +780,38 @@ async function cloudSignIn() {
     }
     const p = await CLOUD.pullSave(s.user.uid);
     cloud.busy = false;
-    if (!frozen) applyResume({ ...p, user: s.user }, { booting: false });
+    if (!frozen) {
+        applyResume({ ...p, user: s.user }, { booting: !authenticated });
+        if (p.ok && s.user && !authenticated) {
+            authenticated = true;
+            unlockBoot?.();
+        }
+    }
 }
 
 /** 로그아웃 — 이 브라우저 세이브는 남는다 */
 async function cloudSignOut() {
     if (cloud.busy) return;
-    await CLOUD.signOut();
+    cloud.busy = true;
+    const result = await CLOUD.signOut();
+    cloud.busy = false;
+    if (!result.ok) { flash(`cl.err.${result.err}`); return; }
     clearCloudLink();
     Object.assign(cloud, { user: null, remote: null, err: null });
     state.modal = null;
     setCloud('off');
+    leaveSession();
+}
+
+function leaveSession() {
+    authenticated = false;
+    frozen = true;
+    if (stopBattle) { stopBattle(); stopBattle = null; }
+    G = null;
+    state.screen = 'start';
+    state.modal = null;
     render();
+    location.reload();
 }
 
 /** 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고 멈춤 창만 남긴다. 먼저 쓴 탭이 남는다 (ADR-0112) */
@@ -3802,6 +3851,13 @@ async function boot() {
     state.candidates = rollCandidates();
     // 전에 로그인해 둔 브라우저면 클라우드와 먼저 맞춘다 — 받은 사본이 있으면 그것을 연다 (SCREEN_DESIGN §2-1 · ADR-0112)
     await cloudResume();
+    if (!authenticated) await new Promise(resolve => { unlockBoot = resolve; });
+    unlockBoot = null;
+    const sessionUid = cloud.user.uid;
+    await CLOUD.watchUser(user => {
+        if (user?.uid !== sessionUid) leaveSession();
+    });
+    if (!authenticated) return;
     if (loadSave()) continueGame();
     // 같은 브라우저의 다른 탭이 세이브를 쓰면 이 탭은 멈춘다 (§2-1)
     onSaveWrittenElsewhere(freeze);
@@ -3985,7 +4041,6 @@ async function boot() {
     if (dev === 'cloud') {
         if (!G) startGame();
         const c = new URLSearchParams(location.search).get('c');
-        cloud.user = { uid: 'dev', email: 'tester@example.com' };
         if (c === 'frozen') { frozen = true; state.modal = 'frozen'; }
         else if (c === 'pick') {
             const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, now())));

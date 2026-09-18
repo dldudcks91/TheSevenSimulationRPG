@@ -1,8 +1,8 @@
 class_id,key_attr,name_kr,name_en,role_kr,role_en,release,description_kr
 warrior,str,전사,Warrior,근접 물리,Melee Physical,main,-
-knight,vit,기사,Knight,탱커 · 수호,Tank · Guardian,main,⚠ 건강은 제안 — 건강이 HP 를 떠나 상태이상 회복 속도만 밀게 된 뒤(08-25) 탱커의 주력 축은 미확정
+knight,str,기사,Knight,탱커 · 수호,Tank · Guardian,main,메인 스탯 = 힘 [확정 2026-09-18 · 사용자] — ~~건강(⚠제안)~~ 대체 · 능력치 굴림에서 최고치로 밀어주는 축 (hero_design §2)
 mage,int,마법사,Mage,마법,Magic,main,-
-archer,luck,궁수,Archer,원거리 물리,Ranged Physical,main,⚠ 운은 이름만 따라간 것이다 (08-26 감각→운) — 전투 계수가 없는 축이 주력이 됐다 · 물리 공격력을 쓰는데 힘이 안 곱해지므로 str 재배정이 유력하나 기획 미결 (GAME_DESIGN §10 · hero_design §4-1-1)
-priest,int,사제,Priest,지원 · 회복,Support · Healing,main,사제 = 순수 캐스터(전용 무기 성경·십자가 — 2026-09-07 마법사와 풀 분리) → 파워 출처는 마법 공격력 = 지능 (battle_design §8 · hero_design §2)
-assassin,agi,암살자,Assassin,치명 · 속도,Crit · Speed,expansion,-
+archer,agi,궁수,Archer,원거리 물리,Ranged Physical,main,메인 스탯 = 민첩 [확정 2026-09-18 · 사용자] — ~~운(08-26 감각→운을 이름만 따라간 것)~~ 대체 (hero_design §2)
+priest,int,사제,Priest,지원 · 회복,Support · Healing,main,사제 = 순수 캐스터(전용 무기 성경·십자가 — 2026-09-07 마법사와 풀 분리) → 파워 출처는 마법 데미지 = 지능 (battle_design §8 · hero_design §2)
+assassin,luck,암살자,Assassin,치명 · 속도,Crit · Speed,expansion,메인 스탯 = 운 [확정 2026-09-18 · 사용자] — 종전 민첩 대체 · ⚠ 운은 드랍률 · 골드도 민다 (hero_design §2 · §4-1-1)
 necromancer,int,네크로맨서,Necromancer,소환,Summoning,expansion,-

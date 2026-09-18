@@ -649,7 +649,7 @@ const STRINGS = {
 
     /* ── 장비 ── */
     'eq.slots': { ko: '장비는 8칸 — 무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 2. 모든 무기는 양손이라 잠기는 칸이 없다', en: '8 gear slots — weapon, helm, armor, gloves, boots, amulet, 2 rings. Every weapon is two-handed, so no slot is ever locked' },
-    'st.atk': { ko: '공격력', en: 'Attack' },
+    'st.atk': { ko: '데미지', en: 'Damage' },
     // 범위 표기 — 무기 피해 · 스킬 피해 · 회복량 (R90 · SCREEN_DESIGN §2 · §6 · ADR-0108). 양끝이 같으면 이 틀을 안 쓰고 한 수만 찍는다
     'st.range': { ko: '{a}~{b}', en: '{a}–{b}' },
     'st.atkType.physical': { ko: '물리', en: 'Physical' },
@@ -664,6 +664,10 @@ const STRINGS = {
     'st.atkSpeed': { ko: '공격 속도', en: 'Attack Speed' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'log.reflect': { ko: '{name} 의 반사 — {target} 에게 {dmg}', en: '{name} reflects {dmg} to {target}' },
+    // 반격 (2026-09-18 · ADR-0158) — 주체는 반격한 쪽. 뒤에 그 반격의 타격 줄(기본 공격)이 잇는다
+    'log.counter': { ko: '{name} 의 반격 → {target}', en: '{name} counters {target}' },
+    // 불러내기 (2026-09-18 · ADR-0161) — {list} = 선 몬스터 이름들(쉼표) · 처음 선 것과 되살아난 것을 가르지 않는다 · `log.buff` 와 같은 틀
+    'log.call': { ko: '{name} — <b>{skill}</b> → {list}', en: '{name} — <b>{skill}</b> → {list}' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
     'eq.sins.note': {
@@ -920,6 +924,11 @@ const STRINGS = {
         ko: '{n}초마다 {d} 의 HP 를 가진 벽을 세워 적의 공격을 나눠 받는다',
         en: 'Every {n}s, raises a wall with {d} HP that soaks enemy attacks',
     },
+    /* 불러내기 — 몬스터 전용 (2026-09-18 · skill_design §12-9 · ADR-0161). 누구를 부르나는 편성이 정해 문장에 이름이 없다 */
+    'sk.line.call': {
+        ko: '{n}초마다 아직 안 나왔거나 쓰러진 무리를 한 번에 모두 불러낸다',
+        en: 'Every {n}s, calls in every member of its band that has not appeared yet or has fallen',
+    },
     /* 확률로 터지는 추가 피해 [2026-09-10 · ADR-0089] — 공격 문장 **뒤에 서는 완결된 둘째 문장**이다(차지 · 라이트닝 · 체인 라이트닝).
        공격 틀마다 변형을 두면 틀이 두 배가 되고, 조각을 이으면 ko/en 어순이 깨진다. {c} = 확률 · {x} = 배수(%) */
     'sk.line.proc': {
@@ -939,7 +948,7 @@ const STRINGS = {
     /* 각주 — 기본 설명창 바닥 한 줄. 괄호를 붙일 수 있는 숫자가 있을 때만 선다 (SCREEN_DESIGN §2 「스킬 설명창 규격」) */
     'sk.altHint': { ko: 'Alt 계산식', en: 'Alt: formula' },
     /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill.csv:effect_stat` 어휘 그대로 · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
-    'sk.eff.atk_pct': { ko: '공격력 +{v} 를 건다', en: '+{v} Attack' },
+    'sk.eff.atk_pct': { ko: '데미지 +{v} 를 건다', en: '+{v} Damage' },
     'sk.eff.period_pct': { ko: '행동 주기 −{v} 를 건다', en: '−{v} action cycle' },
     'sk.eff.barrier_pct': { ko: '최대 HP {v} 짜리 보호막을 씌운다', en: 'a shield worth {v} of max HP' },
     /* 2026-09-09 신설. `.neg` 는 **같은 창을 음수로 쓴 디버프**의 틀이다 — 값은 절댓값으로 들어온다(tip.js) */
@@ -949,7 +958,7 @@ const STRINGS = {
     'sk.eff.dr_pct': { ko: '받는 피해 −{v} 를 건다', en: '−{v} damage taken' },
     'sk.eff.onhit_element': { ko: '기본 공격마다 {v} 의 추가 피해를 얹는다', en: 'adds a {v} extra hit on every basic attack' },
     'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v} 로 퍼진다', en: 'basic attacks spread to all enemies at {v}' },
-    'sk.eff.atk_pct.neg': { ko: '공격력 −{v} 를 건다', en: '−{v} Attack' },
+    'sk.eff.atk_pct.neg': { ko: '데미지 −{v} 를 건다', en: '−{v} Damage' },
     'sk.eff.period_pct.neg': { ko: '행동 주기 +{v} 를 건다', en: '+{v} action cycle' },
     /* 그 스킬의 **표기 쿨** [개정 2026-09-08 2차 사용자 지시] — 어느 영웅이 들든 같은 수다.
        ~~`sk.base`·`sk.eff`·`sk.aligned`~~ (1차 폐기) → ~~`sk.every`(`{s}초마다`)~~ → **`sk.cool`**.
@@ -981,9 +990,9 @@ const STRINGS = {
     },
     'sk.mastery': { ko: '{cls} 마스터리', en: '{cls} Mastery' },
     'sk.mastery.missing': {
-        ko: '죄종 마스터리와 <b>같은 구조</b>다. <b>전사의 맨 윗줄만 확정</b>(체력 · 모든 저항력 · 공격력)이고 기사·마법사·궁수·사제는 첫 줄부터 비어 있다 — 죄종은 7종이 성격으로 갈리는데 직업 5종이 무엇으로 갈릴지가 먼저다.<br>'
+        ko: '죄종 마스터리와 <b>같은 구조</b>다. <b>전사의 맨 윗줄만 확정</b>(체력 · 모든 저항력 · 데미지)이고 기사·마법사·궁수·사제는 첫 줄부터 비어 있다 — 죄종은 7종이 성격으로 갈리는데 직업 5종이 무엇으로 갈릴지가 먼저다.<br>'
             + '<b>모든 저항력</b>은 죄종 어디에도 없는 유일한 축이다.',
-        en: 'Same structure as sin mastery. <b>Only the Warrior\'s top row is settled</b> (health · all resistances · attack); Knight, Mage, Archer and Priest are empty from the first row — the 7 sins split by temperament, but what splits 5 classes is still an open question.<br>'
+        en: 'Same structure as sin mastery. <b>Only the Warrior\'s top row is settled</b> (health · all resistances · damage); Knight, Mage, Archer and Priest are empty from the first row — the 7 sins split by temperament, but what splits 5 classes is still an open question.<br>'
             + '<b>All resistances</b> is the one axis no sin mastery offers.',
     },
     'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
@@ -1189,6 +1198,7 @@ const STRINGS = {
     'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
     'log.downed': { ko: '{name} <b>전투 불능</b>', en: '{name} <b>downed</b>' },   // ~~「이 출정 동안 아웃」~~ 2026-09-08 삭제
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
+    'pop.counter': { ko: '반격', en: 'COUNTER' },   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
 };

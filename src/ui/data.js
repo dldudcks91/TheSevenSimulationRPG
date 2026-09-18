@@ -35,7 +35,9 @@ export const D = {
     chapterList: [],
     heroAttributes: [],       // hero_attribute.csv — [{id, ko, en, abbr, combatStat, dispatch}]
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
-    armorGroups: null,        // armor_group.csv — {id: {id, ko, en, classes, defMult, aspdPct, cdrPct, release}} · 갑옷군 3갈래 (2026-09-16 · R107)
+    armorGroups: null,        // armor_group.csv — {slot: {groupId: {id, slot, ko, en, classes, defMult, aspdPct, cdrPct, release}}} · 방어구 갈래 — 갑옷군 3 (2026-09-16 · R107) + 투구 3 · 장갑 2 · 신발 2 (2026-09-18)
+    armorSinOptions: [],      // armor_sin_option.csv — [{slot, sin, stat, scale, min, max, perIlvl?}] · 방어구 죄종 칸 후보 · CSV 행 순서 (2026-09-18)
+    armorCommonOptions: [],   // armor_common_option.csv — [{slot, group, family, stat, scale, min, max, perIlvl?}] · 방어구 공통옵션 후보 · CSV 행 순서 (2026-09-18)
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
     weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 본편 열 전부(staff·orb·crucifix·bible·crossbow 2026-09-14) · 확장 dagger·scythe 는 없다
@@ -84,7 +86,8 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
-    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group'];
+    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
+    'armor_sin_option', 'armor_common_option'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -99,7 +102,8 @@ export async function loadData(base = './data/') {
         affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
-        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow] = texts.map(parseCsv);
+        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
+        armorSinOptionRow, armorCommonOptionRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -145,13 +149,22 @@ export async function loadData(base = './data/') {
         period: r.action_period, variance: r.variance_pct, damageKind: r.damage_kind, release: r.release,
     }));
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
-    // 갑옷군 — **갑옷 칸에만** 걸린다(09-07). 방어 배수 · 공속 · 쿨감을 든다 (2026-09-16 사용자 확정 · R107)
+    // 방어구 갈래 — **부위 → 갈래** 두 단으로 묶는다. 방어 계수 · 공속 · 쿨감을 든다 (2026-09-16 갑옷군 · R107 · 2026-09-18 투구 · 장갑 · 신발).
+    //   갈래 id 가 부위마다 겹친다(`leather` — 투구 · 장갑 · 신발) — 그래서 id 하나로 색인하지 않는다. 숙련 직업(`classes`)은 갑옷만 들고 나머지는 `-`
     D.armorGroupList = armorGroupRow.map(r => ({
-        id: r.group_id, ko: r.group_kr, en: r.group_en,
-        classes: String(r.classes).split('|'),
+        id: r.group_id, slot: r.slot, ko: r.group_kr, en: r.group_en,
+        classes: r.classes === '-' ? [] : String(r.classes).split('|'),
         defMult: r.def_mult, aspdPct: r.aspd_pct, cdrPct: r.cdr_pct, release: r.release,
     }));
-    D.armorGroups = indexBy(D.armorGroupList, 'id');
+    D.armorGroups = {};
+    for (const g of D.armorGroupList) (D.armorGroups[g.slot] ??= {})[g.id] = g;
+    // 방어구 옵션 표 둘 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 방어구 네 부위도 고정 1 + 죄종 칸 + 공통옵션을 받고 `affix.csv` 를 안 쓴다.
+    //   `perIlvl` 은 `band` 행만 든다(affix.csv 와 같은 규약) · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
+    const bandIlvl = r => (r.scale === 'band' ? { perIlvl: r.per_ilvl } : {});
+    D.armorSinOptions = armorSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
+    D.armorCommonOptions = armorCommonOptionRow.map(r => ({
+        slot: r.slot, group: r.group, family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r),
+    }));
     // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
     //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
@@ -400,6 +413,7 @@ export function buildSystems(d) {
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
         itemBases: d.itemBases, weaponBases: d.weaponBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
         weaponSinOptions: d.weaponSinOptions ?? [], weaponCommonOptions: d.weaponCommonOptions ?? [],   // 무기 옵션 표 둘 (R78)
+        armorSinOptions: d.armorSinOptions ?? [], armorCommonOptions: d.armorCommonOptions ?? [],       // 방어구 옵션 표 둘 (2026-09-18)
         // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
         classSkills,
     });

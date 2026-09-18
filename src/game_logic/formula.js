@@ -13,8 +13,9 @@
  *
  *   적중률   = clamp(hit_base_pct − 부족레벨 × hit_per_level_deficit_pct, hit_min_pct, hit_base_pct)   (비율)
  *              **레벨 차만이 정한다** — 명중·회피 스탯은 폐지됐다 (§9-4). 오버레벨 초과 이득 없음
- *   타격피해 = (공격력 × 스킬 배율 + 능력치 항) × (1 + 조건부 합%) × 치명 배수 × 추가 피해 배수
- *              능력치 항(`flat`)은 배율에 곱하지 않고 더한다 — 곱이 아니라 합 (§9-2 · 2026-09-10)
+ *   타격피해 = 데미지 × 스킬 배율 × 능력치 계수 × 치명 배수 × 추가 피해 배수 × (1 + 피해량)      [2026-09-18 · §9-1 · §9-2]
+ *              데미지 = 무기 범위 굴림 × (1 + Σ 데미지 %) — 상시 · 창 · 도감 「데미지」 · **그 타격의 조건부 %** 가 한 괄호의 덧셈
+ *              능력치 계수 = (1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot) — 복리 곱 · ~~능력치 항 덧셈(09-10)~~ 폐기
  *              추가 피해는 확률이 있는 스킬 타격만 치명 뒤에 한 번 더 굴린다 — 치명과 겹친다 (§9-2 · 2026-09-10)
  *              **공격력은 범위를 굴린다** — 적중하면 공격력 범위의 양끝(atkMin~atkMax) 사이를 한 번 균등 굴림 (§9-1 · R90)
  *   물리     × (1 − 방어값/(방어값 + def_curve_k))     K 는 **상수**다 — 공격자 레벨 무관 (§9-3)
@@ -120,11 +121,12 @@ export function createFormula(balance) {
     /** 곡선에 넣을 물리 방어값 — 방어 무시는 **곡선 앞** 소재값을 비율로 깎는다 (감쇠율의 %가 아니다) */
     const physicalDefense = (def, defIgnorePct = 0) => Math.max(0, (def ?? 0) * (1 - (defIgnorePct ?? 0)));
 
-    /** 현재 저항 상한(비율) — 기본 상한을 뚫는 유일한 수단이 최대 저항 증가, 그 위에 절대 상한 (§9-5) */
-    const resCap = (resMaxBonus = 0) => Math.min(B.res_cap_base + (resMaxBonus ?? 0), B.res_cap_absolute);
+    /** 현재 저항 상한(비율) — 기본 상한을 뚫는 유일한 수단이 최대 저항 증가, 그 위에 절대 상한 (§9-5).
+     *  `elBonus` = **그 원소의** 최대 저항 증가(투구 시기 칸 · 2026-09-18) — 네 원소 공통인 `resMaxBonus` 위에 더한다. 화면(저항 행의 상한)과 전투가 같은 식을 쓴다 */
+    const resCap = (resMaxBonus = 0, elBonus = 0) => Math.min(B.res_cap_base + (resMaxBonus ?? 0) + (elBonus ?? 0), B.res_cap_absolute);
 
     /** 적용 저항(비율) — 상한만 있고 **하한은 없다.** 음수 저항 = 피해 증폭 (§9-5) */
-    const appliedResist = (res, resMaxBonus = 0) => Math.min(res ?? 0, resCap(resMaxBonus));
+    const appliedResist = (res, resMaxBonus = 0, elBonus = 0) => Math.min(res ?? 0, resCap(resMaxBonus, elBonus));
 
     /**
      * 피해 감소 — **원천별로 각각 곱한다** (§9-3). 덧셈이 아니다.
@@ -142,24 +144,40 @@ export function createFormula(balance) {
             B.hit_min_pct, B.hit_base_pct);
 
     /**
+     * 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — `(1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot)`.
+     *   기준 능력치에서 1 · 1점마다 **복리** — 기준 아래로 내려가도 0 에 닿지 않는다(다른 직업 스킬은 「못 쓴다」가 아니라 「덜 세다」).
+     *   평타는 직업 메인 스탯(`hero.computeCombat:main_attr_mult`) · 스킬은 데미지 슬롯이 적은 능력치(`skill.scaleDef:statMult`)가 같은 함수를 쓴다.
+     *   능력치를 모르면(수가 아니면) 1 이다
+     */
+    const statCoef = v => (Number.isFinite(v) ? Math.pow(1 + B.attr_dmg_step_pct, v - B.attr_dmg_pivot) : 1);
+
+    /**
      * 직격 1회. rng 는 이 순서로 쓴다 — 적중 → **피해** → 치명 → (추가 피해 확률이 있는 타격만) 추가 피해.
      * 빗나가면 한 번 · 확률이 0 인 적중은 세 번 · 확률이 있는 적중은 네 번이다 (INTERFACE §5-2 · 2026-09-10 · 피해 굴림 2026-09-14 R90).
      * 순서를 바꾸면 같은 시드가 다른 전투가 되므로 이식 대조가 깨진다.
      *
-     * @param a 공격자 {atkMin, atkMax, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, bonusPct, flat, procChance, procMult}
-     *          `flat`·`procChance`·`procMult` 는 **스킬 타격만** 싣는다(battle.strikeOnce) — 없으면 0 이라 기본 공격은 종전과 같다
-     * @param d 방어자 {def, res:{fire,cold,lightning,poison}, resMaxBonus, dr, lvl} — res 는 **항상 객체**(몬스터도)
+     * @param a 공격자 {atkMin, atkMax, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, dmgPct, condPct, statMult, bonusPct, procChance, procMult}
+     *          `atkMin`·`atkMax` = 데미지 범위 — 데미지 % 괄호(`dmgPct` = 그 괄호 안의 합)까지 **이미 곱해진** 값이다(시트 · 회복이 같은 값을 읽는다)
+     *          `condPct` = **그 타격의** 조건부 % — 같은 괄호 안에 더한다(괄호를 `1 + dmgPct` 에서 `1 + dmgPct + condPct` 로 바꿔 끼운다 · 2026-09-18)
+     *          `statMult` = 능력치 계수(`statCoef` — 평타 = 메인 스탯 · 스킬 = 슬롯의 능력치) · `bonusPct` = **피해량**(괄호와 합치지 않고 따로 곱한다)
+     *          `procChance`·`procMult` 는 **스킬 타격만** 싣는다(battle.strikeOnce) — 없으면 0 이라 기본 공격은 굴림을 안 태운다
+     * @param d 방어자 {def, res:{fire,cold,lightning,poison}, resMaxBonus, resMaxEl?, dr, drFlat?, lvl} — res 는 **항상 객체**(몬스터도)
+     *          `resMaxEl` = 원소별 최대 저항 증가(투구 시기 칸 — 그 타격 원소의 값만 상한에 더한다) · `drFlat` = 절대값 피해 감소(투구 플레이트 — 모든 감소 뒤에 뺀다)
+     *          [2026-09-18 · item_design §1 「투구 옵션」] — 둘 다 없으면 0 이라 종전과 같다. rng 소비는 안 바뀐다
      */
     function strike(rng, a, d) {
         if (rng() >= hitChance(a.lvl, d.lvl)) return { hit: false, dmg: 0, crit: false, proc: false };
 
-        // 능력치 항은 배율에 곱하지 않고 **더한다** (§9-2 「곱이 아니라 합」 · 2026-09-10) — 무기가 약해도 능력치가 제 몫을 한다.
-        //   그래서 공격력이 0 이어도 능력치 항만큼은 들어간다
-        // 피해 굴림 [2026-09-14 · R90 · battle_design §9-1] — 적중 뒤 · 치명 앞에 **한 번**, 공격력 범위 양끝 사이 연속 균등.
+        // 피해 굴림 [2026-09-14 · R90 · battle_design §9-1] — 적중 뒤 · 치명 앞에 **한 번**, 데미지 범위 양끝 사이 연속 균등.
         //   양끝이 같아도 소비한다 — 소비 수가 무기에 의존하면 같은 시드가 다른 전투를 낸다
         const atk = a.atkMin + rng() * (a.atkMax - a.atkMin);
-        let v = atk * (a.skillMult ?? 1) + (a.flat ?? 0);                          // 스킬 배율 (기본 공격 = 1) + 능력치 항
-        v *= 1 + (a.bonusPct ?? 0);                                // 조건부 합(비율) — 특효·도감·버프 덧셈
+        // 능력치 계수는 **곱**이다 [2026-09-18 · battle_design §9-2] — ~~능력치 항을 더한다(곱이 아니라 합 · 09-10)~~ 폐기. 복리라 0 이 안 된다
+        let v = atk * (a.skillMult ?? 1) * (a.statMult ?? 1);     // 스킬 배율 (기본 공격 = 1) × 능력치 계수
+        // 조건부 % 는 **데미지 % 괄호 안의 덧셈**이다 [2026-09-18 · battle_design §9-1] — 범위에는 괄호(1 + dmgPct)가 이미 곱해져 있어 그 괄호를 바꿔 끼운다.
+        //   `dmgPct` 를 안 넘기면(0) `(1 + condPct)` 곱과 같다 · 괄호가 0 이하면(창이 다 깎았다) 범위도 0 이라 끼울 것이 없다
+        const bracket = 1 + (a.dmgPct ?? 0);
+        if (a.condPct && bracket > 0) v *= (bracket + a.condPct) / bracket;
+        v *= 1 + (a.bonusPct ?? 0);                                // 피해량(도감) — 데미지 % 괄호와 합치지 않고 따로 곱한다 (2026-09-18)
         const crit = rng() < Math.min(a.crit ?? 0, B.crit_cap_pct);
         if (crit) v *= a.critDmg ?? 1;
         // 확률로 터지는 추가 피해 — 치명과 **따로 굴려 겹친다**(치명 상한과 무관 · §9-2). 확률이 있는 타격만 굴린다:
@@ -174,9 +192,10 @@ export function createFormula(balance) {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
         } else {
             // 저항 감소는 관통이라는 별도 규칙이 아니라 저항값에 음수를 더하는 것이다 (§9-5)
-            v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - (a.resReduction ?? 0), d.resMaxBonus ?? 0);
+            v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - (a.resReduction ?? 0), d.resMaxBonus ?? 0, d.resMaxEl?.[a.atkType] ?? 0);
         }
         v *= 1 - (d.dr ?? 0);
+        v -= d.drFlat ?? 0;                                        // 절대값 피해 감소 — 모든 감소 뒤 · 하한은 아래 dmg_min (2026-09-18)
         return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
     }
 
@@ -186,8 +205,8 @@ export function createFormula(balance) {
      */
     const indirect = amount => Math.max(B.dmg_min, Math.round(amount));
 
-    /** 흡혈 — 직격의 최종 피해에만 비례한다 (`pct` 는 비율) */
-    const leech = (dmg, pct) => Math.round(dmg * (pct ?? 0));
+    /** 흡혈 — 직격의 최종 피해에만 비례한다 (`pct` 는 비율). `recv` = 흡혈하는 쪽의 **체력 회복 +%**(갑옷 나태 · 2026-09-18) — 0 이면 종전과 같은 값 */
+    const leech = (dmg, pct, recv = 0) => Math.round(dmg * (pct ?? 0) * (1 + (recv ?? 0)));
 
     /**
      * 초당 공격속도 — **행동 주기의 역수**다. 주기(초/1회)는 클수록 느려서 화면에서 방향이 거꾸로 읽히므로,
@@ -206,6 +225,6 @@ export function createFormula(balance) {
 
     return {
         roundPct, pctOption, growthMult, upgradeMult, weaponDamage, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
-        hitChance, strike, indirect, leech, attacksPerSec, effectiveCd,
+        hitChance, statCoef, strike, indirect, leech, attacksPerSec, effectiveCd,
     };
 }

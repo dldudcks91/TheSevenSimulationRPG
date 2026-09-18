@@ -38,7 +38,8 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   sins         — 죄종 id 목록
  *   classes      — 직업 정의 [{id, keyAttr, stage}...]
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
- *   armorGroups  — {id: {defMult, aspdPct, cdrPct, ...}} ← armor_group.csv. **갑옷 칸이** 공속·쿨감을 정한다 (2026-09-16 · R107)
+ *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, ...}}} ← armor_group.csv — **부위 → 갈래** (2026-09-16 갑옷군 · R107 · 2026-09-18 네 부위).
+ *                  **낀 방어구마다** 제 갈래의 공속 · 쿨감을 더한다 — 지금 값이 있는 것은 갑옷군뿐이다(장갑 갈래 고정값은 사용자 보류)
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
  *   skillPool    — **직업별** 고유 스킬 후보 `{classId: [skillId...]}` ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
@@ -374,7 +375,13 @@ export function createHeroSystem(data) {
         const flat = {};                       // 접사 합산 {stat: v}
         const drList = [];                     // 피해 감소는 합치지 않고 원천별로 모은다 (§9-3)
         for (const it of items) {
-            if (it.implicit) flat[it.implicit.stat] = (flat[it.implicit.stat] ?? 0) + it.implicit.v;
+            if (it.implicit) {
+                // 고정 옵션 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 [2026-09-18 · item_design §1 「갑옷 옵션」 · 네 부위 공통].
+                //   고유값은 강화까지 먹은 값으로 온다(부르는 쪽이 `item.effective` 를 지난다) · 다른 부위 · 접사 · 오만의 더하기 값에는 안 곱한다 · 곱한 뒤 정수
+                const own = (it.affixes ?? []).reduce((s, a) => s + (a.stat === 'armor_def_pct' ? a.v : 0), 0);
+                const v = own ? Math.round(it.implicit.v * (1 + own)) : it.implicit.v;
+                flat[it.implicit.stat] = (flat[it.implicit.stat] ?? 0) + v;
+            }
             for (const a of it.affixes ?? []) {
                 flat[a.stat] = (flat[a.stat] ?? 0) + a.v;
                 if (a.stat === 'damage_reduction') drList.push(a.v);
@@ -396,15 +403,13 @@ export function createHeroSystem(data) {
         //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
         const range = weapon ? F.weaponDamage(weapon.ilvl, group, weapon.up) : { min: B.unarmed_atk, max: B.unarmed_atk };
         const atkFlat = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0);
-        // 상시 괄호 = Σ 공격력 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
-        const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level;
+        // 데미지 % 괄호 = Σ 데미지 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
+        //   + **도감 「데미지」** [2026-09-18 · battle_design §9-1 — ~~괄호 밖에서 따로 곱한다~~ → 같은 괄호의 덧셈]. 조건부 % 는 타격마다 전투가 같은 괄호에 끼운다(formula.strike)
+        const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level + (codex.atk_pct ?? 0);
         // 공격력 = **순수 무기 밑수** [개정 2026-09-10 · battle_design §9-1] — ~~`attrMult(magic ? int : str) ×`~~ 는 걷었다.
         //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
-        //   양끝마다 같은 괄호 둘을 곱하고 반올림한다 — 범위 안의 굴림은 전투(formula.strike)가 한다 (R90)
-        const scaleAtk = end => Math.round(
-            (end + atkFlat)
-            * (1 + atkPctSum)
-            * (1 + (codex.atk_pct ?? 0)));
+        //   양끝마다 데미지 % 괄호 하나를 곱하고 반올림한다 — 범위 안의 굴림은 전투(formula.strike)가 한다 (R90 · 괄호 하나 2026-09-18)
+        const scaleAtk = end => Math.round((end + atkFlat) * (1 + atkPctSum));
         const atk = { min: scaleAtk(range.min), max: scaleAtk(range.max) };
 
         // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
@@ -415,18 +420,23 @@ export function createHeroSystem(data) {
         //   `hpBase` 로 `monster_hp_base` 를 넘긴다. 영웅은 안 넘기므로 `hero_hp_base` 다. 성장분 · 장비 몫은 같은 식이다
         const units = hpUnitSum[hero.level];
         if (units === undefined) throw new Error(`hero: 레벨 ${hero.level} 은 HP 구간 밖이다(1 ~ 만렙 ${B.hero_level_cap}) — 몬스터면 stage.csv:dlvl 이 만렙을 넘었다`);
+        // 투구 오만 「레벨당 체력」은 **더하기**다 — 영웅 레벨 × 값이 체력 flat 과 같은 자리에 든다 [2026-09-17 · item_design §1 「투구 옵션」]
         const hpMax = Math.round(
-            ((hero.hpBase ?? B.hero_hp_base) + units * attrMult('vit', A.vit) + f('hp_flat'))
+            ((hero.hpBase ?? B.hero_hp_base) + units * attrMult('vit', A.vit) + f('hp_flat') + f('hp_per_level') * hero.level)
             * (1 + f('hp_pct'))
             * (1 + (codex.hp_pct ?? 0)));
 
-        // 갑옷군이 공속·쿨감을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — **갑옷 칸 하나만** 본다(09-07 적용 범위).
-        //   중갑은 음수(느려진다) · 경갑은 양수 · 로브는 0 이고 쿨감을 든다. 숙련(마스터리)이 그 위에 얹혀 중갑의 손해를 되산다
-        const armorGroup = (data.armorGroups ?? {})[items.find(it => it?.slot === 'armor')?.group] ?? null;
+        // 방어구 갈래가 공속·쿨감을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — ~~갑옷 칸 하나만~~ → **낀 방어구마다 제 갈래 값을 더한다**
+        //   [2026-09-18 — 네 부위가 갈래를 갖는다]. 지금 값이 있는 것은 갑옷군뿐이다 — 중갑은 음수(느려진다) · 경갑은 양수 · 로브는 0 이고 쿨감을 든다.
+        //   갈래 id 가 부위마다 겹쳐(`leather`) 부위와 함께 찾는다. 무기의 `group`(무기군)은 `weapon` 칸이라 여기 안 걸린다
+        const worn = items.map(it => (data.armorGroups ?? {})[it?.slot]?.[it?.group]).filter(Boolean);
+        const groupAspd = worn.reduce((s, g) => s + (g.aspdPct ?? 0), 0);
+        const groupCdr = worn.reduce((s, g) => s + (g.cdrPct ?? 0), 0);
+        // 신발 오만 「레벨당 공격 속도」 — 영웅 레벨 × 값이 공속 합에 더해진다 [2026-09-18 · item_design §1 신발 행] (합산은 더하기 — 원천별 곱 여부는 GAME_DESIGN §10)
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
             / attrMult('agi', A.agi)
-            * (1 - (f('aspd_pct') + (armorGroup?.aspdPct ?? 0))));
+            * (1 - (f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd)));
 
         const resAll = f('res_all');
         const luckMult = attrMult('luck', A.luck);
@@ -441,9 +451,21 @@ export function createHeroSystem(data) {
             crush: f('crushing_blow_pct'),
             // 운 계수는 드랍률 · 골드와 같은 취급이다 (⚠제안 — item_design §1 「무기 옵션」)
             magicFind: F.roundPct(f('magic_find') * luckMult),
+            // ── 방어구 옵션이 여는 축 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 신발 행] — 소비자는 battle.js(경험치만 state.js)
+            //   받는 피해 감소 — **때린 쪽**의 종족 · 등급 · 열이 조건이다. 셋은 더한 뒤 한 원천으로 곱한다(battle.strikeOnce)
+            vsDr: { normal: f('vs_normal_dr'), demon: f('vs_demon_dr'), undead: f('vs_undead_dr') },
+            vsEliteDr: f('vs_elite_dr'), vsFrontDr: f('vs_front_dr'), vsBackDr: f('vs_back_dr'),
+            drFlat: f('dr_flat'),                // 절대값 피해 감소 — 모든 감소 뒤에 뺀다(formula.strike)
+            counter: f('counter_chance'),        // 반격 확률 — 맞으면 때린 적에게 기본 공격 1회 · 차례를 쓴다(battle.strikeOnce)
+            recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약에 곱한다(보호막 제외)
+            xpGain: f('xp_gain_pct'),            // 경험치 획득 — **본인 몫**(state.advanceRun)
+            // ⚠ 빙결 · 중독 시간 감소 — **읽는 곳이 없다**. 상태이상 기계가 서면 그쪽이 읽는다(신발 공통옵션 · 사용자 「풀에 넣어」)
+            freezeDur: f('freeze_dur_reduction'), poisonDur: f('poison_dur_reduction'),
         };
         const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
-            fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind].some(v => v !== 0);
+            fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
+            ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.xpGain,
+            fx.freezeDur, fx.poisonDur].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
             // **원소 옵션이 없는 마법 무기의 기본 공격은 물리다** [개정 2026-09-11 · 사용자 지시 · R80 · battle_design §2-1 · §9-5]
@@ -455,9 +477,12 @@ export function createHeroSystem(data) {
             attack_type: 'physical',
             level: hero.level,                 // 적중률의 공격자 레벨 (§9-4)
             hp_max: hpMax,
-            defense: f('def_flat'),
+            // 갑옷 오만 「레벨당 방어력」은 **더하기**다 — 영웅 레벨 × 값 [2026-09-16 · item_design §1 「갑옷 옵션」]. 고정 옵션 % 는 위 아이템 루프에서 고유값에만 곱했다
+            defense: f('def_flat') + f('def_per_level') * hero.level,
             ...Object.fromEntries(ELEMENTS.map(e => [`res_${e}`, resAll + f(`res_${e}`)])),
             res_max_bonus: f('res_max_bonus'),  // 저항 기본 상한을 뚫는 유일한 수단 (§9-5)
+            // 원소별 최대 저항 증가 [2026-09-18 · 투구 시기 칸] — 그 원소의 상한에만 더한다. 시트 행이 아니라 저항 행의 상한 표기와 전투가 읽는다
+            res_max_el: Object.fromEntries(ELEMENTS.map(e => [e, f(`res_max_${e}`)])),
             res_reduction: f('res_reduction'),  // 상대 저항을 비율만큼 깎는다 — 관통이 아니라 음수 가산
             def_ignore: f('def_ignore'),
             reflect_damage: f('reflect_damage'),
@@ -474,12 +499,15 @@ export function createHeroSystem(data) {
             hp_regen: Number(
                 (B.hp_regen_base_per_level * F.growthMult(hero.level) + f('hp_regen'))
                     .toFixed(3)),
-            cooldown_reduction: f('cooldown_reduction') + (armorGroup?.cdrPct ?? 0),    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js) · 로브가 여기 얹힌다 (R107)
+            cooldown_reduction: f('cooldown_reduction') + groupCdr,    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js) · 로브(R107) · 티아라 공통옵션(2026-09-18)이 여기 얹힌다
             // 타격 회복 — 물리 경직 시간을 줄인다 (battle_design §2-3 · R110 · battle.js stagger). **비율**이다(0.5 = 50% · R111 단위 규약).
-            //   ⚠ 출처(접사 · 마스터리)와 상한은 기획 미정이라(GAME_DESIGN §10) 지금은 모두 0 이다 — 합산 채널만 열어 둔다
+            //   출처는 갑옷 분노 칸(2026-09-18 — 첫 출처) · ⚠ 상한은 기획 미정(GAME_DESIGN §10)
             fhr: f('fhr'),
             action_period: Number(period.toFixed(3)),
-            dmg_bonus_pct: codex.dmg_pct ?? 0,
+            dmg_bonus_pct: codex.dmg_pct ?? 0,    // 피해량(도감) — 데미지 % 괄호와 합치지 않고 전투가 따로 곱한다 (2026-09-18 · battle_design §9-2)
+            // 평타 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — 직업 메인 스탯(`class.csv:key_attr` · hero_design §2)의 `formula.statCoef`.
+            //   직업이나 그 능력치를 모르면 1. **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · ⚠ 몬스터는 `battle.makeEnemy` 가 1 로 덮는다(보류)
+            main_attr_mult: F.statCoef(A?.[keyAttrOf(hero.cls)]),
             gold_find: F.roundPct(f('gold_find') * luckMult),
             item_find: F.roundPct(f('item_find') * luckMult),
             // Σ 상시 피해(비율) — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면

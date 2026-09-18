@@ -29,7 +29,7 @@
    └──────────────────────────┘
             ui/i18n.js (STRINGS ko/en · t())      index.html (한 장 `#stage` 안에 셸 DOM + 툴팁 · 창 레이어)
             ui/tip.js  (툴팁 기계장치 · 영웅/스킬 카드 — 두 렌더러 공용)
-            ui/cloud.js (Google 로그인 · 클라우드 세이브 사본 — Firebase 를 만지는 유일한 파일 · 로그인한 브라우저에서만 SDK 를 불러온다)
+            ui/cloud.js (Google 로그인 · 클라우드 세이브 사본 — Firebase 를 만지는 유일한 파일 · 시작 시 SDK 로 인증을 확인한다)
 ```
 
 ---
@@ -125,8 +125,8 @@ render()
 
 | 의존 | 위치 | 비고 |
 |---|---|---|
-| Galmuri · Pretendard 웹폰트 (CDN **2개**) | `index.html` | **로그인하지 않으면 유일한 네트워크 의존.** 오프라인이면 폴백 폰트 (하이브리드 폰트 도입 08-27 — DEV_PLAN 부채 #11) |
-| Firebase JS SDK (gstatic CDN — `app` · `auth` · `firestore-lite`) + Firebase Authentication(Google) · Firestore | `ui/cloud.js` · `ui/firebase_config.js` | **로그인한 브라우저에서만** 동적 import 로 불러온다 — 로그인하지 않으면 네트워크를 안 탄다. 실패하면 로컬 세이브로 계속한다. 세이브 사본은 `saves/<uid>` 문서 하나(JSON 문자열) · 보안 규칙은 「자기 문서만」 (SCREEN_DESIGN §2-1 · ADR-0112) |
+| Galmuri · Pretendard 웹폰트 (CDN **2개**) | `index.html` | 오프라인이면 폴백 폰트 (하이브리드 폰트 도입 08-27 — DEV_PLAN 부채 #11) |
+| Firebase JS SDK (gstatic CDN — `app` · `auth` · `firestore-lite`) + Firebase Authentication(Google) · Firestore | `ui/cloud.js` · `ui/firebase_config.js` | 시작 시 동적 import 로 인증과 클라우드를 확인한다. **Google 로그인 필수** — 확인 실패 시 로컬 게임을 열지 않고 재시도를 기다린다. 세이브 사본은 `saves/<uid>` 문서 하나(JSON 문자열) · 보안 규칙은 「자기 문서만」 (SCREEN_DESIGN §2-1) |
 | Python `http.server` | `serve.py` (← `start.bat`) | ES Modules 가 `file://` 에서 막혀서. `serve.py` 는 그걸 얇게 감싸 **`Cache-Control: no-store`** 만 더한다 — 같은 파일명으로 아트를 갈아끼우면 브라우저 휴리스틱 캐시가 옛 그림을 계속 쓴다 (2026-09-05) |
 
 패키지 매니저·빌드 도구·프레임워크 없음.

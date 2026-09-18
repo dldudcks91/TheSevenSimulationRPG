@@ -103,6 +103,10 @@
  *   v28 → v29 (2026-09-17 — 퍼센트는 비율로 · R111 · 사용자 지시):
  *     · `items[*].affixes[*].v` 중 **퍼센트 채널**(`item.pctStat`)을 100 으로 나눈다 — 5 → 0.05. 고정값(`hp_flat` · `def_flat` · `atk_flat`)과
  *       `implicit.v`(방어력)는 그대로다. 오만 「레벨당 데미지」도 퍼센트라 같이 나눈다(0.3 → 0.003 · 동작은 같다). rng 0
+ *   v29 → v30 (2026-09-18 — 방어구 옵션 세 층 · 고유 방어력 편차 폐지 · 사용자 확정 · item_design §1 「갑옷 옵션」):
+ *     · 방어구(갑옷 · 투구 · 장갑 · 신발)에 고정 옵션이 없으면 `item.legacyArmorLayers` 로 **고정 옵션 · 죄종 칸을 앞에 채운다** —
+ *       가진 옛 옵션은 뒤에 그대로 둔다(개수를 줄이지 않는다 · v22 무기와 같은 규칙). rng 0 · 행은 uid 번호 · 값은 가운데
+ *     · 방어구 `implicit.v` 를 **지금 공식의 바탕값**으로(`item.baseImplicit` — 부위 갈래 계수 포함 · 편차 없음). 옛 장갑 · 신발 이름 · baseId 는 그대로
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
@@ -110,7 +114,7 @@
 import { makeRng, deriveSeed } from './rng.js';
 import { createFormula } from './formula.js';
 
-export const SAVE_VERSION = 29;
+export const SAVE_VERSION = 30;
 
 /**
  * @param {object} deps
@@ -671,6 +675,26 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * 방어구 옵션이 세 층이 됐다 · 고유 방어력 편차가 사라졌다 [2026-09-18 · 사용자 확정 · item_design §1 「갑옷 옵션」 · INTERFACE §4 v29 → v30].
+     * 옛 방어구는 옛 공용 풀(`affix.csv`)의 옵션만 들고 편차로 굴린 고유값을 든다 —
+     *   · **고정 옵션이 없으면** 고정 옵션 · 죄종 칸을 앞에 채운다(`item.legacyArmorLayers` — uid 로 고르고 값은 가운데). 옛 옵션은 뒤에 그대로 둔다
+     *   · 고유값은 **지금 공식의 바탕값**으로(`item.baseImplicit`) — 새 드롭과 같은 값이 된다. 티아라 · 가죽 투구가 갈래 계수를 이때 받는다
+     * 목걸이 · 반지는 건드리지 않는다. **rng 0**
+     */
+    function upgradeV29(s) {
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it) continue;
+            const layers = I.legacyArmorLayers(it);
+            if (!layers.length) continue;                              // 방어구가 아니다
+            if (!(it.affixes ?? []).some(a => a.src === 'fixed')) it.affixes = [...layers, ...(it.affixes ?? [])];
+            const v = I.baseImplicit(it);
+            if (v !== null && it.implicit) it.implicit.v = v;
+        }
+        s.version = 30;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -682,7 +706,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -712,6 +736,7 @@ export function createGameSystem(deps) {
         if (s.version === 26) s = upgradeV26(s);
         if (s.version === 27) s = upgradeV27(s);
         if (s.version === 28) s = upgradeV28(s);
+        if (s.version === 29) s = upgradeV29(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
@@ -1384,12 +1409,16 @@ export function createGameSystem(deps) {
                 R.drops.push(added.uid);
             }
             // 경험치 — **그 순간 살아 있는 영웅만** 같은 양을 받는다 (사용자 확정 2026-09-14). 레벨업은 다음 라운드부터 전투에 먹는다(②)
-            const xpEach = Math.round(s.xp * B.xp_rate);
+            //   **경험치 획득 +%**(방어구 공통옵션)는 **낀 영웅 본인 몫**만 늘린다 [2026-09-18 사용자 확정 · item_design §1 「갑옷 옵션」] —
+            //   그 순간 입은 장비로 잰다(`heroCombat` 의 옵션 묶음). 0 이면 종전과 같은 값 · rng 0
+            const xpBase = s.xp * B.xp_rate;
             for (const uid of s.alive) {
                 const h = heroById(state, uid);
                 if (!h) continue;
-                const lu = H.grantXp(h, xpEach, run.rng);
-                R.xp[uid] = (R.xp[uid] ?? 0) + xpEach;
+                const gain = heroCombat(state, h).option_fx?.xpGain ?? 0;
+                const xp = Math.round(gain ? xpBase * (1 + gain) : xpBase);
+                const lu = H.grantXp(h, xp, run.rng);
+                R.xp[uid] = (R.xp[uid] ?? 0) + xp;
                 if (lu) mergeLevelUp(R.levelUps, lu);
             }
         }
