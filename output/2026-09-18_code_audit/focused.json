@@ -1,0 +1,328 @@
+{
+  "result": {
+    "passed": 6,
+    "total": 10,
+    "results": [
+      {
+        "name": "dismiss: formation must not retain removed hero references",
+        "ok": false,
+        "detail": "{\"party\":[\"h2\",\"h3\"],\"ranks\":[[\"h1\",\"h2\"],[\"h3\"]],\"removed\":\"h1\"}"
+      },
+      {
+        "name": "duplicate skill cooldowns survive refit independently",
+        "ok": false,
+        "detail": "{\"expectedIndependent\":[15.1,16.2],\"actual\":[16.2,16.2],\"lastCasts\":[{\"t\":0.1,\"e\":\"skill\",\"u\":\"p0\",\"s\":\"war_bash\",\"ready\":15.1},{\"t\":1.2,\"e\":\"skill\",\"u\":\"p0\",\"s\":\"war_bash\",\"ready\":16.2}]}"
+      },
+      {
+        "name": "runtime HP buff renewals: unchanged buff value should not repeatedly grant HP",
+        "ok": true,
+        "detail": {
+          "once": {
+            "hp": 70,
+            "max": 120
+          },
+          "renewed": {
+            "hp": 90,
+            "max": 120
+          },
+          "classification": "same-shout renewal semantics require design decision"
+        }
+      },
+      {
+        "name": "CSV parser malformed widths are observable (robustness observation)",
+        "ok": true,
+        "detail": {
+          "short": [
+            {
+              "id": "a",
+              "value": ""
+            }
+          ],
+          "long": [
+            {
+              "id": "a",
+              "value": 1
+            }
+          ],
+          "unclosed": [
+            {
+              "id": "a",
+              "value": "broken"
+            }
+          ]
+        }
+      },
+      {
+        "name": "all skills: execution at two attribute bounds, finite outputs, bounded duration",
+        "ok": true,
+        "detail": {
+          "runs": 74,
+          "coverage": {
+            "war_bash": 22,
+            "war_doubleswing": 46,
+            "war_quake": 34,
+            "war_leap": 42,
+            "war_taunt": 22,
+            "war_shout": 24,
+            "war_battleorders": 18,
+            "kni_smite": 22,
+            "kni_charge": 40,
+            "kni_rush": 32,
+            "kni_duel": 28,
+            "kni_enchant": 24,
+            "kni_might": 36,
+            "kni_fanaticism": 2,
+            "kni_defiance": 2,
+            "arc_snipe": 28,
+            "arc_rapid": 76,
+            "arc_multishot": 40,
+            "arc_guided": 28,
+            "arc_pierce": 26,
+            "arc_poison": 32,
+            "mag_fireball": 28,
+            "mag_inferno": 22,
+            "mag_iceblast": 66,
+            "mag_frostnova": 28,
+            "mag_lightning": 40,
+            "mag_chain": 30,
+            "mag_focus": 16,
+            "mag_frozenwall": 32,
+            "pri_judgment": 42,
+            "pri_heal": 24,
+            "pri_grace": 28,
+            "pri_haste": 14,
+            "pri_cure": 22,
+            "pri_regen": 18,
+            "pri_penitence": 26,
+            "pri_bind": 50
+          },
+          "unexercised": []
+        }
+      },
+      {
+        "name": "all stages at intended level: five seeds with equipment, mastery and round continuity",
+        "ok": true,
+        "detail": {
+          "runs": 175,
+          "events": 584104,
+          "clears": 145,
+          "reached": {
+            "101": [
+              1101,
+              1102,
+              1103,
+              1150
+            ],
+            "102": [
+              1201,
+              1202,
+              1203,
+              1250
+            ],
+            "103": [
+              1301,
+              1302,
+              1303,
+              1350
+            ],
+            "104": [
+              1401,
+              1402,
+              1403,
+              1450
+            ],
+            "105": [
+              1900
+            ],
+            "201": [
+              2101,
+              2102,
+              2103,
+              2150
+            ],
+            "202": [
+              2201,
+              2202,
+              2203,
+              2250
+            ],
+            "203": [
+              2301,
+              2302,
+              2303,
+              2350
+            ],
+            "204": [
+              2401,
+              2402,
+              2403,
+              2450
+            ],
+            "205": [
+              2900
+            ],
+            "301": [
+              3101,
+              3102,
+              3103,
+              3150
+            ],
+            "302": [
+              3201,
+              3202,
+              3203,
+              3250
+            ],
+            "303": [
+              3301,
+              3302,
+              3303,
+              3350
+            ],
+            "304": [
+              3401,
+              3402,
+              3403,
+              3450
+            ],
+            "305": [
+              3900
+            ],
+            "401": [
+              4101,
+              4102,
+              4103,
+              4150
+            ],
+            "402": [
+              4201,
+              4202,
+              4203,
+              4250
+            ],
+            "403": [
+              4301,
+              4302,
+              4303,
+              4350
+            ],
+            "404": [
+              4401,
+              4402,
+              4403,
+              4450
+            ],
+            "405": [
+              4900
+            ],
+            "501": [
+              5101,
+              5102,
+              5103,
+              5150
+            ],
+            "502": [
+              5201,
+              5202,
+              5203,
+              5250
+            ],
+            "503": [
+              5301,
+              5302,
+              5303,
+              5350
+            ],
+            "504": [
+              5401,
+              5402,
+              5403,
+              5450
+            ],
+            "505": [
+              5900
+            ],
+            "601": [
+              6101,
+              6102,
+              6103,
+              6150
+            ],
+            "602": [
+              6201,
+              6202,
+              6203,
+              6250
+            ],
+            "603": [
+              6301,
+              6302,
+              6303,
+              6350
+            ],
+            "604": [
+              6401,
+              6402,
+              6403,
+              6450
+            ],
+            "605": [
+              6900
+            ],
+            "701": [
+              7101,
+              7102,
+              7103,
+              7150
+            ],
+            "702": [
+              7201,
+              7202,
+              7203,
+              7250
+            ],
+            "703": [
+              7301,
+              7302,
+              7303,
+              7350
+            ],
+            "704": [
+              7401,
+              7402,
+              7403,
+              7450
+            ],
+            "705": [
+              7900
+            ]
+          }
+        }
+      },
+      {
+        "name": "migration v28 -> current: ratio conversion exactly once, flat values stable",
+        "ok": true,
+        "detail": {
+          "items": 6,
+          "version": 30
+        }
+      },
+      {
+        "name": "data immutability: constructing and running systems does not mutate supplied tables",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "aura refit: removing one duplicate caster preserves the other caster aura",
+        "ok": false,
+        "detail": "{\"remainingCaster\":\"p0\",\"removed\":[{\"t\":2.5,\"e\":\"buffEnd\",\"u\":\"p0\",\"s\":\"kni_defiance\"},{\"t\":2.5,\"e\":\"buffEnd\",\"u\":\"p1\",\"s\":\"kni_defiance\"}],\"reapplied\":[]}"
+      },
+      {
+        "name": "summon death: report.downed contains only actual hero UIDs",
+        "ok": false,
+        "detail": "{\"seed\":1,\"stage\":101,\"party\":[\"h1\",\"h2\",\"h3\"],\"downed\":[\"h1\",\"h2\",null,\"h3\"],\"summons\":8}"
+      }
+    ]
+  },
+  "errors": []
+}

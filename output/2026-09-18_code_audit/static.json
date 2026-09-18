@@ -1,0 +1,118 @@
+{
+  "csvCount": 43,
+  "csvRows": {
+    "affix": 13,
+    "armor_common_option": 36,
+    "armor_group": 10,
+    "armor_sin_option": 30,
+    "balance": 183,
+    "chapter": 7,
+    "class": 7,
+    "codex_level": 4,
+    "codex_series": 4,
+    "combat_stat": 24,
+    "commission": 5,
+    "commission_kind": 2,
+    "equip_slot": 8,
+    "formation_template": 3,
+    "gather_node": 7,
+    "hero_attribute": 7,
+    "hero_name": 24,
+    "hero_tier": 4,
+    "hero_trait": 12,
+    "hero_unique_candidates": 40,
+    "item_base": 42,
+    "log_node": 7,
+    "make_recipe": 7,
+    "mastery_node": 38,
+    "mine_node": 7,
+    "monster": 119,
+    "monster_role": 7,
+    "potion": 5,
+    "round_budget": 4,
+    "search_answer": 42,
+    "search_meeting": 14,
+    "search_story": 28,
+    "skill": 38,
+    "skill_tag": 14,
+    "spawn_grade": 4,
+    "stage": 35,
+    "stage_round": 10,
+    "tactic_option": 66,
+    "tactic_slot": 7,
+    "weapon_base": 70,
+    "weapon_common_option": 13,
+    "weapon_group": 12,
+    "weapon_sin_option": 12
+  },
+  "loaderCount": 43,
+  "unloaded": [],
+  "missingFiles": [],
+  "balanceCount": 183,
+  "literalReferencedBalanceCount": 101,
+  "logicImports": {
+    "battle.js": [
+      "./formula.js",
+      "./hero.js",
+      "./skill_runtime.js",
+      "./skill_effects.js",
+      "./spawn_rule.js"
+    ],
+    "csv.js": [],
+    "formula.js": [],
+    "hero.js": [
+      "./formula.js"
+    ],
+    "item.js": [
+      "./formula.js"
+    ],
+    "naming.js": [],
+    "rng.js": [],
+    "skill.js": [
+      "./hero.js",
+      "./formula.js",
+      "./skill_effects.js"
+    ],
+    "skill_effects.js": [],
+    "skill_runtime.js": [
+      "./skill_effects.js"
+    ],
+    "spawn_rule.js": [],
+    "state.js": [
+      "./rng.js",
+      "./formula.js"
+    ],
+    "tactic.js": []
+  },
+  "issues": [
+    {
+      "file": "balance.csv",
+      "line": 24,
+      "kind": "width",
+      "expected": 5,
+      "actual": 6
+    },
+    {
+      "file": "balance.csv",
+      "line": 127,
+      "kind": "width",
+      "expected": 5,
+      "actual": 6
+    },
+    {
+      "file": "hero_unique_candidates.csv",
+      "kind": "missing English column",
+      "column": "origin_kr"
+    },
+    {
+      "file": "hero_unique_candidates.csv",
+      "kind": "missing English column",
+      "column": "look_kr"
+    },
+    {
+      "file": "hero_unique_candidates.csv",
+      "kind": "missing English column",
+      "column": "battle_kr"
+    }
+  ]
+}

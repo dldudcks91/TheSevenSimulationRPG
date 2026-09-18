@@ -2343,6 +2343,16 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 강화 모드 — 클릭이 골드를 쓰므로 칸에 비용을 적는다 (SCREEN_DESIGN §6) */
 .inv-cell { position: relative; }
 .inv-up { position: absolute; top: 1px; right: 2px; font-size: var(--fs-xs); color: var(--color-warning); }
+/* 오른쪽 아래 = **아이템 레벨** [2026-09-18 · ADR-0168] — 오른쪽 위 `+n`(유저가 쌓은 것)과 대각으로 마주 본다.
+   페이퍼돌 착용 칸도 같은 배지를 단다 — 칸에 서는 글자는 이것 하나다(ADR-0122 의 「글자 없음」을 그만큼 대체).
+   아이콘이 칸 가운데라 그림이 모서리까지 번진다 — 글자를 **검은 테두리로 둘러** 그림 위에서도 읽게 한다.
+   칸 배경색 그림자로는 모자랐다: 밝은 그림 위에서 글자가 묻혔다(2026-09-18 실측) */
+.inv-lv, .pd-lv {
+    position: absolute; right: 3px; bottom: 2px;
+    font-size: var(--fs-2xs); line-height: 1; color: var(--text-secondary);
+    text-shadow: 0 1px 1px #000, 0 -1px 1px #000, 1px 0 1px #000, -1px 0 1px #000, 0 0 3px #000;
+    pointer-events: none;
+}
 /* 재료 칸의 오른쪽 위 숫자는 **개수**다 — 강화 단계(+N)와 색을 갈라 둔다 (ADR-0133) */
 .mat-cell { cursor: default; }
 .mat-cell .inv-up { color: var(--text-primary); font-weight: 700; }

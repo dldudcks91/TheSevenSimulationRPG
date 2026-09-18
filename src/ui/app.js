@@ -1597,7 +1597,8 @@ function dropSection(p, R) {
         cell.style.borderColor = rarity(d.rarity).color;
         const us = SYS.game.upgradeState(G, uid);
         cell.innerHTML = `<span class="inv-icon">${itemImg(d)}</span>`
-            + (us && us.up > 0 ? `<span class="inv-up">+${us.up}</span>` : '');
+            + (us && us.up > 0 ? `<span class="inv-up">+${us.up}</span>` : '')
+            + `<span class="inv-lv">${t('ch.itemLv', { n: d.ilvl })}</span>`;   // 가방 칸과 같은 배지 (§4-3 · ADR-0168)
         if (d.rarity === 'unique') cell.classList.add('shine');
         bindTip(cell, d);                        // 방금 주운 것 = 「이 아이템」(기본값). ⚠ 「착용 중」이 아니다 (§6 머리글) · 맥락을 안 넘긴다 — 주인이 없어 스킬 숫자가 식으로 선다 (ADR-0139)
         if (inBag && state.repSalvage) cell.onclick = () => {
@@ -2036,8 +2037,11 @@ function paperdoll(h) {
             if (it) cell.style.borderColor = rarity(it.rarity).color;
             // 칸에는 글자가 없다 [2026-09-15 사용자 지시 · ADR-0122] — 부위는 실루엣이, 찬 칸은 그림과 툴팁이 말한다.
             //   부위 이름은 **빈 칸만** `title` 로 든다 — 찬 칸에 달면 아이템 툴팁 위에 브라우저 기본 툴팁이 겹친다
-            cell.innerHTML = art ? `<span class="pd-art"><img src="${art}" alt="" loading="lazy" onerror="this.remove()"></span>`
-                : `<div class="pd-icon">${it ? itemImg(it) : def.icon}</div>`;
+            //   **예외 하나 — 아이템 레벨**이 찬 칸 오른쪽 아래에 선다 [2026-09-18 사용자 지시 · ADR-0168]:
+            //   그림도 칸 자리도 대신 말해 주지 못하는 개체값이라, 가방 칸과 견주려면 여기도 들어야 한다
+            cell.innerHTML = (art ? `<span class="pd-art"><img src="${art}" alt="" loading="lazy" onerror="this.remove()"></span>`
+                : `<div class="pd-icon">${it ? itemImg(it) : def.icon}</div>`)
+                + (it ? `<span class="pd-lv">${t('ch.itemLv', { n: it.ilvl })}</span>` : '');
             cell.setAttribute('aria-label', L(def));
             if (!it) cell.title = L(def);
             if (it) {
@@ -2295,8 +2299,10 @@ function storagePanel(h, where, { showTarget = false } = {}) {
         if (it) {
             cell.style.borderColor = rarity(it.rarity).color;
             const us = SYS.game.upgradeState(G, it.uid);
+            // 모서리 배지 둘 [2026-09-18 · ADR-0168] — 오른쪽 위 = 유저가 쌓은 강화(0 이면 안 선다) · 오른쪽 아래 = 개체가 태어날 때 박힌 ilvl(언제나 선다)
             cell.innerHTML = `<span class="inv-icon">${itemImg(it)}</span>`
-                + (us && us.up > 0 ? `<span class="inv-up">+${us.up}</span>` : '');
+                + (us && us.up > 0 ? `<span class="inv-up">+${us.up}</span>` : '')
+                + `<span class="inv-lv">${t('ch.itemLv', { n: it.ilvl })}</span>`;
             if (it.rarity === 'unique') cell.classList.add('shine');
             // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
             const target = SYS.game.equipTarget(h, it);

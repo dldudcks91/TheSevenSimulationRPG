@@ -1,0 +1,48 @@
+{
+  "checks": [
+    {
+      "name": "english login layout fits",
+      "ok": true
+    },
+    {
+      "name": "guest dev route blocked",
+      "ok": true
+    },
+    {
+      "name": "direct start and continue blocked",
+      "ok": true
+    },
+    {
+      "name": "cancel stays gated",
+      "ok": true
+    },
+    {
+      "name": "cloud failure stays gated",
+      "ok": true
+    },
+    {
+      "name": "successful login unlocks game",
+      "ok": true
+    },
+    {
+      "name": "existing session restored",
+      "ok": true
+    },
+    {
+      "name": "signout blocks saved game",
+      "ok": true
+    },
+    {
+      "name": "external signout blocks game",
+      "ok": true
+    },
+    {
+      "name": "restore network failure blocks local save",
+      "ok": true
+    },
+    {
+      "name": "no browser exceptions",
+      "ok": true
+    }
+  ]
+}

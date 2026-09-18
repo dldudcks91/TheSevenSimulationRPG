@@ -1,0 +1,136 @@
+{
+  "result": {
+    "passed": 10,
+    "total": 16,
+    "results": [
+      {
+        "name": "RNG: 100 seeds x 1000 draws deterministic and [0,1)",
+        "ok": true,
+        "detail": 100000
+      },
+      {
+        "name": "dependency injection: altered heroTiers must be used",
+        "ok": false,
+        "detail": "{\"expected\":70,\"actual\":[75,67,59]}",
+        "stack": [
+          "Error: {\"expected\":70,\"actual\":[75,67,59]}",
+          "    at assert (eval at evaluate (:226:30), <anonymous>:8:49)",
+          "    at eval (eval at evaluate (:226:30), <anonymous>:50:5)"
+        ]
+      },
+      {
+        "name": "formula: hand-calculated damage, reductions, negative resistance and RNG counts",
+        "ok": true,
+        "detail": {
+          "physical": 84,
+          "fire": 210
+        }
+      },
+      {
+        "name": "skill damage reduction composes multiplicatively with equipment/mastery",
+        "ok": false,
+        "detail": "{\"expected\":0.44,\"actual\":0.5}",
+        "stack": [
+          "Error: {\"expected\":0.44,\"actual\":0.5}",
+          "    at assert (eval at evaluate (:226:30), <anonymous>:8:49)",
+          "    at eval (eval at evaluate (:226:30), <anonymous>:67:5)"
+        ]
+      },
+      {
+        "name": "generation: 500 parties, tiers, skill ownership, attributes and fresh ownership",
+        "ok": true,
+        "detail": {
+          "parties": 500
+        }
+      },
+      {
+        "name": "all levels: combat and item growth finite, HP and weapon damage monotonic",
+        "ok": true,
+        "detail": 1650
+      },
+      {
+        "name": "all gear slots x 120 levels: generated gear/effects finite and known skill references",
+        "ok": true,
+        "detail": 2520
+      },
+      {
+        "name": "save roundtrip: 100 seeds, no mutation and stable serialization",
+        "ok": true,
+        "detail": 100
+      },
+      {
+        "name": "save validation: reject missing party reference",
+        "ok": false,
+        "detail": "canLoad returned true",
+        "stack": [
+          "Error: canLoad returned true",
+          "    at assert (eval at evaluate (:226:30), <anonymous>:8:49)",
+          "    at eval (eval at evaluate (:226:30), <anonymous>:109:31)"
+        ]
+      },
+      {
+        "name": "save validation: reject duplicate item ownership",
+        "ok": false,
+        "detail": "canLoad returned true",
+        "stack": [
+          "Error: canLoad returned true",
+          "    at assert (eval at evaluate (:226:30), <anonymous>:8:49)",
+          "    at eval (eval at evaluate (:226:30), <anonymous>:109:31)"
+        ]
+      },
+      {
+        "name": "save validation: reject invalid level",
+        "ok": false,
+        "detail": "canLoad returned true",
+        "stack": [
+          "Error: canLoad returned true",
+          "    at assert (eval at evaluate (:226:30), <anonymous>:8:49)",
+          "    at eval (eval at evaluate (:226:30), <anonymous>:109:31)"
+        ]
+      },
+      {
+        "name": "save validation: reject missing resources",
+        "ok": false,
+        "detail": "canLoad returned true",
+        "stack": [
+          "Error: canLoad returned true",
+          "    at assert (eval at evaluate (:226:30), <anonymous>:8:49)",
+          "    at eval (eval at evaluate (:226:30), <anonymous>:109:31)"
+        ]
+      },
+      {
+        "name": "all 35 stages x 10 seeds: full timeline determinism, references, finite values, settlement",
+        "ok": true,
+        "detail": {
+          "runs": 350,
+          "events": 200744,
+          "calls": 103,
+          "verdicts": {
+            "wipe": 338,
+            "clear": 4,
+            "timeout": 8
+          }
+        }
+      },
+      {
+        "name": "run boundaries: departure no reward, closure idempotent, old handle rejected",
+        "ok": true,
+        "detail": 50
+      },
+      {
+        "name": "stateful action sequences: 30 seeds x 200 actions preserve ownership/resources/failure atomicity",
+        "ok": true,
+        "detail": {
+          "actions": 6000,
+          "failures": 2040
+        }
+      },
+      {
+        "name": "search: snapshots, answer boundaries, one-time hire, resource conservation",
+        "ok": true,
+        "detail": 30
+      }
+    ]
+  },
+  "errors": []
+}

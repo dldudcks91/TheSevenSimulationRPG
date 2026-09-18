@@ -712,6 +712,9 @@ const STRINGS = {
     'ch.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'ch.xp': { ko: '경험치 {a} / {b}', en: 'XP {a} / {b}' },
     'ch.xp.max': { ko: 'MAX', en: 'MAX' },
+    // 아이템 칸 오른쪽 아래 배지 — **아이템** 레벨이다 (2026-09-18 · SCREEN_DESIGN §6 · ADR-0168).
+    //   위의 `ch.lv`(영웅 레벨)와 글자가 같아도 가리키는 것이 달라 키를 나눈다
+    'ch.itemLv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
     'ch.skill.go': { ko: '스킬 트리 열기', en: 'Open skill tree' },
     'ch.items.h': { ko: '아이템', en: 'Items' },

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "UI replay: maximum-HP buff displays updated current/max HP",
+    "ok": false,
+    "detail": "{\"expected\":\"120 / 120\",\"actual\":\"100 / 100\",\"runtime\":{\"hp\":120,\"hpMax\":120},\"events\":[{\"t\":0,\"e\":\"round\",\"n\":1,\"kind\":\"normal\",\"enemies\":[]},{\"t\":1,\"e\":\"buff\",\"u\":\"p0\",\"s\":\"war_battleorders\",\"stat\":\"hp_max_pct\",\"v\":0.2,\"until\":11,\"amt\":20}]}"
+  },
+  {
+    "name": "UI replay: duplicate skill slots retain separate cooldowns",
+    "ok": false,
+    "detail": "{\"expected\":\"both cooldown masks active after two casts\",\"actual\":[\"100%\",\"0%\"]}"
+  },
+  {
+    "name": "storage failure: remote adoption must not advance cloud link if local write fails",
+    "ok": false,
+    "detail": "{\"localUnchanged\":true,\"cloudLink\":{\"uid\":\"audit-local-only\",\"rev\":42,\"savedAt\":123456}}"
+  },
+  {
+    "name": "cloud comparison: different content at same timestamp is not an identical save",
+    "ok": false,
+    "detail": "{\"expected\":\"cloudPick\",\"actual\":{\"modal\":null,\"status\":\"on\",\"link\":{\"uid\":\"audit-local-only\",\"rev\":2,\"savedAt\":1789716876493}}}"
+  }
+]
