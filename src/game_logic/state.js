@@ -107,6 +107,9 @@
  *     · 방어구(갑옷 · 투구 · 장갑 · 신발)에 고정 옵션이 없으면 `item.legacyArmorLayers` 로 **고정 옵션 · 죄종 칸을 앞에 채운다** —
  *       가진 옛 옵션은 뒤에 그대로 둔다(개수를 줄이지 않는다 · v22 무기와 같은 규칙). rng 0 · 행은 uid 번호 · 값은 가운데
  *     · 방어구 `implicit.v` 를 **지금 공식의 바탕값**으로(`item.baseImplicit` — 부위 갈래 계수 포함 · 편차 없음). 옛 장갑 · 신발 이름 · baseId 는 그대로
+ *   v30 → v31 (2026-09-19 — 아이템 이름 = 「A와 B의 베이스」 · 죄종 단어 넷 · 사용자 확정 · item_design §1 「이름」):
+ *     · `items[*].words` 를 채우고 `name` 을 새 형식으로 다시 조립한다(`item.legacyName` — 단 번호는 uid 번호 · 베이스는 옛 이름에서 뗀다).
+ *       못 알아보는 옛 이름은 그대로 둔다. 이름은 표시 전용이라 전투 결과는 안 바뀐다. rng 0
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
@@ -114,7 +117,7 @@
 import { makeRng, deriveSeed } from './rng.js';
 import { createFormula } from './formula.js';
 
-export const SAVE_VERSION = 30;
+export const SAVE_VERSION = 31;
 
 /**
  * @param {object} deps
@@ -695,6 +698,22 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * 아이템 이름이 「A와 B의 베이스」가 됐다 · 죄종마다 단어 넷 [2026-09-19 · 사용자 확정 · item_design §1 「이름」 · INTERFACE §4 v30 → v31].
+     * 옛 아이템은 `words` 가 없고 이름이 옛 형식이다 — `item.legacyName` 이 단 번호(uid 번호)와 새 이름(옛 이름에서 뗀 베이스)을 낸다.
+     * **rng 0** · 이름은 표시 전용이라 전투 결과는 안 바뀐다
+     */
+    function upgradeV30(s) {
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it || Array.isArray(it.words)) continue;             // 이미 단어를 든 아이템(새 드롭)은 건드리지 않는다
+            const r = I.legacyName(it);
+            it.words = r.words;
+            it.name = r.name;
+        }
+        s.version = 31;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -706,7 +725,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -737,6 +756,7 @@ export function createGameSystem(deps) {
         if (s.version === 27) s = upgradeV27(s);
         if (s.version === 28) s = upgradeV28(s);
         if (s.version === 29) s = upgradeV29(s);
+        if (s.version === 30) s = upgradeV30(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         s.codexCards = s.codexCards ?? {}; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;

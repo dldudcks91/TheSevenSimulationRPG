@@ -325,7 +325,6 @@ const STRINGS = {
     'ch.dismissed': { ko: '{name} 해고', en: '{name} dismissed' },
     'ch.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'ch.upgraded': { ko: '강화 +{n} · {g}G', en: 'Upgraded to +{n} · {g}G' },
-    'ch.weaponGroup': { ko: '{group} · {cls} 전용', en: '{group} · {cls} only' },
     'ch.noTrees': { ko: '마스터리는 실동작 · 전직 층은 미구현이다', en: 'Mastery is live; the advancement layer is not built yet' },
 
     /* ── 선술집 (실동작) ── */
@@ -1073,8 +1072,9 @@ const STRINGS = {
        09-08 삭제 — `ix.h`(탭 제목 · `nav.codex` 가 받는다) · `ix.seg.*`(세그먼트 · `cx.seg.*` 가 받는다) ·
        `ix.g.monster`(몬스터 초상 묶음 · 몬스터 세그먼트의 카드가 그 일을 한다 — §9). */
     'ix.g.heroCls': { ko: '{cls} 초상', en: '{cls} Portraits' },   // 직업 하나가 묶음 하나 (ADR-0066) — ~~ix.g.hero~~ 대체
-    'ix.g.weapon': { ko: '무기', en: 'Weapons' },
-    'ix.g.armor': { ko: '방어구 · 장신구', en: 'Armor & Accessories' },
+    // 아이템 세그먼트의 안쪽 분류 (ADR-0179) — 장신구도 비무기 장비이므로 방어구 쪽 부위 묶음에 든다
+    'ix.seg.weapon': { ko: '무기', en: 'Weapons' },
+    'ix.seg.armor': { ko: '방어구', en: 'Armor' },
     /* 무기 베이스 — 도감 타일 이름 (2026-09-10 · 둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14). ⚠ **`weapon_base.csv` 와 같은 이름이 두 벌이다** —
        본편 열 무기군 전부 CSV 행이 섰으므로 도감이 `L(row)` 로 읽게 되면 이 줄들은 걷는다. 그때까지 CSV 와 **글자까지 같게** 둔다.
        **영어가 원본이고 한글은 직역**이다 (CLAUDE.md 규칙 6). */
@@ -1149,7 +1149,6 @@ const STRINGS = {
     'ix.b.ballista': { ko: '발리스타', en: 'Ballista' },
     'ix.b.demon_crossbow': { ko: '데몬 크로스보우', en: 'Demon Crossbow' },
     'ix.b.colossus_crossbow': { ko: '콜로서스 크로스보우', en: 'Colossus Crossbow' },
-    'ix.g.empty': { ko: '빈 칸 실루엣', en: 'Empty Slot Silhouettes' },
     /* 스킬은 **직업으로 묶는다** [개정 2026-09-08 사용자 지시 — §9-1]. 그룹 하나가 한 직업이고 그 안에
        그 직업의 스킬 전부가 선다 — **1스킬 = 1직업**이라 묶는 일이 `owner_id` 하나로 끝난다(2026-09-09).
        삭제된 키 셋 — `ix.g.skillClass`·`ix.g.skillWeapon`(09-08 · `owner_kind` 를 그대로 묶던 이름) ·
@@ -1185,6 +1184,33 @@ const STRINGS = {
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
     // 물리 경직 칩의 이름 — 칩에 올리면 뜬다 (R110 · SCREEN_DESIGN §4-2 · ADR-0154)
     'bt.stagger': { ko: '경직', en: 'Stagger' },
+    // 창 뱃지 툴팁 — 스킬 설명이 아니라 `buff` 이벤트의 실제 stat·v 를 짧게 말한다
+    'bt.effect.active': { ko: '효과 적용 중', en: 'Effect active' },
+    'bt.effect.atk.up': { ko: '공격력 {v}% 증가', en: 'Attack +{v}%' },
+    'bt.effect.atk.down': { ko: '공격력 {v}% 감소', en: 'Attack −{v}%' },
+    'bt.effect.period.up': { ko: '행동 주기 {v}% 증가', en: 'Action cycle +{v}%' },
+    'bt.effect.period.down': { ko: '행동 주기 {v}% 감소', en: 'Action cycle −{v}%' },
+    'bt.effect.barrier': { ko: '최대 HP의 {v}% 보호막', en: 'Shield equal to {v}% max HP' },
+    'bt.effect.guard.up': { ko: '방어력·모든 저항 {v}% 증가', en: 'Defense and all resistances +{v}%' },
+    'bt.effect.guard.down': { ko: '방어력·모든 저항 {v}% 감소', en: 'Defense and all resistances −{v}%' },
+    'bt.effect.def.up': { ko: '방어력 {v}% 증가', en: 'Defense +{v}%' },
+    'bt.effect.def.down': { ko: '방어력 {v}% 감소', en: 'Defense −{v}%' },
+    'bt.effect.res.up': { ko: '{e} 저항 {v}% 증가', en: '{e} resistance +{v}%' },
+    'bt.effect.res.down': { ko: '{e} 저항 {v}% 감소', en: '{e} resistance −{v}%' },
+    'bt.effect.hp.up': { ko: '최대 HP {v}% 증가', en: 'Max HP +{v}%' },
+    'bt.effect.hp.down': { ko: '최대 HP {v}% 감소', en: 'Max HP −{v}%' },
+    'bt.effect.regen.up': { ko: 'HP 재생 {v}% 증가', en: 'HP regeneration +{v}%' },
+    'bt.effect.regen.down': { ko: 'HP 재생 {v}% 감소', en: 'HP regeneration −{v}%' },
+    'bt.effect.taken.up': { ko: '받는 피해 {v}% 증가', en: 'Damage taken +{v}%' },
+    'bt.effect.taken.down': { ko: '받는 피해 {v}% 감소', en: 'Damage taken −{v}%' },
+    'bt.effect.onhit': { ko: '기본 공격 시 {e} 추가 피해 {v}%', en: '+{v}% {e} damage on basic attacks' },
+    'bt.effect.splash': { ko: '기본 공격이 적 전원에게 {v}% 피해', en: 'Basic attacks deal {v}% damage to all enemies' },
+    'bt.effect.duel': { ko: '시전자만 공격', en: 'Can only attack the caster' },
+    'bt.effect.taunt': { ko: '적의 공격 대상을 자신으로 고정', en: 'Forces enemies to target this unit' },
+    'bt.effect.stagger': { ko: '행동 게이지 정지', en: 'Action gauge stopped' },
+    'bt.effect.element': { ko: '원소', en: 'elemental' },
+    // 현재 창의 시간 상태 — 이름 오른쪽에 값만 선다
+    'bt.effect.permanent': { ko: '상시', en: 'Permanent' },
     // 로그 탭 — 줄의 **주체**(그 일을 한 쪽)로 거른다 (2026-09-15 · SCREEN_DESIGN §4-2)
     'bt.logf.all': { ko: '전체', en: 'All' },
     'bt.logf.party': { ko: '우리', en: 'Party' },

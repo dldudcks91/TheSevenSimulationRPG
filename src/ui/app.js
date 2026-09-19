@@ -286,6 +286,8 @@ const state = {
     // 도감 몬스터 세그먼트가 그리는 초상의 등급 (SCREEN_DESIGN §9 · ADR-0167) — normal | elite.
     // 고르개 하나가 **전 카드를 한 번에** 뒤집는다 · 정예 전용 초상이 있는 몬스터만 얼굴이 갈린다(`monster.csv:face_elite`) · 세이브 아님
     codexGrade: 'normal',
+    // 아이템 세그먼트의 안쪽 분류 (SCREEN_DESIGN §9-1 · ADR-0179) — weapon | armor. 장신구는 armor 쪽 부위 묶음에 든다 · 세이브 아님
+    codexItemSeg: 'weapon',
     bagTab: 'equip',              // 가방의 최상위 축 — 'equip' | 'material' (ADR-0133)
     roll: 1, candidates: [], confirmOverwrite: false,
     salvageMode: false,
@@ -369,7 +371,7 @@ function renderShell() {
     mountDevPalette($('.resources'));   // ⚙ — 배경 · 글자 색을 눈으로 맞추는 개발 장치
 
     $('.crumb').textContent = !authenticated ? t('cl.signIn') : state.screen === 'prologue' ? t('pro.h') : pre ? t('ng.h') : t(`nav.${state.tab}`);
-    $('.tab-seg').innerHTML = '';   // 탭 세그먼트 자리 — 채우는 것은 탭 렌더러다 (§2 · 지금은 원정만)
+    $('.tab-seg').innerHTML = '';   // 탭 세그먼트 자리 — 채우는 것은 탭 렌더러다 (§2 · 원정과 도감)
 }
 
 function render() {
@@ -966,7 +968,8 @@ function renderExpedition(main) {
         main.appendChild(page);
         stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
-            combatOf,   // 영웅 툴팁의 세부 옵션 — 캐릭터 탭과 같은 game.heroCombat (SCREEN_DESIGN §2 「유닛 툴팁 규격」)
+            combatOf, itemOf, itemTipOf: (h, uid) => equippedItemTipCard(h, itemOf(uid)),
+            // 영웅 툴팁 — 현재 착용 장비 + 캐릭터 탭과 같은 세부 옵션 + Alt 장비 hover의 기존 「착용 중」 아이템 카드 (ADR-0171 · ADR-0182)
             // 장착 대상 — 영웅 카드를 누르면 그 영웅으로 바뀐다 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137].
             //   아래 보관 칸의 장착 · 비교가 그 영웅을 향한다. 다시 그려도 재생은 resume 으로 이어진다(가방 칸 클릭과 같은 길)
             pickedUid: state.heroUid, onPickHero: uid => { state.heroUid = uid; render(); },
@@ -1952,7 +1955,7 @@ function heroDoing(h) {
  *   한 띠에 한 뜻만 선다 — 편성에서는 클릭이 곧 편성이라 「본 영웅」 표시가 설 자리가 없고,
  *   09-08 판은 그 자리에 `heroUid` 를 그려서 **눌러도 아무 변화가 없는 화면**이 돼 있었다.
  * 카드 = 초상(카드 전체) + 위칸(왼쪽 지금 하는 일 · 오른쪽 이름) — SCREEN_DESIGN §5 (2026-08-27)
- * 올려놓으면 기본 능력치 툴팁 (2026-08-28, ui/tip.js heroTipCard) — `tip: false` 면 안 뜬다(캐릭터 탭 · 2026-09-15 · ADR-0116)
+ * 올려놓으면 착용 장비 툴팁, Alt 동안 세부 옵션 (ui/tip.js heroTipCard · ADR-0171) — `tip: false` 면 안 뜬다(캐릭터 탭 · 2026-09-15 · ADR-0116)
  * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
  * flat — 편성 패널처럼 이미 패널 안에 들어갈 때. 패널 껍데기(테두리·배경·여백)를 벗는다
  * reorder — 카드를 끌어 다른 카드에 놓으면 두 영웅의 로스터 자리를 맞바꾼다 (캐릭터 탭 · 2026-09-15 · ADR-0136)
@@ -1973,10 +1976,10 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
         const c = el('div', `hs-card${mark}${h.tier === 'unique' ? ' unique' : ''}`);
         c.style.borderTopColor = tierColor(h);
         c.dataset.uid = h.uid;   // 순서 맞바꾸기의 놓을 곳 — 빈 칸(+)은 uid 가 없어 놓을 곳이 아니다 (ADR-0136)
-        // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 (2026-08-28) — 유닛 툴팁: 기본 옵션 · Alt 로 세부 옵션 (SCREEN_DESIGN §2 · §5)
+        // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 (2026-08-28) — 영웅 툴팁: 착용 장비 · Alt 로 세부 옵션 (ADR-0171)
         //   `tip: false` 면 안 건다 — 캐릭터 탭은 같은 값이 바로 아래 네 칸에 있고 뜬 카드가 그 칸을 덮는다 (2026-09-15 사용자 지시 · ADR-0116)
         //   유닛 툴팁은 **카드 옆**에 선다 — 관전 카드와 같은 규칙 (2026-09-15 · ADR-0120)
-        if (tip) bindTipNode(c, () => heroTipCard(h, combatOf(h)), { anchor: true });
+        if (tip) bindTipNode(c, () => heroTipCard(h, combatOf(h), itemOf, uid => equippedItemTipCard(h, itemOf(uid))), { anchor: true, holdOnAlt: true });
         // 위칸 오른쪽은 **이름 + 레벨**이다 [2026-09-18 사용자 지시 · ADR-0165] — 레벨이 이름 뒤에 붙고 두 띠가 같다.
         //   줄어드는 쪽은 여전히 「하는 일」 하나다 — 레벨은 두세 글자라 줄일 것이 없다
         c.innerHTML = `
@@ -2211,6 +2214,14 @@ const rangeCtx = cb => {
     return { atkMin: atk?.min, atkMax: atk?.max, matkMin: cb.atk_magic?.min, matkMax: cb.atk_magic?.max };
 };
 
+/** 영웅 툴팁 장비 hover도 캐릭터 탭 페이퍼돌과 같은 「착용 중」 아이템 카드 한 장을 쓴다 (ADR-0182). */
+function equippedItemTipCard(h, item) {
+    if (!h || !item) return null;
+    const cb = combatOf(h);
+    const skCtx = { period: cb.action_period, ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
+    return tipCard(item, t('tip.equipped'), [], skCtx);
+}
+
 /** ②-3·4 세부 옵션 1·2 — 전투 능력치 22(impl=1 · 09-17 타격 회복 추가)를 두 칸에 나눠 스크롤 없이. 물리 방어 행은 감쇠율을 병기한다 */
 function detailPanels(h) {
     const c = combatOf(h);
@@ -2366,13 +2377,13 @@ function renderCharacter(main) {
 function tipCard(item, headText, hints = [], skCtx) {
     if (!item) return null;                      // 빈 카드는 안 세운다 (§6 개정 2026-09-08 — 아래 bindTip)
     const c = el('div', 'tip-card');
-    // 죄종은 **이름이 든다** — `composeName` 이 「분노의 둔기 — 오만」으로 접두·접미를 다 싣는다 (2026-09-08 사용자 지시).
+    // 죄종은 **이름이 든다** — `composeName` 이 「격노와 찬탈의 둔기」로 죄종 단어를 다 싣는다. 이름은 희귀도 한 색이고 죄종 색은 옵션 줄 태그가 든다 (2026-09-08 사용자 지시 · 2026-09-19 ADR-0175).
     // 하단 죄종 칩은 같은 값을 카드 안에서 두 번 찍던 자리라 걷었다 (SCREEN_DESIGN §6). 장비 패널의 죄종 집계는 별개다
     const g = SYS.item.groupOf(item);            // 무기군 — 직업 전속·행동 주기·공격 타입의 출처 (weapon_group.csv)
     // 강화한 아이템은 **먹인 값**을 찍는다 — 툴팁 숫자가 캐릭터 시트와 갈리면 안 된다 (SCREEN_DESIGN §6)
     const eff = SYS.item.effective(item);
-    const sub = [L(rarity(item.rarity)), L(slotDef(item.slot)), `ilvl ${item.ilvl}`];
-    if (g) sub.push(t('ch.weaponGroup', { group: L(g), cls: g.classes.map(className).join('/') }));
+    const sub = [`ilvl ${item.ilvl}`];
+    if (g) sub.push(L(g));
     // **강화 줄은 없다** (2026-09-08 사용자 지시 · §6) — 단계는 이름 앞의 `+n` 이 이미 들고, 비용·상한은 제련소(§8-2)의 값이다.
     // 그래서 여기서 `game.upgradeState` 를 안 부른다 — 가방 칸의 `+n` 배지와 제련소는 그대로 부른다
     // **스킬 칸** — 무기가 액티브 한 칸을 통째로 정한다 [신설 2026-09-09 · skill_design §12-1 규칙 3].
@@ -3512,19 +3523,18 @@ function monsterCard(m, grade) {
 const CODEX_SEGS = ['monster', 'character', 'item', 'skill'];
 /** 몬스터 카드의 초상 등급 — 라벨은 관전 카드가 쓰는 `kind.*` 를 그대로 부른다 (ADR-0167 · 문구를 새로 안 쓴다) */
 const CODEX_GRADES = ['normal', 'elite'];
+/** 아이템 안쪽 분류 — 무기와 비무기 장비(방어구 · 장신구)를 가른다 (ADR-0179) */
+const CODEX_ITEM_SEGS = ['weapon', 'armor'];
 
 /**
  * 도감 (SCREEN_DESIGN §9 · 개정 2026-09-08 사용자 지시 — 「이미지 도감」 탭 흡수).
- * 세그먼트는 **제목 줄 자리를 같이 쓴다**(`.panel-nav` — §2): 탭 둘을 하나로 합치면서 세로가 한 줄도 안 늘게 하는 자리다.
- * 챕터 세그먼트는 종전대로 그 아래 서브 바에 선다.
+ * 세그먼트는 원정과 같은 **상단바**의 crumb 오른쪽에 선다(ADR-0174). 패널 안에는 중복 제목 줄이 없고,
+ * 몬스터의 챕터 세그먼트부터 각 화면의 도구 줄이 시작한다.
  */
 function renderCodex(main) {
-    const p = el('div', 'panel page');     // 박스 (ADR-0097) — 세그먼트 줄 · 도구 줄은 서 있고 목록 · 묶음이 본문으로 스크롤한다
-    const nav = el('div', 'panel-nav');
-    nav.appendChild(segmented(CODEX_SEGS.map(id => ({ id, label: t(`cx.seg.${id}`) })), state.codexSeg,
+    $('.tab-seg').appendChild(segmented(CODEX_SEGS.map(id => ({ id, label: t(`cx.seg.${id}`) })), state.codexSeg,
         id => { state.codexSeg = id; render(); }));
-    nav.appendChild(el('h2', '', t('nav.codex')));
-    p.appendChild(nav);
+    const p = el('div', 'panel page');     // 박스 (ADR-0097) — 도구 줄은 서 있고 목록 · 묶음이 본문으로 스크롤한다
     ({ monster: codexMonster, character: codexCharacter, item: codexItem, skill: codexSkill })[state.codexSeg](p);
     main.appendChild(p);
 }
@@ -3591,7 +3601,7 @@ function codexMonster(p) {
    영웅 초상은 제 직업 풀이 뽑혀야 하고, 아이템은 그 부위가 드롭돼야 보고, 스킬 아이콘은 그 스킬을 배워야 뜬다.
 
    ⚠ **폴더를 읽는 화면이 아니다.** 목록의 SSOT 는 `mock.js` 의 경로 조립 상수(HERO_FACES ·
-   WEAPON_BASE_STEMS · ITEM_BASE_ART_IDS · SLOT_ART_PARTS · SKILL_ICON_FILES)와 `skill.csv` 다 — 렌더는 동기라
+   WEAPON_BASE_STEMS · ITEM_BASE_ART_IDS · SKILL_ICON_FILES)와 `skill.csv` 다 — 렌더는 동기라
    파일 유무를 물을 수 없다(`skillIcon` 주석과 같은 이유). 코드가 안 부르는 파일(`faces/source/` · `icons/items/source/` · `icons/skills/source/` 원본 시트 ·
    `icons/items/unused/`)은 게임이 안 쓰므로 여기에도 안 뜬다. 파일이 없으면 `onerror` 로 img 만 빠져
    **빈 칸 + 파일명**이 남고, 그 빈 칸이 「이 자산이 비었다」는 신호다 (스타일마다 갖춘 장수가 다르다).
@@ -3660,24 +3670,34 @@ const itemBaseName = id => {
     return id;
 };
 
-/** 아이템 세그먼트 — 무기 베이스 · 방어구 베이스 · 빈 칸 실루엣 (§9-1) */
+/** 아이템 세그먼트 — 무기/방어구를 한 번 더 가르고, 방어구는 장비 부위별로 묶는다 (§9-1 · ADR-0179) */
 function codexItem(p) {
+    const bar = el('div', 'sub-bar');
+    bar.appendChild(segmented(CODEX_ITEM_SEGS.map(id => ({ id, label: t(`ix.seg.${id}`) })), state.codexItemSeg,
+        id => { state.codexItemSeg = id; render(); }));
+    p.appendChild(bar);
+
     const box = el('div', 'ix-body box-body');
-    box.dataset.keep = 'codex:item';
-    // ~~무기군 그림 묶음~~ 은 2026-09-17 삭제 — 무기군 그림 8장이 사라졌다(베이스 그림이 그 자리를 든다)
-    box.innerHTML = ''
-        // 무기 베이스 — **여기는 재고를 보는 자리**라 무기군마다 7장을 전부 편다(uid 가 없으니 `weaponBaseArt` 를 직접 부른다).
-        //    실제 드롭은 개체마다 이 중 하나를 든다 (mock.js:itemArt · uid 해시 · §9-1). 무기군 하나 = 묶음 하나(ADR-0066 문법과 동일)
-        + Object.keys(M.WEAPON_BASE_STEMS).map(g =>
+    box.dataset.keep = `codex:item:${state.codexItemSeg}`;
+    if (state.codexItemSeg === 'weapon') {
+        // ~~무기군 그림 묶음~~ 은 2026-09-17 삭제 — 무기군 그림 8장이 사라졌다(베이스 그림이 그 자리를 든다)
+        // 무기 베이스 — **여기는 재고를 보는 자리**라 무기군마다 전부 편다(uid 가 없으니 `weaponBaseArt` 를 직접 부른다).
+        // 실제 드롭은 개체마다 이 중 하나를 든다 (mock.js:itemArt · uid 해시 · §9-1). 무기군 하나 = 묶음 하나(ADR-0066 문법과 동일)
+        box.innerHTML = Object.keys(M.WEAPON_BASE_STEMS).map(g =>
             artGroup(t('ix.g.weaponBase', { group: L(D.weaponGroups?.[g] ?? g) }), `${M.WEAPON_BASE_DIR}${g}/`,
                 //    확장자를 뗀다 — 베이스 이름이 길어 `.png` 가 붙으면 칸에서 두 줄이 된다 (스킬 세그먼트와 같은 처방 · ADR-0075)
                 M.WEAPON_BASE_STEMS[g].map(s => artTile(M.weaponBaseArt(g, s), t(`ix.b.${s}`), 'box', '', true)))
-          ).join('')
-        // 방어구 베이스 — 그림이 있는 id 만 편다 (mock.js:ITEM_BASE_ART_IDS · 2026-09-17 갑옷 10장)
-        + artGroup(t('ix.g.armor'), M.ITEM_BASE_ART_DIR,
-            M.ITEM_BASE_ART_IDS.map(id => artTile(`${M.ITEM_BASE_ART_DIR}${id}.png`, itemBaseName(id), 'box', '', true)))
-        + artGroup(t('ix.g.empty'), M.SLOT_ART_DIR,
-            M.SLOT_ART_PARTS.map(sl => artTile(M.slotArt(sl), L(slotDef(sl) ?? sl), 'box')));
+        ).join('');
+    } else {
+        // 비무기 베이스 — `equip_slot.csv` 의 부위 순서를 따르고, 각 부위가 소유한 `item_base.csv` id 로 그림 목록을 나눈다.
+        // `ITEM_BASE_ART_IDS` 에 실제로 등록된 그림만 편다는 기존 규칙은 그대로다.
+        box.innerHTML = D.slots.filter(slot => slot.id !== 'weapon').map(slot => {
+            const baseIds = new Set((D.itemBases?.[slot.id] ?? []).map(base => base.id));
+            const artIds = M.ITEM_BASE_ART_IDS.filter(id => baseIds.has(id));
+            return artIds.length ? artGroup(L(slot), M.ITEM_BASE_ART_DIR,
+                artIds.map(id => artTile(`${M.ITEM_BASE_ART_DIR}${id}.png`, itemBaseName(id), 'box', '', true))) : '';
+        }).join('');
+    }
     p.appendChild(box);
 }
 
@@ -3902,6 +3922,9 @@ async function boot() {
     // 초상 등급도 고르개(클릭)로만 바뀐다 — 같은 이유로 길을 낸다 (ADR-0167)
     const cxg = new URLSearchParams(location.search).get('cxg');
     if (CODEX_GRADES.includes(cxg)) state.codexGrade = cxg;
+    // 아이템 안쪽 분류도 클릭으로만 바뀌므로 점검용 진입로를 둔다 (SCREEN_DESIGN §9-1 · ADR-0179)
+    const cxi = new URLSearchParams(location.search).get('cxi');
+    if (CODEX_ITEM_SEGS.includes(cxi)) state.codexItemSeg = cxi;
     // 프롤로그는 새 게임 확정 버튼으로만 닿는 화면이라 헤드리스가 들어올 길을 따로 낸다 (SCREEN_DESIGN §10).
     //   `&s=n` 은 n번째 씬 — 마지막 씬에만 인용·챕터 줄이 서므로 그 상태에도 길이 있어야 한다
     if (dev === 'prologue') {

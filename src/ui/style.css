@@ -268,8 +268,8 @@ html, body { height: 100%; overflow: hidden; }
     background: rgba(var(--surface-0-rgb), var(--chrome-alpha));
     border-bottom: 1px solid var(--border-primary);
 }
-.topbar .crumb { color: var(--text-secondary); font-size: var(--fs-sm); }
-/* 탭 세그먼트 — crumb 바로 오른쪽 · 탭 안의 화면 전환 (2026-09-11 · ADR-0094). 비면 자리를 안 잡아 자원 줄은 오른쪽 끝 그대로다 */
+.topbar .crumb { color: var(--text-secondary); font-size: var(--fs-md); }
+/* 탭 세그먼트 — crumb 바로 오른쪽 · 탭 안의 화면 전환 (원정 ADR-0094 · 도감 ADR-0174). 비면 자리를 안 잡아 자원 줄은 오른쪽 끝 그대로다 */
 .tab-seg { margin-right: auto; }
 .tab-seg:empty { display: none; }
 .tab-seg .segmented { flex-wrap: nowrap; }
@@ -779,7 +779,8 @@ html, body { height: 100%; overflow: hidden; }
 /* ⚠ **`pointer-events: none` 이 기능이다** [2026-09-10 버그 수정] — 툴팁은 z-index 50 으로 **드래그 고스트(45)보다도 위**라,
    이게 없으면 진형 드래그의 놓을 자리 판정(`app.js:bindFormDrag` 의 `elementFromPoint`)이 **툴팁을 먼저 집는다**.
    증상이 자리마다 갈렸던 이유는 `moveTip` 이 커서 오른쪽 아래(+16,+16)에 띄우다가 **화면 아래에 닿으면 위로 접기** 때문이다 —
-   접힌 순간에만 툴팁이 커서 지점을 덮어서 그 자리에서만 드롭이 죽었다. 툴팁은 읽는 것이지 누르는 것이 아니다 */
+   접힌 순간에만 툴팁이 커서 지점을 덮어서 그 자리에서만 드롭이 죽었다. 기본은 그대로 두고 **Alt 로 붙든 영웅 툴팁만**
+   아래 `.interactive` 로 포인터를 받는다 (ADR-0176) */
 .tooltip {
     position: fixed; z-index: 50; display: none; pointer-events: none;
     background: var(--bg-secondary); border: 1px solid var(--border-secondary);
@@ -787,6 +788,9 @@ html, body { height: 100%; overflow: hidden; }
     max-width: 640px;
 }
 .tooltip.show { display: flex; }
+.tooltip.interactive { pointer-events: auto; }
+/* Alt + 영웅 장비 hover의 기존 아이템 카드(ADR-0182) — 부모 영웅 툴팁과 별도라 붙였다 떼도 장비 칸이 움직이지 않는다. */
+.equipment-item-tooltip { z-index: 51; pointer-events: none; }
 .tip-card { width: 304px; padding: 11px 13px; font-size: var(--fs-sm); }
 .tip-card + .tip-card { border-left: 1px solid var(--border-dark); background: var(--bg-input); }
 .tip-card .tip-head { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 5px; letter-spacing: 1px; }
@@ -806,16 +810,17 @@ html, body { height: 100%; overflow: hidden; }
 .tip-card .tip-base .n i { font-style: normal; color: var(--text-muted); font-size: var(--fs-xs); margin-left: 5px; }
 .tip-card .tip-base b { font-size: var(--fs-md); font-weight: normal; color: var(--color-info); white-space: nowrap; }
 /* ~~`.tip-up`~~ (강화 줄) 삭제 2026-09-08 — 툴팁이 강화를 말하지 않는다 (SCREEN_DESIGN §6) */
-/* 유닛 툴팁 — 영웅 · 몬스터 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114). 줄은 캐릭터 탭의 `.attr-list` · `.cs-row` 를 **그대로** 쓴다 —
-   두 자리가 같은 클래스여야 한쪽만 고쳐지지 않는다(옛 `.tip-stats` 두 칸 격자는 2026-09-14 삭제).
-   **Alt 를 누르는 동안만** 오른쪽 열이 서고 카드가 넓어진다 — 왼쪽 열은 기본 카드의 안쪽 폭을 하한으로 들어 넓어져도 자리가 안 움직이고,
-   오른쪽 열 폭은 내용이 정한다(영어가 길다). 비교 두 장(640)을 전제한 툴팁 상한도 이 카드에서는 푼다 */
+/* 유닛 툴팁 — 영웅 · 몬스터 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114 · ADR-0171). 영웅 첫 열은 착용 장비, 몬스터 첫 열은
+   캐릭터 탭의 `.attr-list` · `.cs-row` 를 그대로 쓴 기본 옵션이다. **Alt 를 누르는 동안만** 세부 옵션 두 열이 서고 카드가 넓어진다 —
+   몬스터 첫 열은 기본 카드의 안쪽 폭을 하한으로 들고 세부 열 폭은 내용이 정한다(영어가 길다).
+   영웅은 아래 `.equipment` 규칙으로 장비 200px · 세부 옵션 220px에 고정한다(ADR-0182). 비교 두 장(640)을 전제한 툴팁 상한도 이 카드에서는 푼다 */
 .tip-card.unit.alt { width: auto; }
 .tooltip:has(> .tip-card.unit.alt) { max-width: none; }
-/* 자리는 격자가 정한다 [개정 2026-09-15 사용자 지시 · ADR-0126] — 세부 옵션 1 · 2 가 기본 옵션 열의 **바깥쪽**에 선다:
-   카드 오른쪽에 선 툴팁은 [기본][1][2] · 왼쪽에 선 툴팁(`grow-left`)은 [1][2][기본]. 기본 열은 Alt 를 눌러도 제자리다(DOM 순서는 그대로).
+/* 자리는 격자가 정한다 [개정 2026-09-19 사용자 지시 · ADR-0126 · ADR-0171] — 세부 옵션 1 · 2 가 첫 열의 **바깥쪽**에 선다:
+   카드 오른쪽에 선 툴팁은 [첫 장][1][2] · 왼쪽에 선 툴팁(`grow-left`)은 [1][2][첫 장]. 첫 장은 Alt 를 눌러도 제자리다(DOM 순서는 그대로).
    이름 · 소속 줄은 없다(ADR-0134) — 한 줄짜리 격자다.
-   세부 옵션 두 열은 **같은 폭** — `1fr 1fr` 이고 카드는 내용 폭으로 재므로 더 긴 열의 폭을 둘이 똑같이 갖는다.
+   몬스터 세부 옵션 두 열은 **같은 폭** — `1fr 1fr` 이고 카드는 내용 폭으로 재므로 더 긴 열의 폭을 둘이 똑같이 갖는다.
+   영웅은 아래 고정 격자가 이 값을 덮어 장비와 세부 옵션을 각각 정한 폭으로 만든다.
    열 사이 선은 **틈 한가운데의 가짜 요소**다 — 열의 테두리 · 여백으로 그으면 첫 열과 나머지 열의 안쪽 폭이 여백만큼 달라져 「같은 폭」이 깨진다.
    `stretch` — 선이 가장 긴 열 높이까지 내려간다 */
 .tip-unit { display: grid; grid-template-columns: minmax(278px, 1fr); column-gap: 33px; align-items: stretch; }
@@ -827,7 +832,7 @@ html, body { height: 100%; overflow: hidden; }
 .tip-card.unit.alt.grow-left .tip-unit-col.base { grid-column: 3; }
 .tip-card.unit.alt.grow-left .tip-unit-col.d1 { grid-column: 1; }
 .tip-card.unit.alt.grow-left .tip-unit-col.d2 { grid-column: 2; }
-/* 선은 격자에서 **첫 열이 아닌** 열의 왼쪽 틈에 선다 — 오른쪽에 선 카드는 1 · 2 앞, 왼쪽에 선 카드는 2 · 기본 앞 */
+/* 선은 격자에서 **첫 열이 아닌** 열의 왼쪽 틈에 선다 — 오른쪽에 선 카드는 1 · 2 앞, 왼쪽에 선 카드는 2 · 첫 장 앞 */
 .tip-card.unit.alt .tip-unit-col.d1::before,
 .tip-card.unit.alt .tip-unit-col.d2::before,
 .tip-card.unit.alt.grow-left .tip-unit-col.base::before {
@@ -840,7 +845,7 @@ html, body { height: 100%; overflow: hidden; }
       툴팁 겉테두리(1px) 위에 겹쳐 앉힌다(margin -1) — 안쪽에 따로 서면 회색 선과 색 선이 두 줄로 읽힌다
    ② 줄 높이 1.4 — 툴팁은 메인 `zoom: .9` 밖이라 본문 1.6 을 물려받으면 캐릭터 탭보다 줄마다 2px 넘게 성겼다(23 대 20.5 실측)
    ③ Alt 열의 이름-값 간격 — 열 폭을 내용이 정해서 짧은 열(세부 옵션 2)은 이름과 값이 붙어 있었다
-   ④ 대표값 3줄(`.tip-lead`)은 막대 아래 윗선 하나로 가른다 — Alt 와 무관하게 선다
+   ④ 몬스터의 대표값 3줄(`.tip-lead`)은 막대 아래 윗선 하나로 가른다 — Alt 와 무관하게 선다
    ⑤ 어두운 등급 색(몬스터 일반 · 보스 — `--enemy-line` · `--boss-line`)은 막대만 밝힌다 — 검은 막대 바탕에 묻혔다.
       색 값을 새로 만들지 않고 같은 토큰을 밝혀 윗변과 같은 색 계열로 남긴다 */
 /* ⑥ `zoom: .85` — 카드 전체(글씨 · 막대 · 폭)를 한 단 줄인다 [2026-09-15 사용자 지시 「너무 크다」 · 값은 src/ui/README.md 크기 정책].
@@ -849,6 +854,31 @@ html, body { height: 100%; overflow: hidden; }
 .tip-unit .cs-row { gap: 20px; }
 .tip-lead { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--border-dark); }
 .tip-card.unit.bar-lift .attr-bar > i { filter: brightness(1.8); }
+/* 영웅 툴팁 첫 장 = 페이퍼돌 (ADR-0171 · ADR-0172 · ADR-0182).
+   아래 보관 칸은 메인 zoom .9 → 화면 45.03px, 툴팁은 53px에 zoom .85 → 45.05px다(1600×800 브라우저 실측).
+   같은 60px 페이퍼돌을 그대로 쓰면 화면 51px로 한 단계 컸다. 칸 간격도 보관과 같은 4px로 맞춘다.
+   열은 **장비 200px · 세부 옵션 1/2 각 220px**다. 기본 상태는 220px 폭의 보이지 않는 세부 옵션 1을 겹쳐 놓아 그 높이를 첫 장부터 그대로 잡는다. */
+.tip-card.unit.equipment { --tip-equip-col-w: 200px; --tip-detail-col-w: 220px; }
+.tip-card.unit.equipment:not(.alt) { width: 226px; } /* 내용 200 + 카드 좌우 padding 13×2 */
+.tip-card.unit.equipment .tip-unit { grid-template-columns: var(--tip-equip-col-w); }
+.tip-card.unit.equipment.alt.grow-left .tip-unit { grid-template-columns: var(--tip-detail-col-w) var(--tip-detail-col-w) var(--tip-equip-col-w); }
+.tip-card.unit.equipment.alt:not(.grow-left) .tip-unit { grid-template-columns: var(--tip-equip-col-w) var(--tip-detail-col-w) var(--tip-detail-col-w); }
+.tip-card.unit.equipment .tip-unit-col.base { display: grid; }
+.tip-card.unit.equipment .tip-equipment-face,
+.tip-card.unit.equipment .tip-equipment-probe { grid-area: 1 / 1; }
+.tip-card.unit.equipment .tip-equipment-face { display: flex; flex-direction: column; min-height: 0; }
+.tip-card.unit.equipment .tip-equipment-face .tip-foot { margin-top: auto; }
+.tip-card.unit.equipment .tip-equipment-probe { width: var(--tip-detail-col-w); visibility: hidden; pointer-events: none; }
+.tip-card.unit .tip-equipment.paperdoll {
+    grid-template-columns: repeat(3, 53px); gap: 4px; justify-content: center; margin-top: 4px;
+}
+.tip-card.unit .tip-equipment .pd-cell,
+.tip-card.unit .tip-equipment .pd-gap { width: 53px; height: 53px; }
+.tip-card.unit .tip-equipment .pd-cell { cursor: default; }
+.tooltip.interactive .tip-card.unit .tip-equipment .pd-cell.tip-optionable { cursor: help; }
+.tip-card.unit .tip-equipment .pd-cell.tip-equip-active { background: var(--surface-7); }
+.tip-card.unit .tip-equipment .pd-icon { width: 42px; height: 42px; }
+.tip-card.unit .tip-equipment .pd-cell.art .pd-art { inset: 6px; }
 /* 스킬 툴팁 — 이름 앞 아이콘 (고정 설명 문단은 2026-09-15 에 뗐다 · ADR-0118) */
 /* 그림이 들어오면서 인라인 블록이 된다 (2026-09-03 · SCREEN_DESIGN §2) — 이름 줄의 baseline 을 흔들지 않게 가운데 정렬 */
 .tip-sk-ico { margin-right: 7px; display: inline-block; width: 22px; height: 22px; vertical-align: middle; }
@@ -1282,6 +1312,23 @@ html, body { height: 100%; overflow: hidden; }
 /* 이로운 창 = 초록 · 해로운 창 = 빨강. 가르는 것은 창의 값 부호다 (재생기 refreshBuffs) */
 .buff-chip.good { border-color: var(--color-success); color: var(--color-success); }
 .buff-chip.bad { border-color: var(--color-error); color: var(--color-error); }
+/* 창 뱃지 툴팁 — 첫 줄은 이름 + 남은 초, 둘째 줄은 지금 적용 중인 실효값뿐이다. */
+.tip-effect-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.tip-effect-head .tip-name { margin-bottom: 0; }
+.tip-effect-duration { color: var(--color-info); font-size: var(--fs-xs); font-weight: normal; white-space: nowrap; }
+.tip-effect-summary {
+    margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--border-dark);
+    color: var(--text-primary); white-space: nowrap;
+}
+/* 경직 툴팁도 칩과 같은 멈춤 표시 — 글자가 아니라 막대 둘이라 언어·글꼴을 안 탄다. */
+.tip-effect-stagger { display: inline-block; position: relative; width: 100%; height: 100%; }
+.tip-effect-stagger::before,
+.tip-effect-stagger::after {
+    content: ''; position: absolute; top: 4px; bottom: 4px; width: 4px;
+    background: var(--color-error); opacity: .65;
+}
+.tip-effect-stagger::before { left: 5px; }
+.tip-effect-stagger::after { right: 5px; }
 /* 물리 경직 (R110 · SCREEN_DESIGN §4-2 · ADR-0154) — 해로운 창보다 **옅은 빨강**이고 칩 안은 그림이 아니라 **멈춤 표시**(세로 막대 둘)다.
    0.5초씩 켜졌다 꺼지므로 진한 빨강이면 줄이 번쩍인다. 막대는 글자가 아니라 테두리라 언어 · 글꼴을 안 탄다 */
 .buff-chip.stagger {
@@ -1506,10 +1553,6 @@ html, body { height: 100%; overflow: hidden; }
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; margin-bottom: 14px;
 }
-/* 패널 **안** 첫 줄 — 왼쪽 화면 전환(세그먼트) · 오른쪽 제목 [2026-09-03 사용자 지시].
-   옛 `.sub-bar` 는 패널 **위**에 따로 서서 줄 하나를 먹었다. 제목 줄 자리를 같이 쓰므로 세로가 안 늘어난다 */
-.panel-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
-.panel-nav h2 { margin: 0; }
 .segmented { display: flex; gap: 4px; flex-wrap: wrap; }
 
 /* ───────── 스킬 ───────── */
@@ -1788,7 +1831,7 @@ html, body { height: 100%; overflow: hidden; }
 
 /* 조밀 격자 — 스킬 세그먼트 전용 (ADR-0075 · 2026-09-10).
    묶음이 다섯이라(직업) 92px 그림으로는 하한 1280x700 에서 둘 반만 보이고 나머지는 스크롤 아래였다.
-   그림을 줄여 **다섯 묶음이 한 화면에 다 선다** — 캐릭터 · 아이템은 묶음이 셋 이하라 그대로 92px 이다.
+   그림을 줄여 **다섯 묶음이 한 화면에 다 선다** — 캐릭터 · 아이템은 자산 확인이 우선이라 그대로 92px 이다.
    칸 폭(minmax)은 가장 큰 묶음(8칸)이 하한 폭에서 한 줄에 서도록 잡았다 — 접히면 세로 예산이 깨진다 */
 /* 그림 칸은 **1600×800 한 장 기준 고정값**이다 (ADR-0087) */
 .ix-body.dense { gap: 5px; --ix-art: 48px; }

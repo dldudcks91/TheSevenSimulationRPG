@@ -1,6 +1,6 @@
 {
  "meta": {
-  "created": "2026-09-18",
+  "created": "2026-09-19",
   "seeds": 10,
   "stages": [
    101,
@@ -206,7 +206,7 @@
   },
   "csvHash": {
    "balance": "fa2e5238",
-   "monster": "0e2b26bb",
+   "monster": "2256c409",
    "stage": "8029bfe3",
    "stage_round": "d33dc84e",
    "round_budget": "40e036af",
@@ -247,7 +247,8 @@
    "potion": "f48a6871",
    "armor_group": "81e95402",
    "armor_sin_option": "985e2b48",
-   "armor_common_option": "96bff980"
+   "armor_common_option": "96bff980",
+   "sin_word": "4c604782"
   },
   "tacticsNote": "newGame 직후 상태 그대로 — 전술 칸을 인위적으로 켜지 않는다 (런마다 tactics 에 열린 칸 전체 `번호:옵션:등급:on|off`)",
   "parties": {
@@ -326,9 +327,9 @@
    "tactics": "1:opt_class_pair:common:off",
    "drops": [
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.09;random/vs_undead_dr:0.09;random/vs_elite_dr:0.06",
-    "magic|armor|2|sloth|[Sloth] Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.14;sloth/hp_recovery_pct:0.09;random/xp_gain_pct:0.1;random/vs_elite_dr:0.05",
+    "magic|armor|2|sloth|Forgotten Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.14;sloth/hp_recovery_pct:0.09;random/xp_gain_pct:0.1;random/vs_elite_dr:0.05",
     "normal|helmet|2||Cloth Hood|-|-|def_flat:5|-|fixed/armor_def_pct:0.11;random/dr_flat:1;random/aspd_pct:0.03",
-    "rare|boots|6|gluttony+pride|[Gluttony][Pride] Boots|-|-|def_flat:4|-|fixed/armor_def_pct:0.09;gluttony/res_lightning:0.19;pride/aspd_per_level_pct:0.001;random/freeze_dur_reduction:0.22;random/xp_gain_pct:0.06"
+    "rare|boots|6|gluttony+pride|Predatory and Usurping Boots|-|-|def_flat:4|-|fixed/armor_def_pct:0.09;gluttony/res_lightning:0.19;pride/aspd_per_level_pct:0.001;random/freeze_dur_reduction:0.22;random/xp_gain_pct:0.06"
    ],
    "tl": "4a00701d"
   },
@@ -353,7 +354,7 @@
    "grew": "L12/A205/M9",
    "tactics": "1:opt_march_def:common:on",
    "drops": [
-    "rare|ring|6|envy+gluttony|[Envy][Gluttony] Glutton Ring|-|-|-|-|random/life_steal:0.03;random/atk_pct:0.03;random/crit_damage:0.1;random/res_lightning:0.17"
+    "rare|ring|6|envy+gluttony|Jealous and Gluttonous Glutton Ring|-|-|-|-|random/life_steal:0.03;random/atk_pct:0.03;random/crit_damage:0.1;random/res_lightning:0.17"
    ],
    "tl": "90da92df"
   },
@@ -408,7 +409,7 @@
    "drops": [
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.12;random/vs_back_dr:0.07;random/res_fire:0.08",
     "magic|weapon|2|gluttony|crucifix|seraph_rod|-|-|pri_penitence|fixed/atk_pct:0.07;gluttony/crushing_blow_pct:0.02;random/crit_rate:0.04;random/fire_dmg_pct:0.07",
-    "magic|boots|2|gluttony|[Gluttony] Boots|-|-|def_flat:3|-|fixed/armor_def_pct:0.07;gluttony/res_lightning:0.19;random/hp_flat:9;random/poison_dur_reduction:0.15",
+    "magic|boots|2|gluttony|Abyssal Boots|-|-|def_flat:3|-|fixed/armor_def_pct:0.07;gluttony/res_lightning:0.19;random/hp_flat:9;random/poison_dur_reduction:0.15",
     "normal|weapon|2||bow|rune_bow|-|-|arc_snipe|fixed/atk_pct:0.07;random/crit_rate:0.03;random/vs_front_dmg:0.1",
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.11;random/vs_elite_dr:0.09;random/xp_gain_pct:0.06",
     "magic|weapon|6|envy|axe|berserker_axe|-|-|war_shout|fixed/atk_pct:0.04;envy/def_ignore:0.04;random/def_down_pct:0.07;random/vs_elite_dmg:0.15"
@@ -440,7 +441,7 @@
     "normal|boots|2||Boots|-|-|def_flat:3|-|fixed/armor_def_pct:0.11;random/poison_dur_reduction:0.21;random/hp_flat:13",
     "normal|amulet|4||Gold Necklace|-|-|-|-|random/hp_flat:19",
     "normal|armor|2||Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.05;random/vs_undead_dr:0.08;random/xp_gain_pct:0.05",
-    "magic|ring|6|greed|[Greed] Silver Ring|-|-|-|-|random/atk_pct:0.04"
+    "magic|ring|6|greed|Exploitative Silver Ring|-|-|-|-|random/atk_pct:0.04"
    ],
    "tl": "7dbc4f14"
   },
@@ -466,7 +467,7 @@
    "tactics": "1:opt_march_hp:common:on",
    "drops": [
     "normal|weapon|2||mace|club|-|-|war_doubleswing|fixed/atk_pct:0.07;random/vs_back_dmg:0.07;random/vs_normal_dmg:0.12",
-    "rare|amulet|4|greed+wrath|[Greed][Wrath] Eye Pendant|-|-|-|-|random/res_lightning:0.17;random/res_all:0.1;random/res_cold:0.15",
+    "rare|amulet|4|greed+wrath|Extorting and Slaughtering Eye Pendant|-|-|-|-|random/res_lightning:0.17;random/res_all:0.1;random/res_cold:0.15",
     "normal|boots|6||Boots|-|-|def_flat:4|-|fixed/armor_def_pct:0.09;random/xp_gain_pct:0.07;random/poison_dur_reduction:0.15"
    ],
    "tl": "7201a616"
@@ -519,7 +520,7 @@
    "drops": [
     "magic|weapon|4|pride|crucifix|grand_scepter|-|-|pri_regen|fixed/atk_pct:0.06;pride/dmg_per_level_pct:0.003;random/vs_normal_dmg:0.06;random/vs_front_dmg:0.08",
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.1;random/xp_gain_pct:0.05;random/vs_demon_dr:0.07",
-    "rare|armor|6|envy+greed|[Envy][Greed] Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.11;envy/reflect_damage:0.06;greed/item_find:0.06;random/res_cold:0.14;random/vs_elite_dr:0.06"
+    "rare|armor|6|envy+greed|Spiteful and Extorting Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.11;envy/reflect_damage:0.06;greed/item_find:0.06;random/res_cold:0.14;random/vs_elite_dr:0.06"
    ],
    "tl": "d005269d"
   },
@@ -571,8 +572,8 @@
    "drops": [
     "normal|helmet|2||Cloth Hood|-|-|def_flat:5|-|fixed/armor_def_pct:0.1;random/cooldown_reduction:0.06;random/crit_rate:0.03",
     "normal|armor|2||Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.11;random/xp_gain_pct:0.1;random/vs_undead_dr:0.05",
-    "magic|amulet|4|sloth|[Sloth] Gold Necklace|-|-|-|-|random/hp_flat:12",
-    "magic|armor|2|greed|[Greed] Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.09;greed/item_find:0.08;random/vs_normal_dr:0.05;random/vs_front_dr:0.04",
+    "magic|amulet|4|sloth|Forgotten Gold Necklace|-|-|-|-|random/hp_flat:12",
+    "magic|armor|2|greed|Extorting Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.09;greed/item_find:0.08;random/vs_normal_dr:0.05;random/vs_front_dr:0.04",
     "normal|weapon|2||crucifix|mighty_scepter|-|-|pri_regen|fixed/atk_pct:0.07;random/vs_demon_dmg:0.07;random/res_down_pct:0.06",
     "normal|boots|6||Boots|-|-|def_flat:4|-|fixed/armor_def_pct:0.1;random/poison_dur_reduction:0.16;random/freeze_dur_reduction:0.25"
    ],
@@ -599,8 +600,8 @@
    "grew": "L9/A201/M6",
    "tactics": "1:opt_class_pair:common:off",
    "drops": [
-    "magic|helmet|4|envy|[Envy] Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.05;envy/res_max_fire:0.02;random/xp_gain_pct:0.07;random/aspd_pct:0.05",
-    "rare|armor|6|envy+wrath|[Envy][Wrath] Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.15;envy/reflect_damage:0.05;wrath/fhr:0.16;random/xp_gain_pct:0.09;random/res_poison:0.16"
+    "magic|helmet|4|envy|Envious Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.05;envy/res_max_fire:0.02;random/xp_gain_pct:0.07;random/aspd_pct:0.05",
+    "rare|armor|6|envy+wrath|Treacherous and Rampaging Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.15;envy/reflect_damage:0.05;wrath/fhr:0.16;random/xp_gain_pct:0.09;random/res_poison:0.16"
    ],
    "tl": "ff73f2ed"
   },
@@ -627,7 +628,7 @@
    "drops": [
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.07;random/vs_back_dr:0.06;random/res_fire:0.15",
     "normal|weapon|4||bow|great_bow|-|-|arc_guided|fixed/atk_pct:0.04;random/vs_elite_dmg:0.11;random/def_down_pct:0.05",
-    "magic|gloves|6|gluttony|[Gluttony] Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.06;gluttony/crushing_blow_pct:0.02;random/atk_pct:0.06;random/item_find:0.06"
+    "magic|gloves|6|gluttony|Gluttonous Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.06;gluttony/crushing_blow_pct:0.02;random/atk_pct:0.06;random/item_find:0.06"
    ],
    "tl": "34a86012"
   },
@@ -654,7 +655,7 @@
    "drops": [
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.09;random/vs_front_dr:0.05;random/vs_elite_dr:0.05",
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.06;random/xp_gain_pct:0.1;random/vs_normal_dr:0.06",
-    "magic|armor|4|sloth|[Sloth] Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.11;sloth/hp_recovery_pct:0.09;random/res_cold:0.08;random/vs_demon_dr:0.09",
+    "magic|armor|4|sloth|Weary Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.11;sloth/hp_recovery_pct:0.09;random/res_cold:0.08;random/vs_demon_dr:0.09",
     "normal|weapon|6||bow|gothic_bow|-|-|arc_multishot|fixed/atk_pct:0.04;random/crit_rate:0.02;random/vs_elite_dmg:0.11"
    ],
    "tl": "6666838a"
@@ -836,7 +837,7 @@
    "grew": "L9/A201/M6",
    "tactics": "1:opt_tag_blessing:common:on",
    "drops": [
-    "magic|armor|6|lust|[Lust] Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.11;lust/hp_flat:12;random/res_poison:0.09;random/vs_normal_dr:0.09"
+    "magic|armor|6|lust|Lustful Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.11;lust/hp_flat:12;random/res_poison:0.09;random/vs_normal_dr:0.09"
    ],
    "tl": "1be87740"
   },
@@ -889,8 +890,8 @@
    "drops": [
     "normal|weapon|6||bow|short_bow|-|-|arc_guided|fixed/atk_pct:0.07;random/def_down_pct:0.06;random/vs_back_dmg:0.1",
     "normal|gloves|6||Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.06;random/atk_pct:0.04;random/def_flat:4",
-    "magic|armor|6|greed|[Greed] Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.14;greed/magic_find:0.13;random/vs_undead_dr:0.08;random/xp_gain_pct:0.1",
-    "magic|amulet|10|sloth|[Sloth] Gold Necklace|-|-|-|-|random/gold_find:0.1"
+    "magic|armor|6|greed|Extorting Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.14;greed/magic_find:0.13;random/vs_undead_dr:0.08;random/xp_gain_pct:0.1",
+    "magic|amulet|10|sloth|Lethargic Gold Necklace|-|-|-|-|random/gold_find:0.1"
    ],
    "tl": "18aaef0f"
   },
@@ -965,7 +966,7 @@
    "grew": "L12/A192/M9",
    "tactics": "1:opt_march_cdr:common:on",
    "drops": [
-    "rare|armor|6|wrath+envy|[Wrath][Envy] Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.14;wrath/fhr:0.18;envy/reflect_damage:0.06;random/res_lightning:0.13;random/vs_elite_dr:0.09",
+    "rare|armor|6|wrath+envy|Slaughtering and Jealous Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.14;wrath/fhr:0.18;envy/reflect_damage:0.06;random/res_lightning:0.13;random/vs_elite_dr:0.09",
     "rare|armor|10|wrath+lust|heavy|-|-|def_flat:22|-|fixed/armor_def_pct:0.1;wrath/fhr:0.24;lust/hp_flat:32;random/res_cold:0.19;random/vs_back_dr:0.06"
    ],
    "tl": "42dcc6b3"
@@ -992,7 +993,7 @@
    "tactics": "1:opt_march_hp:common:on",
    "drops": [
     "normal|armor|6||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.06;random/vs_demon_dr:0.05;random/vs_elite_dr:0.07",
-    "rare|gloves|6|greed+sloth|[Greed][Sloth] Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.13;greed/magic_find:0.11;sloth/aspd_pct:0.03;random/gold_find:0.09;random/atk_pct:0.08"
+    "rare|gloves|6|greed+sloth|Exploitative and Slothful Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.13;greed/magic_find:0.11;sloth/aspd_pct:0.03;random/gold_find:0.09;random/atk_pct:0.08"
    ],
    "tl": "edcf2aad"
   },
@@ -1094,7 +1095,7 @@
    "grew": "L9/A201/M6",
    "tactics": "1:opt_tag_blessing:common:on",
    "drops": [
-    "magic|armor|8|wrath|[Wrath] Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:0.1;wrath/fhr:0.12;random/xp_gain_pct:0.07;random/vs_normal_dr:0.07",
+    "magic|armor|8|wrath|Wrathful Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:0.1;wrath/fhr:0.12;random/xp_gain_pct:0.07;random/vs_normal_dr:0.07",
     "normal|helmet|6||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.1;random/xp_gain_pct:0.1;random/cooldown_reduction:0.04",
     "normal|armor|6||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.11;random/xp_gain_pct:0.06;random/vs_elite_dr:0.06",
     "rare|weapon|6|gluttony+pride|mace|club|-|-|war_bash|fixed/atk_pct:0.04;gluttony/crushing_blow_pct:0.01;pride/dmg_per_level_pct:0.003;random/vs_elite_dmg:0.13;random/def_down_pct:0.06"
@@ -1243,7 +1244,7 @@
    "grew": "L7/A201/M4",
    "tactics": "1:opt_march_hp:common:on",
    "drops": [
-    "rare|ring|10|wrath+pride|[Wrath][Pride] Silver Ring|-|-|-|-|random/gold_find:0.08;random/hp_flat:29;random/res_cold:0.17"
+    "rare|ring|10|wrath+pride|Wrathful and Dominating Silver Ring|-|-|-|-|random/gold_find:0.08;random/hp_flat:29;random/res_cold:0.17"
    ],
    "tl": "4b0ac84f"
   },
@@ -1314,7 +1315,7 @@
    "grew": "L9/A198/M6",
    "tactics": "1:opt_affix_lust:common:off",
    "drops": [
-    "magic|amulet|8|lust|[Lust] Gold Necklace|-|-|-|-|random/atk_pct:0.06;random/hp_flat:20"
+    "magic|amulet|8|lust|Debauched Gold Necklace|-|-|-|-|random/atk_pct:0.06;random/hp_flat:20"
    ],
    "tl": "cef8d428"
   },
@@ -1339,7 +1340,7 @@
    "grew": "L8/A201/M5",
    "tactics": "1:opt_tag_blessing:common:on",
    "drops": [
-    "magic|armor|8|greed|[Greed] Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:0.11;greed/item_find:0.07;random/vs_normal_dr:0.04;random/res_poison:0.06",
+    "magic|armor|8|greed|Greedy Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:0.11;greed/item_find:0.07;random/vs_normal_dr:0.04;random/res_poison:0.06",
     "rare|weapon|8|sloth+greed|crucifix|mighty_scepter|-|-|pri_haste|fixed/atk_pct:0.07;sloth/aspd_pct:0.03;greed/item_find:0.06;random/res_down_pct:0.05;random/vs_undead_dmg:0.13"
    ],
    "tl": "8d4f4462"

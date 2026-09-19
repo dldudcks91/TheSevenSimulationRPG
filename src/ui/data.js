@@ -57,6 +57,7 @@ export const D = {
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
+    sinWords: null,           // sin_word.csv — {sinId: [{ko, en}...]} **단 순서**(tier 로 정렬) · 아이템 이름의 죄종 단어 (item_design §1 「이름」 · 2026-09-19)
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
     affixDefs: [],            // affix.csv — [{stat, scale, min, max, perIlvl?, slots:[...]}] · CSV 행 순서 · **무기는 안 쓴다**(R78)
     weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, appliesTo, stat, scale, min, max}] · 무기 죄종 칸 후보 · CSV 행 순서 (2026-09-11 R78)
@@ -87,7 +88,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
-    'armor_sin_option', 'armor_common_option'];
+    'armor_sin_option', 'armor_common_option', 'sin_word'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -103,7 +104,7 @@ export async function loadData(base = './data/') {
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
-        armorSinOptionRow, armorCommonOptionRow] = texts.map(parseCsv);
+        armorSinOptionRow, armorCommonOptionRow, sinWordRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -168,6 +169,17 @@ export async function loadData(base = './data/') {
     // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
     //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
+    // 아이템 이름의 죄종 단어 [2026-09-19 · item_design §1 「이름」] — 죄종마다 단 순서로 정렬한다(행 순서는 계약이 아니다 · **단의 순서가 계약**).
+    //   드롭이 단 번호를 굴리므로(INTERFACE §2-5 `words`) 죄종마다 단 수가 같고 1 부터 이어져야 한다 — 아니면 멈춘다.
+    //   ⚠ `tier_min_ilvl` 은 아직 안 읽는다 — 목표는 레벨 구간이고 밸런싱 전까지는 넷 중 균등이다
+    D.sinWords = {};
+    for (const r of sinWordRow.slice().sort((a, b) => a.tier - b.tier)) {
+        if (!M.SINS[r.sin]) throw new Error(`data: sin_word.csv 의 '${r.word_id}' — 모르는 죄종 '${r.sin}'`);
+        (D.sinWords[r.sin] ??= []).push({ ko: r.name_kr, en: r.name_en, tier: r.tier });
+    }
+    const wordTiers = Object.keys(M.SINS).map(k => (D.sinWords[k] ?? []).map(w => w.tier).join(','));
+    if (new Set(wordTiers).size !== 1 || !wordTiers[0] || wordTiers[0].split(',').some((t, i) => Number(t) !== i + 1))
+        throw new Error(`data: sin_word.csv — 죄종마다 단이 1 부터 같은 수만큼 있어야 한다 (${wordTiers.join(' / ')})`);
     D.weaponBases = {};
     for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en });
     // 무기 옵션 표 둘 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — 무기는 고정 1 + 죄종 칸 + 통합옵션을 받고 `affix.csv` 를 안 쓴다.
@@ -383,6 +395,8 @@ export const eliteName = (sin, baseId) => NAMING.eliteName(sin, monsterName(base
 /** 시스템 조립 — 테스트 페이지도 같은 조립을 쓴다 (데이터만 바꿔 끼울 수 있다) */
 export function buildSystems(d) {
     const sins = Object.keys(M.SINS);
+    // 아이템 이름 조립기 — 죄종 표시명(mock) + 죄종 단어(`sin_word.csv`). 정예 이름(`NAMING`)과 규칙은 같은 모듈이다 (2026-09-19)
+    const naming = createNaming({ sins: M.SINS, sinWords: d.sinWords ?? {} });
     // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다.
     // **hero 보다 먼저** 만든다: 영웅이 생성 시 고유 스킬을 굴리려면 후보 id 목록이 먼저 있어야 한다
     // attributes — 스케일링 슬롯 attr 의 어휘(hero_attribute.csv). 로드 검증이 오타를 잡는다 (skill_design §13-1 · 2026-09-10 R72)
@@ -411,7 +425,8 @@ export function buildSystems(d) {
     const item = createItemSystem({
         // ~~elements~~ 는 2026-09-11 R80 으로 주입 목록에서 빠졌다 — 마법 무기 원소 굴림이 사라져 item.js 가 원소 어휘를 안 읽는다
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
-        itemBases: d.itemBases, weaponBases: d.weaponBases, affixDefs: d.affixDefs, composeName: NAMING.composeName,
+        itemBases: d.itemBases, weaponBases: d.weaponBases, affixDefs: d.affixDefs,
+        naming,                                     // 이름 조립기 — 죄종 단어 표까지 든다 (2026-09-19 · ~~composeName 하나~~)
         weaponSinOptions: d.weaponSinOptions ?? [], weaponCommonOptions: d.weaponCommonOptions ?? [],   // 무기 옵션 표 둘 (R78)
         armorSinOptions: d.armorSinOptions ?? [], armorCommonOptions: d.armorCommonOptions ?? [],       // 방어구 옵션 표 둘 (2026-09-18)
         // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
@@ -455,5 +470,6 @@ export function buildSystems(d) {
         potions: d.potions ?? [],
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
-    return { hero, item, battle, skill, tactic, game, formula: createFormula(d.balance) };
+    // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
+    return { hero, item, battle, skill, tactic, game, naming, formula: createFormula(d.balance) };
 }

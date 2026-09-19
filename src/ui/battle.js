@@ -24,7 +24,7 @@
  *   **카드 크기는 몬스터·영웅·보스가 전부 같은 고정값**이다 (2026-08-27, SCREEN_DESIGN §4-2).
  * 스킬 쿨은 **가로 아이콘 칸**이다 — 이름도 % 도 찍지 않고 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판이 걷히며 보여주고,
  *   **발동한 칸은 튀면서 스킬 이름이 초상 위로 떠오른다** (2026-08-27 — 「방금 뭘 썼나」는 게이지가 아니라 팝업이 답한다).
- * 올려놓으면 툴팁 — 카드는 유닛 툴팁(기본 옵션 · Alt 로 세부 옵션 — 영웅 · 몬스터 · ADR-0114), 스킬 칸은 그 스킬의 이름 · 표기/실효 쿨 · 설명 (2026-08-28, ui/tip.js).
+ * 올려놓으면 툴팁 — 영웅 카드는 착용 장비 + Alt 세부 옵션(ADR-0171), 몬스터 카드는 기본 옵션 + Alt 세부 옵션(ADR-0114), 스킬 칸은 그 스킬의 이름 · 표기/실효 쿨 · 설명 (ui/tip.js).
  * 스킬 칸은 **실제 시전을 그린다** (2026-08-30 — 목업 폐기): 켜고 끄는 것은 타임라인의 `skill` 이벤트이고, 남은 쿨은 그 이벤트가
  *   실어 온 `ready`(시뮬이 쓴 실제 쿨)로 걷힌다. 재생기는 쿨을 **계산하지 않는다**. 회복 · 창 · 재생(`heal`·`buff`·`buffEnd`·`regen`)도
  *   같이 그린다 — 무시하면 화면 HP 가 시뮬과 어긋난다. 아이콘 · 설명만 `mock.js` 표시 사전에서 온다.
@@ -39,7 +39,7 @@
 import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo } from './data.js';
 import { t, L } from './i18n.js';
-import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard } from './tip.js';
+import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard } from './tip.js';
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -78,7 +78,8 @@ export function mountBattle(container, opts) {
     const { result, stageId, heroes, resume, form } = opts;
     const stage = D.stages[stageId];
     const state = {
-        combatOf: opts.combatOf ?? null,   // 영웅 툴팁의 세부 옵션 — `game.heroCombat(G, h)` 는 앱이 든다(재생기는 G 를 모른다 · ADR-0114)
+        combatOf: opts.combatOf ?? null, itemOf: opts.itemOf ?? null, itemTipOf: opts.itemTipOf ?? null,
+        // 영웅 툴팁의 세부 옵션 · 착용 장비 · 장비 hover 아이템 카드 — 앱이 든다(재생기는 G 를 모른다 · ADR-0171 · ADR-0182)
         pickedUid: opts.pickedUid ?? null, onPickHero: opts.onPickHero ?? null,   // 장착 대상 고르기 — 선택은 앱의 화면 상태다 (ADR-0137)
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
@@ -430,11 +431,12 @@ function renderUnits(state, root) {
                     </div>
                 </div>
                 <div class="pop-layer"></div>`;
-            // 올려놓으면 뜬다 — 카드는 **유닛 툴팁**(기본 옵션 · Alt 로 세부 옵션 · SCREEN_DESIGN §2 · ADR-0114), 스킬 칸은 그 스킬 (ui/tip.js).
+            // 올려놓으면 뜬다 — 영웅은 착용 장비 + Alt 세부 옵션, 몬스터는 기본 옵션 + Alt 세부 옵션 (SCREEN_DESIGN §2 · ADR-0171). 스킬 칸은 그 스킬.
             // 영웅의 세부 옵션은 앱이 넘긴 `combatOf`(= game.heroCombat) · 몬스터는 `round` 이벤트의 `sheet`. 소환물(벽)은 둘 다 아니라 안 뜬다.
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
             // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
-            if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null), { anchor: true });
+            if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null, state.itemOf,
+                uid => state.itemTipOf?.(u.hero, uid) ?? null), { anchor: true, holdOnAlt: true });
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u), { anchor: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
             if (u.hero && state.onPickHero) n.onclick = () => state.onPickHero(u.hero.uid);
@@ -497,8 +499,66 @@ function refreshUnit(state, u) {
     refreshBuffs(u, state.t);
 }
 
+/** 남은 시간 표기 — 전투 시각은 0.1초 눈금이라 그 자리까지만 보인다. 12.0은 12로 접는다. */
+const effectTimeText = (until, now) => t('time.s', { s: String(Number(Math.max(0, until - now).toFixed(1))) });
+
+/** 떠 있는 창/경직 툴팁의 남은 시간을 재생 시각에 맞춰 갱신한다. */
+function refreshEffectTipTime(now) {
+    document.querySelectorAll('#tooltip [data-effect-until]').forEach(n => {
+        n.textContent = effectTimeText(Number(n.dataset.effectUntil), now);
+    });
+}
+
 /**
- * 창 뱃지 줄 — 걸려 있는 창 하나 = 칩 하나. 칩은 그 창을 만든 스킬의 아이콘이고 이름은 `title` 이 든다.
+ * 창이 **지금 적용하는 값** 한 줄 — 스킬 설명을 재사용하지 않는다.
+ * `value`는 CSV 원값이 아니라 전투가 능력치 계수까지 적용해 `buff` 이벤트에 실은 실효값이다.
+ */
+function effectSummaryText(stat, value = 0, element = null) {
+    const v = Number(value) || 0;
+    const pct = String(M.pctNum(Math.abs(v)));
+    const key = (() => {
+        switch (stat) {
+            case 'atk_pct': return v < 0 ? 'bt.effect.atk.down' : 'bt.effect.atk.up';
+            case 'period_pct': return v < 0 ? 'bt.effect.period.up' : 'bt.effect.period.down';
+            case 'barrier_pct': return 'bt.effect.barrier';
+            case 'guard_pct': return v < 0 ? 'bt.effect.guard.down' : 'bt.effect.guard.up';
+            case 'def_pct': return v < 0 ? 'bt.effect.def.down' : 'bt.effect.def.up';
+            case 'res_elem': return v < 0 ? 'bt.effect.res.down' : 'bt.effect.res.up';
+            case 'hp_max_pct': return v < 0 ? 'bt.effect.hp.down' : 'bt.effect.hp.up';
+            case 'regen_pct': return v < 0 ? 'bt.effect.regen.down' : 'bt.effect.regen.up';
+            case 'dr_pct': return v < 0 ? 'bt.effect.taken.up' : 'bt.effect.taken.down';
+            case 'onhit_element': return 'bt.effect.onhit';
+            case 'attack_splash': return 'bt.effect.splash';
+            case 'duel': return 'bt.effect.duel';
+            case 'taunt': return 'bt.effect.taunt';
+            default: return 'bt.effect.active';
+        }
+    })();
+    const elem = element ? t(`st.atkType.${element}`) : t('bt.effect.element');
+    return t(key, { v: pct, e: elem });
+}
+
+/**
+ * 창 뱃지 툴팁 — 이름 + **실제 적용 효과** + 남은 시간. 스킬의 대상·쿨·원문 설명은 되풀이하지 않는다.
+ * `until === null`인 오오라는 상시, 경직은 스킬 그림 대신 뱃지와 같은 멈춤 표시를 쓴다.
+ */
+function effectTipCard({ owner, info = null, name = '', stat = null, value = 0, element = null, until = null, now = 0, stagger = false }) {
+    const c = document.createElement('div');
+    c.className = 'tip-card effect-tip';
+    c.dataset.effectOwner = String(owner ?? '');
+    const icon = stagger ? '<i class="tip-effect-stagger"></i>' : skillImg(info);
+    const summary = stagger ? t('bt.effect.stagger') : effectSummaryText(stat, value, element);
+    c.innerHTML = `
+        <div class="tip-effect-head">
+            <div class="tip-name"><span class="tip-sk-ico">${icon}</span>${name}</div>
+            <b class="tip-effect-duration"${until == null ? '' : ` data-effect-until="${until}"`}>${until == null ? t('bt.effect.permanent') : effectTimeText(until, now)}</b>
+        </div>
+        <div class="tip-effect-summary">${summary}</div>`;
+    return c;
+}
+
+/**
+ * 창 뱃지 줄 — 걸려 있는 창 하나 = 칩 하나. 칩은 그 창을 만든 스킬의 아이콘이고 이름·실제 적용 효과·남은 시간은 전용 툴팁이 든다.
  * **이로운 창은 초록 · 해로운 창은 빨강** 테두리 — 가르는 것은 창의 값 부호다(`buff` 이벤트의 `v`).
  * ⚠ 지금 도는 창 4종은 전부 이로워서 빨강은 아직 안 켜진다 (skill.csv · SCREEN_DESIGN §4-2).
  * 자리는 **카드 밖 · 카드 바로 아래**(`.unit-slot` 의 둘째 줄) — 카드 크기를 건드리지 않는다 (2026-08-31 사용자 지시).
@@ -509,15 +569,41 @@ function refreshUnit(state, u) {
 function refreshBuffs(u, now) {
     const row = u.buffRow;   // 카드 밖(.unit-slot 의 둘째 줄)이라 u.node 아래서는 못 찾는다
     if (!row) return;
+    u.buffTipNow = now;
+    refreshEffectTipTime(now);
     const live = u.hp > 0 ? [...(u.buffs ?? new Map())] : [];
     const stag = u.hp > 0 && staggered(u, now);
-    const sig = live.map(([id, b]) => `${id}:${b?.v ?? 0}`).join('|') + (stag ? '|stagger' : '');
+    const stagUntil = stag ? u.stalls?.[u.stalls.length - 1]?.to ?? now : null;
+    // 끝 시각도 지문이다 — 같은 창이 갱신되면 칩 노드와 툴팁의 `until`도 새 값으로 갈아야 한다.
+    const sig = live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
+        + (stag ? `|stagger:${stagUntil}` : '');
     if (row.dataset.sig === sig) return;      // 안 바뀌었으면 손대지 않는다 — 매 틱 다시 그리는 자리다
     row.dataset.sig = sig;
+    // 이 유닛의 칩을 갈아 끼우면 떠 있던 툴팁의 앵커가 DOM에서 빠진다. 유령 툴팁으로 남기지 않는다.
+    const open = document.querySelector('#tooltip .effect-tip');
+    if (open?.dataset.effectOwner === String(u.key)) hideTip();
     row.innerHTML = live.map(([id, b]) => {
         const info = skillInfo(id);
-        return `<span class="buff-chip ${(b?.v ?? 0) < 0 ? 'bad' : 'good'}" title="${L(info.name)}">${skillImg(info)}</span>`;
-    }).join('') + (stag ? `<span class="buff-chip stagger" title="${t('bt.stagger')}"></span>` : '');
+        return `<span class="buff-chip ${(b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
+    }).join('') + (stag ? '<span class="buff-chip stagger" data-stagger="1"></span>' : '');
+
+    const byId = new Map(live);
+    row.querySelectorAll('[data-effect]').forEach(chip => {
+        const id = chip.dataset.effect;
+        const b = byId.get(id);
+        const info = skillInfo(id);
+        const element = SYS.skill?.defs?.[id]?.element ?? null;
+        chip.setAttribute('aria-label', `${L(info.name)} — ${effectSummaryText(b?.stat, b?.v, element)}`);
+        bindTipNode(chip, () => effectTipCard({
+            owner: u.key, info, name: L(info.name), stat: b?.stat, value: b?.v, element,
+            until: b?.until ?? null, now: u.buffTipNow,
+        }));
+    });
+    const staggerChip = row.querySelector('[data-stagger]');
+    if (staggerChip) {
+        staggerChip.setAttribute('aria-label', t('bt.stagger'));
+        bindTipNode(staggerChip, () => effectTipCard({ owner: u.key, name: t('bt.stagger'), until: stagUntil, now: u.buffTipNow, stagger: true }));
+    }
 }
 
 /**

@@ -26,7 +26,7 @@ rng.js ──┐
 csv.js   │  (파싱만 — fetch 는 ui/data.js)
          │
 formula.js(balance) ──────────────────────┐
-naming.js(sins) ─────────┐                │  naming.composeName 이 item 에 주입된다 (이름 조립 규칙)
+naming.js(sins, sinWords) ┐               │  naming 이 통째로 item 에 주입된다 (이름 조립 규칙 · 죄종 단어 · 2026-09-19)
 hero.js(data, skillPool) ─│────────────────┤  skillPool = skill.list 의 id 목록 — **skill.js 를 먼저 만든다**(시스템 주입이 아니라 데이터 · 2026-09-01)
 item.js(data) ───────────┘                │  hero · item · battle 은 **각자 내부에서 createFormula(balance) 를 만든다**
 skill.js(balance, rows) ┐                 │  (성장 곡선 growthMult · 피해 감소 곱 · strike 를 시뮬과 같은 함수에서 읽기 위해)
@@ -226,10 +226,10 @@ strike(rng, a, d):
 | `affixDefs` | `[{stat, scale:'growth'\|'band'\|'flat', min, max, perIlvl?, slots?}]` — `perIlvl` 은 **band 에만**, `slots` 없으면 전 부위 | affix.csv — `per_ilvl` 은 `band` 행만 값이고 로더가 그 행에만 `perIlvl` 키를 넣는다. **행 순서가 `rollAffixes` 의 풀 인덱스에 직결된다** · **무기(R78)도 방어구 네 부위(2026-09-18)도 이 풀을 안 쓴다** — 지금 쓰는 부위는 **목걸이 · 반지**뿐이다 |
 | `weaponSinOptions` | `[{sin, appliesTo, stat, scale, min, max}]` [신설 2026-09-11 · R78] | weapon_sin_option.csv — **무기 죄종 칸 후보**. `appliesTo` = `all` · 무기군 `damageKind` · 직업 id(그 무기군의 `classes` 에 있으면) — 시기 칸이 물리 / 마법사 / 사제로 갈리는 자리다. 한 죄종 · 한 무기군에 행이 여럿이면 그중 하나를 굴린다(탐욕 셋 · 시기-사제 둘). 로드 시 `scale` · `appliesTo` · 죄종 id · 범위를 검증하고 틀리면 던진다. **행 순서가 결정론에 걸린다** |
 | `weaponCommonOptions` | `[{family, stat, appliesTo, scale, min, max}]` [신설 2026-09-11 · R78] | weapon_common_option.csv — **무기 통합옵션 후보**. `family` 가 종류다 — **종류를 먼저 뽑고 그 안에서 변형(행)을 고른다**. `appliesTo` 는 위와 같은 어휘 · 같은 로드 검증. **행 순서가 결정론에 걸린다** |
-| `composeName` | `(prefixSin, base, suffixSin 또는 null) → {ko,en}` | `game_logic/naming.js:createNaming({sins}).composeName` — §2-10 |
+| `naming` | `{composeName, wordCount, baseOf, …}` [개정 2026-09-19 — ~~`composeName` 하나~~] | `game_logic/naming.js:createNaming({sins, sinWords})` — §2-10. item 은 `composeName`(이름 조립) · `wordCount`(단 번호의 폭) · `baseOf`(이관 — 옛 이름에서 베이스 떼기) 셋을 쓴다 |
 | `classSkills` | `{classId: [skillId...]}` **직업별 액티브 후보** (2026-09-09 신설) | `skill.csv` 의 `owner_kind=job` 행을 직업으로 묶은 것 — `ui/data.js` 가 만들어 **hero(`skillPool`)와 item 에 같은 표를 넘긴다**. 두 출처(고유 · 무기)가 한 풀에서 가져가기 때문이다 (skill_design §12-1 규칙 3). **행 순서가 결정론에 걸린다** |
 
-**item 객체** — `{uid, slot(part), rarity, ilvl, up, name:{ko,en}, implicit:{stat,v} 또는 null, affixes:[{stat,v,src}], sins:[sinId], group?, skill?, baseId?}` — ~~`watk`~~ 는 **v26 에서 삭제**(무기 피해는 박지 않고 파생한다 · R90)
+**item 객체** — `{uid, slot(part), rarity, ilvl, up, name:{ko,en}, implicit:{stat,v} 또는 null, affixes:[{stat,v,src}], sins:[sinId], words:[int], group?, skill?, baseId?}` — ~~`watk`~~ 는 **v26 에서 삭제**(무기 피해는 박지 않고 파생한다 · R90)
 - `rarity` 는 `normal` / `magic` / `rare` 를 굴린다 [`normal` 신설 2026-09-14 · R86] — 옛 세이브에는 `normal` 이 없어 이관할 것이 없다(세이브 버전 무변경)
 - `up` = 강화 단계 `0 … equip_upgrade_max`. **드롭이 굴리지 않는다** — 드롭·시작 장비는 언제나 `0` 이고 `upgrade` 만 올린다 (2026-08-31 신설)
 - `group` / `skill` 은 무기만. **`baseId` 는 무기 · 방어구 둘 다다** [방어구 2026-09-17 — 아래 `baseId` 불릿]. ~~`element` 는 **마법 무기군 개체**만~~ → **[폐기 2026-09-11 · R80] 생성 때 원소를 굴리지 않는다** — 새 아이템에 `element` 키가 없고 굴림 1회가 빠졌다(§5-2). **옛 세이브의 값은 죽은 필드로 남는다** — 읽는 곳이 없어져 무해하고 세이브 버전을 올리지 않았다(R77 선례). 원소는 **관련 옵션이 붙었을 때만** 생기고 어느 옵션이 주는지는 미정(GAME_DESIGN §10). ~~`twoHanded`~~ 는 2026-09-01 폐지 — 전 무기가 양손이라 표현할 것이 없다
@@ -238,6 +238,7 @@ strike(rng, a, d):
 - 무기의 행동 주기·공격 타입·착용 직업은 아이템에 **박지 않는다** — 매번 `weaponGroups[group]` 에서 읽는다
 - `sins` 는 죄종 **태그 목록**이지 포인트가 아니다 — 세트포인트 구조는 폐기됐다(08-26). 스키마는 그대로이고, 태그를 **세는 쪽**이 전술카드 조건이 된다 (tactic_card_design.md)
 - **`sins` 의 길이는 희귀도가 정한다 — `normal` 0 · `magic` 1 · `rare` 2** [확정 2026-09-11 · item_design §1 · R77 · `normal` 0 은 2026-09-14 R86] — 레어의 둘째(접미)는 첫째와 다른 죄종이다. ~~레어 접미는 `suffix_sin_chance_pct` 확률~~ 은 폐기(키 퇴역 · §5-2 판정 1회 삭제)
+- **`words` = 이름에 쓴 죄종 단어의 단 번호** [신설 2026-09-19 · item_design §1 「이름」 · 세이브 v31] — `sins` 와 **같은 길이 · 같은 순서**이고 값은 `0 … wordCount(sin) − 1`(0 = 첫 단 = 원래 죄종 이름). **rng 를 더 쓰지 않는다** — 그 죄종을 고른 굴림 `r` 의 남은 자리에서 낸다: `floor(frac(r × 후보 수) × wordCount(sin))`(후보 수 = 접두 7 · 접미 6). `r` 이 균등이면 소수부도 균등이고 고른 죄종과 독립이라 **넷 중 균등**이다 — ⚠ 임시(사용자 지시 2026-09-19 · 목표는 레벨 구간 `sin_word.csv:tier_min_ilvl` · 그때도 소비는 0 이다). `name` 은 이 값으로 조립한 **결과**다 — 죄종 단어의 자리는 `words` 와 `naming.sinPhrase` 가 다시 낸다(화면은 이름을 희귀도 한 색으로 찍는다 · SCREEN_DESIGN §6 · ADR-0175). 일반은 `[]`
 - **`src` = 접사의 출처** [신설 2026-09-11 · R78 · 세이브 v23] — `fixed`(고정 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션 · 공통옵션). **배열 순서가 곧 표시 순서**다(고정 → 죄종 칸 → 통합 — SCREEN_DESIGN §6 · ADR-0100). **방어구 네 부위도 세 층이다** [2026-09-18 · 세이브 v30] — 목걸이 · 반지만 전부 `random`
 - **방어구는 세 층을 정해진 개수로 받는다** [2026-09-18] — 고정 1(`armor_def_pct`) + 죄종 칸(`sins` 마다 1) + 공통옵션(`armor_common_opt_*` 개 · 같은 `family` 는 한 번). 아래 「방어구 옵션」
 - **무기는 세 층을 정해진 개수로 받는다** — 고정 1(`atk_pct`) + 죄종 칸(`sins` 마다 1 — `weaponSinOptions`) + 통합옵션(`weapon_common_opt_magic` / `_rare` 개 — `weaponCommonOptions` · 같은 `family` 는 한 번). **무기는 `affixDefs` 를 안 쓴다** — `affix.csv` 에 `weapon` 슬롯이 없고 `atk_flat` 은 퇴역했다 (아래 「무기 옵션」)
@@ -303,11 +304,12 @@ strike(rng, a, d):
 | `startingArmor(rng)` | `→ item` | **신설 2026-09-14 · R86** — ilvl 1 · **normal** · 갑옷 베이스 1회(티어 후보 — ilvl 1 이면 **클로스 아머 하나**뿐이다 · 2026-09-18) → `build`. ⚠ **직업 맞춤 없음**. `up = 0` |
 | `legacyWeaponLayers(item)` | `→ [affix]` | **세이브 이관 전용**(§4 v22 → v23). 옛 무기의 고정 옵션 · 죄종 칸을 **rng 없이** 만든다 — 행 = `(uid 번호 + 칸 순번) % 후보 수` · 값 = 범위의 가운데(`scale` 반올림). 무기가 아니거나 무기군을 모르면 `[]` [2026-09-11 · R78] |
 | `legacyArmorLayers(item)` | `→ [affix]` | **세이브 이관 전용**(§4 v29 → v30) [신설 2026-09-18]. 옛 방어구의 고정 옵션 · 죄종 칸을 `legacyWeaponLayers` 와 **같은 규칙**(rng 0 · 행 = `(uid 번호 + 칸 순번) % 후보 수` · 값 = 가운데)으로 만든다. 방어구가 아니면 `[]` |
+| `legacyName(item)` | `→ {words, name}` | **세이브 이관 전용**(§4 v30 → v31) [신설 2026-09-19]. `words` = 칸마다 `(uid 번호 + 칸 순번) % wordCount(sin)` — **rng 0**(`legacyWeaponLayers` 와 같은 규칙). `name` = 옛 이름에서 베이스를 떼어(`naming.baseOf` — 09-11 태그형 · 그 전의 「X의 베이스 — Y」형) 새 형식으로 다시 조립한 것. **어느 형식도 아니면 옛 이름 그대로**다. 죄종이 없으면 `{words: [], name}` |
 | `baseImplicit(item)` | `→ int \| null` | **세이브 이관 전용** — 방어구 고유값을 **지금 공식의 바탕값**으로 낸다(부위 배수 × 그 부위 갈래 계수 · rng 0). §4 v27 → v28 · v29 → v30 이 쓴다. 방어구가 아니면 `null` |
 | `canEquip(hero, item)` | `→ null` / `class` | 무기 = 직업 전속 무기군 검사. **능력치 게이트 없음**. 2026-09-01 — 인자 3 → 2, 거절 사유 `twoHanded` 폐지(보조 슬롯 삭제) |
 | `groupOf(item)` | `→ 무기군 정의 또는 null` | |
 | `groupsFor(cls)` | `→ 무기군 정의[]` | 본편(`stage === 'main'`) 무기군만 |
-| `regroupWeapon(item, groupId)` | `→ item` | **세이브 이관 전용** (§4 v15→v16). 개체 굴림(접사·`up` · ~~`watk`~~ R90 삭제 · ~~`element`~~ R80 폐기)은 두고 **`group` 과 `name` 만** 갈아끼운다. ⚠ R90 부터 무기 피해 범위의 **폭**은 무기군이 정하므로 군을 옮기면 폭이 따라 바뀐다. 게임 중에는 부르지 않는다 — 무기군은 드롭 때 정해지고 안 바뀐다 |
+| `regroupWeapon(item, groupId)` | `→ item` | **세이브 이관 전용** (§4 v15→v16). 개체 굴림(접사·`up` · ~~`watk`~~ R90 삭제 · ~~`element`~~ R80 폐기)은 두고 **`group` 과 `name` 만** 갈아끼운다(`name` 은 `sins` · `words` 를 살려 다시 조립한다 · 2026-09-19). ⚠ R90 부터 무기 피해 범위의 **폭**은 무기군이 정하므로 군을 옮기면 폭이 따라 바뀐다. 게임 중에는 부르지 않는다 — 무기군은 드롭 때 정해지고 안 바뀐다 |
 | `salvageDust(item)` | `→ int` | 희귀도별. **`normal` 은 기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 `magic` 값을 따른다. **강화 단계는 반환량에 안 들어간다** (기획 없음) |
 | `upgradeMax()` | `→ int` | `equip_upgrade_max` |
 | `upgradeable(item)` | `→ bool` | **베이스 능력치가 있는 부위인가** [신설 2026-09-15 · R95] — 목걸이 · 반지면 `false`(강화 없음 · item_design §7-2). **부위만 본다** — `up` · 희귀도는 안 본다 |
@@ -635,13 +637,16 @@ strike(rng, a, d):
 
 ### 2-10. `naming.js` — 이름 조립 (2026-08-31 신설)
 
-`createNaming(data)` — 주입 `data.sins` = `{sinId: {ko, en, adj}}`(⚠ 아직 `ui/mock.js:SINS`). **rng 를 쓰지 않는다** — 결정론 계약 밖이다.
+`createNaming(data)` — 주입 `data.sins` = `{sinId: {ko, en, adj}}`(⚠ 아직 `ui/mock.js:SINS`) · **`data.sinWords` = `{sinId: [{ko, en}]}`** — 단 순서(`sin_word.csv` 를 `tier` 로 정렬) [신설 2026-09-19]. 없는 죄종은 **한 단짜리**로 본다(`{ko: S.ko, en: S.adj}` — 원래 죄종 이름). **rng 를 쓰지 않는다** — 결정론 계약 밖이다.
 
 **CSV 가 아니라 코드인 이유**: 언어별 어순·조사가 규칙이라 표로 적을 수 없다. 렌더러가 아니라 여기 있는 이유는 두 렌더러(장비 화면·관전)가 같은 규칙을 두 번 적으면 갈리기 때문이다.
 
 | export | 시그니처 | 계약 |
 |---|---|---|
-| `composeName(prefixSin, base, suffixSin\|null)` | `→ {ko,en}` | **태그 형식 2026-09-11 개정** — ko `"[분노][오만] <base>"` / en `"[Wrath][Pride] <base>"`(ko/en 동형 · 대괄호는 `S[sin].ko`/`.en` 표시명 그대로, `adj` 형용사 아님). `suffixSin` 이 없으면 대괄호 하나뿐(매직 등급). **`prefixSin` 도 없으면 대괄호 없이 `base` 이름뿐**(일반 등급 · 2026-09-14 · R86). `base` 는 문자열(양 언어 공통) 또는 `{ko,en}` — 무기군 정의도 `ko`/`en` 을 갖고 있어 그대로 들어온다. `item.js` 의 `composeName` 이 이것이다 |
+| `composeName(prefixSin, base, suffixSin\|null, words?)` | `→ {ko,en}` | **문장형 2026-09-19 개정** [item_design §1 「이름」 · ~~태그 형식 `[분노][오만] <base>`~~(09-11)] — ko `"<A>와 <B>의 <base>"` / en `"<A> and <B> <base>"`. A · B = 그 죄종의 `words[k]` 단 단어(ko 명사 · en 형용사) — `words` 가 없거나 칸이 비면 첫 단. **「와 / 과」는 A 의 마지막 글자 받침이 가른다**(한글 음절 `(code − 0xAC00) % 28` 이 0 이면 와). `suffixSin` 이 없으면 ko `"<A>의 <base>"` / en `"<A> <base>"`(매직). **`prefixSin` 도 없으면 `base` 이름뿐**(일반). `base` 는 문자열(양 언어 공통) 또는 `{ko,en}` — 무기군 정의도 `ko`/`en` 을 갖고 있어 그대로 들어온다. 결과 = `sinPhrase` 를 이어 붙인 것 + `base` |
+| `sinPhrase(prefixSin, suffixSin\|null, words?)` | `→ {ko:[seg], en:[seg]}` | **이름 앞머리의 조각들** [신설 2026-09-19] — `seg = {t, sin?}`. 죄종 단어 조각만 `sin` 을 든다(나머지는 조사 · 공백). 예 ko `[{t:'격노',sin:'wrath'},{t:'와 '},{t:'찬탈',sin:'pride'},{t:'의 '}]`. `composeName` · `baseOf` 가 쓰고, 화면이 단어를 따로 다뤄야 할 때의 입력이다 — 이름 문자열을 다시 쪼개지 않는다. 일반은 빈 배열 |
+| `wordCount(sin)` | `→ int` | 그 죄종의 단어 수(`sinWords[sin].length` · 없으면 1) [신설 2026-09-19] |
+| `baseOf(name, sins, words?)` | `→ {ko,en} \| null` | **세이브 이관 전용** [신설 2026-09-19] — 옛 이름에서 베이스를 뗀다. **지금 형식**(`words` 로 조립한 앞머리 — 없으면 첫 단 · v15 무기군 교체 이관이 먼저 새 형식으로 다시 조립한 무기) · 09-11 태그형(`[..][..] <base>` — 앞의 대괄호 묶음을 뗀다) · 그 전 형식(ko `"<S.ko>의 <base> — <S.ko>"` · en `"<S.adj> <base> of <S.en>"`)을 알아본다. 두 언어 모두 떼어져야 값을 낸다 · 아니면 `null` |
 | `eliteName(sin, base)` | `→ {ko,en}` | ko `"분노의 스켈레톤 기사"` / en `"Wrathful Skeleton Knight"`. `base` 는 몬스터 이름 `{ko,en}` — **id → 이름 조회는 `ui/data.js:eliteName` 이 맡는다**(`D.monsters` 는 브라우저가 fetch 한 것이라 game_logic 이 볼 수 없다) |
 
 ---
@@ -737,11 +742,11 @@ strike(rng, a, d):
 
 ---
 
-## 4. 세이브 스키마 v30
+## 4. 세이브 스키마 v31
 
 ```
 {
-  version: 30, seed: uint32, createdAt: ms, savedAt: ms,
+  version: 31, seed: uint32, createdAt: ms, savedAt: ms,
   resources: { gold, dust, stigma },      // `dust` = **분해** 산출 · **제작 재료**(item_design §7-1 · 2026-09-15). 처치는 안 뱉는다 (v19)
   materials: { yieldId: n },              // **제작 재료 — 광석 · 목재** [2026-09-15 · R96 · 버전 무변경 — 아래]. 키 = 산출물 id(`mine_node.csv:ore_id` · `log_node.csv:timber_id`). 공급은 파견이 한다(미구현) — 지금은 `?dev=mats` 만 채운다
   potions: [ potionId ],                  // **만든 물약** [2026-09-15 · R103 · 버전 무변경 — 아래]. 닳지 않는다 · 순서 = 얻은 순서 = **칸 순서**(앞 칸부터 · R104) · 새 게임은 `potion.csv:start_owned = 1` 행. **칸 수와 쿨은 세이브에 없다**(전투 안에서만 산다)
@@ -749,7 +754,7 @@ strike(rng, a, d):
   party: [ heroUid ],                     // **편성한 순서 그대로** — `party[0]` 이 리더. 새 게임은 `[]` (2026-09-09)
   formation: { tpl, ranks: [[uid...],[uid...]] },   // **진형 — v20**. `tpl` = `formation_template.csv:tpl_id` · `ranks[0]` 전열 · `ranks[1]` 후열.
                                           //   전투가 읽는다(「앞부터 때린다」의 「앞」) · 정규화는 소속을 바꾸는 쪽이 한다 (§2-7)
-  items: { itemUid: item },               // §2-5 item 객체 — `up`(강화 단계) 포함 · **무기 `watk` 없음 — v26**(피해 범위는 파생 · R90), 접사 값은 강화가 박아 둔 값. **무기는 `skill`(담은 액티브 id)도 든다 — v18** · **접사는 출처 `src` 를 든다 — v23** · **방어구도 세 층(고정 · 죄종 칸 · 공통) — v30**
+  items: { itemUid: item },               // §2-5 item 객체 — `up`(강화 단계) 포함 · **무기 `watk` 없음 — v26**(피해 범위는 파생 · R90), 접사 값은 강화가 박아 둔 값. **무기는 `skill`(담은 액티브 id)도 든다 — v18** · **접사는 출처 `src` 를 든다 — v23** · **방어구도 세 층(고정 · 죄종 칸 · 공통) — v30** · **이름의 죄종 단어 `words` — v31**
   bag: [ itemUid ],                       // **인벤토리** — 순서 = 표시 순서. 드롭이 쌓이는 쪽이고 상한은 `[balance.csv:inventory_cap]`
   stash: [ itemUid ],                     // **창고 — v24**. 플레이어가 직접 옮긴 것만 든다 · 상한 `[balance.csv:stash_cap]`
                                           //   창고에서도 **장착 · 분해 · 강화가 그대로** 된다(꺼내는 단계가 없다 — item_design §1)
@@ -845,6 +850,17 @@ strike(rng, a, d):
 - **왜 보존하지 않나** — v12 의 정수 얼굴은 **직업과 무관하게** 굴린 번호다(궁수 얼굴이 전사에게 갔다). 보존할 개체성이 없고, 직업 일치가 이 개정의 목적 자체라 남겨 두면 목적이 무너진다
 - **전투 결과는 안 바뀐다** — 얼굴은 표시 전용이다. 전용 스트림이라 전투·선술집·강화·전술 수열과도 안 섞인다 (§5-1)
 - **마법사는 `null`** — 이 이관이 돌던 시점엔 풀이 0장이라 초상이 없었다(같은 날 밤 1장이 들어와 **v13→v14 가 소급한다** — 아래). 화면은 빈 칸으로 둔다(자리표시를 안 깐다 — SCREEN_DESIGN §5). 그래도 `rollFace` 는 rng 를 1회 소비하므로 **직업 구성이 소비 수를 바꾸지 않는다**
+
+**v30 → v31 이관** (2026-09-19 — **아이템 이름 = 「A와 B의 베이스」 · 죄종 단어 넷** · 사용자 확정 · item_design §1 「이름」 · DEV_PLAN R118). 옛 아이템은 `words` 가 없고 이름이 옛 형식(태그형 · 그 전의 문장형)이다. `deserialize` 가 v30 을 받으면 제자리에서 올린다:
+
+| 대상 | 규칙 |
+|---|---|
+| `items[*].words` | **`item.legacyName`** — 칸마다 `(uid 번호 + 칸 순번) % wordCount(sin)`. 죄종이 없으면 `[]` · **`words` 가 이미 있는 아이템은 건드리지 않는다** |
+| `items[*].name` | 같은 함수 — 옛 이름에서 베이스를 떼어 새 형식으로 다시 조립한다. **못 알아보는 형식이면 그대로** 둔다(화면은 그 이름을 색 없이 찍는다) |
+| `version` | `31` |
+
+- **rng 0회** · **전투 결과는 안 바뀐다** — 이름은 표시 전용이다
+- **단 번호는 새 드롭과 규칙이 다르다**(uid vs 굴림의 소수부) — 둘 다 넷 중 고르게 퍼지는 임시값이고, 레벨 구간이 서면 둘 다 그 규칙으로 옮긴다
 
 **v29 → v30 이관** (2026-09-18 — **방어구 옵션은 세 층이다 · 고유 방어력 편차 폐지** · 사용자 확정 · item_design §1 「갑옷 옵션」 · 「투구 옵션」 · DEV_PLAN R109 · R113 · R114). 옛 방어구는 옛 공용 풀(`affix.csv`)의 옵션만 들고 개체 편차로 굴린 고유값을 든다. `deserialize` 가 v29 를 받으면 제자리에서 올린다:
 
@@ -1119,7 +1135,7 @@ strike(rng, a, d):
 | `state.searchRoll` | **등급 1회**(매력이 민 레어 확률) → **`rollCandidates(rng, 1, [tier])` 10회** → **죄종 메아리 1회** → **막마다 1회**(`search_story.csv` 의 막 수 — 지금 3) = 막 셋이면 **15회** [신설 2026-09-09].<br>**결과를 먼저 굴리고 이야기를 뒤에 둔다** — 이야기 행이나 막을 늘려도 **나온 영웅이 안 바뀐다**(`rollFace` 를 맨 마지막에 두는 것과 같은 이유). 막을 늘리면 그 뒤의 소비만 는다.<br>죄종 메아리는 굴린 영웅의 `sin` 을 **덮어쓴다** — 죄종은 능력치·고유 굴림의 입력이 아니라(주력 축은 직업이 정한다) 덮어써도 앞의 소비가 안 밀린다.<br>막의 후보는 **공통(`-`) + 그 죄종** 행이고 **CSV 행 순서가 인덱스 순서**다 |
 | `item.rollDrop` | **부위 1회** → `rollGear` 한 벌(아래) — 즉 부위 → 베이스 → 희귀도 → `build` [정리 2026-09-11 · R79 — 뒤 셋을 `rollGear` 에 위임했고 **수열은 종전과 같다**]. **`magicFind` 는 레어 가중치만 바꾸고 굴림은 1회 그대로**(R78). ⚠ **게임 경로에서는 더 안 불린다** — 처치 드롭이 「입고 있던 장비」로 바뀌어(R79) 부위를 굴리지 않는다. 검증·골든이 파이프라인 전체를 한 입구로 재는 자리로 남는다 |
 | `item.rollGear` | **부위 배열 순서대로** 부위마다: 베이스(무기는 `weaponGroup` 을 주면 **0회** · 안 주면 무기군 1회 / 무기 외 1회 — **후보는 그 ilvl 의 티어 행뿐**이지만 소비는 1회 그대로 · 2026-09-18) → **희귀도 1회**(`magicFind + rareBonusPct` 가 레어 가중치에 곱한다) → `build` [신설 2026-09-11 · R79]. ⚠ **부위 배열 순서가 계약이다** — 몬스터는 `monster.csv:wear_slots` 를 그 순서로 넘긴다 |
-| `item.build` | **(매직 · 레어) 접두 죄종** [일반은 0회 — 2026-09-14 · R86] → **(레어) 접미 죄종** [개정 2026-09-11 · R77 — ~~(레어) 접미 판정 → (성공 시) 접미 죄종~~ · 죄종 수는 희귀도가 정한다(매직 1 · 레어 2) — 판정 1회가 빠졌다] → **(무기) 옵션 세 층** [2026-09-11 · R78 — 고정 값 1 → 죄종마다 (행 1 → 값 1) → 통합옵션마다 (종류 1 → 변형 1 → 값 1) · 후보가 비어도 소비 수 불변 · §2-5 「무기 옵션」] / **(방어구 네 부위) 옵션 세 층** [2026-09-18 — 무기와 같은 모양: 고정 값 1 → 죄종마다 (행 1 → 값 1) → 공통옵션마다 (종류 1 → 변형 1 → 값 1) · 후보가 비어도 소비 수 불변 · §2-5 「방어구 옵션」] / **(목걸이 · 반지)** 접사 수 → 접사마다 (정의 선택 → 값) → **(무기) 베이스 1회** [신설 2026-09-10] → ~~**개체 굴림**(방어구 = implicit 편차 1회)~~ **2026-09-18 삭제 — 방어구 고유값도 굴리지 않는다**(방어구에서 소비 1회가 빠졌다 · ~~무기 = 데미지 편차~~ **2026-09-14 삭제 · R90**) → ~~(마법 무기) 원소~~ **[삭제 2026-09-11 · R80 — 생성 때 원소를 굴리지 않는다. 마법 무기에서 소비 1회가 빠진다]** → **(무기) 스킬 1회** [신설 2026-09-09 · `opts.avoidSkill` 로 풀을 좁혀도 1회 — 2026-09-14]. ⚠ 베이스·스킬 굴림은 **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다. 베이스 굴림은 **균등**(대역 가중 없음 — 수치 미발행) |
+| `item.build` | **(매직 · 레어) 접두 죄종** [일반은 0회 — 2026-09-14 · R86] → **(레어) 접미 죄종** [개정 2026-09-11 · R77 — ~~(레어) 접미 판정 → (성공 시) 접미 죄종~~ · 죄종 수는 희귀도가 정한다(매직 1 · 레어 2) — 판정 1회가 빠졌다] · **이름의 죄종 단어는 소비 0** — 각 죄종 굴림의 소수부에서 낸다(§2-5 `words` · 2026-09-19 · R118) → **(무기) 옵션 세 층** [2026-09-11 · R78 — 고정 값 1 → 죄종마다 (행 1 → 값 1) → 통합옵션마다 (종류 1 → 변형 1 → 값 1) · 후보가 비어도 소비 수 불변 · §2-5 「무기 옵션」] / **(방어구 네 부위) 옵션 세 층** [2026-09-18 — 무기와 같은 모양: 고정 값 1 → 죄종마다 (행 1 → 값 1) → 공통옵션마다 (종류 1 → 변형 1 → 값 1) · 후보가 비어도 소비 수 불변 · §2-5 「방어구 옵션」] / **(목걸이 · 반지)** 접사 수 → 접사마다 (정의 선택 → 값) → **(무기) 베이스 1회** [신설 2026-09-10] → ~~**개체 굴림**(방어구 = implicit 편차 1회)~~ **2026-09-18 삭제 — 방어구 고유값도 굴리지 않는다**(방어구에서 소비 1회가 빠졌다 · ~~무기 = 데미지 편차~~ **2026-09-14 삭제 · R90**) → ~~(마법 무기) 원소~~ **[삭제 2026-09-11 · R80 — 생성 때 원소를 굴리지 않는다. 마법 무기에서 소비 1회가 빠진다]** → **(무기) 스킬 1회** [신설 2026-09-09 · `opts.avoidSkill` 로 풀을 좁혀도 1회 — 2026-09-14]. ⚠ 베이스·스킬 굴림은 **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다. 베이스 굴림은 **균등**(대역 가중 없음 — 수치 미발행) |
 | `state.newGame`(시작 장비) | 영웅마다 **무기 → 갑옷** [개정 2026-09-14 · R86 — ~~시작 무기 하나 · magic 이라 접미 죄종을 굴리지 않는다~~]. 무기 = 무기군 1회 → `build`(normal — 죄종 0회 · 스킬은 고유 스킬을 뺀 풀에서 1회) · 갑옷 = 베이스 1회(ilvl 1 이라 후보는 클로스 아머 하나 · 2026-09-18) → `build`(normal — 죄종 0회 → 고정 1 → 공통옵션 `armor_common_opt_normal` × 3 · ~~접사 수 → 접사마다 (정의 → 값) → implicit 1회~~ 2026-09-18) |
 | `item.upgrade` | **0회** [개정 2026-09-15 · R95] — ~~옵션 계단이면 접사 선택 1회~~ · 옵션 계단 퇴역. 베이스는 파생이다 |
 | `state.makeItem` | **ilvl 1회**(레벨대 `lo`~`hi` 균등) → `item.rollGear` 한 벌 — 부위 하나: 베이스(무기 = 무기군 1 / 무기 외 = 베이스 1) → **희귀도 1**(`make_rarity_w_*`) → `build` [신설 2026-09-15 · R96]. 거절이면 **0회**(스트림을 안 열고 `counters.make` 불변) |
@@ -1190,6 +1206,7 @@ strike(rng, a, d):
 - **R106 재촬영** [2026-09-15] — 타임라인 `hit` 에 피해 종류 `ty` 가 붙으며 **50런 전부의 `tl`(타임라인 해시)만** 갈렸다 — 백업과 필드 단위로 대조해 다른 지문 필드와 입력 지문(`meta`)은 한 칸도 안 바뀐 것을 확인했다. 표시용 키라 rng · 결과 수치는 그대로다. 재촬영 뒤 **50런 · 드롭 33 · 이벤트 88031**
 - **R115 재촬영** [2026-09-18] — 1-1 편성 예외(§2-13 · 주술사 3라운드부터 · 정예는 주술사뿐 · 소환 채움 · 아바돈 단독)로 **스테이지 101 의 10런만** 갈렸다 — 백업과 런 단위로 대조해 102~105 의 40런과 입력 지문(`meta`)은 한 칸도 안 바뀐 것을 확인했다(**예외가 없는 스테이지는 수열이 같다**는 §5-2 계약의 증거). 재촬영 뒤 **50런 · 드롭 61 · 이벤트 99982**
 - **R116 재촬영** [2026-09-18] — 1-1 주술사가 고유 스킬 「고블린 소환」으로 무리를 부르고 되살리며(§2-13 · 스킬 소속 `monster` · 종류 `call`) **스테이지 101 의 10런만** 갈렸다 — 입력 지문은 `csvHash` 2(`monster` · `skill`)뿐이고 102~105 의 40런은 백업과 런 단위로 대조해 그대로다. 재촬영 뒤 **50런 · 드롭 54 · 이벤트 105021** · ⚠ 101 시드 5 가 `timeout`(6라운드 되살리기 반복)
+- **R118 재촬영** [2026-09-19] — 아이템 이름이 「A와 B의 베이스」가 되며(§2-10 · 단 번호는 죄종 굴림의 소수부라 **rng 소비 불변**) **드롭 지문의 이름 칸만** 갈렸다 — 옛 지문과 필드 단위로 대조해 달라진 것이 드롭 22칸의 `base`(무기 외 부위는 영문 이름 — `[Sloth] Cloth Armor` → `Forgotten Cloth Armor`)뿐이고 나머지 지문 · `meta.parties` 는 한 칸도 안 바뀐 것을 확인했다. 입력 지문 — `csvHash` 2(**`sin_word` 신규** · `monster` — 직전 커밋의 초상 칸 `face` 0 → 1 이 재촬영 없이 들어와 있었다 · 전투 무관)
 
 #### 입력 지문 (`meta`) — **출력보다 먼저 대조한다**
 
@@ -1257,7 +1274,7 @@ strike(rng, a, d):
 
 ## 7. 데이터 계약 — 무엇이 어디서 오는가
 
-`ui/data.js:loadData` 가 fetch 하는 CSV **43개**(`FILES`) [재집계 2026-09-18 — 이 수는 잘 낡는다. 옛 「32개」는 `gather_node`·`log_node`·`hero_unique_candidates` 신설분이 이미 빠져 있었다]: `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `codex_series` · `weapon_group` · `skill` · **`skill_tag`**(2026-09-01) · `hero_attribute` · `combat_stat` · `chapter` · `mastery_node` · `tactic_slot` · `tactic_option` · **`commission_kind`** · **`commission`** · `affix` · `item_base` · `equip_slot` · `class` · `hero_name` · `hero_trait` · **`mine_node`** · **`hero_tier`**(2026-09-08 · R48) · **`search_story`**(2026-09-09 — 수색 진행 문구. **막의 어휘도 순서도 이 표가 든다**) · **`monster_role`**(2026-09-09 — 역할 → **랭크**. 적의 자리다) · **`formation_template`**(2026-09-09 — 파티 진형의 정원. **첫 행이 기본값**이고 행 순서가 화면 순서다) · **`search_meeting`**·**`search_answer`**(2026-09-09 — 수색 만남 · 답. **`need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)** 두 컬럼이 규칙 전부다) · **`gather_node`**·**`log_node`**(2026-09-10 — 채집·벌목 단계 7, `mine_node` 와 같은 모양) · **`hero_unique_candidates`**(2026-09-10 — 유니크 영웅 후보 풀 ⚠임시 · 아직 아무도 안 읽는다) · **`weapon_base`**(2026-09-10 신설 — 무기군별 세부 베이스 7종 이름. **아직 `sword2h`·`axe`·`mace`·`spear`·`bow` 뿐**(뒤의 셋 2026-09-11) · §2-5 · §5-2) · **`weapon_sin_option`**·**`weapon_common_option`**(2026-09-11 · R78) · **`make_recipe`**(2026-09-15 · R96) · **`potion`**(2026-09-15 — 물약 단계 표 · R103) · **`armor_group`**(2026-09-16 신설 — 갑옷군 3갈래(중갑·경갑·로브) · 방어 배수 · 공속 · 쿨감 · R108 · **2026-09-18 `slot` 칸 — 투구 · 장갑 · 신발 갈래까지 네 부위**) · **`armor_sin_option`**·**`armor_common_option`**(2026-09-18 — 방어구 죄종 칸 · 공통옵션 · §2-5 「방어구 옵션」).
+`ui/data.js:loadData` 가 fetch 하는 CSV **44개**(`FILES`) [재집계 2026-09-19 — 이 수는 잘 낡는다. 옛 「32개」는 `gather_node`·`log_node`·`hero_unique_candidates` 신설분이 이미 빠져 있었다]: `balance` · `monster` · `stage` · `stage_round` · `round_budget` · `spawn_grade` · `codex_level` · `codex_series` · `weapon_group` · `skill` · **`skill_tag`**(2026-09-01) · `hero_attribute` · `combat_stat` · `chapter` · `mastery_node` · `tactic_slot` · `tactic_option` · **`commission_kind`** · **`commission`** · `affix` · `item_base` · `equip_slot` · `class` · `hero_name` · `hero_trait` · **`mine_node`** · **`hero_tier`**(2026-09-08 · R48) · **`search_story`**(2026-09-09 — 수색 진행 문구. **막의 어휘도 순서도 이 표가 든다**) · **`monster_role`**(2026-09-09 — 역할 → **랭크**. 적의 자리다) · **`formation_template`**(2026-09-09 — 파티 진형의 정원. **첫 행이 기본값**이고 행 순서가 화면 순서다) · **`search_meeting`**·**`search_answer`**(2026-09-09 — 수색 만남 · 답. **`need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)** 두 컬럼이 규칙 전부다) · **`gather_node`**·**`log_node`**(2026-09-10 — 채집·벌목 단계 7, `mine_node` 와 같은 모양) · **`hero_unique_candidates`**(2026-09-10 — 유니크 영웅 후보 풀 ⚠임시 · 아직 아무도 안 읽는다) · **`weapon_base`**(2026-09-10 신설 — 무기군별 세부 베이스 7종 이름. **아직 `sword2h`·`axe`·`mace`·`spear`·`bow` 뿐**(뒤의 셋 2026-09-11) · §2-5 · §5-2) · **`weapon_sin_option`**·**`weapon_common_option`**(2026-09-11 · R78) · **`make_recipe`**(2026-09-15 · R96) · **`potion`**(2026-09-15 — 물약 단계 표 · R103) · **`armor_group`**(2026-09-16 신설 — 갑옷군 3갈래(중갑·경갑·로브) · 방어 배수 · 공속 · 쿨감 · R108 · **2026-09-18 `slot` 칸 — 투구 · 장갑 · 신발 갈래까지 네 부위**) · **`armor_sin_option`**·**`armor_common_option`**(2026-09-18 — 방어구 죄종 칸 · 공통옵션 · §2-5 「방어구 옵션」) · **`sin_word`**(2026-09-19 — 아이템 이름의 죄종 단어 · 죄종 × 4단 · `naming` 이 받는다 · §2-10).
 **이 목록 = `src/data/*.csv` 전부**(`inherited/` 제외)여야 한다 — 읽히지 않는 SSOT 를 두지 않는다. `dev/test.html` 의 `csv:` 단정이 디렉터리 목록과 대조한다 (2026-08-28).
 
 표시 헬퍼도 `ui/data.js` 가 낸다 — `monsterName(id)→{ko,en}` · `monsterFace(id, grade?)→path|null`(grade 가 `elite` 이고 `monster.csv:face_elite` 가 1 이면 `<idx>_elite.png` · 아니면 `<idx>.png` — 2026-09-17) · `monsterSin(id)` · `stageName(row)→{ko,en}` · `stageBgOf(id)` · `chapterOf(chapter)` · `eliteName(sin, baseId)`. mock 에 남은 것은 자산 경로(`faceDir()` · `FACE_STYLES`/`setFaceStyle` · `bgDir()` · `BG_STYLES`/`setBgStyle` · `BG_DIR`/`TOWN_BG` · `stageBg`)와 화면 전용 사전뿐이다.
@@ -1328,4 +1345,4 @@ strike(rng, a, d):
 
 ---
 
-*마지막 업데이트: 2026-09-18*
+*마지막 업데이트: 2026-09-19*

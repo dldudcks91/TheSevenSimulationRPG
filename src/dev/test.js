@@ -13,7 +13,7 @@
 
 import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES, fillStory, pickJosa, STORY_TOKEN } from '../ui/data.js';
-import { skillTipCard } from '../ui/tip.js';
+import { bindTipNode, heroTipCard, skillTipCard } from '../ui/tip.js';
 import { setLang, t as i18nT } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
@@ -1024,7 +1024,7 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
 check('save: serialize → deserialize 왕복 동일 (v22)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 30;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 31;
 });
 /**
  * 옛 세이브 흉내 [2026-09-17 · R111] — **v29 전 세이브는 퍼센트를 0~100 눈금으로 들었다**(5% = `5`).
@@ -2598,6 +2598,110 @@ check('item: 죄종 수는 희귀도가 정한다 — 일반 0 · 매직 1 · �
     const sw = SYS.item.startingWeapon(makeRng(3), 'warrior');
     if (sw.rarity !== 'normal' || sw.sins.length !== 0) fail(`시작 무기 ${sw.rarity} · 죄종 ${JSON.stringify(sw.sins)}`);
     return `normal ${seen.normal} · magic ${seen.magic} · rare ${seen.rare}`;
+});
+/**
+ * 아이템 이름 = 「A와 B의 베이스」 [2026-09-19 · 사용자 확정 · item_design §1 「이름」 · R118].
+ * 죄종마다 단어 넷(`sin_word.csv`) · 단 번호는 그 죄종 굴림의 소수부(rng 소비 0) · 화면은 `sinPhrase` 조각으로 죄종 단어를 칠한다.
+ */
+check('csv: sin_word — 죄종마다 단이 같은 수 · 첫 단 = 원래 죄종 이름(ko · adj) · 단어가 서로 겹치지 않는다 (item_design §1 「이름」 · R118)', () => {
+    const sins = Object.keys(M.SINS);
+    const n = D.sinWords[sins[0]]?.length ?? 0;
+    if (n < 2) fail(`단 수 ${n}`);
+    const all = [];
+    for (const sin of sins) {
+        const ws = D.sinWords[sin] ?? [];
+        if (ws.length !== n) fail(`${sin} 단 ${ws.length} ≠ ${n}`);
+        if (ws[0].ko !== M.SINS[sin].ko || ws[0].en !== M.SINS[sin].adj) fail(`${sin} 첫 단 ${ws[0].ko}/${ws[0].en} ≠ ${M.SINS[sin].ko}/${M.SINS[sin].adj}`);
+        if (SYS.naming.wordCount(sin) !== n) fail(`wordCount(${sin}) ${SYS.naming.wordCount(sin)}`);
+        all.push(...ws);
+    }
+    for (const lang of ['ko', 'en']) {
+        const dup = all.map(w => w[lang]).filter((w, i, a) => a.indexOf(w) !== i);
+        if (dup.length) fail(`${lang} 단어가 겹친다: ${dup.join(', ')}`);
+    }
+    return `${sins.length} 죄종 × ${n} 단`;
+});
+check('item: 이름 = 「A와 B의 베이스」 · 영어도 죄종 단어가 앞 — words 는 sins 와 같은 길이 · 이름 앞머리 = sinPhrase · 대괄호 없음 (item_design §1 「이름」 · R118)', () => {
+    const rng = makeRng(119);
+    const seen = { magic: 0, rare: 0 };
+    for (let i = 0; i < 300; i++) {
+        const it = SYS.item.rollDrop(rng, 5);
+        if (!Array.isArray(it.words) || it.words.length !== it.sins.length) fail(`words ${JSON.stringify(it.words)} · sins ${JSON.stringify(it.sins)}`);
+        it.sins.forEach((sin, k) => { if (!(it.words[k] >= 0 && it.words[k] < SYS.naming.wordCount(sin))) fail(`단 번호 ${it.words[k]} (${sin})`); });
+        if (/[[\]]/.test(it.name.ko + it.name.en)) fail(`대괄호가 남았다: ${it.name.ko}`);
+        const p = SYS.naming.sinPhrase(it.sins[0] ?? null, it.sins[1] ?? null, it.words);
+        for (const lang of ['ko', 'en']) {
+            const head = p[lang].map(x => x.t).join('');
+            if (!it.name[lang].startsWith(head) || it.name[lang].length <= head.length) fail(`${lang} 이름 「${it.name[lang]}」이 앞머리 「${head}」로 시작하지 않는다`);
+            if (p[lang].filter(x => x.sin).map(x => x.sin).join() !== it.sins.join()) fail(`${lang} 죄종 조각 ${JSON.stringify(p[lang])} ≠ ${it.sins}`);
+        }
+        if (it.rarity in seen) seen[it.rarity]++;
+    }
+    if (!seen.magic || !seen.rare) fail(`표본 ${JSON.stringify(seen)}`);
+    return `magic ${seen.magic} · rare ${seen.rare}`;
+});
+check('naming: 「와 / 과」는 앞 단어의 받침이 가른다 · 매직은 「의」 · 영어는 「A and B Base」 (item_design §1 「이름」 · R118)', () => {
+    const N = SYS.naming, base = { ko: '베이스', en: 'Base' };
+    // 받침 판정은 여기서 따로 한다 — 한글 음절표(가 ~ 힣)에서 종성 자리를 읽는다
+    const batchim = w => { const c = w.charCodeAt(w.length - 1); return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 > 0; };
+    const sins = Object.keys(M.SINS), other = s => sins.find(x => x !== s);
+    const used = { 와: 0, 과: 0 };
+    for (const sin of sins) D.sinWords[sin].forEach((w, i) => {
+        const suf = other(sin), b = D.sinWords[suf][0];
+        const rare = N.composeName(sin, base, suf, [i, 0]);
+        const j = batchim(w.ko) ? '과' : '와';
+        used[j]++;
+        if (rare.ko !== `${w.ko}${j} ${b.ko}의 베이스`) fail(`ko ${rare.ko}`);
+        if (rare.en !== `${w.en} and ${b.en} Base`) fail(`en ${rare.en}`);
+        const magic = N.composeName(sin, base, null, [i]);
+        if (magic.ko !== `${w.ko}의 베이스` || magic.en !== `${w.en} Base`) fail(`매직 ${magic.ko} / ${magic.en}`);
+    });
+    const plain = N.composeName(null, base, null, []);
+    if (plain.ko !== '베이스' || plain.en !== 'Base') fail(`일반 ${plain.ko}`);
+    if (!used.와 || !used.과) fail(`표에 한쪽 조사만 나온다 — 판정이 안 걸린다 ${JSON.stringify(used)}`);
+    return `와 ${used.와} · 과 ${used.과}`;
+});
+check('item: 이름 단어의 단은 넷 중 고르게 나온다 — 죄종 굴림의 소수부 · 고른 죄종과 독립 (⚠ 임시 — 밸런싱 전 · 사용자 지시 · R118)', () => {
+    const rng = makeRng(4242);
+    const n = SYS.naming.wordCount('wrath');
+    const byTier = Array(n).fill(0), bySinTier = {};
+    let total = 0;
+    for (let i = 0; i < 3000; i++) {
+        const it = SYS.item.rollDrop(rng, 20);
+        it.sins.forEach((sin, k) => { byTier[it.words[k]]++; (bySinTier[sin] ??= Array(n).fill(0))[it.words[k]]++; total++; });
+    }
+    const exp = total / n;
+    byTier.forEach((c, t) => { if (Math.abs(c - exp) > exp * 0.12) fail(`단 ${t + 1} ${c} — 기대 ${exp.toFixed(0)} ±12%`); });
+    for (const [sin, cs] of Object.entries(bySinTier)) if (cs.some(c => c === 0)) fail(`${sin} 에서 안 나오는 단이 있다 ${cs}`);
+    return `죄종 칸 ${total} · 단별 ${byTier.join(' / ')}`;
+});
+check('save: v30 → v31 이관 — 옛 이름(09-11 태그형 · 그 전 문장형)을 새 형식으로 · words 는 uid 번호 · 못 알아보는 이름은 그대로 · words 가 이미 있으면 안 건드린다 · 두 번 열면 같다 (INTERFACE §4 · R118)', () => {
+    const N = SYS.naming, ring = { ko: '링', en: 'Ring' };
+    const v30 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v30.version = 30;
+    const mk = (uid, rarity, sins, name, extra = {}) => ({ uid, slot: 'ring', rarity, ilvl: 5, up: 0, name, implicit: null, affixes: [], sins, ...extra });
+    v30.items.t_tag = mk('i901', 'rare', ['wrath', 'pride'], { ko: '[분노][오만] 링', en: '[Wrath][Pride] Ring' });
+    v30.items.t_old = mk('i902', 'rare', ['envy', 'greed'], { ko: '시기의 링 — 탐욕', en: 'Envious Ring of Greed' });
+    v30.items.t_mag = mk('i903', 'magic', ['lust'], { ko: '[색욕] 링', en: '[Lust] Ring' });
+    v30.items.t_odd = mk('i904', 'magic', ['sloth'], { ko: '옛 반지', en: 'Old Ring' });
+    v30.items.t_nor = mk('i905', 'normal', [], ring);
+    v30.items.t_new = mk('i906', 'magic', ['wrath'], N.composeName('wrath', ring, null, [3]), { words: [3] });
+    const up = SYS.game.deserialize(v30);
+    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
+    const uidWords = it => it.sins.map((sin, k) => (Number(it.uid.slice(1)) + k) % N.wordCount(sin));
+    for (const k of ['t_tag', 't_old', 't_mag']) {
+        const it = up.items[k];
+        if (!eq(it.words, uidWords(it))) fail(`${k} words ${JSON.stringify(it.words)} ≠ uid 번호 ${JSON.stringify(uidWords(it))}`);
+        if (!eq(it.name, N.composeName(it.sins[0], ring, it.sins[1] ?? null, it.words))) fail(`${k} 이름 ${it.name.ko} / ${it.name.en}`);
+    }
+    const odd = up.items.t_odd;
+    if (!eq(odd.name, v30.items.t_odd.name) || !eq(odd.words, uidWords(odd))) fail(`못 알아보는 이름 ${odd.name.ko} · ${JSON.stringify(odd.words)}`);
+    if (!eq(up.items.t_nor.words, []) || !eq(up.items.t_nor.name, ring)) fail('일반이 바뀌었다');
+    if (!eq(up.items.t_new, v30.items.t_new)) fail('words 가 있는 아이템이 바뀌었다');
+    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
+    if (!eq(again.items, up.items)) fail('v31 세이브를 다시 열었더니 달라졌다');
+    if (!eq(SYS.game.deserialize(v30).items, up.items)) fail('같은 v30 을 두 번 열면 다르다');
+    return `${up.items.t_tag.name.ko} · ${up.items.t_old.name.en} · ${up.items.t_mag.name.ko}`;
 });
 check('csv: 무기 옵션 표 둘 — 본편 무기군마다 죄종 7 전부 칸이 있다 · 통합 종류가 개수 이상 · 라벨이 있다 (item_design §1 「무기 옵션」 · R78)', () => {
     const groups = Object.values(WG).filter(g => g.release === 'main');
@@ -4812,8 +4916,8 @@ check('runtime: atk_pct 창은 회복 밑수(matkMin·matkMax)도 같은 괄호�
     return 'matk 100~200 → 125~250(창 25%) → 100~200(창 제거) · 공격력과 같은 괄호';
 });
 
-check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** · **v25 는 리포트의 경험치를 영웅별 `xp` 로 가르고 `run.active` 를 더한다(원정은 라운드 단위 — 런 핸들은 세이브에 안 든다 · R89)** · **v26 은 무기의 `watk` 를 지운다(무기 피해는 범위이고 파생 — R90)** · **v27 은 필드를 안 늘린다(장비 옵션 값을 정수로 반올림 — 2026-09-16)** · **v28 은 필드를 안 늘린다(방어구 고유값 재계산 — R107)** · **v29 는 필드를 안 늘린다(퍼센트 접사 값을 비율로 — R111)** · **v30 은 필드를 안 늘린다(옛 방어구에 고정 옵션 · 죄종 칸 · 고유값 재계산 — 2026-09-18)** (R59 · INTERFACE §4)', () =>
-    SAVE_VERSION === 30 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** · **v25 는 리포트의 경험치를 영웅별 `xp` 로 가르고 `run.active` 를 더한다(원정은 라운드 단위 — 런 핸들은 세이브에 안 든다 · R89)** · **v26 은 무기의 `watk` 를 지운다(무기 피해는 범위이고 파생 — R90)** · **v27 은 필드를 안 늘린다(장비 옵션 값을 정수로 반올림 — 2026-09-16)** · **v28 은 필드를 안 늘린다(방어구 고유값 재계산 — R107)** · **v29 는 필드를 안 늘린다(퍼센트 접사 값을 비율로 — R111)** · **v30 은 필드를 안 늘린다(옛 방어구에 고정 옵션 · 죄종 칸 · 고유값 재계산 — 2026-09-18)** · **v31 은 아이템에 이름의 죄종 단어 `words` 를 더한다(「A와 B의 베이스」 — 2026-09-19 · R118)** (R59 · INTERFACE §4)', () =>
+    SAVE_VERSION === 31 || fail(`v${SAVE_VERSION}`));
 
 /**
  * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.
@@ -4887,6 +4991,70 @@ check('skill: previewOf 확률은 1(= 100%) 에서 자른다 — parts.procChanc
     const low = S.previewOf(def, { atkMin: 100, atkMax: 100, stats: { ...stats, luck: 1 } }).parts.procChance.value;
     if (Math.abs(low - (raw + 0.2)) > 1e-9) fail(`1 아래는 그대로여야 한다 ${low} ≠ ${raw + 0.2}`);
     return `원값 ${raw} · 민 값 ${pushed} → 설명창 ${pc.value} · 운 1 이면 ${low}`;
+});
+check('tip: 영웅 첫 장은 착용 장비 · Alt 는 장비를 둔 채 세부 옵션 둘만 추가 · Basic Stats 는 숨긴다 (ADR-0171)', () => {
+    const h = G.heroes[0], combat = SYS.game.heroCombat(G, h), findItem = uid => G.items[uid] ?? null;
+    const alt = on => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { key: 'Alt' }));
+    const base = heroTipCard(h, combat, findItem);
+    if (!base.classList.contains('equipment')) fail('장비 전용 너비 클래스가 없다');
+    if (!base.querySelector('.tip-equipment')) fail('첫 장에 착용 장비가 없다');
+    if (!base.querySelector('.tip-equipment-face')) fail('장비 화면 레이어가 없다');
+    if (!base.querySelector('.tip-equipment-probe')) fail('기본 높이를 잡는 세부 옵션 1 기준이 없다');
+    if (base.querySelector('.attr-list')) fail('첫 장에 Basic Stats 가 남았다');
+    if (base.querySelector('.tip-unit-col.d1, .tip-unit-col.d2')) fail('기본 상태에 세부 옵션이 섰다');
+    if (base.querySelectorAll('.tip-equipment .pd-cell').length !== 8) fail('착용 위치가 8칸이 아니다');
+    const worn = Object.values(h.equipped).filter(uid => findItem(uid)).length;
+    if (base.querySelectorAll('.tip-equipment .pd-cell.filled').length !== worn) fail('착용한 개체 수와 찬 칸 수가 다르다');
+    let held;
+    try {
+        alt(true);
+        held = heroTipCard(h, combat, findItem);
+    } finally { alt(false); }
+    if (!held.querySelector('.tip-equipment')) fail('Alt 에서 착용 장비가 사라졌다');
+    if (held.querySelector('.tip-equipment-probe')) fail('Alt 에서 높이 기준이 실제 세부 옵션 1과 중복됐다');
+    if (held.querySelector('.attr-list')) fail('Alt 에 Basic Stats 가 섰다');
+    if (held.querySelectorAll('.tip-unit-col.d1, .tip-unit-col.d2').length !== 2) fail('Alt 세부 옵션 두 열이 아니다');
+    const detailRows = held.querySelectorAll('.tip-unit-col.d1 .cs-row, .tip-unit-col.d2 .cs-row').length;
+    if (detailRows !== D.combatStats.filter(s => s.impl).length) fail(`Alt 세부 옵션 ${detailRows}행 — 전체가 아니다`);
+    return `장비 8칸(착용 ${worn}) · Alt 세부 ${detailRows}행`;
+});
+check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover는 옵션 카드를 열고 · 키를 떼면 모두 닫힌다 (ADR-0182)', () => {
+    const h = G.heroes[0], combat = SYS.game.heroCombat(G, h), findItem = uid => G.items[uid] ?? null;
+    const tip = document.createElement('div'), node = document.createElement('div');
+    tip.id = 'tooltip'; document.body.append(tip, node);
+    const itemCardOf = uid => {
+        const card = document.createElement('div');
+        card.className = 'tip-card';
+        card.dataset.testItem = uid;
+        card.textContent = `options:${uid}`;
+        return card;
+    };
+    bindTipNode(node, () => heroTipCard(h, combat, findItem, itemCardOf), { anchor: true, holdOnAlt: true });
+    const alt = on => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { key: 'Alt' }));
+    try {
+        node.onmouseenter(new MouseEvent('mouseenter', { clientX: 10, clientY: 10 }));
+        alt(true);
+        if (!tip.classList.contains('interactive')) fail('Alt 를 누르자 툴팁이 포인터를 받지 않는다');
+        node.onmouseleave(new MouseEvent('mouseleave', { relatedTarget: document.body, clientX: 20, clientY: 20 }));
+        if (!tip.classList.contains('show')) fail('Alt 를 누른 채 영웅 밖으로 나가자 닫혔다');
+        const cell = tip.querySelector('.tip-equipment .pd-cell.filled');
+        if (!cell?.classList.contains('tip-optionable')) fail('찬 장비 칸에 옵션 hover가 연결되지 않았다');
+        cell.onmouseenter(new MouseEvent('mouseenter', { clientX: 30, clientY: 30 }));
+        const itemTip = document.querySelector('#equipment-item-tooltip');
+        if (!itemTip?.classList.contains('show')) fail('찬 장비에 올렸는데 옵션 카드가 뜨지 않았다');
+        if (itemTip.querySelector('.tip-card')?.dataset.testItem !== cell.dataset.equippedItem) fail('올린 장비와 옵션 카드가 다르다');
+        cell.onmouseleave(new MouseEvent('mouseleave', { relatedTarget: document.body }));
+        if (itemTip.classList.contains('show')) fail('장비 칸에서 나왔는데 옵션 카드가 남았다');
+        cell.onmouseenter(new MouseEvent('mouseenter', { clientX: 30, clientY: 30 }));
+        alt(false);
+        if (tip.classList.contains('show')) fail('영웅 밖에서 Alt 를 뗐는데 남았다');
+        if (tip.classList.contains('interactive')) fail('Alt 를 뗐는데 툴팁이 포인터를 계속 받는다');
+        if (itemTip.classList.contains('show')) fail('Alt 를 뗐는데 장비 옵션 카드가 남았다');
+    } finally {
+        alt(false);
+        tip.remove(); node.remove(); document.querySelector('#equipment-item-tooltip')?.remove();
+    }
+    return 'Alt hold → 이탈 유지 → 장비 hover 옵션 → mouseleave/keyup 닫힘';
 });
 check('tip: 스킬 문장 — 37행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {
     const ctx = { period: 2.4, atkMin: 400, atkMax: 400, atkType: 'physical' };

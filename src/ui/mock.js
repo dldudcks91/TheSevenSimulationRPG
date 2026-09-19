@@ -394,7 +394,7 @@ export const ITEM_BASE_ART_IDS = ['armor_cloth', 'armor_robe_1', 'armor_robe_2',
  * 목록 순서 = 대역 순(기본 → ①-A · ①-B → ②-A · ②-B → ③-A · ③-B) — `item_design.md` §1 「이름 — 9군」 표의 행 순서다.
  */
 export const WEAPON_BASE_DIR = './assets/art/icons/items/weapon_base/';
-/** 베이스 그림이 있는 무기군 → 그 7장의 파일 stem. 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
+/** 베이스 그림이 있는 무기군 → 그 7장의 파일 stem. 키 순서는 도감의 묶음 순서다(활 다음 석궁 · ADR-0180). 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
 export const WEAPON_BASE_STEMS = {
     sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
     axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator'],
@@ -402,11 +402,11 @@ export const WEAPON_BASE_STEMS = {
     mace: ['club', 'flanged_mace', 'reinforced_mace', 'battle_hammer', 'legendary_mallet', 'war_club', 'ogre_maul'],
     spear: ['pike', 'thresher', 'giant_thresher', 'halberd', 'cryptic_axe', 'lance', 'war_pike'],
     bow: ['short_bow', 'long_bow', 'great_bow', 'rune_bow', 'diamond_bow', 'gothic_bow', 'hydra_bow'],
+    crossbow: ['crossbow', 'light_crossbow', 'chu_ko_nu', 'heavy_crossbow', 'ballista', 'demon_crossbow', 'colossus_crossbow'],
     staff: ['short_staff', 'long_staff', 'gnarled_staff', 'gothic_staff', 'elder_staff', 'rune_staff', 'archon_staff'],
     orb: ['eagle_orb', 'heavenly_stone', 'demon_heart', 'sacred_globe', 'eldritch_orb', 'swirling_crystal', 'dimensional_shard'],
     crucifix: ['scepter', 'divine_scepter', 'caduceus', 'rune_scepter', 'mighty_scepter', 'grand_scepter', 'seraph_rod'],
     bible: ['psalter', 'breviary', 'missal', 'lectern_bible', 'great_bible', 'wicked_bible', 'apocrypha'],
-    crossbow: ['crossbow', 'light_crossbow', 'chu_ko_nu', 'heavy_crossbow', 'ballista', 'demon_crossbow', 'colossus_crossbow'],
 };
 export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}.png` : null;
 /**

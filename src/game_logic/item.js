@@ -4,10 +4,12 @@
  * 순수 모듈. 데이터는 생성자 주입, 난수는 rng 인자.
  *
  * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v,src}], sins:[sin...],
+ *            words:[단 번호...](이름에 쓴 죄종 단어 — sins 와 같은 길이 · 2026-09-19),
  *            group?(무기군 id — weapon_group.csv),
  *            skill?(무기가 담은 액티브 id — 무기만 · 2026-09-09),
  *            baseId?(베이스 id — 무기는 weapon_base.csv(그 무기군에 풀이 있을 때만 · 2026-09-10) · 방어구 · 장신구는 item_base.csv(2026-09-17)) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
+ *   name 은 `sins` · `words` · 베이스로 조립한 **결과**다 — 죄종 단어의 자리는 `words` 와 naming.sinPhrase 가 다시 낸다.
  *   (CSV 로 이사할 때 stat id 가 곧 combat_stat.csv 의 키가 된다)
  *   무기의 행동 주기·공격 타입·착용 직업은 아이템에 박지 않는다 — 매번 무기군(group)에서 읽는다. SSOT 는 weapon_group.csv.
  *
@@ -76,7 +78,7 @@ import { createFormula } from './formula.js';
  *                         한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다 · **장갑 행은 없다**(`SIN_FROM_WEAPON`) · **행 순서가 결정론 계약**
  *   armorCommonOptions — [{slot, group, family, stat, scale, min, max, perIlvl?}] ← armor_common_option.csv — 방어구 공통옵션 후보 (2026-09-18).
  *                         `group` = `all` 또는 그 부위의 갈래 id · **행 순서가 결정론 계약**
- *   composeName  — (prefixSin, base, suffixSin|null) → {ko,en}
+ *   naming       — game_logic/naming.js 의 조립기 — `composeName(prefixSin, base, suffixSin|null, words)` · `wordCount(sin)` · `baseOf(name, sins)`(이관)
  */
 export function createItemSystem(data) {
     const B = data.balance;
@@ -86,6 +88,17 @@ export function createItemSystem(data) {
     const groupDef = (slot, group) => (group ? AG[slot]?.[group] ?? null : null);
     const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
+    const N = data.naming;
+    /**
+     * 죄종 하나를 굴린다 — **그 굴림의 남은 자리(소수부)로 이름 단어의 단 번호도 낸다** [2026-09-19 · item_design §1 「이름」 · INTERFACE §2-5 `words`].
+     * `r` 이 균등이면 `frac(r × 후보 수)` 도 균등이고 고른 죄종과 독립이라 **단어 넷 중 균등**이 된다 — rng 를 더 쓰지 않아 소비 순서가 그대로다(§5-2).
+     * ⚠ 임시(사용자 지시 — 밸런싱 전) · 목표는 레벨 구간(`sin_word.csv:tier_min_ilvl`)이다
+     */
+    const pickSin = (rng, arr) => {
+        const x = rng() * arr.length, i = Math.floor(x), sin = arr[i];
+        const n = N.wordCount(sin);
+        return { sin, word: Math.min(n - 1, Math.floor((x - i) * n)) };
+    };
 
     /** 베이스 능력치가 없는 부위 — 무기(피해 범위)도 방어구(고유값)도 아닌 둘. 고유값 굴림과 강화가 같은 판정을 쓴다 (R95) */
     const baseless = slot => slot === 'amulet' || slot === 'ring';
@@ -310,20 +323,25 @@ export function createItemSystem(data) {
         // 죄종 수는 희귀도가 정한다 — 일반 0 · 매직 1 · 레어 2 (item_design §1 확정 2026-09-11 · 계승 TheSevenRPG 규칙 채택 · 일반 2026-09-14 R86).
         //   **일반은 접두도 굴리지 않는다** — 레어가 접미를 한 번 더 굴리는 것과 같은 규칙이다(희귀도가 소비 수를 정한다 · INTERFACE §5-2).
         //   ~~레어 접미 확률 판정(suffix_sin_chance_pct)~~ 은 08-25 초반 루프의 임시값이라 걷었다 — 판정 rng 1회가 함께 빠졌다
-        const prefix = rarity === 'normal' ? null : pick(rng, data.sins);
-        const suffix = rarity === 'rare' ? pick(rng, data.sins.filter(s => s !== prefix)) : null;
+        //   이름 단어의 단 번호는 같은 굴림의 소수부에서 낸다(`pickSin`) — 소비 수는 그대로다 (2026-09-19)
+        const pre = rarity === 'normal' ? null : pickSin(rng, data.sins);
+        const prefix = pre?.sin ?? null;
+        const suf = rarity === 'rare' ? pickSin(rng, data.sins.filter(s => s !== prefix)) : null;
+        const suffix = suf?.sin ?? null;
         const sins = [prefix, suffix].filter(Boolean);
+        const words = [pre, suf].filter(Boolean).map(x => x.word);
         const item = {
             uid: null,
             slot, rarity, ilvl,
             up: 0,                             // 강화 단계 — 드롭은 굴리지 않는다. 올리는 것은 upgrade 하나뿐
-            name: data.composeName(prefix, base, suffix),
+            name: N.composeName(prefix, base, suffix, words),
             implicit: null,
             // 무기(R78) · 방어구(2026-09-18)는 세 층 · 목걸이 · 반지는 affix.csv 한 풀 — 셋 다 베이스 · 스킬 굴림보다 **앞**에서 굴린다 (§5-2)
             affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, rarity, ilvl)
                 : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, rarity, ilvl)
                     : rollAffixes(rng, slot, ilvl, affixCount(rng, rarity)),
             sins,
+            words,                             // 이름의 죄종 단어 — sins 와 같은 길이 (2026-09-19)
         };
         if (slot === 'weapon') {
             item.group = base.id;
@@ -335,7 +353,7 @@ export function createItemSystem(data) {
             const wbase = bases.length ? bases[Math.floor(br * bases.length)] : null;
             if (wbase) {
                 item.baseId = wbase.id;
-                item.name = data.composeName(prefix, wbase, suffix);  // 이름은 베이스 이름으로 다시 조립 — 무기군 이름을 덮는다
+                item.name = N.composeName(prefix, wbase, suffix, words);  // 이름은 베이스 이름으로 다시 조립 — 무기군 이름을 덮는다
             }
             // ~~무기 공격력 = 밑수 × 성장 곡선 × 개체 편차~~ **2026-09-14 폐지 · R90** (battle_design §9-1) — 무기 피해는 박지 않는다.
             //   범위는 무기군 × ilvl × 강화 단계가 정하고(`weaponDamage` · formula.weaponDamage) **rng 소비 1회가 빠졌다**(INTERFACE §5-2)
@@ -478,6 +496,21 @@ export function createItemSystem(data) {
         return out;
     }
 
+    /**
+     * 옛 아이템의 이름 단어 · 새 형식 이름 — **세이브 이관 전용**이다 (`state.js upgradeV30` · 2026-09-19 · item_design §1 「이름」).
+     * 단 번호는 `legacyWeaponLayers` 와 **같은 규칙** — rng 를 안 쓰고 칸마다 `(uid 번호 + 칸 순번) % 단어 수`다.
+     * 이름은 옛 이름에서 베이스를 떼어(`naming.baseOf` — 09-11 태그형 · 그 전 문장형) 다시 조립한다 — **못 알아보면 옛 이름 그대로**다
+     */
+    function legacyName(item) {
+        const sins = item?.sins ?? [];
+        if (!sins.length) return { words: [], name: item?.name };
+        const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
+        const num = Number.isFinite(n) ? n : 0;
+        const words = sins.map((sin, i) => (num + i) % N.wordCount(sin));
+        const base = N.baseOf(item.name, sins);
+        return { words, name: base ? N.composeName(sins[0], base, sins[1] ?? null, words) : item.name };
+    }
+
     /** 무기군 정의 — 무기가 아니거나 모르는 군이면 null */
     const groupOf = item => (item && item.slot === 'weapon' ? WG[item.group] : null) ?? null;
 
@@ -503,7 +536,7 @@ export function createItemSystem(data) {
         if (!g || item?.slot !== 'weapon') return item;
         item.group = groupId;
         const [pre, suf] = item.sins ?? [];
-        if (pre) item.name = data.composeName(pre, g, suf ?? null);
+        if (pre) item.name = N.composeName(pre, g, suf ?? null, item.words ?? []);
         return item;
     }
 
@@ -563,5 +596,5 @@ export function createItemSystem(data) {
         return implicitFor(item.slot, item.ilvl, item.group ?? null).v;
     };
 
-    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
+    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, legacyName, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
 }

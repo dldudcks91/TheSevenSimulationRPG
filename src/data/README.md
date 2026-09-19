@@ -28,7 +28,7 @@
 - 숫자로 읽히는 셀은 **숫자**로 변환된다. `0`/`1` 불리언은 `=== 1` 로 비교한다
 - 빈 셀은 빈 문자열이다 — `=== 0` 이 아니라 `undefined`/`''` 를 다뤄야 한다
 
-## 파일 (40종 — 로더가 전부 읽는다)
+## 파일 (44종 — 로더가 전부 읽는다)
 
 | 파일 | 행 | 내용 |
 |---|---|---|
@@ -55,6 +55,7 @@
 | `class.csv` | 7 | **직업** (hero_design §2) — 본편 5 + 확장 2. `key_attr` = 이 직업을 미는 기본 능력치(생성 굴림이 이 축을 최고치로 민다) · `release`(main/expansion — `weapon_group.csv` 와 같은 어휘. `stage` 는 스테이지를 뜻해 안 쓴다). 무기군은 여기 없다 — 직업 전속 배정은 `weapon_group.csv:classes` 가 SSOT. **행 순서 = 표시 순서** |
 | `equip_slot.csv` | 8 | **장비 부위 7 + 착용 위치 8을 한 표로** (item_design §1 · 반지 ×2 · 2026-09-01 보조 삭제). `slot_order` = 착용 위치 순서(세이브 `equipped` 의 키) · `part_order` = 부위 순서(`ring2` 는 `ring1` 과 같은 부위라 `-`). 드롭·접사·필터는 **부위**, 페이퍼돌·`equipped` 는 **위치**. ⚠ 부위 순서가 드롭 굴림의 결정론에 걸린다 |
 | `item_base.csv` | 42 | **아이템 베이스 이름** — 갑옷 10 · 투구 10(시작 1 + 갈래 3 × 티어 3) · 장갑 7 · 신발 7(시작 1 + 갈래 2 × 티어 3 · 2026-09-18) + 목걸이 · 반지 각 4. **무기는 없다**(무기의 베이스는 무기군 자체 = `weapon_group.csv`). 이름 조립은 `game_logic/naming.js`. ⚠ 부위별 행 순서가 결정론에 걸린다 · 수치 근거 없는 임시 이름 풀이다 |
+| `sin_word.csv` | 28 | **아이템 이름의 죄종 단어** (item_design §1 「이름」 확정 2026-09-19) — 죄종 7 × 단 4. `word_id,sin,tier,tier_min_ilvl,name_kr,name_en,description_kr`. `name_en` = **형용사**(Raging) · `name_kr` = **명사**(격노 — 조립이 「의」를 붙인다) · 첫 단은 원래 죄종 이름(`ui/mock.js:SINS` 의 `adj` · `ko` 와 같다). 로더는 죄종마다 `tier` 로 정렬해 읽고 **죄종마다 단이 1 부터 같은 수만큼 있지 않으면 멈춘다** — 행 순서는 계약이 아니지만 **단의 순서는 계약이다**(드롭이 단 번호를 굴린다 · INTERFACE §5-2). ⚠ `tier_min_ilvl` 은 **아직 안 읽는다** — 목표는 레벨 구간이고 밸런싱 전까지는 넷 중 균등이다 |
 | `weapon_sin_option.csv` | 12 | **무기 죄종 칸 후보** (item_design §1 「무기 옵션」 · 2026-09-11 R78) — `sin` · `applies_to`(`all` / 무기군 `damage_kind` / 직업 id — 시기 칸이 물리 · 마법사 · 사제로 갈린다) · `stat` · `scale`(`flat` = 1% 단위 / **`fine`** = 0.1% 단위 — 둘 다 비율) · `min` · `max`. 한 죄종 · 한 무기군에 행이 여럿이면 그중 하나를 굴린다(탐욕 셋 · 시기-사제 둘). 로드 검증은 `item.js`. ⚠ 수치는 전부 제안 · 행 순서가 결정론에 걸린다 |
 | `weapon_common_option.csv` | 13 | **무기 통합옵션 후보** (같은 절) — `family`(종류 — **종류를 먼저 뽑고 그 안에서 변형**) · `stat` · `applies_to` · `scale` · `min` · `max`. 개수는 `[balance.csv:weapon_common_opt_normal]` · `_magic` · `_rare`. ⚠ 보류 셋(최소/최대 피해 · 원소 피해 추가 · 타격 시 발동)은 행이 없다 · 수치는 전부 제안 · 행 순서가 결정론에 걸린다 |
 | `armor_sin_option.csv` | 30 | **방어구 죄종 칸 후보** (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 신발 행 · 2026-09-18) — `slot`(armor · helmet · boots — **장갑 행은 없다**: 장갑은 `weapon_sin_option.csv` 를 그대로 읽는다 ⚠임시) · `sin` · `stat` · `scale` · `min` · `max` · `per_ilvl`(`band` 행만 — **0 이면 아이템 레벨과 무관한 정수**: 레벨당 방어력 · 레벨당 체력). 한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다(탐욕 셋 · 투구 시기 원소 넷). `counter_chance` 의 `max` 는 1 미만(로드 검증). ⚠ 수치는 전부 ⚠제안 · 행 순서가 결정론에 걸린다 |
@@ -89,4 +90,4 @@
 - 계승 데이터의 빈 구멍: [inherited_data_gaps.md](../../docs/reference/inherited_data_gaps.md)
 
 ---
-*마지막 업데이트: 2026-09-18*
+*마지막 업데이트: 2026-09-19*

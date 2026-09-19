@@ -6,7 +6,8 @@
  * `build()` 가 붙일 노드를 돌려준다.
  *
  * 다만 **영웅 카드 · 스킬 카드는 여기 둔다**: 두 렌더러가 같은 카드를 띄우기 때문이다(영웅 띠 ↔ 관전 유닛 카드).
- * 몬스터 카드(관전 적 카드 · 2026-09-14)도 여기 있다 — 영웅 카드와 몸통이 하나다(유닛 카드 · ADR-0114).
+ * 몬스터 카드(관전 적 카드 · 2026-09-14)도 여기 있다 — 유닛 카드의 껍데기와 세부 옵션 조립은 같고 첫 장만
+ * 영웅 = 착용 장비 · 몬스터 = 기본 옵션으로 갈린다(ADR-0171).
  * 그 몸통의 줄 조립(`attrRowsHtml` · `sheetRowsHtml`)은 **캐릭터 탭의 기본 옵션 · 세부 옵션도 부른다** — 두 자리가 한 표기다.
  * 아이템 비교 카드는 `app.js` 에 남는다 — 희귀도 · 접사 · 무기군처럼 app 쪽 헬퍼를 많이 타서 옮기면 그게 따라온다.
  *
@@ -46,17 +47,20 @@ const skillImg = s => {
  * @param build () => Node | Node[]
  * @param anchor true 면 커서가 아니라 **node 옆**에 선다 — 유닛 카드(관전 · 출정 창 띠)만 준다.
  *   크고 오래 읽는 카드라 커서를 따라가면 읽는 동안 흔들린다 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0120)
+ * @param holdOnAlt true 면 Alt 를 누르는 동안 node 밖으로 나가도 닫지 않고 툴팁이 포인터를 받는다 — 영웅 장비 · 세부 옵션 카드만 준다 (ADR-0171 · ADR-0176)
  */
-export function bindTipNode(node, build, { anchor = false } = {}) {
+export function bindTipNode(node, build, { anchor = false, holdOnAlt = false } = {}) {
     node.dataset.tip = '1';
     node._tipBuild = build;
     node._tipAnchor = anchor;
+    node._tipHoldOnAlt = holdOnAlt;
     node.onmouseenter = ev => openTip(node, ev);
     node.onmousemove = moveTip;
     node.onmouseleave = ev => {
         const up = node.parentElement?.closest('[data-tip]');
         // 카드 속 칸(스킬)에서 카드로 돌아오면 카드의 툴팁이 **카드의 자리 규칙**으로 다시 선다
         if (up?._tipBuild && ev.relatedTarget && up.contains(ev.relatedTarget)) openTip(up, ev);
+        else if (altHeld && node._tipHoldOnAlt && anchorNode === node) return;
         else hideTip();
     };
 }
@@ -82,9 +86,11 @@ function openTip(node, ev) {
 function showTip(content, ev) {
     const tip = $tip();
     if (!tip) return;
+    hideEquipmentItemTip();
     tip.innerHTML = '';
     for (const n of [].concat(content)) if (n) tip.appendChild(n);
     tip.classList.add('show');
+    syncTipInteraction();
     moveTip(ev);
 }
 
@@ -154,16 +160,95 @@ export function moveTip(ev) {
     tip.style.top = Math.max(8, y) + 'px';
 }
 
-export function hideTip() { anchorNode = null; $tip()?.classList.remove('show'); }
+export function hideTip() {
+    anchorNode = null;
+    hideEquipmentItemTip();
+    $tip()?.classList.remove('show', 'interactive');
+}
+
+/** 영웅 툴팁의 장비 hover가 쓰는 **별도** 아이템 설명창 — 부모 폭을 바꾸면 칸이 움직여 hover가 끊기므로 형제로 띄운다 (ADR-0182). */
+const $equipmentItemTip = () => document.querySelector('#equipment-item-tooltip');
+function equipmentItemTipHost() {
+    let host = $equipmentItemTip();
+    if (host) return host;
+    host = el('div', 'tooltip equipment-item-tooltip');
+    host.id = 'equipment-item-tooltip';
+    ($tip()?.parentElement ?? document.body).appendChild(host);
+    return host;
+}
+
+function hideEquipmentItemTip() {
+    $tip()?.querySelector('.tip-equip-active')?.classList.remove('tip-equip-active');
+    const host = $equipmentItemTip();
+    if (!host) return;
+    host.classList.remove('show');
+    host.innerHTML = '';
+}
+
+/** 기존 아이템 카드 한 장을 장비 칸 가까이 놓되 한 장 밖으로는 내보내지 않는다. */
+function showEquipmentItemTip(content, cell) {
+    hideEquipmentItemTip();
+    if (!altHeld || !content || !cell) return;
+    const host = equipmentItemTipHost();
+    host.appendChild(content);
+    host.classList.add('show');
+    host.style.left = '0px';
+    host.style.right = '';
+    host.style.top = '0px';
+
+    const parent = stageRect($tip()), at = stageRect(cell);
+    const tw = host.offsetWidth, th = host.offsetHeight;
+    // 영웅 카드에서 먼 바깥쪽을 먼저 쓴다. 안 들어가면 반대편, 그래도 넘치면 한 장 안으로 민다.
+    let x = anchorSide === 'right' ? parent.right + 8 : parent.left - tw - 8;
+    if (anchorSide === 'right' && x + tw > at.w - 8) x = parent.left - tw - 8;
+    if (anchorSide === 'left' && x < 8) x = parent.right + 8;
+    x = Math.max(8, Math.min(x, Math.max(8, at.w - tw - 8)));
+    const y = Math.max(8, Math.min(at.top, Math.max(8, at.h - th - 8)));
+    host.style.left = `${x}px`;
+    host.style.top = `${y}px`;
+    cell.classList.add('tip-equip-active');
+}
 
 /* ───────── 카드 — 두 렌더러가 함께 쓴다 ───────── */
 
 // 등급 표기 — SSOT 는 `hero_tier.csv` 다 (2026-09-08 R48 · ~~mock.js:HERO_TIER~~ 대체 · app.js 와 같은 규칙)
 const tierOf = h => D.heroTiers.find(t => t.id === h.tier) ?? D.heroTiers.find(t => t.id === 'rare') ?? D.heroTiers[0];
 
+/* 영웅 툴팁의 첫 장 — 캐릭터 탭 페이퍼돌과 같은 배치 · 같은 그림 · 같은 모서리 배지다 (ADR-0171).
+   Alt 동안만 툴팁이 포인터를 받아 칸 hover를 확인할 수 있다(ADR-0176). 장착은 아래 보관 칸이 맡는다. */
+const tipSlotDef = id => D.slots.find(s => s.id === id);
+const tipPosDef = pos => tipSlotDef(D.equipSlots.find(s => s.id === pos)?.part);
+const tipItemImg = it => {
+    const src = M.itemArt(it?.slot, it?.group, it?.uid, it?.baseId);
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : (tipSlotDef(it?.slot)?.icon ?? '');
+};
+function equipmentHtml(h, itemOf) {
+    const cells = [];
+    for (const row of M.PAPERDOLL) for (const pos of row) {
+        if (!pos) { cells.push('<div class="pd-gap"></div>'); continue; }
+        const def = tipPosDef(pos);
+        const it = itemOf?.(h.equipped?.[pos]) ?? null;
+        if (!it) {
+            const art = M.slotArt(def?.id);
+            cells.push(`<div class="pd-cell${art ? ' art' : ''}">${art
+                ? `<span class="pd-art"><img src="${art}" alt="" loading="lazy" onerror="this.remove()"></span>`
+                : `<div class="pd-icon">${def?.icon ?? ''}</div>`}</div>`);
+            continue;
+        }
+        const rare = M.RARITY[it.rarity] ?? M.RARITY.magic;
+        cells.push(`<div class="pd-cell filled" data-equipped-item="${it.uid}" style="border-color:${rare.color}">
+            <div class="pd-icon">${tipItemImg(it)}</div>
+            ${(it.up ?? 0) > 0 ? `<span class="pd-up">+${it.up}</span>` : ''}
+            <span class="pd-lv">${t('ch.itemLv', { n: it.ilvl })}</span>
+        </div>`);
+    }
+    return `<div class="tip-col-h">${t('ch.gear.h')}</div><div class="tip-equipment paperdoll">${cells.join('')}</div>`;
+}
+
 /* ───────── 유닛 카드 — 영웅 · 몬스터 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114) ─────────
-   몸통은 **캐릭터 탭의 두 표기 그대로**다 — 왼쪽 「기본 옵션」 막대 줄 · Alt 를 누르는 동안 오른쪽 「세부 옵션」 행.
-   줄 조립은 **여기 한 곳**이고 캐릭터 탭(app.js attrPanel · detailPanels)도 이것을 부른다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 */
+   영웅 첫 장은 착용 장비이고 Alt 동안 세부 옵션 두 열만 더 선다(ADR-0171). 몬스터는 기존 기본 옵션 + Alt 세부 옵션이다.
+   Basic Stats 조립은 **지우지 않는다** — 몬스터가 계속 쓰고 영웅에서도 나중에 되살릴 수 있다.
+   옵션 줄 조립은 여기 한 곳이고 캐릭터 탭(app.js attrPanel · detailPanels)도 이것을 부른다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 */
 
 /**
  * 세부 옵션 머리 — 대표값 몇 줄을 굵게 찍고 그 아래 간격을 둔다 (`sheet_order` 1..N · 구분선은 2026-09-15 사용자 지시로 걷었다).
@@ -241,50 +326,74 @@ export const sheetPages = () => {
 };
 
 /**
- * 유닛 카드 뼈대 — 기본 옵션 막대 + **대표값 3줄**(Alt 와 무관하게 선다 · ADR-0119).
+ * 유닛 카드 뼈대 — 영웅은 착용 장비, 몬스터는 기본 옵션 막대 + 대표값 3줄을 첫 장으로 쓴다.
  * **이름 · 소속 줄은 없다** — 툴팁은 올린 카드 바로 옆에 붙어 뜨고(ADR-0120) 그 카드의 이름 줄 · 위칸이 이미 든다 (ADR-0134).
  * 무엇의 툴팁인지는 윗변 색과 붙은 자리가 말한다.
  * **Alt 를 누르는 동안만** 세부 옵션 두 열이 서고 각주가 걷힌다 — 두 열은 캐릭터 탭 세부 옵션 1 · 2 와 같은 자리에서 끊고 열 이름도 같되,
- * 대표값 3줄은 기본 옵션 열이 들므로 **빼고** 찍는다(나란히 두 번 서지 않게). 한 열로 이으면 스무 줄이 넘어 카드가 아레나를 세로로 덮었다 (ADR-0115).
+ * 영웅은 대표값까지 포함한 전 행, 몬스터는 첫 장과 겹치는 대표값 3줄을 뺀 행을 찍는다. 한 열로 이으면 스무 줄이 넘어 카드가 아레나를 세로로 덮었다 (ADR-0115 · ADR-0171).
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 `_rebuild` 로 **같은 인자로** 다시 만든다 — 스킬 카드와 같은 장치다.
  * @param color 막대 색 = 윗변 색(CSS 값)
  * @param cls   카드에 더할 클래스 — 어두운 등급 색이면 `bar-lift`(막대만 밝힌다 · style.css)
+ * @param itemCardOf 영웅 장비 uid → 기존 「착용 중」 아이템 카드. 앱이 아이템 표기를 주입한다(ADR-0182)
  */
-function unitCard(stats, color, sheet, rebuild, cls = '') {
+function unitCard(stats, color, sheet, rebuild, cls = '', equipment = '', itemCardOf = null) {
     // `grow-left` — 툴팁이 카드 **왼쪽**에 섰다(`openTip` 이 짓기 전에 정한다): 세부 옵션 열이 기본 옵션의 왼쪽에 선다 (ADR-0126).
     //   열 자리는 CSS 격자가 정하고 DOM 순서는 그대로다
     const side = anchorSide === 'left' ? ' grow-left' : '';
-    const c = el('div', `tip-card unit${altHeld ? ' alt' : ''}${side}${cls ? ` ${cls}` : ''}`);
+    // 장비 · 세부 옵션 1 · 2 는 같은 278px 열이다. 기본 상태 높이도 보이지 않는 세부 옵션 1이 잡는다 (ADR-0176).
+    const c = el('div', `tip-card unit${equipment ? ' equipment' : ''}${altHeld ? ' alt' : ''}${side}${cls ? ` ${cls}` : ''}`);
     c.dataset.alt = '1';
     c._rebuild = rebuild;
     c.style.setProperty('--unit-line', color);   // 윗변 3px — 관전 카드 · 띠 카드의 윗변과 같은 색이라 어느 카드의 툴팁인지 잇는다
     const isLead = s => s.sheetOrder <= DETAIL_LEAD;
-    const pages = altHeld ? sheetPages().map((rows, i) => `
+    const detailPages = sheetPages();
+    const pages = altHeld ? detailPages.map((rows, i) => `
             <div class="tip-unit-col d${i + 1}">
                 <div class="tip-col-h">${t('ch.detail.hn', { n: i + 1 })}</div>
-                <div class="tip-sheet">${sheetRowsHtml(rows.filter(s => !isLead(s)), sheet)}</div>
+                <div class="tip-sheet">${sheetRowsHtml(equipment ? rows : rows.filter(s => !isLead(s)), sheet)}</div>
             </div>`).join('') : '';
+    // 영웅은 장비 첫 장만 쓴다. 아래 Basic Stats 몸통은 몬스터와 향후 영웅 복원용으로 그대로 살려 둔다 (ADR-0171).
+    // 기본 상태의 숨은 세부 옵션 1은 **높이 기준**일 뿐 화면·접근성 트리에는 보이지 않는다. 언어와 값이 바뀌어도 실제 세부 옵션 1과 정확히 같은 높이다 (ADR-0176).
+    const foot = `<div class="tip-foot">${t('tip.unit.altHint')}</div>`;
+    const base = equipment ? `
+                <div class="tip-equipment-face">
+                    ${equipment}
+                    ${altHeld ? '' : foot}
+                </div>
+                ${altHeld ? '' : `<div class="tip-equipment-probe" aria-hidden="true">
+                    <div class="tip-col-h">${t('ch.detail.hn', { n: 1 })}</div>
+                    <div class="tip-sheet">${sheetRowsHtml(detailPages[0], sheet)}</div>
+                </div>`}` : `
+                <div class="tip-col-h">${t('ch.attr.h')}</div>
+                <div class="attr-list">${attrRowsHtml(stats, color)}</div>
+                <div class="tip-sheet tip-lead">${sheetRowsHtml(sheetStats().filter(isLead), sheet)}</div>`;
     c.innerHTML = `
         <div class="tip-unit">
             <div class="tip-unit-col base">
-                <div class="tip-col-h">${t('ch.attr.h')}</div>
-                <div class="attr-list">${attrRowsHtml(stats, color)}</div>
-                <div class="tip-sheet tip-lead">${sheetRowsHtml(sheetStats().filter(isLead), sheet)}</div>
+                ${base}
             </div>${pages}
         </div>
-        ${altHeld ? '' : `<div class="tip-foot">${t('tip.unit.altHint')}</div>`}`;
+        ${altHeld || equipment ? '' : foot}`;
+    // Alt 동안만 포인터가 열리므로 찬 칸에 기존 아이템 카드 렌더러를 잇는다. 별도 host라 부모 툴팁 폭·칸 자리는 움직이지 않는다 (ADR-0182).
+    if (equipment && itemCardOf) for (const cell of c.querySelectorAll('[data-equipped-item]')) {
+        cell.classList.add('tip-optionable');
+        cell.onmouseenter = () => { if (altHeld) showEquipmentItemTip(itemCardOf(cell.dataset.equippedItem), cell); };
+        cell.onmouseleave = hideEquipmentItemTip;
+    }
     return c;
 }
 
 /**
- * 영웅 카드 — 기본 옵션 · 대표값 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5). 막대 · 윗변 색 = 등급 색(`hero_tier.csv`).
+ * 영웅 카드 — 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0171).
  * 능력치는 `h.stats` 에서 그대로 읽는다. 세부 옵션은 **부르는 쪽이 넘긴다** — `game.heroCombat` 은 상태 `G` 가 있어야 하는데 이 파일은 `G` 를 모른다.
  * 이름 · 직업 · 레벨 · 죄종 · 등급 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134)
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
+ * @param itemOf uid 로 현재 세이브의 아이템을 찾는 함수 — tip.js 는 G 를 모른다
+ * @param itemCardOf uid 로 기존 「착용 중」 아이템 카드를 만드는 함수 — 아이템 옵션 표기는 앱이 든다
  */
-export function heroTipCard(h, combat = null) {
+export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null) {
     if (!h) return null;
-    return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat));
+    return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat, itemOf, itemCardOf), '', equipmentHtml(h, itemOf), itemCardOf);
 }
 
 /** 몬스터 막대 색 = **카드 윗변 색** — 관전 카드가 등급으로 칠하는 토큰 그대로다(style.css `.unit.enemy` · `.unit.elite` · `.unit.boss`) */
@@ -469,17 +578,26 @@ let altHeld = false;
 /** 마지막 마우스 위치 — 다시 그린 카드의 높이가 달라져도 넘침 보정이 맞게 `moveTip` 을 한 번 더 부른다 */
 let lastMove = null;
 
+/** 전역 툴팁은 드래그를 막지 않게 기본 `pointer-events:none`; Alt 로 붙드는 영웅 툴팁만 장비 hover를 위해 연다 (ADR-0176). */
+function syncTipInteraction() {
+    $tip()?.classList.toggle('interactive', !!(altHeld && anchorNode?._tipHoldOnAlt));
+}
+
 function setAlt(on) {
     if (altHeld === on) return;
     altHeld = on;
+    if (!on) hideEquipmentItemTip();
     const tip = $tip();
     if (!tip?.classList.contains('show')) return;
     // 다시 그리는 것 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114) · 아이템 툴팁의 스킬 칸(ADR-0139 — 카드가 아니라 칸이다).
     //   제 인자를 쥔 `_rebuild` 로 같은 것을 새로 만든다
     const cards = tip.querySelectorAll('[data-alt]');
     for (const c of cards) c.replaceWith(c._rebuild());
+    syncTipInteraction();
     // 카드 옆에 붙은 툴팁(ADR-0120)은 마우스 위치 없이도 다시 놓인다 — 넓어진 카드가 넘치면 왼쪽 · 위로 옮긴다
     if (cards.length && (anchorNode || lastMove)) moveTip(lastMove);
+    // Alt 로 영웅 밖에서도 붙들었던 툴팁은 키를 떼는 순간 커서가 영웅 위인지 다시 본다. 밖이면 그때 닫는다 (ADR-0171).
+    if (!on && anchorNode?._tipHoldOnAlt && !anchorNode.matches(':hover')) hideTip();
 }
 
 // Alt 만 기본 동작을 막는다 — 막지 않으면 떼는 순간 브라우저 메뉴로 포커스가 넘어간다.
