@@ -922,6 +922,8 @@ html, body { height: 100%; overflow: hidden; }
     vertical-align: middle;
 }
 .tip-src.sin { border-color: currentColor; }
+/* 「(미적용)」 — 전투가 아직 안 읽는 옵션 줄 끝 (SCREEN_DESIGN §6 · ADR-0213). 값보다 한 단 흐리게 — 줄을 지우지 않고 상태만 알린다 */
+.tip-inert { font-style: normal; font-size: var(--fs-2xs); color: var(--text-muted); }
 /* 하단 태그 줄 — 죄종 태그 + 힌트(반지 칸 · 착용 중 없음). 둘 다 없으면 렌더러가 줄째 안 낸다(구분선만 남으면 안 된다).
    간격은 `gap` 이 든다 — 옛 판은 태그마다 인라인 `margin-right` 였고 힌트는 그 규칙 밖이었다 (2026-09-08) */
 .tip-card .tip-sins {

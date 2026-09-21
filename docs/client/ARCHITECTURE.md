@@ -52,7 +52,7 @@
 
 | 전역 | 정체 | 소유 | 가변성 |
 |---|---|---|---|
-| `D` | 로드된 CSV 파생 데이터 **36 필드** [정정 2026-09-08 — 31 → 36 · CSV 22 → 27 과 같은 원인. 늘어난 것: `commissionKinds` `commissionList` `mineNodes` `skillTagRows` `heroTiers`] — 밸런스(`balance` `balanceRows`) · 전투 소재(`monsters` `stages` `stageList` `stageOrder` `roundTypes` `budgets` `grades` `eliteRounds` `bossRound`) · 도감(`codexLevels` `codexBonus` `codexSeries`) · 챕터(`chapters` `chapterList`) · 능력치(`heroAttributes` `combatStats`) · 무기군(`weaponGroups` `weaponGroupList`) · 스킬·마스터리(`skillRows` `masteryNodes`) · 전술(`tacticSlots` `tacticOptions`) · **장비**(`slots` `equipSlots` `itemBases` `affixDefs`) · **영웅 풀**(`classes` `heroNamePool` `heroTraitPool` `heroTiers`) · 의뢰(`commissionKinds` `commissionList`) · 파견(`mineNodes`) | `ui/data.js` | 부팅 후 읽기 전용 |
+| `D` | 로드된 CSV 파생 데이터 **36 필드** [정정 2026-09-08 — 31 → 36 · CSV 22 → 27 과 같은 원인. 늘어난 것: `commissionKinds` `commissionList` `mineNodes` `skillTagRows` `heroTiers`] — 밸런스(`balance` `balanceRows`) · 전투 소재(`monsters` `stages` `stageList` `stageOrder` `roundTypes` `budgets` `grades` `eliteRounds` `bossRound`) · 도감(`codexLevels` `codexBonus` `codexSeries`) · 챕터(`chapters` `chapterList`) · 능력치(`heroAttributes` `combatStats`) · 무기군(`weaponGroups` `weaponGroupList`) · 스킬·마스터리(`skillRows` `masteryNodes`) · 전술(`tacticSlots` `tacticOptions`) · **장비**(`slots` `equipSlots` `itemBases` · 부위별 옵션 표 — ~~`affixDefs`~~ 는 2026-09-21 R127 퇴역 · 장신구는 `accessorySinOptions` `accessoryCommonOptions` `amuletProcs`) · **영웅 풀**(`classes` `heroNamePool` `heroTraitPool` `heroTiers`) · 의뢰(`commissionKinds` `commissionList`) · 파견(`mineNodes`) | `ui/data.js` | 부팅 후 읽기 전용 |
 | `SYS` | 조립된 시스템 **7개** (`hero` `item` `battle` `skill` `tactic` `game` `formula`) | `ui/data.js` | 무상태 — 함수 묶음 |
 | `G` | 세이브 상태 (JSON 평문) | `ui/app.js` | **유일한 가변 상태.** `null` 이면 시작 화면 |
 
@@ -173,4 +173,4 @@ render()
 
 ---
 
-*마지막 업데이트: 2026-09-14*
+*마지막 업데이트: 2026-09-21*

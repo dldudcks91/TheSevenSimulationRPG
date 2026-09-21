@@ -237,6 +237,8 @@ export function createBattleSystem(data) {
             resMaxEl: c.res_max_el ?? null, drFlat: c.option_fx?.drFlat ?? 0,
             counter: c.option_fx?.counter ?? 0, recv: c.option_fx?.recv ?? 0,
             defIgnore: c.def_ignore, resReduction: c.res_reduction,
+            // 반지 · 목걸이 옵션 [2026-09-21 · R127] — 원소별 저항 무시(`strike` 가 그 타격 원소만 읽는다) · 버프 지속시간(`castBuff` 가 거는 쪽 값을 읽는다). 없으면 null · 0
+            resReductionEl: c.res_reduction_el ?? null, buffDur: c.option_fx?.buffDur ?? 0,
             skillMult: 1, bonusPct: c.dmg_bonus_pct, // 피해량(도감) — 따로 곱한다(2026-09-18) · strike 가 읽는 이름과 같아야 한다
             crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
@@ -268,6 +270,7 @@ export function createBattleSystem(data) {
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
     const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
+        'resReductionEl', 'buffDur',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod', 'fhr',
         'goldFind', 'itemFind', 'fx', 'magicFind', 'stats'];
 

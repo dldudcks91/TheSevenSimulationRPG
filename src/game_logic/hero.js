@@ -460,12 +460,16 @@ export function createHeroSystem(data) {
             recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약에 곱한다(보호막 제외)
             xpGain: f('xp_gain_pct'),            // 경험치 획득 — **본인 몫**(state.advanceRun)
             // ⚠ 빙결 · 중독 시간 감소 — **읽는 곳이 없다**. 상태이상 기계가 서면 그쪽이 읽는다(신발 공통옵션 · 사용자 「풀에 넣어」)
+            //   화상 · 스턴도 같다 — 반지 · 목걸이 공통옵션이 넷을 다 든다 (2026-09-21 · R127)
             freezeDur: f('freeze_dur_reduction'), poisonDur: f('poison_dur_reduction'),
+            burnDur: f('burn_dur_reduction'), stunDur: f('stun_dur_reduction'),
+            // 버프 지속시간 +% — **낀 영웅이 거는 버프 창**이 길어진다(적에게 거는 창 포함 · skill_runtime.castBuff) [2026-09-21 · 반지 · 목걸이 공통옵션 · R127]
+            buffDur: f('buff_dur_pct'),
         };
         const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.xpGain,
-            fx.freezeDur, fx.poisonDur].some(v => v !== 0);
+            fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
             // **원소 옵션이 없는 마법 무기의 기본 공격은 물리다** [개정 2026-09-11 · 사용자 지시 · R80 · battle_design §2-1 · §9-5]
@@ -484,6 +488,8 @@ export function createHeroSystem(data) {
             // 원소별 최대 저항 증가 [2026-09-18 · 투구 시기 칸] — 그 원소의 상한에만 더한다. 시트 행이 아니라 저항 행의 상한 표기와 전투가 읽는다
             res_max_el: Object.fromEntries(ELEMENTS.map(e => [e, f(`res_max_${e}`)])),
             res_reduction: f('res_reduction'),  // 상대 저항을 비율만큼 깎는다 — 관통이 아니라 음수 가산
+            // 원소별 저항 무시 [2026-09-21 · 반지 시기 칸 · R127] — **그 원소의 타격에만** `res_reduction` 위에 더한다(formula.strike). 시트 행이 아니다(`res_max_el` 과 같은 자리)
+            res_reduction_el: Object.fromEntries(ELEMENTS.map(e => [e, f(`res_reduction_${e}`)])),
             def_ignore: f('def_ignore'),
             reflect_damage: f('reflect_damage'),
             // 원천별 곱의 실효값(비율) — 옛 %(소수 3자리)와 같은 정밀도라 5자리다

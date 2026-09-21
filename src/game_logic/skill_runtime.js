@@ -144,7 +144,8 @@ export function createSkillRuntime(ctx) {
      */
     function castBuff(u, def, t) {
         const targets = targetsOf(u, def);
-        const until = t + def.dur;
+        // 버프 지속시간 +%(반지 · 목걸이 공통옵션 · 2026-09-21 · R127) — **거는 쪽** 값이다. 적에게 거는 창 · 결투의 짝 창도 같은 `until` 을 쓴다 · 0 이면 종전과 같다
+        const until = t + def.dur * (1 + (u.buffDur ?? 0));
         for (const tgt of targets) {
             const wasMax = tgt.hpMax;
             tgt.buffs[def.id] = { stat: def.stat, v: def.value, until, element: def.element ?? null, by: u.key };

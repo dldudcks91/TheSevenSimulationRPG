@@ -1,0 +1,24 @@
+slot,sin,stat,scale,min,max,per_ilvl,description_kr
+ring,wrath,crit_rate,flat,0.02,0.05,-,반지 분노 — 치명타 확률 · 반지 둘이 더해진다(확률이라 곱이 아니다) ⚠제안 수치 — 투구 가죽 공통과 같은 대역 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127)
+ring,sloth,cooldown_reduction,flat,0.03,0.08,-,반지 나태 — 스킬 쿨타임 감소 ⚠제안 수치 (티아라 공통과 같은 대역)
+ring,lust,life_steal,flat,0.01,0.03,-,반지 색욕 — 흡혈 ⚠제안 수치
+ring,envy,def_ignore,flat,0.03,0.08,-,반지 시기 — 방어력 무시 · 다섯 중 하나(균등 · 사용자 2026-09-21) ⚠제안 수치 (무기 시기 물리와 같은 대역)
+ring,envy,res_reduction_fire,flat,0.03,0.08,-,반지 시기 — 불 저항 무시(그 원소의 타격에만) · 다섯 중 하나 ⚠제안 수치 (무기 시기 마법사와 같은 대역)
+ring,envy,res_reduction_cold,flat,0.03,0.08,-,반지 시기 — 냉기 저항 무시 · 다섯 중 하나 ⚠제안 수치
+ring,envy,res_reduction_lightning,flat,0.03,0.08,-,반지 시기 — 전기 저항 무시 · 다섯 중 하나 ⚠제안 수치
+ring,envy,res_reduction_poison,flat,0.03,0.08,-,반지 시기 — 독 저항 무시 · 다섯 중 하나 ⚠제안 수치
+ring,pride,hp_flat,growth,8,20,-,반지 오만 — 체력 +수치(사용자 지시 · 「레벨당 X」 통일 밖 · 아이템 레벨을 따라 자란다) ⚠제안 수치 (갑옷 색욕과 같은 대역)
+ring,gluttony,res_all,flat,0.03,0.1,-,반지 폭식 — 모든 원소 저항 ⚠제안 수치 (갑옷 · 투구 폭식과 같다)
+ring,greed,magic_find,flat,0.05,0.15,-,반지 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치
+ring,greed,gold_find,flat,0.05,0.12,-,반지 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
+ring,greed,item_find,flat,0.04,0.1,-,반지 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치
+amulet,wrath,crit_damage,flat,0.04,0.09,-,목걸이 분노 — 치명타 피해(낮은 값 · 한 칸이라 곱이 쌓이지 않는다) ⚠제안 수치 (무기 분노와 같은 대역)
+amulet,sloth,cooldown_reduction,flat,0.03,0.08,-,목걸이 나태 — 스킬 쿨타임 감소 ⚠제안 수치
+amulet,lust,hp_recovery_pct,flat,0.05,0.12,-,목걸이 색욕 — 체력 회복 +%(받는 힐 · 재생 · 흡혈 · 물약 · 보호막 제외) ⚠제안 수치 (갑옷 나태와 같은 대역)
+amulet,envy,def_down_pct,flat,0.05,0.12,-,목걸이 시기 — 타격 시 몇 초간 대상 방어력 감소(파티 공유 · 센 값 하나) · 둘 중 하나 ⚠제안 수치 (무기 공통 물리와 같은 대역)
+amulet,envy,res_down_pct,flat,0.03,0.08,-,목걸이 시기 — 타격 시 몇 초간 그 타격 원소의 대상 저항 감소(영웅끼리 중첩) · 둘 중 하나 ⚠제안 수치 (무기 공통 마법과 같은 대역)
+amulet,pride,hp_per_level,band,2,5,0,목걸이 오만 — 레벨당 체력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0) ⚠제안 수치 (투구 오만과 같다)
+amulet,gluttony,res_all,flat,0.03,0.1,-,목걸이 폭식 — 모든 원소 저항 ⚠제안 수치
+amulet,greed,magic_find,flat,0.05,0.15,-,목걸이 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치
+amulet,greed,gold_find,flat,0.05,0.12,-,목걸이 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
+amulet,greed,item_find,flat,0.04,0.1,-,목걸이 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치

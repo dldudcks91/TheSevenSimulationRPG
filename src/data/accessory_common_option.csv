@@ -1,0 +1,12 @@
+family,stat,scale,min,max,per_ilvl,description_kr
+ele_res,res_fire,flat,0.06,0.2,-,반지 · 목걸이 공통 — 원소 저항(넷 중 하나) · 불 ⚠제안 수치 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127)
+ele_res,res_cold,flat,0.06,0.2,-,반지 · 목걸이 공통 — 원소 저항 · 냉기 ⚠제안 수치
+ele_res,res_lightning,flat,0.06,0.2,-,반지 · 목걸이 공통 — 원소 저항 · 전기 ⚠제안 수치
+ele_res,res_poison,flat,0.06,0.2,-,반지 · 목걸이 공통 — 원소 저항 · 독 ⚠제안 수치
+dr_flat,dr_flat,growth,0.15,0.25,-,반지 · 목걸이 공통 — 절대값 피해 감소(모든 감소 뒤에 뺀다 · 아이템 레벨 따라 자란다) ⚠제안 수치 (투구 플레이트와 같은 대역)
+status_dur,freeze_dur_reduction,flat,0.1,0.25,-,반지 · 목걸이 공통 — 빙결 시간 감소(넷 중 하나) · ⚠ 상태이상 기계가 없어 지금은 효과가 없다 ⚠제안 수치 (신발 공통과 같은 대역)
+status_dur,poison_dur_reduction,flat,0.1,0.25,-,반지 · 목걸이 공통 — 중독 시간 감소 · ⚠ 효과 없음(같은 이유) ⚠제안 수치
+status_dur,burn_dur_reduction,flat,0.1,0.25,-,반지 · 목걸이 공통 — 화상 시간 감소 · ⚠ 효과 없음(같은 이유) ⚠제안 수치
+status_dur,stun_dur_reduction,flat,0.1,0.25,-,반지 · 목걸이 공통 — 스턴 시간 감소 · ⚠ 효과 없음(같은 이유) ⚠제안 수치
+buff_dur,buff_dur_pct,flat,0.05,0.15,-,반지 · 목걸이 공통 — 버프 지속시간 +%(낀 영웅이 거는 버프 창 · 적에게 거는 창 포함) ⚠제안 수치
+xp,xp_gain_pct,flat,0.05,0.12,-,반지 · 목걸이 공통 — 경험치 획득 증가(본인 몫) ⚠제안 수치

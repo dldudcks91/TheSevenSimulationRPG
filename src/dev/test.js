@@ -152,10 +152,13 @@ check('csv: skill_tag 14행 — 파생 3(aoe·single·multihit) · 대분류 4 (
 });
 // 08-31 mock→CSV 이관분 6종. **행 수가 곧 결정론 계약이다** — 풀이 늘거나 줄면 pick(rng, arr) 이 다른 것을 고른다
 // affix 19 → 18 [2026-09-11 · R78] — `atk_flat` 퇴역: 무기가 affix.csv 를 안 쓴다(무기 옵션 표 둘)
-check('csv: 이관 6종 — class 7 / equip_slot 8 / item_base 40 / affix 13 / hero_name 24 / hero_trait 12', () => {
+// ~~affix 13~~ [2026-09-21 · R127] — 목걸이 · 반지가 세 층 표로 옮겨 **affix.csv 를 지웠다**. 자리에 장신구 표 셋의 행 수가 선다
+check('csv: 이관 5종 + 장신구 표 셋 — class 7 / equip_slot 8 / item_base 40 / hero_name 24 / hero_trait 12 / 장신구 죄종 칸 23 · 공통 11 · 발동 3', () => {
     const got = [D.classes.length, D.equipSlots.length, Object.values(D.itemBases).flat().length,
-        D.affixDefs.length, D.heroNamePool.length, D.heroTraitPool.length];
-    const want = [7, 8, 40, 13, 24, 12];   // affix 18 → 13 [2026-09-18] — 방어구 네 부위가 옵션 표 둘로 옮겨 방어구 전용 다섯 행이 빠졌다(목걸이 · 반지 전용)   // 30 → 36 [2026-09-17] 투구 4 → 10 · 36 → 42 [2026-09-18] 장갑 · 신발 각 4 → 7 (갈래 2 × 티어 3 + 시작) · 42 → 40 [2026-09-21] 목걸이 · 반지 각 4 → 3 (그림 없는 넷째를 뺐다 — 풀이 곧 설치된 그림이다)
+        D.heroNamePool.length, D.heroTraitPool.length,
+        D.accessorySinOptions.length, D.accessoryCommonOptions.length, D.amuletProcs.length];
+    const want = [7, 8, 40, 24, 12, 23, 11, 3];   // 30 → 36 [2026-09-17] 투구 4 → 10 · 36 → 42 [2026-09-18] 장갑 · 신발 각 4 → 7 (갈래 2 × 티어 3 + 시작) · 42 → 40 [2026-09-21] 목걸이 · 반지 각 4 → 3 (그림 없는 넷째를 뺐다 — 풀이 곧 설치된 그림이다)
+    //   장신구 죄종 칸 23 = 반지 13(시기 다섯 · 탐욕 셋 · 나머지 하나씩) + 목걸이 10(시기 둘 · 탐욕 셋) · 공통 11 = 원소 4 · 절대값 1 · 상태이상 4 · 버프 1 · 경험치 1 · 발동 3 = 목걸이 베이스 셋 (2026-09-21 · R127)
     return got.every((n, i) => n === want[i]) || fail(`${got.join('/')} ≠ ${want.join('/')}`);
 });
 /**
@@ -192,10 +195,12 @@ check('csv: equip_slot — 부위 7 유일 · 위치 8 · 보조 없음 · 위�
     const rings = D.equipSlots.filter(e => e.part === 'ring').length;
     return `부위 ${ids.join(' ')} · 위치 8 · 반지 ${rings}칸`;
 });
-/** 접사·아이템 베이스가 가리키는 부위가 전부 실재해야 한다 — `itemBases[slot]` 이 비면 `pick` 이 undefined 를 준다 */
-check('csv: affix.slots · item_base.slot 이 전부 실재 부위 · 무기 외 6부위에 베이스가 있다', () => {
+/** 옵션 표 · 아이템 베이스가 가리키는 부위가 전부 실재해야 한다 — `itemBases[slot]` 이 비면 `pick` 이 undefined 를 준다 */
+check('csv: 방어구 · 장신구 옵션 표의 slot · item_base.slot 이 전부 실재 부위 · 무기 외 6부위에 베이스가 있다', () => {
     const ids = new Set(D.slots.map(s => s.id));
-    for (const d of D.affixDefs) for (const s of d.slots) if (!ids.has(s)) fail(`affix ${d.stat} 의 slot '${s}' 가 없다`);
+    // ~~affix.slots~~ [2026-09-21 · R127 — affix.csv 퇴역] → 부위를 드는 옵션 표 셋
+    for (const d of [...D.armorSinOptions, ...D.armorCommonOptions, ...D.accessorySinOptions])
+        if (!ids.has(d.slot)) fail(`옵션 ${d.stat} 의 slot '${d.slot}' 가 없다`);
     for (const s of ids) {
         if (s === 'weapon') continue;                        // 무기의 베이스는 무기군 자체다
         if (!D.itemBases[s]?.length) fail(`부위 '${s}' 에 아이템 베이스가 없다`);
@@ -245,8 +250,11 @@ check('csv: stages_per_chapter 가 챕터별 stage 행 수와 같고 stage_num �
 check('csv: attr_equip_bonus = 0 이고 접사 어느 것도 기본 능력치를 주지 않는다 (hero_design §4-2)', () => {
     if (D.balance.attr_equip_bonus !== 0) fail(`attr_equip_bonus=${D.balance.attr_equip_bonus}`);
     const attrIds = D.heroAttributes.map(a => a.id);
-    for (const d of D.affixDefs) if (attrIds.includes(d.stat)) fail(`접사가 기본 능력치를 준다: ${d.stat}`);
-    return `접사 ${D.affixDefs.length}종 확인`;
+    // ~~D.affixDefs~~ [2026-09-21 · R127 — affix.csv 퇴역] → 장비 옵션 표 전부
+    const opts = [...D.weaponSinOptions, ...D.weaponCommonOptions, ...D.armorSinOptions, ...D.armorCommonOptions,
+        ...D.accessorySinOptions, ...D.accessoryCommonOptions];
+    for (const d of opts) if (attrIds.includes(d.stat)) fail(`옵션이 기본 능력치를 준다: ${d.stat}`);
+    return `옵션 ${opts.length}행 확인`;
 });
 /** 보스 단독 스테이지 — 세트가 보스 라운드뿐이고 호위 예산도 0 이다. 일반몹 풀을 한 번도 안 뽑는다 (base_expedition_design §1-2 · R75) */
 const isBossOnly = st => SYS.battle.stageRounds(st).every(r => r.round_type === 'boss') && D.budgets[st.boss_grade].escort_max === 0;
@@ -360,7 +368,7 @@ check('csv: combat_stat impl=1 집합 == computeCombat 출력 키 집합 (부채
     const h = SYS.hero.rollHero(makeRng(7), { sin: 'wrath', cls: 'warrior', name: { ko: 'x', en: 'x' }, trait: { ko: 't', en: 't' } });
     const c = SYS.hero.computeCombat(h, []);
     // 전투 능력치가 아닌 출력 — 파생 합·도감 보정·적중 레벨·공격 타입 (INTERFACE §2-4)
-    const EXCLUDE = ['atk_pct_sum', 'dmg_bonus_pct', 'level', 'attack_type', 'option_fx', 'res_max_el', 'main_attr_mult'];   // option_fx = 장비 옵션 묶음(R78 · 방어구 2026-09-18) · res_max_el = 원소별 최대 저항(저항 행의 상한에만 먹는다) — 시트에 안 서는 축
+    const EXCLUDE = ['atk_pct_sum', 'dmg_bonus_pct', 'level', 'attack_type', 'option_fx', 'res_max_el', 'res_reduction_el', 'main_attr_mult'];   // option_fx = 장비 옵션 묶음(R78 · 방어구 2026-09-18) · res_max_el = 원소별 최대 저항(저항 행의 상한에만 먹는다) · res_reduction_el = 원소별 저항 무시(반지 시기 칸 · 2026-09-21) — 시트에 안 서는 축
     const got = new Set(Object.keys(c).filter(k => !EXCLUDE.includes(k)));
     got.add('atk_physical'); got.add('atk_magic');          // 둘은 배타 (INTERFACE §8 항목 5)
     const impl = new Set(D.combatStats.filter(s => s.impl === 1).map(s => s.id));
@@ -419,8 +427,10 @@ check('csv: 퍼센트는 비율 눈금이다 — balance `_pct` 키 · 옵션 �
     const over = (where, v, max) => { if (typeof v === 'number' && Math.abs(v) > max) bad.push(`${where}=${v}`); };
     const BAL_PCT = Object.keys(B).filter(k => (k.endsWith('_pct') || ['attr_bonus_per_point', 'res_cap_base', 'res_cap_absolute', 'weapon_fixed_atk_pct_min', 'weapon_fixed_atk_pct_max'].includes(k)));
     for (const k of BAL_PCT) over(`balance.${k}`, B[k], 2);                 // 최대가 기본 치명 배수 1.5
-    for (const d of [...D.affixDefs, ...D.weaponCommonOptions, ...D.weaponSinOptions, ...D.armorSinOptions, ...D.armorCommonOptions])
+    for (const d of [...D.weaponCommonOptions, ...D.weaponSinOptions, ...D.armorSinOptions, ...D.armorCommonOptions, ...D.accessorySinOptions, ...D.accessoryCommonOptions])
         if (d.scale === 'flat' || d.scale === 'fine') { over(`${d.stat}.min`, d.min, 1); over(`${d.stat}.max`, d.max, 1); }
+    // 목걸이 발동 — 확률은 비율(1 이하) · 간격은 쿨타임 배수(옛 눈금이면 100 이상) (2026-09-21 · R127)
+    for (const r of D.amuletProcs) { over(`amulet_proc ${r.baseId}.min`, r.min, r.trigger === 'interval' ? 10 : 1); over(`amulet_proc ${r.baseId}.max`, r.max, r.trigger === 'interval' ? 10 : 1); }
     for (const m of Object.values(D.monsters)) for (const el of ELEMENTS) over(`monster ${m.monster_idx}.res_${el}`, m[`res_${el}`], 1);
     for (const d of SYS.skill.list) {
         over(`${d.id}.mult`, d.mult, 10); over(`${d.id}.decay`, d.decay, 1);
@@ -476,7 +486,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'def_curve_k', 'dmg_min', 'crit_cap_pct', 'res_cap_base', 'res_cap_absolute', 'attr_dmg_pivot', 'attr_dmg_step_pct',
         'hit_base_pct', 'hit_per_level_deficit_pct', 'hit_min_pct',
         'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'rarity_w_normal', 'rarity_w_magic', 'rarity_w_rare', 'make_rarity_w_normal', 'make_rarity_w_magic', 'make_rarity_w_rare',
-        'affix_normal_min', 'affix_normal_max', 'affix_magic_min', 'affix_magic_max', 'affix_rare_min', 'affix_rare_max', 'weapon_common_opt_normal', 'weapon_common_opt_magic', 'weapon_common_opt_rare', 'weapon_fixed_atk_pct_min', 'weapon_fixed_atk_pct_max', 'weapon_def_down_sec', 'weapon_res_down_sec', 'weapon_atk_down_sec', 'salvage_dust_magic', 'salvage_dust_rare',
+        'accessory_common_opt_normal', 'accessory_common_opt_magic', 'accessory_common_opt_rare', 'weapon_common_opt_normal', 'weapon_common_opt_magic', 'weapon_common_opt_rare', 'weapon_fixed_atk_pct_min', 'weapon_fixed_atk_pct_max', 'weapon_def_down_sec', 'weapon_res_down_sec', 'weapon_atk_down_sec', 'salvage_dust_magic', 'salvage_dust_rare',
         'equip_upgrade_max', 'equip_upgrade_base_pct',
         'equip_upgrade_gold_base', 'equip_upgrade_gold_growth',
         'inventory_cap', 'tavern_candidates', 'tavern_hire_cost', 'tavern_reroll_cost', 'tavern_refresh_hours', 'start_gold', 'start_dust', 'start_stigma',
@@ -623,20 +633,23 @@ check('hero_attribute.csv: 감각 → 운 (2026-08-26 재정의) · 자리 유�
     }
     return ids.join('/');
 });
-check('접사 정의: scale 3분류 · perIlvl 은 band 에만 · 명중/회피 접사 없음 (item_design §2-1)', () => {
-    for (const d of D.affixDefs) {
+// ~~접사 정의(affix.csv)~~ [2026-09-21 · R127 — 파일째 퇴역] → **장신구 옵션 표 둘**에 같은 규약을 건다 (무기 · 방어구 표는 로드 검증 · 아래 단정들이 든다)
+check('장신구 옵션 표: scale 3분류 · perIlvl 은 band 에만 · 라벨 · 명중/회피 없음 · 공통에 원소별 저항 4종 (item_design §2-1 · §1 「반지 · 목걸이」)', () => {
+    const rows = [...D.accessorySinOptions, ...D.accessoryCommonOptions];
+    for (const d of rows) {
         if (!['growth', 'band', 'flat'].includes(d.scale)) fail(`${d.stat} scale=${d.scale}`);
         if (d.scale !== 'band' && d.perIlvl !== undefined) fail(`${d.stat} 에 perIlvl 이 남아 있다`);
         if (d.scale === 'band' && typeof d.perIlvl !== 'number') fail(`${d.stat} band 인데 perIlvl 없음`);
         if (!M.AFFIX_LABELS[d.stat]) fail(`라벨 없음: ${d.stat}`);
     }
-    if (D.affixDefs.some(d => ['accuracy', 'evasion'].includes(d.stat))) fail('명중/회피 접사가 남아 있다');
-    // ~~피해 감소 접사 없음~~ [2026-09-18] — 무조건 % 피해 감소는 장비 옵션에서 빠졌다(갑옷 분노 → 타격 회복 09-17 · 건틀릿 갈래 고정값은 사용자 보류)
-    if (!['res_fire', 'res_cold', 'res_lightning', 'res_poison'].every(s => D.affixDefs.some(d => d.stat === s))) fail('원소별 저항 4종 없음');   // 목걸이 · 반지
-    // 무기는 affix.csv 를 안 쓴다 — 고정 옵션 · 죄종 칸 · 통합옵션 표를 따로 든다 (item_design §1 「무기 옵션」 · 2026-09-11 R78)
-    if (D.affixDefs.some(d => (d.slots ?? []).includes('weapon'))) fail('affix.csv 에 weapon 슬롯이 남았다 — 무기는 무기 옵션 표를 쓴다');
-    if (D.affixDefs.some(d => d.stat === 'atk_flat')) fail('atk_flat 은 퇴역했다 — 최소/최대 피해 보류 (R78)');
-    return `${D.affixDefs.length}종`;
+    if (rows.some(d => ['accuracy', 'evasion'].includes(d.stat))) fail('명중/회피 옵션이 있다');
+    if (!['res_fire', 'res_cold', 'res_lightning', 'res_poison'].every(s => D.accessoryCommonOptions.some(d => d.stat === s))) fail('원소별 저항 4종 없음');
+    if (rows.some(d => d.stat === 'atk_flat')) fail('atk_flat 은 퇴역했다 — 최소/최대 피해 보류 (R78)');
+    // 반지 기준 — 두 칸이라 두 번 쌓인다. 곱이 되는 것(치명 피해 · % 피해 감소 · 최대 저항 · 공속 · 데미지 +%)은 반지에 없다 (item_design §1)
+    const multy = ['crit_damage', 'damage_reduction', 'res_max_bonus', 'aspd_pct', 'atk_pct'];
+    const ringHas = rows.filter(d => (d.slot === 'ring' || d.slot === undefined) && multy.includes(d.stat));
+    if (ringHas.length) fail(`반지에 곱이 되는 옵션: ${ringHas.map(d => d.stat).join(',')}`);
+    return `죄종 칸 ${D.accessorySinOptions.length} · 공통 ${D.accessoryCommonOptions.length}`;
 });
 
 /* ── RNG ── */
@@ -1070,7 +1083,7 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
 check('save: serialize → deserialize 왕복 동일 (v22)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 32;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 33;
 });
 /**
  * 옛 세이브 흉내 [2026-09-17 · R111] — **v29 전 세이브는 퍼센트를 0~100 눈금으로 들었다**(5% = `5`).
@@ -1626,8 +1639,10 @@ check('csv: mastery_node 38행 — 죄종 T1 공통 3 + 죄종 T2 16 + 직업 T1
     return `죄종 T1 ${by.sin1} · 죄종 T2 ${by.sin2} · 직업 T1 ${by.class1} · 직업 T2 ${by.class2}`;
 });
 check('mastery_node: 참조하는 balance 키가 전부 실재하고 stat 이 실재하는 채널이다 — 새 채널을 만들지 않는다', () => {
-    // 접사 채널 = **장비 옵션 표 전부**(affix · 무기 옵션 둘 · 방어구 옵션 둘) — 2026-09-18 aspd_pct 가 affix.csv 에서 방어구 표로 옮겨 갔다
-    const affix = new Set([...D.affixDefs, ...D.weaponSinOptions, ...D.weaponCommonOptions, ...D.armorSinOptions, ...D.armorCommonOptions].map(d => d.stat));
+    // 접사 채널 = **장비 옵션 표 전부**(무기 옵션 둘 · 방어구 옵션 둘 · 장신구 옵션 둘) — 2026-09-18 aspd_pct 가 affix.csv 에서 방어구 표로 옮겨 갔다
+    //   ⚠ `hp_pct`(체력 %)는 **2026-09-21 affix.csv 퇴역**으로 장비 옵션에서 사라졌지만 채널은 산다 — `hero.computeCombat` 이 읽고 마스터리 T1 이 쓴다. 이름으로 남긴다
+    const affix = new Set([...D.weaponSinOptions, ...D.weaponCommonOptions, ...D.armorSinOptions, ...D.armorCommonOptions,
+        ...D.accessorySinOptions, ...D.accessoryCommonOptions].map(d => d.stat).concat('hp_pct'));
     const stats = new Set(D.combatStats.map(x => x.id));
     const sins = new Set(Object.keys(M.SINS));
     const classes = new Set(D.classes.map(c => c.id));
@@ -2555,7 +2570,8 @@ check('item: 장비 옵션 값 — 고정값은 정수 · 퍼센트는 1% 단위
     // 비율 상한 — 고정 옵션이 1~200% 를 굴린다(2026-09-21 사용자 지시 · balance 키). 옛 눈금(0~100)을 잡는 그물은 그대로다
     const PCT_CAP = Math.max(1, B.weapon_fixed_atk_pct_max, B.armor_fixed_def_pct_max);
     // fine(0.1% 단위)은 옵션 표가 정한다 — 오만 「레벨당 데미지」(무기 · 장갑) · 「레벨당 공격 속도」(신발 · 2026-09-18)
-    const FINE = new Set([...D.weaponSinOptions, ...D.weaponCommonOptions, ...D.armorSinOptions, ...D.armorCommonOptions].filter(d => d.scale === 'fine').map(d => d.stat));
+    const FINE = new Set([...D.weaponSinOptions, ...D.weaponCommonOptions, ...D.armorSinOptions, ...D.armorCommonOptions,
+        ...D.accessorySinOptions, ...D.accessoryCommonOptions].filter(d => d.scale === 'fine').map(d => d.stat));
     for (let i = 0; i < 600; i++) {
         const it = SYS.item.rollDrop(rng, 1 + (i % 70));
         if (it.implicit && !Number.isInteger(it.implicit.v)) fail(`${it.slot} implicit ${it.implicit.v}`);
@@ -2587,9 +2603,10 @@ check('item: 접사 3분류 — flat · fine 은 ilvl 60 에서도 굴림 범위
         if (a.src === 'fixed') return it.slot === 'weapon' ? FIXED_W : FIXED_A;
         if (a.src === 'random') return it.slot === 'weapon' ? D.weaponCommonOptions.find(d => d.stat === a.stat)
             : isArmor(it.slot) ? D.armorCommonOptions.find(d => d.slot === it.slot && d.stat === a.stat)
-                : D.affixDefs.find(d => d.stat === a.stat);
+                : D.accessoryCommonOptions.find(d => d.stat === a.stat);            // ~~affixDefs~~ R127 — 반지 · 목걸이 한 풀
         return it.slot === 'weapon' || it.slot === 'gloves' ? D.weaponSinOptions.find(d => d.sin === a.src && d.stat === a.stat)
-            : D.armorSinOptions.find(d => d.slot === it.slot && d.sin === a.src && d.stat === a.stat);
+            : isArmor(it.slot) ? D.armorSinOptions.find(d => d.slot === it.slot && d.sin === a.src && d.stat === a.stat)
+                : D.accessorySinOptions.find(d => d.slot === it.slot && d.sin === a.src && d.stat === a.stat);
     };
     const inRange = (d, v, ilvl) => (d.scale === 'flat' || d.scale === 'fine')
         ? v >= F.roundPct(d.min, d.scale === 'fine') && v <= F.roundPct(d.max, d.scale === 'fine')
@@ -2747,11 +2764,40 @@ check('save: v30 → v31 이관 — 옛 이름(09-11 태그형 · 그 전 문장
     const odd = up.items.t_odd;
     if (!eq(odd.name, v30.items.t_odd.name) || !eq(odd.words, uidWords(odd))) fail(`못 알아보는 이름 ${odd.name.ko} · ${JSON.stringify(odd.words)}`);
     if (!eq(up.items.t_nor.words, []) || !eq(up.items.t_nor.name, ring)) fail('일반이 바뀌었다');
-    if (!eq(up.items.t_new, v30.items.t_new)) fail('words 가 있는 아이템이 바뀌었다');
+    // 옵션 줄은 사슬 끝의 v33 단계(반지 · 목걸이 죄종 칸 소급 · R127)가 따로 채운다 — 여기서는 이름 · 단어만 본다
+    const noOpt = it => ({ ...it, affixes: null });
+    if (!eq(noOpt(up.items.t_new), noOpt(v30.items.t_new))) fail('words 가 있는 아이템이 바뀌었다');
     const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
     if (!eq(again.items, up.items)) fail('v31 세이브를 다시 열었더니 달라졌다');
     if (!eq(SYS.game.deserialize(v30).items, up.items)) fail('같은 v30 을 두 번 열면 다르다');
     return `${up.items.t_tag.name.ko} · ${up.items.t_old.name.en} · ${up.items.t_mag.name.ko}`;
+});
+check('save: v32 → v33 이관 — 옛 반지 · 목걸이에 죄종 칸을 앞에 채우고 옛 옵션은 뒤에 · 목걸이에 발동 스킬(베이스 조건 · 모르는 베이스는 uid) · 다른 부위 · 새 형식은 그대로 · 두 번 열면 같다 (INTERFACE §4 · R127)', () => {
+    const v32 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    v32.version = 32;
+    const base = { rarity: 'rare', ilvl: 20, up: 0, implicit: null, words: [0, 0], name: { ko: 'x', en: 'x' } };
+    v32.items.m_ring = { ...base, uid: 'i801', slot: 'ring', baseId: 'ring_1', sins: ['envy', 'pride'], affixes: [{ stat: 'crit_damage', v: 0.1, src: 'random' }, { stat: 'gold_find', v: 0.08, src: 'random' }] };
+    v32.items.m_amu = { ...base, uid: 'i802', slot: 'amulet', baseId: 'amulet_3', sins: ['wrath', 'lust'], affixes: [{ stat: 'atk_pct', v: 0.05, src: 'random' }] };
+    v32.items.m_old = { ...base, uid: 'i803', slot: 'amulet', baseId: 'amulet_4', rarity: 'normal', sins: [], words: [], affixes: [{ stat: 'hp_pct', v: 0.03, src: 'random' }] };   // 09-21 에 표에서 빠진 베이스
+    v32.items.m_helm = { ...base, uid: 'i804', slot: 'helmet', baseId: 'helmet_plate_1', group: 'plate', sins: ['envy'], words: [0], implicit: { stat: 'def_flat', v: 20 }, affixes: [{ stat: 'armor_def_pct', v: 0.1, src: 'fixed' }] };
+    const up = SYS.game.deserialize(v32);
+    if (up.version !== SAVE_VERSION || SAVE_VERSION !== 33) fail(`version ${up.version} · SAVE_VERSION ${SAVE_VERSION}`);
+    const R = up.items.m_ring, A = up.items.m_amu, O = up.items.m_old;
+    if (!eq(R.affixes.map(a => a.src), ['envy', 'pride', 'random', 'random'])) fail(`반지 출처 ${R.affixes.map(a => a.src)}`);
+    if (!eq(R.affixes.slice(2), v32.items.m_ring.affixes)) fail('옛 옵션이 뒤에 그대로가 아니다');
+    if (!eq(R.affixes.slice(0, 2), SYS.item.legacyAccessoryLayers(v32.items.m_ring).layers)) fail('죄종 칸이 legacyAccessoryLayers 와 다르다');
+    if ('proc' in R) fail('반지에 발동 스킬이 붙었다');
+    const want = D.amuletProcs.find(r => r.baseId === 'amulet_3');
+    if (!A.proc || A.proc.trigger !== want.trigger || A.proc.v !== F.pctOption((want.min + want.max) / 2)) fail(`목걸이 발동 ${JSON.stringify(A.proc)}`);
+    if (!eq(A.affixes.map(a => a.src), ['wrath', 'lust', 'random'])) fail(`목걸이 출처 ${A.affixes.map(a => a.src)}`);
+    const rows = D.amuletProcs;
+    if (!O.proc || O.proc.trigger !== rows[803 % rows.length].trigger) fail(`모르는 베이스의 발동 조건 ${JSON.stringify(O.proc)} — uid 번호로 골라야`);
+    if (!eq(O.affixes, v32.items.m_old.affixes)) fail('일반(죄종 없음) 목걸이의 옵션이 바뀌었다');
+    if (!eq(up.items.m_helm, v32.items.m_helm)) fail('투구가 바뀌었다');
+    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
+    if (!eq(again.items, up.items)) fail('v33 세이브를 다시 열었더니 달라졌다');
+    if (!eq(SYS.game.deserialize(v32).items, up.items)) fail('같은 v32 를 두 번 열면 다르다');
+    return `반지 ${R.affixes.map(a => `${a.src}/${a.stat}`).join(' ')} · 목걸이 ${A.proc.trigger}/${A.proc.skill}:${A.proc.v} · 옛 베이스 ${O.proc.trigger}`;
 });
 check('csv: 무기 옵션 표 둘 — 본편 무기군마다 죄종 7 전부 칸이 있다 · 통합 종류가 개수 이상 · 라벨이 있다 (item_design §1 「무기 옵션」 · R78)', () => {
     const groups = Object.values(WG).filter(g => g.release === 'main');
@@ -2774,11 +2820,8 @@ check('item: 무기 옵션은 세 층 — 고정 1 + 죄종 칸(죄종마다 1) 
     let n = 0;
     for (let i = 0; i < 800 && n < 150; i++) {
         const it = SYS.item.rollDrop(rng, 20);
-        if (it.slot !== 'weapon') {
-            // 목걸이 · 반지만 affix.csv 한 풀(전부 random)이다 — 방어구 네 부위는 세 층(2026-09-18 · 「방어구 옵션은 세 층」 단정)
-            if (['amulet', 'ring'].includes(it.slot) && it.affixes.some(a => a.src !== 'random')) fail(`${it.slot} 에 random 아닌 출처: ${JSON.stringify(it.affixes)}`);
-            continue;
-        }
+        // 방어구 네 부위(2026-09-18) · 목걸이 · 반지(2026-09-21 · R127)도 세 층이다 — 각자의 단정(「방어구 옵션은 세 층」 · 「반지 · 목걸이 옵션은 세 층」)이 든다
+        if (it.slot !== 'weapon') continue;
         n++;
         const g = WG[it.group];
         const applies = r => r.appliesTo === 'all' || r.appliesTo === g.damageKind || g.classes.includes(r.appliesTo);
@@ -2933,6 +2976,106 @@ check('item: 옛 방어구 소급 — 고정 옵션 · 죄종 칸을 굴림 없�
     for (const slot of ['weapon', 'amulet', 'ring']) if (SYS.item.legacyArmorLayers({ ...h, slot }).length) fail(`${slot} 인데 채웠다`);
     return a.map(x => `${x.src}/${x.stat}:${x.v}`).join(' ');
 });
+
+/* ── 반지 · 목걸이 옵션 세 층 (item_design §1 「반지 · 목걸이」 · 2026-09-21 사용자 확정 · R127) ── */
+check('csv: 장신구 옵션 표 — 반지 · 목걸이 죄종 7 전부 · 시기 칸 구성 · 공통 종류가 개수 이상 · 발동 조건이 목걸이 베이스마다 하나 · 발동 후보 (R127)', () => {
+    for (const slot of ['ring', 'amulet']) for (const sin of Object.keys(M.SINS))
+        if (!D.accessorySinOptions.some(r => r.slot === slot && r.sin === sin)) fail(`${slot} ${sin} 칸이 없다`);
+    const fams = new Set(D.accessoryCommonOptions.map(r => r.family));
+    if (fams.size < Math.max(B.accessory_common_opt_normal, B.accessory_common_opt_magic, B.accessory_common_opt_rare)) fail(`공통 종류 ${fams.size} < 개수`);
+    const envy = slot => D.accessorySinOptions.filter(r => r.slot === slot && r.sin === 'envy').map(r => r.stat).sort().join('+');
+    if (envy('ring') !== 'def_ignore+res_reduction_cold+res_reduction_fire+res_reduction_lightning+res_reduction_poison') fail(`반지 시기 ${envy('ring')} — 방어 무시 + 원소별 저항 감소 넷(다섯 균등 · 사용자 2026-09-21)`);
+    if (envy('amulet') !== 'def_down_pct+res_down_pct') fail(`목걸이 시기 ${envy('amulet')} — 파티 디버프 둘`);
+    const trig = Object.fromEntries(D.amuletProcs.map(r => [r.baseId, r.trigger]));
+    const bases = D.itemBases.amulet.map(b => b.id);
+    if (!eq(Object.keys(trig).sort(), bases.slice().sort())) fail(`발동 조건 행 ${Object.keys(trig)} ≠ 목걸이 베이스 ${bases}`);
+    if (!eq(Object.values(trig).sort(), ['hit', 'interval', 'struck'])) fail(`발동 조건 ${Object.values(trig)} — 베이스 셋이 조건 셋을 하나씩 든다`);
+    const pool = SYS.skill.list.filter(sk => sk.amuletPool);
+    const bad = pool.filter(sk => sk.ownerKind === 'monster' || ['aura', 'summon', 'call', 'indirect'].includes(sk.kind) || ['taunt', 'duel'].includes(sk.stat));
+    if (bad.length) fail(`발동 후보가 될 수 없는 스킬: ${bad.map(s => s.id).join(',')}`);
+    if (!pool.length) fail('발동 후보가 비었다');
+    return `죄종 칸 ${D.accessorySinOptions.length} · 공통 종류 ${fams.size} · 발동 ${Object.entries(trig).map(([k, v]) => `${k}=${v}`).join(' ')} · 후보 ${pool.length}`;
+});
+check('skill: amulet_pool — 0/1 · 오오라 · 몬스터 전용이 1 이면 로드가 던진다 · 0 으로 내리면 후보에서 빠진다 (R127)', () => {
+    const load = rows => createSkillSystem({ balance: B, rows, tagRows: D.skillTagRows, attributes: D.heroAttributes });
+    const clone = () => JSON.parse(JSON.stringify(D.skillRows));
+    const throws = mut => { const rows = clone(); mut(rows); try { load(rows); return false; } catch { return true; } };
+    if (!throws(rows => { rows.find(r => r.kind === 'aura').amulet_pool = 1; })) fail('오오라가 발동 후보로 통과했다');
+    if (!throws(rows => { rows.find(r => r.owner_kind === 'monster').amulet_pool = 1; })) fail('몬스터 전용이 발동 후보로 통과했다');
+    if (!throws(rows => { rows[0].amulet_pool = 2; })) fail('amulet_pool 2 가 통과했다');
+    const rows = clone();
+    const first = rows.find(r => r.amulet_pool === 1);
+    first.amulet_pool = 0;
+    if (load(rows).list.some(sk => sk.amuletPool && sk.id === first.skill_id)) fail(`${first.skill_id} 를 0 으로 내렸는데 후보에 남았다`);
+    return `오오라 · 몬스터 · 2 거절 · ${first.skill_id} 0 이면 빠진다`;
+});
+check('item: 반지 · 목걸이 옵션은 세 층 — 죄종 칸(죄종마다 1) + 공통 키 개수 · 같은 종류 한 번 · 목걸이만 발동 스킬(베이스 조건 · 후보 풀 · 범위) · 반지 시기 다섯이 다 뜬다 (R127)', () => {
+    const rng = makeRng(127);
+    const pool = SYS.skill.list.filter(sk => sk.amuletPool).map(sk => sk.id);
+    const procOf = Object.fromEntries(D.amuletProcs.map(r => [r.baseId, r]));
+    const envy = new Set(), trig = new Set();
+    let normalProc = 0;
+    for (let i = 0; i < 1600; i++) {
+        const slot = i % 2 ? 'ring' : 'amulet';
+        const it = SYS.item.rollGear(rng, { slots: [slot], ilvl: 5 + (i % 60) })[0];
+        const common = it.rarity === 'rare' ? B.accessory_common_opt_rare : it.rarity === 'normal' ? B.accessory_common_opt_normal : B.accessory_common_opt_magic;
+        const src = it.affixes.map(a => a.src);
+        const want = [...it.sins, ...Array(common).fill('random')];
+        if (!eq(src, want)) fail(`${slot} ${it.rarity} 출처 ${src.join(',')} ≠ ${want.join(',')}`);
+        it.sins.forEach((sin, k) => {
+            const a = it.affixes[k];
+            if (!D.accessorySinOptions.some(r => r.slot === slot && r.sin === sin && r.stat === a.stat)) fail(`${slot} ${sin} 칸에 ${a.stat}`);
+            if (slot === 'ring' && sin === 'envy') envy.add(a.stat);
+        });
+        const fams = it.affixes.slice(it.sins.length).map(a => D.accessoryCommonOptions.find(r => r.stat === a.stat)?.family);
+        if (fams.some(f => !f)) fail(`${slot} 공통옵션이 풀 밖: ${JSON.stringify(it.affixes)}`);
+        if (new Set(fams).size !== fams.length) fail(`${slot} 같은 종류가 두 번: ${fams.join(',')}`);
+        if (slot === 'ring') { if ('proc' in it) fail('반지에 발동 스킬이 붙었다'); continue; }
+        const p = it.proc, row = procOf[it.baseId];
+        if (!p || !row) fail(`목걸이 ${it.baseId} 에 발동 스킬이 없다`);
+        if (p.trigger !== row.trigger) fail(`${it.baseId} 발동 조건 ${p.trigger} ≠ 베이스의 ${row.trigger}`);
+        if (!pool.includes(p.skill)) fail(`발동 스킬 ${p.skill} 이 후보 풀 밖`);
+        if (!(p.v >= F.roundPct(row.min) && p.v <= F.roundPct(row.max))) fail(`${it.baseId} 값 ${p.v} 가 [${row.min}, ${row.max}] 밖`);
+        if (it.affixes.some(a => a.src === 'fixed')) fail('발동 스킬이 affixes 에 들어갔다 — proc 에만 든다');
+        trig.add(p.trigger);
+        if (it.rarity === 'normal') normalProc++;
+    }
+    if (envy.size !== 5) fail(`반지 시기 칸 ${[...envy].join(',')} — 다섯이 다 떠야 한다`);
+    if (trig.size !== 3) fail(`발동 조건 ${[...trig]} — 셋이 다 떠야 한다`);
+    if (!normalProc) fail('일반 목걸이 표본이 없다 — 고정 옵션은 일반에도 붙는다');
+    return `반지 시기 ${[...envy].sort().join('/')} · 발동 조건 ${[...trig].sort().join('/')} · 일반 목걸이 ${normalProc}개도 발동 스킬`;
+});
+check('combat: 목걸이 발동 스킬은 전투가 읽지 않는다 — proc 을 떼어도 computeCombat · 타임라인이 같다 (사용자 지시 2026-09-21 · 설명에만)', () => {
+    const party = strip => SYS.game.partyOf(G).map(uid => {
+        const h = SYS.game.heroById(G, uid);
+        const am = SYS.item.rollGear(makeRng(3), { slots: ['amulet'], ilvl: 5 })[0];
+        if (!am.proc) fail('표본 목걸이에 발동 스킬이 없다');
+        if (strip) delete am.proc;
+        return { uid, combat: SYS.hero.computeCombat(h, [...SYS.game.heroItems(G, h).map(SYS.item.effective), am]) };
+    });
+    const a = party(false), b = party(true);
+    if (!eq(a.map(u => u.combat), b.map(u => u.combat))) fail('발동 스킬이 전투 능력치를 움직였다');
+    if (!eq(SYS.battle.simulate(a, 101, makeRng(5)).timeline, SYS.battle.simulate(b, 101, makeRng(5)).timeline)) fail('발동 스킬이 타임라인을 움직였다');
+    return '능력치 · 타임라인 동일';
+});
+check('combat: 원소별 저항 감소는 그 원소의 타격에만 · res_reduction 과 같은 자리에 더한다 (반지 시기 칸 · R127)', () => {
+    const zero = () => 0;                                           // 적중 · 최소 피해 · 치명 없음
+    const a = { atkMin: 100, atkMax: 100, lvl: 1, crit: 0, critDmg: 1 };
+    const d = { def: 0, res: { fire: 0.4, cold: 0.4, lightning: 0.4, poison: 0.4 }, resMaxBonus: 0, dr: 0, lvl: 1 };
+    const el = { fire: 0.1, cold: 0, lightning: 0, poison: 0 };
+    const fireEl = F.strike(zero, { ...a, atkType: 'fire', resReductionEl: el }, d).dmg;
+    const fireAll = F.strike(zero, { ...a, atkType: 'fire', resReduction: 0.1 }, d).dmg;
+    const coldEl = F.strike(zero, { ...a, atkType: 'cold', resReductionEl: el }, d).dmg;
+    const coldNone = F.strike(zero, { ...a, atkType: 'cold' }, d).dmg;
+    const physEl = F.strike(zero, { ...a, atkType: 'physical', resReductionEl: el }, d).dmg;
+    const physNone = F.strike(zero, { ...a, atkType: 'physical' }, d).dmg;
+    if (fireEl !== fireAll) fail(`불 타격 ${fireEl} ≠ res_reduction 0.1 과 같아야 ${fireAll}`);
+    if (coldEl !== coldNone) fail(`냉기 타격이 불 저항 감소를 받았다 ${coldEl} ≠ ${coldNone}`);
+    if (physEl !== physNone) fail(`물리 타격이 저항 감소를 받았다 ${physEl} ≠ ${physNone}`);
+    const c = SYS.hero.computeCombat(G.heroes[0], [mkItem('ring', [{ stat: 'res_reduction_fire', v: 0.07, src: 'envy' }])]);
+    if (c.res_reduction_el?.fire !== 0.07 || c.res_reduction_el.cold !== 0) fail(`res_reduction_el ${JSON.stringify(c.res_reduction_el)}`);
+    return `불 ${fireEl} = 전 원소 감소 ${fireAll} · 냉기 ${coldEl} = 없음 ${coldNone}`;
+});
 check('combat: 고정 「방어력 +%」는 그 아이템 자신의 고유 방어력에만 곱한다 · 레벨당 방어력 · 체력 · 공격 속도는 영웅 레벨 × 값을 더한다 (item_design §1 「갑옷 옵션」 · 2026-09-18)', () => {
     const h = { ...G.heroes[0], mastery: {} };
     const armor = mkItem('armor', [{ stat: 'armor_def_pct', v: 0.1, src: 'fixed' }, { stat: 'def_flat', v: 5, src: 'random' }], { implicit: { stat: 'def_flat', v: 100 } });
@@ -3003,7 +3146,8 @@ check('save: v29 → v30 이관 — 옛 방어구에 고정 옵션 · 죄종 칸
     if (!eq(H.affixes.map(x => x.src), ['fixed', 'envy', 'greed', 'random'])) fail(`옛 투구 출처 ${H.affixes.map(x => x.src)}`);
     const tiaraDef = Math.max(1, Math.round(F.armorDefense(35, B.armor_def_slot_helmet, AGROUP.helmet.tiara.defMult)));
     if (H.implicit.v !== tiaraDef) fail(`티아라 고유값 ${H.implicit.v} ≠ ${tiaraDef} — 갈래 계수를 받아야 한다`);
-    if (!eq(up.items.old_ring.affixes, v29.items.old_ring.affixes)) fail('반지가 바뀌었다');
+    // 반지 — v30 단계는 안 건드린다. 사슬 끝의 **v33 단계**가 죄종 칸을 앞에 채우고 옛 옵션은 뒤에 둔다 (2026-09-21 · R127)
+    if (!eq(up.items.old_ring.affixes, [...SYS.item.legacyAccessoryLayers(v29.items.old_ring).layers, ...v29.items.old_ring.affixes])) fail('반지 — v30 이 건드렸거나 v33 규칙과 다르다');
     for (const w of weapons) if (!eq(up.items[w.uid].affixes, w.affixes)) fail(`무기 ${w.uid} 가 바뀌었다`);
     const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
     if (!eq(again.items, up.items)) fail('v30 세이브를 다시 열었더니 달라졌다');
@@ -3664,7 +3808,7 @@ check('save: v31 → v32 이관 — 파티 · 진형이 편성 1 로 · 나머�
     s31.potions = ['light_healing', 'gone_potion', 'minor_healing'];   // 얻은 순서 · 표에서 사라진 id 하나
     s31.run = { stageId: 101, repeat: false, lastAt: NOW, durationSec: 0, active: false };
     const up = SYS.game.deserialize(s31);
-    if (up.version !== SAVE_VERSION || SAVE_VERSION !== 32) fail(`version ${up.version}`);
+    if (up.version !== SAVE_VERSION || SAVE_VERSION < 32) fail(`version ${up.version}`);   // 사슬 끝까지 오른다(v33 — R127)
     if ('party' in up || 'formation' in up) fail('옛 party · formation 이 남았다');
     if (up.presets.length !== B.party_preset_count || up.preset !== 1 || up.run.preset !== 1) fail(`편성 ${up.presets.length} · 고른 ${up.preset} · run ${up.run.preset}`);
     if (!eq(up.presets[0].party, s31.party) || !eq(up.presets[0].formation, s31.formation)) fail('편성 1 이 옛 파티 · 진형이 아니다');
@@ -4361,7 +4505,9 @@ check('simulate: 버프 창 — 창 길이 = duration · 재시전은 중첩 없
     // 버프는 직업 풀의 뒤쪽 자리라 배정(고유 · 무기)으로는 드물다 — 사제 킷을 손으로 십는다
     // 오오라 창(`until: null` · R98)은 창 길이가 없다 — 적의 오오라가 첫 buff 로 설 수 있어 뺀다
     const timed = ev => ev.e === 'buff' && ev.until !== null;
-    const { seed, r } = findSeed(x => x.timeline.some(timed), () => clsUnits('priest'));
+    // 버프 지속시간(반지 · 목걸이 공통옵션 · 2026-09-21)은 걷는다 — 창 길이 규칙만 본다(지속시간 배율은 「runtime: 버프 지속시간」 단정이 든다)
+    const noBuffDur = us => us.map(u => ({ ...u, combat: { ...u.combat, option_fx: u.combat.option_fx && { ...u.combat.option_fx, buffDur: 0 } } }));
+    const { seed, r } = findSeed(x => x.timeline.some(timed), () => noBuffDur(clsUnits('priest')));
     const first = r.timeline.find(timed);
     const def = SYS.skill.defs[first.s];
     const own = r.timeline.filter(ev => (ev.e === 'buff' || ev.e === 'buffEnd') && ev.u === first.u && ev.s === first.s);
@@ -4745,6 +4891,24 @@ check('runtime: 결투 — 시전자에게 같은 until 의 dr_pct 창이 effect
     rt.expire(u, 3 + def.dur);
     if (u.buffs[def.id] || u.dr !== u.drBase) fail('창이 끝났는데 피해 감소가 남았다');
     return `e1 지목 · p0 dr_pct ${M.pctNum(def.value)}% (until ${mark.until}) · 만료 후 원값`;
+});
+check('runtime: 버프 지속시간 — 거는 쪽 창이 (1 + buffDur) 배 · 적에게 거는 창도 · 0 이면 종전과 같다 (반지 · 목걸이 공통옵션 · R127)', () => {
+    const cast = (id, buffDur) => {
+        const u = rtUnit('p0', 'party', { buffDur }), mate = rtUnit('p1', 'party'), foe = rtUnit('e0', 'enemy');
+        const { rt } = fakeRt([u, mate], [foe]);
+        const def = SYS.skill.scaleDef(SYS.skill.defs[id], null);
+        rt.castBuff(u, def, 2);
+        return { def, u, mate, foe };
+    };
+    const grace = cast('pri_grace', 0.5), plain = cast('pri_grace', 0);
+    const d = grace.def.dur;
+    if (Math.abs(grace.mate.buffs.pri_grace.until - (2 + d * 1.5)) > 1e-9) fail(`파티 창 ${grace.mate.buffs.pri_grace.until} ≠ ${2 + d * 1.5}`);
+    if (Math.abs(plain.mate.buffs.pri_grace.until - (2 + d)) > 1e-9) fail(`buffDur 0 인데 창 ${plain.mate.buffs.pri_grace.until} ≠ ${2 + d}`);
+    const pen = cast('pri_penitence', 0.5);
+    if (Math.abs(pen.foe.buffs.pri_penitence.until - (2 + pen.def.dur * 1.5)) > 1e-9) fail(`적에게 거는 창 ${pen.foe.buffs.pri_penitence.until}`);
+    const c = SYS.hero.computeCombat(G.heroes[0], [mkItem('amulet', [{ stat: 'buff_dur_pct', v: 0.1, src: 'random' }])]);
+    if (c.option_fx?.buffDur !== 0.1) fail(`option_fx.buffDur ${c.option_fx?.buffDur}`);
+    return `그레이스 ${d}초 → ${d * 1.5}초 · 참회도 · buffDur 0 은 ${d}초`;
 });
 /**
  * 결투의 시전자 창은 **라운드가 바뀌면 닫힌다** [2026-09-10 · 사용자 원문 「적 하나를 지목하고 라운드 끝까지 + 피해감소」 · R72 후속].
@@ -5209,8 +5373,8 @@ check('runtime: atk_pct 창은 회복 밑수(matkMin·matkMax)도 같은 괄호�
     return 'matk 100~200 → 125~250(창 25%) → 100~200(창 제거) · 공격력과 같은 괄호';
 });
 
-check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** · **v25 는 리포트의 경험치를 영웅별 `xp` 로 가르고 `run.active` 를 더한다(원정은 라운드 단위 — 런 핸들은 세이브에 안 든다 · R89)** · **v26 은 무기의 `watk` 를 지운다(무기 피해는 범위이고 파생 — R90)** · **v27 은 필드를 안 늘린다(장비 옵션 값을 정수로 반올림 — 2026-09-16)** · **v28 은 필드를 안 늘린다(방어구 고유값 재계산 — R107)** · **v29 는 필드를 안 늘린다(퍼센트 접사 값을 비율로 — R111)** · **v30 은 필드를 안 늘린다(옛 방어구에 고정 옵션 · 죄종 칸 · 고유값 재계산 — 2026-09-18)** · **v31 은 아이템에 이름의 죄종 단어 `words` 를 더한다(「A와 B의 베이스」 — 2026-09-19 · R118)** · **v32 는 파티 · 진형을 편성 배열(`presets` · `preset`)로 접고 물약을 개수 표로 바꾼다(편성 — 2026-09-21 · R122 · R124)** (R59 · INTERFACE §4)', () =>
-    SAVE_VERSION === 32 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** · **v25 는 리포트의 경험치를 영웅별 `xp` 로 가르고 `run.active` 를 더한다(원정은 라운드 단위 — 런 핸들은 세이브에 안 든다 · R89)** · **v26 은 무기의 `watk` 를 지운다(무기 피해는 범위이고 파생 — R90)** · **v27 은 필드를 안 늘린다(장비 옵션 값을 정수로 반올림 — 2026-09-16)** · **v28 은 필드를 안 늘린다(방어구 고유값 재계산 — R107)** · **v29 는 필드를 안 늘린다(퍼센트 접사 값을 비율로 — R111)** · **v30 은 필드를 안 늘린다(옛 방어구에 고정 옵션 · 죄종 칸 · 고유값 재계산 — 2026-09-18)** · **v31 은 아이템에 이름의 죄종 단어 `words` 를 더한다(「A와 B의 베이스」 — 2026-09-19 · R118)** · **v32 는 파티 · 진형을 편성 배열(`presets` · `preset`)로 접고 물약을 개수 표로 바꾼다(편성 — 2026-09-21 · R122 · R124)** · **v33 은 목걸이에 발동 스킬 `proc` 을 더하고 옛 반지 · 목걸이에 죄종 칸을 채운다(장신구 옵션 세 층 — 2026-09-21 · R127)** (R59 · INTERFACE §4)', () =>
+    SAVE_VERSION === 33 || fail(`v${SAVE_VERSION}`));
 
 /**
  * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.

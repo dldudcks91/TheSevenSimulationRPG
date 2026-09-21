@@ -28,6 +28,7 @@
  *     — presets = **편성**(v32 · R122 · 길이 = `party_preset_count`) · preset = 고른 편성 번호(1 부터).
  *       party = **편성한 순서 그대로** · `party[0]` 이 리더 · **새 게임은 전부 빈 배열**이다 (2026-09-09) · 한 영웅이 여러 편성에 든다.
  *       potionSlots = 물약 칸 구성(길이 = `potion_slot_max` · null = 빈 칸) — 런을 열 때 재고에서 앞 칸부터 채운다 (R124)
+ *     — items[*].proc = **목걸이 발동 스킬** `{trigger, skill, v}` (목걸이만 · v33 · 2026-09-21 · ⚠ 전투는 안 읽는다 — 설명에만).
  *     — items[*].skill = **무기가 담은 액티브 id** | null (무기만 · v18 신설 2026-09-09).
  *       드롭 때 그 무기군의 **직업 풀**에서 굴려 개체에 박는다 — 액티브 2번 칸의 입력이다
  *       (skill_design §12-1 규칙 3 · `skill.activesFor` 의 `ctx.weaponSkill`)
@@ -115,6 +116,9 @@
  *     · `party` · `formation` 을 **편성 1** 로 접고 나머지 편성은 빈 채로 · `preset = 1` · 옛 원정은 `run.preset = 1`
  *     · `potions`(가진 종류 목록) → **개수 표**(종류마다 1 개) · 편성 1 의 물약 칸 = 표에 있는 id 를 얻은 순서대로(옛 런이 칸을 채우던 규칙)
  *       — 그래서 편성 1 의 다음 런이 같은 칸으로 나간다. rng 0
+ *   v32 → v33 (2026-09-21 — 반지 · 목걸이 옵션 세 층 · 목걸이 고정 옵션 = 발동 스킬 · 사용자 확정 · item_design §1 「반지 · 목걸이」 · R127):
+ *     · 반지 · 목걸이에 죄종 칸이 없으면 `item.legacyAccessoryLayers` 로 **죄종 칸을 앞에 채운다** — 옛 옵션은 뒤에 그대로(v29 방어구와 같은 규칙)
+ *     · 목걸이에 `proc` 이 없으면 **발동 스킬**을 채운다(발동 조건 = 베이스 · 모르는 베이스는 uid 번호). rng 0 · 행은 uid 번호 · 값은 가운데
  *   v1 → v2 는 이관하지 않는다 — 무기군(group)·슬롯·도감 카드·세트포인트 보류로 아이템/도감 스키마가 단절됐다.
  *   하루 된 프로토타입 세이브라 새 게임으로 받는다. v1 은 계속 throw.
  */
@@ -122,7 +126,7 @@
 import { makeRng, deriveSeed } from './rng.js';
 import { createFormula } from './formula.js';
 
-export const SAVE_VERSION = 32;
+export const SAVE_VERSION = 33;
 
 /**
  * @param {object} deps
@@ -748,6 +752,25 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * 반지 · 목걸이 옵션이 세 층이 됐다 · 목걸이 고정 옵션 = 발동 스킬 [2026-09-21 · 사용자 확정 · item_design §1 「반지 · 목걸이」 · INTERFACE §4 v32 → v33 · R127].
+     * 옛 반지 · 목걸이는 옛 공용 풀(`affix.csv`)의 옵션만 든다(전부 `random`) —
+     *   · **죄종 칸이 없으면** 죄종 칸을 앞에 채운다(`item.legacyAccessoryLayers` — uid 로 고르고 값은 가운데). 옛 옵션은 뒤에 그대로 둔다(v29 방어구와 같은 규칙)
+     *   · 목걸이는 **`proc` 이 없으면** 발동 스킬을 채운다(발동 조건 = 그 베이스 · 모르는 베이스는 uid 로)
+     * 다른 부위는 건드리지 않는다. **rng 0**
+     */
+    function upgradeV32(s) {
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it) continue;
+            const { proc, layers } = I.legacyAccessoryLayers(it);
+            if (!proc && !layers.length) continue;                     // 반지 · 목걸이가 아니거나 채울 것이 없다(일반 반지)
+            if (!(it.affixes ?? []).some(a => a.src && a.src !== 'random' && a.src !== 'fixed')) it.affixes = [...layers, ...(it.affixes ?? [])];
+            if (proc && !it.proc) it.proc = proc;
+        }
+        s.version = 33;
+        return s;
+    }
+
+    /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
      * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
      *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
@@ -759,7 +782,7 @@ export function createGameSystem(deps) {
     /** 버전이 낮으면 여기서 올린다 — v1 은 스키마 단절이라 거부한다 (파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31].includes(obj.version))
+        if (![SAVE_VERSION, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32].includes(obj.version))
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         let s = clone(obj);
         if (s.version === 2) s = upgradeV2(s);
@@ -792,6 +815,7 @@ export function createGameSystem(deps) {
         if (s.version === 29) s = upgradeV29(s);
         if (s.version === 30) s = upgradeV30(s);
         if (s.version === 31) s = upgradeV31(s);
+        if (s.version === 32) s = upgradeV32(s);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         // 도감 카드는 걷혔다 [2026-09-21 · 버전 무변경] — 레벨은 이미 있던 `codexKills` 에서 다시 계산되므로 소급할 판단이 없다 · 필드만 지운다 (INTERFACE §4)
         delete s.codexCards; s.codexKills = s.codexKills ?? {};

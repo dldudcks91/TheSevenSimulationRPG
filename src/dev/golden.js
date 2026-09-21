@@ -46,9 +46,9 @@ export function csvHash(text) {
 }
 
 /**
- * 드롭 1개의 지문 — `rollDrop` → `build` → `rollAffixes` 의 **rng 소비를 전부** 드러낸다.
+ * 드롭 1개의 지문 — `rollDrop` → `build` → 옵션 세 층(무기 · 방어구 · 장신구 — ~~`rollAffixes`~~ R127 퇴역)의 **rng 소비를 전부** 드러낸다.
  *   `rarity|slot|ilvl|sins|base|baseId|element|개체굴림|스킬|접사` — 접사 한 줄은 `출처/stat:값` (출처 신설 2026-09-11 R78)
- * **접사는 stat·값·순서를 그대로 적는다** — `rollAffixes` 가 풀에서 뽑는 순서가 바뀌면 여기서만 잡힌다.
+ * **접사는 stat·값·순서를 그대로 적는다** — 옵션 표에서 뽑는 순서가 바뀌면 여기서만 잡힌다.
  * `uid` 는 넣지 않는다 — 발급 순서는 `state.js` 소관이라 전투 결정론과 다른 축이다 (D-A2).
  * 시작 장비(`item.startingWeapon` · `item.startingArmor`)도 **같은 형식**으로 적는다 (`meta.parties`).
  * `baseId` [신설 2026-09-10] — 무기군에 세부 베이스 풀이 있으면 그 굴림. 없는 무기군·무기 아닌 부위는 `-`
@@ -65,7 +65,9 @@ export const dropSig = it => [
     it.element ?? '-',                            // R80(2026-09-11) 부터 언제나 '-' — 생성 때 원소를 안 굴린다. 되살아나면 지문이 갈려 잡힌다
     it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 개체 굴림 — 방어구 implicit 뿐이다
         : '-',                                    //         무기(R90 — 피해 범위는 굴리지 않고 무기군 · ilvl · 강화에서 파생) · 목걸이·반지는 소비 없음
-    it.skill ?? '-',                              // 무기가 담은 액티브 — 그 무기군의 직업 풀에서 개체마다 굴린다 (2026-09-09 · skill_design §12-1)
+    // 무기가 담은 액티브 — 그 무기군의 직업 풀에서 개체마다 굴린다 (2026-09-09 · skill_design §12-1)
+    //   **목걸이는 발동 스킬** `trigger/skill:v` 를 같은 칸에 적는다 (2026-09-21 · R127 — 무기와 목걸이는 한 아이템이 둘 다 들 수 없다)
+    it.skill ?? (it.proc ? `${it.proc.trigger}/${it.proc.skill ?? '-'}:${it.proc.v}` : '-'),
     it.affixes.map(a => `${a.src ?? '-'}/${a.stat}:${a.v}`).join(';') || '-',   // 출처(고정 · 죄종 · 랜덤)도 적는다 — 층이 바뀐 회귀를 잡는다 (2026-09-11 R78)
 ].join('|');
 

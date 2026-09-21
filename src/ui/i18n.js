@@ -729,6 +729,12 @@ const STRINGS = {
     // 교체될 자리가 빈 경우 — 옛 판의 「비어 있음」 빈 카드 한 장을 대신하는 하단 힌트 한 줄 (SCREEN_DESIGN §6 개정 2026-09-08)
     'tip.noneEquipped': { ko: '착용 중 없음', en: 'Nothing equipped' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
+    /* 목걸이 발동 스킬 줄 [신설 2026-09-21 · §6 · ADR-0213] — 발동 조건은 베이스가 정한다(amulet_proc.csv). {p} = 확률(% 포함) · {sec} = 간격 초 · {skill} = 스킬 이름.
+       ⚠ 발동은 전투에 아직 안 걸린다 — 줄 끝에 `tip.inert` 가 붙는다 */
+    'tip.proc.hit': { ko: '타격 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} on hit' },
+    'tip.proc.struck': { ko: '피격 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} when struck' },
+    'tip.proc.interval': { ko: '{sec}초마다 {skill} 발동', en: 'Casts {skill} every {sec}s' },
+    'tip.inert': { ko: '(미적용)', en: '(inactive)' },
     /* 스킬 칸 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
        공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 칸은 스킬 설명창 몸통 그대로라 문구도 설명창 키를 쓴다.
        ~~`tip.skill`~~(「담은 스킬」 라벨)은 2026-09-15 삭제 [사용자 지시 · ADR-0139] */

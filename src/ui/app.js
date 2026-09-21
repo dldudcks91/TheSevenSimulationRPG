@@ -123,6 +123,22 @@ const sinName = id => L(M.SINS[id]) || id;
 const srcTag = src => src === 'fixed' ? `<i class="tip-src">${t('tip.src.fixed')}</i>`
     : M.SINS[src] ? `<i class="tip-src sin" style="color:${sinColor(src)}">${sinName(src)}</i>`
         : `<i class="tip-src">${t('tip.src.random')}</i>`;
+/** 「(미적용)」 표지 — 전투가 아직 안 읽는 옵션 줄 끝 (SCREEN_DESIGN §6 · ADR-0213) */
+const inertTag = () => ` <i class="tip-inert">${t('tip.inert')}</i>`;
+/**
+ * 목걸이 발동 스킬 줄 — `[고정]` + 발동 조건 문장 + 「(미적용)」 (§6 · ADR-0213 · item_design §1 「목걸이 고정 옵션」).
+ * `item.proc` 이 없으면(목걸이가 아니다) 빈 문자열. 스킬이 없으면(`null` — 후보 풀이 빈 데이터) 「—」 로 찍는다
+ */
+const procLine = item => {
+    const p = item?.proc;
+    if (!p) return '';
+    const def = p.skill ? SYS.skill.defs[p.skill] : null;
+    const skill = def ? L(def.name) : '—';
+    const text = p.trigger === 'interval'
+        ? t('tip.proc.interval', { sec: SYS.skill.procIntervalSec(p.skill, p.v) ?? '—', skill })
+        : t(`tip.proc.${p.trigger}`, { p: M.pctText(p.v), skill });
+    return `<li>${srcTag('fixed')}${text}${inertTag()}</li>`;
+};
 const rarity = r => M.RARITY[r] ?? M.RARITY.magic;
 // 등급 표기 — SSOT 는 `hero_tier.csv` 다 (2026-09-08 R48 · ~~mock.js:HERO_TIER~~ 대체).
 // 3층(매직/레어/유니크) 중 모르는 값이 오면 레어로 떨어뜨린다 — 옛 세이브의 안전망
@@ -2621,7 +2637,9 @@ function tipCard(item, headText, hints = [], skCtx) {
         ${baseRows.length ? `<div class="tip-base">${baseRows.join('')}</div>` : ''}
         ${/* 출처 태그 셋 — **데이터가 든 `src` 를 그대로 읽는다** (SCREEN_DESIGN §6 · ADR-0100): 고정 · 죄종 이름(그 죄종 색) · 랜덤.
               순서도 아이템이 든 순서 그대로다 — 렌더러가 정렬하지 않는다. 출처가 없는 옛 접사는 랜덤으로 찍는다 */''}
-        <ul>${(item.affixes ?? []).map(a => `<li>${srcTag(a.src)}${affixText(a)}</li>`).join('')
+        ${/* 목걸이는 **첫 줄이 발동 스킬**이다 — 고정 옵션 자리(`[고정]`) · 문장은 발동 조건마다 하나 · 간격 초는 `skill.procIntervalSec` 가 낸다.
+              전투가 아직 안 읽는 줄은 끝에 「(미적용)」 — 발동 줄과 `inert` 표지가 붙은 stat (SCREEN_DESIGN §6 · ADR-0213) */''}
+        <ul>${procLine(item)}${(item.affixes ?? []).map(a => `<li>${srcTag(a.src)}${affixText(a)}${M.statInert(a.stat) ? inertTag() : ''}</li>`).join('')
             || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>
         ${/* **스킬 칸은 카드 바닥이다** [개정 2026-09-10 사용자 지시 · ADR-0081] — 옛 자리(밑수 바로 아래)에서는
               문장 한 줄이 접사 목록을 아래로 밀어 「이 아이템의 수치」가 카드 중간부터 시작했다. 스킬이 든 칸은 아래에서 노드로 끼운다 */''}

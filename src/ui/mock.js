@@ -138,9 +138,22 @@ export const AFFIX_LABELS = {
     vs_front_dr: { ko: '전열 적에게 받는 피해 감소', en: 'Damage Reduction vs Front Row', fmt: 'pct' },
     vs_back_dr: { ko: '후열 적에게 받는 피해 감소', en: 'Damage Reduction vs Back Row', fmt: 'pct' },
     xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', fmt: 'pct' },
-    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct' },
-    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct' },
+    // `inert` = **전투가 아직 안 읽는 줄** — 툴팁이 줄 끝에 「(미적용)」을 단다(SCREEN_DESIGN §6 · ADR-0213). 상태이상 기계가 서면 그 stat 의 표지를 지운다
+    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct', inert: true },
+    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct', inert: true },
+    // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
+    //    원소별 저항 감소는 무기 시기 칸 `res_reduction`(저항 감소)과 같은 메커니즘이라 이름도 그 계열로 둔다 — **그 원소의 타격에만** 붙는다
+    res_reduction_fire: { ko: '불 저항 감소', en: 'Fire Resist Reduction', fmt: 'pct' },
+    res_reduction_cold: { ko: '냉기 저항 감소', en: 'Cold Resist Reduction', fmt: 'pct' },
+    res_reduction_lightning: { ko: '전기 저항 감소', en: 'Lightning Resist Reduction', fmt: 'pct' },
+    res_reduction_poison: { ko: '독 저항 감소', en: 'Poison Resist Reduction', fmt: 'pct' },
+    burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct', inert: true },
+    stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct', inert: true },
+    buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
 };
+
+/** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
+export const statInert = stat => AFFIX_LABELS[stat]?.inert === true;
 
 /**
  * 접사 한 줄 — {ko, en}. 단위(%)와 어순은 **여기서만** 정한다.
@@ -161,6 +174,8 @@ export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? {
  * 화면 곳곳의 `%` 표기가 이것을 쓴다 (app.js · tip.js)
  */
 export const pctNum = v => Number((v * 100).toFixed(2));
+/** 비율 하나를 부호 없는 `n%` 로 — 옵션 줄이 아닌 문장 안의 확률(목걸이 발동 줄 · 2026-09-21). 단위를 붙이는 곳은 이 파일 하나다 */
+export const pctText = v => `${pctNum(v)}%`;
 
 /** 값만 — 부호와 단위는 affixText 와 **같은 규칙**이다 (단위를 붙이는 곳은 이 파일 하나) */
 export const statValue = (stat, v, fallback) => {

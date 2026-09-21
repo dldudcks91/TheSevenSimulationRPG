@@ -7,7 +7,7 @@
  *   전부 CSV 다 — mock.js 에 남은 게임 데이터는 죄종(`SINS`)·정예 특성 둘뿐이고 나머지는 화면 전용 사전·자산 경로다.
  * mock.js 의 BALANCE 미러는 폐지했다 — balance.csv 를 직접 읽는다 (한 곳만 고치면 된다).
  *
- * ⚠ **CSV 행 순서가 결정론 계약이다** — `slots`(부위) · `itemBases`(부위별) · `affixDefs` · `heroNamePool` ·
+ * ⚠ **CSV 행 순서가 결정론 계약이다** — `slots`(부위) · `itemBases`(부위별) · 옵션 표(무기 · 방어구 · 장신구) · `procSkills` · `heroNamePool` ·
  *   `heroTraitPool` 은 `rng` 가 인덱스를 굴리는 배열이다. 재정렬하면 같은 시드가 다른 게임이 된다 (INTERFACE §5-2).
  */
 
@@ -59,7 +59,10 @@ export const D = {
     classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
     sinWords: null,           // sin_word.csv — {sinId: [{ko, en}...]} **단 순서**(tier 로 정렬) · 아이템 이름의 죄종 단어 (item_design §1 「이름」 · 2026-09-19)
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
-    affixDefs: [],            // affix.csv — [{stat, scale, min, max, perIlvl?, slots:[...]}] · CSV 행 순서 · **무기는 안 쓴다**(R78)
+    // ~~affixDefs~~ (affix.csv) — 2026-09-21 R127 퇴역. 반지 · 목걸이가 아래 세 표로 옮겼다
+    accessorySinOptions: [],  // accessory_sin_option.csv — [{slot, sin, stat, scale, min, max, perIlvl?}] · 반지 · 목걸이 죄종 칸 후보 · CSV 행 순서 (2026-09-21 · R127)
+    accessoryCommonOptions: [], // accessory_common_option.csv — [{family, stat, scale, min, max, perIlvl?}] · 두 부위 한 풀 · CSV 행 순서 (R127)
+    amuletProcs: [],          // amulet_proc.csv — [{baseId, trigger, min, max}] · 목걸이 베이스마다 발동 조건 하나 · CSV 행 순서 (R127)
     weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, appliesTo, stat, scale, min, max}] · 무기 죄종 칸 후보 · CSV 행 순서 (2026-09-11 R78)
     weaponCommonOptions: [],  // weapon_common_option.csv — [{family, stat, appliesTo, scale, min, max}] · 무기 통합옵션 후보 · CSV 행 순서 (R78)
     heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
@@ -86,9 +89,9 @@ export let SYS = null;
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
-    'affix', 'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
+    'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
-    'armor_sin_option', 'armor_common_option', 'sin_word'];
+    'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -100,11 +103,11 @@ export async function loadData(base = './data/') {
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
         weaponGroup, skillRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
-        affixRow, itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
+        itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
-        armorSinOptionRow, armorCommonOptionRow, sinWordRow] = texts.map(parseCsv);
+        armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -166,6 +169,11 @@ export async function loadData(base = './data/') {
     D.armorCommonOptions = armorCommonOptionRow.map(r => ({
         slot: r.slot, group: r.group, family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r),
     }));
+    // 반지 · 목걸이 옵션 표 셋 [2026-09-21 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 · 공통옵션 한 풀 · 목걸이 발동 조건(베이스마다).
+    //   방어구 표와 같은 규약 · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
+    D.accessorySinOptions = accSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
+    D.accessoryCommonOptions = accCommonOptionRow.map(r => ({ family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
+    D.amuletProcs = amuletProcRow.map(r => ({ baseId: r.base_id, trigger: r.trigger, min: r.min, max: r.max }));
     // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
     //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
@@ -253,12 +261,6 @@ export async function loadData(base = './data/') {
     for (const r of itemBaseRow) (D.itemBases[r.slot] ??= []).push({
         id: r.base_id, ko: r.name_kr, en: r.name_en, group: r.group || null, tierMin: Number(r.tier_min_ilvl) || 1,
     });
-    // 접사 정의 — `perIlvl` 은 `band` 행만 든다 (scale 3분류 계약: item_design §2-1)
-    D.affixDefs = affixRow.map(r => ({
-        stat: r.stat, scale: r.scale, min: r.min, max: r.max,
-        ...(r.scale === 'band' ? { perIlvl: r.per_ilvl } : {}),
-        slots: String(r.slots).split('|'),
-    }));
     D.heroNamePool = heroNameRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
     D.heroTraitPool = heroTraitRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
     // 수색 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
@@ -432,10 +434,13 @@ export function buildSystems(d) {
     const item = createItemSystem({
         // ~~elements~~ 는 2026-09-11 R80 으로 주입 목록에서 빠졌다 — 마법 무기 원소 굴림이 사라져 item.js 가 원소 어휘를 안 읽는다
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
-        itemBases: d.itemBases, weaponBases: d.weaponBases, affixDefs: d.affixDefs,
+        itemBases: d.itemBases, weaponBases: d.weaponBases,
         naming,                                     // 이름 조립기 — 죄종 단어 표까지 든다 (2026-09-19 · ~~composeName 하나~~)
         weaponSinOptions: d.weaponSinOptions ?? [], weaponCommonOptions: d.weaponCommonOptions ?? [],   // 무기 옵션 표 둘 (R78)
         armorSinOptions: d.armorSinOptions ?? [], armorCommonOptions: d.armorCommonOptions ?? [],       // 방어구 옵션 표 둘 (2026-09-18)
+        // 반지 · 목걸이 옵션 표 셋 + 발동 스킬 후보 [2026-09-21 · R127] — 후보는 `skill.csv:amulet_pool = 1` · 직업을 안 가리는 한 풀 · 행 순서가 결정론 계약
+        accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],
+        amuletProcs: d.amuletProcs ?? [], procSkills: skill.list.filter(sk => sk.amuletPool).map(sk => sk.id),
         // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
         classSkills,
     });

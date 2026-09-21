@@ -7,7 +7,8 @@
  *            words:[단 번호...](이름에 쓴 죄종 단어 — sins 와 같은 길이 · 2026-09-19),
  *            group?(무기군 id — weapon_group.csv),
  *            skill?(무기가 담은 액티브 id — 무기만 · 2026-09-09),
- *            baseId?(베이스 id — 무기는 weapon_base.csv(그 무기군에 풀이 있을 때만 · 2026-09-10) · 방어구 · 장신구는 item_base.csv(2026-09-17)) }
+ *            baseId?(베이스 id — 무기는 weapon_base.csv(그 무기군에 풀이 있을 때만 · 2026-09-10) · 방어구 · 장신구는 item_base.csv(2026-09-17)),
+ *            proc?(목걸이 고정 옵션 = 발동 스킬 `{trigger, skill, v}` — 목걸이만 · 2026-09-21 · ⚠ 전투는 안 읽는다) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
  *   name 은 `sins` · `words` · 베이스로 조립한 **결과**다 — 죄종 단어의 자리는 `words` 와 naming.sinPhrase 가 다시 낸다.
  *   (CSV 로 이사할 때 stat id 가 곧 combat_stat.csv 의 키가 된다)
@@ -20,7 +21,10 @@
  *   **방어구 네 부위도 같은 세 층이다** [2026-09-18 · 사용자 확정 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 고정 「방어력 +%」 1 + 죄종 칸 +
  *   공통옵션 [balance.csv:armor_common_opt_normal · armor_common_opt_magic · armor_common_opt_rare]. 죄종 칸은 `armor_sin_option.csv`
  *   (장갑만 ⚠임시로 `weapon_sin_option.csv` 를 그대로 읽는다), 공통옵션은 `armor_common_option.csv`(투구는 갈래별 풀).
- *   `affix.csv` 한 풀(전부 `random`)을 쓰는 것은 **목걸이 · 반지**뿐이다.
+ *   **목걸이 · 반지도 세 층이다** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 `accessory_sin_option.csv` +
+ *   공통옵션 `accessory_common_option.csv`(두 부위 한 풀) [balance.csv:accessory_common_opt_normal · _magic · _rare]. 반지는 고정이 없고,
+ *   **목걸이 고정 옵션은 발동 스킬**이라 `affixes` 가 아니라 `item.proc` 에 든다(발동 조건은 베이스 — `amulet_proc.csv`).
+ *   ~~`affix.csv` 한 풀(전부 `random`)을 쓰는 것은 목걸이 · 반지뿐이다~~ — 마지막 사용자가 떠나 파일째 퇴역했다.
  *
  * **한손 개념은 없다** (2026-09-01) — 전 무기가 양손이라 `twoHanded` 플래그도 보조(offhand) 슬롯도 폐지했다.
  *   부위는 7종 · 착용 위치는 8개. 무기↔보조 배타 규칙과 양손 공격력 배율(two_hand_atk_mult)이 함께 사라졌다.
@@ -47,8 +51,9 @@
  *   **목걸이 · 반지는 강화하지 않는다** — 베이스가 없다(`baseless`). 옛 세이브에 남은 `up` 은 그대로 두고, 파생할 것이 없어 무해하다.
  *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
- *   주입된 affixDefs · 무기 옵션 표 · 방어구 옵션 표에서 온다. 목걸이 · 반지의 죄종 칸은 아직 없다(기획 미정 — GAME_DESIGN §10).
+ *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
  *   ⚠ 장갑의 공통옵션 풀은 옛 `affix.csv` 장갑 풀을 옮긴 임시다(기획 미정 · 2026-09-18 사용자 보류) · 장갑 갈래 고정값도 보류다.
+ *   ⚠ **발동 스킬(`item.proc`)은 설명에만 나온다** [사용자 지시 2026-09-21] — 세기 · 내부 쿨타임이 미정이라 전투가 읽지 않는다(GAME_DESIGN §10).
  */
 
 import { createFormula } from './formula.js';
@@ -66,7 +71,12 @@ import { createFormula } from './formula.js';
  *   classSkills  — **직업별** 액티브 후보 `{classId: [skillId...]}` ← skill.csv (행 순서가 굴림 결과를 정한다).
  *                  무기가 **개체마다** 그 무기군의 직업 풀에서 하나를 굴려 담는다 (skill_design §12-1 규칙 3).
  *                  이 모듈은 스킬 시스템을 모른다 — id 목록만 받는다
- *   affixDefs    — [{stat, scale:'growth'|'band'|'flat', min, max, perIlvl?, slots?:[...]}]  slots 없으면 전 부위 · **무기는 안 쓴다**
+ *   ~~affixDefs~~ — 2026-09-21 R127 퇴역(`affix.csv` 삭제 — 마지막 사용자였던 목걸이 · 반지가 아래 세 표로 옮겼다)
+ *   accessorySinOptions    — [{slot, sin, stat, scale, min, max, perIlvl?}] ← accessory_sin_option.csv — 반지 · 목걸이 죄종 칸 후보 (2026-09-21).
+ *                            한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다(반지 시기 다섯 · 목걸이 시기 둘 · 탐욕 셋) · **행 순서가 결정론 계약**
+ *   accessoryCommonOptions — [{family, stat, scale, min, max, perIlvl?}] ← accessory_common_option.csv — **두 부위 한 풀** (2026-09-21) · **행 순서가 결정론 계약**
+ *   amuletProcs  — [{baseId, trigger, min, max}] ← amulet_proc.csv — 목걸이 베이스마다 발동 조건 하나(`hit` · `struck` · `interval`) · 행 순서 = 이관의 대체 순서
+ *   procSkills   — [skillId] ← skill.csv:amulet_pool = 1 — 목걸이 발동 스킬 후보(직업을 안 가리는 한 풀) · **행 순서가 결정론 계약**
  *   weaponSinOptions    — [{sin, appliesTo, stat, scale, min, max}] ← weapon_sin_option.csv — 죄종 칸 후보 (2026-09-11 · R78).
  *                         `appliesTo` = `all` · 무기군 `damageKind`(physical/magic) · 직업 id(그 무기군의 classes 에 있으면).
  *                         한 죄종 · 한 무기군에 행이 여럿이면 그중 하나를 굴린다 · **행 순서가 결정론 계약**
@@ -166,6 +176,44 @@ export function createItemSystem(data) {
         for (const slot of ARMOR_SLOTS)
             if (!armorCommonOpts.some(r => r.slot === slot)) throw new Error(`item: armor_common_option 에 ${slot} 행이 없다`);
     }
+    /* ── 반지 · 목걸이 옵션 표 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) ── */
+    const accSinOpts = data.accessorySinOptions ?? [];
+    const accCommonOpts = data.accessoryCommonOptions ?? [];
+    const procSkills = data.procSkills ?? [];
+    const procRows = data.amuletProcs ?? [];
+    const procByBase = Object.fromEntries(procRows.map(r => [r.baseId, r]));
+    /** 발동 조건 어휘 — 타격 시 · 피격 시 · n초마다. 구조 어휘라 CSV 가 아니라 여기 둔다(`SCALES` 와 같은 자리) */
+    const PROC_TRIGGERS = ['hit', 'struck', 'interval'];
+    const ACC_SLOTS = (data.slots ?? []).filter(baseless);
+    // 로드 검증 — 방어구 표와 같은 이유로 즉시 던진다. **두 부위마다 일곱 죄종이 다 차 있어야 하고**, 목걸이 베이스마다 발동 조건이 하나 있어야 한다
+    {
+        for (const [name, rows] of [['accessory_sin_option', accSinOpts], ['accessory_common_option', accCommonOpts]]) {
+            for (const r of rows) {
+                if (!SCALES.includes(r.scale)) throw new Error(`item: ${name} ${r.stat} scale '${r.scale}'`);
+                if (!(r.max >= r.min)) throw new Error(`item: ${name} ${r.stat} 범위 ${r.min}~${r.max}`);
+                if (r.scale === 'band' && typeof r.perIlvl !== 'number') throw new Error(`item: ${name} ${r.stat} band 행에 per_ilvl 이 없다`);
+            }
+        }
+        for (const r of accSinOpts) {
+            if (!ACC_SLOTS.includes(r.slot)) throw new Error(`item: accessory_sin_option ${r.stat} slot '${r.slot}' 은 반지 · 목걸이가 아니다`);
+            if (!data.sins.includes(r.sin)) throw new Error(`item: accessory_sin_option 죄종 '${r.sin}'`);
+        }
+        for (const slot of ACC_SLOTS) {
+            for (const sin of data.sins)
+                if (!accSinOpts.some(r => r.slot === slot && r.sin === sin)) throw new Error(`item: accessory_sin_option 에 ${slot} · ${sin} 행이 없다`);
+        }
+        if (ACC_SLOTS.length && !accCommonOpts.length) throw new Error('item: accessory_common_option 이 비었다');
+        const amuletBases = (data.itemBases?.amulet ?? []).map(b => b.id);
+        for (const r of procRows) {
+            if (!PROC_TRIGGERS.includes(r.trigger)) throw new Error(`item: amulet_proc ${r.baseId} trigger '${r.trigger}'`);
+            if (!amuletBases.includes(r.baseId)) throw new Error(`item: amulet_proc '${r.baseId}' 는 목걸이 베이스가 아니다`);
+            if (!(r.max >= r.min) || !(r.min > 0)) throw new Error(`item: amulet_proc ${r.baseId} 범위 ${r.min}~${r.max}`);
+        }
+        if (ACC_SLOTS.includes('amulet'))
+            for (const id of amuletBases) if (!procByBase[id]) throw new Error(`item: amulet_proc 에 목걸이 베이스 '${id}' 행이 없다`);
+    }
+    const accSinRows = (slot, sin) => accSinOpts.filter(r => r.slot === slot && r.sin === sin);
+
     /** 방어구 죄종 칸 후보 — 그 부위 · 그 죄종의 행. 장갑은 무기 표의 그 죄종 행 **전부**(무기 갈래를 안 본다 · ⚠임시) */
     const armorSinRows = (slot, sin) => (SIN_FROM_WEAPON.has(slot)
         ? sinOpts.filter(r => r.sin === sin)
@@ -191,12 +239,6 @@ export function createItemSystem(data) {
     /** 희귀도별 키 고르기 — 일반은 **제 키**를 따로 든다(값은 CSV · 죄종 칸만 없고 개수는 매직과 같은 수로 시작 · 2026-09-14 · R86) */
     const byRarity = (rarity, normal, magic, rare) => rarity === 'rare' ? rare : rarity === 'normal' ? normal : magic;
 
-    const affixCount = (rng, rarity) => {
-        const lo = byRarity(rarity, B.affix_normal_min, B.affix_magic_min, B.affix_rare_min);
-        const hi = byRarity(rarity, B.affix_normal_max, B.affix_magic_max, B.affix_rare_max);
-        return lo + Math.floor(rng() * (hi - lo + 1));
-    };
-
     /**
      * 값 하나 — 정의의 `scale` 이 정한다 (item_design §2-1):
      *   growth — 굴림 × growthMult(ilvl), 정수 [2026-09-16 사용자 지시 — 장비 옵션은 소수를 두지 않는다]
@@ -215,17 +257,55 @@ export function createItemSystem(data) {
      * 퍼센트 채널인가 [2026-09-17 · R111] — 세이브 이관(v28 → v29)이 옛 값(0~100 눈금)을 비율로 옮길 때 가른다.
      * 고정값 채널 = 옵션 표의 `growth` · `band` 행 + 옛 무기의 `atk_flat`(R78 에 표에서 빠졌다). **나머지는 전부 퍼센트다**
      */
-    const flatStats = new Set([...(data.affixDefs ?? []), ...sinOpts, ...commonOpts, ...armorSinOpts, ...armorCommonOpts]
+    //   ~~affixDefs~~ 는 2026-09-21 R127 로 퇴역 — 옛 `affix.csv` 의 고정값 행(`hp_flat` growth)은 장신구 · 신발 표가 같은 이름으로 이어 든다
+    const flatStats = new Set([...sinOpts, ...commonOpts, ...armorSinOpts, ...armorCommonOpts, ...accSinOpts, ...accCommonOpts]
         .filter(d => d.scale === 'growth' || d.scale === 'band').map(d => d.stat).concat('atk_flat'));
     const pctStat = stat => !flatStats.has(stat);
 
-    /** 접사 n개 (**목걸이 · 반지** — 무기 R78 · 방어구 2026-09-18 은 세 층) — 같은 stat 이 두 번 붙지 않는다. 출처는 전부 `random`(affix.csv = 통합옵션 풀 · 09-08) */
-    function rollAffixes(rng, slot, ilvl, n) {
-        const pool = data.affixDefs.filter(d => !d.slots || d.slots.includes(slot));
+    // ~~rollAffixes · affixCount~~ — 2026-09-21 R127 퇴역. 목걸이 · 반지가 마지막 사용자였다 (아래 `accessoryOptions`)
+
+    /**
+     * 목걸이 고정 옵션 — **발동 스킬 하나** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「목걸이 고정 옵션」].
+     * 발동 조건은 **베이스가 정한다**(`amulet_proc.csv` — rng 0) · 스킬은 `procSkills` 에서 1회 · 값 1회(확률 · 또는 쿨타임 배수 — 0.01 단위).
+     * rng 소비(계약 — INTERFACE §5-2): **스킬 1 → 값 1** — 베이스에 행이 없거나 풀이 비어도 2회 그대로다.
+     * ⚠ **전투는 이 값을 읽지 않는다**(사용자 지시 — 설명에만) · `affixes` 에 넣지 않아 `computeCombat` 이 합산할 길이 없다
+     */
+    function amuletProc(rng, baseId) {
+        const p = procByBase[baseId] ?? null;
+        const sr = rng(), vr = rng();
+        if (!p) return null;
+        return {
+            trigger: p.trigger,
+            skill: procSkills.length ? procSkills[Math.floor(sr * procSkills.length)] : null,
+            v: F.pctOption(p.min + vr * (p.max - p.min)),
+        };
+    }
+
+    /**
+     * 반지 · 목걸이 옵션 — 죄종 칸 → 공통옵션 [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 순서가 곧 표시 순서다.
+     * rng 소비(계약 — INTERFACE §5-2): **방어구와 같은 모양** — 죄종마다 (행 1 → 값 1) → 공통옵션마다 (종류 1 → 변형 1 → 값 1).
+     * 고정 층은 반지에 없고 목걸이는 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 소비 수는 같다
+     */
+    function accessoryOptions(rng, slot, sins, rarity, ilvl) {
         const out = [];
-        for (let i = 0; i < n && pool.length; i++) {
-            const d = pool.splice(Math.floor(rng() * pool.length), 1)[0];
-            out.push({ stat: d.stat, v: valueOf(d, d.min + rng() * (d.max - d.min), ilvl), src: 'random' });
+        // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(반지 시기 다섯 · 목걸이 시기 둘 · 탐욕 셋) 그중 하나를 균등으로 굴린다
+        for (const sin of sins) {
+            const rows = accSinRows(slot, sin);
+            const pr = rng(), vr = rng();
+            if (!rows.length) continue;
+            const d = rows[Math.floor(pr * rows.length)];
+            out.push({ stat: d.stat, v: valueOf(d, d.min + vr * (d.max - d.min), ilvl), src: sin });
+        }
+        // 공통옵션 — 두 부위 한 풀. **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 상태이상 ×4 가 행 수만큼 비중을 먹지 않게) · 같은 종류는 한 번
+        const families = [...new Set(accCommonOpts.map(r => r.family))];   // 첫 등장 순 = CSV 행 순서
+        const n = byRarity(rarity, B.accessory_common_opt_normal, B.accessory_common_opt_magic, B.accessory_common_opt_rare);
+        for (let i = 0; i < n; i++) {
+            const fr = rng(), sr = rng(), vr = rng();
+            if (!families.length) continue;
+            const fam = families.splice(Math.floor(fr * families.length), 1)[0];
+            const variants = accCommonOpts.filter(r => r.family === fam);
+            const d = variants[Math.floor(sr * variants.length)];
+            out.push({ stat: d.stat, v: valueOf(d, d.min + vr * (d.max - d.min), ilvl), src: 'random' });
         }
         return out;
     }
@@ -315,7 +395,8 @@ export function createItemSystem(data) {
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
      * opts.avoidSkill = (무기) 스킬 풀에서 뺄 id — 시작 무기가 그 영웅의 고유 스킬과 겹치지 않게 (2026-09-14 · R86). 빼도 소비 수는 같다.
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직·레어) 접두 죄종 → (레어) 접미 죄종 →
-     *   **(무기) 옵션 세 층**(`weaponOptions`) / **(방어구) 옵션 세 층**(`armorOptions` · 2026-09-18) / (목걸이 · 반지) 접사 수 → 접사마다 (정의 선택 → 값) →
+     *   **(무기) 옵션 세 층**(`weaponOptions`) / **(방어구) 옵션 세 층**(`armorOptions` · 2026-09-18) /
+ *   **(목걸이 · 반지) 옵션 세 층** [2026-09-21 · R127 — ~~접사 수 → 접사마다 (정의 선택 → 값)~~] — (목걸이) 발동 스킬 1 → 값 1 → `accessoryOptions` →
      *   **(무기) 베이스 1회** [신설 2026-09-10] → **(무기) 스킬 1회** · ~~(방어구) 개체 굴림 1회~~ **2026-09-18 삭제** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
      */
@@ -330,19 +411,22 @@ export function createItemSystem(data) {
         const suffix = suf?.sin ?? null;
         const sins = [prefix, suffix].filter(Boolean);
         const words = [pre, suf].filter(Boolean).map(x => x.word);
+        // 목걸이 고정 옵션(발동 스킬)은 **죄종 칸보다 앞**에서 굴린다 — 무기 · 방어구의 고정 옵션이 죄종 칸 앞인 것과 같은 자리 (2026-09-21 · R127)
+        const proc = slot === 'amulet' ? amuletProc(rng, base?.id) : null;
         const item = {
             uid: null,
             slot, rarity, ilvl,
             up: 0,                             // 강화 단계 — 드롭은 굴리지 않는다. 올리는 것은 upgrade 하나뿐
             name: N.composeName(prefix, base, suffix, words),
             implicit: null,
-            // 무기(R78) · 방어구(2026-09-18)는 세 층 · 목걸이 · 반지는 affix.csv 한 풀 — 셋 다 베이스 · 스킬 굴림보다 **앞**에서 굴린다 (§5-2)
+            // 무기(R78) · 방어구(2026-09-18) · 목걸이 · 반지(2026-09-21 · R127)는 세 층 — 셋 다 베이스 · 스킬 굴림보다 **앞**에서 굴린다 (§5-2)
             affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, rarity, ilvl)
                 : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, rarity, ilvl)
-                    : rollAffixes(rng, slot, ilvl, affixCount(rng, rarity)),
+                    : accessoryOptions(rng, slot, sins, rarity, ilvl),
             sins,
             words,                             // 이름의 죄종 단어 — sins 와 같은 길이 (2026-09-19)
         };
+        if (proc) item.proc = proc;            // 목걸이만 — 행이 없는 베이스(검증이 막는다)면 키가 없다
         if (slot === 'weapon') {
             item.group = base.id;
             // 무기 베이스 — 이름이 실제로 갈리는 무기군만 풀이 있다(weapon_base.csv · 지금 본편 열 전부 — 스태프·오브·십자가·성경·석궁 2026-09-14 · 확장 둘은 없다).
@@ -497,6 +581,31 @@ export function createItemSystem(data) {
     }
 
     /**
+     * 옛 반지 · 목걸이에 채울 죄종 칸 · 목걸이 고정 옵션 — **세이브 이관 전용**이다 (`state.js upgradeV32` · 2026-09-21 · R127).
+     * `legacyArmorLayers` 와 **같은 규칙** — rng 를 안 쓰고 행은 uid 번호로 고르며 값은 **범위의 가운데**다(지금 눈금 · 비율).
+     * 목걸이 발동 조건은 그 베이스의 것 — **베이스를 모르면**(표에서 빠진 옛 베이스 · `amulet_4` 등) `amulet_proc.csv` 행 순서에서 uid 번호로 고른다.
+     * 반지 · 목걸이가 아니면 `{proc: null, layers: []}`. 가진 접사는 건드리지 않는다(호출자가 뒤에 붙인다)
+     */
+    function legacyAccessoryLayers(item) {
+        if (!baseless(item?.slot)) return { proc: null, layers: [] };
+        const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
+        const num = Number.isFinite(n) ? n : 0;
+        const layers = [];
+        (item.sins ?? []).forEach((sin, i) => {
+            const rows = accSinRows(item.slot, sin);
+            if (!rows.length) return;
+            const d = rows[(num + i) % rows.length];
+            layers.push({ stat: d.stat, v: valueOf(d, (d.min + d.max) / 2, item.ilvl), src: sin });
+        });
+        let proc = null;
+        if (item.slot === 'amulet') {
+            const p = procByBase[item.baseId] ?? (procRows.length ? procRows[num % procRows.length] : null);
+            if (p) proc = { trigger: p.trigger, skill: procSkills.length ? procSkills[num % procSkills.length] : null, v: F.pctOption((p.min + p.max) / 2) };
+        }
+        return { proc, layers };
+    }
+
+    /**
      * 옛 아이템의 이름 단어 · 새 형식 이름 — **세이브 이관 전용**이다 (`state.js upgradeV30` · 2026-09-19 · item_design §1 「이름」).
      * 단 번호는 `legacyWeaponLayers` 와 **같은 규칙** — rng 를 안 쓰고 칸마다 `(uid 번호 + 칸 순번) % 단어 수`다.
      * 이름은 옛 이름에서 베이스를 떼어(`naming.baseOf` — 09-11 태그형 · 그 전 문장형) 다시 조립한다 — **못 알아보면 옛 이름 그대로**다
@@ -596,5 +705,5 @@ export function createItemSystem(data) {
         return implicitFor(item.slot, item.ilvl, item.group ?? null).v;
     };
 
-    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, legacyName, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
+    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, legacyAccessoryLayers, legacyName, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
 }

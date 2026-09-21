@@ -175,6 +175,8 @@ export function createSkillSystem(data) {
         desc: { ko: row.desc_kr, en: row.desc_en },
         // 고유 스킬 후보 풀에 들어가는가 (hero.rollInnate 가 받는 목록 · §9-0). `note` 는 설계 노트라 화면에 안 나간다
         innatePool: row.innate_pool === 1,
+        // 목걸이 발동 스킬 후보인가 [2026-09-21 · R127 · item_design §1 「목걸이 고정 옵션」] — 확률로 나가도 이득만 되는 것(피해 · 회복 · 함성류)만 1
+        amuletPool: row.amulet_pool === 1,
         note: row.note,
     });
 
@@ -298,6 +300,10 @@ export function createSkillSystem(data) {
         if (row.innate_pool !== 0 && row.innate_pool !== 1) bad(`innate_pool ${row.innate_pool} — 0 또는 1`);
         // 몬스터 전용은 영웅 고유 풀에 들지 않는다 — 풀은 `job` 행만 읽지만 칸이 1 이면 뜻이 두 곳에서 갈린다 (§12-9)
         if (d.ownerKind === 'monster' && row.innate_pool !== 0) bad(`owner_kind monster 인데 innate_pool ${row.innate_pool} — 몬스터 전용은 0`);
+        // 목걸이 발동 후보 [2026-09-21 · R127] — 0/1 · 몬스터 전용은 0 · **차례 밖에서 나가면 뜻이 없는 종류**(오오라 · 소환 · 불러내기 · 비직격)는 0
+        if (row.amulet_pool !== 0 && row.amulet_pool !== 1) bad(`amulet_pool ${row.amulet_pool} — 0 또는 1`);
+        if (row.amulet_pool === 1 && (d.ownerKind === 'monster' || ['aura', 'summon', 'call', 'indirect'].includes(d.kind)))
+            bad(`amulet_pool 1 인데 ${d.ownerKind} · ${d.kind} — 발동 스킬 후보가 될 수 없다`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
     }
@@ -522,5 +528,14 @@ export function createSkillSystem(data) {
         };
     };
 
-    return { defs, list, activesFor, resolve, castable, pickReady, tagsOf, scaleDef, previewOf, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
+    /**
+     * 목걸이 발동 스킬의 **간격 초** [2026-09-21 · R127 · item_design §1 「목걸이 고정 옵션」] — `n초마다` 발동의 초 = 그 스킬 쿨타임 × 굴린 배수(`item.proc.v`).
+     * 0.1초 단위로 자른다(`battle.js:r1` — 타임라인 시각과 같은 눈금 · 결정론 상수 — INTERFACE §5-3). 스킬을 모르면 null. ⚠ 발동은 전투에 아직 안 걸린다 — 이 값은 설명에만 쓰인다
+     */
+    const procIntervalSec = (id, mult) => {
+        const d = defs[id];
+        return d ? Math.round(d.cool * (mult ?? 1) * 10) / 10 : null;
+    };
+
+    return { defs, list, activesFor, resolve, castable, pickReady, tagsOf, scaleDef, previewOf, procIntervalSec, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

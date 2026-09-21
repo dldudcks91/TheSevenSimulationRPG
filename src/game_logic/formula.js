@@ -156,7 +156,7 @@ export function createFormula(balance) {
      * 빗나가면 한 번 · 확률이 0 인 적중은 세 번 · 확률이 있는 적중은 네 번이다 (INTERFACE §5-2 · 2026-09-10 · 피해 굴림 2026-09-14 R90).
      * 순서를 바꾸면 같은 시드가 다른 전투가 되므로 이식 대조가 깨진다.
      *
-     * @param a 공격자 {atkMin, atkMax, atkType, lvl, crit, critDmg, defIgnore, resReduction, skillMult, dmgPct, condPct, statMult, bonusPct, procChance, procMult}
+     * @param a 공격자 {atkMin, atkMax, atkType, lvl, crit, critDmg, defIgnore, resReduction, resReductionEl?, skillMult, dmgPct, condPct, statMult, bonusPct, procChance, procMult}
      *          `atkMin`·`atkMax` = 데미지 범위 — 데미지 % 괄호(`dmgPct` = 그 괄호 안의 합)까지 **이미 곱해진** 값이다(시트 · 회복이 같은 값을 읽는다)
      *          `condPct` = **그 타격의** 조건부 % — 같은 괄호 안에 더한다(괄호를 `1 + dmgPct` 에서 `1 + dmgPct + condPct` 로 바꿔 끼운다 · 2026-09-18)
      *          `statMult` = 능력치 계수(`statCoef` — 평타 = 메인 스탯 · 스킬 = 슬롯의 능력치) · `bonusPct` = **피해량**(괄호와 합치지 않고 따로 곱한다)
@@ -192,7 +192,9 @@ export function createFormula(balance) {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
         } else {
             // 저항 감소는 관통이라는 별도 규칙이 아니라 저항값에 음수를 더하는 것이다 (§9-5)
-            v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - (a.resReduction ?? 0), d.resMaxBonus ?? 0, d.resMaxEl?.[a.atkType] ?? 0);
+            //   `resReductionEl` = 원소별 저항 무시(반지 시기 칸 · 2026-09-21) — **그 타격 원소의 값만** 더한다 · 없으면 0 이라 종전과 같다
+            const cut = (a.resReduction ?? 0) + (a.resReductionEl?.[a.atkType] ?? 0);
+            v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - cut, d.resMaxBonus ?? 0, d.resMaxEl?.[a.atkType] ?? 0);
         }
         v *= 1 - (d.dr ?? 0);
         v -= d.drFlat ?? 0;                                        // 절대값 피해 감소 — 모든 감소 뒤 · 하한은 아래 dmg_min (2026-09-18)
