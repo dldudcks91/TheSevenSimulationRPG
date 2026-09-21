@@ -20,6 +20,7 @@ from PIL import Image, ImageDraw
 SHEETS = {'human': 'source_sheet_human_wraith.png', 'skel': 'source_sheet_skeleton_2.png', 'satan': 'source_sheet_satan.png',
           'leviathan': 'source_sheet_leviathan.png', 'goblin_shaman': 'source_sheet_goblin_shaman.png',
           'orc_troop': 'source_sheet_orc_troop.png', 'orc_boss': 'source_sheet_orc_boss.png', 'orc_troop_2': 'source_sheet_orc_troop_2.png',
+          'orc_troop_3': 'source_sheet_orc_troop_3.png', 'orc_troop_3_el': 'source_sheet_orc_troop_3_elite.png',
           'skel3': 'source_sheet_skeleton_3.png',
           'skel_el': 'source_sheet_skeleton_elite.png', 'dullahan': 'source_sheet_dullahan.png',
           'goblin_troop_2': 'source_sheet_goblin_troop_2.png', 'goblin_elite': 'source_sheet_goblin_elite.png',
@@ -48,9 +49,15 @@ SPEC = {
  'goblin_helm_dark'        : ('goblin_troop_2', (1035, 0, 2048, 1013),    333.5, 245.7, 1.046, 1102, 70, 16),
  'goblin_skull_helm_dark'  : ('goblin_troop_2', (0, 1035, 1013, 2048),    296.8, 246.1, 1.037, 1103, 58, 20),
  'goblin_feather_skull_elite': ('goblin_elite', (0, 1035, 1013, 2048),   296.8, 246.1, 1.037, '1103_elite', 58, 20),   # 정예 — 기본판과 같은 구도라 같은 값 · 1-1 정예는 주술사뿐이라 1 · 2번 타일은 안 쓴다
- 'orc_helm_tusk_pauldron'  : ('orc_troop_2', (0, 0, 506, 506),   317, 217, 1.35, 2101,   0,   4),
- 'orc_hood_braid_quiver'   : ('orc_troop_2', (518, 0, 1024, 506),309, 220, 1.31, 2102,   0,   4),
- 'orc_coral_skull_crown'   : ('orc_troop_2', (0, 518, 506, 1024),309, 214, 1.22, 2103,   0,   4),
+ # 2-1 오크 셋 [09-21 교체] — 전사(좌상) · 궁수(우상) · 주술사(좌하). 눈 사이 92 · 눈 중점 (327, 246) — 1-3 스켈레톤 셋의 자리에서 오른쪽 24 [09-21 사용자 지시 — 두 번 옮김].
+ # 92 는 머리 크기를 1301 투구 · 1203 민머리와 나란히 놓고 골랐다(오크는 머리가 눈 사이보다 넓어 100 이면 한 단 크다).
+ # 정예 시트(2048²)는 같은 구도라 512 타일에서 눈 자리가 0.4px 안에서 겹친다 → ex/ey/k 공유
+ 'orc_cheekguard_helm'     : ('orc_troop_3', (0, 0, 506, 506),      329.7, 241.9, 1.057, 2101, 71, 31),
+ 'orc_hood_quiver_plain'   : ('orc_troop_3', (518, 0, 1024, 506),   326.4, 234.2, 1.002, 2102, 71, 31),
+ 'orc_bald_elder_feather'  : ('orc_troop_3', (0, 518, 506, 1024),   319.0, 186.8, 0.982, 2103, 71, 31),
+ 'orc_spiked_helm_skull_pauldron_elite': ('orc_troop_3_el', (0, 0, 1013, 1013),       329.7, 241.9, 1.057, '2101_elite', 71, 31),
+ 'orc_hood_browplate_elite'            : ('orc_troop_3_el', (1035, 0, 2048, 1013),    326.4, 234.2, 1.002, '2102_elite', 71, 31),
+ 'orc_bald_elder_beast_skull_elite'    : ('orc_troop_3_el', (0, 1035, 1013, 2048),    319.0, 186.8, 0.982, '2103_elite', 71, 31),
  'orc_scaled_spiked'       : ('orc_boss',  (0, 0, 1014, 1014),   323, 207, 1.30, 2150,   0,   0),
  'skeleton_cracked_helm_el': ('skel3',    (522, 0, 1024, 502),  310, 240, 0.95, '3201_elite', 48, 31),  # 정예 전용 — monster.csv:face_elite
  'skeleton_bloodied_quiver': ('skel_el',  (1035, 0, 2048, 1013), 312.5, 255.1, 1.024, '3202_elite', 43, 38),  # 정예 — 3202 에 맞춤
@@ -74,7 +81,9 @@ FILL = {'goblin_feather_skull_elite': (395, 30, 480, 160)}   # 지팡이 두개�
 # 타일 변 6px 를 통째로 지운다 — 격자선 검정이 초록에 번진 1~3px 이 반투명으로 살아남아 원형 칸에 실선으로 보인다.
 # 09-21 trio 시트는 오른 끝(x 1019~1023 · 위 절반)에 검정 세로 띠까지 있다. 인물은 변에서 30px 이상 떨어져 있어 깎이는 것이 없다
 FRAME6 = [(0, 0, 6, 512), (0, 0, 512, 6), (506, 0, 512, 512), (0, 506, 512, 512)]
-CLEAR = {k: FRAME6 for k in ('sk_warrior', 'sk_warrior_el', 'sk_knight', 'sk_knight_el', 'sk_mage', 'sk_mage_el')}
+CLEAR = {k: FRAME6 for k in ('sk_warrior', 'sk_warrior_el', 'sk_knight', 'sk_knight_el', 'sk_mage', 'sk_mage_el',
+                             'orc_cheekguard_helm', 'orc_hood_quiver_plain', 'orc_bald_elder_feather',
+                             'orc_spiked_helm_skull_pauldron_elite', 'orc_hood_browplate_elite', 'orc_bald_elder_beast_skull_elite')}
 EYE = (256, 215)     # 눈 중심이 앉을 자리 (dx/dy 를 더하면 실효 y ≈ 240)
 S = 512
 ART = 'src/assets/art/faces/source/sheets/'   # 원본 시트 — 2026-09-16 정리로 sheets/ 아래로 내려갔다

@@ -57,7 +57,7 @@
  *     (기본 치명 확률 · HP 재생 밑수) — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다.
  *     반사·피해 감소는 여전히 접사·정예 특성이 붙을 때만 값이 생긴다. ⚠ battle_design §8-1 출처 표의
  *     「치명·재생은 정예 특성이 얹는다」와 부딪히는 것을 알고 택했다 (DEV_PLAN R79).
- *   도감 카드: 처치마다 장비 드롭과 **별개로** 카드 판정 (monster_design §8) — 결과 `cards` 에만 든다(라운드를 이기면 조용히 · 타임라인 이벤트 없음 · R89).
+ *   도감: 처치 수(`kills`)가 레벨의 출처다 (monster_design §8) — ~~처치마다 카드 판정~~ 은 2026-09-21 삭제(도감 카드 걷음 · 처치당 rng 1회가 빠졌다).
  *
  *   · **드롭 = 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · item_design §1 2단계]. **처치당 최대 1개**(08-27)는
  *     그대로이고 판정도 1회 · 등급은 확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 바뀐 것은 **무엇이 떨어지나** —
@@ -469,16 +469,17 @@ export function createBattleSystem(data) {
      *   combat = heroSystem.computeCombat 결과, actives = 그 영웅의 액티브 **인스턴스** 목록(skill.activesFor).
      *   없거나 비면 기본 공격만 돈다. reactions = 사건 훅 등록(⚠ 지금은 아무도 싣지 않는다)
      * @param level 이번 런의 스테이지 레벨(`state.stageLevelState` — 올린 레벨) · 안 주면 기본 레벨 `dlvl`
-     * @param potions 이 런의 물약 칸 `[{id, heal}]` — **앞 칸부터** · 칸 수 [balance.csv:potion_slot_max] 이하 · `null` = 빈 목록. 이 런 안에서만 산다 (battle_design §7-1 · R104).
-     *   빈 목록이면 물약 단계가 아예 안 돌아 rng · 타임라인이 인자를 안 준 것과 같다
+     * @param potions 이 런의 물약 칸 `[{id, heal} | null]` — **자리 순**(0 = 앞 칸 · 칸의 `null` = 빈 칸 — R124) · 칸 수 [balance.csv:potion_slot_max] 이하 · 인자 `null` = 빈 목록. 이 런 안에서만 산다 (battle_design §7-1 · R104).
+     *   찬 칸이 없으면(빈 목록 · 전부 null) 물약 단계가 아예 안 돌아 rng · 타임라인이 인자를 안 준 것과 같다
      * @returns `{ next, result, ended }` — `next()` = 라운드 하나의 요약(이미 끝났으면 null) · `result` = 라운드마다 자라는 결과 + 타임라인.
      *   타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      */
     function createRun(partyUnits, stageId, rng, level, potions = null) {
         const stage = data.stages[stageId];
         const potionSlots = potions ?? [];
-        if (!Array.isArray(potionSlots) || potionSlots.length > B.potion_slot_max || potionSlots.some(p => !(p?.id && p.heal >= 0)))
-            throw new Error(`battle: 물약 칸 ${JSON.stringify(potions)} — [{id, heal}] 이고 칸 수 ${B.potion_slot_max} 이하여야 한다 (INTERFACE §2-6)`);
+        // 칸은 **자리 순**이고 `null` = 빈 칸 — 재고가 모자랐거나 비워 둔 칸 (2026-09-21 · R124)
+        if (!Array.isArray(potionSlots) || potionSlots.length > B.potion_slot_max || potionSlots.some(p => p !== null && !(p?.id && p.heal >= 0)))
+            throw new Error(`battle: 물약 칸 ${JSON.stringify(potions)} — [{id, heal} | null] 이고 칸 수 ${B.potion_slot_max} 이하여야 한다 (INTERFACE §2-6)`);
         // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
         //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
         const stageLevel = level ?? stage.dlvl;
@@ -585,8 +586,8 @@ export function createBattleSystem(data) {
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
                 atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null,
                 ...slotView(p) })),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
-            // 보상 칸(xpTotal · gold · kills · cards · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
-            timeline, xpTotal: 0, gold: 0, kills: {}, cards: {}, drops: [], downed: [],
+            // 보상 칸(xpTotal · gold · kills · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
+            timeline, xpTotal: 0, gold: 0, kills: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -594,9 +595,9 @@ export function createBattleSystem(data) {
             // 아래 `contrib` 맵이 세고 전투가 끝나면 여기로 옮긴다. **rng 를 안 쓰고 타임라인에도 안 들어간다** —
             // 세는 것뿐이라 전투 결과도 골든 수열도 안 건드린다 (`strikes` 와 같은 취급)
             contrib: [],
-            // 이 런의 물약 칸 [2026-09-15 · R103 · 모양 R104] — 재생기가 칸의 첫 상태를 그린다: `max` = 칸 수 · `slots` = 찬 칸(앞 칸부터 · 나머지는 빈 채 출발) ·
+            // 이 런의 물약 칸 [2026-09-15 · R103 · 모양 R104 · 빈 칸 R124] — 재생기가 칸의 첫 상태를 그린다: `max` = 칸 수 · `slots` = 받은 칸 그대로(자리 순 · `null` = 빈 칸 · 목록 뒤도 빈 채 출발) ·
             //   `used` = 마신 수(`potion` 이벤트 수와 같다). 물약 없는 런도 칸은 선다(`slots: []`)
-            potion: { max: B.potion_slot_max, slots: potionSlots.map(p => ({ id: p.id, heal: p.heal })), used: 0 },
+            potion: { max: B.potion_slot_max, slots: potionSlots.map(p => (p ? { id: p.id, heal: p.heal } : null)), used: 0 },
         };
 
         /* 기여 — **전투 시작 시점의 파티 전원**으로 자리를 미리 잡는다. 0 인 영웅도 줄이 서야
@@ -610,13 +611,12 @@ export function createBattleSystem(data) {
 
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
-        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, cards: {}, drops: [] });
+        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, drops: [] });
         let loot = newLoot();
         const bank = () => {
             out.xpTotal += loot.xp;
             out.gold += loot.gold;
             for (const [id, n] of Object.entries(loot.kills)) out.kills[id] = (out.kills[id] ?? 0) + n;
-            for (const [id, n] of Object.entries(loot.cards)) out.cards[id] = (out.cards[id] ?? 0) + n;
             out.drops.push(...loot.drops);
         };
 
@@ -641,10 +641,11 @@ export function createBattleSystem(data) {
            대상 = 살아 있는 파티 영웅(소환 제외) 중 HP 비율이 [balance.csv:potion_use_hp_pct] 밑이고 제 물약 쿨이 끝난 사람.
            순서 = HP 비율 낮은 순 · 같으면 **파티 배열 순** — 동점을 배열 순으로 명시 비교한다(엔진의 정렬 안정성에 기대지 않는다 · INTERFACE §5-3).
            **칸 하나에 물약 하나 · 앞 칸부터 마신다** [R104 사용자 지시] — 먼저 마시는 영웅이 앞의 찬 칸을 받는다. 칸은 런 안에서 다시 안 차므로
-           「앞의 찬 칸」은 늘 방금 마신 칸의 다음이다. 그 칸 물약의 정해진 양을 채우고(최대치에서 자른다) 쿨은 [balance.csv:potion_cooldown_sec] 이다. **rng 를 안 쓴다** ·
+           「앞의 찬 칸」은 늘 방금 마신 칸 뒤의 첫 찬 칸이다(빈 칸 `null` 은 건너뛴다 · R124). 그 칸 물약의 정해진 양을 채우고(최대치에서 자른다) 쿨은 [balance.csv:potion_cooldown_sec] 이다. **rng 를 안 쓴다** ·
            ⚠ 화염 치유 감소는 미구현이다(`skill_runtime.castHeal` 과 같은 처지) */
-        let potionLeft = potionSlots.length;
+        let potionLeft = potionSlots.filter(Boolean).length;
         let potionNext = 0;
+        let potionRound = {};          // 이 라운드에 마신 물약 `{id: n}` — 요약이 싣고 정산이 재고에서 뺀다 (R124) · 세기만 한다
         const drinkPotions = () => {
             const want = party
                 .map((u, i) => ({ u, i }))
@@ -652,10 +653,12 @@ export function createBattleSystem(data) {
             want.sort((a, b) => (a.u.hp / a.u.hpMax - b.u.hp / b.u.hpMax) || (a.i - b.i));
             for (const { u } of want) {
                 if (potionLeft <= 0) break;
+                while (!potionSlots[potionNext]) potionNext++;   // 빈 칸은 건너뛴다 (R124) — 찬 칸이 남아 있으므로 끝을 안 넘는다
                 const i = potionNext++;
                 const slot = potionSlots[i];
                 potionLeft -= 1;
                 out.potion.used += 1;
+                potionRound[slot.id] = (potionRound[slot.id] ?? 0) + 1;
                 // 체력 회복 +%(갑옷 나태 · 2026-09-18)가 물약에도 곱한다 — 이벤트의 `amt` 가 늘어난 양이다. 0 이면 그 칸의 정해진 양 그대로
                 const amt = u.recv ? Math.round(slot.heal * (1 + u.recv)) : slot.heal;
                 u.hp = Math.min(u.hpMax, u.hp + amt);
@@ -711,11 +714,8 @@ export function createBattleSystem(data) {
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
             // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
             // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)
-            // 도감 카드 — 장비 드롭과 별개 판정 [balance.csv:codex_card_drop_pct]. 등급별 차등은 후속 (monster_design §8)
-            //   카드는 **라운드를 이기면 조용히** 들어온다 — 처치 순간 알리는 `card` 이벤트는 없다 [삭제 2026-09-14 · R89 · 사용자 지시]
-            if (rng() < B.codex_card_drop_pct) {      // 확률은 비율 (R111)
-                loot.cards[e.monsterId] = (loot.cards[e.monsterId] ?? 0) + 1;
-            }
+            // ~~도감 카드 판정(rng 1회)~~ 은 2026-09-21 삭제 — 도감 레벨은 위 `loot.kills` 가 올린다 (monster_design §8 · 사용자 지시).
+            //   카드는 나중에 드롭형으로 다시 설계한다. **처치마다 굴림 하나가 빠져 같은 시드의 수열이 갈렸다** (INTERFACE §5-2)
             // 드롭 판정 — **처치당 최대 1개** (item_design §1 확정 08-27). 등급은 굴림 횟수가 아니라
             // 확률 배율(spawn_grade.drop_chance_mult)이다 — 판정은 **1회**. 보스는 최소 1개 보장
             let got = rng() < B.drop_chance_pct * e.dropChanceMult * dropMult ? 1 : 0;
@@ -1007,14 +1007,16 @@ export function createBattleSystem(data) {
         };
         /**
          * 라운드 하나의 요약 — `n` 번째 라운드가 `t` 초에 끝났다 · 이겼나(`cleared`) · 런이 끝났나(`ended`) ·
-         * **그 라운드의 몫**(`xp` · `gold` · `kills` · `cards` · `drops` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
+         * **그 라운드의 몫**(`xp` · `gold` · `kills` · `drops` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
          */
         const summary = cleared => {
             const s = {
                 n: round, t: r1(t), cleared, ended, ...(cleared ? loot : newLoot()),
                 alive: party.filter(u => !u.summon && u.hp > 0).map(u => u.uid), contrib: contribNow(),
+                potions: potionRound,        // 그 라운드에 마신 물약 — 이겼든 졌든 (R124)
             };
             loot = newLoot();
+            potionRound = {};
             return s;
         };
 

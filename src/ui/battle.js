@@ -61,7 +61,6 @@ const stalledFor = (u, now) => (u.stalls ?? []).reduce((s, w) => s + Math.max(0,
 const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity) > now;
 /** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다) */
 const markActed = (u, at) => { u.lastAct = at; u.acted = true; u.stalls = []; };
-const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 /**
  * @param container  붙일 곳
@@ -99,7 +98,8 @@ export function mountBattle(container, opts) {
         layout: opts.layout === 'split' ? 'split' : 'wide',
         // 물약 칸 — **파티가 같이 쓰고 칸 하나에 물약 하나**. 결과가 칸 수와 찬 칸을 싣고(`result.potion`) `potion` 이벤트가 마신 칸 번호(`i`)를 준다 (R104 · ADR-0148).
         //   물약 없이 도는 런도 칸은 전부 빈 채 선다 — 값은 항상 찍는다 (SCREEN_DESIGN §4-1)
-        potion: { max: result.potion?.max ?? 0, slots: (result.potion?.slots ?? []).map(s => ({ id: s.id, heal: s.heal, full: true })) },
+        //   칸의 `null` = 빈 채 나간 칸(재고가 모자랐거나 비워 둔 칸 · R124)
+        potion: { max: result.potion?.max ?? 0, slots: (result.potion?.slots ?? []).map(s => (s ? { id: s.id, heal: s.heal, full: true } : null)) },
     };
 
     // 파티 유닛 — 결과의 party 정보 + 로스터의 표시 정보(이름·죄종·직업)
@@ -191,7 +191,7 @@ function buildDom(state, stage, stageId) {
             </div>
             <div class="battle-side" hidden>
                 <div class="segmented log-filter">${['all', 'party', 'enemy'].map(f => `<button class="btn sm b-logf" data-f="${f}">${t(`bt.logf.${f}`)}</button>`).join('')}</div>
-                <div class="battle-log-wrap pane"><ul class="battle-log"></ul></div>
+                <div class="battle-log-wrap pane"><div class="lg-head"><span class="lg-n">${t('bt.logh.name')}</span><span class="lg-ico">${t('bt.logh.skill')}</span><span class="lg-d">${t('bt.logh.target')}</span><b class="lg-v">${t('bt.logh.val')}</b></div><div class="lg-round"></div><ul class="battle-log"></ul></div>
                 <div class="battle-dmg-wrap pane" hidden></div>
             </div>
         </div>`;
@@ -265,8 +265,9 @@ function paintPane(state, root) {
     root.querySelector('.log-filter').hidden = log.hidden;   // 탭은 로그 판에만 선다 — 누적 데미지 판은 이미 파티 / 적 두 묶음이다
     root.querySelectorAll('.b-logf').forEach(b => b.classList.toggle('on', b.dataset.f === state.logf));
     root.querySelector('.battle-log').dataset.f = state.logf;
-    // 숨어 있는 동안에도 줄은 쌓인다 — display:none 에서는 scrollTop 이 안 잡히므로 보일 때 맨 아래로 맞춘다
-    if (!log.hidden) log.scrollTop = log.scrollHeight;
+    // 숨어 있는 동안에도 줄은 쌓인다 — display:none 에서는 scrollTop 이 안 잡히므로 보일 때 맨 아래로 맞춘다.
+    //   스크롤하는 것은 판이 아니라 **목록**이다 — 머리 줄은 판에 서서 안 움직인다 (ADR-0201)
+    if (!log.hidden) { const ul = root.querySelector('.battle-log'); ul.scrollTop = ul.scrollHeight; }
 }
 
 /* 라운드 표시는 **트랙 하나**가 든다 [2026-09-04 사용자 지시] — 「라운드 n / 총 · 종류」 수치와 경과 시계는 삭제됐다.
@@ -377,9 +378,7 @@ function renderUnits(state, root) {
             // 영웅 등급 색은 **CSV 에서 읽어 변수(`--tier-line`)로 건다** (2026-09-15) — CSS 에 등급마다 줄을 박아 뒀더니 09-14 에 생긴 `normal`
             //   (그리고 `magic`)은 줄이 없어 진영색 파랑으로 떨어졌다. 띠 카드(app.js `tierColor`) · 유닛 툴팁(tip.js `--unit-line`)과 같은 출처다
             //   모르는 등급은 `rare` 로 — 두 곳의 `tierOf` 와 같은 폴백이다(영웅이 없는 파티 유닛도 옛 `tier-rare` 그대로)
-            const tierLine = u.side === 'party'
-                ? (D.heroTiers.find(r => r.id === (u.hero?.tier ?? 'rare')) ?? D.heroTiers.find(r => r.id === 'rare'))?.color
-                : null;
+            const tierLine = u.side === 'party' ? heroTierColor(u.hero) : null;
             // `click` = 누르면 장착 대상이 되는 영웅 카드 · `on` = 지금 장착 대상 (ADR-0137)
             const pick = u.hero && state.onPickHero ? ` click${u.hero.uid === state.pickedUid ? ' on' : ''}` : '';
             n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${pick}${u.hp <= 0 ? ' dead' : ''}`;
@@ -651,7 +650,7 @@ function addDmg(state, u, id, dmg) {
     e.total += dmg;
     e.by.set(id, (e.by.get(id) ?? 0) + dmg);
 }
-/** 누적 데미지 판 — 영웅마다 머리 줄(합계 · 파티 합 안 % · 막대는 파티 안 최대 기준) 아래에 한 줄씩(아이콘 · 이름 · 피해). 보이는 동안만 그린다 */
+/** 누적 데미지 판 — 영웅 한 덩어리 = 왼쪽 초상 + 오른쪽 열(ADR-0211). 열은 머리 줄(합계 · 파티 합 안 % · 막대는 파티 안 최대 기준) 아래에 한 줄씩(아이콘 · 이름 · 피해). 보이는 동안만 그린다 */
 function renderDmg(state, root) {
     const box = root.querySelector('.battle-dmg-wrap');
     if (!box || box.hidden) return;
@@ -659,13 +658,13 @@ function renderDmg(state, root) {
     const sum = rows.reduce((a, e) => a + e.total, 0);
     const max = rows[0]?.total || 1;
     box.innerHTML = rows.length ? rows.map(e => `
-        <div class="dmg-row">
+        <div class="dmg-row">${dmgFace(e.unit)}<div class="dmg-body">
             <div class="dmg-head"><span class="dmg-n">${L(e.name)}</span>
                 <span class="dmg-v">${e.total.toLocaleString()} <span class="muted">${sum ? Math.round(e.total / sum * 100) : 0}%</span></span></div>
             <div class="bar dmg"><i style="width:${e.total / max * 100}%"></i></div>
             <div class="dmg-sks">${dmgLines(e).map(([id, v]) => `
                 <div class="dmg-sk"><i class="dmg-ico">${dmgIcon(id)}</i><span class="dmg-skn">${dmgName(id)}</span><span class="dmg-skv">${v.toLocaleString()}</span></div>`).join('')}</div>
-        </div>`).join('') : `<div class="dmg-row"><span class="muted">—</span></div>`;
+        </div></div>`).join('') : `<div class="dmg-row"><span class="muted">—</span></div>`;
 }
 /** 줄 순서 — 기본 공격 → 그 영웅 카드의 스킬 칸 순(칸에서 빠진 스킬은 그 뒤) → 반사. 피해 큰 순이면 숫자가 오를 때마다 줄이 자리를 바꾼다 */
 function dmgLines(e) {
@@ -676,6 +675,16 @@ function dmgLines(e) {
 /* 기본 공격은 스킬 그림이 없어 **무기 칸 실루엣**을 든다 · 반사는 그림이 없다 */
 const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : skillImg(skillInfo(id));
 const dmgName = id => id === 'basic' ? t('bt.basicAttack') : id === 'reflect' ? t('bt.reflectLabel') : L(skillInfo(id).name);
+/* 영웅 등급 색(`hero_tier.csv:color_hex`) — 아레나 카드 윗변과 누적 판 초상 윗변이 같이 읽는다. 모르는 등급 · 영웅이 없는 파티 유닛은 `rare` */
+const heroTierColor = hero => (D.heroTiers.find(r => r.id === (hero?.tier ?? 'rare')) ?? D.heroTiers.find(r => r.id === 'rare'))?.color;
+/* 덩어리 왼쪽 초상 — 그 영웅 카드와 같은 얼굴 그림(공통 조각 `.hero-face`). 아트가 없으면 빈 칸이다 — 밑에 아무것도 안 깐다 (ADR-0211).
+   윗변 = 영웅 등급 색 — 카드와 같은 변수(`--tier-line`)를 인라인으로 건다(색은 데이터 · 어느 변을 칠하나는 CSS) */
+const dmgFace = u => {
+    const src = M.heroFace(u.hero), line = heroTierColor(u.hero);
+    return `<span class="hero-face dmg-face"${line ? ` style="--tier-line:${line}"` : ''}>${src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''}</span>`;
+};
+/* 로그의 물약 줄 그림 — 그 물약의 그림 하나. 없으면 빈 칸이다(칸의 병 실루엣은 「여기에 물약이 들어간다」는 칸의 말이라 로그에 안 빌린다) */
+const potionIcon = id => { const src = id ? M.potionArt(id) : null; return src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''; };
 
 /**
  * 떠오르는 한 줄. `skillId` 를 주면 **텍스트 왼쪽에 그 스킬 아이콘**이 붙는다 (SCREEN_DESIGN §4 · 2026-09-08).
@@ -699,19 +708,53 @@ function popup(state, u, text, cls, skillId = null) {
     state.timeouts.push(setTimeout(() => p.remove(), 900));
 }
 
-/* 로그 한 줄 — `side` = 그 줄의 **주체**(party / enemy · 라운드 시작 · 종료는 sys). 로그 탭(전체 · 우리 · 적)이 이 값으로 거른다 (ADR-0131).
+/* 로그 한 줄 = **네 칸 격자** — 주체 이름 · 스킬 그림 · 대상 이름 · 값 (SCREEN_DESIGN §4-2 · ADR-0189).
+   칸 폭은 목록 하나의 격자가 정하고 줄이 물려받는다(CSS `subgrid`) — 그래서 모든 줄이 세로로 선다. 넘치는 이름은 `…` · 올리면 전체 이름.
+   이름 · 대상 · 값은 **텍스트 노드**다 — 유닛 이름이 마크업으로 새지 않게 한다(`popup` 과 같다). 그림만 마크업이다.
+   `side` = 그 줄의 **주체**(party / enemy · 라운드 시작 · 종료는 sys). 로그 탭(전체 · 우리 · 적)이 이 값으로 거른다 (ADR-0131).
    줄은 다 쌓고 목록의 `data-f` 에 따라 CSS 가 숨긴다 — 탭을 바꿔도 다시 그리지 않아 스크롤과 쌓인 줄이 남는다.
    남기는 줄 수는 **주체마다** 센다 — 한 목록에서 세면 파티 셋의 줄이 적의 줄을 밀어내 「적」 탭에 몇 줄만 남는다 */
 const LOG_KEEP = 60;
-function pushLog(state, root, text, side = 'sys') {
-    const ul = root.querySelector('.battle-log');
+/** 네 칸 한 줄. `ico` = 그림 마크업(`dmgIcon` — 누적 판과 같은 규칙) · `skill` = 그림에 올리면 뜨는 이름 · `vcls` = 값 칸 색(피해 종류 · 회복) */
+function logRow(name, ico, skill, target, val, vcls = '') {
     const li = document.createElement('li');
+    li.className = 'lg-row';
+    const cell = (tag, cls, text) => {
+        const n = document.createElement(tag);
+        n.className = cls;
+        if (text) { n.textContent = text; n.title = text; }
+        return n;
+    };
+    const i = cell('i', 'lg-ico');
+    i.innerHTML = ico;
+    if (skill) i.title = skill;
+    const v = cell('b', vcls ? `lg-v ${vcls}` : 'lg-v');
+    v.textContent = val ?? '';
+    li.append(cell('span', 'lg-n', name), i, cell('span', 'lg-d', target), v);
+    return li;
+}
+/** 머리 줄 아래 고정 칸 — 지금 라운드 줄(가장 최근 `round` 의 글). 스크롤 목록 밖이라 제자리다 · 넘치면 `…` · 올리면 전체 (ADR-0204) */
+function pinRound(root, html) {
+    const pin = root.querySelector('.lg-round');
+    if (!pin) return;
+    pin.innerHTML = html;
+    pin.title = pin.textContent;
+}
+/** 격자 밖 전폭 한 줄 — 라운드 시작 · 종료. 넘치면 `…` · 올리면 전체 */
+function wideRow(html) {
+    const li = document.createElement('li');
+    li.className = 'lg-wide';
+    li.innerHTML = html;
+    li.title = li.textContent;
+    return li;
+}
+function pushLog(state, root, li, side = 'sys') {
+    const ul = root.querySelector('.battle-log');
     li.dataset.side = side;
-    li.innerHTML = `<span class="t">${clock(state.t)}</span> ${text}`;
     ul.appendChild(li);
     const same = ul.querySelectorAll(`li[data-side="${side}"]`);
     for (let i = 0; i < same.length - LOG_KEEP; i++) same[i].remove();
-    ul.parentElement.scrollTop = ul.parentElement.scrollHeight;
+    ul.scrollTop = ul.scrollHeight;   // 목록이 스크롤한다 — 머리 줄은 목록 밖이다 (ADR-0201)
 }
 
 /* ───────── 재생 ───────── */
@@ -789,7 +832,13 @@ function apply(state, root, opts, ev) {
             for (const e of state.enemies) state.units.set(e.key, e);
             renderUnits(state, root);
             paintRound(state, root);
-            pushLog(state, root, t('log.roundStart', { n: ev.n, kind: kindLabel(ev.kind), list: enemyList(state) }));
+            // 라운드 줄 — 목록에는 경계로 쌓고(지난 라운드를 거슬러 읽을 때), 머리 줄 아래 고정 칸에는 「지금」으로 건다 (ADR-0204)
+            //   종류는 글 왼쪽의 칩이다(라운드 트랙과 같은 색) · 첫 라운드는 목록에 안 쌓는다 — 빈 목록 맨 위에서 고정 줄과 같은 글이 두 번 섰다.
+            //   목록 줄은 2라운드부터 경계로 선다 (ADR-0205)
+            const roundLine = `<span class="lg-kind ${ev.kind}">${kindLabel(ev.kind)}</span>`
+                + t('log.roundStart', { n: ev.n, list: enemyList(state) });
+            if (root.querySelector('.battle-log').childElementCount) pushLog(state, root, wideRow(roundLine));
+            pinRound(root, roundLine);
             break;
         }
         case 'call': {   // 불러내기 (2026-09-18 · ADR-0161) — 처음 부른 무리는 카드로 서고, 쓰러졌던 무리는 **제 카드가 다시 산다**(새 카드 없음)
@@ -812,7 +861,8 @@ function apply(state, root, opts, ev) {
             // 카드가 늘었으면 진형 줄을 다시 세운다(라운드 시작과 같은 함수) — 되살아남만이면 자리 그대로다
             if (grew) renderUnits(state, root);
             const a = U(ev.u);
-            if (a) pushLog(state, root, t('log.call', { name: L(a.name), skill: strikeLabel(ev.s), list: ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', ') }), a.side);
+            // 대상 칸 = 불린 무리(쉼표) — 처음 선 것과 되살아난 것을 가르지 않는다 · 값 칸은 빈다 (ADR-0189)
+            if (a) pushLog(state, root, logRow(L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), ''), a.side);
             break;
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
@@ -830,9 +880,9 @@ function apply(state, root, opts, ev) {
                 refreshUnit(state, d);
             }
             if (a && d) {
-                // 모든 타격을 적는다 — 누가 → 누구 · 피해 · 쓴 스킬
+                // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
-                pushLog(state, root, t('log.hit', { name: L(a.name), target: L(d.name), dmg: ev.dmg, skill, ty: ev.ty ?? '' }), a.side);
+                pushLog(state, root, logRow(L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : ''), a.side);
                 addDmg(state, a, ev.s ?? 'basic', ev.dmg);
                 renderDmg(state, root);
             }
@@ -843,7 +893,7 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
-                pushLog(state, root, t('log.reflect', { name: L(a.name), target: L(d.name), dmg: ev.dmg }), a.side);   // 반사의 주체는 되받아 친 쪽
+                pushLog(state, root, logRow(L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg), a.side);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
                 addDmg(state, a, 'reflect', ev.dmg);
                 renderDmg(state, root);
             }
@@ -855,7 +905,7 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
-                pushLog(state, root, t('log.blast', { name: L(a.name), target: L(d.name), dmg: ev.dmg }), a.side);   // 주체는 터진 쪽 (반사와 같은 자리)
+                pushLog(state, root, logRow(L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg), a.side);   // 주체는 터진 쪽 (반사와 같은 자리)
                 addDmg(state, a, ev.s, ev.dmg);
                 renderDmg(state, root);
             }
@@ -864,7 +914,8 @@ function apply(state, root, opts, ev) {
         case 'counter': {   // 반격 (2026-09-18 · ADR-0158) — 맞은 쪽(u)이 때린 쪽(d)에게 되받아 친다. 뒤에 그 타격 이벤트(기본 공격)가 잇는다
             const u = U(ev.u), d = U(ev.d);
             if (u) popup(state, u, t('pop.counter'), 'counter');
-            if (u && d) pushLog(state, root, t('log.counter', { name: L(u.name), target: L(d.name) }), u.side);   // 주체는 반격한 쪽 (반사와 같은 자리)
+            // 주체는 반격한 쪽 (반사와 같은 자리) · 반격은 기본 공격이라 무기 칸 실루엣 · 값 칸은 「반격」
+            if (u && d) pushLog(state, root, logRow(L(u.name), dmgIcon('basic'), t('bt.basicAttack'), L(d.name), t('log.v.counter')), u.side);
             break;
         }
         case 'dodge': {
@@ -872,7 +923,7 @@ function apply(state, root, opts, ev) {
             const skill = strikeLabel(ev.s);
             if (a) markActed(a, ev.t);
             if (d) popup(state, d, t('pop.dodge'), 'miss');
-            if (a && d) pushLog(state, root, t('log.dodge', { name: L(a.name), target: L(d.name), skill }), a.side);
+            if (a && d) pushLog(state, root, logRow(L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss')), a.side);
             break;
         }
         case 'stagger': {   // 물리 경직 (R110) — 끝 시각까지 창 뱃지 줄에 칩 하나 · 그동안 행동 게이지가 선다. 로그 · 팝업은 없다 (SCREEN_DESIGN §4-2 · ADR-0154)
@@ -893,14 +944,14 @@ function apply(state, root, opts, ev) {
             refreshUnit(state, u);
             const enemy = u.side === 'enemy';
             // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
-            pushLog(state, root, t(enemy ? 'log.slain' : 'log.downed', { name: L(u.name) }), enemy ? 'party' : 'enemy');
+            pushLog(state, root, logRow(L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed')), enemy ? 'party' : 'enemy');
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
             break;
         }
         case 'heal': {   // 회복 — 시전자(a)가 대상(d)의 HP 를 올린다. 부호가 반대일 뿐 타격과 같은 자리에 뜬다
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
-            if (a && d) pushLog(state, root, t('log.heal', { name: L(a.name), target: L(d.name), amt: ev.amt, skill: strikeLabel(ev.s) }), a.side);
+            if (a && d) pushLog(state, root, logRow(L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), `+${ev.amt}`, 'heal-t'), a.side);
             break;
         }
         case 'potion': {   // 물약 — 앞의 찬 칸(`i`)이 비고 그 영웅 HP 가 오른다 (R104 · ADR-0148).
@@ -910,7 +961,8 @@ function apply(state, root, opts, ev) {
             const slot = state.potion.slots[ev.i];
             if (slot) slot.full = false;
             paintPotion(state, root, ev.i);
-            if (u) pushLog(state, root, t('log.potion', { name: L(u.name), amt: ev.amt, left: ev.left }), u.side);
+            // 대상 칸은 빈다 · 남은 칸 수는 안 적는다 — 아레나의 물약 칸이 든다 (ADR-0189)
+            if (u) pushLog(state, root, logRow(L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t'), u.side);
             break;
         }
         case 'regen': {   // HP 재생 — 조용히 오른다(팝업 없음). 정수 1 이상 쌓인 틱에만 온다
@@ -930,7 +982,8 @@ function apply(state, root, opts, ev) {
             // 오오라(`until: null`)는 로그에 안 적는다 — 전투 시작 · 적의 라운드마다 받는 유닛 수만큼 같은 줄이 쌓인다. 뱃지가 든다 (R98 · ADR-0127)
             // 배리어인지는 `stat` 으로 가른다 [2026-09-21 · 부채 #50 곁가지] — `amt` 는 최대 HP 창(`hp_max_pct`)도 실어서
             //   `amt != null` 로 가르면 배틀오더스가 「방벽 21」로 찍혔다
-            if (ev.until !== null) pushLog(state, root, t(ev.stat === 'barrier_pct' ? 'log.barrier' : 'log.buff', { name: L(u.name), skill: strikeLabel(ev.s), amt: ev.amt }), u.side);
+            if (ev.until !== null) pushLog(state, root, logRow(L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '',
+                ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up')), u.side);
             break;
         }
         case 'buffEnd': {
@@ -941,7 +994,7 @@ function apply(state, root, opts, ev) {
             // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
-            if (!aura) pushLog(state, root, t('log.buffEnd', { name: L(u.name), skill: strikeLabel(ev.s) }), u.side);
+            if (!aura) pushLog(state, root, logRow(L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '', t('log.v.ended')), u.side);
             break;
         }
         // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)
@@ -961,7 +1014,7 @@ function apply(state, root, opts, ev) {
         case 'end': {
             state.ended = true;
             clearInterval(state.timer);
-            pushLog(state, root, t(ev.won ? 'log.end.win' : 'log.end.lose'));
+            pushLog(state, root, wideRow(t(ev.won ? 'log.end.win' : 'log.end.lose')));
             showResult(state, root, opts, ev.won);
             // 재생이 끝에 닿았다고 앱에 알린다 — 상단 세그먼트의 관전 칸이 「전투 종료」로 바뀐다 (ADR-0147).
             //   되감아 선 끝(재개 mount)은 알리지 않는다 — 앱은 넘긴 재생 위치로 이미 안다
@@ -971,12 +1024,12 @@ function apply(state, root, opts, ev) {
     }
 }
 
-/** 재생이 끝나면 아레나 위에 결과 띠 — 반복이 켜져 있으면 잠깐 세고 다음 원정으로 · 반복 없이 이기면 [다음 스테이지](ADR-0141) · 패배면 [다시 도전]이 선다 (ADR-0138) */
+/** 재생이 끝나면 아레나 위에 결과 띠 — 반복이 켜져 있으면 잠깐 세고 다음 원정으로 · 반복 없이 이기면 [다음 스테이지](ADR-0141) · [다시 도전]은 이기든 지든 선다 (ADR-0138 · ADR-0212) */
 function showResult(state, root, opts, won) {
     const box = root.querySelector('.battle-result');
     const auto = won && opts.repeat === true;
-    const retry = !won && typeof opts.onRetry === 'function';
-    // 반복이 세는 띠에는 안 단다 — 세는 동안 누를 버튼이 둘이 된다 (ADR-0141)
+    // 반복이 세는 띠에는 둘 다 안 단다 — 세는 동안 누를 버튼이 늘고, 세기가 끝나면 같은 곳으로 저절로 나간다 (ADR-0141 · ADR-0212)
+    const retry = !auto && typeof opts.onRetry === 'function';
     const next = won && !auto && typeof opts.onNext === 'function';
     box.innerHTML = `
         <span class="${won ? 'up' : 'down'} verdict">${t(won ? 'bt.won' : 'bt.lost')}</span>

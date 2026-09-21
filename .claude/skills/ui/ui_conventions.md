@@ -51,7 +51,7 @@ render()
 ## 3. 전역과 화면 상태
 
 - `D`(CSV 파생) · `SYS`(시스템 묶음) · `G`(세이브 상태) 세 전역 — 정의는 [ARCHITECTURE.md §3](docs/client/ARCHITECTURE.md). `G` 가 `null` 이면 시작 화면
-- 화면 상태는 `app.js` 의 `state` 객체 하나다 (`screen` · `tab` · `exp` · `heroUid` · `codexChapter` · `slotFilter` · `roll` · `candidates` · `confirmOverwrite` · `salvageMode` · `battle`). **세이브에 들어가지 않는다** — 새 화면 상태도 여기 붙인다
+- 화면 상태는 `app.js` 의 `state` 객체 하나다 (`screen` · `tab` · `exp` · `heroUid` · `codexChapter` · `slotFilter` · `roll` · `candidates` · `confirmOverwrite` · `bagSelMode` · `bagSel` · `bagLockMode` · `battle`). **세이브에 들어가지 않는다** — 새 화면 상태도 여기 붙인다
 - 시계는 `now()` = `Date.now()`. **UI 층에서만 읽어** 로직에 `now` 인자로 넘긴다
 - 난수는 `makeRng(seed)` 를 만들어 넘길 뿐, 렌더러가 굴리지 않는다 (시작 후보는 `ROLL_SEED` 고정 시드 — 같은 리롤 횟수면 같은 후보)
 

@@ -608,10 +608,10 @@ export const COMMON_TRAITS = [
 export const MASTERY_GRID = { tiers: 3, nodes: 3 };
 /* ═══════════ 도감 ═══════════ */
 /**
- * 몬스터 도감 — **몬스터 카드 모델** (2026-08-25 확정, monster_design §8). 처치 수 문턱(08-22)을 대체한다.
+ * 몬스터 도감 — **처치 수 모델** (2026-09-21 사용자 지시, monster_design §8). 08-25 몬스터 카드 모델을 대체한다(카드는 나중에 드롭형으로).
  *
- * 처치마다 확률로 그 몬스터의 카드가 떨어지고([balance.csv:codex_card_drop_pct]), 카드가 누적 문턱을 넘을 때마다
- * 도감 레벨이 오른다. 레벨별 필요 장수(`codex_level.csv:cards_to_next`) · 레벨별 보정 %(`bonus_pct`) ·
+ * 그 몬스터의 누적 처치 수가 문턱을 넘을 때마다 도감 레벨이 오른다.
+ * 레벨별 누적 처치 문턱(`codex_level.csv:kills_total`) · 레벨별 보정 %(`bonus_pct`) ·
  * 계열 배정(`codex_series.csv`) 는 전부 CSV 다 — 여기 남은 것은 **화면 전용 라벨**뿐이다.
  * 챕터 이름·죄종은 `chapter.csv` (ui/data.js:D.chapterList · chapterOf).
  */

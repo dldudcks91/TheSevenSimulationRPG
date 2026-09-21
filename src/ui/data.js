@@ -28,7 +28,7 @@ export const D = {
     roundSets: {},            // stage_round.csv — {round_set: [{round_num, round_type}]} · 스테이지가 stage.csv:round_set 으로 하나를 고른다
     budgets: null, grades: null, eliteRounds: [], bossRound: 0,   // eliteRounds · bossRound = 첫 스테이지 세트의 배치(도움말 표기)
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
-    codexLevels: [],          // codex_level.csv — 레벨순 cards_to_next (레벨당 증분)
+    codexLevels: [],          // codex_level.csv — 레벨순 kills_total (누적 처치 문턱)
     codexBonus: [],           // codex_level.csv — 레벨순 bonus_pct
     codexSeries: null,        // codex_series.csv — {stage_num: statKey}
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
@@ -51,7 +51,7 @@ export const D = {
     gatherNodes: [],          // gather_node.csv — 채집의 **단계 7** · 같은 모양이고 산출물만 약초다 (yieldKo/yieldEn) · tier 순 ⚠임시
     logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
     makeRecipes: {},          // make_recipe.csv — {part: {ore, timber, dust}} · 제작 필요량 ⚠임시 (item_design §7-1 · R96)
-    potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, craftable, startOwned}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103)
+    potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, craftable, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103)
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
@@ -124,7 +124,7 @@ export async function loadData(base = './data/') {
     D.eliteRounds = baseRounds.filter(r => r.round_type === 'elite').map(r => r.round_num);
     D.bossRound = baseRounds.find(r => r.round_type === 'boss')?.round_num ?? baseRounds.length;
     const codexByLevel = codexLevel.slice().sort((a, b) => a.level - b.level);
-    D.codexLevels = codexByLevel.map(r => r.cards_to_next);
+    D.codexLevels = codexByLevel.map(r => r.kills_total);   // 누적 처치 문턱 (2026-09-21 — 카드 → 처치 수)
     D.codexBonus = codexByLevel.map(r => r.bonus_pct);
     D.codexSeries = Object.fromEntries(codexSeries.map(r => [r.stage_num, r.stat]));
     D.chapterList = chapter.slice().sort((a, b) => a.chapter_id - b.chapter_id)
@@ -233,7 +233,7 @@ export async function loadData(base = './data/') {
     // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
     D.potions = potionRow.map(r => ({
         id: r.potion_id, kind: r.kind, tier: r.tier, ko: r.name_kr, en: r.name_en,
-        heal: r.heal, craftGold: r.craft_gold, craftable: r.craftable === 1, startOwned: r.start_owned === 1,
+        heal: r.heal, craftGold: r.craft_gold, craftable: r.craftable === 1, startOwned: r.start_owned,   // startOwned = 시작 개수(R124 · 2026-09-21 — 전엔 0/1)
     }));
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
@@ -277,7 +277,7 @@ export async function loadData(base = './data/') {
     D.formationTemplates = Object.fromEntries(formationTplRow.map(r =>
         [r.tpl_id, { front: r.front, back: r.back, ko: r.name_kr, en: r.name_en }]));
     // ⚠ **행 순서는 따로 들고 간다** — `Object.keys` 는 `'3'` 같은 정수형 키를 맨 앞으로 끌어올려서
-    //   CSV 의 첫 행(기본값 `2-1`)을 못 준다. 「첫 행이 기본값」은 표가 정하는 규칙이라 배열로 보존한다
+    //   CSV 의 첫 행(기본값)을 못 줄 수 있다. 「첫 행이 기본값」은 표가 정하는 규칙이라 배열로 보존한다
     D.formationTplOrder = formationTplRow.map(r => r.tpl_id);
 
     SYS = buildSystems(D);
@@ -311,6 +311,13 @@ export const stageName = row => ({ ko: row.stage_name_kr, en: row.stage_name_en 
  *  줄바꿈은 셀 안의 `\n` 두 글자다(CSV 는 한 행이 한 줄이다) — 여기서 실제 줄바꿈으로 바꾸고 `.dw-story-text` 의 pre-line 이 편다 */
 const storyLines = s => String(s ?? '').replace(/\\n/g, '\n');
 export const stageStory = row => ({ ko: storyLines(row.story_kr), en: storyLines(row.story_en || row.story_kr) });
+/** 몬스터 이야기 — monster.csv 의 story_kr/story_en 쌍 (도감 몬스터 툴팁 · SCREEN_DESIGN §9 · ADR-0206). 규칙은 `stageStory` 와 같다 —
+ *  영어가 비면 한국어. 이야기가 없는 몬스터는 둘 다 빈 문자열이다(화면이 `—` 로 받는다).
+ *  이름은 `{m:<idx>}` 자리표시자라 부르는 쪽이 `fillStory` 로 푼다 — 파티 문맥이 없어 `{leader}` 는 쓰지 않는다 */
+export const monsterStory = id => {
+    const r = D.monsters?.[id];
+    return r ? stageStory(r) : { ko: '', en: '' };
+};
 
 /* ── 이야기 자리표시자 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-1] ──
    이름을 글에 박지 않는다 — 보스 이름의 SSOT 는 monster.csv, 영웅 이름은 세이브다.

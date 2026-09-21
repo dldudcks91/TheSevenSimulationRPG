@@ -96,7 +96,7 @@ const eliteSig = timeline => timeline
  * ⚠ **정수 합만 적는다** — 부동소수를 그대로 넣으면 이식자가 ULP 로 고생한다.
  */
 const grewSig = (SYS, G) => {
-    const hs = G.party.map(uid => SYS.game.heroById(G, uid)).filter(Boolean);
+    const hs = SYS.game.partyOf(G).map(uid => SYS.game.heroById(G, uid)).filter(Boolean);
     const lv = hs.reduce((a, h) => a + (h.level ?? 0), 0);
     const attr = hs.reduce((a, h) => a + Object.values(h.stats ?? {}).reduce((x, v) => x + v, 0), 0);
     const mp = hs.reduce((a, h) => a + (h.masteryPoints ?? 0), 0);
@@ -159,7 +159,7 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
     const res = r.result, rp = r.report;
 
     // 쓰러진 영웅은 uid 가 아니라 **파티 자리 번호**로 적는다 (uid 발급은 state.js 축)
-    const downed = res.downed.map(uid => G.party.indexOf(uid)).sort((a, b) => a - b).join('|') || '-';
+    const downed = res.downed.map(uid => SYS.game.partyOf(G).indexOf(uid)).sort((a, b) => a - b).join('|') || '-';
 
     return {
         seed, stage,
@@ -169,11 +169,10 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
         downed,
         gold: res.gold, xp: res.xpTotal,                              // ~~dust~~ 2026-09-09 폐기 — 처치가 가루를 안 뱉는다
         // 영웅별 받은 경험치 — 파티 자리 순 `a|b|c` [2026-09-14 · R89 — ~~xpEach(전원 동일)~~]. 쓰러진 영웅은 그 뒤 라운드 몫이 없어 서로 다르다
-        xpBy: G.party.map(uid => rp.xp?.[uid] ?? 0).join('|'),
+        xpBy: SYS.game.partyOf(G).map(uid => rp.xp?.[uid] ?? 0).join('|'),
         events: res.timeline.length,                                  // 타임라인 구조 변화 감지
         strikes: `${res.strikes.party.n}/${res.strikes.party.miss} · ${res.strikes.enemy.n}/${res.strikes.enemy.miss}`,
-        cards: numMapSig(res.cards),
-        kills: numMapSig(res.kills),                                  // 스폰 구성 — 카드는 10%만 뜬다
+        kills: numMapSig(res.kills),                                  // 스폰 구성 (~~cards~~ 는 2026-09-21 삭제 — 도감 카드 걷음)
         casts: strMapSig(res.casts),                                  // 스킬 선택은 rng 를 안 써서 다른 필드가 못 본다
         elites: eliteSig(res.timeline),
         grew: grewSig(SYS, G),                                        // ⚠ resolveBattle **뒤**의 상태 (grantXp)

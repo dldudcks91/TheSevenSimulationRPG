@@ -1,5 +1,6 @@
 key,value,status,knob,description_kr
 party_size_max,3,fixed,0,원정 파티 최대 인원 (2026-08-21 확정)
+party_preset_count,3,fixed,0,편성 수 — 늘 이만큼 서 있고 만들고 지우는 동작이 없다 · 파티 · 진형 · 물약 칸은 편성마다이고 파티 전술은 모든 편성이 같이 쓴다 · 사용자 지정(편성 1 · 2 · 3) [신설 2026-09-21 · SCREEN_DESIGN §15 · R122]
 roster_cap,7,fixed,0,영웅 보유 상한 — 원정 파티 + 휴식/파견 인원 (2026-08-21 확정)
 concurrent_expedition_parties,1,fixed,0,동시 원정 파티 수 (2026-08-21 확정)
 stages_per_chapter,5,fixed,0,챕터당 스테이지 수 — 마지막 스테이지는 챕터보스 단독 1라운드 (2026-09-11 개정 4→5 · base_expedition_design §1-2 — 08-21 의 계승 stage_info 골격 4 를 대체). 라운드 수는 키가 아니라 stage_round.csv 세트의 행 수다 (rounds_per_stage 퇴역)
@@ -107,7 +108,7 @@ weapon_res_down_sec,2.5,proposed,0,마법 무기 타격 시 대상 원소 저항
 weapon_atk_down_sec,2.5,proposed,0,사제 무기 시기 칸 — 타격 시 대상 데미지 감소 창 길이(초) — 겹치지 않는다 ⚠제안 (2026-09-11 R78)
 salvage_dust_magic,2,proposed,0,매직 분해 → 가루 (2026-08-25 초반 루프 구현하면서 발생)
 salvage_dust_rare,5,proposed,0,레어 분해 → 가루 (2026-08-25 초반 루프 구현하면서 발생)
-potion_slot_max,4,proposed,1,물약 칸 — 원정 파티가 같이 쓰는 칸 수 · 스테이지(런)를 시작할 때마다 이만큼 다시 찬다 · 챕터보스 스테이지도 같다 · 사용자 지정 임시값 [신설 2026-09-15 · battle_design §7-1 · R103]
+potion_slot_max,4,proposed,1,물약 칸 — 원정 파티가 같이 쓰는 칸 수 · 편성마다 칸 구성을 든다 · 스테이지(런)를 시작할 때마다 그 구성대로 재고에서 다시 채운다(모자란 칸은 빈다 · 2026-09-21 R124) · 챕터보스 스테이지도 같다 · 사용자 지정 임시값 [신설 2026-09-15 · battle_design §7-1 · R103]
 potion_use_hp_pct,0.5,proposed,1,물약을 마시는 HP 비율 % — 살아 있는 영웅의 HP 비율이 이 값 미만이면 자동으로 마신다 · 차례를 안 쓴다 · 조건 조절 옵션은 나중(GAME_DESIGN §10) [신설 2026-09-15 · R103]
 potion_cooldown_sec,4,proposed,1,물약 쿨타임(초) — 영웅마다 · 원정 시작 때 준비 상태 · 한 영웅이 한순간에 칸을 다 비우지 않게 한다 · 사용자 3~5초 [신설 2026-09-15 · R103]
 make_rarity_w_normal,60,proposed,0,제작 희귀도 가중치 — 일반 [신설 2026-09-15 사용자 지시 · item_design §7-1 · R96] — 드롭(rarity_w_*)과 따로 쥔다 · 훑는 순서는 일반 → 매직 → 레어
@@ -133,7 +134,6 @@ tavern_search_sin_echo_pct,0.5,proposed,1,수색 결과가 **보낸 영웅과 �
 tavern_search_meet_at_pct,0.5,proposed,1,수색 중 **만남**이 열리는 시점 — 소요 시간의 %. 50 = 절반(1시간이면 30분). 답은 이 시점부터 **수령할 때까지 언제든** 고를 수 있다(시간 제한 없음 — 방치형 계약 ③) (2026-09-09 발행)
 tavern_search_meet_hit_pct,0.5,proposed,1,**만난 사람의 죄종에 맞는 답**을 골랐을 때 고용비 할인(%). 소문이 죄종을 미리 알려주므로 **읽기만 하면 누구나 얻는 층**이다 (2026-09-09 발행)
 tavern_search_meet_key_pct,1,proposed,1,**그 죄종 영웅을 보내서 열린 답**을 골랐을 때 고용비 할인(%). 소문을 읽고 맞는 사람을 보낸 **준비의 보상**이라 위 hit 보다 높다. 100 = 전액 면제 (2026-09-09 발행)
-codex_card_drop_pct,0.1,proposed,0,몬스터 처치 시 그 몬스터의 도감 카드가 떨어질 확률(%) — 장비 드롭 파이프라인과 별개 판정. 등급별 차등은 후속(spawn_grade 컬럼 또는 필요량 차등) (2026-08-25 도감 카드 모델 확정하면서 발생)
 mastery_t1_max_rank,5,proposed,1,T1·T2 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
 mastery_t1_atkspeed_pct,0.01,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 [combat_stat.csv:action_period] 감소 % · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_wrath_t1_pct 대체)
 mastery_t1_damage_pct,0.02,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 상시 피해 % · atk_physical/atk_magic 의 (1+Σ상시%) 괄호에 덧셈(딜러·힐러 공통 적용) · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_sloth_t1_pct 대체)

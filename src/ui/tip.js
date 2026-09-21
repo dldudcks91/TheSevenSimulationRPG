@@ -21,8 +21,8 @@
  */
 
 import * as M from './mock.js';
-import { t, L, has as STRINGS_HAS } from './i18n.js';
-import { D, SYS, skillTagName } from './data.js';
+import { t, L, lang, has as STRINGS_HAS } from './i18n.js';
+import { D, SYS, skillTagName, monsterFace, monsterSin, monsterStory, fillStory } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
 
@@ -449,6 +449,45 @@ export function monsterTipCard(u, itemCardOf = null) {
         equipmentHtml(wornOfMonster(u.gear)), itemCardOf);
 }
 
+/**
+ * 도감 몬스터 카드 — **초상 옆 이야기 · 아래 처치 단계** (SCREEN_DESIGN §9 · ADR-0206).
+ * 이름 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134). 처치 수는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
+ * 단계의 보정은 **그 단계에서 더해지는 값**(`codex_level.csv:bonus_pct`)이다 — 카드의 「다음 … +x%」와 같은 수. 합은 스테이지 행이 든다
+ * @param m `{id, kills, boss}` — 도감 카드 한 장의 집계
+ * @param grade 초상 등급 — 일반 / 정예 고르개를 그대로 따른다 (ADR-0167)
+ * @param stat 그 스테이지의 계열 라벨 `{ko, en}` — 없으면(챕터보스 단독 5스테이지) 보정 칸이 `—` 다 (§9 · GAME_DESIGN §10)
+ */
+export function codexMonsterTipCard(m, grade, stat) {
+    const src = monsterFace(m.id, grade);
+    const color = M.SINS[monsterSin(m.id)]?.color ?? 'var(--text-muted)';
+    // 초상 규칙은 도감 카드와 같다 — 아트가 없으면 글자 없는 죄종 색 원판 (§5)
+    const face = src
+        ? `<span class="face${m.boss ? ' boss' : ''}"><img src="${src}" alt="" loading="lazy" onerror="this.remove()"></span>`
+        : `<span class="face none${m.boss ? ' boss' : ''}" style="background:${color}22;border-color:${color}66"></span>`;
+    // 이름은 자리표시자다(`{m:1900|이/가}` — 이름의 SSOT 는 monster.csv · 스테이지 이야기와 같은 규칙). 몬스터 이야기는 `{leader}` 를 안 쓴다
+    const story = fillStory(L(monsterStory(m.id)), lang());
+    const lv = SYS.game.codexLevel(m.kills);
+    // 단계는 **늘 전부 선다** — 닿지 않은 단계도 보여야 「다음에 무엇을 받나」가 읽힌다 · 닿은 단계만 켜진다.
+    //   **레벨만 든다** — 「몇 마리 잡아야 열린다」는 적지 않는다(다음 문턱은 카드가 든다 · ADR-0209)
+    const steps = D.codexBonus.map((bonus, i) => `
+        <div class="cx-step${i < lv ? ' on' : ''}">
+            <span class="cx-step-lv">${t('cx.tip.lv', { lv: i + 1 })}</span>
+            <span class="cx-step-b">${stat ? `${L(stat)} +${M.pctNum(bonus ?? 0)}%` : '—'}</span>
+        </div>`).join('');
+    const card = el('div', 'tip-card cx-tip', `
+        <div class="cx-tip-top">
+            ${face}
+            <div class="cx-tip-story${story ? '' : ' muted'}"></div>
+        </div>
+        <div class="tip-col-h">${t('cx.tip.steps')}</div>
+        <div class="cx-steps">${steps}</div>`);
+    // 글은 **텍스트로** 넣는다 — 데이터 문장이 마크업으로 읽히지 않게. 셀의 줄바꿈 하나가 **문단 하나**다 —
+    //   보스 이야기는 문단 셋이라 줄만 바꾸면 한 덩어리로 읽힌다(2026-09-21 소설체 · 문단 사이는 CSS 가 띄운다)
+    const box = card.querySelector('.cx-tip-story');
+    for (const para of (story || '—').split('\n')) box.appendChild(el('p')).textContent = para;
+    return card;
+}
+
 /* ───────── 스킬 문장 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · 전면 개정 2026-09-08 · 숫자 자리 셋 2026-09-10) ─────────
    ~~표기/실효 쿨 두 줄~~ 대신 **데이터로 조립한 한 문장**을 낸다. 파생값(피해 · 실효값)과 **식의 재료**(원값 · 배율 · 능력치 · 계수)는
    `game_logic/skill.js:previewOf().parts` 가 내고 여기서는 **문장만** 만든다 — 렌더러는 더하지도 곱하지도 않는다 (ADR-0089). */
@@ -587,7 +626,7 @@ function skillLines(def, pv, atkType, R) {
     // 불러내기 — 몬스터 전용 (skill_design §12-9 · 2026-09-18). 세기가 없다 — 누구를 부르나는 편성이 정한다
     if (def.kind === 'call') return [t('sk.line.call', { n })];
     // 자폭 — 몬스터 전용 비직격 (skill_design §12-9 · battle_design §9-6 · 2026-09-21). **쿨이 없다**(차례가 아니라 죽음이 부른다)
-    //   → 오오라처럼 `{n}` 을 안 든다. 방어 · 저항을 안 받는 고정 피해라 문장이 그 사실까지 말한다
+    //   → 오오라처럼 `{n}` 을 안 든다. 방어 · 저항을 안 받는 고정 피해지만 그 규칙은 문장에 안 적는다(스킬 설명만 — 2026-09-21)
     if (def.kind === 'indirect') {
         const d = amountPhrase(def, P.amount, atkType, R);
         return d === null ? null : [t('sk.line.selfDestruct', { d })];

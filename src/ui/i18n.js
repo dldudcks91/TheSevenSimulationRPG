@@ -228,9 +228,8 @@ const STRINGS = {
     'pro.end': { ko: 'Chapter 1. 분노 / 불타는 전장' },
 
     /* ── 원정 (실동작) ── */
-    'exp.partyFull': { ko: '파티가 찼다', en: 'Party full' },
-    'exp.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
-    'exp.noParty': { ko: '파티가 비어 있다 — 대기 영웅을 넣어라', en: 'Party is empty — add a hero from the bench' },
+    'exp.noParty': { ko: '편성이 비어 있다 — 편성 탭에서 영웅을 넣는다', en: 'This party is empty — add heroes in the Party tab' },
+    'exp.departSearching': { ko: '편성에 수색 나간 영웅이 있다', en: 'A hero in this party is out on a search' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
     /* 스테이지 원소 — 어느 저항을 챙겨야 하는지의 신호 (battle_design §9-8) */
@@ -271,31 +270,49 @@ const STRINGS = {
 
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
     'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
-    'rep.again': { ko: '같은 곳으로 다시', en: 'Run it again' },
-    'rep.toIdle': { ko: '편성으로', en: 'Back to party' },
-    'rep.cards': { ko: '도감 카드', en: 'Codex cards' },
-    'rep.cardsNone': { ko: '없음', en: 'None' },
-    'rep.cardLevelUp': { ko: '{name} 도감 Lv.{lv}', en: '{name} codex Lv.{lv}' },
+    /* 도감 카드 줄 셋(rep.cards · rep.cardsNone · rep.cardLevelUp)은 2026-09-21 삭제 — 도감 카드를 걷었다 (monster_design §8 · SCREEN_DESIGN §4-3) */
     /* 빗나감 — 레벨 부족의 전용 신호 (battle_design §9-8). 파티 기준 {맞지 않은 타격}/{총 타격} */
     'rep.miss': { ko: '빗나감', en: 'Misses' },
     'rep.missN': { ko: '{m} / {n} ({p}%)', en: '{m} / {n} ({p}%)' },
 
     /* ── 캐릭터 (실동작) ── */
-    'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제', en: 'Click an item = equip · click a worn slot = unequip' },
-    // 가방의 최상위 축 — 부위가 아니라 갈래다. 「전체」는 없다 (ADR-0133)
-    'ch.bag.equip': { ko: '장비', en: 'Gear' },
+    'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리',
+        en: 'Click an item = equip · click a worn slot = unequip · Ctrl+click or drag = move between stash and inventory' },
+    // 도움말이 받는 힌트 — 인게임 패널에는 규칙 문구를 안 둔다 (SCREEN_DESIGN §12)
+    'ch.salvageHint': { ko: '[잠금]을 누른 뒤 장비를 누르면 그 장비가 잠기거나 풀린다 — 잠근 장비는 분해되지 않는다. [분해]를 누르면 장비를 고를 수 있다 — 고른 뒤 [분해하기]로 가루를 얻는다. [자동 분해]에서 등급 · 아이템 레벨 선을 그으면 새로 들어오는 장비 중 하나라도 걸리는 것은 가방에 들어오기 전에 가루가 된다 — 이미 가진 것은 [지금 인벤토리에도 적용]을 눌러야 갈린다',
+        en: 'Press [Lock], then click gear to lock or unlock it — locked gear is never salvaged. Press [Salvage] to pick gear — then [Salvage now] turns it to dust. In [Auto salvage], set a rarity and an item-level line: new gear that hits either line turns to dust before it enters the bag — gear you already hold is only salvaged when you press [Apply to inventory now]' },
     // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
     'ch.bag.stash': { ko: '창고', en: 'Stash' },
     'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
-    'ch.bag.material': { ko: '재료', en: 'Materials' },
-    'ch.bag.count': { ko: '{n}개', en: '×{n}' },
-    'ch.salvageMode': { ko: '분해 모드', en: 'Salvage mode' },
-    'ch.salvageHint': { ko: '분해 모드: 클릭한 아이템을 가루로 만든다', en: 'Salvage mode: clicking an item turns it to dust' },
+    // 잠그는 중 — [잠금]으로 들어가고 [완료]로 나온다 · 누른 칸이 바로 잠긴다 (ADR-0207)
+    'ch.lock.start': { ko: '잠금', en: 'Lock' },
+    'ch.lock.done': { ko: '완료', en: 'Done' },
+    // 고르는 중 — [분해]로 들어가고 [분해하기] · [취소]로 나온다 (ADR-0184)
+    'ch.sel.start': { ko: '분해', en: 'Salvage' },
+    'ch.sel.go': { ko: '분해하기', en: 'Salvage now' },
+    'ch.sel.cancel': { ko: '취소', en: 'Cancel' },
+    // 자동 분해 창 — 선 둘 + 지금 적용 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0203)
+    'ch.auto.btn': { ko: '자동 분해', en: 'Auto salvage' },
+    'ch.auto.h': { ko: '자동 분해', en: 'Auto Salvage' },
+    'ch.auto.rarity': { ko: '등급', en: 'Rarity' },
+    'ch.auto.r.none': { ko: '안 봄', en: 'Off' },
+    'ch.auto.r.normal': { ko: '일반 이하', en: 'Normal and below' },
+    'ch.auto.r.magic': { ko: '매직 이하', en: 'Magic and below' },
+    'ch.auto.ilvl': { ko: '아이템 레벨', en: 'Item level' },
+    'ch.auto.ilvlOff': { ko: '안 봄', en: 'Off' },
+    'ch.auto.ilvlBelow': { ko: 'Lv.{n} 미만', en: 'Below Lv.{n}' },
+    'ch.auto.apply': { ko: '지금 인벤토리에도 적용', en: 'Apply to inventory now' },
+    'ch.auto.confirm': { ko: '인벤토리의 {n}개가 분해된다', en: '{n} items in the inventory will be salvaged' },
+    'ch.auto.ok': { ko: '확인', en: 'Confirm' },
     'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
     'ch.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
     'ch.err.stashFull': { ko: '창고가 가득 찼다', en: 'Stash is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
-    'ch.salvaged': { ko: '분해 → 가루 +{n}', en: 'Salvaged → dust +{n}' },
+    // 결과 플래시 — 문장을 조각내 잇지 않는다. 건너뛴 것이 있으면 키째 다른 줄을 쓴다
+    'ch.sel.salvaged': { ko: '{n}개 분해 → 가루 +{d}', en: 'Salvaged {n} → dust +{d}' },
+    'ch.sel.salvagedSkip': { ko: '{n}개 분해 → 가루 +{d} · 잠긴 {s}개는 건너뛰었다',
+        en: 'Salvaged {n} → dust +{d} · skipped {s} locked' },
+    'ch.sel.allLocked': { ko: '고른 것이 모두 잠겨 있다', en: 'Every selected item is locked' },
     // 툴팁이 걷은 강화 규칙 문구가 앉는 자리다 (SCREEN_DESIGN §6 개정 2026-09-08 — 조건·규칙 주석은 도움말의 몫).
     // ⚠ 「강화 모드」는 09-03 에 폐기됐는데 문구만 남아 있었다 — 없는 토글을 찾게 만든다. 자리는 제련소(§8-2).
     // 2026-09-15 — 옵션 계단이 퇴역해(R95) 「{n}강마다 옵션」을 걷고 목걸이 · 반지의 강화 없음을 넣었다 (ADR-0125)
@@ -386,20 +403,21 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 10 [개정 2026-09-08 사용자 지시] — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
+    /* 탭 10 [개정 2026-09-08 사용자 지시] — 원정 · 캐릭터 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
        09-08 에 **이미지 도감이 도감 안으로 들어가며** `nav.imagedex` 가 삭제됐다 — 탭이 아니라 도감의 **세그먼트 넷 중 셋**이다 (`cx.seg.*` · §9 · §9-1).
        그래서 이 목록의 탭 수만 11 → 10 으로 줄고 **움직인 탭은 없다** — 도움말이 한 칸 당겨졌을 뿐이다.
        [개정 2026-09-06 사용자 지시] 탭 11 — 도감 뒤에 이미지 도감이 서던 자리. 09-08 에 되물렸다.
        [개정 2026-09-04 사용자 지시] 탭 10 — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
        마을 탭이 **자원**(1인 배치 — 광산 · 채집)과 **탐험**(파티)으로 갈리면서 `nav.town` 은 삭제됐다.
        `nav.explore` 는 값이 그대로인 채 **파견처 칸 라벨에서 탭 라벨로 승격**됐다 (§8-4) — `nav.tavern` 과 같은 사례다.
-       탭 이름이 **활동**(강화 · 상점)이고 패널 머리가 **장소**(`dp.post.forge` 제련소 · `dp.post.trade` 상단)인 것은 그대로 (§8-2 · §8-3).
+       상점은 탭 이름이 **활동**이고 패널 머리가 **장소**(`dp.post.trade` 상단)다 (§8-3) — 제련소는 [2026-09-21 사용자 지시] 탭 이름도 장소다(`nav.forge` · §8-2 · ADR-0190).
        nav.commission 은 탭에서 빠졌지만 **지우지 않는다** — 선술집 탭 안 의뢰 게시판의 섹션 제목이다 (§8-1).
        nav.skill 도 탭이 아니라 **창 제목**이다 (§7). nav.base(거점)는 여전히 유일한 미사용 키다.
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
+    'nav.party': { ko: '편성', en: 'Party' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
-    'nav.forge': { ko: '강화', en: 'Upgrade' },
+    'nav.forge': { ko: '제련소', en: 'Smeltery' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.shop': { ko: '상점', en: 'Shop' },
     'nav.resource': { ko: '자원', en: 'Resources' },
@@ -425,7 +443,7 @@ const STRINGS = {
        그래도 **`dp.party` 를 지우지 않는다**: 인원 표기 자체는 계속 찍히고(§8 — 값이 하나뿐이라고 지우면 「안 재고 있다」로 읽힌다),
        배치가 구현되면 탐험 탭이 같은 문구를 쓴다.
        `dp.post.forge`(제련소) · `dp.post.trade`(상단)는 파견처 칸에서 빠졌지만 **지우지 않는다** —
-       강화 · 상점 탭의 패널 머리다(탭 이름은 활동, 패널 머리는 장소 — §8-2 · §8-3).
+       `dp.post.forge` 는 연구의 가지 이름(`mock.js` rsBranch)이, `dp.post.trade` 는 상점 탭의 패널 머리가 쓴다(§8-3).
        담당 능력치는 문구가 아니라 `hero_attribute.csv:dispatch` 에서 온다 — 화면이 배정표를 따로 갖지 않는다.
        ⚠ **`dp.post.mine` 은 값만 「채광」(활동)으로 바뀌고 키는 옛 장소 id 그대로다** [2026-09-04 사용자 지시] —
        `hero_attribute.csv:dispatch` 가 `mine` 을 값으로 들고 있어 `postAttr('mine')` 이 그 열을 읽는다.
@@ -460,12 +478,8 @@ const STRINGS = {
     'cm.fame': { ko: '명성', en: 'Fame' },
     'cm.accept': { ko: '수락', en: 'Accept' },
 
-    /* 제련소 (SCREEN_DESIGN §8-2) — 제목은 `dp.post.forge` 를 그대로 쓴다(파견 목록의 칸 이름과 같은 자리다).
-       칸 셋 = 제작 · 강화 · 크래프트 (ADR-0124). 강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
-    'fg.assign': { ko: '배치', en: 'Assigned' },
-    'fg.none': { ko: '배치 없음', en: 'None' },
-    'fg.quality': { ko: '품질', en: 'Quality' },
-    'fg.reassign': { ko: '배치 변경', en: 'Reassign' },
+    /* 제련소 (SCREEN_DESIGN §8-2) — 제목 줄이 없다: 탭 이름(`nav.forge`)이 crumb 에 서고 작업 탭은 상단바에 선다 (ADR-0190).
+       작업 탭 셋 = 제작 · 강화 · 크래프트 (ADR-0142) · 배치 줄은 걷었다 (ADR-0191). 강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
     'fg.seg.make': { ko: '제작', en: 'Smith' },
     'fg.seg.up': { ko: '강화', en: 'Upgrade' },
     'fg.seg.craft': { ko: '크래프트', en: 'Craft' },
@@ -486,16 +500,13 @@ const STRINGS = {
     'fg.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
     'fg.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
     'fg.err.missing': { ko: '없는 부위 · 레벨대다', en: 'Unknown slot or level band' },
-    // 물약 칸 (R103 · ADR-0142) — 이름 · 회복량은 `potion.csv` · 판정은 `game.potionState`
-    'fg.err.owned': { ko: '이미 가진 물약이다', en: 'You already own it' },
+    // 물약 (R103 · ADR-0142 · 개수 R124) — 이름 · 회복량은 `potion.csv` · 판정은 `game.potionState` · 칸은 편성 탭이 든다
     'fg.err.locked': { ko: '아직 만들 수 없다', en: 'Not craftable yet' },
     'fg.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
-    'fg.potion.loaded': { ko: '물약 칸', en: 'Potion slots' },
+    'fg.potion.stock': { ko: '재고', en: 'Stock' },
+    'fg.potion.none': { ko: '없음', en: 'None' },
     'fg.potion.tip': { ko: '{name} · 회복 {n}', en: '{name} · Heals {n}' },
-    'fg.potion.empty': { ko: '빈 칸', en: 'Empty slot' },
-    'fg.potion.slotTitle': { ko: '스테이지마다 다시 찬다', en: 'Refills every stage' },
     'fg.potion.heal': { ko: '회복 {n}', en: 'Heals {n}' },
-    'fg.potion.owned': { ko: '가짐', en: 'Owned' },
     'fg.potion.locked': { ko: '잠김', en: 'Locked' },
 
     /* ── 도움말 탭 (2026-08-26) ──
@@ -524,7 +535,7 @@ const STRINGS = {
     'kind.chapterBoss': { ko: '챕터보스', en: 'Chapter Boss' },
 
     /* ── 원정: 편성 · 지역 ── */
-    'exp.seg.idle': { ko: '편성 · 지역', en: 'Party · Zones' },
+    'exp.seg.idle': { ko: '스테이지', en: 'Stages' },
     /* 관전 칸의 이름은 원정 상태를 따른다 — 없음 `exp.seg.battle`(도움말 제목도 이것) · 도는 중 `live` · 끝남 `over` (SCREEN_DESIGN §4 · ADR-0147) */
     'exp.seg.battle': { ko: '전투 관전', en: 'Spectate' },
     'exp.seg.live': { ko: '전투 중', en: 'In Battle' },
@@ -584,7 +595,6 @@ const STRINGS = {
        `exp.heroes.h` 는 창 안으로 들어온 영웅 띠의 이름이다 — 탭 최상단에 있던 시절엔 이름이 없었다(패널의 첫 줄이라
        무엇인지 물을 것이 없었다). 창 안에서는 네 칸이 나란히 서므로 칸마다 이름이 있어야 경계가 읽힌다.
        `exp.go.h` 는 반복 원정 · 보내기 두 버튼이 든 칸의 이름이다 */
-    'exp.heroes.h': { ko: '캐릭터 선택', en: 'Heroes' },
     'exp.go.h': { ko: '출정 방식', en: 'Departure' },
     /* 출정 창 아래 줄 오른쪽 칸의 이름 [2026-09-14 사용자 지시 · ADR-0105] — 이 스테이지의 입장 텍스트가 든다(stage.csv:story_kr/_en) */
     'exp.story.h': { ko: '이야기', en: 'Story' },
@@ -614,7 +624,6 @@ const STRINGS = {
     'rep.drops.h': { ko: '획득 장비', en: 'Loot' },
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
     'rep.drops.none': { ko: '떨어진 장비 없음', en: 'No loot' },
-    'rep.salvage': { ko: '분해', en: 'Salvage' },
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
     'rep.list.h': { ko: '원정 기록', en: 'Runs' },
@@ -662,12 +671,6 @@ const STRINGS = {
     // 아이템 툴팁만 그 역수를 찍는다 (주기는 클수록 느려 이름과 방향이 거꾸로 읽힌다 · ADR-0081)
     'st.atkSpeed': { ko: '공격 속도', en: 'Attack Speed' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
-    'log.reflect': { ko: '{name} 의 반사 — {target} 에게 {dmg}', en: '{name} reflects {dmg} to {target}' },
-    'log.blast': { ko: '{name} 의 자폭 — {target} 에게 {dmg}', en: '{name} self-destructs for {dmg} on {target}' },
-    // 반격 (2026-09-18 · ADR-0158) — 주체는 반격한 쪽. 뒤에 그 반격의 타격 줄(기본 공격)이 잇는다
-    'log.counter': { ko: '{name} 의 반격 → {target}', en: '{name} counters {target}' },
-    // 불러내기 (2026-09-18 · ADR-0161) — {list} = 선 몬스터 이름들(쉼표) · 처음 선 것과 되살아난 것을 가르지 않는다 · `log.buff` 와 같은 틀
-    'log.call': { ko: '{name} — <b>{skill}</b> → {list}', en: '{name} — <b>{skill}</b> → {list}' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
     'eq.sins.note': {
@@ -745,6 +748,20 @@ const STRINGS = {
 
     /* ── 스킬 ── */
     /* ── 연구 탭 — 파티 전술 (2026-08-30 · SCREEN_DESIGN §13) ── */
+    /* ── 편성 탭 (SCREEN_DESIGN §15 · 2026-09-21) — 오류는 결과 코드와 짝을 맞춘다(`pt.err.<코드>` — toggleParty · setPotionSlot · swapPotionSlot · rerollTactic) ── */
+    'pt.preset': { ko: '편성 {n}', en: 'Party {n}' },
+    'pt.party.h': { ko: '파티', en: 'Members' },
+    'pt.potion.h': { ko: '물약', en: 'Potions' },
+    'pt.potion.stock': { ko: '가진 물약', en: 'In stock' },
+    'pt.potion.empty': { ko: '빈 칸', en: 'Empty slot' },
+    'pt.potion.short': { ko: '모자람 — 런에서 빈 채 시작한다', en: 'Short — starts the run empty' },
+    'pt.tactic.shared': { ko: '모든 편성이 같이 쓴다', en: 'Shared by every party' },
+    'pt.err.full': { ko: '파티가 찼다', en: 'Party full' },
+    'pt.err.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
+    'pt.err.missing': { ko: '없는 칸이다', en: 'No such slot' },
+    'pt.err.slotsFull': { ko: '물약 칸이 다 찼다', en: 'All potion slots are full' },
+    'pt.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'pt.err.locked': { ko: '아직 열리지 않은 칸이다', en: 'That slot is not open yet' },
     'rs.h': { ko: '파티 전술', en: 'Party Tactics' },
     'rs.research.h': { ko: '연구', en: 'Research' },
     'rs.research.note': {
@@ -781,9 +798,6 @@ const STRINGS = {
     'rs.off': { ko: '꺼짐', en: 'Off' },
     'rs.reroll': { ko: '리롤 {g}G', en: 'Reroll {g}G' },
     'rs.reroll.done': { ko: '{o}', en: '{o}' },
-    'rs.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
-    'rs.err.locked': { ko: '아직 열리지 않은 칸이다', en: 'That slot is not open yet' },
-    'rs.err.missing': { ko: '없는 칸이다', en: 'No such slot' },
     'rs.note': {
         ko: '칸은 <b>줍는 것이 아니다</b> — 로스터 전원의 레벨 합이 문턱을 넘을 때마다 하나씩 열리고, '
             + '칸에 든 옵션은 골드로 다시 굴린다. 리롤에는 <b>지금 든 것과 다른 칸에 든 것이 나오지 않는다</b>.',
@@ -933,10 +947,10 @@ const STRINGS = {
         en: 'Every {n}s, calls in every member of its band that has not appeared yet or has fallen',
     },
     /* 자폭 — 몬스터 전용 비직격 (2026-09-21 · skill_design §12-9 · battle_design §9-6). 쿨이 없어 {n} 을 안 든다(오오라와 같은 자리).
-       {d} = 피해 구절. 방어 · 저항을 안 받는 고정 피해라 문장이 그 사실을 말한다 */
+       {d} = 피해 구절. 방어 · 저항 같은 계산 규칙은 문장에 적지 않는다 — 스킬이 하는 일만 말한다 (2026-09-21 사용자 지시) */
     'sk.line.selfDestruct': {
-        ko: '쓰러질 때 터져 적 전원에게 {d} 를 입힌다 — 방어와 저항을 무시한다',
-        en: 'On death, explodes to deal {d} to every enemy — ignoring defense and resistance',
+        ko: '쓰러질 때 터져 적 전원에게 {d} 를 입힌다',
+        en: 'On death, explodes to deal {d} to every enemy',
     },
     /* 확률로 터지는 추가 피해 [2026-09-10 · ADR-0089] — 공격 문장 **뒤에 서는 완결된 둘째 문장**이다(차지 · 라이트닝 · 체인 라이트닝).
        공격 틀마다 변형을 두면 틀이 두 배가 되고, 조각을 이으면 ko/en 어순이 깨진다. {c} = 확률 · {x} = 배수(%) */
@@ -1049,26 +1063,24 @@ const STRINGS = {
     'cx.seg.item': { ko: '아이템', en: 'Items' },
     'cx.seg.skill': { ko: '스킬', en: 'Skills' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
-    'cx.sub': { ko: '카드 {pct}% 드롭 · 레벨별 필요 {list}장 — 스테이지 계열 스탯이 오른다', en: 'Cards drop at {pct}% · {list} per level — raises the stage\'s stat line' },
+    'cx.sub': { ko: '누적 처치 {list}마리에서 레벨이 오른다 — 스테이지 계열 스탯이 오른다', en: 'Levels up at {list} total kills — raises the stage\'s stat line' },
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
     'cx.completion': { ko: '완주', en: 'Completion' },
-    'cx.cards': { ko: '{n}장', en: '{n} cards' },
-    'cx.next': { ko: '다음 {n}장', en: 'Next at {n}' },
+    'cx.next': { ko: '다음 {n}마리', en: 'Next at {n}' },
     'cx.max': { ko: '최종', en: 'Max' },
     'cx.kills': { ko: '처치 {n}', en: '{n} kills' },
     'cx.lvTitle': { ko: '도감 Lv.{lv}', en: 'Codex Lv.{lv}' },
+    // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 (SCREEN_DESIGN §9 · ADR-0206)
+    'cx.tip.steps': { ko: '처치 단계', en: 'Kill milestones' },
+    'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.note': {
-        ko: '몬스터를 잡으면 확률로 <b>그 몬스터의 카드</b>가 떨어진다 ([balance.csv:codex_card_drop_pct], 장비 드롭과 별개 판정). '
-            + '카드가 누적 문턱을 넘을 때마다 도감 레벨이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
-            + '카드는 누적이고 소모되지 않는다 · 처치 수는 기록만 · 필요 장수는 codex_level.csv(⚠제안값)<br>'
-            + '⚠ 레벨별 보정 %는 <b>화면 확인용 자리표시</b> — codex_level.csv 로 이관 예정. 보스 등급별 차등은 후속<br>'
-            + '얼굴 아트는 Ch1 5종만 존재 — 나머지는 이니셜 한 글자로 폴백한다',
-        en: 'Slaying a monster has a chance to drop <b>its card</b> ([balance.csv:codex_card_drop_pct], rolled separately from gear). '
-            + "Each cumulative card threshold raises the monster's codex level and that stage's stat line — <b>farming pushes the codex</b><br>"
-            + 'Cards accumulate and are never spent · kills are only recorded · card requirements live in codex_level.csv (⚠ proposed)<br>'
-            + '⚠ Per-level bonus % is a <b>screen-mock placeholder</b> — to be moved into codex_level.csv. Boss-grade scaling comes later<br>'
-            + 'Face art exists for 5 Ch1 monsters only — the rest fall back to a single initial',
+        ko: '그 몬스터를 잡은 수가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
+            + '처치 수는 이긴 라운드의 것만 센다 · 문턱과 레벨별 보정은 codex_level.csv(⚠제안값) · 보스 등급별 차등은 후속<br>'
+            + '카드에 마우스를 올리면 그 몬스터의 이야기와 처치 단계가 뜬다',
+        en: "Each time a monster's kill count passes a cumulative threshold, <b>its codex level</b> rises and that stage's stat line goes up — <b>farming pushes the codex</b><br>"
+            + 'Only kills from rounds you win count · thresholds and per-level bonuses live in codex_level.csv (⚠ proposed) · boss-grade scaling comes later<br>'
+            + "Hover a card to see the monster's story and kill milestones",
     },
 
     /* ── 도감 — 자산 세그먼트 (SCREEN_DESIGN §9-1 · 신설 2026-09-06 · 탭 흡수 2026-09-08) ──
@@ -1222,17 +1234,23 @@ const STRINGS = {
     'bt.logf.all': { ko: '전체', en: 'All' },
     'bt.logf.party': { ko: '우리', en: 'Party' },
     'bt.logf.enemy': { ko: '적', en: 'Enemies' },
+    // 로그 칸 머리 줄 (2026-09-21 · ADR-0196 · ADR-0198) — 탭 바로 아래 · 「스킬」은 그림 칸 왼쪽 끝에서 시작 · 그림 칸 폭은 그림과 이 라벨 중 넓은 쪽
+    'bt.logh.name': { ko: '이름', en: 'Name' },
+    'bt.logh.skill': { ko: '스킬', en: 'Skill' },
+    'bt.logh.target': { ko: '대상', en: 'Target' },
+    'bt.logh.val': { ko: '데미지', en: 'Damage' },
     'bt.items.target': { ko: '장착 대상 {name}', en: 'equip target {name}' },
-    'log.hit': { ko: '{name} → {target} <b class="dt-{ty}">{dmg}</b> · {skill}', en: '{name} → {target} <b class="dt-{ty}">{dmg}</b> · {skill}' },
-    'log.dodge': { ko: '{name} → {target} <b>빗나감</b> · {skill}', en: '{name} → {target} <b>miss</b> · {skill}' },
-    'log.roundStart': { ko: '<b>라운드 {n} ({kind})</b> — {list}', en: '<b>Round {n} ({kind})</b> — {list}' },
-    'log.heal': { ko: '{name} → {target} <b class="heal-t">+{amt}</b> · {skill}', en: '{name} → {target} <b class="heal-t">+{amt}</b> · {skill}' },
-    'log.buff': { ko: '{name} — <b>{skill}</b> 발동', en: '{name} — <b>{skill}</b> up' },
-    'log.potion': { ko: '{name} — 물약 <b class="heal-t">+{amt}</b> · 남은 {left}', en: '{name} — potion <b class="heal-t">+{amt}</b> · {left} left' },
-    'log.barrier': { ko: '{name} — <b>{skill}</b> 방벽 {amt}', en: '{name} — <b>{skill}</b> barrier {amt}' },
-    'log.buffEnd': { ko: '{name} — {skill} 종료', en: '{name} — {skill} ended' },
-    'log.slain': { ko: '{name} 처치 — 드롭 판정', en: '{name} slain — rolling drops' },
-    'log.downed': { ko: '{name} <b>전투 불능</b>', en: '{name} <b>downed</b>' },   // ~~「이 출정 동안 아웃」~~ 2026-09-08 삭제
+    // 라운드 줄 — 종류(일반 · 정예 · 보스)는 괄호가 아니라 글 왼쪽의 칩이다(렌더러가 `kind.*` 로 붙인다 · 2026-09-21 · ADR-0205)
+    'log.roundStart': { ko: '<b>라운드 {n}</b> — {list}', en: '<b>Round {n}</b> — {list}' },
+    // 로그 값 칸 (2026-09-21 · ADR-0189) — 한 줄은 네 칸 격자(주체 이름 · 스킬 그림 · 대상 이름 · 값)라 문장 템플릿이 없다.
+    //   글자로 서는 값만 여기 든다 — 피해 · 회복량은 숫자 그대로다. 팝업(`pop.*`)은 영어가 대문자라 따로 든다
+    'log.v.miss': { ko: '빗나감', en: 'miss' },
+    'log.v.counter': { ko: '반격', en: 'counter' },
+    'log.v.slain': { ko: '처치', en: 'slain' },
+    'log.v.downed': { ko: '전투 불능', en: 'downed' },
+    'log.v.up': { ko: '발동', en: 'up' },
+    'log.v.barrier': { ko: '방벽 {amt}', en: 'barrier {amt}' },
+    'log.v.ended': { ko: '종료', en: 'ended' },
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
     'pop.counter': { ko: '반격', en: 'COUNTER' },   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.slain': { ko: '처치', en: 'Slain' },

@@ -39,7 +39,7 @@ function newGameFull(SYS, B, seed) {
     for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, NOW);    // newGame 은 파티를 비워 둔다 (2026-09-09)
     return G;
 }
-const partyHeroes = (SYS, G) => G.party.map(uid => SYS.game.heroById(G, uid));
+const partyHeroes = (SYS, G) => SYS.game.partyOf(G).map(uid => SYS.game.heroById(G, uid));
 const wornCount = (SYS, G) => sum(partyHeroes(SYS, G), h => Object.values(h.equipped).filter(Boolean).length);
 const dealtOf = rp => sum(rp.contrib ?? [], c => c.dealt ?? 0);
 
