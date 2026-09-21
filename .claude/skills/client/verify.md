@@ -5,7 +5,7 @@
 ## 1. 서버
 
 - 사용자가 `start.bat` 으로 서버를 띄워 뒀으면 **그걸 쓴다** (포트 8777).
-- 안 떠 있으면 `src/` 에서 `python -m http.server 8788` 을 background 로 띄운다. **8777 을 다시 쓰지 않는다** — 사용자가 나중에 `start.bat` 을 눌렀을 때 충돌한다.
+- 안 떠 있으면 `Start-Process -WindowStyle Hidden python -ArgumentList 'serve.py','8788' -WorkingDirectory <저장소 루트>` 로 띄운다 — **OS 에 분리**해야 백그라운드 슬롯 회수에 안 죽고, `serve.py` 여야 `no-store` 가 붙는다(plain `http.server` 는 캐시가 살아 아트 교체가 안 보인다). **8777 은 안 쓴다**(사용자의 `start.bat` 자리) · 8788 이 이미 물려 있으면 **띄우지 말고** 8789 · 8790 으로 비켜 간다 — 겹쳐 bind 되면 두 서버가 요청을 나눠 먹는다.
 - `file://` 로 열지 않는다 — ES Modules 가 CORS 로 막힌다.
 - 검증이 끝나면 내가 띄운 서버는 내가 내린다.
 

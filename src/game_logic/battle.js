@@ -571,6 +571,9 @@ export function createBattleSystem(data) {
             atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ? { ...e.stats } : null,
             ...slotView(e),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             sheet: { ...e.sheet },   // 세부 능력치 복사본 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 · 전투는 안 읽는다)
+            // 입고 있는 한 벌 — 유닛 툴팁의 첫 장(장비 3×3)이 읽는다 [2026-09-21 · R119 · SCREEN_DESIGN §2 · ADR-0183].
+            //   `rollGear` 가 낸 그 아이템들이고(처치 드롭이 이 중 하나로 나간다 · §5-2) 얕은 복사만 한다 — `sheet` 와 같은 취급이다(표시값 · 전투는 안 읽는다 · rng 0)
+            gear: (e.gear ?? []).map(it => ({ ...it })),
         });
         const timeline = [];
         const out = {
@@ -730,17 +733,52 @@ export function createBattleSystem(data) {
             }
         };
 
+        /**
+         * 자폭 [2026-09-21 · 사용자 확정 · skill_design §12-9 · battle_design §9-6] — 쓰러지는 순간 칸에
+         *   `cast_condition=on_death` 인 스킬(`kind=indirect`)이 있으면 **적 전원에게 한 번** 터진다.
+         *   · 세기 = 쓰러지는 쪽의 **공격력 × 그 스킬의 배율**. **방어 · 저항 · 피해 감소를 하나도 빼지 않는 고정 피해**다
+         *   · **배리어도 안 본다** — 반사와 같은 비직격 처리(HP 직접 차감 · §9-6). 대응 축을 HP 총량과 회복으로 묶는 확정의 연장이다
+         *   · **rng 를 안 쓴다** — 피해 굴림 대신 범위 중앙값을 쓴다. 자폭이 없는 판의 수열은 종전과 완전히 같다 (INTERFACE §5-2)
+         *   · **흡혈 · 반사 · 경직 · 타격 훅을 유발하지 않는다** (§9-6 「아무것도 유발하지 않는다」)
+         *   · **한 마리당 한 번** — `blown` 이 서면 되살아나 다시 쓰러져도 안 터진다(보상 `rewarded` 와 같은 규칙).
+         *     지금 구조에서 연쇄는 안 생긴다(몬스터의 자폭은 파티만 때린다) — 플래그는 그 가정이 깨졌을 때의 잠금이다
+         */
+        const blast = u => {
+            if (u.blown) return;
+            const a = (u.actives ?? []).find(x => x.def.kind === 'indirect' && x.def.cond === 'on_death');
+            if (!a) return;
+            u.blown = true;
+            const foes = alive(rt.foesOf(u));
+            if (!foes.length) return;
+            const dmg = F.indirect(((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * a.def.mult);
+            if (dmg <= 0) return;
+            const cu = credit(u);
+            for (const tgt of foes) {
+                tgt.hp = Math.max(0, tgt.hp - dmg);
+                timeline.push({ t: r1(t), e: 'blast', a: u.key, d: tgt.key, s: a.def.id, dmg, dhp: tgt.hp });
+                const ct = credit(tgt);
+                if (cu) cu.dealt += dmg;
+                if (ct) ct.taken += dmg;
+                if (tgt.hp <= 0) {
+                    if (cu && tgt.side !== 'party' && !tgt.summon && !tgt.rewarded) cu.kills += 1;
+                    downed(tgt);
+                }
+            }
+        };
+
         const downed = u => {
             timeline.push({ t: r1(t), e: 'down', u: u.key });
             // 적의 **소환 벽은 처치가 아니다** [2026-09-11 · R79] — 몬스터 행이 없어 골드·경험치·카드·드롭 어느 것도 정의되지 않는다.
             //   R79 로 몬스터가 스킬 칸을 갖게 되어 처음 생긴 경로다(챕터보스 고유 `mag_frozenwall` 등). onKill 을 안 지나므로 **rng 도 안 쓴다**.
-            //   ⚠ 파티 쪽 벽이 uid 없이 `out.downed` 에 실리는 것은 이 변경 **전부터** 있던 동작이라 손대지 않았다 (DEV_PLAN R79 보고)
+            //   **파티 쪽 벽도 전투불능이 아니다** [2026-09-21 · 부채 #44 · INTERFACE §2-6 `downed`] — `makeSummon` 이 `uid` 를 안 주므로
+            //   실으면 `undefined` 가 들어가 리포트의 「전투불능 N명」과 캘리브레이션 `avg downed` 열이 부푼다. 적 쪽 벽(위)과 같은 축이다
             //   **보상은 한 마리당 처음 쓰러질 때 한 번**이다 [2026-09-18 · INTERFACE §2-6 `rewarded`] — 불러내기로 되살아난 무리가 다시 쓰러지면
             //   onKill 을 안 지난다(경험치 · 골드 · 카드 · 드롭 · 처치 기록 없음 · rng 0). 같은 장비가 두 번 떨어지지 않는다
             if (u.side === 'enemy') { if (!u.summon && !u.rewarded) { u.rewarded = true; onKill(u); } }
-            else out.downed.push(u.uid);
+            else if (!u.summon) out.downed.push(u.uid);
             // 처치 정산(드롭 rng)이 **먼저** 돌아야 훅이 rng 를 써도 순서가 잠긴다 (INTERFACE §5-2)
             hooks.emit('down', u, { t });
+            blast(u);   // 자폭 — 죽음이 다 정산된 뒤에 터진다. rng 0 이라 위 순서를 안 건드린다 (§9-6)
         };
 
         /**

@@ -7,9 +7,9 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 1202,1,2,인간 궁수,Human Archer,1,0,Normal,Human,physical,normal,ranged,archer,3,12,3,4,8,4,5,arc_rapid,bow,weapon|armor|gloves,1,35,0.16,0.16,0.16,0.16,1,활을 든 원거리 병사
 1203,1,2,인간 기사,Human Knight,1,0,Normal,Human,physical,normal,heavy,knight,14,5,3,16,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,1,74,0.16,0.16,0.16,0.16,1,판금 갑옷의 중장 기사
 1250,1,2,레기온,Legion,1,0,Normal,Human,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,65,0.16,0.16,0.16,0.16,1,천의 목소리 — 천 개의 분노가 깃든 자
-1301,1,3,스켈레톤 병사,Skeleton Soldier,1,0,Undead,Skeleton,physical,normal,line,warrior,9,10,3,9,3,4,5,war_taunt,mace,weapon|armor|helmet,1,50,0.18,0.18,0.18,0.18,1,묘지에서 일어난 해골 병사
-1302,1,3,스켈레톤 병사,Skeleton Soldier,1,0,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,7,10,4,5,arc_multishot,bow,weapon|armor|gloves,1,40,0.18,0.18,0.18,0.18,1,뼈활을 다루는 해골 궁수
-1303,1,3,스켈레톤 병사,Skeleton Soldier,1,0,Undead,Skeleton,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_rush,sword2h,weapon|armor|helmet|gloves,2,76,0.18,0.18,0.18,0.18,1,해골 말을 탄 기마 전사
+1301,1,3,스켈레톤 전사,Skeleton Warrior,1,1,Undead,Skeleton,physical,normal,line,warrior,9,10,3,9,3,4,5,mon_selfdestruct,mace,weapon|armor|helmet,1,50,0.18,0.18,0.18,0.18,1,묘지에서 일어난 해골 병사
+1302,1,3,스켈레톤 기사,Skeleton Knight,1,1,Undead,Skeleton,physical,normal,heavy,knight,11,11,3,13,3,4,5,kni_rush,sword2h,weapon|armor|helmet|gloves,2,76,0.18,0.18,0.18,0.18,1,사슬 두건을 쓴 해골 기사
+1303,1,3,스켈레톤 마법사,Skeleton Mage,1,1,Undead,Skeleton,cold,normal,caster,mage,3,12,8,7,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,22,0.07,0.25,0.18,0.18,1,등불을 든 후드 차림의 해골 마법사
 1350,1,3,둘라한,Dullahan,1,0,Undead,Skeleton,physical,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_shout,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,66,0.18,0.18,0.18,0.18,1,머리 없는 전쟁귀
 1401,1,4,화염 광신도,Flame Zealot,0,0,Demon,Imp,fire,normal,caster,mage,3,14,9,7,3,4,5,mag_fireball,orb,weapon|armor|amulet,1,24,0.26,0.07,0.19,0.19,1,분노를 신앙으로 받아들여 제 몸에 불을 붙인 임프
 1402,1,4,임프 제사장,Imp Priest,1,0,Demon,Imp,fire,normal,caster,priest,3,14,9,7,3,4,5,pri_judgment,crucifix,weapon|armor|amulet,2,24,0.26,0.07,0.19,0.19,1,누구를 화로에 넣을지 판결하는 몰록 교단의 사제

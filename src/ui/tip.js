@@ -6,8 +6,8 @@
  * `build()` 가 붙일 노드를 돌려준다.
  *
  * 다만 **영웅 카드 · 스킬 카드는 여기 둔다**: 두 렌더러가 같은 카드를 띄우기 때문이다(영웅 띠 ↔ 관전 유닛 카드).
- * 몬스터 카드(관전 적 카드 · 2026-09-14)도 여기 있다 — 유닛 카드의 껍데기와 세부 옵션 조립은 같고 첫 장만
- * 영웅 = 착용 장비 · 몬스터 = 기본 옵션으로 갈린다(ADR-0171).
+ * 몬스터 카드(관전 적 카드 · 2026-09-14)도 여기 있다 — **첫 장까지 영웅과 같은 카드다**: 착용 장비 3×3 + Alt 세부 옵션 두 열
+ * (ADR-0171 · 몬스터 2026-09-21 ADR-0183). 갈리는 것은 **한 벌의 출처** 하나뿐이다 — 영웅은 `equipped`(위치 → uid) · 몬스터는 `gear`(부위 배열).
  * 그 몸통의 줄 조립(`attrRowsHtml` · `sheetRowsHtml`)은 **캐릭터 탭의 기본 옵션 · 세부 옵션도 부른다** — 두 자리가 한 표기다.
  * 아이템 비교 카드는 `app.js` 에 남는다 — 희귀도 · 접사 · 무기군처럼 app 쪽 헬퍼를 많이 타서 옮기면 그게 따라온다.
  *
@@ -214,7 +214,7 @@ function showEquipmentItemTip(content, cell) {
 // 등급 표기 — SSOT 는 `hero_tier.csv` 다 (2026-09-08 R48 · ~~mock.js:HERO_TIER~~ 대체 · app.js 와 같은 규칙)
 const tierOf = h => D.heroTiers.find(t => t.id === h.tier) ?? D.heroTiers.find(t => t.id === 'rare') ?? D.heroTiers[0];
 
-/* 영웅 툴팁의 첫 장 — 캐릭터 탭 페이퍼돌과 같은 배치 · 같은 그림 · 같은 모서리 배지다 (ADR-0171).
+/* 유닛 툴팁의 첫 장 — 캐릭터 탭 페이퍼돌과 같은 배치 · 같은 그림 · 같은 모서리 배지다 (ADR-0171 · 몬스터도 같은 첫 장 ADR-0183).
    Alt 동안만 툴팁이 포인터를 받아 칸 hover를 확인할 수 있다(ADR-0176). 장착은 아래 보관 칸이 맡는다. */
 const tipSlotDef = id => D.slots.find(s => s.id === id);
 const tipPosDef = pos => tipSlotDef(D.equipSlots.find(s => s.id === pos)?.part);
@@ -222,12 +222,39 @@ const tipItemImg = it => {
     const src = M.itemArt(it?.slot, it?.group, it?.uid, it?.baseId);
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : (tipSlotDef(it?.slot)?.icon ?? '');
 };
-function equipmentHtml(h, itemOf) {
-    const cells = [];
+
+/** 영웅의 한 벌 — `equipped` 는 **착용 위치**(equip_slot.csv) → uid 다. uid 를 아이템으로 푸는 것은 앱이 넘긴 `itemOf` 몫이다 */
+const wornOfHero = (h, itemOf) => {
+    const w = {};
+    for (const row of M.PAPERDOLL) for (const pos of row) if (pos) w[pos] = itemOf?.(h.equipped?.[pos]) ?? null;
+    return w;
+};
+/**
+ * 몬스터의 한 벌 — `round` 이벤트의 `gear` 는 **부위**(`monster.csv:wear_slots`) 배열이라 위치가 없다 (INTERFACE §2-6 · ADR-0183).
+ * 같은 부위의 착용 위치에 **앞 칸부터** 앉힌다 — 부위 하나에 위치가 둘인 반지가 그 자리다. 안 입는 부위는 빈 칸으로 남는다.
+ */
+const wornOfMonster = gear => {
+    const w = {}, rest = [...(gear ?? [])];
+    for (const row of M.PAPERDOLL) for (const pos of row) {
+        if (!pos) continue;
+        const part = D.equipSlots.find(s => s.id === pos)?.part;
+        const i = rest.findIndex(it => it?.slot === part);
+        w[pos] = i < 0 ? null : rest.splice(i, 1)[0];
+    }
+    return w;
+};
+
+/**
+ * 장비 3×3 — 「위치 → 아이템」 한 벌을 그린다. 진영은 안 본다(영웅 · 몬스터가 같은 첫 장 · ADR-0183).
+ * @returns `{html, items}` — `items` 는 **찬 칸의 순서**이고 칸의 `data-equip-i` 가 그 자리를 가리킨다.
+ *   uid 로 잇지 않는 이유: 몬스터 장비는 세이브에 없어 `uid` 가 `null` 이다 (item.js `build`)
+ */
+function equipmentHtml(worn) {
+    const cells = [], items = [];
     for (const row of M.PAPERDOLL) for (const pos of row) {
         if (!pos) { cells.push('<div class="pd-gap"></div>'); continue; }
         const def = tipPosDef(pos);
-        const it = itemOf?.(h.equipped?.[pos]) ?? null;
+        const it = worn?.[pos] ?? null;
         if (!it) {
             const art = M.slotArt(def?.id);
             cells.push(`<div class="pd-cell${art ? ' art' : ''}">${art
@@ -236,18 +263,22 @@ function equipmentHtml(h, itemOf) {
             continue;
         }
         const rare = M.RARITY[it.rarity] ?? M.RARITY.magic;
-        cells.push(`<div class="pd-cell filled" data-equipped-item="${it.uid}" style="border-color:${rare.color}">
+        cells.push(`<div class="pd-cell filled" data-equip-i="${items.length}" style="border-color:${rare.color}">
             <div class="pd-icon">${tipItemImg(it)}</div>
             ${(it.up ?? 0) > 0 ? `<span class="pd-up">+${it.up}</span>` : ''}
             <span class="pd-lv">${t('ch.itemLv', { n: it.ilvl })}</span>
         </div>`);
+        items.push(it);
     }
-    return `<div class="tip-col-h">${t('ch.gear.h')}</div><div class="tip-equipment paperdoll">${cells.join('')}</div>`;
+    return {
+        html: `<div class="tip-col-h">${t('ch.gear.h')}</div><div class="tip-equipment paperdoll">${cells.join('')}</div>`,
+        items,
+    };
 }
 
 /* ───────── 유닛 카드 — 영웅 · 몬스터 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114) ─────────
-   영웅 첫 장은 착용 장비이고 Alt 동안 세부 옵션 두 열만 더 선다(ADR-0171). 몬스터는 기존 기본 옵션 + Alt 세부 옵션이다.
-   Basic Stats 조립은 **지우지 않는다** — 몬스터가 계속 쓰고 영웅에서도 나중에 되살릴 수 있다.
+   **양 진영이 같은 카드다** — 첫 장은 착용 장비이고 Alt 동안 세부 옵션 두 열만 더 선다(ADR-0171 · 몬스터 2026-09-21 ADR-0183).
+   Basic Stats 조립은 **지우지 않는다** — 캐릭터 탭 기본 옵션이 같은 함수를 부르고, 첫 장을 되살릴 여지로도 남긴다.
    옵션 줄 조립은 여기 한 곳이고 캐릭터 탭(app.js attrPanel · detailPanels)도 이것을 부른다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 */
 
 /**
@@ -334,9 +365,10 @@ export const sheetPages = () => {
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 `_rebuild` 로 **같은 인자로** 다시 만든다 — 스킬 카드와 같은 장치다.
  * @param color 막대 색 = 윗변 색(CSS 값)
  * @param cls   카드에 더할 클래스 — 어두운 등급 색이면 `bar-lift`(막대만 밝힌다 · style.css)
- * @param itemCardOf 영웅 장비 uid → 기존 「착용 중」 아이템 카드. 앱이 아이템 표기를 주입한다(ADR-0182)
+ * @param equipment `equipmentHtml()` 의 `{html, items}` — 없으면 Basic Stats 몸통으로 떨어진다
+ * @param itemCardOf 장비 **아이템 개체** → 기존 「착용 중」 아이템 카드. 앱이 아이템 표기를 주입한다(ADR-0182 · 몬스터 ADR-0183)
  */
-function unitCard(stats, color, sheet, rebuild, cls = '', equipment = '', itemCardOf = null) {
+function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, itemCardOf = null) {
     // `grow-left` — 툴팁이 카드 **왼쪽**에 섰다(`openTip` 이 짓기 전에 정한다): 세부 옵션 열이 기본 옵션의 왼쪽에 선다 (ADR-0126).
     //   열 자리는 CSS 격자가 정하고 DOM 순서는 그대로다
     const side = anchorSide === 'left' ? ' grow-left' : '';
@@ -357,7 +389,7 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = '', itemCa
     const foot = `<div class="tip-foot">${t('tip.unit.altHint')}</div>`;
     const base = equipment ? `
                 <div class="tip-equipment-face">
-                    ${equipment}
+                    ${equipment.html}
                     ${altHeld ? '' : foot}
                 </div>
                 ${altHeld ? '' : `<div class="tip-equipment-probe" aria-hidden="true">
@@ -375,9 +407,9 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = '', itemCa
         </div>
         ${altHeld || equipment ? '' : foot}`;
     // Alt 동안만 포인터가 열리므로 찬 칸에 기존 아이템 카드 렌더러를 잇는다. 별도 host라 부모 툴팁 폭·칸 자리는 움직이지 않는다 (ADR-0182).
-    if (equipment && itemCardOf) for (const cell of c.querySelectorAll('[data-equipped-item]')) {
+    if (equipment && itemCardOf) for (const cell of c.querySelectorAll('[data-equip-i]')) {
         cell.classList.add('tip-optionable');
-        cell.onmouseenter = () => { if (altHeld) showEquipmentItemTip(itemCardOf(cell.dataset.equippedItem), cell); };
+        cell.onmouseenter = () => { if (altHeld) showEquipmentItemTip(itemCardOf(equipment.items[+cell.dataset.equipI]), cell); };
         cell.onmouseleave = hideEquipmentItemTip;
     }
     return c;
@@ -389,27 +421,32 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = '', itemCa
  * 이름 · 직업 · 레벨 · 죄종 · 등급 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134)
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
  * @param itemOf uid 로 현재 세이브의 아이템을 찾는 함수 — tip.js 는 G 를 모른다
- * @param itemCardOf uid 로 기존 「착용 중」 아이템 카드를 만드는 함수 — 아이템 옵션 표기는 앱이 든다
+ * @param itemCardOf **아이템 개체**로 기존 「착용 중」 아이템 카드를 만드는 함수 — 아이템 옵션 표기는 앱이 든다 (ADR-0183 으로 uid → 개체)
  */
 export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null) {
     if (!h) return null;
-    return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat, itemOf, itemCardOf), '', equipmentHtml(h, itemOf), itemCardOf);
+    return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat, itemOf, itemCardOf), '',
+        equipmentHtml(wornOfHero(h, itemOf)), itemCardOf);
 }
 
 /** 몬스터 막대 색 = **카드 윗변 색** — 관전 카드가 등급으로 칠하는 토큰 그대로다(style.css `.unit.enemy` · `.unit.elite` · `.unit.boss`) */
 const GRADE_LINE = { normal: 'var(--enemy-line)', elite: 'var(--color-warning)', stage_boss: 'var(--boss-line)', chapter_boss: 'var(--boss-line)' };
 
 /**
- * 몬스터 카드 — 기본 옵션 · 대표값 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2).
- * 기본 능력치는 `round` 이벤트의 `stats`(monster.csv 의 7 칸), 세부 옵션은 같은 이벤트의 `sheet`(R94) 그대로다 — 렌더러는 계산하지 않는다.
+ * 몬스터 카드 — 착용 장비 · (Alt) 세부 옵션. **영웅 카드와 같은 첫 장이다** (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · ADR-0183).
+ * 한 벌은 `round` 이벤트의 `gear`(그 몬스터가 입고 있는 장비 — 처치 드롭이 이 중 하나로 나간다 · INTERFACE §2-6),
+ * 세부 옵션은 같은 이벤트의 `sheet`(R94) 그대로다 — 렌더러는 계산하지 않는다.
  * 이름 · 직업 · 등급 줄은 없다 — 올린 카드의 이름 줄 · 테두리 색이 이미 든다 (ADR-0134)
- * @param u 재생기의 적 유닛 `{grade, stats, sheet}`
+ * @param u 재생기의 적 유닛 `{grade, stats, sheet, gear}`
+ * @param itemCardOf 장비 아이템 개체 → 「착용 중」 아이템 카드. 숫자는 **그 몬스터 기준**이라 부르는 쪽이 문맥을 든다 (ui/battle.js)
  */
-export function monsterTipCard(u) {
+export function monsterTipCard(u, itemCardOf = null) {
     if (!u) return null;
-    // 어두운 등급 색(일반 `--enemy-line` · 보스 `--boss-line`)은 막대만 밝힌다 — 검은 막대 바탕에 묻힌다. 정예(노랑)는 그대로 (2026-09-15 · SCREEN_DESIGN §2)
+    // 어두운 등급 색(일반 `--enemy-line` · 보스 `--boss-line`)은 막대만 밝힌다 — 검은 막대 바탕에 묻힌다. 정예(노랑)는 그대로 (2026-09-15 · SCREEN_DESIGN §2).
+    //   장비 첫 장에는 막대가 없어 지금은 안 쓰이지만, Basic Stats 몸통을 되살리면 그대로 걸린다
     const lift = u.grade === 'elite' ? '' : 'bar-lift';
-    return unitCard(u.stats, GRADE_LINE[u.grade] ?? GRADE_LINE.normal, u.sheet ?? null, () => monsterTipCard(u), lift);
+    return unitCard(u.stats, GRADE_LINE[u.grade] ?? GRADE_LINE.normal, u.sheet ?? null, () => monsterTipCard(u, itemCardOf), lift,
+        equipmentHtml(wornOfMonster(u.gear)), itemCardOf);
 }
 
 /* ───────── 스킬 문장 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · 전면 개정 2026-09-08 · 숫자 자리 셋 2026-09-10) ─────────
@@ -549,6 +586,12 @@ function skillLines(def, pv, atkType, R) {
     if (def.kind === 'summon') return P.amount ? [t('sk.line.summon', { n, d: amountSlot(P.amount, R) })] : null;
     // 불러내기 — 몬스터 전용 (skill_design §12-9 · 2026-09-18). 세기가 없다 — 누구를 부르나는 편성이 정한다
     if (def.kind === 'call') return [t('sk.line.call', { n })];
+    // 자폭 — 몬스터 전용 비직격 (skill_design §12-9 · battle_design §9-6 · 2026-09-21). **쿨이 없다**(차례가 아니라 죽음이 부른다)
+    //   → 오오라처럼 `{n}` 을 안 든다. 방어 · 저항을 안 받는 고정 피해라 문장이 그 사실까지 말한다
+    if (def.kind === 'indirect') {
+        const d = amountPhrase(def, P.amount, atkType, R);
+        return d === null ? null : [t('sk.line.selfDestruct', { d })];
+    }
     // 오오라 — **쿨이 없다.** 그래서 이 문장만 `{n}` 을 안 든다 (skill_design §1-5)
     if (def.kind === 'aura') {
         const e = effectPhrase(def, P, R);

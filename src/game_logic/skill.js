@@ -84,7 +84,7 @@ const SCALE_FIELDS = {
 };
 const SCALE_FIELD_IDS = Object.keys(SCALE_FIELDS);
 /** 미리보기 `amount` 의 밑수 — 공격은 공격력 · 회복은 마법 공격력 · 소환은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
-const AMOUNT_BASIS = { attack: 'atk', heal: 'matk', summon: 'hpMax' };
+const AMOUNT_BASIS = { attack: 'atk', heal: 'matk', summon: 'hpMax', indirect: 'atk' };   // indirect(자폭)의 밑수도 공격력이다 — 단 범위를 굴리지 않고 중앙값을 쓴다 (아래 previewOf · battle.js blast · 2026-09-21)
 /** 밑수의 양끝 — 공격 · 회복은 범위(`atkMin`~`atkMax` · `matkMin`~`matkMax` · R90), 벽은 한 점(`hpMax`) */
 const basisEnds = (basis, ctx) => (basis === 'hpMax' ? [ctx.hpMax, ctx.hpMax] : [ctx[`${basis}Min`], ctx[`${basis}Max`]]);
 
@@ -192,8 +192,9 @@ export function createSkillSystem(data) {
         if (d.element !== null && !ELEMENTS.includes(d.element)) bad(`element '${d.element}'`);
         if (d.cond !== null && !CONDITION_IDS.includes(d.cond)) bad(`cast_condition '${d.cond}'`);
         // 쿨 — **오오라만 0 이다**(쿨 없이 상시 · §1-5). 나머지는 양수라야 예산 자가 선다
-        if (d.kind === 'aura') {
-            if (d.cool !== 0) bad(`aura 인데 cool_sec ${d.cool} — 오오라는 쿨이 없다`);
+        // 쿨이 0 인 둘 — 오오라(상시)와 비직격(차례가 아니라 사건이 부른다 · 2026-09-21)
+        if (d.kind === 'aura' || d.kind === 'indirect') {
+            if (d.cool !== 0) bad(`${d.kind} 인데 cool_sec ${d.cool} — 쿨이 없다`);
         } else if (!(d.cool > 0)) {
             bad(`cool_sec ${d.cool}`);
         }
@@ -223,6 +224,15 @@ export function createSkillSystem(data) {
             if (d.target !== 'self') bad(`call 인데 target '${d.target}' — 시전자의 무리를 세운다`);
             if (d.hits !== 0 || d.mult !== 0 || d.dur !== 0) bad(`call 인데 hits ${d.hits} · mult_pct ${d.mult} · duration_sec ${d.dur} — 셋 다 0`);
             if (d.cond !== 'band_missing') bad(`call 인데 cast_condition '${d.cond}' — band_missing 이어야 빈 부름이 안 나간다`);
+        } else if (d.kind === 'indirect') {
+            // 비직격 [2026-09-21 · battle_design §9-6 · skill_design §12-9] — 차례로 나가지 않고 **사건이 부른다**.
+            //   `cast_condition` 이 늘 거짓이라 선택기가 안 고른다 — 실제 발동은 그 사건을 든 쪽(자폭 = battle.js `downed`)이 한다
+            if (d.ownerKind !== 'monster') bad(`indirect 인데 owner_kind '${d.ownerKind}' — 비직격은 몬스터 전용이다`);
+            if (!ATTACK_TARGETS[d.target]) bad(`indirect 인데 target '${d.target}' 는 적 대상이 아니다`);
+            if (d.hits !== 1) bad(`indirect 인데 hits ${d.hits} — 한 번 터진다`);
+            if (!(d.mult > 0)) bad(`indirect 인데 mult_pct ${d.mult}`);
+            if (d.dur !== 0) bad(`indirect 인데 duration_sec ${d.dur} — 창은 buff 만 연다`);
+            if (d.cond === null) bad('indirect 인데 cast_condition 이 없다 — 어느 사건이 부르는지가 행에 있어야 한다');
         } else {
             // **buff 만 적에게 걸 수 있다**(디버프 = 음수 값). heal·aura 는 아군 대상뿐이다
             const okTargets = d.kind === 'buff' ? [...SUPPORT_TARGETS, ...DEBUFF_TARGETS] : SUPPORT_TARGETS;
@@ -483,6 +493,9 @@ export function createSkillSystem(data) {
             const terms = ctx.noStatMult ? [] : termsOf('mult_pct');
             // 밑수는 범위다(R90) — 양끝이 다 알려져야 숫자를 낸다. 한쪽이라도 모르면 식으로 접힌다
             const ends = basisEnds(basis, ctx);
+            // 자폭은 **고정 피해**라 범위를 굴리지 않는다 [2026-09-21 · battle_design §9-6] — 전투(`battle.js` blast)가 중앙값을 쓰므로
+            //   설명창도 한 점으로 낸다(양끝을 같게). 그래야 툴팁의 수와 실제로 들어오는 수가 같다
+            if (def.kind === 'indirect' && ends.every(v => Number.isFinite(v))) { const mid = (ends[0] + ends[1]) / 2; ends[0] = mid; ends[1] = mid; }
             const known = ends.every(v => Number.isFinite(v) && v >= 0);
             amount = !known || (terms.length > 0 && stats === null) ? null
                 : { min: Math.round(ends[0] * def.mult * eff.statMult), max: Math.round(ends[1] * def.mult * eff.statMult) };

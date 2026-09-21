@@ -71,18 +71,23 @@ export function createSkillRuntime(ctx) {
     /** 창 만료 — 행동 순회 **앞에서** 처리한다. rng 를 쓰지 않으므로 수열이 밀리지 않는다 */
     function expire(u, at) {
         let changed = false;
+        const wasMax = u.hpMax;     // 최대 HP 를 밀던 창이 닫히면 재생기에 새 값을 줘야 한다 (부채 #50)
+        const shown = [];           // 이 틱에 낸 `buffEnd` 들 — 조용한 창(`quiet`)은 안 든다
         for (const id of Object.keys(u.buffs)) {
             if (u.buffs[id].until <= at + EPS) {
                 // `quiet` = 무기 옵션 창(타격 시 디버프 · R78) — 열 때 이벤트를 안 냈으므로 닫을 때도 안 낸다(재생기는 `s` 로 스킬 이름을 찾는다)
                 const quiet = u.buffs[id].quiet;
                 delete u.buffs[id];
-                if (!quiet) timeline.push({ t: r1(at), e: 'buffEnd', u: u.key, s: id });
+                if (!quiet) { const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: id }; shown.push(ev); timeline.push(ev); }
                 changed = true;
             }
         }
         // 배리어도 같은 조건 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3)
         if (u.barrier && u.barrier.until <= at + EPS) u.barrier = null;
         if (changed) refreshDerived(u);
+        // 최대 HP 가 줄었으면 **마지막 `buffEnd`** 가 새 최대치와 잘린 현재 HP 를 싣는다 [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6].
+        //   한 틱에 여러 창이 닫혀도 실린 값은 전부 닫힌 뒤의 상태라 마지막 하나면 족하다 — 재생기는 계산하지 않는다
+        if (u.hpMax !== wasMax && shown.length) Object.assign(shown[shown.length - 1], { hpMax: u.hpMax, dhp: u.hp });
     }
 
     /**
@@ -141,11 +146,15 @@ export function createSkillRuntime(ctx) {
         const targets = targetsOf(u, def);
         const until = t + def.dur;
         for (const tgt of targets) {
+            const wasMax = tgt.hpMax;
             tgt.buffs[def.id] = { stat: def.stat, v: def.value, until, element: def.element ?? null, by: u.key };
             const ev = { t: r1(t), e: 'buff', u: tgt.key, s: def.id, stat: def.stat, v: def.value, until: r1(until) };
             EFFECTS[def.stat]?.apply?.(rt, tgt, def, until, ev);
-            timeline.push(ev);
+            // **밀고 나서 싣는다** — 최대 HP 를 미는 창(`hp_max_pct`)은 `refreshDerived` 가 새 최대치를 쓰고 넘친 HP 를 자른 **뒤**의 값이어야 한다
+            //   [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6]. 재생기는 계산하지 않으므로 안 실으면 옛 최대치를 든 채 현재 HP 만 갱신해 `118 / 103` 이 된다
             refreshDerived(tgt);
+            if (tgt.hpMax !== wasMax) Object.assign(ev, { hpMax: tgt.hpMax, dhp: tgt.hp });
+            timeline.push(ev);
         }
         // 결투 — 지목과 **같은 until** 으로 **시전자 자신**에게 받는 피해 감소 창을 연다 (skill_design §13-5 · 2026-09-10).
         //   새 채널이 아니라 `effect_value` 를 `dr_pct` 창으로 쓴다 — 창은 유닛마다 따로 들어서 같은 스킬 id 를 키로 써도 안 겹친다.

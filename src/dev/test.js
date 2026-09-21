@@ -13,7 +13,7 @@
 
 import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES, fillStory, pickJosa, STORY_TOKEN } from '../ui/data.js';
-import { bindTipNode, heroTipCard, skillTipCard } from '../ui/tip.js';
+import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard } from '../ui/tip.js';
 import { setLang, t as i18nT } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
@@ -128,10 +128,10 @@ check('csv: skill_tag 14행 — 파생 3(aoe·single·multihit) · 대분류 4 (
 });
 // 08-31 mock→CSV 이관분 6종. **행 수가 곧 결정론 계약이다** — 풀이 늘거나 줄면 pick(rng, arr) 이 다른 것을 고른다
 // affix 19 → 18 [2026-09-11 · R78] — `atk_flat` 퇴역: 무기가 affix.csv 를 안 쓴다(무기 옵션 표 둘)
-check('csv: 이관 6종 — class 7 / equip_slot 8 / item_base 42 / affix 13 / hero_name 24 / hero_trait 12', () => {
+check('csv: 이관 6종 — class 7 / equip_slot 8 / item_base 40 / affix 13 / hero_name 24 / hero_trait 12', () => {
     const got = [D.classes.length, D.equipSlots.length, Object.values(D.itemBases).flat().length,
         D.affixDefs.length, D.heroNamePool.length, D.heroTraitPool.length];
-    const want = [7, 8, 42, 13, 24, 12];   // affix 18 → 13 [2026-09-18] — 방어구 네 부위가 옵션 표 둘로 옮겨 방어구 전용 다섯 행이 빠졌다(목걸이 · 반지 전용)   // 30 → 36 [2026-09-17] 투구 4 → 10 · 36 → 42 [2026-09-18] 장갑 · 신발 각 4 → 7 (갈래 2 × 티어 3 + 시작)
+    const want = [7, 8, 40, 13, 24, 12];   // affix 18 → 13 [2026-09-18] — 방어구 네 부위가 옵션 표 둘로 옮겨 방어구 전용 다섯 행이 빠졌다(목걸이 · 반지 전용)   // 30 → 36 [2026-09-17] 투구 4 → 10 · 36 → 42 [2026-09-18] 장갑 · 신발 각 4 → 7 (갈래 2 × 티어 3 + 시작) · 42 → 40 [2026-09-21] 목걸이 · 반지 각 4 → 3 (그림 없는 넷째를 뺐다 — 풀이 곧 설치된 그림이다)
     return got.every((n, i) => n === want[i]) || fail(`${got.join('/')} ≠ ${want.join('/')}`);
 });
 /**
@@ -178,6 +178,22 @@ check('csv: affix.slots · item_base.slot 이 전부 실재 부위 · 무기 외
     }
     if (D.itemBases.weapon) fail('무기는 item_base.csv 에 있으면 안 된다 — 베이스는 weapon_group.csv');
     return `부위 ${ids.size} · 베이스 보유 ${Object.keys(D.itemBases).length}`;
+});
+/**
+ * **베이스 풀 = 설치된 그림** [2026-09-21 사용자 확정] — `item_base.csv` 의 전 행이 `mock.js:ITEM_BASE_ART_IDS` 에 있어야 한다.
+ * 그림 없는 베이스는 착용 · 가방 · 제련소 · 도감에서 **부위 이모지**로 떨어지고(`itemArt` 는 해시 폴백을 안 쓴다),
+ *   예외가 안 나므로 「가끔 이모지가 뜬다」로만 보인다 — 반지 · 목걸이의 넷째가 09-18 부터 09-21 까지 그 상태였다.
+ * 무기 쪽 짝은 위 `weapon_base` 단정이다. **거기와 달리 순서는 안 본다** — 방어구 · 장신구 그림은 id 로 찾고(`ITEM_BASE_ART_IDS.includes`)
+ *   인덱스로 찾지 않아 목록 순서가 결정론에 안 걸린다. 반대 방향(그림만 있고 CSV 행이 없는 id)도 잡는다 — 죽은 파일이 목록에 남는다.
+ */
+check('csv: item_base 의 전 행에 그림이 있다 — 베이스 풀 = mock.js:ITEM_BASE_ART_IDS (그림 없는 베이스는 이모지로 떨어진다 · 2026-09-21)', () => {
+    const rows = new Set(Object.values(D.itemBases).flat().map(b => b.id));
+    const art = new Set(M.ITEM_BASE_ART_IDS);
+    const noArt = [...rows].filter(id => !art.has(id));
+    if (noArt.length) fail(`그림 없는 베이스: ${noArt.join(',')} — 아이콘을 설치하거나 item_base.csv 에서 그 행을 뺀다`);
+    const noRow = [...art].filter(id => !rows.has(id));
+    if (noRow.length) fail(`CSV 행 없는 그림: ${noRow.join(',')} — mock.js:ITEM_BASE_ART_IDS 에서 뺀다`);
+    return `베이스 ${rows.size} = 그림 ${art.size}`;
 });
 
 /* ── CSV 무결성 (2026-08-28 형태 최적화) — 코드가 안 읽는 구조 키를 「CSV 끼리 정합한가」로 살린다 ── */
@@ -2504,6 +2520,8 @@ check('item: 장비 옵션 값 — 고정값은 정수 · 퍼센트는 1% 단위
     const rng = makeRng(91);
     let n = 0, fine = 0, upd = 0, pct = 0;
     const onStep = (v, k) => Math.abs(Math.round(v * k) / k - v) < 1e-12;
+    // 비율 상한 — 고정 옵션이 1~200% 를 굴린다(2026-09-21 사용자 지시 · balance 키). 옛 눈금(0~100)을 잡는 그물은 그대로다
+    const PCT_CAP = Math.max(1, B.weapon_fixed_atk_pct_max, B.armor_fixed_def_pct_max);
     // fine(0.1% 단위)은 옵션 표가 정한다 — 오만 「레벨당 데미지」(무기 · 장갑) · 「레벨당 공격 속도」(신발 · 2026-09-18)
     const FINE = new Set([...D.weaponSinOptions, ...D.weaponCommonOptions, ...D.armorSinOptions, ...D.armorCommonOptions].filter(d => d.scale === 'fine').map(d => d.stat));
     for (let i = 0; i < 600; i++) {
@@ -2515,7 +2533,7 @@ check('item: 장비 옵션 값 — 고정값은 정수 · 퍼센트는 1% 단위
                 fine++; continue;
             }
             if (SYS.item.pctStat(a.stat)) {
-                if (!onStep(a.v, 100) || !(a.v >= 0.01 && a.v <= 1)) fail(`${it.slot} ${a.stat} = ${a.v} — 1% 단위 비율이어야`);
+                if (!onStep(a.v, 100) || !(a.v >= 0.01 && a.v <= PCT_CAP)) fail(`${it.slot} ${a.stat} = ${a.v} — 1% 단위 비율 · ${PCT_CAP} 이하여야`);
                 pct++;
             } else if (!Number.isInteger(a.v)) fail(`${it.slot} ${a.stat} = ${a.v}`);
             n++;
@@ -3803,12 +3821,12 @@ function findSeed(pred, mk = skillUnits, stageId = 101) {
 
 check('skill: 어휘 — owner_kind/kind/target/effect_stat/cast_condition 이 사전 안 · 출처마다 priority 유일 (§9-5)', () => {
     // 2026-09-09 확장 — 직업 스킬 풀 37 (skill_design §12 · DEV_PLAN R61)
-    const KIND = ['attack', 'heal', 'buff', 'aura', 'summon', 'call'];   // call = 불러내기 · 몬스터 전용 (2026-09-18 · §12-9)
+    const KIND = ['attack', 'heal', 'buff', 'aura', 'summon', 'call', 'indirect'];   // call = 불러내기 · indirect = 비직격(사망 폭발 §9-6) · 둘 다 몬스터 전용 (§12-9)
     const TGT = ['enemy_single', 'enemy_all', 'enemy_rotate', 'enemy_chain', 'enemy_highest_def',
         'self', 'party', 'ally_single', 'party_adjacent'];
     const STAT = ['atk_pct', 'barrier_pct', 'period_pct', 'taunt', 'guard_pct', 'hp_max_pct',
         'regen_pct', 'dr_pct', 'onhit_element', 'attack_splash', 'duel'];
-    const COND = ['buff_absent', 'ally_hp_below', 'band_missing'];
+    const COND = ['buff_absent', 'ally_hp_below', 'band_missing', 'on_death'];
     const OWNER = ['job', 'advance', 'unique', 'monster'];
     const seen = {};
     for (const d of SYS.skill.list) {
@@ -5022,11 +5040,12 @@ check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover�
     const h = G.heroes[0], combat = SYS.game.heroCombat(G, h), findItem = uid => G.items[uid] ?? null;
     const tip = document.createElement('div'), node = document.createElement('div');
     tip.id = 'tooltip'; document.body.append(tip, node);
-    const itemCardOf = uid => {
+    // `itemCardOf` 는 **아이템 개체**를 받는다 — 몬스터 장비는 세이브 밖이라 uid 가 없다 (ADR-0183)
+    const itemCardOf = it => {
         const card = document.createElement('div');
         card.className = 'tip-card';
-        card.dataset.testItem = uid;
-        card.textContent = `options:${uid}`;
+        card.dataset.testItem = it?.uid ?? '';
+        card.textContent = `options:${it?.uid}`;
         return card;
     };
     bindTipNode(node, () => heroTipCard(h, combat, findItem, itemCardOf), { anchor: true, holdOnAlt: true });
@@ -5042,7 +5061,9 @@ check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover�
         cell.onmouseenter(new MouseEvent('mouseenter', { clientX: 30, clientY: 30 }));
         const itemTip = document.querySelector('#equipment-item-tooltip');
         if (!itemTip?.classList.contains('show')) fail('찬 장비에 올렸는데 옵션 카드가 뜨지 않았다');
-        if (itemTip.querySelector('.tip-card')?.dataset.testItem !== cell.dataset.equippedItem) fail('올린 장비와 옵션 카드가 다르다');
+        // 칸은 **찬 칸의 차례**(`data-equip-i`)를 들고, 그 차례는 페이퍼돌 순서의 착용 개체다 (ADR-0183)
+        const wornUids = M.PAPERDOLL.flat().filter(Boolean).map(pos => h.equipped?.[pos]).filter(uid => findItem(uid));
+        if (itemTip.querySelector('.tip-card')?.dataset.testItem !== wornUids[+cell.dataset.equipI]) fail('올린 장비와 옵션 카드가 다르다');
         cell.onmouseleave(new MouseEvent('mouseleave', { relatedTarget: document.body }));
         if (itemTip.classList.contains('show')) fail('장비 칸에서 나왔는데 옵션 카드가 남았다');
         cell.onmouseenter(new MouseEvent('mouseenter', { clientX: 30, clientY: 30 }));
@@ -5055,6 +5076,30 @@ check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover�
         tip.remove(); node.remove(); document.querySelector('#equipment-item-tooltip')?.remove();
     }
     return 'Alt hold → 이탈 유지 → 장비 hover 옵션 → mouseleave/keyup 닫힘';
+});
+check('tip: 몬스터 첫 장도 착용 장비다 — 영웅과 같은 카드 · 한 벌은 `round` 이벤트의 `gear` (ADR-0183)', () => {
+    const G2 = newGameP(42, cands, NOW);
+    const r = SYS.game.resolveBattle(G2, 101, NOW);
+    if (!r.ok) fail(r.err);
+    const u = r.result.timeline.find(e => e.e === 'round')?.enemies?.[0];
+    if (!u) fail('round 이벤트에 적이 없다');
+    // 한 벌은 시뮬이 실어 온다 — 렌더러가 굴리지 않는다 (INTERFACE §2-6 · 처치 드롭이 이 중 하나로 나간다)
+    if (!Array.isArray(u.gear) || !u.gear.length) fail('round 이벤트가 gear 를 안 싣는다');
+    const alt = on => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { key: 'Alt' }));
+    const base = monsterTipCard(u);
+    if (!base.classList.contains('equipment')) fail('장비 전용 너비 클래스가 없다');
+    if (!base.querySelector('.tip-equipment-face')) fail('첫 장에 착용 장비가 없다');
+    if (base.querySelector('.attr-list')) fail('첫 장에 Basic Stats 가 남았다 — 영웅과 같은 카드여야 한다');
+    if (base.querySelectorAll('.tip-equipment .pd-cell').length !== 8) fail('착용 위치가 8칸이 아니다');
+    const filled = base.querySelectorAll('.tip-equipment .pd-cell.filled').length;
+    if (filled !== u.gear.length) fail(`찬 칸 ${filled} ≠ 입은 부위 ${u.gear.length}`);
+    let held;
+    try { alt(true); held = monsterTipCard(u); } finally { alt(false); }
+    if (!held.querySelector('.tip-equipment')) fail('Alt 에서 착용 장비가 사라졌다');
+    if (held.querySelectorAll('.tip-unit-col.d1, .tip-unit-col.d2').length !== 2) fail('Alt 세부 옵션 두 열이 아니다');
+    const rows = held.querySelectorAll('.tip-unit-col.d1 .cs-row, .tip-unit-col.d2 .cs-row').length;
+    if (rows !== D.combatStats.filter(x => x.impl).length) fail(`Alt 세부 옵션 ${rows}행 — 전체가 아니다`);
+    return `${u.monsterId} · 장비 8칸(착용 ${filled}) · Alt 세부 ${rows}행`;
 });
 check('tip: 스킬 문장 — 37행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {
     const ctx = { period: 2.4, atkMin: 400, atkMax: 400, atkType: 'physical' };
@@ -5073,8 +5118,9 @@ check('tip: 스킬 문장 — 37행 전부 문장을 낸다 · 숫자가 강조�
             // ⚠ 2026-09-08 2차 개정으로 ~~실효 쿨~~ 이 아니라 **표기 쿨**이다 (SCREEN_DESIGN §4-2 · R56)
             const hl = [...line.querySelectorAll('.tip-hl')].map(n => n.textContent);
             if (!hl.length) fail(`${lang} ${def.id} 강조된 숫자가 없다`);
-            // ⚠ **오오라만 예외** — 쿨이 없어서(§1-5) 문장이 초를 안 말한다. 대신 효과 값이 강조돼 있다
-            if (def.kind !== 'aura') {
+            // ⚠ **쿨이 없는 둘만 예외** — 오오라(§1-5 상시)와 비직격(자폭 · 차례가 아니라 죽음이 부른다 · 2026-09-21).
+            //   문장이 초를 안 말한다. 대신 오오라는 효과 값이, 자폭은 피해 값이 강조돼 있다
+            if (def.kind !== 'aura' && def.kind !== 'indirect') {
                 const cool = String(Number(SYS.skill.previewOf(def, ctx).baseSec.toFixed(1)));
                 if (!hl.includes(cool)) fail(`${lang} ${def.id} 표기 쿨 ${cool} 이 강조에 없다 (${hl})`);
             }
@@ -5346,6 +5392,73 @@ check('battle: 적의 소환 벽은 처치가 아니고 클리어를 막지 않�
     if (!bossDown) fail(`×${two.mul} seed ${two.seed} 보스가 안 쓰러졌는데 이겼다`);
     if (end.t !== bossDown.t) fail(`×${two.mul} seed ${two.seed} 보스 전투불능 t=${bossDown.t} 인데 끝은 t=${end.t} — 벽이 클리어를 막았다`);
     return `① ×${one.mul} seed ${one.seed} 벽 ${walls.size} · gold ${r.gold} · 처치 ${killed} / ② ×${two.mul} seed ${two.seed} 벽이 선 채 t=${end.t} 클리어 [${stat.join(' / ')}]`;
+});
+/*
+ * **파티의 소환 벽** [2026-09-21 · 부채 #44] — 적 쪽 벽은 R79 에서 처치가 아니게 고쳤는데 **파티 쪽 벽**은 그대로였다.
+ *   `makeSummon` 이 `uid` 를 안 주므로 벽이 쓰러지면 `downed` 에 `undefined` 가 실려 리포트의 「전투불능 N명」과
+ *   캘리브레이션 `avg downed` 열이 부푼다(파티 3 인데 3.15~3.45 가 나오던 원인).
+ */
+check('battle: 파티의 소환 벽은 전투불능에 안 실린다 — downed 는 영웅 uid 뿐이다 (2026-09-21 · 부채 #44 · INTERFACE §2-6)', () => {
+    // 벽은 **마법사 킷**(mag_frozenwall)이 세운다 — 배정으로는 안 나갈 수 있어 킷을 손으로 싣는다(clsUnits)
+    const wallsOf = r => new Set(r.timeline.filter(ev => ev.e === 'summon' && !ev.u.startsWith('e')).map(ev => ev.d));
+    const downKeys = r => new Set(r.timeline.filter(ev => ev.e === 'down').map(ev => ev.u));
+    let one = null;
+    for (const stageId of [104, 105, 103]) {
+        for (let seed = 1; seed <= 40 && !one; seed++) {
+            const x = SYS.battle.simulate(clsUnits('mage'), stageId, makeRng(seed));
+            const fell = [...wallsOf(x)].filter(k => downKeys(x).has(k));
+            if (fell.length) one = { stageId, seed, r: x, walls: wallsOf(x).size, fell: fell.length };
+        }
+        if (one) break;
+    }
+    if (!one) fail('파티 벽이 쓰러진 판이 없다 — 표본 없음 (스테이지 103~105 · 시드 1~40)');
+    const bad = one.r.downed.filter(uid => !G.party.includes(uid));
+    if (bad.length) fail(`downed 에 영웅이 아닌 값 ${bad.length}개 (${bad.map(x => String(x)).join(',')}) — 벽이 실렸다`);
+    if (one.r.downed.length > G.party.length) fail(`downed ${one.r.downed.length} > 파티 ${G.party.length}`);
+    return `stage ${one.stageId} seed ${one.seed} 벽 ${one.walls} 중 ${one.fell} 쓰러짐 · downed ${one.r.downed.length}/${G.party.length}`;
+});
+/*
+ * **최대 HP 를 미는 창** [2026-09-21 · 부채 #50] — 배틀오더스(`hp_max_pct`)는 로직에서 `hpMax` 를 올리는데 창 이벤트가 그 값을 안 실었다.
+ *   재생기는 **계산하지 않으므로**(INTERFACE §6) 옛 최대치를 든 채 현재 HP 만 갱신해 관전 카드에 `118 / 103` 이 떴다.
+ *   여기서는 **재생기가 아는 최대치**(party[] 초기값 + refit + 창이 실어 준 값)를 그대로 따라가며, 어떤 이벤트도 그 최대치를 넘는 HP 를 말하지 않는지 본다.
+ */
+check('runtime: 최대 HP 를 미는 창이 hpMax·dhp 를 싣는다 — 재생기가 아는 최대치를 HP 가 안 넘는다 (2026-09-21 · 부채 #50 · INTERFACE §6)', () => {
+    let one = null;
+    for (let seed = 1; seed <= 40 && !one; seed++) {
+        const x = SYS.battle.simulate(clsUnits('warrior'), 101, makeRng(seed));
+        if (x.timeline.some(ev => ev.e === 'buff' && ev.stat === 'hp_max_pct')) one = { seed, r: x };
+    }
+    if (!one) fail('hp_max_pct 창이 열린 판이 없다 — 표본 없음 (시드 1~40)');
+    // **창을 여는 시전만 싣는다** — 이미 열려 있는데 다시 걸면(쿨 < 지속) 창 합이 그대로라 최대치가 안 바뀐다.
+    //   여는 것과 재시전을 양쪽으로 다 본다: 여는데 안 실으면 `118 / 103`, 재시전에 실으면 없는 변화를 말하는 것이다
+    const ups = one.r.timeline.filter(ev => ev.e === 'buff' && ev.stat === 'hp_max_pct');
+    const openUntil = new Map();
+    let opened = 0;
+    for (const ev of ups) {
+        const k = `${ev.u}|${ev.s}`;
+        const fresh = !(openUntil.get(k) > ev.t + 1e-9);
+        if (fresh && ev.hpMax === undefined) fail(`t=${ev.t} buff ${ev.s} (${ev.u}) 가 창을 여는데 hpMax 가 없다 — 재생기가 옛 최대치를 든다`);
+        if (!fresh && ev.hpMax !== undefined) fail(`t=${ev.t} buff ${ev.s} (${ev.u}) 는 재시전인데 hpMax 를 실었다 — 최대치는 안 바뀐다`);
+        if (ev.hpMax !== undefined && ev.dhp > ev.hpMax + 1e-9) fail(`t=${ev.t} buff ${ev.s} dhp ${ev.dhp} > hpMax ${ev.hpMax}`);
+        openUntil.set(k, ev.until);
+        if (fresh) opened++;
+    }
+    if (!opened) fail('창을 여는 시전이 하나도 없다 — 표본이 재시전뿐이다');
+    // **최대치를 실어 주는 이벤트는 셋뿐이다** — `summon` 의 hpMax 는 **벽의 것**이라 시전자에 쓰면 안 된다
+    const CARRY = ['refit', 'buff', 'buffEnd'];
+    const cap = new Map(one.r.party.map(p => [p.key, p.hpMax]));
+    let ends = 0;
+    for (const ev of one.r.timeline) {
+        if (ev.hpMax !== undefined && CARRY.includes(ev.e) && cap.has(ev.u)) { cap.set(ev.u, ev.hpMax); if (ev.e === 'buffEnd') ends++; }
+        // `d` 가 있으면 `dhp` 는 그쪽 몫이다(hit 의 피격자 · heal 의 대상) · 없으면 `u` 의 것(refit · regen · 창)
+        const pairs = ev.d !== undefined ? [[ev.d, ev.dhp], [ev.u, ev.ahp]] : [[ev.u, ev.dhp], [ev.u, ev.ahp]];
+        for (const [k, hp] of pairs) {
+            if (hp === undefined || !cap.has(k)) continue;
+            if (hp > cap.get(k) + 1e-9) fail(`t=${ev.t} ${ev.e} ${k} — hp ${hp} > 재생기가 아는 최대 ${cap.get(k)} (관전 카드의 118 / 103)`);
+        }
+    }
+    if (!ends) fail('hp_max_pct 창이 닫히며 hpMax 를 실은 buffEnd 가 하나도 없다 — 최대치가 안 내려간다');
+    return `seed ${one.seed} 시전 ${ups.length}(창 연 것 ${opened}) · 최대치 되돌린 buffEnd ${ends}개 · 넘침 없음`;
 });
 /*
  * **적의 오오라** [2026-09-11 · R79] — 몬스터가 스킬 칸을 갖게 되어 기사 무기를 낀 정예(무기 칸)나 기사 고유(`kni_defiance` 등)가

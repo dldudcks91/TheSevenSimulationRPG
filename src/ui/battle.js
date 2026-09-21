@@ -79,7 +79,8 @@ export function mountBattle(container, opts) {
     const stage = D.stages[stageId];
     const state = {
         combatOf: opts.combatOf ?? null, itemOf: opts.itemOf ?? null, itemTipOf: opts.itemTipOf ?? null,
-        // 영웅 툴팁의 세부 옵션 · 착용 장비 · 장비 hover 아이템 카드 — 앱이 든다(재생기는 G 를 모른다 · ADR-0171 · ADR-0182)
+        monsterItemTipOf: opts.monsterItemTipOf ?? null,   // 몬스터 장비 칸의 아이템 카드 — 세이브 밖 개체라 uid 가 없다 (ADR-0183)
+        // 유닛 툴팁의 세부 옵션 · 착용 장비 · 장비 hover 아이템 카드 — 앱이 든다(재생기는 G 를 모른다 · ADR-0171 · ADR-0182 · ADR-0183)
         pickedUid: opts.pickedUid ?? null, onPickHero: opts.onPickHero ?? null,   // 장착 대상 고르기 — 선택은 앱의 화면 상태다 (ADR-0137)
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
@@ -431,21 +432,24 @@ function renderUnits(state, root) {
                     </div>
                 </div>
                 <div class="pop-layer"></div>`;
-            // 올려놓으면 뜬다 — 영웅은 착용 장비 + Alt 세부 옵션, 몬스터는 기본 옵션 + Alt 세부 옵션 (SCREEN_DESIGN §2 · ADR-0171). 스킬 칸은 그 스킬.
-            // 영웅의 세부 옵션은 앱이 넘긴 `combatOf`(= game.heroCombat) · 몬스터는 `round` 이벤트의 `sheet`. 소환물(벽)은 둘 다 아니라 안 뜬다.
+            // 올려놓으면 뜬다 — **양 진영이 같은 카드다**: 착용 장비 첫 장 + Alt 세부 옵션 (SCREEN_DESIGN §2 · ADR-0171 · 몬스터 ADR-0183). 스킬 칸은 그 스킬.
+            // 세부 옵션은 영웅이 앱이 넘긴 `combatOf`(= game.heroCombat) · 몬스터가 `round` 이벤트의 `sheet`,
+            //   한 벌은 영웅이 `itemOf` 로 푼 `equipped` · 몬스터가 같은 이벤트의 `gear` 다. 소환물(벽)은 둘 다 아니라 안 뜬다.
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
             // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
+            // Alt 동안 카드 밖으로 나가도 유지 — 장비 칸 hover 로 아이템 카드를 여는 규칙이 양 진영 같다 (ADR-0176 · ADR-0182 · ADR-0183)
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null, state.itemOf,
-                uid => state.itemTipOf?.(u.hero, uid) ?? null), { anchor: true, holdOnAlt: true });
-            else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u), { anchor: true });
+                it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
+            // 몬스터 장비의 아이템 카드는 **그 몬스터 기준**으로 스킬 문장을 조립한다 — 스킬 칸과 같은 문맥을 넘긴다(능력치 계수 보류 포함)
+            else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
+                it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
             if (u.hero && state.onPickHero) n.onclick = () => state.onPickHero(u.hero.uid);
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
                 // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
                 if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i],
-                    { period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, source: u.skills[i].source,
-                      noStatMult: u.side === 'enemy' }));   // 몬스터는 능력치 계수 보류 — 전투(`battle.makeEnemy`)와 같은 규칙 (SCREEN_DESIGN §2 · ADR-0164)
+                    { ...unitSkillCtx(u), source: u.skills[i].source }));
             });
             u.node = n;
             // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서
@@ -744,6 +748,17 @@ function drain(state, root, opts) {
     }
 }
 
+/**
+ * 스킬 문장의 재료 — 그 유닛의 **표시값** (INTERFACE §2-6 · SCREEN_DESIGN §4-2).
+ * 문장이 「몇 초마다 얼마나」를 말하려면 주기 · 공격력 · 공격 타입이 필요하고, 회복량의 밑수 `matkMin`~`matkMax` ·
+ * 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다(범위 R90). 카드의 스킬 칸과 **몬스터 장비의 아이템 카드**가 같이 쓴다 (ADR-0183).
+ * 몬스터는 능력치 계수 보류 — 전투(`battle.makeEnemy`)와 같은 규칙 (SCREEN_DESIGN §2 · ADR-0164)
+ */
+const unitSkillCtx = u => ({
+    period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax,
+    hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, noStatMult: u.side === 'enemy',
+});
+
 /** 적 카드 한 장의 상태 — `round` 의 `enemies` 와 `call`(불러내기 · ADR-0161)의 `units` 가 **같은 모양**이라 한 곳에서 만든다 (INTERFACE §2-6).
  *  @param at 그 카드가 선 시각 — 행동 게이지의 기준 · 스킬 칸의 첫 준비 시각 */
 const enemyEntry = (e, at) => ({
@@ -757,6 +772,7 @@ const enemyEntry = (e, at) => ({
     //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
     atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량(범위 · R90) · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
     sheet: e.sheet ?? null,   // 세부 능력치 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 「유닛 툴팁 규격」)
+    gear: e.gear ?? null,     // 입고 있는 한 벌 — 유닛 툴팁의 첫 장(장비 3×3)이 읽는다 (R119 · ADR-0183)
     // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
     skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], at), firedAt: at })),
     buffs: new Map(),
@@ -833,6 +849,18 @@ function apply(state, root, opts, ev) {
             }
             break;
         }
+        case 'blast': {
+            // 자폭 — 비직격 **고정 피해** (battle_design §9-6 · skill_design §12-9 · 2026-09-21). 배리어를 안 보고 HP 만 줄이며 아무것도 유발하지 않는다.
+            //   적 전원이 대상이라 한 번 터질 때 이벤트가 대상 수만큼 잇따른다 — 광역 스킬의 `hit` 과 같은 모양이다
+            const a = U(ev.a), d = U(ev.d);
+            if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
+            if (a && d) {
+                pushLog(state, root, t('log.blast', { name: L(a.name), target: L(d.name), dmg: ev.dmg }), a.side);   // 주체는 터진 쪽 (반사와 같은 자리)
+                addDmg(state, a, ev.s, ev.dmg);
+                renderDmg(state, root);
+            }
+            break;
+        }
         case 'counter': {   // 반격 (2026-09-18 · ADR-0158) — 맞은 쪽(u)이 때린 쪽(d)에게 되받아 친다. 뒤에 그 타격 이벤트(기본 공격)가 잇는다
             const u = U(ev.u), d = U(ev.d);
             if (u) popup(state, u, t('pop.counter'), 'counter');
@@ -890,15 +918,19 @@ function apply(state, root, opts, ev) {
             if (u) { u.hp = ev.dhp; refreshUnit(state, u); }
             break;
         }
-        case 'buff': {   // 창 적용 · 갱신. 배리어면 총량(amt)도 온다
+        case 'buff': {   // 창 적용 · 갱신. 배리어면 총량(amt)도, 최대 HP 를 민 창이면 새 최대치(hpMax·dhp)도 온다
             const u = U(ev.u);
             if (!u) break;
             u.buffs?.set(ev.s, { until: ev.until, stat: ev.stat, v: ev.v });
+            // 최대 HP 를 민 창 — 시뮬이 민 값을 그대로 받는다. 재생기는 계산하지 않는다 (INTERFACE §6 · 부채 #50)
+            if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
             // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
             // 「지금 걸려 있다」는 상태라 카드 테두리가 든다 (SCREEN_DESIGN §4-2)
             // 오오라(`until: null`)는 로그에 안 적는다 — 전투 시작 · 적의 라운드마다 받는 유닛 수만큼 같은 줄이 쌓인다. 뱃지가 든다 (R98 · ADR-0127)
-            if (ev.until !== null) pushLog(state, root, t(ev.amt != null ? 'log.barrier' : 'log.buff', { name: L(u.name), skill: strikeLabel(ev.s), amt: ev.amt }), u.side);
+            // 배리어인지는 `stat` 으로 가른다 [2026-09-21 · 부채 #50 곁가지] — `amt` 는 최대 HP 창(`hp_max_pct`)도 실어서
+            //   `amt != null` 로 가르면 배틀오더스가 「방벽 21」로 찍혔다
+            if (ev.until !== null) pushLog(state, root, t(ev.stat === 'barrier_pct' ? 'log.barrier' : 'log.buff', { name: L(u.name), skill: strikeLabel(ev.s), amt: ev.amt }), u.side);
             break;
         }
         case 'buffEnd': {
@@ -906,6 +938,8 @@ function apply(state, root, opts, ev) {
             if (!u) break;
             const aura = u.buffs?.get(ev.s)?.until === null;   // 오오라 창이 닫힐 때도 로그를 안 쓴다 (R98)
             u.buffs?.delete(ev.s);
+            // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
+            if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
             if (!aura) pushLog(state, root, t('log.buffEnd', { name: L(u.name), skill: strikeLabel(ev.s) }), u.side);
             break;

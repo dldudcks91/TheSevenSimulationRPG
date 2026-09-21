@@ -128,7 +128,7 @@ user-invocable: true
 | 넷이 같은 사람 | 투구·무기·머리를 다 빼고 대체 축을 안 넣음 | 원칙 6 |
 | 조정으로 고쳐 달라는데 안 된다 | 머리폭/어깨폭은 불변량 | 원칙 5 — 왜 안 되는지 숫자로 보이고 재발주 |
 | 화살·깃이 가는 선으로 | 화살대는 외곽선보다 얇다 | `chunky flat fletchings, never thin lines, not past the top of the head` |
-| 백그라운드 서버가 죽는다 | 이 세션의 백그라운드 슬롯이 프로세스를 회수한다 | `Start-Process -WindowStyle Hidden python -m http.server 8777` 로 OS 에 분리. 또는 사용자가 `start.bat` |
+| 백그라운드 서버가 죽는다 | 이 세션의 백그라운드 슬롯이 프로세스를 회수한다 | `Start-Process -WindowStyle Hidden python -ArgumentList 'serve.py','8788'` 로 OS 에 분리 — **8777 은 사용자의 `start.bat` 자리라 안 쓴다**. 또는 사용자가 `start.bat` |
 
 ## 보조 파일
 

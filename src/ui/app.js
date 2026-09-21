@@ -968,8 +968,11 @@ function renderExpedition(main) {
         main.appendChild(page);
         stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
-            combatOf, itemOf, itemTipOf: (h, uid) => equippedItemTipCard(h, itemOf(uid)),
-            // 영웅 툴팁 — 현재 착용 장비 + 캐릭터 탭과 같은 세부 옵션 + Alt 장비 hover의 기존 「착용 중」 아이템 카드 (ADR-0171 · ADR-0182)
+            combatOf, itemOf, itemTipOf: (h, it) => equippedItemTipCard(h, it),
+            // 몬스터 툴팁의 장비 칸 — 같은 「착용 중」 카드이되 숫자는 **그 몬스터 기준**이라 재생기가 문맥을 넘긴다 (ADR-0183).
+            //   세이브 밖 개체(`round` 이벤트의 `gear`)라 uid 로 못 찾는다 — 개체를 그대로 받는다
+            monsterItemTipOf: (item, ctx) => tipCard(item, t('tip.equipped'), [], ctx),
+            // 유닛 툴팁 — 현재 착용 장비 + 캐릭터 탭과 같은 세부 옵션 + Alt 장비 hover의 기존 「착용 중」 아이템 카드 (ADR-0171 · ADR-0182 · ADR-0183)
             // 장착 대상 — 영웅 카드를 누르면 그 영웅으로 바뀐다 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137].
             //   아래 보관 칸의 장착 · 비교가 그 영웅을 향한다. 다시 그려도 재생은 resume 으로 이어진다(가방 칸 클릭과 같은 길)
             pickedUid: state.heroUid, onPickHero: uid => { state.heroUid = uid; render(); },
@@ -1696,6 +1699,7 @@ const EXP_TICK_MS = 200;      // 5fps — 백그라운드에서 미는 것은 �
    크롬이 숨긴 탭의 눈금을 늦추는 최대 간격이 1분이라 그 두 배를 둔다 — **게임 수치가 아니라 브라우저 사정**이라 CSV 가 아니다 (ADR-0102) */
 const FROZEN_GAP_MS = 2 * 60 * 1000;
 let beatAt = null;            // 앱 시계가 마지막으로 불린 실제 시각 — 멈춤은 이 박동의 공백으로 잰다
+let clocksOn = false;         // 부팅 꼬리(`startClocks`)를 이미 걸었나 — 출구가 여럿이라 두 번 걸리지 않게 막는다 (부채 #51)
 
 /** 런이 끝나는 시각 — **마지막 라운드가 계산되기 전엔 모른다**(무한대). 계산되면 결과의 `reason` 이 서고 그 끝이 곧 런의 끝이다 (R89) */
 const runEnd = B => (B.result.reason != null ? B.result.durationSec : Infinity);
@@ -1979,7 +1983,7 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
         // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 (2026-08-28) — 영웅 툴팁: 착용 장비 · Alt 로 세부 옵션 (ADR-0171)
         //   `tip: false` 면 안 건다 — 캐릭터 탭은 같은 값이 바로 아래 네 칸에 있고 뜬 카드가 그 칸을 덮는다 (2026-09-15 사용자 지시 · ADR-0116)
         //   유닛 툴팁은 **카드 옆**에 선다 — 관전 카드와 같은 규칙 (2026-09-15 · ADR-0120)
-        if (tip) bindTipNode(c, () => heroTipCard(h, combatOf(h), itemOf, uid => equippedItemTipCard(h, itemOf(uid))), { anchor: true, holdOnAlt: true });
+        if (tip) bindTipNode(c, () => heroTipCard(h, combatOf(h), itemOf, it => equippedItemTipCard(h, it)), { anchor: true, holdOnAlt: true });
         // 위칸 오른쪽은 **이름 + 레벨**이다 [2026-09-18 사용자 지시 · ADR-0165] — 레벨이 이름 뒤에 붙고 두 띠가 같다.
         //   줄어드는 쪽은 여전히 「하는 일」 하나다 — 레벨은 두세 글자라 줄일 것이 없다
         c.innerHTML = `
@@ -3981,7 +3985,9 @@ async function boot() {
                 if (new URLSearchParams(location.search).get('alt') === '1') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt' }));
             }, 100);
         }
-        if (!TABS.includes(tab)) return;
+        // 꼬리를 건너뛰되 **시계는 건다** [2026-09-21 · 부채 #51] — 여기서 그냥 나가면 `expTick` 이 안 돌아
+        //   멈춤 문턱(ADR-0102)을 재는 자리가 사라진다. `?dev=` 가 일반 주소와 다르게 굴면 QA 가 못 믿는다
+        if (!TABS.includes(tab)) { startClocks(); return; }
     }
     if (dev === 'form') {   // **출정 창**이 열린 상태 — 창은 클릭으로만 열리므로 헤드리스가 닿을 길을 따로 낸다 (2026-09-10 · ADR-0084)
         if (!G) startGame();
@@ -4127,6 +4133,18 @@ async function boot() {
         // 커서 자리는 왼쪽 위 — 카드 두 장(최대 640px)이 접힘 보정 없이 그대로 펴진다
         node?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
     }
+    startClocks();
+}
+
+/**
+ * 부팅의 마지막 — **화면과 무관하게 도는 것들**. `boot()` 의 어느 출구로 나가든 반드시 걸려야 한다 [2026-09-21 · 부채 #51].
+ * 특히 **앱 시계가 멈춤 문턱을 재는 유일한 자리다**(`expTick` → `closeFrozenRun` · ADR-0102) — 재생기는 문턱을 넘은 공백을
+ *   **밀지 않을 뿐** 런을 끊지 않는다(끊는 판단은 앱 시계 한 곳). 그래서 이것을 건너뛴 경로에서는 절전에서 깨어난 원정이
+ *   판정도 알림도 없이 그 자리에서 이어졌다 — `?dev=play` 가 꼬리 앞에서 `return` 하고 있었다
+ */
+function startClocks() {
+    if (clocksOn) return;
+    clocksOn = true;
     // 원정 시계 — 화면과 무관하게 앱이 든다 (ADR-0074). render() 가 걷는 것들과 달리 **끄지 않는다**
     setInterval(expTick, EXP_TICK_MS);
     // 브라우저 탭을 숨기고 돌아올 때 — 숨긴 탭의 시계는 앱 시계 하나다 (ADR-0102)

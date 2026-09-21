@@ -858,19 +858,41 @@ html, body { height: 100%; overflow: hidden; }
    아래 보관 칸은 메인 zoom .9 → 화면 45.03px, 툴팁은 53px에 zoom .85 → 45.05px다(1600×800 브라우저 실측).
    같은 60px 페이퍼돌을 그대로 쓰면 화면 51px로 한 단계 컸다. 칸 간격도 보관과 같은 4px로 맞춘다.
    열은 **장비 200px · 세부 옵션 1/2 각 220px**다. 기본 상태는 220px 폭의 보이지 않는 세부 옵션 1을 겹쳐 놓아 그 높이를 첫 장부터 그대로 잡는다. */
-.tip-card.unit.equipment { --tip-equip-col-w: 200px; --tip-detail-col-w: 220px; }
-.tip-card.unit.equipment:not(.alt) { width: 226px; } /* 내용 200 + 카드 좌우 padding 13×2 */
+/* `--tip-equip-gutter` = Alt 에서 장비 열과 **구분선** 사이 거리 — 열 틈 33 중 선이 다음 열 앞 17 에 서므로 33−17 이다.
+   기본 상태에서도 장비 열 바깥에 같은 거리를 남겨야 「장비 구역의 보이는 폭」이 Alt 전후로 같다 */
+.tip-card.unit.equipment { --tip-equip-col-w: 200px; --tip-detail-col-w: 220px; --tip-equip-gutter: 16px; }
+/* 기본 상태의 카드 폭은 **내용이 정한다** [정정 2026-09-21] — 박아 둔 226px 는 「200 + 좌우 padding 13」이라는 산수였는데
+   이 카드의 실제 좌우 padding 은 6px 다: 툴팁 카드가 `tip-card unit` 이라 **아레나 카드의 `.unit`**(style.css 아래쪽 · 같은 명시도 · 뒤에 선언)
+   규칙까지 함께 먹는다(`padding: 5px 6px 6px`). 그래서 카드가 내용보다 11.6px 넓었고, 200px 트랙이 왼쪽에 붙어
+   **오른변 쪽에 빈 11.6px** 이 남았다 — 툴팁이 카드 왼쪽에 서면(`grow-left`) 오른변을 못 박으므로 그 빈 자리만큼
+   Alt 전후로 장비 열이 어긋났다(실측 9.9px). `max-content` 면 padding 이 무엇이든 카드가 트랙에 딱 맞는다 */
+.tip-card.unit.equipment:not(.alt) { width: max-content; }
+/* 기본 상태의 **바깥 여백** [2026-09-21 사용자 지적 「Alt 누르면 장비칸 넓이가 커진다」] — Alt 에서는 장비 열 바깥에
+   구분선까지 16px 이 서는데 기본 상태에는 카드 padding(6) 뿐이라, Alt 를 누르는 순간 장비 구역이 그만큼 넓어 보였다.
+   모자란 만큼을 **붙는 쪽 반대편에만** 둔다 — 못 박은 변(오른쪽에 서면 왼변 · 왼쪽에 서면 오른변)을 건드리면
+   열이 다시 튄다. 카드 padding 이 아니라 `.tip-unit` 의 margin 으로 주는 이유도 같다(padding 은 `.unit` 충돌로
+   값이 미덥지 않다 — DEV_PLAN 부채 #53). ⚠ 뺄셈의 6px 이 그 충돌에서 온 값이다 */
+.tip-card.unit.equipment:not(.alt) .tip-unit { margin-right: calc(var(--tip-equip-gutter) - 6px); }
+.tip-card.unit.equipment.grow-left:not(.alt) .tip-unit { margin-right: 0; margin-left: calc(var(--tip-equip-gutter) - 6px); }
 .tip-card.unit.equipment .tip-unit { grid-template-columns: var(--tip-equip-col-w); }
 .tip-card.unit.equipment.alt.grow-left .tip-unit { grid-template-columns: var(--tip-detail-col-w) var(--tip-detail-col-w) var(--tip-equip-col-w); }
 .tip-card.unit.equipment.alt:not(.grow-left) .tip-unit { grid-template-columns: var(--tip-equip-col-w) var(--tip-detail-col-w) var(--tip-detail-col-w); }
-.tip-card.unit.equipment .tip-unit-col.base { display: grid; }
+/* 열 폭은 **장비 열 하나로 못박는다** [2026-09-21 · 사용자 지적 「Alt 누를 때랑 안 누를 때 자리가 바뀐다」].
+   기본 상태의 높이 기준(`.tip-equipment-probe`)은 세부 옵션 1과 같은 220px 라서, 트랙을 `auto` 로 두면
+   **보이지 않는 그 220px 이 트랙을 넓혀** 장비 면까지 220 이 됐다 — 페이퍼돌이 `justify-content: center` 라
+   Alt 로 기준이 빠지는 순간 3×3 이 10px(화면 8.5px) 왼쪽으로 튀었다. 트랙을 200 으로 박으면 기준은
+   제 폭(220)으로 **넘쳐 흐르며 높이만** 낸다 — 보이지 않으므로 넘친 자리는 화면에 없다 */
+.tip-card.unit.equipment .tip-unit-col.base { display: grid; grid-template-columns: var(--tip-equip-col-w); }
 .tip-card.unit.equipment .tip-equipment-face,
 .tip-card.unit.equipment .tip-equipment-probe { grid-area: 1 / 1; }
 .tip-card.unit.equipment .tip-equipment-face { display: flex; flex-direction: column; min-height: 0; }
 .tip-card.unit.equipment .tip-equipment-face .tip-foot { margin-top: auto; }
 .tip-card.unit.equipment .tip-equipment-probe { width: var(--tip-detail-col-w); visibility: hidden; pointer-events: none; }
+/* 3×3 은 머리글 바로 밑이 아니라 **한 단 내려** 선다 [2026-09-21 사용자 지시 「살짝 아래로」] — 첫 장은 세부 옵션 1의
+   높이를 쓰므로 칸 아래에 빈 자리가 길게 남았고, 칸이 위로 쏠려 카드가 머리만 찬 것처럼 읽혔다.
+   ⚠ **기본 · Alt 가 같은 값**이라야 한다 — 이 여백은 둘 다 타는 `.tip-equipment-face` 안이라 Alt 전후 자리가 안 움직인다 */
 .tip-card.unit .tip-equipment.paperdoll {
-    grid-template-columns: repeat(3, 53px); gap: 4px; justify-content: center; margin-top: 4px;
+    grid-template-columns: repeat(3, 53px); gap: 4px; justify-content: center; margin-top: 28px;
 }
 .tip-card.unit .tip-equipment .pd-cell,
 .tip-card.unit .tip-equipment .pd-gap { width: 53px; height: 53px; }

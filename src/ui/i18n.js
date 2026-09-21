@@ -663,6 +663,7 @@ const STRINGS = {
     'st.atkSpeed': { ko: '공격 속도', en: 'Attack Speed' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'log.reflect': { ko: '{name} 의 반사 — {target} 에게 {dmg}', en: '{name} reflects {dmg} to {target}' },
+    'log.blast': { ko: '{name} 의 자폭 — {target} 에게 {dmg}', en: '{name} self-destructs for {dmg} on {target}' },
     // 반격 (2026-09-18 · ADR-0158) — 주체는 반격한 쪽. 뒤에 그 반격의 타격 줄(기본 공격)이 잇는다
     'log.counter': { ko: '{name} 의 반격 → {target}', en: '{name} counters {target}' },
     // 불러내기 (2026-09-18 · ADR-0161) — {list} = 선 몬스터 이름들(쉼표) · 처음 선 것과 되살아난 것을 가르지 않는다 · `log.buff` 와 같은 틀
@@ -930,6 +931,12 @@ const STRINGS = {
     'sk.line.call': {
         ko: '{n}초마다 아직 안 나왔거나 쓰러진 무리를 한 번에 모두 불러낸다',
         en: 'Every {n}s, calls in every member of its band that has not appeared yet or has fallen',
+    },
+    /* 자폭 — 몬스터 전용 비직격 (2026-09-21 · skill_design §12-9 · battle_design §9-6). 쿨이 없어 {n} 을 안 든다(오오라와 같은 자리).
+       {d} = 피해 구절. 방어 · 저항을 안 받는 고정 피해라 문장이 그 사실을 말한다 */
+    'sk.line.selfDestruct': {
+        ko: '쓰러질 때 터져 적 전원에게 {d} 를 입힌다 — 방어와 저항을 무시한다',
+        en: 'On death, explodes to deal {d} to every enemy — ignoring defense and resistance',
     },
     /* 확률로 터지는 추가 피해 [2026-09-10 · ADR-0089] — 공격 문장 **뒤에 서는 완결된 둘째 문장**이다(차지 · 라이트닝 · 체인 라이트닝).
        공격 틀마다 변형을 두면 틀이 두 배가 되고, 조각을 이으면 ko/en 어순이 깨진다. {c} = 확률 · {x} = 배수(%) */

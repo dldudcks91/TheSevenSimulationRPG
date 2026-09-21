@@ -34,7 +34,7 @@
  *   `call`   — **불러내기** — 시전자의 무리(`band`) 중 서 있지 않은 것을 **한 번에 전부** 세운다 (skill_design §12-9 · 2026-09-18).
  *              벽과 달리 진짜 몬스터다 · **몬스터 전용**(`owner_kind = monster`) · 세우는 일은 battle.js(`callBand`)가 한다
  */
-export const KINDS = ['attack', 'heal', 'buff', 'aura', 'summon', 'call'];
+export const KINDS = ['attack', 'heal', 'buff', 'aura', 'summon', 'call', 'indirect'];   // indirect = 비직격 · 차례가 아니라 사건이 부른다 (사망 폭발 §9-6 · 2026-09-21 · §12-9)
 
 /**
  * 스킬 타격이 `strike` 에 싣는 셋 — 능력치 계수 · 추가 피해 확률 · 배수 (battle_design §9-2 · 2026-09-10 · 계수 곱 2026-09-18).
@@ -223,6 +223,9 @@ export const CONDITIONS = {
     // 무리 중 서 있지 않은 것(아직 안 나왔거나 쓰러진 것)이 있다 — 불러내기(`call`)의 조건 (2026-09-18 · INTERFACE §2-8).
     //   무리가 없는 유닛은 늘 거짓이다 — 소환사 규칙이 안 걸린 판에서는 이 스킬이 안 나간다
     band_missing: (def, ctx) => (ctx.self.band ?? []).some(m => !m.called || m.hp <= 0),
+    // 자폭 [2026-09-21 · skill_design §12-9] — **차례에는 절대 안 나간다.** 쓰러지는 순간 battle.js 가 직접 부른다.
+    //   늘 거짓이라 `pickReady` 가 고르지 않는다 — 선택기를 안 고치고 「사건이 부르는 스킬」을 여는 자리다
+    on_death: () => false,
 };
 
 export const CONDITION_IDS = Object.keys(CONDITIONS);
