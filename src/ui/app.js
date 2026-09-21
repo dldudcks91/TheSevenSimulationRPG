@@ -22,7 +22,7 @@
  * 2026-09-01 — **세부 옵션의 행 순서는 `combat_stat.csv:sheet_order` 가 정한다** (사용자 지시, SCREEN_DESIGN §6).
  *   카테고리 묶음 순으로 그리던 옛 규칙(`M.COMBAT_CATS` flatMap)은 폐기했고 그 사전도 지웠다 — 카테고리 제목을
  *   안 그리는 화면에서 **순서가 유일한 구조 신호**인데 그 순서가 암묵값(CSV 행 순서)이었다.
- *   머리 3줄(물리 공격력 · 마법 공격력 · 최대 HP)이 대표값이고, 칸은 「피해 감소」 앞에서 갈린다.
+ *   머리 4줄(물리 · 마법 데미지 · 행동 주기 · 최대 HP)이 대표값이고, 칸은 「방어 무시」 앞에서 갈린다(2026-09-22 · ADR-0294).
  *
  * 2026-08-27 — **원정 편성은 「어디를 갈지 먼저」** (사용자 지시, SCREEN_DESIGN §4-1). 행 클릭은 「지역 선택」이고,
  *   출발 버튼은 스테이지 행이 아니라 그 뒤에 열리는 편성 화면이 든다. **누를 때만** 뜬다 — 자동으로 열지 않는다.
@@ -1723,8 +1723,9 @@ function loadBox() {
  *   [2026-09-21 사용자 지시 · ADR-0216] ④ 는 한 칸에 셋이다 — 왼쪽에 전술 효과 · 물약 칸(읽기 전용), **칸 오른쪽 끝**에 출정 방식.
  *   [2026-09-21 사용자 지시 · ADR-0214] **줄이 곧 동사다** — 왼쪽 열은 초상끼리(적 넷 ↔ 영웅 셋) 위아래로 마주 서고, 오른쪽 열은 글(이야기)과 버튼(출정 방식)이다.
  *   [2026-09-21 사용자 지시 · ADR-0193] 창은 **편성을 짜지 않는다** — 영웅 띠와 진형 보드는 편성 탭(§15)으로 갔고, ③은 편성 고르개 + 초상 셋이다.
- *   칸 넷이 **격자의 직접 자식**이다 — 줄마다 감싸면 세로 구분선이 두 줄을 관통하지 못한다.
+ *   칸 넷이 **격자의 직접 자식**이다 — 줄마다 감싸면 두 줄의 열 폭이 따로 잡혀 파티 전술이 이야기와 같은 세로줄에 안 선다.
  *   가림막은 클래스가 세운다 — 오른쪽 열 `dw-c2` · 아래 줄 `dw-r2` (style.css `.dw-body`).
+ *   [2026-09-22 사용자 지시 · ADR-0292] 세로 구분선은 **줄마다 하나** — 위 줄은 이야기 왼쪽, 아래 줄은 **출정 방식 왼쪽**(`.fp-side`)이다.
  */
 function departBody() {
     const z = D.stages[state.expStage];
@@ -1733,9 +1734,9 @@ function departBody() {
     body.appendChild(foeBox(z));              // ① 적 구성 — 위 줄 왼쪽 · 읽는 자리다(클릭 없음)
     story.classList.add('dw-c2');             // ② 이야기 — 위 줄 오른쪽 · 남는 열 폭을 받는다 · 읽는 자리다(클릭 없음)
     pick.classList.add('dw-r2');              // ③ 편성 — 아래 줄 왼쪽 · 적 구성 아래 · 고르개 + 초상 셋(읽기 전용)
-    prep.classList.add('dw-c2', 'dw-r2');     // ④ 아래 줄 오른쪽 — 칸(가림막)은 열 폭 전체이고 속이 양끝으로 갈린다(`.dw-prep` 의 space-between)
+    prep.classList.add('dw-c2', 'dw-r2');     // ④ 아래 줄 오른쪽 — 칸(가림막)은 열 폭 전체이고 속이 양끝으로 갈린다(`.dw-prep` 의 space-between) · 칸 왼쪽 선은 없다(ADR-0292)
     prep.appendChild(loadBox());              //    왼쪽 — 전술 효과 + 물약 칸(읽기 전용 · ADR-0216)
-    prep.appendChild(goBox(z));               //    오른쪽 끝 — 위험도 + 경고 + 반복 원정 + 보내기(제 폭을 든다 · `.fp-side`)
+    prep.appendChild(goBox(z));               //    오른쪽 끝 — 위험도 + 경고 + 반복 원정 + 보내기(제 폭을 든다 · 왼쪽에 이 줄의 세로선 · `.fp-side`)
     body.appendChild(story);
     body.appendChild(pick);
     body.appendChild(prep);
@@ -2441,10 +2442,10 @@ function equippedItemTipCard(h, item) {
     return tipCard(item, t('tip.equipped'), [], skCtx);
 }
 
-/** ②-3·4 세부 옵션 1·2 — 전투 능력치 22(impl=1 · 09-17 타격 회복 추가)를 두 칸에 나눠 스크롤 없이. 물리 방어 행은 감쇠율을 병기한다 */
+/** ②-3·4 세부 옵션 1·2 — 전투 능력치(impl=1 · 저항 감소는 뺀다) + 옵션이 여는 축 11 을 14 · 18 로 나눠 스크롤 없이 (2026-09-22 · ADR-0294). 물리 방어 행은 감쇠율을 병기한다 */
 function detailPanels(h) {
     const c = combatOf(h);
-    // 두 쪽으로 끊는 자리(피해 감소 앞) · 행 목록 · 줄 조립은 유닛 툴팁의 두 열과 같은 함수다 (tip.js:sheetPages · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0115)
+    // 두 쪽으로 끊는 자리(방어 무시 앞) · 행 목록 · 줄 조립은 유닛 툴팁의 두 열과 같은 함수다 (tip.js:sheetPages · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0115)
     return sheetPages().map((rows, pi) => {
         const p = el('div', 'panel');
         p.appendChild(el('h2', '', t('ch.detail.hn', { n: pi + 1 })));

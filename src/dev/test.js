@@ -13,7 +13,7 @@
 
 import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES, fillStory, pickJosa, STORY_TOKEN } from '../ui/data.js';
-import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard } from '../ui/tip.js';
+import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard, sheetPages } from '../ui/tip.js';
 import { setLang, t as i18nT } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
@@ -604,28 +604,27 @@ check('combat_stat.csv: 24행 · 폐지 축 없음 · 저항은 pct · 유틸은
     if (ids.length !== 24) fail(`${ids.length}`);
     return true;
 });
-check('combat_stat.csv: sheet_order 1~24 유일 · 머리 3 = 물공·마공·최대 HP · 저항 묶음이 안 갈린다 (SCREEN_DESIGN §6, 2026-09-01)', () => {
+check('combat_stat.csv: sheet_order 1~24 유일 · 머리 4 = 물공·마공·행동 주기·최대 HP · 세부 옵션 1 = 사용자가 고른 14줄 (SCREEN_DESIGN §6 · ADR-0294)', () => {
     // 캐릭터 시트의 행 순서는 **CSV 행 순서가 아니라 이 컬럼**이 정한다. 화면이 못 읽는 규칙이라 여기서 지킨다
     const orders = D.combatStats.map(s => s.sheetOrder);
     if (orders.some(v => typeof v !== 'number')) fail('sheet_order 가 비어 있는 행이 있다');
     if (new Set(orders).size !== 24) fail(`중복 ${orders.length - new Set(orders).size}개`);
     if (Math.min(...orders) !== 1 || Math.max(...orders) !== 24) fail(`범위 ${Math.min(...orders)}~${Math.max(...orders)}`);
     const seq = D.combatStats.slice().sort((a, b) => a.sheetOrder - b.sheetOrder);
-    // 머리 3 = 대표값 — 시트가 여기까지 굵게 찍고 선을 긋는다 (tip.js:DETAIL_LEAD — 캐릭터 탭 · 유닛 툴팁이 같이 쓴다)
-    const lead = seq.slice(0, 3).map(s => s.id).join();
-    if (lead !== 'atk_physical,atk_magic,hp_max') fail(`머리 3: ${lead}`);
+    // 머리 4 = 대표값 — 시트가 여기까지 굵게 찍고 간격을 둔다 (tip.js:DETAIL_LEAD — 캐릭터 탭 · 유닛 툴팁이 같이 쓴다 · 넷은 2026-09-22 ADR-0294)
+    const lead = seq.slice(0, 4).map(s => s.id).join();
+    if (lead !== 'atk_physical,atk_magic,action_period,hp_max') fail(`머리 4: ${lead}`);
     const drawn = seq.filter(s => s.impl === 1).map(s => s.id);
-    // 22행 = 09-17 타격 회복(fhr)이 들어왔다 (R110 · 사용자 결정 「세부 옵션에 지금 넣는다」) — 둘째 칸의 행동 주기와 쿨타임 감소 사이
+    // 22행 = 09-17 타격 회복(fhr)이 들어왔다 (R110). 저항 감소는 impl=1 이지만 시트에 안 선다(tip.js:SHEET_HIDDEN · ADR-0294) — 맨 뒤에 둔다
     if (drawn.length !== 22) fail(`impl=1 ${drawn.length}`);
-    // 저항 4행과 그 상한을 움직이는 축은 한 묶음 — 칸 경계가 이 사이로 들어오면 상한이 두 칸에서 두 번 나온다
-    const res = drawn.slice(drawn.indexOf('res_fire'), drawn.indexOf('res_fire') + 5).join();
-    if (res !== 'res_fire,res_cold,res_lightning,res_poison,res_max_bonus') fail(`저항 묶음: ${res}`);
-    // 칸 경계 = tip.js:DETAIL_SPLIT_AT ('damage_reduction') — 13 / 9 · 캐릭터 탭 두 패널 · 유닛 툴팁 두 열이 같이 쓴다(sheetPages)
-    const cut = drawn.indexOf('damage_reduction');
-    if (cut !== 13) fail(`세부 옵션 1 이 ${cut}행 (13 이어야 한다)`);
-    const tempo = drawn.slice(drawn.indexOf('action_period'), drawn.indexOf('action_period') + 3).join();
-    if (tempo !== 'action_period,fhr,cooldown_reduction') fail(`템포 묶음: ${tempo}`);
-    return `22행 · 세부 옵션 1 ${cut} / 2 ${drawn.length - cut}`;
+    // 칸 경계 = tip.js:DETAIL_SPLIT_AT ('def_ignore' · 2026-09-22 ADR-0294) — 세부 옵션 1 은 사용자가 적은 14줄 · 그 순서 그대로다.
+    //   옵션이 여는 축(tip.js:FX_ROWS 11)은 전부 2 에 선다 — 캐릭터 탭 두 패널 · 유닛 툴팁 두 열이 같이 쓴다(sheetPages)
+    const cut = drawn.indexOf('def_ignore');
+    const page1 = drawn.slice(0, cut).join();
+    const want = 'atk_physical,atk_magic,action_period,hp_max,crit_rate,crit_damage,cooldown_reduction,defense,damage_reduction,fhr,res_fire,res_cold,res_lightning,res_poison';
+    if (page1 !== want) fail(`세부 옵션 1: ${page1}`);
+    if (drawn[drawn.length - 1] !== 'res_reduction') fail(`시트에 안 서는 저항 감소가 맨 뒤가 아니다: ${drawn[drawn.length - 1]}`);
+    return `22행 · 세부 옵션 1 ${cut} / 2 ${drawn.length - cut - 1}(+ 옵션 줄 · 저항 감소 제외)`;
 });
 check('hero_attribute.csv: 감각 → 운 (2026-08-26 재정의) · 자리 유지 · 직업 메인 스탯(class.csv:key_attr · 2026-09-18)', () => {
     const ids = D.heroAttributes.map(s => s.id);
@@ -5641,8 +5640,15 @@ check('tip: 영웅 첫 장은 착용 장비 · Alt 는 장비를 둔 채 세부 
     if (held.querySelector('.attr-list')) fail('Alt 에 Basic Stats 가 섰다');
     if (held.querySelectorAll('.tip-unit-col.d1, .tip-unit-col.d2').length !== 2) fail('Alt 세부 옵션 두 열이 아니다');
     const detailRows = held.querySelectorAll('.tip-unit-col.d1 .cs-row, .tip-unit-col.d2 .cs-row').length;
-    if (detailRows !== D.combatStats.filter(s => s.impl).length) fail(`Alt 세부 옵션 ${detailRows}행 — 전체가 아니다`);
-    return `장비 8칸(착용 ${worn}) · Alt 세부 ${detailRows}행`;
+    // 전투 능력치 행 전부 + 옵션이 여는 축 중 **값이 있는 줄만** (2026-09-22 · ADR-0291) — 캐릭터 탭은 그 축을 늘 세운다
+    const all = sheetPages().flat();
+    const statRows = all.filter(s => !s.fx).length, fxMax = all.filter(s => s.fx).length;
+    const sparse = sheetPages(combat, true).flat().length;
+    if (detailRows !== sparse) fail(`Alt 세부 옵션 ${detailRows}행 ≠ 값이 있는 줄까지 ${sparse}행`);
+    if (sparse < statRows || sparse > statRows + fxMax) fail(`Alt 세부 옵션 ${sparse}행 — 전투 능력치 ${statRows}행 + 옵션 0~${fxMax} 가 아니다`);
+    const full = sheetPages().map(p => p.length).join(' / ');
+    if (full !== '14 / 18') fail(`캐릭터 탭 세부 옵션 ${full} — 14 / 18 이어야 한다 (ADR-0294)`);
+    return `장비 8칸(착용 ${worn}) · Alt 세부 ${detailRows}행 · 캐릭터 탭 ${full}`;
 });
 check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover는 옵션 카드를 열고 · 키를 떼면 모두 닫힌다 (ADR-0182)', () => {
     const h = G.heroes[0], combat = SYS.game.heroCombat(G, h), findItem = uid => G.items[uid] ?? null;
@@ -5706,7 +5712,8 @@ check('tip: 몬스터 첫 장도 착용 장비다 — 영웅과 같은 카드 ·
     if (!held.querySelector('.tip-equipment')) fail('Alt 에서 착용 장비가 사라졌다');
     if (held.querySelectorAll('.tip-unit-col.d1, .tip-unit-col.d2').length !== 2) fail('Alt 세부 옵션 두 열이 아니다');
     const rows = held.querySelectorAll('.tip-unit-col.d1 .cs-row, .tip-unit-col.d2 .cs-row').length;
-    if (rows !== D.combatStats.filter(x => x.impl).length) fail(`Alt 세부 옵션 ${rows}행 — 전체가 아니다`);
+    // 몬스터는 옵션이 여는 축이 없다(battle.js 가 시트에서 option_fx 를 뺀다) — 옵션 줄은 하나도 안 서고 전투 능력치 행만 선다 (ADR-0291)
+    if (rows !== sheetPages().flat().filter(x => !x.fx).length) fail(`Alt 세부 옵션 ${rows}행 — 전체가 아니다`);
     return `${u.monsterId} · 장비 8칸(착용 ${filled}) · Alt 세부 ${rows}행`;
 });
 check('tip: 스킬 문장 — 37행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {

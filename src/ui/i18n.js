@@ -684,6 +684,14 @@ const STRINGS = {
     'st.atkType.lightning': { ko: '전기', en: 'Lightning' },
     'st.atkType.poison': { ko: '독', en: 'Poison' },
     'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated' },
+    // 세부 옵션 — 옵션이 여는 축 줄 (combat_stat 행이 아니다 · SCREEN_DESIGN §6 · ADR-0291). 한 줄짜리는 아이템 옵션 줄 이름(`M.AFFIX_LABELS`)을 그대로 쓴다
+    'st.fx.part': { ko: '{n} {v}', en: '{n} {v}' },
+    'st.fx.vsTarget': { ko: '정예 · 열 추가 데미지', en: 'Elite & Row Damage' },
+    'st.fx.drType': { ko: '타입별 받는 피해 감소', en: 'Damage Reduction vs Type' },
+    'st.fx.drTarget': { ko: '정예 · 열별 받는 피해 감소', en: 'Damage Reduction vs Elite & Row' },
+    'st.fx.normal': { ko: '일반', en: 'Normal' },
+    'st.fx.demon': { ko: '데몬', en: 'Demon' },
+    'st.fx.undead': { ko: '언데드', en: 'Undead' },
     // 초당 공격속도 — **축이 아니라 표기**다. 축은 `combat_stat.csv:action_period`(행동 주기) 하나고
     // 아이템 툴팁만 그 역수를 찍는다 (주기는 클수록 느려 이름과 방향이 거꾸로 읽힌다 · ADR-0081)
     'st.atkSpeed': { ko: '공격 속도', en: 'Attack Speed' },

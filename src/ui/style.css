@@ -545,23 +545,38 @@ html, body { height: 100%; overflow: hidden; }
    **가로 여백 24 는 그대로다** — 늘리면 오른쪽 열(이야기 · 출정 방식)에 남는 폭이 없어 넘친다 */
 /* 위 여백 36 → **24**(가로 여백과 같다) · 머리 아래 **판 전폭 선** [2026-09-21 사용자 지시 「Ch1-1 아래에도 선 쫙 · 위의 빈 공간을 좀 줄여」 · ADR-0288] —
    선은 패널 제목 밑줄(`.panel > h2`)과 같은 색이고 닫기 X 까지 머리 한 줄 전체를 받친다. 선 아래 → 칸 이름까지는 창의 `gap` 24 그대로 */
-.modal-box.depart-box { width: min(1520px, 100%); padding: 24px 24px 40px; gap: 24px; zoom: .9; }
+/* `--dw-gap` = **선 아래 → 칸 이름** 간격 하나 [2026-09-22 사용자 지시 「Party 와 중간선의 높이 차이를 Enemies 와 똑같이」 · ADR-0292] —
+   머리 선 → 위 줄 이름(창 `gap`)과 가림막 → 아래 줄 이름(`.dw-r2` 윗 여백)이 같은 값을 읽는다. 둘이 갈라지면 아래 줄 이름만 떠 보인다 */
+/* 아래 여백 40 → **28** [2026-09-22 사용자 지시 「표 아래 높이도 12px 감소」] — 그중 `--dw-gap` 만 판이 들고 나머지(4)는 출정 방식 선이 든다
+   (선 끝 → 판 아랫변 = 선 위 여백 · ADR-0295 · `.fp-side`). 판 높이는 28 그대로다 */
+.modal-box.depart-box { --dw-gap: 24px; width: min(1520px, 100%); padding: 24px 24px var(--dw-gap); gap: var(--dw-gap); zoom: .9; }
 .modal-box.depart-box > .modal-head { padding-bottom: 14px; border-bottom: 1px solid var(--border-primary); }
 /* 속은 **칸 넷이 격자 하나에 2×2** 다 [2026-09-10 사용자 지시 · ADR-0088 · 자리는 2026-09-21 ADR-0214]
      위 줄   = 적 구성 ↔ 이야기 — 어떤 곳인가 (**읽는 자리 둘**)
      아래 줄 = 편성 ↔ 출정 방식 — 누구를 보내나 ↔ 갈까 (**누르는 자리 둘**)
    열 폭은 **왼쪽 = 초상 넉 장 폭**(`auto` — 적 구성이 정하고 아래의 편성 초상 셋이 그 안에 든다) · **오른쪽 = 남는 폭**이다.
    이야기가 그 남는 폭을 받아 줄 수가 줄고(글이 열을 안 넓힌다 — `.dw-story`), 출정 방식은 제 폭을 든다(`.fp-side`).
-   칸 넷이 **격자의 직접 자식**이라 세로 구분선이 두 줄을 관통한다. `align-items` 는 기본(stretch) —
-   구분선이 줄 높이 전체에 서고, 칸 안 내용은 위 정렬 그대로다 */
+   칸 넷이 **격자의 직접 자식**이라 두 줄의 열 경계가 한 세로줄에 맞는다(파티 전술이 이야기와 같은 자리에서 시작한다).
+   세로 구분선은 **줄마다 하나** [2026-09-22 사용자 지시 · ADR-0292] — 위 줄은 이야기 칸 왼쪽(`.dw-c2`) · 아래 줄은 출정 방식 왼쪽(`.fp-side`).
+   두 선 다 **가림막에 안 닿는다** [2026-09-22 사용자 지시 · ADR-0293] — 칸 이름 높이에서 시작한다.
+   **선 위아래 여백이 같다** [2026-09-22 사용자 지시 「세로선 길이를 위의 여백에 맞춰서 아래를 늘려」 · ADR-0295] — 선 윗끝이 위 가로선(머리 선 · 가림막)에서
+   `--dw-gap` 떨어지므로 아랫끝도 아래 가로선(가림막 · 판 아랫변)에서 `--dw-gap` 떨어진다.
+   `align-items` 는 기본(stretch) — 칸이 줄 높이를 받아 선이 그 줄의 가장 긴 내용까지 서고, 칸 안 내용은 위 정렬 그대로다 */
 .dw-body { display: grid; grid-template-columns: auto minmax(0, 1fr); }
 /* 가림막 · 여백 — 칸마다 오른쪽 · 아래 여백을 두고, 오른쪽 열(`.dw-c2`)은 왼쪽에 세로선 · 아래 줄(`.dw-r2`)은 위에 가로선을 세운다 */
 /* 줄 사이 28 + 28 → **48 + 48** [2026-09-14 사용자 지시 — 「답답해 보인다」 · 위 `.depart-box` 와 같은 날] — 가로선 위아래가 같은 폭이라 선이 두 줄 사이 가운데에 선다.
    가로선은 **칸 이름 밑줄과 함께 선다** [2026-09-21 사용자 지시 「위아래를 나눠야 할 것 같다」 · ADR-0286 — 같은 날 여백만 남겼던 것(ADR-0285)을 되돌렸다] —
-   여백만으로는 위 줄(읽는 자리)과 아래 줄(누르는 자리)이 한 덩어리로 붙어 보였다. 선과 밑줄 사이는 48 이라 글씨가 선 사이에 갇혀 보이지 않는다 */
-.dw-body > * { padding-right: 26px; padding-bottom: 48px; }
+   여백만으로는 위 줄(읽는 자리)과 아래 줄(누르는 자리)이 한 덩어리로 붙어 보였다.
+   가림막 **아래**는 48 → `--dw-gap` [2026-09-22 사용자 지시 · ADR-0292] — 머리 선 아래와 같은 값이라 선이 아래 줄 쪽에 붙어 선다(머리 선이 위 줄에 붙듯이).
+   가림막 **위**는 48 → **42** [2026-09-22 사용자 지시 「가운데선과 아래 내용물을 6px 위로」] — 선 아래 간격(`--dw-gap`)은 그대로라 아래 줄이 선과 함께 오른다.
+   위 줄의 이 42 는 **margin `--dw-gap` + padding 나머지(18)** 로 가른다 [2026-09-22 사용자 지시 · ADR-0295] — padding 몫만큼 이야기 칸의 왼쪽 선이 내려가
+   가림막 앞 `--dw-gap` 에서 멈춘다(선 윗끝이 머리 선에서 떨어진 거리와 같다). 전부 padding 이면 선이 가림막에 닿는다(ADR-0293) · 합이 42 라 가림막 자리는 그대로다 */
+.dw-body > * { padding-right: 26px; padding-bottom: calc(42px - var(--dw-gap)); margin-bottom: var(--dw-gap); }
 .dw-body > .dw-c2 { padding-right: 0; padding-left: 26px; border-left: 1px solid var(--border-secondary); }
-.dw-body > .dw-r2 { padding-bottom: 0; padding-top: 48px; border-top: 1px solid var(--border-secondary); }
+.dw-body > .dw-r2 { margin-bottom: 0; padding-bottom: 0; padding-top: var(--dw-gap); border-top: 1px solid var(--border-secondary); }
+/* 아래 줄 오른쪽 칸은 **왼쪽 선을 안 든다** — 그 줄의 선은 출정 방식 왼쪽에 선다(`.fp-side` · ADR-0292).
+   윗 여백은 칸이 든다 — 그래서 출정 방식의 선이 여백 아래(칸 이름 높이)에서 시작해 가림막에 안 닿는다 (ADR-0293) */
+.dw-body > .dw-prep { border-left: 0; }
 /* 칸 하나 — 이름 + 내용. 지금 이 껍데기를 쓰는 것은 캐릭터 선택(띠) 하나다(나머지 셋은 제 상자가 있다) */
 .dw-block { min-width: 0; }
 /* ⚠ **띠 카드는 공통 규격 그대로다** [2026-09-10 사용자 지시 — 같은 날의 `max-width: 160px` 특례를 철회] —
@@ -707,7 +722,15 @@ html, body { height: 100%; overflow: hidden; }
 /* **출정 방식** — 이름 + 위험도 + 경고 + 버튼 둘. **폭은 못박는다** — 옛 자리에서는 열(적 구성 내용 폭)이 정했는데,
    제 폭이 없으면 경고 줄의 글자가 폭을 흔들어 버튼이 옆으로 옮겨 다닌다(「크기는 상태에 흔들리지 않는다」 · 2026-08-28).
    라벨이 드는 칸이라 고정 px 가 아니라 `clamp()` — 상한은 진형 옆에 남는 폭이다 */
-.fp-side { display: flex; flex-direction: column; align-items: stretch; gap: 10px; flex: 0 0 clamp(240px, 20em, 300px); }
+/* **왼쪽에 세로 구분선** [2026-09-22 사용자 지시 「아래 선 빼 버리고 Departure 옆에」 · ADR-0292] — 들고 가는 것(읽는 자리)과 보내는 자리를 가른다.
+   `align-self: stretch` 라 선이 **칸 이름 높이부터 격자 끝까지** 선다 — 가림막에는 안 닿는다(위 줄 선과 같은 문법 · ADR-0293).
+   선 · 여백 몫(26 + 1)은 폭에 **더한다** — 빼면 버튼이 그만큼 좁아진다.
+   아래 padding = 판 아래 여백 28 에서 `--dw-gap` 을 뺀 몫 [2026-09-22 사용자 지시 · ADR-0295] — 선이 보내기 아래로 그만큼 더 내려가 판 아랫변 앞 `--dw-gap` 에서 멈춘다 */
+.fp-side {
+    display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+    flex: 0 0 calc(clamp(240px, 20em, 300px) + 27px); align-self: stretch;
+    padding-left: 26px; padding-bottom: calc(28px - var(--dw-gap)); border-left: 1px solid var(--border-secondary);
+}
 /* 이 칸의 이름은 아래 여백을 **flex `gap`(10) 만큼 덜** 준다 — 옆 칸 이름 아래(20)와 합이 같아야 내용의 윗선이 옆 칸과 맞는다 */
 .fp-side .sub-h { margin-bottom: 10px; }
 /* 위험도 줄 — 출정 방식 칸 맨 위 (SCREEN_DESIGN §4-1 · ADR-0104). 윗줄 라벨 + 범위 · 아랫줄 버튼 넷 + 지금 레벨.
@@ -2332,14 +2355,17 @@ html, body { height: 100%; overflow: hidden; }
 /* ②-3·4 세부 옵션 1·2 — 21행(impl=1)을 두 칸에 나눠 스크롤 없이 다 보이는 게 정상 (2026-08-27).
    flex-basis 는 auto — 목록의 본래 높이가 칸 높이 산정에 들어가야 가장 긴 칸이 네 칸의 높이를 정한다.
    (0 이면 목록이 높이 산정에서 빠져 다른 칸 높이에 맞춰 잘리고 스크롤이 생긴다)
-   ⚠ 가장 긴 칸은 2026-09-01 로 **세부 옵션 1**(13행)이 됐다 — 칸 경계가 '피해 감소' 앞으로 옮겨갔다 (SCREEN_DESIGN §6) */
+   ⚠ 두 칸이 **14 · 18 줄**이다 [2026-09-22 · ADR-0291 · ADR-0294 — 옵션이 여는 축이 들어오고 칸 경계가 '방어 무시' 앞으로 옮겨갔다] (SCREEN_DESIGN §6) */
 .cs-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 4px; }
+/* 캐릭터 탭 세부 옵션만 줄 간격을 좁힌다 [2026-09-22 · ADR-0291] — 본문 줄 높이(1.6)로는 18줄(지금은 세부 옵션 2)이 네 칸 높이를 밀어 올려 가방이 한 줄 넘게 줄었다.
+   유닛 툴팁의 같은 줄(`.tip-unit .cs-row`)은 옵션 줄이 값이 있을 때만 서서 그대로 둔다 */
+.cols.c-char .cs-row { line-height: 1.3; }
 .cs-row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 1px 0; }
 .cs-n { font-size: var(--fs-sm); color: var(--text-secondary); }
 .cs-v { font-size: var(--fs-sm); color: var(--text-primary); white-space: nowrap; }
 /* 값이 없는 축 = 다음 장비가 들어올 자리. 지우지 않고 흐리게 남긴다 */
 .cs-row.off .cs-n, .cs-row.off .cs-v { color: var(--text-muted); }
-/* 머리 3줄 = 대표값(물리 공격력 · 마법 공격력 · 최대 HP) — **값 굵기 + 아래 간격** (2026-09-01 · 개정 2026-09-08 · 선은 2026-09-15 걷음).
+/* 머리 4줄 = 대표값(물리 · 마법 데미지 · 행동 주기 · 최대 HP — 넷은 2026-09-22 ADR-0294) — **값 굵기 + 아래 간격** (2026-09-01 · 개정 2026-09-08 · 선은 2026-09-15 걷음).
    제목이 아니라 **선**이다: 카테고리 제목을 두지 않기로 한 08-26 결정을 지키면서 「여기까지가 대표값」만 말한다.
    ⚠ ~~font-size: var(--fs-md)~~ 는 2026-09-08 폐기 [사용자 지시] — 크기까지 키우면 선·굵기와 같은 말을 세 번 하고,
    세부 옵션 1·2 의 행 눈금이 어긋나며, 늘 꺼져 있는 쪽 공격력 줄이 시트에서 제일 큰 글씨가 된다 (SCREEN_DESIGN §6) */

@@ -283,10 +283,11 @@ function equipmentHtml(worn) {
 
 /**
  * 세부 옵션 머리 — 대표값 몇 줄을 굵게 찍고 그 아래 간격을 둔다 (`sheet_order` 1..N · 구분선은 2026-09-15 사용자 지시로 걷었다).
+ * 넷이다 — 물리 데미지 · 마법 데미지 · 행동 주기 · 최대 HP [2026-09-22 사용자 지시 · ADR-0294 — 행동 주기가 마법 데미지와 최대 HP 사이에 서서 셋에서 넷이 됐다].
  * 물리·마법 공격력 중 **하나는 늘 꺼져 있다**(무기 종류가 정한다) — 지우지 않는 것이 결정이다: 회색으로 남은
  * 그 자리가 「내 빌드가 어느 쪽인가」를 말한다 (SCREEN_DESIGN §6, 2026-09-01).
  */
-const DETAIL_LEAD = 3;
+const DETAIL_LEAD = 4;
 
 /** 상한이 걸리는 저항 4행 — 값만으로는 "몇 %까지 의미가 있나"를 못 읽는다 (battle_design §9-5) */
 const RES_ROWS = ['res_fire', 'res_cold', 'res_lightning', 'res_poison'];
@@ -298,8 +299,48 @@ const fmtCombat = (def, v) => v === undefined ? '—'
     : def.fmt === 'sec' ? t('sk.cycleSec', { s: v.toFixed(2) })
     : String(v);
 
-/** 세부 옵션의 행 — impl=0 은 computeCombat 이 내지 않는 축이라 안 그린다 · 순서는 sheet_order 하나가 정한다 (combat_stat.csv) */
-export const sheetStats = () => D.combatStats.filter(s => s.impl).sort((a, b) => a.sheetOrder - b.sheetOrder);
+/** 묶은 줄의 한 조각 이름 — 값이 있는 것만 이름을 붙여 찍는다 (`일반 10% · 데몬 5%`) */
+const typeParts = o => ['normal', 'demon', 'undead'].map(k => [t(`st.fx.${k}`), o?.[k] ?? 0]);
+const one = v => [[null, v ?? 0]];
+
+/**
+ * 옵션이 여는 축 — 세부 옵션의 줄이지만 **combat_stat 행이 아니다** [2026-09-22 · SCREEN_DESIGN §6 · ADR-0291].
+ * 값은 `computeCombat` 의 `option_fx` 묶음(hero.js)이 들고, 전부 0 이면 묶음째 `null` 이라 모든 값이 0 이다.
+ * `after` = 이 줄이 뒤에 서는 combat_stat 행(같은 `after` 끼리는 이 배열 순서) · `parts(x)` = `[[조각 이름, 값]]` —
+ * 조각이 **둘 이상이면 묶은 줄**이다(값이 있는 것만 이름을 붙이고 전부 0이면 `—`). 하나면 이름 없이 값만 찍는다.
+ * 줄 이름은 아이템 옵션 줄(`M.AFFIX_LABELS`) · combat_stat 이름을 먼저 쓴다 — 같은 축이 두 화면에서 다른 이름이면 안 된다.
+ * **전투가 안 읽는 축은 없다** — 상태이상 시간 감소 넷은 아이템 툴팁의 「(미적용)」 줄이 든다 (ADR-0213).
+ * 원소 피해 · 타격 시 방어 · 저항 감소 · 타격 시 대상 데미지 감소는 **전투가 읽지만 세우지 않는다** [2026-09-22 사용자 지시 · ADR-0294]
+ */
+const FX_ROWS = [
+    { id: 'fx_vs_type', after: 'def_ignore', fmt: 'pct', name: () => L(D.combatStats.find(s => s.id === 'vs_type_damage')),
+        parts: x => typeParts(x?.vs) },
+    { id: 'fx_vs_target', after: 'def_ignore', fmt: 'pct', name: () => t('st.fx.vsTarget'),
+        parts: x => [[t('kind.elite'), x?.vsElite ?? 0], [t('exp.form.front'), x?.vsFront ?? 0], [t('exp.form.back'), x?.vsBack ?? 0]] },
+    { id: 'fx_crush', after: 'def_ignore', fmt: 'pct', name: () => L(M.AFFIX_LABELS.crushing_blow_pct), parts: x => one(x?.crush) },
+    { id: 'fx_dr_flat', after: 'res_max_bonus', fmt: 'n', name: () => L(M.AFFIX_LABELS.dr_flat), parts: x => one(x?.drFlat) },
+    { id: 'fx_dr_type', after: 'res_max_bonus', fmt: 'pct', name: () => t('st.fx.drType'), parts: x => typeParts(x?.vsDr) },
+    { id: 'fx_dr_target', after: 'res_max_bonus', fmt: 'pct', name: () => t('st.fx.drTarget'),
+        parts: x => [[t('kind.elite'), x?.vsEliteDr ?? 0], [t('exp.form.front'), x?.vsFrontDr ?? 0], [t('exp.form.back'), x?.vsBackDr ?? 0]] },
+    { id: 'fx_counter', after: 'res_max_bonus', fmt: 'pct', name: () => L(M.AFFIX_LABELS.counter_chance), parts: x => one(x?.counter) },
+    { id: 'fx_recv', after: 'hp_regen', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hp_recovery_pct), parts: x => one(x?.recv) },
+    { id: 'fx_buff_dur', after: 'hp_regen', fmt: 'pct', name: () => L(M.AFFIX_LABELS.buff_dur_pct), parts: x => one(x?.buffDur) },
+    { id: 'fx_magic_find', after: 'item_find', fmt: 'pct', name: () => L(M.AFFIX_LABELS.magic_find), parts: x => one(x?.magicFind) },
+    { id: 'fx_xp', after: 'gold_find', fmt: 'pct', name: () => L(M.AFFIX_LABELS.xp_gain_pct), parts: x => one(x?.xpGain) },
+];
+const fxParts = (s, c) => s.parts(c?.option_fx ?? null);
+/** 옵션 줄에 값이 하나라도 있나 — 유닛 툴팁은 값이 있는 옵션 줄만 세운다 (ADR-0291) */
+const fxOn = (s, c) => fxParts(s, c).some(([, v]) => v);
+
+/** 전투는 읽는데(`impl=1`) 세부 옵션에 안 세우는 행 [2026-09-22 사용자 지시 · ADR-0294] — `impl` 은 「computeCombat 이 내는가」라 그 값을 바꾸지 않고 여기서 거른다 */
+const SHEET_HIDDEN = ['res_reduction'];
+
+/**
+ * 세부 옵션의 행 — combat_stat `impl=1` 을 **sheet_order 순**으로 세우고(impl=0 은 computeCombat 이 내지 않는 축이라 안 그린다 · `SHEET_HIDDEN` 은 뺀다),
+ * 그 사이사이에 옵션이 여는 축(`FX_ROWS`)을 제 `after` 행 뒤에 끼운다 (combat_stat.csv · SCREEN_DESIGN §6)
+ */
+export const sheetStats = () => D.combatStats.filter(s => s.impl && !SHEET_HIDDEN.includes(s.id)).sort((a, b) => a.sheetOrder - b.sheetOrder)
+    .flatMap(s => [s, ...FX_ROWS.filter(r => r.after === s.id).map(r => ({ ...r, fx: true }))]);
 
 /**
  * 세부 옵션 행 — 캐릭터 탭 세부 옵션 1·2 와 유닛 툴팁 오른쪽 열이 같이 쓴다.
@@ -311,6 +352,7 @@ export function sheetRowsHtml(rows, c) {
     // 저항 행의 상한 = 기본 + 최대 저항 증가 + **그 원소의** 최대 저항 증가(투구 시기 칸 · `res_max_el` · 2026-09-18) — 곡선은 `formula.resCap` 하나다
     const resCap = id => SYS.formula.resCap(c?.res_max_bonus ?? 0, c?.res_max_el?.[id.slice(4)] ?? 0);   // `res_fire` → `fire`
     return rows.map(s => {
+        if (s.fx) return fxRowHtml(s, c);
         const v = c?.[s.id];
         const has = v !== undefined;
         const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: M.pctNum(resCap(s.id)) })}</span>`
@@ -322,6 +364,18 @@ export function sheetRowsHtml(rows, c) {
             <span class="cs-n">${L(s)}</span>
             <span class="cs-v">${fmtCombat(s, shown)}${extra}</span></div>`;
     }).join('');
+}
+
+/** 옵션이 여는 축 한 줄 — 묶은 줄은 값이 있는 조각만 이름을 붙이고 전부 0이면 `—` · 세부 옵션이 없는 카드(`c` 없음)는 흐린 `—` (ADR-0291) */
+function fxRowHtml(s, c) {
+    const parts = fxParts(s, c);
+    const on = parts.filter(([, v]) => v);
+    const shown = !c ? '—'
+        : parts.length === 1 ? fmtCombat(s, parts[0][1])
+        : on.length ? on.map(([n, v]) => t('st.fx.part', { n, v: fmtCombat(s, v) })).join(' · ') : '—';
+    return `<div class="cs-row${c ? '' : ' off'}">
+            <span class="cs-n">${s.name()}</span>
+            <span class="cs-v">${shown}</span></div>`;
 }
 
 /**
@@ -343,25 +397,29 @@ export function attrRowsHtml(stats, color) {
 }
 
 /**
- * 세부 옵션을 두 쪽으로 가르는 자리 — '피해 감소' 앞에서 끊는다 (SCREEN_DESIGN §6, 2026-09-01).
- * 1 = 대표 3 + 공격 + 물리 방어 + 저항 4 + 최대 저항 증가(때리고 막는 밑수) / 2 = 피해 감소부터 끝(부가 효과).
- * 저항 4행과 그 상한을 움직이는 `res_max_bonus` 는 한 쪽에 둔다 — 값 뒤에 같은 상한이 붙는 묶음이라 갈리면 상한이 두 번 나온다.
+ * 세부 옵션을 두 쪽으로 가르는 자리 — '방어 무시' 앞에서 끊는다 (SCREEN_DESIGN §6 · 2026-09-22 ADR-0294).
+ * 1 = 사용자가 고른 14줄(대표 4 · 치명타 둘 · 쿨타임 감소 · 물리 방어 · 피해 감소 · 타격 회복 · 저항 4 — 모든 영웅이 늘 값을 갖는 축) /
+ * 2 = 방어 무시부터 끝(18줄 — 조건부 · 장비가 열어야 생기는 축). 최대 저항 증가는 2 로 갔다 — 저항 행이 상한을 제 값 뒤에 찍어 상한이 두 번 나오지 않는다.
  * 캐릭터 탭의 두 패널과 유닛 툴팁의 두 열이 **같은 자리에서** 끊는다 (ADR-0115)
  */
-const DETAIL_SPLIT_AT = 'damage_reduction';
-/** 세부 옵션 두 쪽 — `[1쪽 행, 2쪽 행]` (캐릭터 탭 세부 옵션 1 · 2 · 유닛 툴팁 오른쪽 두 열) */
-export const sheetPages = () => {
+const DETAIL_SPLIT_AT = 'def_ignore';
+/**
+ * 세부 옵션 두 쪽 — `[1쪽 행, 2쪽 행]` (캐릭터 탭 세부 옵션 1 · 2 · 유닛 툴팁 오른쪽 두 열)
+ * @param sparse 유닛 툴팁 — 옵션이 여는 축은 **값이 있는 줄만** 남긴다(몬스터는 그 축이 없어 다 빠진다 · ADR-0291). 끊는 자리는 그대로다
+ */
+export const sheetPages = (c = null, sparse = false) => {
     const rows = sheetStats();
     const cut = rows.findIndex(s => s.id === DETAIL_SPLIT_AT);
-    return [rows.slice(0, cut), rows.slice(cut)];
+    const keep = s => !sparse || !s.fx || fxOn(s, c);
+    return [rows.slice(0, cut).filter(keep), rows.slice(cut).filter(keep)];
 };
 
 /**
- * 유닛 카드 뼈대 — 영웅은 착용 장비, 몬스터는 기본 옵션 막대 + 대표값 3줄을 첫 장으로 쓴다.
+ * 유닛 카드 뼈대 — 영웅은 착용 장비, 몬스터는 기본 옵션 막대 + 대표값(`DETAIL_LEAD`)을 첫 장으로 쓴다.
  * **이름 · 소속 줄은 없다** — 툴팁은 올린 카드 바로 옆에 붙어 뜨고(ADR-0120) 그 카드의 이름 줄 · 위칸이 이미 든다 (ADR-0134).
  * 무엇의 툴팁인지는 윗변 색과 붙은 자리가 말한다.
  * **Alt 를 누르는 동안만** 세부 옵션 두 열이 서고 각주가 걷힌다 — 두 열은 캐릭터 탭 세부 옵션 1 · 2 와 같은 자리에서 끊고 열 이름도 같되,
- * 영웅은 대표값까지 포함한 전 행, 몬스터는 첫 장과 겹치는 대표값 3줄을 뺀 행을 찍는다. 한 열로 이으면 스무 줄이 넘어 카드가 아레나를 세로로 덮었다 (ADR-0115 · ADR-0171).
+ * 영웅은 대표값까지 포함한 전 행, 몬스터는 첫 장과 겹치는 대표값을 뺀 행을 찍는다. 한 열로 이으면 스무 줄이 넘어 카드가 아레나를 세로로 덮었다 (ADR-0115 · ADR-0171).
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 `_rebuild` 로 **같은 인자로** 다시 만든다 — 스킬 카드와 같은 장치다.
  * @param color 막대 색 = 윗변 색(CSS 값)
  * @param cls   카드에 더할 클래스 — 어두운 등급 색이면 `bar-lift`(막대만 밝힌다 · style.css)
@@ -378,7 +436,7 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, item
     c._rebuild = rebuild;
     c.style.setProperty('--unit-line', color);   // 윗변 3px — 관전 카드 · 띠 카드의 윗변과 같은 색이라 어느 카드의 툴팁인지 잇는다
     const isLead = s => s.sheetOrder <= DETAIL_LEAD;
-    const detailPages = sheetPages();
+    const detailPages = sheetPages(sheet, true);
     const pages = altHeld ? detailPages.map((rows, i) => `
             <div class="tip-unit-col d${i + 1}">
                 <div class="tip-col-h">${t('ch.detail.hn', { n: i + 1 })}</div>
@@ -423,7 +481,7 @@ function bindEquipmentCells(c, equipment, itemCardOf) {
 /**
  * 편성 탭 영웅 카드 — 첫 장 **기본 옵션**(능력치 7 막대 + 액티브 스킬 그림 셋) · **Alt 동안 그 바깥쪽에** 장비 3×3 · 세부 옵션 1 · 2
  * [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]. 기본 옵션 열은 Alt 에도 **안 사라진다** — 폭을 못박아 제자리에 선다(style.css `.stats-first`).
- * 대표값 3줄은 안 싣는다 — 세부 옵션 1 머리에 있다. 스킬 칸은 그림만이다(캐릭터 탭 스킬 칸과 같은 규칙) — 툴팁 속에 설명창을 걸면 한 자리를 두 카드가 다툰다.
+ * 대표값은 안 싣는다 — 세부 옵션 1 머리에 있다. 스킬 칸은 그림만이다(캐릭터 탭 스킬 칸과 같은 규칙) — 툴팁 속에 설명창을 걸면 한 자리를 두 카드가 다툰다.
  * 붙는 쪽은 유닛 카드와 같다 — 카드 왼쪽에 선 툴팁은 열이 왼쪽으로 자란다(ADR-0126 · 격자가 자리를 정하고 DOM 순서는 그대로다)
  * @param skills 액티브 칸 셋 — 스킬 개체 또는 `null`(빈 칸). 부르는 쪽이 넘긴다(`app.js:activeCells` — 이 파일은 `G` 를 모른다)
  */
@@ -437,7 +495,7 @@ function statsFirstCard(h, combat, itemOf, itemCardOf, skills) {
     const icons = (skills ?? []).map(s => `<span class="tip-skill${s ? '' : ' vacant'}">${s ? skillImg(s) : ''}</span>`).join('');
     const equipment = altHeld ? equipmentHtml(wornOfHero(h, itemOf)) : null;
     const more = altHeld ? `
-            <div class="tip-unit-col gear">${equipment.html}</div>` + sheetPages().map((rows, i) => `
+            <div class="tip-unit-col gear">${equipment.html}</div>` + sheetPages(combat, true).map((rows, i) => `
             <div class="tip-unit-col d${i + 1}">
                 <div class="tip-col-h">${t('ch.detail.hn', { n: i + 1 })}</div>
                 <div class="tip-sheet">${sheetRowsHtml(rows, combat)}</div>
