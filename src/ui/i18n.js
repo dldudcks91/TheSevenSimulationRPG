@@ -284,6 +284,14 @@ const STRINGS = {
     // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
     'ch.bag.stash': { ko: '창고', en: 'Stash' },
     'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
+    // 정렬 — 칸마다 제 [정렬] · 누르면 그 오른쪽으로 기준 셋이 나온다 (ADR-0242 · ADR-0247).
+    //   영어는 「By」를 뺀다 — [Sort] 바로 옆에 서서 뜻이 이미 서고, 펼친 채로 도구 줄 한 줄에 들어가야 한다
+    'ch.sort.start': { ko: '정렬', en: 'Sort' },
+    'ch.sort.rarity': { ko: '등급순', en: 'Rarity' },
+    'ch.sort.ilvl': { ko: '레벨순', en: 'Level' },
+    'ch.sort.slot': { ko: '부위순', en: 'Slot' },
+    'ch.sortHint': { ko: '[정렬]은 누른 칸을 한 번 줄 세운다 — 등급순 · 레벨순 · 부위순 중 하나를 고르고, 높은 것이 앞에 선다. 그 뒤 들어오는 장비는 끝에 붙는다',
+        en: '[Sort] lines up that panel once — pick by rarity, by level or by slot, highest first. Gear that arrives afterwards goes to the end' },
     // 잠그는 중 — [잠금]으로 들어가고 [완료]로 나온다 · 누른 칸이 바로 잠긴다 (ADR-0207)
     'ch.lock.start': { ko: '잠금', en: 'Lock' },
     'ch.lock.done': { ko: '완료', en: 'Done' },
@@ -411,7 +419,7 @@ const STRINGS = {
        마을 탭이 **자원**(1인 배치 — 광산 · 채집)과 **탐험**(파티)으로 갈리면서 `nav.town` 은 삭제됐다.
        `nav.explore` 는 값이 그대로인 채 **파견처 칸 라벨에서 탭 라벨로 승격**됐다 (§8-4) — `nav.tavern` 과 같은 사례다.
        상점은 탭 이름이 **활동**이고 패널 머리가 **장소**(`dp.post.trade` 상단)다 (§8-3) — 제련소는 [2026-09-21 사용자 지시] 탭 이름도 장소다(`nav.forge` · §8-2 · ADR-0190).
-       nav.commission 은 탭에서 빠졌지만 **지우지 않는다** — 선술집 탭 안 의뢰 게시판의 섹션 제목이다 (§8-1).
+       nav.commission 은 탭에서 빠졌지만 **지우지 않는다** — 선술집 탭 의뢰 패널의 제목이다 (§8-1 · ADR-0248).
        nav.skill 도 탭이 아니라 **창 제목**이다 (§7). nav.base(거점)는 여전히 유일한 미사용 키다.
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
@@ -440,8 +448,8 @@ const STRINGS = {
 
     /* ── 자원 탭 [개정 2026-09-04] — 파견처는 **카드 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
        탐험은 자기 탭(§8-4)으로 나가 이 목록에 없다 — 셋 다 1인 배치라 `dp.party` 를 쓰는 칸이 없다.
-       그래도 **`dp.party` 를 지우지 않는다**: 인원 표기 자체는 계속 찍히고(§8 — 값이 하나뿐이라고 지우면 「안 재고 있다」로 읽힌다),
-       배치가 구현되면 탐험 탭이 같은 문구를 쓴다.
+       자원 단은 인원 표기도 안 찍는다 [2026-09-21 사용자 지시 · ADR-0224] — `dp.solo` · `dp.party` 는 참조가 0 이다.
+       그래도 **지우지 않는다**: 배치가 구현되면 탐험 탭이 같은 문구를 쓴다.
        `dp.post.forge`(제련소) · `dp.post.trade`(상단)는 파견처 칸에서 빠졌지만 **지우지 않는다** —
        `dp.post.forge` 는 연구의 가지 이름(`mock.js` rsBranch)이, `dp.post.trade` 는 상점 탭의 패널 머리가 쓴다(§8-3).
        담당 능력치는 문구가 아니라 `hero_attribute.csv:dispatch` 에서 온다 — 화면이 배정표를 따로 갖지 않는다.
@@ -457,21 +465,22 @@ const STRINGS = {
     'dp.solo': { ko: '1인', en: 'Solo' },
     'dp.party': { ko: '파티', en: 'Party' },
     'dp.attrTitle': { ko: '담당 능력치', en: 'Governing attribute' },
-    // 단계 트랙의 머리 — **라벨 + 개수**뿐이다. 개수는 `D.mineNodes.length` 에서 온다(코드에 7 을 박지 않는다).
+    // 단계 트랙은 머리 줄이 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다.
     // 무엇으로 여는가(해금 조건)는 기획 백지라 문구도 만들지 않는다 (§8)
-    'dp.tier': { ko: '단계 {n}', en: '{n} Tiers' },
 
-    /* 상단 (SCREEN_DESIGN §8-3) — 제목은 `dp.post.trade` 재사용. ⚠ 수치는 전부 목업이라
-       문구도 「무엇을 읽는 자리인가」만 말한다 (base_expedition_design §2-6) */
-    'td.basic': { ko: '기본상단', en: 'Standing traders' },
+    /* 상점 (SCREEN_DESIGN §8-3 · ADR-0223) — 패널 머리는 `dp.post.trade`(상단) 재사용. 위 상단은 장비 · 재료 탭,
+       구분선 아래 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
+    'td.tab.equip': { ko: '장비', en: 'Gear' },
+    'td.tab.mat': { ko: '재료', en: 'Materials' },
+    // 재료 칸의 그림 자리 — 재료 아이콘 아트가 없어 글자로 선다 (사용자 지시 「일단 재료라고만」)
+    'td.matIcon': { ko: '재료', en: 'Mat.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
-    'td.here': { ko: '와 있다 · 체류 {t}', en: 'Here · {t} left' },
-    'td.away': { ko: '지금은 아무도 없다 · 다음 방문 {t}', en: 'Nobody here · next visit in {t}' },
+    'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
+    'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
     'td.buy': { ko: '사기', en: 'Buy' },
     'td.stock': { ko: '수량 {n}', en: '{n} in stock' },
-    'td.noEquip': { ko: '장비는 팔지 않는다', en: 'No gear for sale here' },
 
-    /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 섹션 제목으로 내려왔다).
+    /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
        ⚠ **종류 이름과 「어떻게 도는가」 줄은 여기 없다** — `commission_kind.csv` 의 `_kr`/`_en` 쌍이고
        화면은 `L()` 로 푼다. 목표·보상도 `commission.csv` 가 든다 (mock 과 CSV 가 겹치면 CSV 만 둔다).
        남는 것은 데이터가 아닌 **화면 라벨 둘**뿐이다 */
@@ -496,6 +505,7 @@ const STRINGS = {
     // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
     'fg.make.band': { ko: 'Lv {lo}–{hi}', en: 'Lv {lo}–{hi}' },
     'fg.make.go': { ko: '만들기', en: 'Make' },
+    'fg.make.potion': { ko: '물약', en: 'Potions' },   // 제작 고르개 줄 끝의 물약 칸 이름 — 올리면 뜬다 (ADR-0219)
     'fg.made': { ko: '제작 — {name}', en: 'Made — {name}' },
     'fg.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
     'fg.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
@@ -756,7 +766,6 @@ const STRINGS = {
     /* ── 연구 탭 — 파티 전술 (2026-08-30 · SCREEN_DESIGN §13) ── */
     /* ── 편성 탭 (SCREEN_DESIGN §15 · 2026-09-21) — 오류는 결과 코드와 짝을 맞춘다(`pt.err.<코드>` — toggleParty · setPotionSlot · swapPotionSlot · rerollTactic) ── */
     'pt.preset': { ko: '편성 {n}', en: 'Party {n}' },
-    'pt.party.h': { ko: '파티', en: 'Members' },
     'pt.potion.h': { ko: '물약', en: 'Potions' },
     'pt.potion.stock': { ko: '가진 물약', en: 'In stock' },
     'pt.potion.empty': { ko: '빈 칸', en: 'Empty slot' },
@@ -1078,8 +1087,9 @@ const STRINGS = {
     'cx.kills': { ko: '처치 {n}', en: '{n} kills' },
     'cx.lvTitle': { ko: '도감 Lv.{lv}', en: 'Codex Lv.{lv}' },
     // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 (SCREEN_DESIGN §9 · ADR-0206)
-    'cx.tip.steps': { ko: '처치 단계', en: 'Kill milestones' },
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
+    'cx.tip.story': { ko: '스토리', en: 'Story' },
+    'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },
     'cx.note': {
         ko: '그 몬스터를 잡은 수가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
             + '처치 수는 이긴 라운드의 것만 센다 · 문턱과 레벨별 보정은 codex_level.csv(⚠제안값) · 보스 등급별 차등은 후속<br>'

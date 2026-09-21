@@ -36,7 +36,6 @@ const r2 = v => Math.round(v * 100) / 100;
 /** 시작 파티를 채운 새 게임 — 캘리브레이션 · 골든과 **같은 시작 파티**(시드 1000 + n)라 표끼리 서로를 설명한다 */
 function newGameFull(SYS, B, seed) {
     const G = SYS.game.newGame(seed, SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max), NOW);
-    for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, NOW);    // newGame 은 파티를 비워 둔다 (2026-09-09)
     return G;
 }
 const partyHeroes = (SYS, G) => SYS.game.partyOf(G).map(uid => SYS.game.heroById(G, uid));

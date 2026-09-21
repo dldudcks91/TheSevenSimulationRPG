@@ -131,6 +131,13 @@ tavern_search_sin_echo_pct,0.5,proposed,1,수색 결과가 **보낸 영웅과 �
 tavern_search_meet_at_pct,0.5,proposed,1,수색 중 **만남**이 열리는 시점 — 소요 시간의 %. 50 = 절반(1시간이면 30분). 답은 이 시점부터 **수령할 때까지 언제든** 고를 수 있다(시간 제한 없음 — 방치형 계약 ③) (2026-09-09 발행)
 tavern_search_meet_hit_pct,0.5,proposed,1,**만난 사람의 죄종에 맞는 답**을 골랐을 때 고용비 할인(%). 소문이 죄종을 미리 알려주므로 **읽기만 하면 누구나 얻는 층**이다 (2026-09-09 발행)
 tavern_search_meet_key_pct,1,proposed,1,**그 죄종 영웅을 보내서 열린 답**을 골랐을 때 고용비 할인(%). 소문을 읽고 맞는 사람을 보낸 **준비의 보상**이라 위 hit 보다 높다. 100 = 전액 면제 (2026-09-09 발행)
+trade_visit_hours,4,proposed,1,특수상단 방문 주기(시간) — 이만큼마다 상인이 온다 · 시계는 게임을 만든 시각(createdAt)에서 세고 오프라인에도 흐른다. 상단 장비 목록도 이 주기로 같이 갈린다 ⚠임시 [신설 2026-09-21 사용자 지시 「4시간마다 와서 1시간 머무는걸로 일단」 · base_expedition §2-6 · SCREEN_DESIGN §8-3]
+trade_stay_hours,1,proposed,1,특수상단 체류(시간) — 온 뒤 이만큼 머물고 떠난다. 주기(trade_visit_hours)보다 작아야 떠나 있는 시간이 생긴다 ⚠임시 [신설 2026-09-21 사용자 지시]
+shop_equip_per_slot,3,proposed,1,상단 장비 목록 — **부위마다** 이만큼(무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 순 · 같은 부위가 붙어 선다) · 방문 회차마다 새로 굴린다(item.rollGear — 드롭 희귀도 가중치) ⚠임시 [신설 2026-09-21 사용자 지시 「종류별로 한 3개씩만 해서 붙여놔야지 서로」]
+shop_equip_weapon,6,proposed,1,상단 장비 목록 — **무기만 따로** 이만큼(맨 윗줄을 혼자 채운다) · 나머지 부위는 shop_equip_per_slot ⚠임시 [신설 2026-09-21 사용자 지시 「장비를 맨위에 무기 6개로 하고 다른걸 하나씩 밀어보자」]
+shop_price_normal,150,proposed,1,상단 장비 가격(골드) — 일반 ⚠임시 · 구매는 아직 없다(화면이 미착수 안내) [신설 2026-09-21]
+shop_price_magic,500,proposed,1,상단 장비 가격(골드) — 매직 ⚠임시 [신설 2026-09-21]
+shop_price_rare,1500,proposed,1,상단 장비 가격(골드) — 레어 ⚠임시 [신설 2026-09-21]
 mastery_t1_max_rank,5,proposed,1,T1·T2 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
 mastery_t1_atkspeed_pct,0.01,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 [combat_stat.csv:action_period] 감소 % · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_wrath_t1_pct 대체)
 mastery_t1_damage_pct,0.02,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 상시 피해 % · atk_physical/atk_magic 의 (1+Σ상시%) 괄호에 덧셈(딜러·힐러 공통 적용) · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_sloth_t1_pct 대체)

@@ -22,7 +22,7 @@
 
 import * as M from './mock.js';
 import { t, L, lang, has as STRINGS_HAS } from './i18n.js';
-import { D, SYS, skillTagName, monsterFace, monsterSin, monsterStory, fillStory } from './data.js';
+import { D, SYS, skillTagName, monsterFace, monsterName, monsterSin, monsterStory, fillStory } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
 
@@ -450,20 +450,15 @@ export function monsterTipCard(u, itemCardOf = null) {
 }
 
 /**
- * 도감 몬스터 카드 — **초상 옆 이야기 · 아래 처치 단계** (SCREEN_DESIGN §9 · ADR-0206).
- * 이름 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134). 처치 수는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
+ * 도감 몬스터 툴팁 — **두 장**: 왼쪽 선술집 후보 카드 · 오른쪽 이야기 · 단계 (SCREEN_DESIGN §9 · ADR-0206 · ADR-0233).
+ * 오른쪽 장 = 「스토리」 머리글 + 이야기 · 아래 「보너스 효과」 머리글 + 단계(초상 · 이름 · 직업은 왼쪽 장이 든다). 처치 수는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
  * 단계의 보정은 **그 단계에서 더해지는 값**(`codex_level.csv:bonus_pct`)이다 — 카드의 「다음 … +x%」와 같은 수. 합은 스테이지 행이 든다
  * @param m `{id, kills, boss}` — 도감 카드 한 장의 집계
  * @param grade 초상 등급 — 일반 / 정예 고르개를 그대로 따른다 (ADR-0167)
  * @param stat 그 스테이지의 계열 라벨 `{ko, en}` — 없으면(챕터보스 단독 5스테이지) 보정 칸이 `—` 다 (§9 · GAME_DESIGN §10)
+ * @returns `[후보 카드 장, 이야기 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
  */
 export function codexMonsterTipCard(m, grade, stat) {
-    const src = monsterFace(m.id, grade);
-    const color = M.SINS[monsterSin(m.id)]?.color ?? 'var(--text-muted)';
-    // 초상 규칙은 도감 카드와 같다 — 아트가 없으면 글자 없는 죄종 색 원판 (§5)
-    const face = src
-        ? `<span class="face${m.boss ? ' boss' : ''}"><img src="${src}" alt="" loading="lazy" onerror="this.remove()"></span>`
-        : `<span class="face none${m.boss ? ' boss' : ''}" style="background:${color}22;border-color:${color}66"></span>`;
     // 이름은 자리표시자다(`{m:1900|이/가}` — 이름의 SSOT 는 monster.csv · 스테이지 이야기와 같은 규칙). 몬스터 이야기는 `{leader}` 를 안 쓴다
     const story = fillStory(L(monsterStory(m.id)), lang());
     const lv = SYS.game.codexLevel(m.kills);
@@ -475,17 +470,62 @@ export function codexMonsterTipCard(m, grade, stat) {
             <span class="cx-step-b">${stat ? `${L(stat)} +${M.pctNum(bonus ?? 0)}%` : '—'}</span>
         </div>`).join('');
     const card = el('div', 'tip-card cx-tip', `
-        <div class="cx-tip-top">
-            ${face}
-            <div class="cx-tip-story${story ? '' : ' muted'}"></div>
-        </div>
-        <div class="tip-col-h">${t('cx.tip.steps')}</div>
+        <div class="cx-tip-h">${t('cx.tip.story')}</div>
+        <div class="cx-tip-story${story ? '' : ' muted'}"></div>
+        <div class="cx-tip-h">${t('cx.tip.effects')}</div>
         <div class="cx-steps">${steps}</div>`);
-    // 글은 **텍스트로** 넣는다 — 데이터 문장이 마크업으로 읽히지 않게. 셀의 줄바꿈 하나가 **문단 하나**다 —
-    //   보스 이야기는 문단 셋이라 줄만 바꾸면 한 덩어리로 읽힌다(2026-09-21 소설체 · 문단 사이는 CSS 가 띄운다)
+    // 글은 **텍스트로** 넣는다 — 데이터 문장이 마크업으로 읽히지 않게. 셀의 줄바꿈 하나가 **문단 하나**다(문단 사이는 CSS 가 띄운다) ·
+    //   길이는 원고가 지킨다 — 이야기 칸 안 · 최대 여섯 줄(ADR-0244 · 단정이 잡는다)
     const box = card.querySelector('.cx-tip-story');
     for (const para of (story || '—').split('\n')) box.appendChild(el('p')).textContent = para;
-    return card;
+    // 윗변 = 왼쪽 장과 같은 등급 색 — 두 장이 한 몬스터의 카드로 읽힌다 (ADR-0244)
+    const cand = codexCandCard(m, grade);
+    card.style.borderTopColor = cand.style.borderTopColor;
+    return [cand, card];
+}
+
+/**
+ * 도감 툴팁 왼쪽 장 = **선술집 후보 카드 그대로** (ADR-0233 · SCREEN_DESIGN §3 후보 카드 · §8) — `app.js:candidateCard` 와 같은 `.ng-card` 칸 · 같은 줄 순서다:
+ * 초상 옆에 칩 줄(등급 + 죄종) · 이름 · 직업 · 역할 · 무기군 · 고유 스킬, 아래에 능력치 7 막대 · 능력치 합.
+ * 값은 `monster.csv` 의 기본 능력치 7 — 레벨과 무관하고 `battle.makeEnemy` 가 읽는 것과 같다. 막대 줄은 **같은 함수**다(`attrRowsHtml` · ADR-0114).
+ * 후보 카드의 `Lv.1` · 최대 HP 줄은 없다 — 몬스터의 레벨 · HP 는 스테이지 레벨 · 등급이 정해 한 값이 없다
+ */
+function codexCandCard(m, grade) {
+    const row = D.monsters?.[m.id];
+    const sin = monsterSin(m.id);
+    const sinColor = M.SINS[sin]?.color ?? 'var(--text-muted)';
+    // 등급 = 영웅의 티어 칩 자리 — 보스는 보스, 아니면 일반 / 정예 고르개 (`kind.*` — 관전 카드 · 도감 고르개와 같은 말).
+    //   윗변 · 막대 · 칩 색 = 관전 몬스터 툴팁의 등급 색. 어두운 색은 막대만 밝힌다(`bar-lift` · monsterTipCard 와 같다)
+    const kind = m.boss ? 'boss' : grade;
+    const line = GRADE_LINE[m.boss ? 'stage_boss' : grade] ?? GRADE_LINE.normal;
+    const stats = row ? Object.fromEntries(D.heroAttributes.map(s => [s.id, row[s.id]])) : null;
+    const total = stats ? D.heroAttributes.reduce((a, s) => a + (stats[s.id] ?? 0), 0) : '—';
+    // 역할 줄 = 직업의 역할 + **그 몬스터의 무기군** — 영웅은 직업이 드는 무기군 전부를 적지만 몬스터는 제 무기군이 하나다
+    const cls = D.classes.find(c => c.id === row?.cls);
+    const wg = D.weaponGroups?.[row?.weapon_group];
+    const role = [cls ? L(cls.role) : '', wg ? L(wg) : ''].filter(Boolean).join(' · ');
+    // 스킬은 지금 **고유 하나만** — 정예의 무기 칸 · 보스의 셋째 칸은 판마다 굴려 정해진다(보스는 나중에 전직 칸까지 · ADR-0233)
+    const innate = row?.innate_skill && row.innate_skill !== '-' ? { id: row.innate_skill } : null;
+    const skName = innate ? L(SYS.skill?.defs?.[innate.id]?.name ?? { ko: innate.id, en: innate.id }) : '';
+    // 초상은 **영웅과 같은 네모 칸**(`.hero-face` — `app.js:heroFace` 와 같은 꼴) — 이 장은 선술집 영웅 카드 그대로라
+    //   도감 카드 · 관전의 원형(몬스터) 구분을 여기서만 푼다 (ADR-0237). 아트가 없으면 영웅처럼 **빈 칸**이다
+    const src = monsterFace(m.id, grade);
+    const face = `<span class="hero-face">${src ? `<img src="${src}" alt="${L(monsterName(m.id))}" loading="lazy" onerror="this.remove()">` : ''}</span>`;
+    const c = el('div', `ng-card cx-cand${m.boss || grade !== 'elite' ? ' bar-lift' : ''}`, `
+        <div class="ng-head">
+            ${face}
+            <div class="ng-id">
+                <div class="ng-chips"><span class="tier-chip" style="color:${line}">${t(`kind.${kind}`)}</span><span class="sin-chip" style="color:${sinColor}">${L(M.SINS[sin]) || sin}</span></div>
+                <div class="ng-name"><b>${L(monsterName(m.id))}</b></div>
+                <div class="ng-cls">${cls ? L(cls) : ''}</div>
+                <div class="ng-role muted">${role}</div>
+                ${innate ? `<div class="ng-skill"><span class="ico">${skillImg(innate)}</span><span class="txt"><b>${skName}</b></span></div>` : ''}
+            </div>
+        </div>
+        <div class="attr-list">${attrRowsHtml(stats, line)}</div>
+        <div class="ng-line sep"><span>${t('ng.total')}</span><b>${total}</b></div>`);
+    c.style.borderTopColor = line;
+    return c;
 }
 
 /* ───────── 스킬 문장 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · 전면 개정 2026-09-08 · 숫자 자리 셋 2026-09-10) ─────────

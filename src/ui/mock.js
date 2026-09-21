@@ -651,26 +651,25 @@ export const CX_DONE = {
 
 /**
  * 상단 목업 — ⚠ **여기 숫자는 전부 거짓이다** (SCREEN_DESIGN §8-3 · base_expedition_design §2-6).
- * 기획이 방문 주기 · 체류 · 가격 · 재고를 하나도 안 정했으므로(GAME_DESIGN §10 「상단의 수치 전부」)
+ * 기획이 재고 · 가격을 하나도 안 정했으므로(GAME_DESIGN §10 「상단의 수치 전부」)
  * **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
  * 연구 목업(RESEARCH)이 걸어 둔 길과 같고, 확정되면 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다.
  *
- * ⚠ **장비는 목록에 없다** — 기획이 「장비는 안 판다」로 닫아 둔 자리다(§5 스코프 가드).
+ * **여기 없는 것 둘** [2026-09-21 · ADR-0223] — 특수상단의 **방문 시계**(와 있나 · 남은 시간)와 상단의 **장비 목록**은
+ * `game.shopState` 가 낸다(주기 · 체류 · 장비 칸 수 · 가격은 balance.csv ⚠임시). 여기 남은 것은 재료 목록 · 특수상단 재고 · 상인 이름이다.
  */
 /* ⚠ **`ore_*` 의 이름은 `mine_node.csv` 가 SSOT 다** [2026-09-10] — 여기 이름이 갈리면 같은 id 가 화면 두 곳에서
    다르게 불린다(실제로 `ore_t5` 가 「흑철」로 남아 있었다). 재고 구성·가격만 목업이고 **이름은 표에서 베낀다.**
    상단 재고가 CSV 로 나가면 이 주의는 사라진다 (「mock 과 CSV 가 겹치면 CSV 만」 — DEV_PLAN §5-B) */
 export const TRADE = {
-    /** 기본상단 — 상주 · 고정 목록. 「언제 가도 같다」가 요점이라 타이머가 없다 */
+    /** 상단의 재료 탭 — 상주 · 고정 목록. 「언제 가도 같다」가 요점이라 타이머가 없다 */
     basic: [
         { id: 'ore_t1', name: { ko: '구리', en: 'Copper' }, n: 20, gold: 120 },
         { id: 'ore_t2', name: { ko: '철', en: 'Iron' }, n: 12, gold: 380 },
         { id: 'dust', name: { ko: '분해 가루', en: 'Salvage Dust' }, n: 40, gold: 60 },
     ],
-    /** 특수상단 — 방문마다 굴린다. `here` 가 false 면 `t` 는 다음 방문까지 남은 시간이다 */
+    /** 특수상단 — 상인 이름과 재고. 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다 */
     special: {
-        here: true,
-        t: '1시간 12분',
         who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
         stock: [
             { id: 'ore_t5', name: { ko: '수은', en: 'Quicksilver' }, n: 4, gold: 2400 },

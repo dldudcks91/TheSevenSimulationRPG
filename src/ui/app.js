@@ -311,15 +311,20 @@ const state = {
     // 고르는 동안 칸 클릭은 **체크를 토글할 뿐**이라 오클릭이 파괴가 되지 않는다 — 옛 `salvageMode` 는 클릭이 곧 분해였다.
     // 「잠그는 중」 [ADR-0207] — [잠금]으로 들어가고 [완료]로 나온다 · 칸 클릭 = 그 칸의 자물쇠 토글.
     // 둘 다 탭을 떠나면 풀린다(`setTab`) — 모드 상태가 화면 밖으로 새지 않는다 · 세이브 아님
-    bagSelMode: false, bagSel: new Set(), bagLockMode: false,
+    // 「정렬 펼침」 [ADR-0242 · ADR-0247] — 기준 셋을 펼친 칸('stash' · 'bag') · null 이면 안 펼쳤다.
+    //   `bagSortAnim` = 펼친 직후 첫 그리기에만 미끄러지는 움직임을 단다(그 그리기가 끈다)
+    bagSelMode: false, bagSel: new Set(), bagLockMode: false, bagSortMode: null, bagSortAnim: false,
     autoArm: false,              // 자동 분해 창 — [지금 인벤토리에도 적용]을 한 번 눌러 확인 줄이 선 상태 (ADR-0203) · 창을 닫으면 풀린다
     repSel: null,                // 리포트에서 고른 런 — null 이면 맨 위를 따라간다 (SCREEN_DESIGN §4-3 · ADR-0063 · ADR-0123)
     searchUid: null,             // 수색 칸에서 고른 영웅 — 보내면 비운다 (SCREEN_DESIGN §8-1)
     forgeItem: null,             // 제련소에서 고른 장비 uid
     forgeFilter: null,           // 제련소 목록의 부위 필터 — 캐릭터 탭과 따로 둔다(화면이 다르면 필터도 다르다)
-    makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 (SCREEN_DESIGN §8-2)
+    makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 · 'potion' 이면 물약 칸 (SCREEN_DESIGN §8-2 · ADR-0219)
     makeBand: null,              // 제작 칸에서 고른 레벨대 — 없으면 첫 레벨대
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
+    shopTab: 'equip',            // 상단의 목록 탭 — 'equip' | 'mat' (SCREEN_DESIGN §8-3 · ADR-0223 · `?sh=` 로도 연다)
+    shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · 방문 회차가 넘어가면 풀린다
+    shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
     researchLayout: 'col',       // ⚠ 연구 배치 비교 — 'col'(세로) | 'row'(가로). 하나로 정해지면 걷는다 (§13-1 · `?rsl=` 로도 연다)
     researchPick: null,          // 가로 배치에서 고른 노드 id — 없으면 첫 열린 노드 (§13-1)
     battle: null,           // {result, stageId} — 관전 재생 중인 전투
@@ -1299,17 +1304,20 @@ function bindCardDrag(node, sel, onDrop) {
  * 진형 박스 — 왼쪽에 **정사각 템플릿 아이콘 3개를 가로로**(모양을 점으로 그린다 — 글자가 없어 언어 중립이다),
  * 오른쪽에 **보드**(랭크 줄 = 라벨 + 칸 · 칸은 영웅 띠 카드와 같은 크기).
  * 랭크 최대가 둘이라 보드 높이가 두 줄분으로 고정된다 — 한 줄짜리(3)는 가운데에 서고 패널 크기는 안 흔들린다.
+ * @param pick 이름과 템플릿 아이콘 사이에 끼울 노드 — 편성 탭의 **편성 고르개**(ADR-0229)
  */
-function formBox() {
+function formBox(pick = null) {
     const f = formState();
     const caps = f.caps;
     /* 머리(「진형」)가 **돌아왔다** [2026-09-10 사용자 지시 · ADR-0079 가 ADR-0060 을 대체].
        걷었던 근거(「아이콘과 전열/후열 라벨이 이미 말한다」)는 이 상자가 패널의 유일한 내용이던 시절 것이다 —
        패널이 세 칸(적 구성 · 진형 · 출발)이 된 지금은 **칸마다 이름이 서야 어디까지가 무엇인지** 읽힌다.
-       ⚠ 이름은 상자 **위**가 아니라 **왼쪽 열의 맨 위**에 얹는다 [2026-09-10 사용자 지시 · ADR-0080] —
-         위에 얹으면 그 줄 높이가 패널에 그대로 더해져 창이 세로로 커졌다. 왼쪽 열(아이콘 셋)은 보드보다
-         한참 짧아 **위쪽이 비어 있으므로**, 거기에 얹으면 세로 비용이 0 이고 보드와 같은 줄에 선다 */
+       ⚠ 이름은 **제 줄에 서고 밑줄을 단다** [2026-09-21 사용자 지시 · ADR-0240 — ~~왼쪽 열 맨 위~~ ADR-0080 폐기].
+         옛 자리는 이 상자가 **출정 창** 안에 있어 세로가 빠듯하던 시절 것이다(이름 줄이 창 높이에 그대로 더해졌다).
+         편성 탭으로 옮겨 오고 보드가 한 줄이 된 지금은(ADR-0192 · ADR-0234) 세로가 남고,
+         같은 줄에 서면 **보드의 전열 칸이 이름 줄을 침범한 것처럼** 보였다. 밑줄이 「여기부터 진형이다」를 말한다 */
     const box = el('div', 'fm-box');
+    box.appendChild(el('div', 'fm-h', t('exp.form.h')));     // 이름 + 밑줄 — 상자의 첫 줄 (ADR-0240)
     const main = el('div', 'fm-main');
 
     /* 왼쪽 열 — **이름 + 템플릿 아이콘**. 아이콘은 **가로로** 나란히 (2026-09-09 사용자 지시 — 옛 세로 기둥 폐기).
@@ -1318,7 +1326,9 @@ function formBox() {
        셋 중 하나를 고르는 것이라 .toggle(초록 ON/OFF)이 아니라 .on(고른 것)을 쓴다.
        아이콘은 정원 배열 그대로 점을 찍은 것이라 템플릿을 늘리면 그림도 저절로 따라온다 */
     const side = el('div', 'fm-side');
-    side.appendChild(el('div', 'fm-h', t('exp.form.h')));
+    // 편성 고르개 — 이름 줄 아래 · 아이콘 위 [2026-09-21 사용자 지시 · ADR-0229]: 「어느 편성인가 → 그 편성의 모양」 순서로 읽힌다.
+    //   이 열은 보드보다 짧아 한 줄이 더 들어가도 칸 높이가 안 는다
+    if (pick) side.appendChild(pick);
     const tpls = el('div', 'fm-tpls');
     for (const key of f.templates) {
         const shape = f.shapes[key] ?? [];
@@ -1331,17 +1341,26 @@ function formBox() {
     side.appendChild(tpls);
     main.appendChild(side);
 
-    /* 보드. 빈 칸은 영웅 얼굴과 같은 크기라 「여기에 끌어다 놓는다」가 크기로 읽힌다.
-       줄은 랭크 수만큼만 그린다 — 보드 높이가 CSS 에서 고정이라 빈 줄을 예약하지 않아도 패널이 안 흔들린다 */
+    /* 보드 — **칸 하나 높이의 한 줄**이다 [2026-09-21 사용자 지시 · ADR-0234]. 랭크는 줄이 아니라 **한 단 어긋남**이 말한다:
+       관전 아레나와 같은 그림이라(`ui/battle.js:layoutRanks` · ADR-0053 · ADR-0045) 편성이 전투의 예고편으로 읽힌다.
+       가로 차례도 같은 식 — k 칸짜리 랭크의 i 번째가 `x = (i + 0.5) / k` 이고 x 가 같으면 앞 랭크가 먼저다.
+       2·1 이면 **앞 · 뒤 · 앞** 차례라 뒤 칸이 저절로 가운데에 서고, 칸끼리는 가로로 안 겹쳐 초상이 다 보인다(끌어다 놓는 자리다).
+       빈 칸은 영웅 얼굴과 같은 크기라 「여기에 끌어다 놓는다」가 크기로 읽힌다. 내려가는 단은 CSS 가 `data-rank` 로 준다 */
     const board = el('div', 'fm-board');
     const labels = FORM_RANK_LABELS[caps.length] ?? [];
-    for (let r = 0; r < caps.length; r++) {
-        const cap = caps[r];
-        if (!cap) continue;                          // 정원 0 인 랭크는 줄을 안 그린다 (「모두 앞」의 후열)
-        const row = el('div', 'fm-row');
-        row.appendChild(el('div', 'fm-label', labels[r] ? t(labels[r]) : ''));
-        const cells = el('div', 'fm-cells');
-        for (let i = 0; i < cap; i++) {
+    const lbox = el('div', 'fm-labels');
+    const line = el('div', 'fm-line');
+    const seats = [];
+    caps.forEach((cap, r) => {
+        if (!cap) return;                            // 정원 0 인 랭크는 자리도 라벨도 없다 (「모두 앞」의 후열)
+        const lb = el('div', 'fm-label', labels[r] ? t(labels[r]) : '');
+        lb.dataset.rank = r;
+        lbox.appendChild(lb);
+        for (let i = 0; i < cap; i++) seats.push({ r, i, x: (i + 0.5) / cap });
+    });
+    seats.sort((a, b) => a.x - b.x || a.r - b.r);
+    {
+        for (const { r, i } of seats) {
             const uid = f.ranks[r][i];
             const h = uid ? heroById(uid) : null;
             const cell = el('div', `fm-cell${h ? ' filled' : ''}`);
@@ -1358,11 +1377,11 @@ function formBox() {
                    보드의 영웅을 눌러도 아무 일이 없었다. 끈 뒤의 클릭은 띠와 같이 삼킨다 */
                 cell.onclick = () => { if (!formDragEnded) toggleParty(h); };
             }
-            cells.appendChild(cell);
+            line.appendChild(cell);
         }
-        row.appendChild(cells);
-        board.appendChild(row);
     }
+    board.appendChild(lbox);
+    board.appendChild(line);
     main.appendChild(board);
     box.appendChild(main);
     return box;
@@ -1370,11 +1389,11 @@ function formBox() {
 
 /* ═══════════ 편성 탭 (SCREEN_DESIGN §15 · ADR-0192 ~ 0195) ═══════════
    전투에 나가기 전에 정하는 넷이 한 탭에 있다 — 누구(파티) · 어디에(진형) · 무엇을 들고(물약 칸) · 어떤 조건으로(파티 전술).
-   편성은 늘 `[balance.csv:party_preset_count]` 개가 서 있고 **상단바 고르개**가 어느 편성을 펼지 정한다(출정 창과 같은 값).
+   편성은 늘 `[balance.csv:party_preset_count]` 개가 서 있고 **진형 칸 안의 고르개**가 어느 편성을 펼지 정한다(출정 창과 같은 값 · ADR-0229).
    파티 · 진형 · 물약 칸은 **고른 편성의 것**이고, 파티 전술은 모든 편성이 같이 쓴다 — 카운터 · 켜짐만 고른 편성의 파티로 다시 센다.
    **판정은 전부 game_logic 이 낸다** — 모자람(`presetState`) · 카운터 · 켜짐(`tacticState`). 화면은 고르고 그리기만 한다 */
 
-/** 상단바 고르개 — 원정 · 제련소 · 도감과 같은 자리(§2 탭 세그먼트). 도는 원정의 편성은 「원정 중」을 단다 */
+/** 편성 고르개 — 진형 칸 안 · 이름 아래에 선다(ADR-0229 — 상단바 탭 세그먼트 자리에서 옮겼다). 도는 원정의 편성은 「원정 중」을 단다 */
 function presetSeg(ps) {
     return segmented(ps.presets.map(p => ({ id: p.no, label: presetLabel(p.no, ps) })), ps.activeNo,
         no => { SYS.game.selectPreset(G, no); save(); render(); });
@@ -1382,21 +1401,18 @@ function presetSeg(ps) {
 
 function renderParty(main) {
     const ps = SYS.game.presetState(G);
-    $('.tab-seg').appendChild(presetSeg(ps));
-    const page = el('div', 'panel page pt-page');
-    const body = el('div', 'box-body pt-body');
+    // 캐릭터 탭과 같은 짜임 [2026-09-21 사용자 지시 · §15 · ADR-0221] — 띠 패널이 박스 밖 맨 위에 따로 서고, 박스가 남는 세로를 받는다
+    const page = el('div', 'page page-stack');
+    // 띠 — 캐릭터 탭과 같은 패널(칸 이름 없음). `deployed` — 아래에 진형 보드가 늘 있으므로 파티 카드의 반투명(「보드에 들어가 있다」 · ADR-0056 · 0058)이 늘 참이다
+    page.appendChild(heroStrip(toggleParty, { leaderUid: SYS.game.partyOf(G)[0] ?? null, partyMode: true, deployed: true }));
+    const body = el('div', 'panel fill pt-body');
     body.dataset.keep = 'party';
-    // ① 파티 · 진형 — 한 줄에 나란히. 왼쪽 파티가 남는 폭 · 오른쪽 진형이 내용 폭 (§15)
-    const top = el('div', 'pt-top');
-    const pb = el('div', 'pt-party');
-    pb.appendChild(el('div', 'pt-h', t('pt.party.h')));
-    // `deployed` — 옆에 진형 보드가 늘 있으므로 파티 카드의 반투명(「보드에 들어가 있다」 · ADR-0056 · 0058)이 늘 참이다
-    pb.appendChild(heroStrip(toggleParty, { leaderUid: SYS.game.partyOf(G)[0] ?? null, flat: true, partyMode: true, deployed: true }));
-    top.appendChild(pb);
-    top.appendChild(formBox());
-    body.appendChild(top);
-    body.appendChild(potionBox(ps));          // ② 물약 칸
-    body.appendChild(tacticsBlock());         // ③ 파티 전술
+    // ① 진형 · 물약 — 한 줄에 나란히. 왼쪽 진형이 내용 폭 · 오른쪽 물약이 남는 폭
+    const mid = el('div', 'pt-mid');
+    mid.appendChild(formBox(presetSeg(ps)));
+    mid.appendChild(potionBox(ps));
+    body.appendChild(mid);
+    body.appendChild(tacticsBlock());         // ② 파티 전술 — 칸이 한 줄 (ADR-0217)
     page.appendChild(body);
     main.appendChild(page);
 }
@@ -1415,7 +1431,7 @@ const potionImg = id => {
  */
 function potionBox(ps) {
     const cur = ps.presets[ps.activeNo - 1];
-    const box = el('div', 'pt-sec pt-potion');
+    const box = el('div', 'pt-potion');
     box.appendChild(el('div', 'pt-h', t('pt.potion.h')));
     const row = el('div', 'pt-potion-row');
     const act = r => { if (!r.ok) flash(`pt.err.${r.err}`); else save(); return true; };
@@ -1451,7 +1467,8 @@ function potionBox(ps) {
     return box;
 }
 
-/** 파티 전술 — 칸 이름 옆 잔글씨 「모든 편성이 같이 쓴다」 · 진척 줄 · 칸 격자 (§15 · ADR-0194). 카운터 · 켜짐은 **고른 편성의 파티**로 센다(`tacticState` 기본값) */
+/** 파티 전술 — 칸 이름 옆 잔글씨 「모든 편성이 같이 쓴다」 · 진척 줄 · 칸 격자 (§15 · ADR-0194). 카운터 · 켜짐은 **고른 편성의 파티**로 센다(`tacticState` 기본값)
+ *  칸은 **한 줄**이다 — 열 수는 칸 수(`tactic_slot.csv` 행 수)라 CSS 에 박지 않고 `--rs-n` 으로 넘긴다 (ADR-0217) */
 function tacticsBlock() {
     const ts = SYS.game.tacticState(G);
     const next = ts.slots.find(s => !s.open);
@@ -1471,6 +1488,7 @@ function tacticsBlock() {
             ? t('rs.next', { no: next.no, n: next.unlockTotalLevel - ts.totalLevel })
             : t('rs.allOpen')}</span>`));
     const grid = el('div', 'rs-grid');
+    grid.style.setProperty('--rs-n', ts.slots.length);
     for (const slot of ts.slots) grid.appendChild(tacticCell(slot, reroll));
     box.appendChild(grid);
     return box;
@@ -1479,8 +1497,9 @@ function tacticsBlock() {
 /* ═══════════ 출정 창 (SCREEN_DESIGN §4-1 · ADR-0084 · ADR-0088) ═══════════
    스테이지 행을 누르면 **탭 위에 겹쳐 뜨는 창**이다 — 옛 접이식 전진 패널(2026-08-28~2026-09-10)이 통째로 옮겨 왔다.
    속은 **이름 붙은 칸 넷이 2×2** 로 선다 (ADR-0088):
-     위 줄   = **편성 ↔ 적 구성** — 누구를 보내나 ↔ 누구와 싸우나(마주 선다) · 창은 편성을 **고르기만** 한다 (ADR-0193)
-     아래 줄 = **출정 방식** ↔ **이야기** — 갈까 ↔ 어떤 곳인가 (ADR-0105 · 진형은 편성 탭으로 갔다 — ADR-0192)
+     위 줄   = **적 구성 ↔ 이야기** — 어떤 곳인가. **읽는 자리 둘**이라 클릭이 없다
+     아래 줄 = **편성 ↔ 출정 방식** — 누구를 보내나 ↔ 갈까. **누르는 자리 둘** (창은 편성을 **고르기만** 한다 — ADR-0193 · 진형은 편성 탭 — ADR-0192)
+   **줄이 곧 동사다** [2026-09-21 사용자 지시 · ADR-0214] — 왼쪽 열은 초상(몬스터 넷 ↔ 영웅 셋이 위아래로 마주 선다) · 오른쪽 열은 글과 버튼이다.
    **크기는 상태에 흔들리지 않는다** — 넷이 전부 항상 있는 부품이고, 판 폭은 `.depart-box` 가 못박는다. */
 
 /** 창 머리 — **고른 스테이지의 신원**. 접이식이던 시절엔 바로 위 행이 말하던 것이라 패널에 머리가 없었는데
@@ -1571,7 +1590,7 @@ function goBox(z) {
     side.appendChild(actions);
     return side;
 }
-/** 적 구성 — 창의 **위 줄 오른쪽 · 파티 띠 오른쪽** [2026-09-10 사용자 지시 · §4-1 · ADR-0088].
+/** 적 구성 — 창의 **위 줄 왼쪽 · 편성 초상 위** [2026-09-21 사용자 지시 · §4-1 · ADR-0214 · 옛 자리는 ADR-0088].
  *  이 스테이지에서 기다리는 것들을 **정사각 칸으로 가로 한 줄** 편다 — 칸 크기는 **진형 칸과 같은 `--fm-slot`** 이고,
  *  이름은 안 적고 `title` 이 든다 (「칸에는 글씨가 없으므로 호버가 유일한 길이다」 · 2026-09-06 규칙 그대로).
  *  **클릭이 없는 읽는 자리**다 — 고르는 것은 위 스테이지 행이 이미 했다.
@@ -1590,9 +1609,9 @@ function foeBox(z) {
     return box;
 }
 
-/** 이야기 — 창의 **아래 줄 오른쪽 · 적 구성 아래** [2026-09-14 사용자 지시 · §4-1 · ADR-0105].
+/** 이야기 — 창의 **위 줄 오른쪽 · 적 구성 옆** [2026-09-21 사용자 지시 · §4-1 · ADR-0214 · 칸의 속은 ADR-0105].
  *  이 스테이지의 **이야기 글**(`stage.csv:story_kr/_en`)을 찍는 **읽는 자리**다 — 클릭이 없다.
- *  **글 길이가 창을 흔들지 않는다** — 칸이 크기 격리(`.dw-story`)라 열 폭은 적 구성이, 줄 높이는 진형이 정한다.
+ *  **글이 열을 안 넓힌다** — 칸이 **가로만** 크기 격리(`.dw-story`)라 폭은 왼쪽 열이 쓰고 남는 폭이고, **줄 높이는 글이 정한다**(ADR-0214).
  *  글은 데이터라 `textContent` 로 넣는다. 이름 자리(`{m:…}` · `{leader}`)는 `data.js:fillStory` 가 푼다 — 리더 = 파티 첫 슬롯 [2026-09-15] */
 function storyBox(z) {
     const box = el('div', 'dw-story');
@@ -1609,7 +1628,7 @@ const presetLabel = (no, ps) => t('pt.preset', { n: no })
     + (no === ps.runNo ? `<span class="pt-run">${t('hs.doing.expedition')}</span>` : '');
 
 /**
- * 창의 **편성** 칸 — 위 줄 왼쪽 [2026-09-21 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0193].
+ * 창의 **편성** 칸 — 아래 줄 왼쪽 · 적 구성 아래 [2026-09-21 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0193 · 자리는 ADR-0214].
  * 왼쪽에 편성 버튼이 세로로 · 오른쪽에 **고른 편성의 영웅 셋이 초상으로**. 초상은 **읽기 전용**이다 — 고치려면 편성 탭으로 간다.
  * 초상은 **셋만큼 자리를 늘 잡는다**(덜 찬 자리는 점선 빈 칸) — 편성마다 인원이 달라도 창이 안 흔들린다(적 구성이 넷을 잡는 것과 같다).
  * 고른 값은 편성 탭 고르개와 **하나다**(`selectPreset`).
@@ -1645,25 +1664,69 @@ function presetPick() {
 }
 
 /**
+ * 창의 **들고 가는 것** — 아래 줄 오른쪽 칸의 **왼쪽 묶음** [2026-09-21 사용자 지시 · §4-1 · ADR-0216].
+ * 고른 편성이 **무엇을 들고 가는지**(물약 칸)와 **어떤 조건이 켜져 있는지**(파티 전술)를 보내기 바로 옆에서 읽는다 —
+ * 출발은 되돌릴 수 없고(ADR-0111) 둘 다 **파티에 따라 달라지는 값**이라, 확인할 마지막 지점이 여기다.
+ * **읽는 자리다 — 클릭도 드래그도 없다.** 고치는 자리는 편성 탭(§15) 하나다 (ADR-0193 · ADR-0192).
+ * 문구는 **편성 탭이 쓰던 키를 그대로** 부른다 — 새 i18n 키가 없다.
+ */
+function loadBox() {
+    const box = el('div', 'dw-load');
+
+    // 전술 — 열린 칸의 **효과 줄**만. 조건 문장은 툴팁이 들고(칸이 좁다), 조건을 못 채운 칸은 흐리다.
+    //   값은 `tacticState` 가 **고른 편성의 파티**로 센다 (§15 · ADR-0194)
+    const tac = el('div', 'dw-block dw-tac');
+    tac.appendChild(el('div', 'dw-h', t('rs.h')));
+    for (const s of SYS.game.tacticState(G).slots) {
+        if (!s.open || !s.option) continue;
+        const row = el('div', `dw-tac-row${s.active ? ' on' : ''}`,
+            `<span class="rs-eff">${optionEffect(s.option)}</span>`
+            + (s.option.condKind === 'always' ? '' : `<b class="rs-cnt">${s.have} / ${s.need}</b>`));
+        row.title = `${condText(s.option)} · ${t(s.active ? 'rs.on' : 'rs.off')}`;
+        tac.appendChild(row);
+    }
+    box.appendChild(tac);
+
+    // 물약 — 고른 편성의 칸 넷. 편성 탭과 같은 칸이고 **모자란 칸은 흐린 점선**이다(그 칸은 빈 채로 나간다)
+    const ps = SYS.game.presetState(G);
+    const pot = el('div', 'dw-block dw-pot');
+    pot.appendChild(el('div', 'dw-h', t('pt.potion.h')));
+    const belt = el('div', 'p-belt');
+    for (const s of ps.presets[ps.activeNo - 1].potionSlots) {
+        const info = s ? potionInfo(s.id) : null;
+        const c = el('span', `p-slot${s ? ' full' : ''}${s?.short ? ' short' : ''}`, s ? potionImg(s.id) : potionImg(null));
+        c.title = !s ? t('pt.potion.empty')
+            : `${t('fg.potion.tip', { name: L(info?.name ?? s.id), n: info?.heal ?? 0 })}${s.short ? ` · ${t('pt.potion.short')}` : ''}`;
+        belt.appendChild(c);
+    }
+    pot.appendChild(belt);
+    box.appendChild(pot);
+    return box;
+}
+
+/**
  * 창의 속 — **이름 붙은 칸 넷이 격자 하나에 2×2** 로 선다 (ADR-0088). 갈 곳은 위 목록에서 이미 골랐고, 여기서 **어느 편성을** 보낼지 고른다.
- *   위 줄   ① **편성** ↔ ② **적 구성** — 누구를 보내나 ↔ 누구와 싸우나(마주 선다)
- *   아래 줄 ③ **출정 방식** ↔ ④ **이야기** — 갈까 ↔ 어떤 곳인가
- *   [2026-09-21 사용자 지시 · ADR-0193] 창은 **편성을 짜지 않는다** — 영웅 띠와 진형 보드는 편성 탭(§15)으로 갔고, ①은 편성 고르개 + 초상 셋이다.
+ *   위 줄   ① **적 구성** ↔ ② **이야기** — 어떤 곳인가. **읽는 자리 둘**(클릭 없음)
+ *   아래 줄 ③ **편성** ↔ ④ **들고 가는 것(전술 · 물약) + 출정 방식** — 누구를 보내나 ↔ 무엇을 들고 · 갈까. **누르는 자리 둘**
+ *   [2026-09-21 사용자 지시 · ADR-0216] ④ 는 한 칸에 셋이다 — 왼쪽에 전술 효과 · 물약 칸(읽기 전용), **칸 오른쪽 끝**에 출정 방식.
+ *   [2026-09-21 사용자 지시 · ADR-0214] **줄이 곧 동사다** — 왼쪽 열은 초상끼리(적 넷 ↔ 영웅 셋) 위아래로 마주 서고, 오른쪽 열은 글(이야기)과 버튼(출정 방식)이다.
+ *   [2026-09-21 사용자 지시 · ADR-0193] 창은 **편성을 짜지 않는다** — 영웅 띠와 진형 보드는 편성 탭(§15)으로 갔고, ③은 편성 고르개 + 초상 셋이다.
  *   칸 넷이 **격자의 직접 자식**이다 — 줄마다 감싸면 세로 구분선이 두 줄을 관통하지 못한다.
  *   가림막은 클래스가 세운다 — 오른쪽 열 `dw-c2` · 아래 줄 `dw-r2` (style.css `.dw-body`).
  */
 function departBody() {
     const z = D.stages[state.expStage];
     const body = el('div', 'dw-body');
-    body.appendChild(presetPick());           // ① 편성 — 고르개 + 초상 셋(읽기 전용)
-    const foe = foeBox(z), prep = el('div', 'dw-prep'), story = storyBox(z);
-    foe.classList.add('dw-c2');               // ② 적 구성 — 위 줄 오른쪽 · 읽는 자리다(클릭 없음)
-    prep.classList.add('dw-r2');              // ③ 아래 줄 왼쪽 — 출정 방식 하나. 칸(가림막)은 열 폭 전체이고 출정 방식은 제 폭을 든다(`.fp-side` 폭 못박음)
-    prep.appendChild(goBox(z));               //    위험도 + 경고 + 반복 원정 + 보내기
-    story.classList.add('dw-c2', 'dw-r2');    // ④ 이야기 — 아래 줄 오른쪽 · 적 구성 아래 · 읽는 자리다(클릭 없음)
-    body.appendChild(foe);
-    body.appendChild(prep);
+    const story = storyBox(z), pick = presetPick(), prep = el('div', 'dw-prep');
+    body.appendChild(foeBox(z));              // ① 적 구성 — 위 줄 왼쪽 · 읽는 자리다(클릭 없음)
+    story.classList.add('dw-c2');             // ② 이야기 — 위 줄 오른쪽 · 남는 열 폭을 받는다 · 읽는 자리다(클릭 없음)
+    pick.classList.add('dw-r2');              // ③ 편성 — 아래 줄 왼쪽 · 적 구성 아래 · 고르개 + 초상 셋(읽기 전용)
+    prep.classList.add('dw-c2', 'dw-r2');     // ④ 아래 줄 오른쪽 — 칸(가림막)은 열 폭 전체이고 속이 양끝으로 갈린다(`.dw-prep` 의 space-between)
+    prep.appendChild(loadBox());              //    왼쪽 — 전술 효과 + 물약 칸(읽기 전용 · ADR-0216)
+    prep.appendChild(goBox(z));               //    오른쪽 끝 — 위험도 + 경고 + 반복 원정 + 보내기(제 폭을 든다 · `.fp-side`)
     body.appendChild(story);
+    body.appendChild(pick);
+    body.appendChild(prep);
     return body;
 }
 
@@ -1891,6 +1954,8 @@ function expTick() {
     // 관전이 떠 있으면 **재생기가 시계다** — 애니메이션이 그 눈금 위에 산다. 브라우저 탭이 숨으면 재생기를 걷으므로(`onVisibility`)
     //   숨긴 탭의 시계는 언제나 이쪽이다
     if (!G || state.screen !== 'game' || stopBattle) return;
+    // 상점 탭 — 상인이 오고 가는 순간을 화면이 따라간다 (SCREEN_DESIGN §8-3 · ADR-0223)
+    if (state.tab === 'shop' && !document.hidden) shopTick(at);
     // 한 눈금에 런이 끝나면 **남은 시간을 다음 런으로 넘긴다** — 숨긴 탭은 1분에 한 번 깨므로 안 넘기면 런마다 그만큼 샌다.
     //   다음 런은 앞 런이 끝난 순간에 출발한 것으로 친다(`runBattle` 의 `at`)
     for (;;) {
@@ -2193,7 +2258,7 @@ function gearPanel(h) {
     const counts = {};
     for (const it of worn) for (const s of it.sins ?? []) counts[s] = (counts[s] ?? 0) + 1;
     const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    p.appendChild(el('div', 'sub-h', t('eq.sins.h')));
+    p.appendChild(el('div', 'sub-h sins-h', t('eq.sins.h')));
     const chips = el('div', 'sin-tags');
     if (!entries.length) chips.appendChild(el('span', 'muted', t('eq.sins.none')));
     for (const [sin, n] of entries) {
@@ -2359,6 +2424,7 @@ function detailPanels(h) {
 function clearBagSel() {
     state.bagSelMode = false;
     state.bagLockMode = false;
+    state.bagSortMode = null;
     state.bagSel.clear();
 }
 
@@ -2465,12 +2531,47 @@ function autoSalvageBody() {
     return box;
 }
 
-/** 도구 줄 — 이름 + (인벤토리 쪽에만) [잠금] · [분해] · [자동 분해] 또는 그 모드의 줄 + 칸 수. 관전에서는 장착 대상도 (§6 · §4-2) */
+/**
+ * [정렬] + 펼친 기준 셋 — 칸마다 제 것 [2026-09-21 · ADR-0242 · ADR-0247]. 누르면 **[정렬] 오른쪽으로 [등급순] · [레벨순] · [부위순]이
+ * 차례로 미끄러져 나오고**, [정렬]을 다시 누르면 접힌다. 기준을 고르면 그 칸을 **한 번** 줄 세우고 접힌다.
+ * 펼치면 한 번에 한 모드라 다른 칸의 펼침 · 고르는 중 · 잠그는 중은 풀린다.
+ * 움직임은 **펼친 직후 한 번만** 단다(`bagSortAnim`) — 통째로 다시 그리는 화면이라 그냥 두면 관전 갱신마다 다시 미끄러진다
+ */
+function sortTools(where) {
+    const open = state.bagSortMode === where;
+    const wrap = el('div', 'sort-tools');
+    const b = el('button', `btn sm toggle${open ? ' on' : ''}`, t('ch.sort.start'));
+    b.onclick = () => {
+        clearBagSel();
+        if (!open) { state.bagSortMode = where; state.bagSortAnim = true; }
+        render();
+    };
+    wrap.appendChild(b);
+    if (open) {
+        const fold = el('div', `sort-fold${state.bagSortAnim ? ' anim' : ''}`);
+        state.bagSortAnim = false;
+        for (const key of ['rarity', 'ilvl', 'slot']) {
+            const k = el('button', 'btn sm', t(`ch.sort.${key}`));
+            k.onclick = () => {
+                if (SYS.game.sortStorage(G, where, key).ok) save();
+                clearBagSel();
+                render();
+            };
+            fold.appendChild(k);
+        }
+        wrap.appendChild(fold);
+    }
+    return wrap;
+}
+
+/** 도구 줄 — 이름 + (인벤토리 쪽에만) [잠금] · [분해] · [자동 분해] 또는 그 모드의 줄 + [정렬](칸마다) + 칸 수. 관전에서는 장착 대상도 (§6 · §4-2) */
 function storageTools(h, where, { showTarget = false } = {}) {
     const tools = el('div', 'items-tools');
     tools.appendChild(el('span', 'items-name', t(where === 'stash' ? 'ch.bag.stash' : 'ch.bag.inv')));
-    // 버튼은 **한 벌만** 둔다 — 두 칸에 같이 걸리는 축이라 칸마다 두면 어느 쪽 것인지 읽을 수 없다 (ADR-0184)
-    if (where === 'bag') {
+    // 잠금 · 분해 · 자동 분해는 **한 벌만** 둔다 — 두 칸에 같이 걸리는 축이라 칸마다 두면 어느 쪽 것인지 읽을 수 없다 (ADR-0184).
+    //   [정렬]만 칸마다다 — 누른 칸 하나만 줄 세운다 (ADR-0242). 고르는 중 · 잠그는 중에는 두 칸 다 안 선다
+    if (where === 'stash') { if (!state.bagSelMode && !state.bagLockMode) tools.appendChild(sortTools('stash')); }
+    else {
         if (state.bagSelMode) tools.appendChild(bagSelectBar());
         else if (state.bagLockMode) {
             // 잠그는 중 — 누른 칸이 이미 먹었으므로 나오는 버튼은 [취소]가 아니라 [완료]다 (ADR-0207)
@@ -2483,19 +2584,22 @@ function storageTools(h, where, { showTarget = false } = {}) {
             lk.onclick = () => { clearBagSel(); state.bagLockMode = true; render(); };
             tools.appendChild(lk);
             const sv = el('button', 'btn sm', t('ch.sel.start'));
-            sv.onclick = () => { state.bagSelMode = true; state.bagSel.clear(); render(); };
+            sv.onclick = () => { clearBagSel(); state.bagSelMode = true; render(); };
             tools.appendChild(sv);
             // 자동 분해 — 선이 하나라도 서 있으면 **켜진 모양**이다: 가방이 왜 덜 차는지가 같은 줄에서 읽힌다 (ADR-0203)
             const rule = G.autoSalvage ?? {};
             const au = el('button', `btn sm toggle${rule.rarity || rule.ilvlBelow > 0 ? ' on' : ''}`, t('ch.auto.btn'));
             au.onclick = () => openModal('autoSalvage');
             tools.appendChild(au);
+            tools.appendChild(sortTools('bag'));           // 맨 오른쪽 — 펼치면 그 오른쪽으로 기준이 나온다 (ADR-0242 · ADR-0247)
         }
     }
     const n = where === 'stash' ? (G.stash ?? []).length : G.bag.length;
     const cap = where === 'stash' ? D.balance.stash_cap : D.balance.inventory_cap;
-    tools.appendChild(el('span', 'items-meta muted',
-        `${t('ch.items.sub', { n, cap })}${showTarget ? ` · ${t('bt.items.target', { name: L(h.name) })}` : ''}`));
+    const meta = el('span', 'items-meta muted',
+        `${t('ch.items.sub', { n, cap })}${showTarget ? ` · ${t('bt.items.target', { name: L(h.name) })}` : ''}`);
+    meta.title = meta.textContent;               // 줄이 좁으면 말줄임으로 양보한다 — 전문은 여기 (ADR-0247)
+    tools.appendChild(meta);
     return tools;
 }
 
@@ -3058,7 +3162,7 @@ function tierTrack(post) {
     const own = D[post.tiers] ?? [];         // 이 파견처의 표 — 없으면 빈 배열
     const shape = D.mineNodes ?? [];         // 트랙의 길이·번호를 정하는 표
     const box = el('div', 'dp-tiers');
-    box.appendChild(el('div', 'dp-tier-h', t('dp.tier', { n: shape.length })));
+    // 머리 줄(「단계 N」)은 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다
     const list = el('ol', 'dp-tier-list');
     shape.forEach((s, i) => {
         const n = own[i];
@@ -3087,10 +3191,10 @@ function renderResource(main) {
         const attrs = postAttr(post.id);
         // 담당 능력치가 미정인 카드(채집 · 벌목)도 자리를 지킨다 — 빈 칸은 "안 재고 있다"로 읽힌다 (§4-1)
         const attr = attrs.length ? attrs.map(a => a.abbr).join(' · ') : '—';
-        // 미착수 배지는 **이름 줄 안**이다 (개정 2026-09-09) — 카드 바닥에 따로 서면 단계 상자 7개와 세로를 다툰다
-        c.innerHTML = `<span class="dp-n">${t(post.label)}${post.live ? '' : ` <small class="todo-badge">${t('todo.badge')}</small>`}</span>
-            <span class="dp-meta"><i class="dp-attr" title="${t('dp.attrTitle')}">${attr}</i>
-            <i class="dp-size">${t(post.party ? 'dp.party' : 'dp.solo')}</i></span>`;
+        // 단에는 미착수 배지를 달지 않는다 [2026-09-21 사용자 지시 · ADR-0220] — 「아직 없다」는 아래 안내 패널이 한 번 말한다
+        // 능력치는 이름 오른쪽 같은 줄이다 [2026-09-21 사용자 지시 · ADR-0222]
+        // 인원(「1인」)은 안 찍는다 [2026-09-21 사용자 지시 · ADR-0224] — 1인 배치 / 파티 파견의 차이는 탭이 든다
+        c.innerHTML = `<span class="dp-n">${t(post.label)}<i class="dp-attr" title="${t('dp.attrTitle')}">${attr}</i></span>`;
         c.appendChild(tierTrack(post));
         c.onclick = () => { state.post = post.id; render(); };
         row.appendChild(c);
@@ -3135,9 +3239,11 @@ function renderExplore(main) {
 function renderTavern(main) {
     const B = D.balance;
     const full = G.heroes.length >= B.roster_cap;
-    const p = el('div', 'panel page');
+    // 패널 둘이 위아래로 쌓인다 — 위 영입 후보(제 높이) · 아래 의뢰(남는 세로) (SCREEN_DESIGN §2 박스 규격 · ADR-0248)
+    const page = el('div', 'page page-stack c-tavern');
+    const p = el('div', 'panel');
     p.appendChild(el('h2', '', t('tv.h')));
-    // 박스 (ADR-0097) — 제목은 서 있고 명단 · 도구 · 의뢰가 본문으로 스크롤한다
+    // 박스 (ADR-0097) — 제목은 서 있고 명단 · 도구가 본문으로 스크롤한다(박스가 모자랄 때만 — 의뢰는 안 줄어든다)
     const body = el('div', 'box-body');
     body.dataset.keep = 'tavern';
     p.appendChild(body);
@@ -3176,18 +3282,19 @@ function renderTavern(main) {
     tools.appendChild(rr);
     body.appendChild(tools);
 
-    /* 의뢰 게시판 (SCREEN_DESIGN §8-1 이동 2026-09-03 사용자 지시 · 규격은 §14) — 도구 줄 다음, 패널 맨 아래.
-       의뢰 탭이 폐지되면서 게시판이 여기로 들어왔고, 자리는 같은 날 아침 삭제된 도박장 줄의 자리다.
-       명단 격자 밖인 이유는 그 줄과 같다 — 후보 카드와 다른 것이라 같은 격자에 세우면 「후보」로 읽힌다.
-       제목은 옛 탭 라벨(`nav.commission`)이 섹션 제목으로 내려온 것뿐이라 문구를 새로 쓰지 않는다 */
-    const cm = el('div', 'tv-cm');
-    cm.appendChild(el('h3', 'tv-cm-h', `${t('nav.commission')} <small class="todo-badge">${t('todo.badge')}</small>`));
+    page.appendChild(p);
+
+    /* 의뢰 게시판 — **영입 후보 아래 따로 선 패널**이다 (SCREEN_DESIGN §8-1 · 규격은 §14 · ADR-0248).
+       후보 카드와 다른 일이라 같은 패널에 두면 영입의 한 칸으로 읽힌다(명단 격자 밖에 두던 이유를 패널 단위로 민 것).
+       제목은 옛 탭 라벨(`nav.commission`)이 패널 제목으로 내려온 것뿐이라 문구를 새로 쓰지 않는다 */
+    const cm = el('div', 'panel tv-cm');
+    cm.appendChild(el('h2', '', `${t('nav.commission')} <small class="todo-badge">${t('todo.badge')}</small>`));
     const board = el('div', 'cm-board');
     for (const c of D.commissionList) board.appendChild(commissionCard(c));
     cm.appendChild(board);
-    body.appendChild(cm);
+    page.appendChild(cm);
 
-    main.appendChild(p);
+    main.appendChild(page);
 }
 
 /**
@@ -3352,13 +3459,8 @@ function renderForge(main) {
     body.dataset.keep = `forge-${tab}`;   // 탭마다 따로 되찾는다 — 강화 목록 스크롤이 제작 탭에 묻어가지 않게
 
     const box = el('div', 'fg-box');
-    if (tab === 'make') {
-        // 제작은 두 갈래다 — 왼쪽 장비(부위 · 레벨대 · 재료) · 오른쪽 물약(단계 목록 · R103)
-        const two = el('div', 'fg-work');
-        forgeMake(two);
-        forgePotion(two);
-        box.appendChild(two);
-    } else if (tab === 'up') forgeUpgrade(box);
+    if (tab === 'make') forgeMake(box);   // 제작은 한 칸이다 — 고르개 줄(부위 · 물약) 아래에 고른 하나만 편다 (ADR-0219)
+    else if (tab === 'up') forgeUpgrade(box);
     else box.appendChild(el('div', 'note-body muted', t('todo.lead')));   // 크래프트 — 로직이 없다 (R97)
     body.appendChild(box);
 
@@ -3366,25 +3468,42 @@ function renderForge(main) {
     main.appendChild(p);
 }
 
+/** 부위 고르개의 칸 그림 — 장비칸 빈 칸과 같은 부위 실루엣 (SCREEN_DESIGN §8-2 · 규칙은 `mock.slotArt` 한 곳).
+ *  제작의 부위 줄 · 강화의 부위 필터가 같이 쓴다. 그림이 없는 부위만 이모지로 떨어진다 */
+const slotPickHtml = s => {
+    const art = M.slotArt(s.id);
+    return art ? `<img class="seg-slot" src="${art}" alt="" loading="lazy" onerror="this.remove()">` : s.icon;
+};
+
 /**
- * 제작 칸 — 부위 · 레벨대를 고르고 재료 `보유 / 필요` 를 보고 만든다 (SCREEN_DESIGN §8-2 · 기획 item_design §7-1 · R96).
+ * 제작 칸 — 위 고르개 줄(부위 칸 전부 + 끝에 물약 칸)에서 하나를 고르고, 고른 것만 아래에 편다
+ * (SCREEN_DESIGN §8-2 · ADR-0219 · ADR-0230 — 강화의 부위 필터와 같은 가로 줄이다. 왼쪽 세로 탭(ADR-0226)은 되돌렸다).
+ * 부위면 레벨대를 고르고 재료 `보유 / 필요` 를 보고 만든다 (기획 item_design §7-1 · R96) · 물약이면 `forgePotion`.
  * 판정(재료 모자람 · 인벤토리 가득)은 `game.makeState` 가 낸다 — 렌더러는 세지 않는다. 결과는 희귀도 굴림이라 미리보기가 없다
  */
 function forgeMake(p) {
-    const bands = SYS.game.makeBands();
-    const part = D.slots.some(s => s.id === state.makePart) ? state.makePart : D.slots[0]?.id;
-    const band = bands.some(b => b.band === state.makeBand) ? state.makeBand : bands[0]?.band;
+    const potion = state.makePart === 'potion';
+    const part = potion ? 'potion' : D.slots.some(s => s.id === state.makePart) ? state.makePart : D.slots[0]?.id;
     const col = el('div', 'fg-col fg-make');
+    p.appendChild(col);
 
     const parts = el('div', 'segmented');
-    for (const s of D.slots) {
-        const b = el('button', `btn sm${part === s.id ? ' on' : ''}`, s.icon);
-        b.title = L(s);
-        b.onclick = () => { state.makePart = s.id; render(); };
+    const pick = (id, html, name) => {
+        const b = el('button', `btn sm${part === id ? ' on' : ''}`, html);
+        b.title = name;
+        b.setAttribute('aria-label', name);
+        b.onclick = () => { state.makePart = id; render(); };
         parts.appendChild(b);
-    }
+    };
+    for (const s of D.slots) pick(s.id, slotPickHtml(s), L(s));
+    // 물약 칸 — 그림은 물약 빈 칸의 병 실루엣 (관전 아레나 · 편성 탭의 빈 물약 칸과 같은 한 장)
+    pick('potion', `<img class="seg-slot" src="${M.POTION_SLOT_ART}" alt="" loading="lazy" onerror="this.remove()">`, t('fg.make.potion'));
     col.appendChild(parts);
 
+    if (potion) { forgePotion(col); return; }
+
+    const bands = SYS.game.makeBands();
+    const band = bands.some(b => b.band === state.makeBand) ? state.makeBand : bands[0]?.band;
     const lv = el('div', 'segmented');
     for (const b of bands) {
         const btn = el('button', `btn sm${band === b.band ? ' on' : ''}`, t('fg.make.band', { lo: b.lo, hi: b.hi }));
@@ -3413,18 +3532,17 @@ function forgeMake(p) {
         blk.appendChild(act);
         col.appendChild(blk);
     }
-    p.appendChild(col);
 }
 
 /**
- * 물약 — 제작 탭의 오른쪽 갈래 (SCREEN_DESIGN §8-2 · 기획 item_design §7-4 · R103 · 개수 R124).
+ * 물약 — 제작 고르개 줄의 물약 칸을 고르면 제작 칸 안에 편다 (SCREEN_DESIGN §8-2 · ADR-0219 · 기획 item_design §7-4 · R103 · 개수 R124).
  * 판정(개수 · 잠김 · 골드 부족)은 `game.potionState` 가 낸다 — 렌더러는 세지 않는다.
  * 머리 줄은 **재고**다 — 가진 물약이 그림 + 개수(0 개는 안 선다 · 하나도 없으면 「없음」). **칸은 여기 없다** — 편성마다라 편성 탭이 든다 (ADR-0195).
  * 그림은 관전 아레나 칸과 같은 그림이고 없으면 병 실루엣이 깔린다 — 규칙은 `battle.js:potionBeltHtml` 과 같다 (2026-09-17)
  */
 function forgePotion(p) {
     const ps = SYS.game.potionState(G);
-    const col = el('div', 'fg-col fg-potion');
+    const col = el('div', 'fg-potion');
     const stock = ps.list.filter(row => row.have > 0).map(row => {
         const info = potionInfo(row.id);
         const src = M.potionArt(row.id);
@@ -3473,9 +3591,9 @@ function forgeUpgrade(p) {
     const left = el('div', 'fg-col');
     const tools = el('div', 'items-tools');
     const filter = el('div', 'segmented');
-    for (const f of [{ id: null, label: t('eq.filter.all') }, ...D.slots.map(x => ({ id: x.id, label: x.icon, title: L(x) }))]) {
+    for (const f of [{ id: null, label: t('eq.filter.all') }, ...D.slots.map(x => ({ id: x.id, label: slotPickHtml(x), title: L(x) }))]) {
         const b = el('button', `btn sm${state.forgeFilter === f.id ? ' on' : ''}`, f.label);
-        if (f.title) b.title = f.title;
+        if (f.title) { b.title = f.title; b.setAttribute('aria-label', f.title); }
         b.onclick = () => { state.forgeFilter = f.id; render(); };
         filter.appendChild(b);
     }
@@ -3545,47 +3663,88 @@ function forgeUpgrade(p) {
 }
 
 /**
- * 상점 탭 — 상단 · 기본상단 · 특수상단 (SCREEN_DESIGN §8-3 · 기획 base_expedition_design §2-6).
- * 2026-09-03 사용자 지시로 마을의 칸에서 자기 탭이 됐다 — **탭 이름은 「상점」(활동), 패널 머리는
- * 「상단」(장소 — `dp.post.trade`)** 으로 갈린다 — 제련소(§8-2)는 탭 이름도 장소다(ADR-0190).
- * ⚠ **통째로 목업이다** — 방문 주기 · 체류 · 가격 · 재고가 기획에 하나도 없어서(GAME_DESIGN §10)
- * 데이터는 `mock.js:TRADE` 가 들고, 버튼은 누르면 미착수 안내만 낸다. 확정되면 상수와 이 함수를 함께 지운다.
- *
- * **세로 2단인 이유** — 둘은 배타가 아니다(기본상단은 늘 열려 있고 특수상단이 그 위에 얹힌다).
- * 세그먼트로 가르면 상주하는 창구가 클릭 뒤로 숨는다. 제련소(§8-2)가 세그먼트인 것과 갈리는 지점이다.
+ * 상점 탭 — 상단(장비 · 재료 탭) · 특수상단 카드 (SCREEN_DESIGN §8-3 · ADR-0223 · 기획 base_expedition_design §2-6).
+ * **탭 이름은 「상점」(활동), 패널 머리는 「상단」(장소 — `dp.post.trade`)** 으로 갈린다 — 제련소(§8-2)는 탭 이름도 장소다(ADR-0190).
+ * **패널 둘이 위아래로** — 위 상단 · 아래 특수상단(ADR-0243 「아예 다른 카드로」 · 자리는 ADR-0246 「상단카드 아래로」).
+ * 상단은 제 내용 높이, 특수상단이 남는 세로를 받아 박스 끝까지 선다 — 탐험 탭과 같은 쌓인 판(`.page-stack > .fill`).
+ * 방문 시계와 장비 목록은 `game.shopState` 가 낸다 — 화면은 판정을 하나도 안 한다(ui 원칙 2).
+ * ⚠ **구매는 아직 없다** — [사기]는 미착수 안내만 낸다. 재료 목록 · 특수상단 재고 · 상인 이름은 `mock.js:TRADE`(거짓).
  */
 function renderShop(main) {
-    const p = el('div', 'panel page');
-    // 박스 (ADR-0097) — 제목은 서 있고 기본상단 · 특수상단 · 각주가 본문으로 스크롤한다
+    const S = SYS.game.shopState(G, now());
+    state.shopShown = { cycle: S.cycle, here: S.here };     // 앱 시계가 이것과 비교해 다시 그릴 순간을 잰다(`shopTick`)
+    // 고른 칸은 **그 회차의 것**이다 — 상인이 바뀌면 장비 목록도 새로 굴려지므로 풀린다 (§8-3)
+    if (state.shopSel && state.shopSel.cycle !== S.cycle) state.shopSel = null;
+    const tab = state.shopTab === 'mat' ? 'mat' : 'equip';
+
+    const page = el('div', 'page page-stack c-shop');
+    const p = el('div', 'panel');
+    p.appendChild(el('h2', '', `${t('dp.post.trade')} <small class="todo-badge">${t('todo.badge')}</small>`));
+    // 박스 (ADR-0097) — 제목은 서 있고 본문이 스크롤한다. 두 패널이 스크롤 자리를 따로 든다
     const body = el('div', 'box-body');
     body.dataset.keep = 'shop';
-    p.appendChild(el('h2', '', `${t('dp.post.trade')} <small class="todo-badge">${t('todo.badge')}</small>`));
 
-    /* 기본상단 — 상주라 **타이머를 안 그린다**. 「언제 가도 같다」가 이 층의 전부다 */
-    const basic = el('div', 'td-sec');
-    basic.appendChild(el('h3', 'td-h', t('td.basic')));
-    basic.appendChild(tradeRows(M.TRADE.basic));
-    body.appendChild(basic);
+    /* 상단 — 장비 · 재료 탭은 **패널 안**이다. 이 둘은 상단의 목록만 가르고 특수상단은 그대로라,
+       탭 전체를 가르는 상단바 자리(원정 · 편성 · 제련소 · 도감)에 두면 특수상단까지 갈리는 것으로 읽힌다 (ADR-0223) */
+    const seg = segmented([{ id: 'equip', label: t('td.tab.equip') }, { id: 'mat', label: t('td.tab.mat') }], tab,
+        id => { state.shopTab = id; state.shopSel = null; render(); });
+    seg.classList.add('td-tabs');
+    body.appendChild(seg);
+    body.appendChild(shopGoods(tab === 'equip' ? S.equip.map(equipGood) : M.TRADE.basic.map(matGood), tab, S.cycle));
 
-    /* 특수상단 — 방문 상태 줄이 머리에 선다. **비어 있어도 자리를 지킨다**(§4-1 「값은 항상 찍는다」).
-       ⚠ 재촉 연출을 붙이지 않는다 — 남은 시간은 정보이지 압박이 아니다. 지나간 상인도 세지 않는다
-       (기획 §2-6 의 방치형 계약 규칙 셋이 화면에 걸리는 자리) */
-    const sp = M.TRADE.special;
-    const spec = el('div', 'td-sec');
-    spec.appendChild(el('h3', 'td-h', t('td.special')));
-    spec.appendChild(el('div', `td-state${sp.here ? ' on' : ''}`,
-        sp.here ? `<b>${L(sp.who)}</b><span>${t('td.here', { t: sp.t })}</span>`
-            : `<b>—</b><span>${t('td.away', { t: sp.t })}</span>`));
-    if (sp.here) spec.appendChild(tradeRows(sp.stock));
-    body.appendChild(spec);
-
-    body.appendChild(el('div', 'td-note muted', t('td.noEquip')));
     p.appendChild(body);
-    main.appendChild(p);
+    page.appendChild(p);
+
+    /* 특수상단 — **따로 선 패널**이다(ADR-0243) · 상단 아래에서 남는 세로를 받는다(ADR-0246). 상인이 **와 있을 때만** 카드가 선다. 없으면 「다음 상인까지」 한 줄이
+       자리를 지킨다(§4-1 「값은 항상 찍는다」). ⚠ 남은 시간은 정보다 — 빨강 · 깜빡임 같은 재촉 연출을 안 붙이고
+       지나간 상인도 세지 않는다 (기획 §2-6 의 방치형 계약) */
+    const sp = el('div', 'panel fill');
+    sp.appendChild(el('h2', '', `${t('td.special')} <small class="todo-badge">${t('todo.badge')}</small>`));
+    const spBody = el('div', 'box-body');
+    spBody.dataset.keep = 'shop-sp';
+    if (S.here) {
+        const card = el('div', 'td-card');
+        card.appendChild(el('div', 'td-card-h', `<b>${L(M.TRADE.special.who)}</b>${shopClock(S)}`));
+        card.appendChild(shopGoods(M.TRADE.special.stock.map(matGood), 'special', S.cycle));
+        spBody.appendChild(card);
+    } else spBody.appendChild(el('div', 'td-away', shopClock(S)));
+    sp.appendChild(spBody);
+    page.appendChild(sp);
+    main.appendChild(page);
 }
 
 /**
- * 의뢰 카드 — 종류 배지가 첫인상이고, 그 아래 「어떻게 도는가」 한 줄이 시간축을 든다 (§14).
+ * 상점 탭의 시계 (SCREEN_DESIGN §8-3 · ADR-0223) — 앱 시계(`expTick`)가 이 탭을 보는 동안 부른다.
+ * 방문이 바뀌는 순간(상인이 오거나 떠남 — 회차가 넘어가면 장비 목록도 갈린다) **다시 그리고**, 그 밖에는
+ * 남은 시간 **글자만** 갈아 끼운다 — 계정 버튼 · 관전 중 자원 숫자와 같은 장치다(통째로 다시 그리면 올려 둔 툴팁이 걷힌다)
+ */
+function shopTick(at) {
+    const v = SYS.game.shopVisit(G, at);
+    const shown = state.shopShown;
+    if (!shown || shown.cycle !== v.cycle || shown.here !== v.here) { render(); return; }
+    const txt = shopClockText(v);
+    for (const n of document.querySelectorAll('.td-clock')) if (n.textContent !== txt) n.textContent = txt;
+}
+
+/** 남은 시간 글자 — 와 있으면 떠나기까지, 없으면 다음 상인까지. 앱 시계가 **이 글자만** 갈아 끼운다(`shopTick`) */
+const shopClockText = v => t(v.here ? 'td.leave' : 'td.next', { t: fmtDuration(v.remainMs) });
+const shopClock = v => `<span class="td-clock">${shopClockText(v)}</span>`;
+
+/** 칸 하나가 드는 것 — 장비는 굴린 아이템(`shopState.equip`), 재료는 목업 품목(`mock.js:TRADE`) */
+const equipGood = ({ item, gold }) => ({ item, gold, name: L(item.name), color: rarity(item.rarity).color });
+const matGood = m => ({ mat: m, gold: m.gold, name: L(m.name), color: null });
+
+/** 재료 칸의 툴팁 — 이름 · 수량 · 가격뿐이다 (§8-3) */
+function matTipCard(g) {
+    const c = el('div', 'tip-card');
+    c.innerHTML = `<div class="tip-head">${t('td.tab.mat')}</div><div class="tip-name">${g.name}</div>
+        <div class="tip-sub">${t('td.stock', { n: g.mat.n })} · ${g.gold.toLocaleString()} G</div>`;
+    return c;
+}
+
+/**
+ * 의뢰 카드 — 종류 배지가 첫인상이고, 그 아래가 목표 · 보상이다. 설명 줄은 달지 않는다 — 무엇이
+ * 목표를 채우는지는 도움말(`exp.commission.note`)이 든다 (§14 · ADR-0225).
  * 게시판이 서는 자리는 **선술집 탭**이다 (§8-1 이동 2026-09-03) — 옛 의뢰 탭은 폐지됐고
  * `renderCommission` 도 같이 지웠다. 데이터는 **CSV 두 표**다 — `commission_kind.csv`(유형 둘 ·
  * 확정 기획)와 `commission.csv`(게시판 행 · ⚠임시 자리채움). **칸 수 = 행 수**로 `tactic_slot` 과
@@ -3595,13 +3754,12 @@ function renderShop(main) {
  * 처치(전투가 센다) · 수집(드롭·파견·탐험 산출이 채운다). 「파티를 보내는」 가는 형은 폐지됐고
  * 약탈·보호는 **탐험**으로 이관됐다 (base_expedition_design §1-3 · DEV_PLAN R45).
  * 그래도 종류가 이름보다 먼저 읽혀야 한다 — 무엇이 목표를 채우는지가 카드의 첫인상이다.
- * **이름·설명은 CSV 의 `_kr`/`_en` 쌍**이라 `L()` 로 푼다.
+ * **종류 이름은 CSV 의 `_kr`/`_en` 쌍**이라 `L()` 로 푼다.
  */
 function commissionCard(c) {
     const k = D.commissionKinds[c.kind];
     const card = el('div', `cm-card k-${c.kind}`);
     card.appendChild(el('div', 'cm-kind', L(k)));
-    card.appendChild(el('div', 'cm-how', L(k.how)));
     card.appendChild(el('div', 'cm-goal', L(c.goal)));
 
     const rew = el('div', 'cm-rew', `
@@ -3616,20 +3774,57 @@ function commissionCard(c) {
     return card;
 }
 
-/** 품목 줄 — 이름 · 수량 · 가격 · [사기]. 살 수 없으면 가격이 빨강 (SCREEN_DESIGN §8-3) */
-function tradeRows(list) {
-    const box = el('div', 'td-list');
-    for (const it of list) {
-        const poor = G.resources.gold < it.gold;
-        const row = el('div', 'td-row', `
-            <span class="td-n">${L(it.name)}<small>${t('td.stock', { n: it.n })}</small></span>
-            <span class="td-gold${poor ? ' no' : ''}">${it.gold.toLocaleString()} G</span>`);
-        const b = el('button', 'btn sm', t('td.buy'));
-        // 미착수 안내는 새 문구가 아니라 도움말·미착수 화면이 쓰던 키 그대로다 (ui 원칙 4 · §11)
-        b.onclick = () => { flash('todo.lead'); render(); };
-        row.appendChild(b);
-        box.appendChild(row);
-    }
+/**
+ * 아이콘 칸 격자 + 사기 줄 (SCREEN_DESIGN §8-3 · ADR-0223) — 칸은 인벤토리 칸(`.inv-cell`)과 같은 모양이고 **아래에 가격**이 선다.
+ * **칸 누르기 = 고르기**(다시 누르면 풀림) · 사는 것은 사기 줄의 [사기] — 골드를 내는 되돌릴 수 없는 일이라 두 번 누른다(§3).
+ * 고른 것은 상점 전체에서 하나다(`state.shopSel` — `src` 가 어느 격자인지 가른다).
+ * @param src 'equip' | 'mat' | 'special'
+ */
+function shopGoods(list, src, cycle) {
+    const box = el('div', 'td-goods');
+    const grid = el('div', `td-grid${src === 'equip' ? ' grouped' : ''}`);
+    const sel = state.shopSel?.src === src ? list[state.shopSel.i] ?? null : null;
+    const poor = g => G.resources.gold < g.gold;
+    let group = null;
+    list.forEach((g, i) => {
+        const slot = el('div', 'td-slot');
+        const cell = el('div', `inv-cell filled${sel === g ? ' td-picked' : ''}`);
+        if (g.item) {
+            // 장비 — 인벤토리 칸과 같은 그림 · 희귀도 테두리 · 오른쪽 아래 ilvl. 툴팁은 아이템 카드 한 장(비교할 영웅이 없다)
+            cell.style.borderColor = g.color;
+            cell.innerHTML = `<span class="inv-icon">${itemImg(g.item)}</span><span class="inv-lv">${t('ch.itemLv', { n: g.item.ilvl })}</span>`;
+            bindTip(cell, g.item);
+        } else {
+            // 재료 — 그림 자리에 글자(재료 아이콘 아트가 없다 · 사용자 지시) · 오른쪽 아래 수량
+            cell.innerHTML = `<span class="td-mat">${t('td.matIcon')}</span><span class="inv-lv">×${g.mat.n}</span>`;
+            bindTipNode(cell, () => matTipCard(g));
+        }
+        cell.onclick = () => { state.shopSel = sel === g ? null : { src, i, cycle }; render(); };
+        slot.appendChild(cell);
+        slot.appendChild(el('div', `td-price${poor(g) ? ' no' : ''}`, `${g.gold.toLocaleString()} G`));
+        // 장비는 **같은 부위끼리 붙여** 한 묶음으로 세운다 [사용자 지시] — 목록이 부위 순서로 오므로 부위가 바뀌는 자리에서 새 묶음을 연다 (§8-3)
+        if (src === 'equip') {
+            if (group?.dataset.part !== g.item.slot) {
+                group = el('div', 'td-group');
+                group.dataset.part = g.item.slot;
+                grid.appendChild(group);
+            }
+            group.appendChild(slot);
+        } else grid.appendChild(slot);
+    });
+    box.appendChild(grid);
+
+    // 사기 줄 — 고른 것의 이름(희귀도 색) · 가격 · [사기]. 고른 것이 없으면 `—` 와 꺼진 [사기] (§8-3)
+    const bar = el('div', 'td-buy', sel
+        ? `<span class="td-buy-n"${sel.color ? ` style="color:${sel.color}"` : ''}>${sel.name}</span>
+           <span class="td-price${poor(sel) ? ' no' : ''}">${sel.gold.toLocaleString()} G</span>`
+        : '<span class="td-buy-n muted">—</span>');
+    const b = el('button', 'btn sm primary', t('td.buy'));
+    b.disabled = !sel;
+    // ⚠ 구매 정산이 `game_logic` 에 없다 — 미착수 안내는 새 문구가 아니라 도움말·미착수 화면이 쓰던 키 그대로다 (ui 원칙 4 · §11)
+    b.onclick = () => { flash('todo.lead'); render(); };
+    bar.appendChild(b);
+    box.appendChild(bar);
     return box;
 }
 
@@ -3942,7 +4137,7 @@ function helpSections() {
                 { h: t('eq.sins.h'), body: [t('eq.sins.note')] },
                 { h: t('ch.attr.h'), sub: t('ch.attr.sub'), body: [t('ch.attr.note')] },
                 { h: t('ch.detail.h'), body: [t('ch.detail.note')] },
-                { h: t('ch.items.h'), body: [t('ch.equip.hint'), t('ch.salvageHint'), t('ch.upgradeHint'), t('eq.inv.note')] },
+                { h: t('ch.items.h'), body: [t('ch.equip.hint'), t('ch.salvageHint'), t('ch.sortHint'), t('ch.upgradeHint'), t('eq.inv.note')] },
             ],
         },
         {
@@ -4214,6 +4409,13 @@ async function boot() {
     // `&fg=` — 제련소의 작업 탭을 고른 채 연다 (§10 · ADR-0142). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const fg = new URLSearchParams(location.search).get('fg');
     if (['make', 'up', 'craft'].includes(fg)) state.forgeTab = fg;
+    // `&sh=` — 상단의 장비 · 재료 탭을 고른 채 연다 (§10 · §8-3). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
+    const sh = new URLSearchParams(location.search).get('sh');
+    if (['equip', 'mat'].includes(sh)) state.shopTab = sh;
+    // `&td=away` — 특수상단이 **떠나 있는** 상점 (§10 · §8-3). 방문은 시간으로만 갈리고 새 게임은 상인이 와 있는 채로 시작하므로
+    //   게임을 만든 시각을 체류 시간(+1분)만큼 과거로 당긴다 — `?dev=search` 가 보낸 시각을 당기는 것과 같은 장치
+    if (G && new URLSearchParams(location.search).get('td') === 'away')
+        G.createdAt = now() - D.balance.trade_stay_hours * 3600000 - 60000;
     // `&ps=n` — 편성 n 을 고른 채 연다 (§10 · §15). 고르개는 클릭으로만 바뀌어 헤드리스가 못 닿는다 — 편성 탭 · 출정 창이 같은 값을 든다
     pickPs();
     // `&rsl=` — ⚠ 연구 배치 비교(세로 · 가로)를 고른 채 연다 (§13-1). 토글은 클릭으로만 바뀌어 헤드리스가 못 닿는다

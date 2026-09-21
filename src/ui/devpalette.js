@@ -267,7 +267,8 @@ function injectStyle() {
 .dp-pick { margin-bottom: 7px; }
 .dp-color { width: 54px; height: 22px; padding: 0; border: 1px solid #444; background: #000; cursor: pointer; }
 .dp-hexout { font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: #9a9a9a; }
-.dp-n { width: 50px; flex: 0 0 auto; background: #000; color: #e8e8e8;
+/* 판 안으로 가둔다 — 자원 탭의 단 이름도 .dp-n 이라 이 규칙이 새면 그 이름이 50px 상자로 눌린다 (2026-09-21) */
+.dp-panel .dp-n { width: 50px; flex: 0 0 auto; background: #000; color: #e8e8e8;
         border: 1px solid #444; padding: 2px 4px; font-size: 11px; }
 
 /* 슬라이더 — 기본 두께로는 잡기가 어렵다. 트랙을 키우고 손잡이를 크게 준다 */

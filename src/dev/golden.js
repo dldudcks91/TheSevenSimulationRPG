@@ -143,9 +143,9 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
     const party = SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max);
     const G = SYS.game.newGame(seed, party, NOW);
     // 파티를 **로스터 순서로** 채운다 [2026-09-09] — 새 게임은 파티가 비어 있고(사용자 지시) 편성은 플레이어의 몫이다.
-    //   `toggleParty` 는 rng 를 안 쓰고 순서도 옛 `newGame` 이 넣던 것과 같으므로 **런 지문이 안 움직인다**.
+    //   2026-09-21(ADR-0227)부터는 `newGame` 이 **편성 1 을 로스터 순서로 채우므로** 여기서 안 채운다 —
+    //   같은 파티 · 같은 순서라 **런 지문이 안 움직인다**(또 부르면 `toggleParty` 가 빼기로 뒤집힌다).
     //   ⚠ **전술 칸을 읽기 전에** 채워야 한다 — 전술 조건이 파티 구성을 센다
-    for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, NOW);
     G.progress.cleared = GOLDEN_STAGES.filter(s => s < stage);      // 해금만 풀어준다 (성장 없음) — 101~104 는 옛 [101,102,103] 판과 같은 목록
 
     // 전술 칸 — `newGame` 직후 상태 그대로 (인위적으로 켜지 않는다, D-A4). 켜진 효과가 전투 수치에 들어가므로

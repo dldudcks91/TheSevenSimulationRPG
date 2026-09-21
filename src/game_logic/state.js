@@ -237,7 +237,8 @@ export function createGameSystem(deps) {
      * **파티는 비어 있다** [사용자 지시 2026-09-09 · SCREEN_DESIGN §5] — ~~로스터가 곧 파티~~ 폐기.
      *   자동으로 채우면 플레이어가 **편성을 한 번도 안 하고** 첫 원정을 떠나므로 편성이 결정이라는 것을 배울 자리가 없다.
      *   **처음 고른 영웅이 리더**가 되는 것은 새 규칙이 아니다 — `party` 는 넣은 순서 그대로이고 리더는 `party[0]` 이다.
-     * ⚠ 전투를 바로 돌리는 쪽(골든 · 단정 · `?dev=battle|play|offline`)은 **파티를 직접 채워야 한다** — `toggleParty` 는 rng 를 안 쓴다
+     * ⚠ 전투를 바로 돌리는 쪽(골든 · 단정 · `?dev=battle|play|offline`)은 **직접 안 채운다** [2026-09-21 · ADR-0227] — 편성 1 이 이미 차 있어서
+     *   `toggleParty` 를 또 부르면 **빼기로 뒤집힌다**
      */
     function newGame(seed, candidates, now) {
         const state = {
@@ -252,8 +253,8 @@ export function createGameSystem(deps) {
             run: null, reports: [], notice: null,
             tavern: { rerolledAt: null, hired: [] },
             search: null,
-            // 편성 — 전부 빈 파티라 진형 랭크도 비어 있다(편성이 채우면 `normalizeFormation` 이 자리를 준다 · v20).
-            //   물약 칸은 **편성 1 에만** 시작 물약이 한 칸씩 든다 (v32 · R122 · R124)
+            // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
+            //   물약 칸도 **편성 1 에만** 시작 물약이 한 칸씩 든다 (v32 · R122 · R124)
             presets: newPresets(), preset: 1,
             tactics: { slots: {} },
             // 알아서 분해의 선 — 둘 다 안 봄 = 꺼짐이 기본값이다 (item_design §6-5 · R125)
@@ -268,6 +269,12 @@ export function createGameSystem(deps) {
             const a = addItem(state, I.startingArmor(rng));
             h.equipped.armor = a.uid;
         }
+        // **편성 1 = 로스터 순서** [2026-09-21 사용자 지시 · ADR-0227 · ~~빈 파티~~ 2026-09-09 폐기] — 첫 원정을 떠날 편성이
+        //   처음부터 서 있다. 리더 규칙은 그대로다(`party[0]` = 먼저 넣은 영웅 = 로스터 첫 영웅).
+        //   진형은 `normalizeFormation` 이 파티 순서대로 앞 랭크부터 채운다 — **rng 0 회**라 전투 결과가 안 흔들린다
+        const first = state.presets[0];
+        first.party = state.heroes.slice(0, B.party_size_max).map(h => h.uid);
+        normalizeFormation(first);
         return state;
     }
 
@@ -1012,6 +1019,36 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
+    /* ── 정렬 (ADR-0242 · SCREEN_DESIGN §6) — 칸 하나를 **한 번** 줄 세운다. 늘 정렬된 상태가 아니다 ──
+       등급 사다리는 「통제 가능성의 계단」(일반 → 매직 → 레어 → 크래프트 → 유니크 · `mock.js:RARITY` 머리말)이고
+       수치가 아니라 어휘의 순서라 코드에 둔다. 부위 순서는 `equip_slot.csv` 가 든다(반지 둘은 부위 하나) */
+    const RARITY_LADDER = ['normal', 'magic', 'rare', 'craft', 'unique'];
+    const PART_ORDER = [...new Set(deps.equipSlots.map(s => s.part))];
+    const orderIn = (list, v) => { const i = list.indexOf(v); return i < 0 ? list.length : i; };
+    // 비교 셋 — 등급 · 레벨은 **높은 것이 앞**, 부위는 표 순서가 앞
+    const CMP = {
+        rarity: (a, b) => orderIn(RARITY_LADDER, b.rarity) - orderIn(RARITY_LADDER, a.rarity),
+        ilvl: (a, b) => (b.ilvl ?? 0) - (a.ilvl ?? 0),
+        slot: (a, b) => orderIn(PART_ORDER, a.slot) - orderIn(PART_ORDER, b.slot),
+    };
+    // 고른 기준 다음으로 남은 둘 — 유저가 그 기준 안에서 다음으로 볼 것
+    const SORT_KEYS = { rarity: ['rarity', 'ilvl', 'slot'], ilvl: ['ilvl', 'rarity', 'slot'], slot: ['slot', 'rarity', 'ilvl'] };
+
+    /** 보관 한 칸을 줄 세운다 — 순서만 바꾸고 개체 · 개수는 그대로 · 다 같으면 원래 순서(`Array.sort` 는 안정 정렬) · rng 0 */
+    function sortStorage(state, where, key) {
+        const keys = SORT_KEYS[key];
+        if (!keys || (where !== 'bag' && where !== 'stash')) return { ok: false, err: 'invalid' };
+        const list = where === 'bag' ? state.bag : (state.stash ?? []);
+        const sorted = list.slice().sort((ua, ub) => {
+            const a = state.items[ua], b = state.items[ub];
+            if (!a || !b) return 0;
+            for (const k of keys) { const d = CMP[k](a, b); if (d) return d; }
+            return 0;
+        });
+        if (where === 'bag') state.bag = sorted; else state.stash = sorted;
+        return { ok: true };
+    }
+
     /**
      * 자물쇠 하나를 켜고 끈다 [2026-09-21 · ADR-0185] — 잠긴 아이템은 `salvage` 가 `locked` 로 거절한다.
      * 보관 두 칸(가방 · 창고)에 있는 것만 잠근다 — 착용 중인 것은 어차피 분해되지 않는다.
@@ -1128,23 +1165,30 @@ export function createGameSystem(deps) {
 
     /**
      * 레벨대 = 챕터 — **stage.csv 가 정한다.** 레벨대 n 의 ilvl 은 (챕터 n−1 의 최고 스테이지 레벨, 챕터 n 의 최고 스테이지 레벨] 이고 첫 레벨대는 1 부터다.
-     * 재료는 **그 단계**의 광석(`mine_node.csv`) · 목재(`log_node.csv`) — 단계 n = 챕터 n 의 지역 (base_expedition §2-1).
-     * 두 표 중 하나라도 그 단계가 없으면 그 레벨대는 목록에 없다
+     * 제작(아래)과 상점 장비 목록(`shopState`)이 같은 범위를 쓴다 — 범위가 비는 챕터(`hi < lo`)는 없다
      */
-    const makeBandList = (() => {
+    const chapterBands = (() => {
         const top = new Map();
         for (const s of Object.values(deps.stages ?? {})) top.set(s.chapter, Math.max(top.get(s.chapter) ?? 0, s.dlvl));
         const out = [];
         let lo = 1;
         for (const ch of [...top.keys()].sort((a, b) => a - b)) {
             const hi = top.get(ch);
-            const ore = (deps.mineNodes ?? []).find(n => n.tier === ch);
-            const timber = (deps.logNodes ?? []).find(n => n.tier === ch);
-            if (ore && timber && hi >= lo) out.push({ band: ch, lo, hi, ore: ore.yieldId, timber: timber.yieldId });
+            if (hi >= lo) out.push({ band: ch, lo, hi });
             lo = hi + 1;
         }
         return out;
     })();
+
+    /**
+     * 제작 레벨대 — 챕터 레벨대에 재료를 붙인다. 재료는 **그 단계**의 광석(`mine_node.csv`) · 목재(`log_node.csv`) — 단계 n = 챕터 n 의 지역 (base_expedition §2-1).
+     * 두 표 중 하나라도 그 단계가 없으면 그 레벨대는 목록에 없다
+     */
+    const makeBandList = chapterBands.flatMap(b => {
+        const ore = (deps.mineNodes ?? []).find(n => n.tier === b.band);
+        const timber = (deps.logNodes ?? []).find(n => n.tier === b.band);
+        return ore && timber ? [{ ...b, ore: ore.yieldId, timber: timber.yieldId }] : [];
+    });
 
     /** 제작 레벨대 목록 — 부위 · 상태와 무관하다. 화면의 고르기 칸이 이 순서로 선다 */
     const makeBands = () => makeBandList.map(b => ({ ...b }));
@@ -1795,6 +1839,60 @@ export function createGameSystem(deps) {
         return { ok: true, hero: h };
     }
 
+    /* ── 상점 — 특수상단 방문 시계 · 상단 장비 목록 (base_expedition_design §2-6 · SCREEN_DESIGN §8-3 · 2026-09-21 사용자 지시 · ADR-0223) ──
+       시계는 **게임을 만든 시각에서 센다** — `trade_visit_hours` 마다 상인이 오고 `trade_stay_hours` 머문다. 벽시계라 오프라인에도 흐른다.
+       장비 목록은 **방문 회차마다** 새로 굴린다(상인이 오는 순간 같이 갈린다). 시드 + 회차라 저장하지 않는다 — 선술집 명단과 같은 문법.
+       ⚠ 구매는 아직 없다(화면이 미착수 안내를 낸다) — 그래서 「산 칸」도 세이브에 없다 */
+    const HOUR_MS = 60 * 60 * 1000;
+    const SHOP_PRICE = { normal: B.shop_price_normal, magic: B.shop_price_magic, rare: B.shop_price_rare };
+
+    /** 방문 시계 — rng 를 안 쓰고 아무것도 안 바꾼다. 앱 시계가 틱마다 불러 방문이 바뀌는 순간을 잰다(목록 굴림과 갈라 둔 이유) */
+    function shopVisit(state, now) {
+        const period = B.trade_visit_hours * HOUR_MS, stay = B.trade_stay_hours * HOUR_MS;
+        const t0 = state.createdAt ?? 0;
+        // 시계가 게임을 만든 시각보다 뒤로 가 있으면(기기 시계를 돌렸다) 첫 회차의 첫 순간으로 본다
+        const cycle = Math.floor(Math.max(0, now - t0) / period);
+        const arriveAt = t0 + cycle * period;
+        const leaveAt = arriveAt + stay;
+        const nextAt = arriveAt + period;
+        const here = now < leaveAt;
+        return { cycle, here, arriveAt, leaveAt, nextAt, remainMs: (here ? leaveAt : nextAt) - now };
+    }
+
+    /** 지금 진행 중인 챕터 — 열린 스테이지 중 **가장 뒤의 것**의 챕터 */
+    function frontierChapter(state) {
+        let ch = chapterBands[0]?.band ?? 1;
+        for (const id of deps.stageOrder) if (stageUnlocked(state, id)) ch = deps.stages[id]?.chapter ?? ch;
+        return ch;
+    }
+
+    /** 상단이 파는 부위 — 착용 위치 순서에서 부위만 한 번씩(반지는 위치가 둘이어도 한 종류다) */
+    const shopParts = [...new Set(deps.equipSlots.map(s => s.part))];
+    /** 부위마다 파는 개수 — **무기만 따로**(맨 윗줄을 혼자 채운다 · 사용자 지시 2026-09-21) · 나머지는 한 값 */
+    const shopCountOf = part => (part === 'weapon' ? B.shop_equip_weapon : B.shop_equip_per_slot);
+
+    /**
+     * 상점 화면 상태 한 덩어리 — 방문 시계 + 상단 장비 목록. **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙).
+     * 목록은 **부위마다 `shop_equip_per_slot` 개**(무기만 `shop_equip_weapon` 개)이고 같은 부위가 붙어 선다
+     * [2026-09-21 사용자 지시 「종류별로 한 3개씩만 해서 붙여놔야지 서로」 · 「맨위에 무기 6개로 하고 다른걸 하나씩 밀어보자」].
+     * rng = `deriveSeed(seed ^ 0x5409, 회차)` — 부위 순서대로 칸마다 ilvl 1회(진행 챕터의 레벨대 균등) → `item.rollGear` 한 점 (INTERFACE §5-1 · §5-2).
+     * 아이템은 `uid` 가 없다 — 가방에 들지 않은 물건이라 `addItem` 을 안 지난다
+     */
+    function shopState(state, now) {
+        const visit = shopVisit(state, now);
+        const chapter = frontierChapter(state);
+        const band = chapterBands.find(b => b.band === chapter) ?? chapterBands[0];
+        const rng = makeRng(deriveSeed(state.seed ^ 0x5409, visit.cycle));
+        const equip = [];
+        for (const part of shopParts)
+            for (let i = 0; i < shopCountOf(part); i++) {
+                const ilvl = band.lo + Math.floor(rng() * (band.hi - band.lo + 1));
+                const [item] = I.rollGear(rng, { slots: [part], ilvl });
+                equip.push({ item, gold: SHOP_PRICE[item.rarity] });
+            }
+        return { ...visit, chapter, lo: band.lo, hi: band.hi, equip };
+    }
+
     /**
      * 해고 — 로스터에서 지운다. **되돌릴 수 없다** [신설 2026-09-09 사용자 확정 · INTERFACE §2-7].
      * 막는 것 둘:
@@ -2159,11 +2257,12 @@ export function createGameSystem(deps) {
         newGame, serialize, deserialize, canLoad,
         heroById, heroItems, heroCombat, heroCombatIf, upgradeState, upgradeItem, makeBands, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
-        equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, moveToStash, moveToBag, holderOf,
+        equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, canDepart, runParty, stageLevelState, setStageLevel, departRun, advanceRun, retreatRun, resolveBattle, closeRun, dismissNotice,
         tavernCandidates, tavernState, tavernReroll, hire, dismiss, swapHeroes,
+        shopVisit, shopState,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, rerollTactic, weaponGroupOf, weaponSkillOf,
