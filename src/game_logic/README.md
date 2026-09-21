@@ -24,7 +24,7 @@
 | `skill_effects.js` | **「종류」 등록표** — 종류 6(불러내기 `call` 포함 — 몬스터 전용 · 2026-09-18) · 공격 대상 5 · 효과 13 · 발동 조건 3 (INTERFACE §2-11). 종류 하나 = 등록 한 번(어휘와 실행이 같은 표를 읽는다). 상태·rng 없음 |
 | `skill_runtime.js` | **액티브 실행** — 시전 · 쿨 · 창 · 배리어 · 회복 · 사건 훅(`reactions`). `battle.createRun` 이 런마다 만든다(전역 상태 없음) |
 | `tactic.js` | **파티 전술** — 칸 해금(로스터 합산 레벨) · 조건 판정 · 리롤 후보. **무상태**(어느 칸에 무엇이 들었는지는 세이브가 든다) · 정의는 `tactic_slot.csv`·`tactic_option.csv`(**`(option_id, grade)` 복합키** — 가족과 등급 두 축), 조건 어휘·등급 어휘는 코드 |
-| `battle.js` | 헤드리스 시뮬 — **런을 라운드 단위로 계산한다**(`createRun` — 라운드 사이에 정산 · 갈아입기가 끼어든다 · `simulate` 는 끝까지 이어 부른 것) · 누가 언제 때리는가 · 유닛 생성(`makeUnit` 하나 — 몬스터도 같은 생성자) · 직격·도발·전투불능 · 이긴 라운드의 몫. 보상 지급은 `state.js`(`advanceRun`), 액티브 실행은 `skill_runtime.js`, 피해 자체는 `formula.js` |
+| `battle.js` | 헤드리스 시뮬 — **런을 라운드 단위로 계산한다**(`createRun` — 라운드 사이에 정산이 끼어든다 · **걸음 단위로도 돈다**(`advance` — 재생 시각까지만 · 갈아입기는 틱 사이 어디서나 · R130) · `simulate` 는 끝까지 이어 부른 것) · 누가 언제 때리는가 · 유닛 생성(`makeUnit` 하나 — 몬스터도 같은 생성자) · 직격·도발·전투불능 · 이긴 라운드의 몫. 보상 지급은 `state.js`(`stepRun` · 검증은 `advanceRun` — 둘 다 `settleRound`), 액티브 실행은 `skill_runtime.js`, 피해 자체는 `formula.js` |
 | `spawn_rule.js` | **스테이지 편성 예외** — 스테이지 컨셉이 누가 · 언제 · 몇이 나오나를 바꾸는 자리(예: 1-1 주술사 소환). 다시 쓰는 규칙 함수 + 스테이지 표. 스테이지마다 모양이 달라 CSV 가 아니라 코드다 · 상태 · rng 없음(굴림은 `battle.js`). 소환사 뒤에 뽑힌 몫은 대기하고 소환사의 불러내기 스킬이 세운다 |
 | `state.js` | 세이브 스키마 · `newGame` / `serialize` / `deserialize` · 모든 상태 전이 |
 

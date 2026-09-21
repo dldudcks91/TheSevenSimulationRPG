@@ -246,6 +246,9 @@ const STRINGS = {
     'exp.level.up': { ko: '1 올리기', en: 'Raise by 1' },
     'exp.level.max': { ko: '최대로', en: 'To maximum' },
     'exp.err.range': { ko: '그 위험도로는 바꿀 수 없다', en: 'That danger level is out of range' },
+    // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 보스전 중이면 다음 런부터 · 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
+    'exp.lock.boss': { ko: '보스전 중 — 바꾼 것은 다음 런부터 먹는다', en: 'Boss fight — changes apply next run' },
+    'exp.tactic.off': { ko: '전술이 꺼졌다 — {eff}', en: 'Tactic off — {eff}' },
     'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat' },
     'exp.repeat.sub': {
         ko: '승리하면 같은 곳으로 다시 나간다 · <b>게임이 켜져 있는 동안만</b> 돈다 · 쓰러진 영웅은 빠진 채로 이어진다 · 패배하면 멈추고 전원 회복한다',
@@ -344,6 +347,7 @@ const STRINGS = {
     'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
     'ch.err.running': { ko: '지금 원정에서 싸우는 영웅이다 — 그 원정이 끝나야 해고할 수 있다', en: 'That hero is fighting on an expedition — wait until it ends' },
     'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
+    'ch.err.downed': { ko: '쓰러진 영웅이다 — 이 런이 끝날 때까지 장비를 못 바꾼다', en: 'Hero is down — gear locked until the run ends' },
     /* 확인 문구도 **사용자 지시 그대로** [개정 2026-09-09] — 옛 판(「{name} — 해고하면 되돌릴 수 없다」)의 `{name}` 은 걷었다.
        누구를 해고하는지는 창을 연 카드가 이미 말하고, 되돌릴 수 없다는 것은 **[취소] 버튼이 눈에 보이는 것**이 든다 */
     'ch.dismiss.confirm': { ko: '영웅을 해고합니다.', en: 'This hero will be dismissed.' },
@@ -411,7 +415,9 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 10 [개정 2026-09-08 사용자 지시] — 원정 · 캐릭터 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말 (SCREEN_DESIGN §1).
+    /* 탭 11 [개정 2026-09-21 사용자 지시 · ADR-0253] — 원정 · 편성 · 캐릭터 · 건설 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 도감 · 도움말 (SCREEN_DESIGN §1).
+       연구가 「건설」이 되어 캐릭터 바로 뒤로 왔다 — 키(`nav.research`)는 옛 이름 그대로다.
+       [개정 2026-09-08 사용자 지시] 탭 10 — 원정 · 캐릭터 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
        09-08 에 **이미지 도감이 도감 안으로 들어가며** `nav.imagedex` 가 삭제됐다 — 탭이 아니라 도감의 **세그먼트 넷 중 셋**이다 (`cx.seg.*` · §9 · §9-1).
        그래서 이 목록의 탭 수만 11 → 10 으로 줄고 **움직인 탭은 없다** — 도움말이 한 칸 당겨졌을 뿐이다.
        [개정 2026-09-06 사용자 지시] 탭 11 — 도감 뒤에 이미지 도감이 서던 자리. 09-08 에 되물렸다.
@@ -425,12 +431,13 @@ const STRINGS = {
     'nav.expedition': { ko: '원정', en: 'Expedition' },
     'nav.party': { ko: '편성', en: 'Party' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
+    // 건설 [2026-09-21 사용자 지시 · ADR-0253] — 옛 「연구」. 화면 이름과 자리(캐릭터 바로 뒤)만 바뀌었고 키는 옛 이름 그대로다
+    'nav.research': { ko: '건설', en: 'Construction' },
     'nav.forge': { ko: '제련소', en: 'Smeltery' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.shop': { ko: '상점', en: 'Shop' },
     'nav.resource': { ko: '자원', en: 'Resources' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
-    'nav.research': { ko: '연구', en: 'Research' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
     'nav.commission': { ko: '의뢰', en: 'Commissions' },
@@ -503,13 +510,13 @@ const STRINGS = {
     'fg.pick': { ko: '왼쪽에서 장비를 고른다', en: 'Pick an item on the left' },
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade' },
     // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
-    'fg.make.band': { ko: 'Lv {lo}–{hi}', en: 'Lv {lo}–{hi}' },
+    'fg.make.lv': { ko: 'Lv{n}', en: 'Lv{n}' },   // 제작 레벨 버튼 — 대역이 아니라 레벨 하나다 (ADR-0263)
     'fg.make.go': { ko: '만들기', en: 'Make' },
     'fg.make.potion': { ko: '물약', en: 'Potions' },   // 제작 고르개 줄 끝의 물약 칸 이름 — 올리면 뜬다 (ADR-0219)
     'fg.made': { ko: '제작 — {name}', en: 'Made — {name}' },
     'fg.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
     'fg.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
-    'fg.err.missing': { ko: '없는 부위 · 레벨대다', en: 'Unknown slot or level band' },
+    'fg.err.missing': { ko: '없는 부위 · 레벨 · 종류다', en: 'Unknown slot, level or type' },
     // 물약 (R103 · ADR-0142 · 개수 R124) — 이름 · 회복량은 `potion.csv` · 판정은 `game.potionState` · 칸은 편성 탭이 든다
     'fg.err.locked': { ko: '아직 만들 수 없다', en: 'Not craftable yet' },
     'fg.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
@@ -578,10 +585,10 @@ const STRINGS = {
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
     'exp.bench.note': {
         ko: '파견 화면은 <b>미착수</b> — 파견처 6(영입·교역·제련·채광·채집·<b>벌목</b>) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)<br>'
-            + '<b>연구는 파견이 아니다</b> — 영웅을 보내지 않고 진행하는 별도 시스템이라 연구 탭이 든다 (2026-08-31 연구소 삭제)<br>'
+            + '<b>건설은 파견이 아니다</b> — 영웅을 보내지 않고 진행하는 별도 시스템이라 건설 탭이 든다 (2026-08-31 연구소 삭제)<br>'
             + '보낸 영웅은 잠기지 않는다 — 언제든 불러들이고 <b>흐른 만큼 비례해 받는다</b> (§3-2)',
         en: 'Dispatch screen <b>not started</b> — 6 posts (recruit · trade · smelt · mining · gathering · <b>logging</b>) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)<br>'
-            + '<b>Research is not a dispatch</b> — it runs without sending heroes, so the Research tab owns it (the Lab post was removed 2026-08-31)<br>'
+            + '<b>Construction is not a dispatch</b> — it runs without sending heroes, so the Construction tab owns it (the Lab post was removed 2026-08-31)<br>'
             + 'Dispatched heroes are never locked — recall any time and receive <b>pro rata for the time elapsed</b> (§3-2)',
     },
     'exp.commission.h': { ko: '의뢰', en: 'Commissions' },
@@ -729,7 +736,7 @@ const STRINGS = {
     //   위의 `ch.lv`(영웅 레벨)와 글자가 같아도 가리키는 것이 달라 키를 나눈다
     'ch.itemLv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
-    'ch.skill.go': { ko: '스킬 트리 열기', en: 'Open skill tree' },
+    'ch.skill.go': { ko: '마스터리 열기', en: 'Open Mastery' },
     'ch.items.h': { ko: '아이템', en: 'Items' },
     'ch.items.sub': { ko: '{n} / {cap} 칸', en: '{n} / {cap} slots' },
 
@@ -754,12 +761,14 @@ const STRINGS = {
     'tip.src.random': { ko: '랜덤', en: 'Random' },
     'tip.src.fixed': { ko: '고정', en: 'Fixed' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
+    'tip.tacticOff': { ko: '끼우면 전술이 꺼진다 — {eff}', en: 'Equipping turns a tactic off — {eff}' },
     // ~~`tip.up.first`·`tip.up.next`~~ 는 2026-09-08 삭제 [사용자 지시] — 툴팁의 강화 줄이 통째로 죽었다.
     // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
     // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
     // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
     // ~~tip.hero.h · tip.monster.h~~ (「영웅」 · 「몬스터」 머리글) 는 2026-09-15 삭제 — 유닛 툴팁은 머리글이 없다 (ADR-0115)
     'tip.unit.altHint': { ko: 'Alt 세부 옵션', en: 'Alt: detailed stats' },   // 유닛 툴팁 각주 — 열 이름은 캐릭터 탭 키(ch.attr.h · ch.detail.h) 재사용 (ADR-0114)
+    'tip.unit.altHintGear': { ko: 'Alt 장비 · 세부 옵션', en: 'Alt: gear & detailed stats' },   // 편성 탭 영웅 툴팁 각주 — 첫 장이 기본 옵션이라 Alt 가 장비까지 연다 (ADR-0284)
     'tip.skill.h': { ko: '스킬', en: 'Skill' },
 
     /* ── 스킬 ── */
@@ -770,7 +779,6 @@ const STRINGS = {
     'pt.potion.stock': { ko: '가진 물약', en: 'In stock' },
     'pt.potion.empty': { ko: '빈 칸', en: 'Empty slot' },
     'pt.potion.short': { ko: '모자람 — 런에서 빈 채 시작한다', en: 'Short — starts the run empty' },
-    'pt.tactic.shared': { ko: '모든 편성이 같이 쓴다', en: 'Shared by every party' },
     'pt.err.full': { ko: '파티가 찼다', en: 'Party full' },
     'pt.err.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
     'pt.err.missing': { ko: '없는 칸이다', en: 'No such slot' },
@@ -778,13 +786,14 @@ const STRINGS = {
     'pt.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'pt.err.locked': { ko: '아직 열리지 않은 칸이다', en: 'That slot is not open yet' },
     'rs.h': { ko: '파티 전술', en: 'Party Tactics' },
-    'rs.research.h': { ko: '연구', en: 'Research' },
+    // 건설 [2026-09-21 ADR-0253] — 옛 「연구」. 본문은 위쪽 탭(ADR-0192 로 걷힘)을 설명하던 것을 지금 화면 기준으로 다시 썼다
+    'rs.research.h': { ko: '건설', en: 'Construction' },
     'rs.research.note': {
-        ko: '연구 탭은 <b>「연구」와 「파티 전술」 두 작업</b>이고 위쪽 탭으로 가른다<br>'
-            + '<b>연구</b>는 <b>가지 8</b>(원정 · 탐험 · 제련소 · 선술집 · 상단 · 자원 · 도감 · 파티 전술)이다. 노드를 찍어 열고, <b>가지끼리는 서로 잠그지 않는다</b>. 영웅 파견은 하지 않는다<br>'
+        ko: '<b>건설</b>은 <b>가지 8</b>(원정 · 탐험 · 제련소 · 선술집 · 상단 · 자원 · 도감 · 파티 전술)이다. 노드를 찍어 열고, <b>가지끼리는 서로 잠그지 않는다</b>. 영웅 파견은 하지 않는다<br>'
+            + '파티 전술 가지가 편성 탭의 전술 칸을 여는 자리다<br>'
             + '노드의 내용 · 비용 · 여는 조건이 미정이라 미착수 — 지금 보이는 노드는 자리표시다',
-        en: 'The Research tab holds <b>two jobs — Research and Party Tactics</b>, split by tabs at the top<br>'
-            + '<b>Research</b> has <b>eight branches</b> (Expedition · Exploration · Smeltery · Tavern · Trading House · Resources · Codex · Party Tactics). Nodes open one by one, and <b>no branch locks another</b>. It sends no heroes<br>'
+        en: '<b>Construction</b> has <b>eight branches</b> (Expedition · Exploration · Smeltery · Tavern · Trading House · Resources · Codex · Party Tactics). Nodes open one by one, and <b>no branch locks another</b>. It sends no heroes<br>'
+            + 'The Party Tactics branch is where the tactic slots of the Party tab open<br>'
             + 'Node contents, costs and unlock conditions are undecided, so it is not started — the nodes shown are placeholders',
     },
     /* 연구 [신설 2026-09-01 · 가지 8 2026-09-15 ADR-0145] — ⚠ 노드는 목업이다 (ui/mock.js:RESEARCH · SCREEN_DESIGN §13-1).
@@ -795,7 +804,7 @@ const STRINGS = {
     'rs.rs.progress': { ko: '완료 {n}', en: 'Done {n}' },
     'rs.rs.mat': { ko: '재료', en: 'Materials' },
     'rs.rs.cost': { ko: '재료 {m} · {g}G', en: '{m} mat · {g}G' },
-    'rs.rs.go': { ko: '연구', en: 'Research' },
+    'rs.rs.go': { ko: '건설', en: 'Build' },   // 탭 이름은 명사(Construction) · 버튼은 동작(Build) — ADR-0253
     'rs.rs.need': { ko: '{name} 먼저', en: 'Needs {name}' },
     'rs.rs.slot': { ko: '{b} {n}', en: '{b} {n}' },
     'rs.rs.tbd': { ko: '미정', en: 'TBD' },
@@ -807,7 +816,6 @@ const STRINGS = {
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.next': { ko: '{no}번 칸까지 {n}', en: '{n} more to slot {no}' },
     'rs.allOpen': { ko: '전부 열렸다', en: 'All slots open' },
-    'rs.slot': { ko: '{n}번 칸', en: 'Slot {n}' },
     'rs.needLv': { ko: '합산 Lv.{lv}', en: 'Total Lv.{lv}' },
     'rs.on': { ko: '켜짐', en: 'On' },
     'rs.off': { ko: '꺼짐', en: 'Off' },
@@ -855,6 +863,7 @@ const STRINGS = {
     'sk.err.maxRank': { ko: '이미 최대 랭크다', en: 'Already at max rank' },
     'sk.err.points': { ko: '스킬 포인트가 없다', en: 'No skill points left' },
     'sk.err.noRank': { ko: '아직 찍지 않은 칸이다', en: 'Nothing invested here yet' },
+    'sk.err.downed': { ko: '쓰러진 영웅이다 — 이 런이 끝날 때까지 스킬 트리를 못 바꾼다', en: 'Hero is down — skills locked until the run ends' },
     // 찍은 칸의 툴팁 꼬리 — 우클릭이 있다는 것 자체가 안 보이면 못 쓴다 (SCREEN_DESIGN §7)
     'sk.unlearnHint': { ko: ' · 우클릭 = 1랭크 되돌리기', en: ' · Right-click to refund 1 rank' },
     'sk.slots.h': { ko: '액티브', en: 'Actives' },
@@ -1082,15 +1091,12 @@ const STRINGS = {
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
     'cx.completion': { ko: '완주', en: 'Completion' },
-    'cx.next': { ko: '다음 {n}마리', en: 'Next at {n}' },
-    'cx.max': { ko: '최종', en: 'Max' },
     'cx.kills': { ko: '처치 {n}', en: '{n} kills' },
     'cx.lvTitle': { ko: '도감 Lv.{lv}', en: 'Codex Lv.{lv}' },
     // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 (SCREEN_DESIGN §9 · ADR-0206)
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story' },
-    'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },
-    'cx.note': {
+    'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },    'cx.note': {
         ko: '그 몬스터를 잡은 수가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
             + '처치 수는 이긴 라운드의 것만 센다 · 문턱과 레벨별 보정은 codex_level.csv(⚠제안값) · 보스 등급별 차등은 후속<br>'
             + '카드에 마우스를 올리면 그 몬스터의 이야기와 처치 단계가 뜬다',
@@ -1204,9 +1210,9 @@ const STRINGS = {
     'bt.potion.slot': { ko: '{name} · 회복 {n}', en: '{name} · Heals {n}' },   // 아레나 구석의 물약 칸 (R104 · ADR-0148)   // ~~건너뛰기~~ 2026-09-14 — 진행 중 라운드를 버리고 원정을 끝낸다 (R89)
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
     'bt.note': {
-        ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 라운드는 시작할 때 계산되고 <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
+        ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 원정 중에 바꾼 장비 · 스킬 트리는 <b>그 순간</b> 먹는다(보스전 중이면 다음 런부터 · 쓰러진 영웅은 런이 끝날 때까지 못 바꾼다) · <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
             + '<b>철수</b>하면 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남는다. 게임을 끄면 원정도 그 자리에서 끊긴다.',
-        en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Each round is computed when it starts and <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
+        en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Gear and skill-tree changes during a run apply <b>at once</b> (from the next run during a boss fight · a downed hero is locked until the run ends) · each round <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
             + '<b>Retreat</b> drops the round in progress and keeps what the won rounds gave. Closing the game cuts the expedition off on the spot.',
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
@@ -1250,6 +1256,13 @@ const STRINGS = {
     'bt.logf.all': { ko: '전체', en: 'All' },
     'bt.logf.party': { ko: '우리', en: 'Party' },
     'bt.logf.enemy': { ko: '적', en: 'Enemies' },
+    // 누적 데미지 탭 — 값의 **축**을 고른다 (2026-09-21 · ADR-0252)
+    'bt.dmgf.dealt': { ko: '가한 피해', en: 'Dealt' },
+    'bt.dmgf.taken': { ko: '받은 피해', en: 'Taken' },
+    // 누적 데미지 막대의 조각 — 막대에 올리면 뜬다 (ADR-0252). 기타 = 종류 없는 피해(반사 · 자폭)
+    'bt.dmgk.phys': { ko: '물리 {n}', en: 'Physical {n}' },
+    'bt.dmgk.magic': { ko: '마법 {n}', en: 'Magic {n}' },
+    'bt.dmgk.etc': { ko: '기타 {n}', en: 'Other {n}' },
     // 로그 칸 머리 줄 (2026-09-21 · ADR-0196 · ADR-0198) — 탭 바로 아래 · 「스킬」은 그림 칸 왼쪽 끝에서 시작 · 그림 칸 폭은 그림과 이 라벨 중 넓은 쪽
     'bt.logh.name': { ko: '이름', en: 'Name' },
     'bt.logh.skill': { ko: '스킬', en: 'Skill' },

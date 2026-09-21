@@ -278,7 +278,7 @@ function equipmentHtml(worn) {
 
 /* ───────── 유닛 카드 — 영웅 · 몬스터 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114) ─────────
    **양 진영이 같은 카드다** — 첫 장은 착용 장비이고 Alt 동안 세부 옵션 두 열만 더 선다(ADR-0171 · 몬스터 2026-09-21 ADR-0183).
-   Basic Stats 조립은 **지우지 않는다** — 캐릭터 탭 기본 옵션이 같은 함수를 부르고, 첫 장을 되살릴 여지로도 남긴다.
+   Basic Stats 조립은 **지우지 않는다** — 캐릭터 탭 기본 옵션 · 편성 탭 영웅 툴팁(`statsFirstCard` · ADR-0287)이 같은 막대 조립을 부르고, 첫 장을 되살릴 여지로도 남긴다.
    옵션 줄 조립은 여기 한 곳이고 캐릭터 탭(app.js attrPanel · detailPanels)도 이것을 부른다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 */
 
 /**
@@ -406,12 +406,52 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, item
             </div>${pages}
         </div>
         ${altHeld || equipment ? '' : foot}`;
-    // Alt 동안만 포인터가 열리므로 찬 칸에 기존 아이템 카드 렌더러를 잇는다. 별도 host라 부모 툴팁 폭·칸 자리는 움직이지 않는다 (ADR-0182).
-    if (equipment && itemCardOf) for (const cell of c.querySelectorAll('[data-equip-i]')) {
+    bindEquipmentCells(c, equipment, itemCardOf);
+    return c;
+}
+
+/** 장비 3×3 의 찬 칸 → 「착용 중」 아이템 카드. Alt 동안만 포인터가 열리므로 그때만 뜬다 · 별도 host라 부모 툴팁 폭·칸 자리는 움직이지 않는다 (ADR-0182) */
+function bindEquipmentCells(c, equipment, itemCardOf) {
+    if (!equipment || !itemCardOf) return;
+    for (const cell of c.querySelectorAll('[data-equip-i]')) {
         cell.classList.add('tip-optionable');
         cell.onmouseenter = () => { if (altHeld) showEquipmentItemTip(itemCardOf(equipment.items[+cell.dataset.equipI]), cell); };
         cell.onmouseleave = hideEquipmentItemTip;
     }
+}
+
+/**
+ * 편성 탭 영웅 카드 — 첫 장 **기본 옵션**(능력치 7 막대 + 액티브 스킬 그림 셋) · **Alt 동안 그 바깥쪽에** 장비 3×3 · 세부 옵션 1 · 2
+ * [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]. 기본 옵션 열은 Alt 에도 **안 사라진다** — 폭을 못박아 제자리에 선다(style.css `.stats-first`).
+ * 대표값 3줄은 안 싣는다 — 세부 옵션 1 머리에 있다. 스킬 칸은 그림만이다(캐릭터 탭 스킬 칸과 같은 규칙) — 툴팁 속에 설명창을 걸면 한 자리를 두 카드가 다툰다.
+ * 붙는 쪽은 유닛 카드와 같다 — 카드 왼쪽에 선 툴팁은 열이 왼쪽으로 자란다(ADR-0126 · 격자가 자리를 정하고 DOM 순서는 그대로다)
+ * @param skills 액티브 칸 셋 — 스킬 개체 또는 `null`(빈 칸). 부르는 쪽이 넘긴다(`app.js:activeCells` — 이 파일은 `G` 를 모른다)
+ */
+function statsFirstCard(h, combat, itemOf, itemCardOf, skills) {
+    const color = tierOf(h).color;
+    const side = anchorSide === 'left' ? ' grow-left' : '';
+    const c = el('div', `tip-card unit stats-first${altHeld ? ' alt' : ''}${side}`);
+    c.dataset.alt = '1';
+    c._rebuild = () => statsFirstCard(h, combat, itemOf, itemCardOf, skills);
+    c.style.setProperty('--unit-line', color);
+    const icons = (skills ?? []).map(s => `<span class="tip-skill${s ? '' : ' vacant'}">${s ? skillImg(s) : ''}</span>`).join('');
+    const equipment = altHeld ? equipmentHtml(wornOfHero(h, itemOf)) : null;
+    const more = altHeld ? `
+            <div class="tip-unit-col gear">${equipment.html}</div>` + sheetPages().map((rows, i) => `
+            <div class="tip-unit-col d${i + 1}">
+                <div class="tip-col-h">${t('ch.detail.hn', { n: i + 1 })}</div>
+                <div class="tip-sheet">${sheetRowsHtml(rows, combat)}</div>
+            </div>`).join('') : '';
+    c.innerHTML = `
+        <div class="tip-unit">
+            <div class="tip-unit-col base">
+                <div class="tip-col-h">${t('ch.attr.h')}</div>
+                <div class="attr-list">${attrRowsHtml(h.stats, color)}</div>
+                <div class="tip-skills">${icons}</div>
+                ${altHeld ? '' : `<div class="tip-foot">${t('tip.unit.altHintGear')}</div>`}
+            </div>${more}
+        </div>`;
+    bindEquipmentCells(c, equipment, itemCardOf);
     return c;
 }
 
@@ -422,9 +462,12 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, item
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
  * @param itemOf uid 로 현재 세이브의 아이템을 찾는 함수 — tip.js 는 G 를 모른다
  * @param itemCardOf **아이템 개체**로 기존 「착용 중」 아이템 카드를 만드는 함수 — 아이템 옵션 표기는 앱이 든다 (ADR-0183 으로 uid → 개체)
+ * @param statsFirst 첫 장이 **기본 옵션**인 편성 탭 카드(`statsFirstCard`) — 편성 탭(띠 · 진형 칸)만 준다 [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]
+ * @param skills     `statsFirst` 카드의 액티브 칸 셋(스킬 개체 또는 `null`)
  */
-export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null) {
+export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null } = {}) {
     if (!h) return null;
+    if (statsFirst) return statsFirstCard(h, combat, itemOf, itemCardOf, skills);
     return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat, itemOf, itemCardOf), '',
         equipmentHtml(wornOfHero(h, itemOf)), itemCardOf);
 }

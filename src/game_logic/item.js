@@ -394,6 +394,7 @@ export function createItemSystem(data) {
     /**
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
      * opts.avoidSkill = (무기) 스킬 풀에서 뺄 id — 시작 무기가 그 영웅의 고유 스킬과 겹치지 않게 (2026-09-14 · R86). 빼도 소비 수는 같다.
+     * opts.weaponBase = (무기) 세부 베이스 고정 — 제작이 레벨의 베이스를 넘긴다(2026-09-21 · `weaponBaseAt`). **베이스 굴림은 1회 그대로 소비한다**(값만 안 쓴다).
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직·레어) 접두 죄종 → (레어) 접미 죄종 →
      *   **(무기) 옵션 세 층**(`weaponOptions`) / **(방어구) 옵션 세 층**(`armorOptions` · 2026-09-18) /
  *   **(목걸이 · 반지) 옵션 세 층** [2026-09-21 · R127 — ~~접사 수 → 접사마다 (정의 선택 → 값)~~] — (목걸이) 발동 스킬 1 → 값 1 → `accessoryOptions` →
@@ -434,7 +435,9 @@ export function createItemSystem(data) {
             // ⚠ **풀이 비어도 1회 소비한다** — 스킬 굴림과 같은 이유로, 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다
             const bases = data.weaponBases?.[base.id] ?? [];
             const br = rng();
-            const wbase = bases.length ? bases[Math.floor(br * bases.length)] : null;
+            // `opts.weaponBase` — 제작이 고른 레벨의 베이스(2026-09-21). 굴림은 위에서 이미 1회 소비했다 — 소비 수가 경로에 의존하지 않게
+            const wbase = opts.weaponBase ? bases.find(b => b.id === opts.weaponBase) ?? null
+                : bases.length ? bases[Math.floor(br * bases.length)] : null;
             if (wbase) {
                 item.baseId = wbase.id;
                 item.name = N.composeName(prefix, wbase, suffix, words);  // 이름은 베이스 이름으로 다시 조립 — 무기군 이름을 덮는다
@@ -483,6 +486,28 @@ export function createItemSystem(data) {
     }
 
     /**
+     * 그 부위 · 그 ilvl 에서 `rollGear` 가 베이스를 굴리는 후보 [신설 2026-09-21 · 제작의 종류 목록 · item_design §7-1] —
+     * 무기 = 드롭 무기군(`{id, ko, en}` — id 는 무기군) · 무기 외 = `tierBases`(`{id, ko, en, group}`). **순서는 굴림이 인덱스를 쓰는 순서 그대로**. rng 0
+     */
+    function basesAt(slot, ilvl) {
+        return slot === 'weapon'
+            ? dropGroups.map(g => ({ id: g.id, ko: g.ko, en: g.en }))
+            : tierBases(slot, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, group: b.group ?? null }));
+    }
+
+    /**
+     * 그 무기군에서 그 제작 레벨에 나오는 세부 베이스 [신설 2026-09-21 · 사용자 지시 「레벨 바꾸면 그 레벨의 아이템」 · item_design §7-1] —
+     * `make_level ≤ level` 인 행 중 **`make_level` 이 가장 높은 것 하나**(`weapon_base.csv:make_level`). 없으면 null. rng 0 · 새 객체.
+     * ⚠ 제작만 읽는다 — 드롭은 여전히 무기군 안 7개에서 균등으로 굴린다(`build`)
+     */
+    function weaponBaseAt(groupId, level) {
+        const open = (data.weaponBases?.[groupId] ?? []).filter(b => b.makeLevel <= level);
+        if (!open.length) return null;
+        const b = open.reduce((a, x) => (x.makeLevel > a.makeLevel ? x : a));
+        return { id: b.id, ko: b.ko, en: b.en };
+    }
+
+    /**
      * **한 벌** — 주어진 부위마다 아이템 하나 [신설 2026-09-11 · R79 · monster_design §5-1 · item_design §1].
      * 몬스터가 **입고 있는** 장비가 이것이고, 처치 드롭은 그중 하나가 **그대로** 나간다(2단계 = 입은 부위 중 하나).
      * rng 소비 순서(계약 — INTERFACE §5-2): 부위 배열 순서대로 — 베이스(무기는 `weaponGroup` 을 주면 **0회**) → 희귀도 1 → `build`.
@@ -490,6 +515,8 @@ export function createItemSystem(data) {
      * @param opts `{slots, ilvl, magicFind?, rareBonusPct?, weaponGroup?, rarityWeights?}`
      *   · `magicFind` 파티 평균(비율) · `rareBonusPct` 등급이 미는 레어 가중(비율 · `spawn_grade.csv:gear_rare_bonus_pct`) — **둘은 같은 채널**이다
      *   · `weaponGroup` 무기군 고정. 몬스터는 제 무기군(`monster.csv:weapon_group`)을 들고, 안 주면 본편 무기군에서 굴린다
+     *   · `itemBase` 무기 외 베이스 고정(`itemBases` 의 id — **소비 0**). 제작이 고른 종류를 넘긴다(2026-09-21) · 후보 밖인지는 부르는 쪽이 본다
+     *   · `weaponBase` 무기 세부 베이스 고정(`weaponBases` 의 id) — `build` 로 넘긴다. **소비는 그대로**(베이스 굴림 1회를 하고 값만 버린다 · 2026-09-21)
      *   · `rarityWeights` 희귀도 가중치 `{normal, magic, rare}` — 제작이 넘긴다(없으면 드롭 가중치 · 굴림 수 불변 · R96)
      */
     function rollGear(rng, opts) {
@@ -498,12 +525,13 @@ export function createItemSystem(data) {
         const out = [];
         for (const slot of slots) {
             // 무기군을 지정받으면 굴리지 않는다 — 그 몬스터가 어느 무기를 드는지는 데이터가 정한다(드롭 편향의 단위)
-            // 무기 외는 **그 ilvl 의 티어 행**에서 굴린다(2026-09-18) — 후보만 좁고 소비는 1회 그대로다
+            // 무기 외는 **그 ilvl 의 티어 행**에서 굴린다(2026-09-18) — 후보만 좁고 소비는 1회 그대로다 · `itemBase` 를 받으면 굴리지 않는다(제작 · 2026-09-21)
             const base = slot === 'weapon'
                 ? (opts.weaponGroup ? WG[opts.weaponGroup] : pick(rng, dropGroups))
-                : pick(rng, tierBases(slot, ilvl));
+                : opts.itemBase ? (data.itemBases[slot] ?? []).find(b => b.id === opts.itemBase)
+                    : pick(rng, tierBases(slot, ilvl));
             if (!base) throw new Error(`item: rollGear 부위 '${slot}' 의 베이스가 없다`);
-            out.push(build(rng, slot, rollRarity(rng, rareBonus, opts.rarityWeights), ilvl, base));
+            out.push(build(rng, slot, rollRarity(rng, rareBonus, opts.rarityWeights), ilvl, base, { weaponBase: opts.weaponBase }));
         }
         return out;
     }
@@ -705,5 +733,5 @@ export function createItemSystem(data) {
         return implicitFor(item.slot, item.ilvl, item.group ?? null).v;
     };
 
-    return { rollDrop, rollGear, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, legacyAccessoryLayers, legacyName, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, legacyAccessoryLayers, legacyName, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
 }

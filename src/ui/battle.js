@@ -93,6 +93,7 @@ export function mountBattle(container, opts) {
         // ?dev=play&bt=<아무거나> 처럼 모르는 값이 들어오면 두 판이 다 숨어 빈 열이 선다 (2026-09-03)
         tab: resume?.tab === 'dmg' ? 'dmg' : 'log',
         logf: ['party', 'enemy'].includes(resume?.logf) ? resume.logf : 'all',   // 로그를 거른 주체 — all | party | enemy (ADR-0131)
+        dmgf: resume?.dmgf === 'taken' ? 'taken' : 'dealt',   // 누적 판이 보여 주는 축 — dealt | taken (ADR-0252)
         // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 판 전폭 · 로그 · 누적 없음 · ADR-0130) / 'split'(아레나 + 우측 로그 열 · ADR-0093).
         // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
         layout: opts.layout === 'split' ? 'split' : 'wide',
@@ -139,7 +140,7 @@ export function mountBattle(container, opts) {
         clearInterval(state.timer); state.timer = null;
         for (const id of state.timeouts) clearTimeout(id);
         // wall · auto (ADR-0102) — 앱 시계가 이 자리에서 이어 민다: 마지막으로 시각을 민 실제 시각 · 결과 띠가 다음 런을 세던 중이었나
-        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, logf: state.logf, wall: state.wall, auto: state.auto };
+        return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, logf: state.logf, dmgf: state.dmgf, wall: state.wall, auto: state.auto };
     };
 }
 
@@ -191,6 +192,7 @@ function buildDom(state, stage, stageId) {
             </div>
             <div class="battle-side" hidden>
                 <div class="segmented log-filter">${['all', 'party', 'enemy'].map(f => `<button class="btn sm b-logf" data-f="${f}">${t(`bt.logf.${f}`)}</button>`).join('')}</div>
+                <div class="segmented dmg-filter">${['dealt', 'taken'].map(f => `<button class="btn sm b-dmgf" data-f="${f}">${t(`bt.dmgf.${f}`)}</button>`).join('')}</div>
                 <div class="battle-log-wrap pane"><div class="lg-head"><span class="lg-n">${t('bt.logh.name')}</span><span class="lg-ico">${t('bt.logh.skill')}</span><span class="lg-d">${t('bt.logh.target')}</span><b class="lg-v">${t('bt.logh.val')}</b></div><div class="lg-round"></div><ul class="battle-log"></ul></div>
                 <div class="battle-dmg-wrap pane" hidden></div>
             </div>
@@ -234,6 +236,10 @@ function bindControls(state, root, opts) {
     root.querySelectorAll('.b-logf').forEach(b => {
         b.onclick = () => { state.logf = b.dataset.f; paintPane(state, root); };
     });
+    // 누적 탭 — 가한 피해 · 받은 피해 (ADR-0252). 판을 그 축으로 다시 그린다
+    root.querySelectorAll('.b-dmgf').forEach(b => {
+        b.onclick = () => { state.dmgf = b.dataset.f; paintPane(state, root); };
+    });
     paintLayout(state, root);
     // 철수 [개정 2026-09-14 · R89 — 옛 건너뛰기] — 진행 중이던 라운드를 버리고 원정을 끝낸다. 결과가 바뀌는 일이라 앱이 한다(`state.retreatRun`)
     root.querySelector('.b-skip').onclick = () => { clearInterval(state.timer); opts.onRetreat(); };
@@ -262,8 +268,11 @@ function paintPane(state, root) {
     log.hidden = !(split && state.tab === 'log');
     dmg.hidden = !(split && state.tab === 'dmg');
     if (!dmg.hidden) renderDmg(state, root);
-    root.querySelector('.log-filter').hidden = log.hidden;   // 탭은 로그 판에만 선다 — 누적 데미지 판은 이미 파티 / 적 두 묶음이다
+    // 판마다 제 탭 — 로그는 주체(전체 · 우리 · 적) · 누적은 축(가한 · 받은 · ADR-0252). 보이는 판의 탭만 선다
+    root.querySelector('.log-filter').hidden = log.hidden;
+    root.querySelector('.dmg-filter').hidden = dmg.hidden;
     root.querySelectorAll('.b-logf').forEach(b => b.classList.toggle('on', b.dataset.f === state.logf));
+    root.querySelectorAll('.b-dmgf').forEach(b => b.classList.toggle('on', b.dataset.f === state.dmgf));
     root.querySelector('.battle-log').dataset.f = state.logf;
     // 숨어 있는 동안에도 줄은 쌓인다 — display:none 에서는 scrollTop 이 안 잡히므로 보일 때 맨 아래로 맞춘다.
     //   스크롤하는 것은 판이 아니라 **목록**이다 — 머리 줄은 판에 서서 안 움직인다 (ADR-0201)
@@ -319,11 +328,18 @@ const enemyList = state => state.enemies.map(e => L(e.name)).join(', ');
 /* 띠 왼쪽의 신원 한 조각 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 영웅은 레벨·직업, 몬스터는 정예/보스 라벨.
    일반 몬스터는 빈 채다(테두리 색이 이미 말한다). 라벨은 라운드 종류와 같은 `kind.*` 키를 재사용한다 */
 const clsName = id => { const c = D.classes.find(x => x.id === id); return c ? L(c) : (id ?? ''); };
-const identOf = u => u.side === 'party'
-    ? `Lv.${u.hero?.level ?? 1} · ${clsName(u.cls)}`
-    : (u.grade === 'elite' ? t('kind.elite')
-        : u.grade === 'stage_boss' ? t('kind.boss')
-        : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '');
+const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
+    : u.grade === 'stage_boss' ? t('kind.boss')
+    : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '';
+const identOf = u => u.side === 'party' ? `Lv.${u.hero?.level ?? 1} · ${clsName(u.cls)}` : gradeLabel(u);
+/* 개편판 신원 — **양 진영 같은** `Lv.n · 직업` [2026-09-21 사용자 지시 · ADR-0275]. 정예 · 보스 라벨은 띠 오른쪽(`gradeLabel`)으로 간다.
+   몬스터 레벨 = 결과가 싣는 세부 능력치의 레벨(`sheet.level` — 이번 런의 스테이지 레벨 · 몬스터도 영웅과 같은 computeCombat 을 지난다) ·
+   직업 = `monster.csv:cls`(영웅과 같은 다섯 직업). 값이 없으면 그 조각만 빠진다 — 지어내지 않는다 */
+const identV2 = u => {
+    const lv = u.side === 'party' ? (u.hero?.level ?? 1) : u.sheet?.level;
+    const cls = u.side === 'party' ? u.cls : D.monsters?.[u.monsterId]?.cls;
+    return [lv != null ? `Lv.${lv}` : '', cls ? clsName(cls) : ''].filter(Boolean).join(' · ');
+};
 
 /* ───────── 진형 (⚠ 목업 · SCREEN_DESIGN §4-1 · §4-2) ─────────
    두 진영이 **같은 규칙**으로 선다 (2026-09-09 사용자 지시 — 적도 파티처럼).
@@ -363,7 +379,15 @@ function layoutRanks(list) {
     return Math.max(...byRank.keys()) + 1;
 }
 
+/* 관전 카드 개편판 [2026-09-21 사용자 지시 · ADR-0262] — 이름 띠(신원 · 이름이 카드 맨 위 전폭 띠로)와 **뒤따르는 카드 개편 전부**가
+   이 스위치 하나 아래에 선다: JS 는 `cardV2()` 로 가르고 CSS 는 `.unit.v2` 아래에만 둔다 — 그래야 한 번에 개편 전으로 돌아간다.
+   **되돌림** — `CARD_V2 = false` 한 줄이면 모든 브라우저에서 개편 전 카드(ADR-0017 모양)다.
+   개발용 전/후 버튼(devcompare.js — 상단바 · 임시)이 `<html data-card="v1|v2">` 로 **이 브라우저에서만** 덮어쓴다 */
+const CARD_V2 = true;
+export const cardV2 = () => { const v = document.documentElement.dataset.card; return v ? v === 'v2' : CARD_V2; };
+
 function renderUnits(state, root) {
+    const v2 = cardV2();
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
         const side = root.querySelector(sel);
         side.innerHTML = '';
@@ -381,7 +405,7 @@ function renderUnits(state, root) {
             const tierLine = u.side === 'party' ? heroTierColor(u.hero) : null;
             // `click` = 누르면 장착 대상이 되는 영웅 카드 · `on` = 지금 장착 대상 (ADR-0137)
             const pick = u.hero && state.onPickHero ? ` click${u.hero.uid === state.pickedUid ? ' on' : ''}` : '';
-            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${pick}${u.hp <= 0 ? ' dead' : ''}`;
+            n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${pick}${u.hp <= 0 ? ' dead' : ''}${v2 ? ' v2' : ''}`;
             if (tierLine) n.style.setProperty('--tier-line', tierLine);   // ⚠ 색은 데이터 값이라 인라인이다 — 규칙(어느 변을 칠하나)은 CSS 가 든다
             // ⚠ **죄종 테두리색은 걷었다** (2026-09-03 사용자 지시) — 정예의 윗변을 죄종 색으로 칠하던 인라인 스타일이다.
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
@@ -415,11 +439,20 @@ function renderUnits(state, root) {
             // 한 줄 합침은 좁은 열(~104px)에서 신원(고정 조각)이 줄을 먼저 먹어 이름이 짜부라졌다.
             // 일반 몬스터는 윗줄이 **빈 채**로 자리만 잡는다 — 줄 위치·카드 높이가 카드마다 같아야 격자로 읽힌다
             const ident = identOf(u);
+            // 개편판(cardV2) — 맨 위 띠가 신원을 들고, HP 바 바로 위 이름 줄이 **왼쪽 죄종 칩 · 오른쪽 이름**이다 (ADR-0262 · ADR-0270 · ADR-0274).
+            //   죄종 칩은 다른 화면과 같은 `sin-chip`(죄종 색 글씨) · 몬스터는 죄종을 가진 정예만 — 일반 · 보스는 `sin` 이 없다
+            const sin = v2 && u.sin && M.SINS[u.sin] ? `<span class="sin-chip" style="color:${M.SINS[u.sin].color}">${L(M.SINS[u.sin])}</span>` : '';
+            const grade = v2 ? gradeLabel(u) : '';
+            const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u)}</span>${grade ? `<span class="unit-grade">${grade}</span>` : ''}</div>` : '';
+            const idRow = v2
+                ? `<div class="unit-id">${sin}<span class="unit-name">${name}</span></div>`
+                : `<div class="unit-id"><span class="unit-ident">${ident}</span><span class="unit-name">${name}</span></div>`;
             n.innerHTML = `
+                ${top}
                 <div class="unit-body">
                     ${sprite}
                     <div class="unit-info">
-                        <div class="unit-id"><span class="unit-ident">${ident}</span><span class="unit-name">${name}</span></div>
+                        ${idRow}
                         <div class="hp-row">
                             <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
                             <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
@@ -455,7 +488,7 @@ function renderUnits(state, root) {
             // 「몬스터·영웅·보스가 전부 같은 고정 크기」의 그 크기가 달라진다. 칸(.unit-slot)이 카드와 줄을 세로로 물고,
             // 카드는 창이 걸리든 말든 옛 크기 그대로다 (SCREEN_DESIGN §4-2)
             const cell = document.createElement('div');
-            cell.className = 'unit-slot';
+            cell.className = `unit-slot${v2 ? ' v2' : ''}`;   // 개편판은 칸이 카드 폭을 넓힌다 (ADR-0265)
             // 진형의 자리는 **칸**이 든다 (2026-09-09) — 카드가 아니라 칸을 밀어야 창 뱃지 줄이 카드를 따라간다.
             // 세로(어긋남)는 `data-rank` 를 보고 CSS 가, 가로(차례)는 flex `order` 가 든다 — DOM 순서는 진영 배열 그대로 남는다
             // (로그·누적 데미지가 읽는 순서와 갈리지 않게). ⚠ `order` 는 색·크기 같은 디자인 상수가 아니라 **유닛마다 다른 값**이라 인라인이다
@@ -615,7 +648,10 @@ function refreshBuffs(u, now) {
  * 「방금 뭘 썼나」는 사건이라 게이지로는 안 보인다 — 피해 숫자와 같은 팝업 층이 답한다.
  */
 function castSkill(state, u, ev) {
-    const i = u.skills?.findIndex(x => x.id === ev.s) ?? -1;
+    // 같은 스킬이 두 칸이면 **준비된 앞 칸**이 쓴 칸이다 — 시뮬의 발동 선택(칸 순서 · 준비된 것)과 같다. 칸마다 쿨 표시를 지킨다 (R130)
+    const at = x => x.id === ev.s;
+    let i = u.skills?.findIndex(x => at(x) && (x.readyAt ?? 0) <= ev.t + 0.05) ?? -1;
+    if (i < 0) i = u.skills?.findIndex(at) ?? -1;
     if (i < 0) return;
     const s = u.skills[i];
     s.firedAt = ev.t;
@@ -638,43 +674,63 @@ const strikeLabel = id => id ? L(skillInfo(id).name) : t('bt.basicAttack');
 
 /* ───────── 누적 데미지 — 이벤트의 dmg 를 더할 뿐이다. 재생기는 계산하지 않는다 (정산은 game_logic) ───────── */
 
-/** **영웅만** 쌓는다 — 판이 영웅만 든다 (SCREEN_DESIGN §4-2 · ADR-0149). 줄의 키는 **id** 다 — 스킬 id · 기본 공격 `basic` · 반사 `reflect`.
+/** **영웅만** 쌓는다 — 판이 영웅만 든다 (SCREEN_DESIGN §4-2 · ADR-0149). 항목은 **장부 둘** — 가한 피해(`dealt`) · 받은 피해(`taken`) (ADR-0252).
+    가한 피해 줄의 키는 **id** 다 — 스킬 id · 기본 공격 `basic` · 반사 `reflect`. 받은 피해 줄의 키는 **때린 몬스터 id** 다(정예도 같은 줄 — 적 이름이 등급을 안 가른다).
     이름은 그릴 때 붙인다 — 칸 순서로 줄을 세우려면 스킬 id 가 있어야 한다. 항목이 유닛을 들어 그 영웅의 스킬 칸을 읽는다(갈아입기 `refit` 는 같은 유닛에 덮어쓴다) */
+const dmgLedger = () => ({ total: 0, kind: { phys: 0, magic: 0, etc: 0 }, by: new Map() });
 function dmgEntry(state, u) {
-    if (!state.dmg.has(u.key)) state.dmg.set(u.key, { name: u.name, unit: u, total: 0, by: new Map() });
+    if (!state.dmg.has(u.key)) state.dmg.set(u.key, { name: u.name, unit: u, dealt: dmgLedger(), taken: dmgLedger() });
     return state.dmg.get(u.key);
 }
-function addDmg(state, u, id, dmg) {
-    if (u.side !== 'party') return;
-    const e = dmgEntry(state, u);
-    e.total += dmg;
-    e.by.set(id, (e.by.get(id) ?? 0) + dmg);
+/* 막대 조각 — 물리 · 마법(원소 전부 — 저항으로 깎이는 쪽) · 기타(종류를 안 싣는 반사 · 자폭) (ADR-0252) */
+const dmgKind = ty => !ty ? 'etc' : ty === 'physical' ? 'phys' : 'magic';
+function tally(g, key, dmg, kind) {
+    g.total += dmg;
+    g.kind[kind] += dmg;
+    g.by.set(key, (g.by.get(key) ?? 0) + dmg);
 }
-/** 누적 데미지 판 — 영웅 한 덩어리 = 왼쪽 초상 + 오른쪽 열(ADR-0211). 열은 머리 줄(합계 · 파티 합 안 % · 막대는 파티 안 최대 기준) 아래에 한 줄씩(아이콘 · 이름 · 피해). 보이는 동안만 그린다 */
+/** 한 번의 피해 — 때린 쪽(`a`)이 영웅이면 가한 피해, 맞은 쪽(`d`)이 영웅이면 받은 피해에 쌓는다. `ty` = 이벤트가 실어 온 피해 종류(타격만 · 없으면 기타) */
+function addDmg(state, a, d, id, dmg, ty) {
+    const kind = dmgKind(ty);
+    if (a.side === 'party') tally(dmgEntry(state, a).dealt, id, dmg, kind);
+    if (d.side === 'party') tally(dmgEntry(state, d).taken, a.monsterId ?? a.key, dmg, kind);
+}
+/** 누적 데미지 판 — 영웅 한 덩어리 = 왼쪽 초상 + 오른쪽 열(ADR-0211). 열은 머리 줄(합계 · 파티 합 안 % · 막대는 파티 안 최대 기준) 아래에 한 줄씩(아이콘 · 이름 · 피해).
+    탭(`state.dmgf`)이 장부를 고른다 — 덩어리 모양은 같고 값의 축만 바뀐다 (ADR-0252). 보이는 동안만 그린다 */
 function renderDmg(state, root) {
     const box = root.querySelector('.battle-dmg-wrap');
     if (!box || box.hidden) return;
-    const rows = [...state.dmg.values()].sort((a, b) => b.total - a.total);
-    const sum = rows.reduce((a, e) => a + e.total, 0);
-    const max = rows[0]?.total || 1;
+    const f = state.dmgf;
+    const rows = [...state.dmg.values()].sort((a, b) => b[f].total - a[f].total);
+    const sum = rows.reduce((a, e) => a + e[f].total, 0);
+    const max = rows[0]?.[f].total || 1;
     box.innerHTML = rows.length ? rows.map(e => `
         <div class="dmg-row">${dmgFace(e.unit)}<div class="dmg-body">
             <div class="dmg-head"><span class="dmg-n">${L(e.name)}</span>
-                <span class="dmg-v">${e.total.toLocaleString()} <span class="muted">${sum ? Math.round(e.total / sum * 100) : 0}%</span></span></div>
-            <div class="bar dmg"><i style="width:${e.total / max * 100}%"></i></div>
-            <div class="dmg-sks">${dmgLines(e).map(([id, v]) => `
-                <div class="dmg-sk"><i class="dmg-ico">${dmgIcon(id)}</i><span class="dmg-skn">${dmgName(id)}</span><span class="dmg-skv">${v.toLocaleString()}</span></div>`).join('')}</div>
+                <span class="dmg-v">${e[f].total.toLocaleString()} <span class="muted">${sum ? Math.round(e[f].total / sum * 100) : 0}%</span></span></div>
+            ${dmgBar(e[f], max)}
+            <div class="dmg-sks">${(f === 'dealt' ? dmgLines(e) : [...e.taken.by.entries()]).map(([id, v]) => `
+                <div class="dmg-sk"><i class="dmg-ico">${f === 'dealt' ? dmgIcon(id) : foeIcon(id)}</i><span class="dmg-skn">${f === 'dealt' ? dmgName(id) : L(monsterName(id))}</span><span class="dmg-skv">${v.toLocaleString()}</span></div>`).join('')}</div>
         </div></div>`).join('') : `<div class="dmg-row"><span class="muted">—</span></div>`;
 }
-/** 줄 순서 — 기본 공격 → 그 영웅 카드의 스킬 칸 순(칸에서 빠진 스킬은 그 뒤) → 반사. 피해 큰 순이면 숫자가 오를 때마다 줄이 자리를 바꾼다 */
+/** 머리 줄 막대 — 조각 셋을 왼쪽부터 물리 → 마법 → 기타로 쌓는다. 조각 폭 = 그 값 / 파티 안 최대라 합이 곧 막대 길이다 · 올리면 세 값(기타는 있을 때만) */
+function dmgBar(g, max) {
+    const ks = ['phys', 'magic', 'etc'];
+    const tip = ks.filter(k => k !== 'etc' || g.kind.etc).map(k => t(`bt.dmgk.${k}`, { n: g.kind[k].toLocaleString() })).join(' · ');
+    return `<div class="bar dmg" title="${tip}">${ks.map(k => g.kind[k] ? `<i class="k-${k}" style="width:${g.kind[k] / max * 100}%"></i>` : '').join('')}</div>`;
+}
+/** 줄 순서 — 기본 공격 → 그 영웅 카드의 스킬 칸 순(칸에서 빠진 스킬은 그 뒤) → 반사. 피해 큰 순이면 숫자가 오를 때마다 줄이 자리를 바꾼다.
+    받은 피해는 처음 때린 순서(Map 의 넣은 순서) 그대로다 — 같은 이유 */
 function dmgLines(e) {
     const slots = (e.unit.skills ?? []).map(s => s.id);
     const rank = id => id === 'basic' ? -1 : id === 'reflect' ? Infinity : (slots.includes(id) ? slots.indexOf(id) : slots.length);
-    return [...e.by.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
+    return [...e.dealt.by.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
 }
 /* 기본 공격은 스킬 그림이 없어 **무기 칸 실루엣**을 든다 · 반사는 그림이 없다 */
 const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : skillImg(skillInfo(id));
 const dmgName = id => id === 'basic' ? t('bt.basicAttack') : id === 'reflect' ? t('bt.reflectLabel') : L(skillInfo(id).name);
+/* 받은 피해 줄의 그림 — 때린 몬스터의 초상. 없으면 빈 칸이다(초상 칸과 같다) */
+const foeIcon = id => { const src = monsterFace(id); return src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''; };
 /* 영웅 등급 색(`hero_tier.csv:color_hex`) — 아레나 카드 윗변과 누적 판 초상 윗변이 같이 읽는다. 모르는 등급 · 영웅이 없는 파티 유닛은 `rare` */
 const heroTierColor = hero => (D.heroTiers.find(r => r.id === (hero?.tier ?? 'rare')) ?? D.heroTiers.find(r => r.id === 'rare'))?.color;
 /* 덩어리 왼쪽 초상 — 그 영웅 카드와 같은 얼굴 그림(공통 조각 `.hero-face`). 아트가 없으면 빈 칸이다 — 밑에 아무것도 안 깐다 (ADR-0211).
@@ -883,7 +939,7 @@ function apply(state, root, opts, ev) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
                 pushLog(state, root, logRow(L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : ''), a.side);
-                addDmg(state, a, ev.s ?? 'basic', ev.dmg);
+                addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
                 renderDmg(state, root);
             }
             break;
@@ -894,7 +950,7 @@ function apply(state, root, opts, ev) {
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
                 pushLog(state, root, logRow(L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg), a.side);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
-                addDmg(state, a, 'reflect', ev.dmg);
+                addDmg(state, a, d, 'reflect', ev.dmg);
                 renderDmg(state, root);
             }
             break;
@@ -906,7 +962,7 @@ function apply(state, root, opts, ev) {
             if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
                 pushLog(state, root, logRow(L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg), a.side);   // 주체는 터진 쪽 (반사와 같은 자리)
-                addDmg(state, a, ev.s, ev.dmg);
+                addDmg(state, a, d, ev.s, ev.dmg);
                 renderDmg(state, root);
             }
             break;
@@ -998,15 +1054,17 @@ function apply(state, root, opts, ev) {
             break;
         }
         // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)
-        case 'refit': {   // 라운드 경계에서 갈아입었다 (R89) — 최대 HP · 스킬 칸 · 표시값을 새로 받는다. 남은 스킬은 쿨 표시를 잇는다
+        case 'refit': {   // 갈아입었다 — 라운드 경계 또는 **라운드 도중**(원정 중 교체 · R89 · R130) — 최대 HP · 스킬 칸 · 표시값을 새로 받는다. 남은 스킬은 쿨 표시를 잇는다
             const u = U(ev.u);
             if (!u) break;
-            const had = new Map((u.skills ?? []).map(s => [s.id, s]));
+            const had = u.skills ?? [];
             Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atkMin: ev.atkMin, atkMax: ev.atkMax, matkMin: ev.matkMin, matkMax: ev.matkMax, atkType: ev.atkType, stats: ev.stats ?? null });
-            // 오오라 칸(준비 `0` · `null`)은 갈아입기로 켜짐 · 꺼짐이 바뀔 수 있어 옛 칸을 잇지 않고 새로 받는다 (R98)
+            // 오오라 칸(준비 `0` · `null`)은 갈아입기로 켜짐 · 꺼짐이 바뀔 수 있어 옛 칸을 잇지 않고 새로 받는다 (R98).
+            //   잇는 것은 **같은 자리의 같은 스킬**뿐이다 — 같은 스킬이 고유 · 무기 두 칸에 앉아도 칸마다 제 쿨 표시를 지킨다 (R130 · 시뮬의 칸마다 쿨과 같은 규칙)
             u.skills = (ev.actives ?? []).map((id, i) => {
                 const r = ev.ready?.[i];
-                return (r !== 0 && r !== null && had.get(id)) || { ...skillInfo(id), readyAt: slotReady(r, ev.t), firedAt: ev.t };
+                const old = had[i]?.id === id ? had[i] : null;
+                return (r !== 0 && r !== null && old) || { ...skillInfo(id), readyAt: slotReady(r, ev.t), firedAt: ev.t };
             });
             renderUnits(state, root);
             break;

@@ -46,7 +46,7 @@
  *   로컬 저장(save)은 그대로 · 클라우드는 모아서 통째로(cloudPush) · 갈리면 선택 창 · 다른 탭이 쓰면 멈춤 창(freeze).
  *   Firebase 는 cloud.js 만 만진다. 개발용 경로 ?dev=cloud (계정 창 · &c=pick 선택 창 · &c=frozen 멈춤 창)
  *
- * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태 · &live=1 이면 그 위에 원정을 하나 더 띄운 채) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판을 고른 채(보이는 것은 나눔 배치뿐) · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채 · &logf=party|enemy 면 로그를 그 주체로 거른 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (출정 창이 열린 상태 · &open=0 이면 창을 닫은 목록) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태) / ?dev=mats (제작 재료를 쥔 제련소)
+ * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태 · &live=1 이면 그 위에 원정을 하나 더 띄운 채) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판을 고른 채(보이는 것은 나눔 배치뿐) · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채 · &logf=party|enemy 면 로그를 그 주체로 거른 채 · &dmgf=taken 이면 누적 판을 받은 피해로 고른 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (출정 창이 열린 상태 · &open=0 이면 창을 닫은 목록) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태) / ?dev=mats (제작 재료를 쥔 제련소)
  */
 
 import * as M from './mock.js';
@@ -59,6 +59,7 @@ import * as CLOUD from './cloud.js';
 import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
+import { mountCardCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 버튼. 걷어내려면 이 줄 · 아래 호출 · devcompare.js
 
 const $ = sel => document.querySelector(sel);
 const el = (tag, cls, html) => {
@@ -256,7 +257,9 @@ const itemImg = it => {
 // `?tab=` 이 죽은 이름(`town` · `commission` · `skill` · `base` · `imagedex`)을 받으면 조용히 무시된다(아래 TABS.includes) — 탭으로는 도달할 자리가 없기 때문
 // **편성**이 원정 바로 뒤에 선다 [2026-09-21 사용자 지시 · SCREEN_DESIGN §15 · ADR-0192] — 탭 10 → 11.
 //   전투 준비(파티 · 진형 · 물약 칸 · 파티 전술)가 여기 하나로 모인다 — 출정 창은 만들어 둔 편성을 고르기만 한다(ADR-0193)
-const TABS = ['expedition', 'party', 'character', 'forge', 'tavern', 'shop', 'resource', 'explore', 'research', 'codex', 'help'];
+// **건설**(옛 연구)이 캐릭터 바로 뒤로 왔다 [2026-09-21 사용자 지시 · SCREEN_DESIGN §13 · ADR-0253] — 위 「산출을 먹는 연구가 이어진다」는 이로써 버려졌다.
+//   바뀐 것은 화면 이름과 자리뿐이다 — id `research`(`?tab=research`) · `nav.research` · `rs.*` 키 · `mock.js:RESEARCH` 는 옛 이름 그대로
+const TABS = ['expedition', 'party', 'character', 'research', 'forge', 'tavern', 'shop', 'resource', 'explore', 'codex', 'help'];
 
 /* 파견 목록 — **카드 3** (SCREEN_DESIGN §8 개정 2026-09-04 사용자 지시: 채광 · 채집 · 벌목).
    담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
@@ -320,7 +323,7 @@ const state = {
     forgeItem: null,             // 제련소에서 고른 장비 uid
     forgeFilter: null,           // 제련소 목록의 부위 필터 — 캐릭터 탭과 따로 둔다(화면이 다르면 필터도 다르다)
     makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 · 'potion' 이면 물약 칸 (SCREEN_DESIGN §8-2 · ADR-0219)
-    makeBand: null,              // 제작 칸에서 고른 레벨대 — 없으면 첫 레벨대
+    makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
     shopTab: 'equip',            // 상단의 목록 탭 — 'equip' | 'mat' (SCREEN_DESIGN §8-3 · ADR-0223 · `?sh=` 로도 연다)
     shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · 방문 회차가 넘어가면 풀린다
@@ -393,10 +396,11 @@ function renderShell() {
     const langBtn = el('button', 'btn sm lang-btn', t('ui.langBtn'));
     langBtn.onclick = () => { setLang(lang() === 'ko' ? 'en' : 'ko'); render(); };
     $('.resources').appendChild(langBtn);
+    mountCardCompare($('.resources'), render);   // 임시 — Card [Before | After] (devcompare.js)
     mountDevPalette($('.resources'));   // ⚙ — 배경 · 글자 색을 눈으로 맞추는 개발 장치
 
     $('.crumb').textContent = !authenticated ? t('cl.signIn') : state.screen === 'prologue' ? t('pro.h') : pre ? t('ng.h') : t(`nav.${state.tab}`);
-    $('.tab-seg').innerHTML = '';   // 탭 세그먼트 자리 — 채우는 것은 탭 렌더러다 (§2 · 원정 · 제련소 · 도감)
+    $('.tab-seg').innerHTML = '';   // 탭 세그먼트 자리 — 채우는 것은 탭 렌더러다 (§2 · 원정 — 제련소는 패널 박스 위로 내려갔다 · ADR-0281)
 }
 
 function render() {
@@ -948,7 +952,7 @@ function frozenBody() {
  * `at` 은 출발 시각(기본 지금), `resume` 은 새 런의 재생 위치.
  * 앱 시계가 반복을 한 눈금 안에서 이어 세울 때 둘을 넘긴다 — 앞 런이 끝난 순간에 출발했고, 배속 · 판을 잇는다 (ADR-0102)
  */
-function runBattle(stageId, { instant = false, tab = null, logf = null, at = null, resume = null, preset = undefined } = {}) {
+function runBattle(stageId, { instant = false, tab = null, logf = null, dmgf = null, at = null, resume = null, preset = undefined } = {}) {
     // preset — 나갈 편성 번호. 안 주면 **고른 편성**이고, 이어 달리기(반복 · 다음 스테이지 · 다시 도전)는 **도는 원정의 편성**을 넘긴다 (R122)
     const r = instant ? SYS.game.resolveBattle(G, stageId, at ?? now(), preset) : SYS.game.departRun(G, stageId, at ?? now(), preset);
     if (!r.ok) {
@@ -967,7 +971,7 @@ function runBattle(stageId, { instant = false, tab = null, logf = null, at = nul
     //   재생됐다(2026-09-11 실측 — 앞 194초를 건너뛰었다 · ADR-0102). 이어 받을 것(배속 · 판)은 부르는 쪽이 `resume` 으로 넘긴다
     if (stopBattle) { stopBattle(); stopBattle = null; }
     state.battle = { run: r.run, result: r.run.result, stageId, form: formSnapshot(),
-        resume: resume ?? (tab || logf ? { t: 0, speed: 1, running: true, tab, logf } : undefined) };
+        resume: resume ?? (tab || logf || dmgf ? { t: 0, speed: 1, running: true, tab, logf, dmgf } : undefined) };
     state.exp = 'battle';
     render();
 }
@@ -1063,7 +1067,7 @@ function renderExpedition(main) {
             },
         });
         // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 라운드를 이길 때마다 드롭이 들어오고(`refreshBattleSide`)
-        //   여기서 바꾼 장비는 **다음에 계산되는 라운드부터** 먹는다 (R89). 칸 · 그림 크기는 캐릭터 탭 가방과 같다 (`.bag` · ADR-0097)
+        //   여기서 바꾼 장비는 **그 순간** 먹는다 — 보스 라운드 도중은 다음 런 (R130 · ADR-0272). 칸 · 그림 크기는 캐릭터 탭 가방과 같다 (`.bag` · ADR-0097)
         battleBag = itemsPanel(heroById(state.heroUid), { showTarget: true });
         page.appendChild(battleBag);
         return;
@@ -1306,7 +1310,7 @@ function bindCardDrag(node, sel, onDrop) {
  * 랭크 최대가 둘이라 보드 높이가 두 줄분으로 고정된다 — 한 줄짜리(3)는 가운데에 서고 패널 크기는 안 흔들린다.
  * @param pick 이름과 템플릿 아이콘 사이에 끼울 노드 — 편성 탭의 **편성 고르개**(ADR-0229)
  */
-function formBox(pick = null) {
+function formBox() {
     const f = formState();
     const caps = f.caps;
     /* 머리(「진형」)가 **돌아왔다** [2026-09-10 사용자 지시 · ADR-0079 가 ADR-0060 을 대체].
@@ -1317,24 +1321,17 @@ function formBox(pick = null) {
          편성 탭으로 옮겨 오고 보드가 한 줄이 된 지금은(ADR-0192 · ADR-0234) 세로가 남고,
          같은 줄에 서면 **보드의 전열 칸이 이름 줄을 침범한 것처럼** 보였다. 밑줄이 「여기부터 진형이다」를 말한다 */
     const box = el('div', 'fm-box');
-    box.appendChild(el('div', 'fm-h', t('exp.form.h')));     // 이름 + 밑줄 — 상자의 첫 줄 (ADR-0240)
+    box.appendChild(el('div', 'sub-h', t('exp.form.h')));    // 이름 + 밑줄 — 상자의 첫 줄 (ADR-0240) · 소제목 모양 (ADR-0256)
     const main = el('div', 'fm-main');
 
-    /* 왼쪽 열 — **이름 + 템플릿 아이콘**. 아이콘은 **가로로** 나란히 (2026-09-09 사용자 지시 — 옛 세로 기둥 폐기).
-       보드 **옆**에 두는 이유는 세로다: 머리줄로 올리면 아이콘 높이가 그대로 패널에 더해져
-       보내기 버튼이 화면 밖으로 나간다(실측). 보드 옆이면 세로 비용이 0 이다.
-       셋 중 하나를 고르는 것이라 .toggle(초록 ON/OFF)이 아니라 .on(고른 것)을 쓴다.
-       아이콘은 정원 배열 그대로 점을 찍은 것이라 템플릿을 늘리면 그림도 저절로 따라온다 */
+    /* 왼쪽 열 — **모양 버튼 셋을 세로로**, 버튼마다 **그 모양의 이름을 글로** [2026-09-21 사용자 지시 · ADR-0267 — 점 아이콘 가로 줄을 걷었다].
+       이름은 표(`formation_template.csv` 의 name_kr · name_en)가 든다 — 새 문구가 없다. 순서는 표의 행 순서이고 첫 행이 새 편성의 기본값이다.
+       보드 **옆**에 두어 버튼 셋의 높이가 보드(칸 + 한 단) 안에 든다.
+       셋 중 하나를 고르는 것이라 .toggle(초록 ON/OFF)이 아니라 .on(고른 것)을 쓴다 */
     const side = el('div', 'fm-side');
-    // 편성 고르개 — 이름 줄 아래 · 아이콘 위 [2026-09-21 사용자 지시 · ADR-0229]: 「어느 편성인가 → 그 편성의 모양」 순서로 읽힌다.
-    //   이 열은 보드보다 짧아 한 줄이 더 들어가도 칸 높이가 안 는다
-    if (pick) side.appendChild(pick);
     const tpls = el('div', 'fm-tpls');
     for (const key of f.templates) {
-        const shape = f.shapes[key] ?? [];
-        const b = el('button', `btn fm-tpl${key === f.tpl ? ' on' : ''}`,
-            // 정원 0 인 랭크는 점을 안 찍는다 — 「모두 앞」의 아이콘이 빈 줄을 달고 있으면 안 된다
-            shape.filter(n => n > 0).map(n => `<i>${'<b></b>'.repeat(n)}</i>`).join(''));
+        const b = el('button', `btn fm-tpl${key === f.tpl ? ' on' : ''}`, L(D.formationTemplates?.[key]) || key);
         b.onclick = () => { SYS.game.setFormation(G, key); save(); render(); };   // 자리는 세이브 값이다 (2026-09-09) · 원정 중에도 바꾼다 (R92)
         tpls.appendChild(b);
     }
@@ -1345,17 +1342,16 @@ function formBox(pick = null) {
        관전 아레나와 같은 그림이라(`ui/battle.js:layoutRanks` · ADR-0053 · ADR-0045) 편성이 전투의 예고편으로 읽힌다.
        가로 차례도 같은 식 — k 칸짜리 랭크의 i 번째가 `x = (i + 0.5) / k` 이고 x 가 같으면 앞 랭크가 먼저다.
        2·1 이면 **앞 · 뒤 · 앞** 차례라 뒤 칸이 저절로 가운데에 서고, 칸끼리는 가로로 안 겹쳐 초상이 다 보인다(끌어다 놓는 자리다).
-       빈 칸은 영웅 얼굴과 같은 크기라 「여기에 끌어다 놓는다」가 크기로 읽힌다. 내려가는 단은 CSS 가 `data-rank` 로 준다 */
+       빈 칸은 영웅 얼굴과 같은 크기라 「여기에 끌어다 놓는다」가 크기로 읽힌다. 내려가는 단은 CSS 가 `data-rank` 로 준다.
+       **랭크 이름(전열 · 후열)은 칸마다 그 칸 바로 아래**다 [2026-09-21 사용자 지시 · ADR-0269 — 왼쪽 라벨 열을 걷었다] —
+       칸과 라벨을 자리 감싸개(`.fm-seat`) 하나에 넣어 뒤 랭크가 한 단 내려가면 라벨도 같이 내려간다. 빈 칸도 단다(놓기 전에 읽힌다).
+       드래그 목적지는 여전히 칸(`.fm-cell` · rank/idx)이다 */
     const board = el('div', 'fm-board');
     const labels = FORM_RANK_LABELS[caps.length] ?? [];
-    const lbox = el('div', 'fm-labels');
     const line = el('div', 'fm-line');
     const seats = [];
     caps.forEach((cap, r) => {
-        if (!cap) return;                            // 정원 0 인 랭크는 자리도 라벨도 없다 (「모두 앞」의 후열)
-        const lb = el('div', 'fm-label', labels[r] ? t(labels[r]) : '');
-        lb.dataset.rank = r;
-        lbox.appendChild(lb);
+        if (!cap) return;                            // 정원 0 인 랭크는 자리가 없다 (「모두 앞」의 후열)
         for (let i = 0; i < cap; i++) seats.push({ r, i, x: (i + 0.5) / cap });
     });
     seats.sort((a, b) => a.x - b.x || a.r - b.r);
@@ -1363,24 +1359,34 @@ function formBox(pick = null) {
         for (const { r, i } of seats) {
             const uid = f.ranks[r][i];
             const h = uid ? heroById(uid) : null;
+            const seat = el('div', 'fm-seat');
+            seat.dataset.rank = r;
             const cell = el('div', `fm-cell${h ? ' filled' : ''}`);
             cell.dataset.rank = r;
             cell.dataset.idx = i;
             if (h) {
-                // 리더 태그는 띠와 같은 키를 쓴다 — 리더는 파티의 첫 영웅(`partyOf(G)[0]`)이지 진형의 자리가 아니다
-                cell.innerHTML = `<div class="fm-nm">${L(h.name)}</div>${heroFace(h)}`
+                /* 칸은 **띠 카드와 같은 얼굴**이다 [2026-09-21 사용자 지시 · ADR-0280] — 위칸(왼쪽 하는 일 · 오른쪽 이름) + 오른쪽 아래 레벨.
+                   조각도 띠 카드의 것을 그대로 쓴다 — 같은 크기의 카드가 드래그로 오가므로 같은 영웅이 두 얼굴로 읽히면 안 된다.
+                   리더 태그는 띠와 같은 키를 쓴다 — 리더는 파티의 첫 영웅(`partyOf(G)[0]`)이지 진형의 자리가 아니다 */
+                const doing = heroDoing(h);
+                cell.innerHTML = `<div class="hs-band"><span class="hs-doing ${doing.cls}">${doing.text}</span><b class="hs-name">${L(h.name)}</b></div>`
+                    + heroFace(h)
+                    + `<span class="hs-lv">${t('ch.lv', { n: h.level })}</span>`
                     + (uid === SYS.game.partyOf(G)[0] ? `<span class="hs-leader">${t('exp.leader')}</span>` : '');
                 cell.style.borderTopColor = tierColor(h);
+                // 툴팁 = 편성 띠와 같은 카드 — 첫 장 기본 옵션 · Alt 동안 옆에 장비 + 세부 옵션 (2026-09-21 사용자 지시 · ADR-0284 · ADR-0287). 끌기 시작하면 `bindFormDrag` 가 닫는다
+                bindTipNode(cell, () => heroTipCard(h, combatOf(h), itemOf, it => equippedItemTipCard(h, it), { statsFirst: true, skills: activeCells(h) }), { anchor: true, holdOnAlt: true });
                 bindFormDrag(cell, { uid });
                 /* 클릭 = **파티에서 뺀다** [2026-09-11 사용자 지시 · §4-1 · ADR-0096] — 띠 카드를 다시 누른 것과 같은 문(`toggleParty`)이다.
                    빼는 길이 띠에만 있던 판은 **교체가 막혔다** — 파티가 차 있으면 새 영웅의 클릭은 「파티 정원」으로 거절되는데,
                    보드의 영웅을 눌러도 아무 일이 없었다. 끈 뒤의 클릭은 띠와 같이 삼킨다 */
                 cell.onclick = () => { if (!formDragEnded) toggleParty(h); };
             }
-            line.appendChild(cell);
+            seat.appendChild(cell);
+            seat.appendChild(el('div', 'fm-label', labels[r] ? t(labels[r]) : ''));
+            line.appendChild(seat);
         }
     }
-    board.appendChild(lbox);
     board.appendChild(line);
     main.appendChild(board);
     box.appendChild(main);
@@ -1389,14 +1395,17 @@ function formBox(pick = null) {
 
 /* ═══════════ 편성 탭 (SCREEN_DESIGN §15 · ADR-0192 ~ 0195) ═══════════
    전투에 나가기 전에 정하는 넷이 한 탭에 있다 — 누구(파티) · 어디에(진형) · 무엇을 들고(물약 칸) · 어떤 조건으로(파티 전술).
-   편성은 늘 `[balance.csv:party_preset_count]` 개가 서 있고 **진형 칸 안의 고르개**가 어느 편성을 펼지 정한다(출정 창과 같은 값 · ADR-0229).
-   파티 · 진형 · 물약 칸은 **고른 편성의 것**이고, 파티 전술은 모든 편성이 같이 쓴다 — 카운터 · 켜짐만 고른 편성의 파티로 다시 센다.
+   편성은 늘 `[balance.csv:party_preset_count]` 개가 서 있고 **박스 맨 위의 고르개**가 어느 편성을 펼지 정한다(출정 창과 같은 값 · ADR-0251).
+   파티 · 진형 · 물약 칸 · 파티 전술 칸이 전부 **고른 편성의 것**이다(ADR-0250) — 열린 전술 칸 수만 계정이라 모든 편성이 같다.
    **판정은 전부 game_logic 이 낸다** — 모자람(`presetState`) · 카운터 · 켜짐(`tacticState`). 화면은 고르고 그리기만 한다 */
 
-/** 편성 고르개 — 진형 칸 안 · 이름 아래에 선다(ADR-0229 — 상단바 탭 세그먼트 자리에서 옮겼다). 도는 원정의 편성은 「원정 중」을 단다 */
+/** 편성 고르개 — **박스 맨 위 한 줄**이다 [2026-09-21 사용자 지시 · ADR-0251 — 진형 칸 안(ADR-0229)에서 올렸다].
+ *  전술 칸까지 편성마다가 되어(ADR-0250) 아래 셋(진형 · 물약 · 전술)을 전부 가르므로 셋 모두의 위에 선다. 도는 원정의 편성은 「원정 중」을 단다 */
 function presetSeg(ps) {
-    return segmented(ps.presets.map(p => ({ id: p.no, label: presetLabel(p.no, ps) })), ps.activeNo,
+    const seg = segmented(ps.presets.map(p => ({ id: p.no, label: presetLabel(p.no, ps) })), ps.activeNo,
         no => { SYS.game.selectPreset(G, no); save(); render(); });
+    seg.classList.add('pt-pick');
+    return seg;
 }
 
 function renderParty(main) {
@@ -1407,12 +1416,15 @@ function renderParty(main) {
     page.appendChild(heroStrip(toggleParty, { leaderUid: SYS.game.partyOf(G)[0] ?? null, partyMode: true, deployed: true }));
     const body = el('div', 'panel fill pt-body');
     body.dataset.keep = 'party';
-    // ① 진형 · 물약 — 한 줄에 나란히. 왼쪽 진형이 내용 폭 · 오른쪽 물약이 남는 폭
+    body.appendChild(presetSeg(ps));          // 편성 고르개 — 박스의 첫 줄 (ADR-0251)
+    // 두 열 [2026-09-21 사용자 지시 · ADR-0260] — 왼쪽 열(내용 폭) = 진형 · 그 아래 물약 · 오른쪽 열(남는 폭 전부) = 파티 전술(칸이 세로 목록)
     const mid = el('div', 'pt-mid');
-    mid.appendChild(formBox(presetSeg(ps)));
-    mid.appendChild(potionBox(ps));
+    const left = el('div', 'pt-left');
+    left.appendChild(formBox());
+    left.appendChild(potionBox(ps));
+    mid.appendChild(left);
+    mid.appendChild(tacticsBlock());
     body.appendChild(mid);
-    body.appendChild(tacticsBlock());         // ② 파티 전술 — 칸이 한 줄 (ADR-0217)
     page.appendChild(body);
     main.appendChild(page);
 }
@@ -1432,7 +1444,7 @@ const potionImg = id => {
 function potionBox(ps) {
     const cur = ps.presets[ps.activeNo - 1];
     const box = el('div', 'pt-potion');
-    box.appendChild(el('div', 'pt-h', t('pt.potion.h')));
+    box.appendChild(el('div', 'sub-h', t('pt.potion.h')));   // 소제목 모양 (ADR-0256)
     const row = el('div', 'pt-potion-row');
     const act = r => { if (!r.ok) flash(`pt.err.${r.err}`); else save(); return true; };
     const belt = el('div', 'p-belt');
@@ -1467,8 +1479,9 @@ function potionBox(ps) {
     return box;
 }
 
-/** 파티 전술 — 칸 이름 옆 잔글씨 「모든 편성이 같이 쓴다」 · 진척 줄 · 칸 격자 (§15 · ADR-0194). 카운터 · 켜짐은 **고른 편성의 파티**로 센다(`tacticState` 기본값)
- *  칸은 **한 줄**이다 — 열 수는 칸 수(`tactic_slot.csv` 행 수)라 CSS 에 박지 않고 `--rs-n` 으로 넘긴다 (ADR-0217) */
+/** 파티 전술 — 칸 이름 · 진척 줄 · 칸 격자 (§15 · ADR-0194). 칸은 **고른 편성의 것**이고 카운터 · 켜짐도 그 편성의 파티로 센다(`tacticState` 기본값 · ADR-0250)
+ *  칸은 **세로 목록**이다 — 칸 하나가 한 행이고 행 수는 칸 수(`tactic_slot.csv` 행 수)다. 행 안의 네 칸(번호 · 등급 · 켜짐 | 조건 | 효과 | 리롤)이
+ *  모든 행에서 같은 세로줄에 서는 것은 CSS 가 편성 탭 안에서만 준다(`.pt-tactics` · subgrid) — `tacticCell` 은 그대로다 (ADR-0260) */
 function tacticsBlock() {
     const ts = SYS.game.tacticState(G);
     const next = ts.slots.find(s => !s.open);
@@ -1479,8 +1492,8 @@ function tacticsBlock() {
         else flash(`pt.err.${r.err}`);
         render();
     };
-    const box = el('div', 'pt-sec pt-tactics');
-    box.appendChild(el('div', 'pt-h', `${t('rs.h')}<small>${t('pt.tactic.shared')}</small>`));
+    const box = el('div', 'pt-tactics');     // 오른쪽 열 — 왼쪽 열과는 세로 가림선 하나 (ADR-0260)
+    box.appendChild(el('div', 'sub-h', t('rs.h')));
     box.appendChild(el('div', 'rs-head', `
         <span>${t('rs.total')} <b>${ts.totalLevel}</b></span>
         <span>${t('rs.open')} <b>${ts.open}</b> <span class="muted">/ ${ts.count}</span></span>
@@ -1488,7 +1501,6 @@ function tacticsBlock() {
             ? t('rs.next', { no: next.no, n: next.unlockTotalLevel - ts.totalLevel })
             : t('rs.allOpen')}</span>`));
     const grid = el('div', 'rs-grid');
-    grid.style.setProperty('--rs-n', ts.slots.length);
     for (const slot of ts.slots) grid.appendChild(tacticCell(slot, reroll));
     box.appendChild(grid);
     return box;
@@ -1566,7 +1578,7 @@ function levelRow(z) {
  *  옛 줄은 「런의 스테이지일 때만」 붙어서 칸 크기가 흔들렸다. 버튼은 항상 있으므로 크기가 고정된다. */
 function goBox(z) {
     const side = el('div', 'fp-side');
-    side.appendChild(el('div', 'dw-h', t('exp.go.h')));
+    side.appendChild(el('div', 'sub-h', t('exp.go.h')));
     side.appendChild(levelRow(z));   // 위험도 — 칸 이름 바로 아래 · 보내기보다 위 (ADR-0104)
     // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 칸이 상태에 따라 커졌다 작아진다 (2026-08-28)
     // 상태 경고는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없으므로 막히는 경우가 파티 0 하나뿐이다
@@ -1601,7 +1613,7 @@ function goBox(z) {
 function foeBox(z) {
     const box = el('div', 'foe-box');
     box.innerHTML = `
-        <div class="foe-h">${t('exp.foes')}</div>
+        <div class="sub-h">${t('exp.foes')}</div>
         <div class="foe-list">
             ${SYS.battle.stagePool(z).map(id => foeCell(id)).join('')}
             ${foeCell(z.boss_monster_idx, 'boss')}
@@ -1615,7 +1627,7 @@ function foeBox(z) {
  *  글은 데이터라 `textContent` 로 넣는다. 이름 자리(`{m:…}` · `{leader}`)는 `data.js:fillStory` 가 푼다 — 리더 = 파티 첫 슬롯 [2026-09-15] */
 function storyBox(z) {
     const box = el('div', 'dw-story');
-    box.appendChild(el('div', 'dw-h', t('exp.story.h')));
+    box.appendChild(el('div', 'sub-h', t('exp.story.h')));
     const p = el('p', 'dw-story-text');
     const leader = heroById(SYS.game.partyOf(G)[0]);   // 고른 편성의 리더 — 편성 고르개를 바꾸면 따라 바뀐다 (§4-1 · R122)
     p.textContent = fillStory(L(stageStory(z)), lang(), { leader: leader ? leader.name : null, fallback: t('exp.story.noLeader') });
@@ -1637,7 +1649,7 @@ function presetPick() {
     const ps = SYS.game.presetState(G);
     const cur = ps.presets[ps.activeNo - 1];
     const hb = el('div', 'dw-block');
-    hb.appendChild(el('div', 'dw-h', t('nav.party')));
+    hb.appendChild(el('div', 'sub-h', t('nav.party')));
     const row = el('div', 'pk-row');
     const btns = el('div', 'pk-btns');
     for (const p of ps.presets) {
@@ -1674,9 +1686,9 @@ function loadBox() {
     const box = el('div', 'dw-load');
 
     // 전술 — 열린 칸의 **효과 줄**만. 조건 문장은 툴팁이 들고(칸이 좁다), 조건을 못 채운 칸은 흐리다.
-    //   값은 `tacticState` 가 **고른 편성의 파티**로 센다 (§15 · ADR-0194)
+    //   값은 `tacticState` 가 **고른 편성의 칸 · 파티**로 센다 (§15 · ADR-0250)
     const tac = el('div', 'dw-block dw-tac');
-    tac.appendChild(el('div', 'dw-h', t('rs.h')));
+    tac.appendChild(el('div', 'sub-h', t('rs.h')));
     for (const s of SYS.game.tacticState(G).slots) {
         if (!s.open || !s.option) continue;
         const row = el('div', `dw-tac-row${s.active ? ' on' : ''}`,
@@ -1690,7 +1702,7 @@ function loadBox() {
     // 물약 — 고른 편성의 칸 넷. 편성 탭과 같은 칸이고 **모자란 칸은 흐린 점선**이다(그 칸은 빈 채로 나간다)
     const ps = SYS.game.presetState(G);
     const pot = el('div', 'dw-block dw-pot');
-    pot.appendChild(el('div', 'dw-h', t('pt.potion.h')));
+    pot.appendChild(el('div', 'sub-h', t('pt.potion.h')));
     const belt = el('div', 'p-belt');
     for (const s of ps.presets[ps.activeNo - 1].potionSlots) {
         const info = s ? potionInfo(s.id) : null;
@@ -1907,18 +1919,41 @@ const runEnd = B => (B.result.reason != null ? B.result.durationSec : Infinity);
  *  관전이 떠 있으면 위치는 재생기가 들고, `render()` 첫 줄이 `resume` 에 받아 둔 뒤 이것을 읽는다 */
 const battlePhase = B => (!B ? 'none' : (B.resume?.t ?? 0) + 1e-9 >= runEnd(B) ? 'over' : 'live');
 
+/* ═══ 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] ═══
+   바꾼 장비 · 스킬 트리는 그 순간 전투에 먹는다(다음 눈금의 `game.stepRun` 첫머리). 보스 라운드 도중이면 다음 런부터라 바꾼 순간 알리고,
+   교체로 도는 원정의 전술이 꺼졌으면 그 효과 줄을 알린다 — 판정은 `game.runLock` · `game.runTactics` 가 낸다(렌더러는 세지 않는다) */
+const liveRun = () => (state.battle?.run && !state.battle.run.done ? state.battle.run : null);
+/** 바꾸기 전의 도는 원정 전술 — 교체 뒤 `runChangeFlash` 에 넘긴다 (원정이 없으면 빈 목록) */
+const runTacticsNow = () => { const run = liveRun(); return run ? SYS.game.runTactics(G, run) : []; };
+/** 교체 뒤 플래시 — 바꾼 영웅(`uid`)이 도는 원정의 인원일 때만: 보스 라운드 도중이면 「다음 런부터」 · 아니면 꺼진 전술. 둘 다 아니면 조용하다 */
+function runChangeFlash(uid, before = []) {
+    const run = liveRun();
+    if (!run || !run.party.includes(uid)) return;        // 벤치 영웅의 교체는 도는 원정과 무관하다
+    if (SYS.game.runLock(G, run) === 'boss') { flash('exp.lock.boss'); return; }
+    const off = SYS.game.runTactics(G, run).filter((m, i) => before[i]?.active && !m.active);
+    if (off.length) flash('exp.tactic.off', { eff: off.map(m => optionEffect(m.option)).join(' · ') });
+}
+/** 가방 툴팁의 「끼우면 꺼지는 전술」 줄 — 장착 대상이 도는 원정의 인원이고 끼우면 그 원정의 전술이 꺼질 때만 (§6 · R130) */
+function runTacticHint(h, it) {
+    const run = liveRun();
+    // 원정 인원이 아니거나 · 쓰러져 못 끼거나(`downed`) · 보스 라운드 도중이라 이 런에 안 먹으면 말할 것이 없다
+    if (!run || !h || !run.party.includes(h.uid) || G.run?.fallen?.includes(h.uid) || SYS.game.runLock(G, run) === 'boss') return '';
+    const now = SYS.game.runTactics(G, run);
+    if (!now.some(m => m.active)) return '';            // 켜진 전술이 없으면 꺼질 것도 없다 — 칸마다 사본을 안 만든다
+    const off = SYS.game.runTacticsIf(G, run, h.uid, it.uid).filter((m, i) => now[i]?.active && !m.active);
+    return off.length ? t('tip.tacticOff', { eff: off.map(m => optionEffect(m.option)).join(' · ') }) : '';
+}
+
 /**
- * 라운드 넘기기 [2026-09-14 · R89 · SCREEN_DESIGN §4] — 진행 시각이 지금 계산된 라운드의 끝(`run.segEnd`)을 지났으면
- * 그 라운드를 정산하고(이긴 라운드만 보상) 다음 라운드를 **그 순간의 장비 · 레벨로** 붙인다. 한 번에 여러 라운드를 넘을 수 있다(숨긴 탭).
+ * 걸음 [2026-09-14 · R89 · **2026-09-21 · R130** · SCREEN_DESIGN §4] — 원정을 진행 시각까지 계산한다(`game.stepRun`). 끝난 라운드는
+ * 정산하고(이긴 라운드만 보상) 다음 라운드를 연다 · 원정 중 바꾼 장비 · 스킬 트리는 이 걸음의 첫머리에 먹는다. 한 번에 여러 라운드를 넘을 수 있다(숨긴 탭).
  * **시각을 미는 쪽 둘**(관전 재생기의 `onTime` · 앱 시계 `expTick`)이 시각을 밀기 전에 부른다 — 정산을 부르는 곳은 여기 한 곳이다
  * @returns 정산한 라운드 수
  */
 function advanceBattle(B, tNow, at) {
-    let n = 0;
-    while (B?.run && !B.run.done && tNow >= B.run.segEnd) {
-        SYS.game.advanceRun(G, B.run, at);
-        n++;
-    }
+    if (!B?.run || B.run.done) return 0;
+    // 걸음 — 엔진을 이 시각까지만 민다. 첫머리가 그 순간의 장비 · 스킬 트리로 갈아입히므로 원정 중 교체가 **바꾼 시각에** 먹는다 (R130)
+    const n = SYS.game.stepRun(G, B.run, tNow).rounds ?? 0;
     if (n) { save(); onRoundsSettled(); }
     return n;
 }
@@ -2159,11 +2194,12 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
         // 옛 title 한 줄(직업·Lv·죄종·등급)을 툴팁 카드가 대신한다 (2026-08-28) — 영웅 툴팁: 착용 장비 · Alt 로 세부 옵션 (ADR-0171)
         //   `tip: false` 면 안 건다 — 캐릭터 탭은 같은 값이 바로 아래 네 칸에 있고 뜬 카드가 그 칸을 덮는다 (2026-09-15 사용자 지시 · ADR-0116)
         //   유닛 툴팁은 **카드 옆**에 선다 — 관전 카드와 같은 규칙 (2026-09-15 · ADR-0120)
-        if (tip) bindTipNode(c, () => heroTipCard(h, combatOf(h), itemOf, it => equippedItemTipCard(h, it)), { anchor: true, holdOnAlt: true });
+        //   편성 띠(`partyMode`)는 첫 장이 **기본 옵션**(막대 + 액티브 스킬 그림) · Alt 동안 옆에 장비 + 세부 옵션이 붙는다 (2026-09-21 사용자 지시 · ADR-0284 · ADR-0287)
+        if (tip) bindTipNode(c, () => heroTipCard(h, combatOf(h), itemOf, it => equippedItemTipCard(h, it), { statsFirst: partyMode, skills: partyMode ? activeCells(h) : null }), { anchor: true, holdOnAlt: true });
         // 위칸 오른쪽은 **이름 하나**다 — 카드 오른쪽 끝에 붙는다 [2026-09-21 사용자 지시 · ADR-0197 — 0165 의 이름 뒤 `Lv.n` 을 걷었다].
         //   줄어드는 쪽은 여전히 「하는 일」 하나다
-        // 레벨은 초상 **왼쪽 아래** · 리더는 오른쪽 아래 [2026-09-21 사용자 지시 · ADR-0202 — 0199 의 오른쪽 아래를 비교 후 옮겼다].
-        //   오른쪽 아래는 해고(캐릭터 탭 띠)와 리더(편성 띠)가 나눠 쓰고, 레벨은 어느 카드에서도 안 가린다
+        // 레벨은 초상 **오른쪽 아래**(아이템 칸과 같은 구석) · 리더는 왼쪽 아래 [2026-09-21 사용자 지시 · ADR-0278 — 0202 와 구석을 맞바꿨다].
+        //   왼쪽 아래는 해고(캐릭터 탭 띠)와 리더(편성 띠)가 나눠 쓰고, 레벨은 어느 카드에서도 안 가린다
         c.innerHTML = `
             <div class="hs-band">
                 <span class="hs-doing ${doing.cls}">${doing.text}</span>
@@ -2172,9 +2208,9 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
             ${heroFace(h)}
             <span class="hs-lv">${t('ch.lv', { n: h.level })}</span>
             ${h.uid === leaderUid ? `<span class="hs-leader">${t('exp.leader')}</span>` : ''}`;
-        /* 해고 — **고른 카드에만** 오른쪽 아래에 뜬다 [2026-09-09 사용자 지시 · SCREEN_DESIGN §5 · §6].
+        /* 해고 — **고른 카드에만** 왼쪽 아래에 뜬다 [2026-09-09 사용자 지시 · SCREEN_DESIGN §5 · §6 · 자리는 ADR-0278].
            `dismissable` 을 준 띠(캐릭터 탭)에서만이다 — 편성 띠는 클릭이 파티 넣고 빼기라 여기에 파괴적 버튼을
-           같이 두면 파티 빼려다 해고하는 사고가 난다. 리더 뱃지는 왼쪽 아래라 자리가 안 겹친다.
+           같이 두면 파티 빼려다 해고하는 사고가 난다. 리더 뱃지도 왼쪽 아래지만 편성 띠에만 서서 한 카드에서 안 만난다.
            카드 클릭(선택)까지 올라가지 않게 전파를 끊는다 */
         if (dismissable && h.uid === state.heroUid) {
             const out = el('button', 'btn hs-dismiss', t('ch.dismiss'));
@@ -2237,8 +2273,9 @@ function paperdoll(h) {
                 const skCtx = { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
                 bindTip(cell, it, { head: 'tip.equipped', ctx: skCtx });   // 이 칸의 것은 실제로 착용 중이다 (§6 머리글)
                 cell.onclick = () => {
+                    const before = runTacticsNow();
                     const r = SYS.game.unequip(G, h.uid, pos);
-                    if (!r.ok) flash(`ch.err.${r.err}`); else save();
+                    if (!r.ok) flash(`ch.err.${r.err}`); else { save(); runChangeFlash(h.uid, before); }   // 원정 중 교체 — 보스전 · 꺼진 전술 (R130)
                     render();
                 };
             }
@@ -2637,7 +2674,8 @@ function storagePanel(h, where, { showTarget = false } = {}) {
             //   스킬 칸이 서는 아이템(스킬을 담은 무기)만 계산한다 — 나머지 칸은 맥락을 안 읽는다
             const ifCb = it.skill ? SYS.game.heroCombatIf(G, h, it.uid) : null;
             const ifCtx = ifCb && { period: ifCb.action_period, ...rangeCtx(ifCb), hpMax: ifCb.hp_max, atkType: ifCb.attack_type, stats: h.stats };
-            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: ringHint, ctx: ifCtx ?? undefined, compareCtx: skCtx });
+            // 원정 중이면 「끼우면 꺼지는 전술」 줄이 선다 — 끼우기 전에 말한다 (§6 · ADR-0272)
+            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [ringHint, runTacticHint(h, it)], ctx: ifCtx ?? undefined, compareCtx: skCtx });
             // **끌어서 반대편 격자에 놓아도 옮겨진다** [2026-09-21 · ADR-0187] — `Ctrl`+클릭과 **같은 함수**라 거절 코드도 같다.
             //   고르는 중 · 잠그는 중에는 안 건다 — 체크 · 자물쇠를 붙이는 손짓과 끄는 손짓이 같은 칸에서 싸운다 (ADR-0184)
             if (!moding) bindCardDrag(cell, where === 'stash' ? '.store-bag' : '.store-stash', () => {
@@ -2659,8 +2697,9 @@ function storagePanel(h, where, { showTarget = false } = {}) {
                     if (!r.ok) flash(`ch.err.${r.err}`); else save();
                 } else {
                     // 창고에서도 **바로** 장착된다 — 꺼내는 단계가 없다 (item_design §1)
+                    const before = runTacticsNow();
                     const r = SYS.game.equip(G, h.uid, it.uid);
-                    if (!r.ok) flash(`ch.err.${r.err}`); else save();
+                    if (!r.ok) flash(`ch.err.${r.err}`); else { save(); runChangeFlash(h.uid, before); }   // 원정 중 교체 — 보스전 · 꺼진 전술 (R130)
                 }
                 render();
             };
@@ -2898,7 +2937,8 @@ function skillTreeBody() {
     /** 1랭크 찍기 — 거절 사유는 state 가 코드로 낸다 (INTERFACE §3) */
     const learn = id => {
         const r = SYS.game.learnMastery(G, h.uid, id);
-        if (r.ok) save();
+        if (r.ok) { save(); runChangeFlash(h.uid); }           // 보스전 중이면 「다음 런부터」 (R130)
+        else if (r.err === 'downed') flash('sk.err.downed');   // 도는 원정에서 쓰러져 있다 (R130)
         else if (r.err === 'locked') flash('sk.err.locked', { lv: ms.nodes.find(n => n.id === id)?.unlockLevel ?? 0 });
         else if (r.err === 'maxRank') flash('sk.err.maxRank');
         else if (r.err === 'points') flash('sk.err.points');
@@ -2908,7 +2948,8 @@ function skillTreeBody() {
     /** 1랭크 무르기 — 우클릭. 무료·수시라 확인을 묻지 않는다 (SCREEN_DESIGN §7) */
     const unlearn = id => {
         const r = SYS.game.unlearnMastery(G, h.uid, id);
-        if (r.ok) save();
+        if (r.ok) { save(); runChangeFlash(h.uid); }
+        else if (r.err === 'downed') flash('sk.err.downed');
         else if (r.err === 'noRank') flash('sk.err.noRank');
         render();
     };
@@ -2925,7 +2966,9 @@ function skillTreeBody() {
     reset.disabled = spent === 0;
     reset.onclick = () => {
         const r = SYS.game.resetMastery(G, h.uid);
-        if (r.ok) { flash('sk.reset.done', { n: r.refunded }); save(); }
+        // 보스전 중이면 「다음 런부터」가 먼저다 — 플래시는 한 줄이라 환급 수 대신 먹는 시점을 알린다 (R130)
+        if (r.ok) { save(); if (liveRun()?.party.includes(h.uid) && SYS.game.runLock(G, liveRun()) === 'boss') flash('exp.lock.boss'); else flash('sk.reset.done', { n: r.refunded }); }
+        else if (r.err === 'downed') flash('sk.err.downed');
         render();
     };
     const tools = el('div', 'sk-tools');
@@ -2972,18 +3015,16 @@ const optionEffect = o => L(M.affixText(o.stat, o.value, statRow(o.stat)));
 /** 칸 하나 — 잠긴 칸도 그린다(어디까지 열리는지가 보여야 한다 · §13). 무조건 옵션은 카운터를 달지 않는다 */
 function tacticCell(slot, onReroll) {
     const c = el('div', `rs-cell${slot.open ? (slot.active ? ' on' : ' off') : ' locked'}`);
-    const no = t('rs.slot', { n: slot.no });
+    // 칸 번호는 안 적는다 [2026-09-21 사용자 지시 · ADR-0261] — 세로 목록에서는 행의 순서가 번호다. 잠긴 행은 여는 조건 한 줄뿐
     if (!slot.open) {
-        c.innerHTML = `<div class="rs-top"><span class="rs-no">${no}</span></div>
-            <div class="rs-lock">${t('rs.needLv', { lv: slot.unlockTotalLevel })}</div>`;
+        c.innerHTML = `<div class="rs-lock">${t('rs.needLv', { lv: slot.unlockTotalLevel })}</div>`;
         return c;
     }
     const o = slot.option;
     const counter = o.condKind === 'always' ? '' : `<b class="rs-cnt">${slot.have} / ${slot.need}</b>`;
-    // 등급은 **값만** 가르므로 조건·효과 줄이 아니라 칸 머리에 선다 (§13-2 · tactic_card_design §5-5)
+    // 등급은 **값만** 가르므로 조건·효과 칸이 아니라 행 머리 — **맨 왼쪽**에 선다 (§15 · ADR-0261 · tactic_card_design §5-5)
     c.innerHTML = `
-        <div class="rs-top"><span class="rs-no">${no}</span>
-            <span class="rs-grade ${o.grade}">${t(`rs.grade.${o.grade}`)}</span>
+        <div class="rs-top"><span class="rs-grade ${o.grade}">${t(`rs.grade.${o.grade}`)}</span>
             <span class="rs-state">${t(slot.active ? 'rs.on' : 'rs.off')}</span></div>
         <div class="rs-cond">${condText(o)}${counter}</div>
         <div class="rs-eff">${optionEffect(o)}</div>`;
@@ -3435,20 +3476,22 @@ function searchCell(side) {
 /**
  * 제련소 탭 — 제작 · 강화 · 크래프트 (SCREEN_DESIGN §8-2 · 기획 item_design §7 · base_expedition_design §2-5).
  * 2026-09-03 사용자 지시로 마을의 칸에서 자기 탭이 됐다. **탭 이름이 장소 「제련소」다**(`nav.forge` · ADR-0190) —
- * 탭 이름이 곧 crumb 라 패널에 제목 줄을 두지 않는다. 작업 탭은 **상단바의 탭 세그먼트 자리**에 서고 고른 하나만 편다(ADR-0142).
+ * 패널 제목은 고른 작업 이름이다. 작업 탭은 **패널 박스 바로 위**에 서고(ADR-0281 — 상단바에서 내려왔다 · 도감과 같은 자리) 고른 하나만 편다(ADR-0142).
  * **지금 실제로 도는 것은 제작 · 강화 둘**이다 — 크래프트(R97)는 `game_logic` 에 없어 미착수 안내를 띄운다.
  * 배치 줄은 없다(ADR-0191) — 영웅은 작업할 때 배치되는 쪽으로 간다. 없는 기능에 가짜 수치를 그리지 않는다.
  */
 function renderForge(main) {
-    const p = el('div', 'panel page');
-
-    /* 작업 탭 — 상단바의 탭 세그먼트 자리 (원정 ADR-0094 · 도감 ADR-0174 와 같은 자리 · ADR-0190).
+    /* 작업 탭 — **패널 박스 바로 위**다 [사용자 지시 2026-09-21 · ADR-0281 — ~~상단바의 탭 세그먼트 자리(ADR-0190)~~].
+       도감의 세그먼트(ADR-0273)와 같은 자리 · 같은 모양(`.cx-tabs, .fg-tabs`). 박스 밖이라 스크롤하지 않는다.
        세 작업을 한 화면에 나란히 두지 않는다 — 고른 하나가 박스 끝까지 편다 (ADR-0142) */
     const TABS = [['make', 'fg.seg.make'], ['up', 'fg.seg.up'], ['craft', 'fg.seg.craft']];
     const tab = TABS.some(([id]) => id === state.forgeTab) ? state.forgeTab : 'make';
-    $('.tab-seg').appendChild(segmented(TABS.map(([id, key]) => ({ id, label: t(key) })), tab,
-        id => { state.forgeTab = id; render(); }));
+    const tabs = segmented(TABS.map(([id, key]) => ({ id, label: t(key) })), tab,
+        id => { state.forgeTab = id; render(); });
+    tabs.classList.add('fg-tabs');
+    main.appendChild(tabs);
 
+    const p = el('div', 'panel page');
     // 제목 = 고른 작업 이름 — 다른 탭과 같은 패널 제목(`.panel > h2`)이라 서 있고 본문만 스크롤한다
     p.appendChild(el('h2', '', tab === 'craft'
         ? `${t('fg.seg.craft')} <small class="todo-badge">${t('todo.badge')}</small>`
@@ -3478,8 +3521,9 @@ const slotPickHtml = s => {
 /**
  * 제작 칸 — 위 고르개 줄(부위 칸 전부 + 끝에 물약 칸)에서 하나를 고르고, 고른 것만 아래에 편다
  * (SCREEN_DESIGN §8-2 · ADR-0219 · ADR-0230 — 강화의 부위 필터와 같은 가로 줄이다. 왼쪽 세로 탭(ADR-0226)은 되돌렸다).
- * 부위면 레벨대를 고르고 재료 `보유 / 필요` 를 보고 만든다 (기획 item_design §7-1 · R96) · 물약이면 `forgePotion`.
- * 판정(재료 모자람 · 인벤토리 가득)은 `game.makeState` 가 낸다 — 렌더러는 세지 않는다. 결과는 희귀도 굴림이라 미리보기가 없다
+ * 부위면 레벨(Lv1 · Lv10 …)을 고르고, 그 아래 **종류 목록**의 줄마다 만든다 — 줄 = 그림 · 이름 · 필요 재료 칸 · [만들기]
+ * (기획 item_design §7-1 개정 2026-09-21 · ADR-0263) · 물약이면 `forgePotion`.
+ * 판정(재료 모자람 · 인벤토리 가득)과 종류 목록은 `game.makeState` 가 낸다 — 렌더러는 세지 않는다. 희귀도는 굴림이라 미리보기가 없다
  */
 function forgeMake(p) {
     const potion = state.makePart === 'potion';
@@ -3502,36 +3546,44 @@ function forgeMake(p) {
 
     if (potion) { forgePotion(col); return; }
 
-    const bands = SYS.game.makeBands();
-    const band = bands.some(b => b.band === state.makeBand) ? state.makeBand : bands[0]?.band;
-    const lv = el('div', 'segmented');
-    for (const b of bands) {
-        const btn = el('button', `btn sm${band === b.band ? ' on' : ''}`, t('fg.make.band', { lo: b.lo, hi: b.hi }));
-        btn.onclick = () => { state.makeBand = b.band; render(); };
+    const levels = SYS.game.makeLevels();
+    const level = levels.some(l => l.level === state.makeLevel) ? state.makeLevel : levels[0]?.level;
+    const lv = el('div', 'segmented');   // 칸 폭 = 위 부위 칸 폭 (`.fg-make > .segmented > .btn`)
+    for (const l of levels) {
+        const btn = el('button', `btn sm${level === l.level ? ' on' : ''}`, t('fg.make.lv', { n: l.level }));
+        btn.onclick = () => { state.makeLevel = l.level; render(); };
         lv.appendChild(btn);
     }
     col.appendChild(lv);
 
-    const ms = SYS.game.makeState(G, part, band);
-    if (ms) {
-        const blk = el('div', 'fg-block');
-        for (const c of ms.cost)
-            blk.appendChild(el('div', `fg-mat${c.have < c.need ? ' no' : ''}`,
-                `<span>${c.kind === 'dust' ? t('res.dust') : matName(c.kind, c.id)}</span><b>${c.have} / ${c.need}</b>`));
-        const act = el('div', 'fg-act');
+    const ms = SYS.game.makeState(G, part, level);
+    if (!ms) return;
+    // 필요 재료 칸 셋 — 그림 자리에 **재료 이름 글자**(재료 아트가 없다 · 상점 재료 칸과 같은 규칙) · 칸 아래 `보유/필요`.
+    //   필요량은 부위마다 한 줄이라 모든 줄이 같은 칸을 든다 (ADR-0263)
+    const mats = ms.cost.map(c => {
+        const name = c.kind === 'dust' ? t('res.dust') : matName(c.kind, c.id);
+        return `<span class="fg-kmat${c.have < c.need ? ' no' : ''}" title="${name} ${c.have} / ${c.need}"><span class="fg-kmat-ic">${name}</span><b>${c.have}/${c.need}</b></span>`;
+    }).join('');
+    const list = el('div', 'fg-kinds');
+    // 줄 높이 — 목록이 패널 맨 아래에 닿게 가르는 줄 수 = 이 레벨에서 줄이 가장 많은 부위의 줄 수 (부위를 바꿔도 줄 높이가 같다 · style.css `.fg-kinds`)
+    list.style.setProperty('--kind-rows', Math.max(...D.slots.map(s => SYS.game.makeState(G, s.id, level)?.kinds.length ?? 0)));
+    for (const k of ms.kinds) {
+        // 그림 · 이름 = **만들어질 베이스** — 인벤토리 칸과 같은 규칙(`itemImg`). 무기는 그 레벨의 세부 베이스다(레벨을 바꾸면 바뀐다 · `makeState` 의 `baseId`)
+        const look = { slot: part, group: k.group, baseId: k.baseId };
+        const row = el('div', 'fg-kind', `<span class="fg-ic">${itemImg(look)}</span><span class="fg-kname">${L(k)}</span><span class="fg-kmats">${mats}</span>`);
         const go = el('button', 'btn primary sm', t('fg.make.go'));
         go.disabled = !ms.canMake;
         go.onclick = () => {
-            const r = SYS.game.makeItem(G, part, band);
+            const r = SYS.game.makeItem(G, part, level, k.id);
             if (!r.ok) flash(`fg.err.${r.err}`);
             else { flash('fg.made', { name: L(G.items[r.uid].name) }); save(); }
             render();
         };
-        act.appendChild(go);
-        if (ms.err === 'bagFull') act.appendChild(el('span', 'fg-cost no', t('fg.err.bagFull')));
-        blk.appendChild(act);
-        col.appendChild(blk);
+        row.appendChild(go);
+        list.appendChild(row);
     }
+    col.appendChild(list);
+    if (ms.err === 'bagFull') col.appendChild(el('div', 'fg-kerr', t('fg.err.bagFull')));
 }
 
 /**
@@ -3685,7 +3737,7 @@ function renderShop(main) {
     body.dataset.keep = 'shop';
 
     /* 상단 — 장비 · 재료 탭은 **패널 안**이다. 이 둘은 상단의 목록만 가르고 특수상단은 그대로라,
-       탭 전체를 가르는 상단바 자리(원정 · 편성 · 제련소 · 도감)에 두면 특수상단까지 갈리는 것으로 읽힌다 (ADR-0223) */
+       탭 전체를 가르는 상단바 자리(원정 · 편성 · 도감)에 두면 특수상단까지 갈리는 것으로 읽힌다 (ADR-0223) */
     const seg = segmented([{ id: 'equip', label: t('td.tab.equip') }, { id: 'mat', label: t('td.tab.mat') }], tab,
         id => { state.shopTab = id; state.shopSel = null; render(); });
     seg.classList.add('td-tabs');
@@ -3802,9 +3854,10 @@ function shopGoods(list, src, cycle) {
         cell.onclick = () => { state.shopSel = sel === g ? null : { src, i, cycle }; render(); };
         slot.appendChild(cell);
         slot.appendChild(el('div', `td-price${poor(g) ? ' no' : ''}`, `${g.gold.toLocaleString()} G`));
-        // 장비는 **같은 부위끼리 붙여** 한 묶음으로 세운다 [사용자 지시] — 목록이 부위 순서로 오므로 부위가 바뀌는 자리에서 새 묶음을 연다 (§8-3)
+        // 장비는 **같은 부위끼리 붙여** 한 묶음으로 세운다 [사용자 지시] — 목록이 부위 순서로 오므로 부위가 바뀌는 자리에서 새 묶음을 연다 (§8-3).
+        //   묶음은 `shop_equip_per_slot` 칸에서 끊는다 — 무기 여섯이 셋 · 셋 두 묶음이 되어 아래 줄과 같은 짜임으로 선다 (사용자 지시 「3/3으로」 · ADR-0282)
         if (src === 'equip') {
-            if (group?.dataset.part !== g.item.slot) {
+            if (group?.dataset.part !== g.item.slot || group.childElementCount >= D.balance.shop_equip_per_slot) {
                 group = el('div', 'td-group');
                 group.dataset.part = g.item.slot;
                 grid.appendChild(group);
@@ -3838,8 +3891,8 @@ function stageBonus(stage) {
     return { total, complete };
 }
 
-/** 카드 하나 — `grade` 는 초상만 가른다(수치는 몬스터 하나의 집계다 · ADR-0167) */
-function monsterCard(m, grade) {
+/** 카드 하나 — `grade` 는 초상만 가른다(수치는 몬스터 하나의 집계다 · ADR-0167) · `stat` 은 스테이지 계열 라벨(없으면 `—` · ADR-0098) */
+function monsterCard(m, grade, stat) {
     const cum = D.codexLevels;                 // 레벨별 **누적 처치 문턱** 그대로 (codex_level.csv:kills_total)
     const lv = codexLv(m.kills);
     const maxLv = cum.length;
@@ -3865,9 +3918,9 @@ function monsterCard(m, grade) {
                 <span class="mon-name">${name}${m.boss ? `<span class="b-tag">${t('kind.boss')}</span>` : ''}</span>
                 <div class="mon-mid">
                     <span class="pips">${pips}</span>
-                    <span class="mon-next muted">${t('cx.kills', { n: m.kills.toLocaleString() })} · ${next
-                        ? `${t('cx.next', { n: next.toLocaleString() })} <span class="up">+${M.pctNum(D.codexBonus[lv] ?? 0)}%</span>`
-                        : `<span class="up">${t('cx.max')}</span>`}</span>
+                    <span class="mon-next muted">${t('cx.kills', { n: m.kills.toLocaleString() })} · ${t('cx.tip.lv', { lv })} · ${stat
+                        ? `<span class="up">${L(stat)} +${(SYS.game.codexBonusAt(lv) * 100).toFixed(1)}%</span>`
+                        : '—'}</span>
                 </div>
                 <div class="bar"><i style="width:${pct}%"></i></div>
             </div>
@@ -3880,6 +3933,8 @@ const CODEX_SEGS = ['monster', 'character', 'item', 'skill'];
 const CODEX_GRADES = ['normal', 'elite'];
 /** 아이템 안쪽 분류 — 무기와 비무기 장비(방어구 · 장신구)를 가른다 (ADR-0179) */
 const CODEX_ITEM_SEGS = ['weapon', 'armor'];
+/** 챕터보스 카드가 차지하는 격자 칸 수 — 보스라서 두 칸이다 (ADR-0257). 남은 칸은 `???` 자리가 채운다 */
+const CX_BOSS_SPAN = 2;
 
 /**
  * 도감 (SCREEN_DESIGN §9 · 개정 2026-09-08 사용자 지시 — 「이미지 도감」 탭 흡수).
@@ -3887,8 +3942,11 @@ const CODEX_ITEM_SEGS = ['weapon', 'armor'];
  * 몬스터의 챕터 세그먼트부터 각 화면의 도구 줄이 시작한다.
  */
 function renderCodex(main) {
-    $('.tab-seg').appendChild(segmented(CODEX_SEGS.map(id => ({ id, label: t(`cx.seg.${id}`) })), state.codexSeg,
-        id => { state.codexSeg = id; render(); }));
+    // 세그먼트는 패널 박스 바로 위에 선다 — 상단바가 아니다 (ADR-0273 · 0174 대체)
+    const tabs = segmented(CODEX_SEGS.map(id => ({ id, label: t(`cx.seg.${id}`) })), state.codexSeg,
+        id => { state.codexSeg = id; render(); });
+    tabs.classList.add('cx-tabs');
+    main.appendChild(tabs);
     const p = el('div', 'panel page');     // 박스 (ADR-0097) — 도구 줄은 서 있고 목록 · 묶음이 본문으로 스크롤한다
     ({ monster: codexMonster, character: codexCharacter, item: codexItem, skill: codexSkill })[state.codexSeg](p);
     main.appendChild(p);
@@ -3915,8 +3973,11 @@ function codexMonster(p) {
     }));
 
     const bar = el('div', 'sub-bar');
-    bar.appendChild(segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}`, color: sinColor(c.sin) })), ch.id,
-        id => { state.codexChapter = id; render(); }));
+    // 챕터 버튼은 상단바 탭 세그먼트와 같은 크기다 — `.cx-ch-seg` 가 메인 배율을 되돌린다 (§9 · 2026-09-21 사용자 지시)
+    const chSeg = segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}`, color: sinColor(c.sin) })), ch.id,
+        id => { state.codexChapter = id; render(); });
+    chSeg.classList.add('cx-ch-seg');
+    bar.appendChild(chSeg);
     // 오른쪽에 죄종 + 얼굴 스타일 — 여기가 몬스터 초상을 가장 크게 그리는 화면이라 스타일 고르개가 같이 선다 (§9)
     const right = el('div', 'ix-style');
     right.appendChild(el('span', 'muted', `${t('cx.sinLabel')} <b style="color:${sinColor(ch.sin)}">${sinName(ch.sin)}</b>`));
@@ -3927,34 +3988,75 @@ function codexMonster(p) {
     faceStylePicker(right);
     bar.appendChild(right);
     p.appendChild(bar);
-    // 스테이지 행이 박스 높이를 똑같이 나눠 갖고 **맨 아래까지** 선다 — 늘어난 세로는 초상이 먹는다 (§9)
+    // 스테이지 행이 본문 높이를 똑같이 나눠 갖는다 — 늘어난 세로는 초상이 먹는다 (§9) · 마지막 행은 새 게임 줄 윗선 바로 위에서 끝난다 (ADR-0264)
     const body = el('div', 'box-body cx-mon');
     body.dataset.keep = 'codex:monster';
+    // 카드 칸 격자 — 열 수는 그 챕터 스테이지의 최대 몬스터 수다. 모든 행의 카드 폭이 이 격자 하나를 따른다 (ADR-0255)
+    const cols = Math.max(...stages.map(st => st.monsters.length));
+    body.style.setProperty('--cx-cols', cols);
     p.appendChild(body);
 
+    const last = stages.at(-1);
     for (const stage of stages) {
-        const { total, complete } = stageBonus(stage);
-        const row = el('div', 'codex-stage');
-        // 계열이 없는 스테이지(챕터보스 단독 5스테이지)는 보정 칸이 **빈 칸**이다 — 계열 배정이 기획 미정이라(GAME_DESIGN §10)
-        //   라벨을 지어내지 않는다. 합산도 안 되므로(`codexBonus` 가 그 스테이지 번호를 건너뛴다) 숫자도 안 찍는다 (2026-09-11)
-        const gain = stage.stat
-            ? `<span class="up">${L(stage.stat)} +${(total * 100).toFixed(1)}%</span>
-                    <span class="muted"> · ${t('cx.completion')} ${complete ? `<span class="up">${L(stage.completion)}</span>` : L(stage.completion)}</span>`
-            : '<span class="muted">—</span>';
-        row.innerHTML = `
-            <div class="cs-head">
-                <div class="cs-title"><span class="muted">${stage.num}</span> ${L(stage.name)}</div>
-                <div class="cs-gain">${gain}</div>
-            </div>
-            <div class="mon-strip">${stage.monsters.map(m => monsterCard(m, state.codexGrade)).join('')}</div>`;
-        // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 · **카드 옆에 붙는다**(읽는 카드라 커서를 따라가면 흔들린다 · ADR-0206 · ADR-0120).
-        //   초상 · 핍의 작은 툴팁(파일명 · 문턱)은 그대로 둔다 — 사용자 지시 「나중에 수정」
-        for (const node of row.querySelectorAll('.mon-card[data-mid]')) {
-            const m = stage.monsters.find(x => String(x.id) === node.dataset.mid);
-            if (m) bindTipNode(node, () => codexMonsterTipCard(m, state.codexGrade, stage.stat), { anchor: true });
-        }
-        body.appendChild(row);
+        const row = codexStageRow(stage);
+        if (stage !== last || stage.monsters.length >= cols) { body.appendChild(row); continue; }
+        // 마지막 행 — 챕터보스 스테이지 옆에 다음 번호의 `???` 자리가 남은 칸을 채운다 (ADR-0255 · 데이터가 없는 화면 자리).
+        //   챕터보스 카드는 격자 두 칸이다(ADR-0257) — 몬스터가 칸보다 많으면 제 수만큼
+        const span = Math.min(cols - 1, Math.max(CX_BOSS_SPAN, stage.monsters.length));
+        const pair = el('div', 'cs-pair');
+        row.style.setProperty('--k', span);
+        pair.append(row, codexUnknownRow(stage.num + 1, cols - span));
+        body.appendChild(pair);
     }
+}
+
+/** 스테이지 한 행 — 이름 줄은 상자 밖 위, 상자는 몬스터 카드 줄만 감싼다 (ADR-0254) */
+function codexStageRow(stage) {
+    const { total, complete } = stageBonus(stage);
+    const row = el('div', 'codex-stage');
+    // 계열이 없는 스테이지(챕터보스 단독 5스테이지)는 보정 칸이 **빈 칸**이다 — 계열 배정이 기획 미정이라(GAME_DESIGN §10)
+    //   라벨을 지어내지 않는다. 합산도 안 되므로(`codexBonus` 가 그 스테이지 번호를 건너뛴다) 숫자도 안 찍는다 (2026-09-11)
+    const gain = stage.stat
+        ? `<span class="up">${L(stage.stat)} +${(total * 100).toFixed(1)}%</span>
+                <span class="muted"> · ${t('cx.completion')} ${complete ? `<span class="up">${L(stage.completion)}</span>` : L(stage.completion)}</span>`
+        : '<span class="muted">—</span>';
+    row.innerHTML = `
+        <div class="cs-head">
+            <div class="cs-title"><span class="muted">${M.roman(stage.num)}</span> ${L(stage.name)}</div>
+            <div class="cs-gain">${gain}</div>
+        </div>
+        <div class="mon-strip">${stage.monsters.map(m => monsterCard(m, state.codexGrade, stage.stat)).join('')}</div>`;
+    // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 · **카드 옆에 붙는다**(읽는 카드라 커서를 따라가면 흔들린다 · ADR-0206 · ADR-0120).
+    //   초상 · 핍의 작은 툴팁(파일명 · 문턱)은 그대로 둔다 — 사용자 지시 「나중에 수정」
+    for (const node of row.querySelectorAll('.mon-card[data-mid]')) {
+        const m = stage.monsters.find(x => String(x.id) === node.dataset.mid);
+        if (m) bindTipNode(node, () => codexMonsterTipCard(m, state.codexGrade, stage.stat), { anchor: true });
+    }
+    return row;
+}
+
+/** `???` 자리 — 번호만 있고 이름 · 몬스터가 없는 스테이지 행 (ADR-0255). 스테이지 · 몬스터 표에 행이 없어 툴팁도 없다 */
+function codexUnknownRow(num, n) {
+    const row = el('div', 'codex-stage unknown');
+    const card = `
+        <div class="mon-card unknown">
+            <span class="face none"></span>
+            <div class="mon-body">
+                <span class="mon-name">???</span>
+                <div class="mon-mid">
+                    <span class="pips">${'<span class="pip"></span>'.repeat(D.codexLevels.length)}</span>
+                    <span class="mon-next muted">—</span>
+                </div>
+                <div class="bar"><i style="width:0%"></i></div>
+            </div>
+        </div>`;
+    row.innerHTML = `
+        <div class="cs-head">
+            <div class="cs-title"><span class="muted">${M.roman(num)}</span> ???</div>
+            <div class="cs-gain"><span class="muted">—</span></div>
+        </div>
+        <div class="mon-strip">${card.repeat(n)}</div>`;
+    return row;
 }
 
 /* ═══════════ 도감의 자산 세그먼트 — 캐릭터 · 아이템 · 스킬 (SCREEN_DESIGN §9-1) ═══════════
@@ -4124,7 +4226,7 @@ function helpSections() {
             ],
         },
         {
-            // 편성 — 파티 전술 묶음이 연구 섹션에서 이사 왔다(칸을 굴리는 자리가 편성 탭이다 · §12 · §15 · 2026-09-21)
+            // 편성 — 파티 전술 묶음이 건설(옛 연구) 섹션에서 이사 왔다(칸을 굴리는 자리가 편성 탭이다 · §12 · §15 · 2026-09-21)
             title: t('nav.party'),
             groups: [
                 { h: t('rs.h'), sub: t('rs.open'), body: [t('rs.note'), t('rs.note.cond')] },
@@ -4153,6 +4255,13 @@ function helpSections() {
             ],
         },
         {
+            // 건설(옛 연구)은 탭처럼 캐릭터 뒤로 왔다 — 스킬은 캐릭터 탭 안의 창이라 캐릭터에 붙어 있고, 건설은 그 뒤다 (§12 · ADR-0253)
+            title: t('nav.research'),
+            groups: [
+                { h: t('rs.research.h'), body: [t('rs.research.note')] },
+            ],
+        },
+        {
             // 선술집 = 마을에서 갈라져 나온 섹션 (탭을 되찾았으므로 · SCREEN_DESIGN §12 개정 2026-09-03).
             // 의뢰 묶음도 원정 섹션에서 여기로 이사했다 — 게시판이 이 탭 안에 서기 때문이다 (§8-1)
             title: t('nav.tavern'),
@@ -4176,12 +4285,6 @@ function helpSections() {
             title: t('nav.explore'),
             groups: [
                 { h: t('ex.h'), body: [t('ex.todo')] },
-            ],
-        },
-        {
-            title: t('nav.research'),
-            groups: [
-                { h: t('rs.research.h'), body: [t('rs.research.note')] },
             ],
         },
         {
@@ -4338,7 +4441,7 @@ async function boot() {
         // 고른 지역을 그 스테이지로 채운다 — `runBattle` 은 고른 지역으로 나갈 때만 반복 의사(`&rep=1`)를 런에 옮긴다.
         //   안 채우면 반복이 늘 꺼진 채 나갔다(DEV_PLAN §4 #49 · 유저 흐름은 행 클릭이 채운다)
         state.expStage = playId;
-        runBattle(playId, { tab: new URLSearchParams(location.search).get('bt'), logf: new URLSearchParams(location.search).get('logf') });
+        runBattle(playId, { tab: new URLSearchParams(location.search).get('bt'), logf: new URLSearchParams(location.search).get('logf'), dmgf: new URLSearchParams(location.search).get('dmgf') });
         // `&tip=e|p` — **첫 적 카드 / 첫 영웅 카드의 툴팁**이 뜬 관전 [2026-09-14 · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §10]. 툴팁은 hover 로만 뜨고,
         //   적 카드는 `round` 이벤트가 재생기에 들어간 뒤에 서므로 여기서는 아직 없다 — 설 때까지 기다렸다 한 번 올린다.
         //   `&alt=1` 이면 올린 뒤 **Alt 를 누른 채**로 둔다 — 세부 옵션 열도 누르는 동안만 서서 헤드리스가 못 닿는다(tip.js 의 keydown 을 그대로 탄다)
@@ -4400,10 +4503,12 @@ async function boot() {
     }
     if (dev === 'mats') {   // 제작 재료를 쥔 제련소 — 광석 · 목재는 파견이 채우는데 파견이 아직 없어 [만들기]가 늘 잠긴다 (SCREEN_DESIGN §8-2 · §10 · R96)
         if (!G) startGame();
-        // 양은 레시피 표가 정한다 — 부위 전부를 레벨대마다 한 번씩 만들 만큼. 화면이 수량을 지어내지 않는다
-        const rs = Object.values(D.makeRecipes), sum = k => rs.reduce((a, r) => a + r[k], 0), bands = SYS.game.makeBands();
-        for (const b of bands) { G.materials[b.ore] = sum('ore'); G.materials[b.timber] = sum('timber'); }
-        G.resources.dust = sum('dust') * bands.length;
+        // 양은 레시피 표가 정한다 — 부위 전부를 레벨마다 한 번씩 만들 만큼(Lv1 · Lv10 은 같은 단계라 둘 몫). 화면이 수량을 지어내지 않는다
+        const rs = Object.values(D.makeRecipes), sum = k => rs.reduce((a, r) => a + r[k], 0), levels = SYS.game.makeLevels();
+        const per = {};
+        for (const l of levels) { per[l.ore] = (per[l.ore] ?? 0) + sum('ore'); per[l.timber] = (per[l.timber] ?? 0) + sum('timber'); }
+        Object.assign(G.materials, per);
+        G.resources.dust = sum('dust') * levels.length;
         state.tab = 'forge';
     }
     // `&fg=` — 제련소의 작업 탭을 고른 채 연다 (§10 · ADR-0142). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다

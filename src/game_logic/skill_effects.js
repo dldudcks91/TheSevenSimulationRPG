@@ -98,9 +98,14 @@ export const ATTACK_TARGETS = {
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
             rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
-            // 방어 감소는 **밑수까지** 깎는다 — 창이 다시 파생돼도 되돌아오지 않게 (guard_pct 와 같은 축이다)
-            tgt.defBase = Math.max(0, tgt.defBase * (1 - def.decay));
-            tgt.def = Math.max(0, tgt.def * (1 - def.decay));
+            // 방어 감소는 **밑수까지** 깎는다 — 창이 다시 파생돼도 되돌아오지 않게 (guard_pct 와 같은 축이다).
+            //   % 로 깎으므로 **양수 밑수만** 깎고, 깎은 비율을 `defKeep` 에 곱한다 — 갈아입기가 이 비율로 잇는다(벗었다 입어도 안 씻긴다 · R130).
+            //   `def` 도 같은 비율로 — 밑수 × 창 배수라 둘을 같이 곱하면 다시 파생한 것과 같다(0 밑으로 자르지 않는다 · 음수 방어 R130)
+            if (tgt.defBase > 0) {
+                tgt.defBase = tgt.defBase * (1 - def.decay);
+                tgt.defKeep = (tgt.defKeep ?? 1) * (1 - def.decay);
+                tgt.def = tgt.def * (1 - def.decay);
+            }
         }
     },
     /** 연쇄 — 시작점만 굴리고(rng 1회 · **전열 우선**) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다 */
@@ -166,7 +171,7 @@ export const EFFECTS = {
     // 방어값 비율 + 전 저항(같은 비율을 더한다)을 **함께** 민다 — 전사 외침. 한 행이 채널 하나만 들어서 둘을 한 효과로 묶었다
     guard_pct: {
         derive: (u, sum) => {
-            u.def = u.defBase * (1 + sum);
+            u.def = defScaled(u.defBase, sum);
             for (const k of Object.keys(u.res)) u.res[k] = u.resBase[k] + sum;
         },
     },
@@ -174,7 +179,7 @@ export const EFFECTS = {
     //   `guard_pct` 와 **같은 축**(방어값 · 저항)을 밀므로 guard 의 창 합까지 함께 다시 쓴다 — 표 순서상 guard 뒤라 마지막에 쓴 값이 둘을 다 든다
     // 방어값 % — 물리 무기 통합옵션 「타격 시 대상 방어력 감소」(음수)
     def_pct: {
-        derive: (u, sum) => { u.def = u.defBase * (1 + sum + buffSumOf(u, 'guard_pct')); },
+        derive: (u, sum) => { u.def = defScaled(u.defBase, sum + buffSumOf(u, 'guard_pct')); },
     },
     // 원소 하나의 저항 %p — 마법 무기 통합옵션 「타격 시 그 원소의 대상 저항 감소」(음수). 창이 든 `element` 칸만 민다
     res_elem: {
@@ -241,6 +246,15 @@ export function refreshDerived(u) {
         for (const b of Object.values(u.buffs)) if (b.stat === stat) sum += b.v;
         h.derive(u, sum);
     }
+}
+
+/**
+ * 방어 % 창이 민 방어값 [2026-09-21 · R130 · battle_design §9-3] — **양수 밑수에만 곱한다.** 밑수가 0 이하면 창이 안 민다 — 곱하면 버프가 음수를
+ *   더 깊게 · 디버프가 얕게 만들어 뜻이 뒤집힌다(안전장치 — 깎인 방어는 비율 `defKeep` 이라 지금은 밑수가 음수로 가는 길이 없다). 양수 밑수라도 감소 합이 −100% 를 넘으면
+ *   방어가 음수로 간다(`formula.mitigation` 의 거울식)
+ */
+function defScaled(base, pct) {
+    return base > 0 ? base * (1 + pct) : base;
 }
 
 /** 한 유닛의 한 stat 창 합 — guard 와 같은 축을 미는 무기 옵션 창(`def_pct` · `res_elem`)이 guard 몫까지 함께 다시 쓸 때 쓴다 */

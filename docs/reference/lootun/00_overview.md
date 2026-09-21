@@ -218,7 +218,7 @@ Profession Hall → Mine(광물) / Forest(약초) / Farm(농작)
 
 ## 7. 거점 건물 (요약)
 
-> **상세 전수 조사는 [03_buildings.md](03_buildings.md)로 이관됐다** — 26종 건물별 랭크 효과 · 해금 의존 그래프 · 게이트/보상 분포 · 재화 구조 · 본작 대조. 2026-08-31 재조사로 구 「정체 미상 4종」 중 **3종이 규명**됐고 v2 서술 **7건이 정정**됐다. 여기서는 구조만 요약한다.
+> **상세 전수 조사는 [03_buildings.md](03_buildings.md)로 이관됐다** — 26종 랭크별 효과 한 장 표(§1) · 건물별 근거 · 해금 의존 그래프 · 게이트/보상 분포 · 재화 구조 · 본작 대조. 여기서는 구조만 요약한다.
 
 | 분류 | 건물 |
 |---|---|
@@ -236,7 +236,7 @@ Profession Hall → Mine(광물) / Forest(약초) / Farm(농작)
 
 > **건물이 곧 시스템 해금이다.** 개조 도구도, 자동화도, 드롭 품질(Nemesis)도, 콘텐츠 접근권도 전부 건물 랭크 뒤에 있다.
 
-→ 본작은 **파견처의 건설·업그레이드를 폐기**했다(GAME_DESIGN.md §9 08-26). 이 축의 전체 대조는 [03_buildings.md §11](03_buildings.md).
+→ 본작은 **파견처의 건설·업그레이드를 폐기**했다(GAME_DESIGN.md §9 08-26). 이 축의 전체 대조는 [03_buildings.md §12](03_buildings.md).
 
 ---
 
@@ -405,20 +405,15 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 
 | 항목 | 상태 |
 |---|---|
-| **Deep Dive #4·#6 원문** | 확보 실패. 주제 미상(미션/전투·플라스크/인챈트로 추정) |
+| **Deep Dive #4·#6 원문** | Steam 뉴스 API(`ISteamNews/GetNewsForApp`, appid 1960270)로 받을 수 있다 — #4 Missions & Combat · #6 Flasks and Gems. **이 문서에는 아직 반영 안 함** |
 | **전투가 실시간인가 라운드 턴제인가** | 1차 자료 없음 |
 | **어그로/위협 수치의 구체 규칙** | 탱 역할·전담 탱커 요구는 확인, 수치 규칙 미확인 |
 | **인챈트 총수** | [상점]50+ vs [가이드]100~150+ 충돌 |
 | **로스터 상한** | [상점 1.3]18 vs 구 인게임 FAQ 10 충돌 |
 | **랭크 +10%의 정확한 기준** | 곱연산 기준선 미확인 |
 | **Nemesis Overload/Pristine 재료 획득 경로** | Mythic 콘텐츠라는 것까지만(§6-2 확률 실측은 02_items.md §6-2 참조) |
-| **26개 건물의 정확한 랭크별 골드/재료 비용 전체** | 초기 건설비 일부만 확인 |
-| **Expedition·Grand Expedition·Fortress·Pinnacle** | 존재만 확인, 기능 완전 미상 |
-| **Hidden Vault 전체 기능** | 단편만 확인 |
 | **Community Project 패시브 트리 ↔ Faction 패시브 트리** | 같은 재화 풀인지 별개인지 미확정 |
-| **"건물 풀업 15개" 도전과제가 26종 중 어느 15종을 지칭하는지** | 미확인 |
-| **Artisan's Hall이 세 크래프트를 여는 정확한 랭크** | 5 vs 6, 출처 불일치 |
-| **Castle/Watchtower 랭크 4+, War Camp/Bounty Board 랭크 2+** | 전 구간 미확인 |
+| **건물 랭크별 효과 · 비용의 남은 공백** | [03_buildings.md §14-2](03_buildings.md) 로 이관 |
 
 > **스킬 47/56 확보 세부 · 아이템 관련 N/F는 각 짝 문서의 마지막 절로 이관됐다** — [01_skills.md §8-3](01_skills.md#8-3-미확인nf-총괄) · [02_items.md §13-3](02_items.md#13-3-미확인nf-총괄).
 
@@ -445,4 +440,4 @@ Missions → Bounties → Agony → Factions → Ancient Bastion → Raids → E
 - `lootun_reference.md` 파일 자체는 **삭제**됐다. 저장소 내 상호 참조(`laststory_reference.md`·`dragoncliff/`·`.claude/skills/game-design/doc_map.md`)는 새 경로로 갱신됨
 
 ---
-*마지막 업데이트: 2026-08-31(**§7 거점 건물을 03_buildings.md 로 이관·심화** — 26종 랭크별 효과 보강 · 구 「정체 미상」 4종 중 3종 규명(Expedition·Fortress·Pinnacle) · 분류 재편(성장 상한 3→4 · 콘텐츠 게이트 5→8) · v2 정정 7건. 이 문서에는 분류표와 요약만 남긴다) · 2026-08-28(폴더 3분리 — 스킬·아이템 조사를 01_skills.md/02_items.md로 이관·심화, 이 문서는 개요+비-스킬/아이템 시스템 전담으로 재편) · 2026-08-27(§3 액티브 스킬 47/56 전수 확보) · 2026-08-26(§7 거점 건물 심층조사 v2)*
+*마지막 업데이트: 2026-09-21*

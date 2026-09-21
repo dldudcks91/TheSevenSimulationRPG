@@ -189,7 +189,8 @@ export async function loadData(base = './data/') {
     if (new Set(wordTiers).size !== 1 || !wordTiers[0] || wordTiers[0].split(',').some((t, i) => Number(t) !== i + 1))
         throw new Error(`data: sin_word.csv — 죄종마다 단이 1 부터 같은 수만큼 있어야 한다 (${wordTiers.join(' / ')})`);
     D.weaponBases = {};
-    for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en });
+    // `make_level` — 제작에서 이 베이스가 나오는 레벨 [2026-09-21 사용자 지시 · item_design §7-1] (드롭은 아직 안 읽는다)
+    for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en, makeLevel: Number(r.make_level) });
     // 무기 옵션 표 둘 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — 무기는 고정 1 + 죄종 칸 + 통합옵션을 받고 `affix.csv` 를 안 쓴다.
     //   `applies_to` = `all` · damage_kind · 직업 id — 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     D.weaponSinOptions = weaponSinOptionRow.map(r => ({ sin: r.sin, appliesTo: r.applies_to, stat: r.stat, scale: r.scale, min: r.min, max: r.max }));
@@ -236,7 +237,7 @@ export async function loadData(base = './data/') {
     D.mineNodes = tierNodes(mineNodeRow, 'mine_id', 'ore');
     D.gatherNodes = tierNodes(gatherNodeRow, 'gather_id', 'herb');
     D.logNodes = tierNodes(logNodeRow, 'log_id', 'timber');
-    // 제작 레시피 — 부위마다 광석 · 목재 · 가루 필요량(item_design §7-1 · R96). 어느 단계의 재료인지는 레벨대가 정한다(state.js makeBands)
+    // 제작 레시피 — 부위마다 광석 · 목재 · 가루 필요량(item_design §7-1 · R96). 어느 단계의 재료인지는 레벨이 든 챕터가 정한다(state.js makeLevels · 2026-09-21)
     D.makeRecipes = Object.fromEntries(makeRecipeRow.map(r => [r.part, { ore: r.ore_units, timber: r.timber_units, dust: r.dust_units }]));
     // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
     D.potions = potionRow.map(r => ({

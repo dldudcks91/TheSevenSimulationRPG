@@ -177,6 +177,10 @@ export const pctNum = v => Number((v * 100).toFixed(2));
 /** 비율 하나를 부호 없는 `n%` 로 — 옵션 줄이 아닌 문장 안의 확률(목걸이 발동 줄 · 2026-09-21). 단위를 붙이는 곳은 이 파일 하나다 */
 export const pctText = v => `${pctNum(v)}%`;
 
+/** 로마 숫자 — 도감 스테이지 행의 번호(`I 파멸의 진영` · 2026-09-21 사용자 지시). 언어와 무관한 기호라 i18n 을 안 거친다 */
+const ROMAN = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+export const roman = n => ROMAN.reduce((s, [v, r]) => { while (n >= v) { s += r; n -= v; } return s; }, '');
+
 /** 값만 — 부호와 단위는 affixText 와 **같은 규칙**이다 (단위를 붙이는 곳은 이 파일 하나) */
 export const statValue = (stat, v, fallback) => {
     const pct = statLabel(stat, fallback).fmt === 'pct';
@@ -255,9 +259,11 @@ export const PAPERDOLL = [
    mage_1 마법사(수정구 예언자 — 09-07 밤, 마지막 직업 공백이 닫혔다) ·
    mage_2 포세이돈(청록 장발·수염 노인) · mage_3 노스트라다무스(황도 기호 로브 · 회백 장발 노인)
    — 2026-09-16 사용자 지시로 mage 1 → 3. 늘리는 방향이라 기존 영웅 얼굴은 안 바뀐다(faces/cartoon/README).
+   warrior_4 레오니다스(코린트식 투구 · 진홍 볏) · warrior_5 삼손(헝클어진 장발·수염 · 맨몸)
+   — 2026-09-21 사용자 지시로 warrior 3 → 5. 역시 늘리는 방향이다.
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
    풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
-export const HERO_FACES = { warrior: 3, knight: 5, mage: 3, archer: 1, priest: 4 };
+export const HERO_FACES = { warrior: 5, knight: 5, mage: 3, archer: 1, priest: 4 };
 
 /**
  * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
@@ -276,6 +282,8 @@ export const HERO_FACE_NAMES = {
     warrior_1: { ko: '막시무스', en: 'Maximus' },          // 검투사
     warrior_2: { ko: '바바리안', en: 'Barbarian' },        // 바바리안
     warrior_3: { ko: '검황', en: 'Sword Emperor' },        // 백발백염
+    warrior_4: { ko: '레오니다스', en: 'Leonidas' },       // 코린트식 투구 · 진홍 볏
+    warrior_5: { ko: '삼손', en: 'Samson' },               // 헝클어진 장발·수염
     knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
     mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인

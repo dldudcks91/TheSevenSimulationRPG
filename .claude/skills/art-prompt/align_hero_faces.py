@@ -7,12 +7,15 @@ Targets below are the measured median of the installed heroes whose eyes the
 detector finds (knight_4/5, priest_1/2/3, warrior_2/3).
 """
 import collections
+import os
 import numpy as np
 from PIL import Image
 
 TARGET_GAP = 89.0     # eye centroid distance, px on a 512 canvas
 TARGET_X = 315.0      # eye midpoint x
 TARGET_Y = 235.0      # eye line y
+MARGIN_TOP = 35       # a figure touching the top/sides reads as spilling out of the box
+MARGIN_SIDE = 20      #   (warrior_2/3 sit at top 35~60 · sides 35~44) -- shrink below TARGET_GAP until it fits
 S = 512
 
 
@@ -84,10 +87,16 @@ def eyes(img):
     return best[1], best[2], best[3]
 
 
-def place(img, ex, ey, gap):
+def place(img, ex, ey, gap, eye_gap=None, eye_y=TARGET_Y):
     """Scale to TARGET_GAP, put the eye midpoint on (TARGET_X, TARGET_Y).
-    Bottom overflow is normal -- the bust runs off the frame like the rest."""
-    k = TARGET_GAP / gap
+    Bottom overflow is normal -- the bust runs off the frame like the rest.
+    `eye_gap` pins the size by hand (skips the margin fit) -- the SPEC override."""
+    m0 = np.array(img.convert('RGBA'))[:, :, 3] > 40
+    ys0, xs0 = np.where(m0.any(1))[0], np.where(m0.any(0))[0]
+    k = eye_gap / gap if eye_gap else min(
+        TARGET_GAP / gap,
+        (S - MARGIN_TOP) / (ys0[-1] - ys0[0] + 1),           # bust is pinned to the floor below
+        (S - 2 * MARGIN_SIDE) / (xs0[-1] - xs0[0] + 1))
     nw, nh = round(img.width * k), round(img.height * k)
     ca = np.array(img.convert('RGBA')).astype(float)
     al = ca[:, :, 3:4] / 255
@@ -97,29 +106,34 @@ def place(img, ex, ey, gap):
     scaled = Image.fromarray(np.concatenate(
         [np.clip(pm[:, :, :3] * 255 / al2, 0, 255), pm[:, :, 3:4]], 2).astype(np.uint8))
 
-    ox, oy = TARGET_X - ex * k, TARGET_Y - ey * k
+    ox, oy = TARGET_X - ex * k, eye_y - ey * k
     m = np.array(scaled)[:, :, 3] > 40
     xs = np.where(m.any(0))[0]
     lo, hi = ox + xs[0], ox + xs[-1]
-    if lo < 0:
-        ox -= lo                      # nudge back in, never crop hair at the edge
-    elif hi > S - 1:
-        ox -= hi - (S - 1)
+    if lo < MARGIN_SIDE:
+        ox += MARGIN_SIDE - lo        # nudge back in, never crop hair at the edge
+    elif hi > S - 1 - MARGIN_SIDE:
+        ox -= hi - (S - 1 - MARGIN_SIDE)
+    bottom = oy + np.where(m.any(1))[0][-1]
+    if bottom < S - 1:
+        oy += S - 1 - bottom          # top-row tiles end at the grid line -- the bust must still reach the floor
     canvas = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     canvas.paste(scaled, (round(ox), round(oy)))
     return canvas
 
 
-def tile_bl(path, inset=3):
-    """Bottom-left tile. The grid-facing edges get an extra inset -- the corner
-    keeps a few anti-aliased grid pixels that survive the key as a stray speck."""
+def tile_at(path, corner='BL', inset=3):
+    """One tile of a 2x2 sheet (TL/TR/BL). The grid-facing edges get an extra
+    inset -- the corner keeps a few anti-aliased grid pixels that survive the
+    key as a stray speck."""
     a = np.array(Image.open(path).convert('RGB')).astype(int)
     H, W = a.shape[:2]
     dark = a.max(2) < 60
     cols = [i for i in range(W) if dark[:, i].mean() > 0.8]
     rows = [i for i in range(H) if dark[i].mean() > 0.8]
-    return Image.open(path).convert('RGBA').crop(
-        (0, rows[-1] + 1 + inset, cols[0] - inset, H))
+    x0, x1 = (0, cols[0] - inset) if corner[1] == 'L' else (cols[-1] + 1 + inset, W)
+    y0, y1 = (0, rows[0] - inset) if corner[0] == 'T' else (rows[-1] + 1 + inset, H)
+    return Image.open(path).convert('RGBA').crop((x0, y0, x1, y1))
 
 
 def despeckle(img, min_area=100):
@@ -134,24 +148,30 @@ def despeckle(img, min_area=100):
     return Image.fromarray(a)
 
 
-# sheet basename -> (source/hero SSOT name, cartoon/hero install name).
+# sheet basename -> (source/hero SSOT name, cartoon/hero install name, tile[, place() overrides]).
 # One line per portrait seated this way; 74% (postprocess.md §3) stays the default.
 SPEC = [
-    ('mage_2', 'mage_poseidon', 'mage_2'),
-    ('mage_3', 'mage_nostradamus', 'mage_3'),
+    ('mage_2', 'mage_poseidon', 'mage_2', 'BL'),
+    ('mage_3', 'mage_nostradamus', 'mage_3', 'BL'),
+    ('warrior_2', 'warrior_leonidas', 'warrior_4', 'TR'),
+    ('warrior_2', 'warrior_samson', 'warrior_5', 'BL', {'eye_gap': 85, 'eye_y': 245}),   # eyes = warrior_3 (user 09-21)
 ]
 
 if __name__ == '__main__':
     import sys
-    for sheet, ssot, inst in SPEC:
-        tile = despeckle(key_green(tile_bl(
-            'src/assets/art/faces/source/sheets/source_sheet_%s.png' % sheet)))
+    only = [a for a in sys.argv[1:] if not a.startswith('--')]   # install names; none = all
+    for sheet, ssot, inst, corner, *ov in SPEC:
+        if only and inst not in only:
+            continue
+        tile = despeckle(key_green(tile_at(
+            'src/assets/art/faces/source/sheets/source_sheet_%s.png' % sheet, corner)))
         ex, ey, gap = eyes(tile)
-        out = place(tile, ex, ey, gap)
+        out = place(tile, ex, ey, gap, **(ov[0] if ov else {}))
         nx, ny, ngap = eyes(out)
         print('%-16s tile %dx%d  eyes(%.0f,%.0f) gap %.1f  ->  eyes(%.0f,%.0f) gap %.1f'
               % (inst, tile.width, tile.height, ex, ey, gap, nx, ny, ngap))
         if '--write' in sys.argv:
+            os.makedirs('src/assets/art/faces/source/hero', exist_ok=True)
             out.save('src/assets/art/faces/source/hero/%s.png' % ssot)
             out.quantize(256, Image.FASTOCTREE).save(
                 'src/assets/art/faces/cartoon/hero/%s.png' % inst)

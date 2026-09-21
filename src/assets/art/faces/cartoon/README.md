@@ -68,8 +68,12 @@
 ⚠ 이제 `HERO_FACES[<직업>]` 은 **줄일 때만** 영향이 있다(범위 밖 저장값은 그 직업 풀 안에서 접어서 쓴다).
 늘리는 쪽은 기존 영웅에 무해하다.
 
-**⚠ 영웅 초상은 16장 · 5직업 풀(`HERO_FACES = {warrior:3, knight:5, mage:3, archer:1, priest:4}`)이다**
-[2026-09-16 — **마법사 2종 추가 · mage 1 → 3**(시트 둘이 연달아 들어왔다 · 둘 다 **3번 타일**):
+**⚠ 영웅 초상은 18장 · 5직업 풀(`HERO_FACES = {warrior:5, knight:5, mage:3, archer:1, priest:4}`)이다**
+[2026-09-21 — **전사 2종 추가 · warrior 3 → 5** — 시트 `source_sheet_warrior_2`(아킬레우스 · 레오니다스 · 삼손 · 여포)의 **2 · 3번 타일**:
+`hero/warrior_4` = `../source/hero/warrior_leonidas` **레오니다스** · `hero/warrior_5` = `../source/hero/warrior_samson` **삼손**.
+`hero_unique_candidates.csv` 의 `WARRIOR-P2`·`WARRIOR-P4` 가 confirmed 로 올라갔다. 둘 다 `align_hero_faces.py` 로 앉혔다 —
+눈 사이 89px 로는 볏·머리카락이 캔버스 위·옆에 닿아 칸을 벗어나 보여(사용자 지적), **위 35 · 옆 20px 여백**이 남을 때까지 줄였다(레오니다스 눈 사이 76px). 삼손은 사용자 지시로 **눈 크기를 검황(`warrior_3`)에 맞췄다** — 눈 사이 85 · 눈높이 245 · 아래를 더 자른다.]
+이전 상태 ↓ [2026-09-16 — **마법사 2종 추가 · mage 1 → 3**(시트 둘이 연달아 들어왔다 · 둘 다 **3번 타일**):
 `hero/mage_2` = `../source/mage_poseidon` **포세이돈**(청록 장발·수염 노인 + 갈색 가죽 조끼 · 시트 `source_sheet_mage_2`) ·
 `hero/mage_3` = `../source/mage_nostradamus` **노스트라다무스**(황도 기호를 수놓은 검은 로브 · 회백 장발 노인 · 시트 `source_sheet_mage_3`).
 둘 다 사용자 지시로 **초상 이름이 붙었다**(`HERO_FACE_NAMES` · `hero_unique_candidates.csv` 의 `MAGE-P3`·`MAGE-P5` 후보가
@@ -97,6 +101,8 @@
 | `hero_1` | `hero/warrior_1` | 검투사 (⚠ 누끼 보류 — 배경 불투명) | `../source/gladiator_helm` |
 | `hero_2` | `hero/warrior_2` | 바바리안 (맨몸 문신) | `../source/barbarian` |
 | `hero_7` | `hero/warrior_3` | 백발백염 기사 · 태양 문장 | `../source/knight_sun_greybeard` |
+| — (신규) | `hero/warrior_4` | **레오니다스** — 코린트식 철투구 · 진홍 말총 볏 · 수염 · 진홍 망토 | `../source/hero/warrior_leonidas` |
+| — (신규) | `hero/warrior_5` | **삼손** — 헝클어진 갈색 장발·수염 · 흉터 난 맨몸 | `../source/hero/warrior_samson` |
 | `hero_3` | `hero/knight_1` | 무안면 로마군 (붉은 볏) | `../source/roman_mane_red` |
 | `hero_4` | `hero/knight_2` | 무안면 로마군 (검은 볏) | `../source/roman_mane_black` |
 | `hero_5` | `hero/knight_3` | 무안면 로마군 (붉은 띠) | `../source/roman_band_red` |
@@ -118,7 +124,7 @@
 
 ## 규격
 
-- 512×512 · 투명 배경 · **몬스터 17 + 영웅 16 = 33장** — ⚠ `hero/warrior_1`(검투사)만 배경 불투명(누끼 보류)
+- 512×512 · 투명 배경 · **몬스터 17 + 영웅 18 = 35장** — ⚠ `hero/warrior_1`(검투사)만 배경 불투명(누끼 보류)
 - **256색 팔레트(P + tRNS) · 장당 15~64KB · 합계 1.08MB** [실측 2026-09-16] — 새로 까는 장도 같은 형식으로 맞춘다
   (`Image.quantize(256, FASTOCTREE)` · RGBA 원본은 `../source/` 가 든다). 언제 RGBA 에서 갈렸는지는 이 문서에 안 남아 있다
   (커밋 `1353671` 시점 · 그전 기록은 「512² RGBA 장당 150~360KB · 양자화는 화질 확인이 먼저라 보류」였다)

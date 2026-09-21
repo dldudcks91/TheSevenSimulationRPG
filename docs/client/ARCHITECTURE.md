@@ -79,12 +79,12 @@ render()
 
 **원정 1회**
 ```
-[출발 버튼] → SYS.game.departRun(G, stageId, …)     첫 라운드 계산(battle.createRun) · 보상 없음 · 리포트 자리(진행 중)
+[출발 버튼] → SYS.game.departRun(G, stageId, …)     첫 라운드를 연다(battle.createRun · advance(0)) · 보상 없음 · 리포트 자리(진행 중)
   → save()
-  → 관전(mountBattle — 그 라운드의 타임라인 재생) 또는 다른 탭 — 시계는 앱이 든다
-  → 시계가 라운드 끝 시각에 닿으면 SYS.game.advanceRun(G, …)
-       이긴 라운드 정산(드롭 · XP · 골드 · 도감 카드 · 처치 수) → save()
-       → 다음 라운드를 그 순간의 장비 · 레벨로 계산(바뀐 영웅은 타임라인의 refit)
+  → 관전(mountBattle — 타임라인 재생) 또는 다른 탭 — 시계는 앱이 든다
+  → 시계가 한 눈금 갈 때마다 SYS.game.stepRun(G, run, 지금 시각)     엔진을 그 시각까지만 민다(R130)
+       첫머리 = 그 순간의 장비 · 스킬 트리로 갈아입기(바뀐 영웅만 · 타임라인의 refit · 보스 라운드 도중은 거절)
+       라운드가 끝나면 이긴 라운드 정산(드롭 · XP · 골드 · 처치 수) → 경계 갈아입기(레벨업) → 다음 라운드를 연다 → save()
   → 마지막 라운드 끝 · 전멸 · 시간 초과 = 원정 끝 → 리포트 확정 (반복 ON + 승리면 다음 원정 자동)
   → [철수] = SYS.game.retreatRun · 게임 종료(재접속 · 멈춘 공백) = closeRun
        진행 중이던 라운드는 버린다 · 반복을 끈다 → save()
@@ -96,6 +96,7 @@ render()
 [가방 칸 클릭] → SYS.game.equip(G, heroUid, itemUid)
   → {ok, back, position} 또는 {ok:false, err}
   → ok 면 save(), err 면 flash(i18n 키)
+  → 원정 중이면 다음 눈금의 SYS.game.stepRun 첫머리가 그 시각에 갈아입힌다 · 보스전 중 · 꺼진 전술은 플래시(runLock · runTactics · R130)
   → render()  (전체 다시 그림 — 부분 갱신 없음)
 ```
 

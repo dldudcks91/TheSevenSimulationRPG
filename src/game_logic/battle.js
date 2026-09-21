@@ -1,8 +1,10 @@
 /**
  * 전투 시뮬레이터 — **헤드리스**. 파티·스테이지·시드를 받아 결과와 타임라인을 돌려준다.
- * **런은 라운드 단위로 계산한다** [2026-09-14 · R89 · base_expedition_design §1-1] — `createRun().next()` 한 번이 라운드 하나이고,
- *   라운드 사이에서만 부르는 쪽이 그 순간의 파티(장비 · 레벨)를 넣을 수 있다. 보상(경험치 · 골드 · 도감 · 드롭)은 **이긴 라운드의 몫만** 결과에 들어간다.
- * 화면(ui/battle.js)은 이 타임라인을 시간에 맞춰 옮길 뿐이다 — 인자 없이 끝까지 이어 부르면 `simulate` 와 같다.
+ * **런은 라운드 단위로 계산한다** [2026-09-14 · R89 · base_expedition_design §1-1] — `createRun().next()` 한 번이 라운드 하나다.
+ *   **걸음 단위로도 돈다** [2026-09-21 · R130 · base_expedition_design §1-5] — `advance(until)` 이 재생 시각까지만 틱을 돌고,
+ *   부르는 쪽은 **틱 사이 어디서나** 그 순간의 파티(장비 · 레벨 · 스킬 트리)를 넣을 수 있다(`refit` — 보스 라운드 도중만 거절).
+ *   보상(경험치 · 골드 · 도감 · 드롭)은 **이긴 라운드의 몫만** 결과에 들어간다.
+ * 화면(ui/battle.js)은 이 타임라인을 시간에 맞춰 옮길 뿐이다 — 인자 없이 끝까지 이어 부르면 `simulate` 와 같고, 쪼개 걸어도 같다.
  * 같은 입력 + 같은 시드 = 같은 타임라인 (엔진 이식 후 대조 검증의 기준).
  *
  * battle_design.md 확정 규칙 (그대로 반영):
@@ -76,6 +78,9 @@ import { refreshDerived, weaponOnHit } from './skill_effects.js';
 import { STAGE_SPAWN_RULES } from './spawn_rule.js';
 
 const TICK = 0.1;
+/** 걸음을 끊는 자리의 부동소수 여유 — 시각은 0.1 을 거듭 더해 꼬리가 붙는다(`advance`). **틱을 몇 번 도느냐만** 정하고 틱 안의 계산에는
+ *  안 들어가므로 결과를 안 바꾼다(끊는 자리만 옮긴다 · INTERFACE §5-3 · R130) */
+const STEP_EPS = 1e-6;
 /** 공격력이 없는 쪽의 범위 — 소환 · 마법 무기가 아닌 쪽의 회복 밑수 (R90) */
 const NO_DMG = Object.freeze({ min: 0, max: 0 });
 
@@ -227,6 +232,8 @@ export function createBattleSystem(data) {
             // 창이 미는 축은 **밑수를 따로 든다** — `refreshDerived` 가 창 합으로 파생값을 다시 쓰고,
             //   창이 하나도 없을 때 원값으로 돌아갈 자리가 필요해서다 (skill_effects:EFFECTS.derive)
             def: c.defense, defBase: c.defense,
+            // 깎인 방어의 **비율** — 가이디드 애로우가 양수 밑수를 깎을 때마다 곱해진다. 갈아입기가 `defBase = 새 밑수 × defKeep` 로 읽는다 (R130)
+            defKeep: 1,
             hpMaxBase: c.hp_max,
             res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             resBase: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
@@ -468,14 +475,18 @@ export function createBattleSystem(data) {
      *   `next()` 한 번 = 라운드 하나를 끝까지 계산한다(이기거나 · 전멸하거나 · 시간이 끝나거나). 다음 라운드는 **부를 때 연다** —
      *   그래서 라운드와 라운드 사이에 부르는 쪽(정산)이 끼어들 자리가 생긴다. 이어서 부르기만 하면 한 번에 끝까지 돈 것과
      *   **한 글자도 안 다르다** — `simulate` 가 그렇게 돈다(rng 소비 순서 불변 · INTERFACE §5-2).
+     *   **걸음** [2026-09-21 · R130] — `advance(until)` 은 재생 시각까지만 돈다. 원정은 이 길로 가고(`state.stepRun`), 원정 중 교체는
+     *   다음 걸음 첫머리의 `refit` 으로 **그 시각에** 들어간다 — 미래를 미리 계산해 두지 않으므로 교체가 남은 라운드를 다시 굴리지 않는다.
      * @param partyUnits [{uid, combat:{...}, actives?: [{id, source}], reactions?: [{on, fn}]}] —
      *   combat = heroSystem.computeCombat 결과, actives = 그 영웅의 액티브 **인스턴스** 목록(skill.activesFor).
      *   없거나 비면 기본 공격만 돈다. reactions = 사건 훅 등록(⚠ 지금은 아무도 싣지 않는다)
      * @param level 이번 런의 스테이지 레벨(`state.stageLevelState` — 올린 레벨) · 안 주면 기본 레벨 `dlvl`
      * @param potions 이 런의 물약 칸 `[{id, heal} | null]` — **자리 순**(0 = 앞 칸 · 칸의 `null` = 빈 칸 — R124) · 칸 수 [balance.csv:potion_slot_max] 이하 · 인자 `null` = 빈 목록. 이 런 안에서만 산다 (battle_design §7-1 · R104).
      *   찬 칸이 없으면(빈 목록 · 전부 null) 물약 단계가 아예 안 돌아 rng · 타임라인이 인자를 안 준 것과 같다
-     * @returns `{ next, result, ended }` — `next()` = 라운드 하나의 요약(이미 끝났으면 null) · `result` = 라운드마다 자라는 결과 + 타임라인.
-     *   타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
+     * @returns `{ next, advance, refit, status, result, ended }` — `next()` = 라운드 하나의 요약(이미 끝났으면 null) ·
+     *   `advance(until)` = 그 시각까지만(라운드가 끝나면 그 요약 · 도중에 서면 null · R130) · `refit(partyUnits)` = 지금 시각에 갈아입기
+     *   (`{locked, changed}` — 보스 라운드 도중이면 `locked` · R130) · `status()` = `{t, round, kind, inRound}` ·
+     *   `result` = 걸음마다 자라는 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      */
     function createRun(partyUnits, stageId, rng, level, potions = null) {
         const stage = data.stages[stageId];
@@ -560,8 +571,15 @@ export function createBattleSystem(data) {
          *  오오라도 제 칸에 선다: 켜진 오오라 `0`(쿨이 없다) · 안 켜진 오오라 `null`. 결과 `party[]` · `round` · `refit` 이 같이 쓴다 · 전투는 안 읽는다 */
         const slotView = u => {
             const ids = u.slotIds ?? u.actives.map(a => a.id);
-            const at = new Map(u.actives.map(a => [a.id, a.readyAt]));
-            return { actives: ids, ready: ids.map(id => at.has(id) ? r1(at.get(id)) : id === u.auraOn ? 0 : null) };
+            // **칸마다** 준비 시각 — 같은 스킬이 두 칸에 앉으면 앞 칸부터 하나씩 짝짓는다(id 로 묶으면 두 칸이 한 값으로 합쳐진다 · R130).
+            //   칸에 없는 id 는 오오라다(전투 시작에 칸에서 뺐다) — 켜진 것 0 · 안 켜진 것 null
+            const left = u.actives.slice();
+            const ready = ids.map(id => {
+                const i = left.findIndex(a => a.id === id);
+                if (i >= 0) return r1(left.splice(i, 1)[0].readyAt);
+                return id === u.auraOn ? 0 : null;
+            });
+            return { actives: ids, ready };
         };
         /**
          * 적 하나의 표시값 — `round` 의 `enemies` 와 `call` 의 `units` 가 **같은 모양**을 쓴다 (INTERFACE §2-6 · 불러내기 2026-09-18).
@@ -999,7 +1017,8 @@ export function createBattleSystem(data) {
             }
         }
 
-        let started = false, ended = false;
+        // `between` = 이긴 라운드의 요약을 냈고 다음 라운드를 **아직 안 열었다**(라운드 사이) — 다음 걸음의 첫머리가 연다 (R130)
+        let started = false, ended = false, between = false;
         /** 런을 닫는다 — 끝 시각 · 기여를 굳히고 `end` 이벤트를 낸다. 전멸 · 시간 초과 · 마지막 라운드 클리어 셋이 여기로 온다 */
         const finish = reason => {
             out.reason = reason;
@@ -1023,12 +1042,23 @@ export function createBattleSystem(data) {
             return s;
         };
 
-        /* 갈아입기 [2026-09-14 · R89 · INTERFACE §2-6 createRun] — 라운드 경계에서 **그 순간의 파티**를 받아 **바뀐 영웅만** 다시 입힌다.
+        /* 갈아입기 [2026-09-14 · R89 · INTERFACE §2-6 createRun · **라운드 도중 2026-09-21 · R130**] — **그 순간의 파티**를 받아 **바뀐 영웅만** 다시 입힌다.
+           부르는 자리가 둘이다 — **라운드 사이**(이긴 라운드의 요약 뒤 · 다음 라운드를 열기 전 — 옛 `next(partyUnits)` 의 자리)와
+           **라운드 도중**(틱과 틱 사이 — 원정 중 교체가 그 순간 먹는다 · base_expedition_design §1-5). **보스 라운드 도중에는 거절한다** —
+           보스 라운드가 시작하는 순간의 장비로 싸운다(보스전 중 교체는 다음 런부터). 라운드 사이 · 첫 라운드 전은 보스 라운드 앞이라도 받는다.
            같은지는 입력(`combat` · `stats` · 스킬 칸)으로 가른다 — 같으면 손대지 않아야 인자 없이 이어 부른 것과 한 글자도 안 다르다.
-           지키는 것: 현재 HP(새 최대치로 자른다) · 창 · 배리어 · 행동 예약 · 남은 스킬의 쿨. **새로 생긴 스킬은 지금부터 한 바퀴** (battle_design §6) */
-        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(a => a.id)]);
+           지키는 것: **현재 HP 의 비율**(R130 — ~~현재 HP · 새 최대치로 자른다~~) · 창 · 배리어 · 행동 예약 · 남은 스킬의 쿨(**칸마다** — R130) ·
+           깎인 방어(`defKeep` — R130). **새로 생긴 스킬은 지금부터 한 바퀴** (battle_design §6) */
+        // 스킬 칸 = 출처 자리 + id — 칸이 바뀌면 갈아입는다(같은 id 가 다른 칸으로 옮겨도) · 쿨을 잇는 열쇠와 같다 (R130)
+        const slotKey = a => `${a.source}|${a.id}`;
+        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(slotKey)]);
         const worn = new Map(partyUnits.map(p => [p.uid, { sig: sigOf(p), combat: p.combat }]));
+        /** 라운드 도중인가 — 열었고 아직 안 끝났다(끝났으면 `between` · 닫혔으면 `ended`) */
+        const inRound = () => started && !between && !ended;
         function refit(updates) {
+            if (ended) return { locked: false, changed: [] };
+            // 보스 라운드 도중 — 아무것도 안 바꾼다. 바뀐 입력은 `worn` 에도 안 적으므로 라운드 사이에 오면 그때 입는다 (R130)
+            if (inRound() && roundLog?.kind === 'boss') return { locked: true, changed: [] };
             const changed = [];
             const removed = [];   // 갈아입기로 걷힌 오오라 창 `{u, s}` — 다시 안 걸린 것은 다음 `round` 뒤에 `buffEnd` 로 닫는다 (R98)
             for (const p of updates) {
@@ -1040,15 +1070,22 @@ export function createBattleSystem(data) {
                 if (sig === was.sig) continue;
                 worn.set(p.uid, { sig, combat: p.combat });
                 const fresh = makeUnit('party', p.combat, { stats: p.stats ?? null });
-                // 적이 깎은 영구 방어(가이디드 애로우는 `defBase` 를 깎는다)는 **비율로** 잇는다 — 갈아입기가 디버프를 씻는 길이 되지 않게
-                const cut = was.combat.defense > 0 ? u.defBase / was.combat.defense : 1;
+                // 현재 HP 는 **비율을 지킨다** [2026-09-21 · R130 · base_expedition_design §1-5] — 갈아입기 전 비율을 새 최대치에 곱한다(아래 파생 뒤).
+                //   뺐다 끼워도 손익이 0 이라 회복 수단이 아니고, 잠깐 뺀 HP 장비가 그 런 끝까지 HP 를 깎아 두는 함정도 없다
+                u.hpRatio = u.hpMax > 0 ? u.hp / u.hpMax : 1;
                 for (const k of REFIT_FIELDS) u[k] = fresh[k];
-                u.defBase *= cut;
-                const prev = new Map(u.actives.map(a => [a.id, a.readyAt]));
+                // 적이 깎은 영구 방어(가이디드 애로우)는 **깎인 비율(`defKeep`)로** 잇는다 [2026-09-21 · R130] — ~~옛 방어값으로 나눈 비율~~ 은
+                //   방어가 0 이면 못 재서 장비를 다 벗었다 입으면 기록이 사라졌다. 깎인 **양**으로 들면 맞을 때 입은 방어가 손실을 정해
+                //   가벼운 장비로 맞고 무거운 장비로 갈아입는 수법이 생긴다 — 비율은 어떤 장비로 맞았든 같다 (리뷰 · battle_design §9-3)
+                u.defBase = fresh.defBase * u.defKeep;
+                // 남은 스킬은 **칸마다** 쿨을 잇는다 [2026-09-21 · R130 — ~~스킬 id 로~~] — 고유와 무기 두 칸에 같은 스킬이 앉으면(칸이 둘이면 쿨도 둘 ·
+                //   skill.activesFor) id 로 이을 때 두 칸의 쿨이 한 값으로 합쳐져, 갈아입을 때마다 쓴 칸이 다시 준비됐다
+                const prev = new Map(u.actives.map(a => [slotKey(a), a.readyAt]));
                 u.actives = (SK ? p.actives ?? [] : []).map(a => {
                     const def = SK.resolve(a);
                     if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
-                    return { id: a.id, def, readyAt: prev.has(a.id) ? prev.get(a.id) : t + cooldownSec(B, u, def), source: a.source };
+                    const k = slotKey(a);
+                    return { id: a.id, def, readyAt: prev.has(k) ? prev.get(k) : t + cooldownSec(B, u, def), source: a.source };
                 });
                 // 칸 표시도 새로 잰다 — 새 칸에 오오라가 있으면 아래 `applyAuras` 가 다시 남긴다 (R98)
                 u.slotIds = null;
@@ -1061,9 +1098,15 @@ export function createBattleSystem(data) {
                 }
                 changed.push(u);
             }
-            if (!changed.length) return;
-            // 칸에 오오라가 남아 있는 것은 방금 갈아입은 영웅뿐이다 · 끝에서 전원의 파생값을 다시 쓴다(HP 가 새 최대치로 잘린다)
+            if (!changed.length) return { locked: false, changed: [] };
+            // 칸에 오오라가 남아 있는 것은 방금 갈아입은 영웅뿐이다 · 끝에서 전원의 파생값을 다시 쓴다
             const applied = applyAuras(party);
+            // 비율 복원 — 파생(최대 HP 창 포함)이 끝난 새 최대치에 곱한다. 살아 있는 영웅만 오므로 최소 1 ·
+            //   ⚠ 반올림이 뺐다 끼울 때마다 조금씩 회복시키는 구멍은 1차에서 받아들였다 (base_expedition_design §1-5)
+            for (const u of changed) {
+                u.hp = Math.max(1, Math.round(u.hpRatio * u.hpMax));
+                delete u.hpRatio;
+            }
             for (const u of changed) {
                 timeline.push({
                     t: r1(t), e: 'refit', u: u.key, hpMax: u.hpMax, dhp: u.hp, period: u.period,
@@ -1071,29 +1114,43 @@ export function createBattleSystem(data) {
                     ...slotView(u),
                 });
             }
-            // 오오라 창 이벤트 (R98) — **다음 `round` 바로 뒤**에 나간다(`auraQueue` · 순서 보장 ②).
-            //   걷힌 것 중 다시 안 걸린 것은 닫고(`buffEnd`), 다시 건 것은 연다(`buff`) — 닫기가 먼저다
+            // 오오라 창 이벤트 (R98) — 걷힌 것 중 다시 안 걸린 것은 닫고(`buffEnd`), 다시 건 것은 연다(`buff`) — 닫기가 먼저다.
+            //   **라운드 사이면 다음 `round` 바로 뒤**(`auraQueue` · 순서 보장 ②) · **라운드 도중이면 이 `refit` 바로 뒤에 곧바로** 낸다 —
+            //   다음 `round` 까지 칩이 낡은 채 서지 않게 (R130)
             const again = new Set(applied.map(a => `${a.u}|${a.s}`));
-            for (const r of removed) if (!again.has(`${r.u}|${r.s}`)) auraQueue.push({ e: 'buffEnd', u: r.u, s: r.s });
-            auraQueue.push(...applied);
+            const auraEvents = [];
+            for (const r of removed) if (!again.has(`${r.u}|${r.s}`)) auraEvents.push({ e: 'buffEnd', u: r.u, s: r.s });
+            auraEvents.push(...applied);
+            if (inRound()) for (const ev of auraEvents) timeline.push({ t: r1(t), ...ev });
+            else auraQueue.push(...auraEvents);
             measureParty();
+            return { locked: false, changed: changed.map(u => u.key) };
         }
 
+        /** 아직 안 연 라운드를 연다 — 첫 라운드 · 이긴 라운드의 다음. 시간 초과면 런을 닫고 그 요약을 낸다(아니면 null) */
+        const openRound = () => {
+            if (!started) { started = true; beginRound(); return null; }
+            between = false;
+            // 다음 라운드를 연다 — 한 번에 돌던 판의 「클리어 직후 같은 틱」 자리 그대로다(편성 → 시간 초과 판정 순서 불변)
+            round += 1;
+            beginRound();
+            if (t >= B.battle_timeout_sec) { finish('timeout'); return summary(false); }
+            return null;
+        };
+
         /**
-         * 라운드 하나를 끝까지 — 이기면 **멈추고** 요약을 낸다. 다음 라운드는 다음 호출이 연다.
-         * @param updates 둘째 호출부터 — **그 순간의 파티**(`partyUnits` 모양). 바뀐 영웅만 갈아입는다(`refit`) · 안 주면 그대로 잇는다
+         * 걸음 [신설 2026-09-21 · R130 · INTERFACE §2-6] — 틱을 **`t + TICK ≤ until` 인 동안만** 돈다. 라운드가 끝나면 그 자리에서 멈추고
+         * 요약을 낸다(다음 라운드는 다음 걸음이 연다) · `until` 에 닿으면 `null`(라운드 도중에 섰다). 아직 안 연 라운드는 첫머리에 연다 —
+         * `advance(0)` 은 라운드를 열기만 한다. **쪼개 돌려도 틱 수열이 같다** — 끊는 자리만 다르므로 교체가 없으면 한 번에 돈 것과 같다
          */
-        function next(updates) {
+        function advance(until) {
             if (ended) return null;
-            if (!started) { started = true; beginRound(); }
-            else {
-                if (updates) refit(updates);
-                // 다음 라운드를 연다 — 한 번에 돌던 판의 「클리어 직후 같은 틱」 자리 그대로다(편성 → 시간 초과 판정 순서 불변)
-                round += 1;
-                beginRound();
-                if (t >= B.battle_timeout_sec) { finish('timeout'); return summary(false); }
+            if (!started || between) {
+                const s = openRound();
+                if (s) return s;
             }
-            while (true) {
+            // 끊는 자리의 부동소수 여유 — 시각은 0.1 을 거듭 더해 꼬리가 붙는다. 이 값은 틱을 몇 번 도느냐만 정하고 틱 안의 계산에는 안 들어간다
+            while (t + TICK <= until + STEP_EPS) {
                 t += TICK;
                 // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) rt.expire(u, t);
@@ -1131,13 +1188,29 @@ export function createBattleSystem(data) {
                     out.roundsCleared = round;
                     bank();                              // 이긴 라운드의 몫 — 결과로 옮긴다 (R89)
                     if (round >= rounds) { out.won = true; finish('clear'); return summary(true); }
-                    return summary(true);            // 다음 라운드는 다음 `next()` 가 연다
+                    between = true;                  // 다음 라운드는 다음 걸음이 연다 — 그 사이에 정산 · 경계 갈아입기가 끼어든다
+                    return summary(true);
                 }
                 if (t >= B.battle_timeout_sec) { finish('timeout'); return summary(false); }
             }
+            return null;                             // 라운드 도중에 섰다 — 다음 걸음이 이어 돈다
         }
 
-        return { next, result: out, get ended() { return ended; } };
+        /**
+         * 라운드 하나를 끝까지 — 이기면 **멈추고** 요약을 낸다. 다음 라운드는 다음 호출이 연다.
+         * `advance(Infinity)` 에 경계 갈아입기를 얹은 것이다 — 인자 없이 이어 부르면 `simulate` 와 한 글자도 안 다르다
+         * @param updates 둘째 호출부터 — **그 순간의 파티**(`partyUnits` 모양). 바뀐 영웅만 갈아입는다(`refit`) · 안 주면 그대로 잇는다
+         */
+        function next(updates) {
+            if (ended) return null;
+            if (started && updates) refit(updates);
+            return advance(Infinity);
+        }
+
+        /** 지금 시각 · 라운드 · 그 종류 · 라운드 도중인가 — 표시 · 판정용 (R130 · rng 0) */
+        const status = () => ({ t: r1(t), round, kind: started ? roundLog?.kind ?? null : null, inRound: inRound() });
+
+        return { next, advance, refit, status, result: out, get ended() { return ended; } };
     }
 
     /**
