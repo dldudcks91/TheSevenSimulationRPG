@@ -81,7 +81,7 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 - **`chapter_boss`** — 표본 1 (스테이지 105 뿐 — 보스 단독 1라운드 · 2026-09-11). `boss_guaranteed_drop` · `dust_boss` 의 보스 분기는 한 종류만 지난다
 - **`inventory_cap` 넘침** — 0회. 런당 드롭이 3 안팎이라 `discarded` 경로가 안 열린다
 - **마스터리 랭크 > 0** — 0회. 시작 파티는 포인트를 쓴 적이 없어 `masteryBonus` 는 항상 빈 값이다 (`grew` 는 포인트 **합**만 본다)
-- **세이브 왕복 · 이관** — 골든은 `serialize`/`deserialize` 를 안 지난다 (그쪽은 별도 단정이 본다)
+- **세이브 왕복** — 골든은 `serialize`/`deserialize` 를 안 지난다 (그쪽은 별도 단정이 본다)
 - **원정 중 교체** [2026-09-21 · R130] — 골든 50런은 **교체 없이** 한 번에 푼다(`resolveBattle`). 라운드 도중 갈아입기 · 보스 라운드 잠금 · 쓰러진 영웅 잠금 · 전술 스냅숏 · 칸마다 쿨 · 깎인 방어 보정은 `dev/test.js` 의 `createRun: 갈아입기 …` · `stepRun: …` · `departRun: 전술은 출발 판정이 상한 …` 단정이 유일한 그물이다. 「쪼개 걸어도 한 번에 돈 것과 같다」는 단정이 따로 잠근다
 - **레벨 상한 근처** — 40런의 최고 레벨이 4 대역이라 `hero_level_cap` 분기는 CSV 를 바꿔야만 밟힌다
 - **csvHash 는 이식 계약이 아니다** — 개발 중 "CSV 가 바뀌었나"에만 답한다. 개행은 `\n` 으로 정규화하고 BOM 을 떼고 세므로(파서가 둘 다 무시하니까) **줄바꿈 차이로는 안 켜진다**

@@ -991,17 +991,6 @@ const openAll = (g, S = SYS) => {
     return S.game.deserialize(JSON.parse(JSON.stringify(S.game.serialize(g, NOW))));
 };
 const freshG = () => openAll(SYS.game.newGame(42, cands, NOW));
-/**
- * **옛 세이브가 올라온 판** — 건물을 지우고 v36 으로 내려 불러온다(v36 → v37 이관이 문턱을 넘은 랭크까지 공짜로 짓는다 · R137).
- *   이관 단정의 고정판이다 — 이 판을 더 옛 버전으로 내려 다시 올려도 건물이 같게 선다(같은 문턱 · 같은 입력)
- */
-const asMigrated = (g, S = SYS) => {
-    const s = JSON.parse(JSON.stringify(S.game.serialize(g, NOW)));
-    s.version = 36; delete s.buildings; delete s.research; delete s.progress.peakTotal;
-    return S.game.deserialize(s);
-};
-/** 시드 42 · 첫 영웅 레벨 `lv` 인 옛 세이브가 올라온 판 — 합산 레벨이 지휘 천막을 연다(전 칸 개방은 500) */
-const migratedAt = lv => { const g = SYS.game.newGame(42, cands, NOW); g.heroes[0].level = lv; return asMigrated(g); };
 let G = freshG();
 G0 = JSON.stringify(G);
 /**
@@ -1156,123 +1145,6 @@ check('save: serialize → deserialize 왕복 동일 (v22)', () => {
     return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 37;
 });
 /**
- * 옛 세이브 흉내 [2026-09-17 · R111] — **v29 전 세이브는 퍼센트를 0~100 눈금으로 들었다**(5% = `5`).
- * 지금 판을 직렬화해 버전만 낮춘 픽스처는 퍼센트 접사가 이미 비율이라, 그대로 넣으면 v28 → v29 이관이 **한 번 더** 나눈다.
- * 아이템 값을 비교하는 이관 단정은 이것으로 눈금을 되돌려 넣는다 (소수 셋째 자리에서 자른다 — 곱셈 꼬리 제거)
- */
-const legacyPctSave = s => {
-    for (const it of Object.values(s.items ?? {}))
-        for (const a of it?.affixes ?? []) if (SYS.item.pctStat(a.stat)) a.v = Math.round(a.v * 100 * 1000) / 1000;
-    return s;
-};
-check('save: v25 → v26 이관 — 무기의 watk 를 지운다 · 피해 범위는 무기군 · ilvl · 강화의 파생 · 다른 아이템은 그대로 (INTERFACE §4 · R90)', () => {
-    const v25 = legacyPctSave(JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW))));
-    v25.version = 25;
-    const wUid = Object.keys(v25.items).find(k => v25.items[k].slot === 'weapon');
-    const aUid = Object.keys(v25.items).find(k => v25.items[k].slot !== 'weapon');
-    if (!wUid || !aUid) fail('픽스처 — 무기 · 무기 아닌 아이템이 둘 다 있어야 한다');
-    v25.items[wUid].watk = 9.87;                     // 옛 개체값 — 이관이 지워야 한다
-    const before = JSON.parse(JSON.stringify(G.items[aUid]));   // 지금 눈금의 원본 — v29 까지 올라온 뒤와 같아야 한다 (R111)
-    const up = SYS.game.deserialize(v25);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    const w = up.items[wUid];
-    if ('watk' in w) fail('watk 가 남았다');
-    const d = SYS.item.weaponDamage(w);
-    if (!eq(d, F.weaponDamage(w.ilvl, WG[w.group], w.up))) fail(`피해 범위 ${JSON.stringify(d)} 가 무기군 · ilvl · 강화의 파생이 아니다`);
-    if (!eq(up.items[aUid], before)) fail('무기 아닌 아이템이 바뀌었다');
-    return `${w.group} ilvl ${w.ilvl} → ${d.min}~${d.max} · watk 삭제`;
-});
-check('save: v26 → v27 이관 — 장비 옵션 값이 정수로 · 오만 「레벨당 데미지 +%」(fine)만 소수로 남는다 · v29 가 퍼센트를 비율로 옮긴다 (INTERFACE §4 · 2026-09-16 · R111)', () => {
-    const v26 = legacyPctSave(JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW))));
-    v26.version = 26;
-    const aUid = Object.keys(v26.items).find(k => v26.items[k].implicit);
-    const wUid = Object.keys(v26.items).find(k => v26.items[k].slot === 'weapon');
-    if (!aUid || !wUid) fail('픽스처 — 고유값을 든 방어구와 무기가 둘 다 있어야 한다');
-    v26.items[aUid].implicit.v = 12.7;                                                // 옛 소수 고유값 — v28 이관이 새 공식으로 덮으므로 여기서는 안 본다
-    v26.items[aUid].affixes = [{ stat: 'hp_flat', v: 34.2, src: 'random' }];          // growth — 옛 소수 접사
-    v26.items[wUid].affixes = [{ stat: 'dmg_per_level_pct', v: 0.3, src: 'pride' }];  // fine — 건드리면 안 된다
-    const up = SYS.game.deserialize(v26);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (!Number.isInteger(up.items[aUid].implicit.v)) fail(`implicit 이 정수가 아니다 ${up.items[aUid].implicit.v}`);
-    // v30 이 옛 방어구에 고정 옵션 · 죄종 칸을 **앞에** 채운다 — 자리가 아니라 stat 으로 찾는다 (2026-09-18)
-    const hp = up.items[aUid].affixes.find(a => a.stat === 'hp_flat');
-    if (hp?.v !== 34) fail(`hp_flat 34.2 → ${hp?.v} (34 여야 한다)`);
-    // fine 은 v27 에서 반올림되지 않고 v29 에서 비율이 된다(0.3% → 0.003) — 정수로 올랐으면 0.01 이 된다
-    if (up.items[wUid].affixes[0].v !== 0.003) fail(`fine 0.3 → ${up.items[wUid].affixes[0].v} (0.003 여야 한다)`);
-    return `hp_flat 34.2 → 34 · fine 0.3 → 0.003 · implicit 정수`;
-});
-check('save: v28 → v29 이관 — 퍼센트 접사만 100 으로 나눈다 · 고정값(hp_flat · def_flat · atk_flat) · implicit 은 그대로 · 오만 fine 도 나눈다 (INTERFACE §4 · R111)', () => {
-    const v28 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v28.version = 28;
-    const aUid = Object.keys(v28.items).find(k => v28.items[k].implicit);
-    if (!aUid) fail('픽스처 — 고유값을 든 방어구가 있어야 한다');
-    const imp = v28.items[aUid].implicit.v;
-    v28.items[aUid].affixes = [
-        { stat: 'hp_flat', v: 34, src: 'random' }, { stat: 'def_flat', v: 5, src: 'random' }, { stat: 'atk_flat', v: 3, src: 'random' },
-        { stat: 'crit_rate', v: 4, src: 'random' }, { stat: 'res_fire', v: 17, src: 'random' },
-        { stat: 'dmg_per_level_pct', v: 0.3, src: 'pride' }, { stat: 'magic_find', v: 12, src: 'greed' },
-    ];
-    const up = SYS.game.deserialize(v28);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    // v30 이 앞에 채운 고정 옵션은 이 단정의 몫이 아니다(아래 v29 → v30 단정) — 옛 옵션만 본다
-    const old = it => it.affixes.filter(a => a.src !== 'fixed');
-    const got = old(up.items[aUid]).map(a => `${a.stat}:${a.v}`).join(' ');
-    const want = 'hp_flat:34 def_flat:5 atk_flat:3 crit_rate:0.04 res_fire:0.17 dmg_per_level_pct:0.003 magic_find:0.12';
-    if (got !== want) fail(`${got} ≠ ${want}`);
-    if (up.items[aUid].implicit.v !== imp) fail(`implicit 이 바뀌었다 ${imp} → ${up.items[aUid].implicit.v}`);
-    // 두 번 열어도 한 번만 나눈다 — 이미 v29 인 세이브는 이관을 안 탄다
-    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
-    if (old(again.items[aUid]).map(a => `${a.stat}:${a.v}`).join(' ') !== want) fail('v29 세이브를 다시 열었더니 또 나눴다');
-    return got;
-});
-/**
- * v15 → v16 (2026-09-07 확정 · 2026-09-08 구현 — 사제 전용 무기 · R46).
- * 스태프·오브가 마법사 전용이 되면서 **사제가 낀 그 둘**만 사제 짝으로 갈아끼운다.
- * 벗기지 않는 이유는 **무기가 밑수**라(battle_design §9-1) 맨손 사제는 세기가 통째로 무너지기 때문이다.
- * 가방에 든 것은 마법사가 쓸 수 있으므로 **그대로 둔다** — 여기가 뒤집히면 마법사의 무기가 사라진다.
- */
-check('save: v15 → v16 이관 — 사제가 낀 스태프/오브만 성경/십자가로 · 가방 것은 그대로 (R46)', () => {
-    const v15 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v15.version = 15;
-    const h = v15.heroes[0];
-    h.cls = 'priest';
-    const worn = { uid: 'v16_worn', slot: 'weapon', group: 'staff', rarity: 'magic', ilvl: 3, up: 0,
-        watk: 4.44, element: 'fire', name: { ko: '분노의 스태프', en: 'Wrathful Staff' },
-        implicit: null, affixes: [], sins: ['wrath'] };
-    const bagged = { ...worn, uid: 'v16_bag', group: 'orb', name: { ko: '분노의 오브', en: 'Wrathful Orb' } };
-    v15.items[worn.uid] = worn; v15.items[bagged.uid] = bagged;
-    h.equipped.weapon = worn.uid; v15.bag.push(bagged.uid);
-
-    const up = SYS.game.deserialize(v15);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    const w = up.items.v16_worn, b = up.items.v16_bag;
-    if (w.group !== 'bible') fail(`착용 스태프 → ${w.group} (성경이어야 한다 — 주기 축 1.7 대응)`);
-    if (b.group !== 'orb') fail(`가방 오브가 ${b.group} 로 바뀌었다 — 가방은 안 건드린다`);
-    if (w.element !== 'fire') fail('개체 굴림이 재굴림됐다');
-    if ('watk' in w) fail('v26 자리 — 옛 watk 가 안 지워졌다 (무기 피해는 파생 · R90)');
-    if (w.name.ko === '분노의 스태프') fail('이름이 옛 베이스 그대로다 — 접사 죄종을 살려 다시 조립해야 한다');
-    if (!w.name.ko.includes('성경')) fail(`이름 ${w.name.ko}`);
-    if (SYS.item.canEquip({ cls: 'priest' }, w)) fail('이관 뒤에도 사제가 못 낀다');
-    return `${w.name.ko} · 가방 ${b.group} 보존`;
-});
-/**
- * v16 → v17 (2026-09-08 — 「출정 아웃」 폐기 · R54 · GAME_DESIGN §9 09-08).
- * 세이브가 들던 전투불능 상태(`run.downed` · 리포트의 `outTotal`)가 통째로 없어진다 — 아웃이 런을 넘지 않는다.
- */
-check('save: v16 → v17 이관 — run.downed 와 리포트 outTotal 을 걷는다 · 반복은 그대로 (R54)', () => {
-    const s16 = SYS.game.serialize(G, NOW);
-    s16.version = 16;
-    s16.run = { stageId: 101, repeat: true, lastAt: NOW, durationSec: 60, downed: [SYS.game.partyOf(G)[0]] };
-    s16.lastReport = { at: NOW, stageId: 101, won: false, downed: [SYS.game.partyOf(G)[0]], outTotal: [SYS.game.partyOf(G)[0]] };
-    const up = SYS.game.deserialize(s16);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (up.run.downed !== undefined) fail('run.downed 가 안 걷혔다');
-    // v20 이관이 `lastReport` 를 `reports[]` 로 옮긴다 — 걷혔는지는 그 목록의 첫 칸에서 본다
-    if (up.reports[0].outTotal !== undefined) fail('리포트의 outTotal 이 안 걷혔다');
-    if (up.run.repeat !== true) fail('진행 중이던 반복이 꺼졌다 — 이관은 반복을 안 건드린다');
-    return 'downed·outTotal 삭제 · repeat 유지';
-});
-/**
  * v18 → v19 (2026-09-09 — 처치는 가루를 안 뱉는다 · R63 · item_design §5-3).
  * 리포트의 가루 칸은 걷고, **이미 번 가루는 안 건드린다** — 공급원이 분해 하나로 줄었을 뿐이다.
  */
@@ -1420,60 +1292,6 @@ check('formation: 전열이 살아 있으면 기본 공격은 후열을 안 때�
     }
     return `후열 기본 공격 피격은 전열 전멸 뒤에만 · 옛 판정이면 위반 ${oldBad}건 · 쓰러진 전열이 라운드를 넘은 횟수 ${crossed} · 창 예외 ${exempt}`;
 });
-check('save: v18 → v19 이관 — 리포트의 dust 는 걷고 resources.dust 는 남긴다 (R63)', () => {
-    const s18 = SYS.game.serialize(G, NOW);
-    s18.version = 18;
-    s18.resources = { ...s18.resources, dust: 77 };
-    s18.lastReport = { at: NOW, stageId: 101, won: true, gold: 100, dust: 9, xpEach: 10, levelUps: [], downed: [] };
-    const up = SYS.game.deserialize(s18);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (up.reports[0].dust !== undefined) fail('리포트의 dust 가 안 걷혔다');   // v20 이 목록으로 옮겼다
-    if (up.resources.dust !== 77) fail(`번 가루가 사라졌다 — ${up.resources.dust} (소급 회수는 「자리 비워도 안전」을 깬다)`);
-    return '리포트 dust 삭제 · 보유 가루 77 보존';
-});
-/**
- * v20 → v21 — **리포트는 목록이다** (SCREEN_DESIGN §4-3 · ADR-0063 · R68).
- * 있던 리포트 하나가 배열의 첫 자리로 가고 옛 키는 사라진다. `contrib` 은 **안 채운다** —
- * 지나간 전투를 다시 돌릴 수 없고, 0 으로 지어내면 화면이 「못 때렸다」로 읽는다.
- */
-check('save: v20 → v21 이관 — lastReport 한 칸이 reports 목록의 첫 자리가 된다 (R68)', () => {
-    const s20 = SYS.game.serialize(G, NOW);
-    s20.version = 20;
-    delete s20.reports;
-    s20.lastReport = { at: NOW, stageId: 101, won: true, gold: 100, xpEach: 10, levelUps: [], downed: [], drops: [] };
-    const up = SYS.game.deserialize(s20);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (up.lastReport !== undefined) fail('옛 lastReport 키가 안 걷혔다');
-    if (!Array.isArray(up.reports) || up.reports.length !== 1) fail(`reports 가 목록이 아니다 — ${JSON.stringify(up.reports)}`);
-    if (up.reports[0].gold !== 100) fail('옮긴 리포트가 그 리포트가 아니다');
-    if (up.reports[0].contrib != null) fail('옛 리포트에 기여를 지어냈다 — 이관은 안 채운다');
-    // 리포트가 아예 없던 세이브는 **빈 목록**이 정확한 초기 상태다
-    const s20b = SYS.game.serialize(G, NOW);
-    s20b.version = 20; delete s20b.reports; delete s20b.lastReport;
-    if (SYS.game.deserialize(s20b).reports.length !== 0) fail('리포트가 없던 세이브가 빈 목록이 안 됐다');
-    return '첫 자리로 이동 · contrib 은 null · 없으면 빈 목록';
-});
-/**
- * v21 → v22 — **챕터는 5스테이지다** (base_expedition_design §1-2 · R75).
- * 옛 챕터보스 자리(x04)를 깬 세이브는 새 챕터보스 스테이지(x05)도 깬 것이다 — 안 올리면 해금(직전 클리어)이 다음 챕터를 통째로 잠근다.
- * 리포트의 stageId 는 **안 옮긴다** — 그 런은 9라운드짜리 옛 자리에서 돈 것이다.
- */
-check('save: v21 → v22 이관 — 챕터보스 스테이지의 직전을 깼으면 그 스테이지도 깬 것이다 · 리포트는 안 옮긴다 (R75)', () => {
-    const s21 = SYS.game.serialize(G, NOW);
-    s21.version = 21;
-    s21.progress = { cleared: [101, 102, 103, 104, 201, 202, 203] };
-    s21.reports = [{ at: NOW, stageId: 104, won: true, gold: 1, xpEach: 1, levelUps: [], downed: [], drops: [] }];
-    const up = SYS.game.deserialize(s21);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (!up.progress.cleared.includes(105)) fail(`105 가 소급되지 않았다 — ${up.progress.cleared.join(',')}`);
-    if (!SYS.game.stageUnlocked(up, 201)) fail('이관 뒤에도 챕터 2 가 잠겨 있다');
-    if (up.progress.cleared.includes(205)) fail('204 를 안 깼는데 205 가 들어갔다');
-    if (up.reports[0].stageId !== 104) fail(`리포트 stageId 가 옮겨졌다 — ${up.reports[0].stageId}`);
-    // 이미 든 것은 또 넣지 않는다
-    const again = SYS.game.deserialize({ ...s21, progress: { cleared: [101, 102, 103, 104, 105] } });
-    if (again.progress.cleared.filter(id => id === 105).length !== 1) fail('105 가 중복됐다');
-    return `cleared ${up.progress.cleared.join(',')}`;
-});
 /**
  * 리포트 목록의 상한 — [balance.csv:report_keep] (R68).
  * **회귀 그물**: 상한을 넘겨 돌려 보고 **최신이 맨 앞**이며 **오래된 것부터 밀려나는지**를 본다.
@@ -1511,162 +1329,24 @@ check('battle: 처치가 가루를 안 뱉는다 — 결과·리포트에 칸이
     if (!kills) fail('처치가 0이라 검사가 성립하지 않는다');
     return `처치 ${kills} · 가루 ${before} 그대로`;
 });
-check('save: v2 → v17 연쇄 이관 — 감각→운·명중/회피 폐지(v3) · 마스터리 자리(v4) · 선술집 쿨다운(v5) · 파티 전술(v6) · 고유 스킬(v9) · 전술 등급(v10) · 회복 대기 폐기(v11) · **히든 상한 폐지·등급(v15)** · **사제 무기 분리(v16)**까지 한 번에', () => {
-    const v2 = legacyPctSave(JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW))));
-    v2.version = 2;
-    // v2 세이브 재현 — 능력치 키를 sen 으로 되돌리고 폐지된 접사를 심는다
-    const senValues = [];
-    for (const h of v2.heroes) {
-        h.stats = Object.fromEntries(Object.entries(h.stats).map(([k, v]) => [k === 'luck' ? 'sen' : k, v]));
-        // v2 세이브에는 개체별 히든 상한이 있었다 — v15 가 지우는지 보려면 **없던 것을 되살려** 넣어야 한다
-        h.caps = Object.fromEntries(Object.entries(h.stats).map(([k, v]) => [k, v]));
-        delete h.innate;                 // 안 지우면 이관이 아니라 보존을 검사하게 된다 (v2 에는 고유가 없었다)
-        delete h.face;                   // 같은 이유 — v2 에는 얼굴 번호가 없었다 (v12 에서 생겼다)
-        delete h.tier;                   // v14 까지 생성기는 레어만 냈다 — v15 가 옛 영웅을 레어로 보는지 검사한다
-        senValues.push(h.stats.sen);
-    }
-    const itemUid = Object.keys(v2.items)[0];
-    v2.items[itemUid].affixes = [{ stat: 'accuracy', v: 7 }, { stat: 'crit_rate', v: 3 }, { stat: 'evasion', v: 9 }];
-
-    const up = SYS.game.deserialize(v2);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    for (const h of up.heroes) if (!h.mastery || h.masteryPoints === undefined) fail('v4 자리가 안 생겼다');
-    if (!up.tavern) fail('v5 자리가 안 생겼다');
-    if (!up.presets.every(p => p.tactics?.slots) || 'tactics' in up) fail('v6 자리(v34 부터 편성마다)가 안 생겼다');
-    for (const h of up.heroes) if (!h.innate || !SYS.skill.defs[h.innate]) fail('v9 자리(고유 스킬)가 안 생겼다');
-    for (const h of up.heroes)
-        if (h.face !== null && !(typeof h.face === 'string' && h.face.startsWith(h.cls + '_')))
-            fail(`v13 자리(얼굴 id)가 안 생겼다 (${h.cls} → ${h.face})`);
-    up.heroes.forEach((h, i) => {
-        if ('sen' in h.stats) fail('sen 키가 남았다');
-        if (h.stats.luck !== senValues[i]) fail(`값이 바뀌었다 ${h.stats.luck} ≠ ${senValues[i]}`);
-        if ('caps' in h) fail('v15 자리 — caps 가 안 지워졌다 (개체별 히든 상한 폐지)');
-        if (h.tier !== 'rare') fail(`v15 자리 — 옛 영웅은 레어여야 한다 (${h.tier})`);
-        if (Object.keys(h.stats).length !== D.heroAttributes.length) fail('키 수가 달라졌다');
-    });
-    const af = up.items[itemUid].affixes;
-    if (af.some(a => ['accuracy', 'evasion'].includes(a.stat))) fail('폐지 접사가 남았다');
-    // v23 — 접사에 출처가 붙고 옛 무기는 고정 옵션 · 죄종 칸을 앞에 받는다 (R78). 옛 접사는 `random` 으로 값 그대로 남는다
-    //   v29 — 값은 비율로 옮겨진다(3% → 0.03 · R111)
-    const kept = af.filter(a => a.src === 'random').map(({ stat, v }) => ({ stat, v }));
-    if (!eq(kept, [{ stat: 'crit_rate', v: 0.03 }])) fail(`나머지 접사가 보존되지 않았다 ${JSON.stringify(af)}`);
-    // v23 이 채운 옛 무기 고정 옵션도 v29 를 지나 비율이다 — 옛 눈금으로 채우지 않았으면 1% 로 뭉개진다
-    const fixed = af.find(a => a.src === 'fixed');
-    if (fixed && !(fixed.v >= B.weapon_fixed_atk_pct_min && fixed.v <= B.weapon_fixed_atk_pct_max)) fail(`옛 무기 고정 옵션 ${fixed.v} ∉ [${B.weapon_fixed_atk_pct_min}, ${B.weapon_fixed_atk_pct_max}]`);
-    if (af.some(a => a.src === undefined)) fail(`v23 자리 — 출처 없는 접사가 남았다 ${JSON.stringify(af)}`);
-    if (up.items[itemUid].slot === 'weapon' && af[0]?.src !== 'fixed') fail(`v23 자리 — 옛 무기에 고정 옵션이 안 붙었다 ${JSON.stringify(af)}`);
-    // 무기 개체값은 재굴림하지 않는다
-    const w = Object.values(up.items).find(it => it.slot === 'weapon');
-    // ~~watk 보존~~ → v26 에서 **지워진다** — 무기 피해는 무기군 · ilvl · 강화에서 파생한다 (R90)
-    if ('watk' in w) fail('v26 자리 — watk 가 안 지워졌다');
-    if (!SYS.item.weaponDamage(w)) fail('옛 무기의 피해 범위가 파생되지 않는다');
-    return `${up.heroes.length}명 · 접사 ${af.length}개 잔존`;
-});
-check('save: v8 → v9 이관 — 고유 스킬 없는 영웅에게 시드에서 소급 배정 · 이미 가진 것은 유지 · 결정론 (INTERFACE §4)', () => {
-    // 영웅 0·1 은 고유를 지우고(옛 영웅) 2 는 남긴다 — 이관이 「채우기」이지 「덮어쓰기」가 아님을 본다
-    const mk = () => {
-        const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-        s.version = 8;
-        delete s.heroes[0].innate;
-        delete s.heroes[1].innate;
-        return s;
-    };
-    const kept = SYS.game.serialize(G, NOW).heroes[2].innate;
-    const up = SYS.game.deserialize(mk());
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    for (const h of up.heroes) if (!SYS.skill.defs[h.innate]) fail(`${h.uid} 의 고유 '${h.innate}' 가 정의에 없다`);
-    if (up.heroes[2].innate !== kept) fail('이미 가진 고유가 덮어써졌다');
-    const again = SYS.game.deserialize(mk());
-    if (!eq(up.heroes.map(h => h.innate), again.heroes.map(h => h.innate))) fail('같은 입력인데 소급 배정이 달라졌다');
-    return up.heroes.map(h => h.innate).join(' · ');
-});
-check('save: v12 → v13 이관 — 얼굴을 직업 풀에서 전면 재굴림(문자열 face id) · 결정론 (INTERFACE §4)', () => {
-    // v12 세이브 재현 — 그 시절의 face 는 **직업 무관 정수**였다. 이관은 조건 없이 전부 덮어쓴다(보존할 개체성이 없다)
-    const mk = () => {
-        const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-        s.version = 12;
-        s.heroes.forEach((h, i) => { h.face = i + 1; });
-        return s;
-    };
-    const up = SYS.game.deserialize(mk());
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    for (const h of up.heroes) {
-        // null 은 풀 0장 직업(확장 직업)만 — 본편 5직업은 전부 1장 이상이라 문자열 id 를 받는다 (2026-09-07 밤)
-        if (h.face !== null && !(typeof h.face === 'string' && h.face.startsWith(h.cls + '_')))
-            fail(`${h.uid}(${h.cls}) 의 얼굴이 직업 풀에서 안 나왔다 — ${h.face}`);
-    }
-    const again = SYS.game.deserialize(mk());
-    if (!eq(up.heroes.map(h => h.face), again.heroes.map(h => h.face))) fail('같은 입력인데 재굴림 결과가 달라졌다');
-    return up.heroes.map(h => `${h.cls}:${h.face}`).join(' · ');
-});
-check('save: v13 → v14 이관 — face=null 만 소급 재굴림 · 가진 얼굴은 유지 · 결정론 (INTERFACE §4)', () => {
-    // v13 세이브 재현 — 마법사 풀이 0장이던 시절의 null 얼굴. 0·1번만 지우고 2번은 남긴다(채우기이지 덮어쓰기가 아니다)
-    const mk = () => {
-        const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-        s.version = 13;
-        s.heroes[0].face = null;
-        s.heroes[1].face = null;
-        return s;
-    };
-    const kept = SYS.game.serialize(G, NOW).heroes[2].face;
-    const up = SYS.game.deserialize(mk());
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    for (const h of up.heroes.slice(0, 2))
-        if (!(typeof h.face === 'string' && h.face.startsWith(h.cls + '_')))
-            fail(`${h.uid}(${h.cls}) 의 null 이 소급되지 않았다 — ${h.face}`);
-    if (up.heroes[2].face !== kept) fail('이미 가진 얼굴이 덮어써졌다');
-    const again = SYS.game.deserialize(mk());
-    if (!eq(up.heroes.map(h => h.face), again.heroes.map(h => h.face))) fail('같은 입력인데 소급 결과가 달라졌다');
-    return up.heroes.map(h => `${h.cls}:${h.face}`).join(' · ');
-});
-/**
- * v17 → v18 [2026-09-09 · R59] — 직업 스킬 풀 「1스킬 = 1직업」.
- * 옛 세이브는 ①무기가 스킬을 안 들고(무기군이 정했다) ②고유가 직업을 안 가려 굴려졌다. 둘 다 새 규칙으로 맞춘다.
- * **rng 0회** — 이관이 굴림을 태우면 같은 시드가 다른 결과를 낸다(v14·v15 와 같은 규칙).
- */
-check('save: v17 → v18 이관 — 무기가 제 직업 풀 스킬을 담고 · 직업 밖 고유는 갈린다 · 결정론 (INTERFACE §4)', () => {
-    const poolOf = cls => SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === cls).map(d => d.id);
-    const mk = () => {
-        const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-        s.version = 17;
-        for (const it of Object.values(s.items)) delete it.skill;       // v17 무기는 스킬을 안 들었다
-        s.heroes[0].innate = 'wg_axe';                                   // 지워진 무기군 행 — 정의에 아예 없다
-        s.heroes[1].innate = poolOf(s.heroes[1].cls === 'mage' ? 'warrior' : 'mage')[0];   // 남의 직업 스킬
-        return s;
-    };
-    const before = SYS.game.serialize(G, NOW).heroes[2];
-    const up = SYS.game.deserialize(mk());
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    for (const it of Object.values(up.items)) {
-        if (it.slot !== 'weapon') continue;
-        const cls = SYS.item.groupOf(it)?.classes?.[0];
-        if (!poolOf(cls).includes(it.skill)) fail(`${it.uid}(${it.group}) skill ${it.skill} 가 ${cls} 풀 밖이다`);
-    }
-    for (const h of up.heroes)
-        if (!poolOf(h.cls).includes(h.innate)) fail(`${h.uid}(${h.cls}) 고유 ${h.innate} 가 직업 풀 밖이다`);
-    // 이미 제 직업 것을 든 고유는 **안 건드린다** — 채우기이지 덮어쓰기가 아니다
-    if (poolOf(before.cls).includes(before.innate) && up.heroes[2].innate !== before.innate)
-        fail('멀쩡한 고유가 덮어써졌다');
-    const again = SYS.game.deserialize(mk());
-    if (!eq(up.heroes.map(h => h.innate), again.heroes.map(h => h.innate))) fail('같은 입력인데 고유 결과가 달라졌다');
-    if (!eq(Object.values(up.items).map(i => i.skill ?? null), Object.values(again.items).map(i => i.skill ?? null)))
-        fail('같은 입력인데 무기 스킬이 달라졌다 — 이관이 굴림을 태웠다');
-    return up.heroes.map(h => `${h.cls}:${h.innate}`).join(' · ');
-});
-check('save: 버전 불일치는 거부 (v1 · v99) — v1 은 스키마 단절이라 이관하지 않는다', () => {
-    for (const v of [1, 99]) { try { SYS.game.deserialize({ version: v, heroes: [] }); fail(`v${v} accepted`); } catch (e) { if (e instanceof Fail) throw e; } }
-    return true;
-});
-check('save: canLoad 가 deserialize 와 같은 답을 낸다 — 화면이 이관 가능한 세이브를 거부하면 안 된다 (부채 #24)', () => {
+check('save: v37 만 연다 — v1 · v36 · v99 는 던진다 · 모양이 멀쩡한 세이브도 버전이 다르면 던진다 (INTERFACE §4 「v37 에서 끊었다」 · R139)', () => {
     const cur = SYS.game.serialize(G, NOW);
-    // 이관 가능한 옛 버전은 열려야 한다 — 버전 숫자만 낮춘 세이브로 확인한다
-    for (const v of [2, 3, 4, 5, 6, 7, 8, 9, 10, SAVE_VERSION]) {
+    for (const v of [1, 36, 99]) {
         const s = JSON.parse(JSON.stringify(cur)); s.version = v;
-        if (!SYS.game.canLoad(s)) fail(`v${v} 를 못 연다 — deserialize 는 여는데 canLoad 가 막는다`);
+        try { SYS.game.deserialize(s); fail(`v${v} accepted`); } catch (e) { if (e instanceof Fail) throw e; }
     }
-    for (const v of [1, 99]) if (SYS.game.canLoad({ version: v, heroes: [] })) fail(`v${v} 를 연다고 답했다`);
+    return `v${SAVE_VERSION} 만 연다 · v1 · v36 · v99 거부`;
+});
+check('save: canLoad 가 deserialize 와 같은 답을 낸다 — 지금 버전은 열고 v37 전은 막는다 (부채 #24 · R139 · ADR-0303)', () => {
+    const cur = SYS.game.serialize(G, NOW);
+    if (!SYS.game.canLoad(JSON.parse(JSON.stringify(cur)))) fail(`v${SAVE_VERSION} 를 못 연다 — deserialize 는 여는데 canLoad 가 막는다`);
+    // 시작 화면이 [이어하기] 를 숨기고 「이전 형식」 한 줄을 세우는 근거 — 버전 숫자만 낮춘 세이브로 확인한다
+    for (const v of [1, 36, 99]) {
+        const s = JSON.parse(JSON.stringify(cur)); s.version = v;
+        if (SYS.game.canLoad(s)) fail(`v${v} 를 연다고 답했다`);
+    }
     if (SYS.game.canLoad(null) || SYS.game.canLoad('x')) fail('객체가 아닌 것을 연다고 답했다');
-    return `v2~v10·v${SAVE_VERSION} 열림 · v1·v99 거부`;
+    return `v${SAVE_VERSION} 열림 · v1 · v36 · v99 거부`;
 });
 check('save: 크기 < 64KB (빈 게임)', () => { const n = JSON.stringify(SYS.game.serialize(G, NOW)).length; return n < 65536 ? `${n} bytes` : fail(`${n} bytes`); });
 
@@ -1853,100 +1533,6 @@ check('masteryState: 판정을 한 번에 낸다 — 랭크·상한·해금·찍
     if (ms.nodes.some(n => n.canLearn)) fail('포인트 0 인데 찍을 수 있다');
     if (SYS.game.masteryState(G2, 'h999') !== null) fail('없는 영웅에 null 을 안 낸다');
     return `${h.cls}/${h.sin} → 노드 ${ms.nodes.length} (T1 ${t1.length} · T2 ${t2.length})`;
-});
-check('save: v3 → v6 이관 — 마스터리 자리 신설 + 안 받고 지나간 포인트 소급 (INTERFACE §4)', () => {
-    const v3 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v3.version = 3;
-    for (const h of v3.heroes) { delete h.mastery; delete h.masteryPoints; h.level = 5; }
-    const up = SYS.game.deserialize(v3);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    const want = 4 * B.mastery_point_per_level;
-    for (const h of up.heroes) {
-        if (!h.mastery || Object.keys(h.mastery).length !== 0) fail('mastery 자리가 비어 있지 않다');
-        if (h.masteryPoints !== want) fail(`포인트 ${h.masteryPoints} ≠ ${want}`);
-    }
-    return `${up.heroes.length}명 · Lv5 → ${want}p 소급`;
-});
-
-check('save: v4 → v5 이관 — 선술집 쿨다운 자리 신설 (열려 있는 상태로 올린다, INTERFACE §4)', () => {
-    const v4 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v4.version = 4;
-    delete v4.tavern;
-    const up = SYS.game.deserialize(v4);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (!up.tavern || up.tavern.rerolledAt !== null || up.tavern.hired.length !== 0) fail('tavern 자리가 열린 상태로 안 올라왔다');
-    return SYS.game.tavernState(up, NOW).free ? '무료 리롤이 열린 채로 이관' : fail('이관 직후가 쿨다운 중이다');
-});
-
-check('save: v5 → v6 이관 — 파티 전술 자리 신설 (첫 배정은 저장하지 않고 시드가 낸다, INTERFACE §4)', () => {
-    const G1 = asMigrated(SYS.game.newGame(42, cands, NOW));     // 옛 세이브가 올라온 판 — 건물이 이관 규칙대로 선다 (R137)
-    const v5 = JSON.parse(JSON.stringify(SYS.game.serialize(G1, NOW)));
-    v5.version = 5;
-    delete v5.tactics; delete v5.counters.tactic;
-    const up = SYS.game.deserialize(v5);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    // v34 부터 칸은 편성마다다 — v6 가 세운 빈 자리가 편성마다 한 벌씩 복사돼 올라온다 (R129)
-    if (!up.presets.every(p => p.tactics && Object.keys(p.tactics.slots).length === 0) || 'tactics' in up) fail('tactics 자리가 빈 채로 안 올라왔다');
-    // 옛 세이브도 시드가 같으므로 새로 시작한 판과 **같은 첫 배정**이 나온다
-    const a = SYS.game.tacticState(up).slots.map(x => x.option?.id ?? null);
-    const b = SYS.game.tacticState(G1).slots.map(x => x.option?.id ?? null);
-    return eq(a, b) ? `칸 ${a.length} · 첫 배정 동일` : fail('이관이 첫 배정을 흔들었다');
-});
-
-/**
- * v7 → v8 — 한손 개념 폐지 · 보조 슬롯 폐지 (2026-09-01).
- * 옛 세이브가 들고 있던 것 셋이 여기서 정리된다: 보조 아이템(삭제) · `twoHanded` 플래그(삭제) ·
- * 사라지거나 개명된 무기군(`sword1h` → `sword2h` · `wand` → `orb`).
- */
-check('save: v7 → v8 이관 — 보조 아이템 삭제 · offhand 위치 제거 · 무기군 개명(sword1h→sword2h · wand→orb) (INTERFACE §4)', () => {
-    const v7 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v7.version = 7;
-    // v7 세이브 재현 — 보조를 낀 영웅 · 옛 무기군을 든 아이템 · twoHanded 플래그
-    const h0 = v7.heroes[0];
-    v7.items.old_off = { uid: 'old_off', slot: 'offhand', rarity: 'magic', ilvl: 3, up: 0, name: { ko: '옛 방패', en: 'Old Shield' }, implicit: { stat: 'def_flat', v: 11 }, affixes: [], sins: ['wrath'] };
-    h0.equipped.offhand = 'old_off';
-    v7.items.old_bag_off = { uid: 'old_bag_off', slot: 'offhand', rarity: 'magic', ilvl: 3, up: 0, name: { ko: '가방 방패', en: 'Bagged Shield' }, implicit: { stat: 'def_flat', v: 9 }, affixes: [], sins: ['envy'] };
-    v7.bag.push('old_bag_off');
-    for (const it of Object.values(v7.items)) if (it.slot === 'weapon') it.twoHanded = true;
-    const knight = v7.heroes.find(x => x.cls === 'knight');
-    if (knight) v7.items[knight.equipped.weapon].group = 'sword1h';
-    const caster = v7.heroes.find(x => x.cls === 'mage' || x.cls === 'priest');
-    if (caster) v7.items[caster.equipped.weapon].group = 'wand';
-
-    const up = SYS.game.deserialize(v7);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (up.items.old_off || up.items.old_bag_off) fail('보조 아이템이 안 지워졌다');
-    if (up.bag.includes('old_bag_off')) fail('가방에 보조가 남았다');
-    for (const h of up.heroes) {
-        if ('offhand' in h.equipped) fail('offhand 위치가 남았다');
-        if (Object.keys(h.equipped).length !== D.equipSlots.length) fail(`위치 ${Object.keys(h.equipped).length}개`);
-    }
-    for (const it of Object.values(up.items)) {
-        if ('twoHanded' in it) fail('twoHanded 플래그가 남았다');
-        if (it.group === 'sword1h' || it.group === 'wand') fail(`퇴역 무기군 ${it.group} 이 남았다`);
-    }
-    if (knight && up.items[up.heroes.find(x => x.cls === 'knight').equipped.weapon]?.group !== 'sword2h') fail('sword1h → sword2h 미이관');
-    if (caster && up.items[up.heroes.find(x => x.cls === caster.cls).equipped.weapon]?.group !== 'orb') fail('wand → orb 미이관');
-    return `보조 2개 삭제 · 위치 ${D.equipSlots.length} · 무기군 개명 확인`;
-});
-
-check('save: v6 → v7 이관 — 강화 단계 신설. up=0 이면 배율이 1이라 **전투 수치가 안 움직인다** — 물리 방어만 예외다(v27→v28 이 방어구 고유값을 새 공식에 앉힌다 · R107) (INTERFACE §4)', () => {
-    const G1 = asMigrated(SYS.game.newGame(42, cands, NOW));     // 옛 세이브가 올라온 판 (R137)
-    const v6 = legacyPctSave(JSON.parse(JSON.stringify(SYS.game.serialize(G1, NOW))));
-    v6.version = 6;
-    for (const it of Object.values(v6.items)) delete it.up;
-    delete v6.counters.upgrade;
-    const up = SYS.game.deserialize(v6);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (up.counters.upgrade !== 0) fail(`counters.upgrade ${up.counters.upgrade}`);
-    for (const it of Object.values(up.items)) if (it.up !== 0) fail(`up ${it.up}`);
-    // 이관이 능력치를 흔들지 않는다 — 강화 이전 세이브가 강화 이후 코드에서도 같은 값을 낸다.
-    //   **물리 방어는 뺀다** [2026-09-16 · R107] — v27 → v28 이관이 방어구 고유값을 지금 공식의 바탕값으로 다시 앉히므로
-    //   개체 편차만큼 달라지는 것이 정상이다. 나머지 축이 한 칸도 안 움직이는지가 이 단정의 본론이다
-    const strip = c => { const { defense, ...rest } = c; return JSON.stringify(rest); };
-    const before = G1.heroes.map(h => strip(SYS.game.heroCombat(G1, h)));
-    const after = up.heroes.map(h => strip(SYS.game.heroCombat(up, h)));
-    return eq(before, after) ? `아이템 ${Object.keys(up.items).length}개 up=0 · 물리 방어 밖 전투 수치 동일` : fail('이관이 전투 수치를 흔들었다');
 });
 
 /* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95) ── */
@@ -2995,127 +2581,6 @@ check('item: 이름 단어의 단은 넷 중 고르게 나온다 — 죄종 굴�
     for (const [sin, cs] of Object.entries(bySinTier)) if (cs.some(c => c === 0)) fail(`${sin} 에서 안 나오는 단이 있다 ${cs}`);
     return `죄종 칸 ${total} · 단별 ${byTier.join(' / ')}`;
 });
-check('save: v30 → v31 이관 — 옛 이름(09-11 태그형 · 그 전 문장형)을 새 형식으로 · words 는 uid 번호 · 못 알아보는 이름은 그대로 · words 가 이미 있으면 안 건드린다 · 두 번 열면 같다 (INTERFACE §4 · R118)', () => {
-    const N = SYS.naming, ring = { ko: '링', en: 'Ring' };
-    const v30 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v30.version = 30;
-    const mk = (uid, rarity, sins, name, extra = {}) => ({ uid, slot: 'ring', rarity, ilvl: 5, up: 0, name, implicit: null, affixes: [], sins, ...extra });
-    v30.items.t_tag = mk('i901', 'rare', ['wrath', 'pride'], { ko: '[분노][오만] 링', en: '[Wrath][Pride] Ring' });
-    v30.items.t_old = mk('i902', 'rare', ['envy', 'greed'], { ko: '시기의 링 — 탐욕', en: 'Envious Ring of Greed' });
-    v30.items.t_mag = mk('i903', 'magic', ['lust'], { ko: '[색욕] 링', en: '[Lust] Ring' });
-    v30.items.t_odd = mk('i904', 'magic', ['sloth'], { ko: '옛 반지', en: 'Old Ring' });
-    v30.items.t_nor = mk('i905', 'normal', [], ring);
-    v30.items.t_new = mk('i906', 'magic', ['wrath'], N.composeName('wrath', ring, null, [3]), { words: [3] });
-    const up = SYS.game.deserialize(v30);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    const uidWords = it => it.sins.map((sin, k) => (Number(it.uid.slice(1)) + k) % N.wordCount(sin));
-    for (const k of ['t_tag', 't_old', 't_mag']) {
-        const it = up.items[k];
-        if (!eq(it.words, uidWords(it))) fail(`${k} words ${JSON.stringify(it.words)} ≠ uid 번호 ${JSON.stringify(uidWords(it))}`);
-        if (!eq(it.name, N.composeName(it.sins[0], ring, it.sins[1] ?? null, it.words))) fail(`${k} 이름 ${it.name.ko} / ${it.name.en}`);
-    }
-    const odd = up.items.t_odd;
-    if (!eq(odd.name, v30.items.t_odd.name) || !eq(odd.words, uidWords(odd))) fail(`못 알아보는 이름 ${odd.name.ko} · ${JSON.stringify(odd.words)}`);
-    if (!eq(up.items.t_nor.words, []) || !eq(up.items.t_nor.name, ring)) fail('일반이 바뀌었다');
-    // 옵션 줄은 사슬 끝의 v33 단계(반지 · 목걸이 죄종 칸 소급 · R127)가 따로 채운다 — 여기서는 이름 · 단어만 본다
-    const noOpt = it => ({ ...it, affixes: null });
-    if (!eq(noOpt(up.items.t_new), noOpt(v30.items.t_new))) fail('words 가 있는 아이템이 바뀌었다');
-    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
-    if (!eq(again.items, up.items)) fail('v31 세이브를 다시 열었더니 달라졌다');
-    if (!eq(SYS.game.deserialize(v30).items, up.items)) fail('같은 v30 을 두 번 열면 다르다');
-    return `${up.items.t_tag.name.ko} · ${up.items.t_old.name.en} · ${up.items.t_mag.name.ko}`;
-});
-check('save: v32 → v33 이관 — 옛 반지 · 목걸이에 죄종 칸을 앞에 채우고 옛 옵션은 뒤에 · 목걸이에 발동 스킬(베이스 조건 · 모르는 베이스는 uid) · 다른 부위 · 새 형식은 그대로 · 두 번 열면 같다 (INTERFACE §4 · R127)', () => {
-    const v32 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v32.version = 32;
-    const base = { rarity: 'rare', ilvl: 20, up: 0, implicit: null, words: [0, 0], name: { ko: 'x', en: 'x' } };
-    v32.items.m_ring = { ...base, uid: 'i801', slot: 'ring', baseId: 'ring_1', sins: ['envy', 'pride'], affixes: [{ stat: 'crit_damage', v: 0.1, src: 'random' }, { stat: 'gold_find', v: 0.08, src: 'random' }] };
-    v32.items.m_amu = { ...base, uid: 'i802', slot: 'amulet', baseId: 'amulet_3', sins: ['wrath', 'lust'], affixes: [{ stat: 'atk_pct', v: 0.05, src: 'random' }] };
-    v32.items.m_old = { ...base, uid: 'i803', slot: 'amulet', baseId: 'amulet_4', rarity: 'normal', sins: [], words: [], affixes: [{ stat: 'hp_pct', v: 0.03, src: 'random' }] };   // 09-21 에 표에서 빠진 베이스
-    v32.items.m_helm = { ...base, uid: 'i804', slot: 'helmet', baseId: 'helmet_plate_1', group: 'plate', sins: ['envy'], words: [0], implicit: { stat: 'def_flat', v: 20 }, affixes: [{ stat: 'armor_def_pct', v: 0.1, src: 'fixed' }] };
-    const up = SYS.game.deserialize(v32);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version} · SAVE_VERSION ${SAVE_VERSION}`);
-    const R = up.items.m_ring, A = up.items.m_amu, O = up.items.m_old;
-    if (!eq(R.affixes.map(a => a.src), ['envy', 'pride', 'random', 'random'])) fail(`반지 출처 ${R.affixes.map(a => a.src)}`);
-    if (!eq(R.affixes.slice(2), v32.items.m_ring.affixes)) fail('옛 옵션이 뒤에 그대로가 아니다');
-    if (!eq(R.affixes.slice(0, 2), SYS.item.legacyAccessoryLayers(v32.items.m_ring).layers)) fail('죄종 칸이 legacyAccessoryLayers 와 다르다');
-    if ('proc' in R) fail('반지에 발동 스킬이 붙었다');
-    const want = D.amuletProcs.find(r => r.baseId === 'amulet_3');
-    if (!A.proc || A.proc.trigger !== want.trigger || A.proc.v !== F.pctOption((want.min + want.max) / 2)) fail(`목걸이 발동 ${JSON.stringify(A.proc)}`);
-    if (!eq(A.affixes.map(a => a.src), ['wrath', 'lust', 'random'])) fail(`목걸이 출처 ${A.affixes.map(a => a.src)}`);
-    const rows = D.amuletProcs;
-    if (!O.proc || O.proc.trigger !== rows[803 % rows.length].trigger) fail(`모르는 베이스의 발동 조건 ${JSON.stringify(O.proc)} — uid 번호로 골라야`);
-    if (!eq(O.affixes, v32.items.m_old.affixes)) fail('일반(죄종 없음) 목걸이의 옵션이 바뀌었다');
-    if (!eq(up.items.m_helm, v32.items.m_helm)) fail('투구가 바뀌었다');
-    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
-    if (!eq(again.items, up.items)) fail('v33 세이브를 다시 열었더니 달라졌다');
-    if (!eq(SYS.game.deserialize(v32).items, up.items)) fail('같은 v32 를 두 번 열면 다르다');
-    return `반지 ${R.affixes.map(a => `${a.src}/${a.stat}`).join(' ')} · 목걸이 ${A.proc.trigger}/${A.proc.skill}:${A.proc.v} · 옛 베이스 ${O.proc.trigger}`;
-});
-check('save: v33 → v34 이관 — 옛 전술 칸 한 벌이 편성마다 복사된다 · 최상위 `tactics` 는 지운다 · 칸의 내용 · 전투 무변동 · 두 번 열면 같다 (INTERFACE §4 · R129 · ADR-0250)', () => {
-    const G2 = migratedAt(500);                   // 전 칸 개방 — 옛 세이브가 올라온 판(이관이 건물을 문턱대로 세운다 · R137)
-    G2.resources.gold = 999_999;
-    if (!rollOnly(G2, [2, 4]).ok) fail('fixture: 2 · 4 번 칸 리롤');
-    const s33 = JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW)));
-    s33.version = 33;
-    s33.tactics = { slots: s33.presets[0].tactics.slots };   // v33 은 칸 한 벌을 최상위에 들었다 · 잠금은 없었다(v35)
-    for (const p of s33.presets) delete p.tactics;
-    if (Object.keys(s33.tactics.slots).length !== 2) fail(`fixture: 굴린 칸 ${Object.keys(s33.tactics.slots)}`);
-    const up = SYS.game.deserialize(s33);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version} · SAVE_VERSION ${SAVE_VERSION}`);
-    if ('tactics' in up) fail('최상위 tactics 가 남았다');
-    if (!up.presets.every(p => eq(p.tactics.slots, s33.tactics.slots))) fail('편성마다 옛 칸 한 벌이 안 들었다');
-    up.presets[1].tactics.slots[1] = { id: 'x', grade: 'rare' };
-    if (up.presets[0].tactics.slots[1] || up.presets[2].tactics.slots[1]) fail('복사가 아니라 한 객체를 나눠 쥐었다');
-    delete up.presets[1].tactics.slots[1];
-    const want = SYS.game.tacticState(G2);
-    for (let n = 1; n <= up.presets.length; n++)
-        if (!eq(SYS.game.tacticState(up, SYS.game.partyOf(up, 1), n), want)) fail(`편성 ${n} 의 칸이 옛 칸과 다르다`);
-    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
-    if (!eq(again.presets, up.presets)) fail('v34 세이브를 다시 열었더니 달라졌다');
-    if (!eq(SYS.game.deserialize(s33).presets, SYS.game.deserialize(s33).presets)) fail('같은 v33 을 두 번 열면 다르다');
-    return `굴린 칸 ${Object.keys(s33.tactics.slots).join(',')} → 편성 ${up.presets.length} 벌`;
-});
-check('save: v34 → v35 이관 — 편성마다 잠금 `locked = []` · 칸의 내용 · 전투 무변동 · 두 번 열면 같다 · 없는 칸 번호는 잘린다 (INTERFACE §4 · R28)', () => {
-    const G2 = migratedAt(500);                   // 전 칸 개방 — 옛 세이브가 올라온 판 (R137)
-    G2.resources.gold = 99_999_999;
-    if (!rollOnly(G2, [2, 4]).ok) fail('fixture: 2 · 4 번 칸 리롤');
-    const s34 = JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW)));
-    s34.version = 34;
-    for (const p of s34.presets) delete p.tactics.locked;   // v34 에는 잠금이 없었다
-    const up = SYS.game.deserialize(s34);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (!up.presets.every(p => eq(p.tactics.locked, []))) fail(`잠금 자리 ${JSON.stringify(up.presets.map(p => p.tactics.locked))}`);
-    if (!up.presets.every((p, i) => eq(p.tactics.slots, G2.presets[i].tactics.slots))) fail('이관이 칸의 내용을 흔들었다');
-    for (let n = 1; n <= up.presets.length; n++)
-        if (!eq(SYS.game.tacticState(up, undefined, n), SYS.game.tacticState(G2, undefined, n))) fail(`편성 ${n} 의 전술 판이 달라졌다`);
-    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
-    if (!eq(again.presets, up.presets)) fail('v35 세이브를 다시 열었더니 달라졌다');
-    // 표에 없는 칸 번호 · 중복은 로드가 걸러 낸다 — 칸이 CSV 에서 줄어든 세이브
-    const junk = JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW)));
-    junk.presets[0].tactics.locked = [99, 3, 3, 1];
-    if (!eq(SYS.game.deserialize(junk).presets[0].tactics.locked, [1, 3])) fail(`잠금 정리 ${SYS.game.deserialize(junk).presets[0].tactics.locked}`);
-    return `편성 ${up.presets.length} 벌 · locked [] · 굴린 칸 ${Object.keys(up.presets[0].tactics.slots).join(',')} 그대로`;
-});
-check('save: v35 → v36 이관 — 같이 나간 런 수 `bonds = {}` · 칸의 내용 · 잠금 그대로 · 두 번 열면 같다 · 이상한 값은 걸러 낸다 (INTERFACE §4 · R134)', () => {
-    const G2 = migratedAt(500);                   // 전 칸 개방 — 옛 세이브가 올라온 판 (R137)
-    G2.resources.gold = 99_999_999;
-    if (!rollOnly(G2, [3]).ok) fail('fixture: 3 번 칸 리롤');
-    SYS.game.toggleTacticLock(G2, 2);
-    const s35 = JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW)));
-    s35.version = 35;
-    delete s35.bonds;                              // v35 에는 관계 기록이 없었다
-    const up = SYS.game.deserialize(s35);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (!eq(up.bonds, {})) fail(`bonds ${JSON.stringify(up.bonds)}`);
-    if (!eq(up.presets, G2.presets)) fail('이관이 편성(칸 · 잠금)을 흔들었다');
-    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
-    if (!eq(again.bonds, up.bonds) || !eq(again.presets, up.presets)) fail('v36 세이브를 다시 열었더니 달라졌다');
-    const junk = JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW)));
-    junk.bonds = { 'a|b': 3, 'c|d': -1, 'e|f': 1.5, 'g|h': 'x' };
-    if (!eq(SYS.game.deserialize(junk).bonds, { 'a|b': 3 })) fail(`bonds 정리 ${JSON.stringify(SYS.game.deserialize(junk).bonds)}`);
-    return `bonds {} · 잠금 [${up.presets[up.preset - 1].tactics.locked}] 그대로`;
-});
 check('csv: 무기 옵션 표 둘 — 본편 무기군마다 죄종 7 전부 칸이 있다 · 통합 종류가 개수 이상 · 라벨이 있다 (item_design §1 「무기 옵션」 · R78)', () => {
     const groups = Object.values(WG).filter(g => g.release === 'main');
     const applies = (r, g) => r.appliesTo === 'all' || r.appliesTo === g.damageKind || g.classes.includes(r.appliesTo);
@@ -3168,34 +2633,6 @@ check('item: 매직아이템 획득확률은 레어 가중치에 곱한다 — 0
     if (!(r100 > r0)) fail(`레어 ${r0} → ${r100}`);
     if (!eq(SYS.item.rollDrop(makeRng(91), 5), SYS.item.rollDrop(makeRng(91), 5, { magicFind: 0 }))) fail('magicFind 0 이 수열을 바꿨다');
     return `레어 ${r0} → ${r100} / 2000`;
-});
-check('item: 옛 무기 소급 — 고정 옵션 · 죄종 칸을 굴림 없이 채운다 · 두 번 불러도 같다 (R78)', () => {
-    const w = { uid: 'i7', slot: 'weapon', rarity: 'rare', ilvl: 5, group: 'bible', sins: ['envy', 'greed'], affixes: [{ stat: 'crit_rate', v: 3 }] };
-    const a = SYS.item.legacyWeaponLayers(w), b = SYS.item.legacyWeaponLayers(w);
-    if (!eq(a, b)) fail('결정적이지 않다');
-    if (!eq(a.map(x => x.src), ['fixed', 'envy', 'greed'])) fail(`출처 ${a.map(x => x.src)}`);
-    if (!['atk_down_phys_pct', 'atk_down_mag_pct'].includes(a[1].stat)) fail(`사제 시기 칸 ${a[1].stat}`);
-    if (SYS.item.legacyWeaponLayers({ ...w, slot: 'armor', group: undefined }).length) fail('무기가 아닌데 채웠다');
-    return a.map(x => `${x.src}/${x.stat}:${x.v}`).join(' ');
-});
-check('save: v22 → v23 — 접사에 출처가 붙고 옛 무기는 고정 옵션 · 죄종 칸을 받는다 · rng 0 · 두 번 열면 같다 (R78)', () => {
-    const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    s.version = 22;
-    const weapons = Object.values(s.items).filter(it => it.slot === 'weapon');
-    if (!weapons.length) fail('세이브에 무기가 없다');
-    // v22 모양으로 되돌린다 — 출처도 새 층도 없던 판
-    for (const it of Object.values(s.items)) it.affixes = (it.affixes ?? []).filter(a => a.src === undefined || a.src === 'random').map(({ stat, v }) => ({ stat, v }));
-    const up = SYS.game.deserialize(s);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    for (const it of Object.values(up.items)) {
-        if ((it.affixes ?? []).some(a => a.src === undefined)) fail(`${it.uid} 출처 없는 접사`);
-        if (it.slot === 'weapon') {
-            const src = it.affixes.map(a => a.src);
-            if (src[0] !== 'fixed' || !eq(src.slice(1, 1 + it.sins.length), it.sins)) fail(`${it.uid} ${src.join(',')}`);
-        }
-    }
-    if (!eq(SYS.game.deserialize(s).items, up.items)) fail('두 번 열면 다르다');
-    return `무기 ${weapons.length}개`;
 });
 
 /* ── 방어구 옵션 세 층 · 티어 · 갈래 (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 장갑 · 신발 갈래 · 2026-09-18 사용자 확정) ── */
@@ -3280,18 +2717,6 @@ check('item: 베이스는 그 아이템 레벨의 가장 높은 열린 티어에
     for (let i = 0; i < 80; i++) ring.add(SYS.item.rollGear(rng, { slots: ['ring'], ilvl: 60 })[0].baseId);
     if (ring.size !== D.itemBases.ring.length) fail(`반지 베이스 ${ring.size}/${D.itemBases.ring.length}`);
     return `네 부위 × ilvl 여덟 곳 · 시작 갑옷 ${sa.baseId}`;
-});
-check('item: 옛 방어구 소급 — 고정 옵션 · 죄종 칸을 굴림 없이 채운다 · 장갑 시기 칸은 무기 표 · 두 번 불러도 같다 (2026-09-18)', () => {
-    const h = { uid: 'i9', slot: 'helmet', rarity: 'rare', ilvl: 30, group: 'plate', sins: ['envy', 'pride'], affixes: [{ stat: 'res_fire', v: 0.1, src: 'random' }] };
-    const a = SYS.item.legacyArmorLayers(h), b = SYS.item.legacyArmorLayers(h);
-    if (!eq(a, b)) fail('결정적이지 않다');
-    if (!eq(a.map(x => x.src), ['fixed', 'envy', 'pride'])) fail(`출처 ${a.map(x => x.src)}`);
-    if (a[0].stat !== 'armor_def_pct' || a[0].v !== F.pctOption((B.armor_fixed_def_pct_min + B.armor_fixed_def_pct_max) / 2)) fail(`고정 ${JSON.stringify(a[0])}`);
-    if (!a[1].stat.startsWith('res_max_') || a[2].stat !== 'hp_per_level') fail(`투구 시기 · 오만 ${a[1].stat} · ${a[2].stat}`);
-    const g = SYS.item.legacyArmorLayers({ ...h, slot: 'gloves', group: 'gauntlet', sins: ['envy'] });
-    if (!D.weaponSinOptions.some(r => r.sin === 'envy' && r.stat === g[1]?.stat)) fail(`장갑 시기 ${g[1]?.stat}`);
-    for (const slot of ['weapon', 'amulet', 'ring']) if (SYS.item.legacyArmorLayers({ ...h, slot }).length) fail(`${slot} 인데 채웠다`);
-    return a.map(x => `${x.src}/${x.stat}:${x.v}`).join(' ');
 });
 
 /* ── 반지 · 목걸이 옵션 세 층 (item_design §1 「반지 · 목걸이」 · 2026-09-21 사용자 확정 · R127) ── */
@@ -3441,37 +2866,6 @@ check('formula: 절대값 피해 감소는 모든 감소 뒤에 뺀다 · 원소
     if (F.resCap(0.02) !== F.resCap(0.02, 0)) fail('원소 몫이 없으면 종전과 같아야 한다');
     if (F.leech(100, 0.1) !== 10 || F.leech(100, 0.1, 0.5) !== 15) fail(`흡혈 ${F.leech(100, 0.1)} · ${F.leech(100, 0.1, 0.5)}`);
     return `물리 ${p0.dmg} → ${p3.dmg} · 불 ${f0} → ${fEl}`;
-});
-check('save: v29 → v30 이관 — 옛 방어구에 고정 옵션 · 죄종 칸을 굴림 없이 앞에 채운다 · 고유값은 지금 공식(갈래 계수 포함) · 목걸이 · 반지 · 무기는 그대로 · 두 번 열면 같다 (INTERFACE §4 · 2026-09-18)', () => {
-    const v29 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v29.version = 29;
-    // v29 모양으로 되돌린다 — 방어구는 random 옵션만 · 편차로 굴린 고유값
-    const a0 = Object.values(v29.items).find(it => ARMOR_PARTS.includes(it.slot));
-    if (!a0) fail('픽스처에 방어구가 없다');
-    a0.affixes = [{ stat: 'res_fire', v: 0.12, src: 'random' }];
-    a0.sins = ['wrath'];
-    a0.implicit.v += 3;
-    v29.items.old_helm = { uid: 'i999', slot: 'helmet', rarity: 'rare', ilvl: 35, up: 0, name: { ko: '옛 투구', en: 'Old Helm' }, group: 'tiara', baseId: 'helmet_tiara_2',
-        implicit: { stat: 'def_flat', v: 40 }, affixes: [{ stat: 'hp_flat', v: 50, src: 'random' }], sins: ['envy', 'greed'] };
-    v29.items.old_ring = { uid: 'i998', slot: 'ring', rarity: 'magic', ilvl: 5, up: 0, name: { ko: '옛 반지', en: 'Old Ring' }, implicit: null, affixes: [{ stat: 'crit_rate', v: 0.03, src: 'random' }], sins: ['lust'] };
-    const weapons = Object.values(v29.items).filter(it => it.slot === 'weapon').map(it => JSON.parse(JSON.stringify(it)));
-    const up = SYS.game.deserialize(v29);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    const A = up.items[a0.uid];
-    if (!eq(A.affixes.map(x => x.src), ['fixed', 'wrath', 'random'])) fail(`${a0.slot} 출처 ${A.affixes.map(x => x.src)}`);
-    if (!eq(A.affixes.slice(0, 2), SYS.item.legacyArmorLayers(a0))) fail('고정 · 죄종 칸이 legacyArmorLayers 와 다르다');
-    if (A.implicit.v !== SYS.item.baseImplicit(A)) fail(`고유값 ${A.implicit.v} ≠ ${SYS.item.baseImplicit(A)}`);
-    const H = up.items.old_helm;
-    if (!eq(H.affixes.map(x => x.src), ['fixed', 'envy', 'greed', 'random'])) fail(`옛 투구 출처 ${H.affixes.map(x => x.src)}`);
-    const tiaraDef = Math.max(1, Math.round(F.armorDefense(35, B.armor_def_slot_helmet, AGROUP.helmet.tiara.defMult)));
-    if (H.implicit.v !== tiaraDef) fail(`티아라 고유값 ${H.implicit.v} ≠ ${tiaraDef} — 갈래 계수를 받아야 한다`);
-    // 반지 — v30 단계는 안 건드린다. 사슬 끝의 **v33 단계**가 죄종 칸을 앞에 채우고 옛 옵션은 뒤에 둔다 (2026-09-21 · R127)
-    if (!eq(up.items.old_ring.affixes, [...SYS.item.legacyAccessoryLayers(v29.items.old_ring).layers, ...v29.items.old_ring.affixes])) fail('반지 — v30 이 건드렸거나 v33 규칙과 다르다');
-    for (const w of weapons) if (!eq(up.items[w.uid].affixes, w.affixes)) fail(`무기 ${w.uid} 가 바뀌었다`);
-    const again = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(up, NOW))));
-    if (!eq(again.items, up.items)) fail('v30 세이브를 다시 열었더니 달라졌다');
-    if (!eq(SYS.game.deserialize(v29).items, up.items)) fail('같은 v29 를 두 번 열면 다르다');
-    return `${a0.slot} ${A.affixes.map(x => `${x.src}/${x.stat}`).join(' ')} · 옛 티아라 방어 40 → ${H.implicit.v}`;
 });
 check('equip: 방어구 착용 → 방어력 상승, 해제 → 가방 복귀', () => {
     const G = freshG();                 // 제 판 — 시작 갑옷을 벗기고 갑옷을 가방에 남긴다
@@ -3752,19 +3146,6 @@ check('창고: 창고에서 바로 장착된다 — 교체품은 창고로 돌�
     if (!r.ok) fail(`equip ${r.err}`);
     // 교체품은 **꺼낸 쪽**(창고)으로 — 인벤이 차 있어도 창고 장착이 막히지 않는다
     return h.equipped.gloves === it.uid && g.stash.includes(worn.uid) && !g.bag.includes(worn.uid);
-});
-
-check('save: v23 → v24 이관 — 인벤 상한을 넘는 뒤쪽이 창고로 · 아이템이 안 사라진다', () => {
-    const cap = B.inventory_cap;
-    const v23 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    v23.version = 23;
-    delete v23.stash;
-    v23.bag = Array.from({ length: cap + 4 }, (_, i) => `iMig${i}`);
-    const up = SYS.game.deserialize(v23);
-    if (up.version !== SAVE_VERSION) fail(`v${up.version}`);
-    if (up.bag.length !== cap) fail(`bag ${up.bag.length}`);
-    if (up.stash.length !== 4) fail(`stash ${up.stash.length}`);
-    return up.bag[0] === 'iMig0' && up.stash[0] === `iMig${cap}`;
 });
 
 /* ── 전투 ── */
@@ -4152,37 +3533,6 @@ check('preset: 물약 칸 — 앞의 빈 칸에 넣기 · 비우기 · 맞바꾸
     if (SYS.game.swapPotionSlot(g, 0, cap).err !== 'missing') fail('없는 칸 맞바꾸기');
     if (g.presets[1].potionSlots.some(Boolean)) fail('편성 2 칸이 흔들렸다');
     return `칸 ${ids().map(x => x ?? '-').join(' · ')} · 모자람 ${JSON.stringify(short())}`;
-});
-check('save: v31 → v32 이관 — 파티 · 진형이 편성 1 로 · 나머지 편성은 빈다 · 가진 물약은 종류마다 1 개 · 편성 1 칸 = 옛 런의 칸 · 옛 원정은 편성 1 (INTERFACE §4 · R122 · R124)', () => {
-    const g = newGameP(24, cands, NOW);
-    SYS.game.setFormation(g, SYS.game.formationState(g).templates.at(-1));
-    const s31 = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
-    s31.version = 31;
-    s31.party = s31.presets[0].party.slice();
-    s31.formation = JSON.parse(JSON.stringify(s31.presets[0].formation));
-    delete s31.presets; delete s31.preset;
-    s31.potions = ['light_healing', 'gone_potion', 'minor_healing'];   // 얻은 순서 · 표에서 사라진 id 하나
-    s31.run = { stageId: 101, repeat: false, lastAt: NOW, durationSec: 0, active: false };
-    const up = SYS.game.deserialize(s31);
-    if (up.version !== SAVE_VERSION || SAVE_VERSION < 32) fail(`version ${up.version}`);   // 사슬 끝까지 오른다(v33 — R127)
-    if ('party' in up || 'formation' in up) fail('옛 party · formation 이 남았다');
-    if (up.presets.length !== SYS.game.limitsOf(up).presets || up.preset !== 1 || up.run.preset !== 1) fail(`편성 ${up.presets.length} · 고른 ${up.preset} · run ${up.run.preset}`);
-    if (!eq(up.presets[0].party, s31.party) || !eq(up.presets[0].formation, s31.formation)) fail('편성 1 이 옛 파티 · 진형이 아니다');
-    if (up.presets.slice(1).some(p => p.party.length || p.potionSlots.some(Boolean))) fail('편성 2 부터 안 비었다');
-    if (!eq(up.potions, { light_healing: 1, gone_potion: 1, minor_healing: 1 })) fail(`재고 ${JSON.stringify(up.potions)}`);
-    const want = Array.from({ length: SYS.game.limitsOf(up).potionSlots }, (_, i) => ['light_healing', 'minor_healing'][i] ?? null);
-    if (!eq(up.presets[0].potionSlots, want)) fail(`편성 1 칸 ${JSON.stringify(up.presets[0].potionSlots)}`);
-    // 물약 목록이 없던 세이브(R103 이전) — 새 게임과 같은 시작 재고 · 시작 칸
-    const s31b = JSON.parse(JSON.stringify(s31)); delete s31b.potions;
-    const upb = SYS.game.deserialize(s31b);
-    const fresh = SYS.game.newGame(1, cands, NOW);
-    if (!eq(upb.potions, fresh.potions) || !eq(upb.presets[0].potionSlots, fresh.presets[0].potionSlots)) fail('물약 없던 세이브가 시작 물약으로 안 열린다');
-    // 편성 수 · 칸 수는 그 세이브의 상한(limitsOf — 건물 랭크)을 따른다 — 로드가 붙이고 자른다 · 고른 번호는 범위로
-    const odd = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
-    odd.presets = odd.presets.slice(0, 1); odd.presets[0].potionSlots = ['minor_healing']; odd.preset = 99;
-    const fit = SYS.game.deserialize(odd), FL = SYS.game.limitsOf(fit);
-    if (fit.presets.length !== FL.presets || fit.presets[0].potionSlots.length !== FL.potionSlots || fit.preset !== FL.presets) fail(`맞추기 ${fit.presets.length} · 칸 ${fit.presets[0].potionSlots.length} · 고른 ${fit.preset}`);
-    return `편성 1 = [${up.presets[0].party.length}] ${up.presets[0].formation.tpl} · 칸 ${want.filter(Boolean).join(' · ')} · 재고 ${Object.keys(up.potions).length}종 · 로드가 편성 ${fit.presets.length} · 칸 ${FL.potionSlots} 로 맞춘다`;
 });
 /** 무기 옵션 묶음 — 전부 0 인 판을 깔고 시험할 축만 얹는다 (hero.computeCombat:option_fx 모양 · R78) */
 const FX0 = { vs: { normal: 0, demon: 0, undead: 0 }, vsElite: 0, vsFront: 0, vsBack: 0, ele: { fire: 0, cold: 0, lightning: 0, poison: 0 }, defDown: 0, resDown: 0, atkDownPhys: 0, atkDownMag: 0, crush: 0, magicFind: 0 };
@@ -7212,22 +6562,6 @@ check('departRun: 원정 중에 보내면 도는 원정을 끊고 나간다 — 
     return `seed ${m.seed} · 끊긴 원정 이긴 라운드 ${d.report.roundsCleared} · 버린 라운드 골드 ${m.pendGold}`;
 });
 
-check('save: v24 → v25 이관 — 리포트의 전원 동일 xpEach 가 영웅별 xp 로 · 옛 런은 도는 원정이 아니다 (R89 · INTERFACE §4)', () => {
-    const s24 = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
-    s24.version = 24;
-    s24.reports = [{ at: NOW, stageId: 101, won: true, reason: 'clear', gold: 5, xpEach: 7, party: ['ha', 'hb'], levelUps: [], downed: [], drops: [] }];
-    s24.run = { stageId: 101, repeat: true, lastAt: NOW, durationSec: 30 };
-    const up = SYS.game.deserialize(s24);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    if (!eq(up.reports[0].xp, { ha: 7, hb: 7 })) fail(`xp ${JSON.stringify(up.reports[0].xp)}`);
-    if ('xpEach' in up.reports[0]) fail('xpEach 가 안 걷혔다');
-    if (up.run.active !== false) fail(`run.active ${up.run.active} — 옛 런을 도는 원정으로 읽으면 closeRun 이 멀쩡한 리포트를 끊는다`);
-    // 이관한 세이브를 열어도 끊을 원정이 없다 — 반복만 꺼지고 옛 리포트의 판정은 그대로다
-    SYS.game.closeRun(up, NOW + 1000);
-    if (up.reports[0].reason !== 'clear' || up.run.repeat !== false) fail(`열자마자 판정 ${up.reports[0].reason} · repeat ${up.run.repeat}`);
-    return 'xp {ha:7, hb:7} · xpEach 없음 · active false · 판정 clear 유지';
-});
-
 check('원정 결정론 — 같은 세이브면 resolveBattle 두 번이 같고, departRun + advanceRun 을 손으로 이어도 같다 (R89 · INTERFACE §5-2)', () => {
     let steps = 0;
     for (const seed of [3, 42]) {
@@ -8084,28 +7418,6 @@ check('tactic: 리롤은 가족과 등급을 **같이** 굴린다 — rng 는 �
     if (used !== 2) fail(`rng 소비 ${used}회 (기대 2 — 가족 1 + 등급 1)`);
     return `일반 ${n('common')} · 매직 ${n('magic')} · 레어 ${n('rare')} / 400`;
 });
-check('save: v9 → v10 이관 — 옛 세이브의 전술 칸(문자열)이 **일반 등급**으로 올라온다 (INTERFACE §4)', () => {
-    const G2 = newGameP(42, cands, NOW);
-    G2.heroes[0].level = 500;
-    const fam = SYS.tactic.familyIds[0];
-    const s9 = JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW)));
-    s9.version = 9;
-    s9.tactics = { slots: { 1: fam } };            // v9 는 옵션 id 문자열 하나만 들었다 · 칸은 최상위 한 벌이었다(v34 가 편성마다로 복사한다)
-    const up = SYS.game.deserialize(s9);
-    if (up.version !== SAVE_VERSION) fail(`version ${up.version}`);
-    const got = up.presets[up.preset - 1].tactics.slots[1];
-    if (!got || got.id !== fam || got.grade !== 'common') fail(`이관 결과 ${JSON.stringify(got)}`);
-    // 이관된 칸이 실제로 읽힌다 — 값이 그 가족의 일반 값이어야 한다
-    const slot = SYS.game.tacticState(up).slots[0];
-    if (slot.option.id !== fam || slot.option.value !== SYS.tactic.families[0].grades.common)
-        fail(`칸이 든 값 ${slot.option?.value} ≠ 일반 ${SYS.tactic.families[0].grades.common}`);
-    // CSV 에서 사라진 가족은 첫 배정으로 되돌아간다 (임시 풀은 통째로 교체될 예정 — §5-7)
-    const gone = JSON.parse(JSON.stringify(up));
-    gone.presets[gone.preset - 1].tactics.slots[2] = { id: 'opt_gone_forever', grade: 'rare' };
-    const back = SYS.game.tacticState(gone).slots[1];
-    if (!back.option || back.option.id === 'opt_gone_forever') fail('없는 가족을 든 칸이 안 되돌아갔다');
-    return `${fam} → common ${slot.option.value} · 사라진 가족은 첫 배정으로`;
-});
 
 check('tactic: 새 조건 — 리더(편성 첫 칸) · 전열의 직업 · 장비 죄종 없으면 · 관계(같이 나간 런 수 — 출발 때 +1 · 그 런은 +1 전 값) (§5-8 · R134)', () => {
     const G2 = newGameP(42, cands, NOW);
@@ -8300,20 +7612,6 @@ check('construction: 문턱 — 합산 레벨은 도달한 최고치(해고해�
     const cond = S.game.constructionState(g).buildings.find(b => b.id === 'b').next.require[0];
     if (!(cond.kind === 'building' && cond.have === 3 && cond.ok)) fail(`b r1 조건 ${JSON.stringify(cond)}`);
     return `해고 뒤 최고치 6 · 영웅 레벨 ${B.advance_unlock_level} · a r3 → b r1 열림`;
-});
-check('save: v36 → v37 이관 — 문턱을 이미 넘은 랭크까지 공짜로 지어진 채 · 준비 중 랭크는 안 올린다 · 건물 랭크 조건이 사슬로 이어진다 · 연구 {} · 최고치 = 지금 합산 (INTERFACE §4 · R137)', () => {
-    const S = conSys();
-    const g = S.game.newGame(75, cands, NOW);
-    g.progress.cleared = [101];
-    const old = JSON.parse(JSON.stringify(S.game.serialize(g, NOW)));
-    old.version = 36; delete old.buildings; delete old.research; delete old.progress.peakTotal;
-    const up = S.game.deserialize(old);
-    if (!eq(up.buildings, { a: 2, b: 1 })) fail(`랭크 ${JSON.stringify(up.buildings)} — a 2 · b 1 이어야 한다(b r2 는 준비 중 · a r3 은 합산 미달)`);
-    if (up.resources.gold !== old.resources.gold) fail('이관이 비용을 받았다');
-    if (!eq(up.research, {}) || up.progress.peakTotal !== 3 || up.version !== SAVE_VERSION) fail(`연구 ${JSON.stringify(up.research)} · 최고치 ${up.progress.peakTotal} · v${up.version}`);
-    old.heroes.forEach(h => { h.level = 2; });
-    if (!eq(S.game.deserialize(old).buildings, { a: 3, b: 1 })) fail('합산 6 인데 a r3 까지 안 올랐다(b r1 → a r3 사슬)');
-    return 'a 2 · b 1 (b r2 준비 중) · 합산이 차면 a 3';
 });
 check('construction: 세이브 랭크는 표에 맞춘다 — 없는 건물은 지우고 최대에서 자르고 시작 랭크보다 낮으면 올린다 · 연구도 없는 항목은 지운다 · 왕복 그대로 (INTERFACE §4 · R137)', () => {
     const S = conSys(), g = S.game.newGame(76, cands, NOW);

@@ -624,6 +624,8 @@ function renderLogin(main) {
 function renderStart(main) {
     const wrap = el('div', 'ng-wrap');
     const saved = loadSave();
+    // 열 수 있는 세이브인가 — 판정은 `deserialize` 가 한다(화면이 버전 숫자를 안 본다). v37 전 세이브는 못 연다 (INTERFACE §4 · ADR-0303)
+    const live = !!saved && SYS.game.canLoad(saved);
 
     const head = el('div', 'ng-title');
     head.innerHTML = `<h1>${t('ng.title')}</h1>`;
@@ -631,8 +633,7 @@ function renderStart(main) {
 
     if (saved) {
         const box = el('div', 'ng-continue');
-        // 열 수 있는가는 `deserialize` 가 정한다 — 화면이 버전 숫자로 판정하면 이관 가능한 세이브를 거부한다
-        const old = !SYS.game.canLoad(saved);
+        const old = !live;
         box.innerHTML = `
             <div class="l">${t('ng.hasSave', { t: new Date(saved.savedAt).toLocaleString() })}
                 <small${old ? ' class="down"' : ''}>${old
@@ -651,11 +652,12 @@ function renderStart(main) {
     const actions = el('div', 'ng-actions');
     const reroll = el('button', 'btn', t('ng.reroll'));
     reroll.onclick = () => { state.roll++; state.candidates = rollCandidates(); state.confirmOverwrite = false; render(); };
-    // 세이브가 있으면 두 번 눌러야 지운다 — 되돌릴 수 없는 행동은 한 번의 오클릭으로 일어나면 안 된다
-    const start = el('button', `btn lg ${saved ? 'danger' : 'primary'}`,
-        saved ? t(state.confirmOverwrite ? 'ng.overwriteConfirm' : 'ng.overwrite') : t('ng.start'));
+    // 열 수 있는 세이브가 있으면 두 번 눌러야 지운다 — 되돌릴 수 없는 행동은 한 번의 오클릭으로 일어나면 안 된다.
+    //   열 수 없는 세이브만 있으면 한 번에 — 지워서 잃을 것이 없다 (SCREEN_DESIGN §3 · ADR-0303)
+    const start = el('button', `btn lg ${live ? 'danger' : 'primary'}`,
+        live ? t(state.confirmOverwrite ? 'ng.overwriteConfirm' : 'ng.overwrite') : t('ng.start'));
     start.onclick = () => {
-        if (saved && !state.confirmOverwrite) { state.confirmOverwrite = true; render(); return; }
+        if (live && !state.confirmOverwrite) { state.confirmOverwrite = true; render(); return; }
         // 파티 확정 = 캐릭터 생성. 여기서만 프롤로그를 지난다 (§3-1) — 이어하기는 안 지난다
         startGame({ prologue: true });
     };
@@ -725,7 +727,7 @@ function adoptRemote(remote, { booting }) {
 
 /**
  * 계정과 이 브라우저를 잇는다 — 켤 때(`booting`)와 로그인 버튼이 **같은 규칙**을 탄다 (SCREEN_DESIGN §2-1 「언제 올리고 받나」).
- * ① 클라우드가 비었다 → 올린다 ② 마지막으로 맞춘 사본 그대로다 → 그대로 ③ 두 세이브가 같다 → 기록만 맞춘다
+ * ① 클라우드가 비었거나 열 수 없는 사본(v37 전 · ADR-0303)이다 → 올린다 ② 마지막으로 맞춘 사본 그대로다 → 그대로 ③ 두 세이브가 같다 → 기록만 맞춘다
  * ④ 이 브라우저가 맞춘 뒤 안 바뀌었거나 세이브가 없다 → 묻지 않고 받는다 ⑤ 둘 다 따로 바뀌었다 → 선택 창
  */
 function linkAccount(remote, { booting }) {
@@ -733,8 +735,9 @@ function linkAccount(remote, { booting }) {
     const link = loadCloudLink();
     const local = loadSave();
     const mine = link?.uid === uid;
-    if (!remote) {
-        writeCloudLink({ uid, rev: 0, savedAt: null });
+    // 열 수 없는 사본은 빈 클라우드와 같다 — 받지도 묻지도 않고 이 브라우저 세이브가 그 위에 올라간다(그 사본의 저장 번호에서 잇는다 · §2-1 · ADR-0303)
+    if (!remote || !SYS.game.canLoad(remote.save)) {
+        writeCloudLink({ uid, rev: remote?.rev ?? 0, savedAt: null });
         setCloud('on');
         if (!booting) cloudPush();          // 켤 때는 부팅 끝의 `cloudPush` 가 올린다
         return;

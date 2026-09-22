@@ -223,7 +223,6 @@ export function createConstruction(data) {
     /**
      * 다음 랭크 판정 — **판정 순서가 결과 코드의 순서다**: `missing`(없는 건물) → `maxRank`(다음 랭크가 없다) →
      *   `pending`(여는 것이 전부 준비 중 — 여는 것이 없는 랭크도 같다) → `locked`(조건 미달) → `gold` → `materials`(골드 밖의 재화) · null = 지을 수 있다.
-     *   `wallet` 이 null 이면 비용을 안 본다(옛 세이브 이관 — `autoRanks`)
      * @returns `{rank, require, cost: [{res, need, have}], effects, err}`
      */
     function nextState(id, ranks, ctx, wallet) {
@@ -233,28 +232,13 @@ export function createConstruction(data) {
         const info = rankInfo(id, rank);
         if (!info) return { rank: null, require: [], cost: [], effects: [], err: 'maxRank' };
         const require = check(info.require, ctx, ranks);
-        const cost = info.cost.map(c => ({ res: c.res, need: c.n, have: wallet ? (wallet[c.res] ?? 0) : c.n }));
+        const cost = info.cost.map(c => ({ res: c.res, need: c.n, have: wallet[c.res] ?? 0 }));
         const err = !info.effects.some(e => e.live) ? 'pending'
             : require.some(c => !c.ok) ? 'locked'
             : cost.some(c => c.res === 'gold' && c.have < c.need) ? 'gold'
             : cost.some(c => c.have < c.need) ? 'materials'
             : null;
         return { rank, require, cost, effects: info.effects, err };
-    }
-
-    /**
-     * **문턱을 이미 넘은 랭크를 공짜로 올린다** — 옛 세이브 이관(v36 → v37)이 쓴다. 건물 순서로 돌며 지을 수 있는(준비 중이 아닌 ·
-     *   조건이 맞는) 다음 랭크를 올리고, 한 바퀴에 오른 것이 없을 때까지 반복한다(건물 랭크 조건이 서로 물린다). 비용은 안 본다
-     */
-    function autoRanks(ranks, ctx) {
-        const out = { ...ranks };
-        for (let moved = true; moved;) {
-            moved = false;
-            for (const b of list) {
-                while (nextState(b.id, out, ctx, null).err === null) { out[b.id] = (out[b.id] ?? 0) + 1; moved = true; }
-            }
-        }
-        return out;
     }
 
     /** 연구 배율 `1 + Σ(레벨 × 레벨당 %)` — 그 대상을 받는 연구를 모두 더한다 · 연구가 없으면 1. 다른 원천과는 **부르는 쪽이 곱한다**(§11-7) */
@@ -288,5 +272,5 @@ export function createConstruction(data) {
         return out;
     }
 
-    return { list, research: researchList, startRanks, fitRanks, fitResearch, rankInfo, opened, check, nextState, autoRanks, bonus, reach, tabs };
+    return { list, research: researchList, startRanks, fitRanks, fitResearch, rankInfo, opened, check, nextState, bonus, reach, tabs };
 }

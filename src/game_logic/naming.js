@@ -63,33 +63,11 @@ export function createNaming(data) {
         return { ko: `${join(p.ko)}${b.ko}`, en: `${join(p.en)}${b.en}` };
     };
 
-    /**
-     * **세이브 이관 전용** — 옛 이름에서 베이스를 뗀다 (INTERFACE §4 v30 → v31 · 2026-09-19).
-     * 알아보는 형식 셋: 지금 형식(`words` 로 조립한 앞머리 — v15 무기군 교체 이관이 이미 새 형식으로 다시 조립했을 수 있다) ·
-     *   09-11 태그형 `[분노][오만] <base>` · 그 전 문장형 ko `분노의 <base> — 오만` / en `Wrathful <base> of Pride`.
-     * 두 언어가 **모두** 떼어져야 값을 낸다 — 한쪽만 맞으면 다른 형식을 잘못 읽은 것이다
-     */
-    const baseOf = (name, sins = [], words = []) => {
-        if (!name || !sins.length) return null;
-        const p = sinPhrase(sins[0], sins[1] ?? null, words);
-        const head = { ko: p.ko.map(x => x.t).join(''), en: p.en.map(x => x.t).join('') };
-        if (name.ko.startsWith(head.ko) && name.en.startsWith(head.en) && name.ko.length > head.ko.length && name.en.length > head.en.length)
-            return { ko: name.ko.slice(head.ko.length), en: name.en.slice(head.en.length) };
-        const TAG = /^(\[[^\]]*\])+ /;
-        if (TAG.test(name.ko) && TAG.test(name.en)) return { ko: name.ko.replace(TAG, ''), en: name.en.replace(TAG, '') };
-        const [pre, suf] = sins;
-        const cut = (str, head, tail) => (str.startsWith(head) && str.endsWith(tail) && str.length > head.length + tail.length
-            ? str.slice(head.length, str.length - tail.length) : null);
-        const ko = cut(name.ko, `${S[pre].ko}의 `, suf ? ` — ${S[suf].ko}` : '');
-        const en = cut(name.en, `${S[pre].adj} `, suf ? ` of ${S[suf].en}` : '');
-        return ko !== null && en !== null ? { ko, en } : null;
-    };
-
     /** 정예 이름 — ko "분노의 스켈레톤 기사" / en "Wrathful Skeleton Knight". base = 몬스터 이름 {ko, en} */
     const eliteName = (sin, base) => {
         const s = S[sin], b = pair(base);
         return { ko: `${s.ko}의 ${b.ko}`, en: `${s.adj} ${b.en}` };
     };
 
-    return { composeName, sinPhrase, wordCount, baseOf, eliteName };
+    return { composeName, sinPhrase, wordCount, eliteName };
 }

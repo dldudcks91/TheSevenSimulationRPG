@@ -75,7 +75,7 @@ import { createFormula } from './formula.js';
  *   accessorySinOptions    — [{slot, sin, stat, scale, min, max, perIlvl?}] ← accessory_sin_option.csv — 반지 · 목걸이 죄종 칸 후보 (2026-09-21).
  *                            한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다(반지 시기 다섯 · 목걸이 시기 둘 · 탐욕 셋) · **행 순서가 결정론 계약**
  *   accessoryCommonOptions — [{family, stat, scale, min, max, perIlvl?}] ← accessory_common_option.csv — **두 부위 한 풀** (2026-09-21) · **행 순서가 결정론 계약**
- *   amuletProcs  — [{baseId, trigger, min, max}] ← amulet_proc.csv — 목걸이 베이스마다 발동 조건 하나(`hit` · `struck` · `interval`) · 행 순서 = 이관의 대체 순서
+ *   amuletProcs  — [{baseId, trigger, min, max}] ← amulet_proc.csv — 목걸이 베이스마다 발동 조건 하나(`hit` · `struck` · `interval`)
  *   procSkills   — [skillId] ← skill.csv:amulet_pool = 1 — 목걸이 발동 스킬 후보(직업을 안 가리는 한 풀) · **행 순서가 결정론 계약**
  *   weaponSinOptions    — [{sin, appliesTo, stat, scale, min, max}] ← weapon_sin_option.csv — 죄종 칸 후보 (2026-09-11 · R78).
  *                         `appliesTo` = `all` · 무기군 `damageKind`(physical/magic) · 직업 id(그 무기군의 classes 에 있으면).
@@ -88,7 +88,7 @@ import { createFormula } from './formula.js';
  *                         한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다 · **장갑 행은 없다**(`SIN_FROM_WEAPON`) · **행 순서가 결정론 계약**
  *   armorCommonOptions — [{slot, group, family, stat, scale, min, max, perIlvl?}] ← armor_common_option.csv — 방어구 공통옵션 후보 (2026-09-18).
  *                         `group` = `all` 또는 그 부위의 갈래 id · **행 순서가 결정론 계약**
- *   naming       — game_logic/naming.js 의 조립기 — `composeName(prefixSin, base, suffixSin|null, words)` · `wordCount(sin)` · `baseOf(name, sins)`(이관)
+ *   naming       — game_logic/naming.js 의 조립기 — `composeName(prefixSin, base, suffixSin|null, words)` · `wordCount(sin)`
  */
 export function createItemSystem(data) {
     const B = data.balance;
@@ -254,7 +254,7 @@ export function createItemSystem(data) {
                 : F.pctOption(roll, d.scale === 'fine');
 
     /**
-     * 퍼센트 채널인가 [2026-09-17 · R111] — 세이브 이관(v28 → v29)이 옛 값(0~100 눈금)을 비율로 옮길 때 가른다.
+     * 퍼센트 채널인가 [2026-09-17 · R111] — 옵션 값이 비율인가 고정값인가를 가른다.
      * 고정값 채널 = 옵션 표의 `growth` · `band` 행 + 옛 무기의 `atk_flat`(R78 에 표에서 빠졌다). **나머지는 전부 퍼센트다**
      */
     //   ~~affixDefs~~ 는 2026-09-21 R127 로 퇴역 — 옛 `affix.csv` 의 고정값 행(`hp_flat` growth)은 장신구 · 신발 표가 같은 이름으로 이어 든다
@@ -566,88 +566,6 @@ export function createItemSystem(data) {
         return build(rng, 'armor', 'normal', 1, base);
     }
 
-    /**
-     * 옛 무기에 채울 고정 옵션 · 죄종 칸 — **세이브 이관 전용**이다 (`state.js upgradeV22` · 2026-09-11 R78). 게임 중에는 부르지 않는다.
-     * **rng 를 쓰지 않는다** — 행은 uid 번호로 고르고(v17 의 스킬 소급과 같은 방식) 값은 **범위의 가운데**다.
-     * 같은 세이브를 두 번 열면 같은 결과이고, 가진 접사는 건드리지 않는다(호출자가 뒤에 붙인다).
-     * ⚠ 값은 **지금 눈금(비율)** 이다 [2026-09-17 · R111] — v22 세이브는 옛 눈금(0~100)이라 부르는 쪽이 맞춰 넣는다(`upgradeV22`)
-     */
-    function legacyWeaponLayers(item) {
-        const g = WG[item?.group];
-        if (!g) return [];
-        const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
-        const num = Number.isFinite(n) ? n : 0;
-        const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
-        const out = [{ stat: 'atk_pct', v: F.pctOption((lo + hi) / 2), src: 'fixed' }];
-        (item.sins ?? []).forEach((sin, i) => {
-            const rows = sinOpts.filter(r => r.sin === sin && appliesTo(r, g));
-            if (!rows.length) return;
-            const d = rows[(num + i) % rows.length];
-            out.push({ stat: d.stat, v: valueOf(d, (d.min + d.max) / 2, item.ilvl), src: sin });
-        });
-        return out;
-    }
-
-    /**
-     * 옛 방어구에 채울 고정 옵션 · 죄종 칸 — **세이브 이관 전용**이다 (`state.js upgradeV29` · 2026-09-18). 게임 중에는 부르지 않는다.
-     * `legacyWeaponLayers` 와 **같은 규칙** — rng 를 안 쓰고 행은 uid 번호로 고르며 값은 **범위의 가운데**다(지금 눈금 · 비율).
-     * 방어구가 아니면 `[]`. 가진 접사는 건드리지 않는다(호출자가 뒤에 붙인다)
-     */
-    function legacyArmorLayers(item) {
-        if (!isArmor(item?.slot)) return [];
-        const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
-        const num = Number.isFinite(n) ? n : 0;
-        const lo = B.armor_fixed_def_pct_min, hi = B.armor_fixed_def_pct_max;
-        const out = [{ stat: 'armor_def_pct', v: F.pctOption((lo + hi) / 2), src: 'fixed' }];
-        (item.sins ?? []).forEach((sin, i) => {
-            const rows = armorSinRows(item.slot, sin);
-            if (!rows.length) return;
-            const d = rows[(num + i) % rows.length];
-            out.push({ stat: d.stat, v: valueOf(d, (d.min + d.max) / 2, item.ilvl), src: sin });
-        });
-        return out;
-    }
-
-    /**
-     * 옛 반지 · 목걸이에 채울 죄종 칸 · 목걸이 고정 옵션 — **세이브 이관 전용**이다 (`state.js upgradeV32` · 2026-09-21 · R127).
-     * `legacyArmorLayers` 와 **같은 규칙** — rng 를 안 쓰고 행은 uid 번호로 고르며 값은 **범위의 가운데**다(지금 눈금 · 비율).
-     * 목걸이 발동 조건은 그 베이스의 것 — **베이스를 모르면**(표에서 빠진 옛 베이스 · `amulet_4` 등) `amulet_proc.csv` 행 순서에서 uid 번호로 고른다.
-     * 반지 · 목걸이가 아니면 `{proc: null, layers: []}`. 가진 접사는 건드리지 않는다(호출자가 뒤에 붙인다)
-     */
-    function legacyAccessoryLayers(item) {
-        if (!baseless(item?.slot)) return { proc: null, layers: [] };
-        const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
-        const num = Number.isFinite(n) ? n : 0;
-        const layers = [];
-        (item.sins ?? []).forEach((sin, i) => {
-            const rows = accSinRows(item.slot, sin);
-            if (!rows.length) return;
-            const d = rows[(num + i) % rows.length];
-            layers.push({ stat: d.stat, v: valueOf(d, (d.min + d.max) / 2, item.ilvl), src: sin });
-        });
-        let proc = null;
-        if (item.slot === 'amulet') {
-            const p = procByBase[item.baseId] ?? (procRows.length ? procRows[num % procRows.length] : null);
-            if (p) proc = { trigger: p.trigger, skill: procSkills.length ? procSkills[num % procSkills.length] : null, v: F.pctOption((p.min + p.max) / 2) };
-        }
-        return { proc, layers };
-    }
-
-    /**
-     * 옛 아이템의 이름 단어 · 새 형식 이름 — **세이브 이관 전용**이다 (`state.js upgradeV30` · 2026-09-19 · item_design §1 「이름」).
-     * 단 번호는 `legacyWeaponLayers` 와 **같은 규칙** — rng 를 안 쓰고 칸마다 `(uid 번호 + 칸 순번) % 단어 수`다.
-     * 이름은 옛 이름에서 베이스를 떼어(`naming.baseOf` — 09-11 태그형 · 그 전 문장형) 다시 조립한다 — **못 알아보면 옛 이름 그대로**다
-     */
-    function legacyName(item) {
-        const sins = item?.sins ?? [];
-        if (!sins.length) return { words: [], name: item?.name };
-        const n = parseInt(String(item.uid ?? '').slice(1), 10);    // uid 는 `i12` — 접두 한 글자를 떼고 번호만 쓴다
-        const num = Number.isFinite(n) ? n : 0;
-        const words = sins.map((sin, i) => (num + i) % N.wordCount(sin));
-        const base = N.baseOf(item.name, sins);
-        return { words, name: base ? N.composeName(sins[0], base, sins[1] ?? null, words) : item.name };
-    }
-
     /** 무기군 정의 — 무기가 아니거나 모르는 군이면 null */
     const groupOf = item => (item && item.slot === 'weapon' ? WG[item.group] : null) ?? null;
 
@@ -658,23 +576,6 @@ export function createItemSystem(data) {
      *  **함수를 지우지 않는 이유**: 요구 레벨 게이트가 들어올 자리다(착용 제약 = 요구 레벨만 — hero_design §4-2). */
     function canEquip(hero, item) {
         return null;
-    }
-
-    /**
-     * 무기군 교체 — **세이브 이관 전용**이다 (`state.js upgradeV15`). 게임 중에는 부르지 않는다.
-     * 개체에 박힌 굴림(접사 · 강화 · ~~watk~~ R90 삭제 · ~~element~~ R80)은 **그대로 두고** 군과 이름만 갈아끼운다 —
-     * 아이템의 세기는 개체 굴림이 들고 있고(§9-1) 무기군은 주기·편차·착용 직업을 가리키는 포인터라,
-     * 포인터만 옮기면 세기를 건드리지 않고 소유 직업을 옮길 수 있다.
-     * 이름은 접사 죄종(`sins`)이 그대로라 **베이스만 바뀐 이름**으로 다시 조립한다.
-     * ⚠ R90 부터 무기 피해 범위의 **폭**은 무기군이 정한다 — 군을 옮기면 폭이 따라 바뀐다.
-     */
-    function regroupWeapon(item, groupId) {
-        const g = WG[groupId];
-        if (!g || item?.slot !== 'weapon') return item;
-        item.group = groupId;
-        const [pre, suf] = item.sins ?? [];
-        if (pre) item.name = N.composeName(pre, g, suf ?? null, item.words ?? []);
-        return item;
     }
 
     // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루는 제작 재료 — item_design §7-1 · 반환량은 §5-3 미정)
@@ -723,16 +624,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    /**
-     * 세이브 이관용 — 방어구 고유값을 **지금 공식의 바탕값**으로 다시 낸다 (2026-09-16 · R107 · v27 → v28 · v29 → v30).
-     * 2026-09-18 부터 **새 드롭과 같은 값**이다 — 개체 편차가 폐지돼 바탕값이 곧 고유값이다(`implicitFor` 와 같은 식 · 부위 갈래 계수 포함). **rng 0**
-     */
-    const baseImplicit = item => {
-        if (!item || !isArmor(item.slot)) return null;
-        const slotMult = B[`armor_def_slot_${item.slot}`];
-        if (typeof slotMult !== 'number') return null;
-        return implicitFor(item.slot, item.ilvl, item.group ?? null).v;
-    };
-
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, legacyWeaponLayers, legacyArmorLayers, legacyAccessoryLayers, legacyName, pctStat, canEquip, groupOf, groupsFor, regroupWeapon, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, baseImplicit };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage };
 }
