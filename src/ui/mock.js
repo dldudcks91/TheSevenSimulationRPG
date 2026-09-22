@@ -341,6 +341,17 @@ export const SKILL_ICON_FILES = [
     'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
     'pri_penitence', 'pri_bind', 'pri_haste',
 ];
+// [2026-09-22] **전직 스킬 — 그림이 데이터보다 먼저 왔다.** `skill.csv` 에 행이 없어(skill_design §10) 위 목록에 못 들어간다 —
+//   도감 스킬 세그먼트가 이 표로 **전직 하나 = 묶음 하나**를 따로 세운다(SCREEN_DESIGN §9-1 · ADR-0299).
+//   키 = 직업 id → 전직 id(순서 = skill_design §10-1 표) · 이름은 `i18n:ix.adv.*`(전직) · `ix.sk.*`(스킬).
+//   파일명은 **임시 id** 다 — 행이 서면 그 id 로 맞추고 이 표에서 `SKILL_ICON_FILES` 로 옮긴다. 정전장은 기획 미정이라 그림이 없다
+export const SKILL_ADV_ICON_FILES = {
+    mage: {
+        fire_mage: ['mag_meteor', 'mag_firewall', 'mag_hydra'],
+        frost_mage: ['mag_frozenorb', 'mag_blizzard', 'mag_frostburst'],
+        thunder_mage: ['mag_thunderstrike', 'mag_nova'],
+    },
+};
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);
@@ -661,7 +672,7 @@ export const CX_DONE = {
  * 상단 목업 — ⚠ **여기 숫자는 전부 거짓이다** (SCREEN_DESIGN §8-3 · base_expedition_design §2-6).
  * 기획이 재고 · 가격을 하나도 안 정했으므로(GAME_DESIGN §10 「상단의 수치 전부」)
  * **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
- * 연구 목업(RESEARCH)이 걸어 둔 길과 같고, 확정되면 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다.
+ * 확정되면 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다(건설 목업이 2026-09-22 에 그렇게 걷혔다 — R137).
  *
  * **여기 없는 것 둘** [2026-09-21 · ADR-0223] — 특수상단의 **방문 시계**(와 있나 · 남은 시간)와 상단의 **장비 목록**은
  * `game.shopState` 가 낸다(주기 · 체류 · 장비 칸 수 · 가격은 balance.csv ⚠임시). 여기 남은 것은 재료 목록 · 특수상단 재고 · 상인 이름이다.
@@ -688,26 +699,16 @@ export const TRADE = {
 
 /* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — `commission_kind.csv`(종류 2종 ·
    확정 기획 — 09-07 목표형 개정으로 4종 → 2종, DEV_PLAN R45)와 `commission.csv`(게시판 행 · ⚠임시 자리채움) 두 표이고 로더는 `ui/data.js:D.commissionKinds`·
-   `D.commissionList` 다. 목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)·연구(RESEARCH)와 갈리는 지점이고,
+   `D.commissionList` 다. 목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)과 갈리는 지점이고,
    근거는 「mock 과 CSV 가 겹치면 CSV 만 둔다」(SCREEN_DESIGN §14 · DEV_PLAN §5-B). */
 
-/* ═══════════ 연구 — ⚠ 목업 (SCREEN_DESIGN §13-1 · ADR-0145, 2026-09-15 사용자 지시) ═══════════
- * **가지 8 구조만 섰다** — 원정 · 탐험 · 제련소 · 선술집 · 상단 · 자원 · 도감 · 파티 전술. 가지끼리 서로 잠그지 않는다.
- * 노드의 이름 · 여는 것 · 비용 · 여는 조건은 기획이 안 정했다 → **노드는 자리표시**다(이름 = 가지 이름 + 번호 · 여는 것 = 「미정」).
- * 그래서 **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
- * 기획이 확정되면 이 상수는 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다 (DEV_PLAN §4 #27).
- *
- * branches[].key — 가지 이름의 i18n 키. 탭 · 파견처 이름을 그대로 빌린다(제련소 · 상단은 탭 이름이 아니라 시설 이름 — §13-1)
- * nodes          — 위에서 아래로. 선행(`need`)은 같은 가지의 **바로 위 노드**뿐이다
- * state          — done(완료) | open(살 수 있다) | locked(위 노드가 남았다)
- * name · gain    — 없으면 화면이 자리표시(「가지 이름 + 번호」 · 「미정」)를 찍는다
- * mat · gold     — ⚠ 지어낸 값
+/* ═══════════ 건물 그림 — ⚠ 단색 실루엣 목업 (SCREEN_DESIGN §13 · ADR-0146 · ADR-0302) ═══════════
+ * 건설 탭의 건물 카드 머리 그림 — **키 = `building.csv:building_id`**. 건물마다 그릴 아트가 없어 선 그림(SVG) 한 장씩을 든다.
+ * viewBox 64×48 · 채움은 CSS 의 currentColor(글자색을 따라 테마를 탄다). 아트가 오면 이 표만 이미지로 갈아 끼운다 · 없는 건물은 빈 머리.
+ * ~~연구 목업 `RESEARCH`(가지 · 노드 · 지어낸 비용)~~ 는 2026-09-22 걷었다 — 건설은 표 넷을 그린다(`game.constructionState` · R137)
  */
-const RS_COST = [{ mat: 20, gold: 400 }, { mat: 35, gold: 900 }, { mat: 60, gold: 1600 }];
-/* 카드 머리의 건물 그림 — ⚠ **단색 실루엣 목업**이다(가지마다 그릴 아트가 없다 · SCREEN_DESIGN §13-1 · ADR-0146).
-   viewBox 64×48 · 채움은 CSS 의 currentColor(글자색을 따라 테마를 탄다). 아트가 오면 이 표만 이미지로 갈아 끼운다 */
 const rsSvg = body => `<svg viewBox="0 0 64 48" aria-hidden="true">${body}</svg>`;
-const RS_ART = {
+export const BUILDING_ART = {
     // 원정 — 성문(탑 둘 · 아치 문 · 깃발)
     expedition: rsSvg('<path fill-rule="evenodd" d="M6 46V12h4v4h3v-4h4v4h3v-4h4v10h16V12h4v4h3v-4h4v4h3v-4h4v34ZM26 46V36a6 6 0 0 1 12 0v10Z"/><path d="M50 12V1h1.4v11ZM51.4 1.2 60 4l-8.6 2.8Z"/>'),
     // 탐험 — 언덕 위 망루
@@ -717,45 +718,22 @@ const RS_ART = {
     // 선술집 — 박공집 + 매단 간판
     tavern: rsSvg('<path fill-rule="evenodd" d="M6 46V24L24 10l18 14v22ZM19 46V35h10v11Z"/><path d="M42 20h16v2H42Z"/><path d="M47 22h1.2v3H47ZM54 22h1.2v3H54ZM45 25h12v9H45Z"/>'),
     // 상단 — 짐마차
-    trade: rsSvg('<path d="M12 33V21c0-6 8-10 19-10s19 4 19 10v12Z"/><path d="M8 33h46v4H8Z"/><path fill-rule="evenodd" d="M18 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path fill-rule="evenodd" d="M44 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path d="M54 34h9v2h-9Z"/>'),
+    shop: rsSvg('<path d="M12 33V21c0-6 8-10 19-10s19 4 19 10v12Z"/><path d="M8 33h46v4H8Z"/><path fill-rule="evenodd" d="M18 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path fill-rule="evenodd" d="M44 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path d="M54 34h9v2h-9Z"/>'),
     // 자원 — 산 + 갱도 입구(버팀목)
     resource: rsSvg('<path fill-rule="evenodd" d="M1 46 22 13l8 10 9-9 24 32ZM24 46V37a8 8 0 0 1 16 0v9Z"/><path d="M22.5 46V34h2.5v12ZM39 46V34h2.5v12ZM21.5 32h21v2.5h-21Z"/>'),
+    // 창고 — 곳간(박공 지붕 · 빗장 걸린 널문) [2026-09-22 · R137]
+    storage: rsSvg('<path fill-rule="evenodd" d="M4 46V21L32 7l28 14v25ZM19 46V29h26v17Z"/><path d="M21 31h22v3H21ZM21 37h22v3H21ZM21 43h22v3H21Z"/><path d="M31 29h2v17h-2Z"/>'),
     // 도감 — 기둥 선 서고
     codex: rsSvg('<path d="M4 17 32 4l28 13Z"/><path d="M6 19h52v3H6Z"/><path d="M10 23h5v18h-5ZM22 23h5v18h-5ZM37 23h5v18h-5ZM49 23h5v18h-5Z"/><path d="M4 42h56v4H4Z"/>'),
-    // 파티 전술 — 작전 천막 + 깃발
-    tactics: rsSvg('<path fill-rule="evenodd" d="M4 46 32 11l28 35ZM26 46l6-13 6 13Z"/><path d="M31.3 11V1h1.4v10ZM32.7 1.2 42 4l-9.3 2.8Z"/>'),
-};
-const rsBranch = (id, key, first = {}) => {
-    const nodes = [];
-    RS_COST.forEach((cost, i) => {
-        const up = nodes[i - 1];
-        nodes.push({
-            id: `${id}_${i + 1}`, n: i + 1, ...cost,
-            state: !up || up.state === 'done' ? 'open' : 'locked',
-            need: up?.id,
-            ...(up ? {} : first),
-        });
-    });
-    return { id, key, art: RS_ART[id], nodes };
+    // 지휘 천막 — 작전 천막 + 깃발
+    command: rsSvg('<path fill-rule="evenodd" d="M4 46 32 11l28 35ZM26 46l6-13 6 13Z"/><path d="M31.3 11V1h1.4v10ZM32.7 1.2 42 4l-9.3 2.8Z"/>'),
+    // 훈련장 — 과녁 · 허수아비 · 창걸이
+    training: rsSvg('<path fill-rule="evenodd" d="M12 18a9 9 0 1 1 0 18a9 9 0 1 1 0-18Zm0 3.2a5.8 5.8 0 1 0 0 11.6a5.8 5.8 0 1 0 0-11.6Zm0 3.4a2.4 2.4 0 1 1 0 4.8a2.4 2.4 0 1 1 0-4.8Z"/><path d="M11.3 36h1.4v8h-1.4ZM30.6 44V20h2.8v24ZM22 24h20v2.6H22ZM26 28h12v11H26Z"/><circle cx="32" cy="14.5" r="5"/><path d="M49.3 44V10h1.4v34ZM55.3 44V13h1.4v31ZM50 4l2.2 6h-4.4ZM56 7l2.2 6h-4.4ZM46 31h14v2H46Z"/><path d="M2 44h60v3H2Z"/>'),
+    // 혈통의 전당 — 박공 전당(장미창 · 아치 문) + 양쪽에 매단 깃발
+    lineage: rsSvg('<path fill-rule="evenodd" d="M16 44V22L32 8l16 14v22ZM28 44v-7a4 4 0 0 1 8 0v7ZM32 13a3 3 0 1 1 0 6a3 3 0 1 1 0-6Z"/><path d="M13 44h38v3H13Z"/><path d="M5 47V8h1.4v39ZM6.4 10h7v16l-3.5-3-3.5 3Z"/><path d="M57.6 47V8H59v39ZM57.6 10h-7v16l3.5-3 3.5 3Z"/>'),
 };
 
-export const RESEARCH = {
-    /** ⚠ 지어낸 보유량 — 채집 재료(약초)는 자원 칸(G.resources)에 아직 없다 */
-    material: 42,
-    branches: [
-        // 원정 1 만 내용이 섰다 — 던전 레벨 조절(GAME_DESIGN §9 09-14 「나중에 연구로 옮긴다」). 화면 이름은 출정 창의 「위험도」를 따른다.
-        // 지금 처음부터 열려 있으므로 완료로 선다
-        rsBranch('expedition', 'nav.expedition', {
-            state: 'done',
-            name: { ko: '위험도 조절', en: 'Danger Level' },
-            gain: { ko: '스테이지마다 위험도를 올린다', en: 'Raise the danger of each stage' },
-        }),
-        rsBranch('explore', 'nav.explore'),
-        rsBranch('forge', 'dp.post.forge'),
-        rsBranch('tavern', 'nav.tavern'),
-        rsBranch('trade', 'dp.post.trade'),
-        rsBranch('resource', 'nav.resource'),
-        rsBranch('codex', 'nav.codex'),
-        rsBranch('tactics', 'rs.h'),
-    ],
-};
+/* ═══════════ 훈련장 — ⚠ 목업 (SCREEN_DESIGN §16 · ADR-0297, 2026-09-22 사용자 지시) ═══════════
+ * 훈련(영웅을 넣어 경험치)의 형태 · 칸 수 · 여는 축은 기획 미정(construction_draft §10) → **CSV 로 가지 않는다**(확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다).
+ * slots — ⚠ 지어낸 칸 수. 훈련장 랭크가 칸을 늘린다는 것만 섰다 */
+export const TRAINING = { slots: 2 };

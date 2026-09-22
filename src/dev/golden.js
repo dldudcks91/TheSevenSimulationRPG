@@ -9,8 +9,8 @@
  *
  * 스냅샷 생성:  `test.html?golden=write` → `<pre id="golden">` 에 JSON 이 찍힌다. 그걸 `dev/golden.json` 에 저장한다.
  * 대조:         `test.html` 이 매번 `golden.json` 을 읽어 네 단정으로 비교한다 —
- *               **입력(csvHash → balance) 을 먼저, 출력(parties → runs) 을 나중에**. 원인이 입력 쪽이면
- *               런 지문 불일치는 증상일 뿐이라, 그 순서로 읽어야 회귀로 오진하지 않는다.
+ *               **판정은 출력(parties · runs) 둘만 한다.** 입력(csvHash · balance)은 빨간불을 안 켜고 **설명한다** —
+ *               출력이 어긋나면 그 사유 끝에 입력 차이(`inputNote`)가 붙어 입력 탓인지 코드 탓인지를 가른다 [2026-09-22 · 구조 감사].
  */
 
 import { makeRng } from '../game_logic/rng.js';
@@ -218,7 +218,7 @@ export function buildFingerprint(SYS, B, D, NOW, created) {
 
 /* ── 대조 — 전부 「옛값 → 새값」 형식으로 사람이 읽는 문자열을 돌려준다 ── */
 
-const RETAKE = '→ **스냅샷을 다시 찍어야 한다** (test.html?golden=write)';
+const RETAKE = '→ 의도한 변경이면 **다시 찍는다** (test.html?golden=write)';
 
 /** 사전 대조 — 키 합집합을 돌아 `키: 옛값 → 새값`. 기대값에만 있으면 `없음`, 실측에만 있으면 신규 키다 */
 function mapDiff(actual, expected, limit) {
@@ -234,13 +234,13 @@ function mapDiff(actual, expected, limit) {
 }
 
 /**
- * CSV 원문 대조 — **골든 지문 불일치보다 먼저 읽어야 한다.**
- * 여기가 깨졌으면 런 지문 diff 는 원인이 아니라 증상이다. "`monster.csv` 가 달라졌다"가 즉시 나온다.
+ * CSV 원문 대조 — **설명이다**(판정하지 않는다 · 2026-09-22). "`monster.csv` 가 달라졌다"가 즉시 나온다.
+ * 코드가 안 읽는 칸(설명문 · 이야기)까지 걸리므로 이것만으로는 다시 찍지 않는다 — 출력이 같으면 기록할 것이 없다.
  */
 export function compareCsvHash(actual, expected) {
-    if (!expected?.meta?.csvHash) return ['golden.json 에 meta.csvHash 가 없다 — 다시 찍어라'];
+    if (!expected?.meta?.csvHash) return ['golden.json 에 meta.csvHash 가 없다'];
     const { n, out } = mapDiff(actual.csvHash, expected.meta.csvHash, 8);
-    return n ? [`CSV ${n}종이 달라졌다 ${RETAKE}: ${out.join(' · ')}${n > out.length ? ` (+${n - out.length})` : ''}`] : [];
+    return n ? [`CSV ${n}종이 달라졌다: ${out.join(' · ')}${n > out.length ? ` (+${n - out.length})` : ''}`] : [];
 }
 
 /**
@@ -248,9 +248,18 @@ export function compareCsvHash(actual, expected) {
  * 다르면 키별로 `키: 옛값 → 새값` 을 최대 8개까지 찍는다.
  */
 export function compareBalance(actual, expected) {
-    if (!expected?.meta?.balance) return ['golden.json 에 meta.balance 가 없다 — 다시 찍어라'];
+    if (!expected?.meta?.balance) return ['golden.json 에 meta.balance 가 없다'];
     const { n, out } = mapDiff(actual.balance, expected.meta.balance, 8);
-    return n ? [`balance ${n}키가 달라졌다 ${RETAKE}: ${out.join(' · ')}${n > out.length ? ` (+${n - out.length})` : ''}`] : [];
+    return n ? [`balance ${n}키가 달라졌다: ${out.join(' · ')}${n > out.length ? ` (+${n - out.length})` : ''}`] : [];
+}
+
+/**
+ * 입력 차이 한 줄 — 출력 대조(시작 파티 · 런)가 어긋났을 때 **그 사유 끝에** 붙인다 [신설 2026-09-22 · 구조 감사].
+ *   입력이 달라졌으면 그 변경이 **의도한 것인지** 보고(의도면 다시 찍는다), 입력이 그대로면 **코드가 결과를 바꿨다**(의도가 아니면 회귀)
+ */
+export function inputNote(actual, expected) {
+    const diff = [...compareCsvHash(actual, expected), ...compareBalance(actual, expected)];
+    return diff.length ? `입력 변화 — ${diff.join(' · ')} ${RETAKE}` : `입력 그대로 — 코드가 결과를 바꿨다 ${RETAKE}`;
 }
 
 /**

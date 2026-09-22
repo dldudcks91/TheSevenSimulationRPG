@@ -706,15 +706,15 @@ const amountSlot = (part, R) => slot({
  * 수량 구절 — 값을 아는 자리는 **실제 수치**(`{v} 의 물리 피해`), 모르는 자리는 **식**(`{f} 만큼 피해`)으로 접는다.
  * ⚠ 감소·치명·추가 피해 **전**의 값이다 (previewOf 주석) — 설명창이 약속하는 건 「내가 때리는 세기」다.
  */
-function amountPhrase(def, part, atkType, R) {
+function amountPhrase(line, part, atkType, R) {
     if (!part) return null;
-    const heal = def.kind === 'heal';
+    const heal = line.effect === 'heal';
     const d = amountSlot(part, R);
     if (part.value == null) return t(heal ? 'sk.amt.healFx' : 'sk.amt.fx', { f: d });
     if (heal) return t('sk.amt.heal', { v: d });
     // 피해 종류 = 그 타격이 상대하는 방어 — **스킬의 원소 태그가 먼저**고 없으면 쓰는 이의 공격 타입이다 (전투 `strikeOnce` 와 같은 순서 · battle_design §2-1).
     //   원소는 이름으로 말한다 — 「마법 피해」는 없다. 공격 타입만 보면 09-11 뒤 원소 스킬까지 「물리 피해」로 찍힌다 (2026-09-15)
-    const type = def.element ?? atkType;
+    const type = line.element ?? atkType;
     return type && type !== 'physical' ? t('sk.amt.elem', { v: d, e: t(`st.atkType.${type}`) }) : t('sk.amt.physical', { v: d });
 }
 
@@ -722,15 +722,17 @@ function amountPhrase(def, part, atkType, R) {
  * 버프 효과 구절 — 이름 + 값만. 어휘에 없는 stat 이면 null(그 문장을 안 만든다).
  * **음수 값은 디버프**다 (참회 · 속박 — 같은 창을 반대로 쓴다). 부호를 문장에 그대로 흘리면
  *   「공격력 +-25%」가 되므로 절댓값을 넘기고 **`.neg` 틀이 방향을 든다**. 값 자리가 `%` 까지 든다(틀은 단위를 안 든다).
+ * @param st 걸린 효과(`SYS.skill.statuses` — 능력치 · 값 · 시간 · 2026-09-22)
  */
-function effectPhrase(def, P, R) {
-    const key = `sk.eff.${def.stat}${def.value < 0 ? '.neg' : ''}`;
-    return STRINGS_HAS(key) ? t(key, { v: slot({ raw: Math.abs(def.value), part: P.value, unit: UNIT.pct }, R) }) : null;
+function effectPhrase(st, P, R) {
+    const key = `sk.eff.${st.stat}${st.value < 0 ? '.neg' : ''}`;
+    return STRINGS_HAS(key) ? t(key, { v: slot({ raw: Math.abs(st.value), part: P.value, unit: UNIT.pct }, R) }) : null;
 }
 
 /**
- * 문장 — `kind` × `target` 이 틀을 정한다. 틀이 없으면 `null`(설명만 뜬다).
+ * 문장 — **하는 일 × 나가는 방식 × `target`** 이 틀을 정한다(2026-09-22 — ~~`kind` × `target`~~). 틀이 없으면 `null`(설명만 뜬다).
  * 숫자 자리는 **틀이 쓸 때만** 만든다(`() =>`) — 안 쓰는 자리가 `R.fx` 를 켜서 각주가 헛서지 않게.
+ * ⚠ 1단계는 스킬 하나 = 하는 일 한 줄이라 **첫 줄(`effects[0]`)** 로 문장을 만든다(로더가 강제) — 줄마다 문장은 2단계(SCREEN_DESIGN §2 먼저)
  * @returns {string[] | null} 첫째가 본 문장 · 둘째는 확률로 터지는 추가 피해(있을 때만 — **완결된 둘째 문장**이라 틀에 잇지 않는다)
  */
 function skillLines(def, pv, atkType, R) {
@@ -738,57 +740,61 @@ function skillLines(def, pv, atkType, R) {
     // 표기 쿨 — 실효 쿨은 폐기됐다 (개정 2026-09-08 2차 · ADR-0038). 어느 영웅이 들든 같은 수다
     const n = sec(pv?.baseSec ?? def.cool);
     const at = (raw, key, unit) => slot({ raw, part: P[key], unit }, R);
-    if (def.kind === 'attack') {
-        const d = amountPhrase(def, P.amount, atkType, R);
+    const e = def.effects[0];
+    // 거는 걸린 효과 — `apply` 줄만 든다(능력치 · 값 · 시간)
+    const st = e.status ? SYS.skill.statuses[e.status] ?? null : null;
+    if (e.effect === 'hit') {
+        const d = amountPhrase(e, P.amount, atkType, R);
         if (d === null) return null;
-        const k = () => at(def.decay, 'decay', UNIT.pct);
-        const h = () => at(def.hits, 'hits', UNIT.times);
+        const k = () => at(e.decay, 'decay', UNIT.pct);
+        const h = () => at(e.hits, 'hits', UNIT.times);
         let line;
         // 광역 — 감쇠가 있으면 **주 대상만 온전**하다(멀티샷). 감쇠가 없는 광역은 옛 틀 그대로
-        if (def.target === 'enemy_all') line = (P.decay || def.decay > 0) ? t('sk.line.allDecay', { n, d, k: k() }) : t('sk.line.all', { n, d });
+        if (def.target === 'enemy_all') line = (P.decay || e.decay > 0) ? t('sk.line.allDecay', { n, d, k: k() }) : t('sk.line.all', { n, d });
         else if (def.target === 'enemy_chain') line = t('sk.line.chain', { n, d, k: k() });
         else if (def.target === 'enemy_rotate') line = t('sk.line.rotate', { n, d, h: h() });
         // 가이디드 — 단타 + 방어 감소(감쇠 칸이 그 적의 방어를 깎는 비율이다 · skill.csv note)
         else if (def.target === 'enemy_highest_def') line = t('sk.line.guided', { n, d, k: k() });
         else {
             // 타수 슬롯이 있으면 여럿일 수 있으므로(모르면 식) 다타 틀로 — 버림은 `scaleDef` 가 이미 했다
-            const many = P.hits ? (P.hits.value == null || P.hits.value > 1) : def.hits > 1;
+            const many = P.hits ? (P.hits.value == null || P.hits.value > 1) : e.hits > 1;
             line = many ? t('sk.line.singleN', { n, d, h: h() }) : t('sk.line.single', { n, d });
         }
-        if (!(def.procChance > 0)) return [line];
-        return [line, t('sk.line.proc', { c: at(def.procChance, 'procChance', UNIT.pct), x: at(def.procMult, 'procMult', UNIT.pct) })];
+        if (!(e.procChance > 0)) return [line];
+        return [line, t('sk.line.proc', { c: at(e.procChance, 'procChance', UNIT.pct), x: at(e.procMult, 'procMult', UNIT.pct) })];
     }
-    if (def.kind === 'heal') {
-        const d = amountPhrase(def, P.amount, atkType, R);
+    if (e.effect === 'heal') {
+        const d = amountPhrase(e, P.amount, atkType, R);
         return d === null ? null : [t(def.target === 'ally_single' ? 'sk.line.healOne' : 'sk.line.heal', { n, d })];
     }
     // 소환 — 벽의 HP 가 `시전자 최대 HP × 배율 + 능력치 항` 이다 (skill_design §12-6). 피해가 아니라 구절 없이 자리만 쓴다
-    if (def.kind === 'summon') return P.amount ? [t('sk.line.summon', { n, d: amountSlot(P.amount, R) })] : null;
+    if (e.effect === 'summon') return P.amount ? [t('sk.line.summon', { n, d: amountSlot(P.amount, R) })] : null;
     // 불러내기 — 몬스터 전용 (skill_design §12-9 · 2026-09-18). 세기가 없다 — 누구를 부르나는 편성이 정한다
-    if (def.kind === 'call') return [t('sk.line.call', { n })];
+    if (e.effect === 'call') return [t('sk.line.call', { n })];
     // 자폭 — 몬스터 전용 비직격 (skill_design §12-9 · battle_design §9-6 · 2026-09-21). **쿨이 없다**(차례가 아니라 죽음이 부른다)
     //   → 오오라처럼 `{n}` 을 안 든다. 방어 · 저항을 안 받는 고정 피해지만 그 규칙은 문장에 안 적는다(스킬 설명만 — 2026-09-21)
-    if (def.kind === 'indirect') {
-        const d = amountPhrase(def, P.amount, atkType, R);
+    if (e.effect === 'fixed') {
+        const d = amountPhrase(e, P.amount, atkType, R);
         return d === null ? null : [t('sk.line.selfDestruct', { d })];
     }
+    if (e.effect !== 'apply' || !st) return null;
     // 오오라 — **쿨이 없다.** 그래서 이 문장만 `{n}` 을 안 든다 (skill_design §1-5)
-    if (def.kind === 'aura') {
-        const e = effectPhrase(def, P, R);
-        return e === null ? null : [t('sk.line.aura', { e })];
+    if (def.cast === 'aura') {
+        const ph = effectPhrase(st, P, R);
+        return ph === null ? null : [t('sk.line.aura', { e: ph })];
     }
-    if (def.kind === 'buff') {
-        const s = () => at(def.dur, 'dur', UNIT.sec);
-        if (def.stat === 'taunt') return [t('sk.line.taunt', { n, s: s() })];
+    if (def.cast === 'turn') {
+        const s = () => at(st.dur, 'dur', UNIT.sec);
+        if (st.stat === 'taunt') return [t('sk.line.taunt', { n, s: s() })];
         // 지목은 창의 길이를 안 말한다 — 「라운드가 끝날 때까지」라 초로 셀 것이 아니다. 효과값은 그동안 **시전자가 받는 피해 감소**다
-        if (def.stat === 'duel') return [t('sk.line.duel', { n, v: at(Math.abs(def.value), 'value', UNIT.pct) })];
-        const e = effectPhrase(def, P, R);
-        if (e === null) return null;
+        if (st.stat === 'duel') return [t('sk.line.duel', { n, v: at(Math.abs(st.value), 'value', UNIT.pct) })];
+        const ph = effectPhrase(st, P, R);
+        if (ph === null) return null;
         const key = def.target === 'party' ? 'sk.line.buffParty'
             : def.target === 'party_adjacent' ? 'sk.line.buffAdjacent'
             : (def.target === 'enemy_all' || def.target === 'enemy_single') ? 'sk.line.debuffAll'
             : 'sk.line.buffSelf';
-        return [t(key, { n, s: s(), e })];
+        return [t(key, { n, s: s(), e: ph })];
     }
     return null;
 }
@@ -875,7 +881,7 @@ export function skillTipSection(s, ctx = {}) {
  * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주.
  * 스킬 카드와 아이템 툴팁의 스킬 칸이 **같이 부른다** — 한쪽만 고쳐지지 않게 몸통은 여기 하나다 (ADR-0139).
  * 칩은 **출처 칩**(영웅·무기·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **능력치 칩**이다.
- * 능력치 칩은 스케일링 슬롯(`def.scales`)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
+ * 능력치 칩은 스케일링 슬롯(하는 일 줄의 `scales` — 줄 순 · 2026-09-22)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
  * 고정 설명(`def.desc`)은 **안 낸다** — 문장이 같은 말을 값까지 넣어 한다(같은 ADR).
  */
 function skillBodyHtml(s, ctx) {
@@ -884,7 +890,7 @@ function skillBodyHtml(s, ctx) {
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
     for (const tg of (def ? SYS.skill.tagsOf(def) : [])) chips.push(`<i class="tip-chip">${L(skillTagName(tg))}</i>`);
-    for (const at of new Set((def?.scales ?? []).map(x => x.attr))) chips.push(`<i class="tip-chip attr">${abbrOf(at)}</i>`);
+    for (const at of new Set((def?.effects ?? []).flatMap(e => e.scales).map(x => x.attr))) chips.push(`<i class="tip-chip attr">${abbrOf(at)}</i>`);
     // 정의를 못 찾으면(행이 지워진 옛 세이브) 이름만 낸다 — 던지지 않는다
     const R = { alt: altHeld, fx: false };
     const lines = def ? skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, R) : null;

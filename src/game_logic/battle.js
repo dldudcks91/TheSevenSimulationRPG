@@ -65,7 +65,7 @@
  *     그대로이고 판정도 1회 · 등급은 확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 바뀐 것은 **무엇이 떨어지나** —
  *     판정 뒤 **입은 부위 중 하나**를 골라 그 아이템을 그대로 낸다. 파이프라인 3~6단계(ilvl · 희귀도 · 접사 · 개체 굴림)는
  *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = `스테이지 레벨 + gear_ilvl_add`(굴림 없음) ·
- *     희귀도 = 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고, 파티의 매직찬스가 **적 장비도 좋게 한다**
+ *     희귀도 = 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
  *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
  */
 
@@ -76,6 +76,8 @@ import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js
 import { refreshDerived, weaponOnHit } from './skill_effects.js';
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
 import { STAGE_SPAWN_RULES } from './spawn_rule.js';
+// 몬스터 차림 줄 — 전투 줄에서 씨앗 하나만 받아 몬스터마다 제 줄을 연다 (INTERFACE §5-1 · 2026-09-22)
+import { makeRng, deriveSeed } from './rng.js';
 
 const TICK = 0.1;
 /** 걸음을 끊는 자리의 부동소수 여유 — 시각은 0.1 을 거듭 더해 꼬리가 붙는다(`advance`). **틱을 몇 번 도느냐만** 정하고 틱 안의 계산에는
@@ -185,9 +187,9 @@ export function createBattleSystem(data) {
         for (const id of rules.flatMap(r => r.refs ?? [])) {
             if (!pool.includes(id)) throw new Error(`battle: 스테이지 ${sid} 편성 예외의 몬스터 ${id} 가 그 스테이지의 일반몹이 아니다 (spawn_rule.js)`);
         }
-        // 소환사는 고유 스킬이 불러내기(`call`)여야 한다 [2026-09-18] — 아니면 채운 몫이 대기로 빠진 채 영영 안 선다
+        // 소환사는 고유 스킬이 불러내기(`call` 줄)를 가져야 한다 [2026-09-18 · 줄 2026-09-22] — 아니면 채운 몫이 대기로 빠진 채 영영 안 선다
         for (const id of rules.flatMap(r => r.summoners ?? [])) {
-            if (SK && SK.defs[data.monsters[id].innate_skill]?.kind !== 'call')
+            if (SK && !SK.defs[data.monsters[id].innate_skill]?.effects.some(e => e.effect === 'call'))
                 throw new Error(`battle: 스테이지 ${sid} 의 소환사 ${id} 는 고유 스킬이 불러내기(call)가 아니다 — 대기 무리가 안 선다 (spawn_rule.js)`);
         }
         for (const { round_num: n, round_type: type } of stageRounds(st)) {
@@ -267,8 +269,6 @@ export function createBattleSystem(data) {
             // 타격 동안만 — `strikeOnce` 가 얹고 원복한다(능력치 계수 · 조건부 % · 스킬의 추가 피해 확률·배수). 평소 계수 1 · 나머지 0
             //   ~~`flat`(능력치 항 · 덧셈)~~ 은 2026-09-18 폐기 — 능력치는 곱이다(battle_design §9-2)
             statMult: 1, condPct: 0, procChance: 0, procMult: 0,
-            // 능력치 계수를 안 탄다 — **몬스터**(`makeEnemy` 가 true · 보류 — GAME_DESIGN §10 「몬스터의 능력치 계수」). 스킬 시전 때 `scaleDef` 로 넘긴다
-            noStatMult: false,
             ...extra,
         };
     }
@@ -285,7 +285,7 @@ export function createBattleSystem(data) {
      * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
      * 행동하지 않으므로 행동 주기도 AI 도 대상 선택도 없다 — `next: Infinity` 라 차례가 영원히 안 온다.
      * 공격·방어 축은 전부 0 이고 HP 만 든다: **펫 서브시스템을 여는 것이 아니다**(기획 §12-6 이 못박은 구분).
-     * @param caster 시전자 · @param def 스킬 정의(`mult` = 시전자 최대 HP 의 비율 · `statMult` = 능력치 계수 — 런타임이 `scaleDef` 를 지난 것을 넘긴다 · 2026-09-18) · @param key 유닛 키
+     * @param caster 시전자 · @param def 시전 단위(`summon` 줄 — `mult` = 시전자 최대 HP 의 비율 · `statMult` = 능력치 계수 — 런타임이 `scaleDef` 가 낸 것을 넘긴다 · 2026-09-18) · @param key 유닛 키
      */
     function makeSummon(caster, def, key) {
         const hp = Math.max(1, Math.round(caster.hpMax * def.mult * (def.statMult ?? 1)));
@@ -339,9 +339,8 @@ export function createBattleSystem(data) {
         }
         c.defense *= B.monster_def_scale;
         c.attack_type = m.attack_type;                                      // ③
-        // ④ 능력치 계수 **보류** [2026-09-18 · 사용자 — GAME_DESIGN §10 「몬스터의 능력치 계수」] — 평타 계수를 1 로 덮고 스킬 쪽은 유닛 `noStatMult` 로 끈다.
-        //   `computeCombat` 은 직업(`cls`)과 능력치를 받아 계수를 내지만 몬스터는 지금 그것을 안 탄다
-        c.main_attr_mult = 1;
+        // 능력치 계수는 **영웅과 같다** [2026-09-22 사용자 — 보류 해제 · battle_design §9-2] — 평타는 `computeCombat` 이 낸
+        //   `main_attr_mult`(직업 메인 스탯) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
         /*
          * 스킬 칸 — **등급이 연다** (skill_design §2 · monster_design §5-1): 일반 = 고유 1 · 정예 = + 낀 무기가 든 스킬 ·
          *   보스 = + 셋째 칸. **칸은 출처 자리**라 「있는 것 중 앞에서 n개」가 아니다 — 그래서 열리지 않은 출처를
@@ -371,8 +370,7 @@ export function createBattleSystem(data) {
             rank: rankOfRole(m.role),        // 진형 — 역할이 자리를 정한다 (battle_design §3-1)
             monsterType: m.monster_type,     // 종족(Normal/Demon/Undead) — 무기 옵션 vs 종족이 읽는다 (R78)
             cls: m.cls,                      // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
-            stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef)
-            noStatMult: true,                // 능력치 계수 보류 — 스킬의 데미지 슬롯도 1 (위 ④ · 2026-09-18)
+            stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 영웅과 같다)
             actives: acts,
             // 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이 같으면 몬스터가 달라도 같다. `exp_coef` 는 몬스터별 조정 칸 (monster_design §7 · R85)
             expReward: B.monster_xp_base * B.monster_xp_growth ** (lvl - 1) * g.exp_mult * m.exp_coef,
@@ -395,15 +393,18 @@ export function createBattleSystem(data) {
      * **2단이다** [개정 2026-09-11 · R79 · INTERFACE §5-2]:
      *   **1단 편성** — 누가 나오나. 스테이지 편성 예외(`spawn_rule.js`)가 뽑을 목록과 범위를 바꾸고, 소환사가 서면 상한까지 채운다 [2026-09-18].
      *     예외가 없는 스테이지는 굴림 순서·횟수가 **종전과 같다**
-     *   **2단 장비·스킬** — 편성이 확정된 뒤 목록 순서로 유닛마다 `rollGear` 한 벌 + (보스면) 셋째 스킬 1회
+     *   **2단 장비·스킬** — 편성이 확정된 뒤 목록 순서로 유닛마다 `rollGear` 한 벌 + (보스면) 셋째 스킬 1회.
+     *     **장비는 전투 줄에서 안 굴린다** [2026-09-22 · 구조 감사] — 유닛마다 **제 줄**(씨앗 · 라운드 번호 · 목록 자리)에서 굴린다.
+     *     전투 줄에 두면 아이템 옵션 한 줄이 장비 굴림 수를 바꿔 그 뒤 편성 · 적중 · 치명이 통째로 갈렸다. 셋째 스킬은 전투 줄 그대로다(1회 고정)
      *
      * ⚠ **1단이 2단보다 앞인 것이 계약이다** — 장비 굴림이 편성 굴림을 밀면 같은 시드가 다른 편성을 낸다
      *   (`rollFace` 를 맨 뒤에 두는 것 · `searchRoll` 의 「결과를 먼저, 이야기를 뒤에」와 같은 규칙).
      * ⚠ **전역 상한도 1단에서 자른다** — 잘릴 유닛의 장비를 굴리면 수열이 편성 상한에 종속된다.
      * @param magicFind 파티 평균 매직아이템 획득확률(비율) — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
      * @param level 몬스터 레벨 = **이번 런의 스테이지 레벨** — 안 주면 기본 레벨 `dlvl` (2026-09-14 · R87)
+     * @param gearSeed 몬스터 차림 줄의 씨앗 — `createRun` 이 런을 열 때 전투 줄에서 한 번 뽑는다 (2026-09-22)
      */
-    function spawnRound(rng, stage, pool, n, magicFind = 0, level = stage.dlvl) {
+    function spawnRound(rng, gearSeed, stage, pool, n, magicFind = 0, level = stage.dlvl) {
         const type = stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
         const budgetKey = type === 'boss' ? stage.boss_grade : type;
         const bd = data.budgets[budgetKey];
@@ -446,7 +447,8 @@ export function createBattleSystem(data) {
             const m = data.monsters[s.id];
             const g = data.grades[s.grade];
             // 아이템 레벨은 **굴리지 않는다** — 던전 레벨 + 등급 가산이다 (item_design §1 3단계 · 사용자 확정 2026-09-11)
-            const gear = data.itemSystem.rollGear(rng, {
+            // 제 줄 = (씨앗 · 라운드 · 목록 자리) — 앞 몬스터의 굴림 수가 뒤 몬스터의 장비도 전투 수열도 안 민다 (INTERFACE §5-1 · 2026-09-22)
+            const gear = data.itemSystem.rollGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), {
                 slots: wearSlots(m),
                 ilvl: level + g.gear_ilvl_add,
                 magicFind,
@@ -487,18 +489,21 @@ export function createBattleSystem(data) {
      *   `advance(until)` = 그 시각까지만(라운드가 끝나면 그 요약 · 도중에 서면 null · R130) · `refit(partyUnits)` = 지금 시각에 갈아입기
      *   (`{locked, changed}` — 보스 라운드 도중이면 `locked` · R130) · `status()` = `{t, round, kind, inRound}` ·
      *   `result` = 걸음마다 자라는 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
+     * @param slotMax 물약 칸 수 — 게임은 그 세이브의 상한(`state.limitsOf(state).potionSlots`)을 넘긴다 · 안 주면 CSV 기본값 [balance.csv:potion_slot_max] (2026-09-22)
      */
-    function createRun(partyUnits, stageId, rng, level, potions = null) {
+    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max) {
         const stage = data.stages[stageId];
         const potionSlots = potions ?? [];
         // 칸은 **자리 순**이고 `null` = 빈 칸 — 재고가 모자랐거나 비워 둔 칸 (2026-09-21 · R124)
-        if (!Array.isArray(potionSlots) || potionSlots.length > B.potion_slot_max || potionSlots.some(p => p !== null && !(p?.id && p.heal >= 0)))
-            throw new Error(`battle: 물약 칸 ${JSON.stringify(potions)} — [{id, heal} | null] 이고 칸 수 ${B.potion_slot_max} 이하여야 한다 (INTERFACE §2-6)`);
+        if (!Array.isArray(potionSlots) || potionSlots.length > slotMax || potionSlots.some(p => p !== null && !(p?.id && p.heal >= 0)))
+            throw new Error(`battle: 물약 칸 ${JSON.stringify(potions)} — [{id, heal} | null] 이고 칸 수 ${slotMax} 이하여야 한다 (INTERFACE §2-6)`);
         // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
         //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
         const stageLevel = level ?? stage.dlvl;
         const pool = stagePool(stage);
         const rounds = stageRounds(stage).length;      // 그 세트의 행 수 — 챕터보스 스테이지는 1 (2026-09-11)
+        // 몬스터 차림 줄의 씨앗 — **런의 첫 굴림**이다 [2026-09-22 · 구조 감사 · INTERFACE §5-1]. 장비는 이 씨앗에서 몬스터마다 제 줄로 굴린다(`spawnRound`)
+        const gearSeed = Math.floor(rng() * 4294967296);
 
         // 파티 유닛 — 몬스터와 **같은 생성자**를 지난다 (§8-1). 자리가 정하는 것만 extra 로 얹는다
         const party = partyUnits.map((p, i) => makeUnit('party', p.combat, {
@@ -533,17 +538,18 @@ export function createBattleSystem(data) {
         const applyAuras = side => {
             const applied = [];
             for (const p of side) {
-                const aura = p.actives.find(a => a.def.kind === 'aura');
+                const aura = p.actives.find(a => a.def.cast === 'aura');
                 if (!aura) continue;
                 p.slotIds = p.actives.map(a => a.id);
                 p.auraOn = aura.id;
-                p.actives = p.actives.filter(a => a.def.kind !== 'aura');
+                p.actives = p.actives.filter(a => a.def.cast !== 'aura');
                 const targets = aura.def.target === 'self' ? [p] : side;
-                // 오오라의 세기도 **시전자 능력치로 민 값**이다 — 걸 때 한 번 (skill.js scaleDef · 2026-09-10)
-                const eff = SK.scaleDef(aura.def, p.stats);
+                // 오오라의 세기도 **시전자 능력치로 민 값**이다 — 걸 때 한 번 (skill.js scaleDef · 2026-09-10).
+                //   창은 그 줄이 거는 걸린 효과(`stat` · `element`)이고 값은 계수 민 값이다 — 1단계는 줄이 하나다(2026-09-22 · 로더가 강제)
+                const x = SK.scaleDef(aura.def, p.stats).effects[0];
                 for (const tgt of targets) {
-                    tgt.buffs[aura.id] = { stat: aura.def.stat, v: eff.value, until: Infinity, element: aura.def.element ?? null, by: p.key };
-                    applied.push({ e: 'buff', u: tgt.key, s: aura.id, stat: aura.def.stat, v: eff.value, until: null });
+                    tgt.buffs[aura.id] = { stat: x.stat, v: x.value, until: Infinity, element: x.element ?? null, by: p.key };
+                    applied.push({ e: 'buff', u: tgt.key, s: aura.id, stat: x.stat, v: x.value, until: null });
                 }
             }
             for (const p of side) refreshDerived(p);
@@ -618,7 +624,7 @@ export function createBattleSystem(data) {
             contrib: [],
             // 이 런의 물약 칸 [2026-09-15 · R103 · 모양 R104 · 빈 칸 R124] — 재생기가 칸의 첫 상태를 그린다: `max` = 칸 수 · `slots` = 받은 칸 그대로(자리 순 · `null` = 빈 칸 · 목록 뒤도 빈 채 출발) ·
             //   `used` = 마신 수(`potion` 이벤트 수와 같다). 물약 없는 런도 칸은 선다(`slots: []`)
-            potion: { max: B.potion_slot_max, slots: potionSlots.map(p => (p ? { id: p.id, heal: p.heal } : null)), used: 0 },
+            potion: { max: slotMax, slots: potionSlots.map(p => (p ? { id: p.id, heal: p.heal } : null)), used: 0 },
         };
 
         /* 기여 — **전투 시작 시점의 파티 전원**으로 자리를 미리 잡는다. 0 인 영웅도 줄이 서야
@@ -699,7 +705,8 @@ export function createBattleSystem(data) {
             for (const p of party) {
                 let closed = false;
                 for (const [id, b] of Object.entries(p.buffs)) {
-                    if (b.stat === 'dr_pct' && SK?.resolve({ id })?.stat === 'duel') {
+                    // 그 창을 건 스킬이 거는 걸린 효과가 `duel` 인가 — 1단계는 줄이 하나다(2026-09-22 · 2단계가 걸린 효과의 `round_end` 로 일반화한다)
+                    if (b.stat === 'dr_pct' && SK?.statuses[SK.resolve({ id })?.effects[0].status]?.stat === 'duel') {
                         delete p.buffs[id];
                         timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: id });
                         closed = true;
@@ -709,7 +716,7 @@ export function createBattleSystem(data) {
             }
             // 매직찬스는 **스폰 굴림**에 걸린다 [2026-09-11 · R79] — 장비 희귀도가 여기서 정해지기 때문이다.
             //   ⚠ 딸린 것 — 파티의 매직아이템 획득확률이 **적 장비도 좋게 한다**(사용자가 알고 택한 「이스터에그」)
-            const sp = spawnRound(rng, stage, pool, round, magicFind, stageLevel);
+            const sp = spawnRound(rng, gearSeed, stage, pool, round, magicFind, stageLevel);
             units.enemies = sp.list;
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
@@ -756,8 +763,8 @@ export function createBattleSystem(data) {
 
         /**
          * 자폭 [2026-09-21 · 사용자 확정 · skill_design §12-9 · battle_design §9-6] — 쓰러지는 순간 칸에
-         *   `cast_condition=on_death` 인 스킬(`kind=indirect`)이 있으면 **적 전원에게 한 번** 터진다.
-         *   · 세기 = 쓰러지는 쪽의 **공격력 × 그 스킬의 배율**. **방어 · 저항 · 피해 감소를 하나도 빼지 않는 고정 피해**다
+         *   `cast_condition=on_death` 인 사건 스킬(`cast=event` · 하는 일 `fixed`)이 있으면 **적 전원에게 한 번** 터진다.
+         *   · 세기 = 쓰러지는 쪽의 **공격력 × 그 스킬 `fixed` 줄의 배율**. **방어 · 저항 · 피해 감소를 하나도 빼지 않는 고정 피해**다
          *   · **배리어도 안 본다** — 반사와 같은 비직격 처리(HP 직접 차감 · §9-6). 대응 축을 HP 총량과 회복으로 묶는 확정의 연장이다
          *   · **rng 를 안 쓴다** — 피해 굴림 대신 범위 중앙값을 쓴다. 자폭이 없는 판의 수열은 종전과 완전히 같다 (INTERFACE §5-2)
          *   · **흡혈 · 반사 · 경직 · 타격 훅을 유발하지 않는다** (§9-6 「아무것도 유발하지 않는다」)
@@ -766,12 +773,13 @@ export function createBattleSystem(data) {
          */
         const blast = u => {
             if (u.blown) return;
-            const a = (u.actives ?? []).find(x => x.def.kind === 'indirect' && x.def.cond === 'on_death');
+            const a = (u.actives ?? []).find(x => x.def.cast === 'event' && x.def.cond === 'on_death');
             if (!a) return;
+            const fx = a.def.effects[0];   // 고정 피해 줄 — 1단계는 줄이 하나다(2026-09-22 · 2단계가 「event 스킬이 자기 줄을 실행」 으로 옮긴다)
             u.blown = true;
             const foes = alive(rt.foesOf(u));
             if (!foes.length) return;
-            const dmg = F.indirect(((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * a.def.mult);
+            const dmg = F.indirect(((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * fx.mult);
             if (dmg <= 0) return;
             const cu = credit(u);
             for (const tgt of foes) {
@@ -1217,8 +1225,8 @@ export function createBattleSystem(data) {
      * 런 하나를 **한 번에 끝까지** — `createRun` 을 끝날 때까지 이어 부른다. 전투 결과만 보는 쪽(단정 · 캘리브레이션)이 쓴다.
      * @returns 결과 + 타임라인 (`createRun` 의 `result` 와 같은 모양)
      */
-    function simulate(partyUnits, stageId, rng, level, potions = null) {
-        const run = createRun(partyUnits, stageId, rng, level, potions);
+    function simulate(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max) {
+        const run = createRun(partyUnits, stageId, rng, level, potions, slotMax);
         while (run.next()?.ended === false);
         return run.result;
     }

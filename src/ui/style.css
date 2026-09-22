@@ -111,6 +111,10 @@
     --toggle-line: #2a6a3a;
     --toggle-fg: #a0f0b0;
 
+    /* 전직 스킬 그림 칸의 바탕 [2026-09-22 · ADR-0301 · ⚠ 시험 적용] — 스킬 그림이 전부 색 없는 흰 실루엣이라
+       기본 ↔ 전직 닮은 쌍(파이어볼 ↔ 메테오)을 가른다. 어두운 바탕 색 중 비어 있던 보라 · 검정 위에서 겨우 보이는 세기 */
+    --adv-skill-bg: #160d1e;
+
     /* 등급색 — **SSOT 는 `data/hero_tier.csv` · `ui/mock.js:RARITY`**. 여기 값은 그 사본이다 (하나를 바꾸면 셋 다) */
     --rarity-normal: #D8D8D8;
     --rarity-magic: #4169E1;
@@ -401,6 +405,8 @@ html, body { height: 100%; overflow: hidden; }
 .btn.primary { background: var(--btn-primary-bg); border-color: var(--btn-primary-line); color: var(--btn-primary-fg); }
 .btn.primary:hover { background: var(--btn-primary-bg-hover); border-color: var(--text-accent); }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
+/* 안 지은 건물이 잠근 자리 — 흐리지만 **눌린다**(누르면 지을 건물을 말한다 · disabled 가 아니다) · 탭 바의 흐린 탭도 같다 (SCREEN_DESIGN §1 · §13 · R137) */
+.btn.dim, .nav button.dim { opacity: .45; }
 .btn.sm { padding: 3px 8px; font-size: var(--fs-sm); }
 
 /* 기본은 **무채색**이다 (2026-09-03 사용자 지시) — 영웅의 죄종 칩에서 색을 걷었기 때문(SCREEN_DESIGN §5).
@@ -1942,11 +1948,12 @@ html, body { height: 100%; overflow: hidden; }
    상자를 되살리면 `--cx-pad: 6px; --cx-bd: 1px` 과 `.mon-strip` 의 배경 한 줄이다 */
 /* 세그먼트 줄 — 패널 박스 바로 위 (ADR-0273). 메인 배율을 되돌려 상단바 탭 세그먼트 · 챕터 버튼과 같은 크기다 */
 /* 제련소 작업 탭(`.fg-tabs` · ADR-0281)도 같은 자리 · 같은 모양이다 — 박스 위 전환 줄은 한 규칙 */
-.cx-tabs, .fg-tabs { flex: none; flex-wrap: nowrap; margin-bottom: 6px; zoom: calc(1 / .9); }
+/* 훈련장 작업 탭(`.tr-tabs` · ADR-0297)도 합류한다 */
+.cx-tabs, .fg-tabs, .tr-tabs { flex: none; flex-wrap: nowrap; margin-bottom: 6px; zoom: calc(1 / .9); }
 /* 고른 칸이 안 보였다 [2026-09-21 사용자 지시] — 공용 `.btn.sm.on` 은 테두리 · 배경이 한 단 밝아질 뿐이다.
    고른 칸 = 왼쪽 메뉴의 고른 칸과 같은 강조색 테두리 + 흰 글씨. 굵기는 안 바꾼다(폭이 흔들린다).
    안 고른 칸은 공용 글자색 그대로다 — 흐리게 하면 못 누르는 칸처럼 보였다(사용자 지시) */
-.cx-tabs .btn.on, .fg-tabs .btn.on { color: var(--text-primary); border-color: var(--text-accent); }
+.cx-tabs .btn.on, .fg-tabs .btn.on, .tr-tabs .btn.on { color: var(--text-primary); border-color: var(--text-accent); }
 .cx-mon {
     display: flex; flex-direction: column; gap: 12px;
     --cx-pad: 0px; --cx-bd: 0px; --cx-split: 8px;
@@ -2095,6 +2102,8 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-input); border: 1px solid var(--border-dark);
 }
 .ix-art.round { border-radius: 50%; }
+/* 전직 스킬 — 그림 칸 바탕만 전직 색이다 (SCREEN_DESIGN §2 「스킬 그림」 · ADR-0301) */
+.ix-art.adv { background: var(--adv-skill-bg); }
 .ix-art img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
 /* 원형 마스크는 가장자리를 잘라낸다 — 몬스터 카드(.face img)와 같은 cover 라야 도감에서 보이는 그대로다 */
 .ix-art.round img { object-fit: cover; }
@@ -3042,6 +3051,12 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .pt-tactics .rs-state { margin-left: 10px; }
 .pt-tactics .rs-roll { margin-top: 0; justify-self: end; }
 .pt-tactics .rs-lock { grid-column: 1 / -1; margin-top: 0; }   /* 잠긴 행은 여는 조건 한 줄 — 첫 세로줄부터 선다 (ADR-0261) */
+/* 리롤 줄 — 전체 리롤 버튼 하나 · 진척 줄과 칸 목록 사이 · 잠금 토글이 선 오른쪽 세로줄 위에 맞춘다 (§15 · R28) */
+.pt-tactics .rs-bar { display: flex; justify-content: flex-end; margin: -3px 0 10px; }
+/* 잠금 토글 — 행의 넷째 칸. 잠근 칸은 버튼이 강조되고 행 왼쪽에 경고색 선이 선다 (`.locked` = 안 열린 칸과는 다른 말이다) */
+.pt-tactics .rs-pin { justify-self: end; }
+.rs-pin.on { color: var(--text-primary); border-color: var(--border-highlight); }
+.rs-cell.held { box-shadow: inset 3px 0 0 var(--color-warning); }
 .pt-tactics .rs-cond, .pt-tactics .rs-eff, .pt-tactics .rs-lock { font-size: var(--fs-xs); }
 /* 「원정 중」 — 도는 원정의 편성 번호에 붙는다. 영웅 띠의 「원정 중」(`.hs-doing.exp`)과 같은 색 */
 .pt-run { margin-left: 6px; font-size: var(--fs-2xs); color: var(--color-warning); }
@@ -3098,6 +3113,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 }
 .rs-grade.magic { color: var(--rarity-magic); }
 .rs-grade.rare { color: var(--rarity-rare); }
+/* 난이도 — 조건 사전의 점수 (§15 · tactic_card_design §5-8). 등급 칩 옆에 잔글씨로 선다 — 어려울수록 굴릴 값의 천장이 높다는 신호다 */
+.rs-score { font-size: var(--fs-xs); color: var(--text-muted); }
 .rs-cell.on .rs-state { color: var(--color-success); }
 
 .rs-cond {
@@ -3109,13 +3126,21 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .rs-cell.on .rs-cnt { color: var(--color-info); }
 .rs-eff { font-size: var(--fs-sm); color: var(--color-info); }
 .rs-lock { font-size: var(--fs-sm); color: var(--color-warning); margin-top: 4px; }
+.rs-cond .no { color: var(--color-error); }   /* 건설 비용 중 모자란 재화 (§13 · R137) */
 .rs-roll { align-self: flex-start; margin-top: 3px; }
+
+/* 훈련장 — 건물 줄(이름 · 짓기 상태 · [건설에서 짓기]) · 훈련 칸은 위 `.rs-grid` / `.rs-cell` 을 빌린다 (SCREEN_DESIGN §16 · ADR-0297) */
+.tr-bld { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.tr-bld b { color: var(--text-primary); }
+.tr-bld .rs-lock { margin-top: 0; }
+.tr-note { margin-top: 14px; }
 
 /* 연구 탭의 위쪽 탭 (ADR-0145) */
 .rs-tabs { margin: 0 0 10px; }
 /* 연구 — 가지 8 열 (SCREEN_DESIGN §13-1 · ADR-0145). **가지 사이에는 선이 없다**(서로 잠그지 않는다) —
    이음선은 열 안에서 위 노드가 아래 노드를 여는 것만 보인다. 열 폭은 `minmax(0, 1fr)` — 영어 이름이 길어도 한 장 폭을 안 넘는다 */
-.rs-tree { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; align-items: start; }
+/* 열 수 = 건물 수(`--rs-n` — 건설 탭이 표의 건물 수를 넣는다 · R137) · 안 지은 탭의 카드 한 장은 기본 10열의 한 칸 폭으로 선다 */
+.rs-tree { display: grid; grid-template-columns: repeat(var(--rs-n, 10), minmax(0, 1fr)); gap: 10px; align-items: start; }
 /* 가지 하나가 카드 하나다 — 노드는 카드 안에 든다 (2026-09-15 사용자 지시 · ADR-0146) */
 .rs-branch {
     display: flex; flex-direction: column; min-width: 0;
@@ -3130,7 +3155,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     font-size: var(--fs-sm); color: var(--text-primary);
     padding: 8px 2px 6px; margin-bottom: 10px; border-bottom: 1px solid var(--border-dark);
 }
-.rs-branch-h .muted { font-size: var(--fs-xs); }
+/* 완료 수 「n / 전체」는 한 덩어리다 — 가지 10 에서 영어 이름이 길어 「0 /」 · 「3」 으로 쪼개졌다(ADR-0297). 줄바꿈은 이름이 받는다 */
+.rs-branch-h .muted { font-size: var(--fs-xs); white-space: nowrap; flex: none; }
 .rs-node { position: relative; }
 .rs-branch .rs-node + .rs-node { margin-top: 16px; }
 .rs-branch .rs-node + .rs-node::before {

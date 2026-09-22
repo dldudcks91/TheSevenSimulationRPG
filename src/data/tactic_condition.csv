@@ -1,0 +1,10 @@
+cond_id,category,polarity,test,arg,n,score,chance,description_kr
+always,always,has,none,-,-,0,1,조건 없음 — 리롤의 바닥값. 점수 0 은 무조건만이다. ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+party_sin_all_diff,party,has,sin_kind,-,3,1,0.71,죄종이 전부 다르면(3종 이상 — 1명짜리 파티가 저절로 켜지 않게 문턱을 둔다) — 시작 파티가 이미 켠다(죄종이 겹치지 않게 뽑힌다). ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+party_cls_same2,party,has,cls_same,-,2,3,0.40,같은 직업 2명 이상 — 시작 로스터(3명)로는 불가라 가운데 점수 밑으로 안 내린다(규칙 ③). ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+party_sin_same3,party,has,sin_same,-,3,5,0.007,같은 죄종 3명 — 로스터가 꽉 차도 셋 중 하나꼴로만 맞춘다. ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+gear_sin3,gear,has,gear_sin,sin,3,3,0.24,파티 장비 이름에 그 죄종이 3개 이상 — 가방을 가득 채워 고르면 대부분 맞춘다. ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+gear_no_sin,gear,not,gear_sin,sin,-,3,0.17,파티 장비에 그 죄종이 하나도 없으면 — 그 죄종 장비를 포기하는 대가. 「없으면」의 효과는 빠진 것을 메우지 않는다(§2-3). ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+leader_cls,leader,has,leader_cls,cls,-,2,-,리더(편성 첫 칸)가 그 직업이면 — 순서만 바꾸면 되므로 「파티에 그 직업이 있으면」과 같은 어려움으로 본다(규칙 ②). ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+front_priest,formation,has,front_cls,priest,-,3,-,전열에 사제가 있으면 — 역할과 반대 배치라 한 단 올렸다(규칙 ⑤). ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+bond_100,bond,has,together,-,100,4,-,지금 셋이 같이 나간 런이 100회 이상 — 확률이 아니라 시간(런 한 번 2~4분이면 약 5시간). ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)

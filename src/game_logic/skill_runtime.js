@@ -13,13 +13,15 @@
  *   · 회복 밑수는 마법 공격력 **범위** (battle_design §9-1 · §9-2) — **시전마다 양을 한 번 굴린다**(rng 1회 · R90). 능력치 계수(`statMult`)를 곱한다(2026-09-18 — ~~능력치 항 `flat` 을 더한다~~).
  *     받는 쪽의 **체력 회복 +%**(갑옷 나태 · 2026-09-18)가 그 대상만 늘린다
  *   · **스킬 계수** (skill_design §13 · 2026-09-10) — 시전 순간 `SK.scaleDef(def, u.stats)` 로 실효 정의를 한 번 만들고
- *     대상 표·회복·버프·소환이 전부 그것을 읽는다. 쿨은 원값이다(`cool_sec` 은 슬롯이 못 민다 — §13-1)
+ *     그 **하는 일 줄**(시전 단위 `x`)을 차례로 실행한다 — 대상 표·회복·버프·소환이 전부 `x` 를 읽는다. 쿨은 원값이다(`cool_sec` 은 슬롯이 못 민다 — §13-1)
+ *   · **하는 일은 표가 실행한다** [2026-09-22 · R136 · PLAN_skill_structure] — `skill_effects.js:EFFECT_TYPES[x.effect].run`. ~~`kind` 로 가르던 if 사슬~~ 은 없다.
+ *     `castHeal` · `castBuff` · `castSummon` · `castCall` 은 **시전 단위 하나**를 받는다(줄 + 스킬 id · 대상 + 걸린 효과를 푼 값) — 계산 · rng · 이벤트는 그대로다
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   사건 훅(`reactions`)은 **발화 지점만** 있고 등록하는 소비자가 아직 없다 — 마스터리 T3 자리 (skill_design §5).
  */
 
-import { ATTACK_TARGETS, EFFECTS, refreshDerived } from './skill_effects.js';
+import { EFFECT_TYPES, EFFECTS, refreshDerived } from './skill_effects.js';
 
 /**
  * 사건 훅 — 유닛이 든 `reactions: [{on, fn}]` 를 **배열 순서대로** 부른다. 등록이 없으면 아무 일도 없다.
@@ -91,7 +93,7 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * 대상 풀 — heal · buff · aura 가 공유한다. **전부 결정론이라 rng 를 한 번도 안 쓴다**
+     * 대상 풀 — heal · apply(버프 · 적에게 거는 창 · 오오라)가 공유한다(`def.target` — 시전 단위가 든 스킬 대상). **전부 결정론이라 rng 를 한 번도 안 쓴다**
      *   (INTERFACE §5-2 — 대상 선택이 굴림을 쓰는 것은 공격 표의 순환·연쇄 둘뿐이다).
      *   `ally_single`    HP **비율** 최저 아군 [사용자 확정 2026-09-09] — 절대량이 아니라 비율이라 탱커가 안 독점한다
      *   `party_adjacent` `party` 배열의 양 옆(자기 제외) — 위치 개념 미확정의 임시 규칙 (skill_design §7)
@@ -122,7 +124,7 @@ export function createSkillRuntime(ctx) {
     /**
      * 회복 — 마법 공격력 **굴림** × 배율 **× 능력치 계수**. 대상은 `targetsOf` 가 정한다(결정론). **rng 1회** —
      * 시전 한 번에 한 번 굴려 대상 전원이 같은 양을 받는다 (battle_design §9-1 · §9-2 · R90).
-     * `def` 는 `scaleDef` 를 지난 실효 정의다 — 원시 정의가 와도 `statMult` 는 1 로 읽는다 (2026-09-18 — ~~`+ flat`~~)
+     * `def` 는 `scaleDef` 가 낸 시전 단위(`heal` 줄)다 — `statMult` 가 없으면 1 로 읽는다 (2026-09-18 — ~~`+ flat`~~)
      */
     function castHeal(u, def, t) {
         const matk = u.matkMin + rng() * (u.matkMax - u.matkMin);   // 회복량 굴림 — 대상 선택 앞 · 양끝이 같아도 1회 (R90)
@@ -140,7 +142,8 @@ export function createSkillRuntime(ctx) {
      * 버프 창 — 중첩 없음, 같은 스킬 재시전은 `until` 갱신. 창 밖에 만들 것이 있는 효과는 표의 `apply` 가 한다.
      * **적에게도 건다** — `target` 이 `enemy_*` 면 음수 값의 디버프다 [사용자 확정 2026-09-09].
      * 창에 함께 싣는 둘 — `element`(평타 부여가 무슨 원소로 때리나) · `by`(지목한 자가 누구인가).
-     * `def` 는 `scaleDef` 를 지난 실효 정의다 — 창의 `v`·`until` 이 능력치로 민 값이다 (2026-09-10)
+     * `def` 는 `scaleDef` 가 낸 시전 단위(`apply` 줄)다 — **걸린 효과를 푼 값**이라 창의 `stat`·`v`·`until`·`element` 가 그 행이고(`v`·`until` 은 능력치로 민 값 · 2026-09-10),
+     *   창의 열쇠는 **거는 스킬 id**(`def.id`)다 — 같은 스킬 재시전 = 갱신 · 다른 스킬의 같은 능력치 = 덧셈 (2026-09-22 · S2-a)
      */
     function castBuff(u, def, t) {
         const targets = targetsOf(u, def);
@@ -249,13 +252,11 @@ export function createSkillRuntime(ctx) {
         hooks.emit('cast', u, { t, def });
         // 실효 정의 — **시전 순간 시전자 능력치로 한 번** 민다 (skill_design §13 · 2026-09-10). 전투와 설명창이 같은 함수다.
         //   쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
-        //   능력치 계수는 몬스터가 안 탄다 — `noStatMult`(보류 · 2026-09-18 · GAME_DESIGN §10)
-        const eff = SK.scaleDef(def, u.stats ?? null, { noStatMult: u.noStatMult });
-        if (def.kind === 'attack') ATTACK_TARGETS[def.target](rt, u, eff, foes);
-        else if (def.kind === 'heal') castHeal(u, eff, t);
-        else if (def.kind === 'summon') castSummon(u, eff, t);
-        else if (def.kind === 'call') castCall(u, eff, t);
-        else castBuff(u, eff, t);   // buff — 아군 창도 적에게 거는 창도 여기다 (aura 는 액티브 칸에 없다)
+        //   능력치 계수는 영웅 · 몬스터가 같이 탄다 (2026-09-22 — 보류 해제 · battle_design §9-2)
+        const eff = SK.scaleDef(def, u.stats ?? null);
+        // 하는 일 줄을 `seq` 순으로 — 실행은 하는 일 표가 든다 (2026-09-22 · R136). 버프는 아군 창도 적에게 거는 창도 `apply` 다
+        //   (오오라는 액티브 칸에 없다 · 사건 스킬은 조건이 늘 거짓이라 여기 안 온다). ⚠ 1단계는 줄이 하나다 — 로더가 강제한다
+        for (const x of eff.effects) EFFECT_TYPES[x.effect].run(rt, u, x, t, foes);
     }
 
     /**

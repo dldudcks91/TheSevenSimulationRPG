@@ -19,6 +19,7 @@ import { createItemSystem } from '../game_logic/item.js';
 import { createBattleSystem } from '../game_logic/battle.js';
 import { createSkillSystem } from '../game_logic/skill.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
+import { createConstruction } from '../game_logic/construction.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createGameSystem } from '../game_logic/state.js';
 
@@ -41,7 +42,9 @@ export const D = {
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
     weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 본편 열 전부(staff·orb·crucifix·bible·crossbow 2026-09-14) · 확장 dagger·scythe 는 없다
-    skillRows: [],            // skill.csv 원시 행 — 정규화·검증은 game_logic/skill.js
+    skillRows: [],            // skill.csv 원시 행 — 스킬마다 하나뿐인 것. 정규화·검증은 game_logic/skill.js
+    skillEffectRows: [],      // skill_effect.csv 원시 행 — 스킬이 하는 일(한 줄에 하나 · 2026-09-22)
+    skillStatusRows: [],      // skill_status.csv 원시 행 — 걸린 효과(버프 · 디버프 · 오오라가 거는 창 · 2026-09-22)
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
     heroTiers: [],            // hero_tier.csv — [{id, weight, totalMin, totalMax, shape, color, ko, en, desc:{ko,en}}] · 굴림 SSOT + 화면 표기
@@ -51,9 +54,11 @@ export const D = {
     gatherNodes: [],          // gather_node.csv — 채집의 **단계 7** · 같은 모양이고 산출물만 약초다 (yieldKo/yieldEn) · tier 순 ⚠임시
     logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
     makeRecipes: {},          // make_recipe.csv — {part: {ore, timber, dust}} · 제작 필요량 ⚠임시 (item_design §7-1 · R96)
-    potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, craftable, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103)
+    potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103) · 만들 수 있는 단계는 제련소 랭크(R137)
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
-    tacticOptions: [],        // tactic_option.csv 원시 행 — **`(option_id, grade)` 복합키** 1행 = 가족 하나의 등급 하나
+    tacticOptions: [],        // tactic_option.csv 원시 행 — 1행 = 옵션 하나(조건 id + 인자 + 능력치 + 기준값) · ~~`(option_id, grade)` 복합키~~ 2026-09-22 폐지
+    tacticConditions: [],     // tactic_condition.csv 원시 행 — 조건 사전 · 점수 ⚠임시 (tactic_card_design §5-8 · R134)
+    tacticScores: [],         // tactic_score.csv 원시 행 — 점수 하나 = 등급별 배수 ⚠제안 (§5-8)
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
@@ -72,6 +77,11 @@ export const D = {
     searchAnswers: [],        // search_answer.csv 원시 행 — 만남의 답. `need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)
     heroUniqueCandidates: [], // hero_unique_candidates.csv 원시 행 — 유니크 영웅 후보 풀(hero_design §1). ⚠임시 —
                               //   `status`(confirmed/proposed) 대부분이 proposed. 아직 소비하는 화면·로직 없음(2026-09-10 논의 자료)
+    // 건설 표 넷 — 원시 행 그대로 넘긴다. 검증 · 셈은 game_logic/construction.js (construction_draft §11 · 2026-09-22 · R137)
+    buildingRows: [],         // building.csv — 건물마다 한 줄 (이름 · 붙는 탭 · 시작 랭크 · 순서)
+    buildingRankRows: [],     // building_rank.csv — 건물 × 랭크마다 한 줄 (문턱 · 비용)
+    buildingEffectRows: [],   // building_effect.csv — 여는 것 **한 줄에 하나** (켜기 · 더하기)
+    researchRows: [],         // research.csv — 연구 항목 (지금은 머리줄뿐 — 항목은 나중에)
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
@@ -87,11 +97,12 @@ export let SYS = null;
 
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
-    'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
+    'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
-    'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc'];
+    'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
+    'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -101,13 +112,14 @@ export async function loadData(base = './data/') {
     // 원문 보관 — 골든 스냅샷이 파일별 해시를 뜬다 (dev/golden.js). 파싱 전이라 컬럼 추가·행 순서도 걸린다
     FILES.forEach((f, i) => { D.csvText[f] = texts[i]; });
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
-        weaponGroup, skillRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
+        weaponGroup, skillRow, skillEffectRow, skillStatusRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
-        armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow] = texts.map(parseCsv);
+        armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
+        tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -196,10 +208,15 @@ export async function loadData(base = './data/') {
     D.weaponSinOptions = weaponSinOptionRow.map(r => ({ sin: r.sin, appliesTo: r.applies_to, stat: r.stat, scale: r.scale, min: r.min, max: r.max }));
     D.weaponCommonOptions = weaponCommonOptionRow.map(r => ({ family: r.family, stat: r.stat, appliesTo: r.applies_to, scale: r.scale, min: r.min, max: r.max }));
     D.skillRows = skillRow;
+    D.skillEffectRows = skillEffectRow;
+    D.skillStatusRows = skillStatusRow;
     D.skillTagRows = skillTagRow;
     D.masteryNodes = masteryNode;
     D.tacticSlots = tacticSlot;
     D.tacticOptions = tacticOption;
+    // 조건 사전 · 점수 × 등급 배수 — 옵션 값 = 기준값 × 배수(조건의 점수, 등급) (tactic_card_design §5-8 · 2026-09-22 · R134). 검증은 game_logic/tactic.js
+    D.tacticConditions = tacticConditionRow;
+    D.tacticScores = tacticScoreRow;
     // 의뢰 — 두 표가 층을 나눈다. **유형 둘은 확정 기획**(GAME_DESIGN §9 09-07 「의뢰는 목표형」)이고,
     // 게시판 행(commission)은 ⚠임시다 — 보상·목표가 미정이라 mine_node 와 같은 자리채움이다.
     // ⚠ 09-07 전면 개정 — ~~4종(사냥·파견·약탈·보호)~~ 은 「전장을 여는 의뢰」를 전제한 모델이라 통째로 폐기됐다.
@@ -242,7 +259,7 @@ export async function loadData(base = './data/') {
     // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
     D.potions = potionRow.map(r => ({
         id: r.potion_id, kind: r.kind, tier: r.tier, ko: r.name_kr, en: r.name_en,
-        heal: r.heal, craftGold: r.craft_gold, craftable: r.craftable === 1, startOwned: r.start_owned,   // startOwned = 시작 개수(R124 · 2026-09-21 — 전엔 0/1)
+        heal: r.heal, craftGold: r.craft_gold, startOwned: r.start_owned,   // startOwned = 시작 개수(R124 · 2026-09-21 — 전엔 0/1) · ~~craftable~~ 은 2026-09-22 삭제 — 단계는 제련소 랭크가 연다(R137)
     }));
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
@@ -282,6 +299,11 @@ export async function loadData(base = './data/') {
     // ⚠ **행 순서는 따로 들고 간다** — `Object.keys` 는 `'3'` 같은 정수형 키를 맨 앞으로 끌어올려서
     //   CSV 의 첫 행(기본값)을 못 줄 수 있다. 「첫 행이 기본값」은 표가 정하는 규칙이라 배열로 보존한다
     D.formationTplOrder = formationTplRow.map(r => r.tpl_id);
+    // 건설 — 원시 행 그대로(수색 이야기와 같은 취급). 여기서 가공하면 구조가 두 곳에 생긴다 (R137)
+    D.buildingRows = buildingRow;
+    D.buildingRankRows = buildingRankRow;
+    D.buildingEffectRows = buildingEffectRow;
+    D.researchRows = researchRow;
 
     SYS = buildSystems(D);
     return D;
@@ -410,8 +432,10 @@ export function buildSystems(d) {
     // 스킬은 정의만 든다(무상태) — 실행은 battle, 배정은 state 가 partyUnits 를 만들 때 부른다.
     // **hero 보다 먼저** 만든다: 영웅이 생성 시 고유 스킬을 굴리려면 후보 id 목록이 먼저 있어야 한다
     // attributes — 스케일링 슬롯 attr 의 어휘(hero_attribute.csv). 로드 검증이 오타를 잡는다 (skill_design §13-1 · 2026-09-10 R72)
+    // 스킬 표는 셋이다 — 스킬 · 하는 일 · 걸린 효과 (2026-09-22 · R136 · INTERFACE §2-8)
     const skill = createSkillSystem({
-        balance: d.balance, rows: d.skillRows ?? [], tagRows: d.skillTagRows ?? [], attributes: d.heroAttributes ?? [],
+        balance: d.balance, rows: d.skillRows ?? [], effectRows: d.skillEffectRows ?? [], statusRows: d.skillStatusRows ?? [],
+        tagRows: d.skillTagRows ?? [], attributes: d.heroAttributes ?? [],
     });
     /**
      * 직업 풀 `{classId: [skillId...]}` — **1스킬 = 1직업** (skill_design §12-1 확정 2026-09-08).
@@ -428,7 +452,7 @@ export function buildSystems(d) {
         heroFaces: M.HERO_FACES,
         // 등급 표 — **행 순서가 결정론 계약이다** (INTERFACE §5-2). weight 0(유니크)은 굴림에서 빠진다.
         // 등급이 정하는 것은 총합 대역과 분포 모양 둘뿐이고 상한은 전 영웅 공통이다 (hero_design §1 · §4-3)
-        heroTiers: D.heroTiers,
+        heroTiers: d.heroTiers,   // 인자 `d` 에서 읽는다 — 전역 `D` 를 읽으면 테스트가 바꿔 끼운 표가 조용히 무시됐다 (2026-09-22 · 부채 #58)
         // 고유 스킬 풀 — **직업별**이다 (skill_design §12-1 규칙 1). hero 는 skill 시스템이 아니라 id 목록을 받는다
         skillPool: classSkills,
     });
@@ -446,14 +470,20 @@ export function buildSystems(d) {
         classSkills,
     });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
+    // 표가 셋이다 — 조건 사전(점수) · 옵션(조건 + 능력치 + 기준값) · 점수 × 등급 배수 (tactic_card_design §5-8 · 2026-09-22 · R134)
     const tactic = createTacticSystem({
         slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: d.classes,
-        skillSystem: skill,
+        conditions: d.tacticConditions ?? [], scores: d.tacticScores ?? [],
         // 등급 가중치 — 리롤이 옵션과 등급을 같이 굴린다 (tactic_card_design §5-5). 값은 CSV
         gradeWeights: {
             common: d.balance.tactic_grade_weight_common,
             magic: d.balance.tactic_grade_weight_magic,
             rare: d.balance.tactic_grade_weight_rare,
+        },
+        // 전체 리롤 비용 — 기본가 × 배수 ^ 잠근 칸 수 (tactic_card_design §5-6 · 2026-09-22). 값은 CSV
+        rerollCost: {
+            base: d.balance.tactic_reroll_base_cost,
+            lockMult: d.balance.tactic_reroll_lock_mult,
         },
     });
     const battle = createBattleSystem({
@@ -466,8 +496,15 @@ export function buildSystems(d) {
         //   이고 `slots` 는 `monster.csv:wear_slots` 어휘 검증용이다
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
     });
+    // 건설 — 표 넷이 무엇을 여는지 정하고 이 시스템은 센다 (construction_draft §11 · INTERFACE §2-14 · R137).
+    //   비용이 적을 수 있는 재화 = 자원 셋 + 제작 재료(파견처 산출물 id — 공급은 파견이 한다 · 미구현)
+    const construction = createConstruction({
+        buildings: d.buildingRows ?? [], ranks: d.buildingRankRows ?? [], effects: d.buildingEffectRows ?? [], research: d.researchRows ?? [],
+        stageIds: d.stageOrder ?? [], balance: d.balance,
+        resources: ['gold', 'dust', 'stigma', ...[d.mineNodes, d.gatherNodes, d.logNodes].flatMap(ns => (ns ?? []).map(n => n.yieldId))],
+    });
     const game = createGameSystem({
-        hero, item, battle, skill, tactic, balance: d.balance,
+        hero, item, battle, skill, tactic, construction, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
         // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
@@ -484,5 +521,5 @@ export function buildSystems(d) {
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
-    return { hero, item, battle, skill, tactic, game, naming, formula: createFormula(d.balance) };
+    return { hero, item, battle, skill, tactic, construction, game, naming, formula: createFormula(d.balance) };
 }

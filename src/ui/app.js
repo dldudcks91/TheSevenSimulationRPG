@@ -53,7 +53,7 @@ import * as M from './mock.js';
 import { t, L, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
 import { bindTipNode, hideTip, heroTipCard, skillTipCard, skillTipSection, skillLineHtml, stagePoint, rangeText, attrRowsHtml, sheetRowsHtml, sheetPages, codexMonsterTipCard } from './tip.js';
-import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageStory, fillStory, stageBgOf, chapterOf, codexStages, skillInfo, skillTagName, potionInfo } from './data.js';
+import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageStory, fillStory, stageBgOf, chapterOf, codexStages, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadCloudLink, writeCloudLink, clearCloudLink, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
 import { makeRng } from '../game_logic/rng.js';
@@ -259,7 +259,8 @@ const itemImg = it => {
 //   전투 준비(파티 · 진형 · 물약 칸 · 파티 전술)가 여기 하나로 모인다 — 출정 창은 만들어 둔 편성을 고르기만 한다(ADR-0193)
 // **건설**(옛 연구)이 캐릭터 바로 뒤로 왔다 [2026-09-21 사용자 지시 · SCREEN_DESIGN §13 · ADR-0253] — 위 「산출을 먹는 연구가 이어진다」는 이로써 버려졌다.
 //   바뀐 것은 화면 이름과 자리뿐이다 — id `research`(`?tab=research`) · `nav.research` · `rs.*` 키 · `mock.js:RESEARCH` 는 옛 이름 그대로
-const TABS = ['expedition', 'party', 'character', 'research', 'forge', 'tavern', 'shop', 'resource', 'explore', 'codex', 'help'];
+// **훈련장**이 선술집 바로 뒤에 선다 [2026-09-22 사용자 지시 · SCREEN_DESIGN §16 · ADR-0297] — 탭 11 → 12. 영웅을 들이고(선술집) 키운다(훈련장)
+const TABS = ['expedition', 'party', 'character', 'research', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'help'];
 
 /* 파견 목록 — **카드 3** (SCREEN_DESIGN §8 개정 2026-09-04 사용자 지시: 채광 · 채집 · 벌목).
    담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
@@ -309,6 +310,8 @@ const state = {
     codexGrade: 'normal',
     // 아이템 세그먼트의 안쪽 분류 (SCREEN_DESIGN §9-1 · ADR-0179) — weapon | armor. 장신구는 armor 쪽 부위 묶음에 든다 · 세이브 아님
     codexItemSeg: 'weapon',
+    // 스킬 세그먼트의 직업 탭 (SCREEN_DESIGN §9-1 · ADR-0299) — 직업 id · null 이면 `class.csv` 첫 행 · 세이브 아님
+    codexSkillSeg: null,
     roll: 1, candidates: [], confirmOverwrite: false,
     // 보관의 「고르는 중」 [2026-09-21 · ADR-0184] — [분해]로 들어가고 [분해하기] · [취소]로 나온다.
     // 고르는 동안 칸 클릭은 **체크를 토글할 뿐**이라 오클릭이 파괴가 되지 않는다 — 옛 `salvageMode` 는 클릭이 곧 분해였다.
@@ -325,11 +328,10 @@ const state = {
     makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 · 'potion' 이면 물약 칸 (SCREEN_DESIGN §8-2 · ADR-0219)
     makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
+    trainingTab: 'train',        // 훈련장의 작업 탭 — 'train' | 'adv'(전직 = 혈통의 전당) (SCREEN_DESIGN §16 · ADR-0297 · `?tr=` 로도 연다)
     shopTab: 'equip',            // 상단의 목록 탭 — 'equip' | 'mat' (SCREEN_DESIGN §8-3 · ADR-0223 · `?sh=` 로도 연다)
     shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · 방문 회차가 넘어가면 풀린다
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
-    researchLayout: 'col',       // ⚠ 연구 배치 비교 — 'col'(세로) | 'row'(가로). 하나로 정해지면 걷는다 (§13-1 · `?rsl=` 로도 연다)
-    researchPick: null,          // 가로 배치에서 고른 노드 id — 없으면 첫 열린 노드 (§13-1)
     battle: null,           // {result, stageId} — 관전 재생 중인 전투
     // 편성 패널이 연 스테이지 (SCREEN_DESIGN §4-1) — null 이면 패널이 없다. 지역을 눌러야 열린다(자동으로 열지 않는다)
     expStage: null,
@@ -372,8 +374,10 @@ function renderShell() {
 
     const nav = $('.nav');
     nav.innerHTML = '';
+    // 안 지은 건물의 탭은 흐리다 [2026-09-22 · R137 · SCREEN_DESIGN §1] — 눌러도 그 탭으로 간다(본문은 `render` 가 고른다) · 판정은 `constructionState.tabs`
+    const tabOpen = !pre && G ? SYS.game.constructionState(G).tabs : {};
     if (!pre) for (const id of TABS) {
-        const b = el('button', id === state.tab ? 'on' : '', t(`nav.${id}`));
+        const b = el('button', `${id === state.tab ? 'on' : ''}${tabOpen[id] === false ? ' dim' : ''}`, t(`nav.${id}`));
         // 탭을 떠나면 **고르는 중 · 잠그는 중이 풀린다** [ADR-0184 · ADR-0207] — 모드 상태가 화면 밖으로 새지 않는다
         b.onclick = () => { state.tab = id; clearBagSel(); render(); };
         nav.appendChild(b);
@@ -422,6 +426,7 @@ function render() {
     if (!authenticated) renderLogin(main);
     else if (state.screen === 'prologue' && G) renderPrologue(main);
     else if (state.screen === 'start' || !G) renderStart(main);
+    else if (unbuiltOf(state.tab)) renderUnbuilt(main, unbuiltOf(state.tab));   // 안 지은 건물의 탭 — 그 건물 카드 (§1 · §13 · R137)
     else ({
         // 키 순서 = 탭 바 순서 (TABS) — 읽는 사람이 화면과 대조할 수 있게 맞춰 둔다
         expedition: renderExpedition,
@@ -429,6 +434,7 @@ function render() {
         character: renderCharacter,
         forge: renderForge,
         tavern: renderTavern,
+        training: renderTraining,
         shop: renderShop,
         resource: renderResource,
         explore: renderExplore,
@@ -1003,6 +1009,8 @@ function renderExpedition(main) {
         main.appendChild(page);
         stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
+            // 반복 원정의 다음 출발 시각 — 결과 띠가 남은 초를 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300)
+            restartAt: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now())?.at ?? null,
             combatOf, itemOf, itemTipOf: (h, it) => equippedItemTipCard(h, it),
             // 몬스터 툴팁의 장비 칸 — 같은 「착용 중」 카드이되 숫자는 **그 몬스터 기준**이라 재생기가 문맥을 넘긴다 (ADR-0183).
             //   세이브 밖 개체(`round` 이벤트의 `gear`)라 uid 로 못 찾는다 — 개체를 그대로 받는다
@@ -1018,7 +1026,7 @@ function renderExpedition(main) {
             layout: state.btLayout, onLayout: v => { state.btLayout = v; },
             now, frozenMs: FROZEN_GAP_MS,   // 시각은 실제로 흐른 시간이 민다 · 문턱을 넘은 공백은 밀지 않는다 (ADR-0102)
             // 라운드 넘기기 — 재생기가 시각을 밀기 **전에** 부른다: 그 시각까지 끝난 라운드를 정산하고 다음 라운드를 붙인다 (R89)
-            onTime: tNow => advanceBattle(state.battle, tNow, now()),
+            onTime: (tNow, speed) => advanceBattle(state.battle, tNow, now(), speed),
             // 재생이 런의 끝에 닿았다 — 상단 세그먼트만 갈아 끼워 관전 칸을 「전투 종료」로 (ADR-0147). 재생기를 걷지 않는다 —
             //   다시 그리면 아레나 · 로그 · 결과 띠가 통째로 다시 선다(라운드 정산이 보관 칸만 갈아 끼우는 `refreshBattleSide` 와 같은 길)
             onOver: () => $('.tab-seg')?.replaceChildren(expNavBox('over')),
@@ -1037,7 +1045,9 @@ function renderExpedition(main) {
                 // 재생기를 먼저 걷는다 — 반복으로 이어지는 런은 배속 · 판을 잇고 시각만 0 에서 시작한다 (§4 · ADR-0102)
                 const pos = stopBattle ? stopBattle() : state.battle?.resume;
                 stopBattle = null;
-                if (auto && G.run?.repeat && result.won) runBattle(stageId, { resume: { ...pos, t: 0, wall: now(), auto: false }, preset: G.run.preset });
+                // 다음 출발은 `game.nextRepeat` 가 정한다 — 끝난 순간 + [balance.csv:repeat_restart_sec] (ADR-0300). 세기가 끝나 부른 것(`auto`)일 때만 나간다
+                const nx = auto ? SYS.game.nextRepeat(G, state.battle?.endedAt ?? now()) : null;
+                if (nx) runBattle(nx.stageId, { at: nx.at, resume: { ...pos, t: 0, wall: nx.at, auto: false }, preset: nx.preset });
                 // 반복이 안 이어지면 출정이 끝난 것이다 — ~~아웃된 영웅을 낫게 하는 일~~ 은 2026-09-08 폐기(§1-1 개정).
                 //   리포트로 가는 것은 띠의 [리포트 보기](`auto` 가 아니다)뿐이다 — 세던 도중 반복을 껐으면 관전에 남는다 [2026-09-15 사용자 지시 · ADR-0140]
                 else {
@@ -1485,11 +1495,17 @@ function potionBox(ps) {
 function tacticsBlock() {
     const ts = SYS.game.tacticState(G);
     const next = ts.slots.find(s => !s.open);
-    /** 리롤 — 거절 사유는 state 가 코드로 낸다 (INTERFACE §3) */
-    const reroll = no => {
-        const r = SYS.game.rerollTactic(G, no);
-        if (r.ok) { flash('rs.reroll.done', { o: `${condText(r.option)} → ${optionEffect(r.option)}` }); save(); }
+    /** 전체 리롤 — 열렸고 안 잠긴 칸을 한 번에 (tactic_card_design §5-6 · R28). 거절 사유는 state 가 코드로 낸다 (INTERFACE §3) */
+    const reroll = () => {
+        const r = SYS.game.rerollTactic(G);
+        if (r.ok) { flash('rs.reroll.done', { n: r.rolled.length }); save(); }
         else flash(`pt.err.${r.err}`);
+        render();
+    };
+    /** 잠금 — 무료 · 언제든 푼다. 결과는 자물쇠 버튼과 리롤 비용이 말하므로 플래시가 없다 */
+    const lock = no => {
+        const r = SYS.game.toggleTacticLock(G, no);
+        if (r.ok) save(); else flash(`pt.err.${r.err}`);
         render();
     };
     const box = el('div', 'pt-tactics');     // 오른쪽 열 — 왼쪽 열과는 세로 가림선 하나 (ADR-0260)
@@ -1497,11 +1513,19 @@ function tacticsBlock() {
     box.appendChild(el('div', 'rs-head', `
         <span>${t('rs.total')} <b>${ts.totalLevel}</b></span>
         <span>${t('rs.open')} <b>${ts.open}</b> <span class="muted">/ ${ts.count}</span></span>
+        <span>${t('rs.lockedN')} <b>${ts.lockedCount}</b></span>
         <span class="muted">${next
-            ? t('rs.next', { no: next.no, n: next.unlockTotalLevel - ts.totalLevel })
+            ? needText('tactic_slots', next.no)       // 다음 칸 — 지을 지휘 천막 랭크 (R137 · ~~합산 레벨까지 남은 양~~)
             : t('rs.allOpen')}</span>`));
+    // 리롤 줄 — 버튼 하나 · 비용은 잠근 칸 수가 정하고 버튼에 적는다. 굴릴 칸이 없으면(전부 잠금) 꺼진다 — 골드 부족은 눌러서 사유를 듣는다 (§15)
+    const bar = el('div', 'rs-bar');
+    const b = el('button', 'btn sm rs-roll', t('rs.reroll', { g: ts.rerollCost.toLocaleString() }));
+    b.disabled = !ts.slots.some(s => s.open && !s.locked);
+    b.onclick = reroll;
+    bar.appendChild(b);
+    box.appendChild(bar);
     const grid = el('div', 'rs-grid');
-    for (const slot of ts.slots) grid.appendChild(tacticCell(slot, reroll));
+    for (const slot of ts.slots) grid.appendChild(tacticCell(slot, lock));
     box.appendChild(grid);
     return box;
 }
@@ -1547,7 +1571,8 @@ function levelRow(z) {
     const label = el('span', 'lv-h', t('exp.level.h'));
     label.title = t('exp.level.tip');
     head.appendChild(label);
-    head.appendChild(el('span', 'lv-range', t('exp.level.range', { min: s.base, max: s.max })));
+    // 안 열렸으면 범위 자리에 **지을 건물**을 찍는다 — 버튼 줄은 그대로 서고 전부 흐리다(max = base) · 창 크기가 안 흔들린다 (R137)
+    head.appendChild(el('span', 'lv-range', s.open ? t('exp.level.range', { min: s.base, max: s.max }) : needText('stage_level')));
     box.appendChild(head);
     const set = lv => {
         const r = SYS.game.setStageLevel(G, z.stage_id, lv);
@@ -1587,8 +1612,11 @@ function goBox(z) {
     side.appendChild(el('div', 'down exp-warn', { noParty: t('exp.noParty'), searching: t('exp.departSearching') }[perr] ?? ''));
 
     const actions = el('div', 'form-actions');
-    const rep = el('button', `btn lg toggle${state.expRepeat ? ' on' : ''}`, t('exp.repeat'));
+    // 반복 원정은 원정 건물이 연다(처음부터 지어짐) — 안 열렸으면 흐리고 누르면 지을 건물을 말한다 (R137)
+    const repOpen = SYS.game.hasFeature(G, 'repeat');
+    const rep = el('button', `btn lg toggle${state.expRepeat && repOpen ? ' on' : ''}${repOpen ? '' : ' dim'}`, t('exp.repeat'));
     rep.onclick = () => {
+        if (!repOpen) { flashNeed('repeat'); return; }
         state.expRepeat = !state.expRepeat;
         // 이 스테이지가 지금 도는 런이면 곧바로 런에도 옮긴다 — 관전의 자동 진행이 이 값을 읽는다
         if (G.run?.stageId === z.stage_id) { G.run.repeat = state.expRepeat; save(); }
@@ -1659,7 +1687,7 @@ function presetPick() {
     }
     row.appendChild(btns);
     const faces = el('div', 'pk-faces');
-    for (let i = 0; i < D.balance.party_size_max; i++) {
+    for (let i = 0; i < SYS.game.limitsOf(G).party; i++) {
         const h = heroById(cur.party[i]);
         const c = el('div', `pk-face${h ? '' : ' empty'}`);
         if (h) {
@@ -1693,7 +1721,7 @@ function loadBox() {
         if (!s.open || !s.option) continue;
         const row = el('div', `dw-tac-row${s.active ? ' on' : ''}`,
             `<span class="rs-eff">${optionEffect(s.option)}</span>`
-            + (s.option.condKind === 'always' ? '' : `<b class="rs-cnt">${s.have} / ${s.need}</b>`));
+            + condCounter(s.option, s.have, s.need));
         row.title = `${condText(s.option)} · ${t(s.active ? 'rs.on' : 'rs.off')}`;
         tac.appendChild(row);
     }
@@ -1878,7 +1906,7 @@ function contribRowsHtml(list, marks) {
         <span class="v">${sum('kills')}</span></div>`;
     // 빈자리 — 파티 정원까지 **줄만 잡는다**. 인원이 적은 런만 표가 짧아지면 상세가 런마다 흔들린다 (ADR-0086)
     const pad = `<div class="ct-row pad"><span class="n"><span class="hero-face"></span></span><span></span><span></span><span></span></div>`
-        .repeat(Math.max(0, D.balance.party_size_max - rows.length));
+        .repeat(Math.max(0, SYS.game.limitsOf(G).party - rows.length));
     return head + body + pad + total;
 }
 
@@ -1951,10 +1979,13 @@ function runTacticHint(h, it) {
  * **시각을 미는 쪽 둘**(관전 재생기의 `onTime` · 앱 시계 `expTick`)이 시각을 밀기 전에 부른다 — 정산을 부르는 곳은 여기 한 곳이다
  * @returns 정산한 라운드 수
  */
-function advanceBattle(B, tNow, at) {
+function advanceBattle(B, tNow, at, speed = 1) {
     if (!B?.run || B.run.done) return 0;
     // 걸음 — 엔진을 이 시각까지만 민다. 첫머리가 그 순간의 장비 · 스킬 트리로 갈아입히므로 원정 중 교체가 **바꾼 시각에** 먹는다 (R130)
     const n = SYS.game.stepRun(G, B.run, tNow).rounds ?? 0;
+    // 끝난 순간 — 런의 끝에 **처음** 닿은 이 걸음이 적는다 [2026-09-22 · ADR-0300]. 끝을 넘어 민 만큼을 배속으로 되돌려 실제 시각으로 잰다.
+    //   반복의 다음 출발(`game.nextRepeat`)이 이 값에서 센다 — 관전 재생기는 끝난 뒤에도 벽시계를 밀어서 걷을 때의 재생 위치로는 못 되짚는다
+    if (B.run.done && B.endedAt == null) B.endedAt = at - Math.max(0, tNow - runEnd(B)) / speed * 1000;
     if (n) { save(); onRoundsSettled(); }
     return n;
 }
@@ -2004,14 +2035,17 @@ function expTick() {
         const speed = r.speed ?? 1;
         const tNow = r.t + Math.max(0, at - (r.wall ?? at)) / 1000 * speed;
         // 그 시각까지 끝난 라운드를 정산하고 다음 라운드를 붙인다 — 한 눈금에 여러 라운드를 넘을 수 있다(숨긴 탭은 1분에 한 번 깬다 · R89)
-        advanceBattle(B, tNow, at);
+        advanceBattle(B, tNow, at, speed);
         const end = runEnd(B);               // 마지막 라운드가 계산되기 전엔 끝을 모른다(무한대)
         B.resume = { ...r, t: Math.min(end, tNow), wall: at, auto: false };
         if (tNow < end) return;
-        // 끝 — 관전의 `onEnd` 와 **같은 규칙**이다. 어느 탭에서 끝났든 반복 원정이면 다음 런이 출발한다
-        if (G.run?.repeat && B.result.won) {
-            const endedAt = at - (tNow - end) / speed * 1000;   // 이 런이 실제로 끝난 순간 = 다음 런이 출발한 순간
-            runBattle(B.stageId, { at: endedAt, resume: { ...r, t: 0, wall: endedAt, auto: false }, preset: G.run.preset });
+        // 끝 — 반복 원정이면 다음 런은 `game.nextRepeat` 가 정한 시각(끝난 순간 + [balance.csv:repeat_restart_sec])에 나간다.
+        //   관전 결과 띠의 세기와 **같은 답**이다 — 어느 탭에서 끝났든 같은 시각이다 (ADR-0300)
+        const nx = SYS.game.nextRepeat(G, B.endedAt ?? at - (tNow - end) / speed * 1000);
+        if (nx) {
+            // 그 시각 전이면 끝난 런을 붙든 채 기다린다 — `auto` 가 다음 눈금에 이 자리로 다시 데려온다. 기다리는 동안 멈춤이 오면 `closeFrozenRun` 이 반복만 끈다
+            if (at < nx.at) { B.resume = { ...B.resume, auto: true }; return; }
+            runBattle(nx.stageId, { at: nx.at, resume: { ...r, t: 0, wall: nx.at, auto: false }, preset: nx.preset });
             // 관전이 섰으면 재생기가 시계다 · 출발이 거절됐으면 멈춘다. 새 런은 라운드마다 시각을 먹으므로(한 틱 이상) 이어 돌아도 끝없이 돌지 않는다 (R89)
             if (stopBattle || state.battle === B) return;
             continue;
@@ -2159,9 +2193,10 @@ function renderPrologue(main) {
  */
 function heroDoing(h) {
     // 수색이 먼저다 — 나가 있으면 원정에 못 들어가고 싸우는 영웅은 수색에 못 나가므로(state.js:toggleParty · searchSend) 두 상태가 겹칠 수 없다
-    if (G.search?.heroUid === h.uid) return { cls: 'exp', text: t('hs.doing.search') };
-    const out = SYS.game.runParty(G).includes(h.uid);
-    return out ? { cls: 'exp', text: t('hs.doing.expedition') } : { cls: 'idle', text: t('hs.doing.idle') };
+    //   판정은 `game.heroBusy` 하나다 — 편성 · 해고 · 수색이 막는 판정과 같은 답이다 (2026-09-22)
+    const busy = SYS.game.heroBusy(G, h.uid);
+    if (busy === 'search') return { cls: 'exp', text: t('hs.doing.search') };
+    return busy === 'run' ? { cls: 'exp', text: t('hs.doing.expedition') } : { cls: 'idle', text: t('hs.doing.idle') };
 }
 
 /**
@@ -2227,7 +2262,7 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
         c.onclick = () => { if (!formDragEnded) onPick(h); };
         strip.appendChild(c);
     }
-    for (let i = G.heroes.length; i < D.balance.roster_cap; i++) strip.appendChild(el('div', 'hs-card empty', '<span>+</span>'));
+    for (let i = G.heroes.length; i < SYS.game.limitsOf(G).roster; i++) strip.appendChild(el('div', 'hs-card empty', '<span>+</span>'));
     p.appendChild(strip);
     return p;
 }
@@ -2386,18 +2421,19 @@ function skillCards(h) {
  *   ② 마지막 한 명이다 → 같은 꼴(막힘 + [확인] 하나) — 0명이 되면 복구가 막힌다 (INTERFACE §2-7)
  *   ③ 다 벗었다 → 「영웅을 해고합니다」 + **[확인] [취소]** (되돌릴 수 없어서 취소가 눈에 보여야 한다 — §3)
  * ⚠ 옛 판은 막힘 상태에 **버튼이 아예 없어** 창을 X 로만 닫을 수 있었고, 확인 상태에도 취소가 없었다.
- * 판정은 `game_logic` 의 규칙과 **같은 값을 읽는다** — 화면이 규칙을 다시 쓰지 않는다.
+ * **판정은 `game.dismissState` 가 낸다** [2026-09-22 · 부채 #56] — 화면이 규칙을 다시 쓰지 않는다. 막힘은 ①② 말고도
+ *   원정에서 싸우는 중 · 수색 나가 있음 둘이 더 있고, 문장은 결과 코드의 키(`ch.err.<코드>`)다. 옛 판은 장비 · 마지막 한 명만 직접 세어
+ *   원정 · 수색 중인 영웅에게 ③ 을 띄웠고 [확인] 을 누른 뒤에야 거절 플래시가 떴다
  */
 function dismissBody() {
     const h = heroById(state.heroUid);
     const box = el('div', 'dismiss-box');
     if (!h) return box;
-    const worn = Object.values(h.equipped ?? {}).filter(Boolean).length;
-    const last = G.heroes.length <= 1;
+    const { err } = SYS.game.dismissState(G, h.uid);
     const actions = el('div', 'dismiss-actions');
-    if (worn || last) {
-        // 막힘 — 문장 하나 + 닫는 버튼 하나. `ch.err.last` 는 플래시와 같은 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다)
-        box.appendChild(el('div', 'down', t(worn ? 'ch.dismiss.blocked' : 'ch.err.last')));
+    if (err) {
+        // 막힘 — 문장 하나 + 닫는 버튼 하나. 장비만 사용자 지시 문구(`ch.dismiss.blocked`)이고 나머지는 플래시와 같은 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다)
+        box.appendChild(el('div', 'down', t(err === 'equipped' ? 'ch.dismiss.blocked' : `ch.err.${err}`)));
         const ok = el('button', 'btn', t('ui.ok'));
         ok.onclick = closeModal;
         actions.appendChild(ok);
@@ -2621,19 +2657,21 @@ function storageTools(h, where, { showTarget = false } = {}) {
             const lk = el('button', 'btn sm', t('ch.lock.start'));
             lk.onclick = () => { clearBagSel(); state.bagLockMode = true; render(); };
             tools.appendChild(lk);
-            const sv = el('button', 'btn sm', t('ch.sel.start'));
-            sv.onclick = () => { clearBagSel(); state.bagSelMode = true; render(); };
+            // [분해] · [자동 분해]는 제련소가 연다 — 안 지었으면 흐리고 누르면 지을 건물을 말한다 (R137)
+            const canSv = SYS.game.hasFeature(G, 'salvage'), canAu = SYS.game.hasFeature(G, 'auto_salvage');
+            const sv = el('button', `btn sm${canSv ? '' : ' dim'}`, t('ch.sel.start'));
+            sv.onclick = () => { if (!canSv) { flashNeed('salvage'); return; } clearBagSel(); state.bagSelMode = true; render(); };
             tools.appendChild(sv);
             // 자동 분해 — 선이 하나라도 서 있으면 **켜진 모양**이다: 가방이 왜 덜 차는지가 같은 줄에서 읽힌다 (ADR-0203)
             const rule = G.autoSalvage ?? {};
-            const au = el('button', `btn sm toggle${rule.rarity || rule.ilvlBelow > 0 ? ' on' : ''}`, t('ch.auto.btn'));
-            au.onclick = () => openModal('autoSalvage');
+            const au = el('button', `btn sm toggle${canAu && (rule.rarity || rule.ilvlBelow > 0) ? ' on' : ''}${canAu ? '' : ' dim'}`, t('ch.auto.btn'));
+            au.onclick = () => { if (!canAu) { flashNeed('auto_salvage'); return; } openModal('autoSalvage'); };
             tools.appendChild(au);
             tools.appendChild(sortTools('bag'));           // 맨 오른쪽 — 펼치면 그 오른쪽으로 기준이 나온다 (ADR-0242 · ADR-0247)
         }
     }
     const n = where === 'stash' ? (G.stash ?? []).length : G.bag.length;
-    const cap = where === 'stash' ? D.balance.stash_cap : D.balance.inventory_cap;
+    const cap = SYS.game.limitsOf(G)[where === 'stash' ? 'stash' : 'bag'];
     const meta = el('span', 'items-meta muted',
         `${t('ch.items.sub', { n, cap })}${showTarget ? ` · ${t('bt.items.target', { name: L(h.name) })}` : ''}`);
     meta.title = meta.textContent;               // 줄이 좁으면 말줄임으로 양보한다 — 전문은 여기 (ADR-0247)
@@ -2647,11 +2685,12 @@ function storagePanel(h, where, { showTarget = false } = {}) {
     p.appendChild(storageTools(h, where, { showTarget }));
     const uids = where === 'stash' ? (G.stash ?? []) : G.bag;
     const items = uids.map(itemOf).filter(Boolean);
-    const cap = where === 'stash' ? D.balance.stash_cap : D.balance.inventory_cap;
+    const cap = SYS.game.limitsOf(G)[where === 'stash' ? 'stash' : 'bag'];
     // 고르는 중 · 잠그는 중은 같은 파선 테두리를 쓴다 — 「지금 칸을 누르면 장착이 아니다」가 같은 뜻이다 (ADR-0207)
     const moding = state.bagSelMode || state.bagLockMode;
     const grid = el('div', `inv-cells wide${moding ? ' picking' : ''}`);
-    for (let i = 0; i < cap; i++) {
+    // 상한보다 많이 들고 있으면(상한이 줄어든 옛 세이브) **넘친 것도 그린다** — 가방 · 창고는 넘친 채 둔다 (R137 · 새 드롭만 막힌다)
+    for (let i = 0; i < Math.max(cap, items.length); i++) {
         const it = items[i];
         const picked = it && state.bagSel.has(it.uid);
         const cell = el('div', `inv-cell${it ? ' filled' : ''}${picked ? ' picked' : ''}`);
@@ -3001,37 +3040,41 @@ function skillTreeBody() {
     return wrap;
 }
 
-/* ═══════════ 연구 — 파티 전술 (SCREEN_DESIGN §13) ═══════════
-   칸은 **획득물이 아니다**: 합산 레벨이 칸을 열고, 칸에 든 옵션은 골드로 다시 굴린다 (tactic_card_design §5).
+/* ═══════════ 파티 전술 칸 (SCREEN_DESIGN §15) ═══════════
+   칸은 **획득물이 아니다**: 지휘 천막 랭크가 칸을 열고(R137), 칸에 든 옵션은 골드로 다시 굴린다 (tactic_card_design §5).
    판정(열림 · 조건 카운터 · 비용)은 전부 `game.tacticState` 가 실어 온다 — 렌더러는 파티를 세지 않는다. */
 
 /** 조건의 인자 — 죄종 · 스킬 태그 둘 중 하나다. 스킬 태그 이름은 CSV(skill_tag.csv), 문장 틀은 i18n */
-const condArgName = o =>
-    o.condKind === 'affix_sin' ? sinName(o.condArg)
-        : o.condKind === 'skill_tag' ? L(skillTagName(o.condArg)) : '';
-const condText = o => t(`rs.cond.${o.condKind}`, { n: o.condN, a: condArgName(o) });
+/** 조건의 인자 — 장비 죄종은 죄종 이름 · 리더 · 진형은 직업 이름 (CSV 이름을 쓴다 — 조건 사전 §5-8) */
+const condArgName = o => !o.condArg ? '' : o.condKind === 'gear_sin' ? sinName(o.condArg) : className(o.condArg);
+/** 조건 문장 — 문구 키는 조건 어휘(`test`)이고 「없으면」은 `.not` 이 붙는다 (§5-8) */
+const condText = o => t(`rs.cond.${o.condKind}${o.polarity === 'not' ? '.not' : ''}`, { n: o.condN, a: condArgName(o) });
+/** 조건 카운터 「지금 / 필요」 — 무조건은 안 단다(§4 「안 보이면 함정」). 「없으면」은 필요가 0 이다 */
+const condCounter = (o, have, need) => (o.condKind === 'none' ? '' : `<b class="rs-cnt">${have} / ${need}</b>`);
 /** 효과 한 줄 — 축 이름·단위는 `stat` 에서 파생한다 (마스터리 칸과 같은 규칙 · §13) */
 const optionEffect = o => L(M.affixText(o.stat, o.value, statRow(o.stat)));
 
-/** 칸 하나 — 잠긴 칸도 그린다(어디까지 열리는지가 보여야 한다 · §13). 무조건 옵션은 카운터를 달지 않는다 */
-function tacticCell(slot, onReroll) {
-    const c = el('div', `rs-cell${slot.open ? (slot.active ? ' on' : ' off') : ' locked'}`);
-    // 칸 번호는 안 적는다 [2026-09-21 사용자 지시 · ADR-0261] — 세로 목록에서는 행의 순서가 번호다. 잠긴 행은 여는 조건 한 줄뿐
+/** 칸 하나 — 안 열린 칸도 그린다(어디까지 열리는지가 보여야 한다 · §13). 무조건 옵션은 카운터를 달지 않는다.
+ *  열린 칸의 넷째 칸은 **잠금 토글**이다(§15 · R28) — 안 열린 칸의 `.locked` 와 헷갈리지 않게 잠근 칸은 `.held` 로 단다 */
+function tacticCell(slot, onLock) {
+    const c = el('div', `rs-cell${slot.open ? (slot.active ? ' on' : ' off') + (slot.locked ? ' held' : '') : ' locked'}`);
+    // 칸 번호는 안 적는다 [2026-09-21 사용자 지시 · ADR-0261] — 세로 목록에서는 행의 순서가 번호다. 잠긴 행은 **지을 지휘 천막 랭크** 한 줄뿐 (R137)
     if (!slot.open) {
-        c.innerHTML = `<div class="rs-lock">${t('rs.needLv', { lv: slot.unlockTotalLevel })}</div>`;
+        c.innerHTML = `<div class="rs-lock">${needText('tactic_slots', slot.no)}</div>`;
         return c;
     }
     const o = slot.option;
-    const counter = o.condKind === 'always' ? '' : `<b class="rs-cnt">${slot.have} / ${slot.need}</b>`;
+    const counter = condCounter(o, slot.have, slot.need);
     // 등급은 **값만** 가르므로 조건·효과 칸이 아니라 행 머리 — **맨 왼쪽**에 선다 (§15 · ADR-0261 · tactic_card_design §5-5)
     c.innerHTML = `
         <div class="rs-top"><span class="rs-grade ${o.grade}">${t(`rs.grade.${o.grade}`)}</span>
+            <span class="rs-score">${t('rs.score', { n: o.score })}</span>
             <span class="rs-state">${t(slot.active ? 'rs.on' : 'rs.off')}</span></div>
         <div class="rs-cond">${condText(o)}${counter}</div>
         <div class="rs-eff">${optionEffect(o)}</div>`;
-    const b = el('button', 'btn sm rs-roll', t('rs.reroll', { g: slot.cost.toLocaleString() }));
-    b.disabled = G.resources.gold < slot.cost;
-    b.onclick = () => onReroll(slot.no);
+    // 버튼 글은 **누르면 일어날 일**이다(잠그기 / 풀기) — 잠근 상태는 버튼 강조와 행의 `.held` 가 말한다
+    const b = el('button', `btn sm rs-pin${slot.locked ? ' on' : ''}`, t(slot.locked ? 'rs.unlock' : 'rs.lock'));
+    b.onclick = () => onLock(slot.no);
     c.appendChild(b);
     return c;
 }
@@ -3051,126 +3094,169 @@ function todoPanel(titleKey, noteKey) {
 const renderTodo = (main, titleKey, noteKey) => main.appendChild(todoPanel(titleKey, noteKey));
 
 function renderResearch(main) {
-    // 위쪽 탭은 걷었다 [2026-09-21 · ADR-0192 — ADR-0145 의 위쪽 탭을 대체] — 파티 전술은 편성 탭(§15)으로 갔고 연구 탭은 연구 하나다
+    // 위쪽 탭은 걷었다 [2026-09-21 · ADR-0192 — ADR-0145 의 위쪽 탭을 대체] — 파티 전술은 편성 탭(§15)으로 갔고 건설 탭은 건설 하나다
+    const cs = SYS.game.constructionState(G);
     const p = el('div', 'panel page');
-    researchBody(p);
+    p.appendChild(el('div', 'rs-head', `<span>${t('cn.progress', { n: cs.built })} <span class="muted">/ ${cs.total}</span></span>`));
+    const body = el('div', 'box-body');
+    body.dataset.keep = 'research';
+    const tree = el('div', 'rs-tree');
+    tree.style.setProperty('--rs-n', cs.buildings.length);    // 카드가 한 줄에 다 선다 — 열 수 = 표의 건물 수
+    for (const b of cs.buildings) tree.appendChild(buildingCard(b));
+    body.appendChild(tree);
+    p.appendChild(body);
     main.appendChild(p);
 }
 
 /**
- * 연구 — 가지 8 열 · **⚠ 노드는 통째로 목업이다** (SCREEN_DESIGN §13-1 · ADR-0145, 2026-09-15 사용자 지시).
- * 가지 구조만 섰고 노드의 내용 · 비용 · 여는 조건은 기획이 안 정했다 — 값은 `mock.js:RESEARCH` 에서 오고 `SYS.*` 를 하나도 부르지 않는다.
- * **가지 사이에는 선이 없다** — 가지끼리 서로 잠그지 않는다. 선행은 같은 열의 바로 위 노드뿐이고 CSS 이음선(`.rs-node`)이 그것을 보인다.
- * 노드 생김새는 파티 전술 칸과 **같은 것**을 쓴다: 한 탭 안의 두 작업이 다른 카드 문법을 쓰면 같은 화면으로 안 읽힌다.
- * 기획이 확정되면 이 두 함수와 `mock.js:RESEARCH` 를 함께 지우고 상태 함수로 갈아탄다 (DEV_PLAN §4 #27).
+ * 건설 — **표 넷을 그대로 그린다** (SCREEN_DESIGN §13 · ADR-0302 · construction_draft §11 · R137). 건물 하나가 카드 하나 · 카드 안에 랭크가 위에서 아래로.
+ * 판정(조건 · 비용 · 지을 수 있나)은 전부 `game.constructionState` 가 낸다 — 렌더러는 고르고 적기만 한다. 짓기는 `game.construct`.
+ * 생김새는 옛 가지 카드(ADR-0146 · 파티 전술 칸과 같은 칸 문법)를 그대로 쓴다. ~~`mock.js:RESEARCH` 목업 · 세로/가로 배치 비교~~ 는 2026-09-22 걷었다
  */
-function researchBody(p) {
-    const R = M.RESEARCH;
-    const nodes = R.branches.flatMap(b => b.nodes.map(n => ({ ...n, branch: b })));
-    const done = list => list.filter(n => n.state === 'done').length;
-    // 이름이 안 정해진 노드는 「가지 이름 + 번호」 자리표시로 선다 — 조립은 템플릿이 한다(어순은 i18n 이 흡수)
-    const nameOf = n => n.name ? L(n.name) : t('rs.rs.slot', { b: t(n.branch.key), n: n.n });
-    const byId = id => nodes.find(n => n.id === id);
-
-    const layout = state.researchLayout === 'row' ? 'row' : 'col';
-    const head = el('div', 'rs-head', `
-        <span>${t('rs.rs.progress', { n: done(nodes) })} <span class="muted">/ ${nodes.length}</span></span>
-        <span>${t('rs.rs.mat')} <b>${R.material}</b></span>
-        <small class="todo-badge">${t('todo.badge')}</small>`);
-    // ⚠ 배치 비교 토글 — 세로 · 가로 중 하나로 정하기 전까지만 선다. 정해지면 토글과 버린 배치를 함께 걷는다 (§13-1 · 2026-09-15 사용자 지시)
-    const seg = el('div', 'segmented rs-layout');
-    for (const [id, key] of [['col', 'rs.rs.layout.col'], ['row', 'rs.rs.layout.row']]) {
-        const b = el('button', `btn sm${layout === id ? ' on' : ''}`, t(key));
-        b.onclick = () => { state.researchLayout = id; render(); };
-        seg.appendChild(b);
-    }
-    head.appendChild(seg);
-    p.appendChild(head);
-
-    const body = el('div', 'box-body');
-    body.dataset.keep = `research-${layout}`;
-    p.appendChild(body);
-
-    if (layout === 'col') {
-        const tree = el('div', 'rs-tree');
-        for (const b of R.branches) {
-            // 가지 하나가 카드 하나다 — 머리에 건물 그림(⚠ 단색 실루엣 목업) · 이름 · 완료 수, 그 아래 노드 (§13-1 · ADR-0146)
-            const col = el('div', 'rs-branch');
-            const own = nodes.filter(n => n.branch === b);
-            col.appendChild(el('div', 'rs-art', b.art ?? ''));
-            col.appendChild(el('div', 'rs-branch-h',
-                `<span>${t(b.key)}</span><span class="muted">${done(own)} / ${own.length}</span>`));
-            for (const n of own) col.appendChild(researchNode(n, nameOf, byId));
-            tree.appendChild(col);
-        }
-        body.appendChild(tree);
-        return;
-    }
-
-    // 가로 — 가지 한 줄이 카드 하나 · 노드 칸은 이름 · 상태만 · 나머지는 아래 상세 줄 (§13-1 배치 비교)
-    const pick = byId(state.researchPick) ?? nodes.find(n => n.state === 'open') ?? nodes[0];
-    const rows = el('div', 'rs-rows');
-    for (const b of R.branches) {
-        const own = nodes.filter(n => n.branch === b);
-        const row = el('div', 'rs-row');
-        row.appendChild(el('div', 'rs-row-h', `<div class="rs-art">${b.art ?? ''}</div>
-            <div class="rs-row-name"><span>${t(b.key)}</span><span class="muted">${done(own)} / ${own.length}</span></div>`));
-        const track = el('div', 'rs-track');
-        for (const n of own) {
-            const cls = n.state === 'done' ? ' on' : n.state === 'locked' ? ' locked' : '';
-            const c = el('div', `rs-cell rs-node rs-mini${cls}${n.id === pick.id ? ' pick' : ''}`);
-            // 상태 한 줄 — 잠긴 노드에는 비용을 안 찍는다 (§13-1)
-            const s = n.state === 'done' ? `<span class="rs-state">${t('rs.rs.done')}</span>`
-                : n.state === 'open' ? t('rs.rs.cost', { m: n.mat, g: n.gold.toLocaleString() })
-                : t('rs.rs.locked');
-            c.innerHTML = `<div class="rs-no">${nameOf(n)}</div><div class="rs-mini-s">${s}</div>`;
-            c.onclick = () => { state.researchPick = n.id; render(); };
-            track.appendChild(c);
-        }
-        row.appendChild(track);
-        rows.appendChild(row);
-    }
-    body.appendChild(rows);
-    p.appendChild(researchDetail(pick, nameOf, byId));
+function buildingCard(b) {
+    const col = el('div', 'rs-branch');
+    col.appendChild(el('div', 'rs-art', M.BUILDING_ART[b.id] ?? ''));   // ⚠ 단색 실루엣 목업 — 아트가 오면 그림만 갈아 끼운다
+    col.appendChild(el('div', 'rs-branch-h', `<span>${L(b.name)}</span><span class="muted">${b.rank} / ${b.maxRank}</span>`));
+    for (const r of b.ranks) col.appendChild(rankCell(b, r));
+    return col;
 }
 
-/** 가로 배치의 상세 줄 — 고른 노드 하나. 세로 배치의 노드 칸이 드는 것을 한 줄로 편다 (§13-1 배치 비교) */
-function researchDetail(n, nameOf, byId) {
-    const d = el('div', 'rs-detail');
-    d.appendChild(el('b', '', nameOf(n)));
-    d.appendChild(el('span', 'rs-eff', n.gain ? L(n.gain) : t('rs.rs.tbd')));
-    if (n.state === 'done') {
-        d.appendChild(el('span', 'rs-state', t('rs.rs.done')));
-    } else if (n.state === 'locked') {
-        // 잠긴 노드에는 비용 대신 선행 노드를 찍는다 (§13-1)
-        d.appendChild(el('span', 'rs-lock', t('rs.rs.need', { name: nameOf(byId(n.need)) })));
-    } else {
-        d.appendChild(el('span', 'rs-cond', t('rs.rs.cost', { m: n.mat, g: n.gold.toLocaleString() })));
-        const go = el('button', 'btn sm', t('rs.rs.go'));
-        go.onclick = () => { flash('todo.lead'); render(); };   // 목업이라 안내만 — 문구는 기존 키 재사용
-        d.appendChild(go);
-    }
-    return d;
-}
-
-/** 노드 하나 — 파티 전술 칸과 같은 생김새 (§13-1) */
-function researchNode(n, nameOf, byId) {
-    const c = el('div', `rs-cell rs-node${n.state === 'done' ? ' on' : n.state === 'locked' ? ' locked' : ''}`);
+/**
+ * 랭크 칸 하나 — **지음** = 완료 · **다음 랭크** = 조건이 모자라면 모자란 조건, 섰으면 비용 + [건설] · **그 뒤 랭크** = 조건만(비용은 안 찍는다 —
+ * 아직 치를 값이 아니다) · 여는 것이 전부 준비 중이면 「준비 중」(지을 수 없다 · construction_draft §11-5). 여는 것 문장은 표의 줄에서 만든다(§11-6)
+ */
+function rankCell(b, r) {
+    const next = r.rank === b.rank + 1;
+    const pending = !r.effects.some(e => e.live);
+    const c = el('div', `rs-cell rs-node${r.built ? ' on' : next && !pending ? '' : ' locked'}`);
     c.appendChild(el('div', 'rs-top',
-        `<span class="rs-no">${nameOf(n)}</span>${n.state === 'done' ? `<span class="rs-state">${t('rs.rs.done')}</span>` : ''}`));
-    // 여는 것이 안 정해졌으면 「미정」 — 빈 줄은 「아무것도 안 여는 노드」로 읽힌다 (§4-1)
-    c.appendChild(el('div', 'rs-eff', n.gain ? L(n.gain) : t('rs.rs.tbd')));
-    // 잠긴 노드에는 비용을 안 찍는다 — 아직 굴려지지 않은 값이라 찍으면 확정으로 읽힌다 (§13-1).
-    // 대신 선행 노드를 찍는다: 그게 잠긴 노드가 답해야 할 질문이다
-    if (n.state === 'locked') {
-        c.appendChild(el('div', 'rs-lock', t('rs.rs.need', { name: nameOf(byId(n.need)) })));
-    } else if (n.state === 'open') {
-        c.appendChild(el('div', 'rs-cond', `<span>${t('rs.rs.cost', { m: n.mat, g: n.gold.toLocaleString() })}</span>`));
-        const go = el('button', 'btn sm rs-roll', t('rs.rs.go'));
-        go.onclick = () => { flash('todo.lead'); render(); };   // 목업이라 안내만 — 문구는 기존 키 재사용
-        c.appendChild(go);
-    }
+        `<span class="rs-no">${t('cn.rank', { n: r.rank })}</span>${r.built ? `<span class="rs-state">${t('rs.rs.done')}</span>` : ''}`));
+    c.appendChild(el('div', 'rs-eff', r.effects.map(effectText).join(' · ')));
+    if (r.built) return c;
+    if (pending) { c.appendChild(el('div', 'rs-lock', t('cn.pending'))); return c; }
+    const conds = next ? r.require.filter(x => !x.ok) : r.require;
+    if (conds.length) c.appendChild(el('div', 'rs-lock', conds.map(reqText).join(' · ')));
+    if (!next || conds.length) return c;
+    c.appendChild(el('div', 'rs-cond', `<span>${b.next.cost.map(costText).join(' · ') || t('cn.free')}</span>`));
+    // 한 번 누름 — 사는 일이라 고용 · 강화와 같다(되돌릴 수 없는 파괴가 아니다 · §3)
+    const go = el('button', 'btn sm rs-roll', t('rs.rs.go'));
+    go.disabled = !!b.next.err;
+    go.onclick = () => {
+        const res = SYS.game.construct(G, b.id);
+        if (res.ok) { flash('cn.built', { b: L(b.name), n: res.rank }); save(); }
+        else flash(`cn.err.${res.err}`);
+        render();
+    };
+    c.appendChild(go);
     return c;
+}
+
+/** 여는 것 한 줄 — 켜기 = 기능 이름 · 더하기 = 「이름 +n」(`cn.t.<대상>`) · 준비 중이면 꼬리표. 연구 상한(`research:<id>`)은 한 키 */
+const effectText = e => {
+    const s = t(e.target.startsWith('research:') ? 'cn.t.research' : `cn.t.${e.target}`, { n: e.value });
+    return e.live ? s : `${s} ${t('cn.soon')}`;
+};
+/** 조건 한 줄 — 스테이지 「1-5 클리어」 · 합산 「합산 레벨 12 / 15」 · 영웅 · 다른 건물 랭크. 지금 값은 `constructionState` 가 실어 온다 */
+const reqText = x => x.kind === 'stage' ? t('cn.req.stage', { s: stageTag(x.ref) })
+    : x.kind === 'total' ? t('cn.req.total', { have: x.have, need: x.need })
+    : x.kind === 'hero' ? t('cn.req.hero', { have: x.have, need: x.need })
+    : t('cn.req.building', { b: buildingName(x.ref), n: x.need });
+const stageTag = id => { const z = D.stages[id]; return z ? `${z.chapter}-${z.stage_num}` : String(id); };
+const buildingName = id => { const b = SYS.construction.list.find(x => x.id === id); return b ? L(b.name) : id; };
+/** 비용 한 칸 — 모자란 재화는 붉다. 재화 이름 = 자원 셋 또는 제작 재료(파견처 산출물) */
+const costText = c => `<span class="${c.have < c.need ? 'no' : ''}">${resName(c.res)} ${c.need.toLocaleString()}</span>`;
+const resName = id => ({ gold: t('res.gold'), dust: t('res.dust'), stigma: t('res.stigma') })[id]
+    ?? (() => { const n = [...D.mineNodes, ...D.gatherNodes, ...D.logNodes].find(x => x.yieldId === id); return n ? L({ ko: n.yieldKo, en: n.yieldEn }) : id; })();
+
+/** 무엇을 지어야 열리나 — `{b, n}`(건물 이름 · 랭크) · 표에 없으면 null. 판정은 `game.needOf` (§13 · R137) */
+const needArgs = (target, n) => { const w = SYS.game.needOf(target, n); return w && { b: L(w.name), n: w.rank }; };
+/** 잠긴 자리의 한 줄 — 「선술집 2랭크 필요」 · 표에 없는 대상은 「준비 중」 */
+const needText = (target, n) => { const a = needArgs(target, n); return a ? t('cn.need', a) : t('cn.pending'); };
+/** 잠긴 버튼을 누르면 — 같은 문장을 플래시로 */
+const flashNeed = (target, n) => { const a = needArgs(target, n); flash(a ? 'cn.need' : 'cn.pending', a ?? {}); };
+
+/**
+ * 안 지은 건물의 탭 [2026-09-22 · R137 · SCREEN_DESIGN §1] — 그 탭에 붙은 건물이 하나도 안 지어졌으면 **그 건물 카드**를 편다(거기서 바로 짓는다).
+ * 기능이 아직 없는 건물(첫 랭크가 준비 중 — 자원 · 탐험 · 훈련장)은 null — 탭은 흐려도 **지금 목업을 그대로** 편다(목업을 볼 길을 남긴다)
+ */
+function unbuiltOf(tab) {
+    const cs = SYS.game.constructionState(G);
+    if (cs.tabs[tab] !== false) return null;
+    const own = cs.buildings.filter(b => b.tab === tab && b.rank === 0);
+    return own.some(b => b.next.err !== 'pending') ? own : null;
+}
+function renderUnbuilt(main, own) {
+    const p = el('div', 'panel page');
+    p.appendChild(el('h2', '', t(`nav.${state.tab}`)));
+    const body = el('div', 'box-body');
+    const tree = el('div', 'rs-tree');
+    for (const b of own) tree.appendChild(buildingCard(b));
+    body.appendChild(tree);
+    p.appendChild(body);
+    main.appendChild(p);
+}
+
+/* ═══════════ 훈련장 — 훈련 · 전직 (SCREEN_DESIGN §16 · ADR-0297) ═══════════ */
+
+/**
+ * 훈련장 탭 — ⚠ **통째로 목업**이다. 훈련(경험치)도 전직(DEV_PLAN R16)도 `game_logic` 에 없어 `SYS.*` 를 부르지 않는다.
+ * 작업 탭은 제련소와 같은 자리 · 같은 모양(패널 박스 바로 위 · ADR-0281)이고 고른 하나만 편다.
+ * **전직 작업 탭이 혈통의 전당이다** — 두 작업 탭 다 맨 위에 제 건물의 줄(건설 가지 첫 노드의 상태)을 든다.
+ * 기획이 확정되면 이 함수들과 `mock.js:TRAINING` 을 함께 걷고 상태 함수로 갈아탄다.
+ */
+function renderTraining(main) {
+    const TABS = [['train', 'tr.seg.train'], ['adv', 'tr.seg.adv']];
+    const tab = TABS.some(([id]) => id === state.trainingTab) ? state.trainingTab : 'train';
+    const tabs = segmented(TABS.map(([id, key]) => ({ id, label: t(key) })), tab,
+        id => { state.trainingTab = id; render(); });
+    tabs.classList.add('tr-tabs');
+    main.appendChild(tabs);
+
+    const p = el('div', 'panel page');
+    p.appendChild(el('h2', '', `${t(tab === 'train' ? 'tr.seg.train' : 'tr.seg.adv')} <small class="todo-badge">${t('todo.badge')}</small>`));
+    // 박스 (ADR-0097) — 고른 작업이 박스 끝까지 서며 넘치면 스크롤한다
+    const body = el('div', 'box-body');
+    body.dataset.keep = `training-${tab}`;
+    if (tab === 'train') {
+        body.appendChild(trainingBuilding('training'));
+        // 훈련 칸 — 건설 노드 칸(`.rs-cell`)을 빌린다. 칸 수는 ⚠ 지어낸 값(`mock.js:TRAINING`)
+        const grid = el('div', 'rs-grid');
+        for (let i = 1; i <= M.TRAINING.slots; i++) {
+            const c = el('div', 'rs-cell');
+            c.appendChild(el('div', 'rs-top', `<span class="rs-no">${t('tr.slot', { n: i })}</span>`));
+            c.appendChild(el('div', 'rs-eff', t('tr.slot.empty')));
+            const b = el('button', 'btn sm rs-roll', t('tr.slot.put'));
+            b.onclick = () => { flash('todo.lead'); render(); };   // 목업이라 안내만 — 문구는 기존 키 재사용
+            c.appendChild(b);
+            grid.appendChild(c);
+        }
+        body.appendChild(grid);
+    } else {
+        body.appendChild(trainingBuilding('lineage'));
+    }
+    // 안내 — 미착수 탭의 예외(§11 · `todoPanel`)와 같다. 도움말도 같은 키를 부른다 (§12).
+    //   공용 `todo.lead`(「기획은 확정됐고 화면이 아직 없다」)는 안 붙인다 — 훈련장은 기획이 미정이라 그 문장이 거짓이다
+    body.appendChild(el('div', 'note-body tr-note', t(tab === 'train' ? 'tr.train.todo' : 'tr.adv.todo')));
+    p.appendChild(body);
+    main.appendChild(p);
+}
+
+/** 건물 줄 — 이 작업을 여는 건물(훈련장 · 혈통의 전당)의 첫 랭크 상태 · 안 지었으면 [건설에서 짓기] (§16).
+ *  판정은 건설 탭과 같은 `constructionState` — 준비 중 · 모자란 조건 · 비용 중 하나를 찍는다(건설 탭의 다음 랭크 칸과 같은 순서 · R137) */
+function trainingBuilding(id) {
+    const b = SYS.game.constructionState(G).buildings.find(x => x.id === id);
+    const row = el('div', 'tr-bld');
+    row.appendChild(el('b', '', b ? L(b.name) : id));
+    if (!b) return row;
+    if (b.rank > 0) { row.appendChild(el('span', 'rs-state', t('rs.rs.done'))); return row; }
+    const unmet = b.ranks[0]?.require.filter(x => !x.ok) ?? [];
+    row.appendChild(b.next.err === 'pending' ? el('span', 'rs-lock', t('cn.pending'))
+        : unmet.length ? el('span', 'rs-lock', unmet.map(reqText).join(' · '))
+        : el('span', 'rs-cond', `<span>${b.next.cost.map(costText).join(' · ') || t('cn.free')}</span>`));
+    const go = el('button', 'btn sm', t('tr.bld.go'));
+    go.onclick = () => { state.tab = 'research'; clearBagSel(); render(); };   // 되돌릴 수 있는 이동이라 한 번 누름
+    row.appendChild(go);
+    return row;
 }
 
 /* ═══════════ 선술집 ═══════════ */
@@ -3280,7 +3366,7 @@ function renderExplore(main) {
    깊어진다)가 이 승격으로 청산됐다. 판정은 전부 game_logic 이 낸다 */
 function renderTavern(main) {
     const B = D.balance;
-    const full = G.heroes.length >= B.roster_cap;
+    const full = G.heroes.length >= SYS.game.limitsOf(G).roster;
     // 패널 둘이 위아래로 쌓인다 — 위 영입 후보(제 높이) · 아래 의뢰(남는 세로) (SCREEN_DESIGN §2 박스 규격 · ADR-0248)
     const page = el('div', 'page page-stack c-tavern');
     const p = el('div', 'panel');
@@ -3300,7 +3386,7 @@ function renderTavern(main) {
         card.querySelector('.b-hire').onclick = () => {
             const r = SYS.game.hire(G, i);
             if (r.ok) { flash('tv.hired', { name: L(r.hero.name) }); save(); }
-            else flash(r.err === 'roster' ? 'tv.err.roster' : 'tv.err.gold', { cap: B.roster_cap });
+            else flash(r.err === 'roster' ? 'tv.err.roster' : 'tv.err.gold', { cap: SYS.game.limitsOf(G).roster });
             render();
         };
         grid.appendChild(card);
@@ -3407,7 +3493,7 @@ function searchCell(side) {
         card.querySelector('.b-take').onclick = () => {
             const r = SYS.game.searchTake(G, now());
             if (r.ok) { flash('tv.hired', { name: L(r.hero.name) }); save(); }
-            else flash(`tv.err.${r.err}`, { cap: B.roster_cap });
+            else flash(`tv.err.${r.err}`, { cap: SYS.game.limitsOf(G).roster });
             render();
         };
         card.querySelector('.b-drop').onclick = () => {
@@ -3440,6 +3526,11 @@ function searchCell(side) {
 
     /* 대기 — 사양 + 대기 영웅 칩. **고르는 자리에 결정 입력이 함께 선다**(매력 → 레어 확률 · 죄종 → 같은 죄종) */
     c.appendChild(el('div', 'tv-search-spec muted', t('tv.search.spec', { n: S.slots, h: S.hours })));
+    // 안 열렸으면 소문 · 칩 대신 **지을 건물** 한 줄 — 칸은 그대로 서서 명단 격자가 안 흔들린다 (R137)
+    if (!S.open) {
+        c.appendChild(el('div', 'tv-story muted', `<p>${needText('search')}</p>`));
+        return c;
+    }
     // 소문 — **보내기 전에** 만날 사람의 죄종을 말한다. 맞는 죄종을 보내면 만남에서 답 하나가 더 열린다
     if (S.rumor) c.appendChild(rumorLine(S.rumor));
     if (!S.ready.length) {
@@ -3547,14 +3638,15 @@ function forgeMake(p) {
 
     if (potion) { forgePotion(col); return; }
 
-    const levels = SYS.game.makeLevels();
-    const level = levels.some(l => l.level === state.makeLevel) ? state.makeLevel : levels[0]?.level;
+    // 레벨은 **제련소 랭크가 앞에서부터 연다**(`open` · R137) — 안 열린 레벨은 흐리고 누르면 지을 랭크를 말한다 · 고른 레벨이 닫혀 있으면 첫 열린 레벨
+    const levels = SYS.game.makeLevels(G);
+    const level = levels.some(l => l.level === state.makeLevel && l.open) ? state.makeLevel : (levels.find(l => l.open) ?? levels[0])?.level;
     const lv = el('div', 'segmented');   // 칸 폭 = 위 부위 칸 폭 (`.fg-make > .segmented > .btn`)
-    for (const l of levels) {
-        const btn = el('button', `btn sm${level === l.level ? ' on' : ''}`, t('fg.make.lv', { n: l.level }));
-        btn.onclick = () => { state.makeLevel = l.level; render(); };
+    levels.forEach((l, i) => {
+        const btn = el('button', `btn sm${level === l.level ? ' on' : ''}${l.open ? '' : ' dim'}`, t('fg.make.lv', { n: l.level }));
+        btn.onclick = () => { if (!l.open) { flashNeed('make_level', i + 1); return; } state.makeLevel = l.level; render(); };
         lv.appendChild(btn);
-    }
+    });
     col.appendChild(lv);
 
     const ms = SYS.game.makeState(G, part, level);
@@ -3611,7 +3703,8 @@ function forgePotion(p) {
         const act = el('span', 'fg-pact');
         // 가진 것은 개수 · **가진 뒤에도 [만들기]가 선다** — 거듭 만든다 (R124)
         if (row.have) act.appendChild(el('span', 'fg-ptag', `×${row.have}`));
-        if (!row.craftable) { if (!row.have) act.appendChild(el('span', 'fg-ptag muted', t('fg.potion.locked'))); }
+        // 안 열린 단계는 **지을 제련소 랭크**를 찍는다 (R137 · ~~「잠김」~~)
+        if (!row.craftable) { if (!row.have) act.appendChild(el('span', 'fg-ptag muted', needText('potion_tier', row.tier))); }
         else {
             const go = el('button', 'btn primary sm', t('fg.make.go'));
             go.disabled = !row.canMake;
@@ -3755,7 +3848,9 @@ function renderShop(main) {
     sp.appendChild(el('h2', '', `${t('td.special')} <small class="todo-badge">${t('todo.badge')}</small>`));
     const spBody = el('div', 'box-body');
     spBody.dataset.keep = 'shop-sp';
-    if (S.here) {
+    // 특수상단 방문은 상단 랭크가 연다 — 안 열렸으면 시계 자리에 **지을 건물** 한 줄 (R137)
+    if (!S.special) spBody.appendChild(el('div', 'td-away', needText('shop_special')));
+    else if (S.here) {
         const card = el('div', 'td-card');
         card.appendChild(el('div', 'td-card-h', `<b>${L(M.TRADE.special.who)}</b>${shopClock(S)}`));
         card.appendChild(shopGoods(M.TRADE.special.stock.map(matGood), 'special', S.cycle));
@@ -3858,7 +3953,7 @@ function shopGoods(list, src, cycle) {
         // 장비는 **같은 부위끼리 붙여** 한 묶음으로 세운다 [사용자 지시] — 목록이 부위 순서로 오므로 부위가 바뀌는 자리에서 새 묶음을 연다 (§8-3).
         //   묶음은 `shop_equip_per_slot` 칸에서 끊는다 — 무기 여섯이 셋 · 셋 두 묶음이 되어 아래 줄과 같은 짜임으로 선다 (사용자 지시 「3/3으로」 · ADR-0282)
         if (src === 'equip') {
-            if (group?.dataset.part !== g.item.slot || group.childElementCount >= D.balance.shop_equip_per_slot) {
+            if (group?.dataset.part !== g.item.slot || group.childElementCount >= SYS.game.limitsOf(G).shopPerSlot) {
                 group = el('div', 'td-group');
                 group.dataset.part = g.item.slot;
                 grid.appendChild(group);
@@ -4182,14 +4277,32 @@ function codexSkill(p) {
     // 출처 칩은 안 단다 — 그룹 머리가 이미 직업을 말하고, `owner_kind` 는 이제 전부 `job` 이라 더 말해 주는 것이 없다
     const tile = r => artTile(M.skillIcon(r.skill_id), L(skillInfo(r.skill_id).name), 'box', `data-skill="${r.skill_id}"`, true);
 
-    // **조밀 격자** — 직업 다섯이 한 화면에 다 선다 (ADR-0075). 그림만 작아지고 묶는 문법 · 타일이 든 것은 그대로다
+    // 직업 탭 — **한 번에 한 직업** (ADR-0299 — ADR-0075 의 「직업 다섯이 한 화면」 대체). 순서는 `class.csv` 행 순이고
+    //   모르는 값(옛 `?cxs=` 등)은 첫 직업으로 떨어진다. 아이템 안쪽 세그먼트(ADR-0179)와 같은 자리 · 같은 모양.
+    //   **스킬이 0개인 직업은 탭이 안 선다** — 확장 직업(`release=expansion`)은 `class.csv` 에 행만 있고 스킬이 없다
+    const classes = (D.classes ?? []).filter(c => M.SKILL_ADV_ICON_FILES[c.id]
+        || rows.some(r => r.owner_kind === 'job' && r.owner_id === c.id));
+    const cls = classes.find(c => c.id === state.codexSkillSeg) ?? classes[0];
+    const bar = el('div', 'sub-bar');
+    bar.appendChild(segmented(classes.map(c => ({ id: c.id, label: className(c.id) })), cls?.id,
+        id => { state.codexSkillSeg = id; render(); }));
+    p.appendChild(bar);
+
+    // **조밀 격자** (ADR-0075) — 그림만 작아지고 묶는 문법 · 타일이 든 것은 그대로다
     const box = el('div', 'ix-body dense box-body');
-    box.dataset.keep = 'codex:skill';
-    box.innerHTML = (D.classes ?? []).map(c => {
+    box.dataset.keep = `codex:skill:${cls?.id}`;
+    if (cls) {
         // 그룹 안의 순서는 CSV 순(= priority 순)을 그대로 쓴다
-        const tiles = rows.filter(r => r.owner_kind === 'job' && r.owner_id === c.id).map(r => tile(r));
-        return tiles.length ? artGroup(t('ix.g.skillCls', { cls: className(c.id) }), M.SKILL_ICON_DIR, tiles) : '';
-    }).join('');
+        const tiles = rows.filter(r => r.owner_kind === 'job' && r.owner_id === cls.id).map(r => tile(r));
+        // 전직 스킬 — **전직 하나가 묶음 하나**(ADR-0299). `skill.csv` 행이 없어 그림 목록(`SKILL_ADV_ICON_FILES`)과
+        //   이름(`ix.adv.*` · `ix.sk.*`)을 따로 읽는다 [2026-09-22 · §9-1]. 스킬 정의가 없으니 `data-skill` 을 안 단다(툴팁 없음)
+        //   그림 칸은 `adv` — 바탕이 전직 색이다(§2 「스킬 그림」 · ADR-0301)
+        const adv = Object.entries(M.SKILL_ADV_ICON_FILES[cls.id] ?? {}).map(([a, stems]) =>
+            artGroup(t(`ix.adv.${a}`), M.SKILL_ICON_DIR,
+                stems.map(s => artTile(M.SKILL_ICON_DIR + s + '.png', t(`ix.sk.${s}`), 'box adv', '', true))));
+        box.innerHTML = (tiles.length ? artGroup(t('ix.g.skillCls', { cls: className(cls.id) }), M.SKILL_ICON_DIR, tiles) : '')
+            + adv.join('');
+    }
     p.appendChild(box);
 
     // 툴팁은 DOM 이 선 **뒤에** 건다 (격자가 문자열이라 노드가 없다). 카드는 캐릭터 탭 · 관전과 같은 것을 그대로 부른다 —
@@ -4217,8 +4330,8 @@ function helpSections() {
             title: t('nav.expedition'),
             lead: t('exp.oneParty'),
             groups: [
-                { h: t('exp.party.h'), sub: t('help.exp.party', { n: B.party_size_max, m: B.concurrent_expedition_parties }), body: [t('exp.party.note')] },
-                { h: t('exp.bench.h'), sub: t('help.exp.bench', { n: G.heroes.length, cap: B.roster_cap }), body: [t('exp.bench.note')] },
+                { h: t('exp.party.h'), sub: t('help.exp.party', { n: SYS.game.limitsOf(G).party, m: B.concurrent_expedition_parties }), body: [t('exp.party.note')] },
+                { h: t('exp.bench.h'), sub: t('help.exp.bench', { n: G.heroes.length, cap: SYS.game.limitsOf(G).roster }), body: [t('exp.bench.note')] },
                 { h: t('exp.zones.h'), sub: t('exp.zones.sub', { r: SYS.battle.stageRounds(D.stageList[0]).length }), body: [t('exp.zones.note', rounds)] },
                 { h: t('exp.level.h'), body: [t('exp.level.tip')] },   // 위험도 — 인게임 툴팁 키 재사용 (§12 · ADR-0104)
                 { h: t('exp.repeat'), body: [t('exp.repeat.sub')] },
@@ -4271,6 +4384,14 @@ function helpSections() {
                 { h: t('tv.reroll.free'), body: [t('tv.reroll.note')] },
                 { h: t('tv.uniqueTodo.h'), body: [t('tv.uniqueTodo.b')] },
                 { h: t('exp.commission.h'), body: [t('exp.commission.note')] },
+            ],
+        },
+        {
+            // 훈련장 — 탭처럼 선술집 뒤다 (§12 · §16 · ADR-0297). 탭의 안내 문구를 같은 키로 부른다
+            title: t('nav.training'),
+            groups: [
+                { h: t('tr.seg.train'), body: [t('tr.train.todo')] },
+                { h: t('tr.seg.adv'), body: [t('tr.adv.todo')] },
             ],
         },
         {
@@ -4397,6 +4518,9 @@ async function boot() {
     // 아이템 안쪽 분류도 클릭으로만 바뀌므로 점검용 진입로를 둔다 (SCREEN_DESIGN §9-1 · ADR-0179)
     const cxi = new URLSearchParams(location.search).get('cxi');
     if (CODEX_ITEM_SEGS.includes(cxi)) state.codexItemSeg = cxi;
+    // 스킬 직업 탭도 같다 — 값 검사는 `codexSkill` 이 한다(모르는 값은 첫 직업 · SCREEN_DESIGN §9-1 · ADR-0299)
+    const cxs = new URLSearchParams(location.search).get('cxs');
+    if (cxs) state.codexSkillSeg = cxs;
     // 프롤로그는 새 게임 확정 버튼으로만 닿는 화면이라 헤드리스가 들어올 길을 따로 낸다 (SCREEN_DESIGN §10).
     //   `&s=n` 은 n번째 씬 — 마지막 씬에만 인용·챕터 줄이 서므로 그 상태에도 길이 있어야 한다
     if (dev === 'prologue') {
@@ -4409,7 +4533,20 @@ async function boot() {
     //   편성을 대신 해 준다. 유저 흐름에서는 편성 패널이 그 일을 한다(§4-1). 로스터 순서라 리더도 첫 영웅이다
     // `&ps=n` 을 먼저 고른다 — 채우는 것은 **고른 편성**이다(`toggleParty` · R122) · `?dev=form&party=full&ps=2` 가 편성 2 를 채운다
     const wantPs = Number(new URLSearchParams(location.search).get('ps'));
-    const pickPs = () => { if (G && wantPs) SYS.game.selectPreset(G, wantPs); };
+    /* 건물을 끝까지 지은 채로 — 문턱 · 비용을 건너뛴다(개발용 · R137). 편성 수 · 물약 칸 수가 같이 늘도록 세이브를 한 번 돌려 불러온다(`deserialize` 가 상한에 맞춘다) */
+    const devBuild = (...ids) => {
+        if (!G) return;
+        for (const b of SYS.construction.list) if (!ids.length || ids.includes(b.id)) G.buildings[b.id] = b.maxRank;
+        G = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(G, now()))));
+    };
+    // `&cn=max` — **모든 건물을 끝까지 지은** 판 [2026-09-22 · R137 · SCREEN_DESIGN §10] — 새 게임은 제련소 · 선술집이 안 지어져 있어 그 탭들에 곧장 못 닿는다
+    if (new URLSearchParams(location.search).get('cn') === 'max') { if (!G) startGame(); devBuild(); }
+    // `&ps=n` 이 지금 편성 수를 넘으면 지휘 천막을 끝까지 짓는다 — 편성 수는 그 건물이 늘린다 (R137)
+    const pickPs = () => {
+        if (!G || !wantPs) return;
+        if (wantPs > SYS.game.limitsOf(G).presets) devBuild('command');
+        SYS.game.selectPreset(G, wantPs);
+    };
     const devParty = () => { pickPs(); if (G && SYS.game.partyOf(G).length === 0) for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, now()); };
     // `&runs=n` 이면 **연달아 n번** 정산한다 [2026-09-09] — 리포트의 런 목록(§4-3)은 줄이 하나면 고르는 결정이 없다.
     //   반복 원정이 만드는 상태(줄이 여럿 쌓인 목록)에 클릭 없이 닿는 유일한 길이다. 상한은 balance:report_keep
@@ -4473,6 +4610,7 @@ async function boot() {
            새 게임에서는 버튼이 전부 흐리다 — 상한이 n 에 닿을 때까지 앞 스테이지를 순서대로 클리어 처리하고 올린다 */
         const wantLvl = Number(new URLSearchParams(location.search).get('lvl'));
         if (wantLvl) {
+            devBuild('expedition');      // 위험도 조절은 원정 건물 랭크가 연다 (R137)
             for (const id of D.stageOrder) {
                 if (SYS.game.stageLevelState(G, state.expStage).max >= wantLvl) break;
                 if (!G.progress.cleared.includes(id)) G.progress.cleared.push(id);
@@ -4496,14 +4634,14 @@ async function boot() {
         const first = SYS.game.masteryState(G, h0.uid).nodes.find(n => n.canLearn);
         if (first) SYS.game.learnMastery(G, h0.uid, first.id);
     }
-    if (dev === 'tactics') {   // 전술 칸이 전부 열린 상태 — 칸은 합산 레벨로만 열리므로 헤드리스가 닿을 길을 따로 낸다
+    if (dev === 'tactics') {   // 전술 칸이 전부 열린 상태 — 칸은 지휘 천막 랭크로만 열리므로 헤드리스가 닿을 길을 따로 낸다
         if (!G) startGame();
-        // 마지막 칸의 문턱을 한 영웅에게 몰아 준다(문턱은 로스터 합산이라 이 한 줄이면 전부 열린다)
-        G.heroes[0].level = SYS.tactic.slotList[SYS.tactic.slotCount - 1].unlockTotalLevel;
+        devBuild('command');             // 지휘 천막을 끝까지 — 문턱(합산 레벨)을 건너뛴다 (R137)
         state.tab = 'party';             // 전술 칸은 편성 탭에 선다 (§15 · ADR-0194)
     }
     if (dev === 'mats') {   // 제작 재료를 쥔 제련소 — 광석 · 목재는 파견이 채우는데 파견이 아직 없어 [만들기]가 늘 잠긴다 (SCREEN_DESIGN §8-2 · §10 · R96)
         if (!G) startGame();
+        devBuild('forge');               // 제련소를 끝까지 — 제작 레벨이 전부 열린다 (R137)
         // 양은 레시피 표가 정한다 — 부위 전부를 레벨마다 한 번씩 만들 만큼(Lv1 · Lv10 은 같은 단계라 둘 몫). 화면이 수량을 지어내지 않는다
         const rs = Object.values(D.makeRecipes), sum = k => rs.reduce((a, r) => a + r[k], 0), levels = SYS.game.makeLevels();
         const per = {};
@@ -4515,6 +4653,9 @@ async function boot() {
     // `&fg=` — 제련소의 작업 탭을 고른 채 연다 (§10 · ADR-0142). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const fg = new URLSearchParams(location.search).get('fg');
     if (['make', 'up', 'craft'].includes(fg)) state.forgeTab = fg;
+    // `&tr=` — 훈련장의 작업 탭(훈련 · 전직)을 고른 채 연다 (§10 · §16). 같은 이유 — 탭은 클릭으로만 바뀐다
+    const tr = new URLSearchParams(location.search).get('tr');
+    if (['train', 'adv'].includes(tr)) state.trainingTab = tr;
     // `&sh=` — 상단의 장비 · 재료 탭을 고른 채 연다 (§10 · §8-3). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const sh = new URLSearchParams(location.search).get('sh');
     if (['equip', 'mat'].includes(sh)) state.shopTab = sh;
@@ -4524,9 +4665,6 @@ async function boot() {
         G.createdAt = now() - D.balance.trade_stay_hours * 3600000 - 60000;
     // `&ps=n` — 편성 n 을 고른 채 연다 (§10 · §15). 고르개는 클릭으로만 바뀌어 헤드리스가 못 닿는다 — 편성 탭 · 출정 창이 같은 값을 든다
     pickPs();
-    // `&rsl=` — ⚠ 연구 배치 비교(세로 · 가로)를 고른 채 연다 (§13-1). 토글은 클릭으로만 바뀌어 헤드리스가 못 닿는다
-    const rsLayout = new URLSearchParams(location.search).get('rsl');
-    if (['col', 'row'].includes(rsLayout)) state.researchLayout = rsLayout;
     // `?dev=forge` · `?dev=trade` 는 삭제됐다 (2026-09-03 · SCREEN_DESIGN §10) — 강화·상점이 탭이 되어
     // `?tab=forge` · `?tab=shop` 이 바로 닿는다. `?dev=*` 는 클릭으로만 만들어지는 상태에 길을 내는 장치다
     /* 수색 — 세 상태(대기 · 수색 중 · 완료)가 **시간으로만** 갈리므로 헤드리스가 닿을 길을 낸다 (SCREEN_DESIGN §10).
@@ -4534,6 +4672,7 @@ async function boot() {
        보내는 사람은 로스터 첫 영웅이고, 시작 시각을 과거로 당겨 상태를 만든다 — `searchSend` 는 `now` 를 받는다 */
     if (dev === 'search') {
         if (!G) startGame();
+        devBuild('tavern');              // 수색은 선술집 랭크가 연다 (R137)
         const span = D.balance.tavern_search_hours * 3600000;
         const back = { out: 0.05, mid: 0.5 }[new URLSearchParams(location.search).get('s')] ?? 1.2;
         // `&key=1` — 보내는 영웅의 죄종을 **소문에 맞춘다**. 열쇠 답이 열린 화면은 죄종이 맞아야만 나오므로

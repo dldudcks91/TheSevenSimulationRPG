@@ -1,19 +1,20 @@
 /**
- * 스킬 「종류」 등록표 — 공격 대상 · 버프 효과 · 발동 조건. **어휘와 실행이 같은 표**에 산다.
+ * 스킬 「종류」 등록표 — 나가는 방식 · 하는 일 · 공격 대상 · 걸린 효과의 능력치 · 발동 조건. **어휘와 실행이 같은 표**에 산다.
  *
  * 순수 모듈 — DOM·저장소·시계·Math.random 접근 없음. **상태를 들지 않는다**(모듈 전역 가변 없음).
  *   난수가 필요한 항목은 런타임(`rt.rng`)을 인자로 받는다 — 이 파일이 시드를 만들지 않는다.
  *
- * **정의는 CSV · 종류는 코드** (skill_architecture_survey §8) — `skill.csv` 가 값을 들고,
+ * **정의는 CSV · 종류는 코드** (skill_architecture_survey §8) — 스킬 표 셋(`skill.csv` · `skill_effect.csv` · `skill_status.csv` · 2026-09-22)이 값을 들고,
  *   그 값이 어느 종류인지는 여기 표의 **키**가 정한다. 종류 하나 = 여기 등록 한 번:
  *   어휘 배열을 따로 두면 표와 배열이 반드시 어긋나므로 **표의 키가 곧 어휘다**.
  *
  * skill_design.md / battle_design.md 확정 규칙:
  *   · 공격 대상 4종(skill_design §9-3) — 단일 다단 · 광역 전원 · 순환 · 연쇄 감쇠.
  *     시작점을 굴리는 둘(순환·연쇄)은 rng 를 **정확히 1회** 쓴다 — 발화 순서가 곧 계약이다 (INTERFACE §5-2)
- *   · **스킬 타격은 능력치 계수·추가 피해를 싣는다** (skill_design §13 · 2026-09-10 · 계수 곱 2026-09-18) — 핸들러가 받는 `def` 는 `scaleDef` 를 지난
- *     실효 정의이고 타격마다 `{statMult, procChance, procMult}` 를 `rt.strikeOnce` 에 넘긴다. 광역(`enemy_all`)은 `decay` 가 있으면 **주 대상 밖**이 약해진다
+ *   · **스킬 타격은 능력치 계수·추가 피해를 싣는다** (skill_design §13 · 2026-09-10 · 계수 곱 2026-09-18) — 핸들러가 받는 `def` 는 `scaleDef` 가 낸
+ *     **시전 단위**(`hit` 줄 하나 — 스킬 id · 대상 · 실효값 · 2026-09-22)이고 타격마다 `{statMult, procChance, procMult}` 를 `rt.strikeOnce` 에 넘긴다. 광역(`enemy_all`)은 `decay` 가 있으면 **주 대상 밖**이 약해진다
  *   · 버프 창(battle_design §7) — 중첩 없음. 같은 stat 의 서로 다른 창은 **덧셈**이고 파생값을 다시 쓴다
+ *     예외 하나 — 받는 피해 감소(`dr_pct`)는 **창마다 곱**한다(원천별 곱 · battle_design §9-3 · 2026-09-22)
  *   · `atk_pct` 는 새 곱셈 층이 아니라 **데미지 % 괄호에 덧셈**이다 (battle_design §9-1 · 괄호 하나 2026-09-18).
  *     회복 밑수(`matkMin`·`matkMax`)도 같은 괄호를 탄다 — 공격 창이 회복만 비껴가면 같은 괄호가 아니다 · 범위 양끝마다 (R90)
  *   · `period_pct` 는 **다음 차례 예약부터** 걸린다 — 이미 잡힌 `next` 는 건드리지 않는다 (INTERFACE §2-6)
@@ -26,15 +27,16 @@
  *   다단타·순환 중 대상이 쓰러지면 남은 타수를 **버린다**(재지정 없음) — 재지정 규칙 미확정.
  */
 
+import { reductionMult } from './formula.js';
+
 /**
- * 스킬 종류 — 이 다섯이 곧 `skill.csv:kind` 어휘다.
- *   `aura`   — 쿨 없이 상시 · 한 번에 하나 · **행동을 안 먹는다** (skill_design §1-5). 액티브 칸에서 빠져
- *              전투 시작에 `until: Infinity` 창으로 걸린다 — 켜는 주체는 battle.js 다
- *   `summon` — **HP 를 가진 유닛**을 세운다 (skill_design §12-6 프로즌월). 행동하지 않고 대상 풀에만 들어간다
- *   `call`   — **불러내기** — 시전자의 무리(`band`) 중 서 있지 않은 것을 **한 번에 전부** 세운다 (skill_design §12-9 · 2026-09-18).
- *              벽과 달리 진짜 몬스터다 · **몬스터 전용**(`owner_kind = monster`) · 세우는 일은 battle.js(`callBand`)가 한다
+ * 나가는 방식 — 이 셋이 곧 `skill.csv:cast` 어휘다 [2026-09-22 · R136 · 옛 `kind` 의 「어떻게 나가나」 절반].
+ *   `turn`  — 차례가 와서 쓴다(발동 선택 `skill.pickReady` 가 고른다)
+ *   `aura`  — 쿨 없이 상시 · 한 번에 하나 · **행동을 안 먹는다** (skill_design §1-5). 액티브 칸에서 빠져
+ *             전투 시작에 `until: Infinity` 창으로 걸린다 — 켜는 주체는 battle.js 다
+ *   `event` — 차례가 아니라 **사건이 부른다**(사망 폭발 §9-6 · 2026-09-21 · §12-9). `cast_condition` 이 그 사건이고 늘 거짓이라 선택기가 안 고른다
  */
-export const KINDS = ['attack', 'heal', 'buff', 'aura', 'summon', 'call', 'indirect'];   // indirect = 비직격 · 차례가 아니라 사건이 부른다 (사망 폭발 §9-6 · 2026-09-21 · §12-9)
+export const CASTS = ['turn', 'aura', 'event'];
 
 /**
  * 스킬 타격이 `strike` 에 싣는 셋 — 능력치 계수 · 추가 피해 확률 · 배수 (battle_design §9-2 · 2026-09-10 · 계수 곱 2026-09-18).
@@ -45,7 +47,7 @@ const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChan
 /**
  * 공격 대상 4종 — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
  * @param rt   skill_runtime 이 만든 런타임 — `rng` · `strikeOnce` · `pickTarget` 을 쓴다
- * @param u    시전자 · @param def 스킬 정의 · @param foes **생존** 적 배열(호출자가 걸러 준다)
+ * @param u    시전자 · @param def 시전 단위(`skill.scaleDef` 가 낸 `hit` 줄 — 스킬 id · 실효값) · @param foes **생존** 적 배열(호출자가 걸러 준다)
  */
 export const ATTACK_TARGETS = {
     /** 단일 다단 — 대상을 한 번 고르고 `hits` 회. 대상이 쓰러지면 남은 타수는 버린다 */
@@ -140,9 +142,31 @@ export const DEBUFF_TARGETS = ['enemy_single', 'enemy_all'];
 export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...SUPPORT_TARGETS])];
 
 /**
- * 버프 효과 — `skill.csv:effect_stat` 어휘가 곧 이 표의 키다.
+ * 하는 일 — 이 표의 키가 곧 `skill_effect.csv:effect` 어휘다 [2026-09-22 · R136 · 옛 `kind` 의 「무엇을 하나」 절반].
+ *   `casts`                  — 그 일을 싣는 나가는 방식. `skill.js` 가 로드 때 짝을 검증한다(옛 kind 일곱이 그대로 남는 짝이다)
+ *   `run(rt, u, x, t, foes)` — 차례의 실행. `x` = 시전 단위(`skill.scaleDef` 가 낸 줄 하나 — 스킬 id · 대상 · 실효값 · 걸린 효과를 푼 값)
+ *   `apply`  — 걸린 효과를 건다(버프 · 적에게 거는 창 · 오오라). 오오라(`cast = aura`)는 차례에 안 나가고 battle.js 가 전투 시작에 건다
+ *   `summon` — **HP 를 가진 유닛**을 세운다 (skill_design §12-6 프로즌월). 행동하지 않고 대상 풀에만 들어간다
+ *   `call`   — **불러내기** — 시전자의 무리(`band`) 중 서 있지 않은 것을 **한 번에 전부** 세운다 (skill_design §12-9 · 2026-09-18).
+ *              벽과 달리 진짜 몬스터다 · **몬스터 전용**(`owner_kind = monster`) · 세우는 일은 battle.js(`callBand`)가 한다
+ *   `fixed`  — 고정 피해(자폭 · 비직격 battle_design §9-6). **`run` 이 없다** — `event` 스킬이라 차례에 안 나가고 battle.js `blast` 가 실행한다
+ *              (PLAN_skill_structure 2단계가 「event 스킬이 자기 줄을 실행」 일반 경로로 옮긴다)
+ */
+export const EFFECT_TYPES = {
+    hit: { casts: ['turn'], run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
+    heal: { casts: ['turn'], run: (rt, u, x, t) => rt.castHeal(u, x, t) },
+    apply: { casts: ['turn', 'aura'], run: (rt, u, x, t) => rt.castBuff(u, x, t) },
+    summon: { casts: ['turn'], run: (rt, u, x, t) => rt.castSummon(u, x, t) },
+    call: { casts: ['turn'], run: (rt, u, x, t) => rt.castCall(u, x, t) },
+    fixed: { casts: ['event'] },
+};
+
+export const EFFECT_IDS = Object.keys(EFFECT_TYPES);
+
+/**
+ * 걸린 효과의 능력치 — `skill_status.csv:stat` 어휘가 곧 이 표의 키다 (옛 `skill.csv:effect_stat` · 2026-09-22).
  *   `derive(u, sum)`             — 그 stat 의 **창 합**으로 파생값을 다시 쓴다(sum 0 이면 원값 복원)
- *   `apply(rt, tgt, def, until, ev)` — 시전 순간 한 번. 창 밖에 따로 만들 것이 있는 효과만 든다
+ *   `apply(rt, tgt, def, until, ev)` — 시전 순간 한 번. 창 밖에 따로 만들 것이 있는 효과만 든다(`def` = 시전 단위 — 걸린 효과를 푼 `value`)
  * 둘 다 없는 항목(`taunt`)은 **표식**이다 — 소비자는 battle.js 의 타겟팅이다.
  */
 export const EFFECTS = {
@@ -204,7 +228,16 @@ export const EFFECTS = {
     // HP 재생 창 — 09-07 확정 구조(레벨 곡선 밑수)에 **얹는다**. 밑수가 0 이면 아무 일도 없다
     regen_pct: { derive: (u, sum) => { u.regen = u.regenBase * (1 + sum); } },
     // 받는 피해 감소 — 감쇠 뒤 곱이고 원천별로 각각 곱한다 (battle_design §9-3). 방어·저항과 채널이 다르다
-    dr_pct: { derive: (u, sum) => { u.dr = u.drBase + sum; } },
+    //   **창 하나 = 원천 하나** — 창 합(`sum`)을 안 쓰고 창마다 곱한다. 밑값(`drBase` — 장비 · 마스터리를 이미 곱으로 합친 값)도 원천 하나다.
+    //   ~~`drBase + sum`~~ 은 2026-09-22 에 고쳤다 — 덧셈이라 장비 50% + 결투 20% 가 70%(곱이면 60%)였고 합이 100% 를 넘을 수 있었다.
+    //   창이 없으면 밑값을 그대로 둔다(부동소수 왕복 없이 원값 복원) · 음수 창(받는 피해 증가)은 `1 − v` 가 1 보다 커져 그대로 곱해진다
+    dr_pct: {
+        derive: u => {
+            const wins = [];
+            for (const b of Object.values(u.buffs)) if (b.stat === 'dr_pct') wins.push(b.v);
+            u.dr = wins.length ? 1 - (1 - u.drBase) * reductionMult(wins) : u.drBase;
+        },
+    },
     // 평타 부여 둘 — derive 도 apply 도 없는 **표식**이다. 소비자는 skill_runtime 의 기본 공격 분기다
     //   onhit_element  원소 추가타 1회 (인챈트 · 독화살) — 창이 든 `element` 로 때린다
     //   attack_splash  기본 공격이 단일 → 광역 (관통 사격) — 그때 배율이 창의 값(비율)이 된다

@@ -27,6 +27,14 @@
  * 09-14 최대 HP · 09-15 무기 피해 · 09-16 방어구 고유값이 차례로 곱셈 축을 떠났다.
  */
 
+/**
+ * 피해 감소 — **원천별로 각각 곱한다** (§9-3). 덧셈이 아니다.
+ * 몇 개를 쌓아도 0에 수렴할 뿐 닿지 않아 상한 규칙이 필요 없고, 접사 하나의 실효 체력 기여가 항상 일정하다.
+ * **밸런스 값을 안 읽어 팩토리 밖에 선다** [2026-09-22] — 장비 · 마스터리 합산(`hero.computeCombat`)과 버프 창(`skill_effects.dr_pct`)이
+ *   이 함수 하나를 쓴다. `createFormula(...).reductionMult` 도 같은 함수다 (INTERFACE §2-3)
+ */
+export const reductionMult = pcts => (pcts ?? []).reduce((m, p) => m * (1 - (p ?? 0)), 1);
+
 export function createFormula(balance) {
     const B = balance;
     const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -138,11 +146,7 @@ export function createFormula(balance) {
     /** 적용 저항(비율) — 상한만 있고 **하한은 없다.** 음수 저항 = 피해 증폭 (§9-5) */
     const appliedResist = (res, resMaxBonus = 0, elBonus = 0) => Math.min(res ?? 0, resCap(resMaxBonus, elBonus));
 
-    /**
-     * 피해 감소 — **원천별로 각각 곱한다** (§9-3). 덧셈이 아니다.
-     * 몇 개를 쌓아도 0에 수렴할 뿐 닿지 않아 상한 규칙이 필요 없고, 접사 하나의 실효 체력 기여가 항상 일정하다.
-     */
-    const reductionMult = pcts => (pcts ?? []).reduce((m, p) => m * (1 - (p ?? 0)), 1);
+    // 피해 감소 `reductionMult` 는 모듈 위에 선다 — 밸런스 값을 안 읽어서 버프 창(`skill_effects`)도 같은 함수를 부른다. 반환 목록은 그 함수를 그대로 싣는다
 
     /**
      * 적중률(비율) — **레벨 차 하나로 정해진다** (§9-4). 명중·회피 스탯 폐지.

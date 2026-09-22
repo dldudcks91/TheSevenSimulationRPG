@@ -1,6 +1,6 @@
 {
  "meta": {
-  "created": "2026-09-21",
+  "created": "2026-09-22",
   "seeds": 10,
   "stages": [
    101,
@@ -206,10 +206,12 @@
    "mastery_warrior_t1_atk_pct": 0.02,
    "tactic_grade_weight_common": 70,
    "tactic_grade_weight_magic": 25,
-   "tactic_grade_weight_rare": 5
+   "tactic_grade_weight_rare": 5,
+   "tactic_reroll_base_cost": 600,
+   "tactic_reroll_lock_mult": 2
   },
   "csvHash": {
-   "balance": "cec7be84",
+   "balance": "2402a18b",
    "monster": "70b7671b",
    "stage": "8029bfe3",
    "stage_round": "d33dc84e",
@@ -224,8 +226,8 @@
    "combat_stat": "f06a91cd",
    "chapter": "caebe8a3",
    "mastery_node": "c38e69f9",
-   "tactic_slot": "e38e81e8",
-   "tactic_option": "23709fcb",
+   "tactic_slot": "34357be2",
+   "tactic_option": "af047378",
    "commission_kind": "14d4f5e3",
    "commission": "be24eea9",
    "item_base": "e2f79e19",
@@ -254,7 +256,9 @@
    "sin_word": "4c604782",
    "accessory_sin_option": "b05ec0dd",
    "accessory_common_option": "608e27d4",
-   "amulet_proc": "8af77117"
+   "amulet_proc": "8af77117",
+   "tactic_condition": "90c119b0",
+   "tactic_score": "739ec256"
   },
   "tacticsNote": "newGame 직후 상태 그대로 — 전술 칸을 인위적으로 켜지 않는다 (런마다 tactics 에 열린 칸 전체 `번호:옵션:등급:on|off`)",
   "parties": {
@@ -329,7 +333,7 @@
    "casts": "arc_pierce:6|arc_poison:7|arc_snipe:7|mag_frozenwall:6|mag_lightning:11|mon_summon_goblin:4|pri_haste:1|pri_heal:1|pri_judgment:12|pri_penitence:6|war_bash:10|war_battleorders:1|war_doubleswing:2",
    "elites": "3:wrath:Frenzy+Precise+Durable 6:gluttony:Gorging+Durable+Nimble",
    "grew": "L12/A201/M9",
-   "tactics": "1:opt_class_pair:common:off",
+   "tactics": "1:opt_lead_knight:common:off",
    "drops": [
     "normal|weapon|4||crucifix|scepter|-|-|pri_heal|fixed/atk_pct:0.93;random/vs_elite_dmg:0.1;random/crit_rate:0.02",
     "magic|weapon|2|greed|bow|rune_bow|-|-|arc_poison|fixed/atk_pct:1.48;greed/magic_find:0.14;random/vs_demon_dmg:0.09;random/crit_rate:0.04",
@@ -358,11 +362,11 @@
    "casts": "arc_snipe:7|kni_rush:9|mon_summon_goblin:5|pri_cure:9|pri_grace:5|pri_judgment:2|pri_regen:1|war_bash:7|war_battleorders:1|war_doubleswing:2|war_quake:7|war_shout:1|war_taunt:5",
    "elites": "3:envy:Deprivation+Precise+Vampiric 6:gluttony:Gorging+Deadly+Swift",
    "grew": "L12/A205/M9",
-   "tactics": "1:opt_march_def:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|weapon|6||axe|great_axe|-|-|war_shout|fixed/atk_pct:1.8;random/def_down_pct:0.06;random/vs_undead_dmg:0.08"
    ],
-   "tl": "c05ed202"
+   "tl": "2dc49f77"
   },
   {
    "seed": 3,
@@ -382,7 +386,7 @@
    "casts": "arc_multishot:9|arc_poison:6|arc_snipe:7|mag_frozenwall:5|mag_iceblast:17|mon_summon_goblin:4|pri_bind:6|pri_grace:1|pri_haste:5|war_bash:7|war_battleorders:1|war_doubleswing:2|war_shout:1",
    "elites": "3:wrath:Frenzy+Thorny+Ferocious 6:lust:Temptation+Deadly+Thorny",
    "grew": "L12/A197/M9",
-   "tactics": "1:opt_tag_shout:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|helmet|2||Cloth Hood|-|-|def_flat:5|-|fixed/armor_def_pct:0.94;random/xp_gain_pct:0.11;random/cooldown_reduction:0.04",
     "rare|gloves|6|wrath+lust|Slaughtering and Obsessive Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:1.84;wrath/crit_damage:0.08;lust/life_steal:0.02;random/atk_pct:0.08;random/def_ignore:0.05"
@@ -407,12 +411,12 @@
    "casts": "arc_poison:6|arc_snipe:15|kni_smite:7|mag_frostnova:8|mag_iceblast:19|mon_summon_goblin:5|pri_haste:1|pri_heal:1|war_bash:6|war_battleorders:1|war_doubleswing:2",
    "elites": "3:wrath:Frenzy+Durable+Deadly 6:greed:Gamble+Thorny+Precise",
    "grew": "L12/A195/M9",
-   "tactics": "1:opt_march_atk:common:on",
+   "tactics": "1:opt_gear_wrath:common:off",
    "drops": [
     "rare|weapon|4|wrath+envy|crucifix|mighty_scepter|-|-|pri_haste|fixed/atk_pct:1.31;wrath/crit_damage:0.07;envy/atk_down_phys_pct:0.08;random/res_down_pct:0.04;random/poison_dmg_pct:0.08",
     "rare|gloves|6|lust+greed|Debauched and Greedy Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:1.27;lust/life_steal:0.01;greed/magic_find:0.13;random/aspd_pct:0.04;random/def_ignore:0.04"
    ],
-   "tl": "ca43b340"
+   "tl": "0febbfaa"
   },
   {
    "seed": 5,
@@ -421,22 +425,23 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 74.3,
+   "sec": 86.5,
    "downed": "-",
-   "gold": 983,
-   "xp": 1314.4,
-   "xpBy": "656|656|656",
-   "events": 549,
-   "strikes": "201/1 · 57/2",
-   "kills": "1101:8|1102:7|1103:2|1150:1",
-   "casts": "arc_snipe:8|kni_rush:8|mon_summon_goblin:2|pri_bind:4|pri_cure:4|pri_penitence:1|pri_regen:1|war_bash:5|war_battleorders:5|war_doubleswing:11|war_quake:1",
-   "elites": "3:lust:Temptation+Ferocious+Vampiric 6:wrath:Frenzy+Deadly+Thorny",
-   "grew": "L9/A192/M6",
-   "tactics": "1:opt_march_cdr:common:on",
+   "gold": 1022,
+   "xp": 1441.6000000000001,
+   "xpBy": "721|721|721",
+   "events": 612,
+   "strikes": "242/3 · 75/1",
+   "kills": "1101:7|1102:10|1103:3|1150:1",
+   "casts": "arc_snipe:7|kni_rush:9|mon_summon_goblin:3|pri_bind:5|pri_cure:4|pri_grace:1|pri_haste:1|war_bash:7|war_battleorders:4|war_doubleswing:14",
+   "elites": "3:lust:Temptation+Vigorous+Nimble 6:greed:Gamble+Ferocious+Thorny",
+   "grew": "L12/A192/M9",
+   "tactics": "1:opt_march_aspd:common:on",
    "drops": [
-    "normal|amulet|6||Talisman|-|-|-|struck/mag_inferno:0.1|random/xp_gain_pct:0.06;random/dr_flat:1"
+    "magic|armor|2|gluttony|Hungering Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:1.99;gluttony/res_all:0.09;random/res_lightning:0.14;random/vs_elite_dr:0.08",
+    "normal|gloves|6||Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:1.21;random/atk_pct:0.05;random/res_cold:0.19"
    ],
-   "tl": "9ab3a5a2"
+   "tl": "06ba5679"
   },
   {
    "seed": 6,
@@ -445,24 +450,24 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 120.3,
+   "sec": 105.1,
    "downed": "-",
-   "gold": 1061,
-   "xp": 1568.8000000000002,
-   "xpBy": "873|873|829",
-   "events": 801,
-   "strikes": "310/4 · 128/2",
-   "kills": "1101:7|1102:11|1103:5|1150:1",
-   "casts": "arc_pierce:7|arc_rapid:23|arc_snipe:7|mag_fireball:9|mag_frozenwall:6|mon_summon_goblin:5|pri_haste:1|pri_judgment:1|war_bash:12|war_doubleswing:18|war_taunt:6",
-   "elites": "3:wrath:Frenzy+Vampiric+Deadly 6:lust:Temptation+Swift+Thorny",
+   "gold": 1009,
+   "xp": 1399.2,
+   "xpBy": "779|779|739",
+   "events": 713,
+   "strikes": "272/7 · 103/1",
+   "kills": "1101:8|1102:8|1103:3|1150:1",
+   "casts": "arc_pierce:6|arc_rapid:20|arc_snipe:8|mag_fireball:7|mag_frozenwall:5|mon_summon_goblin:3|pri_haste:1|pri_heal:1|war_bash:8|war_doubleswing:14|war_leap:2|war_quake:1|war_taunt:6",
+   "elites": "3:pride:Inviolable+Thorny+Precise 6:envy:Deprivation+Ferocious+Durable",
    "grew": "L12/A201/M9",
-   "tactics": "1:opt_march_hp:common:on",
+   "tactics": "1:opt_lead_priest:common:off",
    "drops": [
-    "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.5;random/vs_front_dr:0.06;random/vs_normal_dr:0.04",
-    "normal|weapon|4||crucifix|caduceus|-|-|pri_judgment|fixed/atk_pct:0.77;random/vs_back_dmg:0.12;random/vs_elite_dmg:0.11",
-    "normal|armor|6||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:1.81;random/vs_elite_dr:0.04;random/xp_gain_pct:0.06"
+    "magic|armor|2|envy|Treacherous Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:1.02;envy/reflect_damage:0.04;random/xp_gain_pct:0.1;random/vs_normal_dr:0.09",
+    "rare|armor|4|lust+sloth|Obsessive and Weary Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:1.65;lust/hp_flat:16;sloth/hp_recovery_pct:0.11;random/vs_demon_dr:0.08;random/vs_elite_dr:0.06",
+    "rare|amulet|6|gluttony+greed|Hungering and Exploitative Gold Necklace|-|-|-|interval/pri_heal:1.05|gluttony/res_all:0.04;greed/gold_find:0.06;random/res_poison:0.08;random/xp_gain_pct:0.06"
    ],
-   "tl": "e50f7b17"
+   "tl": "cca1b128"
   },
   {
    "seed": 7,
@@ -471,23 +476,23 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 104.7,
+   "sec": 100.9,
    "downed": "-",
-   "gold": 996,
-   "xp": 1356.8000000000002,
-   "xpBy": "678|755|678",
-   "events": 653,
-   "strikes": "230/5 · 99/0",
-   "kills": "1101:9|1102:6|1103:3|1150:1",
-   "casts": "arc_pierce:6|arc_snipe:16|kni_duel:7|kni_smite:7|mon_summon_goblin:3|pri_haste:1|pri_penitence:1|war_bash:15|war_doubleswing:3|war_leap:9|war_taunt:1",
-   "elites": "3:greed:Gamble+Ferocious+Preemptive 6:envy:Deprivation+Durable+Ferocious",
-   "grew": "L12/A210/M9",
-   "tactics": "1:opt_march_hp:common:on",
+   "gold": 983,
+   "xp": 1314.4,
+   "xpBy": "657|732|657",
+   "events": 671,
+   "strikes": "223/4 · 86/0",
+   "kills": "1101:4|1102:9|1103:4|1150:1",
+   "casts": "arc_pierce:6|arc_snipe:11|kni_duel:7|kni_smite:7|mon_summon_goblin:4|pri_judgment:2|pri_penitence:1|war_bash:17|war_doubleswing:3|war_leap:9|war_taunt:1",
+   "elites": "3:wrath:Frenzy+Deadly+Nimble 6:wrath:Frenzy+Vampiric+Preemptive",
+   "grew": "L10/A210/M7",
+   "tactics": "1:opt_march_atk:common:on",
    "drops": [
-    "normal|weapon|2||bow|hydra_bow|-|-|arc_poison|fixed/atk_pct:0.42;random/vs_elite_dmg:0.08;random/vs_back_dmg:0.07",
-    "normal|amulet|6||Gold Necklace|-|-|-|interval/pri_regen:1.33|random/dr_flat:1;random/xp_gain_pct:0.11"
+    "magic|helmet|2|envy|Jealous Cloth Hood|-|-|def_flat:5|-|fixed/armor_def_pct:1.46;envy/res_max_cold:0.04;random/crit_rate:0.03;random/dr_flat:1",
+    "magic|weapon|6|sloth|axe|decapitator|-|-|war_bash|fixed/atk_pct:0.72;sloth/aspd_pct:0.03;random/crit_rate:0.04;random/def_down_pct:0.07"
    ],
-   "tl": "ebead11d"
+   "tl": "fc4644ca"
   },
   {
    "seed": 8,
@@ -507,7 +512,7 @@
    "casts": "arc_snipe:8|mag_frostnova:10|mag_frozenwall:6|mon_summon_goblin:6|pri_haste:1|pri_heal:1|pri_judgment:12|pri_regen:6|war_bash:12|war_battleorders:7|war_doubleswing:16",
    "elites": "3:gluttony:Gorging+Ferocious+Vampiric 6:sloth:Apathy+Thorny+Deadly",
    "grew": "L12/A195/M9",
-   "tactics": "1:opt_affix_sloth:common:off",
+   "tactics": "1:opt_march_res:common:on",
    "drops": [
     "normal|armor|2||Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.84;random/xp_gain_pct:0.06;random/vs_elite_dr:0.07",
     "rare|armor|6|lust+wrath|Obsessive and Slaughtering Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:1.49;lust/hp_flat:21;wrath/fhr:0.24;random/xp_gain_pct:0.07;random/vs_demon_dr:0.05"
@@ -532,7 +537,7 @@
    "casts": "arc_guided:18|arc_pierce:11|arc_snipe:15|kni_duel:14|mon_summon_goblin:5|pri_cure:4|pri_heal:2|war_bash:11|war_battleorders:8|war_doubleswing:4|war_leap:16|war_shout:2",
    "elites": "3:pride:Inviolable+Ferocious+Durable 6:pride:Inviolable+Ferocious+Swift",
    "grew": "L12/A198/M9",
-   "tactics": "1:opt_affix_lust:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "magic|helmet|2|envy|Spiteful Cloth Hood|-|-|def_flat:5|-|fixed/armor_def_pct:0.7;envy/res_max_poison:0.03;random/res_fire:0.14;random/dr_flat:1",
     "magic|armor|2|lust|Lustful Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:1.93;lust/hp_flat:13;random/vs_elite_dr:0.05;random/xp_gain_pct:0.1",
@@ -559,13 +564,13 @@
    "casts": "arc_snipe:5|mag_frozenwall:5|mag_iceblast:18|mon_summon_goblin:3|pri_cure:2|pri_haste:5|pri_heal:1|pri_judgment:11|war_bash:11|war_doubleswing:2|war_leap:10|war_taunt:5",
    "elites": "3:sloth:Apathy+Thorny+Vigorous 6:gluttony:Gorging+Nimble+Vigorous",
    "grew": "L12/A201/M9",
-   "tactics": "1:opt_tag_blessing:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "magic|helmet|2|envy|Envious Cloth Hood|-|-|def_flat:5|-|fixed/armor_def_pct:0.09;envy/res_max_poison:0.05;random/dr_flat:1;random/res_fire:0.17",
     "normal|armor|2||Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:1.12;random/vs_demon_dr:0.07;random/xp_gain_pct:0.11",
     "normal|amulet|6||Eye Pendant|-|-|-|hit/kni_enchant:0.08|random/dr_flat:1;random/burn_dur_reduction:0.23"
    ],
-   "tl": "ebfb2db6"
+   "tl": "41ceaf80"
   },
   {
    "seed": 1,
@@ -585,7 +590,7 @@
    "casts": "arc_multishot:2|arc_pierce:7|arc_poison:8|arc_rapid:13|kni_charge:8|mag_frozenwall:7|mag_lightning:14|pri_judgment:14|pri_penitence:7|war_bash:2|war_battleorders:4|war_leap:3|war_quake:8",
    "elites": "3:greed:Gamble+Vigorous+Durable 6:pride:Inviolable+Nimble+Preemptive",
    "grew": "L12/A201/M9",
-   "tactics": "1:opt_class_pair:common:off",
+   "tactics": "1:opt_lead_knight:common:off",
    "drops": [
     "rare|armor|6|sloth+gluttony|Forgotten and Abyssal Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.19;sloth/hp_recovery_pct:0.12;gluttony/res_all:0.07;random/vs_elite_dr:0.07;random/res_fire:0.19",
     "magic|weapon|4|lust|sword2h|balrog_blade|-|-|kni_enchant|fixed/atk_pct:1.68;lust/life_steal:0.02;random/vs_elite_dmg:0.11;random/crit_rate:0.03",
@@ -611,7 +616,7 @@
    "casts": "arc_rapid:10|kni_charge:16|kni_rush:15|pri_cure:16|pri_grace:8|war_bash:1|war_battleorders:2|war_leap:7|war_quake:20|war_taunt:7",
    "elites": "3:sloth:Apathy+Thorny+Preemptive 6:greed:Gamble+Ferocious+Vigorous",
    "grew": "L12/A205/M9",
-   "tactics": "1:opt_march_def:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|weapon|4||mace|flanged_mace|-|-|war_bash|fixed/atk_pct:0.22;random/vs_elite_dmg:0.06;random/vs_undead_dmg:0.09",
     "magic|gloves|6|pride|Usurping Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.99;pride/dmg_per_level_pct:0.003;random/atk_pct:0.04;random/res_lightning:0.16",
@@ -620,7 +625,7 @@
     "normal|weapon|4||mace|club|-|-|war_bash|fixed/atk_pct:1.95;random/crit_rate:0.04;random/vs_normal_dmg:0.15",
     "magic|ring|8|lust|Debauched Glutton Ring|-|-|-|-|lust/life_steal:0.02;random/res_fire:0.18;random/freeze_dur_reduction:0.14"
    ],
-   "tl": "b8bdbe39"
+   "tl": "2418937a"
   },
   {
    "seed": 3,
@@ -640,7 +645,7 @@
    "casts": "arc_multishot:13|arc_poison:9|arc_rapid:5|kni_charge:15|kni_smite:2|mag_frozenwall:6|mag_iceblast:23|pri_bind:6|pri_haste:6|war_bash:2|war_leap:3|war_quake:5|war_shout:2",
    "elites": "3:envy:Deprivation+Precise+Vampiric 6:greed:Gamble+Durable+Ferocious",
    "grew": "L12/A197/M9",
-   "tactics": "1:opt_tag_shout:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "magic|armor|6|greed|Extorting Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:1.5;greed/magic_find:0.08;random/vs_back_dr:0.08;random/xp_gain_pct:0.11",
     "magic|helmet|4|pride|Contemptuous Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1;pride/hp_per_level:4;random/aspd_pct:0.05;random/cooldown_reduction:0.08",
@@ -667,12 +672,12 @@
    "casts": "arc_poison:7|arc_rapid:19|arc_snipe:8|kni_charge:5|kni_smite:9|mag_frostnova:10|mag_iceblast:24|war_bash:3|war_battleorders:1|war_leap:10|war_quake:9",
    "elites": "3:sloth:Apathy+Swift+Ferocious 6:wrath:Frenzy+Nimble+Deadly",
    "grew": "L9/A195/M6",
-   "tactics": "1:opt_march_atk:common:on",
+   "tactics": "1:opt_gear_wrath:common:off",
    "drops": [
     "normal|gloves|4||Cloth Gloves|-|-|def_flat:3|-|fixed/armor_def_pct:0.87;random/res_poison:0.18;random/def_flat:4",
     "magic|weapon|4|lust|sword2h|zweihander|-|-|kni_duel|fixed/atk_pct:1.04;lust/life_steal:0.01;random/vs_undead_dmg:0.07;random/vs_back_dmg:0.05"
    ],
-   "tl": "ba9cf8ee"
+   "tl": "38a7f823"
   },
   {
    "seed": 5,
@@ -681,49 +686,46 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 104.5,
+   "sec": 123.8,
    "downed": "-",
-   "gold": 1083,
-   "xp": 1429.2192,
-   "xpBy": "715|715|715",
-   "events": 731,
-   "strikes": "276/19 · 138/0",
-   "kills": "1201:8|1202:5|1203:3|1250:1",
-   "casts": "arc_rapid:11|kni_charge:5|kni_duel:2|kni_rush:11|pri_bind:6|pri_cure:11|war_battleorders:5|war_doubleswing:15|war_leap:2|war_quake:8|war_shout:1|war_taunt:1",
-   "elites": "3:gluttony:Gorging+Preemptive+Vigorous 6:wrath:Frenzy+Thorny+Preemptive",
+   "gold": 1097,
+   "xp": 1476.85984,
+   "xpBy": "738|738|738",
+   "events": 839,
+   "strikes": "338/34 · 172/0",
+   "kills": "1201:6|1202:3|1203:8|1250:1",
+   "casts": "arc_pierce:1|arc_rapid:6|kni_charge:14|kni_rush:13|pri_bind:6|pri_cure:12|war_bash:3|war_battleorders:6|war_doubleswing:18|war_leap:3|war_quake:7",
+   "elites": "3:envy:Deprivation+Nimble+Ferocious 6:wrath:Frenzy+Swift+Vigorous",
    "grew": "L12/A192/M9",
-   "tactics": "1:opt_march_cdr:common:on",
+   "tactics": "1:opt_march_aspd:common:on",
    "drops": [
-    "rare|helmet|6|lust+pride|Debauched and Contemptuous Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.65;lust/life_steal:0.03;pride/hp_per_level:3;random/res_fire:0.13;random/cooldown_reduction:0.05",
-    "magic|helmet|8|gluttony|Abyssal Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.28;gluttony/res_all:0.04;random/aspd_pct:0.03;random/res_cold:0.11"
+    "normal|boots|8||Boots|-|-|def_flat:4|-|fixed/armor_def_pct:1.42;random/hp_flat:22;random/xp_gain_pct:0.08"
    ],
-   "tl": "93af023e"
+   "tl": "2eef2c32"
   },
   {
    "seed": 6,
    "stage": 102,
    "won": false,
    "reason": "wipe",
-   "rounds": 9,
-   "cleared": 8,
-   "sec": 133.3,
+   "rounds": 8,
+   "cleared": 7,
+   "sec": 123.7,
    "downed": "0|1|2",
    "gold": 340,
-   "xp": 857.53152,
-   "xpBy": "289|473|454",
-   "events": 874,
-   "strikes": "322/24 · 206/0",
-   "kills": "1201:5|1202:2|1203:7",
-   "casts": "arc_pierce:8|arc_rapid:36|kni_charge:13|mag_fireball:9|mag_frozenwall:7|war_bash:2|war_doubleswing:11|war_leap:5|war_quake:8|war_shout:1|war_taunt:5",
+   "xp": 857.5315200000001,
+   "xpBy": "289|474|454",
+   "events": 837,
+   "strikes": "295/25 · 204/0",
+   "kills": "1201:5|1202:3|1203:6",
+   "casts": "arc_pierce:7|arc_rapid:35|kni_charge:14|mag_fireball:9|mag_frozenwall:6|war_bash:1|war_doubleswing:11|war_leap:3|war_quake:8|war_taunt:5",
    "elites": "3:sloth:Apathy+Preemptive+Vampiric 6:lust:Temptation+Ferocious+Thorny",
    "grew": "L8/A201/M5",
-   "tactics": "1:opt_march_hp:common:on",
+   "tactics": "1:opt_lead_priest:common:off",
    "drops": [
-    "normal|gloves|4||Cloth Gloves|-|-|def_flat:3|-|fixed/armor_def_pct:1.72;random/def_flat:6;random/def_ignore:0.07",
-    "normal|helmet|6||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.29;random/xp_gain_pct:0.11;random/dr_flat:1",
-    "normal|helmet|4||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.07;random/xp_gain_pct:0.12;random/dr_flat:1"
+    "normal|gloves|4||Cloth Gloves|-|-|def_flat:3|-|fixed/armor_def_pct:1.72;random/def_flat:6;random/def_ignore:0.07"
    ],
-   "tl": "3c9e7342"
+   "tl": "97d0785c"
   },
   {
    "seed": 7,
@@ -732,26 +734,27 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 121.1,
+   "sec": 128.3,
    "downed": "-",
-   "gold": 1097,
-   "xp": 1476.85984,
-   "xpBy": "739|820|739",
-   "events": 757,
-   "strikes": "276/12 · 172/0",
-   "kills": "1201:4|1202:8|1203:5|1250:1",
-   "casts": "arc_pierce:7|arc_poison:1|arc_rapid:17|arc_snipe:8|kni_charge:10|kni_duel:8|kni_smite:8|war_bash:8|war_battleorders:1|war_doubleswing:2|war_leap:13|war_quake:5",
-   "elites": "3:envy:Deprivation+Nimble+Swift 6:gluttony:Gorging+Ferocious+Precise",
+   "gold": 1111,
+   "xp": 1524.5004800000002,
+   "xpBy": "763|846|763",
+   "events": 799,
+   "strikes": "297/15 · 183/0",
+   "kills": "1201:7|1202:7|1203:4|1250:1",
+   "casts": "arc_pierce:7|arc_rapid:12|arc_snipe:9|kni_charge:9|kni_duel:8|kni_smite:8|war_bash:9|war_leap:20|war_quake:9|war_taunt:1",
+   "elites": "3:envy:Deprivation+Nimble+Swift 6:wrath:Frenzy+Thorny+Vampiric",
    "grew": "L12/A210/M9",
-   "tactics": "1:opt_march_hp:common:on",
+   "tactics": "1:opt_march_atk:common:on",
    "drops": [
     "normal|weapon|4||mace|battle_hammer|-|-|war_shout|fixed/atk_pct:1.45;random/vs_back_dmg:0.07;random/def_down_pct:0.07",
     "magic|helmet|4|pride|Contemptuous Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.55;pride/hp_per_level:4;random/dr_flat:1;random/aspd_pct:0.04",
     "magic|weapon|6|gluttony|sword2h|highland_blade|-|-|kni_charge|fixed/atk_pct:1.06;gluttony/crushing_blow_pct:0.01;random/vs_normal_dmg:0.07;random/crit_rate:0.04",
-    "normal|weapon|4||mace|war_club|-|-|war_bash|fixed/atk_pct:0.76;random/crit_rate:0.02;random/vs_elite_dmg:0.07",
-    "normal|helmet|8||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.39;random/res_cold:0.1;random/crit_rate:0.04"
+    "normal|helmet|4||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.17;random/dr_flat:1;random/aspd_pct:0.05",
+    "magic|weapon|4|gluttony|bow|hydra_bow|-|-|arc_snipe|fixed/atk_pct:0.22;gluttony/crushing_blow_pct:0.01;random/def_down_pct:0.09;random/vs_front_dmg:0.06",
+    "magic|armor|8|sloth|Lethargic Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:1.86;sloth/hp_recovery_pct:0.08;random/vs_elite_dr:0.04;random/xp_gain_pct:0.1"
    ],
-   "tl": "044a2232"
+   "tl": "ea989e40"
   },
   {
    "seed": 8,
@@ -771,7 +774,7 @@
    "casts": "arc_rapid:9|kni_charge:16|mag_frostnova:11|mag_frozenwall:7|pri_judgment:13|pri_regen:7|war_battleorders:7|war_doubleswing:20|war_leap:6|war_quake:7|war_shout:2",
    "elites": "3:envy:Deprivation+Durable+Precise 6:greed:Gamble+Vampiric+Durable",
    "grew": "L11/A195/M8",
-   "tactics": "1:opt_affix_sloth:common:off",
+   "tactics": "1:opt_march_res:common:on",
    "drops": [
     "normal|helmet|4||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.88;random/xp_gain_pct:0.1;random/res_lightning:0.17",
     "rare|armor|4|envy+greed|Treacherous and Extorting Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:1.94;envy/reflect_damage:0.06;greed/magic_find:0.09;random/vs_front_dr:0.09;random/res_poison:0.19",
@@ -800,7 +803,7 @@
    "casts": "arc_guided:12|arc_pierce:7|arc_rapid:31|kni_charge:11|kni_duel:16|war_battleorders:9|war_leap:23|war_quake:20|war_shout:5",
    "elites": "3:pride:Inviolable+Precise+Durable 6:gluttony:Gorging+Deadly+Thorny",
    "grew": "L9/A198/M6",
-   "tactics": "1:opt_affix_lust:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|armor|4||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.42;random/vs_elite_dr:0.05;random/xp_gain_pct:0.11",
     "normal|gloves|4||Cloth Gloves|-|-|def_flat:3|-|fixed/armor_def_pct:0.13;random/res_fire:0.06;random/res_lightning:0.1",
@@ -826,7 +829,7 @@
    "casts": "arc_pierce:2|arc_rapid:17|kni_charge:6|mag_frozenwall:6|mag_iceblast:22|pri_haste:6|pri_judgment:13|war_doubleswing:3|war_leap:16|war_quake:10|war_taunt:6",
    "elites": "3:greed:Gamble+Ferocious+Deadly 6:lust:Temptation+Swift+Precise",
    "grew": "L12/A201/M9",
-   "tactics": "1:opt_tag_blessing:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "rare|helmet|4|pride+envy|Usurping and Spiteful Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.06;pride/hp_per_level:3;envy/res_max_lightning:0.02;random/res_cold:0.18;random/cooldown_reduction:0.04",
     "normal|gloves|6||Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.79;random/item_find:0.06;random/res_all:0.07",
@@ -835,7 +838,7 @@
     "magic|armor|4|lust|Obsessive Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:1.78;lust/hp_flat:21;random/vs_front_dr:0.06;random/vs_elite_dr:0.05",
     "rare|boots|8|gluttony+wrath|Hungering and Raging Boots|-|-|def_flat:4|-|fixed/armor_def_pct:0.99;gluttony/res_lightning:0.11;wrath/aspd_pct:0.05;random/xp_gain_pct:0.05;random/freeze_dur_reduction:0.17"
    ],
-   "tl": "9e2c9e23"
+   "tl": "5b50adf0"
   },
   {
    "seed": 1,
@@ -855,7 +858,7 @@
    "casts": "arc_pierce:6|arc_poison:7|kni_charge:4|kni_rush:18|mag_frozenwall:4|mag_iceblast:11|mag_lightning:8|pri_judgment:11|pri_penitence:6",
    "elites": "3:gluttony:Gorging+Vigorous+Ferocious",
    "grew": "L6/A201/M3",
-   "tactics": "1:opt_class_pair:common:off",
+   "tactics": "1:opt_lead_knight:common:off",
    "drops": [],
    "tl": "1112b509"
   },
@@ -871,20 +874,20 @@
    "gold": 1251,
    "xp": 1712.9287393280003,
    "xpBy": "936|855|927",
-   "events": 1096,
+   "events": 1097,
    "strikes": "415/51 · 216/0",
    "kills": "1301:5|1302:9|1303:4|1350:1",
    "casts": "kni_duel:2|kni_rush:33|mag_frozenwall:1|mag_iceblast:13|pri_cure:17|pri_grace:9|war_bash:2|war_quake:12|war_shout:2|war_taunt:9",
    "elites": "3:gluttony:Gorging+Deadly+Swift 6:sloth:Apathy+Durable+Preemptive",
    "grew": "L12/A205/M9",
-   "tactics": "1:opt_march_def:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|armor|6||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.2;random/xp_gain_pct:0.1;random/res_lightning:0.17",
     "magic|helmet|6|lust|Debauched Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.54;lust/life_steal:0.02;random/cooldown_reduction:0.06;random/dr_flat:1",
     "normal|gloves|6||Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:1.49;random/atk_pct:0.04;random/res_poison:0.18",
     "normal|boots|10||leather|-|-|def_flat:1|-|fixed/armor_def_pct:0.86;random/xp_gain_pct:0.1;random/freeze_dur_reduction:0.14"
    ],
-   "tl": "dcb31f6a"
+   "tl": "fe342d91"
   },
   {
    "seed": 3,
@@ -904,7 +907,7 @@
    "casts": "arc_multishot:15|arc_poison:9|kni_enchant:1|kni_rush:8|mag_frozenwall:6|mag_iceblast:38|pri_bind:10|pri_haste:10|war_bash:1|war_quake:8|war_shout:12",
    "elites": "3:lust:Temptation+Vampiric+Nimble 6:lust:Temptation+Swift+Ferocious",
    "grew": "L10/A197/M7",
-   "tactics": "1:opt_tag_shout:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|armor|6||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.87;random/res_poison:0.1;random/vs_normal_dr:0.06",
     "magic|weapon|6|sloth|orb|dimensional_shard|-|-|mag_frostnova|fixed/atk_pct:1.1;sloth/aspd_pct:0.03;random/res_down_pct:0.07;random/crit_rate:0.04",
@@ -930,7 +933,7 @@
    "casts": "arc_poison:6|arc_snipe:7|kni_enchant:2|kni_rush:11|kni_smite:5|mag_frostnova:7|mag_iceblast:29",
    "elites": "3:greed:Gamble+Vampiric+Thorny",
    "grew": "L9/A195/M6",
-   "tactics": "1:opt_march_atk:common:on",
+   "tactics": "1:opt_gear_wrath:common:off",
    "drops": [],
    "tl": "1996c601"
   },
@@ -941,23 +944,24 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 151.5,
+   "sec": 98.1,
    "downed": "-",
-   "gold": 1251,
-   "xp": 1712.9287393280001,
-   "xpBy": "859|859|859",
-   "events": 1124,
-   "strikes": "405/58 · 244/0",
-   "kills": "1301:3|1302:8|1303:7|1350:1",
-   "casts": "kni_rush:35|mag_iceblast:24|pri_bind:8|pri_cure:16|war_battleorders:7|war_doubleswing:21|war_quake:2|war_shout:2|war_taunt:2",
-   "elites": "3:sloth:Apathy+Preemptive+Vampiric 6:gluttony:Gorging+Ferocious+Swift",
+   "gold": 1139,
+   "xp": 1338.2255776000002,
+   "xpBy": "670|670|670",
+   "events": 604,
+   "strikes": "272/55 · 93/0",
+   "kills": "1301:3|1302:4|1303:4|1350:1",
+   "casts": "kni_rush:16|kni_smite:1|mag_fireball:1|mag_iceblast:10|pri_bind:5|pri_cure:9|war_battleorders:6|war_doubleswing:12|war_quake:2|war_shout:2",
+   "elites": "3:greed:Gamble+Durable+Preemptive 6:gluttony:Gorging+Thorny+Vampiric",
    "grew": "L12/A192/M9",
-   "tactics": "1:opt_march_cdr:common:on",
+   "tactics": "1:opt_march_aspd:common:on",
    "drops": [
-    "normal|amulet|6||Talisman|-|-|-|struck/war_leap:0.09|random/res_cold:0.13;random/dr_flat:1",
-    "magic|ring|10|gluttony|Abyssal Silver Ring|-|-|-|-|gluttony/res_all:0.06;random/xp_gain_pct:0.1;random/freeze_dur_reduction:0.21"
+    "normal|amulet|6||Eye Pendant|-|-|-|hit/kni_rush:0.07|random/buff_dur_pct:0.14;random/dr_flat:1",
+    "normal|helmet|6||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.13;random/aspd_pct:0.03;random/res_poison:0.07",
+    "normal|boots|10||leather|-|-|def_flat:1|-|fixed/armor_def_pct:0.34;random/poison_dur_reduction:0.2;random/hp_flat:22"
    ],
-   "tl": "668bcc48"
+   "tl": "eaf60ce4"
   },
   {
    "seed": 6,
@@ -966,20 +970,20 @@
    "reason": "wipe",
    "rounds": 9,
    "cleared": 8,
-   "sec": 151.4,
+   "sec": 144.7,
    "downed": "0|1|2",
    "gold": 352,
    "xp": 856.4643696640002,
-   "xpBy": "387|476|452",
-   "events": 861,
-   "strikes": "336/50 · 208/0",
-   "kills": "1301:4|1302:4|1303:4",
-   "casts": "arc_pierce:8|arc_rapid:26|kni_rush:10|mag_fireball:11|mag_focus:1|mag_frozenwall:8|mag_iceblast:15|war_bash:4|war_doubleswing:11|war_shout:4|war_taunt:5",
+   "xpBy": "268|476|452",
+   "events": 812,
+   "strikes": "331/46 · 190/0",
+   "kills": "1301:3|1302:4|1303:5",
+   "casts": "arc_pierce:8|arc_rapid:26|kni_rush:8|mag_fireball:10|mag_focus:1|mag_frozenwall:7|mag_iceblast:23|war_bash:2|war_doubleswing:13|war_leap:2|war_shout:2|war_taunt:5",
    "elites": "3:wrath:Frenzy+Thorny+Durable 6:lust:Temptation+Vigorous+Precise",
-   "grew": "L9/A201/M6",
-   "tactics": "1:opt_march_hp:common:on",
+   "grew": "L8/A201/M5",
+   "tactics": "1:opt_lead_priest:common:off",
    "drops": [],
-   "tl": "5ddbaa15"
+   "tl": "6a082627"
   },
   {
    "seed": 7,
@@ -988,23 +992,23 @@
    "reason": "wipe",
    "rounds": 6,
    "cleared": 5,
-   "sec": 117.8,
+   "sec": 108.9,
    "downed": "0|1|2",
    "gold": 240,
    "xp": 642.3482772480002,
    "xpBy": "322|356|242",
-   "events": 688,
-   "strikes": "251/57 · 176/0",
+   "events": 667,
+   "strikes": "244/52 · 165/0",
    "kills": "1301:4|1302:5|1303:1",
-   "casts": "arc_pierce:6|arc_snipe:7|kni_duel:7|kni_rush:18|kni_smite:7|mag_iceblast:3|war_bash:8|war_leap:10",
-   "elites": "3:greed:Gamble+Thorny+Durable 6:envy:Deprivation+Vampiric+Durable",
+   "casts": "arc_pierce:6|arc_snipe:7|kni_duel:6|kni_rush:16|kni_smite:6|mag_iceblast:4|war_bash:7|war_battleorders:1|war_leap:10",
+   "elites": "3:greed:Gamble+Thorny+Durable 6:sloth:Apathy+Thorny+Durable",
    "grew": "L8/A210/M5",
-   "tactics": "1:opt_march_hp:common:on",
+   "tactics": "1:opt_march_atk:common:on",
    "drops": [
     "normal|helmet|6||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.91;random/aspd_pct:0.05;random/xp_gain_pct:0.1",
     "normal|weapon|6||mace|club|-|-|war_doubleswing|fixed/atk_pct:1.43;random/vs_back_dmg:0.07;random/vs_normal_dmg:0.13"
    ],
-   "tl": "6d64086f"
+   "tl": "4df476fb"
   },
   {
    "seed": 8,
@@ -1013,22 +1017,22 @@
    "reason": "wipe",
    "rounds": 9,
    "cleared": 8,
-   "sec": 153,
+   "sec": 155.8,
    "downed": "0|1|2",
    "gold": 432,
    "xp": 1124.1094851840003,
    "xpBy": "429|618|538",
-   "events": 854,
-   "strikes": "265/40 · 230/0",
+   "events": 862,
+   "strikes": "267/40 · 234/0",
    "kills": "1301:6|1302:7|1303:4",
-   "casts": "kni_rush:12|mag_frostnova:12|mag_frozenwall:8|mag_iceblast:20|pri_judgment:12|pri_regen:6|war_battleorders:5|war_doubleswing:15|war_leap:1|war_shout:2",
+   "casts": "kni_rush:12|mag_frostnova:12|mag_frozenwall:8|mag_iceblast:20|pri_judgment:12|pri_regen:6|war_battleorders:5|war_doubleswing:15|war_leap:2|war_shout:2",
    "elites": "3:lust:Temptation+Durable+Swift 6:pride:Inviolable+Ferocious+Nimble",
    "grew": "L9/A195/M6",
-   "tactics": "1:opt_affix_sloth:common:off",
+   "tactics": "1:opt_march_res:common:on",
    "drops": [
     "rare|weapon|8|greed+gluttony|orb|eldritch_orb|-|-|mag_iceblast|fixed/atk_pct:0.04;greed/item_find:0.1;gluttony/crushing_blow_pct:0.01;random/crit_rate:0.03;random/lightning_dmg_pct:0.14"
    ],
-   "tl": "78c524e2"
+   "tl": "22d262df"
   },
   {
    "seed": 9,
@@ -1048,7 +1052,7 @@
    "casts": "arc_guided:18|arc_pierce:10|kni_duel:13|kni_rush:16|mag_fireball:2|mag_iceblast:19|war_battleorders:8|war_leap:20",
    "elites": "3:envy:Deprivation+Precise+Vigorous 6:pride:Inviolable+Durable+Vampiric",
    "grew": "L9/A198/M6",
-   "tactics": "1:opt_affix_lust:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|helmet|6||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.45;random/cooldown_reduction:0.06;random/aspd_pct:0.02",
     "rare|armor|8|lust+greed|Obsessive and Exploitative Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:1.57;lust/hp_flat:12;greed/gold_find:0.08;random/res_poison:0.2;random/vs_elite_dr:0.07"
@@ -1062,20 +1066,20 @@
    "reason": "wipe",
    "rounds": 4,
    "cleared": 3,
-   "sec": 103,
+   "sec": 94.5,
    "downed": "0|1|2",
    "gold": 192,
    "xp": 481.7612079360001,
    "xpBy": "241|241|241",
-   "events": 693,
-   "strikes": "237/43 · 193/0",
+   "events": 645,
+   "strikes": "226/43 · 169/0",
    "kills": "1301:1|1302:3|1303:3",
-   "casts": "kni_charge:3|kni_rush:14|mag_frozenwall:5|mag_iceblast:28|pri_haste:6|pri_judgment:11|war_leap:8|war_taunt:5",
+   "casts": "kni_charge:3|kni_rush:12|mag_frozenwall:4|mag_iceblast:27|pri_haste:5|pri_judgment:10|war_leap:8|war_taunt:5",
    "elites": "3:sloth:Apathy+Precise+Durable",
    "grew": "L6/A201/M3",
-   "tactics": "1:opt_tag_blessing:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [],
-   "tl": "e7a075cd"
+   "tl": "378abe1d"
   },
   {
    "seed": 1,
@@ -1095,7 +1099,7 @@
    "casts": "arc_pierce:5|arc_poison:6|kni_duel:13|kni_rush:5|mag_fireball:5|mag_frozenwall:6|mag_lightning:13|pri_judgment:13|pri_penitence:5",
    "elites": "3:pride:Inviolable+Ferocious+Vampiric",
    "grew": "L7/A201/M4",
-   "tactics": "1:opt_class_pair:common:off",
+   "tactics": "1:opt_lead_knight:common:off",
    "drops": [],
    "tl": "1f0e6f99"
   },
@@ -1117,7 +1121,7 @@
    "casts": "kni_duel:14|kni_rush:24|mag_fireball:12|mag_frostnova:4|mag_frozenwall:3|mag_inferno:4|pri_cure:27|pri_grace:13|pri_judgment:18|war_quake:19|war_taunt:12",
    "elites": "3:gluttony:Gorging+Ferocious+Durable 6:wrath:Frenzy+Thorny+Preemptive",
    "grew": "L12/A205/M9",
-   "tactics": "1:opt_march_def:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "magic|helmet|12|lust|plate|-|-|def_flat:8|-|fixed/armor_def_pct:0.47;lust/life_steal:0.02;random/xp_gain_pct:0.07;random/res_fire:0.19"
    ],
@@ -1141,7 +1145,7 @@
    "casts": "arc_multishot:11|arc_poison:7|kni_duel:9|kni_smite:3|mag_fireball:9|mag_frozenwall:6|mag_iceblast:21|pri_bind:6|pri_haste:6|pri_judgment:8",
    "elites": "3:envy:Deprivation+Precise+Vampiric",
    "grew": "L9/A197/M6",
-   "tactics": "1:opt_tag_shout:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [],
    "tl": "6e074900"
   },
@@ -1163,7 +1167,7 @@
    "casts": "arc_poison:5|arc_snipe:6|kni_duel:4|kni_enchant:2|kni_smite:6|mag_fireball:7|mag_frostnova:7|mag_iceblast:18|pri_judgment:7",
    "elites": "3:gluttony:Gorging+Preemptive+Nimble 6:sloth:Apathy+Precise+Durable",
    "grew": "L8/A195/M5",
-   "tactics": "1:opt_march_atk:common:on",
+   "tactics": "1:opt_gear_wrath:common:off",
    "drops": [
     "normal|weapon|8||orb|eagle_orb|-|-|mag_iceblast|fixed/atk_pct:1.82;random/res_down_pct:0.06;random/vs_undead_dmg:0.12",
     "normal|armor|10||light|-|-|def_flat:14|-|fixed/armor_def_pct:0.11;random/res_cold:0.16;random/vs_undead_dr:0.07"
@@ -1177,69 +1181,71 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 300.3,
+   "sec": 187.3,
    "downed": "-",
-   "gold": 1424,
-   "xp": 1984.7919418685965,
-   "xpBy": "991|991|991",
-   "events": 1935,
-   "strikes": "798/155 · 377/0",
-   "kills": "1401:9|1402:4|1403:6|1450:1",
-   "casts": "kni_duel:12|kni_rush:31|mag_chain:3|mag_fireball:11|mag_frozenwall:12|mag_inferno:8|pri_bind:16|pri_cure:34|pri_judgment:23|pri_regen:1|war_battleorders:14|war_doubleswing:36",
-   "elites": "3:wrath:Frenzy+Preemptive+Nimble 6:gluttony:Gorging+Precise+Nimble",
+   "gold": 1388,
+   "xp": 1864.5015211492873,
+   "xpBy": "931|931|931",
+   "events": 1228,
+   "strikes": "518/132 · 206/0",
+   "kills": "1401:7|1402:3|1403:7|1450:1",
+   "casts": "kni_duel:9|kni_rush:20|mag_fireball:16|mag_focus:2|mag_iceblast:5|mag_inferno:3|pri_bind:9|pri_cure:20|pri_judgment:7|pri_regen:2|war_battleorders:9|war_doubleswing:22",
+   "elites": "3:lust:Temptation+Ferocious+Vampiric 6:gluttony:Gorging+Deadly+Ferocious",
    "grew": "L12/A192/M9",
-   "tactics": "1:opt_march_cdr:common:on",
+   "tactics": "1:opt_march_aspd:common:on",
    "drops": [
-    "magic|amulet|8|envy|Jealous Gold Necklace|-|-|-|interval/arc_pierce:1.03|envy/res_down_pct:0.06;random/res_lightning:0.11;random/xp_gain_pct:0.12",
-    "normal|gloves|12||gauntlet|-|-|def_flat:5|-|fixed/armor_def_pct:0.66;random/def_ignore:0.05;random/def_flat:8"
+    "rare|armor|8|pride+envy|Prideful and Spiteful Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:1.91;pride/def_per_level:1;envy/reflect_damage:0.06;random/xp_gain_pct:0.1;random/vs_back_dr:0.06",
+    "normal|amulet|8||Talisman|-|-|-|struck/war_shout:0.13|random/dr_flat:1;random/buff_dur_pct:0.13",
+    "rare|armor|10|gluttony+envy|light|-|-|def_flat:14|-|fixed/armor_def_pct:1.63;gluttony/res_all:0.04;envy/reflect_damage:0.07;random/vs_front_dr:0.09;random/vs_demon_dr:0.09",
+    "rare|helmet|12|gluttony+pride|tiara|-|-|def_flat:2|-|fixed/armor_def_pct:0.32;gluttony/res_all:0.03;pride/hp_per_level:5;random/cooldown_reduction:0.03;random/xp_gain_pct:0.05"
    ],
-   "tl": "ecaac6d7"
+   "tl": "31f4825d"
   },
   {
    "seed": 6,
    "stage": 104,
    "won": false,
    "reason": "wipe",
-   "rounds": 3,
-   "cleared": 2,
-   "sec": 89.6,
+   "rounds": 4,
+   "cleared": 3,
+   "sec": 125.7,
    "downed": "0|1|2",
-   "gold": 72,
-   "xp": 240.5808414386177,
-   "xpBy": "0|133|128",
-   "events": 520,
-   "strikes": "214/70 · 149/0",
-   "kills": "1402:1|1403:3",
-   "casts": "arc_pierce:5|arc_rapid:16|kni_duel:8|mag_fireball:9|mag_frozenwall:5|mag_lightning:2|pri_judgment:7|war_doubleswing:5|war_taunt:3",
-   "elites": "3:pride:Inviolable+Nimble+Vigorous",
-   "grew": "L5/A201/M2",
-   "tactics": "1:opt_march_hp:common:on",
+   "gold": 216,
+   "xp": 541.3068932368899,
+   "xpBy": "0|301|160",
+   "events": 630,
+   "strikes": "248/79 · 174/0",
+   "kills": "1401:3|1402:2|1403:2",
+   "casts": "arc_pierce:6|arc_rapid:19|kni_duel:7|mag_fireball:16|mag_frozenwall:6|pri_cure:5|pri_judgment:12|war_doubleswing:5|war_taunt:3",
+   "elites": "3:envy:Deprivation+Vampiric+Durable",
+   "grew": "L6/A201/M3",
+   "tactics": "1:opt_lead_priest:common:off",
    "drops": [],
-   "tl": "46cf90f4"
+   "tl": "be230f07"
   },
   {
    "seed": 7,
    "stage": 104,
    "won": false,
    "reason": "wipe",
-   "rounds": 5,
-   "cleared": 4,
-   "sec": 103.1,
+   "rounds": 6,
+   "cleared": 5,
+   "sec": 120.3,
    "downed": "0|1|2",
-   "gold": 216,
-   "xp": 541.3068932368899,
-   "xpBy": "270|300|150",
-   "events": 529,
-   "strikes": "199/59 · 110/0",
-   "kills": "1401:2|1402:4|1403:1",
-   "casts": "arc_pierce:6|arc_snipe:7|kni_duel:8|kni_smite:4|mag_fireball:4|pri_judgment:14|war_bash:7|war_leap:9",
-   "elites": "3:envy:Deprivation+Precise+Ferocious",
-   "grew": "L7/A210/M4",
-   "tactics": "1:opt_march_hp:common:on",
+   "gold": 234,
+   "xp": 601.4521035965444,
+   "xpBy": "300|333|150",
+   "events": 550,
+   "strikes": "201/63 · 110/0",
+   "kills": "1401:2|1402:5|1403:1",
+   "casts": "arc_pierce:7|arc_snipe:8|kni_duel:6|kni_smite:4|mag_fireball:6|mag_focus:2|pri_judgment:13|war_bash:6|war_leap:9",
+   "elites": "3:envy:Deprivation+Precise+Ferocious 6:pride:Inviolable+Vigorous+Nimble",
+   "grew": "L8/A210/M5",
+   "tactics": "1:opt_march_atk:common:on",
    "drops": [
     "magic|amulet|8|envy|Spiteful Gold Necklace|-|-|-|interval/mag_iceblast:1.11|envy/res_down_pct:0.07;random/buff_dur_pct:0.06;random/res_poison:0.07"
    ],
-   "tl": "6a8e751b"
+   "tl": "b3c1da14"
   },
   {
    "seed": 8,
@@ -1248,23 +1254,23 @@
    "reason": "wipe",
    "rounds": 5,
    "cleared": 4,
-   "sec": 123.4,
+   "sec": 129.2,
    "downed": "0|1|2",
    "gold": 288,
    "xp": 781.8877346755075,
    "xpBy": "390|429|416",
-   "events": 778,
-   "strikes": "250/69 · 213/0",
+   "events": 805,
+   "strikes": "258/72 · 225/0",
    "kills": "1402:7|1403:4",
-   "casts": "kni_duel:10|mag_fireball:4|mag_frostnova:10|mag_frozenwall:6|pri_judgment:34|pri_regen:6|war_battleorders:6|war_doubleswing:13",
+   "casts": "kni_duel:10|mag_fireball:4|mag_frostnova:10|mag_frozenwall:7|pri_judgment:34|pri_regen:6|war_battleorders:6|war_doubleswing:13",
    "elites": "3:sloth:Apathy+Vampiric+Deadly",
    "grew": "L9/A195/M6",
-   "tactics": "1:opt_affix_sloth:common:off",
+   "tactics": "1:opt_march_res:common:on",
    "drops": [
     "normal|weapon|8||spear|giant_thresher|-|-|kni_smite|fixed/atk_pct:1.26;random/vs_front_dmg:0.12;random/vs_undead_dmg:0.09",
     "normal|amulet|10||Talisman|-|-|-|struck/mag_iceblast:0.13|random/buff_dur_pct:0.11;random/dr_flat:1"
    ],
-   "tl": "6f53c8fb"
+   "tl": "9ee0140b"
   },
   {
    "seed": 9,
@@ -1284,7 +1290,7 @@
    "casts": "arc_guided:7|arc_pierce:4|kni_duel:11|mag_fireball:3|pri_judgment:12|war_battleorders:4|war_leap:7",
    "elites": "3:lust:Temptation+Durable+Preemptive",
    "grew": "L6/A198/M3",
-   "tactics": "1:opt_affix_lust:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [
     "normal|armor|8||Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:1.85;random/vs_demon_dr:0.08;random/vs_elite_dr:0.09"
    ],
@@ -1295,24 +1301,22 @@
    "stage": 104,
    "won": false,
    "reason": "wipe",
-   "rounds": 5,
-   "cleared": 4,
-   "sec": 149.2,
+   "rounds": 4,
+   "cleared": 3,
+   "sec": 128.8,
    "downed": "0|1|2",
-   "gold": 252,
-   "xp": 661.5973139561987,
-   "xpBy": "270|330|270",
-   "events": 885,
-   "strikes": "343/84 · 184/0",
-   "kills": "1401:2|1402:3|1403:4",
-   "casts": "kni_duel:10|mag_fireball:7|mag_frozenwall:11|mag_iceblast:24|pri_haste:8|pri_judgment:23|war_leap:10|war_taunt:6",
+   "gold": 216,
+   "xp": 541.3068932368899,
+   "xpBy": "270|270|270",
+   "events": 813,
+   "strikes": "313/80 · 179/0",
+   "kills": "1401:2|1402:2|1403:3",
+   "casts": "kni_duel:9|mag_fireball:7|mag_frozenwall:10|mag_iceblast:22|pri_haste:7|pri_judgment:21|war_leap:10|war_taunt:6",
    "elites": "3:lust:Temptation+Durable+Vigorous",
-   "grew": "L7/A201/M4",
-   "tactics": "1:opt_tag_blessing:common:on",
-   "drops": [
-    "normal|weapon|8||crucifix|divine_scepter|-|-|pri_regen|fixed/atk_pct:0.99;random/vs_front_dmg:0.08;random/vs_undead_dmg:0.1"
-   ],
-   "tl": "3a79d9b2"
+   "grew": "L6/A201/M3",
+   "tactics": "1:opt_bond_100:common:off",
+   "drops": [],
+   "tl": "416789dd"
   },
   {
    "seed": 1,
@@ -1332,7 +1336,7 @@
    "casts": "arc_pierce:8|arc_poison:10|mag_frozenwall:21|mag_inferno:11|mag_lightning:14|pri_judgment:17|pri_penitence:9",
    "elites": "-",
    "grew": "L3/A201/M0",
-   "tactics": "1:opt_class_pair:common:off",
+   "tactics": "1:opt_lead_knight:common:off",
    "drops": [],
    "tl": "240b3878"
   },
@@ -1354,7 +1358,7 @@
    "casts": "kni_rush:61|mag_frozenwall:87|pri_cure:67|pri_grace:32|war_quake:47|war_taunt:29",
    "elites": "-",
    "grew": "L3/A205/M0",
-   "tactics": "1:opt_march_def:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [],
    "tl": "7303afbb"
   },
@@ -1376,7 +1380,7 @@
    "casts": "arc_multishot:20|arc_poison:12|mag_frozenwall:22|mag_iceblast:41|mag_inferno:16|mag_lightning:23|pri_bind:10|pri_haste:10",
    "elites": "-",
    "grew": "L3/A197/M0",
-   "tactics": "1:opt_tag_shout:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [],
    "tl": "535a6151"
   },
@@ -1398,9 +1402,9 @@
    "casts": "arc_poison:6|arc_snipe:7|kni_smite:9|mag_fireball:9|mag_frostnova:19|mag_frozenwall:7|mag_iceblast:20",
    "elites": "-",
    "grew": "L3/A195/M0",
-   "tactics": "1:opt_march_atk:common:on",
+   "tactics": "1:opt_gear_wrath:common:off",
    "drops": [],
-   "tl": "3c0b0950"
+   "tl": "9f0937dc"
   },
   {
    "seed": 5,
@@ -1409,22 +1413,22 @@
    "reason": "clear",
    "rounds": 1,
    "cleared": 1,
-   "sec": 229.5,
+   "sec": 223.6,
    "downed": "-",
    "gold": 4055,
    "xp": 1351.5831672021543,
    "xpBy": "676|676|676",
-   "events": 1149,
-   "strikes": "614/238 · 159/0",
+   "events": 1146,
+   "strikes": "617/237 · 154/0",
    "kills": "1900:1",
-   "casts": "kni_rush:24|mag_chain:23|mag_frozenwall:12|mag_lightning:23|pri_bind:12|pri_cure:25|war_battleorders:11|war_doubleswing:28",
+   "casts": "kni_rush:23|mag_chain:22|mag_frozenwall:12|mag_lightning:22|pri_bind:11|pri_cure:23|war_battleorders:11|war_doubleswing:26",
    "elites": "-",
    "grew": "L12/A192/M9",
-   "tactics": "1:opt_march_cdr:common:on",
+   "tactics": "1:opt_march_aspd:common:on",
    "drops": [
-    "rare|amulet|16|gluttony+lust|Predatory and Obsessive Talisman|-|-|-|struck/mag_iceblast:0.09|gluttony/res_all:0.05;lust/hp_recovery_pct:0.09;random/buff_dur_pct:0.13;random/res_fire:0.12"
+    "normal|weapon|16||staff|gothic_staff|-|-|mag_chain|fixed/atk_pct:0.49;random/res_down_pct:0.06;random/vs_back_dmg:0.12"
    ],
-   "tl": "3b316052"
+   "tl": "ffbc8e6e"
   },
   {
    "seed": 6,
@@ -1444,9 +1448,9 @@
    "casts": "arc_pierce:33|arc_rapid:116|mag_fireball:40|mag_focus:42|mag_frozenwall:97|war_doubleswing:22|war_taunt:10",
    "elites": "-",
    "grew": "L3/A201/M0",
-   "tactics": "1:opt_march_hp:common:on",
+   "tactics": "1:opt_lead_priest:common:off",
    "drops": [],
-   "tl": "b351ed45"
+   "tl": "7fcce8f6"
   },
   {
    "seed": 7,
@@ -1455,20 +1459,20 @@
    "reason": "wipe",
    "rounds": 1,
    "cleared": 0,
-   "sec": 259.4,
+   "sec": 256,
    "downed": "0|1|2",
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 2095,
-   "strikes": "1733/642 · 114/0",
+   "events": 2346,
+   "strikes": "1977/742 · 112/0",
    "kills": "-",
-   "casts": "arc_pierce:12|arc_snipe:14|kni_duel:8|kni_smite:8|mag_frozenwall:39|war_bash:17|war_leap:22",
+   "casts": "arc_pierce:13|arc_snipe:16|kni_duel:8|kni_smite:8|mag_frozenwall:39|war_bash:16|war_leap:22",
    "elites": "-",
    "grew": "L3/A210/M0",
-   "tactics": "1:opt_march_hp:common:on",
+   "tactics": "1:opt_march_atk:common:on",
    "drops": [],
-   "tl": "bcbd154f"
+   "tl": "3d43f1ca"
   },
   {
    "seed": 8,
@@ -1488,11 +1492,11 @@
    "casts": "mag_chain:17|mag_fireball:12|mag_frostnova:14|mag_frozenwall:18|pri_judgment:17|pri_regen:9|war_battleorders:8|war_doubleswing:19",
    "elites": "-",
    "grew": "L12/A195/M9",
-   "tactics": "1:opt_affix_sloth:common:off",
+   "tactics": "1:opt_march_res:common:on",
    "drops": [
     "rare|gloves|16|wrath+envy|leather|-|-|def_flat:2|-|fixed/armor_def_pct:1.18;wrath/crit_damage:0.07;envy/def_ignore:0.04;random/res_cold:0.1;random/crit_rate:0.03"
    ],
-   "tl": "09a0ad5a"
+   "tl": "42bc674b"
   },
   {
    "seed": 9,
@@ -1512,7 +1516,7 @@
    "casts": "arc_guided:11|arc_pierce:6|kni_duel:7|mag_frozenwall:7|mag_iceblast:25|mag_inferno:9|war_battleorders:5|war_leap:10",
    "elites": "-",
    "grew": "L3/A198/M0",
-   "tactics": "1:opt_affix_lust:common:off",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [],
    "tl": "d9c102c3"
   },
@@ -1523,20 +1527,20 @@
    "reason": "wipe",
    "rounds": 1,
    "cleared": 0,
-   "sec": 90.7,
+   "sec": 88.9,
    "downed": "0|1|2",
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 473,
-   "strikes": "227/95 · 104/0",
+   "events": 465,
+   "strikes": "225/95 · 100/0",
    "kills": "-",
-   "casts": "mag_frostnova:7|mag_frozenwall:9|mag_iceblast:14|mag_inferno:7|pri_haste:4|pri_judgment:9|war_leap:8|war_taunt:5",
+   "casts": "mag_frostnova:7|mag_frozenwall:9|mag_iceblast:14|mag_inferno:6|pri_haste:4|pri_judgment:9|war_leap:8|war_taunt:5",
    "elites": "-",
    "grew": "L3/A201/M0",
-   "tactics": "1:opt_tag_blessing:common:on",
+   "tactics": "1:opt_bond_100:common:off",
    "drops": [],
-   "tl": "c0189c2d"
+   "tl": "405a1e06"
   }
  ]
 }

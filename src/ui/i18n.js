@@ -51,7 +51,7 @@ export const L = v =>
     v == null ? '' : (typeof v === 'string' ? v : (v[current] ?? v.ko ?? ''));
 
 /** UI 문구 조회 — 미등록 키는 키 그대로 노출된다 (누락이 화면에서 바로 보이게) */
-/** 그 키가 사전에 있는가 — 어휘가 CSV 에서 오는 자리(버프 `effect_stat`)가 문장을 만들지 말지 고를 때 쓴다 */
+/** 그 키가 사전에 있는가 — 어휘가 CSV 에서 오는 자리(걸린 효과 `skill_status.csv:stat`)가 문장을 만들지 말지 고를 때 쓴다 */
 export const has = key => Object.prototype.hasOwnProperty.call(STRINGS, key);
 
 export function t(key, params) {
@@ -246,6 +246,7 @@ const STRINGS = {
     'exp.level.up': { ko: '1 올리기', en: 'Raise by 1' },
     'exp.level.max': { ko: '최대로', en: 'To maximum' },
     'exp.err.range': { ko: '그 위험도로는 바꿀 수 없다', en: 'That danger level is out of range' },
+    'exp.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 보스전 중이면 다음 런부터 · 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
     'exp.lock.boss': { ko: '보스전 중 — 바꾼 것은 다음 런부터 먹는다', en: 'Boss fight — changes apply next run' },
     'exp.tactic.off': { ko: '전술이 꺼졌다 — {eff}', en: 'Tactic off — {eff}' },
@@ -318,6 +319,7 @@ const STRINGS = {
     'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
     'ch.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
     'ch.err.stashFull': { ko: '창고가 가득 찼다', en: 'Stash is full' },
+    'ch.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     // 결과 플래시 — 문장을 조각내 잇지 않는다. 건너뛴 것이 있으면 키째 다른 줄을 쓴다
     'ch.sel.salvaged': { ko: '{n}개 분해 → 가루 +{d}', en: 'Salvaged {n} → dust +{d}' },
@@ -363,6 +365,7 @@ const STRINGS = {
     'tv.empty': { ko: '고용함 — 다음 교체에 채워진다', en: 'Hired — refills on next refresh' },
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'tv.err.roster': { ko: '로스터가 가득 찼다 ({cap})', en: 'Roster full ({cap})' },
+    'tv.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
     /* 수색 칸 [신설 2026-09-01 · **실동작 2026-09-09** — SCREEN_DESIGN §8-1 · ADR-0062].
        ⚠ 진행 중 이야기 문장은 여기 없다 — `search_story.csv` 가 든다(막 수·죄종 필터가 굴림의 입력이라
@@ -435,6 +438,8 @@ const STRINGS = {
     'nav.research': { ko: '건설', en: 'Construction' },
     'nav.forge': { ko: '제련소', en: 'Smeltery' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
+    // 훈련장 [2026-09-22 사용자 지시 · ADR-0297] — 선술집 뒤 · 건설의 훈련장 가지 이름도 이 키를 쓴다
+    'nav.training': { ko: '훈련장', en: 'Training Grounds' },
     'nav.shop': { ko: '상점', en: 'Shop' },
     'nav.resource': { ko: '자원', en: 'Resources' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
@@ -519,12 +524,12 @@ const STRINGS = {
     'fg.err.missing': { ko: '없는 부위 · 레벨 · 종류다', en: 'Unknown slot, level or type' },
     // 물약 (R103 · ADR-0142 · 개수 R124) — 이름 · 회복량은 `potion.csv` · 판정은 `game.potionState` · 칸은 편성 탭이 든다
     'fg.err.locked': { ko: '아직 만들 수 없다', en: 'Not craftable yet' },
+    'fg.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     'fg.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'fg.potion.stock': { ko: '재고', en: 'Stock' },
     'fg.potion.none': { ko: '없음', en: 'None' },
     'fg.potion.tip': { ko: '{name} · 회복 {n}', en: '{name} · Heals {n}' },
     'fg.potion.heal': { ko: '회복 {n}', en: 'Heals {n}' },
-    'fg.potion.locked': { ko: '잠김', en: 'Locked' },
 
     /* ── 도움말 탭 (2026-08-26) ──
        설명 문구는 여기서 새로 쓰지 않는다 — 인게임에서 걷어낸 *.note / *.sub / *.hint 를 같은 키로 재사용한다.
@@ -781,7 +786,7 @@ const STRINGS = {
 
     /* ── 스킬 ── */
     /* ── 연구 탭 — 파티 전술 (2026-08-30 · SCREEN_DESIGN §13) ── */
-    /* ── 편성 탭 (SCREEN_DESIGN §15 · 2026-09-21) — 오류는 결과 코드와 짝을 맞춘다(`pt.err.<코드>` — toggleParty · setPotionSlot · swapPotionSlot · rerollTactic) ── */
+    /* ── 편성 탭 (SCREEN_DESIGN §15 · 2026-09-21) — 오류는 결과 코드와 짝을 맞춘다(`pt.err.<코드>` — toggleParty · setPotionSlot · swapPotionSlot · rerollTactic · toggleTacticLock) ── */
     'pt.preset': { ko: '편성 {n}', en: 'Party {n}' },
     'pt.potion.h': { ko: '물약', en: 'Potions' },
     'pt.potion.stock': { ko: '가진 물약', en: 'In stock' },
@@ -793,64 +798,157 @@ const STRINGS = {
     'pt.err.slotsFull': { ko: '물약 칸이 다 찼다', en: 'All potion slots are full' },
     'pt.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'pt.err.locked': { ko: '아직 열리지 않은 칸이다', en: 'That slot is not open yet' },
+    'pt.err.allLocked': { ko: '굴릴 칸이 없다 — 전부 잠갔다', en: 'Nothing to reroll — every slot is locked' },
     'rs.h': { ko: '파티 전술', en: 'Party Tactics' },
+    /* 건설 [2026-09-22 · R137 · SCREEN_DESIGN §13 · ADR-0302] — 표 넷을 그대로 그린다. 여는 것 문장은 **대상마다 한 키**(`cn.t.<대상>` —
+       어휘는 `game_logic/construction.js:TARGETS`) · 더하기는 `+{n}`. 조건 · 비용 · 잠긴 자리의 「무엇을 지어야 하나」도 여기 */
+    'cn.progress': { ko: '지은 랭크 {n}', en: 'Ranks built {n}' },
+    'cn.rank': { ko: '{n}랭크', en: 'Rank {n}' },
+    'cn.need': { ko: '{b} {n}랭크 필요', en: 'Needs {b} rank {n}' },
+    'cn.pending': { ko: '준비 중', en: 'Coming later' },
+    'cn.soon': { ko: '(준비 중)', en: '(later)' },
+    'cn.free': { ko: '무료', en: 'Free' },
+    'cn.built': { ko: '{b} {n}랭크를 지었다', en: 'Built {b} rank {n}' },
+    'cn.req.stage': { ko: '{s} 클리어', en: 'Clear {s}' },
+    'cn.req.total': { ko: '합산 레벨 {have} / {need}', en: 'Total level {have} / {need}' },
+    'cn.req.hero': { ko: '최고 영웅 Lv.{have} / {need}', en: 'Top hero Lv.{have} / {need}' },
+    'cn.req.building': { ko: '{b} {n}랭크', en: '{b} rank {n}' },
+    // 거절 코드 — construct 의 err (INTERFACE §3)
+    'cn.err.missing': { ko: '없는 건물이다', en: 'Unknown building' },
+    'cn.err.maxRank': { ko: '다 지었다', en: 'Fully built' },
+    'cn.err.pending': { ko: '아직 여는 기능이 없다', en: 'Nothing to open yet' },
+    'cn.err.locked': { ko: '조건이 모자란다', en: 'Requirements not met' },
+    'cn.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'cn.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
+    'cn.t.expedition': { ko: '원정', en: 'Expeditions' },
+    'cn.t.repeat': { ko: '반복 원정', en: 'Repeat runs' },
+    'cn.t.stage_level': { ko: '위험도 조절', en: 'Danger level' },
+    'cn.t.salvage': { ko: '분해', en: 'Salvage' },
+    'cn.t.auto_salvage': { ko: '자동 분해', en: 'Auto salvage' },
+    'cn.t.upgrade_item': { ko: '강화', en: 'Upgrade' },
+    'cn.t.make': { ko: '제작', en: 'Smithing' },
+    'cn.t.storage': { ko: '창고', en: 'Stash' },
+    'cn.t.codex': { ko: '도감', en: 'Codex' },
+    'cn.t.hire': { ko: '고용', en: 'Hiring' },
+    'cn.t.search': { ko: '수색', en: 'Search' },
+    'cn.t.shop': { ko: '상단', en: 'Trading House' },
+    'cn.t.shop_special': { ko: '특수상단', en: 'Visiting trader' },
+    'cn.t.craft': { ko: '크래프트', en: 'Craft' },
+    'cn.t.auto_salvage_score': { ko: '자동 분해 점수 선', en: 'Auto-salvage score line' },
+    'cn.t.stigma_craft': { ko: '낙인 크래프트', en: 'Stigma craft' },
+    'cn.t.skill_card': { ko: '스킬 카드 합성', en: 'Skill card fusion' },
+    'cn.t.dispatch': { ko: '파견', en: 'Dispatch' },
+    'cn.t.explore': { ko: '탐험', en: 'Exploration' },
+    'cn.t.raid': { ko: '약탈', en: 'Raid' },
+    'cn.t.escort': { ko: '보호', en: 'Escort' },
+    'cn.t.gear_set': { ko: '장비 세트 저장', en: 'Gear sets' },
+    'cn.t.monster_card': { ko: '몬스터 카드', en: 'Monster cards' },
+    'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission board' },
+    'cn.t.gamble': { ko: '도박장', en: 'Gambling den' },
+    'cn.t.high_tier_candidates': { ko: '높은 등급 후보', en: 'Higher-tier recruits' },
+    'cn.t.training': { ko: '훈련', en: 'Training' },
+    'cn.t.advance': { ko: '전직', en: 'Advancement' },
+    'cn.t.skill_depth': { ko: '영웅 스킬 더 찍기', en: 'Deeper hero skills' },
+    'cn.t.bag': { ko: '가방 칸 +{n}', en: 'Bag +{n}' },
+    'cn.t.stash': { ko: '창고 칸 +{n}', en: 'Stash +{n}' },
+    'cn.t.roster': { ko: '로스터 +{n}', en: 'Roster +{n}' },
+    'cn.t.presets': { ko: '편성 +{n}', en: 'Presets +{n}' },
+    'cn.t.potionSlots': { ko: '물약 칸 +{n}', en: 'Potion slots +{n}' },
+    'cn.t.upgrade': { ko: '강화 상한 +{n}', en: 'Upgrade cap +{n}' },
+    'cn.t.tavernCandidates': { ko: '고용 후보 +{n}', en: 'Recruits +{n}' },
+    'cn.t.searchSlots': { ko: '수색 칸 +{n}', en: 'Search slots +{n}' },
+    'cn.t.shopPerSlot': { ko: '품목 수 +{n}', en: 'Wares +{n}' },
+    'cn.t.shopWeapon': { ko: '무기 품목 +{n}', en: 'Weapon wares +{n}' },
+    'cn.t.make_level': { ko: '제작 레벨 +{n}', en: 'Smithing levels +{n}' },
+    'cn.t.potion_tier': { ko: '물약 단계 +{n}', en: 'Potion tiers +{n}' },
+    'cn.t.tactic_slots': { ko: '전술 칸 +{n}', en: 'Tactic slots +{n}' },
+    'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Smithing types +{n}' },
+    'cn.t.resource_tier': { ko: '자원 단계 +{n}', en: 'Resource tiers +{n}' },
+    'cn.t.workers': { ko: '일꾼 칸 +{n}', en: 'Workers +{n}' },
+    'cn.t.shop_layers': { ko: '품목 층 +{n}', en: 'Ware tiers +{n}' },
+    'cn.t.explore_regions': { ko: '탐험 지역 +{n}', en: 'Regions +{n}' },
+    'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
+    'cn.t.gear_sets': { ko: '장비 세트 +{n}', en: 'Gear sets +{n}' },
+    'cn.t.commission_slots': { ko: '동시 의뢰 +{n}', en: 'Parallel commissions +{n}' },
+    'cn.t.training_slots': { ko: '훈련 칸 +{n}', en: 'Training slots +{n}' },
+    'cn.t.research': { ko: '연구 상한 +{n}', en: 'Research cap +{n}' },
     // 건설 [2026-09-21 ADR-0253] — 옛 「연구」. 본문은 위쪽 탭(ADR-0192 로 걷힘)을 설명하던 것을 지금 화면 기준으로 다시 썼다
     'rs.research.h': { ko: '건설', en: 'Construction' },
     'rs.research.note': {
-        ko: '<b>건설</b>은 <b>가지 8</b>(원정 · 탐험 · 제련소 · 선술집 · 상단 · 자원 · 도감 · 파티 전술)이다. 노드를 찍어 열고, <b>가지끼리는 서로 잠그지 않는다</b>. 영웅 파견은 하지 않는다<br>'
-            + '파티 전술 가지가 편성 탭의 전술 칸을 여는 자리다<br>'
-            + '노드의 내용 · 비용 · 여는 조건이 미정이라 미착수 — 지금 보이는 노드는 자리표시다',
-        en: '<b>Construction</b> has <b>eight branches</b> (Expedition · Exploration · Smeltery · Tavern · Trading House · Resources · Codex · Party Tactics). Nodes open one by one, and <b>no branch locks another</b>. It sends no heroes<br>'
-            + 'The Party Tactics branch is where the tactic slots of the Party tab open<br>'
-            + 'Node contents, costs and unlock conditions are undecided, so it is not started — the nodes shown are placeholders',
+        ko: '<b>건설</b>은 건물마다 <b>랭크를 하나씩 지어</b> 기능 · 칸을 연다. 무엇을 여는지는 랭크 칸에 적혀 있다<br>'
+            + '다음 랭크는 <b>조건</b>(스테이지 클리어 · 로스터 합산 레벨의 최고치 · 영웅 레벨 · 다른 건물의 랭크)을 채우면 <b>비용</b>을 내고 짓는다. 지은 것은 되돌리지 않는다<br>'
+            + '안 지은 건물의 탭은 흐리다 — 누르면 그 건물 카드가 떠서 거기서 짓는다. <b>준비 중</b>인 랭크는 여는 기능이 아직 없어 지을 수 없다',
+        en: '<b>Construction</b> opens features and slots <b>one building rank at a time</b>. Each rank lists what it opens<br>'
+            + 'Meet the next rank\'s <b>requirements</b> (a stage clear · the highest total roster level reached · a hero level · another building\'s rank), then pay its <b>cost</b>. Built ranks are never undone<br>'
+            + 'Tabs of unbuilt buildings are dimmed — open one to build it right there. Ranks marked <b>coming later</b> open nothing yet and cannot be built',
     },
-    /* 연구 [신설 2026-09-01 · 가지 8 2026-09-15 ADR-0145] — ⚠ 노드는 목업이다 (ui/mock.js:RESEARCH · SCREEN_DESIGN §13-1).
-       노드의 이름·여는 것은 데이터 문자열이라 mock 의 {ko,en} 을 L() 이 푼다. 여기 있는 것은 **라벨뿐**이고,
-       이름이 안 정해진 노드는 `rs.rs.slot` 이 「가지 이름 + 번호」로 조립한다(가지 이름은 기존 탭 · 파견처 키).
-       누를 때의 안내는 새로 쓰지 않고 `todo.lead` 를 그대로 부른다 (§11 · 수색 버튼과 같은 처리) */
+    /* 건설 버튼 · 완료 표시 — 탭 이름 키(`rs.research.h`)와 같은 옛 접두를 그대로 쓴다. 나머지 건설 문구는 `cn.*` (2026-09-22 · R137) */
     'rs.rs.done': { ko: '완료', en: 'Done' },
-    'rs.rs.progress': { ko: '완료 {n}', en: 'Done {n}' },
-    'rs.rs.mat': { ko: '재료', en: 'Materials' },
-    'rs.rs.cost': { ko: '재료 {m} · {g}G', en: '{m} mat · {g}G' },
     'rs.rs.go': { ko: '건설', en: 'Build' },   // 탭 이름은 명사(Construction) · 버튼은 동작(Build) — ADR-0253
-    'rs.rs.need': { ko: '{name} 먼저', en: 'Needs {name}' },
-    'rs.rs.slot': { ko: '{b} {n}', en: '{b} {n}' },
-    'rs.rs.tbd': { ko: '미정', en: 'TBD' },
-    'rs.rs.locked': { ko: '잠김', en: 'Locked' },
-    // ⚠ 배치 비교 토글 (§13-1 · 2026-09-15) — 세로 · 가로 중 하나로 정해지면 키도 함께 지운다
-    'rs.rs.layout.col': { ko: '세로', en: 'Vertical' },
-    'rs.rs.layout.row': { ko: '가로', en: 'Horizontal' },
+    /* 훈련장 탭 [2026-09-22 ADR-0297 · SCREEN_DESIGN §16] — ⚠ 목업. 작업 탭 훈련 · 전직(= 혈통의 전당).
+       건물 줄은 건설 탭의 랭크 칸과 같은 문구(`cn.*`)를 쓴다(판정이 같다). 안내 둘은 도움말도 같은 키로 부른다 */
+    'tr.seg.train': { ko: '훈련', en: 'Training' },
+    'tr.seg.adv': { ko: '전직', en: 'Advance' },
+    'tr.slot': { ko: '훈련 칸 {n}', en: 'Slot {n}' },
+    'tr.slot.empty': { ko: '비었다', en: 'Empty' },
+    'tr.slot.put': { ko: '영웅 넣기', en: 'Assign Hero' },
+    'tr.bld.go': { ko: '건설에서 짓기', en: 'Build in Construction' },
+    'tr.train.todo': {
+        ko: '훈련 칸에 영웅을 넣어 두면 경험치가 오른다. 원정 경험치 획득 %도 훈련장의 연구다<br>'
+            + '넣어 둔 시간만큼 오르는지 · 어디까지 오르는지 · 훈련 중인 영웅을 원정에 쓸 수 있는지는 기획 미정이라 미착수',
+        en: 'Heroes placed in a training slot gain experience. Expedition experience gain % is also researched here<br>'
+            + 'How gain scales with time, where it caps and whether training heroes can still go on expeditions are undecided, so it is not started',
+    },
+    'tr.adv.todo': {
+        ko: '<b>혈통의 전당</b>을 지으면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고른다. 스킬 창에는 전직 트리가 남는다<br>'
+            + '갈래를 고르는 규칙과 전직 기능이 아직 없어 미착수',
+        en: 'Once the <b>Hall of Lineage</b> is built, heroes advance here — each class picks one of three paths. The advancement tree stays in the skill window<br>'
+            + 'The rules for picking a path and the advancement itself are not built yet, so it is not started',
+    },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
-    'rs.next': { ko: '{no}번 칸까지 {n}', en: '{n} more to slot {no}' },
     'rs.allOpen': { ko: '전부 열렸다', en: 'All slots open' },
-    'rs.needLv': { ko: '합산 Lv.{lv}', en: 'Total Lv.{lv}' },
     'rs.on': { ko: '켜짐', en: 'On' },
     'rs.off': { ko: '꺼짐', en: 'Off' },
-    'rs.reroll': { ko: '리롤 {g}G', en: 'Reroll {g}G' },
-    'rs.reroll.done': { ko: '{o}', en: '{o}' },
+    // 전체 리롤 + 잠금 [2026-09-22 · R28 · tactic_card_design §5-6] — 버튼 하나가 안 잠근 칸을 전부 굴리고, 비용은 잠근 칸 수가 정한다
+    'rs.reroll': { ko: '전체 리롤 {g}G', en: 'Reroll All {g}G' },
+    'rs.reroll.done': { ko: '{n}칸을 다시 굴렸다', en: 'Rerolled {n} slot(s)' },
+    'rs.lockedN': { ko: '잠근 칸', en: 'Locked' },
+    'rs.lock': { ko: '잠그기', en: 'Lock' },
+    'rs.unlock': { ko: '풀기', en: 'Unlock' },
     'rs.note': {
-        ko: '칸은 <b>줍는 것이 아니다</b> — 로스터 전원의 레벨 합이 문턱을 넘을 때마다 하나씩 열리고, '
-            + '칸에 든 옵션은 골드로 다시 굴린다. 리롤에는 <b>지금 든 것과 다른 칸에 든 것이 나오지 않는다</b>.',
-        en: 'Slots are <b>not looted</b> — one opens each time the summed level of your whole roster crosses a threshold, '
-            + 'and the option inside is rerolled with gold. A reroll never returns what this slot or another slot already holds.',
+        ko: '칸은 <b>줍는 것이 아니다</b> — <b>지휘 천막</b>의 랭크를 지을 때마다 하나씩 열리고(로스터 전원의 레벨 합이 그 랭크의 문턱이다), '
+            + '칸에 든 옵션은 골드로 다시 굴린다. 리롤은 <b>안 잠근 칸을 한 번에 전부</b> 굴린다 — 지킬 칸은 <b>잠근다</b>. '
+            + '잠그는 것은 무료지만 <b>잠근 칸이 많을수록 리롤이 비싸진다</b>. 새로 나오는 것은 <b>지금 판에 든 것과 겹치지 않는다</b>.',
+        en: 'Slots are <b>not looted</b> — one opens with each <b>Command Tent</b> rank you build (the summed level of your whole roster is that rank\'s requirement), '
+            + 'and the options inside are rerolled with gold. A reroll rolls <b>every unlocked slot at once</b> — <b>lock</b> the ones you want to keep. '
+            + 'Locking is free, but <b>each locked slot makes the reroll pricier</b>. A reroll never returns an option already on the board.',
     },
     'rs.note.cond': {
-        ko: '조건은 <b>편성에서 확정되는 것</b>만 센다 — 죄종·직업·장비의 죄종·스킬 태그. '
+        ko: '조건은 <b>편성에서 확정되는 것</b>만 센다 — 죄종 · 직업 · 장비의 죄종 · 리더 · 진형 · 이 파티로 나간 횟수. <b>어려운 조건일수록</b>(난이도) 굴려서 나올 수 있는 값이 높다. '
             + '전투 중에 변하는 값(현재 HP · 남은 적)은 쓰지 않는다. 효과는 <b>파티에 든 영웅</b>에게만 붙는다.',
-        en: 'Conditions read only what the formation fixes — sins, classes, gear sins, skill tags. '
+        en: 'Conditions read only what the formation fixes — sins, classes, gear sins, the leader, the formation and runs taken as this party. <b>The harder the condition</b> (Difficulty), the higher a roll can go. '
             + 'Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.',
     },
     // 전술 옵션 등급 — ⚠ 아이템 희귀도(`mock.js:RARITY`)와 **별개 축**이고 이름만 같다 (tactic_card_design §5-5)
     'rs.grade.common': { ko: '일반', en: 'Common' },
     'rs.grade.magic': { ko: '매직', en: 'Magic' },
     'rs.grade.rare': { ko: '레어', en: 'Rare' },
-    'rs.cond.always': { ko: '조건 없음', en: 'No condition' },
+    // 조건 문장 — 키 = 조건 어휘(`tactic_condition.csv:test`) · 「없으면」은 `.not` [2026-09-22 · tactic_card_design §5-8 · R134]
+    //   ~~always · class_same · affix_sin · skill_tag~~ 는 조건 사전으로 바뀌며 걷었다(스킬 태그 조건은 삭제)
+    'rs.cond.none': { ko: '조건 없음', en: 'No condition' },
     'rs.cond.sin_same': { ko: '같은 죄종 {n}명 이상', en: '{n}+ heroes sharing a sin' },
     'rs.cond.sin_kind': { ko: '죄종 {n}종 이상', en: '{n}+ different sins' },
-    'rs.cond.class_same': { ko: '같은 직업 {n}명 이상', en: '{n}+ heroes sharing a class' },
-    'rs.cond.affix_sin': { ko: '{a} 접사 {n}개 이상', en: '{n}+ {a} affixes' },
-    'rs.cond.skill_tag': { ko: '{a} 스킬 보유 {n}명 이상', en: '{n}+ heroes with a {a} skill' },
+    'rs.cond.cls_same': { ko: '같은 직업 {n}명 이상', en: '{n}+ heroes sharing a class' },
+    'rs.cond.gear_sin': { ko: '{a} 장비 {n}개 이상', en: '{n}+ {a} gear' },
+    'rs.cond.gear_sin.not': { ko: '{a} 장비 없음', en: 'No {a} gear at all' },
+    'rs.cond.leader_cls': { ko: '리더가 {a}', en: 'Leader: {a}' },
+    'rs.cond.leader_cls.not': { ko: '리더가 {a} 아님', en: 'Leader is not {a}' },
+    'rs.cond.front_cls': { ko: '전열에 {a}', en: '{a} in the front row' },
+    'rs.cond.front_cls.not': { ko: '전열에 {a} 없음', en: 'No {a} in the front row' },
+    'rs.cond.together': { ko: '이 파티로 {n}회 이상 출정', en: '{n}+ runs as this party' },
+    // 난이도 — 조건 사전의 점수 · 어려울수록 등급 값의 천장이 높다 (§5-8 · SCREEN_DESIGN §15)
+    'rs.score': { ko: '난이도 {n}', en: 'Difficulty {n}' },
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
     'sk.points.note': {
@@ -1002,7 +1100,7 @@ const STRINGS = {
     'sk.u.times': { ko: '{v}번', en: '{v} times' },
     /* 각주 — 기본 설명창 바닥 한 줄. 괄호를 붙일 수 있는 숫자가 있을 때만 선다 (SCREEN_DESIGN §2 「스킬 설명창 규격」) */
     'sk.altHint': { ko: 'Alt 계산식', en: 'Alt: formula' },
-    /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill.csv:effect_stat` 어휘 그대로 · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
+    /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill_status.csv:stat` 어휘 그대로(옛 `skill.csv:effect_stat` · 2026-09-22) · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
     'sk.eff.atk_pct': { ko: '데미지 +{v} 를 건다', en: '+{v} Damage' },
     'sk.eff.period_pct': { ko: '행동 주기 −{v} 를 건다', en: '−{v} action cycle' },
     'sk.eff.barrier_pct': { ko: '최대 HP {v} 짜리 보호막을 씌운다', en: 'a shield worth {v} of max HP' },
@@ -1203,6 +1301,20 @@ const STRINGS = {
        삭제된 키 셋 — `ix.g.skillClass`·`ix.g.skillWeapon`(09-08 · `owner_kind` 를 그대로 묶던 이름) ·
        **`ix.skillFrom`**(09-09 · 무기군 액티브의 이름표였는데 무기군 고정 폐기로 이름표 자체가 사라졌다) */
     'ix.g.skillCls': { ko: '{cls} 스킬', en: '{cls} Skills' },
+    /* 전직 스킬 묶음 [2026-09-22 · §9-1 · ADR-0299] — `skill.csv` 행이 없어 이름을 여기서 든다(무기 베이스 `ix.b.*` 와 같은 처방).
+       전직 하나가 묶음 하나이고 머리가 전직 이름(`ix.adv.*`)이다. 행이 서면 CSV 이름으로 넘어가고 이 키들은 지운다.
+       이름 출처는 skill_design.md §10-1. 삭제된 키 — `ix.g.skillAdv`(같은 날 · 「{직업} 전직 스킬」 한 묶음이던 머리) */
+    'ix.adv.fire_mage': { ko: '파이어 메이지', en: 'Fire Mage' },
+    'ix.adv.frost_mage': { ko: '프로스트 메이지', en: 'Frost Mage' },
+    'ix.adv.thunder_mage': { ko: '썬더 메이지', en: 'Thunder Mage' },
+    'ix.sk.mag_meteor': { ko: '메테오', en: 'Meteor' },
+    'ix.sk.mag_firewall': { ko: '파이어월', en: 'Firewall' },
+    'ix.sk.mag_hydra': { ko: '히드라', en: 'Hydra' },
+    'ix.sk.mag_frozenorb': { ko: '프로즌 오브', en: 'Frozen Orb' },
+    'ix.sk.mag_blizzard': { ko: '블리자드', en: 'Blizzard' },
+    'ix.sk.mag_frostburst': { ko: '프로스트 버스트', en: 'Frost Burst' },
+    'ix.sk.mag_thunderstrike': { ko: '썬더 스트라이크', en: 'Thunder Strike' },
+    'ix.sk.mag_nova': { ko: '노바', en: 'Nova' },
     'ix.count': { ko: '{n}장', en: '{n} images' },
     'ix.style': { ko: '얼굴 스타일', en: 'Face style' },
     'ix.hero': { ko: '영웅 {n}', en: 'Hero {n}' },

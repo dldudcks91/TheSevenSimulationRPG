@@ -472,7 +472,7 @@ function renderUnits(state, root) {
             // Alt 동안 카드 밖으로 나가도 유지 — 장비 칸 hover 로 아이템 카드를 여는 규칙이 양 진영 같다 (ADR-0176 · ADR-0182 · ADR-0183)
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null, state.itemOf,
                 it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
-            // 몬스터 장비의 아이템 카드는 **그 몬스터 기준**으로 스킬 문장을 조립한다 — 스킬 칸과 같은 문맥을 넘긴다(능력치 계수 보류 포함)
+            // 몬스터 장비의 아이템 카드는 **그 몬스터 기준**으로 스킬 문장을 조립한다 — 스킬 칸과 같은 문맥을 넘긴다(그 몬스터의 능력치 계수 포함)
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
                 it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
@@ -628,7 +628,8 @@ function refreshBuffs(u, now) {
         const id = chip.dataset.effect;
         const b = byId.get(id);
         const info = skillInfo(id);
-        const element = SYS.skill?.defs?.[id]?.element ?? null;
+        // 창의 원소 — 그 창을 건 스킬이 거는 걸린 효과가 든다(`skill_status.csv` · 1단계는 줄이 하나 · 2026-09-22). 무기 옵션 창(`wx:`)은 스킬이 아니라 null
+        const element = SYS.skill?.statuses?.[SYS.skill.defs?.[id]?.effects[0].status]?.element ?? null;
         chip.setAttribute('aria-label', `${L(info.name)} — ${effectSummaryText(b?.stat, b?.v, element)}`);
         bindTipNode(chip, () => effectTipCard({
             owner: u.key, info, name: L(info.name), stat: b?.stat, value: b?.v, element,
@@ -831,7 +832,7 @@ function step(state, root, opts) {
     state.wall = at;   // 세워 둔 동안에도 민다 — 다시 틀 때 세워 둔 시간이 한꺼번에 흐르지 않게
     if (!state.running || state.ended || !(gap > 0) || gap > opts.frozenMs) return;
     state.t += gap / 1000 * state.speed;
-    opts.onTime?.(state.t);    // 끝난 라운드를 정산하고 다음 라운드를 붙인다 — 붙은 뒤에 적용해야 경계 너머 사건이 한 눈금 늦지 않는다 (R89)
+    opts.onTime?.(state.t, state.speed);    // 끝난 라운드를 정산하고 다음 라운드를 붙인다 — 붙은 뒤에 적용해야 경계 너머 사건이 한 눈금 늦지 않는다 (R89)
     drain(state, root, opts);
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
     for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
@@ -851,11 +852,11 @@ function drain(state, root, opts) {
  * 스킬 문장의 재료 — 그 유닛의 **표시값** (INTERFACE §2-6 · SCREEN_DESIGN §4-2).
  * 문장이 「몇 초마다 얼마나」를 말하려면 주기 · 공격력 · 공격 타입이 필요하고, 회복량의 밑수 `matkMin`~`matkMax` ·
  * 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다(범위 R90). 카드의 스킬 칸과 **몬스터 장비의 아이템 카드**가 같이 쓴다 (ADR-0183).
- * 몬스터는 능력치 계수 보류 — 전투(`battle.makeEnemy`)와 같은 규칙 (SCREEN_DESIGN §2 · ADR-0164)
+ * 몬스터도 영웅과 같이 능력치 계수를 탄다 — 전투(`battle.makeEnemy`)와 같은 규칙 (SCREEN_DESIGN §2 · ADR-0298)
  */
 const unitSkillCtx = u => ({
     period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax,
-    hpMax: u.hpMax, atkType: u.atkType, stats: u.stats, noStatMult: u.side === 'enemy',
+    hpMax: u.hpMax, atkType: u.atkType, stats: u.stats,
 });
 
 /** 적 카드 한 장의 상태 — `round` 의 `enemies` 와 `call`(불러내기 · ADR-0161)의 `units` 가 **같은 모양**이라 한 곳에서 만든다 (INTERFACE §2-6).
@@ -1103,7 +1104,10 @@ function showResult(state, root, opts, won) {
     if (next) box.querySelector('.b-stage-next').onclick = () => opts.onNext();
     if (auto) {
         state.auto = true;       // 세는 중 — 여기서 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
-        let left = 3, beat = opts.now();
+        // 세는 초 = 다음 런이 나가는 시각까지 남은 초 — 그 시각(끝난 순간 + [balance.csv:repeat_restart_sec])은 앱이 준다(`game.nextRepeat` · ADR-0300).
+        //   끝난 뒤에 관전을 다시 열었으면 이미 흐른 만큼 덜 센다 — 출발 시각은 세기가 아니라 그 답이 정한다
+        const restartAt = opts.restartAt?.() ?? opts.now() + D.balance.repeat_restart_sec * 1000;
+        let left = Math.max(0, Math.ceil((restartAt - opts.now()) / 1000)), beat = opts.now();
         const tick = () => {
             // 멈췄다 깨어났으면 다음 런을 세우지 않는다 — 꺼져 있던 것이다. 마무리는 앱 시계가 한다 (ADR-0102)
             const at = opts.now();
