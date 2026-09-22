@@ -445,6 +445,9 @@ const STRINGS = {
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
+    // 흐린 탭을 누르면 — 탭은 안 바뀌고 이 문장이 플래시로 선다 (SCREEN_DESIGN §1 · ADR-0311). `{b}` = 건물 이름 · 조사 없이 「부터」
+    'nav.unbuilt': { ko: '건설 탭에서 {b}부터 지어야 한다', en: 'Build the {b} first — in the Construction tab' },
+    'nav.pending': { ko: '{b} — 아직 준비 중이다', en: '{b} — coming later' },
     'nav.commission': { ko: '의뢰', en: 'Commissions' },
     'nav.skill': { ko: '스킬', en: 'Skills' },
     'nav.base': { ko: '거점', en: 'Base' },
@@ -823,8 +826,6 @@ const STRINGS = {
     'cn.t.expedition': { ko: '원정', en: 'Expeditions' },
     'cn.t.repeat': { ko: '반복 원정', en: 'Repeat runs' },
     'cn.t.stage_level': { ko: '위험도 조절', en: 'Danger level' },
-    'cn.t.salvage': { ko: '분해', en: 'Salvage' },
-    'cn.t.auto_salvage': { ko: '자동 분해', en: 'Auto salvage' },
     'cn.t.upgrade_item': { ko: '강화', en: 'Upgrade' },
     'cn.t.make': { ko: '제작', en: 'Smithing' },
     'cn.t.storage': { ko: '창고', en: 'Stash' },
@@ -834,7 +835,6 @@ const STRINGS = {
     'cn.t.shop': { ko: '상단', en: 'Trading House' },
     'cn.t.shop_special': { ko: '특수상단', en: 'Visiting trader' },
     'cn.t.craft': { ko: '크래프트', en: 'Craft' },
-    'cn.t.auto_salvage_score': { ko: '자동 분해 점수 선', en: 'Auto-salvage score line' },
     'cn.t.stigma_craft': { ko: '낙인 크래프트', en: 'Stigma craft' },
     'cn.t.skill_card': { ko: '스킬 카드 합성', en: 'Skill card fusion' },
     'cn.t.dispatch': { ko: '파견', en: 'Dispatch' },
@@ -877,15 +877,15 @@ const STRINGS = {
     'rs.research.note': {
         ko: '<b>건설</b>은 건물마다 <b>랭크를 하나씩 지어</b> 기능 · 칸을 연다. 무엇을 여는지는 랭크 칸에 적혀 있다<br>'
             + '다음 랭크는 <b>조건</b>(스테이지 클리어 · 로스터 합산 레벨의 최고치 · 영웅 레벨 · 다른 건물의 랭크)을 채우면 <b>비용</b>을 내고 짓는다. 지은 것은 되돌리지 않는다<br>'
-            + '안 지은 건물의 탭은 흐리다 — 누르면 그 건물 카드가 떠서 거기서 짓는다. <b>준비 중</b>인 랭크는 여는 기능이 아직 없어 지을 수 없다',
+            + '안 지은 건물의 탭은 흐리다 — 눌러도 들어가지 않고 지을 건물을 알려 준다. 짓는 곳은 이 탭 하나다. <b>준비 중</b>인 랭크는 여는 기능이 아직 없어 지을 수 없다',
         en: '<b>Construction</b> opens features and slots <b>one building rank at a time</b>. Each rank lists what it opens<br>'
             + 'Meet the next rank\'s <b>requirements</b> (a stage clear · the highest total roster level reached · a hero level · another building\'s rank), then pay its <b>cost</b>. Built ranks are never undone<br>'
-            + 'Tabs of unbuilt buildings are dimmed — open one to build it right there. Ranks marked <b>coming later</b> open nothing yet and cannot be built',
+            + 'Tabs of unbuilt buildings are dimmed — they stay closed until built, and clicking one names the building to build. Build here, in this tab. Ranks marked <b>coming later</b> open nothing yet and cannot be built',
     },
     /* 건설 버튼 · 완료 표시 — 탭 이름 키(`rs.research.h`)와 같은 옛 접두를 그대로 쓴다. 나머지 건설 문구는 `cn.*` (2026-09-22 · R137) */
     'rs.rs.done': { ko: '완료', en: 'Done' },
     'rs.rs.go': { ko: '건설', en: 'Build' },   // 탭 이름은 명사(Construction) · 버튼은 동작(Build) — ADR-0253
-    /* 훈련장 탭 [2026-09-22 ADR-0297 · SCREEN_DESIGN §16] — ⚠ 목업. 작업 탭 훈련 · 전직(= 혈통의 전당).
+    /* 훈련장 탭 [2026-09-22 ADR-0297 · SCREEN_DESIGN §16] — ⚠ 목업. 작업 탭 훈련 · 전직(훈련장의 뒤 랭크가 연다 · ADR-0310).
        건물 줄은 건설 탭의 랭크 칸과 같은 문구(`cn.*`)를 쓴다(판정이 같다). 안내 둘은 도움말도 같은 키로 부른다 */
     'tr.seg.train': { ko: '훈련', en: 'Training' },
     'tr.seg.adv': { ko: '전직', en: 'Advance' },
@@ -900,9 +900,9 @@ const STRINGS = {
             + 'How gain scales with time, where it caps and whether training heroes can still go on expeditions are undecided, so it is not started',
     },
     'tr.adv.todo': {
-        ko: '<b>혈통의 전당</b>을 지으면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고른다. 스킬 창에는 전직 트리가 남는다<br>'
+        ko: '<b>훈련장</b> 랭크를 올려 전직이 열리면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고른다. 스킬 창에는 전직 트리가 남는다<br>'
             + '갈래를 고르는 규칙과 전직 기능이 아직 없어 미착수',
-        en: 'Once the <b>Hall of Lineage</b> is built, heroes advance here — each class picks one of three paths. The advancement tree stays in the skill window<br>'
+        en: 'Once <b>Training Grounds</b> ranks up far enough to open advancement, heroes advance here — each class picks one of three paths. The advancement tree stays in the skill window<br>'
             + 'The rules for picking a path and the advancement itself are not built yet, so it is not started',
     },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
@@ -972,6 +972,10 @@ const STRINGS = {
     'sk.err.downed': { ko: '쓰러진 영웅이다 — 이 런이 끝날 때까지 스킬 트리를 못 바꾼다', en: 'Hero is down — skills locked until the run ends' },
     // 찍은 칸의 툴팁 꼬리 — 우클릭이 있다는 것 자체가 안 보이면 못 쓴다 (SCREEN_DESIGN §7)
     'sk.unlearnHint': { ko: ' · 우클릭 = 1랭크 되돌리기', en: ' · Right-click to refund 1 rank' },
+    // 낀 장비가 켜는 칸 (직업 T2 · 2026-09-22 R138) — 갈래 이름은 CSV 에서
+    'sk.gate.weapon': { ko: '무기: {groups} 일 때', en: 'With weapon: {groups}' },
+    'sk.gate.armor': { ko: '갑옷: {groups} 일 때', en: 'With armor: {groups}' },
+    'sk.gate.offSuffix': { ko: ' (지금 장비로는 꺼짐)', en: ' (off with current gear)' },
     'sk.slots.h': { ko: '액티브', en: 'Actives' },
     'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
     'sk.cycle': { ko: '행동 주기', en: 'Action Cycle' },

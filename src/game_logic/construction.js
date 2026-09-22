@@ -19,12 +19,12 @@
 const U = live => ({ kind: 'unlock', live });
 const A = live => ({ kind: 'add', live });
 export const TARGETS = {
-    // 켜기 — 지금 있는 기능
+    // 켜기 — 지금 있는 기능 (분해 · 알아서 분해는 건물 밖이라 여기 없다 — 처음부터 열려 있다 · 2026-09-23 사용자 지시 · R140)
     expedition: U(true), repeat: U(true), stage_level: U(true),
-    salvage: U(true), auto_salvage: U(true), upgrade_item: U(true), make: U(true),
+    upgrade_item: U(true), make: U(true),
     storage: U(true), codex: U(true), hire: U(true), search: U(true), shop: U(true), shop_special: U(true),
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
-    craft: U(false), auto_salvage_score: U(false), stigma_craft: U(false), skill_card: U(false),
+    craft: U(false), stigma_craft: U(false), skill_card: U(false),
     dispatch: U(false), explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
     commission_board: U(false), gamble: U(false), high_tier_candidates: U(false),
     training: U(false), advance: U(false), skill_depth: U(false),

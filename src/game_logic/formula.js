@@ -152,10 +152,13 @@ export function createFormula(balance) {
      * 적중률(비율) — **레벨 차 하나로 정해진다** (§9-4). 명중·회피 스탯 폐지.
      * 오버레벨은 hit_base_pct 에서 멈추고(초과 이득 없음), 아무리 모자라도 hit_min_pct 는 맞는다.
      * 적정 레벨에서는 분산이 0 — 분산은 언더레벨 도전을 자발적으로 택했을 때만 생긴다.
+     * `bonus` = 공격자의 **명중률**(비율 · 궁수 T1-3 — 2026-09-22 R138) — 레벨 차로 나온 값에 더하고 hit_base_pct 를 넘지 않는다.
+     *   오버레벨이면 이미 기준이라 아무 일도 안 하고, 레벨이 모자란 스테이지에서만 듣는다 (§9-4). 없으면 0 이라 종전과 같다
      */
-    const hitChance = (attackerLevel, defenderLevel) =>
-        clamp(B.hit_base_pct - Math.max(0, (defenderLevel ?? 1) - (attackerLevel ?? 1)) * B.hit_per_level_deficit_pct,
-            B.hit_min_pct, B.hit_base_pct);
+    const hitChance = (attackerLevel, defenderLevel, bonus = 0) =>
+        Math.min(B.hit_base_pct,
+            clamp(B.hit_base_pct - Math.max(0, (defenderLevel ?? 1) - (attackerLevel ?? 1)) * B.hit_per_level_deficit_pct,
+                B.hit_min_pct, B.hit_base_pct) + (bonus || 0));
 
     /**
      * 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — `(1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot)`.
@@ -170,7 +173,7 @@ export function createFormula(balance) {
      * 빗나가면 한 번 · 확률이 0 인 적중은 세 번 · 확률이 있는 적중은 네 번이다 (INTERFACE §5-2 · 2026-09-10 · 피해 굴림 2026-09-14 R90).
      * 순서를 바꾸면 같은 시드가 다른 전투가 되므로 이식 대조가 깨진다.
      *
-     * @param a 공격자 {atkMin, atkMax, atkType, lvl, crit, critDmg, defIgnore, resReduction, resReductionEl?, skillMult, dmgPct, condPct, statMult, bonusPct, procChance, procMult}
+     * @param a 공격자 {atkMin, atkMax, atkType, lvl, hitBonus?, crit, critDmg, defIgnore, resReduction, resReductionEl?, skillMult, dmgPct, condPct, statMult, bonusPct, procChance, procMult}
      *          `atkMin`·`atkMax` = 데미지 범위 — 데미지 % 괄호(`dmgPct` = 그 괄호 안의 합)까지 **이미 곱해진** 값이다(시트 · 회복이 같은 값을 읽는다)
      *          `condPct` = **그 타격의** 조건부 % — 같은 괄호 안에 더한다(괄호를 `1 + dmgPct` 에서 `1 + dmgPct + condPct` 로 바꿔 끼운다 · 2026-09-18)
      *          `statMult` = 능력치 계수(`statCoef` — 평타 = 메인 스탯 · 스킬 = 슬롯의 능력치) · `bonusPct` = **피해량**(괄호와 합치지 않고 따로 곱한다)
@@ -180,7 +183,7 @@ export function createFormula(balance) {
      *          [2026-09-18 · item_design §1 「투구 옵션」] — 둘 다 없으면 0 이라 종전과 같다. rng 소비는 안 바뀐다
      */
     function strike(rng, a, d) {
-        if (rng() >= hitChance(a.lvl, d.lvl)) return { hit: false, dmg: 0, crit: false, proc: false };
+        if (rng() >= hitChance(a.lvl, d.lvl, a.hitBonus)) return { hit: false, dmg: 0, crit: false, proc: false };
 
         // 피해 굴림 [2026-09-14 · R90 · battle_design §9-1] — 적중 뒤 · 치명 앞에 **한 번**, 데미지 범위 양끝 사이 연속 균등.
         //   양끝이 같아도 소비한다 — 소비 수가 무기에 의존하면 같은 시드가 다른 전투를 낸다

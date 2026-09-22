@@ -590,6 +590,30 @@ export function createItemSystem(data) {
      */
     const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, WG[item.group] ?? null, item.up) : null);
 
+    /**
+     * 무기 피해 범위에 **고정 옵션 「데미지 +%」**(`src: 'fixed'` 의 `atk_pct`)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
+     * 양끝마다 곱하고 한 번 반올림한다 — `hero.computeCombat` 의 괄호 곱과 같은 규칙. 다른 % (죄종 칸 · 랜덤 · 마스터리 · 도감)는 안 든다 —
+     * 그 합은 영웅이 정하는 괄호라 캐릭터 시트가 든다. 고정 줄이 없는 옛 무기는 `weaponDamage` 그대로
+     */
+    function weaponDamageFixed(item) {
+        const d = weaponDamage(item);
+        if (!d) return null;
+        const pct = (item.affixes ?? []).reduce((s, a) => s + (a.src === 'fixed' && a.stat === 'atk_pct' ? a.v : 0), 0);
+        return pct ? { min: Math.round(d.min * (1 + pct)), max: Math.round(d.max * (1 + pct)) } : d;
+    }
+
+    /**
+     * 방어구 고유값에 **고정 옵션 「방어력 +%」**(`armor_def_pct`)를 먹인 값 `{stat, v}` [2026-09-23 사용자 지시] — 툴팁 메인 옵션 · 제련소가 부른다.
+     * 강화 배율까지 든다(`effective`). 곱한 뒤 정수 — `hero.computeCombat` 이 아이템마다 하는 곱과 **같은 판정 · 같은 반올림**이다
+     * (그 아이템의 `armor_def_pct` 를 출처와 무관하게 더한다 — 이 stat 은 고정 줄에만 선다). 고유값이 없으면(무기 · 목걸이 · 반지) null
+     */
+    function implicitFixed(item) {
+        const imp = effective(item)?.implicit;
+        if (!imp) return null;
+        const pct = (item.affixes ?? []).reduce((s, a) => s + (a.stat === 'armor_def_pct' ? a.v : 0), 0);
+        return pct ? { ...imp, v: Math.round(imp.v * (1 + pct)) } : imp;
+    }
+
     const upgradeMax = () => B.equip_upgrade_max;
 
     /** 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화하지 않는다 (item_design §7-2 · R95). 부위만 본다 */
@@ -624,5 +648,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed };
 }

@@ -472,7 +472,7 @@ function renderUnits(state, root) {
             // Alt 동안 카드 밖으로 나가도 유지 — 장비 칸 hover 로 아이템 카드를 여는 규칙이 양 진영 같다 (ADR-0176 · ADR-0182 · ADR-0183)
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null, state.itemOf,
                 it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
-            // 몬스터 장비의 아이템 카드는 **그 몬스터 기준**으로 스킬 문장을 조립한다 — 스킬 칸과 같은 문맥을 넘긴다(그 몬스터의 능력치 계수 포함)
+            // 몬스터 장비의 아이템 카드도 영웅 · 캐릭터 탭과 같다 — 스킬 칸의 숫자는 그 몬스터의 표시값이다 (ADR-0183 · ADR-0312)
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
                 it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다

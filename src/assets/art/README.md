@@ -1,6 +1,6 @@
 # 아트 자산 (src/assets/art/)
 
-`backgrounds/` · `faces/` · `icons/` 는 모두 신규 아트가 직접 들어가는 활성 폴더다.
+`backgrounds/` · `faces/` · `icons/` · `buildings/` 는 모두 신규 아트가 직접 들어가는 활성 폴더다.
 ⚠ **계승 포크 정책이 걸리는 것은 `backgrounds/source/pixel/` 에 남은 계승 원본 셋뿐이다**(101 · 102 · `town`) — 데이터 CSV(`src/data/inherited/`)와 같은 정책으로 **원본 SSOT 는 TheSevenRPG 에 있고 여기 것은 재동기화 가능한 사본**, 읽기 전용(CLAUDE.md 규칙 3). 나머지는 다시 뽑아 덮어써도 된다.
 **세 폴더가 같은 모양이다** [2026-09-16] — 게임이 읽는 그림 = 묶음 폴더/id(`backgrounds/<스타일>/background_stage_<id>.webp` · `faces/<스타일>/monster/<idx>.png` · `icons/items/item_base/<base_id>.png` …) · 손 안 댄 원본 = `source/` · id 없는 여분 = `unused/`.
 **스타일 축을 갖는 것은 `backgrounds/`(2026-09-16) · `faces/`(2026-08-30) 둘**이고 `icons/` 는 없다(2026-09-03).
@@ -181,6 +181,26 @@ im.crop((0, 0, im.width, 615 * im.height // 768)).save(dst, 'WEBP', quality=92, 
 - **옛 계승 Ch1-3(원한의 묘지)은 지웠다** — 「너무 픽셀 구조」라 1 · 2 스타일로 다시 뽑았다. CLAUDE.md 규칙 3(`backgrounds/` 읽기 전용)의 예외이고 사용자 지시다. git 에 남아 되살릴 수 있다
 - **`stage.csv:bg` 는 그림이 선 스테이지만 1 이다** — 104 · 105 · 201~205 · 301~305 를 올렸다. ⚠ `ui/data.js:stageBgOf` 의 주석은 아직 이 칸을 「계승 자산이 있는 스테이지」라고 적는다
 - 발주 프롬프트는 **1 · 2 를 스타일 기준으로 첨부**하고 「타일셋 금지 · 가운데 비우기 · 글자 금지」를 못박은 판이다(대화에서 만들었다 — 문서화 미정). 2장부터는 「첨부의 렌더링만 따르고 색 · 소재는 따르지 말 것」과 챕터 공통 블록(세계 · 죄종 색이 스테이지 1 → 5 로 짙어진다)을 더했고, 비우는 띠를 실측에 맞춰 **위 12% · 아래 20%** 로 고쳤다. ⚠ 실내 스테이지는 공통 블록의 사막 문장(우물 · 야자수)이 새어 들어가므로 스테이지 블록의 AVOID 로 막는다 — **303 은 보물고 안에 야자수 · 우물이 든 채로 설치됐다.** 스테이지 블록에 색을 누르는 말(muted · dusty 등)을 넣으면 그림체가 튄다(305 는 두 번 다시 뽑았다). 1 · 2 와 갈렸던 옛 3 의 문제는 픽셀 크기가 아니라 **판석이 떠 있는 타일셋 짜임**이었다
+
+---
+
+## buildings/ — 건설 탭의 건물 그림 [신설 2026-09-23 사용자 지시]
+
+```
+buildings/
+├── <building_id>.webp   ← 게임이 읽는다 — 파일명 = building.csv:building_id · 목록은 ui/mock.js:BUILDING_IMAGES
+│     expedition · command · forge · tavern · training · shop · resource · explore · codex · storage
+├── source/
+│   └── sheet_01_buildings.png   ← 원본 시트 2752×1536 · 4×3 = 12칸 · 칸 사이 검은 홈 — 게임이 안 읽는다
+└── unused/
+    └── codex_alt.webp   ← 11번 칸(도감 두 번째 판) · id 없는 여분
+```
+
+- **그림체는 배경(`backgrounds/illustrate/`)과 같다** — 발주 때 `illustrate/background_stage_101.webp` · `102.webp` 두 장을 첨부하고 「렌더링만 따르고 색 · 소재는 따르지 말 것」으로 열었다(배경 발주와 같은 줄). 프롬프트는 대화에서 만들었다 — 위에 공통 형태(시트 규격 · 각도 · 아래 1/4 빈 땅 · 같은 저녁 하늘 · 글자 금지), 아래에 번호 목록(칸 번호 = 건설 탭 부지 순서)
+- **칸 → 파일** — 1~10 번 칸이 부지 순서(원정 · 지휘 천막 · 제련소 · 선술집 · 훈련장 · 상단 · 자원 · 탐험 · 도감 · 창고)다. 11 = 도감 여분(`unused/codex_alt`) · 12 = 자원 여분인데 **생성기 ✦ 가 박혀** 안 잘랐다(시트에만 남는다)
+- **자르기** — 검은 홈을 실측(열 평균 밝기 < 30)으로 찾고 칸 안쪽 3px 을 더 걷어 홈 가장자리를 뺐다 → 장당 **666~667 × 494~495**(약 4:3). 화면의 부지는 3:2 라 `cover` 가 위아래를 조금 자른다(`center 40%`) — **카드 비율이 바뀌어도 다시 자를 필요가 없게** 칸을 통째로 뒀다
+- **인코딩** — WebP q90 · 장당 29~51KB. ⚠ 이 PC 에 Python 이 없어 **Edge 캔버스(`toDataURL('image/webp', 0.9)`)로** 자르고 쌌다 — 다른 폴더의 PIL 레시피와 도구가 다르다. 다시 자를 땐 어느 쪽이든 같은 좌표(홈 안쪽 3px)면 된다
+- 그림이 없는 건물은 `ui/mock.js:BUILDING_ART` 의 단색 실루엣(SVG)으로 폴백한다 — 건물이 늘면 파일을 넣고 `BUILDING_IMAGES` 에 id 를 더한다
 
 ---
 

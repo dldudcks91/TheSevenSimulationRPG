@@ -265,6 +265,17 @@ export function createGameSystem(deps) {
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(obj);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
+        // 마스터리 — **표에 맞춘다** [2026-09-22 · R138 · 버전 무변경] — 그 영웅의 트리에 없는 노드(표에서 걷힌 칸)와 상한을 넘은 랭크는
+        //   포인트로 돌려준다. 롤백이 무료라(skill_design §5) 돌려주는 것이 곧 이관이고, 남겨 두면 못 빼는 포인트가 된다
+        for (const h of s.heroes) {
+            const own = new Map(H.masteryNodesFor(h).map(n => [n.id, n]));
+            for (const [id, r] of Object.entries(h.mastery ?? {})) {
+                const keep = Math.min(r, own.get(id)?.maxRank ?? 0);
+                if (keep === r) continue;
+                h.masteryPoints = (h.masteryPoints ?? 0) + (r - keep);
+                if (keep > 0) h.mastery[id] = keep; else delete h.mastery[id];
+            }
+        }
         // 도감 카드는 걷혔다 [2026-09-21 · 버전 무변경] — 레벨은 이미 있던 `codexKills` 에서 다시 계산되므로 소급할 판단이 없다 · 필드만 지운다 (INTERFACE §4)
         delete s.codexCards; s.codexKills = s.codexKills ?? {};
         s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
@@ -454,9 +465,8 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /** 분해 — 가방 · 창고 아이템을 몬스터 가루로 (제련소를 안 지었으면 `unbuilt` · 착용 중인 것은 `missing` · 잠근 것은 `locked`) */
+    /** 분해 — 가방 · 창고 아이템을 몬스터 가루로 (착용 중인 것은 `missing` · 잠근 것은 `locked`) · 건물이 막지 않는다 (R140) */
     function salvage(state, itemUid) {
-        if (!hasFeature(state, 'salvage')) return { ok: false, err: 'unbuilt' };   // 건물이 연다 (R137)
         const it = state.items[itemUid];
         const from = it ? holderOf(state, itemUid) : null;   // 창고 것도 분해된다 [v24 · item_design §1]
         if (!from) return { ok: false, err: 'missing' };
@@ -543,9 +553,8 @@ export function createGameSystem(deps) {
         (!!rule.rarity && AUTO_RARITY[rule.rarity].includes(it.rarity))
         || (rule.ilvlBelow > 0 && it.ilvl < rule.ilvlBelow);
 
-    /** 선을 바꾼다 — 준 키만. 가방의 것은 건드리지 않는다(다음 드롭부터 먹는다) · 제련소를 안 지었으면 `unbuilt` (R137) */
+    /** 선을 바꾼다 — 준 키만. 가방의 것은 건드리지 않는다(다음 드롭부터 먹는다) · 건물이 막지 않는다 (R140) */
     function setAutoSalvage(state, rule) {
-        if (!hasFeature(state, 'auto_salvage')) return { ok: false, err: 'unbuilt' };
         const next = { ...autoRuleOf(state) };
         if ('rarity' in rule) {
             if (rule.rarity !== null && !AUTO_RARITY[rule.rarity]) return { ok: false, err: 'invalid' };
@@ -571,9 +580,8 @@ export function createGameSystem(deps) {
         return { n: list.length, dust: list.reduce((a, it) => a + I.salvageDust(it), 0) };
     }
 
-    /** 인벤토리에서 선에 걸린 것을 분해한다 — `salvage` 를 그대로 부르므로 반환량 · 거절 규칙이 같다 · 제련소를 안 지었으면 `unbuilt` (R137) */
+    /** 인벤토리에서 선에 걸린 것을 분해한다 — `salvage` 를 그대로 부르므로 반환량 · 거절 규칙이 같다 */
     function applyAutoSalvage(state) {
-        if (!hasFeature(state, 'auto_salvage')) return { ok: false, err: 'unbuilt' };
         let n = 0, dust = 0;
         for (const it of autoTargets(state)) {
             const r = salvage(state, it.uid);
@@ -1273,7 +1281,7 @@ export function createGameSystem(deps) {
             for (const it of s.drops) {
                 // 알아서 분해 [2026-09-21 · R125 · item_design §6-5] — **가방 참 검사보다 먼저** 선을 본다: 걸린 것은 칸을 안 먹고 버린 수에도 안 든다.
                 //   「그 런이 준 것」이라 uid 를 받아 리포트 `drops` 에 남긴 뒤 곧바로 지운다 — 화면은 흐린 빈 칸으로 그린다(SCREEN_DESIGN §4-3) · rng 0
-                if (hasFeature(state, 'auto_salvage') && autoSalvageHits(autoRuleOf(state), it)) {   // 제련소가 없으면 선이 서 있어도 안 먹는다 (R137)
+                if (autoSalvageHits(autoRuleOf(state), it)) {
                     const gone = addItem(state, it);
                     R.drops.push(gone.uid);
                     state.resources.dust += I.salvageDust(gone);
@@ -1414,7 +1422,7 @@ export function createGameSystem(deps) {
     function nextRepeat(state, endedAt) {
         const run = state.run;
         if (!run || run.active || run.repeat !== true) return null;
-        if (!hasFeature(state, 'repeat')) return null;   // 반복 원정은 원정 건물이 연다(처음부터 지어짐 · R137)
+        if (!hasFeature(state, 'repeat')) return null;   // 반복 원정은 원정 건물 랭크가 연다(새 게임은 잠김 · R137 · 2026-09-23 r1 → r2)
         const report = state.reports.find(r => r.at === run.lastAt);
         if (!report?.won) return null;
         return { stageId: run.stageId, preset: run.preset, at: endedAt + B.repeat_restart_sec * 1000 };
@@ -1952,6 +1960,7 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return null;
         const points = h.masteryPoints ?? 0;
+        const items = heroItems(state, h);
         return {
             points,
             nodes: H.masteryNodesFor(h).map(n => {
@@ -1962,6 +1971,9 @@ export function createGameSystem(deps) {
                     value: n.value, rank, maxRank: n.maxRank, unlockLevel: n.unlockLevel, unlocked,
                     total: Number((n.value * rank).toFixed(3)),
                     canLearn: unlocked && rank < n.maxRank && points > 0,
+                    // 낀 장비가 켜는 칸 [2026-09-22 · skill_design §3-5 · R138] — `gate` = {slot, groups} 또는 null · `on` = 지금 장비로 켜졌나.
+                    //   꺼져 있어도 찍을 수 있다 — 랭크는 캐릭터에 쌓이고 장비를 바꾸면 켜진다
+                    gate: n.gate, on: H.gateOn(n, items),
                 };
             }),
         };

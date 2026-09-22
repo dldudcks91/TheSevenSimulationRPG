@@ -18,6 +18,7 @@
  *   죄종 마스터리와 직업 마스터리는 **포인트 풀을 공유**하고(§1-4) 액티브를 주지 않는다 — 여기 들어오는 것은
  *   전부 수치 노드(T1·T2)뿐이다. 반응형(T3)은 전투 중 사건에 붙어 이 파일이 아니라 battle.js 의 몫이고
  *   값이 전부 미정이라 아직 없다. 노드 정의는 `mastery_node.csv`, 랭크당 값은 `balance.csv` 다.
+ *   직업 T2 세 칸은 **낀 장비가 켠다**(T2-1 · T2-2 = 든 무기군 · T2-3 = 갑옷 칸의 갑옷군 — `requires` · 2026-09-22 R138).
  *   ⚠ **포인트 지급 곡선은 기획 미확정**(skill_design §7) — `mastery_point_per_level` 은 임시 형태다.
  *
  * 전투 계수가 실제로 걸리는 축은 둘뿐 [개정 2026-09-10 · battle_design §8 · DEV_PLAN R72] — 민첩(행동 주기) ·
@@ -68,6 +69,9 @@ export function createHeroSystem(data) {
 
     const TREE_KINDS = ['sin', 'class'];
     const ANY = '*';                       // owner_id 가 `*` = 그 tree_kind 의 주인 전부 (T1 공통 3종)
+    // `requires` = 그 칸의 **낀 장비 갈래가 켜는 노드** [2026-09-22 · skill_design §3-5 · §3-6 · R138] — `<칸>:<갈래>|<갈래>` 또는 `-`.
+    //   무기 칸은 무기군(`weapon_group.csv`) · 갑옷 칸은 갑옷군(`armor_group.csv` 의 armor 행)을 본다. 편성 시점에 정해져 전투 중 계산 · rng 가 없다
+    const GATE_TABLES = { weapon: () => data.weaponGroups ?? {}, armor: () => data.armorGroups?.armor ?? {} };
 
     /** 로드 시 전수 검증 — 키가 balance 에 없으면 값이 undefined 로 조용히 새므로 즉시 던진다 */
     const masteryNodes = (data.masteryNodes ?? []).map(row => {
@@ -81,14 +85,31 @@ export function createHeroSystem(data) {
         if (row.tree_kind === 'sin' && row.owner_id !== ANY && !data.sins.includes(row.owner_id)) bad(`죄종 '${row.owner_id}'`);
         if (row.tree_kind === 'class' && row.owner_id !== ANY && !data.classes.some(c => c.id === row.owner_id)) bad(`직업 '${row.owner_id}'`);
         if (!(row.tier >= 1)) bad(`tier ${row.tier}`);
+        let gate = null;
+        if (row.requires && row.requires !== '-') {
+            const [slot, list = ''] = String(row.requires).split(':');
+            if (!GATE_TABLES[slot]) bad(`requires 칸 '${slot}'`);
+            const groups = list.split('|').filter(Boolean);
+            if (!groups.length) bad(`requires '${row.requires}' 에 갈래가 없다`);
+            for (const g of groups) if (!GATE_TABLES[slot]()[g]) bad(`requires ${slot} 갈래 '${g}'`);
+            gate = { slot, groups };
+        }
         return {
             id: row.node_id, treeKind: row.tree_kind, ownerId: row.owner_id, tier: row.tier,
             stat: row.stat, value: num(row.value_key), maxRank: num(row.max_rank_key),
             // 해금 없음(`-`)은 레벨 1 — 「T1 은 1레벨부터」(§1-4)를 숫자 하나로 표현한 것
             unlockLevel: row.unlock_key === '-' ? 1 : num(row.unlock_key),
+            gate,
         };
     });
     const masteryById = Object.fromEntries(masteryNodes.map(n => [n.id, n]));
+
+    /**
+     * 그 노드가 **지금 낀 장비로 켜졌나** — 게이트 없는 노드는 언제나 켜져 있다. 랭크는 캐릭터에 쌓이고 켜는 것만 장비가 정한다(§3-5 「누적형」 소멸).
+     * `items` 를 모르면(null) 게이트 노드는 꺼진 것으로 친다 — 맨몸과 같다
+     */
+    const gateOn = (n, items) => !n.gate
+        || (items ?? []).some(it => it?.slot === n.gate.slot && n.gate.groups.includes(it.group));
 
     /** 이 영웅의 트리에 걸린 노드 — 죄종·직업 둘 다. 죄종도 직업도 생성 시 확정이라 목록은 안 바뀐다 (§1-4) */
     const masteryNodesFor = hero => masteryNodes.filter(n =>
@@ -98,13 +119,14 @@ export function createHeroSystem(data) {
     /**
      * 찍은 랭크 → 접사와 **같은 채널**의 가산치. 새 곱셈 층을 만들지 않는다 (battle_design §9-2 「괄호는 둘뿐」).
      * 피해 감소만 따로 낸다 — 원천별 곱이라 합치면 안 된다(§9-3). **노드 하나 = 원천 하나**.
+     * `items` = 낀 장비 — 무기 · 갑옷이 켜는 노드(`gate`)를 가린다 (skill_design §3-5 · R138)
      */
-    function masteryBonus(hero) {
+    function masteryBonus(hero, items = null) {
         const flat = {}, dr = [];
         const ranks = hero?.mastery ?? {};
         for (const n of masteryNodesFor(hero)) {
             const r = Math.min(ranks[n.id] ?? 0, n.maxRank);   // 상한 초과는 세이브 손상 — 계산에선 잘라 쓴다
-            if (!(r > 0)) continue;
+            if (!(r > 0) || !gateOn(n, items)) continue;
             if (n.stat === 'damage_reduction') dr.push(n.value * r);
             else flat[n.stat] = (flat[n.stat] ?? 0) + n.value * r;
         }
@@ -388,7 +410,7 @@ export function createHeroSystem(data) {
             }
         }
         // 마스터리는 접사와 같은 채널로 합류한다 — 이 줄 아래로는 출처를 구분하지 않는다
-        const mb = masteryBonus(hero);
+        const mb = masteryBonus(hero, items);
         for (const k of Object.keys(mb.flat)) flat[k] = (flat[k] ?? 0) + mb.flat[k];
         for (const v of mb.dr) drList.push(v);
         // 파티 전술도 같은 채널로 합류한다 — 새 곱셈 층을 만들지 않는다 (tactic_card_design §2-4)
@@ -465,11 +487,14 @@ export function createHeroSystem(data) {
             burnDur: f('burn_dur_reduction'), stunDur: f('stun_dur_reduction'),
             // 버프 지속시간 +% — **낀 영웅이 거는 버프 창**이 길어진다(적에게 거는 창 포함 · skill_runtime.castBuff) [2026-09-21 · 반지 · 목걸이 공통옵션 · R127]
             buffDur: f('buff_dur_pct'),
+            // 명중률 — 레벨 차 적중률에 **더한다** · 기준 적중률을 넘지 않는다(formula.hitChance) [2026-09-22 · 궁수 T1-3 · battle_design §9-4 · R138].
+            //   08-26 에 폐지된 명중(`accuracy` — 회피와 짝)과 다른 축이라 id 를 따로 둔다
+            hitBonus: f('hit_bonus'),
         };
         const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.xpGain,
-            fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur].some(v => v !== 0);
+            fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
             // **원소 옵션이 없는 마법 무기의 기본 공격은 물리다** [개정 2026-09-11 · 사용자 지시 · R80 · battle_design §2-1 · §9-5]
@@ -525,6 +550,6 @@ export function createHeroSystem(data) {
 
     return {
         rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
-        masteryNodes, masteryById, masteryNodesFor, masteryBonus,
+        masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn,
     };
 }

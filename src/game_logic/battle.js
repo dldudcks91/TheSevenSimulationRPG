@@ -65,7 +65,7 @@
  *     그대로이고 판정도 1회 · 등급은 확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 바뀐 것은 **무엇이 떨어지나** —
  *     판정 뒤 **입은 부위 중 하나**를 골라 그 아이템을 그대로 낸다. 파이프라인 3~6단계(ilvl · 희귀도 · 접사 · 개체 굴림)는
  *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = `스테이지 레벨 + gear_ilvl_add`(굴림 없음) ·
- *     희귀도 = 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
+ *     희귀도 = 등급의 가중치(`gear_rarity_w_*` · 2026-09-23 — 일반 등급은 레어 0) · 레어 가중에 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
  *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
  */
 
@@ -240,6 +240,7 @@ export function createBattleSystem(data) {
             res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             resBase: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 레벨 (§9-4 · R87)
+            hitBonus: c.option_fx?.hitBonus ?? 0,     // 명중률 — 적중률에 더한다(궁수 T1-3 · 2026-09-22 R138 · formula.hitChance). 없으면 0
             resMaxBonus: c.res_max_bonus, dr: c.damage_reduction, drBase: c.damage_reduction,
             // 방어구 옵션 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 원소별 최대 저항 · 절대값 피해 감소 · 반격 확률 · 체력 회복 +%.
             //   `strike` 가 앞의 둘을 읽고(방어자) · 반격은 `strikeOnce` 끝 · 회복은 재생 · 회복 스킬 · 흡혈 · 물약이 읽는다. 없으면 0 — 종전과 같다
@@ -276,7 +277,7 @@ export function createBattleSystem(data) {
     /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
     const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType',
-        'def', 'defBase', 'res', 'resBase', 'lvl', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
+        'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
         'resReductionEl', 'buffDur',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod', 'fhr',
         'goldFind', 'itemFind', 'fx', 'magicFind', 'stats'];
@@ -453,6 +454,8 @@ export function createBattleSystem(data) {
                 ilvl: level + g.gear_ilvl_add,
                 magicFind,
                 rareBonusPct: g.gear_rare_bonus_pct,
+                // 희귀도 가중치는 **등급이 쥔다** — 일반 = 일반 + 가끔 매직(레어 0) · 정예 = 일반 + 매직 + 가끔 레어 (2026-09-23 사용자 지시)
+                rarityWeights: { normal: g.gear_rarity_w_normal, magic: g.gear_rarity_w_magic, rare: g.gear_rarity_w_rare },
                 weaponGroup: m.weapon_group,
             });
             // 셋째 칸 — 보스만. ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙)

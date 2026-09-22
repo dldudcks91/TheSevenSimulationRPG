@@ -1,8 +1,9 @@
 building_id,rank,require,cost,status
 expedition,1,-,-,proposed
-expedition,2,stage:105,gold:3000|dust:30,proposed
-expedition,3,stage:203,gold:3000|dust:30,proposed
-expedition,4,stage:405,gold:12000|dust:120,proposed
+expedition,2,stage:102,gold:1000|dust:10,proposed
+expedition,3,stage:105,gold:3000|dust:30,proposed
+expedition,4,stage:203,gold:3000|dust:30,proposed
+expedition,5,stage:405,gold:12000|dust:120,proposed
 forge,1,-,gold:100,proposed
 forge,2,stage:105,gold:3000|dust:30,proposed
 forge,3,stage:205,gold:6000|dust:60,proposed
@@ -43,9 +44,7 @@ command,4,total:30,gold:3000,proposed
 command,5,total:40,gold:4000,proposed
 command,6,total:55,gold:5500,proposed
 command,7,total:90,gold:9000,proposed
-command,8,total:140,gold:14000,proposed
-command,9,total:200,gold:20000,proposed
 training,1,-,gold:1000,proposed
 training,2,-,gold:3000,proposed
-lineage,1,hero:advance_unlock_level|building:training:1,gold:5000,proposed
-lineage,2,-,gold:10000,proposed
+training,3,hero:advance_unlock_level,gold:5000,proposed
+training,4,-,gold:10000,proposed

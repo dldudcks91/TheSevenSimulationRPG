@@ -97,8 +97,10 @@ attack_type = physical | fire | cold | lightning | poison
             (몸값 defense · res_* 는 그 위에 더한다)
             [balance.csv:monster_hp_scale · monster_atk_scale · monster_def_scale]
 장비의 아이템 레벨 = 스테이지 레벨(올리면 따라간다 · 기본 = stage.csv:dlvl) + [spawn_grade.csv:gear_ilvl_add]
-장비의 희귀도     = 레어 가중치 × (1 + 파티 매직찬스% + [spawn_grade.csv:gear_rare_bonus_pct]%)
+장비의 희귀도     = 등급의 가중치 [spawn_grade.csv:gear_rarity_w_normal · _magic · _rare]
+                    — 그중 레어 가중치 × (1 + 파티 매직찬스% + [spawn_grade.csv:gear_rare_bonus_pct]%)
 ```
+**[2026-09-23 사용자 지시]** 일반 몬스터는 **일반 + 가끔 매직**(레어 가중치 0 — 매직찬스도 레어를 못 만든다) · 정예는 **일반 + 매직 + 가끔 레어**. 드롭 = 입은 장비라 **드롭 희귀도도 등급을 따른다**. 보스는 종전 드롭 가중치와 같은 값으로 시작한다.
 **[코드 반영 2026-09-11 · DEV_PLAN R79]** 옛 식(~~`monster.csv` 소재값 × `spawn_grade` 배율 × 전역 스케일~~)은 폐기됐다 — `hp`·`attack`·`action_period` **컬럼이 삭제**되고 그 자리를 능력치·장비가 낸다 (§7).
 
 - ~~**`monster.csv` 는 전부 일반 등급 소재값**~~ → **[코드 반영 2026-09-11] 소재값 자체가 없어졌다** — 등급의 세기는 **장비**(희귀도 · 아이템 레벨)와 **`hp_mult` 하나**가 낸다. `spawn_grade.csv` 에서 `atk_mult` · `def_mult` · `res_add` 는 **퇴역**했고 `hp_mult` 만 남았다 — **HP 는 장비에서 안 오기 때문**이다(영웅 체계에서 HP 는 레벨이 준다). 빼면 보스가 호위와 같은 체력이 되어 §5-1 이 미리 짚은 「먼저 모자랄 곳은 보스 체력」이 그대로 터진다. 필요하면 나머지도 다시 넣는다 (§5-1 · DEV_PLAN R79)
@@ -280,4 +282,4 @@ attack_type = physical | fire | cold | lightning | poison
 
 ---
 
-*마지막 업데이트: 2026-09-22*
+*마지막 업데이트: 2026-09-23*

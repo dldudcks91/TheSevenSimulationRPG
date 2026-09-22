@@ -150,6 +150,8 @@ export const AFFIX_LABELS = {
     burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct', inert: true },
     stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct', inert: true },
     buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
+    // 명중률 — 장비 옵션이 아니라 궁수 마스터리 T1-3 의 축이다(레벨 차 적중률에 더한다 · 2026-09-22 R138). 폐지된 `accuracy` 와 다른 id
+    hit_bonus: { ko: '명중률', en: 'Hit Bonus', fmt: 'pct' },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
@@ -729,9 +731,16 @@ export const BUILDING_ART = {
     command: rsSvg('<path fill-rule="evenodd" d="M4 46 32 11l28 35ZM26 46l6-13 6 13Z"/><path d="M31.3 11V1h1.4v10ZM32.7 1.2 42 4l-9.3 2.8Z"/>'),
     // 훈련장 — 과녁 · 허수아비 · 창걸이
     training: rsSvg('<path fill-rule="evenodd" d="M12 18a9 9 0 1 1 0 18a9 9 0 1 1 0-18Zm0 3.2a5.8 5.8 0 1 0 0 11.6a5.8 5.8 0 1 0 0-11.6Zm0 3.4a2.4 2.4 0 1 1 0 4.8a2.4 2.4 0 1 1 0-4.8Z"/><path d="M11.3 36h1.4v8h-1.4ZM30.6 44V20h2.8v24ZM22 24h20v2.6H22ZM26 28h12v11H26Z"/><circle cx="32" cy="14.5" r="5"/><path d="M49.3 44V10h1.4v34ZM55.3 44V13h1.4v31ZM50 4l2.2 6h-4.4ZM56 7l2.2 6h-4.4ZM46 31h14v2H46Z"/><path d="M2 44h60v3H2Z"/>'),
-    // 혈통의 전당 — 박공 전당(장미창 · 아치 문) + 양쪽에 매단 깃발
-    lineage: rsSvg('<path fill-rule="evenodd" d="M16 44V22L32 8l16 14v22ZM28 44v-7a4 4 0 0 1 8 0v7ZM32 13a3 3 0 1 1 0 6a3 3 0 1 1 0-6Z"/><path d="M13 44h38v3H13Z"/><path d="M5 47V8h1.4v39ZM6.4 10h7v16l-3.5-3-3.5 3Z"/><path d="M57.6 47V8H59v39ZM57.6 10h-7v16l3.5-3 3.5 3Z"/>'),
 };
+
+/**
+ * 건물 그림 — **일러스트 아트** [2026-09-23 사용자 지시] · `src/assets/art/buildings/<building_id>.webp` (시트 `buildings/source/sheet_01_buildings.png` 를 잘랐다).
+ * 부지 네모를 꽉 채우고(`cover`) 상세 머리에도 선다. **목록에 있는 건물만 그림을 읽는다** — 없는 건물은 위 단색 실루엣(`BUILDING_ART`)으로 폴백한다.
+ * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`EXPLORE_MAP_CHAPTERS` 와 같은 재고 목록)
+ */
+export const BUILDING_IMG_DIR = './assets/art/buildings/';
+export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'storage'];
+export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${id}.webp` : null);
 
 /* ═══════════ 훈련장 — ⚠ 목업 (SCREEN_DESIGN §16 · ADR-0297, 2026-09-22 사용자 지시) ═══════════
  * 훈련(영웅을 넣어 경험치)의 형태 · 칸 수 · 여는 축은 기획 미정(construction_draft §10) → **CSV 로 가지 않는다**(확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다).

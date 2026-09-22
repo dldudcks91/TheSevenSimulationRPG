@@ -328,7 +328,8 @@ const state = {
     makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 · 'potion' 이면 물약 칸 (SCREEN_DESIGN §8-2 · ADR-0219)
     makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
-    trainingTab: 'train',        // 훈련장의 작업 탭 — 'train' | 'adv'(전직 = 혈통의 전당) (SCREEN_DESIGN §16 · ADR-0297 · `?tr=` 로도 연다)
+    cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
+    trainingTab: 'train',        // 훈련장의 작업 탭 — 'train' | 'adv'(전직 — 훈련장의 뒤 랭크가 연다) (SCREEN_DESIGN §16 · ADR-0297 · ADR-0310 · `?tr=` 로도 연다)
     shopTab: 'equip',            // 상단의 목록 탭 — 'equip' | 'mat' (SCREEN_DESIGN §8-3 · ADR-0223 · `?sh=` 로도 연다)
     shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · 방문 회차가 넘어가면 풀린다
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
@@ -374,12 +375,14 @@ function renderShell() {
 
     const nav = $('.nav');
     nav.innerHTML = '';
-    // 안 지은 건물의 탭은 흐리다 [2026-09-22 · R137 · SCREEN_DESIGN §1] — 눌러도 그 탭으로 간다(본문은 `render` 가 고른다) · 판정은 `constructionState.tabs`
-    const tabOpen = !pre && G ? SYS.game.constructionState(G).tabs : {};
+    // 안 지은 건물의 탭은 흐리고 **눌러도 안 들어간다** [2026-09-23 · SCREEN_DESIGN §1 · ADR-0311] — 누르면 지을 건물을 플래시로 말한다 · 판정은 `constructionState`
+    const cs = !pre && G ? SYS.game.constructionState(G) : null;
+    const tabOpen = cs ? cs.tabs : {};
     if (!pre) for (const id of TABS) {
-        const b = el('button', `${id === state.tab ? 'on' : ''}${tabOpen[id] === false ? ' dim' : ''}`, t(`nav.${id}`));
+        const shut = tabOpen[id] === false;
+        const b = el('button', `${id === state.tab ? 'on' : ''}${shut ? ' dim' : ''}`, t(`nav.${id}`));
         // 탭을 떠나면 **고르는 중 · 잠그는 중이 풀린다** [ADR-0184 · ADR-0207] — 모드 상태가 화면 밖으로 새지 않는다
-        b.onclick = () => { state.tab = id; clearBagSel(); render(); };
+        b.onclick = shut ? () => flashUnbuilt(cs, id) : () => { state.tab = id; clearBagSel(); render(); };
         nav.appendChild(b);
     }
     if (!pre) {
@@ -426,7 +429,7 @@ function render() {
     if (!authenticated) renderLogin(main);
     else if (state.screen === 'prologue' && G) renderPrologue(main);
     else if (state.screen === 'start' || !G) renderStart(main);
-    else if (unbuiltOf(state.tab)) renderUnbuilt(main, unbuiltOf(state.tab));   // 안 지은 건물의 탭 — 그 건물 카드 (§1 · §13 · R137)
+    // 안 지은 건물의 탭도 **제 화면**을 편다 — 건설 화면은 건설 탭에만 선다 (§1 · ADR-0308)
     else ({
         // 키 순서 = 탭 바 순서 (TABS) — 읽는 사람이 화면과 대조할 수 있게 맞춰 둔다
         expedition: renderExpedition,
@@ -1015,7 +1018,7 @@ function renderExpedition(main) {
             // 반복 원정의 다음 출발 시각 — 결과 띠가 남은 초를 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300)
             restartAt: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now())?.at ?? null,
             combatOf, itemOf, itemTipOf: (h, it) => equippedItemTipCard(h, it),
-            // 몬스터 툴팁의 장비 칸 — 같은 「착용 중」 카드이되 숫자는 **그 몬스터 기준**이라 재생기가 문맥을 넘긴다 (ADR-0183).
+            // 몬스터 툴팁의 장비 칸 — 영웅 · 캐릭터 탭과 같은 「착용 중」 카드다 (ADR-0183 · ADR-0312). 스킬 숫자는 그 몬스터의 표시값(`ctx` — 재생기가 싣는다).
             //   세이브 밖 개체(`round` 이벤트의 `gear`)라 uid 로 못 찾는다 — 개체를 그대로 받는다
             monsterItemTipOf: (item, ctx) => tipCard(item, t('tip.equipped'), [], ctx),
             // 유닛 툴팁 — 현재 착용 장비 + 캐릭터 탭과 같은 세부 옵션 + Alt 장비 hover의 기존 「착용 중」 아이템 카드 (ADR-0171 · ADR-0182 · ADR-0183)
@@ -1615,7 +1618,7 @@ function goBox(z) {
     side.appendChild(el('div', 'down exp-warn', { noParty: t('exp.noParty'), searching: t('exp.departSearching') }[perr] ?? ''));
 
     const actions = el('div', 'form-actions');
-    // 반복 원정은 원정 건물이 연다(처음부터 지어짐) — 안 열렸으면 흐리고 누르면 지을 건물을 말한다 (R137)
+    // 반복 원정은 원정 건물 랭크가 연다(새 게임은 잠김) — 안 열렸으면 흐리고 누르면 지을 건물을 말한다 (R137)
     const repOpen = SYS.game.hasFeature(G, 'repeat');
     const rep = el('button', `btn lg toggle${state.expRepeat && repOpen ? ' on' : ''}${repOpen ? '' : ' dim'}`, t('exp.repeat'));
     rep.onclick = () => {
@@ -2308,9 +2311,7 @@ function paperdoll(h) {
             if (!it) cell.title = L(def);
             if (it) {
                 // 실제로 착용 중이라 담은 스킬 줄도 **h 의 실제 능력치 기준**으로 낸다 (2026-09-11 사용자 지시)
-                const cb = combatOf(h);
-                const skCtx = { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
-                bindTip(cell, it, { head: 'tip.equipped', ctx: skCtx });   // 이 칸의 것은 실제로 착용 중이다 (§6 머리글)
+                bindTip(cell, it, { head: 'tip.equipped', ctx: heroSkillCtx(h) });   // 이 칸의 것은 실제로 착용 중이다 (§6 머리글)
                 cell.onclick = () => {
                     const before = runTacticsNow();
                     const r = SYS.game.unequip(G, h.uid, pos);
@@ -2473,12 +2474,19 @@ const rangeCtx = cb => {
     return { atkMin: atk?.min, atkMax: atk?.max, matkMin: cb.atk_magic?.min, matkMax: cb.atk_magic?.max };
 };
 
-/** 영웅 툴팁 장비 hover도 캐릭터 탭 페이퍼돌과 같은 「착용 중」 아이템 카드 한 장을 쓴다 (ADR-0182). */
+/** 「착용 중」 카드의 스킬 칸 맥락 — 그 영웅의 **지금 값** (§6 · ADR-0139). 페이퍼돌 · 가방 비교 · 유닛 툴팁 장비 hover 가 같이 쓴다 */
+const heroSkillCtx = h => {
+    const cb = combatOf(h);
+    return { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
+};
+
+/**
+ * 영웅 툴팁 장비 hover도 캐릭터 탭 페이퍼돌과 **같은** 「착용 중」 아이템 카드 한 장이다 (ADR-0182) — 스킬 칸까지 같다 [2026-09-23 사용자 지시 · ADR-0312].
+ * 이 카드는 Alt 를 누른 채로만 뜨므로 스킬 칸은 식이 선 모양으로 선다 — 캐릭터 탭에서 Alt 를 누른 것과 같다. 몬스터 장비 카드(`monsterItemTipOf`)도 같다
+ */
 function equippedItemTipCard(h, item) {
     if (!h || !item) return null;
-    const cb = combatOf(h);
-    const skCtx = { period: cb.action_period, ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
-    return tipCard(item, t('tip.equipped'), [], skCtx);
+    return tipCard(item, t('tip.equipped'), [], heroSkillCtx(h));
 }
 
 /** ②-3·4 세부 옵션 1·2 — 전투 능력치(impl=1 · 저항 감소는 뺀다) + 옵션이 여는 축 11 을 14 · 18 로 나눠 스크롤 없이 (2026-09-22 · ADR-0294). 물리 방어 행은 감쇠율을 병기한다 */
@@ -2660,15 +2668,14 @@ function storageTools(h, where, { showTarget = false } = {}) {
             const lk = el('button', 'btn sm', t('ch.lock.start'));
             lk.onclick = () => { clearBagSel(); state.bagLockMode = true; render(); };
             tools.appendChild(lk);
-            // [분해] · [자동 분해]는 제련소가 연다 — 안 지었으면 흐리고 누르면 지을 건물을 말한다 (R137)
-            const canSv = SYS.game.hasFeature(G, 'salvage'), canAu = SYS.game.hasFeature(G, 'auto_salvage');
-            const sv = el('button', `btn sm${canSv ? '' : ' dim'}`, t('ch.sel.start'));
-            sv.onclick = () => { if (!canSv) { flashNeed('salvage'); return; } clearBagSel(); state.bagSelMode = true; render(); };
+            // [분해] · [자동 분해]는 건물이 막지 않는다 — 처음부터 열려 있다 (R140)
+            const sv = el('button', 'btn sm', t('ch.sel.start'));
+            sv.onclick = () => { clearBagSel(); state.bagSelMode = true; render(); };
             tools.appendChild(sv);
             // 자동 분해 — 선이 하나라도 서 있으면 **켜진 모양**이다: 가방이 왜 덜 차는지가 같은 줄에서 읽힌다 (ADR-0203)
             const rule = G.autoSalvage ?? {};
-            const au = el('button', `btn sm toggle${canAu && (rule.rarity || rule.ilvlBelow > 0) ? ' on' : ''}${canAu ? '' : ' dim'}`, t('ch.auto.btn'));
-            au.onclick = () => { if (!canAu) { flashNeed('auto_salvage'); return; } openModal('autoSalvage'); };
+            const au = el('button', `btn sm toggle${rule.rarity || rule.ilvlBelow > 0 ? ' on' : ''}`, t('ch.auto.btn'));
+            au.onclick = () => openModal('autoSalvage');
             tools.appendChild(au);
             tools.appendChild(sortTools('bag'));           // 맨 오른쪽 — 펼치면 그 오른쪽으로 기준이 나온다 (ADR-0242 · ADR-0247)
         }
@@ -2711,8 +2718,7 @@ function storagePanel(h, where, { showTarget = false } = {}) {
             // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
             const target = SYS.game.equipTarget(h, it);
             const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
-            const cb = combatOf(h);
-            const skCtx = { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
+            const skCtx = heroSkillCtx(h);
             // 「이 아이템」 카드의 스킬 숫자는 **h 가 이 아이템으로 바꿔 꼈을 때** 값이다 — 주기 · 피해 범위 · 공격 타입이 그 무기의 것이어야 한다 (ADR-0139).
             //   스킬 칸이 서는 아이템(스킬을 담은 무기)만 계산한다 — 나머지 칸은 맥락을 안 읽는다
             const ifCb = it.skill ? SYS.game.heroCombatIf(G, h, it.uid) : null;
@@ -2776,7 +2782,8 @@ function renderCharacter(main) {
  * (SCREEN_DESIGN §6 · 개정 2026-09-10 [ADR-0081] — 메인 옵션이 커지고 담은 스킬이 카드 바닥으로 내려갔다).
  * @param hints 하단 힌트. 문자열 하나든 배열이든 받는다 — 반지 칸 · 「착용 중 없음」이 함께 설 수 있다
  * @param skCtx 스킬 칸의 계산 맥락(`{period,atkMin,atkMax,matkMin,matkMax,hpMax,atkType,stats}`) — 착용 중 카드 = 그 영웅의 `game.heroCombat` ·
- *   「이 아이템」 카드 = `game.heroCombatIf`(장착 대상 영웅이 그 무기를 낀 것으로 · ADR-0139). 생략하면 식이 접힌 채 나온다.
+ *   「이 아이템」 카드 = `game.heroCombatIf`(장착 대상 영웅이 그 무기를 낀 것으로 · ADR-0139) · 몬스터 장비 카드 = 그 몬스터의 표시값(ADR-0312).
+ *   생략하면 식이 접힌 채 나온다.
  */
 function tipCard(item, headText, hints = [], skCtx) {
     if (!item) return null;                      // 빈 카드는 안 세운다 (§6 개정 2026-09-08 — 아래 bindTip)
@@ -2784,8 +2791,8 @@ function tipCard(item, headText, hints = [], skCtx) {
     // 죄종은 **이름이 든다** — `composeName` 이 「격노와 찬탈의 둔기」로 죄종 단어를 다 싣는다. 이름은 희귀도 한 색이고 죄종 색은 옵션 줄 태그가 든다 (2026-09-08 사용자 지시 · 2026-09-19 ADR-0175).
     // 하단 죄종 칩은 같은 값을 카드 안에서 두 번 찍던 자리라 걷었다 (SCREEN_DESIGN §6). 장비 패널의 죄종 집계는 별개다
     const g = SYS.item.groupOf(item);            // 무기군 — 직업 전속·행동 주기·공격 타입의 출처 (weapon_group.csv)
-    // 강화한 아이템은 **먹인 값**을 찍는다 — 툴팁 숫자가 캐릭터 시트와 갈리면 안 된다 (SCREEN_DESIGN §6)
-    const eff = SYS.item.effective(item);
+    // 메인 옵션은 **먹인 값**을 찍는다 — 강화 배율 · 그 아이템의 고정 옵션까지. 툴팁 숫자가 캐릭터 시트와 갈리면 안 된다 (SCREEN_DESIGN §6 · ADR-0309)
+    const imp = SYS.item.implicitFixed(item);
     const sub = [`ilvl ${item.ilvl}`];
     if (g) sub.push(L(g));
     // **강화 줄은 없다** (2026-09-08 사용자 지시 · §6) — 단계는 이름 앞의 `+n` 이 이미 들고, 비용·상한은 제련소(§8-2)의 값이다.
@@ -2807,15 +2814,15 @@ function tipCard(item, headText, hints = [], skCtx) {
         // 공격력의 **이름은 무기군이 정한다**(물리 ↔ 마법) — 그 이름의 SSOT 는 `combat_stat.csv` 다.
         // 원소는 마법 무기 **개체**가 든 값이라 이름 옆 주석으로 붙인다 — 「마법 공격력 (마법)」은 같은 말을 두 번 한다
         const atkStat = statRow(g.damageKind === 'physical' ? 'atk_physical' : 'atk_magic');
-        // 값은 **피해 범위** `최소~최대` — 강화 배율까지 든 파생값이다(`item.weaponDamage` · R90 · ADR-0108)
-        baseRows.push(baseRow(atkStat ? L(atkStat) : t('st.atk'), rangeText(SYS.item.weaponDamage(item)),
+        // 값은 **피해 범위** `최소~최대` — 강화 배율 · **고정 옵션 「데미지 +%」**까지 든 파생값이다(`item.weaponDamageFixed` · ADR-0108 · ADR-0307)
+        baseRows.push(baseRow(atkStat ? L(atkStat) : t('st.atk'), rangeText(SYS.item.weaponDamageFixed(item)),
             item.element ? t(`st.atkType.${item.element}`) : ''));
         // 주기(초/1회)는 **클수록 느려** 이름과 방향이 거꾸로 읽힌다 → **초당 공격속도**로 뒤집어 낸다.
         // 축은 여전히 `combat_stat.csv:action_period` 하나고(세부 옵션 2 가 그 행을 그대로 든다) 변환은 `formula` 가 한다
         baseRows.push(baseRow(t('st.atkSpeed'), SYS.formula.attacksPerSec(g.period).toFixed(2)));
     }
-    if (eff.implicit) baseRows.push(baseRow(L(M.statLabel(eff.implicit.stat)),
-        M.baseValue(eff.implicit.stat, eff.implicit.v)));
+    // 방어구 고유값 — 고정 옵션 「방어력 +%」를 먹인 값(`item.implicitFixed` · ADR-0309)
+    if (imp) baseRows.push(baseRow(L(M.statLabel(imp.stat)), M.baseValue(imp.stat, imp.v)));
     c.innerHTML = `
         <div class="tip-head">${headText}</div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${item.up > 0 ? `+${item.up} ` : ''}${L(item.name)}</div>
@@ -2911,22 +2918,29 @@ function activeSlots(h, title) {
  */
 const statRow = stat => D.combatStats.find(s => s.id === stat);
 
+/** 낀 장비가 켜는 칸의 조건 한 줄 — 「무기: 둔기 · 창 …」 (갈래 이름은 CSV · 2026-09-22 R138) */
+const gateText = gate => t(`sk.gate.${gate.slot}`, {
+    groups: gate.groups.map(g => L((gate.slot === 'weapon' ? D.weaponGroups : D.armorGroups?.armor)?.[g] ?? g)).join(' · '),
+});
+
 /**
  * 칸 하나 — **랭크 0 이어도 값을 찍는다** (§4-1 "값은 항상 찍는다"). 누르면 1랭크.
  * 잠긴 칸은 랭크 대신 **필요 레벨**을 찍는다 — 잠금은 칸이 설명한다(화면에 티어 어휘를 쓰지 않으므로 그 자리가 없다).
+ * 낀 장비가 안 켠 칸(`on === false`)은 값에 줄을 긋는다 — 찍기는 그대로 된다(랭크는 캐릭터에 쌓인다 · skill_design §3-5)
  */
 function masteryCell(node, accent) {
     if (!node) return `<div class="sk-cell empty"></div>`;
     const fb = statRow(node.stat);
     const taken = node.rank > 0;
     const cls = `sk-cell${taken ? ' taken' : ''}${node.rank >= node.maxRank ? ' full' : ''}`
-        + `${node.unlocked ? '' : ' locked'}${node.canLearn ? ' can' : ' dim'}`;
+        + `${node.unlocked ? '' : ' locked'}${node.canLearn ? ' can' : ' dim'}${node.gate && !node.on ? ' off' : ''}`;
+    const gateLine = node.gate ? ` — ${gateText(node.gate)}${node.on ? '' : t('sk.gate.offSuffix')}` : '';
     const meta = node.unlocked
         ? `<span class="sk-v">${M.statValue(node.stat, node.total, fb)}</span><span class="sk-r">${node.rank} / ${node.maxRank}</span>`
         : `<span class="lv">${t('sk.needLv', { lv: node.unlockLevel })}</span>`;
     return `
         <div class="${cls}" data-node="${node.id}"${taken && accent ? ` style="border-color:${accent}"` : ''}
-             title="${L(M.affixText(node.stat, node.total, fb))} — ${node.rank} / ${node.maxRank}${node.unlocked ? '' : t('sk.lockedSuffix')}${taken ? t('sk.unlearnHint') : ''}">
+             title="${L(M.affixText(node.stat, node.total, fb))} — ${node.rank} / ${node.maxRank}${gateLine}${node.unlocked ? '' : t('sk.lockedSuffix')}${taken ? t('sk.unlearnHint') : ''}">
             <div class="sk-n">${L(M.statLabel(node.stat, fb))}</div>
             <div class="sk-meta">${meta}</div>
         </div>`;
@@ -3096,32 +3110,75 @@ function todoPanel(titleKey, noteKey) {
 }
 const renderTodo = (main, titleKey, noteKey) => main.appendChild(todoPanel(titleKey, noteKey));
 
+/**
+ * 건설 — **부지 격자 | 상세** [2026-09-23 사용자 지시 · ADR-0304 — ADR-0302 의 가로 카드 줄을 대체] (SCREEN_DESIGN §13-1).
+ * 왼쪽 = 건물 하나가 **큰 네모 하나**(부지) · 누르면 오른쪽 상세가 그 건물의 랭크를 위에서 아래로 편다. 고른 건물은 `state.cnPick`(세이브 아님).
+ * 판정(조건 · 비용 · 지을 수 있나)은 전부 `game.constructionState` 가 낸다 — 렌더러는 고르고 적기만 한다. 짓기는 `game.construct`
+ */
 function renderResearch(main) {
-    // 위쪽 탭은 걷었다 [2026-09-21 · ADR-0192 — ADR-0145 의 위쪽 탭을 대체] — 파티 전술은 편성 탭(§15)으로 갔고 건설 탭은 건설 하나다
     const cs = SYS.game.constructionState(G);
+    // 부지 순서 = **왼쪽 탭 바 순서**(`TABS` · 2026-09-23 사용자 지시) — 건물의 탭(`building.csv:tab`)으로 줄 세운다.
+    //   탭이 없는 건물(`-` · 창고)은 맨 뒤 · 같은 탭끼리는 표 순서(`sort_order` — 정렬은 안정이라 그대로 남는다)
+    const navAt = b => { const i = TABS.indexOf(b.tab); return i < 0 ? TABS.length : i; };
+    const order = [...cs.buildings].sort((a, b) => navAt(a) - navAt(b));
+    // 안 골랐으면 지금 지을 수 있는 첫 건물 · 없으면 첫 부지 — 지으면 그 건물에 고정된다(`rankCell`)
+    const pick = order.find(b => b.id === state.cnPick) ?? order.find(b => !b.next.err) ?? order[0];
     const p = el('div', 'panel page');
     p.appendChild(el('div', 'rs-head', `<span>${t('cn.progress', { n: cs.built })} <span class="muted">/ ${cs.total}</span></span>`));
-    const body = el('div', 'box-body');
-    body.dataset.keep = 'research';
-    const tree = el('div', 'rs-tree');
-    tree.style.setProperty('--rs-n', cs.buildings.length);    // 카드가 한 줄에 다 선다 — 열 수 = 표의 건물 수
-    for (const b of cs.buildings) tree.appendChild(buildingCard(b));
-    body.appendChild(tree);
-    p.appendChild(body);
+    const work = el('div', 'cn-work');
+    const lots = el('div', 'cn-lots');
+    lots.dataset.keep = 'cn-lots';
+    for (const b of order) lots.appendChild(buildingLot(b, b === pick));
+    work.appendChild(lots);
+    if (pick) work.appendChild(buildingSide(pick));
+    p.appendChild(work);
     main.appendChild(p);
 }
 
+/** 부지 한 칸 — 그림 · 이름 · 진행 막대(랭크 눈금 — 숫자 n / 최대는 안 찍는다 · 막대가 대신한다 · 2026-09-23 사용자 지시).
+ *  **그림이 네모를 꽉 채우고**(`M.buildingImg` — 없으면 단색 실루엣) 이름 · 막대는 아래 어두운 띠 위에 선다 (2026-09-23 사용자 지시).
+ *  지었나(실선 · 그림 그대로) · 안 지었나(점선 · 그림이 어둡다) · 지금 지을 수 있나(모서리 점) · 준비 중(흐림) — 글 없이 모양이 말한다 */
+function buildingLot(b, picked) {
+    const img = M.buildingImg(b.id);
+    const cls = [b.rank > 0 ? 'on' : '', !b.next.err ? 'ready' : '', b.rank === 0 && b.next.err === 'pending' ? 'locked' : '', picked ? 'pick' : '', img ? 'has-img' : ''];
+    const lot = el('button', `cn-lot ${cls.filter(Boolean).join(' ')}`);
+    // 변수에 담긴 상대 url() 은 **스타일시트(ui/) 기준**으로 풀린다 — 페이지 기준 절대 경로로 넘긴다
+    if (img) lot.style.setProperty('--lot-img', `url("${new URL(img, location.href).href}")`);
+    else lot.appendChild(el('div', 'rs-art', M.BUILDING_ART[b.id] ?? ''));   // 그림이 없는 건물 — 단색 실루엣
+    const foot = el('div', 'cn-lot-foot');
+    foot.appendChild(el('div', 'cn-lot-name', L(b.name)));
+    foot.appendChild(rankPips(b));
+    lot.appendChild(foot);
+    lot.onclick = () => { state.cnPick = b.id; render(); };   // 고르기만 한다 — 되돌릴 수 있어 한 번 누름
+    return lot;
+}
+
+/** 랭크 눈금 — 최대 랭크만큼 칸 · 지은 만큼 찬다 */
+function rankPips(b) {
+    const row = el('div', 'cn-pips');
+    for (let i = 1; i <= b.maxRank; i++) row.appendChild(el('span', i <= b.rank ? 'on' : ''));
+    return row;
+}
+
 /**
- * 건설 — **표 넷을 그대로 그린다** (SCREEN_DESIGN §13 · ADR-0302 · construction_draft §11 · R137). 건물 하나가 카드 하나 · 카드 안에 랭크가 위에서 아래로.
- * 판정(조건 · 비용 · 지을 수 있나)은 전부 `game.constructionState` 가 낸다 — 렌더러는 고르고 적기만 한다. 짓기는 `game.construct`.
- * 생김새는 옛 가지 카드(ADR-0146 · 파티 전술 칸과 같은 칸 문법)를 그대로 쓴다. ~~`mock.js:RESEARCH` 목업 · 세로/가로 배치 비교~~ 는 2026-09-22 걷었다
+ * 상세 — 고른 건물 하나. 머리(그림 · 이름 · 눈금 · n / 최대) 아래 랭크가 위에서 아래로 선다(칸 문법은 옛 가지 카드 그대로 · ADR-0146).
+ * 건설 탭에만 선다 — 흐린 탭은 제 화면을 편다(§1 · ADR-0308)
  */
-function buildingCard(b) {
-    const col = el('div', 'rs-branch');
-    col.appendChild(el('div', 'rs-art', M.BUILDING_ART[b.id] ?? ''));   // ⚠ 단색 실루엣 목업 — 아트가 오면 그림만 갈아 끼운다
-    col.appendChild(el('div', 'rs-branch-h', `<span>${L(b.name)}</span><span class="muted">${b.rank} / ${b.maxRank}</span>`));
-    for (const r of b.ranks) col.appendChild(rankCell(b, r));
-    return col;
+function buildingSide(b) {
+    const side = el('div', 'cn-side');
+    const head = el('div', 'cn-side-h');
+    const img = M.buildingImg(b.id);
+    if (img) { const pic = el('div', 'cn-side-img'); pic.style.backgroundImage = `url("${img}")`; head.appendChild(pic); }
+    else head.appendChild(el('div', 'rs-art', M.BUILDING_ART[b.id] ?? ''));
+    const name = el('div', 'cn-side-name', `<b>${L(b.name)}</b><span class="muted">${b.rank} / ${b.maxRank}</span>`);
+    name.appendChild(rankPips(b));
+    head.appendChild(name);
+    side.appendChild(head);
+    const ranks = el('div', 'cn-ranks');
+    ranks.dataset.keep = `cn-ranks-${b.id}`;   // 머리는 서 있고 목록만 스크롤한다 · 건물마다 자리가 따로다 — 다른 건물을 골랐다가 돌아와도 제자리
+    for (const r of b.ranks) ranks.appendChild(rankCell(b, r));
+    side.appendChild(ranks);
+    return side;
 }
 
 /**
@@ -3146,6 +3203,7 @@ function rankCell(b, r) {
     go.disabled = !!b.next.err;
     go.onclick = () => {
         const res = SYS.game.construct(G, b.id);
+        state.cnPick = b.id;    // 지은 건물에 머문다 — 안 고른 채 지으면 기본 고르기가 다음 건물로 넘어간다
         if (res.ok) { flash('cn.built', { b: L(b.name), n: res.rank }); save(); }
         else flash(`cn.err.${res.err}`);
         render();
@@ -3177,34 +3235,18 @@ const needArgs = (target, n) => { const w = SYS.game.needOf(target, n); return w
 const needText = (target, n) => { const a = needArgs(target, n); return a ? t('cn.need', a) : t('cn.pending'); };
 /** 잠긴 버튼을 누르면 — 같은 문장을 플래시로 */
 const flashNeed = (target, n) => { const a = needArgs(target, n); flash(a ? 'cn.need' : 'cn.pending', a ?? {}); };
-
-/**
- * 안 지은 건물의 탭 [2026-09-22 · R137 · SCREEN_DESIGN §1] — 그 탭에 붙은 건물이 하나도 안 지어졌으면 **그 건물 카드**를 편다(거기서 바로 짓는다).
- * 기능이 아직 없는 건물(첫 랭크가 준비 중 — 자원 · 탐험 · 훈련장)은 null — 탭은 흐려도 **지금 목업을 그대로** 편다(목업을 볼 길을 남긴다)
- */
-function unbuiltOf(tab) {
-    const cs = SYS.game.constructionState(G);
-    if (cs.tabs[tab] !== false) return null;
-    const own = cs.buildings.filter(b => b.tab === tab && b.rank === 0);
-    return own.some(b => b.next.err !== 'pending') ? own : null;
-}
-function renderUnbuilt(main, own) {
-    const p = el('div', 'panel page');
-    p.appendChild(el('h2', '', t(`nav.${state.tab}`)));
-    const body = el('div', 'box-body');
-    const tree = el('div', 'rs-tree');
-    for (const b of own) tree.appendChild(buildingCard(b));
-    body.appendChild(tree);
-    p.appendChild(body);
-    main.appendChild(p);
-}
+/** 흐린 탭을 누르면 — 그 탭에 붙은 건물 중 표 순서가 앞인 것을 말한다. 첫 랭크가 전부 준비 중이면 지을 수 없으니 「준비 중」 (§1 · ADR-0311) */
+const flashUnbuilt = (cs, tab) => {
+    const b = cs.buildings.find(x => x.tab === tab);
+    if (b) flash(b.next.err === 'pending' ? 'nav.pending' : 'nav.unbuilt', { b: L(b.name) });
+};
 
 /* ═══════════ 훈련장 — 훈련 · 전직 (SCREEN_DESIGN §16 · ADR-0297) ═══════════ */
 
 /**
  * 훈련장 탭 — ⚠ **통째로 목업**이다. 훈련(경험치)도 전직(DEV_PLAN R16)도 `game_logic` 에 없어 `SYS.*` 를 부르지 않는다.
  * 작업 탭은 제련소와 같은 자리 · 같은 모양(패널 박스 바로 위 · ADR-0281)이고 고른 하나만 편다.
- * **전직 작업 탭이 혈통의 전당이다** — 두 작업 탭 다 맨 위에 제 건물의 줄(건설 가지 첫 노드의 상태)을 든다.
+ * 건물은 훈련장 하나다 — 전직은 그 뒤 랭크가 연다(ADR-0310). 두 작업 탭 다 맨 위에 그 작업을 여는 랭크의 줄을 든다.
  * 기획이 확정되면 이 함수들과 `mock.js:TRAINING` 을 함께 걷고 상태 함수로 갈아탄다.
  */
 function renderTraining(main) {
@@ -3221,7 +3263,7 @@ function renderTraining(main) {
     const body = el('div', 'box-body');
     body.dataset.keep = `training-${tab}`;
     if (tab === 'train') {
-        body.appendChild(trainingBuilding('training'));
+        body.appendChild(trainingBuilding('training'));   // 훈련을 여는 랭크 — 어느 랭크인지는 표가 정한다(`needOf`)
         // 훈련 칸 — 건설 노드 칸(`.rs-cell`)을 빌린다. 칸 수는 ⚠ 지어낸 값(`mock.js:TRAINING`)
         const grid = el('div', 'rs-grid');
         for (let i = 1; i <= M.TRAINING.slots; i++) {
@@ -3235,7 +3277,7 @@ function renderTraining(main) {
         }
         body.appendChild(grid);
     } else {
-        body.appendChild(trainingBuilding('lineage'));
+        body.appendChild(trainingBuilding('advance'));    // 전직을 여는 랭크 — 훈련장의 뒤 랭크다(ADR-0310)
     }
     // 안내 — 미착수 탭의 예외(§11 · `todoPanel`)와 같다. 도움말도 같은 키를 부른다 (§12).
     //   공용 `todo.lead`(「기획은 확정됐고 화면이 아직 없다」)는 안 붙인다 — 훈련장은 기획이 미정이라 그 문장이 거짓이다
@@ -3244,17 +3286,22 @@ function renderTraining(main) {
     main.appendChild(p);
 }
 
-/** 건물 줄 — 이 작업을 여는 건물(훈련장 · 혈통의 전당)의 첫 랭크 상태 · 안 지었으면 [건설에서 짓기] (§16).
- *  판정은 건설 탭과 같은 `constructionState` — 준비 중 · 모자란 조건 · 비용 중 하나를 찍는다(건설 탭의 다음 랭크 칸과 같은 순서 · R137) */
-function trainingBuilding(id) {
-    const b = SYS.game.constructionState(G).buildings.find(x => x.id === id);
+/** 건물 줄 — 이 작업(`target` — 훈련 · 전직)을 여는 **랭크**의 상태 · 「훈련장 n랭크」 · 안 지었으면 [건설에서 짓기] (§16).
+ *  어느 건물의 몇 랭크인지는 표가 정한다(`needOf` — 전직은 훈련장의 뒤 랭크 · ADR-0310).
+ *  판정은 건설 탭과 같은 `constructionState` — 준비 중 · 모자란 조건 · 비용 중 하나를 찍는다(건설 탭의 다음 랭크 칸과 같은 순서 · R137).
+ *  그 랭크가 다음 랭크보다 뒤면 비용 대신 「바로 앞 랭크 필요」다 — 한 칸씩 짓는다(construction_draft 원칙 5) */
+function trainingBuilding(target) {
+    const w = SYS.game.needOf(target);
+    const b = w && SYS.game.constructionState(G).buildings.find(x => x.id === w.id);
     const row = el('div', 'tr-bld');
-    row.appendChild(el('b', '', b ? L(b.name) : id));
+    row.appendChild(el('b', '', b ? `${L(b.name)} ${t('cn.rank', { n: w.rank })}` : target));
     if (!b) return row;
-    if (b.rank > 0) { row.appendChild(el('span', 'rs-state', t('rs.rs.done'))); return row; }
-    const unmet = b.ranks[0]?.require.filter(x => !x.ok) ?? [];
-    row.appendChild(b.next.err === 'pending' ? el('span', 'rs-lock', t('cn.pending'))
+    if (b.rank >= w.rank) { row.appendChild(el('span', 'rs-state', t('rs.rs.done'))); return row; }
+    const at = b.ranks[w.rank - 1];
+    const unmet = at.require.filter(x => !x.ok);
+    row.appendChild(!at.effects.some(e => e.live) ? el('span', 'rs-lock', t('cn.pending'))
         : unmet.length ? el('span', 'rs-lock', unmet.map(reqText).join(' · '))
+        : w.rank > b.rank + 1 ? el('span', 'rs-lock', t('cn.need', { b: L(b.name), n: w.rank - 1 }))
         : el('span', 'rs-cond', `<span>${b.next.cost.map(costText).join(' · ') || t('cn.free')}</span>`));
     const go = el('button', 'btn sm', t('tr.bld.go'));
     go.onclick = () => { state.tab = 'research'; clearBagSel(); render(); };   // 되돌릴 수 있는 이동이라 한 번 누름
@@ -3385,8 +3432,10 @@ function renderTavern(main) {
     T.candidates.forEach((c, i) => {
         // 고용한 칸은 빈 채로 남는다 — 다음 리롤에 채워진다 (base_expedition_design §2-4)
         if (!c) { grid.appendChild(el('div', 'ng-card tv-empty', t('tv.empty'))); return; }
-        const card = candidateCard(c, `<button class="btn primary sm b-hire" ${full || G.resources.gold < B.tavern_hire_cost ? 'disabled' : ''}>${t('tv.hire', { g: B.tavern_hire_cost.toLocaleString() })}</button>`);
+        // 선술집을 안 지었으면 [고용]은 흐리고(눌린다) 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308)
+        const card = candidateCard(c, `<button class="btn primary sm b-hire${T.open ? '' : ' dim'}" ${T.open && (full || G.resources.gold < B.tavern_hire_cost) ? 'disabled' : ''}>${t('tv.hire', { g: B.tavern_hire_cost.toLocaleString() })}</button>`);
         card.querySelector('.b-hire').onclick = () => {
+            if (!T.open) { flashNeed('hire'); return; }
             const r = SYS.game.hire(G, i);
             if (r.ok) { flash('tv.hired', { name: L(r.hero.name) }); save(); }
             else flash(r.err === 'roster' ? 'tv.err.roster' : 'tv.err.gold', { cap: SYS.game.limitsOf(G).roster });
@@ -3405,11 +3454,14 @@ function renderTavern(main) {
     body.appendChild(row);
 
     const tools = el('div', 'tv-tools');
-    const rr = el('button', 'btn', T.free
+    const rr = el('button', `btn${T.open ? '' : ' dim'}`, T.free
         ? t('tv.reroll.free')
         : t('tv.reroll', { g: T.cost.toLocaleString(), t: fmtDuration(T.freeAt - now()) }));
-    rr.disabled = !T.free && G.resources.gold < T.cost;
-    rr.onclick = () => { const r = SYS.game.tavernReroll(G, now()); if (!r.ok) flash('tv.err.gold'); else save(); render(); };
+    rr.disabled = T.open && !T.free && G.resources.gold < T.cost;
+    rr.onclick = () => {
+        if (!T.open) { flashNeed('hire'); return; }
+        const r = SYS.game.tavernReroll(G, now()); if (!r.ok) flash('tv.err.gold'); else save(); render();
+    };
     tools.appendChild(rr);
     body.appendChild(tools);
 
@@ -3667,9 +3719,12 @@ function forgeMake(p) {
         // 그림 · 이름 = **만들어질 베이스** — 인벤토리 칸과 같은 규칙(`itemImg`). 무기는 그 레벨의 세부 베이스다(레벨을 바꾸면 바뀐다 · `makeState` 의 `baseId`)
         const look = { slot: part, group: k.group, baseId: k.baseId };
         const row = el('div', 'fg-kind', `<span class="fg-ic">${itemImg(look)}</span><span class="fg-kname">${L(k)}</span><span class="fg-kmats">${mats}</span>`);
-        const go = el('button', 'btn primary sm', t('fg.make.go'));
-        go.disabled = !ms.canMake;
+        // 안 열린 레벨(제련소를 안 지었다)이면 흐리고(눌린다) 누르면 지을 랭크를 말한다 — 레벨 버튼과 같은 문장 (§13-1 잠긴 자리 · ADR-0308)
+        const shut = ms.err === 'unbuilt';
+        const go = el('button', `btn primary sm${shut ? ' dim' : ''}`, t('fg.make.go'));
+        go.disabled = !shut && !ms.canMake;
         go.onclick = () => {
+            if (shut) { flashNeed('make_level', levels.findIndex(l => l.level === level) + 1); return; }
             const r = SYS.game.makeItem(G, part, level, k.id);
             if (!r.ok) flash(`fg.err.${r.err}`);
             else { flash('fg.made', { name: L(G.items[r.uid].name) }); save(); }
@@ -3772,7 +3827,7 @@ function forgeUpgrade(p) {
     if (!it) right.appendChild(el('div', 'fg-pick', t('fg.pick')));
     else {
         const us = SYS.game.upgradeState(G, it.uid);
-        const eff = SYS.item.effective(it);        // 먹인 값 — 툴팁·캐릭터 시트와 같은 숫자여야 한다 (§6)
+        const imp = SYS.item.implicitFixed(it);    // 먹인 값(강화 · 고정 옵션) — 툴팁·캐릭터 시트와 같은 숫자여야 한다 (§6 · ADR-0309)
         const grp = SYS.item.groupOf(it);
         right.appendChild(el('div', 'fg-head', `
             <span class="fg-ic">${itemImg(it)}</span>
@@ -3789,12 +3844,14 @@ function forgeUpgrade(p) {
             for (let i = 0; i < us.max; i++) pips.appendChild(el('i', `fg-pip${i < us.up ? ' on' : ''}`));
             plus.appendChild(pips);
             plus.appendChild(el('div', 'fg-val', grp
-                ? `<span>${t('st.atk')}</span><b>${rangeText(SYS.item.weaponDamage(it))}</b>`
-                : `<span>${t('fg.base')}</span><b>${eff.implicit ? affixText(eff.implicit) : '—'}</b>`));
+                ? `<span>${t('st.atk')}</span><b>${rangeText(SYS.item.weaponDamageFixed(it))}</b>`
+                : `<span>${t('fg.base')}</span><b>${imp ? affixText(imp) : '—'}</b>`));
             const act = el('div', 'fg-act');
-            const go = el('button', 'btn primary sm', us.cost == null ? t('fg.upMax', { up: us.up }) : t('fg.go'));
-            go.disabled = !us.canUpgrade;
+            // 제련소를 안 지었으면 흐리고(눌린다) 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308)
+            const go = el('button', `btn primary sm${us.open ? '' : ' dim'}`, us.cost == null ? t('fg.upMax', { up: us.up }) : t('fg.go'));
+            go.disabled = us.open && !us.canUpgrade;
             go.onclick = () => {
+                if (!us.open) { flashNeed('upgrade_item'); return; }
                 const r = SYS.game.upgradeItem(G, it.uid);
                 if (!r.ok) flash(`ch.err.${r.err}`);
                 else { flash('ch.upgraded', { n: r.up, g: r.cost }); save(); }
@@ -3971,10 +4028,12 @@ function shopGoods(list, src, cycle) {
         ? `<span class="td-buy-n"${sel.color ? ` style="color:${sel.color}"` : ''}>${sel.name}</span>
            <span class="td-price${poor(sel) ? ' no' : ''}">${sel.gold.toLocaleString()} G</span>`
         : '<span class="td-buy-n muted">—</span>');
-    const b = el('button', 'btn sm primary', t('td.buy'));
+    // 상단을 안 지었으면 흐리고 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308)
+    const open = SYS.game.hasFeature(G, 'shop');
+    const b = el('button', `btn sm primary${open ? '' : ' dim'}`, t('td.buy'));
     b.disabled = !sel;
     // ⚠ 구매 정산이 `game_logic` 에 없다 — 미착수 안내는 새 문구가 아니라 도움말·미착수 화면이 쓰던 키 그대로다 (ui 원칙 4 · §11)
-    b.onclick = () => { flash('todo.lead'); render(); };
+    b.onclick = () => { if (!open) { flashNeed('shop'); return; } flash('todo.lead'); render(); };
     bar.appendChild(b);
     box.appendChild(bar);
     return box;
@@ -4536,7 +4595,7 @@ async function boot() {
     //   편성을 대신 해 준다. 유저 흐름에서는 편성 패널이 그 일을 한다(§4-1). 로스터 순서라 리더도 첫 영웅이다
     // `&ps=n` 을 먼저 고른다 — 채우는 것은 **고른 편성**이다(`toggleParty` · R122) · `?dev=form&party=full&ps=2` 가 편성 2 를 채운다
     const wantPs = Number(new URLSearchParams(location.search).get('ps'));
-    /* 건물을 끝까지 지은 채로 — 문턱 · 비용을 건너뛴다(개발용 · R137). 편성 수 · 물약 칸 수가 같이 늘도록 세이브를 한 번 돌려 불러온다(`deserialize` 가 상한에 맞춘다) */
+    /* 건물을 끝까지 지은 채로 — 문턱 · 비용을 건너뛴다(개발용 · R137). 물약 칸 수가 같이 늘도록 세이브를 한 번 돌려 불러온다(`deserialize` 가 상한에 맞춘다) */
     const devBuild = (...ids) => {
         if (!G) return;
         for (const b of SYS.construction.list) if (!ids.length || ids.includes(b.id)) G.buildings[b.id] = b.maxRank;
@@ -4544,10 +4603,9 @@ async function boot() {
     };
     // `&cn=max` — **모든 건물을 끝까지 지은** 판 [2026-09-22 · R137 · SCREEN_DESIGN §10] — 새 게임은 제련소 · 선술집이 안 지어져 있어 그 탭들에 곧장 못 닿는다
     if (new URLSearchParams(location.search).get('cn') === 'max') { if (!G) startGame(); devBuild(); }
-    // `&ps=n` 이 지금 편성 수를 넘으면 지휘 천막을 끝까지 짓는다 — 편성 수는 그 건물이 늘린다 (R137)
+    // `&ps=n` — 편성 수는 처음부터 [balance.csv:party_preset_count] 이고 건물이 안 늘린다(2026-09-23 · ~~넘으면 지휘 천막을 끝까지 짓는다~~ R137)
     const pickPs = () => {
         if (!G || !wantPs) return;
-        if (wantPs > SYS.game.limitsOf(G).presets) devBuild('command');
         SYS.game.selectPreset(G, wantPs);
     };
     const devParty = () => { pickPs(); if (G && SYS.game.partyOf(G).length === 0) for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, now()); };
@@ -4573,7 +4631,8 @@ async function boot() {
         devParty();
         // `&rep=1` — **반복 원정을 켠 채** 출발한다 [2026-09-10]. 반복은 전진 패널의 토글로만 켜져서
         //   「런이 끝나면 다음 런이 저절로 선다」(ADR-0074)에 헤드리스가 못 닿았다 (§10 · ?dev=form 과 같은 장치)
-        if (new URLSearchParams(location.search).get('rep') === '1') state.expRepeat = true;
+        //   반복은 원정 건물 랭크가 열어서(새 게임은 잠김 · 2026-09-23) 원정 건물을 끝까지 짓고 켠다 — `&lvl` 과 같은 장치
+        if (new URLSearchParams(location.search).get('rep') === '1') { devBuild('expedition'); state.expRepeat = true; }
         // `&stage=<id>` — **그 스테이지의 관전** [2026-09-15 · §10] — 오오라를 든 기사 몬스터는 2장부터라(ADR-0127) 첫 스테이지로는 못 본다.
         //   후반 스테이지는 해금 전이라 출발이 거절되므로 앞 스테이지를 순서대로 클리어 처리하고 보낸다(`?dev=form&lvl` 과 같은 장치)
         const wantPlay = Number(new URLSearchParams(location.search).get('stage'));
@@ -4594,6 +4653,9 @@ async function boot() {
                 clearInterval(wait);
                 node.onmouseenter(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
                 if (new URLSearchParams(location.search).get('alt') === '1') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt' }));
+                // `&eq=n` — Alt 로 붙든 툴팁의 **n번째 찬 장비 칸**에 올린 채 — 「착용 중」 아이템 카드가 선다(ADR-0182). 칸 hover 도 Alt 동안만이라 헤드리스가 못 닿았다
+                const eq = +new URLSearchParams(location.search).get('eq');
+                if (eq > 0) document.querySelectorAll('#tooltip [data-equip-i]')[eq - 1]?.onmouseenter?.();
             }, 100);
         }
         // 꼬리를 건너뛰되 **시계는 건다** [2026-09-21 · 부채 #51] — 여기서 그냥 나가면 `expTick` 이 안 돌아

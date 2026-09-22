@@ -318,6 +318,7 @@ const FX_ROWS = [
     { id: 'fx_vs_target', after: 'def_ignore', fmt: 'pct', name: () => t('st.fx.vsTarget'),
         parts: x => [[t('kind.elite'), x?.vsElite ?? 0], [t('exp.form.front'), x?.vsFront ?? 0], [t('exp.form.back'), x?.vsBack ?? 0]] },
     { id: 'fx_crush', after: 'def_ignore', fmt: 'pct', name: () => L(M.AFFIX_LABELS.crushing_blow_pct), parts: x => one(x?.crush) },
+    { id: 'fx_hit', after: 'def_ignore', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hit_bonus), parts: x => one(x?.hitBonus) },   // 궁수 T1-3 (2026-09-22 R138)
     { id: 'fx_dr_flat', after: 'res_max_bonus', fmt: 'n', name: () => L(M.AFFIX_LABELS.dr_flat), parts: x => one(x?.drFlat) },
     { id: 'fx_dr_type', after: 'res_max_bonus', fmt: 'pct', name: () => t('st.fx.drType'), parts: x => typeParts(x?.vsDr) },
     { id: 'fx_dr_target', after: 'res_max_bonus', fmt: 'pct', name: () => t('st.fx.drTarget'),
@@ -539,7 +540,7 @@ const GRADE_LINE = { normal: 'var(--enemy-line)', elite: 'var(--color-warning)',
  * 세부 옵션은 같은 이벤트의 `sheet`(R94) 그대로다 — 렌더러는 계산하지 않는다.
  * 이름 · 직업 · 등급 줄은 없다 — 올린 카드의 이름 줄 · 테두리 색이 이미 든다 (ADR-0134)
  * @param u 재생기의 적 유닛 `{grade, stats, sheet, gear}`
- * @param itemCardOf 장비 아이템 개체 → 「착용 중」 아이템 카드. 숫자는 **그 몬스터 기준**이라 부르는 쪽이 문맥을 든다 (ui/battle.js)
+ * @param itemCardOf 장비 아이템 개체 → 「착용 중」 아이템 카드 — 영웅 · 캐릭터 탭과 같은 카드다 (ui/battle.js · ADR-0312)
  */
 export function monsterTipCard(u, itemCardOf = null) {
     if (!u) return null;
@@ -877,6 +878,12 @@ export function skillTipSection(s, ctx = {}) {
     return n;
 }
 
+/** 스킬 이름 줄 — 아이콘 + 이름. 정의를 못 찾으면(행이 지워진 옛 세이브) id 를 이름으로 낸다 */
+const skillNameHtml = s => {
+    const def = SYS.skill?.defs?.[s.id] ?? null;
+    return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</div>`;
+};
+
 /**
  * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주.
  * 스킬 카드와 아이템 툴팁의 스킬 칸이 **같이 부른다** — 한쪽만 고쳐지지 않게 몸통은 여기 하나다 (ADR-0139).
@@ -886,7 +893,6 @@ export function skillTipSection(s, ctx = {}) {
  */
 function skillBodyHtml(s, ctx) {
     const def = SYS.skill?.defs?.[s.id] ?? null;
-    const name = L(def?.name ?? s.name ?? { ko: s.id, en: s.id });
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
     for (const tg of (def ? SYS.skill.tagsOf(def) : [])) chips.push(`<i class="tip-chip">${L(skillTagName(tg))}</i>`);
@@ -895,7 +901,7 @@ function skillBodyHtml(s, ctx) {
     const R = { alt: altHeld, fx: false };
     const lines = def ? skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, R) : null;
     return `
-        <div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${name}</div>
+        ${skillNameHtml(s)}
         ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
         ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}
         ${R.fx && !R.alt ? `<div class="tip-foot">${t('sk.altHint')}</div>` : ''}`;
