@@ -26,7 +26,9 @@
  *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
  *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], tactics: {slots}}], preset: n, items: {uid: item}, bag: [uid],
  *     — presets = **편성**(v32 · R122 · 길이 = `party_preset_count`) · preset = 고른 편성 번호(1 부터).
- *       party = **편성한 순서 그대로** · `party[0]` 이 리더 · **새 게임은 전부 빈 배열**이다 (2026-09-09) · 한 영웅이 여러 편성에 든다.
+ *       party = **편성한 순서 그대로** · `party[0]` 이 리더 · **새 게임은 전부 빈 배열**이다 (2026-09-09).
+ *       **한 영웅은 한 편성에만 든다 — v38** [2026-09-23 · 다부대] — 편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다.
+ *       `toggleParty` 가 넣을 때 다른 편성에서 빼고(이동), 로드도 같은 규칙으로 걸러 낸다 (옛 규칙 = 여러 편성에 들어도 됨)
  *       potionSlots = 물약 칸 구성(길이 = `potion_slot_max` · null = 빈 칸) — 런을 열 때 재고에서 앞 칸부터 채운다 (R124)
  *       tactics = **이 편성의 파티 전술 칸**(v34 · R129) — 아래 옛 `tactics` 와 같은 모양이고 편성마다 한 벌이다
  *     — items[*].proc = **목걸이 발동 스킬** `{trigger, skill, v}` (목걸이만 · v33 · 2026-09-21 · ⚠ 전투는 안 읽는다 — 설명에만).
@@ -36,10 +38,14 @@
  *   progress: {cleared: [stageId], levelUp: {stageId: n}},   // levelUp = 스테이지별 올린 양 — 없으면 {} (2026-09-14 · R87 · 버전 무변경)
  *   codexKills: {monsterId: n}   — **도감 레벨의 출처** — 누적 처치 수 (monster_design §8 · 2026-09-21 카드 → 처치 수)
  *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make},   // upgrade 는 R95(2026-09-15)부터 안 오른다 — 강화가 rng 를 안 쓴다 · make = 제작 회차(R96 · 없으면 0)
- *   run: {stageId, preset, repeat, lastAt, durationSec, active, fallen?} | null,   // active = 원정이 도는 중(v25 · R89) — 불러온 세이브에 서 있으면 끊긴 원정이다 · preset = 나간 편성 번호(v32) · fallen = 이 런에서 쓰러져 있는 영웅(R130 · 버전 무변경 · 없으면 [] — 옛 v16 `downed` 와 다른 필드)
+ *   runs: [{stageId, preset, repeat, lastAt, durationSec, active, fallen?} | null],   // **부대마다 하나 — v38** [2026-09-23 · 다부대 · GAME_DESIGN §1-1] — 옛 `run`(단수) 대체.
+ *     길이 = presets 와 같고 **자리 + 1 = 편성 번호**(부대 = 편성이다) · 안 나간 편성은 null · 동시에 active 일 수 있는 수는 `limitsOf(state).expeditions`.
+ *     active = 그 부대가 도는 중(v25 · R89) — 불러온 세이브에 서 있으면 끊긴 원정이다 · preset = 나간 편성 번호(자리와 같다 · v32) ·
+ *     fallen = 이 런에서 쓰러져 있는 영웅(R130 · 없으면 [] — 옛 v16 `downed` 와 다른 필드)
  *   reports: [{...}]             — 리포트 목록. **최신이 맨 앞**이고 [balance.csv:report_keep] 개까지 남는다 (v21).
  *     반복 원정은 이기는 동안 런을 잇는데, 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3)
- *   notice: {kind:'runClosed', stageId, at, seenAt} | null   — 재접속 알림 (배너 1회)
+ *   notice: {kind:'runClosed', runs: [{stageId, at}], stageId, at, seenAt} | null   — 재접속 알림 (배너 1회).
+ *     `runs` = **끊은 부대마다 한 줄 — v38**(편성 번호 순) · `stageId`·`at` 은 그중 첫 줄을 그대로 둔 것이다(한 부대만 돌던 화면이 안 깨지게)
  *   tavern: {rerolledAt: ms|null, hired: [슬롯번호]}         — 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸.
  *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
  *   search: {heroUid, startedAt: ms, no, sin, cha, answer: 답 id|null} | null   — 나가 있는 수색 1건 (base_expedition_design §2-4).
@@ -61,15 +67,16 @@
  *   progress.peakTotal              — 로스터 합산 레벨의 **도달 최고치**(v37) — 해고가 합산을 내리기 전에 적는다(건설 문턱 `total:`)
  * }
  *
- * **버전** — `deserialize` 는 **v37 만 연다** [2026-09-22 · R139 · 사용자 지시] — 그 전 세이브(v1 ~ v36)는 던지고 시작 화면이 새 게임으로 받는다.
- *   옛 이관(`upgradeV2` ~ `upgradeV36`)은 지웠다(INTERFACE §4 「v37 에서 끊었다」). v38 이 생기면 `deserialize` 안에서 한 단계씩 올린다
+ * **버전** — `deserialize` 는 **v38 만 연다** [2026-09-23 · 사용자 지시 「끊어」 · 다부대] — 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다.
+ *   v37 에서 한 번 끊고(2026-09-22 · R139) 이관 틀을 통째로 지운 직후라, `run` → `runs` 하나 때문에 그것만 되살리는 것보다 끊는 쪽이 깨끗하다.
+ *   v39 가 생기면 `deserialize` 안에서 한 단계씩 올린다 (INTERFACE §4)
  */
 
 import { makeRng, deriveSeed } from './rng.js';
 // 건설 어휘 — 창구가 모르는 이름을 거절하는 데만 쓴다(시스템 주입이 아니다 · skill_effects.js 와 같은 취급)
 import { TARGETS as CN_TARGETS } from './construction.js';
 
-export const SAVE_VERSION = 37;
+export const SAVE_VERSION = 38;
 
 /**
  * @param {object} deps
@@ -183,7 +190,7 @@ export function createGameSystem(deps) {
      */
     /**
      * 상한 — **이 세이브가 쓸 수 있는 칸 · 인원 · 단계의 수를 여기 한 곳이 답한다** [신설 2026-09-22 · INTERFACE §2-7 · construction_draft §9].
-     *   bag 가방 · stash 창고 · roster 로스터 · party 파티 인원 · presets 편성 수 · potionSlots 물약 칸 · upgrade 강화 단계 ·
+     *   bag 가방 · stash 창고 · roster 로스터 · party 파티 인원 · presets 편성 수 · **expeditions 동시 원정 부대 수**(v38 · 편성 수를 넘지 않는다) · potionSlots 물약 칸 · upgrade 강화 단계 ·
      *   tavernCandidates 고용 후보 · searchSlots 동시 수색 · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기)
      *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 — 이 셋은 기본값이 0 이다(건물만 연다)
      * **값 = balance.csv 기본값 + 지어진 건물 랭크의 더하기** [2단계 2026-09-22 · R137 · construction_draft §11-2] — 기본값은 **건설 전** 값이고
@@ -193,7 +200,8 @@ export function createGameSystem(deps) {
     function limitsOf(state) {
         const out = {
             bag: B.inventory_cap, stash: B.stash_cap, roster: B.roster_cap, party: B.party_size_max,
-            presets: B.party_preset_count, potionSlots: B.potion_slot_max, upgrade: B.equip_upgrade_max,
+            presets: B.party_preset_count, expeditions: B.concurrent_expedition_parties,
+            potionSlots: B.potion_slot_max, upgrade: B.equip_upgrade_max,
             tavernCandidates: B.tavern_candidates, searchSlots: B.tavern_search_slots,
             shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon,
             makeLevels: 0, potionTier: 0, tacticSlots: 0,
@@ -202,6 +210,8 @@ export function createGameSystem(deps) {
             const key = ADD_KEY[target] ?? target;
             if (key in out) out[key] += n;      // 준비 중인 더하기(일꾼 칸 등)는 붙을 상한이 아직 없다
         }
+        // 부대는 편성 하나에 하나다 — 편성보다 많은 부대를 낼 수 없다 [2026-09-23 · 다부대]
+        out.expeditions = Math.min(out.expeditions, out.presets);
         return out;
     }
     /** 더하기 대상 이름 → 상한 키 — 표의 단계 셋만 이름이 다르다(나머지는 같은 이름에 붙는다) */
@@ -217,7 +227,7 @@ export function createGameSystem(deps) {
             progress: { cleared: [], levelUp: {}, peakTotal: 0 },   // levelUp = 스테이지별 **올린 양** — 안 올린 스테이지는 안 적는다 (2026-09-14 · R87) · peakTotal = 합산 레벨 도달 최고치(v37)
             codexKills: {},
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0 },
-            run: null, reports: [], notice: null,
+            runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [] },
             search: null,
             // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
@@ -258,7 +268,7 @@ export function createGameSystem(deps) {
         try { deserialize(obj); return true; } catch { return false; }
     }
 
-    /** **v37 만 연다** — 그 전은 끊었다(2026-09-22 · R139 · 파일 머리 참조). 다음 버전이 생기면 여기서 한 단계씩 올린다 */
+    /** **v38 만 연다** — 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조). 다음 버전이 생기면 여기서 한 단계씩 올린다 */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
         if (obj.version !== SAVE_VERSION)
@@ -278,7 +288,7 @@ export function createGameSystem(deps) {
         }
         // 도감 카드는 걷혔다 [2026-09-21 · 버전 무변경] — 레벨은 이미 있던 `codexKills` 에서 다시 계산되므로 소급할 판단이 없다 · 필드만 지운다 (INTERFACE §4)
         delete s.codexCards; s.codexKills = s.codexKills ?? {};
-        s.run = s.run ?? null; s.reports = s.reports ?? []; s.notice = s.notice ?? null;
+        s.reports = s.reports ?? []; s.notice = s.notice ?? null;
         s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
         // 수색 — 없으면 「한 적이 없다」가 정확한 초기 상태라 **버전을 안 올린다** (INTERFACE §4 · 2026-09-09)
         s.stash = s.stash ?? [];       // 창고 — v24. 없던 세이브는 빈 채로 열린다
@@ -299,6 +309,10 @@ export function createGameSystem(deps) {
         // 편성 — **편성 수 · 칸 수를 그 세이브의 상한에 맞춘다**(모자라면 빈 편성 · 빈 칸을 붙이고 넘치면 뒤를 자른다) · 고른 번호는 범위로 자른다 (INTERFACE §2-7 · R122)
         s.presets = fitPresets(s, s.presets);
         s.preset = Math.min(limitsOf(s).presets, Math.max(1, Number.isInteger(s.preset) ? s.preset : 1));
+        // 한 영웅은 한 편성에만 든다 — 겹치면 **앞 편성이 갖는다** (v38 · 다부대 · `toggleParty` 와 같은 규칙)
+        dedupeParties(s);
+        // 부대 — 편성 수에 맞춘다(넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다). 도는 채로 저장된 부대는 **끊긴 것**이라 `closeRun` 이 걷는다 (v38)
+        s.runs = fitRuns(s, s.runs);
         // 알아서 분해 — 없으면 「꺼짐」이 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R125)
         s.autoSalvage = { rarity: null, ilvlBelow: 0, ...(s.autoSalvage ?? {}) };
         // 같이 나간 런 수 — 1 이상 정수만 남긴다 (v36 · R134)
@@ -419,9 +433,10 @@ export function createGameSystem(deps) {
 
     /**
      * 도는 원정에서 쓰러져 있는 영웅인가 [2026-09-21 · R130 · base_expedition_design §1-5] — 그 런이 끝날 때까지 장비 · 스킬 트리를 못 바꾼다
-     *   (쓰러진 영웅의 장비를 벗겨 산 영웅에게 넘기는 길을 막는다). `state.run.fallen` 은 `stepRun` 이 적는다 · 원정이 안 돌면 거짓
+     *   (쓰러진 영웅의 장비를 벗겨 산 영웅에게 넘기는 길을 막는다). `runs[*].fallen` 은 `stepRun` 이 적는다 · 원정이 안 돌면 거짓.
+     *   **부대를 안 가린다** [2026-09-23 · 다부대] — 어느 부대에서든 쓰러져 있으면 잠긴다(한 영웅은 한 부대에만 서므로 답은 하나다)
      */
-    const fallenOf = (state, uid) => state.run?.active === true && (state.run.fallen ?? []).includes(uid);
+    const fallenOf = (state, uid) => (state.runs ?? []).some(r => r?.active === true && (r.fallen ?? []).includes(uid));
 
     /** 가방 → 착용. 그 위치의 착용품은 가방으로 (가방이 차면 실패). position 은 생략 가능.
      *  양손↔보조 배타는 2026-09-01 한손 개념 폐지로 사라졌다 — 되돌아오는 것은 언제나 그 자리에 있던 하나뿐이다 */
@@ -871,15 +886,53 @@ export function createGameSystem(deps) {
             tactics: fitTactics(p.tactics),
         };
     });
+    /* ── 부대 — 편성 하나에 하나다 [v38 · 2026-09-23 다부대 · GAME_DESIGN §1-1] ──
+       `state.runs` 는 `presets` 와 같은 색인이다(자리 + 1 = 편성 번호). 부대라는 번호를 따로 두지 않는다 —
+       편성이 곧 부대라서, 「2부대」는 「편성 2 가 나간 원정」이다 */
+    /** 새 게임의 부대 자리 — 전부 비어 있다 */
+    const newRuns = (state = null) => Array.from({ length: limitsOf(state).presets }, () => null);
+    /** 불러온 부대 자리를 편성 수에 맞춘다 — 넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다 */
+    const fitRuns = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) => {
+        const r = Array.isArray(list) ? list[i] : null;
+        return r && typeof r === 'object' ? r : null;
+    });
+    /** 그 편성의 부대 — 없는 번호면 null */
+    const runAt = (state, no) => (Number.isInteger(no) && no >= 1 ? state.runs?.[no - 1] ?? null : null);
+    /** 지금 도는 부대의 편성 번호 — 오름차순 · 없으면 [] */
+    const runningNos = state => (state.runs ?? []).map((r, i) => (r?.active ? i + 1 : 0)).filter(Boolean);
+    /**
+     * 한 영웅은 한 편성에만 든다 [v38 · 다부대] — 겹치면 **앞 편성이 갖는다.**
+     * 로드(`deserialize`)와 편성 이동(`toggleParty`)이 같은 규칙을 쓴다 · 뺀 자리는 진형에서도 빠진다 · rng 0
+     */
+    function dedupeParties(state) {
+        const seen = new Set();
+        for (const p of state.presets) {
+            p.party = p.party.filter(uid => (seen.has(uid) ? false : (seen.add(uid), true)));
+            normalizeFormation(p);
+        }
+    }
+
     /** 번호 → 편성. 정수가 아니거나 범위 밖이면 null */
     const presetAt = (state, no) => (Number.isInteger(no) && no >= 1 && no <= (state.presets?.length ?? 0) ? state.presets[no - 1] : null);
     /** 고른 편성 — 번호가 틀려 있으면 편성 1 (로드가 범위로 자르므로 평소엔 안 탄다) */
     const curPreset = state => presetAt(state, state.preset) ?? state.presets[0];
     /** 편성의 파티 — **복사본**이다. `no` 를 안 주면 고른 편성 · 없는 번호면 [] */
     const partyOf = (state, no = state.preset) => (presetAt(state, no)?.party ?? []).slice();
-    /** 그 편성으로 지금 나가면 나올 거절 — 스테이지 무관. 없는 편성 `missing` → 빈 파티 `noParty` → 수색 나간 영웅 `searching` → null */
-    const presetErr = (state, p) => (!p ? 'missing' : p.party.length === 0 ? 'noParty'
-        : p.party.some(uid => heroBusy(state, uid) === 'search') ? 'searching' : null);
+    /**
+     * 그 편성으로 지금 나가면 나올 거절 — 스테이지 무관 [다부대 2026-09-23].
+     * 없는 편성 `missing` → 빈 파티 `noParty` → 수색 나간 영웅 `searching` →
+     * **`busy`**(그 편성의 영웅이 **다른 부대**에서 싸우는 중 — 도는 부대의 인원은 출발 때 굳은 스냅샷이라 편성을 옮겨 두면 한 사람이 두 부대에 선다) →
+     * **`full`**(도는 부대가 이미 상한만큼이다 — **그 편성이 이미 도는 중이면 안 센다**: 다시 보내는 것은 그 부대를 끊고 여는 것이라 수가 안 는다) → null
+     */
+    const presetErr = (state, p, no) => {
+        if (!p) return 'missing';
+        if (p.party.length === 0) return 'noParty';
+        if (p.party.some(uid => heroBusy(state, uid) === 'search')) return 'searching';
+        if (p.party.some(uid => { const at = runOf(state, uid); return at !== null && at !== no; })) return 'busy';
+        const going = runningNos(state);
+        if (!going.includes(no) && going.length >= limitsOf(state).expeditions) return 'full';
+        return null;
+    };
 
     /**
      * 파티와 진형을 맞춘다 — **결정적이고 순서를 보존한다.** rng 를 안 쓴다.
@@ -970,19 +1023,22 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 편성 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** [신설 2026-09-21 · R122 · R124 · SCREEN_DESIGN §15 · §4-1].
-     * `runNo` = 도는 원정의 편성(고르개의 「원정 중」) · 칸마다 `short` = 재고가 모자라 런에서 빈 채 시작할 칸 — `departRun` 이 채우는 것과 같은 함수(`fillSlots`)다
+     * 편성 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** [신설 2026-09-21 · R122 · R124 · SCREEN_DESIGN §15 · §4-1 · **다부대 2026-09-23**].
+     * `runNos` = 도는 부대의 편성 번호(오름차순 · ~~`runNo` 하나~~) · `max` = 동시에 낼 수 있는 부대 수 ·
+     * 편성마다 `running` = 그 편성이 도는 중인가(고르개의 「원정 중」) · 칸마다 `short` = 재고가 모자라 런에서 빈 채 시작할 칸 — `departRun` 이 채우는 것과 같은 함수(`fillSlots`)다
      */
     function presetState(state) {
-        const runNo = state.run?.active && presetAt(state, state.run.preset) ? state.run.preset : null;
+        const L = limitsOf(state);
+        const going = runningNos(state);
         return {
-            count: limitsOf(state).presets, activeNo: state.preset, runNo, slotMax: limitsOf(state).potionSlots,
+            count: L.presets, activeNo: state.preset, runNos: going, max: L.expeditions, slotMax: L.potionSlots,
             presets: state.presets.map((p, i) => {
                 const filled = fillSlots(state, p);
                 return {
                     no: i + 1, party: p.party.slice(), formation: clone(p.formation),
                     potionSlots: padSlots(state, p.potionSlots ?? []).map((id, k) => (id ? { id, short: !filled[k] } : null)),
-                    err: presetErr(state, p),
+                    running: going.includes(i + 1),
+                    err: presetErr(state, p, i + 1),
                 };
             }),
         };
@@ -1030,7 +1086,7 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         // 원정 중에도 넣고 뺀다 [2026-09-14 · R92 · 사용자 지시] — 도는 원정은 나간 인원 그대로 싸우고(`runParty`), 바꾼 인원은 다음 원정부터다
-        //   **고른 편성**에 작용한다 [2026-09-21 · R122] — 한 영웅이 여러 편성에 들어가도 된다(편성은 계획이다)
+        //   **고른 편성**에 작용한다 [2026-09-21 · R122]
         const p = curPreset(state);
         if (p.party.includes(uid)) {
             p.party = p.party.filter(u => u !== uid);
@@ -1041,6 +1097,14 @@ export function createGameSystem(deps) {
         //   수색 나간 영웅은 마을에 없다. 출정 중 아웃은 편성이 아니라 출발이 본다
         if (heroBusy(state, uid) === 'search') return { ok: false, err: 'searching' };
         if (p.party.length >= limitsOf(state).party) return { ok: false, err: 'full' };
+        // **한 영웅은 한 편성에만** [v38 · 2026-09-23 다부대] — 다른 편성에 들어 있으면 거기서 뺀다(거절이 아니라 이동 · 그 편성의 진형에서도 빠진다).
+        //   편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다. 도는 부대는 나간 인원 그대로 싸우므로 흔들리지 않는다 —
+        //   옮겨 둔 탓에 그 편성이 못 나가는 것은 출발(`presetErr` 의 `busy`)이 본다
+        for (const other of state.presets) {
+            if (other === p || !other.party.includes(uid)) continue;
+            other.party = other.party.filter(u => u !== uid);
+            normalizeFormation(other);
+        }
         p.party.push(uid);
         normalizeFormation(p);                            // 전열이 찬 뒤 후열로 — 새 영웅의 자리 (진형 2026-09-09)
         return { ok: true };
@@ -1059,13 +1123,14 @@ export function createGameSystem(deps) {
     }
 
     function canDepart(state, stageId, now, no = state.preset) {
-        // 원정이 도는 중이어도 막지 않는다 — 보내면 `departRun` 이 그 원정을 끊는다 (R92)
+        // **그 편성의** 원정이 도는 중이어도 막지 않는다 — 보내면 `departRun` 이 그 부대를 끊는다 (R92 · 다른 부대는 안 건드린다)
         if (!hasFeature(state, 'expedition')) return 'unbuilt';   // 원정 건물이 연다(처음부터 지어짐 · R137)
         if (!stageUnlocked(state, stageId)) return 'locked';
         // 편성 `no`(기본 고른 편성)로 나간다 [2026-09-21 · R122] — 없는 편성 · 빈 파티 · **수색 나간 영웅이 든 편성**은 못 나간다.
         //   편성은 계획이라 든 채로 수색을 보낼 수 있고 여기서 막는다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
         //   아웃이 런을 넘지 않으므로 언제나 전원이 나간다 (base_expedition_design §1-1)
-        return presetErr(state, presetAt(state, no));
+        //   **다부대** [2026-09-23] — 다른 부대에서 싸우는 영웅이 든 편성(`busy`) · 도는 부대가 이미 상한만큼(`full`)도 여기서 막는다
+        return presetErr(state, presetAt(state, no), no);
     }
 
     /**
@@ -1149,22 +1214,39 @@ export function createGameSystem(deps) {
         had.points = (had.points ?? 0) + (lu.points ?? 0);
     };
 
-    /** 도는 원정의 리포트 — 판정이 아직 없고(`reason: null`) 그 원정이 나간 시각의 것. 도는 원정이 없으면 null */
-    const liveReport = state => state.run?.active ? state.reports.find(r => r.at === state.run.lastAt && r.reason === null) ?? null : null;
+    /**
+     * 그 부대의 도는 리포트 — 판정이 아직 없고(`reason: null`) 그 부대가 나간 시각의 것. 안 돌면 null.
+     * **편성 번호로 가린다** [v38 · 2026-09-23 다부대] — 부대가 여럿이면 `reason: null` 인 리포트도 여럿이라 시각만으로는 못 가린다(`report.preset`)
+     */
+    const liveReport = (state, no) => {
+        const run = runAt(state, no);
+        return run?.active ? state.reports.find(r => r.preset === no && r.at === run.lastAt && r.reason === null) ?? null : null;
+    };
 
     /** 끝났거나 **끊긴** 원정의 핸들인가 — 끊기(새 출발 · `closeRun`)는 핸들 없이 리포트 판정만 세운다 (R92) */
     const runOver = run => !run || run.done || run.report.reason !== null;
 
     /**
-     * 지금 싸우는 영웅 — 도는 원정이 나갈 때의 인원 [신설 2026-09-14 · R92]. 원정 중에도 편성을 바꾸고 고르므로 **고른 편성의 파티**와 다를 수 있다 —
-     * 파티에서 뺀 영웅도 그 원정이 끝날 때까지 싸우고, 새로 넣은 영웅은 안 싸운다. 해고 · 수색이 이것으로 막는다. 도는 원정이 없으면 `[]`
+     * 지금 싸우는 영웅 — 도는 원정이 나갈 때의 인원 [신설 2026-09-14 · R92 · **다부대 2026-09-23**]. 원정 중에도 편성을 바꾸고 고르므로 **그 편성의 지금 파티**와 다를 수 있다 —
+     * 파티에서 뺀 영웅도 그 원정이 끝날 때까지 싸우고, 새로 넣은 영웅은 안 싸운다. 해고 · 수색이 이것으로 막는다. 도는 부대가 없으면 `[]`.
+     * `no` 를 주면 **그 부대**의 인원, 안 주면 **도는 모든 부대를 합친 것**(중복 없음 · 편성 번호 순)
      */
-    function runParty(state) {
-        return liveReport(state)?.party.slice() ?? [];
+    function runParty(state, no) {
+        if (no !== undefined) return liveReport(state, no)?.party.slice() ?? [];
+        const out = [];
+        for (const n of runningNos(state)) for (const uid of liveReport(state, n)?.party ?? []) if (!out.includes(uid)) out.push(uid);
+        return out;
     }
 
     /**
-     * 영웅이 지금 하는 일 — `'run'`(도는 원정의 인원 · `runParty`) · `'search'`(수색 나감) · `null`(마을) [신설 2026-09-22 · INTERFACE §2-7].
+     * 그 영웅이 싸우는 부대 — 편성 번호 · 안 싸우면 null [신설 2026-09-23 · 다부대].
+     * `heroBusy` 가 `'run'` 이라고만 말하는 자리에서 **어느 부대인지**가 필요할 때 읽는다(영웅 띠 · 출발의 `busy`).
+     * 한 영웅은 한 부대에만 서므로 답은 하나다 · rng 0
+     */
+    const runOf = (state, uid) => runningNos(state).find(n => (liveReport(state, n)?.party ?? []).includes(uid)) ?? null;
+
+    /**
+     * 영웅이 지금 하는 일 — `'run'`(**도는 어느 부대든** 그 인원 · `runParty` · 어느 부대인지는 `runOf`) · `'search'`(수색 나감) · `null`(마을) [신설 2026-09-22 · INTERFACE §2-7].
      * **영웅을 붙잡는 활동의 판정은 여기 한 곳이다** — 편성 · 출발 · 해고 · 수색 · 화면의 「지금 하는 일」이 모두 이것을 읽는다.
      *   파견 · 훈련처럼 영웅을 붙잡는 활동이 생기면 여기에 더한다(흩어져 있던 `runParty(…).includes` · `search.heroUid ===` 를 걷었다 — 2026-09-22 구조 감사).
      * 둘은 겹치지 않는다 — 싸우는 영웅은 수색에 못 나가고(`searchSend`) 수색 나간 영웅이 든 편성은 못 나간다(`canDepart`).
@@ -1184,9 +1266,10 @@ export function createGameSystem(deps) {
     function departRun(state, stageId, now, no = state.preset) {
         const why = canDepart(state, stageId, now, no);
         if (why) return { ok: false, err: why };
-        // 도는 원정이 있으면 **먼저 끊는다** — 철수와 같다(진행 중이던 라운드는 없던 것 · 리포트 `retreat` · 반복 off) [2026-09-14 · R92 · 사용자 지시].
-        //   보상은 이긴 라운드에만 들어오므로 끊고 다시 보내는 것이 가속 수단이 안 된다. 옛 핸들은 리포트 판정이 서서 `done` 으로 거절된다
-        cutRun(state, 'retreat');
+        // **그 부대의** 원정이 돌고 있으면 **먼저 끊는다** — 철수와 같다(진행 중이던 라운드는 없던 것 · 리포트 `retreat` · 반복 off) [2026-09-14 · R92 · 사용자 지시].
+        //   보상은 이긴 라운드에만 들어오므로 끊고 다시 보내는 것이 가속 수단이 안 된다. 옛 핸들은 리포트 판정이 서서 `done` 으로 거절된다.
+        //   **다른 부대는 안 건드린다** [2026-09-23 · 다부대] — 부대마다 제 칸을 가진다
+        cutRun(state, 'retreat', no);
 
         state.counters.battle += 1;
         const rng = makeRng(deriveSeed(state.seed, state.counters.battle));
@@ -1210,7 +1293,7 @@ export function createGameSystem(deps) {
         state.bonds[bondKey(going)] = fixed.bond + 1;
 
         const report = {
-            at: now, stageId, level, won: false, reason: null, durationSec: 0,   // reason null = 진행 중
+            at: now, stageId, level, preset: no, won: false, reason: null, durationSec: 0,   // reason null = 진행 중 · preset = 어느 부대의 런인가 (v38 · 다부대)
             gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
             downed: [], party: going.slice(), drops: [], discarded: 0,
             rounds: [], roundsCleared: 0,
@@ -1221,8 +1304,9 @@ export function createGameSystem(deps) {
         // 목록의 맨 앞에 넣고 상한만큼만 남긴다 — 오래된 런부터 밀려난다 (v21)
         state.reports.unshift(report);
         if (state.reports.length > B.report_keep) state.reports.length = B.report_keep;
-        state.run = {
-            stageId, preset: no, repeat: state.run?.stageId === stageId ? state.run.repeat : false,
+        // 부대의 자리에만 쓴다 — 다른 부대의 칸은 그대로다. 반복 플래그는 **그 부대가 같은 스테이지를 돌던 중**이었을 때만 이어받는다 (v38 · 다부대)
+        state.runs[no - 1] = {
+            stageId, preset: no, repeat: runAt(state, no)?.stageId === stageId ? runAt(state, no).repeat : false,
             // fallen = 이 런에서 쓰러져 있는 영웅 — `stepRun` 이 채운다 · 장비 · 스킬 트리 잠금(`downed`)이 읽는다 (R130 · 옛 v16 `downed` 와 다른 필드)
             lastAt: now, durationSec: 0, active: true, fallen: [],
         };
@@ -1314,14 +1398,15 @@ export function createGameSystem(deps) {
         R.strikes = clone(res.strikes);
         R.contrib = clone(s.contrib);
         R.downed = res.downed.slice();
-        if (state.run) state.run.durationSec = s.t;
+        const slot = runAt(state, run.preset);   // **그 부대의 칸** — 다른 부대는 제 걸음으로 따로 정산한다 (v38 · 다부대)
+        if (slot) slot.durationSec = s.t;
 
         if (s.ended) {
             R.won = res.won;
             R.reason = res.reason;
             if (res.won && !state.progress.cleared.includes(run.stageId)) state.progress.cleared.push(run.stageId);
             run.done = true;
-            if (state.run) { state.run.active = false; state.run.fallen = []; }   // 전투 밖 = 전원 회복 (base_expedition_design §1-1)
+            if (slot) { slot.active = false; slot.fallen = []; }   // 전투 밖 = 전원 회복 (base_expedition_design §1-1)
             return true;
         }
         run.battle.refit(runUnits(state, run));
@@ -1338,7 +1423,8 @@ export function createGameSystem(deps) {
         run.battle.refit(runUnits(state, run));
         const s = run.battle.advance(Infinity);
         const done = settleRound(state, run, s);
-        if (state.run?.active) state.run.fallen = run.result.downed.slice();   // `stepRun` 과 같이 적는다 — 잠금(`downed`)이 읽는다
+        const slot = runAt(state, run.preset);
+        if (slot?.active) slot.fallen = run.result.downed.slice();   // `stepRun` 과 같이 **그 부대의 칸에** 적는다 — 잠금(`downed`)이 읽는다
         return { ok: true, round: s, done };
     }
 
@@ -1347,7 +1433,7 @@ export function createGameSystem(deps) {
      *   ① **첫머리 갈아입기** — 그 순간의 파티를 넘긴다(바뀐 영웅만 · 쓰러진 영웅은 안 입는다 · **보스 라운드 도중이면 엔진이 거절**).
      *      그래서 원정 중 장비 · 스킬 트리 교체는 **다음 걸음의 첫머리 = 바꾼 시각**에 먹는다
      *   ② `advance(until)` — 끝난 라운드가 나오면 정산하고(`settleRound` — 경계 갈아입기 포함) 이어 민다(한 걸음에 여러 라운드 — 숨긴 탭)
-     *   ③ 이 런에서 쓰러져 있는 영웅(`state.run.fallen`)을 적는다 — 장비 · 스킬 트리 잠금(`downed`)이 읽는다
+     *   ③ 이 런에서 쓰러져 있는 영웅(`runs[preset-1].fallen`)을 적는다 — 장비 · 스킬 트리 잠금(`downed`)이 읽는다
      * **교체가 없으면 어디서 끊어 걸어도 `resolveBattle` 과 같은 결과다**(틱 수열이 같다 · INTERFACE §8 항목 18)
      * @returns `{ok, rounds, done}` — 정산한 라운드 수 · 런이 끝났나
      */
@@ -1360,15 +1446,16 @@ export function createGameSystem(deps) {
             done = settleRound(state, run, s);
             if (done) break;
         }
-        if (state.run?.active) state.run.fallen = run.result.downed.slice();
+        const slot = runAt(state, run.preset);
+        if (slot?.active) slot.fallen = run.result.downed.slice();   // 부대마다 제 칸에 적는다 (v38 · 다부대)
         return { ok: true, rounds, done };
     }
 
-    /** 도는 원정을 끊는다 — 진행 중이던 라운드는 **없던 것**이다(보상 없음 · 리포트는 마지막으로 정산한 라운드 끝 그대로). 반복도 끈다. 끊었으면 true */
-    function cutRun(state, reason) {
-        const run = state.run;
+    /** 그 부대의 원정을 끊는다 — 진행 중이던 라운드는 **없던 것**이다(보상 없음 · 리포트는 마지막으로 정산한 라운드 끝 그대로). 반복도 끈다. 끊었으면 true */
+    function cutRun(state, reason, no) {
+        const run = runAt(state, no);
         if (!run?.active) return false;
-        const R = liveReport(state);
+        const R = liveReport(state, no);
         run.active = false;
         run.repeat = false;
         run.fallen = [];              // 끊기면 전투 밖이다 — 쓰러져 있는 영웅이 없다 (R130)
@@ -1380,7 +1467,7 @@ export function createGameSystem(deps) {
     function retreatRun(state, run, now) {
         if (runOver(run)) return { ok: false, err: 'done' };
         run.done = true;
-        cutRun(state, 'retreat');
+        cutRun(state, 'retreat', run.preset);   // 핸들이 어느 부대인지 안다 — 다른 부대는 안 건드린다 (v38 · 다부대)
         return { ok: true, report: run.report };
     }
 
@@ -1397,33 +1484,41 @@ export function createGameSystem(deps) {
 
     /**
      * 재접속 · 멈춤 — **원정은 게임이 켜져 있는 동안만 돈다** (base_expedition_design §1 · 2026-08-25).
-     * 도는 원정이 있으면 **끊는다** [개정 2026-09-14 · R89 · 사용자 확정] — 진행 중이던 라운드는 버리고(리포트 `closed`) 반복을 끈다.
+     * **도는 부대를 전부 끊는다** [개정 2026-09-14 · R89 · 사용자 확정 · **다부대 2026-09-23**] — 진행 중이던 라운드는 버리고(리포트 `closed`) 반복을 끈다.
      *   ~~꺼져 있던 사이 돌던 런은 마무리된 것으로 본다~~ 는 폐기 — 남은 라운드를 마무리해 주면 껐다 켜기로 원정을 무한히 빨리 돌릴 수 있다.
-     * 끊었거나 반복이 켜져 있었으면 재접속 알림을 남긴다. 오프라인에 도는 것은 파견뿐이다 — 미구현
+     * 끊었거나 반복이 켜져 있던 부대가 하나라도 있으면 재접속 알림을 남긴다(`notice.runs` = 부대마다 한 줄 · 편성 번호 순).
+     * 오프라인에 도는 것은 파견뿐이다 — 미구현
      */
     function closeRun(state, now) {
-        const run = state.run;
-        if (!run) return null;
-        const repeat = run.repeat === true;
-        const cut = cutRun(state, 'closed');
-        if (!cut && !repeat) return null;
-        run.repeat = false;
-        state.notice = { kind: 'runClosed', stageId: run.stageId, at: run.lastAt, seenAt: now };
+        const hit = [];
+        for (let i = 0; i < (state.runs?.length ?? 0); i++) {
+            const run = state.runs[i];
+            if (!run) continue;
+            const repeat = run.repeat === true;
+            const cut = cutRun(state, 'closed', i + 1);
+            if (!cut && !repeat) continue;
+            run.repeat = false;
+            hit.push({ stageId: run.stageId, at: run.lastAt });
+        }
+        if (hit.length === 0) return null;
+        // `stageId` · `at` 은 **첫 줄 그대로** — 한 부대만 돌던 화면이 안 깨지게 남긴다 (v38)
+        state.notice = { kind: 'runClosed', runs: hit, stageId: hit[0].stageId, at: hit[0].at, seenAt: now };
         return state.notice;
     }
     function dismissNotice(state) { state.notice = null; }
 
     /**
      * 반복 원정의 다음 출발 [신설 2026-09-22 · 부채 #57 · INTERFACE §2-7 · base_expedition_design §1-1 · ADR-0300] — **아무것도 안 바꾼다** · rng 0.
+     * **부대마다 따로 묻는다** [2026-09-23 · 다부대] — `no` 가 없으면 그 부대는 없는 것이다.
      * 끝난 원정이 반복이 켜져 있고 이긴 런이면 같은 스테이지 · 같은 편성으로 **끝난 순간 + [balance.csv:repeat_restart_sec]** 에 나간다.
      * 관전 결과 띠의 세기와 앱 시계가 둘 다 이 답대로만 출발시킨다 — 보고 있든 다른 탭이든 같은 시각이다(옛 화면은 두 곳에서 따로 셌다).
      * `endedAt` = 그 런이 **실제로 끝난 순간**(ms) — 배속이 게임 시각을 밀어서 로직은 모르고 화면 층이 잰다
      */
-    function nextRepeat(state, endedAt) {
-        const run = state.run;
+    function nextRepeat(state, endedAt, no) {
+        const run = runAt(state, no);
         if (!run || run.active || run.repeat !== true) return null;
         if (!hasFeature(state, 'repeat')) return null;   // 반복 원정은 원정 건물 랭크가 연다(새 게임은 잠김 · R137 · 2026-09-23 r1 → r2)
-        const report = state.reports.find(r => r.at === run.lastAt);
+        const report = state.reports.find(r => r.preset === no && r.at === run.lastAt);
         if (!report?.won) return null;
         return { stageId: run.stageId, preset: run.preset, at: endedAt + B.repeat_restart_sec * 1000 };
     }
@@ -2037,7 +2132,7 @@ export function createGameSystem(deps) {
         equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
-        stageUnlocked, canDepart, runParty, heroBusy, limitsOf, stageLevelState, setStageLevel, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
+        stageUnlocked, canDepart, runParty, runOf, heroBusy, limitsOf, stageLevelState, setStageLevel, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         runLock, runTactics, runTacticsIf,
         tavernCandidates, tavernState, tavernReroll, hire, dismissState, dismiss, swapHeroes,
         shopVisit, shopState,

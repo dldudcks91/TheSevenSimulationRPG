@@ -1157,7 +1157,7 @@ check('hero: 얼굴 id 는 태어날 때 1회 굴려 박힌다 — **제 직업 
 check('save: serialize → deserialize 왕복 동일 (v22)', () => {
     const s = SYS.game.serialize(G, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
-    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 37;
+    return eq(SYS.game.serialize(back, NOW), s) && s.version === SAVE_VERSION && SAVE_VERSION === 38;
 });
 /**
  * v18 → v19 (2026-09-09 — 처치는 가루를 안 뱉는다 · R63 · item_design §5-3).
@@ -1344,24 +1344,24 @@ check('battle: 처치가 가루를 안 뱉는다 — 결과·리포트에 칸이
     if (!kills) fail('처치가 0이라 검사가 성립하지 않는다');
     return `처치 ${kills} · 가루 ${before} 그대로`;
 });
-check('save: v37 만 연다 — v1 · v36 · v99 는 던진다 · 모양이 멀쩡한 세이브도 버전이 다르면 던진다 (INTERFACE §4 「v37 에서 끊었다」 · R139)', () => {
+check('save: v38 만 연다 — v1 · v36 · v37 · v99 는 던진다 · 모양이 멀쩡한 세이브도 버전이 다르면 던진다 (INTERFACE §4 「v38 에서 또 끊었다」 · 다부대)', () => {
     const cur = SYS.game.serialize(G, NOW);
-    for (const v of [1, 36, 99]) {
+    for (const v of [1, 36, 37, 99]) {
         const s = JSON.parse(JSON.stringify(cur)); s.version = v;
         try { SYS.game.deserialize(s); fail(`v${v} accepted`); } catch (e) { if (e instanceof Fail) throw e; }
     }
-    return `v${SAVE_VERSION} 만 연다 · v1 · v36 · v99 거부`;
+    return `v${SAVE_VERSION} 만 연다 · v1 · v36 · v37 · v99 거부`;
 });
-check('save: canLoad 가 deserialize 와 같은 답을 낸다 — 지금 버전은 열고 v37 전은 막는다 (부채 #24 · R139 · ADR-0303)', () => {
+check('save: canLoad 가 deserialize 와 같은 답을 낸다 — 지금 버전은 열고 v38 전은 막는다 (부채 #24 · R139 · ADR-0303 · 다부대)', () => {
     const cur = SYS.game.serialize(G, NOW);
     if (!SYS.game.canLoad(JSON.parse(JSON.stringify(cur)))) fail(`v${SAVE_VERSION} 를 못 연다 — deserialize 는 여는데 canLoad 가 막는다`);
     // 시작 화면이 [이어하기] 를 숨기고 「이전 형식」 한 줄을 세우는 근거 — 버전 숫자만 낮춘 세이브로 확인한다
-    for (const v of [1, 36, 99]) {
+    for (const v of [1, 36, 37, 99]) {
         const s = JSON.parse(JSON.stringify(cur)); s.version = v;
         if (SYS.game.canLoad(s)) fail(`v${v} 를 연다고 답했다`);
     }
     if (SYS.game.canLoad(null) || SYS.game.canLoad('x')) fail('객체가 아닌 것을 연다고 답했다');
-    return `v${SAVE_VERSION} 열림 · v1 · v36 · v99 거부`;
+    return `v${SAVE_VERSION} 열림 · v1 · v36 · v37 · v99 거부`;
 });
 check('save: 크기 < 64KB (빈 게임)', () => { const n = JSON.stringify(SYS.game.serialize(G, NOW)).length; return n < 65536 ? `${n} bytes` : fail(`${n} bytes`); });
 
@@ -3604,10 +3604,10 @@ check('advanceRun: 마신 물약이 재고에서 빠진다 — 같은 물약 여
     if (h.potions.minor_healing !== 3) fail(`철수했는데 재고 ${h.potions.minor_healing} (그 라운드 ${firstRound}병)`);
     return `세 칸 마이너 → ${spent}병 · 재고 0(키 없음) · 철수한 라운드 ${firstRound}병은 안 줄었다`;
 });
-check('preset: 편성은 늘 상한(limitsOf.presets)만큼 서 있다 — 고른 편성에 파티 · 진형이 작용하고 다른 편성은 안 흔들린다 · 한 영웅이 여러 편성에 든다 · 없는 번호는 missing (SCREEN_DESIGN §15 · INTERFACE §2-7 · R122 · R137)', () => {
+check('preset: 편성은 늘 상한(limitsOf.presets)만큼 서 있다 — 고른 편성에 파티 · 진형이 작용하고 다른 편성은 안 흔들린다 · 한 영웅은 한 편성에만 든다(v38 다부대) · 없는 번호는 missing (SCREEN_DESIGN §15 · INTERFACE §2-7 · R122 · R137)', () => {
     const g = openAll(SYS.game.newGame(21, cands, NOW));      // 편성 여럿 — 지휘 천막이 늘린다 (R137)
     const ps0 = SYS.game.presetState(g), cap = SYS.game.limitsOf(g).presets;
-    if (ps0.count !== cap || g.presets.length !== cap || ps0.activeNo !== 1 || ps0.runNo !== null) fail(`편성 ${ps0.count} · 고른 ${ps0.activeNo} · 원정 ${ps0.runNo}`);
+    if (ps0.count !== cap || g.presets.length !== cap || ps0.activeNo !== 1 || ps0.runNos.length !== 0) fail(`편성 ${ps0.count} · 고른 ${ps0.activeNo} · 도는 부대 ${ps0.runNos}`);
     if (ps0.presets[0].err !== null) fail(`새 게임 편성 1 이 못 나간다 — ${ps0.presets[0].err}`);
     if (!ps0.presets.slice(1).every(p => p.err === 'noParty')) fail('편성 2 부터가 빈 파티가 아니다');
     const [a, b, c] = g.heroes.map(h => h.uid);
@@ -3616,21 +3616,23 @@ check('preset: 편성은 늘 상한(limitsOf.presets)만큼 서 있다 — 고�
     for (const bad of [0, cap + 1, 1.5, '2', null]) if (SYS.game.selectPreset(g, bad).err !== 'missing') fail(`없는 번호 ${bad}`);
     if (g.preset !== 2) fail('거절이 고른 번호를 바꿨다');
     if (SYS.game.partyOf(g).length !== 0) fail('편성 2 가 편성 1 파티를 비춘다');
+    // a 는 편성 1 에 있다 — 편성 2 에 넣으면 **편성 1 에서 빠진다**(한 영웅은 한 편성에만 · v38 다부대). 진형에서도 빠진다
     SYS.game.toggleParty(g, a, NOW); SYS.game.toggleParty(g, c, NOW);
     SYS.game.setFormation(g, SYS.game.formationState(g).templates.at(-1));
-    if (!eq(SYS.game.partyOf(g, 1), [a, b]) || !eq(SYS.game.partyOf(g, 2), [a, c])) fail(`파티 ${SYS.game.partyOf(g, 1)} / ${SYS.game.partyOf(g, 2)}`);
+    if (!eq(SYS.game.partyOf(g, 1), [b]) || !eq(SYS.game.partyOf(g, 2), [a, c])) fail(`파티 ${SYS.game.partyOf(g, 1)} / ${SYS.game.partyOf(g, 2)}`);
+    if (JSON.stringify(g.presets[0].formation).includes(a)) fail('옮긴 영웅이 앞 편성의 진형에 남았다');
     if (g.presets[0].formation.tpl === g.presets[1].formation.tpl) fail('진형이 편성마다 안 갈린다');
     const copy = SYS.game.partyOf(g); copy.push('x');
     if (SYS.game.partyOf(g).includes('x')) fail('partyOf 가 복사본이 아니다');
     // 전술 조건은 고른 편성의 파티로 센다
     SYS.game.selectPreset(g, 1);
-    if (!eq(SYS.game.tacticState(g), SYS.game.tacticState(g, [a, b]))) fail('전술이 고른 편성을 안 센다');
+    if (!eq(SYS.game.tacticState(g), SYS.game.tacticState(g, [b]))) fail('전술이 고른 편성을 안 센다');
     // 해고는 모든 편성에서 뺀다 — 장비를 벗겨야 해고된다
     const hc = SYS.game.heroById(g, c);
     for (const pos of Object.keys(hc.equipped)) if (hc.equipped[pos]) SYS.game.unequip(g, c, pos);
     if (!SYS.game.dismiss(g, c).ok) fail('해고');
     if (SYS.game.partyOf(g, 2).includes(c) || JSON.stringify(g.presets[1].formation).includes(c)) fail('해고한 영웅이 편성 2 에 남았다');
-    return `편성 ${ps0.count} · 1=[${SYS.game.partyOf(g, 1).length}] 2=[${SYS.game.partyOf(g, 2).length}] · 겹친 영웅 1 · 해고가 모든 편성에서 뺀다`;
+    return `편성 ${ps0.count} · 1=[${SYS.game.partyOf(g, 1).length}] 2=[${SYS.game.partyOf(g, 2).length}] · 한 영웅은 한 편성에만 · 해고가 모든 편성에서 뺀다`;
 });
 check('preset: 출발은 편성 번호를 든다 — 빈 편성 noParty · 반복은 도는 원정의 편성으로 다시 나간다(고른 편성이 바뀌어도 · 그 편성의 지금 모습) · runNo (INTERFACE §2-7 · R122)', () => {
     const g = newGameP(22, cands, NOW);            // 편성 1 = 로스터 전원
@@ -3640,15 +3642,17 @@ check('preset: 출발은 편성 번호를 든다 — 빈 편성 noParty · 반�
     if (SYS.game.canDepart(g, 101, NOW, 9) !== 'missing') fail('없는 편성');
     SYS.game.toggleParty(g, g.heroes[0].uid, NOW);   // 편성 2 = 한 명
     const d = SYS.game.departRun(g, 101, NOW, 1);
-    if (!d.ok || d.run.preset !== 1 || g.run.preset !== 1) fail(`편성 1 출발 ${JSON.stringify(d.err ?? d.run?.preset)}`);
+    if (!d.ok || d.run.preset !== 1 || g.runs[0].preset !== 1) fail(`편성 1 출발 ${JSON.stringify(d.err ?? d.run?.preset)}`);
     if (!eq(d.report.party, SYS.game.partyOf(g, 1))) fail('편성 1 의 파티가 안 나갔다');
-    if (SYS.game.presetState(g).runNo !== 1) fail('runNo');
+    if (!eq(SYS.game.presetState(g).runNos, [1])) fail('runNos');
     // 반복 — 앱은 도는 원정의 번호를 넘긴다. 고른 편성(2)이 아니라 편성 1 의 **지금 모습**이 나간다
     SYS.game.selectPreset(g, 1); SYS.game.toggleParty(g, g.heroes[2].uid, NOW); SYS.game.selectPreset(g, 2);
-    const again = SYS.game.departRun(g, 101, NOW, g.run.preset);
-    if (!again.ok || !eq(again.report.party, SYS.game.partyOf(g, 1)) || again.report.party.length !== 2) fail(`반복 파티 ${again.report?.party}`);
+    const again = SYS.game.departRun(g, 101, NOW, g.runs[0].preset);
+    if (!again.ok || !eq(again.report.party, SYS.game.partyOf(g, 1)) || again.report.party.length !== 1) fail(`반복 파티 ${again.report?.party}`);
+    // 부대 상한이 1 이면 편성 2 는 `full` 이다 — 기본 번호(고른 편성)를 보려고 도는 부대를 먼저 걷는다 (v38 다부대)
+    SYS.game.retreatRun(g, again.run, NOW);
     const two = SYS.game.departRun(g, 101, NOW);
-    return (two.ok && two.run.preset === 2 && two.report.party.length === 1) ? '빈 편성 거절 · 편성 1 반복은 지금 모습(2명) · 기본은 고른 편성 2' : fail('기본 번호가 고른 편성이 아니다');
+    return (two.ok && two.run.preset === 2 && two.report.party.length === 1) ? '빈 편성 거절 · 편성 1 반복은 지금 모습 · 기본은 고른 편성 2' : fail('기본 번호가 고른 편성이 아니다');
 });
 check('preset: 물약 칸 — 앞의 빈 칸에 넣기 · 비우기 · 맞바꾸기 · 같은 물약 여러 칸 · 재고를 안 본다 · 모자람은 뒤 칸부터 · 칸은 편성마다 (ADR-0195 · INTERFACE §2-7 · R124)', () => {
     const g = openAll(SYS.game.newGame(23, cands, NOW));    // 편성 1 = [마이너, -, -, -] · 재고 마이너 1 · 물약 칸 · 편성 여럿은 건물이 늘린다 (R137)
@@ -3782,10 +3786,15 @@ check('simulate: 귀환보다 클리어가 먼저다 — 마지막 타격과 같
     const r = SYS.battle.simulate(godUnits(), 101, makeRng(5));
     return r.won && r.reason === 'clear' && r.downed.length === 0 ? `r${r.roundsCleared} ${r.reason}` : fail(`${r.reason} downed ${r.downed.length}`);
 });
-check('balance: concurrent_expedition_parties 는 코드가 표현할 수 있는 값이어야 한다 (부채 #19)', () =>
-    // state.party / state.run 이 단수 필드라 「동시 원정 1」은 구조로만 지켜진다.
-    // 이 키를 2 로 올리면 코드가 아무 일도 안 하므로, 값이 갈리는 순간 여기서 빨간불이 켜져야 한다
-    B.concurrent_expedition_parties === 1 || fail(`${B.concurrent_expedition_parties} — 동시 원정 >1 은 구현이 없다 (state.party·state.run 이 단수)`));
+check('balance: concurrent_expedition_parties 는 1 ~ 편성 수여야 한다 — 코드가 읽는 값이다 (부채 #19 해소 · v38 다부대)', () => {
+    // ~~state.run 이 단수라 「동시 원정 1」이 구조로만 지켜진다~~ → 2026-09-23 `state.runs` 가 부대마다 한 자리를 든다.
+    // 부대 = 편성이므로 편성 수보다 많은 부대는 낼 수 없다 — `limitsOf` 가 그 위에서 한 번 더 자른다
+    const n = B.concurrent_expedition_parties;
+    if (!Number.isInteger(n) || n < 1) fail(`${n} — 1 이상 정수여야 한다`);
+    if (n > B.party_preset_count) fail(`${n} — 편성 ${B.party_preset_count} 보다 많은 부대는 못 낸다 (부대 = 편성)`);
+    if (SYS.game.limitsOf(SYS.game.newGame(42, cands, NOW)).expeditions !== Math.min(n, B.party_preset_count)) fail('limitsOf.expeditions 가 이 키를 안 읽는다');
+    return `동시 원정 ${n} / 편성 ${B.party_preset_count}`;
+});
 /*
  * **몬스터는 영웅과 같은 함수를 지난다** [전면 개정 2026-09-11 · R79 · 사용자 지시 · monster_design §5-1 · battle_design §8-1].
  *   `combatFromMonster` 가 삭제되고 `heroSystem.computeCombat` 을 부르므로, 이 단정은 **세 줄만 다르다**는 것을 지킨다:
@@ -5278,8 +5287,8 @@ check('runtime: atk_pct 창은 회복 밑수(matkMin·matkMax)도 같은 괄호�
     return 'matk 100~200 → 125~250(창 25%) → 100~200(창 제거) · 공격력과 같은 괄호';
 });
 
-check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** · **v25 는 리포트의 경험치를 영웅별 `xp` 로 가르고 `run.active` 를 더한다(원정은 라운드 단위 — 런 핸들은 세이브에 안 든다 · R89)** · **v26 은 무기의 `watk` 를 지운다(무기 피해는 범위이고 파생 — R90)** · **v27 은 필드를 안 늘린다(장비 옵션 값을 정수로 반올림 — 2026-09-16)** · **v28 은 필드를 안 늘린다(방어구 고유값 재계산 — R107)** · **v29 는 필드를 안 늘린다(퍼센트 접사 값을 비율로 — R111)** · **v30 은 필드를 안 늘린다(옛 방어구에 고정 옵션 · 죄종 칸 · 고유값 재계산 — 2026-09-18)** · **v31 은 아이템에 이름의 죄종 단어 `words` 를 더한다(「A와 B의 베이스」 — 2026-09-19 · R118)** · **v32 는 파티 · 진형을 편성 배열(`presets` · `preset`)로 접고 물약을 개수 표로 바꾼다(편성 — 2026-09-21 · R122 · R124)** · **v33 은 목걸이에 발동 스킬 `proc` 을 더하고 옛 반지 · 목걸이에 죄종 칸을 채운다(장신구 옵션 세 층 — 2026-09-21 · R127)** · **v34 는 전술 칸을 편성 안으로 옮긴다(`presets[*].tactics` — 편성마다 · 2026-09-21 · R129)** · **v35 는 전술 칸에 잠금 `locked` 를 더한다(전체 리롤 + 잠금 — 2026-09-22 · R28)** · **v36 은 같이 나간 런 수 `bonds` 를 더한다(전술 관계 조건 — 2026-09-22 · R134)** (R59 · INTERFACE §4)', () =>
-    SAVE_VERSION === 37 || fail(`v${SAVE_VERSION}`));
+check('save: SAVE_VERSION 23 — 쿨·창·배리어는 전투 안에서만 살고 세이브가 든 것은 마스터리 랭크·포인트 · 선술집 쿨다운 · **리롤한 전술 칸(가족+등급)** · 강화 단계 · 고유 스킬 · **무기가 담은 스킬(`items[*].skill` — v18)** · **초상 id(`face`)** · **등급(`tier`)**뿐. 회복 대기(`injuredUntil`)는 v11 · **개체별 히든 상한(`caps`)은 v15** · **출정 아웃(`run.downed`)은 v17** 에서 사라졌다 · v22 는 필드를 안 늘린다(클리어 기록 소급 — R75) · **v23 은 접사에 출처 `src` 를 붙인다(무기 옵션 세 층 — R78)** · **v24 는 보관을 둘로 가른다(`stash` 신설 — 인벤토리 + 창고)** · **v25 는 리포트의 경험치를 영웅별 `xp` 로 가르고 `run.active` 를 더한다(원정은 라운드 단위 — 런 핸들은 세이브에 안 든다 · R89)** · **v26 은 무기의 `watk` 를 지운다(무기 피해는 범위이고 파생 — R90)** · **v27 은 필드를 안 늘린다(장비 옵션 값을 정수로 반올림 — 2026-09-16)** · **v28 은 필드를 안 늘린다(방어구 고유값 재계산 — R107)** · **v29 는 필드를 안 늘린다(퍼센트 접사 값을 비율로 — R111)** · **v30 은 필드를 안 늘린다(옛 방어구에 고정 옵션 · 죄종 칸 · 고유값 재계산 — 2026-09-18)** · **v31 은 아이템에 이름의 죄종 단어 `words` 를 더한다(「A와 B의 베이스」 — 2026-09-19 · R118)** · **v32 는 파티 · 진형을 편성 배열(`presets` · `preset`)로 접고 물약을 개수 표로 바꾼다(편성 — 2026-09-21 · R122 · R124)** · **v33 은 목걸이에 발동 스킬 `proc` 을 더하고 옛 반지 · 목걸이에 죄종 칸을 채운다(장신구 옵션 세 층 — 2026-09-21 · R127)** · **v34 는 전술 칸을 편성 안으로 옮긴다(`presets[*].tactics` — 편성마다 · 2026-09-21 · R129)** · **v35 는 전술 칸에 잠금 `locked` 를 더한다(전체 리롤 + 잠금 — 2026-09-22 · R28)** · **v36 은 같이 나간 런 수 `bonds` 를 더한다(전술 관계 조건 — 2026-09-22 · R134)** · **v37 은 건물 랭크 · 연구 · 합산 레벨 최고치를 더한다(건설 — 2026-09-22 · R137)** · **v38 은 `run`(단수)을 `runs`(부대마다)로 바꾸고 리포트에 편성 번호를 싣는다(다부대 — 2026-09-23)** (R59 · INTERFACE §4)', () =>
+    SAVE_VERSION === 38 || fail(`v${SAVE_VERSION}`));
 
 /**
  * 스킬 툴팁 문장 [신설 2026-09-08 · SCREEN_DESIGN §4-2] — 수치표를 버리고 데이터로 조립한 한 문장을 낸다.
@@ -5579,9 +5588,9 @@ check('resolveBattle: 골드·처치·드롭·전투불능이 상태에 반영 �
     if (Object.keys(G2.codexKills).length === 0) fail('kills');
     if ('codexCards' in G2 || 'cards' in rp) fail('도감 카드가 상태 · 리포트에 되살아났다 (2026-09-21 걷음)');
     if (rp.drops.some(u => !G2.bag.includes(u))) fail('drops');
-    if (G2.run.downed !== undefined) fail('run.downed 가 아직 있다 — 「출정 아웃」은 2026-09-08 폐기(v17)');
+    if (G2.runs[0].downed !== undefined) fail('run.downed 가 아직 있다 — 「출정 아웃」은 2026-09-08 폐기(v17)');
     if (rp.won !== G2.progress.cleared.includes(101)) fail('cleared');
-    if (G2.counters.battle !== 1 || !G2.run || G2.run.stageId !== 101) fail('counters/run');
+    if (G2.counters.battle !== 1 || !G2.runs[0] || G2.runs[0].stageId !== 101) fail('counters/run');
     if (!rp.strikes || !(rp.strikes.party.n >= 1) || !eq(rp.strikes, r.result.strikes)) fail('리포트에 빗나감 집계가 없다 (§9-8)');
     return `${rp.won ? 'WIN' : 'LOSE'} gold+${rp.gold} drops ${rp.drops.length} kills ${Object.values(G2.codexKills).reduce((a, b) => a + b, 0)} downed ${rp.downed.length}`;
 });
@@ -6010,8 +6019,8 @@ check('「출정 아웃」 폐기: 이어지는 반복 런에도 전원이 나�
     if (!r1.ok) fail(r1.err);
     if (r1.report.party.length !== SYS.game.partyOf(G2).length) fail('첫 런부터 인원이 빠졌다');
     // 옛 규칙이 되살아나면 여기서 걸린다 — 아웃을 심을 칸 자체가 없어야 한다
-    if (G2.run.downed !== undefined) fail('run.downed 가 살아 있다 — 아웃이 런을 넘는다');
-    G2.run.repeat = true;
+    if (G2.runs[0].downed !== undefined) fail('run.downed 가 살아 있다 — 아웃이 런을 넘는다');
+    G2.runs[0].repeat = true;
     const r2 = SYS.game.resolveBattle(G2, 101, NOW + 1000);
     if (!r2.ok) fail(r2.err);
     if (r2.report.party.length !== SYS.game.partyOf(G2).length) fail('반복 런에서 인원이 빠졌다');
@@ -6025,7 +6034,7 @@ check('「출정 아웃」 폐기: 쓰러진 영웅도 다음 런에서 XP 를 �
     if (r1.report.downed.length === 0) return '이 시드는 아무도 안 쓰러졌다 — 참가 인원만 확인';
     const victim = r1.report.downed[0];
     const xpBefore = SYS.game.heroById(G2, victim).xp;
-    G2.run.repeat = true;
+    G2.runs[0].repeat = true;
     const r2 = SYS.game.resolveBattle(G2, 101, NOW + 1000);
     if (!r2.ok) fail(r2.err);
     if (!r2.report.party.includes(victim)) fail('직전 런에 쓰러진 영웅이 다음 런에 안 나갔다');
@@ -6035,9 +6044,9 @@ check('「출정 아웃」 폐기: 쓰러진 영웅도 다음 런에서 XP 를 �
 check('closeRun: 반복만 끈다 — 회복시킬 아웃이 없다 (2026-09-08 개정)', () => {
     const G2 = newGameP(42, cands, NOW);
     SYS.game.resolveBattle(G2, 101, NOW);
-    G2.run.repeat = true;
+    G2.runs[0].repeat = true;
     SYS.game.closeRun(G2, NOW + 60000);
-    if (G2.run.repeat !== false) fail('반복이 안 꺼졌다');
+    if (G2.runs[0].repeat !== false) fail('반복이 안 꺼졌다');
     if (G2.notice?.kind !== 'runClosed') fail('알림이 안 남았다');
     return '반복 off · 알림 runClosed';
 });
@@ -6111,11 +6120,11 @@ check('codex: 보너스는 처치 수 레벨에서(계열 = 스테이지 번호)
 check('closeRun: 반복 켠 채 껐다 켜면 반복이 꺼지고 알림만 남는다 — 추가 전투·자원 변화 없음', () => {
     const G2 = newGameP(42, cands, NOW);
     SYS.game.resolveBattle(G2, 101, NOW);
-    G2.run.repeat = true;
+    G2.runs[0].repeat = true;
     const snap = JSON.stringify({ r: G2.resources, b: G2.counters.battle, bag: G2.bag, rep: G2.lastReport });
     const n = SYS.game.closeRun(G2, NOW + 8 * 3_600_000);
     if (!n || n.kind !== 'runClosed' || n.stageId !== 101) fail(`notice ${JSON.stringify(n)}`);
-    if (G2.run.repeat !== false) fail('repeat still on');
+    if (G2.runs[0].repeat !== false) fail('repeat still on');
     if (JSON.stringify({ r: G2.resources, b: G2.counters.battle, bag: G2.bag, rep: G2.lastReport }) !== snap) fail('state changed offline');
     SYS.game.dismissNotice(G2);
     return G2.notice === null;
@@ -6371,7 +6380,7 @@ check('createRun: 쪼개 걸어도(advance) 한 번에 돈 것과 한 글자도 
 check('stepRun: 교체가 없으면 어디서 끊어 걸어도 resolveBattle 과 같다 — 리포트 · 가방 · 경험치 · 도감 · 자원 (INTERFACE §2-7 · R130)', () => {
     let rounds = 0;
     const snap = g => JSON.stringify({ r: g.resources, bag: g.bag, items: g.items, ck: g.codexKills,
-        h: g.heroes.map(h => [h.uid, h.level, h.xp, h.masteryPoints]), rep: g.reports[0], run: g.run, pot: g.potions });
+        h: g.heroes.map(h => [h.uid, h.level, h.xp, h.masteryPoints]), rep: g.reports[0], run: g.runs[0], pot: g.potions });
     for (const seed of [1, 2, 3, 7]) {
         const A = newGameP(seed, cands, NOW), Bg = newGameP(seed, cands, NOW);
         SYS.game.resolveBattle(A, 101, NOW);
@@ -6392,7 +6401,7 @@ check('stepRun: 원정 중 교체는 다음 걸음 첫머리(= 바꾼 시각)에
         const d = SYS.game.departRun(g, 101, NOW);
         SYS.game.stepRun(g, d.run, 3);
         const st = d.run.battle.status();
-        const uid = d.run.party.find(u => !g.run.fallen.includes(u));
+        const uid = d.run.party.find(u => !g.runs[0].fallen.includes(u));
         if (!st.inRound || st.round !== 1 || !uid) continue;
         const key = d.run.result.party.find(p => p.uid === uid).key;
         SYS.game.heroById(g, uid).level += 10;
@@ -6409,20 +6418,20 @@ check('stepRun: 원정 중 교체는 다음 걸음 첫머리(= 바꾼 시각)에
     for (let seed = 1; seed <= 40 && !two; seed++) {
         const g = newGameP(seed, cands, NOW);
         const d = SYS.game.departRun(g, 101, NOW);
-        for (let T = 0.5; !d.run.done && !g.run.fallen.length && T < 900; T += 0.5) SYS.game.stepRun(g, d.run, T);
-        if (d.run.done || !g.run.fallen.length) continue;
-        const uid = g.run.fallen[0], h = SYS.game.heroById(g, uid);
-        if (!eq(g.run.fallen, d.run.result.downed)) fail(`seed ${seed} — fallen ${g.run.fallen} ≠ 이 런의 쓰러짐 ${d.run.result.downed}`);
+        for (let T = 0.5; !d.run.done && !g.runs[0].fallen.length && T < 900; T += 0.5) SYS.game.stepRun(g, d.run, T);
+        if (d.run.done || !g.runs[0].fallen.length) continue;
+        const uid = g.runs[0].fallen[0], h = SYS.game.heroById(g, uid);
+        if (!eq(g.runs[0].fallen, d.run.result.downed)) fail(`seed ${seed} — fallen ${g.runs[0].fallen} ≠ 이 런의 쓰러짐 ${d.run.result.downed}`);
         const pos = Object.keys(h.equipped).find(k => h.equipped[k]);
         const errs = {
             equip: SYS.game.equip(g, uid, 'none').err, unequip: SYS.game.unequip(g, uid, pos).err,
             learn: SYS.game.learnMastery(g, uid, 'none').err, unlearn: SYS.game.unlearnMastery(g, uid, 'none').err, reset: SYS.game.resetMastery(g, uid).err,
         };
         for (const [k, e] of Object.entries(errs)) if (e !== 'downed') fail(`seed ${seed} 쓰러진 영웅의 ${k} — ${e} (downed 여야)`);
-        const live = d.run.party.find(u => !g.run.fallen.includes(u));
+        const live = d.run.party.find(u => !g.runs[0].fallen.includes(u));
         if (live && SYS.game.resetMastery(g, live).err) fail(`seed ${seed} — 산 영웅의 스킬 트리가 막혔다`);
         SYS.game.retreatRun(g, d.run, NOW);
-        if (SYS.game.resetMastery(g, uid).err || g.run.fallen.length) fail(`seed ${seed} — 끊긴 원정 뒤에도 잠겨 있다`);
+        if (SYS.game.resetMastery(g, uid).err || g.runs[0].fallen.length) fail(`seed ${seed} — 끊긴 원정 뒤에도 잠겨 있다`);
         two = { seed, n: d.run.result.downed.length };
     }
     if (!two) fail('도중에 쓰러진 영웅이 있는 원정이 없다 — ② 표본 없음 (시드 1~40)');
@@ -6648,12 +6657,12 @@ check('closeRun: 도는 원정을 끊는다 — 진행 중 라운드는 없던 �
     const m = midRun();
     if (!m) fail('둘째 라운드도 골드를 줄 원정이 없다 — 표본 없음 (시드 1~40)');
     const { G2, d } = m;
-    G2.run.repeat = true;
+    G2.runs[0].repeat = true;
     const snap = settledSnap(G2, d.report);
     const n = SYS.game.closeRun(G2, NOW + 3_600_000);
     if (n?.kind !== 'runClosed' || n.stageId !== 101) fail(`알림 ${JSON.stringify(n)}`);
     if (d.report.reason !== 'closed') fail(`리포트 판정 ${d.report.reason}`);
-    if (G2.run.active !== false || G2.run.repeat !== false) fail(`active ${G2.run.active} · repeat ${G2.run.repeat}`);
+    if (G2.runs[0].active !== false || G2.runs[0].repeat !== false) fail(`active ${G2.runs[0].active} · repeat ${G2.runs[0].repeat}`);
     if (settledSnap(G2, d.report) !== snap) fail('끊었는데 자원 · 가방 · 도감 · 경험치 · 리포트가 움직였다 — 진행 중 라운드를 정산했다');
     if (G2.resources.gold !== m.gold0 + d.report.gold || d.report.roundsCleared < 1) fail(`이긴 라운드의 보상이 없다 — 골드 ${m.gold0} → ${G2.resources.gold} · 리포트 ${d.report.gold}`);
     if (SYS.game.canDepart(G2, 101, NOW) !== null) fail('끊었는데 출발이 막혀 있다');
@@ -6664,12 +6673,12 @@ check('retreatRun: 철수 — 진행 중 라운드는 버리고 이긴 라운드
     const m = midRun();
     if (!m) fail('둘째 라운드도 골드를 줄 원정이 없다 — 표본 없음 (시드 1~40)');
     const { G2, d } = m;
-    G2.run.repeat = true;
+    G2.runs[0].repeat = true;
     const snap = settledSnap(G2, d.report);
     const r = SYS.game.retreatRun(G2, d.run, NOW + 2000);
     if (!r.ok || r.report !== d.report) fail(`retreat ${r.err}`);
     if (d.report.reason !== 'retreat') fail(`리포트 판정 ${d.report.reason}`);
-    if (G2.run.active !== false || G2.run.repeat !== false || d.run.done !== true) fail(`active ${G2.run.active} · repeat ${G2.run.repeat} · done ${d.run.done}`);
+    if (G2.runs[0].active !== false || G2.runs[0].repeat !== false || d.run.done !== true) fail(`active ${G2.runs[0].active} · repeat ${G2.runs[0].repeat} · done ${d.run.done}`);
     if (settledSnap(G2, d.report) !== snap) fail('철수했는데 자원 · 가방 · 도감 · 경험치 · 리포트가 움직였다 — 진행 중 라운드를 정산했다');
     if (G2.resources.gold !== m.gold0 + d.report.gold) fail(`이긴 라운드의 골드가 자원에 없다 — ${m.gold0} → ${G2.resources.gold} · 리포트 ${d.report.gold}`);
     if (SYS.game.retreatRun(G2, d.run, NOW).err !== 'done' || SYS.game.advanceRun(G2, d.run, NOW).err !== 'done') fail('끝난 원정이 또 움직였다');
@@ -6682,19 +6691,113 @@ check('departRun: 원정 중에 보내면 도는 원정을 끊고 나간다 — 
     const m = midRun();
     if (!m) fail('둘째 라운드도 골드를 줄 원정이 없다 — 표본 없음 (시드 1~40)');
     const { G2, d } = m;
-    G2.run.repeat = true;
+    G2.runs[0].repeat = true;
     const snap = settledSnap(G2, d.report), battles = G2.counters.battle;
     const e = SYS.game.departRun(G2, 101, NOW + 2000);
     if (!e.ok) fail(`원정 중 출발 ${e.err}`);
     if (d.report.reason !== 'retreat') fail(`끊긴 원정의 판정 ${d.report.reason}`);
     if (settledSnap(G2, d.report) !== snap) fail('끊었는데 자원 · 가방 · 도감 · 경험치 · 옛 리포트가 움직였다 — 진행 중 라운드를 정산했다');
     if (G2.reports[0] !== e.report || G2.reports[1] !== d.report || e.report.reason !== null) fail('새 리포트가 맨 앞(진행 중) · 끊긴 리포트가 그 뒤여야');
-    if (G2.run.active !== true || G2.run.lastAt !== NOW + 2000 || G2.run.repeat !== false || G2.counters.battle !== battles + 1) fail(`새 원정 active ${G2.run.active} · lastAt ${G2.run.lastAt} · repeat ${G2.run.repeat} · 전투 ${battles} → ${G2.counters.battle}`);
+    if (G2.runs[0].active !== true || G2.runs[0].lastAt !== NOW + 2000 || G2.runs[0].repeat !== false || G2.counters.battle !== battles + 1) fail(`새 원정 active ${G2.runs[0].active} · lastAt ${G2.runs[0].lastAt} · repeat ${G2.runs[0].repeat} · 전투 ${battles} → ${G2.counters.battle}`);
     const after = settledSnap(G2, e.report);
     if (SYS.game.advanceRun(G2, d.run, NOW + 9_000_000).err !== 'done' || SYS.game.retreatRun(G2, d.run, NOW + 3000).err !== 'done') fail('끊긴 원정의 핸들이 또 움직였다');
-    if (settledSnap(G2, e.report) !== after || e.report.reason !== null || G2.run.active !== true) fail('끊긴 원정의 핸들이 새 원정을 건드렸다');
+    if (settledSnap(G2, e.report) !== after || e.report.reason !== null || G2.runs[0].active !== true) fail('끊긴 원정의 핸들이 새 원정을 건드렸다');
     if (!SYS.game.advanceRun(G2, e.run, NOW + 9_000_000).ok) fail('새 원정이 안 넘어간다');
     return `seed ${m.seed} · 끊긴 원정 이긴 라운드 ${d.report.roundsCleared} · 버린 라운드 골드 ${m.pendGold}`;
+});
+
+/* ── 다부대 [v38 · 2026-09-23 · GAME_DESIGN §1-1 「동시 원정은 최대 3부대다」] ──
+   부대 = 편성이다. 부대 수를 여는 건물 랭크는 아직 미정(GAME_DESIGN §10 「다부대의 남은 설계」)이라
+   **CSV 기본값을 바꿔 끼운 시스템**으로 규칙을 잠근다 — 건물 표가 서면 그때 문턱 단정이 따로 붙는다 */
+const MULTI = buildSystems({ ...D, balance: { ...B, concurrent_expedition_parties: 3 } });
+/** 새 게임의 영웅 셋을 편성 1 · 2 · 3 에 한 명씩 흩는다 — 한 영웅은 한 편성에만 들므로 넣으면 앞 편성에서 빠진다 */
+const spread = (S, g) => {
+    const uids = g.heroes.map(h => h.uid);
+    S.game.selectPreset(g, 2); S.game.toggleParty(g, uids[1], NOW);
+    S.game.selectPreset(g, 3); S.game.toggleParty(g, uids[2], NOW);
+    S.game.selectPreset(g, 1);
+    return uids;
+};
+
+check('다부대: 부대 셋이 동시에 돈다 — 편성마다 제 칸 · 제 리포트 · 제 전투 스트림 · 하나가 끝나도 남은 부대는 돈다 · 껐다 켜면 전부 끊긴다 (v38 · GAME_DESIGN §1-1)', () => {
+    const g = MULTI.game.newGame(51, cands, NOW);
+    const [a, b, c] = spread(MULTI, g);
+    if (MULTI.game.limitsOf(g).expeditions !== 3) fail(`상한 ${MULTI.game.limitsOf(g).expeditions}`);
+    const d = [1, 2, 3].map(no => MULTI.game.departRun(g, 101, NOW, no));
+    if (d.some(x => !x.ok)) fail(`출발 ${JSON.stringify(d.map(x => x.err ?? 'ok'))}`);
+    if (!eq(g.runs.map(r => r?.active === true), [true, true, true])) fail(`도는 부대 ${JSON.stringify(g.runs.map(r => r?.active))}`);
+    if (!eq(MULTI.game.presetState(g).runNos, [1, 2, 3])) fail('runNos');
+    if (!eq(d.map(x => x.report.preset), [1, 2, 3])) fail('리포트에 편성 번호가 안 실렸다 — 어느 부대의 런인지 못 가린다');
+    if (g.counters.battle !== 3) fail(`전투 스트림 ${g.counters.battle} — 부대마다 하나씩이어야 한다`);
+    // 인원 — 합친 것(`heroBusy` 가 읽는다) · 부대별 · 어느 부대인가
+    if (!eq(MULTI.game.runParty(g).slice().sort(), [a, b, c].slice().sort())) fail(`합친 인원 ${MULTI.game.runParty(g)}`);
+    if (!eq(MULTI.game.runParty(g, 2), [b])) fail(`부대 2 인원 ${MULTI.game.runParty(g, 2)}`);
+    if (MULTI.game.runOf(g, b) !== 2 || MULTI.game.runOf(g, a) !== 1 || MULTI.game.runOf(g, 'nope') !== null) fail('runOf');
+    if (MULTI.game.heroBusy(g, c) !== 'run') fail('heroBusy 가 셋째 부대를 못 본다');
+    // 부대 2 만 끝까지 — 나머지는 그대로 돈다
+    while (!MULTI.game.advanceRun(g, d[1].run, NOW).done);
+    if (g.runs[1].active !== false) fail('끝난 부대가 안 닫혔다');
+    if (g.runs[0].active !== true || g.runs[2].active !== true) fail('한 부대가 끝나자 다른 부대까지 닫혔다');
+    if (MULTI.game.runOf(g, b) !== null || MULTI.game.runOf(g, a) !== 1) fail('끝난 부대의 영웅이 아직 싸운다고 나온다');
+    // 껐다 켜면 남은 부대가 전부 끊긴다 — 오프라인엔 원정이 안 돈다 (base_expedition_design §1)
+    const n = MULTI.game.closeRun(g, NOW + 60_000);
+    if (n?.kind !== 'runClosed' || n.runs.length !== 2) fail(`알림 ${JSON.stringify(n)}`);
+    if (g.runs.some(r => r?.active)) fail('껐는데 도는 부대가 남았다');
+    return `부대 3 동시 · 전투 스트림 3 · 하나 끝나도 둘은 돈다 · closeRun 이 ${n.runs.length}개를 끊었다`;
+});
+
+check('다부대: 상한을 넘으면 full · 다른 부대에서 싸우는 영웅이 든 편성은 busy · 같은 편성 재출발은 부대 수를 안 늘린다 (v38 · INTERFACE §3)', () => {
+    const S = buildSystems({ ...D, balance: { ...B, concurrent_expedition_parties: 2 } });
+    const g = S.game.newGame(52, cands, NOW);
+    const [, b] = spread(S, g);
+    if (!S.game.departRun(g, 101, NOW, 1).ok || !S.game.departRun(g, 101, NOW, 2).ok) fail('두 부대 출발');
+    if (S.game.canDepart(g, 101, NOW, 3) !== 'full') fail(`셋째 부대 ${S.game.canDepart(g, 101, NOW, 3)}`);
+    if (S.game.departRun(g, 101, NOW, 3).err !== 'full') fail('셋째 부대 출발이 안 막혔다');
+    // 같은 편성을 다시 보내는 것은 그 부대를 끊고 여는 것이라 수가 안 는다
+    if (!S.game.departRun(g, 101, NOW + 1, 1).ok) fail('같은 편성 재출발이 막혔다');
+    if (S.game.presetState(g).runNos.length !== 2) fail('재출발로 부대 수가 늘었다');
+    // busy — 부대 2 에서 싸우는 영웅을 편성 3 으로 옮기면 그 편성은 못 나간다(도는 부대는 나간 인원 그대로 싸운다)
+    S.game.selectPreset(g, 3); S.game.toggleParty(g, b, NOW);
+    if (S.game.canDepart(g, 101, NOW, 3) !== 'busy') fail(`busy 가 아니라 ${S.game.canDepart(g, 101, NOW, 3)}`);
+    if (S.game.presetState(g).presets[2].err !== 'busy') fail('편성 화면이 busy 를 안 낸다');
+    if (!eq(S.game.runParty(g, 2), [b])) fail('편성을 옮겼다고 도는 부대의 인원이 흔들렸다');
+    return '상한 2 → 셋째 full · 같은 편성 재출발은 수가 안 는다 · 옮겨 둔 영웅이 싸우는 중이면 busy';
+});
+
+check('다부대: 부대끼리 rng 가 안 섞인다 — 사이에 다른 부대를 보내도 그 부대의 런은 혼자 돌린 것과 같다 (INTERFACE §5-1 · v38)', () => {
+    const fp = g2 => JSON.stringify(g2.reports.filter(r => r.preset === 1).map(r => [r.won, r.reason, r.gold, r.roundsCleared, r.drops.length, r.downed.length]));
+    const solo = MULTI.game.newGame(53, cands, NOW);
+    spread(MULTI, solo);
+    const s1 = MULTI.game.departRun(solo, 101, NOW, 1);
+    while (!MULTI.game.advanceRun(solo, s1.run, NOW).done);
+    // 같은 시드 · 같은 순서로 부대 1 을 먼저 보내고, 그 뒤 부대 2 · 3 을 끼워 넣는다 — 부대 1 의 rng 인스턴스는 제 클로저 안에 있다
+    const mix = MULTI.game.newGame(53, cands, NOW);
+    spread(MULTI, mix);
+    const m1 = MULTI.game.departRun(mix, 101, NOW, 1);
+    MULTI.game.departRun(mix, 101, NOW, 2);
+    MULTI.game.departRun(mix, 101, NOW, 3);
+    while (!MULTI.game.advanceRun(mix, m1.run, NOW).done);
+    if (fp(mix) !== fp(solo)) fail(`부대 1 의 런이 갈렸다 — 혼자 ${fp(solo)} · 섞어 ${fp(mix)}`);
+    return `부대 1 의 결과가 다른 부대를 끼워 넣어도 같다 ${fp(solo)}`;
+});
+
+check('save: runs 는 편성 수만큼 선다 — 왕복 동일 · 옛 단수 run 필드는 없다 · 겹친 파티는 로드가 앞 편성에 몰아준다 (v38 · 다부대)', () => {
+    const g = MULTI.game.newGame(54, cands, NOW);
+    spread(MULTI, g);
+    MULTI.game.departRun(g, 101, NOW, 2);
+    const s = MULTI.game.serialize(g, NOW);
+    if (s.runs?.length !== MULTI.game.limitsOf(g).presets) fail(`runs ${JSON.stringify(s.runs?.length)}`);
+    if (s.run !== undefined) fail('옛 단수 run 필드가 남아 있다');
+    if (s.runs[0] !== null || s.runs[1]?.active !== true) fail(`안 나간 편성은 null · 나간 편성만 선다 ${JSON.stringify(s.runs)}`);
+    const back = MULTI.game.deserialize(JSON.parse(JSON.stringify(s)));
+    if (!eq(MULTI.game.serialize(back, NOW), s)) fail('왕복이 다르다');
+    // 겹친 파티 — 손으로 두 편성에 같은 영웅을 넣어 두면 로드가 **앞 편성**만 남긴다
+    const dup = JSON.parse(JSON.stringify(s));
+    dup.presets[2].party = dup.presets[0].party.concat(dup.presets[1].party);
+    const fixed = MULTI.game.deserialize(dup);
+    if (fixed.presets[2].party.length !== 0) fail(`겹친 파티가 남았다 ${JSON.stringify(fixed.presets[2].party)}`);
+    if (JSON.stringify(fixed.presets[2].formation).includes(dup.presets[1].party[0])) fail('겹쳐 들어온 영웅이 진형에 남았다');
+    return `runs ${s.runs.length}칸 · 왕복 동일 · 겹친 파티는 앞 편성이 갖는다`;
 });
 
 check('원정 결정론 — 같은 세이브면 resolveBattle 두 번이 같고, departRun + advanceRun 을 손으로 이어도 같다 (R89 · INTERFACE §5-2)', () => {
@@ -6995,22 +7098,22 @@ check('dismissState: 해고와 같은 판정 · 상태를 안 바꾼다 — 원�
 check('nextRepeat: 반복 + 이긴 런이면 같은 스테이지 · 같은 편성으로 끝난 순간 + repeat_restart_sec · 반복 꺼짐 · 짐 · 도는 중 · 원정 없음은 null · 상태를 안 바꾼다 (ADR-0300 · 부채 #57)', () => {
     const g = newGameS(42);
     const END = NOW + 90_000;
-    if (SYS.game.nextRepeat(g, END) !== null) fail('원정이 없는데 다음 출발이 섰다');
+    if (SYS.game.nextRepeat(g, END, 1) !== null) fail('원정이 없는데 다음 출발이 섰다');
     const d = SYS.game.departRun(g, 101, NOW);
     if (!d.ok) fail(`출발 ${d.err}`);
-    g.run.repeat = true;
-    if (SYS.game.nextRepeat(g, END) !== null) fail('도는 중인데 다음 출발이 섰다');
+    g.runs[0].repeat = true;
+    if (SYS.game.nextRepeat(g, END, 1) !== null) fail('도는 중인데 다음 출발이 섰다');
     // 끝난 런을 손으로 세운다 — 이긴 판 · 진 판 둘 다 봐야 하는데 시작 파티의 승패는 밸런스가 정한다
-    const rep = g.reports.find(r => r.at === g.run.lastAt);
-    g.run.active = false; rep.reason = 'clear'; rep.won = true;
+    const rep = g.reports.find(r => r.at === g.runs[0].lastAt);
+    g.runs[0].active = false; rep.reason = 'clear'; rep.won = true;
     const snap = JSON.stringify(g);
-    const nx = SYS.game.nextRepeat(g, END);
+    const nx = SYS.game.nextRepeat(g, END, 1);
     if (JSON.stringify(g) !== snap) fail('nextRepeat 가 상태를 바꿨다');
-    if (!nx || nx.stageId !== 101 || nx.preset !== g.run.preset || nx.at !== END + B.repeat_restart_sec * 1000) fail(`다음 출발 ${JSON.stringify(nx)}`);
+    if (!nx || nx.stageId !== 101 || nx.preset !== g.runs[0].preset || nx.at !== END + B.repeat_restart_sec * 1000) fail(`다음 출발 ${JSON.stringify(nx)}`);
     rep.won = false; rep.reason = 'wipe';
-    if (SYS.game.nextRepeat(g, END) !== null) fail('진 런인데 다음 출발이 섰다');
-    rep.won = true; rep.reason = 'clear'; g.run.repeat = false;
-    if (SYS.game.nextRepeat(g, END) !== null) fail('반복이 꺼졌는데 다음 출발이 섰다');
+    if (SYS.game.nextRepeat(g, END, 1) !== null) fail('진 런인데 다음 출발이 섰다');
+    rep.won = true; rep.reason = 'clear'; g.runs[0].repeat = false;
+    if (SYS.game.nextRepeat(g, END, 1) !== null) fail('반복이 꺼졌는데 다음 출발이 섰다');
     return `끝난 순간 + ${B.repeat_restart_sec}초 · 반복 꺼짐 · 짐 · 도는 중 · 원정 없음 → null`;
 });
 check('nextRepeat: 반복 원정은 원정 건물 랭크가 연다 — 새 게임은 잠겨 이긴 런도 다음 출발이 없다 · 그 랭크를 지으면 선다 · 편성 수는 건물이 안 늘린다 (2026-09-23 사용자 지시)', () => {
@@ -7020,11 +7123,11 @@ check('nextRepeat: 반복 원정은 원정 건물 랭크가 연다 — 새 게�
     if ((g.buildings.expedition ?? 0) >= need.rank || SYS.game.hasFeature(g, 'repeat')) fail(`새 게임인데 반복 원정이 열렸다 (원정 r${g.buildings.expedition})`);
     const d = SYS.game.departRun(g, 101, NOW);
     if (!d.ok) fail(`출발 ${d.err}`);
-    const rep = g.reports.find(r => r.at === g.run.lastAt);
-    g.run.active = false; g.run.repeat = true; rep.reason = 'clear'; rep.won = true;
-    if (SYS.game.nextRepeat(g, NOW) !== null) fail('잠긴 판에서 다음 출발이 섰다');
+    const rep = g.reports.find(r => r.at === g.runs[0].lastAt);
+    g.runs[0].active = false; g.runs[0].repeat = true; rep.reason = 'clear'; rep.won = true;
+    if (SYS.game.nextRepeat(g, NOW, 1) !== null) fail('잠긴 판에서 다음 출발이 섰다');
     g.buildings.expedition = need.rank;
-    if (!SYS.game.nextRepeat(g, NOW)) fail(`원정 r${need.rank} 를 지었는데 다음 출발이 안 선다`);
+    if (!SYS.game.nextRepeat(g, NOW, 1)) fail(`원정 r${need.rank} 를 지었는데 다음 출발이 안 선다`);
     if (SYS.game.needOf('presets') !== null) fail('편성 수를 늘리는 건물 랭크가 있다');
     if (g.presets.length !== B.party_preset_count || SYS.game.limitsOf(newGameS(42)).presets !== B.party_preset_count) fail('편성 수가 balance 값이 아니다');
     return `원정 r${need.rank} 가 연다 · 편성 ${B.party_preset_count} (건물 무관)`;
@@ -7041,6 +7144,7 @@ check('buildSystems: 바꿔 끼운 데이터만 읽는다 — 등급 표를 한 
 check('limitsOf: 상한은 한 곳이 답한다 — balance 기본값 + 지어진 건물 랭크의 더하기 · 새 게임(null)은 시작 랭크 · 편성 · 물약 칸 · 강화 · 고용 후보 판정이 이 값을 따른다 (2026-09-22 구조 감사 · R137)', () => {
     const base = {
         bag: B.inventory_cap, stash: B.stash_cap, roster: B.roster_cap, party: B.party_size_max, presets: B.party_preset_count,
+        expeditions: B.concurrent_expedition_parties,
         potionSlots: B.potion_slot_max, upgrade: B.equip_upgrade_max, tavernCandidates: B.tavern_candidates, searchSlots: B.tavern_search_slots,
         shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon, makeLevels: 0, potionTier: 0, tacticSlots: 0,
     };
@@ -7049,6 +7153,7 @@ check('limitsOf: 상한은 한 곳이 답한다 — balance 기본값 + 지어�
     const expect = ranks => {
         const w = { ...base };
         for (const [k0, n] of Object.entries(SYS.construction.opened(ranks).adds)) { const k = KEY[k0] ?? k0; if (k in w) w[k] += n; }
+        w.expeditions = Math.min(w.expeditions, w.presets);   // 부대는 편성 하나에 하나다 (v38 · 다부대)
         return w;
     };
     const raw = SYS.game.newGame(42, cands, NOW);

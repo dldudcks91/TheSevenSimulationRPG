@@ -350,6 +350,12 @@ const state = {
 };
 let stopBattle = null;
 let battleBag = null;       // 관전 아래 보관 칸 — 라운드 정산 때 이것만 갈아 끼운다 (R89 · `refreshBattleSide`)
+/**
+ * 그 부대의 세이브 칸 [v38 · 2026-09-23 다부대] — `G.runs` 는 편성 번호로 색인된다(자리 + 1 = 번호).
+ * 번호를 안 주면 **지금 관전 중인 런의 편성**, 그것도 없으면 고른 편성이다 — 화면이 부대 하나만 보던 때의 `G.run` 자리를 그대로 메운다.
+ * 부대 탭(여러 부대를 오가며 본다)은 2단계다
+ */
+const runSlot = (no = state.battle?.run?.preset ?? G?.preset) => (Number.isInteger(no) ? G?.runs?.[no - 1] ?? null : null);
 
 const rollCandidates = () => SYS.hero.rollStartParty(makeRng(ROLL_SEED + state.roll), D.balance.party_size_max);
 /* 플래시 — 상단바 가운데에 내려왔다가 제 시간에 사라지는 한 줄 (SCREEN_DESIGN §2 · ADR-0113).
@@ -973,8 +979,9 @@ function runBattle(stageId, { instant = false, tab = null, logf = null, dmgf = n
         state.exp = 'idle';
         render(); return;
     }
-    // 반복 의사를 이번 런에 옮긴다 — departRun 은 같은 스테이지 재출발일 때만 옛 값을 잇는다
-    if (G.run && stageId === state.expStage) G.run.repeat = state.expRepeat === true;
+    // 반복 의사를 이번 런에 옮긴다 — departRun 은 같은 스테이지 재출발일 때만 옛 값을 잇는다 (부대마다 제 칸 · v38)
+    const slot = runSlot(r.run?.preset ?? preset ?? G.preset);
+    if (slot && stageId === state.expStage) slot.repeat = state.expRepeat === true;
     save();
     if (instant) { state.battle = null; state.repSel = null; state.exp = 'report'; render(); return; }
     // tab — 개발용 ?dev=play&bt=dmg: 우측 열의 판을 누적 데미지로 **골라** 헤드리스가 클릭 없이 닿게 한다(보이는 것은 `&lay=split` 일 때 · ADR-0130)
@@ -1014,9 +1021,9 @@ function renderExpedition(main) {
         const page = el('div', 'bt-page page');
         main.appendChild(page);
         stopBattle = mountBattle(page, {
-            result, stageId, heroes: G.heroes, repeat: G.run?.repeat === true, resume: state.battle.resume,
-            // 반복 원정의 다음 출발 시각 — 결과 띠가 남은 초를 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300)
-            restartAt: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now())?.at ?? null,
+            result, stageId, heroes: G.heroes, repeat: runSlot()?.repeat === true, resume: state.battle.resume,
+            // 반복 원정의 다음 출발 시각 — 결과 띠가 남은 초를 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300) · 부대마다 따로 묻는다 (v38)
+            restartAt: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset)?.at ?? null,
             combatOf, itemOf, itemTipOf: (h, it) => equippedItemTipCard(h, it),
             // 몬스터 툴팁의 장비 칸 — 영웅 · 캐릭터 탭과 같은 「착용 중」 카드다 (ADR-0183 · ADR-0312). 스킬 숫자는 그 몬스터의 표시값(`ctx` — 재생기가 싣는다).
             //   세이브 밖 개체(`round` 이벤트의 `gear`)라 uid 로 못 찾는다 — 개체를 그대로 받는다
@@ -1042,7 +1049,7 @@ function renderExpedition(main) {
                 if (stopBattle) { const pos = stopBattle(); if (B) B.resume = { ...pos, auto: false }; stopBattle = null; }
                 if (B && !B.run.done) {
                     SYS.game.retreatRun(G, B.run, now());
-                    if (G.run?.stageId === state.expStage) state.expRepeat = false;   // 철수는 반복도 끈다 — 편성 창의 버튼과 어긋나지 않게
+                    if (runSlot(B.run.preset)?.stageId === state.expStage) state.expRepeat = false;   // 철수는 반복도 끈다 — 편성 창의 버튼과 어긋나지 않게
                     state.battle = null;       // 버린 라운드는 다시 볼 것이 없다
                 }
                 save(); state.repSel = null; state.exp = 'report'; render();
@@ -1052,7 +1059,7 @@ function renderExpedition(main) {
                 const pos = stopBattle ? stopBattle() : state.battle?.resume;
                 stopBattle = null;
                 // 다음 출발은 `game.nextRepeat` 가 정한다 — 끝난 순간 + [balance.csv:repeat_restart_sec] (ADR-0300). 세기가 끝나 부른 것(`auto`)일 때만 나간다
-                const nx = auto ? SYS.game.nextRepeat(G, state.battle?.endedAt ?? now()) : null;
+                const nx = auto ? SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset) : null;
                 if (nx) runBattle(nx.stageId, { at: nx.at, resume: { ...pos, t: 0, wall: nx.at, auto: false }, preset: nx.preset });
                 // 반복이 안 이어지면 출정이 끝난 것이다 — ~~아웃된 영웅을 낫게 하는 일~~ 은 2026-09-08 폐기(§1-1 개정).
                 //   리포트로 가는 것은 띠의 [리포트 보기](`auto` 가 아니다)뿐이다 — 세던 도중 반복을 껐으면 관전에 남는다 [2026-09-15 사용자 지시 · ADR-0140]
@@ -1071,7 +1078,7 @@ function renderExpedition(main) {
                 stopBattle = null;
                 if (state.battle) state.battle.resume = { ...pos, auto: false };   // 거절돼 남는 관전이 걷힌 자리에서 다시 서게
                 state.expStage = nextStage; state.expChapter = D.stages[nextStage].chapter; state.expRepeat = false;
-                runBattle(nextStage, { resume: { ...pos, t: 0, wall: now(), auto: false }, preset: G.run?.preset });
+                runBattle(nextStage, { resume: { ...pos, t: 0, wall: now(), auto: false }, preset: state.battle?.run?.preset });
             },
             // 다시 도전 — 결과 띠의 버튼 · 이겨도 선다(반복이 세는 띠만 빼고) [2026-09-15 · 09-21 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0138 · ADR-0212]. 같은 스테이지로 지금 파티 · 진형을 곧바로 보낸다.
             //   반복 원정의 이어 달리기와 같은 길이다 — 배속 · 판은 잇고 시각만 0 에서. 출발이 거절되면 `runBattle` 이 플래시 후 편성으로 간다
@@ -1079,7 +1086,7 @@ function renderExpedition(main) {
                 const pos = stopBattle ? stopBattle() : state.battle?.resume;
                 stopBattle = null;
                 if (state.battle) state.battle.resume = { ...pos, auto: false };   // 거절돼 남는 관전이 걷힌 자리에서 다시 서게
-                runBattle(stageId, { resume: { ...pos, t: 0, wall: now(), auto: false }, preset: G.run?.preset });
+                runBattle(stageId, { resume: { ...pos, t: 0, wall: now(), auto: false }, preset: state.battle?.run?.preset });
             },
         });
         // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 라운드를 이길 때마다 드롭이 들어오고(`refreshBattleSide`)
@@ -1184,7 +1191,7 @@ function renderExpIdle(main) {
             if (!unlocked) { flash('exp.locked'); return; }
             state.expStage = z.stage_id;
             // 반복 의사는 그 스테이지의 런에서 읽어 온다 — 런이 없거나 다른 스테이지면 꺼진 채로 시작
-            state.expRepeat = G.run?.stageId === z.stage_id && G.run.repeat === true;
+            state.expRepeat = runSlot()?.stageId === z.stage_id && runSlot().repeat === true;
             state.modal = 'depart';
             render();
         };
@@ -1625,7 +1632,7 @@ function goBox(z) {
         if (!repOpen) { flashNeed('repeat'); return; }
         state.expRepeat = !state.expRepeat;
         // 이 스테이지가 지금 도는 런이면 곧바로 런에도 옮긴다 — 관전의 자동 진행이 이 값을 읽는다
-        if (G.run?.stageId === z.stage_id) { G.run.repeat = state.expRepeat; save(); }
+        { const s = runSlot(); if (s?.stageId === z.stage_id) { s.repeat = state.expRepeat; save(); } }
         render();
     };
     const go = el('button', 'btn lg primary', t('exp.deploy'));
@@ -1671,7 +1678,7 @@ function storyBox(z) {
 
 /** 편성 번호의 이름 — 도는 원정의 편성이면 「원정 중」을 붙인다(영웅 띠의 「원정 중」과 같은 말 · 색) (§15 · §4-1) */
 const presetLabel = (no, ps) => t('pt.preset', { n: no })
-    + (no === ps.runNo ? `<span class="pt-run">${t('hs.doing.expedition')}</span>` : '');
+    + (ps.runNos.includes(no) ? `<span class="pt-run">${t('hs.doing.expedition')}</span>` : '');
 
 /**
  * 창의 **편성** 칸 — 아래 줄 왼쪽 · 적 구성 아래 [2026-09-21 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0193 · 자리는 ADR-0214].
@@ -1783,7 +1790,7 @@ function departBody() {
 
 /** 리포트 목록은 **끝난 원정만** 든다 (§4-3 · ADR-0123) — 도는 원정의 리포트도 `G.reports` 맨 앞에 서서 라운드마다 차지만
  *  (끊기면 그 값으로 선다 · INTERFACE §2-7) 목록에는 안 선다. 지금 도는 것은 관전이 든다 */
-const runningReport = R => R.reason == null && G.run?.active === true && R.at === G.run.lastAt;
+const runningReport = R => { const s = G.runs?.[(R.preset ?? 0) - 1]; return R.reason == null && s?.active === true && R.at === s.lastAt; };
 const doneReports = () => G.reports.filter(R => !runningReport(R));
 
 /** 지난 시간 — 분 · 시간 · 일 중 **하나로만**. 줄이 좁아 두 단위를 못 쓴다 */
@@ -1972,7 +1979,7 @@ function runChangeFlash(uid, before = []) {
 function runTacticHint(h, it) {
     const run = liveRun();
     // 원정 인원이 아니거나 · 쓰러져 못 끼거나(`downed`) · 보스 라운드 도중이라 이 런에 안 먹으면 말할 것이 없다
-    if (!run || !h || !run.party.includes(h.uid) || G.run?.fallen?.includes(h.uid) || SYS.game.runLock(G, run) === 'boss') return '';
+    if (!run || !h || !run.party.includes(h.uid) || runSlot(run.preset)?.fallen?.includes(h.uid) || SYS.game.runLock(G, run) === 'boss') return '';
     const now = SYS.game.runTactics(G, run);
     if (!now.some(m => m.active)) return '';            // 켜진 전술이 없으면 꺼질 것도 없다 — 칸마다 사본을 안 만든다
     const off = SYS.game.runTacticsIf(G, run, h.uid, it.uid).filter((m, i) => now[i]?.active && !m.active);
@@ -2047,7 +2054,7 @@ function expTick() {
         if (tNow < end) return;
         // 끝 — 반복 원정이면 다음 런은 `game.nextRepeat` 가 정한 시각(끝난 순간 + [balance.csv:repeat_restart_sec])에 나간다.
         //   관전 결과 띠의 세기와 **같은 답**이다 — 어느 탭에서 끝났든 같은 시각이다 (ADR-0300)
-        const nx = SYS.game.nextRepeat(G, B.endedAt ?? at - (tNow - end) / speed * 1000);
+        const nx = SYS.game.nextRepeat(G, B.endedAt ?? at - (tNow - end) / speed * 1000, B.run?.preset ?? G.preset);
         if (nx) {
             // 그 시각 전이면 끝난 런을 붙든 채 기다린다 — `auto` 가 다음 눈금에 이 자리로 다시 데려온다. 기다리는 동안 멈춤이 오면 `closeFrozenRun` 이 반복만 끈다
             if (at < nx.at) { B.resume = { ...B.resume, auto: true }; return; }
@@ -2083,7 +2090,7 @@ function closeFrozenRun(at) {
     SYS.game.closeRun(G, at);
     if (cut) state.battle = null;                                  // 버린 라운드는 다시 볼 것이 없다
     else B.resume = { ...r, t: B.result.durationSec, wall: at, auto: false };
-    if (G.run?.stageId === state.expStage) state.expRepeat = false;   // 편성 창의 반복 버튼과 어긋나지 않게
+    if (runSlot(B.run?.preset)?.stageId === state.expStage) state.expRepeat = false;   // 편성 창의 반복 버튼과 어긋나지 않게
     save();
     // 관전을 보고 있었으면 재접속처럼 **편성**으로 — 부재 중 알림이 거기 선다. 다른 화면은 뺏지 않는다
     if (state.exp === 'battle') state.exp = 'idle';
@@ -4769,8 +4776,8 @@ async function boot() {
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
         devParty();
-        if (!G.run) SYS.game.resolveBattle(G, D.stageOrder[0], now() - 31 * 60000);
-        G.run.repeat = true;
+        if (!runSlot(G.preset)) SYS.game.resolveBattle(G, D.stageOrder[0], now() - 31 * 60000);
+        runSlot(G.preset).repeat = true;
         SYS.game.closeRun(G, now()); save();
     }
     // 계정 · 선택 · 멈춤 창 — 로그인 · 다른 기기 · 다른 탭으로만 닿는 화면이라 길을 따로 낸다 (SCREEN_DESIGN §2-1 · §10).

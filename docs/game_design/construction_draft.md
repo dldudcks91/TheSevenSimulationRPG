@@ -130,7 +130,7 @@
 
 | 후보 | 이유 |
 |---|---|
-| 동시 원정 파티 수 (`concurrent_expedition_parties`) | GAME_DESIGN §1-1 · 09-17 「동시 원정은 1개」 |
+| ~~동시 원정 파티 수 (`concurrent_expedition_parties`)~~ | ~~GAME_DESIGN §1-1 · 09-17 「동시 원정은 1개」~~ → **2026-09-23 뒤집혔다 — 건물이 연다.** 동시 원정이 최대 3부대가 되어 부대 칸은 원정 건물이, 로스터 상한(5 → 10 · 랭크마다 +1)은 선술집이 연다. 어느 랭크인지는 GAME_DESIGN §10 「다부대의 남은 설계」 (§2 표에 아직 안 얹었다) |
 | 영웅 휴식 · 치료 시설 | 부상 · 치료 시스템 자체가 폐기됐다 ([base_expedition_design.md §1-1](base_expedition_design.md)) |
 | 장비 옵션 재굴림 | [item_design.md §7-2](item_design.md) — 08-31 재굴림 금지 |
 | 아이템 상한 돌파 (Lootun Keep · Castle · Watchtower · Fortress) | §1 무한 수직 스케일링 금지 |
