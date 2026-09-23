@@ -374,11 +374,13 @@ export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}$
 /**
  * 물약 그림 — `src/assets/art/icons/items/potion/<potion_id>.png` (2026-09-15 · R104 · SCREEN_DESIGN §4-2 · §8-2 · ADR-0148).
  *
- * 축은 `potion.csv:potion_id` 다. **그림은 사용자가 준다** — 받으면 id 를 목록에 한 줄. 목록에 없는 물약은 `null` 이고 칸은 테두리만 선다.
+ * 축은 `potion.csv:potion_id` 다. 그림이 있는 id 만 목록에 둔다. 목록에 없는 물약은 `null` 이고 칸은 테두리만 선다.
  * `slotArt` 와 같은 이유로 해시 폴백이 없다 — 틀린 그림이 곧 틀린 정보다(마이너 칸에 슈퍼 병이 뜨면 회복량을 잘못 읽는다).
  */
 export const POTION_ART_DIR = './assets/art/icons/items/potion/';
-export const POTION_ART_IDS = [];
+export const POTION_ART_IDS = [
+    'minor_healing', 'light_healing', 'healing', 'greater_healing', 'super_healing',
+];
 export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}${id}.png` : null;
 /**
  * 물약 **칸**의 배경 실루엣 — 칸 넷 전부가 같은 한 장을 든다 [2026-09-17 사용자 지시].

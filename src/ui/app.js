@@ -4096,8 +4096,8 @@ function monsterCard(m, grade, stat) {
 const CODEX_SEGS = ['monster', 'character', 'item', 'skill'];
 /** 몬스터 카드의 초상 등급 — 라벨은 관전 카드가 쓰는 `kind.*` 를 그대로 부른다 (ADR-0167 · 문구를 새로 안 쓴다) */
 const CODEX_GRADES = ['normal', 'elite'];
-/** 아이템 안쪽 분류 — 무기와 비무기 장비(방어구 · 장신구)를 가른다 (ADR-0179) */
-const CODEX_ITEM_SEGS = ['weapon', 'armor'];
+/** 아이템 안쪽 분류 — 무기와 비무기 장비(방어구 · 장신구)를 가르고, 소모품인 물약이 셋째다 (ADR-0179 · 물약 ADR-0314) */
+const CODEX_ITEM_SEGS = ['weapon', 'armor', 'potion'];
 /** 챕터보스 카드가 차지하는 격자 칸 수 — 보스라서 두 칸이다 (ADR-0257). 남은 칸은 `???` 자리가 채운다 */
 const CX_BOSS_SPAN = 2;
 
@@ -4299,7 +4299,7 @@ const itemBaseName = id => {
     return id;
 };
 
-/** 아이템 세그먼트 — 무기/방어구를 한 번 더 가르고, 방어구는 장비 부위별로 묶는다 (§9-1 · ADR-0179) */
+/** 아이템 세그먼트 — 무기/방어구/물약을 한 번 더 가르고, 방어구는 장비 부위별로 · 물약은 종류별로 묶는다 (§9-1 · ADR-0179 · 0314) */
 function codexItem(p) {
     const bar = el('div', 'sub-bar');
     bar.appendChild(segmented(CODEX_ITEM_SEGS.map(id => ({ id, label: t(`ix.seg.${id}`) })), state.codexItemSeg,
@@ -4316,6 +4316,15 @@ function codexItem(p) {
             artGroup(t('ix.g.weaponBase', { group: L(D.weaponGroups?.[g] ?? g) }), `${M.WEAPON_BASE_DIR}${g}/`,
                 //    확장자를 뗀다 — 베이스 이름이 길어 `.png` 가 붙으면 칸에서 두 줄이 된다 (스킬 세그먼트와 같은 처방 · ADR-0075)
                 M.WEAPON_BASE_STEMS[g].map(s => artTile(M.weaponBaseArt(g, s), t(`ix.b.${s}`), 'box', '', true)))
+        ).join('');
+    } else if (state.codexItemSeg === 'potion') {
+        // 물약 — **종류 하나가 묶음 하나**(`potion.csv:kind`)고 묶음 안의 순서는 CSV 행 순(= 단계 순)이다 (§9-1 · ADR-0314).
+        // 이름은 **CSV 가 든다**(`L(row)`) — 무기 베이스처럼 i18n 에 같은 이름을 두 벌 두지 않는다.
+        // 그림이 등록된 id 만 편다(방어구 베이스와 같은 규칙) · 칸 배경 `slot.png` 는 어느 물약도 아니라 안 싣는다(ADR-0181 과 같은 이유)
+        const rows = (D.potions ?? []).filter(row => M.POTION_ART_IDS.includes(row.id));
+        box.innerHTML = [...new Set(rows.map(row => row.kind))].map(kind =>
+            artGroup(t('ix.g.potion', { kind: t(`ix.pk.${kind}`) }), M.POTION_ART_DIR,
+                rows.filter(row => row.kind === kind).map(row => artTile(M.potionArt(row.id), L(row), 'box', '', true)))
         ).join('');
     } else {
         // 비무기 베이스 — `equip_slot.csv` 의 부위 순서를 따르고, 각 부위가 소유한 `item_base.csv` id 로 그림 목록을 나눈다.

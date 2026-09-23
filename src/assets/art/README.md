@@ -477,16 +477,18 @@ icons/items/
 - **재발주 처방** — 양손검: 「blade at least one third as wide as the guard is long, thick heavy blade」 · 가는 검(롱 소드 · 클레이모어)도 굵게. 활: 「thick chunky bow limbs, each limb as wide as the grip wrap」 · 「no thin separate string — omit it or draw it thick」 · 검은 몸체(룬 · 고딕)에 「bright rim highlight along the dark limb」 · 설치본 `bow.png` 를 굵기 기준으로 첨부 · 롱 보우는 숏 보우와 **형태로** 가른다
 - 파일마다 생김새의 출처 · 실측 표 · 발주 중 수정 이력은 [DEV_LOG.md §4](../../../docs/client/DEV_LOG.md)
 
-### `potion/` — 물약 그림 [신설 2026-09-15 · **티어 5종은 대기 · 칸 배경은 찼다** 2026-09-17]
+### `potion/` — 물약 그림 [5종 설치 2026-09-23]
 
 ```
 icons/items/potion/
 ├── slot.png   ← **칸 배경 실루엣** — id 가 아니다(칸 넷이 같은 한 장) [2026-09-17]
-└── (대기) minor_healing · light_healing · healing · greater_healing · super_healing .png   ← 파일명 = potion.csv 의 potion_id
+└── minor_healing · light_healing · healing · greater_healing · super_healing .png   ← 파일명 = potion.csv 의 potion_id
 ```
 
-관전 아레나의 물약 칸 · 제련소 물약 머리 줄이 읽는다([SCREEN_DESIGN §4-2 · §8-2](../../../docs/client/SCREEN_DESIGN.md) · ADR-0148). **칸 한 변이 28px** 이라 장비 칸(40px)보다 작다 — 병의 윤곽이 굵어야 읽힌다. 규격은 아래 「규격」과 같다.
-**목록에 적어야 뜬다** — `mock.js:POTION_ART_IDS` 에 id 한 줄. 목록에 없는 물약은 칸이 테두리만 선다 · 해시 폴백을 안 쓰는 이유는 `empty/` 와 같다(틀린 그림 = 틀린 정보 — 마이너 칸에 슈퍼 병이 뜨면 회복량을 잘못 읽는다).
+관전 아레나의 물약 칸 · 편성 탭의 물약 칸 · 제련소 물약 머리 줄 · **도감 아이템의 물약 탭**이 읽는다([SCREEN_DESIGN §4-2 · §8-2 · §9-1 · §15](../../../docs/client/SCREEN_DESIGN.md) · ADR-0148 · 0314). **칸 한 변이 28px** 이라 장비 칸(40px)보다 작다 — 병의 윤곽이 굵어야 읽힌다(도감 타일은 더 크다). 규격은 아래 「규격」과 같다. **실측 [2026-09-23]** — 프레이밍(장변 87% · 중앙 50/50)은 통과했고 **색 수만 아이템 합격선(35~130) 위다**(135~142 — 유리 반사와 액체 그라디언트). 28px · 40px 몽타주에서 다섯 단계가 **병의 부피**로 갈려 읽혀 재발주하지 않았다.
+**목록에 적어야 뜬다** — `mock.js:POTION_ART_IDS` 에 5종이 등록돼 있다. 목록에 없는 물약은 칸이 테두리만 선다 · 해시 폴백을 안 쓰는 이유는 `empty/` 와 같다(틀린 그림 = 틀린 정보 — 마이너 칸에 슈퍼 병이 뜨면 회복량을 잘못 읽는다).
+
+원본 `source/sheet_healing_potions.png` 는 3×2 시트다(위쪽 왼쪽부터 1~3단계 · 아래쪽 왼쪽부터 4~5단계). 화면용 5장은 이 시트를 잘라 외곽의 흰 배경을 투명하게 처리하고 512×512 RGBA 로 정규화한 것이다. 병 몸통의 부피가 단계마다 커진다.
 
 **칸 배경은 그 규칙 밖이다** [2026-09-17 사용자 지시] — `slot.png` 한 장을 **칸 넷이 다 든다**. `potionArt` 가 축이 「어느 물약인가」라 틀리면 회복량을 잘못 읽는 반면, 이쪽은 **「여기에 물약이 들어간다」는 칸의 말**이라 티어를 안 가린다 (`empty/` 의 부위 실루엣과 같은 자리 · 조립은 `mock.js:POTION_SLOT_ART`). 찬 칸과 빈 칸은 **진하기**가 가른다 — 빈 칸 `.3` · 찬 칸 `.8` (28px 칸에서 테두리 실선/점선만으로는 덜 읽힌다). 티어 그림이 오면 찬 칸이 제 그림으로 바뀌고 이 배경은 빈 칸에만 남는다.
 
@@ -548,4 +550,4 @@ icons/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-09-21*
+*마지막 업데이트: 2026-09-23*
