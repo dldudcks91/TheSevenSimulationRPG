@@ -39,7 +39,7 @@
 import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo } from './data.js';
 import { t, L } from './i18n.js';
-import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard } from './tip.js';
+import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -127,6 +127,7 @@ export function mountBattle(container, opts) {
     const dom = buildDom(state, stage, stageId);
     container.appendChild(dom);
     bindControls(state, container, opts);
+    bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
     // t=0 의 이벤트(첫 라운드 편성)를 먼저 적용해서 첫 프레임부터 적이 서 있게 한다.
     // 재개(resume)면 그 시각까지 조용히 되감는다 — 팝업 없이. 로그·게이지·누적은 다시 쌓인다 (2026-08-27)
     if (resume) { state.t = resume.t; state.catchUp = true; }
@@ -292,17 +293,27 @@ function potionBeltHtml(p) {
         const s = p.slots[i];
         const info = s?.full ? potionInfo(s.id) : null;
         const src = info ? M.potionArt(s.id) : null;
-        const tip = info ? t('bt.potion.slot', { name: L(info.name), n: s.heal }) : t('bt.potion.empty');
         const img = src ? `<img src="${src}" alt="" onerror="this.remove()">`
             : `<img class="p-bg" src="${M.POTION_SLOT_ART}" alt="" onerror="this.remove()">`;
-        return `<span class="p-slot${info ? ' full' : ''}" data-i="${i}" title="${tip}">${img}</span>`;
+        return `<span class="p-slot${info ? ' full' : ''}" data-i="${i}">${img}</span>`;
     }).join('');
+}
+/**
+ * 칸마다 **물약 카드**를 건다 (SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315 · ~~`title` 한 줄~~) — 칸이 문자열로 서므로
+ * 그린 **뒤에** 건다. 회복량은 **그 런이 싣고 나간 값**(`slots[i].heal`)이다 — 재생기는 CSV 를 다시 읽지 않는다
+ */
+function bindPotionTips(state, root) {
+    for (const n of root.querySelectorAll('.b-belt .p-slot')) {
+        const s = state.potion.slots[Number(n.dataset.i)];
+        bindTipNode(n, () => potionTipCard(s?.full ? s.id : null, { heal: s?.heal }));
+    }
 }
 /** 물약 칸을 다시 칠한다 — `fired` = 방금 마신 칸이면 한 번 번쩍인다(되감기 중에는 안 번쩍인다 · 스킬 칸의 `fire` 와 같은 520ms) */
 function paintPotion(state, root, fired = -1) {
     const belt = root.querySelector('.b-belt');
     if (!belt) return;
     belt.innerHTML = potionBeltHtml(state.potion);
+    bindPotionTips(state, root);
     if (fired < 0 || state.catchUp) return;
     const slot = belt.querySelector(`.p-slot[data-i="${fired}"]`);
     if (!slot) return;

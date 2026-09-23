@@ -58,6 +58,7 @@ TheSevenSimulationRPG/
 4. **`game_logic` 모듈은 생성자에서 데이터를 주입받는다**
 5. **git 커밋/푸시는 사용자가 명시적으로 요청할 때만**
 6. **다국어 ko/en 나란히** — 렌더러(`app.js`/`battle.js`)에 한국어 리터럴 금지. **아이템·스킬 이름은 영어가 원본이고 한글은 직역**(의역 금지 — `Morning Star` → 모닝스타) (세부: [src/ui/README.md](src/ui/README.md) · 규약 본문 [src/data/README.md](src/data/README.md))
+7. **hover 설명은 그 아이템 · 스킬의 효과만 적는다** [2026-09-24 사용자 지시] — 툴팁은 **짧다.** 언제 발동하나 · 어느 순서로 쓰나 · 무엇이 소모되나 같은 **규칙 · 절차 · 조건 설명을 늘어놓지 않는다.** 그런 문장은 도움말 탭(SCREEN_DESIGN §12)의 몫이다
 
 검증 방법 · 개발용 URL · 밸런스 손잡이 → [src/dev/README.md](src/dev/README.md)
 경계(export·스키마·rng 순서)를 바꾸면 **INTERFACE.md 먼저**, 화면을 바꾸면 **SCREEN_DESIGN.md 먼저** → [docs/client/DEV_PLAN.md §7](docs/client/DEV_PLAN.md)
@@ -74,4 +75,4 @@ TheSevenSimulationRPG/
 - **짧은 동의(「ㄱ」 · 「ok」)의 범위**는 글로벌 CLAUDE.md, **커밋 · 푸시**는 위 규칙 5
 
 ---
-*마지막 업데이트: 2026-09-21*
+*마지막 업데이트: 2026-09-24*

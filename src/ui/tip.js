@@ -22,7 +22,7 @@
 
 import * as M from './mock.js';
 import { t, L, lang, has as STRINGS_HAS } from './i18n.js';
-import { D, SYS, skillTagName, monsterFace, monsterName, monsterSin, monsterStory, fillStory } from './data.js';
+import { D, SYS, skillTagName, monsterFace, monsterName, monsterSin, monsterStory, fillStory, potionInfo } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
 
@@ -112,12 +112,34 @@ export function stagePoint(ev) {
 }
 
 /**
- * 노드의 창 사각형 → **한 장 좌표** 사각형. 모서리 둘을 각각 옮겨 작은 쪽 · 큰 쪽을 고른다 — 눕힌 한 장(ADR-0109)에서는
- * 창의 왼쪽 위가 한 장의 왼쪽 위가 아니다 (위 `stagePoint` 의 ⚠)
+ * 옛 `zoom` 보정 [2026-09-24 버그 수정] — **Chrome 127 이하**는 `zoom` 아래 요소의 `getBoundingClientRect` 를 **배율을 뺀 값**으로 줬다
+ * (창 원점 기준으로 ÷ 누적 zoom · Chrome 128 에서 표준화). 메인(`.main { zoom: .9 }`) 안의 카드가 그만큼 원점에서 멀게 재여
+ * **카드 옆 툴팁이 오른쪽 아래로 밀렸다**(Chrome 126 실측 — 왼쪽에 서야 할 툴팁이 올린 카드를 덮었다). 표준 브라우저는 1 이다.
+ * 방식은 처음 한 번 재서 기억한다 — `zoom: .5` 인 100px 탐침이 100 으로 재이면 옛 방식이다
  */
-function stageRect(node) {
-    const b = node.getBoundingClientRect();
-    const a = stagePoint({ clientX: b.left, clientY: b.top }), z = stagePoint({ clientX: b.right, clientY: b.bottom });
+let legacyZoom = null;
+function rectZoom(node) {
+    if (legacyZoom === null) {
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:absolute;visibility:hidden;width:100px;height:1px;zoom:.5';
+        document.body.appendChild(probe);
+        legacyZoom = probe.getBoundingClientRect().width > 75;
+        probe.remove();
+    }
+    if (!legacyZoom) return 1;
+    // `zoom` 은 상속이 아니라 곱이다 — 노드 자신부터 조상까지 곱한다(카드 속 칸은 `.main` × 툴팁 카드 배율)
+    let z = 1;
+    for (let n = node; n; n = n.parentElement) z *= parseFloat(getComputedStyle(n).zoom) || 1;
+    return z;
+}
+
+/**
+ * 노드의 창 사각형 → **한 장 좌표** 사각형. 모서리 둘을 각각 옮겨 작은 쪽 · 큰 쪽을 고른다 — 눕힌 한 장(ADR-0109)에서는
+ * 창의 왼쪽 위가 한 장의 왼쪽 위가 아니다 (위 `stagePoint` 의 ⚠). 옛 `zoom` 방식이면 사각형을 먼저 되곱한다(`rectZoom`)
+ */
+export function stageRect(node) {
+    const b = node.getBoundingClientRect(), k = rectZoom(node);
+    const a = stagePoint({ clientX: b.left * k, clientY: b.top * k }), z = stagePoint({ clientX: b.right * k, clientY: b.bottom * k });
     return { left: Math.min(a.x, z.x), right: Math.max(a.x, z.x), top: Math.min(a.y, z.y), w: a.w, h: a.h };
 }
 
@@ -521,7 +543,7 @@ function statsFirstCard(h, combat, itemOf, itemCardOf, skills) {
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
  * @param itemOf uid 로 현재 세이브의 아이템을 찾는 함수 — tip.js 는 G 를 모른다
  * @param itemCardOf **아이템 개체**로 기존 「착용 중」 아이템 카드를 만드는 함수 — 아이템 옵션 표기는 앱이 든다 (ADR-0183 으로 uid → 개체)
- * @param statsFirst 첫 장이 **기본 옵션**인 편성 탭 카드(`statsFirstCard`) — 편성 탭(띠 · 진형 칸)만 준다 [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]
+ * @param statsFirst 첫 장이 **기본 옵션**인 편성 탭 카드(`statsFirstCard`) — 편성 탭(띠 · 진형 칸)이 **스위치가 켜져 있을 때만** 준다(`app.js:PARTY_TIP_STATS` · 꺼 둠 · ADR-0318) [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]
  * @param skills     `statsFirst` 카드의 액티브 칸 셋(스킬 개체 또는 `null`)
  */
 export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null } = {}) {
@@ -627,6 +649,24 @@ function codexCandCard(m, grade) {
         <div class="attr-list">${attrRowsHtml(stats, line)}</div>
         <div class="ng-line sep"><span>${t('ng.total')}</span><b>${total}</b></div>`);
     c.style.borderTopColor = line;
+    return c;
+}
+
+/**
+ * 물약 카드 (SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315 · 신설 2026-09-24) — **두 렌더러가 함께 쓴다**:
+ * 편성 탭 칸 · 가진 물약 (§15) · 출정 창 칸 (§4-1) · 제련소 재고 · 제작 행 (§8-2) · 도감 타일 (§9-1) ↔ 관전 아레나 칸 (§4-2).
+ * **관전 창 뱃지(버프) 툴팁과 같은 모양이다** [2026-09-24 사용자 지시 「스킬 버프 나올 때처럼 통일」] — 첫 줄 **이름**,
+ *   가는 선 아래 **효과 한 줄**. 클래스도 그 카드(`battle.js:effectTipCard`)의 것을 그대로 쓴다(`.tip-effect-head` · `.tip-effect-summary`).
+ *   **그림은 안 단다** [2026-09-24 사용자 지시] — 올린 칸이 이미 그 그림이다.
+ *   효과만 적는다 (CLAUDE.md 규칙 7) — 언제 마시나 · 어느 칸부터 · 무엇이 소모되나는 안 쓴다.
+ * @param id    물약 id — `null` 이면 **빈 칸 카드**다(「빈 칸」 — 칸도 카드를 세운다)
+ * @param opts.heal  회복량 덮어쓰기 — 관전은 **그 런이 싣고 나간 값**을 쓴다(재생기는 CSV 를 다시 읽지 않는다)
+ */
+export function potionTipCard(id, { heal } = {}) {
+    const info = id ? potionInfo(id) : null;
+    const c = el('div', 'tip-card potion');
+    c.innerHTML = `<div class="tip-effect-head"><div class="tip-name">${info ? L(info.name) : t('pt.potion.empty')}</div></div>`
+        + (info ? `<div class="tip-effect-summary">${t('tip.potion.heal', { n: (heal ?? info.heal).toLocaleString() })}</div>` : '');
     return c;
 }
 
@@ -851,17 +891,17 @@ export function skillLineHtml(s, ctx = {}) {
 }
 
 /**
- * 스킬 카드 — 머리글 「스킬」 + **몸통**(`skillBodyHtml`) (SCREEN_DESIGN §2 「스킬 설명창 규격」).
+ * 스킬 카드 — **몸통**(`skillBodyHtml`) (SCREEN_DESIGN §2 「스킬 설명창 규격」).
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 **같은 인자로** 다시 만든다 — 그래서 카드가 제 인자를 쥔 `_rebuild` 를 든다(유닛 카드와 같은 장치).
  * @param s   `.id` 만 있으면 된다 — 정의는 `SYS.skill.defs` 에서 집는다(호출처마다 다른 모양을 받아 왔다)
  * @param ctx {period, atkMin, atkMax, matkMin, matkMax, hpMax, atkType, stats, source} — 모르는 값은 생략한다. 그 숫자 자리가 식으로 접힌다
  */
 export function skillTipCard(s, ctx = {}) {
     if (!s) return null;
-    const c = el('div', 'tip-card');
+    const c = el('div', 'tip-card skill');
     c.dataset.alt = '1';
     c._rebuild = () => skillTipCard(s, ctx);
-    c.innerHTML = `<div class="tip-head">${t('tip.skill.h')}</div>${skillBodyHtml(s, ctx)}`;
+    c.innerHTML = skillBodyHtml(s, ctx);
     return c;
 }
 
@@ -885,7 +925,7 @@ const skillNameHtml = s => {
 };
 
 /**
- * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주.
+ * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장).
  * 스킬 카드와 아이템 툴팁의 스킬 칸이 **같이 부른다** — 한쪽만 고쳐지지 않게 몸통은 여기 하나다 (ADR-0139).
  * 칩은 **출처 칩**(영웅·무기·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **능력치 칩**이다.
  * 능력치 칩은 스케일링 슬롯(하는 일 줄의 `scales` — 줄 순 · 2026-09-22)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
@@ -903,6 +943,5 @@ function skillBodyHtml(s, ctx) {
     return `
         ${skillNameHtml(s)}
         ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
-        ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}
-        ${R.fx && !R.alt ? `<div class="tip-foot">${t('sk.altHint')}</div>` : ''}`;
+        ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}`;
 }

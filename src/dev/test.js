@@ -520,7 +520,9 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level',
         'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare',
         'tactic_reroll_base_cost', 'tactic_reroll_lock_mult',
-        'potion_slot_max', 'potion_use_hp_pct', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'repeat_restart_sec'];
+        'potion_slot_max', 'potion_use_hp_pct', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'repeat_restart_sec',
+        'gamble_spin_regen_hours', 'gamble_spin_cap', 'gamble_stake_steps', 'gamble_stake_gold', 'gamble_stake_chapter_mult',
+        'gamble_reels', 'gamble_rows', 'gamble_hold_trigger', 'gamble_hold_respins', 'gamble_hold_coin_pct'];
     const missing = need.filter(k => B[k] === undefined);
     if (missing.length) fail(`missing: ${missing.join(', ')}`);
     if (B.offline_cap_hours !== undefined) fail('offline_cap_hours 는 퇴역 키 — 반복 원정은 게임이 켜져 있는 동안만 (08-25)');
@@ -1170,7 +1172,7 @@ check('save: serialize → deserialize 왕복 동일 (v22)', () => {
  */
 check('formation: 파티 순서대로 전열부터 찬다 · 템플릿이 정원을 정한다 (진형 2026-09-09)', () => {
     const G2 = newGameP(31, cands, NOW);
-    // 기본 템플릿 = 표의 첫 행 = 일자(모두 앞) — 새 편성은 셋이 한 줄에 선다 (2026-09-21 사용자 지시 · id `3` 은 CSV 로더가 숫자로 읽는다)
+    // 기본 템플릿 = 표의 첫 행 = 일자(모두 전열) — 새 편성은 셋이 한 줄에 선다 (2026-09-21 사용자 지시 · id `3` 은 CSV 로더가 숫자로 읽는다)
     const f0 = SYS.game.formationState(G2);
     if (f0.tpl !== f0.templates[0] || String(f0.tpl) !== '3') fail(`기본 템플릿 ${f0.tpl} (첫 행 ${f0.templates[0]})`);
     if (!eq(f0.ranks[0], SYS.game.partyOf(G2)) || f0.ranks[1].length) fail(`일자 ${f0.ranks[0]} / ${f0.ranks[1]}`);
@@ -1184,18 +1186,18 @@ check('formation: 파티 순서대로 전열부터 찬다 · 템플릿이 정원
     const g = SYS.game.formationState(G2);
     if (!eq(g.caps, [1, 2])) fail(`1-2 정원 ${g.caps}`);
     if (g.ranks[0].length !== 1 || g.ranks[1].length !== 2) fail(`재배치 ${g.ranks[0].length}/${g.ranks[1].length}`);
-    // 모두 앞 — 후열이 없다
+    // 모두 전열 — 후열이 없다
     SYS.game.setFormation(G2, '3');
     if (SYS.game.formationState(G2).ranks[1].length !== 0) fail('템플릿 3 에 후열이 남았다');
-    // 모두 뒤 — 전열이 없다 [2026-09-21 사용자 지시] · 전원이 후열(1)이고 전열 칸으로는 못 옮긴다(정원 0)
+    // 모두 후열 — 전열이 없다 [2026-09-21 사용자 지시] · 전원이 후열(1)이고 전열 칸으로는 못 옮긴다(정원 0)
     if (!SYS.game.setFormation(G2, '0-3').ok) fail('setFormation 0-3');
     const b = SYS.game.formationState(G2);
-    if (b.ranks[0].length || !eq(b.ranks[1], SYS.game.partyOf(G2))) fail(`모두 뒤 ${b.ranks[0]} / ${b.ranks[1]}`);
-    if (SYS.game.partyOf(G2).some(uid => SYS.game.rankOf(G2, uid) !== 1)) fail('모두 뒤인데 전열(0)인 영웅이 있다');
+    if (b.ranks[0].length || !eq(b.ranks[1], SYS.game.partyOf(G2))) fail(`모두 후열 ${b.ranks[0]} / ${b.ranks[1]}`);
+    if (SYS.game.partyOf(G2).some(uid => SYS.game.rankOf(G2, uid) !== 1)) fail('모두 후열인데 전열(0)인 영웅이 있다');
     if (SYS.game.placeFormation(G2, SYS.game.partyOf(G2)[0], 0, 0).err !== 'missing') fail('정원 0 인 전열로 옮겨졌다');
     SYS.game.setFormation(G2, '3');
     if (SYS.game.setFormation(G2, 'nope').err !== 'missing') fail('없는 템플릿이 통과했다');
-    return '기본 3(일자) → 2-1 → 1-2 → 3 · 0-3(모두 뒤) 재배치';
+    return '기본 3(일자) → 2-1 → 1-2 → 3 · 0-3(모두 후열) 재배치';
 });
 check('formation: 전투 유닛이 자리를 들고 간다 — partyUnits.rank (진형 2026-09-09)', () => {
     const G2 = newGameP(32, cands, NOW);
@@ -6462,7 +6464,7 @@ check('departRun: 전술은 출발 판정이 상한 — 도중 리롤 · 출발 
     for (const uid of party) for (const iu of Object.values(SYS.game.heroById(g, uid).equipped)) if (iu) g.items[iu].sins = [];
     for (const w of weapons) g.items[w].sins = ['wrath'];       // 분노 태그 셋 — 조건 3 을 딱 채운다
     // 열린 칸을 전부 정한다 — 1 분노 장비(켜짐) · 2 나태 장비(꺼짐) · 나머지는 출발 때 꺼진 가족. 안 정한 칸은 첫 배정이 들어가 결과가 흐려진다
-    //   진형은 모두 뒤 — 「전열에 ~」 조건이 저절로 켜지지 않게 (과녁은 모두 앞과 같다 — battle_design §3-1)
+    //   진형은 모두 후열 — 「전열에 ~」 조건이 저절로 켜지지 않게 (과녁은 모두 전열과 같다 — battle_design §3-1)
     const slots = { 1: { id: 'opt_gear_wrath', grade: 'common' }, 2: { id: 'opt_gear_sloth', grade: 'common' } };
     g.presets[g.preset - 1].tactics = { slots, locked: [] };
     g.presets[g.preset - 1].formation = { tpl: '0-3', ranks: [[], party.slice()] };
@@ -7147,6 +7149,7 @@ check('limitsOf: 상한은 한 곳이 답한다 — balance 기본값 + 지어�
         expeditions: B.concurrent_expedition_parties,
         potionSlots: B.potion_slot_max, upgrade: B.equip_upgrade_max, tavernCandidates: B.tavern_candidates, searchSlots: B.tavern_search_slots,
         shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon, makeLevels: 0, potionTier: 0, tacticSlots: 0,
+        gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 (2026-09-24 · R149)
     };
     // 표의 단계 셋만 이름이 다르다(state.js ADD_KEY) — 나머지 더하기는 같은 이름의 상한에 붙고 · 붙을 상한이 없는 것(준비 중)은 버린다
     const KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots' };
@@ -7792,7 +7795,7 @@ const conRows = (over = {}) => ({
         { building_id: 'a', rank: 2, kind: 'unlock', target: 'search', value: '-', status: 'proposed' },
         { building_id: 'a', rank: 3, kind: 'add', target: 'bag', value: 6, status: 'proposed' },
         { building_id: 'b', rank: 1, kind: 'add', target: 'bag', value: 4, status: 'proposed' },
-        { building_id: 'b', rank: 2, kind: 'unlock', target: 'gamble', value: '-', status: 'proposed' },   // 준비 중뿐인 랭크
+        { building_id: 'b', rank: 2, kind: 'unlock', target: 'raid', value: '-', status: 'proposed' },   // 준비 중뿐인 랭크 (옛 `gamble` — 2026-09-24 R149 로 도박장이 열려 준비 중인 약탈로 갈았다)
     ],
     researchRows: [],
     ...over,
@@ -7998,12 +8001,154 @@ check('construction: 분해 · 알아서 분해는 건물이 막지 않는다 �
     return fail('40 시드 동안 드롭이 없었다 — 시험이 헛돈다');
 });
 check('construction: 잠긴 자리가 말할 건물 — needOf 는 켜기면 처음 나오는 랭크 · 더하기면 쌓아 닿는 랭크 · 표에 없으면 null (INTERFACE §2-7 · R137)', () => {
-    const S = conSys();                              // a r2 수색 · a r3 가방 +6 · b r1 가방 +4 · b r2 도박장(준비 중)
+    const S = conSys();                              // a r2 수색 · a r3 가방 +6 · b r1 가방 +4 · b r2 약탈(준비 중)
     const at = (target, n) => { const w = S.game.needOf(target, n); return w ? `${w.id}${w.rank}` : null; };
-    const got = { search: at('search'), bag5: at('bag', 5), bag10: at('bag', 10), bag11: at('bag', 11), gamble: at('gamble'), craft: at('craft') };
-    if (!eq(got, { search: 'a2', bag5: 'a3', bag10: 'b1', bag11: null, gamble: 'b2', craft: null })) fail(JSON.stringify(got));
+    const got = { search: at('search'), bag5: at('bag', 5), bag10: at('bag', 10), bag11: at('bag', 11), raid: at('raid'), craft: at('craft') };
+    if (!eq(got, { search: 'a2', bag5: 'a3', bag10: 'b1', bag11: null, raid: 'b2', craft: null })) fail(JSON.stringify(got));
     if (S.game.needOf('search').name.ko !== '가') fail('이름이 없다');
     return Object.entries(got).map(([k, v]) => `${k} ${v ?? '-'}`).join(' · ');
+});
+
+/* ── 도박장 슬롯 (base_expedition_design 「도박장」 · INTERFACE §2-7 · §2-15 · 2026-09-24 · R149) ── */
+/** 도박장이 열린 새 판 — 선술집 `rank` · 골드는 넉넉히(판돈 거절이 다른 단정을 가리지 않게) */
+const gambleGame = (seed, rank = 3) => {
+    const g = SYS.game.newGame(seed, cands, NOW);
+    g.buildings.tavern = rank;
+    g.resources.gold = 1e9;
+    return g;
+};
+const GAMBLE_H = B.gamble_spin_regen_hours * 3600000;
+
+check('gamble: 표 넷이 불러와진다 — 판 = 릴 × 행 · 라인 칸 수 = 릴 · 판돈 단계는 1 부터 · 판이 찼을 때의 코인은 굴림에 안 나온다 (INTERFACE §2-15)', () => {
+    const GB = SYS.gamble;
+    if (GB.reels !== B.gamble_reels || GB.rows !== B.gamble_rows) fail(`판 크기 ${GB.reels}×${GB.rows}`);
+    if (!GB.lines.length || GB.lines.some(l => l.cells.length !== GB.reels)) fail('라인 칸 수');
+    if (GB.stakes[0]?.step !== 1) fail('판돈 단계가 1 부터가 아니다');
+    if (GB.coins.find(c => c.id === GB.fill)?.weight !== 0) fail('판이 찼을 때의 코인이 굴림에 나온다');
+    return `${GB.reels}×${GB.rows} · 라인 ${GB.lines.length} · 심볼 ${GB.symbols.length} · 코인 ${GB.coins.length} · 판돈 ${GB.stakes.length}단계`;
+});
+check('gamble: 라인 판정 — 셋이 같으면 맞는다 · 와일드가 대신 선다 · 코인이 끊는다 · 다 와일드면 와일드 (INTERFACE §2-15)', () => {
+    const GB = SYS.gamble, line = GB.lines[0];
+    const lineSyms = GB.symbols.filter(s => s.kind === 'line').map(s => s.id);
+    const [a, b] = lineSyms;
+    const wild = GB.symbols.find(s => s.kind === 'wild').id, coin = GB.symbols.find(s => s.kind === 'coin').id;
+    // 나머지 칸은 두 심볼을 번갈아 — 이 라인의 칸만 덮어써서 이 라인의 판정만 본다
+    const hit = ids => {
+        const cells = Array.from({ length: GB.reels * GB.rows }, (_, i) => lineSyms[i % 2]);
+        line.cells.forEach((c, k) => { cells[c] = ids[k]; });
+        return GB.evaluate(cells).lines.find(h => h.line === line.id)?.symbol ?? null;
+    };
+    const row = (first, mid) => Array.from({ length: GB.reels }, (_, k) => (k === 1 ? mid : first));
+    const got = { same: hit(row(a, a)), wildMid: hit(row(a, wild)), allWild: hit(row(wild, wild)), coinMid: hit(row(a, coin)), mixed: hit(row(a, b)), wildCoin: hit(row(wild, coin)) };
+    if (!eq(got, { same: a, wildMid: a, allWild: wild, coinMid: null, mixed: null, wildCoin: null })) fail(JSON.stringify(got));
+    return Object.entries(got).map(([k, v]) => `${k} ${v ?? '-'}`).join(' · ');
+});
+check('gamble: 같은 판 번호면 같은 판 — 결과를 저장하지 않아도 다시 나온다 · 다음 판은 다른 판 (INTERFACE §5-1)', () => {
+    const a = gambleGame(91);
+    const b = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(a, NOW))));
+    const ra = SYS.game.gambleSpin(a, 1, NOW), rb = SYS.game.gambleSpin(b, 1, NOW);
+    if (!ra.ok || !rb.ok) fail(`${ra.err} · ${rb.err}`);
+    if (!eq(ra.spin, rb.spin)) fail('같은 세이브 · 같은 판 번호가 다른 결과를 냈다');
+    const touched = g => [g.resources, g.materials, g.gamble, g.counters.gamble];
+    if (!eq(touched(a), touched(b))) fail('같은 판 뒤의 골드 · 재료 · 충전이 갈렸다');
+    const rc = SYS.game.gambleSpin(a, 1, NOW);
+    if (rc.spin.n !== ra.spin.n + 1) fail('판 번호가 안 오른다');
+    if (eq(rc.spin.cells, ra.spin.cells) && eq(rc.spin.coinAt, ra.spin.coinAt)) fail('다음 판이 같은 판이다');
+    return `판 ${ra.spin.n} · ${ra.spin.cells.join(' ')}`;
+});
+check('gamble: 거절 순서 unbuilt → missing → locked → charge → gold · 거절이면 아무것도 안 바뀐다 (INTERFACE §2-7 · §3)', () => {
+    const snap = g => JSON.stringify(g);
+    const errs = [];
+    const g0 = SYS.game.newGame(92, cands, NOW);
+    delete g0.buildings.tavern;
+    const s0 = snap(g0);
+    errs.push(SYS.game.gambleSpin(g0, 1, NOW).err);
+    if (snap(g0) !== s0) fail('unbuilt 거절이 상태를 바꿨다');
+    const g = gambleGame(92);
+    const openN = SYS.game.limitsOf(g).gambleStakes;
+    errs.push(SYS.game.gambleSpin(g, SYS.gamble.stakes.length + 1, NOW).err);
+    if (openN < SYS.gamble.stakes.length) errs.push(SYS.game.gambleSpin(g, openN + 1, NOW).err);
+    else errs.push('locked');   // 표의 단계가 다 열려 있으면 이 자리를 시험할 수 없다
+    for (let i = 0; i < B.gamble_spin_cap; i++) if (!SYS.game.gambleSpin(g, 1, NOW).ok) fail(`${i + 1}번째 판이 거절됐다`);
+    const s1 = snap(g);
+    errs.push(SYS.game.gambleSpin(g, 1, NOW).err);
+    if (snap(g) !== s1) fail('charge 거절이 상태를 바꿨다');
+    const g2 = gambleGame(93);
+    g2.resources.gold = 0;
+    const s2 = snap(g2);
+    errs.push(SYS.game.gambleSpin(g2, 1, NOW).err);
+    if (snap(g2) !== s2) fail('gold 거절이 상태를 바꿨다');
+    if (!eq(errs, ['unbuilt', 'missing', 'locked', 'charge', 'gold'])) fail(errs.join(' · '));
+    return errs.join(' → ');
+});
+check('gamble: 충전 — 주기마다 한 칸 · 상한에서 멈춘다 · 가득에서 쓰면 다음 칸은 한 주기 뒤 · 차던 몫은 안 버린다 · 새 게임은 가득 (INTERFACE §4)', () => {
+    const g = gambleGame(94), cap = B.gamble_spin_cap;
+    const st = t => SYS.game.gambleState(g, t);
+    if (st(NOW).charges !== cap || st(NOW).nextAt !== null) fail('새 게임이 가득이 아니다');
+    SYS.game.gambleSpin(g, 1, NOW);
+    let s = st(NOW);
+    if (s.charges !== cap - 1 || s.nextAt !== NOW + GAMBLE_H) fail(`가득에서 한 판 — ${s.charges}칸 · 다음 ${s.nextAt - NOW}`);
+    SYS.game.gambleSpin(g, 1, NOW + GAMBLE_H / 2);
+    s = st(NOW + GAMBLE_H / 2);
+    if (s.charges !== cap - 2 || s.nextAt !== NOW + GAMBLE_H) fail(`차던 몫을 버렸다 — ${s.charges}칸 · 다음 ${s.nextAt - NOW}`);
+    s = st(NOW + GAMBLE_H * 1000);
+    if (s.charges !== cap || s.nextAt !== null) fail('상한에서 안 멈춘다');
+    return `상한 ${cap} · 주기 ${B.gamble_spin_regen_hours}h`;
+});
+check('gamble: 판돈은 진행 챕터 × 단계 배수 · 단계는 선술집 랭크가 연다 · 재료는 진행 챕터 단계 (base_expedition_design 「도박장」 · R149)', () => {
+    const g = gambleGame(95, 3);
+    const s1 = SYS.game.gambleState(g, NOW);
+    const open3 = s1.stakes.filter(x => x.open).length;
+    if (s1.stakes[0].gold !== Math.round(B.gamble_stake_gold * B.gamble_stake_chapter_mult ** (s1.chapter - 1) * s1.stakes[0].mult)) fail('판돈 식');
+    g.buildings.tavern = SYS.construction.list.find(b => b.id === 'tavern').maxRank;
+    const openMax = SYS.game.gambleState(g, NOW).stakes.filter(x => x.open).length;
+    if (!(openMax > open3)) fail(`랭크를 올려도 단계가 안 는다 ${open3} → ${openMax}`);
+    for (const id of D.stageOrder) if (D.stages[id].chapter === s1.chapter && !g.progress.cleared.includes(id)) g.progress.cleared.push(id);
+    const s2 = SYS.game.gambleState(g, NOW);
+    if (!(s2.chapter > s1.chapter)) fail('챕터를 다 깨도 진행 챕터가 안 넘어간다');
+    if (!(s2.stakes[0].gold > s1.stakes[0].gold)) fail(`판돈이 챕터를 안 따른다 ${s1.stakes[0].gold} → ${s2.stakes[0].gold}`);
+    if (s2.mats.ore === s1.mats.ore || s2.mats.timber === s1.mats.timber) fail('재료 단계가 챕터를 안 따른다');
+    return `선술집 r3 ${open3}단계 · 최대 ${openMax}단계 · ch${s1.chapter} ${s1.stakes.map(x => x.gold).join('/')} · ch${s2.chapter} ${s2.stakes.map(x => x.gold).join('/')}`;
+});
+check('gamble: 골드 환급은 1 미만 · 장비 · 낙인은 안 나온다 · 지급 = 결과와 같다 (GAME_DESIGN §10 「도박장」 ②③ · R149)', () => {
+    const N = 20000;
+    let gm = 0, holds = 0, fulls = 0;
+    const units = { ore: 0, timber: 0, dust: 0 };
+    for (let i = 1; i <= N; i++) {
+        const r = SYS.gamble.spin(makeRng(deriveSeed(4242, i)));
+        gm += r.goldMult;
+        for (const k in units) units[k] += r.mats[k];
+        if (r.hold) { holds++; if (r.hold.full) fulls++; }
+    }
+    const rtp = gm / N;
+    if (!(rtp < 1)) fail(`골드 환급 ${rtp.toFixed(3)} ≥ 1 — 골드 소모처가 아니다`);
+    // 실제 판 — 가방 · 아이템 · 낙인은 그대로이고 골드 · 재료는 결과가 말한 만큼만 움직인다
+    const g = gambleGame(96, SYS.construction.list.find(b => b.id === 'tavern').maxRank);
+    const bag0 = g.bag.length, items0 = Object.keys(g.items).length, stig0 = g.resources.stigma;
+    for (let t = 0; t < 40; t++) {
+        const gold0 = g.resources.gold, dust0 = g.resources.dust, mats0 = { ...g.materials };
+        const r = SYS.game.gambleSpin(g, 1 + (t % SYS.game.limitsOf(g).gambleStakes), NOW + t * GAMBLE_H);
+        if (!r.ok) fail(`${t}번째 판 ${r.err}`);
+        if (g.resources.gold - gold0 !== r.spin.net) fail(`골드 변화 ${g.resources.gold - gold0} ≠ 순손익 ${r.spin.net}`);
+        for (const [id, n] of Object.entries(r.spin.mats)) {
+            const have = id === 'dust' ? g.resources.dust - dust0 : (g.materials[id] ?? 0) - (mats0[id] ?? 0);
+            if (have !== n) fail(`${id} 지급 ${have} ≠ ${n}`);
+        }
+    }
+    if (g.bag.length !== bag0 || Object.keys(g.items).length !== items0 || g.resources.stigma !== stig0) fail('장비 · 낙인이 나왔다');
+    return `골드 환급 ${rtp.toFixed(3)} · 재료(1 단계 개수/판) 광석 ${(units.ore / N).toFixed(2)} · 목재 ${(units.timber / N).toFixed(2)} · 가루 ${(units.dust / N).toFixed(2)} · 홀드 1/${Math.round(N / Math.max(holds, 1))} · 판이 다 참 ${fulls}/${N}`;
+});
+check('gamble: 모두 돌리기 — 쌓인 충전을 다 쓰고 멈춘다 · 합계 = 판마다의 합 · 한 판도 못 돌면 그 거절 (INTERFACE §2-7 · R149)', () => {
+    const g = gambleGame(97);
+    const gold0 = g.resources.gold;
+    const r = SYS.game.gambleSpinAll(g, 1, NOW);
+    if (!r.ok) fail(r.err);
+    if (r.spins.length !== B.gamble_spin_cap || r.stop !== 'charge') fail(`${r.spins.length}판 · 멈춘 사유 ${r.stop}`);
+    if (g.resources.gold - gold0 !== r.net) fail(`골드 변화 ${g.resources.gold - gold0} ≠ 합계 순손익 ${r.net}`);
+    if (r.net !== r.gold - r.stake) fail('순손익 ≠ 받음 − 판돈');
+    const again = SYS.game.gambleSpinAll(g, 1, NOW);
+    if (again.ok || again.err !== 'charge') fail(`빈 충전에서 ${JSON.stringify(again).slice(0, 80)}`);
+    return `${r.spins.length}판 · 받음 ${r.gold} · 판돈 ${r.stake} · 순손익 ${r.net}`;
 });
 check('construction: 상한이 줄어든 세이브 — 가방은 넘친 채 둔다(새 드롭 · 옮기기만 막힌다) · 편성 · 물약 칸은 상한에 맞춰 자른다 (사용자 확정 2026-09-22 · R137)', () => {
     const S = buildSystems({ ...D, ...gateRows() });
@@ -8030,6 +8175,50 @@ check('construction: 진짜 표 — 첫 건설(새 게임에 안 지어졌고 �
     if (short.length) fail(`시작 재화로 첫 건설을 다 못 짓는다 ${JSON.stringify(short)} (가진 것 ${JSON.stringify(wallet)})`);
     for (const b of firsts) if (!SYS.game.construct(g, b.id).ok) fail(`${b.id} 를 못 짓는다`);
     return `${firsts.map(b => b.name.ko).join(' → ') || '없음'} · 비용 ${JSON.stringify(need)} ≤ 시작 ${JSON.stringify(wallet)}`;
+});
+check('construction: 관리자 모드(openAll) — 켜면 기능 · 상한 · 탭이 모든 건물 최대 랭크로 열린 척 · 세이브와 건설 탭의 실제 랭크는 그대로 · 끄면 돌아온다 (INTERFACE §2-7 · SCREEN_DESIGN §10-3)', () => {
+    let on = false;
+    const S = buildSystems(D, { openAll: () => on });
+    const g = S.game.newGame(84, cands, NOW);
+    const maxed = JSON.parse(JSON.stringify(g));
+    for (const b of S.construction.list) maxed.buildings[b.id] = b.maxRank;
+    const unlocks = [...new Set(S.construction.list
+        .flatMap(b => Array.from({ length: b.maxRank }, (_, i) => S.construction.rankInfo(b.id, i + 1).effects).flat())
+        .filter(e => e.kind === 'unlock').map(e => e.target))];
+    const L0 = S.game.limitsOf(g), Lmax = S.game.limitsOf(maxed), cs0 = S.game.constructionState(g), save0 = JSON.stringify(S.game.serialize(g, NOW));
+    if (unlocks.every(id => S.game.hasFeature(g, id)) || eq(L0, Lmax)) fail('fixture: 새 게임인데 이미 다 열려 있다 — 시험이 헛돈다');
+    on = true;
+    const shut = unlocks.filter(id => !S.game.hasFeature(g, id));
+    if (shut.length) fail(`켰는데 닫힌 기능 ${shut.join(' · ')}`);
+    if (!eq(S.game.limitsOf(g), Lmax)) fail(`켰는데 상한 ${JSON.stringify(S.game.limitsOf(g))} ≠ 다 지은 판 ${JSON.stringify(Lmax)}`);
+    const cs = S.game.constructionState(g);
+    const dim = Object.entries(cs.tabs).filter(([, v]) => !v).map(([k]) => k);
+    if (dim.length) fail(`켰는데 흐린 탭 ${dim.join(' · ')}`);
+    const real = st => st.buildings.map(b => [b.id, b.rank, b.next.err]);
+    if (!eq(real(cs), real(cs0))) fail('건설 탭이 실제 랭크를 안 그린다');
+    if (JSON.stringify(S.game.serialize(g, NOW)) !== save0) fail('켜기만 했는데 세이브가 바뀌었다');
+    on = false;
+    if (!eq(S.game.limitsOf(g), L0) || !eq(S.game.constructionState(g).tabs, cs0.tabs)) fail('끄니 원래대로 안 돌아왔다');
+    return `기능 ${unlocks.length} 전부 열림 · 물약 칸 ${L0.potionSlots} → ${Lmax.potionSlots} · 전술 칸 ${L0.tacticSlots} → ${Lmax.tacticSlots} · 세이브 그대로`;
+});
+check('선술집 명단은 건물이 안 늘린다 — 모든 건물 최대 랭크(관리자 모드)에서도 후보는 tavern_candidates · 표에 tavernCandidates 더하기를 적으면 로드가 멈춘다 (2026-09-24 사용자 지시 · base_expedition §2-4)', () => {
+    const S = buildSystems(D, { openAll: () => true });
+    const g = S.game.newGame(84, cands, NOW);
+    const n = S.game.tavernCandidates(g).length;
+    if (S.game.limitsOf(g).tavernCandidates !== B.tavern_candidates || n !== B.tavern_candidates) fail(`다 연 판의 명단 ${n} — ${B.tavern_candidates} 여야`);
+    let threw = false;
+    try { buildSystems({ ...D, buildingEffectRows: [...D.buildingEffectRows, { building_id: 'tavern', rank: 3, kind: 'add', target: 'tavernCandidates', value: 1, status: 'proposed' }] }); } catch { threw = true; }
+    if (!threw) fail('tavernCandidates 더하기 줄이 로드를 통과했다');
+    return `다 연 판 명단 ${n} · 더하기 줄은 거절`;
+});
+check('선술집 로스터 — 다 지으면 3부대(편성 수 × 파티 인원)를 다 채우고 · 짓기 전엔 못 채운다 (2026-09-24 사용자 지시 「3부대 돌리는 게 좀 빡세도록」 · construction_draft §2)', () => {
+    const need = B.party_preset_count * B.party_size_max;
+    const S = buildSystems(D, { openAll: () => true });
+    const full = S.game.limitsOf(S.game.newGame(85, cands, NOW)).roster;
+    const start = SYS.game.limitsOf(null).roster;
+    if (full < need) fail(`다 지은 로스터 ${full} — 3부대 ${need} 명을 못 채운다`);
+    if (start >= need) fail(`시작 로스터 ${start} 가 이미 3부대 ${need} 명을 채운다 — 건물이 할 일이 없다`);
+    return `시작 ${start} → 다 지음 ${full} · 3부대 ${need}`;
 });
 
 /* ── 골든 시드 스냅샷 — Phase 2 이식 대조의 실제 도구 (DEV_PLAN §5-A #4 · dev/golden.js) ── */

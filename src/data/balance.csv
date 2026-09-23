@@ -1,8 +1,8 @@
 key,value,status,knob,description_kr
 party_size_max,3,fixed,0,원정 파티 최대 인원 (2026-08-21 확정)
 party_preset_count,3,fixed,0,편성 수 — **처음부터 이만큼이고 건물이 늘리지 않는다**(2026-09-23 사용자 지시 · 지휘 천막의 presets 줄 삭제 · ~~기본값 1 + 지휘 천막 r2 · r5 더하기~~ R137) · 늘 이만큼 서 있고 만들고 지우는 동작이 없다 · 파티 · 진형 · 물약 칸은 편성마다이고 파티 전술은 모든 편성이 같이 쓴다 · 사용자 지정(편성 1 · 2 · 3) [신설 2026-09-21 · SCREEN_DESIGN §15 · R122]
-roster_cap,5,fixed,0,영웅 보유 상한 **기본값** — 건설 전 값이고 선술집 랭크의 더하기가 얹힌다(building_effect.csv roster · 2026-09-22 R137 · 옛 값 7 = 다 지은 값) · 원정 파티 + 휴식/파견 인원 (2026-08-21 확정)
-concurrent_expedition_parties,1,fixed,0,동시 원정 파티 수 (2026-08-21 확정)
+roster_cap,5,fixed,0,영웅 보유 상한 **기본값** — 건설 전 값이고 선술집 랭크의 더하기가 얹힌다(building_effect.csv roster — r2 · r3 · r4 · r6 · r7 에 +1 · 다 지으면 10 · 3부대를 다 채우는 것은 r6 부터 — 2026-09-24 사용자 지시 「3부대 돌리는 게 좀 빡세도록」 · ~~r5 +2 = 다 지은 값 7~~ R137) · 원정 파티 + 휴식/파견 인원 (2026-08-21 확정)
+concurrent_expedition_parties,3,fixed,0,동시에 낼 수 있는 **부대 수** — 부대 = 편성이라 `party_preset_count` 를 넘지 않는다(`limitsOf` 가 자른다) · 화면의 관전 칸도 이 수만큼 선다(둘 이상이면 부대마다 · ADR-0316) · **건물이 안 연다** — 처음부터 이만큼이다 [2026-09-24 사용자 지시 「일단 열고 나중에 닫아도 될 것 같은데」 · ⚠제안 3 — ~~1 (2026-08-21)~~ · 부대 칸을 원정 건물 랭크로 닫는 안은 GAME_DESIGN §10 「다부대의 남은 설계」]
 stages_per_chapter,5,fixed,0,챕터당 스테이지 수 — 마지막 스테이지는 챕터보스 단독 1라운드 (2026-09-11 개정 4→5 · base_expedition_design §1-2 — 08-21 의 계승 stage_info 골격 4 를 대체). 라운드 수는 키가 아니라 stage_round.csv 세트의 행 수다 (rounds_per_stage 퇴역)
 wave_monster_max,3,fixed,0,라운드당 몬스터 전역 상한 — round_budget.csv 의 어떤 편성도 이 값을 넘지 못한다 (2026-08-22 역할 정리)
 advance_unlock_level,30,fixed,0,전직 해금 레벨 (GAME_DESIGN §9 · 전직 3갈래 skill_design §4)
@@ -119,7 +119,7 @@ inventory_cap,36,proposed,0,인벤토리 칸 수 — **고정**(건물 랭크가
 stash_cap,36,proposed,0,창고 칸 수 — **고정**(건물 랭크가 늘리지 않는다 · 2026-09-22 사용자 지시) · 플레이어가 옮긴 것만
 report_keep,20,proposed,0,리포트 목록이 남기는 런 수 — 반복 원정이 이어지면 오래된 런부터 밀려난다. 세이브 크기의 손잡이다 (2026-09-09 발행 · SCREEN_DESIGN §4-3)
 repeat_restart_sec,3,fixed,0,반복 원정의 다음 런이 앞 런이 끝난 뒤 나가기까지의 초 — **관전 여부와 무관하다**(관전 결과 띠가 이만큼 세고 · 다른 탭이어도 앱 시계가 이 시각에 출발시킨다) · 옛 관전 띠의 세기 3초를 규칙으로 올렸다 [신설 2026-09-22 사용자 「3초 카운트가 적용되도록」 · base_expedition_design §1-1 · 부채 #57]
-tavern_candidates,2,fixed,0,선술집 명단 후보 수 — 수색 결과 1칸과 합쳐 3칸 (2026-08-26 확정)
+tavern_candidates,2,fixed,0,선술집 명단 후보 수 — 수색 결과 1칸과 합쳐 3칸 (2026-08-26 확정) · **이것이 최대이고 건물이 늘리지 않는다**(2026-09-24 사용자 지시 · 선술집 r3 · r6 의 tavernCandidates 줄 삭제 · ~~기본값 + 선술집 r3 · r6 더하기~~ R137)
 tavern_refresh_hours,6,fixed,0,리롤 쿨다운(시간) — 자동 갱신 없음. 플레이어가 리롤한 뒤 이만큼 지나야 무료 리롤 · 오프라인에도 진행 (2026-08-26 확정)
 tavern_hire_cost,600,proposed,0,영웅 고용 비용(골드) — 명단·수색 결과 공통 (2026-08-25 초반 루프 구현하면서 발생)
 tavern_reroll_cost,120,proposed,0,쿨다운 중 즉시 리롤 비용(골드) (2026-08-25 초반 루프 구현하면서 발생)
@@ -132,6 +132,18 @@ tavern_search_sin_echo_pct,0.5,proposed,1,수색 결과가 **보낸 영웅과 �
 tavern_search_meet_at_pct,0.5,proposed,1,수색 중 **만남**이 열리는 시점 — 소요 시간의 %. 50 = 절반(1시간이면 30분). 답은 이 시점부터 **수령할 때까지 언제든** 고를 수 있다(시간 제한 없음 — 방치형 계약 ③) (2026-09-09 발행)
 tavern_search_meet_hit_pct,0.5,proposed,1,**만난 사람의 죄종에 맞는 답**을 골랐을 때 고용비 할인(%). 소문이 죄종을 미리 알려주므로 **읽기만 하면 누구나 얻는 층**이다 (2026-09-09 발행)
 tavern_search_meet_key_pct,1,proposed,1,**그 죄종 영웅을 보내서 열린 답**을 골랐을 때 고용비 할인(%). 소문을 읽고 맞는 사람을 보낸 **준비의 보상**이라 위 hit 보다 높다. 100 = 전액 면제 (2026-09-09 발행)
+commission_slots,1,fixed,0,동시에 받아 둘 수 있는 의뢰 수 **기본값** — 선술집 r1 이 의뢰를 열 때의 값이고 선술집 r2 의 더하기가 얹힌다(building_effect.csv commission_slots) · ⚠ 의뢰가 미구현이라 아직 읽는 코드가 없다 [신설 2026-09-24 사용자 지시 「의뢰(기본1개 가능)」 · base_expedition §1-3]
+commission_board_cards,4,fixed,0,의뢰 게시판에 서는 카드 수 상한 — commission.csv 의 앞에서 이만큼만 선다(행이 적으면 행 수). 받아 둘 수 있는 수(commission_slots)와 다른 값이다 — 이것은 고를 폭 [신설 2026-09-24 사용자 지시 「의뢰 4개까지만 보이도록」 · SCREEN_DESIGN §14 · ADR-0322]
+gamble_spin_regen_hours,1,proposed,1,도박장 스핀 한 칸이 차는 시간(시간) — 꺼져 있어도 찬다(벽시계) · gamble_spin_cap 까지 쌓인다 · 일일 리셋이 아니다(비운 시간이 기회로 남는다) ⚠제안 [신설 2026-09-24 사용자 확정 D1 「충전식」 · base_expedition_design 「도박장」 · R149]
+gamble_spin_cap,5,proposed,1,도박장 충전 상한(스핀 수) — 가득이면 더 안 찬다 · 새 게임은 가득 ⚠제안 [신설 2026-09-24 · R149]
+gamble_stake_steps,1,proposed,0,도박장 판돈 단계 수의 기본값 — 도박장이 열릴 때(선술집 r3) 고를 수 있는 단계 · 선술집 r5 · r7 이 하나씩 더한다(building_effect.csv gambleStakes) · 단계 배수는 slot_stake.csv [신설 2026-09-24 사용자 확정 D2 · R149]
+gamble_stake_gold,100,proposed,1,도박장 1 단계 판돈(골드) — 챕터 1 기준 ⚠제안 [신설 2026-09-24 · R149]
+gamble_stake_chapter_mult,1.5,proposed,1,도박장 판돈의 챕터 배수 — 판돈 = gamble_stake_gold × 이 값^(진행 챕터−1) × 단계 배수 · 재료가 진행 챕터 단계로 나오므로 판돈도 따라 오른다(뒤 챕터에서 싼 판돈으로 비싼 재료를 사지 않게) ⚠제안 [신설 2026-09-24 사용자 확정 D2 · R149]
+gamble_reels,3,fixed,0,도박장 판의 릴 수 — slot_line.csv 의 rows 칸 수와 같아야 한다(로드가 검증한다) [신설 2026-09-24 사용자 확정 D4 「3×3 · 5라인」 · R149]
+gamble_rows,3,fixed,0,도박장 판의 행 수 [신설 2026-09-24 사용자 확정 D4 · R149]
+gamble_hold_trigger,3,proposed,1,홀드 앤 스핀이 서는 코인 수 — 한 판에 이만큼 이상이면 선다 ⚠제안 [신설 2026-09-24 사용자 확정 D5 · R149]
+gamble_hold_respins,3,proposed,0,홀드 앤 스핀의 리스핀 수 — 새 코인이 서면 이 값으로 돌아간다 ⚠제안 [신설 2026-09-24 · R149]
+gamble_hold_coin_pct,0.06,proposed,1,리스핀마다 빈 칸 하나가 코인을 받을 확률(비율) ⚠제안 — dev 시뮬: 홀드 약 1/74판 · 그랜드 약 1/7500판 [신설 2026-09-24 · R149]
 trade_visit_hours,4,proposed,1,특수상단 방문 주기(시간) — 이만큼마다 상인이 온다 · 시계는 게임을 만든 시각(createdAt)에서 세고 오프라인에도 흐른다. 상단 장비 목록도 이 주기로 같이 갈린다 ⚠임시 [신설 2026-09-21 사용자 지시 「4시간마다 와서 1시간 머무는걸로 일단」 · base_expedition §2-6 · SCREEN_DESIGN §8-3]
 trade_stay_hours,1,proposed,1,특수상단 체류(시간) — 온 뒤 이만큼 머물고 떠난다. 주기(trade_visit_hours)보다 작아야 떠나 있는 시간이 생긴다 ⚠임시 [신설 2026-09-21 사용자 지시]
 shop_equip_per_slot,3,proposed,1,상단 장비 목록 — **부위마다** 이만큼(무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 순 · 같은 부위가 붙어 선다) · 방문 회차마다 새로 굴린다(item.rollGear — 드롭 희귀도 가중치) ⚠임시 [신설 2026-09-21 사용자 지시 「종류별로 한 3개씩만 해서 붙여놔야지 서로」]

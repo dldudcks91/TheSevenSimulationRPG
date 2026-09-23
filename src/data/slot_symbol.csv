@@ -1,0 +1,8 @@
+symbol_id,kind,yield,weight,pay,name_kr,name_en,description_kr
+seven,line,gold,3,50,세븐,Seven,⚠제안 — 한 라인에 셋이면 판돈 × pay 골드. 게임 이름(THE SEVEN)이 최고 심볼이다 · 값 전부는 dev 시뮬(골드 환급 약 0.64 · 재료 판당 약 0.85개)로 맞춘 첫 값이다 (base_expedition_design 「도박장」 · R149) · ⚠ 행 순서가 굴림 순서다(INTERFACE §5-2)
+wild,wild,gold,2,100,탐욕의 인장,Sigil of Greed,⚠제안 — 다른 라인 심볼 대신 선다(코인은 못 대신한다). 셋 다 와일드면 판돈 × pay 골드. 탐욕 = 도박(탐욕 정예 특성의 이름)
+gold,line,gold,12,8,금괴,Gold Bar,⚠제안 — 골드 라인
+ore,line,ore,16,3,광석,Ore,⚠제안 — 재료 라인 · pay = 개수(판돈 단계 배수를 곱한다) · 진행 챕터 단계의 광석(mine_node.csv 의 tier)
+timber,line,timber,16,3,목재,Timber,⚠제안 — 재료 라인 · 진행 챕터 단계의 목재(log_node.csv 의 tier)
+dust,line,dust,14,4,가루,Dust,⚠제안 — 재료 라인 · 가루(분해 산출과 같은 재화)
+coin,coin,-,4,0,코인,Coin,⚠제안 — 라인을 끊는다. 한 판에 balance.csv:gamble_hold_trigger 개 이상이면 홀드 앤 스핀 · 값은 slot_coin.csv

@@ -26,15 +26,19 @@ export const TARGETS = {
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
     dispatch: U(false), explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
-    commission_board: U(false), gamble: U(false), high_tier_candidates: U(false),
+    commission_board: U(false),
+    gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
     training: U(false), advance: U(false), skill_depth: U(false),
     // 더하기 — 지금 있는 상한(`state.limitsOf` 의 키) · 단계
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),
-    tavernCandidates: A(true), searchSlots: A(true), shopPerSlot: A(true), shopWeapon: A(true),
+    // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정 + 수색 결과이고 건물이 안 늘린다 [2026-09-24 사용자 지시]
+    searchSlots: A(true), shopPerSlot: A(true), shopWeapon: A(true),
+    gambleStakes: A(true),   // 도박장 판돈 단계 — 기본값 `gamble_stake_steps` 위로 더한다 (2026-09-24 · R149)
     make_level: A(true), potion_tier: A(true), tactic_slots: A(true),
     // 더하기 — 준비 중
     make_kinds: A(false), resource_tier: A(false), workers: A(false), shop_layers: A(false),
     explore_regions: A(false), explore_slots: A(false), gear_sets: A(false), commission_slots: A(false), training_slots: A(false),
+    recruit_quality: A(false),   // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
 };
 
 /** 연구가 받는 대상 — `live: false` = 그 값을 읽는 자리가 아직 없다(construction_draft §5) */

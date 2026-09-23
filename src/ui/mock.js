@@ -744,6 +744,43 @@ export const BUILDING_IMG_DIR = './assets/art/buildings/';
 export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'storage'];
 export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${id}.webp` : null);
 
+/**
+ * 재화 실루엣 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.
+ * viewBox 32×32 · 채움은 CSS 의 currentColor(칸마다 `.res-<종류>` 가 색을 준다). 아트가 오면 이 표만 이미지로 갈아 끼운다.
+ * 종류 = 자원 셋(gold · dust · stigma) · 제작 재료는 그 재료가 나는 파견처로 가른다(ore 채광 · wood 벌목 · herb 채집 — `app.js:resKind`)
+ */
+const resSvg = body => `<svg viewBox="0 0 32 32" aria-hidden="true">${body}</svg>`;
+export const RES_ART = {
+    // 금화 — 테 두른 동전 둘(앞 동전의 가운데 홈)
+    gold: resSvg('<path d="M19 6a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z" opacity=".45"/><path fill-rule="evenodd" d="M13 8a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-1.5 3h3v8h-3Z"/>'),
+    // 분해 가루 — 낮은 더미 위 흩날리는 알갱이
+    dust: resSvg('<path d="M3 27c3-6 7.5-9 13-9s10 3 13 9Z"/><circle cx="9" cy="11" r="1.8"/><circle cx="16" cy="6" r="1.5"/><circle cx="23" cy="10" r="2"/><circle cx="13" cy="14" r="1.2"/><circle cx="20" cy="15" r="1.1"/>'),
+    // 낙인 — 속이 빈 마름모 인장
+    stigma: resSvg('<path fill-rule="evenodd" d="M16 2 28 16 16 30 4 16Zm0 7-6 7 6 7 6-7Z"/><path d="M15 14h2v4h-2Z"/>'),
+    // 광석 — 모난 돌덩이 둘
+    ore: resSvg('<path d="M3 26 7 14l7-4 6 5 1 11Z"/><path d="M18 26l2-9 6-3 4 6-1 6Z" opacity=".7"/>'),
+    // 목재 — 쌓은 통나무(끝의 나이테 면)
+    wood: resSvg('<path fill-rule="evenodd" d="M4 15h20a4.5 4.5 0 0 1 0 9H4a4.5 4.5 0 0 1 0-9Zm20 2.2a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6Z"/><path d="M8 7h16a4 4 0 0 1 0 8H8a4 4 0 0 1 0-8Z" opacity=".6"/>'),
+    // 약초 — 줄기 하나에 잎 셋
+    herb: resSvg('<path d="M15 30h2V13h-2Z"/><path d="M16 14C8 14 5 9 5 4c7 0 11 4 11 10Z"/><path d="M16 14c0-6 4-10 11-10 0 5-3 10-11 10Z" opacity=".75"/><path d="M16 22c-5 0-8-3-8-6 5 0 8 2 8 6Z" opacity=".6"/>'),
+};
+
+/**
+ * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331). ⚠ 임시 단색 실루엣 — 아트가 오면 이 표만 갈아 끼운다.
+ * 골드 · 재료 심볼은 재화 실루엣(`RES_ART`)을 그대로 쓴다(같은 것을 두 그림으로 그리지 않는다) — 따로 그리는 것은 표에 없는 셋뿐이다.
+ * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만
+ */
+const GAMBLE_ART = {
+    // 세븐 — 게임 이름(THE SEVEN)의 7
+    seven: resSvg('<text x="16" y="26" text-anchor="middle" font-size="27" font-weight="700" fill="currentColor">7</text>'),
+    // 탐욕의 인장(와일드) — 별
+    wild: resSvg('<path d="M16 2l4.1 8.9 9.7 1.1-7.2 6.6 2 9.6L16 23.4l-8.6 4.8 2-9.6-7.2-6.6 9.7-1.1Z"/>'),
+    // 코인 — 테 두른 동전
+    coin: resSvg('<path fill-rule="evenodd" d="M16 3a13 13 0 1 1 0 26 13 13 0 0 1 0-26Zm0 3.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19Z"/><circle cx="16" cy="16" r="5.5"/>'),
+};
+/** 심볼 그림 — 제 그림이 없으면 산출(`yield`)의 재화 실루엣. 목재는 재화 쪽 이름이 `wood` 다 · ~~`slotArt`~~ 는 장비 빈 칸 그림이 이미 쓰는 이름이다 */
+export const gambleArt = (id, yieldKind) => GAMBLE_ART[id] ?? RES_ART[yieldKind === 'timber' ? 'wood' : yieldKind] ?? '';
+
 /* ═══════════ 훈련장 — ⚠ 목업 (SCREEN_DESIGN §16 · ADR-0297, 2026-09-22 사용자 지시) ═══════════
  * 훈련(영웅을 넣어 경험치)의 형태 · 칸 수 · 여는 축은 기획 미정(construction_draft §10) → **CSV 로 가지 않는다**(확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다).
  * slots — ⚠ 지어낸 칸 수. 훈련장 랭크가 칸을 늘린다는 것만 섰다 */

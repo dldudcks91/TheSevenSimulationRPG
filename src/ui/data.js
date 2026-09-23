@@ -20,8 +20,10 @@ import { createBattleSystem } from '../game_logic/battle.js';
 import { createSkillSystem } from '../game_logic/skill.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
 import { createConstruction } from '../game_logic/construction.js';
+import { createGamble } from '../game_logic/gamble.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createGameSystem } from '../game_logic/state.js';
+import { adminOn } from './devadmin.js';   // 개발 장치 — 관리자 모드 스위치 (SCREEN_DESIGN §10-3)
 
 /** 로드된 데이터 — 렌더러는 수치를 여기서 읽는다 (D.balance.party_size_max 처럼) */
 export const D = {
@@ -82,6 +84,11 @@ export const D = {
     buildingRankRows: [],     // building_rank.csv — 건물 × 랭크마다 한 줄 (문턱 · 비용)
     buildingEffectRows: [],   // building_effect.csv — 여는 것 **한 줄에 하나** (켜기 · 더하기)
     researchRows: [],         // research.csv — 연구 항목 (지금은 머리줄뿐 — 항목은 나중에)
+    // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
+    slotSymbolRows: [],       // slot_symbol.csv — 심볼(종류 · 산출 · 가중치 · 배당 · 이름)
+    slotCoinRows: [],         // slot_coin.csv — 홀드 앤 스핀 코인 값 · 잭팟 4단(on_fill = 판이 다 찼을 때)
+    slotLineRows: [],         // slot_line.csv — 라인(릴마다 행 번호)
+    slotStakeRows: [],        // slot_stake.csv — 판돈 단계 배수
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
@@ -102,7 +109,8 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
-    'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research'];
+    'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -119,7 +127,8 @@ export async function loadData(base = './data/') {
         searchMeetingRow, searchAnswerRow,
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
-        tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow] = texts.map(parseCsv);
+        tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -304,8 +313,13 @@ export async function loadData(base = './data/') {
     D.buildingRankRows = buildingRankRow;
     D.buildingEffectRows = buildingEffectRow;
     D.researchRows = researchRow;
+    // 도박장 표 넷 — 원시 행 그대로 (검증 · 굴림은 game_logic/gamble.js · R149)
+    D.slotSymbolRows = slotSymbolRow;
+    D.slotCoinRows = slotCoinRow;
+    D.slotLineRows = slotLineRow;
+    D.slotStakeRows = slotStakeRow;
 
-    SYS = buildSystems(D);
+    SYS = buildSystems(D, { openAll: adminOn });
     return D;
 }
 
@@ -424,8 +438,11 @@ export const skillTagName = id => {
  */
 export const eliteName = (sin, baseId) => NAMING.eliteName(sin, monsterName(baseId));
 
-/** 시스템 조립 — 테스트 페이지도 같은 조립을 쓴다 (데이터만 바꿔 끼울 수 있다) */
-export function buildSystems(d) {
+/**
+ * 시스템 조립 — 테스트 페이지도 같은 조립을 쓴다 (데이터만 바꿔 끼울 수 있다)
+ * `dev.openAll` — 관리자 모드 스위치 `() → bool`(개발 장치 · SCREEN_DESIGN §10-3). 게임만 넘기고 테스트는 안 넘긴다(늘 꺼짐)
+ */
+export function buildSystems(d, dev = {}) {
     const sins = Object.keys(M.SINS);
     // 아이템 이름 조립기 — 죄종 표시명(mock) + 죄종 단어(`sin_word.csv`). 정예 이름(`NAMING`)과 규칙은 같은 모듈이다 (2026-09-19)
     const naming = createNaming({ sins: M.SINS, sinWords: d.sinWords ?? {} });
@@ -503,8 +520,12 @@ export function buildSystems(d) {
         stageIds: d.stageOrder ?? [], balance: d.balance,
         resources: ['gold', 'dust', 'stigma', ...[d.mineNodes, d.gatherNodes, d.logNodes].flatMap(ns => (ns ?? []).map(n => n.yieldId))],
     });
+    // 도박장 슬롯 — 표 넷이 판을 정하고 이 시스템은 한 판을 굴린다(세이브를 모른다 · INTERFACE §2-15 · R149)
+    const gamble = createGamble({
+        symbols: d.slotSymbolRows ?? [], coins: d.slotCoinRows ?? [], lines: d.slotLineRows ?? [], stakes: d.slotStakeRows ?? [], balance: d.balance,
+    });
     const game = createGameSystem({
-        hero, item, battle, skill, tactic, construction, balance: d.balance,
+        hero, item, battle, skill, tactic, construction, gamble, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
         // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
@@ -518,8 +539,9 @@ export function buildSystems(d) {
         makeRecipes: d.makeRecipes ?? {}, mineNodes: d.mineNodes ?? [], logNodes: d.logNodes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)
         potions: d.potions ?? [],
+        openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
-    return { hero, item, battle, skill, tactic, construction, game, naming, formula: createFormula(d.balance) };
+    return { hero, item, battle, skill, tactic, construction, gamble, game, naming, formula: createFormula(d.balance) };
 }
