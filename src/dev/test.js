@@ -276,19 +276,18 @@ check('csv: attr_equip_bonus = 0 이고 접사 어느 것도 기본 능력치를
 });
 /** 보스 단독 스테이지 — 세트가 보스 라운드뿐이고 호위 예산도 0 이다. 일반몹 풀을 한 번도 안 뽑는다 (base_expedition_design §1-2 · R75) */
 const isBossOnly = st => SYS.battle.stageRounds(st).every(r => r.round_type === 'boss') && D.budgets[st.boss_grade].escort_max === 0;
-check('csv: stage ↔ monster 정합 — 보스 행 존재·등급·타입 일치 · 일반몹 타입 일치 · dlvl 단조 · 고아 몬스터 없음', () => {
+// 종족(타입) 일치는 검사하지 않는다 — 「1스테이지 = 1타입」 규칙은 2026-09-24 삭제됐다 (monster_design §1)
+check('csv: stage ↔ monster 정합 — 보스 행 존재·등급 일치 · dlvl 단조 · 고아 몬스터 없음', () => {
     const seen = new Set();
     let prev = 0;
     for (const st of D.stageList) {
         const boss = D.monsters[st.boss_monster_idx];
         if (!boss) fail(`${st.stage_id} boss_monster_idx ${st.boss_monster_idx} 없음`);
         if (boss.spawn_grade !== st.boss_grade) fail(`${st.stage_id} boss grade ${boss.spawn_grade} ≠ ${st.boss_grade}`);
-        if (boss.monster_type !== st.monster_type) fail(`${st.stage_id} boss type ${boss.monster_type} ≠ ${st.monster_type}`);
         const pool = SYS.battle.stagePool(st);
         // 보스 단독 스테이지는 일반몹이 **0** 이어야 하고 나머지는 셋이다 (2026-09-11 · R75)
         const solo = isBossOnly(st);
         if (pool.length !== (solo ? 0 : 3)) fail(`${st.stage_id} 일반몹 ${pool.length}${solo ? ' — 보스 단독 스테이지인데 일반몹이 있다' : ''}`);
-        for (const id of pool) if (D.monsters[id].monster_type !== st.monster_type) fail(`${id} type ${D.monsters[id].monster_type}`);
         // dlvl 은 스테이지마다 오른다 — 보스 단독 스테이지만 **직전과 같아도 된다**
         //   (챕터보스 소재값이 직전 스테이지 일반몹 평균이라 같은 레벨 대역에 선다 · ⚠제안 — 곡선 재작성은 밸런스 작업)
         if (!(solo ? st.dlvl >= prev : st.dlvl > prev)) fail(`dlvl 단조 아님 ${st.stage_id} ${prev}→${st.dlvl}`);
