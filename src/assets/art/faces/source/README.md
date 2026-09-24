@@ -10,7 +10,7 @@
 
 ## 게임 초상 내보내기 [2026-09-24]
 
-`ready/monster/` 36장과 `ready/hero/` 19장은 기존 게임 PNG를 **바이트 그대로 보존한 512×512 작업 원본**이다. 더 큰 원본 시트가 남아 있는 그림은 시트도 따로 보관한다. 게임 폴더에는 PNG를 두지 않고, 몬스터 256×256 · 영웅 320×320의 투명 WebP(품질 90)를 둔다.
+`ready/monster/` 38장과 `ready/hero/` 19장은 기존 게임 PNG를 **바이트 그대로 보존한 512×512 작업 원본**이다. 더 큰 원본 시트가 남아 있는 그림은 시트도 따로 보관한다. 게임 폴더에는 PNG를 두지 않고, 몬스터 256×256 · 영웅 320×320의 투명 WebP(품질 90)를 둔다.
 
 새 초상이 확정되면 해당 id의 PNG를 `ready/monster/` 또는 `ready/hero/`에 저장하고, 저장소 루트에서 아래 명령으로 내보낸다. 미확정 시안은 `_scratch/`에 둔다.
 
@@ -21,9 +21,15 @@ python scripts/export_face_portraits.py
 
 첫 이관에는 `--migrate`를 사용했다. 이 옵션은 구 게임 PNG를 `ready/`에 복사해 일치 여부를 검사하고 WebP를 만든 다음, 게임 폴더의 PNG를 제거한다.
 
+## 1-4 화염 광신도·임프 제사장 일반/정예 분리 [2026-09-24]
+
+- 화염 광신도 `1401` — `sheets/source_sheet_ch1_st4_flame_zealot_normal_8.png`의 **1번(좌상)**을 `(0, 0, 443, 443)`으로 잘라 새 일반형 `ready/monster/1401.png`로 쓴다. 손끝에 작은 불꽃만 든 모습이다. 교체 전의 팔 전체가 불타는 초상은 바이트 그대로 `ready/monster/1401_elite.png`로 옮겨 정예형이 됐다.
+- 임프 제사장 `1402` — 일반형 `ready/monster/1402.png`는 그대로 두고, `sheets/source_sheet_ch1_st4_imp_priest_elite_8.png`의 **2번(우상 두 번째)**을 `(444, 0, 887, 443)`으로 잘라 `ready/monster/1402_elite.png`로 추가했다. 화염 문양이 수놓인 청동 테두리 두건이 정예 표식이다.
+- 두 몬스터 모두 `monster.csv:face_elite = 1`이며 게임용 파일은 `cartoon/monster/1401[_elite].webp` · `1402[_elite].webp`다.
+
 ## 임프 제사장 1402 교체 [2026-09-24]
 
-`sheets/source_sheet_ch1_st4_imp_priest_8.png`는 화염 광신도 `1401`의 임프 형상을 종족 기준으로 삼아 그린 **가로형 4열 × 2행 시안**이다. 사용자가 고른 **1번(좌상)**을 `(0, 0, 443, 443)`으로 잘라 512×512 투명 원본 `ready/monster/1402.png`로 확대했다. 게임용 `cartoon/monster/1402.webp`는 기존 내보내기 스크립트의 몬스터 규격(256×256 · 품질 90)으로 만들었다. 이전 1402 원본과 WebP는 `source/_scratch/imp_priest_1402_previous.*`에 보관했다.
+`sheets/source_sheet_ch1_st4_imp_priest_8.png`는 화염 광신도 `1401`의 임프 형상을 종족 기준으로 삼아 그린 **가로형 4열 × 2행 시안**이다. 사용자가 고른 **1번(좌상)**을 `(0, 0, 443, 443)`으로 잘라 512×512 투명 일반형 원본 `ready/monster/1402.png`로 확대했다. 게임용 `cartoon/monster/1402.webp`는 기존 내보내기 스크립트의 몬스터 규격(256×256 · 품질 90)으로 만들었다. 이전 1402 원본과 WebP는 `source/_scratch/imp_priest_1402_previous.*`에 보관했다.
 
 ## 기존 스타일 원본의 폴더 기록 [2026-09-16]
 
@@ -51,9 +57,9 @@ python scripts/export_face_portraits.py
 
 ## 화염 광신도 크기 조정 시트 [2026-09-24]
 
-`sheets/source_sheet_ch1_st4_flame_zealot_refinement_v2.png` 는 4×2 비교 시트다. 사용자가 고른 **두 번째 시안의 좌상 1번**을 443×443으로 잘라 512×512 투명 캔버스 가운데에 배치했다. `monster/flame_zealot.png` 가 원본 선택본이고 `ready/monster/1401.png` 가 내보내기용 작업 원본, `../cartoon/monster/1401.webp` 가 게임용 사본이다. 기존 `source_sheet_ch1_st4_sd.png` 는 첫 스테이지 4 시트로 보존한다.
+`sheets/source_sheet_ch1_st4_flame_zealot_refinement_v2.png` 는 4×2 비교 시트다. 사용자가 고른 **두 번째 시안의 좌상 1번**을 443×443으로 잘라 512×512 투명 캔버스 가운데에 배치했다. `monster/flame_zealot.png` 가 원본 선택본이고, 이 초상은 2026-09-24 일반/정예 분리 뒤 `ready/monster/1401_elite.png` · `../cartoon/monster/1401_elite.webp`가 됐다. 기존 `source_sheet_ch1_st4_sd.png` 는 첫 스테이지 4 시트로 보존한다.
 
-**[09-24 아랫선 정렬]** 새 임프 제사장 `1402`와 나란히 놓았을 때 `1401`의 알파 영역은 y=48~476으로, `1402`(y=24~494)보다 작고 아래가 18px 떠 있었다. 기존 그림 전체를 **1.098배** 확대하고 가운데에 놓아 알파 영역을 대략 y=24~494에 맞췄다. 선택본 `monster/flame_zealot.png`는 그대로 보존하고 `ready/monster/1401.png`와 게임용 WebP만 갱신했다. 이전 게임 원본과 WebP는 `source/_scratch/flame_zealot_1401_before_align.*`에 보관했다.
+**[09-24 아랫선 정렬]** 새 임프 제사장 `1402`와 나란히 놓았을 때 당시 `1401`의 알파 영역은 y=48~476으로, `1402`(y=24~494)보다 작고 아래가 18px 떠 있었다. 기존 그림 전체를 **1.098배** 확대하고 가운데에 놓아 알파 영역을 대략 y=24~494에 맞췄다. 선택본 `monster/flame_zealot.png`는 그대로 보존했고, 이 정렬본이 지금의 정예 원본 `ready/monster/1401_elite.png`다. 정렬 전 게임 원본과 WebP는 `source/_scratch/flame_zealot_1401_before_align.*`에 보관했다.
 
 ## 몬스터 — Gem 레비아탄 (`source_sheet_leviathan.png`) [2026-09-14]
 
