@@ -3358,10 +3358,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 부지 격자의 폭 = 왼쪽 열 − 64px — 반 폭 + 60px(네모가 반 폭 때보다 조금 넓다 · 사용자 「그림 가로를 살짝만」)과 같은 값이고 왼쪽에 붙어 남는 64px 가 상세와의 사이가 된다 */
 .cn-work > .cn-lots { width: calc(100% - 64px); justify-self: start; }
 /* 부지 — 건물 하나가 네모 하나 · **한 줄에 3개**(3열 · 폭은 열이 나눠 갖는다 · 2026-09-24 사용자 지시 · ADR-0326) · **높이는 139 고정** (2026-09-23 사용자 지시 「세로는 고정」).
-   **격자는 늘 3 × 4 = 12칸** — 빈 칸은 빈 부지(`.cn-lot.empty`)가 채우고, 높이 187 은 네 줄이 박스(한 장 기준 · 격자 세로 779)에 딱 들어가는 값이다
-   (2026-09-24 사용자 지시 「3x4로」 · ADR-0342 — ~~3 × 5 = 15칸~~ · ~~148~~ 은 영웅 띠가 위에 있던 때 · 띠를 걷으며 한 줄에 39 씩 늘었다 — ADR-0354). 건물이 12를 넘으면 줄이 늘고 격자가 스크롤한다 */
+   **격자는 늘 3 × 5 = 15칸** — 빈 칸은 빈 부지(`.cn-lot.empty`)가 채운다. **네모 높이 148 그대로 · 줄 간격 9** — 다섯 줄(148 × 5 + 9 × 4 = 776)이 격자 세로(한 장 기준 779)에 든다 ·
+   간격 10 이면 780 으로 1 이 넘쳐 스크롤이 생긴다 (2026-09-24 사용자 지시 「5칸으로 늘려서 세로 높이 기존처럼」 · ADR-0355 — ~~3 × 4 · 줄 187~~ ADR-0354). 건물이 15를 넘으면 줄이 늘고 격자가 스크롤한다 */
 .cn-lots {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 187px; align-content: start; gap: 10px;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 148px; align-content: start; gap: 9px 10px;
     overflow-y: auto; min-height: 0;
 }
 .cn-lot {
@@ -3405,9 +3405,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     background: var(--bg-secondary); border: 1px solid var(--border-primary);
 }
 /* 머리 — 그림(부지와 같은 그림 · 3:2) · 이름 · 상태 한 줄(미건설 · n랭크 · 최대 랭크) · 눈금. 안 지었으면 그림이 어둡고 테두리가 점선.
-   **그림 높이 154 = 아래 두 소제목의 글자 윗선이 부지 둘째 줄 네모의 윗변(187 + 10)에 서는 값** (2026-09-24 사용자 지시 · 한 장 실측 · ~~96 × 64~~ · ~~106~~ 은 줄 139 · ~~104~~ 는 줄 137 · ~~115~~ 는 줄 148 때 — 줄이 늘면 같은 만큼 는다).
+   **그림 높이 114 = 아래 두 소제목의 글자 윗선이 부지 둘째 줄 네모의 윗변(148 + 9)에 서는 값** (2026-09-24 사용자 지시 · 한 장 실측 · ~~96 × 64~~ · ~~106~~ 은 줄 139 · ~~104~~ 는 줄 137 · ~~115~~ 는 줄 간격 10 · ~~154~~ 는 줄 187 때 — 둘째 줄 윗변이 움직인 만큼 같이 움직인다).
    머리 높이는 그림이 정한다 — 부지 네모 높이 · `.cn-side` 위 여백 · `.cn-head` 아래 여백 · `.sub-h` 위 여백이 바뀌면 다시 잰다 */
-.cn-head { flex: none; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; --cn-thumb-h: 154px; }
+.cn-head { flex: none; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; --cn-thumb-h: 114px; }
 .cn-thumb {
     flex: none; width: calc(var(--cn-thumb-h) * 1.5); height: var(--cn-thumb-h); display: flex; align-items: center; justify-content: center;
     background: var(--bg-tertiary) center 40% / cover no-repeat; border: 1px solid var(--border-secondary);

@@ -8585,7 +8585,7 @@ check('construction: 진짜 표 — 첫 건설(새 게임에 안 지어졌고 �
     for (const b of firsts) if (!SYS.game.construct(g, b.id).ok) fail(`${b.id} 를 못 짓는다`);
     return `${firsts.map(b => b.name.ko).join(' → ') || '없음'} · 비용 ${JSON.stringify(need)} ≤ 시작 ${JSON.stringify(wallet)}`;
 });
-check('construction: 관리자 모드(openAll) — 켜면 기능 · 상한 · 탭이 모든 건물 최대 랭크로 열린 척 · 세이브와 건설 탭의 실제 랭크는 그대로 · 끄면 돌아온다 (INTERFACE §2-7 · SCREEN_DESIGN §10-3)', () => {
+check('construction: 관리자 모드(openAll) — 켜면 기능 · 상한 · 탭이 모든 건물 최대 랭크로 열린 척 · 스테이지도 전부 열림 · 세이브와 건설 탭의 실제 랭크는 그대로 · 끄면 돌아온다 (INTERFACE §2-7 · SCREEN_DESIGN §10-3 · R155)', () => {
     let on = false;
     const S = buildSystems(D, { openAll: () => on });
     const g = S.game.newGame(84, cands, NOW);
@@ -8595,10 +8595,15 @@ check('construction: 관리자 모드(openAll) — 켜면 기능 · 상한 · �
         .flatMap(b => Array.from({ length: b.maxRank }, (_, i) => S.construction.rankInfo(b.id, i + 1).effects).flat())
         .filter(e => e.kind === 'unlock').map(e => e.target))];
     const L0 = S.game.limitsOf(g), Lmax = S.game.limitsOf(maxed), cs0 = S.game.constructionState(g), save0 = JSON.stringify(S.game.serialize(g, NOW));
-    if (unlocks.every(id => S.game.hasFeature(g, id)) || eq(L0, Lmax)) fail('fixture: 새 게임인데 이미 다 열려 있다 — 시험이 헛돈다');
+    const openStages = () => D.stageOrder.filter(id => S.game.stageUnlocked(g, id)).length;
+    const st0 = openStages();
+    if (unlocks.every(id => S.game.hasFeature(g, id)) || eq(L0, Lmax) || st0 === D.stageOrder.length) fail('fixture: 새 게임인데 이미 다 열려 있다 — 시험이 헛돈다');
     on = true;
     const shut = unlocks.filter(id => !S.game.hasFeature(g, id));
     if (shut.length) fail(`켰는데 닫힌 기능 ${shut.join(' · ')}`);
+    const stLocked = D.stageOrder.filter(id => !S.game.stageUnlocked(g, id));
+    if (stLocked.length) fail(`켰는데 잠긴 스테이지 ${stLocked.join(' · ')} — 장 잠금 · 직전 클리어를 안 따져야 (R155)`);
+    if (g.progress.cleared.length) fail('켜기만 했는데 클리어 기록이 생겼다');
     if (!eq(S.game.limitsOf(g), Lmax)) fail(`켰는데 상한 ${JSON.stringify(S.game.limitsOf(g))} ≠ 다 지은 판 ${JSON.stringify(Lmax)}`);
     const cs = S.game.constructionState(g);
     const dim = Object.entries(cs.tabs).filter(([, v]) => !v).map(([k]) => k);
@@ -8607,8 +8612,8 @@ check('construction: 관리자 모드(openAll) — 켜면 기능 · 상한 · �
     if (!eq(real(cs), real(cs0))) fail('건설 탭이 실제 랭크를 안 그린다');
     if (JSON.stringify(S.game.serialize(g, NOW)) !== save0) fail('켜기만 했는데 세이브가 바뀌었다');
     on = false;
-    if (!eq(S.game.limitsOf(g), L0) || !eq(S.game.constructionState(g).tabs, cs0.tabs)) fail('끄니 원래대로 안 돌아왔다');
-    return `기능 ${unlocks.length} 전부 열림 · 물약 칸 ${L0.potionSlots} → ${Lmax.potionSlots} · 전술 칸 ${L0.tacticSlots} → ${Lmax.tacticSlots} · 세이브 그대로`;
+    if (!eq(S.game.limitsOf(g), L0) || !eq(S.game.constructionState(g).tabs, cs0.tabs) || openStages() !== st0) fail('끄니 원래대로 안 돌아왔다');
+    return `기능 ${unlocks.length} 전부 열림 · 물약 칸 ${L0.potionSlots} → ${Lmax.potionSlots} · 전술 칸 ${L0.tacticSlots} → ${Lmax.tacticSlots} · 스테이지 ${st0} → ${D.stageOrder.length} · 세이브 그대로`;
 });
 check('선술집 명단은 건물이 안 늘린다 — 모든 건물 최대 랭크(관리자 모드)에서도 후보는 tavern_candidates · 표에 tavernCandidates 더하기를 적으면 로드가 멈춘다 (2026-09-24 사용자 지시 · base_expedition §2-4)', () => {
     const S = buildSystems(D, { openAll: () => true });

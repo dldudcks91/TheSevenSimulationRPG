@@ -94,7 +94,7 @@ export const SAVE_VERSION = 38;
  *   construction — 건설 시스템(`construction.js` · 표 넷을 든다 · INTERFACE §2-14 · R137)
  *   gamble — 도박장 슬롯(`gamble.js` · 표 넷을 든다 · 한 판을 굴린다 · INTERFACE §2-15 · R149)
  *   commission — 의뢰(`commission.js` · 표 넷을 든다 · 카드 한 장을 굴리고 처치 · 드롭을 대조한다 · INTERFACE §2-16 · R153)
- *   openAll — `() → bool` 선택 · **개발 장치**(관리자 모드) — 켜져 있으면 「무엇이 열렸나」가 모든 건물을 최대 랭크로 친다(`openRanks` · INTERFACE §2-7)
+ *   openAll — `() → bool` 선택 · **개발 장치**(관리자 모드) — 켜져 있으면 「무엇이 열렸나」가 모든 건물을 최대 랭크로 친다(`openRanks`) · 스테이지도 전부 열린다(`stageUnlocked` · INTERFACE §2-7)
  */
 export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, commission: CM, balance: B } = deps;
@@ -197,7 +197,8 @@ export function createGameSystem(deps) {
      */
     /**
      * 「무엇이 열렸나」가 세는 랭크 — 세이브의 `buildings` · **`deps.openAll()` 이 켜져 있으면 모든 건물의 최대 랭크** [2026-09-24 · 개발 장치 — 관리자 모드 · INTERFACE §2-7].
-     *   세는 자리는 셋이다(`limitsOf` · `hasFeature` · `constructionState.tabs`). 짓기 쪽(건설 탭의 랭크 · 다음 랭크 · `construct`)은 안 거친다 — 실제 랭크를 본다
+     *   세는 자리는 셋이다(`limitsOf` · `hasFeature` · `constructionState.tabs`). 짓기 쪽(건설 탭의 랭크 · 다음 랭크 · `construct`)은 안 거친다 — 실제 랭크를 본다.
+     *   스테이지는 이 랭크가 아니라 `stageUnlocked` 가 `openAll()` 을 직접 본다(장 잠금 · 직전 클리어를 같이 건너뛴다)
      */
     const openAll = deps.openAll ?? (() => false);
     const maxRanks = Object.fromEntries(CN.list.map(b => [b.id, b.maxRank]));
@@ -1157,9 +1158,11 @@ export function createGameSystem(deps) {
     /** 그 장이 원정 랭크로 열렸나 — 보스를 깨도 다음 장은 저절로 안 열린다 (2026-09-24 · R152 · construction_draft §2) */
     const chapterOpen = (state, chapter) => chapter <= limitsOf(state).chapters;
 
-    /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 */
+    /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 ·
+     *  관리자 모드면 표의 모든 스테이지가 열린 척한다(클리어 기록은 안 쓴다 · 2026-09-24 · R155 · INTERFACE §2-7) */
     function stageUnlocked(state, stageId) {
         const i = deps.stageOrder.indexOf(stageId);
+        if (i >= 0 && openAll()) return true;
         if (i < 0 || !chapterOpen(state, deps.stages[stageId]?.chapter)) return false;
         return i === 0 || state.progress.cleared.includes(deps.stageOrder[i - 1]);
     }

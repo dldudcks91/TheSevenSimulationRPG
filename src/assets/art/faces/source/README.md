@@ -53,6 +53,8 @@ python scripts/export_face_portraits.py
 
 `sheets/source_sheet_ch1_st4_flame_zealot_refinement_v2.png` 는 4×2 비교 시트다. 사용자가 고른 **두 번째 시안의 좌상 1번**을 443×443으로 잘라 512×512 투명 캔버스 가운데에 배치했다. `monster/flame_zealot.png` 가 원본 선택본이고 `ready/monster/1401.png` 가 내보내기용 작업 원본, `../cartoon/monster/1401.webp` 가 게임용 사본이다. 기존 `source_sheet_ch1_st4_sd.png` 는 첫 스테이지 4 시트로 보존한다.
 
+**[09-24 아랫선 정렬]** 새 임프 제사장 `1402`와 나란히 놓았을 때 `1401`의 알파 영역은 y=48~476으로, `1402`(y=24~494)보다 작고 아래가 18px 떠 있었다. 기존 그림 전체를 **1.098배** 확대하고 가운데에 놓아 알파 영역을 대략 y=24~494에 맞췄다. 선택본 `monster/flame_zealot.png`는 그대로 보존하고 `ready/monster/1401.png`와 게임용 WebP만 갱신했다. 이전 게임 원본과 WebP는 `source/_scratch/flame_zealot_1401_before_align.*`에 보관했다.
+
 ## 몬스터 — Gem 레비아탄 (`source_sheet_leviathan.png`) [2026-09-14]
 
 `monster.csv:2900`(레비아탄 · 챕터 2 챕터 보스 · `size_type = 3`)의 첫 아트이자 **챕터 2 의 첫 초상**이다 — 그림을 넣으면서 `face` 를 0 → 1 로 올렸다.
