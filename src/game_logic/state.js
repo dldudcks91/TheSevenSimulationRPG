@@ -37,8 +37,9 @@
  *       (skill_design §12-1 규칙 3 · `skill.activesFor` 의 `ctx.weaponSkill`)
  *   progress: {cleared: [stageId], levelUp: {stageId: n}},   // levelUp = 스테이지별 올린 양 — 없으면 {} (2026-09-14 · R87 · 버전 무변경)
  *   codexKills: {monsterId: n}   — **도감 레벨의 출처** — 누적 처치 수 (monster_design §8 · 2026-09-21 카드 → 처치 수)
- *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make, gamble},   // upgrade 는 R95(2026-09-15)부터 안 오른다 — 강화가 rng 를 안 쓴다 · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0)
- *   gamble: {emptyAt: ms|null}  — 도박장 충전 시계(충전이 0 이었던 가상의 시각 · null = 가득) · 없으면 가득 · 버전 무변경 (2026-09-24 · R149)
+ *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make, gamble, commission},   // upgrade 는 R95(2026-09-15)부터 안 오른다 — 강화가 rng 를 안 쓴다 · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0)
+ *   commissions: {cards: [{no, tpl, kind, axis, ref, need, grade, gold, have?}]}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3).
+ *     자리 순서 그대로 · **굴린 순간의 내용을 박는다**(대상 풀이 그때의 진행에 달려 있다 — 수색 스냅샷과 같은 이유) · `have` 가 있으면 받아 둔 것 · 없으면 게시판에 걸린 것
  *   runs: [{stageId, preset, repeat, lastAt, durationSec, active, fallen?} | null],   // **부대마다 하나 — v38** [2026-09-23 · 다부대 · GAME_DESIGN §1-1] — 옛 `run`(단수) 대체.
  *     길이 = presets 와 같고 **자리 + 1 = 편성 번호**(부대 = 편성이다) · 안 나간 편성은 null · 동시에 active 일 수 있는 수는 `limitsOf(state).expeditions`.
  *     active = 그 부대가 도는 중(v25 · R89) — 불러온 세이브에 서 있으면 끊긴 원정이다 · preset = 나간 편성 번호(자리와 같다 · v32) ·
@@ -76,6 +77,8 @@
 import { makeRng, deriveSeed } from './rng.js';
 // 건설 어휘 — 창구가 모르는 이름을 거절하는 데만 쓴다(시스템 주입이 아니다 · skill_effects.js 와 같은 취급)
 import { TARGETS as CN_TARGETS } from './construction.js';
+// 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
+import { AXES as CM_AXES } from './commission.js';
 
 export const SAVE_VERSION = 38;
 
@@ -90,10 +93,11 @@ export const SAVE_VERSION = 38;
  *   potions [{id, kind, tier, ko, en, heal, craftGold, startOwned}] (potion.csv 행 순서) — 물약 단계 표 · startOwned = 시작 개수 (battle_design §7-1 · item_design §7-4 · R103 · R124) · 만들 수 있는 단계는 제련소 랭크가 연다(R137)
  *   construction — 건설 시스템(`construction.js` · 표 넷을 든다 · INTERFACE §2-14 · R137)
  *   gamble — 도박장 슬롯(`gamble.js` · 표 넷을 든다 · 한 판을 굴린다 · INTERFACE §2-15 · R149)
+ *   commission — 의뢰(`commission.js` · 표 넷을 든다 · 카드 한 장을 굴리고 처치 · 드롭을 대조한다 · INTERFACE §2-16 · R153)
  *   openAll — `() → bool` 선택 · **개발 장치**(관리자 모드) — 켜져 있으면 「무엇이 열렸나」가 모든 건물을 최대 랭크로 친다(`openRanks` · INTERFACE §2-7)
  */
 export function createGameSystem(deps) {
-    const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, balance: B } = deps;
+    const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, commission: CM, balance: B } = deps;
     const clone = v => JSON.parse(JSON.stringify(v));
 
     const positions = deps.equipSlots.map(s => s.id);
@@ -201,8 +205,8 @@ export function createGameSystem(deps) {
     /**
      * 상한 — **이 세이브가 쓸 수 있는 칸 · 인원 · 단계의 수를 여기 한 곳이 답한다** [신설 2026-09-22 · INTERFACE §2-7 · construction_draft §9].
      *   bag 가방 · stash 창고 · roster 로스터 · party 파티 인원 · presets 편성 수 · **expeditions 동시 원정 부대 수**(v38 · 편성 수를 넘지 않는다) · potionSlots 물약 칸 · upgrade 강화 단계 ·
-     *   tavernCandidates 고용 후보 · searchSlots 동시 수색 · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기)
-     *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 — 이 셋은 기본값이 0 이다(건물만 연다)
+     *   tavernCandidates 고용 후보 · searchSlots 동시 수색 · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기) · commissionSlots 동시 의뢰(R153)
+     *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 · **chapters 들어갈 수 있는 장**(원정 랭크 · R152) — 이 넷은 기본값이 0 이다(건물만 연다)
      * **값 = balance.csv 기본값 + 지어진 건물 랭크의 더하기** [2단계 2026-09-22 · R137 · construction_draft §11-2] — 기본값은 **건설 전** 값이고
      *   더하기는 `building_effect.csv` 가 든다(이름이 같은 키에 붙는다 · 단계 셋은 `ADD_KEY`). 판정 · 불러오기 · 전투 입력 · 강화 비용 · 화면이 모두 이것을 읽는다.
      * `state` 가 null 이면(새 게임을 만드는 도중) **시작 랭크**(`building.csv:start_rank`)의 상한이다 · 관리자 모드면 모든 건물의 최대 랭크다(`openRanks`)
@@ -216,6 +220,8 @@ export function createGameSystem(deps) {
             shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon,
             makeLevels: 0, potionTier: 0, tacticSlots: 0,
             gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 — 선술집 뒤 랭크가 더한다 (R149)
+            chapters: 0,   // 들어갈 수 있는 장 — 건물만 연다(원정 랭크마다 +1 · r1 은 처음부터 지어져 1장) (2026-09-24 · R152)
+            commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 선술집 r2 가 더한다 (R153)
         };
         for (const [target, n] of Object.entries(CN.opened(openRanks(state)).adds)) {
             const key = ADD_KEY[target] ?? target;
@@ -226,7 +232,7 @@ export function createGameSystem(deps) {
         return out;
     }
     /** 더하기 대상 이름 → 상한 키 — 표의 단계 셋만 이름이 다르다(나머지는 같은 이름에 붙는다) */
-    const ADD_KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots' };
+    const ADD_KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots', commission_slots: 'commissionSlots' };
 
     function newGame(seed, candidates, now) {
         const state = {
@@ -237,11 +243,12 @@ export function createGameSystem(deps) {
             heroes: [], items: {}, bag: [], stash: [],
             progress: { cleared: [], levelUp: {}, peakTotal: 0 },   // levelUp = 스테이지별 **올린 양** — 안 올린 스테이지는 안 적는다 (2026-09-14 · R87) · peakTotal = 합산 레벨 도달 최고치(v37)
             codexKills: {},
-            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0 },
-            gamble: { emptyAt: null },            // 도박장 충전 시계 — null = 가득 (R149 · INTERFACE §4)
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [] },
             search: null,
+            // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
+            commissions: { cards: [] },
             // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
             //   물약 칸도 **편성 1 에만** 시작 물약이 한 칸씩 든다 (v32 · R122 · R124)
             presets: newPresets(), preset: 1,     // 전술 칸도 편성마다 든다(`presets[*].tactics` · v34 · R129)
@@ -260,6 +267,15 @@ export function createGameSystem(deps) {
             const a = addItem(state, I.startingArmor(rng));
             h.equipped.armor = a.uid;
         }
+        // 모든 새 게임에 고블린 일꾼 한 명을 준다. 기존 시작 파티 뒤에 넣어 첫 편성은 그대로 둔다.
+        addHero(state, {
+            name: { ko: '고블린 일꾼', en: 'Goblin Worker' },
+            tier: 'normal', sin: 'greed', cls: 'warrior',
+            trait: { ko: '집사', en: 'Butler' }, face: 'goblin_butler',
+            level: 1, xp: 0, mastery: {}, masteryPoints: 0, innate: null,
+            stats: { str: 5, agi: 5, int: 5, vit: 5, luck: 5, ldr: 5, cha: 5 },
+            equipped: {},
+        });
         // **편성 1 = 로스터 순서** [2026-09-21 사용자 지시 · ADR-0227 · ~~빈 파티~~ 2026-09-09 폐기] — 첫 원정을 떠날 편성이
         //   처음부터 서 있다. 리더 규칙은 그대로다(`party[0]` = 먼저 넣은 영웅 = 로스터 첫 영웅).
         //   진형은 `normalizeFormation` 이 파티 순서대로 앞 랭크부터 채운다 — **rng 0 회**라 전투 결과가 안 흔들린다
@@ -287,6 +303,9 @@ export function createGameSystem(deps) {
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(obj);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
+        // 고정 지급 캐릭터의 옛 이름을 이미 저장된 세이브에서도 갱신한다.
+        for (const h of s.heroes) if (h.face === 'goblin_butler' && h.name?.ko === '집사 고블린')
+            h.name = { ko: '고블린 일꾼', en: 'Goblin Worker' };
         // 마스터리 — **표에 맞춘다** [2026-09-22 · R138 · 버전 무변경] — 그 영웅의 트리에 없는 노드(표에서 걷힌 칸)와 상한을 넘은 랭크는
         //   포인트로 돌려준다. 롤백이 무료라(skill_design §5) 돌려주는 것이 곧 이관이고, 남겨 두면 못 빼는 포인트가 된다
         for (const h of s.heroes) {
@@ -311,9 +330,14 @@ export function createGameSystem(deps) {
         // 제작 재료 · 회차 — 없으면 「가진 재료가 없다 · 만든 적이 없다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R96)
         s.materials = s.materials ?? {};
         s.counters.make = s.counters.make ?? 0;
-        // 도박장 충전 · 판 수 — 없으면 「가득 · 돌린 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R149)
-        s.gamble = { emptyAt: null, ...(s.gamble ?? {}) };
+        // 도박장 판 수 — 없으면 「돌린 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R149).
+        //   충전 시계 `gamble` 은 같은 날 나갔다(횟수 제한 없음 · ADR-0334) — 읽는 곳이 없어 필드만 지운다
+        delete s.gamble;
         s.counters.gamble = s.counters.gamble ?? 0;
+        // 의뢰 — 없으면 「게시판을 굴린 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R153).
+        //   모르는 어휘의 카드는 지운다 — 표가 바뀌어 셀 수 없는 카드가 자리를 막지 않게(빈 자리는 다음 채우기가 굴린다)
+        s.counters.commission = s.counters.commission ?? 0;
+        s.commissions = { cards: (Array.isArray(s.commissions?.cards) ? s.commissions.cards : []).filter(c => c && CM_AXES[c.axis]) };
         // 물약 재고 — 개수 표다. 모양이 틀리면 시작 재고로 연다 (INTERFACE §4 · R124)
         if (!s.potions || typeof s.potions !== 'object' || Array.isArray(s.potions)) s.potions = startStock();
         // 건설 — **표에 맞춘다**(없는 건물은 지우고 최대 랭크에서 자르고 시작 랭크보다 낮으면 올린다 · 연구도 없는 항목을 지운다) (v37 · R137).
@@ -1130,11 +1154,14 @@ export function createGameSystem(deps) {
 
     /* ── 스테이지 · 원정 ── */
 
-    /** 해금 = 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 */
+    /** 그 장이 원정 랭크로 열렸나 — 보스를 깨도 다음 장은 저절로 안 열린다 (2026-09-24 · R152 · construction_draft §2) */
+    const chapterOpen = (state, chapter) => chapter <= limitsOf(state).chapters;
+
+    /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 */
     function stageUnlocked(state, stageId) {
         const i = deps.stageOrder.indexOf(stageId);
-        if (i <= 0) return i === 0;
-        return state.progress.cleared.includes(deps.stageOrder[i - 1]);
+        if (i < 0 || !chapterOpen(state, deps.stages[stageId]?.chapter)) return false;
+        return i === 0 || state.progress.cleared.includes(deps.stageOrder[i - 1]);
     }
 
     function canDepart(state, stageId, now, no = state.preset) {
@@ -1153,7 +1180,7 @@ export function createGameSystem(deps) {
      *   `base` = `stage.csv:dlvl` · `max` = **클리어한 스테이지의 기본 레벨 중 최고**(키가 없다 — 클리어 기록에서 파생) ·
      *   `level` = 기본 레벨 + 올린 양(`progress.levelUp`)을 `[base, max]` 로 자른 값.
      *   올린 스테이지는 상한 이하라 그걸 깨도 상한이 안 오른다 — 그래서 기본 레벨만 봐도 「클리어한 최고 레벨」이다.
-     *   **원정 건물 랭크가 연다**(`stage_level` · R137 · ~~처음부터 열림 — 사용자 09-14~~) — `open` 이 false 면 `max = level = base`(올린 기록은 세이브에 남고 열리면 다시 먹는다).
+     *   **처음부터 열려 있다**(2026-09-24 · R152 — 사용자 09-14 로 되돌림 · ~~원정 건물 랭크가 연다 · `open` 칸 · R137~~).
      *   아무것도 안 깼으면 `max = base` 라 못 올린다.
      *   세이브에는 **올린 양**을 둔다 — 기본 레벨이 다시 깔려도 어긋나지 않게. 상한을 넘는 기록은 읽을 때 자른다. rng 를 안 쓴다
      */
@@ -1161,18 +1188,15 @@ export function createGameSystem(deps) {
         const st = deps.stages[stageId];
         if (!st) return null;
         const base = st.dlvl;
-        const open = hasFeature(state, 'stage_level');
-        if (!open) return { base, max: base, level: base, open };
         const cap = state.progress.cleared.reduce((m, id) => Math.max(m, deps.stages[id]?.dlvl ?? 0), 0);
         const max = Math.max(base, cap);
-        return { base, max, level: Math.min(max, base + (state.progress.levelUp?.[stageId] ?? 0)), open };
+        return { base, max, level: Math.min(max, base + (state.progress.levelUp?.[stageId] ?? 0)) };
     }
 
-    /** 스테이지 레벨을 바꾼다 — 비용 없음 · 되돌리기 자유. 기본 레벨로 돌리면 기록을 지운다(안 올린 스테이지는 적지 않는다) · 안 열렸으면 `unbuilt` */
+    /** 스테이지 레벨을 바꾼다 — 비용 없음 · 되돌리기 자유. 기본 레벨로 돌리면 기록을 지운다(안 올린 스테이지는 적지 않는다) */
     function setStageLevel(state, stageId, level) {
         const s = stageLevelState(state, stageId);
         if (!s) return { ok: false, err: 'missing' };
-        if (!s.open) return { ok: false, err: 'unbuilt' };
         if (!Number.isInteger(level) || level < s.base || level > s.max) return { ok: false, err: 'range' };
         state.progress.levelUp = state.progress.levelUp ?? {};
         if (level === s.base) delete state.progress.levelUp[stageId];
@@ -1377,12 +1401,14 @@ export function createGameSystem(deps) {
             // ~~처치가 뱉는 가루~~ 는 2026-09-09 삭제 — 가루의 공급원은 **분해** 하나다(`salvage` · item_design §5-3)
             // 도감 레벨의 출처 — 이긴 라운드의 처치 수 (monster_design §8 · 2026-09-21 카드 걷음)
             for (const [id, n] of Object.entries(s.kills)) state.codexKills[id] = (state.codexKills[id] ?? 0) + n;
+            const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(버린 것은 안 든다 · R153)
             for (const it of s.drops) {
                 // 알아서 분해 [2026-09-21 · R125 · item_design §6-5] — **가방 참 검사보다 먼저** 선을 본다: 걸린 것은 칸을 안 먹고 버린 수에도 안 든다.
                 //   「그 런이 준 것」이라 uid 를 받아 리포트 `drops` 에 남긴 뒤 곧바로 지운다 — 화면은 흐린 빈 칸으로 그린다(SCREEN_DESIGN §4-3) · rng 0
                 if (autoSalvageHits(autoRuleOf(state), it)) {
                     const gone = addItem(state, it);
                     R.drops.push(gone.uid);
+                    gained.push(gone);
                     state.resources.dust += I.salvageDust(gone);
                     delete state.items[gone.uid];
                     continue;
@@ -1391,7 +1417,9 @@ export function createGameSystem(deps) {
                 const added = addItem(state, it);
                 state.bag.push(added.uid);
                 R.drops.push(added.uid);
+                gained.push(added);
             }
+            commissionCount(state, run.stageId, s.killGrades ?? {}, gained);
             // 경험치 — **그 순간 살아 있는 영웅만** 같은 양을 받는다 (사용자 확정 2026-09-14). 레벨업은 다음 라운드부터 전투에 먹는다(②)
             //   **경험치 획득 +%**(방어구 공통옵션)는 **낀 영웅 본인 몫**만 늘린다 [2026-09-18 사용자 확정 · item_design §1 「갑옷 옵션」] —
             //   그 순간 입은 장비로 잰다(`heroCombat` 의 옵션 묶음). 0 이면 종전과 같은 값 · rng 0
@@ -1531,8 +1559,7 @@ export function createGameSystem(deps) {
      */
     function nextRepeat(state, endedAt, no) {
         const run = runAt(state, no);
-        if (!run || run.active || run.repeat !== true) return null;
-        if (!hasFeature(state, 'repeat')) return null;   // 반복 원정은 원정 건물 랭크가 연다(새 게임은 잠김 · R137 · 2026-09-23 r1 → r2)
+        if (!run || run.active || run.repeat !== true) return null;   // 반복 원정은 처음부터 열려 있다 (2026-09-24 · R152 · ~~원정 건물 r2 가 연다~~)
         const report = state.reports.find(r => r.preset === no && r.at === run.lastAt);
         if (!report?.won) return null;
         return { stageId: run.stageId, preset: run.preset, at: endedAt + B.repeat_restart_sec * 1000 };
@@ -1638,20 +1665,12 @@ export function createGameSystem(deps) {
         return { ...visit, chapter, lo: band.lo, hi: band.hi, equip, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
     }
 
-    /* ── 도박장 — 충전식 슬롯 (base_expedition_design 「도박장」 · INTERFACE §2-7 · §2-15 · 2026-09-24 사용자 「일단 만들어」 · R149) ──
-       판은 `gamble.js` 가 굴리고 여기는 **충전 · 판돈 · 지급**만 한다.
-       충전은 벽시계라 꺼져 있어도 차고 상한에서 멈춘다 — **일일 리셋이 아니다**(비운 시간이 기회로 남는다 · 방치형 계약).
+    /* ── 도박장 — 슬롯 (base_expedition_design 「도박장」 · INTERFACE §2-7 · §2-15 · 2026-09-24 사용자 「일단 만들어」 · R149) ──
+       판은 `gamble.js` 가 굴리고 여기는 **판돈 · 지급**만 한다.
+       **횟수 제한이 없다 — 판돈만 있으면 돈다**(같은 날 사용자 「횟수 무제한 · 돈만 있으면」 — 충전식에서 바뀜 · ADR-0334). 시계를 안 본다.
        판돈과 재료 단계는 **진행 챕터**(`frontierChapter` — 상점과 같은 값)를 따른다: 재료만 챕터를 따르면 뒤 챕터에서 싼 판돈으로 비싼 재료를 산다.
        결과는 저장하지 않는다 — 판 번호(`counters.gamble`)와 시드가 재현한다(선술집 명단 · 제작과 같은 문법). 장비 · 낙인은 안 나온다 */
 
-    /** 충전 — `{charges, nextAt}`. `gamble.emptyAt` = 충전이 0 이었던 가상의 시각 · null = 가득 (INTERFACE §4) */
-    function gambleCharges(state, now) {
-        const cap = B.gamble_spin_cap, period = B.gamble_spin_regen_hours * HOUR_MS;
-        const e = state.gamble?.emptyAt;
-        if (e == null) return { charges: cap, nextAt: null };
-        const n = Math.max(0, Math.min(cap, Math.floor((now - e) / period)));
-        return { charges: n, nextAt: n >= cap ? null : e + (n + 1) * period };
-    }
     /** 판돈 — 기본 판돈 × 챕터 배수^(챕터−1) × 단계 배수를 곱한 **뒤 한 번** 정수로 (INTERFACE §5-3) */
     const gambleStake = (chapter, mult) => Math.round(B.gamble_stake_gold * B.gamble_stake_chapter_mult ** (chapter - 1) * mult);
     /** 그 단계보다 높지 않은 가장 높은 tier 의 산출물 — 표에 그 tier 가 없어도 비지 않게 */
@@ -1663,15 +1682,15 @@ export function createGameSystem(deps) {
      * 도박장 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙) · rng 0 · 상태 불변.
      * `pays` = **고른 단계의 판돈에서의** 배당표 — 골드는 `floor(값 × 판돈)`(지급과 같은 식) · 재료는 `pay × 단계 배수` 개
      */
-    function gambleState(state, now, step = 1) {
+    function gambleState(state, step = 1) {
         const chapter = frontierChapter(state);
         const openN = limitsOf(state).gambleStakes;
         const stakes = GB.stakes.map((s, i) => ({ step: s.step, mult: s.mult, gold: gambleStake(chapter, s.mult), open: i < openN }));
         const cur = stakes.find(s => s.step === step) ?? stakes[0];
         const mats = gambleMats(chapter);
         return {
-            open: hasFeature(state, 'gamble'), ...gambleCharges(state, now), cap: B.gamble_spin_cap, chapter, mats, stakes,
-            step: cur.step, stake: cur.gold,
+            open: hasFeature(state, 'gamble'), chapter, mats, stakes,
+            step: cur.step, stake: cur.gold, batch: B.gamble_batch_spins,
             pays: {
                 symbols: GB.symbols.filter(s => s.kind !== 'coin').map(s => (s.yield === 'gold'
                     ? { id: s.id, gold: Math.floor(s.pay * cur.gold), mat: null }
@@ -1683,26 +1702,21 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 한 판. 거절 순서 `unbuilt` → `missing`(표에 없는 단계) → `locked`(안 열린 단계) → `charge` → `gold` — 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
-     * 통과하면 충전 한 칸 · 판돈을 쓰고 `counters.gamble` 선증가 → rng = `deriveSeed(seed ^ 0x6A3B, 판 번호)` (INTERFACE §5-1)
+     * 한 판 — 횟수 제한 없음. 거절 순서 `unbuilt` → `missing`(표에 없는 단계) → `locked`(안 열린 단계) → `gold` — 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
+     * 통과하면 판돈을 쓰고 `counters.gamble` 선증가 → rng = `deriveSeed(seed ^ 0x6A3B, 판 번호)` (INTERFACE §5-1)
      * → 골드 `floor(goldMult × 판돈)` · 재료 `mats × 단계 배수`(광석 · 목재 = `materials[그 챕터 단계 id]` · 가루 = `resources.dust`).
      * `net` 은 골드만 센다 — 재료는 순손익에 안 든다
      */
-    function gambleSpin(state, step, now) {
+    function gambleSpin(state, step) {
         if (!hasFeature(state, 'gamble')) return { ok: false, err: 'unbuilt' };
         const idx = GB.stakes.findIndex(s => s.step === step);
         if (idx < 0) return { ok: false, err: 'missing' };
         if (idx >= limitsOf(state).gambleStakes) return { ok: false, err: 'locked' };
-        const { charges } = gambleCharges(state, now);
-        if (charges < 1) return { ok: false, err: 'charge' };
         const chapter = frontierChapter(state);
         const { mult } = GB.stakes[idx];
         const stake = gambleStake(chapter, mult);
         if (state.resources.gold < stake) return { ok: false, err: 'gold' };
 
-        // 충전 한 칸 — 가득이었으면 지금부터 다음 칸을 센다 · 차던 중이었으면 그 몫을 안 버린다 (INTERFACE §4)
-        const cap = B.gamble_spin_cap, period = B.gamble_spin_regen_hours * HOUR_MS;
-        state.gamble = { emptyAt: charges >= cap ? now - (cap - 1) * period : state.gamble.emptyAt + period };
         state.resources.gold -= stake;
         state.counters.gamble = (state.counters.gamble ?? 0) + 1;
         const r = GB.spin(makeRng(deriveSeed(state.seed ^ 0x6A3B, state.counters.gamble)));
@@ -1723,14 +1737,15 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 모두 돌리기 — 거절이 날 때까지 `gambleSpin` 을 거듭 부른다(같은 `now` 라 충전이 도중에 안 찬다 · 끝이 있다).
-     * 한 판도 못 돌았으면 그 거절을 그대로 낸다 · `stop` = 멈춘 사유(`charge` · `gold` …) · 합계는 여기서 낸다(화면이 더하지 않게)
+     * 여러 판 돌리기 — `gambleSpin` 을 **`gamble_batch_spins` 판까지** 거듭 부르고 거절이 나면 멈춘다(판돈이 떨어지면 덜 돈다).
+     * 판 수가 정해진 까닭: 횟수 제한이 없어 끝이 골드뿐이면 한 번 누름에 가진 골드를 다 건다 (ADR-0334).
+     * 한 판도 못 돌았으면 그 거절을 그대로 낸다 · `stop` = 멈춘 사유(다 돌았으면 null) · 합계는 여기서 낸다(화면이 더하지 않게)
      */
-    function gambleSpinAll(state, step, now) {
+    function gambleSpinBatch(state, step) {
         const spins = [];
         let stop = null;
-        for (;;) {
-            const r = gambleSpin(state, step, now);
+        while (spins.length < B.gamble_batch_spins) {
+            const r = gambleSpin(state, step);
             if (!r.ok) { stop = r.err; break; }
             spins.push(r.spin);
         }
@@ -1739,6 +1754,127 @@ export function createGameSystem(deps) {
         for (const s of spins) for (const [id, n] of Object.entries(s.mats)) mats[id] = (mats[id] ?? 0) + n;
         const sum = k => spins.reduce((a, s) => a + s[k], 0);
         return { ok: true, spins, stop, gold: sum('gold'), stake: sum('stake'), net: sum('net'), mats };
+    }
+
+    /* ── 의뢰 — 게시판 · 받기 · 세기 · 수령 (base_expedition_design §1-3 · INTERFACE §2-7 · §2-16 · 2026-09-24 사용자 「의뢰가 실제로 적용되도록」 · R153) ──
+       카드는 `commission.js` 가 굴리고 여기는 **자리 · 받기 · 세기 · 지급**만 한다.
+       게시판은 `commission_board_cards` 자리이고 받은 카드는 **제자리에서** 진행 중이 된다 — 자리가 비는 것은 수령 · 포기 때이고 그 자리에 새 카드를 굴린다.
+       카드는 **굴린 순간의 내용을 박는다** — 대상 풀이 그때의 진행(열린 스테이지)에 달려 있어 다시 굴리면 다른 카드다(수색 스냅샷과 같은 이유).
+       기한은 없다 · 포기에 벌이 없다 · 명성은 보류(카드에 명성 칸이 없다) */
+
+    const isTaken = c => c.have !== undefined && c.have !== null;
+    const boardOf = state => state.commissions?.cards ?? [];
+    const ownBoard = state => (state.commissions ??= { cards: [] }).cards;
+
+    /** 굴릴 대상 — **지금 들어갈 수 있는 스테이지**의 챕터 · 일반몹 · 그 종족 + 진행 챕터. 순서가 계약이다(챕터 · 몬스터 오름차순 · 종족은 표 순서 · INTERFACE §2-16) */
+    function commissionCtx(state) {
+        const chapters = new Set(), monsters = new Set();
+        for (const id of deps.stageOrder) {
+            if (!stageUnlocked(state, id)) continue;
+            const st = deps.stages[id];
+            chapters.add(st.chapter);
+            for (const m of BT.stagePool(st)) monsters.add(m);
+        }
+        const mons = [...monsters].sort((a, b) => a - b);
+        const present = new Set(mons.map(id => deps.monsters[id]?.monster_type));
+        return {
+            chapters: [...chapters].sort((a, b) => a - b),
+            monsters: mons,
+            races: CM.races.map(r => r.id).filter(id => present.has(id)),
+            chapter: frontierChapter(state),
+        };
+    }
+
+    /** 카드 한 장 — `counters.commission` 선증가 → rng = `deriveSeed(seed ^ 0xC0DA, 번호)` (INTERFACE §5-1) · 굴릴 틀이 없으면 null */
+    function rollCard(state) {
+        state.counters.commission = (state.counters.commission ?? 0) + 1;
+        const no = state.counters.commission;
+        const c = CM.roll(makeRng(deriveSeed(state.seed ^ 0xC0DA, no)), commissionCtx(state));
+        return c ? { no, ...c } : null;
+    }
+
+    /** 게시판 한 벌 — **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙) · rng 0 · 상태 불변 */
+    function commissionState(state) {
+        const open = hasFeature(state, 'commission_board');
+        const slots = limitsOf(state).commissionSlots;
+        const list = boardOf(state);
+        const taken = list.filter(isTaken).length;
+        return {
+            open, slots, taken,
+            cards: list.map(c => {
+                const t = isTaken(c);
+                return { ...c, taken: t, have: t ? c.have : null, done: t && c.have >= c.need, canTake: open && !t && taken < slots };
+            }),
+        };
+    }
+
+    /** 빈 자리를 굴려 채운다 — 자리 수가 `commission_board_cards` 가 될 때까지 끝에 붙인다 · 이미 차 있으면 아무것도 안 바뀐다 */
+    function commissionFill(state) {
+        if (!hasFeature(state, 'commission_board')) return { ok: false, err: 'unbuilt' };
+        const cards = ownBoard(state);
+        let rolled = 0;
+        while (cards.length < B.commission_board_cards) {
+            const c = rollCard(state);
+            if (!c) break;
+            cards.push(c);
+            rolled++;
+        }
+        return { ok: true, rolled };
+    }
+
+    /** 받는다 — 거절 순서 `unbuilt` → `missing` → `full` · 거절이면 아무것도 안 바뀐다. **자리는 그대로**이고 받은 뒤부터 센다 */
+    function commissionTake(state, no) {
+        if (!hasFeature(state, 'commission_board')) return { ok: false, err: 'unbuilt' };
+        const c = boardOf(state).find(x => x.no === no && !isTaken(x));
+        if (!c) return { ok: false, err: 'missing' };
+        if (boardOf(state).filter(isTaken).length >= limitsOf(state).commissionSlots) return { ok: false, err: 'full' };
+        c.have = 0;
+        return { ok: true, card: { ...c } };
+    }
+
+    /** 그 자리를 비운다 — 게시판이 열려 있으면 **그 자리에** 새 카드를 굴려 넣고, 닫혀 있으면 자리만 지운다 */
+    function vacate(state, c) {
+        const cards = ownBoard(state);
+        const i = cards.indexOf(c);
+        const next = hasFeature(state, 'commission_board') ? rollCard(state) : null;
+        if (next) cards[i] = next; else cards.splice(i, 1);
+    }
+
+    /** 수령 — 거절 순서 `missing` → `notDone`. 골드를 주고 그 자리를 새로 굴린다 · **`unbuilt` 로 안 막는다**(받아 둔 것은 끝까지 간다) */
+    function commissionClaim(state, no) {
+        const c = boardOf(state).find(x => x.no === no && isTaken(x));
+        if (!c) return { ok: false, err: 'missing' };
+        if (c.have < c.need) return { ok: false, err: 'notDone' };
+        state.resources.gold += c.gold;
+        vacate(state, c);
+        return { ok: true, gold: c.gold, card: { ...c } };
+    }
+
+    /** 포기 — **벌이 없다**(진행도만 버린다) · 그 자리를 새로 굴린다. ⚠ 받고 곧바로 포기하면 무료 리롤이다(GAME_DESIGN §10 「의뢰 세부」 ②) */
+    function commissionDrop(state, no) {
+        const c = boardOf(state).find(x => x.no === no && isTaken(x));
+        if (!c) return { ok: false, err: 'missing' };
+        vacate(state, c);
+        return { ok: true };
+    }
+
+    /**
+     * 센다 — `settleRound` 가 **이긴 라운드마다** 부른다. 받아 둔 · 안 찬 카드마다 처치(`killGrades`)와 들어온 드롭을 대조하고 `need` 에서 자른다.
+     *   모든 부대가 같이 채운다(의뢰에는 파티가 없다) · 진 라운드 · 끊긴 라운드는 여기 안 온다(도감 처치 수와 같은 규칙) · rng 0
+     */
+    function commissionCount(state, stageId, killGrades, gained) {
+        const open = boardOf(state).filter(c => isTaken(c) && c.have < c.need);
+        if (!open.length) return;
+        const chapter = deps.stages[stageId]?.chapter ?? null;
+        const add = (c, n) => { c.have = Math.min(c.need, c.have + n); };
+        for (const [id, byGrade] of Object.entries(killGrades)) {
+            const ev0 = { chapter, monster: Number(id), race: deps.monsters[id]?.monster_type ?? null };
+            for (const [grade, n] of Object.entries(byGrade)) {
+                const ev = { ...ev0, grade };
+                for (const c of open) if (CM.matchKill(c, ev)) add(c, n);
+            }
+        }
+        for (const it of gained) for (const c of open) if (CM.matchDrop(c, it)) add(c, 1);
     }
 
     /**
@@ -2011,7 +2147,10 @@ export function createGameSystem(deps) {
             const rank = state.buildings[b.id] ?? 0;
             const ranks = Array.from({ length: b.maxRank }, (_, i) => {
                 const info = CN.rankInfo(b.id, i + 1);
-                return { rank: i + 1, built: i < rank, effects: info.effects, require: CN.check(info.require, ctx, state.buildings) };
+                // 더하기에 `total` — 그 건물을 이 랭크까지 지었을 때의 합(「n장까지 연다」 같은 누적 문장 · R152)
+                const upto = CN.opened({ [b.id]: i + 1 }).adds;
+                const effects = info.effects.map(e => (e.kind === 'add' ? { ...e, total: upto[e.target] ?? 0 } : e));
+                return { rank: i + 1, built: i < rank, effects, require: CN.check(info.require, ctx, state.buildings) };
             });
             return { id: b.id, name: b.name, tab: b.tab, rank, maxRank: b.maxRank, next: CN.nextState(b.id, state.buildings, ctx, wallet), ranks };
         });
@@ -2250,10 +2389,11 @@ export function createGameSystem(deps) {
         equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
-        stageUnlocked, canDepart, runParty, runOf, heroBusy, limitsOf, stageLevelState, setStageLevel, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
+        stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, stageLevelState, setStageLevel, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         runLock, runTactics, runTacticsIf,
         tavernCandidates, tavernState, tavernReroll, hire, dismissState, dismiss, swapHeroes,
-        shopVisit, shopState, gambleState, gambleSpin, gambleSpinAll,
+        shopVisit, shopState, gambleState, gambleSpin, gambleSpinBatch,
+        commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, rerollTactic, toggleTacticLock, weaponGroupOf, weaponSkillOf,

@@ -14,7 +14,9 @@
  *   배치는 재생 위치(resume)가 아니라 **취향**이라 app.js 의 `state.btLayout` 이 들고 `opts.layout`/`opts.onLayout` 으로 오간다 — 런이 바뀌어도 남는다.
  * 로그는 모든 타격을 적는다(누가 → 누구 · 피해 · 쓴 스킬). 로그 판 위의 탭 셋(전체 · 우리 · 적)이 **줄의 주체**로 거른다 — 줄은 다 쌓고 CSS 가 숨긴다 (ADR-0131). 누적 데미지는 이벤트의 dmg 를 더한 표시값이다 — 정산이 아니다.
  * 재렌더에도 재생이 이어진다 — 정리 함수가 재생 위치 {t, speed, running, tab, logf, wall, auto} 를 돌려주고(tab = 우측 열에서 고른 판 · logf = 로그를 거른 주체), 다음 mount 가 opts.resume 으로 받아
- *   그 시각까지 팝업 없이 되감는다 (catchUp).
+ *   그 시각까지 팝업 없이 되감는다 (catchUp). **되감는 동안은 상태만 적용하고 DOM 은 끝에 한 번 그린다** (2026-09-24 · `paintCaughtUp`) —
+ *   사건마다 그리던 옛 판은 관전 중 클릭(가방 칸 · 영웅 카드)마다 그 런의 사건 수만큼 카드를 다시 짓고 로그 줄마다 레이아웃을 강제해
+ *   클릭 한 번에 수백 ms 멈췄다(나눔 배치 실측 300~520ms · 런이 길수록 길다).
  * **시각은 실제로 흐른 시간 × 배속이다** (2026-09-11 · ADR-0102) — 눈금 수로 밀지 않는다. 브라우저가 숨긴 탭의 눈금을 늦추기 때문이다.
  *   시계는 `opts.now` 로 읽고(wall = 마지막으로 시각을 민 실제 시각), 공백이 `opts.frozenMs` 를 넘으면 JS 가 멈춰 있었던 것이라 밀지 않는다.
  *   auto = 결과 띠가 다음 런을 세던 중 — 그 도중에 걷히면 앱 시계가 이어서 세운다. 숨긴 탭에서는 앱이 이 재생기를 걷는다.
@@ -88,7 +90,10 @@ export function mountBattle(container, opts) {
         auto: false,             // 결과 띠가 다음 런을 세는 중 — 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
-        catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않는다
+        catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않고 DOM 도 안 만진다(끝에 `paintCaughtUp` 이 한 번 그린다)
+        // 로그 — 적은 줄 수(되감기 중 모아 둔 것 포함) · 목록에 선 주체별 줄 수 · 되감기 중 모아 둔 재료 · 목록을 맨 아래로 맞출 일이 남았나.
+        //   `dmgDirty` = 누적 판을 다시 그릴 일이 남았나 — 둘 다 걸음 끝에 한 번 푼다(`step`)
+        logged: 0, logN: {}, logBuf: [], logDirty: false, dmgDirty: false,
         // 우측 열에서 보고 있는 판 — 넓게 배치로 가 있어도 남는다. **둘 중 하나로 못박는다**:
         // ?dev=play&bt=<아무거나> 처럼 모르는 값이 들어오면 두 판이 다 숨어 빈 열이 선다 (2026-09-03)
         tab: resume?.tab === 'dmg' ? 'dmg' : 'log',
@@ -129,10 +134,12 @@ export function mountBattle(container, opts) {
     bindControls(state, container, opts);
     bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
     // t=0 의 이벤트(첫 라운드 편성)를 먼저 적용해서 첫 프레임부터 적이 서 있게 한다.
-    // 재개(resume)면 그 시각까지 조용히 되감는다 — 팝업 없이. 로그·게이지·누적은 다시 쌓인다 (2026-08-27)
+    // 재개(resume)면 그 시각까지 조용히 되감는다 — 팝업 없이. 로그·게이지·누적은 다시 쌓인다 (2026-08-27).
+    //   되감는 동안은 상태만 적용하고 그리는 것은 끝에 한 번이다 (2026-09-24 · `paintCaughtUp`)
     if (resume) { state.t = resume.t; state.catchUp = true; }
     drain(state, container, opts);
-    state.catchUp = false;
+    if (state.catchUp) { state.catchUp = false; paintCaughtUp(state, container); }
+    scrollLog(state, container);
     if (!state.ended) start(state, container, opts);
     renderDmg(state, container);
 
@@ -311,10 +318,10 @@ function bindPotionTips(state, root) {
 /** 물약 칸을 다시 칠한다 — `fired` = 방금 마신 칸이면 한 번 번쩍인다(되감기 중에는 안 번쩍인다 · 스킬 칸의 `fire` 와 같은 520ms) */
 function paintPotion(state, root, fired = -1) {
     const belt = root.querySelector('.b-belt');
-    if (!belt) return;
+    if (!belt || state.catchUp) return;      // 되감는 동안은 안 칠한다 — 끝에 한 번 (`paintCaughtUp`)
     belt.innerHTML = potionBeltHtml(state.potion);
     bindPotionTips(state, root);
-    if (fired < 0 || state.catchUp) return;
+    if (fired < 0) return;
     const slot = belt.querySelector(`.p-slot[data-i="${fired}"]`);
     if (!slot) return;
     slot.classList.add('fire');
@@ -322,6 +329,7 @@ function paintPotion(state, root, fired = -1) {
 }
 
 function paintRound(state, root) {
+    if (state.catchUp) return;
     root.querySelectorAll('.rt').forEach(n => {
         const v = Number(n.dataset.n);
         n.classList.toggle('done', v < state.round);
@@ -398,6 +406,7 @@ const CARD_V2 = true;
 export const cardV2 = () => { const v = document.documentElement.dataset.card; return v ? v === 'v2' : CARD_V2; };
 
 function renderUnits(state, root) {
+    if (state.catchUp) return;      // 되감는 동안은 카드를 안 짓는다 — `u.node` 가 비어 있어 `refreshUnit` 도 그냥 지나간다
     const v2 = cardV2();
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
         const side = root.querySelector(sel);
@@ -514,7 +523,7 @@ function renderUnits(state, root) {
 }
 
 function refreshUnit(state, u) {
-    if (!u.node) return;
+    if (!u.node || state.catchUp) return;
     const pct = Math.max(0, u.hp / u.hpMax * 100);
     u.node.querySelector('.bar.hp > i').style.width = pct + '%';
     u.node.querySelector('.hp-text').textContent = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
@@ -639,7 +648,8 @@ function refreshBuffs(u, now) {
         const id = chip.dataset.effect;
         const b = byId.get(id);
         const info = skillInfo(id);
-        // 창의 원소 — 그 창을 건 스킬이 거는 걸린 효과가 든다(`skill_status.csv` · 1단계는 줄이 하나 · 2026-09-22). 무기 옵션 창(`wx:`)은 스킬이 아니라 null
+        // 창의 원소 — 그 창을 건 스킬의 **첫 줄**이 거는 걸린 효과가 든다(`skill_status.csv` · 이벤트가 창 열쇠를 안 실어 칩은 스킬 id 로 선다 · 부채 #68 —
+        //   여러 줄 스킬은 결투 하나이고 두 줄 다 원소가 없다). 무기 옵션 창(`wx:`)은 스킬이 아니라 null
         const element = SYS.skill?.statuses?.[SYS.skill.defs?.[id]?.effects[0].status]?.element ?? null;
         chip.setAttribute('aria-label', `${L(info.name)} — ${effectSummaryText(b?.stat, b?.v, element)}`);
         bindTipNode(chip, () => effectTipCard({
@@ -703,6 +713,7 @@ function tally(g, key, dmg, kind) {
 }
 /** 한 번의 피해 — 때린 쪽(`a`)이 영웅이면 가한 피해, 맞은 쪽(`d`)이 영웅이면 받은 피해에 쌓는다. `ty` = 이벤트가 실어 온 피해 종류(타격만 · 없으면 기타) */
 function addDmg(state, a, d, id, dmg, ty) {
+    state.dmgDirty = true;   // 판은 걸음 끝에 한 번 다시 그린다(`step`) — 타격마다 다시 짓지 않는다
     const kind = dmgKind(ty);
     if (a.side === 'party') tally(dmgEntry(state, a).dealt, id, dmg, kind);
     if (d.side === 'party') tally(dmgEntry(state, d).taken, a.monsterId ?? a.key, dmg, kind);
@@ -711,7 +722,7 @@ function addDmg(state, a, d, id, dmg, ty) {
     탭(`state.dmgf`)이 장부를 고른다 — 덩어리 모양은 같고 값의 축만 바뀐다 (ADR-0252). 보이는 동안만 그린다 */
 function renderDmg(state, root) {
     const box = root.querySelector('.battle-dmg-wrap');
-    if (!box || box.hidden) return;
+    if (!box || box.hidden || state.catchUp) return;   // 되감는 동안은 안 그린다 — 되감기 뒤 `mountBattle` 이 한 번
     const f = state.dmgf;
     const rows = [...state.dmg.values()].sort((a, b) => b[f].total - a[f].total);
     const sum = rows.reduce((a, e) => a + e[f].total, 0);
@@ -816,13 +827,60 @@ function wideRow(html) {
     li.title = li.textContent;
     return li;
 }
-function pushLog(state, root, li, side = 'sys') {
-    const ul = root.querySelector('.battle-log');
-    li.dataset.side = side;
+/** 로그 한 줄 — 주체 `side` + `logRow` 의 칸 그대로. 칸 재료는 **부르는 순간** 정해지고 DOM 만 미룰 수 있다(`queueLog`) */
+const logLine = (state, root, side, ...cells) => queueLog(state, root, { side, cells });
+/** 격자 밖 전폭 한 줄(라운드 시작 · 종료) — 주체는 `sys` */
+const logWide = (state, root, html) => queueLog(state, root, { side: 'sys', html });
+/** 되감는 동안은 재료만 모아 두고(`flushLog` 가 남길 줄만 짓는다) 아니면 곧장 붙인다. 목록을 맨 아래로 맞추는 것은 걸음 끝에 한 번(`scrollLog`) */
+function queueLog(state, root, entry) {
+    state.logged += 1;
+    if (state.catchUp) { state.logBuf.push(entry); return; }
+    appendLog(state, root.querySelector('.battle-log'), entry);
+    state.logDirty = true;
+}
+/** 목록 끝에 붙이고, 그 주체의 줄이 `LOG_KEEP` 을 넘으면 그 주체의 가장 오래된 줄을 뗀다 — 셈은 `state.logN` 이 든다(줄마다 목록을 다시 훑지 않는다) */
+function appendLog(state, ul, e) {
+    const li = e.html != null ? wideRow(e.html) : logRow(...e.cells);
+    li.dataset.side = e.side;
     ul.appendChild(li);
-    const same = ul.querySelectorAll(`li[data-side="${side}"]`);
-    for (let i = 0; i < same.length - LOG_KEEP; i++) same[i].remove();
-    ul.scrollTop = ul.scrollHeight;   // 목록이 스크롤한다 — 머리 줄은 목록 밖이다 (ADR-0201)
+    state.logN[e.side] = (state.logN[e.side] ?? 0) + 1;
+    if (state.logN[e.side] > LOG_KEEP) { ul.querySelector(`li[data-side="${e.side}"]`)?.remove(); state.logN[e.side] -= 1; }
+}
+/** 되감기의 끝 — 주체마다 **마지막 `LOG_KEEP` 줄만** 짓는다. 어차피 잘려 나갈 줄은 만들지 않는다 */
+function flushLog(state, root) {
+    const buf = state.logBuf;
+    state.logBuf = [];
+    const seen = {}, keep = [];
+    for (let i = buf.length - 1; i >= 0; i--) {
+        const s = buf[i].side;
+        seen[s] = (seen[s] ?? 0) + 1;
+        if (seen[s] <= LOG_KEEP) keep.push(buf[i]);
+    }
+    const ul = root.querySelector('.battle-log');
+    for (let i = keep.length - 1; i >= 0; i--) appendLog(state, ul, keep[i]);
+    if (keep.length) state.logDirty = true;
+}
+/**
+ * 목록을 맨 아래로 — **걸음마다 한 번 · 판이 보일 때만** (2026-09-24). 스크롤하는 것은 판이 아니라 목록이다 — 머리 줄은 목록 밖이다 (ADR-0201).
+ * 줄마다 `scrollHeight` 를 읽으면 그때마다 레이아웃이 강제된다. 숨은 판(넓게 배치 · 누적 판)은 보일 때 `paintPane` 이 맞춘다
+ */
+function scrollLog(state, root) {
+    if (!state.logDirty) return;
+    const ul = root.querySelector('.battle-log');
+    if (!ul || ul.closest('[hidden]')) return;
+    state.logDirty = false;
+    ul.scrollTop = ul.scrollHeight;
+}
+/**
+ * 되감기가 끝난 자리를 **한 번에** 그린다 (2026-09-24) — 되감는 동안 건너뛴 카드 · 게이지 · 창 뱃지 · 라운드 트랙 · 물약 칸 · 로그.
+ * 행동 표시(`acted`)는 눕힌다 — 되감은 동안 한 번이라도 행동한 유닛의 게이지가 첫 프레임에 100% 로 서지 않게(그 시각의 실제 경과를 그린다)
+ */
+function paintCaughtUp(state, root) {
+    renderUnits(state, root);
+    for (const u of [...state.party, ...state.enemies]) { u.acted = false; refreshUnit(state, u); }
+    paintRound(state, root);
+    paintPotion(state, root);
+    flushLog(state, root);
 }
 
 /* ───────── 재생 ───────── */
@@ -847,6 +905,8 @@ function step(state, root, opts) {
     drain(state, root, opts);
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
     for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
+    scrollLog(state, root);   // 이 걸음에 붙은 줄이 몇이든 목록은 한 번만 맞춘다
+    if (state.dmgDirty) { state.dmgDirty = false; renderDmg(state, root); }   // 누적 판도 한 번 (숨어 있으면 `renderDmg` 가 그냥 지나간다)
 }
 
 /** 현재 시각까지의 이벤트를 전부 적용한다 */
@@ -905,7 +965,7 @@ function apply(state, root, opts, ev) {
             //   목록 줄은 2라운드부터 경계로 선다 (ADR-0205)
             const roundLine = `<span class="lg-kind ${ev.kind}">${kindLabel(ev.kind)}</span>`
                 + t('log.roundStart', { n: ev.n, list: enemyList(state) });
-            if (root.querySelector('.battle-log').childElementCount) pushLog(state, root, wideRow(roundLine));
+            if (state.logged) logWide(state, root, roundLine);   // 적은 줄이 있으면 = 목록이 비지 않았다(주체마다 `LOG_KEEP` 줄은 남는다)
             pinRound(root, roundLine);
             break;
         }
@@ -930,7 +990,7 @@ function apply(state, root, opts, ev) {
             if (grew) renderUnits(state, root);
             const a = U(ev.u);
             // 대상 칸 = 불린 무리(쉼표) — 처음 선 것과 되살아난 것을 가르지 않는다 · 값 칸은 빈다 (ADR-0189)
-            if (a) pushLog(state, root, logRow(L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), ''), a.side);
+            if (a) logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), '');
             break;
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
@@ -950,9 +1010,8 @@ function apply(state, root, opts, ev) {
             if (a && d) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
-                pushLog(state, root, logRow(L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : ''), a.side);
+                logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
                 addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
-                renderDmg(state, root);
             }
             break;
         }
@@ -961,9 +1020,8 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
-                pushLog(state, root, logRow(L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg), a.side);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
+                logLine(state, root, a.side, L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
                 addDmg(state, a, d, 'reflect', ev.dmg);
-                renderDmg(state, root);
             }
             break;
         }
@@ -973,9 +1031,8 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
             if (a && d) {
-                pushLog(state, root, logRow(L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg), a.side);   // 주체는 터진 쪽 (반사와 같은 자리)
+                logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg);   // 주체는 터진 쪽 (반사와 같은 자리)
                 addDmg(state, a, d, ev.s, ev.dmg);
-                renderDmg(state, root);
             }
             break;
         }
@@ -983,7 +1040,7 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u), d = U(ev.d);
             if (u) popup(state, u, t('pop.counter'), 'counter');
             // 주체는 반격한 쪽 (반사와 같은 자리) · 반격은 기본 공격이라 무기 칸 실루엣 · 값 칸은 「반격」
-            if (u && d) pushLog(state, root, logRow(L(u.name), dmgIcon('basic'), t('bt.basicAttack'), L(d.name), t('log.v.counter')), u.side);
+            if (u && d) logLine(state, root, u.side, L(u.name), dmgIcon('basic'), t('bt.basicAttack'), L(d.name), t('log.v.counter'));
             break;
         }
         case 'dodge': {
@@ -991,7 +1048,7 @@ function apply(state, root, opts, ev) {
             const skill = strikeLabel(ev.s);
             if (a) markActed(a, ev.t);
             if (d) popup(state, d, t('pop.dodge'), 'miss');
-            if (a && d) pushLog(state, root, logRow(L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss')), a.side);
+            if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss'));
             break;
         }
         case 'stagger': {   // 물리 경직 (R110) — 끝 시각까지 창 뱃지 줄에 칩 하나 · 그동안 행동 게이지가 선다. 로그 · 팝업은 없다 (SCREEN_DESIGN §4-2 · ADR-0154)
@@ -1012,14 +1069,14 @@ function apply(state, root, opts, ev) {
             refreshUnit(state, u);
             const enemy = u.side === 'enemy';
             // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
-            pushLog(state, root, logRow(L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed')), enemy ? 'party' : 'enemy');
+            logLine(state, root, enemy ? 'party' : 'enemy', L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed'));
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
             break;
         }
         case 'heal': {   // 회복 — 시전자(a)가 대상(d)의 HP 를 올린다. 부호가 반대일 뿐 타격과 같은 자리에 뜬다
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
-            if (a && d) pushLog(state, root, logRow(L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), `+${ev.amt}`, 'heal-t'), a.side);
+            if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), `+${ev.amt}`, 'heal-t');
             break;
         }
         case 'potion': {   // 물약 — 앞의 찬 칸(`i`)이 비고 그 영웅 HP 가 오른다 (R104 · ADR-0148).
@@ -1030,7 +1087,7 @@ function apply(state, root, opts, ev) {
             if (slot) slot.full = false;
             paintPotion(state, root, ev.i);
             // 대상 칸은 빈다 · 남은 칸 수는 안 적는다 — 아레나의 물약 칸이 든다 (ADR-0189)
-            if (u) pushLog(state, root, logRow(L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t'), u.side);
+            if (u) logLine(state, root, u.side, L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t');
             break;
         }
         case 'regen': {   // HP 재생 — 조용히 오른다(팝업 없음). 정수 1 이상 쌓인 틱에만 온다
@@ -1050,8 +1107,8 @@ function apply(state, root, opts, ev) {
             // 오오라(`until: null`)는 로그에 안 적는다 — 전투 시작 · 적의 라운드마다 받는 유닛 수만큼 같은 줄이 쌓인다. 뱃지가 든다 (R98 · ADR-0127)
             // 배리어인지는 `stat` 으로 가른다 [2026-09-21 · 부채 #50 곁가지] — `amt` 는 최대 HP 창(`hp_max_pct`)도 실어서
             //   `amt != null` 로 가르면 배틀오더스가 「방벽 21」로 찍혔다
-            if (ev.until !== null) pushLog(state, root, logRow(L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '',
-                ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up')), u.side);
+            if (ev.until !== null) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '',
+                ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up'));
             break;
         }
         case 'buffEnd': {
@@ -1062,7 +1119,7 @@ function apply(state, root, opts, ev) {
             // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
-            if (!aura) pushLog(state, root, logRow(L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '', t('log.v.ended')), u.side);
+            if (!aura) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '', t('log.v.ended'));
             break;
         }
         // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)
@@ -1084,7 +1141,7 @@ function apply(state, root, opts, ev) {
         case 'end': {
             state.ended = true;
             clearInterval(state.timer);
-            pushLog(state, root, wideRow(t(ev.won ? 'log.end.win' : 'log.end.lose')));
+            logWide(state, root, t(ev.won ? 'log.end.win' : 'log.end.lose'));
             showResult(state, root, opts, ev.won);
             // 재생이 끝에 닿았다고 앱에 알린다 — 상단 세그먼트의 관전 칸이 「전투 종료」로 바뀐다 (ADR-0147).
             //   되감아 선 끝(재개 mount)은 알리지 않는다 — 앱은 넘긴 재생 위치로 이미 안다

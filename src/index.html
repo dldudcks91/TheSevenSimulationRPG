@@ -11,7 +11,8 @@
 <body>
     <!-- 한 장 — 화면은 1600×800 한 장이고 창에 맞춰 통째로 줄이고 늘린다 (ADR-0087 · 크기는 style.css 의 #stage) -->
     <div id="stage">
-        <div id="app">
+        <!-- login-gate 로 시작한다 — 첫 render 전에 빈 브랜드 · 상단바 · 내비가 비치지 않게 (ADR-0349). 이후엔 app.js:renderShell 이 authenticated 를 따라 건다 -->
+        <div id="app" class="login-gate">
             <div class="brand">THE <b>SEVEN</b></div>
             <div class="topbar">
                 <div class="crumb"></div>

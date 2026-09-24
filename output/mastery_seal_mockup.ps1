@@ -20,15 +20,18 @@ public static class MasterySealMockup
         if (points.Length > 1) g.DrawLines(p, points);
     }
 
-    static void Seal(Graphics g, float x, float y, float size, int kind)
+    static void Seal(Graphics g, float x, float y, float size, int kind, bool chrome = true)
     {
         var state = g.Save();
         g.TranslateTransform(x, y);
         g.ScaleTransform(size / 100f, size / 100f);
 
-        using (var fill = new SolidBrush(Cell)) g.FillRectangle(fill, 0, 0, 100, 100);
-        using (var border = new Pen(Edge, 1.2f)) g.DrawRectangle(border, 0.6f, 0.6f, 98.8f, 98.8f);
-        using (var ring = new Pen(Edge, 1.9f)) g.DrawEllipse(ring, 19, 19, 62, 62);
+        if (chrome)
+        {
+            using (var fill = new SolidBrush(Cell)) g.FillRectangle(fill, 0, 0, 100, 100);
+            using (var border = new Pen(Edge, 1.2f)) g.DrawRectangle(border, 0.6f, 0.6f, 98.8f, 98.8f);
+        }
+        using (var ring = new Pen(Metal, 1.9f)) g.DrawEllipse(ring, 14, 14, 72, 72);
         using (var pen = new Pen(Metal, 4.1f))
         using (var brush = new SolidBrush(Metal))
         {
@@ -78,11 +81,30 @@ public static class MasterySealMockup
             }
         }
 
-        using (var badge = new SolidBrush(Bg)) g.FillRectangle(badge, 73, 85, 24, 12);
-        using (var badgeText = new SolidBrush(Muted))
-        using (var font = new Font("Arial", 8, FontStyle.Regular, GraphicsUnit.Pixel))
-            g.DrawString("0/5", font, badgeText, 76, 86);
+        if (chrome)
+        {
+            using (var badge = new SolidBrush(Bg)) g.FillRectangle(badge, 73, 85, 24, 12);
+            using (var badgeText = new SolidBrush(Muted))
+            using (var font = new Font("Arial", 8, FontStyle.Regular, GraphicsUnit.Pixel))
+                g.DrawString("0/5", font, badgeText, 76, 86);
+        }
         g.Restore(state);
+    }
+
+    public static void RenderAssets(string directory)
+    {
+        string[] names = { "aspd_pct_seal.png", "atk_pct_seal.png", "hp_pct_seal.png" };
+        for (int i = 0; i < names.Length; i++)
+        {
+            using (var bmp = new Bitmap(256, 256, PixelFormat.Format32bppArgb))
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.Clear(Color.Transparent);
+                Seal(g, 0, 0, 256, i, false);
+                bmp.Save(System.IO.Path.Combine(directory, names[i]), ImageFormat.Png);
+            }
+        }
     }
 
     public static void Render(string output)
@@ -124,3 +146,4 @@ public static class MasterySealMockup
 
 Add-Type -TypeDefinition $source -ReferencedAssemblies System.Drawing
 [MasterySealMockup]::Render((Join-Path $PSScriptRoot 'mastery_seal_mockup.png'))
+[MasterySealMockup]::RenderAssets((Join-Path $PSScriptRoot '..\src\assets\art\icons\mastery'))

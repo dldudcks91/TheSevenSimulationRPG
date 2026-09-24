@@ -36,7 +36,7 @@ Phase 1 = **무빌드 웹**(ES Modules + 순수 DOM/CSS, 서버 없음, CSV, Loc
 TheSevenSimulationRPG/
 ├── CLAUDE.md
 ├── start.bat              # 로컬 서버 실행 — ES Modules 는 file:// 에서 막힌다
-├── serve.py               # 그 서버 본체 — http.server + `Cache-Control: no-store` (같은 파일명 아트 교체가 캐시로 안 먹던 문제)
+├── serve.py               # 그 서버 본체 — http.server + `Cache-Control: no-cache` + ETag (같은 파일명 아트 교체는 반영 · 안 바뀐 그림은 다시 안 받는다)
 ├── docs/
 │   ├── game_design/       # 게임의 WHAT — GAME_DESIGN.md(메인 · §9 최근 결정 · §10 미확정) + 세부 8종 + DECISION_LOG.md(이력 아카이브 — 평소엔 안 연다)
 │   ├── client/            # 소프트웨어의 HOW — DEV_PLAN(계획·부채) · ARCHITECTURE(구조) · INTERFACE(이식 계약) · DEV_LOG(이력 아카이브 — 평소엔 안 연다)
@@ -69,7 +69,7 @@ TheSevenSimulationRPG/
 ## 작업 규칙 (세션 공통 — 스킬마다 옮겨 적지 않는다)
 
 - **병렬 세션** [2026-08-26] — 같은 저장소에서 Claude 세션이 여럿 동시에 돈다. 문서 · CSV 를 인용하거나 고치기 전에 `ls -la --time-style=long-iso` 로 mtime 을 보고 세션 시작 뒤 바뀐 파일은 다시 읽는다. 패치는 정확한 old 문자열 매칭으로만 한다(다른 세션의 변경을 덮어쓰지 않는다). 커밋 전 `git status` 에 내가 안 만진 파일이 있으면 다른 세션의 작업이다
-- **서버는 사용자 것이다** [2026-09-21] — `8777` 은 사용자의 `start.bat` 전용이라 **어떤 세션도 끄지 않는다**. `taskkill /F /IM python.exe` 처럼 **이름으로 뭉뚱그려 죽이는 명령 금지** — 끌 땐 PID · 포트로 대상을 확인하고 그 하나만. 에이전트가 띄울 땐 `serve.py <세션 포트>` 를 `Start-Process` 로 OS 에 분리한다(background Bash 슬롯은 회수될 때 서버를 같이 데려간다 · plain `python -m http.server` 는 `no-store` 가 빠져 아트 교체가 캐시로 안 먹는다). 이미 물린 포트엔 **띄우지 않는다** — `serve.py` 의 `allow_reuse_address` 가 Windows 에선 강탈을 허용해 bind 가 그냥 되고, 두 서버가 요청을 나눠 먹는다
+- **서버는 사용자 것이다** [2026-09-21] — `8777` 은 사용자의 `start.bat` 전용이라 **어떤 세션도 끄지 않는다**. `taskkill /F /IM python.exe` 처럼 **이름으로 뭉뚱그려 죽이는 명령 금지** — 끌 땐 PID · 포트로 대상을 확인하고 그 하나만. 에이전트가 띄울 땐 `serve.py <세션 포트>` 를 `Start-Process` 로 OS 에 분리한다(background Bash 슬롯은 회수될 때 서버를 같이 데려간다 · plain `python -m http.server` 는 재검증(`no-cache` + ETag)이 빠져 아트 교체가 캐시로 안 먹는다). 이미 물린 포트엔 **띄우지 않는다** — `serve.py` 의 `allow_reuse_address` 가 Windows 에선 강탈을 허용해 bind 가 그냥 되고, 두 서버가 요청을 나눠 먹는다
 - **문서 · 형제 프로젝트 조사는 `model: "sonnet"` 서브에이전트** [2026-08-26] — 직접 grep 으로 메인 컨텍스트를 태우지 않는다. 형제 프로젝트(TheSevenRPG · TheSevenSimulation · TheSevenTactics)는 세션의 additional working directories 안에서만
 - **서브에이전트는 상황 판단** [2026-09-10 사용자 정정] — 서로 독립인 갈래를 동시에 돌리거나 산출물이 메인 맥락을 넘칠 때만 에이전트에 맡긴다(결정 목록 D1~Dn 과 검증 절차를 담은 `PLAN.md` → 실행자 · 파일이 겹치지 않게 단계를 나눈다 · 메인은 diff 검수와 보고). 같은 파일을 순서대로 고치는 일은 메인이 직접 한다
 - **짧은 동의(「ㄱ」 · 「ok」)의 범위**는 글로벌 CLAUDE.md, **커밋 · 푸시**는 위 규칙 5

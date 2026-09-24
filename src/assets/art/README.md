@@ -2,7 +2,7 @@
 
 `backgrounds/` · `faces/` · `icons/` · `buildings/` 는 모두 신규 아트가 직접 들어가는 활성 폴더다.
 ⚠ **계승 포크 정책이 걸리는 것은 `backgrounds/source/pixel/` 에 남은 계승 원본 셋뿐이다**(101 · 102 · `town`) — 데이터 CSV(`src/data/inherited/`)와 같은 정책으로 **원본 SSOT 는 TheSevenRPG 에 있고 여기 것은 재동기화 가능한 사본**, 읽기 전용(CLAUDE.md 규칙 3). 나머지는 다시 뽑아 덮어써도 된다.
-**세 폴더가 같은 모양이다** [2026-09-16] — 게임이 읽는 그림 = 묶음 폴더/id(`backgrounds/<스타일>/background_stage_<id>.webp` · `faces/<스타일>/monster/<idx>.png` · `icons/items/item_base/<base_id>.png` …) · 손 안 댄 원본 = `source/` · id 없는 여분 = `unused/`.
+**세 폴더가 같은 모양이다** [2026-09-16] — 게임이 읽는 그림 = 묶음 폴더/id(`backgrounds/<스타일>/background_stage_<id>.webp` · `faces/<스타일>/monster/<idx>.webp` · `icons/items/item_base/<base_id>.png` …) · 손 안 댄 원본 = `source/` · id 없는 여분 = `unused/`.
 **스타일 축을 갖는 것은 `backgrounds/`(2026-09-16) · `faces/`(2026-08-30) 둘**이고 `icons/` 는 없다(2026-09-03).
 
 ## backgrounds/
@@ -225,7 +225,7 @@ id 가 아니다. 스타일로 쓰려면 id 로 이름을 바꿔 새 폴더의 `
 
 ### 새 스타일 넣는 법 — 두 단계
 
-1. `faces/` 아래 폴더를 만들고 같은 파일명으로 그림을 넣는다 (`faces/<스타일>/monster/1101.png` · `faces/<스타일>/hero/warrior_1.png` …)
+1. `faces/` 아래 폴더를 만들고 같은 파일명으로 그림을 넣는다 (`faces/<스타일>/monster/1101.webp` · `faces/<스타일>/hero/warrior_1.webp` …)
 2. `src/ui/mock.js` 의 `FACE_STYLES` 목록에 그 폴더 이름을 더한다
 
 고르는 순서는 언어와 같다 — URL `?face=<스타일>` → localStorage → **목록의 첫 항목**.
@@ -284,13 +284,13 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 원본을 되살려야 하면 `source/` 가 그림의 SSOT 다 — `cartoon/` 것은 이름만 바꾼 사본이고, 위 절차를 거친 것은 **사본 + 여백 정규화**다.
 
-⚠ **지금 `cartoon/hero/*.png` 은 이 정규화를 거치지 않았다** — 위에서 정규화한 기사 5종은 2026-09-04 에 전부 교체·삭제됐다. 그 뒤의 초상은 시트를 타일째 잘라 쓰기 때문에 원래 여백이 거의 없다: 가로 71~100% · 세로 88~100%. 다시 여백이 큰 초상이 들어오면 이 절차를 그 장에만 적용한다.
+⚠ **현재 `cartoon/hero/*.webp`의 작업 원본은 이 정규화를 거치지 않았다** — 위에서 정규화한 기사 5종은 2026-09-04 에 전부 교체·삭제됐다. 그 뒤의 초상은 시트를 타일째 잘라 쓰기 때문에 원래 여백이 거의 없다: 가로 71~100% · 세로 88~100%. 다시 여백이 큰 초상이 들어오면 이 절차를 그 장에만 적용한다.
 
 ---
 
 ## icons/mastery/ — 마스터리 아이콘
 
-죄종 공통 윗줄 3종의 설치본은 `aspd_pct_v2.png`(빠른 검격) · `atk_pct_v2.png`(검과 상승 표지) · `hp_pct_v2.png`(하트와 상승 표지)다. 투명 배경의 굵은 실루엣이며, 화면은 PNG 의 알파를 마스크로 써 기존 스킬 아이콘과 같은 밝은 청회색(`#d8d9e6`) 단색으로 표시한다. `src/ui/app.js:MASTERY_T1_ICONS` 가 세 노드에 연결한다. 이전 금색 육각형 3종과 `_source.png` 는 비교용으로 남긴다.
+죄종 공통 윗줄 3종의 설치본은 `aspd_pct_seal.png`(속도 눈금) · `atk_pct_seal.png`(솟는 각면) · `hp_pct_seal.png`(씨앗과 잎)이다. 모두 매끈한 큰 원형 봉인선을 공유하며, 화면은 PNG 알파를 마스크로 써 기존 청동색 토큰으로 표시한다. `src/ui/app.js:MASTERY_T1_ICONS` 가 세 노드에 연결한다. `output/mastery_seal_mockup.ps1` 로 재생성할 수 있다. 이전 아이콘과 `_source.png` 는 비교용으로 남긴다.
 
 ## icons/skills/ — 스킬 아이콘 [신설 2026-09-03]
 

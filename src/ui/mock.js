@@ -224,7 +224,7 @@ export const PAPERDOLL = [
    전투 25종 = 장비·스킬이 만든다. */
 
 /**
- * 영웅 초상 — 몬스터와 같은 스타일 폴더(`faces/<스타일>/`)의 `hero/<직업id>_<k>.png` (2026-09-07 직업 분류 · 하위 폴더 2026-09-14).
+ * 영웅 초상 — 몬스터와 같은 스타일 폴더(`faces/<스타일>/`)의 `hero/<직업id>_<k>.webp` (2026-09-07 직업 분류 · 하위 폴더 2026-09-14).
  * **어느 그림인지는 영웅이 태어날 때 굴려 세이브에 박은 `face` 가 정한다** (2026-09-06 사용자 지시).
  *
  * 옛 판은 **이름 해시**였다 — 저장할 자리가 없어서 매번 다시 계산한 것이고, 그래서 두 가지가 따라왔다:
@@ -312,11 +312,12 @@ const strHash = s => {
 export const heroFace = hero => {
     const id = hero?.face;
     if (typeof id !== 'string') return null;            // null·옛 정수 → 빈 칸 (v13 이관이 정수를 남기지 않는다 — 방어)
+    if (id === 'goblin_butler') return `${faceDir()}hero/goblin_butler.webp`;
     const i = id.lastIndexOf('_');
     const cls = id.slice(0, i), k = Math.floor(+id.slice(i + 1));
     const m = HERO_FACES[cls] ?? 0;
     if (!(m >= 1) || !(k >= 1)) return null;
-    return `${faceDir()}hero/${cls}_${1 + (k - 1) % m}.png`;   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
+    return `${faceDir()}hero/${cls}_${1 + (k - 1) % m}.webp`;   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
 };
 
 /**
@@ -552,10 +553,10 @@ export const EXPLORE_MAP_CHAPTERS = [1];
 export const exploreMap = ch => (EXPLORE_MAP_CHAPTERS.includes(ch) ? BG_DIR + `explore_chapter_${ch}.webp` : null);
 
 /**
- * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.png` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.png`.
+ * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
  *
  * **스타일 하나 = 폴더 하나** (2026-08-30). 새 스타일을 넣는 방법은 둘뿐이다:
- *   ① `faces/` 아래 폴더를 만들고 같은 경로 규칙(`monster/<idx>.png` · `hero/<직업id>_<k>.png`)으로 그림을 넣는다
+ *   ① `faces/` 아래 폴더를 만들고 같은 경로 규칙(`monster/<idx>.webp` · `hero/<직업id>_<k>.webp`)으로 그림을 넣는다
  *   ② 아래 `FACE_STYLES` 에 그 폴더 이름을 더한다
  * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `faceDir()` 하나뿐이라서다.
  * 고르는 순서는 언어와 같다: URL `?face=<스타일>` → localStorage → 목록의 **첫 항목**.
@@ -701,10 +702,9 @@ export const TRADE = {
     },
 };
 
-/* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — `commission_kind.csv`(종류 2종 ·
-   확정 기획 — 09-07 목표형 개정으로 4종 → 2종, DEV_PLAN R45)와 `commission.csv`(게시판 행 · ⚠임시 자리채움) 두 표이고 로더는 `ui/data.js:D.commissionKinds`·
-   `D.commissionList` 다. 목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)과 갈리는 지점이고,
-   근거는 「mock 과 CSV 가 겹치면 CSV 만 둔다」(SCREEN_DESIGN §14 · DEV_PLAN §5-B). */
+/* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — 종류(`commission_kind.csv`) · 틀(`commission.csv`) ·
+   등급(`commission_grade.csv`) · 종족(`monster_type.csv`)이고 카드는 `game_logic/commission.js` 가 굴린다(2026-09-24 · R153).
+   목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)과 갈리는 지점이고, 근거는 「mock 과 CSV 가 겹치면 CSV 만 둔다」(SCREEN_DESIGN §14 · DEV_PLAN §5-B). */
 
 /* ═══════════ 건물 그림 — ⚠ 단색 실루엣 목업 (SCREEN_DESIGN §13 · ADR-0146 · ADR-0302) ═══════════
  * 건설 탭의 건물 카드 머리 그림 — **키 = `building.csv:building_id`**. 건물마다 그릴 아트가 없어 선 그림(SVG) 한 장씩을 든다.

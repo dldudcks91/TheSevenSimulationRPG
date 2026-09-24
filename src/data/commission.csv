@@ -1,6 +1,8 @@
-commission_id,kind_id,goal_kr,goal_en,reward_gold,reward_fame,description_kr
-cm_kill_forest,kill,뒤틀린 숲의 몬스터 30마리,30 monsters in the Twisted Forest,1800,3,⚠임시 — 이 표 전체가 구조 검증용 자리채움이다. 게시판 칸 수 = 행 수이고 보상·목표는 기획 미정 (GAME_DESIGN §10 「의뢰 세부」)
-cm_kill_elite,kill,정예 6마리,6 elites,3100,5,⚠임시
-cm_col_ore,collect,광산에서 재료 12개,12 materials from the mine,900,2,⚠임시
-cm_col_herb,collect,채집에서 약초 20개,20 herbs from gathering,1200,2,⚠임시
-cm_col_drop,collect,매직 장비 5개,5 magic items,1500,3,⚠임시 — 드롭이 채우는 수집. 09-07 이 「수집」의 원천으로 드롭을 명시했는데 그 자리를 덮는 행이 없어 채웠다 (2026-09-08)
+commission_id,kind_id,axis,ref,need,reward_gold,weight,description_kr
+cm_kill_chapter,kill,chapter,-,30,1800,3,⚠제안 — 의뢰의 **틀**이다(게시판 행이 아니다 — 카드는 틀 · 등급 · 대상을 굴려 만든다 · base_expedition_design §1-3 · 2026-09-24 · R153). 「{지역}의 몬스터 n마리」 — 대상 챕터는 지금 들어갈 수 있는 챕터에서 굴린다 · 보상 챕터 = 그 챕터. need · reward_gold 는 일반 등급의 값이고 등급 배수가 곱해진다(commission_grade.csv)
+cm_kill_race,kill,race,-,25,1600,2,⚠제안 — 「{종족} 종족 n마리」 — 종족은 지금 들어갈 수 있는 스테이지의 일반몹에서 굴린다(monster_type.csv 행 순서) · 보스 · 정예도 그 종족이면 센다
+cm_kill_monster,kill,monster,-,12,1400,2,⚠제안 — 「{몬스터} n마리」 — 지금 들어갈 수 있는 스테이지의 일반몹에서 굴린다 · 정예로 나온 것도 센다 · 보상 챕터 = 그 몬스터의 챕터
+cm_kill_elite,kill,grade,elite,6,3100,2,⚠제안 — 「정예 n마리」 — 어디서든
+cm_kill_boss,kill,grade,boss,2,3000,1,⚠제안 — 「보스 n마리」 — 스테이지보스 · 챕터보스 어디서든
+cm_col_magic,collect,rarity,magic,5,1500,2,⚠제안 — 「매직 장비 n개」 — 들어온 드롭(알아서 분해로 녹은 것 포함 · 가방이 차서 버린 것 제외). 파견 · 탐험 산출 수집은 그 활동이 생기면 어휘가 는다(광산 · 채집 행을 걷은 이유)
+cm_col_rare,collect,rarity,rare,2,2400,1,⚠제안 — 「레어 장비 n개」

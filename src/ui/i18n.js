@@ -247,7 +247,6 @@ const STRINGS = {
     'exp.level.up': { ko: '1 올리기', en: 'Raise by 1' },
     'exp.level.max': { ko: '최대로', en: 'To maximum' },
     'exp.err.range': { ko: '그 위험도로는 바꿀 수 없다', en: 'That danger level is out of range' },
-    'exp.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 보스전 중이면 다음 런부터 · 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
     'exp.lock.boss': { ko: '보스전 중 — 바꾼 것은 다음 런부터 먹는다', en: 'Boss fight — changes apply next run' },
     'exp.tactic.off': { ko: '전술이 꺼졌다 — {eff}', en: 'Tactic off — {eff}' },
@@ -419,7 +418,8 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 11 [개정 2026-09-21 사용자 지시 · ADR-0253] — 원정 · 편성 · 캐릭터 · 건설 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 도감 · 도움말 (SCREEN_DESIGN §1).
+    /* 탭 12 [개정 2026-09-24 사용자 지시 · ADR-0348] — 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 제련소 · 훈련장 · 자원 · 탐험 · 도감 · 도움말 (SCREEN_DESIGN §1).
+       [개정 2026-09-21 사용자 지시 · ADR-0253] 탭 11 — 원정 · 편성 · 캐릭터 · 건설 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 도감 · 도움말.
        연구가 「건설」이 되어 캐릭터 바로 뒤로 왔다 — 키(`nav.research`)는 옛 이름 그대로다.
        [개정 2026-09-08 사용자 지시] 탭 10 — 원정 · 캐릭터 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
        09-08 에 **이미지 도감이 도감 안으로 들어가며** `nav.imagedex` 가 삭제됐다 — 탭이 아니라 도감의 **세그먼트 넷 중 셋**이다 (`cx.seg.*` · §9 · §9-1).
@@ -437,11 +437,11 @@ const STRINGS = {
     'nav.character': { ko: '캐릭터', en: 'Character' },
     // 건설 [2026-09-21 사용자 지시 · ADR-0253] — 옛 「연구」. 화면 이름과 자리(캐릭터 바로 뒤)만 바뀌었고 키는 옛 이름 그대로다
     'nav.research': { ko: '건설', en: 'Construction' },
-    'nav.forge': { ko: '제련소', en: 'Smeltery' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
-    // 훈련장 [2026-09-22 사용자 지시 · ADR-0297] — 선술집 뒤 · 건설의 훈련장 가지 이름도 이 키를 쓴다
-    'nav.training': { ko: '훈련장', en: 'Training Grounds' },
     'nav.shop': { ko: '상점', en: 'Shop' },
+    'nav.forge': { ko: '제련소', en: 'Smeltery' },
+    // 훈련장 [2026-09-22 사용자 지시 · ADR-0297] — 제련소 뒤(ADR-0348) · 건설의 훈련장 가지 이름도 이 키를 쓴다
+    'nav.training': { ko: '훈련장', en: 'Training Grounds' },
     'nav.resource': { ko: '자원', en: 'Resources' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.codex': { ko: '도감', en: 'Codex' },
@@ -496,22 +496,33 @@ const STRINGS = {
     'td.buy': { ko: '사기', en: 'Buy' },
     'td.stock': { ko: '수량 {n}', en: '{n} in stock' },
 
-    /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
-       ⚠ **종류 이름과 「어떻게 도는가」 줄은 여기 없다** — `commission_kind.csv` 의 `_kr`/`_en` 쌍이고
-       화면은 `L()` 로 푼다. 목표·보상도 `commission.csv` 가 든다 (mock 과 CSV 가 겹치면 CSV 만 둔다).
-       남는 것은 데이터가 아닌 **화면 라벨 둘**뿐이다 */
-    'cm.fame': { ko: '명성', en: 'Fame' },
+    /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
+       ⚠ **종류 · 등급 이름은 여기 없다** — `commission_kind.csv` · `commission_grade.csv` 의 `_kr`/`_en` 쌍이고 화면은 `L()` 로 푼다.
+       남는 것은 화면 라벨 · **목표 틀**(어휘마다 하나 — `{t}` = 대상 이름 · `{n}` = 목표 수) · 플래시다. ~~`cm.fame`~~ 은 명성 보류로 걷었다 */
     'cm.accept': { ko: '수락', en: 'Accept' },
+    'cm.claim': { ko: '수령', en: 'Claim' },
+    'cm.drop': { ko: '포기', en: 'Abandon' },
+    'cm.dropConfirm': { ko: '정말 포기', en: 'Confirm abandon' },
+    'cm.slots': { ko: '받음 {n} / {max}', en: 'Taken {n} / {max}' },
+    'cm.goal.chapter': { ko: '{t}의 몬스터 {n}마리', en: '{n} monsters in the {t}' },
+    'cm.goal.race': { ko: '{t} 종족 {n}마리', en: '{n} {t} foes' },
+    'cm.goal.monster': { ko: '{t} {n}마리', en: '{t} ×{n}' },
+    'cm.goal.elite': { ko: '정예 {n}마리', en: '{n} elites' },
+    'cm.goal.boss': { ko: '보스 {n}마리', en: '{n} bosses' },
+    'cm.goal.rarity': { ko: '{t} 장비 {n}개', en: '{n} {t} items' },
+    'cm.taken': { ko: '의뢰를 받았다 — {goal}', en: 'Commission taken — {goal}' },
+    'cm.claimed': { ko: '의뢰 완료 — {g} G', en: 'Commission complete — {g} G' },
+    'cm.dropped': { ko: '의뢰를 포기했다', en: 'Commission abandoned' },
+    'cm.err.full': { ko: '의뢰는 {n}개까지 받아 둘 수 있다', en: 'You can hold up to {n} commissions' },
+    'cm.err.notDone': { ko: '아직 목표를 다 채우지 않았다', en: 'The goal is not filled yet' },
     /* 도박장 (SCREEN_DESIGN §8-1 · ADR-0322 자리 · ADR-0331 슬롯) — 의뢰 오른쪽 칸이 창을 연다. 창은 3×3 슬롯이다.
        심볼 · 잭팟 이름은 여기 없다 — `slot_symbol.csv` · `slot_coin.csv` 의 `_kr`/`_en` 쌍을 `L()` 로 푼다. 규칙 문장은 도움말(`gb.help`)만 든다 */
     'gb.h': { ko: '도박장', en: 'Gambling Den' },
     'gb.enter': { ko: '입장', en: 'Enter' },
-    'gb.charges': { ko: '충전 {n} / {cap}', en: 'Spins {n} / {cap}' },
-    'gb.next': { ko: '다음 {t}', en: 'Next in {t}' },
-    'gb.full': { ko: '가득', en: 'Full' },
+    'gb.from': { ko: '한 판 {g} G부터', en: 'From {g} G a spin' },
     'gb.stake': { ko: '판돈', en: 'Stake' },
     'gb.spin': { ko: '스핀 · {g} G', en: 'Spin · {g} G' },
-    'gb.spinAll': { ko: '모두 돌리기', en: 'Spin All' },
+    'gb.spinN': { ko: '{n}판 돌리기', en: 'Spin ×{n}' },
     'gb.won': { ko: '받음', en: 'Won' },
     'gb.net': { ko: '순손익', en: 'Net' },
     'gb.spins': { ko: '{n}판', en: '{n} spins' },
@@ -521,15 +532,14 @@ const STRINGS = {
     'gb.pay.h': { ko: '배당표', en: 'Paytable' },
     'gb.pay.hold': { ko: '코인 {n}개 이상 → 홀드 앤 스핀', en: '{n}+ coins → Hold & Spin' },
     'gb.pay.fill': { ko: '판이 다 차면', en: 'Full board' },
-    'gb.err.charge': { ko: '충전이 없다 — 다음 {t}', en: 'No spins — next in {t}' },
     'gb.err.gold': { ko: '판돈이 모자란다 ({g} G)', en: 'Not enough gold for the stake ({g} G)' },
     // 도움말 전용 — 규칙은 인게임 창에 안 적는다 (SCREEN_DESIGN §12 · 원칙 4). 값은 부르는 쪽이 balance 에서 넣는다
     'gb.help': {
-        ko: '선술집이 연다. 스핀은 {h}시간마다 한 칸씩 차고 {cap}칸까지 쌓인다 — 게임을 꺼 둬도 찬다<br>'
+        ko: '선술집이 연다. 횟수 제한은 없다 — 판돈만 있으면 돈다. {n}판 돌리기는 한 번에 {n}판을 돌리고, 도중에 판돈이 떨어지면 거기서 멈춘다<br>'
             + '판돈을 걸고 돌리면 가로 · 대각 {lines}라인에서 같은 심볼 셋이 골드나 재료를 준다. 와일드가 다른 심볼 대신 선다 · 코인은 라인을 끊는다<br>'
             + '코인이 {trig}개 이상 서면 홀드 앤 스핀 — 코인은 제자리에 붙고, 새 코인이 설 때마다 리스핀이 {re}번으로 돌아간다. 판이 다 차면 그랜드<br>'
             + '판돈과 재료는 진행 중인 챕터를 따른다. 윗단계 판돈은 선술집 랭크가 연다. 장비 · 낙인은 안 나온다',
-        en: 'The Tavern opens it. A spin charges every {h}h and up to {cap} are stored — they charge while the game is off<br>'
+        en: 'The Tavern opens it. There is no spin limit — spin as long as you can pay the stake. Spin ×{n} plays {n} spins at once and stops early if you run out of gold<br>'
             + 'Stake gold and spin: three matching symbols on any of the {lines} rows or diagonals pay gold or materials. Wilds stand in for other symbols · coins break a line<br>'
             + 'Land {trig}+ coins for Hold & Spin — coins stick, and each new coin resets the respins to {re}. Fill the board for the Grand<br>'
             + 'Stakes and materials follow your current chapter. Higher stakes unlock with Tavern ranks. No equipment or stigma comes out',
@@ -640,13 +650,17 @@ const STRINGS = {
         ko: '의뢰는 <b>받아 두는 목표</b>다 — 전장이 열리지 않는다. 게시판에서 골라 받아 두면 <b>평소 활동 위에 얹혀</b> 저절로 진행된다 (2026-09-07 확정)<br>'
             + '유형은 <b>둘</b> — <b>처치</b>(「x를 잡아라」 · 돌던 전투가 저절로 센다) · <b>수집</b>(「x를 모아라」 · 드롭과 파견·탐험 산출이 채운다)<br>'
             + '<b>오프라인에도 진행된다</b> — 자리를 비운 사이에도 목표가 나아간다. 그래서 따로 나갈 파티도, 의뢰만의 전장도 없다<br>'
-            + '<b>수락하면 그 회차가 소진된다</b> — 그래서 「어느 의뢰를 받을까」가 결정이 된다. 명성은 <b>성공했을 때만</b> 오르고 떨어지지 않는다<br>'
-            + '동시에 받을 수 있는 수 · 보상 · 명성 폭은 미정이라 <b>화면의 숫자는 전부 임시</b>다 (base_expedition_design §1-3)',
+            + '카드는 <b>틀 · 등급 · 대상</b>을 굴려 선다 — 대상은 지금 갈 수 있는 곳에서만 나온다. 등급은 <b>일반 · 매직 · 레어</b> — 윗 등급일수록 드물고 목표당 골드가 좋다<br>'
+            + '<b>수락하면 그 카드가 소진된다</b> — 받은 카드는 그 자리에서 진행 중이 되고, 받아 둘 수 있는 수는 선술집 랭크가 늘린다. 그래서 「어느 의뢰를 받을까」가 결정이 된다<br>'
+            + '<b>받은 뒤</b> 이긴 라운드의 처치와 들어온 드롭만 센다(가방이 차서 버린 것은 빼고) · 모든 부대가 같이 채운다 · <b>기한은 없다</b><br>'
+            + '다 채우면 <b>[수령]</b>으로 골드를 받는다 · <b>[포기]</b>는 벌이 없다(진행만 버린다) — 비는 자리에는 새 카드가 선다. 명성은 보류다 (base_expedition_design §1-3)',
         en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b> (settled 2026-09-07)<br>'
             + 'There are <b>two kinds</b> — <b>Slay</b> ("kill x" · the battles you already run count it) and <b>Collect</b> ("gather x" · drops and dispatch/exploration yields fill it)<br>'
             + '<b>It advances offline too</b> — the goal moves while you are away. So there is no party to send and no commission-only battlefield<br>'
-            + '<b>Accepting spends that slot</b> — which is what makes "who do I take on" a decision. Fame rises <b>only on success</b> and never falls<br>'
-            + 'How many you can hold at once, the rewards and the fame swings are undecided, so <b>every figure on the screen is placeholder</b> (base_expedition_design §1-3)',
+            + 'Each card rolls a <b>template, grade and target</b> — targets only come from places you can reach now. Grades are <b>Normal · Magic · Rare</b> — higher grades are rarer and pay more gold per goal<br>'
+            + '<b>Accepting spends that card</b> — it turns into an active commission in place, and the Tavern rank raises how many you can hold. That is what makes "which one do I take" a decision<br>'
+            + 'Only kills in won rounds and drops that come in <b>after you accept</b> count (items thrown away on a full bag do not) · every party fills it · <b>there is no deadline</b><br>'
+            + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place. Fame is on hold (base_expedition_design §1-3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드 (챕터의 마지막 스테이지는 챕터보스 단독 1라운드)', en: '1 run = 1 stage · {r} rounds (the last stage of each chapter is one round against the chapter boss alone)' },
@@ -843,8 +857,8 @@ const STRINGS = {
     'rs.h': { ko: '파티 전술', en: 'Party Tactics' },
     /* 건설 [2026-09-22 · R137 · SCREEN_DESIGN §13 · ADR-0302] — 표 넷을 그대로 그린다. 여는 것 문장은 **대상마다 한 키**(`cn.t.<대상>` —
        어휘는 `game_logic/construction.js:TARGETS`) · 더하기는 `+{n}`. 조건 · 비용 · 잠긴 자리의 「무엇을 지어야 하나」도 여기 */
-    'cn.progress': { ko: '지은 랭크 {n}', en: 'Ranks built {n}' },
     'cn.rank': { ko: '{n}랭크', en: 'Rank {n}' },
+    'cn.rank.no': { ko: '랭크 {n}', en: 'Rank {n}' },   // 상세 머리 상태 · 「다음 랭크」 · 랭크 목록의 번호 — `{n}` 은 로마 숫자(`M.roman`) · SCREEN_DESIGN §13-1
     'cn.need': { ko: '{b} {n}랭크 필요', en: 'Needs {b} rank {n}' },
     'cn.pending': { ko: '준비 중', en: 'Coming later' },
     'cn.soon': { ko: '(준비 중)', en: '(later)' },
@@ -856,7 +870,6 @@ const STRINGS = {
     'cn.now.h': { ko: '현재 가능한 기능', en: 'Available Now' },
     'cn.now.none': { ko: '아직 지은 랭크가 없다', en: 'Nothing built yet' },
     'cn.ranks.h': { ko: '{b} 랭크', en: '{b} Ranks' },
-    'cn.cost.h': { ko: '{n}랭크 비용', en: 'Rank {n} cost' },
     'cn.owned': { ko: '보유 {n}', en: 'Owned {n}' },
     'cn.built': { ko: '{b} {n}랭크를 지었다', en: 'Built {b} rank {n}' },
     'cn.req.stage': { ko: '{s} 클리어', en: 'Clear {s}' },
@@ -872,10 +885,10 @@ const STRINGS = {
     'cn.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
     // 여는 것 설명 — 「무엇을 할 수 있게 되나」 한 문장 · 대상마다 한 키 · 효과만(조건 · 절차는 안 적는다) [2026-09-24 사용자 지시 · ADR-0325 — 옛 값은 기능 이름]
     'cn.t.expedition': { ko: '파티를 원정에 보낸다', en: 'Send a party on expeditions' },
-    'cn.t.repeat': { ko: '원정을 자동으로 반복한다', en: 'Repeat expeditions automatically' },
-    'cn.t.stage_level': { ko: '원정 스테이지의 위험도를 조절한다', en: "Adjust a stage's danger level" },
-    'cn.t.upgrade_item': { ko: '장비를 강화한다', en: 'Upgrade equipment' },
-    'cn.t.make': { ko: '재료로 장비를 제작한다', en: 'Craft equipment from materials' },
+    // 제련소 랭크 I 의 둘은 문장이 아니라 이름 토막 [2026-09-24 사용자 지시 「장비 강화, 장비 제작 이렇게만」 · 시험 중 — SCREEN_DESIGN §13-1]
+    'cn.t.upgrade_item': { ko: '장비 강화', en: 'Equipment Upgrade' },
+    'cn.t.make': { ko: '장비 제작', en: 'Equipment Smithing' },
+    'cn.t.potion': { ko: '물약 제작', en: 'Potion Brewing' },   // 제련소 r2 — 물약 1단계를 함께 연다 (2026-09-24 사용자 지시)
     'cn.t.storage': { ko: '가방과 창고를 쓴다', en: 'Use the bag and stash' },
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록한다', en: 'Record monsters you meet in the codex' },
     'cn.t.hire': { ko: '선술집 명단에서 영웅을 고용한다', en: 'Hire heroes from the tavern roster' },
@@ -896,30 +909,32 @@ const STRINGS = {
     'cn.t.training': { ko: '영웅을 훈련시켜 경험치를 올린다', en: 'Train heroes to gain experience' },
     'cn.t.advance': { ko: '영웅을 전직시킨다', en: "Advance a hero's class" },
     'cn.t.skill_depth': { ko: '영웅 스킬에 포인트를 더 찍는다', en: 'Invest more points into hero skills' },
-    // 더하기는 「대상 +n 증가」 한 토막 — 서술형 문장으로 늘리지 않는다 (ADR-0329)
-    'cn.t.bag': { ko: '가방 칸 +{n} 증가', en: 'Bag slots +{n}' },
-    'cn.t.stash': { ko: '창고 칸 +{n} 증가', en: 'Stash slots +{n}' },
-    'cn.t.roster': { ko: '로스터 +{n} 증가', en: 'Roster +{n}' },
-    'cn.t.presets': { ko: '편성 +{n} 증가', en: 'Party presets +{n}' },
-    'cn.t.potionSlots': { ko: '원정 물약 칸 +{n} 증가', en: 'Expedition potion slots +{n}' },
-    'cn.t.upgrade': { ko: '강화 상한 +{n} 증가', en: 'Upgrade cap +{n}' },
-    'cn.t.searchSlots': { ko: '동시 수색 +{n} 증가', en: 'Parallel searches +{n}' },
-    'cn.t.shopPerSlot': { ko: '상단 부위별 품목 +{n} 증가', en: 'Wares per slot +{n}' },
-    'cn.t.shopWeapon': { ko: '상단 무기 품목 +{n} 증가', en: 'Weapon wares +{n}' },
-    'cn.t.make_level': { ko: '제작 레벨 +{n} 증가', en: 'Smithing level +{n}' },
-    'cn.t.potion_tier': { ko: '물약 단계 +{n} 증가', en: 'Potion tier +{n}' },
-    'cn.t.tactic_slots': { ko: '파티 전술 칸 +{n} 증가', en: 'Party tactic slots +{n}' },
-    'cn.t.make_kinds': { ko: '제작 종류 +{n} 증가', en: 'Craftable types +{n}' },
-    'cn.t.resource_tier': { ko: '파견처 자원 단계 +{n} 증가', en: 'Resource tier +{n}' },
-    'cn.t.workers': { ko: '파견처 일꾼 칸 +{n} 증가', en: 'Worker slots +{n}' },
-    'cn.t.shop_layers': { ko: '상단 품목 층 +{n} 증가', en: 'Ware tiers +{n}' },
-    'cn.t.explore_regions': { ko: '탐험 지역 +{n} 증가', en: 'Exploration regions +{n}' },
-    'cn.t.explore_slots': { ko: '동시 탐험 +{n} 증가', en: 'Parallel explorations +{n}' },
-    'cn.t.gear_sets': { ko: '장비 세트 +{n} 증가', en: 'Gear sets +{n}' },
-    'cn.t.commission_slots': { ko: '동시 의뢰 +{n} 증가', en: 'Parallel commissions +{n}' },
-    'cn.t.training_slots': { ko: '훈련 칸 +{n} 증가', en: 'Training slots +{n}' },
-    'cn.t.recruit_quality': { ko: '고용 · 수색 영웅 품질 +{n} 증가', en: 'Hire and search hero quality +{n}' },
-    'cn.t.research': { ko: '연구 상한 +{n} 증가', en: 'Research cap +{n}' },
+    // 더하기는 「대상 +n」 한 토막 — 서술형 문장으로 늘리지 않는다 (ADR-0329) · 「증가」 도 안 붙인다 — 「+」 가 이미 말한다 (ADR-0351)
+    'cn.t.bag': { ko: '가방 칸 +{n}', en: 'Bag slots +{n}' },
+    'cn.t.stash': { ko: '창고 칸 +{n}', en: 'Stash slots +{n}' },
+    'cn.t.roster': { ko: '로스터 +{n}', en: 'Roster +{n}' },
+    'cn.t.presets': { ko: '편성 +{n}', en: 'Party presets +{n}' },
+    'cn.t.potionSlots': { ko: '원정 물약 칸 +{n}', en: 'Expedition potion slots +{n}' },
+    'cn.t.upgrade': { ko: '강화 상한 +{n}', en: 'Upgrade cap +{n}' },
+    'cn.t.searchSlots': { ko: '동시 수색 +{n}', en: 'Parallel searches +{n}' },
+    'cn.t.shopPerSlot': { ko: '상단 부위별 품목 +{n}', en: 'Wares per slot +{n}' },
+    'cn.t.shopWeapon': { ko: '상단 무기 품목 +{n}', en: 'Weapon wares +{n}' },
+    'cn.t.make_level': { ko: '제작 레벨 +{n}', en: 'Smithing level +{n}' },
+    'cn.t.potion_tier': { ko: '물약 단계 +{n}', en: 'Potion tier +{n}' },
+    'cn.t.tactic_slots': { ko: '파티 전술 칸 +{n}', en: 'Party tactic slots +{n}' },
+    // 장은 예외로 누적 번호 — `{total}` = 그 랭크까지 연 장 수 (SCREEN_DESIGN §13-1 · R152)
+    'cn.t.chapters': { ko: '{total}장까지 연다', en: 'Opens up to Chapter {total}' },
+    'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}' },
+    'cn.t.resource_tier': { ko: '파견처 자원 단계 +{n}', en: 'Resource tier +{n}' },
+    'cn.t.workers': { ko: '파견처 일꾼 칸 +{n}', en: 'Worker slots +{n}' },
+    'cn.t.shop_layers': { ko: '상단 품목 층 +{n}', en: 'Ware tiers +{n}' },
+    'cn.t.explore_regions': { ko: '탐험 지역 +{n}', en: 'Exploration regions +{n}' },
+    'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
+    'cn.t.gear_sets': { ko: '장비 세트 +{n}', en: 'Gear sets +{n}' },
+    'cn.t.commission_slots': { ko: '동시 의뢰 +{n}', en: 'Parallel commissions +{n}' },
+    'cn.t.training_slots': { ko: '훈련 칸 +{n}', en: 'Training slots +{n}' },
+    'cn.t.recruit_quality': { ko: '고용 · 수색 영웅 품질 +{n}', en: 'Hire and search hero quality +{n}' },
+    'cn.t.research': { ko: '연구 상한 +{n}', en: 'Research cap +{n}' },
     // 건설 [2026-09-21 ADR-0253] — 옛 「연구」. 본문은 위쪽 탭(ADR-0192 로 걷힘)을 설명하던 것을 지금 화면 기준으로 다시 썼다
     'rs.research.h': { ko: '건설', en: 'Construction' },
     'rs.research.note': {
@@ -1285,13 +1300,14 @@ const STRINGS = {
     },
 
     /* ── 도감 ── */
-    /* 세그먼트 넷 [신설 2026-09-08 사용자 지시 — SCREEN_DESIGN §9] — 몬스터(카드 수집)만 이 블록이 든다.
-       나머지 셋(캐릭터 · 아이템 · 스킬)의 문구는 아래 「도감 — 자산 세그먼트」(`ix.*`) 블록이다.
+    /* 세그먼트 다섯 [마스터리 추가 2026-09-24 — SCREEN_DESIGN §9] — 몬스터(카드 수집)만 이 블록이 든다.
+       나머지 넷(캐릭터 · 아이템 · 스킬 · 마스터리)의 문구는 아래 「도감 — 자산 세그먼트」(`ix.*`) 블록이다.
        `cx.h`(몬스터 도감)는 화면 제목 자리를 `nav.codex` 에 내주고 **도움말 섹션 제목으로만** 남는다 (§12). */
     'cx.seg.monster': { ko: '몬스터', en: 'Monsters' },
     'cx.seg.character': { ko: '캐릭터', en: 'Characters' },
     'cx.seg.item': { ko: '아이템', en: 'Items' },
     'cx.seg.skill': { ko: '스킬', en: 'Skills' },
+    'cx.seg.mastery': { ko: '마스터리', en: 'Masteries' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
     'cx.sub': { ko: '누적 처치 {list}마리에서 레벨이 오른다 — 스테이지 계열 스탯이 오른다', en: 'Levels up at {list} total kills — raises the stage\'s stat line' },
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
@@ -1408,6 +1424,15 @@ const STRINGS = {
        삭제된 키 셋 — `ix.g.skillClass`·`ix.g.skillWeapon`(09-08 · `owner_kind` 를 그대로 묶던 이름) ·
        **`ix.skillFrom`**(09-09 · 무기군 액티브의 이름표였는데 무기군 고정 폐기로 이름표 자체가 사라졌다) */
     'ix.g.skillCls': { ko: '{cls} 스킬', en: '{cls} Skills' },
+    'ix.mastery.sin': { ko: '죄종', en: 'Sin' },
+    'ix.mastery.class': { ko: '직업', en: 'Class' },
+    'ix.mastery.adv': { ko: '전직', en: 'Advancement' },
+    'ix.g.masteryAdv': { ko: '{cls} 전직 트리', en: '{cls} Advancement Tree' },
+    'ix.mastery.unplanned': { ko: '확정된 노드 없음', en: 'No confirmed nodes' },
+    'ix.mastery.previewRank': { ko: '1/{max}랭크 예시', en: 'Rank 1/{max} preview' },
+    // 스킬 세그먼트의 안쪽 분류 [2026-09-24 · §9-1 · ADR-0335] — 직업은 탭이 아니라 일반 탭의 묶음이다(0299 의 직업 탭 대체)
+    'ix.seg.basic': { ko: '일반 스킬', en: 'Basic Skills' },
+    'ix.seg.adv': { ko: '전직 스킬', en: 'Advanced Skills' },
     /* 전직 스킬 묶음 [2026-09-22 · §9-1 · ADR-0299] — `skill.csv` 행이 없어 이름을 여기서 든다(무기 베이스 `ix.b.*` 와 같은 처방).
        전직 하나가 묶음 하나이고 머리가 전직 이름(`ix.adv.*`)이다. 행이 서면 CSV 이름으로 넘어가고 이 키들은 지운다.
        이름 출처는 skill_design.md §10-1. 삭제된 키 — `ix.g.skillAdv`(같은 날 · 「{직업} 전직 스킬」 한 묶음이던 머리) */

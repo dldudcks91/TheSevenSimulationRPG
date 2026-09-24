@@ -1,17 +1,18 @@
-status_id,stat,value,duration_sec,element,note
-war_taunt,taunt,0,6,-,-
-war_shout,guard_pct,0.25,10,-,-
-war_battleorders,hp_max_pct,0.2,12,-,-
-kni_duel,duel,0.2,999,-,-
-kni_enchant,onhit_element,0.6,10,fire,-
-kni_might,atk_pct,0.15,0,-,-
-kni_fanaticism,period_pct,0.12,0,-,-
-kni_defiance,dr_pct,0.1,0,-,-
-arc_pierce,attack_splash,0.7,10,-,-
-arc_poison,onhit_element,0.5,10,poison,-
-mag_focus,atk_pct,0.2,8,-,-
-pri_grace,atk_pct,0.25,8,-,-
-pri_haste,period_pct,0.2,8,-,-
-pri_regen,regen_pct,0.6,12,-,-
-pri_penitence,atk_pct,-0.25,10,-,-
-pri_bind,period_pct,-0.2,10,-,-
+status_id,stat,value,duration_sec,element,round_end,note
+war_taunt,taunt,0,6,-,keep,-
+war_shout,guard_pct,0.25,10,-,keep,-
+war_battleorders,hp_max_pct,0.2,12,-,keep,-
+kni_duel,duel,0.2,999,-,keep,결투의 지목(표식 — battle.pickTarget) · 값은 buff 이벤트 v 와 설명창 문장이 읽는다(실제 피해 감소는 kni_duel_guard) · keep — 영웅이 건 지목은 적 배열과 함께 사라진다 · ⚠ 몬스터가 영웅에게 건 지목은 라운드를 넘어 남는다(동작 불변 리팩터라 그대로 · 2026-09-24 R151)
+kni_duel_guard,dr_pct,0.2,999,-,close,결투의 짝 — 시전자가 받는 피해 감소(결투 둘째 줄이 건다) · close — 라운드가 바뀌면 닫힌다(battle.beginRound) · 값은 지목 행과 같게 둔다(설명창이 지목 행을 읽는다) · 2026-09-24 R151
+kni_enchant,onhit_element,0.6,10,fire,keep,-
+kni_might,atk_pct,0.15,0,-,keep,-
+kni_fanaticism,period_pct,0.12,0,-,keep,-
+kni_defiance,dr_pct,0.1,0,-,keep,-
+arc_pierce,attack_splash,0.7,10,-,keep,-
+arc_poison,onhit_element,0.5,10,poison,keep,-
+mag_focus,atk_pct,0.2,8,-,keep,-
+pri_grace,atk_pct,0.25,8,-,keep,-
+pri_haste,period_pct,0.2,8,-,keep,-
+pri_regen,regen_pct,0.6,12,-,keep,-
+pri_penitence,atk_pct,-0.25,10,-,keep,-
+pri_bind,period_pct,-0.2,10,-,keep,-

@@ -79,7 +79,7 @@ hit_per_level_deficit_pct,0.05,fixed,1,레벨 1 부족당 적중률 감소(%p) �
 hit_min_pct,0.3,fixed,1,적중률 하한(%) — 레벨이 아무리 모자라도 이만큼은 맞는다. 0이면 영원히 못 넘는 벽이 되고 너무 높으면 게이트가 안 걸린다. (명중/회피 폐지로 hit_floor_pct 를 대체 — 의미가 다르므로 키를 새로 만들었다) (2026-08-26 수치 대역 재설계) (2026-09-22 사용자 확정 0.3 — 같은 날 0.05 를 거쳐 되돌렸다)
 monster_hp_base,50,proposed,1,몬스터 레벨 1 최대 HP 바탕 — 영웅의 hero_hp_base 자리를 몬스터에서 대신한다 [2026-09-14 사용자 지시 · 영웅 100 / 몬스터 50 · R91 → 2026-09-22 사용자 지시 「일단」 50→100 → 2026-09-23 사용자 지시 100→50 · 캘리브레이션 재측정 안 함]. 그 위에 레벨 성장분(hero_hp_band{b}_unit 누적합 × 건강 계수)과 장비 HP 가 더해지고 등급 배율(spawn_grade.csv:hp_mult)과 monster_hp_scale 이 곱해진다 — 식은 영웅과 같은 함수다(hero.js computeCombat 의 hpBase 입력)
 monster_hp_scale,1.0,proposed,1,몬스터 HP 전역 배율 — 소재값 x 등급배율 위에 곱한다 (라운드 소요를 round_budget.time_target_sec 에 맞추는 주 손잡이) (2026-08-27 캘리브레이션 — 2.4→1.0 · 킬 속도가 라운드 목표 시간보다 한참 느렸다)
-monster_atk_scale,1,proposed,1,몬스터 데미지 전역 배율 (캘리브레이션 손잡이) (2026-09-22 사용자 「일단 1」 0.2→1 — 몬스터 전투 계수를 영웅과 똑같이 · 같은 날 능력치 계수 보류 해제와 한 묶음 · 캘리브레이션 재측정 전) (2026-08-31 재보정 — 0.1→0.2 · 101~103 이 전부 승률 100% 로 목표 대역을 위로 벗어나 있었다. 승률이 100% 인 원인은 킬 속도가 아니라 **파티가 안 죽는 것**이었으므로(101~103 의 avg downed 가 0.00) 데미지 축으로 잡았다. 0.25 는 102 를 20% 로 0.3 은 0% 로 떨어뜨려 대역 아래로 지나친다 · monster_hp_scale 과 hero_hp_base 는 안 건드렸다 — 같은 축을 두 손잡이로 동시에 돌리면 어느 쪽이 효과를 냈는지 못 읽는다) (2026-08-27 캘리브레이션 — 0.25→0.1 · dmg_min 바닥에 깔릴 정도로 더 내리면 등급별 데미지 차이가 무의미해진다)
+monster_atk_scale,0.5,proposed,1,몬스터 데미지 전역 배율 (캘리브레이션 손잡이) (2026-09-24 사용자 1→0.5 · 캘리브레이션 재측정 전) (2026-09-22 사용자 「일단 1」 0.2→1 — 몬스터 전투 계수를 영웅과 똑같이 · 같은 날 능력치 계수 보류 해제와 한 묶음 · 캘리브레이션 재측정 전) (2026-08-31 재보정 — 0.1→0.2 · 101~103 이 전부 승률 100% 로 목표 대역을 위로 벗어나 있었다. 승률이 100% 인 원인은 킬 속도가 아니라 **파티가 안 죽는 것**이었으므로(101~103 의 avg downed 가 0.00) 데미지 축으로 잡았다. 0.25 는 102 를 20% 로 0.3 은 0% 로 떨어뜨려 대역 아래로 지나친다 · monster_hp_scale 과 hero_hp_base 는 안 건드렸다 — 같은 축을 두 손잡이로 동시에 돌리면 어느 쪽이 효과를 냈는지 못 읽는다) (2026-08-27 캘리브레이션 — 0.25→0.1 · dmg_min 바닥에 깔릴 정도로 더 내리면 등급별 데미지 차이가 무의미해진다)
 battle_timeout_sec,600,proposed,0,전투 제한시간(초) — 넘으면 `timeout` 으로 끝난다(이긴 것이 아니다 · ~~철수 처리~~ — 철수는 플레이어 행동 · R89) (2026-08-25 초반 루프 구현하면서 발생)
 gold_rate,0.3,proposed,1,처치 골드 = 처치 XP(monster_xp_base 곡선 × exp_mult × exp_coef) × gold_mult × gold_rate — ~~exp_reward~~ 는 2026-09-14 R85 로 exp_coef 가 됐다 (2026-08-25 초반 루프 구현하면서 발생)
 drop_chance_pct,0.09,proposed,0,드롭 판정 1회의 기본 성공 확률(%) — 등급 배율은 spawn_grade.drop_chance_mult · 처치당 최대 1개 (item_design §1) (2026-08-25 초반 루프 구현하면서 발생 · 2026-08-28 판정 1회로 개정)
@@ -111,7 +111,7 @@ potion_cooldown_sec,4,proposed,1,물약 쿨타임(초) — 영웅마다 · 원�
 make_rarity_w_normal,60,proposed,0,제작 희귀도 가중치 — 일반 [신설 2026-09-15 사용자 지시 · item_design §7-1 · R96] — 드롭(rarity_w_*)과 따로 쥔다 · 훑는 순서는 일반 → 매직 → 레어
 make_rarity_w_magic,30,proposed,0,제작 희귀도 가중치 — 매직 [신설 2026-09-15 사용자 지시 · R96]
 make_rarity_w_rare,10,proposed,0,제작 희귀도 가중치 — 레어 [신설 2026-09-15 사용자 지시 · R96] · 제련소 운 배치가 이 가중치를 미는지는 미정(GAME_DESIGN §10)
-equip_upgrade_max,3,fixed,0,강화 단계 상한 **기본값** — 건설 전 값이고 제련소 랭크의 더하기가 얹힌다(building_effect.csv upgrade · 2026-09-22 R137) · 다 지으면 +9강 (2026-08-31 item_design §1 확정)
+equip_upgrade_max,3,fixed,0,강화 단계 상한 **기본값** — 건설 전 값이고 제련소 랭크의 더하기가 얹힌다(building_effect.csv upgrade · 2026-09-22 R137) · 다 지으면 +6강(2026-09-24 사용자 — 제련소 r2 의 +3 을 뺐다 · 나중에 다시 넣는다 · 확정 목표는 +9강 · 2026-08-31 item_design §1)
 equip_upgrade_base_pct,0.05,proposed,1,강화 1단계당 베이스 능력치 % — 무기 데미지 밑수와 방어구 부위 고유 방어력에 곱해진다. 개체 굴림값은 안 건드리고 배율로 파생한다 (2026-08-31 발행)
 equip_upgrade_gold_base,200,proposed,1,+1강 비용(골드) — 골드의 최종 소모처 (2026-08-31 발행)
 equip_upgrade_gold_growth,1.35,proposed,1,강화 단계마다 비용에 곱하는 배율 — 비용 = base × growth^(현재 단계) (2026-08-31 발행)
@@ -132,10 +132,10 @@ tavern_search_sin_echo_pct,0.5,proposed,1,수색 결과가 **보낸 영웅과 �
 tavern_search_meet_at_pct,0.5,proposed,1,수색 중 **만남**이 열리는 시점 — 소요 시간의 %. 50 = 절반(1시간이면 30분). 답은 이 시점부터 **수령할 때까지 언제든** 고를 수 있다(시간 제한 없음 — 방치형 계약 ③) (2026-09-09 발행)
 tavern_search_meet_hit_pct,0.5,proposed,1,**만난 사람의 죄종에 맞는 답**을 골랐을 때 고용비 할인(%). 소문이 죄종을 미리 알려주므로 **읽기만 하면 누구나 얻는 층**이다 (2026-09-09 발행)
 tavern_search_meet_key_pct,1,proposed,1,**그 죄종 영웅을 보내서 열린 답**을 골랐을 때 고용비 할인(%). 소문을 읽고 맞는 사람을 보낸 **준비의 보상**이라 위 hit 보다 높다. 100 = 전액 면제 (2026-09-09 발행)
-commission_slots,1,fixed,0,동시에 받아 둘 수 있는 의뢰 수 **기본값** — 선술집 r1 이 의뢰를 열 때의 값이고 선술집 r2 의 더하기가 얹힌다(building_effect.csv commission_slots) · ⚠ 의뢰가 미구현이라 아직 읽는 코드가 없다 [신설 2026-09-24 사용자 지시 「의뢰(기본1개 가능)」 · base_expedition §1-3]
+commission_slots,1,fixed,0,동시에 받아 둘 수 있는 의뢰 수 **기본값** — 선술집 r1 이 의뢰를 열 때의 값이고 선술집 r2 의 더하기가 얹힌다(building_effect.csv commission_slots → state.limitsOf 의 commissionSlots) [신설 2026-09-24 사용자 지시 「의뢰(기본1개 가능)」 · base_expedition §1-3 · R153]
+commission_gold_chapter_mult,1.6,proposed,1,의뢰 골드의 챕터 배수 — 카드 골드 = 틀 reward_gold × 등급 gold_mult × 이 값^(보상 챕터−1). 보상 챕터 = 지역 틀이면 그 챕터 · 개체 틀이면 그 몬스터의 챕터 · 나머지는 진행 챕터 ⚠제안 (2026-09-24 · R153)
 commission_board_cards,4,fixed,0,의뢰 게시판에 서는 카드 수 상한 — commission.csv 의 앞에서 이만큼만 선다(행이 적으면 행 수). 받아 둘 수 있는 수(commission_slots)와 다른 값이다 — 이것은 고를 폭 [신설 2026-09-24 사용자 지시 「의뢰 4개까지만 보이도록」 · SCREEN_DESIGN §14 · ADR-0322]
-gamble_spin_regen_hours,1,proposed,1,도박장 스핀 한 칸이 차는 시간(시간) — 꺼져 있어도 찬다(벽시계) · gamble_spin_cap 까지 쌓인다 · 일일 리셋이 아니다(비운 시간이 기회로 남는다) ⚠제안 [신설 2026-09-24 사용자 확정 D1 「충전식」 · base_expedition_design 「도박장」 · R149]
-gamble_spin_cap,5,proposed,1,도박장 충전 상한(스핀 수) — 가득이면 더 안 찬다 · 새 게임은 가득 ⚠제안 [신설 2026-09-24 · R149]
+gamble_batch_spins,10,proposed,1,도박장 「n판 돌리기」 한 번에 도는 판 수 — 도중에 판돈이 떨어지면 거기서 멈춘다 · 스핀 횟수 자체는 제한이 없다(판돈만 있으면 돈다) ⚠제안 [신설 2026-09-24 사용자 「횟수 무제한 · 돈만 있으면」 · ADR-0334 · R149]
 gamble_stake_steps,1,proposed,0,도박장 판돈 단계 수의 기본값 — 도박장이 열릴 때(선술집 r3) 고를 수 있는 단계 · 선술집 r5 · r7 이 하나씩 더한다(building_effect.csv gambleStakes) · 단계 배수는 slot_stake.csv [신설 2026-09-24 사용자 확정 D2 · R149]
 gamble_stake_gold,100,proposed,1,도박장 1 단계 판돈(골드) — 챕터 1 기준 ⚠제안 [신설 2026-09-24 · R149]
 gamble_stake_chapter_mult,1.5,proposed,1,도박장 판돈의 챕터 배수 — 판돈 = gamble_stake_gold × 이 값^(진행 챕터−1) × 단계 배수 · 재료가 진행 챕터 단계로 나오므로 판돈도 따라 오른다(뒤 챕터에서 싼 판돈으로 비싼 재료를 사지 않게) ⚠제안 [신설 2026-09-24 사용자 확정 D2 · R149]

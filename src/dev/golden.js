@@ -120,7 +120,7 @@ function partyFingerprint(SYS, B, NOW, seed) {
     const kv = o => Object.entries(o ?? {}).map(([k, v]) => `${k}:${v}`).join(',') || '-';
     // **로스터 순서**로 적는다 [2026-09-09] — `newGame` 이 파티를 안 채우게 되면서(사용자 지시) `G.party` 가 비었다.
     //   로스터는 넣은 순서 그대로라 **지문은 한 글자도 안 바뀐다**(옛 `G.party` 와 같은 순서 · 같은 영웅)
-    return G.heroes.map(h => h.uid).map(uid => {
+    return G.heroes.slice(0, B.party_size_max).map(h => h.uid).map(uid => {
         const h = SYS.game.heroById(G, uid);
         const w = G.items[h.equipped?.weapon];
         const a = G.items[h.equipped?.armor];         // 시작 갑옷 — 2026-09-14 R86

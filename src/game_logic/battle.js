@@ -47,13 +47,16 @@
  *     기본 공격은 안 싣고 직업 메인 스탯의 계수(`mainMult`)를 쓴다 (battle_design §9-2 · 2026-09-18 — ~~능력치 항 `flat`~~ 폐기).
  *   · **사건 훅** — `strikeOnce` 가 `hit`/`hitTaken`/`kill` 을, `downed` 가 `down` 을, 런타임이 `cast` 를 발화한다.
  *     유닛의 `reactions` 가 비면 아무 일도 없다 — 발화 **지점**이 곧 rng 순서 계약이다 (INTERFACE §5-2).
+ *   · **스킬 id 전용 코드가 없다** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 이 파일이 스킬에 대해 아는 것은 규칙뿐이다:
+ *     오오라(`cast = aura`)를 창으로 건다 · 라운드가 바뀌면 `round_end = close` 창을 닫는다 · 쓰러지면 사건 `on_death` 를 쏜다(`rt.fire`) ·
+ *     표식(`taunt` · `duel`)을 타겟팅이 읽는다. ~~결투 창 닫기 · 자폭 `blast`~~ 는 데이터(걸린 효과 · 하는 일 줄)로 갔다
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   ~~타겟팅: 진형·어그로 미확정 → 랜덤~~ **확정 2026-09-09** — 대상 선택은 **전열 우선(하드 게이트)**이다:
  *     전열 생존자가 있으면 후열은 대상이 안 되고, 전열이 전멸해야 뒤가 열린다 (battle_design §3-1).
  *     우선순위는 **좁은 계약부터** — 지목(결투) → 도발 → 전열 → 무작위. 앞의 둘은 진형을 무시한다.
  *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
- *   `skill.csv:status`(결빙 등)는 `status_effect.csv` 가 없어 코드가 읽지 않는다.
+ *   상태이상(결빙 등)은 아직 없다 — 걸린 효과 행으로 들어온다(PLAN_skill_structure 4단계).
  *   전직·마스터리·패시브는 미구현 — 지금 도는 것은 직업 기본 액티브뿐이다 (프로토타입 §9-0).
  *   ~~몬스터의 치명·반사·피해 감소는 0~~ → **[폐기 2026-09-11 · D2 사용자 확정]** 몬스터도 **영웅과 같은 밑수**를 받는다
  *     (기본 치명 확률 · HP 재생 밑수) — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다.
@@ -73,7 +76,7 @@ import { createFormula } from './formula.js';
 // 원소 어휘만 가져온다 — 시스템 주입이 아니다 (skill.js 와 같은 취급 · INTERFACE §1)
 import { ELEMENTS } from './hero.js';
 import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js';
-import { refreshDerived, weaponOnHit } from './skill_effects.js';
+import { refreshDerived, weaponOnHit, stateOf } from './skill_effects.js';
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
 import { STAGE_SPAWN_RULES } from './spawn_rule.js';
 // 몬스터 차림 줄 — 전투 줄에서 씨앗 하나만 받아 몬스터마다 제 줄을 연다 (INTERFACE §5-1 · 2026-09-22)
@@ -546,13 +549,17 @@ export function createBattleSystem(data) {
                 p.slotIds = p.actives.map(a => a.id);
                 p.auraOn = aura.id;
                 p.actives = p.actives.filter(a => a.def.cast !== 'aura');
-                const targets = aura.def.target === 'self' ? [p] : side;
                 // 오오라의 세기도 **시전자 능력치로 민 값**이다 — 걸 때 한 번 (skill.js scaleDef · 2026-09-10).
-                //   창은 그 줄이 거는 걸린 효과(`stat` · `element`)이고 값은 계수 민 값이다 — 1단계는 줄이 하나다(2026-09-22 · 로더가 강제)
-                const x = SK.scaleDef(aura.def, p.stats).effects[0];
-                for (const tgt of targets) {
-                    tgt.buffs[aura.id] = { stat: x.stat, v: x.value, until: Infinity, element: x.element ?? null, by: p.key };
-                    applied.push({ e: 'buff', u: tgt.key, s: aura.id, stat: x.stat, v: x.value, until: null });
+                //   **`apply` 줄마다** 창 하나 — 창은 그 줄이 거는 걸린 효과(`stat` · `element`)이고 값은 계수 민 값이다.
+                //   창 열쇠 = 걸린 효과 id · 창이 오오라 id(`s`)를 든다 — 이벤트의 `s` 는 오오라 id 그대로 (2026-09-24 · R151 · 줄 여럿).
+                //   대상은 자기 아니면 **편 배열 전체**(쓰러진 유닛 포함 — 갈아입기가 이 함수를 다시 부른다) 둘뿐이다 — 로드가 `self` · `party` 만 받는다(skill.js)
+                for (const x of SK.scaleDef(aura.def, p.stats).effects) {
+                    if (x.effect !== 'apply') continue;
+                    const targets = x.target === 'self' ? [p] : side;
+                    for (const tgt of targets) {
+                        tgt.buffs[x.status] = { stat: x.stat, v: x.value, until: Infinity, element: x.element ?? null, by: p.key, s: aura.id, roundEnd: x.roundEnd };
+                        applied.push({ e: 'buff', u: tgt.key, s: aura.id, stat: x.stat, v: x.value, until: null });
+                    }
                 }
             }
             for (const p of side) refreshDerived(p);
@@ -617,7 +624,8 @@ export function createBattleSystem(data) {
                 atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null,
                 ...slotView(p) })),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             // 보상 칸(xpTotal · gold · kills · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
-            timeline, xpTotal: 0, gold: 0, kills: {}, drops: [], downed: [],
+            // killGrades = kills 를 처치 순간의 등급으로 가른 것 `{monsterId: {grade: n}}` — 의뢰 「정예 · 보스 n마리」가 읽는다 (R153 · 세는 것뿐이라 rng 0)
+            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, drops: [], downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -641,12 +649,16 @@ export function createBattleSystem(data) {
 
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
-        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, drops: [] });
+        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, killGrades: {}, drops: [] });
         let loot = newLoot();
         const bank = () => {
             out.xpTotal += loot.xp;
             out.gold += loot.gold;
             for (const [id, n] of Object.entries(loot.kills)) out.kills[id] = (out.kills[id] ?? 0) + n;
+            for (const [id, byGrade] of Object.entries(loot.killGrades)) {
+                const to = (out.killGrades[id] ??= {});
+                for (const [g, n] of Object.entries(byGrade)) to[g] = (to[g] ?? 0) + n;
+            }
             out.drops.push(...loot.drops);
         };
 
@@ -664,6 +676,8 @@ export function createBattleSystem(data) {
             strikeOnce, pickTarget, r1, EPS, hooks,
             makeSummon: (caster, def) => makeSummon(caster, def, `s${summonSeq++}`),
             callBand: (caster, at) => callBand(caster, at),   // 불러내기 — 무리를 세우는 것은 적 배열 · 오오라 · 보상 표식을 아는 이쪽이다 (2026-09-18)
+            // 비직격 고정 피해 한 대상 — 기여표와 전투불능을 아는 이쪽이다 (하는 일 `fixed` · 2026-09-24 R151 — ~~`blast` 전용 함수~~)
+            dealIndirect: (a, d, dmg, s) => dealIndirect(a, d, dmg, s),
         });
 
         /* 물약 [2026-09-15 · R103 · battle_design §7-1] — 칸은 **파티가 같이 쓰고 이 런 안에서만** 산다: 여기서 차고 라운드 사이에는 안 찬다.
@@ -701,21 +715,23 @@ export function createBattleSystem(data) {
             // 소환물은 **라운드가 끝나면 사라진다** (skill_design §12-6). 걷어내는 자리가 여기다 —
             //   적 배열이 갈리는 것과 같은 시점이라 결투 선언의 지목도 함께 사라진다(창이 적에게 붙어 있었다)
             for (let i = party.length - 1; i >= 0; i--) if (party[i].summon) party.splice(i, 1);
-            // 결투의 **시전자 창**(받는 피해 감소)도 여기서 닫는다 [2026-09-10 · 사용자 원문 「라운드 끝까지 + 피해 감소」] —
-            //   지목이 적 배열과 함께 사라지는 바로 이 시점이다. 창이 999초라 만료로는 안 닫힌다.
+            // **라운드가 끝나면 닫히는 창**(걸린 효과 `round_end = close`)을 여기서 닫는다 [2026-09-24 · R151 · INTERFACE §2-6 「라운드 경계」 —
+            //   ~~결투의 시전자 창만 알아보던 전용 코드~~(2026-09-10 사용자 원문 「라운드 끝까지 + 피해 감소」)를 데이터 규칙으로].
+            //   **파티만 본다** — 적의 창은 바로 아래에서 적 배열과 함께 사라진다. 지금 쓰는 효과는 결투의 시전자 창(`kni_duel_guard` — 999초라 만료로는 안 닫힌다) 하나다.
             //   rng 를 안 쓴다. 닫을 때 **기존 `buffEnd`** 를 낸다 — 만료(`skill_runtime.expire`)와 같은 모양이라 재생기가 칩을 걷는다
-            //   (새 이벤트 종류가 아니다 · 이 라운드의 `round` 이벤트보다 앞선다)
+            //   (새 이벤트 종류가 아니다 · 이 라운드의 `round` 이벤트보다 앞선다 · 최대 HP 가 바뀌면 그 유닛의 마지막 `buffEnd` 가 새 최대치를 싣는다 — 부채 #50)
             for (const p of party) {
-                let closed = false;
+                const wasMax = p.hpMax;
+                let last = null;
                 for (const [id, b] of Object.entries(p.buffs)) {
-                    // 그 창을 건 스킬이 거는 걸린 효과가 `duel` 인가 — 1단계는 줄이 하나다(2026-09-22 · 2단계가 걸린 효과의 `round_end` 로 일반화한다)
-                    if (b.stat === 'dr_pct' && SK?.statuses[SK.resolve({ id })?.effects[0].status]?.stat === 'duel') {
-                        delete p.buffs[id];
-                        timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: id });
-                        closed = true;
-                    }
+                    if (b.roundEnd !== 'close') continue;
+                    delete p.buffs[id];
+                    last = { t: r1(t), e: 'buffEnd', u: p.key, s: b.s ?? id };
+                    timeline.push(last);
                 }
-                if (closed) refreshDerived(p);
+                if (!last) continue;
+                refreshDerived(p);
+                if (p.hpMax !== wasMax) Object.assign(last, { hpMax: p.hpMax, dhp: p.hp });
             }
             // 매직찬스는 **스폰 굴림**에 걸린다 [2026-09-11 · R79] — 장비 희귀도가 여기서 정해지기 때문이다.
             //   ⚠ 딸린 것 — 파티의 매직아이템 획득확률이 **적 장비도 좋게 한다**(사용자가 알고 택한 「이스터에그」)
@@ -740,6 +756,8 @@ export function createBattleSystem(data) {
             roundLog.killed.push(e.monsterId);                    // 사실의 기록 — 진 라운드에서 잡은 것도 남는다
             // 아래 보상은 전부 **라운드 몫**이다 — 이기면 결과로 옮기고 지면 버린다 (R89)
             loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
+            const byGrade = (loot.killGrades[e.monsterId] ??= {});
+            byGrade[e.grade] = (byGrade[e.grade] ?? 0) + 1;
             loot.xp += e.expReward;
             loot.gold += Math.round(e.expReward * e.goldMult * B.gold_rate * goldMult);
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
@@ -765,36 +783,24 @@ export function createBattleSystem(data) {
         };
 
         /**
-         * 자폭 [2026-09-21 · 사용자 확정 · skill_design §12-9 · battle_design §9-6] — 쓰러지는 순간 칸에
-         *   `cast_condition=on_death` 인 사건 스킬(`cast=event` · 하는 일 `fixed`)이 있으면 **적 전원에게 한 번** 터진다.
-         *   · 세기 = 쓰러지는 쪽의 **공격력 × 그 스킬 `fixed` 줄의 배율**. **방어 · 저항 · 피해 감소를 하나도 빼지 않는 고정 피해**다
-         *   · **배리어도 안 본다** — 반사와 같은 비직격 처리(HP 직접 차감 · §9-6). 대응 축을 HP 총량과 회복으로 묶는 확정의 연장이다
-         *   · **rng 를 안 쓴다** — 피해 굴림 대신 범위 중앙값을 쓴다. 자폭이 없는 판의 수열은 종전과 완전히 같다 (INTERFACE §5-2)
-         *   · **흡혈 · 반사 · 경직 · 타격 훅을 유발하지 않는다** (§9-6 「아무것도 유발하지 않는다」)
-         *   · **한 마리당 한 번** — `blown` 이 서면 되살아나 다시 쓰러져도 안 터진다(보상 `rewarded` 와 같은 규칙).
-         *     지금 구조에서 연쇄는 안 생긴다(몬스터의 자폭은 파티만 때린다) — 플래그는 그 가정이 깨졌을 때의 잠금이다
+         * 비직격 고정 피해 한 대상 — 하는 일 `fixed` 가 부르는 이음매다 [2026-09-24 · R151 · PLAN_skill_structure 2단계 D6 — ~~자폭 전용 `blast` 함수~~].
+         *   무엇을 · 얼마나는 스킬 쪽(`skill_effects.EFFECT_TYPES.fixed` — 세기 · 대상)이 정하고, 여기는 **기여표와 전투불능을 아는 쪽의 일**만 한다.
+         *   자폭 [2026-09-21 · 사용자 확정 · skill_design §12-9 · battle_design §9-6] — 쓰러지는 순간(`downed` 끝의 `rt.fire(u, 'on_death')`) 적 전원에게 한 번 터진다.
+         *   · **방어 · 저항 · 피해 감소 · 배리어를 하나도 빼지 않는 고정 피해**다 — 반사와 같은 비직격 처리(HP 직접 차감 · §9-6).
+         *     대응 축을 HP 총량과 회복으로 묶는 확정의 연장이다
+         *   · **rng 를 안 쓴다** · **흡혈 · 반사 · 경직 · 타격 훅을 유발하지 않는다** (§9-6 「아무것도 유발하지 않는다」)
+         *   · 기여는 양쪽 다 센다 · 맞아서 쓰러지면 그 자리에서 `downed` 가 다시 돈다. **한 마리당 한 번**은 사건 규칙(`EVENT_TRIGGERS.on_death.once` · `u.fired`)이 든다 —
+         *     지금 구조에서 연쇄는 안 생긴다(몬스터의 자폭은 파티만 때린다) — 그 규칙은 그 가정이 깨졌을 때의 잠금이다
          */
-        const blast = u => {
-            if (u.blown) return;
-            const a = (u.actives ?? []).find(x => x.def.cast === 'event' && x.def.cond === 'on_death');
-            if (!a) return;
-            const fx = a.def.effects[0];   // 고정 피해 줄 — 1단계는 줄이 하나다(2026-09-22 · 2단계가 「event 스킬이 자기 줄을 실행」 으로 옮긴다)
-            u.blown = true;
-            const foes = alive(rt.foesOf(u));
-            if (!foes.length) return;
-            const dmg = F.indirect(((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * fx.mult);
-            if (dmg <= 0) return;
-            const cu = credit(u);
-            for (const tgt of foes) {
-                tgt.hp = Math.max(0, tgt.hp - dmg);
-                timeline.push({ t: r1(t), e: 'blast', a: u.key, d: tgt.key, s: a.def.id, dmg, dhp: tgt.hp });
-                const ct = credit(tgt);
-                if (cu) cu.dealt += dmg;
-                if (ct) ct.taken += dmg;
-                if (tgt.hp <= 0) {
-                    if (cu && tgt.side !== 'party' && !tgt.summon && !tgt.rewarded) cu.kills += 1;
-                    downed(tgt);
-                }
+        const dealIndirect = (a, d, dmg, s) => {
+            d.hp = Math.max(0, d.hp - dmg);
+            timeline.push({ t: r1(t), e: 'blast', a: a.key, d: d.key, s, dmg, dhp: d.hp });
+            const ca = credit(a), cd = credit(d);
+            if (ca) ca.dealt += dmg;
+            if (cd) cd.taken += dmg;
+            if (d.hp <= 0) {
+                if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1;
+                downed(d);
             }
         };
 
@@ -810,7 +816,8 @@ export function createBattleSystem(data) {
             else if (!u.summon) out.downed.push(u.uid);
             // 처치 정산(드롭 rng)이 **먼저** 돌아야 훅이 rng 를 써도 순서가 잠긴다 (INTERFACE §5-2)
             hooks.emit('down', u, { t });
-            blast(u);   // 자폭 — 죽음이 다 정산된 뒤에 터진다. rng 0 이라 위 순서를 안 건드린다 (§9-6)
+            // 사건 `on_death` — 그 유닛의 사건 스킬(자폭)이 **죽음이 다 정산된 뒤에** 나간다. 자폭은 rng 0 이라 위 순서를 안 건드린다 (§9-6 · 2026-09-24 R151 — ~~`blast(u)`~~)
+            rt.fire(u, 'on_death', t);
         };
 
         /**
@@ -856,8 +863,8 @@ export function createBattleSystem(data) {
         };
         const pickFrom = pool => pool[Math.floor(rng() * pool.length)];
 
-        /** 도발자 — `taunt` 창이 켜진 생존 유닛 중 배열 순 첫 번째 (skill_design §9-2 기사 항) */
-        const hasTaunt = list => list.find(p => p.hp > 0 && Object.values(p.buffs).some(b => b.stat === 'taunt')) ?? null;
+        /** 도발자 — `taunt` 창(표식 — `skill_effects.stateOf`)이 켜진 생존 유닛 중 배열 순 첫 번째 (skill_design §9-2 기사 항) */
+        const hasTaunt = list => list.find(p => p.hp > 0 && stateOf(p, 'taunt')) ?? null;
 
         /**
          * 단일 대상 선택 — 적 측은 **지목**(결투 선언) → **도발** 순으로 고정하고 그때는 **타겟 rng 를 쓰지 않는다**.
@@ -866,7 +873,7 @@ export function createBattleSystem(data) {
          */
         function pickTarget(u, foes) {
             if (u.side === 'enemy') {
-                const duel = Object.values(u.buffs).find(b => b.stat === 'duel');
+                const duel = stateOf(u, 'duel')?.[1];      // 지목 창(표식) — 첫 창의 건 자 `by`
                 if (duel) {
                     const marked = party.find(p => p.key === duel.by && p.hp > 0);
                     if (marked) return marked;
@@ -1071,7 +1078,7 @@ export function createBattleSystem(data) {
             // 보스 라운드 도중 — 아무것도 안 바꾼다. 바뀐 입력은 `worn` 에도 안 적으므로 라운드 사이에 오면 그때 입는다 (R130)
             if (inRound() && roundLog?.kind === 'boss') return { locked: true, changed: [] };
             const changed = [];
-            const removed = [];   // 갈아입기로 걷힌 오오라 창 `{u, s}` — 다시 안 걸린 것은 다음 `round` 뒤에 `buffEnd` 로 닫는다 (R98)
+            const removed = [];   // 갈아입기로 걷힌 오오라 창 `{u, s}`(`s` = 건 오오라 id) — 다시 안 걸린 것은 다음 `round` 뒤에 `buffEnd` 로 닫는다 (R98)
             for (const p of updates) {
                 const u = party.find(x => x.uid === p.uid && !x.summon);
                 const was = worn.get(p.uid);
@@ -1105,7 +1112,7 @@ export function createBattleSystem(data) {
                 for (const x of party) for (const [id, b] of Object.entries(x.buffs)) {
                     if (b.by !== u.key || b.until !== Infinity) continue;
                     delete x.buffs[id];
-                    removed.push({ u: x.key, s: id });
+                    removed.push({ u: x.key, s: b.s ?? id });   // 창 열쇠는 걸린 효과 id · 이벤트는 건 오오라 id (2026-09-24 · R151)
                 }
                 changed.push(u);
             }

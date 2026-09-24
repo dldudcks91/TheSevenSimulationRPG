@@ -21,6 +21,7 @@ import { createSkillSystem } from '../game_logic/skill.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
 import { createConstruction } from '../game_logic/construction.js';
 import { createGamble } from '../game_logic/gamble.js';
+import { createCommission } from '../game_logic/commission.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createGameSystem } from '../game_logic/state.js';
 import { adminOn } from './devadmin.js';   // 개발 장치 — 관리자 모드 스위치 (SCREEN_DESIGN §10-3)
@@ -51,7 +52,11 @@ export const D = {
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
     heroTiers: [],            // hero_tier.csv — [{id, weight, totalMin, totalMax, shape, color, ko, en, desc:{ko,en}}] · 굴림 SSOT + 화면 표기
     commissionKinds: null,    // commission_kind.csv — {id: {id, ridesOn, ko, en, how:{ko,en}}} · ridesOn = battle(전투가 센다) | yield(드롭·산출이 채운다)
-    commissionList: [],       // commission.csv — 게시판 행 (**칸 수 = 행 수** · tactic_slot 과 같은 문법) ⚠임시
+    // 의뢰 표 셋 — 원시 행 그대로 넘긴다. 검증 · 굴림 · 대조는 game_logic/commission.js (base_expedition_design §1-3 · 2026-09-24 · R153) · ⚠ 행 순서가 굴림 순서다
+    commissionKindRows: [],   // commission_kind.csv 원시 행
+    commissionRows: [],       // commission.csv — 의뢰의 **틀**(종류 × 대상 어휘 · 기본 수 · 기본 골드 · 가중치) ⚠제안 · ~~게시판 행(칸 수 = 행 수)~~ 은 R153 로 폐기 — 카드는 굴린다
+    commissionGradeRows: [],  // commission_grade.csv — 의뢰 등급 일반 · 매직 · 레어(카드 희귀도) ⚠제안
+    monsterTypeRows: [],      // monster_type.csv — 종족 표시 이름 · 행 순서가 의뢰 종족 풀의 순서
     mineNodes: [],            // mine_node.csv — 채광의 **단계 7** [{id, tier, unlockChapter, ko, en, yieldId, yieldKo, yieldEn, yieldPerHour}] · tier 순 ⚠임시
     gatherNodes: [],          // gather_node.csv — 채집의 **단계 7** · 같은 모양이고 산출물만 약초다 (yieldKo/yieldEn) · tier 순 ⚠임시
     logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
@@ -63,7 +68,7 @@ export const D = {
     tacticScores: [],         // tactic_score.csv 원시 행 — 점수 하나 = 등급별 배수 ⚠제안 (§5-8)
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
-    classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage}] (stage = CSV 의 release)
+    classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage, color}] (stage = CSV 의 release)
     sinWords: null,           // sin_word.csv — {sinId: [{ko, en}...]} **단 순서**(tier 로 정렬) · 아이템 이름의 죄종 단어 (item_design §1 「이름」 · 2026-09-19)
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
     // ~~affixDefs~~ (affix.csv) — 2026-09-21 R127 퇴역. 반지 · 목걸이가 아래 세 표로 옮겼다
@@ -110,7 +115,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -128,7 +133,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -226,8 +231,8 @@ export async function loadData(base = './data/') {
     // 조건 사전 · 점수 × 등급 배수 — 옵션 값 = 기준값 × 배수(조건의 점수, 등급) (tactic_card_design §5-8 · 2026-09-22 · R134). 검증은 game_logic/tactic.js
     D.tacticConditions = tacticConditionRow;
     D.tacticScores = tacticScoreRow;
-    // 의뢰 — 두 표가 층을 나눈다. **유형 둘은 확정 기획**(GAME_DESIGN §9 09-07 「의뢰는 목표형」)이고,
-    // 게시판 행(commission)은 ⚠임시다 — 보상·목표가 미정이라 mine_node 와 같은 자리채움이다.
+    // 의뢰 — **유형 둘은 확정 기획**(GAME_DESIGN §9 09-07 「의뢰는 목표형」)이고, 카드는 틀(commission) · 등급(commission_grade) ·
+    // 대상을 굴려 만든다(GAME_DESIGN §9 09-24 · R153 — ~~게시판 행 = CSV 행~~ 폐기). 수치는 ⚠제안.
     // ⚠ 09-07 전면 개정 — ~~4종(사냥·파견·약탈·보호)~~ 은 「전장을 여는 의뢰」를 전제한 모델이라 통째로 폐기됐다.
     //   의뢰는 열리지 않고 **받아 두는 목표**라 남는 축은 「어디에 얹히는가」 하나(`ridesOn`)이고,
     //   ~~`form`(세는 형/가는 형)~~ · ~~`channel`(실시간/오프라인)~~ 은 가는 형이 사라져 축 자체가 소멸했다.
@@ -244,10 +249,12 @@ export async function loadData(base = './data/') {
         id: r.kind_id, ridesOn: r.rides_on,
         ko: r.name_kr, en: r.name_en, how: { ko: r.how_kr, en: r.how_en },
     })), 'id');
-    D.commissionList = commissionRow.map(r => ({
-        id: r.commission_id, kind: r.kind_id,
-        goal: { ko: r.goal_kr, en: r.goal_en }, gold: r.reward_gold, fame: r.reward_fame,
-    }));
+    // 틀 · 등급 · 종족은 원시 행 그대로 — 카드는 game_logic 이 굴려 세이브에 박는다(R153). 화면은 카드의 `axis`·`ref` 로 문구를 조립하고
+    //   등급 · 종족 이름은 `SYS.commission.grades` · `races` 에서 읽는다(검증을 지난 정규화 표 — 두 번 풀지 않는다)
+    D.commissionKindRows = commissionKind;
+    D.commissionRows = commissionRow;
+    D.commissionGradeRows = commissionGradeRow;
+    D.monsterTypeRows = monsterTypeRow;
     // 채광의 단계 — 화면은 **순서와 이름만** 그린다 (SCREEN_DESIGN §8). tier 가 그 순서다.
     // ⚠임시 — 표 전체가 구조 검증용 자리채움이라고 CSV 스스로 적어 뒀다(description_kr). 해금 조건(unlock_chapter)은
     // 기획 백지라 **화면이 그리지 않는다** — 문턱 키가 없으면 문턱을 안 그린다 (§4-1).
@@ -279,7 +286,7 @@ export async function loadData(base = './data/') {
     // 직업 — CSV 컬럼은 `release`(스테이지와 충돌하지 않는 이름), game_logic 이 읽는 필드는 `stage` 그대로
     D.classes = classRow.map(r => ({
         id: r.class_id, keyAttr: r.key_attr, ko: r.name_kr, en: r.name_en,
-        role: { ko: r.role_kr, en: r.role_en }, stage: r.release,
+        role: { ko: r.role_kr, en: r.role_en }, stage: r.release, color: r.color_hex || null,
     }));
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};
@@ -331,14 +338,14 @@ export const monsterName = id => {
     return r ? { ko: r.monster_name_kr, en: r.monster_name_en } : { ko: '???', en: '???' };
 };
 /** 얼굴 이미지가 있는 몬스터만 경로를 돌려준다 (monster.csv:face).
- *  **정예는 제 초상을 가질 수 있다** [2026-09-17] — `monster.csv:face_elite` 가 1 이면 `<idx>_elite.png`,
- *  아니면 기본 `<idx>.png` 로 떨어진다. 파일이 있는지 찔러보지 않는다 — `face` 가 이미 같은 꼴이고,
- *  개발 서버가 `no-store` 라 404 폴백은 매 렌더마다 요청을 다시 쓴다 */
+ *  **정예는 제 초상을 가질 수 있다** [2026-09-17] — `monster.csv:face_elite` 가 1 이면 `<idx>_elite.webp`,
+ *  아니면 기본 `<idx>.webp` 로 떨어진다. 파일이 있는지 찔러보지 않는다 — `face` 가 이미 같은 꼴이고,
+ *  404 는 재검증할 표지(ETag)가 없어 폴백은 매 렌더마다 요청을 다시 쓴다(개발 서버 `serve.py`) */
 export const monsterFace = (id, grade = 'normal') => {
     const r = D.monsters?.[id];
     if (!r?.face) return null;
     const v = grade === 'elite' && r.face_elite ? '_elite' : '';
-    return `${M.faceDir()}monster/${id}${v}.png`;
+    return `${M.faceDir()}monster/${id}${v}.webp`;
 };
 /** 몬스터 id 앞자리 = 챕터 (1101 → 1챕터) */
 export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wrath';
@@ -524,8 +531,13 @@ export function buildSystems(d, dev = {}) {
     const gamble = createGamble({
         symbols: d.slotSymbolRows ?? [], coins: d.slotCoinRows ?? [], lines: d.slotLineRows ?? [], stakes: d.slotStakeRows ?? [], balance: d.balance,
     });
+    // 의뢰 — 틀 · 종류 · 등급 · 종족 표가 무엇이 서는지 정하고 이 시스템은 카드 한 장을 굴리고 처치 · 드롭을 대조한다(세이브를 모른다 · INTERFACE §2-16 · R153)
+    const commission = createCommission({
+        templates: d.commissionRows ?? [], kinds: d.commissionKindRows ?? [], grades: d.commissionGradeRows ?? [], races: d.monsterTypeRows ?? [],
+        monsters: d.monsters, balance: d.balance,
+    });
     const game = createGameSystem({
-        hero, item, battle, skill, tactic, construction, gamble, balance: d.balance,
+        hero, item, battle, skill, tactic, construction, gamble, commission, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
         // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
@@ -543,5 +555,5 @@ export function buildSystems(d, dev = {}) {
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
-    return { hero, item, battle, skill, tactic, construction, gamble, game, naming, formula: createFormula(d.balance) };
+    return { hero, item, battle, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
 }

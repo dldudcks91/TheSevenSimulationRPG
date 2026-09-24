@@ -1,5 +1,5 @@
 /**
- * 액티브 **실행** — 시전 · 쿨 · 창 · 배리어 · 회복 · 사건 훅. 정의·배정·선택은 `skill.js`, 종류 표는 `skill_effects.js`.
+ * 액티브 **실행** — 시전 · 쿨 · 창 · 배리어 · 회복 · 사건. 정의·배정·선택은 `skill.js`, 종류 표는 `skill_effects.js`.
  *
  * 순수 모듈 — DOM·저장소·시계·Math.random 접근 없음. 시각은 인자(`t`, 초), 난수는 주입(`ctx.rng`).
  * **전역 상태 없음** — `battle.simulate` 가 전투 하나마다 런타임을 새로 만든다. 유닛·타임라인은 만들어 준 쪽 것이고
@@ -8,20 +8,24 @@
  * battle_design.md / skill_design.md 확정 규칙:
  *   · 한 차례에 하나 (battle_design §3) — 준비된 것이 없으면 기본 공격. 발동 선택은 rng 를 쓰지 않는다
  *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **처음엔 준비 상태다**(전투 시작 · 등장 — battle.js 가 박는다 · R100) · 원정 도중 새로 생긴 스킬만 첫 준비 시각에 같은 식을 쓴다
- *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 스킬의 같은 stat 은 덧셈
+ *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 효과의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
  *   · 회복 밑수는 마법 공격력 **범위** (battle_design §9-1 · §9-2) — **시전마다 양을 한 번 굴린다**(rng 1회 · R90). 능력치 계수(`statMult`)를 곱한다(2026-09-18 — ~~능력치 항 `flat` 을 더한다~~).
  *     받는 쪽의 **체력 회복 +%**(갑옷 나태 · 2026-09-18)가 그 대상만 늘린다
  *   · **스킬 계수** (skill_design §13 · 2026-09-10) — 시전 순간 `SK.scaleDef(def, u.stats)` 로 실효 정의를 한 번 만들고
  *     그 **하는 일 줄**(시전 단위 `x`)을 차례로 실행한다 — 대상 표·회복·버프·소환이 전부 `x` 를 읽는다. 쿨은 원값이다(`cool_sec` 은 슬롯이 못 민다 — §13-1)
  *   · **하는 일은 표가 실행한다** [2026-09-22 · R136 · PLAN_skill_structure] — `skill_effects.js:EFFECT_TYPES[x.effect].run`. ~~`kind` 로 가르던 if 사슬~~ 은 없다.
- *     `castHeal` · `castBuff` · `castSummon` · `castCall` 은 **시전 단위 하나**를 받는다(줄 + 스킬 id · 대상 + 걸린 효과를 푼 값) — 계산 · rng · 이벤트는 그대로다
+ *     `castHeal` · `castBuff` · `castSummon` · `castCall` 은 **시전 단위 하나**를 받는다(줄 + 스킬 id · 그 줄의 대상 + 걸린 효과를 푼 값) — 계산 · rng · 이벤트는 그대로다
+ *   · **표준 모양** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 시전 한 번 = **하는 일 줄을 `seq` 순으로**(`cast` — 차례 · 사건이 같이 쓴다) ·
+ *     창 열쇠 = **걸린 효과 id**(창이 건 스킬 id `s` 를 들어 이벤트는 그대로) · 사건 스킬은 `fire` 가 쏜다 · **스킬 id 전용 분기는 없다**
+ *     (~~결투의 시전자 창 분기~~ → 결투의 둘째 줄 · ~~`battle.js:blast`~~ → `fire` + 하는 일 `fixed`)
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   사건 훅(`reactions`)은 **발화 지점만** 있고 등록하는 소비자가 아직 없다 — 마스터리 T3 자리 (skill_design §5).
  */
 
-import { EFFECT_TYPES, EFFECTS, refreshDerived } from './skill_effects.js';
+import { createFormula } from './formula.js';
+import { EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, sumOf, stateOf } from './skill_effects.js';
 
 /**
  * 사건 훅 — 유닛이 든 `reactions: [{on, fn}]` 를 **배열 순서대로** 부른다. 등록이 없으면 아무 일도 없다.
@@ -47,7 +51,7 @@ export function cooldownSec(B, u, def) {
 /**
  * @param {object} ctx  전투 하나의 문맥 — 전부 `battle.simulate` 가 넘긴다
  *   SK          — skill.js (발동 선택 `pickReady` · 조건 `castable`). 없으면 액티브 없이 기본 공격만 돈다
- *   B           — balance.csv — [balance.csv:skill_cd_floor_mult] 쿨 바닥을 읽는다
+ *   B           — balance.csv — [balance.csv:skill_cd_floor_mult] 쿨 바닥을 읽는다 · 제 `formula` 를 만든다(고정 피해의 `indirect`)
  *   rng         — 주입 난수. 이 파일이 쓰는 곳은 공격 대상 표의 시작점 굴림과 회복량 굴림(R90)이다
  *   timeline    — 재생용 이벤트 배열 (제자리에 push)
  *   out         — 전투 결과 (여기서는 `casts` 만 센다)
@@ -59,12 +63,15 @@ export function cooldownSec(B, u, def) {
  *   makeSummon  — `(caster, def)` 소환 유닛 하나. **유닛 생성자는 battle.js 것**이라 만드는 일을 그쪽에 맡긴다
  *   callBand    — `(caster, t) → {units: [표시값], then: [이벤트]}` 불러내기 — 시전자의 무리 중 서 있지 않은 것을 전부 세운다(2026-09-18 · INTERFACE §2-13).
  *                 적 배열 · 오오라 · 보상 표식을 아는 쪽이 battle.js 라 세우는 일을 그쪽에 맡긴다
+ *   dealIndirect — `(a, d, dmg, s)` 비직격 고정 피해 한 대상(하는 일 `fixed` · 2026-09-24 R151) — HP 차감 · `blast` 이벤트 · 기여 · 전투불능은
+ *                 기여표와 전투불능을 아는 쪽이 battle.js 라 그쪽에 맡긴다
  *   r1          — 타임라인 시각 반올림 (소수 1자리 · INTERFACE §5-3)
  *   EPS         — 준비·만료 판정 허용 오차
  *   hooks       — createHooks() 결과
  */
 export function createSkillRuntime(ctx) {
     const { SK, B, rng, timeline, out, units, r1, EPS, hooks } = ctx;
+    const F = createFormula(B);      // 고정 피해의 `indirect` — 무상태 순수 함수라 battle.js 의 것과 같은 값을 낸다 (code_conventions §2)
 
     const alive = list => list.filter(u => u.hp > 0);
     const alliesOf = u => (u.side === 'party' ? units.party : units.enemies);
@@ -76,11 +83,12 @@ export function createSkillRuntime(ctx) {
         const wasMax = u.hpMax;     // 최대 HP 를 밀던 창이 닫히면 재생기에 새 값을 줘야 한다 (부채 #50)
         const shown = [];           // 이 틱에 낸 `buffEnd` 들 — 조용한 창(`quiet`)은 안 든다
         for (const id of Object.keys(u.buffs)) {
-            if (u.buffs[id].until <= at + EPS) {
+            const b = u.buffs[id];
+            if (b.until <= at + EPS) {
                 // `quiet` = 무기 옵션 창(타격 시 디버프 · R78) — 열 때 이벤트를 안 냈으므로 닫을 때도 안 낸다(재생기는 `s` 로 스킬 이름을 찾는다)
-                const quiet = u.buffs[id].quiet;
                 delete u.buffs[id];
-                if (!quiet) { const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: id }; shown.push(ev); timeline.push(ev); }
+                // `s` = 그 창을 건 스킬 — 창 열쇠는 걸린 효과 id 다 (2026-09-24 · R151). 손으로 만든 창(`s` 없음)은 열쇠를 쓴다
+                if (!b.quiet) { const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: b.s ?? id }; shown.push(ev); timeline.push(ev); }
                 changed = true;
             }
         }
@@ -93,32 +101,13 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * 대상 풀 — heal · apply(버프 · 적에게 거는 창 · 오오라)가 공유한다(`def.target` — 시전 단위가 든 스킬 대상). **전부 결정론이라 rng 를 한 번도 안 쓴다**
-     *   (INTERFACE §5-2 — 대상 선택이 굴림을 쓰는 것은 공격 표의 순환·연쇄 둘뿐이다).
-     *   `ally_single`    HP **비율** 최저 아군 [사용자 확정 2026-09-09] — 절대량이 아니라 비율이라 탱커가 안 독점한다
-     *   `party_adjacent` `party` 배열의 양 옆(자기 제외) — 위치 개념 미확정의 임시 규칙 (skill_design §7)
-     *   `enemy_single`   생존 적 중 **HP 최대** 하나 — 결투 선언의 지목 (§12-4 ⚠ 「rng 소비 0 유지」 조건)
+     * 고르는 대상 — heal · apply(버프 · 적에게 거는 창 · 오오라) · 고정 피해가 쓴다(`x.target` — 그 줄의 대상).
+     *   고르는 규칙은 등록표 `PICK_TARGETS` 가 든다(2026-09-24 · R151 — ~~여기 있던 switch~~) · **전부 결정론이라 rng 를 한 번도 안 쓴다**
+     *   (INTERFACE §5-2 — 대상 선택이 굴림을 쓰는 것은 공격 표의 단일 · 순환 · 연쇄뿐이다). 모르는 대상은 시전자 하나다(로드가 막는다 — 손으로 만든 시전 단위만 온다)
      */
-    function targetsOf(u, def) {
-        switch (def.target) {
-            case 'self': return [u];
-            case 'party': return alive(alliesOf(u));
-            case 'ally_single': {
-                const list = alive(alliesOf(u));
-                return list.length === 0 ? [] : [list.reduce((a, b) => (b.hp / b.hpMax < a.hp / a.hpMax ? b : a))];
-            }
-            case 'party_adjacent': {
-                const list = alliesOf(u);
-                const i = list.indexOf(u);
-                return [list[i - 1], list[i + 1]].filter(x => x && x.hp > 0);
-            }
-            case 'enemy_single': {
-                const foes = alive(foesOf(u));
-                return foes.length === 0 ? [] : [foes.reduce((a, b) => (b.hp > a.hp ? b : a))];
-            }
-            case 'enemy_all': return alive(foesOf(u));
-            default: return [u];
-        }
+    function targetsOf(u, x) {
+        const t = PICK_TARGETS[x.target];
+        return t ? t.pick(rt, u) : [u];
     }
 
     /**
@@ -139,19 +128,21 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * 버프 창 — 중첩 없음, 같은 스킬 재시전은 `until` 갱신. 창 밖에 만들 것이 있는 효과는 표의 `apply` 가 한다.
-     * **적에게도 건다** — `target` 이 `enemy_*` 면 음수 값의 디버프다 [사용자 확정 2026-09-09].
-     * 창에 함께 싣는 둘 — `element`(평타 부여가 무슨 원소로 때리나) · `by`(지목한 자가 누구인가).
-     * `def` 는 `scaleDef` 가 낸 시전 단위(`apply` 줄)다 — **걸린 효과를 푼 값**이라 창의 `stat`·`v`·`until`·`element` 가 그 행이고(`v`·`until` 은 능력치로 민 값 · 2026-09-10),
-     *   창의 열쇠는 **거는 스킬 id**(`def.id`)다 — 같은 스킬 재시전 = 갱신 · 다른 스킬의 같은 능력치 = 덧셈 (2026-09-22 · S2-a)
+     * 버프 창 — 중첩 없음, 같은 효과 재시전은 `until` 갱신. 창 밖에 만들 것이 있는 효과는 표의 `apply` 가 한다.
+     * **적에게도 건다** — 대상이 적 쪽(`PICK_TARGETS[..].side = enemy`)이면 음수 값의 디버프다 [사용자 확정 2026-09-09].
+     * 창에 함께 싣는 것 — `element`(평타 부여가 무슨 원소로 때리나) · `by`(지목한 자가 누구인가) · `s`(건 스킬 — 이벤트의 `s`) · `roundEnd`(라운드 경계 규칙).
+     * `def` 는 `scaleDef` 가 낸 시전 단위(`apply` 줄)다 — **걸린 효과를 푼 값**이라 창의 `stat`·`v`·`until`·`element`·`roundEnd` 가 그 행이고(`v`·`until` 은 능력치로 민 값 · 2026-09-10),
+     *   **창의 열쇠는 걸린 효과 id**(`def.status`)다 [2026-09-24 · R151 — ~~거는 스킬 id~~ 는 한 스킬이 한 유닛에 효과 둘을 걸면 뒤 줄이 앞 줄을 덮었다] —
+     *   같은 효과 재시전 = 갱신 · 다른 효과의 같은 능력치 = 덧셈 (S2-a). 손으로 만든 시전 단위(`status` 없음)는 스킬 id 를 열쇠로 쓴다
      */
     function castBuff(u, def, t) {
         const targets = targetsOf(u, def);
-        // 버프 지속시간 +%(반지 · 목걸이 공통옵션 · 2026-09-21 · R127) — **거는 쪽** 값이다. 적에게 거는 창 · 결투의 짝 창도 같은 `until` 을 쓴다 · 0 이면 종전과 같다
+        // 버프 지속시간 +%(반지 · 목걸이 공통옵션 · 2026-09-21 · R127) — **거는 쪽** 값이다. 적에게 거는 창도 같은 `until` 을 쓴다 · 0 이면 종전과 같다
         const until = t + def.dur * (1 + (u.buffDur ?? 0));
+        const key = def.status ?? def.id;
         for (const tgt of targets) {
             const wasMax = tgt.hpMax;
-            tgt.buffs[def.id] = { stat: def.stat, v: def.value, until, element: def.element ?? null, by: u.key };
+            tgt.buffs[key] = { stat: def.stat, v: def.value, until, element: def.element ?? null, by: u.key, s: def.id, roundEnd: def.roundEnd ?? 'keep' };
             const ev = { t: r1(t), e: 'buff', u: tgt.key, s: def.id, stat: def.stat, v: def.value, until: r1(until) };
             EFFECTS[def.stat]?.apply?.(rt, tgt, def, until, ev);
             // **밀고 나서 싣는다** — 최대 HP 를 미는 창(`hp_max_pct`)은 `refreshDerived` 가 새 최대치를 쓰고 넘친 HP 를 자른 **뒤**의 값이어야 한다
@@ -160,14 +151,7 @@ export function createSkillRuntime(ctx) {
             if (tgt.hpMax !== wasMax) Object.assign(ev, { hpMax: tgt.hpMax, dhp: tgt.hp });
             timeline.push(ev);
         }
-        // 결투 — 지목과 **같은 until** 으로 **시전자 자신**에게 받는 피해 감소 창을 연다 (skill_design §13-5 · 2026-09-10).
-        //   새 채널이 아니라 `effect_value` 를 `dr_pct` 창으로 쓴다 — 창은 유닛마다 따로 들어서 같은 스킬 id 를 키로 써도 안 겹친다.
-        //   창 길이는 지목과 같은 999초지만 **라운드가 바뀌면 `battle.beginRound` 가 닫는다** — 지목이 적 배열과 함께 사라지는 그 시점이다
-        if (def.stat === 'duel' && targets.length > 0) {
-            u.buffs[def.id] = { stat: 'dr_pct', v: def.value, until, element: null, by: u.key };
-            timeline.push({ t: r1(t), e: 'buff', u: u.key, s: def.id, stat: 'dr_pct', v: def.value, until: r1(until) });
-            refreshDerived(u);
-        }
+        // ~~결투면 시전자에게 같은 until 의 dr_pct 창을 연다~~ — 2026-09-24 R151 결투의 **둘째 줄**(`kni_duel_guard` · `self`)이 건다. 스킬 id 전용 분기는 없다
     }
 
     /**
@@ -196,38 +180,61 @@ export function createSkillRuntime(ctx) {
         for (const ev of then) timeline.push({ t: r1(t), ...ev });
     }
 
-    /** 창 합 — 같은 stat 의 창을 더한다(버프 규칙과 같은 덧셈) */
-    const buffSum = (u, stat) => {
-        let sum = 0;
-        for (const b of Object.values(u.buffs)) if (b.stat === stat) sum += b.v;
-        return sum;
-    };
-    /** 평타에 얹는 원소 추가타 — 창 하나만 읽는다(둘을 겹쳐 든 경우는 먼저 걸린 것) */
-    const onhitOf = u => {
-        for (const [id, b] of Object.entries(u.buffs)) if (b.stat === 'onhit_element') return { id, v: b.v, element: b.element };
-        return null;
-    };
-
     /**
      * 기본 공격 — **평타 부여 창이 여기서 읽힌다** (skill_design §12-4·§12-5 인챈트 · 관통 사격 · 독화살).
-     *   `attack_splash`  단일 → 광역. 그때 배율이 창의 값(비율)이다 (창이 없으면 1배 단일)
-     *   `onhit_element`  때린 대상마다 원소 추가타 1회. **스킬 타격에는 안 붙는다**
+     *   `attack_splash`  단일 → 광역. 그때 배율이 창 합(비율)이다 (창이 없으면 1배 단일)
+     *   `onhit_element`  때린 대상마다 원소 추가타 1회 — 첫 창의 원소 · 값(둘을 겹쳐 든 경우는 먼저 걸린 것) · `s` = 그 창을 건 스킬. **스킬 타격에는 안 붙는다**
      * ⚠ 창이 켜지면 타격 수가 늘어 rng 소비도 는다 — 창이 없을 때의 수열은 종전과 **완전히 같다**
      * @param forced 대상을 정해 준다 — **반격**이 때린 쪽을 넘긴다(battle.strikeOnce · 2026-09-18). 주면 타겟 굴림(`pickTarget`)을 **안 쓴다** ·
      *   광역 창이 켜져 있으면 평타처럼 적 전원이다(「반격은 평타와 모든 로직이 같다」 · 사용자)
      */
     function basicAttack(u, t, foes, forced = null) {
-        const splash = buffSum(u, 'attack_splash');
+        const splash = sumOf(u, 'attack_splash');
         const targets = splash > 0 ? foes.slice() : [forced ?? ctx.pickTarget(u, foes)];
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
             ctx.strikeOnce(u, tgt, splash > 0 ? splash : 1, null);
         }
-        const oh = onhitOf(u);
+        const oh = stateOf(u, 'onhit_element');
         if (!oh) return;
+        const [key, win] = oh;
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
-            ctx.strikeOnce(u, tgt, oh.v, oh.element, oh.id);
+            ctx.strikeOnce(u, tgt, win.v, win.element, win.s ?? key);
+        }
+    }
+
+    /**
+     * **시전 한 번** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 시전자 능력치로 한 번 민 뒤(skill_design §13 · 2026-09-10 — 전투와 설명창이 같은 함수)
+     *   **하는 일 줄을 `seq` 순으로** 실행한다. 차례(`act`)와 사건(`fire`)이 같이 쓴다 — `skill` 이벤트 · 시전 수 · 쿨은 부르는 쪽 몫이다.
+     *   줄마다 살아 있는 적을 **다시 본다** — 앞 줄이 쓰러뜨린 적은 뒤 줄의 대상이 아니고, 적이 없으면 적을 쓰는 줄(`foes`)은 건너뛴다(굴림도 없다).
+     *   능력치 계수는 영웅 · 몬스터가 같이 탄다 (2026-09-22 — 보류 해제 · battle_design §9-2)
+     */
+    function cast(u, def, t) {
+        const eff = SK.scaleDef(def, u.stats ?? null);
+        for (const x of eff.effects) {
+            const type = EFFECT_TYPES[x.effect];
+            const foes = alive(foesOf(u));
+            if (type.foes && foes.length === 0) continue;
+            type.run(rt, u, x, t, foes);
+        }
+    }
+
+    /**
+     * 사건 [2026-09-24 · R151 — ~~`battle.js:blast` 전용 함수~~] — 그 유닛의 칸에서 `cast = event` · `cast_condition = name` 인 스킬을 **칸 순서대로** 쏜다.
+     *   `EVENT_TRIGGERS[name].once` 면 **한 유닛 한 번** — 쏘기 **전에** `u.fired` 에 세운다(되살아나도 안 풀린다 — 보상 `rewarded` 와 같은 규칙).
+     *   차례가 아니라서 `skill` 이벤트 · 시전 수 · `cast` 훅 · 쿨을 안 남긴다(종전 그대로). 부르는 자리는 사건을 아는 쪽이다 — `on_death` = battle.js `downed` 끝
+     */
+    function fire(u, name, t) {
+        const trig = EVENT_TRIGGERS[name];
+        for (const a of u.actives ?? []) {
+            if (a.def.cast !== 'event' || a.def.cond !== name) continue;
+            if (trig?.once) {
+                u.fired ??= {};
+                if (u.fired[a.def.id]) continue;
+                u.fired[a.def.id] = true;
+            }
+            cast(u, a.def, t);
         }
     }
 
@@ -250,22 +257,17 @@ export function createSkillRuntime(ctx) {
         // `ready` = 이 스킬이 다시 준비되는 시각. 재생기가 쿨을 **계산하지 않고** 그리게 하려고 함께 싣는다
         timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt) });
         hooks.emit('cast', u, { t, def });
-        // 실효 정의 — **시전 순간 시전자 능력치로 한 번** 민다 (skill_design §13 · 2026-09-10). 전투와 설명창이 같은 함수다.
-        //   쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
-        //   능력치 계수는 영웅 · 몬스터가 같이 탄다 (2026-09-22 — 보류 해제 · battle_design §9-2)
-        const eff = SK.scaleDef(def, u.stats ?? null);
-        // 하는 일 줄을 `seq` 순으로 — 실행은 하는 일 표가 든다 (2026-09-22 · R136). 버프는 아군 창도 적에게 거는 창도 `apply` 다
-        //   (오오라는 액티브 칸에 없다 · 사건 스킬은 조건이 늘 거짓이라 여기 안 온다). ⚠ 1단계는 줄이 하나다 — 로더가 강제한다
-        for (const x of eff.effects) EFFECT_TYPES[x.effect].run(rt, u, x, t, foes);
+        // 쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
+        cast(u, def, t);
     }
 
     /**
-     * 등록표(`skill_effects.js`)의 핸들러가 `rt.strikeOnce`·`rt.pickTarget`·`rt.rng` 를 부르므로 그 셋도 같이 싣는다 —
+     * 등록표(`skill_effects.js`)의 핸들러가 `rt.strikeOnce`·`rt.pickTarget`·`rt.rng`·`rt.F`·`rt.dealIndirect` 를 부르므로 그것도 같이 싣는다 —
      * 표가 battle.js 를 직접 import 하지 않게 하는 이음매다(표는 상태를 모르고 런타임만 안다).
      */
     const rt = {
-        rng, strikeOnce: ctx.strikeOnce, pickTarget: ctx.pickTarget,
-        alive, alliesOf, foesOf, act, expire, castHeal, castBuff, castSummon, castCall, basicAttack, targetsOf, buffSum,
+        rng, F, strikeOnce: ctx.strikeOnce, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
+        alive, alliesOf, foesOf, act, cast, fire, expire, castHeal, castBuff, castSummon, castCall, basicAttack, targetsOf,
     };
     return rt;
 }

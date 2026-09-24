@@ -251,6 +251,9 @@ button { font-family: inherit; font-size: inherit; color: inherit; cursor: point
    nav 폭 330 은 **메인이 줄어든 만큼**이다(아래 `.main` 의 zoom · ADR-0090) — 영어 라벨("Expedition")이 드는 하한 188 을 넉넉히 넘는다. */
 html, body { height: 100%; overflow: hidden; }
 #stage { position: absolute; left: 0; top: 0; width: 1600px; height: 800px; transform-origin: 0 0; }
+/* 맞춘 뒤에 보인다 [2026-09-24 · ADR-0349] — app.js 는 module 이라 첫 그리기 뒤에 돈다. 그 사이 한 장이 원배율로 섰다가 줄어드는 게 보였다.
+   `.fit` 은 `app.js:fitStage` 가 처음 맞출 때 건다 — 배율 공식을 여기 옮겨 적지 않는다 */
+#stage:not(.fit) { visibility: hidden; }
 #app {
     display: grid;
     grid-template-columns: 330px 1fr;
@@ -283,7 +286,12 @@ html, body { height: 100%; overflow: hidden; }
 }
 /* 현재 위치 = 고른 탭 이름 — 흰 글씨 · 굵게 (2026-09-21 사용자 지시 · SCREEN_DESIGN §2 상단바). 크기는 패널 제목과 같다 */
 .topbar .crumb { color: var(--text-primary); font-size: var(--fs-md); font-weight: bold; }
-/* 탭 세그먼트 — crumb 바로 오른쪽 · 탭 안의 화면 전환 (원정 ADR-0094 · 도감 ADR-0174). 비면 자리를 안 잡아 자원 줄은 오른쪽 끝 그대로다 */
+/* crumb 은 가장 긴 탭 이름만큼 자리를 잡는다 [2026-09-24 · SCREEN_DESIGN §2 · ADR-0353] — 탭 이름 전부를 한 칸에 겹치고 고른 것만 보인다.
+   원정 세그먼트가 모든 탭에 서므로 글자 길이가 탭마다 세그먼트를 밀면 안 된다 · 라벨 칸이라 고정 px 이 아니다 */
+.topbar .crumb { display: grid; flex-shrink: 0; white-space: nowrap; }
+.topbar .crumb > span { grid-area: 1 / 1; }
+.topbar .crumb > .ghost { visibility: hidden; }
+/* 원정 세그먼트 — crumb 바로 오른쪽 · **모든 탭에 선다** (ADR-0094 · ADR-0353). 비면(게임 밖) 자리를 안 잡아 자원 줄은 오른쪽 끝 그대로다 */
 .tab-seg { margin-right: auto; }
 .tab-seg:empty { display: none; }
 .tab-seg .segmented { flex-wrap: nowrap; }
@@ -841,6 +849,24 @@ html, body { height: 100%; overflow: hidden; }
 .equipment-item-tooltip { z-index: 51; pointer-events: none; }
 .tip-card { width: 304px; padding: 11px 13px; font-size: var(--fs-sm); }
 .tip-card + .tip-card { border-left: 1px solid var(--border-dark); background: var(--bg-input); }
+/* 아이템 비교 두 장 (SCREEN_DESIGN §6 · ADR-0337 · ADR-0339) — 두 장이 **따로 선 상자**다: 툴팁 상자를 걷고 카드가 상자를 든다.
+   툴팁이 커서 왼쪽으로 접히면(`tip.js:moveTip` 의 `at-left`) 순서를 뒤집어 「이 아이템」이 커서 쪽에 남는다 — DOM 은 그대로라 폭도 그대로다 */
+.tooltip:has(> .tip-vs) { background: none; border: 0; box-shadow: none; max-width: none; }
+.tooltip.at-left:has(> .tip-vs) { flex-direction: row-reverse; }
+.tooltip:has(> .tip-vs) > .tip-card {
+    background: var(--bg-secondary); border: 1px solid var(--border-secondary);
+    box-shadow: 0 6px 24px rgba(var(--shadow-rgb),.75);
+}
+/* VS — 틈은 좁고(`width`), 원정 관전과 같은 **글자만** 그 **위**에 떠 두 장의 가장자리에 겹친다(ADR-0339 · 상자 없음 ADR-0340).
+   글자는 틈보다 넓지만 **카드 안 여백(13px)까지만** 걸친다 — 가장자리의 값 열을 가리지 않는다. 세로는 두 장의 가운데.
+   그림자는 카드 바탕색 번짐이다 — 글자 밑을 지나는 두 카드의 테두리 선만 지운다(가장자리가 없어 네모로 안 읽힌다) */
+.tip-vs { position: relative; width: 8px; }
+.tip-vs span {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;
+    margin-left: 1px;   /* 끝 글자 뒤 자간(2px)의 절반 — 글자가 가운데에 선다 */
+    font-size: var(--fs-xs); letter-spacing: 2px; line-height: 1; white-space: nowrap; color: var(--text-muted);
+    text-shadow: 0 0 3px var(--bg-secondary), 0 0 3px var(--bg-secondary), 0 0 2px var(--bg-secondary);
+}
 .tip-card .tip-head { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 5px; letter-spacing: 1px; }
 .tip-card .tip-name { font-size: var(--fs-md); word-break: keep-all; margin-bottom: 3px; }
 .tip-card .tip-sub { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 8px; }
@@ -1809,6 +1835,12 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-card); border: 1px solid var(--border-primary);
     padding: 10px 11px 11px;
 }
+.sk-box.mastery-colored {
+    border-color: var(--mastery-color);
+    box-shadow: inset 0 3px 0 var(--mastery-color);
+}
+.sk-box.mastery-colored .sk-tag { color: var(--mastery-color); }
+.sk-box.mastery-colored .sk-cell.icon-only { border-color: var(--mastery-color); }
 .sk-box.locked { opacity: .5; }
 
 /* 좌상단 라벨 — 어떤 트리인지 */
@@ -1875,21 +1907,20 @@ html, body { height: 100%; overflow: hidden; }
 /* 현재 총합 — 랭크 0 이어도 찍는다(빈 칸은 「안 재고 있다」로 읽힌다) */
 .sk-v { font-size: var(--fs-2xs); color: var(--color-info); }
 .sk-meta .lv { font-size: var(--fs-2xs); color: var(--color-warning); }
-/* 낀 장비가 안 켠 칸 (직업 T2 — 든 무기 · 입은 갑옷 · 2026-09-22 R138) — 찍을 수는 있고 값만 안 먹는다. 어느 장비가 켜는지는 title 이 든다 */
-.sk-cell.off .sk-v { color: var(--text-muted); text-decoration: line-through; }
 /* 못 찍는 칸은 손가락 커서를 주지 않는다 — 눌러도 되는 곳만 눌러 보인다 */
 .sk-cell.dim { cursor: default; }
 .sk-cell.dim:hover { background: var(--bg-tertiary); border-color: var(--border-primary); }
 .sk-cell.taken.dim:hover { background: var(--surface-1); }
 .sk-cell.can:hover { background: var(--surface-5); border-color: var(--border-highlight); }
-/* 죄종 공통 3칸은 얇은 사각 테두리 안에 아이콘을 64% 크기로 둔다. */
-.sk-cell.icon-only { position: relative; padding: 0; }
+/* 마스터리는 모두 봉인 문장을 쓰고, 잠금 레벨과 랭크는 바깥 모서리에 둔다. */
+.sk-cell.icon-only { position: relative; padding: 0; border-color: var(--bronze-line); }
 .sk-icon-art {
-    position: absolute; inset: 18%; background: #d8d9e6;
-    -webkit-mask-size: contain; mask-size: contain;
-    -webkit-mask-position: center; mask-position: center;
-    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-    pointer-events: none;
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+}
+.sk-icon-lock {
+    position: absolute; left: 2px; top: 2px;
+    padding: 0 2px; background: var(--bg-card); color: var(--color-warning);
+    font-size: var(--fs-2xs); line-height: 1.2; white-space: nowrap; pointer-events: none;
 }
 .sk-icon-rank {
     position: absolute; right: 2px; bottom: 2px;
@@ -1897,6 +1928,11 @@ html, body { height: 100%; overflow: hidden; }
     font-size: var(--fs-2xs); line-height: 1.2; white-space: nowrap; pointer-events: none;
 }
 .sk-cell.icon-only.can:hover .sk-icon-art { filter: brightness(1.15); }
+.sk-cell.icon-only.off .sk-icon-art { opacity: .4; }
+.sk-cell.icon-only.off::after {
+    content: ''; position: absolute; top: 50%; left: 22%; width: 56%; height: 1px;
+    background: var(--text-muted); transform: rotate(-45deg); pointer-events: none;
+}
 .sk-tools { display: flex; justify-content: center; margin-top: 8px; }
 
 /* 액티브 슬롯 3개 + 실효 쿨 병기 (battle_design §5·§6) */
@@ -2123,7 +2159,7 @@ html, body { height: 100%; overflow: hidden; }
 .cx-step.on { color: var(--color-success); }
 
 /* ───────── 도감 — 자산 세그먼트 (SCREEN_DESIGN §9-1 · 2026-09-06 · 도감으로 흡수 2026-09-08) ─────────
-   옛 「이미지 도감」 탭. 자산을 묶음별로 펼치는 조회 화면이고, 09-08 에 도감의 세그먼트 셋(캐릭터 · 아이템 · 스킬)이 됐다 —
+   옛 「이미지 도감」 탭. 자산을 묶음별로 펼치는 조회 화면이고, 마스터리를 포함한 도감의 조회 세그먼트 넷이 됐다 —
    **클래스 이름은 `.ix-*` 그대로**다(화면의 속이 안 바뀌었다). 칸 폭은 고정 px 이 아니라 auto-fill + minmax 다 —
    이름과 파일명이 들어가는 칸이라 영어에서 길어진다 (폭 정책은 src/ui/README.md).
    마스크는 게임에서 쓰는 것 그대로 — 영웅·아이템·스킬은 네모(`box`), 몬스터는 원형(`round` — 09-08 이 화면에서는 안 쓰지만 §9 카드가 쓴다) */
@@ -2171,6 +2207,17 @@ html, body { height: 100%; overflow: hidden; }
 .ix-body.dense .ix-art { width: var(--ix-art); height: var(--ix-art); }
 .ix-body.dense .ix-name { line-height: 1.15; }
 .ix-body.dense .ix-file { line-height: 1.1; }
+/* 전직 스킬 — 직업 하나가 한 줄 · 그 직업의 전직 박스가 나란히 (SCREEN_DESIGN §9-1 · ADR-0336).
+   칸 폭은 줄 안에서 같고(개수는 데이터가 정한다) 높이는 grid 가 줄에서 가장 긴 박스에 맞춘다 */
+.ix-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 5px; }
+
+/* 마스터리 도감 — 인게임 판을 그대로 세워 한 줄에 세 판씩 비교한다. */
+.codex-mastery-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 350px));
+    gap: 14px; align-content: start; justify-content: center;
+    padding: 2px 1px 8px;
+}
+.codex-mastery-grid .sk-box { min-width: 0; }
 
 /* ───────── 페이퍼돌 (부위 8종 · 위치 9개, 반지 ×2) ───────── */
 
@@ -3059,23 +3106,18 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px;
     padding: 9px; background: var(--bg-card); border: 1px solid var(--border-dark);
 }
-.gb-need { font-size: var(--fs-sm); }
+.gb-need, .gb-from { font-size: var(--fs-sm); }
 .gb-go { margin-top: auto; align-self: stretch; }
-.gb-cell .gb-charge { flex-wrap: wrap; gap: 4px 8px; font-size: var(--fs-xs); }
 
-/* 도박장 창 — 3×3 슬롯 [2026-09-24 · SCREEN_DESIGN §8-1 · ADR-0331]. 왼쪽 판(충전 · 판 · 결과 · 판돈 · 버튼) | 오른쪽 배당표.
+/* 도박장 창 — 3×3 슬롯 [2026-09-24 · SCREEN_DESIGN §8-1 · ADR-0331]. 왼쪽 판(판 · 결과 · 판돈 · 버튼) | 오른쪽 배당표.
    배당표 열은 라벨이 드는 칸이라 고정 px 이 아니라 minmax(ui/README 폭 정책) · 판의 칸 높이만 px 이다(릴 띠가 칸 하나씩 굴러야 해서) */
 .modal-box.gb-modal { width: min(900px, 100%); }
-.gb-box { --gb-cell-h: 92px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); gap: 18px; }
+.gb-box { --gb-cell-h: 92px; --gb-gap: 6px; --gb-bounce: 7px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); gap: 18px; }
 .gb-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.gb-charge { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); }
-.gb-dots { display: inline-flex; gap: 4px; }
-.gb-dots i { width: 9px; height: 9px; border: 1px solid var(--border-highlight); transform: rotate(45deg); }
-.gb-dots i.on { background: var(--color-warning); border-color: var(--color-warning); }
 .gb-holdh { font-size: var(--fs-sm); color: var(--color-warning); margin-bottom: 4px; }
 .gb-board {
     display: grid; grid-template-columns: repeat(var(--reels), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), var(--gb-cell-h));
-    gap: 6px; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-primary);
+    gap: var(--gb-gap); padding: 8px; background: var(--bg-input); border: 1px solid var(--border-primary);
 }
 .gb-c {
     position: relative; overflow: hidden; min-width: 0;
@@ -3095,15 +3137,33 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .gb-c.coin.k-jackpot { border-color: var(--color-warning); }
 /* 맞은 라인 · 새로 선 코인 — 테두리 한 벌로 읽힌다. 판돈보다 적게 받은 판도 맞은 칸은 밝아지지만 결과 줄의 순손익이 − 를 든다(ADR-0331) */
 .gb-c.win { border-color: var(--color-warning); background: var(--bg-tertiary); }
-.gb-c.fresh { box-shadow: inset 0 0 0 2px var(--color-warning); }
+/* 새로 선 코인 — 튀어 오르며 선다(리스핀 재생 중에만 붙는다) */
+.gb-c.fresh { box-shadow: inset 0 0 0 2px var(--color-warning); animation: gb-pop .32s ease-out both; }
+@keyframes gb-pop { 0% { transform: scale(.45); opacity: .2; } 65% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
 .gb-board.holding .gb-c:not(.coin) { opacity: .22; }
 .gb-board.idle .gb-c { opacity: .35; }
-/* 도는 판 — **고정 띠**(심볼 표를 두 번 이은 것)를 CSS 가 굴린다. 결과와 무관하고 렌더러는 난수를 안 쓴다(ui 원칙 2).
-   띠가 반만큼 올라가면 처음과 같은 그림이라 끊김 없이 돈다 · 릴마다 속도를 조금씩 달리한다 */
-.gb-c.roll { justify-content: flex-start; }
-.gb-strip { display: flex; flex-direction: column; width: 100%; animation: gb-roll calc(.2s + var(--reel) * .05s) linear infinite; filter: blur(1px); }
-.gb-strip-cell { flex: 0 0 var(--gb-cell-h); height: var(--gb-cell-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-@keyframes gb-roll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+/* 도는 판 — **릴마다 한 줄 띠**가 아래로 흐르다 왼쪽부터 멈춘다 [2026-09-24 사용자 「좌라락좌라락」 · ADR-0333].
+   띠 = [결과 칸 · 채움 칸] 위에서 아래 순 — 채움 끝을 창에 걸고 시작(`--from`)해 결과 칸이 창에 닿으면(0) 멈춘다: **멈추는 곳이 결과**다.
+   박자 — 70% 까지 같은 속도로 흐르고(거리의 82%) 속도를 이어받아 느려지며 `--gb-bounce` 만큼 더 내려갔다가 제자리(「탁」).
+   `--n`(채움 칸 수) · `--dur`(이 릴이 도는 시간) · `--delay`(흐른 시간 — 다시 그려져도 이어서 돈다)는 렌더러가 릴마다 준다(`app.js:gbReel`) */
+.gb-reel { position: relative; overflow: hidden; min-width: 0; }
+.gb-reel-strip {
+    --from: calc(var(--n) * -1 * (var(--gb-cell-h) + var(--gb-gap)));
+    display: flex; flex-direction: column; gap: var(--gb-gap);
+    animation: gb-reel var(--dur) both, gb-reel-blur var(--dur) linear both;
+    animation-delay: var(--delay, 0ms), var(--delay, 0ms);
+}
+.gb-reel-strip > .gb-c { flex: 0 0 var(--gb-cell-h); height: var(--gb-cell-h); }
+@keyframes gb-reel {
+    0% { transform: translateY(var(--from)); animation-timing-function: linear; }
+    70% { transform: translateY(calc(var(--from) * .18)); animation-timing-function: cubic-bezier(.3, .43, .4, 1); }
+    92% { transform: translateY(var(--gb-bounce)); animation-timing-function: ease-in-out; }
+    100% { transform: translateY(0); }
+}
+/* 개발 장치 `?dev=gamble&spin=1&roll=ms` — 도는 판을 그 순간에 세운다(헤드리스가 흐르는 장면을 찍는 길 · SCREEN_DESIGN §10) */
+.gb-board.freeze .gb-reel-strip { animation-play-state: paused; }
+/* 흐르는 동안만 번진다 — 멈추기 직전에 또렷해져 멈춘 칸이 읽힌다 */
+@keyframes gb-reel-blur { 0% { filter: blur(1px); } 8% { filter: blur(2px); } 70% { filter: blur(1.5px); } 88%, 100% { filter: blur(0); } }
 .gb-res { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: var(--fs-sm); min-height: 1.6em; }
 .gb-res .gb-tags { color: var(--color-warning); }
 .gb-res b.up { color: var(--color-success); }
@@ -3288,13 +3348,20 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    상세 폭은 `minmax()` — 영어 조건 문장이 한국어보다 길다 (src/ui/README 폭 정책) */
 .cn-work {
     flex: 1 1 0; min-height: 0;
-    /* 부지 | 상세가 폭을 반씩 · 사이를 넉넉히 (2026-09-24 사용자 지시 「왼쪽이 너무 답답해 보여」 — ~~상세 1.25 · 간격 12~~ ADR-0326) */
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 24px;
+    /* 부지 | 상세가 폭을 거의 반씩 · 사이를 넉넉히 (2026-09-24 사용자 지시 「왼쪽이 너무 답답해 보여」 — ~~상세 1.25 · 간격 12~~ ADR-0326).
+       **상세는 반에서 100px 좁고** 오른쪽 끝이 판에 붙는다 · 왼쪽 열은 나머지 전부이고 **부지 격자는 그 왼쪽에 붙는다**(`.cn-lots` 의 폭 · `justify-self`) · 남는 폭이 두 열 사이가 된다
+       (2026-09-24 사용자 지시 「오른쪽 넓이를 줄여」 → 「더 줄여」 → 「100px 까지」 → 「그림 가로를 살짝만」 → 가운데에 세워 본 뒤 「다시 왼쪽에 맞춰」) */
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, calc((100% - 24px) / 2 - 100px)); grid-template-rows: minmax(0, 1fr); gap: 0;
 }
-/* 부지 — 건물 하나가 네모 하나 · **한 줄에 3개**(3열 · 폭은 열이 나눠 갖는다 · 2026-09-24 사용자 지시 · ADR-0326) · **높이는 141 고정** (2026-09-23 사용자 지시 「세로는 고정」).
-   격자는 위에서부터 서고 남는 세로는 비운다 · 모자라면 격자가 스크롤한다 */
+/* 박스 — 한 장의 남는 세로를 다 받는다(`.page-stack > .fill` · 영웅 띠는 없다 — ADR-0354). 안은 두 열 */
+.cn-box { display: flex; flex-direction: column; }
+/* 부지 격자의 폭 = 왼쪽 열 − 64px — 반 폭 + 60px(네모가 반 폭 때보다 조금 넓다 · 사용자 「그림 가로를 살짝만」)과 같은 값이고 왼쪽에 붙어 남는 64px 가 상세와의 사이가 된다 */
+.cn-work > .cn-lots { width: calc(100% - 64px); justify-self: start; }
+/* 부지 — 건물 하나가 네모 하나 · **한 줄에 3개**(3열 · 폭은 열이 나눠 갖는다 · 2026-09-24 사용자 지시 · ADR-0326) · **높이는 139 고정** (2026-09-23 사용자 지시 「세로는 고정」).
+   **격자는 늘 3 × 4 = 12칸** — 빈 칸은 빈 부지(`.cn-lot.empty`)가 채우고, 높이 187 은 네 줄이 박스(한 장 기준 · 격자 세로 779)에 딱 들어가는 값이다
+   (2026-09-24 사용자 지시 「3x4로」 · ADR-0342 — ~~3 × 5 = 15칸~~ · ~~148~~ 은 영웅 띠가 위에 있던 때 · 띠를 걷으며 한 줄에 39 씩 늘었다 — ADR-0354). 건물이 12를 넘으면 줄이 늘고 격자가 스크롤한다 */
 .cn-lots {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 141px; align-content: start; gap: 10px;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 187px; align-content: start; gap: 10px;
     overflow-y: auto; min-height: 0;
 }
 .cn-lot {
@@ -3306,6 +3373,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .cn-lot.on { background: var(--surface-1); border-style: solid; border-color: var(--border-secondary); }
 .cn-lot.locked { opacity: .55; }
 .cn-lot.pick { border: 2px solid var(--text-accent); padding: 7px 5px; opacity: 1; }
+/* 빈 부지 — 건물이 없는 칸. 점선 네모만 · 누르지 않는다 (2026-09-24 사용자 지시 — 격자를 15칸으로 채운다) */
+.cn-lot.empty { background: transparent; cursor: default; }
+.cn-lot.empty:hover { border-color: var(--border-primary); }
 /* 지금 지을 수 있다 — 모서리 점 하나(글 없이). 조건 · 재화가 다 맞는 건물만 (`next.err` 없음) */
 .cn-lot.ready::after {
     content: ''; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%;
@@ -3334,14 +3404,16 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     padding: 12px 14px;
     background: var(--bg-secondary); border: 1px solid var(--border-primary);
 }
-/* 머리 — 작은 그림(부지와 같은 그림 · 3:2) · 이름 · 상태 한 줄(미건설 · n랭크 · 최대 랭크) · 눈금. 안 지었으면 그림이 어둡고 테두리가 점선 */
-.cn-head { flex: none; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+/* 머리 — 그림(부지와 같은 그림 · 3:2) · 이름 · 상태 한 줄(미건설 · n랭크 · 최대 랭크) · 눈금. 안 지었으면 그림이 어둡고 테두리가 점선.
+   **그림 높이 154 = 아래 두 소제목의 글자 윗선이 부지 둘째 줄 네모의 윗변(187 + 10)에 서는 값** (2026-09-24 사용자 지시 · 한 장 실측 · ~~96 × 64~~ · ~~106~~ 은 줄 139 · ~~104~~ 는 줄 137 · ~~115~~ 는 줄 148 때 — 줄이 늘면 같은 만큼 는다).
+   머리 높이는 그림이 정한다 — 부지 네모 높이 · `.cn-side` 위 여백 · `.cn-head` 아래 여백 · `.sub-h` 위 여백이 바뀌면 다시 잰다 */
+.cn-head { flex: none; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; --cn-thumb-h: 154px; }
 .cn-thumb {
-    flex: none; width: 96px; height: 64px; display: flex; align-items: center; justify-content: center;
+    flex: none; width: calc(var(--cn-thumb-h) * 1.5); height: var(--cn-thumb-h); display: flex; align-items: center; justify-content: center;
     background: var(--bg-tertiary) center 40% / cover no-repeat; border: 1px solid var(--border-secondary);
 }
 .cn-head:not(.on) .cn-thumb { border-style: dashed; border-color: var(--border-primary); filter: brightness(.55); }
-.cn-thumb .rs-art { height: 44px; }
+.cn-thumb .rs-art { height: 72px; }
 .cn-head-name { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .cn-head-name b { font-size: var(--fs-lg); color: var(--text-primary); }
 .cn-head-state { font-size: var(--fs-sm); color: var(--color-progress); }
@@ -3356,20 +3428,22 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 머리 아래 반으로 갈린다 — 왼쪽 「현재 가능한 기능」 + 「다음 랭크」 · 오른쪽 「{건물} 랭크」 목록. 반쪽마다 제 안에서 스크롤한다 (ADR-0326) */
 .cn-split { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
 .cn-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow-y: auto; }
+/* 두 반 사이를 더 띄운다 — 왼쪽 반은 오른쪽 끝을, 오른쪽 반은 왼쪽 끝을 줄인다 · 바깥 끝은 그대로 (2026-09-24 사용자 지시) */
+.cn-split > .cn-col:first-child { margin-right: 5px; }
+.cn-split > .cn-col:last-child { margin-left: 3px; }
 .cn-now { flex: none; display: flex; flex-direction: column; gap: 6px; }
 .cn-now .cn-sub, .cn-next .cn-sub { margin-bottom: 0; }
 .cn-now .cn-eff-t { gap: 3px; }
 .cn-next { flex: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }   /* 왼쪽 위 — 아래에 「현재 가능한 기능」 이 선다 (ADR-0327) */
-/* 「n랭크」 아래 여는 것 설명 — 한 줄에 한 문장 · 상자 없이 글이다 (ADR-0324 · ADR-0325) */
+/* 「n랭크」 아래 여는 것 설명 — 한 줄에 한 문장 · 상자 없이 글이다 (ADR-0324 · ADR-0325).
+   **소제목 아래 글은 전부 `--fs-xs`** — 소제목(`--fs-md` 굵게)보다 눈에 띄게 작다 · 강조는 색 · 굵기가 든다 (2026-09-24 사용자 지시 「부제목보다 크거나 비슷하면 … 더 작아야 해」 · ~~`--fs-md` · `--fs-sm`~~) */
 .cn-next-top { display: flex; flex-direction: column; gap: 3px; }
-.cn-next-top .cn-rno { align-self: flex-start; font-size: var(--fs-md); color: var(--text-accent); }
+.cn-next-top .cn-rno { align-self: flex-start; color: var(--text-accent); }
 .cn-next-top.pending .cn-rno { color: var(--text-muted); }
-.cn-next-top .cn-eff-t { font-size: var(--fs-md); }
-.cn-reqs { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: var(--fs-sm); }
+.cn-reqs { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: var(--fs-xs); }
 .cn-req.ok { color: var(--color-success); }
 .cn-req.no { color: var(--color-warning); }
-.cn-label { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: -2px; }
-.cn-next-end { font-size: var(--fs-sm); color: var(--text-muted); }
+.cn-next-end { font-size: var(--fs-xs); color: var(--text-muted); }
 /* 재료 칸 — 재화 그림 칸(한 변 52) · 오른쪽 아래 필요 수량 · 칸 아래 이름과 「보유 n」. 모자라면 칸 테 · 수량 · 보유가 붉다.
    그림은 `mock.js:RES_ART`(⚠ 임시 실루엣) — 색은 재화 종류(`.res-*`)가 준다 */
 .cn-mats { display: flex; flex-wrap: wrap; gap: 8px 10px; }
@@ -3393,10 +3467,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .res-ore { color: var(--color-info); }
 .res-wood { color: var(--color-progress); }
 .res-herb { color: var(--color-success); }
-.cn-go { align-self: stretch; margin-top: 2px; }
+/* [건설] — 작은 주 버튼 · 글자 한 단 작고 폭은 글자만큼 · 왼쪽에 붙는다 (2026-09-24 사용자 지시 「건설 버튼 크기랑 글씨 좀 줄여」 · ~~폭 꽉 채움~~) */
+.cn-go { align-self: flex-start; min-width: 96px; margin-top: 2px; padding: 3px 18px; font-size: var(--fs-sm); }
 /* 랭크 목록 = **글 목록** — 배지 · 태그 · 표 · 칸 상자 없이 글이고 묶음 사이는 가는 선 하나 (ADR-0324).
    **한 묶음 높이 = 목록 세로의 1/7** (2026-09-23 사용자 지시 「최대 7단계일 때 꽉 차도록」). 7랭크면 꽉 차고 넘으면 목록이 스크롤한다 ·
-   글이 길면 묶음이 제 높이만큼 는다(자르지 않는다). 묶음은 세 세로줄 — 「n랭크」 · 여는 것 글(윗줄) / 조건(아랫줄 · 주황 글씨) · 「✓ 완료」 · 「준비 중」.
+   글이 길면 묶음이 제 높이만큼 는다(자르지 않는다). 묶음은 세 세로줄 — 「n랭크」 · 여는 것 글 · 「✓ 완료」 · 「준비 중」 — **효과만**이고 조건은 올리면 뜨는 툴팁이 든다(ADR-0347).
    ⚠ 1/7 은 묶음의 `min-height` 로 준다 — 격자 행(`grid-auto-rows: minmax(%, auto)`)으로 주면 목록이 낮을 때 행이 글만큼 안 늘어나 겹쳤다(2026-09-24) */
 .cn-ranks {
     flex: 1 1 0; min-height: 0; overflow-y: auto;
@@ -3405,23 +3480,25 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 상태는 글자색과 오른쪽 끝 글자가 말한다 — 지음 흰 글씨 + 「✓ 완료」(목록의 주황은 조건만 — ADR-0330) · 다음 흰 굵은 글 + 옅은 붉은 바탕 · 그 뒤 · 준비 중 흐림 */
 .cn-rank {
     flex: none; min-height: calc(100% / 7);
-    display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; grid-template-rows: auto auto;
-    align-content: center; column-gap: 14px; row-gap: 2px; padding: 6px 8px; line-height: 1.4;
+    display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; align-items: center;
+    column-gap: 14px; padding: 6px 8px; line-height: 1.4;
     border-bottom: 1px solid var(--border-dark);
 }
 .cn-rank.next { background: rgba(var(--accent-rgb), .07); }
-/* 그 뒤 랭크는 조건만 빼고 흐리다 — 줄째 흐리면 조건의 주황도 같이 죽는다 (ADR-0328) · 준비 중은 조건을 안 찍으니 줄째 */
-.cn-rank.later > :not(.cn-need), .cn-rank.pending { opacity: .6; }
-.cn-rno { grid-column: 1; grid-row: 1 / span 2; align-self: center; font-size: var(--fs-sm); font-weight: bold; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-muted); }
+/* 그 뒤 · 준비 중 랭크는 줄째 흐리다 — 목록에 조건이 없어 주황을 살릴 까닭이 없다 (ADR-0347 — ~~조건만 빼고 흐림 · ADR-0328~~) */
+.cn-rank.later, .cn-rank.pending { opacity: .6; }
+/* 조건 툴팁 — 조건 줄뿐 · 「다음 랭크」 의 `.cn-req` 표기 그대로(✓ 초록 · ✗ 경고색) · 폭은 내용만큼 (ADR-0347) */
+.tip-card.cn-req-tip { width: auto; max-width: 280px; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-xs); }
+.cn-rno { grid-column: 1; font-size: var(--fs-xs); font-weight: bold; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-muted); }
 .cn-rank.on .cn-rno, .cn-rank.next .cn-rno { color: var(--text-primary); }
+/* 로마 숫자 자리 — 숫자마다 폭이 달라(I ↔ VIII) 자리를 가장 넓은 숫자(VIII)만큼 잡는다 · 그래야 여는 것 글이 줄끼리 맞는다.
+   숫자 글자는 언어가 바뀌어도 같아 `em` 하나로 된다(라벨 칸 고정 폭 금지는 언어마다 길이가 다른 글의 몫 — src/ui/README) (2026-09-24 사용자 지시 「로마자로」) */
+.cn-rn { display: inline-block; min-width: 1.55em; }   /* VIII 이 1.52em(12px 굵게 18.2 · 실측) */
 /* 여는 것 설명 — 여는 것마다 한 문장 · 한 줄에 하나(`.cn-desc`). 준비 중인 것은 흐린 문장 + 꼬리 (ADR-0325) */
-.cn-eff-t { grid-column: 2; grid-row: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: var(--fs-sm); color: var(--text-primary); word-break: keep-all; }
-.cn-rank.one .cn-eff-t { grid-row: 1 / span 2; align-self: center; }
+.cn-eff-t { grid-column: 2; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: var(--fs-xs); color: var(--text-primary); word-break: keep-all; }
 .cn-desc.soon { color: var(--text-muted); }
-/* 아랫줄 — 안 지은 랭크의 조건(주황 글씨 · 「다음 랭크」 의 ✗ 와 같은 경고색 — ADR-0328) */
-.cn-need { grid-column: 2; grid-row: 2; font-size: var(--fs-xs); color: var(--color-warning); }
 /* 오른쪽 끝 — 「✓ 완료」(초록 글자) · 「준비 중」(흐린 글자) */
-.cn-state { grid-column: 3; grid-row: 1 / span 2; align-self: center; font-size: var(--fs-xs); white-space: nowrap; color: var(--text-muted); }
+.cn-state { grid-column: 3; font-size: var(--fs-xs); white-space: nowrap; color: var(--text-muted); }
 .cn-rank.on .cn-state { color: var(--color-success); }
 
 /* ───────── 제련소 (SCREEN_DESIGN §8-2) ─────────
@@ -3567,8 +3644,22 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     font-size: var(--fs-xs);
 }
 .cm-gold { color: var(--color-warning); }
-.cm-fame { color: var(--text-muted); }
 .cm-go { align-self: stretch; }
+/* 의뢰 등급 칩 — 아이템 희귀도의 색 · 이름 사다리 그대로(같은 말이 두 색이 되지 않게 · ADR-0352) */
+.cm-grade { margin-left: 6px; padding: 0 5px; font-size: var(--fs-xs); border: 1px solid currentColor; border-radius: 2px; white-space: nowrap; }
+.cm-grade.g-normal { color: var(--rarity-normal); }
+.cm-grade.g-magic { color: var(--rarity-magic); }
+.cm-grade.g-rare { color: var(--rarity-rare); }
+/* 진행 중 카드 — 제자리에서 테두리가 선다(왼쪽 변은 종류의 색 그대로) · 다 채우면 막대가 성공 색 (§14 · ADR-0352) */
+.cm-card.taken { border-top-color: var(--border-highlight); border-right-color: var(--border-highlight); border-bottom-color: var(--border-highlight); }
+.cm-card.done { border-top-color: var(--color-success); border-right-color: var(--color-success); border-bottom-color: var(--color-success); }
+.cm-prog { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-muted); }
+.cm-prog .bar { flex: 1 1 auto; min-width: 0; }
+.cm-card.done .cm-prog .bar > i { background: var(--color-success); }
+/* 패널 제목 옆 — 받은 수 / 받을 수 (값은 늘 찍는다 · §4-1) */
+.cm-slots { margin-left: 8px; font-size: var(--fs-xs); font-weight: normal; color: var(--text-muted); }
+/* 게시판이 안 열렸을 때 — 카드 대신 「선술집 n랭크 필요」 한 줄 */
+.cm-need { padding: 7px 9px; }
 
 /* 상인이 없을 때 — 카드 대신 한 줄이 자리를 지킨다(「지금 없다」와 「고장났다」가 갈려야 한다 · §4-1) */
 .td-away { display: inline-block; padding: 7px 9px; border: 1px solid var(--border-dark); background: var(--bg-secondary); border-radius: 2px; }

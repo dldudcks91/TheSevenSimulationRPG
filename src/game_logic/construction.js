@@ -13,20 +13,24 @@
  * 여는 것의 대상 — `kind` 는 켜기(`unlock`) · 더하기(`add`) 둘뿐이다(construction_draft §11-2).
  *   `live: false` = **준비 중** — 그 기능이 아직 없다. 표에 적어 두면 화면에 「준비 중」으로 보이고, 기능이 생기면 여기만 `true` 로 바꾼다.
  *   더하기는 **기본값에 더한다** — 이름이 `state.limitsOf` 의 키와 같은 대상은 그 상한에 붙는다(단계 셋 `make_level` · `potion_tier` · `tactic_slots` 는
- *   `makeLevels` · `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY`).
+ *   `makeLevels` · `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY` · 장 수 `chapters` 도 기본값이 0 이다).
+ *   **첫 단계는 켜기가 심는다**(`seed` = 켜기 대상 id) — 그 켜기가 처음 나오는 랭크에서 이 더하기가 **1 씩 함께 선다**(표에 +1 줄을 따로 적지 않는다 ·
+ *   제작 Lv1 은 제작(`make`) · 물약 1단계는 물약 제작(`potion`)과 함께 열린다 — 2026-09-24 사용자 지시 · INTERFACE §2-14). `opened` · `reach` 가 센다
  *   연구의 상한은 `research:<연구 id>` 로 더한다(이 표에 없다 — 연구 표가 id 를 든다)
  */
 const U = live => ({ kind: 'unlock', live });
-const A = live => ({ kind: 'add', live });
+const A = (live, seed = null) => ({ kind: 'add', live, seed });
 export const TARGETS = {
     // 켜기 — 지금 있는 기능 (분해 · 알아서 분해는 건물 밖이라 여기 없다 — 처음부터 열려 있다 · 2026-09-23 사용자 지시 · R140)
-    expedition: U(true), repeat: U(true), stage_level: U(true),
+    //   ~~`repeat` · `stage_level`~~ 도 건물 밖이다 — 반복 원정 · 던전 레벨 조절은 처음부터 열린다 (2026-09-24 사용자 지시 · R152)
+    expedition: U(true),
     upgrade_item: U(true), make: U(true),
+    potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 제련소 r2)
     storage: U(true), codex: U(true), hire: U(true), search: U(true), shop: U(true), shop_special: U(true),
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
     dispatch: U(false), explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
-    commission_board: U(false),
+    commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
     training: U(false), advance: U(false), skill_depth: U(false),
     // 더하기 — 지금 있는 상한(`state.limitsOf` 의 키) · 단계
@@ -34,10 +38,12 @@ export const TARGETS = {
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정 + 수색 결과이고 건물이 안 늘린다 [2026-09-24 사용자 지시]
     searchSlots: A(true), shopPerSlot: A(true), shopWeapon: A(true),
     gambleStakes: A(true),   // 도박장 판돈 단계 — 기본값 `gamble_stake_steps` 위로 더한다 (2026-09-24 · R149)
-    make_level: A(true), potion_tier: A(true), tactic_slots: A(true),
+    make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
+    chapters: A(true),   // 들어갈 수 있는 장 — 원정 랭크마다 +1 · 기본값 0 (`state.limitsOf` · `stageUnlocked` · 2026-09-24 · R152)
+    commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)
     // 더하기 — 준비 중
     make_kinds: A(false), resource_tier: A(false), workers: A(false), shop_layers: A(false),
-    explore_regions: A(false), explore_slots: A(false), gear_sets: A(false), commission_slots: A(false), training_slots: A(false),
+    explore_regions: A(false), explore_slots: A(false), gear_sets: A(false), training_slots: A(false),
     recruit_quality: A(false),   // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
 };
 
@@ -77,6 +83,12 @@ export function createConstruction(data) {
     const stageIds = new Set(data.stageIds ?? []);
     const resources = new Set(data.resources ?? []);
     const posInt = v => Number.isInteger(v) && v > 0;
+    // 켜기 → 그 켜기가 첫 단계를 심는 더하기들 (`TARGETS.seed`) — 심는 쪽은 켜기여야 한다
+    const SEEDS = {};
+    for (const [id, t] of Object.entries(TARGETS)) if (t.seed) {
+        if (TARGETS[t.seed]?.kind !== 'unlock') bad(`${id} — seed '${t.seed}' 가 켜기 대상이 아니다`);
+        (SEEDS[t.seed] ??= []).push(id);
+    }
 
     /* ── 건물 ── */
     const list = [];
@@ -205,13 +217,18 @@ export function createConstruction(data) {
         return row ? { require: row.require, cost: row.cost, effects: row.effects.map(e => ({ ...e, live: liveOf(e) })) } : null;
     }
 
-    /** 지어진 랭크까지의 여는 것 — `{features: [id], adds: {target: n}}` · **준비 중도 모은다**(그 기능이 생기면 곧바로 먹게) */
+    /** 지어진 랭크까지의 여는 것 — `{features: [id], adds: {target: n}}` · **준비 중도 모은다**(그 기능이 생기면 곧바로 먹게) ·
+     *  켜기가 처음 나오면 그 켜기가 심는 첫 단계(`SEEDS`)가 1 씩 든다 */
     function opened(ranks) {
         const features = [], adds = {};
         for (const b of list) {
             for (let n = 1; n <= (ranks?.[b.id] ?? 0) && n <= b.maxRank; n++) {
                 for (const e of rankRows.get(`${b.id}:${n}`).effects) {
-                    if (e.kind === 'unlock') { if (!features.includes(e.target)) features.push(e.target); } else adds[e.target] = (adds[e.target] ?? 0) + e.value;
+                    if (e.kind === 'unlock') {
+                        if (features.includes(e.target)) continue;
+                        features.push(e.target);
+                        for (const s of SEEDS[e.target] ?? []) adds[s] = (adds[s] ?? 0) + 1;
+                    } else adds[e.target] = (adds[e.target] ?? 0) + e.value;
                 }
             }
         }
@@ -253,14 +270,21 @@ export function createConstruction(data) {
 
     /**
      * 그 대상이 **n 에 닿는 랭크** `{id, name, rank}` — 잠긴 자리가 「무엇을 지어야 열리나」를 말할 때 읽는다(`state.needOf`) · 못 닿으면 null.
-     *   켜기 = 그 줄이 처음 나오는 랭크(n 은 안 본다) · 더하기 = 값을 쌓아 **n 이상**이 되는 랭크(기본값은 안 센다 — 부르는 쪽이 뺀다).
-     *   한 대상을 여러 건물이 더하면 **표의 건물 순서 · 랭크 순서**로 쌓는다
+     *   켜기 = 그 줄이 처음 나오는 랭크(n 은 안 본다) · 더하기 = 값을 쌓아 **n 이상**이 되는 랭크(기본값은 안 센다 — 부르는 쪽이 뺀다 ·
+     *   켜기가 심는 첫 단계는 센다 — `reach('make_level', 1)` = 제련소 r1). 한 대상을 여러 건물이 더하면 **표의 건물 순서 · 랭크 순서**로 쌓는다
      */
     function reach(target, n = 1) {
         let sum = 0;
+        const seedBy = TARGETS[target]?.seed ?? null;
+        let seeded = false;
         for (const b of list)
             for (let r = 1; r <= b.maxRank; r++)
                 for (const e of rankRows.get(`${b.id}:${r}`).effects) {
+                    if (!seeded && e.kind === 'unlock' && e.target === seedBy) {
+                        seeded = true;
+                        if (++sum >= n) return { id: b.id, name: b.name, rank: r };
+                        continue;
+                    }
                     if (e.target !== target) continue;
                     if (e.kind === 'unlock') return { id: b.id, name: b.name, rank: r };
                     sum += e.value;

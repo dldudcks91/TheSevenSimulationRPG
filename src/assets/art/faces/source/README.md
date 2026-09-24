@@ -1,14 +1,31 @@
 # 스타일 앵커 (faces/source/)
 
-몬스터·영웅 초상 아트의 **스타일 기준 이미지**. 게임이 로드하지 않는다 — 생성 시 레퍼런스로 첨부하는 용도.
-게임에서 보려면 이름을 바꿔 넣은 [`../cartoon/`](../cartoon/)(`monster/<idx>.png` · `hero/<직업id>_<k>.png`) 을 `?face=cartoon` 으로 켠다.
+몬스터·영웅 초상 아트의 **PNG 원본과 스타일 기준 이미지**. 게임이 이 폴더를 로드하지 않는다.
+게임에서 보려면 축소한 [`../cartoon/`](../cartoon/)(`monster/<idx>.webp` · `hero/<직업id>_<k>.webp`) 을 `?face=cartoon` 으로 켠다.
 **이 폴더의 자리** [2026-09-14 구 `example/`] — 게임이 읽는 그림 = 묶음 폴더/id · 원본 시트·앵커 = `source/`(여기) · id 없는 여분 = `unused/`. `icons/` 도 같은 모양이다([`../../README.md`](../../README.md)).
 
-`_source_sheet_*.png` · `source_sheet_*.png` 는 Gemini 가 한 번에 뽑은 원본 시트(해골은 2752×1536, 검투사·로마군·기사·고블린은 2048×2048 — 전부 불투명).
+`_source_sheet_*.png` · `source_sheet_*.png` 는 여러 초상을 한 번에 뽑은 원본 시트다(해골은 2752×1536, 검투사·로마군·기사·고블린은 2048×2048). `source_sheet_ch1_st4_flame_zealot_refinement_v2.png` 는 투명 배경의 예외다.
 나머지는 거기서 잘라 **배경을 알파로 되돌리고 512×512 정사각으로 맞춘** 것이다 —
 ⚠ `gladiator_helm.png` 만 예외다(누끼 없음 · 1013×1013 원본 해상도 · 아래 참조).
 
-## 폴더 넷 [2026-09-16]
+## 게임 초상 내보내기 [2026-09-24]
+
+`ready/monster/` 36장과 `ready/hero/` 19장은 기존 게임 PNG를 **바이트 그대로 보존한 512×512 작업 원본**이다. 더 큰 원본 시트가 남아 있는 그림은 시트도 따로 보관한다. 게임 폴더에는 PNG를 두지 않고, 몬스터 256×256 · 영웅 320×320의 투명 WebP(품질 90)를 둔다.
+
+새 초상이 확정되면 해당 id의 PNG를 `ready/monster/` 또는 `ready/hero/`에 저장하고, 저장소 루트에서 아래 명령으로 내보낸다. 미확정 시안은 `_scratch/`에 둔다.
+
+```powershell
+python -m pip install Pillow
+python scripts/export_face_portraits.py
+```
+
+첫 이관에는 `--migrate`를 사용했다. 이 옵션은 구 게임 PNG를 `ready/`에 복사해 일치 여부를 검사하고 WebP를 만든 다음, 게임 폴더의 PNG를 제거한다.
+
+## 임프 제사장 1402 교체 [2026-09-24]
+
+`sheets/source_sheet_ch1_st4_imp_priest_8.png`는 화염 광신도 `1401`의 임프 형상을 종족 기준으로 삼아 그린 **가로형 4열 × 2행 시안**이다. 사용자가 고른 **1번(좌상)**을 `(0, 0, 443, 443)`으로 잘라 512×512 투명 원본 `ready/monster/1402.png`로 확대했다. 게임용 `cartoon/monster/1402.webp`는 기존 내보내기 스크립트의 몬스터 규격(256×256 · 품질 90)으로 만들었다. 이전 1402 원본과 WebP는 `source/_scratch/imp_priest_1402_previous.*`에 보관했다.
+
+## 기존 스타일 원본의 폴더 기록 [2026-09-16]
 
 71장이 한 폴더에 섞여 있어 갈랐다. **챕터로는 나누지 않는다** — 배정은 바뀌고(09-16 에 `orc_tusks_strap` 이 `1103` 에서 풀렸다),
 시트 · 예비 · 앵커는 애초에 챕터가 없다. 어느 그림이 어느 몬스터에 붙었는지는 **아래 절들의 표**가 든다.
@@ -16,7 +33,7 @@
 | 폴더 | 장수 | 무엇 |
 |---|---|---|
 | `anchors/` | 3 | **합격선의 SSOT** — `gladiator_helm` · `barbarian`(+ `barbarian_original`). 어깨폭 71~75% · 두상 57~67% · 색 수 42~62 가 전부 이 두 장의 실측값이다 |
-| `sheets/` | 29 | 자르기 전 원본 시트(`source_sheet_*.png` · `_source_sheet_*.png`). 장수는 3분의 1인데 **용량은 83%** |
+| `sheets/` | 2 | 자르기 전 원본 시트(`source_sheet_*.png`) |
 | `chapters/` | 7 | **스테이지 한 판 = 2×2 한 장** [2026-09-17] — `ch<챕터>_st<스테이지>.png`. 일반 3 + 스테이지 보스 1 이 정확히 넷이라 시트 규격에 그대로 맞는다. **빈 칸이 곧 발주서다** → [chapters/README.md](chapters/README.md) |
 | `hero/` | 18 | 영웅 초상 — `archer_*` · `knight_*` · `mage_*` · `priest_*` · `roman_*` · `warrior_*` |
 | `monster/` | 45 | 몬스터 초상 — `abaddon` · `footman` · `goblin_*` · `leviathan` · `orc_*` · `satan` · `skeleton_*` · `wraith_*` |
@@ -26,11 +43,15 @@
 
 ## 이 세트가 정의하는 스타일
 
-- 클린 카툰 흉상 · SD 비율(두상이 전체의 약 절반) · 굵고 균일한 어두운 외곽선
+- 클린 카툰 흉상 · 굵고 균일한 어두운 외곽선. **새로 그릴 초상은 [공통 구도 기준](../../../../../docs/reference/character_portrait_prompt.md)에 따라 머리를 캔버스 높이의 약 70%로 잡는다.** 위 앵커의 두상 57~67%는 기존 그림의 실측값이다
 - 플랫 베이스 + 부드러운 그림자 1단 + 둥근 면의 작은 광택 하이라이트
 - **거의 정면**, 아주 살짝 틀어짐
 - **머리 + 어깨 + 가슴 일부 + 한 손** — 무기가 프레임에 들어와 직업을 읽게 한다
 - 배경 투명 · 저채도 팔레트
+
+## 화염 광신도 크기 조정 시트 [2026-09-24]
+
+`sheets/source_sheet_ch1_st4_flame_zealot_refinement_v2.png` 는 4×2 비교 시트다. 사용자가 고른 **두 번째 시안의 좌상 1번**을 443×443으로 잘라 512×512 투명 캔버스 가운데에 배치했다. `monster/flame_zealot.png` 가 원본 선택본이고 `ready/monster/1401.png` 가 내보내기용 작업 원본, `../cartoon/monster/1401.webp` 가 게임용 사본이다. 기존 `source_sheet_ch1_st4_sd.png` 는 첫 스테이지 4 시트로 보존한다.
 
 ## 몬스터 — Gem 레비아탄 (`source_sheet_leviathan.png`) [2026-09-14]
 

@@ -157,7 +157,7 @@ export function moveTip(ev) {
     tip.style.right = '';
     if (anchored) tip.style.left = '0px';
     const tw = tip.offsetWidth, th = tip.offsetHeight;   // 배율 전 크기 = 한 장 단위
-    let x, y, w, h;
+    let x, y, w, h, folded = false;
     if (anchored) {
         const r = stageRect(anchorNode);
         ({ w, h } = r);
@@ -175,8 +175,11 @@ export function moveTip(ev) {
         const p = stagePoint(ev);
         ({ w, h } = p);
         x = p.x + 16; y = p.y + 16;
-        if (x + tw > w - 8) x = p.x - tw - 16;
+        if (x + tw > w - 8) { x = p.x - tw - 16; folded = true; }
     }
+    // 커서 왼쪽으로 접혔나 — 아이템 비교 두 장이 이걸 보고 순서를 뒤집는다(「이 아이템」이 커서 쪽 · SCREEN_DESIGN §6 · ADR-0337).
+    //   뒤집어도 폭은 같아 위에서 잰 `tw` 가 그대로 맞는다
+    tip.classList.toggle('at-left', folded);
     if (y + th > h - 8) y = h - th - 8;
     if (x !== null) tip.style.left = Math.max(8, x) + 'px';
     tip.style.top = Math.max(8, y) + 'px';
@@ -773,7 +776,7 @@ function effectPhrase(st, P, R) {
 /**
  * 문장 — **하는 일 × 나가는 방식 × `target`** 이 틀을 정한다(2026-09-22 — ~~`kind` × `target`~~). 틀이 없으면 `null`(설명만 뜬다).
  * 숫자 자리는 **틀이 쓸 때만** 만든다(`() =>`) — 안 쓰는 자리가 `R.fx` 를 켜서 각주가 헛서지 않게.
- * ⚠ 1단계는 스킬 하나 = 하는 일 한 줄이라 **첫 줄(`effects[0]`)** 로 문장을 만든다(로더가 강제) — 줄마다 문장은 2단계(SCREEN_DESIGN §2 먼저)
+ * ⚠ **첫 줄(`effects[0]`)** 로만 문장을 만든다 — 여러 줄 스킬(결투 · 2026-09-24 R151)도 첫 줄 문장이다. 줄마다 문장은 SCREEN_DESIGN §2 먼저(부채 #63)
  * @returns {string[] | null} 첫째가 본 문장 · 둘째는 확률로 터지는 추가 피해(있을 때만 — **완결된 둘째 문장**이라 틀에 잇지 않는다)
  */
 function skillLines(def, pv, atkType, R) {
