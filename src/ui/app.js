@@ -159,6 +159,12 @@ function fmtDuration(ms) {
     if (m > 0) return sec > 0 && m < 10 ? t('time.ms', { m, s: sec }) : t('time.m', { m });
     return t('time.s', { s: sec });
 }
+/** 플레이 시간 `H:MM:SS` — 시는 24를 넘어도 일로 안 접는다 (SCREEN_DESIGN §2 · ADR-0356) */
+function fmtPlayTime(ms) {
+    const s = Math.floor(Math.max(0, ms ?? 0) / 1000);
+    const pad = n => String(n).padStart(2, '0');
+    return `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+}
 /* 직업 7종 — id 로 참조, 표시는 L() (hero_design §2). 무기군 목록은 weapon_group.csv(D.weaponGroupList)에서 파생 */
 const classDef = id => D.classes.find(c => c.id === id);
 const className = id => L(classDef(id)) || id;
@@ -425,6 +431,8 @@ function renderShell() {
     $('.resources').appendChild(langBtn);
     mountAdmin($('.resources'), render);   // Admin — 켜면 건물로 막힌 탭 · 기능 · 상한이 열린 척한다 (devadmin.js)
     mountCardCompare($('.resources'), render);   // 임시 — Card [Before | After] (devcompare.js)
+    // 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356]. `data-play` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshPlayTime`)
+    if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'play-time', `${t('ui.playTime')}<b data-play>${fmtPlayTime(G.playMs)}</b>`));
     mountDevPalette($('.resources'));   // ⚙ — 배경 · 글자 색을 눈으로 맞추는 개발 장치
 
     // crumb — 게임 화면이면 **탭 이름 전부를 한 칸에 겹쳐 두고 고른 것만 보인다** [2026-09-24 · SCREEN_DESIGN §2 · ADR-0353].
@@ -1508,7 +1516,7 @@ function formBox() {
 
 /* ═══════════ 편성 탭 (SCREEN_DESIGN §15 · ADR-0192 ~ 0195) ═══════════
    전투에 나가기 전에 정하는 넷이 한 탭에 있다 — 누구(파티) · 어디에(진형) · 무엇을 들고(물약 칸) · 어떤 조건으로(파티 전술).
-   편성은 늘 `[balance.csv:party_preset_count]` 개가 서 있고 **박스 맨 위의 고르개**가 어느 편성을 펼지 정한다(출정 창과 같은 값 · ADR-0251).
+   편성은 늘 `limitsOf(G).presets` 개가 서 있고(원정 랭크가 연다 · R156) **박스 맨 위의 고르개**가 어느 편성을 펼지 정한다(출정 창과 같은 값 · ADR-0251).
    파티 · 진형 · 물약 칸 · 파티 전술 칸이 전부 **고른 편성의 것**이다(ADR-0250) — 열린 전술 칸 수만 계정이라 모든 편성이 같다.
    **판정은 전부 game_logic 이 낸다** — 모자람(`presetState`) · 카운터 · 켜짐(`tacticState`). 화면은 고르고 그리기만 한다 */
 
@@ -2113,6 +2121,26 @@ function refreshGold() {
     if (gold) gold.textContent = G.resources.gold.toLocaleString();
 }
 
+/* 플레이 시간 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356] — **게임 화면이 떠 있고 탭이 보이는 동안만** 앱 시계 눈금 사이를 더한다.
+   숨으면 박자를 끊고(돌아온 첫 눈금은 박자만 잡는다) · 멈춤 문턱을 넘은 공백(절전)은 안 더한다 — 멈춤 판정과 같은 문턱이다(ADR-0102).
+   **저장은 따로 안 건다** — 다른 저장(정산 · 조작)에 실려 간다. 세이브를 한 번 더 쓰면 같은 게임을 연 다른 탭이 멈춘다(`freeze` · §2-1) —
+   닫힐 때(`pagehide`) 쓰던 것을 그래서 걷었다: 옛 탭을 닫는 순간 새 탭이 멈춤 창에 섰다 (2026-09-25 실측). 마지막 저장 뒤의 몫은 버려진다 */
+let playAt = null;            // 플레이 시간을 마지막으로 잰 실제 시각 — 세지 않는 동안은 null
+function playTick(at) {
+    const on = !!G && authenticated && state.screen === 'game' && !document.hidden;
+    if (on && playAt != null && at - playAt <= FROZEN_GAP_MS) SYS.game.addPlayTime(G, at - playAt);
+    playAt = on ? at : null;
+    if (on) refreshPlayTime();
+}
+
+/** 상단바의 플레이 시간 숫자만 — 글자가 바뀔 때만 쓴다(1초에 한 번) · 골드(`refreshGold`)와 같은 길 */
+function refreshPlayTime() {
+    const n = $('.resources [data-play]');
+    if (!n) return;
+    const txt = fmtPlayTime(G.playMs);
+    if (n.textContent !== txt) n.textContent = txt;
+}
+
 /** 관전이 떠 있을 때 아레나 아래 보관 칸만 갈아 끼운다(재생기 · 로그 · 스크롤은 그대로) — 앱 시계가 손이 빈 눈금에 부른다 (ADR-0341) */
 function refreshBattleBag() {
     bagStale = false;
@@ -2128,6 +2156,7 @@ function expTick() {
     const at = now();
     const gap = beatAt == null ? 0 : at - beatAt;
     beatAt = at;
+    playTick(at);                // 멈춤 판정보다 먼저 — 공백은 `playTick` 이 같은 문턱으로 거른다 (ADR-0356)
     // 멈췄다 깨어났다 — 게임을 껐다 켠 것과 같이 본다 (ADR-0102). 재생기가 먼저 깨어나도 그쪽은 공백을 밀지 않고 여기로 미룬다
     if (gap > FROZEN_GAP_MS) { closeFrozenRun(at); return; }
     if (!G || state.screen !== 'game') return;
@@ -2999,9 +3028,10 @@ function tipCard(item, headText, hints = [], skCtx) {
         // 값은 **피해 범위** `최소~최대` — 강화 배율 · **고정 옵션 「데미지 +%」**까지 든 파생값이다(`item.weaponDamageFixed` · ADR-0108 · ADR-0307)
         baseRows.push(baseRow(atkStat ? L(atkStat) : t('st.atk'), rangeText(SYS.item.weaponDamageFixed(item)),
             item.element ? t(`st.atkType.${item.element}`) : ''));
-        // 주기(초/1회)는 **클수록 느려** 이름과 방향이 거꾸로 읽힌다 → **초당 공격속도**로 뒤집어 낸다.
-        // 축은 여전히 `combat_stat.csv:action_period` 하나고(세부 옵션 2 가 그 행을 그대로 든다) 변환은 `formula` 가 한다
-        baseRows.push(baseRow(t('st.atkSpeed'), SYS.formula.attacksPerSec(g.period).toFixed(2)));
+        // 속도 줄 = **공격 속도**, 값은 초 / 1회 [2026-09-25 사용자 지시 · ADR-0357 초 · ADR-0358 이름 — 초당 공격속도(ADR-0081)를 걷었다].
+        //   이름 · 값 꼴이 세부 옵션 머리의 그 행과 같다(`combat_stat.csv:action_period` · `sk.cycleSec`) — 값은 무기군 밑수(민첩 · 공격 속도 % 전)
+        const cycleStat = statRow('action_period');
+        baseRows.push(baseRow(cycleStat ? L(cycleStat) : t('sk.cycle'), t('sk.cycleSec', { s: g.period.toFixed(2) })));
     }
     // 방어구 고유값 — 고정 옵션 「방어력 +%」를 먹인 값(`item.implicitFixed` · ADR-0309)
     if (imp) baseRows.push(baseRow(L(M.statLabel(imp.stat)), M.baseValue(imp.stat, imp.v)));
@@ -5044,7 +5074,7 @@ function helpSections() {
             title: t('nav.expedition'),
             lead: t('exp.oneParty'),
             groups: [
-                { h: t('exp.party.h'), sub: t('help.exp.party', { n: SYS.game.limitsOf(G).party, m: B.concurrent_expedition_parties }), body: [t('exp.party.note')] },
+                { h: t('exp.party.h'), sub: t('help.exp.party', { n: SYS.game.limitsOf(G).party, m: SYS.game.limitsOf(G).expeditions }), body: [t('exp.party.note')] },
                 { h: t('exp.bench.h'), sub: t('help.exp.bench', { n: G.heroes.length, cap: SYS.game.limitsOf(G).roster }), body: [t('exp.bench.note')] },
                 { h: t('exp.zones.h'), sub: t('exp.zones.sub', { r: SYS.battle.stageRounds(D.stageList[0]).length }), body: [t('exp.zones.note', rounds)] },
                 { h: t('exp.level.h'), body: [t('exp.level.tip')] },   // 위험도 — 인게임 툴팁 키 재사용 (§12 · ADR-0104)
@@ -5274,9 +5304,14 @@ async function boot() {
     };
     // `&cn=max` — **모든 건물을 끝까지 지은** 판 [2026-09-22 · R137 · SCREEN_DESIGN §10] — 새 게임은 제련소 · 선술집이 안 지어져 있어 그 탭들에 곧장 못 닿는다
     if (new URLSearchParams(location.search).get('cn') === 'max') { if (!G) startGame(); devBuild(); }
-    // `&ps=n` — 편성 수는 처음부터 [balance.csv:party_preset_count] 이고 건물이 안 늘린다(2026-09-23 · ~~넘으면 지휘 천막을 끝까지 짓는다~~ R137)
+    // `&ps=n` — 편성 수는 원정 랭크가 연다(r1 · r3 · r6 · R156) — 지금 편성보다 크면 **원정을 편성 n 이 열리는 랭크까지** 짓는다
     const pickPs = () => {
         if (!G || !wantPs) return;
+        const w = wantPs > SYS.game.limitsOf(G).presets ? SYS.game.needOf('presets', wantPs) : null;
+        if (w && (G.buildings[w.id] ?? 0) < w.rank) {
+            G.buildings[w.id] = w.rank;
+            G = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(G, now()))));
+        }
         SYS.game.selectPreset(G, wantPs);
     };
     const devParty = () => { pickPs(); if (G && SYS.game.partyOf(G).length === 0) for (const h of G.heroes) SYS.game.toggleParty(G, h.uid, now()); };

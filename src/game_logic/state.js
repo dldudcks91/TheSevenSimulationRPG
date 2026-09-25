@@ -8,6 +8,7 @@
  * 세이브 형식 v37 (2026-09-22)
  * {
  *   version, seed, createdAt, savedAt,
+ *   playMs   — **누적 플레이 시간**(ms). 더하는 것은 `addPlayTime` 하나 · 언제 더할지는 화면이 정한다 · 없으면 0 · 버전 무변경 (2026-09-25 · ADR-0356)
  *   resources: {gold, dust, stigma},
  *   materials: {yieldId: n}   — 제작 재료(광석 · 목재 — 산출물 id 가 키). 없으면 {} · 버전 무변경 (2026-09-15 · R96)
  *   potions: {potionId: n}    — 물약 재고(v32 · R124). 마시면 준다(`advanceRun`) · 만들면 는다 · 0 이면 키가 없다. 새 게임 = `start_owned` 개수. 칸 구성은 편성이 든다
@@ -25,7 +26,7 @@
  *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
  *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
  *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], tactics: {slots}}], preset: n, items: {uid: item}, bag: [uid],
- *     — presets = **편성**(v32 · R122 · 길이 = `party_preset_count`) · preset = 고른 편성 번호(1 부터).
+ *     — presets = **편성**(v32 · R122 · 길이 = `limitsOf(state).presets` — 원정 랭크가 연다 · R156) · preset = 고른 편성 번호(1 부터).
  *       party = **편성한 순서 그대로** · `party[0]` 이 리더 · **새 게임은 전부 빈 배열**이다 (2026-09-09).
  *       **한 영웅은 한 편성에만 든다 — v38** [2026-09-23 · 다부대] — 편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다.
  *       `toggleParty` 가 넣을 때 다른 편성에서 빼고(이동), 로드도 같은 규칙으로 걸러 낸다 (옛 규칙 = 여러 편성에 들어도 됨)
@@ -185,6 +186,16 @@ export function createGameSystem(deps) {
         state.items[it.uid] = it;
         return it;
     }
+    /**
+     * 시작 장비 한 벌 — **일반 무기 + 일반 갑옷**을 입힌다 (hero_design §1). 새 게임의 시작 영웅과 **선술집에서 온 영웅**(명단 · 수색)이 같은 한 벌이다 [2026-09-25 사용자 지시].
+     *   무기 → 갑옷 — **이 순서가 계약이다**(INTERFACE §5-2). 무기 스킬 풀에서 고유 스킬을 빼도 소비 수는 같다 · 바로 입으므로 가방 칸을 안 먹는다
+     */
+    function equipStarter(state, h, rng) {
+        const w = addItem(state, I.startingWeapon(rng, h.cls, h.innate));
+        h.equipped.weapon = w.uid;
+        const a = addItem(state, I.startingArmor(rng));
+        h.equipped.armor = a.uid;
+    }
 
     /**
      * 새 게임 — 확정한 시작 영웅 3명이 곧 로스터다. 각자 **일반 무기 + 일반 갑옷**을 입고 시작한다 [개정 2026-09-14 · R86 · hero_design §1] —
@@ -238,6 +249,7 @@ export function createGameSystem(deps) {
     function newGame(seed, candidates, now) {
         const state = {
             version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
+            playMs: 0,       // 누적 플레이 시간 — 화면이 보이는 동안만 더한다(`addPlayTime` · ADR-0356)
             resources: { gold: B.start_gold, dust: B.start_dust, stigma: B.start_stigma },
             materials: {},   // 제작 재료(광석 · 목재) — 파견이 채운다(미구현 · R96)
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
@@ -260,14 +272,8 @@ export function createGameSystem(deps) {
             buildings: CN.startRanks(), research: {},
         };
         const rng = makeRng(deriveSeed(state.seed, 0));
-        for (const c of candidates) {
-            const h = addHero(state, clone(c));
-            // 영웅마다 무기 → 갑옷 — **이 순서가 계약이다**(INTERFACE §5-2). 무기 스킬 풀에서 고유 스킬을 빼도 소비 수는 같다
-            const w = addItem(state, I.startingWeapon(rng, h.cls, h.innate));
-            h.equipped.weapon = w.uid;
-            const a = addItem(state, I.startingArmor(rng));
-            h.equipped.armor = a.uid;
-        }
+        // 영웅마다 무기 → 갑옷 — 한 스트림을 로스터 순서로 이어 쓴다(INTERFACE §5-2)
+        for (const c of candidates) equipStarter(state, addHero(state, clone(c)), rng);
         // 모든 새 게임에 고블린 일꾼 한 명을 준다. 기존 시작 파티 뒤에 넣어 첫 편성은 그대로 둔다.
         addHero(state, {
             name: { ko: '고블린 일꾼', en: 'Goblin Worker' },
@@ -287,6 +293,15 @@ export function createGameSystem(deps) {
     }
 
     const serialize = (state, now) => ({ ...clone(state), version: SAVE_VERSION, savedAt: now });
+
+    /**
+     * 누적 플레이 시간에 더한다 [2026-09-25 · ADR-0356 · INTERFACE §2-7] — in-place · 새 누적 값을 돌려준다.
+     * **0 이하 · 유한수가 아닌 값은 무시**한다(시계가 뒤로 가도 줄지 않는다). 무엇을 더할지(보이는 동안만 · 절전 공백 제외)는 부르는 쪽이 정한다
+     */
+    function addPlayTime(state, ms) {
+        if (Number.isFinite(ms) && ms > 0) state.playMs = (state.playMs ?? 0) + ms;
+        return state.playMs ?? 0;
+    }
 
     /**
      * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
@@ -358,6 +373,8 @@ export function createGameSystem(deps) {
         // 같이 나간 런 수 — 1 이상 정수만 남긴다 (v36 · R134)
         s.bonds = Object.fromEntries(Object.entries(s.bonds && typeof s.bonds === 'object' ? s.bonds : {}).filter(([, n]) => Number.isInteger(n) && n > 0));
         s.progress.peakTotal = Number.isInteger(s.progress.peakTotal) && s.progress.peakTotal > 0 ? s.progress.peakTotal : 0;
+        // 플레이 시간 — 없으면 0 부터 센다. 흘러간 몫은 기록이 없어 소급할 판단이 없다 → 버전을 안 올린다 (INTERFACE §4 · ADR-0356)
+        s.playMs = Number.isFinite(s.playMs) && s.playMs > 0 ? s.playMs : 0;
         return s;
     }
 
@@ -895,12 +912,14 @@ export function createGameSystem(deps) {
     const formCaps = tpl => { const t = FT[tpl] ?? FT[DEFAULT_TPL]; return t ? [t.front, t.back] : [B.party_size_max, 0]; };
 
     /* ── 편성 [2026-09-21 · 사용자 확정 · SCREEN_DESIGN §15 · ADR-0192 · R122] ──
-       편성은 **늘 [balance.csv:party_preset_count] 개가 서 있고** 번호가 이름이다(1 부터) — 만들고 지우는 동작이 없다.
+       편성은 **늘 `limitsOf(state).presets` 개가 서 있고** 번호가 이름이다(1 부터) — 만들고 지우는 동작이 없다. 수는 원정 랭크가 연다(r1 · r3 · r6 · R156).
        편성마다 파티 · 진형 · 물약 칸 · **파티 전술 칸**을 든다(전술은 v34 부터 편성마다 · R129 — 열린 칸 수만 계정이다).
        파티 · 진형 · 물약 칸을 바꾸는 함수는 **고른 편성**(`state.preset`)에 작용한다 — 편성 탭은 늘 고른 편성을 펴므로 번호를 따로 받지 않는다.
        출발만 번호를 받는다 — 반복이 **도는 원정의 편성**으로 다시 나가야 해서다(고른 편성이 그새 바뀌었을 수 있다) */
-    // 편성 수는 `limitsOf(state).presets` 가 답한다 — 여기서는 CSV 값이 쓸 수 있는 수인지만 본다
-    if (!(Number.isInteger(B.party_preset_count) && B.party_preset_count >= 1)) throw new Error(`balance: party_preset_count ${B.party_preset_count} — 1 이상 정수여야 한다 (INTERFACE §2-7)`);
+    // 편성 수는 `limitsOf(state).presets` 가 답한다 — 여기서는 CSV 값이 쓸 수 있는 수인지만 본다.
+    //   기본값은 0 이어도 된다 — 시작 랭크(처음부터 지어진 원정 r1)의 더하기를 얹은 수가 1 이상이면 된다 (R156)
+    const startPresets = B.party_preset_count + (CN.opened(CN.startRanks()).adds.presets ?? 0);
+    if (!(Number.isInteger(B.party_preset_count) && B.party_preset_count >= 0 && startPresets >= 1)) throw new Error(`balance: party_preset_count ${B.party_preset_count} · 시작 편성 ${startPresets} — 기본값은 0 이상 정수 · 시작 랭크의 편성은 1 이상이어야 한다 (INTERFACE §2-7)`);
     const emptyPreset = state => ({ party: [], formation: { tpl: DEFAULT_TPL, ranks: [[], []] }, potionSlots: padSlots(state, []), tactics: { slots: {}, locked: [] } });
     /** 불러온 전술 칸 — 없으면 리롤한 적이 없는 상태 (R129) · 잠금은 CSV 에 있는 칸 번호만 남긴다(칸이 줄면 잘린다 · v35 · R28) */
     const fitTactics = t => ({
@@ -1579,6 +1598,11 @@ export function createGameSystem(deps) {
         const hired = state.tavern?.hired ?? [];
         return H.rollCandidates(rng, limitsOf(state).tavernCandidates).map((c, i) => (hired.includes(i) ? null : c));
     }
+    /**
+     * 선술집에서 온 영웅(명단 · 수색)의 시작 장비 스트림 [2026-09-25 사용자 지시] — **그 영웅의 번호**(`addHero` 가 올린 `counters.hero`)가 정한다.
+     *   명단(`^ 0x5A17`) · 수색 결과(`^ 0x5EA7`)와 갈라 두어 나올 영웅을 안 바꾼다 · 불러오기를 다시 해도 같은 한 벌이다 (INTERFACE §5-1)
+     */
+    const recruitRng = state => makeRng(deriveSeed(state.seed ^ 0x6EA2, state.counters.hero));
     /** 무료 리롤이 열리는 시각 — 리롤한 적이 없으면 이미 열려 있다. 쿨다운은 **플레이어 행동**에 걸린다(자동 갱신 없음) */
     function tavernFreeAt(state) {
         const at = state.tavern?.rerolledAt;
@@ -1607,6 +1631,7 @@ export function createGameSystem(deps) {
         if (!c) return { ok: false, err: 'missing' };
         state.resources.gold -= B.tavern_hire_cost;
         const h = addHero(state, clone(c));
+        equipStarter(state, h, recruitRng(state));   // 시작 영웅과 같은 한 벌을 입고 온다 (2026-09-25 사용자 지시)
         // 고용한 칸만 빈다 — 명단을 갈지 않는다. 고용이 무료 리롤 우회로가 되면 쿨다운이 무의미해진다 (§2-4)
         state.tavern = state.tavern ?? { rerolledAt: null, hired: [] };
         state.tavern.hired.push(index);
@@ -2082,6 +2107,7 @@ export function createGameSystem(deps) {
         const { hero } = searchRoll(state, s);
         state.resources.gold -= cost;
         const h = addHero(state, hero);
+        equipStarter(state, h, recruitRng(state));   // 명단 고용과 같은 한 벌 — 결과 스트림을 안 민다 (2026-09-25)
         state.search = null;
         return { ok: true, hero: h, cost };
     }
@@ -2176,7 +2202,9 @@ export function createGameSystem(deps) {
         }
         state.buildings[buildingId] = nx.rank;
         // 편성 수 · 물약 칸 수가 더하기로 늘었으면 **그 자리를 곧바로 붙인다**(빈 편성 · 빈 칸 — 불러오기와 같은 `fitPresets`) · 줄어드는 길은 없다
+        //   부대 자리도 편성과 같은 길이로 맞춘다(`fitRuns` — 편성이 원정 랭크로 느는 길이 생겼다 · R156)
         state.presets = fitPresets(state, state.presets);
+        state.runs = fitRuns(state, state.runs);
         return { ok: true, rank: nx.rank };
     }
 
@@ -2386,7 +2414,7 @@ export function createGameSystem(deps) {
     }
 
     return {
-        newGame, serialize, deserialize, canLoad,
+        newGame, serialize, deserialize, canLoad, addPlayTime,
         heroById, heroItems, heroCombat, heroCombatIf, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf,

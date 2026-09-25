@@ -304,6 +304,8 @@ html, body { height: 100%; overflow: hidden; }
 .resources { display: flex; gap: 18px; font-size: var(--fs-sm); }
 .resources span b { color: var(--text-primary); margin-left: 6px; }
 .resources span { color: var(--text-muted); }
+/* 플레이 시간 — 골드와 같은 모양 · 숫자 폭을 고르게 둬 1초마다 바뀌어도 옆 버튼이 안 흔들린다 (SCREEN_DESIGN §2 · ADR-0356) */
+.resources .play-time b { font-variant-numeric: tabular-nums; }
 /* 언어 토글 — 리소스 줄 끝에 붙는다 */
 .lang-btn { margin-left: 4px; min-width: 46px; }
 /* 플래시 — 상단바 가운데에 뜨는 한 줄 [2026-09-14 사용자 지시 · ADR-0113 · SCREEN_DESIGN §2 「플래시」].

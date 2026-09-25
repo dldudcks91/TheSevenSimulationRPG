@@ -3649,7 +3649,7 @@ check('advanceRun: 마신 물약이 재고에서 빠진다 — 같은 물약 여
     return `세 칸 마이너 → ${spent}병 · 재고 0(키 없음) · 철수한 라운드 ${firstRound}병은 안 줄었다`;
 });
 check('preset: 편성은 늘 상한(limitsOf.presets)만큼 서 있다 — 고른 편성에 파티 · 진형이 작용하고 다른 편성은 안 흔들린다 · 한 영웅은 한 편성에만 든다(v38 다부대) · 없는 번호는 missing (SCREEN_DESIGN §15 · INTERFACE §2-7 · R122 · R137)', () => {
-    const g = openAll(SYS.game.newGame(21, cands, NOW));      // 편성 여럿 — 지휘 천막이 늘린다 (R137)
+    const g = openAll(SYS.game.newGame(21, cands, NOW));      // 편성 여럿 — 원정 랭크가 늘린다 (R156)
     const ps0 = SYS.game.presetState(g), cap = SYS.game.limitsOf(g).presets;
     if (ps0.count !== cap || g.presets.length !== cap || ps0.activeNo !== 1 || ps0.runNos.length !== 0) fail(`편성 ${ps0.count} · 고른 ${ps0.activeNo} · 도는 부대 ${ps0.runNos}`);
     if (ps0.presets[0].err !== null) fail(`새 게임 편성 1 이 못 나간다 — ${ps0.presets[0].err}`);
@@ -3832,12 +3832,15 @@ check('simulate: 귀환보다 클리어가 먼저다 — 마지막 타격과 같
 });
 check('balance: concurrent_expedition_parties 는 1 ~ 편성 수여야 한다 — 코드가 읽는 값이다 (부채 #19 해소 · v38 다부대)', () => {
     // ~~state.run 이 단수라 「동시 원정 1」이 구조로만 지켜진다~~ → 2026-09-23 `state.runs` 가 부대마다 한 자리를 든다.
-    // 부대 = 편성이므로 편성 수보다 많은 부대는 낼 수 없다 — `limitsOf` 가 그 위에서 한 번 더 자른다
+    // 부대 = 편성이므로 편성 수보다 많은 부대는 낼 수 없다 — `limitsOf` 가 그 위에서 한 번 더 자른다 · 편성 수는 원정 랭크가 연다(R156) — 비교는 다 지은 편성 수와
     const n = B.concurrent_expedition_parties;
     if (!Number.isInteger(n) || n < 1) fail(`${n} — 1 이상 정수여야 한다`);
-    if (n > B.party_preset_count) fail(`${n} — 편성 ${B.party_preset_count} 보다 많은 부대는 못 낸다 (부대 = 편성)`);
-    if (SYS.game.limitsOf(SYS.game.newGame(42, cands, NOW)).expeditions !== Math.min(n, B.party_preset_count)) fail('limitsOf.expeditions 가 이 키를 안 읽는다');
-    return `동시 원정 ${n} / 편성 ${B.party_preset_count}`;
+    const full = SYS.game.limitsOf(freshG());
+    if (n > full.presets) fail(`${n} — 다 지은 편성 ${full.presets} 보다 많은 부대는 못 낸다 (부대 = 편성)`);
+    if (full.expeditions !== n) fail(`다 지은 판 부대 ${full.expeditions} — limitsOf.expeditions 가 이 키를 안 읽는다`);
+    const L0 = SYS.game.limitsOf(SYS.game.newGame(42, cands, NOW));
+    if (L0.expeditions !== Math.min(n, L0.presets)) fail(`새 게임 부대 ${L0.expeditions} — 편성 ${L0.presets} 에서 잘려야 한다`);
+    return `동시 원정 ${n} / 다 지은 편성 ${full.presets} · 새 게임 ${L0.expeditions}`;
 });
 /*
  * **몬스터는 영웅과 같은 함수를 지난다** [전면 개정 2026-09-11 · R79 · 사용자 지시 · monster_design §5-1 · battle_design §8-1].
@@ -6830,9 +6833,16 @@ check('departRun: 원정 중에 보내면 도는 원정을 끊고 나간다 — 
 });
 
 /* ── 다부대 [v38 · 2026-09-23 · GAME_DESIGN §1-1 「동시 원정은 최대 3부대다」] ──
-   부대 = 편성이다. 부대 수를 여는 건물 랭크는 아직 미정(GAME_DESIGN §10 「다부대의 남은 설계」)이라
-   **CSV 기본값을 바꿔 끼운 시스템**으로 규칙을 잠근다 — 건물 표가 서면 그때 문턱 단정이 따로 붙는다 */
+   부대 = 편성이다. 편성은 원정 랭크가 연다(r1 · r3 · r6 · R156 — 문턱 단정은 `presets:` 쪽) — 여기서는 **셋째 편성까지 지어 둔 판**(`multiGame`)에
+   **부대 수 기본값을 바꿔 끼운 시스템**으로 규칙을 잠근다 */
 const MULTI = buildSystems({ ...D, balance: { ...B, concurrent_expedition_parties: 3 } });
+/** 편성 셋이 선 새 게임 — 셋째 편성을 여는 랭크(`needOf('presets', 3)`)까지 지어 둔 채 불러온다(`deserialize` 가 편성 · 부대 자리를 맞춘다) */
+const multiGame = (S, seed) => {
+    const g = S.game.newGame(seed, cands, NOW);
+    const w = S.game.needOf('presets', 3);
+    g.buildings[w.id] = Math.max(g.buildings[w.id] ?? 0, w.rank);
+    return S.game.deserialize(JSON.parse(JSON.stringify(S.game.serialize(g, NOW))));
+};
 /** 새 게임의 영웅 셋을 편성 1 · 2 · 3 에 한 명씩 흩는다 — 한 영웅은 한 편성에만 들므로 넣으면 앞 편성에서 빠진다 */
 const spread = (S, g) => {
     const uids = g.heroes.map(h => h.uid);
@@ -6843,7 +6853,7 @@ const spread = (S, g) => {
 };
 
 check('다부대: 부대 셋이 동시에 돈다 — 편성마다 제 칸 · 제 리포트 · 제 전투 스트림 · 하나가 끝나도 남은 부대는 돈다 · 껐다 켜면 전부 끊긴다 (v38 · GAME_DESIGN §1-1)', () => {
-    const g = MULTI.game.newGame(51, cands, NOW);
+    const g = multiGame(MULTI, 51);
     const [a, b, c] = spread(MULTI, g);
     if (MULTI.game.limitsOf(g).expeditions !== 3) fail(`상한 ${MULTI.game.limitsOf(g).expeditions}`);
     const d = [1, 2, 3].map(no => MULTI.game.departRun(g, 101, NOW, no));
@@ -6871,7 +6881,7 @@ check('다부대: 부대 셋이 동시에 돈다 — 편성마다 제 칸 · 제
 
 check('다부대: 상한을 넘으면 full · 다른 부대에서 싸우는 영웅이 든 편성은 busy · 같은 편성 재출발은 부대 수를 안 늘린다 (v38 · INTERFACE §3)', () => {
     const S = buildSystems({ ...D, balance: { ...B, concurrent_expedition_parties: 2 } });
-    const g = S.game.newGame(52, cands, NOW);
+    const g = multiGame(S, 52);
     const [, b] = spread(S, g);
     if (!S.game.departRun(g, 101, NOW, 1).ok || !S.game.departRun(g, 101, NOW, 2).ok) fail('두 부대 출발');
     if (S.game.canDepart(g, 101, NOW, 3) !== 'full') fail(`셋째 부대 ${S.game.canDepart(g, 101, NOW, 3)}`);
@@ -6889,12 +6899,12 @@ check('다부대: 상한을 넘으면 full · 다른 부대에서 싸우는 영�
 
 check('다부대: 부대끼리 rng 가 안 섞인다 — 사이에 다른 부대를 보내도 그 부대의 런은 혼자 돌린 것과 같다 (INTERFACE §5-1 · v38)', () => {
     const fp = g2 => JSON.stringify(g2.reports.filter(r => r.preset === 1).map(r => [r.won, r.reason, r.gold, r.roundsCleared, r.drops.length, r.downed.length]));
-    const solo = MULTI.game.newGame(53, cands, NOW);
+    const solo = multiGame(MULTI, 53);
     spread(MULTI, solo);
     const s1 = MULTI.game.departRun(solo, 101, NOW, 1);
     while (!MULTI.game.advanceRun(solo, s1.run, NOW).done);
     // 같은 시드 · 같은 순서로 부대 1 을 먼저 보내고, 그 뒤 부대 2 · 3 을 끼워 넣는다 — 부대 1 의 rng 인스턴스는 제 클로저 안에 있다
-    const mix = MULTI.game.newGame(53, cands, NOW);
+    const mix = multiGame(MULTI, 53);
     spread(MULTI, mix);
     const m1 = MULTI.game.departRun(mix, 101, NOW, 1);
     MULTI.game.departRun(mix, 101, NOW, 2);
@@ -6905,7 +6915,7 @@ check('다부대: 부대끼리 rng 가 안 섞인다 — 사이에 다른 부대
 });
 
 check('save: runs 는 편성 수만큼 선다 — 왕복 동일 · 옛 단수 run 필드는 없다 · 겹친 파티는 로드가 앞 편성에 몰아준다 (v38 · 다부대)', () => {
-    const g = MULTI.game.newGame(54, cands, NOW);
+    const g = multiGame(MULTI, 54);
     spread(MULTI, g);
     MULTI.game.departRun(g, 101, NOW, 2);
     const s = MULTI.game.serialize(g, NOW);
@@ -7173,6 +7183,42 @@ check('search: 수령은 골드·정원을 지키고 칸을 비운다 · 버리�
     SYS.game.searchSend(g, g.heroes[1].uid, NOW);
     return SYS.game.searchState(g, NOW + span).result.name.ko !== first.name.ko || fail('다시 보냈는데 같은 결과');
 });
+check('tavern · search: 선술집에서 온 영웅은 시작 장비 한 벌을 입고 온다 — 명단 · 수색 둘 다 · 일반 무기(제 직업 · 고유 스킬 제외) + 일반 갑옷 · 같은 세이브는 같은 한 벌 · 온 사람은 안 바뀐다 (2026-09-25 사용자 지시 · INTERFACE §5-1)', () => {
+    const kit = (g, h, what) => {
+        const w = g.items[h.equipped.weapon], a = g.items[h.equipped.armor];
+        if (!w || w.slot !== 'weapon' || w.rarity !== 'normal' || w.ilvl !== 1 || w.up !== 0) fail(`${what}: 무기 ${JSON.stringify(w && [w.slot, w.rarity, w.ilvl, w.up])}`);
+        if (!WG[w.group]?.classes.includes(h.cls)) fail(`${what}: 무기군 ${w.group} 이 ${h.cls} 무기가 아니다`);
+        if (w.skill && w.skill === h.innate) fail(`${what}: 무기 스킬 ${w.skill} 이 고유 스킬과 겹친다`);
+        if (!a || a.slot !== 'armor' || a.rarity !== 'normal' || a.ilvl !== 1 || a.up !== 0) fail(`${what}: 갑옷 ${JSON.stringify(a && [a.slot, a.rarity, a.ilvl, a.up])}`);
+        const worn = Object.entries(h.equipped).filter(([, u]) => u).map(([p]) => p).sort();
+        if (!eq(worn, ['armor', 'weapon'])) fail(`${what}: 입은 칸 ${worn}`);
+        if (g.bag.includes(w.uid) || g.bag.includes(a.uid)) fail(`${what}: 입은 장비가 가방에도 있다`);
+    };
+    const pair = (g, h) => [g.items[h.equipped.weapon], g.items[h.equipped.armor]];
+    // 명단 — 후보가 그대로 오고(장비만 더해진다) · 가방은 안 는다 · 같은 세이브에서 고용하면 같은 한 벌이다
+    const g = newGameS(42);
+    g.resources.gold = B.tavern_hire_cost * 10;
+    const twin = structuredClone(g);
+    const cand = SYS.game.tavernCandidates(g)[0];
+    const bag0 = g.bag.length;
+    const r = SYS.game.hire(g, 0);
+    if (!r.ok) fail(`고용 ${r.err}`);
+    kit(g, r.hero, '명단');
+    if (r.hero.name.ko !== cand.name.ko || !eq(r.hero.stats, cand.stats)) fail('명단: 후보와 다른 사람이 왔다');
+    if (g.bag.length !== bag0) fail(`명단: 가방 ${bag0} → ${g.bag.length}`);
+    const r2 = SYS.game.hire(twin, 0);
+    if (!eq(pair(g, r.hero), pair(twin, r2.hero))) fail('명단: 같은 세이브인데 한 벌이 갈렸다');
+    // 수색 — 보여 준 사람이 그대로 오고(결과 스트림을 안 민다) 같은 한 벌을 입는다
+    const s = newGameS(42);
+    SYS.game.searchSend(s, s.heroes[0].uid, NOW);
+    s.resources.gold = B.tavern_hire_cost * 10;
+    const want = SYS.game.searchState(s, NOW + SPAN()).result;
+    const t = SYS.game.searchTake(s, NOW + SPAN());
+    if (!t.ok) fail(`수령 ${t.err}`);
+    kit(s, t.hero, '수색');
+    if (t.hero.name.ko !== want.name.ko || !eq(t.hero.stats, want.stats)) fail('수색: 보여 준 것과 다른 사람이 왔다');
+    return `명단 ${r.hero.cls} ${pair(g, r.hero).map(it => it.baseId ?? it.group).join(' + ')} · 수색 ${t.hero.cls} ${pair(s, t.hero).map(it => it.baseId ?? it.group).join(' + ')}`;
+});
 check('search: 나가 있는 영웅은 편성도 해고도 막힌다 — 마을에 없기 때문이다', () => {
     const g = newGameS(42);
     const uid = g.heroes[0].uid;
@@ -7239,7 +7285,7 @@ check('nextRepeat: 반복 + 이긴 런이면 같은 스테이지 · 같은 편�
     if (SYS.game.nextRepeat(g, END, 1) !== null) fail('반복이 꺼졌는데 다음 출발이 섰다');
     return `끝난 순간 + ${B.repeat_restart_sec}초 · 반복 꺼짐 · 짐 · 도는 중 · 원정 없음 → null`;
 });
-check('nextRepeat: 반복 원정은 처음부터 열려 있다 — 새 게임(원정 r1)도 이긴 런은 다음 출발이 선다 · 건물 어휘에 없다 · 편성 수는 건물이 안 늘린다 (2026-09-24 사용자 지시 · R152)', () => {
+check('nextRepeat: 반복 원정은 처음부터 열려 있다 — 새 게임(원정 r1)도 이긴 런은 다음 출발이 선다 · 건물 어휘에 없다 (2026-09-24 사용자 지시 · R152)', () => {
     const g = SYS.game.newGame(42, cands, NOW);
     let threw = false;
     try { SYS.game.hasFeature(g, 'repeat'); } catch { threw = true; }
@@ -7249,15 +7295,40 @@ check('nextRepeat: 반복 원정은 처음부터 열려 있다 — 새 게임(�
     const rep = g.reports.find(r => r.at === g.runs[0].lastAt);
     g.runs[0].active = false; g.runs[0].repeat = true; rep.reason = 'clear'; rep.won = true;
     if (!SYS.game.nextRepeat(g, NOW, 1)) fail(`새 게임(원정 r${g.buildings.expedition})인데 다음 출발이 안 선다`);
-    if (SYS.game.needOf('presets') !== null) fail('편성 수를 늘리는 건물 랭크가 있다');
-    if (g.presets.length !== B.party_preset_count || SYS.game.limitsOf(newGameS(42)).presets !== B.party_preset_count) fail('편성 수가 balance 값이 아니다');
-    return `원정 r${g.buildings.expedition} 에서 반복 · 편성 ${B.party_preset_count} (건물 무관)`;
+    return `원정 r${g.buildings.expedition} 에서 반복`;
 });
 /*
- * 장은 원정 랭크가 연다 [2026-09-24 사용자 지시 · R152 · construction_draft §2] — 원정 r n = n−1 장 보스 클리어 → n 장 · 비용은 골드만.
+ * 편성은 원정 랭크가 연다 [2026-09-25 사용자 지시 · R156 · construction_draft §2] — r1 = 편성 1 · r3 · r6 이 +1(다 지으면 3) · 두 랭크는 문턱이 없다(골드만).
+ *   부대 = 편성이라 동시 원정도 편성 수를 따라 열린다 · 짓는 순간 빈 편성 · 빈 부대 자리가 붙는다(`construct`)
+ */
+check('presets: 편성은 원정 랭크가 연다 — r1 = 1 · r3 · r6 이 +1 · 문턱 없음 · 부대도 따라 열린다 (R156)', () => {
+    const at = n => SYS.game.needOf('presets', n);
+    const got = [1, 2, 3].map(n => `${at(n)?.id}:${at(n)?.rank}`);
+    if (!eq(got, ['expedition:1', 'expedition:3', 'expedition:6'])) fail(`편성 n 을 여는 곳 ${JSON.stringify(got)}`);
+    if (at(4) !== null) fail(`넷째 편성을 여는 곳이 있다 ${JSON.stringify(at(4))}`);
+    for (const r of [3, 6]) {
+        const info = SYS.construction.rankInfo('expedition', r);
+        if (info.require.length) fail(`원정 r${r} 에 문턱 ${JSON.stringify(info.require)} — 없어야 한다`);
+        if (!info.effects.every(e => e.target === 'presets')) fail(`원정 r${r} 가 편성 밖의 것을 연다 ${JSON.stringify(info.effects)}`);
+    }
+    const g = SYS.game.newGame(42, cands, NOW);
+    const L0 = SYS.game.limitsOf(g);
+    if (g.presets.length !== 1 || L0.presets !== 1 || L0.expeditions !== 1 || g.runs.length !== 1) fail(`새 게임 편성 ${g.presets.length} · 상한 ${L0.presets} · 부대 ${L0.expeditions} · runs ${g.runs.length}`);
+    g.progress.cleared = D.stageOrder.filter(id => D.stages[id].chapter === 1);
+    g.resources.gold = 1e6;
+    for (const r of [2, 3]) { const x = SYS.game.construct(g, 'expedition'); if (!x.ok || x.rank !== r) fail(`원정 r${r} 짓기 ${JSON.stringify(x)}`); }
+    const L3 = SYS.game.limitsOf(g);
+    if (g.presets.length !== 2 || L3.presets !== 2 || L3.expeditions !== Math.min(2, B.concurrent_expedition_parties) || g.runs.length !== 2) fail(`원정 r3 편성 ${g.presets.length} · 부대 ${L3.expeditions} · runs ${g.runs.length}`);
+    const full = SYS.game.limitsOf(newGameS(42)).presets;
+    if (full !== B.party_preset_count + 3) fail(`다 지은 편성 ${full}`);
+    return `편성 1 → r3 2 → r6 ${full} · 부대 ${L0.expeditions} → ${L3.expeditions}`;
+});
+/*
+ * 장은 원정 랭크가 연다 [2026-09-24 사용자 지시 · R152 · 랭크 7 2026-09-25 · R156 · construction_draft §2] — 장을 여는 랭크 = r1 · r2 · r4 · r5 · r7(사이 r3 · r6 은 편성) ·
+ *   n 장을 여는 랭크의 문턱 = n−1 장 보스 클리어 · 비용은 모든 랭크가 골드만.
  *   보스를 깨도 다음 장 첫 스테이지는 안 열린다 · 원정 r2 를 지으면 열린다 · 잠긴 장은 「원정 n랭크 필요」(`needOf('chapters', n)`)
  */
-check('chapter: 보스를 깨도 다음 장은 원정 랭크가 연다 — 원정 r n = n 장 · 문턱은 앞 장 보스 · 비용은 골드만 · 랭크 줄은 「n장까지」 누적 (R152)', () => {
+check('chapter: 보스를 깨도 다음 장은 원정 랭크가 연다 — 장을 여는 랭크 r1 · r2 · r4 · r5 · r7 · 문턱은 앞 장 보스 · 비용은 골드만 · 랭크 줄은 「n장까지」 누적 (R152 · R156)', () => {
     const g = SYS.game.newGame(43, cands, NOW);
     if (SYS.game.limitsOf(g).chapters !== 1 || !SYS.game.chapterOpen(g, 1) || SYS.game.chapterOpen(g, 2)) fail(`새 게임 장 ${SYS.game.limitsOf(g).chapters}`);
     g.progress.cleared = D.stageOrder.filter(id => D.stages[id].chapter === 1);
@@ -7265,20 +7336,29 @@ check('chapter: 보스를 깨도 다음 장은 원정 랭크가 연다 — 원�
     if (SYS.game.stageUnlocked(g, first2)) fail('1장 보스만 깼는데 2장이 열렸다');
     if (SYS.game.canDepart(g, first2, NOW) !== 'locked') fail(`잠긴 장 출발 ${SYS.game.canDepart(g, first2, NOW)}`);
     const exp = SYS.construction.list.find(b => b.id === 'expedition');
-    for (let n = 2; n <= exp.maxRank; n++) {
-        const w = SYS.game.needOf('chapters', n);
-        if (w?.id !== 'expedition' || w.rank !== n) fail(`${n}장을 여는 곳 ${JSON.stringify(w)}`);
-        const info = SYS.construction.rankInfo('expedition', n);
-        const boss = D.stageOrder.filter(id => D.stages[id].chapter === n - 1).at(-1);
-        if (!eq(info.require.map(c => `${c.kind}:${c.ref}`), [`stage:${boss}`])) fail(`원정 r${n} 문턱 ${JSON.stringify(info.require)} — ${n - 1}장 보스(${boss})여야 한다`);
-        if (info.cost.some(c => c.res !== 'gold')) fail(`원정 r${n} 비용에 골드 밖의 재화 ${JSON.stringify(info.cost)}`);
+    const opens = [];   // 장을 여는 랭크 — 랭크 순서대로
+    for (let r = 1; r <= exp.maxRank; r++) {
+        const info = SYS.construction.rankInfo('expedition', r);
+        if (info.cost.some(c => c.res !== 'gold')) fail(`원정 r${r} 비용에 골드 밖의 재화 ${JSON.stringify(info.cost)}`);
+        if (info.effects.some(e => e.target === 'chapters')) opens.push(r);
     }
+    if (!eq(opens, [1, 2, 4, 5, 7])) fail(`장을 여는 랭크 ${JSON.stringify(opens)} — r1 · r2 · r4 · r5 · r7 이어야 한다`);
+    opens.forEach((r, i) => {
+        const n = i + 1;
+        const w = SYS.game.needOf('chapters', n);
+        if (w?.id !== 'expedition' || w.rank !== r) fail(`${n}장을 여는 곳 ${JSON.stringify(w)} — 원정 r${r} 여야 한다`);
+        if (n === 1) return;
+        const info = SYS.construction.rankInfo('expedition', r);
+        const boss = D.stageOrder.filter(id => D.stages[id].chapter === n - 1).at(-1);
+        if (!eq(info.require.map(c => `${c.kind}:${c.ref}`), [`stage:${boss}`])) fail(`원정 r${r} 문턱 ${JSON.stringify(info.require)} — ${n - 1}장 보스(${boss})여야 한다`);
+    });
     g.resources.gold = 1e6;
     const r = SYS.game.construct(g, 'expedition');
     if (!r.ok || !SYS.game.stageUnlocked(g, first2)) fail(`원정 r2 를 지었는데 2장이 안 열렸다 ${JSON.stringify(r)}`);
     const row = SYS.game.constructionState(g).buildings.find(b => b.id === 'expedition').ranks.map(x => x.effects.find(e => e.target === 'chapters')?.total);
-    if (!eq(row, Array.from({ length: exp.maxRank }, (_, i) => i + 1))) fail(`랭크 줄의 누적 장 ${JSON.stringify(row)}`);
-    return `원정 r1 ~ r${exp.maxRank} = 1 ~ ${exp.maxRank}장 · 문턱 = 앞 장 보스 · 골드만`;
+    const want = Array.from({ length: exp.maxRank }, (_, i) => (opens.includes(i + 1) ? opens.indexOf(i + 1) + 1 : undefined));
+    if (!eq(row, want)) fail(`랭크 줄의 누적 장 ${JSON.stringify(row)} — ${JSON.stringify(want)} 여야 한다`);
+    return `1 ~ ${opens.length}장 = 원정 r${opens.join(' · r')} · 문턱 = 앞 장 보스 · 골드만`;
 });
 check('chapter: 반복 원정 · 위험도가 빠진 물약 칸 둘은 창고가 연다 — 원정 랭크는 물약 칸을 안 늘린다 (R152)', () => {
     const adds = id => Array.from({ length: SYS.construction.list.find(b => b.id === id).maxRank }, (_, i) => SYS.construction.rankInfo(id, i + 1).effects)
@@ -7372,6 +7452,20 @@ check('save: 수색은 세이브 버전을 안 올렸다 — 필드가 없는 �
     const back = SYS.game.deserialize(raw);
     if (back.version !== SAVE_VERSION) fail(`버전이 움직였다 (${back.version})`);
     return (back.search === null && back.counters.search === 0) || fail('기본값 보정이 안 걸렸다');
+});
+check('save: 플레이 시간 — 새 게임 0 · 더하면 쌓이고 0 이하 · NaN 은 무시 · 왕복에 남는다 · 필드가 없는 세이브는 0 으로 열린다 (ADR-0356)', () => {
+    const g = newGameS(42);
+    if (g.playMs !== 0) fail(`새 게임 ${g.playMs}`);
+    SYS.game.addPlayTime(g, 1500);
+    SYS.game.addPlayTime(g, 0); SYS.game.addPlayTime(g, -800); SYS.game.addPlayTime(g, NaN); SYS.game.addPlayTime(g, Infinity);
+    if (SYS.game.addPlayTime(g, 2500) !== 4000 || g.playMs !== 4000) fail(`누적 ${g.playMs}`);
+    const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))));
+    if (back.playMs !== 4000) fail(`왕복 ${back.playMs}`);
+    const raw = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
+    delete raw.playMs;                                         // 플레이 시간이 없던 시절의 세이브 모양
+    const old = SYS.game.deserialize(raw);
+    if (old.version !== SAVE_VERSION) fail(`버전이 움직였다 (${old.version})`);
+    return old.playMs === 0 ? '4000ms · 옛 세이브 0' : fail(`옛 세이브 ${old.playMs}`);
 });
 
 /* ── 수색 만남 (ADR-0068 · 2026-09-09) ── */
@@ -7956,6 +8050,7 @@ const conRows = (over = {}) => ({
         { building_id: 'b', rank: 2, kind: 'unlock', target: 'raid', value: '-', status: 'proposed' },   // 준비 중뿐인 랭크 (옛 `gamble` — 2026-09-24 R149 로 도박장이 열려 준비 중인 약탈로 갈았다)
     ],
     researchRows: [],
+    balance: { ...B, party_preset_count: 1 },   // 지어낸 표는 편성을 안 연다 — 기본값 1 로 선다(진짜 표는 원정 r1 이 연다 · R156)
     ...over,
 });
 const conSys = over => buildSystems({ ...D, ...conRows(over) });
@@ -8625,9 +8720,10 @@ check('선술집 명단은 건물이 안 늘린다 — 모든 건물 최대 랭�
     return `다 연 판 명단 ${n} · 더하기 줄은 거절`;
 });
 check('선술집 로스터 — 다 지으면 3부대(편성 수 × 파티 인원)를 다 채우고 · 짓기 전엔 못 채운다 (2026-09-24 사용자 지시 「3부대 돌리는 게 좀 빡세도록」 · construction_draft §2)', () => {
-    const need = B.party_preset_count * B.party_size_max;
     const S = buildSystems(D, { openAll: () => true });
-    const full = S.game.limitsOf(S.game.newGame(85, cands, NOW)).roster;
+    const L = S.game.limitsOf(S.game.newGame(85, cands, NOW));
+    const need = L.presets * B.party_size_max;   // 다 지은 편성 수 — 편성은 원정 랭크가 연다 (R156)
+    const full = L.roster;
     const start = SYS.game.limitsOf(null).roster;
     if (full < need) fail(`다 지은 로스터 ${full} — 3부대 ${need} 명을 못 채운다`);
     if (start >= need) fail(`시작 로스터 ${start} 가 이미 3부대 ${need} 명을 채운다 — 건물이 할 일이 없다`);

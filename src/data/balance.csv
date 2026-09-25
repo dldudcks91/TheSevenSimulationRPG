@@ -1,8 +1,8 @@
 key,value,status,knob,description_kr
 party_size_max,3,fixed,0,원정 파티 최대 인원 (2026-08-21 확정)
-party_preset_count,3,fixed,0,편성 수 — **처음부터 이만큼이고 건물이 늘리지 않는다**(2026-09-23 사용자 지시 · 지휘 천막의 presets 줄 삭제 · ~~기본값 1 + 지휘 천막 r2 · r5 더하기~~ R137) · 늘 이만큼 서 있고 만들고 지우는 동작이 없다 · 파티 · 진형 · 물약 칸은 편성마다이고 파티 전술은 모든 편성이 같이 쓴다 · 사용자 지정(편성 1 · 2 · 3) [신설 2026-09-21 · SCREEN_DESIGN §15 · R122]
+party_preset_count,0,fixed,0,편성 수 **기본값** — 건설 전 값이고 원정 건물 랭크의 더하기가 얹힌다(building_effect.csv presets — r1 · r3 · r6 에 +1 · 원정 r1 은 처음부터 지어져 편성 1 로 시작 · 다 지으면 3 — 2026-09-25 사용자 지시 · R156 · ~~처음부터 3 · 건물이 안 늘린다~~ 09-23) · 늘 이만큼 서 있고 만들고 지우는 동작이 없다 · 파티 · 진형 · 물약 칸 · 파티 전술 칸은 편성마다다 [신설 2026-09-21 · SCREEN_DESIGN §15 · R122]
 roster_cap,5,fixed,0,영웅 보유 상한 **기본값** — 건설 전 값이고 선술집 랭크의 더하기가 얹힌다(building_effect.csv roster — r2 · r3 · r4 · r6 · r7 에 +1 · 다 지으면 10 · 3부대를 다 채우는 것은 r6 부터 — 2026-09-24 사용자 지시 「3부대 돌리는 게 좀 빡세도록」 · ~~r5 +2 = 다 지은 값 7~~ R137) · 원정 파티 + 휴식/파견 인원 (2026-08-21 확정)
-concurrent_expedition_parties,3,fixed,0,동시에 낼 수 있는 **부대 수** — 부대 = 편성이라 `party_preset_count` 를 넘지 않는다(`limitsOf` 가 자른다) · 화면의 관전 칸도 이 수만큼 선다(둘 이상이면 부대마다 · ADR-0316) · **건물이 안 연다** — 처음부터 이만큼이다 [2026-09-24 사용자 지시 「일단 열고 나중에 닫아도 될 것 같은데」 · ⚠제안 3 — ~~1 (2026-08-21)~~ · 부대 칸을 원정 건물 랭크로 닫는 안은 GAME_DESIGN §10 「다부대의 남은 설계」]
+concurrent_expedition_parties,3,fixed,0,동시에 낼 수 있는 **부대 수** — 부대 = 편성이라 편성 수를 넘지 않는다(`limitsOf` 가 자른다) · 화면의 관전 칸도 이 수만큼 선다(둘 이상이면 부대마다 · ADR-0316) · **이 키는 건물이 안 늘린다 — 편성이 원정 r1 · r3 · r6 으로 열리므로 부대도 1 → 2 → 3 으로 따라 열린다**(2026-09-25 사용자 지시 · R156 · ~~처음부터 3부대~~ 09-24 「일단 열고 나중에 닫아도」 · ~~1 (2026-08-21)~~)
 stages_per_chapter,5,fixed,0,챕터당 스테이지 수 — 마지막 스테이지는 챕터보스 단독 1라운드 (2026-09-11 개정 4→5 · base_expedition_design §1-2 — 08-21 의 계승 stage_info 골격 4 를 대체). 라운드 수는 키가 아니라 stage_round.csv 세트의 행 수다 (rounds_per_stage 퇴역)
 wave_monster_max,3,fixed,0,라운드당 몬스터 전역 상한 — round_budget.csv 의 어떤 편성도 이 값을 넘지 못한다 (2026-08-22 역할 정리)
 advance_unlock_level,30,fixed,0,전직 해금 레벨 (GAME_DESIGN §9 · 전직 3갈래 skill_design §4)
@@ -28,14 +28,14 @@ hp_regen_base_per_level,0.05,proposed,1,**HP 재생 밑수** — 전 영웅이 �
 start_gold,300,proposed,0,새 게임 시작 골드 (2026-08-25 초반 루프 구현하면서 발생)
 start_dust,0,proposed,0,새 게임 시작 몬스터 가루 (2026-08-25 초반 루프 구현하면서 발생)
 start_stigma,0,proposed,0,새 게임 시작 낙인 (2026-08-25 초반 루프 구현하면서 발생)
-hero_xp_base,1200,proposed,0,레벨업 필요 XP 기준값 — xp_next = hero_xp_base × level ^ hero_xp_exp (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「일단」 80→1200 — xp_rate 0.5→1 과 함께 필요량 7.5배 · 목표 「가장 빨라도 사탄(1-5)까지 1시간」 · hit_per_level_deficit_pct · hit_min_pct 와 한 묶음 · 시뮬 100시드 최소 57분 · 중앙 1시간 53분)
+hero_xp_base,600,proposed,0,레벨업 필요 XP 기준값 — xp_next = hero_xp_base × level ^ hero_xp_exp (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「일단」 80→1200 — xp_rate 0.5→1 과 함께 필요량 7.5배 · 목표 「가장 빨라도 사탄(1-5)까지 1시간」 · hit_per_level_deficit_pct · hit_min_pct 와 한 묶음 · 시뮬 100시드 최소 57분 · 중앙 1시간 53분) (2026-09-25 사용자 1200→600 — 필요량 절반)
 hero_xp_exp,1.4,proposed,0,레벨업 필요 XP 지수 (2026-08-25 초반 루프 구현하면서 발생)
 attr_growth_chance_pct,0.35,proposed,0,⚠ **퇴역 — 코드가 안 읽는다** · 기본 능력치 자동 성장은 2026-09-14 폐지(R83 · hero_design §4-3) · 옛 뜻: 레벨업 시 축별 +1 확률(%) (2026-08-25 초반 루프 구현하면서 발생)
 xp_rate,1,proposed,1,전투 XP 합 → 영웅 각자 지급 배율 (그 라운드를 이긴 순간 살아 있는 영웅만 — 2026-09-14 R89 · ~~전원 동일 지급~~) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「1배율 기준」 0.5→1 — 레벨 속도는 hero_xp_base 가 맡는다)
 monster_xp_base,40,proposed,1,처치 XP 의 레벨 1 기준값 — 처치 XP = monster_xp_base × monster_xp_growth ^ (몬스터 레벨 − 1) × spawn_grade.exp_mult × monster.csv:exp_coef. 몬스터 레벨 = stage.csv:dlvl 이라 레벨과 등급이 같으면 몬스터가 달라도 XP 가 같다 · 골드도 이 값에서 나온다 (monster_design §7 · DEV_PLAN R85) (2026-09-14 발행)
 monster_xp_growth,1.06,proposed,1,처치 XP 의 레벨당 배율 — 몬스터 레벨이 1 오르면 이만큼 곱한다. power_growth_per_level 과 같은 값에서 시작했다(몬스터가 약한 만큼 XP 도 적어 낮은 스테이지를 돌 이득이 없다) · 키는 따로다 (2026-09-14 발행)
 unarmed_atk,1.5,proposed,0,무기 없을 때 기본 데미지 (2026-08-25 초반 루프 구현하면서 발생)
-unarmed_period,1.3,proposed,0,무기 없을 때 행동 주기(초) (2026-08-25 초반 루프 구현하면서 발생)
+unarmed_period,2.6,proposed,0,무기 없을 때 행동 주기(초) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-25 사용자 「공격속도 절반」 — 전 무기 주기 ×2 에 맞춰 1.3 → 2.6 · 안 올리면 맨손이 모든 무기보다 빨라진다)
 weapon_atk_base,3.34,proposed,1,무기 피해 범위의 **가운데** — 가운데 = base x power_growth_per_level ^ (ilvl-1) · 양끝 = 가운데 x (1 ∓ 타격 범위 폭) x 강화 배율(정수 반올림) · ~~x 개체 편차~~ 2026-09-14 폐지(R90 — 직격마다 범위를 굴린다). **밑수다** — 다른 슬롯의 고정 데미지를 여기 더하지 않는다 (battle_design §9-1) (2026-09-01 한손 개념 폐지 — 폐기한 two_hand_atk_mult 1.45 를 흡수해 2.3 → 3.34. 이제 전 무기가 양손이라 배율이 전역 상수가 됐다) (2026-08-26 수치 대역 재설계)
 weapon_atk_band_levels,10,fixed,0,무기 피해 구간 폭(레벨) [2026-09-15 사용자 확정 · R105] — 구간 b = floor((ilvl−1)/이 값)+1 · 체력(hero_hp_band_levels)과 같은 폭이다
 weapon_atk_band1_unit,0.35,proposed,1,무기 피해 가운데의 구간 1 레벨업 1회 상승분 ⚠제안 — 레벨 1 처치 타수를 전 구간 유지하도록 역산(체력 구간 단위 × 몬스터 건강 계수 × weapon_atk_base/monster_hp_base) (2026-09-16)

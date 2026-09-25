@@ -457,6 +457,7 @@ const STRINGS = {
     'res.stigma': { ko: '낙인', en: 'Stigma' },
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
     'ui.close': { ko: '닫기', en: 'Close' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
+    'ui.playTime': { ko: '플레이 시간', en: 'Playtime' },   // 상단바 ⚙ 왼쪽 — 누적 플레이 시간의 라벨 (SCREEN_DESIGN §2 · ADR-0356)
     /* 창 안에서 답하는 버튼 둘 (2026-09-09) — 어느 창이든 같은 말을 쓴다. 「확인」은 **읽었다/한다**,
        「취소」는 **안 한다**. 창을 그냥 닫는 길(X · 바깥 · Esc)은 그대로 있고, 이 둘은 그것을 **눈에 보이게** 한다 */
     'ui.ok': { ko: '확인', en: 'OK' },
@@ -750,9 +751,6 @@ const STRINGS = {
     'st.fx.normal': { ko: '일반', en: 'Normal' },
     'st.fx.demon': { ko: '데몬', en: 'Demon' },
     'st.fx.undead': { ko: '언데드', en: 'Undead' },
-    // 초당 공격속도 — **축이 아니라 표기**다. 축은 `combat_stat.csv:action_period`(행동 주기) 하나고
-    // 아이템 툴팁만 그 역수를 찍는다 (주기는 클수록 느려 이름과 방향이 거꾸로 읽힌다 · ADR-0081)
-    'st.atkSpeed': { ko: '공격 속도', en: 'Attack Speed' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
@@ -1090,7 +1088,8 @@ const STRINGS = {
     // 낀 장비가 켜는 칸 (직업 T2 · 2026-09-22 R138) — 갈래 이름은 CSV 에서
     'sk.slots.h': { ko: '액티브', en: 'Actives' },
     'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
-    'sk.cycle': { ko: '행동 주기', en: 'Action Cycle' },
+    // 인게임 이름은 「공격 속도」 하나다 — 값은 초 / 1회 그대로 (2026-09-25 사용자 지시 · ADR-0358)
+    'sk.cycle': { ko: '공격 속도', en: 'Attack Speed' },
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
@@ -1217,7 +1216,8 @@ const STRINGS = {
     /* 각주 — 기본 설명창 바닥 한 줄. 괄호를 붙일 수 있는 숫자가 있을 때만 선다 (SCREEN_DESIGN §2 「스킬 설명창 규격」) */
     /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill_status.csv:stat` 어휘 그대로(옛 `skill.csv:effect_stat` · 2026-09-22) · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
     'sk.eff.atk_pct': { ko: '데미지 +{v} 를 건다', en: '+{v} Damage' },
-    'sk.eff.period_pct': { ko: '행동 주기 −{v} 를 건다', en: '−{v} action cycle' },
+    // 주기를 줄이는 창 = 빨라진다 → 「공격 속도 +」 — 옵션 `aspd_pct`(주기 × (1 − 값))와 같은 방향 · 같은 수 (ADR-0358)
+    'sk.eff.period_pct': { ko: '공격 속도 +{v} 를 건다', en: '+{v} Attack Speed' },
     'sk.eff.barrier_pct': { ko: '최대 HP {v} 짜리 보호막을 씌운다', en: 'a shield worth {v} of max HP' },
     /* 2026-09-09 신설. `.neg` 는 **같은 창을 음수로 쓴 디버프**의 틀이다 — 값은 절댓값으로 들어온다(tip.js) */
     'sk.eff.guard_pct': { ko: '방어력과 모든 저항 +{v} 를 건다', en: '+{v} defense and all resistances' },
@@ -1227,21 +1227,21 @@ const STRINGS = {
     'sk.eff.onhit_element': { ko: '기본 공격마다 {v} 의 추가 피해를 얹는다', en: 'adds a {v} extra hit on every basic attack' },
     'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v} 로 퍼진다', en: 'basic attacks spread to all enemies at {v}' },
     'sk.eff.atk_pct.neg': { ko: '데미지 −{v} 를 건다', en: '−{v} Damage' },
-    'sk.eff.period_pct.neg': { ko: '행동 주기 +{v} 를 건다', en: '+{v} action cycle' },
+    'sk.eff.period_pct.neg': { ko: '공격 속도 −{v} 를 건다', en: '−{v} Attack Speed' },
     /* 그 스킬의 **표기 쿨** [개정 2026-09-08 2차 사용자 지시] — 어느 영웅이 들든 같은 수다.
        ~~`sk.base`·`sk.eff`·`sk.aligned`~~ (1차 폐기) → ~~`sk.every`(`{s}초마다`)~~ → **`sk.cool`**.
        **말까지 바꾼 이유는 값이 바뀌었기 때문**이다 — 「{s}초마다」는 빈도의 약속인데 표기 쿨은 빈도가 아니다
        (정렬 대기만큼 뒤에 나간다). 쿨이라고 적으면 참이 된다 */
     'sk.cool': { ko: '쿨 {s}초', en: 'Cooldown {s}s' },
     'sk.slots.note': {
-        ko: '행동 주기가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격.<br>'
+        ko: '차례가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격.<br>'
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
-            + '쿨은 실시간으로 돈다. 쿨이 행동 주기의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
+            + '쿨은 실시간으로 돈다. 쿨이 공격 속도(초)의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
             + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 무기 칸은 <b>그 무기군이 지정한 직업의 풀</b>에서 온다<br>'
             + '⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>이다 — 지금 값은 임시다',
         en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack.<br>'
             + 'One action per turn. A skill <b>replaces</b> that turn\'s attack and there is no mana — the action itself is the only cost<br>'
-            + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of the cycle → <b>CDR affixes</b> are the alignment lever<br>'
+            + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of Attack Speed (seconds) → <b>CDR affixes</b> are the alignment lever<br>'
             + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the weapon slot from <b>the pool of the class its weapon group names</b><br>'
             + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
     },
@@ -1468,7 +1468,7 @@ const STRINGS = {
             + '<b>Retreat</b> drops the round in progress and keeps what the won rounds gave. Closing the game cuts the expedition off on the spot.',
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
-    'bt.actTitle': { ko: '행동 주기 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Action cycle {s}s — acts when the gauge fills' },
+    'bt.actTitle': { ko: '공격 속도 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Attack Speed {s}s — acts when the gauge fills' },
     'bt.tab.dmg': { ko: '누적 데미지', en: 'Damage' },
     // 배치 토글 — 버튼은 **바꿀 배치의 이름**을 든다 (2026-09-03 · SCREEN_DESIGN §4-2)
     'bt.layout.toSplit': { ko: '나눠 보기', en: 'Split view' },
@@ -1481,8 +1481,9 @@ const STRINGS = {
     'bt.effect.active': { ko: '효과 적용 중', en: 'Effect active' },
     'bt.effect.atk.up': { ko: '공격력 {v}% 증가', en: 'Attack +{v}%' },
     'bt.effect.atk.down': { ko: '공격력 {v}% 감소', en: 'Attack −{v}%' },
-    'bt.effect.period.up': { ko: '행동 주기 {v}% 증가', en: 'Action cycle +{v}%' },
-    'bt.effect.period.down': { ko: '행동 주기 {v}% 감소', en: 'Action cycle −{v}%' },
+    // 키 이름은 **주기**의 방향이다 — 주기가 늘면(up) 느려져 공격 속도 감소 · 줄면(down) 증가 (ADR-0358)
+    'bt.effect.period.up': { ko: '공격 속도 {v}% 감소', en: 'Attack Speed −{v}%' },
+    'bt.effect.period.down': { ko: '공격 속도 {v}% 증가', en: 'Attack Speed +{v}%' },
     'bt.effect.barrier': { ko: '최대 HP의 {v}% 보호막', en: 'Shield equal to {v}% max HP' },
     'bt.effect.guard.up': { ko: '방어력·모든 저항 {v}% 증가', en: 'Defense and all resistances +{v}%' },
     'bt.effect.guard.down': { ko: '방어력·모든 저항 {v}% 감소', en: 'Defense and all resistances −{v}%' },
