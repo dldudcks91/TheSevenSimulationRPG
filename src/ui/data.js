@@ -407,6 +407,11 @@ export const codexStages = () => (D.stageList ?? []).map(s => {
         .map(m => ({ id: m.monster_idx }));
     return { id: s.stage_id, chapter: s.chapter, num: s.stage_num, name: stageName(s), monsters: [...normals, { id: s.boss_monster_idx, boss: true }] };
 });
+/** 도감 `???` 자리(VI)의 입주자 — `monster.csv` 에 그 번호로 적힌 몬스터(idx 순). 그 번호의 스테이지는 없어 **전투에 안 나온다** (ADR-0361 · 1장 = 둘라한) */
+export const codexSlotMonsters = (chapter, num) => Object.values(D.monsters ?? {})
+    .filter(m => m.chapter === chapter && m.stage_num === num)
+    .sort((a, b) => a.monster_idx - b.monster_idx)
+    .map(m => ({ id: m.monster_idx, boss: m.spawn_grade !== 'normal' }));
 /**
  * 액티브 한 줄 — 이름 · 표기 쿨 · 아이콘 · 설명이 **전부 `skill.csv`** 다 (2026-09-01 mock 표시 사전 폐지).
  * 관전 카드 · 스킬 칸 · 툴팁이 같은 한 곳에서 읽는다 (SCREEN_DESIGN §4-2).

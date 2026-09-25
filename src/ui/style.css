@@ -3600,12 +3600,14 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     border: 1px solid var(--border-dark); background: var(--bg-input); border-radius: 2px; font-size: var(--fs-xs); }
 .td-buy-n { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .td-buy .td-price { font-size: var(--fs-xs); }
-/* 상점은 **패널 둘이 위아래로** — 위 상단 · 아래 특수상단(ADR-0243 「아예 다른 카드로」 · 자리는 ADR-0246 「상단카드 아래로」).
+/* 상점은 **맨 위 영웅 띠 · 패널 둘이 위아래로** — 띠(ADR-0359) · 위 상단 · 아래 특수상단(ADR-0243 「아예 다른 카드로」 · 자리는 ADR-0246 「상단카드 아래로」).
    탐험 탭과 같은 쌓인 판(.page-stack > .fill): 특수상단(.fill)이 남는 세로를 받아 박스 끝까지 서고 제 본문(.box-body) 안에서 스크롤한다.
-   상단은 제 내용 높이로 서되 박스가 모자라면 줄어들어 **제 본문이** 스크롤한다 — 쌓인 판의 `flex: none` 을 여기서만 푼다 */
+   상단은 제 내용 높이로 서되 박스가 모자라면 줄어들어 **제 본문이** 스크롤한다 — 쌓인 판의 `flex: none` 을 여기서만 푼다.
+   **띠는 안 줄어든다** — 박스의 머리(§2 박스 규격)라 카드가 잘리면 안 된다 · 캐릭터 탭 띠와 같다 */
 .c-shop > .panel { display: flex; flex-direction: column; min-height: 0; }
 .c-shop > .panel:not(.fill) { flex: 0 1 auto; }
 .c-shop > .panel:not(.fill) > .box-body { flex: 0 1 auto; }
+.c-shop > .panel.hs-panel { flex: none; }
 /* 특수상단의 상인 카드 — **한 줄로 납작하게** 선다(사용자 지시 「특수상단을 일단 좀 줄여」 · ADR-0235) — 왼쪽 이름 · 남은 시간 / 가운데 작은 칸 / 오른쪽 사기 줄 */
 .td-card { display: inline-flex; align-items: center; gap: 14px; max-width: 100%;
     padding: 7px 10px; background: var(--bg-card); border: 1px solid var(--border-secondary); }

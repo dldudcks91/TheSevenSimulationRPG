@@ -1,7 +1,7 @@
 """챕터 시트 다시 찍기 — 스테이지 한 판 = 2×2 한 장 (faces/source/chapters/README.md).
 
 `monster.csv` 가 대장이다: 스테이지마다 일반몹 3 + 스테이지 보스 1 을 읽어
-`cartoon/monster/<idx>.png` 를 칸에 앉힌다. 아트가 없는 자리는 **빈 초록 칸**으로 남고, 그 빈 칸이 곧 발주서다.
+`cartoon/monster/<idx>.webp` 를 칸에 앉힌다. 아트가 없는 자리는 **빈 초록 칸**으로 남고, 그 빈 칸이 곧 발주서다.
 `cartoon/monster/` 를 건드렸으면(설치 · 교체 · 삭제) 이걸 돌린다 — SKILL.md 5단계.
 
     python .claude/skills/art-prompt/build_chapter_sheets.py            # 아트가 있는 스테이지 전부
@@ -75,7 +75,7 @@ def build(ch, st, entry):
     for (x, y), idx in zip(CELL_XY, slots(entry)):
         if idx is None:
             continue
-        f = FACES + '%d.png' % idx
+        f = FACES + '%d.webp' % idx
         if not os.path.exists(f):
             continue
         cell = normalize(Image.open(f))

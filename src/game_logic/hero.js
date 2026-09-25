@@ -520,7 +520,10 @@ export function createHeroSystem(data) {
             // 원천별 곱의 실효값(비율) — 옛 %(소수 3자리)와 같은 정밀도라 5자리다
             damage_reduction: Number((1 - F.reductionMult(drList)).toFixed(5)),
             crit_rate: B.base_crit_pct + f('crit_rate'),
-            crit_damage: B.base_crit_damage_pct + f('crit_damage'),
+            // 치명타 피해 = 1 + (바탕 + 접사 · 마스터리 · 전술 − 1) × **운 계수** [2026-09-25 사용자 — C안 · battle_design §9-2] — **치명 보너스 몫에만** 곱한다.
+            //   운이 기준(10)이면 바탕 그대로 · 계수는 평타 · 스킬과 같은 `formula.statCoef`(복리)라 보너스가 0 이 안 된다(치명이 평소 타격보다 약해지지 않는다).
+            //   ~~D안(전체에 곱함 · 하한 1)~~ 은 같은 날 대체 · 몬스터도 같은 길을 지난다(makeEnemy — 특수 분기 없음). 시트가 이 값을 그대로 보여 준다
+            crit_damage: Number((1 + (B.base_crit_damage_pct + f('crit_damage') - 1) * F.statCoef(A.luck)).toFixed(4)),
             life_steal: f('life_steal'),
             // 초당 회복 — 행동 주기와 무관한 실시간 (battle.js 가 틱마다 누산).
             // **밑수를 갖는 유일한 축**이다 [확정 2026-09-07 · battle_design §8] — 「장비가 0이면 능력치도 0」의 예외로,

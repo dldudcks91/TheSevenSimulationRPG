@@ -195,9 +195,10 @@ export function createFormula(balance) {
         const bracket = 1 + (a.dmgPct ?? 0);
         if (a.condPct && bracket > 0) v *= (bracket + a.condPct) / bracket;
         v *= 1 + (a.bonusPct ?? 0);                                // 피해량(도감) — 데미지 % 괄호와 합치지 않고 따로 곱한다 (2026-09-18)
-        const crit = rng() < Math.min(a.crit ?? 0, B.crit_cap_pct);
+        // 치명 확률에 상한이 없다 [2026-09-25 사용자 — ~~`crit_cap_pct`~~ 삭제] — 1 이상이면 전타 치명. 굴림은 그대로 1회(rng ③)
+        const crit = rng() < (a.crit ?? 0);
         if (crit) v *= a.critDmg ?? 1;
-        // 확률로 터지는 추가 피해 — 치명과 **따로 굴려 겹친다**(치명 상한과 무관 · §9-2). 확률이 있는 타격만 굴린다:
+        // 확률로 터지는 추가 피해 — 치명과 **따로 굴려 겹친다**(§9-2). 확률이 있는 타격만 굴린다:
         //   기본 공격은 확률이 0 이라 굴림을 안 태우므로 수열이 종전과 같다 (INTERFACE §5-2)
         let proc = false;
         if ((a.procChance ?? 0) > 0) {

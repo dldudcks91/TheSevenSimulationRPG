@@ -70,7 +70,7 @@ const STRINGS = {
     'ng.h': { ko: '새 게임', en: 'New Game' },
     'ng.title': { ko: '첫 파티', en: 'Your First Party' },
     'ng.sub': {
-        ko: '이 {n}명이 그대로 시작 로스터가 된다 — 마음에 들 때까지 다시 굴려도 된다',
+        ko: '이 {n}명이 그대로 시작 영웅 로스터가 된다 — 마음에 들 때까지 다시 굴려도 된다',
         en: 'These {n} become your starting roster — reroll as many times as you like',
     },
     'ng.roll': { ko: '{n}번째 굴림', en: 'Roll {n}' },
@@ -81,7 +81,7 @@ const STRINGS = {
     'ng.trait': { ko: '시작 특성', en: 'Starting Trait' },
     'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
     'ng.note': {
-        ko: '첫 파티는 <b>레어 1 + 매직 1 + 일반 1</b>이다 — 첫 화면부터 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
+        ko: '첫 파티는 <b>레어 1 + 매직 1 + 일반 1</b>이다 — 첫 화면부터 영웅 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
             + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 ([hero_tier.csv:attr_total_min/max] — 등급끼리 대역이 <b>겹칠 수 있다</b>) — '
             + '세 장의 차이는 양과 <b>모양</b> 둘이다: 레어 · 일반은 고르게 나고, 매직은 <b>한 축이 크게 튈 수 있다</b>. 장비로도 레벨업으로도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
             + '<b>등급 차이는 끝까지 간다</b> — 상한은 [balance.csv:hero_attr_max] 하나로 전 영웅 공통이지만 레벨업으로 능력치가 안 올라 <b>굴린 모양이 곧 그 영웅의 끝</b>이다<br>'
@@ -364,7 +364,7 @@ const STRINGS = {
     'tv.reroll.free': { ko: '후보 교체 (무료)', en: 'New candidates (free)' },
     'tv.empty': { ko: '고용함 — 다음 교체에 채워진다', en: 'Hired — refills on next refresh' },
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
-    'tv.err.roster': { ko: '로스터가 가득 찼다 ({cap})', en: 'Roster full ({cap})' },
+    'tv.err.roster': { ko: '영웅 로스터가 가득 찼다 ({cap})', en: 'Hero roster full ({cap})' },
     'tv.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
     /* 수색 칸 [신설 2026-09-01 · **실동작 2026-09-09** — SCREEN_DESIGN §8-1 · ADR-0062].
@@ -593,7 +593,7 @@ const STRINGS = {
     'help.title': { ko: '도움말', en: 'Help' },
     'help.newgame': { ko: '새 게임', en: 'New Game' },
     'help.exp.party': { ko: '전투 {n}인 — 동시 원정 {m}팀', en: '{n} fighters — {m} expedition at a time' },
-    'help.exp.bench': { ko: '파견 대기 · 로스터 {n} / {cap}', en: 'Awaiting dispatch · Roster {n} / {cap}' },
+    'help.exp.bench': { ko: '파견 대기 · 영웅 로스터 {n} / {cap}', en: 'Awaiting dispatch · Hero roster {n} / {cap}' },
 
     /* ── 공통 ── */
     'face.noArt': { ko: '{name} — 원작 아트 없음', en: '{name} — no source art' },
@@ -606,11 +606,9 @@ const STRINGS = {
     /* ── 원정: 편성 · 지역 ── */
     /* 스테이지 · 부대 · 리포트 칸은 **ko 에서도 영어 그대로** [2026-09-24 사용자 지시 · SCREEN_DESIGN §4] — 부대 `{n}` 은 로마 숫자(`M.roman`) */
     'exp.seg.idle': { ko: 'Stages', en: 'Stages' },
-    /* 관전 칸의 이름 — **칸이 하나면** 원정 상태를 따른다: 없음 `exp.seg.battle`(도움말 제목도 이것) · 도는 중 `live` · 끝남 `over` (SCREEN_DESIGN §4 · ADR-0147).
-       **칸이 여럿이면**(부대 수가 둘 이상) 이름은 부대고 상태는 색만 든다 — `exp.seg.party` (ADR-0316) */
+    /* 관전 칸의 이름 — 부대 수가 몇이든 이름은 부대고 상태는 색만 든다 — `exp.seg.party` (SCREEN_DESIGN §4 · ADR-0316 · 하나여도 ADR-0360).
+       `exp.seg.battle` 은 도움말 제목으로만 산다 */
     'exp.seg.battle': { ko: '전투 관전', en: 'Spectate' },
-    'exp.seg.live': { ko: '전투 중', en: 'In Battle' },
-    'exp.seg.over': { ko: '전투 종료', en: 'Battle Over' },
     'exp.seg.party': { ko: 'Party {n}', en: 'Party {n}' },
     'exp.seg.report': { ko: 'Report', en: 'Report' },
     'exp.oneParty': {
@@ -719,7 +717,7 @@ const STRINGS = {
     'rep.contrib.xp': { ko: '경험치 {n}', en: '{n} XP' },
     'rep.log.sub': { ko: '정예 {e} / 보스 {b}', en: 'Elite {e} / Boss {b}' },
     'rep.contract': {
-        ko: '방치형 계약 — 자리를 비워도 로스터는 파괴되지 않는다. 사건은 리포트 안에서 완결',
+        ko: '방치형 계약 — 자리를 비워도 영웅 로스터는 파괴되지 않는다. 사건은 리포트 안에서 완결',
         en: 'The idle-game contract — the roster is never destroyed while you are away. Every event resolves inside the report',
     },
 
@@ -882,15 +880,15 @@ const STRINGS = {
     'cn.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'cn.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
     // 여는 것 설명 — 「무엇을 할 수 있게 되나」 한 문장 · 대상마다 한 키 · 효과만(조건 · 절차는 안 적는다) [2026-09-24 사용자 지시 · ADR-0325 — 옛 값은 기능 이름]
-    'cn.t.expedition': { ko: '파티를 원정에 보낸다', en: 'Send a party on expeditions' },
     // 제련소 랭크 I 의 둘은 문장이 아니라 이름 토막 [2026-09-24 사용자 지시 「장비 강화, 장비 제작 이렇게만」 · 시험 중 — SCREEN_DESIGN §13-1]
     'cn.t.upgrade_item': { ko: '장비 강화', en: 'Equipment Upgrade' },
     'cn.t.make': { ko: '장비 제작', en: 'Equipment Smithing' },
     'cn.t.potion': { ko: '물약 제작', en: 'Potion Brewing' },   // 제련소 r2 — 물약 1단계를 함께 연다 (2026-09-24 사용자 지시)
     'cn.t.storage': { ko: '가방과 창고를 쓴다', en: 'Use the bag and stash' },
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록한다', en: 'Record monsters you meet in the codex' },
-    'cn.t.hire': { ko: '선술집 명단에서 영웅을 고용한다', en: 'Hire heroes from the tavern roster' },
-    'cn.t.search': { ko: '영웅을 보내 새 영웅을 찾는다', en: 'Send a hero to search for new heroes' },
+    // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 제련소와 같은 시험 중 — SCREEN_DESIGN §13-1]
+    'cn.t.hire': { ko: '영웅 고용', en: 'Hero Hiring' },
+    'cn.t.search': { ko: '영웅 수색', en: 'Hero Search' },
     'cn.t.shop': { ko: '상단에서 장비와 재료를 산다', en: 'Buy gear and materials at the trading house' },
     'cn.t.shop_special': { ko: '특수상단이 찾아온다', en: 'The special merchant starts visiting' },
     'cn.t.craft': { ko: '매직 장비에 전용 옵션을 더한다', en: 'Add a special option to magic gear' },
@@ -902,7 +900,7 @@ const STRINGS = {
     'cn.t.escort': { ko: '의뢰인의 상단을 호위한다', en: "Escort a client's caravan" },
     'cn.t.gear_set': { ko: '장비 한 벌을 저장해 바로 갈아입는다', en: 'Save a gear loadout and swap instantly' },
     'cn.t.monster_card': { ko: '몬스터 카드를 모은다', en: 'Collect monster cards' },
-    'cn.t.commission_board': { ko: '의뢰를 받아 목표로 둔다', en: 'Take on commissions as goals' },
+    'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission Board' },   // 선술집 r2 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-25)
     'cn.t.gamble': { ko: '골드를 걸어 골드와 재료를 노린다', en: 'Wager gold for gold or materials' },
     'cn.t.training': { ko: '영웅을 훈련시켜 경험치를 올린다', en: 'Train heroes to gain experience' },
     'cn.t.advance': { ko: '영웅을 전직시킨다', en: "Advance a hero's class" },
@@ -910,7 +908,7 @@ const STRINGS = {
     // 더하기는 「대상 +n」 한 토막 — 서술형 문장으로 늘리지 않는다 (ADR-0329) · 「증가」 도 안 붙인다 — 「+」 가 이미 말한다 (ADR-0351)
     'cn.t.bag': { ko: '가방 칸 +{n}', en: 'Bag slots +{n}' },
     'cn.t.stash': { ko: '창고 칸 +{n}', en: 'Stash slots +{n}' },
-    'cn.t.roster': { ko: '로스터 +{n}', en: 'Roster +{n}' },
+    'cn.t.roster': { ko: '영웅 로스터 +{n}', en: 'Hero roster +{n}' },
     'cn.t.presets': { ko: '편성 +{n}', en: 'Party presets +{n}' },
     'cn.t.potionSlots': { ko: '원정 물약 칸 +{n}', en: 'Expedition potion slots +{n}' },
     'cn.t.upgrade': { ko: '강화 상한 +{n}', en: 'Upgrade cap +{n}' },
@@ -920,8 +918,8 @@ const STRINGS = {
     'cn.t.make_level': { ko: '제작 레벨 +{n}', en: 'Smithing level +{n}' },
     'cn.t.potion_tier': { ko: '물약 단계 +{n}', en: 'Potion tier +{n}' },
     'cn.t.tactic_slots': { ko: '파티 전술 칸 +{n}', en: 'Party tactic slots +{n}' },
-    // 장은 예외로 누적 번호 — `{total}` = 그 랭크까지 연 장 수 (SCREEN_DESIGN §13-1 · R152)
-    'cn.t.chapters': { ko: '{total}장까지 연다', en: 'Opens up to Chapter {total}' },
+    // 장은 예외로 누적 번호 — `{total}` = 그 랭크까지 연 장 수 (SCREEN_DESIGN §13-1 · R152 · 문구 2026-09-25 사용자 지시 · R161)
+    'cn.t.chapters': { ko: '챕터 {total} 해금', en: 'Unlocks Chapter {total}' },
     'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}' },
     'cn.t.resource_tier': { ko: '파견처 자원 단계 +{n}', en: 'Resource tier +{n}' },
     'cn.t.workers': { ko: '파견처 일꾼 칸 +{n}', en: 'Worker slots +{n}' },
@@ -937,7 +935,7 @@ const STRINGS = {
     'rs.research.h': { ko: '건설', en: 'Construction' },
     'rs.research.note': {
         ko: '<b>건설</b>은 건물마다 <b>랭크를 하나씩 지어</b> 기능 · 칸을 연다. 무엇을 여는지는 랭크 칸에 적혀 있다<br>'
-            + '다음 랭크는 <b>조건</b>(스테이지 클리어 · 로스터 합산 레벨의 최고치 · 영웅 레벨 · 다른 건물의 랭크)을 채우면 <b>비용</b>을 내고 짓는다. 지은 것은 되돌리지 않는다<br>'
+            + '다음 랭크는 <b>조건</b>(스테이지 클리어 · 영웅 로스터 합산 레벨의 최고치 · 영웅 레벨 · 다른 건물의 랭크)을 채우면 <b>비용</b>을 내고 짓는다. 지은 것은 되돌리지 않는다<br>'
             + '안 지은 건물의 탭은 흐리다 — 눌러도 들어가지 않고 지을 건물을 알려 준다. 짓는 곳은 이 탭 하나다. <b>준비 중</b>인 랭크는 여는 기능이 아직 없어 지을 수 없다',
         en: '<b>Construction</b> opens features and slots <b>one building rank at a time</b>. Each rank lists what it opens<br>'
             + 'Meet the next rank\'s <b>requirements</b> (a stage clear · the highest total roster level reached · a hero level · another building\'s rank), then pay its <b>cost</b>. Built ranks are never undone<br>'
@@ -978,7 +976,7 @@ const STRINGS = {
     'rs.lock': { ko: '잠그기', en: 'Lock' },
     'rs.unlock': { ko: '풀기', en: 'Unlock' },
     'rs.note': {
-        ko: '칸은 <b>줍는 것이 아니다</b> — <b>지휘 천막</b>의 랭크를 지을 때마다 하나씩 열리고(로스터 전원의 레벨 합이 그 랭크의 문턱이다), '
+        ko: '칸은 <b>줍는 것이 아니다</b> — <b>지휘 천막</b>의 랭크를 지을 때마다 하나씩 열리고(영웅 로스터 전원의 레벨 합이 그 랭크의 문턱이다), '
             + '칸에 든 옵션은 골드로 다시 굴린다. 리롤은 <b>안 잠근 칸을 한 번에 전부</b> 굴린다 — 지킬 칸은 <b>잠근다</b>. '
             + '잠그는 것은 무료지만 <b>잠근 칸이 많을수록 리롤이 비싸진다</b>. 새로 나오는 것은 <b>지금 판에 든 것과 겹치지 않는다</b>.',
         en: 'Slots are <b>not looted</b> — one opens with each <b>Command Tent</b> rank you build (the summed level of your whole roster is that rank\'s requirement), '
@@ -1251,7 +1249,7 @@ const STRINGS = {
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
     'sk.sinTree.sub': { ko: '죄종에서 옴 — 모든 {sin} 영웅 공유', en: 'Shared by all {sin} heroes' },
     'sk.sinTree.missing': {
-        ko: '<b>맨 윗줄은 7죄종이 전부 같다</b> — 죄종마다 다르게 주면 파워가 갈려 약한 죄종 영웅이 로스터에서 버려진다. 바닥을 통일하고 <b>죄종의 개성은 그 아랫줄부터</b> 준다.<br>'
+        ko: '<b>맨 윗줄은 7죄종이 전부 같다</b> — 죄종마다 다르게 주면 파워가 갈려 약한 죄종 영웅이 영웅 로스터에서 버려진다. 바닥을 통일하고 <b>죄종의 개성은 그 아랫줄부터</b> 준다.<br>'
             + '둘째 줄이 {sin} 만의 축이고, <b>맨 아랫줄(반응형)은 기획이 방향만 정했다</b> — 「~하면 ~한다」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없다.',
         en: '<b>The top row is identical for all 7 sins</b> — differing power there would strand heroes of the weaker sins on the bench. The floor is shared and <b>each sin\'s identity starts one row down</b>.<br>'
             + 'The second row is {sin}\'s own axis. <b>The bottom row (reactive) has direction but no numbers</b> — "when X, then Y" scales with trigger frequency, and there is no yardstick for that yet.',
@@ -1293,7 +1291,7 @@ const STRINGS = {
         en: 'Appears rarely in both the roster and searches — stationing a high-Charisma hero raises the odds and quality (hero_design.md §1)',
     },
     'tv.tiers.note': {
-        ko: '<b>유니크</b> — 이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용), 로스터에 1명만. 본편 15명(직업별 3)이 상한<br>'
+        ko: '<b>유니크</b> — 이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용), 영웅 로스터에 1명만. 본편 15명(직업별 3)이 상한<br>'
             + '<b>레어</b> — 전부 굴림, 고유 스킬은 공용 풀에서 배정. 죄종 × 직업 35칸 커버리지를 전담한다',
         en: '<b>Unique</b> — fixed name, class, and sin + 1 signature skill (hero-exclusive); one copy per roster. Capped at 15 in the base game (3 per class)<br>'
             + '<b>Rare</b> — everything rolled; signature skill assigned from the shared pool. Covers all 35 sin × class cells',

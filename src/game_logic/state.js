@@ -233,7 +233,7 @@ export function createGameSystem(deps) {
             makeLevels: 0, potionTier: 0, tacticSlots: 0,
             gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 — 선술집 뒤 랭크가 더한다 (R149)
             chapters: 0,   // 들어갈 수 있는 장 — 건물만 연다(원정 랭크마다 +1 · r1 은 처음부터 지어져 1장) (2026-09-24 · R152)
-            commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 선술집 r2 가 더한다 (R153)
+            commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 더하기 대상이지만 지금 표엔 늘리는 랭크가 없다 (R153 · R162)
         };
         for (const [target, n] of Object.entries(CN.opened(openRanks(state)).adds)) {
             const key = ADD_KEY[target] ?? target;
@@ -912,12 +912,12 @@ export function createGameSystem(deps) {
     const formCaps = tpl => { const t = FT[tpl] ?? FT[DEFAULT_TPL]; return t ? [t.front, t.back] : [B.party_size_max, 0]; };
 
     /* ── 편성 [2026-09-21 · 사용자 확정 · SCREEN_DESIGN §15 · ADR-0192 · R122] ──
-       편성은 **늘 `limitsOf(state).presets` 개가 서 있고** 번호가 이름이다(1 부터) — 만들고 지우는 동작이 없다. 수는 원정 랭크가 연다(r1 · r3 · r6 · R156).
+       편성은 **늘 `limitsOf(state).presets` 개가 서 있고** 번호가 이름이다(1 부터) — 만들고 지우는 동작이 없다. 수는 기본값 하나에 원정 랭크가 더 연다(r3 · r6 · R156 · 첫 편성은 기본값 R161).
        편성마다 파티 · 진형 · 물약 칸 · **파티 전술 칸**을 든다(전술은 v34 부터 편성마다 · R129 — 열린 칸 수만 계정이다).
        파티 · 진형 · 물약 칸을 바꾸는 함수는 **고른 편성**(`state.preset`)에 작용한다 — 편성 탭은 늘 고른 편성을 펴므로 번호를 따로 받지 않는다.
        출발만 번호를 받는다 — 반복이 **도는 원정의 편성**으로 다시 나가야 해서다(고른 편성이 그새 바뀌었을 수 있다) */
     // 편성 수는 `limitsOf(state).presets` 가 답한다 — 여기서는 CSV 값이 쓸 수 있는 수인지만 본다.
-    //   기본값은 0 이어도 된다 — 시작 랭크(처음부터 지어진 원정 r1)의 더하기를 얹은 수가 1 이상이면 된다 (R156)
+    //   기본값은 0 이어도 된다 — 시작 랭크(처음부터 지어진 랭크)의 더하기를 얹은 수가 1 이상이면 된다 (R156 · 지금 표는 기본값 1 · R161)
     const startPresets = B.party_preset_count + (CN.opened(CN.startRanks()).adds.presets ?? 0);
     if (!(Number.isInteger(B.party_preset_count) && B.party_preset_count >= 0 && startPresets >= 1)) throw new Error(`balance: party_preset_count ${B.party_preset_count} · 시작 편성 ${startPresets} — 기본값은 0 이상 정수 · 시작 랭크의 편성은 1 이상이어야 한다 (INTERFACE §2-7)`);
     const emptyPreset = state => ({ party: [], formation: { tpl: DEFAULT_TPL, ranks: [[], []] }, potionSlots: padSlots(state, []), tactics: { slots: {}, locked: [] } });
@@ -1188,7 +1188,7 @@ export function createGameSystem(deps) {
 
     function canDepart(state, stageId, now, no = state.preset) {
         // **그 편성의** 원정이 도는 중이어도 막지 않는다 — 보내면 `departRun` 이 그 부대를 끊는다 (R92 · 다른 부대는 안 건드린다)
-        if (!hasFeature(state, 'expedition')) return 'unbuilt';   // 원정 건물이 연다(처음부터 지어짐 · R137)
+        //   원정은 건물 밖이다 — 처음부터 열려 있어 `hasFeature` 를 묻지 않는다 (2026-09-25 · R161 · 원정 r1 은 장만 연다)
         if (!stageUnlocked(state, stageId)) return 'locked';
         // 편성 `no`(기본 고른 편성)로 나간다 [2026-09-21 · R122] — 없는 편성 · 빈 파티 · **수색 나간 영웅이 든 편성**은 못 나간다.
         //   편성은 계획이라 든 채로 수색을 보낼 수 있고 여기서 막는다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
@@ -2176,7 +2176,7 @@ export function createGameSystem(deps) {
             const rank = state.buildings[b.id] ?? 0;
             const ranks = Array.from({ length: b.maxRank }, (_, i) => {
                 const info = CN.rankInfo(b.id, i + 1);
-                // 더하기에 `total` — 그 건물을 이 랭크까지 지었을 때의 합(「n장까지 연다」 같은 누적 문장 · R152)
+                // 더하기에 `total` — 그 건물을 이 랭크까지 지었을 때의 합(「챕터 n 해금」 같은 누적 문장 · R152)
                 const upto = CN.opened({ [b.id]: i + 1 }).adds;
                 const effects = info.effects.map(e => (e.kind === 'add' ? { ...e, total: upto[e.target] ?? 0 } : e));
                 return { rank: i + 1, built: i < rank, effects, require: CN.check(info.require, ctx, state.buildings) };

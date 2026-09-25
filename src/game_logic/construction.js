@@ -23,7 +23,7 @@ const A = (live, seed = null) => ({ kind: 'add', live, seed });
 export const TARGETS = {
     // 켜기 — 지금 있는 기능 (분해 · 알아서 분해는 건물 밖이라 여기 없다 — 처음부터 열려 있다 · 2026-09-23 사용자 지시 · R140)
     //   ~~`repeat` · `stage_level`~~ 도 건물 밖이다 — 반복 원정 · 던전 레벨 조절은 처음부터 열린다 (2026-09-24 사용자 지시 · R152)
-    expedition: U(true),
+    //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열리고 원정 r1 은 장만 연다 (2026-09-25 사용자 지시 · R161)
     upgrade_item: U(true), make: U(true),
     potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 제련소 r2)
     storage: U(true), codex: U(true), hire: U(true), search: U(true), shop: U(true), shop_special: U(true),

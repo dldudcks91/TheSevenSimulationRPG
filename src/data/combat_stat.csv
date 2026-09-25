@@ -1,8 +1,8 @@
 stat_id,stat_kr,stat_en,category,attr,fmt,impl,sheet_order,description_kr
 atk_physical,물리 데미지,Physical Damage,offense,-,n,1,1,physical 공격의 피해원 — 무기 피해 범위(최소~최대 · 직격마다 굴림 · 2026-09-14 R90) x (1 + 상시 피해 % 합) — ~~힘 계수~~ 09-10 폐기(힘은 스킬 계수로 · DEV_PLAN R71·R72). **무기가 밑수다** — 다른 슬롯의 고정 데미지를 이 괄호에 더하지 않는다. 상대 defense 가 곱셈 감쇠 (battle_design §9-1·9-3)
 atk_magic,마법 데미지,Magic Damage,offense,-,n,1,2,원소 공격의 피해원 — 구조는 물리와 동일(마법 무기 피해 범위 x (1 + 상시 피해 %) — ~~지능 계수~~ 09-10 폐기). ~~원소는 마법 무기 개체가 든다~~ → 원소는 스킬의 원소 태그가 주고 원소 옵션이 없는 기본 공격은 물리로 친다(2026-09-11 R80). 상대의 그 원소 저항이 % 로 감소시킨다 (battle_design §9-5). 회복 스킬의 회복량도 이 값에 비례한다 (별도 회복량 스탯 없음 · 회복의 능력치 항은 지능 — 09-10 확정)
-crit_rate,치명타 확률,Crit Chance,offense,-,pct,1,5,치명타 발생 확률 — 상한 [balance.csv:crit_cap_pct]. 기본 능력치 보정 없음. 장비·스킬 전담
-crit_damage,치명타 피해,Crit Damage,offense,-,pct,1,6,치명타 시 피해 배율 — 직격에만 붙는다 (반사·도트 제외 — battle_design §9-6)
+crit_rate,치명타 확률,Crit Chance,offense,-,pct,1,5,치명타 발생 확률 — **상한 없음** [2026-09-25 사용자 — ~~crit_cap_pct~~ 삭제 · 1 이상이면 전타 치명]. 기본 능력치 보정 없음. 장비·스킬 전담
+crit_damage,치명타 피해,Crit Damage,offense,luck,pct,1,6,치명타 시 피해 배율 — 직격에만 붙는다 (반사·도트 제외 — battle_design §9-6) · **1 + (바탕 + 장비 − 1) × 운 계수** — 치명 보너스 몫에만 곱한다 [2026-09-25 사용자 C안 — 운 10 이면 바탕 그대로 · 계수는 평타와 같은 복리 statCoef · battle_design §9-2]
 def_ignore,방어 무시,Defense Ignore,offense,-,pct,1,15,**물리 전용**. 감쇠 곡선에 넣기 전 상대 물리 방어값을 이 비율만큼 깎는다 — 감쇠율의 %가 아니다. 원소 쪽 대응은 res_reduction (battle_design §9-3)
 res_reduction,저항 감소,Resist Reduction,offense,-,pct,1,22,**원소 전용**. 상대 원소 저항을 %p 로 깎는다 — 관통이라는 별도 규칙이 아니라 저항값에 음수를 더하는 것이다. 저항은 하한이 없어 음수가 되면 피해가 증폭된다 (battle_design §9-5)
 vs_type_damage,타입 추가 데미지,Type Damage,offense,-,pct,0,23,Normal/Demon/Undead 대상 추가 피해 — 조건이 맞는 타격에서 **데미지 % 괄호**에 덧셈으로 들어간다(2026-09-18 — ~~조건부 괄호가 상시 괄호와 곱해진다~~ 폐기 · 한 괄호). 무기 슬롯 전속 (battle_design §9-1)

@@ -10,7 +10,7 @@
 
 ## 게임 초상 내보내기 [2026-09-24]
 
-`ready/monster/` 38장과 `ready/hero/` 19장은 기존 게임 PNG를 **바이트 그대로 보존한 512×512 작업 원본**이다. 더 큰 원본 시트가 남아 있는 그림은 시트도 따로 보관한다. 게임 폴더에는 PNG를 두지 않고, 몬스터 256×256 · 영웅 320×320의 투명 WebP(품질 90)를 둔다.
+`ready/monster/` 42장과 `ready/hero/` 19장은 게임 초상의 작업 원본이다. 더 큰 원본 시트가 남아 있는 그림은 시트도 따로 보관한다. 게임 폴더에는 PNG를 두지 않고, 몬스터 256×256 · 영웅 320×320의 투명 WebP(품질 90)를 둔다.
 
 새 초상이 확정되면 해당 id의 PNG를 `ready/monster/` 또는 `ready/hero/`에 저장하고, 저장소 루트에서 아래 명령으로 내보낸다. 미확정 시안은 `_scratch/`에 둔다.
 
@@ -20,6 +20,28 @@ python scripts/export_face_portraits.py
 ```
 
 첫 이관에는 `--migrate`를 사용했다. 이 옵션은 구 게임 PNG를 `ready/`에 복사해 일치 여부를 검사하고 WebP를 만든 다음, 게임 폴더의 PNG를 제거한다.
+
+## 1-2 인간 몬스터 초상 교체 [2026-09-25]
+
+`sheets/source_sheet_ch1_st2_human_3x3_rows_v2.png`는 매 행이 **보병 → 궁수 → 기사**인 3×3 시트다. 사용자 선택에 따라 보병 `1201`은 **2행 1열**, 궁수 `1202`는 **2행 2열**, 기사 `1203`은 **1행 3열**을 적용했다. `scripts/apply_ch1_st2_human_portraits.py`가 격자선을 빼고 초록 배경을 투명화해 512×512 `ready/monster/<idx>.png`와 256×256 `cartoon/monster/<idx>.webp`를 만들었다. 이전 PNG·WebP는 `_scratch/ch1_st2_human_before_apply/`에 보관했다.
+
+`sheets/source_sheet_ch1_st2_human_3x3_hero_style_v4.png`는 현재 저장된 **인간 영웅**의 그림결을 기준으로 새로 그린 비교 시트다. 매 행 보병 → 궁수 → 기사이고, 기존 몬스터 그림은 직업·장비 확인에만 사용했다. 이전 `sheets/source_sheet_ch1_st2_human_3x3_hero_style_v3.png`는 머리 위 여백 부족과 반복되는 얼굴 구조 때문에 재시안 기준에서 제외했다. v4는 영웅 다섯 장을 그림체 참조로 사용하고 아래 행의 여백을 다시 맞췄다. 상세 기준은 [공통 구도 문서의 1-2 인간 절](../../../../../docs/reference/character_portrait_prompt.md), 전체 생성 지시는 [v4 프롬프트](../../../../../docs/reference/ch1_st2_human_hero_style_v4_prompt.md)에 있다. **v4는 아직 선택용 시트**다.
+
+`sheets/source_sheet_ch1_st2_human_3x3_hero_style_v5.png`는 새로 그린 **선택용 3×3 시트**다. 매 행 보병 → 화살통이 보이는 궁수 → 중장 기사이며, 영웅 `archer_1`·`knight_2`는 선·음영·여백의 그림체 참조로만 사용했다. 기존 `ready/monster/1201~1203`은 직업과 장비를 확인하는 데만 사용했다. 아홉 명의 얼굴형과 머리·투구 실루엣을 나누고 아래 행의 머리 위 여백을 맞췄다. 제작 기준과 재현용 지시는 [v5 프롬프트](../../../../../docs/reference/ch1_st2_human_hero_style_v5_prompt.md)에 있다. **게임 초상은 아직 교체하지 않았다.**
+
+## 1-4 일반형 두 종 검은 눈 적용 [2026-09-25]
+
+사용자가 고른 검은 눈 시안으로 **화염 광신도 `1401`·임프 제사장 `1402`의 일반형만** 교체했다. 주황 발광 눈을 검은 눈으로 바꾼 생성 시안을 각각 512×512 `ready/monster/<idx>.png`로 축소하고, 256×256 `cartoon/monster/<idx>.webp`로 내보냈다. 교체 전 일반형 PNG·WebP는 `_scratch/1401_before_black_eyes.*`·`1402_before_black_eyes.*`에 보관했다. 정예형은 별도 초상을 쓰며, `chapters/ch1_st4.png`를 다시 찍었다.
+
+## 1-4 청동 수호상 일반/정예 분리 [2026-09-25]
+
+청동 수호상 `1403`도 같은 방식으로 **검은 눈 일반형**을 만들고, 사용자 정정에 따라 목 안쪽·몸통·갑옷 틈의 **불길과 용암빛을 전부 제거한 청동상**으로 고쳐 `ready/monster/1403.png`·`cartoon/monster/1403.webp`에 설치했다. 기존 주황 발광 눈과 몸의 불길이 있는 초상은 바이트 그대로 `ready/monster/1403_elite.png`·`cartoon/monster/1403_elite.webp`에 보존했다. `monster.csv:face_elite`를 0 → 1로 바꾸고 `chapters/ch1_st4.png`를 다시 찍었다. 교체 전 기본형은 `_scratch/1403_before_black_eyes.*`, 눈만 검게 바꾼 중간판은 `_scratch/1403_before_no_fire.*`에 보관했다. `monster/bronze_guardian.png`와 4×2 원본 시트는 기존 불붙은 원형을 보존한다.
+
+## 1-4 청동 수호상·몰록 비율 재시안 [2026-09-25]
+
+`sheets/source_sheet_ch1_st4_guardian_moloch_4x2_sd_v3.png`는 1774×887 투명 PNG 비교 시트다. **4열 × 2행**, 윗줄은 청동 수호상 `1403` 네 시안, 아랫줄은 몰록 `1450` 네 시안이다. 교체 전 `ready/monster/1403.png`·`1450.png`를 외형 참조로, `1401.png`·`1402.png`를 그림체와 큰 두상 비율 참조로 사용했다. 각 칸은 [공통 구도 기준](../../../../../docs/reference/character_portrait_prompt.md)의 큰 머리·작은 몸통·상단 여백에 맞춰 다시 그렸다.
+
+사용자가 **세 번째 시트의 4열**을 두 몬스터 모두에 골랐다. 청동 수호상은 윗줄 우측 `(1334, 4, 1773, 443)`, 몰록은 아랫줄 우측 `(1334, 447, 1773, 886)`을 잘라 당시 512×512 `ready/monster/1403.png`·`1450.png`와 `monster/bronze_guardian.png`·`moloch.png`에 저장했다. 게임용 초상은 256×256 WebP로 내보냈다. 이때의 주황눈 청동 수호상은 위의 **일반/정예 분리**로 정예형이 됐다. 교체 전 작업 원본과 WebP는 `_scratch/*_before_sd_v3.*`에 보관했다.
 
 ## 1-4 화염 광신도·임프 제사장 일반/정예 분리 [2026-09-24]
 
@@ -591,7 +613,7 @@ python scripts/export_face_portraits.py
 
 ## 몬스터 — 인간 망령 시트 3종 (`source_sheet_human_wraith.png`) [2026-09-10]
 
-지금 `monster/1201~1203` 이 쓰는 그림이다. **1024² · 2×2 · 초록 `#00FF00` 배경 · 격자선 `508~515`**(바깥 테두리 `0~6` · `1016~1023`),
+2026-09-25 교체 전 `monster/1201~1203` 이 쓰던 그림이다. **1024² · 2×2 · 초록 `#00FF00` 배경 · 격자선 `508~515`**(바깥 테두리 `0~6` · `1016~1023`),
 ✦ 워터마크가 **없어** 넷이 다 살아 있고 4번(케틀 헬름)은 안 땄다.
 
 | 파일 | 타일 | 내용 | 배정 |
