@@ -25,6 +25,12 @@ python scripts/export_face_portraits.py
 
 `sheets/source_sheet_ch2_st2_ent_2x2.png`는 사용자가 넣은 2048×2048 **2×2 엔트 시트**다(초록 배경 · 검은 격자선). 1번 = 맨몸 엔트 · 2번 = 창과 짐승 두개골 견갑 · 3번 = 뿔 · 잎 망토 · 수정 지팡이 · 4번 = 이끼 수염의 늙은 엔트(지팡이 · 두루마리). 2-2 일반몹 `2201~2203`이 같은 날 도마뱀에서 엔트로 바뀌었다. 사용자 지시로 **1번을 `2201` 엔트**에 적용했다 — `scripts/apply_ch2_st2_ent_portrait.py`가 좌상 칸 `(0, 0, 1007, 1007)`의 초록 배경을 투명화해 512×512 `ready/monster/2201.png`와 256×256 `cartoon/monster/2201.webp`를 만든다. 2~4번은 아직 배정하지 않았다.
 
+## 2-3 숲마을 시체 · 3-1 사암 골렘 [2026-09-26]
+
+- `sheets/source_sheet_ch2_st3_undead_2x2.png`는 사용자가 넣은 2048×2048 **2×2 언데드 시트**다(격자선 x · y 1016~1031). 1번 = 쇠사슬 감긴 거구 시체 · 2번 = 투구 · 방패의 해골 병사 · 3번 = 군모 · 룬 검의 해골 장교 · 4번 = 짐승 두개골 지팡이의 늪 주술사(✦ 워터마크). **1번을 `2301` 숲마을 시체**에 적용했다(`scripts/apply_ch2_st3_corpse_portrait.py`). 2~4번은 배정하지 않았다.
+- `sheets/source_sheet_ch3_st1_sandstone_golem.jpg`(검은 눈) · `_elite.jpg`(주황 발광 눈 · 견갑 문양)는 사용자가 넣은 단독 그림 두 장이다. 옛 시트에서 잘라 위 · 오른쪽에 검은 격자선이 남아 있어 잘라 내고 **`3103` 사암 골렘 일반 · 정예**에 적용했다(`scripts/apply_ch3_st1_sandstone_golem_portraits.py` · `monster.csv:face_elite = 1`).
+- 셋 다 초록 배경을 투명화해 512×512 `ready/monster/`와 256×256 `cartoon/monster/`로 내보냈고, `chapters/ch2_st3.png` · `ch3_st1.png`를 새로 찍었다.
+
 ## 2-4 나가 전사·주술사 초상 적용 [2026-09-25]
 
 사용자가 확인한 **원본 4칸 포함 시트** `sheets/source_sheet_ch2_st4_naga_original_expanded_3x3.png`에서 **1번(1행 1열)**을 나가 전사 `2401`, **6번(2행 3열)**을 나가 주술사 `2402`, **2번(1행 2열)**을 나가 마법사 `2403`에 적용했다. `scripts/apply_ch2_st4_naga_portraits.py`가 세 칸의 초록 배경을 투명화해 512×512 `ready/monster/<idx>.png`를 만들고, 게임용 256×256 `cartoon/monster/<idx>.webp`로 내보낸다. 최종 적용 직전 파일은 `_scratch/ch2_st4_naga_before_original_expanded/`에 보관했다. `chapters/ch2_st4.png`의 나가 세 칸도 갱신했다.

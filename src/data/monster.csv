@@ -25,7 +25,7 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 2202,2,2,엔트 저주사,Ent Curser,0,0,Normal,Ent,poison,normal,caster,priest,3,12,11,9,3,4,5,pri_bind,crucifix,weapon|armor|amulet,1,25,0.22,0.22,0.09,0.3,1,,,독 주술로 숨을 막는 무리의 주술사
 2203,2,2,엔트 돌격병,Ent Charger,0,0,Normal,Ent,physical,normal,heavy,knight,12,10,3,15,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,81,0.22,0.22,0.22,0.22,1,,,비대해진 몸으로 밀어붙이는 거대 엔트
 2250,2,2,아비주,Abyzou,0,0,Normal,Lizardman,physical,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_snipe,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,71,0.22,0.22,0.22,0.22,1,,,시기의 어머니 — 깨어나지 않는 알을 품는 자
-2301,2,3,숲마을 시체,Villager Corpse,0,0,Undead,Zombie,physical,normal,line,warrior,10,5,3,14,3,4,5,war_quake,mace,weapon|armor|helmet,2,60,0.23,0.23,0.23,0.23,1,,,뿌리에 삼켜진 마을에서 흙을 헤집고 일어선 시체
+2301,2,3,숲마을 시체,Villager Corpse,1,0,Undead,Zombie,physical,normal,line,warrior,10,5,3,14,3,4,5,war_quake,mace,weapon|armor|helmet,2,60,0.23,0.23,0.23,0.23,1,,,뿌리에 삼켜진 마을에서 흙을 헤집고 일어선 시체
 2302,2,3,뿌리 시체,Root Corpse,0,0,Undead,Zombie,physical,normal,heavy,knight,11,4,3,18,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,2,83,0.23,0.23,0.23,0.23,1,,,썩은 뿌리에 얽힌 거대 시체
 2303,2,3,이끼에 얽힌 해골,Mossbound Skeleton,0,0,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,7,10,4,5,arc_pierce,bow,weapon|armor|gloves,1,47,0.23,0.23,0.23,0.23,1,,,이끼에 덮인 채 활을 겨누는 해골
 2350,2,3,밴시,Banshee,0,0,Undead,Ghost,cold,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_frostnova,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,73,0.09,0.32,0.23,0.23,1,,,부패한 곡성 — 죽음을 예고하는 울음
@@ -36,7 +36,7 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 2900,2,5,레비아탄,Leviathan,1,0,Demon,Gargoyle,physical,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_bash,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,74,0.24,0.24,0.24,0.24,1,,,시기의 심연에서 올라온 괴물
 3101,3,1,사막 도마뱀 약탈자,Desert Lizardman Raider,0,0,Normal,Lizardman,physical,normal,skirmish,archer,3,13,3,4,8,4,5,arc_pierce,bow,weapon|armor|boots,1,40,0.25,0.25,0.25,0.25,1,,,폐허의 보물 사냥꾼
 3102,3,1,사막 도마뱀 주술사,Desert Lizardman Shaman,0,0,Normal,Lizardman,poison,normal,caster,priest,3,12,10,4,3,4,5,pri_haste,crucifix,weapon|armor|amulet,1,27,0.25,0.25,0.1,0.35,1,,,모래 마법 원거리
-3103,3,1,사암 골렘,Sandstone Golem,0,0,Normal,Golem,physical,normal,heavy,knight,12,3,3,17,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,2,86,0.25,0.25,0.25,0.25,1,,,폐허에서 깨어난 거대 석상
+3103,3,1,사암 골렘,Sandstone Golem,1,1,Normal,Golem,physical,normal,heavy,knight,12,3,3,17,3,4,5,kni_charge,sword2h,weapon|armor|helmet|gloves,2,86,0.25,0.25,0.25,0.25,1,,,폐허에서 깨어난 거대 석상
 3150,3,1,다곤,Dagon,0,0,Normal,Golem,physical,stage_boss,boss,warrior,10,2,3,10,3,15,5,war_quake,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,75,0.25,0.25,0.25,0.25,1,,,모래에 묻힌 신 — 반인반어 고대 신
 3201,3,2,스켈레톤 전사,Skeleton Warrior,1,1,Undead,Skeleton,physical,normal,line,warrior,7,10,3,8,3,4,5,war_leap,mace,weapon|armor|helmet,1,58,0.27,0.27,0.27,0.27,1,,,묘지 수호 근접 전사
 3202,3,2,스켈레톤 궁수,Skeleton Archer,1,1,Undead,Skeleton,physical,normal,ranged,archer,3,11,3,6,8,4,5,arc_snipe,bow,weapon|armor|gloves,1,47,0.27,0.27,0.27,0.27,1,,,지하묘지 함정 지킴이
