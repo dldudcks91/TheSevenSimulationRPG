@@ -1429,6 +1429,9 @@ check('xp: 레벨업해도 기본 능력치는 안 바뀐다 — gains 는 비�
  */
 check('csv: mastery_node 46행 — 죄종 T1 공통 3 + 죄종 T2 21(7×3) + 직업 T1 15(5×3) + 직업 T2 7(공통 2 + 갑옷 5). T3(반응형)는 아직 없다', () => {
     if (D.masteryNodes.length !== 46) fail(`${D.masteryNodes.length}행`);
+    for (const n of D.masteryNodes) {
+        if (!n.name_kr?.trim() || !n.name_en?.trim()) fail(`${n.node_id} 표시 이름 ko/en 누락`);
+    }
     const by = {};
     for (const n of D.masteryNodes) { const k = `${n.tree_kind}${n.tier}`; by[k] = (by[k] ?? 0) + 1; }
     if (by.sin1 !== 3 || by.sin2 !== 21 || by.class1 !== 15 || by.class2 !== 7) fail(JSON.stringify(by));
@@ -1456,6 +1459,30 @@ check('csv: mastery_node 46행 — 죄종 T1 공통 3 + 죄종 T2 21(7×3) + 직
     // T3 는 전투 중 사건에 붙는 반응형이라 hero.js 가 아니라 battle.js 의 몫 — 값도 전부 미정이다
     if (D.masteryNodes.some(n => n.tier === 3)) fail('T3 가 CSV 에 들어왔다 — 구현 없이 두면 읽히지 않는 SSOT 가 된다');
     return `죄종 T1 ${by.sin1} · 죄종 T2 ${by.sin2} · 직업 T1 ${by.class1} · 직업 T2 ${by.class2}`;
+});
+check('mastery: 다섯 직업의 T2 세 칸은 기획한 장비군 마스터리 이름으로 풀린다', () => {
+    const expected = {
+        warrior: ['둔기 마스터리', '도끼 마스터리', '중갑 마스터리'],
+        knight: ['창 마스터리', '양손검 마스터리', '중갑 마스터리'],
+        mage: ['오브 마스터리', '스태프 마스터리', '로브 마스터리'],
+        priest: ['십자가 마스터리', '성경 마스터리', '로브 마스터리'],
+        archer: ['활 마스터리', '석궁 마스터리', '경갑 마스터리'],
+    };
+    const shared = D.masteryNodes.filter(n => n.tree_kind === 'class' && n.tier === 2 && n.owner_id === '*');
+    if (shared.map(n => n.node_id).join() !== 'cls_t2_weapon_damage,cls_t2_weapon_atkspeed') fail('공통 무기 노드 순서가 바뀌었다');
+    for (const [cls, names] of Object.entries(expected)) {
+        const armor = D.masteryNodes.filter(n => n.tree_kind === 'class' && n.tier === 2 && n.owner_id === cls);
+        if (armor.length !== 1) fail(`${cls} 갑옷 노드 ${armor.length}개`);
+        const actual = shared.map(n => {
+            const ids = n.requires.slice('weapon:'.length).split('|');
+            const groups = ids.filter(id => D.weaponGroups[id]?.classes.includes(cls));
+            if (!n.requires.startsWith('weapon:') || groups.length !== 1) fail(`${cls} ${n.node_id} 표시 무기군 ${groups.length}개`);
+            return n.name_kr.replace('{group}', D.weaponGroups[groups[0]].ko);
+        });
+        actual.push(armor[0].name_kr);
+        if (actual.join() !== names.join()) fail(`${cls} ${actual.join(' · ')} ≠ ${names.join(' · ')}`);
+    }
+    return Object.entries(expected).map(([cls, names]) => `${cls}: ${names.join(' · ')}`).join(' / ');
 });
 check('mastery: 직업 T2 는 낀 장비가 켠다 — 든 무기군 · 갑옷 칸의 갑옷군 · 랭크가 있어도 안 맞으면 0 (skill_design §3-5 · §3-6 · R138)', () => {
     const r = B.mastery_t1_max_rank;
@@ -1647,6 +1674,10 @@ check('masteryState: 판정을 한 번에 낸다 — 랭크·상한·해금·찍
     if (t1.some(n => !n.unlocked)) fail('T1 이 잠겨 있다');
     if (t2.some(n => n.unlocked)) fail(`레벨 ${h.level} 인데 T2 가 열려 있다`);
     if (ms.nodes.some(n => n.canLearn)) fail('포인트 0 인데 찍을 수 있다');
+    for (const n of ms.nodes) {
+        const row = D.masteryNodes.find(r => r.node_id === n.id);
+        if (n.name?.ko !== row?.name_kr || n.name?.en !== row?.name_en) fail(`${n.id} CSV 표시 이름이 화면 상태에 없다`);
+    }
     if (SYS.game.masteryState(G2, 'h999') !== null) fail('없는 영웅에 null 을 안 낸다');
     return `${h.cls}/${h.sin} → 노드 ${ms.nodes.length} (T1 ${t1.length} · T2 ${t2.length})`;
 });

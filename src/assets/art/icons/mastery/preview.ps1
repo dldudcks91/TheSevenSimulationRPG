@@ -3,8 +3,12 @@ Add-Type -AssemblyName System.Drawing
 $here = $PSScriptRoot
 $repo = [IO.Path]::GetFullPath((Join-Path $here '..\..\..\..\..'))
 $plan = @(Import-Csv (Join-Path $here 'icon_plan.csv') -Encoding UTF8)
+$masteryNames = @{}
+foreach ($node in (Import-Csv (Join-Path $repo 'src\data\mastery_node.csv') -Encoding UTF8)) {
+    $masteryNames[$node.node_id] = $node.name_kr
+}
 $columns = 8
-$cellWidth = 142
+$cellWidth = 208
 $cellHeight = 124
 $rows = [Math]::Ceiling($plan.Count / $columns)
 $out = Join-Path $repo 'output\mastery_icons_all.png'
@@ -26,8 +30,13 @@ try {
         $g.DrawRectangle($border, $x+4, $y+4, $cellWidth-8, $cellHeight-8)
         $artPath = Join-Path $repo $plan[$i].asset_path
         $img = [Drawing.Image]::FromFile($artPath)
-        try { $g.DrawImage($img, $x+33, $y+4, 76, 76) } finally { $img.Dispose() }
-        $g.DrawString($plan[$i].name_ko, $font, $text, $x+8, $y+80)
+        try { $g.DrawImage($img, $x+[Math]::Floor(($cellWidth-76)/2), $y+4, 76, 76) } finally { $img.Dispose() }
+        $name = $masteryNames[$plan[$i].node_id]
+        if (-not $name) { throw "Missing mastery name: $($plan[$i].node_id)" }
+        # Shared weapon nodes have class-specific names; use the generic group label on this sheet.
+        $genericGroup = [char[]]@(0xBB34, 0xAE30, 0xAD70) -join ''
+        $name = $name.Replace('{group}', $genericGroup)
+        $g.DrawString($name, $font, $text, $x+8, $y+80)
         $g.DrawString($plan[$i].node_id, $small, $muted, $x+8, $y+103)
     }
     [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($out)) | Out-Null

@@ -44,7 +44,7 @@ export function applyDocumentLang() {
 }
 
 /**
- * 데이터 문자열 선택 — mock.js 의 {ko, en} 쌍을 현재 언어로 푼다.
+ * 데이터 문자열 선택 — CSV 또는 mock.js 의 {ko, en} 쌍을 현재 언어로 푼다.
  * 평문 문자열이 오면 그대로 돌려준다 (양 언어 공통 표기: 고유명사·숫자 등).
  */
 export const L = v =>
@@ -1021,31 +1021,11 @@ const STRINGS = {
             + '⚠ Advancement points are a separate pool, absent until the advancement layer exists.',
     },
     'sk.points.left': { ko: '남은 포인트', en: 'Points left' },
-    'sk.masteryName.aspd_pct': { ko: '신속', en: 'Swiftness' },
-    'sk.masteryName.atk_pct': { ko: '맹공', en: 'Assault' },
-    'sk.masteryName.buff_dur_pct': { ko: '지속', en: 'Persistence' },
-    'sk.masteryName.cooldown_reduction': { ko: '재빠른 시전', en: 'Quick Casting' },
-    'sk.masteryName.crit_damage': { ko: '급소', en: 'Deadly Strike' },
-    'sk.masteryName.crit_rate': { ko: '예리함', en: 'Precision' },
-    'sk.masteryName.crushing_blow_pct': { ko: '강타', en: 'Crushing Blow' },
-    'sk.masteryName.damage_reduction': { ko: '강인함', en: 'Fortitude' },
-    'sk.masteryName.def_flat': { ko: '철벽', en: 'Iron Guard' },
-    'sk.masteryName.def_ignore': { ko: '관통', en: 'Penetration' },
-    'sk.masteryName.fhr': { ko: '불굴', en: 'Resilience' },
-    'sk.masteryName.gold_find': { ko: '재물운', en: 'Fortune' },
-    'sk.masteryName.hit_bonus': { ko: '집중', en: 'Focus' },
-    'sk.masteryName.hp_pct': { ko: '활력', en: 'Vitality' },
-    'sk.masteryName.hp_recovery_pct': { ko: '회복력', en: 'Recovery' },
-    'sk.masteryName.hp_regen': { ko: '재생', en: 'Regeneration' },
-    'sk.masteryName.item_find': { ko: '탐색', en: 'Scavenging' },
-    'sk.masteryName.life_steal': { ko: '흡수', en: 'Leech' },
-    'sk.masteryName.magic_find': { ko: '행운', en: 'Luck' },
-    'sk.masteryName.reflect_damage': { ko: '반격', en: 'Retaliation' },
-    'sk.masteryName.res_all': { ko: '저항', en: 'Resistance' },
-    'sk.masteryName.res_max_bonus': { ko: '극한 저항', en: 'Unyielding Resistance' },
-    'sk.masteryName.res_reduction': { ko: '약점 간파', en: 'Weakness Exploit' },
     'sk.tip.rank': { ko: 'Rank {n}/{max}', en: 'Rank {n}/{max}' },
     'sk.tip.effect': { ko: '{effect}. (랭크당 {perRank})', en: '{effect}. (Per rank {perRank})' },
+    'sk.gate.weapon': { ko: '착용 무기: {groups}일 때 효과 적용', en: 'Active with weapon: {groups}' },
+    'sk.gate.armor': { ko: '착용 갑옷: {groups}일 때 효과 적용', en: 'Active with armor: {groups}' },
+    'sk.gate.offSuffix': { ko: '지금 장비로는 꺼짐', en: 'Inactive with current gear' },
     /* 마스터리 효과 문장 — 「무엇이 n 증가한다」 (SCREEN_DESIGN §7 · ADR-0332). 축마다 **통째로** 든다 — 조사(이/가)와
        동사(증가/감소)를 렌더러가 고르지 않는다. 이름이 「감소」인 축은 줄어드는 것이 주어다. {v} 는 부호 없는 값.
        사전에 없는 축은 맨 위 틀로 떨어진다 */
@@ -1256,10 +1236,12 @@ const STRINGS = {
     },
     'sk.mastery': { ko: '{cls} 마스터리', en: '{cls} Mastery' },
     'sk.mastery.missing': {
-        ko: '죄종 마스터리와 <b>같은 구조</b>다. <b>전사의 맨 윗줄만 확정</b>(체력 · 모든 저항력 · 데미지)이고 기사·마법사·궁수·사제는 첫 줄부터 비어 있다 — 죄종은 7종이 성격으로 갈리는데 직업 5종이 무엇으로 갈릴지가 먼저다.<br>'
-            + '<b>모든 저항력</b>은 죄종 어디에도 없는 유일한 축이다.',
-        en: 'Same structure as sin mastery. <b>Only the Warrior\'s top row is settled</b> (health · all resistances · damage); Knight, Mage, Archer and Priest are empty from the first row — the 7 sins split by temperament, but what splits 5 classes is still an open question.<br>'
-            + '<b>All resistances</b> is the one axis no sin mastery offers.',
+        ko: '죄종 마스터리와 <b>같은 구조</b>다. <b>맨 윗줄 3칸은 직업마다 확정</b>돼 있다.<br>'
+            + '<b>그 아래 3칸은 낀 장비가 효과를 켠다.</b> 빠른 무기는 데미지 %, 느린 무기는 공격 속도, 자기 직업의 갑옷군은 갑옷 마스터리를 켠다. 랭크는 장비가 안 맞아도 찍어 둘 수 있지만 효과는 꺼진다.<br>'
+            + '맨 아랫줄의 반응형 노드는 아직 기획 중이다.',
+        en: 'The class mastery uses the <b>same structure</b> as sin mastery. <b>Each class has three confirmed nodes in the top row.</b><br>'
+            + '<b>Equipped gear activates the three nodes below.</b> Fast weapons activate Damage %, slow weapons activate Attack Speed, and the class armor type activates Armor Mastery. You can invest ranks without matching gear, but the effect stays inactive.<br>'
+            + 'The reactive bottom row is still being designed.',
     },
     'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
     'sk.advTree.missing': {

@@ -894,6 +894,8 @@ html, body { height: 100%; overflow: hidden; }
     flex: none; margin-left: auto; font-size: var(--fs-xs); font-weight: normal;
     color: var(--text-muted); white-space: nowrap;
 }
+.tip-card.mastery .tip-gate { color: var(--text-muted); }
+.tip-card.mastery .tip-gate-off { display: block; color: var(--color-warning); }
 /* **메인 옵션(밑수)** [개정 2026-09-10 사용자 지시 · ADR-0081] — ~~`.tip-implicit` 한 줄~~ 을 대체한다.
    본문(`--fs-sm`)보다 **한 단 큰 값**이 이름 오른쪽에 선다: 아이템을 고르는 첫 판단이 이 두세 줄이고,
    접사 목록(`--fs-xs`)과 크기로 층이 갈려야 「밑수 ↔ 굴린 옵션」이 눈에 먼저 들어온다.

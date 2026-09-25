@@ -29,4 +29,4 @@ Make the five new faces differ in head silhouette, snout length, jaw, eyes, fins
 Nine equal square bust tiles, flat pure #00FF00 backgrounds and straight 16px pure black dividers. No text or watermark.
 ```
 
-생성본의 원본 네 얼굴은 후처리에서 사용자 원본의 네 칸으로 교체했다. 원본과 신규 칸의 초록 배경을 `#00FF00`으로, 격자는 `#000000` 16px로 맞췄다. 이 시트는 디자인 후보이며 게임에 적용된 2401~2403 초상화는 별도다.
+생성본의 원본 네 얼굴은 후처리에서 사용자 원본의 네 칸으로 교체했다. 원본과 신규 칸의 초록 배경을 `#00FF00`으로, 격자는 `#000000` 16px로 맞췄다. 사용자 선택에 따라 이 시트의 1번은 나가 전사 `2401`, 6번은 나가 주술사 `2402`, 2번은 나가 마법사 `2403`의 게임 초상에 적용했다.

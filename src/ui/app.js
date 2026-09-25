@@ -3127,7 +3127,8 @@ function activeSlots(h, title) {
 }
 
 /**
- * 마스터리 칸의 축 이름·단위는 **`stat` 에서 파생**한다 (SCREEN_DESIGN §7).
+ * 마스터리 노드 이름은 CSV 의 name_kr/name_en(직업 공통 무기 노드의 {group}은 직업별 무기군),
+ * 효과의 축 이름·단위는 **`stat` 에서 파생**한다 (SCREEN_DESIGN §7).
  * 접사와 같은 채널이면 접사 이름이 그대로 맞고(공격 속도 · 최대 HP · 모든 원소 저항),
  *   접사 풀 밖(HP 재생 · 쿨타임 감소 · 최대 저항 증가)이면 `combat_stat.csv` 행이 이름과 단위를 든다.
  * 화면이 노드 이름 사전을 따로 갖지 않는다 — 가지면 CSV 와 갈린다.
@@ -3142,9 +3143,32 @@ const masteryIconPath = (id, { sin, cls } = {}) => {
     return `./assets/art/icons/mastery/nodes/${variant}${id}.png`;
 };
 
+/** T2 장비 조건 — 공통 무기 노드는 현재 직업이 실제로 들 수 있는 무기군만 보여준다. */
+function masteryGateGroups(gate, cls) {
+    if (!gate) return [];
+    const table = gate.slot === 'weapon' ? D.weaponGroups : D.armorGroups?.armor;
+    const usable = gate.slot === 'weapon' && cls
+        ? gate.groups.filter(id => table?.[id]?.classes.includes(cls))
+        : gate.groups;
+    return (usable.length ? usable : gate.groups).map(id => table?.[id] ?? id);
+}
+
+function masteryGateText(gate, cls) {
+    if (!gate) return '';
+    const groups = masteryGateGroups(gate, cls).map(L).join(' · ');
+    return t(`sk.gate.${gate.slot}`, { groups });
+}
+
+function masteryDisplayName(node, cls) {
+    const name = L(node.name);
+    if (!name.includes('{group}')) return name;
+    const groups = masteryGateGroups(node.gate, cls).map(L).join(' · ');
+    return name.replace('{group}', groups);
+}
+
 function masteryTipCard(node, rankLabel = t('sk.tip.rank', { n: node.rank, max: node.maxRank }), owner = {}) {
     const fb = statRow(node.stat);
-    const name = t(`sk.masteryName.${node.stat}`);
+    const name = masteryDisplayName(node, owner.cls);
     // 효과 = 「무엇이 n 증가한다」 — 축마다 통째인 문장 · 값은 부호 없이(동사가 방향을 든다 · SCREEN_DESIGN §7 · ADR-0332)
     const key = `sk.masteryEffect.${node.stat}`;
     const effect = t('sk.tip.effect', {
@@ -3157,11 +3181,14 @@ function masteryTipCard(node, rankLabel = t('sk.tip.rank', { n: node.rank, max: 
     const card = el('div', 'tip-card skill mastery');
     const color = masteryAccent(owner);
     if (color) card.style.borderTopColor = color;
+    const gate = masteryGateText(node.gate, owner.cls);
+    const gateLine = gate ? `<div class="tip-line tip-gate">${gate}${node.on === false
+        ? `<span class="tip-gate-off">${t('sk.gate.offSuffix')}</span>` : ''}</div>` : '';
     card.innerHTML = `<div class="tip-name">
             <span class="tip-title"><span class="tip-sk-ico"><img src="${masteryIconPath(node.id, owner)}" alt=""></span>${name}</span>
             <span class="tip-rank">${rankLabel}</span>
         </div>
-        <div class="tip-line">${effect}</div>`;
+        <div class="tip-line">${effect}</div>${gateLine}`;
     return card;
 }
 
@@ -3172,13 +3199,14 @@ function masteryTipCard(node, rankLabel = t('sk.tip.rank', { n: node.rank, max: 
  */
 function masteryCell(node, owner = {}) {
     if (!node) return `<div class="sk-cell empty"></div>`;
-    const fb = statRow(node.stat);
     const taken = node.rank > 0;
     const cls = `sk-cell icon-only${taken ? ' taken' : ''}${node.rank >= node.maxRank ? ' full' : ''}`
         + `${node.unlocked ? '' : ' locked'}${node.canLearn ? ' can' : ' dim'}${node.gate && !node.on ? ' off' : ''}`;
-    const label = L(M.statLabel(node.stat, fb));
+    const label = masteryDisplayName(node, owner.cls);
+    const gate = masteryGateText(node.gate, owner.cls);
+    const off = node.gate && !node.on ? `, ${t('sk.gate.offSuffix')}` : '';
     return `<div class="${cls}" data-node="${node.id}"
-                 aria-label="${label} ${node.rank}/${node.maxRank}">
+                 aria-label="${label} ${node.rank}/${node.maxRank}${gate ? `, ${gate}` : ''}${off}">
                 <img class="sk-icon-art" src="${masteryIconPath(node.id, owner)}" alt="" aria-hidden="true">
                 ${node.unlocked ? '' : `<span class="sk-icon-lock" aria-hidden="true">${t('sk.needLv', { lv: node.unlockLevel })}</span>`}
                 <span class="sk-icon-rank" aria-hidden="true">${node.rank}/${node.maxRank}</span>
@@ -5036,11 +5064,12 @@ function codexMastery(p) {
 
     const previewNode = row => {
         const unlockLevel = row.unlock_key === '-' ? 1 : D.balance[row.unlock_key];
+        const gate = SYS.hero.masteryById[row.node_id]?.gate ?? null;
         return {
-            id: row.node_id, stat: row.stat, tier: row.tier,
+            id: row.node_id, stat: row.stat, name: { ko: row.name_kr, en: row.name_en }, tier: row.tier,
             value: D.balance[row.value_key], maxRank: D.balance[row.max_rank_key],
             rank: 0, total: 0, unlockLevel, unlocked: unlockLevel <= 1,
-            canLearn: false, gate: null, on: true,
+            canLearn: false, gate, on: true,
         };
     };
     const nodesFor = (tree, owner) => rows

@@ -303,7 +303,7 @@ icons/skills/
 │   ├── sheet_04_knight.png       ← 4차 (3×3 · 기사 7 + `war_quake` 재발주 + 여분 1). ⚠ 그 앞의 기사 1차 시트는 여섯이 반려돼 **폴더에 없다**
 │   ├── sheet_05_archer.png       ← 5차 (3×3 · 궁수 6 + `war_shout` 재발주 + 여분 2)
 │   └── Gemini_Generated_Image_*.png  ← 3장 · 받은 이름 그대로다(아직 `sheet_<번호>` 로 개명 안 됨)
-├── war_bash.png          ← 배쉬       (휘두르는 주먹 + 충격성)
+├── war_bash.png          ← 배시       (대각선의 큰 주먹)
 ├── war_doubleswing.png   ← 더블스윙   (교차한 도끼 두 자루)
 ├── war_quake.png         ← 지각균열   (땅에 박힌 도끼 + 흰 틈 균열)
 ├── war_leap.png          ← 리프어택   (포물선 도약 궤적 + 방사 충격선)

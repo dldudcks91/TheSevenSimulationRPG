@@ -2350,7 +2350,7 @@ export function createGameSystem(deps) {
                 const rank = h.mastery?.[n.id] ?? 0;
                 const unlocked = h.level >= n.unlockLevel;
                 return {
-                    id: n.id, treeKind: n.treeKind, ownerId: n.ownerId, tier: n.tier, stat: n.stat,
+                    id: n.id, treeKind: n.treeKind, ownerId: n.ownerId, tier: n.tier, stat: n.stat, name: n.name,
                     value: n.value, rank, maxRank: n.maxRank, unlockLevel: n.unlockLevel, unlocked,
                     total: Number((n.value * rank).toFixed(3)),
                     canLearn: unlocked && rank < n.maxRank && points > 0,

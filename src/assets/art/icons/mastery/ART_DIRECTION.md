@@ -1,6 +1,6 @@
 # 마스터리 아이콘 제작표
 
-확정 범위는 `src/data/mastery_node.csv`의 46개 노드다. 노드별 제작 지시는 [icon_plan.csv](icon_plan.csv)에 한 행씩 저장한다. `node_id`가 데이터와 그림을 잇는 키이며, `asset_path`는 게임에서 읽는 개별 PNG 경로다. 새 마스터리가 확정되면 데이터와 이 표에 함께 추가한다.
+확정 범위는 `src/data/mastery_node.csv`의 46개 노드다. 노드별 제작 지시는 [icon_plan.csv](icon_plan.csv)에 한 행씩 저장한다. `node_id`가 데이터와 그림을 잇는 키이며, `asset_path`는 게임에서 읽는 개별 PNG 경로다. 표시 이름은 `mastery_node.csv:name_kr/name_en`이 기준이다. 직업 공통 무기 노드의 `{group}`은 직업에 맞는 `weapon_group.csv` 이름으로 바뀌며, 한 칸씩만 그리는 비교표에는 `무기군 마스터리`로 적는다. 새 마스터리가 확정되면 데이터와 이 표에 함께 추가한다.
 
 스킬창과 도감의 마스터리 탭은 모두 노드 ID로 아이콘을 읽는다. 고유 노드는 `nodes/<node_id>.png`, 죄종 공통 노드는 `nodes/variants/<죄종>/<node_id>.png`, 직업 공통 노드는 `nodes/variants/class/<직업>/<node_id>.png`를 쓴다. 특정 PNG 하나를 바꾸면 두 화면에 함께 반영된다.
 

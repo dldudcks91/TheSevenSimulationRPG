@@ -81,6 +81,7 @@ export function createHeroSystem(data) {
             return B[key];
         };
         if (!row.node_id) bad('node_id 가 없다');
+        if (!row.name_kr?.trim() || !row.name_en?.trim()) bad('표시 이름 ko/en 이 비었다');
         if (!TREE_KINDS.includes(row.tree_kind)) bad(`tree_kind '${row.tree_kind}'`);
         if (row.tree_kind === 'sin' && row.owner_id !== ANY && !data.sins.includes(row.owner_id)) bad(`죄종 '${row.owner_id}'`);
         if (row.tree_kind === 'class' && row.owner_id !== ANY && !data.classes.some(c => c.id === row.owner_id)) bad(`직업 '${row.owner_id}'`);
@@ -94,9 +95,21 @@ export function createHeroSystem(data) {
             for (const g of groups) if (!GATE_TABLES[slot]()[g]) bad(`requires ${slot} 갈래 '${g}'`);
             gate = { slot, groups };
         }
+        // 공통 무기 노드의 표시 이름은 직업마다 정확히 한 무기군으로 풀려야 한다.
+        const templated = row.name_kr.includes('{group}') || row.name_en.includes('{group}');
+        if (templated) {
+            if (!row.name_kr.includes('{group}') || !row.name_en.includes('{group}')
+                || row.tree_kind !== 'class' || row.owner_id !== ANY || gate?.slot !== 'weapon')
+                bad('무기군 이름 형식은 양 언어의 직업 공통 무기 노드에만 쓴다');
+            for (const cls of mainClasses) {
+                const usable = gate.groups.filter(id => data.weaponGroups[id].classes.includes(cls));
+                if (usable.length !== 1) bad(`${cls} 직업의 표시 무기군 ${usable.length}개 (1개 필요)`);
+            }
+        }
         return {
             id: row.node_id, treeKind: row.tree_kind, ownerId: row.owner_id, tier: row.tier,
-            stat: row.stat, value: num(row.value_key), maxRank: num(row.max_rank_key),
+            stat: row.stat, name: { ko: row.name_kr, en: row.name_en },
+            value: num(row.value_key), maxRank: num(row.max_rank_key),
             // 해금 없음(`-`)은 레벨 1 — 「T1 은 1레벨부터」(§1-4)를 숫자 하나로 표현한 것
             unlockLevel: row.unlock_key === '-' ? 1 : num(row.unlock_key),
             gate,
