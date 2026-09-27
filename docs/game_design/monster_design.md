@@ -200,7 +200,7 @@ attack_type = physical | fire | cold | lightning | poison
 | `role` | skirmish / line / ranged / caster / heavy / elite_line / boss |
 | `size_type` | 소/중/대 — **전투 미관여 확정 [2026-08-31]**. `role`·`type` 두 축이 이미 몬스터 차별화(방어 성향·vs 접사)를 맡고 있어 사이즈까지 전투 축으로 쓰면 축 중복이다(item_design.md §1 사이즈 특효 삭제와 한 묶음 · **2026-09-17 사이즈 특효 축 삭제로 재검토도 닫혔다** — GAME_DESIGN.md §9). 아트 발주(몬스터 일러스트 캔버스 크기) 전용 — `docs/reference/monster_art_prompt.md` §3 |
 | `cls` | **직업** — `class.csv` 의 본편 5(`warrior`/`knight`/`mage`/`archer`/`priest`). 정하는 것은 **스킬 풀과 무기군**이고 자리는 `role` 이 정한다(겸하지 않는다 · §5-1) [신설 2026-09-11] |
-| `str` `agi` `int` `vit` `luck` `ldr` `cha` | **기본 능력치 7종** — 영웅은 굴리고 **몬스터는 고정**. 대역은 영웅과 같다(`hero_attr_min`~`hero_attr_max`). 전투로 나가는 자리는 영웅과 같다 — **`vit`(HP 성장분) · `agi`(행동 주기) · 직업 메인 스탯(평타 능력치 계수) · 스킬 데미지 슬롯이 적은 능력치(스킬 능력치 계수)** · 그 밖의 스킬 슬롯(타수 · 지속 등) [신설 2026-09-11 · 능력치 계수 2026-09-22 · battle_design §8-1 · §9-2] |
+| `str` `agi` `int` `vit` `luck` `ldr` `cha` | **기본 능력치 7종** — 영웅은 굴리고 **몬스터는 고정**. 대역은 영웅과 같다(`hero_attr_min`~`hero_attr_max`). 전투로 나가는 자리는 영웅과 같다 — **`vit`(HP 성장분) · `agi`(행동 주기) · 낀 무기의 피해 종류 — 물리 = 힘 · 마법 = 지능(평타 능력치 계수 · ~~직업 메인 스탯~~ 2026-09-27) · 스킬 데미지 슬롯이 적은 능력치(스킬 능력치 계수)** · 그 밖의 스킬 슬롯(타수 · 지속 등) [신설 2026-09-11 · 능력치 계수 2026-09-22 · battle_design §8-1 · §9-2] |
 | `innate_skill` | **고유 스킬 1** — `skill.csv` id. 그 `cls` 의 풀에서 고르고 **몬스터마다 고정**이다. 풀은 **영웅과 공유**한다 (skill_design §2). `-` 면 빈 고유 칸 [신설 2026-09-11]. **예외 — 몬스터 전용 스킬**(`owner_kind = monster` · 영웅 풀 밖)을 들 수 있다 [2026-09-18 · skill_design §12-9] |
 | `weapon_group` | **낀 무기의 무기군** — `weapon_group.csv` id. 그 `cls` 의 무기군이어야 한다. **그것이 곧 그 몬스터가 떨어뜨리는 무기**다(§5-2 · item_design §1) [신설 2026-09-11] |
 | `wear_slots` | **입는 부위** — `equip_slot.csv:part` 를 `|` 로 이은 것. `weapon` 이 **항상 든다**(무기가 밑수라 맨손이면 세기가 성립하지 않는다). **드롭은 이 중 하나**이고(item_design §1 2단계) 스폰 때 이 순서로 굴린다. ⚠ **등급과 무관해야 한다**(§5-1) [신설 2026-09-11] |
@@ -284,4 +284,4 @@ attack_type = physical | fire | cold | lightning | poison
 
 ---
 
-*마지막 업데이트: 2026-09-26*
+*마지막 업데이트: 2026-09-27*

@@ -1,8 +1,8 @@
 # 아트 자산 (src/assets/art/)
 
-`backgrounds/` · `faces/` · `icons/` · `buildings/` 는 모두 신규 아트가 직접 들어가는 활성 폴더다.
+`backgrounds/` · `faces/` · `icons/`(+ 원본 `icons_source/`) · `buildings/` 는 모두 신규 아트가 직접 들어가는 활성 폴더다.
 ⚠ **계승 포크 정책이 걸리는 것은 `backgrounds/source/pixel/` 에 남은 계승 원본 셋뿐이다**(101 · 102 · `town`) — 데이터 CSV(`src/data/inherited/`)와 같은 정책으로 **원본 SSOT 는 TheSevenRPG 에 있고 여기 것은 재동기화 가능한 사본**, 읽기 전용(CLAUDE.md 규칙 3). 나머지는 다시 뽑아 덮어써도 된다.
-**세 폴더가 같은 모양이다** [2026-09-16] — 게임이 읽는 그림 = 묶음 폴더/id(`backgrounds/<스타일>/background_stage_<id>.webp` · `faces/<스타일>/monster/<idx>.webp` · `icons/items/item_base/<base_id>.png` …) · 손 안 댄 원본 = `source/` · id 없는 여분 = `unused/`.
+**세 폴더가 같은 모양이다** [2026-09-16] — 게임이 읽는 그림 = 묶음 폴더/id(`backgrounds/<스타일>/background_stage_<id>.webp` · `faces/<스타일>/monster/<idx>.webp` · `icons/items/item_base/<base_id>.webp` …) · 손 안 댄 원본 = `source/` · id 없는 여분 = `unused/`. ⚠ 아이콘만은 원본 · 여분이 **폴더 밖** `icons_source/` 에 있다 (아래 「아이콘 — 원본과 설치본」).
 **스타일 축을 갖는 것은 `backgrounds/`(2026-09-16) · `faces/`(2026-08-30) 둘**이고 `icons/` 는 없다(2026-09-03).
 
 ## backgrounds/
@@ -288,14 +288,44 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ---
 
+## 아이콘 — 원본과 설치본 [2026-09-27 사용자 지시 · 못박음]
+
+**게임이 읽는 아이콘은 전부 256px WebP 다. PNG 를 게임에 넣지 않는다.**
+
+| 폴더 | 무엇 | 게임이 읽나 |
+|---|---|---|
+| `icons_source/` | **모든 원본** — 512 PNG 설치 원본 · 발주 시트(`source/`) · 여분(`unused/`) · 옛 판(`v1/` …) · 작업 파일(`mastery/` 의 스크립트 · 계획표) | **안 읽는다** |
+| `icons/` | **설치본만** — `icons_source/` 와 **같은 상대 경로 · 같은 이름**의 `.webp`(256×256 RGBA) | 읽는다 — 이 폴더엔 WebP 외의 파일이 없다 |
+
+- **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
+- **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · materials/ores). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
+- **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
+- 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
+
 ## icons/mastery/ — 마스터리 아이콘
 
-죄종 공통 윗줄 3종의 설치본은 `aspd_pct_seal.png`(속도 눈금) · `atk_pct_seal.png`(솟는 각면) · `hp_pct_seal.png`(씨앗과 잎)이다. 모두 매끈한 큰 원형 봉인선을 공유하며, 화면은 PNG 알파를 마스크로 써 기존 청동색 토큰으로 표시한다. `src/ui/app.js:MASTERY_T1_ICONS` 가 세 노드에 연결한다. `output/mastery_seal_mockup.ps1` 로 재생성할 수 있다. 이전 아이콘과 `_source.png` 는 비교용으로 남긴다.
+**게임이 읽는 것은 `sin/<node_id>.webp`(죄종 판 24) · `class/<node_id>.webp`(직업 판 22)** [2026-09-27] — 원 고리 + 가운데 기호(정면 · 정지)의 회색 `#d8d8e6` 한 벌(512 투명 · 고리가 파일의 91.4%). 화면이 판 색 마스크로 칠한다(`app.js:masteryIconHtml` · SCREEN_DESIGN §7 · ADR-0378 · ADR-0380 · ADR-0382). 같은 능력치는 두 판에서 같은 기호이고 죄종 T2 만 테마 이름 그림이다. 원본은 SVG(세션 작업본 — 기호를 이미지 생성기로 다시 뽑으면 같은 틀에 합성한다).
+
+아래 옛 봉인 문양(`nodes/` · `nodes/variants/` · `*_seal.png` · `generate.ps1` · `IconRenderer.cs` · `icon_plan.csv` · `ART_DIRECTION.md`)은 **이제 어디서도 안 읽힌다** — 비교용으로 남겨 두었다.
+
+## icons/sins/ — 죄종 아이콘 [신설 2026-09-27]
+
+`<죄종 id>.png` 7장(`wrath` · `envy` · `greed` · `sloth` · `gluttony` · `lust` · `pride`) — 스킬 아이콘과 같은 규격(512 투명 · 회색 `#d8d8e6` 단색 실루엣 · 긴 변 0.88 · 실선 21px · 파낸 선 15px)이다. 화면은 알파를 마스크로 써 판 색으로 칠한다(`mock.js:sinIcon` · SCREEN_DESIGN §7 · ADR-0368). 원본은 같은 폴더 `source.html`(SVG) — 고치면 512 로 렌더해 다시 자른다.
+
+## icons/classes/ — 직업 아이콘 [신설 2026-09-27]
+
+`<class_id>.png` 7장(`warrior` · `knight` · `mage` · `archer` · `priest` · `assassin` · `necromancer`) — 스킬 아이콘과 같은 규격(512 투명 · 회색 `#d8d8e6` 단색 실루엣 · 긴 변 0.88 · 중앙). Gemini 시트 `source/sheet_01_classes.png`(3×3)를 `cut.py` 로 잘랐고, 여분 두 칸(낫 · 두건)은 `unused/`. 화면은 알파를 마스크로 써 판 색으로 칠한다(`mock.js:classIcon` · SCREEN_DESIGN §7 · ADR-0375). ⚠ 두건 칸(`unused/hood.png`) 원본에 Gemini 워터마크가 있었다 — 쓰려면 확인한다
+
+## icons/materials/ — 재료 아이콘 [신설 2026-09-27]
+
+`ores/<ore_id>.png` 7장(`ore_t1` 구리 ~ `ore_t7` 오리하르콘 — 파일명 = `mine_node.csv:ore_id`) — 512 투명 · 어두운 모암 + 광물 강조색 한 점 · 단계마다 다른 실루엣 · 긴 변 0.88 · 중앙(정규화 — 원본은 크기 77~89% · 중심이 제각각이었다). 원본은 `ores/source/v3/`(t1~t5 지금 판) · `v2/`(t6 · t7 지금 판 · t1~t5 는 폐기) · `v1/`(원색 돌덩이 판 — 폐기) · 발주 첨부용 앵커 `source/anchor_items.png`(설치된 아이템 6장) — 셋 다 게임이 안 읽는다. ⚠ `ore_t2`(철)는 어두운 회색 덩이라 어두운 상자 바탕에서 가장 약하게 읽힌다 · 경계밀도 5% 로 합격선 하단 밖. 화면은 자원 탭 단계 상자의 산출물 칸(`mock.js:MATERIAL_ICONS` · SCREEN_DESIGN §8 · ADR-0377). **빈 것** — 약초(`gather_node`) · 목재(`log_node`) 7장씩 · 건설 재료 칸은 아직 광석 실루엣(`RES_ART`)
 
 ## icons/skills/ — 스킬 아이콘 [신설 2026-09-03]
 
 ```
-icons/skills/
+icons_source/skills/
 ├── source/                       ← 원본 시트 — **게임이 안 읽는다.** `sheet_<번호>_<내용>.png` · 번호가 곧 받은 순서다 [개명 2026-09-09 · 폴더 2026-09-14]
 │   ├── sheet_01_color.png        ← 1차 (2×2 · 컬러 카툰) — 이 스타일은 **폐기**됐다. 옛 설치본의 출처로만 남는다
 │   ├── sheet_02_mono_anchor.png  ← 2차 (2×2 · 단색 실루엣) · **지금의 앵커** — 새 시트를 발주할 때 이것을 첨부한다
@@ -375,7 +405,7 @@ Gemini 가 투명 배경 지시를 무시하고 흰 배경으로 굽는다(초�
 ## icons/items/ — 장비 아이콘 [신설 2026-09-03]
 
 ```
-icons/items/
+icons_source/items/
 │   (무기군 그림 8장은 2026-09-17 삭제 — 베이스 그림이 그 자리를 든다 · 사용자 지시)
 ├── empty/
 │   └── weapon · helmet · armor · gloves · boots · amulet · ring .png  ← 파일명 = equip_slot.csv 의 part (부위 7종 전부)
@@ -484,7 +514,7 @@ icons/items/
 ### `potion/` — 물약 그림 [5종 설치 2026-09-23]
 
 ```
-icons/items/potion/
+icons_source/items/potion/
 ├── slot.png   ← **칸 배경 실루엣** — id 가 아니다(칸 넷이 같은 한 장) [2026-09-17]
 └── minor_healing · light_healing · healing · greater_healing · super_healing .png   ← 파일명 = potion.csv 의 potion_id
 ```
@@ -501,7 +531,7 @@ icons/items/potion/
 ### `empty/` — 미장착 슬롯의 부위 실루엣 [신설 2026-09-03]
 
 ```
-icons/items/empty/
+icons_source/items/empty/
 └── weapon · helmet · armor · gloves · boots · amulet · ring .png   ← 파일명 = equip_slot.csv 의 part
                                                              (부위 7종 전부 찼다 — 2026-09-17)
 ```
@@ -542,10 +572,10 @@ icons/items/empty/
 
 | 세트 | 어디에 | 조립하는 곳 |
 |---|---|---|
-| `empty/<part>.png` | **캐릭터 탭 페이퍼돌의 빈 칸** (SCREEN_DESIGN §6) | `ui/mock.js:slotArt` |
+| `empty/<part>.webp` | **캐릭터 탭 페이퍼돌의 빈 칸** (SCREEN_DESIGN §6) | `ui/mock.js:slotArt` |
 | ~~`<group_id>.png` (무기 8)~~ **삭제 2026-09-17** | **착용 칸 · 가방 칸 · 제련소 목록·머리** (SCREEN_DESIGN §2) — `item.group` 이 곧 파일명이라 **제 그림이다**. ⚠ **본편 열 전부 베이스 그림이 서서 실칸에서는 안 쓰인다** — 아래 베이스 7장이 대신 뜬다. 무기군 그림은 **도감 「무기」 줄에만** 남았다 | `ui/mock.js:itemArt` |
-| `weapon_base/<group>/*.png` (본편 열 무기군 베이스 각 7) | 같은 칸들 — **개체마다 제 무기군의 7장 중 하나** [2026-09-10 · 둔기·창·활 2026-09-11 · 스태프·오브·십자가·성경·석궁 2026-09-14]. 개체가 든 `baseId` 의 그림이다(`weapon_base.csv` 가 드롭 때 굴린다 · **이름도 그 베이스**). `baseId` 가 없는 옛 개체만 **`uid`+무기군 해시**로 고른다 — **rng 가 아니라** 그리는 시각의 해시라 골든이 안 움직이고, uid 가 세이브에 남으므로 **한 개체는 평생 같은 무기**다. ⚠ 해시로 고른 옛 개체는 이름·툴팁이 무기군 이름이라 **그림과 이름이 어긋난다** | `ui/mock.js:itemArt` (`WEAPON_BASE_STEMS` — 무기군별 맵) |
-| `item_base/<base_id>.png` (갑옷 10 · 투구 10 · 장갑 7 · 신발 7 · 반지 3 · 목걸이 3) | 같은 칸들 — **개체가 든 `baseId` 의 그림** [2026-09-17]. 드롭 때 굴린 베이스 id 를 개체가 들고(`item.js:build`) 화면은 그대로 읽어, 퀼티드와 더스크 슈라우드가 다른 그림이다. ⚠ **옛 세이브의 방어구는 `baseId` 가 없어** 이모지로 떨어진다 — 새로 먹는 것부터 그림이 붙는다 | `ui/mock.js:itemArt` (`ITEM_BASE_ART_IDS`) |
+| `weapon_base/<group>/*.webp` (본편 열 무기군 베이스 각 7) | 같은 칸들 — **개체마다 제 무기군의 7장 중 하나** [2026-09-10 · 둔기·창·활 2026-09-11 · 스태프·오브·십자가·성경·석궁 2026-09-14]. 개체가 든 `baseId` 의 그림이다(`weapon_base.csv` 가 드롭 때 굴린다 · **이름도 그 베이스**). `baseId` 가 없는 옛 개체만 **`uid`+무기군 해시**로 고른다 — **rng 가 아니라** 그리는 시각의 해시라 골든이 안 움직이고, uid 가 세이브에 남으므로 **한 개체는 평생 같은 무기**다. ⚠ 해시로 고른 옛 개체는 이름·툴팁이 무기군 이름이라 **그림과 이름이 어긋난다** | `ui/mock.js:itemArt` (`WEAPON_BASE_STEMS` — 무기군별 맵) |
+| `item_base/<base_id>.webp` (갑옷 10 · 투구 10 · 장갑 7 · 신발 7 · 반지 3 · 목걸이 3) | 같은 칸들 — **개체가 든 `baseId` 의 그림** [2026-09-17]. 드롭 때 굴린 베이스 id 를 개체가 들고(`item.js:build`) 화면은 그대로 읽어, 퀼티드와 더스크 슈라우드가 다른 그림이다. ⚠ **옛 세이브의 방어구는 `baseId` 가 없어** 이모지로 떨어진다 — 새로 먹는 것부터 그림이 붙는다 | `ui/mock.js:itemArt` (`ITEM_BASE_ART_IDS`) |
 | ~~반지 · 목걸이의 **넷째 이름**(`ring_4` · `amulet_4`)~~ **해소 2026-09-21** | 그림 없는 그 두 베이스를 `item_base.csv` 에서 **뺐다** — 「베이스 풀 = 설치된 그림」(item_design §1 · `dev/test.js` 단정이 양방향으로 지킨다). 이모지로 떨어지는 것은 이제 **옛 세이브의 개체**뿐이다 | — |
 
 ⚠ 화면에서 이 그림들은 **`<img>` 로 들어간다. CSS `background: url()` 이 아니다** — 상대 경로를 커스텀 프로퍼티에
@@ -554,4 +584,4 @@ icons/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-09-23*
+*마지막 업데이트: 2026-09-27*

@@ -48,7 +48,7 @@ TheSevenSimulationRPG/
     ├── game_logic/        # 순수 게임 로직 — 이식 대상                       → game_logic/README.md
     ├── dev/               # test.html — 단정 + 밸런스 캘리브레이션           → dev/README.md
     ├── data/              # CSV SSOT + inherited/ (읽기 전용 25종)       → data/README.md
-    └── assets/art/        # backgrounds/<스타일>/ · faces/<스타일>/ · icons/ (전부 신규 아트·편집 중)  → assets/art/README.md
+    └── assets/art/        # backgrounds/<스타일>/ · faces/<스타일>/ · icons/(게임용 256 WebP 만) · icons_source/(원본 PNG 전부 — `python scripts/build_icons.py` 가 icons/ 를 짓는다) (전부 신규 아트·편집 중)  → assets/art/README.md
 ```
 
 ## 규칙
@@ -75,4 +75,4 @@ TheSevenSimulationRPG/
 - **짧은 동의(「ㄱ」 · 「ok」)의 범위**는 글로벌 CLAUDE.md, **커밋 · 푸시**는 위 규칙 5
 
 ---
-*마지막 업데이트: 2026-09-24*
+*마지막 업데이트: 2026-09-27*

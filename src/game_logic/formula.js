@@ -163,7 +163,7 @@ export function createFormula(balance) {
     /**
      * 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — `(1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot)`.
      *   기준 능력치에서 1 · 1점마다 **복리** — 기준 아래로 내려가도 0 에 닿지 않는다(다른 직업 스킬은 「못 쓴다」가 아니라 「덜 세다」).
-     *   평타는 직업 메인 스탯(`hero.computeCombat:main_attr_mult`) · 스킬은 데미지 슬롯이 적은 능력치(`skill.scaleDef:statMult`)가 같은 함수를 쓴다.
+     *   평타는 든 무기의 피해 종류 — 물리 = 힘 · 마법 = 지능(`hero.computeCombat:main_attr_mult` · 2026-09-27) · 스킬은 데미지 슬롯이 적은 능력치(`skill.scaleDef:statMult`)가 같은 함수를 쓴다.
      *   능력치를 모르면(수가 아니면) 1 이다
      */
     const statCoef = v => (Number.isFinite(v) ? Math.pow(1 + B.attr_dmg_step_pct, v - B.attr_dmg_pivot) : 1);

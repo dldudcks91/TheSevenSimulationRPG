@@ -9,6 +9,8 @@
  *   **건물은 안 짓고 클리어 기록도 안 쓴다** — 세이브는 그대로라 끄면 원래 진행으로 돌아간다. 누르면 앱이 전체를 다시 그린다
  *   (새로고침이 아니다 — 새로고침은 도는 원정을 끊는다). 켠 상태는 이 브라우저에만 남는다(localStorage).
  *
+ * **켤 때 골드를 채운다** [2026-09-27 사용자 지시] — `onEnable` 콜백이 앱의 세이브를 만진다(`app.js` · 값 `balance.csv:admin_gold`). 이것만은 세이브에 남는다.
+ *
  * ⚠ 걷어내려면 이 파일과 `app.js` 의 import · 호출 두 줄, `data.js` 의 import · 주입 두 줄을 지운다.
  * ⚠ 문구는 영어다 — 다국어 대상이 아니다(유저에게 안 보인다 · devcompare.js 와 같다).
  */
@@ -23,13 +25,13 @@ export const adminOn = () => on;
 
 let styled = false;
 /** 상단바가 다시 그려질 때마다 호출된다 — 버튼은 매번 새로 붙는다. `rerender` = 앱의 전체 다시 그림 */
-export function mountAdmin(container, rerender) {
+export function mountAdmin(container, rerender, onEnable = null) {
     if (!styled) { styled = true; injectStyle(); }
     const b = document.createElement('button');
     b.className = `btn sm da-b${on ? ' on' : ''}`;
     b.textContent = 'Admin';
-    b.title = 'Dev — every building counts as max rank · every stage open (save unchanged)';
-    b.onclick = () => { on = !on; write(on); rerender(); };
+    b.title = 'Dev — every building counts as max rank · every stage open · gold topped up when turned on';
+    b.onclick = () => { on = !on; write(on); if (on) onEnable?.(); rerender(); };
     container.appendChild(b);
 }
 

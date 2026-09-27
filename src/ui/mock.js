@@ -321,7 +321,13 @@ export const heroFace = hero => {
 };
 
 /**
- * 스킬 아이콘 그림 — `src/assets/art/icons/skills/<skill_id>.png` (2026-09-03 · SCREEN_DESIGN §2).
+ * 아이콘 설치본의 확장자 — **게임이 읽는 아이콘은 전부 256px WebP** [2026-09-27 사용자 지시] (`src/assets/art/README.md` 「아이콘 — 원본과 설치본」).
+ * 원본 PNG 는 `icons_source/` 에 같은 경로로 있고 `python scripts/build_icons.py` 가 설치본을 짓는다. 아래 경로 조립은 전부 이 상수를 쓴다
+ */
+export const ICON_EXT = '.webp';
+
+/**
+ * 스킬 아이콘 그림 — `src/assets/art/icons/skills/<skill_id>.webp` (2026-09-03 · SCREEN_DESIGN §2).
  *
  * 제 그림이 있는 스킬은 그것, **없는 스킬은 `null`** — 그리는 쪽(`skillImg` 셋)이 **검은 칸**을 깐다 [2026-09-18 사용자 지시 · ADR-0162].
  *   ~~id 안정 해시로 목록에서 하나~~ 는 폐기 — 남의 그림은 틀린 정보다(부위 실루엣 `slotArt` 와 같은 이유). 자산이 늘면 이 목록에 파일명만 더한다.
@@ -355,13 +361,20 @@ export const SKILL_ADV_ICON_FILES = {
         thunder_mage: ['mag_thunderstrike', 'mag_nova'],
     },
 };
+/** 죄종 아이콘 — 스킬 아이콘 규격의 회색 실루엣 7장. 화면은 마스크로 쓰고 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0368) */
+export const SIN_ICON_DIR = './assets/art/icons/sins/';
+export const sinIcon = sin => SINS[sin] ? SIN_ICON_DIR + sin + ICON_EXT : null;
+/** 직업 아이콘 — 스킬 아이콘과 같은 Gemini 단색 실루엣 시트에서 잘랐다(`icons/classes/source/`). 마스터리 직업 판 머리가 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0375) */
+export const CLASS_ICON_DIR = './assets/art/icons/classes/';
+export const CLASS_ICON_FILES = ['warrior', 'knight', 'mage', 'archer', 'priest', 'assassin', 'necromancer'];
+export const classIcon = cls => CLASS_ICON_FILES.includes(cls) ? CLASS_ICON_DIR + cls + ICON_EXT : null;
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);
-    return SKILL_ICON_FILES.includes(key) ? SKILL_ICON_DIR + key + '.png' : null;
+    return SKILL_ICON_FILES.includes(key) ? SKILL_ICON_DIR + key + ICON_EXT : null;
 };
 /**
- * 미장착 착용 칸의 부위 실루엣 — `src/assets/art/icons/items/empty/<part>.png` (2026-09-03 · SCREEN_DESIGN §6).
+ * 미장착 착용 칸의 부위 실루엣 — `src/assets/art/icons/items/empty/<part>.webp` (2026-09-03 · SCREEN_DESIGN §6).
  *
  * 축은 **부위**(`equip_slot.csv:part`)라 반지 두 칸(`ring1`·`ring2`)이 같은 그림을 든다.
  * `skillIcon` 과 달리 **해시 폴백이 없다** — 스킬은 「제 그림은 아니어도 늘 같은 그림」이면 되지만
@@ -371,9 +384,9 @@ export const skillIcon = id => {
  */
 export const SLOT_ART_DIR = './assets/art/icons/items/empty/';
 export const SLOT_ART_PARTS = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'amulet', 'ring'];
-export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}${part}.png` : null;
+export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}${part}${ICON_EXT}` : null;
 /**
- * 물약 그림 — `src/assets/art/icons/items/potion/<potion_id>.png` (2026-09-15 · R104 · SCREEN_DESIGN §4-2 · §8-2 · ADR-0148).
+ * 물약 그림 — `src/assets/art/icons/items/potion/<potion_id>.webp` (2026-09-15 · R104 · SCREEN_DESIGN §4-2 · §8-2 · ADR-0148).
  *
  * 축은 `potion.csv:potion_id` 다. 그림이 있는 id 만 목록에 둔다. 목록에 없는 물약은 `null` 이고 칸은 테두리만 선다.
  * `slotArt` 와 같은 이유로 해시 폴백이 없다 — 틀린 그림이 곧 틀린 정보다(마이너 칸에 슈퍼 병이 뜨면 회복량을 잘못 읽는다).
@@ -382,7 +395,7 @@ export const POTION_ART_DIR = './assets/art/icons/items/potion/';
 export const POTION_ART_IDS = [
     'minor_healing', 'light_healing', 'healing', 'greater_healing', 'super_healing',
 ];
-export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}${id}.png` : null;
+export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}${id}${ICON_EXT}` : null;
 /**
  * 물약 **칸**의 배경 실루엣 — 칸 넷 전부가 같은 한 장을 든다 [2026-09-17 사용자 지시].
  *
@@ -390,9 +403,9 @@ export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}$
  *   이쪽은 **여기에 물약이 들어간다**는 칸의 말이라 티어를 안 가린다. `slotArt` 의 부위 실루엣과 같은 자리다.
  * 그래서 파일명이 id 가 아니다 — `potion.csv` 에 `slot` 이라는 id 는 없고, 앞으로도 겹치지 않는다.
  */
-export const POTION_SLOT_ART = `${POTION_ART_DIR}slot.png`;
+export const POTION_SLOT_ART = `${POTION_ART_DIR}slot${ICON_EXT}`;
 /**
- * 방어구 · 장신구 그림 — `icons/items/item_base/<base_id>.png` (2026-09-03 · **베이스 축으로 개정 2026-09-17** · SCREEN_DESIGN §2).
+ * 방어구 · 장신구 그림 — `icons/items/item_base/<base_id>.webp` (2026-09-03 · **베이스 축으로 개정 2026-09-17** · SCREEN_DESIGN §2).
  *
  * 축은 `item_base.csv:base_id` 다 — 개체가 드롭 때 그 id 를 들고(`item.js:build` · INTERFACE 「item 객체」) 화면은 그대로 읽는다.
  *   그래서 퀼티드와 더스크 슈라우드가 **다른 그림**이다. 옛 「부위당 한 장」 표(`ITEM_ART_BY_SLOT`)와
@@ -447,7 +460,7 @@ export const WEAPON_BASE_STEMS = {
     crucifix: ['scepter', 'divine_scepter', 'caduceus', 'rune_scepter', 'mighty_scepter', 'grand_scepter', 'seraph_rod'],
     bible: ['psalter', 'breviary', 'missal', 'lectern_bible', 'great_bible', 'wicked_bible', 'apocrypha'],
 };
-export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}.png` : null;
+export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}${ICON_EXT}` : null;
 /**
  * `baseId` 가 있으면(2026-09-10 · `weapon_base.csv` 로 실제 굴린 개체 — `item.baseId`) **그 그림을 그대로** 쓴다 —
  * 이름과 그림이 같은 베이스를 가리키게 된다. 없으면(구 세이브 · 베이스 풀이 아직 없는 무기군) **uid 해시**로 옛날처럼 고른다.
@@ -458,16 +471,16 @@ export const itemArt = (slot, group, uid, baseId) => {
         // 도감의 「무기」 묶음은 uid 없이 부르므로 거기서는 무기군 그림 그대로다 (재고를 보는 자리다 · §9-1)
         const stems = WEAPON_BASE_STEMS[group];
         if (stems) {
-            if (baseId && stems.includes(baseId)) return `${WEAPON_BASE_DIR}${group}/${baseId}.png`;
+            if (baseId && stems.includes(baseId)) return `${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}`;
             if (uid)
                 // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
                 //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
-                return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}.png`;
+                return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}${ICON_EXT}`;
         }
         return null;   // 무기군 그림 8장은 2026-09-17 삭제 — 베이스 풀이 없는 무기군은 부위 이모지로 떨어진다
     }
     // 방어구 · 장신구 — 개체가 든 베이스의 그림. 그림이 없는 베이스는 `null` → 부위 이모지 (2026-09-17)
-    return baseId && ITEM_BASE_ART_IDS.includes(baseId) ? `${ITEM_BASE_ART_DIR}${baseId}.png` : null;
+    return baseId && ITEM_BASE_ART_IDS.includes(baseId) ? `${ITEM_BASE_ART_DIR}${baseId}${ICON_EXT}` : null;
 };
 /* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의
    자리표시로 이모지(⚔ ⛨ ✦ 🏹 …)를 초상 **밑에 깔던** 방식이다. 영웅 그림이 배경 투명 PNG 이고
@@ -696,7 +709,7 @@ export const TRADE = {
     special: {
         who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
         stock: [
-            { id: 'ore_t5', name: { ko: '수은', en: 'Quicksilver' }, n: 4, gold: 2400 },
+            { id: 'ore_t5', name: { ko: '루비', en: 'Ruby' }, n: 4, gold: 2400 },
             { id: 'brand', name: { ko: '낙인', en: 'Brand' }, n: 1, gold: 5000 },
         ],
     },
@@ -743,6 +756,18 @@ export const BUILDING_ART = {
 export const BUILDING_IMG_DIR = './assets/art/buildings/';
 export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'storage'];
 export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${id}.webp` : null);
+
+/**
+ * 재료 아이콘 — 자원 단계 상자의 산출물 그림 (SCREEN_DESIGN §8 · ADR-0377) · 파일명 = 재료 id (`mine_node.csv:ore_id` …).
+ * **목록에 있는 재료만 그림을 읽는다** — 없는 재료는 칸째 빠진다. 약초 · 목재 그림이 오면 폴더와 줄을 더한다
+ */
+export const MATERIAL_ICONS = {
+    ore: { dir: './assets/art/icons/materials/ores/', ids: ['ore_t1', 'ore_t2', 'ore_t3', 'ore_t4', 'ore_t5', 'ore_t6', 'ore_t7'] },
+};
+export const materialIcon = id => {
+    const g = Object.values(MATERIAL_ICONS).find(x => x.ids.includes(id));
+    return g ? `${g.dir}${id}${ICON_EXT}` : null;
+};
 
 /**
  * 재화 실루엣 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.

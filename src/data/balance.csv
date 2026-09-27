@@ -135,7 +135,7 @@ commission_slots,1,fixed,0,동시에 받아 둘 수 있는 의뢰 수 **기본�
 commission_gold_chapter_mult,1,proposed,1,의뢰 골드의 챕터 배수 — 카드 골드 = 틀 reward_gold × 등급 gold_mult × 이 값^(보상 챕터−1). 보상 챕터 = 지역 틀이면 그 챕터 · 개체 틀이면 그 몬스터의 챕터 · 나머지는 진행 챕터 ⚠제안 (2026-09-24 · R153) · **당분간 1** — 모든 카드가 1챕터 기준 금액 [2026-09-25 사용자 지시 「당분간은 제일 낮은기준으로 통일」 — 1.6 이었을 때 정예 · 보스 · 희귀도 틀이 진행 챕터 배수를 받으면서 어느 챕터에서든 채워져서 관리자 모드(진행 챕터 7)에서 1-1 보스 셋에 100663 이 나왔다]
 commission_board_cards,4,fixed,0,의뢰 게시판에 서는 카드 수 상한 — commission.csv 의 앞에서 이만큼만 선다(행이 적으면 행 수). 받아 둘 수 있는 수(commission_slots)와 다른 값이다 — 이것은 고를 폭 [신설 2026-09-24 사용자 지시 「의뢰 4개까지만 보이도록」 · SCREEN_DESIGN §14 · ADR-0322]
 gamble_batch_spins,10,proposed,1,도박장 「n판 돌리기」 한 번에 도는 판 수 — 도중에 판돈이 떨어지면 거기서 멈춘다 · 스핀 횟수 자체는 제한이 없다(판돈만 있으면 돈다) ⚠제안 [신설 2026-09-24 사용자 「횟수 무제한 · 돈만 있으면」 · ADR-0334 · R149]
-gamble_stake_steps,1,proposed,0,도박장 판돈 단계 수의 기본값 — 도박장이 열릴 때(선술집 r3) 고를 수 있는 단계 · 선술집 r5 · r7 이 하나씩 더한다(building_effect.csv gambleStakes) · 단계 배수는 slot_stake.csv [신설 2026-09-24 사용자 확정 D2 · R149]
+gamble_stake_steps,3,proposed,0,도박장 판돈 단계 수 — 도박장이 열리면(선술집 r3) 이만큼 다 고를 수 있다 · 건물이 안 늘린다 (2026-09-27 사용자 지시 · 옛 1 + 선술집 r5 · r7)한다(building_effect.csv gambleStakes) · 단계 배수는 slot_stake.csv [신설 2026-09-24 사용자 확정 D2 · R149]
 gamble_stake_gold,100,proposed,1,도박장 1 단계 판돈(골드) — 챕터 1 기준 ⚠제안 [신설 2026-09-24 · R149]
 gamble_stake_chapter_mult,1.5,proposed,1,도박장 판돈의 챕터 배수 — 판돈 = gamble_stake_gold × 이 값^(진행 챕터−1) × 단계 배수 · 재료가 진행 챕터 단계로 나오므로 판돈도 따라 오른다(뒤 챕터에서 싼 판돈으로 비싼 재료를 사지 않게) ⚠제안 [신설 2026-09-24 사용자 확정 D2 · R149]
 gamble_reels,3,fixed,0,도박장 판의 릴 수 — slot_line.csv 의 rows 칸 수와 같아야 한다(로드가 검증한다) [신설 2026-09-24 사용자 확정 D4 「3×3 · 5라인」 · R149]
@@ -145,11 +145,10 @@ gamble_hold_respins,3,proposed,0,홀드 앤 스핀의 리스핀 수 — 새 코�
 gamble_hold_coin_pct,0.06,proposed,1,리스핀마다 빈 칸 하나가 코인을 받을 확률(비율) ⚠제안 — dev 시뮬: 홀드 약 1/74판 · 그랜드 약 1/7500판 [신설 2026-09-24 · R149]
 trade_visit_hours,4,proposed,1,특수상단 방문 주기(시간) — 이만큼마다 상인이 온다 · 시계는 게임을 만든 시각(createdAt)에서 세고 오프라인에도 흐른다. 상단 장비 목록도 이 주기로 같이 갈린다 ⚠임시 [신설 2026-09-21 사용자 지시 「4시간마다 와서 1시간 머무는걸로 일단」 · base_expedition §2-6 · SCREEN_DESIGN §8-3]
 trade_stay_hours,1,proposed,1,특수상단 체류(시간) — 온 뒤 이만큼 머물고 떠난다. 주기(trade_visit_hours)보다 작아야 떠나 있는 시간이 생긴다 ⚠임시 [신설 2026-09-21 사용자 지시]
-shop_equip_per_slot,3,proposed,1,상단 장비 목록 — **부위마다** 이만큼(무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 순 · 같은 부위가 붙어 선다) · 방문 회차마다 새로 굴린다(item.rollGear — 드롭 희귀도 가중치) ⚠임시 [신설 2026-09-21 사용자 지시 「종류별로 한 3개씩만 해서 붙여놔야지 서로」]
-shop_equip_weapon,6,proposed,1,상단 장비 목록 — **무기만 따로** 이만큼(맨 윗줄을 혼자 채운다) · 나머지 부위는 shop_equip_per_slot ⚠임시 [신설 2026-09-21 사용자 지시 「장비를 맨위에 무기 6개로 하고 다른걸 하나씩 밀어보자」]
+shop_equip_per_slot,1,proposed,1,상단 장비 목록 — **부위마다** 이만큼 · 상단 랭크 3 이 +1 (무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 순 · 같은 부위가 붙어 선다) · 방문 회차마다 새로 굴린다(item.rollGear — 드롭 희귀도 가중치) ⚠임시 [신설 2026-09-21 · 3 → 1 2026-09-27 사용자 지시 「처음에 각 종류별로 1개씩」]
+shop_equip_weapon,3,proposed,1,상단 장비 목록 — **무기만 따로** 이만큼(한 묶음으로 맨 윗줄을 혼자 채운다) · 나머지 부위는 shop_equip_per_slot ⚠임시 [신설 2026-09-21 · 6 → 3 2026-09-27 사용자 지시 「무기도 3개만」]
 shop_price_normal,150,proposed,1,상단 장비 가격(골드) — 일반 ⚠임시 · 구매는 아직 없다(화면이 미착수 안내) [신설 2026-09-21]
 shop_price_magic,500,proposed,1,상단 장비 가격(골드) — 매직 ⚠임시 [신설 2026-09-21]
-shop_price_rare,1500,proposed,1,상단 장비 가격(골드) — 레어 ⚠임시 [신설 2026-09-21]
 mastery_t1_max_rank,5,proposed,1,T1·T2 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
 mastery_t1_atkspeed_pct,0.01,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 [combat_stat.csv:action_period] 감소 % · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_wrath_t1_pct 대체)
 mastery_t1_damage_pct,0.02,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 상시 피해 % · atk_physical/atk_magic 의 (1+Σ상시%) 괄호에 덧셈(딜러·힐러 공통 적용) · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_sloth_t1_pct 대체)
@@ -208,3 +207,4 @@ tactic_grade_weight_magic,25,proposed,1,전술 옵션 리롤이 **매직**을 �
 tactic_grade_weight_rare,5,proposed,1,전술 옵션 리롤이 **레어**를 낼 상대 가중치. 파워 예산의 상한선(§5-7 「7칸 전부 레어」)에 닿는 빈도를 이 값이 정한다. ⚠ 기획 미정 — 값 임시 (2026-09-02 등급 축 코드 반영하면서 발행)
 tactic_reroll_base_cost,600,proposed,1,전술 **전체 리롤**의 기본가(지금은 골드) — 잠근 칸이 없을 때의 값. 비용 = 이 값 × tactic_reroll_lock_mult ^ 잠근 칸 수. 칸이 몇 개 열렸든 같은 기본가다(일단) (tactic_card_design §5-6 · 2026-09-22 사용자 「일단 600」). ⚠ 값 임시 — 밸런스 때 올린다 · 재화가 낙인으로 바뀌어도 키 이름은 그대로
 tactic_reroll_lock_mult,2,proposed,1,전술 리롤 비용이 **잠금 1개마다** 곱해지는 배수 — 가파른 곱이라 다 잠그고 하나만 굴리기가 가장 비싸다 (tactic_card_design §5-6 · 2026-09-22 사용자 확정 「잠금마다 ×2 · 나중에 더 올린다」). 1 미만이면 로드가 멈춘다(지킬수록 싸지면 안 된다)
+admin_gold,1000000,fixed,0,**개발 장치** — 관리자 모드(Admin)를 켤 때 골드를 이 값까지 채운다(모자란 만큼 · 진짜 골드 · 세이브에 남는다) · 게임 기능이 아니다 [2026-09-27 사용자 지시 「Admin 누르면 돈 100만 쓸 수 있도록」 · SCREEN_DESIGN §10-3]

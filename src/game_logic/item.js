@@ -71,6 +71,7 @@ import { createFormula } from './formula.js';
  *   classSkills  — **직업별** 액티브 후보 `{classId: [skillId...]}` ← skill.csv (행 순서가 굴림 결과를 정한다).
  *                  무기가 **개체마다** 그 무기군의 직업 풀에서 하나를 굴려 담는다 (skill_design §12-1 규칙 3).
  *                  이 모듈은 스킬 시스템을 모른다 — id 목록만 받는다
+ *   starterSkills — `classSkills` 와 같은 모양 ← skill.csv:starter_pool = 1 — **시작 무기만** 여기서 굴린다 (2026-09-27 · hero_design §1) · 행 순서가 결정론 계약
  *   ~~affixDefs~~ — 2026-09-21 R127 퇴역(`affix.csv` 삭제 — 마지막 사용자였던 목걸이 · 반지가 아래 세 표로 옮겼다)
  *   accessorySinOptions    — [{slot, sin, stat, scale, min, max, perIlvl?}] ← accessory_sin_option.csv — 반지 · 목걸이 죄종 칸 후보 (2026-09-21).
  *                            한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다(반지 시기 다섯 · 목걸이 시기 둘 · 탐욕 셋) · **행 순서가 결정론 계약**
@@ -123,6 +124,7 @@ export function createItemSystem(data) {
 
     /** 드롭·시작 무기에 쓰는 무기군 = 본편(release=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
     const classSkills = data.classSkills ?? {};   // {classId: [skillId...]} — 무기가 담을 후보 (skill_design §12)
+    const starterSkills = data.starterSkills ?? {};   // {classId: [skillId...]} — 시작 무기만의 후보(직업 기본기) · 비면 직업 풀 (2026-09-27)
     const dropGroups = Object.values(WG).filter(g => g.release === 'main');
     /** 그 직업의 **스킬이 붙는** 무기군들 — 09-10 장착 개방 뒤로는 착용 제한이 아니라 시작 무기 선정에만 쓴다 */
     const groupsFor = cls => dropGroups.filter(g => g.classes.includes(cls));
@@ -457,7 +459,10 @@ export function createItemSystem(data) {
             // ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다
             // `opts.avoidSkill` — 그 id 를 풀에서 뺀다(시작 무기 ↔ 고유 스킬 · 2026-09-14 사용자 지시 · R86). 빼도 **소비는 1회 그대로**고,
             //   빼서 풀이 비면(한 개짜리 풀) 원래 풀에서 굴린다 — 지금 본편 직업 풀은 전부 여러 개라 이 분기는 안 탄다
-            const full = classSkills[base.classes?.[0]] ?? [];
+            // `opts.starter` — 시작 무기는 직업 풀 대신 **기본기 풀**(`skill.csv:starter_pool`)에서 굴린다 (2026-09-27 사용자 지시 · hero_design §1).
+            //   소비는 1회 그대로다 · 기본기 풀이 비면(표에 1 이 없는 직업) 직업 풀로 돌아간다
+            const cls0 = base.classes?.[0];
+            const full = (opts.starter && starterSkills[cls0]?.length ? starterSkills[cls0] : classSkills[cls0]) ?? [];
             const kept = opts.avoidSkill ? full.filter(s => s !== opts.avoidSkill) : full;
             const pool = kept.length ? kept : full;
             const sr = rng();
@@ -549,12 +554,13 @@ export function createItemSystem(data) {
 
     /** 시작 무기 — **그 직업의 스킬이 붙는 무기군**에서 ilvl 1 **일반** 1개 (무기가 밑수라 빈손이면 세기가 성립하지 않는다).
      *  ~~매직~~ → 일반 [2026-09-14 사용자 확정 · R86 · hero_design §1] — 시작 장비는 일반 무기 + 일반 갑옷이다.
+     *  스킬은 **직업 기본기 풀**(`skill.csv:starter_pool = 1`)에서 굴린다 [2026-09-27 사용자 지시] — 고유 스킬이 보조기여도 첫 무기가 딜 · 힐을 쥔다.
      *  `avoidSkill` = 그 영웅의 고유 스킬 — 무기가 **같은 스킬을 담지 않는다**(액티브 두 칸에 한 스킬이 서지 않게). 소비 수는 같다.
      *  09-10 장착 개방 뒤에도 시작만은 자기 직업 무기로 준다 — 첫 무기 칸에 제 직업 스킬이 서야 직업이 무엇인지 읽힌다.
      *  갈아 끼우는 것은 자유다(`canEquip` 은 아무것도 거절하지 않는다). */
     function startingWeapon(rng, cls, avoidSkill = null) {
         const gs = groupsFor(cls);
-        return build(rng, 'weapon', 'normal', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups), { avoidSkill });
+        return build(rng, 'weapon', 'normal', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups), { avoidSkill, starter: true });
     }
 
     /** 시작 갑옷 — ilvl 1 **일반** 1개 [신설 2026-09-14 사용자 확정 · R86]. 베이스는 **ilvl 1 의 티어 행**에서 1회 → `build`.

@@ -1,8 +1,8 @@
-slot_no,description_kr
-1,1번 칸 — 새 게임 첫 화면부터 열려 있다(지휘 천막을 지은 채 시작한다 · tactic_card_design §5-1)
-2,2번 칸
-3,3번 칸
-4,4번 칸
-5,5번 칸
-6,6번 칸
-7,7번 칸 — 마지막 칸. 칸 수 = 이 테이블의 행 수다 (코드는 세지 않는다) · 칸을 여는 것은 지휘 천막 랭크다(building_effect.csv tactic_slots · 합산 레벨은 그 랭크의 문턱 · 2026-09-22 R137)
+slot_no,category,description_kr
+1,always,1번 칸 — 새 게임 첫 화면부터 열려 있다(지휘 천막을 지은 채 시작한다 · tactic_card_design §5-1)
+2,party,2번 칸
+3,leadership,3번 칸
+4,gear,4번 칸
+5,formation,5번 칸
+6,leader,6번 칸
+7,bond,7번 칸 — 마지막 칸. 칸 수 = 이 테이블의 행 수다 (코드는 세지 않는다) · 칸을 여는 것은 지휘 천막 랭크다(building_effect.csv tactic_slots · 합산 레벨은 그 랭크의 문턱 · 2026-09-22 R137)

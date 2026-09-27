@@ -44,7 +44,7 @@
  *     배리어는 HP 밖 흡수 풀이고, 흡혈·반사는 **배리어가 먹은 몫을 포함한 dmg** 에 비례한다(직격이 들어간 사실은 같다).
  *   · **스킬 계수** (skill_design §13 · 2026-09-10) — 영웅 유닛은 기본 능력치(`stats`)를 들고, 런타임이 시전 순간 `skill.scaleDef` 로
  *     실효 정의를 만든다. 스킬 타격은 능력치 계수(`statMult`)·추가 피해(`procChance`/`procMult`)를 `strikeOnce` 에 싣는다 —
- *     기본 공격은 안 싣고 직업 메인 스탯의 계수(`mainMult`)를 쓴다 (battle_design §9-2 · 2026-09-18 — ~~능력치 항 `flat`~~ 폐기).
+ *     기본 공격은 안 싣고 평타 계수(`mainMult` — 물리 무기 · 맨손 = 힘 · 마법 무기 = 지능 · 2026-09-27)를 쓴다 (battle_design §9-2 · 2026-09-18 — ~~능력치 항 `flat`~~ 폐기).
  *   · **사건 훅** — `strikeOnce` 가 `hit`/`hitTaken`/`kill` 을, `downed` 가 `down` 을, 런타임이 `cast` 를 발화한다.
  *     유닛의 `reactions` 가 비면 아무 일도 없다 — 발화 **지점**이 곧 rng 순서 계약이다 (INTERFACE §5-2).
  *   · **스킬 id 전용 코드가 없다** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 이 파일이 스킬에 대해 아는 것은 규칙뿐이다:
@@ -228,7 +228,7 @@ export function createBattleSystem(data) {
             // 데미지 % 괄호 안의 **지금** 합 = 상시 + 창 [2026-09-18 · battle_design §9-1] — `refreshDerived` 가 `atkMin` 과 함께 다시 쓴다.
             //   `strike` 가 타격마다 조건부 % 를 이 괄호에 끼울 때 읽는다
             dmgPct: atkPct,
-            // 평타 능력치 계수(직업 메인 스탯 · battle_design §9-2 · 2026-09-18) — 소환 · 모름 = 1. 몬스터는 `makeEnemy` 가 1 로 덮어 온다(보류)
+            // 평타 능력치 계수(든 무기의 피해 종류 — 물리 = 힘 · 마법 = 지능 · battle_design §9-2 · 2026-09-18 · 2026-09-27) — 소환 · 모름 = 1. 몬스터도 같다(2026-09-22)
             mainMult: c.main_attr_mult ?? 1,
             matkMin: matk.min, matkMax: matk.max,    // 회복량의 밑수 — 시전마다 그 사이를 굴린다 (battle_design §9-1 · skill_runtime.castHeal)
             // 회복 밑수도 공격력과 **같은 괄호**를 탄다 — atk_pct 창이 여기도 걸린다 (skill_effects:EFFECTS.atk_pct)
@@ -344,7 +344,7 @@ export function createBattleSystem(data) {
         c.defense *= B.monster_def_scale;
         c.attack_type = m.attack_type;                                      // ③
         // 능력치 계수는 **영웅과 같다** [2026-09-22 사용자 — 보류 해제 · battle_design §9-2] — 평타는 `computeCombat` 이 낸
-        //   `main_attr_mult`(직업 메인 스탯) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
+        //   `main_attr_mult`(낀 무기의 피해 종류 — 물리 = 힘 · 마법 = 지능 · 2026-09-27) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
         /*
          * 스킬 칸 — **등급이 연다** (skill_design §2 · monster_design §5-1): 일반 = 고유 1 · 정예 = + 낀 무기가 든 스킬 ·
          *   보스 = + 셋째 칸. **칸은 출처 자리**라 「있는 것 중 앞에서 n개」가 아니다 — 그래서 열리지 않은 출처를
@@ -937,7 +937,7 @@ export function createBattleSystem(data) {
          * 직격 1회 — 기본 공격과 스킬 타격이 **같은 함수**를 쓴다.
          * 스킬 배율·원소 태그·**스킬 타격 필드**(`sk`)는 `strike` 시그니처를 건드리지 않으려고 **그 타격 동안만** 유닛에 얹고 원복한다.
          * `s`(스킬 id)·`proc`(추가 피해가 터졌다)·`bar`(배리어 잔량)는 해당될 때만 붙는다 — 기본 공격의 이벤트 모양·rng 수열은 그대로다.
-         * @param sk `{statMult, procChance, procMult}` — **스킬 타격만** 넘긴다(skill_effects 공격 대상 표). 기본 공격은 안 넘긴다 — 능력치 계수는 메인 스탯(`mainMult`) · 추가 피해 0
+         * @param sk `{statMult, procChance, procMult}` — **스킬 타격만** 넘긴다(skill_effects 공격 대상 표). 기본 공격은 안 넘긴다 — 능력치 계수는 평타 계수(`mainMult`) · 추가 피해 0
          */
         function strikeOnce(u, target, mult, element, s, sk = null) {
             const mult0 = u.skillMult, type0 = u.atkType, stat0 = u.statMult, chance0 = u.procChance, pmult0 = u.procMult, cond0 = u.condPct;

@@ -32,7 +32,7 @@
 
 죄종 공통 노드 3개와 직업 공통 노드 2개는 원본을 공유하므로, 각 판에 쓰는 색 변형 PNG를 별도로 생성한다. 생성기는 `mastery_node.csv`의 소유자를 읽어 죄종 변형 21개와 직업 변형 10개를 관리한다. 확장 직업 두 종류는 아직 마스터리 노드와 직업색이 없다.
 
-비어 있는 아이콘만 생성: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/assets/art/icons/mastery/generate.ps1`
+비어 있는 아이콘만 생성: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/assets/art/icons_source/mastery/generate.ps1`
 
 한 개 다시 생성: 위 명령 뒤에 `-NodeId sin_t1_atkspeed` 추가. 전체를 강제로 다시 생성하려면 `-Force`를 추가한다. 기본 전체 실행은 이미 존재하는 PNG를 건너뛰므로 개별 교체본이 보존된다. 특정 마스터리만 교체할 때는 표의 해당 행을 수정하고 `asset_path`의 PNG 하나만 갈아 끼우면 된다. 게임 코드는 노드 ID로 파일을 읽으므로 다른 아이콘에 영향이 없다.
 

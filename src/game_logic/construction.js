@@ -12,6 +12,7 @@
 /**
  * 여는 것의 대상 — `kind` 는 켜기(`unlock`) · 더하기(`add`) 둘뿐이다(construction_draft §11-2).
  *   `live: false` = **준비 중** — 그 기능이 아직 없다. 표에 적어 두면 화면에 「준비 중」으로 보이고, 기능이 생기면 여기만 `true` 로 바꾼다.
+ *   `build: true` = 준비 중이어도 **그 줄이 랭크를 지을 수 있게 한다** — 뒤 랭크로 가는 길을 막지 않는다(효과는 기능이 생길 때 먹는다)
  *   더하기는 **기본값에 더한다** — 이름이 `state.limitsOf` 의 키와 같은 대상은 그 상한에 붙는다(단계 셋 `make_level` · `potion_tier` · `tactic_slots` 는
  *   `makeLevels` · `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY` · 장 수 `chapters` 도 기본값이 0 이다).
  *   **첫 단계는 켜기가 심는다**(`seed` = 켜기 대상 id) — 그 켜기가 처음 나오는 랭크에서 이 더하기가 **1 씩 함께 선다**(표에 +1 줄을 따로 적지 않는다 ·
@@ -29,7 +30,7 @@ export const TARGETS = {
     storage: U(true), codex: U(true), hire: U(true), search: U(true), shop: U(true), shop_special: U(true),
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
-    dispatch: U(false), explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
+    explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
     training: U(false), advance: U(false), skill_depth: U(false),
@@ -37,14 +38,17 @@ export const TARGETS = {
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정 + 수색 결과이고 건물이 안 늘린다 [2026-09-24 사용자 지시]
     searchSlots: A(true), shopPerSlot: A(true), shopWeapon: A(true),
-    gambleStakes: A(true),   // 도박장 판돈 단계 — 기본값 `gamble_stake_steps` 위로 더한다 (2026-09-24 · R149)
     make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
     chapters: A(true),   // 들어갈 수 있는 장 — 원정 랭크마다 +1 · 기본값 0 (`state.limitsOf` · `stageUnlocked` · 2026-09-24 · R152)
     commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)
     // 더하기 — 준비 중
-    make_kinds: A(false), resource_tier: A(false), workers: A(false), shop_layers: A(false),
+    // 자원 단계 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼(`state.limitsOf` 의 `resourceTiers`) · 단계 하나에 영웅 한 명이라 일꾼 칸이 따로 없다
+    //   ~~`dispatch` 켜기 · `workers` 더하기~~ (2026-09-27 사용자 지시 · ADR-0372) · 배치가 `game_logic` 에 서면 `true`
+    make_kinds: A(false), resource_tier: A(false), shop_layers: A(false),
     explore_regions: A(false), explore_slots: A(false), gear_sets: A(false), training_slots: A(false),
-    recruit_quality: A(false),   // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
+    // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
+    //   준비 중이어도 짓는다 — 선술집 r5 · r7 의 유일한 줄이라 막으면 r6 · r7 로스터에 못 닿는다 (2026-09-27 사용자 지시)
+    recruit_quality: { ...A(false), build: true },
 };
 
 /** 연구가 받는 대상 — `live: false` = 그 값을 읽는 자리가 아직 없다(construction_draft §5) */
@@ -191,6 +195,7 @@ export function createConstruction(data) {
         row.effects.push({ kind: r.kind, target: r.target, value: r.kind === 'add' ? r.value : null });
     }
     const liveOf = e => targetOf(e.target).live;
+    const buildOf = e => targetOf(e.target).live || !!targetOf(e.target).build;
 
     /* ── 셈 ── */
 
@@ -211,10 +216,10 @@ export function createConstruction(data) {
     /** 세이브의 연구 레벨을 표에 맞춘다 — 없는 연구 · 0 · 정수 아님은 지운다(상한은 지을 때 본다) */
     const fitResearch = levels => Object.fromEntries(Object.entries(levels ?? {}).filter(([id, n]) => researchById.has(id) && Number.isInteger(n) && n > 0));
 
-    /** 그 랭크의 정의 — `{require, cost, effects[+live]}` · 없으면 null */
+    /** 그 랭크의 정의 — `{require, cost, effects[+live], pending}` · `pending` = 지을 수 없는 준비 중(짓게 하는 줄이 하나도 없다) · 없으면 null */
     function rankInfo(id, rank) {
         const row = rankRows.get(`${id}:${rank}`);
-        return row ? { require: row.require, cost: row.cost, effects: row.effects.map(e => ({ ...e, live: liveOf(e) })) } : null;
+        return row ? { require: row.require, cost: row.cost, effects: row.effects.map(e => ({ ...e, live: liveOf(e) })), pending: !row.effects.some(buildOf) } : null;
     }
 
     /** 지어진 랭크까지의 여는 것 — `{features: [id], adds: {target: n}}` · **준비 중도 모은다**(그 기능이 생기면 곧바로 먹게) ·
@@ -243,7 +248,7 @@ export function createConstruction(data) {
 
     /**
      * 다음 랭크 판정 — **판정 순서가 결과 코드의 순서다**: `missing`(없는 건물) → `maxRank`(다음 랭크가 없다) →
-     *   `pending`(여는 것이 전부 준비 중 — 여는 것이 없는 랭크도 같다) → `locked`(조건 미달) → `gold` → `materials`(골드 밖의 재화) · null = 지을 수 있다.
+     *   `pending`(여는 것이 전부 준비 중이고 짓게 하는 줄(`build`)도 없다 — 여는 것이 없는 랭크도 같다) → `locked`(조건 미달) → `gold` → `materials`(골드 밖의 재화) · null = 지을 수 있다.
      * @returns `{rank, require, cost: [{res, need, have}], effects, err}`
      */
     function nextState(id, ranks, ctx, wallet) {
@@ -254,7 +259,7 @@ export function createConstruction(data) {
         if (!info) return { rank: null, require: [], cost: [], effects: [], err: 'maxRank' };
         const require = check(info.require, ctx, ranks);
         const cost = info.cost.map(c => ({ res: c.res, need: c.n, have: wallet[c.res] ?? 0 }));
-        const err = !info.effects.some(e => e.live) ? 'pending'
+        const err = info.pending ? 'pending'
             : require.some(c => !c.ok) ? 'locked'
             : cost.some(c => c.res === 'gold' && c.have < c.need) ? 'gold'
             : cost.some(c => c.have < c.need) ? 'materials'

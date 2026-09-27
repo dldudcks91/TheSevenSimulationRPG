@@ -30,6 +30,9 @@
         <div id="modal" class="modal-layer" hidden></div>
     </div>
 
+    <!-- 세로 창 막 — 터치 기기에서 창이 세로로 길면 창 전체를 덮는다. 한 장 밖이라 배율을 안 탄다 (SCREEN_DESIGN §2 · ADR-0371). 채우는 것은 app.js:renderTurnGate 하나 -->
+    <div id="turn" class="turn-gate" hidden></div>
+
     <script type="module" src="./ui/app.js"></script>
 </body>
 </html>

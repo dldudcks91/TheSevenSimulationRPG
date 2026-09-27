@@ -40,7 +40,7 @@ for f in src/ui/app.js src/ui/battle.js src/ui/tip.js; do echo "--- $f"; \
 
 - [src/dev/README.md](src/dev/README.md) 의 스크린샷 명령에 `--window-size=1600,800` 을 더해 찍는다 (기준 한 장 · 배율 1 — 수치 근거는 [src/ui/README.md](src/ui/README.md))
 - 배율 확인은 `--window-size=1280,700` · `1920,1080` 으로 한 번씩 — 한 장이 통째로 줄고 느는지(가운데 · 비율 그대로 · 배경 그림이 한 장과 함께 줄고 가장자리는 바닥색 — ADR-0107 · 툴팁이 커서 옆)
-- 터치 기기의 세로 창(한 장이 90° 눕는다 — ADR-0109)은 `--window-size=540,1080` 에 `--blink-settings=primaryPointerType=2,availablePointerTypes=2,primaryHoverType=1,availableHoverTypes=1` 을 더해 찍는다 — 이 설정이 없으면 헤드리스는 PC 로 잡혀 안 눕는다 · 폭 390 은 헤드리스 창이 잘려 보인다. 눕힌 좌표는 `?dev=tip&t=doll` 로 본다(커서 자리 창 40,40 옆에 툴팁이 서야 한다)
+- 터치 기기의 세로 창(「가로로 돌려 주세요」 막이 선다 — ADR-0371)은 `--window-size=540,1080` 에 `--blink-settings=primaryPointerType=2,availablePointerTypes=2,primaryHoverType=1,availableHoverTypes=1` 을 더해 찍는다 — 이 설정이 없으면 헤드리스는 PC 로 잡혀 막이 안 선다(그 모습이 곧 「이대로 계속하기」 뒤의 작게 맞춘 한 장이다) · 폭 390 은 헤드리스 창이 잘려 보인다. 같은 설정에 `--window-size=1080,540` 이면 막 없이 한 장이 창을 채워야 한다
 - 같은 화면을 `?lang=ko` 와 `?lang=en` 두 번 찍는다. 영어는 같은 내용이 더 길어 칸이 넘친다
 - 화면에는 개발용 URL 로 도달한다(`?screen=` · `?dev=` · `?tab=`) — 클릭이 필요하면 그 화면에 도달 경로가 없다는 뜻이다. `?tab=` 은 `?dev=` 뒤
 - 출력 파일은 저장소 밖(임시 폴더)에 두고 **보고에 경로를 적는다**

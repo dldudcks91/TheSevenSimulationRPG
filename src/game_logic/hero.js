@@ -552,9 +552,10 @@ export function createHeroSystem(data) {
             fhr: f('fhr'),
             action_period: Number(period.toFixed(3)),
             dmg_bonus_pct: codex.dmg_pct ?? 0,    // 피해량(도감) — 데미지 % 괄호와 합치지 않고 전투가 따로 곱한다 (2026-09-18 · battle_design §9-2)
-            // 평타 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — 직업 메인 스탯(`class.csv:key_attr` · hero_design §2)의 `formula.statCoef`.
-            //   직업이나 그 능력치를 모르면 1. **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · ⚠ 몬스터는 `battle.makeEnemy` 가 1 로 덮는다(보류)
-            main_attr_mult: F.statCoef(A?.[keyAttrOf(hero.cls)]),
+            // 평타 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — **든 무기의 피해 종류**가 고른 능력치의 `formula.statCoef`.
+            //   마법 무기 = 지능 · 물리 무기 · 맨손 = 힘 [2026-09-27 사용자 — ~~직업 메인 스탯(`class.csv:key_attr`)~~ 대체 · 메인 스탯은 굴림 최고치 축만 남는다].
+            //   능력치를 모르면 1. **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 몬스터도 같은 값을 쓴다(2026-09-22)
+            main_attr_mult: F.statCoef(A?.[magic ? 'int' : 'str']),
             gold_find: F.roundPct(f('gold_find') * luckMult),
             item_find: F.roundPct(f('item_find') * luckMult),
             // Σ 상시 피해(비율) — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면

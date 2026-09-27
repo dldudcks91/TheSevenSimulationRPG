@@ -48,15 +48,19 @@ const skillImg = s => {
  * @param anchor true 면 커서가 아니라 **node 옆**에 선다 — 유닛 카드(관전 · 출정 창 띠)만 준다.
  *   크고 오래 읽는 카드라 커서를 따라가면 읽는 동안 흔들린다 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0120)
  * @param holdOnAlt true 면 Alt 를 누르는 동안 node 밖으로 나가도 닫지 않고 툴팁이 포인터를 받는다 — 영웅 장비 · 세부 옵션 카드만 준다 (ADR-0171 · ADR-0176)
+ * @param actions () => {label, run}[] — **손가락으로 연 툴팁**의 버튼 줄에 설 그 칸만의 행동 (마우스의 우클릭 같은 것 · ADR-0374). 마우스 툴팁엔 안 선다
  */
-export function bindTipNode(node, build, { anchor = false, holdOnAlt = false } = {}) {
+export function bindTipNode(node, build, { anchor = false, holdOnAlt = false, actions = null } = {}) {
     node.dataset.tip = '1';
     node._tipBuild = build;
     node._tipAnchor = anchor;
     node._tipHoldOnAlt = holdOnAlt;
-    node.onmouseenter = ev => openTip(node, ev);
-    node.onmousemove = moveTip;
+    node._tipActions = actions;
+    // 손가락이 낸 가짜 마우스 이벤트(탭마다 브라우저가 흉내 낸다)는 안 본다 — 손가락 툴팁은 길게 누르기가 연다 (ADR-0374)
+    node.onmouseenter = ev => { if (!touchInput) openTip(node, ev); };
+    node.onmousemove = ev => { if (!touchInput) moveTip(ev); };
     node.onmouseleave = ev => {
+        if (touchInput) return;
         const up = node.parentElement?.closest('[data-tip]');
         // 카드 속 칸(스킬)에서 카드로 돌아오면 카드의 툴팁이 **카드의 자리 규칙**으로 다시 선다
         if (up?._tipBuild && ev.relatedTarget && up.contains(ev.relatedTarget)) openTip(up, ev);
@@ -73,14 +77,16 @@ let anchorNode = null;
  */
 let anchorSide = 'right';
 
-/** 노드의 툴팁을 연다 — 앵커 · 쪽을 먼저 정하고 그다음에 카드를 짓는다 */
-function openTip(node, ev) {
+/** 노드의 툴팁을 연다 — 앵커 · 쪽을 먼저 정하고 그다음에 카드를 짓는다. `touch` = 손가락이 길게 눌러 열었다 (버튼 줄이 선다 · ADR-0374) */
+function openTip(node, ev, touch = false) {
     anchorNode = node._tipAnchor ? node : null;
     if (anchorNode) {
         const r = stageRect(anchorNode);
         anchorSide = r.w - r.right >= r.left ? 'right' : 'left';
     } else anchorSide = 'right';
+    touchOpen = touch;
     showTip(node._tipBuild(), ev);
+    if (touch) addTouchBar(node, ev);
 }
 
 function showTip(content, ev) {
@@ -95,8 +101,8 @@ function showTip(content, ev) {
 }
 
 /**
- * 창 좌표 → **한 장 좌표** (SCREEN_DESIGN §2 · ADR-0087 · ADR-0109). 화면은 `#stage` 한 장이 `transform` 으로 통째로 줄고 늘고
- * (터치 기기의 세로 창에서는 90° 눕고), 마우스의 `clientX/Y` 를 그대로 `left/top` 에 넣으면 그만큼 어긋난다 —
+ * 창 좌표 → **한 장 좌표** (SCREEN_DESIGN §2 · ADR-0087). 화면은 `#stage` 한 장이 `transform` 으로 통째로 줄고 늘고
+ * (눕히던 ADR-0109 는 ADR-0371 이 대체했다 — 역행렬이라 회전이 없어도 그대로다), 마우스의 `clientX/Y` 를 그대로 `left/top` 에 넣으면 그만큼 어긋난다 —
  * `app.js:fitStage` 가 건 행렬을 **그대로 뒤집어** 되돌린다(회전도 함께 풀린다 · `#stage` 는 왼쪽 위 0,0 · `transform-origin: 0 0`).
  * ⚠ 창 사각형(`getBoundingClientRect`)을 옮길 때는 모서리 둘을 각각 바꿔 작은 쪽 · 큰 쪽을 고른다 — 눕힌 한 장에서는 창의 왼쪽 위가 한 장의 왼쪽 위가 아니다.
  * `#stage` 가 없으면(dev/test.html 이 이 파일을 import 한다) 창 좌표 그대로다. **부를 때만** DOM 을 읽는다.
@@ -140,7 +146,7 @@ function rectZoom(node) {
 export function stageRect(node) {
     const b = node.getBoundingClientRect(), k = rectZoom(node);
     const a = stagePoint({ clientX: b.left * k, clientY: b.top * k }), z = stagePoint({ clientX: b.right * k, clientY: b.bottom * k });
-    return { left: Math.min(a.x, z.x), right: Math.max(a.x, z.x), top: Math.min(a.y, z.y), w: a.w, h: a.h };
+    return { left: Math.min(a.x, z.x), right: Math.max(a.x, z.x), top: Math.min(a.y, z.y), bottom: Math.max(a.y, z.y), w: a.w, h: a.h };
 }
 
 /**
@@ -156,7 +162,9 @@ export function moveTip(ev) {
     // 카드 옆이면 재기 전에 한 장 왼쪽 끝으로 보낸다 — 옛 자리의 남은 폭에 눌려 넓어진 카드(Alt)가 좁게 재이지 않게. 같은 틱이라 안 깜빡인다
     tip.style.right = '';
     if (anchored) tip.style.left = '0px';
-    const tw = tip.offsetWidth, th = tip.offsetHeight;   // 배율 전 크기 = 한 장 단위
+    // 손가락 툴팁의 버튼 줄은 툴팁 **아래 바깥**에 매달린다(`.tip-touch` · ADR-0374) — 아래 넘침 보정에 그 높이도 든다
+    const bar = tip.querySelector(':scope > .tip-touch');
+    const tw = tip.offsetWidth, th = tip.offsetHeight + (bar ? bar.offsetHeight + 6 : 0);   // 배율 전 크기 = 한 장 단위
     let x, y, w, h, folded = false;
     if (anchored) {
         const r = stageRect(anchorNode);
@@ -187,6 +195,9 @@ export function moveTip(ev) {
 
 export function hideTip() {
     anchorNode = null;
+    // 손가락이 켠 [세부]는 그 툴팁 한 장의 것이다 — 닫히면 꺼진다 (ADR-0374). 툴팁이 이미 닫히니 다시 그릴 것이 없다
+    if (altByTouch) { altByTouch = false; altHeld = false; }
+    touchOpen = false;
     hideEquipmentItemTip();
     $tip()?.classList.remove('show', 'interactive');
 }
@@ -306,14 +317,6 @@ function equipmentHtml(worn) {
    Basic Stats 조립은 **지우지 않는다** — 캐릭터 탭 기본 옵션 · 편성 탭 영웅 툴팁(`statsFirstCard` · ADR-0287)이 같은 막대 조립을 부르고, 첫 장을 되살릴 여지로도 남긴다.
    옵션 줄 조립은 여기 한 곳이고 캐릭터 탭(app.js attrPanel · detailPanels)도 이것을 부른다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 */
 
-/**
- * 세부 옵션 머리 — 대표값 몇 줄을 굵게 찍고 그 아래 간격을 둔다 (`sheet_order` 1..N · 구분선은 2026-09-15 사용자 지시로 걷었다).
- * 넷이다 — 물리 데미지 · 마법 데미지 · 행동 주기 · 최대 HP [2026-09-22 사용자 지시 · ADR-0294 — 행동 주기가 마법 데미지와 최대 HP 사이에 서서 셋에서 넷이 됐다].
- * 물리·마법 공격력 중 **하나는 늘 꺼져 있다**(무기 종류가 정한다) — 지우지 않는 것이 결정이다: 회색으로 남은
- * 그 자리가 「내 빌드가 어느 쪽인가」를 말한다 (SCREEN_DESIGN §6, 2026-09-01).
- */
-const DETAIL_LEAD = 4;
-
 /** 상한이 걸리는 저항 4행 — 값만으로는 "몇 %까지 의미가 있나"를 못 읽는다 (battle_design §9-5) */
 const RES_ROWS = ['res_fire', 'res_cold', 'res_lightning', 'res_poison'];
 
@@ -326,52 +329,83 @@ const fmtCombat = (def, v) => v === undefined ? '—'
 
 /** 묶은 줄의 한 조각 이름 — 값이 있는 것만 이름을 붙여 찍는다 (`일반 10% · 데몬 5%`) */
 const typeParts = o => ['normal', 'demon', 'undead'].map(k => [t(`st.fx.${k}`), o?.[k] ?? 0]);
+/** 원소 넷 — 순서는 저항 4행과 같다(불 · 냉기 · 전기 · 독 — `RES_ROWS`) */
+const eleParts = o => RES_ROWS.map(id => id.slice(4)).map(e => [t(`st.fx.${e}`), o?.[e] ?? 0]);
 const one = v => [[null, v ?? 0]];
 
 /**
  * 옵션이 여는 축 — 세부 옵션의 줄이지만 **combat_stat 행이 아니다** [2026-09-22 · SCREEN_DESIGN §6 · ADR-0291].
- * 값은 `computeCombat` 의 `option_fx` 묶음(hero.js)이 들고, 전부 0 이면 묶음째 `null` 이라 모든 값이 0 이다.
- * `after` = 이 줄이 뒤에 서는 combat_stat 행(같은 `after` 끼리는 이 배열 순서) · `parts(x)` = `[[조각 이름, 값]]` —
- * 조각이 **둘 이상이면 묶은 줄**이다(값이 있는 것만 이름을 붙이고 전부 0이면 `—`). 하나면 이름 없이 값만 찍는다.
+ * 값은 대개 `computeCombat` 의 `option_fx` 묶음(hero.js)이 들고, 전부 0 이면 묶음째 `null` 이라 모든 값이 0 이다.
+ * `parts(x, c)` = `[[조각 이름, 값]]` (`x` = `option_fx` · `c` = 시트 전체) — 조각이 **둘 이상이면 묶은 줄**이다(값이 있는 것만 이름을 붙이고 전부 0이면 `—`).
+ * 하나면 이름 없이 값만 찍는다. 어느 칸 · 어느 묶음에 서는지는 `DETAIL_LAYOUT` 이 정한다.
  * 줄 이름은 아이템 옵션 줄(`M.AFFIX_LABELS`) · combat_stat 이름을 먼저 쓴다 — 같은 축이 두 화면에서 다른 이름이면 안 된다.
  * **전투가 안 읽는 축은 없다** — 상태이상 시간 감소 넷은 아이템 툴팁의 「(미적용)」 줄이 든다 (ADR-0213).
- * 원소 피해 · 타격 시 방어 · 저항 감소 · 타격 시 대상 데미지 감소는 **전투가 읽지만 세우지 않는다** [2026-09-22 사용자 지시 · ADR-0294]
+ * 타격 시 방어 · 저항 약화 · 타격 시 대상 데미지 감소는 **전투가 읽지만 세우지 않는다** [2026-09-22 사용자 지시 · ADR-0294 — 원소 피해 · 저항 감소는 2026-09-27 에 다시 섰다]
  */
 const FX_ROWS = [
-    { id: 'fx_vs_type', after: 'def_ignore', fmt: 'pct', name: () => L(D.combatStats.find(s => s.id === 'vs_type_damage')),
+    { id: 'fx_ele', fmt: 'pct', name: () => t('st.fx.ele'), parts: x => eleParts(x?.ele) },
+    // 저항 감소 — 모든 원소 타격(`res_reduction` · combat_stat 행)과 그 원소의 타격에만(`res_reduction_el` · 반지 시기 칸) 을 한 줄로 묶는다 [2026-09-27]
+    { id: 'fx_res_red', fmt: 'pct', name: () => L(D.combatStats.find(s => s.id === 'res_reduction')),
+        parts: (x, c) => [[t('st.fx.all'), c?.res_reduction ?? 0], ...eleParts(c?.res_reduction_el)] },
+    { id: 'fx_vs_type', fmt: 'pct', name: () => L(D.combatStats.find(s => s.id === 'vs_type_damage')),
         parts: x => typeParts(x?.vs) },
-    { id: 'fx_vs_target', after: 'def_ignore', fmt: 'pct', name: () => t('st.fx.vsTarget'),
+    { id: 'fx_vs_target', fmt: 'pct', name: () => t('st.fx.vsTarget'),
         parts: x => [[t('kind.elite'), x?.vsElite ?? 0], [t('exp.form.front'), x?.vsFront ?? 0], [t('exp.form.back'), x?.vsBack ?? 0]] },
-    { id: 'fx_crush', after: 'def_ignore', fmt: 'pct', name: () => L(M.AFFIX_LABELS.crushing_blow_pct), parts: x => one(x?.crush) },
-    { id: 'fx_hit', after: 'def_ignore', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hit_bonus), parts: x => one(x?.hitBonus) },   // 궁수 T1-3 (2026-09-22 R138)
-    { id: 'fx_dr_flat', after: 'res_max_bonus', fmt: 'n', name: () => L(M.AFFIX_LABELS.dr_flat), parts: x => one(x?.drFlat) },
-    { id: 'fx_dr_type', after: 'res_max_bonus', fmt: 'pct', name: () => t('st.fx.drType'), parts: x => typeParts(x?.vsDr) },
-    { id: 'fx_dr_target', after: 'res_max_bonus', fmt: 'pct', name: () => t('st.fx.drTarget'),
+    { id: 'fx_crush', fmt: 'pct', name: () => L(M.AFFIX_LABELS.crushing_blow_pct), parts: x => one(x?.crush) },
+    { id: 'fx_hit', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hit_bonus), parts: x => one(x?.hitBonus) },   // 궁수 T1-3 (2026-09-22 R138)
+    { id: 'fx_dr_flat', fmt: 'n', name: () => L(M.AFFIX_LABELS.dr_flat), parts: x => one(x?.drFlat) },
+    { id: 'fx_dr_type', fmt: 'pct', name: () => t('st.fx.drType'), parts: x => typeParts(x?.vsDr) },
+    { id: 'fx_dr_target', fmt: 'pct', name: () => t('st.fx.drTarget'),
         parts: x => [[t('kind.elite'), x?.vsEliteDr ?? 0], [t('exp.form.front'), x?.vsFrontDr ?? 0], [t('exp.form.back'), x?.vsBackDr ?? 0]] },
-    { id: 'fx_counter', after: 'res_max_bonus', fmt: 'pct', name: () => L(M.AFFIX_LABELS.counter_chance), parts: x => one(x?.counter) },
-    { id: 'fx_recv', after: 'hp_regen', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hp_recovery_pct), parts: x => one(x?.recv) },
-    { id: 'fx_buff_dur', after: 'hp_regen', fmt: 'pct', name: () => L(M.AFFIX_LABELS.buff_dur_pct), parts: x => one(x?.buffDur) },
-    { id: 'fx_magic_find', after: 'item_find', fmt: 'pct', name: () => L(M.AFFIX_LABELS.magic_find), parts: x => one(x?.magicFind) },
-    { id: 'fx_xp', after: 'gold_find', fmt: 'pct', name: () => L(M.AFFIX_LABELS.xp_gain_pct), parts: x => one(x?.xpGain) },
+    { id: 'fx_counter', fmt: 'pct', name: () => L(M.AFFIX_LABELS.counter_chance), parts: x => one(x?.counter) },
+    { id: 'fx_recv', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hp_recovery_pct), parts: x => one(x?.recv) },
+    { id: 'fx_buff_dur', fmt: 'pct', name: () => L(M.AFFIX_LABELS.buff_dur_pct), parts: x => one(x?.buffDur) },
+    { id: 'fx_magic_find', fmt: 'pct', name: () => L(M.AFFIX_LABELS.magic_find), parts: x => one(x?.magicFind) },
+    { id: 'fx_xp', fmt: 'pct', name: () => L(M.AFFIX_LABELS.xp_gain_pct), parts: x => one(x?.xpGain) },
 ];
-const fxParts = (s, c) => s.parts(c?.option_fx ?? null);
-/** 옵션 줄에 값이 하나라도 있나 — 유닛 툴팁은 값이 있는 옵션 줄만 세운다 (ADR-0291) */
-const fxOn = (s, c) => fxParts(s, c).some(([, v]) => v);
-
-/** 전투는 읽는데(`impl=1`) 세부 옵션에 안 세우는 행 [2026-09-22 사용자 지시 · ADR-0294] — `impl` 은 「computeCombat 이 내는가」라 그 값을 바꾸지 않고 여기서 거른다 */
-const SHEET_HIDDEN = ['res_reduction'];
+const fxParts = (s, c) => s.parts(c?.option_fx ?? null, c);
 
 /**
- * 세부 옵션의 행 — combat_stat `impl=1` 을 **sheet_order 순**으로 세우고(impl=0 은 computeCombat 이 내지 않는 축이라 안 그린다 · `SHEET_HIDDEN` 은 뺀다),
- * 그 사이사이에 옵션이 여는 축(`FX_ROWS`)을 제 `after` 행 뒤에 끼운다 (combat_stat.csv · SCREEN_DESIGN §6)
+ * 세부 옵션의 자리 — `[세부 옵션 1, 세부 옵션 2]` · 칸마다 **묶음**의 배열 · 묶음마다 줄 id [2026-09-27 사용자 지시 · SCREEN_DESIGN §6 · ADR-0381].
+ * 1 = **늘 먹는 것**(모든 타격 · 모든 피격) — 대표 · 공격 · 방어 · 저항 · 회복 / 2 = **조건부**(대상 · 상황 · 발동이 붙는 것) — 원소 · 대상 · 확률 · 맞을 때 · 효과 증폭 · 파밍.
+ * 묶음은 **순서로만** 모은다 — 제목도 간격도 없다(간격은 2026-09-27 사용자 지시로 걷었다 · ADR-0389). 2 의 「대상」 묶음은 주는 것 ↔ 막는 것을 한 쌍씩 붙인다.
+ * combat_stat 행끼리의 순서는 `sheet_order` 와 같아야 한다(dev/test.js 가 대조한다) · `fx_` 는 `FX_ROWS`.
+ * 캐릭터 탭의 두 패널과 유닛 툴팁의 두 열이 **같은 자리에서** 끊는다 (ADR-0115)
  */
-export const sheetStats = () => D.combatStats.filter(s => s.impl && !SHEET_HIDDEN.includes(s.id)).sort((a, b) => a.sheetOrder - b.sheetOrder)
-    .flatMap(s => [s, ...FX_ROWS.filter(r => r.after === s.id).map(r => ({ ...r, fx: true }))]);
+const DETAIL_LAYOUT = [
+    [
+        ['atk_physical', 'atk_magic', 'action_period', 'hp_max'],
+        ['crit_rate', 'crit_damage', 'def_ignore', 'cooldown_reduction'],
+        ['defense', 'damage_reduction', 'fx_dr_flat'],
+        ['res_fire', 'res_cold', 'res_lightning', 'res_poison'],
+        ['life_steal', 'hp_regen'],
+    ],
+    [
+        ['fx_ele', 'fx_res_red'],
+        ['fx_vs_type', 'fx_dr_type', 'fx_vs_target', 'fx_dr_target'],
+        ['fx_crush', 'fx_hit', 'res_max_bonus'],
+        ['fhr', 'fx_counter', 'reflect_damage'],
+        ['fx_recv', 'fx_buff_dur'],
+        ['item_find', 'fx_magic_find', 'gold_find', 'fx_xp'],
+    ],
+];
+/**
+ * 대표값 = 세부 옵션 1 의 첫 묶음 — 값을 굵게 찍는다 (구분선은 2026-09-15 · 아래 간격은 2026-09-27 사용자 지시로 걷었다 · ADR-0389) · 몬스터 첫 장에도 선다.
+ * 물리·마법 공격력 중 **하나는 늘 꺼져 있다**(무기 종류가 정한다) — 지우지 않는 것이 결정이다: 회색으로 남은
+ * 그 자리가 「내 빌드가 어느 쪽인가」를 말한다 (SCREEN_DESIGN §6, 2026-09-01).
+ */
+const LEAD_IDS = DETAIL_LAYOUT[0][0];
+const rowOf = id => id.startsWith('fx_') ? { ...FX_ROWS.find(r => r.id === id), fx: true }
+    : { ...D.combatStats.find(s => s.id === id), lead: LEAD_IDS.includes(id) };
+/** 세부 옵션의 줄 id 전부(자리 순) — 단정이 combat_stat · FX_ROWS 와 대조한다 */
+export const detailLayoutIds = () => DETAIL_LAYOUT.map(page => page.flat());
+/** 대표값 줄 (몬스터 첫 장 · SCREEN_DESIGN §2) */
+export const leadStats = () => LEAD_IDS.map(rowOf);
 
 /**
  * 세부 옵션 행 — 캐릭터 탭 세부 옵션 1·2 와 유닛 툴팁 오른쪽 열이 같이 쓴다.
  * 방어 소재값 → 감쇠율 · 저항 → 현재 상한은 `formula` 가 낸다 — 같은 곡선을 두 번 구현하지 않는다 (battle_design §9-8).
- * @param rows `sheetStats()` 전체 또는 그 조각
+ * @param rows `sheetPages()` 의 한 쪽 또는 `leadStats()`
  * @param c    computeCombat 모양 — 영웅 `game.heroCombat` · 몬스터 `round` 이벤트의 `sheet`. 없으면 전 행이 흐린 `—`
  */
 export function sheetRowsHtml(rows, c) {
@@ -386,7 +420,7 @@ export function sheetRowsHtml(rows, c) {
         // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
         //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
         const shown = s.id === 'defense' && has ? Math.round(v) : v;
-        return `<div class="cs-row${has ? '' : ' off'}${s.sheetOrder <= DETAIL_LEAD ? ' lead' : ''}">
+        return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}">
             <span class="cs-n">${L(s)}</span>
             <span class="cs-v">${fmtCombat(s, shown)}${extra}</span></div>`;
     }).join('');
@@ -422,26 +456,22 @@ export function attrRowsHtml(stats, color) {
     }).join('');
 }
 
+/** 대표값을 뺀 쪽 — 몬스터 카드는 첫 장이 대표값을 이미 든다 */
+const dropLead = rows => rows.filter(s => !s.lead);
+/** 줄에 값이 있나 — 묶은 줄은 조각 하나라도 · 전투 능력치는 0 이 아닌 값 */
+const rowOn = (s, c) => s.fx ? fxParts(s, c).some(([, v]) => v) : !!c?.[s.id];
 /**
- * 세부 옵션을 두 쪽으로 가르는 자리 — '방어 무시' 앞에서 끊는다 (SCREEN_DESIGN §6 · 2026-09-22 ADR-0294).
- * 1 = 사용자가 고른 14줄(대표 4 · 치명타 둘 · 쿨타임 감소 · 물리 방어 · 피해 감소 · 타격 회복 · 저항 4 — 모든 영웅이 늘 값을 갖는 축) /
- * 2 = 방어 무시부터 끝(18줄 — 조건부 · 장비가 열어야 생기는 축). 최대 저항 증가는 2 로 갔다 — 저항 행이 상한을 제 값 뒤에 찍어 상한이 두 번 나오지 않는다.
- * 캐릭터 탭의 두 패널과 유닛 툴팁의 두 열이 **같은 자리에서** 끊는다 (ADR-0115)
+ * 세부 옵션 두 쪽 — `[1쪽 행, 2쪽 행]` (캐릭터 탭 세부 옵션 1 · 2 · 유닛 툴팁 오른쪽 두 열) · 자리는 `DETAIL_LAYOUT`.
+ * @param sparse 유닛 툴팁 [ADR-0381] — 세부 옵션 1 은 옵션이 여는 축만 **값이 있는 줄만**(ADR-0291) · 세부 옵션 2 는 **전 줄이 값이 있을 때만** 선다
+ *               (조건부 칸이라 0 은 「그 조건이 없다」다 — 옵션이 없는 영웅 · 몬스터는 2 가 빈다). 끊는 자리는 그대로다
  */
-const DETAIL_SPLIT_AT = 'def_ignore';
-/**
- * 세부 옵션 두 쪽 — `[1쪽 행, 2쪽 행]` (캐릭터 탭 세부 옵션 1 · 2 · 유닛 툴팁 오른쪽 두 열)
- * @param sparse 유닛 툴팁 — 옵션이 여는 축은 **값이 있는 줄만** 남긴다(몬스터는 그 축이 없어 다 빠진다 · ADR-0291). 끊는 자리는 그대로다
- */
-export const sheetPages = (c = null, sparse = false) => {
-    const rows = sheetStats();
-    const cut = rows.findIndex(s => s.id === DETAIL_SPLIT_AT);
-    const keep = s => !sparse || !s.fx || fxOn(s, c);
-    return [rows.slice(0, cut).filter(keep), rows.slice(cut).filter(keep)];
-};
+export const sheetPages = (c = null, sparse = false) => DETAIL_LAYOUT.map((page, pi) => {
+    const keep = s => !sparse || ((pi === 0 && !s.fx) || rowOn(s, c));
+    return page.flat().map(rowOf).filter(keep);
+});
 
 /**
- * 유닛 카드 뼈대 — 영웅은 착용 장비, 몬스터는 기본 옵션 막대 + 대표값(`DETAIL_LEAD`)을 첫 장으로 쓴다.
+ * 유닛 카드 뼈대 — 영웅은 착용 장비, 몬스터는 기본 옵션 막대 + 대표값(`leadStats`)을 첫 장으로 쓴다.
  * **이름 · 소속 줄은 없다** — 툴팁은 올린 카드 바로 옆에 붙어 뜨고(ADR-0120) 그 카드의 이름 줄 · 위칸이 이미 든다 (ADR-0134).
  * 무엇의 툴팁인지는 윗변 색과 붙은 자리가 말한다.
  * **Alt 를 누르는 동안만** 세부 옵션 두 열이 서고 각주가 걷힌다 — 두 열은 캐릭터 탭 세부 옵션 1 · 2 와 같은 자리에서 끊고 열 이름도 같되,
@@ -461,12 +491,11 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, item
     c.dataset.alt = '1';
     c._rebuild = rebuild;
     c.style.setProperty('--unit-line', color);   // 윗변 3px — 관전 카드 · 띠 카드의 윗변과 같은 색이라 어느 카드의 툴팁인지 잇는다
-    const isLead = s => s.sheetOrder <= DETAIL_LEAD;
     const detailPages = sheetPages(sheet, true);
     const pages = altHeld ? detailPages.map((rows, i) => `
             <div class="tip-unit-col d${i + 1}">
                 <div class="tip-col-h">${t('ch.detail.hn', { n: i + 1 })}</div>
-                <div class="tip-sheet">${sheetRowsHtml(equipment ? rows : rows.filter(s => !isLead(s)), sheet)}</div>
+                <div class="tip-sheet">${sheetRowsHtml(equipment ? rows : dropLead(rows), sheet)}</div>
             </div>`).join('') : '';
     // 영웅은 장비 첫 장만 쓴다. 아래 Basic Stats 몸통은 몬스터와 향후 영웅 복원용으로 그대로 살려 둔다 (ADR-0171).
     // 기본 상태의 숨은 세부 옵션 1은 **높이 기준**일 뿐 화면·접근성 트리에는 보이지 않는다. 언어와 값이 바뀌어도 실제 세부 옵션 1과 정확히 같은 높이다 (ADR-0176).
@@ -482,7 +511,7 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, item
                 </div>`}` : `
                 <div class="tip-col-h">${t('ch.attr.h')}</div>
                 <div class="attr-list">${attrRowsHtml(stats, color)}</div>
-                <div class="tip-sheet tip-lead">${sheetRowsHtml(sheetStats().filter(isLead), sheet)}</div>`;
+                <div class="tip-sheet tip-lead">${sheetRowsHtml(leadStats(), sheet)}</div>`;
     c.innerHTML = `
         <div class="tip-unit">
             <div class="tip-unit-col base">
@@ -853,7 +882,8 @@ let lastMove = null;
 
 /** 전역 툴팁은 드래그를 막지 않게 기본 `pointer-events:none`; Alt 로 붙드는 영웅 툴팁만 장비 hover를 위해 연다 (ADR-0176). */
 function syncTipInteraction() {
-    $tip()?.classList.toggle('interactive', !!(altHeld && anchorNode?._tipHoldOnAlt));
+    // 손가락으로 연 툴팁은 늘 받는다 — 버튼 줄을 눌러야 한다 (ADR-0374)
+    $tip()?.classList.toggle('interactive', !!(touchOpen || (altHeld && anchorNode?._tipHoldOnAlt)));
 }
 
 function setAlt(on) {
@@ -869,8 +899,10 @@ function setAlt(on) {
     syncTipInteraction();
     // 카드 옆에 붙은 툴팁(ADR-0120)은 마우스 위치 없이도 다시 놓인다 — 넓어진 카드가 넘치면 왼쪽 · 위로 옮긴다
     if (cards.length && (anchorNode || lastMove)) moveTip(lastMove);
+    tip.querySelector('.tip-touch-alt')?.classList.toggle('on', on);
     // Alt 로 영웅 밖에서도 붙들었던 툴팁은 키를 떼는 순간 커서가 영웅 위인지 다시 본다. 밖이면 그때 닫는다 (ADR-0171).
-    if (!on && anchorNode?._tipHoldOnAlt && !anchorNode.matches(':hover')) hideTip();
+    //   손가락 툴팁은 커서가 없다 — 바깥 탭이 닫는다
+    if (!on && !touchOpen && anchorNode?._tipHoldOnAlt && !anchorNode.matches(':hover')) hideTip();
 }
 
 // Alt 만 기본 동작을 막는다 — 막지 않으면 떼는 순간 브라우저 메뉴로 포커스가 넘어간다.
@@ -879,6 +911,90 @@ window.addEventListener('keydown', ev => { if (ev.key === 'Alt') { ev.preventDef
 window.addEventListener('keyup', ev => { if (ev.key === 'Alt') { ev.preventDefault(); setAlt(false); } });
 window.addEventListener('blur', () => setAlt(false));
 window.addEventListener('mousemove', ev => { lastMove = ev; }, { passive: true });
+
+/* ───────── 손가락 — 길게 누르기 · 바깥 탭 · 버튼 줄 (SCREEN_DESIGN §2 「터치 조작」 · ADR-0374) ─────────
+   **입력마다** 가른다 — 마지막 포인터가 손가락이면 손가락 방식이다. 기기(`pointer: coarse`)로 가르면 터치 노트북의 마우스가 죽는다.
+   마우스 쪽 길(hover · Alt 키 · 우클릭)은 하나도 안 바뀐다 */
+/** 마지막 포인터 입력이 손가락인가 — 손가락이 낸 가짜 마우스 이벤트를 `bindTipNode` 가 걸러 낸다 */
+let touchInput = false;
+/** 지금 뜬 툴팁을 손가락이 열었나 — 버튼 줄 · 포인터 받기 · 바깥 탭 닫기가 이걸 본다 */
+let touchOpen = false;
+/** [세부]로 켠 Alt 인가 — 툴팁이 닫히면 끈다(`hideTip`) */
+let altByTouch = false;
+/** 이만큼 누르고 있으면 길게 누르기다 (ms) */
+const LONG_PRESS_MS = 450;
+/** 이만큼 움직이면 누르기가 아니다 — 진형 드래그 임계(`app.js:bindCardDrag` 4px)와 같다 · 창 좌표 그대로(손이 움직인 거리다) */
+const PRESS_SLOP = 4;
+/** 누르는 중 — `{ x, y, fired, timer }` */
+let press = null;
+/** 길게 누른 손을 뗀 직후의 click 을 삼킨다 — 누르던 칸의 클릭(배우기 · 고르기)이 툴팁에 딸려 일어나지 않게 */
+let swallowUntil = 0;
+
+export const isTouchInput = () => touchInput;
+
+function cancelPress() {
+    if (press) clearTimeout(press.timer);
+    press = null;
+}
+
+window.addEventListener('pointerdown', ev => {
+    touchInput = ev.pointerType === 'touch';
+    if (!touchInput) return;
+    cancelPress();
+    const inTip = ev.target.closest?.('#tooltip, #equipment-item-tooltip');
+    // 툴팁 밖을 탭하면 닫힌다 — 그 탭은 삼키지 않는다(제 할 일도 한다)
+    if (touchOpen && !inTip) hideTip();
+    if (inTip) return;
+    const node = ev.target.closest?.('[data-tip]');
+    if (!node?._tipBuild) return;
+    const at = { clientX: ev.clientX, clientY: ev.clientY };
+    const p = { x: ev.clientX, y: ev.clientY, fired: false };
+    p.timer = setTimeout(() => {
+        p.fired = true;
+        if (press !== p || !node.isConnected) return;
+        lastMove = at;
+        openTip(node, at, true);
+    }, LONG_PRESS_MS);
+    press = p;
+}, true);
+window.addEventListener('pointermove', ev => {
+    touchInput = ev.pointerType === 'touch';
+    if (press && !press.fired && Math.abs(ev.clientX - press.x) + Math.abs(ev.clientY - press.y) >= PRESS_SLOP) cancelPress();
+}, true);
+// 브라우저가 스크롤로 가져가면 `pointercancel` 이 온다 — 누르기가 아니다
+for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, () => {
+    if (press?.fired) swallowUntil = performance.now() + 400;
+    cancelPress();
+}, true);
+window.addEventListener('click', ev => {
+    if (performance.now() >= swallowUntil) return;
+    swallowUntil = 0;
+    ev.preventDefault();
+    ev.stopPropagation();
+}, true);
+
+/** 손가락 툴팁 아래의 버튼 줄 — [세부](= Alt) · 칸이 준 행동(= 우클릭 같은 것). 설 버튼이 없으면 줄도 안 선다 */
+function addTouchBar(node, ev) {
+    const tip = $tip();
+    if (!tip) return;
+    const acts = node._tipActions?.() ?? [];
+    const hasAlt = !!tip.querySelector('[data-alt]');
+    if (!hasAlt && !acts.length) return;
+    const bar = el('div', 'tip-touch');
+    if (hasAlt) {
+        const b = el('button', `btn tip-touch-alt${altHeld ? ' on' : ''}`, t('tip.touch.alt'));
+        b.onclick = () => { const on = !altHeld; altByTouch = on; setAlt(on); };
+        bar.appendChild(b);
+    }
+    for (const a of acts) {
+        const b = el('button', 'btn', a.label);
+        b.onclick = () => { hideTip(); a.run(); };
+        bar.appendChild(b);
+    }
+    tip.appendChild(bar);
+    // 줄이 붙어 키가 컸다 — 아래 넘침 보정을 다시 한다
+    moveTip(ev);
+}
 
 /**
  * 툴팁이 내는 **문장**을 그대로 낸다 — 스킬 창의 액티브 줄이 hover 와 같은 말을 하게 하는 창이다(아이템 툴팁의 스킬 칸은 2026-09-15 부터 몸통째 `skillTipSection` 을 부른다 · ADR-0139)

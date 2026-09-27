@@ -183,6 +183,8 @@ export function createSkillSystem(data) {
         innatePool: row.innate_pool === 1,
         // 목걸이 발동 스킬 후보인가 [2026-09-21 · R127 · item_design §1 「목걸이 고정 옵션」] — 확률로 나가도 이득만 되는 것(피해 · 회복 · 함성류)만 1
         amuletPool: row.amulet_pool === 1,
+        // 시작 무기 스킬 후보인가 [2026-09-27 사용자 지시 · hero_design §1] — 새 게임 · 선술집 영웅의 첫 무기가 직업 기본기를 담게
+        starterPool: row.starter_pool === 1,
         note: row.note,
         // 하는 일 줄 — `skill_effect.csv` 를 아래에서 붙인다(`seq` 순)
         effects: [],
@@ -286,6 +288,9 @@ export function createSkillSystem(data) {
         if (row.amulet_pool !== 0 && row.amulet_pool !== 1) bad(`amulet_pool ${row.amulet_pool} — 0 또는 1`);
         if (row.amulet_pool === 1 && (d.ownerKind === 'monster' || d.cast !== 'turn' || d.effects.some(e => e.effect === 'summon' || e.effect === 'call')))
             bad(`amulet_pool 1 인데 ${d.ownerKind} · ${d.cast} · ${d.effects.map(e => e.effect).join('+')} — 발동 스킬 후보가 될 수 없다`);
+        // 시작 무기 스킬 후보 [2026-09-27 사용자 지시 · hero_design §1] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
+        if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
+        if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 시작 무기 후보는 직업 스킬만`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
     }

@@ -231,9 +231,10 @@ export function createGameSystem(deps) {
             tavernCandidates: B.tavern_candidates, searchSlots: B.tavern_search_slots,
             shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon,
             makeLevels: 0, potionTier: 0, tacticSlots: 0,
-            gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 — 선술집 뒤 랭크가 더한다 (R149)
+            gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 — 건물이 안 늘린다 · 도박장이 열리면 다 열린다 (2026-09-27 사용자 지시 · 옛 선술집 r5 · r7 더하기)
             chapters: 0,   // 들어갈 수 있는 장 — 건물만 연다(원정 랭크마다 +1 · r1 은 처음부터 지어져 1장) (2026-09-24 · R152)
             commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 더하기 대상이지만 지금 표엔 늘리는 랭크가 없다 (R153 · R162)
+            resourceTiers: 0,   // 열린 자원 단계 수 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼 · 건물만 연다(자원 랭크마다 +1 · 2026-09-27 · 자원 탭 자리 칸 · ADR-0372)
         };
         for (const [target, n] of Object.entries(CN.opened(openRanks(state)).adds)) {
             const key = ADD_KEY[target] ?? target;
@@ -244,7 +245,7 @@ export function createGameSystem(deps) {
         return out;
     }
     /** 더하기 대상 이름 → 상한 키 — 표의 단계 셋만 이름이 다르다(나머지는 같은 이름에 붙는다) */
-    const ADD_KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots', commission_slots: 'commissionSlots' };
+    const ADD_KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots', commission_slots: 'commissionSlots', resource_tier: 'resourceTiers' };
 
     function newGame(seed, candidates, now) {
         const state = {
@@ -252,6 +253,7 @@ export function createGameSystem(deps) {
             playMs: 0,       // 누적 플레이 시간 — 화면이 보이는 동안만 더한다(`addPlayTime` · ADR-0356)
             resources: { gold: B.start_gold, dust: B.start_dust, stigma: B.start_stigma },
             materials: {},   // 제작 재료(광석 · 목재) — 파견이 채운다(미구현 · R96)
+            dispatch: [],    // 자원 파견 자리 [{post, tier, uid, since}] — 한 자리에 한 명 (2026-09-27 · ADR-0373)
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
             heroes: [], items: {}, bag: [], stash: [],
             progress: { cleared: [], levelUp: {}, peakTotal: 0 },   // levelUp = 스테이지별 **올린 양** — 안 올린 스테이지는 안 적는다 (2026-09-14 · R87) · peakTotal = 합산 레벨 도달 최고치(v37)
@@ -259,6 +261,7 @@ export function createGameSystem(deps) {
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [] },
+            shop: null,      // 상단에서 산 칸 — 산 적이 없으면 null (2026-09-27 · INTERFACE §4)
             search: null,
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
             commissions: { cards: [] },
@@ -350,6 +353,8 @@ export function createGameSystem(deps) {
         //   충전 시계 `gamble` 은 같은 날 나갔다(횟수 제한 없음 · ADR-0334) — 읽는 곳이 없어 필드만 지운다
         delete s.gamble;
         s.counters.gamble = s.counters.gamble ?? 0;
+        // 상단에서 산 칸 — 없으면 「산 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-09-27)
+        s.shop = s.shop && Array.isArray(s.shop.sold) ? s.shop : null;
         // 의뢰 — 없으면 「게시판을 굴린 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R153).
         //   모르는 어휘의 카드는 지운다 — 표가 바뀌어 셀 수 없는 카드가 자리를 막지 않게(빈 자리는 다음 채우기가 굴린다)
         s.counters.commission = s.counters.commission ?? 0;
@@ -375,6 +380,15 @@ export function createGameSystem(deps) {
         s.progress.peakTotal = Number.isInteger(s.progress.peakTotal) && s.progress.peakTotal > 0 ? s.progress.peakTotal : 0;
         // 플레이 시간 — 없으면 0 부터 센다. 흘러간 몫은 기록이 없어 소급할 판단이 없다 → 버전을 안 올린다 (INTERFACE §4 · ADR-0356)
         s.playMs = Number.isFinite(s.playMs) && s.playMs > 0 ? s.playMs : 0;
+        // 자원 파견 자리 — 없으면 「아무도 안 보냈다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-09-27).
+        //   **건물 랭크를 맞춘 뒤에** 거른다(열린 자리 = `limitsOf.resourceTiers`) — 없는 영웅 · 안 열린 자리 · 겹친 자리 · 겹친 영웅은 앞의 것이 갖는다
+        const seen = new Set(), taken = new Set();
+        s.dispatch = (Array.isArray(s.dispatch) ? s.dispatch : []).filter(d => {
+            const key = `${d?.post}:${d?.tier}`;
+            if (!d || !s.heroes.some(h => h.uid === d.uid) || !seatOpen(s, d.post, d.tier) || seen.has(key) || taken.has(d.uid)) return false;
+            seen.add(key); taken.add(d.uid);
+            return true;
+        });
         return s;
     }
 
@@ -1315,7 +1329,62 @@ export function createGameSystem(deps) {
      */
     function heroBusy(state, uid) {
         if (state.search?.heroUid === uid) return 'search';
-        return runParty(state).includes(uid) ? 'run' : null;
+        if (runParty(state).includes(uid)) return 'run';
+        return dispatchOf(state, uid) ? 'dispatch' : null;
+    }
+
+    /* ── 자원 파견 — 단계마다 한 자리 [신설 2026-09-27 · SCREEN_DESIGN §8 · ADR-0372 · ADR-0373 · INTERFACE §2-7] ──
+       자리 = 파견처(채광 · 채집 · 벌목) × 그 표의 단계. 한 자리에 한 명 · 한 영웅은 한 자리. **산출 정산은 아직 없다** — 앉히고 빼는 것까지다 */
+    const DISPATCH_TABLES = { mine: deps.mineNodes ?? [], gather: deps.gatherNodes ?? [], log: deps.logNodes ?? [] };
+    /** 그 자리가 열렸나 — 표에 그 단계가 있고 앞에서부터 `limitsOf.resourceTiers` 개 안에 든다(자원 랭크가 연다) */
+    const seatOpen = (state, post, tier) => !!DISPATCH_TABLES[post]?.some(n => n.tier === tier) && Number.isInteger(tier) && tier >= 1 && tier <= limitsOf(state).resourceTiers;
+    const dispatchList = state => state.dispatch ?? [];
+    function dispatchOf(state, uid) {
+        const d = dispatchList(state).find(x => x.uid === uid);
+        return d ? { post: d.post, tier: d.tier, since: d.since } : null;
+    }
+    const dispatchSeat = (state, post, tier) => dispatchList(state).find(x => x.post === post && x.tier === tier)?.uid ?? null;
+    /** 담당 능력치 — `hero_attribute.csv:dispatch` 에 그 파견처가 든 행(`|` 로 여럿) */
+    const dispatchAttr = post => (deps.heroAttributes ?? []).find(a => (a.dispatch ?? '').split('|').includes(post))?.id ?? null;
+    /** 앉히면 나올 거절 — `dispatchAssign` 과 선택 창(`dispatchPick`)이 이 하나를 읽는다 */
+    const seatErr = (state, post, tier, uid) => {
+        if (!seatOpen(state, post, tier)) return 'unbuilt';
+        if (!heroById(state, uid)) return 'missing';
+        const busy = heroBusy(state, uid);
+        if (busy === 'run') return 'running';      // 원정 파티를 바꾸는 것은 편성 탭의 일이다 (사용자 확정 2026-09-27)
+        if (busy === 'search') return 'searching';
+        return null;
+    };
+    /** 자리에서 빼기 — 원정 · 수색으로 떠날 때 · 해고할 때 부른다. 벌이 없다(base_expedition §3-2) */
+    const unseat = (state, uid) => { if (state.dispatch) state.dispatch = state.dispatch.filter(x => x.uid !== uid); };
+
+    function dispatchPick(state, post, tier) {
+        const attr = dispatchAttr(post);
+        const seated = dispatchSeat(state, post, tier);
+        const heroes = state.heroes.filter(h => h.uid !== seated).map((h, i) => {
+            const err = seatErr(state, post, tier, h.uid);
+            return { uid: h.uid, busy: heroBusy(state, h.uid), at: dispatchOf(state, h.uid), value: attr ? (h.stats?.[attr] ?? 0) : 0, ok: err === null, err, i };
+        });
+        heroes.sort((a, b) => (b.ok - a.ok) || ((a.busy === null ? 0 : 1) - (b.busy === null ? 0 : 1)) || (b.value - a.value) || (a.i - b.i));
+        return { post, tier, open: seatOpen(state, post, tier), attr, seated, heroes: heroes.map(({ i, ...h }) => h) };
+    }
+
+    function dispatchAssign(state, post, tier, uid, now) {
+        const err = seatErr(state, post, tier, uid);
+        if (err) return { ok: false, err };
+        const at = dispatchOf(state, uid);
+        if (at && at.post === post && at.tier === tier) return { ok: true };
+        const prev = dispatchSeat(state, post, tier);
+        state.dispatch = dispatchList(state).filter(x => x.uid !== uid && !(x.post === post && x.tier === tier));
+        state.dispatch.push({ post, tier, uid, since: now });
+        return { ok: true, moved: at ? { post: at.post, tier: at.tier } : null, replaced: prev };
+    }
+
+    function dispatchRecall(state, post, tier) {
+        const uid = dispatchSeat(state, post, tier);
+        if (!uid) return { ok: false, err: 'empty' };
+        unseat(state, uid);
+        return { ok: true, uid };
     }
 
     /**
@@ -1339,6 +1408,8 @@ export function createGameSystem(deps) {
         //   편성 `no`(기본 고른 편성 · 반복은 도는 원정의 `run.preset`)의 파티다 — 반복은 **그 편성의 지금 모습**으로 나간다 (R122)
         const preset = presetAt(state, no);
         const going = preset.party.slice();
+        // 자원 자리에 앉아 있던 인원은 **저절로 빠진다** — 회수에 벌이 없다(base_expedition §3-2 · 2026-09-27 · ADR-0373). rng 0
+        for (const uid of going) unseat(state, uid);
         // 몬스터 레벨 = **이 스테이지의 지금 레벨**(올린 양 포함 · 2026-09-14 R87). rng 를 안 쓰므로 수열이 안 밀린다
         const level = stageLevelState(state, stageId).level;
         // 물약 — **이 런을 열 때** 그 편성의 칸 구성을 재고에서 앞 칸부터 채운다(모자란 칸은 빈다). 재고는 마실 때 준다(`advanceRun`).
@@ -1643,7 +1714,9 @@ export function createGameSystem(deps) {
        장비 목록은 **방문 회차마다** 새로 굴린다(상인이 오는 순간 같이 갈린다). 시드 + 회차라 저장하지 않는다 — 선술집 명단과 같은 문법.
        ⚠ 구매는 아직 없다(화면이 미착수 안내를 낸다) — 그래서 「산 칸」도 세이브에 없다 */
     const HOUR_MS = 60 * 60 * 1000;
-    const SHOP_PRICE = { normal: B.shop_price_normal, magic: B.shop_price_magic, rare: B.shop_price_rare };
+    const SHOP_PRICE = { normal: B.shop_price_normal, magic: B.shop_price_magic };
+    /** 상단 희귀도 가중치 — 드롭 가중치에서 **레어만 뺀다**(0) · 굴림 수는 그대로 1회 [2026-09-27 사용자 지시 「레어템은 상점에서 못사도록」 · base_expedition_design §2-6] */
+    const SHOP_RARITY = { normal: B.rarity_w_normal, magic: B.rarity_w_magic, rare: 0 };
 
     /** 방문 시계 — rng 를 안 쓰고 아무것도 안 바꾼다. 앱 시계가 틱마다 불러 방문이 바뀌는 순간을 잰다(목록 굴림과 갈라 둔 이유) */
     function shopVisit(state, now) {
@@ -1665,6 +1738,19 @@ export function createGameSystem(deps) {
         return ch;
     }
 
+    /**
+     * 보유 재료 — 채광 · 채집 · 벌목 한 줄씩 (SCREEN_DESIGN §6 재료 탭 · ADR-0379). **표의 단계 전부**가 늘 선다(0 개여도 ·
+     * 진행 챕터와 무관 — ADR-0387). 가루 · 낙인은 `resources` 라 안 든다 · rng 0
+     */
+    function materialsState(state) {
+        const mats = state.materials ?? {};
+        const rows = Object.entries(DISPATCH_TABLES).map(([post, nodes]) => ({
+            post,
+            items: nodes.map(n => ({ id: n.yieldId, tier: n.tier, have: mats[n.yieldId] ?? 0 })),
+        }));
+        return { rows };
+    }
+
     /** 상단이 파는 부위 — 착용 위치 순서에서 부위만 한 번씩(반지는 위치가 둘이어도 한 종류다) */
     const shopParts = [...new Set(deps.equipSlots.map(s => s.part))];
     /** 부위마다 파는 개수 — **무기만 따로**(맨 윗줄을 혼자 채운다 · 사용자 지시 2026-09-21) · 나머지는 한 값 */
@@ -1679,18 +1765,43 @@ export function createGameSystem(deps) {
      */
     function shopState(state, now) {
         const visit = shopVisit(state, now);
-        const chapter = frontierChapter(state);
+        // 이번 회차에 산 것이 있으면 **그때의 챕터**로 굴린다 — 산 뒤에 챕터가 열려도 목록이 안 바뀐다 (INTERFACE §2-7 · 2026-09-27)
+        const bought = state.shop?.cycle === visit.cycle ? state.shop : null;
+        const chapter = bought?.chapter ?? frontierChapter(state);
         const band = chapterBands.find(b => b.band === chapter) ?? chapterBands[0];
         const rng = makeRng(deriveSeed(state.seed ^ 0x5409, visit.cycle));
         const equip = [];
         for (const part of shopParts)
             for (let i = 0; i < shopCountOf(state, part); i++) {
                 const ilvl = band.lo + Math.floor(rng() * (band.hi - band.lo + 1));
-                const [item] = I.rollGear(rng, { slots: [part], ilvl });
-                equip.push({ item, gold: SHOP_PRICE[item.rarity] });
+                const [item] = I.rollGear(rng, { slots: [part], ilvl, rarityWeights: SHOP_RARITY });
+                equip.push({ item, gold: SHOP_PRICE[item.rarity], sold: !!bought?.sold.includes(equip.length) });
             }
         // `open` = 상단 · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 목록 · 시계는 닫혀 있어도 같은 값이다(시드 + 회차)
         return { ...visit, chapter, lo: band.lo, hi: band.hi, equip, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
+    }
+
+    /**
+     * 상단 장비 한 칸을 산다 [2026-09-27 · base_expedition_design §2-6 — 기본상단이 장비를 판다(09-27 개정)].
+     * 거절 순서 `unbuilt` → `stale` → `missing` → `sold` → `gold` → `bagFull` — 거절이면 아무것도 안 바뀐다.
+     * 목록을 `shopState` 로 다시 굴려 **같은 물건**을 얻는다 — 새 스트림을 안 연다 (INTERFACE §2-7)
+     */
+    function shopBuy(state, i, cycle, now) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const S = shopState(state, now);
+        if (cycle !== S.cycle) return { ok: false, err: 'stale' };
+        const g = S.equip[i];
+        if (!g) return { ok: false, err: 'missing' };
+        if (g.sold) return { ok: false, err: 'sold' };
+        if (state.resources.gold < g.gold) return { ok: false, err: 'gold' };
+        if (state.bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        // 회차의 첫 구매가 레벨대를 박는다 — 그 뒤로 이 회차의 목록은 이 챕터로 굴린다
+        if (state.shop?.cycle !== S.cycle) state.shop = { cycle: S.cycle, chapter: S.chapter, sold: [] };
+        state.shop.sold.push(i);
+        state.resources.gold -= g.gold;
+        const it = addItem(state, g.item);
+        state.bag.push(it.uid);
+        return { ok: true, uid: it.uid, gold: g.gold };
     }
 
     /* ── 도박장 — 슬롯 (base_expedition_design 「도박장」 · INTERFACE §2-7 · §2-15 · 2026-09-24 사용자 「일단 만들어」 · R149) ──
@@ -1938,6 +2049,7 @@ export function createGameSystem(deps) {
         if (err) return { ok: false, err };
         // 합산 레벨이 내려가기 **전에** 최고치를 적는다 — 건설 문턱 `total:` 은 도달한 최고치를 본다(construction_draft 원칙 3 · R137)
         state.progress.peakTotal = peakTotal(state);
+        unseat(state, uid);   // 자원 자리도 비운다 (2026-09-27)
         for (const p of state.presets) {
             if (!p.party.includes(uid)) continue;
             p.party = p.party.filter(u => u !== uid);
@@ -2087,6 +2199,7 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         if (heroBusy(state, uid) === 'run') return { ok: false, err: 'party' };   // 지금 싸우는 영웅만 막는다 — 편성은 계획이다(출발이 `searching` 으로 막는다 · R92 · 2026-09-21)
+        unseat(state, uid);   // 자원 자리에서 빠진다 — 벌이 없다 (2026-09-27 · ADR-0373)
         state.counters.search += 1;
         state.search = { heroUid: uid, startedAt: now, no: state.counters.search, sin: h.sin, cha: h.stats?.cha ?? 0, answer: null };
         return { ok: true, endsAt: now + searchMs() };
@@ -2179,7 +2292,7 @@ export function createGameSystem(deps) {
                 // 더하기에 `total` — 그 건물을 이 랭크까지 지었을 때의 합(「챕터 n 해금」 같은 누적 문장 · R152)
                 const upto = CN.opened({ [b.id]: i + 1 }).adds;
                 const effects = info.effects.map(e => (e.kind === 'add' ? { ...e, total: upto[e.target] ?? 0 } : e));
-                return { rank: i + 1, built: i < rank, effects, require: CN.check(info.require, ctx, state.buildings) };
+                return { rank: i + 1, built: i < rank, pending: info.pending, effects, require: CN.check(info.require, ctx, state.buildings) };
             });
             return { id: b.id, name: b.name, tab: b.tab, rank, maxRank: b.maxRank, next: CN.nextState(b.id, state.buildings, ctx, wallet), ranks };
         });
@@ -2232,7 +2345,7 @@ export function createGameSystem(deps) {
     const partyMembers = (state, party = partyOf(state), no = state.preset, front = null) => {
         const byUid = formationOf(presetAt(state, no) ?? curPreset(state)).byUid;
         return party.map(uid => heroById(state, uid)).filter(Boolean)
-            .map(h => ({ sin: h.sin, cls: h.cls, items: heroItems(state, h), front: front ? front.includes(h.uid) : (byUid[h.uid] ?? 0) === 0 }));
+            .map(h => ({ sin: h.sin, cls: h.cls, ldr: h.stats?.ldr ?? 0, items: heroItems(state, h), front: front ? front.includes(h.uid) : (byUid[h.uid] ?? 0) === 0 }));
     };
     /** 같이 나간 런 수의 키 — 나간 인원의 uid 를 정렬해 잇는다(순서 · 자리와 무관) · 전술 「관계」 조건 (v36 · R134) */
     const bondKey = party => party.slice().sort().join('|');
@@ -2265,7 +2378,9 @@ export function createGameSystem(deps) {
         const slots = TC.slotList.map((s, i) => {
             const opened = s.no <= open;
             // 저장된 것(리롤한 칸) 우선 · 없으면 첫 배정. 세이브에 없는 가족·등급은 CSV 가 바뀐 것이라 첫 배정으로 되돌린다
-            const option = opened ? (TC.optionOf(stored[s.no]) ?? TC.optionOf(initial[i]) ?? null) : null;
+            //   **그 칸의 종류가 아닌 옵션도 첫 배정으로** — 칸 = 상황(2026-09-27) 전의 세이브는 아무 칸에 아무 종류나 들었다
+            const kept = TC.optionOf(stored[s.no]);
+            const option = opened ? ((kept?.category === s.category ? kept : null) ?? TC.optionOf(initial[i]) ?? null) : null;
             const m = option ? TC.measure(option, ctx) : null;
             return {
                 no: s.no, open: opened, locked: opened && held.has(s.no),
@@ -2307,7 +2422,7 @@ export function createGameSystem(deps) {
         if (state.resources.gold < st.rerollCost) return { ok: false, err: 'gold' };
         const held = st.slots.filter(s => s.open && s.option).map(s => s.option.id);
         const n = (state.counters.tactic ?? 0) + 1;
-        const picks = TC.pickMany(makeRng(deriveSeed(state.seed ^ 0x7AC7, n)), roll.length, held);
+        const picks = TC.pickMany(makeRng(deriveSeed(state.seed ^ 0x7AC7, n)), roll.map(s => TC.slotList[s.no - 1].category), held);
         if (!picks) return { ok: false, err: 'missing' };     // 가족이 칸의 두 배 이상이라는 것은 로드 시 검증했다
         state.counters.tactic = n;
         state.resources.gold -= st.rerollCost;
@@ -2423,9 +2538,10 @@ export function createGameSystem(deps) {
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, stageLevelState, setStageLevel, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         runLock, runTactics, runTacticsIf,
         tavernCandidates, tavernState, tavernReroll, hire, dismissState, dismiss, swapHeroes,
-        shopVisit, shopState, gambleState, gambleSpin, gambleSpinBatch,
+        shopVisit, shopState, shopBuy, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
+        dispatchOf, dispatchSeat, dispatchPick, dispatchAssign, dispatchRecall, materialsState,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, rerollTactic, toggleTacticLock, weaponGroupOf, weaponSkillOf,
         constructionState, construct, hasFeature, bonusOf, needOf, peakTotal,

@@ -473,6 +473,9 @@ export function buildSystems(d, dev = {}) {
      */
     const classSkills = Object.fromEntries((d.classes ?? []).map(c =>
         [c.id, skill.list.filter(sk => sk.innatePool && sk.ownerKind === 'job' && sk.ownerId === c.id).map(sk => sk.id)]));
+    // 시작 무기의 스킬 후보 — 직업 풀 중 `starter_pool = 1` 인 기본기만 (2026-09-27 사용자 지시 · hero_design §1) · 행 순서가 결정론 계약
+    const starterSkills = Object.fromEntries(Object.entries(classSkills).map(([c, ids]) =>
+        [c, ids.filter(id => skill.defs[id].starterPool)]));
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
@@ -496,7 +499,7 @@ export function buildSystems(d, dev = {}) {
         accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],
         amuletProcs: d.amuletProcs ?? [], procSkills: skill.list.filter(sk => sk.amuletPool).map(sk => sk.id),
         // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
-        classSkills,
+        classSkills, starterSkills,
     });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
     // 표가 셋이다 — 조건 사전(점수) · 옵션(조건 + 능력치 + 기준값) · 점수 × 등급 배수 (tactic_card_design §5-8 · 2026-09-22 · R134)
@@ -554,6 +557,8 @@ export function buildSystems(d, dev = {}) {
         defaultFormationTpl: (d.formationTplOrder ?? [])[0],
         // 제작 — 레시피와 재료 단계 표. 레벨대 = 챕터(stages) · 재료 = 그 tier 의 산출물 (item_design §7-1 · R96)
         makeRecipes: d.makeRecipes ?? {}, mineNodes: d.mineNodes ?? [], logNodes: d.logNodes ?? [],
+        // 자원 파견 — 자리 = 파견처 × 단계(세 표) · 선택 창의 담당 능력치(`hero_attribute.csv:dispatch`) (2026-09-27 · ADR-0373)
+        gatherNodes: d.gatherNodes ?? [], heroAttributes: d.heroAttributes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)
         potions: d.potions ?? [],
         openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)

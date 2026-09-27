@@ -66,6 +66,12 @@ export function t(key, params) {
 const STRINGS = {
     /* ── 셸 ── */
     'app.title': { ko: 'The Seven Simulation RPG — 화면 목업', en: 'The Seven Simulation RPG — Screen Mockup' },
+    // 세로 창 막 (SCREEN_DESIGN §2 · ADR-0371)
+    'app.turn.title': { ko: '기기를 가로로 돌려 주세요', en: 'Rotate your device to landscape' },
+    'app.turn.full': { ko: '전체 화면 + 가로 고정', en: 'Fullscreen + lock landscape' },
+    'app.turn.skip': { ko: '이대로 계속하기', en: 'Continue as is' },
+    // 손가락 툴팁 버튼 줄 — [세부] = Alt 를 누른 것과 같다 (SCREEN_DESIGN §2 「터치 조작」 · ADR-0374)
+    'tip.touch.alt': { ko: '세부', en: 'Details' },
     /* ── 새 게임 (2026-08-24) ── */
     'ng.h': { ko: '새 게임', en: 'New Game' },
     'ng.title': { ko: '첫 파티', en: 'Your First Party' },
@@ -113,6 +119,7 @@ const STRINGS = {
 
     // 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112) — 버튼 글자가 곧 상태다
     'cl.signIn': { ko: 'Google 로그인', en: 'Sign in with Google' },
+    'cl.guest': { ko: '게스트로 시작', en: 'Play as Guest' },
     'cl.st.checking': { ko: '☁ 확인 중', en: '☁ Checking' },
     'cl.st.on': { ko: '☁ 연결됨', en: '☁ Connected' },
     'cl.st.saving': { ko: '☁ 저장 중', en: '☁ Saving' },
@@ -288,6 +295,8 @@ const STRINGS = {
     // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
     'ch.bag.stash': { ko: '창고', en: 'Stash' },
     'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
+    'ch.bag.equip': { ko: '장비', en: 'Gear' },
+    'ch.bag.mat': { ko: '재료', en: 'Materials' },
     // 정렬 — 칸마다 제 [정렬] · 누르면 그 오른쪽으로 기준 셋이 나온다 (ADR-0242 · ADR-0247).
     //   영어는 「By」를 뺀다 — [Sort] 바로 옆에 서서 뜻이 이미 서고, 펼친 채로 도구 줄 한 줄에 들어가야 한다
     'ch.sort.start': { ko: '정렬', en: 'Sort' },
@@ -479,6 +488,14 @@ const STRINGS = {
     'dp.post.mine': { ko: '채광', en: 'Mining' },
     'dp.post.gather': { ko: '채집', en: 'Gathering' },
     'dp.post.log': { ko: '벌목', en: 'Logging' },
+    // 자원 자리 칸의 선택 창 (SCREEN_DESIGN §8 · ADR-0373) — 거절은 `game.dispatchAssign` · `dispatchRecall` 의 결과 코드와 짝
+    'dp.recall': { ko: '회수', en: 'Recall' },
+    'dp.pick.none': { ko: '보낼 영웅이 없다', en: 'No heroes to send' },
+    'dp.err.running': { ko: '원정 중인 영웅은 보낼 수 없다', en: 'Heroes on an expedition cannot be sent' },
+    'dp.err.searching': { ko: '수색 중인 영웅은 보낼 수 없다', en: 'Heroes on a search cannot be sent' },
+    'dp.err.unbuilt': { ko: '아직 열리지 않은 자리다', en: 'This spot is not open yet' },
+    'dp.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
+    'dp.err.empty': { ko: '빈 자리다', en: 'This spot is empty' },
     'dp.solo': { ko: '1인', en: 'Solo' },
     'dp.party': { ko: '파티', en: 'Party' },
     'dp.attrTitle': { ko: '담당 능력치', en: 'Governing attribute' },
@@ -495,6 +512,13 @@ const STRINGS = {
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
     'td.buy': { ko: '사기', en: 'Buy' },
+    // 상단 장비 구매 (SCREEN_DESIGN §8-3 · game.shopBuy · 2026-09-27) — 거절은 결과 코드와 짝이다(unbuilt 는 flashNeed · missing 은 stale 과 같은 뜻)
+    'td.sold': { ko: '팔림', en: 'Sold' },
+    'td.bought': { ko: '{name} 구매 (−{g} G)', en: 'Bought {name} (−{g} G)' },
+    'td.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'td.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
+    'td.err.sold': { ko: '이미 팔린 물건이다', en: 'Already sold' },
+    'td.err.stale': { ko: '상인이 바뀌었다', en: 'The trader has changed' },
     'td.stock': { ko: '수량 {n}', en: '{n} in stock' },
 
     /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
@@ -557,9 +581,7 @@ const STRINGS = {
     'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
     'fg.worn': { ko: '착용 중', en: 'Equipped' },
     'fg.bag': { ko: '가방', en: 'Bag' },
-    'fg.count': { ko: '장비 {n}', en: '{n} items' },
-    'fg.empty': { ko: '가진 장비가 없다', en: 'You own no gear' },
-    'fg.pick': { ko: '왼쪽에서 장비를 고른다', en: 'Pick an item on the left' },
+    'fg.pick': { ko: '장비를 고른다', en: 'Pick an item' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade' },
     // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
     'fg.make.lv': { ko: 'Lv{n}', en: 'Lv{n}' },   // 제작 레벨 버튼 — 대역이 아니라 레벨 하나다 (ADR-0263)
@@ -727,6 +749,7 @@ const STRINGS = {
     'hs.doing.expedition': { ko: '원정 중', en: 'On expedition' },
     /* 수색 중 [신설 2026-09-09] — 나가 있으면 편성이 막히므로(state.js:toggleParty) 띠가 그 이유를 든다 */
     'hs.doing.search': { ko: '수색 중', en: 'On a search' },
+    'hs.doing.dispatch': { ko: '{post} {tier}', en: '{post} {tier}' },   // 자원 자리 — 「채광 2」 (2026-09-27 · ADR-0373)
     /* ~~'hs.doing.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 띠의 「지금 하는 일」은 **대기 하나**다 (SCREEN_DESIGN §5) */
 
     /* ── 장비 ── */
@@ -749,6 +772,12 @@ const STRINGS = {
     'st.fx.normal': { ko: '일반', en: 'Normal' },
     'st.fx.demon': { ko: '데몬', en: 'Demon' },
     'st.fx.undead': { ko: '언데드', en: 'Undead' },
+    'st.fx.ele': { ko: '원소 피해', en: 'Elemental Damage' },
+    'st.fx.all': { ko: '전체', en: 'All' },
+    'st.fx.fire': { ko: '불', en: 'Fire' },
+    'st.fx.cold': { ko: '냉기', en: 'Cold' },
+    'st.fx.lightning': { ko: '전기', en: 'Lightning' },
+    'st.fx.poison': { ko: '독', en: 'Poison' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
@@ -863,7 +892,6 @@ const STRINGS = {
     'cn.state.none': { ko: '미건설', en: 'Not built' },
     'cn.state.max': { ko: '최대 랭크', en: 'Max rank' },
     'cn.next.h': { ko: '다음 랭크', en: 'Next Rank' },
-    'cn.now.h': { ko: '현재 가능한 기능', en: 'Available Now' },
     'cn.now.none': { ko: '아직 지은 랭크가 없다', en: 'Nothing built yet' },
     'cn.ranks.h': { ko: '{b} 랭크', en: '{b} Ranks' },
     'cn.owned': { ko: '보유 {n}', en: 'Owned {n}' },
@@ -894,14 +922,13 @@ const STRINGS = {
     'cn.t.craft': { ko: '매직 장비에 전용 옵션을 더한다', en: 'Add a special option to magic gear' },
     'cn.t.stigma_craft': { ko: '낙인으로 장비를 크래프트한다', en: 'Craft equipment with stigmas' },
     'cn.t.skill_card': { ko: '스킬 카드를 합성한다', en: 'Fuse skill cards' },
-    'cn.t.dispatch': { ko: '영웅을 채광 · 채집 · 벌목에 보낸다', en: 'Send heroes to mine, gather and log' },
     'cn.t.explore': { ko: '파티를 탐험에 보낸다', en: 'Send a party to explore' },
     'cn.t.raid': { ko: '목표를 털어 전리품을 얻는다', en: 'Raid a target for loot' },
     'cn.t.escort': { ko: '의뢰인의 상단을 호위한다', en: "Escort a client's caravan" },
     'cn.t.gear_set': { ko: '장비 한 벌을 저장해 바로 갈아입는다', en: 'Save a gear loadout and swap instantly' },
     'cn.t.monster_card': { ko: '몬스터 카드를 모은다', en: 'Collect monster cards' },
     'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission Board' },   // 선술집 r2 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-25)
-    'cn.t.gamble': { ko: '골드를 걸어 골드와 재료를 노린다', en: 'Wager gold for gold or materials' },
+    'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r3 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
     'cn.t.training': { ko: '영웅을 훈련시켜 경험치를 올린다', en: 'Train heroes to gain experience' },
     'cn.t.advance': { ko: '영웅을 전직시킨다', en: "Advance a hero's class" },
     'cn.t.skill_depth': { ko: '영웅 스킬에 포인트를 더 찍는다', en: 'Invest more points into hero skills' },
@@ -917,12 +944,13 @@ const STRINGS = {
     'cn.t.shopWeapon': { ko: '상단 무기 품목 +{n}', en: 'Weapon wares +{n}' },
     'cn.t.make_level': { ko: '제작 레벨 +{n}', en: 'Smithing level +{n}' },
     'cn.t.potion_tier': { ko: '물약 단계 +{n}', en: 'Potion tier +{n}' },
-    'cn.t.tactic_slots': { ko: '파티 전술 칸 +{n}', en: 'Party tactic slots +{n}' },
+    // 전술 칸도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 칸 수 (SCREEN_DESIGN §13-1 · 2026-09-27 사용자 지시 「파티 전술 레벨1 해금」)
+    'cn.t.tactic_slots': { ko: '파티 전술 레벨 {total} 해금', en: 'Unlocks Party Tactics Level {total}' },
     // 장은 예외로 누적 번호 — `{total}` = 그 랭크까지 연 장 수 (SCREEN_DESIGN §13-1 · R152 · 문구 2026-09-25 사용자 지시 · R161)
     'cn.t.chapters': { ko: '챕터 {total} 해금', en: 'Unlocks Chapter {total}' },
     'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}' },
-    'cn.t.resource_tier': { ko: '파견처 자원 단계 +{n}', en: 'Resource tier +{n}' },
-    'cn.t.workers': { ko: '파견처 일꾼 칸 +{n}', en: 'Worker slots +{n}' },
+    // 자원 단계도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 단계 (2026-09-27 사용자 지시 「랭크1에 채광, 채집, 벌목 n단계 해금」)
+    'cn.t.resource_tier': { ko: '채광 · 채집 · 벌목 {total}단계 해금', en: 'Unlocks Mining, Gathering and Logging Tier {total}' },
     'cn.t.shop_layers': { ko: '상단 품목 층 +{n}', en: 'Ware tiers +{n}' },
     'cn.t.explore_regions': { ko: '탐험 지역 +{n}', en: 'Exploration regions +{n}' },
     'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
@@ -1006,8 +1034,7 @@ const STRINGS = {
     'rs.cond.front_cls': { ko: '전열에 {a}', en: '{a} in the front row' },
     'rs.cond.front_cls.not': { ko: '전열에 {a} 없음', en: 'No {a} in the front row' },
     'rs.cond.together': { ko: '이 파티로 {n}회 이상 출정', en: '{n}+ runs as this party' },
-    // 난이도 — 조건 사전의 점수 · 어려울수록 등급 값의 천장이 높다 (§5-8 · SCREEN_DESIGN §15)
-    'rs.score': { ko: '난이도 {n}', en: 'Difficulty {n}' },
+    'rs.cond.leader_ldr': { ko: '리더의 통솔 {n} 이상', en: "Leader's Leadership {n}+" },   // 2026-09-27 — 칸 3(칸 = 상황)
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
     'sk.points.note': {
@@ -1025,7 +1052,6 @@ const STRINGS = {
     'sk.tip.effect': { ko: '{effect}. (랭크당 {perRank})', en: '{effect}. (Per rank {perRank})' },
     'sk.gate.weapon': { ko: '착용 무기: {groups}일 때 효과 적용', en: 'Active with weapon: {groups}' },
     'sk.gate.armor': { ko: '착용 갑옷: {groups}일 때 효과 적용', en: 'Active with armor: {groups}' },
-    'sk.gate.offSuffix': { ko: '지금 장비로는 꺼짐', en: 'Inactive with current gear' },
     /* 마스터리 효과 문장 — 「무엇이 n 증가한다」 (SCREEN_DESIGN §7 · ADR-0332). 축마다 **통째로** 든다 — 조사(이/가)와
        동사(증가/감소)를 렌더러가 고르지 않는다. 이름이 「감소」인 축은 줄어드는 것이 주어다. {v} 는 부호 없는 값.
        사전에 없는 축은 맨 위 틀로 떨어진다 */
@@ -1054,6 +1080,7 @@ const STRINGS = {
     'sk.masteryEffect.res_max_bonus': { ko: '최대 원소 저항이 {v} 증가한다', en: 'Max Resistances increase by {v}' },
     'sk.masteryEffect.res_reduction': { ko: '적의 원소 저항이 {v} 감소한다', en: 'Enemy resistances are reduced by {v}' },
     'sk.reset': { ko: '초기화', en: 'Reset' },
+    'sk.unlearn': { ko: '되돌리기', en: 'Refund' },
     'sk.reset.done': { ko: '{n} 포인트를 돌려받았다', en: 'Refunded {n} points' },
     'sk.needLv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'sk.err.locked': { ko: 'Lv.{lv} 부터 찍을 수 있다', en: 'Available from Lv.{lv}' },
@@ -1223,11 +1250,8 @@ const STRINGS = {
             + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the weapon slot from <b>the pool of the class its weapon group names</b><br>'
             + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
     },
-    'sk.tab1': { ko: '탭1', en: 'Tab 1' },
-    'sk.tab2': { ko: '탭2', en: 'Tab 2' },
-    'sk.tab3': { ko: '탭3', en: 'Tab 3' },
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
-    'sk.sinTree.sub': { ko: '죄종에서 옴 — 모든 {sin} 영웅 공유', en: 'Shared by all {sin} heroes' },
+    'sk.sinTree.sub': { ko: '모든 {sin} 영웅 공유', en: 'Shared by all {sin} heroes' },
     'sk.sinTree.missing': {
         ko: '<b>맨 윗줄은 7죄종이 전부 같다</b> — 죄종마다 다르게 주면 파워가 갈려 약한 죄종 영웅이 영웅 로스터에서 버려진다. 바닥을 통일하고 <b>죄종의 개성은 그 아랫줄부터</b> 준다.<br>'
             + '둘째 줄이 {sin} 만의 축이고, <b>맨 아랫줄(반응형)은 기획이 방향만 정했다</b> — 「~하면 ~한다」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없다.',
@@ -1250,8 +1274,6 @@ const STRINGS = {
         en: '<b>Advancement is the only layer that grants actives</b> — both masteries are purely passive. Picking one of three advancements grants three actives, and <b>only the one you invest in</b> takes the slot and becomes a tree root.<br>'
             + '⚠ Not built — 45 roots are now required and the <b>tree shape (deep tree vs shallow tiers)</b> is undecided, so the total is unbounded. The project\'s largest content debt.',
     },
-    'sk.advLocked': { ko: 'Lv.{lv} 해금 — 현재 Lv.{cur}', en: 'Unlocks at Lv.{lv} — now Lv.{cur}' },
-    'sk.advOpen': { ko: '해금됨', en: 'Unlocked' },
     'sk.lockedSuffix': { ko: ' (잠김)', en: ' (locked)' },
     'sk.grid.note': {
         ko: '마스터리는 가지가 갈리는 트리가 아니라 <b>위에서 아래로 쌓는</b> 구조다 — <b>윗줄이 먼저 열리고 아랫줄일수록 늦게</b> 열린다<br>'

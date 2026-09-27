@@ -64,12 +64,14 @@ export function createTacticSystem(data) {
         cls_same: { arg: null, count: c => maxCount(c.classes) },                // 같은 직업이 몇 명까지 겹치나
         gear_sin: { arg: 'sin', count: (c, a) => c.gearSins[a] ?? 0 },           // 파티 장비 이름의 그 죄종 수 (item_design §1 「이름」)
         leader_cls: { arg: 'cls', count: (c, a) => (c.leader?.cls === a ? 1 : 0) },   // 리더 = 편성 첫 칸
+        leader_ldr: { arg: null, count: c => c.leader?.ldr ?? 0 },                // 리더의 통솔 — 문턱 이상이면 참 (2026-09-27 · 칸 3)
         front_cls: { arg: 'cls', count: (c, a) => c.front.filter(m => m.cls === a).length },   // 전열에 선 그 직업 인원
         together: { arg: null, count: c => c.bond },                             // 지금 이 인원이 같이 나간 런 수 (세이브 v36)
     };
     // ~~always~~ · ~~class_same~~ · ~~affix_sin~~ · ~~skill_tag~~ 는 2026-09-22 폐지 — 조건 사전(§5-8)으로 이름이 바뀌었고
     //   **스킬 태그 조건은 삭제**다. 옛 세이브의 칸은 가족 id 로 찾으므로 없는 가족은 첫 배정으로 돌아간다(state.tacticState)
-    const CATEGORIES = ['always', 'party', 'gear', 'leader', 'formation', 'bond'];
+    // `leadership` = 리더의 통솔 [2026-09-27 사용자 「일단」 — 칸 = 상황 고정 · tactic_card_design §5-9]
+    const CATEGORIES = ['always', 'party', 'gear', 'leader', 'formation', 'bond', 'leadership'];
 
     /* ── 칸 (tactic_slot.csv) ── */
 
@@ -79,7 +81,10 @@ export function createTacticSystem(data) {
         // ~~reroll_cost_gold~~ 는 2026-09-22 삭제 — 비용은 칸이 아니라 **잠근 칸 수**가 정한다 (§5-6 · 아래 rerollCost)
         // ~~unlock_total_level~~ 도 2026-09-22 삭제 — 칸은 **지휘 천막 랭크**가 연다(`building_effect.csv` 의 `tactic_slots` · 합산 레벨은 그 랭크의 문턱 · R137).
         //   이 표는 칸 **수**만 든다 — 몇 칸이 열렸나는 `state.tacticState` 가 `limitsOf` 로 센다
-        return { no };
+        // **칸 = 상황** [2026-09-27 사용자 「일단」 · tactic_card_design §5-9] — 칸마다 조건 종류가 고정이고 첫 배정 · 리롤은 그 종류 안에서만 뽑는다
+        const category = row.category;
+        if (!CATEGORIES.includes(category)) throw new Error(`tactic: 칸 ${no} category '${category}' — 어휘는 ${CATEGORIES.join('/')}`);
+        return { no, category };
     });
     const slotCount = slotList.length;
 
@@ -167,10 +172,14 @@ export function createTacticSystem(data) {
         families.push(fam);
     }
     const familyIds = families.map(f => f.id);
-    // 가족이 **칸의 두 배** 이상이어야 한다 — 전체 리롤은 굴리기 직전에 든 것(열린 칸 전부)과 이번에 이미 뽑은 것을 빼고 뽑으므로
-    //   모든 칸을 새로 뽑는 마지막 한 번에 `칸 수 + (칸 수 − 1)` 가족이 후보에서 빠진다 (§5-6 중복 규칙)
-    if (families.length < slotCount * 2)
-        throw new Error(`tactic: 가족 ${families.length}개 < 칸 ${slotCount}개 × 2 — 전체 리롤이 후보를 다 쓴다`);
+    // 가족이 **그 종류의 칸의 두 배** 이상이어야 한다 [2026-09-27 — 칸 = 상황] — 전체 리롤은 굴리기 직전에 든 것과 이번에 이미 뽑은 것을 빼고
+    //   **그 칸의 종류 안에서** 뽑으므로, 종류마다 `칸 수 + (칸 수 − 1)` 가족이 후보에서 빠진다 (§5-6 중복 규칙)
+    for (const cat of CATEGORIES) {
+        const slotsOf = slotList.filter(s => s.category === cat).length;
+        const famsOf = families.filter(f => f.category === cat).length;
+        if (slotsOf && famsOf < slotsOf * 2)
+            throw new Error(`tactic: 종류 ${cat} — 가족 ${famsOf}개 < 칸 ${slotsOf}개 × 2 — 전체 리롤이 후보를 다 쓴다`);
+    }
 
     /** 등급 가중치 — 값은 CSV. 하나라도 빠지거나 음수면 리롤이 조용히 한쪽으로 쏠리므로 로드 시 막는다 */
     const gradeWeights = GRADES.map(g => {
@@ -252,9 +261,15 @@ export function createTacticSystem(data) {
             const j = Math.floor(rng() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
+        // 칸 = 상황 [2026-09-27] — 섞은 순서에서 **그 칸의 종류인 것 중 아직 안 쓴 첫 가족**을 준다. rng 소비는 섞기뿐이라 칸 수와 무관하다
         // 등급은 안 굴린다 — 첫 배정은 언제나 일반이다 (§5-5): 시드 운이 초반 격차를 만들지 않고
         //   칸이 열릴 때마다 「굴릴 이유」가 같이 생긴다
-        return pool.slice(0, slotCount).map(id => ({ id, grade: BASE_GRADE }));
+        const used = new Set();
+        return slotList.map(s => {
+            const id = pool.find(f => !used.has(f) && famById[f].category === s.category);
+            used.add(id);
+            return { id, grade: BASE_GRADE };
+        });
     }
 
     /**
@@ -264,8 +279,9 @@ export function createTacticSystem(data) {
      *   **등급이 달라도 같은 가족이면 같은 옵션이다** — 「일반 데미지」와 「레어 데미지」를 두 칸에 세우면 안 된다.
      *   점수는 출현에 안 걸린다 — 어려운 조건도 쉬운 조건만큼 뜬다(§5-8 「출현은 균등」)
      */
-    function pick(rng, excludeIds = []) {
-        const rest = familyIds.filter(id => !excludeIds.includes(id));
+    function pick(rng, excludeIds = [], category = null) {
+        // `category` = 그 칸의 조건 종류 [2026-09-27 — 칸 = 상황] · null 이면 풀 전체
+        const rest = familyIds.filter(id => !excludeIds.includes(id) && (category === null || famById[id].category === category));
         if (!rest.length) return null;
         const id = rest[Math.floor(rng() * rest.length)];
         return { id, grade: rollGrade(rng) };
@@ -276,10 +292,12 @@ export function createTacticSystem(data) {
      * `excludeIds` = **잠긴 칸의 옵션 + 굴리기 직전 열린 칸이 들고 있던 옵션**이고, 이번에 뽑은 가족은 다음 뽑기에서 빠진다.
      * 후보가 모자라면 `null` — 로드가 「가족 ≥ 칸 × 2」를 검증하므로 평소엔 안 탄다
      */
-    function pickMany(rng, count, excludeIds = []) {
+    function pickMany(rng, categories, excludeIds = []) {
+        // `categories` = 굴릴 칸들의 조건 종류(칸 번호 오름차순) [2026-09-27 — 칸 = 상황] · 수를 주면 종류 없이 그만큼
+        const cats = typeof categories === 'number' ? Array(categories).fill(null) : categories;
         const out = [], taken = excludeIds.slice();
-        for (let i = 0; i < count; i++) {
-            const got = pick(rng, taken);
+        for (let i = 0; i < cats.length; i++) {
+            const got = pick(rng, taken, cats[i]);
             if (!got) return null;
             out.push(got);
             taken.push(got.id);

@@ -54,7 +54,7 @@ user-invocable: true
 
 **1. 프롬프트를 쓴다** — [prompt_template.md](prompt_template.md) 골격에 채운다. 앵커 지정 → 문법 블록(아이템/스킬/empty) → 금지어 표 대조 → 타일 순서 = id 순서.
 
-**2. 사용자가 뽑는다** — 시트를 `icons/skills/source/` 또는 `icons/items/source/` 에 원본으로 받는다 (게임이 안 읽는 파일 — README 에 그렇게 기록).
+**2. 사용자가 뽑는다** — 시트를 `icons_source/skills/source/` 또는 `icons_source/items/source/` 에 원본으로 받는다 (게임이 안 읽는 파일 — README 에 그렇게 기록).
 
 **3. 자른다** — `python .claude/skills/icon-prompt/cut.py <시트> --grid 3x3 --out <폴더>` → 흰/체커보드 자동 감지, 격자 십자 제거, 하이라이트 보존 누끼, 0.88 정규화까지 한 번에. 산출물을 `Read` 로 **눈 확인**.
 
@@ -66,7 +66,8 @@ user-invocable: true
 
 **5. 설치 + 문서**
 
-- 타일을 id 파일명으로 복사 — `icons/skills/<skill_id>.png` / `icons/items/<group_id>.png` / 방어구·장신구 베이스는 `icons/items/item_base/<base_id>.png`(`mock.js:ITEM_BASE_ART_DIR`) / `icons/items/empty/<part>.png` / 무기 베이스는 `icons/items/weapon_base/<group_id>/<base_id>.png`(`weapon_base.csv` 행 + `mock.js:WEAPON_BASE_STEMS` 줄이 서야 게임이 읽는다). 어느 id 에도 안 붙는 여분은 `icons/items/unused/`
+- **원본과 설치본은 폴더가 다르다** [2026-09-27 사용자 지시] — 타일(512 PNG)은 **`icons_source/`** 에 id 파일명으로 넣고 `python scripts/build_icons.py` 를 돌린다 → 게임이 읽는 **256 WebP** 가 `icons/` 같은 경로에 선다. `icons/` 에 PNG 를 직접 넣지 않는다(넣어도 스크립트가 원본 폴더로 옮긴다). 규칙 본문 = art/README 「아이콘 — 원본과 설치본」
+- 원본 자리 — `icons_source/skills/<skill_id>.png` / 방어구·장신구 베이스는 `icons_source/items/item_base/<base_id>.png`(`mock.js:ITEM_BASE_ART_DIR`) / `icons_source/items/empty/<part>.png` / 무기 베이스는 `icons_source/items/weapon_base/<group_id>/<base_id>.png`(`weapon_base.csv` 행 + `mock.js:WEAPON_BASE_STEMS` 줄이 서야 게임이 읽는다). 어느 id 에도 안 붙는 여분은 `icons_source/items/unused/`. **새 아이콘 폴더**면 `build_icons.py:GAME_DIRS` 에도 더한다
 - `src/ui/mock.js` 목록 갱신 — 스킬은 `SKILL_ICON_FILES` 에 추가(⚠ **길이가 변하면 그림 없는 스킬 전체의 해시 폴백이 재배정**된다 — 무해하지만 보고에 적는다) · 무기는 `ITEM_ART_GROUPS` · 방어구는 `ITEM_ART_BY_SLOT`(⚠ 임시 표 — 부위당 한 장, 개체가 base_id 를 들면 걷는다) · empty 는 `SLOT_ART_PARTS`. 투구·목걸이는 지금 이모지 폴백이라 **그림 + 목록 추가가 세트**다
 - [art/README.md](../../../src/assets/art/README.md) — 채워진 것/빈 것 표 · 해당 절(**지금 상태**만 — 파일 · 검수 통과 여부 · 남은 일. 발주 경위와 실측 표는 보고에) · 꼬리 날짜(날짜만)
 - 보고에는 **실측 표 · 설치 파일 목록 · mock.js 변경 여부 · 건너뛴 것**

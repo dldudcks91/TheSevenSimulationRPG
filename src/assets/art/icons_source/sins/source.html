@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>죄종 아이콘 v4</title>
+<style>
+  body{margin:0;padding:32px;background:#14111a;color:#d8d4e0;font-family:system-ui,sans-serif}
+  h1{font-size:18px;font-weight:600;margin:0 0 4px} p{margin:0 0 24px;color:#8a8496;font-size:13px}
+  h2{font-size:14px;font-weight:600;margin:28px 0 12px;color:#aaa3b8}
+  .row{display:flex;gap:22px;align-items:flex-end;flex-wrap:wrap}
+  .cell{text-align:center;font-size:12px;color:#aaa3b8}.cell svg,.cell img{display:block;margin:0 auto 6px}
+  .sm{display:flex;gap:14px;align-items:center}
+  .ref img{width:88px;height:88px}
+  .inline{font-size:14px;line-height:28px;background:#1c1824;border:1px solid #2a2533;border-radius:10px;padding:10px 16px;display:inline-block}
+  .inline svg{vertical-align:-5px;margin:0 3px 0 10px}
+</style></head><body>
+<h1>죄종 아이콘 — v4 (스킬 아이콘 규격에 맞춤)</h1>
+<p>실선 2.6 / 파낸 선 1.9 (64 기준 = 512px 에서 21 / 15px) · 긴 변 0.88 · #d8d8e6</p>
+
+<h2>죄종 아이콘 + 기존 스킬 아이콘 나란히 (88px)</h2><div class="row" id="mix"></div>
+<h2>죄종색</h2><div class="row" id="color"></div>
+<h2>작은 크기 (32 / 20 px)</h2><div class="sm" id="small"></div>
+<h2>비교 — 기존 스킬 아이콘</h2><div class="row ref" id="ref"></div>
+<h2>본문 안</h2><div class="inline" id="inline"></div>
+<script>
+const SINS = {
+  wrath:{ko:'분노',en:'Wrath',c:'#e03030'}, envy:{ko:'시기',en:'Envy',c:'#30b050'},
+  greed:{ko:'탐욕',en:'Greed',c:'#d0a020'}, sloth:{ko:'나태',en:'Sloth',c:'#808898'},
+  gluttony:{ko:'폭식',en:'Gluttony',c:'#e07020'}, lust:{ko:'색욕',en:'Lust',c:'#e03080'},
+  pride:{ko:'오만',en:'Pride',c:'#8040e0'},
+};
+const W = '#fff', B = '#000';
+const S = 2.6, C = 1.9;           // 실선 · 파낸 선 (64 단위)
+// 테두리: 모양을 채우고 S 만큼 깎은 안쪽을 비운다 — 테두리 두께가 어디서나 S
+const rim = (d, t = S) => `<path fill="${W}" d="${d}"/><path fill="${B}" d="${d}" filter="url(#ER${t})"/>`;
+const G = {
+  wrath: `
+    ${rim('M32 4C37 14 50 21 50 37C50 51 42 60 32 60C19 60 13 50 13 39C13 30 18 24 22 18C23 26 25 29 28 31C27 21 28 12 32 4Z')}
+    <path fill="${W}" d="M32 30C35 36.5 42 41 42 48.5C42 52.5 38 54.5 32 54.5C26 54.5 21 52 21 48C21 44 23.5 41.5 26 39.5C27 42.5 28.8 44 31 44.5C29.5 39.5 30 34.5 32 30Z"/>
+    <path fill="${W}" d="M46.5 7C52 13 54.5 21 50.5 27.5C50 21 48 14 46.5 7Z"/>
+    <path fill="${W}" d="M11.5 20C8.5 25 8.5 30 10.5 34C11.5 29.5 12.5 25 11.5 20Z"/>`,
+  envy: `
+    ${rim('M4 32Q32 6 60 32Q32 58 4 32Z')}
+    <circle cx="32" cy="32" r="8.3" fill="${W}"/>
+    <ellipse cx="32" cy="32" rx="1.9" ry="6.2" fill="${B}"/>
+    <path fill="${W}" d="M14 21.5L10.5 15.5L17 19ZM24 16.5L22.5 10L27 15ZM40 16.5L41.5 10L37 15ZM50 21.5L53.5 15.5L47 19Z"/>`,
+  greed: `
+    <path fill="${W}" d="M20 5L26.5 9.5L32 4L37.5 9.5L44 5L41.5 15H22.5Z"/>
+    <rect x="21.5" y="16.9" width="21" height="2.6" rx="1.3" fill="${W}"/>
+    ${rim('M22.5 21.4H41.5C52 28 58 40 55 50C53 57 45 60 32 60C19 60 11 57 9 50C6 40 12 28 22.5 21.4Z')}
+    ${rim('M32 33A9 9 0 1 1 32 51A9 9 0 1 1 32 33Z')}
+    <path fill="${W}" d="M32 37.5l3.6 4.5-3.6 4.5-3.6-4.5z"/>`,
+  sloth: `
+    <rect x="12" y="4" width="40" height="5.2" rx="1.5" fill="${W}"/>
+    <rect x="12" y="54.8" width="40" height="5.2" rx="1.5" fill="${W}"/>
+    ${rim('M16.5 11.1H47.5C47.5 24 39 29 36.3 32C39 35 47.5 40 47.5 52.9H16.5C16.5 40 25 35 27.7 32C25 29 16.5 24 16.5 11.1Z')}
+    <path fill="${W}" d="M24 17.5H40C38 23 34.5 25.8 32 27.3C29.5 25.8 26 23 24 17.5Z"/>
+    <rect x="31.2" y="28" width="1.6" height="16" fill="${W}"/>
+    <path fill="${W}" d="M21.5 51Q32 38 42.5 51Z"/>`,
+  gluttony: `
+    ${rim('M5 22Q32 -2 59 22Q59 48 32 60Q5 48 5 22Z')}
+    <path fill="${W}" d="M14 16.5L23 13L18.5 27ZM23 13L32 11.4L27.5 26.5ZM32 11.4L41 13L36.5 26.5ZM41 13L50 16.5L45.5 27Z"/>
+    <path fill="${W}" d="M20.5 53.5L27.5 57.5L24 45ZM28.5 58L35.5 58L32 47ZM36.5 57.5L43.5 53.5L40 45Z"/>`,
+  lust: `
+    <path fill="${W}" d="M32 57C15 45 9 35 9 25.5C9 17.5 15 12 22 12C26.5 12 30 14.5 32 18.5C34 14.5 37.5 12 42 12C49 12 55 17.5 55 25.5C55 35 49 45 32 57Z"/>
+    <path fill="none" stroke="${B}" stroke-width="${S + 2 * C}" stroke-linecap="round" d="M4 44Q20 30 32 33Q44 36 60 20"/>
+    <path fill="none" stroke="${W}" stroke-width="${S}" stroke-linecap="round" d="M4 44Q20 30 32 33Q44 36 60 20"/>
+    <path fill="${W}" d="M15.5 36.5l-2.5-5.5 5.2 3zM25 32l.5-6 3 4.8zM38.5 35l1.8 5.8-5.2-3zM48 29l-.6-6 4.4 3.6z"/>
+    <path fill="none" stroke="${B}" stroke-width="${C}" stroke-linecap="round" d="M14.5 25C14.5 20.5 17.5 17.5 21.5 17.2"/>`,
+  pride: `
+    <path fill="${W}" d="M13 44L9.5 19.5L22 29.5L32 12.5L42 29.5L54.5 19.5L51 44Z"/>
+    <circle cx="9.5" cy="15.8" r="3.4" fill="${W}"/><circle cx="32" cy="8.2" r="3.4" fill="${W}"/><circle cx="54.5" cy="15.8" r="3.4" fill="${W}"/>
+    <path fill="${B}" d="M32 26.5l4.5 6-4.5 6-4.5-6z"/>
+    <circle cx="21" cy="36.5" r="2.2" fill="${B}"/><circle cx="43" cy="36.5" r="2.2" fill="${B}"/>
+    <rect x="12" y="45.9" width="40" height="8" rx="1.5" fill="${W}"/>
+    <g fill="${B}"><circle cx="22" cy="49.9" r="1.5"/><circle cx="32" cy="49.9" r="1.5"/><circle cx="42" cy="49.9" r="1.5"/></g>`,
+};
+// 긴 변 0.88 · 가운데 정렬 — 512 렌더 실측으로 뽑은 값
+const FIT = {wrath:'translate(32 32) scale(1.0080) translate(-30.812 -32.062)', envy:'translate(32 32) scale(1.0102) translate(-32.000 -27.562)', greed:'translate(32 32) scale(1.0057) translate(-32.000 -32.000)', sloth:'translate(32 32) scale(1.0057) translate(-32.000 -32.000)', gluttony:'translate(32 32) scale(1.0430) translate(-32.000 -35.000)', lust:'translate(32 32) scale(0.9627) translate(-32.000 -34.500)', pride:'translate(32 32) scale(1.0883) translate(-32.000 -29.375)'};
+let uid = 0;
+function icon(k, size, color = '#d8d8e6') {
+  const id = 'm' + (uid++);
+  const d = G[k].replaceAll('url(#ER', `url(#${id}ER`);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64"><defs>
+    <filter id="${id}ER${S}" x="-5%" y="-5%" width="110%" height="110%"><feMorphology operator="erode" radius="${S}"/></filter>
+    <mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><g transform="${FIT[k]}">${d}</g></mask></defs>
+    <rect width="64" height="64" fill="${color}" mask="url(#${id})"/></svg>`;
+}
+const keys = Object.keys(SINS);
+const lab = k => `${SINS[k].ko}<br><span style="color:#6f6a7a">${SINS[k].en}</span>`;
+const SK = 'file:///C:/Users/82109/Desktop/LYC/git/TheSevenSimulationRPG/src/assets/art/icons_source/skills/';
+const REF = ['mag_fireball','kni_defiance','kni_might','arc_snipe','mag_chain','war_bash','pri_heal'];
+if (typeof mix !== 'undefined') {
+  mix.innerHTML = keys.map((k, n) => `<div class="cell">${icon(k, 88)}${SINS[k].ko}</div><div class="cell"><img src="${SK}${REF[n]}.png" width="88" height="88">${REF[n]}</div>`).join('');
+  color.innerHTML = keys.map(k => `<div class="cell">${icon(k, 88, SINS[k].c)}${lab(k)}</div>`).join('');
+  small.innerHTML = keys.map(k => icon(k, 32)).join('') + '<span style="width:20px"></span>' + keys.map(k => icon(k, 20, SINS[k].c)).join('');
+  ref.innerHTML = REF.map(f => `<div class="cell"><img src="${SK}${f}.png">${f}</div>`).join('');
+  inline.innerHTML = '장비 죄종:' + keys.map(k => `${icon(k, 20, SINS[k].c)}${SINS[k].ko}`).join('');
+}
+</script>
+</body></html>
