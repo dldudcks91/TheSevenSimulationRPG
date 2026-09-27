@@ -759,10 +759,12 @@ export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG
 
 /**
  * 재료 아이콘 — 자원 단계 상자의 산출물 그림 (SCREEN_DESIGN §8 · ADR-0377) · 파일명 = 재료 id (`mine_node.csv:ore_id` …).
- * **목록에 있는 재료만 그림을 읽는다** — 없는 재료는 칸째 빠진다. 약초 · 목재 그림이 오면 폴더와 줄을 더한다
+ * **목록에 있는 재료만 그림을 읽는다** — 없는 재료는 칸째 빠진다.
  */
 export const MATERIAL_ICONS = {
     ore: { dir: './assets/art/icons/materials/ores/', ids: ['ore_t1', 'ore_t2', 'ore_t3', 'ore_t4', 'ore_t5', 'ore_t6', 'ore_t7'] },
+    timber: { dir: './assets/art/icons/materials/timbers/', ids: ['timber_t1', 'timber_t2', 'timber_t3', 'timber_t4', 'timber_t5', 'timber_t6', 'timber_t7'] },
+    herb: { dir: './assets/art/icons/materials/herbs/', ids: ['herb_t1', 'herb_t2', 'herb_t3', 'herb_t4', 'herb_t5', 'herb_t6', 'herb_t7'] },
 };
 export const materialIcon = id => {
     const g = Object.values(MATERIAL_ICONS).find(x => x.ids.includes(id));

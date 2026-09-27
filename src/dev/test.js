@@ -646,7 +646,7 @@ check('combat_stat.csv: 24행 · 폐지 축 없음 · 저항은 pct · 유틸은
     if (ids.length !== 24) fail(`${ids.length}`);
     return true;
 });
-check('combat_stat.csv: sheet_order 1~24 유일 · 세부 옵션 자리(tip.js:DETAIL_LAYOUT)와 같은 순서 · 1 = 늘 먹는 것 17 / 2 = 조건부 18 (SCREEN_DESIGN §6 · ADR-0381)', () => {
+check('combat_stat.csv: sheet_order 1~24 유일 · 세부 옵션 자리(tip.js:DETAIL_LAYOUT)와 같은 순서 · 1 = 늘 먹는 것 16 / 2 = 조건부 18 (SCREEN_DESIGN §6 · ADR-0381)', () => {
     const orders = D.combatStats.map(s => s.sheetOrder);
     if (orders.some(v => typeof v !== 'number')) fail('sheet_order 가 비어 있는 행이 있다');
     if (new Set(orders).size !== 24) fail(`중복 ${orders.length - new Set(orders).size}개`);
@@ -664,7 +664,8 @@ check('combat_stat.csv: sheet_order 1~24 유일 · 세부 옵션 자리(tip.js:D
     if (missing.join() !== 'res_reduction' || !flat.includes('fx_res_red')) fail(`줄로 안 서는 impl=1: ${missing.join()}`);
     if (pages[0].slice(0, 4).join() !== 'atk_physical,atk_magic,action_period,hp_max') fail(`머리 4: ${pages[0].slice(0, 4).join()}`);
     const n = pages.map(p => p.length).join(' / ');
-    if (n !== '17 / 18') fail(`세부 옵션 ${n}`);
+    // 16 — 고정 피해 감소가 피해 감소 줄(`고정 / %`)로 들어갔다 (2026-09-27 사용자 지시)
+    if (n !== '16 / 18') fail(`세부 옵션 ${n}`);
     return `세부 옵션 ${n} (전투 능력치 ${statIds.length} + 옵션 줄 ${flat.length - statIds.length})`;
 });
 check('hero_attribute.csv: 감각 → 운 (2026-08-26 재정의) · 자리 유지 · 직업 메인 스탯(class.csv:key_attr · 2026-09-18 · 사제 매력 2026-09-27)', () => {
@@ -5616,7 +5617,7 @@ check('tip: 영웅 첫 장은 착용 장비 · Alt 는 장비를 둔 채 세부 
     for (const s of s2) if (!(s.fx ? true : combat[s.id])) fail(`Alt 세부 옵션 2 에 값이 0 인 ${s.id} 가 섰다`);
     if (held.querySelector('.tip-unit-col .cs-row.gap')) fail('세부 옵션에 묶음 간격이 남았다 (ADR-0389)');
     const full = `${p1.length} / ${p2.length}`;
-    if (full !== '17 / 18') fail(`캐릭터 탭 세부 옵션 ${full} — 17 / 18 이어야 한다 (ADR-0381)`);
+    if (full !== '16 / 18') fail(`캐릭터 탭 세부 옵션 ${full} — 16 / 18 이어야 한다 (ADR-0381 · 고정 피해 감소는 피해 감소 줄)`);
     return `장비 8칸(착용 ${worn}) · Alt 세부 ${detailRows}행 · 캐릭터 탭 ${full}`;
 });
 check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover는 옵션 카드를 열고 · 키를 떼면 모두 닫힌다 (ADR-0182)', () => {

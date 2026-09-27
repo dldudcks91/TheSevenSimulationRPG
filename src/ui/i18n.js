@@ -995,8 +995,9 @@ const STRINGS = {
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.allOpen': { ko: '전부 열렸다', en: 'All slots open' },
-    'rs.on': { ko: '켜짐', en: 'On' },
-    'rs.off': { ko: '꺼짐', en: 'Off' },
+    // 한국어도 On / Off 그대로 [2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 · SCREEN_DESIGN §15]
+    'rs.on': { ko: 'On', en: 'On' },
+    'rs.off': { ko: 'Off', en: 'Off' },
     // 전체 리롤 + 잠금 [2026-09-22 · R28 · tactic_card_design §5-6] — 버튼 하나가 안 잠근 칸을 전부 굴리고, 비용은 잠근 칸 수가 정한다
     'rs.reroll': { ko: '전체 리롤 {g}G', en: 'Reroll All {g}G' },
     'rs.reroll.done': { ko: '{n}칸을 다시 굴렸다', en: 'Rerolled {n} slot(s)' },
@@ -1268,6 +1269,7 @@ const STRINGS = {
             + 'The reactive bottom row is still being designed.',
     },
     'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
+    'sk.advNeed': { ko: '전직 필요', en: 'Advancement required' },   // 전직 판의 잠김 베일 (§7 · §13-1)
     'sk.advTree.missing': {
         ko: '<b>액티브를 주는 층은 전직 하나</b>다 — 두 마스터리는 전부 패시브다. 전직 3갈래 중 하나를 고르면 그 전직이 액티브 3을 주고, <b>그중 1개를 찍은 것만</b> 칸에 올라 트리의 뿌리가 된다.<br>'
             + '⚠ 미구현 — 뿌리 45개가 필요해졌고 <b>트리 형태(깊은 트리 vs 얕은 티어)</b>가 미정이라 총량을 못 정한다. 본 프로젝트 최대의 콘텐츠 부채다.',

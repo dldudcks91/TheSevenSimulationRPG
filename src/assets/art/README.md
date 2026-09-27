@@ -299,7 +299,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · materials/ores). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · materials/ores · materials/timbers · materials/herbs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다

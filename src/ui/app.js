@@ -3314,7 +3314,8 @@ function masteryCell(node, owner = {}) {
 function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraSlot = false, preview = false, sin = null, cls = null }) {
     const owner = { sin, cls };
     const color = masteryAccent(owner);
-    const box = el('div', `sk-box${locked ? ' locked' : ''}${color ? ' mastery-colored' : ''}`);
+    // `locked` — true = 흐린 판(도감의 미기획 판) · 문자열 = 격자 위 잠김 베일 + 그 한 줄(스킬 창의 전직 판)
+    const box = el('div', `sk-box${locked === true ? ' locked' : ''}${color ? ' mastery-colored' : ''}`);
     if (color) box.style.setProperty('--mastery-color', color);
     const { tiers, nodes: perTier } = M.MASTERY_GRID;
     const rows = [];
@@ -3334,6 +3335,8 @@ function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraS
             ${sub ? `<span class="muted sk-sub">${sub}</span>` : ''}
         </div>
         <div class="sk-grid">${rows.join('')}</div>`;
+    // 잠긴 판은 격자 위에 잠김 베일 (§7 · §13-1) — 한 줄은 부르는 쪽이 준다(전직 판 = 「전직 필요」)
+    if (typeof locked === 'string') { const g = box.querySelector('.sk-grid'); g.classList.add('lock-host'); g.appendChild(lockVeilText(locked)); }
     const nodeById = new Map(nodes.map(n => [n.id, n]));
     box.querySelectorAll('.sk-cell[data-node]').forEach(c =>
         bindTipNode(c, () => {
@@ -3429,7 +3432,7 @@ function skillTreeBody() {
     // 전직 층은 구현이 없다 — **같은 프레임의 빈 판**으로 자리만 남긴다. 생김새가 갈리면 같은 층으로 안 읽힌다
     wrap.appendChild(masteryBox({
         title: t('sk.advTree'),
-        nodes: [], locked: true,
+        nodes: [], locked: t('sk.advNeed'),
     }));
     return wrap;
 }
@@ -3461,7 +3464,7 @@ function tacticCell(slot, onLock) {
     const c = el('div', `rs-cell${slot.open ? (slot.active ? ' on' : ' off') + (slot.locked ? ' held' : '') : ' locked'}`);
     // 칸 번호는 안 적는다 [2026-09-21 사용자 지시 · ADR-0261] — 세로 목록에서는 행의 순서가 번호다. 잠긴 행은 **지을 지휘 천막 랭크** 한 줄뿐 (R137)
     if (!slot.open) {
-        c.innerHTML = `<div class="rs-lock">${needText('tactic_slots', slot.no)}</div>`;
+        c.innerHTML = `<div class="rs-lock">${lockIcon(true)}<span>${needText('tactic_slots', slot.no)}</span></div>`;
         return c;
     }
     const o = slot.option;
@@ -3703,8 +3706,10 @@ const resName = id => ({ gold: t('res.gold'), dust: t('res.dust'), stigma: t('re
 const needArgs = (target, n) => { const w = SYS.game.needOf(target, n); return w && { b: L(w.name), n: w.rank }; };
 /** 잠긴 자리의 한 줄 — 「선술집 2랭크 필요」 · 표에 없는 대상은 「준비 중」 */
 const needText = (target, n) => { const a = needArgs(target, n); return a ? t('cn.need', a) : t('cn.pending'); };
-/** 통째로 잠긴 칸의 베일 — 내용물 위에 검은 반투명 막 + 자물쇠(`lockIcon` 닫힘) + 같은 한 줄. 부모가 `.lock-host`(기준 상자)여야 한다 (§13-1) */
-const lockVeil = (target, n) => el('div', 'lock-veil', `<span class="lock-ico">${lockIcon(true)}</span><span>${needText(target, n)}</span>`);
+/** 통째로 잠긴 칸의 베일 — 내용물 위에 검은 반투명 막 + 자물쇠(`lockIcon` 닫힘) + 한 줄. 부모가 `.lock-host`(기준 상자)여야 한다 (§13-1) */
+const lockVeilText = text => el('div', 'lock-veil', `<span class="lock-ico">${lockIcon(true)}</span><span>${text}</span>`);
+/** 건물 랭크가 여는 자리 — 한 줄은 「선술집 n랭크 필요」 */
+const lockVeil = (target, n) => lockVeilText(needText(target, n));
 /** 잠긴 버튼을 누르면 — 같은 문장을 플래시로 */
 const flashNeed = (target, n) => { const a = needArgs(target, n); flash(a ? 'cn.need' : 'cn.pending', a ?? {}); };
 /** 흐린 탭을 누르면 — 그 탭에 붙은 건물 중 표 순서가 앞인 것을 말한다. 첫 랭크가 전부 준비 중이면 지을 수 없으니 「준비 중」 (§1 · ADR-0311) */

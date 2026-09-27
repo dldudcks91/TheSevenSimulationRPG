@@ -2524,7 +2524,7 @@ html, body { height: 100%; overflow: hidden; }
 /* ②-3·4 세부 옵션 1·2 — **목록은 칸 높이를 정하지 않는다** [2026-09-27 사용자 지시 · ADR-0384].
    flex-basis 0 — 목록이 높이 산정에서 빠져 네 칸 높이(= 가방이 남긴 세로)에 맞춰 서고, 넘치면 **칸 안에서 휠로 내린다**.
    ~~flex-basis auto — 가장 긴 칸이 네 칸의 높이를 정한다~~ 는 폐기: 줄이 늘 때마다 가방이 깎였다.
-   두 칸은 **17 · 18 줄 + 묶음 간격**이다 [ADR-0381] (SCREEN_DESIGN §6) */
+   두 칸은 **16 · 18 줄**이다 [ADR-0381 · 간격은 ADR-0389 가 걷음] (SCREEN_DESIGN §6) */
 .cs-scroll { flex: 1 1 0; min-height: 0; overflow-y: auto; padding-right: 4px; }
 /* 캐릭터 탭 세부 옵션만 줄 간격을 좁힌다 [2026-09-22 · ADR-0291] — 본문 줄 높이(1.6)로는 18줄(지금은 세부 옵션 2)이 네 칸 높이를 밀어 올려 가방이 한 줄 넘게 줄었다.
    유닛 툴팁의 같은 줄(`.tip-unit .cs-row`)은 옵션 줄이 값이 있을 때만 서서 그대로 둔다 */
@@ -3371,7 +3371,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .pt-tactics .rs-grid { grid-template-columns: max-content minmax(0, 1.4fr) minmax(0, 1fr) max-content; gap: 8px 16px; }
 .pt-tactics .rs-cell { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; padding: 11px 12px; }
 .pt-tactics .rs-top { gap: 6px; }
-.pt-tactics .rs-state { margin-left: 0; min-width: 3ch; }   /* 맨 왼쪽 (2026-09-27) — 켜짐 · 꺼짐 글자 폭이 달라도 등급 칩이 같은 자리에 선다 */
+.pt-tactics .rs-state { margin-left: 0; min-width: 3ch; }   /* 맨 왼쪽 (2026-09-27) — On · Off 글자 폭이 달라도 등급 칩이 같은 자리에 선다 */
 .pt-tactics .rs-roll { margin-top: 0; justify-self: end; }
 .pt-tactics .rs-lock { grid-column: 1 / -1; margin-top: 0; }   /* 잠긴 행은 여는 조건 한 줄 — 첫 세로줄부터 선다 (ADR-0261) */
 /* 리롤 줄 — 전체 리롤 버튼 하나 · 진척 줄과 칸 목록 사이 · 잠금 토글이 선 오른쪽 세로줄 위에 맞춘다 (§15 · R28) */
@@ -3384,7 +3384,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .rs-pin.on { color: var(--color-warning); }
 .rs-pin-ico { display: block; }
 .rs-cell.held { box-shadow: inset 3px 0 0 var(--color-warning); }
-.pt-tactics .rs-cond, .pt-tactics .rs-eff, .pt-tactics .rs-lock { font-size: var(--fs-xs); }
+.pt-tactics .rs-cond, .pt-tactics .rs-eff, .pt-tactics .rs-lock { font-size: calc(var(--fs-xs) + 1px); }   /* 한 단 아래 +1px (2026-09-27 사용자 지시) */
+/* 잠긴 행 — 왼쪽에 닫힌 자물쇠(`lockIcon` · 글자색 = 경고색) + 여는 조건 한 줄 */
+.pt-tactics .rs-lock { display: flex; align-items: center; gap: 6px; }
+.pt-tactics .rs-lock .rs-pin-ico { width: 1.1em; height: 1.1em; flex: none; }
 /* 「원정 중」 — 도는 원정의 편성 번호에 붙는다. 영웅 띠의 「원정 중」(`.hs-doing.exp`)과 같은 색 */
 .pt-run { margin-left: 6px; font-size: var(--fs-2xs); color: var(--color-warning); }
 /* 출정 창의 편성 고르개 (SCREEN_DESIGN §4-1 · ADR-0193) — 버튼 세로 · 초상 셋. 초상은 진형 · 적 구성 칸과 같은 한 변이라 적 구성과 마주 선다 */
@@ -3441,6 +3444,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .rs-grade.magic { color: var(--rarity-magic); }
 .rs-grade.rare { color: var(--rarity-rare); }
 .rs-cell.on .rs-state { color: var(--color-success); }
+.rs-cell.off .rs-state { color: var(--color-error); }   /* Off 는 빨강 (2026-09-27 사용자 지시 · §15) */
 
 .rs-cond {
     display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
@@ -3603,7 +3607,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 }
 /* 상태는 글자색과 오른쪽 끝 글자가 말한다 — 지음 흰 글씨 + 「✓」(목록의 주황은 조건만 — ADR-0330) · 다음 흰 굵은 글 + 옅은 붉은 바탕 · 그 뒤 · 준비 중 흐림 */
 .cn-rank {
-    flex: none; font-size: var(--fs-xs); min-height: calc(2 * 1.4em + 9px);   /* 글 두 줄(줄 높이 1.4) + 위아래 여백 8 + 아래 선 1 (ADR-0392) */
+    flex: 1 0 auto; font-size: var(--fs-xs); min-height: calc(2 * 1.4em + 9px);   /* 최소 글 두 줄(줄 높이 1.4) + 위아래 여백 8 + 아래 선 1 (ADR-0392) · 목록의 남는 세로는 칸들이 똑같이 나눠 가진다 (ADR-0393) */
     display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; align-items: center;
     column-gap: 14px; padding: 4px 8px; line-height: 1.4;
     border-bottom: 1px solid var(--border-dark);

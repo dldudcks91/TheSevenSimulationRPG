@@ -37,6 +37,8 @@ GAME_DIRS = [
     "mastery/sin",
     "mastery/class",
     "materials/ores",
+    "materials/timbers",
+    "materials/herbs",
 ]
 
 

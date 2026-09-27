@@ -353,7 +353,6 @@ const FX_ROWS = [
         parts: x => [[t('kind.elite'), x?.vsElite ?? 0], [t('exp.form.front'), x?.vsFront ?? 0], [t('exp.form.back'), x?.vsBack ?? 0]] },
     { id: 'fx_crush', fmt: 'pct', name: () => L(M.AFFIX_LABELS.crushing_blow_pct), parts: x => one(x?.crush) },
     { id: 'fx_hit', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hit_bonus), parts: x => one(x?.hitBonus) },   // 궁수 T1-3 (2026-09-22 R138)
-    { id: 'fx_dr_flat', fmt: 'n', name: () => L(M.AFFIX_LABELS.dr_flat), parts: x => one(x?.drFlat) },
     { id: 'fx_dr_type', fmt: 'pct', name: () => t('st.fx.drType'), parts: x => typeParts(x?.vsDr) },
     { id: 'fx_dr_target', fmt: 'pct', name: () => t('st.fx.drTarget'),
         parts: x => [[t('kind.elite'), x?.vsEliteDr ?? 0], [t('exp.form.front'), x?.vsFrontDr ?? 0], [t('exp.form.back'), x?.vsBackDr ?? 0]] },
@@ -367,7 +366,7 @@ const fxParts = (s, c) => s.parts(c?.option_fx ?? null, c);
 
 /**
  * 세부 옵션의 자리 — `[세부 옵션 1, 세부 옵션 2]` · 칸마다 **묶음**의 배열 · 묶음마다 줄 id [2026-09-27 사용자 지시 · SCREEN_DESIGN §6 · ADR-0381].
- * 1 = **늘 먹는 것**(모든 타격 · 모든 피격) — 대표 · 공격 · 방어 · 저항 · 회복 / 2 = **조건부**(대상 · 상황 · 발동이 붙는 것) — 원소 · 대상 · 확률 · 맞을 때 · 효과 증폭 · 파밍.
+ * 1 = **늘 먹는 것**(모든 타격 · 모든 피격) — 대표 · 공격 · 방어 · 회복 · 저항 / 2 = **조건부**(대상 · 상황 · 발동이 붙는 것) — 원소 · 대상 · 확률 · 맞을 때 · 효과 증폭 · 파밍.
  * 묶음은 **순서로만** 모은다 — 제목도 간격도 없다(간격은 2026-09-27 사용자 지시로 걷었다 · ADR-0389). 2 의 「대상」 묶음은 주는 것 ↔ 막는 것을 한 쌍씩 붙인다.
  * combat_stat 행끼리의 순서는 `sheet_order` 와 같아야 한다(dev/test.js 가 대조한다) · `fx_` 는 `FX_ROWS`.
  * 캐릭터 탭의 두 패널과 유닛 툴팁의 두 열이 **같은 자리에서** 끊는다 (ADR-0115)
@@ -376,9 +375,9 @@ const DETAIL_LAYOUT = [
     [
         ['atk_physical', 'atk_magic', 'action_period', 'hp_max'],
         ['crit_rate', 'crit_damage', 'def_ignore', 'cooldown_reduction'],
-        ['defense', 'damage_reduction', 'fx_dr_flat'],
-        ['res_fire', 'res_cold', 'res_lightning', 'res_poison'],
+        ['defense', 'damage_reduction'],   // 피해 감소 줄이 고정 피해 감소를 함께 든다 — `고정 / %` (2026-09-27 사용자 지시)
         ['life_steal', 'hp_regen'],
+        ['res_fire', 'res_cold', 'res_lightning', 'res_poison'],   // 저항 넷이 맨 아래 [2026-09-27 사용자 지시]
     ],
     [
         ['fx_ele', 'fx_res_red'],
@@ -420,9 +419,11 @@ export function sheetRowsHtml(rows, c) {
         // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
         //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
         const shown = s.id === 'defense' && has ? Math.round(v) : v;
+        // 피해 감소 = **고정 / %** 한 줄 [2026-09-27 사용자 지시 · SCREEN_DESIGN §6] — 고정 피해 감소(`option_fx.drFlat` · 모든 감소 뒤에 뺀다)는 제 줄을 잃었다
+        const text = s.id === 'damage_reduction' && has ? `${c.option_fx?.drFlat ?? 0} / ${fmtCombat(s, v)}` : fmtCombat(s, shown);
         return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}">
             <span class="cs-n">${L(s)}</span>
-            <span class="cs-v">${fmtCombat(s, shown)}${extra}</span></div>`;
+            <span class="cs-v">${text}${extra}</span></div>`;
     }).join('');
 }
 
