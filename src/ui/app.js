@@ -60,6 +60,7 @@ import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
 import { mountCardCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 버튼. 걷어내려면 이 줄 · 아래 호출 · devcompare.js
+import { mountFxToggle } from './devfx.js';   // 임시 — 관전 연출 단계 버튼 FX [1] [2] [3] (SCREEN_DESIGN §10-4). 걷어내려면 이 줄 · 아래 호출 · devfx.js
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
@@ -434,6 +435,7 @@ function renderShell() {
     // Admin — 켜면 건물로 막힌 탭 · 기능 · 상한이 열린 척한다 (devadmin.js) · **켤 때 골드를 `admin_gold` 까지 채운다**(진짜 골드 · 2026-09-27 · SCREEN_DESIGN §10-3)
     mountAdmin($('.resources'), render, () => { const g = D.balance.admin_gold; if (G && G.resources.gold < g) { G.resources.gold = g; save(); } });
     mountCardCompare($('.resources'), render);   // 임시 — Card [Before | After] (devcompare.js)
+    mountFxToggle($('.resources'));   // 임시 — FX [1] [2] [3] (devfx.js) · 다시 그리지 않는다
     // 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356]. `data-play` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshPlayTime`)
     if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'play-time', `${t('ui.playTime')}<b data-play>${fmtPlayTime(G.playMs)}</b>`));
     mountDevPalette($('.resources'));   // ⚙ — 배경 · 글자 색을 눈으로 맞추는 개발 장치

@@ -276,20 +276,46 @@ export const EFFECTS = {
     //   시전자 자신의 피해 감소는 결투의 **둘째 줄**이 건다(`kni_duel_guard` · `dr_pct` · 2026-09-24 R151 — ~~`castBuff` 의 결투 분기~~)
     duel: { state: true },
     taunt: { state: true },
+    // 상태이상 전용 셋 [2026-09-28 · R178 · battle_design §2-6 · §2-7] — `AILMENTS[..].stat` 의 짝이라 그 상태이상 행만 쓴다(로드 검사).
+    //   burn    받는 피해 증가 · 받는 회복 감소 — 가장 센 창 하나가 `ATTRS`(dr · recv)에서 민다
+    //   poison  초당 피해(절대값 · 거는 순간 굳힌다) — 소비자는 battle.js 의 중독 틱
+    //   stun    행동 · 쿨 정지 — 소비자는 battle.js 의 `stun`(런타임이 창을 건 뒤 부른다)
+    burn: {},
+    poison: { state: true },
+    stun: { state: true },
 };
 
 export const EFFECT_STATS = Object.keys(EFFECTS);
 
 /**
- * 상태이상 [2026-09-28 · R177 · battle_design §2-4] — **걸린 효과의 `status_id` 가 이 표의 키면 상태이상이다.** 창은 버프 · 디버프와 같고
- *   다른 것은 **받는 쪽 시간 감소**뿐이다. 상태이상 하나 = 걸린 효과 한 행 = 창 하나라 「결빙은 하나」(어느 스킬이 걸어도 갱신)가 구조로 선다.
- *   `cut` — 받는 쪽 시간 감소가 든 **유닛 필드 이름**(비율 · battle.makeUnit ← `hero.computeCombat:option_fx`). `rt.applyStatus` 가 `× (1 − 대상[cut])` 를 곱한다.
- *   화상 · 스턴 등은 거는 스킬과 함께 한 줄씩 들어온다(첫 사용자와 같이 — 코드를 미리 만들지 않는다)
+ * 상태이상 [2026-09-28 · R177 · 넷 R178 · battle_design §2-4 ~ §2-7] — **이 표의 키가 `skill_status.csv:ailment` 어휘다.** 창은 버프 · 디버프와 같고
+ *   다른 것은 받는 쪽 시간 감소 · 겹침 · 이벤트(`k`)다. 세기가 다른 행 여럿(약한 화상 · 강한 화상)이 같은 상태이상으로 선다.
+ *   `cut`   — 받는 쪽 시간 감소가 든 **유닛 필드 이름**(비율 · battle.makeUnit ← `hero.computeCombat:option_fx`). `rt.applyStatus` 가 `× (1 − 대상[cut])` 를 곱한다
+ *   `stack` — `one` = 창 하나(열쇠 = 상태이상 이름 · 다시 걸면 갱신) · `strongest` = 거는 것마다 창(열쇠 = `status_id@시전자`)이 제 시간으로 흐르고
+ *             **가장 센 하나만 적용**된다(`strongestOf` — 사용자 09-28 「동시에 적용되는 건 센 놈만 · 센 놈이 끝나면 약한 놈 남은 시간으로」)
+ *   `stat`  — 그 상태이상 전용 능력치(`EFFECTS`) — 있으면 행의 `stat` 이 같아야 하고, 그 능력치는 그 상태이상 행만 쓴다(로드 검사 · skill.js)
+ *   `hold`  — 창을 건 뒤 런타임이 `ctx.stun` 을 부른다(행동 · 쿨 정지 — battle.js)
  */
 export const AILMENTS = {
-    freeze: { cut: 'freezeDur' },     // 결빙 — 공속 감소(`period_pct` 음수) · 신발 · 반지 · 목걸이의 「빙결 시간 감소」가 줄인다
+    freeze: { cut: 'freezeDur', stack: 'one' },                         // 결빙 — 공속 감소(`period_pct` 음수) · 「빙결 시간 감소」가 줄인다
+    burn: { cut: 'burnDur', stack: 'strongest', stat: 'burn' },         // 화상 — 받는 피해 +값 · 받는 회복 −[balance.csv:burn_heal_cut]
+    poison: { cut: 'poisonDur', stack: 'strongest', stat: 'poison' },   // 중독 — 초당 피해(거는 순간 굳힌다) · 독 저항만
+    stun: { cut: 'stunDur', stack: 'one', stat: 'stun', hold: true },   // 스턴 — 행동 차례 · 스킬 쿨 정지 · 경직과 누적 안 함
 };
 export const AILMENT_IDS = Object.keys(AILMENTS);
+
+/**
+ * 적용 중인 상태이상 하나 [2026-09-28 · R178] — `u` 의 창 중 `ail` 이 같은 것에서 **가장 센 창**(`v` 최대 · 같으면 늦게 끝나는 쪽 · 그다음 삽입 순서) 또는 null.
+ *   화상 파생(`ATTRS`) · 중독 틱(battle.js) · 이벤트 동기화(skill_runtime)가 같이 쓴다
+ */
+export function strongestOf(u, ail) {
+    let best = null;
+    for (const b of Object.values(u.buffs)) {
+        if (b.ail !== ail) continue;
+        if (!best || b.v > best.v || (b.v === best.v && b.until > best.until)) best = b;
+    }
+    return best;
+}
 
 /**
  * 한 유닛의 한 능력치 **창 합** — 같은 능력치의 창은 덧셈이다(창 순서대로 · 받는 피해 감소만 예외 — 곱). 평타 광역 · 능력치 표가 쓴다
@@ -352,10 +378,20 @@ const ATTRS = [
     // 받는 피해 감소 — **창 하나 = 원천 하나** — 창 합을 안 쓰고 창마다 곱한다. 밑값(`drBase` — 장비 · 마스터리를 이미 곱으로 합친 값)도 원천 하나다.
     //   ~~`drBase + sum`~~ 은 2026-09-22 에 고쳤다 — 덧셈이라 장비 50% + 결투 20% 가 70%(곱이면 60%)였고 합이 100% 를 넘을 수 있었다.
     //   창이 없으면 밑값을 그대로 둔다(부동소수 왕복 없이 원값 복원) · 음수 창(받는 피해 증가)은 `1 − v` 가 1 보다 커져 그대로 곱해진다
+    //   화상(가장 센 창 하나)은 **원천 하나**로 끝에 선다 — 받는 피해 증가라 `-v` (2026-09-28 · R178 · battle_design §2-6)
     u => {
         const wins = [];
         for (const b of Object.values(u.buffs)) if (b.stat === 'dr_pct') wins.push(b.v);
+        const burn = strongestOf(u, 'burn');
+        if (burn) wins.push(-burn.v);
         u.dr = wins.length ? 1 - (1 - u.drBase) * reductionMult(wins) : u.drBase;
+    },
+    // 받는 회복 — 화상이 걸려 있으면 장비의 체력 회복 +% 와 **곱**으로 줄인다(`cut` = 창에 굳힌 [balance.csv:burn_heal_cut]) [2026-09-28 · R178].
+    //   회복 스킬 · 재생 · 물약 · 흡혈이 전부 `recv` 를 읽으므로 여기 한 곳이다. 밑값(`recvBase`)이 없는 유닛(손으로 만든 유닛)은 건드리지 않는다
+    u => {
+        if (u.recvBase === undefined) return;
+        const burn = strongestOf(u, 'burn');
+        u.recv = burn ? (1 + u.recvBase) * (1 - (burn.cut ?? 0)) - 1 : u.recvBase;
     },
 ];
 

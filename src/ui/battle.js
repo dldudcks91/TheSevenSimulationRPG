@@ -42,6 +42,7 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
+import { fxHit, fxStrike, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 세 단계 — 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0406)
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -569,11 +570,15 @@ function refreshEffectTipTime(now) {
  * 창이 **지금 적용하는 값** 한 줄 — 스킬 설명을 재사용하지 않는다.
  * `value`는 CSV 원값이 아니라 전투가 능력치 계수까지 적용해 `buff` 이벤트에 실은 실효값이다.
  */
-function effectSummaryText(stat, value = 0, element = null) {
+function effectSummaryText(stat, value = 0, element = null, cut = 0) {
     const v = Number(value) || 0;
     const pct = String(M.pctNum(Math.abs(v)));
     const key = (() => {
         switch (stat) {
+            // 상태이상 셋 (2026-09-28 · R178 · ADR-0405) — 화상은 받는 회복 감소(`cut`)도 · 중독은 초당 피해(절대값) · 스턴은 값이 없다
+            case 'burn': return 'bt.effect.burn';
+            case 'poison': return 'bt.effect.poison';
+            case 'stun': return 'bt.effect.stun';
             case 'atk_pct': return v < 0 ? 'bt.effect.atk.down' : 'bt.effect.atk.up';
             case 'period_pct': return v < 0 ? 'bt.effect.period.up' : 'bt.effect.period.down';
             case 'barrier_pct': return 'bt.effect.barrier';
@@ -591,19 +596,19 @@ function effectSummaryText(stat, value = 0, element = null) {
         }
     })();
     const elem = element ? t(`st.atkType.${element}`) : t('bt.effect.element');
-    return t(key, { v: pct, e: elem });
+    return t(key, { v: pct, e: elem, n: String(Math.round(v)), c: String(M.pctNum(Number(cut) || 0)) });
 }
 
 /**
  * 창 뱃지 툴팁 — 이름 + **실제 적용 효과** + 남은 시간. 스킬의 대상·쿨·원문 설명은 되풀이하지 않는다.
  * `until === null`인 오오라는 상시, 경직은 스킬 그림 대신 뱃지와 같은 멈춤 표시를 쓴다.
  */
-function effectTipCard({ owner, info = null, name = '', stat = null, value = 0, element = null, until = null, now = 0, stagger = false }) {
+function effectTipCard({ owner, info = null, name = '', stat = null, value = 0, element = null, cut = 0, until = null, now = 0, stagger = false }) {
     const c = document.createElement('div');
     c.className = 'tip-card effect-tip';
     c.dataset.effectOwner = String(owner ?? '');
     const icon = stagger ? '<i class="tip-effect-stagger"></i>' : skillImg(info);
-    const summary = stagger ? t('bt.effect.stagger') : effectSummaryText(stat, value, element);
+    const summary = stagger ? t('bt.effect.stagger') : effectSummaryText(stat, value, element, cut);
     c.innerHTML = `
         <div class="tip-effect-head">
             <div class="tip-name"><span class="tip-sk-ico">${icon}</span>${name}</div>
@@ -638,22 +643,24 @@ function refreshBuffs(u, now) {
     // 이 유닛의 칩을 갈아 끼우면 떠 있던 툴팁의 앵커가 DOM에서 빠진다. 유령 툴팁으로 남기지 않는다.
     const open = document.querySelector('#tooltip .effect-tip');
     if (open?.dataset.effectOwner === String(u.key)) hideTip();
+    // 상태이상 칩(`b.k` — 열쇠가 상태이상 이름)은 **늘 해롭다** · 그림은 적용 중인 것을 건 스킬(`b.s`) · 이름은 상태이상 (R178 · ADR-0405)
     row.innerHTML = live.map(([id, b]) => {
-        const info = skillInfo(id);
-        return `<span class="buff-chip ${(b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
+        const info = skillInfo(b?.s ?? id);
+        return `<span class="buff-chip ${b?.k || (b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
     }).join('') + (stag ? '<span class="buff-chip stagger" data-stagger="1"></span>' : '');
 
     const byId = new Map(live);
     row.querySelectorAll('[data-effect]').forEach(chip => {
         const id = chip.dataset.effect;
         const b = byId.get(id);
-        const info = skillInfo(id);
+        const info = skillInfo(b?.s ?? id);
+        const name = b?.k ? t(`bt.ail.${b.k}`) : L(info.name);
         // 창의 원소 — 그 창을 건 스킬의 **첫 줄**이 거는 걸린 효과가 든다(`skill_status.csv` · 이벤트가 창 열쇠를 안 실어 칩은 스킬 id 로 선다 · 부채 #68 —
         //   여러 줄 스킬은 결투 하나이고 두 줄 다 원소가 없다). 무기 옵션 창(`wx:`)은 스킬이 아니라 null
-        const element = SYS.skill?.statuses?.[SYS.skill.defs?.[id]?.effects[0].status]?.element ?? null;
-        chip.setAttribute('aria-label', `${L(info.name)} — ${effectSummaryText(b?.stat, b?.v, element)}`);
+        const element = b?.k ? null : SYS.skill?.statuses?.[SYS.skill.defs?.[id]?.effects[0].status]?.element ?? null;
+        chip.setAttribute('aria-label', `${name} — ${effectSummaryText(b?.stat, b?.v, element, b?.cut)}`);
         bindTipNode(chip, () => effectTipCard({
-            owner: u.key, info, name: L(info.name), stat: b?.stat, value: b?.v, element,
+            owner: u.key, info, name, stat: b?.stat, value: b?.v, element, cut: b?.cut ?? 0,
             until: b?.until ?? null, now: u.buffTipNow,
         }));
     });
@@ -770,6 +777,10 @@ const potionIcon = id => { const src = id ? M.potionArt(id) : null; return src ?
  * 기본 공격은 `s` 가 없어 아이콘도 없다 — **아이콘의 유무가 「스킬이 나갔다」는 신호**다.
  * 아이콘만 innerHTML 이고 본문은 텍스트 노드다 — 유닛 이름·수치가 마크업으로 새지 않게 한다.
  */
+/** 피해 팝업의 클래스 — 색은 피해 종류(`ty`)가 정하고(로그와 같은 색) 치명은 크기만 다르다 · 종류가 없는 피해(반사 · 자폭)는 무채색.
+    때린 쪽 · 맞은 쪽은 색으로 가르지 않는다 — 팝업이 뜨는 카드의 자리가 든다 (ADR-0408) */
+const dmgPop = (ty = null, crit = false) => `dmg${crit ? ' crit' : ''}${ty ? ` dt-${ty}` : ''}`;
+
 function popup(state, u, text, cls, skillId = null) {
     if (!u?.node || state.catchUp) return;   // 되감기 중에는 팝업을 띄우지 않는다
     const layer = u.node.querySelector('.pop-layer');
@@ -988,6 +999,7 @@ function apply(state, root, opts, ev) {
             }
             // 카드가 늘었으면 진형 줄을 다시 세운다(라운드 시작과 같은 함수) — 되살아남만이면 자리 그대로다
             if (grew) renderUnits(state, root);
+            for (const e of ev.units) fxAppear(state, U(e.key));   // 불린 무리가 떠오르며 선다 — 카드를 지은 뒤 (ADR-0406)
             const a = U(ev.u);
             // 대상 칸 = 불린 무리(쉼표) — 처음 선 것과 되살아난 것을 가르지 않는다 · 값 칸은 빈다 (ADR-0189)
             if (a) logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), '');
@@ -1004,9 +1016,10 @@ function apply(state, root, opts, ev) {
             if (a) { markActed(a, ev.t); if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
-                popup(state, d, `-${ev.dmg}`, ev.crit ? 'crit' : (a?.side === 'party' ? 'dmg' : 'dmg-in'), ev.s);
+                popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty, ev.crit), ev.s);
                 refreshUnit(state, d);
             }
+            fxHit(state, a, d, ev);   // 1 은 모든 타격 · 2 · 3 은 스킬만 (ADR-0406)
             if (a && d) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
@@ -1018,7 +1031,8 @@ function apply(state, root, opts, ev) {
         case 'reflect': {
             // 반사 — 비직격. 공격자 HP 만 줄고 아무것도 유발하지 않는다 (battle_design §9-6)
             const a = U(ev.a), d = U(ev.d);
-            if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
+            if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, dmgPop()); refreshUnit(state, d); }
+            fxStrike(state, d);   // 맞은 카드만 흔들린다 — 반사는 스킬이 아니다 (ADR-0406)
             if (a && d) {
                 logLine(state, root, a.side, L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
                 addDmg(state, a, d, 'reflect', ev.dmg);
@@ -1029,7 +1043,8 @@ function apply(state, root, opts, ev) {
             // 자폭 — 비직격 **고정 피해** (battle_design §9-6 · skill_design §12-9 · 2026-09-21). 배리어를 안 보고 HP 만 줄이며 아무것도 유발하지 않는다.
             //   적 전원이 대상이라 한 번 터질 때 이벤트가 대상 수만큼 잇따른다 — 광역 스킬의 `hit` 과 같은 모양이다
             const a = U(ev.a), d = U(ev.d);
-            if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, 'dmg-in'); refreshUnit(state, d); }
+            if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, dmgPop()); refreshUnit(state, d); }
+            fxStrike(state, d, ev);   // 맞은 카드가 흔들리고 자폭은 스킬이라 2 · 3 도 탄다 (ADR-0406)
             if (a && d) {
                 logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg);   // 주체는 터진 쪽 (반사와 같은 자리)
                 addDmg(state, a, d, ev.s, ev.dmg);
@@ -1048,6 +1063,7 @@ function apply(state, root, opts, ev) {
             const skill = strikeLabel(ev.s);
             if (a) markActed(a, ev.t);
             if (d) popup(state, d, t('pop.dodge'), 'miss');
+            fxMiss(state, a, d);   // (ADR-0406)
             if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss'));
             break;
         }
@@ -1057,9 +1073,19 @@ function apply(state, root, opts, ev) {
             // 경직 중에 또 걸리면 **끝만 새로** — 시뮬이 행동 예약을 미는 방식과 같다 (INTERFACE §2-6 「경직」)
             u.stalls = u.stalls ?? [];
             const w = u.stalls[u.stalls.length - 1];
-            if (w && ev.t < w.to) w.to = ev.until;
+            if (w && ev.t < w.to) w.to = Math.max(w.to, ev.until);   // 스턴과 겹치면 늦은 끝 (R178 — 누적하지 않는다)
             else u.stalls.push({ from: ev.t, to: ev.until });
             refreshUnit(state, u);
+            break;
+        }
+        case 'dot': {
+            // 지속 피해 — 중독 틱 (2026-09-28 · R178 · ADR-0405). 비직격이라 행동이 아니다(`markActed` 없음) · 주체 = 그 중독을 건 쪽 · 이름 = 상태이상
+            const a = U(ev.a), d = U(ev.d);
+            if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty)); refreshUnit(state, d); }
+            if (a && d) {
+                logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
+                addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
+            }
             break;
         }
         case 'down': {
@@ -1071,11 +1097,13 @@ function apply(state, root, opts, ev) {
             // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
             logLine(state, root, enemy ? 'party' : 'enemy', L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed'));
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
+            fxDown(state, u);   // (ADR-0406)
             break;
         }
         case 'heal': {   // 회복 — 시전자(a)가 대상(d)의 HP 를 올린다. 부호가 반대일 뿐 타격과 같은 자리에 뜬다
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
+            fxHeal(state, d, ev);   // 스킬 회복만 (ADR-0406)
             if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), `+${ev.amt}`, 'heal-t');
             break;
         }
@@ -1098,28 +1126,38 @@ function apply(state, root, opts, ev) {
         case 'buff': {   // 창 적용 · 갱신. 배리어면 총량(amt)도, 최대 HP 를 민 창이면 새 최대치(hpMax·dhp)도 온다
             const u = U(ev.u);
             if (!u) break;
-            u.buffs?.set(ev.s, { until: ev.until, stat: ev.stat, v: ev.v });
+            // 상태이상은 칩을 `k`(이름)로 든다 — 한 유닛에 상태이상 하나 = 칩 하나 (R178 · ADR-0405)
+            u.buffs?.set(ev.k ?? ev.s, { until: ev.until, stat: ev.stat, v: ev.v, s: ev.s, k: ev.k ?? null, cut: ev.cut ?? 0 });
+            // 스턴 — 경직과 같은 창으로 행동 게이지를 세우고(겹치면 늦은 끝) 아직 안 준비된 칸의 쿨을 시뮬이 민 만큼(`cd`) 민다. 계산이 아니라 실려 온 값이다
+            if (ev.k === 'stun') {
+                u.stalls = u.stalls ?? [];
+                const w = u.stalls[u.stalls.length - 1];
+                if (w && ev.t < w.to) w.to = Math.max(w.to, ev.until);
+                else u.stalls.push({ from: ev.t, to: ev.until });
+                if (ev.cd > 0) for (const s of u.skills ?? []) if ((s.readyAt ?? 0) > ev.t) s.readyAt += ev.cd;
+            }
             // 최대 HP 를 민 창 — 시뮬이 민 값을 그대로 받는다. 재생기는 계산하지 않는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
+            fxBuff(state, u, ev);   // 좋은 창 · 나쁜 창 · 방벽 — 스킬만 · 오오라 없음 (ADR-0406)
             // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
             // 「지금 걸려 있다」는 상태라 카드 테두리가 든다 (SCREEN_DESIGN §4-2)
             // 오오라(`until: null`)는 로그에 안 적는다 — 전투 시작 · 적의 라운드마다 받는 유닛 수만큼 같은 줄이 쌓인다. 뱃지가 든다 (R98 · ADR-0127)
             // 배리어인지는 `stat` 으로 가른다 [2026-09-21 · 부채 #50 곁가지] — `amt` 는 최대 HP 창(`hp_max_pct`)도 실어서
             //   `amt != null` 로 가르면 배틀오더스가 「방벽 21」로 찍혔다
-            if (ev.until !== null) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '',
+            if (ev.until !== null) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '',
                 ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up'));
             break;
         }
         case 'buffEnd': {
             const u = U(ev.u);
             if (!u) break;
-            const aura = u.buffs?.get(ev.s)?.until === null;   // 오오라 창이 닫힐 때도 로그를 안 쓴다 (R98)
-            u.buffs?.delete(ev.s);
+            const aura = u.buffs?.get(ev.k ?? ev.s)?.until === null;   // 오오라 창이 닫힐 때도 로그를 안 쓴다 (R98)
+            u.buffs?.delete(ev.k ?? ev.s);   // 상태이상은 `k` 로 든 칩 (R178)
             // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
-            if (!aura) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), '', t('log.v.ended'));
+            if (!aura) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '', t('log.v.ended'));
             break;
         }
         // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)

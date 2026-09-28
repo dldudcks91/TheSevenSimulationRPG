@@ -1534,6 +1534,14 @@ const STRINGS = {
     'bt.effect.duel': { ko: '시전자만 공격', en: 'Can only attack the caster' },
     'bt.effect.taunt': { ko: '적의 공격 대상을 자신으로 고정', en: 'Forces enemies to target this unit' },
     'bt.effect.stagger': { ko: '행동 게이지 정지', en: 'Action gauge stopped' },
+    // 상태이상 (2026-09-28 · R178 · ADR-0405) — 칩 이름 · 로그 이름 · 툴팁 적용값
+    'bt.ail.freeze': { ko: '결빙', en: 'Freeze' },
+    'bt.ail.burn': { ko: '화상', en: 'Burn' },
+    'bt.ail.poison': { ko: '중독', en: 'Poison' },
+    'bt.ail.stun': { ko: '스턴', en: 'Stun' },
+    'bt.effect.burn': { ko: '받는 피해 {v}% 증가 · 받는 회복 {c}% 감소', en: 'Damage taken +{v}% · Healing received −{c}%' },
+    'bt.effect.poison': { ko: '초당 독 피해 {n}', en: '{n} poison damage per second' },
+    'bt.effect.stun': { ko: '행동 · 쿨타임 정지', en: 'Actions and cooldowns stopped' },
     'bt.effect.element': { ko: '원소', en: 'elemental' },
     // 현재 창의 시간 상태 — 이름 오른쪽에 값만 선다
     'bt.effect.permanent': { ko: '상시', en: 'Permanent' },

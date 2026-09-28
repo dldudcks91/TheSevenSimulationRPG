@@ -74,8 +74,6 @@
     --boss-bg: #1f1416;
     --downed-line: #5a2424;
     --hp-fill: #c03030;
-    --dmg-out: #ffd0d0;
-    --dmg-in: #ff8080;
     --accent-rgb: 224, 48, 48;  /* = --text-accent 의 채널. 보스 초상 글로우가 쓴다 */
 
     /* 정예 · 패시브 · 경고 — 금색 계열 */
@@ -109,6 +107,24 @@
     --dt-cold: #5aaaf5;
     --dt-poison: #6cc24a;
     --dt-fire: #ee5140;
+    /* 관전 연출 색 (ADR-0406) — 위 피해 종류 색 계열을 **채도를 낮춘** 값 · `-core` 는 조각의 밝은 속. 네온 · 번짐 빛을 안 쓴다 */
+    --fx-physical: #cfae8a;
+    --fx-physical-core: #f0e4d2;
+    --fx-fire: #c65a3a;
+    --fx-fire-core: #e9a868;
+    --fx-cold: #6f9ec4;
+    --fx-cold-core: #d6e6f1;
+    --fx-lightning: #d4bd62;
+    --fx-lightning-core: #f5eec8;
+    --fx-poison: #739a48;
+    --fx-poison-core: #b9d08e;
+    --fx-ring: #b3a58f;
+    --fx-heal: #8fc79a;
+    --fx-heal-core: #dcf0d8;
+    --fx-bleed-rgb: 176, 44, 40;
+    --fx-buff-rgb: 212, 176, 98;
+    --fx-debuff-rgb: 92, 52, 120;
+    --fx-barrier-rgb: 130, 168, 200;
     --done-line: #3a5a3a;
     --done-bg: #16201a;
     --toggle-bg: #14301c;
@@ -1719,9 +1735,16 @@ html, body { height: 100%; overflow: hidden; }
     animation: pop-up .9s ease-out forwards; white-space: nowrap;
     text-shadow: 0 1px 2px #000;
 }
-.pop.dmg { color: var(--dmg-out); }
-.pop.dmg-in { color: var(--dmg-in); }
-.pop.crit { color: var(--color-warning); font-size: var(--fs-lg); }
+/* 피해 숫자는 한 단 크다 [2026-09-28 사용자 지시 · ADR-0407] — 보통 13 → 15 · 치명 18 → 20. 글자 팝업(빗나감 · 반격 · 처치 · 회복)은 그대로.
+   색은 **피해 종류 색** — 로그의 피해 숫자와 같은 토큰(`--dt-*`) [2026-09-28 사용자 지시 · ADR-0408]. 종류가 없는 피해(반사 · 자폭)는 무채색 기본이다.
+   때린 쪽 · 맞은 쪽을 색으로 가르지 않는다(옛 `--dmg-out` 연분홍 / `--dmg-in` 빨강 폐지 — 카드 자리가 든다) · 치명도 같은 색이고 크기만 크다(옛 치명 노랑 폐지) */
+.pop.dmg { color: var(--text-primary); font-size: var(--fs-md); }
+.pop.dmg.crit { font-size: calc(var(--fs-lg) + 2px); }
+.pop.dmg.dt-physical { color: var(--dt-physical); }
+.pop.dmg.dt-fire { color: var(--dt-fire); }
+.pop.dmg.dt-cold { color: var(--dt-cold); }
+.pop.dmg.dt-lightning { color: var(--dt-lightning); }
+.pop.dmg.dt-poison { color: var(--dt-poison); }
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
 .pop.counter { color: var(--color-warning); font-size: var(--fs-xs); }            /* 반격 — 반격한 카드의 글자 (ADR-0158) */
 .pop.heal { color: var(--heal-fg); }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
@@ -1743,6 +1766,152 @@ html, body { height: 100%; overflow: hidden; }
     0% { transform: translate(-50%, 6px); opacity: 0; }
     18% { transform: translate(-50%, -2px); opacity: 1; }
     100% { transform: translate(-50%, -30px); opacity: 0; }
+}
+
+/* 관전 연출 [2026-09-28 사용자 지시 · SCREEN_DESIGN §4-2 「연출」 · ADR-0406] — 세 단계. **어느 카드에 붙이나는 `fx.js`, 모양 · 길이는 여기.**
+   단계를 빼면 그 단계의 규칙을 통째로 지운다(단계마다 묶어 두었다). 켜짐은 `<html data-fx>` 가 든다(개발용 버튼 devfx.js · 기본값 `fx.js:FX_DEFAULT`).
+   길이는 전부 `--fx-k` 를 곱한다 — 배속이 오르면 짧아진다(fx.js 가 칸 `.unit-slot` 에 건다 · ×1 1 / ×2 .75 / ×4 .55) */
+
+/* ── 1 · 피격 반응 — 카드 · 초상 · 칸이 움직인다. 그림 없음 · 아레나 전체는 안 흔든다(소란) ── */
+.unit.fx-shake { animation: fx-shake calc(220ms * var(--fx-k, 1)) ease-out; }
+.unit.fx-shake-crit { animation: fx-shake-crit calc(320ms * var(--fx-k, 1)) ease-out; }
+.unit.fx-dodge { animation: fx-dodge calc(260ms * var(--fx-k, 1)) ease-out; }
+.unit.fx-down { animation: fx-down calc(380ms * var(--fx-k, 1)) ease-out; }
+.sprite.fx-flash { animation: fx-flash calc(200ms * var(--fx-k, 1)) ease-out; }
+.sprite.fx-flash-crit { animation: fx-flash-crit calc(340ms * var(--fx-k, 1)) linear; }
+/* 쓰러짐 — 초상을 덮는 붉은 막(곱하기 섞기라 그림의 선이 그대로 비친다). 조각 층에 서서 초상 크기(`--sw` · `--sh`)를 받는다 */
+.fx-layer > .fx-bleed {
+    width: var(--sw, 101px); height: var(--sh, 101px); margin: calc(var(--sh, 101px) / -2) 0 0 calc(var(--sw, 101px) / -2);
+    background: rgb(var(--fx-bleed-rgb)); mix-blend-mode: multiply;
+    animation: fx-bleed calc(520ms * var(--fx-k, 1)) ease-out both;
+}
+/* 때린 카드 — 상대 진영 쪽으로. 파티는 아래 진영이라 위로, 적은 아래로 (진형이 칸을 `top` 으로 미는 것과 안 부딪히게 칸의 transform 을 쓴다) */
+.side-party .unit-slot.fx-lunge { animation: fx-lunge-up calc(240ms * var(--fx-k, 1)) ease-out; }
+.side-enemy .unit-slot.fx-lunge { animation: fx-lunge-down calc(240ms * var(--fx-k, 1)) ease-out; }
+/* 쓰러진 카드는 **한 박자 뒤에** 흐려진다 — 곧바로 흐려지면(.unit.dead) 마지막 타격의 연출이 회색으로 옅게 탄다. 단계가 하나라도 켜진 동안만 */
+html:not([data-fx=""]) .unit.dead {
+    transition: opacity calc(450ms * var(--fx-k, 1)) calc(300ms * var(--fx-k, 1)), filter calc(450ms * var(--fx-k, 1)) calc(300ms * var(--fx-k, 1));
+}
+@keyframes fx-shake { 0%, 100% { transform: none; } 20% { transform: translateX(-4px); } 45% { transform: translateX(4px); } 70% { transform: translateX(-2px); } }
+@keyframes fx-shake-crit { 0%, 100% { transform: none; } 15% { transform: translateX(-7px); } 35% { transform: translateX(7px); } 55% { transform: translateX(-5px); } 75% { transform: translateX(3px); } }
+@keyframes fx-dodge { 0%, 100% { transform: none; } 35% { transform: translateX(calc(12px * var(--fx-sx, 1))); } }
+@keyframes fx-down { 0%, 100% { transform: none; } 30% { transform: translateY(6px); } }
+@keyframes fx-flash { 0% { filter: brightness(2.4); } 100% { filter: none; } }
+@keyframes fx-flash-crit { 0% { filter: brightness(2.8); } 30% { filter: none; } 50% { filter: brightness(2.2); } 100% { filter: none; } }
+@keyframes fx-bleed { 0% { opacity: .95; } 45% { opacity: .8; } 100% { opacity: 0; } }
+@keyframes fx-lunge-up { 0%, 100% { transform: none; } 35% { transform: translateY(-9px); } }
+@keyframes fx-lunge-down { 0%, 100% { transform: none; } 35% { transform: translateY(9px); } }
+
+/* ── 조각 층 — 카드 안 **팝업 층 앞**이라 피해 숫자가 늘 위에 선다. 조각은 초상 한가운데(`--cx` · `--cy` — fx.js 가 잰다)에서 시작한다 ── */
+.fx-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.fx-layer > * { position: absolute; left: var(--cx, 56px); top: var(--cy, 56px); pointer-events: none; }
+
+/* ── 2 · 스킬 이펙트 — 스킬에만. 타격은 피해 종류가 모양을 정한다 · 색은 `--fx-*`(피해 종류 색을 채도를 낮춘 값) ── */
+/* 물리 — 베기 궤적. 왼쪽에서 오른쪽으로 그어지고 왼쪽부터 사라진다 */
+.fx-slash {
+    width: 132px; height: 6px; margin: -3px 0 0 -66px; border-radius: 3px;
+    background: linear-gradient(90deg, transparent, var(--fx-physical) 25%, var(--fx-physical-core) 60%, transparent);
+    transform: rotate(var(--r));
+    animation: fx-slash calc(280ms * var(--fx-k, 1)) ease-out calc(var(--dl, 0ms) * var(--fx-k, 1)) both;
+}
+@keyframes fx-slash { 0% { clip-path: inset(0 100% 0 0); opacity: 1; } 45% { clip-path: inset(0 0 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 60%); opacity: 0; } }
+/* 화염 — 불똥 */
+.fx-ember {
+    width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2); border-radius: 50%;
+    background: radial-gradient(circle, var(--fx-fire-core) 0 30%, var(--fx-fire) 65%);
+    animation: fx-burst calc(480ms * var(--fx-k, 1)) cubic-bezier(.2, .7, .4, 1) both;
+}
+@keyframes fx-burst { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 70% { opacity: .9; } 100% { transform: translate(var(--dx), var(--dy)) scale(.45); opacity: 0; } }
+/* 화염 · 독의 한가운데 — 짧게 확 터지는 원판. 가장자리를 딱 끊는다(번짐 빛이 아니다) */
+.fx-flare {
+    width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%;
+    animation: fx-flare calc(280ms * var(--fx-k, 1)) ease-out both;
+}
+.fx-flare.fire { background: radial-gradient(circle, var(--fx-fire-core) 0 32%, var(--fx-fire) 58% 68%, transparent 69%); }
+.fx-flare.poison { background: radial-gradient(circle at 45% 40%, var(--fx-poison-core) 0 22%, var(--fx-poison) 45% 66%, transparent 67%); }
+@keyframes fx-flare { 0% { transform: scale(.35); opacity: .95; } 100% { transform: scale(1.25); opacity: 0; } }
+/* 냉기 — 얼음 조각(마름모) · 조각마다 크기가 조금씩 다르다(`--sc`) */
+.fx-shard {
+    width: 9px; height: 22px; margin: -11px 0 0 -4.5px;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    background: linear-gradient(var(--fx-cold-core), var(--fx-cold));
+    animation: fx-shard calc(400ms * var(--fx-k, 1)) ease-out both;
+}
+@keyframes fx-shard { 0% { transform: translate(0, 0) rotate(var(--r)) scale(calc(var(--sc, 1) * .5)); opacity: 1; } 65% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(var(--sc, 1)); opacity: 0; } }
+/* 전기 — 번개 갈래. 그림 틀(-50 -60 · 100 × 120)의 원점이 초상 한가운데에 오게 민다 */
+.fx-bolt {
+    width: 100px; height: 120px; margin: -60px 0 0 -50px;
+    animation: fx-flicker calc(320ms * var(--fx-k, 1)) linear calc(var(--dl, 0ms) * var(--fx-k, 1)) both;
+}
+.fx-bolt svg { display: block; overflow: visible; }
+.fx-bolt polyline { fill: none; stroke: var(--fx-lightning); stroke-width: 4.2; stroke-linejoin: miter; stroke-linecap: round; }
+.fx-bolt polyline.core { stroke: var(--fx-lightning-core); stroke-width: 1.6; }
+@keyframes fx-flicker { 0% { opacity: 0; } 8% { opacity: 1; } 25% { opacity: .25; } 40% { opacity: 1; } 70% { opacity: .6; } 100% { opacity: 0; } }
+/* 독 — 방울이 튀어 올랐다 떨어진다 */
+.fx-drop {
+    width: var(--sz); height: calc(var(--sz) * 1.25); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: radial-gradient(circle at 40% 35%, var(--fx-poison-core) 0 25%, var(--fx-poison) 55%);
+    animation: fx-drop calc(560ms * var(--fx-k, 1)) both;
+}
+@keyframes fx-drop {
+    0% { transform: translate(0, 0) scale(.6); opacity: 1; animation-timing-function: ease-out; }
+    40% { transform: translate(calc(var(--dx) * .6), var(--dy)) scale(1); opacity: 1; animation-timing-function: ease-in; }
+    100% { transform: translate(var(--dx), calc(var(--dy) + 56px)) scale(.85); opacity: 0; }
+}
+/* 종류가 없는 피해(자폭) — 충격 고리 */
+.fx-ring {
+    width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%;
+    border: 3px solid var(--fx-ring);
+    animation: fx-ring calc(380ms * var(--fx-k, 1)) ease-out both;
+}
+@keyframes fx-ring { 0% { transform: scale(.3); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
+/* 회복 — 초록 빛 알갱이가 초상 아래쪽에서 오른다 */
+.fx-mote {
+    width: var(--sz, 6px); height: var(--sz, 6px); margin: calc(var(--sz, 6px) / -2) 0 0 calc(var(--sz, 6px) / -2); border-radius: 50%;
+    background: radial-gradient(circle, var(--fx-heal-core) 0 35%, var(--fx-heal) 60%);
+    animation: fx-rise calc(720ms * var(--fx-k, 1)) ease-out calc(var(--dl, 0ms) * var(--fx-k, 1)) both;
+}
+@keyframes fx-rise { 0% { transform: translate(var(--dx), var(--y0)); opacity: 0; } 25% { opacity: 1; } 100% { transform: translate(var(--dx), var(--y1)); opacity: 0; } }
+/* 창 · 방벽 — 카드 전체. 조각 층의 기본 자리(초상 한가운데)를 덮어 카드를 채운다 */
+.fx-layer > .fx-card { left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; }
+.fx-card::before { content: ''; position: absolute; left: 0; right: 0; top: 0; }
+/* 좋은 창 — 금빛 띠가 아래에서 위로 훑는다 */
+.fx-sweep::before {
+    height: 42%;
+    background: linear-gradient(to top, transparent, rgba(var(--fx-buff-rgb), .55) 55%, transparent);
+    animation: fx-sweep calc(560ms * var(--fx-k, 1)) ease-out both;
+}
+@keyframes fx-sweep { 0% { transform: translateY(240%); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-100%); opacity: .6; } }
+/* 나쁜 창(상태이상 포함) — 어두운 기운이 위에서 내려앉는다 */
+.fx-haze::before {
+    height: 80%;
+    background: linear-gradient(to bottom, rgba(var(--fx-debuff-rgb), .8), rgba(var(--fx-debuff-rgb), .35) 60%, transparent);
+    animation: fx-haze calc(640ms * var(--fx-k, 1)) ease-out both;
+}
+@keyframes fx-haze { 0% { transform: translateY(-70%); opacity: 0; } 35% { opacity: 1; } 100% { transform: translateY(10%); opacity: 0; } }
+/* 방벽 — 카드 둘레에 막이 한 번 퍼진다 */
+.fx-layer > .fx-shell {
+    left: -3px; top: -3px; width: calc(100% + 6px); height: calc(100% + 6px); border-radius: 4px;
+    border: 3px solid rgb(var(--fx-barrier-rgb)); background: rgba(var(--fx-barrier-rgb), .2);
+    animation: fx-shell calc(540ms * var(--fx-k, 1)) ease-out both;
+}
+@keyframes fx-shell { 0% { transform: scale(.95); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1.04); opacity: 0; } }
+/* 불러낸 무리 — 떠오르며 선다 */
+.unit-slot.fx-appear { animation: fx-appear calc(380ms * var(--fx-k, 1)) ease-out backwards; }
+@keyframes fx-appear { 0% { transform: translateY(12px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+
+/* ── 3 · 타격 그림 — 피해 종류의 그림 한 장(`assets/art/fx/<종류>.webp`)이 커지며 살짝 돌고 사라진다. 치명은 한 단 크다 ── */
+.fx-stamp {
+    width: 124px; height: 124px; margin: -62px 0 0 -62px; object-fit: contain;
+    animation: fx-stamp calc(440ms * var(--fx-k, 1)) ease-out both;
+}
+.fx-stamp.crit { width: 152px; height: 152px; margin: -76px 0 0 -76px; }
+@keyframes fx-stamp {
+    0% { transform: rotate(var(--r)) scale(.5); opacity: 0; }
+    15% { opacity: 1; }
+    60% { transform: rotate(var(--r)) scale(1.02); opacity: 1; }
+    100% { transform: rotate(var(--r)) scale(1.1); opacity: 0; }
 }
 
 /* 판(로그 · 누적) — **나눔 배치의 우측 열에만** 선다 (SCREEN_DESIGN §4-2 · ADR-0130). 넓게 배치에는 판이 없다 */

@@ -20,7 +20,7 @@ import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { parseCsv } from '../game_logic/csv.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createSkillSystem } from '../game_logic/skill.js';
-import { ATTACK_TARGETS, refreshDerived, weaponOnHit } from '../game_logic/skill_effects.js';
+import { ATTACK_TARGETS, AILMENT_IDS, refreshDerived, weaponOnHit } from '../game_logic/skill_effects.js';
 import { createSkillRuntime, createHooks, cooldownSec } from '../game_logic/skill_runtime.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
 import { createCommission } from '../game_logic/commission.js';
@@ -526,7 +526,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level',
         'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare',
         'tactic_reroll_base_cost', 'tactic_reroll_lock_mult',
-        'potion_slot_max', 'potion_use_hp_pct', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'repeat_restart_sec',
+        'potion_slot_max', 'potion_use_hp_pct', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'burn_heal_cut', 'dot_tick_sec', 'repeat_restart_sec',
         'gamble_batch_spins', 'gamble_stake_steps', 'gamble_stake_gold', 'gamble_stake_chapter_mult',
         'gamble_reels', 'gamble_rows', 'gamble_hold_trigger', 'gamble_hold_respins', 'gamble_hold_coin_pct',
         'commission_slots', 'commission_board_cards', 'commission_gold_chapter_mult'];
@@ -4809,6 +4809,8 @@ function fakeRt(party, enemies, opts = {}) {
         }),
         // 비직격 고정 피해 — 진짜 이음매는 battle.js 것(기여 · 전투불능)이라 여기서는 **HP 와 이벤트만** 남긴다 (2026-09-24 R151)
         dealIndirect: (a, d, dmg, s) => { d.hp = Math.max(0, d.hp - dmg); log.push({ e: 'blast', a: a.key, d: d.key, s, dmg, dhp: d.hp }); },
+        // 스턴 — 진짜 이음매는 battle.js 것(행동 예약 · 쿨)이라 여기서는 `opts.stun` 이 부름을 받는다 (2026-09-28 R178)
+        stun: opts.stun,
         r1: v => Math.round(v * 10) / 10, EPS: SYS.skill.EPS,
         hooks: createHooks(),
     });
@@ -5052,7 +5054,7 @@ check('runtime: 버프 지속시간 — 거는 쪽 창이 (1 + buffDur) 배 · �
  * 결빙 [2026-09-28 · R177 · battle_design §2-4] — 상태이상 첫 번째. 스킬 타격이 맞은 대상에게 공속 감소 창 `freeze` 하나를 건다.
  * 상태이상 하나 = 걸린 효과 한 행이라 어느 스킬이 걸어도 창은 하나다 · 받는 쪽 「빙결 시간 감소」가 시간을 줄인다
  */
-check('runtime: 결빙 — 창 하나(어느 스킬이 걸어도 갱신 · 다른 스킬이면 옛 칩의 buffEnd 먼저) · 공속이 준다 · 바인드와 더한다 · 받는 쪽 빙결 시간 감소(100% 면 안 걸린다) · 거는 쪽 버프 지속 · rng 0 (battle_design §2-4 · R177)', () => {
+check('runtime: 결빙 — 창 하나(어느 스킬이 걸어도 갱신 · 칩은 k 로 들어 옛 칩의 buffEnd 가 없다 — R178) · 공속이 준다 · 바인드와 더한다 · 받는 쪽 빙결 시간 감소(100% 면 안 걸린다) · 거는 쪽 버프 지속 · rng 0 (battle_design §2-4 · R177)', () => {
     const ib = skillLine('mag_iceblast'), fn = skillLine('mag_frostnova'), bind = skillLine('pri_bind');
     const oi = ib.onHit, on = fn.onHit;
     if (!oi || !on) fail('아이스 블라스트 · 프로스트 노바의 타격 줄에 onHit 이 없다');
@@ -5069,16 +5071,16 @@ check('runtime: 결빙 — 창 하나(어느 스킬이 걸어도 갱신 · 다�
     if (Math.abs(w.until - (1 + oi.dur)) > 1e-9) fail(`until ${w.until} ≠ ${1 + oi.dur}`);
     if (Math.abs(foe.period - 2 * (1 - oi.value)) > 1e-12) fail(`주기 ${foe.period} ≠ ${2 * (1 - oi.value)}`);
     const ev0 = log.at(-1);
-    if (ev0?.e !== 'buff' || ev0.u !== 'e0' || ev0.s !== 'mag_iceblast' || ev0.stat !== 'period_pct') fail(`buff 이벤트 ${JSON.stringify(ev0)}`);
+    if (ev0?.e !== 'buff' || ev0.u !== 'e0' || ev0.s !== 'mag_iceblast' || ev0.stat !== 'period_pct' || ev0.k !== 'freeze') fail(`buff 이벤트 ${JSON.stringify(ev0)}`);
     // 같은 스킬이 다시 — 시간만 새로 · buffEnd 없음
     const n0 = log.length;
     rt.applyStatus(u, foe, oi, 2);
     if (!eq(log.slice(n0).map(e => e.e), ['buff'])) fail(`같은 스킬 재적용 이벤트 [${log.slice(n0).map(e => e.e)}]`);
-    // 다른 스킬 — 창은 그대로 하나 · 옛 칩(s = mag_iceblast)의 buffEnd 가 새 buff 바로 앞 (재생기는 칩을 s 로 든다)
+    // 다른 스킬 — 창은 그대로 하나 · 재생기가 칩을 `k`(상태이상 이름)로 들어 옛 칩의 buffEnd 가 없다 (2026-09-28 · R178 — ~~R177 의 buffEnd → buff~~)
     const n1 = log.length;
     rt.applyStatus(u, foe, on, 3);
-    const tail = log.slice(n1).map(e => `${e.e}:${e.s}`);
-    if (!eq(tail, ['buffEnd:mag_iceblast', 'buff:mag_frostnova'])) fail(`다른 스킬 갱신 이벤트 [${tail}]`);
+    const tail = log.slice(n1).map(e => `${e.e}:${e.s}:${e.k}`);
+    if (!eq(tail, ['buff:mag_frostnova:freeze'])) fail(`다른 스킬 갱신 이벤트 [${tail}]`);
     if (Object.values(foe.buffs).filter(b => b.stat === 'period_pct').length !== 1) fail('결빙 창이 둘 섰다 — 결빙은 하나');
     if (Math.abs(foe.buffs.freeze.until - (3 + on.dur)) > 1e-9) fail(`갱신 until ${foe.buffs.freeze.until} ≠ ${3 + on.dur}`);
     // 바인드와는 따로 서서 더한다
@@ -5097,7 +5099,7 @@ check('runtime: 결빙 — 창 하나(어느 스킬이 걸어도 갱신 · 다�
     f2.rt.castBuff(caster, bind, 0);
     if (Math.abs(half.buffs.pri_bind?.until - bind.dur * 1.5) > 1e-9) fail(`바인드가 빙결 시간 감소를 탔다 (${half.buffs.pri_bind?.until})`);
     if (count.rng + f2.count.rng !== 0) fail(`rng ${count.rng + f2.count.rng}회 — 결빙은 굴리지 않는다`);
-    return `공속 ${M.pctNum(-oi.value)}% 감소 ${oi.dur}초 · 다른 스킬 갱신 = buffEnd → buff · 바인드와 합 · 감소 50% → ${oi.dur * 0.75}초 · 100% 면 안 걸림`;
+    return `공속 ${M.pctNum(-oi.value)}% 감소 ${oi.dur}초 · 다른 스킬 갱신 = buff 하나(k freeze) · 바인드와 합 · 감소 50% → ${oi.dur * 0.75}초 · 100% 면 안 걸림`;
 });
 check('runtime: 결빙은 스킬 타격만 싣는다 — 공격 대상 표가 sk.onHit 을 넘기고 기본 공격은 안 넘긴다 (battle_design §2-4 · R177)', () => {
     const u = rtUnit('p0', 'party');
@@ -5173,8 +5175,155 @@ check('battle: 결빙 — 스킬 타격이 맞은 대상에게만 건다 · 빗�
     const e = SYS.battle.makeEnemy('e0', 1101, 'normal', 10, [boots]);
     if (e.freezeDur !== 0.2) fail(`몬스터 유닛 freezeDur ${e.freezeDur}`);
     if (M.statInert('freeze_dur_reduction')) fail('빙결 시간 감소가 아직 「(미적용)」이다');
-    if (!M.statInert('poison_dur_reduction')) fail('중독 시간 감소의 「(미적용)」이 빠졌다 — 중독은 아직 없다');
+    for (const st of ['poison_dur_reduction', 'burn_dur_reduction', 'stun_dur_reduction']) if (M.statInert(st)) fail(`${st} 가 아직 「(미적용)」이다 — R178 로 전투가 읽는다`);
     return `맞은 결빙 타격 ${landed} = 결빙 ${landed} · 빗나감 ${missed} · 쓰러뜨린 타격 ${killed} (10 런) · 신발 20% → 유닛 0.2`;
+});
+/**
+ * 화상 · 중독 · 스턴 [2026-09-28 · R178 · battle_design §2-5 ~ §2-7] — 상태이상 종류는 `skill_status.csv:ailment` 칸이다(세기가 다른 행 여럿이 같은 상태이상).
+ * 화상 · 중독은 거는 것마다 창이 제 시간으로 흐르고 **가장 센 하나만** 적용된다. **지금 거는 스킬이 없어 CSV 에 행도 없다** — 거는 스킬 없는 행은
+ * 로드가 거절한다(`skill_status: … 아무 스킬도 안 건다`). 그래서 단정은 행을 손으로 더하고 스킬 셋에 걸어 본 판(`ailTables` —
+ * 파이어볼 = 중독 · 인페르노 = 화상 · 아이스 블라스트 = 스턴)에서 돈다. 값은 단정용이다
+ */
+const AIL_ROWS = [
+    { status_id: 'burn', stat: 'burn', value: 0.15, duration_sec: 4, element: '-', round_end: 'keep', ailment: 'burn', note: '-' },
+    { status_id: 'poison', stat: 'poison', value: 0.2, duration_sec: 5, element: 'poison', round_end: 'keep', ailment: 'poison', note: '-' },
+    { status_id: 'stun', stat: 'stun', value: 0, duration_sec: 2, element: '-', round_end: 'keep', ailment: 'stun', note: '-' },
+];
+const ailTables = () => {
+    const t = skillTables();
+    t.statusRows.push(...AIL_ROWS.map(r => ({ ...r })));
+    for (const [id, st] of [['mag_fireball', 'poison'], ['mag_inferno', 'burn'], ['mag_iceblast', 'stun']]) t.effectRows.find(r => r.skill_id === id).status = st;
+    return t;
+};
+const S_AIL = loadSkills(ailTables());
+/** 상태이상 시전 단위 — 그 행을 푼 모양(`scaleDef` 의 `onHit` 과 같은 모양) + 덮을 값 */
+const ailX = (status, extra = {}) => {
+    const st = S_AIL.statuses[status];
+    return { id: 'test_skill', status, stat: st.stat, value: st.value, dur: st.dur, element: st.element, roundEnd: st.roundEnd, ailment: st.ailment, ...extra };
+};
+check('skill: 상태이상 칸 — ailment 가 종류 · 전용 stat(burn · poison · stun)은 그 상태이상 행만 · 세기가 다른 행도 같은 상태이상 (INTERFACE §2-8 · R178)', () => {
+    if (!eq(AILMENT_IDS, ['freeze', 'burn', 'poison', 'stun'])) fail(`AILMENT_IDS [${AILMENT_IDS}]`);
+    const want = { freeze: 'freeze', burn: 'burn', poison: 'poison', stun: 'stun', pri_bind: null, mag_focus: null };
+    for (const [id, a] of Object.entries(want)) if (S_AIL.statuses[id]?.ailment !== a) fail(`${id} ailment ${S_AIL.statuses[id]?.ailment} ≠ ${a}`);
+    if (SYS.skill.statuses.freeze?.ailment !== 'freeze') fail('CSV 의 결빙 행이 ailment freeze 가 아니다');
+    const cases = [
+        [t => { t.statusRows.find(r => r.status_id === 'burn').ailment = 'nope'; }, '모르는 ailment'],
+        [t => { t.statusRows.find(r => r.status_id === 'burn').stat = 'atk_pct'; }, '화상 행의 stat 이 burn 이 아니다'],
+        [t => { t.statusRows.find(r => r.status_id === 'pri_bind').stat = 'poison'; }, '중독 아닌 행이 poison 을 쓴다'],
+        [t => { t.statusRows.find(r => r.status_id === 'stun').ailment = 'burn'; }, '스턴 행을 화상으로 적었다'],
+    ];
+    for (const [mut, why] of cases) {
+        const t = ailTables();
+        mut(t);
+        let threw = false;
+        try { loadSkills(t); } catch (e) { threw = true; }
+        if (!threw) fail(`${why} 가 통과했다`);
+    }
+    // 세기가 다른 화상 행 — 같은 상태이상으로 서고 타격 줄이 맞은 대상에게 건다 · 타격 원소는 그대로
+    const ok = skillTables();
+    ok.statusRows.push({ ...AIL_ROWS[0], status_id: 'burn_heavy', value: 0.3 });
+    ok.effectRows.find(r => r.skill_id === 'mag_fireball').status = 'burn_heavy';
+    const x = skillLine('mag_fireball', loadSkills(ok));
+    if (x.onHit?.ailment !== 'burn' || x.onHit.value !== 0.3 || x.onHit.stat !== 'burn' || x.element !== 'fire') fail(`강한 화상 onHit ${JSON.stringify(x.onHit)} · 원소 ${x.element}`);
+    return `잘못된 행 ${cases.length}가지가 로드에서 걸린다 · burn_heavy(0.3) 도 화상`;
+});
+check('runtime: 화상 — 거는 것마다 창 · 적용은 센 것 하나 · 센 것이 끝나면 약한 것이 제 남은 시간으로 · 받는 피해 증가 · 받는 회복 감소(곱) · 이벤트는 바뀔 때만(k burn) · 받는 쪽 시간 감소 · rng 0 (battle_design §2-5 · §2-6 · R178)', () => {
+    const a = rtUnit('p0', 'party'), b = rtUnit('p1', 'party');
+    const foe = rtUnit('e0', 'enemy', { recv: 0.2, recvBase: 0.2 });
+    const { rt, log, count } = fakeRt([a, b], [foe]);
+    const cut = B.burn_heal_cut;
+    const light = ailX('burn', { id: 'sk_light', value: 0.1, dur: 15 });
+    const heavy = ailX('burn', { id: 'sk_heavy', status: 'burn_heavy', value: 0.25, dur: 10 });
+    rt.applyStatus(a, foe, light, 0);
+    rt.applyStatus(b, foe, heavy, 0);
+    if (Object.keys(foe.buffs).length !== 2) fail(`창 ${Object.keys(foe.buffs)} — 거는 것마다 하나`);
+    if (Math.abs(foe.dr + 0.25) > 1e-12) fail(`받는 피해 dr ${foe.dr} — 센 화상 +25% 하나만(−0.25)`);
+    if (Math.abs(foe.recv - (1.2 * (1 - cut) - 1)) > 1e-12) fail(`받는 회복 ${foe.recv} ≠ 1.2 × (1 − ${cut}) − 1`);
+    const evs = () => log.filter(e => e.k === 'burn').map(e => `${e.e}:${e.s ?? ''}:${e.v ?? ''}:${e.until ?? ''}`);
+    if (!eq(evs(), ['buff:sk_light:0.1:15', 'buff:sk_heavy:0.25:10'])) fail(`이벤트 [${evs()}]`);
+    // 같은 시전자의 같은 행 — 그 창만 새로(창 수 그대로) · 적용 중인 센 것이 그대로라 이벤트가 없다
+    rt.applyStatus(a, foe, light, 2);
+    if (Object.keys(foe.buffs).length !== 2 || foe.buffs['burn@p0'].until !== 17) fail(`재적용 창 ${Object.keys(foe.buffs)} · until ${foe.buffs['burn@p0']?.until}`);
+    if (evs().length !== 2) fail(`센 것이 그대로인데 이벤트가 났다 [${evs()}]`);
+    // 센 것이 끝난다 → 약한 것이 제 남은 시간(17)으로
+    rt.expire(foe, 10);
+    if (Math.abs(foe.dr + 0.1) > 1e-12) fail(`센 것이 끝난 뒤 dr ${foe.dr} ≠ −0.1`);
+    if (evs().at(-1) !== 'buff:sk_light:0.1:17') fail(`이어받기 이벤트 ${evs().at(-1)}`);
+    rt.expire(foe, 17);
+    if (foe.dr !== 0 || foe.recv !== 0.2) fail(`다 끝났는데 dr ${foe.dr} · recv ${foe.recv}`);
+    if (evs().at(-1) !== 'buffEnd:sk_light::') fail(`끝 이벤트 ${evs().at(-1)}`);
+    if (log.some(e => e.e === 'buffEnd' && !e.k)) fail('화상 창이 칩 없는 buffEnd 를 냈다 — 창은 조용하다');
+    // 받는 쪽 화상 시간 감소
+    const half = rtUnit('e1', 'enemy', { burnDur: 0.5 });
+    fakeRt([a], [half]).rt.applyStatus(a, half, light, 0);
+    if (Math.abs(half.buffs['burn@p0']?.until - 7.5) > 1e-9) fail(`화상 시간 감소 50% until ${half.buffs['burn@p0']?.until}`);
+    if (count.rng !== 0) fail(`rng ${count.rng}회`);
+    return `+10%(15초) · +25%(10초) → 10초까지 +25% · 그 뒤 +10% 가 17초까지 · 회복 +20% 인 대상 → ${M.pctNum(1.2 * (1 - cut) - 1)}%`;
+});
+check('runtime: 중독 — 초당 피해를 거는 순간 굳힌다(시전자 데미지 중앙값 × 값) · 센 것 하나 · k poison (battle_design §2-6 · R178)', () => {
+    const a = rtUnit('p0', 'party', { atkMin: 10, atkMax: 30 }), foe = rtUnit('e0', 'enemy');
+    const { rt, log, count } = fakeRt([a], [foe]);
+    const x = ailX('poison');
+    rt.applyStatus(a, foe, x, 0);
+    const w = foe.buffs['poison@p0'];
+    if (!w || Math.abs(w.v - 20 * x.value) > 1e-9 || w.ail !== 'poison' || !w.quiet) fail(`중독 창 ${JSON.stringify(w)}`);
+    a.atkMin = a.atkMax = 100;
+    if (Math.abs(foe.buffs['poison@p0'].v - 20 * x.value) > 1e-9) fail('시전자가 강해지자 중독 세기가 바뀌었다');
+    const ev = log.at(-1);
+    if (ev?.e !== 'buff' || ev.k !== 'poison' || Math.abs(ev.v - 20 * x.value) > 1e-9) fail(`buff ${JSON.stringify(ev)}`);
+    if (count.rng !== 0) fail(`rng ${count.rng}회`);
+    return `데미지 10~30 × ${x.value} → 초당 ${20 * x.value}`;
+});
+check('runtime: 스턴 — 창 하나(k stun) · 또 걸리면 늦게 끝나는 쪽 · 창을 건 뒤 ctx.stun 을 불러 민 쿨 초를 cd 로 싣는다 · 스턴 시간 감소 100% 면 안 건다 (battle_design §2-7 · R178)', () => {
+    const calls = [];
+    const u = rtUnit('p0', 'party'), foe = rtUnit('e0', 'enemy'), immune = rtUnit('e1', 'enemy', { stunDur: 1 });
+    const { rt, log } = fakeRt([u], [foe, immune], { stun: (x, end) => { calls.push(`${x.key}:${end}`); return 1.5; } });
+    const x = ailX('stun');
+    rt.applyStatus(u, foe, x, 1);
+    if (!foe.buffs.stun || foe.buffs.stun.until !== 1 + x.dur) fail(`스턴 창 ${JSON.stringify(foe.buffs.stun)}`);
+    const ev = log.at(-1);
+    if (ev?.e !== 'buff' || ev.k !== 'stun' || ev.cd !== 1.5) fail(`buff ${JSON.stringify(ev)}`);
+    rt.applyStatus(u, foe, ailX('stun', { dur: 0.5 }), 1.5);
+    if (foe.buffs.stun.until !== 1 + x.dur) fail(`짧은 스턴이 끝을 당겼다 (${foe.buffs.stun.until})`);
+    if (!eq(calls, [`e0:${1 + x.dur}`, `e0:${1 + x.dur}`])) fail(`ctx.stun 부름 [${calls}]`);
+    rt.applyStatus(u, immune, x, 1);
+    if (immune.buffs.stun || calls.length !== 2) fail('스턴 시간 감소 100% 인데 걸렸다');
+    return `스턴 ${x.dur}초 · 짧은 재적용은 끝을 안 당긴다 · cd 실림`;
+});
+/** 표를 고친 판 — 파이어볼 = 중독 · 인페르노 = 화상 · 아이스 블라스트 = 스턴 (지금 이 셋을 거는 스킬이 없다) */
+const SYS_AIL = (() => {
+    const t = ailTables();
+    return buildSystems({ ...D, skillEffectRows: t.effectRows, skillStatusRows: t.statusRows });
+})();
+check('battle: 화상 · 중독 · 스턴 — 중독은 dot_tick_sec 마다 독 피해(dot · 건 쪽 몫) · 스턴 동안 그 유닛은 행동하지 않는다 · 스턴 cd 는 늘어난 시간 안 · 화상이 걸린다 (battle_design §2-5 ~ §2-7 · R178)', () => {
+    let dots = 0, stuns = 0, burns = 0;
+    for (let seed = 1; seed <= 10; seed++) {
+        const r = SYS_AIL.battle.simulate(clsUnits('mage'), 101, makeRng(seed));
+        const tl = r.timeline;
+        const lastDot = {};
+        tl.forEach((ev, i) => {
+            if (ev.e === 'dot') {
+                dots++;
+                if (ev.k !== 'poison' || ev.ty !== 'poison' || !(ev.dmg >= B.dmg_min)) fail(`seed ${seed} dot ${JSON.stringify(ev)}`);
+                if (!ev.a?.startsWith('p') || ev.s !== 'mag_fireball') fail(`seed ${seed} 중독을 건 쪽 ${ev.a} · ${ev.s}`);
+                if (lastDot[ev.d] !== undefined && ev.t - lastDot[ev.d] < B.dot_tick_sec - 0.05) fail(`seed ${seed} ${ev.d} 틱 간격 ${ev.t - lastDot[ev.d]}`);
+                lastDot[ev.d] = ev.t;
+            }
+            if (ev.e === 'buff' && ev.k === 'burn') burns++;
+            if (ev.e === 'buff' && ev.k === 'stun') {
+                stuns++;
+                if (!(ev.cd >= 0) || ev.cd > ev.until - ev.t + 0.11) fail(`seed ${seed} 스턴 cd ${ev.cd} · 길이 ${ev.until - ev.t}`);
+                // 적 key 는 라운드마다 다시 쓰인다 — 다음 `round` 이벤트(새 적) 앞까지만 본다
+                for (let j = i + 1; j < tl.length && tl[j].t < ev.until - 1e-9 && tl[j].e !== 'round'; j++) {
+                    const x = tl[j];
+                    if (x.t <= ev.t + 1e-9) continue;
+                    if ((x.e === 'skill' && x.u === ev.u) || ((x.e === 'hit' || x.e === 'dodge') && x.a === ev.u)) fail(`seed ${seed} — ${ev.u} 가 스턴(${ev.t} ~ ${ev.until}) 중 ${x.t} 에 행동했다 (${x.e})`);
+                }
+            }
+        });
+    }
+    if (!dots || !stuns || !burns) fail(`10 런에 중독 틱 ${dots} · 스턴 ${stuns} · 화상 알림 ${burns} — 단정이 헛돈다`);
+    return `10 런 — 중독 틱 ${dots} · 스턴 ${stuns} · 화상 알림 ${burns}`;
 });
 /**
  * 결투의 시전자 창은 **라운드가 바뀌면 닫힌다** [2026-09-10 · 사용자 원문 「적 하나를 지목하고 라운드 끝까지 + 피해감소」 · R72 후속].

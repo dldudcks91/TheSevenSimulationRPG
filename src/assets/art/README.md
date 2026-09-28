@@ -1,6 +1,6 @@
 # 아트 자산 (src/assets/art/)
 
-`backgrounds/` · `faces/` · `icons/`(+ 원본 `icons_source/`) · `buildings/` 는 모두 신규 아트가 직접 들어가는 활성 폴더다.
+`backgrounds/` · `faces/` · `icons/`(+ 원본 `icons_source/`) · `buildings/` · `fx/`(+ 원본 `fx_source/`) 는 모두 신규 아트가 직접 들어가는 활성 폴더다.
 ⚠ **계승 포크 정책이 걸리는 것은 `backgrounds/source/pixel/` 에 남은 계승 원본 셋뿐이다**(101 · 102 · `town`) — 데이터 CSV(`src/data/inherited/`)와 같은 정책으로 **원본 SSOT 는 TheSevenRPG 에 있고 여기 것은 재동기화 가능한 사본**, 읽기 전용(CLAUDE.md 규칙 3). 나머지는 다시 뽑아 덮어써도 된다.
 **세 폴더가 같은 모양이다** [2026-09-16] — 게임이 읽는 그림 = 묶음 폴더/id(`backgrounds/<스타일>/background_stage_<id>.webp` · `faces/<스타일>/monster/<idx>.webp` · `icons/items/item_base/<base_id>.webp` …) · 손 안 댄 원본 = `source/` · id 없는 여분 = `unused/`. ⚠ 아이콘만은 원본 · 여분이 **폴더 밖** `icons_source/` 에 있다 (아래 「아이콘 — 원본과 설치본」).
 **스타일 축을 갖는 것은 `backgrounds/`(2026-09-16) · `faces/`(2026-08-30) 둘**이고 `icons/` 는 없다(2026-09-03).
@@ -201,6 +201,19 @@ buildings/
 - **자르기** — 검은 홈을 실측(열 평균 밝기 < 30)으로 찾고 칸 안쪽 3px 을 더 걷어 홈 가장자리를 뺐다 → 장당 **666~667 × 494~495**(약 4:3). 화면의 부지는 3:2 라 `cover` 가 위아래를 조금 자른다(`center 40%`) — **카드 비율이 바뀌어도 다시 자를 필요가 없게** 칸을 통째로 뒀다
 - **인코딩** — WebP q90 · 장당 29~51KB. ⚠ 이 PC 에 Python 이 없어 **Edge 캔버스(`toDataURL('image/webp', 0.9)`)로** 자르고 쌌다 — 다른 폴더의 PIL 레시피와 도구가 다르다. 다시 자를 땐 어느 쪽이든 같은 좌표(홈 안쪽 3px)면 된다
 - 그림이 없는 건물은 `ui/mock.js:BUILDING_ART` 의 단색 실루엣(SVG)으로 폴백한다 — 건물이 늘면 파일을 넣고 `BUILDING_IMAGES` 에 id 를 더한다
+
+---
+
+## fx/ — 관전 타격 그림 (연출 3단계) [신설 2026-09-28 사용자 지시 · ADR-0406]
+
+```
+fx/<피해 종류>.webp        게임이 읽는다 — physical · fire · cold · lightning · poison
+fx_source/<피해 종류>.png  원본(1024 투명 PNG) — 게임은 안 읽는다
+```
+
+- **화면** — 스킬로 맞은 카드의 초상 위에 약 124px(치명 152px)로 떠서 0.4초 동안 커지며 돌고 사라진다(`ui/fx.js` · SCREEN_DESIGN §4-2 「연출」). 그림이 없는 종류는 2단계(코드로 그린 모양)가 선다 — **파일을 넣으면 코드는 안 고친다**(처음 쓰는 순간 읽어 본다 · 새로고침 필요)
+- **규격** — 투명 배경 · 효과가 한가운데에서 터지는 모양 · 내용이 변의 86% · 384×384 WebP(알파) q90
+- **발주** — Codex 내장 이미지 생성 · 지시문과 설치 절차는 [docs/reference/fx_art_prompt.md](../../../docs/reference/fx_art_prompt.md) 한 곳이다
 
 ---
 

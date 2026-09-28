@@ -140,15 +140,15 @@ export const AFFIX_LABELS = {
     xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', fmt: 'pct' },
     // `inert` = **전투가 아직 안 읽는 줄** — 툴팁이 줄 끝에 「(미적용)」을 단다(SCREEN_DESIGN §6 · ADR-0213). 상태이상 기계가 서면 그 stat 의 표지를 지운다
     freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct' },   // 결빙이 읽는다(2026-09-28 · R177 · battle_design §2-4)
-    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct', inert: true },
+    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
     // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
     //    원소별 저항 감소는 무기 시기 칸 `res_reduction`(저항 감소)과 같은 메커니즘이라 이름도 그 계열로 둔다 — **그 원소의 타격에만** 붙는다
     res_reduction_fire: { ko: '불 저항 감소', en: 'Fire Resist Reduction', fmt: 'pct' },
     res_reduction_cold: { ko: '냉기 저항 감소', en: 'Cold Resist Reduction', fmt: 'pct' },
     res_reduction_lightning: { ko: '전기 저항 감소', en: 'Lightning Resist Reduction', fmt: 'pct' },
     res_reduction_poison: { ko: '독 저항 감소', en: 'Poison Resist Reduction', fmt: 'pct' },
-    burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct', inert: true },
-    stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct', inert: true },
+    burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct' },   // 화상이 읽는다(R178)
+    stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct' },   // 스턴이 읽는다(R178)
     buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
     // 명중률 — 장비 옵션이 아니라 궁수 마스터리 T1-3 의 축이다(레벨 차 적중률에 더한다 · 2026-09-22 R138). 폐지된 `accuracy` 와 다른 id
     hit_bonus: { ko: '명중률', en: 'Hit Bonus', fmt: 'pct' },

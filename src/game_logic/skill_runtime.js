@@ -20,14 +20,15 @@
  *     창 열쇠 = **걸린 효과 id**(창이 건 스킬 id `s` 를 들어 이벤트는 그대로) · 사건 스킬은 `fire` 가 쏜다 · **스킬 id 전용 분기는 없다**
  *     (~~결투의 시전자 창 분기~~ → 결투의 둘째 줄 · ~~`battle.js:blast`~~ → `fire` + 하는 일 `fixed`)
  *   · **상태이상** [2026-09-28 · R177 · battle_design §2-4] — 창을 거는 곳은 `applyStatus` 하나다(고른 대상 = `castBuff` · 맞은 대상 = `battle.strikeOnce` 의 결빙).
- *     상태이상 창(`AILMENTS`)만 받는 쪽 시간 감소를 곱한다 · rng 0
+ *     상태이상 창(`AILMENTS`)만 받는 쪽 시간 감소를 곱한다 · rng 0 · 화상 · 중독은 거는 것마다 창이 서고 가장 센 하나가 적용된다(`applyStrongest` · `syncAilment` · R178) ·
+ *     스턴은 창을 건 뒤 `ctx.stun` 이 행동 예약 · 쿨을 민다(battle.js)
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   사건 훅(`reactions`)은 **발화 지점만** 있고 등록하는 소비자가 아직 없다 — 마스터리 T3 자리 (skill_design §5).
  */
 
 import { createFormula } from './formula.js';
-import { AILMENTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, sumOf, stateOf } from './skill_effects.js';
+import { AILMENTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
 
 /**
  * 사건 훅 — 유닛이 든 `reactions: [{on, fn}]` 를 **배열 순서대로** 부른다. 등록이 없으면 아무 일도 없다.
@@ -84,16 +85,23 @@ export function createSkillRuntime(ctx) {
         let changed = false;
         const wasMax = u.hpMax;     // 최대 HP 를 밀던 창이 닫히면 재생기에 새 값을 줘야 한다 (부채 #50)
         const shown = [];           // 이 틱에 낸 `buffEnd` 들 — 조용한 창(`quiet`)은 안 든다
+        const ails = new Set();     // 창이 닫힌 화상 · 중독 — 닫은 뒤 가장 센 창을 다시 알린다 (R178)
         for (const id of Object.keys(u.buffs)) {
             const b = u.buffs[id];
             if (b.until <= at + EPS) {
                 // `quiet` = 무기 옵션 창(타격 시 디버프 · R78) — 열 때 이벤트를 안 냈으므로 닫을 때도 안 낸다(재생기는 `s` 로 스킬 이름을 찾는다)
                 delete u.buffs[id];
-                // `s` = 그 창을 건 스킬 — 창 열쇠는 걸린 효과 id 다 (2026-09-24 · R151). 손으로 만든 창(`s` 없음)은 열쇠를 쓴다
-                if (!b.quiet) { const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: b.s ?? id }; shown.push(ev); timeline.push(ev); }
+                // `s` = 그 창을 건 스킬 — 창 열쇠는 걸린 효과 id 다 (2026-09-24 · R151). 손으로 만든 창(`s` 없음)은 열쇠를 쓴다 · 상태이상은 `k` (R178)
+                if (!b.quiet) {
+                    const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: b.s ?? id };
+                    if (b.ail) ev.k = b.ail;
+                    shown.push(ev); timeline.push(ev);
+                } else if (b.ail) ails.add(b.ail);
                 changed = true;
             }
         }
+        // 화상 · 중독 — 남은 창 중 가장 센 것을 다시 알린다(이벤트 값은 창에서 오므로 아래 `refreshDerived` 와 순서가 무관하다)
+        for (const ail of ails) syncAilment(u, ail, at);
         // 배리어도 같은 조건 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3)
         if (u.barrier && u.barrier.until <= at + EPS) u.barrier = null;
         if (changed) refreshDerived(u);
@@ -151,21 +159,67 @@ export function createSkillRuntime(ctx) {
      */
     function applyStatus(u, tgt, x, t) {
         let dur = x.dur * (1 + (u.buffDur ?? 0));
-        const cut = x.ailment ? (tgt[AILMENTS[x.ailment].cut] ?? 0) : 0;
+        const ail = x.ailment ? AILMENTS[x.ailment] : null;
+        const cut = ail ? (tgt[ail.cut] ?? 0) : 0;
         if (cut) dur *= 1 - cut;
         if (!(dur > 0)) return;
-        const until = t + dur;
-        const key = x.status ?? x.id;
+        let until = t + dur;
+        // 화상 · 중독 — 거는 것마다 창이 제 시간으로 흐르고 가장 센 하나만 적용된다 (2026-09-28 · R178 · battle_design §2-5)
+        if (ail?.stack === 'strongest') { applyStrongest(u, tgt, x, until, t); return; }
+        // 상태이상(`one`)의 열쇠는 상태이상 이름 — 세기가 다른 행이 걸어도 창 하나다 (R178)
+        const key = ail ? x.ailment : (x.status ?? x.id);
         const old = tgt.buffs[key];
-        if (old && !old.quiet && (old.s ?? key) !== x.id) timeline.push({ t: r1(t), e: 'buffEnd', u: tgt.key, s: old.s ?? key });
+        // 스턴은 또 걸리면 **늦게 끝나는 쪽** — 더하지도 줄이지도 않는다 (battle_design §2-7)
+        if (ail?.hold && old) until = Math.max(until, old.until);
+        // 다른 스킬이 갱신하면 옛 칩을 닫는다 — 상태이상은 재생기가 `k` 로 칩을 들어 필요 없다 (R178)
+        if (!ail && old && !old.quiet && (old.s ?? key) !== x.id) timeline.push({ t: r1(t), e: 'buffEnd', u: tgt.key, s: old.s ?? key });
         const wasMax = tgt.hpMax;
-        tgt.buffs[key] = { stat: x.stat, v: x.value, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep' };
+        tgt.buffs[key] = { stat: x.stat, v: x.value, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep', ...(ail ? { ail: x.ailment } : {}) };
         const ev = { t: r1(t), e: 'buff', u: tgt.key, s: x.id, stat: x.stat, v: x.value, until: r1(until) };
+        if (ail) ev.k = x.ailment;
+        // 스턴 — 행동 예약 · 스킬 쿨을 미는 일은 그것을 아는 battle.js 가 한다. 민 쿨 초를 재생기에 싣는다
+        if (ail?.hold) ev.cd = r1(ctx.stun?.(tgt, until) ?? 0);
         EFFECTS[x.stat]?.apply?.(rt, tgt, x, until, ev);
         // **밀고 나서 싣는다** — 최대 HP 를 미는 창(`hp_max_pct`)은 `refreshDerived` 가 새 최대치를 쓰고 넘친 HP 를 자른 **뒤**의 값이어야 한다
         //   [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6]. 재생기는 계산하지 않으므로 안 실으면 옛 최대치를 든 채 현재 HP 만 갱신해 `118 / 103` 이 된다
         refreshDerived(tgt);
         if (tgt.hpMax !== wasMax) Object.assign(ev, { hpMax: tgt.hpMax, dhp: tgt.hp });
+        timeline.push(ev);
+    }
+
+    /**
+     * 화상 · 중독 한 번 [2026-09-28 · R178 · battle_design §2-5 · §2-6] — 창 열쇠 = `status_id@시전자` 라 **같은 시전자의 같은 행**만 그 창을 새로 걸고
+     *   나머지는 제 시간으로 따로 흐른다. 창은 조용하다(`quiet`) — 이벤트는 `syncAilment` 가 가장 센 창이 바뀔 때만 낸다.
+     *   값 — 화상 = 행의 값(받는 피해 증가 · 비율) + 받는 회복 감소 [balance.csv:burn_heal_cut] · 중독 = **초당 피해를 지금 굳힌다**(시전자 데미지 중앙값 × 행의 값). rng 0
+     */
+    function applyStrongest(u, tgt, x, until, t) {
+        const v = x.stat === 'poison' ? ((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * x.value : x.value;
+        const win = { stat: x.stat, v, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep', ail: x.ailment, quiet: true };
+        if (x.stat === 'burn') win.cut = B.burn_heal_cut;
+        tgt.buffs[`${x.status ?? x.id}@${u.key}`] = win;
+        refreshDerived(tgt);
+        syncAilment(tgt, x.ailment, t);
+    }
+
+    /**
+     * 화상 · 중독의 이벤트 [2026-09-28 · R178] — **적용 중인 가장 센 창**(`strongestOf`)이 지난번에 알린 것과 다르면 `buff`(`k` · 새 `s` · `v` · `until`),
+     *   다 끝났으면 `buffEnd` 하나. 센 것이 끝나고 약한 것이 이으면 `buff` 가 새 `until` 로 다시 온다. 알린 것은 유닛의 `ailShown` 이 든다. rng 0
+     */
+    function syncAilment(u, ail, t) {
+        const best = strongestOf(u, ail);
+        u.ailShown ??= {};
+        const shown = u.ailShown[ail];
+        if (!best) {
+            if (!shown) return;
+            delete u.ailShown[ail];
+            timeline.push({ t: r1(t), e: 'buffEnd', u: u.key, s: shown.s, k: ail });
+            return;
+        }
+        const until = r1(best.until);
+        if (shown && shown.s === best.s && shown.v === best.v && shown.until === until) return;
+        u.ailShown[ail] = { s: best.s, v: best.v, until };
+        const ev = { t: r1(t), e: 'buff', u: u.key, s: best.s, k: ail, stat: best.stat, v: best.v, until };
+        if (best.cut !== undefined) ev.cut = best.cut;
         timeline.push(ev);
     }
 

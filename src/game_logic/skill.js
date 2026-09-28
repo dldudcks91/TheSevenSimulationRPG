@@ -37,8 +37,8 @@
  *     「양 옆의 아군」(`party` 배열의 인접 자리 — 위치 개념은 여전히 미확정) ·
  *     독화살(**도트가 아니라** 원소 추가타 1회 — 틱 피해 채널 미도입) ·
  *     적 공격력 감소(새 채널이 아니라 **음수 버프 창** [사용자 확정 2026-09-09]). 전부 skill_design §7 이 든다.
- *   상태이상은 **결빙 하나**다 [2026-09-28 · R177 · battle_design §2-4] — `hit` 줄이 걸린 효과(`freeze`)를 들면 맞은 대상에게 건다(`x.onHit`).
- *     상태이상 하나 = 걸린 효과 한 행 — id 가 `skill_effects.js:AILMENTS` 의 키면 상태이상이다. 화상 · 스턴 등은 거는 스킬과 함께 온다.
+ *   상태이상 [2026-09-28 · R177 결빙 · R178 화상 · 중독 · 스턴 · battle_design §2-4 ~ §2-7] — `hit` 줄이 상태이상 행을 들면 맞은 대상에게 건다(`x.onHit`).
+ *     어느 행이 어느 상태이상인지는 `skill_status.csv:ailment` 칸(`skill_effects.js:AILMENTS` 의 키)이다 — 세기가 다른 행 여럿이 같은 상태이상이다.
  *
  * **표 셋** [2026-09-22 · R136 · PLAN_skill_structure] — 스킬(`skill.csv` · 스킬마다 하나뿐인 것 — 나가는 방식 `cast` · 대상 · 쿨 · 조건 · 표시) ·
  *   하는 일(`skill_effect.csv` · 한 줄에 하나 — `effect` · 배율 · 타수 · 능력치 계수) · 걸린 효과(`skill_status.csv` — `apply` 줄이 거는 창의
@@ -219,8 +219,9 @@ export function createSkillSystem(data) {
         element: dash(row.element),
         // 라운드 경계 — `close` 창은 라운드가 바뀌면 닫힌다 (2026-09-24 · R151 · 결투의 시전자 창)
         roundEnd: row.round_end,
-        // 상태이상 — id 가 `AILMENTS` 의 키면 그 이름 · 아니면 null. CSV 칸이 아니다: 상태이상 하나 = 걸린 효과 한 행 (2026-09-28 · R177 · battle_design §2-4)
-        ailment: Object.hasOwn(AILMENTS, row.status_id) ? row.status_id : null,
+        // 상태이상의 종류 — `ailment` 칸(`AILMENTS` 의 키) · `-` 면 null. 세기가 다른 행 여럿이 같은 상태이상일 수 있다
+        //   (2026-09-28 · R178 · battle_design §2-4 — ~~R177 의 「id 가 `AILMENTS` 의 키면 상태이상」~~)
+        ailment: dash(row.ailment ?? '-'),
         note: row.note,
     });
 
@@ -233,6 +234,12 @@ export function createSkillSystem(data) {
         if (typeof st.dur !== 'number' || !(st.dur >= 0)) bad(`duration_sec '${st.dur}' — 0 이상의 숫자(0 = 상시)`);
         if (st.element !== null && !ELEMENTS.includes(st.element)) bad(`element '${st.element}'`);
         if (!ROUND_ENDS.includes(st.roundEnd)) bad(`round_end '${st.roundEnd}' — ${ROUND_ENDS.join('·')}`);
+        // 상태이상 [2026-09-28 · R178] — 어휘 · 전용 능력치의 짝(화상 행은 `burn` · `burn` 은 화상 행만)
+        if (st.ailment !== null && !AILMENT_IDS.includes(st.ailment)) bad(`ailment '${st.ailment}' — ${AILMENT_IDS.join('·')}`);
+        for (const id of AILMENT_IDS) {
+            const own = AILMENTS[id].stat;
+            if (own && (st.stat === own) !== (st.ailment === id)) bad(`stat '${st.stat}' · ailment '${st.ailment}' — ${id} 행은 stat ${own} 이고 ${own} 은 ${id} 행만 쓴다`);
+        }
         // 결투 — value 는 **시전자가 받는 피해 감소(비율)** 다 (skill_design §13-5 · 2026-09-10). 음수면 받는 피해가 는다.
         //   실제 감소는 결투의 둘째 줄(`dr_pct`)이 걸고 이 값은 `buff` 이벤트 `v` · 설명창 문장이 읽는다 (2026-09-24 · R151)
         if (st.stat === 'duel' && !(st.value >= 0)) bad(`duel 인데 value ${st.value} — 시전자 피해 감소라 0 이상`);

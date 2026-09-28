@@ -56,8 +56,9 @@
  *     전열 생존자가 있으면 후열은 대상이 안 되고, 전열이 전멸해야 뒤가 열린다 (battle_design §3-1).
  *     우선순위는 **좁은 계약부터** — 지목(결투) → 도발 → 전열 → 무작위. 앞의 둘은 진형을 무시한다.
  *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
- *   상태이상은 **결빙 하나**다 [2026-09-28 · R177 · battle_design §2-4] — 스킬 타격이 맞은 대상에게 건다(`strikeOnce` 의 `sk.onHit` → `rt.applyStatus`).
- *     화상 · 스턴 등은 거는 스킬과 함께 온다(GAME_DESIGN §10 「상태이상 기계 정의」).
+ *   상태이상은 **결빙 · 화상 · 중독 · 스턴** [2026-09-28 · R177 · R178 · battle_design §2-4 ~ §2-7] — 스킬 타격이 맞은 대상에게 건다(`strikeOnce` 의 `sk.onHit` → `rt.applyStatus`).
+ *     화상은 받는 피해 · 받는 회복을 창 파생(`skill_effects`)으로 밀고, 중독은 틱(`poisonTick` — 창 만료 뒤 · 재생 앞), 스턴은 `stun` 이 행동 예약 · 쿨을 민다.
+ *     침식 · 매혹 · 심판은 미정이다(GAME_DESIGN §10 「상태이상 기계 정의」).
  *   전직·마스터리·패시브는 미구현 — 지금 도는 것은 직업 기본 액티브뿐이다 (프로토타입 §9-0).
  *   ~~몬스터의 치명·반사·피해 감소는 0~~ → **[폐기 2026-09-11 · D2 사용자 확정]** 몬스터도 **영웅과 같은 밑수**를 받는다
  *     (기본 치명 확률 · HP 재생 밑수) — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다.
@@ -77,7 +78,7 @@ import { createFormula } from './formula.js';
 // 원소 어휘만 가져온다 — 시스템 주입이 아니다 (skill.js 와 같은 취급 · INTERFACE §1)
 import { ELEMENTS } from './hero.js';
 import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js';
-import { refreshDerived, weaponOnHit, stateOf } from './skill_effects.js';
+import { refreshDerived, weaponOnHit, stateOf, strongestOf } from './skill_effects.js';
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
 import { STAGE_SPAWN_RULES } from './spawn_rule.js';
 // 몬스터 차림 줄 — 전투 줄에서 씨앗 하나만 받아 몬스터마다 제 줄을 연다 (INTERFACE §5-1 · 2026-09-22)
@@ -249,12 +250,15 @@ export function createBattleSystem(data) {
             // 방어구 옵션 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 원소별 최대 저항 · 절대값 피해 감소 · 반격 확률 · 체력 회복 +%.
             //   `strike` 가 앞의 둘을 읽고(방어자) · 반격은 `strikeOnce` 끝 · 회복은 재생 · 회복 스킬 · 흡혈 · 물약이 읽는다. 없으면 0 — 종전과 같다
             resMaxEl: c.res_max_el ?? null, drFlat: c.option_fx?.drFlat ?? 0,
-            counter: c.option_fx?.counter ?? 0, recv: c.option_fx?.recv ?? 0,
+            // 받는 회복 — `recvBase` = 장비의 체력 회복 +% · `recv` = 화상이 민 파생값(skill_effects `ATTRS` · 2026-09-28 R178). 창이 없으면 둘이 같다
+            counter: c.option_fx?.counter ?? 0, recv: c.option_fx?.recv ?? 0, recvBase: c.option_fx?.recv ?? 0,
             defIgnore: c.def_ignore, resReduction: c.res_reduction,
             // 반지 · 목걸이 옵션 [2026-09-21 · R127] — 원소별 저항 무시(`strike` 가 그 타격 원소만 읽는다) · 버프 지속시간(`castBuff` 가 거는 쪽 값을 읽는다). 없으면 null · 0
             resReductionEl: c.res_reduction_el ?? null, buffDur: c.option_fx?.buffDur ?? 0,
             // 빙결 시간 감소 [2026-09-28 · R177 · battle_design §2-4] — **받는 쪽** 값(비율 · 신발 · 반지 · 목걸이). `rt.applyStatus` 가 `AILMENTS.freeze.cut` 으로 읽는다. 없으면 0
             freezeDur: c.option_fx?.freezeDur ?? 0,
+            // 화상 · 중독 · 스턴 시간 감소 [2026-09-28 · R178 · battle_design §2-5] — 받는 쪽 값(비율 · 공통옵션). `AILMENTS[..].cut` 이 이 이름을 읽는다. 없으면 0
+            burnDur: c.option_fx?.burnDur ?? 0, poisonDur: c.option_fx?.poisonDur ?? 0, stunDur: c.option_fx?.stunDur ?? 0,
             skillMult: 1, bonusPct: c.dmg_bonus_pct, // 피해량(도감) — 따로 곱한다(2026-09-18) · strike 가 읽는 이름과 같아야 한다
             crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
@@ -264,6 +268,8 @@ export function createBattleSystem(data) {
             next: 0,
             // 물리 경직 (battle_design §2-3 · R110) — 타격 회복(비율)이 경직 시간을 줄이고, `stagUntil` 은 경직이 끝나는 시각이다(`stagger`)
             fhr: c.fhr ?? 0, stagUntil: 0,
+            // 스턴이 끝나는 시각(`stun` · battle_design §2-7) · 중독 틱 누산(`poisonTick` · §2-6) — 전투 안에서만 사는 값 (2026-09-28 · R178)
+            stunUntil: 0, dotAcc: 0,
             actives: [], buffs: {}, barrier: null,
             reactions: [],                           // 사건 훅 등록 자리 (⚠ 지금은 아무도 싣지 않는다)
             goldFind: c.gold_find, itemFind: c.item_find,
@@ -284,7 +290,7 @@ export function createBattleSystem(data) {
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
     const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
-        'resReductionEl', 'buffDur', 'freezeDur',
+        'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod', 'fhr',
         'goldFind', 'itemFind', 'fx', 'magicFind', 'stats'];
 
@@ -681,6 +687,8 @@ export function createBattleSystem(data) {
             callBand: (caster, at) => callBand(caster, at),   // 불러내기 — 무리를 세우는 것은 적 배열 · 오오라 · 보상 표식을 아는 이쪽이다 (2026-09-18)
             // 비직격 고정 피해 한 대상 — 기여표와 전투불능을 아는 이쪽이다 (하는 일 `fixed` · 2026-09-24 R151 — ~~`blast` 전용 함수~~)
             dealIndirect: (a, d, dmg, s) => dealIndirect(a, d, dmg, s),
+            // 스턴 — 행동 예약 · 스킬 칸을 아는 이쪽이 민다. 민 쿨 초를 돌려준다 (2026-09-28 · R178 · battle_design §2-7)
+            stun: (u, end) => stun(u, end),
         });
 
         /* 물약 [2026-09-15 · R103 · battle_design §7-1] — 칸은 **파티가 같이 쓰고 이 런 안에서만** 산다: 여기서 차고 라운드 사이에는 안 찬다.
@@ -689,7 +697,7 @@ export function createBattleSystem(data) {
            순서 = HP 비율 낮은 순 · 같으면 **파티 배열 순** — 동점을 배열 순으로 명시 비교한다(엔진의 정렬 안정성에 기대지 않는다 · INTERFACE §5-3).
            **칸 하나에 물약 하나 · 앞 칸부터 마신다** [R104 사용자 지시] — 먼저 마시는 영웅이 앞의 찬 칸을 받는다. 칸은 런 안에서 다시 안 차므로
            「앞의 찬 칸」은 늘 방금 마신 칸 뒤의 첫 찬 칸이다(빈 칸 `null` 은 건너뛴다 · R124). 그 칸 물약의 정해진 양을 채우고(최대치에서 자른다) 쿨은 [balance.csv:potion_cooldown_sec] 이다. **rng 를 안 쓴다** ·
-           ⚠ 화염 치유 감소는 미구현이다(`skill_runtime.castHeal` 과 같은 처지) */
+           화상의 회복 감소는 `u.recv`(창 파생 — 2026-09-28 R178)에 이미 들어 있다 */
         let potionLeft = potionSlots.filter(Boolean).length;
         let potionNext = 0;
         let potionRound = {};          // 이 라운드에 마신 물약 `{id: n}` — 요약이 싣고 정산이 재고에서 뺀다 (R124) · 세기만 한다
@@ -842,6 +850,9 @@ export function createBattleSystem(data) {
                     m.hp = m.hpMax;
                     m.barrier = null;
                     m.stagUntil = 0;
+                    m.stunUntil = 0;           // 스턴 · 중독 틱 · 알린 상태이상도 풀린다 (R178)
+                    m.dotAcc = 0;
+                    m.ailShown = null;
                     m.regenAcc = 0;
                     for (const [id, b] of Object.entries(m.buffs)) if (b.until !== Infinity) delete m.buffs[id];
                     refreshDerived(m);
@@ -913,9 +924,56 @@ export function createBattleSystem(data) {
             const dur = B.stagger_sec * Math.max(0, 1 - u.fhr);
             if (!(dur > 0)) return;
             const end = t + dur;
-            u.next += end - Math.max(u.stagUntil, t);
+            // 스턴과 누적하지 않는다 [2026-09-28 · R178 · battle_design §2-7] — 스턴이 더 늦게 끝나면 그 뒤로 넘는 몫만 민다. 스턴이 없으면 종전 그대로
+            const from = Math.max(u.stagUntil, t);
+            u.next += u.stunUntil > from ? Math.max(0, end - u.stunUntil) : end - from;
             u.stagUntil = end;
             timeline.push({ t: r1(t), e: 'stagger', u: u.key, until: r1(end) });
+        }
+
+        /**
+         * 스턴 [2026-09-28 · R178 · battle_design §2-7] — **행동 차례와 스킬 쿨을 함께 멈춘다**(경직은 차례만). 런타임이 스턴 창을 건 뒤 부른다(`ctx.stun`).
+         *   · 또 걸리면 늦게 끝나는 쪽 — `end ≤ stunUntil` 이면 아무것도 안 민다
+         *   · 행동 예약 — 경직 · 스턴 중 **더 늦게 끝나는 것 뒤로 넘는 몫만** 민다(누적하지 않는다 — 경직 1초 남은 유닛에 스턴 2초면 2초 뒤에 풀린다)
+         *   · 스킬 쿨 — **아직 안 준비된 칸만** 스턴이 늘어난 만큼 민다(준비된 칸은 준비된 채 기다린다)
+         *   재생 · 물약 · 창 시간은 그대로 흐른다 · rng 0
+         * @returns 민 쿨 초 — `buff` 이벤트의 `cd`(재생기가 칸의 준비 시각에 더한다)
+         */
+        function stun(u, end) {
+            const from = Math.max(u.stunUntil ?? 0, t);
+            if (!(end > from)) return 0;
+            const block = Math.max(from, u.stagUntil ?? 0);
+            if (end > block) u.next += end - block;
+            const cd = end - from;
+            for (const a of u.actives) if (a.readyAt > t + EPS) a.readyAt += cd;
+            u.stunUntil = end;
+            return cd;
+        }
+
+        /**
+         * 중독 틱 한 유닛 [2026-09-28 · R178 · battle_design §2-6] — 가장 센 중독 창(`strongestOf`)이 있으면 `dotAcc` 를 쌓고
+         *   [balance.csv:dot_tick_sec] 에 닿을 때마다 `초당 피해 × 간격` 을 **독 저항만** 거쳐 HP 에서 바로 뺀다 —
+         *   비직격(battle_design §9-6): 배리어 · 방어 · 피해 감소 · 적중 · 치명 · 흡혈 · 반사 · 경직 · 훅 없음. 중독이 없으면 누산을 비운다.
+         *   기여 · 처치는 그 창을 건 유닛의 몫(자리에 없으면 없다) · 쓰러지면 `down`(처치 정산의 드롭 굴림이 이 자리 — INTERFACE §5-2). 그 밖에 rng 0
+         */
+        function poisonTick(u) {
+            const w = strongestOf(u, 'poison');
+            if (!w) { u.dotAcc = 0; return; }
+            u.dotAcc = (u.dotAcc ?? 0) + TICK;
+            if (u.dotAcc + EPS < B.dot_tick_sec) return;
+            u.dotAcc -= B.dot_tick_sec;
+            const resist = F.appliedResist(u.res?.poison ?? 0, u.resMaxBonus ?? 0, u.resMaxEl?.poison ?? 0);
+            const dmg = F.indirect(w.v * B.dot_tick_sec * (1 - resist));
+            u.hp = Math.max(0, u.hp - dmg);
+            timeline.push({ t: r1(t), e: 'dot', a: w.by, d: u.key, k: 'poison', s: w.s, dmg, dhp: u.hp, ty: 'poison' });
+            const src = party.find(x => x.key === w.by) ?? units.enemies.find(x => x.key === w.by) ?? null;
+            const ca = src ? credit(src) : null, cd = credit(u);
+            if (ca) ca.dealt += dmg;
+            if (cd) cd.taken += dmg;
+            if (u.hp <= 0) {
+                if (ca && u.side !== 'party' && !u.summon && !u.rewarded) ca.kills += 1;
+                downed(u);
+            }
         }
 
         /**
@@ -1033,7 +1091,7 @@ export function createBattleSystem(data) {
              *   조건이 안 맞으면 **굴리지 않는다** — 반격 옵션이 없는 판의 rng 수열은 종전과 같다(`&&` 가 판정 앞에서 끊는다).
              *   반격도 직격이라 맞은 쪽이 다시 반격할 수 있다 — 확률이 곱으로 줄어 끝난다(`counter_chance` 는 1 미만 — item.js 로드 검증)
              */
-            if (target.counter > 0 && target.hp > 0 && !target.summon && u.hp > 0 && target.stagUntil <= t
+            if (target.counter > 0 && target.hp > 0 && !target.summon && u.hp > 0 && target.stagUntil <= t && (target.stunUntil ?? 0) <= t
                 && rng() < target.counter) {
                 timeline.push({ t: r1(t), e: 'counter', u: target.key, d: u.key });
                 rt.basicAttack(target, t, alive(rt.foesOf(target)), u);
@@ -1178,6 +1236,8 @@ export function createBattleSystem(data) {
                 t += TICK;
                 // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) rt.expire(u, t);
+                // 중독 틱 — 창 만료 **뒤** · 재생 **앞** (2026-09-28 · R178 · INTERFACE §5-2). 앞 유닛의 틱이 쓰러뜨려도 배열은 그대로 돈다
+                for (const u of [...party, ...units.enemies]) if (u.hp > 0) poisonTick(u);
                 // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다
                 // (매 틱 소수점을 더하면 타임라인이 흘러넘치고 재생기가 정수 HP 와 어긋난다). rng 를 안 쓴다
                 for (const u of [...party, ...units.enemies]) {
