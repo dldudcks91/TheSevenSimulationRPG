@@ -56,7 +56,8 @@
  *     전열 생존자가 있으면 후열은 대상이 안 되고, 전열이 전멸해야 뒤가 열린다 (battle_design §3-1).
  *     우선순위는 **좁은 계약부터** — 지목(결투) → 도발 → 전열 → 무작위. 앞의 둘은 진형을 무시한다.
  *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
- *   상태이상(결빙 등)은 아직 없다 — 걸린 효과 행으로 들어온다(PLAN_skill_structure 4단계).
+ *   상태이상은 **결빙 하나**다 [2026-09-28 · R177 · battle_design §2-4] — 스킬 타격이 맞은 대상에게 건다(`strikeOnce` 의 `sk.onHit` → `rt.applyStatus`).
+ *     화상 · 스턴 등은 거는 스킬과 함께 온다(GAME_DESIGN §10 「상태이상 기계 정의」).
  *   전직·마스터리·패시브는 미구현 — 지금 도는 것은 직업 기본 액티브뿐이다 (프로토타입 §9-0).
  *   ~~몬스터의 치명·반사·피해 감소는 0~~ → **[폐기 2026-09-11 · D2 사용자 확정]** 몬스터도 **영웅과 같은 밑수**를 받는다
  *     (기본 치명 확률 · HP 재생 밑수) — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다.
@@ -252,6 +253,8 @@ export function createBattleSystem(data) {
             defIgnore: c.def_ignore, resReduction: c.res_reduction,
             // 반지 · 목걸이 옵션 [2026-09-21 · R127] — 원소별 저항 무시(`strike` 가 그 타격 원소만 읽는다) · 버프 지속시간(`castBuff` 가 거는 쪽 값을 읽는다). 없으면 null · 0
             resReductionEl: c.res_reduction_el ?? null, buffDur: c.option_fx?.buffDur ?? 0,
+            // 빙결 시간 감소 [2026-09-28 · R177 · battle_design §2-4] — **받는 쪽** 값(비율 · 신발 · 반지 · 목걸이). `rt.applyStatus` 가 `AILMENTS.freeze.cut` 으로 읽는다. 없으면 0
+            freezeDur: c.option_fx?.freezeDur ?? 0,
             skillMult: 1, bonusPct: c.dmg_bonus_pct, // 피해량(도감) — 따로 곱한다(2026-09-18) · strike 가 읽는 이름과 같아야 한다
             crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
@@ -281,7 +284,7 @@ export function createBattleSystem(data) {
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
     const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
-        'resReductionEl', 'buffDur',
+        'resReductionEl', 'buffDur', 'freezeDur',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod', 'fhr',
         'goldFind', 'itemFind', 'fx', 'magicFind', 'stats'];
 
@@ -1002,6 +1005,9 @@ export function createBattleSystem(data) {
                 && hpBefore - target.hp >= target.hpMax * B.stagger_hp_pct) stagger(target);
             // 타격 시 창 — 무기 옵션의 방어력 · 저항 · 공격력 감소 (skill_effects.weaponOnHit · R78). rng 0 · 이벤트 없음(`quiet`)
             if (fx && target.hp > 0) weaponOnHit(u, fx, target, hitType, t, windowSec);
+            // 맞은 대상에게 거는 걸린 효과 — 결빙 [2026-09-28 · R177 · battle_design §2-4]. **스킬 타격만**(`sk` — 기본 공격 · 반격 · 평타 부여 추가타는 없다) ·
+            //   살아 있고 행동하는 대상에게만(벽은 차례가 없다) · 사건 훅 · 반사 · 전투불능 · 반격보다 앞. rng 0 — `buff` 이벤트는 그 `hit`(· `stagger`) 뒤
+            if (sk?.onHit && target.hp > 0 && !target.summon) rt.applyStatus(u, target, sk.onHit, t);
             // 사건 훅 — 등록된 반응이 없으면 아무 일도 없다. 핸들러가 rng 를 쓰면 **이 자리에서** 소비한다
             hooks.emit('hit', u, { t, d: target, dmg, crit, s, proc });
             hooks.emit('hitTaken', target, { t, a: u, dmg, crit, s, proc });

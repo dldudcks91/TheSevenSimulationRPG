@@ -89,7 +89,7 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 → 그 결과 `src/data/item_base.csv`(신규)는 **이름만 4개씩 뽑아 왔고**, `game_logic/item.js` 가 "무기 외 부위의 **베이스 이름 풀**"로 명시한다 — 즉 판금 갑옷과 가죽 갑옷은 **완전히 같은 물건**이다. 무기의 `weapon_group.csv` 에 대응하는 방어구 테이블이 없다.
 → ⚠ **이름-분류가 D2 원본과 뒤섞여 있다** — `Plate Mail` 이 `light_armor`, `Dusk Shroud` 가 `heavy_armor` 로 분류돼 있어(원본과 정반대) **이름에서 성격을 역산하면 안 된다.**
 → ⚠ **`Ghost Armor` 는 어휘가 충돌한다** — `Ghost` 는 G3-a 가 이미 적은 대로 **몬스터 베이스(물방↓마방↑)** 이고, 무기 통합옵션에 vs Undead 추가 피해가 있다.
-→ 처리 방향은 **GAME_DESIGN §10 「방어구 갈래 축」·「계승 `equipment_base.csv:sub_group` 의 처리」** — 09-01 에 "직업으로 안 가르되 트레이드오프는 둔다"가 확정됐고(사용자), 이 축을 되살릴지 버리고 새로 짤지는 미확정 (item_design.md §1 방어구 갈래)
+→ **닫혔다** — 네 부위 모두 각자의 갈래가 대체해(갑옷 09-16 · 투구 09-17 · 장갑 · 신발 09-18) 계승 갈래를 쓰는 부위가 없다. GAME_DESIGN §10 의 행은 2026-09-28 에 지웠고 원문은 DECISION_LOG.md §4 (item_design.md §1 방어구 갈래)
 
 ### G6. 1:1 전투 전제 (GAME_DESIGN §9 기재 항목과 동일)
 `stage_info`는 `wave` 컬럼으로 웨이브당 **몬스터 1마리**(monster_idx 단수)를 지정 — 원작이 1:1이었기 때문.
@@ -181,4 +181,4 @@ GAME_DESIGN.md §9 미확정 항목 **"TheSevenRPG CSV fork 범위/시점"**에 
 | `equipment_suffix` | `lust\|helmet` | replace_provisional | `res_all` | percentile | 5 | 30 | magic_resist 는 전 원소 공통 저항이 되었고 단위가 소재값 -> 직접 %로 바뀌었다 (9-5). 범위를 % 스케일로 환산 — 2026-08-26 |
 
 ---
-*마지막 업데이트: 2026-09-01 (**G5-b 신설** — 방어구 `sub_group` 축 8갈래 중 3개가 폐지 스탯(명중·회피·마법방어) 위에 있고 신발은 둘 다 무효라는 미등재 공백 · `item_base.csv` 가 이름 풀일 뿐이라는 사실 · `Ghost` 어휘 충돌 / G3-b 「신규 3부위」→ 보조 폐지로 2부위) · 2026-08-28 (부록 A — 구 `equipment_option_override.csv` 34행 이관, CSV 폐기) · 2026-08-23 (게이트 폐지 반영 — G2 결론 유지, 근거만 축소)*
+*마지막 업데이트: 2026-09-28*

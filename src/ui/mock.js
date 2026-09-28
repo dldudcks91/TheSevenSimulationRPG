@@ -139,7 +139,7 @@ export const AFFIX_LABELS = {
     vs_back_dr: { ko: '후열 적에게 받는 피해 감소', en: 'Damage Reduction vs Back Row', fmt: 'pct' },
     xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', fmt: 'pct' },
     // `inert` = **전투가 아직 안 읽는 줄** — 툴팁이 줄 끝에 「(미적용)」을 단다(SCREEN_DESIGN §6 · ADR-0213). 상태이상 기계가 서면 그 stat 의 표지를 지운다
-    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct', inert: true },
+    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct' },   // 결빙이 읽는다(2026-09-28 · R177 · battle_design §2-4)
     poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct', inert: true },
     // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
     //    원소별 저항 감소는 무기 시기 칸 `res_reduction`(저항 감소)과 같은 메커니즘이라 이름도 그 계열로 둔다 — **그 원소의 타격에만** 붙는다
@@ -349,6 +349,15 @@ export const SKILL_ICON_FILES = [
     'mag_chain', 'mag_focus', 'mag_frozenwall', 'mag_inferno',
     'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
     'pri_penitence', 'pri_bind', 'pri_haste',
+    // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 전사 · 기사 · 마법사 · 사제 36. 궁수 9 는 발주 대기(검은 칸)
+    'war_ragnarok', 'war_berserk', 'war_mutualruin', 'war_whirlwind', 'war_thorswrath', 'war_shockwave',
+    'war_lionsroar', 'war_command', 'war_intimidate',
+    'kni_lastbastion', 'kni_unbreakablewill', 'kni_divinejudgment', 'kni_unyieldingoath', 'kni_holywar', 'kni_vow',
+    'kni_retribution', 'kni_condemnation', 'kni_showdown',
+    'mag_meteor', 'mag_firewall', 'mag_hydra', 'mag_frozenorb', 'mag_blizzard', 'mag_frostburst',
+    'mag_thunderstrike', 'mag_nova', 'mag_staticfield',
+    'pri_aegis', 'pri_benediction', 'pri_resurrection', 'pri_punishment', 'pri_atonement', 'pri_excommunication',
+    'pri_diamondbody', 'pri_sweep', 'pri_counter',
 ];
 // [2026-09-22] **전직 스킬 — 그림이 데이터보다 먼저 왔다.** `skill.csv` 에 행이 없어(skill_design §10) 위 목록에 못 들어간다 —
 //   도감 스킬 세그먼트가 이 표로 **전직 하나 = 묶음 하나**를 따로 세운다(SCREEN_DESIGN §9-1 · ADR-0299).
@@ -793,20 +802,17 @@ export const RES_ART = {
 };
 
 /**
- * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331). ⚠ 임시 단색 실루엣 — 아트가 오면 이 표만 갈아 끼운다.
- * 골드 · 재료 심볼은 재화 실루엣(`RES_ART`)을 그대로 쓴다(같은 것을 두 그림으로 그리지 않는다) — 따로 그리는 것은 표에 없는 셋뿐이다.
- * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만
+ * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331). 심볼 일곱 = **죄종 일곱** — 칸마다 그 죄종 아이콘(`sinIcon`)을 든다 (2026-09-28 사용자 지시).
+ * 짝은 뜻으로 맞췄다 — 최고 심볼 = 오만 · 와일드 = 탐욕(탐욕 = 도박) · 골드 = 색욕 · 광석 = 분노(대장간 불) · 목재 = 시기(숲 챕터) · 가루 = 나태(쌓인 먼지) · 코인 = 폭식(쌓아 먹는다).
+ * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만. 무엇을 받는지는 배당표가 읽힌다
  */
-const GAMBLE_ART = {
-    // 세븐 — 게임 이름(THE SEVEN)의 7
-    seven: resSvg('<text x="16" y="26" text-anchor="middle" font-size="27" font-weight="700" fill="currentColor">7</text>'),
-    // 탐욕의 인장(와일드) — 별
-    wild: resSvg('<path d="M16 2l4.1 8.9 9.7 1.1-7.2 6.6 2 9.6L16 23.4l-8.6 4.8 2-9.6-7.2-6.6 9.7-1.1Z"/>'),
-    // 코인 — 테 두른 동전
-    coin: resSvg('<path fill-rule="evenodd" d="M16 3a13 13 0 1 1 0 26 13 13 0 0 1 0-26Zm0 3.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19Z"/><circle cx="16" cy="16" r="5.5"/>'),
+const GAMBLE_SIN = { seven: 'pride', wild: 'greed', gold: 'lust', ore: 'wrath', timber: 'envy', dust: 'sloth', coin: 'gluttony' };
+/** 심볼 그림 — 흰 단색 죄종 아이콘을 **마스크**로 써 그 죄종 색(`SINS.color`)으로 칠한다(`sk-icon-mask` 와 같은 수법). 글자는 색을 안 든다.
+ *  ~~`slotArt`~~ 는 장비 빈 칸 그림이 이미 쓰는 이름이다 */
+export const gambleArt = id => {
+    const sin = GAMBLE_SIN[id], src = sinIcon(sin);
+    return src ? `<i class="gb-ico sk-icon-mask" aria-hidden="true" style="background:${SINS[sin].color};-webkit-mask-image:url('${src}');mask-image:url('${src}')"></i>` : '';
 };
-/** 심볼 그림 — 제 그림이 없으면 산출(`yield`)의 재화 실루엣. 목재는 재화 쪽 이름이 `wood` 다 · ~~`slotArt`~~ 는 장비 빈 칸 그림이 이미 쓰는 이름이다 */
-export const gambleArt = (id, yieldKind) => GAMBLE_ART[id] ?? RES_ART[yieldKind === 'timber' ? 'wood' : yieldKind] ?? '';
 
 /* ═══════════ 훈련장 — ⚠ 목업 (SCREEN_DESIGN §16 · ADR-0297, 2026-09-22 사용자 지시) ═══════════
  * 훈련(영웅을 넣어 경험치)의 형태 · 칸 수 · 여는 축은 기획 미정(construction_draft §10) → **CSV 로 가지 않는다**(확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다).

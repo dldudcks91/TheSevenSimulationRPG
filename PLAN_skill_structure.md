@@ -217,7 +217,7 @@ statuses[statusId] = { id, stat, value, dur, element, note }
 |---|---|
 | **가안을 기획서에 먼저 적는다** — §8 의 가안 셋을 battle_design §3-1(적 자리) · skill_design §7 · GAME_DESIGN §10(상태이상) · hero_design 또는 skill_design §4(전직 목록)에 `/game-design` 절차로 옮기고 결정 로그에 한 줄(「가안 — 사용자 위임 09-22」). 기획 문서가 코드보다 먼저다 | — |
 | 적 자리 모델 — 6칸 · 배치 규칙 · 「전열 가운데」(프로즌 오브) · 「맞은 자리에 남는 불」(메테오 ③) · 자리에 붙는 걸린 효과(`attach = slot` / `row`) · 적 표시값에 칸 번호 | §8-1 가안 · ⚠ 골든 재촬영(아래) |
-| 상태이상 — 화상 · 결빙 · 스턴(보스 배수) · 슬로우를 걸린 효과 행으로 · `mag_iceblast` · `mag_frostnova` 의 결빙을 줄로 되살린다(3-1 에서 버린 값) | §8-2 가안 |
+| 상태이상 — 화상 · 결빙 · 스턴(보스 배수) · 슬로우를 걸린 효과 행으로 · `mag_iceblast` · `mag_frostnova` 의 결빙을 줄로 되살린다(3-1 에서 버린 값) · **결빙은 2026-09-28 R177 로 섰다** — 줄 사이 대상 공유(S3) 대신 `hit` 줄이 맞은 대상에게 건다(`x.onHit` · `rt.applyStatus`) · 상태이상 = 걸린 효과 id 가 `AILMENTS` 의 키(battle_design §2-4) — 화상 · 스턴은 같은 길로 · **남은 순서는 [PLAN_status_effect.md](PLAN_status_effect.md)** | §8-2 가안 |
 | 전직 목록 표 `class_advance.csv` | §8-3 가안 |
 | 전직 마법사 8 · 전사 9 행 추가(`owner_kind = advance` · `owner_id` = 전직 id) · 정전장은 기획 미정이라 제외 · 아이콘 파일명(`icons/skills/mag_meteor.png` 등 임시 id)을 발행 id 에 맞춘다 · 기획서의 노드 칸 중 **보류**인 것(파이어월 ③④ 등)은 행에 안 넣는다 | 위 셋 + 2~3단계 |
 | 도감이 CSV 를 읽게 — `mock.js:SKILL_ADV_ICON_FILES` · `i18n:ix.adv.*` · `ix.sk.*` 를 걷고 전직 묶음을 `skill.csv`(advance 행) + `class_advance.csv` 에서 세운다(SCREEN_DESIGN §9-1 · ADR-0299 의 「그림이 데이터보다 먼저」 단락을 갱신) · 설명창이 붙는다 | 전직 행 |

@@ -355,6 +355,7 @@ icons_source/skills/
 ├── arc_pierce.png        ← 관통 사격  (판 셋을 꿰뚫은 화살)
 ├── arc_poison.png        ← 독화살     (화살촉 + 떨어지는 방울 셋)
 ├── pri_judgment.png      ← 심판       (검 + 번개 균열)          [2차 시트]
+├── (전직 36) war_ragnarok … · kni_lastbastion … · mag_meteor … mag_staticfield · pri_aegis … ← **전직 전사 · 기사 · 마법사 · 사제 각 9 — 투톤**(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 넷 · 2026-09-28 · 마법사 8 은 흰 실루엣 판을 대체 · 궁수 9 는 발주 대기). 강조색 픽셀(채도 높은 쪽)은 그대로 두고 검정만 회백으로 칠한다. 전직 시트의 스타일 앵커가 이 시트다
 └── unused/               ← id 가 없는 여분 (`swords_cross` · `shield_impact` · `chevron_burst` · `quiver` · `bow`)
 ```
 

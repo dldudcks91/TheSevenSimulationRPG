@@ -339,14 +339,17 @@ const one = v => [[null, v ?? 0]];
  * `parts(x, c)` = `[[조각 이름, 값]]` (`x` = `option_fx` · `c` = 시트 전체) — 조각이 **둘 이상이면 묶은 줄**이다(값이 있는 것만 이름을 붙이고 전부 0이면 `—`).
  * 하나면 이름 없이 값만 찍는다. 어느 칸 · 어느 묶음에 서는지는 `DETAIL_LAYOUT` 이 정한다.
  * 줄 이름은 아이템 옵션 줄(`M.AFFIX_LABELS`) · combat_stat 이름을 먼저 쓴다 — 같은 축이 두 화면에서 다른 이름이면 안 된다.
- * **전투가 안 읽는 축은 없다** — 상태이상 시간 감소 넷은 아이템 툴팁의 「(미적용)」 줄이 든다 (ADR-0213).
+ * **전투가 안 읽는 축은 없다** — 상태이상 시간 감소 중 중독 · 화상 · 스턴은 아이템 툴팁의 「(미적용)」 줄이 든다 (ADR-0213).
+ *   ⚠ 빙결 시간 감소는 2026-09-28 부터 전투가 읽는다(결빙 · R177) — 이 판의 줄은 아직 없다(세부 옵션 배치는 SCREEN_DESIGN 먼저 · `/ui`).
  * 타격 시 방어 · 저항 약화 · 타격 시 대상 데미지 감소는 **전투가 읽지만 세우지 않는다** [2026-09-22 사용자 지시 · ADR-0294 — 원소 피해 · 저항 감소는 2026-09-27 에 다시 섰다]
  */
 const FX_ROWS = [
-    { id: 'fx_ele', fmt: 'pct', name: () => t('st.fx.ele'), parts: x => eleParts(x?.ele) },
+    // 원소 두 줄은 **네 값을 늘 `/` 로 잇는다**(불 / 냉기 / 전기 / 독 — 저항 4행과 같은 순서 · 0 도 찍는다) [2026-09-28 사용자 지시]
+    { id: 'fx_ele', fmt: 'pct', slash: true, name: () => t('st.fx.ele'), parts: x => eleParts(x?.ele) },
     // 저항 감소 — 모든 원소 타격(`res_reduction` · combat_stat 행)과 그 원소의 타격에만(`res_reduction_el` · 반지 시기 칸) 을 한 줄로 묶는다 [2026-09-27]
-    { id: 'fx_res_red', fmt: 'pct', name: () => L(D.combatStats.find(s => s.id === 'res_reduction')),
-        parts: (x, c) => [[t('st.fx.all'), c?.res_reduction ?? 0], ...eleParts(c?.res_reduction_el)] },
+    //   적 원소 저항 감소 = 원소마다 **모든 원소(`res_reduction`) + 그 원소(`res_reduction_el`)** — 그 원소 타격에 실제로 먹는 값(formula.strike)
+    { id: 'fx_res_red', fmt: 'pct', slash: true, name: () => t('st.fx.resRed'),
+        parts: (x, c) => eleParts(c?.res_reduction_el).map(([n, v]) => [n, v + (c?.res_reduction ?? 0)]) },
     { id: 'fx_vs_type', fmt: 'pct', name: () => L(D.combatStats.find(s => s.id === 'vs_type_damage')),
         parts: x => typeParts(x?.vs) },
     { id: 'fx_vs_target', fmt: 'pct', name: () => t('st.fx.vsTarget'),
@@ -367,7 +370,7 @@ const fxParts = (s, c) => s.parts(c?.option_fx ?? null, c);
 /**
  * 세부 옵션의 자리 — `[세부 옵션 1, 세부 옵션 2]` · 칸마다 **묶음**의 배열 · 묶음마다 줄 id [2026-09-27 사용자 지시 · SCREEN_DESIGN §6 · ADR-0381].
  * 1 = **늘 먹는 것**(모든 타격 · 모든 피격) — 대표 · 공격 · 방어 · 회복 · 저항 / 2 = **조건부**(대상 · 상황 · 발동이 붙는 것) — 원소 · 대상 · 확률 · 맞을 때 · 효과 증폭 · 파밍.
- * 묶음은 **순서로만** 모은다 — 제목도 간격도 없다(간격은 2026-09-27 사용자 지시로 걷었다 · ADR-0389). 2 의 「대상」 묶음은 주는 것 ↔ 막는 것을 한 쌍씩 붙인다.
+ * 묶음 사이는 제목 없이 **살짝 띄운다** — 간격은 묶음 경계가 정한다(`sheetPages` · ADR-0396). 2 의 「대상」 묶음은 주는 것 ↔ 막는 것을 한 쌍씩 붙인다.
  * combat_stat 행끼리의 순서는 `sheet_order` 와 같아야 한다(dev/test.js 가 대조한다) · `fx_` 는 `FX_ROWS`.
  * 캐릭터 탭의 두 패널과 유닛 툴팁의 두 열이 **같은 자리에서** 끊는다 (ADR-0115)
  */
@@ -375,21 +378,21 @@ const DETAIL_LAYOUT = [
     [
         ['atk_physical', 'atk_magic', 'action_period', 'hp_max'],
         ['crit_rate', 'crit_damage', 'def_ignore', 'cooldown_reduction'],
-        ['defense', 'damage_reduction'],   // 피해 감소 줄이 고정 피해 감소를 함께 든다 — `고정 / %` (2026-09-27 사용자 지시)
-        ['life_steal', 'hp_regen'],
-        ['res_fire', 'res_cold', 'res_lightning', 'res_poison'],   // 저항 넷이 맨 아래 [2026-09-27 사용자 지시]
+        // 피해 감소 줄이 고정 피해 감소를 함께 든다(`고정 / %`) [2026-09-27 사용자 지시]
+        ['defense', 'damage_reduction', 'fhr'],
+        // 저항 넷 아래에 원소 두 줄(불/냉기/전기/독 네 값) · 타격 회복과 불 저항 사이를 띄운다 [2026-09-28 사용자 지시]
+        ['res_fire', 'res_cold', 'res_lightning', 'res_poison', 'fx_ele', 'fx_res_red'],
     ],
     [
-        ['fx_ele', 'fx_res_red'],
-        ['fx_vs_type', 'fx_dr_type', 'fx_vs_target', 'fx_dr_target'],
-        ['fx_crush', 'fx_hit', 'res_max_bonus'],
-        ['fhr', 'fx_counter', 'reflect_damage'],
-        ['fx_recv', 'fx_buff_dur'],
-        ['item_find', 'fx_magic_find', 'gold_find', 'fx_xp'],
+        // ~~최대 저항 증가~~ 줄은 걷었다 — 그 값은 저항 4행의 「상한」이 든다 [2026-09-28 사용자 지시]
+        ['fx_vs_type', 'fx_dr_type', 'fx_vs_target', 'fx_dr_target'],   // 대상
+        ['fx_crush', 'fx_hit', 'fx_counter', 'reflect_damage'],         // 발동 · 반응 — 강타 · 명중률을 반격 · 반사와 붙였다 [2026-09-28 사용자 지시]
+        ['life_steal', 'hp_regen', 'fx_recv', 'fx_buff_dur'],           // 회복 · 지속 — 흡혈은 HP 재생 위 [2026-09-28 사용자 지시]
+        ['item_find', 'fx_magic_find', 'gold_find', 'fx_xp'],           // 파밍
     ],
 ];
 /**
- * 대표값 = 세부 옵션 1 의 첫 묶음 — 값을 굵게 찍는다 (구분선은 2026-09-15 · 아래 간격은 2026-09-27 사용자 지시로 걷었다 · ADR-0389) · 몬스터 첫 장에도 선다.
+ * 대표값 = 세부 옵션 1 의 첫 묶음 — 값을 굵게 찍고 아래를 살짝 띄운다 (구분선은 2026-09-15 걷음 · 간격 ADR-0396) · 몬스터 첫 장에도 선다.
  * 물리·마법 공격력 중 **하나는 늘 꺼져 있다**(무기 종류가 정한다) — 지우지 않는 것이 결정이다: 회색으로 남은
  * 그 자리가 「내 빌드가 어느 쪽인가」를 말한다 (SCREEN_DESIGN §6, 2026-09-01).
  */
@@ -421,7 +424,7 @@ export function sheetRowsHtml(rows, c) {
         const shown = s.id === 'defense' && has ? Math.round(v) : v;
         // 피해 감소 = **고정 / %** 한 줄 [2026-09-27 사용자 지시 · SCREEN_DESIGN §6] — 고정 피해 감소(`option_fx.drFlat` · 모든 감소 뒤에 뺀다)는 제 줄을 잃었다
         const text = s.id === 'damage_reduction' && has ? `${c.option_fx?.drFlat ?? 0} / ${fmtCombat(s, v)}` : fmtCombat(s, shown);
-        return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}">
+        return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}${s.gap ? ' gap' : ''}">
             <span class="cs-n">${L(s)}</span>
             <span class="cs-v">${text}${extra}</span></div>`;
     }).join('');
@@ -432,9 +435,10 @@ function fxRowHtml(s, c) {
     const parts = fxParts(s, c);
     const on = parts.filter(([, v]) => v);
     const shown = !c ? '—'
+        : s.slash ? parts.map(([, v]) => fmtCombat(s, v)).join('/')
         : parts.length === 1 ? fmtCombat(s, parts[0][1])
         : on.length ? on.map(([n, v]) => t('st.fx.part', { n, v: fmtCombat(s, v) })).join(' · ') : '—';
-    return `<div class="cs-row${c ? '' : ' off'}">
+    return `<div class="cs-row${c ? '' : ' off'}${s.gap ? ' gap' : ''}">
             <span class="cs-n">${s.name()}</span>
             <span class="cs-v">${shown}</span></div>`;
 }
@@ -458,7 +462,7 @@ export function attrRowsHtml(stats, color) {
 }
 
 /** 대표값을 뺀 쪽 — 몬스터 카드는 첫 장이 대표값을 이미 든다 */
-const dropLead = rows => rows.filter(s => !s.lead);
+const dropLead = rows => rows.filter(s => !s.lead).map((s, i) => (i || !s.gap ? s : { ...s, gap: false }));
 /** 줄에 값이 있나 — 묶은 줄은 조각 하나라도 · 전투 능력치는 0 이 아닌 값 */
 const rowOn = (s, c) => s.fx ? fxParts(s, c).some(([, v]) => v) : !!c?.[s.id];
 /**
@@ -468,7 +472,9 @@ const rowOn = (s, c) => s.fx ? fxParts(s, c).some(([, v]) => v) : !!c?.[s.id];
  */
 export const sheetPages = (c = null, sparse = false) => DETAIL_LAYOUT.map((page, pi) => {
     const keep = s => !sparse || ((pi === 0 && !s.fx) || rowOn(s, c));
-    return page.flat().map(rowOf).filter(keep);
+    // 묶음 경계마다 첫 줄 위를 살짝 띄운다 — 거른 뒤에 달아서 통째로 빠진 묶음은 간격도 안 남는다 (ADR-0396)
+    return page.map(g => g.map(rowOf).filter(keep)).filter(g => g.length)
+        .flatMap((g, gi) => g.map((s, i) => (gi && !i ? { ...s, gap: true } : s)));
 });
 
 /**
@@ -541,17 +547,19 @@ function bindEquipmentCells(c, equipment, itemCardOf) {
  * 붙는 쪽은 유닛 카드와 같다 — 카드 왼쪽에 선 툴팁은 열이 왼쪽으로 자란다(ADR-0126 · 격자가 자리를 정하고 DOM 순서는 그대로다)
  * @param skills 액티브 칸 셋 — 스킬 개체 또는 `null`(빈 칸). 부르는 쪽이 넘긴다(`app.js:activeCells` — 이 파일은 `G` 를 모른다)
  */
-function statsFirstCard(h, combat, itemOf, itemCardOf, skills) {
+function statsFirstCard(h, combat, itemOf, itemCardOf, skills, gearBelow = false) {
     const color = tierOf(h).color;
     const side = anchorSide === 'left' ? ' grow-left' : '';
-    const c = el('div', `tip-card unit stats-first${altHeld ? ' alt' : ''}${side}`);
+    const open = altHeld;
+    // [실험 HERO_TIP_ALL] `gearBelow` — 장비가 기본 옵션 **아래**에 늘 서고 Alt 는 세부 옵션 1 · 2 만 연다
+    const c = el('div', `tip-card unit stats-first${open ? ' alt' : ''}${gearBelow ? ' gear-below' : ''}${side}`);
     c.dataset.alt = '1';
-    c._rebuild = () => statsFirstCard(h, combat, itemOf, itemCardOf, skills);
+    c._rebuild = () => statsFirstCard(h, combat, itemOf, itemCardOf, skills, gearBelow);
     c.style.setProperty('--unit-line', color);
     const icons = (skills ?? []).map(s => `<span class="tip-skill${s ? '' : ' vacant'}">${s ? skillImg(s) : ''}</span>`).join('');
-    const equipment = altHeld ? equipmentHtml(wornOfHero(h, itemOf)) : null;
-    const more = altHeld ? `
-            <div class="tip-unit-col gear">${equipment.html}</div>` + sheetPages(combat, true).map((rows, i) => `
+    const equipment = open || gearBelow ? equipmentHtml(wornOfHero(h, itemOf)) : null;
+    const more = open ? (gearBelow ? '' : `
+            <div class="tip-unit-col gear">${equipment.html}</div>`) + sheetPages(combat, !gearBelow).map((rows, i) => `
             <div class="tip-unit-col d${i + 1}">
                 <div class="tip-col-h">${t('ch.detail.hn', { n: i + 1 })}</div>
                 <div class="tip-sheet">${sheetRowsHtml(rows, combat)}</div>
@@ -561,13 +569,17 @@ function statsFirstCard(h, combat, itemOf, itemCardOf, skills) {
             <div class="tip-unit-col base">
                 <div class="tip-col-h">${t('ch.attr.h')}</div>
                 <div class="attr-list">${attrRowsHtml(h.stats, color)}</div>
-                <div class="tip-skills">${icons}</div>
-                ${altHeld ? '' : `<div class="tip-foot">${t('tip.unit.altHintGear')}</div>`}
+                ${skills ? `<div class="tip-skills">${icons}</div>` : ''}
+                ${gearBelow ? `<div class="tip-gear-below">${equipment.html}</div>` : ''}
+                ${open ? '' : `<div class="tip-foot">${t(gearBelow ? 'tip.unit.altHint' : 'tip.unit.altHintGear')}</div>`}
             </div>${more}
         </div>`;
     bindEquipmentCells(c, equipment, itemCardOf);
     return c;
 }
+
+/** [실험 2026-09-27] true = 원정 영웅 hover 가 기본 옵션 + 그 아래 장비 · Alt 로 세부 옵션 1 · 2 · false 로 끄면 옛 카드(장비 + Alt 세부 옵션)로 돌아간다 */
+const HERO_TIP_ALL = true;
 
 /**
  * 영웅 카드 — 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0171).
@@ -579,9 +591,11 @@ function statsFirstCard(h, combat, itemOf, itemCardOf, skills) {
  * @param statsFirst 첫 장이 **기본 옵션**인 편성 탭 카드(`statsFirstCard`) — 편성 탭(띠 · 진형 칸)이 **스위치가 켜져 있을 때만** 준다(`app.js:PARTY_TIP_STATS` · 꺼 둠 · ADR-0318) [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]
  * @param skills     `statsFirst` 카드의 액티브 칸 셋(스킬 개체 또는 `null`)
  */
-export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null } = {}) {
+export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null, all = false } = {}) {
     if (!h) return null;
     if (statsFirst) return statsFirstCard(h, combat, itemOf, itemCardOf, skills);
+    // [실험 2026-09-27] 원정 관전 카드만 `all` 을 준다 — 기본 옵션 + 그 아래 장비 · Alt 로 세부 옵션 1 · 2
+    if (all && HERO_TIP_ALL) return statsFirstCard(h, combat, itemOf, itemCardOf, null, true);
     return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat, itemOf, itemCardOf), '',
         equipmentHtml(wornOfHero(h, itemOf)), itemCardOf);
 }

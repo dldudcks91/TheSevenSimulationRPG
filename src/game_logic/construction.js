@@ -33,7 +33,8 @@ export const TARGETS = {
     explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
-    training: U(false), advance: U(false), skill_depth: U(false),
+    // 훈련 · 전직 — 준비 중이어도 짓는다(훈련장 r1 ~ r3 · 2026-09-28 사용자 지시). 기능이 서면 `live` 만 true 로
+    training: { ...U(false), build: true }, advance: { ...U(false), build: true }, skill_depth: U(false),
     // 더하기 — 지금 있는 상한(`state.limitsOf` 의 키) · 단계
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정 + 수색 결과이고 건물이 안 늘린다 [2026-09-24 사용자 지시]
@@ -41,11 +42,12 @@ export const TARGETS = {
     make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
     chapters: A(true),   // 들어갈 수 있는 장 — 원정 랭크마다 +1 · 기본값 0 (`state.limitsOf` · `stageUnlocked` · 2026-09-24 · R152)
     commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)
-    // 더하기 — 준비 중
     // 자원 단계 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼(`state.limitsOf` 의 `resourceTiers`) · 단계 하나에 영웅 한 명이라 일꾼 칸이 따로 없다
-    //   ~~`dispatch` 켜기 · `workers` 더하기~~ (2026-09-27 사용자 지시 · ADR-0372) · 배치가 `game_logic` 에 서면 `true`
-    make_kinds: A(false), resource_tier: A(false), shop_layers: A(false),
-    explore_regions: A(false), explore_slots: A(false), gear_sets: A(false), training_slots: A(false),
+    //   ~~`dispatch` 켜기 · `workers` 더하기~~ (2026-09-27 사용자 지시 · ADR-0372) · **2026-09-27 켰다** — 배치(`dispatchAssign`)와 산출(`dispatchSettle` · base_expedition §3-3)이 섰다
+    resource_tier: A(true),
+    // 더하기 — 준비 중
+    make_kinds: A(false), shop_layers: A(false),
+    explore_regions: A(false), explore_slots: A(false), gear_sets: A(false), training_slots: { ...A(false), build: true },
     // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
     //   준비 중이어도 짓는다 — 선술집 r5 · r7 의 유일한 줄이라 막으면 r6 · r7 로스터에 못 닿는다 (2026-09-27 사용자 지시)
     recruit_quality: { ...A(false), build: true },

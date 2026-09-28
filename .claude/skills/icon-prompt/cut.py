@@ -169,6 +169,32 @@ def finish(rgb, mask):
     return Image.fromarray(canvas)
 
 
+def snap(counts, n, parts):
+    """Cut lines between cells. Gemini does not keep art inside the exact thirds
+    (war_advanced_skills_sheet 2026-09-28: the bottom row pokes ~50-90px above the
+    nominal line, so a strict slice leaks chevron tips into the cell above and
+    clips the icon below). Each line moves to the middle of the widest empty
+    band within +-1/4 cell of the nominal line; no empty band -> nominal line."""
+    cuts = [0]
+    win = n // parts // 4
+    for k in range(1, parts):
+        nom = k * n // parts
+        lo, hi = max(0, nom - win), min(n, nom + win + 1)
+        empty = counts[lo:hi] == 0
+        best, run_start = None, None
+        for i, e in enumerate(list(empty) + [False]):
+            if e and run_start is None:
+                run_start = i
+            elif not e and run_start is not None:
+                length, mid = i - run_start, lo + (run_start + i - 1) // 2
+                if best is None or length > best[0] or (length == best[0] and abs(mid - nom) < abs(best[1] - nom)):
+                    best = (length, mid)
+                run_start = None
+        cuts.append(best[1] if best else nom)
+    cuts.append(n)
+    return cuts
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('sheet')
@@ -184,11 +210,14 @@ def main():
     print('bg tones:', tones, '(1 = white sheet, 2 = baked checkerboard)')
     fig = ~bg
     H, W = fig.shape
+    ys = snap(fig.sum(1), H, R)
+    xs = snap(fig.sum(0), W, C)
+    print('cuts  y:', ys[1:-1], ' x:', xs[1:-1], '(nominal', [k * H // R for k in range(1, R)], ')')
     empty = []
     for r in range(R):
         for c in range(C):
             cell = np.zeros(fig.shape, bool)
-            cell[r * H // R:(r + 1) * H // R, c * W // C:(c + 1) * W // C] = True
+            cell[ys[r]:ys[r + 1], xs[c]:xs[c + 1]] = True
             im = finish(rgb, fig & cell)
             if im is None:
                 empty.append((r + 1, c + 1))

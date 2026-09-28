@@ -332,5 +332,133 @@ as a finger, so they never merge into one mass.
 - ⚠ **약한 타일은 `kni_might` 하나만 여분 칸에서 재발주를 받는다** (§9) — 채택은 40px 에서 대 보고. `kni_duel` 은 보류
 - ⚠ **`mock.js:SKILL_ICON_FILES` 는 길이가 곧 해시 나머지**다 — 22 → 37 이 되며 남은 폴백 배정이 다시 바뀐다(전부 제 그림이 되므로 결과적으로 무해)
 - **이 스킬의 소관 밖** — 사제 무기 `crucifix` · `bible` 은 **아이템 아이콘이 없다**(09-07 무기군 신설 이후 미발주). `art/README.md` 의 「무기군 `release=main` 8종 · 8종 전부」 표가 그만큼 낡았다
+## 11. 전직 45 — 투톤 [2026-09-28 — 사용자 「약간 더 화려해도」 · ADR-0401]
+
+전직 스킬은 **회백 실루엣 + 효과 도형 하나만 원소 강조색**(평면)이다. 기본 스킬 문법(§2)에서 **색 한 가지 · 작은 곁가지 하나**만 푼다. 설치 때 검정 → `#d8d9e6`, 채도 높은 픽셀은 그대로(scratchpad `tone.py` 와 같은 식 — 채도 0.25~0.55 구간에서 섞는다). 타일 순서 = `skill.csv` 전직 행 순서(갈래 순 · 갈래 안 ①②③).
+
+| 직업 | 상태 | 앵커 |
+|---|---|---|
+| 전사 9 | **설치** (`source/war_advanced_skills_sheet.png`) | — (이 시트가 전직 앵커다) |
+| 기사 · 사제 9 | **설치** (`source/kni_advanced_skills_sheet.png` · `pri_advanced_skills_sheet.png` — 사제는 1254px · 검정에 잡티가 있어 투톤 칠은 밝기 문턱도 본다) | 전사 전직 시트 |
+| 마법사 9 | **설치** (`source/mage_elemental_skills_sheet.png` — 흰 실루엣 8장 대체 · `mag_staticfield` 는 기획 미정이라 그림은 임시) | 전사 전직 시트 |
+| 궁수 9 | 발주 대기 | 전사 전직 시트 |
+
+### 공통 머리 (앵커 = 전사 전직 시트를 첨부)
+
+```
+Use the attached sheet for RENDERING STYLE ONLY — solid black silhouettes with
+exactly one flat saturated accent color per icon, chunky masses, never thin
+lines. Do NOT copy its subjects or its compositions; every icon below is a new
+drawing.
+
+2048x2048 sheet, 3x3 grid, 9 fantasy skill icons on a PLAIN SOLID WHITE
+background. Each icon is centered in its cell and fills about 70% of it, with
+white margin all around — no icon may touch a grid line, the sheet edge, or
+another icon. Keep every icon fully inside its own third of the sheet. No text
+anywhere, no letters, no runes. No drop shadows, no background scene, no frames.
+
+- Each icon is one solid black object plus one bold effect shape, and may add
+  one small secondary detail (sparks, fragments or drops).
+- The effect shape is filled with ONE flat saturated accent color (hex given
+  per icon). Everything else stays solid black. Flat color only — no gradient,
+  no outline, no shading, no glow.
+- Dynamic diagonal composition with exaggerated motion — tilted, swinging,
+  mid-impact, never standing straight or symmetrical.
+- All nine icons share the same visual weight and the same amount of detail.
+- Where two shapes overlap, keep a clean white gap between them so they never
+  merge into one mass.
+```
+
+### 기사 — `kni_lastbastion` … `kni_showdown`
+
+```
+1. A tall tower shield planted on a slight tilt, three arrows snapping against
+   its face, a protective dome arc curving over the top. Dome #4A90E2.
+2. A clenched gauntlet fist in front of three nested shield outlines stacked
+   behind it, each larger than the last. Shield outlines #5DADE2.
+3. A round shield facing front, a bold arrow bent back as it bounces off, a
+   spiky reflection burst at the impact point. Burst #F4C430.
+4. A sword planted point-down, a bold halo ring floating around its crossguard,
+   two small wings spreading from the hilt. Halo and wings #F5D76E.
+5. A kite shield with a ring of blazing flames bursting outward from its rim.
+   Flames #F39C12.
+6. A gauntlet hand laid flat over a heart shape, three small upward chevrons
+   rising above it. Heart #E84A5F.
+7. A lance on a steep diagonal, three upward chevrons stacked along its shaft,
+   growing larger toward the tip. Chevrons #E67E22.
+8. A broad sword swinging down on a steep diagonal onto a cracked skull, one
+   crescent slash arc trailing behind the blade. Slash #C0392B.
+9. A lance and a sword meeting point-to-point head-on, a bold target reticle
+   ring around the meeting point. Reticle #9B59B6.
+```
+
+### 궁수 — `arc_trueaim` … `arc_trap`
+
+```
+1. A drawn longbow held upright, arrow nocked, a bold crosshair reticle
+   floating ahead of the arrowhead. Reticle #E74C3C.
+2. One huge heavy arrow flying on a steep diagonal, a big spiky impact burst
+   exploding where its head lands. Burst #F39C12.
+3. An open quiver tilted on a diagonal, two arrows sliding back into it, a bold
+   circular arrow loop wrapping around it. Loop #2ECC71.
+4. A bow tilted on a diagonal with an arrow just leaving it, long speed streaks
+   trailing behind the arrow. Streaks #3FA9E0.
+5. A bow bent to its absolute limit, string pulled far back, a sharp four-point
+   star flash at the arrowhead. Star #F5C518.
+6. One arrow flying on a long low diagonal, a bold zigzag chain trail linking
+   three small impact bursts along its path. Chain #1ABC9C.
+7. A snarling wolf head in profile, a bold target reticle painted over its eye.
+   Reticle #D35400.
+8. A sword and an arrow flying side by side on the same diagonal, two motion
+   streaks behind them. Streaks #27AE60.
+9. A steel bear trap snapped open on the ground, jagged jaws, a spiky burst
+   bursting up from its center. Burst #E67E22.
+```
+
+### 사제 — `pri_aegis` … `pri_counter`
+
+```
+1. A thick hexagon-patterned bubble dome covering a small upright cross.
+   Dome #5DADE2.
+2. Two open hands raised upward, a wide trapezoid light pillar pouring down
+   between them, three drops rising. Light pillar #F7DC6F.
+3. A cross rising out of a cracked grave slab, a pair of wings spreading behind
+   it. Wings #F5B041.
+4. A pillar of holy fire crashing down onto a cracked ground slab, three
+   downward chevrons at its sides. Fire pillar #9B59B6.
+5. A heart wrapped in a chain, drops rising out of it upward. Drops #A569BD.
+6. A closed holy book slammed shut, a halo ring shattering into pieces above
+   it. Halo pieces #D4AC0D.
+7. A clenched fist raised on a diagonal, diamond-cut crystal armor forming over
+   the forearm. Crystal #85C1E9.
+8. A long wooden staff swung horizontally in a wide arc, a bold crescent sweep
+   trail behind it. Sweep #E59866.
+9. A forearm raised to block, a bold curved counter-arrow hooking back off it
+   toward the attacker. Counter-arrow #EC7063.
+```
+
+### 마법사 — `mag_meteor` … `mag_staticfield` (흰 실루엣 8장 재발주 + 정전장)
+
+```
+1. A huge boulder plunging on a steep diagonal, a long flame tail behind it.
+   Flame #E8471C.
+2. A wide wall of tall flames rising from a flat black ground bar.
+   Flames #F39C12.
+3. A three-headed serpent, necks rising, fire breathing out of the middle
+   mouth. Fire #E74C3C.
+4. A faceted orb with sharp ice shards bursting outward from it.
+   Shards #5DADE2.
+5. A heavy storm cloud with slanted ice shards and snow driving down.
+   Ice and snow #85C1E9.
+6. A frozen cube cracking open, an ice starburst exploding from inside.
+   Starburst #76D7EA.
+7. Two zigzag lightning bolts striking down onto a cracked ground slab.
+   Bolts #F5C518.
+8. A ring of crackling lightning expanding outward from a small central orb.
+   Lightning ring #F7DC6F.
+9. A low dome of small zigzag sparks crackling over flat ground.
+   Sparks #AF7AC5.
+```
+
 ---
-*마지막 업데이트: 2026-09-14*
+*마지막 업데이트: 2026-09-28*

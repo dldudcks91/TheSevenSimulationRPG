@@ -491,7 +491,7 @@ function renderUnits(state, root) {
             // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
             // Alt 동안 카드 밖으로 나가도 유지 — 장비 칸 hover 로 아이템 카드를 여는 규칙이 양 진영 같다 (ADR-0176 · ADR-0182 · ADR-0183)
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null, state.itemOf,
-                it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
+                it => state.itemTipOf?.(u.hero, it) ?? null, { all: true }), { anchor: true, holdOnAlt: true });
             // 몬스터 장비의 아이템 카드도 영웅 · 캐릭터 탭과 같다 — 스킬 칸의 숫자는 그 몬스터의 표시값이다 (ADR-0183 · ADR-0312)
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
                 it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });

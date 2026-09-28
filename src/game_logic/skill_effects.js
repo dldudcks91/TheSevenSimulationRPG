@@ -61,10 +61,11 @@ export const EVENT_TRIGGERS = {
 export const EVENT_IDS = Object.keys(EVENT_TRIGGERS);
 
 /**
- * 스킬 타격이 `strike` 에 싣는 셋 — 능력치 계수 · 추가 피해 확률 · 배수 (battle_design §9-2 · 2026-09-10 · 계수 곱 2026-09-18).
- * `def` 가 `scaleDef` 를 안 지난 원시 정의여도 `statMult` 는 1 로 읽는다. 기본 공격은 이것을 안 만든다(메인 스탯 계수를 쓴다)
+ * 스킬 타격이 `strike` 에 싣는 넷 — 능력치 계수 · 추가 피해 확률 · 배수 (battle_design §9-2 · 2026-09-10 · 계수 곱 2026-09-18) ·
+ *   **맞은 대상에게 거는 걸린 효과**(`onHit` — 결빙 · 2026-09-28 R177 · battle_design §2-4 — 적중하면 `battle.strikeOnce` 가 `rt.applyStatus` 로 건다).
+ * `def` 가 `scaleDef` 를 안 지난 원시 정의여도 `statMult` 는 1 로 읽는다. 기본 공격은 이것을 안 만든다(메인 스탯 계수를 쓴다 · 결빙도 안 건다)
  */
-const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0 });
+const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0, onHit: def.onHit ?? null });
 
 /**
  * **공격 대상** 5종 — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
@@ -278,6 +279,17 @@ export const EFFECTS = {
 };
 
 export const EFFECT_STATS = Object.keys(EFFECTS);
+
+/**
+ * 상태이상 [2026-09-28 · R177 · battle_design §2-4] — **걸린 효과의 `status_id` 가 이 표의 키면 상태이상이다.** 창은 버프 · 디버프와 같고
+ *   다른 것은 **받는 쪽 시간 감소**뿐이다. 상태이상 하나 = 걸린 효과 한 행 = 창 하나라 「결빙은 하나」(어느 스킬이 걸어도 갱신)가 구조로 선다.
+ *   `cut` — 받는 쪽 시간 감소가 든 **유닛 필드 이름**(비율 · battle.makeUnit ← `hero.computeCombat:option_fx`). `rt.applyStatus` 가 `× (1 − 대상[cut])` 를 곱한다.
+ *   화상 · 스턴 등은 거는 스킬과 함께 한 줄씩 들어온다(첫 사용자와 같이 — 코드를 미리 만들지 않는다)
+ */
+export const AILMENTS = {
+    freeze: { cut: 'freezeDur' },     // 결빙 — 공속 감소(`period_pct` 음수) · 신발 · 반지 · 목걸이의 「빙결 시간 감소」가 줄인다
+};
+export const AILMENT_IDS = Object.keys(AILMENTS);
 
 /**
  * 한 유닛의 한 능력치 **창 합** — 같은 능력치의 창은 덧셈이다(창 순서대로 · 받는 피해 감소만 예외 — 곱). 평타 광역 · 능력치 표가 쓴다

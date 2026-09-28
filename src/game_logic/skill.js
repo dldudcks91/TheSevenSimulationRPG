@@ -37,8 +37,8 @@
  *     「양 옆의 아군」(`party` 배열의 인접 자리 — 위치 개념은 여전히 미확정) ·
  *     독화살(**도트가 아니라** 원소 추가타 1회 — 틱 피해 채널 미도입) ·
  *     적 공격력 감소(새 채널이 아니라 **음수 버프 창** [사용자 확정 2026-09-09]). 전부 skill_design §7 이 든다.
- *   결빙 등 상태이상은 **아직 없다** — 아무도 안 읽던 옛 `skill.csv:status` 칸은 표 셋 분리(2026-09-22)에서 버렸고
- *     걸린 효과 행으로 다시 들어온다 (PLAN_skill_structure 4단계).
+ *   상태이상은 **결빙 하나**다 [2026-09-28 · R177 · battle_design §2-4] — `hit` 줄이 걸린 효과(`freeze`)를 들면 맞은 대상에게 건다(`x.onHit`).
+ *     상태이상 하나 = 걸린 효과 한 행 — id 가 `skill_effects.js:AILMENTS` 의 키면 상태이상이다. 화상 · 스턴 등은 거는 스킬과 함께 온다.
  *
  * **표 셋** [2026-09-22 · R136 · PLAN_skill_structure] — 스킬(`skill.csv` · 스킬마다 하나뿐인 것 — 나가는 방식 `cast` · 대상 · 쿨 · 조건 · 표시) ·
  *   하는 일(`skill_effect.csv` · 한 줄에 하나 — `effect` · 배율 · 타수 · 능력치 계수) · 걸린 효과(`skill_status.csv` — `apply` 줄이 거는 창의
@@ -59,7 +59,7 @@
 import { ELEMENTS } from './hero.js';
 import { createFormula } from './formula.js';
 import {
-    CASTS, CAST_IDS, EVENT_IDS, EFFECT_TYPES, TARGETS, ATTACK_TARGETS, HIT_DECAY, PICK_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS,
+    CASTS, CAST_IDS, EVENT_IDS, EFFECT_TYPES, TARGETS, ATTACK_TARGETS, HIT_DECAY, PICK_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS, AILMENTS, AILMENT_IDS,
 } from './skill_effects.js';
 
 /** 준비·만료 판정 허용 오차 — 틱 누산(0.1 씩 더한 t)이 `readyAt` 을 미세하게 밑도는 것을 막는다 (INTERFACE §5-3) */
@@ -155,8 +155,9 @@ export function createSkillSystem(data) {
     const slotFits = (d, e, field) => ({
         mult_pct: e.effect === 'hit' || e.effect === 'heal' || e.effect === 'summon',
         hits: e.effect === 'hit',
-        effect_value: e.effect === 'apply',
-        duration_sec: e.effect === 'apply' && d.cast === 'turn',
+        // 걸린 효과의 값 · 시간 — `apply` 줄, 그리고 **걸린 효과를 든 `hit` 줄**(맞은 대상에게 거는 결빙 · 2026-09-28 R177)
+        effect_value: e.effect === 'apply' || (e.effect === 'hit' && e.status !== null),
+        duration_sec: (e.effect === 'apply' && d.cast === 'turn') || (e.effect === 'hit' && e.status !== null),
         decay_pct: usesDecayOf(lineTarget(d, e), e),
         proc_chance_pct: e.effect === 'hit' && e.procChance > 0,
         proc_mult_pct: e.effect === 'hit' && e.procChance > 0,
@@ -203,7 +204,7 @@ export function createSkillSystem(data) {
         procChance: row.proc_chance_pct,
         procMult: row.proc_mult_pct,
         element: dash(row.element),
-        // 거는 걸린 효과 id — `apply` 줄만 든다
+        // 거는 걸린 효과 id — `apply` 줄(고른 대상에게) · `hit` 줄(맞은 대상에게 — 결빙 · 2026-09-28 R177)
         status: dash(row.status),
         // 스케일링 슬롯 — **채운 것만** `{field, attr, coef}` (skill_design §13-1). `-` 슬롯은 빠진다
         scales: slotsOf(row).filter(s => s.field !== NONE).map(({ field, attr, coef }) => ({ field, attr, coef })),
@@ -218,6 +219,8 @@ export function createSkillSystem(data) {
         element: dash(row.element),
         // 라운드 경계 — `close` 창은 라운드가 바뀌면 닫힌다 (2026-09-24 · R151 · 결투의 시전자 창)
         roundEnd: row.round_end,
+        // 상태이상 — id 가 `AILMENTS` 의 키면 그 이름 · 아니면 null. CSV 칸이 아니다: 상태이상 하나 = 걸린 효과 한 행 (2026-09-28 · R177 · battle_design §2-4)
+        ailment: Object.hasOwn(AILMENTS, row.status_id) ? row.status_id : null,
         note: row.note,
     });
 
@@ -318,8 +321,17 @@ export function createSkillSystem(data) {
             if (e.element !== null) bad(`apply 줄의 element '${e.element}' — 원소는 걸린 효과(${st.id})가 든다`);
             // 오오라의 상시 창은 라운드를 넘어야 한다 — 라운드마다 꺼지면 다시 켜는 자리가 없다 (2026-09-24 · R151)
             if (d.cast === 'aura' && st.roundEnd !== 'keep') bad(`aura 인데 ${st.id} 의 round_end '${st.roundEnd}' — 오오라는 keep 이다`);
+        } else if (e.effect === 'hit' && e.status !== null) {
+            // 맞은 대상에게 거는 걸린 효과 [2026-09-28 · R177 · battle_design §2-4 결빙] — 창이라 시간이 양수이고,
+            //   적의 창은 적 배열과 함께 사라지고 파티의 창은 라운드를 넘어 남아야 해서(결빙이 라운드 경계에서 풀리면 규칙이 둘이 된다) keep 이다
+            const st = statuses[e.status];
+            if (!st) bad(`status '${e.status}' 가 skill_status 에 없다`);
+            // 맞은 대상(= 적)에게 거는 것은 **상태이상뿐**이다 — 버프를 적에게 거는 줄이 조용히 통과하지 않게(옛 「attack 이 창을 연다」 검사가 이것이다)
+            if (!st.ailment) bad(`hit 줄이 거는 ${st.id} 는 상태이상이 아니다 — 맞은 대상에게 거는 것은 상태이상(${AILMENT_IDS.join('·')})뿐`);
+            if (!(st.dur > 0)) bad(`맞은 대상에게 창을 거는데 ${st.id} 의 duration_sec ${st.dur}`);
+            if (st.roundEnd !== 'keep') bad(`hit 줄이 거는 ${st.id} 의 round_end '${st.roundEnd}' — keep 이다`);
         } else if (e.status !== null) {
-            bad(`status '${e.status}' — 걸린 효과는 apply 줄만 건다`);
+            bad(`status '${e.status}' — 걸린 효과는 apply · hit 줄만 건다`);
         }
         // 하는 일 ↔ 대상 짝 — **그 줄의 대상**(줄 `target` · `-` 면 스킬 것 · 2026-09-24 R151)이 등록표에 맞아야 한다(표가 곧 어휘):
         //   hit = 공격 대상(`ATTACK_TARGETS`) · heal = 아군 쪽 고르는 대상 · 오오라 apply = `self` · `party` 만 · 차례 apply = 고르는 대상 전부(적에게 거는 창 포함) · fixed = 적 쪽 고르는 대상
@@ -451,7 +463,7 @@ export function createSkillSystem(data) {
         for (const e of d.effects) if (e.status !== null) applied.add(e.status);
     });
     for (const id of Object.keys(statuses))
-        if (!applied.has(id)) throw new Error(`skill_status: ${id} — 아무 스킬도 안 건다(skill_effect.csv 의 apply 줄이 가리키지 않는다)`);
+        if (!applied.has(id)) throw new Error(`skill_status: ${id} — 아무 스킬도 안 건다(skill_effect.csv 의 apply · hit 줄이 가리키지 않는다)`);
 
     /**
      * 배정 — **출처가 칸을 정한다** (§2). 상한 [balance.csv:active_slots].
@@ -468,7 +480,9 @@ export function createSkillSystem(data) {
         // 무기 — **무기 개체가 든 스킬**이다 (§12-1 규칙 3). 무기를 바꾸면 이 칸이 바뀌고 맨손이면 빈 칸이다
         const wg = ctx.weaponSkill && defs[ctx.weaponSkill] ? defs[ctx.weaponSkill] : null;
         // 셋째 칸 — **몬스터 보스가 쓰는 자리**다 [신설 2026-09-11 · R79 · monster_design §5-1]. 영웅 경로는 이것을 안 넘긴다
-        const third = ctx.thirdSkill && defs[ctx.thirdSkill] ? defs[ctx.thirdSkill] : null;
+        //   영웅은 **배운 전직 스킬**이 이 칸이다(`hero.advanceSkill` · 2026-09-28 R16) — 정의에 없는 id(행이 걷힌 옛 세이브)는 빈 칸
+        const thirdId = ctx.thirdSkill ?? (hero?.advanceSkill && defs[hero.advanceSkill]?.ownerKind === 'advance' ? hero.advanceSkill : null);
+        const third = thirdId && defs[thirdId] ? defs[thirdId] : null;
         // **출처가 칸을 정한다** (§2) — 배운 것 중 셋을 고르는 게 아니라 출처가 셋이고 각각 하나씩 준다.
         //   비어 있는 출처는 자리를 남기지 않고 빠진다(전투는 든 것만 돌린다). 어느 출처인지는 `source` 가 말한다
         const base = [
@@ -544,7 +558,8 @@ export function createSkillSystem(data) {
      * **스킬 계수 공용 계산** (skill_design §13 · battle_design §9-2 · 2026-09-10 R72) — 전투와 미리보기가 **같은 함수**를 쓴다.
      * 반환은 `def` 의 얕은 복사본이고 **`effects` 가 줄마다 민 복사본**이다 [2026-09-22 · R136] — 한 줄 = **시전 단위** `x`:
      *   그 줄 + 스킬의 `id`·`target` + 실효 `hits`·`decay`·`procChance`·`procMult`·`statMult` + (`apply` 줄이면) 거는 걸린 효과를 푼
-     *   실효 `stat`·`value`·`dur`·`element`. 실행 함수(대상 표 · 회복 · 창 · 소환 · 불러내기)는 `x` 하나만 받는다. 줄마다 제 슬롯으로 민다:
+     *   실효 `stat`·`value`·`dur`·`element`·`ailment` + (걸린 효과를 든 `hit` 줄이면) 같은 것을 `onHit` 에 따로(맞은 대상에게 건다 · 2026-09-28 R177).
+     *   실행 함수(대상 표 · 회복 · 창 · 소환 · 불러내기)는 `x` 하나만 받는다. 줄마다 제 슬롯으로 민다:
      *   · `mult_pct` — **배율에 더하지 않는다.** 그 슬롯 능력치의 계수(`formula.statCoef`)를 `statMult` 로 내고 공격은 `공격력 × 배율 × statMult` ·
      *     회복은 `마법 공격력 × 배율 × statMult` · 소환은 `시전자 최대 HP × 배율 × statMult` 가 된다 [2026-09-18 · battle_design §9-2 —
      *     ~~`flat` 으로 더한다(곱이 아니라 합 · 09-10)~~ 폐기]. 슬롯의 `coef` 칸은 안 읽는다 — 계수 모양은 전역 하나다. 복리라 0 이 안 된다.
@@ -577,8 +592,9 @@ export function createSkillSystem(data) {
         const grow = (raw, field) => (raw < 0 ? -(-raw + (sum[field] ?? 0)) : raw + (sum[field] ?? 0));
         const hits = Math.floor(e.hits + (sum.hits ?? 0));
         const decayAdd = sum.decay_pct ?? 0;
-        // 거는 걸린 효과 — 값 · 시간은 **이 줄의 슬롯**이 민다(S5). 창의 열쇠는 거는 스킬 id(`id`)다
+        // 거는 걸린 효과 — 값 · 시간은 **이 줄의 슬롯**이 민다(S5). 창의 열쇠는 걸린 효과 id(`status`)다
         const st = e.status === null ? null : statuses[e.status];
+        const sv = st ? { stat: st.stat, value: grow(st.value, 'effect_value'), dur: grow(st.dur, 'duration_sec'), element: st.element, roundEnd: st.roundEnd, ailment: st.ailment } : null;
         return {
             ...e,
             id: def.id,
@@ -591,7 +607,9 @@ export function createSkillSystem(data) {
             procMult: grow(e.procMult ?? 0, 'proc_mult_pct'),
             statMult,
             // 걸린 효과를 푼 값 — 창의 열쇠는 `status`(걸린 효과 id · `...e` 가 싣는다) · 라운드 경계 규칙 `roundEnd` 도 함께 (2026-09-24 · R151)
-            ...(st ? { stat: st.stat, value: grow(st.value, 'effect_value'), dur: grow(st.dur, 'duration_sec'), element: st.element, roundEnd: st.roundEnd } : {}),
+            ...(sv && e.effect !== 'hit' ? sv : {}),
+            // `hit` 줄이 거는 것은 **맞은 대상에게** 따로 싣는다 — 줄의 `element` 는 타격의 원소라 덮으면 안 된다 (2026-09-28 · R177 · 결빙)
+            ...(sv && e.effect === 'hit' ? { onHit: { id: def.id, status: e.status, ...sv } } : {}),
         };
     }
 
@@ -645,9 +663,11 @@ export function createSkillSystem(data) {
             if (field === 'mult_pct') continue;               // 배율 항은 위 `parts.amount` 가 든다
             const terms = termsOf(field);
             if (terms.length === 0) continue;
+            // 걸린 효과의 값 · 시간 — `hit` 줄이면 맞은 대상에게 거는 효과(`onHit`)의 것이다 (2026-09-28 · R177 · 결빙)
+            const of = x => ((key === 'value' || key === 'dur') && x.onHit ? x.onHit[key] : x[key]);
             // 확률은 1(= 100%) 에서 자른다 — `strike` 가 그 상한으로 굴리므로 설명창의 120% 는 틀린 숫자다. `raw`·`scaleDef` 는 안 자른다
-            const value = stats === null ? null : (key === 'procChance' ? Math.min(eff[key], 1) : eff[key]);
-            parts[key] = { value, raw: raw[key], terms };
+            const value = stats === null ? null : (key === 'procChance' ? Math.min(of(eff), 1) : of(eff));
+            parts[key] = { value, raw: of(raw), terms };
         }
         const everySec = period === null ? null : F.effectiveCd(def.cool, period);
         return {

@@ -89,6 +89,7 @@ export const D = {
     buildingRankRows: [],     // building_rank.csv — 건물 × 랭크마다 한 줄 (문턱 · 비용)
     buildingEffectRows: [],   // building_effect.csv — 여는 것 **한 줄에 하나** (켜기 · 더하기)
     researchRows: [],         // research.csv — 연구 항목 (지금은 머리줄뿐 — 항목은 나중에)
+    advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
     // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
     slotSymbolRows: [],       // slot_symbol.csv — 심볼(종류 · 산출 · 가중치 · 배당 · 이름)
     slotCoinRows: [],         // slot_coin.csv — 홀드 앤 스핀 코인 값 · 잭팟 4단(on_fill = 판이 다 찼을 때)
@@ -115,7 +116,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -133,7 +134,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -275,7 +276,8 @@ export async function loadData(base = './data/') {
     // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
     D.potions = potionRow.map(r => ({
         id: r.potion_id, kind: r.kind, tier: r.tier, ko: r.name_kr, en: r.name_en,
-        heal: r.heal, craftGold: r.craft_gold, startOwned: r.start_owned,   // startOwned = 시작 개수(R124 · 2026-09-21 — 전엔 0/1) · ~~craftable~~ 은 2026-09-22 삭제 — 단계는 제련소 랭크가 연다(R137)
+        heal: r.heal, craftGold: r.craft_gold, startOwned: r.start_owned,
+        shopGold: typeof r.shop_gold === 'number' ? r.shop_gold : null,   // 기본상단 가격 — `-` = 안 판다 (2026-09-28 · base_expedition §2-6)   // startOwned = 시작 개수(R124 · 2026-09-21 — 전엔 0/1) · ~~craftable~~ 은 2026-09-22 삭제 — 단계는 제련소 랭크가 연다(R137)
     }));
     // 장비 — 한 표가 둘을 먹인다. 드롭·접사·필터는 **부위**(slots), 페이퍼돌·equipped 는 **위치**(equipSlots).
     // ⚠ slots 순서가 rollDrop 의 부위 굴림에 직결된다 — part_order 가 그 순서다
@@ -320,6 +322,8 @@ export async function loadData(base = './data/') {
     D.buildingRankRows = buildingRankRow;
     D.buildingEffectRows = buildingEffectRow;
     D.researchRows = researchRow;
+    // 전직 갈래 — 직업마다 셋(`advance.csv` · skill_design §4-1 · R16). 원시 행 그대로 — 검증은 state.js 가 로드 시 한다
+    D.advanceRows = advanceRow;
     // 도박장 표 넷 — 원시 행 그대로 (검증 · 굴림은 game_logic/gamble.js · R149)
     D.slotSymbolRows = slotSymbolRow;
     D.slotCoinRows = slotCoinRow;
@@ -561,6 +565,8 @@ export function buildSystems(d, dev = {}) {
         gatherNodes: d.gatherNodes ?? [], heroAttributes: d.heroAttributes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)
         potions: d.potions ?? [],
+        // 전직 — 갈래 표. 갈래의 스킬은 `skill.csv` 의 `owner_kind=advance` 행이다 (skill_design §4 · R16)
+        advances: d.advanceRows ?? [],
         openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)

@@ -31,7 +31,7 @@ gloves,all,aspd_pct,aspd_pct,flat,0.02,0.05,-,장갑 ⚠임시 — 옛 풀 · �
 gloves,all,def_ignore,def_ignore,flat,0.03,0.08,-,장갑 ⚠임시 — 옛 풀 · 방어 무시
 gloves,all,gold_find,gold_find,flat,0.05,0.12,-,장갑 ⚠임시 — 옛 풀 · 골드 획득
 gloves,all,item_find,item_find,flat,0.04,0.1,-,장갑 ⚠임시 — 옛 풀 · 아이템 드랍확률
-boots,all,freeze_dur,freeze_dur_reduction,flat,0.1,0.25,-,신발 공통 — 빙결 시간 감소 % · ⚠ 상태이상 기계가 없어 지금은 효과가 없다 ⚠제안 수치 (item_design §1 신발 공통옵션 · 2026-09-18)
+boots,all,freeze_dur,freeze_dur_reduction,flat,0.1,0.25,-,신발 공통 — 빙결 시간 감소 % · 결빙이 읽는다(받는 쪽 시간 × (1 − 감소) · battle_design §2-4 · 2026-09-28) ⚠제안 수치 (item_design §1 신발 공통옵션 · 2026-09-18)
 boots,all,poison_dur,poison_dur_reduction,flat,0.1,0.25,-,신발 공통 — 중독 시간 감소 % · ⚠ 효과 없음(같은 이유) ⚠제안 수치
 boots,all,hp,hp_flat,growth,8,20,-,신발 공통 — 체력 + ⚠제안 수치 (옛 affix hp_flat 과 같은 대역)
 boots,all,xp,xp_gain_pct,flat,0.05,0.12,-,신발 공통 — 경험치 획득 증가(본인 몫) ⚠제안 수치

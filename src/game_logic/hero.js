@@ -494,8 +494,8 @@ export function createHeroSystem(data) {
             counter: f('counter_chance'),        // 반격 확률 — 맞으면 때린 적에게 기본 공격 1회 · 차례를 쓴다(battle.strikeOnce)
             recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약에 곱한다(보호막 제외)
             xpGain: f('xp_gain_pct'),            // 경험치 획득 — **본인 몫**(state.advanceRun)
-            // ⚠ 빙결 · 중독 시간 감소 — **읽는 곳이 없다**. 상태이상 기계가 서면 그쪽이 읽는다(신발 공통옵션 · 사용자 「풀에 넣어」)
-            //   화상 · 스턴도 같다 — 반지 · 목걸이 공통옵션이 넷을 다 든다 (2026-09-21 · R127)
+            // 상태이상 시간 감소 — **받는 쪽** 값. 빙결은 결빙이 읽는다(battle.makeUnit → `rt.applyStatus` · 2026-09-28 · R177 · battle_design §2-4) ·
+            //   ⚠ 중독 · 화상 · 스턴은 **읽는 곳이 없다** — 그 상태이상이 서면 읽는다(신발 · 반지 · 목걸이 공통옵션 · 2026-09-21 · R127)
             freezeDur: f('freeze_dur_reduction'), poisonDur: f('poison_dur_reduction'),
             burnDur: f('burn_dur_reduction'), stunDur: f('stun_dur_reduction'),
             // 버프 지속시간 +% — **낀 영웅이 거는 버프 창**이 길어진다(적에게 거는 창 포함 · skill_runtime.castBuff) [2026-09-21 · 반지 · 목걸이 공통옵션 · R127]

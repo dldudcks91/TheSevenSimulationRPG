@@ -238,6 +238,7 @@ const STRINGS = {
     /* ── 원정 (실동작) ── */
     'exp.noParty': { ko: '편성이 비어 있다 — 편성 탭에서 영웅을 넣는다', en: 'This party is empty — add heroes in the Party tab' },
     'exp.departSearching': { ko: '편성에 수색 나간 영웅이 있다', en: 'A hero in this party is out on a search' },
+    'exp.departAdvancing': { ko: '편성에 전직 중인 영웅이 있다', en: 'A hero in this party is advancing' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
     /* 스테이지 원소 — 어느 저항을 챙겨야 하는지의 신호 (battle_design §9-8) */
@@ -356,9 +357,10 @@ const STRINGS = {
        코드가 있으면 문구도 있어야 한다. `last` 는 창 본문도 이 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다) */
     'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
     'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
+    'ch.err.advancing': { ko: '전직 중인 영웅이다', en: 'That hero is advancing' },
     'ch.err.running': { ko: '지금 원정에서 싸우는 영웅이다 — 그 원정이 끝나야 해고할 수 있다', en: 'That hero is fighting on an expedition — wait until it ends' },
     'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
-    'ch.err.downed': { ko: '쓰러진 영웅이다 — 이 런이 끝날 때까지 장비를 못 바꾼다', en: 'Hero is down — gear locked until the run ends' },
+    /* ~~'ch.err.downed'~~ 은 2026-09-28 삭제 — 쓰러진 영웅도 장비를 바꾼다 (R176 · ADR-0400) */
     /* 확인 문구도 **사용자 지시 그대로** [개정 2026-09-09] — 옛 판(「{name} — 해고하면 되돌릴 수 없다」)의 `{name}` 은 걷었다.
        누구를 해고하는지는 창을 연 카드가 이미 말하고, 되돌릴 수 없다는 것은 **[취소] 버튼이 눈에 보이는 것**이 든다 */
     'ch.dismiss.confirm': { ko: '영웅을 해고합니다.', en: 'This hero will be dismissed.' },
@@ -394,6 +396,7 @@ const STRINGS = {
     'tv.search.canceled': { ko: '수색을 취소했다', en: 'Search called off' },
     'tv.search.dropped': { ko: '{name} 을(를) 돌려보냈다', en: 'Sent {name} away' },
     'tv.err.busy': { ko: '이미 수색 중이다', en: 'A search is already out' },
+    'tv.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot be sent' },
     'tv.err.party': { ko: '원정 파티는 보낼 수 없다', en: "Party members can't be sent" },
     'tv.err.missing': { ko: '영웅을 찾을 수 없다', en: 'Hero not found' },
     'tv.err.none': { ko: '나간 수색이 없다', en: 'No search is out' },
@@ -493,6 +496,7 @@ const STRINGS = {
     'dp.pick.none': { ko: '보낼 영웅이 없다', en: 'No heroes to send' },
     'dp.err.running': { ko: '원정 중인 영웅은 보낼 수 없다', en: 'Heroes on an expedition cannot be sent' },
     'dp.err.searching': { ko: '수색 중인 영웅은 보낼 수 없다', en: 'Heroes on a search cannot be sent' },
+    'dp.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot be sent' },
     'dp.err.unbuilt': { ko: '아직 열리지 않은 자리다', en: 'This spot is not open yet' },
     'dp.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
     'dp.err.empty': { ko: '빈 자리다', en: 'This spot is empty' },
@@ -749,6 +753,7 @@ const STRINGS = {
     'hs.doing.expedition': { ko: '원정 중', en: 'On expedition' },
     /* 수색 중 [신설 2026-09-09] — 나가 있으면 편성이 막히므로(state.js:toggleParty) 띠가 그 이유를 든다 */
     'hs.doing.search': { ko: '수색 중', en: 'On a search' },
+    'hs.doing.advance': { ko: '전직 중', en: 'Advancing' },
     'hs.doing.dispatch': { ko: '{post} {tier}', en: '{post} {tier}' },   // 자원 자리 — 「채광 2」 (2026-09-27 · ADR-0373)
     /* ~~'hs.doing.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 띠의 「지금 하는 일」은 **대기 하나**다 (SCREEN_DESIGN §5) */
 
@@ -766,14 +771,14 @@ const STRINGS = {
     'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated' },
     // 세부 옵션 — 옵션이 여는 축 줄 (combat_stat 행이 아니다 · SCREEN_DESIGN §6 · ADR-0291). 한 줄짜리는 아이템 옵션 줄 이름(`M.AFFIX_LABELS`)을 그대로 쓴다
     'st.fx.part': { ko: '{n} {v}', en: '{n} {v}' },
-    'st.fx.vsTarget': { ko: '정예 · 열 추가 데미지', en: 'Elite & Row Damage' },
+    'st.fx.vsTarget': { ko: '정예 · 열별 추가 데미지', en: 'Damage vs Elite & Row' },   // 「별」 — 받는 피해 감소 줄과 짝 (2026-09-28 사용자 지시)
     'st.fx.drType': { ko: '타입별 받는 피해 감소', en: 'Damage Reduction vs Type' },
     'st.fx.drTarget': { ko: '정예 · 열별 받는 피해 감소', en: 'Damage Reduction vs Elite & Row' },
     'st.fx.normal': { ko: '일반', en: 'Normal' },
     'st.fx.demon': { ko: '데몬', en: 'Demon' },
     'st.fx.undead': { ko: '언데드', en: 'Undead' },
-    'st.fx.ele': { ko: '원소 피해', en: 'Elemental Damage' },
-    'st.fx.all': { ko: '전체', en: 'All' },
+    'st.fx.ele': { ko: '원소 피해량 증가', en: 'Elemental Damage Increase' },
+    'st.fx.resRed': { ko: '적 원소 저항 감소', en: 'Enemy Resist Reduction' },   // 불/냉기/전기/독 네 값 (2026-09-28 사용자 지시) · 영어는 「Elemental」을 뺐다 — 두 줄로 꺾여 칸 바닥에 닿았다(저항은 원소뿐이다)
     'st.fx.fire': { ko: '불', en: 'Fire' },
     'st.fx.cold': { ko: '냉기', en: 'Cold' },
     'st.fx.lightning': { ko: '전기', en: 'Lightning' },
@@ -896,7 +901,7 @@ const STRINGS = {
     'cn.ranks.h': { ko: '{b} 랭크', en: '{b} Ranks' },
     'cn.owned': { ko: '보유 {n}', en: 'Owned {n}' },
     'cn.built': { ko: '{b} {n}랭크를 지었다', en: 'Built {b} rank {n}' },
-    'cn.req.stage': { ko: '{s} 클리어', en: 'Clear {s}' },
+    'cn.req.stage': { ko: '스테이지 {s} 클리어', en: 'Clear Stage {s}' },   // 「스테이지」 를 앞에 명시 (2026-09-27 사용자 지시)
     'cn.req.total': { ko: '합산 레벨 {have} / {need}', en: 'Total level {have} / {need}' },
     'cn.req.hero': { ko: '최고 영웅 Lv.{have} / {need}', en: 'Top hero Lv.{have} / {need}' },
     'cn.req.building': { ko: '{b} {n}랭크', en: '{b} rank {n}' },
@@ -928,7 +933,7 @@ const STRINGS = {
     'cn.t.gear_set': { ko: '장비 한 벌을 저장해 바로 갈아입는다', en: 'Save a gear loadout and swap instantly' },
     'cn.t.monster_card': { ko: '몬스터 카드를 모은다', en: 'Collect monster cards' },
     'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission Board' },   // 선술집 r2 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-25)
-    'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r3 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
+    'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r4 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
     'cn.t.training': { ko: '영웅을 훈련시켜 경험치를 올린다', en: 'Train heroes to gain experience' },
     'cn.t.advance': { ko: '영웅을 전직시킨다', en: "Advance a hero's class" },
     'cn.t.skill_depth': { ko: '영웅 스킬에 포인트를 더 찍는다', en: 'Invest more points into hero skills' },
@@ -979,7 +984,28 @@ const STRINGS = {
     'tr.slot': { ko: '훈련 칸 {n}', en: 'Slot {n}' },
     'tr.slot.empty': { ko: '비었다', en: 'Empty' },
     'tr.slot.put': { ko: '영웅 넣기', en: 'Assign Hero' },
-    'tr.bld.go': { ko: '건설에서 짓기', en: 'Build in Construction' },
+    // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §16) — 거절은 `tr.err.<코드>`(game.advanceStart · advanceLearn · advanceForget)
+    'tr.adv.level': { ko: 'Lv.{have} / {need}', en: 'Lv.{have} / {need}' },
+    'tr.adv.go': { ko: '전직', en: 'Advance' },
+    'tr.adv.confirm': { ko: '한 번 더 — 되돌릴 수 없다', en: 'Again — cannot be undone' },
+    'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}' },
+    'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
+    'tr.adv.learn': { ko: '배우기', en: 'Learn' },
+    'tr.adv.learned': { ko: '배움', en: 'Learned' },
+    'tr.adv.forget': { ko: '되돌리기', en: 'Unlearn' },
+    'tr.err.unbuilt': { ko: '훈련장 3랭크가 전직을 연다', en: 'Training Grounds Rank 3 opens advancement' },
+    'tr.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
+    'tr.err.class': { ko: '이 직업의 갈래가 아니다', en: 'Not a path of this class' },
+    'tr.err.done': { ko: '이미 전직했다', en: 'Already advanced' },
+    'tr.err.working': { ko: '전직하는 중이다', en: 'Already advancing' },
+    'tr.err.level': { ko: '레벨이 모자라다', en: 'Level too low' },
+    'tr.err.running': { ko: '원정에서 싸우는 중이다', en: 'Fighting on an expedition' },
+    'tr.err.searching': { ko: '수색 나가 있다', en: 'Out on a search' },
+    'tr.err.none': { ko: '아직 전직하지 않았다', en: 'Not advanced yet' },
+    'tr.err.learned': { ko: '이미 하나를 배웠다 — 먼저 되돌린다', en: 'Already learned one — unlearn it first' },
+    'tr.err.skill': { ko: '이 갈래의 스킬이 아니다', en: 'Not a skill of this path' },
+    'tr.err.empty': { ko: '배운 전직 스킬이 없다', en: 'No advancement skill learned' },
+    'tr.err.downed': { ko: '원정에서 쓰러져 있다', en: 'Downed on an expedition' },
     'tr.train.todo': {
         ko: '훈련 칸에 영웅을 넣어 두면 경험치가 오른다. 원정 경험치 획득 %도 훈련장의 연구다<br>'
             + '넣어 둔 시간만큼 오르는지 · 어디까지 오르는지 · 훈련 중인 영웅을 원정에 쓸 수 있는지는 기획 미정이라 미착수',
@@ -987,15 +1013,17 @@ const STRINGS = {
             + 'How gain scales with time, where it caps and whether training heroes can still go on expeditions are undecided, so it is not started',
     },
     'tr.adv.todo': {
-        ko: '<b>훈련장</b> 랭크를 올려 전직이 열리면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고른다. 스킬 창에는 전직 트리가 남는다<br>'
-            + '갈래를 고르는 규칙과 전직 기능이 아직 없어 미착수',
-        en: 'Once <b>Training Grounds</b> ranks up far enough to open advancement, heroes advance here — each class picks one of three paths. The advancement tree stays in the skill window<br>'
-            + 'The rules for picking a path and the advancement itself are not built yet, so it is not started',
+        ko: '<b>훈련장</b> 3랭크가 열면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
+            + '전직 스킬은 셋 중 하나만 배우고 언제든 무료로 되돌린다 — 배운 것이 액티브 전직 칸이다',
+        en: '<b>Training Grounds</b> Rank 3 opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions, searches or resource posts<br>'
+            + 'Learn one of the three advancement skills and unlearn it for free at any time — the learned one fills the Advance active slot',
     },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.allOpen': { ko: '전부 열렸다', en: 'All slots open' },
     // 한국어도 On / Off 그대로 [2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 · SCREEN_DESIGN §15]
+    // 자원 자리 칸 제목의 둘째 줄 — 산출 속도 (2026-09-27 · SCREEN_DESIGN §8)
+    'dp.rate': { ko: '{item} 1개 / {s}초', en: '1 {item} / {s}s' },
     'rs.on': { ko: 'On', en: 'On' },
     'rs.off': { ko: 'Off', en: 'Off' },
     // 전체 리롤 + 잠금 [2026-09-22 · R28 · tactic_card_design §5-6] — 버튼 하나가 안 잠근 칸을 전부 굴리고, 비용은 잠근 칸 수가 정한다
@@ -1466,9 +1494,9 @@ const STRINGS = {
     //   칸도 **물약 카드**를 띄운다(ADR-0315). 빈 칸 이름은 `pt.potion.empty` 한 벌로 합쳤다   // ~~건너뛰기~~ 2026-09-14 — 진행 중 라운드를 버리고 원정을 끝낸다 (R89)
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
     'bt.note': {
-        ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 원정 중에 바꾼 장비 · 스킬 트리는 <b>그 순간</b> 먹는다(보스전 중이면 다음 런부터 · 쓰러진 영웅은 런이 끝날 때까지 못 바꾼다) · <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
+        ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 원정 중에 바꾼 장비 · 스킬 트리는 <b>그 순간</b> 먹는다(보스전 중이면 다음 런부터 · 쓰러진 영웅은 런이 끝날 때까지 스킬 트리를 못 바꾼다) · <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
             + '<b>철수</b>하면 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남는다. 게임을 끄면 원정도 그 자리에서 끊긴다.',
-        en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Gear and skill-tree changes during a run apply <b>at once</b> (from the next run during a boss fight · a downed hero is locked until the run ends) · each round <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
+        en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Gear and skill-tree changes during a run apply <b>at once</b> (from the next run during a boss fight · a downed hero keeps the skill tree locked until the run ends) · each round <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
             + '<b>Retreat</b> drops the round in progress and keeps what the won rounds gave. Closing the game cuts the expedition off on the spot.',
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },

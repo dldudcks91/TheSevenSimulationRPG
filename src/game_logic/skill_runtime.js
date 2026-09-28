@@ -19,13 +19,15 @@
  *   · **표준 모양** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 시전 한 번 = **하는 일 줄을 `seq` 순으로**(`cast` — 차례 · 사건이 같이 쓴다) ·
  *     창 열쇠 = **걸린 효과 id**(창이 건 스킬 id `s` 를 들어 이벤트는 그대로) · 사건 스킬은 `fire` 가 쏜다 · **스킬 id 전용 분기는 없다**
  *     (~~결투의 시전자 창 분기~~ → 결투의 둘째 줄 · ~~`battle.js:blast`~~ → `fire` + 하는 일 `fixed`)
+ *   · **상태이상** [2026-09-28 · R177 · battle_design §2-4] — 창을 거는 곳은 `applyStatus` 하나다(고른 대상 = `castBuff` · 맞은 대상 = `battle.strikeOnce` 의 결빙).
+ *     상태이상 창(`AILMENTS`)만 받는 쪽 시간 감소를 곱한다 · rng 0
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   사건 훅(`reactions`)은 **발화 지점만** 있고 등록하는 소비자가 아직 없다 — 마스터리 T3 자리 (skill_design §5).
  */
 
 import { createFormula } from './formula.js';
-import { EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, sumOf, stateOf } from './skill_effects.js';
+import { AILMENTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, sumOf, stateOf } from './skill_effects.js';
 
 /**
  * 사건 훅 — 유닛이 든 `reactions: [{on, fn}]` 를 **배열 순서대로** 부른다. 등록이 없으면 아무 일도 없다.
@@ -136,22 +138,35 @@ export function createSkillRuntime(ctx) {
      *   같은 효과 재시전 = 갱신 · 다른 효과의 같은 능력치 = 덧셈 (S2-a). 손으로 만든 시전 단위(`status` 없음)는 스킬 id 를 열쇠로 쓴다
      */
     function castBuff(u, def, t) {
-        const targets = targetsOf(u, def);
-        // 버프 지속시간 +%(반지 · 목걸이 공통옵션 · 2026-09-21 · R127) — **거는 쪽** 값이다. 적에게 거는 창도 같은 `until` 을 쓴다 · 0 이면 종전과 같다
-        const until = t + def.dur * (1 + (u.buffDur ?? 0));
-        const key = def.status ?? def.id;
-        for (const tgt of targets) {
-            const wasMax = tgt.hpMax;
-            tgt.buffs[key] = { stat: def.stat, v: def.value, until, element: def.element ?? null, by: u.key, s: def.id, roundEnd: def.roundEnd ?? 'keep' };
-            const ev = { t: r1(t), e: 'buff', u: tgt.key, s: def.id, stat: def.stat, v: def.value, until: r1(until) };
-            EFFECTS[def.stat]?.apply?.(rt, tgt, def, until, ev);
-            // **밀고 나서 싣는다** — 최대 HP 를 미는 창(`hp_max_pct`)은 `refreshDerived` 가 새 최대치를 쓰고 넘친 HP 를 자른 **뒤**의 값이어야 한다
-            //   [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6]. 재생기는 계산하지 않으므로 안 실으면 옛 최대치를 든 채 현재 HP 만 갱신해 `118 / 103` 이 된다
-            refreshDerived(tgt);
-            if (tgt.hpMax !== wasMax) Object.assign(ev, { hpMax: tgt.hpMax, dhp: tgt.hp });
-            timeline.push(ev);
-        }
+        for (const tgt of targetsOf(u, def)) applyStatus(u, tgt, def, t);
         // ~~결투면 시전자에게 같은 until 의 dr_pct 창을 연다~~ — 2026-09-24 R151 결투의 **둘째 줄**(`kni_duel_guard` · `self`)이 건다. 스킬 id 전용 분기는 없다
+    }
+
+    /**
+     * 걸린 효과 하나를 **대상 하나에** 건다 [2026-09-28 · R177 — `castBuff` 의 몸통을 뗐다] — 고른 대상(`castBuff`)과 **맞은 대상**(`battle.strikeOnce` 의
+     *   `sk.onHit` — 결빙 · battle_design §2-4)이 같이 쓴다. `x` = 걸린 효과를 푼 모양(`id` 건 스킬 · `status` · `stat` · `value` · `dur` · `element` · `roundEnd` · `ailment`).
+     * 시간 — 버프 지속시간 +%(반지 · 목걸이 공통옵션 · 2026-09-21 · R127)는 **거는 쪽** 값이다(적에게 거는 창도 같다 · 0 이면 종전과 같다).
+     *   **상태이상**(`AILMENTS`)이면 **받는 쪽** 시간 감소를 한 번 더 곱하고, 0 이하가 되면 안 건다(이벤트도 없다). 감소가 0 이면 곱하지 않는다 — 부동소수가 종전과 같다.
+     * 같은 열쇠의 창을 **다른 스킬**이 걸었었으면 옛 `s` 의 `buffEnd` 를 먼저 낸다 — 재생기가 칩을 `s` 로 들어서, 안 내면 옛 칩이 남는다(조용한 창 제외). rng 0
+     */
+    function applyStatus(u, tgt, x, t) {
+        let dur = x.dur * (1 + (u.buffDur ?? 0));
+        const cut = x.ailment ? (tgt[AILMENTS[x.ailment].cut] ?? 0) : 0;
+        if (cut) dur *= 1 - cut;
+        if (!(dur > 0)) return;
+        const until = t + dur;
+        const key = x.status ?? x.id;
+        const old = tgt.buffs[key];
+        if (old && !old.quiet && (old.s ?? key) !== x.id) timeline.push({ t: r1(t), e: 'buffEnd', u: tgt.key, s: old.s ?? key });
+        const wasMax = tgt.hpMax;
+        tgt.buffs[key] = { stat: x.stat, v: x.value, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep' };
+        const ev = { t: r1(t), e: 'buff', u: tgt.key, s: x.id, stat: x.stat, v: x.value, until: r1(until) };
+        EFFECTS[x.stat]?.apply?.(rt, tgt, x, until, ev);
+        // **밀고 나서 싣는다** — 최대 HP 를 미는 창(`hp_max_pct`)은 `refreshDerived` 가 새 최대치를 쓰고 넘친 HP 를 자른 **뒤**의 값이어야 한다
+        //   [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6]. 재생기는 계산하지 않으므로 안 실으면 옛 최대치를 든 채 현재 HP 만 갱신해 `118 / 103` 이 된다
+        refreshDerived(tgt);
+        if (tgt.hpMax !== wasMax) Object.assign(ev, { hpMax: tgt.hpMax, dhp: tgt.hp });
+        timeline.push(ev);
     }
 
     /**
@@ -267,7 +282,7 @@ export function createSkillRuntime(ctx) {
      */
     const rt = {
         rng, F, strikeOnce: ctx.strikeOnce, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
-        alive, alliesOf, foesOf, act, cast, fire, expire, castHeal, castBuff, castSummon, castCall, basicAttack, targetsOf,
+        alive, alliesOf, foesOf, act, cast, fire, expire, castHeal, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf,
     };
     return rt;
 }
