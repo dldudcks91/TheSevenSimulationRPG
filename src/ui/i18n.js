@@ -454,6 +454,8 @@ const STRINGS = {
     'nav.forge': { ko: '제련소', en: 'Smeltery' },
     // 훈련장 [2026-09-22 사용자 지시 · ADR-0297] — 제련소 뒤(ADR-0348) · 건설의 훈련장 가지 이름도 이 키를 쓴다
     'nav.training': { ko: '훈련장', en: 'Training Grounds' },
+    // 서고 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422] — 훈련장 뒤 · 건물 이름(`building.csv`)과 같은 말
+    'nav.library': { ko: '서고', en: 'Library' },
     'nav.resource': { ko: '자원', en: 'Resources' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.codex': { ko: '도감', en: 'Codex' },
@@ -731,6 +733,7 @@ const STRINGS = {
     'rep.drops.h': { ko: '획득 장비', en: 'Loot' },
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
     'rep.drops.none': { ko: '떨어진 장비 없음', en: 'No loot' },
+    'rep.book': { ko: '책', en: 'Book' },   // 획득 격자의 스킬북 칸 배지 (R179 · ADR-0420)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
     'rep.list.h': { ko: '원정 기록', en: 'Runs' },
@@ -858,7 +861,6 @@ const STRINGS = {
     /* 스킬 칸 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
        공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 칸은 스킬 설명창 몸통 그대로라 문구도 설명창 키를 쓴다.
        ~~`tip.skill`~~(「담은 스킬」 라벨)은 2026-09-15 삭제 [사용자 지시 · ADR-0139] */
-    'tip.noSkill': { ko: '스킬 없음', en: 'No skill' },
     // 옵션 출처 태그 (SCREEN_DESIGN §6 · ADR-0100) — 셋이다: 고정(그 부위면 무조건) · 죄종 이름(죄종 칸 — 문구는 `mock.js:SINS`) · 랜덤(통합옵션).
     // 출처가 없는 옛 접사는 랜덤으로 찍는다 (2026-09-08 신설 · 2026-09-11 셋으로 — R78)
     'tip.src.random': { ko: '랜덤', en: 'Random' },
@@ -934,6 +936,8 @@ const STRINGS = {
     'cn.t.craft': { ko: '매직 장비에 전용 옵션을 더한다', en: 'Add a special option to magic gear' },
     'cn.t.stigma_craft': { ko: '낙인으로 장비를 크래프트한다', en: 'Craft equipment with stigmas' },
     'cn.t.skill_card': { ko: '스킬 카드를 합성한다', en: 'Fuse skill cards' },
+    'cn.t.skillbook': { ko: '스킬북으로 스킬을 배운다', en: 'Learn skills from skill books' },   // 서고 r1 (R179 · construction_draft §2)
+    'cn.t.book_craft': { ko: '기본 스킬북을 만든다', en: 'Craft basic skill books' },
     'cn.t.explore': { ko: '파티를 탐험에 보낸다', en: 'Send a party to explore' },
     'cn.t.raid': { ko: '목표를 털어 전리품을 얻는다', en: 'Raid a target for loot' },
     'cn.t.escort': { ko: '의뢰인의 상단을 호위한다', en: "Escort a client's caravan" },
@@ -1031,6 +1035,10 @@ const STRINGS = {
     // 한국어도 On / Off 그대로 [2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 · SCREEN_DESIGN §15]
     // 자원 자리 칸 제목의 둘째 줄 — 산출 속도 (2026-09-27 · SCREEN_DESIGN §8)
     'dp.rate': { ko: '{item} 1개 / {s}초', en: '1 {item} / {s}s' },
+    // 파견 관전 창 — 단 이름 줄의 버튼 · 대상 바 밑 · 떨어지는 재료 (2026-09-28 · SCREEN_DESIGN §8 · ADR-0415)
+    'dp.watch': { ko: '자세히 보기', en: 'Details' },
+    'dp.watch.none': { ko: '보낸 영웅이 없다', en: 'No hero sent' },
+    'dp.watch.gain': { ko: '+{n} {item}', en: '+{n} {item}' },
     'rs.on': { ko: 'On', en: 'On' },
     'rs.off': { ko: 'Off', en: 'Off' },
     // 전체 리롤 + 잠금 [2026-09-22 · R28 · tactic_card_design §5-6] — 버튼 하나가 안 잠근 칸을 전부 굴리고, 비용은 잠근 칸 수가 정한다
@@ -1134,13 +1142,38 @@ const STRINGS = {
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
-    // 출처 셋은 **영웅 / 무기 / 전직** 이다 [2026-09-08 사용자 지시] — ~~고유~~. 액티브 줄·후보 카드·툴팁 칩이 같은 키를 쓴다
+    // 출처 셋은 **영웅 / 책 / 전직** 이다 [2026-09-08 사용자 지시 · 2026-09-29 ~~무기~~ → 책 — R179 · ADR-0420] — ~~고유~~. 액티브 줄·후보 카드·툴팁 칩이 같은 키를 쓴다
     'sk.innate': { ko: '영웅', en: 'Hero' },
     // 액티브 3칸의 출처 라벨 — 칸은 출처가 정한다 (skill_design §2)
-    'sk.src.weapon_group': { ko: '무기', en: 'Weapon' },
+    'sk.src.book': { ko: '책', en: 'Book' },
     'sk.src.advance': { ko: '전직', en: 'Advance' },
-    'sk.emptyWeapon': { ko: '무기 없음', en: 'No weapon' },
+    'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
+    // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-29 사용자 지시 · SCREEN_DESIGN §6 · ADR-0427] — **한국어도 영어로 찍는다**(같은 날 사용자 「다 영어로 뜨게」 · ADR-0428)
+    'sk.lockLv': { ko: 'Level {n}+', en: 'Level {n}+' },
+    /* 스킬북 창 [2026-09-29 · R179 · SCREEN_DESIGN §6 「스킬북 창」 · ADR-0420] — 규칙 문장은 없다(덮어쓰기 · 중복 가루는 도움말의 몫) */
+    'bk.learned.h': { ko: '배운 스킬', en: 'Learned Skill' },
+    'bk.noneLearned': { ko: '없음', en: 'None' },
+    'bk.own.h': { ko: '가진 책', en: 'Books Owned' },
+    'bk.none': { ko: '가진 책이 없다', en: 'No books' },
+    'bk.learn': { ko: '배우기', en: 'Learn' },
+    'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite' },
+    'bk.same': { ko: '배움', en: 'Learned' },
+    'bk.craft.h': { ko: '기본 책 만들기', en: 'Craft Basic Books' },
+    'bk.make': { ko: '만들기', en: 'Craft' },
+    'bk.have': { ko: '보유', en: 'Owned' },
+    'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}' },
+    'bk.crafted': { ko: '{skill} 스킬북을 만들었다', en: 'Crafted a {skill} book' },
+    // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.bookState` (INTERFACE §3)
+    'bk.err.unbuilt': { ko: '서고를 지어야 한다', en: 'Build the Library first' },
+    'bk.err.level': { ko: 'Lv.{n} 부터', en: 'From Lv.{n}' },
+    'bk.err.downed': { ko: '쓰러진 영웅이다', en: 'This hero is down' },
+    'bk.err.missing': { ko: '배울 수 없는 스킬이다', en: 'Cannot be learned' },
+    'bk.err.book': { ko: '그 책이 없다', en: 'You do not have that book' },
+    'bk.err.same': { ko: '이미 배운 스킬이다', en: 'Already learned' },
+    'bk.err.have': { ko: '이미 가진 책이다', en: 'Already owned' },
+    'bk.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'bk.err.materials': { ko: '가루가 모자란다', en: 'Not enough dust' },
     /* 스킬 툴팁 문장 [전면 개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2]
        ~~`표기 6초 · 실효 7.2초 (+20%)`~~ 를 버리고 **데이터로 조립한 한 문장**을 낸다.
        틀은 `kind` × `target` 이 고르고 숫자만 강조색으로 뽑는다. **조각을 이어붙이지 않는다** —

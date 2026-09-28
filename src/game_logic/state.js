@@ -33,9 +33,9 @@
  *       potionSlots = 물약 칸 구성(길이 = `potion_slot_max` · null = 빈 칸) — 런을 열 때 재고에서 앞 칸부터 채운다 (R124)
  *       tactics = **이 편성의 파티 전술 칸**(v34 · R129) — 아래 옛 `tactics` 와 같은 모양이고 편성마다 한 벌이다
  *     — items[*].proc = **목걸이 발동 스킬** `{trigger, skill, v}` (목걸이만 · v33 · 2026-09-21 · ⚠ 전투는 안 읽는다 — 설명에만).
- *     — items[*].skill = **무기가 담은 액티브 id** | null (무기만 · v18 신설 2026-09-09).
- *       드롭 때 그 무기군의 **직업 풀**에서 굴려 개체에 박는다 — 액티브 2번 칸의 입력이다
- *       (skill_design §12-1 규칙 3 · `skill.activesFor` 의 `ctx.weaponSkill`)
+ *     — ~~items[*].skill = 무기가 담은 액티브 id~~ — **2026-09-29 삭제**(R179 · 스킬북 skill_design §2-1) · 로드가 지운다
+ *   books: {skillId: 1}   — **스킬북 재고**(R179 · 버전 무변경) — 한 권까지 · 가진 책이 또 떨어지면 가루 · `learnBook` 이 쓰면 키를 지운다
+ *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
  *   progress: {cleared: [stageId], levelUp: {stageId: n}},   // levelUp = 스테이지별 올린 양 — 없으면 {} (2026-09-14 · R87 · 버전 무변경)
  *   codexKills: {monsterId: n}   — **도감 레벨의 출처** — 누적 처치 수 (monster_design §8 · 2026-09-21 카드 → 처치 수)
  *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make, gamble, commission},   // upgrade 는 R95(2026-09-15)부터 안 오른다 — 강화가 rng 를 안 쓴다 · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0)
@@ -191,10 +191,10 @@ export function createGameSystem(deps) {
     }
     /**
      * 시작 장비 한 벌 — **일반 무기 + 일반 갑옷**을 입힌다 (hero_design §1). 새 게임의 시작 영웅과 **선술집에서 온 영웅**(명단 · 수색)이 같은 한 벌이다 [2026-09-25 사용자 지시].
-     *   무기 → 갑옷 — **이 순서가 계약이다**(INTERFACE §5-2). 무기 스킬 풀에서 고유 스킬을 빼도 소비 수는 같다 · 바로 입으므로 가방 칸을 안 먹는다
+     *   무기 → 갑옷 — **이 순서가 계약이다**(INTERFACE §5-2). 바로 입으므로 가방 칸을 안 먹는다 · ~~무기 스킬 풀에서 고유 스킬을 뺀다~~(2026-09-29 R179 — 무기가 스킬을 안 담는다)
      */
     function equipStarter(state, h, rng) {
-        const w = addItem(state, I.startingWeapon(rng, h.cls, h.innate));
+        const w = addItem(state, I.startingWeapon(rng, h.cls));
         h.equipped.weapon = w.uid;
         const a = addItem(state, I.startingArmor(rng));
         h.equipped.armor = a.uid;
@@ -202,7 +202,7 @@ export function createGameSystem(deps) {
 
     /**
      * 새 게임 — 확정한 시작 영웅 3명이 곧 로스터다. 각자 **일반 무기 + 일반 갑옷**을 입고 시작한다 [개정 2026-09-14 · R86 · hero_design §1] —
-     *   무기는 제 직업 스킬이 붙는 무기군이고 **그 영웅의 고유 스킬과 같은 스킬을 담지 않는다**.
+     *   무기는 제 직업 무기군이다(~~고유와 같은 스킬을 담지 않는다~~ — 2026-09-29 R179 무기가 스킬을 안 담는다 · 첫 파티의 딜 · 힐 보장은 고유가 든다 — hero.rollStartParty).
      * **파티는 비어 있다** [사용자 지시 2026-09-09 · SCREEN_DESIGN §5] — ~~로스터가 곧 파티~~ 폐기.
      *   자동으로 채우면 플레이어가 **편성을 한 번도 안 하고** 첫 원정을 떠나므로 편성이 결정이라는 것을 배울 자리가 없다.
      *   **처음 고른 영웅이 리더**가 되는 것은 새 규칙이 아니다 — `party` 는 넣은 순서 그대로이고 리더는 `party[0]` 이다.
@@ -264,6 +264,7 @@ export function createGameSystem(deps) {
             advancing: [],   // 전직하는 중 [{uid, branch, since, until}] (2026-09-28 · R16)
             dispatch: [],    // 자원 파견 자리 [{post, tier, uid, since, at, carry}] — 한 자리에 한 명 (2026-09-27 · ADR-0373) · `at` · `carry` = 산출 시계(§3-3)
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
+            books: {},       // 스킬북 재고 {skillId: 1} — 처치가 떨군다 · 서고가 만든다 (2026-09-29 · R179)
             heroes: [], items: {}, bag: [], stash: [],
             progress: { cleared: [], levelUp: {}, peakTotal: 0 },   // levelUp = 스테이지별 **올린 양** — 안 올린 스테이지는 안 적는다 (2026-09-14 · R87) · peakTotal = 합산 레벨 도달 최고치(v37)
             codexKills: {},
@@ -364,6 +365,7 @@ export function createGameSystem(deps) {
         s.counters.gamble = s.counters.gamble ?? 0;
         // 상단에서 산 칸 — 없으면 「산 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-09-27)
         s.shop = s.shop && Array.isArray(s.shop.sold) ? s.shop : null;
+        if (s.shop && !Array.isArray(s.shop.books)) s.shop.books = [];   // 상단 스킬북 (2026-09-29) — 그 전 세이브는 산 책이 없다
         // 의뢰 — 없으면 「게시판을 굴린 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R153).
         //   모르는 어휘의 카드는 지운다 — 표가 바뀌어 셀 수 없는 카드가 자리를 막지 않게(빈 자리는 다음 채우기가 굴린다)
         s.counters.commission = s.counters.commission ?? 0;
@@ -395,6 +397,13 @@ export function createGameSystem(deps) {
             if (h.advance && advanceById[h.advance]?.cls !== h.cls) h.advance = null;
             if (h.advanceSkill && !(h.advance && advanceSkills(h.advance).includes(h.advanceSkill))) h.advanceSkill = null;
         }
+        // 스킬북 [2026-09-29 · R179 · 버전 무변경 — INTERFACE §4] — 없으면 「가진 책이 없다 · 안 배웠다」가 정확한 초기 상태다.
+        //   책은 한 권까지 · 정의에 없는 id 는 지운다 · 배운 스킬이 정의에 없으면 빈 칸으로. **무기의 `skill` 은 지운다**(무기가 스킬을 안 담는다 —
+        //   옛 무기 스킬을 배운 스킬로 옮기지 않는다: 소급하면 책의 문턱(레벨 · 서고)을 우회한다)
+        s.books = Object.fromEntries(Object.entries(s.books && typeof s.books === 'object' && !Array.isArray(s.books) ? s.books : {})
+            .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0).map(([id]) => [id, 1]));
+        for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
+        for (const it of Object.values(s.items ?? {})) if (it && 'skill' in it) delete it.skill;
         s.advancing = (Array.isArray(s.advancing) ? s.advancing : []).filter(w => {
             const h = w && s.heroes.find(x => x.uid === w.uid);
             return h && !h.advance && advanceById[w.branch]?.cls === h.cls && Number.isFinite(w.since) && Number.isFinite(w.until);
@@ -428,15 +437,9 @@ export function createGameSystem(deps) {
         const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
         return w?.group ?? null;
     };
-    /**
-     * 착용 무기가 **담은 스킬** — 액티브 2번 칸의 입력이다 [개정 2026-09-09 · skill_design §12-1 규칙 3].
-     * ~~무기군이 스킬을 정하던 것~~(`weaponGroupOf`)을 대체한다 — 이제 스킬은 **무기 개체**에 박혀 있고
-     *   같은 도끼라도 개체마다 다르다. 맨손이거나 옛 무기면 `null` 이고 그러면 그 칸이 빈다.
-     */
-    const weaponSkillOf = (state, h) => {
-        const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
-        return w?.skill ?? null;
-    };
+    /* ~~`weaponSkillOf(state, h)`~~ 는 2026-09-29 삭제(R179) — 무기가 스킬을 안 담는다. 둘째 액티브 칸은 `hero.bookSkill` 이다(skill.activesFor) */
+    /** 책이 될 수 있는 스킬 — 영웅이 배울 수 있는 것(정의에 있고 몬스터 전용이 아니다) [2026-09-29 · R179 · battle `makeEnemy` 의 `bookSkill` 과 같은 규칙] */
+    const bookable = id => !!SK?.defs?.[id] && SK.defs[id].ownerKind !== 'monster';
     /* ~~`isOut(state, uid)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기(base_expedition_design §1-1 개정).
        아웃은 **그 런 안에서만** 산다(전투 유닛의 HP 0) — 전투 밖에 아웃된 영웅이 존재하지 않는다. */
 
@@ -1291,7 +1294,7 @@ export function createGameSystem(deps) {
             return {
                 uid, combat: heroCombat(state, h, list, no, tactic),  // 전술 조건도 이 인원으로 센다 — 원정은 나간 인원이다 (R92) · 칸은 나간 편성의 것 (R129) · 출발 때 켜진 것만 (R130)
                 stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
-                actives: SK.activesFor(h, { weaponSkill: weaponSkillOf(state, h) }),
+                actives: SK.activesFor(h),                // 둘째 칸 = 책으로 배운 스킬(`h.bookSkill`) — ~~무기가 든 스킬~~ 2026-09-29 R179
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
             };
         });
@@ -1452,6 +1455,68 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
+    /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 서고 · INTERFACE §2-7] ──
+       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound` — 가진 책이면 가루) 기본 책만 서고가 만든다.
+       배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0 */
+    /** 기본 책 — `skill.csv:starter_pool = 1` 인 직업 스킬(`ui/data.js:starterSkills` 와 같은 조건) · 행 순서 */
+    const craftableBooks = () => (SK?.list ?? []).filter(d => d.starterPool && d.innatePool && d.ownerKind === 'job').map(d => d.id);
+    /** 책 한 권을 재고에 넣는다 — 가진 책이면 가루로 바꾸고 그 양을 돌려준다(0 = 재고에 들었다) */
+    function addBook(state, id) {
+        state.books = state.books ?? {};
+        if (state.books[id]) { state.resources.dust += B.book_dup_dust; return B.book_dup_dust; }
+        state.books[id] = 1;
+        return 0;
+    }
+    /** 배우기의 책 밖 거절 — `learnBook` 과 `bookState.hero.err` 가 같은 판정을 쓴다 */
+    function learnGate(state, h) {
+        if (!hasFeature(state, 'skillbook')) return 'unbuilt';
+        if (!h) return 'missing';
+        // 관리자 모드도 레벨 문턱을 본다 [2026-09-29 사용자 지시 「10제한은 Admin에서도 걸리게」] — 전직(`advanceGate`)과 다르다
+        if (h.level < B.skillbook_learn_level) return 'level';
+        if (fallenOf(state, h.uid)) return 'downed';
+        return null;
+    }
+    function craftGate(state, id) {
+        if (!hasFeature(state, 'book_craft')) return 'unbuilt';
+        if (!craftableBooks().includes(id)) return 'missing';
+        if (state.books?.[id]) return 'have';
+        if (state.resources.gold < B.book_craft_gold) return 'gold';
+        if (state.resources.dust < B.book_craft_dust) return 'materials';
+        return null;
+    }
+    function bookState(state, uid = null) {
+        const h = uid ? heroById(state, uid) : null;
+        return {
+            open: hasFeature(state, 'skillbook'),
+            need: { have: h?.level ?? 0, need: B.skillbook_learn_level },
+            books: Object.keys(state.books ?? {}).filter(id => state.books[id] > 0).map(id => ({ id, n: state.books[id] })),
+            craft: craftableBooks().map(id => ({ id, gold: B.book_craft_gold, dust: B.book_craft_dust, err: craftGate(state, id) })),
+            hero: uid ? { skill: h?.bookSkill ?? null, err: learnGate(state, h) } : null,
+        };
+    }
+    function learnBook(state, uid, skillId) {
+        const h = heroById(state, uid);
+        const gate = learnGate(state, h);
+        if (gate === 'unbuilt') return { ok: false, err: gate };
+        if (!h || !bookable(skillId)) return { ok: false, err: 'missing' };
+        if (gate) return { ok: false, err: gate };
+        if (!state.books?.[skillId]) return { ok: false, err: 'book' };
+        if (h.bookSkill === skillId) return { ok: false, err: 'same' };
+        const replaced = h.bookSkill ?? null;
+        state.books[skillId] -= 1;
+        if (state.books[skillId] <= 0) delete state.books[skillId];
+        h.bookSkill = skillId;   // 도는 원정이면 다음 걸음 첫머리의 `refit` 이 먹는다 (마스터리 · 전직 스킬과 같다)
+        return { ok: true, replaced };
+    }
+    function craftBook(state, skillId) {
+        const err = craftGate(state, skillId);
+        if (err) return { ok: false, err };
+        state.resources.gold -= B.book_craft_gold;
+        state.resources.dust -= B.book_craft_dust;
+        (state.books ??= {})[skillId] = 1;
+        return { ok: true };
+    }
+
     /* ── 자원 파견 — 단계마다 한 자리 [신설 2026-09-27 · SCREEN_DESIGN §8 · ADR-0372 · ADR-0373 · INTERFACE §2-7] ──
        자리 = 파견처(채광 · 채집 · 벌목) × 그 표의 단계. 한 자리에 한 명 · 한 영웅은 한 자리. **산출 정산은 아직 없다** — 앉히고 빼는 것까지다 */
     const DISPATCH_TABLES = { mine: deps.mineNodes ?? [], gather: deps.gatherNodes ?? [], log: deps.logNodes ?? [] };
@@ -1600,7 +1665,7 @@ export function createGameSystem(deps) {
         const report = {
             at: now, stageId, level, preset: no, won: false, reason: null, durationSec: 0,   // reason null = 진행 중 · preset = 어느 부대의 런인가 (v38 · 다부대)
             gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
-            downed: [], party: going.slice(), drops: [], discarded: 0,
+            downed: [], party: going.slice(), drops: [], books: [], discarded: 0,
             rounds: [], roundsCleared: 0,
             // 빗나감 · 기여는 **0 에서 자리를 잡는다** — 첫 라운드 전에 끊겨도 리포트가 빈 칸 없이 선다 (SCREEN_DESIGN §4-3)
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -1685,6 +1750,8 @@ export function createGameSystem(deps) {
                 R.drops.push(added.uid);
                 gained.push(added);
             }
+            // 스킬북 [2026-09-29 · R179] — 재고에 넣는다 · 가진 책이면 가루(`book_dup_dust`) · 가방 칸을 안 먹는다 · rng 0
+            for (const id of s.books ?? []) (R.books ??= []).push({ id, dust: addBook(state, id) });
             commissionCount(state, run.stageId, s.killGrades ?? {}, gained);
             // 경험치 — **그 순간 살아 있는 영웅만** 같은 양을 받는다 (사용자 확정 2026-09-14). 레벨업은 다음 라운드부터 전투에 먹는다(②)
             //   **경험치 획득 +%**(방어구 공통옵션)는 **낀 영웅 본인 몫**만 늘린다 [2026-09-18 사용자 확정 · item_design §1 「갑옷 옵션」] —
@@ -1953,7 +2020,44 @@ export function createGameSystem(deps) {
         // `open` = 상단 · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 목록 · 시계는 닫혀 있어도 같은 값이다(시드 + 회차)
         // 물약 — **정해진 셋을 늘 판다** [2026-09-28 사용자 지시 · base_expedition §2-6] — `potion.csv:shop_gold` 가 선 행만 · 회차 · 매진이 없다
         const potions = potionRows.filter(p => p.shopGold != null).map(p => ({ id: p.id, tier: p.tier, heal: p.heal, gold: p.shopGold, have: state.potions?.[p.id] ?? 0 }));
-        return { ...visit, chapter, lo: band.lo, hi: band.hi, equip, potions, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
+        // 스킬북 — 회차마다 `shop_book_count` 권 · 따로 선 스트림(0x540B) [2026-09-29 사용자 지시 · base_expedition §2-6 · INTERFACE §5-2]
+        const books = shopBookIds(state, visit.cycle).map((id, i) => ({ id, gold: B.shop_book_gold, sold: !!bought?.books?.includes(i), have: !!state.books?.[id] }));
+        return { ...visit, chapter, lo: band.lo, hi: band.hi, equip, potions, books, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
+    }
+
+    /** 상단이 파는 책의 후보 — 직업 스킬 중 기본 책이 아닌 것(기본 책은 서고가 만든다 · 보스 고유는 드롭만) · `skill.csv` 행 순서 */
+    const shopBookPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && !d.starterPool).map(d => d.id);
+    /** 그 회차의 책 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
+    function shopBookIds(state, cycle) {
+        const pool = shopBookPool();
+        const rng = makeRng(deriveSeed(state.seed ^ 0x540B, cycle));
+        const n = Math.min(B.shop_book_count, pool.length);
+        for (let k = 0; k < n; k++) {
+            const j = k + Math.floor(rng() * (pool.length - k));
+            [pool[k], pool[j]] = [pool[j], pool[k]];
+        }
+        return pool.slice(0, n);
+    }
+
+    /**
+     * 상단 스킬북 한 권을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7] — 거절 `unbuilt` → `stale` → `missing` → `sold` → `have` → `gold`.
+     * 가진 책은 못 산다 — 사면 가루로 새므로(`addBook`) 막는다. rng 를 새로 안 연다(`shopState` 와 같은 스트림)
+     */
+    function shopBookBuy(state, i, cycle, now) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const S = shopState(state, now);
+        if (cycle !== S.cycle) return { ok: false, err: 'stale' };
+        const b = S.books[i];
+        if (!b) return { ok: false, err: 'missing' };
+        if (b.sold) return { ok: false, err: 'sold' };
+        if (b.have) return { ok: false, err: 'have' };
+        if (state.resources.gold < b.gold) return { ok: false, err: 'gold' };
+        if (state.shop?.cycle !== S.cycle) state.shop = { cycle: S.cycle, chapter: S.chapter, sold: [], books: [] };
+        state.shop.books = state.shop.books ?? [];
+        state.shop.books.push(i);
+        state.resources.gold -= b.gold;
+        addBook(state, b.id);
+        return { ok: true, id: b.id, gold: b.gold };
     }
 
     /**
@@ -1986,7 +2090,7 @@ export function createGameSystem(deps) {
         if (state.resources.gold < g.gold) return { ok: false, err: 'gold' };
         if (state.bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
         // 회차의 첫 구매가 레벨대를 박는다 — 그 뒤로 이 회차의 목록은 이 챕터로 굴린다
-        if (state.shop?.cycle !== S.cycle) state.shop = { cycle: S.cycle, chapter: S.chapter, sold: [] };
+        if (state.shop?.cycle !== S.cycle) state.shop = { cycle: S.cycle, chapter: S.chapter, sold: [], books: [] };
         state.shop.sold.push(i);
         state.resources.gold -= g.gold;
         const it = addItem(state, g.item);
@@ -2730,13 +2834,14 @@ export function createGameSystem(deps) {
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, stageLevelState, setStageLevel, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         runLock, runTactics, runTacticsIf,
         tavernCandidates, tavernState, tavernReroll, hire, dismissState, dismiss, swapHeroes,
-        shopVisit, shopState, shopBuy, shopPotionBuy, gambleState, gambleSpin, gambleSpinBatch,
+        shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
         dispatchOf, dispatchSeat, dispatchPick, dispatchAssign, dispatchRecall, dispatchSettle, dispatchProgress, materialsState,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget,
+        bookState, learnBook, craftBook,
         masteryState, learnMastery, unlearnMastery, resetMastery,
-        tacticState, tacticBonus, rerollTactic, toggleTacticLock, weaponGroupOf, weaponSkillOf,
+        tacticState, tacticBonus, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, bonusOf, needOf, peakTotal,
     };
 }

@@ -28,12 +28,10 @@ hp_regen_base_per_level,0.05,proposed,1,**HP 재생 밑수** — 전 영웅이 �
 start_gold,300,proposed,0,새 게임 시작 골드 (2026-08-25 초반 루프 구현하면서 발생)
 start_dust,0,proposed,0,새 게임 시작 몬스터 가루 (2026-08-25 초반 루프 구현하면서 발생)
 start_stigma,0,proposed,0,새 게임 시작 낙인 (2026-08-25 초반 루프 구현하면서 발생)
-hero_xp_base,600,proposed,0,레벨업 필요 XP 기준값 — xp_next = hero_xp_base × level ^ hero_xp_exp (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「일단」 80→1200 — xp_rate 0.5→1 과 함께 필요량 7.5배 · 목표 「가장 빨라도 사탄(1-5)까지 1시간」 · hit_per_level_deficit_pct · hit_min_pct 와 한 묶음 · 시뮬 100시드 최소 57분 · 중앙 1시간 53분) (2026-09-25 사용자 1200→600 — 필요량 절반)
-hero_xp_exp,1.4,proposed,0,레벨업 필요 XP 지수 (2026-08-25 초반 루프 구현하면서 발생)
 attr_growth_chance_pct,0.35,proposed,0,⚠ **퇴역 — 코드가 안 읽는다** · 기본 능력치 자동 성장은 2026-09-14 폐지(R83 · hero_design §4-3) · 옛 뜻: 레벨업 시 축별 +1 확률(%) (2026-08-25 초반 루프 구현하면서 발생)
-xp_rate,1,proposed,1,전투 XP 합 → 영웅 각자 지급 배율 (그 라운드를 이긴 순간 살아 있는 영웅만 — 2026-09-14 R89 · ~~전원 동일 지급~~) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「1배율 기준」 0.5→1 — 레벨 속도는 hero_xp_base 가 맡는다)
-monster_xp_base,40,proposed,1,처치 XP 의 레벨 1 기준값 — 처치 XP = monster_xp_base × monster_xp_growth ^ (몬스터 레벨 − 1) × spawn_grade.exp_mult × monster.csv:exp_coef. 몬스터 레벨 = stage.csv:dlvl 이라 레벨과 등급이 같으면 몬스터가 달라도 XP 가 같다 · 골드도 이 값에서 나온다 (monster_design §7 · DEV_PLAN R85) (2026-09-14 발행)
-monster_xp_growth,1.06,proposed,1,처치 XP 의 레벨당 배율 — 몬스터 레벨이 1 오르면 이만큼 곱한다. power_growth_per_level 과 같은 값에서 시작했다(몬스터가 약한 만큼 XP 도 적어 낮은 스테이지를 돌 이득이 없다) · 키는 따로다 (2026-09-14 발행)
+xp_rate,1,proposed,1,전투 XP 합 → 영웅 각자 지급 배율 (그 라운드를 이긴 순간 살아 있는 영웅만 — 2026-09-14 R89 · ~~전원 동일 지급~~) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「1배율 기준」 0.5→1 — 레벨 속도는 level_xp.csv 가 맡는다)
+monster_gold_base,40,proposed,1,처치 골드의 레벨 1 기준값 — 처치 골드 = monster_gold_base × monster_gold_growth ^ (몬스터 레벨 − 1) × spawn_grade.exp_mult × monster.csv:exp_coef × gold_mult × gold_rate. 처치 XP 는 level_xp.csv:monster_xp 로 갈라졌다 — 이 곡선은 골드만 탄다 (2026-09-28 ~~monster_xp_base~~ 에서 이름만 옮김 · PLAN_early_progression D3)
+monster_gold_growth,1.06,proposed,1,처치 골드의 레벨당 배율 — 몬스터 레벨이 1 오르면 이만큼 곱한다 (2026-09-28 ~~monster_xp_growth~~ 에서 이름만 옮김 · D3)
 unarmed_atk,1.5,proposed,0,무기 없을 때 기본 데미지 (2026-08-25 초반 루프 구현하면서 발생)
 unarmed_period,2.0,proposed,0,무기 없을 때 행동 주기(초) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-25 사용자 「공격속도 절반」 — 전 무기 주기 ×2 에 맞춰 1.3 → 2.6 · 안 올리면 맨손이 모든 무기보다 빨라진다) (2026-09-28 사용자 「30% 정도만 올려보자」 — 전 무기 공격 속도 ×1.3 에 맞춰 2.6 → 2.0 · 가장 빠른 본편 무기와 같다)
 weapon_atk_base,3.34,proposed,1,무기 피해 범위의 **가운데** — 가운데 = base x power_growth_per_level ^ (ilvl-1) · 양끝 = 가운데 x (1 ∓ 타격 범위 폭) x 강화 배율(정수 반올림) · ~~x 개체 편차~~ 2026-09-14 폐지(R90 — 직격마다 범위를 굴린다). **밑수다** — 다른 슬롯의 고정 데미지를 여기 더하지 않는다 (battle_design §9-1) (2026-09-01 한손 개념 폐지 — 폐기한 two_hand_atk_mult 1.45 를 흡수해 2.3 → 3.34. 이제 전 무기가 양손이라 배율이 전역 상수가 됐다) (2026-08-26 수치 대역 재설계)
@@ -82,7 +80,7 @@ monster_hp_base,50,proposed,1,몬스터 레벨 1 최대 HP 바탕 — 영웅의 
 monster_hp_scale,1.0,proposed,1,몬스터 HP 전역 배율 — 소재값 x 등급배율 위에 곱한다 (라운드 소요를 round_budget.time_target_sec 에 맞추는 주 손잡이) (2026-08-27 캘리브레이션 — 2.4→1.0 · 킬 속도가 라운드 목표 시간보다 한참 느렸다)
 monster_atk_scale,0.5,proposed,1,몬스터 데미지 전역 배율 (캘리브레이션 손잡이) (2026-09-24 사용자 1→0.5 · 캘리브레이션 재측정 전) (2026-09-22 사용자 「일단 1」 0.2→1 — 몬스터 전투 계수를 영웅과 똑같이 · 같은 날 능력치 계수 보류 해제와 한 묶음 · 캘리브레이션 재측정 전) (2026-08-31 재보정 — 0.1→0.2 · 101~103 이 전부 승률 100% 로 목표 대역을 위로 벗어나 있었다. 승률이 100% 인 원인은 킬 속도가 아니라 **파티가 안 죽는 것**이었으므로(101~103 의 avg downed 가 0.00) 데미지 축으로 잡았다. 0.25 는 102 를 20% 로 0.3 은 0% 로 떨어뜨려 대역 아래로 지나친다 · monster_hp_scale 과 hero_hp_base 는 안 건드렸다 — 같은 축을 두 손잡이로 동시에 돌리면 어느 쪽이 효과를 냈는지 못 읽는다) (2026-08-27 캘리브레이션 — 0.25→0.1 · dmg_min 바닥에 깔릴 정도로 더 내리면 등급별 데미지 차이가 무의미해진다)
 battle_timeout_sec,600,proposed,0,전투 제한시간(초) — 넘으면 `timeout` 으로 끝난다(이긴 것이 아니다 · ~~철수 처리~~ — 철수는 플레이어 행동 · R89) (2026-08-25 초반 루프 구현하면서 발생)
-gold_rate,0.3,proposed,1,처치 골드 = 처치 XP(monster_xp_base 곡선 × exp_mult × exp_coef) × gold_mult × gold_rate — ~~exp_reward~~ 는 2026-09-14 R85 로 exp_coef 가 됐다 (2026-08-25 초반 루프 구현하면서 발생)
+gold_rate,0.3,proposed,1,처치 골드 = monster_gold_base 곡선 × exp_mult × exp_coef × gold_mult × gold_rate (2026-09-28 처치 XP 와 분리 — 값은 그대로) — ~~exp_reward~~ 는 2026-09-14 R85 로 exp_coef 가 됐다 (2026-08-25 초반 루프 구현하면서 발생)
 drop_chance_pct,0.09,proposed,0,드롭 판정 1회의 기본 성공 확률(%) — 등급 배율은 spawn_grade.drop_chance_mult · 처치당 최대 1개 (item_design §1) (2026-08-25 초반 루프 구현하면서 발생 · 2026-08-28 판정 1회로 개정)
 boss_guaranteed_drop,1,proposed,0,보스 처치 시 최소 드롭 개수 (2026-08-25 초반 루프 구현하면서 발생)
 rarity_w_normal,60,proposed,0,드롭 희귀도 가중치 — **일반** [신설 2026-09-14 사용자 지시 · item_design §1 · R86] — 훑는 순서는 일반 → 매직 → 레어 · 매직아이템 획득확률은 레어 가중치에만 곱한다(일반·매직은 그대로)
@@ -212,3 +210,10 @@ tactic_reroll_lock_mult,2,proposed,1,전술 리롤 비용이 **잠금 1개마다
 admin_gold,1000000,fixed,0,**개발 장치** — 관리자 모드(Admin)를 켤 때 골드를 이 값까지 채운다(모자란 만큼 · 진짜 골드 · 세이브에 남는다) · 게임 기능이 아니다 [2026-09-27 사용자 지시 「Admin 누르면 돈 100만 쓸 수 있도록」 · SCREEN_DESIGN §10-3]
 dispatch_offline_cap_hours,3,proposed,1,자원 파견 산출의 **오프라인 상한**(시간) — 정산과 정산 사이의 공백을 여기서 자른다. 켜 둔 동안은 앱 시계가 자주 정산해 끝없이 흐르고 껐다 켠 첫 정산만 걸린다 [2026-09-27 사용자 「오프라인에선 최대 3시간 · 접속 중엔 계속」 · 「일단 3시간」 · base_expedition §3-3]
 advance_hours,2,proposed,1,전직에 걸리는 시간(시간) — 훈련장 전직 칸에 넣은 영웅이 이만큼 지나면 전직이 끝난다 · 그동안 원정 · 수색 · 자원 자리에 못 나간다 [2026-09-28 사용자 「시간 키만 두고 ⚠임시값」 · skill_design §4 · GAME_DESIGN §10 「전직 작업의 값」]
+skillbook_learn_level,10,proposed,0,스킬북을 쓸 수 있는 영웅 레벨 — 둘째 액티브 칸(배운 스킬)의 문턱 · 1장 끝 · 마스터리 T2 와 같은 무렵 [2026-09-28 사용자 확정 「10 레벨에 1개의 액티브 스킬」 · skill_design §2-1 · R179]
+drop_book_pct,0.25,proposed,1,드롭이 난 처치에서 **장비 대신 스킬북**이 나올 확률(비율) — 처치당 1개는 그대로 · 그 몬스터의 고유 스킬 책(영웅이 못 배우는 몬스터 전용이면 장비) · ⚠임시 · 등급마다 다른가는 GAME_DESIGN §10 「스킬북의 남은 설계」 ⑧ [2026-09-28 사용자 「처치당 1개 · 장비냐 책이냐를 굴린다」 · item_design §1 드롭 1-2 · R179]
+book_dup_dust,3,proposed,1,이미 가진 스킬북이 또 떨어지면 바뀌는 가루 양 — 책은 한 권까지 · ⚠임시 [2026-09-28 사용자 「중복 책은 가루」 · skill_design §2-1 · R179]
+book_craft_gold,1000,proposed,1,서고 **기본 책 제작**의 골드 — 기본 책 = `skill.csv:starter_pool` · ⚠임시 [2026-09-28 사용자 「아주 기본적인 책만 만든다」 · construction_draft §2 서고 · R179]
+book_craft_dust,10,proposed,1,서고 **기본 책 제작**의 가루 · ⚠임시 [2026-09-28 · construction_draft §2 서고 · R179]
+shop_book_count,3,proposed,1,상단이 **방문 회차마다** 파는 스킬북 수 — 후보 = 직업 스킬 중 기본 책(`skill.csv:starter_pool`)이 아닌 것 · 같은 회차에 같은 책 둘 없음 · 장비 탭 맨 윗줄 무기 오른쪽 · ⚠임시 [2026-09-29 사용자 「상점에서 책 3개 정도 파는 걸로 해볼까」 · base_expedition_design §2-6]
+shop_book_gold,1500,proposed,1,상단 스킬북 한 권의 골드 — 서고 기본 책 제작(book_craft_gold + 가루)보다 비싸다 · ⚠임시 [2026-09-29 · base_expedition_design §2-6]

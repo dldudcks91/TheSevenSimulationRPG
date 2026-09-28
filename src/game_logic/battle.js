@@ -71,6 +71,7 @@
  *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = `스테이지 레벨 + gear_ilvl_add`(굴림 없음) ·
  *     희귀도 = 등급의 가중치(`gear_rarity_w_*` · 2026-09-23 — 일반 등급은 레어 0) · 레어 가중에 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
  *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
+ *   · **그 한 개는 장비 또는 스킬북이다** [2026-09-29 · R179 · item_design §1 드롭 1-2] — 판정 뒤 종류 1회 · 책은 그 몬스터의 고유 스킬 책(`result.books`).
  */
 
 import { createFormula } from './formula.js';
@@ -99,6 +100,7 @@ const NO_DMG = Object.freeze({ min: 0, max: 0 });
  *   heroSystem — hero.js. **몬스터도 `computeCombat` 을 지난다** (§8-1 「계산이 한 곳」 · 신설 2026-09-11 R79),
  *   classSkills {classId: [skillId]} — 보스 셋째 스킬 칸의 후보 풀. item·hero 에 넘기는 **같은 표**다 (신설 2026-09-11 R79),
  *   slots [partId] — 장비 부위 어휘. `monster.csv:wear_slots` 검증에만 쓴다 (신설 2026-09-11 R79),
+ *   levelXp [{level, monsterXp}] — `level_xp.csv`. 몬스터 레벨 → 처치 XP 기준값 (신설 2026-09-28 · 1 ~ 만렙을 덮어야 한다),
  *   monsterRoles {role: {rank}} — `monster_role.csv`. **적의 자리**를 정한다 (진형 확정 2026-09-09).
  *     모르는 역할은 **전열(0)** 로 떨어뜨린다 — 빠뜨린 몬스터가 뒤에 숨어 무적이 되는 것보다 앞에 서는 편이 안전하다
  */
@@ -114,6 +116,11 @@ export function createBattleSystem(data) {
     const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
+    // 처치 XP 기준값 — 몬스터 레벨 → `level_xp.csv:monster_xp` (2026-09-28 · ~~monster_xp_base × monster_xp_growth ^ (lvl − 1)~~).
+    //   몬스터 레벨은 만렙을 안 넘으므로(`hero_level_cap`) 1 ~ 만렙을 못 덮으면 생성 때 던진다
+    const MONSTER_XP = new Map((data.levelXp ?? []).map(r => [r.level, r.monsterXp]));
+    for (let l = 1; l <= B.hero_level_cap; l++)
+        if (!(MONSTER_XP.get(l) > 0)) throw new Error(`battle: level_xp.csv 에 레벨 ${l} 의 monster_xp 가 없다 (상한 ${B.hero_level_cap})`);
 
     /** 입는 부위 — `monster.csv:wear_slots` 를 `|` 로 가른다. **이 순서가 장비 굴림 순서**다 (INTERFACE §5-2) */
     const wearSlots = m => String(m.wear_slots ?? '').split('|').filter(Boolean);
@@ -359,15 +366,16 @@ export function createBattleSystem(data) {
         // 능력치 계수는 **영웅과 같다** [2026-09-22 사용자 — 보류 해제 · battle_design §9-2] — 평타는 `computeCombat` 이 낸
         //   `main_attr_mult`(낀 무기의 피해 종류 — 물리 = 힘 · 마법 = 지능 · 2026-09-27) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
         /*
-         * 스킬 칸 — **등급이 연다** (skill_design §2 · monster_design §5-1): 일반 = 고유 1 · 정예 = + 낀 무기가 든 스킬 ·
+         * 스킬 칸 — **등급이 연다** (skill_design §2 · monster_design §5-1): 일반 = 고유 1 · 정예 = 둘째 칸 ·
          *   보스 = + 셋째 칸. **칸은 출처 자리**라 「있는 것 중 앞에서 n개」가 아니다 — 그래서 열리지 않은 출처를
-         *   `activesFor` 에 **넘기지 않는다**(고유가 비었다고 무기 스킬이 1번 칸으로 올라오면 안 된다).
+         *   `activesFor` 에 **넘기지 않는다**.
+         * **정예의 둘째 칸은 비어 있다** [2026-09-29 · R179 · 사용자 「일단 스킬 1개만 · 나중에 넣을게」] — ~~낀 무기가 든 스킬~~ 은
+         *   무기가 스킬을 안 담게 되어 사라졌다(skill_design §2-1). 넣을 것은 사용자가 정한다 — 그때 여기에 `slots >= 2` 출처가 선다
          */
         const slots = g.skill_slots;
         // ⚠ `activesFor` 는 **인스턴스**(`{id, source}`)를 낸다 — 파티 경로와 같이 **정의를 풀고 `readyAt` 을 얹어야** 한다.
         //   안 풀면 `skill.castable(def, …)` 이 undefined 를 읽는다 (INTERFACE §2-6 「전투 유닛」 actives 행)
         const acts = SK ? SK.activesFor({ innate: m.innate_skill }, {
-            weaponSkill: slots >= 2 ? gear.find(it => it.slot === 'weapon')?.skill : null,
             thirdSkill: slots >= 3 ? thirdSkill : null,
         }).map(a => {
             const def = SK.resolve(a);
@@ -390,8 +398,12 @@ export function createBattleSystem(data) {
             stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 영웅과 같다)
             actives: acts,
             // 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이 같으면 몬스터가 달라도 같다. `exp_coef` 는 몬스터별 조정 칸 (monster_design §7 · R85)
-            expReward: B.monster_xp_base * B.monster_xp_growth ** (lvl - 1) * g.exp_mult * m.exp_coef,
+            //   XP 는 레벨 표(`level_xp.csv`) · 골드는 옛 지수 곡선(`monster_gold_*`)을 따로 탄다 (2026-09-28 · PLAN_early_progression D3)
+            expReward: MONSTER_XP.get(lvl) * g.exp_mult * m.exp_coef,
+            goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * g.exp_mult * m.exp_coef,
             goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
+            // 떨굴 수 있는 스킬북 = 고유 스킬 — 영웅이 배울 수 있는 것만(몬스터 전용 `owner_kind=monster` 는 책이 없다) [2026-09-29 · R179 · skill_design §2-1] · rng 0
+            bookSkill: m.innate_skill && SK?.defs[m.innate_skill] && SK.defs[m.innate_skill].ownerKind !== 'monster' ? m.innate_skill : null,
             ...rest,
         });
     }
@@ -638,7 +650,8 @@ export function createBattleSystem(data) {
                 ...slotView(p) })),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             // 보상 칸(xpTotal · gold · kills · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
             // killGrades = kills 를 처치 순간의 등급으로 가른 것 `{monsterId: {grade: n}}` — 의뢰 「정예 · 보스 n마리」가 읽는다 (R153 · 세는 것뿐이라 rng 0)
-            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, drops: [], downed: [],
+            // books = 떨어진 스킬북의 스킬 id — 처치당 1개를 장비와 나눠 쓴다(onKill · 2026-09-29 R179) · drops 와 같이 이긴 라운드의 몫만
+            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, drops: [], books: [], downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -662,7 +675,7 @@ export function createBattleSystem(data) {
 
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
-        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, killGrades: {}, drops: [] });
+        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, killGrades: {}, drops: [], books: [] });
         let loot = newLoot();
         const bank = () => {
             out.xpTotal += loot.xp;
@@ -673,6 +686,7 @@ export function createBattleSystem(data) {
                 for (const [g, n] of Object.entries(byGrade)) to[g] = (to[g] ?? 0) + n;
             }
             out.drops.push(...loot.drops);
+            out.books.push(...loot.books);
         };
 
         let t = 0, round = 1;
@@ -774,7 +788,7 @@ export function createBattleSystem(data) {
             const byGrade = (loot.killGrades[e.monsterId] ??= {});
             byGrade[e.grade] = (byGrade[e.grade] ?? 0) + 1;
             loot.xp += e.expReward;
-            loot.gold += Math.round(e.expReward * e.goldMult * B.gold_rate * goldMult);
+            loot.gold += Math.round(e.goldReward * e.goldMult * B.gold_rate * goldMult);
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
             // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
             // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)
@@ -789,10 +803,18 @@ export function createBattleSystem(data) {
              *   여기서 아이템을 만들지 않는다 — 부위 · ilvl · 희귀도 · 접사 · 개체 굴림은 **스폰 때** 이미 돌았다(`spawnRound`).
              *   남은 굴림은 **입은 부위 중 하나를 고르는 1회**뿐이고, 그것이 「드롭 부위 편향의 단위」의 답이다 — 단위는 **입은 것**이다.
              * ⚠ 맨몸 몬스터는 판정이 성공해도 낼 것이 없다 — 아무것도 굴리지 않고 넘어간다.
+             * **그 한 개가 장비냐 스킬북이냐를 굴린다** [2026-09-29 · R179 · 사용자 「처치당 1개 · 장비냐 책이냐」 · item_design §1 드롭 1-2] —
+             *   드롭이 나면 **종류 1회**(`drop_book_pct`) → 책이면 그 몬스터의 고유 스킬 책(굴림 더 없음) · 장비면 입은 부위 1회.
+             *   책 후보 = 고유 스킬이 **영웅이 배울 수 있는 것**(`owner_kind` 가 `monster` 가 아니다 — 자폭 · 고블린 소환은 책이 없다).
+             *   ⚠ **후보가 없어도 종류 굴림은 1회 소비한다** — 소비 수가 몬스터에 의존하면 같은 시드가 다른 드롭을 낸다(INTERFACE §5-2) · 후보가 없으면 장비로 간다
              */
+            const bookId = e.bookSkill ?? null;
             for (let i = 0; i < got; i++) {
                 const worn = e.gear ?? [];
-                if (!worn.length) break;
+                if (!worn.length && !bookId) break;
+                const book = rng() < B.drop_book_pct;
+                if (book && bookId) { loot.books.push(bookId); continue; }
+                if (!worn.length) continue;
                 loot.drops.push(worn[Math.floor(rng() * worn.length)]);
             }
         };

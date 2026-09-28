@@ -47,6 +47,8 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다. **1스킬 = 1직업**(skill_design §12-1
  *                  확정 2026-09-08)이라 ~~전 행에서 균등~~ 이 아니라 **제 직업 풀**에서 굴린다 —
  *                  「마법사가 배쉬를 드는 일은 없다」
+ *   starterPool  — `skillPool` 과 같은 모양 ← skill.csv:starter_pool = 1(직업 기본기 — 딜 · 힐) — **첫 파티의 고유만** 여기서 굴린다
+ *                  [2026-09-29 · R179 · hero_design §1 — ~~시작 무기의 스킬~~ 에서 옮겨 왔다] · 그 직업이 비면 직업 풀 · 행 순서가 결정론 계약
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
  *   heroTiers    — 영웅 등급 표 [{id, weight, totalMin, totalMax, shape}...] ← `hero_tier.csv` (**행 순서가 굴림 결과를 정한다**).
  *                  `weight = 0` 인 행은 생성기가 안 뽑는다(유니크는 수작업). 등급을 가르는 것은 **총합 대역과 분포 모양 둘뿐**이다
@@ -62,6 +64,7 @@ export function createHeroSystem(data) {
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
     const skillPool = data.skillPool ?? {};      // {classId: [skillId...]} — 직업 풀 (skill_design §12)
+    const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 기본기 · 첫 파티 고유만 (2026-09-29 · R179)
     const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
 
@@ -252,22 +255,24 @@ export function createHeroSystem(data) {
      *   ~~`skill.csv` 전 행에서 균등~~(09-01)은 「1스킬 = 1직업」 확정으로 폐기됐다.
      * ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 직업에 의존하면 같은 시드가 다른 파티를 낸다
      *   (초상 굴림이 09-07 에 같은 이유로 같은 규칙이 됐다 · INTERFACE §5-2).
+     * `starter` = **첫 파티** — 직업 기본기 풀(`starterPool` — 딜 · 힐)에서 굴린다 [2026-09-29 · R179 · hero_design §1].
+     *   무기가 스킬을 안 담게 되어 레벨 10(스킬북) 전엔 고유 한 칸뿐이라 보장이 여기로 왔다. **소비는 1회 그대로**(풀만 좁다) · 기본기가 비면 직업 풀
      */
-    const rollInnate = (rng, cls) => {
-        const pool = skillPool[cls] ?? [];
+    const rollInnate = (rng, cls, starter = false) => {
+        const pool = (starter && starterPool[cls]?.length ? starterPool[cls] : skillPool[cls]) ?? [];
         const r = rng();
         return pool.length ? pool[Math.floor(r * pool.length)] : null;
     };
 
-    /** 생성 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollParty 쪽의 일 */
-    function rollHero(rng, { sin, cls, name, trait, tier }) {
+    /** 생성 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollParty 쪽의 일 · `starter` = 첫 파티(고유를 기본기 풀에서 — rollInnate) */
+    function rollHero(rng, { sin, cls, name, trait, tier, starter = false }) {
         // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 등급 1 → 총합 1 → 능력치 7 → 고유 1 = **언제나 10회**.
         // 객체 리터럴 안에서 부르면 평가 순서가 문장으로 안 보여 순서가 조용히 밀린다.
         // ⚠ ~~상한 7회(`rollCaps`)~~ 는 09-07 폐지 — 상한은 개체별이 아니라 `hero_attr_max` 하나다 (§4-3)
         const t = rollTier(rng, tier);
         const total = rollTotal(rng, t);
         const stats = rollAttributes(rng, keyAttrOf(cls), { total, shape: t?.shape });
-        const innate = rollInnate(rng, cls);
+        const innate = rollInnate(rng, cls, starter);
         return {
             uid: null,               // uid 발급은 state 의 일 (카운터 소유자)
             name, tier: t?.id ?? 'rare', sin, cls, trait,
@@ -288,13 +293,13 @@ export function createHeroSystem(data) {
      * ⚠ **얼굴은 맨 마지막에 굴린다** (2026-09-06) — 능력치·상한·고유 뒤에 두어야 **앞의 소비 순서가 안 밀린다**.
      *   영웅 안에서 굴리면 1번 영웅의 얼굴이 2번 영웅의 능력치를 밀어 **같은 시드가 다른 파티**를 낸다 (INTERFACE §5-2).
      */
-    function rollParty(rng, n, tiers) {
+    function rollParty(rng, n, tiers, starter = false) {
         const names = drawDistinct(rng, data.namePool, n);
         const sins = drawDistinct(rng, data.sins, n);
         const classes = drawDistinct(rng, mainClasses, n);
         const traits = drawDistinct(rng, data.traitPool, n);
         const party = names.map((name, i) =>
-            rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i] }));
+            rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i], starter }));
         // 소비는 언제나 인원수만큼 1회씩이다 — 직업 풀이 비어도(마법사) 소비 수는 안 바뀐다
         party.forEach(h => { h.face = rollFace(rng, h.cls); });
         return party;
@@ -307,7 +312,8 @@ export function createHeroSystem(data) {
      */
     const START_TIERS = ['rare', 'magic', 'normal'];
 
-    const rollStartParty = (rng, n) => rollParty(rng, n, START_TIERS);
+    // 첫 파티만 고유를 직업 기본기 풀에서 굴린다 [2026-09-29 · R179 · hero_design §1] — 선술집 · 수색(`rollCandidates`)은 직업 풀 그대로
+    const rollStartParty = (rng, n) => rollParty(rng, n, START_TIERS, true);
 
     /**
      * 선술집 후보 — 시작 파티와 같은 굴림이되 **등급도 굴린다** (첫 파티만 지정이다).
@@ -318,7 +324,15 @@ export function createHeroSystem(data) {
 
     /* ── 성장 ── */
 
-    const xpNeeded = level => Math.round(B.hero_xp_base * Math.pow(level, B.hero_xp_exp));
+    /**
+     * 레벨업 필요 XP — **표 조회**다 (`level_xp.csv:xp_need` · 2026-09-28 · ~~hero_xp_base × level ^ hero_xp_exp~~).
+     *   디아블로2 필요량의 모양을 따른다(PLAN_early_progression D1 · D2). 표가 1 ~ 상한 − 1 을 못 덮으면 생성 때 던진다 —
+     *   빈 칸이 undefined 로 새면 `hero.xp >= undefined` 가 거짓이라 레벨이 조용히 멈춘다
+     */
+    const XP_NEED = new Map((data.levelXp ?? []).map(r => [r.level, r.xpNeed]));
+    for (let l = 1; l < B.hero_level_cap; l++)
+        if (!(XP_NEED.get(l) > 0)) throw new Error(`hero: level_xp.csv 에 레벨 ${l} 의 xp_need 가 없다 (상한 ${B.hero_level_cap})`);
+    const xpNeeded = level => XP_NEED.get(level);
 
     /**
      * XP 지급 → 레벨업 처리.

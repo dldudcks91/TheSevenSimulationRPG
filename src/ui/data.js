@@ -89,6 +89,7 @@ export const D = {
     buildingRankRows: [],     // building_rank.csv — 건물 × 랭크마다 한 줄 (문턱 · 비용)
     buildingEffectRows: [],   // building_effect.csv — 여는 것 **한 줄에 하나** (켜기 · 더하기)
     researchRows: [],         // research.csv — 연구 항목 (지금은 머리줄뿐 — 항목은 나중에)
+    levelXp: [],              // level_xp.csv — 레벨순 [{level, xpNeed, monsterXp}] · 레벨업 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28)
     advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
     // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
     slotSymbolRows: [],       // slot_symbol.csv — 심볼(종류 · 산출 · 가중치 · 배당 · 이름)
@@ -116,7 +117,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -134,7 +135,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -324,6 +325,8 @@ export async function loadData(base = './data/') {
     D.researchRows = researchRow;
     // 전직 갈래 — 직업마다 셋(`advance.csv` · skill_design §4-1 · R16). 원시 행 그대로 — 검증은 state.js 가 로드 시 한다
     D.advanceRows = advanceRow;
+    // 레벨 표 — 레벨마다 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28 · PLAN_early_progression D1 · D2). 레벨순 · 검증은 hero.js · battle.js 가 생성 때 한다
+    D.levelXp = levelXpRow.slice().sort((a, b) => a.level - b.level).map(r => ({ level: r.level, xpNeed: r.xp_need, monsterXp: r.monster_xp }));
     // 도박장 표 넷 — 원시 행 그대로 (검증 · 굴림은 game_logic/gamble.js · R149)
     D.slotSymbolRows = slotSymbolRow;
     D.slotCoinRows = slotCoinRow;
@@ -472,16 +475,17 @@ export function buildSystems(d, dev = {}) {
     });
     /**
      * 직업 풀 `{classId: [skillId...]}` — **1스킬 = 1직업** (skill_design §12-1 확정 2026-09-08).
-     * 고유 굴림(hero)과 무기 개체 굴림(item)이 **같은 표**를 본다 — 두 출처가 한 풀에서 가져가기 때문이다(규칙 3).
-     * ⚠ 행 순서가 결정론 계약이다 — 풀에서 빼거나 넣으면 같은 시드가 다른 고유·다른 무기를 낸다 (INTERFACE §5-2)
+     * 고유 굴림(hero)과 보스 셋째 칸(battle)이 **같은 표**를 본다 — ~~무기 개체 굴림(item)~~ 은 2026-09-29 R179 로 걷혔다(무기가 스킬을 안 담는다).
+     * ⚠ 행 순서가 결정론 계약이다 — 풀에서 빼거나 넣으면 같은 시드가 다른 고유를 낸다 (INTERFACE §5-2)
      */
     const classSkills = Object.fromEntries((d.classes ?? []).map(c =>
         [c.id, skill.list.filter(sk => sk.innatePool && sk.ownerKind === 'job' && sk.ownerId === c.id).map(sk => sk.id)]));
-    // 시작 무기의 스킬 후보 — 직업 풀 중 `starter_pool = 1` 인 기본기만 (2026-09-27 사용자 지시 · hero_design §1) · 행 순서가 결정론 계약
+    // 직업 기본기 — 직업 풀 중 `starter_pool = 1` 인 것 · **첫 파티의 고유**를 여기서 굴린다 (2026-09-29 · R179 · hero_design §1 — ~~시작 무기의 스킬~~ 에서 옮겼다) · 행 순서가 결정론 계약
     const starterSkills = Object.fromEntries(Object.entries(classSkills).map(([c, ids]) =>
         [c, ids.filter(id => skill.defs[id].starterPool)]));
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
+        levelXp: d.levelXp,   // 레벨업 필요 XP 표 (level_xp.csv)
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
         // 초상 장수 — 로직은 그림을 모르고 **직업별 장수 객체만** 받는다. 영웅이 태어날 때 제 직업 풀에서 굴려 세이브에 박는다
         // (2026-09-06 저장형 · 2026-09-07 직업 분류 — 풀이 0장인 직업은 face = null)
@@ -491,6 +495,7 @@ export function buildSystems(d, dev = {}) {
         heroTiers: d.heroTiers,   // 인자 `d` 에서 읽는다 — 전역 `D` 를 읽으면 테스트가 바꿔 끼운 표가 조용히 무시됐다 (2026-09-22 · 부채 #58)
         // 고유 스킬 풀 — **직업별**이다 (skill_design §12-1 규칙 1). hero 는 skill 시스템이 아니라 id 목록을 받는다
         skillPool: classSkills,
+        starterPool: starterSkills,   // 첫 파티의 고유 — 직업 기본기(딜 · 힐) (2026-09-29 · R179)
     });
     const item = createItemSystem({
         // ~~elements~~ 는 2026-09-11 R80 으로 주입 목록에서 빠졌다 — 마법 무기 원소 굴림이 사라져 item.js 가 원소 어휘를 안 읽는다
@@ -502,8 +507,7 @@ export function buildSystems(d, dev = {}) {
         // 반지 · 목걸이 옵션 표 셋 + 발동 스킬 후보 [2026-09-21 · R127] — 후보는 `skill.csv:amulet_pool = 1` · 직업을 안 가리는 한 풀 · 행 순서가 결정론 계약
         accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],
         amuletProcs: d.amuletProcs ?? [], procSkills: skill.list.filter(sk => sk.amuletPool).map(sk => sk.id),
-        // 무기 개체가 담을 액티브 후보 — 그 무기군의 **직업** 풀에서 드롭 때 하나를 굴린다 (skill_design §12-1 규칙 3)
-        classSkills, starterSkills,
+        // ~~classSkills · starterSkills~~ — 무기가 스킬을 안 담는다 (2026-09-29 · R179 · skill_design §2-1)
     });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
     // 표가 셋이다 — 조건 사전(점수) · 옵션(조건 + 능력치 + 기준값) · 점수 × 등급 배수 (tactic_card_design §5-8 · 2026-09-22 · R134)
@@ -525,10 +529,11 @@ export function buildSystems(d, dev = {}) {
     const battle = createBattleSystem({
         balance: d.balance, monsters: d.monsters, stages: d.stages, roundSets: d.roundSets,
         budgets: d.budgets, grades: d.grades, sins,
+        levelXp: d.levelXp,                        // 처치 XP 표 (level_xp.csv:monster_xp)
         sinTraits: M.SIN_TRAITS, commonTraits: M.COMMON_TRAITS, itemSystem: item, skillSystem: skill,
         monsterRoles: d.monsterRoles ?? {},        // 적의 랭크 — 진형 (battle_design §3-1)
         // 몬스터도 영웅과 같은 경로로 전투 능력치를 얻는다 (2026-09-11 R79 · battle_design §8-1 · monster_design §5-1) —
-        //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스 셋째 칸의 후보 풀(hero·item 과 같은 표)
+        //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스 셋째 칸의 후보 풀(hero 와 같은 표)
         //   이고 `slots` 는 `monster.csv:wear_slots` 어휘 검증용이다
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
     });

@@ -890,6 +890,9 @@ html, body { height: 100%; overflow: hidden; }
 /* Alt + 영웅 장비 hover의 기존 아이템 카드(ADR-0182) — 부모 영웅 툴팁과 별도라 붙였다 떼도 장비 칸이 움직이지 않는다. */
 .equipment-item-tooltip { z-index: 51; pointer-events: none; }
 .tip-card { width: 304px; padding: 11px 13px; font-size: var(--fs-sm); }
+/* 한 줄 툴팁 — 폭이 글자만큼이다 (잠긴 스킬 칸 「Level n+」 · 2026-09-29 사용자 「가로 넓이 줄여」 · ADR-0428) */
+.tip-card.tip-mini { width: max-content; padding: 6px 10px; }
+.tip-card.tip-mini .tip-name { margin: 0; }
 .tip-card + .tip-card { border-left: 1px solid var(--border-dark); background: var(--bg-input); }
 /* 아이템 비교 두 장 (SCREEN_DESIGN §6 · ADR-0337 · ADR-0339) — 두 장이 **따로 선 상자**다: 툴팁 상자를 걷고 카드가 상자를 든다.
    툴팁이 커서 왼쪽으로 접히면(`tip.js:moveTip` 의 `at-left`) 순서를 뒤집어 「이 아이템」이 커서 쪽에 남는다 — DOM 은 그대로라 폭도 그대로다 */
@@ -1094,19 +1097,7 @@ html, body { height: 100%; overflow: hidden; }
 /* 칸 안 메달 크기 = 직업 판 봉인 문양과 같게 — 둘 다 칸의 75.5% 를 차지한다 [2026-09-27 사용자 지시 「직업 마스터리처럼 크기를 맞춰」].
    그림의 고리가 파일의 91.4% 라 inset 8.7% (0.826 × 0.914 ≈ 0.755) */
 .sk-icon-art.sk-icon-mask { inset: 8.7%; width: auto; height: auto; }
-/* 스킬 칸 [신설 2026-09-09 · 자리 개정 2026-09-10 ADR-0081 · 몸통 통일 2026-09-15 ADR-0139] — 무기가 액티브 한 칸을 통째로 정하므로 툴팁이 그것을 말한다.
-   자리는 **카드 바닥**이다(접사 목록 아래). 윗선 하나로 「아이템의 수치」와 「무기가 데려오는 것」을 가른다 —
-   아랫선은 안 긋는다: 힌트 줄(`.tip-sins`)이 자기 윗선을 들고 있어 두 줄이 붙어 선다.
-   속은 스킬 설명창의 **몸통 그대로**다(`.tip-name` · `.tip-chips` · `.tip-line` · `.tip-foot` — `tip.js:skillTipSection`).
-   **이름만 한 단 작다** — 카드의 제목은 아이템 이름이고, 같은 크기로 서면 제목이 둘로 읽힌다.
-   유닛 툴팁의 장비 hover 카드도 같은 칸이다(ADR-0312).
-   카드의 **직계 칸**만 잡는다 — 편성 탭 영웅 카드의 그림 칸(`.tip-skills .tip-skill`)도 `.tip-card` 안이다 */
-.tip-card > .tip-skill {
-    margin: 9px 0 0; padding: 7px 0 0;
-    border-top: 1px solid var(--border-dark);
-}
-.tip-card > .tip-skill .tip-name { font-size: var(--fs-sm); }
-.tip-card > .tip-skill.empty { color: var(--text-muted); font-size: var(--fs-xs); }
+/* ~~아이템 카드의 스킬 칸(`.tip-card > .tip-skill`)~~ — 2026-09-29 걷었다(R179 · ADR-0421): 무기가 스킬을 안 담는다 */
 .tip-card ul { list-style: none; }
 .tip-card li { color: var(--info-fg); }
 /* 물약 카드 (SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315) — 따로 규칙이 없다: 창 뱃지 툴팁의 클래스(`.tip-effect-*` · `.tip-sk-ico`)를 그대로 탄다 */
@@ -2798,6 +2789,27 @@ html, body { height: 100%; overflow: hidden; }
    사유는 `title` 이 들고, **찍는** 자리는 스킬 트리 창 목록(`.act-slot.empty`)이다 (SCREEN_DESIGN §6 · §7).
    빈 것을 말하는 것은 파선 테두리다 — 페이퍼돌 빈 칸 · `.act-slot.empty` 와 같은 문법 */
 .sk-card.vacant { border-style: dashed; opacity: .55; }
+/* 잠긴 빈 칸 — 가운데에 닫힌 자물쇠 [2026-09-29 사용자 지시 · SCREEN_DESIGN §6 · ADR-0425] — 탭 바 자물쇠와 같은 회색 · 칸 크기를 따라간다 */
+.sk-card .sk-lock { display: inline-flex; width: 45%; height: 45%; color: var(--text-muted); }
+.sk-card .sk-lock svg { width: 100%; height: 100%; }
+/* 스킬북 줄 [2026-09-29 · R179 · 서고 탭 SCREEN_DESIGN §17 · ADR-0422] — 한 줄 = 그림 + 이름 + 버튼 · ~~캐릭터 탭 스킬북 창~~ 은 걷혔다(ADR-0426) */
+.bk-box { display: flex; flex-direction: column; gap: 14px; font-size: var(--fs-sm); overflow-y: auto; padding-right: 4px; }
+.bk-sec { display: flex; flex-direction: column; gap: 6px; }
+.bk-row { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.bk-who { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.bk-ico { width: 38px; height: 38px; flex: none; background: var(--bg-input); border: 1px solid var(--border-dark); }
+.bk-ico.vacant { border-style: dashed; opacity: .55; }
+.bk-ico img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
+.bk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-err { flex: none; font-size: var(--fs-xs); }
+.bk-empty { font-size: var(--fs-xs); }
+.bk-cost { display: flex; gap: 10px; margin-left: auto; flex: none; color: var(--text-muted); font-size: var(--fs-xs); }
+.bk-cost b { color: var(--text-primary); font-weight: 600; }
+.bk-cost .down b { color: inherit; }
+/* 줄 끝 버튼은 글자가 달라도(만들기 · 보유 · 덮어쓰기) 폭이 같아 비용 열이 한 줄로 선다 — 라벨 칸이라 px 이 아니라 em */
+.bk-row > .btn { flex: none; min-width: 5.5em; }
+/* 서고 탭 패널 본문 [SCREEN_DESIGN §17 · ADR-0422] — 높이는 패널(박스)이 정한다 */
+.bk-box.lib-body { flex: 1 1 auto; min-height: 0; }
 
 /* ③ 아이템 — 열 수는 창 폭이 정한다. 데이터는 용량(INV_GRID.cap)만 지킨다 */
 .inv-cells.wide { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
@@ -3102,6 +3114,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 }
 .inv-check { top: 1px; font-size: var(--fs-xs); color: var(--color-warning); font-weight: 700; }
 .inv-lock { bottom: 2px; }
+/* 리포트 획득 격자의 스킬북 칸 배지 「책」 (§4-3 · ADR-0420) — 체크 배지 자리 · 색은 정보색 */
+.inv-check.book-tag { color: var(--info-fg); font-size: var(--fs-2xs); }
+.book-cell .inv-icon img { image-rendering: var(--face-render); }
 /* ───────── 창 레이어 (SCREEN_DESIGN §2 · §7) ─────────
    탭 위에 겹쳐 뜨는 판 하나. 툴팁(z-index 50)보다 아래에 둔다 — 창 안의 스킬 칸에도 툴팁이 떠야 한다.
    판은 자기 내용 폭을 쓰되 화면을 넘지 않는다(고정 px 금지 · ui/README 폭 정책). 세로가 모자라면 판 안에서만 스크롤한다 */
@@ -3225,6 +3240,19 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 산출 게이지 [2026-09-27 · §8] — 찬 칸 맨 아래 가는 줄 · 다음 1개까지 찬 비율. 폭은 앱 시계가 갈아 끼운다(`refreshDispatchBars`) */
 .dp-gauge { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(var(--veil-rgb), .7); }
 .dp-gauge > b { display: block; height: 100%; background: var(--color-success); }
+/* 단 이름 줄의 [자세히 보기] — 오른쪽 끝 (§8 · ADR-0415) */
+.dp-n .dp-watch { margin-left: auto; align-self: center; font-weight: normal; }
+/* 파견 관전 창 [2026-09-28 · ADR-0415 → 개정 2026-09-29 · ADR-0416 「원정 전투창처럼」] — **원정 관전의 부품 그대로**:
+   `battle-panel` › `arena`(챕터 배경) › 적 진영(대상 카드) · VS · 파티 진영(영웅 카드). 카드 · 바 · 팝업 · 타격 모션은 관전 규칙이 든다 —
+   여기엔 창의 크기와 카드 속 한 줄(`dpw-line`)만 둔다 */
+.modal-box.dpw-modal { width: min(1200px, 100%); }
+.dpw-panel { display: flex; flex-direction: column; padding: 0; border: 0; background: none; }
+/* 관전 판은 탭 본문의 남는 세로를 받는 구조(`flex: 1 1 0`)라 창 안에선 0 으로 접힌다 — 창은 높이를 제가 든다 */
+.dpw-panel > .battle-body { flex: none; }
+.dpw-panel .arena { flex: none; height: 480px; }
+.dpw-line { font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dpw-panel .act-fill { transition: width .2s linear; }
+.dpw-panel .bar.hp > i { transition: width .15s ease-out; }   /* 맞을 때만 준다 — 짧게 끊어 떨어진다 (ADR-0418) */
 /* 자리 칸의 선택 창 [2026-09-27 · SCREEN_DESIGN §8 · ADR-0373] — 칸 옆에 선다. 자리는 툴팁과 같은 **한 장 좌표**(`app.js:dpPickPanel` · `stageRect`)라
    `position: fixed` 가 한 장(#stage)에 붙는다. 깔개(`.dp-pick-back`)는 한 장 전체 — 바깥 클릭이 닫기다 */
 .dp-pick-back { position: fixed; inset: 0; z-index: 38; }
@@ -3916,9 +3944,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 무기는 **한 묶음으로 맨 윗줄을 혼자 쓴다**(사용자 지시 「무기도 3개만」 · ADR-0362) — 칸 간격은 아래 줄과 같다 */
 .td-group { display: grid; grid-auto-flow: column; grid-auto-columns: 60px; gap: 6px; }
 .td-group[data-part="weapon"] { grid-column: 1 / -1; }
-/* 맨 윗줄 = 무기 묶음 + **간격** + 물약 묶음 [2026-09-28 사용자 지시 「맨 위 칸 · 왼쪽 장비들과 일정 범위 떨어져서」 · §8-3] */
-.td-toprow { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 36px; }
-.td-toprow .td-group[data-part="weapon"] { grid-column: auto; }
+/* 장비 탭 두 열 — 왼쪽 장비 3 × 3 · **간격** · 오른쪽 열(맨 위 스킬북 셋 · 그 아래 물약 셋) [2026-09-29 사용자 지시 · ADR-0424 · §8-3].
+   간격은 09-28 물약 자리의 것(「왼쪽 장비들과 일정 범위 떨어져서」) · 오른쪽 열의 줄 간격은 장비 격자의 줄 간격과 같아 줄이 나란하다 */
+.td-split { display: flex; align-items: flex-start; gap: 36px; }
+.td-side { display: flex; flex-direction: column; gap: 8px; }
 .td-slot { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .td-slot .inv-icon { width: 44px; height: 44px; }
 /* 고른 칸 — 영웅 띠 · 관전 유닛 카드와 같은 **파란 겉 테두리**(§5). 테두리 색은 희귀도가 들고 있어 그 바깥에 선다 */

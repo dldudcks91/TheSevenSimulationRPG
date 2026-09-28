@@ -33,6 +33,9 @@ export const TARGETS = {
     explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
+    // 서고 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook`) · 기본 책 제작(`craftBook`).
+    //   ~~제련소 r5 `skill_card`~~ 줄은 걷었다(서고가 받는다 — 스킬 카드는 정의가 없어 대상만 남는다)
+    skillbook: U(true), book_craft: U(true),
     // 훈련 · 전직 — 준비 중이어도 짓는다(훈련장 r1 ~ r3 · 2026-09-28 사용자 지시). 기능이 서면 `live` 만 true 로
     training: { ...U(false), build: true }, advance: { ...U(false), build: true }, skill_depth: U(false),
     // 더하기 — 지금 있는 상한(`state.limitsOf` 의 키) · 단계

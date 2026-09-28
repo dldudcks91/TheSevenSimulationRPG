@@ -65,9 +65,9 @@ export const dropSig = it => [
     it.element ?? '-',                            // R80(2026-09-11) 부터 언제나 '-' — 생성 때 원소를 안 굴린다. 되살아나면 지문이 갈려 잡힌다
     it.implicit ? `${it.implicit.stat}:${it.implicit.v}`   // 개체 굴림 — 방어구 implicit 뿐이다
         : '-',                                    //         무기(R90 — 피해 범위는 굴리지 않고 무기군 · ilvl · 강화에서 파생) · 목걸이·반지는 소비 없음
-    // 무기가 담은 액티브 — 그 무기군의 직업 풀에서 개체마다 굴린다 (2026-09-09 · skill_design §12-1)
-    //   **목걸이는 발동 스킬** `trigger/skill:v` 를 같은 칸에 적는다 (2026-09-21 · R127 — 무기와 목걸이는 한 아이템이 둘 다 들 수 없다)
-    it.skill ?? (it.proc ? `${it.proc.trigger}/${it.proc.skill ?? '-'}:${it.proc.v}` : '-'),
+    // 스킬 칸 — ~~무기가 담은 액티브~~ 는 2026-09-29 R179 로 사라졌다(무기가 스킬을 안 담는다 · 무기는 언제나 '-').
+    //   **목걸이는 발동 스킬** `trigger/skill:v` 를 이 칸에 적는다 (2026-09-21 · R127)
+    it.proc ? `${it.proc.trigger}/${it.proc.skill ?? '-'}:${it.proc.v}` : '-',
     it.affixes.map(a => `${a.src ?? '-'}/${a.stat}:${a.v}`).join(';') || '-',   // 출처(고정 · 죄종 · 랜덤)도 적는다 — 층이 바뀐 회귀를 잡는다 (2026-09-11 R78)
 ].join('|');
 
@@ -180,6 +180,7 @@ function runFingerprint(SYS, B, NOW, seed, stage) {
         grew: grewSig(SYS, G),                                        // ⚠ resolveBattle **뒤**의 상태 (grantXp)
         tactics,
         drops: res.drops.map(dropSig),
+        books: res.books.join('|') || '-',                           // 떨어진 스킬북 — 처치당 1개를 장비와 나눠 쓴다 (2026-09-29 · R179 · 종류 굴림 1회)
         // 타임라인 전체의 지문 — 요약 필드가 못 보는 순서·값 변화를 잡는다.
         // 어디가 깨졌는지는 위 필드들이 말하고 이 값은 「달라졌다」만 말한다
         tl: csvHash(JSON.stringify(res.timeline)),

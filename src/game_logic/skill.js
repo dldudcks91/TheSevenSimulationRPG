@@ -11,8 +11,8 @@
  * skill_design.md / battle_design.md 확정 규칙:
  *   · **1스킬 = 1직업** (§12 확정 2026-09-08) — 스킬은 직업에 귀속되고 직업 사이에 겹치지 않는다.
  *     ~~고유 풀 = 직업 비종속 균등~~(09-01)과 ~~무기군이 스킬의 종류를 정한다~~(§2-1) 둘 다 폐기됐다.
- *     배정은 **출처 셋이 각각 하나씩** 주고(§2) 두 출처(고유 · 무기)는 **직업 풀**에서 온다 — 고유는 영웅의 직업 · 무기는 그 무기군이 지정한 직업(2026-09-10 §12-1 규칙 2 · 3):
- *     고유는 영웅이 태어날 때 굴린 것(`hero.innate`) · 무기는 **무기 개체가 든 것**(`ctx.weaponSkill`)이다.
+ *     배정은 **출처 셋이 각각 하나씩** 준다(§2): 고유는 영웅이 태어날 때 제 직업 풀에서 굴린 것(`hero.innate`) ·
+ *     **배운 스킬은 스킬북으로 배운 것**(`hero.bookSkill` — 2026-09-29 · R179 · §2-1 · ~~무기 개체가 든 것 `ctx.weaponSkill`~~) · 전직은 배운 전직 스킬(`hero.advanceSkill`).
  *     총 칸 수는 [balance.csv:active_slots] 에서 자른다
  *   · 발동(battle_design §3) — 준비된 것 중 `readyAt` 최소(가장 오래 기다린 것) → 동률이면 **칸 순서**.
  *     없으면 기본 공격. **한 차례에 하나**
@@ -23,14 +23,12 @@
  *     정의·검증만 여기서 하고 **전투 로직은 태그를 읽지 않는다** — 소비자는 전술카드 조건 · 변형 노드 · 화면
  *
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
- *   배정 출처: **칸은 출처가 정한다** (§2 — 고유 / 무기 / 전직).
- *     · 고유 — 영웅이 생성 시 **제 직업 풀**에서 하나를 굴려 온다(hero.rollInnate · §12-1 규칙 1)
- *     · 무기 — **무기 개체가 든 스킬**(`item.skill`)이다. 그 무기군의 직업 풀에서 드롭 때 굴린 것이고,
- *       무기를 바꾸면 이 칸이 통째로 바뀐다. 출처 id 는 `weapon_group` 을 그대로 쓴다 —
- *       무기군이라는 **어휘는 죽었지만 키는 산다**(R39 와 같은 취급 · 화면 라벨은 이미 「무기」다)
- *     · 전직 — **전직 시스템이 없다**(R16 미반영). 찍은 것이 없으므로 이 칸은 언제나 빈다(R52)
- *   두 출처가 같은 풀에서 오면 고유와 무기가 같은 스킬일 수 있다 — **겹쳐도 칸은 둘이고 쿨도 둘이다**
- *     (§12-1 규칙 3 · 2026-09-09 R66 — ~~앞선 출처만 남아 칸이 하나로 준다~~ 폐기).
+ *   배정 출처: **칸은 출처가 정한다** (§2 — 고유 / 배운 스킬 / 전직).
+ *     · 고유 — 영웅이 생성 시 **제 직업 풀**에서 하나를 굴려 온다(hero.rollInnate · §12-1 규칙 1 · 첫 파티는 기본기 풀 — 2026-09-29)
+ *     · 배운 스킬 — **스킬북으로 배운 것**(`hero.bookSkill` · source `book`) [2026-09-29 · R179 — ~~무기 개체가 든 스킬 `item.skill` · source `weapon_group`~~ 대체]
+ *     · 전직 — 배운 전직 스킬(`hero.advanceSkill` · 2026-09-28 R16) · 몬스터 보스는 `ctx.thirdSkill`
+ *   고유와 같은 스킬의 책을 배우면 **칸은 둘이고 쿨도 둘이다**
+ *     (§12-1 규칙 3 · 2026-09-09 R66 — ~~앞선 출처만 남아 칸이 하나로 준다~~ 폐기 · 2026-09-29 무기 → 책으로 옮겨 산다).
  *   **직업 풀 37 이 전부 발행됐다** (2026-09-09 · DEV_PLAN R61) — 다만 다섯은 **근사**다:
  *     오오라(칸 순서 첫 하나를 전투 시작에 자동으로 켠다 — 고르는 화면이 없다) ·
  *     「라운드 종료까지」(창 999초 + 라운드마다 적 배열이 갈리는 것으로 근사) ·
@@ -69,7 +67,7 @@ const EPS = 1e-9;
 // 스킬은 **직업 · 전직 · 유니크** 셋으로 나뉜다 [사용자 확정 2026-09-09 · skill_design §12].
 //   ~~`weapon_group`~~ 은 무기군 고정 폐기(§12-1 규칙 2)로 어휘에서 빠졌다 — 무기는 스킬의 **그릇**이지 출처가 아니다.
 //   지금 발행된 행은 전부 `job`(37 중 엔진 어휘로 도는 22) · `advance`·`unique` 는 미발행이다
-// `monster` = **몬스터 전용** [2026-09-18 · skill_design §12-9] — 영웅 고유 풀 · 무기 스킬 · 보스 셋째 칸은 전부 `job` 행만 읽어 여기 안 든다
+// `monster` = **몬스터 전용** [2026-09-18 · skill_design §12-9] — 영웅 고유 풀 · 보스 셋째 칸은 전부 `job` 행만 읽어 여기 안 든다 · **스킬북도 안 떨군다**(영웅이 못 배운다 · 2026-09-29 R179)
 const OWNER_KINDS = ['job', 'advance', 'unique', 'monster'];
 // cast · effect · target · 걸린 효과의 stat · cast_condition 은 skill_effects.js 등록표의 키를 그대로 쓴다 (import 참조)
 /**
@@ -298,9 +296,9 @@ export function createSkillSystem(data) {
         if (row.amulet_pool !== 0 && row.amulet_pool !== 1) bad(`amulet_pool ${row.amulet_pool} — 0 또는 1`);
         if (row.amulet_pool === 1 && (d.ownerKind === 'monster' || d.cast !== 'turn' || d.effects.some(e => e.effect === 'summon' || e.effect === 'call')))
             bad(`amulet_pool 1 인데 ${d.ownerKind} · ${d.cast} · ${d.effects.map(e => e.effect).join('+')} — 발동 스킬 후보가 될 수 없다`);
-        // 시작 무기 스킬 후보 [2026-09-27 사용자 지시 · hero_design §1] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
+        // 직업 기본기 [2026-09-27 · 2026-09-29 R179 — 첫 파티의 고유 · 서고 기본 책 · ~~시작 무기 스킬~~] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
-        if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 시작 무기 후보는 직업 스킬만`);
+        if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
     }
@@ -477,15 +475,15 @@ export function createSkillSystem(data) {
      * 배정 단위는 id 가 아니라 **인스턴스** `{id, source}` 다 — 같은 스킬이라도 어디서 왔는지가 화면의 입력이고,
      *   변형 노드가 붙으면 칸마다 덧씌울 것이 생긴다(정의 객체는 공유물이라 손대면 안 된다 — `resolve` 참조).
      * hero 를 통째로 받는 이유: 전직 출처가 붙어도 이 함수 안만 바뀌게 하려는 것.
-     * @param ctx.weaponSkill 착용 무기 개체가 든 스킬 id — **아이템을 아는 쪽(state.js)이 넘긴다.**
-     *        이 모듈은 장비를 모른다. 안 넘기면 그 칸이 빈다(맨손과 구분되지 않는다 — 넘기는 쪽의 책임)
+     * ~~@param ctx.weaponSkill 착용 무기 개체가 든 스킬 id~~ — **2026-09-29 폐지 · R179** (skill_design §2-1) — 둘째 칸은 `hero.bookSkill`(책으로 배운 것)이다
      * @param hero.skillOrder [skillId] — 플레이어가 정한 칸 순서(선택 필드). 지금은 아무도 싣지 않아 기본 순서가 곧 결과다
      */
     const activesFor = (hero, ctx = {}) => {
         // 정의에 없는 id(행이 지워진 옛 세이브)는 **빈 고유 칸**으로 친다 — 던지면 세이브를 못 연다
         const innate = hero?.innate && defs[hero.innate] ? { id: hero.innate, source: 'innate' } : null;
-        // 무기 — **무기 개체가 든 스킬**이다 (§12-1 규칙 3). 무기를 바꾸면 이 칸이 바뀌고 맨손이면 빈 칸이다
-        const wg = ctx.weaponSkill && defs[ctx.weaponSkill] ? defs[ctx.weaponSkill] : null;
+        // 배운 스킬 — **스킬북으로 배운 것**이다 [2026-09-29 · R179 · skill_design §2-1 — ~~무기 개체가 든 스킬(`ctx.weaponSkill`)~~ 대체].
+        //   영웅에 박혀 무기를 바꿔도 안 바뀐다 · 몬스터는 안 든다(정예 둘째 칸은 비어 있다 — monster_design §5-1) · 정의에 없는 id(행이 걷힌 옛 세이브)는 빈 칸
+        const bk = hero?.bookSkill && defs[hero.bookSkill] ? defs[hero.bookSkill] : null;
         // 셋째 칸 — **몬스터 보스가 쓰는 자리**다 [신설 2026-09-11 · R79 · monster_design §5-1]. 영웅 경로는 이것을 안 넘긴다
         //   영웅은 **배운 전직 스킬**이 이 칸이다(`hero.advanceSkill` · 2026-09-28 R16) — 정의에 없는 id(행이 걷힌 옛 세이브)는 빈 칸
         const thirdId = ctx.thirdSkill ?? (hero?.advanceSkill && defs[hero.advanceSkill]?.ownerKind === 'advance' ? hero.advanceSkill : null);
@@ -494,7 +492,7 @@ export function createSkillSystem(data) {
         //   비어 있는 출처는 자리를 남기지 않고 빠진다(전투는 든 것만 돌린다). 어느 출처인지는 `source` 가 말한다
         const base = [
             innate,
-            wg ? { id: wg.id, source: 'weapon_group' } : null,
+            bk ? { id: bk.id, source: 'book' } : null,
             // 전직 — **찍은 하나뿐이다. 안 찍었으면 이 칸은 비어 있다** [사용자 확정 2026-09-08 · §2].
             //   전직 시스템이 없어(R16 미반영 · 해금 레벨 [balance.csv:advance_unlock_level]) 아무도 못 찍었으므로
             //   **지금은 언제나 빈 칸**이고, 화면은 그 칸을 「전직 전」으로 그린다(`sk.emptyAdvance`).

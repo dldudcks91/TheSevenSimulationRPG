@@ -11,8 +11,10 @@
  *
  *   ?mode=stage&seeds=1-50&stages=101&strip=0|1
  *       시드마다 새 게임 → 앞 스테이지 해금만 → 그 스테이지 한 판. `strip=1` 이면 출발 전에 파티 장비를 전부 벗긴다
- *   ?mode=campaign&seeds=1-20&runs=30&bot=greedy|off
- *       시드마다 게임 하나로 원정을 `runs` 번 잇는다 — 매번 아직 못 깬 첫 스테이지. 판이 끝날 때마다 봇이 장착하고 남은 가방은 분해한다
+ *   ?mode=campaign&seeds=1-20&runs=30&bot=greedy|off[&until=105][&mastery=1][&potion=1]
+ *       시드마다 게임 하나로 원정을 `runs` 번 잇는다 — 매번 아직 못 깬 첫 스테이지. 판이 끝날 때마다 봇이 장착하고 남은 가방은 분해한다.
+ *       시간 = 판마다 `durationSec` + [balance.csv:repeat_restart_sec] 를 쌓는다 — 스테이지별 **첫 클리어 시각 · 도착 레벨**을 낸다.
+ *       `until` = 그 스테이지를 깨면 그 시드를 멈춘다 · `mastery=1` = 판마다 포인트를 찍는다 · `potion=1` = 판마다 골드로 물약을 산다
  */
 
 import { loadData, buildSystems, D } from '../ui/data.js';
@@ -49,6 +51,27 @@ const BOT = {
         + '가장 많이 오르는 영웅에게 끼고, 안 올라도 그 자리가 비어 있으면 낀다. 벗은 것 · 남은 가방은 분해한다',
     off: '장착하지 않는다 · 가방은 분해한다',
 };
+const BOT_MASTERY = '판마다 파티 영웅의 포인트를 masteryState 노드 순서대로 찍을 수 있는 첫 칸에 전부 찍는다';
+const BOT_POTION = '판마다 상단 물약 중 살 수 있는 가장 높은 단계를 골드가 모자랄 때까지 산다(상단이 안 지어졌으면 안 산다)';
+
+function botMastery(SYS, G) {
+    let n = 0;
+    for (const h of partyHeroes(SYS, G)) {
+        for (;;) {
+            const node = SYS.game.masteryState(G, h.uid)?.nodes.find(x => x.canLearn);
+            if (!node || !SYS.game.learnMastery(G, h.uid, node.id).ok) break;
+            n++;
+        }
+    }
+    return n;
+}
+
+function botPotion(SYS, G) {
+    let n = 0;
+    const list = (SYS.game.shopState(G, NOW)?.potions ?? []).slice().sort((a, b) => b.tier - a.tier);
+    for (const p of list) while (SYS.game.shopPotionBuy(G, p.id).ok) n++;
+    return n;
+}
 const ASSUME = [
     '시작 파티 그대로 — 고용 · 해고 · 수색 없음',
     '마스터리 포인트를 안 쓴다 · 전술 리롤 · 강화 · 제작 · 크래프트 없음',
@@ -142,26 +165,57 @@ function stageSummary(rows, seeds) {
 
 /* ── campaign — 한 게임으로 원정을 잇는다 ── */
 
-function runCampaign(SYS, B, seeds, runs, bot) {
+function runCampaign(SYS, B, seeds, runs, bot, opt = {}) {
     const rows = [];
     for (const seed of seeds) {
         const G = newGameFull(SYS, B, seed);
         const classes = partyHeroes(SYS, G).map(h => h.cls);
+        let t = 0;                                   // 누적 초 — 판 시간 + 재출발
         for (let n = 1; n <= runs; n++) {
             const stageId = D.stageOrder.find(id => !G.progress.cleared.includes(id)) ?? D.stageOrder[D.stageOrder.length - 1];
+            const lvBefore = avg(partyHeroes(SYS, G), h => h.level);
             const r = SYS.game.resolveBattle(G, stageId, NOW);
             if (!r.ok) throw new Error(`sim: seed ${seed} run ${n} stage ${stageId} — ${r.err}`);
             const rp = r.report;
+            t += rp.durationSec + B.repeat_restart_sec;
             const equips = bot === 'greedy' ? botEquip(SYS, G) : 0;
             const salvaged = salvageBag(SYS, G);
+            const learned = opt.mastery ? botMastery(SYS, G) : 0;
+            const potions = opt.potion ? botPotion(SYS, G) : 0;
             rows.push({
-                seed, n, classes, stageId, won: rp.won, cleared: rp.roundsCleared,
-                drops: rp.drops.length, discarded: rp.discarded, equips, salvaged,
+                seed, n, classes, stageId, won: rp.won, cleared: rp.roundsCleared, sec: rp.durationSec, t: r2(t), lvBefore: r2(lvBefore),
+                drops: rp.drops.length, discarded: rp.discarded, equips, salvaged, learned, potions,
                 reached: G.progress.cleared.length, levels: sum(partyHeroes(SYS, G), h => h.level), dealt: dealtOf(rp),
             });
+            if (opt.until != null && G.progress.cleared.includes(opt.until)) break;
         }
     }
     return rows;
+}
+
+const pctl = (xs, p) => {
+    if (!xs.length) return null;
+    const s = xs.slice().sort((a, b) => a - b);
+    return s[Math.min(s.length - 1, Math.floor(p * (s.length - 1) + 0.5))];
+};
+
+/** 스테이지별 — 첫 클리어 누적 분(중앙 · 빠른 1/4 · 느린 1/4) · 못 깬 시드 · 첫 도전 때 평균 레벨 · 판 수 · 한 판 승률 */
+function stageTimes(rows, seeds) {
+    const out = {};
+    for (const id of D.stageOrder) {
+        const tries = rows.filter(r => r.stageId === id);
+        if (!tries.length) continue;
+        const firstClear = seeds.map(s => tries.find(r => r.seed === s && r.won)).filter(Boolean);
+        const firstTry = seeds.map(s => tries.find(r => r.seed === s)).filter(Boolean);
+        const mins = firstClear.map(r => r.t / 60);
+        out[id] = {
+            tried: firstTry.length, clearedSeeds: firstClear.length,
+            medMin: r2(pctl(mins, 0.5)), q1Min: r2(pctl(mins, 0.25)), q3Min: r2(pctl(mins, 0.75)),
+            arriveLv: r2(avg(firstTry, r => r.lvBefore)), clearLv: r2(avg(firstClear, r => r.levels / 3)),
+            runsPerSeed: r2(tries.length / Math.max(1, firstTry.length)), winPct: r2(100 * avg(tries, r => r.won ? 1 : 0)),
+        };
+    }
+    return out;
 }
 
 function campaignSummary(rows, seeds, runs) {
@@ -180,6 +234,7 @@ function campaignSummary(rows, seeds, runs) {
         all: pack(rows),
         halves: [pack(rows.filter(r => first.has(r.seed))), pack(rows.filter(r => !first.has(r.seed)))],
         curve: marks.map(m => ({ run: m, reached: r2(avg(rows.filter(r => r.n === m), r => r.reached)) })),
+        stages: stageTimes(rows, seeds),
     };
 }
 
@@ -204,7 +259,10 @@ function renderCampaign(s) {
         ['', 'seeds', 'reached', 'wins/seed', 'levels', 'drops', 'equips', 'equip %', 'discarded'],
         [['all', s.all], ['seeds 1st half', s.halves[0]], ['seeds 2nd half', s.halves[1]]].map(([k, p]) =>
             [k, p.seeds, p.reached, p.winsPerSeed, p.levels, p.drops, p.equips, p.equipPct, p.discarded]),
-    ) + table(['run', 'avg reached'], s.curve.map(c => [c.run, c.reached]));
+    ) + table(['run', 'avg reached'], s.curve.map(c => [c.run, c.reached]))
+      + '<h2>stage times (cumulative min to first clear)</h2>' + table(
+        ['stage', 'tried', 'cleared', 'median', 'fast 1/4', 'slow 1/4', 'arrive Lv', 'clear Lv', 'runs/seed', 'win %'],
+        Object.entries(s.stages).map(([id, v]) => [id, v.tried, v.clearedSeeds, v.medMin, v.q1Min, v.q3Min, v.arriveLv, v.clearLv, v.runsPerSeed, v.winPct]));
 }
 
 const head = document.getElementById('head');
@@ -228,10 +286,17 @@ try {
         const runs = Math.max(1, Number(q.get('runs') ?? 30) | 0);
         const bot = q.get('bot') ?? 'greedy';
         if (!BOT[bot]) throw new Error(`sim: bot=${bot} 은 없다 — ${Object.keys(BOT).join(' | ')}`);
-        rows = runCampaign(SYS, B, seeds, runs, bot);
+        const opt = {
+            until: q.get('until') != null ? Number(q.get('until')) : null,
+            mastery: q.get('mastery') === '1', potion: q.get('potion') === '1',
+        };
+        if (opt.until != null && !D.stageOrder.includes(opt.until)) throw new Error(`sim: until=${opt.until} 이 stage.csv 에 없다`);
+        rows = runCampaign(SYS, B, seeds, runs, bot, opt);
         summary = campaignSummary(rows, seeds, runs);
         html = renderCampaign(summary);
-        meta = { mode, seeds: `${seeds[0]}..${seeds[seeds.length - 1]} (${seeds.length})`, runs, botName: bot, bot: BOT[bot] };
+        meta = { mode, seeds: `${seeds[0]}..${seeds[seeds.length - 1]} (${seeds.length})`, runs, botName: bot,
+            bot: [BOT[bot], opt.mastery && BOT_MASTERY, opt.potion && BOT_POTION].filter(Boolean).join(' · '), until: opt.until,
+            time: '판마다 durationSec + repeat_restart_sec 누적 — 편성 · 장착 · 화면 조작 시간은 0' };
     } else {
         throw new Error(`sim: mode=${mode} 은 없다 — stage | campaign`);
     }
