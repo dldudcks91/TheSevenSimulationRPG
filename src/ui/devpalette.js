@@ -1,7 +1,10 @@
 /**
- * devpalette.js — 개발용 색 피커 (SCREEN_DESIGN §10-1)
+ * devpalette.js — 상단바 오른쪽 끝 `⚙` 판 (SCREEN_DESIGN §2-2 · §10-1 · ADR-0414)
  *
- * 상단바 오른쪽 끝 `⚙` 을 누르면 열리는 판. 배경 RGB · 글자 3단 · 투명도 3축을 실시간으로 바꿔 보고,
+ * 판 머리에 **탭 둘** — **설정**(게임 기능 — 스킬 이펙트 · 피격 반응. 탭 이름과 속은 app.js 가 넘긴다 · 다국어) ·
+ *   **Palette**(개발용 색 피커). 열면 설정 탭이고 페이지를 연 동안은 마지막 탭으로 연다. 판은 창 레이어가 아니다 — `⚙` 이나 × 로만 여닫는다.
+ *
+ * **Palette** — 배경 RGB · 글자 3단 · 투명도 3축을 실시간으로 바꿔 보고,
  * 맘에 드는 값이 나오면 그 자리에서 `style.css` 에 붙여 넣을 줄을 뽑는다. **게임 기능이 아니다.**
  *
  * 어떻게 동작하나 — `style.css:root` 의 **표면 계단**(`--surface-0`~`--surface-7`) · 채널 변수 · 투명도 토큰을
@@ -12,10 +15,10 @@
  *   DOM 에서 사라져 **드래그가 끊긴다**(2026-09-14 사용자 보고). 판은 열 때 한 번만 만들고,
  *   그 뒤로는 `syncPanel()` 이 숫자칸 · 견본 · CSS 칸의 **값만** 갈아 끼운다.
  *
- * ⚠ 스타일을 `style.css` 가 아니라 이 파일 안에 넣었다 — **개발 장치는 한 파일로 끝나야 지우기 쉽다.**
- *    걷어내려면 이 파일과 `app.js` 의 import 한 줄만 지우면 된다.
+ * ⚠ 판 · 탭의 스타일을 `style.css` 가 아니라 이 파일 안에 넣었다(설정 탭 속의 모양만 style.css `.set-box`).
+ *    ⚠ 색 피커를 걷을 때는 **이 파일을 지우지 않고 Palette 탭만** 걷는다 — 판 · 탭 틀 · 설정 탭이 여기 산다 (ADR-0414).
  *
- * ⚠ 문구는 전부 영어 · 기호다. 다국어 대상이 아니다(유저에게 안 보인다).
+ * ⚠ Palette 탭의 문구는 전부 영어 · 기호다(개발 장치 · 다국어 대상이 아니다). 설정 탭의 이름 · 속은 app.js 가 `t()` 로 넘긴다.
  */
 
 const KEY = 'devPalette';
@@ -119,6 +122,8 @@ let DEFAULTS = null;   // 한 번만 읽는다 — 덮어쓴 뒤에 읽으면 �
 let state = null;
 let panel = null;
 let ui = null;         // 판 안의 노드 참조 — 다시 그리지 않으므로 계속 살아 있다
+let settings = null;   // 설정 탭 { label, body } — app.js 가 상단바를 그릴 때마다 넘긴다(언어가 바뀌면 새 이름)
+let tab = 'set';       // 열 탭 — 열면 설정 · 페이지를 연 동안은 마지막에 고른 탭
 
 /** 부팅 직후 1회 — 저장된 값이 있으면 되살린다 */
 export function initDevPalette() {
@@ -129,16 +134,19 @@ export function initDevPalette() {
     if (saved) apply(DEFAULTS, state);
 }
 
-/** 상단바가 다시 그려질 때마다 호출된다 — 버튼은 매번 새로 붙는다 (app.js 의 전체 다시 그림) */
-export function mountDevPalette(container) {
+/** 상단바가 다시 그려질 때마다 호출된다 — 버튼은 매번 새로 붙는다 (app.js 의 전체 다시 그림).
+    `set` = 설정 탭 { label, body() } — 판이 열려 있으면 설정 탭만 새로 선다(언어 · 값). 슬라이더는 안 건드린다 */
+export function mountDevPalette(container, set = null) {
     initDevPalette();
     injectStyle();
+    settings = set;
     const b = document.createElement('button');
     b.className = 'btn sm dp-btn';
     b.textContent = '⚙';
-    b.title = 'Dev palette — background / text / opacity';
+    b.title = settings?.label ?? 'Dev palette — background / text / opacity';
     b.onclick = () => togglePanel();
     container.appendChild(b);
+    refreshSettings();
 }
 
 function togglePanel() {
@@ -169,8 +177,12 @@ function sliderRow(d) {
 }
 
 function buildPanel() {
+    if (!settings) tab = 'pal';
+    // 탭 둘은 **열 때 한 번** 만들고 고를 때는 숨기기만 한다 — Palette 탭을 다시 그리면 드래그가 끊긴다(위 ⚠)
     panel.innerHTML = `
-        <div class="dp-h">Dev palette<button class="dp-x" title="close">×</button></div>
+        <div class="dp-h"><span class="dp-tabs">${settings ? '<button class="dp-tab" data-tab="set"></button>' : ''}<button class="dp-tab" data-tab="pal">Palette</button></span><button class="dp-x" title="close">×</button></div>
+        ${settings ? '<div class="dp-pane dp-set" data-pane="set"></div>' : ''}
+        <div class="dp-pane" data-pane="pal">
         <div class="dp-sec">BACKGROUND</div>
         <label class="dp-row dp-pick"><span class="dp-k">#</span>
             <input type="color" class="dp-color"><output class="dp-hexout"></output></label>
@@ -182,7 +194,8 @@ function buildPanel() {
         <div class="dp-rows" data-sec="op"></div>
         <div class="dp-sec">CSS</div>
         <textarea class="dp-out" readonly rows="7" spellcheck="false"></textarea>
-        <div class="dp-foot"><button class="btn sm dp-reset">Reset</button></div>`;
+        <div class="dp-foot"><button class="btn sm dp-reset">Reset</button></div>
+        </div>`;
 
     const rows = SLIDERS.map(sliderRow);
     rows.forEach(r => panel.querySelector(`.dp-rows[data-sec="${r.def.sec}"]`).appendChild(r.wrap));
@@ -205,7 +218,27 @@ function buildPanel() {
     panel.querySelector('.dp-reset').onclick = () => {
         state = freshState(DEFAULTS); clear(); save(state); syncPanel();
     };
+    panel.querySelectorAll('.dp-tab').forEach(b => { b.onclick = () => { tab = b.dataset.tab; showTab(); }; });
+    refreshSettings();
+    showTab();
     syncPanel();
+}
+
+/** 고른 탭만 보인다 — 숨기기만 하고 다시 만들지 않는다 */
+function showTab() {
+    if (!panel) return;
+    panel.querySelectorAll('.dp-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+    panel.querySelectorAll('.dp-pane').forEach(p => { p.hidden = p.dataset.pane !== tab; });
+}
+
+/** 설정 탭 — 이름과 속을 새로 세운다. 줄 둘뿐이라 통째로 다시 만들어도 끊길 드래그가 없다 */
+function refreshSettings() {
+    if (!panel || !settings) return;
+    const t = panel.querySelector('.dp-tab[data-tab="set"]');
+    const pane = panel.querySelector('.dp-pane[data-pane="set"]');
+    if (!t || !pane) return;
+    t.textContent = settings.label;
+    pane.replaceChildren(settings.body());
 }
 
 /**
@@ -259,6 +292,12 @@ function injectStyle() {
     max-height: calc(100vh - 72px); overflow-y: auto;
 }
 .dp-h { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 8px; }
+/* 탭 둘 — 설정 · Palette (ADR-0414). 고른 탭이 밝다 */
+.dp-tabs { display: flex; gap: 4px; }
+.dp-tab { background: none; border: 1px solid #444; color: #999; font: inherit; padding: 3px 10px; cursor: pointer; }
+.dp-tab.on { color: #fff; border-color: #888; background: #1d1d1d; }
+.dp-pane[hidden] { display: none; }
+.dp-set { padding: 4px 0 2px; }
 .dp-x { background: none; border: 0; color: #aaa; font-size: 17px; line-height: 1; cursor: pointer; }
 .dp-sec { color: #888; letter-spacing: 1px; font-size: 10px; margin: 10px 0 5px; }
 .dp-hint { color: #666; font-style: normal; letter-spacing: 0; }

@@ -35,7 +35,7 @@ xp_rate,1,proposed,1,전투 XP 합 → 영웅 각자 지급 배율 (그 라운�
 monster_xp_base,40,proposed,1,처치 XP 의 레벨 1 기준값 — 처치 XP = monster_xp_base × monster_xp_growth ^ (몬스터 레벨 − 1) × spawn_grade.exp_mult × monster.csv:exp_coef. 몬스터 레벨 = stage.csv:dlvl 이라 레벨과 등급이 같으면 몬스터가 달라도 XP 가 같다 · 골드도 이 값에서 나온다 (monster_design §7 · DEV_PLAN R85) (2026-09-14 발행)
 monster_xp_growth,1.06,proposed,1,처치 XP 의 레벨당 배율 — 몬스터 레벨이 1 오르면 이만큼 곱한다. power_growth_per_level 과 같은 값에서 시작했다(몬스터가 약한 만큼 XP 도 적어 낮은 스테이지를 돌 이득이 없다) · 키는 따로다 (2026-09-14 발행)
 unarmed_atk,1.5,proposed,0,무기 없을 때 기본 데미지 (2026-08-25 초반 루프 구현하면서 발생)
-unarmed_period,2.6,proposed,0,무기 없을 때 행동 주기(초) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-25 사용자 「공격속도 절반」 — 전 무기 주기 ×2 에 맞춰 1.3 → 2.6 · 안 올리면 맨손이 모든 무기보다 빨라진다)
+unarmed_period,2.0,proposed,0,무기 없을 때 행동 주기(초) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-25 사용자 「공격속도 절반」 — 전 무기 주기 ×2 에 맞춰 1.3 → 2.6 · 안 올리면 맨손이 모든 무기보다 빨라진다) (2026-09-28 사용자 「30% 정도만 올려보자」 — 전 무기 공격 속도 ×1.3 에 맞춰 2.6 → 2.0 · 가장 빠른 본편 무기와 같다)
 weapon_atk_base,3.34,proposed,1,무기 피해 범위의 **가운데** — 가운데 = base x power_growth_per_level ^ (ilvl-1) · 양끝 = 가운데 x (1 ∓ 타격 범위 폭) x 강화 배율(정수 반올림) · ~~x 개체 편차~~ 2026-09-14 폐지(R90 — 직격마다 범위를 굴린다). **밑수다** — 다른 슬롯의 고정 데미지를 여기 더하지 않는다 (battle_design §9-1) (2026-09-01 한손 개념 폐지 — 폐기한 two_hand_atk_mult 1.45 를 흡수해 2.3 → 3.34. 이제 전 무기가 양손이라 배율이 전역 상수가 됐다) (2026-08-26 수치 대역 재설계)
 weapon_atk_band_levels,10,fixed,0,무기 피해 구간 폭(레벨) [2026-09-15 사용자 확정 · R105] — 구간 b = floor((ilvl−1)/이 값)+1 · 체력(hero_hp_band_levels)과 같은 폭이다
 weapon_atk_band1_unit,0.35,proposed,1,무기 피해 가운데의 구간 1 레벨업 1회 상승분 ⚠제안 — 레벨 1 처치 타수를 전 구간 유지하도록 역산(체력 구간 단위 × 몬스터 건강 계수 × weapon_atk_base/monster_hp_base) (2026-09-16)

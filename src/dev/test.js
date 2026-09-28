@@ -5773,6 +5773,34 @@ check('battle: 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이
     if (Math.abs(up / xa - B.monster_xp_growth) > 1e-9) fail(`레벨 +1 배율 ${up / xa} ≠ monster_xp_growth ${B.monster_xp_growth}`);
     return `${a.monster_idx}(${a.chapter}장) = ${b.monster_idx}(${b.chapter}장) = ${xa.toFixed(2)} @Lv${lvl} · Lv${lvl + 1} ×${B.monster_xp_growth}`;
 });
+/*
+ * **몬스터 레벨 = 스테이지 레벨 + `monster.csv:level_add`** [2026-09-28 · 사용자 「사탄만 13」 · monster_design §7 · INTERFACE §2-6].
+ *   가산이 있는 몬스터는 **레벨을 더 준 가산 0 몬스터와 전투 유닛이 같아야** 한다(레벨 · HP · 처치 XP) — 가산이 다른 길로 새지 않는다.
+ *   입은 장비는 스테이지 레벨로 굴린다 — 드롭 ilvl 이 가산을 타면 챕터 레벨대(제작 · 상단)를 건너뛴 장비가 떨어진다
+ */
+check('battle: 몬스터 레벨 = 스테이지 레벨 + level_add — 전투 유닛은 더한 레벨 · 입은 장비는 스테이지 레벨 (monster_design §7 · 2026-09-28)', () => {
+    const bad = Object.values(D.monsters).filter(m => !(Number.isInteger(m.level_add) && m.level_add >= 0)).map(m => m.monster_idx);
+    if (bad.length) fail(`level_add 가 0 이상 정수가 아닌 몬스터: ${bad.join(', ')}`);
+    const boss = Object.values(D.monsters).find(m => m.level_add > 0);
+    if (!boss) fail('level_add 가 있는 몬스터가 없다 — 이 단정이 헛돈다');
+    const id = boss.monster_idx, grade = boss.spawn_grade, add = boss.level_add, lvl = 10;
+    const e = SYS.battle.makeEnemy('e0', id, grade, lvl);
+    let plain;
+    try { boss.level_add = 0; plain = SYS.battle.makeEnemy('e1', id, grade, lvl + add); } finally { boss.level_add = add; }
+    for (const k of ['lvl', 'hpMax', 'expReward', 'regen']) if (e[k] !== plain[k]) fail(`${k}: 가산 ${e[k]} ≠ 레벨 ${lvl + add} ${plain[k]}`);
+    if (e.lvl !== lvl + add) fail(`lvl ${e.lvl} ≠ ${lvl} + ${add}`);
+    // 스폰 — 그 몬스터가 보스로 서는 스테이지 한 판의 첫 라운드
+    const st = D.stageList.find(s => s.boss_monster_idx === id);
+    if (!st) fail(`${id} 가 보스인 스테이지가 없다`);
+    const r = SYS.battle.simulate(units(), st.stage_id, makeRng(1));
+    const u = r.timeline.filter(ev => ev.e === 'round').flatMap(ev => ev.enemies).find(x => x.monsterId === id);
+    if (!u) fail(`스테이지 ${st.stage_id} 에 ${id} 가 안 섰다`);
+    if (u.sheet.level !== st.dlvl + add) fail(`sheet.level ${u.sheet.level} ≠ dlvl ${st.dlvl} + ${add}`);
+    const want = st.dlvl + D.grades[grade].gear_ilvl_add;
+    const off = u.gear.filter(it => it.ilvl !== want);
+    if (off.length) fail(`입은 장비 ilvl ${off.map(it => it.ilvl).join(',')} ≠ 스테이지 레벨 ${st.dlvl} + 등급 가산 = ${want}`);
+    return `${id} +${add} · 레벨 ${lvl} → ${e.lvl} · hp ${e.hpMax} · XP ${e.expReward.toFixed(1)} · ${st.stage_id} 에서 Lv${u.sheet.level} · 장비 ilvl ${want}`;
+});
 check('runtime: refreshDerived — 같은 stat 의 창은 덧셈이고 창이 사라지면 원값이 돌아온다 (battle_design §9-2)', () => {
     const u = rtUnit('p0', 'party', { atkMin: 200, atkMax: 400, atkMinBase: 100, atkMaxBase: 200, atkPct: 1 });   // 상시 100%(비율 1)가 이미 곱해진 상태 · 양끝 둘 다 (R90 · R111)
     u.buffs = { a: { stat: 'atk_pct', v: 0.25, until: 9 }, b: { stat: 'atk_pct', v: 0.15, until: 9 } };

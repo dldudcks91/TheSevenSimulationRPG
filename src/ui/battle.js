@@ -42,7 +42,7 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
-import { fxHit, fxStrike, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 세 단계 — 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0406)
+import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 = 스킬 이펙트(기본 On) + 피격 반응(기본 Off) — 둘 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414)
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -130,6 +130,7 @@ export function mountBattle(container, opts) {
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
+    fxPreload();   // 스킬 이펙트 그림을 미리 읽는다 — 지금은 그림이 꺼져 있어 아무것도 안 한다 (ADR-0411 · ADR-0412)
     const dom = buildDom(state, stage, stageId);
     container.appendChild(dom);
     bindControls(state, container, opts);
@@ -772,27 +773,19 @@ const dmgFace = u => {
 /* 로그의 물약 줄 그림 — 그 물약의 그림 하나. 없으면 빈 칸이다(칸의 병 실루엣은 「여기에 물약이 들어간다」는 칸의 말이라 로그에 안 빌린다) */
 const potionIcon = id => { const src = id ? M.potionArt(id) : null; return src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''; };
 
-/**
- * 떠오르는 한 줄. `skillId` 를 주면 **텍스트 왼쪽에 그 스킬 아이콘**이 붙는다 (SCREEN_DESIGN §4 · 2026-09-08).
- * 기본 공격은 `s` 가 없어 아이콘도 없다 — **아이콘의 유무가 「스킬이 나갔다」는 신호**다.
- * 아이콘만 innerHTML 이고 본문은 텍스트 노드다 — 유닛 이름·수치가 마크업으로 새지 않게 한다.
- */
 /** 피해 팝업의 클래스 — 색은 피해 종류(`ty`)가 정하고(로그와 같은 색) 치명은 크기만 다르다 · 종류가 없는 피해(반사 · 자폭)는 무채색.
     때린 쪽 · 맞은 쪽은 색으로 가르지 않는다 — 팝업이 뜨는 카드의 자리가 든다 (ADR-0408) */
 const dmgPop = (ty = null, crit = false) => `dmg${crit ? ' crit' : ''}${ty ? ` dt-${ty}` : ''}`;
 
-function popup(state, u, text, cls, skillId = null) {
+/**
+ * 떠오르는 한 줄 — 본문은 텍스트 노드다(유닛 이름 · 수치가 마크업으로 새지 않게 한다).
+ * 피해 숫자는 **스킬 아이콘을 안 단다** (2026-09-28 · ADR-0409 — 옛 ADR-0039 대체) — 「스킬이 나갔다」는 스킬 이펙트(fx.js)가 든다.
+ */
+function popup(state, u, text, cls) {
     if (!u?.node || state.catchUp) return;   // 되감기 중에는 팝업을 띄우지 않는다
     const layer = u.node.querySelector('.pop-layer');
     const p = document.createElement('span');
     p.className = `pop ${cls}`;
-    const img = skillId ? skillImg(skillInfo(skillId)) : '';
-    if (img) {
-        const ico = document.createElement('i');
-        ico.className = 'pop-ico';
-        ico.innerHTML = img;
-        p.appendChild(ico);
-    }
     p.appendChild(document.createTextNode(text));
     layer.appendChild(p);
     state.timeouts.push(setTimeout(() => p.remove(), 900));
@@ -999,7 +992,7 @@ function apply(state, root, opts, ev) {
             }
             // 카드가 늘었으면 진형 줄을 다시 세운다(라운드 시작과 같은 함수) — 되살아남만이면 자리 그대로다
             if (grew) renderUnits(state, root);
-            for (const e of ev.units) fxAppear(state, U(e.key));   // 불린 무리가 떠오르며 선다 — 카드를 지은 뒤 (ADR-0406)
+            for (const e of ev.units) fxAppear(state, U(e.key));   // 불린 무리가 떠오르며 선다 — 카드를 지은 뒤 (ADR-0409)
             const a = U(ev.u);
             // 대상 칸 = 불린 무리(쉼표) — 처음 선 것과 되살아난 것을 가르지 않는다 · 값 칸은 빈다 (ADR-0189)
             if (a) logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), '');
@@ -1016,10 +1009,10 @@ function apply(state, root, opts, ev) {
             if (a) { markActed(a, ev.t); if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
-                popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty, ev.crit), ev.s);
+                popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty, ev.crit));
                 refreshUnit(state, d);
             }
-            fxHit(state, a, d, ev);   // 1 은 모든 타격 · 2 · 3 은 스킬만 (ADR-0406)
+            fxHit(state, a, d, ev);   // 스킬 이펙트는 스킬만 · 피격 반응은 모든 타격(켜져 있을 때) (ADR-0409 · ADR-0410)
             if (a && d) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
@@ -1032,7 +1025,7 @@ function apply(state, root, opts, ev) {
             // 반사 — 비직격. 공격자 HP 만 줄고 아무것도 유발하지 않는다 (battle_design §9-6)
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, dmgPop()); refreshUnit(state, d); }
-            fxStrike(state, d);   // 맞은 카드만 흔들린다 — 반사는 스킬이 아니다 (ADR-0406)
+            fxReflect(state, d);   // 피격 반응만 — 반사는 스킬이 아니다 (ADR-0410)
             if (a && d) {
                 logLine(state, root, a.side, L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
                 addDmg(state, a, d, 'reflect', ev.dmg);
@@ -1044,7 +1037,7 @@ function apply(state, root, opts, ev) {
             //   적 전원이 대상이라 한 번 터질 때 이벤트가 대상 수만큼 잇따른다 — 광역 스킬의 `hit` 과 같은 모양이다
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, dmgPop()); refreshUnit(state, d); }
-            fxStrike(state, d, ev);   // 맞은 카드가 흔들리고 자폭은 스킬이라 2 · 3 도 탄다 (ADR-0406)
+            fxBlast(state, d, ev);   // 자폭은 스킬이라 이펙트가 선다 · 피격 반응도 (ADR-0409 · ADR-0410)
             if (a && d) {
                 logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg);   // 주체는 터진 쪽 (반사와 같은 자리)
                 addDmg(state, a, d, ev.s, ev.dmg);
@@ -1063,7 +1056,7 @@ function apply(state, root, opts, ev) {
             const skill = strikeLabel(ev.s);
             if (a) markActed(a, ev.t);
             if (d) popup(state, d, t('pop.dodge'), 'miss');
-            fxMiss(state, a, d);   // (ADR-0406)
+            fxMiss(state, a, d);   // 피격 반응 (ADR-0410)
             if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss'));
             break;
         }
@@ -1097,13 +1090,13 @@ function apply(state, root, opts, ev) {
             // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
             logLine(state, root, enemy ? 'party' : 'enemy', L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed'));
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
-            fxDown(state, u);   // (ADR-0406)
+            fxDown(state, u);   // 피격 반응 (ADR-0410)
             break;
         }
         case 'heal': {   // 회복 — 시전자(a)가 대상(d)의 HP 를 올린다. 부호가 반대일 뿐 타격과 같은 자리에 뜬다
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
-            fxHeal(state, d, ev);   // 스킬 회복만 (ADR-0406)
+            fxHeal(state, d, ev);   // 스킬 회복만 (ADR-0409)
             if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), `+${ev.amt}`, 'heal-t');
             break;
         }
@@ -1139,7 +1132,7 @@ function apply(state, root, opts, ev) {
             // 최대 HP 를 민 창 — 시뮬이 민 값을 그대로 받는다. 재생기는 계산하지 않는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
-            fxBuff(state, u, ev);   // 좋은 창 · 나쁜 창 · 방벽 — 스킬만 · 오오라 없음 (ADR-0406)
+            fxBuff(state, u, ev);   // 좋은 창 · 나쁜 창 · 방벽 — 스킬만 · 오오라 없음 (ADR-0409)
             // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
             // 「지금 걸려 있다」는 상태라 카드 테두리가 든다 (SCREEN_DESIGN §4-2)
             // 오오라(`until: null`)는 로그에 안 적는다 — 전투 시작 · 적의 라운드마다 받는 유닛 수만큼 같은 줄이 쌓인다. 뱃지가 든다 (R98 · ADR-0127)

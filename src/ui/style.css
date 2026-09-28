@@ -1748,14 +1748,7 @@ html, body { height: 100%; overflow: hidden; }
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
 .pop.counter { color: var(--color-warning); font-size: var(--fs-xs); }            /* 반격 — 반격한 카드의 글자 (ADR-0158) */
 .pop.heal { color: var(--heal-fg); }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
-/* 피해 팝업의 스킬 아이콘 (2026-09-08) — 숫자 왼쪽. `inline-flex` 로 글자 기준선이 아니라 줄 가운데에 맞춘다.
-   `em` 크기라 치명(fs-lg)에서 숫자와 같이 커진다. 아이콘이 없으면 이 요소 자체가 안 생겨 줄이 안 흔들린다 */
-.pop-ico {
-    display: inline-flex; align-items: center; vertical-align: middle;
-    width: 1.15em; height: 1.15em; margin-right: 3px;
-    filter: drop-shadow(0 1px 2px #000);
-}
-.pop-ico img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* ⚠ 피해 팝업의 스킬 아이콘(`.pop-ico` · ADR-0039)은 걷었다 (2026-09-28 · ADR-0409) — 「스킬이 나갔다」는 아래 「관전 연출」의 스킬 이펙트가 든다 */
 /* 발동한 스킬 이름 — 피해 숫자(초상 위, top 38%)와 자리를 나눠 카드 가운데 위로 뜬다. 배경 위에서 읽히도록 제 칩을 갖는다 */
 .pop.skill-tag {
     /* 카드 위에서 시작해 위칸 언저리까지 떠오른다 — 카드에서 완전히 떨어지면 어느 유닛이 쓴 건지 안 붙는다 */
@@ -1768,11 +1761,14 @@ html, body { height: 100%; overflow: hidden; }
     100% { transform: translate(-50%, -30px); opacity: 0; }
 }
 
-/* 관전 연출 [2026-09-28 사용자 지시 · SCREEN_DESIGN §4-2 「연출」 · ADR-0406] — 세 단계. **어느 카드에 붙이나는 `fx.js`, 모양 · 길이는 여기.**
-   단계를 빼면 그 단계의 규칙을 통째로 지운다(단계마다 묶어 두었다). 켜짐은 `<html data-fx>` 가 든다(개발용 버튼 devfx.js · 기본값 `fx.js:FX_DEFAULT`).
-   길이는 전부 `--fx-k` 를 곱한다 — 배속이 오르면 짧아진다(fx.js 가 칸 `.unit-slot` 에 건다 · ×1 1 / ×2 .75 / ×4 .55) */
+/* 관전 연출 = **스킬 이펙트** [2026-09-28 사용자 지시 · SCREEN_DESIGN §4-2 「연출」 · ADR-0409] — 스킬에만 · 늘 켜져 있다. **어느 카드에 붙이나는 `fx.js`, 모양 · 길이는 여기.**
+   길이는 전부 `--fx-k` 를 곱한다 — 배속이 오르면 짧아진다(fx.js 가 칸 `.unit-slot` 에 건다 · ×1 1 / ×2 .75 / ×4 .55).
+   모양은 아래 코드 모양이다 · 그림 한 장(`.fx-stamp` — 이 절 끝)은 꺼져 있다(나중에 전직 스킬에만 · ADR-0412) · 피격 반응은 개발용 FX 버튼으로만 켠다(기본 꺼짐 · ADR-0410) */
 
-/* ── 1 · 피격 반응 — 카드 · 초상 · 칸이 움직인다. 그림 없음 · 아레나 전체는 안 흔든다(소란) ── */
+/* 쓰러진 카드는 **한 박자 뒤에** 흐려진다 — 곧바로 흐려지면(.unit.dead) 마지막 타격의 스킬 이펙트가 회색으로 옅게 탄다. 배속을 따르지 않는 고정 박자다 */
+.unit.dead { transition: opacity .45s .3s, filter .45s .3s; }
+
+/* ── 피격 반응 — 카드 · 초상 · 칸이 움직인다. 그림 없음 · 아레나 전체는 안 흔든다(소란) · fx.js 가 켜져 있을 때만 클래스를 건다 ── */
 .unit.fx-shake { animation: fx-shake calc(220ms * var(--fx-k, 1)) ease-out; }
 .unit.fx-shake-crit { animation: fx-shake-crit calc(320ms * var(--fx-k, 1)) ease-out; }
 .unit.fx-dodge { animation: fx-dodge calc(260ms * var(--fx-k, 1)) ease-out; }
@@ -1788,10 +1784,6 @@ html, body { height: 100%; overflow: hidden; }
 /* 때린 카드 — 상대 진영 쪽으로. 파티는 아래 진영이라 위로, 적은 아래로 (진형이 칸을 `top` 으로 미는 것과 안 부딪히게 칸의 transform 을 쓴다) */
 .side-party .unit-slot.fx-lunge { animation: fx-lunge-up calc(240ms * var(--fx-k, 1)) ease-out; }
 .side-enemy .unit-slot.fx-lunge { animation: fx-lunge-down calc(240ms * var(--fx-k, 1)) ease-out; }
-/* 쓰러진 카드는 **한 박자 뒤에** 흐려진다 — 곧바로 흐려지면(.unit.dead) 마지막 타격의 연출이 회색으로 옅게 탄다. 단계가 하나라도 켜진 동안만 */
-html:not([data-fx=""]) .unit.dead {
-    transition: opacity calc(450ms * var(--fx-k, 1)) calc(300ms * var(--fx-k, 1)), filter calc(450ms * var(--fx-k, 1)) calc(300ms * var(--fx-k, 1));
-}
 @keyframes fx-shake { 0%, 100% { transform: none; } 20% { transform: translateX(-4px); } 45% { transform: translateX(4px); } 70% { transform: translateX(-2px); } }
 @keyframes fx-shake-crit { 0%, 100% { transform: none; } 15% { transform: translateX(-7px); } 35% { transform: translateX(7px); } 55% { transform: translateX(-5px); } 75% { transform: translateX(3px); } }
 @keyframes fx-dodge { 0%, 100% { transform: none; } 35% { transform: translateX(calc(12px * var(--fx-sx, 1))); } }
@@ -1806,7 +1798,7 @@ html:not([data-fx=""]) .unit.dead {
 .fx-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .fx-layer > * { position: absolute; left: var(--cx, 56px); top: var(--cy, 56px); pointer-events: none; }
 
-/* ── 2 · 스킬 이펙트 — 스킬에만. 타격은 피해 종류가 모양을 정한다 · 색은 `--fx-*`(피해 종류 색을 채도를 낮춘 값) ── */
+/* ── 스킬 이펙트 — 타격은 피해 종류가 모양을 정한다 · 색은 `--fx-*`(피해 종류 색을 채도를 낮춘 값) ── */
 /* 물리 — 베기 궤적. 왼쪽에서 오른쪽으로 그어지고 왼쪽부터 사라진다 */
 .fx-slash {
     width: 132px; height: 6px; margin: -3px 0 0 -66px; border-radius: 3px;
@@ -1901,18 +1893,25 @@ html:not([data-fx=""]) .unit.dead {
 .unit-slot.fx-appear { animation: fx-appear calc(380ms * var(--fx-k, 1)) ease-out backwards; }
 @keyframes fx-appear { 0% { transform: translateY(12px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 
-/* ── 3 · 타격 그림 — 피해 종류의 그림 한 장(`assets/art/fx/<종류>.webp`)이 커지며 살짝 돌고 사라진다. 치명은 한 단 크다 ── */
+/* ── 그림 한 장 [2026-09-28 · ADR-0411 → **지금은 안 쓴다** · ADR-0412 — `fx.js:ART_ON` 이 꺼져 있다 · 나중에 전직 스킬 그림이 쓴다] — 켜면 종류마다 `assets/art/fx/<종류>.webp` 가 **있을 때** 위의 코드 모양 대신 선다.
+   크기 보통 83 · 치명 101(초상 101 안 — 수치 열을 안 덮는다). 움직임은 종류가 정한다(fx.js `MOTION`) — 터짐(타격 · 자폭) · 떠오름(회복 · 강화) · 내려앉음(약화) · 부풂(방벽) ── */
 .fx-stamp {
-    width: 124px; height: 124px; margin: -62px 0 0 -62px; object-fit: contain;
+    width: 83px; height: 83px; margin: -41.5px 0 0 -41.5px; object-fit: contain;
     animation: fx-stamp calc(440ms * var(--fx-k, 1)) ease-out both;
 }
-.fx-stamp.crit { width: 152px; height: 152px; margin: -76px 0 0 -76px; }
+.fx-stamp.crit { width: 101px; height: 101px; margin: -50.5px 0 0 -50.5px; }
+.fx-stamp.fx-m-rise { animation-name: fx-stamp-rise; animation-duration: calc(620ms * var(--fx-k, 1)); }
+.fx-stamp.fx-m-sink { animation-name: fx-stamp-sink; animation-duration: calc(620ms * var(--fx-k, 1)); }
+.fx-stamp.fx-m-pulse { animation-name: fx-stamp-pulse; animation-duration: calc(540ms * var(--fx-k, 1)); }
 @keyframes fx-stamp {
     0% { transform: rotate(var(--r)) scale(.5); opacity: 0; }
     15% { opacity: 1; }
     60% { transform: rotate(var(--r)) scale(1.02); opacity: 1; }
     100% { transform: rotate(var(--r)) scale(1.1); opacity: 0; }
 }
+@keyframes fx-stamp-rise { 0% { transform: translateY(16px) scale(.8); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-20px) scale(1); opacity: 0; } }
+@keyframes fx-stamp-sink { 0% { transform: translateY(-18px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(14px) scale(.9); opacity: 0; } }
+@keyframes fx-stamp-pulse { 0% { transform: scale(.7); opacity: 0; } 30% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1.12); opacity: 0; } }
 
 /* 판(로그 · 누적) — **나눔 배치의 우측 열에만** 선다 (SCREEN_DESIGN §4-2 · ADR-0130). 넓게 배치에는 판이 없다 */
 .battle-side .pane {
@@ -2749,6 +2748,11 @@ html:not([data-fx=""]) .unit.dead {
 .lv-val.auto-val { font-size: var(--fs-sm); min-width: 8em; }
 .auto-act { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; justify-content: center; min-height: 2em; }
 .auto-confirm { color: var(--color-warning); }
+/* `⚙` 판의 설정 탭 [2026-09-28 · SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414] — 자동 분해 창과 같은 틀: 라벨 열 + [Off] [On] 열 ·
+   라벨 폭은 글자가 정한다(영어가 길다 · 고정 px 금지). 판 · 탭의 모양은 devpalette.js 가 든다 */
+.set-box { display: grid; grid-template-columns: max-content auto; gap: 14px 18px; align-items: center; font-size: var(--fs-sm); }
+.set-row { display: contents; }
+.set-k { color: var(--text-secondary); white-space: nowrap; }
 .dismiss-box { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; font-size: var(--fs-sm); }
 /* 답하는 버튼 줄 — 막힘이면 [확인] 하나, 확인이면 [확인] [취소] 둘 (2026-09-09 사용자 지시 · SCREEN_DESIGN §6).
    ⚠ **줄은 상태와 상관없이 늘 있다** — 막힘 상태에 버튼이 없던 옛 판은 창을 X 로만 닫을 수 있었다.

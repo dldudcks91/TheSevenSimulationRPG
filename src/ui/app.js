@@ -60,7 +60,7 @@ import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
 import { mountCardCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 버튼. 걷어내려면 이 줄 · 아래 호출 · devcompare.js
-import { mountFxToggle } from './devfx.js';   // 임시 — 관전 연출 단계 버튼 FX [1] [2] [3] (SCREEN_DESIGN §10-4). 걷어내려면 이 줄 · 아래 호출 · devfx.js
+import { skillFxOn, hitFxOn, setFxOn } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 피격 반응 켜고 끄기 (SCREEN_DESIGN §2-2 · ADR-0414)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
@@ -435,10 +435,11 @@ function renderShell() {
     // Admin — 켜면 건물로 막힌 탭 · 기능 · 상한이 열린 척한다 (devadmin.js) · **켤 때 골드를 `admin_gold` 까지 채운다**(진짜 골드 · 2026-09-27 · SCREEN_DESIGN §10-3)
     mountAdmin($('.resources'), render, () => { const g = D.balance.admin_gold; if (G && G.resources.gold < g) { G.resources.gold = g; save(); } });
     mountCardCompare($('.resources'), render);   // 임시 — Card [Before | After] (devcompare.js)
-    mountFxToggle($('.resources'));   // 임시 — FX [1] [2] [3] (devfx.js) · 다시 그리지 않는다
     // 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356]. `data-play` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshPlayTime`)
     if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'play-time', `${t('ui.playTime')}<b data-play>${fmtPlayTime(G.playMs)}</b>`));
-    mountDevPalette($('.resources'));   // ⚙ — 배경 · 글자 색을 눈으로 맞추는 개발 장치
+    // ⚙ — 판의 탭 둘: 설정(스킬 이펙트 · 피격 반응 — 속은 여기 `settingsBody`) · Palette(배경 · 글자 색을 눈으로 맞추는 개발 장치)
+    //   [2026-09-28 사용자 지시 · SCREEN_DESIGN §2-2 · ADR-0414]
+    mountDevPalette($('.resources'), { label: t('set.h'), body: settingsBody });
 
     // crumb — 게임 화면이면 **탭 이름 전부를 한 칸에 겹쳐 두고 고른 것만 보인다** [2026-09-24 · SCREEN_DESIGN §2 · ADR-0353].
     //   폭 = 그 언어에서 가장 긴 탭 이름이라 탭을 옮겨도 오른쪽 원정 세그먼트가 안 움직인다 (라벨 칸이라 고정 px 이 아니다 · style.css `.crumb`)
@@ -573,6 +574,22 @@ function segmented(items, current, onPick) {
         }
         b.onclick = () => onPick(it.id);
         box.appendChild(b);
+    }
+    return box;
+}
+
+/**
+ * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414) — 줄 둘: 스킬 이펙트 · 피격 반응, 줄마다 [Off] [On] · 둘은 따로 켜고 끈다.
+ * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
+ */
+function settingsBody() {
+    const box = el('div', 'set-box');
+    for (const [k, label, isOn] of [['skill', 'set.skillFx', skillFxOn], ['hit', 'set.hitFx', hitFxOn]]) {
+        const row = el('div', 'set-row');
+        row.appendChild(el('span', 'set-k', t(label)));
+        row.appendChild(segmented([{ id: 'off', label: t('set.off') }, { id: 'on', label: t('set.on') }],
+            isOn() ? 'on' : 'off', id => { setFxOn(k, id === 'on'); box.replaceWith(settingsBody()); }));
+        box.appendChild(row);
     }
     return box;
 }

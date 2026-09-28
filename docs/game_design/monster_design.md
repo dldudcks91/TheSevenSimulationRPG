@@ -209,6 +209,7 @@ attack_type = physical | fire | cold | lightning | poison
 | `res_fire` `res_cold` `res_lightning` `res_poison` | **직접 %** — 소재값이 아니다. **몸값으로 남고** 장비의 저항이 그 위에 더해진다 [확정 2026-09-11 · 사용자 지시] — 굴린 장비로 저항이 판마다 요동치면 도감이 「화염 저항 60%」를 적을 수 없고(§8) 「이 원소를 막았나」가 안 읽힌다(battle_design §9-5). ~~`spawn_grade.csv:res_add` %p 가산~~ 은 **퇴역**했다 (§7-1) |
 | ~~`action_period`~~ | **[삭제 2026-09-11]** — `weapon_group.action_period / 민첩 계수`가 낸다. 영웅과 같은 식이다 |
 | `exp_coef` | **처치 XP 계수** — 몬스터별 조정 칸이고 지금은 전 행이 중립값이다 [개정 2026-09-14 · 사용자 확정 · DEV_PLAN R85]. 처치 XP 는 **몬스터 레벨(= 스테이지 레벨 · 기본 `dlvl`)이 정한다** — `[balance.csv:monster_xp_base]` × `[balance.csv:monster_xp_growth]`^(레벨−1) × 등급 `spawn_grade.exp_mult` × 이 계수. 레벨과 등급이 같으면 몬스터가 달라도 XP 가 같고, 스테이지 레벨을 올리면 따라 오른다. 골드도 이 값에서 나온다. ~~`exp_reward` 처치 XP 소재값~~(행마다 박힌 값 — 레벨을 안 따라왔다) 폐기 |
+| `level_add` | **몬스터 레벨 가산** [신설 2026-09-28 · 사용자 「사탄만 13」] — 몬스터 레벨 = 스테이지 레벨 + 이 값. 적중(레벨 차) · HP 성장분 · 처치 XP 가 더한 레벨을 읽고, **입은 장비의 아이템 레벨(= 드롭)은 안 탄다**(스테이지 레벨 + 등급 가산 그대로). 스테이지 레벨 · 챕터 레벨대를 건드리지 않고 **그 몬스터 하나만** 세게 만드는 칸이다 — 지금 값이 있는 행은 1장 챕터보스(사탄) 하나이고 나머지는 중립값 |
 | `face` | 초상 아트 보유 플래그(0/1). 1 이면 `assets/art/faces/<스타일>/monster/<idx>.png` 를 그리고 0 이면 빈 칸이다 (`ui/data.js:monsterFace`). **전투에 관여하지 않는다** — `size_type` 과 같은 표시 전용 축이다
 | `monster_name_kr` · `monster_name_en` · `description_kr` | 표시용. **이름 ko/en 쌍의 `ui/mock.js MONSTERS` 이관은 끝났다** [정정 2026-09-08] — `ui/data.js:monsterName` 이 두 컬럼을 직접 읽는다. ~~`sprite_key`~~ 는 실재하지 않는 컬럼이었다 — 그 자리는 `face` 다 |
 

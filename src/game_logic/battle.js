@@ -58,7 +58,6 @@
  *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
  *   상태이상은 **결빙 · 화상 · 중독 · 스턴** [2026-09-28 · R177 · R178 · battle_design §2-4 ~ §2-7] — 스킬 타격이 맞은 대상에게 건다(`strikeOnce` 의 `sk.onHit` → `rt.applyStatus`).
  *     화상은 받는 피해 · 받는 회복을 창 파생(`skill_effects`)으로 밀고, 중독은 틱(`poisonTick` — 창 만료 뒤 · 재생 앞), 스턴은 `stun` 이 행동 예약 · 쿨을 민다.
- *     침식 · 매혹 · 심판은 미정이다(GAME_DESIGN §10 「상태이상 기계 정의」).
  *   전직·마스터리·패시브는 미구현 — 지금 도는 것은 직업 기본 액티브뿐이다 (프로토타입 §9-0).
  *   ~~몬스터의 치명·반사·피해 감소는 0~~ → **[폐기 2026-09-11 · D2 사용자 확정]** 몬스터도 **영웅과 같은 밑수**를 받는다
  *     (기본 치명 확률 · HP 재생 밑수) — 「몬스터를 영웅과 같은 구조로」가 목적이라 특수 분기를 두지 않는다.
@@ -339,6 +338,11 @@ export function createBattleSystem(data) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
         const { thirdSkill = null, ...rest } = extra;
+        // 몬스터 레벨 = 스테이지 레벨(인자 `lvl`) + 몬스터별 가산 [2026-09-28 · 사용자 「사탄만 13」 · monster_design §7 · INTERFACE §2-6] —
+        //   아래 전투 능력치 · 적중(`makeUnit` 의 `lvl`) · 처치 XP 가 더한 레벨을 읽는다. 입은 장비의 ilvl 은 `spawnRound` 가 스테이지 레벨로 굴려 안 탄다
+        const levelAdd = m.level_add;
+        if (!Number.isInteger(levelAdd) || levelAdd < 0) throw new Error(`battle: 몬스터 ${monsterId} 의 level_add '${levelAdd}' — 0 이상 정수여야 한다 (monster.csv)`);
+        lvl += levelAdd;
         const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
         // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
         // 입력에서 다른 것은 **레벨 1 HP 바탕** 하나다 — 영웅 `hero_hp_base` 대신 `monster_hp_base` [2026-09-14 사용자 지시 · R91 · monster_design §5]

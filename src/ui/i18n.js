@@ -474,6 +474,13 @@ const STRINGS = {
        「취소」는 **안 한다**. 창을 그냥 닫는 길(X · 바깥 · Esc)은 그대로 있고, 이 둘은 그것을 **눈에 보이게** 한다 */
     'ui.ok': { ko: '확인', en: 'OK' },
     'ui.cancel': { ko: '취소', en: 'Cancel' },
+    /* 설정 [2026-09-28 사용자 지시 · SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414] — 상단바 오른쪽 끝 `⚙` 판의 설정 탭 (`set.h` = 탭 이름 · ⚙ 의 title).
+       버튼 글은 한국어도 On / Off 그대로(2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 — 파티 전술 칸 `rs.on` 과 같다) */
+    'set.h': { ko: '설정', en: 'Settings' },
+    'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
+    'set.hitFx': { ko: '피격 반응', en: 'Hit Reactions' },
+    'set.on': { ko: 'On', en: 'On' },
+    'set.off': { ko: 'Off', en: 'Off' },
 
     /* ── 자원 탭 [개정 2026-09-04] — 파견처는 **카드 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
        탐험은 자기 탭(§8-4)으로 나가 이 목록에 없다 — 셋 다 1인 배치라 `dp.party` 를 쓰는 칸이 없다.
