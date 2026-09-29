@@ -80,7 +80,7 @@ import { ELEMENTS } from './hero.js';
 import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js';
 import { refreshDerived, weaponOnHit, stateOf, strongestOf } from './skill_effects.js';
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
-import { STAGE_SPAWN_RULES } from './spawn_rule.js';
+import { STAGE_SPAWN_RULES, spawnRuleKey } from './spawn_rule.js';
 // 몬스터 차림 줄 — 전투 줄에서 씨앗 하나만 받아 몬스터마다 제 줄을 연다 (INTERFACE §5-1 · 2026-09-22)
 import { makeRng, deriveSeed } from './rng.js';
 
@@ -176,7 +176,7 @@ export function createBattleSystem(data) {
      *   n 라운드에서 뽑을 목록과 호위 수 범위를 낸다. rng 0 — 굴림은 `spawnRound` 가 한다.
      *   표에 없는 스테이지는 `roundPool` · `elitePool` 이 `pool` **그 배열**이고 소환사가 없다 — 수열이 예외 도입 전과 같다
      */
-    const rulesOf = stage => STAGE_SPAWN_RULES[stage.stage_id] ?? [];
+    const rulesOf = stage => STAGE_SPAWN_RULES[spawnRuleKey(stage)] ?? [];   // 키 = 장소 — 칸 I · II · III 이 같은 규칙 (2026-09-29)
     function roundDraw(stage, pool, n, bd) {
         const rules = rulesOf(stage);
         const roundPool = rules.reduce((ids, r) => (r.pool ? r.pool(ids, n) : ids), pool);
@@ -192,8 +192,8 @@ export function createBattleSystem(data) {
     // 예외 표도 **로드에서 멈춘다** — 번호가 틀리면 규칙이 조용히 헛돌고(풀에 없는 몬스터를 빼거나 좁혀도 아무 일도 없다),
     //   뽑을 목록이 비면 전투 도중에 없는 몬스터를 뽑는다
     for (const [sid, rules] of Object.entries(STAGE_SPAWN_RULES)) {
-        const st = data.stages[sid];
-        if (!st) throw new Error(`battle: 편성 예외의 스테이지 ${sid} 가 stage.csv 에 없다 (spawn_rule.js)`);
+        const st = Object.values(data.stages).find(s => spawnRuleKey(s) === sid);   // 장소의 첫 칸 — 풀은 칸 전부가 같다
+        if (!st) throw new Error(`battle: 편성 예외의 장소 ${sid} 가 stage.csv 에 없다 (spawn_rule.js)`);
         const pool = stagePool(st);
         for (const id of rules.flatMap(r => r.refs ?? [])) {
             if (!pool.includes(id)) throw new Error(`battle: 스테이지 ${sid} 편성 예외의 몬스터 ${id} 가 그 스테이지의 일반몹이 아니다 (spawn_rule.js)`);
@@ -513,12 +513,12 @@ export function createBattleSystem(data) {
      * @param partyUnits [{uid, combat:{...}, actives?: [{id, source}], reactions?: [{on, fn}]}] —
      *   combat = heroSystem.computeCombat 결과, actives = 그 영웅의 액티브 **인스턴스** 목록(skill.activesFor).
      *   없거나 비면 기본 공격만 돈다. reactions = 사건 훅 등록(⚠ 지금은 아무도 싣지 않는다)
-     * @param level 이번 런의 스테이지 레벨(`state.stageLevelState` — 올린 레벨) · 안 주면 기본 레벨 `dlvl`
+     * @param level 이번 런의 몬스터 레벨 · 안 주면 기본 레벨 `dlvl`(출발은 늘 `dlvl` 을 넘긴다 — 위험도 폐지 2026-09-29 · ~~`state.stageLevelState` 의 올린 레벨~~)
      * @param potions 이 런의 물약 칸 `[{id, heal} | null]` — **자리 순**(0 = 앞 칸 · 칸의 `null` = 빈 칸 — R124) · 칸 수 [balance.csv:potion_slot_max] 이하 · 인자 `null` = 빈 목록. 이 런 안에서만 산다 (battle_design §7-1 · R104).
      *   찬 칸이 없으면(빈 목록 · 전부 null) 물약 단계가 아예 안 돌아 rng · 타임라인이 인자를 안 준 것과 같다
      * @returns `{ next, advance, refit, status, result, ended }` — `next()` = 라운드 하나의 요약(이미 끝났으면 null) ·
-     *   `advance(until)` = 그 시각까지만(라운드가 끝나면 그 요약 · 도중에 서면 null · R130) · `refit(partyUnits)` = 지금 시각에 갈아입기
-     *   (`{locked, changed}` — 보스 라운드 도중이면 `locked` · R130) · `status()` = `{t, round, kind, inRound}` ·
+     *   `advance(until)` = 그 시각까지만(라운드가 끝나면 그 요약 · 도중에 서면 null · R130) · `refit(partyUnits, fill?)` = 지금 시각에 갈아입기
+     *   (`{locked, changed}` — 보스 라운드 도중이면 `locked` · R130 · `fill` = 가득 채울 영웅 uid — 레벨업 · R182) · `status()` = `{t, round, kind, inRound}` ·
      *   `result` = 걸음마다 자라는 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      * @param slotMax 물약 칸 수 — 게임은 그 세이브의 상한(`state.limitsOf(state).potionSlots`)을 넘긴다 · 안 주면 CSV 기본값 [balance.csv:potion_slot_max] (2026-09-22)
      */
@@ -1155,7 +1155,7 @@ export function createBattleSystem(data) {
            **라운드 도중**(틱과 틱 사이 — 원정 중 교체가 그 순간 먹는다 · base_expedition_design §1-5). **보스 라운드 도중에는 거절한다** —
            보스 라운드가 시작하는 순간의 장비로 싸운다(보스전 중 교체는 다음 런부터). 라운드 사이 · 첫 라운드 전은 보스 라운드 앞이라도 받는다.
            같은지는 입력(`combat` · `stats` · 스킬 칸)으로 가른다 — 같으면 손대지 않아야 인자 없이 이어 부른 것과 한 글자도 안 다르다.
-           지키는 것: **현재 HP 의 비율**(R130 — ~~현재 HP · 새 최대치로 자른다~~) · 창 · 배리어 · 행동 예약 · 남은 스킬의 쿨(**칸마다** — R130) ·
+           지키는 것: **현재 HP 의 비율**(R130 — ~~현재 HP · 새 최대치로 자른다~~ · **`fill` 에 든 영웅 = 레벨업은 가득** — R182) · 창 · 배리어 · 행동 예약 · 남은 스킬의 쿨(**칸마다** — R130) ·
            깎인 방어(`defKeep` — R130). **새로 생긴 스킬은 지금부터 한 바퀴** (battle_design §6) */
         // 스킬 칸 = 출처 자리 + id — 칸이 바뀌면 갈아입는다(같은 id 가 다른 칸으로 옮겨도) · 쿨을 잇는 열쇠와 같다 (R130)
         const slotKey = a => `${a.source}|${a.id}`;
@@ -1163,7 +1163,7 @@ export function createBattleSystem(data) {
         const worn = new Map(partyUnits.map(p => [p.uid, { sig: sigOf(p), combat: p.combat }]));
         /** 라운드 도중인가 — 열었고 아직 안 끝났다(끝났으면 `between` · 닫혔으면 `ended`) */
         const inRound = () => started && !between && !ended;
-        function refit(updates) {
+        function refit(updates, fill) {
             if (ended) return { locked: false, changed: [] };
             // 보스 라운드 도중 — 아무것도 안 바꾼다. 바뀐 입력은 `worn` 에도 안 적으므로 라운드 사이에 오면 그때 입는다 (R130)
             if (inRound() && roundLog?.kind === 'boss') return { locked: true, changed: [] };
@@ -1175,7 +1175,8 @@ export function createBattleSystem(data) {
                 // 쓰러진 영웅은 그 런 끝까지 빠진다 — 새로 입혀도 안 일어난다. 나간 인원 밖의 영웅은 안 읽는다(인원은 나갈 때 굳는다 — 원정 중에 편성을 바꿔도 도는 원정은 그대로다 · R92)
                 if (!u || !was || u.hp <= 0) continue;
                 const sig = sigOf(p);
-                if (sig === was.sig) continue;
+                // 레벨업한 영웅(`fill`)은 입력이 같아도 갈아입는다 — 체력을 채우는 자리가 아래 비율 복원이다 (R182)
+                if (sig === was.sig && !fill?.includes(p.uid)) continue;
                 worn.set(p.uid, { sig, combat: p.combat });
                 const fresh = makeUnit('party', p.combat, { stats: p.stats ?? null });
                 // 현재 HP 는 **비율을 지킨다** [2026-09-21 · R130 · base_expedition_design §1-5] — 갈아입기 전 비율을 새 최대치에 곱한다(아래 파생 뒤).
@@ -1211,8 +1212,9 @@ export function createBattleSystem(data) {
             const applied = applyAuras(party);
             // 비율 복원 — 파생(최대 HP 창 포함)이 끝난 새 최대치에 곱한다. 살아 있는 영웅만 오므로 최소 1 ·
             //   ⚠ 반올림이 뺐다 끼울 때마다 조금씩 회복시키는 구멍은 1차에서 받아들였다 (base_expedition_design §1-5)
+            //   **레벨업한 영웅(`fill`)은 가득 찬다** [2026-09-29 · R182 · hero_design §5 — 디아블로2 방식] — 비율 대신 새 최대치로 선다
             for (const u of changed) {
-                u.hp = Math.max(1, Math.round(u.hpRatio * u.hpMax));
+                u.hp = fill?.includes(u.uid) ? u.hpMax : Math.max(1, Math.round(u.hpRatio * u.hpMax));
                 delete u.hpRatio;
             }
             for (const u of changed) {

@@ -15,10 +15,11 @@
 
 import { makeRng } from '../game_logic/rng.js';
 
-/** 스냅샷 범위 — 캘리브레이션(시드 20 × 같은 5스테이지)과 **같은 조건**이라 두 표가 서로를 설명한다 (D-A3).
- *  105 = 챕터보스 단독 1라운드의 표본 (2026-09-11 · R75 — ~~101~104~~) */
+/** 스냅샷 범위 — 캘리브레이션(시드 20 × 같은 칸)과 **같은 조건**이라 두 표가 서로를 설명한다 (D-A3).
+ *  **칸 번호**(2026-09-29 · 스테이지 칸 구조 — ~~101 ~ 105~~): 1011 = 정예로 끝나는 칸 I(`elite_end`) · 1013 · 1023 · 1033 · 1043 = 스테이지보스 칸 III
+ *  (옛 101 ~ 104 와 같은 9라운드 · 같은 보스) · 1051 = 챕터보스 단독 1라운드 (R75) */
 export const GOLDEN_SEEDS = 10;
-export const GOLDEN_STAGES = [101, 102, 103, 104, 105];
+export const GOLDEN_STAGES = [1011, 1013, 1023, 1033, 1043, 1051];
 
 /**
  * 사람이 읽는 요약용 손잡이 5키 — **대조는 `meta.balance` 전 키가 한다.**
@@ -138,15 +139,17 @@ function partyFingerprint(SYS, B, NOW, seed) {
 /**
  * 런 1개의 지문.
  * @param seed  시작 파티 시드(`makeRng(1000+seed)`) 겸 세이브 마스터 시드 — 캘리브레이션과 같은 규칙
+ * @param order 스테이지(칸) 표 순서 `D.stageOrder` — 앞 칸을 전부 깬 것으로 둔다(해금만)
  */
-function runFingerprint(SYS, B, NOW, seed, stage) {
+function runFingerprint(SYS, B, NOW, seed, stage, order) {
     const party = SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max);
     const G = SYS.game.newGame(seed, party, NOW);
     // 파티를 **로스터 순서로** 채운다 [2026-09-09] — 새 게임은 파티가 비어 있고(사용자 지시) 편성은 플레이어의 몫이다.
     //   2026-09-21(ADR-0227)부터는 `newGame` 이 **편성 1 을 로스터 순서로 채우므로** 여기서 안 채운다 —
     //   같은 파티 · 같은 순서라 **런 지문이 안 움직인다**(또 부르면 `toggleParty` 가 빼기로 뒤집힌다).
     //   ⚠ **전술 칸을 읽기 전에** 채워야 한다 — 전술 조건이 파티 구성을 센다
-    G.progress.cleared = GOLDEN_STAGES.filter(s => s < stage);      // 해금만 풀어준다 (성장 없음) — 101~104 는 옛 [101,102,103] 판과 같은 목록
+    // 해금만 풀어준다 (성장 없음) — **표 순서의 앞 칸 전부**다: 칸은 직전 칸을 깨야 열린다(2026-09-29 · ~~골든 스테이지 중 앞의 것~~)
+    G.progress.cleared = order.slice(0, order.indexOf(stage));
 
     // 전술 칸 — `newGame` 직후 상태 그대로 (인위적으로 켜지 않는다, D-A4). 켜진 효과가 전투 수치에 들어가므로
     // 지문에 남겨야 나중에 달라졌을 때 원인을 읽을 수 있다. 전술은 자기 rng 스트림이라 전투 수열과 안 섞인다.
@@ -213,7 +216,7 @@ export function buildFingerprint(SYS, B, D, NOW, created) {
     const runs = [];
     for (const stage of GOLDEN_STAGES)
         for (let seed = 1; seed <= GOLDEN_SEEDS; seed++)
-            runs.push(runFingerprint(SYS, B, NOW, seed, stage));
+            runs.push(runFingerprint(SYS, B, NOW, seed, stage, D.stageOrder));
     return { meta: { ...buildMeta(B, D, NOW, created), parties: buildParties(SYS, B, NOW) }, runs };
 }
 

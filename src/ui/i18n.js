@@ -240,33 +240,35 @@ const STRINGS = {
     'exp.departSearching': { ko: '편성에 수색 나간 영웅이 있다', en: 'A hero in this party is out on a search' },
     'exp.departAdvancing': { ko: '편성에 전직 중인 영웅이 있다', en: 'A hero in this party is advancing' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
-    'exp.stageMeta': { ko: '위험도 {lv} · 약 {m}분', en: 'Danger {lv} · ~{m} min' },
+    /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 폐지로 「위험도 {lv}」 → 「레벨 {lv}」]. {lv} = `stage.csv:dlvl` */
+    'exp.stageMeta': { ko: '레벨 {lv} · 약 {m}분', en: 'Level {lv} · ~{m} min' },
+    /* 장소 한 줄 — 스테이지 목록 줄의 잔글씨 [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0436]. {lv} · {m} 는 칸들의 범위(`1~3`)거나 한 값이다.
+       en 은 「~」를 안 붙인다 — 범위의 「~」와 겹쳐 `~4~5 min` 으로 읽혔다 */
+    'exp.placeMeta': { ko: 'Lv {lv} · 약 {m}분', en: 'Lv {lv} · {m} min' },
     /* 스테이지 원소 — 어느 저항을 챙겨야 하는지의 신호 (battle_design §9-8) */
     'exp.element': { ko: '원소 {e}', en: 'Element {e}' },
-    /* 위험도 조절 — 출정 창 출정 방식 칸 (SCREEN_DESIGN §4-1 · ADR-0104 · R87). 기호 버튼의 뜻은 title 이 든다 */
-    'exp.level.h': { ko: '위험도', en: 'Danger' },
-    'exp.level.range': { ko: '{min} ~ {max}', en: '{min} ~ {max}' },
-    'exp.level.tip': {
-        ko: '클리어한 스테이지 중 가장 높은 레벨까지 올릴 수 있다 · 올리면 몬스터 · 몬스터가 입은 장비와 드롭의 아이템 레벨 · 경험치 · 골드가 함께 오른다 · 비용 없이 언제든 되돌린다',
-        en: 'Raise it up to the highest level among cleared stages · raising it lifts the monsters, the item level of their gear and drops, XP and gold · revert anytime for free',
-    },
-    'exp.level.base': { ko: '기본 레벨로', en: 'Back to base level' },
-    'exp.level.down': { ko: '1 내리기', en: 'Lower by 1' },
-    'exp.level.up': { ko: '1 올리기', en: 'Raise by 1' },
-    'exp.level.max': { ko: '최대로', en: 'To maximum' },
-    'exp.err.range': { ko: '그 위험도로는 바꿀 수 없다', en: 'That danger level is out of range' },
+    /* 출발 칸 줄의 라벨 — 출정 창 출정 방식 칸 맨 위 [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 줄(ADR-0104)을 걷은 자리] */
+    'exp.cell.h': { ko: '출발 칸', en: 'Starting stage' },
     // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 보스전 중이면 다음 런부터 · 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
     'exp.lock.boss': { ko: '보스전 중 — 바꾼 것은 다음 런부터 먹는다', en: 'Boss fight — changes apply next run' },
     'exp.tactic.off': { ko: '전술이 꺼졌다 — {eff}', en: 'Tactic off — {eff}' },
+    // 반복 원정 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0432 — PLAN_stage_segments D8] — 켬 = 장소 안 순환 · 끔 = 이길 때마다 다음 칸. 어느 쪽이든 원정은 멈추지 않는다.
+    //   버튼 글자는 기획 용어(반복 켬 · 끔)라 그대로다 — 뜻은 툴팁(`exp.repeat.tip`)과 도움말(`exp.repeat.sub`)이 든다
     'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat' },
+    'exp.repeat.tip': {
+        ko: '켜면 이 장소의 칸을 돌아가며 싸운다 · 끄면 이길 때마다 다음 칸으로 나아간다',
+        en: "On: loop through this area's stages · Off: move on to the next stage after each win",
+    },
     'exp.repeat.sub': {
-        ko: '승리하면 같은 곳으로 다시 나간다 · <b>게임이 켜져 있는 동안만</b> 돈다 · 쓰러진 영웅은 빠진 채로 이어진다 · 패배하면 멈추고 전원 회복한다',
-        en: 'Re-runs the same stage after a win · <b>only while the game is open</b> · anyone who went down sits out the rest · a defeat ends it and everyone recovers',
+        ko: '원정은 <b>멈추지 않는다</b> — 런이 끝나면 곧 다음 런이 나가고, 멈추는 길은 <b>철수</b>와 <b>게임 끄기</b> 둘뿐이다 · <b>게임이 켜져 있는 동안만</b> 돈다<br>'
+            + '이기면 다음 칸 · 지면(전원 전투불능 · 제한시간 초과) 같은 칸을 다시 돈다 · <b>반복을 켜면</b> 그 장소의 칸 I → II → III → I 을 돌고, <b>끄면</b> 순서의 다음 칸으로 나아간다(다음 칸이 잠겼으면 같은 칸) · 칸마다 새 런이라 전원 회복한 채 나간다',
+        en: 'Expeditions <b>never stop on their own</b> — when a run ends the next one heads out shortly; only <b>Retreat</b> or <b>closing the game</b> stops them · they run <b>only while the game is open</b><br>'
+            + 'A win moves on to the next stage · a loss (whole party downed · timed out) runs the same stage again · <b>with repeat on</b> the party loops through the area\'s stages I → II → III → I; <b>with it off</b> it moves on to the next stage in order (the same stage again if the next is locked) · every stage is a new run, so everyone heads out recovered',
     },
     'exp.notice.runClosed.h': { ko: '부재 중', en: 'While you were away' },
     'exp.notice.runClosed.body': {
-        ko: '원정은 게임이 켜져 있을 때만 돈다 — {stage} 원정은 진행 중이던 라운드를 잃고 멈췄다. 이긴 라운드까지의 보상은 마지막 리포트에 있다',
-        en: 'Expeditions only run while the game is open — the {stage} expedition stopped and lost the round in progress. Rewards from the rounds you won are in the last report',
+        ko: '원정은 게임이 켜져 있을 때만 돈다 — {stage} 원정이 멈췄다. 진행 중이던 라운드는 사라졌고, 이긴 라운드까지의 보상은 마지막 리포트에 있다',
+        en: 'Expeditions only run while the game is open — the {stage} expedition stopped. The round in progress was lost; rewards from the rounds you won are in the last report',
     },
     'exp.notice.report': { ko: '리포트 보기', en: 'View report' },
     'exp.notice.dismiss': { ko: '확인', en: 'OK' },
@@ -358,7 +360,7 @@ const STRINGS = {
     'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
     'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
     'ch.err.advancing': { ko: '전직 중인 영웅이다', en: 'That hero is advancing' },
-    'ch.err.running': { ko: '지금 원정에서 싸우는 영웅이다 — 그 원정이 끝나야 해고할 수 있다', en: 'That hero is fighting on an expedition — wait until it ends' },
+    'ch.err.running': { ko: '원정에 나가 있는 영웅이다 — 철수해야 해고할 수 있다', en: 'That hero is out on an expedition — retreat first' },   // 원정은 저절로 안 끝난다 — 철수가 풀어 준다 (2026-09-29 · ADR-0433)
     'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
     /* ~~'ch.err.downed'~~ 은 2026-09-28 삭제 — 쓰러진 영웅도 장비를 바꾼다 (R176 · ADR-0400) */
     /* 확인 문구도 **사용자 지시 그대로** [개정 2026-09-09] — 옛 판(「{name} — 해고하면 되돌릴 수 없다」)의 `{name}` 은 걷었다.
@@ -424,9 +426,10 @@ const STRINGS = {
     'bt.won': { ko: '승리', en: 'Victory' },
     'bt.lost': { ko: '패배', en: 'Defeat' },
     'bt.toReport': { ko: '리포트 보기', en: 'View report' },
-    'bt.retry': { ko: '다시 도전', en: 'Retry' },   // 패배한 결과 띠에만 선다 (SCREEN_DESIGN §4-2 · ADR-0138)
-    'bt.nextStage': { ko: '다음 스테이지', en: 'Next stage' },   // 반복 없이 이긴 결과 띠에만 선다 (SCREEN_DESIGN §4-2 · ADR-0141)
-    'bt.nextRun': { ko: '다음 원정 {s}초 후', en: 'Next run in {s}s' },
+    /* 결과 띠의 세기 [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0430] — 언제나 다음 런을 센다. {name} = **다음 런의 칸**(`Ch1-1 이름` 태그).
+       갈 칸이 바뀌면 「다음 칸」 · 같은 칸이면 「다시」. ~~bt.retry · bt.nextStage · bt.nextRun~~ 은 같은 날 삭제 — 두 버튼을 걷었다 */
+    'bt.nextCell': { ko: '{s}초 뒤 다음 칸 — {name}', en: 'Next stage in {s}s — {name}' },
+    'bt.again': { ko: '{s}초 뒤 다시 — {name}', en: 'Again in {s}s — {name}' },
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
@@ -697,7 +700,11 @@ const STRINGS = {
             + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place. Fame is on hold (base_expedition_design §1-3)',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
-    'exp.zones.sub': { ko: '1런 = 스테이지 1개 · {r}라운드 (챕터의 마지막 스테이지는 챕터보스 단독 1라운드)', en: '1 run = 1 stage · {r} rounds (the last stage of each chapter is one round against the chapter boss alone)' },
+    // 원정 지역 [개정 2026-09-29 · PLAN_stage_segments D1] — 챕터 = 장소 {p} · 장소마다 칸 I · II · III · 칸 하나가 한 런이다(도움말 · SCREEN_DESIGN §12)
+    'exp.zones.sub': {
+        ko: '챕터 = 장소 {p}곳 · 장소마다 칸 I · II · III — 1런 = 칸 하나 · {r}라운드 (마지막 장소는 챕터보스 단독 1라운드 한 칸)',
+        en: 'A chapter = {p} areas · each area has stages I · II · III — 1 run = 1 stage · {r} rounds (the last area is a single stage: one round against the chapter boss alone)',
+    },
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
     'exp.foes': { ko: '적 구성', en: 'Enemies' },
     /* 출정 창의 칸 이름 둘 [2026-09-10 사용자 지시 · ADR-0084] — 「적 구성」·「진형」과 **같은 규격**으로 선다.
@@ -711,10 +718,10 @@ const STRINGS = {
     'exp.story.noLeader': { ko: '용병 하나', en: 'A mercenary' },
     'exp.zones.note': {
         ko: '지역 죄종은 해당 죄종 접사의 드롭 가중치를 올린다 — 타겟 파밍의 축<br>'
-            + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치(정예 {e} / 보스 {b})는 챕터의 마지막 스테이지를 뺀 전 스테이지 공통이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다. <b>마지막 스테이지는 챕터보스 하나와 싸우는 1라운드</b>다<br>'
-            + '중도 귀환해도 <b>루팅은 전량 보존</b>된다. 비용은 <b>그 출정 동안 파티가 얇아지는 것</b> + 미클리어(다음 스테이지 미해금)뿐',
+            + '<b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치는 칸 III 이 정예 {e} / 보스 {b} · <b>칸 I · II 는 {b}라운드째도 정예</b>(보스가 없다)이고, 몬스터 조합·정예 특성만 매 런 새로 굴려진다. 몬스터 · 배경 · 원소는 장소의 칸 셋이 같고 레벨은 칸마다 오른다. <b>마지막 장소는 챕터보스 하나와 싸우는 1라운드</b>다<br>'
+            + '중도 귀환해도 <b>루팅은 전량 보존</b>된다. 비용은 <b>그 출정 동안 파티가 얇아지는 것</b> + 미클리어(다음 칸 미해금)뿐',
         en: "A zone's sin raises the drop weight of that sin's affixes — the axis of target farming<br>"
-            + '<b>Fixed structure, random contents</b> — the round layout (elite {e} / boss {b}) is identical for every stage but the last of each chapter; only monster mixes and elite traits reroll each run. <b>The last stage is a single round against the chapter boss</b><br>'
+            + '<b>Fixed structure, random contents</b> — stage III lays out elite {e} / boss {b}; <b>stages I · II have an elite in round {b} too</b> (no boss); only monster mixes and elite traits reroll each run. Monsters, backdrop and element are shared by an area\'s three stages, and the level rises stage by stage. <b>The last area is a single round against the chapter boss</b><br>'
             + 'Retreating early <b>keeps all loot</b>. The cost is <b>a thinner party for the rest of the run</b> plus no-clear (next stage stays locked)',
     },
 
@@ -1039,6 +1046,13 @@ const STRINGS = {
     'dp.watch': { ko: '자세히 보기', en: 'Details' },
     'dp.watch.none': { ko: '보낸 영웅이 없다', en: 'No hero sent' },
     'dp.watch.gain': { ko: '+{n} {item}', en: '+{n} {item}' },
+    // 파견 관전 창 미니게임 [시험 구현 2026-09-29 · PLAN_dispatch_watch D7]
+    'dw.hint.strike': { ko: '링이 표적에 닿을 때 누르기', en: 'Tap when the ring meets the mark' },
+    'dw.hint.pick': { ko: '반짝인 잎을 눈으로 따라가 고르기', en: 'Follow the glowing leaf and pick it' },
+    'dw.hint.beat': { ko: '표시가 선에 닿을 때마다 누르기', en: 'Tap as each mark hits the line' },
+    'dw.bonus': { ko: '+{s}초 앞당김', en: '+{s}s sooner' },
+    'dw.miss': { ko: '빗나감', en: 'Miss' },
+    'dw.info': { ko: '앞당긴 시간 {n} / {cap}초 (이번 시간)', en: 'Sped up {n} / {cap}s (this hour)' },
     'rs.on': { ko: 'On', en: 'On' },
     'rs.off': { ko: 'Off', en: 'Off' },
     // 전체 리롤 + 잠금 [2026-09-22 · R28 · tactic_card_design §5-6] — 버튼 하나가 안 잠근 칸을 전부 굴리고, 비용은 잠근 칸 수가 정한다
@@ -1077,7 +1091,7 @@ const STRINGS = {
     'rs.cond.leader_cls.not': { ko: '리더가 {a} 아님', en: 'Leader is not {a}' },
     'rs.cond.front_cls': { ko: '전열에 {a}', en: '{a} in the front row' },
     'rs.cond.front_cls.not': { ko: '전열에 {a} 없음', en: 'No {a} in the front row' },
-    'rs.cond.together': { ko: '이 파티로 {n}회 이상 출정', en: '{n}+ runs as this party' },
+    'rs.cond.together': { ko: '이 파티로 스테이지 {n}회 이상 클리어', en: '{n}+ stage clears as this party' },   // 이긴 칸마다 +1 (2026-09-29 · ~~{n}회 이상 출정~~)
     'rs.cond.leader_ldr': { ko: '리더의 통솔 {n} 이상', en: "Leader's Leadership {n}+" },   // 2026-09-27 — 칸 3(칸 = 상황)
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
@@ -1535,9 +1549,9 @@ const STRINGS = {
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
     'bt.note': {
         ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 원정 중에 바꾼 장비 · 스킬 트리는 <b>그 순간</b> 먹는다(보스전 중이면 다음 런부터 · 쓰러진 영웅은 런이 끝날 때까지 스킬 트리를 못 바꾼다) · <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
-            + '<b>철수</b>하면 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남는다. 게임을 끄면 원정도 그 자리에서 끊긴다.',
+            + '<b>철수</b>하면 원정이 멈춘다 — 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남는다 · 런이 끝나 다음 런을 세는 동안 누르면 다음 런이 안 나간다. 게임을 끄면 원정도 그 자리에서 끊긴다.',
         en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Gear and skill-tree changes during a run apply <b>at once</b> (from the next run during a boss fight · a downed hero keeps the skill tree locked until the run ends) · each round <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
-            + '<b>Retreat</b> drops the round in progress and keeps what the won rounds gave. Closing the game cuts the expedition off on the spot.',
+            + '<b>Retreat</b> stops the expedition — it drops the round in progress and keeps what the won rounds gave · pressed while the next run is counting down, the next run does not head out. Closing the game cuts the expedition off on the spot.',
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '공격 속도 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Attack Speed {s}s — acts when the gauge fills' },
@@ -1613,8 +1627,12 @@ const STRINGS = {
     'log.v.up': { ko: '발동', en: 'up' },
     'log.v.barrier': { ko: '방벽 {amt}', en: 'barrier {amt}' },
     'log.v.ended': { ko: '종료', en: 'ended' },
+    'log.v.lvup': { ko: '▲ Lv.{n}', en: '▲ Lv.{n}' },   // 레벨업 — 오른 영웅의 줄 · 새 레벨 (2026-09-29 · ADR-0435)
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
     'pop.counter': { ko: '반격', en: 'COUNTER' },   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
+    // 레벨업 (2026-09-29 · ADR-0435) — 오른 카드의 금색 글자 · 영웅 레벨이 적보다 낮았으면 아래 작은 줄에 적중 변화
+    'pop.lvup': { ko: '레벨 업', en: 'LEVEL UP' },
+    'pop.lvupHit': { ko: '적중 {a}% → {b}%', en: 'Hit {a}% → {b}%' },
 };

@@ -562,6 +562,8 @@ html, body { height: 100%; overflow: hidden; }
    요약 줄 20 + 격자 행 간격 12 + 위 여백 2 로 **38px** 였다.
    ⚠ 이 값이 없으면 행이 71px 로 줄어 **배경 아트가 그만큼 잘린다** — 행의 그림은 스테이지를 알아보는 단서다.
    `align-items: center` 라 남는 세로는 글 위아래로 고르게 퍼진다 */
+/* **장소 한 줄 = 버튼 하나** [2026-09-29 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0436 — 같은 날의 칸 버튼 셋(ADR-0429)을 걷고 옛 행 모양으로].
+   왼쪽 = 이름 + 잔글씨(레벨 범위 · 소요 · 원소) · 오른쪽 끝 = 잠긴 줄의 자물쇠 + 이유. 칸은 출정 창의 출발 칸 버튼(`.cp-*`)이 고른다 */
 .zone {
     display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
     min-height: 109px;
@@ -571,29 +573,38 @@ html, body { height: 100%; overflow: hidden; }
 }
 /* 69.3% = 잘라 낸 사본(2752×1360)에서 원본(×1536)의 60% 와 **같은 띠**가 보이는 값 — 행 그림은 안 바뀐다 (2026-09-11 · 아래 `.arena.has-bg`) */
 .zone.has-bg { background-size: cover; background-position: center 69.3%; image-rendering: var(--bg-render); }
+/* 칸 I 이 잠긴 장소는 줄째 흐리다 — II · III 의 잠김은 창의 출발 칸 버튼이 든다 (ADR-0436) */
 .zone.locked { opacity: .45; }
 .zone.boss { border-left-color: var(--text-accent); }
 .zone .title { display: flex; align-items: center; gap: 8px; }
 .zone .meta { font-size: var(--fs-sm); color: var(--text-muted); margin-top: 2px; }
-/* 행 클릭 = 고른다 (2026-08-27, SCREEN_DESIGN §4-1) — 출발은 위에 열리는 편성 패널이 든다.
-   커서는 실제로 눌리는 행에만 준다. 잠긴 행은 눌러도 플래시뿐이라 안 준다 */
+/* 잠긴 줄의 오른쪽 끝 — 자물쇠 + 왜 잠겼나 한 줄(출발 칸 버튼의 잠긴 모양과 같은 자물쇠) */
+.zone-lock { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-sm); color: var(--text-muted); }
+.zone-lock .lock-ico { display: inline-flex; flex: 0 0 auto; }
+.zone-lock .lock-ico svg { width: 1em; height: 1em; }
+/* 줄 클릭 = 그 장소의 출정 창 (2026-08-27 · SCREEN_DESIGN §4-1 · ADR-0436).
+   커서는 실제로 눌리는 줄에만 준다. 잠긴 줄은 눌러도 플래시뿐이라 안 준다 */
 .zone:not(.locked) { cursor: pointer; }
 .zone:not(.locked):hover { border-color: var(--border-highlight); }
-.zone.on { border-color: var(--border-highlight); background-color: var(--bg-card); margin-bottom: 0; }
-/* ⚠ 「원정」 칩(`.zone-pick`)은 없다 [2026-09-15 사용자 지시 · ADR-0151] — 고른 행은 테두리가 혼자 표시한다 */
+/* 고른 줄 — 테두리가 혼자 든다 · 창을 닫아도 남는다. ⚠ 옛 `margin-bottom: 0`(접이식이 행 아래 붙던 시절)은 안 되살린다 — 고르면 아래 줄이 당겨 붙었다 */
+.zone.on { border-color: var(--border-highlight); background-color: var(--bg-card); }
+/* ⚠ 「원정」 칩(`.zone-pick`)은 없다 [2026-09-15 사용자 지시 · ADR-0151] — 고른 줄은 테두리가 혼자 표시한다 */
 
 /* ───────── 출정 창 (SCREEN_DESIGN §4-1 · ADR-0084 · ADR-0088) ─────────
-   스테이지 행을 누르면 **탭 위에 겹쳐 뜨는 창**이다 — 접이식 전진 패널(`.form-panel` · 2026-08-28~2026-09-10)을 걷었다.
+   장소 줄을 누르면 **탭 위에 겹쳐 뜨는 창**이다 — 접이식 전진 패널(`.form-panel` · 2026-08-28~2026-09-10)을 걷었다.
    껍데기(어두운 판 · 가운데 · 정사각 X)는 셸의 창(.modal-layer/.modal-box)을 **그대로** 쓰고 여기서는 크기만 정한다.
    **폭을 못박는 이유**는 판 크기를 내용에 맡기면 상태가 크기를 흔들기 때문이다: 경고 줄의 글자가 있고 없고에 따라
    출정 칸 폭이 바뀌면 창이 통째로 넓어졌다 좁아졌다 한다(「크기는 상태에 흔들리지 않는다」 · 2026-08-28 사용자 지시).
-   폭은 1180 → 1280 → **1520** [2026-09-10 사용자 지시 — 「탭 자체를 더 키워라」]. 판 여백은 창 공통(12/14)보다 넉넉하게 준다 — 칸이 넷이다.
+   폭은 1180 → 1280 → 1520(2026-09-10 「탭 자체를 더 키워라」) → 1200 [2026-09-29 사용자 지시 「탭 좌우가 너무 넓어서 좀 줄이고 이야기를 4줄이 아니라 더 늘어나도 되도록」 · ADR-0438]
+   → **1300** [같은 날 사용자 지시 「물약을 나중에 4개까지 나오게 할 거니까 미리 4칸 들어갔다고 가정하고 조금만 더 넓게」 · ADR-0441] — 칸이 다 열린 물약 넉 칸이 한 줄에 든다.
+   줄어든 폭은 오른쪽 열(이야기 · 들고 가는 것)이 받는다 — 이야기 줄 수에 상한이 없어 창이 그만큼 길어진다(한 장을 넘으면 `.modal-box` 의 창 안 스크롤).
+   판 여백은 창 공통(12/14)보다 넉넉하게 준다 — 칸이 넷이다.
    **높이는 칸이 아니라 간격 · 여백으로 키웠다** [2026-09-10 사용자 지시 · ADR-0088] — 칸을 키우면 가로가 같이 커진다.
    ⚠ **선택자가 `.modal-box.depart-box` 인 것이 기능이다** — `.depart-box` 한 단이면 뒤에 선언된 창 공통 `.modal-box` 와 명시도가 같아
      여백이 그쪽(12/14/14)에 덮여 안 먹었다(옛 16/20/20 도). 이 창에서만 한 단 올린다 — `.modal-box` 자체는 안 건드린다 */
 /* **배율 .9** [2026-09-11 사용자 지시 · ADR-0099] — 창의 배율은 **창마다 정한다**(창은 한 장 직속이라 메인 배율을 안 물려받는다).
    출정 창은 띠 카드가 **캐릭터 탭 띠와 같은 크기**로 보이게 줄인다 — 메인과 같은 값이지만 묶지 않는다(메인이 바뀌어도 이 창은 제 값).
-   폭 1520 · 칸 118 · 여백은 **설계 크기**이고 화면에는 90% 로 선다. 배율 아래서는 보이는 폭과 `offsetWidth` 가 갈린다 —
+   폭 1300 · 칸 118 · 여백은 **설계 크기**이고 화면에는 90% 로 선다. 배율 아래서는 보이는 폭과 `offsetWidth` 가 갈린다 —
    진형 드래그 고스트가 그 차를 보정한다(`app.js:bindFormDrag`) */
 /* **높이를 한 번 더 키운다** [2026-09-14 사용자 지시 — 「너무 답답해 보인다」] — 이번에도 칸이 아니라 간격으로:
    판 위아래 여백 22/26 → 36/40 · 머리와 속 사이 10 → 24(창 공통 `gap` 을 이 창에서만 덮는다) · 줄 사이 · 칸 이름 아래는 아래 규칙.
@@ -604,7 +615,7 @@ html, body { height: 100%; overflow: hidden; }
    머리 선 → 위 줄 이름(창 `gap`)과 가림막 → 아래 줄 이름(`.dw-r2` 윗 여백)이 같은 값을 읽는다. 둘이 갈라지면 아래 줄 이름만 떠 보인다 */
 /* 아래 여백 40 → **28** [2026-09-22 사용자 지시 「표 아래 높이도 12px 감소」] — 그중 `--dw-gap` 만 판이 들고 나머지(4)는 출정 방식 선이 든다
    (선 끝 → 판 아랫변 = 선 위 여백 · ADR-0295 · `.fp-side`). 판 높이는 28 그대로다 */
-.modal-box.depart-box { --dw-gap: 24px; width: min(1520px, 100%); padding: 24px 24px var(--dw-gap); gap: var(--dw-gap); zoom: .9; }
+.modal-box.depart-box { --dw-gap: 24px; width: min(1300px, 100%); padding: 24px 24px var(--dw-gap); gap: var(--dw-gap); zoom: .9; }
 .modal-box.depart-box > .modal-head { padding-bottom: 14px; border-bottom: 1px solid var(--border-primary); }
 /* 속은 **칸 넷이 격자 하나에 2×2** 다 [2026-09-10 사용자 지시 · ADR-0088 · 자리는 2026-09-21 ADR-0214]
      위 줄   = 적 구성 ↔ 이야기 — 어떤 곳인가 (**읽는 자리 둘**)
@@ -637,7 +648,7 @@ html, body { height: 100%; overflow: hidden; }
 /* ⚠ **띠 카드는 공통 규격 그대로다** [2026-09-10 사용자 지시 — 같은 날의 `max-width: 160px` 특례를 철회] —
    창이 커진 몫은 **적 구성 · 진형 칸**(`--fm-slot`)이 받는다. 띠는 캐릭터 탭과 같은 카드여야 같은 부품으로 읽힌다(§5) */
 /* 창 머리 = **고른 스테이지의 신원**. 접이식이던 시절엔 바로 위 행이 말하던 것이라 패널에 머리가 없었는데,
-   창은 목록에서 떨어져 뜨므로 여기가 그 자리를 이어받는다. 잔글씨(위험도·소요·원소)는 스테이지 행이 찍는 것과 같은 값 */
+   창은 목록에서 떨어져 뜨므로 여기가 그 자리를 이어받는다. 잔글씨 = 레벨(`stage.csv:dlvl`) · 소요 · 원소 (ADR-0437) */
 .dw-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
 .dw-title small { font-size: var(--fs-sm); font-weight: 400; color: var(--text-muted); }
 /* 진형 목업 (SCREEN_DESIGN §4-1) — 랭크 줄은 **항상 3줄**이고, 2랭크 템플릿의 셋째 줄은 빈 줄로 남는다.
@@ -766,40 +777,56 @@ html, body { height: 100%; overflow: hidden; }
 /* 왼쪽 묶음 — 전술(남는 폭) · 물약(제 폭). 둘 다 **읽기 전용**이라 커서도 안 바꾼다 */
 .dw-load { display: flex; align-items: flex-start; gap: 26px; flex: 1 1 auto; min-width: 0; }
 /* 전술 묶음은 **제 폭을 못박는다** — 효과 글 길이(리롤 · 언어)가 옆의 물약 칸 자리를 흔들면 안 된다.
-   라벨이 드는 칸이라 고정 px 가 아니라 `clamp()` (§4-1 「크기는 상태에 흔들리지 않는다」) */
-.dw-tac { flex: 0 0 clamp(150px, 13em, 210px); min-width: 0; }
+   라벨이 드는 칸이라 고정 px 가 아니라 `clamp()` (§4-1 「크기는 상태에 흔들리지 않는다」).
+   13em(상한 210) → **12em(상한 180)** [2026-09-29 · ADR-0438] — 창 폭 1200 에서 이 칸(전술 + 물약 + 출정 방식)이 받는 폭은 설계 606 이다.
+   옛 폭(195 + 26 + 물약 넉 칸 172 + 26 + 327 = 746)이면 물약 칸이 출정 방식 밑으로 파고들었다(실측 — 2칸에서도 25px 겹쳤다).
+   창 폭 1300 [ADR-0441] 에서 받는 폭은 706 이고 이 값 그대로 넉 칸 한 줄이 든다 — 180 + 26 + 172 + 26 + 287 = 691 */
+.dw-tac { flex: 0 0 clamp(150px, 12em, 180px); min-width: 0; }
 /* 효과 한 줄 — 효과 글 + 카운터. **조건을 못 채운 칸은 흐리다** — 칸 격자(편성 탭)의 켜짐/꺼짐을 진하기 하나로 줄인 것이다 */
 .dw-tac-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; opacity: .4; }
 .dw-tac-row.on { opacity: 1; }
 /* 물약 칸 — 아레나 칸(`.b-belt .p-slot` 34)과 편성 탭 칸(44) 사이. 창 배율(.9) 아래서 편성 탭 칸과 비슷하게 보인다 */
 .dw-pot .p-slot { width: 40px; height: 40px; }
 .dw-pot .p-slot.short { opacity: .4; border-style: dashed; }
-/* **출정 방식** — 이름 + 위험도 + 경고 + 버튼 둘. **폭은 못박는다** — 옛 자리에서는 열(적 구성 내용 폭)이 정했는데,
+/* 물약 칸은 **한 줄**이다 [2026-09-29 사용자 지시 · ADR-0441 — 같은 날의 「두 칸씩 줄」(ADR-0438)을 걷었다] — 창 폭을 칸이 다 열린 넉 칸(172)이 한 줄로 드는 값으로 잡았다.
+   줄바꿈 규칙이 따로 없다 — 공용 `.p-belt` 의 가로 줄 그대로다 */
+/* **출정 방식** — 이름 + 출발 칸 + 경고 + 버튼 둘. **폭은 못박는다** — 옛 자리에서는 열(적 구성 내용 폭)이 정했는데,
    제 폭이 없으면 경고 줄의 글자가 폭을 흔들어 버튼이 옆으로 옮겨 다닌다(「크기는 상태에 흔들리지 않는다」 · 2026-08-28).
    라벨이 드는 칸이라 고정 px 가 아니라 `clamp()` — 상한은 진형 옆에 남는 폭이다 */
 /* **왼쪽에 세로 구분선** [2026-09-22 사용자 지시 「아래 선 빼 버리고 Departure 옆에」 · ADR-0292] — 들고 가는 것(읽는 자리)과 보내는 자리를 가른다.
    `align-self: stretch` 라 선이 **칸 이름 높이부터 격자 끝까지** 선다 — 가림막에는 안 닿는다(위 줄 선과 같은 문법 · ADR-0293).
    선 · 여백 몫(26 + 1)은 폭에 **더한다** — 빼면 버튼이 그만큼 좁아진다.
-   아래 padding = 판 아래 여백 28 에서 `--dw-gap` 을 뺀 몫 [2026-09-22 사용자 지시 · ADR-0295] — 선이 보내기 아래로 그만큼 더 내려가 판 아랫변 앞 `--dw-gap` 에서 멈춘다 */
+   아래 padding = 판 아래 여백 28 에서 `--dw-gap` 을 뺀 몫 [2026-09-22 사용자 지시 · ADR-0295] — 선이 보내기 아래로 그만큼 더 내려가 판 아랫변 앞 `--dw-gap` 에서 멈춘다.
+   폭 20em(상한 300) → **17em(상한 260)** [2026-09-29 · ADR-0438] — 창 폭 1200 에서 전술 · 물약과 한 줄에 들게 줄였다(`.dw-tac` 위 주석의 셈) */
 .fp-side {
     display: flex; flex-direction: column; align-items: stretch; gap: 10px;
-    flex: 0 0 calc(clamp(240px, 20em, 300px) + 27px); align-self: stretch;
+    flex: 0 0 calc(clamp(240px, 17em, 260px) + 27px); align-self: stretch;
     padding-left: 26px; padding-bottom: calc(28px - var(--dw-gap)); border-left: 1px solid var(--border-secondary);
 }
 /* 이 칸의 이름은 아래 여백을 **flex `gap`(10) 만큼 덜** 준다 — 옆 칸 이름 아래(20)와 합이 같아야 내용의 윗선이 옆 칸과 맞는다 */
 .fp-side .sub-h { margin-bottom: 10px; }
-/* 위험도 줄 — 출정 방식 칸 맨 위 (SCREEN_DESIGN §4-1 · ADR-0104). 윗줄 라벨 + 범위 · 아랫줄 버튼 넷 + 지금 레벨.
-   못 올리는 상태에서도 줄은 그대로 서고 버튼만 흐려진다 — 창 크기가 상태에 안 흔들린다 */
-.lv-box { display: flex; flex-direction: column; gap: 4px; }
-.lv-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.lv-h { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
-.lv-range { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-/* 버튼 넷과 숫자는 **한 무리로 가운데에 모인다** — 숫자가 칸 폭을 먹으면 `‹` `›` 가 양끝으로 벌어져 한 조절기로 안 읽힌다 */
+/* 출발 칸 줄 — 출정 방식 칸 맨 위 [2026-09-29 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 줄(ADR-0104)을 걷은 자리].
+   윗줄 잔글씨 라벨 · 아랫줄 칸 버튼 셋. **자리는 늘 셋 · 같은 폭**(`repeat(3, minmax(0, 1fr))`) — 칸이 하나인 장소(챕터보스)도
+   빈 자리 둘(`.cp-void`)이 폭을 잡아 버튼 폭이 장소마다 안 흔들린다. 라벨 칸이라 고정 px 이 아니다(영어 「Chapter Boss」가 한 칸 폭을 넘으면 두 줄로 접힌다) */
+.cp-box { display: flex; flex-direction: column; gap: 4px; }
+.cp-h { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
+.cp-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+/* ⚠ 선택자는 `.btn.sm.cp-btn` — 한 단(`.cp-btn`)이면 공용 `.btn.sm { padding }` · `.btn.sm.on`(클래스 둘 · 셋)에 져서 안 먹는다(`.go-tree` 와 같은 사정) */
+.btn.sm.cp-btn { min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 4px; line-height: 1.2; text-align: center; }
+/* 고른 칸 — 강조색 테두리 + 밝은 글자(공용 `.btn.sm.on` 은 한 단 밝아질 뿐이라 안 보였다 — 제련소 작업 탭과 같은 처방 · 2026-09-21) */
+.btn.sm.cp-btn.on { color: var(--text-primary); border-color: var(--text-accent); }
+/* 잠긴 칸 — 흐리고 자물쇠. 눌러도 플래시뿐이라 커서를 안 준다 · 이유는 툴팁 한 줄(`tip-mini`) */
+.cp-btn.locked { opacity: .45; cursor: default; }
+.cp-btn.locked:hover { border-color: var(--border-secondary); background: var(--bg-tertiary); }
+.cp-btn .lock-ico { display: inline-flex; flex: 0 0 auto; }
+.cp-btn .lock-ico svg { width: 1em; height: 1em; }
+/* 버튼 줄 — 자동 분해 창의 레벨 선(§6)이 쓴다(옛 위험도 줄의 모양 · 위험도는 2026-09-29 폐지 · ADR-0437).
+   버튼과 숫자는 **한 무리로 가운데에 모인다** — 숫자가 칸 폭을 먹으면 버튼이 양끝으로 벌어져 한 조절기로 안 읽힌다 */
 .lv-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
 .lv-btn { flex: 0 0 auto; min-width: 2.2em; text-align: center; }
 .lv-val { flex: 0 0 auto; min-width: 3em; text-align: center; font-size: var(--fs-lg); color: var(--text-primary); font-variant-numeric: tabular-nums; }
-/* 올린 레벨 — 출정 창의 숫자 · 창 머리 · 스테이지 목록 행이 같은 강조색을 쓴다 */
-.lv-val.up, .lv-up { color: var(--text-accent); }
+/* 켠 값 — 강조색 */
+.lv-val.up { color: var(--text-accent); }
 /* 세로로 쌓이던 시절의 윗 여백을 걷는다 — 이제 제 칸 안에서 경고 줄 바로 밑이다 */
 /* 버튼 둘은 **세로로 쌓는다** [2026-09-10 사용자 지시] — 가로로 나란하던 것을 세웠다.
    `stretch` 라 둘의 폭이 저절로 같아진다(옛 `min-width: 148px` 는 가로 배치에서 크기를 맞추던 값이라 하한으로만 남긴다) */
@@ -1739,6 +1766,19 @@ html, body { height: 100%; overflow: hidden; }
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
 .pop.counter { color: var(--color-warning); font-size: var(--fs-xs); }            /* 반격 — 반격한 카드의 글자 (ADR-0158) */
 .pop.heal { color: var(--heal-fg); }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
+/* 레벨업 — 금색 · 다른 글자 팝업보다 크고 한 박자 길다(1.6s = battle.js `LVUP_MS`) · 적중 변화는 아래 작은 줄 (2026-09-29 · ADR-0435).
+   피해 숫자(top 38%)와 겹치지 않게 조금 위에서 떠오른다 */
+.pop.lvup {
+    top: 18%; font-size: var(--fs-md); font-weight: 700; color: var(--color-warning); text-align: center;
+    animation-duration: 1.6s;
+}
+.pop.lvup small { display: block; font-size: var(--fs-xs); font-weight: 400; color: var(--text-primary); }
+/* 본 적 없는 레벨업 — 관전 카드 신원의 `Lv.n` 이 반짝인다 · **그 글자를 누를 때까지** (2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440) */
+.unit-lv.lv-new { color: var(--color-warning); font-weight: 700; cursor: pointer; animation: lv-blink 1.1s ease-in-out infinite; }
+@keyframes lv-blink {
+    0%, 100% { opacity: 1; text-shadow: 0 0 6px var(--color-warning); }
+    50% { opacity: .35; text-shadow: none; }
+}
 /* ⚠ 피해 팝업의 스킬 아이콘(`.pop-ico` · ADR-0039)은 걷었다 (2026-09-28 · ADR-0409) — 「스킬이 나갔다」는 아래 「관전 연출」의 스킬 이펙트가 든다 */
 /* 발동한 스킬 이름 — 피해 숫자(초상 위, top 38%)와 자리를 나눠 카드 가운데 위로 뜬다. 배경 위에서 읽히도록 제 칩을 갖는다 */
 .pop.skill-tag {
@@ -2729,7 +2769,7 @@ html, body { height: 100%; overflow: hidden; }
 .btn.sm.go-tree { padding-top: 4px; padding-bottom: 4px; }
 /* 해고 창의 속 — 한 줄 + (막히지 않았으면) 위험 색 버튼. 규칙 설명이 아니라 상태와 확인이다 (SCREEN_DESIGN §6) */
 /* 자동 분해 창 [2026-09-21 · SCREEN_DESIGN §6 · ADR-0203] — 라벨 열 + 조작 열. 라벨 폭은 글자가 정한다(영어가 길다 · 고정 px 금지).
-   레벨 선은 위험도 줄의 `.lv-row` 를 그대로 쓰되 값이 「Lv.n 미만」 문장이라 글자를 한 단 줄이고 폭을 넉넉히 잡는다 */
+   레벨 선은 버튼 줄 `.lv-row`(옛 위험도 줄의 모양)를 그대로 쓰되 값이 「Lv.n 미만」 문장이라 글자를 한 단 줄이고 폭을 넉넉히 잡는다 */
 .auto-box { display: grid; grid-template-columns: max-content auto; gap: 14px 18px; align-items: center; font-size: var(--fs-sm); }
 /* 이 창의 머리 이름 = **패널 제목(.panel > h2)과 같은 크기** [2026-09-21 사용자 지시] — 기본 h2(1.5em)가 속 줄보다 두 단 넘게 컸다.
    다른 창의 머리는 안 건드린다(이 창만 지시받았다) */
@@ -3082,9 +3122,14 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     /* 바닥은 불투명하다 (ADR-0212) — 2·1 진형이면 뒷줄 카드 아래 창 뱃지가 이 자리까지 내려온다. 층은 띠가 위라도
        바닥이 비치면 아래 아이콘이 글자와 겹쳐 보인다. 투명도 손잡이(--panel-alpha-soft)는 다른 판도 쓰므로 안 건드린다 */
     background: var(--bg-secondary); border: 1px solid var(--border-secondary); padding: 8px 14px;
+    /* **한 줄로 선다** [2026-09-29 · ADR-0430] — 세기가 다음 칸 이름을 들어 길어졌다(「Again in 3s — Ch2-4 Threshold of the Abyss II」).
+       `left: 50%` 인 절대 위치 상자는 폭이 아레나의 절반에서 접혀 나눔 배치에서 글과 버튼이 두 줄로 꺾였다 — 폭을 글에 맡기고 아레나 폭에서만 자른다 */
+    width: max-content; max-width: calc(100% - 24px); white-space: nowrap;
 }
 .battle-result.show { display: flex; }
-.battle-result .verdict { font-size: var(--fs-lg); letter-spacing: 1px; }
+.battle-result .verdict { font-size: var(--fs-lg); letter-spacing: 1px; flex: 0 0 auto; }
+.battle-result .b-next { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.battle-result .btn { flex: 0 0 auto; }
 .pop.miss { color: var(--text-muted); }
 
 /* 고르는 중 [2026-09-21 · ADR-0184] — 클릭이 **체크**가 되므로 칸 모양을 바꾼다.
@@ -3253,6 +3298,43 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dpw-line { font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dpw-panel .act-fill { transition: width .2s linear; }
 .dpw-panel .bar.hp > i { transition: width .15s ease-out; }   /* 맞을 때만 준다 — 짧게 끊어 떨어진다 (ADR-0418) */
+/* 파견 관전 창 미니게임 [시험 구현 2026-09-29 · PLAN_dispatch_watch D7] — 판 위에 한 겹(`.dwg`)을 얹는다. 자리는 `app.js:dwgAt` 가 % 로 준다 */
+.dwg { position: absolute; inset: 0; z-index: 5; user-select: none; }
+.dwg-strike, .dwg-beat { cursor: pointer; }
+.dwg-pick { pointer-events: none; }
+.dwg-pick.armed .dwg-leaf { pointer-events: auto; cursor: pointer; }
+.dwg-hint { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 3px 12px; border-radius: 12px;
+    background: rgba(0, 0, 0, .6); color: var(--text-primary); font-size: var(--fs-sm); white-space: nowrap; pointer-events: none; }
+.dwg-info { position: absolute; right: 12px; top: 8px; z-index: 6; font-size: var(--fs-xs); color: var(--text-secondary); pointer-events: none; }
+/* 채광 — 한 방 맞히기: 표적(가운데 원) 위로 흰 링이 줄어든다 */
+.dwg-at { position: absolute; width: 0; height: 0; }
+.dwg-core, .dwg-ring { position: absolute; left: -28px; top: -28px; width: 56px; height: 56px; border-radius: 50%; box-sizing: border-box; }
+.dwg-core { border: 3px solid var(--color-warning); background: rgba(255, 200, 80, .18); box-shadow: 0 0 14px var(--color-warning); }
+.dwg-ring { border: 3px solid #fff; animation: dwg-shrink linear forwards; }
+@keyframes dwg-shrink { from { transform: scale(3); opacity: .35; } to { transform: scale(1); opacity: 1; } }
+/* 채집 — 골라 따기: 잎 한 줄 · 반짝 → 뒤집혀 섞인다(자리 이동은 `left` 전이) */
+.dwg-row { position: absolute; height: 64px; transform: translate(-50%, -50%); }
+.dwg-leaf { position: absolute; top: 0; width: 64px; height: 64px; padding: 6px; border-radius: 10px; border: 2px solid var(--border-dark);
+    background: var(--surface-1); transition-property: left, transform; transition-timing-function: ease-in-out; }
+.dwg-leaf img { width: 100%; height: 100%; object-fit: contain; }
+.dwg-leaf.hot, .dwg-leaf.good { border-color: var(--color-success); box-shadow: 0 0 16px var(--color-success); }
+.dwg-leaf.hot { transform: scale(1.12); }
+.dwg-leaf.bad { border-color: var(--color-error); }
+.dwg-leaf.shut img { visibility: hidden; }
+.dwg-leaf.shut::after { content: '?'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: var(--text-secondary); }
+.dwg-pick.armed .dwg-leaf:hover { transform: translateY(-3px); }
+/* 벌목 — 박자 잇기: 표시가 오른쪽에서 와 노란 선에 닿는다 */
+.dwg-track { position: absolute; width: 400px; height: 38px; transform: translate(-50%, -50%); border-radius: 19px; overflow: hidden;
+    background: rgba(0, 0, 0, .6); border: 1px solid var(--border-dark); }
+.dwg-track.miss { animation: dwg-miss .3s; }
+@keyframes dwg-miss { from { border-color: var(--color-error); box-shadow: 0 0 12px var(--color-error); } }
+.dwg-line { position: absolute; top: 3px; bottom: 3px; width: 4px; margin-left: -2px; background: var(--color-warning); box-shadow: 0 0 8px var(--color-warning); }
+.dwg-mark { position: absolute; top: 8px; left: 100%; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: #fff;
+    animation-name: dwg-slide; animation-timing-function: linear; animation-fill-mode: both; }
+.dwg-mark.hit { background: var(--color-success); }
+/* 선(왼쪽 20% = `app.js:DWG_BEAT_LINE`)을 지나면 흐려진다 — 지나간 표시가 왼쪽 끝에 쌓이지 않게 */
+@keyframes dwg-slide { 0% { left: 100%; opacity: 1; } 80% { left: 20%; opacity: 1; } 100% { left: 0%; opacity: 0; } }
+.dwg-combo { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--color-warning); font-weight: bold; }
 /* 자리 칸의 선택 창 [2026-09-27 · SCREEN_DESIGN §8 · ADR-0373] — 칸 옆에 선다. 자리는 툴팁과 같은 **한 장 좌표**(`app.js:dpPickPanel` · `stageRect`)라
    `position: fixed` 가 한 장(#stage)에 붙는다. 깔개(`.dp-pick-back`)는 한 장 전체 — 바깥 클릭이 닫기다 */
 .dp-pick-back { position: fixed; inset: 0; z-index: 38; }
@@ -3613,10 +3695,12 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 틈은 초상 사이 틈(7)과 같다 · 버튼 기둥 폭도 초상 한 변이라 **영웅 셋이 적 구성 둘째 ~ 넷째 칸 바로 아래**에 선다 [2026-09-21 · ADR-0283] —
    옛 판은 기둥이 글자 폭(6em)에 틈 18 이라 초상이 적 칸과 어긋나 섰다 */
 .pk-row { display: flex; align-items: flex-start; gap: 7px; }
-/* 버튼 셋이 **초상 한 변**(`--fm-slot`)을 나눠 갖는다 [2026-09-21 사용자 지시] — 버튼 기둥의 위아래가 초상과 딱 떨어진다.
-   높이를 버튼 수로 나누는 것이라 편성 개수(`[balance.csv:party_preset_count]`)가 바뀌어도 기둥 높이는 그대로다 */
+/* 버튼 기둥은 **초상 한 변**(`--fm-slot`) 높이다 [2026-09-21 사용자 지시 · ADR-0283].
+   버튼 하나 = 기둥을 **편성이 다 열렸을 때의 개수**(`--pk-n` — 렌더러가 `limitsOf` 에 다 지은 랭크를 물어 넣는다)로 나눈 높이다
+   [2026-09-29 사용자 지시 「파티 개수가 1개여도 3개일 때처럼의 높이로」 · ADR-0442] — 다 열리면 위아래가 초상과 딱 떨어지고,
+   덜 열렸으면 버튼이 위에서부터 서고 아래가 빈다. 옛 식(`flex: 1 1 0` — 지금 개수로 나눔)은 편성 하나일 때 버튼 하나가 초상 높이로 섰다 */
 .pk-btns { display: flex; flex-direction: column; gap: 7px; flex: 0 0 var(--fm-slot); width: var(--fm-slot); height: var(--fm-slot); }
-.pk-btns .btn { min-width: 0; text-align: left; flex: 1 1 0; min-height: 0; padding-top: 0; padding-bottom: 0; }
+.pk-btns .btn { min-width: 0; text-align: left; flex: 0 0 calc((var(--fm-slot) - 7px * (var(--pk-n, 1) - 1)) / var(--pk-n, 1)); min-height: 0; padding-top: 0; padding-bottom: 0; }
 .pk-faces { display: flex; gap: 7px; }
 .pk-face {
     position: relative; overflow: hidden; flex: 0 0 auto;

@@ -29,6 +29,7 @@ import { adminOn } from './devadmin.js';   // 개발 장치 — 관리자 모드
 /** 로드된 데이터 — 렌더러는 수치를 여기서 읽는다 (D.balance.party_size_max 처럼) */
 export const D = {
     balance: null, monsters: null, stages: null, stageList: [], stageOrder: [],
+    places: [], placeCells: {},   // 장소 — [{key, chapter, num, cells:[stage 행]}] 표 순서 · {`chapter-stage_num`: 칸 행들} (2026-09-29 · PLAN_stage_segments D1 · D3)
     roundSets: {},            // stage_round.csv — {round_set: [{round_num, round_type}]} · 스테이지가 stage.csv:round_set 으로 하나를 고른다
     budgets: null, grades: null, eliteRounds: [], bossRound: 0,   // eliteRounds · bossRound = 첫 스테이지 세트의 배치(도움말 표기)
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
@@ -143,6 +144,15 @@ export async function loadData(base = './data/') {
     D.stageList = stage.slice().sort((a, b) => a.stage_id - b.stage_id);
     D.stages = indexBy(D.stageList, 'stage_id');
     D.stageOrder = D.stageList.map(s => s.stage_id);
+    // 장소 — 칸(`cell`)을 (chapter, stage_num) 으로 묶는다 · 칸 순 [2026-09-29 · PLAN_stage_segments D1 · D3].
+    //   이야기는 장소의 것이라 **칸 I 에만** 적혀 있고 나머지 칸은 `-` 다 — 여기서 칸 I 의 글을 채운다(글을 칸마다 세 번 적지 않는다)
+    D.placeCells = {};
+    for (const s of D.stageList) (D.placeCells[placeKey(s)] ??= []).push(s);
+    D.places = Object.values(D.placeCells).map(cells => ({ key: placeKey(cells[0]), chapter: cells[0].chapter, num: cells[0].stage_num, cells }));
+    for (const cells of Object.values(D.placeCells)) for (const s of cells) {
+        if (s.story_kr === '-') s.story_kr = cells[0].story_kr;
+        if (s.story_en === '-') s.story_en = cells[0].story_en;
+    }
     // 라운드 세트 — `stage_round.csv` 는 세트(`round_set`)마다 라운드 줄을 든다. 스테이지가 `stage.csv:round_set` 으로 하나를 고르고
     //   라운드 수는 그 세트의 행 수다 (2026-09-11 — 챕터보스 스테이지는 보스 1라운드 · base_expedition_design §1-2)
     D.roundSets = {};
@@ -150,8 +160,10 @@ export async function loadData(base = './data/') {
     for (const rows of Object.values(D.roundSets)) rows.sort((a, b) => a.round_num - b.round_num);
     D.budgets = indexBy(budget, 'budget_key');
     D.grades = indexBy(grade, 'grade');
-    // 도움말이 적는 「보통 스테이지」의 배치 — **첫 스테이지의 세트**에서 읽는다. 세트 이름을 코드가 박지 않는다
-    const baseRounds = D.roundSets[D.stageList[0]?.round_set] ?? [];
+    // 도움말이 적는 「보통 스테이지」의 배치 — **보스 라운드가 있는 첫 여러 라운드 세트**(칸 III)에서 읽는다. 세트 이름을 코드가 박지 않는다
+    //   (~~첫 스테이지의 세트~~ — 2026-09-29 부터 첫 칸은 정예로 끝나는 칸 I 이다)
+    const hasBoss = s => (D.roundSets[s.round_set] ?? []).length > 1 && D.roundSets[s.round_set].some(r => r.round_type === 'boss');
+    const baseRounds = D.roundSets[(D.stageList.find(hasBoss) ?? D.stageList[0])?.round_set] ?? [];
     D.eliteRounds = baseRounds.filter(r => r.round_type === 'elite').map(r => r.round_num);
     D.bossRound = baseRounds.find(r => r.round_type === 'boss')?.round_num ?? baseRounds.length;
     const codexByLevel = codexLevel.slice().sort((a, b) => a.level - b.level);
@@ -358,8 +370,19 @@ export const monsterFace = (id, grade = 'normal') => {
 export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wrath';
 /** 챕터 행 — {id, sin, name:{ko,en}} */
 export const chapterOf = ch => D.chapters?.[ch] ?? null;
-/** 스테이지 이름 — stage.csv 의 _kr/_en 쌍 */
-export const stageName = row => ({ ko: row.stage_name_kr, en: row.stage_name_en ?? row.stage_name_kr });
+/** 장소 키 — (chapter, stage_num). 칸 I · II · III 이 한 장소를 나눠 가진다 (2026-09-29 · PLAN_stage_segments D1) */
+export const placeKey = row => `${row.chapter}-${row.stage_num}`;
+/** 그 칸이 든 장소의 칸 행들 — 칸 순 */
+export const placeCells = row => D.placeCells?.[placeKey(row)] ?? [row];
+/** 장소 이름 — stage.csv 의 _kr/_en 쌍 그대로 (로마 숫자 없이 — 도감 · 목록의 장소 줄) */
+export const placeName = row => ({ ko: row.stage_name_kr, en: row.stage_name_en ?? row.stage_name_kr });
+/** 스테이지(칸) 이름 — 장소 이름 뒤 **로마 숫자**, 칸이 둘 이상인 장소만: 「파멸의 진영 II」 · 챕터보스 칸은 이름 그대로 (2026-09-29 · PLAN_stage_segments D9) */
+export const stageName = row => {
+    const p = placeName(row);
+    if (placeCells(row).length < 2) return p;
+    const n = M.roman(row.cell);
+    return { ko: `${p.ko} ${n}`, en: `${p.en} ${n}` };
+};
 /** 스테이지 이야기 — stage.csv 의 story_kr/story_en 쌍 (출정 창 「이야기」 칸 · SCREEN_DESIGN §4-1 · ADR-0105). 영어가 비면 한국어.
  *  줄바꿈은 셀 안의 `\n` 두 글자다(CSV 는 한 행이 한 줄이다) — 여기서 실제 줄바꿈으로 바꾸고 `.dw-story-text` 의 pre-line 이 편다 */
 const storyLines = s => String(s ?? '').replace(/\\n/g, '\n');
@@ -405,14 +428,19 @@ export function fillStory(text, lang, { leader = null, fallback = '' } = {}) {
 }
 /** 스테이지 배경 — `stage.csv:bg` 가 **자리를 연다**. ⚠ 그것은 스타일 폴더의 재고가 아니다 —
  *  고른 스타일에 그림이 없으면 404 가 한 번 나고 CSS 그라디언트가 보인다. 경로 조립은 mock(`bgDir`) */
-export const stageBgOf = id => (D.stages?.[id]?.bg ? M.stageBg(id) : null);
-/** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) + 보스 1. 챕터보스 스테이지는 **보스 하나뿐**이다(2026-09-11). 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다 */
-export const codexStages = () => (D.stageList ?? []).map(s => {
+//   그림은 **장소의 것**이다 — 파일 이름이 장소 번호(`chapter × 100 + stage_num` — 옛 스테이지 번호)라 칸 I · II · III 이 같은 그림을 쓴다 (2026-09-29)
+export const stageBgOf = id => {
+    const s = D.stages?.[id];
+    return s?.bg ? M.stageBg(s.chapter * 100 + s.stage_num) : null;
+};
+/** 도감 스테이지 목록 — stage.csv + monster.csv 에서 만든다: 일반몹(idx 순) + 보스 1. 챕터보스 스테이지는 **보스 하나뿐**이다(2026-09-11). 표시 라벨(계열·완성 보상)은 렌더러가 mock 에서 붙인다.
+ *  **장소 하나에 한 줄** — 칸 I · II · III 은 몬스터가 같다(2026-09-29 · PLAN_stage_segments D3). `id` 는 장소의 첫 칸 · 이름은 로마 숫자 없이 */
+export const codexStages = () => (D.places ?? []).map(({ cells: [s] }) => {
     const normals = Object.values(D.monsters ?? {})
         .filter(m => m.chapter === s.chapter && m.stage_num === s.stage_num && m.spawn_grade === 'normal')
         .sort((a, b) => a.monster_idx - b.monster_idx)
         .map(m => ({ id: m.monster_idx }));
-    return { id: s.stage_id, chapter: s.chapter, num: s.stage_num, name: stageName(s), monsters: [...normals, { id: s.boss_monster_idx, boss: true }] };
+    return { id: s.stage_id, chapter: s.chapter, num: s.stage_num, name: placeName(s), monsters: [...normals, { id: s.boss_monster_idx, boss: true }] };
 });
 /** 도감 `???` 자리(VI)의 입주자 — `monster.csv` 에 그 번호로 적힌 몬스터(idx 순). 그 번호의 스테이지는 없어 **전투에 안 나온다** (ADR-0361 · 1장 = 둘라한) */
 export const codexSlotMonsters = (chapter, num) => Object.values(D.monsters ?? {})

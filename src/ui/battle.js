@@ -67,13 +67,13 @@ const markActed = (u, at) => { u.lastAct = at; u.acted = true; u.stalls = []; };
 
 /**
  * @param container  붙일 곳
- * @param opts { result, stageId, heroes: [hero...], repeat: bool, onEnd(auto), onOver(), onTime(t), onRetreat(), now(), frozenMs }
+ * @param opts { result, stageId, heroes: [hero...], upNext(), onEnd(auto), onOver(), onTime(t), onRetreat(), now(), frozenMs }
  *   onOver() = 재생이 런의 끝에 닿았다(결과 띠가 선 순간 · 되감기로 선 끝은 안 부른다) — 앱이 상단 세그먼트의 관전 칸을 「전투 종료」로 바꾼다 (ADR-0147)
  *   now = 실제 시각(ms)을 읽는 시계 · frozenMs = 「멈췄다」의 문턱 — 둘 다 앱이 넘긴다 (ADR-0102)
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
- *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 재생이 끝나고 사용자가 넘어갈 때 / 반복 자동 진행 시.
- *   onRetry() = 패배한 결과 띠의 [다시 도전] — 같은 스테이지로 다시 보내는 것은 앱이다. 안 넘기면 버튼이 안 선다 (ADR-0138)
- *   onNext() = 반복 없이 이긴 결과 띠의 [다음 스테이지] — 어디가 다음인지 · 보내는 것은 앱이다. 안 넘기면(마지막 스테이지) 버튼이 안 선다 (ADR-0141)
+ *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
+ *   upNext() = 다음 런 `{stageId, at}`(앱이 `game.nextRepeat` 로 답한다) · 멈춘 부대(철수 · 끊김 뒤)면 null — 결과 띠는 이 답이 있으면 **언제나** 센다 (ADR-0430).
+ *     ~~onRetry()[다시 도전] · onNext()[다음 스테이지] · repeat · restartAt~~ 은 2026-09-29 삭제 — 원정이 멈추지 않아 이어 가기가 두 버튼의 일을 한다
  * @returns 정리 함수
  */
 export function mountBattle(container, opts) {
@@ -84,6 +84,8 @@ export function mountBattle(container, opts) {
         monsterItemTipOf: opts.monsterItemTipOf ?? null,   // 몬스터 장비 칸의 아이템 카드 — 세이브 밖 개체라 uid 가 없다 (ADR-0183)
         // 유닛 툴팁의 세부 옵션 · 착용 장비 · 장비 hover 아이템 카드 — 앱이 든다(재생기는 G 를 모른다 · ADR-0171 · ADR-0182 · ADR-0183)
         pickedUid: opts.pickedUid ?? null, onPickHero: opts.onPickHero ?? null,   // 장착 대상 고르기 — 선택은 앱의 화면 상태다 (ADR-0137)
+        // 본 적 없는 레벨업 — 영웅 → 반짝이나 · 그 글자를 눌렀다. 「본 레벨」은 앱의 화면 상태다(관전을 안 보는 동안 오른 것도 든다 · ADR-0440)
+        lvUnseen: opts.lvUnseen ?? null, onLvSeen: opts.onLvSeen ?? null,
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
         // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
@@ -114,6 +116,9 @@ export function mountBattle(container, opts) {
         const h = heroes.find(x => x.uid === p.uid);
         return {
             key: p.key, side: 'party', name: h?.name, sin: h?.sin, cls: h?.cls, hero: h,   // hero — 툴팁이 기본 능력치를 읽는다 (2026-08-28)
+            // 카드가 마지막으로 그린 레벨 — 영웅의 지금 레벨이 이보다 높으면 레벨업을 띄운다(`levelCheck` · ADR-0435).
+            //   재개로 다시 선 카드는 지금 레벨로 출발한다 — 지난 레벨업을 한꺼번에 띄우지 않는다
+            shownLv: h?.level ?? 1, lvPop: null,
             // 진형의 랭크 번호 (0 = 전열) — 카드 자리에만 쓴다 (2026-09-09). 가로 차례는 `layoutRanks` 가 나중에 박는다
             rank: form?.byUid?.[p.uid] ?? 0,
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
@@ -352,15 +357,18 @@ const clsName = id => { const c = D.classes.find(x => x.id === id); return c ? L
 const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
     : u.grade === 'stage_boss' ? t('kind.boss')
     : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '';
-const identOf = u => u.side === 'party' ? `Lv.${u.hero?.level ?? 1} · ${clsName(u.cls)}` : gradeLabel(u);
+const identOf = (u, state) => u.side === 'party' ? `${lvSpan(state, u, u.hero?.level ?? 1)} · ${clsName(u.cls)}` : gradeLabel(u);
 /* 개편판 신원 — **양 진영 같은** `Lv.n · 직업` [2026-09-21 사용자 지시 · ADR-0275]. 정예 · 보스 라벨은 띠 오른쪽(`gradeLabel`)으로 간다.
    몬스터 레벨 = 결과가 싣는 세부 능력치의 레벨(`sheet.level` — 이번 런의 스테이지 레벨 · 몬스터도 영웅과 같은 computeCombat 을 지난다) ·
    직업 = `monster.csv:cls`(영웅과 같은 다섯 직업). 값이 없으면 그 조각만 빠진다 — 지어내지 않는다 */
-const identV2 = u => {
+const identV2 = (u, state) => {
     const lv = u.side === 'party' ? (u.hero?.level ?? 1) : u.sheet?.level;
     const cls = u.side === 'party' ? u.cls : D.monsters?.[u.monsterId]?.cls;
-    return [lv != null ? `Lv.${lv}` : '', cls ? clsName(cls) : ''].filter(Boolean).join(' · ');
+    return [lv != null ? lvSpan(state, u, lv) : '', cls ? clsName(cls) : ''].filter(Boolean).join(' · ');
 };
+/* 신원의 레벨 칸 — `Lv.n` 을 제 칸(`.unit-lv`)에 든다. **영웅이 본 적 없는 레벨업이면 반짝인다**(`lv-new` — 그 글자를 누르면 걷힌다)
+   [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440]. 본 레벨은 앱의 화면 상태다(`opts.lvUnseen` — 세이브 밖 · 새로고침하면 걷힌다) */
+const lvSpan = (state, u, lv) => `<span class="unit-lv${u.hero && state?.lvUnseen?.(u.hero) ? ' lv-new' : ''}">Lv.${lv}</span>`;
 
 /* ───────── 진형 (⚠ 목업 · SCREEN_DESIGN §4-1 · §4-2) ─────────
    두 진영이 **같은 규칙**으로 선다 (2026-09-09 사용자 지시 — 적도 파티처럼).
@@ -438,6 +446,7 @@ function renderUnits(state, root) {
             // ⚠ 영웅은 2026-09-03 (직업 글리프가 배경 투명 PNG 사이로 비쳤다), **몬스터는 2026-09-06** 사용자 지시다.
             //   몬스터에 남아 있던 것은 이름 **이니셜 글자 하나**였고, 같은 이유로 그림 위에 비쳤다.
             //   09-03 에 죄종 색 원판을 이미 걷었으므로(「카드 형태를 똑같이」·「죄종 안 보이게」) 이제 폴백은 완전히 빈 칸이다
+            // ~~경험치 줄~~(ADR-0435)은 같은 날 걷었다 — 사용자 「보라색 선 필요없음」 (ADR-0439)
             const sprite = face
                 ? `<div class="sprite has-face"><img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
                 : `<div class="sprite"></div>`;
@@ -460,12 +469,12 @@ function renderUnits(state, root) {
             // 윗줄 = 무채색 신원(`Lv.n · 직업` / 정예·보스 라벨) · 아랫줄 = 이름, 둘 다 **오른쪽 정렬**(재개정 2026-09-07 사용자 지시 — 정렬만 뒤집었다).
             // 한 줄 합침은 좁은 열(~104px)에서 신원(고정 조각)이 줄을 먼저 먹어 이름이 짜부라졌다.
             // 일반 몬스터는 윗줄이 **빈 채**로 자리만 잡는다 — 줄 위치·카드 높이가 카드마다 같아야 격자로 읽힌다
-            const ident = identOf(u);
+            const ident = identOf(u, state);
             // 개편판(cardV2) — 맨 위 띠가 신원을 들고, HP 바 바로 위 이름 줄이 **왼쪽 죄종 칩 · 오른쪽 이름**이다 (ADR-0262 · ADR-0270 · ADR-0274).
             //   죄종 칩은 다른 화면과 같은 `sin-chip`(죄종 색 글씨) · 몬스터는 죄종을 가진 정예만 — 일반 · 보스는 `sin` 이 없다
             const sin = v2 && u.sin && M.SINS[u.sin] ? `<span class="sin-chip" style="color:${M.SINS[u.sin].color}">${L(M.SINS[u.sin])}</span>` : '';
             const grade = v2 ? gradeLabel(u) : '';
-            const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u)}</span>${grade ? `<span class="unit-grade">${grade}</span>` : ''}</div>` : '';
+            const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u, state)}</span>${grade ? `<span class="unit-grade">${grade}</span>` : ''}</div>` : '';
             const idRow = v2
                 ? `<div class="unit-id">${sin}<span class="unit-name">${name}</span></div>`
                 : `<div class="unit-id"><span class="unit-ident">${ident}</span><span class="unit-name">${name}</span></div>`;
@@ -499,6 +508,9 @@ function renderUnits(state, root) {
                 it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
             if (u.hero && state.onPickHero) n.onclick = () => state.onPickHero(u.hero.uid);
+            // 반짝이는 레벨 — 누르면 지금 레벨을 본 것으로 친다(앱의 화면 상태) · 카드 클릭(장착 대상 고르기)은 그대로 이어진다 (ADR-0440)
+            const lvNew = n.querySelector('.unit-lv.lv-new');
+            if (lvNew && u.hero) lvNew.addEventListener('click', () => { state.onLvSeen?.(u.hero.uid); lvNew.classList.remove('lv-new'); });
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
                 // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
@@ -506,6 +518,7 @@ function renderUnits(state, root) {
                     { ...unitSkillCtx(u), source: u.skills[i].source }));
             });
             u.node = n;
+            if (u.lvPop) popLevel(state, u);   // 떠 있던 레벨업 글자는 다시 지은 카드에도 이어서 선다 — 경계의 `round` 가 카드를 새로 짓는다 (ADR-0435)
             // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서
             // 「몬스터·영웅·보스가 전부 같은 고정 크기」의 그 크기가 달라진다. 칸(.unit-slot)이 카드와 줄을 세로로 물고,
             // 카드는 창이 걸리든 말든 옛 크기 그대로다 (SCREEN_DESIGN §4-2)
@@ -789,6 +802,45 @@ function popup(state, u, text, cls) {
     p.appendChild(document.createTextNode(text));
     layer.appendChild(p);
     state.timeouts.push(setTimeout(() => p.remove(), 900));
+}
+
+/* 레벨업 글자가 떠 있는 시간(ms) — CSS `.pop.lvup` 의 animation-duration 과 같은 값이다 (ADR-0435) */
+const LVUP_MS = 1600;
+/**
+ * 레벨업 [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0435] — 재생기는 레벨을 계산하지 않는다. **카드가 마지막으로 그린 레벨(`shownLv`)과
+ * 영웅 객체의 지금 레벨을 대조**한다 — 앱이 재생 시각까지만 계산하므로 영웅 레벨은 재생이 그 라운드 끝에 닿는 순간 바뀐다(ADR-0106).
+ * 부르는 자리는 경계의 `refit`(레벨이 오른 영웅은 체력이 가득 차 갈아입는다 · R182)과 `end`(마지막 라운드의 레벨업 — `refit` 이 없다).
+ * 오른 영웅마다 로그 한 줄 + 카드의 「레벨 업」 글자 · 영웅 레벨이 적보다 낮았으면 글자 아래 적중 변화(명중률 포함 · 가장 높은 적 기준)
+ */
+function levelCheck(state, root) {
+    for (const u of state.party) {
+        const lv = u.hero?.level;
+        if (!(lv > u.shownLv)) continue;
+        const from = u.shownLv;
+        u.shownLv = lv;
+        logLine(state, root, 'party', L(u.name), '', '', '', t('log.v.lvup', { n: lv }));
+        if (state.catchUp) continue;
+        const foe = Math.max(0, ...state.enemies.map(e => e.sheet?.level ?? 0));
+        const bonus = state.combatOf?.(u.hero)?.option_fx?.hitBonus ?? 0;
+        const a = SYS.formula.hitChance(from, foe, bonus), b = SYS.formula.hitChance(lv, foe, bonus);
+        const sub = foe > 0 && b > a ? t('pop.lvupHit', { a: M.pctNum(a), b: M.pctNum(b) }) : null;
+        u.lvPop = { until: performance.now() + LVUP_MS, sub };
+        popLevel(state, u);
+    }
+}
+/** 레벨업 글자를 카드에 붙인다 — 카드를 다시 지어도(`renderUnits`) 남은 시간만큼 **이어서** 선다(애니메이션을 경과만큼 앞당긴다) */
+function popLevel(state, u) {
+    const lp = u.lvPop;
+    if (!lp || !u.node || state.catchUp) return;
+    const left = lp.until - performance.now();
+    if (left <= 0) { u.lvPop = null; return; }
+    const p = document.createElement('span');
+    p.className = 'pop lvup';
+    p.style.animationDelay = `${left - LVUP_MS}ms`;
+    p.appendChild(document.createTextNode(t('pop.lvup')));
+    if (lp.sub) { const s = document.createElement('small'); s.textContent = lp.sub; p.appendChild(s); }
+    u.node.querySelector('.pop-layer').appendChild(p);
+    state.timeouts.push(setTimeout(() => p.remove(), left));
 }
 
 /* 로그 한 줄 = **네 칸 격자** — 주체 이름 · 스킬 그림 · 대상 이름 · 값 (SCREEN_DESIGN §4-2 · ADR-0189).
@@ -1167,11 +1219,13 @@ function apply(state, root, opts, ev) {
                 return (r !== 0 && r !== null && old) || { ...skillInfo(id), readyAt: slotReady(r, ev.t), firedAt: ev.t };
             });
             renderUnits(state, root);
+            levelCheck(state, root);   // 경계의 갈아입기 = 레벨이 오른 영웅(체력 가득 · R182) — 도중 갈아입기면 레벨이 그대로라 아무 일 없다 (ADR-0435)
             break;
         }
         case 'end': {
             state.ended = true;
             clearInterval(state.timer);
+            levelCheck(state, root);   // 마지막 라운드의 레벨업 — 런이 닫혀 `refit` 이 없다 (ADR-0435)
             logWide(state, root, t(ev.won ? 'log.end.win' : 'log.end.lose'));
             showResult(state, root, opts, ev.won);
             // 재생이 끝에 닿았다고 앱에 알린다 — 상단 세그먼트의 관전 칸이 「전투 종료」로 바뀐다 (ADR-0147).
@@ -1182,37 +1236,35 @@ function apply(state, root, opts, ev) {
     }
 }
 
-/** 재생이 끝나면 아레나 위에 결과 띠 — 반복이 켜져 있으면 잠깐 세고 다음 원정으로 · 반복 없이 이기면 [다음 스테이지](ADR-0141) · [다시 도전]은 이기든 지든 선다 (ADR-0138 · ADR-0212) */
+/** 재생이 끝나면 아레나 위에 결과 띠 — 판정 · 다음 런 세기 · [리포트 보기] [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0430].
+ *  원정은 멈추지 않는다 — 다음 런이 있으면(`opts.upNext`) **언제나** 세고 끝나면 앱이 보낸다. 세기는 **다음 런의 칸**을 적는다:
+ *  갈 칸이 바뀌면 「n초 뒤 다음 칸 — 이름」 · 같은 칸이면 「n초 뒤 다시 — 이름」. 답이 없으면(철수 · 끊김 뒤) 안 센다.
+ *  ~~[다음 스테이지](ADR-0141) · [다시 도전](ADR-0138 · ADR-0212)~~ 은 같은 날 걷었다 — 이어 가기가 그 일을 한다 */
 function showResult(state, root, opts, won) {
     const box = root.querySelector('.battle-result');
-    const auto = won && opts.repeat === true;
-    // 반복이 세는 띠에는 둘 다 안 단다 — 세는 동안 누를 버튼이 늘고, 세기가 끝나면 같은 곳으로 저절로 나간다 (ADR-0141 · ADR-0212)
-    const retry = !auto && typeof opts.onRetry === 'function';
-    const next = won && !auto && typeof opts.onNext === 'function';
+    // 어디로 · 언제는 앱이 답한다(`game.nextRepeat`) — 재생기는 정하지 않는다
+    const nx = opts.upNext?.() ?? null;
     box.innerHTML = `
         <span class="${won ? 'up' : 'down'} verdict">${t(won ? 'bt.won' : 'bt.lost')}</span>
-        ${auto ? `<span class="muted b-next"></span>` : ''}
-        <button class="btn primary sm b-report">${t('bt.toReport')}</button>
-        ${next ? `<button class="btn sm b-stage-next">${t('bt.nextStage')}</button>` : ''}
-        ${retry ? `<button class="btn sm b-retry">${t('bt.retry')}</button>` : ''}`;
+        ${nx ? `<span class="muted b-next"></span>` : ''}
+        <button class="btn primary sm b-report">${t('bt.toReport')}</button>`;
     box.classList.add('show');
+    // 리포트로 간다 — 세기는 **안 끊는다**(멈추는 길은 철수 · 게임 끄기뿐이다). 걷힌 세기는 앱 시계가 잇는다
     box.querySelector('.b-report').onclick = () => opts.onEnd(false);
-    // 같은 스테이지로 곧바로 다시 보낸다 — 출발은 앱이 한다(재생기는 계산하지 않는다)
-    if (retry) box.querySelector('.b-retry').onclick = () => opts.onRetry();
-    // 다음 스테이지로 곧바로 보낸다 — 어디가 다음인지도 출발도 앱이 정한다
-    if (next) box.querySelector('.b-stage-next').onclick = () => opts.onNext();
-    if (auto) {
-        state.auto = true;       // 세는 중 — 여기서 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
+    if (nx) {
+        state.auto = true;       // 세는 중 — 여기서 걷히면(탭 이동 · 숨김 · 부대 바꿔 보기 · 리포트 보기) 앱 시계가 이어서 세운다 (ADR-0102)
         // 세는 초 = 다음 런이 나가는 시각까지 남은 초 — 그 시각(끝난 순간 + [balance.csv:repeat_restart_sec])은 앱이 준다(`game.nextRepeat` · ADR-0300).
         //   끝난 뒤에 관전을 다시 열었으면 이미 흐른 만큼 덜 센다 — 출발 시각은 세기가 아니라 그 답이 정한다
-        const restartAt = opts.restartAt?.() ?? opts.now() + D.balance.repeat_restart_sec * 1000;
-        let left = Math.max(0, Math.ceil((restartAt - opts.now()) / 1000)), beat = opts.now();
+        const next = D.stages[nx.stageId];
+        const key = nx.stageId === opts.stageId ? 'bt.again' : 'bt.nextCell';
+        const name = next ? `Ch${next.chapter}-${next.stage_num} ${L(stageName(next))}` : '';
+        let left = Math.max(0, Math.ceil((nx.at - opts.now()) / 1000)), beat = opts.now();
         const tick = () => {
             // 멈췄다 깨어났으면 다음 런을 세우지 않는다 — 꺼져 있던 것이다. 마무리는 앱 시계가 한다 (ADR-0102)
             const at = opts.now();
             if (at - beat > opts.frozenMs) return;
             beat = at;
-            box.querySelector('.b-next').textContent = t('bt.nextRun', { s: left });
+            box.querySelector('.b-next').textContent = t(key, { s: left, name });
             if (left <= 0) { opts.onEnd(true); return; }
             left -= 1;
             state.timeouts.push(setTimeout(tick, 1000));

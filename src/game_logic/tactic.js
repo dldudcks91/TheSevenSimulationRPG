@@ -66,7 +66,7 @@ export function createTacticSystem(data) {
         leader_cls: { arg: 'cls', count: (c, a) => (c.leader?.cls === a ? 1 : 0) },   // 리더 = 편성 첫 칸
         leader_ldr: { arg: null, count: c => c.leader?.ldr ?? 0 },                // 리더의 통솔 — 문턱 이상이면 참 (2026-09-27 · 칸 3)
         front_cls: { arg: 'cls', count: (c, a) => c.front.filter(m => m.cls === a).length },   // 전열에 선 그 직업 인원
-        together: { arg: null, count: c => c.bond },                             // 지금 이 인원이 같이 나간 런 수 (세이브 v36)
+        together: { arg: null, count: c => c.bond },                             // 지금 이 인원이 같이 깬 칸 수 (세이브 v36 · 이긴 칸마다 +1 · 2026-09-29)
     };
     // ~~always~~ · ~~class_same~~ · ~~affix_sin~~ · ~~skill_tag~~ 는 2026-09-22 폐지 — 조건 사전(§5-8)으로 이름이 바뀌었고
     //   **스킬 태그 조건은 삭제**다. 옛 세이브의 칸은 가족 id 로 찾으므로 없는 가족은 첫 배정으로 돌아간다(state.tacticState)
@@ -214,7 +214,7 @@ export function createTacticSystem(data) {
 
     /**
      * 파티 문맥 — 조건이 세는 숫자를 **한 번에** 뽑아 둔다. 조건마다 파티를 다시 훑지 않는다.
-     * members = [{sin, cls, items:[아이템], front}] **편성 순서대로**(첫 칸이 리더) · `extra.bond` = 이 인원이 같이 나간 런 수.
+     * members = [{sin, cls, items:[아이템], front}] **편성 순서대로**(첫 칸이 리더) · `extra.bond` = 이 인원이 같이 깬 칸 수(이긴 칸마다 +1 · 2026-09-29).
      * 모으는 것은 state.js, 세는 규칙은 여기.
      */
     function contextOf(members, extra = {}) {

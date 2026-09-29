@@ -53,7 +53,7 @@ import * as M from './mock.js';
 import { t, L, has, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle } from './battle.js';
 import { bindTipNode, hideTip, isTouchInput, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
-import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
+import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadCloudLink, writeCloudLink, clearCloudLink, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
 import { makeRng } from '../game_logic/rng.js';
@@ -82,6 +82,10 @@ let unlockBoot = null;
 function save() { if (G && !frozen) writeSave(SYS.game.serialize(G, now())); }
 
 const heroById = uid => G?.heroes.find(h => h.uid === uid);
+/* 레벨업 반짝임 [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440] — 본 레벨(`state.lvSeen`)보다 지금 레벨이 높은가 · 그 글자를 누르면 지금 레벨을 본 것으로 친다.
+   관전을 안 보는 동안(다른 탭 · 숨긴 탭) 오른 레벨도 돌아와 카드가 서면 반짝인다 — 재생기가 아니라 영웅 레벨을 대조하기 때문이다 */
+const lvUnseen = h => h.level > (state.lvSeen[h.uid] ?? h.level);
+const lvSee = uid => { const h = heroById(uid); if (h) state.lvSeen[uid] = h.level; };
 /* 매력 — **수색이 미는 유일한 능력치**다 (base_expedition_design §2-4). 약어는 `hero_attribute.csv` 가 든다 */
 const CHA = 'cha';
 const chaAbbr = () => D.heroAttributes.find(a => a.id === CHA)?.abbr ?? CHA;
@@ -192,6 +196,8 @@ const affixText = a => L(M.affixText(a.stat, a.v));
 
 /* 스테이지 표시 — 수치도 이름도 D.stages(stage.csv) · 조립은 data.js:stageName */
 const stageTitle = row => `${L(chapterOf(row.chapter)?.name)} — ${L(stageName(row))}`;
+/** 두 칸이 **같은 장소**인가 — 장소 = (chapter, stage_num) · 반복 스위치는 장소에 딸린다 (2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0432 · PLAN_stage_segments D8) */
+const samePlace = (a, b) => !!D.stages[a] && !!D.stages[b] && placeKey(D.stages[a]) === placeKey(D.stages[b]);
 /** 예상 소요 = 그 스테이지의 라운드별 목표 전투시간 합 (round_budget.csv) — 라운드 줄은 `battle.stageRounds` (챕터보스 스테이지는 보스 하나 · 2026-09-11) */
 function stageMinutes(stage) {
     const sec = SYS.battle.stageRounds(stage).reduce((a, r) => {
@@ -327,6 +333,9 @@ const state = {
     gb: { step: 1, last: null, anim: null },
     exp: 'idle',            // idle | battle | report
     btLayout: 'wide',       // 관전 배치 — wide | split (2026-09-03 사용자 지시). 세이브 아님
+    // 레벨업 반짝임의 「본 레벨」 {uid: level} [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440] — 지금 레벨이 이보다 높으면 관전 카드의 `Lv` 가 반짝인다.
+    //   세이브 아님 — 새로고침하면 걷힌다(사용자 선택) · `lvSeenOf` = 이 표를 연 게임(G) — 새 게임 · 불러오기면 새로 연다(`render`)
+    lvSeen: {}, lvSeenOf: null,
     heroUid: null,
     codexChapter: 1,
     expChapter: null,       // 원정에서 보고 있는 챕터 — `null` 이면 「다음에 갈 곳」으로 자동 (ADR-0067)
@@ -484,6 +493,10 @@ function render() {
     M.applyDocumentBg();
     if (G) {
         if (!heroById(state.heroUid)) state.heroUid = G.heroes[0]?.uid ?? null;
+        // 레벨업 반짝임의 본 레벨 — 처음 보는 영웅은 지금 레벨을 본 것으로 친다 · 게임이 바뀌면 새로 연다 (ADR-0440).
+        //   영웅은 그리기를 거친 뒤에야 파티에 들어 레벨이 오르므로(고용 · 편성은 클릭 → 그리기) 첫 레벨업 전에 여기서 적힌다
+        if (state.lvSeenOf !== G) { state.lvSeenOf = G; state.lvSeen = {}; }
+        for (const h of G.heroes) state.lvSeen[h.uid] ??= h.level;
     }
     renderShell();
     const main = $('.main');
@@ -526,7 +539,7 @@ const MODALS = {
     dismiss: { title: 'ch.dismiss', body: dismissBody },
     /* 출정 — 스테이지를 누르면 뜨는 창 [2026-09-10 사용자 지시 · ADR-0084 · SCREEN_DESIGN §4-1].
        옛 접이식 전진 패널이 통째로 이 창이 됐다. `head` 를 주는 첫 창이다 — 제목이 i18n 키 하나가 아니라
-       **고른 스테이지의 신원**(죄종 · Ch-스테이지 이름 · 위험도 · 소요 · 원소)이기 때문이다:
+       **고른 스테이지의 신원**(죄종 · Ch-스테이지 이름 · 레벨 · 소요 · 원소)이기 때문이다:
        접이식이 바로 위 행에 붙어 말하던 「어느 지역의 편성인가」를 창에서는 머리가 든다 */
     depart: { head: departHead, body: departBody, cls: 'depart-box' },
     // 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112). `lock` 인 창은 닫는 길이 없다 — 멈춤 창 하나뿐인 의도된 예외다:
@@ -1089,21 +1102,32 @@ function frozenBody() {
  * `at` 은 출발 시각(기본 지금), `resume` 은 새 런의 재생 위치.
  * 앱 시계가 반복을 한 눈금 안에서 이어 세울 때 둘을 넘긴다 — 앞 런이 끝난 순간에 출발했고, 배속 · 판을 잇는다 (ADR-0102)
  */
-function runBattle(stageId, { instant = false, tab = null, logf = null, dmgf = null, at = null, resume = null, preset = undefined, focus = true, defer = false } = {}) {
-    // preset — 나갈 편성 번호. 안 주면 **고른 편성**이고, 이어 달리기(반복 · 다음 스테이지 · 다시 도전)는 **도는 원정의 편성**을 넘긴다 (R122)
-    // focus — 이 런의 관전으로 **옮겨 갈까**. 안 보는 부대의 반복이 이어질 때만 false 다 (화면을 뺏지 않는다 · ADR-0316)
-    const r = instant ? SYS.game.resolveBattle(G, stageId, at ?? now(), preset) : SYS.game.departRun(G, stageId, at ?? now(), preset);
+function runBattle(stageId, { instant = false, tab = null, logf = null, dmgf = null, at = null, resume = null, preset = undefined, focus = true, defer = false, repeat = null, from = null } = {}) {
+    // preset — 나갈 편성 번호. 안 주면 **고른 편성**이고, 이어 달리기는 **도는 원정의 편성**을 넘긴다 (R122)
+    // from — 이어 가는 런이면 **앞 런의 핸들**. 그 부대는 처음 나간 편성 그대로 나간다 — 그새 편성을 고쳐도 안 먹는다(철수하고 다시 보내야 먹는다 · 2026-09-29)
+    // focus — 이 런을 **보는 부대의 런으로 삼을까**. 안 보는 부대의 다음 런일 때만 false 다 (화면을 뺏지 않는다 · ADR-0316)
+    // repeat — 출정 창의 반복 스위치(true/false). **창의 보내기로 나갈 때만** 넘긴다 — 이어 가는 런은 부대가 든 값 그대로다
+    //   (로직이 같은 장소 동안 잇는다 · 2026-09-29 ADR-0432 — ~~고른 칸과 같은 스테이지면 창의 값을 옮긴다~~: 이어 가는 런이 고른 칸에 닿으면
+    //   창을 마지막으로 열었던 값(다른 편성의 것일 수도 있다)이 덮어썼다)
+    const r = instant ? SYS.game.resolveBattle(G, stageId, at ?? now(), preset) : SYS.game.departRun(G, stageId, at ?? now(), preset, from);
     if (!r.ok) {
         // 도는 원정은 거절 사유가 아니다 — `departRun` 이 끊고 나간다 (R92). 거절이면 도는 원정도 그대로다
-        if (!focus) return;                 // 안 보는 부대의 반복이 거절됐다 — 보던 화면에 플래시를 얹지 않는다
+        // 이어 가는 런이 거절됐다 — 그 부대를 **멈춘다**(나가 있던 영웅이 풀린다). 서 있기만 하면 칸 사이에 붙잡힌 채 남는다 (2026-09-29).
+        //   `stopped`(이미 철수 · 끊김 · 새 런이 섰다)면 멈출 것이 없다 — 철수가 `done` 으로 거절될 뿐이다
+        if (from) {
+            SYS.game.retreatRun(G, from, now()); save();
+            if (r.err === 'stopped') { if (focus && !defer) render(); return; }   // 알릴 것이 없다 — 걷힌 재생기 자리만 다시 세운다
+        }
+        if (!focus) return;                 // 안 보는 부대의 다음 런이 거절됐다 — 보던 화면에 플래시를 얹지 않는다
         if (r.err === 'locked') flashStageLock(D.stages[stageId]);
         else flash({ noParty: 'exp.noParty', searching: 'exp.departSearching', advancing: 'exp.departAdvancing' }[r.err] ?? 'exp.cantDepart');
+        if (defer) { clockRender = true; return; }   // 앱 시계가 낸 다음 런이 거절됐다 — 알리기만 하고 보던 화면은 그대로다 (ADR-0431)
         state.exp = 'idle';
         render(); return;
     }
-    // 반복 의사를 이번 런에 옮긴다 — departRun 은 같은 스테이지 재출발일 때만 옛 값을 잇는다 (부대마다 제 칸 · v38)
+    // 창의 반복 스위치를 이번 런에 옮긴다 — `departRun` 은 같은 장소를 돌던 부대의 값을 잇는다(v39). 창에서 보낸 출발만 창의 값으로 덮는다 (ADR-0432)
     const slot = runSlot(r.run?.preset ?? preset ?? G.preset);
-    if (slot && stageId === state.expStage) slot.repeat = state.expRepeat === true;
+    if (slot && repeat != null) slot.repeat = repeat === true;
     save();
     if (instant) { delete state.battles[r.run?.preset ?? preset ?? G.preset]; state.battle = null; state.repSel = null; state.exp = 'report'; render(); return; }
     // tab — 개발용 ?dev=play&bt=dmg: 우측 열의 판을 누적 데미지로 **골라** 헤드리스가 클릭 없이 닿게 한다(보이는 것은 `&lay=split` 일 때 · ADR-0130)
@@ -1113,11 +1137,14 @@ function runBattle(stageId, { instant = false, tab = null, logf = null, dmgf = n
     //   ⚠ 걷는 것은 **보는 부대로 옮겨 갈 때만**이다 — 안 보는 부대의 반복이 남의 재생기를 걷으면 보던 관전이 끊긴다 (ADR-0316)
     if (focus && stopBattle) { stopBattle(); stopBattle = null; }
     const no = r.run.preset;
-    // 진형은 **그 부대의 것**으로 찍는다 — 안 보는 부대의 반복이 고른 편성의 진형을 쓰면 아레나 줄이 남의 것이 된다 (ADR-0316)
-    const H = { run: r.run, result: r.run.result, stageId, form: formSnapshot(no),
+    // 진형은 **그 부대가 굳힌 것**으로 찍는다 — 안 보는 부대의 반복이 고른 편성의 진형을 쓰면 아레나 줄이 남의 것이 된다 (ADR-0316) ·
+    //   이어 가는 런은 처음 나간 편성의 자리다 — 그새 편성을 고쳐도 아레나 줄이 전투와 안 어긋난다 (2026-09-29)
+    const H = { run: r.run, result: r.run.result, stageId, form: formSnapshot(r.run),
         resume: resume ?? (tab || logf || dmgf ? { t: 0, speed: 1, running: true, tab, logf, dmgf } : undefined) };
     state.battles[no] = H;          // 부대마다 한 핸들 — 안 보는 부대도 앱 시계가 민다
-    if (focus) { state.battle = H; state.exp = 'battle'; }
+    // 보는 부대의 런으로 삼는다. **화면을 관전으로 옮기는 것은 유저가 보낸 출발 · 떠 있는 띠의 세기뿐이다** — 앱 시계가 낸 다음 런(`defer`)은
+    //   보던 화면을 안 뺏는다: 관전을 보고 있었으면 그대로 관전이 새 런이고, 리포트 · 스테이지를 보고 있었으면 남는다 (2026-09-29 · ADR-0431)
+    if (focus) { state.battle = H; if (!defer) state.exp = 'battle'; }
     // defer — 앱 시계가 세운 다음 런(`tickBattle`)이다: 그리는 것은 다음 눈금 · 조작이 끝난 뒤 (ADR-0338). 유저가 보낸 런은 곧바로 그린다
     if (defer) clockRender = true;
     else render();
@@ -1132,7 +1159,9 @@ const watchNo = () => state.battle?.run?.preset ?? null;
 function watchBattle(no) {
     const H = state.battles[no];
     if (!H) return;
-    if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = { ...pos, auto: false }; stopBattle = null; }
+    // 세던 세기(`auto`)는 **안 끈다** — 다음 런을 세던 부대를 두고 다른 부대로 옮겨 봐도 그 부대는 이어 간다(앱 시계가 세운다).
+    //   ~~`auto: false`~~ 는 2026-09-29 걷었다 — 원정이 멈추지 않는데 바꿔 보기만으로 그 부대가 조용히 섰다 (ADR-0430)
+    if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
     state.battle = H;
     state.exp = 'battle';
     render();
@@ -1183,15 +1212,15 @@ function renderExpedition(main) {
 
     if (state.exp === 'battle') {
         const { result, stageId } = state.battle;
-        const nextStage = D.stageOrder[D.stageOrder.indexOf(stageId) + 1] ?? null;   // 결과 띠의 [다음 스테이지] — 마지막 스테이지면 없다 (ADR-0141)
         /* 관전 화면 한 장 [2026-09-11 사용자 지시 · ADR-0095 · ADR-0097] — 전투 판 + 가방이 박스(`.page`) 세로를 채운다.
            두 배치 다 아레나가 남는 세로를 먹고 가방 아랫변이 박스 끝(탭 내비 「새 게임」 줄 아랫변)에 붙는다 (style.css `.bt-page`) */
         const page = el('div', 'bt-page page');
         main.appendChild(page);
         stopBattle = mountBattle(page, {
-            result, stageId, heroes: G.heroes, repeat: runSlot()?.repeat === true, resume: state.battle.resume,
-            // 반복 원정의 다음 출발 시각 — 결과 띠가 남은 초를 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300) · 부대마다 따로 묻는다 (v38)
-            restartAt: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset)?.at ?? null,
+            result, stageId, heroes: G.heroes, resume: state.battle.resume,
+            // 다음 런 — 어디로(칸) · 언제. 결과 띠가 남은 초와 그 칸 이름을 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300 · ADR-0430) · 부대마다 따로 묻는다 (v38).
+            //   원정은 멈추지 않는다 — 이기든 지든 답이 있고, 철수 · 끊김 뒤에만 null 이다 (v39 · PLAN_stage_segments D7)
+            upNext: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset),
             combatOf, itemOf, itemTipOf: (h, it) => equippedItemTipCard(h, it),
             // 몬스터 툴팁의 장비 칸 — 영웅 · 캐릭터 탭과 같은 「착용 중」 카드다 (ADR-0183 · ADR-0312). 스킬 숫자는 그 몬스터의 표시값(`ctx` — 재생기가 싣는다).
             //   세이브 밖 개체(`round` 이벤트의 `gear`)라 uid 로 못 찾는다 — 개체를 그대로 받는다
@@ -1200,6 +1229,8 @@ function renderExpedition(main) {
             // 장착 대상 — 영웅 카드를 누르면 그 영웅으로 바뀐다 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137].
             //   아래 보관 칸의 장착 · 비교가 그 영웅을 향한다. 다시 그려도 재생은 resume 으로 이어진다(가방 칸 클릭과 같은 길)
             pickedUid: state.heroUid, onPickHero: uid => { state.heroUid = uid; render(); },
+            // 본 적 없는 레벨업 — 카드 신원의 `Lv` 가 반짝이고 그 글자를 누르면 걷힌다 (SCREEN_DESIGN §4-2 · ADR-0440)
+            lvUnseen, onLvSeen: lvSee,
             // 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 출발 순간에 찍은 스냅샷이다. 재생기는 이 값으로 **자리만** 민다
             form: state.battle.form,
             // 관전 배치 — 'wide'(아레나 전폭 · 로그 · 누적 없음) / 'split'(아레나 + 우측 딜미터 열 · ADR-0130).
@@ -1211,52 +1242,40 @@ function renderExpedition(main) {
             // 재생이 런의 끝에 닿았다 — 상단 세그먼트만 갈아 끼워 관전 칸을 「전투 종료」로 (ADR-0147). 재생기를 걷지 않는다 —
             //   다시 그리면 아레나 · 로그 · 결과 띠가 통째로 다시 선다(라운드 정산이 보관 칸만 갈아 끼우는 `refreshBattleBag` 와 같은 길)
             onOver: () => $('.tab-seg')?.replaceChildren(expNavBox('over')),
-            // 철수 — 옛 「건너뛰기」 자리 (R89). 진행 중이던 라운드는 버리고 리포트로 간다 · 이미 끝난 런이면 그냥 리포트로
+            // 철수 — 옛 「건너뛰기」 자리 (R89) · **원정을 멈추는 길**이다(나머지 하나는 게임 끄기 · PLAN_stage_segments D7).
+            //   도는 런 = 진행 중이던 라운드를 버리고 끝낸다 · **끝나 다음 런을 세던 런 = 이어 가기만 끈다**(리포트는 그대로 · v39 · ADR-0430). 둘 다 리포트로 간다
             onRetreat: () => {
                 const B = state.battle;
                 if (stopBattle) { const pos = stopBattle(); if (B) B.resume = { ...pos, auto: false }; stopBattle = null; }
-                if (B && !B.run.done) {
-                    SYS.game.retreatRun(G, B.run, now());
-                    if (runSlot(B.run.preset)?.stageId === state.expStage) state.expRepeat = false;   // 철수는 반복도 끈다 — 편성 창의 버튼과 어긋나지 않게
-                    delete state.battles[B.run.preset];   // **그 부대만** 놓는다 — 다른 부대는 그대로 돈다 (ADR-0316)
-                    state.battle = null;       // 버린 라운드는 다시 볼 것이 없다
+                if (B) {
+                    const done = B.run.done;
+                    SYS.game.retreatRun(G, B.run, now());   // 끝난 런이 이어 가는 중이 아니면(이미 멈췄다) 거절될 뿐이다 — 리포트로 가는 것은 같다
+                    if (samePlace(runSlot(B.run.preset)?.stageId, state.expStage)) state.expRepeat = false;   // 철수는 반복도 끈다 — 출정 창의 버튼과 어긋나지 않게
+                    if (!done) {
+                        delete state.battles[B.run.preset];   // **그 부대만** 놓는다 — 다른 부대는 그대로 돈다 (ADR-0316)
+                        state.battle = null;       // 버린 라운드는 다시 볼 것이 없다 · 끝난 런은 결과 띠째 관전에 남는다 (ADR-0140)
+                    }
                 }
                 save(); state.repSel = null; state.exp = 'report'; render();
             },
             onEnd: auto => {
-                // 재생기를 먼저 걷는다 — 반복으로 이어지는 런은 배속 · 판을 잇고 시각만 0 에서 시작한다 (§4 · ADR-0102)
+                // 재생기를 먼저 걷는다 — 이어지는 런은 배속 · 판을 잇고 시각만 0 에서 시작한다 (§4 · ADR-0102)
                 const pos = stopBattle ? stopBattle() : state.battle?.resume;
                 stopBattle = null;
-                // 다음 출발은 `game.nextRepeat` 가 정한다 — 끝난 순간 + [balance.csv:repeat_restart_sec] (ADR-0300). 세기가 끝나 부른 것(`auto`)일 때만 나간다
+                // 다음 출발은 `game.nextRepeat` 가 정한다 — 어디로(다음 칸 · 같은 칸) · 끝난 순간 + [balance.csv:repeat_restart_sec] (ADR-0300 · ADR-0430). 세기가 끝나 부른 것(`auto`)일 때만 나간다
                 const nx = auto ? SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset) : null;
-                if (nx) runBattle(nx.stageId, { at: nx.at, resume: { ...pos, t: 0, wall: nx.at, auto: false }, preset: nx.preset });
-                // 반복이 안 이어지면 출정이 끝난 것이다 — ~~아웃된 영웅을 낫게 하는 일~~ 은 2026-09-08 폐기(§1-1 개정).
-                //   리포트로 가는 것은 띠의 [리포트 보기](`auto` 가 아니다)뿐이다 — 세던 도중 반복을 껐으면 관전에 남는다 [2026-09-15 사용자 지시 · ADR-0140]
+                if (nx) runBattle(nx.stageId, { at: nx.at, resume: { ...pos, t: 0, wall: nx.at, auto: false }, preset: nx.preset, from: state.battle?.run });   // 처음 나간 편성 그대로 (2026-09-29)
+                // [리포트 보기](`auto` 가 아니다) — 리포트로 가되 **세기는 안 끊는다**: 세던 것(`pos.auto`)을 앱 시계가 이어 세운다.
+                //   멈추는 길은 철수 · 게임 끄기뿐이다 (2026-09-29 · ADR-0430 — ~~[리포트 보기]가 세기를 끊었다~~)
                 else {
-                    if (state.battle) state.battle.resume = { ...pos, auto: false };
+                    if (state.battle) state.battle.resume = { ...pos };
                     save();
                     if (!auto) { state.repSel = null; state.exp = 'report'; }
                     render();
                 }
             },
-            // 다음 스테이지 — 반복 없이 이긴 결과 띠의 버튼 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0141]. 스테이지 순서의 다음 곳으로 지금 파티 · 진형을 보낸다.
-            //   다른 스테이지라 반복은 꺼진 채 나간다(`departRun`) — 편성 창의 반복 의사도 끈다: 고른 지역을 그리로 옮기면 `runBattle` 이 그 의사를 새 런에 옮긴다.
-            //   마지막 스테이지면 안 넘긴다(버튼이 안 선다)
-            onNext: nextStage == null ? null : () => {
-                const pos = stopBattle ? stopBattle() : state.battle?.resume;
-                stopBattle = null;
-                if (state.battle) state.battle.resume = { ...pos, auto: false };   // 거절돼 남는 관전이 걷힌 자리에서 다시 서게
-                state.expStage = nextStage; state.expChapter = D.stages[nextStage].chapter; state.expRepeat = false;
-                runBattle(nextStage, { resume: { ...pos, t: 0, wall: now(), auto: false }, preset: state.battle?.run?.preset });
-            },
-            // 다시 도전 — 결과 띠의 버튼 · 이겨도 선다(반복이 세는 띠만 빼고) [2026-09-15 · 09-21 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0138 · ADR-0212]. 같은 스테이지로 지금 파티 · 진형을 곧바로 보낸다.
-            //   반복 원정의 이어 달리기와 같은 길이다 — 배속 · 판은 잇고 시각만 0 에서. 출발이 거절되면 `runBattle` 이 플래시 후 편성으로 간다
-            onRetry: () => {
-                const pos = stopBattle ? stopBattle() : state.battle?.resume;
-                stopBattle = null;
-                if (state.battle) state.battle.resume = { ...pos, auto: false };   // 거절돼 남는 관전이 걷힌 자리에서 다시 서게
-                runBattle(stageId, { resume: { ...pos, t: 0, wall: now(), auto: false }, preset: state.battle?.run?.preset });
-            },
+            // ~~onNext [다음 스테이지](ADR-0141) · onRetry [다시 도전](ADR-0138 · ADR-0212)~~ 은 2026-09-29 삭제 — 원정이 멈추지 않아
+            //   이긴 런은 다음 칸 · 진 런은 같은 칸으로 저절로 이어진다 (SCREEN_DESIGN §4-2 · ADR-0430)
         });
         // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 라운드를 이길 때마다 드롭이 들어오고(`refreshBattleBag`)
         //   여기서 바꾼 장비는 **그 순간** 먹는다 — 보스 라운드 도중은 다음 런 (R130 · ADR-0272). 칸 · 그림 크기는 캐릭터 탭 가방과 같다 (`.bag` · ADR-0097)
@@ -1276,7 +1295,7 @@ const toggleParty = h => {
     render();
 };
 
-/** 재접속 알림 — 반복 원정은 게임이 켜져 있는 동안만 돈다. 꺼진 사이의 런은 마무리됐고 결과는 마지막 리포트에 있다 */
+/** 재접속 알림 — 원정은 게임이 켜져 있는 동안만 돈다. 꺼지면 도는 부대 · 다음 런을 기다리던 부대가 멈추고(v39) 결과는 마지막 리포트에 있다 */
 function noticeBanner() {
     const n = G.notice;
     if (!n) return null;
@@ -1330,46 +1349,68 @@ function renderExpIdle(main) {
     cb.appendChild(segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}`, color: sinColor(c.sin) })), curCh,
         id => { state.expChapter = id; state.expStage = null; render(); }));
     zp.appendChild(cb);
-    const rows = D.stageList.filter(s => s.chapter === curCh);   // 잠긴 스테이지도 보인다 — 어디까지 가야 하는지가 보여야 한다
-    for (const z of rows) {
-        const unlocked = SYS.game.stageUnlocked(G, z.stage_id);
-        const chapterBoss = z.boss_grade === 'chapter_boss';
-        const sin = chapterOf(z.chapter)?.sin ?? 'wrath';
-        const bg = stageBgOf(z.stage_id);
-        const row = el('div', `zone${unlocked ? '' : ' locked'}${chapterBoss ? ' boss' : ''}${z.stage_id === state.expStage ? ' on' : ''}`);
+    /* **장소 한 줄 = 버튼 하나** [2026-09-29 사용자 지시 「원정 스테이지는 기존처럼 1-1 1개만 클릭할 수 있게하고 안에서 조정할 수 있게」 ·
+       SCREEN_DESIGN §4-1 · ADR-0436 — 같은 날의 칸 버튼 셋(ADR-0429)을 걷었다]. 스테이지는 장소 × 칸(I · II · III)이고,
+       목록은 **장소**를 고르고 **칸은 출정 창의 출발 칸 버튼**(`cellRow`)이 고른다. 잠긴 장소도 보인다 — 어디까지 가야 하는지가 보여야 한다 */
+    for (const place of D.places.filter(p => p.chapter === curCh)) {
+        const head = place.cells[0];
+        // 줄의 잠김 = **칸 I** 의 잠김 — 칸 I 이 열리면 그 장소에 들어갈 길이 있다(II · III 의 잠김은 창의 출발 칸 버튼이 든다)
+        const unlocked = SYS.game.stageUnlocked(G, head.stage_id);
+        const chapterBoss = head.boss_grade === 'chapter_boss';
+        const sin = chapterOf(head.chapter)?.sin ?? 'wrath';
+        const bg = stageBgOf(head.stage_id);   // 장소 그림 — 칸 셋이 같은 그림이다 (data.js)
+        // 고른 줄 = 고른 칸이 이 장소의 칸일 때 — 창을 닫아도 테두리가 남는다
+        const on = place.cells.some(z => z.stage_id === state.expStage);
+        const row = el('div', `zone${unlocked ? '' : ' locked'}${chapterBoss ? ' boss' : ''}${on ? ' on' : ''}`);
         row.style.borderLeftColor = unlocked ? sinColor(sin) : '';
         if (bg) {
             row.style.backgroundImage = `linear-gradient(90deg, var(--bg-tertiary) 34%, rgba(4,4,4,.55) 68%, rgba(4,4,4,.30)), url('${bg}')`;
             row.classList.add('has-bg');
         }
-        /* ⚠ **접이식 「구성 보기」는 없다** [2026-09-10 사용자 지시 · ADR-0080] — 행은 이제 제목 줄과 부제 줄뿐이라
-           **모든 행이 같은 높이**이고, 골라도 그 높이가 안 바뀐다(옛 판은 고른 행에서만 접이식이 빠져 행이 줄었다).
-           등장 몬스터는 아래로 내려오는 전진 패널의 적 구성 칸이 든다 (ADR-0078) */
+        /* ⚠ **접이식 「구성 보기」는 없다** [2026-09-10 사용자 지시 · ADR-0080] — 줄 높이는 못박혀 있고(`style.css .zone`) 골라도 안 바뀐다.
+           등장 몬스터는 출정 창의 적 구성 칸이 든다 (ADR-0078).
+           줄 = 죄종 · `Ch1-1 장소 이름`(로마 숫자 없이) · 잔글씨 레벨 범위 · 소요 · 원소 — 레벨은 **데이터를 읽는다**(`stage.csv:dlvl` · 위험도 폐지 · ADR-0437) */
+        const lv = spanText(place.cells.map(z => z.dlvl));
+        const m = spanText(place.cells.map(stageMinutes));
         row.innerHTML = `
             <div>
                 <div class="title">
                     <span class="sin-chip" style="color:${sinColor(sin)}">${sinName(sin)}</span>
-                    <span>Ch${z.chapter}-${z.stage_num} ${L(stageName(z))}</span>
+                    <span>Ch${head.chapter}-${head.stage_num} ${L(placeName(head))}</span>
                 </div>
-                <div class="meta">${t('exp.stageMeta', { lv: levelMark(z.stage_id), m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</div>
+                <div class="meta">${t('exp.placeMeta', { lv, m })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(head)}`) })}</div>
             </div>
-            <div>${unlocked ? '' : `<span class="muted" style="font-size:var(--fs-sm)">${stageLockText(z)}</span>`}</div>`;
-        // ⚠ 클리어 표시 · 「원정」 칩은 없다 [2026-09-15 사용자 지시 · ADR-0151] — 오른쪽 끝은 잠긴 행의 안내만 든다.
-        //   고른 행의 표시는 테두리(`.zone.on`)가 혼자 든다
-        /* 행 클릭 = **출정 창을 연다** [2026-09-10 사용자 지시 · ADR-0084] — 옛 접이식 토글을 걷었다.
-           같은 행을 다시 눌러 접던 규칙(2026-08-28)은 창의 **닫는 길 셋**(X · 바깥 · Esc · §2)이 대신하므로
-           여기서는 여는 일만 한다. `state.expStage` 는 남는다 — 창을 닫아도 고른 행의 표시(`.zone.on`)가 이어진다 */
+            <div>${unlocked ? '' : `<span class="zone-lock"><span class="lock-ico">${lockIcon(true)}</span>${stageLockText(head)}</span>`}</div>`;
+        // ⚠ 클리어 표시 · 「원정」 칩은 없다 [2026-09-15 사용자 지시 · ADR-0151] — 오른쪽 끝은 잠긴 줄의 이유만 든다.
+        //   고른 줄의 표시는 테두리(`.zone.on`)가 혼자 든다
+        /* 줄 클릭 = **그 장소의 출정 창을 연다** [2026-09-10 사용자 지시 · ADR-0084 · 2026-09-29 장소 줄 · ADR-0436]. 창의 **닫는 길 셋**(X · 바깥 · Esc · §2)이 닫는다.
+           처음 골라진 칸은 `placeStartCell` 이 정한다 · `state.expStage` 는 남는다 — 창을 닫아도 고른 줄의 표시가 이어진다 */
         row.onclick = () => {
-            if (!unlocked) { flashStageLock(z); return; }
-            state.expStage = z.stage_id;
-            // 반복 의사는 그 스테이지의 런에서 읽어 온다 — 런이 없거나 다른 스테이지면 꺼진 채로 시작
-            state.expRepeat = runSlot()?.stageId === z.stage_id && runSlot().repeat === true;
+            if (!unlocked) { flashStageLock(head); return; }
+            state.expStage = placeStartCell(place);
+            // 반복 스위치는 **같은 장소**를 도는 부대(고른 편성)에서 읽어 온다 — 스위치는 장소에 딸린다(v39 · ADR-0432). 런이 없거나 다른 장소면 꺼진 채로 시작
+            state.expRepeat = samePlace(runSlot()?.stageId, head.stage_id) && runSlot().repeat === true;
             state.modal = 'depart';
             render();
         };
         zp.appendChild(row);
     }
     main.appendChild(zp);
+}
+
+/** 값 여럿을 한 조각으로 — 같으면 하나(`10`) · 다르면 범위(`1~3`). 목록 장소 줄의 레벨 · 소요 (§4-1 · ADR-0436) */
+function spanText(vals) {
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    return lo === hi ? String(lo) : `${lo}~${hi}`;
+}
+
+/** 장소 줄을 눌렀을 때 **처음 골라진 칸** [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0436 · PLAN_expedition_window D5] —
+ *  ① 그 장소에서 마지막으로 고른 칸(`state.expStage` 가 그 장소의 칸이면) → ② 열렸고 안 깬 첫 칸 → ③ 다 깼으면 칸 I.
+ *  ① 은 되돌아온 사람의 자리 · ② 는 진행의 자리 · ③ 은 반복 순환의 처음이다 */
+function placeStartCell(place) {
+    if (place.cells.some(z => z.stage_id === state.expStage)) return state.expStage;
+    const next = place.cells.find(z => SYS.game.stageUnlocked(G, z.stage_id) && !G.progress.cleared.includes(z.stage_id));
+    return (next ?? place.cells[0]).stage_id;
 }
 
 /* ═══════════ 진형 (SCREEN_DESIGN §4-1) ═══════════
@@ -1388,8 +1429,8 @@ const formState = (no = undefined) => SYS.game.formationState(G, no);   // `no` 
  *  ⚠ **자리 계산(가로 차례 · 깊이)은 여기서 안 한다** — 재생기의 `layoutRanks` 가 든다 (2026-09-09 적 진형이 붙으며 합쳤다).
  *    적은 진형을 몬스터 역할에서 뽑으므로 편성 화면이 관여할 수 없고, 규칙이 둘로 갈리면 두 진영이 다른 모양으로 선다.
  *  ⚠ 여전히 화면 상태뿐이다 — 세이브(G)에도 전투 계산(SYS.*)에도 안 실린다. 재생기는 이 값으로 **카드 자리만** 정한다 */
-function formSnapshot(no = undefined) {
-    return { byUid: { ...formState(no).byUid } };
+function formSnapshot(run) {
+    return { byUid: { ...run.fixed.byUid } };   // 출발이 굳힌 자리 — 전투(`partyUnits`)가 읽은 그 값이다 (2026-09-29 · ~~그 편성의 지금 진형~~)
 }
 
 /** 어느 자리에 있나 — `[랭크, 칸]` 또는 못 찾으면 null */
@@ -1716,9 +1757,10 @@ function tacticsBlock() {
    **줄이 곧 동사다** [2026-09-21 사용자 지시 · ADR-0214] — 왼쪽 열은 초상(몬스터 넷 ↔ 영웅 셋이 위아래로 마주 선다) · 오른쪽 열은 글과 버튼이다.
    **크기는 상태에 흔들리지 않는다** — 넷이 전부 항상 있는 부품이고, 판 폭은 `.depart-box` 가 못박는다. */
 
-/** 창 머리 — **고른 스테이지의 신원**. 접이식이던 시절엔 바로 위 행이 말하던 것이라 패널에 머리가 없었는데
+/** 창 머리 — **고른 칸의 신원**. 접이식이던 시절엔 바로 위 행이 말하던 것이라 패널에 머리가 없었는데
  *  (2026-08-28 「머리 통째로 삭제」), 창은 목록에서 떨어져 뜨므로 **여기가 그 자리를 이어받는다** (ADR-0084).
- *  줄 하나에 죄종 칩 · Ch-스테이지 이름 · 잔글씨로 위험도/소요/원소 — **스테이지 행이 찍던 것과 같은 값**이다. */
+ *  줄 하나에 죄종 칩 · Ch-칸 이름 · 잔글씨로 레벨/소요/원소. 레벨은 **데이터를 읽는다**(`stage.csv:dlvl` — 보기만) —
+ *  위험도가 폐지돼 바꾸는 조작이 없다 [2026-09-29 사용자 「위험도 없어 이제」 · ADR-0437 · ~~`stageLevelState` 의 지금 레벨~~] */
 function departHead() {
     const z = D.stages[state.expStage];
     const sin = chapterOf(z.chapter)?.sin ?? 'wrath';
@@ -1726,63 +1768,50 @@ function departHead() {
     h.innerHTML = `
         <span class="sin-chip" style="color:${sinColor(sin)}">${sinName(sin)}</span>
         <span>Ch${z.chapter}-${z.stage_num} ${L(stageName(z))}</span>
-        <small>${t('exp.stageMeta', { lv: levelMark(z.stage_id), m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</small>`;
+        <small>${t('exp.stageMeta', { lv: z.dlvl, m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</small>`;
     return h;
 }
 
-/** 위험도 — **지금 레벨**(올렸으면 올린 레벨)을 찍는다. 올린 스테이지는 숫자가 강조색이다
- *  [2026-09-14 · SCREEN_DESIGN §4-1 · ADR-0104]. 스테이지 행 부제와 창 머리가 같은 값을 쓴다 — 범위 · 판정은 `stageLevelState` 가 낸다 */
-function levelMark(stageId) {
-    const s = SYS.game.stageLevelState(G, stageId);
-    return s.level > s.base ? `<b class="lv-up">${s.level}</b>` : String(s.level);
-}
-
-/** 위험도 줄 — **출정 방식 칸의 맨 위** [2026-09-14 제안 후 승인 · SCREEN_DESIGN §4-1 · ADR-0104].
- *  윗줄 = 「위험도」 + 잔글씨 범위 · 아랫줄 = `«` `‹` 지금 레벨 `›` `»`. **범위와 판정은 `stageLevelState` 가 낸다** —
- *  화면은 끝에 닿은 버튼을 흐리게 할 뿐이다. 못 올리는 상태(아무것도 안 깬 초반)에서도 **줄은 선다** — 창 크기는
- *  상태에 흔들리지 않는다(2026-08-28). 누르는 즉시 저장 — 반복 원정이 도는 스테이지면 **다음 런부터** 먹는다
- *  (지금 재생 중인 런은 출발 때 이미 정산됐다) */
-function levelRow(z) {
-    const s = SYS.game.stageLevelState(G, z.stage_id);
-    const box = el('div', 'lv-box');
-    const head = el('div', 'lv-head');
-    const label = el('span', 'lv-h', t('exp.level.h'));
-    label.title = t('exp.level.tip');
-    head.appendChild(label);
-    // 위험도 조절은 처음부터 열려 있다 (2026-09-24 · R152 · ~~원정 건물 랭크가 연다 — 범위 자리에 지을 건물~~)
-    head.appendChild(el('span', 'lv-range', t('exp.level.range', { min: s.base, max: s.max })));
-    box.appendChild(head);
-    const set = lv => {
-        const r = SYS.game.setStageLevel(G, z.stage_id, lv);
-        if (!r.ok) flash(`exp.err.${r.err}`); else save();
-        render();
-    };
-    const btn = (glyph, key, lv, off) => {
-        const b = el('button', 'btn sm lv-btn', glyph);
-        b.title = t(key);
-        b.disabled = off;
-        b.onclick = () => set(lv);
-        return b;
-    };
-    const atBase = s.level <= s.base, atMax = s.level >= s.max;
-    const row = el('div', 'lv-row');
-    row.appendChild(btn('«', 'exp.level.base', s.base, atBase));
-    row.appendChild(btn('‹', 'exp.level.down', s.level - 1, atBase));
-    const val = el('span', `lv-val${s.level > s.base ? ' up' : ''}`, String(s.level));
-    val.title = t('exp.level.tip');
-    row.appendChild(val);
-    row.appendChild(btn('›', 'exp.level.up', s.level + 1, atMax));
-    row.appendChild(btn('»', 'exp.level.max', s.max, atMax));
+/** 출발 칸 줄 — **출정 방식 칸의 맨 위** [2026-09-29 사용자 지시 「위험도를 삭제하고 버튼 3개 넣어서 어디에서 출발할지 정하도록」 ·
+ *  SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 줄(ADR-0104)을 걷은 자리]. 윗줄 = 잔글씨 「출발 칸」 · 아랫줄 = 칸 버튼 셋 `I` `II` `III`(같은 폭).
+ *  고른 칸은 `on` · 잠긴 칸은 흐리고 자물쇠 + 이유 툴팁 한 줄(목록의 잠긴 줄과 같은 문장 · 잠긴 스킬 칸 툴팁과 같은 모양 · ADR-0427).
+ *  칸이 하나인 장소(챕터보스)는 첫 자리에 「챕터보스」 하나 + 빈 자리 둘 — 자리를 늘 셋 잡아 버튼 폭이 장소마다 안 흔들린다(ADR-0098 과 같은 규칙).
+ *  누르면 **창이 그 칸으로 바뀐다** — 고른 칸(`state.expStage`)만 바꾸고 다시 그린다. 반복 스위치는 장소에 딸려 그대로다 (ADR-0432) */
+function cellRow(z) {
+    const cells = placeCells(z);
+    const box = el('div', 'cp-box');
+    box.appendChild(el('div', 'cp-h', t('exp.cell.h')));
+    const row = el('div', 'cp-row');
+    for (let i = 0; i < 3; i++) {
+        const c = cells[i];
+        if (!c) { row.appendChild(el('span', 'cp-void')); continue; }   // 칸이 하나인 장소의 빈 자리 — 자리만 잡는다
+        const open = SYS.game.stageUnlocked(G, c.stage_id);
+        const label = cells.length > 1 ? M.roman(c.cell) : t('kind.chapterBoss');
+        const b = el('button', `btn sm cp-btn${c.stage_id === z.stage_id ? ' on' : ''}${open ? '' : ' locked'}`,
+            open ? label : `<span class="lock-ico">${lockIcon(true)}</span>${label}`);
+        if (!open) {
+            const txt = stageLockText(c);
+            bindTipNode(b, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${txt}</div>`));
+            b.setAttribute('aria-label', txt);
+        }
+        b.onclick = () => {
+            if (!open) { flashStageLock(c); return; }
+            if (c.stage_id === state.expStage) return;
+            state.expStage = c.stage_id;
+            render();
+        };
+        row.appendChild(b);
+    }
     box.appendChild(row);
     return box;
 }
 
-/** 출정 방식 — **위험도 줄**(`levelRow` · 2026-09-14 · ADR-0104) + 경고 줄 + 같은 크기 버튼 둘. 반복 원정은 별도 줄이 아니라 **버튼**이다 (2026-08-28 사용자 지시):
+/** 출정 방식 — **출발 칸 줄**(`cellRow` · 2026-09-29 · ADR-0437) + 경고 줄 + 같은 크기 버튼 둘. 반복 원정은 별도 줄이 아니라 **버튼**이다 (2026-08-28 사용자 지시):
  *  옛 줄은 「런의 스테이지일 때만」 붙어서 칸 크기가 흔들렸다. 버튼은 항상 있으므로 크기가 고정된다. */
 function goBox(z) {
     const side = el('div', 'fp-side');
     side.appendChild(el('div', 'sub-h', t('exp.go.h')));
-    side.appendChild(levelRow(z));   // 위험도 — 칸 이름 바로 아래 · 보내기보다 위 (ADR-0104)
+    side.appendChild(cellRow(z));   // 출발 칸 — 칸 이름 바로 아래 · 보내기보다 위 (위험도 줄이 서던 자리 · ADR-0437)
     // 경고는 있을 때만 글자가 뜨지만 **줄은 항상 잡는다** — 안 그러면 칸이 상태에 따라 커졌다 작아진다 (2026-08-28)
     // 상태 경고는 없다 [2026-09-03] — 전투 밖에 쓰러져 있는 영웅이 없으므로 막히는 경우가 파티 0 하나뿐이다
     //   고른 편성으로 나가므로 판정도 그 편성의 것이다 — 빈 파티 · 수색 나간 영웅(`presetState` 의 `err` · 2026-09-21 · R122)
@@ -1791,16 +1820,19 @@ function goBox(z) {
 
     const actions = el('div', 'form-actions');
     // 반복 원정은 처음부터 열려 있다 (2026-09-24 · R152 · ~~원정 건물 랭크가 연다 — 흐린 버튼~~)
+    // 뜻 [개정 2026-09-29 · ADR-0432 — PLAN_stage_segments D8] = **켬 · 장소 안 순환(I → II → III → I) / 끔 · 이길 때마다 다음 칸** — 어느 쪽이든 멈추지 않는다.
+    //   글자는 기획 용어 그대로 · 뜻 한 줄은 툴팁이 든다
     const rep = el('button', `btn lg toggle${state.expRepeat ? ' on' : ''}`, t('exp.repeat'));
+    rep.title = t('exp.repeat.tip');
     rep.onclick = () => {
         state.expRepeat = !state.expRepeat;
-        // 이 스테이지가 지금 도는 런이면 곧바로 런에도 옮긴다 — 관전의 자동 진행이 이 값을 읽는다
-        { const s = runSlot(); if (s?.stageId === z.stage_id) { s.repeat = state.expRepeat; save(); } }
+        // 고른 편성의 부대가 **이 장소**를 돌고 있으면 곧바로 그 부대에도 옮긴다 — 다음 런의 칸(`game.nextRepeat`)이 이 값을 읽는다
+        { const s = runSlot(); if (samePlace(s?.stageId, z.stage_id)) { s.repeat = state.expRepeat; save(); } }
         render();
     };
     const go = el('button', 'btn lg primary', t('exp.deploy'));
-    // 출발하면 창은 할 일이 끝났다 — 안 닫으면 관전 화면 위에 편성 창이 그대로 떠 있는다
-    go.onclick = () => { state.modal = null; runBattle(z.stage_id); };
+    // 출발하면 창은 할 일이 끝났다 — 안 닫으면 관전 화면 위에 편성 창이 그대로 떠 있는다 · 창의 반복 스위치를 새 런에 싣는다 (ADR-0432)
+    go.onclick = () => { state.modal = null; runBattle(z.stage_id, { repeat: state.expRepeat }); };
     actions.appendChild(rep);
     actions.appendChild(go);
     side.appendChild(actions);
@@ -1809,18 +1841,20 @@ function goBox(z) {
 /** 적 구성 — 창의 **위 줄 왼쪽 · 편성 초상 위** [2026-09-21 사용자 지시 · §4-1 · ADR-0214 · 옛 자리는 ADR-0088].
  *  이 스테이지에서 기다리는 것들을 **정사각 칸으로 가로 한 줄** 편다 — 칸 크기는 **진형 칸과 같은 `--fm-slot`** 이고,
  *  이름은 안 적고 `title` 이 든다 (「칸에는 글씨가 없으므로 호버가 유일한 길이다」 · 2026-09-06 규칙 그대로).
- *  **클릭이 없는 읽는 자리**다 — 고르는 것은 위 스테이지 행이 이미 했다.
+ *  **클릭이 없는 읽는 자리**다 — 고르는 것은 목록의 장소 줄과 출발 칸 버튼이 이미 했다.
  *  「이건 적이다」를 글자로 안 써도 되는 것은 **원형이 몬스터**이기 때문이지만(§5), 칸 이름 한 줄은 둔다:
  *  진형 상자가 제목을 안 다는 근거(아이콘·전열/후열 라벨이 이미 말한다 · ADR-0060)가 여기엔 없다.
- *  ⚠ 칸 **수**는 스테이지마다 같지 않다 — 보통은 일반 셋 + 보스 하나, **챕터보스 스테이지는 보스 하나뿐**이다(2026-09-11).
- *  칸은 늘 같은 정사각이라 **높이는 안 흔들린다.** */
+ *  ⚠ 칸 **수**는 칸마다 같지 않다 — 칸 III 은 일반 셋 + 보스 하나, **칸 I · II 는 일반 셋뿐**(마지막 라운드가 정예라 보스가 안 나온다 · 2026-09-29 · ADR-0432),
+ *  **챕터보스 칸은 보스 하나뿐**이다(2026-09-11). 보스가 나오나는 그 칸의 라운드 세트(`battle.stageRounds`)가 말한다 — `boss_monster_idx` 는 칸 I · II 도 장소의 보스를 든다.
+ *  칸은 늘 같은 정사각이고 자리는 넷만큼 잡으므로(`.foe-list` · ADR-0098) **크기는 안 흔들린다** — 보스 없는 칸은 넷째 자리가 빈다 */
 function foeBox(z) {
     const box = el('div', 'foe-box');
+    const hasBoss = SYS.battle.stageRounds(z).some(r => r.round_type === 'boss');
     box.innerHTML = `
         <div class="sub-h">${t('exp.foes')}</div>
         <div class="foe-list">
             ${SYS.battle.stagePool(z).map(id => foeCell(id)).join('')}
-            ${foeCell(z.boss_monster_idx, 'boss')}
+            ${hasBoss ? foeCell(z.boss_monster_idx, 'boss') : ''}
         </div>`;
     return box;
 }
@@ -1843,6 +1877,10 @@ function storyBox(z) {
 const presetLabel = (no, ps) => t('pt.preset', { n: M.roman(no) })
     + (ps.runNos.includes(no) ? `<span class="pt-run">${t('hs.doing.expedition')}</span>` : '');
 
+/** 편성이 **다 열렸을 때의 개수** — 원정 건물을 끝까지 지은 판의 상한을 `limitsOf` 에 묻는다(상한 함수는 `state.buildings` 만 읽는다 ·
+ *  기본값 + 더하기를 렌더러가 따로 셈하지 않는다). 출정 창 편성 버튼의 높이가 이 수로 나뉜다 (§4-1 · ADR-0442) */
+const presetFull = () => SYS.game.limitsOf({ buildings: Object.fromEntries(SYS.construction.list.map(b => [b.id, b.maxRank])) }).presets;
+
 /**
  * 창의 **편성** 칸 — 아래 줄 왼쪽 · 적 구성 아래 [2026-09-21 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0193 · 자리는 ADR-0214].
  * 왼쪽에 편성 버튼이 세로로 · 오른쪽에 **고른 편성의 영웅 셋이 초상으로**. 초상은 **읽기 전용**이다 — 고치려면 편성 탭으로 간다.
@@ -1856,6 +1894,7 @@ function presetPick() {
     hb.appendChild(el('div', 'sub-h', t('nav.party')));
     const row = el('div', 'pk-row');
     const btns = el('div', 'pk-btns');
+    btns.style.setProperty('--pk-n', presetFull());   // 버튼 높이 = 기둥 ÷ 다 열렸을 때의 개수 — 덜 열렸으면 위에서부터 서고 아래가 빈다 (ADR-0442)
     for (const p of ps.presets) {
         const b = el('button', `btn sm${p.no === ps.activeNo ? ' on' : ''}`, presetLabel(p.no, ps));
         b.onclick = () => { SYS.game.selectPreset(G, p.no); save(); render(); };
@@ -1940,7 +1979,7 @@ function departBody() {
     pick.classList.add('dw-r2');              // ③ 편성 — 아래 줄 왼쪽 · 적 구성 아래 · 고르개 + 초상 셋(읽기 전용)
     prep.classList.add('dw-c2', 'dw-r2');     // ④ 아래 줄 오른쪽 — 칸(가림막)은 열 폭 전체이고 속이 양끝으로 갈린다(`.dw-prep` 의 space-between) · 칸 왼쪽 선은 없다(ADR-0292)
     prep.appendChild(loadBox());              //    왼쪽 — 전술 효과 + 물약 칸(읽기 전용 · ADR-0216)
-    prep.appendChild(goBox(z));               //    오른쪽 끝 — 위험도 + 경고 + 반복 원정 + 보내기(제 폭을 든다 · 왼쪽에 이 줄의 세로선 · `.fp-side`)
+    prep.appendChild(goBox(z));               //    오른쪽 끝 — 출발 칸 + 경고 + 반복 원정 + 보내기(제 폭을 든다 · 왼쪽에 이 줄의 세로선 · `.fp-side`)
     body.appendChild(story);
     body.appendChild(pick);
     body.appendChild(prep);
@@ -2266,7 +2305,7 @@ function expTick() {
  * (숨긴 탭은 1분에 한 번 깨므로 안 넘기면 런마다 그만큼 샌다). 다음 런은 앞 런이 끝난 순간에 출발한 것으로 친다(`runBattle` 의 `at`)
  */
 function tickBattle(H, at) {
-    const watching = H === state.battle;   // 보는 부대의 반복만 관전을 이어 간다 — 안 보는 부대는 화면을 안 뺏는다
+    const watching = H === state.battle;   // 보는 부대의 다음 런만 관전 핸들을 이어 간다 — 화면은 둘 다 안 뺏는다 (ADR-0316 · ADR-0431)
     for (;;) {
         const B = H;
         if (!B) return;
@@ -2281,13 +2320,13 @@ function tickBattle(H, at) {
         const end = runEnd(B);               // 마지막 라운드가 계산되기 전엔 끝을 모른다(무한대)
         B.resume = { ...r, t: Math.min(end, tNow), wall: at, auto: false };
         if (tNow < end) return;
-        // 끝 — 반복 원정이면 다음 런은 `game.nextRepeat` 가 정한 시각(끝난 순간 + [balance.csv:repeat_restart_sec])에 나간다.
+        // 끝 — 다음 런은 `game.nextRepeat` 가 정한 칸 · 시각(끝난 순간 + [balance.csv:repeat_restart_sec])에 나간다 — 멈춘 부대(철수 · 끊김)만 null 이다 (v39 · ADR-0430).
         //   관전 결과 띠의 세기와 **같은 답**이다 — 어느 탭에서 끝났든 같은 시각이다 (ADR-0300)
         const nx = SYS.game.nextRepeat(G, B.endedAt ?? at - (tNow - end) / speed * 1000, B.run?.preset ?? G.preset);
         if (nx) {
             // 그 시각 전이면 끝난 런을 붙든 채 기다린다 — `auto` 가 다음 눈금에 이 자리로 다시 데려온다. 기다리는 동안 멈춤이 오면 `closeFrozenRun` 이 반복만 끈다
             if (at < nx.at) { B.resume = { ...B.resume, auto: true }; return; }
-            runBattle(nx.stageId, { at: nx.at, resume: { ...r, t: 0, wall: nx.at, auto: false }, preset: nx.preset, focus: watching, defer: true });
+            runBattle(nx.stageId, { at: nx.at, resume: { ...r, t: 0, wall: nx.at, auto: false }, preset: nx.preset, focus: watching, defer: true, from: B.run });   // 처음 나간 편성 그대로 (2026-09-29)
             // 관전이 섰으면 재생기가 시계다 · 출발이 거절됐으면 멈춘다. 새 런은 라운드마다 시각을 먹으므로(한 틱 이상) 이어 돌아도 끝없이 돌지 않는다 (R89)
             if (watching && stopBattle) return;
             const next = state.battles[nx.preset];
@@ -2326,7 +2365,7 @@ function closeFrozenRun(at) {
             delete state.battles[no];                              // 버린 라운드는 다시 볼 것이 없다
             if (H === state.battle) state.battle = null;
         }
-        if (runSlot(H.run?.preset)?.stageId === state.expStage) state.expRepeat = false;   // 편성 창의 반복 버튼과 어긋나지 않게
+        if (samePlace(runSlot(H.run?.preset)?.stageId, state.expStage)) state.expRepeat = false;   // 출정 창의 반복 버튼과 어긋나지 않게 — 스위치는 장소에 딸린다 (ADR-0432)
     }
     save();
     // 관전을 보고 있었으면 재접속처럼 **편성**으로 — 부재 중 알림이 거기 선다. 다른 화면은 뺏지 않는다
@@ -2963,7 +3002,7 @@ function autoSalvageBody() {
         id => set({ rarity: id === 'none' ? null : id })));
     box.appendChild(rRow);
 
-    // 레벨 선 — 위험도 줄(§4-1)과 같은 버튼 줄. 값은 「Lv.n 미만」, 0 이면 「안 봄」 · 0 에서 내림은 꺼진다
+    // 레벨 선 — 버튼 줄(`.lv-row` · 옛 위험도 줄의 모양 · 위험도는 2026-09-29 폐지). 값은 「Lv.n 미만」, 0 이면 「안 봄」 · 0 에서 내림은 꺼진다
     const lRow = el('div', 'auto-row');
     lRow.appendChild(el('span', 'auto-k', t('ch.auto.ilvl')));
     const n = rule.ilvlBelow;
@@ -4294,10 +4333,166 @@ function dpWatchBody() {
 
 /** 앱 시계가 자원 탭일 때 눈금마다 부른다 — 바 폭 · 남은 초만 갈아 끼우고 박자마다 타격 연출(전체 다시 그림이 아니다).
  *  박자 사이에 흐른 양 = 흐른 시간 ÷ 간격 — 바가 넘어간 만큼 「+n 산출물」이 떨어진다. 긴 공백(숨긴 탭에서 돌아옴)은 연출 없이 맞추기만 */
+/* ─── 파견 관전 창 미니게임 [시험 구현 2026-09-29 사용자 「최대한 빠르고 단순하게 · 확인만 하게」 · PLAN_dispatch_watch D7] ───
+   채광 = 한 방 맞히기 · 채집 = 골라 따기 · 벌목 = 박자 잇기. 판의 내용 · 채점 · 보상은 전부 `game.dwRound` · `dwJudge` · `dwClaim` 이 정한다 —
+   화면은 그리고, 누른 시각(판 시작부터 ms)을 재서 넘길 뿐이다. **보고 있을 때만** — 앱 시계는 자원 탭 · 탭이 보일 때만 부르고,
+   창이 닫히거나 다시 그려지면 하던 판은 사라진다(받지 않은 판 · D5) */
+const DWG_TILE_PX = 72;        // 골라 따기 잎 한 칸의 폭(잎 64 + 틈 8) — 배치의 치수다
+const DWG_BEAT_TRAVEL = 2.5;   // 박자 표시가 판을 가로지르는 데 드는 박자 수 — 연출의 속도다
+const DWG_BEAT_LINE = 0.2;     // 선의 자리(판 왼쪽에서의 비) — 표시는 오른쪽 끝에서 와 이 선에 닿는다
+const DWG_REST_MS = 900;       // 판이 끝나고 결과를 보여 두는 시간 — 연출의 길이다
+let dwg = null;                // {key, box, busy, nextAt, round, post, tier, layer, timers, done}
+function dwgStop() {
+    if (!dwg) return;
+    (dwg.timers ?? []).forEach(clearTimeout);
+    dwg.layer?.remove();
+    dwg = null;
+}
+/** 판 사이의 흐름 — 창을 연(또는 자리를 바꾼) 뒤 최소 간격이 지나면 첫 판 · 판이 끝나면 그 판이 굴린 간격 뒤 다음 판 */
+function dwgTick(box, at) {
+    const key = box.dataset.dw, gapMin = D.balance.dw_gap_min_sec * 1000;
+    if (!dwg || dwg.key !== key) { dwgStop(); dwg = { key, box, busy: false, nextAt: at + gapMin }; }
+    if (dwg.box !== box) {   // 창이 다시 그려졌다 — 하던 판은 버리고 새 판을 기다린다
+        if (dwg.busy) { (dwg.timers ?? []).forEach(clearTimeout); dwg.busy = false; dwg.nextAt = at + gapMin; }
+        dwg.box = box;
+    }
+    const S = SYS.game.dwState(G, at);
+    let info = box.querySelector('.dwg-info');
+    if (!info) { info = el('div', 'dwg-info'); box.appendChild(info); }
+    info.textContent = t('dw.info', { n: Math.round(S.usedSec), cap: S.capSec });
+    if (dwg.busy || at < dwg.nextAt) return;
+    const [post, tier] = key.split(':');
+    const r = SYS.game.dwRound(G, post, at);
+    if (!r.ok) { dwg.nextAt = at + gapMin; return; }   // 이번 시간 상한 — 시간이 바뀌면 다시 뜬다
+    save();
+    Object.assign(dwg, { busy: true, done: false, round: r.round, post, tier: Number(tier), timers: [] });
+    dwgStart(box, r.round);
+}
+/** 창 안 한 점의 자리(판 기준 %) — 줌이 걸려도 비로 재니 맞는다 */
+const dwgAt = (box, node) => {
+    const a = box.getBoundingClientRect(), r = (node ?? box).getBoundingClientRect();
+    return { x: (r.left + r.width / 2 - a.left) / a.width * 100, y: (r.top + r.height / 2 - a.top) / a.height * 100 };
+};
+function dwgStart(box, round) {
+    const layer = el('div', `dwg dwg-${round.kind}`);
+    layer.appendChild(el('div', 'dwg-hint', t(`dw.hint.${round.kind}`)));
+    box.appendChild(layer);
+    dwg.layer = layer;
+    const later = (ms, fn) => dwg.timers.push(setTimeout(fn, ms));
+    const t0 = performance.now();
+    const since = () => performance.now() - t0;
+    if (round.kind === 'strike') {
+        // 한 방 맞히기 — 링이 표적까지 줄어드는 순간에 한 번 누른다(판 아무 데나)
+        const c = dwgAt(box, box.querySelector('.side-enemy .sprite'));
+        const at = el('div', 'dwg-at', `<i class="dwg-core"></i><i class="dwg-ring" style="animation-duration:${round.strike.ms}ms"></i>`);
+        at.style.cssText = `left:${c.x}%;top:${c.y}%`;
+        layer.appendChild(at);
+        layer.onpointerdown = ev => { ev.preventDefault(); dwgEnd(since()); };
+        later(round.strike.ms + round.strike.win + 50, () => dwgEnd(NaN));
+    }
+    if (round.kind === 'pick') {
+        // 골라 따기 — 진짜가 반짝 → 뒤집혀 섞인다 → 하나 고른다. 넘기는 값은 고른 잎의 **처음 자리**
+        const { n, answer, swaps, step, limit } = round.pick;
+        const row = dwgRowOf(round);
+        const c = dwgAt(box, box.querySelector('.side-enemy .unit'));
+        const wrap = el('div', 'dwg-row');
+        wrap.style.cssText = `left:${c.x}%;top:${c.y}%;width:${n * DWG_TILE_PX}px`;
+        const icon = M.materialIcon(row.yieldId);
+        const slot = [];   // slot[i] = 지금 i 자리에 선 잎
+        for (let i = 0; i < n; i++) {
+            const b = el('button', `dwg-leaf${i === answer ? ' hot' : ''}`, icon ? `<img src="${icon}" alt="" draggable="false">` : '');
+            b.style.left = `${i * DWG_TILE_PX}px`;
+            b.style.transitionDuration = `${step}ms`;
+            b.dataset.orig = i;
+            b.onclick = () => {
+                if (!layer.classList.contains('armed')) return;
+                layer.classList.remove('armed');
+                for (const x of slot) x.classList.remove('shut');
+                slot.find(x => Number(x.dataset.orig) === answer)?.classList.add('good');
+                if (Number(b.dataset.orig) !== answer) b.classList.add('bad');
+                dwgEnd(Number(b.dataset.orig));
+            };
+            slot.push(b);
+            wrap.appendChild(b);
+        }
+        layer.appendChild(wrap);
+        later(step, () => slot.forEach(x => { x.classList.remove('hot'); x.classList.add('shut'); }));
+        swaps.forEach(([i, j], k) => later(step * (k + 2), () => {
+            [slot[i], slot[j]] = [slot[j], slot[i]];
+            slot[i].style.left = `${i * DWG_TILE_PX}px`;
+            slot[j].style.left = `${j * DWG_TILE_PX}px`;
+        }));
+        const armAt = step * (swaps.length + 2);
+        later(armAt, () => layer.classList.add('armed'));
+        later(armAt + limit, () => { layer.classList.remove('armed'); dwgEnd(-1); });
+    }
+    if (round.kind === 'beat') {
+        // 박자 잇기 — 표시 i 가 선에 닿는 시각 = (i+1) × 박자. 누를 때마다 채점해 맞힌 표시를 칠한다
+        const { n, ms, win } = round.beat;
+        const c = dwgAt(box, box.querySelector('.divider'));
+        const track = el('div', 'dwg-track', `<i class="dwg-line" style="left:${DWG_BEAT_LINE * 100}%"></i><b class="dwg-combo"></b>`);
+        track.style.cssText = `left:${c.x}%;top:${c.y}%`;
+        const travel = ms * DWG_BEAT_TRAVEL;
+        const marks = Array.from({ length: n }, (_, i) => {
+            const m = el('i', 'dwg-mark');
+            // 오른쪽 끝(100%) → 왼쪽 끝(0%) 을 `travel` 동안 — 선(왼쪽에서 DWG_BEAT_LINE)에 닿는 것은 출발 뒤 (1 − 선) × travel
+            m.style.animationDuration = `${travel}ms`;
+            m.style.animationDelay = `${(i + 1) * ms - (1 - DWG_BEAT_LINE) * travel}ms`;
+            track.appendChild(m);
+            return m;
+        });
+        layer.appendChild(track);
+        const presses = [];
+        let hits = 0;
+        layer.onpointerdown = ev => {
+            ev.preventDefault();
+            presses.push(since());
+            const j = SYS.game.dwJudge(round, presses);
+            const cnt = j.hit.filter(Boolean).length;
+            j.hit.forEach((h, i) => marks[i].classList.toggle('hit', h));
+            if (cnt === hits) { track.classList.remove('miss'); void track.offsetWidth; track.classList.add('miss'); }
+            hits = cnt;
+            track.querySelector('.dwg-combo').textContent = j.best ? `×${j.best}` : '';
+        };
+        later(n * ms + win + 200, () => dwgEnd(presses));
+    }
+}
+const dwgRowOf = round => D[POSTS.find(p => p.id === round.post).tiers].find(x => x.tier === dwg.tier);
+/** 판 끝 — 받고(채점 · 보상은 `dwClaim`) 결과를 영웅 카드 위에 띄운 뒤 판을 걷는다 */
+function dwgEnd(input) {
+    if (!dwg?.busy || dwg.done) return;
+    dwg.done = true;
+    const { box, layer, round, post, tier } = dwg;
+    dwg.timers.forEach(clearTimeout);
+    dwg.timers = [];
+    layer.onpointerdown = null;
+    const res = SYS.game.dwClaim(G, post, tier, input, now());
+    const pop = (cls, text) => {
+        const lay = box.querySelector('.side-party .pop-layer');
+        if (!lay) return;
+        const f = el('span', `pop ${cls}`, text);
+        f.onanimationend = () => f.remove();
+        lay.appendChild(f);
+    };
+    if (res.ok && res.ms > 0) pop('heal', t('dw.bonus', { s: Math.round(res.ms / 1000) }));
+    else pop('dmg dt-physical', t('dw.miss'));
+    const got = res.ok ? Object.values(res.gained).reduce((a, b) => a + b, 0) : 0;
+    if (got > 0) { const row = dwgRowOf(round); pop('heal', t('dp.watch.gain', { n: got, item: L({ ko: row.yieldKo, en: row.yieldEn }) })); }
+    save();
+    dwLast = null;   // 체력 바를 앞당긴 몫에 맞춰 다시 그린다(연출 없이)
+    dwg.timers.push(setTimeout(() => {
+        layer.remove();
+        if (!dwg) return;
+        dwg.busy = false;
+        dwg.nextAt = now() + round.gapMs;
+    }, DWG_REST_MS));
+}
+
 let dwLast = null;
 function refreshDispatchWatch(at) {
     const box = document.querySelector('.dpw-arena');
-    if (!box) { dwLast = null; return; }
+    if (!box) { dwLast = null; dwgStop(); return; }
+    dwgTick(box, at);
     const key = box.dataset.dw, [post, tier] = key.split(':');
     const p = SYS.game.dispatchProgress(G, post, Number(tier), at);
     if (!p) return;
@@ -5808,9 +6003,8 @@ function helpSections() {
             groups: [
                 { h: t('exp.party.h'), sub: t('help.exp.party', { n: SYS.game.limitsOf(G).party, m: SYS.game.limitsOf(G).expeditions }), body: [t('exp.party.note')] },
                 { h: t('exp.bench.h'), sub: t('help.exp.bench', { n: G.heroes.length, cap: SYS.game.limitsOf(G).roster }), body: [t('exp.bench.note')] },
-                { h: t('exp.zones.h'), sub: t('exp.zones.sub', { r: SYS.battle.stageRounds(D.stageList[0]).length }), body: [t('exp.zones.note', rounds)] },
-                { h: t('exp.level.h'), body: [t('exp.level.tip')] },   // 위험도 — 인게임 툴팁 키 재사용 (§12 · ADR-0104)
-                { h: t('exp.repeat'), body: [t('exp.repeat.sub')] },
+                { h: t('exp.zones.h'), sub: t('exp.zones.sub', { p: B.stages_per_chapter, r: SYS.battle.stageRounds(D.stageList[0]).length }), body: [t('exp.zones.note', rounds)] },
+                { h: t('exp.repeat'), sub: t('exp.repeat.tip'), body: [t('exp.repeat.sub')] },   // 버튼 툴팁 키 재사용 (§12 · ADR-0432)
                 { h: t('exp.seg.battle'), body: [t('bt.note')] },
                 { h: t('exp.seg.report'), sub: t('rep.log.sub', rounds), body: [t('rep.contract'), t('rep.injuryNote')] },
             ],
@@ -6114,18 +6308,17 @@ async function boot() {
     if (dev === 'play') {
         if (!G) startGame();
         devParty();
-        // `&rep=1` — **반복 원정을 켠 채** 출발한다 [2026-09-10]. 반복은 전진 패널의 토글로만 켜져서
-        //   「런이 끝나면 다음 런이 저절로 선다」(ADR-0074)에 헤드리스가 못 닿았다 (§10 · ?dev=form 과 같은 장치) · 반복은 처음부터 열려 있다(R152)
+        // `&rep=1` — **반복 원정(장소 안 순환)을 켠 채** 출발한다 [2026-09-10 · 뜻은 2026-09-29 ADR-0432]. 반복은 출정 창의 토글로만 켜진다
+        //   (§10 · ?dev=form 과 같은 장치) · 반복은 처음부터 열려 있다(R152) · 런이 끝나면 반복을 안 켜도 다음 런이 선다(v39)
         if (new URLSearchParams(location.search).get('rep') === '1') state.expRepeat = true;
         // `&stage=<id>` — **그 스테이지의 관전** [2026-09-15 · §10] — 오오라를 든 기사 몬스터는 2장부터라(ADR-0127) 첫 스테이지로는 못 본다.
-        //   후반 스테이지는 해금 전이라 출발이 거절되므로 앞 스테이지를 순서대로 클리어 처리하고 보낸다(`?dev=form&lvl` 과 같은 장치)
+        //   후반 스테이지는 해금 전이라 출발이 거절되므로 앞 스테이지를 순서대로 클리어 처리하고 보낸다
         const wantPlay = Number(new URLSearchParams(location.search).get('stage'));
         const playId = D.stages[wantPlay] ? wantPlay : D.stageOrder[0];
         //   장은 원정 랭크가 열어서(보스를 깨도 다음 장은 안 열린다 · R152) 2장 이후면 원정 건물을 끝까지 짓는다
         if (!SYS.game.chapterOpen(G, D.stages[playId].chapter)) devBuild('expedition');
         for (const id of D.stageOrder) { if (id === playId) break; if (!G.progress.cleared.includes(id)) G.progress.cleared.push(id); }
-        // 고른 지역을 그 스테이지로 채운다 — `runBattle` 은 고른 지역으로 나갈 때만 반복 의사(`&rep=1`)를 런에 옮긴다.
-        //   안 채우면 반복이 늘 꺼진 채 나갔다(DEV_PLAN §4 #49 · 유저 흐름은 행 클릭이 채운다)
+        // 고른 칸을 그 칸으로 채운다 — 목록 · 창이 그 칸을 고른 채 선다(유저 흐름은 칸 클릭이 채운다) · 반복 스위치는 `repeat` 옵션이 싣는다 (ADR-0432)
         state.expStage = playId;
         const playOpts = { tab: new URLSearchParams(location.search).get('bt'), logf: new URLSearchParams(location.search).get('logf'), dmgf: new URLSearchParams(location.search).get('dmgf') };
         /* `&parties=n` — **부대 n 개가 동시에 도는 관전** [2026-09-24 · ADR-0316 · §10] — 부대마다 선 관전 칸과 「안 보는 부대도 앱 시계가 민다」는
@@ -6140,10 +6333,10 @@ async function boot() {
                 for (const uid of SYS.game.partyOf(G, no)) SYS.game.toggleParty(G, uid, now());   // 비우고
                 SYS.game.toggleParty(G, uids[no - 1], now());                                     // 한 명만 넣는다
             }
-            for (let no = 1; no <= wantParties; no++) runBattle(playId, { ...playOpts, preset: no });
+            for (let no = 1; no <= wantParties; no++) runBattle(playId, { ...playOpts, preset: no, repeat: state.expRepeat });
             SYS.game.selectPreset(G, 1);
             watchBattle(1);
-        } else runBattle(playId, playOpts);
+        } else runBattle(playId, { ...playOpts, repeat: state.expRepeat });   // `&rep=1` — 창의 보내기와 같이 반복 스위치를 싣는다 (ADR-0432)
         // `&tip=e|p` — **첫 적 카드 / 첫 영웅 카드의 툴팁**이 뜬 관전 [2026-09-14 · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §10]. 툴팁은 hover 로만 뜨고,
         //   적 카드는 `round` 이벤트가 재생기에 들어간 뒤에 서므로 여기서는 아직 없다 — 설 때까지 기다렸다 한 번 올린다.
         //   `&alt=1` 이면 올린 뒤 **Alt 를 누른 채**로 둔다 — 세부 옵션 열도 누르는 동안만 서서 헤드리스가 못 닿는다(tip.js 의 keydown 을 그대로 탄다)
@@ -6173,16 +6366,6 @@ async function boot() {
            **폭이 넘치는지는 그 화면에서만 보인다**(가장 긴 이름은 Ch7-4). 챕터도 같이 옮겨야 그 행이 그려진다 */
         const want = Number(new URLSearchParams(location.search).get('stage'));
         if (D.stages[want]) { state.expStage = want; state.expChapter = D.stages[want].chapter; }
-        /* `&lvl=n` — **위험도를 n 으로 올린 창** (2026-09-14 · ADR-0104 · §10). 조절은 클리어 기록이 있어야 살아나므로
-           새 게임에서는 버튼이 전부 흐리다 — 상한이 n 에 닿을 때까지 앞 스테이지를 순서대로 클리어 처리하고 올린다 */
-        const wantLvl = Number(new URLSearchParams(location.search).get('lvl'));
-        if (wantLvl) {
-            for (const id of D.stageOrder) {
-                if (SYS.game.stageLevelState(G, state.expStage).max >= wantLvl) break;
-                if (!G.progress.cleared.includes(id)) G.progress.cleared.push(id);
-            }
-            SYS.game.setStageLevel(G, state.expStage, wantLvl);
-        }
         // `&open=0` — **창을 닫은 채** 목록만 본다. 창이 화면을 덮으므로 뒤의 스테이지 목록(§4-1)에 닿을 길이 따로 필요하다
         if (new URLSearchParams(location.search).get('open') === '0') state.modal = null;
         // 파티는 **기본으로 안 채운다** — 새 게임은 빈 편성이고 그것이 이 화면의 첫 상태다 (2026-09-09).

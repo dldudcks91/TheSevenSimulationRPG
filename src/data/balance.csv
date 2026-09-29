@@ -3,7 +3,7 @@ party_size_max,3,fixed,0,원정 파티 최대 인원 (2026-08-21 확정)
 party_preset_count,1,fixed,0,편성 수 **기본값** — 건설 전 값이고 원정 건물 랭크의 더하기가 얹힌다(building_effect.csv presets — r3 · r6 에 +1 · 편성 1 로 시작 · 다 지으면 3 — 2026-09-25 사용자 지시 · R156 · 첫 편성은 기본값이다 — 원정 r1 은 장만 연다 R161 · ~~r1 이 +1 · 기본값 0~~ R156 · ~~처음부터 3 · 건물이 안 늘린다~~ 09-23) · 늘 이만큼 서 있고 만들고 지우는 동작이 없다 · 파티 · 진형 · 물약 칸 · 파티 전술 칸은 편성마다다 [신설 2026-09-21 · SCREEN_DESIGN §15 · R122]
 roster_cap,5,fixed,0,영웅 보유 상한 **기본값** — 건설 전 값이고 선술집 랭크의 더하기가 얹힌다(building_effect.csv roster — r2 · r3 · r4 · r6 · r7 에 +1 · 다 지으면 10 · 3부대를 다 채우는 것은 r6 부터 — 2026-09-24 사용자 지시 「3부대 돌리는 게 좀 빡세도록」 · ~~r5 +2 = 다 지은 값 7~~ R137) · 원정 파티 + 휴식/파견 인원 (2026-08-21 확정)
 concurrent_expedition_parties,3,fixed,0,동시에 낼 수 있는 **부대 수** — 부대 = 편성이라 편성 수를 넘지 않는다(`limitsOf` 가 자른다) · 화면의 관전 칸도 이 수만큼 선다(둘 이상이면 부대마다 · ADR-0316) · **이 키는 건물이 안 늘린다 — 편성이 기본 1 · 원정 r3 · r6 으로 열리므로 부대도 1 → 2 → 3 으로 따라 열린다**(2026-09-25 사용자 지시 · R156 · ~~처음부터 3부대~~ 09-24 「일단 열고 나중에 닫아도」 · ~~1 (2026-08-21)~~)
-stages_per_chapter,5,fixed,0,챕터당 스테이지 수 — 마지막 스테이지는 챕터보스 단독 1라운드 (2026-09-11 개정 4→5 · base_expedition_design §1-2 — 08-21 의 계승 stage_info 골격 4 를 대체). 라운드 수는 키가 아니라 stage_round.csv 세트의 행 수다 (rounds_per_stage 퇴역)
+stages_per_chapter,5,fixed,0,챕터당 **장소** 수 — 장소마다 칸(stage.csv 의 cell · 9라운드 독립 스테이지)이 선다 · 칸 수는 키가 아니라 stage.csv 의 행 수다 (2026-09-29 · 스테이지 칸 구조 · PLAN_stage_segments) · 마지막 장소는 챕터보스 단독 1라운드 한 칸 (2026-09-11 개정 4→5 · base_expedition_design §1-2 — 08-21 의 계승 stage_info 골격 4 를 대체). 라운드 수는 키가 아니라 stage_round.csv 세트의 행 수다 (rounds_per_stage 퇴역)
 wave_monster_max,3,fixed,0,라운드당 몬스터 전역 상한 — round_budget.csv 의 어떤 편성도 이 값을 넘지 못한다 (2026-08-22 역할 정리)
 advance_unlock_level,30,fixed,0,전직 해금 레벨 (GAME_DESIGN §9 · 전직 3갈래 skill_design §4)
 active_slots,3,fixed,0,액티브 칸 수 — 고유 · 무기군 · 전직 각 하나 (GAME_DESIGN §9 08-26 「액티브 3」 · skill_design §2). 첫 칸은 생성 시 굴린 고유 스킬 · 나머지는 직업 액티브로 채운다(프로토타입 §9-0 개정 2026-09-01)
@@ -209,6 +209,19 @@ tactic_reroll_base_cost,600,proposed,1,전술 **전체 리롤**의 기본가(지
 tactic_reroll_lock_mult,2,proposed,1,전술 리롤 비용이 **잠금 1개마다** 곱해지는 배수 — 가파른 곱이라 다 잠그고 하나만 굴리기가 가장 비싸다 (tactic_card_design §5-6 · 2026-09-22 사용자 확정 「잠금마다 ×2 · 나중에 더 올린다」). 1 미만이면 로드가 멈춘다(지킬수록 싸지면 안 된다)
 admin_gold,1000000,fixed,0,**개발 장치** — 관리자 모드(Admin)를 켤 때 골드를 이 값까지 채운다(모자란 만큼 · 진짜 골드 · 세이브에 남는다) · 게임 기능이 아니다 [2026-09-27 사용자 지시 「Admin 누르면 돈 100만 쓸 수 있도록」 · SCREEN_DESIGN §10-3]
 dispatch_offline_cap_hours,3,proposed,1,자원 파견 산출의 **오프라인 상한**(시간) — 정산과 정산 사이의 공백을 여기서 자른다. 켜 둔 동안은 앱 시계가 자주 정산해 끝없이 흐르고 껐다 켠 첫 정산만 걸린다 [2026-09-27 사용자 「오프라인에선 최대 3시간 · 접속 중엔 계속」 · 「일단 3시간」 · base_expedition §3-3]
+dw_gap_min_sec,12,proposed,1,⚠임시 파견 관전 창 미니게임 — 판과 판 사이 **최소** 간격(초) · 창을 보고 있을 때만 흐른다 · 창을 열고 첫 판도 이만큼 뒤 [시험 구현 2026-09-29 · PLAN_dispatch_watch D7]
+dw_gap_max_sec,24,proposed,1,⚠임시 판과 판 사이 **최대** 간격(초) — 최소와 최대 사이에서 판마다 굴린다
+dw_bonus_sec,8,proposed,1,⚠임시 만점 한 판의 보상 — 영웅이 이만큼(초) 일한 것으로 친다(다음 1개가 빨리 온다) · 셋 공통 · 벌목은 이은 비율만큼
+dw_bonus_cap_sec,600,proposed,1,⚠임시 한 시간(시계 기준)에 앞당길 수 있는 합(초) — 셋 합산 · 닿으면 그 시간엔 판이 안 뜬다
+dw_strike_ms,1200,proposed,1,⚠임시 채광 「한 방 맞히기」 — 링이 표적까지 줄어드는 시간(ms) · 그 순간에 누르면 성공
+dw_strike_win_ms,120,proposed,1,⚠임시 채광 — 맞힌 것으로 치는 폭(± ms)
+dw_pick_count,4,proposed,1,⚠임시 채집 「골라 따기」 — 잎 수 · 그중 하나가 진짜
+dw_pick_swaps,4,proposed,1,⚠임시 채집 — 뒤집은 뒤 섞는 횟수
+dw_pick_step_ms,450,proposed,1,⚠임시 채집 — 진짜가 반짝이는 시간이자 한 번 섞는 시간(ms)
+dw_pick_limit_ms,4000,proposed,1,⚠임시 채집 — 다 섞인 뒤 고를 수 있는 시간(ms) · 넘기면 놓친 판
+dw_beat_count,5,proposed,1,⚠임시 벌목 「박자 잇기」 — 표시 수 · 점수 = 가장 길게 이은 수 ÷ 표시 수
+dw_beat_ms,700,proposed,1,⚠임시 벌목 — 박자 간격(ms) · 표시 i 가 선에 닿는 시각 = (i+1) × 이 값
+dw_beat_win_ms,150,proposed,1,⚠임시 벌목 — 맞힌 것으로 치는 폭(± ms) · 표시 밖의 누름은 이음을 끊는다
 advance_hours,2,proposed,1,전직에 걸리는 시간(시간) — 훈련장 전직 칸에 넣은 영웅이 이만큼 지나면 전직이 끝난다 · 그동안 원정 · 수색 · 자원 자리에 못 나간다 [2026-09-28 사용자 「시간 키만 두고 ⚠임시값」 · skill_design §4 · GAME_DESIGN §10 「전직 작업의 값」]
 skillbook_learn_level,10,proposed,0,스킬북을 쓸 수 있는 영웅 레벨 — 둘째 액티브 칸(배운 스킬)의 문턱 · 1장 끝 · 마스터리 T2 와 같은 무렵 [2026-09-28 사용자 확정 「10 레벨에 1개의 액티브 스킬」 · skill_design §2-1 · R179]
 drop_book_pct,0.25,proposed,1,드롭이 난 처치에서 **장비 대신 스킬북**이 나올 확률(비율) — 처치당 1개는 그대로 · 그 몬스터의 고유 스킬 책(영웅이 못 배우는 몬스터 전용이면 장비) · ⚠임시 · 등급마다 다른가는 GAME_DESIGN §10 「스킬북의 남은 설계」 ⑧ [2026-09-28 사용자 「처치당 1개 · 장비냐 책이냐를 굴린다」 · item_design §1 드롭 1-2 · R179]

@@ -45,10 +45,14 @@ export const bossEscorts = (lo, hi) => ({ refs: [], escorts: () => [lo, hi] });
 export const bossAlone = () => bossEscorts(0, 0);
 
 /**
- * 스테이지 → 규칙 배열. **배열 순서대로 겹쳐 건다.** 표에 없는 스테이지는 예외가 없다 — 편성 · rng 가 예외 도입 전과 같다.
+ * **장소** → 규칙 배열. **배열 순서대로 겹쳐 건다.** 표에 없는 장소는 예외가 없다 — 편성 · rng 가 예외 도입 전과 같다.
+ * 키 = `'<chapter>-<stage_num>'` — **장소의 칸 전부**(I · II · III)가 같은 규칙을 탄다 [2026-09-29 · 스테이지 칸 구조 · PLAN_stage_segments D3] (~~키 = stage_id~~)
  */
 export const STAGE_SPAWN_RULES = Object.freeze({
     // 1-1 파멸의 진영 — 「주술사가 나머지를 소환한다」 [2026-09-18 사용자 지시]
     //   주술사는 3라운드부터 · 정예는 주술사뿐 · 주술사가 서면 척후병 · 전사로 상한까지 채운다(그 몫은 「고블린 소환」이 세운다) · 아바돈은 혼자
-    101: [roundFrom(1103, 3), eliteOnly(1103), summoner(1103), bossAlone()],
+    '1-1': [roundFrom(1103, 3), eliteOnly(1103), summoner(1103), bossAlone()],
 });
+
+/** 그 스테이지(칸)의 규칙 키 — 장소 (`STAGE_SPAWN_RULES` 의 키) */
+export const spawnRuleKey = stage => `${stage.chapter}-${stage.stage_num}`;
