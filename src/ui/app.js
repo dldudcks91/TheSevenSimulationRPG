@@ -4262,8 +4262,15 @@ const dwCur = () => {
 
 function dpWatchHead() {
     const cur = dwCur();
-    return segmented(dwSeats().map(s => ({ id: `${s.post}:${s.tier}`, label: `${t(POSTS.find(p => p.id === s.post).label)} ${s.tier}` })),
-        `${cur.post}:${cur.tier}`, id => { const [post, tier] = id.split(':'); state.dw = { post, tier: Number(tier) }; render(); });
+    const wrap = el('div', 'dpw-head');
+    wrap.appendChild(segmented(dwSeats().map(s => ({ id: `${s.post}:${s.tier}`, label: `${t(POSTS.find(p => p.id === s.post).label)} ${s.tier}` })),
+        `${cur.post}:${cur.tier}`, id => { const [post, tier] = id.split(':'); state.dw = { post, tier: Number(tier) }; render(); }));
+    // [미니게임] — 오른쪽 위(닫기 왼쪽) · 누르면 기다리지 않고 바로 한 판 [시험 구현 2026-09-29 사용자 지시 · PLAN_dispatch_watch D7].
+    //   판이 도는 중 · 이번 시간 상한이면 흐리다(앱 시계가 `dwgTick` 에서 갈아 끼운다)
+    const go = el('button', 'btn sm dwg-go', t('dw.play'));
+    go.onclick = () => { const box = document.querySelector('.dpw-arena'); if (box) dwgTick(box, now(), true); };
+    wrap.appendChild(go);
+    return wrap;
 }
 
 /** 창의 배경 — 원정에서 보는 챕터(`expChapter`)의 **다음에 갈 스테이지** 그림 · 전부 깼으면 마지막 해금 스테이지 · 그림이 없으면 관전의 기본 그라디언트 */
@@ -4348,8 +4355,9 @@ function dwgStop() {
     dwg.layer?.remove();
     dwg = null;
 }
-/** 판 사이의 흐름 — 창을 연(또는 자리를 바꾼) 뒤 최소 간격이 지나면 첫 판 · 판이 끝나면 그 판이 굴린 간격 뒤 다음 판 */
-function dwgTick(box, at) {
+/** 판 사이의 흐름 — 창을 연(또는 자리를 바꾼) 뒤 최소 간격이 지나면 첫 판 · 판이 끝나면 그 판이 굴린 간격 뒤 다음 판.
+ *  `force` = 머리의 [미니게임] 버튼 — 간격을 기다리지 않고 바로 연다(판이 도는 중 · 상한이면 안 연다) */
+function dwgTick(box, at, force = false) {
     const key = box.dataset.dw, gapMin = D.balance.dw_gap_min_sec * 1000;
     if (!dwg || dwg.key !== key) { dwgStop(); dwg = { key, box, busy: false, nextAt: at + gapMin }; }
     if (dwg.box !== box) {   // 창이 다시 그려졌다 — 하던 판은 버리고 새 판을 기다린다
@@ -4360,12 +4368,15 @@ function dwgTick(box, at) {
     let info = box.querySelector('.dwg-info');
     if (!info) { info = el('div', 'dwg-info'); box.appendChild(info); }
     info.textContent = t('dw.info', { n: Math.round(S.usedSec), cap: S.capSec });
-    if (dwg.busy || at < dwg.nextAt) return;
+    const go = document.querySelector('.dwg-go');
+    if (go) go.disabled = dwg.busy || S.usedSec >= S.capSec;
+    if (dwg.busy || (!force && at < dwg.nextAt)) return;
     const [post, tier] = key.split(':');
     const r = SYS.game.dwRound(G, post, at);
     if (!r.ok) { dwg.nextAt = at + gapMin; return; }   // 이번 시간 상한 — 시간이 바뀌면 다시 뜬다
     save();
     Object.assign(dwg, { busy: true, done: false, round: r.round, post, tier: Number(tier), timers: [] });
+    if (go) go.disabled = true;
     dwgStart(box, r.round);
 }
 /** 창 안 한 점의 자리(판 기준 %) — 줌이 걸려도 비로 재니 맞는다 */

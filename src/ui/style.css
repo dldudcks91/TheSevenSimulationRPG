@@ -3300,6 +3300,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dpw-panel .bar.hp > i { transition: width .15s ease-out; }   /* 맞을 때만 준다 — 짧게 끊어 떨어진다 (ADR-0418) */
 /* 파견 관전 창 미니게임 [시험 구현 2026-09-29 · PLAN_dispatch_watch D7] — 판 위에 한 겹(`.dwg`)을 얹는다. 자리는 `app.js:dwgAt` 가 % 로 준다 */
 .dwg { position: absolute; inset: 0; z-index: 5; user-select: none; }
+/* 머리 줄 — 자리 탭은 왼쪽 · [미니게임]은 오른쪽 끝(닫기 왼쪽) */
+.dpw-head { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.dpw-head .dwg-go { margin-left: auto; }
 .dwg-strike, .dwg-beat { cursor: pointer; }
 .dwg-pick { pointer-events: none; }
 .dwg-pick.armed .dwg-leaf { pointer-events: auto; cursor: pointer; }

@@ -1052,6 +1052,7 @@ const STRINGS = {
     'dw.hint.beat': { ko: '표시가 선에 닿을 때마다 누르기', en: 'Tap as each mark hits the line' },
     'dw.bonus': { ko: '+{s}초 앞당김', en: '+{s}s sooner' },
     'dw.miss': { ko: '빗나감', en: 'Miss' },
+    'dw.play': { ko: '미니게임', en: 'Minigame' },
     'dw.info': { ko: '앞당긴 시간 {n} / {cap}초 (이번 시간)', en: 'Sped up {n} / {cap}s (this hour)' },
     'rs.on': { ko: 'On', en: 'On' },
     'rs.off': { ko: 'Off', en: 'Off' },
