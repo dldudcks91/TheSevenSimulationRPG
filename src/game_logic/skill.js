@@ -560,6 +560,14 @@ export function createSkillSystem(data) {
     const tagsOf = def => [...(def?.derived ?? []), ...(def?.tags ?? [])];
 
     /**
+     * **이 스킬이 이 무기로 나가나** [신설 2026-09-29 · R187 · skill_design §2-2] — 직업 스킬은 그 직업의 무기군을 들어야 나간다.
+     *   전직 · 몬스터 전용 스킬은 무기와 상관없다. 새 CSV 칸이 없다 — 스킬의 직업(`ownerId`)과 무기군의 직업(`weapon_group.csv:classes`)에서 읽는다.
+     *   이 모듈은 아이템을 모르므로 무기군 → `classes` 는 부르는 쪽이 푼다. 안 맞는 칸을 어떻게 돌리나(건너뛰기 · 쿨 멈춤)는 battle 의 일이다
+     * @param classes [classId] — 든 무기군의 `classes` · 맨손 `null`
+     */
+    const fitsWeapon = (def, classes) => def?.ownerKind !== 'job' || !!classes?.includes(def.ownerId);
+
+    /**
      * **스킬 계수 공용 계산** (skill_design §13 · battle_design §9-2 · 2026-09-10 R72) — 전투와 미리보기가 **같은 함수**를 쓴다.
      * 반환은 `def` 의 얕은 복사본이고 **`effects` 가 줄마다 민 복사본**이다 [2026-09-22 · R136] — 한 줄 = **시전 단위** `x`:
      *   그 줄 + 스킬의 `id`·`target` + 실효 `hits`·`decay`·`procChance`·`procMult`·`statMult` + (`apply` 줄이면) 거는 걸린 효과를 푼
@@ -695,5 +703,5 @@ export function createSkillSystem(data) {
         return d ? Math.round(d.cool * (mult ?? 1) * 10) / 10 : null;
     };
 
-    return { defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, scaleDef, previewOf, procIntervalSec, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
+    return { defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, fitsWeapon, scaleDef, previewOf, procIntervalSec, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

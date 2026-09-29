@@ -324,6 +324,10 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 아래 옛 봉인 문양(`nodes/` · `nodes/variants/` · `*_seal.png` · `generate.ps1` · `IconRenderer.cs` · `icon_plan.csv` · `ART_DIRECTION.md`)은 **이제 어디서도 안 읽힌다** — 비교용으로 남겨 두었다.
 
+## shrines/ — 신단 그림 [신설 2026-09-29]
+
+`<죄종 id>.webp` 7장(`wrath` · `sloth` · `lust` · `envy` · `pride` · `gluttony` · `greed`) — 512 투명 · 내용 88% · 원본 `shrines/source/<id>.png`(1024 · 게임이 안 읽는다). 결과 띠 · 관전 헤드 · 리포트의 신단 칩이 읽는다(`data.js:shrineInfo` · SCREEN_DESIGN §4-2 「신단」 · ADR-0445) · 파일명 = `shrine.csv:shrine_id`. 발주 지시문 · 규격 [docs/reference/shrine_art_prompt.md](../../../docs/reference/shrine_art_prompt.md)
+
 ## icons/sins/ — 죄종 아이콘 [신설 2026-09-27]
 
 `<죄종 id>.png` 7장(`wrath` · `envy` · `greed` · `sloth` · `gluttony` · `lust` · `pride`) — 스킬 아이콘과 같은 규격(512 투명 · 회색 `#d8d8e6` 단색 실루엣 · 긴 변 0.88 · 실선 21px · 파낸 선 15px)이다. 화면은 알파를 마스크로 써 판 색으로 칠한다(`mock.js:sinIcon` · SCREEN_DESIGN §7 · ADR-0368). 원본은 같은 폴더 `source.html`(SVG) — 고치면 512 로 렌더해 다시 자른다.

@@ -41,6 +41,22 @@ export function setFxOn(k, on) {
     try { localStorage.setItem(PREF_KEY[k], on ? 'on' : 'off'); } catch { /* 저장 실패는 무해 — 이번 창에서만 먹는다 */ }
 }
 
+/* 몬스터 흔들림 단계 — 피격 반응이 켜져 있을 때 **몬스터 카드만** 따른다(영웅 카드는 2 단계 폭) · 폭은 style.css 가 단계로 든다 (SCREEN_DESIGN §2-2 · ADR-0454) */
+export const SHAKE_LEVELS = [1, 2, 3];
+export const SHAKE_DEFAULT = 2;
+const SHAKE_KEY = 'thesevensim.fxShake';
+let shake = (() => {
+    try { const v = Number(localStorage.getItem(SHAKE_KEY)); return SHAKE_LEVELS.includes(v) ? v : SHAKE_DEFAULT; } catch { return SHAKE_DEFAULT; }
+})();
+/** 고른 단계 — 타격마다 읽는다 */
+export const shakeLevel = () => shake;
+/** 단계를 고른다 — 누른 순간부터 다음 타격에 먹는다 */
+export function setShakeLevel(n) {
+    if (!SHAKE_LEVELS.includes(n)) return;
+    shake = n;
+    try { localStorage.setItem(SHAKE_KEY, String(n)); } catch { /* 저장 실패는 무해 */ }
+}
+
 /* 배속이 오르면 연출이 짧아진다 — ×4 에서 원래 길이면 사건이 겹겹이 쌓인다. 배수는 칸(`.unit-slot`)에 걸어 카드 · 조각이 물려받는다 */
 const SPEED_K = { 1: 1, 2: 0.75, 4: 0.55 };
 /* 한 카드에 조각이 이만큼 떠 있으면 새 조각을 안 띄운다 — 광역 다단히트가 ×4 로 몰려도 화면이 조각으로 덮이지 않게 */
@@ -124,6 +140,7 @@ function spawn(layer, cls, vars = {}, tag = 'i') {
 function struck(state, d, crit) {
     if (!hitFxOn() || !live(state, d)) return;
     prep(state, d);
+    if (d.side === 'enemy') d.node.dataset.shake = shake;   // 몬스터 카드만 단계를 따른다 (ADR-0454)
     play(d.node, crit ? 'fx-shake-crit' : 'fx-shake', CARD);
     play(d.node.querySelector('.sprite'), crit ? 'fx-flash-crit' : 'fx-flash', FACE);
 }

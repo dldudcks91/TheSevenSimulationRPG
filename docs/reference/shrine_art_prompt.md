@@ -1,9 +1,9 @@
 # 신단 그림 프롬프트 — Codex 발주
 
-> 기획: [base_expedition_design.md §1-2 「신단」](../game_design/base_expedition_design.md) · 남은 칸 [GAME_DESIGN.md §10 「신단의 남은 칸」](../game_design/GAME_DESIGN.md)
+> 기획: [base_expedition_design.md §1-2 「신단」](../game_design/base_expedition_design.md) · 화면: [SCREEN_DESIGN §4-2 「신단」](../client/SCREEN_DESIGN.md) · [ADR-0445](../client/adr/0445-신단은-헤드의-칩과-결과-띠의-한-줄로-보인다.md)
 > 도구: **Codex 내장 이미지 생성(imagegen)** — 같은 방식의 선례는 [fx_art_prompt.md](fx_art_prompt.md)
 
-> ⚠ **지금 게임은 이 그림을 안 읽는다** — 신단이 화면 어디에 어떻게 뜨는지가 아직 미정이다(§10 「신단의 남은 칸」 ④). 그래서 **어디에 놓아도 쓰이게 투명 배경의 구조물 한 채**로 뽑는다. 화면이 정해지면 `src/assets/art/README.md` 에 `shrines/` 절을 세우고 읽는 코드를 잇는다.
+> **게임이 읽는다** [2026-09-29] — 결과 띠 · 관전 헤드 · 리포트의 신단 칩(`battle.js:shrineChip` · 경로 `data.js:shrineInfo`). 투명 배경의 구조물 한 채라 어디에 놓아도 쓰인다 (`src/assets/art/README.md` 「shrines/」)
 
 **쓰는 법** — Codex 에 「`docs/reference/shrine_art_prompt.md` 의 §2 지시대로 만들어」라고 준다. §2 가 Codex 가 읽는 지시문 전부다(영어). 일부만 뽑으려면 이름을 짚는다.
 
@@ -119,7 +119,7 @@ GREEDY SHRINE (greed — grants more item find and gold): from the top of the al
 
 ## 3. 받은 뒤
 
-- 게임은 아직 안 읽는다(위 ⚠). 화면이 정해지면 `src/assets/art/README.md` 에 `shrines/` 절을 세우고, 읽는 코드와 함께 잇는다
+- 게임은 파일명(`<죄종 id>.webp`)으로 읽는다 — 덮어쓰면 바로 바뀐다(`serve.py` 재검증)
 - 한 장만 다시 뽑으려면 §2 에서 그 이름 하나만 시킨다 — 같은 파일을 덮어쓴다. `wrath` 를 다시 뽑으면 나머지와 한 벌이 맞는지 다시 본다(나머지의 Image 3 이다)
 - 원본(`shrines/source/`)은 게임이 안 읽는다 — 다시 줄이거나 고칠 때의 출처다
 

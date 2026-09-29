@@ -63,6 +63,7 @@ export const D = {
     logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
     makeRecipes: {},          // make_recipe.csv — {part: {ore, timber, dust}} · 제작 필요량 ⚠임시 (item_design §7-1 · R96)
     potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103) · 만들 수 있는 단계는 제련소 랭크(R137)
+    shrines: [],              // shrine.csv — [{id, sin, ko, en, fx:{stat: value}}] · shrine_id 로 묶음 · 첫 줄 순서 = 뽑기 순서 ⚠임시값 (base_expedition_design §1-2 · 2026-09-29)
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
     tacticOptions: [],        // tactic_option.csv 원시 행 — 1행 = 옵션 하나(조건 id + 인자 + 능력치 + 기준값) · ~~`(option_id, grade)` 복합키~~ 2026-09-22 폐지
     tacticConditions: [],     // tactic_condition.csv 원시 행 — 조건 사전 · 점수 ⚠임시 (tactic_card_design §5-8 · R134)
@@ -118,7 +119,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -136,7 +137,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -287,6 +288,13 @@ export async function loadData(base = './data/') {
     // 제작 레시피 — 부위마다 광석 · 목재 · 가루 필요량(item_design §7-1 · R96). 어느 단계의 재료인지는 레벨이 든 챕터가 정한다(state.js makeLevels · 2026-09-21)
     D.makeRecipes = Object.fromEntries(makeRecipeRow.map(r => [r.part, { ore: r.ore_units, timber: r.timber_units, dust: r.dust_units }]));
     // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
+    // 신단 [2026-09-29 · base_expedition_design §1-2] — `shrine_id` 로 묶는다(한 신단이 효과 여러 줄 · 탐욕) · 첫 줄 순서가 뽑기 순서다. 검증은 game_logic/state.js
+    D.shrines = [];
+    for (const r of shrineRow) {
+        let s = D.shrines.find(x => x.id === r.shrine_id);
+        if (!s) D.shrines.push(s = { id: r.shrine_id, sin: r.sin, ko: r.name_kr, en: r.name_en, fx: {} });
+        s.fx[r.stat] = (s.fx[r.stat] ?? 0) + r.value;
+    }
     D.potions = potionRow.map(r => ({
         id: r.potion_id, kind: r.kind, tier: r.tier, ko: r.name_kr, en: r.name_en,
         heal: r.heal, craftGold: r.craft_gold, startOwned: r.start_owned,
@@ -463,6 +471,12 @@ export const skillInfo = id => {
     };
 };
 
+/** 신단 한 줄 — 이름 · 효과가 **전부 `shrine.csv`** 다 · 그림 = `assets/art/shrines/<id>.webp`. 없는 id 는 null (2026-09-29) */
+export const shrineInfo = id => {
+    const s = (D.shrines ?? []).find(x => x.id === id);
+    return s ? { id: s.id, sin: s.sin, name: { ko: s.ko, en: s.en }, fx: { ...s.fx }, img: `./assets/art/shrines/${s.id}.webp` } : null;
+};
+
 /** 물약 한 줄 — 이름 · 회복량 · 단계가 **전부 `potion.csv`** 다 (R103). 없는 id 는 null — 표에서 사라진 물약이 세이브에 남을 수 있다 */
 export const potionInfo = id => {
     const p = (D.potions ?? []).find(x => x.id === id);
@@ -598,6 +612,8 @@ export function buildSystems(d, dev = {}) {
         gatherNodes: d.gatherNodes ?? [], heroAttributes: d.heroAttributes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)
         potions: d.potions ?? [],
+        // 신단 — 이긴 칸 뒤 칸 I → II · II → III 에 하나가 선다 (base_expedition_design §1-2 · 2026-09-29)
+        shrines: d.shrines ?? [],
         // 전직 — 갈래 표. 갈래의 스킬은 `skill.csv` 의 `owner_kind=advance` 행이다 (skill_design §4 · R16)
         advances: d.advanceRows ?? [],
         openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)

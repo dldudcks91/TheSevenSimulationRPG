@@ -4399,6 +4399,123 @@ check('skill: activesFor — 칸은 출처가 정한다 · 고유 / 배운 스�
     }
     return `${MAIN.length}직업 × (고유 · 배운 스킬) · 전직 칸은 빈다`;
 });
+
+/* ── 무기 판정 — 직업 스킬은 그 직업의 무기군을 들어야 나간다 [2026-09-29 · R187 · skill_design §2-2 · battle_design §6] ── */
+
+check('skill: fitsWeapon — 직업 스킬은 그 직업의 무기군을 들어야 나간다 · 전직 · 몬스터 전용은 무관 · 맨손은 거짓 (skill_design §2-2 · R187)', () => {
+    const job = SYS.skill.list.filter(d => d.ownerKind === 'job');
+    for (const d of job) {
+        const own = D.weaponGroupList.filter(g => g.classes.includes(d.ownerId));
+        if (!own.length) fail(`${d.id} — ${d.ownerId} 의 무기군이 없다(그 스킬은 영원히 안 나간다)`);
+        for (const g of own) if (!SYS.skill.fitsWeapon(d, g.classes)) fail(`${d.id} — 제 직업 무기 ${g.id} 로 안 나간다`);
+        for (const g of D.weaponGroupList) if (!g.classes.includes(d.ownerId) && SYS.skill.fitsWeapon(d, g.classes)) fail(`${d.id} — 남의 무기 ${g.id} 로 나간다`);
+        if (SYS.skill.fitsWeapon(d, null)) fail(`${d.id} — 맨손으로 나간다`);
+    }
+    const free = SYS.skill.list.filter(d => d.ownerKind !== 'job');
+    for (const d of free) if (!SYS.skill.fitsWeapon(d, null)) fail(`${d.id}(${d.ownerKind}) — 무기와 상관없어야 하는데 맨손으로 안 나간다`);
+    // 몬스터 — 고유가 제 무기군과 어긋나면 그 몬스터의 고유가 조용히 꺼진다(데이터 실수를 로드 단계에서 잡는다)
+    let mons = 0;
+    for (const m of Object.values(D.monsters)) {
+        const d = SYS.skill.defs[m.innate_skill];
+        if (!d) continue;
+        if (!SYS.skill.fitsWeapon(d, WG[m.weapon_group].classes)) fail(`몬스터 ${m.monster_idx} — 고유 ${d.id} 가 제 무기 ${m.weapon_group} 로 안 나간다`);
+        mons++;
+    }
+    return `직업 스킬 ${job.length} · 무관 ${free.length} · 몬스터 고유 ${mons} 전부 제 무기와 맞다`;
+});
+
+/** p0 에게만 칸을 싣고 무기군을 쥐여 준 이길 수 있는 파티 — 나머지는 칸이 없다(평타만) */
+const armedKit = (acts, group) => godUnits().map((u, i) => (i === 0 ? { ...u, actives: acts, weaponGroup: group } : { ...u, actives: [] }));
+
+check('battle: 무기가 안 맞는 직업 스킬 칸은 건너뛴다 — 차례를 안 먹어 칸이 없는 것과 한 글자도 안 다르다 · 맞으면 나간다 · 꺼진 오오라는 안 켠다 (battle_design §6 · R187)', () => {
+    const kit = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura').slice(0, 2)
+        .map(d => ({ id: d.id, source: 'innate' }));
+    if (kit.length < 2) fail('궁수 직업 스킬이 둘이 안 된다 — 표본 없음');
+    const ids = kit.map(a => a.id);
+    let cast = 0;
+    for (let seed = 1; seed <= 5; seed++) {
+        // ① 남의 무기(도끼) · 맨손 — p0 의 칸은 없는 것과 같다(타임라인 · 결과가 한 글자도 안 다르다 = 차례를 안 먹고 rng 도 안 민다)
+        const bare = SYS.battle.simulate(armedKit([], 'axe'), 1013, makeRng(seed));
+        for (const g of ['axe', null]) {
+            const r = SYS.battle.simulate(armedKit(kit, g), 1013, makeRng(seed));
+            if (JSON.stringify(r.timeline) !== JSON.stringify(bare.timeline)) fail(`seed ${seed} 무기 ${g} — 꺼진 칸이 전투를 바꿨다(차례를 먹었거나 쿨이 돌았다)`);
+            if (!eq(r.party[0].actives, ids) || !r.party[0].ready.every(v => v === null)) fail(`seed ${seed} 무기 ${g} — 칸 표시 ${JSON.stringify(r.party[0])} — 꺼진 칸은 null`);
+        }
+        // ② 제 무기(활 · 석궁) — 나간다
+        for (const g of ['bow', 'crossbow']) {
+            const r = SYS.battle.simulate(armedKit(kit, g), 1013, makeRng(seed));
+            const n = r.timeline.filter(ev => ev.e === 'skill' && ev.u === 'p0').length;
+            if (!n) fail(`seed ${seed} 무기 ${g} — 제 직업 무기인데 스킬이 한 번도 안 나갔다`);
+            if (!eq(r.party[0].ready, [0, 0])) fail(`seed ${seed} 무기 ${g} — 첫 준비 ${JSON.stringify(r.party[0].ready)} — 준비 상태로 출발해야`);
+            cast += n;
+        }
+    }
+    // ③ 오오라 — 기사 오오라를 활로 들면 안 켜진다 · 양손검이면 켜진다
+    const aura = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'knight' && d.cast === 'aura');
+    const auraOn = g => SYS.battle.simulate(armedKit([{ id: aura.id, source: 'innate' }], g), 1013, makeRng(1));
+    const off = auraOn('bow'), on = auraOn('sword2h');
+    if (off.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id) || off.party[0].ready[0] !== null) fail(`${aura.id} — 활로 켜졌다`);
+    if (!on.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id) || on.party[0].ready[0] !== 0) fail(`${aura.id} — 양손검으로 안 켜졌다`);
+    return `꺼진 칸 = 칸 없음(5 시드 × 도끼 · 맨손) · 활 · 석궁 시전 ${cast} · ${aura.id} 활 꺼짐 · 양손검 켜짐`;
+});
+
+check('battle: 적도 같은 규칙 — 무기가 안 맞는 몬스터의 직업 스킬은 라운드가 바뀌어도 안 켜진다 (skill_design §2-2 · R187)', () => {
+    // 모든 몬스터에게 제 직업이 아닌 무기군을 쥐여 준 판 — 라운드 시작 · 불러내기가 준비 시각을 되돌려도 꺼진 칸은 그대로여야 한다
+    const swap = Object.fromEntries(Object.entries(D.monsters).map(([id, m]) =>
+        [id, { ...m, weapon_group: D.weaponGroupList.find(g => !g.classes.includes(m.cls)).id }]));
+    const S2 = buildSystems({ ...D, monsters: swap });
+    const S1 = SYS;
+    let before = 0, after = 0;
+    for (let seed = 1; seed <= 5; seed++) {
+        const jobCasts = (S, r) => r.timeline.filter(ev => ev.e === 'skill' && ev.u.startsWith('e') && S.skill.defs[ev.s]?.ownerKind === 'job').length;
+        before += jobCasts(S1, S1.battle.simulate(godUnits(), 1013, makeRng(seed)));
+        const r = S2.battle.simulate(godUnits(), 1013, makeRng(seed));
+        const n = jobCasts(S2, r);
+        if (n) fail(`seed ${seed} — 제 무기가 아닌 몬스터가 직업 스킬을 ${n}번 썼다`);
+        for (const ev of r.timeline.filter(e => e.e === 'round'))
+            for (const e of ev.enemies) (e.actives ?? []).forEach((id, i) => {
+                if (S2.skill.defs[id]?.ownerKind === 'job' && e.ready[i] !== null) fail(`seed ${seed} 라운드 ${ev.n} ${e.monsterId} — ${id} 칸 표시 ${e.ready[i]} — 꺼진 칸은 null`);
+            });
+        after += n;
+    }
+    if (!before) fail('제 무기를 든 판에서도 몬스터가 직업 스킬을 안 썼다 — 비교 표본 없음');
+    return `제 무기 판 몬스터 직업 스킬 ${before}회 → 남의 무기 판 ${after}회`;
+});
+
+check('createRun.refit: 무기를 바꿔 칸이 꺼지면 쿨이 멈추고 · 되돌리면 멈춘 자리에서 잇는다 — 뺐다 끼워도 쿨이 안 되돌아간다 (battle_design §6 · R187)', () => {
+    const sk = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura' && (d.cool ?? 0) > 3);
+    if (!sk) fail('궁수 직업 스킬 중 쿨 3초 넘는 것이 없다 — 표본 없음');
+    // 데미지 1 — 쿨 한 바퀴를 넘겨 기다리는 동안 라운드가 끝나지 않게 한다(HP 는 godUnits 그대로라 안 쓰러진다)
+    const kit = g => armedKit([{ id: sk.id, source: 'innate' }], g).map(u => ({ ...u, combat: { ...u.combat, atk_physical: { min: 1, max: 1 } } }));
+    const tenth = v => Math.round(v * 10) / 10;       // battle.js r1 과 같은 자릿수 (아래 같은 이름은 이 단정보다 뒤에 선다)
+    const lastFit = run => run.result.timeline.findLast(ev => ev.e === 'refit' && ev.u === 'p0');
+    const castsOf = run => run.result.timeline.filter(ev => ev.e === 'skill' && ev.u === 'p0');
+    for (let seed = 1; seed <= 20; seed++) {
+        const run = SYS.battle.createRun(kit('bow'), 1013, makeRng(seed));
+        run.advance(0);
+        let T = 0.1;
+        for (; T < 30 && !castsOf(run).length; T += 0.1) if (run.advance(T)) break;
+        const first = castsOf(run)[0];
+        if (!first || run.status().inRound === false || first.ready - T < 2) continue;   // 남은 쿨이 넉넉한 순간이 필요하다
+        // 꺼짐 — 남은 쿨을 얼린다 · 칸 표시 null
+        run.refit(kit('axe'));
+        const offEv = lastFit(run);
+        if (!offEv || offEv.ready[0] !== null) fail(`seed ${seed} — 도끼로 바꾼 칸 표시 ${JSON.stringify(offEv?.ready)} — null 이어야`);
+        const left = first.ready - offEv.t;
+        // 멈춘 동안 — 안 나간다(쿨 한 바퀴를 넘겨 기다려도)
+        const wait = offEv.t + left + 1;
+        if (run.advance(wait)) continue;                                                 // 라운드가 끝났다 — 이 시드는 버린다
+        if (castsOf(run).length !== 1) fail(`seed ${seed} — 꺼진 칸이 ${castsOf(run).length - 1}번 더 나갔다`);
+        // 켜짐 — 지금 + 얼린 쿨
+        run.refit(kit('bow'));
+        const onEv = lastFit(run);
+        if (!onEv || onEv === offEv) fail(`seed ${seed} — 활로 되돌린 갈아입기가 안 났다`);
+        const want = tenth(onEv.t + left);
+        if (Math.abs(onEv.ready[0] - want) > 0.15) fail(`seed ${seed} — 되돌린 칸 준비 ${onEv.ready[0]} ≠ ${onEv.t} + 멈춘 쿨 ${tenth(left)} = ${want}(쿨이 멈추지 않았거나 되돌아갔다)`);
+        return `seed ${seed} ${sk.id} — ${offEv.t}초 꺼짐(남은 ${tenth(left)}초) → ${onEv.t}초 켜짐 → 준비 ${onEv.ready[0]}`;
+    }
+    fail('시전 뒤 쿨이 넉넉히 남은 채 라운드가 이어지는 순간이 없다 — 표본 없음 (시드 1~20)');
+});
 /** 고유 스킬은 **제 직업 풀**에서 굴린다 [개정 2026-09-09 · §12-1 규칙 1] — 「마법사가 배쉬를 드는 일은 없다」 */
 check('hero: 고유 스킬이 제 직업 풀 안에서 나온다 · 풀이 비어도 rng 1회 (skill_design §12-1 규칙 1)', () => {
     const poolOf = cls => SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === cls).map(d => d.id);
@@ -8118,7 +8235,56 @@ check('원정 이어 가기: 반복(순환)은 같은 장소를 도는 동안 �
     if (SYS.game.retreatRun(g, d3.run, NOW + 4000).err !== 'done') fail('두 번째 철수가 먹었다');
     return '같은 장소 = 반복 유지 · 다른 장소 = 끔 · 기다리는 부대 철수 = 멈춤 · 옛 핸들 done';
 });
-check('원정 이어 가기: 다음 칸은 처음 나간 편성 그대로 — 그새 편성의 인원 · 진형 · 물약 칸 · 전술 칸을 고쳐도(비워도) 안 먹는다 · 옛 핸들 · 멈춘 부대는 stopped · 고친 편성은 철수하고 다시 보낼 때부터 (2026-09-29 사용자 지시)', () => {
+const shrineFxOf = (id, stat) => D.shrines.find(s => s.id === id)?.fx?.[stat] ?? 0;
+check('신단: 이긴 칸 뒤 칸 I → II · II → III 에만 선다(III · 진 칸 · 새로 보낸 런은 아니다) · 이어 가는 런이 그 칸이면 이어받고 효과를 입는다 · 진 칸을 다시 돌 때 남는다 · 끊기 · 칸 사이 철수가 지운다 · 같은 시드 = 같은 신단 · 전투 수열 무변동 (base_expedition_design §1-2 · 2026-09-29)', () => {
+    if (D.shrines.length !== 7) fail(`신단 ${D.shrines.length}종 (7 이어야 한다)`);
+    if (!eq(D.shrines.map(s => s.sin).sort(), ['envy', 'gluttony', 'greed', 'lust', 'pride', 'sloth', 'wrath'])) fail(`죄종 ${D.shrines.map(s => s.sin)}`);
+    if (Object.keys(D.shrines.find(s => s.id === 'greed').fx).length !== 2) fail('탐욕은 드랍률 · 골드 두 효과다');
+    const ids = D.shrines.map(s => s.id);
+    // 이긴 런이 필요하다 — 시작 파티의 승패는 밸런스가 정해 이기는 시드를 찾는다
+    const winAt = (g, stageId, at, from) => { const d = SYS.game.departRun(g, stageId, at, 1, from); if (!d.ok) fail(`${stageId} 출발 ${d.err}`); while (!SYS.game.advanceRun(g, d.run, at).done); return d; };
+    let g = null, d1 = null, seed = 47;
+    for (; seed < 90 && !d1?.report.won; seed++) { g = newGameS(seed); d1 = winAt(g, 1011, NOW); }
+    if (!d1.report.won) fail('시험 조건 — 1011 을 이기는 시드가 없다');
+    if (d1.report.shrine !== null) fail(`새로 보낸 런이 신단을 입었다 — ${d1.report.shrine}`);
+    const sh = g.runs[0].shrine;
+    if (!sh || !ids.includes(sh.id) || sh.stageId !== 1012) fail(`1011 을 이겼는데 신단 ${JSON.stringify(sh)}`);
+    const nx = SYS.game.nextRepeat(g, NOW, 1);
+    if (nx?.stageId !== 1012 || nx.shrine?.id !== sh.id || nx.shrine.fresh !== true) fail(`nextRepeat ${JSON.stringify(nx)}`);
+    // 같은 시드 = 같은 신단 · 신단 스트림이 전투 수열을 안 민다(같은 런의 타임라인이 그대로)
+    const g2 = newGameS(seed - 1), d1b = winAt(g2, 1011, NOW);
+    if (g2.runs[0].shrine?.id !== sh.id) fail(`같은 시드인데 신단 ${g2.runs[0].shrine?.id} ≠ ${sh.id}`);
+    if (JSON.stringify(d1b.run.result.timeline) !== JSON.stringify(d1.run.result.timeline)) fail('같은 시드의 전투 타임라인이 갈렸다');
+    // 이어 가는 런이 이어받는다 — 효과는 오만(최대 HP)으로 잰다: 같은 인원을 신단 없이 보낸 판과 비교
+    g.runs[0].shrine = { id: 'pride', stageId: 1012 };
+    const d2 = SYS.game.departRun(g, 1012, NOW + 1000, 1, d1.run);
+    if (!d2.ok || d2.report.shrine !== 'pride' || d2.run.fixed.shrine !== 'pride') fail(`이어받기 ${d2.err} ${d2.report?.shrine}`);
+    // 진 칸 — 자리의 신단은 그대로 · 다음 출발은 fresh 거짓 · 같은 칸으로 이어 나가면 다시 입는다
+    SYS.game.retreatRun(g, d2.run, NOW + 1500);
+    if (g.runs[0].shrine !== null) fail('철수했는데 신단이 남았다');
+    const d3 = SYS.game.departRun(g, 1012, NOW + 2000);
+    if (d3.report.shrine !== null) fail('새로 보낸 런(이어 가기 아님)이 신단을 입었다');
+    // 같은 인원 · 같은 레벨을 신단 없이 보낸 판(d3)과 비교한다
+    const hp = d => d.run.result.party.map(p => p.hpMax);
+    const ratio = hp(d2)[0] / hp(d3)[0];
+    if (!(ratio > 1 + shrineFxOf('pride', 'hp_pct') - 0.03 && ratio < 1 + shrineFxOf('pride', 'hp_pct') + 0.03)) fail(`오만의 신단 HP 배율 ${ratio.toFixed(3)}`);
+    g.runs[0].shrine = { id: 'wrath', stageId: 1012 };
+    g.runs[0].active = false; Object.assign(d3.report, { reason: 'wipe', won: false }); d3.run.done = true;
+    const lost = SYS.game.nextRepeat(g, NOW + 3000, 1);
+    if (lost?.stageId !== 1012 || lost.shrine?.id !== 'wrath' || lost.shrine.fresh !== false) fail(`진 칸 다음 출발 ${JSON.stringify(lost)}`);
+    const d4 = SYS.game.departRun(g, 1012, NOW + 4000, 1, d3.run);
+    if (d4.report.shrine !== 'wrath') fail(`진 칸을 다시 도는데 신단 ${d4.report.shrine}`);
+    // 다른 칸의 신단은 안 입는다
+    SYS.game.retreatRun(g, d4.run, NOW + 4500);
+    // III 을 이기면 신단이 안 선다(다음은 다른 장소) — 이기는 시드에서 1013 을 이겨 본다
+    let k = null, e = null;
+    for (let s = 47; s < 90 && !e?.report.won; s++) { k = newGameS(s); k.progress.cleared = [1011, 1012]; k.runs[0] = null; e = winAt(k, 1013, NOW); if (e.report.won) break; }
+    if (e.report.won && k.runs[0].shrine !== null) fail(`III 을 이겼는데 신단 ${JSON.stringify(k.runs[0].shrine)}`);
+    // 불러오기 — 신단 칸이 든 세이브가 열린다
+    if (!SYS.game.canLoad(JSON.parse(JSON.stringify(g)))) fail('신단 칸이 든 세이브를 못 연다');
+    return `시드 ${seed - 1} → ${sh.id} · 오만 HP ×${ratio.toFixed(2)} · 진 칸 유지 · 철수 · 새로 보냄 = 없음 · III 이긴 판 ${e.report.won ? '신단 없음' : '(못 이김 — 생략)'}`;
+});
+check('원정 이어 가기: 다음 칸은 처음 나간 편성 그대로 —그새 편성의 인원 · 진형 · 물약 칸 · 전술 칸을 고쳐도(비워도) 안 먹는다 · 옛 핸들 · 멈춘 부대는 stopped · 고친 편성은 철수하고 다시 보낼 때부터 (2026-09-29 사용자 지시)', () => {
     const g = newGameS(46);
     const [a, b, c] = SYS.game.partyOf(g);
     const d1 = SYS.game.departRun(g, 1011, NOW);

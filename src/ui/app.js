@@ -51,8 +51,8 @@
 
 import * as M from './mock.js';
 import { t, L, has, lang, setLang, applyDocumentLang } from './i18n.js';
-import { mountBattle } from './battle.js';
-import { bindTipNode, hideTip, isTouchInput, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
+import { mountBattle, shrineChip } from './battle.js';
+import { bindTipNode, hideTip, isTouchInput, isAltHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadCloudLink, writeCloudLink, clearCloudLink, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
@@ -60,7 +60,7 @@ import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
 import { mountCardCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 버튼. 걷어내려면 이 줄 · 아래 호출 · devcompare.js
-import { skillFxOn, hitFxOn, setFxOn } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 피격 반응 켜고 끄기 (SCREEN_DESIGN §2-2 · ADR-0414)
+import { skillFxOn, hitFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 피격 반응 켜고 끄기 · 몬스터 흔들림 단계 (SCREEN_DESIGN §2-2 · ADR-0414 · ADR-0454)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
@@ -354,11 +354,13 @@ const state = {
     roll: 1, candidates: [], confirmOverwrite: false,
     // 보관의 「고르는 중」 [2026-09-21 · ADR-0184] — [분해]로 들어가고 [분해하기] · [취소]로 나온다.
     // 고르는 동안 칸 클릭은 **체크를 토글할 뿐**이라 오클릭이 파괴가 되지 않는다 — 옛 `salvageMode` 는 클릭이 곧 분해였다.
-    // 「잠그는 중」 [ADR-0207] — [잠금]으로 들어가고 [완료]로 나온다 · 칸 클릭 = 그 칸의 자물쇠 토글.
-    // 둘 다 탭을 떠나면 풀린다(`setTab`) — 모드 상태가 화면 밖으로 새지 않는다 · 세이브 아님
+    // 도구 줄 [잠금] · 「잠그는 중」은 2026-09-29 걷었다 — 잠금은 우클릭 메뉴가 든다 (ADR-0454).
+    // 탭을 떠나면 풀린다(`setTab`) — 모드 상태가 화면 밖으로 새지 않는다 · 세이브 아님
     // 「정렬 펼침」 [ADR-0242 · ADR-0247] — 기준 셋을 펼친 칸('stash' · 'bag') · null 이면 안 펼쳤다.
     //   `bagSortAnim` = 펼친 직후 첫 그리기에만 미끄러지는 움직임을 단다(그 그리기가 끈다)
-    bagSelMode: false, bagSel: new Set(), bagLockMode: false, bagSortMode: null, bagSortAnim: false,
+    bagSelMode: false, bagSel: new Set(), bagSortMode: null, bagSortAnim: false,
+    // 고르기 메뉴 [2026-09-29 · ADR-0447] — 펼친 줄('rarity' · 'ilvl' · null) · 올라오는 / 펼치는 움직임을 첫 그리기에만 다는 표시(그 그리기가 끈다)
+    bagPickFold: null, bagPickAnim: false, bagFoldAnim: false,
     bagTab: 'equip',             // 인벤토리 칸의 탭 — 'equip' | 'mat' (SCREEN_DESIGN §6 · ADR-0379) · 창고 칸은 안 갈린다
     autoArm: false,              // 자동 분해 창 — [지금 인벤토리에도 적용]을 한 번 눌러 확인 줄이 선 상태 (ADR-0203) · 창을 닫으면 풀린다
     bookArm: null,               // 서고 탭 — [배우기]를 한 번 눌러 [덮어쓰기]로 바뀐 책 id (§3 · ADR-0422) · 영웅을 바꾸면 풀린다 · 세이브 아님
@@ -392,6 +394,7 @@ const state = {
     // 자원 탭에서 열려 있는 파견처 (§8) — 들어오면 첫 칸(채광)이 골라져 있다. 비워 두면 첫 화면이 빈다
     post: 'mine',
     dpPick: null,           // 자원 자리 칸의 선택 창 — `{post, tier}` · 열린 칸 하나 (SCREEN_DESIGN §8 · ADR-0373) · 세이브 아님
+    itemMenu: null,         // 보관 칸 우클릭 메뉴 — `{uid, hero, x, y}` (x · y = 한 장 좌표) (SCREEN_DESIGN §6 · ADR-0451) · 세이브 아님
     dw: null,               // 파견 관전 창이 보는 자리 — `{post, tier}` · 비었으면 첫 앉은 자리 (SCREEN_DESIGN §8 · ADR-0415) · 세이브 아님
     // 선택 창에서 한 번 누른 쪽 — 'cloud' | 'local' | null. 두 번째 누름이 덮어쓰기를 확정한다 (SCREEN_DESIGN §2-1)
     cloudArm: null,
@@ -437,7 +440,7 @@ function renderShell() {
         // 흐린 탭은 오른쪽 끝에 닫힌 자물쇠(잠김 베일과 같은 그림 · 이름과 같은 회색으로 같이 흐린다) [2026-09-28 사용자 지시 · §1]
         const b = el('button', `${id === state.tab ? 'on' : ''}${shut ? ' dim' : ''}`,
             shut ? `<span class="nav-lbl">${t(`nav.${id}`)}</span><span class="nav-lock">${lockIcon(true)}</span>` : t(`nav.${id}`));
-        // 탭을 떠나면 **고르는 중 · 잠그는 중이 풀린다** [ADR-0184 · ADR-0207] — 모드 상태가 화면 밖으로 새지 않는다
+        // 탭을 떠나면 **고르는 중이 풀린다** [ADR-0184] — 모드 상태가 화면 밖으로 새지 않는다
         b.onclick = shut ? () => flashUnbuilt(cs, id) : () => { state.tab = id; clearBagSel(); state.cmArm = null; state.dpPick = null; render(); };
         nav.appendChild(b);
     }
@@ -485,7 +488,8 @@ function render() {
     clockRender = false;      // 무엇 때문에 그리든 지금 상태를 그린다 — 미뤄 둔 앱 시계 그리기는 여기서 풀린다 (ADR-0338)
     bagStale = false;         // 관전 보관 칸도 새로 선다 (ADR-0341)
     // 자원 자리의 선택 창은 탭 본문 밖(한 장 바로 아래)에 선다 — 본문과 함께 안 지워지므로 여기서 걷는다 (`dpPickPanel` · ADR-0373)
-    document.querySelectorAll('#stage > .dp-pick, #stage > .dp-pick-back').forEach(n => n.remove());
+    //   보관 칸 우클릭 메뉴도 같은 자리 · 같은 틀이다 (`itemMenuPanel` · ADR-0451)
+    document.querySelectorAll('#stage > .dp-pick, #stage > .dp-pick-back, #stage > .item-menu, #stage > .item-menu-back').forEach(n => n.remove());
     // 관전 중 재렌더(가방 클릭 · 언어 전환 · 세그먼트 이동)면 재생 위치를 받아 뒀다가 다음 mount 에 넘긴다 — 처음부터 다시 틀지 않는다 (2026-08-27)
     if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
     applyDocumentLang();
@@ -524,6 +528,7 @@ function render() {
         help: renderHelp,
     })[state.tab](main);
     for (const n of main.querySelectorAll('[data-keep]')) if (kept.has(n.dataset.keep)) n.scrollTop = kept.get(n.dataset.keep);
+    if (state.itemMenu && authenticated && G) itemMenuPanel();   // 보관 칸 우클릭 메뉴 — 본문 뒤에 선다 (ADR-0451)
     renderModal();
     hideTip();
 }
@@ -614,7 +619,7 @@ function segmented(items, current, onPick) {
 }
 
 /**
- * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414) — 줄 둘: 스킬 이펙트 · 피격 반응, 줄마다 [Off] [On] · 둘은 따로 켜고 끈다.
+ * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414 · ADR-0454) — 줄 셋: 스킬 이펙트 · 피격 반응(줄마다 [Off] [On] · 따로 켜고 끈다) · 몬스터 흔들림 [1] [2] [3].
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
  */
 function settingsBody() {
@@ -626,6 +631,12 @@ function settingsBody() {
             isOn() ? 'on' : 'off', id => { setFxOn(k, id === 'on'); box.replaceWith(settingsBody()); }));
         box.appendChild(row);
     }
+    // 몬스터 흔들림 [1] [2] [3] — 피격 반응이 꺼져 있으면 먹지 않으므로 흐려져 안 눌린다(값은 남는다 · ADR-0454)
+    const row = el('div', 'set-row');
+    row.appendChild(el('span', 'set-k', t('set.shake')));
+    row.appendChild(segmented(SHAKE_LEVELS.map(n => ({ id: n, label: String(n), disabled: !hitFxOn() })),
+        shakeLevel(), id => { setShakeLevel(id); box.replaceWith(settingsBody()); }));
+    box.appendChild(row);
     return box;
 }
 
@@ -1191,7 +1202,7 @@ function expNavBox(phase = battlePhase(state.battle)) {
         ...cells,
         { id: 'report', label: t('exp.seg.report'), disabled: !doneReports().length },
     ], cur, id => {
-        // 다른 탭에서 눌렀다 — 원정 탭의 그 화면으로 간다. 탭 버튼과 같이 고르는 중 · 잠그는 중이 풀린다 (ADR-0184 · ADR-0207 · ADR-0353)
+        // 다른 탭에서 눌렀다 — 원정 탭의 그 화면으로 간다. 탭 버튼과 같이 고르는 중이 풀린다 (ADR-0184 · ADR-0353)
         if (state.tab !== 'expedition') { state.tab = 'expedition'; clearBagSel(); }
         if (id.startsWith('battle')) {
             const no = Number(id.slice(6));
@@ -1218,6 +1229,7 @@ function renderExpedition(main) {
         main.appendChild(page);
         stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, resume: state.battle.resume,
+            shrine: state.battle.run?.report?.shrine ?? null,   // 이 런이 입은 신단 — 헤드의 칩 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445)
             // 다음 런 — 어디로(칸) · 언제. 결과 띠가 남은 초와 그 칸 이름을 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300 · ADR-0430) · 부대마다 따로 묻는다 (v38).
             //   원정은 멈추지 않는다 — 이기든 지든 답이 있고, 철수 · 끊김 뒤에만 null 이다 (v39 · PLAN_stage_segments D7)
             upNext: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset),
@@ -1258,13 +1270,15 @@ function renderExpedition(main) {
                 }
                 save(); state.repSel = null; state.exp = 'report'; render();
             },
-            onEnd: auto => {
+            onEnd: (auto, skip = false) => {
                 // 재생기를 먼저 걷는다 — 이어지는 런은 배속 · 판을 잇고 시각만 0 에서 시작한다 (§4 · ADR-0102)
                 const pos = stopBattle ? stopBattle() : state.battle?.resume;
                 stopBattle = null;
                 // 다음 출발은 `game.nextRepeat` 가 정한다 — 어디로(다음 칸 · 같은 칸) · 끝난 순간 + [balance.csv:repeat_restart_sec] (ADR-0300 · ADR-0430). 세기가 끝나 부른 것(`auto`)일 때만 나간다
                 const nx = auto ? SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset) : null;
-                if (nx) runBattle(nx.stageId, { at: nx.at, resume: { ...pos, t: 0, wall: nx.at, auto: false }, preset: nx.preset, from: state.battle?.run });   // 처음 나간 편성 그대로 (2026-09-29)
+                // `skip` = 결과 띠의 [건너뛰기] — 같은 답을 **지금** 내보낸다(출발 시각만 앞당긴다 · SCREEN_DESIGN §4-2 · ADR-0453)
+                const at = nx && skip ? Math.min(nx.at, now()) : nx?.at;
+                if (nx) runBattle(nx.stageId, { at, resume: { ...pos, t: 0, wall: at, auto: false }, preset: nx.preset, from: state.battle?.run });   // 처음 나간 편성 그대로 (2026-09-29)
                 // [리포트 보기](`auto` 가 아니다) — 리포트로 가되 **세기는 안 끊는다**: 세던 것(`pos.auto`)을 앱 시계가 이어 세운다.
                 //   멈추는 길은 철수 · 게임 끄기뿐이다 (2026-09-29 · ADR-0430 — ~~[리포트 보기]가 세기를 끊었다~~)
                 else {
@@ -2238,16 +2252,16 @@ function refreshGold() {
     if (gold) gold.textContent = G.resources.gold.toLocaleString();
 }
 
-/* 플레이 시간 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356] — **게임 화면이 떠 있고 탭이 보이는 동안만** 앱 시계 눈금 사이를 더한다.
-   숨으면 박자를 끊고(돌아온 첫 눈금은 박자만 잡는다) · 멈춤 문턱을 넘은 공백(절전)은 안 더한다 — 멈춤 판정과 같은 문턱이다(ADR-0102).
+/* 플레이 시간 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · **2026-09-29 · ADR-0443**] — **게임 화면이 떠 있는 동안** 앱 시계 눈금 사이를 더한다.
+   **숨긴 탭도 센다** — 원정은 끝없이 돌아 켜 둔 시간이 곧 플레이다(ADR-0443) · 멈춤 문턱을 넘은 공백(절전)은 안 더한다 — 멈춤 판정과 같은 문턱이다(ADR-0102).
    **저장은 따로 안 건다** — 다른 저장(정산 · 조작)에 실려 간다. 세이브를 한 번 더 쓰면 같은 게임을 연 다른 탭이 멈춘다(`freeze` · §2-1) —
    닫힐 때(`pagehide`) 쓰던 것을 그래서 걷었다: 옛 탭을 닫는 순간 새 탭이 멈춤 창에 섰다 (2026-09-25 실측). 마지막 저장 뒤의 몫은 버려진다 */
 let playAt = null;            // 플레이 시간을 마지막으로 잰 실제 시각 — 세지 않는 동안은 null
 function playTick(at) {
-    const on = !!G && authenticated && state.screen === 'game' && !document.hidden;
+    const on = !!G && authenticated && state.screen === 'game';
     if (on && playAt != null && at - playAt <= FROZEN_GAP_MS) SYS.game.addPlayTime(G, at - playAt);
     playAt = on ? at : null;
-    if (on) refreshPlayTime();
+    if (on && !document.hidden) refreshPlayTime();
 }
 
 /** 상단바의 플레이 시간 숫자만 — 글자가 바뀔 때만 쓴다(1초에 한 번) · 골드(`refreshGold`)와 같은 길 */
@@ -2412,6 +2426,7 @@ function reportDetail(R) {
             <div><span>${t('rep.rounds')}</span>${t('rep.roundsCleared', { n: roundsDone, total: stage ? SYS.battle.stageRounds(stage).length : R.rounds.length })}</div>
             <div><span>${t('rep.downed')}</span>${R.downed.length ? `<span class="down">${t('rep.downedN', { n: R.downed.length })}</span>` : t('rep.none')}</div>
             <div><span>${t('rep.miss')}</span>${missText}</div>
+            ${R.shrine ? `<div><span>${t('rep.shrine')}</span>${shrineChip(R.shrine)}</div>` : ''}
         </div>`;
 
     dropSection(p, R);
@@ -2740,9 +2755,22 @@ function skillCards(h) {
     // 소제목은 이름뿐이다 (2026-09-08 사용자 지시) — 공격 속도는 **세부 옵션 1 의 제 행**이 든다
     // (`combat_stat.csv:action_period` — 세부 옵션 1 대표값). §4-1 「값은 항상 찍는다」는 그 행이 지킨다
     wrap.appendChild(el('div', 'sub-h', t('ch.skill.h')));
+    // 꺼진 칸 [2026-09-29 · R187 · §6 · ADR-0446] — 직업 스킬이 든 무기의 무기군과 안 맞으면 전투에서 안 나간다. 판정은 `skill.fitsWeapon`(맨손 = 무기군 없음)
+    const worn = G?.items?.[h.equipped?.weapon] ?? null;
+    const classes = worn ? D.weaponGroups[worn.group]?.classes ?? null : null;
+    const isOff = a => !SYS.skill.fitsWeapon(SYS.skill.resolve(a), classes);
+    // 툴팁 맨 위 한 줄 — 그 스킬 직업의 무기군 이름(`weapon_group.csv` 순서). Alt 로 다시 그려도 줄이 남게 `_rebuild` 를 감싼다
+    const needTip = a => {
+        const own = SYS.skill.resolve(a)?.ownerId;
+        const card = skillTipCard(a, tipCtx);
+        card.prepend(el('div', 'tip-need', t('sk.needWeapon', { w: D.weaponGroupList.filter(g => g.classes.includes(own)).map(g => L(g)).join(' · ') })));
+        card._rebuild = () => needTip(a);
+        return card;
+    };
     const grid = el('div', 'sk-cards');
     activeCells(h).forEach((a, i) => {
-        const c = el('div', `sk-card${a ? '' : ' vacant'}`);
+        const off = !!a && isOff(a);
+        const c = el('div', `sk-card${a ? '' : ' vacant'}${off ? ' off' : ''}`);
         // 찬 칸은 **그림 하나** — 이름 · 초 · 효과 문장은 툴팁이 말한다 (화면에 두면 툴팁과 두 번 찍힌다).
         // 빈 칸 안은 **글자를 안 넣는다**: 칸이 아이콘 크기라 `Not advanced` 가 물리적으로 안 들어간다
         // (9px 로 낮추고 여백을 걷어도 잘렸다 — ko 만 통과하는 칸은 통과가 아니다). 사유는 `title` 이 든다.
@@ -2752,7 +2780,7 @@ function skillCards(h) {
         c.innerHTML = a ? `<span class="ico">${skillImg(a)}</span>` : locked ? `<span class="sk-lock">${lockIcon(true)}</span>` : '';
         if (locked) c.classList.add('locked');
         // 출처는 **칸 아래 글자**가 말한다 [2026-09-15 사용자 지시 · ADR-0121] — 그래서 툴팁에 `source` 를 안 넘긴다(출처 칩이 안 선다)
-        if (a) bindTipNode(c, () => skillTipCard(a, tipCtx));
+        if (a) bindTipNode(c, () => (off ? needTip(a) : skillTipCard(a, tipCtx)));
         // 잠긴 칸의 툴팁은 **한 줄** — 「레벨 n 이상」 [2026-09-29 사용자 지시 · ADR-0427] · 값은 표(`skillbook_learn_level` · `advance_unlock_level`)
         else if (locked) { const txt = t('sk.lockLv', { n: slotLockLevel(i) }); bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${txt}</div>`)); c.setAttribute('aria-label', txt); }
         else { c.title = emptySlotText(i, h); c.setAttribute('aria-label', emptySlotText(i, h)); }
@@ -2936,12 +2964,13 @@ function detailPanels(h) {
 
 /* ── 보관 (③ 아이템) ── */
 
-/** 고르는 중 · 잠그는 중을 푼다 [ADR-0184 · ADR-0207] — 탭을 떠날 때와 실행 · 취소 · 완료 뒤에 부른다 */
+/** 고르는 중을 푼다 [ADR-0184] — 탭을 떠날 때와 실행 · 취소 뒤에 부른다 */
 function clearBagSel() {
     state.bagSelMode = false;
-    state.bagLockMode = false;
     state.bagSortMode = null;
+    state.bagPickFold = null;
     state.bagSel.clear();
+    state.itemMenu = null;   // 우클릭 메뉴도 탭 밖으로 안 샌다 (ADR-0451)
 }
 
 /** 보관 — **왼쪽 창고 / 오른쪽 인벤토리 두 칸** [2026-09-11 사용자 확정 · SCREEN_DESIGN §6 · item_design §1].
@@ -2955,7 +2984,7 @@ function itemsPanel(h, { showTarget = false, onPick = null, selUid = null } = {}
 }
 
 /**
- * 고르는 중 줄 — **[분해하기] · [취소]** [2026-09-21 · ADR-0184]. [잠그기]는 여기서 빠져 도구 줄의 [잠금]이 됐다 (ADR-0207).
+ * 고르는 중 줄 — **[분해하기] · [취소]** [2026-09-21 · ADR-0184]. 잠금은 우클릭 메뉴가 든다 (ADR-0451 · ADR-0454).
  * 체크가 하나도 없으면 [분해하기]가 꺼진다 — 빈 손으로 누를 수 있는 파괴 버튼을 두지 않는다.
  */
 function bagSelectBar() {
@@ -2982,6 +3011,56 @@ function bagSelectBar() {
 
     for (const b of [go, cx]) bar.appendChild(b);
     return bar;
+}
+
+/**
+ * 고르기 메뉴 — 도구 줄 위로 올라오는 두 줄 **[등급 ▸] · [레벨 ▸]** [2026-09-29 사용자 지시 · ADR-0447 · 체크 규칙은 ADR-0444].
+ * **[분해하기] 바로 위**에 뜬다(왼쪽 끝 = [분해하기] 왼쪽 끝 · 사용자 지시). 영어의 레벨 줄(여덟 칸)이 인벤토리 칸 안에 들도록
+ * 선택지는 촘촘하다(style.css `.sel-fold`).
+ * 누른 줄의 선택지가 **오른쪽으로 미끄러져 나온다** — 한 번에 한 줄(`bagPickFold`) · 처음엔 둘 다 접혀 있다.
+ * 선택지 하나 = 인벤토리의 한 묶음(등급 하나 · 레벨 구간 하나). 누르면 **잠기지 않은 것을 전부 체크**하고, 전부 체크돼 있으면 켜진 모양 ·
+ * 다시 누르면 그 묶음 체크를 푼다. 창고는 안 건드린다 · 걸 것이 없으면 꺼진 채 선다 · 등급과 레벨은 같은 `bagSel` 에 **체크를 더한다**.
+ * 움직임은 올라올 때(`bagPickAnim`) · 펼칠 때(`bagFoldAnim`) 한 번씩 — 통째로 다시 그리는 화면이라 늘 달면 체크마다 다시 움직인다
+ */
+function bagPickMenu() {
+    const open = G.bag.map(itemOf).filter(it => it && !it.locked);
+    const pop = el('div', `sel-pop${state.bagPickAnim ? ' anim' : ''}`);
+    state.bagPickAnim = false;
+    // 레벨 구간 — 폭 = 아이템 구간 폭(무기 피해 · 방어구 방어력이 오르는 구간) · 만렙까지 자르고 그 위(등급 보정으로 넘는 ilvl)는 하나로
+    const w = D.balance.weapon_atk_band_levels, cap = D.balance.hero_level_cap;
+    const bands = [];
+    for (let lo = 1; lo <= cap; lo += w) {
+        const hi = Math.min(lo + w - 1, cap);
+        bands.push({ label: `${lo}~${hi}`, has: it => it.ilvl >= lo && it.ilvl <= hi });
+    }
+    bands.push({ label: `${cap + 1}+`, has: it => it.ilvl > cap });
+    const rows = [
+        { id: 'rarity', head: t('ch.sel.byRarity'), opts: Object.entries(M.RARITY).map(([id, r]) => ({ label: L(r), color: r.color, has: it => it.rarity === id })) },
+        { id: 'ilvl', head: t('ch.sel.byLevel'), opts: bands },
+    ];
+    const groupBtn = (o, i) => {
+        const uids = open.filter(o.has).map(it => it.uid);
+        const all = uids.length > 0 && uids.every(u => state.bagSel.has(u));
+        const b = el('button', `btn sm toggle${all ? ' on' : ''}`, o.label);
+        if (o.color) b.style.color = o.color;
+        b.style.setProperty('--i', i);                  // 펼칠 때 차례로 나오는 지연 (style.css `.sel-fold.anim`)
+        b.disabled = !uids.length;
+        b.onclick = () => {
+            for (const u of uids) { if (all) state.bagSel.delete(u); else state.bagSel.add(u); }
+            render();
+        };
+        return b;
+    };
+    for (const row of rows) {
+        const on = state.bagPickFold === row.id;
+        const head = el('button', `btn sm toggle sel-head${on ? ' on' : ''}`, row.head);
+        head.onclick = () => { state.bagPickFold = on ? null : row.id; state.bagFoldAnim = !on; render(); };
+        pop.appendChild(head);
+        const fold = el('div', `sel-fold${on && state.bagFoldAnim ? ' anim' : ''}`);
+        if (on) { row.opts.forEach((o, i) => fold.appendChild(groupBtn(o, i))); state.bagFoldAnim = false; }
+        pop.appendChild(fold);
+    }
+    return pop;
 }
 
 /**
@@ -3050,7 +3129,7 @@ function autoSalvageBody() {
 /**
  * [정렬] + 펼친 기준 셋 — 칸마다 제 것 [2026-09-21 · ADR-0242 · ADR-0247]. 누르면 **[정렬] 오른쪽으로 [등급순] · [레벨순] · [부위순]이
  * 차례로 미끄러져 나오고**, [정렬]을 다시 누르면 접힌다. 기준을 고르면 그 칸을 **한 번** 줄 세우고 접힌다.
- * 펼치면 한 번에 한 모드라 다른 칸의 펼침 · 고르는 중 · 잠그는 중은 풀린다.
+ * 펼치면 한 번에 한 모드라 다른 칸의 펼침 · 고르는 중은 풀린다.
  * 움직임은 **펼친 직후 한 번만** 단다(`bagSortAnim`) — 통째로 다시 그리는 화면이라 그냥 두면 관전 갱신마다 다시 미끄러진다
  */
 function sortTools(where) {
@@ -3080,14 +3159,14 @@ function sortTools(where) {
     return wrap;
 }
 
-/** 도구 줄 — 이름 + (인벤토리 쪽에만) [잠금] · [분해] · [자동 분해] 또는 그 모드의 줄 + [정렬](칸마다) + 칸 수. 관전에서는 장착 대상도 (§6 · §4-2) */
+/** 도구 줄 — 이름 + (인벤토리 쪽에만) [분해] · [자동 분해] 또는 그 모드의 줄 + [정렬](칸마다) + 칸 수. 관전에서는 장착 대상도 (§6 · §4-2) */
 function storageTools(h, where, { showTarget = false } = {}) {
     const tools = el('div', 'items-tools');
     tools.appendChild(el('span', 'items-name', t(where === 'stash' ? 'ch.bag.stash' : 'ch.bag.inv')));
-    // 잠금 · 분해 · 자동 분해는 **한 벌만** 둔다 — 두 칸에 같이 걸리는 축이라 칸마다 두면 어느 쪽 것인지 읽을 수 없다 (ADR-0184).
-    //   [정렬]만 칸마다다 — 누른 칸 하나만 줄 세운다 (ADR-0242). 고르는 중 · 잠그는 중에는 두 칸 다 안 선다
+    // 분해 · 자동 분해는 **한 벌만** 둔다 — 두 칸에 같이 걸리는 축이라 칸마다 두면 어느 쪽 것인지 읽을 수 없다 (ADR-0184).
+    //   [정렬]만 칸마다다 — 누른 칸 하나만 줄 세운다 (ADR-0242). 고르는 중에는 두 칸 다 안 선다
     // 인벤토리 칸에만 장비 · 재료 탭 [2026-09-27 · ADR-0379] — 재료 탭에서는 장비에 걸린 버튼 · 칸 수가 안 선다.
-    //   탭을 바꾸면 고르는 중 · 잠그는 중 · 정렬 펼침이 풀린다(재료 칸에는 걸 것이 없다)
+    //   탭을 바꾸면 고르는 중 · 정렬 펼침이 풀린다(재료 칸에는 걸 것이 없다)
     const matTab = where === 'bag' && state.bagTab === 'mat';
     if (where === 'bag') {
         const seg = segmented([{ id: 'equip', label: t('ch.bag.equip') }, { id: 'mat', label: t('ch.bag.mat') }], matTab ? 'mat' : 'equip',
@@ -3096,22 +3175,20 @@ function storageTools(h, where, { showTarget = false } = {}) {
         tools.appendChild(seg);
     }
     if (matTab) return tools;
-    if (where === 'stash') { if (!state.bagSelMode && !state.bagLockMode) tools.appendChild(sortTools('stash')); }
+    if (where === 'stash') { if (!state.bagSelMode) tools.appendChild(sortTools('stash')); }
     else {
-        if (state.bagSelMode) tools.appendChild(bagSelectBar());
-        else if (state.bagLockMode) {
-            // 잠그는 중 — 누른 칸이 이미 먹었으므로 나오는 버튼은 [취소]가 아니라 [완료]다 (ADR-0207)
-            const done = el('button', 'btn sm primary', t('ch.lock.done'));
-            done.onclick = () => { clearBagSel(); render(); };
-            tools.appendChild(done);
+        if (state.bagSelMode) {
+            // [분해하기] 바로 위로 고르기 메뉴가 뜬다 — 방금 누른 [분해] 자리다 [2026-09-29 사용자 지시 · ADR-0447].
+            //   메뉴는 도구 줄 밖(위 패널 위)에 서므로 줄은 한 줄 그대로다
+            const anchor = el('div', 'sel-anchor');
+            anchor.appendChild(bagSelectBar());
+            anchor.appendChild(bagPickMenu());
+            tools.appendChild(anchor);
         } else {
-            // [잠금]은 [분해] 왼쪽의 제 버튼 [2026-09-21 사용자 지시 · ADR-0207]
-            const lk = el('button', 'btn sm', t('ch.lock.start'));
-            lk.onclick = () => { clearBagSel(); state.bagLockMode = true; render(); };
-            tools.appendChild(lk);
+            // 도구 줄 [잠금]은 없다 — 잠금은 우클릭 메뉴가 든다 [2026-09-29 사용자 지시 · ADR-0454]
             // [분해] · [자동 분해]는 건물이 막지 않는다 — 처음부터 열려 있다 (R140)
             const sv = el('button', 'btn sm', t('ch.sel.start'));
-            sv.onclick = () => { clearBagSel(); state.bagSelMode = true; render(); };
+            sv.onclick = () => { clearBagSel(); state.bagSelMode = true; state.bagPickAnim = true; render(); };
             tools.appendChild(sv);
             // 자동 분해 — 선이 하나라도 서 있으면 **켜진 모양**이다: 가방이 왜 덜 차는지가 같은 줄에서 읽힌다 (ADR-0203)
             const rule = G.autoSalvage ?? {};
@@ -3181,8 +3258,8 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
     const uids =where === 'stash' ? (G.stash ?? []) : G.bag;
     const items = uids.map(itemOf).filter(Boolean);
     const cap = SYS.game.limitsOf(G)[where === 'stash' ? 'stash' : 'bag'];
-    // 고르는 중 · 잠그는 중은 같은 파선 테두리를 쓴다 — 「지금 칸을 누르면 장착이 아니다」가 같은 뜻이다 (ADR-0207)
-    const moding = state.bagSelMode || state.bagLockMode;
+    // 고르는 중은 파선 테두리 — 「지금 칸을 누르면 장착이 아니다」 (ADR-0184)
+    const moding = state.bagSelMode;
     const grid = el('div', `inv-cells wide${moding ? ' picking' : ''}`);
     // 상한보다 많이 들고 있으면(상한이 줄어든 옛 세이브) **넘친 것도 그린다** — 가방 · 창고는 넘친 채 둔다 (R137 · 새 드롭만 막힌다)
     for (let i = 0; i < Math.max(cap, items.length); i++) {
@@ -3205,9 +3282,12 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
             const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
             // 원정 중이면 「끼우면 꺼지는 전술」 줄이 선다 — 끼우기 전에 말한다 (§6 · ADR-0272)
             //   ~~스킬 칸의 맥락(`heroCombatIf`)~~ 은 2026-09-29 걷었다 — 아이템 툴팁에 스킬 칸이 없다(ADR-0421)
-            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [ringHint, runTacticHint(h, it)] });
+            //   반지 칸 줄은 비교의 줄이라 Alt 동안만 선다 · 전술 줄은 기본 카드에도 선다 (ADR-0448)
+            //   손가락 툴팁의 버튼 줄 = 우클릭 메뉴와 같은 둘 (ADR-0374 · ADR-0451) — 고르는 중엔 안 선다
+            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [runTacticHint(h, it)], altHints: [ringHint],
+                actions: moding ? null : () => itemActions(h, it) });
             // **끌어서 반대편 격자에 놓아도 옮겨진다** [2026-09-21 · ADR-0187] — `Ctrl`+클릭과 **같은 함수**라 거절 코드도 같다.
-            //   고르는 중 · 잠그는 중에는 안 건다 — 체크 · 자물쇠를 붙이는 손짓과 끄는 손짓이 같은 칸에서 싸운다 (ADR-0184)
+            //   고르는 중에는 안 건다 — 체크를 붙이는 손짓과 끄는 손짓이 같은 칸에서 싸운다 (ADR-0184)
             if (!moding) bindCardDrag(cell, where === 'stash' ? '.store-bag' : '.store-stash', () => {
                 const r = where === 'stash' ? SYS.game.moveToBag(G, it.uid) : SYS.game.moveToStash(G, it.uid);
                 if (!r.ok) flash(`ch.err.${r.err}`); else save();
@@ -3215,10 +3295,7 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
             });
             cell.onclick = (e) => {
                 if (formDragEnded) return;              // 방금 끌어 놓은 손짓의 클릭 한 번은 삼킨다
-                if (state.bagLockMode) {
-                    // 잠그는 중 — **누른 칸의 자물쇠를 바로 토글**한다. 결과는 왼쪽 아래 배지가 든다 · 플래시 없음 (ADR-0207)
-                    if (SYS.game.setItemLock(G, it.uid, !it.locked).ok) save();
-                } else if (state.bagSelMode) {
+                if (state.bagSelMode) {
                     // 고르는 중 — **체크를 토글할 뿐** 아무것도 사라지지 않는다 (ADR-0184)
                     if (state.bagSel.has(it.uid)) state.bagSel.delete(it.uid); else state.bagSel.add(it.uid);
                 } else if (e.ctrlKey || e.metaKey) {
@@ -3230,10 +3307,18 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
                     return;
                 } else {
                     // 창고에서도 **바로** 장착된다 — 꺼내는 단계가 없다 (item_design §1)
-                    const before = runTacticsNow();
-                    const r = SYS.game.equip(G, h.uid, it.uid);
-                    if (!r.ok) flash(`ch.err.${r.err}`); else { save(); runChangeFlash(h.uid, before); }   // 원정 중 교체 — 보스전 · 꺼진 전술 (R130)
+                    equipFromStorage(h, it);
                 }
+                render();
+            };
+            // **우클릭 = [착용] · [잠금] 버튼** [2026-09-29 사용자 지시 · §6 「우클릭 메뉴」 · ADR-0451] — 커서 자리(한 장 좌표)에 선다.
+            //   고르는 중엔 안 뜬다(칸 누르기가 체크다) · 손가락이 낸 contextmenu 는 길게 누르기(툴팁)라 무시한다 (ADR-0374)
+            cell.oncontextmenu = e => {
+                e.preventDefault();
+                if (moding || isTouchInput()) return;
+                hideTip();
+                const pt = stagePoint(e);
+                state.itemMenu = { uid: it.uid, hero: h.uid, x: pt.x, y: pt.y };
                 render();
             };
         }
@@ -3241,6 +3326,53 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
     }
     p.appendChild(grid);
     return p;
+}
+
+/** 보관 칸 장비를 장착한다 — 칸 클릭 · 우클릭 메뉴 [착용] · 손가락 버튼 줄이 같이 부른다. 원정 중 교체면 보스전 · 꺼진 전술 플래시 (R130) */
+function equipFromStorage(h, it) {
+    const before = runTacticsNow();
+    const r = SYS.game.equip(G, h.uid, it.uid);
+    if (!r.ok) flash(`ch.err.${r.err}`); else { save(); runChangeFlash(h.uid, before); }
+}
+
+/** 자물쇠 하나를 켜고 끈다 — 우클릭 메뉴 · 손가락 버튼 줄의 [잠금] 이 부른다. 결과는 칸의 배지가 든다 · 플래시 없음 (ADR-0207) */
+function toggleItemLock(it) {
+    if (SYS.game.setItemLock(G, it.uid, !it.locked).ok) save();
+}
+
+/** 우클릭 메뉴 · 손가락 버튼 줄의 행동 — [착용] · [잠금]/[잠금 해제] (§6 「우클릭 메뉴」 · ADR-0451). `run` 이 다시 그리기까지 한다 */
+function itemActions(h, it) {
+    return [
+        { label: t('ch.menu.equip'), run: () => { equipFromStorage(h, it); render(); } },
+        { label: t(it.locked ? 'ch.menu.unlock' : 'ch.menu.lock'), run: () => { toggleItemLock(it); render(); } },
+    ];
+}
+
+/**
+ * 보관 칸 우클릭 메뉴 (§6 「우클릭 메뉴」 · ADR-0451) — 자원 자리의 선택 창(`dpPickPanel` · ADR-0373)과 같은 틀:
+ * 상태(`state.itemMenu`)가 들고 그리기마다 **한 장 바로 아래**에 다시 선다 · 깔개가 바깥 클릭 · 우클릭을 받아 닫기만 한다 · `Esc` 도 닫는다.
+ * 자리는 커서(한 장 좌표) — 왼쪽 위를 대고, 한 장 밖으로 넘치면 커서 반대쪽으로 접는다.
+ * 장비가 보관 칸에 없으면(장착 · 분해로 사라졌다) 조용히 닫힌다
+ */
+function itemMenuPanel() {
+    const { uid, hero, x, y } = state.itemMenu;
+    const it = itemOf(uid), h = heroById(hero);
+    if (!it || !h || !(G.bag.includes(uid) || (G.stash ?? []).includes(uid))) { state.itemMenu = null; return; }
+    const close = () => { state.itemMenu = null; render(); };
+    const back = el('div', 'item-menu-back');
+    back.onclick = close;
+    back.oncontextmenu = e => { e.preventDefault(); close(); };
+    const box = el('div', 'item-menu');
+    for (const a of itemActions(h, it)) {
+        const b = el('button', 'btn sm', a.label);
+        b.onclick = () => { state.itemMenu = null; a.run(); };
+        box.appendChild(b);
+    }
+    const st = document.querySelector('#stage');
+    st.append(back, box);
+    const bw = box.offsetWidth, bh = box.offsetHeight, W = st.offsetWidth, H = st.offsetHeight;
+    box.style.left = `${Math.max(8, x + bw > W - 8 ? x - bw : x)}px`;
+    box.style.top = `${Math.max(8, y + bh > H - 8 ? y - bh : y)}px`;
 }
 
 function renderCharacter(main) {
@@ -3326,20 +3458,42 @@ function tipCard(item, headText, hints = [], skCtx) {
  * @param opts.head    머리글 키. 기본은 「이 아이템」 — 「착용 중」은 페이퍼돌만 넘긴다
  * @param opts.compare 비교 상대. **`null`(교체될 자리가 빔)이면 둘째 카드를 안 세우고** 하단 힌트 한 줄로 접는다 —
  *                     「비어 있음」 넉 자에 툴팁 폭의 절반이 빈 상자로 서 있었다. `undefined` 면 비교 자체를 안 한다
- * @param opts.hints   하단 힌트(반지 칸 등)
+ * @param opts.hints   하단 힌트 — 기본 카드에도 선다(끼우면 꺼지는 전술 — 클릭이 곧 장착이라 누르기 전에 봐야 한다)
+ * @param opts.altHints 비교의 힌트 — Alt 동안만 선다(반지 칸 · ADR-0448)
  * @param opts.ctx        `item` 카드의 스킬 칸 계산 맥락 — 페이퍼돌은 그 영웅의 `heroCombat` · 가방 · 창고는 `heroCombatIf`(그 무기를 낀 것으로 · ADR-0139)
  * @param opts.compareCtx `compare` 카드의 계산 맥락 — `compare` 는 언제나 착용 중인 것이라(§6) 있으면 준다(itemsPanel)
+ * @param opts.actions    손가락 툴팁 버튼 줄의 행동(`tip.js:bindTipNode` 그대로) — 보관 칸의 [착용] · [잠금] (ADR-0451)
  *
  * **두 장이면 사이에 `VS`** — 원정 관전의 두 진영 사이와 같은 글자다. DOM 은 늘 `[이 아이템, VS, 착용 중]` 이고,
  * 툴팁이 커서 왼쪽으로 접히면 CSS 가 순서를 뒤집어 「이 아이템」이 커서 쪽에 남는다(`tip.js:moveTip` 의 `at-left` · §6 · ADR-0337)
+ *
+ * **비교는 Alt 를 누르는 동안만** [2026-09-29 사용자 지시 · §6 · ADR-0448] — 비교 상대가 있는 자리(`compare !== undefined`)는
+ * `data-alt` 를 단 묶음(`.tip-compare`) 하나를 세우고 `tip.js:setAlt` 가 그 묶음을 `_rebuild` 로 다시 짓는다.
+ * 묶음은 `display: contents` 라 두 장 · VS 는 여전히 툴팁 줄의 항목이다(style.css).
+ * **처음부터 Alt 때의 모양이다** [2026-09-29 사용자 지시 「Alt 를 눌렀을 때 기준으로」 · ADR-0450] — 착용품 카드 · VS 는 두 상태 모두 짓고
+ * 기본 상태엔 `alt-only` 로 **보이지 않게 자리만** 잡는다. 폭 · 높이 · 접힘(`moveTip`)이 두 상태에서 같아 Alt 로 「이 아이템」 카드가 안 움직인다.
+ * 카드 바닥은 **바꿔 끼우는 칸**(`.tip-swap`) 하나 — 기본 = 각주 「Alt 비교」 · Alt = 반지 칸 · 착용 중 없음. 둘이 겹쳐 서서 높이가 안 변한다
  */
-function bindTip(node, item, { head = 'tip.this', compare, hints = [], ctx, compareCtx } = {}) {
-    const foot = [].concat(hints, compare === null ? t('tip.noneEquipped') : []);
-    bindTipNode(node, () => compare ? [
-        tipCard(item, t(head), foot, ctx),
-        el('div', 'tip-vs', '<span>VS</span>'),
-        tipCard(compare, t('tip.equipped'), [], compareCtx),
-    ] : tipCard(item, t(head), foot, ctx));
+function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints = [], ctx, compareCtx, actions = null } = {}) {
+    if (compare === undefined) { bindTipNode(node, () => tipCard(item, t(head), hints, ctx), { actions }); return; }
+    const altLines = [].concat(altHints, compare === null ? t('tip.noneEquipped') : []).filter(Boolean);
+    const build = () => {
+        const w = el('div', `tip-compare${isAltHeld() ? ' alt' : ''}`);
+        w.dataset.alt = '1';
+        w._rebuild = build;
+        const c = tipCard(item, t(head), hints, ctx);
+        const swap = el('div', 'tip-swap');
+        swap.appendChild(el('div', 'tip-foot base-only', t('tip.item.altHint')));
+        if (altLines.length) swap.appendChild(el('div', 'tip-sins alt-only', altLines.map(x => `<span class="muted">${x}</span>`).join('')));
+        c.appendChild(swap);
+        w.appendChild(c);
+        if (compare) {
+            w.appendChild(el('div', 'tip-vs alt-only', '<span>VS</span>'));
+            w.appendChild(tipCard(compare, t('tip.equipped'), [], compareCtx)).classList.add('alt-only');
+        }
+        return w;
+    };
+    bindTipNode(node, build, { actions });
 }
 
 /* ═══════════ 스킬 ═══════════ */
@@ -6233,6 +6387,8 @@ async function boot() {
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.modal && !MODALS[state.modal]?.lock) closeModal(); });
     // 자원 자리의 선택 창도 Esc 로 닫는다 (ADR-0373)
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.dpPick && !state.modal) { state.dpPick = null; render(); } });
+    // 보관 칸 우클릭 메뉴도 Esc 로 닫는다 (ADR-0451)
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.itemMenu && !state.modal) { state.itemMenu = null; render(); } });
     // 브라우저 메뉴를 안 띄운다 — 우클릭 · 길게 누르기 둘 다 (style.css 게임 화면 기본기 ⑤ · SCREEN_DESIGN §2). 우클릭을 쓰는 칸(스킬 창)은 제 핸들러가 먼저 돈다
     document.addEventListener('contextmenu', e => e.preventDefault());
 

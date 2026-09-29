@@ -922,13 +922,22 @@ html, body { height: 100%; overflow: hidden; }
 .tip-card.tip-mini .tip-name { margin: 0; }
 .tip-card + .tip-card { border-left: 1px solid var(--border-dark); background: var(--bg-input); }
 /* 아이템 비교 두 장 (SCREEN_DESIGN §6 · ADR-0337 · ADR-0339) — 두 장이 **따로 선 상자**다: 툴팁 상자를 걷고 카드가 상자를 든다.
-   툴팁이 커서 왼쪽으로 접히면(`tip.js:moveTip` 의 `at-left`) 순서를 뒤집어 「이 아이템」이 커서 쪽에 남는다 — DOM 은 그대로라 폭도 그대로다 */
-.tooltip:has(> .tip-vs) { background: none; border: 0; box-shadow: none; max-width: none; }
-.tooltip.at-left:has(> .tip-vs) { flex-direction: row-reverse; }
-.tooltip:has(> .tip-vs) > .tip-card {
+   툴팁이 커서 왼쪽으로 접히면(`tip.js:moveTip` 의 `at-left`) 순서를 뒤집어 「이 아이템」이 커서 쪽에 남는다 — DOM 은 그대로라 폭도 그대로다.
+   두 장은 **Alt 동안만** 선다 — 카드 · VS 를 `data-alt` 묶음(`.tip-compare`)이 들고, 묶음은 상자가 없어(`contents`) 셋이 그대로 툴팁 줄의 항목이다 (ADR-0448) */
+.tip-compare { display: contents; }
+.tooltip:has(> .tip-compare > .tip-vs) { background: none; border: 0; box-shadow: none; max-width: none; }
+.tooltip.at-left:has(> .tip-compare > .tip-vs) { flex-direction: row-reverse; }
+.tooltip:has(> .tip-compare > .tip-vs) > .tip-compare > .tip-card {
     background: var(--bg-secondary); border: 1px solid var(--border-secondary);
     box-shadow: 0 6px 24px rgba(var(--shadow-rgb),.75);
 }
+/* 처음부터 Alt 때의 모양 (ADR-0450) — 착용품 카드 · VS 는 기본 상태에도 **자리를 잡고 안 보인다**: 폭 · 높이 · 접힘이 두 상태에서 같아
+   Alt 로 「이 아이템」 카드가 안 움직인다. 카드 바닥(`.tip-swap`)은 「Alt 비교」와 Alt 줄(반지 칸 · 착용 중 없음)을 **한 칸에 겹쳐** 높이 = 큰 쪽 */
+.tip-compare:not(.alt) .alt-only, .tip-compare.alt .base-only { visibility: hidden; }
+.tip-swap { display: grid; }
+.tip-swap > * { grid-area: 1 / 1; }
+/* 손가락 버튼 줄은 「이 아이템」 카드 아래 — 접힌 비교 툴팁은 그 카드가 오른쪽 끝이다(왼쪽 끝은 숨은 착용품 카드 자리) */
+.tooltip.at-left:has(> .tip-compare > .tip-vs) > .tip-touch { left: auto; right: 0; }
 /* VS — 틈은 좁고(`width`), 원정 관전과 같은 **글자만** 그 **위**에 떠 두 장의 가장자리에 겹친다(ADR-0339 · 상자 없음 ADR-0340).
    글자는 틈보다 넓지만 **카드 안 여백(13px)까지만** 걸친다 — 가장자리의 값 열을 가리지 않는다. 세로는 두 장의 가운데.
    그림자는 카드 바탕색 번짐이다 — 글자 밑을 지나는 두 카드의 테두리 선만 지운다(가장자리가 없어 네모로 안 읽힌다) */
@@ -1815,8 +1824,13 @@ html, body { height: 100%; overflow: hidden; }
 /* 때린 카드 — 상대 진영 쪽으로. 파티는 아래 진영이라 위로, 적은 아래로 (진형이 칸을 `top` 으로 미는 것과 안 부딪히게 칸의 transform 을 쓴다) */
 .side-party .unit-slot.fx-lunge { animation: fx-lunge-up calc(240ms * var(--fx-k, 1)) ease-out; }
 .side-enemy .unit-slot.fx-lunge { animation: fx-lunge-down calc(240ms * var(--fx-k, 1)) ease-out; }
-@keyframes fx-shake { 0%, 100% { transform: none; } 20% { transform: translateX(-4px); } 45% { transform: translateX(4px); } 70% { transform: translateX(-2px); } }
-@keyframes fx-shake-crit { 0%, 100% { transform: none; } 15% { transform: translateX(-7px); } 35% { transform: translateX(7px); } 55% { transform: translateX(-5px); } 75% { transform: translateX(3px); } }
+/* 흔들림 폭 — `--shake` · 치명 `--shake-crit`. 기본(영웅 카드 · 파견 관전 창) 4px · 치명 7px ·
+   **몬스터 카드는 설정 탭의 「몬스터 흔들림」 단계**를 fx.js 가 `data-shake` 로 단다 (2026-09-29 · SCREEN_DESIGN §2-2 · ADR-0454) */
+.unit.enemy[data-shake="1"] { --shake: 2px; --shake-crit: 4px; }
+.unit.enemy[data-shake="2"] { --shake: 4px; --shake-crit: 7px; }
+.unit.enemy[data-shake="3"] { --shake: 8px; --shake-crit: 12px; }
+@keyframes fx-shake { 0%, 100% { transform: none; } 20% { transform: translateX(calc(var(--shake, 4px) * -1)); } 45% { transform: translateX(var(--shake, 4px)); } 70% { transform: translateX(calc(var(--shake, 4px) * -.5)); } }
+@keyframes fx-shake-crit { 0%, 100% { transform: none; } 15% { transform: translateX(calc(var(--shake-crit, 7px) * -1)); } 35% { transform: translateX(var(--shake-crit, 7px)); } 55% { transform: translateX(calc(var(--shake-crit, 7px) * -.714)); } 75% { transform: translateX(calc(var(--shake-crit, 7px) * .429)); } }
 @keyframes fx-dodge { 0%, 100% { transform: none; } 35% { transform: translateX(calc(12px * var(--fx-sx, 1))); } }
 @keyframes fx-down { 0%, 100% { transform: none; } 30% { transform: translateY(6px); } }
 @keyframes fx-flash { 0% { filter: brightness(2.4); } 100% { filter: none; } }
@@ -2832,6 +2846,10 @@ html, body { height: 100%; overflow: hidden; }
 /* 잠긴 빈 칸 — 가운데에 닫힌 자물쇠 [2026-09-29 사용자 지시 · SCREEN_DESIGN §6 · ADR-0425] — 탭 바 자물쇠와 같은 회색 · 칸 크기를 따라간다 */
 .sk-card .sk-lock { display: inline-flex; width: 45%; height: 45%; color: var(--text-muted); }
 .sk-card .sk-lock svg { width: 100%; height: 100%; }
+/* 무기가 안 맞아 꺼진 칸 [2026-09-29 · R187 · SCREEN_DESIGN §6 · ADR-0446] — 그림은 서되 흑백으로 흐리다(「있지만 안 돈다」 — 빈 칸 · 자물쇠와 다른 뜻) ·
+   툴팁 맨 위 한 줄(`.tip-need`)이 필요한 무기를 말한다 */
+.sk-card.off .ico img { filter: grayscale(1); opacity: .45; }
+.tip-need { color: var(--danger-fg); font-size: var(--fs-sm); margin-bottom: 4px; }
 /* 스킬북 줄 [2026-09-29 · R179 · 서고 탭 SCREEN_DESIGN §17 · ADR-0422] — 한 줄 = 그림 + 이름 + 버튼 · ~~캐릭터 탭 스킬북 창~~ 은 걷혔다(ADR-0426) */
 .bk-box { display: flex; flex-direction: column; gap: 14px; font-size: var(--fs-sm); overflow-y: auto; padding-right: 4px; }
 .bk-sec { display: flex; flex-direction: column; gap: 6px; }
@@ -3130,6 +3148,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .battle-result .verdict { font-size: var(--fs-lg); letter-spacing: 1px; flex: 0 0 auto; }
 .battle-result .b-next { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .battle-result .btn { flex: 0 0 auto; }
+/* 신단 [2026-09-29 · SCREEN_DESIGN §4-2 「신단」 · ADR-0445] — 그림 + 이름 칩 하나를 헤드 · 결과 띠 · 리포트가 같이 쓴다 · 올리면 효과(title) */
+.shrine-chip { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; white-space: nowrap; }
+.shrine-chip img { width: 24px; height: 24px; object-fit: contain; }
+.battle-result .b-shrine { display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; overflow: hidden; }
+.bh-top .shrine-chip { margin-left: 8px; }
+/* 신단 카드 [2026-09-29 사용자 지시 · ADR-0449] — 이긴 칸 뒤 적 진영에 몬스터 카드와 같은 틀로 선다. 윗변 · 효과 줄 = 이로운 창 칩과 같은 초록(적의 빨강이 아니다) */
+.unit.shrine { border-top-color: var(--color-success); }
+/* 효과 줄은 접힌다 — 오른쪽 열이 좁아 영어(「Cooldown Reduction 15%」)가 한 줄에 안 든다 · 남는 세로는 이름 위에 있다(열이 바닥 정렬) */
+.shrine-fx { font-size: var(--fs-sm); line-height: 1.25; color: var(--color-success); text-align: right; }
 .pop.miss { color: var(--text-muted); }
 
 /* 고르는 중 [2026-09-21 · ADR-0184] — 클릭이 **체크**가 되므로 칸 모양을 바꾼다.
@@ -3341,6 +3368,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 자리 칸의 선택 창 [2026-09-27 · SCREEN_DESIGN §8 · ADR-0373] — 칸 옆에 선다. 자리는 툴팁과 같은 **한 장 좌표**(`app.js:dpPickPanel` · `stageRect`)라
    `position: fixed` 가 한 장(#stage)에 붙는다. 깔개(`.dp-pick-back`)는 한 장 전체 — 바깥 클릭이 닫기다 */
 .dp-pick-back { position: fixed; inset: 0; z-index: 38; }
+/* 보관 칸 우클릭 메뉴 [2026-09-29 · SCREEN_DESIGN §6 「우클릭 메뉴」 · ADR-0451] — 선택 창과 같은 틀 · 같은 층: 커서 자리(한 장 좌표 · `app.js:itemMenuPanel`)에 버튼 둘이
+   세로로 선다. 깔개는 한 장 전체 — 바깥 클릭 · 우클릭이 닫기만 한다. 버튼 폭은 글자가 정하고 둘이 같은 폭이다(세로 줄 · `stretch`) */
+.item-menu-back { position: fixed; inset: 0; z-index: 38; }
+.item-menu {
+    position: fixed; z-index: 39; display: flex; flex-direction: column; gap: 4px; padding: 6px;
+    background: var(--bg-secondary); border: 1px solid var(--border-secondary);
+    box-shadow: 0 6px 24px rgba(var(--shadow-rgb),.75);
+}
+.item-menu .btn { text-align: left; }
 .dp-pick {
     position: fixed; z-index: 39; width: 300px; max-height: 60%; display: flex; flex-direction: column; gap: 6px;
     padding: 10px 12px; box-shadow: 0 6px 24px rgba(var(--shadow-rgb),.75);
@@ -3406,6 +3442,31 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .bag-row .items-tools { flex-wrap: nowrap; }
 .bag-row .items-tools > :not(.items-meta) { flex-shrink: 0; }
 .bag-row .items-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 고르기 메뉴 [2026-09-29 · SCREEN_DESIGN §6 · ADR-0447] — **[분해하기] 바로 위**에 뜬다(왼쪽 끝 = [분해하기] 왼쪽 끝 · 사용자 지시).
+   보관 칸은 화면 맨 아래라 **위로** 편다 — 위 패널(세부 옵션 · 관전 아레나)의 아래쪽을 덮고 칸 격자는 안 가린다.
+   선택지는 촘촘하다(여백 3 · 간격 2) — 공용 여백이면 영어의 레벨 줄(여덟 칸)이 [Salvage now] 위에서 시작해 화면 오른쪽 끝을 넘었다(09-29 실측 1619 > 1600).
+   두 열 격자라 줄 머리 폭이 같아 펼친 선택지의 시작 x 가 맞는다.
+   선택지 글자색(등급 색)은 JS 인라인이다 — 크래프트엔 `--rarity-*` 토큰이 없다. 움직임은 JS 가 첫 그리기에만 `.anim` 을 단다(정렬과 같은 이유) */
+.sel-anchor { position: relative; display: flex; }
+.sel-pop {
+    position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 30;
+    display: grid; grid-template-columns: max-content max-content; align-items: center; gap: 4px 5px;
+    padding: 4px; background: var(--bg-secondary); border: 1px solid var(--border-secondary);
+    box-shadow: 0 4px 14px rgba(var(--shadow-rgb), .6);
+}
+.sel-head::after { content: ' \25B8'; }
+.sel-fold { display: flex; align-items: center; gap: 2px; }
+.sel-fold > .btn.sm { padding-left: 3px; padding-right: 3px; }
+.sel-pop.anim { animation: sel-rise .18s ease-out both; }
+/* 펼침은 끝 장면을 안 둔다(`backwards` + `from` 만) — 정렬의 `sort-slide both` 를 빌리면 끝난 뒤에도 불투명 1 이 남아
+   꺼진 선택지(`.btn:disabled` 흐림)가 켜진 것처럼 밝게 섰다(09-29 실측 · 빈 가방의 관전 화면) */
+.sel-fold.anim > .btn { animation: sel-slide .22s ease-out backwards; animation-delay: calc(var(--i) * .03s); }
+@keyframes sel-slide { from { opacity: 0; transform: translateX(-14px); } }
+@keyframes sel-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .sel-pop.anim, .sel-fold.anim > .btn { animation: none; } }
 .pd-cell.filled { cursor: pointer; }
 .pd-cell.filled:hover { background: var(--surface-7); }
 

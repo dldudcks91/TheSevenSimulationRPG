@@ -889,9 +889,11 @@ function skillLines(def, pv, atkType, R) {
 
 /* ───────── Alt 계산식 — 누르는 동안만 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089) ─────────
    토글이 아니다 — 켜 둔 것을 잊으면 모든 설명창이 식으로 부푼다. 떠 있는 설명창도 **즉시** 바꾼다
-   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **`data-alt` 를 단 것** — 스킬 카드(식) · 유닛 카드(세부 옵션 열 · 2026-09-14) · 아이템 카드의 스킬 칸(식 · 2026-09-15 ADR-0139). 아이템 카드의 나머지는 그대로다.
+   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **`data-alt` 를 단 것** — 스킬 카드(식) · 유닛 카드(세부 옵션 열 · 2026-09-14) · 아이템 비교 묶음(착용품 카드 · 2026-09-29 ADR-0448).
    스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 **안 본다** — 판 안에 셋이 나란히 서서 식이 붙으면 세 줄이 같이 부푼다 */
 let altHeld = false;
+/** 지금 Alt 를 누르고 있나 — 카드를 `app.js` 가 짓는 아이템 비교 툴팁(ADR-0448)이 짓는 순간 읽는다 */
+export const isAltHeld = () => altHeld;
 /** 마지막 마우스 위치 — 다시 그린 카드의 높이가 달라져도 넘침 보정이 맞게 `moveTip` 을 한 번 더 부른다 */
 let lastMove = null;
 
@@ -907,7 +909,7 @@ function setAlt(on) {
     if (!on) hideEquipmentItemTip();
     const tip = $tip();
     if (!tip?.classList.contains('show')) return;
-    // 다시 그리는 것 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114) · 아이템 툴팁의 스킬 칸(ADR-0139 — 카드가 아니라 칸이다).
+    // 다시 그리는 것 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114) · 아이템 비교 묶음(ADR-0448 — 카드 한 장 ↔ 두 장 + VS).
     //   제 인자를 쥔 `_rebuild` 로 같은 것을 새로 만든다
     const cards = tip.querySelectorAll('[data-alt]');
     for (const c of cards) c.replaceWith(c._rebuild());

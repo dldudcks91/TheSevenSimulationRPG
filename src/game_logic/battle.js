@@ -116,6 +116,24 @@ export function createBattleSystem(data) {
     const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
+    /**
+     * 무기 판정 [2026-09-29 · R187 · skill_design §2-2] — **직업 스킬은 그 직업의 무기군을 들어야 나간다**(규칙은 `skill.fitsWeapon`).
+     *   무기군 → 직업 목록은 여기서 푼다(skill.js 는 아이템을 모른다). 맨손 · 모르는 무기군 = `null` → 직업 스킬이 전부 안 맞는다.
+     *   무기군 키가 **없는** 파티 유닛(`undefined` — 직업을 손으로 실은 검증 파티)은 판정하지 않는다 (INTERFACE §2-6)
+     */
+    const fitterOf = group => {
+        if (group === undefined || !SK) return () => true;
+        const classes = data.itemSystem.groupOf({ slot: 'weapon', group })?.classes ?? null;
+        return def => SK.fitsWeapon(def, classes);
+    };
+    /**
+     * 칸 하나를 전투에 세운다 — 정의를 풀고 준비 시각을 얹는다. **무기가 안 맞는 칸은 꺼진 채 선다**(R187 · battle_design §6):
+     *   `readyAt = Infinity` 라 `pickReady` 가 안 고르고(차례를 안 먹는다) 쿨이 멈춘다 · 남은 쿨은 `frozen`(초)
+     * @param frozen 꺼질 때 멈춰 둘 쿨(초) — 전투 시작 · 등장은 0(준비 상태로 출발 · R100)
+     */
+    const slotOf = (a, def, fits, readyAt, frozen = 0) => (fits(def)
+        ? { id: a.id, def, readyAt, source: a.source }
+        : { id: a.id, def, readyAt: Infinity, source: a.source, off: true, frozen });
     // 처치 XP 기준값 — 몬스터 레벨 → `level_xp.csv:monster_xp` (2026-09-28 · ~~monster_xp_base × monster_xp_growth ^ (lvl − 1)~~).
     //   몬스터 레벨은 만렙을 안 넘으므로(`hero_level_cap`) 1 ~ 만렙을 못 덮으면 생성 때 던진다
     const MONSTER_XP = new Map((data.levelXp ?? []).map(r => [r.level, r.monsterXp]));
@@ -375,12 +393,14 @@ export function createBattleSystem(data) {
         const slots = g.skill_slots;
         // ⚠ `activesFor` 는 **인스턴스**(`{id, source}`)를 낸다 — 파티 경로와 같이 **정의를 풀고 `readyAt` 을 얹어야** 한다.
         //   안 풀면 `skill.castable(def, …)` 이 undefined 를 읽는다 (INTERFACE §2-6 「전투 유닛」 actives 행)
+        //   무기 판정은 영웅과 같다 — 제 무기군(`monster.csv:weapon_group`)이 그 직업 스킬에 안 맞으면 칸이 꺼진다 (R187 · skill_design §2-2)
+        const fits = fitterOf(m.weapon_group);
         const acts = SK ? SK.activesFor({ innate: m.innate_skill }, {
             thirdSkill: slots >= 3 ? thirdSkill : null,
         }).map(a => {
             const def = SK.resolve(a);
             if (!def) throw new Error(`battle: 몬스터 ${monsterId} 의 알 수 없는 스킬 ${a?.id ?? a}`);
-            return { id: a.id, def, readyAt: 0, source: a.source };
+            return slotOf(a, def, fits, 0);
         }) : [];
         // 세부 능력치 복사본 [2026-09-14 · R94 · INTERFACE §2-6 `round`] — 유닛 툴팁이 Alt 로 펴는 **표시값**이다(SCREEN_DESIGN §2).
         //   위 ①②③ 까지 먹은 값 그대로이고 전투 내부용 둘(`option_fx` 묶음 · `atk_pct_sum` 괄호 합)만 뺀다.
@@ -546,11 +566,12 @@ export function createBattleSystem(data) {
             potionReadyAt: 0,            // 제 물약이 다시 준비되는 시각 — **준비 상태로 출발한다**(스킬과 같은 규칙 · R103). 갈아입기(`refit`)가 안 건드린다
             // 칸 순서 = 출처 자리. **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 첫 준비 시각 0.
             //   동시 준비는 칸 순서라(`SK.pickReady`) 첫 차례는 1번 칸이다. rng 0
-            actives: (SK ? p.actives ?? [] : []).map(a => {
+            //   든 무기가 안 맞는 직업 스킬은 꺼진 채 선다 — 멈춘 쿨 0 (R187 · `slotOf`)
+            actives: (fits => (SK ? p.actives ?? [] : []).map(a => {
                 const def = SK.resolve(a);
                 if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
-                return { id: a.id, def, readyAt: 0, source: a.source };
-            }),
+                return slotOf(a, def, fits, 0);
+            }))(fitterOf(p.weaponGroup)),
         }));
         /*
          * 오오라 — **쿨 없이 상시이고 행동을 안 먹는다** (skill_design §1-5). 그래서 액티브 칸에서 빼고
@@ -569,11 +590,13 @@ export function createBattleSystem(data) {
         const applyAuras = side => {
             const applied = [];
             for (const p of side) {
-                const aura = p.actives.find(a => a.def.cast === 'aura');
-                if (!aura) continue;
+                if (!p.actives.some(a => a.def.cast === 'aura')) continue;
+                // **꺼진 오오라는 안 켠다** [2026-09-29 · R187] — 무기가 안 맞는 직업 스킬(`off`)이다. 칸에서 빼는 것은 켜진 오오라와 같다
+                const aura = p.actives.find(a => a.def.cast === 'aura' && !a.off) ?? null;
                 p.slotIds = p.actives.map(a => a.id);
-                p.auraOn = aura.id;
+                p.auraOn = aura?.id ?? null;
                 p.actives = p.actives.filter(a => a.def.cast !== 'aura');
+                if (!aura) continue;
                 // 오오라의 세기도 **시전자 능력치로 민 값**이다 — 걸 때 한 번 (skill.js scaleDef · 2026-09-10).
                 //   **`apply` 줄마다** 창 하나 — 창은 그 줄이 거는 걸린 효과(`stat` · `element`)이고 값은 계수 민 값이다.
                 //   창 열쇠 = 걸린 효과 id · 창이 오오라 id(`s`)를 든다 — 이벤트의 `s` 는 오오라 id 그대로 (2026-09-24 · R151 · 줄 여럿).
@@ -615,9 +638,13 @@ export function createBattleSystem(data) {
             // **칸마다** 준비 시각 — 같은 스킬이 두 칸에 앉으면 앞 칸부터 하나씩 짝짓는다(id 로 묶으면 두 칸이 한 값으로 합쳐진다 · R130).
             //   칸에 없는 id 는 오오라다(전투 시작에 칸에서 뺐다) — 켜진 것 0 · 안 켜진 것 null
             const left = u.actives.slice();
+            //   꺼진 칸(무기가 안 맞는 직업 스킬 · R187)은 안 켜진 오오라와 같은 `null` — 재생기가 「안 도는 칸」으로 그린다
             const ready = ids.map(id => {
                 const i = left.findIndex(a => a.id === id);
-                if (i >= 0) return r1(left.splice(i, 1)[0].readyAt);
+                if (i >= 0) {
+                    const a = left.splice(i, 1)[0];
+                    return a.off ? null : r1(a.readyAt);
+                }
                 return id === u.auraOn ? 0 : null;
             });
             return { actives: ids, ready };
@@ -770,7 +797,8 @@ export function createBattleSystem(data) {
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
             const enemyAuras = applyAuras(units.enemies);
             // 적 스킬도 **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 등장 라운드 시작 시각에 곧바로 쓴다. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
-            for (const e of units.enemies) for (const a of e.actives) a.readyAt = t;
+            //   꺼진 칸(무기가 안 맞는 직업 스킬 · R187)은 그대로 둔다 — 되돌리면 켜진다
+            for (const e of units.enemies) for (const a of e.actives) if (!a.off) a.readyAt = t;
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
             for (const e of units.enemies) e.next = 0.4 + rng() * 0.6;
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
@@ -884,7 +912,7 @@ export function createBattleSystem(data) {
                     refreshDerived(m);
                 }
                 m.next = m.period;
-                for (const a of m.actives) a.readyAt = at;
+                for (const a of m.actives) if (!a.off) a.readyAt = at;   // 꺼진 칸은 그대로 (R187)
             }
             // 오오라 — 라운드 시작과 같은 함수다. 이미 걸린 유닛은 칸에서 오오라가 빠져 있어 다시 안 걸린다
             const then = fresh ? applyAuras(units.enemies) : [];
@@ -1159,7 +1187,8 @@ export function createBattleSystem(data) {
            깎인 방어(`defKeep` — R130). **새로 생긴 스킬은 지금부터 한 바퀴** (battle_design §6) */
         // 스킬 칸 = 출처 자리 + id — 칸이 바뀌면 갈아입는다(같은 id 가 다른 칸으로 옮겨도) · 쿨을 잇는 열쇠와 같다 (R130)
         const slotKey = a => `${a.source}|${a.id}`;
-        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(slotKey)]);
+        // 무기군도 입력이다 — 칸이 켜지고 꺼지는 것을 정한다 (R187)
+        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(slotKey), p.weaponGroup ?? null]);
         const worn = new Map(partyUnits.map(p => [p.uid, { sig: sigOf(p), combat: p.combat }]));
         /** 라운드 도중인가 — 열었고 아직 안 끝났다(끝났으면 `between` · 닫혔으면 `ended`) */
         const inRound = () => started && !between && !ended;
@@ -1189,12 +1218,18 @@ export function createBattleSystem(data) {
                 u.defBase = fresh.defBase * u.defKeep;
                 // 남은 스킬은 **칸마다** 쿨을 잇는다 [2026-09-21 · R130 — ~~스킬 id 로~~] — 고유와 무기 두 칸에 같은 스킬이 앉으면(칸이 둘이면 쿨도 둘 ·
                 //   skill.activesFor) id 로 이을 때 두 칸의 쿨이 한 값으로 합쳐져, 갈아입을 때마다 쓴 칸이 다시 준비됐다
-                const prev = new Map(u.actives.map(a => [slotKey(a), a.readyAt]));
+                //   **무기가 칸을 켜고 끈다** [2026-09-29 · R187 · battle_design §6 — 쿨은 멈춘 자리에서 잇는다]:
+                //   켜짐 → 켜짐 = 준비 시각 그대로 · 켜짐 → 꺼짐 = 남은 쿨을 얼린다 · 꺼짐 → 켜짐 = 지금 + 얼린 쿨 · 꺼짐 → 꺼짐 = 얼린 쿨 그대로 ·
+                //   새 칸 = 한 바퀴(꺼져 있으면 그 한 바퀴를 얼린다). 뺐다 끼워도 쿨이 되돌아가지 않는다
+                const prev = new Map(u.actives.map(a => [slotKey(a), a]));
+                const fits = fitterOf(p.weaponGroup);
                 u.actives = (SK ? p.actives ?? [] : []).map(a => {
                     const def = SK.resolve(a);
                     if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
-                    const k = slotKey(a);
-                    return { id: a.id, def, readyAt: prev.has(k) ? prev.get(k) : t + cooldownSec(B, u, def), source: a.source };
+                    const was = prev.get(slotKey(a));
+                    const lap = cooldownSec(B, u, def);
+                    const left = !was ? lap : was.off ? was.frozen : Math.max(0, was.readyAt - t);
+                    return slotOf(a, def, fits, !was ? t + lap : was.off ? t + was.frozen : was.readyAt, left);
                 });
                 // 칸 표시도 새로 잰다 — 새 칸에 오오라가 있으면 아래 `applyAuras` 가 다시 남긴다 (R98)
                 u.slotIds = null;

@@ -39,7 +39,7 @@
  */
 
 import * as M from './mock.js';
-import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo } from './data.js';
+import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
 import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 = 스킬 이펙트(기본 On) + 피격 반응(기본 Off) — 둘 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414)
@@ -65,6 +65,19 @@ const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity)
 /** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다) */
 const markActed = (u, at) => { u.lastAct = at; u.acted = true; u.stalls = []; };
 
+/** 신단 효과 한 줄 — 「데미지 +20%」 · 효과가 둘이면 「 · 」로 잇는다 · 없는 id 는 빈 글 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445) */
+export const shrineFxText = id => shrineFxList(id).map(f => f.text).join(' · ');
+/** 신단 효과 — 효과마다 `{k: 능력치, text}` 하나(탐욕은 둘) · 적 진영의 신단 카드는 효과마다 줄 하나 · 칸 하나를 세운다 (ADR-0449 · ADR-0452) */
+const shrineFxList = id => {
+    const s = shrineInfo(id);
+    return s ? Object.entries(s.fx).map(([k, v]) => ({ k, text: t(`shrine.fx.${k}`, { v: Math.round(v * 100) }) })) : [];
+};
+/** 신단 칩 — 그림 + 이름 · 올리면 효과만(CLAUDE.md 규칙 7) · 헤드 · 결과 띠 · 리포트가 같이 쓴다 (ADR-0445) */
+export const shrineChip = id => {
+    const s = shrineInfo(id);
+    return s ? `<span class="shrine-chip" title="${shrineFxText(id)}"><img src="${s.img}" alt="">${L(s.name)}</span>` : '';
+};
+
 /**
  * @param container  붙일 곳
  * @param opts { result, stageId, heroes: [hero...], upNext(), onEnd(auto), onOver(), onTime(t), onRetreat(), now(), frozenMs }
@@ -72,7 +85,8 @@ const markActed = (u, at) => { u.lastAct = at; u.acted = true; u.stalls = []; };
  *   now = 실제 시각(ms)을 읽는 시계 · frozenMs = 「멈췄다」의 문턱 — 둘 다 앱이 넘긴다 (ADR-0102)
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
- *   upNext() = 다음 런 `{stageId, at}`(앱이 `game.nextRepeat` 로 답한다) · 멈춘 부대(철수 · 끊김 뒤)면 null — 결과 띠는 이 답이 있으면 **언제나** 센다 (ADR-0430).
+ *   shrine = 이 런이 입은 신단 id(없으면 null) — 헤드의 칩 (ADR-0445)
+ *   upNext() = 다음 런 `{stageId, at, shrine}`(앱이 `game.nextRepeat` 로 답한다) · 멈춘 부대(철수 · 끊김 뒤)면 null — 결과 띠는 이 답이 있으면 **언제나** 센다 (ADR-0430).
  *     ~~onRetry()[다시 도전] · onNext()[다음 스테이지] · repeat · restartAt~~ 은 2026-09-29 삭제 — 원정이 멈추지 않아 이어 가기가 두 버튼의 일을 한다
  * @returns 정리 함수
  */
@@ -91,6 +105,7 @@ export function mountBattle(container, opts) {
         // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
         wall: resume?.wall ?? opts.now(),
         auto: false,             // 결과 띠가 다음 런을 세는 중 — 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
+        shrineCard: null,        // 이긴 끝에 적 진영에 선 신단 id — 서면 적 진영이 몬스터 대신 이 카드를 그린다 (ADR-0449)
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않고 DOM 도 안 만진다(끝에 `paintCaughtUp` 이 한 번 그린다)
@@ -136,7 +151,7 @@ export function mountBattle(container, opts) {
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
     fxPreload();   // 스킬 이펙트 그림을 미리 읽는다 — 지금은 그림이 꺼져 있어 아무것도 안 한다 (ADR-0411 · ADR-0412)
-    const dom = buildDom(state, stage, stageId);
+    const dom = buildDom(state, stage, stageId, opts.shrine ?? null);
     container.appendChild(dom);
     bindControls(state, container, opts);
     bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
@@ -161,7 +176,7 @@ export function mountBattle(container, opts) {
 
 /* ───────── 구성 ───────── */
 
-function buildDom(state, stage, stageId) {
+function buildDom(state, stage, stageId, shrine) {
     const wrap = document.createElement('div');
     wrap.className = 'panel battle-panel';
     const bg = stageBgOf(stageId);
@@ -178,6 +193,7 @@ function buildDom(state, stage, stageId) {
         <div class="battle-head">
             <div class="bh-top">
                 <div class="bh-title">${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}</div>
+                ${shrine ? shrineChip(shrine) : ''}
                 <div class="round-track">${
                     Array.from({ length: rounds }, (_, i) => {
                         const n = i + 1, k = kindOf(n);
@@ -415,12 +431,50 @@ function layoutRanks(list) {
 const CARD_V2 = true;
 export const cardV2 = () => { const v = document.documentElement.dataset.card; return v ? v === 'v2' : CARD_V2; };
 
+/* 신단 카드 [2026-09-29 사용자 지시 · SCREEN_DESIGN §4-2 「신단」 · ADR-0449] — 이긴 칸 뒤 적 진영에 몬스터 카드와 **같은 틀**로 선다.
+   띠 오른쪽(정예 · 보스 라벨 자리) = 「신단 획득」 · 초상 = 신단 그림 · 이름 줄 = 이름뿐(이름이 죄종을 말한다) ·
+   HP · 행동 게이지 자리에 효과 줄. 카드 자체에는 툴팁 · 클릭이 없다.
+   **스킬 칸 `active_slots` 개** [2026-09-29 사용자 지시 · ADR-0452] — 몬스터 카드와 같은 줄 · 효과 하나 = 칸 하나(앞 칸부터 · 나머지는 빈 칸) ·
+   그림은 효과마다 스킬 아이콘을 빌린다(`mock.shrineFxIcon` ⚠임시) · 덮개 없이 늘 걷힌 칸 · 칸에 올리면 그 효과 */
+function paintShrineCard(side, id, v2) {
+    const s = shrineInfo(id);
+    if (!s) return;
+    const name = L(s.name), got = t('bt.shrineGot'), fx = shrineFxList(id);
+    const top = v2 ? `<div class="unit-top"><span class="unit-ident"></span><span class="unit-grade">${got}</span></div>` : '';
+    const idRow = v2 ? `<div class="unit-id"><span class="unit-name">${name}</span></div>`
+        : `<div class="unit-id"><span class="unit-ident">${got}</span><span class="unit-name">${name}</span></div>`;
+    const slots = Array.from({ length: Math.max(D.balance.active_slots, fx.length) }, (_, i) => fx[i]
+        ? `<div class="cd-slot" data-i="${i}"><span class="cd-g">${shrineFxImg(fx[i].k)}</span></div>`
+        : `<div class="cd-slot empty"></div>`).join('');
+    side.innerHTML = `<div class="unit-slot${v2 ? ' v2' : ''}" data-rank="0"><div class="unit shrine${v2 ? ' v2' : ''}">
+        ${top}
+        <div class="unit-body">
+            <div class="sprite has-face"><img src="${s.img}" alt="${name}" onerror="this.remove()"></div>
+            <div class="unit-info">${idRow}${fx.map(f => `<div class="shrine-fx">${f.text}</div>`).join('')}<div class="cd-list">${slots}</div></div>
+        </div>
+    </div></div>`;
+    side.querySelectorAll('.cd-slot[data-i]').forEach(n => bindTipNode(n, () => shrineTipCard(s, fx[Number(n.dataset.i)])));
+}
+/** 신단 효과 칸의 그림 — 그림이 없으면 스킬과 같은 검은 칸 (ADR-0162) */
+const shrineFxImg = k => { const src = M.shrineFxIcon(k); return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '<i class="sk-noart"></i>'; };
+/** 신단 효과 칸의 툴팁 — 창 뱃지 툴팁(`effectTipCard`)과 같은 틀: 그림 + 신단 이름 · 효과 한 줄. 남은 시간은 안 적는다 (CLAUDE.md 규칙 7 · ADR-0452) */
+function shrineTipCard(s, f) {
+    const c = document.createElement('div');
+    c.className = 'tip-card effect-tip';
+    c.innerHTML = `
+        <div class="tip-effect-head"><div class="tip-name"><span class="tip-sk-ico">${shrineFxImg(f.k)}</span>${L(s.name)}</div></div>
+        <div class="tip-effect-summary">${f.text}</div>`;
+    return c;
+}
+
 function renderUnits(state, root) {
     if (state.catchUp) return;      // 되감는 동안은 카드를 안 짓는다 — `u.node` 가 비어 있어 `refreshUnit` 도 그냥 지나간다
     const v2 = cardV2();
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
         const side = root.querySelector(sel);
         side.innerHTML = '';
+        // 이긴 끝에 신단이 섰다 — 쓰러진 몬스터 대신 그 자리에 신단 카드 한 장 (ADR-0449)
+        if (sel === '.side-enemy' && state.shrineCard) { side.dataset.depth = 1; paintShrineCard(side, state.shrineCard, v2); continue; }
         // 진형 — **양 진영 같다** (2026-09-09 사용자 지시). 깊이와 랭크만 넘기고 미는 폭·방향은 CSS 가 든다
         // (수치가 스타일에 산다). 방향은 진영이 정한다 — 전열은 언제나 VS 쪽이라 위 진영과 아래 진영이 서로 뒤집힌다
         side.dataset.depth = layoutRanks(list);
@@ -1215,7 +1269,8 @@ function apply(state, root, opts, ev) {
             //   잇는 것은 **같은 자리의 같은 스킬**뿐이다 — 같은 스킬이 고유 · 무기 두 칸에 앉아도 칸마다 제 쿨 표시를 지킨다 (R130 · 시뮬의 칸마다 쿨과 같은 규칙)
             u.skills = (ev.actives ?? []).map((id, i) => {
                 const r = ev.ready?.[i];
-                const old = had[i]?.id === id ? had[i] : null;
+                // 꺼져 있던 칸(무기가 안 맞는 직업 스킬 — 준비 시각 무한 · R187)은 잇지 않는다 — 다시 켜지면 새 준비 시각으로 받는다
+                const old = had[i]?.id === id && had[i].readyAt !== Infinity ? had[i] : null;
                 return (r !== 0 && r !== null && old) || { ...skillInfo(id), readyAt: slotReady(r, ev.t), firedAt: ev.t };
             });
             renderUnits(state, root);
@@ -1244,13 +1299,24 @@ function showResult(state, root, opts, won) {
     const box = root.querySelector('.battle-result');
     // 어디로 · 언제는 앱이 답한다(`game.nextRepeat`) — 재생기는 정하지 않는다
     const nx = opts.upNext?.() ?? null;
+    // 막 이긴 칸 뒤의 신단은 적 진영에 카드로 선다 — 띠에는 진 칸을 다시 돌며 이어받는 「신단 유지」만 (ADR-0449)
+    //   마지막 몬스터가 쓰러지는 모습(흐려짐 .3s 뒤 .45s)이 끝난 다음에 바꿔 세운다 · 되감아 선 끝은 곧바로
+    if (won && nx?.shrine?.fresh) {
+        const show = () => { state.shrineCard = nx.shrine.id; renderUnits(state, root); };
+        if (state.catchUp) show(); else state.timeouts.push(setTimeout(show, 800));
+    }
     box.innerHTML = `
         <span class="${won ? 'up' : 'down'} verdict">${t(won ? 'bt.won' : 'bt.lost')}</span>
         ${nx ? `<span class="muted b-next"></span>` : ''}
+        ${nx?.shrine && !nx.shrine.fresh ? `<span class="b-shrine">${shrineChip(nx.shrine.id)}<span class="muted">${t('bt.shrineKeep')} — ${shrineFxText(nx.shrine.id)}</span></span>` : ''}
+        ${nx ? `<button class="btn sm b-go">${t('bt.skipWait')}</button>` : ''}
         <button class="btn primary sm b-report">${t('bt.toReport')}</button>`;
     box.classList.add('show');
     // 리포트로 간다 — 세기는 **안 끊는다**(멈추는 길은 철수 · 게임 끄기뿐이다). 걷힌 세기는 앱 시계가 잇는다
     box.querySelector('.b-report').onclick = () => opts.onEnd(false);
+    // 건너뛰기 — 세기를 걷고 다음 런이 **지금** 나간다. 갈 칸 · 편성 · 신단은 같은 답이고 출발 시각만 앱이 지금으로 바꾼다 (SCREEN_DESIGN §4-2 · ADR-0453)
+    const go = box.querySelector('.b-go');
+    if (go) go.onclick = () => opts.onEnd(true, true);
     if (nx) {
         state.auto = true;       // 세는 중 — 여기서 걷히면(탭 이동 · 숨김 · 부대 바꿔 보기 · 리포트 보기) 앱 시계가 이어서 세운다 (ADR-0102)
         // 세는 초 = 다음 런이 나가는 시각까지 남은 초 — 그 시각(끝난 순간 + [balance.csv:repeat_restart_sec])은 앱이 준다(`game.nextRepeat` · ADR-0300).

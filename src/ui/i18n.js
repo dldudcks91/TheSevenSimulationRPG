@@ -290,11 +290,15 @@ const STRINGS = {
     'rep.missN': { ko: '{m} / {n} ({p}%)', en: '{m} / {n} ({p}%)' },
 
     /* ── 캐릭터 (실동작) ── */
-    'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 착용 칸 클릭 = 해제 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리',
-        en: 'Click an item = equip · click a worn slot = unequip · Ctrl+click or drag = move between stash and inventory' },
+    'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 우클릭 = [착용] · [잠금] 버튼 · 착용 칸 클릭 = 해제 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리',
+        en: 'Click an item = equip · right-click = [Equip] · [Lock] buttons · click a worn slot = unequip · Ctrl+click or drag = move between stash and inventory' },
+    // 보관 칸 우클릭 메뉴 — 커서 자리에 버튼 둘 · 손가락은 길게 누른 툴팁 버튼 줄 (SCREEN_DESIGN §6 「우클릭 메뉴」 · ADR-0451)
+    'ch.menu.equip': { ko: '착용', en: 'Equip' },
+    'ch.menu.lock': { ko: '잠금', en: 'Lock' },
+    'ch.menu.unlock': { ko: '잠금 해제', en: 'Unlock' },
     // 도움말이 받는 힌트 — 인게임 패널에는 규칙 문구를 안 둔다 (SCREEN_DESIGN §12)
-    'ch.salvageHint': { ko: '[잠금]을 누른 뒤 장비를 누르면 그 장비가 잠기거나 풀린다 — 잠근 장비는 분해되지 않는다. [분해]를 누르면 장비를 고를 수 있다 — 고른 뒤 [분해하기]로 가루를 얻는다. [자동 분해]에서 등급 · 아이템 레벨 선을 그으면 새로 들어오는 장비 중 하나라도 걸리는 것은 가방에 들어오기 전에 가루가 된다 — 이미 가진 것은 [지금 인벤토리에도 적용]을 눌러야 갈린다',
-        en: 'Press [Lock], then click gear to lock or unlock it — locked gear is never salvaged. Press [Salvage] to pick gear — then [Salvage now] turns it to dust. In [Auto salvage], set a rarity and an item-level line: new gear that hits either line turns to dust before it enters the bag — gear you already hold is only salvaged when you press [Apply to inventory now]' },
+    'ch.salvageHint': { ko: '장비를 우클릭해 [잠금]을 누르면 잠기거나 풀린다 — 잠근 장비는 분해되지 않는다. [분해]를 누르면 장비를 고를 수 있다 — 고른 뒤 [분해하기]로 가루를 얻는다. [자동 분해]에서 등급 · 아이템 레벨 선을 그으면 새로 들어오는 장비 중 하나라도 걸리는 것은 가방에 들어오기 전에 가루가 된다 — 이미 가진 것은 [지금 인벤토리에도 적용]을 눌러야 갈린다',
+        en: 'Right-click gear and press [Lock] to lock or unlock it — locked gear is never salvaged. Press [Salvage] to pick gear — then [Salvage now] turns it to dust. In [Auto salvage], set a rarity and an item-level line: new gear that hits either line turns to dust before it enters the bag — gear you already hold is only salvaged when you press [Apply to inventory now]' },
     // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
     'ch.bag.stash': { ko: '창고', en: 'Stash' },
     'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
@@ -308,13 +312,13 @@ const STRINGS = {
     'ch.sort.slot': { ko: '부위순', en: 'Slot' },
     'ch.sortHint': { ko: '[정렬]은 누른 칸을 한 번 줄 세운다 — 등급순 · 레벨순 · 부위순 중 하나를 고르고, 높은 것이 앞에 선다. 그 뒤 들어오는 장비는 끝에 붙는다',
         en: '[Sort] lines up that panel once — pick by rarity, by level or by slot, highest first. Gear that arrives afterwards goes to the end' },
-    // 잠그는 중 — [잠금]으로 들어가고 [완료]로 나온다 · 누른 칸이 바로 잠긴다 (ADR-0207)
-    'ch.lock.start': { ko: '잠금', en: 'Lock' },
-    'ch.lock.done': { ko: '완료', en: 'Done' },
     // 고르는 중 — [분해]로 들어가고 [분해하기] · [취소]로 나온다 (ADR-0184)
     'ch.sel.start': { ko: '분해', en: 'Salvage' },
     'ch.sel.go': { ko: '분해하기', en: 'Salvage now' },
     'ch.sel.cancel': { ko: '취소', en: 'Cancel' },
+    // 고르기 메뉴의 줄 머리 — [분해하기] 위로 올라와 누른 줄이 오른쪽으로 펼쳐진다 (ADR-0447)
+    'ch.sel.byRarity': { ko: '등급', en: 'Rarity' },
+    'ch.sel.byLevel': { ko: '레벨', en: 'Level' },
     // 자동 분해 창 — 선 둘 + 지금 적용 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0203)
     'ch.auto.btn': { ko: '자동 분해', en: 'Auto salvage' },
     'ch.auto.h': { ko: '자동 분해', en: 'Auto Salvage' },
@@ -430,6 +434,20 @@ const STRINGS = {
        갈 칸이 바뀌면 「다음 칸」 · 같은 칸이면 「다시」. ~~bt.retry · bt.nextStage · bt.nextRun~~ 은 같은 날 삭제 — 두 버튼을 걷었다 */
     'bt.nextCell': { ko: '{s}초 뒤 다음 칸 — {name}', en: 'Next stage in {s}s — {name}' },
     'bt.again': { ko: '{s}초 뒤 다시 — {name}', en: 'Again in {s}s — {name}' },
+    // 신단 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445) — 효과 줄은 `shrine.csv` 의 능력치마다 한 키 · {v} = %
+    'bt.shrineGot': { ko: '신단 획득', en: 'Shrine blessing' },
+    'bt.shrineKeep': { ko: '신단 유지', en: 'Shrine kept' },
+    // 결과 띠의 [건너뛰기] — 세기를 걷고 다음 런을 곧바로 보낸다 (SCREEN_DESIGN §4-2 · ADR-0453)
+    'bt.skipWait': { ko: '건너뛰기', en: 'Skip' },
+    'rep.shrine': { ko: '신단', en: 'Shrine' },
+    'shrine.fx.atk_pct': { ko: '데미지 +{v}%', en: 'Damage +{v}%' },
+    'shrine.fx.cooldown_reduction': { ko: '쿨타임 감소 {v}%', en: 'Cooldown Reduction {v}%' },
+    'shrine.fx.life_steal': { ko: '흡혈 {v}%', en: 'Life Steal {v}%' },
+    'shrine.fx.res_all': { ko: '모든 원소 저항 +{v}%', en: 'All Resistances +{v}%' },
+    'shrine.fx.hp_pct': { ko: '최대 HP +{v}%', en: 'Max HP +{v}%' },
+    'shrine.fx.xp_gain_pct': { ko: '경험치 +{v}%', en: 'Experience +{v}%' },
+    'shrine.fx.item_find': { ko: '드랍률 +{v}%', en: 'Item Find +{v}%' },
+    'shrine.fx.gold_find': { ko: '골드 획득 +{v}%', en: 'Gold Find +{v}%' },
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
@@ -484,6 +502,7 @@ const STRINGS = {
     'set.h': { ko: '설정', en: 'Settings' },
     'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
     'set.hitFx': { ko: '피격 반응', en: 'Hit Reactions' },
+    'set.shake': { ko: '몬스터 흔들림', en: 'Monster Shake' },
     'set.on': { ko: 'On', en: 'On' },
     'set.off': { ko: 'Off', en: 'Off' },
 
@@ -874,6 +893,8 @@ const STRINGS = {
     'tip.src.fixed': { ko: '고정', en: 'Fixed' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
     'tip.tacticOff': { ko: '끼우면 전술이 꺼진다 — {eff}', en: 'Equipping turns a tactic off — {eff}' },
+    // 아이템 툴팁 각주 — 기본은 「이 아이템」 한 장이고 Alt 동안 착용품 카드가 붙는다 (SCREEN_DESIGN §6 · 2026-09-29 · ADR-0448)
+    'tip.item.altHint': { ko: 'Alt 비교', en: 'Alt: compare' },
     // ~~`tip.up.first`·`tip.up.next`~~ 는 2026-09-08 삭제 [사용자 지시] — 툴팁의 강화 줄이 통째로 죽었다.
     // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
     // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
@@ -1166,6 +1187,8 @@ const STRINGS = {
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
     // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-29 사용자 지시 · SCREEN_DESIGN §6 · ADR-0427] — **한국어도 영어로 찍는다**(같은 날 사용자 「다 영어로 뜨게」 · ADR-0428)
     'sk.lockLv': { ko: 'Level {n}+', en: 'Level {n}+' },
+    // 무기가 안 맞아 꺼진 액티브 칸 — 툴팁 맨 위 한 줄 [2026-09-29 · R187 · SCREEN_DESIGN §6 · ADR-0446] · {w} = 그 스킬 직업의 무기군 이름을 ` · ` 로 이은 것
+    'sk.needWeapon': { ko: '{w} 필요', en: 'Needs {w}' },
     /* 스킬북 창 [2026-09-29 · R179 · SCREEN_DESIGN §6 「스킬북 창」 · ADR-0420] — 규칙 문장은 없다(덮어쓰기 · 중복 가루는 도움말의 몫) */
     'bk.learned.h': { ko: '배운 스킬', en: 'Learned Skill' },
     'bk.noneLearned': { ko: '없음', en: 'None' },

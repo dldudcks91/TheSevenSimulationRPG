@@ -173,6 +173,44 @@ export function createGameSystem(deps) {
     const answersFor = (meetingId, sentSin) =>
         answerRows.filter(a => a.meeting_id === meetingId && (a.need_sin === '-' || a.need_sin === sentSin));
 
+    /* ── 신단 [2026-09-29 · base_expedition_design §1-2] — 이긴 칸 뒤 칸 I → II · II → III 으로 넘어갈 때 하나가 서고 다음 칸의 파티 전원이 입는다 ── */
+
+    /** 신단 효과가 올릴 수 있는 이름 — **전술 보너스 채널(`hero.computeCombat` 의 flat)이 읽는 것**만 · 경험치는 `settleRound` 가 따로 곱한다 */
+    const SHRINE_STATS = ['atk_pct', 'cooldown_reduction', 'life_steal', 'res_all', 'hp_pct', 'xp_gain_pct', 'item_find', 'gold_find'];
+    /** 신단 표 — `shrine.csv` 를 id 로 묶은 것 · 행 순서가 뽑기 순서다. 비어 있으면 신단이 안 선다 */
+    const shrineList = deps.shrines ?? [];
+    const shrineById = (() => {
+        const bad = why => { throw new Error(`shrine: ${why}`); };
+        const map = {};
+        for (const s of shrineList) {
+            if (!s?.id || map[s.id]) bad(`id '${s?.id}'`);
+            if (!s.ko || !s.en) bad(`${s.id} — 이름이 비었다`);
+            const fx = Object.entries(s.fx ?? {});
+            if (fx.length === 0) bad(`${s.id} — 효과가 없다`);
+            for (const [stat, v] of fx) {
+                if (!SHRINE_STATS.includes(stat)) bad(`${s.id} — 모르는 능력치 '${stat}'`);
+                if (!(Number.isFinite(v) && v > 0)) bad(`${s.id} — ${stat} 값 '${v}'`);
+            }
+            map[s.id] = s;
+        }
+        return map;
+    })();
+    /** 그 신단의 효과 한 값(없으면 0) */
+    const shrineFx = (id, stat) => shrineById[id]?.fx?.[stat] ?? 0;
+    /** 전술 보너스 `{flat, dr}` 에 신단 효과를 더한 **새** 묶음 — 원본을 안 바꾼다 */
+    const withShrine = (bonus, id) => {
+        const s = shrineById[id];
+        if (!s) return bonus;
+        const flat = { ...(bonus?.flat ?? {}) };
+        for (const [stat, v] of Object.entries(s.fx)) if (stat !== 'xp_gain_pct') flat[stat] = (flat[stat] ?? 0) + v;
+        return { flat, dr: (bonus?.dr ?? []).slice() };
+    };
+    /** 이긴 칸 다음에 신단이 서는 칸 — **같은 장소의 바로 다음 칸**(칸 번호 +1)일 때만 그 칸 id · 아니면 null(장소 사이 · 순환의 III → I · 칸 하나인 장소) */
+    const shrineTarget = stageId => {
+        const nx = deps.stageOrder[deps.stageOrder.indexOf(stageId) + 1];
+        return nx != null && samePlace(nx, stageId) && deps.stages[nx].cell === deps.stages[stageId].cell + 1 ? nx : null;
+    };
+
     /* ── 생성 · 직렬화 ── */
 
     const emptyEquip = () => Object.fromEntries(positions.map(p => [p, null]));
@@ -462,9 +500,9 @@ export function createGameSystem(deps) {
     const heroById = (state, uid) => state.heroes.find(h => h.uid === uid);
     const heroItems = (state, h) => Object.values(h.equipped).filter(Boolean).map(uid => state.items[uid]).filter(Boolean);
     /**
-     * 착용 무기의 무기군 — **액티브 2번 칸(무기군)의 입력**이다 (skill_design §2 · `skill.activesFor`).
+     * 착용 무기의 무기군 — **직업 스킬이 나가는가의 입력**이다 [2026-09-29 · R187 · skill_design §2-2 — ~~액티브 2번 칸(무기군)의 입력~~].
      * 장비를 아는 층은 여기뿐이라 이 조회도 여기 있다 — `skill.js` 는 아이템을 모른다.
-     * 맨손이면 `null` 이고, 그러면 그 칸이 빈다.
+     * 맨손이면 `null` 이고, 그러면 직업 스킬 칸이 전부 꺼진다(`partyUnits` → battle).
      */
     const weaponGroupOf = (state, h) => {
         const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
@@ -1320,13 +1358,16 @@ export function createGameSystem(deps) {
         // 자리 — 전투가 「앞」을 읽는 유일한 입력 (진형 2026-09-09) · 둘째 라운드부터는 안 읽힌다(`refit`) · 원정은 **출발 때 굳힌 자리**다(`fixed.byUid` — 이어 가는 런은 처음 나간 편성의 자리 · 2026-09-29)
         const byUid = fixed?.byUid ?? formationOf(p).byUid;
         const list = uids ?? p.party;
-        const tactic = snap ? TC.bonusOf(snapMeasure(state, snap, list, no, fixed).filter(m => m.active).map(m => m.option)) : undefined;
+        const base = snap ? TC.bonusOf(snapMeasure(state, snap, list, no, fixed).filter(m => m.active).map(m => m.option)) : undefined;
+        // 신단 [2026-09-29 · base_expedition_design §1-2] — 그 런이 입는 신단(`fixed.shrine`)을 **전술 보너스와 같은 채널에** 더한다 · 새 곱셈 층이 없다
+        const tactic = fixed?.shrine ? withShrine(base ?? tacticBonus(state, list, no), fixed.shrine) : base;
         return list.map(uid => {
             const h = heroById(state, uid);
             return {
                 uid, combat: heroCombat(state, h, list, no, tactic),  // 전술 조건도 이 인원으로 센다 — 원정은 나간 인원이다 (R92) · 칸은 나간 편성의 것 (R129) · 출발 때 켜진 것만 (R130)
                 stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
                 actives: SK.activesFor(h),                // 둘째 칸 = 책으로 배운 스킬(`h.bookSkill`) — ~~무기가 든 스킬~~ 2026-09-29 R179
+                weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 직업 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · skill_design §2-2)
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
             };
         });
@@ -1784,13 +1825,18 @@ export function createGameSystem(deps) {
         const tactics = tacticSnap(view, going, no);
         //   조건이 읽은 전열 · 같이 깬 칸 수도 굳힌다 — 도는 원정의 재판정(`runTactics`)이 이 값으로 센다 (R134) · 자리(`byUid`)도 굳힌 편성의 것이다(`partyUnits` · 관전 아레나)
         const byUid = formationOf(squad).byUid;
-        const fixed = { front: going.filter(uid => (byUid[uid] ?? 0) === 0), bond: bondOf(state, going), byUid };
+        // 신단 [2026-09-29 · base_expedition_design §1-2] — **이어 가는 런**이고 그 부대 자리에 **이 칸의** 신단이 서 있으면 이어받는다(진 칸을 다시 돌 때도 남는다) ·
+        //   새로 보낸 런 · 다른 칸으로 가는 런은 신단 없음 · rng 0
+        const had = runAt(state, no)?.shrine;
+        const shrine = from && had?.stageId === stageId && shrineById[had.id] ? had.id : null;
+        const fixed = { front: going.filter(uid => (byUid[uid] ?? 0) === 0), bond: bondOf(state, going), byUid, shrine };
         const battle = BT.createRun(partyUnits(view, going, no, tactics, fixed), stageId, rng, level, fillSlots(state, squad), limitsOf(state).potionSlots);
         // 같이 깬 칸 수(`bonds`)는 **출발에서 안 센다** — 칸을 이긴 순간 +1 이다(`settleRound`) · 이 런의 판정은 지금까지 센 값(위 `fixed.bond`).
         //   ~~출발할 때 +1~~ (v36) 은 2026-09-29 사용자 지시로 걷었다 — 출정 → 철수를 연타하면 한 판도 안 싸우고 올랐다 (tactic_card_design §5-8)
 
         const report = {
             at: now, stageId, level, preset: no, won: false, reason: null, durationSec: 0,   // reason null = 진행 중 · preset = 어느 부대의 런인가 (v38 · 다부대)
+            shrine,                                                                           // 이 런이 입은 신단 id · 없으면 null (2026-09-29)
             gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
             downed: [], party: going.slice(), drops: [], books: [], discarded: 0,
             rounds: [], roundsCleared: 0,
@@ -1808,11 +1854,13 @@ export function createGameSystem(deps) {
             stageId, preset: no, repeat: samePlace(prev?.stageId, stageId) ? prev.repeat === true : false, auto: true,
             // fallen = 이 런에서 쓰러져 있는 영웅 — `stepRun` 이 채운다 · 스킬 트리 잠금(`downed`)이 읽는다 (R130 · 옛 v16 `downed` 와 다른 필드)
             lastAt: now, durationSec: 0, active: true, fallen: [],
+            shrine: shrine ? { id: shrine, stageId } : null,   // 이 런이 입는 신단 — 이긴 칸 뒤 `settleRound` 가 다음 칸의 것으로 바꾼다 (2026-09-29)
         };
         // 첫 라운드를 **연다** — 스폰 · 등장 지연 굴림은 여기서 돈다. 틱은 재생 시각을 따라 `stepRun` 이 민다 [2026-09-21 · R130] —
         //   ~~첫 라운드까지 계산한다~~: 미래를 미리 계산해 두면 원정 중 교체가 그 순간 먹을 자리가 없다(base_expedition_design §1-5)
         battle.advance(0);
-        return { ok: true, report, run: { stageId, preset: no, report, result: battle.result, done: false, battle, rng, party: going, tactics, fixed, squad } };
+        // `seq` = 이 런의 전투 번호 — 신단 뽑기 스트림의 두 번째 인자(다른 부대가 그새 나가도 같은 신단 · INTERFACE §5-1)
+        return { ok: true, report, run: { stageId, preset: no, report, result: battle.result, done: false, battle, rng, party: going, tactics, fixed, squad, seq: state.counters.battle } };
     }
 
     /** 편성 `no` 자리에 굳힌 편성을 끼운 **읽기 전용 얕은 사본** — 이어 가는 런의 전술 칸 · 진형을 처음 나간 편성으로 센다(`wearing` 의 사본과 같은 수법 · 원본 불변) */
@@ -1902,7 +1950,8 @@ export function createGameSystem(deps) {
             for (const uid of s.alive) {
                 const h = heroById(state, uid);
                 if (!h) continue;
-                const gain = heroCombat(state, h).option_fx?.xpGain ?? 0;
+                // 폭식의 신단 — 그 런이 입은 신단의 경험치 몫을 같은 괄호에 더한다 (2026-09-29 · base_expedition_design §1-2)
+                const gain = (heroCombat(state, h).option_fx?.xpGain ?? 0) + shrineFx(run.fixed?.shrine, 'xp_gain_pct');
                 const xp = Math.round(gain ? xpBase * (1 + gain) : xpBase);
                 const lu = H.grantXp(h, xp, run.rng);
                 R.xp[uid] = (R.xp[uid] ?? 0) + xp;
@@ -1927,6 +1976,13 @@ export function createGameSystem(deps) {
             if (res.won) { state.bonds = state.bonds ?? {}; state.bonds[bondKey(run.party)] = bondOf(state, run.party) + 1; }
             run.done = true;
             if (slot) { slot.active = false; slot.fallen = []; }   // 전투 밖 = 전원 회복 (base_expedition_design §1-1)
+            // 신단 [2026-09-29 · base_expedition_design §1-2] — **이긴 칸**: 다음 칸이 같은 장소의 다음 칸이면 새로 하나 서고 아니면 지운다 ·
+            //   **진 칸**: 그대로 둔다(같은 칸을 다시 도는 런이 이어받는다). rng = 신단 스트림(전투 수열과 안 섞인다 · INTERFACE §5-1)
+            if (slot && res.won) {
+                const to = shrineList.length ? shrineTarget(run.stageId) : null;
+                const r = to ? makeRng(deriveSeed(state.seed ^ 0x5B1E, run.seq ?? state.counters.battle)) : null;
+                slot.shrine = to ? { id: shrineList[Math.floor(r() * shrineList.length)].id, stageId: to } : null;
+            }
             return true;
         }
         run.battle.refit(runUnits(state, run), leveled);
@@ -1980,6 +2036,7 @@ export function createGameSystem(deps) {
         run.repeat = false;
         run.auto = false;             // 끊긴 부대는 다음 런이 안 나간다 (v39)
         run.fallen = [];              // 끊기면 전투 밖이다 — 쓰러져 있는 영웅이 없다 (R130)
+        run.shrine = null;            // 신단은 이어 가는 런만 이어받는다 — 끊긴 부대는 잃는다 (2026-09-29)
         if (R) R.reason = reason;
         return true;
     }
@@ -1995,6 +2052,7 @@ export function createGameSystem(deps) {
             if (!run || !slot?.auto || slot.active || slot.lastAt !== run.report.at) return { ok: false, err: 'done' };
             slot.auto = false;
             slot.repeat = false;
+            slot.shrine = null;   // 칸 사이 철수 — 다음 런이 없으니 신단도 없다 (2026-09-29)
             return { ok: true, report: run.report };
         }
         run.done = true;
@@ -2034,6 +2092,7 @@ export function createGameSystem(deps) {
             if (!cut && !going) continue;
             run.repeat = false;
             run.auto = false;
+            run.shrine = null;
             hit.push({ stageId: run.stageId, at: run.lastAt });
         }
         if (hit.length === 0) return null;
@@ -2058,7 +2117,9 @@ export function createGameSystem(deps) {
         const report = state.reports.find(r => r.preset === no && r.at === run.lastAt);
         if (!report || report.reason == null || report.reason === 'retreat' || report.reason === 'closed') return null;
         const stageId = report.won ? nextStageOf(state, run.stageId, run.repeat === true) : run.stageId;
-        return { stageId, preset: run.preset, at: endedAt + B.repeat_restart_sec * 1000 };
+        // 다음 런이 이어받을 신단 — 그 칸의 것일 때만(`departRun` 과 같은 판정) · `fresh` = 막 이긴 칸 뒤에 선 것 (2026-09-29)
+        const sh = run.shrine?.stageId === stageId && shrineById[run.shrine.id] ? { id: run.shrine.id, fresh: report.won } : null;
+        return { stageId, preset: run.preset, at: endedAt + B.repeat_restart_sec * 1000, shrine: sh };
     }
 
     /* ── 선술집 — 명단 · 리롤 쿨다운 (base_expedition_design §2-4 확정 2026-08-26) ── */
