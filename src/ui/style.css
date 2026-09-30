@@ -932,10 +932,8 @@ html, body { height: 100%; overflow: hidden; }
     box-shadow: 0 6px 24px rgba(var(--shadow-rgb),.75);
 }
 /* 처음부터 Alt 때의 모양 (ADR-0450) — 착용품 카드 · VS 는 기본 상태에도 **자리를 잡고 안 보인다**: 폭 · 높이 · 접힘이 두 상태에서 같아
-   Alt 로 「이 아이템」 카드가 안 움직인다. 카드 바닥(`.tip-swap`)은 「Alt 비교」와 Alt 줄(반지 칸 · 착용 중 없음)을 **한 칸에 겹쳐** 높이 = 큰 쪽 */
-.tip-compare:not(.alt) .alt-only, .tip-compare.alt .base-only { visibility: hidden; }
-.tip-swap { display: grid; }
-.tip-swap > * { grid-area: 1 / 1; }
+   Alt 로 「이 아이템」 카드가 안 움직인다. Alt 줄(반지 칸 · 착용 중 없음)도 같다 — 각주 「Alt 비교」는 그 아래에서 두 상태 모두 선다 (ADR-0456) */
+.tip-compare:not(.alt) .alt-only { visibility: hidden; }
 /* 손가락 버튼 줄은 「이 아이템」 카드 아래 — 접힌 비교 툴팁은 그 카드가 오른쪽 끝이다(왼쪽 끝은 숨은 착용품 카드 자리) */
 .tooltip.at-left:has(> .tip-compare > .tip-vs) > .tip-touch { left: auto; right: 0; }
 /* VS — 틈은 좁고(`width`), 원정 관전과 같은 **글자만** 그 **위**에 떠 두 장의 가장자리에 겹친다(ADR-0339 · 상자 없음 ADR-0340).
@@ -1739,7 +1737,7 @@ html, body { height: 100%; overflow: hidden; }
    **숫자만 강조색, 식은 흐린 색** — 식은 풀이지 값이 아니라 문장을 밀어내지 않게 한 단 물러선다.
    값이 없는 자리(도감)는 식이 숫자 자리를 **대신**하므로 이 클래스를 안 쓴다(식 속 숫자가 `.tip-hl` 을 그대로 탄다) */
 .tip-fx { color: var(--text-muted); }
-/* 「Alt 계산식」 각주 — 기본 설명창 바닥 한 줄. 괄호가 붙을 숫자가 있을 때만 선다 */
+/* Alt 각주 — 툴팁 바닥 한 줄(「Alt 세부 옵션」 · 「Alt 비교」 …). Alt 를 누르는 동안에도 걷지 않는다 (ADR-0456) */
 .tip-foot {
     margin-top: 8px; padding-top: 5px; border-top: 1px solid var(--border-dark);
     font-size: var(--fs-xs); color: var(--text-muted);
@@ -1803,7 +1801,7 @@ html, body { height: 100%; overflow: hidden; }
 
 /* 관전 연출 = **스킬 이펙트** [2026-09-28 사용자 지시 · SCREEN_DESIGN §4-2 「연출」 · ADR-0409] — 스킬에만 · 늘 켜져 있다. **어느 카드에 붙이나는 `fx.js`, 모양 · 길이는 여기.**
    길이는 전부 `--fx-k` 를 곱한다 — 배속이 오르면 짧아진다(fx.js 가 칸 `.unit-slot` 에 건다 · ×1 1 / ×2 .75 / ×4 .55).
-   모양은 아래 코드 모양이다 · 그림 한 장(`.fx-stamp` — 이 절 끝)은 꺼져 있다(나중에 전직 스킬에만 · ADR-0412) · 피격 반응은 개발용 FX 버튼으로만 켠다(기본 꺼짐 · ADR-0410) */
+   모양은 아래 코드 모양이다 · 그림 한 장(`.fx-stamp` — 이 절 끝)은 꺼져 있다(나중에 전직 스킬에만 · ADR-0412) · 피격 반응은 설정 탭에서 켜고 끈다(기본 켜짐 · 2026-09-30) */
 
 /* 쓰러진 카드는 **한 박자 뒤에** 흐려진다 — 곧바로 흐려지면(.unit.dead) 마지막 타격의 스킬 이펙트가 회색으로 옅게 탄다. 배속을 따르지 않는 고정 박자다 */
 .unit.dead { transition: opacity .45s .3s, filter .45s .3s; }
@@ -1826,6 +1824,7 @@ html, body { height: 100%; overflow: hidden; }
 .side-enemy .unit-slot.fx-lunge { animation: fx-lunge-down calc(240ms * var(--fx-k, 1)) ease-out; }
 /* 흔들림 폭 — `--shake` · 치명 `--shake-crit`. 기본(영웅 카드 · 파견 관전 창) 4px · 치명 7px ·
    **몬스터 카드는 설정 탭의 「몬스터 흔들림」 단계**를 fx.js 가 `data-shake` 로 단다 (2026-09-29 · SCREEN_DESIGN §2-2 · ADR-0454) */
+.unit.enemy[data-shake="0"] { --shake: 0px; --shake-crit: 0px; }
 .unit.enemy[data-shake="1"] { --shake: 2px; --shake-crit: 4px; }
 .unit.enemy[data-shake="2"] { --shake: 4px; --shake-crit: 7px; }
 .unit.enemy[data-shake="3"] { --shake: 8px; --shake-crit: 12px; }
@@ -3157,6 +3156,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .unit.shrine { border-top-color: var(--color-success); }
 /* 효과 줄은 접힌다 — 오른쪽 열이 좁아 영어(「Cooldown Reduction 15%」)가 한 줄에 안 든다 · 남는 세로는 이름 위에 있다(열이 바닥 정렬) */
 .shrine-fx { font-size: var(--fs-sm); line-height: 1.25; color: var(--color-success); text-align: right; }
+/* 칸 그림 = 죄종 아이콘(ADR-0455) — 스킬 아이콘과 같은 규격이지만 획이 굵어 칸을 꽉 채우면 답답하다 → 칸 가운데에 작게 [2026-09-30 사용자 지시] */
+.unit.shrine .cd-slot .cd-g { display: flex; align-items: center; justify-content: center; }
+.unit.shrine .cd-slot .cd-g img { width: 72%; height: 72%; }
 .pop.miss { color: var(--text-muted); }
 
 /* 고르는 중 [2026-09-21 · ADR-0184] — 클릭이 **체크**가 되므로 칸 모양을 바꾼다.

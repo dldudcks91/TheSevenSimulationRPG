@@ -1580,9 +1580,6 @@ const STRINGS = {
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '공격 속도 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Attack Speed {s}s — acts when the gauge fills' },
     'bt.tab.dmg': { ko: '누적 데미지', en: 'Damage' },
-    // 배치 토글 — 버튼은 **바꿀 배치의 이름**을 든다 (2026-09-03 · SCREEN_DESIGN §4-2)
-    'bt.layout.toSplit': { ko: '나눠 보기', en: 'Split view' },
-    'bt.layout.toWide': { ko: '넓게 보기', en: 'Wide view' },
     'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack' },
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
     // 물리 경직 칩의 이름 — 칩에 올리면 뜬다 (R110 · SCREEN_DESIGN §4-2 · ADR-0154)

@@ -619,7 +619,7 @@ function segmented(items, current, onPick) {
 }
 
 /**
- * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414 · ADR-0454) — 줄 셋: 스킬 이펙트 · 피격 반응(줄마다 [Off] [On] · 따로 켜고 끈다) · 몬스터 흔들림 [1] [2] [3].
+ * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414 · ADR-0454) — 줄 셋: 스킬 이펙트 · 피격 반응(줄마다 [Off] [On] · 따로 켜고 끈다) · 몬스터 흔들림 [0] [1] [2] [3].
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
  */
 function settingsBody() {
@@ -631,7 +631,7 @@ function settingsBody() {
             isOn() ? 'on' : 'off', id => { setFxOn(k, id === 'on'); box.replaceWith(settingsBody()); }));
         box.appendChild(row);
     }
-    // 몬스터 흔들림 [1] [2] [3] — 피격 반응이 꺼져 있으면 먹지 않으므로 흐려져 안 눌린다(값은 남는다 · ADR-0454)
+    // 몬스터 흔들림 [0] [1] [2] [3](0 = 번쩍임만) —피격 반응이 꺼져 있으면 먹지 않으므로 흐려져 안 눌린다(값은 남는다 · ADR-0454)
     const row = el('div', 'set-row');
     row.appendChild(el('span', 'set-k', t('set.shake')));
     row.appendChild(segmented(SHAKE_LEVELS.map(n => ({ id: n, label: String(n), disabled: !hitFxOn() })),
@@ -3472,7 +3472,7 @@ function tipCard(item, headText, hints = [], skCtx) {
  * 묶음은 `display: contents` 라 두 장 · VS 는 여전히 툴팁 줄의 항목이다(style.css).
  * **처음부터 Alt 때의 모양이다** [2026-09-29 사용자 지시 「Alt 를 눌렀을 때 기준으로」 · ADR-0450] — 착용품 카드 · VS 는 두 상태 모두 짓고
  * 기본 상태엔 `alt-only` 로 **보이지 않게 자리만** 잡는다. 폭 · 높이 · 접힘(`moveTip`)이 두 상태에서 같아 Alt 로 「이 아이템」 카드가 안 움직인다.
- * 카드 바닥은 **바꿔 끼우는 칸**(`.tip-swap`) 하나 — 기본 = 각주 「Alt 비교」 · Alt = 반지 칸 · 착용 중 없음. 둘이 겹쳐 서서 높이가 안 변한다
+ * 카드 바닥은 **Alt 줄**(반지 칸 · 착용 중 없음 — `alt-only`) 위 · **각주 「Alt 비교」** 맨 아래 — 각주는 Alt 동안에도 선다 [2026-09-30 사용자 지시 · ADR-0456]
  */
 function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints = [], ctx, compareCtx, actions = null } = {}) {
     if (compare === undefined) { bindTipNode(node, () => tipCard(item, t(head), hints, ctx), { actions }); return; }
@@ -3482,10 +3482,8 @@ function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints 
         w.dataset.alt = '1';
         w._rebuild = build;
         const c = tipCard(item, t(head), hints, ctx);
-        const swap = el('div', 'tip-swap');
-        swap.appendChild(el('div', 'tip-foot base-only', t('tip.item.altHint')));
-        if (altLines.length) swap.appendChild(el('div', 'tip-sins alt-only', altLines.map(x => `<span class="muted">${x}</span>`).join('')));
-        c.appendChild(swap);
+        if (altLines.length) c.appendChild(el('div', 'tip-sins alt-only', altLines.map(x => `<span class="muted">${x}</span>`).join('')));
+        c.appendChild(el('div', 'tip-foot', t('tip.item.altHint')));
         w.appendChild(c);
         if (compare) {
             w.appendChild(el('div', 'tip-vs alt-only', '<span>VS</span>'));
@@ -6756,6 +6754,8 @@ async function boot() {
         const node = list[Math.max(1, Number(q.get('i')) || 1) - 1];
         // 커서 자리는 왼쪽 위 — 카드 두 장(최대 640px)이 접힘 보정 없이 그대로 펴진다
         node?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
+        // `&alt=1` — 올린 뒤 **Alt 를 누른 채** — 비교 두 장도 누르는 동안만 선다(ADR-0448 · `?dev=play` 의 `&alt=1` 과 같다)
+        if (q.get('alt') === '1') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt' }));
     }
     startClocks();
 }

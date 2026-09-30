@@ -189,9 +189,10 @@ im.crop((0, 0, im.width, 615 * im.height // 768)).save(dst, 'WEBP', quality=92, 
 ```
 buildings/
 ├── <building_id>.webp   ← 게임이 읽는다 — 파일명 = building.csv:building_id · 목록은 ui/mock.js:BUILDING_IMAGES
-│     expedition · command · forge · tavern · training · shop · resource · explore · codex · storage
+│     expedition · command · forge · tavern · training · shop · resource · explore · codex · storage · library
 ├── source/
-│   └── sheet_01_buildings.png   ← 원본 시트 2752×1536 · 4×3 = 12칸 · 칸 사이 검은 홈 — 게임이 안 읽는다
+│   ├── sheet_01_buildings.png   ← 원본 시트 2752×1536 · 4×3 = 12칸 · 칸 사이 검은 홈 — 게임이 안 읽는다
+│   └── library.png              ← 서고 원본 1448×1086(4:3 한 장) — 게임이 안 읽는다
 └── unused/
     └── codex_alt.webp   ← 11번 칸(도감 두 번째 판) · id 없는 여분
 ```
@@ -200,6 +201,7 @@ buildings/
 - **칸 → 파일** — 1~10 번 칸이 부지 순서(원정 · 지휘 천막 · 제련소 · 선술집 · 훈련장 · 상단 · 자원 · 탐험 · 도감 · 창고)다. 11 = 도감 여분(`unused/codex_alt`) · 12 = 자원 여분인데 **생성기 ✦ 가 박혀** 안 잘랐다(시트에만 남는다)
 - **자르기** — 검은 홈을 실측(열 평균 밝기 < 30)으로 찾고 칸 안쪽 3px 을 더 걷어 홈 가장자리를 뺐다 → 장당 **666~667 × 494~495**(약 4:3). 화면의 부지는 3:2 라 `cover` 가 위아래를 조금 자른다(`center 40%`) — **카드 비율이 바뀌어도 다시 자를 필요가 없게** 칸을 통째로 뒀다
 - **인코딩** — WebP q90 · 장당 29~51KB. ⚠ 이 PC 에 Python 이 없어 **Edge 캔버스(`toDataURL('image/webp', 0.9)`)로** 자르고 쌌다 — 다른 폴더의 PIL 레시피와 도구가 다르다. 다시 자를 땐 어느 쪽이든 같은 좌표(홈 안쪽 3px)면 된다
+- **서고(`library`)는 따로 한 장이다** [2026-09-30] — 시트를 첨부해 「그 시트의 새 칸 하나」로 발주했다(둥근 돌 탑 · 도감의 기둥 신전 · 11번 목조 팔각과 실루엣을 가른다). 원본이 4:3 한 장이라 자르지 않고 **667×500 으로 줄여**(PIL Lanczos) WebP q90 으로 쌌다 — 시트 칸과 폭이 같다
 - 그림이 없는 건물은 `ui/mock.js:BUILDING_ART` 의 단색 실루엣(SVG)으로 폴백한다 — 건물이 늘면 파일을 넣고 `BUILDING_IMAGES` 에 id 를 더한다
 
 ---

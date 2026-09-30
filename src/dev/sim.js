@@ -184,6 +184,7 @@ function runCampaign(SYS, B, seeds, runs, bot, opt = {}) {
             const potions = opt.potion ? botPotion(SYS, G) : 0;
             rows.push({
                 seed, n, classes, stageId, won: rp.won, cleared: rp.roundsCleared, sec: rp.durationSec, t: r2(t), lvBefore: r2(lvBefore),
+                gold: rp.gold, goldHave: G.resources.gold, dustHave: G.resources.dust, kills: sum(rp.contrib ?? [], c => c.kills ?? 0),
                 drops: rp.drops.length, discarded: rp.discarded, equips, salvaged, learned, potions,
                 reached: G.progress.cleared.length, levels: sum(partyHeroes(SYS, G), h => h.level), dealt: dealtOf(rp),
             });

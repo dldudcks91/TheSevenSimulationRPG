@@ -7,9 +7,9 @@
  *   · 언어를 바꿔도 같은 타임라인을 다시 재생한다
  *
  * 배치: 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 + 아레나 아래 가방(app.js 가 붙인다) (2026-08-27).
- * **배치가 둘이고 컨트롤의 버튼 하나가 오간다** (2026-09-03 사용자 지시, SCREEN_DESIGN §4-2):
- *   · **넓게**(기본) — 아레나가 판 전폭이다. 로그 · 누적은 **없다** — 컨트롤의 두 판 버튼은 흐린 채 안 눌린다 (2026-09-15 · ADR-0130 — 옛 로그 창 폐기)
- *   · **나눔** — 좌 아레나(열을 뺀 폭 · 넓게와 같은 카드) / 우 로그 열 · 두 버튼이 그 열의 판을 고른다 (2026-09-11 · ADR-0093)
+ * **배치가 둘이고 컨트롤의 판 버튼 둘(로그 · 누적)이 오간다** (2026-09-03 사용자 지시 · 2026-09-30 ADR-0457 — 배치 버튼 폐기, SCREEN_DESIGN §4-2):
+ *   · **넓게**(기본) — 아레나가 판 전폭이다. 로그 · 누적은 **없다** — 판 버튼을 누르면 그 판을 든 열이 선다(나눔) (ADR-0130 — 옛 로그 창 폐기)
+ *   · **나눔** — 좌 아레나(열을 뺀 폭 · 넓게와 같은 카드) / 우 로그 열 · 다른 판 버튼은 판을 바꾸고 켜진 판 버튼은 열을 닫는다 (2026-09-11 · ADR-0093)
  *   판(로그·누적) DOM 은 우측 열 안에 **늘 있다** — 넓게 배치에서는 열만 숨고 줄은 계속 쌓인다(새로 만들면 쌓아 둔 로그와 스크롤이 날아간다).
  *   배치는 재생 위치(resume)가 아니라 **취향**이라 app.js 의 `state.btLayout` 이 들고 `opts.layout`/`opts.onLayout` 으로 오간다 — 런이 바뀌어도 남는다.
  * 로그는 모든 타격을 적는다(누가 → 누구 · 피해 · 쓴 스킬). 로그 판 위의 탭 셋(전체 · 우리 · 적)이 **줄의 주체**로 거른다 — 줄은 다 쌓고 CSS 가 숨긴다 (ADR-0131). 누적 데미지는 이벤트의 dmg 를 더한 표시값이다 — 정산이 아니다.
@@ -117,7 +117,7 @@ export function mountBattle(container, opts) {
         tab: resume?.tab === 'dmg' ? 'dmg' : 'log',
         logf: ['party', 'enemy'].includes(resume?.logf) ? resume.logf : 'all',   // 로그를 거른 주체 — all | party | enemy (ADR-0131)
         dmgf: resume?.dmgf === 'taken' ? 'taken' : 'dealt',   // 누적 판이 보여 주는 축 — dealt | taken (ADR-0252)
-        // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 판 전폭 · 로그 · 누적 없음 · ADR-0130) / 'split'(아레나 + 우측 로그 열 · ADR-0093).
+        // 배치 [2026-09-03 사용자 지시] — 'wide'(아레나 판 전폭 · 로그 · 누적 없음 · ADR-0130) / 'split'(아레나 + 우측 로그 열 · ADR-0093) · 판 버튼이 오간다(ADR-0457).
         // 재생 위치가 아니라 **취향**이라 resume 이 아니라 app.js 의 화면 상태(state.btLayout)가 든다 — 다음 원정에도 남는다
         layout: opts.layout === 'split' ? 'split' : 'wide',
         // 물약 칸 — **파티가 같이 쓰고 칸 하나에 물약 하나**. 결과가 칸 수와 찬 칸을 싣고(`result.potion`) `potion` 이벤트가 마신 칸 번호(`i`)를 준다 (R104 · ADR-0148).
@@ -205,7 +205,6 @@ function buildDom(state, stage, stageId, shrine) {
                     <button class="btn sm b-pause">${t('bt.pause')}</button>
                     <button class="btn sm b-skip">${t('bt.retreat')}</button>
                     <span class="ctrl-div"></span>
-                    <button class="btn sm b-layout"></button>
                     <button class="btn sm b-pane" data-tab="log">${t('bt.log.h')}</button>
                     <button class="btn sm b-pane" data-tab="dmg">${t('bt.tab.dmg')}</button>
                 </div>
@@ -248,19 +247,14 @@ function bindControls(state, root, opts) {
         state.running = !state.running;
         pause.textContent = state.running ? t('bt.pause') : t('bt.resume');
     };
-    // 배치 토글 — 버튼 하나로 옛 구조(나눔)와 지금 구조(넓게)를 오간다 (2026-09-03 사용자 지시, SCREEN_DESIGN §4-2)
-    root.querySelector('.b-layout').onclick = () => {
-        state.layout = state.layout === 'split' ? 'wide' : 'split';
-        opts.onLayout?.(state.layout);   // 취향이라 화면 상태에 남긴다 — 다음 원정에도 이어진다
-        paintLayout(state, root);
-    };
-    // 판 고르기 — 컨트롤의 두 버튼은 **나눔 배치에서만** 눌린다: 우측 열의 판을 고른다 (ADR-0130).
-    //   넓게 배치에서는 `disabled` 로 흐리게 선다 — 판이 없는데 눌릴 것처럼 보이면 거짓 신호다
+    // 판 버튼 = 우측 열 여닫기 (ADR-0457 — 배치 버튼 폐기) — 닫혀 있으면 그 판을 든 열이 서고(나눔),
+    //   열려 있으면 켜진 버튼은 열을 닫고(넓게) 다른 버튼은 판만 바꾼다
     root.querySelectorAll('.b-pane').forEach(b => {
         b.onclick = () => {
-            if (state.layout !== 'split') return;
-            state.tab = b.dataset.tab;
-            paintPane(state, root);
+            if (state.layout === 'split' && state.tab === b.dataset.tab) state.layout = 'wide';
+            else { state.layout = 'split'; state.tab = b.dataset.tab; }
+            opts.onLayout?.(state.layout);   // 취향이라 화면 상태에 남긴다 — 다음 원정에도 이어진다
+            paintLayout(state, root);
         };
     });
     // 로그 거르기 — **줄의 주체**로 전체 · 우리 · 적 (ADR-0131). 줄은 그대로 두고 목록의 `data-f` 만 바꾼다
@@ -278,16 +272,13 @@ function bindControls(state, root, opts) {
 
 /**
  * 배치를 다시 칠한다 (2026-09-03) — 넓게 / 나눔.
- *   넓게 → 우측 열이 숨고 판 버튼 둘이 흐려진다 · 나눔 → 우측 열이 서고 버튼이 판을 고른다 (ADR-0130)
+ *   넓게 → 우측 열이 숨는다 · 나눔 → 우측 열이 서고 켜진 판 버튼이 그 판을 가리킨다 (ADR-0457)
  * 판(로그·누적) DOM 은 열 안에 늘 있다 — 숨어 있는 동안에도 줄은 쌓인다
  */
 function paintLayout(state, root) {
     const split = state.layout === 'split';
     root.querySelector('.battle-body').classList.toggle('split', split);
     root.querySelector('.battle-side').hidden = !split;
-    root.querySelectorAll('.b-pane').forEach(b => { b.disabled = !split; });
-    // 버튼은 **바꿀 배치의 이름**을 든다 — 지금 상태를 적으면 누르면 무엇이 되는지가 안 읽힌다
-    root.querySelector('.b-layout').textContent = t(split ? 'bt.layout.toWide' : 'bt.layout.toSplit');
     paintPane(state, root);
 }
 
@@ -435,16 +426,16 @@ export const cardV2 = () => { const v = document.documentElement.dataset.card; r
    띠 오른쪽(정예 · 보스 라벨 자리) = 「신단 획득」 · 초상 = 신단 그림 · 이름 줄 = 이름뿐(이름이 죄종을 말한다) ·
    HP · 행동 게이지 자리에 효과 줄. 카드 자체에는 툴팁 · 클릭이 없다.
    **스킬 칸 `active_slots` 개** [2026-09-29 사용자 지시 · ADR-0452] — 몬스터 카드와 같은 줄 · 효과 하나 = 칸 하나(앞 칸부터 · 나머지는 빈 칸) ·
-   그림은 효과마다 스킬 아이콘을 빌린다(`mock.shrineFxIcon` ⚠임시) · 덮개 없이 늘 걷힌 칸 · 칸에 올리면 그 효과 */
+   그림 = 그 신단의 죄종 아이콘(`mock.sinIcon` · 찬 칸 전부 같다 — ADR-0455) · 덮개 없이 늘 걷힌 칸 · 칸에 올리면 그 효과 */
 function paintShrineCard(side, id, v2) {
     const s = shrineInfo(id);
     if (!s) return;
-    const name = L(s.name), got = t('bt.shrineGot'), fx = shrineFxList(id);
+    const name = L(s.name), got = t('bt.shrineGot'), fx = shrineFxList(id), ico = shrineSinImg(s.sin);
     const top = v2 ? `<div class="unit-top"><span class="unit-ident"></span><span class="unit-grade">${got}</span></div>` : '';
     const idRow = v2 ? `<div class="unit-id"><span class="unit-name">${name}</span></div>`
         : `<div class="unit-id"><span class="unit-ident">${got}</span><span class="unit-name">${name}</span></div>`;
     const slots = Array.from({ length: Math.max(D.balance.active_slots, fx.length) }, (_, i) => fx[i]
-        ? `<div class="cd-slot" data-i="${i}"><span class="cd-g">${shrineFxImg(fx[i].k)}</span></div>`
+        ? `<div class="cd-slot" data-i="${i}"><span class="cd-g">${ico}</span></div>`
         : `<div class="cd-slot empty"></div>`).join('');
     side.innerHTML = `<div class="unit-slot${v2 ? ' v2' : ''}" data-rank="0"><div class="unit shrine${v2 ? ' v2' : ''}">
         ${top}
@@ -455,14 +446,14 @@ function paintShrineCard(side, id, v2) {
     </div></div>`;
     side.querySelectorAll('.cd-slot[data-i]').forEach(n => bindTipNode(n, () => shrineTipCard(s, fx[Number(n.dataset.i)])));
 }
-/** 신단 효과 칸의 그림 — 그림이 없으면 스킬과 같은 검은 칸 (ADR-0162) */
-const shrineFxImg = k => { const src = M.shrineFxIcon(k); return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '<i class="sk-noart"></i>'; };
+/** 신단 효과 칸의 그림 — 그 신단의 죄종 아이콘(ADR-0455) · 스킬 아이콘과 같은 회색 실루엣이라 칠하지 않고 그대로 넣는다 · 그림이 없으면 스킬과 같은 검은 칸 (ADR-0162) */
+const shrineSinImg = sin => { const src = M.sinIcon(sin); return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : '<i class="sk-noart"></i>'; };
 /** 신단 효과 칸의 툴팁 — 창 뱃지 툴팁(`effectTipCard`)과 같은 틀: 그림 + 신단 이름 · 효과 한 줄. 남은 시간은 안 적는다 (CLAUDE.md 규칙 7 · ADR-0452) */
 function shrineTipCard(s, f) {
     const c = document.createElement('div');
     c.className = 'tip-card effect-tip';
     c.innerHTML = `
-        <div class="tip-effect-head"><div class="tip-name"><span class="tip-sk-ico">${shrineFxImg(f.k)}</span>${L(s.name)}</div></div>
+        <div class="tip-effect-head"><div class="tip-name"><span class="tip-sk-ico">${shrineSinImg(s.sin)}</span>${L(s.name)}</div></div>
         <div class="tip-effect-summary">${f.text}</div>`;
     return c;
 }

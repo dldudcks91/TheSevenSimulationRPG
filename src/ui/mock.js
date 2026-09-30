@@ -383,21 +383,6 @@ export const skillIcon = id => {
     return SKILL_ICON_FILES.includes(key) ? SKILL_ICON_DIR + key + ICON_EXT : null;
 };
 /**
- * 신단 효과 칸의 그림 — **스킬 아이콘을 빌린다** ⚠임시 [2026-09-29 사용자 「아이콘 니가 대충 넣어봐 우리 쓰던 아이콘으로」 · SCREEN_DESIGN §4-2 「신단」 · ADR-0452].
- *   키 = `shrine.csv:stat`(효과 하나 = 칸 하나) · 값 = 뜻이 닿는 스킬 그림. 신단 효과 전용 그림을 발주하면 이 표를 갈아 끼운다
- */
-export const SHRINE_FX_ICON = {
-    atk_pct: 'kni_might',               // 데미지 — 쥔 주먹
-    cooldown_reduction: 'pri_haste',    // 쿨타임 감소 — 모래시계
-    life_steal: 'war_mutualruin',       // 흡혈 — 심장을 꿴 칼
-    res_all: 'kni_defiance',            // 모든 원소 저항 — 방패
-    hp_pct: 'kni_vow',                  // 최대 HP — 하트
-    xp_gain_pct: 'mag_focus',           // 경험치 — 후광 두른 머리
-    item_find: 'pri_benediction',       // 드랍률 — 받드는 두 손
-    gold_find: 'pri_regen',             // 골드 획득 — 잔
-};
-export const shrineFxIcon = stat => skillIcon(SHRINE_FX_ICON[stat]);
-/**
  * 미장착 착용 칸의 부위 실루엣 — `src/assets/art/icons/items/empty/<part>.webp` (2026-09-03 · SCREEN_DESIGN §6).
  *
  * 축은 **부위**(`equip_slot.csv:part`)라 반지 두 칸(`ring1`·`ring2`)이 같은 그림을 든다.
@@ -778,7 +763,7 @@ export const BUILDING_ART = {
  * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`EXPLORE_MAP_CHAPTERS` 와 같은 재고 목록)
  */
 export const BUILDING_IMG_DIR = './assets/art/buildings/';
-export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'storage'];
+export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'storage', 'library'];
 export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${id}.webp` : null);
 
 /**

@@ -20,7 +20,7 @@
 
 /** 기본값 — 이 브라우저에서 한 번도 안 고른 사람이 보는 화면 */
 export const SKILL_FX_DEFAULT = true;
-export const HIT_FX_DEFAULT = false;
+export const HIT_FX_DEFAULT = true;
 /* 고른 값은 이 브라우저에만 남는다 — localStorage 는 UI 환경설정이라 세이브 어댑터 규칙과 무관(i18n.js 의 언어와 같다) · 접근은 이 파일 안에서만 */
 const PREF_KEY = { skill: 'thesevensim.fxSkill', hit: 'thesevensim.fxHit' };
 function readPref(k, def) {
@@ -42,11 +42,15 @@ export function setFxOn(k, on) {
 }
 
 /* 몬스터 흔들림 단계 — 피격 반응이 켜져 있을 때 **몬스터 카드만** 따른다(영웅 카드는 2 단계 폭) · 폭은 style.css 가 단계로 든다 (SCREEN_DESIGN §2-2 · ADR-0454) */
-export const SHAKE_LEVELS = [1, 2, 3];
-export const SHAKE_DEFAULT = 2;
+export const SHAKE_LEVELS = [0, 1, 2, 3];   // 0 = 흔들림 없이 번쩍임만
+export const SHAKE_DEFAULT = 1;
 const SHAKE_KEY = 'thesevensim.fxShake';
 let shake = (() => {
-    try { const v = Number(localStorage.getItem(SHAKE_KEY)); return SHAKE_LEVELS.includes(v) ? v : SHAKE_DEFAULT; } catch { return SHAKE_DEFAULT; }
+    try {
+        const s = localStorage.getItem(SHAKE_KEY);   // 없으면 null — Number(null) 이 0 이라 먼저 거른다
+        const v = s === null ? NaN : Number(s);
+        return SHAKE_LEVELS.includes(v) ? v : SHAKE_DEFAULT;
+    } catch { return SHAKE_DEFAULT; }
 })();
 /** 고른 단계 — 타격마다 읽는다 */
 export const shakeLevel = () => shake;
@@ -134,7 +138,7 @@ function spawn(layer, cls, vars = {}, tag = 'i') {
     return el;
 }
 
-/* ═══ 피격 반응 — 설정 탭에서 켠다 · 기본 꺼짐 (ADR-0410 · ADR-0413) ═══ */
+/* ═══ 피격 반응 — 설정 탭에서 켜고 끈다 · 기본 켜짐 (ADR-0410 · ADR-0413 · 2026-09-30 기본 On) ═══ */
 
 /** 맞은 카드 — 흔들림 + 초상 번쩍임. 치명은 크게 · 두 번 */
 function struck(state, d, crit) {

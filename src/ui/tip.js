@@ -481,7 +481,7 @@ export const sheetPages = (c = null, sparse = false) => DETAIL_LAYOUT.map((page,
  * 유닛 카드 뼈대 — 영웅은 착용 장비, 몬스터는 기본 옵션 막대 + 대표값(`leadStats`)을 첫 장으로 쓴다.
  * **이름 · 소속 줄은 없다** — 툴팁은 올린 카드 바로 옆에 붙어 뜨고(ADR-0120) 그 카드의 이름 줄 · 위칸이 이미 든다 (ADR-0134).
  * 무엇의 툴팁인지는 윗변 색과 붙은 자리가 말한다.
- * **Alt 를 누르는 동안만** 세부 옵션 두 열이 서고 각주가 걷힌다 — 두 열은 캐릭터 탭 세부 옵션 1 · 2 와 같은 자리에서 끊고 열 이름도 같되,
+ * **Alt 를 누르는 동안만** 세부 옵션 두 열이 선다 · 각주는 두 상태 모두 선다(ADR-0456) — 두 열은 캐릭터 탭 세부 옵션 1 · 2 와 같은 자리에서 끊고 열 이름도 같되,
  * 영웅은 대표값까지 포함한 전 행, 몬스터는 첫 장과 겹치는 대표값을 뺀 행을 찍는다. 한 열로 이으면 스무 줄이 넘어 카드가 아레나를 세로로 덮었다 (ADR-0115 · ADR-0171).
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 `_rebuild` 로 **같은 인자로** 다시 만든다 — 스킬 카드와 같은 장치다.
  * @param color 막대 색 = 윗변 색(CSS 값)
@@ -510,7 +510,7 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, item
     const base = equipment ? `
                 <div class="tip-equipment-face">
                     ${equipment.html}
-                    ${altHeld ? '' : foot}
+                    ${foot}
                 </div>
                 ${altHeld ? '' : `<div class="tip-equipment-probe" aria-hidden="true">
                     <div class="tip-col-h">${t('ch.detail.hn', { n: 1 })}</div>
@@ -525,7 +525,7 @@ function unitCard(stats, color, sheet, rebuild, cls = '', equipment = null, item
                 ${base}
             </div>${pages}
         </div>
-        ${altHeld || equipment ? '' : foot}`;
+        ${equipment ? '' : foot}`;
     bindEquipmentCells(c, equipment, itemCardOf);
     return c;
 }
@@ -571,7 +571,7 @@ function statsFirstCard(h, combat, itemOf, itemCardOf, skills, gearBelow = false
                 <div class="attr-list">${attrRowsHtml(h.stats, color)}</div>
                 ${skills ? `<div class="tip-skills">${icons}</div>` : ''}
                 ${gearBelow ? `<div class="tip-gear-below">${equipment.html}</div>` : ''}
-                ${open ? '' : `<div class="tip-foot">${t(gearBelow ? 'tip.unit.altHint' : 'tip.unit.altHintGear')}</div>`}
+                <div class="tip-foot">${t(gearBelow ? 'tip.unit.altHint' : 'tip.unit.altHintGear')}</div>
             </div>${more}
         </div>`;
     bindEquipmentCells(c, equipment, itemCardOf);
