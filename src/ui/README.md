@@ -7,7 +7,7 @@
 | 파일 | 역할 |
 |---|---|
 | `app.js` | 화면 렌더링. 계산·난수 없음 |
-| `battle.js` | 전투 관전 = `game_logic/battle.js` 타임라인 **재생기** (계산하지 않는다) |
+| `battle.js` | 전투 관전 = `game_logic/battle.js` 타임라인 **재생기** (계산하지 않는다). **로그 방식(격자 · 문장)의 선택 · 저장도 여기다** — `⚙` 판 설정 탭이 `setLogStyle` 로 고르고 문서 뿌리의 `data-log-style` 을 CSS 가 읽는다 ([SCREEN_DESIGN §4-2](../../docs/client/SCREEN_DESIGN.md) · ADR-0459) |
 | `data.js` | CSV fetch → `game_logic` 시스템 조립(주입). 수치 미러 없음. `D.csvText` 에 **원문**도 남긴다 — 읽는 곳은 `dev/golden.js` 의 CSV 해시 하나뿐이고 게임 로직은 안 본다 (2026-08-31) |
 | `storage.js` | localStorage 어댑터 — 세이브 저장소를 만지는 **유일한** 파일. 클라우드 사본과 마지막으로 맞춘 기록(`thesevensim.cloud`) · **다른 탭이 세이브를 썼다**는 신호(`storage` 이벤트)도 여기 |
 | `cloud.js` | 클라우드 세이브 어댑터 — **Firebase 를 만지는 유일한** 파일(Google 로그인 · 사본 올리기 · 받기). SDK 는 처음 부를 때 CDN 에서 불러온다 · 세이브 형식은 모른다 ([SCREEN_DESIGN §2-1](../../docs/client/SCREEN_DESIGN.md) · ADR-0112) |

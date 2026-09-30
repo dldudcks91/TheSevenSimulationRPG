@@ -124,7 +124,6 @@ const STRINGS = {
     'cl.st.on': { ko: '☁ 연결됨', en: '☁ Connected' },
     'cl.st.saving': { ko: '☁ 저장 중', en: '☁ Saving' },
     'cl.st.error': { ko: '☁ 연결 실패', en: '☁ Offline' },
-    'cl.st.conflict': { ko: '☁ 세이브 선택', en: '☁ Choose save' },
     'cl.h': { ko: '클라우드 세이브', en: 'Cloud Save' },
     'cl.account': { ko: '계정', en: 'Account' },
     'cl.cloudAt': { ko: '클라우드 사본', en: 'Cloud copy' },
@@ -136,15 +135,11 @@ const STRINGS = {
     'cl.err.network': { ko: '클라우드에 연결하지 못했다', en: 'Could not reach the cloud' },
     'cl.err.signIn': { ko: '로그인하지 못했다', en: 'Sign-in failed' },
     'cl.err.tooLarge': { ko: '세이브가 너무 커서 올리지 못했다', en: 'The save is too large to upload' },
-    'cl.pick.h': { ko: '어느 세이브로 이어할까', en: 'Which save to continue?' },
-    'cl.pick.cloud': { ko: '클라우드', en: 'Cloud' },
-    'cl.pick.local': { ko: '이 브라우저', en: 'This browser' },
-    'cl.pick.at': { ko: '{t} 저장', en: 'Saved {t}' },
-    'cl.pick.none': { ko: '세이브 없음', en: 'No save' },
-    'cl.pick.use': { ko: '이 세이브로 이어하기', en: 'Continue with this save' },
-    'cl.pick.confirm': { ko: '한 번 더 누르면 다른 쪽을 덮어쓴다', en: 'Click again to overwrite the other' },
     'cl.frozen.h': { ko: '다른 탭에서 게임이 열렸다', en: 'The game is open in another tab' },
     'cl.frozen.reload': { ko: '이 탭에서 이어하기', en: 'Continue in this tab' },
+    // 멈춤 창의 둘째 까닭 — 다른 기기 · 브라우저가 클라우드에 먼저 올렸다. 새로고침이 클라우드 사본을 받는다 (ADR-0458)
+    'cl.taken.h': { ko: '다른 곳에서 게임이 이어졌다', en: 'The game continued elsewhere' },
+    'cl.taken.reload': { ko: '클라우드 세이브로 이어하기', en: 'Continue from the cloud save' },
 
     /* ── 프롤로그 (2026-09-03 · SCREEN_DESIGN §3-1) ──
        본문·씬 제목은 **한국어만** 넣는다 (사용자 지시 2026-09-03) — `en` 이 없으면 t() 가 ko 로 폴백하므로
@@ -239,6 +234,8 @@ const STRINGS = {
     'exp.noParty': { ko: '편성이 비어 있다 — 편성 탭에서 영웅을 넣는다', en: 'This party is empty — add heroes in the Party tab' },
     'exp.departSearching': { ko: '편성에 수색 나간 영웅이 있다', en: 'A hero in this party is out on a search' },
     'exp.departAdvancing': { ko: '편성에 전직 중인 영웅이 있다', en: 'A hero in this party is advancing' },
+    // 출정 확인 창의 문장 — 문구는 사용자 지시 그대로다 (SCREEN_DESIGN §4-1 · ADR-0467)
+    'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 폐지로 「위험도 {lv}」 → 「레벨 {lv}」]. {lv} = `stage.csv:dlvl` */
     'exp.stageMeta': { ko: '레벨 {lv} · 약 {m}분', en: 'Level {lv} · ~{m} min' },
@@ -377,7 +374,8 @@ const STRINGS = {
 
     /* ── 선술집 (실동작) ── */
     'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)' },
-    'tv.reroll': { ko: '즉시 교체 ({g} 골드 · 무료까지 {t})', en: 'Refresh now ({g} gold · free in {t})' },
+    'tv.reroll': { ko: '교체하기 ({g} 골드)', en: 'Refresh ({g} gold)' },
+    'tv.reroll.wait': { ko: '무료까지 {t}', en: 'Free in {t}' },
     'tv.reroll.free': { ko: '후보 교체 (무료)', en: 'New candidates (free)' },
     'tv.empty': { ko: '고용함 — 다음 교체에 채워진다', en: 'Hired — refills on next refresh' },
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
@@ -505,6 +503,10 @@ const STRINGS = {
     'set.shake': { ko: '몬스터 흔들림', en: 'Monster Shake' },
     'set.on': { ko: 'On', en: 'On' },
     'set.off': { ko: 'Off', en: 'Off' },
+    // 로그 방식 — 네 칸 격자 · 한 문장 (2026-09-30 · ADR-0459). 이 줄의 버튼 글은 언어를 따른다
+    'set.log': { ko: '로그', en: 'Log' },
+    'set.logGrid': { ko: '칸', en: 'Grid' },
+    'set.logText': { ko: '문장', en: 'Text' },
 
     /* ── 자원 탭 [개정 2026-09-04] — 파견처는 **카드 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
        탐험은 자기 탭(§8-4)으로 나가 이 목록에 없다 — 셋 다 1인 배치라 `dp.party` 를 쓰는 칸이 없다.
@@ -537,16 +539,18 @@ const STRINGS = {
     // 단계 트랙은 머리 줄이 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다.
     // 무엇으로 여는가(해금 조건)는 기획 백지라 문구도 만들지 않는다 (§8)
 
-    /* 상점 (SCREEN_DESIGN §8-3 · ADR-0223) — 패널 머리는 `dp.post.trade`(상단) 재사용. 위 상단은 장비 · 재료 탭,
-       구분선 아래 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
-    'td.tab.equip': { ko: '장비', en: 'Gear' },
-    'td.tab.mat': { ko: '재료', en: 'Materials' },
+    /* 상점 (SCREEN_DESIGN §8-3 · ADR-0223) — 패널 머리는 `dp.post.trade`(상단) 재사용. 상단은 탭 없이 장비 목록 하나(2026-09-30),
+       오른쪽 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
+    'td.tab.mat': { ko: '재료', en: 'Materials' },   // 특수상단 재료 칸 툴팁 머리
+    // 상단 목록 교체 — 방문 회차의 첫 교체는 무료 · 그 뒤로 두 배씩 (§8-3 · game.shopReroll · 2026-09-30)
+    'td.reroll': { ko: '교체 ({g} 골드)', en: 'Refresh ({g} gold)' },
+    'td.reroll.free': { ko: '교체 (무료)', en: 'Refresh (free)' },
     // 재료 칸의 그림 자리 — 재료 아이콘 아트가 없어 글자로 선다 (사용자 지시 「일단 재료라고만」)
     'td.matIcon': { ko: '재료', en: 'Mat.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
-    'td.buy': { ko: '사기', en: 'Buy' },
+    'td.buy': { ko: '구매', en: 'Buy' },
     // 상단 장비 구매 (SCREEN_DESIGN §8-3 · game.shopBuy · 2026-09-27) — 거절은 결과 코드와 짝이다(unbuilt 는 flashNeed · missing 은 stale 과 같은 뜻)
     'td.sold': { ko: '팔림', en: 'Sold' },
     'td.bought': { ko: '{name} 구매 (−{g} G)', en: 'Bought {name} (−{g} G)' },
@@ -913,6 +917,9 @@ const STRINGS = {
     'pt.potion.h': { ko: '물약', en: 'Potions' },
     'pt.potion.stock': { ko: '가진 물약', en: 'In stock' },
     'pt.potion.empty': { ko: '빈 칸', en: 'Empty slot' },
+    // 소제목 옆 `?` 에 올리면 서는 설명 툴팁의 본문 — 한두 문장만 · 자세한 규칙은 도움말 탭 (§15 · ADR-0464)
+    'pt.help.form': { ko: '적은 전열부터 공격합니다. 전열이 모두 쓰러져야 후열이 공격받습니다.', en: 'Enemies attack the front row first. The back row is attacked only after the whole front row has fallen.' },
+    'pt.help.potion': { ko: 'HP가 {n}% 아래로 떨어진 영웅이 자동으로 물약을 마십니다.', en: 'A hero whose HP falls below {n}% drinks a potion automatically.' },
     // ~~`pt.potion.short`~~ (「모자람 — 런에서 빈 채 시작한다」) 는 2026-09-24 삭제 — 툴팁은 효과만 든다(CLAUDE.md 규칙 7). 모자란 칸은 칸이 흐린 점선으로 말한다
     'pt.err.full': { ko: '파티가 찼다', en: 'Party full' },
     'pt.err.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
@@ -1185,11 +1192,12 @@ const STRINGS = {
     'sk.src.advance': { ko: '전직', en: 'Advance' },
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
-    // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-29 사용자 지시 · SCREEN_DESIGN §6 · ADR-0427] — **한국어도 영어로 찍는다**(같은 날 사용자 「다 영어로 뜨게」 · ADR-0428)
-    'sk.lockLv': { ko: 'Level {n}+', en: 'Level {n}+' },
+    // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-30 사용자 지시 · SCREEN_DESIGN §6 · ADR-0466 — ~~`sk.lockLv` 「Level n+」~~(ADR-0428) 를 칸마다의 문장으로] · {n} = 책 `skillbook_learn_level` · 전직 `advance_unlock_level`
+    'sk.lock.book': { ko: 'Lv{n}이 되면 서고에서 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned at the Library.' },
+    'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
     // 무기가 안 맞아 꺼진 액티브 칸 — 툴팁 맨 위 한 줄 [2026-09-29 · R187 · SCREEN_DESIGN §6 · ADR-0446] · {w} = 그 스킬 직업의 무기군 이름을 ` · ` 로 이은 것
     'sk.needWeapon': { ko: '{w} 필요', en: 'Needs {w}' },
-    /* 스킬북 창 [2026-09-29 · R179 · SCREEN_DESIGN §6 「스킬북 창」 · ADR-0420] — 규칙 문장은 없다(덮어쓰기 · 중복 가루는 도움말의 몫) */
+    /* 스킬북 [2026-09-29 · R179 · 서고 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
     'bk.learned.h': { ko: '배운 스킬', en: 'Learned Skill' },
     'bk.noneLearned': { ko: '없음', en: 'None' },
     'bk.own.h': { ko: '가진 책', en: 'Books Owned' },
@@ -1199,7 +1207,6 @@ const STRINGS = {
     'bk.same': { ko: '배움', en: 'Learned' },
     'bk.craft.h': { ko: '기본 책 만들기', en: 'Craft Basic Books' },
     'bk.make': { ko: '만들기', en: 'Craft' },
-    'bk.have': { ko: '보유', en: 'Owned' },
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}' },
     'bk.crafted': { ko: '{skill} 스킬북을 만들었다', en: 'Crafted a {skill} book' },
     // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.bookState` (INTERFACE §3)
@@ -1209,7 +1216,6 @@ const STRINGS = {
     'bk.err.missing': { ko: '배울 수 없는 스킬이다', en: 'Cannot be learned' },
     'bk.err.book': { ko: '그 책이 없다', en: 'You do not have that book' },
     'bk.err.same': { ko: '이미 배운 스킬이다', en: 'Already learned' },
-    'bk.err.have': { ko: '이미 가진 책이다', en: 'Already owned' },
     'bk.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'bk.err.materials': { ko: '가루가 모자란다', en: 'Not enough dust' },
     /* 스킬 툴팁 문장 [전면 개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2]
@@ -1326,6 +1332,7 @@ const STRINGS = {
     /* 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다(Alt 의 괄호 식이 값 바로 뒤에 서게). 초는 `time.s` · % 는 기호 그대로 */
     'sk.u.times': { ko: '{v}번', en: '{v} times' },
     /* 각주 — 기본 설명창 바닥 한 줄. 괄호를 붙일 수 있는 숫자가 있을 때만 선다 (SCREEN_DESIGN §2 「스킬 설명창 규격」) */
+    'sk.altHint': { ko: 'Alt 계산식', en: 'Alt: formula' },
     /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill_status.csv:stat` 어휘 그대로(옛 `skill.csv:effect_stat` · 2026-09-22) · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
     'sk.eff.atk_pct': { ko: '데미지 +{v} 를 건다', en: '+{v} Damage' },
     // 주기를 줄이는 창 = 빨라진다 → 「공격 속도 +」 — 옵션 `aspd_pct`(주기 × (1 − 값))와 같은 방향 · 같은 수 (ADR-0358)
@@ -1571,6 +1578,12 @@ const STRINGS = {
     // ~~`bt.potion.empty` · `bt.potion.slot`~~ (아레나 칸의 `title` 한 줄 · R104 · ADR-0148) 는 2026-09-24 삭제 —
     //   칸도 **물약 카드**를 띄운다(ADR-0315). 빈 칸 이름은 `pt.potion.empty` 한 벌로 합쳤다   // ~~건너뛰기~~ 2026-09-14 — 진행 중 라운드를 버리고 원정을 끝낸다 (R89)
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
+    // [버프] — 아레나 왼쪽 위 구석 버튼 · 그 런의 버프를 출처별 세 줄로 (SCREEN_DESIGN §4-2 「버프」 · ADR-0461 · ADR-0462)
+    'bt.buff': { ko: '버프', en: 'Buffs' },
+    'bt.buff.shrine': { ko: '신단', en: 'Shrine' },
+    'bt.buff.tactic': { ko: '전술', en: 'Tactics' },
+    'bt.buff.codex': { ko: '도감', en: 'Codex' },
+    'bt.buff.none': { ko: '없음', en: 'None' },
     'bt.note': {
         ko: '관전은 가능하되 <b>의무가 아니다</b> — 배속은 진행 속도만 바꾼다. 원정 중에 바꾼 장비 · 스킬 트리는 <b>그 순간</b> 먹는다(보스전 중이면 다음 런부터 · 쓰러진 영웅은 런이 끝날 때까지 스킬 트리를 못 바꾼다) · <b>라운드를 이긴 순간 그 보상이 들어온다</b>(가방 · 골드 · 경험치 · 도감).<br>'
             + '<b>철수</b>하면 원정이 멈춘다 — 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남는다 · 런이 끝나 다음 런을 세는 동안 누르면 다음 런이 안 나간다. 게임을 끄면 원정도 그 자리에서 끊긴다.',
@@ -1639,7 +1652,7 @@ const STRINGS = {
     'bt.items.target': { ko: '장착 대상 {name}', en: 'equip target {name}' },
     // 라운드 줄 — 종류(일반 · 정예 · 보스)는 괄호가 아니라 글 왼쪽의 칩이다(렌더러가 `kind.*` 로 붙인다 · 2026-09-21 · ADR-0205)
     'log.roundStart': { ko: '<b>라운드 {n}</b> — {list}', en: '<b>Round {n}</b> — {list}' },
-    // 로그 값 칸 (2026-09-21 · ADR-0189) — 한 줄은 네 칸 격자(주체 이름 · 스킬 그림 · 대상 이름 · 값)라 문장 템플릿이 없다.
+    // 로그 값 칸 (2026-09-21 · ADR-0189) — 격자 방식의 한 줄은 네 칸(주체 이름 · 스킬 그림 · 대상 이름 · 값)이다. 문장 방식의 틀은 아래 `log.say.*`.
     //   글자로 서는 값만 여기 든다 — 피해 · 회복량은 숫자 그대로다. 팝업(`pop.*`)은 영어가 대문자라 따로 든다
     'log.v.miss': { ko: '빗나감', en: 'miss' },
     'log.v.counter': { ko: '반격', en: 'counter' },
@@ -1649,6 +1662,28 @@ const STRINGS = {
     'log.v.barrier': { ko: '방벽 {amt}', en: 'barrier {amt}' },
     'log.v.ended': { ko: '종료', en: 'ended' },
     'log.v.lvup': { ko: '▲ Lv.{n}', en: '▲ Lv.{n}' },   // 레벨업 — 오른 영웅의 줄 · 새 레벨 (2026-09-29 · ADR-0435)
+    /* 로그 문장 틀 — `⚙` 설정의 「로그」가 `문장` 일 때 (2026-09-30 · SCREEN_DESIGN §4-2 · ADR-0459). 줄 종류마다 하나.
+       **끝말을 줄인 축약형이다** — 「~습니다」 · 마침표 없이 명사로 끝낸다(좁은 열에서 한 줄에 들게 · 2026-09-30 사용자 지시 「문장줄이자 한글일경우에 특히」).
+       자리: `{a}` 주체 · `{d}` 대상 · `{ico}` 스킬 그림(올리면 이름) · `{k}` 상태이상 이름 · `{v}` 값.
+       `{a|이/가}` 처럼 조사 쌍(받침 있을 때/없을 때)을 달면 앞말 받침을 보고 고른다 — 그림 뒤는 **가려진 스킬 이름**의 받침(`data.js:pickJosa`).
+       그림이 없는 줄(스킬 없이 걸린 상태이상 등)은 그림과 그 조사가 같이 빠진다 */
+    'log.say.hit': { ko: '{a|이/가} {d}에게 {ico|으로/로} {v} 피해', en: '{a} hit {d} with {ico} for {v}' },
+    'log.say.miss': { ko: '{a|이/가} {d}에게 {ico} 빗나감', en: '{a} missed {d} with {ico}' },
+    'log.say.reflect': { ko: '{a|이/가} {d}에게 {v} 반사', en: '{a} reflected {v} to {d}' },
+    'log.say.counter': { ko: '{a|이/가} {d}에게 반격', en: '{a} countered {d}' },
+    'log.say.dot': { ko: '{d|이/가} {ico} {k|으로/로} {v} 피해', en: '{d} took {v} from {ico} {k}' },
+    'log.say.heal': { ko: '{a|이/가} {ico|으로/로} {d} HP {v} 회복', en: '{a} healed {d} for {v} with {ico}' },
+    'log.say.healSelf': { ko: '{a|이/가} {ico|으로/로} HP {v} 회복', en: '{a} healed {v} with {ico}' },
+    'log.say.potion': { ko: '{a|이/가} {ico|으로/로} HP {v} 회복', en: '{a} drank {ico} for {v} HP' },
+    'log.say.buff': { ko: '{a}에게 {ico} 발동', en: '{ico} on {a}' },
+    'log.say.ail': { ko: '{a|이/가} {ico} {k}에 걸림', en: '{a} afflicted with {ico} {k}' },
+    'log.say.barrier': { ko: '{a|이/가} {ico|으로/로} 방벽 {v}', en: '{a} gained {v} barrier from {ico}' },
+    'log.say.buffEnd': { ko: '{a}의 {ico} 종료', en: '{ico} on {a} ended' },
+    'log.say.ailEnd': { ko: '{a}의 {ico} {k} 해제', en: '{ico} {k} on {a} ended' },
+    'log.say.slain': { ko: '{a} 처치', en: '{a} slain' },
+    'log.say.downed': { ko: '{a} 전투 불능', en: '{a} downed' },
+    'log.say.call': { ko: '{a|이/가} {ico|으로/로} {d} 소환', en: '{a} summoned {d} with {ico}' },
+    'log.say.lvup': { ko: '{a} 레벨 {v} 달성', en: '{a} reached Lv.{v}' },
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
     'pop.counter': { ko: '반격', en: 'COUNTER' },   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.slain': { ko: '처치', en: 'Slain' },

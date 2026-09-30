@@ -11,10 +11,11 @@
  *
  *   ?mode=stage&seeds=1-50&stages=101&strip=0|1
  *       시드마다 새 게임 → 앞 스테이지 해금만 → 그 스테이지 한 판. `strip=1` 이면 출발 전에 파티 장비를 전부 벗긴다
- *   ?mode=campaign&seeds=1-20&runs=30&bot=greedy|off[&until=105][&mastery=1][&potion=1]
+ *   ?mode=campaign&seeds=1-20&runs=30&bot=greedy|off[&until=105][&mastery=1][&potion=1][&build=expedition,shop|max]
  *       시드마다 게임 하나로 원정을 `runs` 번 잇는다 — 매번 아직 못 깬 첫 스테이지. 판이 끝날 때마다 봇이 장착하고 남은 가방은 분해한다.
  *       시간 = 판마다 `durationSec` + [balance.csv:repeat_restart_sec] 를 쌓는다 — 스테이지별 **첫 클리어 시각 · 도착 레벨**을 낸다.
  *       `until` = 그 스테이지를 깨면 그 시드를 멈춘다 · `mastery=1` = 판마다 포인트를 찍는다 · `potion=1` = 판마다 골드로 물약을 산다
+ *       `build` = 그 건물을 **끝까지 지은 채** 시작한다(문턱 · 비용 없이 · `max` 면 전부) — 2장부터는 원정 건물이 장을 열어(R152) 안 주면 `locked` 로 멈춘다
  */
 
 import { loadData, buildSystems, D } from '../ui/data.js';
@@ -53,6 +54,7 @@ const BOT = {
 };
 const BOT_MASTERY = '판마다 파티 영웅의 포인트를 masteryState 노드 순서대로 찍을 수 있는 첫 칸에 전부 찍는다';
 const BOT_POTION = '판마다 상단 물약 중 살 수 있는 가장 높은 단계를 골드가 모자랄 때까지 산다(상단이 안 지어졌으면 안 산다)';
+const BOT_BUILD = ids => `시작할 때 건물(${ids === 'max' ? '전부' : ids.join(' · ')})을 문턱 · 비용 없이 끝까지 지어 둔다 — 봇은 건설을 안 한다`;
 
 function botMastery(SYS, G) {
     let n = 0;
@@ -169,6 +171,7 @@ function runCampaign(SYS, B, seeds, runs, bot, opt = {}) {
     const rows = [];
     for (const seed of seeds) {
         const G = newGameFull(SYS, B, seed);
+        for (const b of SYS.construction.list) if (opt.build === 'max' || opt.build?.includes(b.id)) G.buildings[b.id] = b.maxRank;
         const classes = partyHeroes(SYS, G).map(h => h.cls);
         let t = 0;                                   // 누적 초 — 판 시간 + 재출발
         for (let n = 1; n <= runs; n++) {
@@ -290,13 +293,16 @@ try {
         const opt = {
             until: q.get('until') != null ? Number(q.get('until')) : null,
             mastery: q.get('mastery') === '1', potion: q.get('potion') === '1',
+            build: q.get('build') === 'max' ? 'max' : q.get('build') ? q.get('build').split(',') : null,
         };
         if (opt.until != null && !D.stageOrder.includes(opt.until)) throw new Error(`sim: until=${opt.until} 이 stage.csv 에 없다`);
+        const noBuilding = opt.build && opt.build !== 'max' && opt.build.find(id => !SYS.construction.list.some(b => b.id === id));
+        if (noBuilding) throw new Error(`sim: build=${noBuilding} 은 없다 — ${SYS.construction.list.map(b => b.id).join(' | ')}`);
         rows = runCampaign(SYS, B, seeds, runs, bot, opt);
         summary = campaignSummary(rows, seeds, runs);
         html = renderCampaign(summary);
         meta = { mode, seeds: `${seeds[0]}..${seeds[seeds.length - 1]} (${seeds.length})`, runs, botName: bot,
-            bot: [BOT[bot], opt.mastery && BOT_MASTERY, opt.potion && BOT_POTION].filter(Boolean).join(' · '), until: opt.until,
+            bot: [BOT[bot], opt.mastery && BOT_MASTERY, opt.potion && BOT_POTION, opt.build && BOT_BUILD(opt.build)].filter(Boolean).join(' · '), until: opt.until,
             time: '판마다 durationSec + repeat_restart_sec 누적 — 편성 · 장착 · 화면 조작 시간은 0' };
     } else {
         throw new Error(`sim: mode=${mode} 은 없다 — stage | campaign`);

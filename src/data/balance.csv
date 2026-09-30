@@ -9,7 +9,7 @@ advance_unlock_level,30,fixed,0,전직 해금 레벨 (GAME_DESIGN §9 · 전직 
 active_slots,3,fixed,0,액티브 칸 수 — 고유 · 무기군 · 전직 각 하나 (GAME_DESIGN §9 08-26 「액티브 3」 · skill_design §2). 첫 칸은 생성 시 굴린 고유 스킬 · 나머지는 직업 액티브로 채운다(프로토타입 §9-0 개정 2026-09-01)
 skill_cd_floor_mult,0.1,proposed,1,쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로 안 내려간다. 0 이면 스킬이 매 차례 나가 예산이 무너진다 (2026-09-01 코드 상수 CD_MIN_MULT 이관 · battle_design §6)
 skill_decay_cap_pct,0.9,proposed,0,스케일링 슬롯이 민 감쇠(decay_pct)의 상한(%) — 연쇄 배율 감쇠·광역 약화·방어 감소가 민첩으로 100 에 닿으면 두 번째 대상부터 0 이 되거나 방어가 한 방에 사라진다. 슬롯이 더한 뒤에만 건다 — CSV 원값은 skill.js 의 0 이상 100 미만 검증 그대로다. 안전 상한이라 손잡이(knob)가 아니다(~~crit_cap_pct 와 같은~~ — 치명 상한은 2026-09-25 삭제) (skill_design §13-5 · DEV_PLAN R72) (2026-09-10 R72 발행)
-hero_level_cap,70,fixed,0,영웅 레벨 상한 = **7장 끝** — 챕터 하나가 10레벨이다 [2026-09-14 사용자 확정 · story_chapter_design §2 · hero_design §5 · R88]. 상한에 닿으면 XP 를 더 쌓지 않는다. 몬스터 레벨(stage.csv:dlvl)도 이 값을 넘지 않는다 — HP 구간 키(hero_hp_band{b}_unit)가 만렙까지만 있다. 무릎(5장 끝) 이후의 느린 곡선은 미반영 — 레벨업 필요 XP 식은 그대로 쓴다(사용자 09-14) (2026-08-30 발행 · 2026-09-14 50 → 70)
+hero_level_cap,50,fixed,0,영웅 레벨 상한 = **만렙** [2026-09-30 사용자 「만렙50으로 갈거고」 · GAME_DESIGN §9 09-30 · hero_design §5 · R194] — 나이트메어를 깼을 때 45 ~ 50 이고 헬은 레벨이 아니라 난이도로 오른다. 상한에 닿으면 XP 를 더 쌓지 않는다. 몬스터 레벨(stage.csv:dlvl + monster.csv:level_add)도 이 값을 넘지 않는다 — HP 구간 키(hero_hp_band{b}_unit)가 만렙까지만 있다. ~~7장 끝 · 챕터 하나가 10레벨~~(2026-09-14 · R88) (2026-08-30 발행 · 2026-09-14 50 → 70 · 2026-09-30 70 → 50)
 hero_attr_min,1,fixed,0,영웅 기본 능력치 최소값 — 7종 공통 (2026-08-22 확정)
 hero_attr_max,20,fixed,0,영웅 기본 능력치 최대값 — **전 영웅 공통 상한 하나**다. ~~히든 상한선은 이 값 이하에서 개체별로 굴림~~ 은 2026-09-07 폐지(rollCaps 삭제 · 세이브 v15) — 개체차는 시작 굴림(등급별 총합 대역 + 분포 모양 · hero_tier.csv)이 만들고 상한이 만들지 않는다. ~~「등급은 출발선이지 천장이 아니다」~~ → 2026-09-14 레벨업 능력치 성장 폐지로 **시작 굴림이 닿는 끝**이다 (hero_design §4-3) (2026-08-22 확정)
 attr_equip_bonus,0,fixed,0,장비·접사가 기본 능력치에 기여하는 값 — 0 고정. 이 불변식이 개체차와 파견 배치 결정을 지킨다 (2026-08-22 확정)
@@ -22,14 +22,13 @@ hero_hp_band2_unit,14,proposed,1,HP 구간 2(레벨 11~20)의 레벨업 1회 상
 hero_hp_band3_unit,26,proposed,1,HP 구간 3(레벨 21~30)의 레벨업 1회 상승 단위 — 건강 계수 1.0 기준 (2026-09-14 · R84)
 hero_hp_band4_unit,48,proposed,1,HP 구간 4(레벨 31~40)의 레벨업 1회 상승 단위 — 건강 계수 1.0 기준 (2026-09-14 · R84)
 hero_hp_band5_unit,86,proposed,1,HP 구간 5(레벨 41~50)의 레벨업 1회 상승 단위 — 건강 계수 1.0 기준 (2026-09-14 · R84)
-hero_hp_band6_unit,86,proposed,1,HP 구간 6(레벨 51~60)의 레벨업 1회 상승 단위 — 건강 계수 1.0 기준 · **41~50 과 같은 값을 잇는다** — 건강 20 영웅의 레벨 70 최대 HP 가 약 4,300 (R84 논의에서 확정한 표 · 사용자 09-14) (2026-09-14 · R88)
-hero_hp_band7_unit,86,proposed,1,HP 구간 7(레벨 61~70)의 레벨업 1회 상승 단위 — 건강 계수 1.0 기준 · 구간 6 과 같다 (2026-09-14 · R88)
 hp_regen_base_per_level,0.05,proposed,1,**HP 재생 밑수** — 전 영웅이 갖는 레벨 1 초당 회복. 이후 base x power_growth_per_level ^ (level-1) 로 성장 축(기하)을 탄다 — 안 태우면 밑수만 선형으로 자라 후반에 무의미해진다. 그 위에 장비 접사·마스터리가 더해진다 — ~~마지막에 건강 계수가 곱해진다~~ 2026-09-10 폐기 · R72 (battle_design §8 · hero_design §4-1). 「장비가 0이면 능력치도 0」의 유일한 예외 — 밑수는 세기가 아니라 생존의 바닥이라 hero_hp_base 와 같은 분류다. ⚠제안 — 구조만 확정(2026-09-07)이고 값·곡선은 미정이다 (GAME_DESIGN §10). 가드: **밑수 x 파티 인원이 몬스터 DPS 를 넘으면 안 된다** — 넘으면 전멸이 오지 않아 「출정을 끊는 것은 전멸」(§9 09-07)이 무력화된다 (2026-09-08 R43 발행)
 start_gold,300,proposed,0,새 게임 시작 골드 (2026-08-25 초반 루프 구현하면서 발생)
 start_dust,0,proposed,0,새 게임 시작 몬스터 가루 (2026-08-25 초반 루프 구현하면서 발생)
 start_stigma,0,proposed,0,새 게임 시작 낙인 (2026-08-25 초반 루프 구현하면서 발생)
 attr_growth_chance_pct,0.35,proposed,0,⚠ **퇴역 — 코드가 안 읽는다** · 기본 능력치 자동 성장은 2026-09-14 폐지(R83 · hero_design §4-3) · 옛 뜻: 레벨업 시 축별 +1 확률(%) (2026-08-25 초반 루프 구현하면서 발생)
 xp_rate,1,proposed,1,전투 XP 합 → 영웅 각자 지급 배율 (그 라운드를 이긴 순간 살아 있는 영웅만 — 2026-09-14 R89 · ~~전원 동일 지급~~) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「1배율 기준」 0.5→1 — 레벨 속도는 level_xp.csv 가 맡는다)
+xp_level_gap_mult,0.9,proposed,1,레벨 차 경험치 감쇠 — 영웅이 몬스터보다 **높은 레벨 하나마다** 그 몬스터의 처치 XP 에 이 값을 곱한다(`× 값 ^ 레벨 차` · 1 = 감쇠 없음). 영웅마다 따로 재고 몬스터가 같거나 높으면 안 깎는다 · 저레벨 칸만 돌아 끝없이 오르는 것을 막는다 ⚠임시 [신설 2026-09-30 사용자 「일단 10%로 적용해보자」 · hero_design §5]
 monster_gold_base,40,proposed,1,처치 골드의 레벨 1 기준값 — 처치 골드 = monster_gold_base × monster_gold_growth ^ (몬스터 레벨 − 1) × spawn_grade.exp_mult × monster.csv:exp_coef × gold_mult × gold_rate. 처치 XP 는 level_xp.csv:monster_xp 로 갈라졌다 — 이 곡선은 골드만 탄다 (2026-09-28 ~~monster_xp_base~~ 에서 이름만 옮김 · PLAN_early_progression D3)
 monster_gold_growth,1.06,proposed,1,처치 골드의 레벨당 배율 — 몬스터 레벨이 1 오르면 이만큼 곱한다 (2026-09-28 ~~monster_xp_growth~~ 에서 이름만 옮김 · D3)
 unarmed_atk,1.5,proposed,0,무기 없을 때 기본 데미지 (2026-08-25 초반 루프 구현하면서 발생)
@@ -121,7 +120,7 @@ repeat_restart_sec,10,fixed,0,반복 원정의 다음 런이 앞 런이 끝난 �
 tavern_candidates,2,fixed,0,선술집 명단 후보 수 — 수색 결과 1칸과 합쳐 3칸 (2026-08-26 확정) · **이것이 최대이고 건물이 늘리지 않는다**(2026-09-24 사용자 지시 · 선술집 r3 · r6 의 tavernCandidates 줄 삭제 · ~~기본값 + 선술집 r3 · r6 더하기~~ R137)
 tavern_refresh_hours,6,fixed,0,리롤 쿨다운(시간) — 자동 갱신 없음. 플레이어가 리롤한 뒤 이만큼 지나야 무료 리롤 · 오프라인에도 진행 (2026-08-26 확정)
 tavern_hire_cost,600,proposed,0,영웅 고용 비용(골드) — 명단·수색 결과 공통 (2026-08-25 초반 루프 구현하면서 발생)
-tavern_reroll_cost,120,proposed,0,쿨다운 중 즉시 리롤 비용(골드) (2026-08-25 초반 루프 구현하면서 발생)
+tavern_reroll_cost,600,proposed,0,쿨다운 중 즉시 리롤 **첫** 비용(골드) — 무료 리롤 뒤 유료 리롤마다 두 배(600 → 1200 → 2400 … 상한 없음) · 쿨다운이 끝나 무료로 바꾸면 첫 값으로 돌아간다 (2026-08-25 초반 루프 구현하면서 발생 · 120 → 600 + 두 배 2026-09-30 사용자 지시)
 tavern_search_slots,1,fixed,0,동시 수색 건수 — 1 고정 (2026-08-26 확정)
 tavern_search_hours,1,proposed,1,수색 소요(시간) — 오프라인에도 진행. ~~12~~ → **1** (2026-09-09 사용자 지시). 스토리 막이 이 시간을 균등분할해 열린다(막 수 = search_story.csv 의 phase 종류 수)
 tavern_search_rare_base_pct,0.15,proposed,1,수색 결과가 **레어**로 나올 기본 확률(%) — 매력 0 기준. 실제 확률 = base + 매력 × [balance.csv:tavern_search_rare_per_cha_pct], 상한 [balance.csv:tavern_search_rare_cap_pct]. 기준선은 명단 굴림의 레어 비중이었다(~~hero_tier.csv 가중치 30/100 = 30%~~) — 매력이 낮으면 명단만 못하고 높으면 명단을 넘는다는 것이 이 세 키의 뜻이다. ⚠ 2026-09-14 명단의 레어 비중이 10/100 = 10% 로 내려가 **매력 0 에서도 명단을 넘는다** — 값은 안 건드렸다(R86) (2026-09-09 발행)
@@ -147,8 +146,9 @@ trade_visit_hours,4,proposed,1,특수상단 방문 주기(시간) — 이만큼�
 trade_stay_hours,1,proposed,1,특수상단 체류(시간) — 온 뒤 이만큼 머물고 떠난다. 주기(trade_visit_hours)보다 작아야 떠나 있는 시간이 생긴다 ⚠임시 [신설 2026-09-21 사용자 지시]
 shop_equip_per_slot,1,proposed,1,상단 장비 목록 — **부위마다** 이만큼 · 상단 랭크 3 이 +1 (무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 순 · 같은 부위가 붙어 선다) · 방문 회차마다 새로 굴린다(item.rollGear — 드롭 희귀도 가중치) ⚠임시 [신설 2026-09-21 · 3 → 1 2026-09-27 사용자 지시 「처음에 각 종류별로 1개씩」]
 shop_equip_weapon,3,proposed,1,상단 장비 목록 — **무기만 따로** 이만큼(한 묶음으로 맨 윗줄을 혼자 채운다) · 나머지 부위는 shop_equip_per_slot ⚠임시 [신설 2026-09-21 · 6 → 3 2026-09-27 사용자 지시 「무기도 3개만」]
-shop_price_normal,150,proposed,1,상단 장비 가격(골드) — 일반 ⚠임시 · 구매는 아직 없다(화면이 미착수 안내) [신설 2026-09-21]
-shop_price_magic,500,proposed,1,상단 장비 가격(골드) — 매직 ⚠임시 [신설 2026-09-21]
+shop_price_normal,600,proposed,1,상단 장비 가격(골드) — 일반 ⚠임시 · 구매는 아직 없다(화면이 미착수 안내) [신설 2026-09-21 · 150 → 600 2026-09-30 사용자 지시 「노말아이템 1~10레벨까지는 600원」]
+shop_price_magic,1500,proposed,1,상단 장비 가격(골드) — 매직 ⚠임시 [신설 2026-09-21 · 500 → 1500 2026-09-30 사용자 지시 「매직은 1500원」]
+shop_reroll_cost,600,proposed,1,상단 목록 [교체]의 **첫 유료** 값(골드) — 방문 회차마다 첫 교체는 무료 · 그 뒤로 할 때마다 두 배(600 → 1200 → 2400 … 상한 없음) · 다음 상인이 오면 다시 무료 ⚠임시 [신설 2026-09-30 사용자 지시 「특수상단 올때마다 무료로 변경 · 변경하는 가격 600원에 2배씩」]
 mastery_t1_max_rank,5,proposed,1,T1·T2 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
 mastery_t1_atkspeed_pct,0.01,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 [combat_stat.csv:action_period] 감소 % · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_wrath_t1_pct 대체)
 mastery_t1_damage_pct,0.02,proposed,1,마스터리 T1 공통 — 7죄종 전부 동일 · 랭크당 상시 피해 % · atk_physical/atk_magic 의 (1+Σ상시%) 괄호에 덧셈(딜러·힐러 공통 적용) · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (2026-08-28 T1 공통화 확정 — 옛 mastery_sloth_t1_pct 대체)
@@ -225,7 +225,6 @@ dw_beat_win_ms,150,proposed,1,⚠임시 벌목 — 맞힌 것으로 치는 폭(�
 advance_hours,2,proposed,1,전직에 걸리는 시간(시간) — 훈련장 전직 칸에 넣은 영웅이 이만큼 지나면 전직이 끝난다 · 그동안 원정 · 수색 · 자원 자리에 못 나간다 [2026-09-28 사용자 「시간 키만 두고 ⚠임시값」 · skill_design §4 · GAME_DESIGN §10 「전직 작업의 값」]
 skillbook_learn_level,10,proposed,0,스킬북을 쓸 수 있는 영웅 레벨 — 둘째 액티브 칸(배운 스킬)의 문턱 · 1장 끝 · 마스터리 T2 와 같은 무렵 [2026-09-28 사용자 확정 「10 레벨에 1개의 액티브 스킬」 · skill_design §2-1 · R179]
 drop_book_pct,0.25,proposed,1,드롭이 난 처치에서 **장비 대신 스킬북**이 나올 확률(비율) — 처치당 1개는 그대로 · 그 몬스터의 고유 스킬 책(영웅이 못 배우는 몬스터 전용이면 장비) · ⚠임시 · 등급마다 다른가는 GAME_DESIGN §10 「스킬북의 남은 설계」 ⑧ [2026-09-28 사용자 「처치당 1개 · 장비냐 책이냐를 굴린다」 · item_design §1 드롭 1-2 · R179]
-book_dup_dust,3,proposed,1,이미 가진 스킬북이 또 떨어지면 바뀌는 가루 양 — 책은 한 권까지 · ⚠임시 [2026-09-28 사용자 「중복 책은 가루」 · skill_design §2-1 · R179]
 book_craft_gold,1000,proposed,1,서고 **기본 책 제작**의 골드 — 기본 책 = `skill.csv:starter_pool` · ⚠임시 [2026-09-28 사용자 「아주 기본적인 책만 만든다」 · construction_draft §2 서고 · R179]
 book_craft_dust,10,proposed,1,서고 **기본 책 제작**의 가루 · ⚠임시 [2026-09-28 · construction_draft §2 서고 · R179]
 shop_book_count,3,proposed,1,상단이 **방문 회차마다** 파는 스킬북 수 — 후보 = 직업 스킬 중 기본 책(`skill.csv:starter_pool`)이 아닌 것 · 같은 회차에 같은 책 둘 없음 · 장비 탭 맨 윗줄 무기 오른쪽 · ⚠임시 [2026-09-29 사용자 「상점에서 책 3개 정도 파는 걸로 해볼까」 · base_expedition_design §2-6]

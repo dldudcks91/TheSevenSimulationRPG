@@ -702,7 +702,8 @@ export function createBattleSystem(data) {
 
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
-        const newLoot = () => ({ xp: 0, gold: 0, kills: {}, killGrades: {}, drops: [], books: [] });
+        // xpByLevel = xp 를 **몬스터 레벨**로 가른 것 `{lvl: xp}` — 정산이 영웅마다 레벨 차 감쇠를 건다 (2026-09-30 · hero_design §5 · 세는 것뿐이라 rng 0)
+        const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, drops: [], books: [] });
         let loot = newLoot();
         const bank = () => {
             out.xpTotal += loot.xp;
@@ -816,6 +817,7 @@ export function createBattleSystem(data) {
             const byGrade = (loot.killGrades[e.monsterId] ??= {});
             byGrade[e.grade] = (byGrade[e.grade] ?? 0) + 1;
             loot.xp += e.expReward;
+            loot.xpByLevel[e.lvl] = (loot.xpByLevel[e.lvl] ?? 0) + e.expReward;
             loot.gold += Math.round(e.goldReward * e.goldMult * B.gold_rate * goldMult);
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
             // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
@@ -1165,7 +1167,7 @@ export function createBattleSystem(data) {
         };
         /**
          * 라운드 하나의 요약 — `n` 번째 라운드가 `t` 초에 끝났다 · 이겼나(`cleared`) · 런이 끝났나(`ended`) ·
-         * **그 라운드의 몫**(`xp` · `gold` · `kills` · `drops` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
+         * **그 라운드의 몫**(`xp` · `xpByLevel` · `gold` · `kills` · `drops` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
          */
         const summary = cleared => {
             const s = {

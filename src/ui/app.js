@@ -43,15 +43,16 @@
  *   동사는 그대로 갈린다: **클릭은 소속**(로스터 띠 = 파티 넣고 빼기) · **드래그는 자리**(칩).
  *
  * 2026-09-14 — **계정 · 클라우드 세이브** (SCREEN_DESIGN §2-1 · ADR-0112). 로그인하면 세이브 사본이 Google 계정을 따라간다 —
- *   로컬 저장(save)은 그대로 · 클라우드는 모아서 통째로(cloudPush) · 갈리면 선택 창 · 다른 탭이 쓰면 멈춤 창(freeze).
- *   Firebase 는 cloud.js 만 만진다. 개발용 경로 ?dev=cloud (계정 창 · &c=pick 선택 창 · &c=frozen 멈춤 창)
+ *   로컬 저장(save)은 그대로 · 클라우드는 모아서 통째로(cloudPush) · 다른 탭이 쓰면 멈춤 창(freeze).
+ *   2026-09-30 — 갈리면 **클라우드가 이긴다**(ADR-0458): 켤 때는 받고 · 도중엔 멈춤 창. 고르는 창은 없다.
+ *   Firebase 는 cloud.js 만 만진다. 개발용 경로 ?dev=cloud (계정 창 · &c=taken 멈춤 창(다른 곳) · &c=frozen 멈춤 창(다른 탭))
  *
  * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태 · &live=1 이면 그 위에 원정을 하나 더 띄운 채) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판을 고른 채(보이는 것은 나눔 배치뿐) · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채 · &logf=party|enemy 면 로그를 그 주체로 거른 채 · &dmgf=taken 이면 누적 판을 받은 피해로 고른 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (출정 창이 열린 상태 · &open=0 이면 창을 닫은 목록) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태) / ?dev=mats (제작 재료를 쥔 제련소)
  */
 
 import * as M from './mock.js';
 import { t, L, has, lang, setLang, applyDocumentLang } from './i18n.js';
-import { mountBattle, shrineChip } from './battle.js';
+import { mountBattle, shrineChip, LOG_STYLES, logStyle, setLogStyle } from './battle.js';
 import { bindTipNode, hideTip, isTouchInput, isAltHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadCloudLink, writeCloudLink, clearCloudLink, onSaveWrittenElsewhere } from './storage.js';
@@ -82,7 +83,7 @@ let unlockBoot = null;
 function save() { if (G && !frozen) writeSave(SYS.game.serialize(G, now())); }
 
 const heroById = uid => G?.heroes.find(h => h.uid === uid);
-/* 레벨업 반짝임 [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440] — 본 레벨(`state.lvSeen`)보다 지금 레벨이 높은가 · 그 글자를 누르면 지금 레벨을 본 것으로 친다.
+/* 레벨업 반짝임 [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440 · ADR-0463] — 본 레벨(`state.lvSeen`)보다 지금 레벨이 높은가 · 그 영웅 카드를 누르면 지금 레벨을 본 것으로 친다.
    관전을 안 보는 동안(다른 탭 · 숨긴 탭) 오른 레벨도 돌아와 카드가 서면 반짝인다 — 재생기가 아니라 영웅 레벨을 대조하기 때문이다 */
 const lvUnseen = h => h.level > (state.lvSeen[h.uid] ?? h.level);
 const lvSee = uid => { const h = heroById(uid); if (h) state.lvSeen[uid] = h.level; };
@@ -372,7 +373,6 @@ const state = {
     makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
     cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
-    shopTab: 'equip',            // 상단의 목록 탭 — 'equip' | 'mat' (SCREEN_DESIGN §8-3 · ADR-0223 · `?sh=` 로도 연다)
     shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · 방문 회차가 넘어가면 풀린다
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
     battle: null,           // {result, stageId} — **보는 부대**의 핸들 (아래 `battles` 의 한 칸을 가리키는 이름이다)
@@ -396,8 +396,6 @@ const state = {
     dpPick: null,           // 자원 자리 칸의 선택 창 — `{post, tier}` · 열린 칸 하나 (SCREEN_DESIGN §8 · ADR-0373) · 세이브 아님
     itemMenu: null,         // 보관 칸 우클릭 메뉴 — `{uid, hero, x, y}` (x · y = 한 장 좌표) (SCREEN_DESIGN §6 · ADR-0451) · 세이브 아님
     dw: null,               // 파견 관전 창이 보는 자리 — `{post, tier}` · 비었으면 첫 앉은 자리 (SCREEN_DESIGN §8 · ADR-0415) · 세이브 아님
-    // 선택 창에서 한 번 누른 쪽 — 'cloud' | 'local' | null. 두 번째 누름이 덮어쓰기를 확정한다 (SCREEN_DESIGN §2-1)
-    cloudArm: null,
 };
 let stopBattle = null;
 let battleBag = null;       // 관전 아래 보관 칸 — 라운드 정산 때 이것만 갈아 끼운다 (R89 · `refreshBattleBag` · ADR-0341)
@@ -547,11 +545,14 @@ const MODALS = {
        **고른 스테이지의 신원**(죄종 · Ch-스테이지 이름 · 레벨 · 소요 · 원소)이기 때문이다:
        접이식이 바로 위 행에 붙어 말하던 「어느 지역의 편성인가」를 창에서는 머리가 든다 */
     depart: { head: departHead, body: departBody, cls: 'depart-box' },
+    // 출정 확인 — 다른 일을 하던 영웅이 낀 편성을 [보내기] 했을 때만 뜬다 · [취소]는 출정 창으로 돌아간다 (SCREEN_DESIGN §4-1 · ADR-0467)
+    //   **머리 줄이 없다**(`bare`) [2026-09-30 사용자 지시 「보내기 글자는 지워」 · 「x버튼삭제」] — 제목도 닫기 X 도 없이 문장과 버튼 둘만 선다 · 바깥 · `Esc` 는 닫는다
+    departConfirm: { bare: true, body: departConfirmBody },
     // 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112). `lock` 인 창은 닫는 길이 없다 — 멈춤 창 하나뿐인 의도된 예외다:
-    //   닫을 수 있으면 멈춘 탭이 다시 저장해 다른 탭의 진행을 덮는다
+    //   닫을 수 있으면 멈춘 탭이 다시 저장해 다른 탭 · 다른 곳의 진행을 덮는다. 멈춤 창은 까닭이 둘이라 글자만 갈린다 (ADR-0458)
     cloud: { title: 'cl.h', body: cloudBody },
-    cloudPick: { title: 'cl.pick.h', body: cloudPickBody },
-    frozen: { title: 'cl.frozen.h', body: frozenBody, lock: true },
+    frozen: { title: 'cl.frozen.h', body: frozenBody('cl.frozen.reload'), lock: true },
+    cloudTaken: { title: 'cl.taken.h', body: frozenBody('cl.taken.reload'), lock: true },
     // 자동 분해 — 보관 도구 줄 [자동 분해]가 연다 (SCREEN_DESIGN §6 · ADR-0203 · item_design §6-5)
     //   `cls` 는 머리 글씨를 줄이는 데만 쓴다 — 작은 창이라 기본 h2 가 속보다 두 단 넘게 컸다(2026-09-21 사용자 지시)
     autoSalvage: { title: 'ch.auto.h', body: autoSalvageBody, cls: 'auto-modal' },
@@ -573,17 +574,17 @@ function renderModal() {
     const box = el('div', `modal-box${m.cls ? ` ${m.cls}` : ''}`);
     const head = el('div', 'modal-head');
     // `head` 를 주면 제목 줄을 통째로 갈아 끼운다 — 안 주면 i18n 키 하나가 든다(창 대부분이 이쪽이다)
-    head.appendChild(m.head ? m.head() : el('h2', '', t(m.title)));
+    if (!m.bare) head.appendChild(m.head ? m.head() : el('h2', '', t(m.title)));
     // 닫기는 **정사각 X 하나**다 — 모든 창에 같은 모양·같은 자리 (2026-09-01 사용자 지시 · SCREEN_DESIGN §2).
     // 글리프는 언어를 안 타므로 `ui.close` 는 title 로 간다 — 문구가 사라진 게 아니라 자리를 옮겼다
-    if (!m.lock) {
+    if (!m.lock && !m.bare) {
         const x = el('button', 'btn modal-x', '×');
         x.title = t('ui.close');
         x.setAttribute('aria-label', t('ui.close'));
         x.onclick = closeModal;
         head.appendChild(x);
     }
-    box.appendChild(head);
+    if (!m.bare) box.appendChild(head);   // `bare` — 머리 줄째 없는 창(출정 확인 창 · ADR-0467)
     box.appendChild(m.body());
     layer.appendChild(box);
     /* 판 **바깥**을 눌렀을 때만 닫는다 — 판 안의 클릭이 올라와도 닫히면 랭크 한 번 찍고 창이 사라진다.
@@ -594,9 +595,8 @@ function renderModal() {
     layer.onclick = e => { if (e.target === layer && downOnLayer && !m.lock) closeModal(); };
 }
 
-// 창을 닫으면 선택 창의 「한 번 누름」도 풀린다 — 다시 열었을 때 한 번에 덮어쓰지 않게 (SCREEN_DESIGN §2-1)
-// 자동 분해 창의 [지금 적용] 확인도 같다 — 닫았다 열면 처음부터 두 번 눌러야 한다 (ADR-0203)
-const closeModal = () => { state.modal = null; state.cloudArm = null; state.autoArm = false; render(); };
+// 창을 닫으면 자동 분해 창의 [지금 적용] 확인도 풀린다 — 닫았다 열면 처음부터 두 번 눌러야 한다 (ADR-0203)
+const closeModal = () => { state.modal = null; state.autoArm = false; render(); };
 const openModal = id => { state.modal = id; render(); };
 
 /** 세그먼트 버튼 묶음 — items: {id, label, disabled?, color?, cls?} · `cls` = 그 칸의 상태 클래스(원정 관전 칸의 `seg-live` 등 · ADR-0147) */
@@ -619,8 +619,9 @@ function segmented(items, current, onPick) {
 }
 
 /**
- * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414 · ADR-0454) — 줄 셋: 스킬 이펙트 · 피격 반응(줄마다 [Off] [On] · 따로 켜고 끈다) · 몬스터 흔들림 [0] [1] [2] [3].
+ * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414 · ADR-0454 · ADR-0459) — 줄 넷: 스킬 이펙트 · 피격 반응(줄마다 [Off] [On] · 따로 켜고 끈다) · 몬스터 흔들림 [0] [1] [2] [3] · 로그 [칸] [문장].
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
+ * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`)
  */
 function settingsBody() {
     const box = el('div', 'set-box');
@@ -637,6 +638,12 @@ function settingsBody() {
     row.appendChild(segmented(SHAKE_LEVELS.map(n => ({ id: n, label: String(n), disabled: !hitFxOn() })),
         shakeLevel(), id => { setShakeLevel(id); box.replaceWith(settingsBody()); }));
     box.appendChild(row);
+    // 로그 [칸] [문장] — 관전 로그 한 줄을 네 칸 격자로 찍나 한 문장으로 찍나 (ADR-0459) · 이 줄의 버튼 글은 언어를 따른다
+    const logSet = el('div', 'set-row');
+    logSet.appendChild(el('span', 'set-k', t('set.log')));
+    logSet.appendChild(segmented(LOG_STYLES.map(s => ({ id: s, label: t(s === 'grid' ? 'set.logGrid' : 'set.logText') })),
+        logStyle(), id => { setLogStyle(id); box.replaceWith(settingsBody()); }));
+    box.appendChild(logSet);
     return box;
 }
 
@@ -800,16 +807,18 @@ function renderStart(main) {
 
 /* ═══════════ 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112) ═══════════
    로그인하면 세이브 사본이 Google 계정을 따라간다. 로컬 저장(`save`)은 그대로이고, 클라우드는 모아서 **통째로** 올린다.
-   이 브라우저가 마지막으로 맞춘 사본은 `storage.js` 의 연결 기록 `{uid, rev, savedAt}` 이 든다 —
-   「이 브라우저가 바뀌었나」는 세이브의 `savedAt` 으로, 「클라우드가 먼저 바뀌었나」는 저장 번호 `rev` 로 가른다(기기마다 시계가 달라서). */
+   이 브라우저가 마지막으로 맞춘 사본은 `storage.js` 의 연결 기록 `{uid, rev, savedAt, pending?}` 이 든다 —
+   「이 브라우저가 바뀌었나」는 세이브의 `savedAt` 으로, 「클라우드가 먼저 바뀌었나」는 저장 번호 `rev` 로 가른다(기기마다 시계가 달라서).
+   `pending` 은 올리는 중인 세이브의 `savedAt` — 응답이 끊겨 번호를 못 받은 사본을 다음에 받았을 때 제 것으로 알아본다 (ADR-0458).
+   갈리면 **클라우드가 이긴다** — 켤 때는 묻지 않고 받고, 하는 도중엔 멈춤 창을 세운다(새로고침이 켜는 길로 받는다) */
 
 // 올리는 간격 — 로컬은 바뀔 때마다지만 클라우드 무료 한도는 **쓰기 횟수**라 모아서 올린다. 게임 수치가 아니라 저장소 사정이라 CSV 가 아니다 (ADR-0102 선례)
 const CLOUD_PUSH_MS = 60 * 1000;
 // 켤 때 계정 복원 + 받기를 기다리는 상한 — 넘으면 이 브라우저 세이브로 켜고 다음 간격에 다시 붙는다. 같은 이유로 CSV 가 아니다
 const CLOUD_BOOT_WAIT_MS = 8 * 1000;
-// 이 탭의 연결 — 화면 상태가 아니라서 `state` 밖에 둔다. status: off · checking · on · saving · error · conflict
+// 이 탭의 연결 — 화면 상태가 아니라서 `state` 밖에 둔다. status: off · checking · on · saving · error
 // resuming — 켤 때 계정을 복원하는 중(`cloudResume`). 로그인 기록이 있으면 그동안 로그인 화면을 안 그린다 (ADR-0349)
-const cloud = { status: 'off', user: null, remote: null, err: null, busy: false, resuming: false };
+const cloud = { status: 'off', user: null, err: null, busy: false, resuming: false };
 
 /** 계정 버튼 — 글자가 곧 상태다 */
 function cloudBtn() {
@@ -821,32 +830,29 @@ function cloudBtn() {
     b.onclick = () => {
         if (frozen || s === 'checking') return;
         if (s === 'off' || (s === 'error' && !cloud.user)) cloudSignIn();
-        else if (s === 'conflict') openModal('cloudPick');
         else openModal('cloud');
     };
     return b;
 }
 
-/** 상태가 바뀌었다 — **버튼만** 갈아 끼운다(관전을 걷지 않는다 · `refreshBattleBag` 와 같은 장치). 계정 · 선택 창이 떠 있으면 창도 */
+/** 상태가 바뀌었다 — **버튼만** 갈아 끼운다(관전을 걷지 않는다 · `refreshBattleBag` 와 같은 장치). 계정 창이 떠 있으면 창도 */
 function setCloud(status) {
     cloud.status = status;
     if (status !== 'error') cloud.err = null;
     if (!authenticated) { render(); return; }
     $('.cloud-btn')?.replaceWith(cloudBtn());
-    if (state.modal === 'cloud' || state.modal === 'cloudPick') renderModal();
+    if (state.modal === 'cloud') renderModal();
 }
 
-/** 선택 창을 띄운다 — 켤 때는 첫 render 가 그리고, 도중이면 다른 창이 없을 때만(창을 두 장 겹치지 않는다 — 버튼이 「세이브 선택」을 든다) */
-function askPick(remote, { booting }) {
-    cloud.remote = remote;
-    setCloud('conflict');
-    if (booting) state.modal = 'cloudPick';
-    else if (!state.modal || state.modal === 'cloud') openModal('cloudPick');
+/** 하는 도중 클라우드가 다른 곳에서 바뀌었다 — 덮어쓰지도 곧장 받지도 않고 멈춘다. 멈춤 창의 새로고침이 켜는 길로 받는다 (ADR-0458).
+ *  곧장 받으면 두 곳이 다 켜져 있을 때 1분마다 서로를 새로고침시킨다 */
+function takenElsewhere() {
+    setCloud('on');
+    freeze('cloudTaken');
 }
 
-/** 받는다 — 로컬 세이브와 연결 기록을 클라우드 사본으로 맞춘다. 열 수 없는 사본은 조용히 받지 않는다(선택 창이 사유를 보여준다) */
+/** 받는다 — 로컬 세이브와 연결 기록을 클라우드 사본으로 맞춘다. 켤 때 · 로그인 버튼만 탄다 — 열 수 있는 사본만 온다(`linkAccount` ①) */
 function adoptRemote(remote, { booting }) {
-    if (!SYS.game.canLoad(remote.save)) { askPick(remote, { booting }); return; }
     // 도중이면 새로고침까지 이 탭이 옛 상태를 다시 저장하지 않게 먼저 멈춘다
     if (!booting) frozen = true;
     writeSave(remote.save);
@@ -857,11 +863,14 @@ function adoptRemote(remote, { booting }) {
 }
 
 /**
- * 계정과 이 브라우저를 잇는다 — 켤 때(`booting`)와 로그인 버튼이 **같은 규칙**을 탄다 (SCREEN_DESIGN §2-1 「언제 올리고 받나」).
- * ① 클라우드가 비었거나 열 수 없는 사본(v37 전 · ADR-0303)이다 → 올린다 ② 마지막으로 맞춘 사본 그대로다 → 그대로 ③ 두 세이브가 같다 → 기록만 맞춘다
- * ④ 이 브라우저가 맞춘 뒤 안 바뀌었거나 세이브가 없다 → 묻지 않고 받는다 ⑤ 둘 다 따로 바뀌었다 → 선택 창
+ * 계정과 이 브라우저를 잇는다 — 켤 때(`booting`) · 로그인 버튼(`login`) · 끊겼다 다시 붙을 때가 **같은 규칙**을 탄다 (SCREEN_DESIGN §2-1 「언제 올리고 받나」).
+ * **클라우드가 이긴다** (ADR-0458):
+ * ① 클라우드가 비었거나 열 수 없는 사본(v37 전 · ADR-0303)이다 → 올린다
+ * ② 이 브라우저가 이 계정과 마지막으로 맞춘 뒤 클라우드가 안 바뀌었다(올리다 응답이 끊긴 제 사본 — `pending` — 포함) → 이 브라우저 세이브 그대로
+ * ③ 두 세이브가 같다 → 기록만 맞춘다
+ * ④ 그 밖(다른 곳에서 바뀌었다 · 이 계정과 맞춘 적이 없다) → 받는다 — 켤 때 · 로그인 버튼이면 곧장, 다시 붙을 때면 멈춤 창
  */
-function linkAccount(remote, { booting }) {
+function linkAccount(remote, { booting, login = false }) {
     const uid = cloud.user.uid;
     const link = loadCloudLink();
     const local = loadSave();
@@ -874,13 +883,14 @@ function linkAccount(remote, { booting }) {
         return;
     }
     if (mine && remote.rev === link.rev) { setCloud('on'); return; }
-    if (local && local.savedAt === remote.savedAt) {
-        writeCloudLink({ uid, rev: remote.rev, savedAt: local.savedAt });
+    // 올리다 응답이 끊긴 제 사본이거나(②) 두 세이브가 같다(③) — 번호만 받아 적는다. 그 뒤의 저장은 다음 올리기가 올린다
+    if ((mine && link.pending != null && remote.savedAt === link.pending) || (local && local.savedAt === remote.savedAt)) {
+        writeCloudLink({ uid, rev: remote.rev, savedAt: remote.savedAt });
         setCloud('on');
         return;
     }
-    if (!local || (mine && local.savedAt === link.savedAt)) { adoptRemote(remote, { booting }); return; }
-    askPick(remote, { booting });
+    if (booting || login) adoptRemote(remote, { booting });
+    else takenElsewhere();
 }
 
 /** 켤 때 — 전에 로그인해 둔 브라우저면 계정을 복원하고 클라우드와 맞춘 **뒤에** 세이브를 연다 */
@@ -903,13 +913,13 @@ async function cloudResume() {
     render();
 }
 
-/** 복원 결과를 건다 — 켤 때 · 다시 붙을 때(`cloudTick`) · 로그인 버튼이 같이 쓴다 */
-function applyResume(r, { booting }) {
+/** 복원 결과를 건다 — 켤 때 · 다시 붙을 때(`cloudTick`) · 로그인 버튼(`login`)이 같이 쓴다 */
+function applyResume(r, how) {
     if (r.user) cloud.user = r.user;
     if (!r.ok) { cloud.err = r.err; setCloud('error'); return; }
     // 로그아웃된 채다 — 세션이 끝났거나 다른 곳에서 로그아웃했다. 이 브라우저 세이브는 그대로 둔다
     if (!r.user) { clearCloudLink(); cloud.user = null; setCloud('off'); return; }
-    linkAccount(r.remote, { booting });
+    linkAccount(r.remote, how);
 }
 
 /** 간격마다 — 끊겼으면 다시 붙고, 붙어 있으면 바뀐 것을 올린다 */
@@ -923,7 +933,7 @@ async function cloudTick() {
     if (!frozen) applyResume(r, { booting: false });
 }
 
-/** 올리기 — 마지막으로 맞춘 뒤 바뀐 것이 있을 때만. 클라우드가 먼저 바뀌었으면 덮어쓰지 않고 선택 창 */
+/** 올리기 — 마지막으로 맞춘 뒤 바뀐 것이 있을 때만. 클라우드가 다른 곳에서 먼저 바뀌었으면 덮어쓰지 않고 멈춘다 (ADR-0458) */
 async function cloudPush({ manual = false } = {}) {
     const link = loadCloudLink();
     if (frozen || cloud.busy || cloud.status !== 'on' || !cloud.user || !link) return;
@@ -935,14 +945,18 @@ async function cloudPush({ manual = false } = {}) {
     const uid = cloud.user.uid;
     cloud.busy = true;
     setCloud('saving');
+    // 올리는 세이브를 먼저 적어 둔다 — 올라갔는데 응답이 끊기면 다음에 받은 사본을 이것으로 알아본다(`linkAccount` ②)
+    writeCloudLink({ ...link, pending: local.savedAt });
     const r = await CLOUD.pushSave(uid, local, link.rev);
     cloud.busy = false;
     if (cloud.user?.uid !== uid) return;      // 올리는 사이 로그아웃했다
-    if (r.ok) {
-        writeCloudLink({ uid, rev: r.rev, savedAt: local.savedAt });
+    // 번호가 달라도 클라우드 사본이 방금 올린 세이브면 제 것이다 — 응답이 끊긴 트랜잭션을 Firestore 가 다시 돌리면 제 사본을 읽는다
+    const rev = r.ok ? r.rev : r.err === 'conflict' && r.remote.savedAt === local.savedAt ? r.remote.rev : null;
+    if (rev != null) {
+        writeCloudLink({ uid, rev, savedAt: local.savedAt });
         setCloud('on');
         if (manual) { flash('cl.pushed'); render(); }
-    } else if (r.err === 'conflict') askPick(r.remote, { booting: false });
+    } else if (r.err === 'conflict') takenElsewhere();
     else { cloud.err = r.err; setCloud('error'); }
 }
 
@@ -962,7 +976,7 @@ async function cloudSignIn() {
     const p = await CLOUD.pullSave(s.user.uid);
     cloud.busy = false;
     if (!frozen) {
-        applyResume({ ...p, user: s.user }, { booting: !authenticated });
+        applyResume({ ...p, user: s.user }, { booting: !authenticated, login: true });
         if (p.ok && s.user && !authenticated) {
             authenticated = true;
             unlockBoot?.();
@@ -996,7 +1010,7 @@ async function cloudSignOut() {
     cloud.busy = false;
     if (!result.ok) { flash(`cl.err.${result.err}`); return; }
     clearCloudLink();
-    Object.assign(cloud, { user: null, remote: null, err: null });
+    Object.assign(cloud, { user: null, err: null });
     state.modal = null;
     setCloud('off');
     leaveSession();
@@ -1013,15 +1027,16 @@ function leaveSession() {
     location.reload();
 }
 
-/** 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고 멈춤 창만 남긴다. 먼저 쓴 탭이 남는다 (ADR-0112) */
-function freeze() {
+/** 다른 탭이 세이브를 썼다(`frozen`) · 다른 곳이 클라우드에 먼저 올렸다(`cloudTaken` · ADR-0458) — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고
+ *  멈춤 창만 남긴다. 먼저 쓴 쪽이 남는다 (ADR-0112) */
+function freeze(modal = 'frozen') {
     if (frozen) return;
     frozen = true;
     if (stopBattle) { stopBattle(); stopBattle = null; }
     state.battle = null;
     state.battles = {};          // 부대 핸들도 전부 놓는다 — 이 탭은 더 이상 원정을 안 민다 (ADR-0316)
     if (state.exp === 'battle') state.exp = 'idle';
-    state.modal = 'frozen';
+    state.modal = modal;
     render();
 }
 
@@ -1052,57 +1067,16 @@ function cloudBody() {
     return box;
 }
 
-/** 선택 창 — 카드 둘. 고르면 다른 쪽이 덮이므로 두 번 누른다 (§3 새 게임 덮어쓰기와 같은 규칙) */
-function cloudPickBody() {
-    const box = el('div', 'cl-pick');
-    const card = (which, save, use) => {
-        const c = el('div', 'cl-card', `<h3>${t(`cl.pick.${which}`)}</h3>`);
-        const ok = !!save && SYS.game.canLoad(save);
-        if (!save) c.appendChild(el('small', 'muted', t('cl.pick.none')));
-        else {
-            c.appendChild(el('div', '', t('cl.pick.at', { t: new Date(save.savedAt).toLocaleString() })));
-            c.appendChild(el('small', ok ? '' : 'down', ok
-                ? t('ng.saveLine', { h: save.heroes.length, c: save.progress.cleared.length, g: save.resources.gold.toLocaleString() })
-                : t('ng.oldSave', { v: save.version })));
-        }
-        const armed = state.cloudArm === which;
-        const b = el('button', `btn ${armed ? 'danger' : 'primary'}`, t(armed ? 'cl.pick.confirm' : 'cl.pick.use'));
-        b.disabled = !ok || cloud.busy;
-        b.onclick = () => { if (armed) use(); else { state.cloudArm = which; renderModal(); } };
-        c.appendChild(b);
-        return c;
+/** 멈춤 창 — 닫는 길이 없다(`lock`). 새로고침이 이 탭을 다른 탭이 쓴 세이브 · 클라우드 사본(켜는 길이 받는다) 위에 다시 세운다.
+ *  까닭이 둘이라 버튼 글자만 받는다 (ADR-0458) */
+function frozenBody(key) {
+    return () => {
+        const box = el('div', 'cl-frozen');
+        const b = el('button', 'btn primary', t(key));
+        b.onclick = () => location.reload();
+        box.appendChild(b);
+        return box;
     };
-    box.appendChild(card('cloud', cloud.remote?.save, () => adoptRemote(cloud.remote, { booting: false })));
-    box.appendChild(card('local', loadSave(), useLocalSave));
-    return box;
-}
-
-/** 「이 브라우저」를 골랐다 — 번호를 안 보고 클라우드를 덮어쓴다 */
-async function useLocalSave() {
-    const local = loadSave();
-    if (!local || cloud.busy || !cloud.user) return;
-    const uid = cloud.user.uid;
-    cloud.busy = true;
-    setCloud('saving');
-    const r = await CLOUD.pushSave(uid, local, null);
-    cloud.busy = false;
-    state.cloudArm = null;
-    if (!r.ok) { cloud.err = r.err; setCloud('error'); return; }
-    writeCloudLink({ uid, rev: r.rev, savedAt: local.savedAt });
-    cloud.remote = null;
-    state.modal = null;
-    setCloud('on');
-    flash('cl.pushed');
-    render();
-}
-
-/** 멈춤 창 — 닫는 길이 없다(`lock`). 새로고침이 이 탭을 다른 탭이 쓴 세이브 위에 다시 세운다 */
-function frozenBody() {
-    const box = el('div', 'cl-frozen');
-    const b = el('button', 'btn primary', t('cl.frozen.reload'));
-    b.onclick = () => location.reload();
-    box.appendChild(b);
-    return box;
 }
 
 /* ═══════════ 원정 (편성 · 전투 · 리포트) ═══════════ */
@@ -1230,6 +1204,8 @@ function renderExpedition(main) {
         stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, resume: state.battle.resume,
             shrine: state.battle.run?.report?.shrine ?? null,   // 이 런이 입은 신단 — 헤드의 칩 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445)
+            // [버프] 창 — 그 런의 버프를 출처별로(신단 · 전술 · 도감). 누른 순간 묻는다 (SCREEN_DESIGN §4-2 「버프」 · ADR-0461)
+            buffsOf: () => SYS.game.runBuffs(G, state.battle?.run),
             // 다음 런 — 어디로(칸) · 언제. 결과 띠가 남은 초와 그 칸 이름을 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300 · ADR-0430) · 부대마다 따로 묻는다 (v38).
             //   원정은 멈추지 않는다 — 이기든 지든 답이 있고, 철수 · 끊김 뒤에만 null 이다 (v39 · PLAN_stage_segments D7)
             upNext: () => SYS.game.nextRepeat(G, state.battle?.endedAt ?? now(), state.battle?.run?.preset ?? G.preset),
@@ -1553,6 +1529,18 @@ function bindCardDrag(node, sel, onDrop) {
     };
 }
 
+/** 소제목 + `?` 표시 — 글씨 바로 오른쪽에 서고 **올리면** 설명 툴팁이 선다 (SCREEN_DESIGN §15 · ADR-0464). 누르는 자리가 아니다.
+ *  카드는 물약 카드와 같은 모양이다 — 첫 줄 그 칸 이름 · 선 아래 설명 한두 문장 (`tip.js:potionTipCard` 의 클래스 그대로)
+ *  @param text () => string — 설명 문장 (올릴 때 짓는다) */
+function subHelp(key, text) {
+    const h = el('div', 'sub-h', t(key));
+    const q = el('span', 'q-btn', '?');
+    bindTipNode(q, () => el('div', 'tip-card q-tip',
+        `<div class="tip-effect-head"><div class="tip-name">${t(key)}</div></div><div class="tip-effect-summary">${text()}</div>`));
+    h.appendChild(q);
+    return h;
+}
+
 /**
  * 진형 박스 — 왼쪽에 **정사각 템플릿 아이콘 3개를 가로로**(모양을 점으로 그린다 — 글자가 없어 언어 중립이다),
  * 오른쪽에 **보드**(랭크 줄 = 라벨 + 칸 · 칸은 영웅 띠 카드와 같은 크기).
@@ -1570,7 +1558,7 @@ function formBox() {
          편성 탭으로 옮겨 오고 보드가 한 줄이 된 지금은(ADR-0192 · ADR-0234) 세로가 남고,
          같은 줄에 서면 **보드의 전열 칸이 이름 줄을 침범한 것처럼** 보였다. 밑줄이 「여기부터 진형이다」를 말한다 */
     const box = el('div', 'fm-box');
-    box.appendChild(el('div', 'sub-h', t('exp.form.h')));    // 이름 + 밑줄 — 상자의 첫 줄 (ADR-0240) · 소제목 모양 (ADR-0256)
+    box.appendChild(subHelp('exp.form.h', () => t('pt.help.form')));       // 이름 + 밑줄 — 상자의 첫 줄 (ADR-0240) · 소제목 모양 (ADR-0256) · 옆에 `?` (ADR-0464)
     const main = el('div', 'fm-main');
 
     /* 왼쪽 열 — **모양 버튼 셋을 세로로**, 버튼마다 **그 모양의 이름을 글로** [2026-09-21 사용자 지시 · ADR-0267 — 점 아이콘 가로 줄을 걷었다].
@@ -1689,7 +1677,8 @@ const potionImg = id => {
 function potionBox(ps) {
     const cur = ps.presets[ps.activeNo - 1];
     const box = el('div', 'pt-potion');
-    box.appendChild(el('div', 'sub-h', t('pt.potion.h')));   // 소제목 모양 (ADR-0256)
+    // 소제목 모양 (ADR-0256) · 옆에 `?` (ADR-0464) — 문턱은 `potionState` 가 낸 비율을 % 로만 바꿔 찍는다
+    box.appendChild(subHelp('pt.potion.h', () => t('pt.help.potion', { n: Math.round(SYS.game.potionState(G).useHpPct * 100) })));
     const row = el('div', 'pt-potion-row');
     const act = r => { if (!r.ok) flash(`pt.err.${r.err}`); else save(); return true; };
     const belt = el('div', 'p-belt');
@@ -1846,7 +1835,11 @@ function goBox(z) {
     };
     const go = el('button', 'btn lg primary', t('exp.deploy'));
     // 출발하면 창은 할 일이 끝났다 — 안 닫으면 관전 화면 위에 편성 창이 그대로 떠 있는다 · 창의 반복 스위치를 새 런에 싣는다 (ADR-0432)
-    go.onclick = () => { state.modal = null; runBattle(z.stage_id, { repeat: state.expRepeat }); };
+    //   **다른 일을 하던 영웅이 끼어 있으면 먼저 묻는다** [2026-09-30 사용자 지시 · ADR-0467] — 나갈 수 있는 편성일 때만이다(거절될 출발은 묻지 않고 지금처럼 플래시)
+    go.onclick = () => {
+        if (departPulls(z.stage_id)) { openModal('departConfirm'); return; }
+        state.modal = null; runBattle(z.stage_id, { repeat: state.expRepeat });
+    };
     actions.appendChild(rep);
     actions.appendChild(go);
     side.appendChild(actions);
@@ -2000,6 +1993,27 @@ function departBody() {
     return body;
 }
 
+/** 이 출발이 **다른 일을 하던 영웅을 데려가나** — 고른 편성이 나갈 수 있고(`game.canDepart`) 그 안에 하던 일이 있는 영웅이 있을 때 참이다.
+ *  판정은 `game.heroBusy` 가 낸다 · `'run'` 은 안 센다 — 나갈 수 있는 편성에서 그것은 **제 부대**이고, 다시 보내기는 그 부대를 끊고 나가는 일이다(ADR-0111) */
+const departPulls = stageId => SYS.game.canDepart(G, stageId, now()) === null
+    && SYS.game.partyOf(G).some(uid => { const busy = SYS.game.heroBusy(G, uid); return busy !== null && busy !== 'run'; });
+
+/** 출정 확인 창 — 문장 하나 + [확인] · [취소] [2026-09-30 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0467]. 해고 창과 같은 상자다(`.dismiss-box`).
+ *  [확인] = 출정 창의 [보내기]가 하던 일 그대로 · [취소] = 출정 창으로 돌아간다(고른 칸 · 편성 · 반복 스위치는 화면 상태라 그대로다) */
+function departConfirmBody() {
+    const box = el('div', 'dismiss-box');
+    box.appendChild(el('div', '', t('exp.departBusy')));
+    const actions = el('div', 'dismiss-actions');
+    const ok = el('button', 'btn primary', t('ui.ok'));
+    ok.onclick = () => { state.modal = null; runBattle(state.expStage, { repeat: state.expRepeat }); };
+    const no = el('button', 'btn', t('ui.cancel'));
+    no.onclick = () => openModal('depart');
+    actions.appendChild(ok);
+    actions.appendChild(no);
+    box.appendChild(actions);
+    return box;
+}
+
 /* ═══════════ 리포트 — 왼쪽 런 목록 · 오른쪽 상세 (SCREEN_DESIGN §4-3 · ADR-0063) ═══════════
    반복 원정은 이기는 동안 런을 잇고, 끝난 런은 `G.reports` 맨 앞에 쌓인다(세이브 v21 · 상한 balance:report_keep).
    왼쪽은 **고르는 자리**(한 줄 = 한 런) · 오른쪽은 **읽는 자리**다. 고른 줄은 `state.repSel`(화면 상태 — `null` 이면 맨 위를 따라간다). */
@@ -2086,9 +2100,9 @@ function dropSection(p, R) {
         bindTip(cell, d);                        // 방금 주운 것 = 「이 아이템」(기본값). ⚠ 「착용 중」이 아니다 (§6 머리글) · 맥락을 안 넘긴다 — 주인이 없어 스킬 숫자가 식으로 선다 (ADR-0139)
         grid.appendChild(cell);                  // 클릭은 안 건다 — 보기 전용이다 (ADR-0186)
     }
-    // 스킬북 칸 — 스킬 그림 + 왼쪽 위 「책」 배지 · 가진 책이라 가루가 된 것은 흐린 칸 · 올리면 설명창(주인 없음 — 식만)
+    // 스킬북 칸 — 스킬 그림 + 왼쪽 위 「책」 배지 · 흐려지지 않는다(떨어진 책은 전부 재고에 쌓인다 · ADR-0460) · 올리면 설명창(주인 없음 — 식만)
     for (const b of books) {
-        const cell = el('div', `inv-cell filled book-cell${b.dust ? ' gone' : ''}`);
+        const cell = el('div', 'inv-cell filled book-cell');
         cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(b.id))}</span><span class="inv-check book-tag">${t('rep.book')}</span>`;
         bindTipNode(cell, () => skillTipCard({ id: b.id }, {}));
         grid.appendChild(cell);
@@ -2299,6 +2313,8 @@ function expTick() {
     if (state.tab === 'resource' && !document.hidden) { refreshDispatchBars(at); refreshDispatchWatch(at); }
     // 상점 탭 — 상인이 오고 가는 순간을 화면이 따라간다 (SCREEN_DESIGN §8-3 · ADR-0223)
     if (state.tab === 'shop' && !document.hidden) shopTick(at);
+    // 선술집 탭 — 무료까지 남은 시간 글자만 갈고, 무료가 열리는 순간 다시 그린다 (SCREEN_DESIGN §8-1 · 2026-09-30)
+    if (state.tab === 'tavern' && !document.hidden) tavernTick(at);
     /* **부대마다 민다** [2026-09-24 · ADR-0316] — 보는 부대는 관전이 떠 있으면 **재생기가 시계다**(애니메이션이 그 눈금 위에 산다 ·
        브라우저 탭이 숨으면 재생기를 걷으므로(`onVisibility`) 숨긴 탭의 시계는 언제나 이쪽이다) — 그 하나만 건너뛰고,
        안 보는 부대는 여기서 배속 1 로 실제 흐른 시간만큼 간다. 목록을 먼저 뜬다 — `tickBattle` 이 반복으로 핸들을 갈아 끼운다 */
@@ -2781,8 +2797,8 @@ function skillCards(h) {
         if (locked) c.classList.add('locked');
         // 출처는 **칸 아래 글자**가 말한다 [2026-09-15 사용자 지시 · ADR-0121] — 그래서 툴팁에 `source` 를 안 넘긴다(출처 칩이 안 선다)
         if (a) bindTipNode(c, () => (off ? needTip(a) : skillTipCard(a, tipCtx)));
-        // 잠긴 칸의 툴팁은 **한 줄** — 「레벨 n 이상」 [2026-09-29 사용자 지시 · ADR-0427] · 값은 표(`skillbook_learn_level` · `advance_unlock_level`)
-        else if (locked) { const txt = t('sk.lockLv', { n: slotLockLevel(i) }); bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${txt}</div>`)); c.setAttribute('aria-label', txt); }
+        // 잠긴 칸의 툴팁은 **한 줄** — 칸마다의 문장(책 = 서고에서 · 전직 = 전직 후) [2026-09-30 사용자 지시 · ADR-0466] · 값은 표(`skillbook_learn_level` · `advance_unlock_level`)
+        else if (locked) { const txt = t(`sk.lock.${ACTIVE_SOURCES[i]}`, { n: slotLockLevel(i) }); bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${txt}</div>`)); c.setAttribute('aria-label', txt); }
         else { c.title = emptySlotText(i, h); c.setAttribute('aria-label', emptySlotText(i, h)); }
         // ~~둘째 칸을 누르면 스킬북 창~~ — 2026-09-29 사용자 지시로 걷었다(ADR-0426). 칸은 누를 수 없고 배우기 · 만들기는 서고 탭(§17)에만 선다
         const slot = el('div', 'sk-slot');
@@ -2880,7 +2896,8 @@ function bookLearnInto(box, h, bs) {
     own.appendChild(el('div', 'sub-h', t('bk.own.h')));
     if (!bs.books.length) own.appendChild(el('div', 'muted bk-empty', t('bk.none')));
     for (const b of bs.books) {
-        const r = bookRow(b.id, tipCtx);
+        // 권수 `×n` — 이름 바로 뒤 · 1권도 찍는다(책은 쌓인다 · 물약 칸과 같은 표기 · ADR-0460)
+        const r = bookRow(b.id, tipCtx, `<span class="bk-n">×${b.n}</span>`);
         const same = b.id === cur;
         const armed = state.bookArm === b.id;
         const btn = el('button', `btn sm${armed ? ' danger' : ''}`, t(same ? 'bk.same' : armed ? 'bk.overwrite' : 'bk.learn'));
@@ -2909,7 +2926,7 @@ function bookCraftInto(box, h, bs) {
         const part = (res, need, have) => `<span class="${have < need ? 'down' : ''}"><b>${need.toLocaleString()}</b> ${resName(res)}</span>`;
         const cost = `<span class="bk-cost">${part('gold', c.gold, G.resources.gold)}${part('dust', c.dust, G.resources.dust)}</span>`;
         const r = bookRow(c.id, tipCtx, cost);
-        const btn = el('button', 'btn sm', t(c.err === 'have' ? 'bk.have' : 'bk.make'));
+        const btn = el('button', 'btn sm', t('bk.make'));   // 가진 책도 만든다 — 쌓인다 (ADR-0460)
         btn.disabled = !!c.err;
         btn.onclick = () => {
             state.bookArm = null;
@@ -3233,17 +3250,7 @@ function materialGrid() {
             used++;
         }
     });
-    // 넷째 줄부터 스킬북 — 가진 책만 · 칸 = 스킬 그림 · 수량 배지 없음(책은 한 권까지) · 올리면 그 스킬 설명창(주인 없음 — 식만)
-    //   [2026-09-29 · R179 · SCREEN_DESIGN §6 · ADR-0420]. 한 줄 = 장비 격자의 열 수(`.bag .inv-cells.wide` 의 12 — style.css 와 같은 값)
-    const BOOK_COLS = 12;
-    SYS.game.bookState(G).books.forEach((b, i) => {
-        const cell = el('div', 'inv-cell filled mat-cell book-cell');
-        cell.style.gridRow = String(4 + Math.floor(i / BOOK_COLS));
-        cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(b.id))}</span>`;
-        bindTipNode(cell, () => skillTipCard({ id: b.id }, {}));
-        grid.appendChild(cell);
-        used++;
-    });
+    // 스킬북은 여기 안 선다 — 서고 탭(§17)에서만 보인다 [2026-09-30 사용자 지시 · ADR-0460]
     // 빈 칸 — 자리가 정해진 칸들 사이의 구멍을 앞에서부터 메운다(격자 자동 배치)
     for (let i = used; i < total; i++) grid.appendChild(el('div', 'inv-cell'));
     return grid;
@@ -4729,6 +4736,21 @@ function renderExplore(main) {
 /* ═══════════ 선술집 탭 — 명단 · 고용 · 의뢰 게시판 (SCREEN_DESIGN §8-1) ═══════════
    2026-09-03 사용자 지시 — 마을의 첫 칸에서 자기 탭이 됐다. 09-01 「선술집을 접는 대가」(고용이 한 단계
    깊어진다)가 이 승격으로 청산됐다. 판정은 전부 game_logic 이 낸다 */
+/** 무료 리롤까지 남은 시간 — 시:분:초 두 자리씩 · 앱 시계가 **이 글자만** 갈아 끼운다(`tavernTick`) */
+function tavernWaitText(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const p = n => String(n).padStart(2, '0');
+    return t('tv.reroll.wait', { t: `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}` });
+}
+/** 선술집 시계 — 무료가 열리는 순간 다시 그리고(버튼이 무료로 바뀐다 · 손이 바쁘면 다음 빈 눈금), 그 밖에는 남은 시간 글자만 간다 (`shopTick` 과 같은 장치) */
+function tavernTick(at) {
+    // 무료 시각은 리롤로만 바뀌고 리롤은 다시 그린다 — 그린 순간 받아 둔 값을 쓴다(`tavernState` 는 명단을 굴려 눈금마다 부르기엔 무겁다)
+    const { freeAt, free } = state.tavernShown ?? {};
+    if (freeAt == null) return;
+    if ((at >= freeAt) !== free) { if (handBusy()) clockRender = true; else render(); return; }
+    const txt = tavernWaitText(freeAt - at);
+    for (const n of document.querySelectorAll('.tv-wait')) if (n.textContent !== txt) n.textContent = txt;
+}
 function renderTavern(main) {
     const B = D.balance;
     const full = G.heroes.length >= SYS.game.limitsOf(G).roster;
@@ -4771,13 +4793,16 @@ function renderTavern(main) {
     const tools = el('div', 'tv-tools');
     const rr = el('button', `btn${T.open ? '' : ' dim'}`, T.free
         ? t('tv.reroll.free')
-        : t('tv.reroll', { g: T.cost.toLocaleString(), t: fmtDuration(T.freeAt - now()) }));
+        : t('tv.reroll', { g: T.cost.toLocaleString() }));
     rr.disabled = T.open && !T.free && G.resources.gold < T.cost;
     rr.onclick = () => {
         if (!T.open) { flashNeed('hire'); return; }
         const r = SYS.game.tavernReroll(G, now()); if (!r.ok) flash('tv.err.gold'); else save(); render();
     };
     tools.appendChild(rr);
+    // 무료까지 남은 시간 — 버튼 오른쪽에 따로 선다 · 앱 시계가 1초마다 글자만 간다(`tavernTick`) (SCREEN_DESIGN §8-1 · 2026-09-30)
+    if (!T.free) tools.appendChild(el('span', 'tv-wait', tavernWaitText(T.freeAt - now())));
+    state.tavernShown = { freeAt: T.freeAt, free: T.free };
     body.appendChild(tools);
 
     page.appendChild(p);
@@ -5453,7 +5478,6 @@ function renderShop(main) {
     state.shopShown = { cycle: S.cycle, here: S.here };     // 앱 시계가 이것과 비교해 다시 그릴 순간을 잰다(`shopTick`)
     // 고른 칸은 **그 회차의 것**이다 — 상인이 바뀌면 장비 목록도 새로 굴려지므로 풀린다 (§8-3)
     if (state.shopSel && state.shopSel.cycle !== S.cycle) state.shopSel = null;
-    const tab = state.shopTab === 'mat' ? 'mat' : 'equip';
 
     // 캐릭터 탭과 같은 세로 3단 — 띠 / 왼쪽 영웅 장비 · 오른쪽 상점 열(상단 | 특수상단 나란히) / 아이템창 (§8-3 · ADR-0365 · ADR-0367)
     const h = heroById(state.heroUid);
@@ -5465,21 +5489,25 @@ function renderShop(main) {
     band.appendChild(gearPanel(h));
     const col = el('div', 'cols c-shop-col');
     const p = el('div', 'panel');
-    p.appendChild(el('h2', '', `${t('dp.post.trade')} <small class="todo-badge">${t('todo.badge')}</small>`));
+    // 제목 줄 오른쪽 끝 [교체] — 방문 회차의 첫 교체는 무료 · 그 뒤로 두 배씩 (§8-3 · 2026-09-30 사용자 지시 — 미착수 표지 자리)
+    const head = el('h2', '', t('dp.post.trade'));
+    const rr = el('button', `btn sm${S.open ? '' : ' dim'}`, S.rerollCost ? t('td.reroll', { g: S.rerollCost.toLocaleString() }) : t('td.reroll.free'));
+    rr.disabled = S.open && G.resources.gold < S.rerollCost;
+    rr.onclick = () => {
+        if (!S.open) { flashNeed('shop'); return; }
+        const r = SYS.game.shopReroll(G, S.cycle, now());
+        if (r.ok) { state.shopSel = null; save(); } else flash('td.err.' + r.err);
+        render();
+    };
+    head.appendChild(rr);
+    p.appendChild(head);
     // 박스 (ADR-0097) — 제목은 서 있고 본문이 스크롤한다. 두 패널이 스크롤 자리를 따로 든다
-    const body = el('div', 'box-body');
+    const body = el('div', 'box-body td-body');   // 목록이 패널 가운데에 선다 (§8-3 · 2026-09-30)
     body.dataset.keep = 'shop';
 
-    /* 상단 — 장비 · 재료 탭은 **패널 안**이다. 이 둘은 상단의 목록만 가르고 특수상단은 그대로라,
-       탭 전체를 가르는 상단바 자리(원정 · 편성 · 도감)에 두면 특수상단까지 갈리는 것으로 읽힌다 (ADR-0223) */
-    const seg = segmented([{ id: 'equip', label: t('td.tab.equip') }, { id: 'mat', label: t('td.tab.mat') }], tab,
-        id => { state.shopTab = id; state.shopSel = null; render(); });
-    seg.classList.add('td-tabs');
-    body.appendChild(seg);
-    // 장비 탭 맨 윗줄 오른쪽 — 정해진 물약 셋(미량 · 소량 · 일반) · 무기 묶음과 간격을 둔다 [2026-09-28 사용자 지시 · §8-3]
+    // 탭 없이 장비 목록 하나 [2026-09-30 사용자 지시 「장비와 재료 탭 삭제」] — 맨 윗줄 오른쪽에 정해진 물약 셋(2026-09-28) ·
     //   그 사이(무기 바로 오른쪽)에 스킬북 셋 [2026-09-29 사용자 지시 · §8-3 · ADR-0423]
-    const eq = tab === 'equip';
-    body.appendChild(shopGoods(eq ? S.equip.map(equipGood) : M.TRADE.basic.map(matGood), tab, S.cycle, eq ? S.potions.map(potionGood) : [], eq ? S.books.map(bookGood) : []));
+    body.appendChild(shopGoods(S.equip.map(equipGood), 'equip', S.cycle, S.potions.map(potionGood), S.books.map(bookGood)));
 
     p.appendChild(body);
     col.appendChild(p);
@@ -5533,7 +5561,7 @@ const equipGood = ({ item, gold, sold }) => ({ item, gold, sold, name: L(item.na
 const matGood = m => ({ mat: m, gold: m.gold, name: L(m.name), color: null });
 /** 물약 칸 — `shopState.potions`(정해진 셋 · 매진 없음) · 이름은 `potion.csv` */
 const potionGood = x => { const p = D.potions.find(r => r.id === x.id); return { potion: x, gold: x.gold, name: p ? L({ ko: p.ko, en: p.en }) : x.id, color: null }; };
-/** 스킬북 칸 — `shopState.books`(회차마다 굴린 책 · 한 권씩 매진 · 가진 책은 못 산다) · 이름은 스킬 이름 (ADR-0423) */
+/** 스킬북 칸 — `shopState.books`(회차마다 굴린 책 · 한 권씩 매진 · 가진 책도 산다 — 쌓인다 · ADR-0460) · 이름은 스킬 이름 (ADR-0423) */
 const bookGood = x => ({ book: x, gold: x.gold, sold: x.sold, name: L(skillInfo(x.id).name), color: null });
 
 /** 재료 칸의 툴팁 — 이름 · 수량 · 가격뿐이다 (§8-3) */
@@ -5661,19 +5689,17 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
             group.appendChild(slot);
         } else grid.appendChild(slot);
     });
-    // 스킬북 묶음 — 오른쪽 열 맨 위 · 스킬 그림 · 아래 가격 · 산 칸은 「팔림」 · 가진 책은 흐리고 「보유」(못 고른다) (§8-3 · ADR-0423 · ADR-0424)
+    // 스킬북 묶음 — 오른쪽 열 맨 위 · 스킬 그림 · 아래 가격 · 산 칸은 「팔림」 · 가진 책도 고른다(쌓인다 · 권수는 안 단다 — ADR-0460) (§8-3 · ADR-0423 · ADR-0424)
     if (side && books.length) {
         const bg = el('div', 'td-group td-books');
         books.forEach((g, i) => {
             const slot = el('div', 'td-slot');
-            const shut = g.sold || g.book.have;
-            const cell = el('div', `inv-cell filled${sel === g ? ' td-picked' : ''}${shut ? ' gone' : ''}`);
+            const cell = el('div', `inv-cell filled${sel === g ? ' td-picked' : ''}${g.sold ? ' gone' : ''}`);
             cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(g.book.id))}</span>`;
             bindTipNode(cell, () => skillTipCard({ id: g.book.id }, h ? heroSkillCtx(h) : {}));
-            if (!shut) cell.onclick = () => { state.shopSel = sel === g ? null : { src: 'book', i, cycle }; render(); };
+            if (!g.sold) cell.onclick = () => { state.shopSel = sel === g ? null : { src: 'book', i, cycle }; render(); };
             slot.appendChild(cell);
             slot.appendChild(g.sold ? el('div', 'td-price muted', t('td.sold'))
-                : g.book.have ? el('div', 'td-price muted', t('bk.have'))
                 : el('div', `td-price${poor(g) ? ' no' : ''}`, `${g.gold.toLocaleString()} G`));
             bg.appendChild(slot);
         });
@@ -5728,7 +5754,7 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
             const r = SYS.game.shopBookBuy(G, state.shopSel.i, state.shopSel.cycle, now());
             if (r.ok) { flash('td.bought', { name: sel.name, g: r.gold.toLocaleString() }); save(); }
             else if (r.err === 'unbuilt') { flashNeed('shop'); return; }
-            else flash(r.err === 'have' ? 'bk.err.have' : `td.err.${r.err === 'missing' ? 'stale' : r.err}`);
+            else flash(`td.err.${r.err === 'missing' ? 'stale' : r.err}`);
             if (r.ok || r.err !== 'gold') state.shopSel = null;
             render();
             return;
@@ -6536,6 +6562,12 @@ async function boot() {
         // 파티는 **기본으로 안 채운다** — 새 게임은 빈 편성이고 그것이 이 화면의 첫 상태다 (2026-09-09).
         //   `&party=full` 이면 채운다: 파티 테두리·리더 표시는 **클릭으로만** 만들어져 헤드리스가 못 닿는다 (§10)
         if (new URLSearchParams(location.search).get('party') === 'full') devParty();
+        // `&busy=1` — **출정 확인 창**이 뜬 상태 (§4-1 · ADR-0467) — 고른 편성의 첫 영웅을 자원 자리에 앉히고 확인 창을 연다. 창은 [보내기]로만 떠서 헤드리스가 못 닿는다
+        if (new URLSearchParams(location.search).get('busy') === '1') {
+            devBuild('resource');            // 자원 단계는 자원 랭크가 연다 — 새 게임은 0 이라 앉힐 자리가 없다 (R137)
+            const uid = SYS.game.partyOf(G)[0];
+            if (uid && SYS.game.dispatchAssign(G, POSTS[0].id, 1, uid, now()).ok && departPulls(state.expStage)) state.modal = 'departConfirm';
+        }
     }
     if (dev === 'tree') {   // 스킬 창이 열린 캐릭터 탭 — 창은 버튼으로만 열린다 (SCREEN_DESIGN §7 · §10)
         if (!G) startGame();
@@ -6549,22 +6581,21 @@ async function boot() {
         if (first) SYS.game.learnMastery(G, h0.uid, first.id);
     }
     if (dev === 'book') {   // 책을 쥔 **서고 탭** (§17 · §10 · ADR-0422 · ADR-0426) — 서고 · 레벨 10 · 책이 있어야 버튼이 산다.
-        //   `&mat=1` 이면 캐릭터 탭 인벤토리 재료 탭(넷째 줄부터 책)
         if (!G) startGame();
         devBuild('library');             // 서고 r1 — 문턱(1장 보스)을 건너뛴다
         const h0 = G.heroes[0];
         h0.level = Math.max(h0.level, D.balance.skillbook_learn_level);
         // 책 셋 — 제 직업 기본기 둘 · 남의 직업 하나 · 그중 하나를 이미 배운 채로(덮어쓰기 줄이 보이게). 골드 · 가루는 만들기 줄이 켜지게
+        //   제 직업 책은 두 권씩 — 배운 책은 한 권이 남아 「배움」 줄에도 권수가 서고 둘째 책은 `×2` (책은 쌓인다 · ADR-0460)
         const own = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === h0.cls).map(d => d.id);
         const other = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId !== h0.cls)?.id;
-        for (const id of [own[0], own[1], other].filter(Boolean)) G.books[id] = 1;
+        for (const [id, n] of [[own[0], 2], [own[1], 2], [other, 1]]) if (id) G.books[id] = n;
         SYS.game.learnBook(G, h0.uid, own[0]);
         G.resources.gold = Math.max(G.resources.gold, D.balance.book_craft_gold * 3);
         G.resources.dust = Math.max(G.resources.dust, D.balance.book_craft_dust * 3);
         state.heroUid = h0.uid;
-        // 스킬북 창이 걷혀(ADR-0426) 기본이 서고 탭이다 — 옛 `&lib=1` 은 기본과 같아 따로 안 읽는다
-        if (new URLSearchParams(location.search).get('mat') === '1') { state.tab = 'character'; state.bagTab = 'mat'; }
-        else state.tab = 'library';
+        // 책은 서고 탭에서만 보인다(ADR-0426 · ADR-0460) — 옛 `&lib=1` · `&mat=1` 은 읽지 않는다
+        state.tab = 'library';
     }
     if (dev === 'tactics') {   // 전술 칸이 전부 열린 상태 — 칸은 지휘 천막 랭크로만 열리므로 헤드리스가 닿을 길을 따로 낸다
         if (!G) startGame();
@@ -6600,9 +6631,6 @@ async function boot() {
     // `&hero=n` — 로스터 n 번째 영웅(1 부터)을 고른 채 연다 (§10 · 2026-09-28). 띠의 고르기는 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const heroNo = Number(new URLSearchParams(location.search).get('hero'));
     if (Number.isInteger(heroNo) && G?.heroes?.[heroNo - 1]) state.heroUid = G.heroes[heroNo - 1].uid;
-    // `&sh=` — 상단의 장비 · 재료 탭을 고른 채 연다 (§10 · §8-3). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
-    const sh = new URLSearchParams(location.search).get('sh');
-    if (['equip', 'mat'].includes(sh)) state.shopTab = sh;
     // 인벤토리 칸의 탭 — 탭은 클릭으로만 바뀐다(SCREEN_DESIGN §10 · §6 · ADR-0379)
     const bg = new URLSearchParams(location.search).get('bag');
     if (['equip', 'mat'].includes(bg)) state.bagTab = bg;
@@ -6712,20 +6740,14 @@ async function boot() {
         runSlot(G.preset).repeat = true;
         SYS.game.closeRun(G, now()); save();
     }
-    // 계정 · 선택 · 멈춤 창 — 로그인 · 다른 기기 · 다른 탭으로만 닿는 화면이라 길을 따로 낸다 (SCREEN_DESIGN §2-1 · §10).
-    //   가짜 계정이고 연결 기록을 안 쓰므로 `cloudPush` 가 네트워크를 안 탄다
+    // 계정 · 멈춤 창 — 로그인 · 다른 기기 · 다른 탭으로만 닿는 화면이라 길을 따로 낸다 (SCREEN_DESIGN §2-1 · §10).
+    //   가짜 계정이고 연결 기록을 안 쓰므로 `cloudPush` 가 네트워크를 안 탄다 · `&c=taken` = 다른 곳에서 이어졌다(ADR-0458)
     if (dev === 'cloud') {
         if (!G) startGame();
         const c = new URLSearchParams(location.search).get('c');
         if (c === 'frozen') { frozen = true; state.modal = 'frozen'; }
-        else if (c === 'pick') {
-            const s = JSON.parse(JSON.stringify(SYS.game.serialize(G, now())));
-            s.savedAt = now() - 60 * 60000;
-            s.resources.gold += 1234;
-            cloud.remote = { rev: 3, savedAt: s.savedAt, save: s };
-            cloud.status = 'conflict';
-            state.modal = 'cloudPick';
-        } else { cloud.status = 'on'; state.modal = 'cloud'; }
+        else if (c === 'taken') { frozen = true; cloud.status = 'on'; state.modal = 'cloudTaken'; }
+        else { cloud.status = 'on'; state.modal = 'cloud'; }
     }
     // ?tab= 은 dev 분기 **뒤에** 건다 — startGame() 이 탭을 원정으로 되돌리므로 앞에 두면 먹히지 않는다
     if (TABS.includes(tab)) state.tab = tab;

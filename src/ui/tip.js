@@ -1050,7 +1050,7 @@ const skillNameHtml = s => {
 };
 
 /**
- * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장).
+ * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주(기본 상태 · 괄호가 붙을 숫자가 있을 때만).
  * 스킬 카드가 부른다 (~~아이템 툴팁의 스킬 칸~~ 은 2026-09-29 걷혔다 · ADR-0421).
  * 칩은 **출처 칩**(영웅·책·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **능력치 칩**이다.
  * 능력치 칩은 스케일링 슬롯(하는 일 줄의 `scales` — 줄 순 · 2026-09-22)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
@@ -1068,5 +1068,6 @@ function skillBodyHtml(s, ctx) {
     return `
         ${skillNameHtml(s)}
         ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
-        ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}`;
+        ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}
+        ${R.fx && !R.alt ? `<div class="tip-foot">${t('sk.altHint')}</div>` : ''}`;
 }

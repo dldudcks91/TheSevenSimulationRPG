@@ -42,7 +42,7 @@ export const SINS = {
     wrath: { ko: '분노', en: 'Wrath', adj: 'Wrathful', color: '#e03030' },
     envy: { ko: '시기', en: 'Envy', adj: 'Envious', color: '#30b050' },
     greed: { ko: '탐욕', en: 'Greed', adj: 'Greedy', color: '#d0a020' },
-    sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#808898' },
+    sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#7087a8' },   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
     gluttony: { ko: '폭식', en: 'Gluttony', adj: 'Gluttonous', color: '#e07020' },
     lust: { ko: '색욕', en: 'Lust', adj: 'Lustful', color: '#e03080' },
     pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0' },
@@ -341,8 +341,8 @@ export const SKILL_ICON_DIR = './assets/art/icons/skills/';
 //   `wg_sword2h` → `war_taunt`·`war_doubleswing`·`war_quake`)은 **그림째 교체**돼 옛 컬러 자산이 남아 있지 않다.
 //   목록에 없는 스킬은 검은 칸이다(2026-09-18 · ADR-0162 — 해시 폴백 폐기)
 export const SKILL_ICON_FILES = [
-    'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_taunt', 'war_shout', 'war_battleorders',
-    'kni_smite', 'kni_charge', 'kni_rush', 'kni_duel', 'kni_enchant',
+    'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_taunt', 'war_shout', 'war_battleorders', 'war_ironskin',
+    'kni_smite', 'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_duel', 'kni_enchant',
     'kni_might', 'kni_fanaticism', 'kni_defiance',
     'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
     'mag_fireball', 'mag_iceblast', 'mag_frostnova', 'mag_lightning',

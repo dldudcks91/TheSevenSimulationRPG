@@ -34,7 +34,7 @@
  *       tactics = **이 편성의 파티 전술 칸**(v34 · R129) — 아래 옛 `tactics` 와 같은 모양이고 편성마다 한 벌이다
  *     — items[*].proc = **목걸이 발동 스킬** `{trigger, skill, v}` (목걸이만 · v33 · 2026-09-21 · ⚠ 전투는 안 읽는다 — 설명에만).
  *     — ~~items[*].skill = 무기가 담은 액티브 id~~ — **2026-09-29 삭제**(R179 · 스킬북 skill_design §2-1) · 로드가 지운다
- *   books: {skillId: 1}   — **스킬북 재고**(R179 · 버전 무변경) — 한 권까지 · 가진 책이 또 떨어지면 가루 · `learnBook` 이 쓰면 키를 지운다
+ *   books: {skillId: n}   — **스킬북 재고**(R179 · 버전 무변경) — 소모품이라 쌓인다(2026-09-30) · `learnBook` 이 1권을 쓰고 0 이면 키를 지운다
  *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
  *   progress: {cleared: [stageId], peakTotal},   // ~~levelUp = 스테이지별 올린 양~~(R87) — **2026-09-29 위험도 폐지로 삭제** · 로드가 지운다 (몬스터 레벨 = `stage.csv:dlvl` 고정)
  *   codexKills: {monsterId: n}   — **도감 레벨의 출처** — 누적 처치 수 (monster_design §8 · 2026-09-21 카드 → 처치 수)
@@ -51,7 +51,7 @@
  *     반복 원정은 이기는 동안 런을 잇는데, 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3)
  *   notice: {kind:'runClosed', runs: [{stageId, at}], stageId, at, seenAt} | null   — 재접속 알림 (배너 1회).
  *     `runs` = **끊은 부대마다 한 줄 — v38**(편성 번호 순) · `stageId`·`at` 은 그중 첫 줄을 그대로 둔 것이다(한 부대만 돌던 화면이 안 깨지게)
- *   tavern: {rerolledAt: ms|null, hired: [슬롯번호]}         — 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸.
+ *   tavern: {rerolledAt: ms|null, hired: [슬롯번호], paid}   — 리롤 쿨다운의 기준 시각 · 이번 명단에서 산 칸 · 무료 뒤 유료 리롤 횟수(값이 두 배씩 · 09-30).
  *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
  *   search: {heroUid, startedAt: ms, no, sin, cha, answer: 답 id|null} | null   — 나가 있는 수색 1건 (base_expedition_design §2-4).
  *     `answer` = 만남에서 고른 답. **고용비만 깎는다** — 결과 영웅은 안 건드리므로 언제 답하든 같은 사람이 온다.
@@ -309,7 +309,7 @@ export function createGameSystem(deps) {
             codexKills: {},
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
-            tavern: { rerolledAt: null, hired: [] },
+            tavern: { rerolledAt: null, hired: [], paid: 0 },
             shop: null,      // 상단에서 산 칸 — 산 적이 없으면 null (2026-09-27 · INTERFACE §4)
             search: null,
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
@@ -420,6 +420,7 @@ export function createGameSystem(deps) {
         delete s.codexCards; s.codexKills = s.codexKills ?? {};
         s.reports = s.reports ?? []; s.notice = s.notice ?? null;
         s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
+        s.tavern.paid = s.tavern.paid ?? 0;   // 유료 리롤 횟수 — 없으면 0 이 정확한 초기 상태라 버전을 안 올린다 (2026-09-30 · INTERFACE §4)
         // 수색 — 없으면 「한 적이 없다」가 정확한 초기 상태라 **버전을 안 올린다** (INTERFACE §4 · 2026-09-09)
         s.stash = s.stash ?? [];       // 창고 — v24. 없던 세이브는 빈 채로 열린다
         // 스테이지 레벨 올린 양 — **위험도 폐지로 지운다** [2026-09-29 · PLAN_expedition_window D2 · 버전 무변경] — 몬스터 레벨은 칸의 기본 레벨 고정이라 옮길 곳이 없다
@@ -469,10 +470,10 @@ export function createGameSystem(deps) {
             if (h.advanceSkill && !(h.advance && advanceSkills(h.advance).includes(h.advanceSkill))) h.advanceSkill = null;
         }
         // 스킬북 [2026-09-29 · R179 · 버전 무변경 — INTERFACE §4] — 없으면 「가진 책이 없다 · 안 배웠다」가 정확한 초기 상태다.
-        //   책은 한 권까지 · 정의에 없는 id 는 지운다 · 배운 스킬이 정의에 없으면 빈 칸으로. **무기의 `skill` 은 지운다**(무기가 스킬을 안 담는다 —
+        //   책은 쌓인다(권수 그대로 · 2026-09-30) · 정의에 없는 id · 양의 정수가 아닌 값은 지운다 · 배운 스킬이 정의에 없으면 빈 칸으로. **무기의 `skill` 은 지운다**(무기가 스킬을 안 담는다 —
         //   옛 무기 스킬을 배운 스킬로 옮기지 않는다: 소급하면 책의 문턱(레벨 · 서고)을 우회한다)
         s.books = Object.fromEntries(Object.entries(s.books && typeof s.books === 'object' && !Array.isArray(s.books) ? s.books : {})
-            .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0).map(([id]) => [id, 1]));
+            .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
         for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
         for (const it of Object.values(s.items ?? {})) if (it && 'skill' in it) delete it.skill;
         s.advancing = (Array.isArray(s.advancing) ? s.advancing : []).filter(w => {
@@ -1539,16 +1540,15 @@ export function createGameSystem(deps) {
     }
 
     /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 서고 · INTERFACE §2-7] ──
-       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound` — 가진 책이면 가루) 기본 책만 서고가 만든다.
+       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound`) 상단이 팔고 기본 책만 서고가 만든다 —
+       **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다).
        배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0 */
     /** 기본 책 — `skill.csv:starter_pool = 1` 인 직업 스킬(`ui/data.js:starterSkills` 와 같은 조건) · 행 순서 */
     const craftableBooks = () => (SK?.list ?? []).filter(d => d.starterPool && d.innatePool && d.ownerKind === 'job').map(d => d.id);
-    /** 책 한 권을 재고에 넣는다 — 가진 책이면 가루로 바꾸고 그 양을 돌려준다(0 = 재고에 들었다) */
+    /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 */
     function addBook(state, id) {
         state.books = state.books ?? {};
-        if (state.books[id]) { state.resources.dust += B.book_dup_dust; return B.book_dup_dust; }
-        state.books[id] = 1;
-        return 0;
+        state.books[id] = (state.books[id] ?? 0) + 1;
     }
     /** 배우기의 책 밖 거절 — `learnBook` 과 `bookState.hero.err` 가 같은 판정을 쓴다 */
     function learnGate(state, h) {
@@ -1562,7 +1562,6 @@ export function createGameSystem(deps) {
     function craftGate(state, id) {
         if (!hasFeature(state, 'book_craft')) return 'unbuilt';
         if (!craftableBooks().includes(id)) return 'missing';
-        if (state.books?.[id]) return 'have';
         if (state.resources.gold < B.book_craft_gold) return 'gold';
         if (state.resources.dust < B.book_craft_dust) return 'materials';
         return null;
@@ -1596,7 +1595,7 @@ export function createGameSystem(deps) {
         if (err) return { ok: false, err };
         state.resources.gold -= B.book_craft_gold;
         state.resources.dust -= B.book_craft_dust;
-        (state.books ??= {})[skillId] = 1;
+        addBook(state, skillId);
         return { ok: true };
     }
 
@@ -1825,8 +1824,8 @@ export function createGameSystem(deps) {
         const tactics = tacticSnap(view, going, no);
         //   조건이 읽은 전열 · 같이 깬 칸 수도 굳힌다 — 도는 원정의 재판정(`runTactics`)이 이 값으로 센다 (R134) · 자리(`byUid`)도 굳힌 편성의 것이다(`partyUnits` · 관전 아레나)
         const byUid = formationOf(squad).byUid;
-        // 신단 [2026-09-29 · base_expedition_design §1-2] — **이어 가는 런**이고 그 부대 자리에 **이 칸의** 신단이 서 있으면 이어받는다(진 칸을 다시 돌 때도 남는다) ·
-        //   새로 보낸 런 · 다른 칸으로 가는 런은 신단 없음 · rng 0
+        // 신단 [2026-09-29 · base_expedition_design §1-2] — **이어 가는 런**이고 그 부대 자리에 **이 칸의** 신단이 서 있으면 이어받는다(막 이긴 칸 뒤에 선 것 —
+        //   진 칸 뒤엔 자리가 비어 있다 · 2026-09-30) · 새로 보낸 런 · 다른 칸으로 가는 런은 신단 없음 · rng 0
         const had = runAt(state, no)?.shrine;
         const shrine = from && had?.stageId === stageId && shrineById[had.id] ? had.id : null;
         const fixed = { front: going.filter(uid => (byUid[uid] ?? 0) === 0), bond: bondOf(state, going), byUid, shrine };
@@ -1854,7 +1853,7 @@ export function createGameSystem(deps) {
             stageId, preset: no, repeat: samePlace(prev?.stageId, stageId) ? prev.repeat === true : false, auto: true,
             // fallen = 이 런에서 쓰러져 있는 영웅 — `stepRun` 이 채운다 · 스킬 트리 잠금(`downed`)이 읽는다 (R130 · 옛 v16 `downed` 와 다른 필드)
             lastAt: now, durationSec: 0, active: true, fallen: [],
-            shrine: shrine ? { id: shrine, stageId } : null,   // 이 런이 입는 신단 — 이긴 칸 뒤 `settleRound` 가 다음 칸의 것으로 바꾼다 (2026-09-29)
+            shrine: shrine ? { id: shrine, stageId } : null,   // 이 런이 입는 신단 — 칸이 끝나면 `settleRound` 가 다음 칸의 것으로 바꾸거나 지운다 (2026-09-29 · 09-30)
         };
         // 첫 라운드를 **연다** — 스폰 · 등장 지연 굴림은 여기서 돈다. 틱은 재생 시각을 따라 `stepRun` 이 민다 [2026-09-21 · R130] —
         //   ~~첫 라운드까지 계산한다~~: 미래를 미리 계산해 두면 원정 중 교체가 그 순간 먹을 자리가 없다(base_expedition_design §1-5)
@@ -1903,10 +1902,44 @@ export function createGameSystem(deps) {
         return runTactics(w ? w.state : state, run);
     }
 
+    /** 도감 보너스 중 **전투가 읽는 키** — `hero.computeCombat` 이 받는 셋(`acc_pct` 는 명중 폐지로 계산되고 버려진다 · INTERFACE §2-4) */
+    const CODEX_READ = ['atk_pct', 'hp_pct', 'dmg_pct'];
+
+    /**
+     * 그 런의 버프 [신설 2026-09-30 · SCREEN_DESIGN §4-2 「버프」] — 그 런의 파티 전원이 받는 것을 **출처별로** 묶는다. 아무것도 안 바꾼다 · rng 0
+     *   `shrine` = 그 런이 입은 신단 id(없으면 null) · `tactics` = 출발 때 켜진 전술 중 **지금 조건이 선** 것의 합 `{flat, dr}`
+     *   (`tactic.bonusOf` — 같은 능력치는 더하고 피해 감소는 원천별이라 따로) · `codex` = 도감 보너스 중 전투가 읽고 0 이 아닌 것 `{stat: v}`.
+     *   **끝난 런도 그 런의 것을 낸다** — 관전 머리 줄의 신단 칩과 같다(`runTactics` 는 끝난 런에 `[]`). 핸들이 없으면 신단 · 전술은 빈다
+     */
+    function runBuffs(state, run) {
+        const on = run ? snapMeasure(state, run.tactics ?? [], run.party, run.preset, run.fixed).filter(m => m.active).map(m => m.option) : [];
+        const cx = codexBonus(state);
+        return {
+            shrine: run?.fixed?.shrine ?? null,
+            tactics: TC.bonusOf(on),
+            codex: Object.fromEntries(CODEX_READ.filter(k => cx[k]).map(k => [k, cx[k]])),
+        };
+    }
+
+    /**
+     * 레벨 차로 깎이는 경험치 — 영웅이 몬스터보다 높은 레벨마다 `xp_level_gap_mult` 를 한 번씩 곱한다(`몫 × mult ^ 차`).
+     *   **몬스터가 같거나 높으면 안 깎는다**(모자란 레벨은 적중이 이미 값을 치른다 · battle_design §9-4).
+     *   깎이는 양을 돌려준다 — 차가 없으면 정확히 0 이라 종전 값과 한 글자도 안 다르다 · rng 0
+     * @param byLevel 그 라운드 처치 XP 를 몬스터 레벨로 가른 것 `{lvl: xp}` (battle.js 라운드 요약의 `xpByLevel`)
+     */
+    function xpGapCut(byLevel, heroLevel) {
+        let cut = 0;
+        for (const [lvl, xp] of Object.entries(byLevel ?? {})) {
+            const gap = heroLevel - Number(lvl);
+            if (gap > 0) cut += xp * (1 - B.xp_level_gap_mult ** gap);
+        }
+        return cut;
+    }
+
     /**
      * 끝난 라운드 하나를 정산한다 — `advanceRun` · `stepRun` 이 같이 쓴다.
      *   ① **이긴 라운드만**: 골드 → 도감(처치 수) → 드롭(인벤토리 · 넘치면 그 순간 버린다) →
-     *      **경험치 = 그 라운드 처치 XP 합 × xp_rate 를 그 순간 살아 있는 영웅마다**(쓰러진 영웅은 그 라운드 몫이 없다) → 마지막 라운드면 클리어.
+     *      **경험치 = 그 라운드 처치 XP 합 × xp_rate 를 그 순간 살아 있는 영웅마다**(쓰러진 영웅은 그 라운드 몫이 없다 · 제 레벨보다 낮은 몬스터의 몫은 레벨 차로 깎인다 — `xpGapCut`) → 마지막 라운드면 클리어.
      *      진 라운드(전멸 · 시간 초과)는 보상 없이 런을 닫는다
      *   ② 런이 안 끝났으면 **경계 갈아입기** — 그 순간의 장비 · 레벨로(레벨업이 여기서 먹는다 · **레벨이 오른 영웅은 체력이 가득 찬다** — R182). 다음 라운드는 다음 걸음이 연다 (R130)
      * @returns 런이 끝났나
@@ -1940,8 +1973,8 @@ export function createGameSystem(deps) {
                 R.drops.push(added.uid);
                 gained.push(added);
             }
-            // 스킬북 [2026-09-29 · R179] — 재고에 넣는다 · 가진 책이면 가루(`book_dup_dust`) · 가방 칸을 안 먹는다 · rng 0
-            for (const id of s.books ?? []) (R.books ??= []).push({ id, dust: addBook(state, id) });
+            // 스킬북 [2026-09-29 · R179] — 재고에 쌓는다(가진 책이어도 +1 · 2026-09-30) · 가방 칸을 안 먹는다 · rng 0
+            for (const id of s.books ?? []) { addBook(state, id); (R.books ??= []).push({ id }); }
             commissionCount(state, run.stageId, s.killGrades ?? {}, gained);
             // 경험치 — **그 순간 살아 있는 영웅만** 같은 양을 받는다 (사용자 확정 2026-09-14). 레벨업은 다음 라운드부터 전투에 먹는다(②)
             //   **경험치 획득 +%**(방어구 공통옵션)는 **낀 영웅 본인 몫**만 늘린다 [2026-09-18 사용자 확정 · item_design §1 「갑옷 옵션」] —
@@ -1952,7 +1985,9 @@ export function createGameSystem(deps) {
                 if (!h) continue;
                 // 폭식의 신단 — 그 런이 입은 신단의 경험치 몫을 같은 괄호에 더한다 (2026-09-29 · base_expedition_design §1-2)
                 const gain = (heroCombat(state, h).option_fx?.xpGain ?? 0) + shrineFx(run.fixed?.shrine, 'xp_gain_pct');
-                const xp = Math.round(gain ? xpBase * (1 + gain) : xpBase);
+                // 레벨 차 감쇠 [2026-09-30 사용자 「레벨차이가 나면 얻는 경험치가 줄도록」 · hero_design §5] — **영웅마다 따로** · 정산 순간의 레벨로 잰다
+                const base = xpBase - xpGapCut(s.xpByLevel, h.level) * B.xp_rate;
+                const xp = Math.round(gain ? base * (1 + gain) : base);
                 const lu = H.grantXp(h, xp, run.rng);
                 R.xp[uid] = (R.xp[uid] ?? 0) + xp;
                 if (lu) { mergeLevelUp(R.levelUps, lu); leveled.push(uid); }
@@ -1976,10 +2011,10 @@ export function createGameSystem(deps) {
             if (res.won) { state.bonds = state.bonds ?? {}; state.bonds[bondKey(run.party)] = bondOf(state, run.party) + 1; }
             run.done = true;
             if (slot) { slot.active = false; slot.fallen = []; }   // 전투 밖 = 전원 회복 (base_expedition_design §1-1)
-            // 신단 [2026-09-29 · base_expedition_design §1-2] — **이긴 칸**: 다음 칸이 같은 장소의 다음 칸이면 새로 하나 서고 아니면 지운다 ·
-            //   **진 칸**: 그대로 둔다(같은 칸을 다시 도는 런이 이어받는다). rng = 신단 스트림(전투 수열과 안 섞인다 · INTERFACE §5-1)
-            if (slot && res.won) {
-                const to = shrineList.length ? shrineTarget(run.stageId) : null;
+            // 신단 [2026-09-29 · base_expedition_design §1-2] — 그 칸이 끝나면 **이기든 지든** 입던 신단은 사라진다 [2026-09-30 사용자 지시 — ~~진 칸은 그대로 둔다~~] ·
+            //   **이긴 칸**만 다음 칸이 같은 장소의 다음 칸이면 새로 하나 선다. rng = 신단 스트림(전투 수열과 안 섞인다 · INTERFACE §5-1) · 진 칸은 굴리지 않는다
+            if (slot) {
+                const to = res.won && shrineList.length ? shrineTarget(run.stageId) : null;
                 const r = to ? makeRng(deriveSeed(state.seed ^ 0x5B1E, run.seq ?? state.counters.battle)) : null;
                 slot.shrine = to ? { id: shrineList[Math.floor(r() * shrineList.length)].id, stageId: to } : null;
             }
@@ -2117,7 +2152,7 @@ export function createGameSystem(deps) {
         const report = state.reports.find(r => r.preset === no && r.at === run.lastAt);
         if (!report || report.reason == null || report.reason === 'retreat' || report.reason === 'closed') return null;
         const stageId = report.won ? nextStageOf(state, run.stageId, run.repeat === true) : run.stageId;
-        // 다음 런이 이어받을 신단 — 그 칸의 것일 때만(`departRun` 과 같은 판정) · `fresh` = 막 이긴 칸 뒤에 선 것 (2026-09-29)
+        // 다음 런이 이어받을 신단 — 그 칸의 것일 때만(`departRun` 과 같은 판정) · `fresh` = 막 이긴 칸 뒤에 선 것 — 진 칸 뒤엔 신단이 없어 늘 참이다 (2026-09-29 · 09-30)
         const sh = run.shrine?.stageId === stageId && shrineById[run.shrine.id] ? { id: run.shrine.id, fresh: report.won } : null;
         return { stageId, preset: run.preset, at: endedAt + B.repeat_restart_sec * 1000, shrine: sh };
     }
@@ -2146,16 +2181,19 @@ export function createGameSystem(deps) {
     /** 선술집 화면 상태 한 덩어리 — 판정을 여기서 다 낸다 (masteryState 와 같은 규칙) · `open` = 고용이 열렸나(선술집 건물 · R137) */
     function tavernState(state, now) {
         const freeAt = tavernFreeAt(state);
-        return { candidates: tavernCandidates(state), freeAt, free: now >= freeAt, cost: B.tavern_reroll_cost, open: hasFeature(state, 'hire') };
+        return { candidates: tavernCandidates(state), freeAt, free: now >= freeAt, cost: tavernRerollCost(state), open: hasFeature(state, 'hire') };
     }
+    /** 다음 유료 리롤 값 — 무료 리롤 뒤 유료 리롤마다 **두 배**(상한 없음) [2026-09-30 사용자 지시] · 쿨다운이 끝나면 다음 리롤이 무료라 첫 값으로 돌아간다 */
+    const tavernRerollCost = state => B.tavern_reroll_cost * 2 ** (state.tavern?.paid ?? 0);
     /** 리롤 — 쿨다운이 끝났으면 무료, 아니면 즉시 리롤 비용(골드). 리롤은 명단을 통째로 갈고 쿨다운을 다시 건다 · 선술집을 안 지었으면 `unbuilt` */
     function tavernReroll(state, now) {
         if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };
         const free = now >= tavernFreeAt(state);
-        if (!free && state.resources.gold < B.tavern_reroll_cost) return { ok: false, err: 'gold' };
-        if (!free) state.resources.gold -= B.tavern_reroll_cost;
+        const cost = tavernRerollCost(state);
+        if (!free && state.resources.gold < cost) return { ok: false, err: 'gold' };
+        if (!free) state.resources.gold -= cost;
         state.counters.tavern += 1;
-        state.tavern = { rerolledAt: now, hired: [] };
+        state.tavern = { rerolledAt: now, hired: [], paid: free ? 0 : (state.tavern?.paid ?? 0) + 1 };
         return { ok: true, free };
     }
     function hire(state, index) {
@@ -2168,7 +2206,7 @@ export function createGameSystem(deps) {
         const h = addHero(state, clone(c));
         equipStarter(state, h, recruitRng(state));   // 시작 영웅과 같은 한 벌을 입고 온다 (2026-09-25 사용자 지시)
         // 고용한 칸만 빈다 — 명단을 갈지 않는다. 고용이 무료 리롤 우회로가 되면 쿨다운이 무의미해진다 (§2-4)
-        state.tavern = state.tavern ?? { rerolledAt: null, hired: [] };
+        state.tavern = state.tavern ?? { rerolledAt: null, hired: [], paid: 0 };
         state.tavern.hired.push(index);
         return { ok: true, hero: h };
     }
@@ -2233,7 +2271,8 @@ export function createGameSystem(deps) {
         const bought = state.shop?.cycle === visit.cycle ? state.shop : null;
         const chapter = bought?.chapter ?? frontierChapter(state);
         const band = chapterBands.find(b => b.band === chapter) ?? chapterBands[0];
-        const rng = makeRng(deriveSeed(state.seed ^ 0x5409, visit.cycle));
+        const rerolls = bought?.rerolls ?? 0;
+        const rng = makeRng(shopSeed(state, 0x5409, visit.cycle, rerolls));
         const equip = [];
         for (const part of shopParts)
             for (let i = 0; i < shopCountOf(state, part); i++) {
@@ -2245,16 +2284,38 @@ export function createGameSystem(deps) {
         // 물약 — **정해진 셋을 늘 판다** [2026-09-28 사용자 지시 · base_expedition §2-6] — `potion.csv:shop_gold` 가 선 행만 · 회차 · 매진이 없다
         const potions = potionRows.filter(p => p.shopGold != null).map(p => ({ id: p.id, tier: p.tier, heal: p.heal, gold: p.shopGold, have: state.potions?.[p.id] ?? 0 }));
         // 스킬북 — 회차마다 `shop_book_count` 권 · 따로 선 스트림(0x540B) [2026-09-29 사용자 지시 · base_expedition §2-6 · INTERFACE §5-2]
-        const books = shopBookIds(state, visit.cycle).map((id, i) => ({ id, gold: B.shop_book_gold, sold: !!bought?.books?.includes(i), have: !!state.books?.[id] }));
-        return { ...visit, chapter, lo: band.lo, hi: band.hi, equip, potions, books, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
+        const books = shopBookIds(state, visit.cycle, rerolls).map((id, i) => ({ id, gold: B.shop_book_gold, sold: !!bought?.books?.includes(i) }));
+        return { ...visit, chapter, lo: band.lo, hi: band.hi, equip, potions, books, rerolls, rerollCost: shopRerollCost(rerolls), open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
+    }
+    /** 상점 스트림 — 교체한 적이 없으면 옛 스트림 그대로 · 교체마다 그 값에서 한 번 더 가른다 (INTERFACE §5-1 · 2026-09-30) */
+    const shopSeed = (state, salt, cycle, rerolls) => {
+        const s = deriveSeed(state.seed ^ salt, cycle);
+        return rerolls ? deriveSeed(s, rerolls) : s;
+    };
+    /** 다음 교체 값 — 회차의 첫 교체는 무료(0) · 그 뒤로 `shop_reroll_cost` 에서 두 배씩(상한 없음) [2026-09-30 사용자 지시] */
+    const shopRerollCost = rerolls => (rerolls ? B.shop_reroll_cost * 2 ** (rerolls - 1) : 0);
+
+    /**
+     * 상단 목록 교체 [2026-09-30 사용자 지시 · INTERFACE §2-7] — 거절 `unbuilt` → `stale` → `gold` · 거절이면 아무것도 안 바뀐다.
+     * 장비 · 책을 다음 스트림으로 다시 굴린다 — **산 칸도 풀린다**(새 목록이다) · 레벨대는 지금 진행 챕터로 다시 박는다 · 물약은 그대로
+     */
+    function shopReroll(state, cycle, now) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const S = shopState(state, now);
+        if (cycle !== S.cycle) return { ok: false, err: 'stale' };
+        const gold = S.rerollCost;
+        if (state.resources.gold < gold) return { ok: false, err: 'gold' };
+        state.resources.gold -= gold;
+        state.shop = { cycle: S.cycle, chapter: frontierChapter(state), sold: [], books: [], rerolls: S.rerolls + 1 };
+        return { ok: true, gold, free: gold === 0 };
     }
 
     /** 상단이 파는 책의 후보 — 직업 스킬 중 기본 책이 아닌 것(기본 책은 서고가 만든다 · 보스 고유는 드롭만) · `skill.csv` 행 순서 */
     const shopBookPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && !d.starterPool).map(d => d.id);
     /** 그 회차의 책 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
-    function shopBookIds(state, cycle) {
+    function shopBookIds(state, cycle, rerolls = 0) {
         const pool = shopBookPool();
-        const rng = makeRng(deriveSeed(state.seed ^ 0x540B, cycle));
+        const rng = makeRng(shopSeed(state, 0x540B, cycle, rerolls));
         const n = Math.min(B.shop_book_count, pool.length);
         for (let k = 0; k < n; k++) {
             const j = k + Math.floor(rng() * (pool.length - k));
@@ -2264,8 +2325,8 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 상단 스킬북 한 권을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7] — 거절 `unbuilt` → `stale` → `missing` → `sold` → `have` → `gold`.
-     * 가진 책은 못 산다 — 사면 가루로 새므로(`addBook`) 막는다. rng 를 새로 안 연다(`shopState` 와 같은 스트림)
+     * 상단 스킬북 한 권을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7] — 거절 `unbuilt` → `stale` → `missing` → `sold` → `gold`.
+     * 가진 책도 산다 — 책은 쌓인다(`addBook` · 2026-09-30). rng 를 새로 안 연다(`shopState` 와 같은 스트림)
      */
     function shopBookBuy(state, i, cycle, now) {
         if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
@@ -2274,7 +2335,6 @@ export function createGameSystem(deps) {
         const b = S.books[i];
         if (!b) return { ok: false, err: 'missing' };
         if (b.sold) return { ok: false, err: 'sold' };
-        if (b.have) return { ok: false, err: 'have' };
         if (state.resources.gold < b.gold) return { ok: false, err: 'gold' };
         if (state.shop?.cycle !== S.cycle) state.shop = { cycle: S.cycle, chapter: S.chapter, sold: [], books: [] };
         state.shop.books = state.shop.books ?? [];
@@ -3056,9 +3116,9 @@ export function createGameSystem(deps) {
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
-        runLock, runTactics, runTacticsIf,
+        runLock, runTactics, runTacticsIf, runBuffs,
         tavernCandidates, tavernState, tavernReroll, hire, dismissState, dismiss, swapHeroes,
-        shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, gambleState, gambleSpin, gambleSpinBatch,
+        shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
         dispatchOf, dispatchSeat, dispatchPick, dispatchAssign, dispatchRecall, dispatchSettle, dispatchProgress, materialsState,

@@ -39,7 +39,7 @@
  */
 
 import * as M from './mock.js';
-import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo } from './data.js';
+import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
 import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 = 스킬 이펙트(기본 On) + 피격 반응(기본 Off) — 둘 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414)
@@ -77,6 +77,42 @@ export const shrineChip = id => {
     const s = shrineInfo(id);
     return s ? `<span class="shrine-chip" title="${shrineFxText(id)}"><img src="${s.img}" alt="">${L(s.name)}</span>` : '';
 };
+
+/* [버프] 창 [2026-09-30 · SCREEN_DESIGN §4-2 「버프」 · ADR-0461 · 버튼 자리 ADR-0462] — 그 런의 버프를 **출처별 세 줄**(신단 · 전술 · 도감)로 적는다.
+   합치기(같은 능력치 · 피해 감소는 따로)는 `game.runBuffs` 가 했다 — 여기는 옮겨 적을 뿐이다 */
+/** 도감 계열 번호 — `codex_series.csv` 의 그 능력치 행 */
+const cxNum = k => Object.keys(D.codexSeries ?? {}).find(n => D.codexSeries[n] === k);
+/** 옵션 줄 사전(`AFFIX_LABELS`)에 없는 축의 이름 — 전투 능력치 표 · 없으면 도감 계열 라벨(`dmg_pct` = 피해량) */
+const buffLabel = k => D.combatStats.find(s => s.id === k) ?? (cxNum(k) ? { ...M.CX_STAT[cxNum(k)], fmt: 'pct' } : undefined);
+/** 효과 한 조각 — 옵션 줄과 같은 표기(「데미지 +2%」) */
+const buffStat = (k, v) => L(M.affixText(k, v, buffLabel(k)));
+/** 세 줄 — 비어 있는 출처는 「없음」(줄이 빠지지 않는다) */
+const buffRows = b => {
+    const none = `<span class="muted">${t('bt.buff.none')}</span>`;
+    const list = (flat, dr = []) => {
+        const parts = [...Object.entries(flat ?? {}).map(([k, v]) => buffStat(k, v)), ...dr.map(v => buffStat('damage_reduction', v))];
+        return parts.length ? parts.map(x => `<span class="bp-it">${x}</span>`).join(' · ') : none;   // 효과 하나는 안 꺾인다 — 줄은 효과 사이에서 바뀐다
+    };
+    return [
+        ['shrine', b.shrine ? `${shrineChip(b.shrine)}<span>${shrineFxText(b.shrine)}</span>` : none],
+        ['tactic', list(b.tactics?.flat, b.tactics?.dr)],
+        ['codex', list(b.codex)],
+    ].map(([k, v]) => `<div class="bp-row"><b>${t(`bt.buff.${k}`)}</b><span class="bp-fx">${v}</span></div>`).join('');   // `.buff-row` 는 카드 아래 창 뱃지 줄의 이름이다 — 겹치지 않게 `bp-`
+};
+/** 버튼 아래에 창을 연다 — 투명 뒤판이 화면을 덮어 **버튼을 다시 누르거나 창 밖을 누르면** 닫힌다(우클릭 메뉴와 같은 수법 · 전역 리스너 없음).
+ *  버튼은 아레나 왼쪽 위 구석에 선다(ADR-0462) — 열린 동안 `.open` 이 층을 올려 창이 카드 위에 선다 */
+function openBuffPop(btn, b) {
+    const wrap = btn.parentElement;
+    const back = document.createElement('div');
+    back.className = 'buff-back';
+    const pop = document.createElement('div');
+    pop.className = 'buff-pop';
+    pop.innerHTML = buffRows(b);
+    back.onclick = () => { back.remove(); pop.remove(); btn.classList.remove('on'); wrap.classList.remove('open'); };
+    wrap.append(back, pop);
+    btn.classList.add('on');
+    wrap.classList.add('open');
+}
 
 /**
  * @param container  붙일 곳
@@ -151,7 +187,7 @@ export function mountBattle(container, opts) {
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
     fxPreload();   // 스킬 이펙트 그림을 미리 읽는다 — 지금은 그림이 꺼져 있어 아무것도 안 한다 (ADR-0411 · ADR-0412)
-    const dom = buildDom(state, stage, stageId, opts.shrine ?? null);
+    const dom = buildDom(state, stage, stageId, opts.shrine ?? null, !!opts.buffsOf);
     container.appendChild(dom);
     bindControls(state, container, opts);
     bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
@@ -176,7 +212,7 @@ export function mountBattle(container, opts) {
 
 /* ───────── 구성 ───────── */
 
-function buildDom(state, stage, stageId, shrine) {
+function buildDom(state, stage, stageId, shrine, buffs) {
     const wrap = document.createElement('div');
     wrap.className = 'panel battle-panel';
     const bg = stageBgOf(stageId);
@@ -218,6 +254,7 @@ function buildDom(state, stage, stageId, shrine) {
                 <div class="divider"><span class="muted">VS</span></div>
                 <div class="side side-party"></div>
                 <div class="p-belt b-belt">${potionBeltHtml(state.potion)}</div>
+                ${buffs ? `<div class="b-buffwrap"><button class="btn sm b-buff">${t('bt.buff')}</button></div>` : ''}
                 <div class="battle-result"></div>
             </div>
             <div class="battle-side" hidden>
@@ -266,6 +303,9 @@ function bindControls(state, root, opts) {
         b.onclick = () => { state.dmgf = b.dataset.f; paintPane(state, root); };
     });
     paintLayout(state, root);
+    // [버프] — 그 런의 버프를 출처별 세 줄로 (SCREEN_DESIGN §4-2 「버프」 · ADR-0461). 값은 **누른 순간** 앱이 `game.runBuffs` 로 답한다
+    const buff = root.querySelector('.b-buff');
+    if (buff) buff.onclick = () => openBuffPop(buff, opts.buffsOf());
     // 철수 [개정 2026-09-14 · R89 — 옛 건너뛰기] — 진행 중이던 라운드를 버리고 원정을 끝낸다. 결과가 바뀌는 일이라 앱이 한다(`state.retreatRun`)
     root.querySelector('.b-skip').onclick = () => { clearInterval(state.timer); opts.onRetreat(); };
 }
@@ -373,8 +413,8 @@ const identV2 = (u, state) => {
     const cls = u.side === 'party' ? u.cls : D.monsters?.[u.monsterId]?.cls;
     return [lv != null ? lvSpan(state, u, lv) : '', cls ? clsName(cls) : ''].filter(Boolean).join(' · ');
 };
-/* 신원의 레벨 칸 — `Lv.n` 을 제 칸(`.unit-lv`)에 든다. **영웅이 본 적 없는 레벨업이면 반짝인다**(`lv-new` — 그 글자를 누르면 걷힌다)
-   [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440]. 본 레벨은 앱의 화면 상태다(`opts.lvUnseen` — 세이브 밖 · 새로고침하면 걷힌다) */
+/* 신원의 레벨 칸 — `Lv.n` 을 제 칸(`.unit-lv`)에 든다. **영웅이 본 적 없는 레벨업이면 반짝인다**(`lv-new` — 그 영웅 카드를 누르면 걷힌다)
+   [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440 · 누르는 자리 ADR-0463]. 본 레벨은 앱의 화면 상태다(`opts.lvUnseen` — 세이브 밖 · 새로고침하면 걷힌다) */
 const lvSpan = (state, u, lv) => `<span class="unit-lv${u.hero && state?.lvUnseen?.(u.hero) ? ' lv-new' : ''}">Lv.${lv}</span>`;
 
 /* ───────── 진형 (⚠ 목업 · SCREEN_DESIGN §4-1 · §4-2) ─────────
@@ -552,10 +592,10 @@ function renderUnits(state, root) {
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
                 it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
-            if (u.hero && state.onPickHero) n.onclick = () => state.onPickHero(u.hero.uid);
-            // 반짝이는 레벨 — 누르면 지금 레벨을 본 것으로 친다(앱의 화면 상태) · 카드 클릭(장착 대상 고르기)은 그대로 이어진다 (ADR-0440)
+            // 반짝이는 레벨 — **카드 어디를 눌러도** 지금 레벨을 본 것으로 친다(앱의 화면 상태) · 장착 대상 고르기보다 먼저 건다: 고르기가 화면을 다시 그려도 본 레벨이 먼저 적힌다 (ADR-0463)
             const lvNew = n.querySelector('.unit-lv.lv-new');
-            if (lvNew && u.hero) lvNew.addEventListener('click', () => { state.onLvSeen?.(u.hero.uid); lvNew.classList.remove('lv-new'); });
+            if (lvNew && u.hero) n.addEventListener('click', () => { state.onLvSeen?.(u.hero.uid); lvNew.classList.remove('lv-new'); });
+            if (u.hero && state.onPickHero) n.onclick = () => state.onPickHero(u.hero.uid);
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
                 // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
@@ -863,7 +903,7 @@ function levelCheck(state, root) {
         if (!(lv > u.shownLv)) continue;
         const from = u.shownLv;
         u.shownLv = lv;
-        logLine(state, root, 'party', L(u.name), '', '', '', t('log.v.lvup', { n: lv }));
+        logLine(state, root, 'party', ['lvup', lv], L(u.name), '', '', '', t('log.v.lvup', { n: lv }));
         if (state.catchUp) continue;
         const foe = Math.max(0, ...state.enemies.map(e => e.sheet?.level ?? 0));
         const bonus = state.combatOf?.(u.hero)?.option_fx?.hitBonus ?? 0;
@@ -888,15 +928,41 @@ function popLevel(state, u) {
     state.timeouts.push(setTimeout(() => p.remove(), left));
 }
 
-/* 로그 한 줄 = **네 칸 격자** — 주체 이름 · 스킬 그림 · 대상 이름 · 값 (SCREEN_DESIGN §4-2 · ADR-0189).
+/* 로그 한 줄 = **네 칸 격자** — 주체 이름 · 스킬 그림 · 대상 이름 · 값 (SCREEN_DESIGN §4-2 · ADR-0189). 설정이 `문장` 이면 같은 줄이 한 문장으로 선다(아래 「로그 방식」 · ADR-0459).
    칸 폭은 목록 하나의 격자가 정하고 줄이 물려받는다(CSS `subgrid`) — 그래서 모든 줄이 세로로 선다. 넘치는 이름은 `…` · 올리면 전체 이름.
    이름 · 대상 · 값은 **텍스트 노드**다 — 유닛 이름이 마크업으로 새지 않게 한다(`popup` 과 같다). 그림만 마크업이다.
    `side` = 그 줄의 **주체**(party / enemy · 라운드 시작 · 종료는 sys). 로그 탭(전체 · 우리 · 적)이 이 값으로 거른다 (ADR-0131).
    줄은 다 쌓고 목록의 `data-f` 에 따라 CSS 가 숨긴다 — 탭을 바꿔도 다시 그리지 않아 스크롤과 쌓인 줄이 남는다.
    남기는 줄 수는 **주체마다** 센다 — 한 목록에서 세면 파티 셋의 줄이 적의 줄을 밀어내 「적」 탭에 몇 줄만 남는다 */
 const LOG_KEEP = 60;
-/** 네 칸 한 줄. `ico` = 그림 마크업(`dmgIcon` — 누적 판과 같은 규칙) · `skill` = 그림에 올리면 뜨는 이름 · `vcls` = 값 칸 색(피해 종류 · 회복) */
-function logRow(name, ico, skill, target, val, vcls = '') {
+
+/* 로그 방식 — **네 칸 격자**(기본) · **한 문장** (2026-09-30 사용자 지시 · SCREEN_DESIGN §2-2 · §4-2 · ADR-0459). `⚙` 판 설정 탭(app.js `settingsBody`)이 고른다.
+   줄은 두 모양을 다 들고(격자 칸 넷 + 문장 `.lg-say`) 문서 뿌리의 `data-log-style` 에 따라 CSS 가 하나만 보인다 —
+   바꾸면 **쌓인 줄까지 한꺼번에** 바뀌고 다시 그리지 않는다(스크롤 · 쌓인 줄이 남는다). 고른 값은 이 브라우저에만(fx.js 의 켜짐과 같다) */
+export const LOG_STYLES = ['grid', 'text'];
+export const LOG_STYLE_DEFAULT = 'grid';
+const LOG_STYLE_KEY = 'thesevensim.logStyle';
+let logStyleNow = (() => {
+    try {
+        const v = localStorage.getItem(LOG_STYLE_KEY);
+        return LOG_STYLES.includes(v) ? v : LOG_STYLE_DEFAULT;
+    } catch { return LOG_STYLE_DEFAULT; }   // 프라이빗 모드 등 — 기본값으로
+})();
+document.documentElement.dataset.logStyle = logStyleNow;
+/** 고른 로그 방식 */
+export const logStyle = () => logStyleNow;
+/** 로그 방식을 고른다 — 뿌리 속성만 갈고, 떠 있는 로그 목록은 맨 아래로 맞춘다(줄 높이가 바뀌어 보던 자리가 흩어진다) */
+export function setLogStyle(s) {
+    if (!LOG_STYLES.includes(s)) return;
+    logStyleNow = s;
+    document.documentElement.dataset.logStyle = s;
+    for (const ul of document.querySelectorAll('.battle-log')) ul.scrollTop = ul.scrollHeight;
+    try { localStorage.setItem(LOG_STYLE_KEY, s); } catch { /* 저장 실패는 무해 — 이번 창에서만 먹는다 */ }
+}
+
+/** 한 줄 — 격자 칸 넷 + 문장. `form` = 문장 틀 이름(`log.say.<form>`) 또는 `[이름, 값]`(문장의 값이 격자 값과 다를 때 — 회복 `+40` → `40`).
+    `ico` = 그림 마크업(`dmgIcon` — 누적 판과 같은 규칙) · `skill` = 그림에 올리면 뜨는 이름 · `vcls` = 값 칸 색(피해 종류 · 회복) */
+function logRow(form, name, ico, skill, target, val, vcls = '') {
     const li = document.createElement('li');
     li.className = 'lg-row';
     const cell = (tag, cls, text) => {
@@ -910,8 +976,44 @@ function logRow(name, ico, skill, target, val, vcls = '') {
     if (skill) i.title = skill;
     const v = cell('b', vcls ? `lg-v ${vcls}` : 'lg-v');
     v.textContent = val ?? '';
-    li.append(cell('span', 'lg-n', name), i, cell('span', 'lg-d', target), v);
+    const [key, sayVal = val] = Array.isArray(form) ? form : [form];
+    li.append(cell('span', 'lg-n', name), i, cell('span', 'lg-d', target), v, sayLine(key, { a: name, d: target, ico, skill, v: sayVal, vcls }));
     return li;
+}
+/* 문장 틀의 자리 — `{a}` · `{a|이/가}` (조사 쌍 = 받침 있을 때/없을 때) */
+const SAY_TOKEN = /\{(\w+)(?:\|([^{}|/]+)\/([^{}|/]+))?\}/g;
+/**
+ * 문장 한 줄 (ADR-0459) — 틀은 `log.say.<key>`. 이름 · 상태이상 · 값은 **텍스트 노드**라 마크업으로 새지 않고(`logRow` 와 같다) 그림만 마크업이다.
+ * 이름 · 값은 `<b>` 라 밝고 나머지 글은 줄 색(한 단 흐림)이다 · 값은 격자와 같은 색 클래스를 단다.
+ * 조사는 앞말 받침을 탄다 — 그림 뒤는 가려진 스킬 이름(`skill`)의 받침. 그림이 없으면 그림과 그 조사가 같이 빠진다
+ */
+function sayLine(key, { a, d, ico, skill, v, vcls }) {
+    const box = document.createElement('span');
+    box.className = 'lg-say';
+    const tpl = t(`log.say.${key}`);
+    const word = { a, d, ico: skill, k: skill, v: String(v ?? '') };
+    let at = 0;
+    for (const m of tpl.matchAll(SAY_TOKEN)) {
+        box.append(tpl.slice(at, m.index));
+        at = m.index + m[0].length;
+        const [, slot, withJong, withoutJong] = m;
+        let node;
+        if (slot === 'ico') {
+            if (!ico) continue;
+            node = document.createElement('i');
+            node.className = 'lg-ico';
+            node.innerHTML = ico;
+            if (skill) node.title = skill;
+        } else {
+            node = document.createElement('b');
+            if (slot === 'v' && vcls) node.className = vcls;
+            node.textContent = word[slot] ?? '';
+        }
+        box.append(node);
+        if (withJong) box.append(pickJosa(word[slot] ?? '', withJong, withoutJong));
+    }
+    box.append(tpl.slice(at));
+    return box;
 }
 /** 머리 줄 아래 고정 칸 — 지금 라운드 줄(가장 최근 `round` 의 글). 스크롤 목록 밖이라 제자리다 · 넘치면 `…` · 올리면 전체 (ADR-0204) */
 function pinRound(root, html) {
@@ -928,8 +1030,8 @@ function wideRow(html) {
     li.title = li.textContent;
     return li;
 }
-/** 로그 한 줄 — 주체 `side` + `logRow` 의 칸 그대로. 칸 재료는 **부르는 순간** 정해지고 DOM 만 미룰 수 있다(`queueLog`) */
-const logLine = (state, root, side, ...cells) => queueLog(state, root, { side, cells });
+/** 로그 한 줄 — 주체 `side` + 문장 틀 `form` + `logRow` 의 칸 그대로. 칸 재료는 **부르는 순간** 정해지고 DOM 만 미룰 수 있다(`queueLog`) */
+const logLine = (state, root, side, form, ...cells) => queueLog(state, root, { side, form, cells });
 /** 격자 밖 전폭 한 줄(라운드 시작 · 종료) — 주체는 `sys` */
 const logWide = (state, root, html) => queueLog(state, root, { side: 'sys', html });
 /** 되감는 동안은 재료만 모아 두고(`flushLog` 가 남길 줄만 짓는다) 아니면 곧장 붙인다. 목록을 맨 아래로 맞추는 것은 걸음 끝에 한 번(`scrollLog`) */
@@ -941,7 +1043,7 @@ function queueLog(state, root, entry) {
 }
 /** 목록 끝에 붙이고, 그 주체의 줄이 `LOG_KEEP` 을 넘으면 그 주체의 가장 오래된 줄을 뗀다 — 셈은 `state.logN` 이 든다(줄마다 목록을 다시 훑지 않는다) */
 function appendLog(state, ul, e) {
-    const li = e.html != null ? wideRow(e.html) : logRow(...e.cells);
+    const li = e.html != null ? wideRow(e.html) : logRow(e.form, ...e.cells);
     li.dataset.side = e.side;
     ul.appendChild(li);
     state.logN[e.side] = (state.logN[e.side] ?? 0) + 1;
@@ -1092,7 +1194,7 @@ function apply(state, root, opts, ev) {
             for (const e of ev.units) fxAppear(state, U(e.key));   // 불린 무리가 떠오르며 선다 — 카드를 지은 뒤 (ADR-0409)
             const a = U(ev.u);
             // 대상 칸 = 불린 무리(쉼표) — 처음 선 것과 되살아난 것을 가르지 않는다 · 값 칸은 빈다 (ADR-0189)
-            if (a) logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), '');
+            if (a) logLine(state, root, a.side, 'call', L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), '');
             break;
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
@@ -1113,7 +1215,7 @@ function apply(state, root, opts, ev) {
             if (a && d) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
-                logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
+                logLine(state, root, a.side, 'hit', L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
                 addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
             }
             break;
@@ -1124,7 +1226,7 @@ function apply(state, root, opts, ev) {
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, dmgPop()); refreshUnit(state, d); }
             fxReflect(state, d);   // 피격 반응만 — 반사는 스킬이 아니다 (ADR-0410)
             if (a && d) {
-                logLine(state, root, a.side, L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
+                logLine(state, root, a.side, 'reflect', L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
                 addDmg(state, a, d, 'reflect', ev.dmg);
             }
             break;
@@ -1136,7 +1238,7 @@ function apply(state, root, opts, ev) {
             if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, dmgPop()); refreshUnit(state, d); }
             fxBlast(state, d, ev);   // 자폭은 스킬이라 이펙트가 선다 · 피격 반응도 (ADR-0409 · ADR-0410)
             if (a && d) {
-                logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg);   // 주체는 터진 쪽 (반사와 같은 자리)
+                logLine(state, root, a.side, 'hit', L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg);   // 주체는 터진 쪽 (반사와 같은 자리)
                 addDmg(state, a, d, ev.s, ev.dmg);
             }
             break;
@@ -1145,7 +1247,7 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u), d = U(ev.d);
             if (u) popup(state, u, t('pop.counter'), 'counter');
             // 주체는 반격한 쪽 (반사와 같은 자리) · 반격은 기본 공격이라 무기 칸 실루엣 · 값 칸은 「반격」
-            if (u && d) logLine(state, root, u.side, L(u.name), dmgIcon('basic'), t('bt.basicAttack'), L(d.name), t('log.v.counter'));
+            if (u && d) logLine(state, root, u.side, 'counter', L(u.name), dmgIcon('basic'), t('bt.basicAttack'), L(d.name), t('log.v.counter'));
             break;
         }
         case 'dodge': {
@@ -1154,7 +1256,7 @@ function apply(state, root, opts, ev) {
             if (a) markActed(a, ev.t);
             if (d) popup(state, d, t('pop.dodge'), 'miss');
             fxMiss(state, a, d);   // 피격 반응 (ADR-0410)
-            if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss'));
+            if (a && d) logLine(state, root, a.side, 'miss', L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss'));
             break;
         }
         case 'stagger': {   // 물리 경직 (R110) — 끝 시각까지 창 뱃지 줄에 칩 하나 · 그동안 행동 게이지가 선다. 로그 · 팝업은 없다 (SCREEN_DESIGN §4-2 · ADR-0154)
@@ -1173,7 +1275,7 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty)); refreshUnit(state, d); }
             if (a && d) {
-                logLine(state, root, a.side, L(a.name), ev.s ? dmgIcon(ev.s) : '', t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
+                logLine(state, root, a.side, 'dot', L(a.name), ev.s ? dmgIcon(ev.s) : '', t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
                 addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
             }
             break;
@@ -1185,7 +1287,7 @@ function apply(state, root, opts, ev) {
             refreshUnit(state, u);
             const enemy = u.side === 'enemy';
             // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
-            logLine(state, root, enemy ? 'party' : 'enemy', L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed'));
+            logLine(state, root, enemy ? 'party' : 'enemy', enemy ? 'slain' : 'downed', L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed'));
             popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
             fxDown(state, u);   // 피격 반응 (ADR-0410)
             break;
@@ -1194,7 +1296,7 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `+${ev.amt}`, 'heal'); refreshUnit(state, d); }
             fxHeal(state, d, ev);   // 스킬 회복만 (ADR-0409)
-            if (a && d) logLine(state, root, a.side, L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), `+${ev.amt}`, 'heal-t');
+            if (a && d) logLine(state, root, a.side, [a === d ? 'healSelf' : 'heal', ev.amt], L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), `+${ev.amt}`, 'heal-t');
             break;
         }
         case 'potion': {   // 물약 — 앞의 찬 칸(`i`)이 비고 그 영웅 HP 가 오른다 (R104 · ADR-0148).
@@ -1205,7 +1307,7 @@ function apply(state, root, opts, ev) {
             if (slot) slot.full = false;
             paintPotion(state, root, ev.i);
             // 대상 칸은 빈다 · 남은 칸 수는 안 적는다 — 아레나의 물약 칸이 든다 (ADR-0189)
-            if (u) logLine(state, root, u.side, L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t');
+            if (u) logLine(state, root, u.side, ['potion', ev.amt], L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t');
             break;
         }
         case 'regen': {   // HP 재생 — 조용히 오른다(팝업 없음). 정수 1 이상 쌓인 틱에만 온다
@@ -1235,7 +1337,8 @@ function apply(state, root, opts, ev) {
             // 오오라(`until: null`)는 로그에 안 적는다 — 전투 시작 · 적의 라운드마다 받는 유닛 수만큼 같은 줄이 쌓인다. 뱃지가 든다 (R98 · ADR-0127)
             // 배리어인지는 `stat` 으로 가른다 [2026-09-21 · 부채 #50 곁가지] — `amt` 는 최대 HP 창(`hp_max_pct`)도 실어서
             //   `amt != null` 로 가르면 배틀오더스가 「방벽 21」로 찍혔다
-            if (ev.until !== null) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '',
+            if (ev.until !== null) logLine(state, root, u.side, ev.stat === 'barrier_pct' ? ['barrier', ev.amt] : ev.k ? 'ail' : 'buff',
+                L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '',
                 ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up'));
             break;
         }
@@ -1247,7 +1350,7 @@ function apply(state, root, opts, ev) {
             // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
-            if (!aura) logLine(state, root, u.side, L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '', t('log.v.ended'));
+            if (!aura) logLine(state, root, u.side, ev.k ? 'ailEnd' : 'buffEnd', L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '', t('log.v.ended'));
             break;
         }
         // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)
