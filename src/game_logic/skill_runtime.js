@@ -6,7 +6,7 @@
  *   런타임은 그것을 **제자리에서** 바꾼다(HP·창·배리어·쿨은 전투 안에서만 사는 값이라 세이브에 안 들어간다 · INTERFACE §4).
  *
  * battle_design.md / skill_design.md 확정 규칙:
- *   · 한 차례에 하나 (battle_design §3) — 준비된 것이 없으면 기본 공격. 발동 선택은 rng 를 쓰지 않는다
+ *   · 한 차례에 하나 (battle_design §3) — 준비된 것이 없으면 기본 공격 · **마법 무기는 기본 공격이 없다**(R198 — 기다리기는 battle.js). 발동 선택은 rng 를 쓰지 않는다
  *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **처음엔 준비 상태다**(전투 시작 · 등장 — battle.js 가 박는다 · R100) · 원정 도중 새로 생긴 스킬만 첫 준비 시각에 같은 식을 쓴다
  *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 효과의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
@@ -307,16 +307,28 @@ export function createSkillRuntime(ctx) {
         }
     }
 
-    /** 한 차례 — 준비된 액티브 하나를 쓰고, 없으면 기본 공격 (battle_design §3) */
+    /**
+     * 지금 고를 액티브 — 준비됐고 발동 조건이 참인 것 중 `pickReady` 가 고른 하나 · 없으면 null. **rng 0**.
+     *   차례(`act`)와 마법 무기의 기다림(battle.js 틱 루프 — 찬 채로 기다리다 준비되는 틱에 시전 · R198)이 같은 판정을 쓴다
+     */
+    function pick(u, t) {
+        // 발동 선택 — rng 를 쓰지 않는다. 조건이 거짓인 것은 준비된 것으로 치지 않는다 (skill_design §9-3)
+        return SK && u.actives.length
+            ? SK.pickReady(u.actives, t, a => SK.castable(a.def, { self: u, allies: alive(alliesOf(u)) }))
+            : null;
+    }
+
+    /**
+     * 한 차례 — 준비된 액티브 하나를 쓰고, 없으면 기본 공격 (battle_design §3).
+     *   **마법 무기(`noBasic`)는 기본 공격이 없다** [2026-10-02 · R198] — 준비된 것이 없으면 아무것도 안 한다. 그 차례를 세우지 않는 것
+     *   (찬 채로 기다리기)은 부르는 쪽(battle.js 틱 루프)이 `pick` 으로 먼저 가른다 — 여기는 안전장치다
+     */
     function act(u, t) {
         const foes = alive(foesOf(u));
         if (foes.length === 0) return;
-        // 발동 선택 — rng 를 쓰지 않는다. 조건이 거짓인 것은 준비된 것으로 치지 않는다 (skill_design §9-3)
-        const sel = SK && u.actives.length
-            ? SK.pickReady(u.actives, t, a => SK.castable(a.def, { self: u, allies: alive(alliesOf(u)) }))
-            : null;
+        const sel = pick(u, t);
         if (!sel) {
-            basicAttack(u, t, foes);
+            if (!u.noBasic) basicAttack(u, t, foes);
             return;
         }
         const def = sel.def;
@@ -336,7 +348,7 @@ export function createSkillRuntime(ctx) {
      */
     const rt = {
         rng, F, strikeOnce: ctx.strikeOnce, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
-        alive, alliesOf, foesOf, act, cast, fire, expire, castHeal, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf,
+        alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf,
     };
     return rt;
 }

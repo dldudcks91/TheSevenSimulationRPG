@@ -1325,10 +1325,12 @@ const STRINGS = {
     },
     /* 수량 구절 — 값을 아는 자리는 **실제 수치**(`{v}`), 모르는 자리(도감 · 후보 카드)는 **식**(`{f}`)으로 접는다 [식 2026-09-10 · ADR-0089].
        `{v}` 에는 Alt 를 누르는 동안 괄호 식이 따라 붙는다 — 틀은 그걸 모른다. ⚠ 감소·치명·추가 피해 전의 값이다 (game_logic/skill.js:previewOf)
-       ~~`sk.amt.mult` · `sk.amt.healMult`(「공격력의 {m}%」)~~ → 식 모양 `sk.amt.fx` · `sk.amt.healFx` — 회복의 밑수는 마법 공격력이라 옛 문구가 틀렸었다 */
+       ~~`sk.amt.mult` · `sk.amt.healMult`(「공격력의 {m}%」)~~ → 식 모양 `sk.amt.*Fx` · `sk.amt.healFx` — 회복의 밑수는 마법 공격력이라 옛 문구가 틀렸었다.
+       피해는 식이어도 **종류를 말한다** (2026-10-02 · ADR-0477 — ~~`sk.amt.fx`(「{f} 만큼 피해」)~~) */
     'sk.amt.physical': { ko: '{v} 의 물리 피해', en: '{v} physical damage' },
     'sk.amt.elem': { ko: '{v} 의 {e} 피해', en: '{v} {e} damage' },   // {e} = 원소 이름 `st.atkType.*` — 「마법 피해」는 없다(마법 공격은 반드시 원소를 갖는다 · battle_design §2-1)
-    'sk.amt.fx': { ko: '{f} 만큼 피해', en: 'damage equal to {f}' },
+    'sk.amt.physicalFx': { ko: '{f} 의 물리 피해', en: 'physical damage equal to {f}' },   // ko 는 값 자리와 같은 꼴 — ~~「{f} 만큼의」~~ (2026-10-02 사용자 지시)
+    'sk.amt.elemFx': { ko: '{f} 의 {e} 피해', en: '{e} damage equal to {f}' },
     'sk.amt.heal': { ko: '{v} 만큼', en: '{v} HP' },
     'sk.amt.healFx': { ko: '{f} 만큼', en: 'HP equal to {f}' },
     /* 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다(Alt 의 괄호 식이 값 바로 뒤에 서게). 초는 `time.s` · % 는 기호 그대로 */
@@ -1345,7 +1347,7 @@ const STRINGS = {
     'sk.eff.hp_max_pct': { ko: '최대 HP +{v} 를 건다', en: '+{v} max HP' },
     'sk.eff.regen_pct': { ko: 'HP 재생 +{v} 를 건다', en: '+{v} HP regen' },
     'sk.eff.dr_pct': { ko: '받는 피해 −{v} 를 건다', en: '−{v} damage taken' },
-    'sk.eff.onhit_element': { ko: '기본 공격마다 {v} 의 추가 피해를 얹는다', en: 'adds a {v} extra hit on every basic attack' },
+    'sk.eff.onhit_element': { ko: '기본 공격마다 {v} 의 {e} 추가 피해를 얹는다', en: 'adds a {v} {e} extra hit on every basic attack' },   // {e} = 걸린 효과의 원소 `st.atkType.*` (ADR-0477)
     'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v} 로 퍼진다', en: 'basic attacks spread to all enemies at {v}' },
     'sk.eff.atk_pct.neg': { ko: '데미지 −{v} 를 건다', en: '−{v} Damage' },
     'sk.eff.period_pct.neg': { ko: '공격 속도 −{v} 를 건다', en: '−{v} Attack Speed' },
@@ -1355,15 +1357,17 @@ const STRINGS = {
        (정렬 대기만큼 뒤에 나간다). 쿨이라고 적으면 참이 된다 */
     'sk.cool': { ko: '쿨 {s}초', en: 'Cooldown {s}s' },
     'sk.slots.note': {
-        ko: '차례가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격.<br>'
+        ko: '차례가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격. <b>마법 무기는 기본 공격이 없다</b> — 준비된 스킬이 없으면 게이지가 찬 채로 기다렸다가 스킬이 준비되는 순간 시전한다<br>'
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
             + '쿨은 실시간으로 돈다. 쿨이 공격 속도(초)의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
-            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 무기 칸은 <b>그 무기군이 지정한 직업의 풀</b>에서 온다<br>'
+            + '기본 공격은 언제나 <b>물리</b>다 — 원소 피해는 스킬만 낸다<br>'
+            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 책 칸은 <b>배운 책</b>에서 온다. <b>책 칸만</b> 그 스킬 직업의 무기를 들어야 나간다<br>'
             + '⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>이다 — 지금 값은 임시다',
-        en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack.<br>'
+        en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack. <b>Magic weapons have no basic attack</b> — with nothing ready, the gauge waits full and casts the moment a skill is ready<br>'
             + 'One action per turn. A skill <b>replaces</b> that turn\'s attack and there is no mana — the action itself is the only cost<br>'
             + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of Attack Speed (seconds) → <b>CDR affixes</b> are the alignment lever<br>'
-            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the weapon slot from <b>the pool of the class its weapon group names</b><br>'
+            + 'Basic attacks are always <b>physical</b> — only skills deal elemental damage<br>'
+            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the book slot from <b>the book you read</b>. <b>Only the book slot</b> needs a weapon of that skill\'s class<br>'
             + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
     },
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
@@ -1552,20 +1556,10 @@ const STRINGS = {
     // 스킬 세그먼트의 안쪽 분류 [2026-09-24 · §9-1 · ADR-0335] — 직업은 탭이 아니라 일반 탭의 묶음이다(0299 의 직업 탭 대체)
     'ix.seg.basic': { ko: '일반 스킬', en: 'Basic Skills' },
     'ix.seg.adv': { ko: '전직 스킬', en: 'Advanced Skills' },
-    /* 전직 스킬 묶음 [2026-09-22 · §9-1 · ADR-0299] — `skill.csv` 행이 없어 이름을 여기서 든다(무기 베이스 `ix.b.*` 와 같은 처방).
-       전직 하나가 묶음 하나이고 머리가 전직 이름(`ix.adv.*`)이다. 행이 서면 CSV 이름으로 넘어가고 이 키들은 지운다.
-       이름 출처는 skill_design.md §10-1. 삭제된 키 — `ix.g.skillAdv`(같은 날 · 「{직업} 전직 스킬」 한 묶음이던 머리) */
-    'ix.adv.fire_mage': { ko: '파이어 메이지', en: 'Fire Mage' },
-    'ix.adv.frost_mage': { ko: '프로스트 메이지', en: 'Frost Mage' },
-    'ix.adv.thunder_mage': { ko: '썬더 메이지', en: 'Thunder Mage' },
-    'ix.sk.mag_meteor': { ko: '메테오', en: 'Meteor' },
-    'ix.sk.mag_firewall': { ko: '파이어월', en: 'Firewall' },
-    'ix.sk.mag_hydra': { ko: '히드라', en: 'Hydra' },
-    'ix.sk.mag_frozenorb': { ko: '프로즌 오브', en: 'Frozen Orb' },
-    'ix.sk.mag_blizzard': { ko: '블리자드', en: 'Blizzard' },
-    'ix.sk.mag_frostburst': { ko: '프로스트 버스트', en: 'Frost Burst' },
-    'ix.sk.mag_thunderstrike': { ko: '썬더 스트라이크', en: 'Thunder Strike' },
-    'ix.sk.mag_nova': { ko: '노바', en: 'Nova' },
+    // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]
+    'ix.tier': { ko: '{n}티어', en: 'Tier {n}' },
+    /* 전직 스킬 묶음의 이름 — `ix.adv.*`(전직) · `ix.sk.*`(스킬) 11 키는 2026-10-02 삭제. 묶음 머리는 `advance.csv`,
+       타일 이름은 `skill.csv` 가 든다(§9-1 · ADR-0472) */
     'ix.count': { ko: '{n}장', en: '{n} images' },
     'ix.style': { ko: '얼굴 스타일', en: 'Face style' },
     'ix.hero': { ko: '영웅 {n}', en: 'Hero {n}' },

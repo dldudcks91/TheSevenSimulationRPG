@@ -425,7 +425,8 @@ export function refreshDerived(u) {
  * **rng 0 · 타임라인 이벤트 없음** — 창에 `quiet` 을 달아 만료도 조용하다(`skill_runtime.expire`).
  *   방어력 감소 · 공격력 감소 = **겹치지 않는다** — 대상의 창 하나에 센 값만 남고 시간만 갱신된다
  *   원소 저항 감소 = **영웅끼리 중첩** — 공격자 · 원소마다 창이 따로 서고, 같은 영웅의 재타격은 시간만 갱신한다
- *   공격력 감소는 **공격 타입이 맞는 대상**에만 — 물리 감소 = 물리 공격 · 마법 감소 = 원소 공격
+ *   공격력 감소는 **든 무기의 피해 종류가 맞는 대상**에만 — 물리 감소 = 물리 무기 · 맨손 · 마법 감소 = 마법 무기(`noBasic`)
+ *     [개정 2026-10-02 · R198 — ~~평타의 공격 타입(물리 · 원소)~~ — 평타가 언제나 물리라 마법 감소가 아무에게도 안 걸리게 됐다]
  * @param u 공격자 · @param fx 공격자의 무기 옵션 묶음(`hero.computeCombat:option_fx`) · @param d 대상 · @param type 그 타격의 공격 타입
  * @param t 지금 시각(초) · @param sec `{def, res, atk}` 창 길이 — [balance.csv:weapon_def_down_sec] · `weapon_res_down_sec` · `weapon_atk_down_sec`
  * @returns 창이 하나라도 섰는가
@@ -438,7 +439,7 @@ export function weaponOnHit(u, fx, d, type, t, sec) {
         changed = true;
     };
     if (fx.defDown > 0) strongest('wx:def_down', 'def_pct', fx.defDown, sec.def);
-    const atkDown = d.atkType === 'physical' ? fx.atkDownPhys : fx.atkDownMag;
+    const atkDown = d.noBasic ? fx.atkDownMag : fx.atkDownPhys;
     if (atkDown > 0) strongest('wx:atk_down', 'atk_pct', atkDown, sec.atk);
     if (fx.resDown > 0 && type !== 'physical' && type in d.res) {
         d.buffs[`wx:res_down:${u.key}:${type}`] = { stat: 'res_elem', v: -fx.resDown, until: t + sec.res, element: type, by: u.key, quiet: true };

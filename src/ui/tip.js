@@ -791,19 +791,31 @@ const amountSlot = (part, R) => slot({
 }, R);
 
 /**
- * 수량 구절 — 값을 아는 자리는 **실제 수치**(`{v} 의 물리 피해`), 모르는 자리는 **식**(`{f} 만큼 피해`)으로 접는다.
+ * 하는 일 줄 하나의 **피해 종류** — `physical` 또는 원소 id · 피해를 안 내는 줄은 `null`. 문장(`amountPhrase`)과 종류 칩(`skillBodyHtml`)이 같이 쓴다 (ADR-0477 · ADR-0480).
+ * 타격 · 고정 = 그 타격이 상대하는 방어 — **스킬의 원소 태그가 먼저**고 없으면 쓰는 이의 공격 타입이다 (전투 `strikeOnce` 와 같은 순서 · battle_design §2-1).
+ *   원소는 이름으로 말한다 — 「마법 피해」는 없다. 공격 타입만 보면 09-11 뒤 원소 스킬까지 「물리 피해」로 찍힌다 (2026-09-15).
+ *   공격 타입은 언제나 물리라(2026-10-02) 주인이 없는 자리(`atkType` 없음)도 같은 답을 낸다 — 그래서 식도 종류를 말한다.
+ * 평타 부여(`onhit_element`) = 걸린 효과가 얹는 원소. 평타를 퍼뜨리기만 하는 `attack_splash` 는 제 피해가 없다
+ */
+function damageTypeOf(line, atkType) {
+    if (line.effect === 'hit' || line.effect === 'fixed') return line.element ?? atkType ?? 'physical';
+    const st = line.status ? SYS.skill.statuses[line.status] ?? null : null;
+    return st?.stat === 'onhit_element' ? st.element : null;
+}
+
+/**
+ * 수량 구절 — 값을 아는 자리는 **실제 수치**(`{v} 의 물리 피해`), 모르는 자리는 **식**(`{f} 의 물리 피해`)으로 접는다.
+ * 피해는 두 자리 모두 **종류를 말한다** (ADR-0477).
  * ⚠ 감소·치명·추가 피해 **전**의 값이다 (previewOf 주석) — 설명창이 약속하는 건 「내가 때리는 세기」다.
  */
 function amountPhrase(line, part, atkType, R) {
     if (!part) return null;
-    const heal = line.effect === 'heal';
     const d = amountSlot(part, R);
-    if (part.value == null) return t(heal ? 'sk.amt.healFx' : 'sk.amt.fx', { f: d });
-    if (heal) return t('sk.amt.heal', { v: d });
-    // 피해 종류 = 그 타격이 상대하는 방어 — **스킬의 원소 태그가 먼저**고 없으면 쓰는 이의 공격 타입이다 (전투 `strikeOnce` 와 같은 순서 · battle_design §2-1).
-    //   원소는 이름으로 말한다 — 「마법 피해」는 없다. 공격 타입만 보면 09-11 뒤 원소 스킬까지 「물리 피해」로 찍힌다 (2026-09-15)
-    const type = line.element ?? atkType;
-    return type && type !== 'physical' ? t('sk.amt.elem', { v: d, e: t(`st.atkType.${type}`) }) : t('sk.amt.physical', { v: d });
+    if (line.effect === 'heal') return part.value == null ? t('sk.amt.healFx', { f: d }) : t('sk.amt.heal', { v: d });
+    const type = damageTypeOf(line, atkType);
+    const elem = type && type !== 'physical';
+    if (part.value == null) return elem ? t('sk.amt.elemFx', { f: d, e: t(`st.atkType.${type}`) }) : t('sk.amt.physicalFx', { f: d });
+    return elem ? t('sk.amt.elem', { v: d, e: t(`st.atkType.${type}`) }) : t('sk.amt.physical', { v: d });
 }
 
 /**
@@ -814,7 +826,10 @@ function amountPhrase(line, part, atkType, R) {
  */
 function effectPhrase(st, P, R) {
     const key = `sk.eff.${st.stat}${st.value < 0 ? '.neg' : ''}`;
-    return STRINGS_HAS(key) ? t(key, { v: slot({ raw: Math.abs(st.value), part: P.value, unit: UNIT.pct }, R) }) : null;
+    if (!STRINGS_HAS(key)) return null;
+    // {e} = 얹는 원소 — 평타 부여(`onhit_element`)만 든다 (ADR-0477). 다른 틀은 안 쓰는 자리라 비워 둔다
+    const e = st.element ? t(`st.atkType.${st.element}`) : '';
+    return t(key, { v: slot({ raw: Math.abs(st.value), part: P.value, unit: UNIT.pct }, R), e });
 }
 
 /**
@@ -1052,7 +1067,7 @@ const skillNameHtml = s => {
 /**
  * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주(기본 상태 · 괄호가 붙을 숫자가 있을 때만).
  * 스킬 카드가 부른다 (~~아이템 툴팁의 스킬 칸~~ 은 2026-09-29 걷혔다 · ADR-0421).
- * 칩은 **출처 칩**(영웅·책·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **능력치 칩**이다.
+ * 칩은 **출처 칩**(영웅·책·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **종류 칩**(피해를 내는 스킬만 — 물리 · 원소 이름 `st.atkType.*` · 줄 순 · 같은 종류는 한 번 · ADR-0480) · **능력치 칩**이다.
  * 능력치 칩은 스케일링 슬롯(하는 일 줄의 `scales` — 줄 순 · 2026-09-22)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
  * 고정 설명(`def.desc`)은 **안 낸다** — 문장이 같은 말을 값까지 넣어 한다(같은 ADR).
  */
@@ -1061,6 +1076,7 @@ function skillBodyHtml(s, ctx) {
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
     for (const tg of (def ? SYS.skill.tagsOf(def) : [])) chips.push(`<i class="tip-chip">${L(skillTagName(tg))}</i>`);
+    for (const ty of new Set((def?.effects ?? []).map(e => damageTypeOf(e, ctx.atkType)).filter(Boolean))) chips.push(`<i class="tip-chip dmg">${t(`st.atkType.${ty}`)}</i>`);
     for (const at of new Set((def?.effects ?? []).flatMap(e => e.scales).map(x => x.attr))) chips.push(`<i class="tip-chip attr">${abbrOf(at)}</i>`);
     // 정의를 못 찾으면(행이 지워진 옛 세이브) 이름만 낸다 — 던지지 않는다
     const R = { alt: altHeld, fx: false };

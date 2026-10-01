@@ -12,6 +12,8 @@
  *     챕터보스 스테이지는 **보스 1라운드**다 (base_expedition_design §1-2 개정 2026-09-11). 편성은 round_budget.csv ·
  *     스테이지 컨셉이 편성을 바꾸는 예외는 spawn_rule.js (monster_design §4 · 2026-09-18)
  *   · 행동 주기 단일 축 (공격/캐스팅 같은 시계), 한 차례에 하나
+ *   · **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 차례가 와도 준비된 스킬이 없으면
+ *     **찬 채로 기다렸다가** 스킬이 준비되는 틱에 곧바로 시전한다(`noBasic` · 틱 루프). 영웅 · 몬스터 같은 규칙 · rng 0
  *   · **몬스터도 영웅과 같은 모양이다** — 직업 · 기본 능력치 7종 · 고유 스킬 · 장비 (monster_design §5-1 · 사용자 지시 2026-09-11).
  *     ~~몬스터 소재값(monster.csv) × 등급 배율(spawn_grade.csv)~~ 은 폐기 — `hp`·`attack`·`action_period` 컬럼이 없어졌다
  *   · 용어는 "사망"이 아니라 **전투불능** — 라운드 사이 회복 없음. 회복은 전투 안에서만 일어나고
@@ -24,14 +26,14 @@
  *   · **몬스터는 영웅과 같은 전투 능력치 체계를 쓴다** (§8-1) — 같은 `strike` 에 같은 모양의 유닛이 양쪽으로 들어간다.
  *     몬스터 방어 200과 영웅 방어 200은 정확히 같은 감쇠를 만든다. 저항은 양쪽 다 **4원소 객체 · 직접 %**
  *   · 적중은 **레벨 차 0/1 게이트** (§9-4) — 영웅은 자기 레벨, 몬스터는 스테이지 레벨(올린 레벨 · 기본 dlvl). 빗나가면 흡혈·반사도 유발되지 않는다
- *   · 원소: 몬스터는 스테이지 원소(monster.csv:attack_type) · 영웅은 **물리** — 마법 무기의 원소는 관련 옵션이 붙었을 때만 생긴다
- *     (§2-1 · §9-5 · 개정 2026-09-11 · R80). 그래서 몬스터의 `attack_type` 은 `computeCombat` 결과를 **덮는다**
+ *   · 원소: **평타는 언제나 물리, 원소 피해는 스킬만 낸다** [2026-10-02 · 사용자 확정 · R198 · §2-1 · §9-5] — 영웅 · 몬스터 같은 규칙.
+ *     ~~몬스터는 스테이지 원소(monster.csv:attack_type)로 `computeCombat` 결과를 덮는다~~ 는 컬럼째 폐기
  *   · 반사는 비직격 — 감쇠·치명 없이 공격자 HP 를 직접 깎고 아무것도 유발하지 않는다 (§9-6)
  *   · **물리 경직** [2026-09-17 · R110 · §2-3] — 물리 직격으로 줄어든 HP 가 최대 HP 의 [balance.csv:stagger_hp_pct](비율) 이상이면
  *     [balance.csv:stagger_sec] × (1 − 타격 회복 비율) 만큼 **행동 차례만** 늦춘다(쿨은 돈다 · 다시 걸리면 끝 시각만 새로 · 양쪽 같은 규칙 · rng 0).
  *     타격 회복(`fhr`)의 출처는 갑옷 분노 칸이다(2026-09-18) · ⚠ 상한은 기획 미정이다 (GAME_DESIGN §10 「경직 · 상태이상 개편의 남은 칸」)
  *   · **방어구 옵션** [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 영웅 · 몬스터 같은 규칙(입은 장비대로):
- *     **반격**(맞으면 확률로 때린 적에게 기본 공격 1회 · 내 차례를 쓴다 · 평타와 같은 규칙) · **조건부 받는 피해 감소**(때린 쪽의 종족 · 등급 · 열 —
+ *     **반격**(맞으면 확률로 때린 적에게 기본 공격 1회 · 내 차례를 쓴다 · 평타와 같은 규칙 — **마법 무기는 평타가 없어 반격하지 않는다** · R198) · **조건부 받는 피해 감소**(때린 쪽의 종족 · 등급 · 열 —
  *     셋을 더해 한 원천으로 곱) · **절대값 피해 감소**(formula.strike) · **원소별 최대 저항**(formula.strike) · **체력 회복 +%**(재생 · 회복 스킬 · 흡혈 · 물약)
  *
  *   · **유닛 생성은 `makeUnit` 하나다** — 영웅도 몬스터도 같은 생성자를 지난다 (§8-1). 그리고 **전투 능력치를 만드는 함수도 하나다**
@@ -44,7 +46,7 @@
  *     배리어는 HP 밖 흡수 풀이고, 흡혈·반사는 **배리어가 먹은 몫을 포함한 dmg** 에 비례한다(직격이 들어간 사실은 같다).
  *   · **스킬 계수** (skill_design §13 · 2026-09-10) — 영웅 유닛은 기본 능력치(`stats`)를 들고, 런타임이 시전 순간 `skill.scaleDef` 로
  *     실효 정의를 만든다. 스킬 타격은 능력치 계수(`statMult`)·추가 피해(`procChance`/`procMult`)를 `strikeOnce` 에 싣는다 —
- *     기본 공격은 안 싣고 평타 계수(`mainMult` — 물리 무기 · 맨손 = 힘 · 마법 무기 = 지능 · 2026-09-27)를 쓴다 (battle_design §9-2 · 2026-09-18 — ~~능력치 항 `flat`~~ 폐기).
+ *     기본 공격은 안 싣고 평타 계수(`mainMult` — 힘 · ~~마법 무기 = 지능~~(2026-09-27) 은 R198 로 소멸 — 마법 무기는 평타가 없다)를 쓴다 (battle_design §9-2 · 2026-09-18 — ~~능력치 항 `flat`~~ 폐기).
  *   · **사건 훅** — `strikeOnce` 가 `hit`/`hitTaken`/`kill` 을, `downed` 가 `down` 을, 런타임이 `cast` 를 발화한다.
  *     유닛의 `reactions` 가 비면 아무 일도 없다 — 발화 **지점**이 곧 rng 순서 계약이다 (INTERFACE §5-2).
  *   · **스킬 id 전용 코드가 없다** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 이 파일이 스킬에 대해 아는 것은 규칙뿐이다:
@@ -86,7 +88,7 @@ import { makeRng, deriveSeed } from './rng.js';
 
 const TICK = 0.1;
 /** 걸음을 끊는 자리의 부동소수 여유 — 시각은 0.1 을 거듭 더해 꼬리가 붙는다(`advance`). **틱을 몇 번 도느냐만** 정하고 틱 안의 계산에는
- *  안 들어가므로 결과를 안 바꾼다(끊는 자리만 옮긴다 · INTERFACE §5-3 · R130) */
+ *  안 들어가므로 결과를 안 바꾼다(끊는 자리만 옮긴다 · INTERFACE §5-3 · R130). 행동 차례 판정(`u.next`)도 같은 여유를 쓴다(2026-10-02 · #69) */
 const STEP_EPS = 1e-6;
 /** 공격력이 없는 쪽의 범위 — 소환 · 마법 무기가 아닌 쪽의 회복 밑수 (R90) */
 const NO_DMG = Object.freeze({ min: 0, max: 0 });
@@ -117,8 +119,9 @@ export function createBattleSystem(data) {
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
     /**
-     * 무기 판정 [2026-09-29 · R187 · skill_design §2-2] — **직업 스킬은 그 직업의 무기군을 들어야 나간다**(규칙은 `skill.fitsWeapon`).
-     *   무기군 → 직업 목록은 여기서 푼다(skill.js 는 아이템을 모른다). 맨손 · 모르는 무기군 = `null` → 직업 스킬이 전부 안 맞는다.
+     * 무기 판정 [2026-09-29 · R187 · 개정 2026-10-02 · R197 · skill_design §2-2] — **배운 스킬 칸만** 그 스킬 직업의 무기군을 들어야 나간다
+     *   (규칙은 `skill.fitsWeapon` · 칸을 가리는 것은 `slotOf`). 고유 · 전직 칸은 무기를 안 본다 — ~~직업 스킬 전부 · 출처 무관~~(09-29).
+     *   무기군 → 직업 목록은 여기서 푼다(skill.js 는 아이템을 모른다). 맨손 · 모르는 무기군 = `null` → 배운 직업 스킬이 안 맞는다.
      *   무기군 키가 **없는** 파티 유닛(`undefined` — 직업을 손으로 실은 검증 파티)은 판정하지 않는다 (INTERFACE §2-6)
      */
     const fitterOf = group => {
@@ -127,11 +130,12 @@ export function createBattleSystem(data) {
         return def => SK.fitsWeapon(def, classes);
     };
     /**
-     * 칸 하나를 전투에 세운다 — 정의를 풀고 준비 시각을 얹는다. **무기가 안 맞는 칸은 꺼진 채 선다**(R187 · battle_design §6):
-     *   `readyAt = Infinity` 라 `pickReady` 가 안 고르고(차례를 안 먹는다) 쿨이 멈춘다 · 남은 쿨은 `frozen`(초)
+     * 칸 하나를 전투에 세운다 — 정의를 풀고 준비 시각을 얹는다. **무기가 안 맞는 배운 칸은 꺼진 채 선다**(R187 · R197 · battle_design §6):
+     *   `readyAt = Infinity` 라 `pickReady` 가 안 고르고(차례를 안 먹는다) 쿨이 멈춘다 · 남은 쿨은 `frozen`(초).
+     *   무기를 보는 것은 **배운 칸(`source = book`)뿐**이다 — 고유 · 전직(몬스터 보스 셋째 칸 포함) 칸은 늘 켜진다 (2026-10-02 · R197)
      * @param frozen 꺼질 때 멈춰 둘 쿨(초) — 전투 시작 · 등장은 0(준비 상태로 출발 · R100)
      */
-    const slotOf = (a, def, fits, readyAt, frozen = 0) => (fits(def)
+    const slotOf = (a, def, fits, readyAt, frozen = 0) => (a.source !== 'book' || fits(def)
         ? { id: a.id, def, readyAt, source: a.source }
         : { id: a.id, def, readyAt: Infinity, source: a.source, off: true, frozen });
     // 처치 XP 기준값 — 몬스터 레벨 → `level_xp.csv:monster_xp` (2026-09-28 · ~~monster_xp_base × monster_xp_growth ^ (lvl − 1)~~).
@@ -171,12 +175,15 @@ export function createBattleSystem(data) {
         .map(m => m.monster_idx);
 
     /**
-     * 스테이지 원소 — 그 스테이지 몬스터의 `attack_type` 중 physical 이 아닌 첫 값 (없으면 'physical').
+     * 스테이지 원소 — 그 스테이지 몬스터의 **고유 스킬이 든 원소** 중 첫 값 (없으면 'physical').
+     *   [개정 2026-10-02 · R198 — ~~몬스터의 `attack_type` 중 physical 이 아닌 첫 값~~] 원소 피해는 스킬만 내므로(battle_design §2-1)
+     *   원소의 출처도 스킬이다 — 고유 스킬의 하는 일 줄 중 원소 태그(`skill_effect.csv:element`)를 든 첫 줄. 보스 셋째 칸은 스폰 굴림이라 안 본다.
      * 편성 화면이 "이 스테이지는 어느 저항을 요구하나"를 표시하려면 필요한데(§9-8),
-     * 렌더러가 몬스터 테이블을 훑어 계산하면 규칙이 화면 층에 새므로 여기 둔다.
+     * 렌더러가 몬스터 테이블을 훑어 계산하면 규칙이 화면 층에 새므로 여기 둔다. rng 0
      */
+    const skillElement = id => (SK?.defs[id]?.effects ?? []).find(e => e.element)?.element ?? null;
     const stageElement = stage =>
-        stageMonsters(stage).find(m => m.attack_type !== 'physical')?.attack_type ?? 'physical';
+        stageMonsters(stage).map(m => skillElement(m.innate_skill)).find(Boolean) ?? 'physical';
 
     /**
      * 스테이지의 라운드 줄 — `stage.csv:round_set` 이 `stage_round.csv` 의 세트 하나를 고른다 (base_expedition_design §1-2 · 2026-09-11).
@@ -259,7 +266,10 @@ export function createBattleSystem(data) {
             matkMin: matk.min, matkMax: matk.max,    // 회복량의 밑수 — 시전마다 그 사이를 굴린다 (battle_design §9-1 · skill_runtime.castHeal)
             // 회복 밑수도 공격력과 **같은 괄호**를 탄다 — atk_pct 창이 여기도 걸린다 (skill_effects:EFFECTS.atk_pct)
             matkMinBase: matk.min / bracket, matkMaxBase: matk.max / bracket,
-            atkType: c.attack_type,                  // physical 또는 원소 (monster_design §2 · §9-5)
+            atkType: c.attack_type,                  // 평타의 공격 타입 — 언제나 physical (2026-10-02 · R198 · battle_design §2-1). 원소는 스킬 타격이 얹는다(`strikeOnce`)
+            // 평타를 안 친다 — 마법 무기 [2026-10-02 · R198 · battle_design §3]. 차례에 준비된 스킬이 없으면 찬 채로 기다린다(틱 루프) · 반격도 없다.
+            //   `basic_attack` 을 모르는 입력(소환 · 손으로 만든 검증 유닛)은 평타를 친다
+            noBasic: c.basic_attack === false,
             // 창이 미는 축은 **밑수를 따로 든다** — `refreshDerived` 가 창 합으로 파생값을 다시 쓰고,
             //   창이 하나도 없을 때 원값으로 돌아갈 자리가 필요해서다 (skill_effects:EFFECTS.derive)
             def: c.defense, defBase: c.defense,
@@ -312,7 +322,7 @@ export function createBattleSystem(data) {
 
     /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
-    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType',
+    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType', 'noBasic',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
         'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'period', 'basePeriod', 'fhr',
@@ -346,12 +356,13 @@ export function createBattleSystem(data) {
      *
      * 입력 = **레벨과 무관한 모양**(직업 · 기본 능력치 7 · 고유 스킬) + **스폰 때 굴린 장비**.
      *   크기는 던전 레벨과 등급이 장비로 준다 — ~~소재값 × 등급 배율~~ 은 컬럼째 없어졌다(`hp`·`attack`·`action_period`).
-     * 몬스터 전용으로 남는 것은 세 줄뿐이다:
+     * 몬스터 전용으로 남는 것은 두 줄뿐이다:
      *   ① **몸값 합류** — `defense` · `res_*` 는 몸이 들고 장비가 그 **위에** 더한다 [사용자 확정 · monster_design §7].
      *      도감이 저항을 공략 정보로 적고(§8) 굴린 장비로 판마다 요동치면 「이 원소를 막았나」가 안 읽히기 때문이다(§9-5)
      *   ② **몬스터 전용 전역 배율** — 합계에 곱한다(캘리브레이션 조절값). 등급 세기는 `hp_mult` 하나만 남았다 —
      *      **HP 는 장비에서 안 오기 때문**이다(영웅 체계에서 HP 는 레벨이 준다). ~~`atk_mult`·`def_mult`·`res_add`~~ 퇴역
-     *   ③ **`attack_type` 덮기** — 원소를 정하는 것은 **스테이지**다 (monster_design §2). `computeCombat` 은 R80 으로 언제나 `physical` 을 낸다
+     *   ~~③ `attack_type` 덮기 — 원소를 정하는 것은 스테이지다~~ → **2026-10-02 폐기 · R198** — 평타는 언제나 물리, 원소는 스킬만 낸다(battle_design §2-1).
+     *      `monster.csv:attack_type` 컬럼째 없다. 마법 무기를 낀 몬스터는 영웅과 같이 평타를 안 친다(`basic_attack`)
      *
      * ⚠ 치명·재생 **밑수도 영웅과 같이 받는다** [D2 사용자 확정 2026-09-11] — 특수 분기를 두지 않는 것이 목적이라
      *   `crit_rate`·`hp_regen` 을 0 으로 덮지 않는다. 마법 무기를 낀 몬스터는 `atk_magic`(= matkMin·matkMax)을 갖는다(monster_design §5-1 이 인정).
@@ -380,9 +391,8 @@ export function createBattleSystem(data) {
             if (c[k] !== undefined) c[k] = { min: c[k].min * B.monster_atk_scale, max: c[k].max * B.monster_atk_scale };
         }
         c.defense *= B.monster_def_scale;
-        c.attack_type = m.attack_type;                                      // ③
         // 능력치 계수는 **영웅과 같다** [2026-09-22 사용자 — 보류 해제 · battle_design §9-2] — 평타는 `computeCombat` 이 낸
-        //   `main_attr_mult`(낀 무기의 피해 종류 — 물리 = 힘 · 마법 = 지능 · 2026-09-27) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
+        //   `main_attr_mult`(힘 · 마법 무기는 평타가 없다 — R198) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
         /*
          * 스킬 칸 — **등급이 연다** (skill_design §2 · monster_design §5-1): 일반 = 고유 1 · 정예 = 둘째 칸 ·
          *   보스 = + 셋째 칸. **칸은 출처 자리**라 「있는 것 중 앞에서 n개」가 아니다 — 그래서 열리지 않은 출처를
@@ -393,7 +403,7 @@ export function createBattleSystem(data) {
         const slots = g.skill_slots;
         // ⚠ `activesFor` 는 **인스턴스**(`{id, source}`)를 낸다 — 파티 경로와 같이 **정의를 풀고 `readyAt` 을 얹어야** 한다.
         //   안 풀면 `skill.castable(def, …)` 이 undefined 를 읽는다 (INTERFACE §2-6 「전투 유닛」 actives 행)
-        //   무기 판정은 영웅과 같다 — 제 무기군(`monster.csv:weapon_group`)이 그 직업 스킬에 안 맞으면 칸이 꺼진다 (R187 · skill_design §2-2)
+        //   무기 판정은 영웅과 같은 규칙이다 — 무기를 보는 것은 배운 칸뿐이고 몬스터는 배운 칸이 없어 **칸이 늘 켜진다** (R197 · skill_design §2-2)
         const fits = fitterOf(m.weapon_group);
         const acts = SK ? SK.activesFor({ innate: m.innate_skill }, {
             thirdSkill: slots >= 3 ? thirdSkill : null,
@@ -403,12 +413,13 @@ export function createBattleSystem(data) {
             return slotOf(a, def, fits, 0);
         }) : [];
         // 세부 능력치 복사본 [2026-09-14 · R94 · INTERFACE §2-6 `round`] — 유닛 툴팁이 Alt 로 펴는 **표시값**이다(SCREEN_DESIGN §2).
-        //   위 ①②③ 까지 먹은 값 그대로이고 전투 내부용 둘(`option_fx` 묶음 · `atk_pct_sum` 괄호 합)만 뺀다.
+        //   위 ①② 까지 먹은 값 그대로이고 전투 내부용(`option_fx` 묶음 · `atk_pct_sum` 괄호 합 · 평타 계수 · 평타 여부)만 뺀다.
         //   전투는 이것을 안 읽는다(유닛 필드가 따로 있다) · rng 0
         const sheet = { ...c };
         delete sheet.option_fx;
         delete sheet.atk_pct_sum;
         delete sheet.main_attr_mult;   // 평타 능력치 계수 — 시트 행이 아니다(2026-09-18)
+        delete sheet.basic_attack;     // 평타 여부 — 시트 행이 아니다(2026-10-02 · R198)
         for (const k of ['atk_physical', 'atk_magic']) if (sheet[k]) sheet[k] = { ...sheet[k] };
         return makeUnit('enemy', c, {
             key, monsterId, grade, gear, sheet,
@@ -566,7 +577,7 @@ export function createBattleSystem(data) {
             potionReadyAt: 0,            // 제 물약이 다시 준비되는 시각 — **준비 상태로 출발한다**(스킬과 같은 규칙 · R103). 갈아입기(`refit`)가 안 건드린다
             // 칸 순서 = 출처 자리. **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 첫 준비 시각 0.
             //   동시 준비는 칸 순서라(`SK.pickReady`) 첫 차례는 1번 칸이다. rng 0
-            //   든 무기가 안 맞는 직업 스킬은 꺼진 채 선다 — 멈춘 쿨 0 (R187 · `slotOf`)
+            //   든 무기가 안 맞는 **배운 칸**은 꺼진 채 선다 — 멈춘 쿨 0 (R187 · R197 · `slotOf`)
             actives: (fits => (SK ? p.actives ?? [] : []).map(a => {
                 const def = SK.resolve(a);
                 if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
@@ -591,7 +602,7 @@ export function createBattleSystem(data) {
             const applied = [];
             for (const p of side) {
                 if (!p.actives.some(a => a.def.cast === 'aura')) continue;
-                // **꺼진 오오라는 안 켠다** [2026-09-29 · R187] — 무기가 안 맞는 직업 스킬(`off`)이다. 칸에서 빼는 것은 켜진 오오라와 같다
+                // **꺼진 오오라는 안 켠다** [2026-09-29 · R187] — 무기가 안 맞는 배운 칸(`off` · R197)이다. 칸에서 빼는 것은 켜진 오오라와 같다
                 const aura = p.actives.find(a => a.def.cast === 'aura' && !a.off) ?? null;
                 p.slotIds = p.actives.map(a => a.id);
                 p.auraOn = aura?.id ?? null;
@@ -638,7 +649,7 @@ export function createBattleSystem(data) {
             // **칸마다** 준비 시각 — 같은 스킬이 두 칸에 앉으면 앞 칸부터 하나씩 짝짓는다(id 로 묶으면 두 칸이 한 값으로 합쳐진다 · R130).
             //   칸에 없는 id 는 오오라다(전투 시작에 칸에서 뺐다) — 켜진 것 0 · 안 켜진 것 null
             const left = u.actives.slice();
-            //   꺼진 칸(무기가 안 맞는 직업 스킬 · R187)은 안 켜진 오오라와 같은 `null` — 재생기가 「안 도는 칸」으로 그린다
+            //   꺼진 칸(무기가 안 맞는 배운 칸 · R187 · R197)은 안 켜진 오오라와 같은 `null` — 재생기가 「안 도는 칸」으로 그린다
             const ready = ids.map(id => {
                 const i = left.findIndex(a => a.id === id);
                 if (i >= 0) {
@@ -658,7 +669,8 @@ export function createBattleSystem(data) {
         const enemyView = e => ({
             key: e.key, monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? null,
             traits: e.traits ?? null, hpMax: e.hpMax, period: e.period,
-            atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ? { ...e.stats } : null,
+            atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, noBasic: e.noBasic,   // noBasic = 행동 게이지 색 (마법 무기 — R198 · SCREEN_DESIGN §4-2 · ADR-0476)
+            stats: e.stats ? { ...e.stats } : null,
             ...slotView(e),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             sheet: { ...e.sheet },   // 세부 능력치 복사본 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 · 전투는 안 읽는다)
             // 입고 있는 한 벌 — 유닛 툴팁의 첫 장(장비 3×3)이 읽는다 [2026-09-21 · R119 · SCREEN_DESIGN §2 · ADR-0183].
@@ -672,8 +684,9 @@ export function createBattleSystem(data) {
             // stats 는 기본 능력치의 **복사본**이다(설명창이 스킬 계수를 풀어 쓴다 · 2026-09-10). ~~정산(grantXp)이 전투 뒤에 능력치를 올린다~~ —
             // 09-14 로 레벨업이 능력치를 안 올려(R83) 복사의 원래 이유는 사라졌다.
             // 전투에는 안 쓰이고 타임라인에도 안 들어가므로 rng·골든 지문과 무관하다
+            // noBasic 은 행동 게이지 색이다(마법 무기 = 파랑 · R198 · SCREEN_DESIGN §4-2 · ADR-0476)
             party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
-                atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, stats: p.stats ? { ...p.stats } : null,
+                atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, noBasic: p.noBasic, stats: p.stats ? { ...p.stats } : null,
                 ...slotView(p) })),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             // 보상 칸(xpTotal · gold · kills · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
             // killGrades = kills 를 처치 순간의 등급으로 가른 것 `{monsterId: {grade: n}}` — 의뢰 「정예 · 보스 n마리」가 읽는다 (R153 · 세는 것뿐이라 rng 0)
@@ -798,7 +811,7 @@ export function createBattleSystem(data) {
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
             const enemyAuras = applyAuras(units.enemies);
             // 적 스킬도 **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 등장 라운드 시작 시각에 곧바로 쓴다. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
-            //   꺼진 칸(무기가 안 맞는 직업 스킬 · R187)은 그대로 둔다 — 되돌리면 켜진다
+            //   꺼진 칸(무기가 안 맞는 배운 칸 · R187 · R197 — 몬스터는 배운 칸이 없어 지금은 없다)은 그대로 둔다 — 되돌리면 켜진다
             for (const e of units.enemies) for (const a of e.actives) if (!a.off) a.readyAt = t;
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
             for (const e of units.enemies) e.next = 0.4 + rng() * 0.6;
@@ -1146,8 +1159,9 @@ export function createBattleSystem(data) {
              *   ⚠ 이 타격의 사건(경직 · 창 · 훅 · 반사 · 전투불능)이 다 끝난 뒤다. 경직 중이면(이 타격이 건 경직 포함) 차례가 없어 못 한다.
              *   조건이 안 맞으면 **굴리지 않는다** — 반격 옵션이 없는 판의 rng 수열은 종전과 같다(`&&` 가 판정 앞에서 끊는다).
              *   반격도 직격이라 맞은 쪽이 다시 반격할 수 있다 — 확률이 곱으로 줄어 끝난다(`counter_chance` 는 1 미만 — item.js 로드 검증)
+             *   **마법 무기는 반격하지 않는다** [2026-10-02 · 사용자 확정 · R198] — 평타가 없어서다(`noBasic`). 판정 **앞**에서 끊으므로 굴리지도 않는다
              */
-            if (target.counter > 0 && target.hp > 0 && !target.summon && u.hp > 0 && target.stagUntil <= t && (target.stunUntil ?? 0) <= t
+            if (target.counter > 0 && !target.noBasic && target.hp > 0 && !target.summon && u.hp > 0 && target.stagUntil <= t && (target.stunUntil ?? 0) <= t
                 && rng() < target.counter) {
                 timeline.push({ t: r1(t), e: 'counter', u: target.key, d: u.key });
                 rt.basicAttack(target, t, alive(rt.foesOf(target)), u);
@@ -1257,7 +1271,9 @@ export function createBattleSystem(data) {
             for (const u of changed) {
                 timeline.push({
                     t: r1(t), e: 'refit', u: u.key, hpMax: u.hpMax, dhp: u.hp, period: u.period,
-                    atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, atkType: u.atkType, stats: u.stats ? { ...u.stats } : null,
+                    atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, atkType: u.atkType,
+                    noBasic: u.noBasic,   // 무기를 바꾸면 행동 게이지 색도 바뀐다 (REFIT_FIELDS · ADR-0476)
+                    stats: u.stats ? { ...u.stats } : null,
                     ...slotView(u),
                 });
             }
@@ -1321,7 +1337,14 @@ export function createBattleSystem(data) {
                 for (const u of [...party, ...units.enemies]) {
                     if (u.hp <= 0) continue;
                     u.next -= TICK;
-                    if (u.next <= 0) { u.next = u.period; rt.act(u, t); }
+                    // 같은 여유로 판정한다 — `next -= TICK` 의 꼬리(5.0 − 0.1 × 50 > 0)가 틱 하나를 더 먹지 않게 (DEV_PLAN §4 #69)
+                    if (u.next <= STEP_EPS) {
+                        // 마법 무기는 평타가 없다 [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 준비된 스킬이 없으면 **찬 채로 기다린다**:
+                        //   차례를 세우지 않고(`next = 0` — 경직 · 스턴이 미는 몫은 여기서부터 더해진다) 다음 틱에 다시 본다 → 준비되는 틱에 곧바로 시전. rng 0
+                        if (u.noBasic && !rt.pick(u, t)) { u.next = 0; continue; }
+                        u.next = u.period;
+                        rt.act(u, t);
+                    }
                 }
                 // 귀환 룰 [개정 2026-09-03 — base_expedition_design §1-1] — **전멸일 때만 돌아온다.**
                 // 하나가 쓰러져도 런을 접지 않고 남은 인원으로 계속 간다. 쓰러진 영웅은 `out.downed` 에 실려

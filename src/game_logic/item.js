@@ -442,9 +442,8 @@ export function createItemSystem(data) {
             // ~~무기 공격력 = 밑수 × 성장 곡선 × 개체 편차~~ **2026-09-14 폐지 · R90** (battle_design §9-1) — 무기 피해는 박지 않는다.
             //   범위는 무기군 × ilvl × 강화 단계가 정하고(`weaponDamage` · formula.weaponDamage) **rng 소비 1회가 빠졌다**(INTERFACE §5-2)
             // ~~마법 무기는 개체가 원소를 든다~~ **폐기 2026-09-11 · 사용자 지시 · R80** (battle_design §2-1 · §9-5 · item_design §2)
-            //   원소는 **관련 옵션이 붙었을 때만** 생긴다 — 생성 때 따로 굴리지 않고 드롭의 무작위성은 옵션 굴림이 든다.
+            //   원소는 **스킬의 원소 태그만** 낸다 [2026-10-02 · R198 — ~~관련 옵션이 붙었을 때만~~] — 마법 무기는 평타가 없다(`hero.computeCombat:basic_attack`).
             //   그래서 `element` 키가 아예 없고 **마법 무기에서 rng 소비 1회가 빠졌다**(INTERFACE §5-2).
-            //   원소 옵션이 없는 마법 무기의 기본 공격은 **물리로 친다** — 그 판정은 `hero.computeCombat` 이 한다(`attack_type`).
             //   ⚠ 옛 세이브의 `item.element` 는 읽는 곳이 없어져 **죽은 필드**로 남는다(세이브 버전 무변경 · R77 선례).
             // ~~무기가 담는 액티브 — 개체가 든다(`item.skill` · 그 무기군의 직업 풀에서 1회)~~ **2026-09-29 폐지 · R179** (skill_design §2-1 스킬북) —
             //   무기는 스킬을 담지 않는다. 둘째 액티브 칸은 영웅이 책으로 배운 것(`hero.bookSkill`)이고 **무기에서 rng 소비 1회가 빠졌다**(INTERFACE §5-2)

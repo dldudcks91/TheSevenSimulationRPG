@@ -310,6 +310,8 @@ export async function loadData(base = './data/') {
     D.classes = classRow.map(r => ({
         id: r.class_id, keyAttr: r.key_attr, ko: r.name_kr, en: r.name_en,
         role: { ko: r.role_kr, en: r.role_en }, stage: r.release, color: r.color_hex || null,
+        // 레벨 1 최대 HP — 빈 칸(확장 직업)이면 null 이고 hero.js 가 `balance.csv:hero_hp_base` 로 떨어진다 (2026-10-02)
+        hpBase: r.hp_base === '' || r.hp_base == null ? null : Number(r.hp_base),
     }));
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};

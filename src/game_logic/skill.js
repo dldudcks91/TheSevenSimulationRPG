@@ -184,6 +184,8 @@ export function createSkillSystem(data) {
         amuletPool: row.amulet_pool === 1,
         // 시작 무기 스킬 후보인가 [2026-09-27 사용자 지시 · hero_design §1] — 새 게임 · 선술집 영웅의 첫 무기가 직업 기본기를 담게
         starterPool: row.starter_pool === 1,
+        // 직업 스킬의 티어 1 · 2 · 3 [2026-10-02 · skill_design §12-10] — 표시 전용(도감) · 직업 밖은 `-` → null
+        tier: dash(row.tier ?? '-'),
         note: row.note,
         // 하는 일 줄 — `skill_effect.csv` 를 아래에서 붙인다(`seq` 순)
         effects: [],
@@ -299,6 +301,8 @@ export function createSkillSystem(data) {
         // 직업 기본기 [2026-09-27 · 2026-09-29 R179 — 첫 파티의 고유 · 서고 기본 책 · ~~시작 무기 스킬~~] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
         if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
+        // 티어 [2026-10-02 · skill_design §12-10] — 직업 스킬은 1 · 2 · 3, 그 밖은 `-`
+        if (d.ownerKind === 'job' ? ![1, 2, 3].includes(d.tier) : d.tier !== null) bad(`tier '${row.tier}' — 직업 스킬은 1 · 2 · 3, 그 밖은 -`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
     }
@@ -562,7 +566,8 @@ export function createSkillSystem(data) {
     /**
      * **이 스킬이 이 무기로 나가나** [신설 2026-09-29 · R187 · skill_design §2-2] — 직업 스킬은 그 직업의 무기군을 들어야 나간다.
      *   전직 · 몬스터 전용 스킬은 무기와 상관없다. 새 CSV 칸이 없다 — 스킬의 직업(`ownerId`)과 무기군의 직업(`weapon_group.csv:classes`)에서 읽는다.
-     *   이 모듈은 아이템을 모르므로 무기군 → `classes` 는 부르는 쪽이 푼다. 안 맞는 칸을 어떻게 돌리나(건너뛰기 · 쿨 멈춤)는 battle 의 일이다
+     *   이 모듈은 아이템을 모르므로 무기군 → `classes` 는 부르는 쪽이 푼다. 안 맞는 칸을 어떻게 돌리나(건너뛰기 · 쿨 멈춤)는 battle 의 일이다.
+     *   **부르는 쪽은 배운 칸(`source = book`)에만 묻는다** [2026-10-02 · R197] — 고유 · 전직 칸은 무기를 안 본다(battle `slotOf` · 캐릭터 탭 꺼진 칸)
      * @param classes [classId] — 든 무기군의 `classes` · 맨손 `null`
      */
     const fitsWeapon = (def, classes) => def?.ownerKind !== 'job' || !!classes?.includes(def.ownerId);

@@ -151,8 +151,10 @@ check('csv: skill — 직업 풀 39행(전사 8 · 기사 9 · 궁수 6 · 마�
     // 겹침 없음 — 같은 스킬이 두 직업에 있으면 「마법사가 배쉬를 든다」가 되살아난다
     const byId = {};
     for (const r of rows) { if (byId[r.skill_id]) fail(`${r.skill_id} 중복`); byId[r.skill_id] = r.owner_id; }
-    // 전 행이 고유 풀이다 — 두 출처(고유 · 무기)가 **같은 직업 풀**에서 가져간다 (§12-1 규칙 3)
-    if (rows.some(r => r.innate_pool !== 1)) fail('직업 풀 행인데 innate_pool 이 0 이다');
+    // 고유 풀 = 직업 풀 전부 — **포커스 하나만 뺀다** [2026-10-02 · R198 · skill_design §12-1] — 마법 무기는 평타가 없어
+    //   고유 한 칸뿐인 레벨 10 전에 자기 강화 창만 든 마법사는 피해를 못 낸다(책 · 목걸이로는 온다)
+    const offPool = rows.filter(r => r.innate_pool !== 1).map(r => r.skill_id);
+    if (offPool.join() !== 'mag_focus') fail(`고유 풀에서 빠진 직업 행 [${offPool}] — 포커스 하나여야 한다`);
     return `${Object.entries(want).map(([c, n]) => `${c} ${n}`).join(' · ')} · 몬스터 전용 ${other.filter(r => r.owner_kind === 'monster').length} · 전직 ${other.filter(r => r.owner_kind === 'advance').length}`;
 });
 // 태그 어휘의 SSOT (2026-09-01 mock→CSV 이관). **행 수·파생 여부가 계약이다** — skill.js 가 derived=1 셋을
@@ -443,7 +445,7 @@ check('csv: combat_stat impl=1 집합 == computeCombat 출력 키 집합 (부채
     const h = SYS.hero.rollHero(makeRng(7), { sin: 'wrath', cls: 'warrior', name: { ko: 'x', en: 'x' }, trait: { ko: 't', en: 't' } });
     const c = SYS.hero.computeCombat(h, []);
     // 전투 능력치가 아닌 출력 — 파생 합·도감 보정·적중 레벨·공격 타입 (INTERFACE §2-4)
-    const EXCLUDE = ['atk_pct_sum', 'dmg_bonus_pct', 'level', 'attack_type', 'option_fx', 'res_max_el', 'res_reduction_el', 'main_attr_mult'];   // option_fx = 장비 옵션 묶음(R78 · 방어구 2026-09-18) · res_max_el = 원소별 최대 저항(저항 행의 상한에만 먹는다) · res_reduction_el = 원소별 저항 무시(반지 시기 칸 · 2026-09-21) — 시트에 안 서는 축
+    const EXCLUDE = ['atk_pct_sum', 'dmg_bonus_pct', 'level', 'attack_type', 'basic_attack', 'option_fx', 'res_max_el', 'res_reduction_el', 'main_attr_mult'];   // option_fx = 장비 옵션 묶음(R78 · 방어구 2026-09-18) · res_max_el = 원소별 최대 저항(저항 행의 상한에만 먹는다) · res_reduction_el = 원소별 저항 무시(반지 시기 칸 · 2026-09-21) · basic_attack = 평타 여부(마법 무기 = 거짓 · 2026-10-02 R198) — 시트에 안 서는 축
     const got = new Set(Object.keys(c).filter(k => !EXCLUDE.includes(k)));
     got.add('atk_physical'); got.add('atk_magic');          // 둘은 배타 (INTERFACE §8 항목 5)
     const impl = new Set(D.combatStats.filter(s => s.impl === 1).map(s => s.id));
@@ -466,11 +468,11 @@ check('csv: hero_attribute 7행 · 순서 str agi int vit luck ldr cha · combat
     }
     return ids.join('/');
 });
-check('csv: monster_name_en 전부 있음 · attack_type ∈ physical+원소4 · weapon_group damage_kind ∈ physical|magic', () => {
-    const types = ['physical', ...ELEMENTS];
+check('csv: monster_name_en 전부 있음 · attack_type 컬럼 없음(R198) · weapon_group damage_kind ∈ physical|magic', () => {
     for (const m of Object.values(D.monsters)) {
         if (!m.monster_name_en || String(m.monster_name_en).trim() === '') fail(`${m.monster_idx} monster_name_en 없음`);
-        if (!types.includes(m.attack_type)) fail(`${m.monster_idx} attack_type ${m.attack_type}`);
+        // 평타는 언제나 물리 · 원소는 스킬만 낸다 [2026-10-02 · R198 · monster_design §2] — 몬스터마다 공격 원소를 적던 칸은 폐기됐다
+        if ('attack_type' in m) fail(`${m.monster_idx} attack_type 컬럼이 살아 있다 — 2026-10-02 폐기(R198)`);
         if (![0, 1].includes(m.face)) fail(`${m.monster_idx} face ${m.face}`);
     }
     for (const g of D.weaponGroupList) {
@@ -1171,6 +1173,8 @@ const newGameP = (...args) => openAll(SYS.game.newGame(...args));
  *   「파티가 몇 대는 버틴다」는 표본 조건을 밸런스 값에 기대지 않게 한다 — 같은 날 배율이 0.2 → 1 이 되자 세 단정의 표본이 0 이 됐다
  */
 const SOFT = buildSystems({ ...D, balance: { ...B, monster_atk_scale: B.monster_atk_scale / 5 } });
+// 표본용 센 몬스터 [2026-10-02] — 거꾸로 「누군가 쓰러진 채 이긴다」를 모으는 단정용. 공격속도 절반 · 데미지 2배 뒤 1011 에서 아무도 안 쓰러져 표본이 0 이 됐다
+const HARD = buildSystems({ ...D, balance: { ...B, monster_atk_scale: B.monster_atk_scale * 3 } });
 // 09-10 장착 개방 뒤에도 **시작 무기만은** 제 직업 무기다 — 첫 무기 칸에 제 직업 스킬이 서야 직업이 읽힌다(item.js startingWeapon)
 check('newGame: 시작 파티 3명은 각자 제 직업 무기와 일반 갑옷으로 시작하고, 고블린 일꾼은 로스터에 대기한다', () => {
     if (G.heroes.length !== 4 || SYS.game.partyOf(G).length !== 3) fail('count');
@@ -2455,11 +2459,11 @@ check('combat: 무기가 공격력을 올린다', () => {
     return atk(armed) > atk(naked) ? `${atk(naked)} → ${atk(armed)}` : false;
 });
 /*
- * **원소 옵션이 없는 마법 무기의 기본 공격은 물리다** [사용자 지시 2026-09-11 · R80 · battle_design §2-1 · §9-5].
- *   바뀌는 것은 **무엇에 깎이나**뿐이다 — 세기 채널(`atk_magic` = 회복의 밑수)은 그대로 마법이다.
- *   원소를 주는 옵션이 아직 없으므로 `attack_type` 은 어떤 무기에서도 `physical` 이다.
+ * **평타는 언제나 물리 · 원소 피해는 스킬만 낸다 · 마법 무기는 평타를 안 친다** [사용자 확정 2026-10-02 · R198 · battle_design §2-1 · §3]
+ *   — ~~원소 옵션이 없는 마법 무기의 기본 공격은 물리다~~(09-11 · R80) 대체. 세기 채널(`atk_magic` = 스킬 · 회복의 밑수)은 그대로 마법이다.
+ *   `attack_type` 은 어떤 무기에서도 `physical` · `basic_attack` 은 마법 무기만 거짓이다.
  */
-check('combat: 무기군이 물리/마법을 정하지만 attack_type 은 언제나 물리 — 원소는 옵션이 준다 (§2-1 · R80)', () => {
+check('combat: 무기군이 물리/마법을 정하고 attack_type 은 언제나 물리 · 마법 무기는 basic_attack 거짓 (§2-1 · §3 · R198)', () => {
     const h = { ...G.heroes[0], stats: { ...G.heroes[0].stats, int: 20, str: 1 } };
     const staff = SYS.item.startingWeapon(makeRng(2), 'mage');
     if (!['staff', 'orb'].includes(staff.group)) fail(`mage weapon ${staff.group}`);
@@ -2474,7 +2478,12 @@ check('combat: 무기군이 물리/마법을 정하지만 attack_type 은 언제
     const n = SYS.hero.computeCombat(h, []);
     if (n.attack_type !== 'physical') fail('unarmed not physical');
     if (c.action_period > WG[staff.group].period) fail('period from group');
-    return `${staff.group} → atk_magic ${c.atk_magic.min}~${c.atk_magic.max} · atkType ${c.attack_type}`;
+    // 평타 여부 — 마법 무기만 거짓 · 맨손 · 물리 무기는 참 (R198)
+    if (c.basic_attack !== false) fail(`${staff.group} basic_attack ${c.basic_attack} — 마법 무기는 평타가 없다 (R198)`);
+    if (n.basic_attack !== true) fail(`맨손 basic_attack ${n.basic_attack}`);
+    const axe = SYS.item.startingWeapon(makeRng(2), 'warrior');
+    if (SYS.hero.computeCombat(h, [axe]).basic_attack !== true) fail(`${axe.group} basic_attack — 물리 무기는 평타를 친다`);
+    return `${staff.group} → atk_magic ${c.atk_magic.min}~${c.atk_magic.max} · atkType ${c.attack_type} · 평타 ${c.basic_attack} / 맨손 ${n.basic_attack}`;
 });
 check('combat: 무기가 밑수다 — 무기 접사의 고정 공격력만 오르고 장갑의 것은 안 오른다 (§9-1)', () => {
     const h = G.heroes[0];
@@ -2552,6 +2561,16 @@ check('combat: 공격력은 순수 무기 밑수 — 힘·지능만 다른 두 �
     }
     return `물리 ${atk(SYS.hero.computeCombat(lo, [w]))} · 마법 ${atk(SYS.hero.computeCombat(lo, [staff]))} · 맨손 ${atk(SYS.hero.computeCombat(lo, []))} — 힘·지능 1 과 20 이 같다`;
 });
+check('combat: 레벨 1 최대 HP 는 직업마다 — class.csv:hp_base · 빈 칸(확장 직업)은 balance.csv:hero_hp_base (2026-10-02 사용자)', () => {
+    const h = G.heroes[0], out = [];
+    for (const c of D.classes) {
+        const hp = SYS.hero.computeCombat({ ...h, cls: c.id, level: 1 }, []).hp_max;
+        const want = Math.round(c.hpBase ?? B.hero_hp_base);
+        if (hp !== want) fail(`${c.id} 레벨 1 HP ${hp} ≠ ${want}`);
+        out.push(`${c.id} ${hp}`);
+    }
+    return out.join(' · ');
+});
 check('combat: hp_max — 레벨 1 은 건강 무관하게 같고 레벨 N 은 구간 단위 누적합 × 건강 계수만큼 갈린다 (hero_design §4-1 · 2026-09-14 · R84)', () => {
     const h = G.heroes[0];
     const at = (lv, vit) => SYS.hero.computeCombat({ ...h, level: lv, stats: { ...h.stats, vit } }, []).hp_max;
@@ -2559,8 +2578,9 @@ check('combat: hp_max — 레벨 1 은 건강 무관하게 같고 레벨 N 은 �
     const coef = vit => Number(vitRow.multBasePct) + vit * Number(vitRow.multPerPointPct);   // 비율 (R111)
     // 단정은 레벨업을 하나씩 밟으며 **그 레벨의 구간 키를 직접** 읽는다 — 코드의 누적합 표를 거치지 않는다
     const units = lv => { let s = 0; for (let n = 2; n <= lv; n++) s += B[`hero_hp_band${Math.floor((n - 1) / B.hero_hp_band_levels) + 1}_unit`]; return s; };
-    const want = (lv, vit) => Math.round(B.hero_hp_base + units(lv) * coef(vit));
-    if (at(1, 1) !== Math.round(B.hero_hp_base) || at(1, 20) !== Math.round(B.hero_hp_base)) fail(`lv1 vit1 ${at(1, 1)} · vit20 ${at(1, 20)} ≠ ${B.hero_hp_base}`);
+    const base = D.classes.find(c => c.id === h.cls)?.hpBase ?? B.hero_hp_base;   // 레벨 1 바탕은 직업마다 (class.csv:hp_base · 2026-10-02)
+    const want = (lv, vit) => Math.round(base + units(lv) * coef(vit));
+    if (at(1, 1) !== Math.round(base) || at(1, 20) !== Math.round(base)) fail(`lv1 vit1 ${at(1, 1)} · vit20 ${at(1, 20)} ≠ ${base} (${h.cls})`);
     const E = B.hero_hp_band_levels, CAP = B.hero_level_cap;
     for (const lv of [2, E, E + 1, CAP]) for (const vit of [1, 10, 20]) if (at(lv, vit) !== want(lv, vit)) fail(`lv${lv} vit${vit} ${at(lv, vit)} ≠ ${want(lv, vit)}`);
     // 구간 안의 상승분은 일정하고 경계에서 다음 구간 단위로 바뀐다 — 건강 16 = 계수 1.0 이 아니어도 되게 계수로 나눠 본다
@@ -3510,7 +3530,8 @@ const units = () => SYS.game.partyOf(G).map(uid => ({ uid, combat: SYS.game.hero
  */
 const godUnits = (lvl = 50) => units().map(u => ({
     uid: u.uid,
-    combat: { ...u.combat, atk_physical: { min: 2000, max: 2000 }, atk_magic: undefined, attack_type: 'physical', hp_max: 100000, level: lvl },
+    // 전원 물리 평타를 친다 — 마법 무기를 든 영웅(사제 · 마법사)도 평타를 쳐야 구조 단정이 시작 파티의 스킬 굴림에 안 흔들린다 (R198)
+    combat: { ...u.combat, atk_physical: { min: 2000, max: 2000 }, atk_magic: undefined, attack_type: 'physical', basic_attack: true, hp_max: 100000, level: lvl },
 }));
 /** 공격력 범위에 배수 — 테스트 파티를 세게 만든다 (R90 — 공격력은 `{min, max}`) */
 const scaleRange = (r, k) => ({ min: (r?.min ?? 1) * k, max: (r?.max ?? 1) * k });
@@ -3547,26 +3568,28 @@ const armorUnits = affixes => SYS.game.partyOf(G).map(uid => {
 });
 /*
  * 데미지 공식 개정 [2026-09-18 · 사용자 확정 · battle_design §9-1 · §9-2 · GAME_DESIGN §9] — 평타 × 능력치 계수 · 도감 「데미지」는 한 괄호 ·
- *   몬스터도 같다(2026-09-22 — 보류 해제). 평타 계수의 능력치 = **든 무기의 피해 종류** — 물리 무기 · 맨손 = 힘 · 마법 무기 = 지능
- *   [2026-09-27 사용자 — ~~직업 메인 스탯(`class.csv:key_attr`)~~ 대체]. 직업은 계수를 안 가른다
+ *   몬스터도 같다(2026-09-22 — 보류 해제). 평타 계수의 능력치 = **힘** — 물리 무기 · 맨손 [2026-09-27 사용자 — ~~직업 메인 스탯(`class.csv:key_attr`)~~ 대체] ·
+ *   ~~마법 무기 = 지능~~ 은 2026-10-02 소멸(R198 — 마법 무기는 평타가 없다). 직업은 계수를 안 가른다
  */
-check('hero: 평타 능력치 계수 main_attr_mult = statCoef(물리 무기 · 맨손 = 힘 · 마법 무기 = 지능) — 직업과 무관 (battle_design §9-2 · 2026-09-27)', () => {
+check('hero: 평타 능력치 계수 main_attr_mult = statCoef(힘) — 무기 · 직업과 무관 · 마법 무기는 평타가 없다 (battle_design §9-2 · 2026-09-27 · R198)', () => {
     const base = SYS.game.heroById(G, SYS.game.partyOf(G)[0]);
     const flat = Object.fromEntries(Object.keys(base.stats).map(k => [k, B.attr_dmg_pivot]));
     const hi = F.statCoef(B.attr_dmg_pivot + 7);
     const weapon = group => mkItem('weapon', [], { group, up: 0 });
     const out = [];
     for (const [id, g] of Object.entries(WG)) {
-        const want = g.damageKind === 'magic' ? 'int' : 'str';
-        const other = want === 'int' ? 'str' : 'int';
+        // ~~마법 무기 = 지능~~(2026-09-27) 은 2026-10-02 소멸 — 마법 무기는 평타가 없어(`basic_attack` 거짓) 계수를 읽는 곳이 없다 · 값은 힘 그대로
+        const want = 'str';
+        const other = 'int';
         for (const cls of D.classes) {
             const c = SYS.hero.computeCombat({ ...base, cls: cls.id, stats: { ...flat, [want]: B.attr_dmg_pivot + 7 } }, [weapon(id)]);
             if (Math.abs(c.main_attr_mult - hi) > 1e-12) fail(`${id}(${g.damageKind}) · ${cls.id} — ${want} 가 높은데 계수 ${c.main_attr_mult}`);
             // 반대 축이 높아도 평타 계수는 안 움직인다
             const c2 = SYS.hero.computeCombat({ ...base, cls: cls.id, stats: { ...flat, [other]: B.attr_dmg_pivot + 7 } }, [weapon(id)]);
             if (c2.main_attr_mult !== 1) fail(`${id} · ${cls.id} — ${other} 가 계수를 움직였다 ${c2.main_attr_mult}`);
+            if (c.basic_attack !== (g.damageKind !== 'magic')) fail(`${id}(${g.damageKind}) basic_attack ${c.basic_attack}`);
         }
-        out.push(`${id}=${want}`);
+        out.push(`${id}=${g.damageKind === 'magic' ? '평타 없음' : want}`);
     }
     // 맨손은 물리 — 힘
     const bare = SYS.hero.computeCombat({ ...base, stats: { ...flat, str: B.attr_dmg_pivot + 7 } }, []);
@@ -3598,7 +3621,7 @@ check('hero: 치명타 피해 = 1 + (바탕 + 장비 − 1) × 운 계수 — �
     if (!near(withGear, want(b + 0.1, 20))) fail(`장비 +0.1 · 운 20 ${withGear}`);
     return `운 1 → ${cd(1)} · 10 → ${cd(B.attr_dmg_pivot)} · 20 → ${cd(20)} · 장비 +0.1 · 운 20 → ${withGear}`;
 });
-check('battle: 평타는 능력치 계수를 곱한다 — 같은 시드의 첫 평타가 계수만큼 커진다 · 몬스터도 낀 무기의 피해 종류로 (battle_design §9-2 · 2026-09-18 · 몬스터 2026-09-22 · 무기 기준 2026-09-27)', () => {
+check('battle: 평타는 능력치 계수(힘)를 곱한다 — 같은 시드의 첫 평타가 계수만큼 커진다 · 몬스터도 같다 · 마법 무기는 평타가 없다 (battle_design §9-2 · 2026-09-18 · 몬스터 2026-09-22 · R198)', () => {
     const units = m => armorUnits([]).map(u => ({ ...u, combat: { ...u.combat, main_attr_mult: m } }));
     const first = r => r.timeline.find(ev => ev.e === 'hit' && ev.a.startsWith('p') && !ev.s);
     // 레벨 1 평타는 한 자릿수라 반올림에 묻힌다 — 계수 10 과 20 을 잰다(비율 2 는 같다)
@@ -3614,13 +3637,16 @@ check('battle: 평타는 능력치 계수를 곱한다 — 같은 시드의 첫 
     const mWant = F.statCoef(Number(mRow.str));
     if (Math.abs(e.mainMult - mWant) > 1e-12) fail(`맨손 몬스터 계수 mainMult ${e.mainMult} ≠ statCoef(str ${mRow.str}) = ${mWant}`);
     if (e.mainMult === 1) fail('표본 몬스터의 힘이 기준값이라 계수를 못 가른다 — 다른 몬스터로 잰다');
+    // 마법 무기 — 평타가 없다 [2026-10-02 · R198] · 계수는 힘 그대로(~~지능~~ 2026-09-27 소멸 — 읽는 곳이 없다)
     const magicGroup = Object.keys(WG).find(k => WG[k].damageKind === 'magic');
     const em = SYS.battle.makeEnemy('e1', 1103, 'normal', 1, [mkItem('weapon', [], { group: magicGroup, up: 0 })]);
     const iRow = D.monsters[1103];
-    if (Math.abs(em.mainMult - F.statCoef(Number(iRow.int))) > 1e-12) fail(`마법 무기 몬스터 계수 ${em.mainMult} ≠ statCoef(int ${iRow.int})`);
+    if (!em.noBasic) fail(`마법 무기 몬스터 noBasic ${em.noBasic} — 평타가 없어야 한다 (R198)`);
+    if (e.noBasic) fail('맨손 몬스터가 평타를 안 친다');
+    if (Math.abs(em.mainMult - F.statCoef(Number(iRow.str))) > 1e-12) fail(`마법 무기 몬스터 계수 ${em.mainMult} ≠ statCoef(str ${iRow.str}) — 평타 계수는 힘이다`);
     if ('noStatMult' in e) fail('몬스터 유닛에 옛 보류 표시(noStatMult)가 남았다');
     if ('main_attr_mult' in e.sheet) fail('몬스터 시트에 평타 계수가 새어 나왔다');
-    return `첫 평타 계수 10 ${d1} → 계수 20 ${d2} · 몬스터 1101 맨손(str ${mRow.str}) ×${e.mainMult.toFixed(2)} · 1103 ${magicGroup}(int ${iRow.int}) ×${em.mainMult.toFixed(2)}`;
+    return `첫 평타 계수 10 ${d1} → 계수 20 ${d2} · 몬스터 1101 맨손(str ${mRow.str}) ×${e.mainMult.toFixed(2)} · 1103 ${magicGroup} 평타 없음`;
 });
 check('hero: 도감 「데미지」는 데미지 % 괄호에 더한다 — 따로 곱하지 않는다 (battle_design §9-1 · 2026-09-18)', () => {
     const h = SYS.game.heroById(G, SYS.game.partyOf(G)[0]);
@@ -3661,6 +3687,66 @@ check('battle: 반격 —맞으면 확률로 때린 적에게 기본 공격 1회
     const e = SYS.battle.makeEnemy('e0', mid, 'normal', 10, [mkItem('helmet', [{ stat: 'counter_chance', v: 0.07, src: 'wrath' }])]);
     if (e.counter !== 0.07) fail(`몬스터 반격 확률 ${e.counter}`);
     return `반격 ${n}회 · 이벤트 ${tl.length}`;
+});
+/*
+ * **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 차례가 와도 준비된 스킬이 없으면
+ *   게이지가 **찬 채로 기다렸다가** 스킬이 준비되는 틱에 곧바로 시전한다. 칸이 없으면 아무것도 안 한다 · 반격도 없다 · 영웅 · 몬스터 같은 규칙
+ */
+check('battle: 마법 무기는 평타를 안 친다 — 준비된 스킬이 없으면 찬 채로 기다렸다가 준비되는 틱에 시전한다 · 칸이 없으면 아무것도 안 한다 (battle_design §3 · R198)', () => {
+    const sk = SYS.skill.defs.mag_fireball;
+    if (!sk) fail('표본 스킬 mag_fireball 이 없다');
+    // 혼자 나간 마법 무기 영웅 — 쿨이 주기보다 긴 스킬 하나(기다리는 구간이 생긴다) · 신 파티의 체력이라 안 쓰러진다
+    const caster = acts => [{ ...godUnits()[0], combat: { ...godUnits()[0].combat, basic_attack: false }, actives: acts, weaponGroup: 'staff' }];
+    let gaps = 0, waited = 0;
+    for (let seed = 1; seed <= 3; seed++) {
+        const r = SYS.battle.simulate(caster([{ id: sk.id, source: 'innate' }]), 1013, makeRng(seed));
+        const tl = r.timeline;
+        if (tl.some(ev => (ev.e === 'hit' || ev.e === 'dodge') && ev.a === 'p0' && ev.s === undefined)) fail(`seed ${seed} — 마법 무기 p0 가 평타를 쳤다`);
+        const casts = tl.filter(ev => ev.e === 'skill' && ev.u === 'p0');
+        if (casts.length < 2) fail(`seed ${seed} — 시전 표본 ${casts.length}`);
+        const period = r.party[0].period;
+        for (let i = 1; i < casts.length; i++) {
+            const a = casts[i - 1], b = casts[i];
+            if (b.t < a.ready - 0.05) fail(`seed ${seed} — ${b.t}초 시전이 준비(${a.ready}) 전이다`);
+            // 사이에 행동을 미는 사건(라운드 경계 · p0 의 경직 · p0 에 걸린 창)이 없을 때만 — 준비 · 주기 중 늦은 쪽의 틱에 나가야 한다
+            const between = tl.filter(ev => ev.t > a.t && ev.t <= b.t);
+            if (between.some(ev => ev.e === 'round' || ((ev.e === 'stagger' || ev.e === 'buff') && ev.u === 'p0'))) continue;
+            gaps++;
+            const due = Math.max(a.t + period, a.ready);
+            if (b.t > due + 0.15) fail(`seed ${seed} — ${due.toFixed(1)}초(준비 ${a.ready} · 주기 ${period})에 나가야 하는데 ${b.t}초 — 찬 채로 안 기다렸다`);
+            if (a.ready > a.t + period + 0.15) waited++;
+        }
+    }
+    if (!gaps) fail('막는 사건 없이 이어진 시전 표본이 없다');
+    if (!waited) fail('쿨이 주기보다 길어 기다린 표본이 없다 — 「찬 채로 기다린다」를 못 쟀다');
+    // 칸이 없는 마법 무기 — 아무것도 안 한다(차례가 영원히 안 선다) · rng 0 이라 수열도 안 민다
+    const idle = SYS.battle.simulate(caster([]), 1013, makeRng(1));
+    if (idle.timeline.some(ev => ev.a === 'p0' || (ev.e === 'skill' && ev.u === 'p0'))) fail('칸이 없는 마법 무기 p0 가 무언가 했다');
+    return `막힘 없는 시전 간격 ${gaps}개 · 그중 쿨이 주기보다 길어 찬 채로 기다린 것 ${waited}`;
+});
+check('battle: 마법 무기는 반격하지 않는다 — 반격 확률이 있어도 굴리지 않는다 (R198 · item_design §1 「투구 옵션」)', () => {
+    const base = armorUnits([{ stat: 'counter_chance', v: 0.6, src: 'wrath' }]);
+    const phys = base.map(u => ({ ...u, combat: { ...u.combat, basic_attack: true } }));
+    const mage = base.map(u => ({ ...u, combat: { ...u.combat, basic_attack: false } }));
+    const r0 = SOFT.battle.simulate(phys, 1013, makeRng(5));
+    const r1 = SOFT.battle.simulate(mage, 1013, makeRng(5));
+    const n0 = r0.timeline.filter(ev => ev.e === 'counter' && ev.u.startsWith('p')).length;
+    if (!n0) fail('물리 무기 판에 반격 표본이 없다');
+    if (r1.timeline.some(ev => ev.e === 'counter' && ev.u.startsWith('p'))) fail('마법 무기 영웅이 반격했다');
+    if (!r1.timeline.some(ev => ev.e === 'hit' && ev.d?.startsWith('p'))) fail('마법 무기 판에서 영웅이 한 번도 안 맞았다 — 표본 없음');
+    return `물리 무기 반격 ${n0}회 → 마법 무기 0회`;
+});
+check('battle: 스테이지 원소 = 몬스터 고유 스킬의 원소 — attack_type 이 아니다 (INTERFACE §2-6 stageElement · R198)', () => {
+    const elOf = id => (SYS.skill.defs[id]?.effects ?? []).find(e => e.element)?.element ?? null;
+    let n = 0;
+    for (const st of D.stageList) {
+        const mons = Object.values(D.monsters).filter(m => m.chapter === st.chapter && m.stage_num === st.stage_num);
+        const want = mons.map(m => elOf(m.innate_skill)).find(Boolean) ?? 'physical';
+        const got = SYS.battle.stageElement(st);
+        if (got !== want) fail(`${st.stage_id} stageElement ${got} ≠ 고유 스킬 원소 ${want}`);
+        if (got !== 'physical') n++;
+    }
+    return `원소 스테이지 ${n}/${D.stageList.length}`;
 });
 check('battle: 조건부 받는 피해 감소 — 때린 쪽의 열이 맞으면 그 타격만 한 원천으로 곱한다 · 전투에 안 닿는 방어구 옵션(경험치)은 타임라인을 한 글자도 안 바꾼다 (2026-09-18)', () => {
     const lvl = 40;
@@ -3829,7 +3915,8 @@ check('departRun: 칸은 런을 열 때 그 편성의 구성대로 재고에서 
     return `첫 런 마이너 ${drunk}병 → 재고 ${JSON.stringify(g.potions)} · 다음 런 칸 ${ids(d2.run.result.potion).map(x => x ?? '-').join(' · ')}`;
 });
 check('advanceRun: 마신 물약이 재고에서 빠진다 — 같은 물약 여러 칸 · 라운드마다 정산 · 0 이면 키가 없다 · 철수한 라운드의 물약은 안 준다 (battle_design §7-1 · INTERFACE §2-7 · R124)', () => {
-    const S1 = buildSystems({ ...D, balance: { ...B, potion_use_hp_pct: 101, potion_cooldown_sec: 0 } });
+    // 몬스터 체력 ×10 — 철수 시험이 「첫 라운드가 1초 안에 안 끝난다」에 기댄다. 데미지 2배(2026-10-02) 뒤 시작 스킬 일제 사격이 첫 라운드를 1초 안에 끝냈다
+    const S1 = buildSystems({ ...D, balance: { ...B, potion_use_hp_pct: 101, potion_cooldown_sec: 0, monster_hp_scale: B.monster_hp_scale * 10 } });
     const mk = () => {
         const g = openAll(S1.game.newGame(5, cands, NOW), S1);    // 편성 1 은 이미 차 있다 (ADR-0227) · 물약 칸 셋이 들도록 다 지은 판 (R137)
         g.potions = { minor_healing: 3 };
@@ -3962,7 +4049,7 @@ check('battle: 강타 — 맞기 직전 현재 체력 × % 가 hit.cb 로 서고
     if (hit.dmg !== plain.dmg + hit.cb) fail(`dmg ${hit.dmg} ≠ ${plain.dmg} + ${hit.cb}`);
     return `cb ${hit.cb} / hp ${hp0}`;
 });
-check('battle: 타격 시 창 — 방어 · 공격 감소는 센 값 하나 · 저항 감소는 영웅끼리 중첩 · 타입이 맞아야 공격 감소 (skill_effects.weaponOnHit · R78)', () => {
+check('battle: 타격 시 창 — 방어 · 공격 감소는 센 값 하나 · 저항 감소는 영웅끼리 중첩 · 든 무기의 피해 종류가 맞아야 공격 감소 (skill_effects.weaponOnHit · R78 · R198)', () => {
     const sec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec };
     const d = SYS.battle.makeEnemy('e0', 1101, 'normal', 2);      // 물리 공격 몬스터
     const def0 = d.def, res0 = d.res.fire, atk0 = d.atkMax;
@@ -3979,11 +4066,21 @@ check('battle: 타격 시 창 — 방어 · 공격 감소는 센 값 하나 · �
     if (Math.abs(d.res.fire - (res0 - 0.1)) > 1e-9) fail(`불 저항 ${res0} → ${d.res.fire} (두 영웅 -10% 이어야 한다)`);
     if (d.res.cold !== d.resBase.cold) fail('다른 원소 저항이 깎였다');
     weaponOnHit(p0, { ...FX0, atkDownMag: 0.3 }, d, 'fire', 4, sec);
-    if (d.atkMax !== atk0) fail('물리 공격 몬스터에 마법 공격력 감소가 걸렸다');
+    if (d.atkMax !== atk0) fail('물리 무기(맨손) 몬스터에 마법 공격력 감소가 걸렸다');
     weaponOnHit(p0, { ...FX0, atkDownPhys: 0.3 }, d, 'fire', 4, sec);
     if (Math.abs(d.atkMax - atk0 * (1 - 0.3)) > 1e-9) fail(`공격력 ${atk0} → ${d.atkMax}`);
     if (Object.values(d.buffs).some(b => !b.quiet)) fail('조용하지 않은 창');
-    return `def ${def0.toFixed(1)}→${d.def.toFixed(1)} · fire ${res0}→${d.res.fire} · atk ${atk0.toFixed(1)}→${d.atkMax.toFixed(1)}`;
+    // 마법 감소는 **마법 무기를 든 대상**에 [개정 2026-10-02 · R198 — ~~원소 공격 대상~~ · 평타가 언제나 물리라 옛 조건은 아무에게도 안 걸렸다]
+    const magicGroup = Object.keys(WG).find(k => WG[k].damageKind === 'magic');
+    const dm = SYS.battle.makeEnemy('e1', 1103, 'normal', 2, [mkItem('weapon', [], { group: magicGroup, up: 0 })]);
+    const am0 = dm.atkMax, mm0 = dm.matkMax;
+    weaponOnHit(p0, { ...FX0, atkDownPhys: 0.3 }, dm, 'physical', 5, sec);
+    if (dm.atkMax !== am0) fail('마법 무기 몬스터에 물리 공격력 감소가 걸렸다');
+    weaponOnHit(p0, { ...FX0, atkDownMag: 0.3 }, dm, 'physical', 5, sec);
+    // 공격력 · 회복 밑수는 같은 괄호다 — 괄호 앞 밑수 × (1 + 상시 % − 30%)
+    if (Math.abs(dm.atkMax - dm.atkMaxBase * (1 + dm.atkPct - 0.3)) > 1e-6 || Math.abs(dm.matkMax - dm.matkMaxBase * (1 + dm.atkPct - 0.3)) > 1e-6)
+        fail(`마법 무기 몬스터 공격력 ${am0} → ${dm.atkMax} · 회복 밑수 ${mm0} → ${dm.matkMax} — 마법 공격력 감소가 안 걸렸다`);
+    return `def ${def0.toFixed(1)}→${d.def.toFixed(1)} · fire ${res0}→${d.res.fire} · atk ${atk0.toFixed(1)}→${d.atkMax.toFixed(1)} · 마법 무기 ${am0.toFixed(1)}→${dm.atkMax.toFixed(1)}`;
 });
 check('battle: 타격 시 창은 조용하다 — wx: 창은 buff/buffEnd 이벤트를 안 낸다 · 같은 시드 = 같은 전투 (R78)', () => {
     const fx = { ...FX0, defDown: 0.1, resDown: 0.05, atkDownPhys: 0.1, atkDownMag: 0.1 };
@@ -4055,11 +4152,11 @@ check('balance: concurrent_expedition_parties 는 1 ~ 편성 수여야 한다 �
 });
 /*
  * **몬스터는 영웅과 같은 함수를 지난다** [전면 개정 2026-09-11 · R79 · 사용자 지시 · monster_design §5-1 · battle_design §8-1].
- *   `combatFromMonster` 가 삭제되고 `heroSystem.computeCombat` 을 부르므로, 이 단정은 **세 줄만 다르다**는 것을 지킨다:
- *   ① 몸값 합류(`defense`·`res_*`) ② 몬스터 전용 전역 배율 ③ `attack_type` 덮기.
+ *   `combatFromMonster` 가 삭제되고 `heroSystem.computeCombat` 을 부르므로, 이 단정은 **두 줄만 다르다**는 것을 지킨다:
+ *   ① 몸값 합류(`defense`·`res_*`) ② 몬스터 전용 전역 배율. ~~③ `attack_type` 덮기~~ 는 2026-10-02 폐기(R198 — 평타는 언제나 물리).
  *   **직접 computeCombat 을 불러 대조**하므로 한쪽만 바뀌면 빨간불이다.
  */
-check('battle: 몬스터는 computeCombat 을 지난다 — 다른 것은 몸값 · 전역 배율 · attack_type 셋뿐 (§8-1 · R79)', () => {
+check('battle: 몬스터는 computeCombat 을 지난다 — 다른 것은 몸값 · 전역 배율 둘뿐 · 평타는 물리 (§8-1 · R79 · R198)', () => {
     const id = 1401, m = D.monsters[id], g = D.grades.elite, lvl = 7;
     const gear = SYS.item.rollGear(makeRng(4), { slots: ['weapon', 'armor'], ilvl: 5, weaponGroup: m.weapon_group });
     const e = SYS.battle.makeEnemy('e0', id, 'elite', lvl, gear);
@@ -4079,9 +4176,10 @@ check('battle: 몬스터는 computeCombat 을 지난다 — 다른 것은 몸값
     // 공격력은 범위다 — 전역 배율이 양끝에 같이 곱해진다 (R90)
     if (Math.abs(e.atkMin - atk0.min * B.monster_atk_scale) > 1e-6) fail(`atkMin ${e.atkMin} ≠ ${atk0.min} × monster_atk_scale`);
     if (Math.abs(e.atkMax - atk0.max * B.monster_atk_scale) > 1e-6) fail(`atkMax ${e.atkMax} ≠ ${atk0.max} × monster_atk_scale`);
-    // ③ attack_type — 원소를 정하는 것은 스테이지다 (computeCombat 은 R80 으로 언제나 physical 을 낸다)
-    if (c.attack_type !== 'physical') fail('computeCombat 이 physical 이 아니다 — R80 미반영');
-    if (e.atkType !== m.attack_type) fail(`atkType ${e.atkType} ≠ ${m.attack_type}`);
+    // 평타는 언제나 물리 — 몬스터도 덮지 않는다 (R198 · ~~③ 스테이지 원소로 덮기~~)
+    if (c.attack_type !== 'physical') fail('computeCombat 이 physical 이 아니다');
+    if (e.atkType !== 'physical') fail(`atkType ${e.atkType} — 몬스터 평타도 물리다 (R198)`);
+    if (e.noBasic !== (c.basic_attack === false)) fail(`noBasic ${e.noBasic} ≠ computeCombat basic_attack ${c.basic_attack}`);
     if (e.lvl !== lvl) fail('lvl 은 스테이지 dlvl');
     // **밑수도 영웅과 같이 받는다** [D2 사용자 확정] — 치명·재생을 0 으로 덮지 않는다
     if (e.crit !== c.crit_rate) fail(`crit ${e.crit} ≠ ${c.crit_rate} — 밑수를 덮었다 (D2)`);
@@ -4410,7 +4508,8 @@ check('skill: activesFor — 칸은 출처가 정한다 · 고유 / 배운 스�
     return `${MAIN.length}직업 × (고유 · 배운 스킬) · 전직 칸은 빈다`;
 });
 
-/* ── 무기 판정 — 직업 스킬은 그 직업의 무기군을 들어야 나간다 [2026-09-29 · R187 · skill_design §2-2 · battle_design §6] ── */
+/* ── 무기 판정 — 배운 칸의 직업 스킬은 그 직업의 무기군을 들어야 나간다 [2026-09-29 · R187 · 개정 2026-10-02 · R197 · skill_design §2-2 · battle_design §6] ──
+ *   `fitsWeapon` 은 스킬 하나의 규칙이고, 그 규칙을 **배운 칸(`source = book`)에만** 묻는 것은 battle(`slotOf`) · 캐릭터 탭이다 — 고유 · 전직 칸은 무기를 안 본다 */
 
 check('skill: fitsWeapon — 직업 스킬은 그 직업의 무기군을 들어야 나간다 · 전직 · 몬스터 전용은 무관 · 맨손은 거짓 (skill_design §2-2 · R187)', () => {
     const job = SYS.skill.list.filter(d => d.ownerKind === 'job');
@@ -4423,23 +4522,17 @@ check('skill: fitsWeapon — 직업 스킬은 그 직업의 무기군을 들어�
     }
     const free = SYS.skill.list.filter(d => d.ownerKind !== 'job');
     for (const d of free) if (!SYS.skill.fitsWeapon(d, null)) fail(`${d.id}(${d.ownerKind}) — 무기와 상관없어야 하는데 맨손으로 안 나간다`);
-    // 몬스터 — 고유가 제 무기군과 어긋나면 그 몬스터의 고유가 조용히 꺼진다(데이터 실수를 로드 단계에서 잡는다)
-    let mons = 0;
-    for (const m of Object.values(D.monsters)) {
-        const d = SYS.skill.defs[m.innate_skill];
-        if (!d) continue;
-        if (!SYS.skill.fitsWeapon(d, WG[m.weapon_group].classes)) fail(`몬스터 ${m.monster_idx} — 고유 ${d.id} 가 제 무기 ${m.weapon_group} 로 안 나간다`);
-        mons++;
-    }
-    return `직업 스킬 ${job.length} · 무관 ${free.length} · 몬스터 고유 ${mons} 전부 제 무기와 맞다`;
+    // ~~몬스터 — 고유가 제 무기군과 어긋나면 조용히 꺼진다~~ — 2026-10-02 R197 로 고유는 무기를 안 본다(몬스터는 배운 칸이 없다 · 아래 「적도 같은 규칙」 단정)
+    return `직업 스킬 ${job.length} · 무관 ${free.length}`;
 });
 
 /** p0 에게만 칸을 싣고 무기군을 쥐여 준 이길 수 있는 파티 — 나머지는 칸이 없다(평타만) */
 const armedKit = (acts, group) => godUnits().map((u, i) => (i === 0 ? { ...u, actives: acts, weaponGroup: group } : { ...u, actives: [] }));
 
-check('battle: 무기가 안 맞는 직업 스킬 칸은 건너뛴다 — 차례를 안 먹어 칸이 없는 것과 한 글자도 안 다르다 · 맞으면 나간다 · 꺼진 오오라는 안 켠다 (battle_design §6 · R187)', () => {
+check('battle: 무기가 안 맞는 배운 칸은 건너뛴다 — 차례를 안 먹어 칸이 없는 것과 한 글자도 안 다르다 · 맞으면 나간다 · 꺼진 오오라는 안 켠다 (battle_design §6 · R187 · R197)', () => {
+    // 배운 칸(`book`)만 무기를 본다 — 칸 둘을 다 책 출처로 싣는다(실제 영웅의 책 칸은 하나지만 규칙은 칸마다다)
     const kit = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura').slice(0, 2)
-        .map(d => ({ id: d.id, source: 'innate' }));
+        .map(d => ({ id: d.id, source: 'book' }));
     if (kit.length < 2) fail('궁수 직업 스킬이 둘이 안 된다 — 표본 없음');
     const ids = kit.map(a => a.id);
     let cast = 0;
@@ -4460,43 +4553,48 @@ check('battle: 무기가 안 맞는 직업 스킬 칸은 건너뛴다 — 차례
             cast += n;
         }
     }
-    // ③ 오오라 — 기사 오오라를 활로 들면 안 켜진다 · 양손검이면 켜진다
+    // ③ 오오라 — 책으로 배운 기사 오오라를 활로 들면 안 켜진다 · 양손검이면 켜진다
     const aura = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'knight' && d.cast === 'aura');
-    const auraOn = g => SYS.battle.simulate(armedKit([{ id: aura.id, source: 'innate' }], g), 1013, makeRng(1));
+    const auraOn = (g, source = 'book') => SYS.battle.simulate(armedKit([{ id: aura.id, source }], g), 1013, makeRng(1));
     const off = auraOn('bow'), on = auraOn('sword2h');
     if (off.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id) || off.party[0].ready[0] !== null) fail(`${aura.id} — 활로 켜졌다`);
     if (!on.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id) || on.party[0].ready[0] !== 0) fail(`${aura.id} — 양손검으로 안 켜졌다`);
-    return `꺼진 칸 = 칸 없음(5 시드 × 도끼 · 맨손) · 활 · 석궁 시전 ${cast} · ${aura.id} 활 꺼짐 · 양손검 켜짐`;
+    // ④ **고유 칸은 무기를 안 본다** [2026-10-02 · R197] — 같은 스킬을 고유로 실으면 남의 무기 · 맨손에서도 나가고 켜진다
+    for (const g of ['axe', null]) {
+        const innate = SYS.battle.simulate(armedKit(kit.map(a => ({ ...a, source: 'innate' })), g), 1013, makeRng(1));
+        if (!innate.timeline.some(ev => ev.e === 'skill' && ev.u === 'p0')) fail(`무기 ${g} — 고유 칸이 안 나갔다(고유는 무기를 안 본다 · R197)`);
+        if (!innate.party[0].ready.every(v => v === 0)) fail(`무기 ${g} — 고유 칸 표시 ${JSON.stringify(innate.party[0].ready)} — 꺼지면 안 된다`);
+        const ia = auraOn(g, 'innate');
+        if (!ia.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id)) fail(`무기 ${g} — 고유 오오라가 안 켜졌다`);
+    }
+    return `꺼진 배운 칸 = 칸 없음(5 시드 × 도끼 · 맨손) · 활 · 석궁 시전 ${cast} · ${aura.id} 책 · 활 꺼짐 · 양손검 켜짐 · 고유는 도끼 · 맨손에서도 켜짐`;
 });
 
-check('battle: 적도 같은 규칙 — 무기가 안 맞는 몬스터의 직업 스킬은 라운드가 바뀌어도 안 켜진다 (skill_design §2-2 · R187)', () => {
-    // 모든 몬스터에게 제 직업이 아닌 무기군을 쥐여 준 판 — 라운드 시작 · 불러내기가 준비 시각을 되돌려도 꺼진 칸은 그대로여야 한다
+check('battle: 적도 같은 규칙 — 몬스터는 배운 칸이 없어 무기가 안 맞아도 직업 스킬이 나간다 · 칸이 안 꺼진다 (skill_design §2-2 · R187 · R197)', () => {
+    // 모든 몬스터에게 제 직업이 아닌 무기군을 쥐여 준 판 — 고유 · 보스 셋째 칸은 무기를 안 보므로 칸이 켜진 채 나가야 한다
+    //   ~~남의 무기 판에서는 직업 스킬이 안 나간다~~(09-29 · R187) — 2026-10-02 R197 로 무기를 보는 것은 배운 칸뿐이다
     const swap = Object.fromEntries(Object.entries(D.monsters).map(([id, m]) =>
         [id, { ...m, weapon_group: D.weaponGroupList.find(g => !g.classes.includes(m.cls)).id }]));
     const S2 = buildSystems({ ...D, monsters: swap });
-    const S1 = SYS;
-    let before = 0, after = 0;
+    let after = 0;
     for (let seed = 1; seed <= 5; seed++) {
         const jobCasts = (S, r) => r.timeline.filter(ev => ev.e === 'skill' && ev.u.startsWith('e') && S.skill.defs[ev.s]?.ownerKind === 'job').length;
-        before += jobCasts(S1, S1.battle.simulate(godUnits(), 1013, makeRng(seed)));
         const r = S2.battle.simulate(godUnits(), 1013, makeRng(seed));
-        const n = jobCasts(S2, r);
-        if (n) fail(`seed ${seed} — 제 무기가 아닌 몬스터가 직업 스킬을 ${n}번 썼다`);
+        after += jobCasts(S2, r);
         for (const ev of r.timeline.filter(e => e.e === 'round'))
             for (const e of ev.enemies) (e.actives ?? []).forEach((id, i) => {
-                if (S2.skill.defs[id]?.ownerKind === 'job' && e.ready[i] !== null) fail(`seed ${seed} 라운드 ${ev.n} ${e.monsterId} — ${id} 칸 표시 ${e.ready[i]} — 꺼진 칸은 null`);
+                if (S2.skill.defs[id]?.cast !== 'aura' && e.ready[i] === null) fail(`seed ${seed} 라운드 ${ev.n} ${e.monsterId} — ${id} 칸이 꺼졌다(몬스터는 배운 칸이 없다 · R197)`);
             });
-        after += n;
     }
-    if (!before) fail('제 무기를 든 판에서도 몬스터가 직업 스킬을 안 썼다 — 비교 표본 없음');
-    return `제 무기 판 몬스터 직업 스킬 ${before}회 → 남의 무기 판 ${after}회`;
+    if (!after) fail('남의 무기를 든 몬스터가 직업 스킬을 한 번도 안 썼다 — 고유가 무기를 봤다(R197)');
+    return `남의 무기 판 몬스터 직업 스킬 ${after}회 (5 시드)`;
 });
 
-check('createRun.refit: 무기를 바꿔 칸이 꺼지면 쿨이 멈추고 · 되돌리면 멈춘 자리에서 잇는다 — 뺐다 끼워도 쿨이 안 되돌아간다 (battle_design §6 · R187)', () => {
+check('createRun.refit: 무기를 바꿔 배운 칸이 꺼지면 쿨이 멈추고 · 되돌리면 멈춘 자리에서 잇는다 — 뺐다 끼워도 쿨이 안 되돌아간다 (battle_design §6 · R187 · R197)', () => {
     const sk = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura' && (d.cool ?? 0) > 3);
     if (!sk) fail('궁수 직업 스킬 중 쿨 3초 넘는 것이 없다 — 표본 없음');
-    // 데미지 1 — 쿨 한 바퀴를 넘겨 기다리는 동안 라운드가 끝나지 않게 한다(HP 는 godUnits 그대로라 안 쓰러진다)
-    const kit = g => armedKit([{ id: sk.id, source: 'innate' }], g).map(u => ({ ...u, combat: { ...u.combat, atk_physical: { min: 1, max: 1 } } }));
+    // 데미지 1 — 쿨 한 바퀴를 넘겨 기다리는 동안 라운드가 끝나지 않게 한다(HP 는 godUnits 그대로라 안 쓰러진다) · 무기를 보는 것은 배운 칸뿐이다(R197)
+    const kit = g => armedKit([{ id: sk.id, source: 'book' }], g).map(u => ({ ...u, combat: { ...u.combat, atk_physical: { min: 1, max: 1 } } }));
     const tenth = v => Math.round(v * 10) / 10;       // battle.js r1 과 같은 자릿수 (아래 같은 이름은 이 단정보다 뒤에 선다)
     const lastFit = run => run.result.timeline.findLast(ev => ev.e === 'refit' && ev.u === 'p0');
     const castsOf = run => run.result.timeline.filter(ev => ev.e === 'skill' && ev.u === 'p0');
@@ -4525,6 +4623,21 @@ check('createRun.refit: 무기를 바꿔 칸이 꺼지면 쿨이 멈추고 · �
         return `seed ${seed} ${sk.id} — ${offEv.t}초 꺼짐(남은 ${tenth(left)}초) → ${onEv.t}초 켜짐 → 준비 ${onEv.ready[0]}`;
     }
     fail('시전 뒤 쿨이 넉넉히 남은 채 라운드가 이어지는 순간이 없다 — 표본 없음 (시드 1~20)');
+});
+/** 행동 게이지 색의 재료 [2026-10-02 · ADR-0476 · INTERFACE §2-6] — 재생기는 무기를 다시 읽지 않고 시뮬이 쓴 `noBasic` 을 받는다.
+ *  `result.party[]` 가 싣고 · 갈아입어 물리 → 마법이 되면 `refit` 이 새 값을 싣는다(적 항목은 위 `round` 단정이 본다) */
+check('simulate · refit: 표시값 noBasic — result.party[] 와 refit 이 유닛의 평타 여부를 싣는다 (행동 게이지 색 · ADR-0476)', () => {
+    const magicKit = () => godUnits().map((u, i) => (i === 0 ? { ...u, combat: { ...u.combat, basic_attack: false } } : u));
+    const r = SYS.battle.simulate(magicKit(), 1013, makeRng(1));
+    if (r.party[0].noBasic !== true) fail(`마법 무기 p0 noBasic ${r.party[0].noBasic}`);
+    if (r.party.slice(1).some(p => p.noBasic !== false)) fail(`물리 무기 noBasic ${r.party.map(p => p.noBasic)}`);
+    const run = SYS.battle.createRun(godUnits(), 1013, makeRng(1));
+    run.advance(0);
+    run.refit(magicKit());
+    const fit = run.result.timeline.findLast(ev => ev.e === 'refit' && ev.u === 'p0');
+    if (!fit) fail('평타 여부를 바꿨는데 갈아입기가 안 났다');
+    if (fit.noBasic !== true) fail(`refit noBasic ${fit.noBasic} — 물리 → 마법인데 새 값이 안 실렸다`);
+    return `party ${r.party.map(p => p.noBasic).join(',')} · refit ${fit.noBasic}`;
 });
 /** 고유 스킬은 **제 직업 풀**에서 굴린다 [개정 2026-09-09 · §12-1 규칙 1] — 「마법사가 배쉬를 드는 일은 없다」 */
 check('hero: 고유 스킬이 제 직업 풀 안에서 나온다 · 풀이 비어도 rng 1회 (skill_design §12-1 규칙 1)', () => {
@@ -4675,7 +4788,8 @@ check('simulate: round 이벤트가 적의 스킬 칸(actives)과 툴팁 표시�
                 for (const id of e.actives) if (typeof id !== 'string' || !SYS.skill.defs[id]) fail(`${tag} 칸이 스킬 id 가 아니다 (${JSON.stringify(id)})`);
                 if (e.actives[0] !== m.innate_skill) fail(`${tag} 1번 칸 ${e.actives[0]} ≠ 고유 ${m.innate_skill}`);
                 if (!(e.actives.length >= 1 && e.actives.length <= g.skill_slots)) fail(`${tag} ${e.grade} 칸 ${e.actives.length} — 1..${g.skill_slots} 밖`);
-                if (e.atkType !== m.attack_type) fail(`${tag} atkType ${e.atkType} ≠ ${m.attack_type}`);
+                if (e.atkType !== 'physical') fail(`${tag} atkType ${e.atkType} — 평타는 언제나 물리다 (R198)`);
+                if (typeof e.noBasic !== 'boolean') fail(`${tag} noBasic ${e.noBasic} — 행동 게이지 색의 재료가 없다 (ADR-0476)`);
                 if (!(e.atkMin > 0 && e.atkMax >= e.atkMin) || typeof e.matkMin !== 'number' || typeof e.matkMax !== 'number')
                     fail(`${tag} atk ${e.atkMin}~${e.atkMax} · matk ${e.matkMin}~${e.matkMax}`);
                 for (const k of AXES) if (e.stats?.[k] !== m[k]) fail(`${tag} stats.${k} ${e.stats?.[k]} ≠ ${m[k]}`);
@@ -5945,7 +6059,7 @@ check('battle: 적의 세부 능력치 sheet — 전투 유닛과 같은 값 · 
     const atk = s.atk_physical ?? s.atk_magic;
     if (atk.min !== e.atkMin || atk.max !== e.atkMax) fail(`공격력 ${atk.min}~${atk.max} ≠ ${e.atkMin}~${e.atkMax}`);
     if (s.crit_rate !== e.crit || s.damage_reduction !== e.dr || s.attack_type !== e.atkType) fail('치명 · 피해 감소 · 공격 타입이 유닛과 다르다');
-    if ('option_fx' in s || 'atk_pct_sum' in s) fail('전투 내부용 필드가 sheet 로 새어 나왔다');
+    if ('option_fx' in s || 'atk_pct_sum' in s || 'main_attr_mult' in s || 'basic_attack' in s) fail('전투 내부용 필드가 sheet 로 새어 나왔다');
     const r = SYS.battle.simulate(units(), 1013, makeRng(1));
     const round = r.timeline.find(ev => ev.e === 'round');
     const bad = round.enemies.find(x => !x.sheet || x.sheet.hp_max !== x.hpMax || x.sheet.action_period !== x.period);
@@ -5960,7 +6074,8 @@ check('battle: makeEnemy 유닛의 전투 안 필드 초기값 —창·배리어
     //   여기 남는 것은 **몬스터만 드는 축**과 **전투 안에서만 사는 필드의 초기값**이다
     const want = {
         key: 'e0', side: 'enemy', monsterId: id, grade, lvl, cls: m.cls, next: 0, regenAcc: 0, skillMult: 1,
-        atkType: m.attack_type, monsterType: m.monster_type,
+        atkType: 'physical', monsterType: m.monster_type,   // 평타는 언제나 물리 (R198 · ~~m.attack_type~~)
+        noBasic: false,                                     // 맨몸(장비 인자 없음) = 맨손 — 평타를 친다 · 마법 무기를 낀 몬스터만 안 친다(R198 · 「평타는 능력치 계수」 단정)
         expReward: D.levelXp.find(r => r.level === lvl).monsterXp * g.exp_mult * m.exp_coef,
         goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * g.exp_mult * m.exp_coef, goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
     };
@@ -6288,6 +6403,39 @@ check('tip: 값을 모르면 식으로 접힌다 — 후보 카드 · 도감 자
     if (!gone || gone.querySelector('.tip-line')) fail('없는 스킬에 문장이 났다');
     return `모름 "${bare}" / 앎 "${full}"`;
 });
+check('tip: 피해를 내는 문장은 값 · 식 모두 종류를 말한다 — 원소 태그 · 없으면 물리 · 평타 부여는 얹는 원소 · ko/en (SCREEN_DESIGN §2 · ADR-0477)', () => {
+    const ctx = { period: 2.4, atkMin: 400, atkMax: 400, atkType: 'physical', stats: { ...G.heroes[0].stats } };
+    let n = 0;
+    try {
+        for (const lang of ['ko', 'en']) {
+            setLang(lang);
+            for (const def of SYS.skill.list) {
+                const e = def.effects[0];
+                const st = e.status ? SYS.skill.statuses[e.status] : null;
+                const type = (e.effect === 'hit' || e.effect === 'fixed') ? (e.element ?? 'physical')
+                    : st?.stat === 'onhit_element' ? st.element : null;
+                if (!type) continue;
+                const word = i18nT(`st.atkType.${type}`).toLowerCase();
+                for (const [tag, c] of [['값', ctx], ['식', {}]]) {
+                    const card = skillTipCard({ id: def.id }, c);
+                    const txt = card.querySelector('.tip-line')?.textContent ?? '';
+                    if (!txt.toLowerCase().includes(word)) fail(`${lang} ${def.id} ${tag} 문장에 「${word}」가 없다: ${txt}`);
+                    // 종류 칩 — 태그 칩 뒤 · 능력치 칩 앞에 한 번 (ADR-0480)
+                    const chips = [...card.querySelectorAll('.tip-chip')];
+                    const dmg = chips.filter(x => x.classList.contains('dmg'));
+                    if (dmg.length !== 1 || dmg[0].textContent.toLowerCase() !== word) fail(`${lang} ${def.id} ${tag} 종류 칩 [${dmg.map(x => x.textContent)}] ≠ 「${word}」`);
+                    const at = chips.findIndex(x => x.classList.contains('attr'));
+                    if (at >= 0 && at < chips.indexOf(dmg[0])) fail(`${lang} ${def.id} 종류 칩이 능력치 칩 뒤에 섰다`);
+                }
+                n += 1;
+            }
+            // 피해가 없는 스킬은 종류 칩이 없다 — 버프 · 회복 · 평타 퍼뜨리기
+            for (const id of ['war_shout', 'pri_heal', 'arc_pierce'])
+                if (skillTipCard({ id }, ctx).querySelector('.tip-chip.dmg')) fail(`${lang} ${id} 피해가 없는데 종류 칩이 섰다`);
+        }
+    } finally { setLang('ko'); }
+    return `${n / 2} 스킬 × 값 · 식 × ko/en — 문장 · 종류 칩`;
+});
 check('tip: 피해 · 회복량은 범위로 찍힌다 — 양끝이 다르면 「최소~최대」 · 같으면 한 수 · ko/en (SCREEN_DESIGN §2 · ADR-0108 · R90)', () => {
     const def = SYS.skill.defs.war_bash;
     const stats = { ...G.heroes[0].stats };
@@ -6478,7 +6626,7 @@ check('battle: 적의 소환 벽은 처치가 아니고 클리어를 막지 않�
     //   드문 사건이라 한 가지 세기·시드에 기대면 수열이 바뀔 때마다 표본이 사라진다 — 세기를 올려 가며 찾는다(결함은 파티 세기와 무관하다)
     let one = null;
     for (const mul of [1, 2, 4, 8]) {
-        const mk = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', atk_magic: undefined,
+        const mk = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', basic_attack: true, atk_magic: undefined,
             atk_physical: scaleRange(u.combat.atk_physical ?? u.combat.atk_magic, mul) } }));
         for (let seed = 1; seed <= 40 && !one; seed++) {
             const x = SYS.battle.simulate(mk(), 1051, makeRng(seed));
@@ -6502,7 +6650,7 @@ check('battle: 적의 소환 벽은 처치가 아니고 클리어를 막지 않�
     const stat = [];
     let two = null;
     for (const mul of [4, 8, 16, 32, 64]) {
-        const mk = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', atk_magic: undefined,
+        const mk = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', basic_attack: true, atk_magic: undefined,
             atk_physical: scaleRange(u.combat.atk_physical ?? u.combat.atk_magic, mul) } }));
         let summoned = 0, wins = 0, standing = 0;
         for (let seed = 1; seed <= 40; seed++) {
@@ -6598,7 +6746,7 @@ check('battle: 적의 오오라는 시전되지 않는다 — 라운드 시작�
     // 오오라를 드는 몬스터가 실재해야 이 단정이 뜻을 갖는다
     const holders = Object.values(D.monsters).filter(m => auras.has(m.innate_skill));
     if (!holders.length) fail('오오라를 고유로 든 몬스터가 없다 — 이 단정이 아무것도 안 잰다');
-    const strong = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', atk_magic: undefined,
+    const strong = () => units().map(u => ({ uid: u.uid, combat: { ...u.combat, hp_max: 100000, attack_type: 'physical', basic_attack: true, atk_magic: undefined,
         atk_physical: scaleRange(u.combat.atk_physical ?? u.combat.atk_magic, 16) } }));
     let enemyCasts = 0, runs = 0;
     for (const st of D.stageList) {
@@ -7287,19 +7435,19 @@ const xpShareOf = (s, level) => {
 check('advanceRun: 이긴 라운드의 경험치는 그 순간 살아 있는 영웅만 — 쓰러진 영웅은 그 런 끝까지 몫이 없다 (R89 D2)', () => {
     let sample = 0, rounds = 0;
     for (let seed = 1; seed <= 30 && sample < 3; seed++) {
-        const G2 = newGameP(seed, cands, NOW);
-        const d = SYS.game.departRun(G2, 1011, NOW);
+        const G2 = openAll(HARD.game.newGame(seed, cands, NOW), HARD);   // 표본이 밸런스 값에 기대지 않게 센 몬스터 판 (위 HARD)
+        const d = HARD.game.departRun(G2, 1011, NOW);
         if (!d.ok) fail(`seed ${seed} depart ${d.err}`);
         const R = d.report, out = new Set();
         for (;;) {
             const before = { ...R.xp };
-            const lv = Object.fromEntries(R.party.map(uid => [uid, SYS.game.heroById(G2, uid).level]));   // 정산 순간의 레벨 — 레벨 차 감쇠가 읽는다
-            const a = SYS.game.advanceRun(G2, d.run, NOW);
+            const lv = Object.fromEntries(R.party.map(uid => [uid, HARD.game.heroById(G2, uid).level]));   // 정산 순간의 레벨 — 레벨 차 감쇠가 읽는다
+            const a = HARD.game.advanceRun(G2, d.run, NOW);
             const s = a.round;
             // 경험치 획득 +%(방어구 공통옵션)는 **본인 몫** — 그 영웅의 옵션 묶음으로 잰다 (2026-09-18). 0 이면 전원 같은 값이다
             const each = uid => {
                 if (!s.cleared) return 0;
-                const gain = SYS.game.heroCombat(G2, SYS.game.heroById(G2, uid)).option_fx?.xpGain ?? 0;
+                const gain = HARD.game.heroCombat(G2, HARD.game.heroById(G2, uid)).option_fx?.xpGain ?? 0;
                 const base = xpShareOf(s, lv[uid]);
                 return Math.round(gain ? base * (1 + gain) : base);
             };

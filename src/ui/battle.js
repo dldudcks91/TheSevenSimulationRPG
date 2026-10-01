@@ -175,6 +175,7 @@ export function mountBattle(container, opts) {
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
             atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType,   // 툴팁 문장의 피해·회복량(범위 · R90) — 전투에는 안 쓴다 (INTERFACE §2-6)
+            noBasic: p.noBasic,   // 마법 무기(평타 없음 · R198) — 행동 게이지 색 (ADR-0476)
             // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
             stats: p.stats ?? null,
             // 첫 준비 시각은 결과가 싣는다(`party[].ready`). 스킬은 준비 상태로 출발해 칸은 걷힌 채 선다 (R100)
@@ -574,7 +575,7 @@ function renderUnits(state, root) {
                             <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
                         </div>
                         <div class="act-row" title="${t('bt.actTitle', { s: u.period.toFixed(2) })}">
-                            <i class="act-fill"></i>
+                            <i class="act-fill ${u.noBasic ? 'k-magic' : 'k-phys'}"></i>
                         </div>
                         ${skills}
                     </div>
@@ -793,7 +794,7 @@ function castSkill(state, u, ev) {
             state.timeouts.push(setTimeout(() => slot.classList.remove('fire'), 520));
         }
     }
-    popup(state, u, L(s.name), 'skill-tag');
+    // 스킬 이름 팝업은 없다 (2026-10-02 · ADR-0470) — 발동은 스킬 칸 반짝임 · 스킬 이펙트 · 로그가 말한다
 }
 /** 타격 라벨(`strikeLabel`) — 이벤트가 들고 온 스킬 id(`s`) 의 이름, 없으면 기본 공격. 로그가 쓴다 — 누적 데미지는 id 로 쌓고 그릴 때 같은 이름을 붙인다 */
 /** 칸의 첫 준비 시각 — 시뮬이 실은 값 그대로 · `null` 은 안 켜진 오오라라 **늘 덮는다**(Infinity) · 값이 없으면 `dflt` (INTERFACE §2-6 · R98) */
@@ -879,11 +880,19 @@ const dmgPop = (ty = null, crit = false) => `dmg${crit ? ' crit' : ''}${ty ? ` d
  * 떠오르는 한 줄 — 본문은 텍스트 노드다(유닛 이름 · 수치가 마크업으로 새지 않게 한다).
  * 피해 숫자는 **스킬 아이콘을 안 단다** (2026-09-28 · ADR-0409 — 옛 ADR-0039 대체) — 「스킬이 나갔다」는 스킬 이펙트(fx.js)가 든다.
  */
+/* 팝업 줄 수 — 초상 높이(101px) 안에 줄 높이(CSS `.pop` 의 18px)로 든다. 다 차면 마지막 줄에 겹친다 */
+const POP_ROWS = 4;
 function popup(state, u, text, cls) {
     if (!u?.node || state.catchUp) return;   // 되감기 중에는 팝업을 띄우지 않는다
     const layer = u.node.querySelector('.pop-layer');
     const p = document.createElement('span');
     p.className = `pop ${cls}`;
+    // 겹치지 않게 위아래로 쌓는다 — 떠 있는 팝업이 안 쓰는 가장 위 줄을 잡는다 (2026-10-02 · ADR-0471)
+    const used = new Set([...layer.querySelectorAll(':scope > .pop[data-row]')].map(x => +x.dataset.row));
+    let row = 0;
+    while (used.has(row) && row < POP_ROWS - 1) row++;
+    p.dataset.row = row;
+    p.style.setProperty('--pop-row', row);
     p.appendChild(document.createTextNode(text));
     layer.appendChild(p);
     state.timeouts.push(setTimeout(() => p.remove(), 900));
@@ -1145,6 +1154,7 @@ const enemyEntry = (e, at) => ({
     //                 `castSkill` 이 칸에서 못 찾아 적의 `skill` 이벤트(칸 번쩍임 · 이름 팝업)를 **조용히 흘렸다**
     //   buffs: Map  → ⚠ **이게 없어서 적의 창이 화면에 안 떴다**: buff 이벤트가 `u.buffs?.set` 이라 조용히 흘렸다
     atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, stats: e.stats ?? null,   // 툴팁 문장의 피해·회복량(범위 · R90) · 스킬 계수 — 파티와 같다 (INTERFACE §2-6)
+    noBasic: e.noBasic,   // 행동 게이지 색 — 파티와 같은 규칙 (ADR-0476)
     sheet: e.sheet ?? null,   // 세부 능력치 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 「유닛 툴팁 규격」)
     gear: e.gear ?? null,     // 입고 있는 한 벌 — 유닛 툴팁의 첫 장(장비 3×3)이 읽는다 (R119 · ADR-0183)
     // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
@@ -1358,7 +1368,7 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u);
             if (!u) break;
             const had = u.skills ?? [];
-            Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atkMin: ev.atkMin, atkMax: ev.atkMax, matkMin: ev.matkMin, matkMax: ev.matkMax, atkType: ev.atkType, stats: ev.stats ?? null });
+            Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atkMin: ev.atkMin, atkMax: ev.atkMax, matkMin: ev.matkMin, matkMax: ev.matkMax, atkType: ev.atkType, noBasic: ev.noBasic, stats: ev.stats ?? null });
             // 오오라 칸(준비 `0` · `null`)은 갈아입기로 켜짐 · 꺼짐이 바뀔 수 있어 옛 칸을 잇지 않고 새로 받는다 (R98).
             //   잇는 것은 **같은 자리의 같은 스킬**뿐이다 — 같은 스킬이 고유 · 무기 두 칸에 앉아도 칸마다 제 쿨 표시를 지킨다 (R130 · 시뮬의 칸마다 쿨과 같은 규칙)
             u.skills = (ev.actives ?? []).map((id, i) => {

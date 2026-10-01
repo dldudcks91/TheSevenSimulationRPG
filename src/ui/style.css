@@ -69,7 +69,6 @@
 
     /* 적 · 보스 · 전투불능 · 피해 */
     --enemy-line: #7a3030;
-    --enemy-fill: #b06030;
     --boss-line: #7a2a2a;
     --boss-bg: #1f1416;
     --downed-line: #5a2424;
@@ -953,6 +952,11 @@ html, body { height: 100%; overflow: hidden; }
 .tip-card .tip-head { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 5px; letter-spacing: 1px; }
 .tip-card .tip-name { font-size: var(--fs-md); word-break: keep-all; margin-bottom: 3px; }
 .tip-card .tip-sub { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 8px; }
+/* 아이템 카드 머리글 — 왼쪽 「이 아이템」 · 오른쪽 끝 Lv (SCREEN_DESIGN §6 · ADR-0473 · ADR-0474). 레벨은 두 장 비교에서 같은 모서리에 서서 대조된다 ·
+   글씨는 머리글보다 한 치수(1px) 작다(사용자 지시) — 확대 배율의 `--fs-xs` 재정의도 따라가게 calc */
+.tip-card .tip-head-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.tip-card .tip-meta { font-size: calc(var(--fs-xs) - 1px); letter-spacing: 0; white-space: nowrap; color: var(--text-secondary); }
+.tip-card .tip-head-row + .tip-name { margin-bottom: 8px; }   /* 이름 아래 줄이 걷힌 자리 — 그 줄이 쥐던 간격을 이름이 든다 */
 /* 스킬·마스터리 툴팁 — 이름과 그림을 한 줄의 머리로 묶고 효과 문장에 읽을 자리를 준다. */
 .tip-card.skill { width: 348px; padding: 14px 16px 15px; border-top: 2px solid var(--border-highlight); }
 .tip-card.skill .tip-name {
@@ -1690,10 +1694,13 @@ html, body { height: 100%; overflow: hidden; }
 }
 .act-fill {
     display: block; height: 100%; width: 0;
-    background: var(--color-warning);
+    background: var(--color-warning);        /* 기본 노랑 — 파견 창(채굴 타격)이 쓴다 */
     transition: width .1s linear;            /* 틱 간격과 맞춘다 */
 }
-.unit.enemy .act-fill { background: var(--enemy-fill); }
+/* 관전 카드는 **무기 종류** 색이다 [2026-10-02 사용자 지시 · ADR-0476] — 물리 무기 주황 · 마법 무기(평타 없음 — 찬 채로 스킬을 기다린다 · R198) 파랑.
+   양 진영 같다(옛 적 갈색 `--enemy-fill` 폐지) · 누적 판 막대(`.bar.dmg > i.k-phys/k-magic`)와 같은 두 색 */
+.act-fill.k-phys { background: var(--dt-physical); }
+.act-fill.k-magic { background: var(--color-info); }
 /* 막바지(85%~) 발광(.act-row.full)은 **삭제했다** (2026-09-04 사용자 지시) — 인과는 특수효과가 아니라
    게이지가 실제로 100% 까지 차는 것으로 읽는다. 행동 틱의 100% 표시와 스냅 리셋은 재생기(battle.js refreshUnit)가 든다 */
 
@@ -1783,15 +1790,19 @@ html, body { height: 100%; overflow: hidden; }
 
 .pop-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .pop {
-    position: absolute; top: 38%; left: 57px; font-size: var(--fs-sm);   /* 왼쪽 초상(101px 칸) 한가운데서 떠오른다 — 패딩 6 + 50.5 (2026-09-03) */
-    animation: pop-up .9s ease-out forwards; white-space: nowrap;
+    /* 초상 오른쪽 위(얼굴 옆 검은 여백)에서 떠오른다 (2026-10-02 · ADR-0470) — 오른쪽 끝 = 패딩 6 + 초상 101 - 4 · 위 = 패딩 5 + 4.
+       개편판(.v2)은 초상이 맨 위 띠(24 + 틈 5) 아래라 그만큼 내린다 */
+    /* 동시에 뜬 팝업은 줄(`--pop-row` — battle.js `popup` 이 잡는다)마다 18px 씩 아래로 쌓인다 (ADR-0471) */
+    position: absolute; top: 9px; left: 103px; margin-top: calc(var(--pop-row, 0) * 18px); font-size: var(--fs-sm);
+    animation: pop-up-r .9s ease-out forwards; white-space: nowrap;
     text-shadow: 0 1px 2px #000;
 }
 /* 피해 숫자는 한 단 크다 [2026-09-28 사용자 지시 · ADR-0407] — 보통 13 → 15 · 치명 18 → 20. 글자 팝업(빗나감 · 반격 · 처치 · 회복)은 그대로.
    색은 **피해 종류 색** — 로그의 피해 숫자와 같은 토큰(`--dt-*`) [2026-09-28 사용자 지시 · ADR-0408]. 종류가 없는 피해(반사 · 자폭)는 무채색 기본이다.
    때린 쪽 · 맞은 쪽을 색으로 가르지 않는다(옛 `--dmg-out` 연분홍 / `--dmg-in` 빨강 폐지 — 카드 자리가 든다) · 치명도 같은 색이고 크기만 크다(옛 치명 노랑 폐지) */
+.unit.v2 .pop:not(.lvup) { top: 33px; }
 .pop.dmg { color: var(--text-primary); font-size: var(--fs-md); }
-.pop.dmg.crit { font-size: calc(var(--fs-lg) + 2px); }
+/* 피해 숫자는 스킬 · 평타 · 치명 모두 같은 크기다 (2026-10-02 사용자 지시 · ADR-0471 — 치명의 큰 글씨 폐지) */
 .pop.dmg.dt-physical { color: var(--dt-physical); }
 .pop.dmg.dt-fire { color: var(--dt-fire); }
 .pop.dmg.dt-cold { color: var(--dt-cold); }
@@ -1801,10 +1812,10 @@ html, body { height: 100%; overflow: hidden; }
 .pop.counter { color: var(--color-warning); font-size: var(--fs-xs); }            /* 반격 — 반격한 카드의 글자 (ADR-0158) */
 .pop.heal { color: var(--heal-fg); }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
 /* 레벨업 — 금색 · 다른 글자 팝업보다 크고 한 박자 길다(1.6s = battle.js `LVUP_MS`) · 적중 변화는 아래 작은 줄 (2026-09-29 · ADR-0435).
-   피해 숫자(top 38%)와 겹치지 않게 조금 위에서 떠오른다 */
+   피해 숫자(초상 오른쪽 위 모서리)와 자리를 갈라 왼쪽 초상(101px 칸 — 패딩 6 + 50.5) 위에서 떠오른다 (ADR-0470) */
 .pop.lvup {
-    top: 18%; font-size: var(--fs-md); font-weight: 700; color: var(--color-warning); text-align: center;
-    animation-duration: 1.6s;
+    top: 18%; left: 57px; font-size: var(--fs-md); font-weight: 700; color: var(--color-warning); text-align: center;
+    animation-name: pop-up; animation-duration: 1.6s;
 }
 .pop.lvup small { display: block; font-size: var(--fs-xs); font-weight: 400; color: var(--text-primary); }
 /* 본 적 없는 레벨업 — 관전 카드 신원의 `Lv.n` 이 반짝인다 · **그 영웅 카드를 누를 때까지** (2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440 · ADR-0463) */
@@ -1814,11 +1825,11 @@ html, body { height: 100%; overflow: hidden; }
     50% { opacity: .35; text-shadow: none; }
 }
 /* ⚠ 피해 팝업의 스킬 아이콘(`.pop-ico` · ADR-0039)은 걷었다 (2026-09-28 · ADR-0409) — 「스킬이 나갔다」는 아래 「관전 연출」의 스킬 이펙트가 든다 */
-/* 발동한 스킬 이름 — 피해 숫자(초상 위, top 38%)와 자리를 나눠 카드 가운데 위로 뜬다. 배경 위에서 읽히도록 제 칩을 갖는다 */
-.pop.skill-tag {
-    /* 카드 위에서 시작해 위칸 언저리까지 떠오른다 — 카드에서 완전히 떨어지면 어느 유닛이 쓴 건지 안 붙는다 */
-    top: 12%; left: 50%; font-size: var(--fs-xs); color: var(--info-fg-soft);
-    background: rgba(var(--veil-rgb),.72); border: 1px solid var(--info-line); padding: 1px 6px;
+/* 스킬 이름 팝업(`.pop.skill-tag`)은 걷었다 (2026-10-02 · ADR-0470) */
+@keyframes pop-up-r {
+    0% { transform: translate(-100%, 6px); opacity: 0; }       /* 글자의 오른쪽 끝을 초상 오른쪽 끝에 붙인다 */
+    18% { transform: translate(-100%, -2px); opacity: 1; }
+    100% { transform: translate(-100%, -30px); opacity: 0; }
 }
 @keyframes pop-up {
     0% { transform: translate(-50%, 6px); opacity: 0; }
@@ -2545,6 +2556,13 @@ html, body { height: 100%; overflow: hidden; }
 /* 전직 스킬 — 직업 하나가 한 줄 · 그 직업의 전직 박스가 나란히 (SCREEN_DESIGN §9-1 · ADR-0336).
    칸 폭은 줄 안에서 같고(개수는 데이터가 정한다) 높이는 grid 가 줄에서 가장 긴 박스에 맞춘다 */
 .ix-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 5px; }
+/* 일반 스킬 — 직업 카드 하나에 칸 없이 같은 간격 (SCREEN_DESIGN §9-1 · ADR-0479). 열 폭은 조밀 격자 칸 폭으로 고정 · 왼쪽부터 붙인다.
+   티어 머리는 시작 그림 위에만 글자가 있고 나머지는 빈 줄로 높이를 맞춘다 · 2 · 3티어 시작은 열 틈 한가운데 세로선 */
+.ix-flat { display: grid; grid-template-columns: repeat(auto-fill, 112px); column-gap: 5px; row-gap: 4px; }
+.ix-cell { min-width: 0; position: relative; display: flex; flex-direction: column; gap: 1px; }
+.ix-cell.tier-start::before { content: ''; position: absolute; left: -3px; top: 0; bottom: 0; border-left: 1px solid var(--border-dark); }
+.ix-tier-head { font-size: var(--fs-xs); line-height: 1.2; min-height: 1.2em; }
+.ix-flat .ix-tile { background: none; border: 0; }
 
 /* 마스터리 도감 — 인게임 판을 그대로 세워 한 줄에 세 판씩 비교한다. */
 .codex-mastery-grid {
@@ -3620,8 +3638,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    영입 후보의 본문은 기본값(`flex: 1 1 0`)이면 제 높이를 못 잰다 — 내용 높이에서 시작해 줄기만 하게 `0 1 auto` 로 준다.
    카드 규격 자체는 .cm-board / .cm-card 가 그대로 든다 */
 .c-tavern > .panel, .tv-low > .panel { display: flex; flex-direction: column; min-height: 0; }
-.c-tavern > .panel:first-child { flex: 0 1 auto; }
-.c-tavern > .panel:first-child > .box-body { flex: 0 1 auto; }
+.c-tavern > .panel:first-child { flex: 0 1 auto; }.c-tavern > .panel:first-child > .box-body { flex: 0 1 auto; }
 /* 아랫줄 = 의뢰 | 도박장 나란히 [2026-09-24 사용자 지시 · §8-1 · ADR-0322] — 남는 세로는 줄이 받고 두 패널은 stretch 로 같은 높이다.
    줄은 패널이 아니라 `.panel + .panel` 여백을 못 받는다 — 위 여백은 여기서 주고, 줄 안의 둘째 패널은 세로 여백을 끈다(`.cols` 와 같은 함정).
    폭은 4 : 1 — 도박장 칸이 의뢰 카드 한 장쯤이 된다 */

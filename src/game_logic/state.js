@@ -501,9 +501,9 @@ export function createGameSystem(deps) {
     const heroById = (state, uid) => state.heroes.find(h => h.uid === uid);
     const heroItems = (state, h) => Object.values(h.equipped).filter(Boolean).map(uid => state.items[uid]).filter(Boolean);
     /**
-     * 착용 무기의 무기군 — **직업 스킬이 나가는가의 입력**이다 [2026-09-29 · R187 · skill_design §2-2 — ~~액티브 2번 칸(무기군)의 입력~~].
+     * 착용 무기의 무기군 — **배운 칸의 스킬이 나가는가의 입력**이다 [2026-09-29 · R187 · 개정 2026-10-02 · R197 · skill_design §2-2 — ~~액티브 2번 칸(무기군)의 입력~~].
      * 장비를 아는 층은 여기뿐이라 이 조회도 여기 있다 — `skill.js` 는 아이템을 모른다.
-     * 맨손이면 `null` 이고, 그러면 직업 스킬 칸이 전부 꺼진다(`partyUnits` → battle).
+     * 맨손이면 `null` 이고, 그러면 배운 칸의 직업 스킬이 꺼진다(`partyUnits` → battle · 고유 · 전직 칸은 무기를 안 본다).
      */
     const weaponGroupOf = (state, h) => {
         const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
@@ -1368,7 +1368,7 @@ export function createGameSystem(deps) {
                 uid, combat: heroCombat(state, h, list, no, tactic),  // 전술 조건도 이 인원으로 센다 — 원정은 나간 인원이다 (R92) · 칸은 나간 편성의 것 (R129) · 출발 때 켜진 것만 (R130)
                 stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
                 actives: SK.activesFor(h),                // 둘째 칸 = 책으로 배운 스킬(`h.bookSkill`) — ~~무기가 든 스킬~~ 2026-09-29 R179
-                weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 직업 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · skill_design §2-2)
+                weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 배운 칸의 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · R197 · skill_design §2-2)
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
             };
         });

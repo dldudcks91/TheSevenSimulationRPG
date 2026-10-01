@@ -2784,10 +2784,11 @@ function skillCards(h) {
     // 소제목은 이름뿐이다 (2026-09-08 사용자 지시) — 공격 속도는 **세부 옵션 1 의 제 행**이 든다
     // (`combat_stat.csv:action_period` — 세부 옵션 1 대표값). §4-1 「값은 항상 찍는다」는 그 행이 지킨다
     wrap.appendChild(el('div', 'sub-h', t('ch.skill.h')));
-    // 꺼진 칸 [2026-09-29 · R187 · §6 · ADR-0446] — 직업 스킬이 든 무기의 무기군과 안 맞으면 전투에서 안 나간다. 판정은 `skill.fitsWeapon`(맨손 = 무기군 없음)
+    // 꺼진 칸 [2026-09-29 · R187 · §6 · ADR-0446] — **배운 칸**의 직업 스킬이 든 무기의 무기군과 안 맞으면 전투에서 안 나간다(2026-10-02 · R197 — 고유 · 전직 칸은 무기를 안 본다).
+    //   판정은 `skill.fitsWeapon`(맨손 = 무기군 없음) · 어느 칸이 무기를 보나는 전투(`battle.slotOf`)와 같다
     const worn = G?.items?.[h.equipped?.weapon] ?? null;
     const classes = worn ? D.weaponGroups[worn.group]?.classes ?? null : null;
-    const isOff = a => !SYS.skill.fitsWeapon(SYS.skill.resolve(a), classes);
+    const isOff = a => a.source === 'book' && !SYS.skill.fitsWeapon(SYS.skill.resolve(a), classes);
     // 툴팁 맨 위 한 줄 — 그 스킬 직업의 무기군 이름(`weapon_group.csv` 순서). Alt 로 다시 그려도 줄이 남게 `_rebuild` 를 감싼다
     const needTip = a => {
         const own = SYS.skill.resolve(a)?.ownerId;
@@ -3414,8 +3415,8 @@ function renderCharacter(main) {
 /* ── 비교 툴팁 ── */
 
 /**
- * 아이템 카드 한 장 — 줄 순서는 **머리글 / 이름 / 소속 / 메인 옵션 / 옵션 / 스킬 / 힌트**
- * (SCREEN_DESIGN §6 · 개정 2026-09-10 [ADR-0081] — 메인 옵션이 커지고 담은 스킬이 카드 바닥으로 내려갔다).
+ * 아이템 카드 한 장 — 줄 순서는 **머리글(오른쪽 끝 Lv) / 이름 / 메인 옵션 / 옵션 / 힌트**
+ * (SCREEN_DESIGN §6 · ADR-0081 · 소속 줄은 머리글로 올라갔다 — ADR-0473).
  * @param hints 하단 힌트. 문자열 하나든 배열이든 받는다 — 반지 칸 · 「착용 중 없음」이 함께 설 수 있다
  * @param skCtx 스킬 칸의 계산 맥락(`{period,atkMin,atkMax,matkMin,matkMax,hpMax,atkType,stats}`) — 착용 중 카드 = 그 영웅의 `game.heroCombat` ·
  *   「이 아이템」 카드 = `game.heroCombatIf`(장착 대상 영웅이 그 무기를 낀 것으로 · ADR-0139) · 몬스터 장비 카드 = 그 몬스터의 표시값(ADR-0312).
@@ -3429,11 +3430,11 @@ function tipCard(item, headText, hints = [], skCtx) {
     const g = SYS.item.groupOf(item);            // 무기군 — 직업 전속·행동 주기·공격 타입의 출처 (weapon_group.csv)
     // 메인 옵션은 **먹인 값**을 찍는다 — 강화 배율 · 그 아이템의 고정 옵션까지. 툴팁 숫자가 캐릭터 시트와 갈리면 안 된다 (SCREEN_DESIGN §6 · ADR-0309)
     const imp = SYS.item.implicitFixed(item);
-    const sub = [`ilvl ${item.ilvl}`];
-    if (g) sub.push(L(g));
+    // 머리글 오른쪽 끝 = 아이템 레벨 하나 [2026-10-02 사용자 지시 · ADR-0473 · 무기군은 안 싣는다 ADR-0474] — 가방 칸 배지와 같은 글(`ch.itemLv`)이다
+    const meta = t('ch.itemLv', { n: item.ilvl });
     // **강화 줄은 없다** (2026-09-08 사용자 지시 · §6) — 단계는 이름 앞의 `+n` 이 이미 들고, 비용·상한은 제련소(§8-2)의 값이다.
     // 그래서 여기서 `game.upgradeState` 를 안 부른다 — 가방 칸의 `+n` 배지와 제련소는 그대로 부른다
-    // ~~스킬 칸~~ — 2026-09-29 걷었다(R179 · ADR-0421): 무기가 스킬을 안 담는다(skill_design §2-1). 카드는 여섯 줄이다
+    // ~~스킬 칸~~ — 2026-09-29 걷었다(R179 · ADR-0421): 무기가 스킬을 안 담는다(skill_design §2-1). 카드는 다섯 줄이다
     const hintTags = [].concat(hints).filter(Boolean).map(x => `<span class="muted">${x}</span>`).join('');
     // **메인 옵션 — 밑수 하나가 한 행이다** [개정 2026-09-10 사용자 지시 · ADR-0081].
     //   이름 왼쪽 · 값 오른쪽이라 두 카드(이 아이템 ↔ 착용 중)의 값이 **같은 x 에 선다** — 비교가 이 툴팁의 일이다.
@@ -3456,9 +3457,8 @@ function tipCard(item, headText, hints = [], skCtx) {
     // 방어구 고유값 — 고정 옵션 「방어력 +%」를 먹인 값(`item.implicitFixed` · ADR-0309)
     if (imp) baseRows.push(baseRow(L(M.statLabel(imp.stat)), M.baseValue(imp.stat, imp.v)));
     c.innerHTML = `
-        <div class="tip-head">${headText}</div>
+        <div class="tip-head tip-head-row"><span>${headText}</span><span class="tip-meta">${meta}</span></div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${item.up > 0 ? `+${item.up} ` : ''}${L(item.name)}</div>
-        <div class="tip-sub">${sub.join(' · ')}</div>
         ${baseRows.length ? `<div class="tip-base">${baseRows.join('')}</div>` : ''}
         ${/* 출처 태그 셋 — **데이터가 든 `src` 를 그대로 읽는다** (SCREEN_DESIGN §6 · ADR-0100): 고정 · 죄종 이름(그 죄종 색) · 랜덤.
               순서도 아이템이 든 순서 그대로다 — 렌더러가 정렬하지 않는다. 출처가 없는 옛 접사는 랜덤으로 찍는다 */''}
@@ -5453,7 +5453,7 @@ function forgeUpgrade(p) {
         right.appendChild(el('div', 'fg-head', `
             <span class="fg-ic">${itemImg(it)}</span>
             <span><span class="fg-title" style="color:${rarity(it.rarity).color}">${us.up > 0 ? `+${us.up} ` : ''}${L(it.name)}</span>
-            <span class="fg-meta">${L(rarity(it.rarity))} · ${L(slotDef(it.slot))} · ilvl ${it.ilvl} · ${worn.has(it.uid) ? t('fg.worn') : t('fg.bag')}</span></span>`));
+            <span class="fg-meta">${L(rarity(it.rarity))} · ${L(slotDef(it.slot))} · ${t('ch.itemLv', { n: it.ilvl })} · ${worn.has(it.uid) ? t('fg.worn') : t('fg.bag')}</span></span>`));
 
         /* 강화 — 핍이 진행을, 버튼 옆 수치가 다음 비용을 든다. 목걸이 · 반지는 핍 · 값 · 버튼 대신 한 줄이다 (ADR-0125).
            ⚠ 「베이스 능력치 현재 → 다음」은 아직 못 그린다: `upgradeState` 가 다음 값을 안 주고
@@ -6017,15 +6017,15 @@ const artTile = (src, name, shape, attr = '', stem = false) => `
         <span class="ix-file muted">${src ? (f => stem ? f.replace(/\.[^.]+$/, '') : f)(src.split('/').pop()) : '—'}</span>
     </div>`;
 
-/** 그룹 하나 — 머리(이름 · 폴더 경로 · 장수) + 타일 격자 */
-const artGroup = (title, dir, tiles) => `
+/** 그룹 하나 — 머리(이름 · 폴더 경로 · 장수) + 타일 격자. `body` 를 주면 격자 대신 그것을 편다(일반 스킬의 티어 칸 · ADR-0475) — 장수는 `tiles` 가 센다 */
+const artGroup = (title, dir, tiles, body = null) => `
     <div class="ix-group">
         <div class="ix-head">
             <span class="ix-title">${title}</span>
             <span class="ix-dir muted">${dir}</span>
             <span class="muted">${t('ix.count', { n: tiles.length })}</span>
         </div>
-        <div class="ix-grid">${tiles.join('')}</div>
+        ${body ?? `<div class="ix-grid">${tiles.join('')}</div>`}
     </div>`;
 
 /** 캐릭터 세그먼트 — 영웅 초상. 얼굴 스타일 고르개가 여기와 몬스터 세그먼트에 선다 (§9-1) */
@@ -6135,20 +6135,36 @@ function codexSkill(p) {
     box.dataset.keep = `codex:skill:${state.codexSkillSeg}`;
     const classes = D.classes ?? [];
     if (state.codexSkillSeg === 'adv') {
-        // 전직 스킬 — **전직 하나가 묶음 하나**(ADR-0299)이고 순서는 직업(`class.csv` 행) 순 → 전직 순이다.
-        //   `skill.csv` 행이 없어 그림 목록(`SKILL_ADV_ICON_FILES`)과 이름(`ix.adv.*` · `ix.sk.*`)을 따로 읽는다 [2026-09-22 · §9-1].
-        //   스킬 정의가 없으니 `data-skill` 을 안 단다(툴팁 없음) · 그림 칸은 `adv` — 바탕이 전직 색이다(§2 「스킬 그림」 · ADR-0301)
+        // 전직 스킬 — **전직 하나가 묶음 하나**(ADR-0299)이고 순서는 직업(`class.csv` 행) 순 → `advance.csv:sort_order` 순이다.
+        //   묶음 안은 `skill.csv` 의 `owner_kind=advance` 행(CSV 순) — 일반 탭과 같은 타일 · 같은 툴팁이다 [2026-10-02 · ADR-0472].
+        //   그림 칸만 `adv` — 바탕이 전직 색이다(§2 「스킬 그림」 · ADR-0301)
         //   **직업 하나가 한 줄**이고 그 직업의 전직 박스가 줄에 나란히 선다(ADR-0336) — 줄 머리는 없다(전직 이름이 직업을 말한다)
-        box.innerHTML = classes.map(c => Object.entries(M.SKILL_ADV_ICON_FILES[c.id] ?? {})).filter(advs => advs.length)
-            .map(advs => `<div class="ix-row">${advs.map(([a, stems]) =>
-                artGroup(t(`ix.adv.${a}`), M.SKILL_ICON_DIR,
-                    stems.map(s => artTile(M.SKILL_ICON_DIR + s + M.ICON_EXT, t(`ix.sk.${s}`), 'box adv', '', true)))).join('')}</div>`).join('');
+        const advTile = r => artTile(M.skillIcon(r.skill_id), L(skillInfo(r.skill_id).name), 'box adv', `data-skill="${r.skill_id}"`, true);
+        const advs = D.advanceRows ?? [];
+        box.innerHTML = classes.map(c => advs.filter(a => a.class_id === c.id)
+            .sort((a, b) => Number(a.sort_order) - Number(b.sort_order))
+            .map(a => [a, rows.filter(r => r.owner_kind === 'advance' && r.owner_id === a.advance_id)])
+            .filter(([, rs]) => rs.length))
+            .filter(groups => groups.length)
+            .map(groups => `<div class="ix-row">${groups.map(([a, rs]) =>
+                artGroup(L({ ko: a.name_kr, en: a.name_en }), M.SKILL_ICON_DIR, rs.map(advTile))).join('')}</div>`).join('');
     } else {
         // 일반 스킬 — **직업 하나가 묶음 하나**로 다섯 직업이 한 화면에 선다(ADR-0075 · 0335). 그룹 안의 순서는 CSV 순(= priority 순).
         //   **스킬이 0개인 직업은 묶음이 안 선다** — 확장 직업(`release=expansion`)은 `class.csv` 에 행만 있고 스킬이 없다
+        //   카드 안은 **칸 없이 같은 간격**(ADR-0478 — 0475 의 티어 칸 셋 대체) — 1 → 2 → 3티어(`skill.csv:tier`) · 티어 안은 CSV 순.
+        //   열 폭은 **고정**(조밀 격자 칸 폭)이고 왼쪽부터 붙여 선다 — 그림이 직업 사이에서도 세로로 줄을 맞춘다.
+        //   티어가 시작하는 그림 위에 「{n}티어」 · 2 · 3티어 시작 자리는 열 틈에 구분선(`.tier-start`)
+        const ownOf = c => rows.filter(r => r.owner_kind === 'job' && r.owner_id === c.id)
+            .sort((a, b) => a.tier - b.tier);   // 안정 정렬 — 티어 안은 CSV 순 그대로
         box.innerHTML = classes.map(c => {
-            const tiles = rows.filter(r => r.owner_kind === 'job' && r.owner_id === c.id).map(r => tile(r));
-            return tiles.length ? artGroup(t('ix.g.skillCls', { cls: className(c.id) }), M.SKILL_ICON_DIR, tiles) : '';
+            const own = ownOf(c);
+            const cells = own.map((r, i) => {
+                const first = i === 0 || own[i - 1].tier !== r.tier;
+                return `<div class="ix-cell${first && i > 0 ? ' tier-start' : ''}">` +
+                    `<span class="ix-tier-head muted">${first ? t('ix.tier', { n: r.tier }) : ''}</span>${tile(r)}</div>`;
+            });
+            const body = `<div class="ix-flat">${cells.join('')}</div>`;
+            return own.length ? artGroup(t('ix.g.skillCls', { cls: className(c.id) }), M.SKILL_ICON_DIR, cells, body) : '';
         }).join('');
     }
     p.appendChild(box);

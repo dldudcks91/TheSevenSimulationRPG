@@ -29,7 +29,7 @@
 
 import { createFormula } from './formula.js';
 
-/** 원소 4종 — combat_stat.csv 의 res_* 와 monster.csv:attack_type 이 쓰는 같은 어휘 (battle_design §9-5) */
+/** 원소 4종 — combat_stat.csv 의 res_* 와 스킬의 원소 태그(`skill_effect.csv:element`)가 쓰는 같은 어휘 (battle_design §9-5) */
 export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
 
 /**
@@ -37,7 +37,7 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   balance      — balance.csv 를 {key: value} 로 눕힌 것
  *   stats        — 기본 능력치 7종 정의 [{id}...] (순서 = 표시 순서)  ← hero_attribute.csv
  *   sins         — 죄종 id 목록
- *   classes      — 직업 정의 [{id, keyAttr, stage}...]
+ *   classes      — 직업 정의 [{id, keyAttr, stage, hpBase}...] — `hpBase` = 레벨 1 최대 HP(null 이면 `hero_hp_base` · 2026-10-02)
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
  *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, ...}}} ← armor_group.csv — **부위 → 갈래** (2026-09-16 갑옷군 · R107 · 2026-09-18 네 부위).
  *                  **낀 방어구마다** 제 갈래의 공속 · 쿨감을 더한다 — 지금 값이 있는 것은 갑옷군뿐이다(장갑 갈래 고정값은 사용자 보류)
@@ -67,6 +67,8 @@ export function createHeroSystem(data) {
     const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 기본기 · 첫 파티 고유만 (2026-09-29 · R179)
     const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
+    // 레벨 1 최대 HP — **직업마다** [2026-10-02 사용자 「궁수 · 마법사 50 · 사제 70」] · 빈 칸이면 전역 `hero_hp_base`
+    const hpBaseOf = id => data.classes.find(c => c.id === id)?.hpBase ?? B.hero_hp_base;
 
     /* ── 마스터리 노드 (skill_design §3) — 정의는 CSV · 값은 balance.csv · 랭크는 영웅이 든다 ── */
 
@@ -406,7 +408,9 @@ export function createHeroSystem(data) {
      * · 공격 타입은 직업이 아니라 **무기군**이 정한다 (battle_design §2-1 — 스태프·오브 = magic). 맨손은 physical.
      *   ~~사제의 파워 출처 = 마법 공격력 = 지능~~ 은 09-10 에 깨졌다 — 공격력은 순수 무기 밑수이고 지능은 스킬 계수로 간다 (§9-1).
      * · ~~**원소는 무기 개체가 든다** — 마법 무기군이면 그 무기의 element 가 공격 타입이다~~ → **[폐기 2026-09-11 · 사용자 지시 · R80]**
-     *   원소는 **관련 옵션이 붙었을 때만** 생기고 그 옵션이 아직 없으므로 `attack_type` 은 **언제나 `physical`** 이다 (§2-1 · §9-5).
+     *   `attack_type` 은 **언제나 `physical`** 이다 — **평타는 언제나 물리, 원소 피해는 스킬만 낸다** [2026-10-02 · R198 · battle_design §2-1].
+     * · **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — `basic_attack = false` 를 낸다.
+     *   차례가 와도 준비된 스킬이 없으면 기다리는 것은 전투(battle.js)의 일이다. 맨손 · 물리 무기는 `true`.
      * · **저항은 소재값이 아니라 직접 %다** (§9-5) — `res_all` + 원소별 접사. 상한은 전투에서 적용된다
      *   (formula.appliedResist) — 여기서는 원값을 그대로 내고, 상한을 뚫는 `res_max_bonus` 를 따로 낸다.
      * · **최대 HP 는 레벨이 키운다** — ~~기하 곡선(§9-0)~~ 이 아니라 **10레벨 구간 직선의 누적합**이다 [2026-09-14 · R84]. 방어는 비율 축이라 레벨을 안 탄다.
@@ -419,7 +423,7 @@ export function createHeroSystem(data) {
     function computeCombat(hero, items, codex = {}, party = null) {
         // ⚠ **몬스터도 이 함수를 지난다** [2026-09-11 · R79 · battle_design §8-1 · monster_design §5-1] — `battle.js:makeEnemy` 가
         //   `{stats, level: dlvl, cls, innate}` 모양을 넘긴다. `mastery` 가 없으면 랭크 0 이라 마스터리 몫은 0 이고,
-        //   `codex`·`party` 도 안 넘어온다. 몬스터 전용으로 남는 것은 호출한 쪽의 세 줄(몸값 합류 · 전역 배율 · attack_type 덮기)뿐이다.
+        //   `codex`·`party` 도 안 넘어온다. 몬스터 전용으로 남는 것은 호출한 쪽의 두 줄(몸값 합류 · 전역 배율)뿐이다(~~attack_type 덮기~~ 2026-10-02 폐기 · R198).
         const A = hero.stats;
         const flat = {};                       // 접사 합산 {stat: v}
         const drList = [];                     // 피해 감소는 합치지 않고 원천별로 모은다 (§9-3)
@@ -461,17 +465,17 @@ export function createHeroSystem(data) {
         const scaleAtk = end => Math.round((end + atkFlat) * (1 + atkPctSum));
         const atk = { min: scaleAtk(range.min), max: scaleAtk(range.max) };
 
-        // 최대 HP — 레벨 1 값은 전 영웅 공통이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
+        // 최대 HP — 레벨 1 값은 ~~전 영웅 공통~~ **직업마다**(`class.csv:hp_base` · 2026-10-02)이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
         //   성장분 = **구간 단위의 누적합**(`hpUnitSum`) × 건강 계수 [확정 2026-09-14 · R84]. 레벨 1 에서 누적합이 0 이라
         //   몬스터 앵커링 기준점(`hero_hp_base`)이 안 흔들린다 (battle_design §8). 레벨업 팝업의 상승분은 hpMax(새)−hpMax(옛) 로 낸다(반올림 정합)
         //   ⚠ 몬스터도 여기를 지난다 — `stage.csv:dlvl` 이 만렙을 넘으면 구간이 없어 던진다
         //   ⚠ **레벨 1 바탕만 몬스터가 따로다** [2026-09-14 사용자 지시 · R91 · monster_design §5] — `battle.js:makeEnemy` 가
-        //   `hpBase` 로 `monster_hp_base` 를 넘긴다. 영웅은 안 넘기므로 `hero_hp_base` 다. 성장분 · 장비 몫은 같은 식이다
+        //   `hpBase` 로 `monster_hp_base` 를 넘긴다. 영웅은 안 넘기므로 제 직업의 `class.csv:hp_base`(빈 칸이면 `hero_hp_base`)다. 성장분 · 장비 몫은 같은 식이다
         const units = hpUnitSum[hero.level];
         if (units === undefined) throw new Error(`hero: 레벨 ${hero.level} 은 HP 구간 밖이다(1 ~ 만렙 ${B.hero_level_cap}) — 몬스터면 stage.csv:dlvl 이 만렙을 넘었다`);
         // 투구 오만 「레벨당 체력」은 **더하기**다 — 영웅 레벨 × 값이 체력 flat 과 같은 자리에 든다 [2026-09-17 · item_design §1 「투구 옵션」]
         const hpMax = Math.round(
-            ((hero.hpBase ?? B.hero_hp_base) + units * attrMult('vit', A.vit) + f('hp_flat') + f('hp_per_level') * hero.level)
+            ((hero.hpBase ?? hpBaseOf(hero.cls)) + units * attrMult('vit', A.vit) + f('hp_flat') + f('hp_per_level') * hero.level)
             * (1 + f('hp_pct'))
             * (1 + (codex.hp_pct ?? 0)));
 
@@ -524,13 +528,14 @@ export function createHeroSystem(data) {
             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
-            // **원소 옵션이 없는 마법 무기의 기본 공격은 물리다** [개정 2026-09-11 · 사용자 지시 · R80 · battle_design §2-1 · §9-5]
-            //   ~~magic ? (weapon.element ?? ELEMENTS[0]) : physical~~ 폐기 — 생성 때 원소를 굴리지 않으므로(item.js build) 들 원소가 없다.
-            //   ⚠ 바뀌는 것은 **무엇에 깎이나**뿐이다 — 마법 무기의 세기 채널(`atk_magic` = 회복의 밑수)은 그대로고,
-            //   깎임만 저항(§9-5)에서 방어 곡선(§9-3)으로 옮겨간다. 그래서 08-26 「원소 없는 마법 공격은 없다」도 그대로 선다.
-            //   평타에 원소를 얹는 것은 **평타 부여 스킬**(인챈트 계열 · 미구현)의 몫이고, 어느 옵션이 원소를 주는지는 기획 미정(GAME_DESIGN §10).
-            //   ⚠ **몬스터는 이 값을 덮는다** — 원소를 정하는 것은 스테이지다(`monster.csv:attack_type` · monster_design §2 · battle.js makeEnemy)
+            // **평타는 언제나 물리다** [2026-10-02 · 사용자 확정 · R198 · battle_design §2-1 — ~~원소 옵션이 없는 마법 무기의 기본 공격은 물리~~(09-11 · R80) 대체].
+            //   마법 무기는 평타가 없으므로(아래 `basic_attack`) 마법 무기의 세기 채널(`atk_magic`)은 **스킬 · 회복의 밑수**로만 쓰이고,
+            //   원소 피해는 스킬의 원소 태그만 낸다. 평타에 원소를 얹는 것은 **평타 부여 스킬**(인챈트 계열)의 몫이다.
+            //   몬스터도 같다 — ~~스테이지 원소로 덮는다(`monster.csv:attack_type`)~~ 는 2026-10-02 컬럼째 폐기
             attack_type: 'physical',
+            // 평타를 치나 [2026-10-02 · R198 · battle_design §3] — 마법 무기는 안 친다(차례에 준비된 스킬이 없으면 기다린다 · battle.js).
+            //   **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 몬스터도 같은 값을 쓴다
+            basic_attack: !magic,
             level: hero.level,                 // 적중률의 공격자 레벨 (§9-4)
             hp_max: hpMax,
             // 갑옷 오만 「레벨당 방어력」은 **더하기**다 — 영웅 레벨 × 값 [2026-09-16 · item_design §1 「갑옷 옵션」]. 고정 옵션 % 는 위 아이템 루프에서 고유값에만 곱했다
@@ -566,10 +571,10 @@ export function createHeroSystem(data) {
             fhr: f('fhr'),
             action_period: Number(period.toFixed(3)),
             dmg_bonus_pct: codex.dmg_pct ?? 0,    // 피해량(도감) — 데미지 % 괄호와 합치지 않고 전투가 따로 곱한다 (2026-09-18 · battle_design §9-2)
-            // 평타 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — **든 무기의 피해 종류**가 고른 능력치의 `formula.statCoef`.
-            //   마법 무기 = 지능 · 물리 무기 · 맨손 = 힘 [2026-09-27 사용자 — ~~직업 메인 스탯(`class.csv:key_attr`)~~ 대체 · 메인 스탯은 굴림 최고치 축만 남는다].
+            // 평타 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — **힘**의 `formula.statCoef`.
+            //   ~~마법 무기 = 지능~~(2026-09-27) 은 2026-10-02 소멸 — 마법 무기는 평타가 없다(R198). 물리 무기 · 맨손 = 힘 [2026-09-27 — ~~직업 메인 스탯~~ 대체].
             //   능력치를 모르면 1. **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 몬스터도 같은 값을 쓴다(2026-09-22)
-            main_attr_mult: F.statCoef(A?.[magic ? 'int' : 'str']),
+            main_attr_mult: F.statCoef(A?.str),
             gold_find: F.roundPct(f('gold_find') * luckMult),
             item_find: F.roundPct(f('item_find') * luckMult),
             // Σ 상시 피해(비율) — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면

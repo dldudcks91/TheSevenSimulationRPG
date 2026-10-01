@@ -361,17 +361,8 @@ export const SKILL_ICON_FILES = [
     'pri_aegis', 'pri_benediction', 'pri_resurrection', 'pri_punishment', 'pri_atonement', 'pri_excommunication',
     'pri_diamondbody', 'pri_sweep', 'pri_counter',
 ];
-// [2026-09-22] **전직 스킬 — 그림이 데이터보다 먼저 왔다.** `skill.csv` 에 행이 없어(skill_design §10) 위 목록에 못 들어간다 —
-//   도감 스킬 세그먼트가 이 표로 **전직 하나 = 묶음 하나**를 따로 세운다(SCREEN_DESIGN §9-1 · ADR-0299).
-//   키 = 직업 id → 전직 id(순서 = skill_design §10-1 표) · 이름은 `i18n:ix.adv.*`(전직) · `ix.sk.*`(스킬).
-//   파일명은 **임시 id** 다 — 행이 서면 그 id 로 맞추고 이 표에서 `SKILL_ICON_FILES` 로 옮긴다. 정전장은 기획 미정이라 그림이 없다
-export const SKILL_ADV_ICON_FILES = {
-    mage: {
-        fire_mage: ['mag_meteor', 'mag_firewall', 'mag_hydra'],
-        frost_mage: ['mag_frozenorb', 'mag_blizzard', 'mag_frostburst'],
-        thunder_mage: ['mag_thunderstrike', 'mag_nova'],
-    },
-};
+// ~~`SKILL_ADV_ICON_FILES`(전직 스킬 그림 표 — 행보다 그림이 먼저 왔던 09-22 의 임시 목록)~~ 는 2026-10-02 삭제 —
+//   도감 전직 탭이 `skill.csv` 의 `owner_kind=advance` 행을 직접 편다(SCREEN_DESIGN §9-1 · ADR-0472)
 /** 죄종 아이콘 — 스킬 아이콘 규격의 회색 실루엣 7장. 화면은 마스크로 쓰고 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0368) */
 export const SIN_ICON_DIR = './assets/art/icons/sins/';
 export const sinIcon = sin => SINS[sin] ? SIN_ICON_DIR + sin + ICON_EXT : null;
