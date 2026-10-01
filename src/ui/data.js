@@ -17,6 +17,7 @@ import { createHeroSystem } from '../game_logic/hero.js';
 import { createNaming } from '../game_logic/naming.js';
 import { createItemSystem } from '../game_logic/item.js';
 import { createBattleSystem } from '../game_logic/battle.js';
+import { createArenaSystem } from '../game_logic/arena.js';
 import { createSkillSystem } from '../game_logic/skill.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
 import { createConstruction } from '../game_logic/construction.js';
@@ -622,5 +623,6 @@ export function buildSystems(d, dev = {}) {
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
-    return { hero, item, battle, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
+    const arena = createArenaSystem({ hero, item, skill, battle });
+    return { hero, item, battle, arena, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
 }

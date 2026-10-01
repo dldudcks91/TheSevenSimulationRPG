@@ -553,8 +553,9 @@ export function createBattleSystem(data) {
      *   `result` = 걸음마다 자라는 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      * @param slotMax 물약 칸 수 — 게임은 그 세이브의 상한(`state.limitsOf(state).potionSlots`)을 넘긴다 · 안 주면 CSV 기본값 [balance.csv:potion_slot_max] (2026-09-22)
      */
-    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max) {
-        const stage = data.stages[stageId];
+    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null) {
+        // 결투장은 스테이지 스폰 대신 영웅 팀 스냅샷을 받아 같은 전투 루프를 단판으로 돈다.
+        const stage = encounter ? { dlvl: level ?? 1 } : data.stages[stageId];
         const potionSlots = potions ?? [];
         // 칸은 **자리 순**이고 `null` = 빈 칸 — 재고가 모자랐거나 비워 둔 칸 (2026-09-21 · R124)
         if (!Array.isArray(potionSlots) || potionSlots.length > slotMax || potionSlots.some(p => p !== null && !(p?.id && p.heal >= 0)))
@@ -562,8 +563,8 @@ export function createBattleSystem(data) {
         // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
         //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
         const stageLevel = level ?? stage.dlvl;
-        const pool = stagePool(stage);
-        const rounds = stageRounds(stage).length;      // 그 세트의 행 수 — 챕터보스 스테이지는 1 (2026-09-11)
+        const pool = encounter ? [] : stagePool(stage);
+        const rounds = encounter ? 1 : stageRounds(stage).length;
         // 몬스터 차림 줄의 씨앗 — **런의 첫 굴림**이다 [2026-09-22 · 구조 감사 · INTERFACE §5-1]. 장비는 이 씨앗에서 몬스터마다 제 줄로 굴린다(`spawnRound`)
         const gearSeed = Math.floor(rng() * 4294967296);
 
@@ -667,6 +668,7 @@ export function createBattleSystem(data) {
          *   ⚠ 파티 쪽과 달리 **타임라인 안**이라 골든 지문(`tl`)에 걸린다 — 키 순서도 지문이다 · rng 는 0
          */
         const enemyView = e => ({
+            ...(e.hero ? { hero: e.hero, rank: e.rank } : {}),
             key: e.key, monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? null,
             traits: e.traits ?? null, hpMax: e.hpMax, period: e.period,
             atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, noBasic: e.noBasic,   // noBasic = 행동 게이지 색 (마법 무기 — R198 · SCREEN_DESIGN §4-2 · ADR-0476)
@@ -805,7 +807,12 @@ export function createBattleSystem(data) {
             }
             // 매직찬스는 **스폰 굴림**에 걸린다 [2026-09-11 · R79] — 장비 희귀도가 여기서 정해지기 때문이다.
             //   ⚠ 딸린 것 — 파티의 매직아이템 획득확률이 **적 장비도 좋게 한다**(사용자가 알고 택한 「이스터에그」)
-            const sp = spawnRound(rng, gearSeed, stage, pool, round, magicFind, stageLevel);
+            const sp = encounter ? { type: 'normal', list: encounter.map((p, i) => makeUnit('enemy', p.combat, {
+                key: `e${i}`, uid: p.uid, hero: p.hero, grade: 'normal', monsterType: 'Normal',
+                rank: p.rank ?? 0, stats: p.stats, sheet: { ...p.combat }, gear: p.gear,
+                reactions: p.reactions ?? [],
+                actives: (p.actives ?? []).map(a => slotOf(a, SK.resolve(a), fitterOf(p.weaponGroup), 0)),
+            })) } : spawnRound(rng, gearSeed, stage, pool, round, magicFind, stageLevel);
             units.enemies = sp.list;
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
@@ -824,6 +831,7 @@ export function createBattleSystem(data) {
         };
 
         const onKill = e => {
+            if (encounter) return;   // 연습 결투: XP·골드·드롭·도감 처치 없음
             roundLog.killed.push(e.monsterId);                    // 사실의 기록 — 진 라운드에서 잡은 것도 남는다
             // 아래 보상은 전부 **라운드 몫**이다 — 이기면 결과로 옮기고 지면 버린다 (R89)
             loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
@@ -1396,5 +1404,12 @@ export function createBattleSystem(data) {
     }
 
     // makeEnemy 는 검증(dev/test.js)이 몬스터→유닛 변환 규칙을 직접 볼 수 있도록 함께 내보낸다 — stagePool 과 같은 이유
-    return { simulate, createRun, stagePool, stageElement, stageRounds, makeEnemy };
+    function simulateTeams(party, enemies, rng) {
+        if (!party.length || !enemies.length) throw new Error('battle: both teams must have units');
+        const run = createRun(party, null, rng, 1, [], 0, enemies);
+        while (run.next()?.ended === false);
+        return { ...run.result, mode: 'arena' };
+    }
+
+    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, makeEnemy };
 }

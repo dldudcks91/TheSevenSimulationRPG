@@ -3,6 +3,7 @@
  *
  * 판 머리에 **탭 둘** — **설정**(게임 기능 — 스킬 이펙트 · 피격 반응. 탭 이름과 속은 app.js 가 넘긴다 · 다국어) ·
  *   **Palette**(개발용 색 피커). 열면 설정 탭이고 페이지를 연 동안은 마지막 탭으로 연다. 판은 창 레이어가 아니다 — `⚙` 이나 × 로만 여닫는다.
+ *   판은 **한 장(`#stage`) 안**에 선다 — 게임과 함께 줄고 는다 (ADR-0481).
  *
  * **Palette** — 배경 RGB · 글자 3단 · 투명도 3축을 실시간으로 바꿔 보고,
  * 맘에 드는 값이 나오면 그 자리에서 `style.css` 에 붙여 넣을 줄을 뽑는다. **게임 기능이 아니다.**
@@ -153,7 +154,8 @@ function togglePanel() {
     if (panel) { panel.remove(); panel = null; ui = null; return; }
     panel = document.createElement('div');
     panel.className = 'dp-panel';
-    document.body.appendChild(panel);
+    // 한 장(`#stage`) 안에 붙인다 — 밖에 서면 배율을 안 타 게임이 줄어든 만큼 판만 커 보였다 (2026-10-02 · ADR-0481)
+    (document.getElementById('stage') || document.body).appendChild(panel);
     buildPanel();
 }
 
@@ -285,11 +287,11 @@ function injectStyle() {
     s.textContent = `
 .dp-btn { margin-left: 4px; min-width: 30px; }
 .dp-panel {
-    position: fixed; right: 12px; top: 56px; z-index: 90; width: 280px;
+    position: absolute; right: 12px; top: 56px; z-index: 90; width: 280px;
     background: #101010; border: 1px solid #444; padding: 10px 12px;
     font-size: 12px; color: #e8e8e8; box-shadow: 0 8px 28px rgba(0,0,0,.8);
-    /* 슬라이더가 아홉 개라 낮은 창에서는 넘친다 — 판 안에서 굴린다 */
-    max-height: calc(100vh - 72px); overflow-y: auto;
+    /* 슬라이더가 아홉 개라 넘친다 — 판 안에서 굴린다. 높이는 한 장 기준(%)이다 — 한 장 안에서는 vh 를 안 쓴다 (ADR-0087) */
+    max-height: calc(100% - 72px); overflow-y: auto;
 }
 .dp-h { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 8px; }
 /* 탭 둘 — 설정 · Palette (ADR-0414). 고른 탭이 밝다 */

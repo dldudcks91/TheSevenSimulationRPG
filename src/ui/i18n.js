@@ -464,6 +464,24 @@ const STRINGS = {
        nav.skill 도 탭이 아니라 **창 제목**이다 (§7). nav.base(거점)는 여전히 유일한 미사용 키다.
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
+    'nav.arena': { ko: '결투장', en: 'Arena' },
+    'ar.practice': { ko: '연습 · 3 대 3', en: 'Practice · 3 vs 3' },
+    'ar.select': { ko: '출전 영웅 {n} / 3', en: 'Selected heroes {n} / 3' },
+    'ar.ours': { ko: '우리 팀', en: 'Your team' },
+    'ar.opponent': { ko: '상대 팀', en: 'Opponent team' },
+    'ar.front': { ko: '전열', en: 'Front' },
+    'ar.backRank': { ko: '후열', en: 'Back' },
+    'ar.noOpponent': { ko: '상대를 찾으면 팀이 나타난다', en: 'Find an opponent to reveal their team' },
+    'ar.find': { ko: '상대 찾기', en: 'Find opponent' },
+    'ar.reroll': { ko: '다른 상대 찾기', en: 'Find another opponent' },
+    'ar.fight': { ko: '결투 시작', en: 'Start duel' },
+    'ar.back': { ko: '결투장으로', en: 'Back to arena' },
+    'ar.draw': { ko: '무승부', en: 'Draw' },
+    'ar.last': { ko: '지난 결투: {result} · {sec}초', en: 'Last duel: {result} · {sec}s' },
+    'ar.help': {
+        ko: '영웅 3명을 골라 전열·후열을 정하고 상대를 찾는다. 상대는 무작위 인간 3명이며 선택한 팀의 평균 레벨로 나온다.<br>개인 능력치·장비·스킬로 단판 전투를 한다. 파티 전술·도감 보너스·물약은 적용하지 않는다. 제한시간이 지나면 무승부다.<br>연습 결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없다. 편성과 결과는 재접속하면 초기화된다.',
+        en: 'Choose three heroes, set their front or back ranks, then find an opponent. Three random human heroes appear at your team’s average level.<br>A single round uses individual stats, gear and skills. Party tactics, codex bonuses and potions do not apply. Reaching the time limit ends in a draw.<br>Practice duels run independently of expeditions, with no rewards, codex kills or resource costs. Selections and results reset when you reload.',
+    },
     'nav.party': { ko: '편성', en: 'Party' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
     // 건설 [2026-09-21 사용자 지시 · ADR-0253] — 옛 「연구」. 화면 이름과 자리(캐릭터 바로 뒤)만 바뀌었고 키는 옛 이름 그대로다

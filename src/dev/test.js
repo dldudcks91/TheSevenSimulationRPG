@@ -64,6 +64,41 @@ await loadData('../data/');
 const SYS = buildSystems(D);
 const B = D.balance;
 const WG = D.weaponGroups;
+check('결투장: 인간 3인 상대 · 평균 레벨 · 전열/후열 · 원본 독립', () => {
+    const g = SYS.game.newGame(72, SYS.hero.rollCandidates(makeRng(72), 3), 0);
+    g.heroes.slice(0, 3).forEach((h, i) => { h.level = 2 + i; });
+    const before = JSON.stringify(g);
+    const team = SYS.arena.snapshotTeam(g.heroes.slice(0, 3), g.items);
+    const enemy = SYS.arena.rollOpponent(team, makeRng(73));
+    if (enemy.length !== 3 || enemy.some(p => p.hero.level !== 3 || !p.gear.some(it => it.slot === 'weapon')))
+        fail('상대 인원/레벨/무기');
+    const result = SYS.arena.fight(team, enemy, makeRng(74));
+    const round = result.timeline.find(e => e.e === 'round');
+    if (round.enemies.some((e, i) => !e.hero?.name || e.rank !== (i === 0 ? 0 : 1))) fail('상대 신원/진형');
+    if (JSON.stringify(g) !== before) fail('원본 세이브가 변했다');
+    team[0].hero.stats.str = -1;
+    return JSON.stringify(g) === before;
+});
+check('결투장: 같은 입력/시드 = 같은 결과 · 단판 · 보상/도감/물약 없음', () => {
+    const g = SYS.game.newGame(81, SYS.hero.rollCandidates(makeRng(81), 3), 0);
+    const team = SYS.arena.snapshotTeam(g.heroes.slice(0, 3), g.items);
+    const enemy = SYS.arena.rollOpponent(team, makeRng(82));
+    const before = JSON.stringify([team, enemy]);
+    const a = SYS.arena.fight(team, enemy, makeRng(83));
+    const b = SYS.arena.fight(team, enemy, makeRng(83));
+    return JSON.stringify(a) === JSON.stringify(b) && JSON.stringify([team, enemy]) === before
+        && a.rounds.length === 1 && a.xpTotal === 0 && a.gold === 0 && !Object.keys(a.kills).length
+        && !a.drops.length && !a.books.length && a.potion.max === 0 && a.potion.used === 0
+        && a.timeline.some(e => e.e === 'end');
+});
+check('결투장: 3명 미만/중복 선택 거절', () => {
+    const g = SYS.game.newGame(91, SYS.hero.rollCandidates(makeRng(91), 3), 0);
+    let rejected = 0;
+    for (const hs of [g.heroes.slice(0, 2), [g.heroes[0], g.heroes[0], g.heroes[1]]]) {
+        try { SYS.arena.snapshotTeam(hs, g.items); } catch { rejected++; }
+    }
+    return rejected === 2;
+});
 const AGROUP = D.armorGroups;                    // armor_group.csv — {slot: {groupId: def}} · 갑옷군 3갈래 (2026-09-16 · R107) + 투구 · 장갑 · 신발 갈래 (2026-09-18)
 /** 무기 피해 가운데 — 구간 직선의 누적합 (R105). 단정이 공식을 손으로 다시 세운다: 코드와 같은 식을 쓰면 서로를 못 잡는다 */
 const bandMid = ilvl => {

@@ -292,7 +292,8 @@ const itemImg = it => {
 // **훈련장**이 선다 [2026-09-22 사용자 지시 · SCREEN_DESIGN §16 · ADR-0297] — 탭 11 → 12
 // 건설 뒤는 **선술집 · 상점 · 제련소 · 훈련장** 순이다 [2026-09-24 사용자 지시 · ADR-0348] — 건설 부지도 이 순서를 따라간다(`renderResearch`)
 // **서고**가 훈련장 바로 뒤에 선다 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422] — 탭 12 → 13. 둘 다 영웅을 키우는 자리다
-const TABS = ['expedition', 'party', 'character', 'research', 'tavern', 'shop', 'forge', 'training', 'library', 'resource', 'explore', 'codex', 'help'];
+// **결투장**은 도감 바로 앞에 선다 [2026-10-02 사용자 지시] — 처음엔 원정 바로 뒤였다
+const TABS = ['expedition', 'party', 'character', 'research', 'tavern', 'shop', 'forge', 'training', 'library', 'resource', 'explore', 'arena', 'codex', 'help'];
 
 /* 파견 목록 — **카드 3** (SCREEN_DESIGN §8 개정 2026-09-04 사용자 지시: 채광 · 채집 · 벌목).
    담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
@@ -329,6 +330,7 @@ const FORM_RANK_LABELS = { 1: ['exp.form.front'], 2: ['exp.form.front', 'exp.for
 const state = {
     screen: 'start',        // start | game
     tab: 'expedition',
+    arena: { owner: null, selected: [], ranks: {}, team: null, opponent: null, match: null, last: null },
     // 도박장 창 (SCREEN_DESIGN §8-1 · ADR-0331) — 고른 판돈 단계 · 마지막 결과 · 재생 위치. 세이브 아님 —
     //   결과는 이미 세이브에 들어가 있고(`gambleSpin`) 이것은 **다시 보여 줄 거리**다
     gb: { step: 1, last: null, anim: null },
@@ -398,6 +400,7 @@ const state = {
     dw: null,               // 파견 관전 창이 보는 자리 — `{post, tier}` · 비었으면 첫 앉은 자리 (SCREEN_DESIGN §8 · ADR-0415) · 세이브 아님
 };
 let stopBattle = null;
+let stopArena = null;
 let battleBag = null;       // 관전 아래 보관 칸 — 라운드 정산 때 이것만 갈아 끼운다 (R89 · `refreshBattleBag` · ADR-0341)
 /**
  * 그 부대의 세이브 칸 [v38 · 2026-09-23 다부대] — `G.runs` 는 편성 번호로 색인된다(자리 + 1 = 번호).
@@ -492,6 +495,7 @@ function render() {
     //   보관 칸 우클릭 메뉴도 같은 자리 · 같은 틀이다 (`itemMenuPanel` · ADR-0451)
     document.querySelectorAll('#stage > .dp-pick, #stage > .dp-pick-back, #stage > .item-menu, #stage > .item-menu-back').forEach(n => n.remove());
     // 관전 중 재렌더(가방 클릭 · 언어 전환 · 세그먼트 이동)면 재생 위치를 받아 뒀다가 다음 mount 에 넘긴다 — 처음부터 다시 틀지 않는다 (2026-08-27)
+    if (stopArena) { const pos = stopArena(); if (state.arena.match) state.arena.match.resume = pos; stopArena = null; }
     if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
     applyDocumentLang();
     M.applyDocumentFace();
@@ -515,6 +519,7 @@ function render() {
     else ({
         // 키 순서 = 탭 바 순서 (TABS) — 읽는 사람이 화면과 대조할 수 있게 맞춰 둔다
         expedition: renderExpedition,
+        arena: renderArena,
         party: renderParty,
         character: renderCharacter,
         research: renderResearch,
@@ -1203,6 +1208,118 @@ function expNavBox(phase = battlePhase(state.battle)) {
 /** 원정 세 화면 중 **지금 설 수 있는 것** — 관전은 볼 핸들이 있을 때 · 리포트는 끝난 리포트가 있을 때 · 아니면 스테이지.
  *  셸의 세그먼트(고른 칸)와 `renderExpedition`(서는 화면)이 같은 답을 쓴다 — 셸이 먼저 그려도 둘이 안 어긋난다 (ADR-0353) */
 const expScreen = () => (state.exp === 'battle' && state.battle ? 'battle' : state.exp === 'report' && doneReports().length ? 'report' : 'idle');
+
+function renderArena(main) {
+    const A = state.arena;
+    if (A.owner !== G) {
+        Object.assign(A, { owner: G, selected: G.heroes.slice(0, 3).map(h => h.uid), ranks: {}, team: null, opponent: null, match: null, last: null });
+    }
+    A.selected = A.selected.filter(uid => G.heroes.some(h => h.uid === uid));
+    const back = () => { A.match = null; A.team = null; A.opponent = null; render(); };
+    if (A.match) {
+        const page = el('div', 'bt-page page arena-watch');
+        main.appendChild(page);
+        const all = [...A.match.team, ...A.match.opponent];
+        const items = Object.fromEntries(all.flatMap(p => p.gear.map(it => [it.uid, it])));
+        stopArena = mountBattle(page, {
+            result: A.match.result, heroes: A.match.team.map(p => p.hero), resume: A.match.resume,
+            title: t('nav.arena'), background: '', roundRows: [{ round_num: 1, round_type: 'normal' }],
+            form: { byUid: Object.fromEntries(A.match.team.map(p => [p.uid, p.rank])) },
+            combatOf: h => all.find(p => p.uid === h.uid)?.combat,
+            itemOf: uid => items[uid] ?? null,
+            itemTipOf: (h, it) => tipCard(it, t('tip.equipped'), [], all.find(p => p.uid === h.uid)?.combat),
+            resultLabel: 'ar.back', returnLabel: 'ar.back',
+            layout: 'split', now, frozenMs: FROZEN_GAP_MS, onEnd: back, onRetreat: back,
+        });
+        return;
+    }
+    const page = el('div', 'panel page arena-page');
+    main.appendChild(page);
+    page.appendChild(el('h2', '', `${t('nav.arena')} <small>${t('ar.practice')}</small>`));
+    const selection = el('div', 'arena-selection');
+    selection.appendChild(el('h3', 'sub-h', t('ar.select', { n: A.selected.length })));
+    const roster = el('div', 'hero-strip arena-roster');
+    const invalidate = () => { A.team = null; A.opponent = null; };
+    for (const h of G.heroes) {
+        const picked = A.selected.includes(h.uid);
+        const card = arenaHeroCard(h, picked);
+        card.disabled = !picked && A.selected.length >= 3;
+        card.onclick = () => {
+            if (picked) A.selected = A.selected.filter(uid => uid !== h.uid);
+            else if (A.selected.length < 3) A.selected.push(h.uid);
+            invalidate(); render();
+        };
+        roster.appendChild(card);
+    }
+    selection.appendChild(roster);
+    page.appendChild(selection);
+    const teams = el('div', 'arena-teams');
+    const ours = el('div', 'arena-team');
+    ours.appendChild(el('h3', 'sub-h', t('ar.ours')));
+    const picked = A.selected.map(uid => G.heroes.find(h => h.uid === uid));
+    const ourCards = el('div', 'arena-team-cards');
+    picked.forEach((h, i) => {
+        const cell = el('div', 'arena-seat');
+        const rank = A.ranks[h.uid] ?? (i === 0 ? 0 : 1);
+        cell.appendChild(arenaHeroCard(h));
+        const toggle = el('button', 'btn sm', t(rank === 0 ? 'ar.front' : 'ar.backRank'));
+        toggle.onclick = () => { A.ranks[h.uid] = 1 - rank; invalidate(); render(); };
+        cell.appendChild(toggle);
+        ourCards.appendChild(cell);
+    });
+    ours.appendChild(ourCards);
+    const theirs = el('div', 'arena-team');
+    theirs.appendChild(el('h3', 'sub-h', t('ar.opponent')));
+    const enemyCards = el('div', 'arena-team-cards');
+    if (A.opponent) for (const p of A.opponent) {
+        const cell = el('div', 'arena-seat');
+        cell.appendChild(arenaHeroCard(p.hero));
+        cell.appendChild(el('span', 'muted', t(p.rank === 0 ? 'ar.front' : 'ar.backRank')));
+        enemyCards.appendChild(cell);
+    }
+    else enemyCards.appendChild(el('span', 'muted', t('ar.noOpponent')));
+    theirs.appendChild(enemyCards);
+    teams.append(ours, el('span', 'arena-vs', 'VS'), theirs);
+    page.appendChild(teams);
+    const controls = el('div', 'arena-actions');
+    const find = el('button', 'btn', t(A.opponent ? 'ar.reroll' : 'ar.find'));
+    find.disabled = picked.length !== SYS.arena.teamSize;
+    find.onclick = () => {
+        A.team = SYS.arena.snapshotTeam(picked, G.items, A.ranks);
+        A.opponent = SYS.arena.rollOpponent(A.team, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
+        render();
+    };
+    const fight = el('button', 'btn primary arena-fight', t('ar.fight'));
+    fight.disabled = !A.opponent || picked.length !== SYS.arena.teamSize;
+    fight.onclick = () => {
+        // 찾은 뒤 장비를 바꿨을 수 있어 출전 순간 다시 찍는다. 상대는 확인한 그대로다.
+        A.team = SYS.arena.snapshotTeam(picked, G.items, A.ranks);
+        const result = SYS.arena.fight(A.team, A.opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
+        A.last = result;
+        A.match = { team: A.team, opponent: A.opponent, result, resume: null };
+        render();
+    };
+    controls.append(find, fight);
+    if (A.last) controls.appendChild(el('span', 'arena-last muted', t('ar.last', {
+        result: t(A.last.reason === 'timeout' ? 'ar.draw' : A.last.won ? 'bt.won' : 'bt.lost'), sec: A.last.durationSec,
+    })));
+    page.appendChild(controls);
+}
+
+function arenaHeroCard(h, selected = null) {
+    const card = el(selected === null ? 'div' : 'button', `hs-card arena-hero${selected ? ' on' : ''}`);
+    if (selected !== null) card.type = 'button';
+    card.style.borderTopColor = tierColor(h);
+    card.setAttribute('aria-label', L(h.name));
+    if (selected !== null) card.setAttribute('aria-pressed', String(selected));
+    const face = el('div', 'hero-face');
+    const src = M.heroFace(h);
+    if (src) { const img = document.createElement('img'); img.src = src; img.alt = ''; face.appendChild(img); }
+    const name = el('span', 'hs-name'); name.textContent = L(h.name);
+    const info = el('small', 'muted'); info.textContent = `Lv.${h.level} · ${className(h.cls)}`;
+    card.append(face, name, info);
+    return card;
+}
 
 function renderExpedition(main) {
     // 세 화면이 같은 자리를 쓴다 — 세그먼트는 셸이 이미 세웠다(모든 탭 · ADR-0353). 서는 화면은 셸의 고른 칸과 같은 답이다
@@ -6244,6 +6361,10 @@ function helpSections() {
                 { h: t('exp.seg.battle'), body: [t('bt.note')] },
                 { h: t('exp.seg.report'), sub: t('rep.log.sub', rounds), body: [t('rep.contract'), t('rep.injuryNote')] },
             ],
+        },
+        {
+            title: t('nav.arena'),
+            groups: [{ h: t('ar.practice'), body: [t('ar.help')] }],
         },
         {
             // 편성 — 파티 전술 묶음이 건설(옛 연구) 섹션에서 이사 왔다(칸을 굴리는 자리가 편성 탭이다 · §12 · §15 · 2026-09-21)

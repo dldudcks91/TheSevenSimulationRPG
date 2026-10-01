@@ -128,7 +128,7 @@ function openBuffPop(btn, b) {
  */
 export function mountBattle(container, opts) {
     const { result, stageId, heroes, resume, form } = opts;
-    const stage = D.stages[stageId];
+    const stage = D.stages[stageId] ?? {};
     const state = {
         combatOf: opts.combatOf ?? null, itemOf: opts.itemOf ?? null, itemTipOf: opts.itemTipOf ?? null,
         monsterItemTipOf: opts.monsterItemTipOf ?? null,   // 몬스터 장비 칸의 아이템 카드 — 세이브 밖 개체라 uid 가 없다 (ADR-0183)
@@ -188,7 +188,7 @@ export function mountBattle(container, opts) {
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
     fxPreload();   // 스킬 이펙트 그림을 미리 읽는다 — 지금은 그림이 꺼져 있어 아무것도 안 한다 (ADR-0411 · ADR-0412)
-    const dom = buildDom(state, stage, stageId, opts.shrine ?? null, !!opts.buffsOf);
+    const dom = buildDom(state, stage, stageId, opts.shrine ?? null, !!opts.buffsOf, opts);
     container.appendChild(dom);
     bindControls(state, container, opts);
     bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
@@ -213,12 +213,12 @@ export function mountBattle(container, opts) {
 
 /* ───────── 구성 ───────── */
 
-function buildDom(state, stage, stageId, shrine, buffs) {
+function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'panel battle-panel';
-    const bg = stageBgOf(stageId);
+    const bg = opts.background ?? stageBgOf(stageId);
     // 라운드 트랙은 **그 스테이지의 세트**를 그린다 — 챕터보스 스테이지는 보스 칸 하나다 (battle.stageRounds · 2026-09-11)
-    const roundRows = SYS.battle.stageRounds(stage);
+    const roundRows = opts.roundRows ?? SYS.battle.stageRounds(stage);
     const rounds = roundRows.length;
     const kindOf = n => roundRows.find(r => r.round_num === n)?.round_type ?? 'normal';
     /* 헤드는 **한 줄** [재개정 2026-09-04 사용자 지시 · SCREEN_DESIGN §4-2]
@@ -229,7 +229,7 @@ function buildDom(state, stage, stageId, shrine, buffs) {
     wrap.innerHTML = `
         <div class="battle-head">
             <div class="bh-top">
-                <div class="bh-title">${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}</div>
+                <div class="bh-title">${opts.title ?? `${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}`}</div>
                 ${shrine ? shrineChip(shrine) : ''}
                 <div class="round-track">${
                     Array.from({ length: rounds }, (_, i) => {
@@ -240,7 +240,7 @@ function buildDom(state, stage, stageId, shrine, buffs) {
                 <div class="battle-ctrl">
                     ${SPEEDS.map(s => `<button class="btn sm b-speed" data-s="${s}">${t('bt.speed', { n: s })}</button>`).join('')}
                     <button class="btn sm b-pause">${t('bt.pause')}</button>
-                    <button class="btn sm b-skip">${t('bt.retreat')}</button>
+                    <button class="btn sm b-skip">${t(opts.returnLabel ?? 'bt.retreat')}</button>
                     <span class="ctrl-div"></span>
                     <button class="btn sm b-pane" data-tab="log">${t('bt.log.h')}</button>
                     <button class="btn sm b-pane" data-tab="dmg">${t('bt.tab.dmg')}</button>
@@ -397,7 +397,7 @@ function paintRound(state, root) {
 /* 정예의 죄종 접두 이름(「나태의 고블린 전사」)은 관전에서 안 쓴다 (2026-09-03 사용자 지시) —
    정예임은 라벨·노란 테두리가 이미 말하고, 접두가 붙으면 같은 몬스터가 다른 이름으로 로그·누적에 흩어진다.
    조립 규칙(`naming.js:eliteName`)은 살아 있다 — 화면이 안 부를 뿐이다 */
-const enemyName = e => monsterName(e.monsterId);
+const enemyName = e => e.hero?.name ?? monsterName(e.monsterId);
 const enemyList = state => state.enemies.map(e => L(e.name)).join(', ');
 /* 띠 왼쪽의 신원 한 조각 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 영웅은 레벨·직업, 몬스터는 정예/보스 라벨.
    일반 몬스터는 빈 채다(테두리 색이 이미 말한다). 라벨은 라운드 종류와 같은 `kind.*` 키를 재사용한다 */
@@ -405,13 +405,13 @@ const clsName = id => { const c = D.classes.find(x => x.id === id); return c ? L
 const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
     : u.grade === 'stage_boss' ? t('kind.boss')
     : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '';
-const identOf = (u, state) => u.side === 'party' ? `${lvSpan(state, u, u.hero?.level ?? 1)} · ${clsName(u.cls)}` : gradeLabel(u);
+const identOf = (u, state) => u.hero ? `${lvSpan(state, u, u.hero.level)} · ${clsName(u.cls)}` : gradeLabel(u);
 /* 개편판 신원 — **양 진영 같은** `Lv.n · 직업` [2026-09-21 사용자 지시 · ADR-0275]. 정예 · 보스 라벨은 띠 오른쪽(`gradeLabel`)으로 간다.
    몬스터 레벨 = 결과가 싣는 세부 능력치의 레벨(`sheet.level` — 이번 런의 스테이지 레벨 · 몬스터도 영웅과 같은 computeCombat 을 지난다) ·
    직업 = `monster.csv:cls`(영웅과 같은 다섯 직업). 값이 없으면 그 조각만 빠진다 — 지어내지 않는다 */
 const identV2 = (u, state) => {
     const lv = u.side === 'party' ? (u.hero?.level ?? 1) : u.sheet?.level;
-    const cls = u.side === 'party' ? u.cls : D.monsters?.[u.monsterId]?.cls;
+    const cls = u.hero?.cls ?? D.monsters?.[u.monsterId]?.cls;
     return [lv != null ? lvSpan(state, u, lv) : '', cls ? clsName(cls) : ''].filter(Boolean).join(' · ');
 };
 /* 신원의 레벨 칸 — `Lv.n` 을 제 칸(`.unit-lv`)에 든다. **영웅이 본 적 없는 레벨업이면 반짝인다**(`lv-new` — 그 영웅 카드를 누르면 걷힌다)
@@ -518,7 +518,7 @@ function renderUnits(state, root) {
             // 영웅 등급 색은 **CSV 에서 읽어 변수(`--tier-line`)로 건다** (2026-09-15) — CSS 에 등급마다 줄을 박아 뒀더니 09-14 에 생긴 `normal`
             //   (그리고 `magic`)은 줄이 없어 진영색 파랑으로 떨어졌다. 띠 카드(app.js `tierColor`) · 유닛 툴팁(tip.js `--unit-line`)과 같은 출처다
             //   모르는 등급은 `rare` 로 — 두 곳의 `tierOf` 와 같은 폴백이다(영웅이 없는 파티 유닛도 옛 `tier-rare` 그대로)
-            const tierLine = u.side === 'party' ? heroTierColor(u.hero) : null;
+            const tierLine = u.hero ? heroTierColor(u.hero) : null;
             // `click` = 누르면 장착 대상이 되는 영웅 카드 · `on` = 지금 장착 대상 (ADR-0137)
             const pick = u.hero && state.onPickHero ? ` click${u.hero.uid === state.pickedUid ? ' on' : ''}` : '';
             n.className = `unit ${u.side}${u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${pick}${u.hp <= 0 ? ' dead' : ''}${v2 ? ' v2' : ''}`;
@@ -527,7 +527,7 @@ function renderUnits(state, root) {
             // 「죄종인지 정예인지 안 보이게」와 정면으로 부딪히고, 인라인이라 정예의 노란 테두리(.unit.elite)를 **윗변에서만 이겨** 테두리가 두 색이 됐다.
             // 이제 카드의 테두리는 등급만 말한다: 일반 = 진영색 윗변 / 정예 = 노랑 / 보스 = 빨강
             const name = L(u.name);
-            const face = u.side === 'enemy' ? monsterFace(u.monsterId, u.grade) : M.heroFace(u.hero);   // 얼굴 id 는 영웅 객체가 든다 (세이브 v13)
+            const face = u.hero ? M.heroFace(u.hero) : monsterFace(u.monsterId, u.grade);
             // **양쪽 다 밑에 아무것도 안 깐다** — 아트가 없거나 `onerror` 로 빠지면 빈 네모다.
             // ⚠ 영웅은 2026-09-03 (직업 글리프가 배경 투명 PNG 사이로 비쳤다), **몬스터는 2026-09-06** 사용자 지시다.
             //   몬스터에 남아 있던 것은 이름 **이니셜 글자 하나**였고, 같은 이유로 그림 위에 비쳤다.
@@ -840,7 +840,7 @@ function renderDmg(state, root) {
                 <span class="dmg-v">${e[f].total.toLocaleString()} <span class="muted">${sum ? Math.round(e[f].total / sum * 100) : 0}%</span></span></div>
             ${dmgBar(e[f], max)}
             <div class="dmg-sks">${(f === 'dealt' ? dmgLines(e) : [...e.taken.by.entries()]).map(([id, v]) => `
-                <div class="dmg-sk"><i class="dmg-ico">${f === 'dealt' ? dmgIcon(id) : foeIcon(id)}</i><span class="dmg-skn">${f === 'dealt' ? dmgName(id) : L(monsterName(id))}</span><span class="dmg-skv">${v.toLocaleString()}</span></div>`).join('')}</div>
+                <div class="dmg-sk"><i class="dmg-ico">${f === 'dealt' ? dmgIcon(id) : foeIcon(id, state.units.get(id)?.hero)}</i><span class="dmg-skn">${f === 'dealt' ? dmgName(id) : L(state.units.get(id)?.name ?? monsterName(id))}</span><span class="dmg-skv">${v.toLocaleString()}</span></div>`).join('')}</div>
         </div></div>`).join('') : `<div class="dmg-row"><span class="muted">—</span></div>`;
 }
 /** 머리 줄 막대 — 조각 셋을 왼쪽부터 물리 → 마법 → 기타로 쌓는다. 조각 폭 = 그 값 / 파티 안 최대라 합이 곧 막대 길이다 · 올리면 세 값(기타는 있을 때만) */
@@ -860,7 +860,7 @@ function dmgLines(e) {
 const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : skillImg(skillInfo(id));
 const dmgName = id => id === 'basic' ? t('bt.basicAttack') : id === 'reflect' ? t('bt.reflectLabel') : L(skillInfo(id).name);
 /* 받은 피해 줄의 그림 — 때린 몬스터의 초상. 없으면 빈 칸이다(초상 칸과 같다) */
-const foeIcon = id => { const src = monsterFace(id); return src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''; };
+const foeIcon = (id, hero) => { const src = hero ? M.heroFace(hero) : monsterFace(id); return src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''; };
 /* 영웅 등급 색(`hero_tier.csv:color_hex`) — 아레나 카드 윗변과 누적 판 초상 윗변이 같이 읽는다. 모르는 등급 · 영웅이 없는 파티 유닛은 `rare` */
 const heroTierColor = hero => (D.heroTiers.find(r => r.id === (hero?.tier ?? 'rare')) ?? D.heroTiers.find(r => r.id === 'rare'))?.color;
 /* 덩어리 왼쪽 초상 — 그 영웅 카드와 같은 얼굴 그림(공통 조각 `.hero-face`). 아트가 없으면 빈 칸이다 — 밑에 아무것도 안 깐다 (ADR-0211).
@@ -1146,8 +1146,9 @@ const unitSkillCtx = u => ({
  *  @param at 그 카드가 선 시각 — 행동 게이지의 기준 · 스킬 칸의 첫 준비 시각 */
 const enemyEntry = (e, at) => ({
     key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
+    hero: e.hero ?? null, cls: e.hero?.cls,
     name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: at, node: null,
-    rank: enemyRank(e.monsterId),   // 진형 — 몬스터 **역할**이 정한다 (`monster_role.csv`)
+    rank: e.rank ?? enemyRank(e.monsterId),
     // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
     //   skills      → **시뮬이 실어 온 그 목록**(`round` 이벤트의 `actives` — 파티의 `result.party[].actives` 와 같은 모양) [개정 2026-09-11 R79 후속 · 사용자 지적].
     //                 ⚠ 옛 판은 `skills: []` 로 비웠다(「몬스터 액티브는 아직 없다」) — R79 로 몬스터가 스킬을 쓰게 된 뒤에도 남아 칸이 빈 채였고,
@@ -1410,11 +1411,11 @@ function showResult(state, root, opts, won) {
         if (state.catchUp) show(); else state.timeouts.push(setTimeout(show, 800));
     }
     box.innerHTML = `
-        <span class="${won ? 'up' : 'down'} verdict">${t(won ? 'bt.won' : 'bt.lost')}</span>
+        <span class="${won ? 'up' : 'down'} verdict">${t(opts.result.mode === 'arena' && opts.result.reason === 'timeout' ? 'ar.draw' : won ? 'bt.won' : 'bt.lost')}</span>
         ${nx ? `<span class="muted b-next"></span>` : ''}
         ${nx?.shrine && !nx.shrine.fresh ? `<span class="b-shrine">${shrineChip(nx.shrine.id)}<span class="muted">${t('bt.shrineKeep')} — ${shrineFxText(nx.shrine.id)}</span></span>` : ''}
         ${nx ? `<button class="btn sm b-go">${t('bt.skipWait')}</button>` : ''}
-        <button class="btn primary sm b-report">${t('bt.toReport')}</button>`;
+        <button class="btn primary sm b-report">${t(opts.resultLabel ?? 'bt.toReport')}</button>`;
     box.classList.add('show');
     // 리포트로 간다 — 세기는 **안 끊는다**(멈추는 길은 철수 · 게임 끄기뿐이다). 걷힌 세기는 앱 시계가 잇는다
     box.querySelector('.b-report').onclick = () => opts.onEnd(false);
