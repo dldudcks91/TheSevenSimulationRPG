@@ -1,3 +1,5 @@
+import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
+
 /**
  * 화면 목업 데이터 — **게임 로직이 아니다.**
  *
@@ -312,12 +314,12 @@ const strHash = s => {
 export const heroFace = hero => {
     const id = hero?.face;
     if (typeof id !== 'string') return null;            // null·옛 정수 → 빈 칸 (v13 이관이 정수를 남기지 않는다 — 방어)
-    if (id === 'goblin_butler') return `${faceDir()}hero/goblin_butler.webp`;
+    if (id === 'goblin_butler') return facePath('hero/goblin_butler.webp');
     const i = id.lastIndexOf('_');
     const cls = id.slice(0, i), k = Math.floor(+id.slice(i + 1));
     const m = HERO_FACES[cls] ?? 0;
     if (!(m >= 1) || !(k >= 1)) return null;
-    return `${faceDir()}hero/${cls}_${1 + (k - 1) % m}.webp`;   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
+    return facePath(`hero/${cls}_${1 + (k - 1) % m}.webp`);   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
 };
 
 /**
@@ -580,22 +582,19 @@ export const exploreMap = ch => (EXPLORE_MAP_CHAPTERS.includes(ch) ? BG_DIR + `e
  * **스타일 하나 = 폴더 하나** (2026-08-30). 새 스타일을 넣는 방법은 둘뿐이다:
  *   ① `faces/` 아래 폴더를 만들고 같은 경로 규칙(`monster/<idx>.webp` · `hero/<직업id>_<k>.webp`)으로 그림을 넣는다
  *   ② 아래 `FACE_STYLES` 에 그 폴더 이름을 더한다
- * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `faceDir()` 하나뿐이라서다.
+ * 경로는 `facePath()`가 조립하고, 파일 목록은 exporter가 갱신한다.
  * 고르는 순서는 언어와 같다: URL `?face=<스타일>` → localStorage → 목록의 **첫 항목**.
- * **한 스타일이 전 몬스터를 다 갖출 필요는 없다** — 파일이 없으면 그 자리는 죄종 색 원판 + 이니셜로 떨어진다
- * (렌더러가 `<img onerror>` 로 받는다). 그리는 중인 스타일로도 게임이 돈다.
+ * 선택한 스타일에 없는 초상은 빈 칸이다.
  *
  * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
-export const FACE_STYLES = ['cartoon'];      // **첫 항목이 기본값이다**. ~~`pixel16`~~ 은 폴더째 사라져 2026-09-17 에 뺐다 —
-// 목록이 하나면 도감의 고르개가 안 선다(app.js:faceStylePicker). 폴더를 새로 채우면 여기에 한 줄 더하는 것으로 되살아난다
+export const FACE_STYLES = ['gemini', 'gpt']; // 첫 항목이 기본값. 기존 cartoon 저장값도 gemini로 돌아간다.
 const FACE_STORE_KEY = 'thesevensim.faceStyle';
 
 let faceStyleCur = (() => {
     const q = new URLSearchParams(location.search).get('face');
-    // URL 로 고르면 **그 자리에서 저장한다** — 스타일에는 언어 토글 같은 UI 스위치가 없어서, 저장하지 않으면
-    //   `?face=` 를 매번 다시 붙여야 한다(문서는 「한 번 걸면 계속 그 스타일로 돈다」고 적고 있었다). 2026-08-30 수정
+    // URL 선택은 저장한다. 상단바 · 설정 · 도감도 같은 값을 쓴다.
     if (FACE_STYLES.includes(q)) {
         try { localStorage.setItem(FACE_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 스타일 */ }
         return q;
@@ -623,6 +622,11 @@ export function applyDocumentFace() {
     document.documentElement.dataset.face = faceStyleCur;
 }
 export const faceDir = () => `./assets/art/faces/${faceStyleCur}/`;
+
+/** 선택한 스타일에 파일이 있을 때만 초상을 표시한다. */
+export function facePath(file) {
+    return PORTRAIT_FILES[faceStyleCur]?.includes(file) ? `${faceDir()}${file}` : null;
+}
 
 /**
  * 정예 특성 — 계승 elite_trait.csv. en 은 CSV 의 trait_name(영문) 그대로.

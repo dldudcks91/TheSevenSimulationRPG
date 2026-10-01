@@ -18,10 +18,11 @@ SKILL.md 1단계에서 편다 — 스케치(1-S)는 §0~§5, 세부(1-D)는 §6.
 
 | 인물 | 첨부 | 이유 |
 |---|---|---|
-| 갑옷 · 투구 | `faces/source/anchors/gladiator_helm.png` | 외곽선 굵기 · 음영 단수 · 닫힌 투구의 눈높이 |
-| 맨머리 · 맨몸 · 후드 · 천 | `faces/source/anchors/barbarian.png` | 두상 비율 65% · 어깨폭 75% — SD 구도의 실측 기준 |
+| **모든 발주 — 그림체** | 현행 영웅 초상 1~2장 `faces/source/ready/hero/` — 차림이 가까운 것(투구 = `knight_*` · `warrior_*` / 후드 = `archer_1` · `mage_1` / 맨머리 = `priest_1` · `mage_2`) | 우리 그림의 실물이다 — 선 · 탁한 색 · **무뚝뚝한 연기**까지 나른다 [2026-10-01] |
+| 갑옷 · 투구 (보조) | `faces/source/anchors/gladiator_helm.png` | 외곽선 굵기 · 음영 단수 · 닫힌 투구의 눈높이 |
+| 맨머리 · 맨몸 · 후드 · 천 (보조) | `faces/source/anchors/barbarian.png` | 두상 비율 65% · 어깨폭 75% — SD 구도의 실측 기준 |
 | 같은 종족이 이미 있다 | 그 그림도 함께 (해골이면 `monster/skeleton_plain`) | 종족 고유의 골격·색을 나른다 |
-| 같은 대상의 현행 초상 | `faces/source/ready/<hero|monster>/<id>.png` | 외형 보존의 필수 입력. 전면 재설계 때는 직접 확인 후 직업·장비 기준으로만 사용할 수 있다 |
+| 같은 대상의 현행 초상 | `faces/source/ready/<hero|monster>/<id>.png` | 외형 보존의 필수 입력. 전면 재설계 때는 직접 확인 후 직업·장비 기준으로만 사용할 수 있다. ⚠ **그림체가 틀려서 다시 뽑는 거면 붙이지 않는다** — 틀린 연기가 복제된다 |
 | 같은 챕터·진영·역할 | 가장 가까운 현행 초상 | 종족 참조만으로 부족한 장비·강조색·실루엣을 나른다 |
 | 애매하면 | 둘 다 | 해가 없다 |
 
@@ -35,6 +36,7 @@ SKILL.md 1단계에서 편다 — 스케치(1-S)는 §0~§5, 세부(1-D)는 §6.
 ```
 Match the attached portraits exactly — same proportions, same outline weight,
 same flat shading, same dark palette, same bust framing and gaze.
+Play every character straight and grim like the heroes, even monsters.
 
 2048x2048 sheet, 3x3 grid, nine bust portraits, straight 16px pure black gridlines, solid pure
 green #00FF00 background, no text anywhere. Nothing on the characters may be
@@ -60,6 +62,8 @@ the small body may be cropped by the bottom edge.
 
 **적지 않는다 — 앵커가 나른다**: 두상 비율 · 얼굴 생김새 · 외곽선 굵기 · 음영 단수 · 눈 처리 · 손·무기 유무 · 디테일 수준 · 자세.
 
+**연기 톤 한 줄(`Play every character straight and grim…`)만은 예외다** [2026-10-01] — 그림은 선 · 음영은 나르지만 **연기는 소재 단어가 끌고 온다**(`imp` → 이빨 웃음의 카툰 악당). 그래서 톤만 한 구절로 잡고, **표정 · 입 · 눈썹을 하나하나 적지 않는다** — 그건 Gemini 몫이다.
+
 **부정문은 통틀어 2개까지** — `no text` · `no saturated green` 이 이미 둘이다. 부정문은 잘 안 지켜지면서 그 대상을 화면에 불러온다(「no cracks」가 금 간 두개골을 부른다).
 
 **넣으면 안 되는 것** — 디테일 수치 제한(`3 tones` · `under ten colors`) · 「사실적」을 암시하는 단어(`realistic` · `adult proportion` · `head no more than a third`).
@@ -80,6 +84,7 @@ the small body may be cropped by the bottom edge.
 | 눈에 흰자·홍채가 생겼다 | `Eyes are solid black shapes.` |
 | 손·무기가 들어왔다 | `No weapons, no hands. Worn gear only.` |
 | 후드 속 얼굴이 검은 구멍 | `The face inside the hood is fully lit, never a dark void.` |
+| 그래도 카툰 악당 연기(이빨 웃음 · 쨍한 피부) | `Mouths stay closed or barely open, skin as muted as the heroes'.` |
 | 문장에 글자가 새겨졌다 | 그 자리에 `plain shape, no lettering` |
 | 아홉이 같은 사람 | 지시를 **더하는 게 아니라** 소재의 축 한 줄을 고친다 (SKILL.md 원칙 6) |
 
@@ -101,13 +106,14 @@ the small body may be cropped by the bottom edge.
 | `head no more than a third` · `realistic` · `human proportion` | 두상 47% (SD 붕괴) | `head about two thirds of the bust` · `skull big and round` |
 | `wear and grime` · `battle-worn` · `weathered plate` | 디테일 폭발 | `grim` · `hard-used face` (얼굴 표정으로 옮긴다) |
 | `emblem` · `sigil` · `badge` · `crest` | 글자가 새겨진다 | `plain shape, no lettering` 을 그 자리에 덧붙이거나 뺀다 |
+| `imp` · `gremlin` · `mischievous` · `grinning` · `cackling` · `sly` | 카툰 악당 연기 — 이빨 웃음 · 큰 머리와 귀 · 쨍한 피부 (10-01 1401 · 1402) | 역할 · 처지로 부른다: `small red-skinned demon cultist` · `fire-scarred zealot`. 표정은 적지 않는다 |
 | `glowing` · `radiant` · `shining` | 그라디언트 · 플랫 붕괴 | 발광은 없다. 강조색 단색으로 |
 | 순색 초록 계열 (`forest green` · `emerald` · `leaf`) | 누끼에 뚫림 | §3 |
 | 얇은 것 (`thin lines` · `arrow shafts` · `fine chain`) | 외곽선보다 가늘어 40px 에서 사라지고, 디테일로 잡힌다 | `chunky flat shapes, never thin lines` |
 
 ## 3. 키잉 안전 색 표 — `g − max(r,b)` 가 40 미만이면 안전
 
-키잉이 `g − max(r,b)` 40~120 을 알파 경사로 쓴다([cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md)). 25~39 는 경계(안티에일리어싱 링에서 새는 수가 있다).
+키잉이 `g − max(r,b)` 40~120 을 알파 경사로 쓴다([faces/README.md](../../../src/assets/art/faces/README.md)). 25~39 는 경계(안티에일리어싱 링에서 새는 수가 있다).
 
 | 색 | hex | 판정값 | |
 |---|---|---|---|
@@ -203,4 +209,4 @@ Change only this:
 - ⚠ **첫 결과를 재서 이 절을 고친다** — 특히 첫 문단이 스케치를 얼마나 지키는지
 
 ---
-*마지막 업데이트: 2026-09-15*
+*마지막 업데이트: 2026-10-01*

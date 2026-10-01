@@ -42,7 +42,7 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
-import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 = 스킬 이펙트(기본 On) + 피격 반응(기본 Off) — 둘 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414)
+import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 피격 반응 + 공격 시 흔들림(셋 다 기본 On) — 셋 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468)
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -458,7 +458,7 @@ function layoutRanks(list) {
 /* 관전 카드 개편판 [2026-09-21 사용자 지시 · ADR-0262] — 이름 띠(신원 · 이름이 카드 맨 위 전폭 띠로)와 **뒤따르는 카드 개편 전부**가
    이 스위치 하나 아래에 선다: JS 는 `cardV2()` 로 가르고 CSS 는 `.unit.v2` 아래에만 둔다 — 그래야 한 번에 개편 전으로 돌아간다.
    **되돌림** — `CARD_V2 = false` 한 줄이면 모든 브라우저에서 개편 전 카드(ADR-0017 모양)다.
-   개발용 전/후 버튼(devcompare.js — 상단바 · 임시)이 `<html data-card="v1|v2">` 로 **이 브라우저에서만** 덮어쓴다 */
+   개발용 전/후 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-card="v1|v2">` 로 **이 브라우저에서만** 덮어쓴다 */
 const CARD_V2 = true;
 export const cardV2 = () => { const v = document.documentElement.dataset.card; return v ? v === 'v2' : CARD_V2; };
 

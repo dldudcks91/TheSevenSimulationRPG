@@ -21,7 +21,7 @@
 
 ## 앉히는 규칙
 
-`cartoon/monster/<idx>.png` 를 가져와 **앵커 문법**으로 다시 앉힌다 — 어깨폭이 칸의 **74%** · 가로 가운데 · 세로 아래 붙임
+`gemini/monster/<idx>.webp`(없으면 `gpt/monster/<idx>.webp`) 를 가져와 **앵커 문법**으로 다시 앉힌다 — 어깨폭이 칸의 **74%** · 가로 가운데 · 세로 아래 붙임
 ([postprocess.md §3](../../../../../.claude/skills/art-prompt/postprocess.md)). 게임 화면의 원형 마스크용 정렬(§3-0)과는 다르다 —
 저쪽은 원이 가장자리를 자르는 것을 전제하고, 여기는 **네모 칸에 흉상 하나가 통째로** 서야 한다.
 
@@ -33,7 +33,7 @@ python .claude/skills/art-prompt/build_chapter_sheets.py 1 3        # 챕터 1 �
 python .claude/skills/art-prompt/build_chapter_sheets.py --prune    # 아트가 0 이 된 스테이지의 옛 장을 지운다
 ```
 
-`monster.csv` 가 대장이고 `cartoon/monster/<idx>.png` 가 그림이라, **둘 중 하나라도 건드리면 다시 찍는다**(설치 · 교체 · 삭제 · 스테이지 이동 · `face` 값 변경). 그 절차는 `/art-prompt` 5단계에 걸려 있다.
+`monster.csv` 가 대장이고 `gemini/monster/<idx>.webp`(없으면 `gpt/monster/<idx>.webp`) 가 그림이라, **둘 중 하나라도 건드리면 다시 찍는다**(설치 · 교체 · 삭제 · 스테이지 이동 · `face` 값 변경). 그 절차는 `/art-prompt` 5단계에 걸려 있다.
 아트가 **한 장도 없는 스테이지는 안 만든다** — 통짜 초록 장이 되어 쓸모가 없다.
 
 ---

@@ -8,10 +8,10 @@
  *   계산 · 난수 없음 — 흩어짐은 사건 번호(`state.idx`)와 유닛 키에서 정해진 값이라 같은 런은 같은 그림이다.
  *   되감기(`state.catchUp`) · 카드가 없는 유닛은 그냥 지나간다.
  *
- * **피격 반응**(옛 1단계 — 모든 타격에 카드 번쩍임 · 흔들림, 때린 카드 튀어나감, 빗나감 비킴, 쓰러짐 붉은 막)은 같은 설정 탭에서 따로 켠다
- *   (기본 꺼짐 · ADR-0410 · ADR-0413).
+ * **피격 반응**(옛 1단계 — 모든 타격에 카드 번쩍임 · 흔들림, 빗나감 비킴, 쓰러짐 붉은 막)은 같은 설정 탭에서 따로 켠다
+ *   (기본 켜짐 · ADR-0410 · ADR-0413). **공격 시 흔들림**(때린 카드 튀어나감)은 피격 반응에서 떼어 또 따로 켠다(기본 켜짐 · ADR-0468).
  *
- * 둘의 켜고 끄기는 **`⚙` 판의 설정 탭**(app.js · devpalette.js · SCREEN_DESIGN §2-2)이 `setFxOn` 으로 건다 — 이 브라우저에만 남는다(아래 「켜고 끄기」).
+ * 셋의 켜고 끄기는 **`⚙` 판의 설정 탭**(app.js · devpalette.js · SCREEN_DESIGN §2-2)이 `setFxOn` 으로 건다 — 이 브라우저에만 남는다(아래 「켜고 끄기」).
  *
  * 모양 · 색 · 길이는 style.css 「관전 연출」 규칙이 든다 — 여기는 **어느 카드에 무엇을 붙이나**와 조각마다 다른 값(방향 · 크기 · 늦춤)만 정한다.
  */
@@ -21,20 +21,23 @@
 /** 기본값 — 이 브라우저에서 한 번도 안 고른 사람이 보는 화면 */
 export const SKILL_FX_DEFAULT = true;
 export const HIT_FX_DEFAULT = true;
+export const LUNGE_FX_DEFAULT = true;
 /* 고른 값은 이 브라우저에만 남는다 — localStorage 는 UI 환경설정이라 세이브 어댑터 규칙과 무관(i18n.js 의 언어와 같다) · 접근은 이 파일 안에서만 */
-const PREF_KEY = { skill: 'thesevensim.fxSkill', hit: 'thesevensim.fxHit' };
+const PREF_KEY = { skill: 'thesevensim.fxSkill', hit: 'thesevensim.fxHit', lunge: 'thesevensim.fxLunge' };
 function readPref(k, def) {
     try {
         const v = localStorage.getItem(PREF_KEY[k]);
         return v === 'on' ? true : v === 'off' ? false : def;
     } catch { return def; }   // 프라이빗 모드 등 — 기본값으로
 }
-const fxOn = { skill: readPref('skill', SKILL_FX_DEFAULT), hit: readPref('hit', HIT_FX_DEFAULT) };
+const fxOn = { skill: readPref('skill', SKILL_FX_DEFAULT), hit: readPref('hit', HIT_FX_DEFAULT), lunge: readPref('lunge', LUNGE_FX_DEFAULT) };
 /** 스킬 이펙트가 켜져 있나 — 사건마다 읽는다(바꿔도 다시 그리지 않는다) */
 export const skillFxOn = () => fxOn.skill;
 /** 피격 반응이 켜져 있나 — 타격마다 읽는다 */
 export const hitFxOn = () => fxOn.hit;
-/** 켜고 끈다 — `k` = 'skill' | 'hit'. 누른 순간부터 다음 사건에 먹는다 · 이미 떠 있는 조각은 제 길이를 마저 돈다 */
+/** 공격 시 흔들림(때린 카드 튀어나감)이 켜져 있나 — 피격 반응과 따로 · 타격마다 읽는다 (ADR-0468) */
+export const lungeFxOn = () => fxOn.lunge;
+/** 켜고 끈다 — `k` = 'skill' | 'hit' | 'lunge'. 누른 순간부터 다음 사건에 먹는다 · 이미 떠 있는 조각은 제 길이를 마저 돈다 */
 export function setFxOn(k, on) {
     if (!(k in fxOn)) return;
     fxOn[k] = !!on;
@@ -148,9 +151,9 @@ function struck(state, d, crit) {
     play(d.node, crit ? 'fx-shake-crit' : 'fx-shake', CARD);
     play(d.node.querySelector('.sprite'), crit ? 'fx-flash-crit' : 'fx-flash', FACE);
 }
-/** 때린 카드 — 상대 진영 쪽으로 튀어나갔다 돌아온다(방향은 CSS 가 진영으로 가른다) */
+/** 때린 카드 — 상대 진영 쪽으로 튀어나갔다 돌아온다(방향은 CSS 가 진영으로 가른다) · 피격 반응이 아니라 「공격 시 흔들림」을 따른다 (ADR-0468) */
 function lunge(state, a) {
-    if (!hitFxOn() || !live(state, a)) return;
+    if (!lungeFxOn() || !live(state, a)) return;
     prep(state, a);
     play(a.node.parentElement, 'fx-lunge', SLOT);
 }
@@ -268,7 +271,7 @@ export function fxBlast(state, d, ev) {
     struck(state, d, false);
     if (ev.s) impact(state, d, null, false);
 }
-/** 빗나감(`dodge`) — 피격 반응 · 때린 카드가 튀어나가고 맞을 카드가 옆으로 비킨다(비키는 쪽은 사건마다 정해진다) */
+/** 빗나감(`dodge`) — 때린 카드가 튀어나가고(공격 시 흔들림) 맞을 카드가 옆으로 비킨다(피격 반응 · 비키는 쪽은 사건마다 정해진다) */
 export function fxMiss(state, a, d) {
     lunge(state, a);
     if (!hitFxOn() || !live(state, d)) return;

@@ -1,6 +1,6 @@
 # postprocess — 격자 절단 · 키잉 · 여백 정규화 · 설치
 
-SKILL.md 4~5단계에서 편다. 키잉의 **원리와 이력은 [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) · [source/README.md](../../../src/assets/art/faces/source/README.md) 가 SSOT** — 여기는 그대로 돌릴 수 있는 코드와 그 문서에 없는 규칙(74% 패딩)만 적는다.
+SKILL.md 4~5단계에서 편다. 키잉의 **원리와 이력은 [faces/README.md](../../../src/assets/art/faces/README.md) · [source/README.md](../../../src/assets/art/faces/source/README.md) 가 SSOT** — 여기는 그대로 돌릴 수 있는 코드와 그 문서에 없는 규칙(74% 패딩)만 적는다.
 
 ## 0. 어떤 절차인지 먼저 가른다
 
@@ -61,7 +61,7 @@ python - <<'X'
 import sys; sys.path.insert(0,'.claude/skills/art-prompt')
 from align_faces import build, SPEC
 for n in SPEC:
-    img, idx = build(n); img.save('src/assets/art/faces/cartoon/monster/%d.png' % idx)
+    img, idx = build(n); img.save('src/assets/art/faces/gemini/monster/%d.png' % idx)
 X
 ```
 
@@ -102,11 +102,11 @@ def normalize(img, target=0.74, S=512):
 
 ```python
 python .claude/skills/art-prompt/align_hero_faces.py           # 실측만
-python .claude/skills/art-prompt/align_hero_faces.py --write   # source/hero + cartoon/hero 에 설치
+python .claude/skills/art-prompt/align_hero_faces.py --write   # source/hero + gemini/hero 에 설치
 python .claude/skills/art-prompt/align_hero_faces.py --write warrior_4   # 설치 이름을 주면 그 장만
 ```
 
-새 장을 이 기준으로 앉히면 그 파일의 `SPEC` 에 `(시트이름, source/hero 이름, cartoon/hero 이름, 타일 TL/TR/BL)` 한 줄을 더한다.
+새 장을 이 기준으로 앉히면 그 파일의 `SPEC` 에 `(시트이름, source/hero 이름, gemini/hero 이름, 타일 TL/TR/BL)` 한 줄을 더한다.
 위 칸(TL · TR)은 몸이 격자선에서 끊기므로 `place` 가 흉상을 바닥까지 내린다 — 그만큼 눈높이가 235 보다 낮아진다(`warrior_leonidas` y 298).
 볏 · 장발이 커서 89px 로는 캔버스 위·옆에 닿으면 **위 35 · 옆 20px 여백**이 남을 때까지 줄인다(`MARGIN_TOP` · `MARGIN_SIDE` — 닿으면 칸을 벗어나 보인다 · 2026-09-21 사용자 지적).
 기준값의 근거와 어느 장이 이 기준인지는 [faces/source/README.md](../../../src/assets/art/faces/source/README.md) 「영웅을 얼굴로 앉힌다」.
@@ -128,10 +128,10 @@ for tag, box in TILES.items():
 ## 5. 설치
 
 1. **SSOT** — `faces/source/hero/<설명>.png`(영웅) · `faces/source/monster/<설명>.png`(몬스터). 파일명은 내용으로(예: `archer_hood_black.png`). 시트 원본은 `faces/source/sheets/source_sheet_<이름>.png` 로 남긴다 [폴더 분리 2026-09-16 — 앵커는 `anchors/`]
-2. **사본** — `faces/cartoon/hero/<직업id>_<k>.png` 로 복사 [개정 2026-09-07]. `직업id` 는 `data/class.csv` 의 id(그림이 읽히는 직업), `k` 는 그 직업 풀의 다음 번호(추가) 또는 교체할 번호
+2. **사본** — `faces/gemini/hero/<직업id>_<k>.png` 로 복사 [개정 2026-09-07]. `직업id` 는 `data/class.csv` 의 id(그림이 읽히는 직업), `k` 는 그 직업 풀의 다음 번호(추가) 또는 교체할 번호
 3. **`src/ui/mock.js` `HERO_FACES[<직업id>]`** — 추가면 그 직업의 장수를 올린다. **늘리는 방향은 무해하다** (2026-09-06 저장형 전환 뒤 얼굴은 세이브에 박혀 있다 — 새로 태어나는 영웅의 굴림 범위만 넓어진다). ⚠ **줄이는 방향만** 영향이 있다: 범위를 넘은 저장값은 그 직업 풀 안에서 접힌다. 사용자에게 추가/교체를 먼저 묻는다. 몬스터는 `monster/<idx>.png` 라 직업 축이 없다
-4. **문서** — [cartoon/README.md](../../../src/assets/art/faces/cartoon/README.md) `hero_*` 절의 장수·출처 · [source/README.md](../../../src/assets/art/faces/source/README.md) 영웅 표에 한 줄 · 두 문서 꼬리 날짜(날짜만)
-5. **챕터 시트 다시 찍기(몬스터만)** — `python .claude/skills/art-prompt/build_chapter_sheets.py`. `faces/source/chapters/` 가 `cartoon/monster/` 의 거울이라 **초상을 넣은 · 지운 · 옮긴 스테이지가 그대로 낡는다**. 스테이지를 옮겼으면 **양쪽**(떠난 스테이지 · 도착한 스테이지)이 다시 찍힌다 — 인자 없이 돌리면 전부 훑는다
+4. **문서** — [faces/README.md](../../../src/assets/art/faces/README.md) `hero_*` 절의 장수·출처 · [source/README.md](../../../src/assets/art/faces/source/README.md) 영웅 표에 한 줄 · 두 문서 꼬리 날짜(날짜만)
+5. **챕터 시트 다시 찍기(몬스터만)** — `python .claude/skills/art-prompt/build_chapter_sheets.py`. `faces/source/chapters/` 가 `gemini/monster/` 의 거울이라 **초상을 넣은 · 지운 · 옮긴 스테이지가 그대로 낡는다**. 스테이지를 옮겼으면 **양쪽**(떠난 스테이지 · 도착한 스테이지)이 다시 찍힌다 — 인자 없이 돌리면 전부 훑는다
 6. 브라우저 확인 — 서버가 `serve.py`(no-cache + ETag — 쓸 때마다 재검증) 면 새로고침으로 충분. `python -m http.server` 면 같은 파일명 교체가 캐시에 먹힌다 → 하드 리로드
 
 ## 6. 크롭·스케일로 못 고치는 것 (다시)

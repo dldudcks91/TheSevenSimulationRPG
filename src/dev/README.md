@@ -117,7 +117,7 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?cx=monster\|character\|item\|skill\|mastery` | 도감의 세그먼트 (SCREEN_DESIGN §9 · §9-1) — `?tab=codex&cx=mastery` 처럼 겹쳐 쓴다. 기본값 `monster`. ⚠ 옛 이름 `?ix=character\|item` 은 09-08 에 이미지 도감 탭과 함께 죽었다 |
 | `?cxm=sin\|class\|adv` | 마스터리 도감의 죄종 · 직업 · 전직 탭 — `?tab=codex&cx=mastery&cxm=adv`처럼 겹쳐 쓴다. 기본값 `sin` |
 | `?cxg=normal\|elite` | 도감 몬스터 카드의 **초상 등급** (SCREEN_DESIGN §9 · ADR-0167) — `?tab=codex&cxg=elite` 처럼 겹쳐 쓴다. 기본값 `normal`. 정예 전용 초상(`monster.csv:face_elite` 가 1)이 있는 몬스터만 얼굴이 갈린다 |
-| `?face=<스타일>` | 몬스터 얼굴 아트 스타일 교체 — `src/assets/art/faces/<스타일>/`. 목록은 `ui/mock.js:FACE_STYLES` · localStorage 에 남는다 |
+| `?face=<스타일>` | 영웅·몬스터 초상 스타일 `gemini`(기본) / `gpt` — `src/assets/art/faces/<스타일>/`. Admin 오른쪽 · 설정 · 도감에서도 선택 · localStorage에 남는다. 선택한 스타일에 없는 초상은 빈 칸 |
 | `?bg=<스타일>` | **스테이지 배경 아트 스타일 교체** [2026-09-16] — `src/assets/art/backgrounds/<스타일>/`. 목록은 `ui/mock.js:BG_STYLES`(**`illustrate` 정식** · `pixel` 비교용 · ADR-0152) · `?face=` 와 같이 localStorage 에 남는다. ⚠ 그 스타일에 그림이 없는 스테이지는 그라디언트로 떨어진다(두 스타일 다 챕터 1~3 뿐) · **거점 배경 · 탐험 지도는 스타일을 안 탄다** |
 
 헤드리스 (Edge) — 스크린샷:

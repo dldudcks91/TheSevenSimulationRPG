@@ -4,7 +4,7 @@ usage:
   python .claude/skills/art-prompt/measure.py <png> [<png> ...]
   python .claude/skills/art-prompt/measure.py --sheet <2048x2048 2x2 green sheet.png>
 
-Accepts transparent RGBA crops (cartoon/hero/<class>_<k>.png), green-background originals
+Accepts transparent RGBA crops (gemini/hero/<class>_<k>.png), green-background originals
 (source/hero|monster/*.png) or a whole 2048 2x2 sheet (--sheet; BR tile is the watermark slot).
 Output is ASCII only -- the Windows console is cp949.
 

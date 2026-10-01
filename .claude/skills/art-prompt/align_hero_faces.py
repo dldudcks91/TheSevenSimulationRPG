@@ -174,4 +174,4 @@ if __name__ == '__main__':
             os.makedirs('src/assets/art/faces/source/hero', exist_ok=True)
             out.save('src/assets/art/faces/source/hero/%s.png' % ssot)
             out.quantize(256, Image.FASTOCTREE).save(
-                'src/assets/art/faces/cartoon/hero/%s.png' % inst)
+                'src/assets/art/faces/gemini/hero/%s.png' % inst)

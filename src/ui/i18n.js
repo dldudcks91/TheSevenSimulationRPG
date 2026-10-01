@@ -498,9 +498,11 @@ const STRINGS = {
     /* 설정 [2026-09-28 사용자 지시 · SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414] — 상단바 오른쪽 끝 `⚙` 판의 설정 탭 (`set.h` = 탭 이름 · ⚙ 의 title).
        버튼 글은 한국어도 On / Off 그대로(2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 — 파티 전술 칸 `rs.on` 과 같다) */
     'set.h': { ko: '설정', en: 'Settings' },
+    'set.artStyle': { ko: '아트 스타일', en: 'Art Style' },
     'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
     'set.hitFx': { ko: '피격 반응', en: 'Hit Reactions' },
-    'set.shake': { ko: '몬스터 흔들림', en: 'Monster Shake' },
+    'set.shake': { ko: '피격 시 흔들림', en: 'Shake on Hit' },
+    'set.lunge': { ko: '공격 시 흔들림', en: 'Shake on Attack' },
     'set.on': { ko: 'On', en: 'On' },
     'set.off': { ko: 'Off', en: 'Off' },
     // 로그 방식 — 네 칸 격자 · 한 문장 (2026-09-30 · ADR-0459). 이 줄의 버튼 글은 언어를 따른다

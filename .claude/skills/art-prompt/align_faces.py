@@ -11,7 +11,7 @@ monster_idx 자리에 `'3201_elite'` 처럼 문자열을 넣으면 그 이름으
     import sys; sys.path.insert(0, '.claude/skills/art-prompt')
     from align_faces import build, SPEC
     for n in (*SPEC, *READY):
-        img, idx = build(n); img.save('src/assets/art/faces/cartoon/monster/%s.png' % idx)
+        img, idx = build(n); img.save('src/assets/art/faces/gemini/monster/%s.png' % idx)
     X
 """
 import numpy as np

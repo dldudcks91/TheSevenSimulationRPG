@@ -1,7 +1,7 @@
 # 스타일 앵커 (faces/source/)
 
 몬스터·영웅 초상 아트의 **PNG 원본과 스타일 기준 이미지**. 게임이 이 폴더를 로드하지 않는다.
-게임에서 보려면 축소한 [`../cartoon/`](../cartoon/)(`monster/<idx>.webp` · `hero/<직업id>_<k>.webp`) 을 `?face=cartoon` 으로 켠다.
+게임용 초상은 [`../gemini/`](../gemini/)와 [`../gpt/`](../gpt/)로 나뉜다(2026-10-01). 기본값은 Gemini이며 상단 Admin 오른쪽과 설정에서 선택한다. 현재 분류와 내보내기는 [초상 README](../README.md)를 따른다. 아래의 `cartoon/`는 분리 전 이력 경로다.
 **이 폴더의 자리** [2026-09-14 구 `example/`] — 게임이 읽는 그림 = 묶음 폴더/id · 원본 시트·앵커 = `source/`(여기) · id 없는 여분 = `unused/`. `icons/` 도 같은 모양이다([`../../README.md`](../../README.md)).
 
 `_source_sheet_*.png` · `source_sheet_*.png` 는 여러 초상을 한 번에 뽑은 원본 시트다(해골은 2752×1536, 검투사·로마군·기사·고블린은 2048×2048). `source_sheet_ch1_st4_flame_zealot_refinement_v2.png` 는 투명 배경의 예외다.
@@ -33,6 +33,7 @@ python scripts/export_face_portraits.py
 
 - `sheets/source_sheet_ch2_st3_undead_2x2.png`는 사용자가 넣은 2048×2048 **2×2 언데드 시트**다(격자선 x · y 1016~1031). 1번 = 쇠사슬 감긴 거구 시체 · 2번 = 투구 · 방패의 해골 병사 · 3번 = 군모 · 룬 검의 해골 장교 · 4번 = 짐승 두개골 지팡이의 늪 주술사(✦ 워터마크). 지금은 **배정 없음** — 2-3 이 우상족으로 바뀌며(09-28) `2301` 에 쓰던 1번 초상을 지웠다.
 - `sheets/source_sheet_ch2_st3_invidia_idol_3x3.png`는 사용자가 넣은 **1024×1024 3×3 우상 시트**다(격자선 x · y 336~345 · 678~687). 아홉 칸이 전부 우상족이 섬기는 우상 인비디아의 변형이다. **2번(1행 2열 · 태양 원판 얼굴)을 `2350` 인비디아**에 적용했다 — 절단 `(346, 0, 678, 332)` · 초록 키잉 · 512² 확대.
+- `sheets/source_sheet_ch2_st3_idolfolk_3x3.png`는 사용자가 넣은 **1024×1024 3×3 우상족 시트**다(격자선 x 337~342 · 681~686 · y 337~342 · 680~686 · 그 반투명 테두리 한 줄씩도 뺀다). 1~5번 = 나무 가면 잔챙이 · 6~9번 = 칠한 가면 · 깃털 관 주술사. **1번(널빤지 가면)을 `2301` 사냥꾼 · 8번(둥근 흰 가면)을 `2303` 주술사**에 적용했다(`scripts/apply_ch2_st3_idolfolk_portraits.py` · `monster.csv:face = 1`). 나머지 일곱 칸은 배정 없음.
 - `sheets/source_sheet_ch3_st1_sandstone_golem.jpg`(검은 눈) · `_elite.jpg`(주황 발광 눈 · 견갑 문양)는 사용자가 넣은 단독 그림 두 장이다. 옛 시트에서 잘라 위 · 오른쪽에 검은 격자선이 남아 있어 잘라 내고 **`3103` 사암 골렘 일반 · 정예**에 적용했다(`scripts/apply_ch3_st1_sandstone_golem_portraits.py` · `monster.csv:face_elite = 1`).
 - 모두 초록 배경을 투명화해 512×512 `ready/monster/`와 256×256 `cartoon/monster/`로 내보냈고, `chapters/ch2_st3.png` · `ch3_st1.png`를 새로 찍었다.
 
@@ -638,7 +639,7 @@ python scripts/export_face_portraits.py
 
 1·2판의 시트와 타일은 사용자 지시로 **삭제**했다 — 커밋된 적이 없어 git 에도 없다.
 
-로마군·바바리안과 같은 **초록 키잉**으로 512² 투명 PNG 를 만들었다(절차는 [`../cartoon/README.md`](../cartoon/README.md)).
+로마군·바바리안과 같은 **초록 키잉**으로 512² 투명 PNG 를 만들었다(절차는 [초상 README](../README.md)).
 경사 구간(`g − max(r,b)` 40~120)에 걸린 픽셀이 타일당 **0.3%** 뿐이라 판정이 사실상 이진이었다 — 견갑이 뚫리지 않았다.
 
 ### 옛 인간 기사 5종은 남아 있지 않다
@@ -780,7 +781,7 @@ python scripts/export_face_portraits.py
 
 Gem 재발주 산출물(2048² · 불투명 **초록 `#00FF00` 배경**). 초록 배경은 「transparent」 지시가 두 번 안 먹은 뒤의
 우회다: 인물이 전 층 채도 ≤ 0.25 라 `g − max(r,b)` 판정 하나로 기계 키잉이 된다(절차는
-[`../cartoon/README.md`](../cartoon/README.md)). 게임용 사본은 `cartoon/hero/warrior_2.png`(키잉 투명 512²).
+[초상 README](../README.md)). 게임용 사본은 `cartoon/hero/warrior_2.png`(키잉 투명 512²).
 `barbarian_original.png` 는 이 앵커의 **자르기 전 · 배경이 붙은 원본**이다(구 `illustrate/hero_babarian.png` — 2026-09-14 이 폴더로 옮겼다).
 
 구판 변주 3장(`barbarian_1..3.png`)은 **스타일 불합격으로 삭제**(미커밋 — 복구 불가): 밝기 중앙 116 · 밝은 영역
@@ -848,4 +849,4 @@ Gem 재발주 산출물(2048² · 불투명 **초록 `#00FF00` 배경**). 초록
 이 스타일의 굵고 어두운 외곽선(약 `#0B060C`)이 자동 누끼를 가능하게 한다 — 픽셀아트나 회화체면 같은 방법이 안 통한다.
 
 ---
-*마지막 업데이트: 2026-09-30*
+*마지막 업데이트: 2026-10-01*

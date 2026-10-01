@@ -1,8 +1,8 @@
 """챕터 시트 다시 찍기 — 스테이지 한 판 = 2×2 한 장 (faces/source/chapters/README.md).
 
 `monster.csv` 가 대장이다: 스테이지마다 일반몹 3 + 스테이지 보스 1 을 읽어
-`cartoon/monster/<idx>.webp` 를 칸에 앉힌다. 아트가 없는 자리는 **빈 초록 칸**으로 남고, 그 빈 칸이 곧 발주서다.
-`cartoon/monster/` 를 건드렸으면(설치 · 교체 · 삭제) 이걸 돌린다 — SKILL.md 5단계.
+`gemini/monster/<idx>.webp` 우선 · 없으면 `gpt/monster/<idx>.webp` 를 칸에 앉힌다. 아트가 없는 자리는 **빈 초록 칸**으로 남고, 그 빈 칸이 곧 발주서다.
+두 스타일의 `monster/` 를 건드렸으면(설치 · 교체 · 삭제) 이걸 돌린다 — SKILL.md 5단계.
 
     python .claude/skills/art-prompt/build_chapter_sheets.py            # 아트가 있는 스테이지 전부
     python .claude/skills/art-prompt/build_chapter_sheets.py 1 3        # 챕터 1 스테이지 3 만
@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image
 
 CSV = 'src/data/monster.csv'
-FACES = 'src/assets/art/faces/cartoon/monster/'
+FACES = ['src/assets/art/faces/gemini/monster/', 'src/assets/art/faces/gpt/monster/']
 OUT = 'src/assets/art/faces/source/chapters/'
 CELL, SHEET, GRID = 1013, 2048, (1014, 1033)      # 격자선 밴드 — sheets/ 의 Gem 시트와 같은 규격
 GREEN = (0, 255, 0)
@@ -75,8 +75,8 @@ def build(ch, st, entry):
     for (x, y), idx in zip(CELL_XY, slots(entry)):
         if idx is None:
             continue
-        f = FACES + '%d.webp' % idx
-        if not os.path.exists(f):
+        f = next((folder + '%d.webp' % idx for folder in FACES if os.path.exists(folder + '%d.webp' % idx)), None)
+        if f is None:
             continue
         cell = normalize(Image.open(f))
         sheet.paste(cell.convert('RGB'), (x, y), cell)

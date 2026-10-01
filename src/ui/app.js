@@ -60,8 +60,8 @@ import * as CLOUD from './cloud.js';
 import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
-import { mountCardCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 버튼. 걷어내려면 이 줄 · 아래 호출 · devcompare.js
-import { skillFxOn, hitFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 피격 반응 켜고 끄기 · 몬스터 흔들림 단계 (SCREEN_DESIGN §2-2 · ADR-0414 · ADR-0454)
+import { mountCardCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 버튼(⚙ 설정 탭 마지막 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
+import { skillFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 피격 반응 · 공격 시 흔들림 켜고 끄기 · 피격 시 흔들림 단계 (SCREEN_DESIGN §2-2 · ADR-0414 · ADR-0454 · ADR-0468)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
@@ -461,7 +461,10 @@ function renderShell() {
     $('.resources').appendChild(langBtn);
     // Admin — 켜면 건물로 막힌 탭 · 기능 · 상한이 열린 척한다 (devadmin.js) · **켤 때 골드를 `admin_gold` 까지 채운다**(진짜 골드 · 2026-09-27 · SCREEN_DESIGN §10-3)
     mountAdmin($('.resources'), render, () => { const g = D.balance.admin_gold; if (G && G.resources.gold < g) { G.resources.gold = g; save(); } });
-    mountCardCompare($('.resources'), render);   // 임시 — Card [Before | After] (devcompare.js)
+    const artPicker = faceStyleButtons();
+    artPicker.classList.add('face-style-buttons');
+    artPicker.setAttribute('aria-label', t('set.artStyle'));
+    $('.resources').appendChild(artPicker);
     // 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356]. `data-play` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshPlayTime`)
     if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'play-time', `${t('ui.playTime')}<b data-play>${fmtPlayTime(G.playMs)}</b>`));
     // ⚙ — 판의 탭 둘: 설정(스킬 이펙트 · 피격 반응 — 속은 여기 `settingsBody`) · Palette(배경 · 글자 색을 눈으로 맞추는 개발 장치)
@@ -619,31 +622,41 @@ function segmented(items, current, onPick) {
 }
 
 /**
- * `⚙` 판 설정 탭의 속 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414 · ADR-0454 · ADR-0459) — 줄 넷: 스킬 이펙트 · 피격 반응(줄마다 [Off] [On] · 따로 켜고 끈다) · 몬스터 흔들림 [0] [1] [2] [3] · 로그 [칸] [문장].
+ * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · Card(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
- * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`)
+ * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 초상을 바꾼다.
  */
 function settingsBody() {
     const box = el('div', 'set-box');
-    for (const [k, label, isOn] of [['skill', 'set.skillFx', skillFxOn], ['hit', 'set.hitFx', hitFxOn]]) {
+    const artRow = el('div', 'set-row');
+    artRow.appendChild(el('span', 'set-k', t('set.artStyle')));
+    artRow.appendChild(faceStyleButtons());
+    box.appendChild(artRow);
+    // [Off] [On] 한 줄 — 스킬 이펙트 · 피격 반응 · 공격 시 흔들림이 같은 틀이다 (`k` = fx.js:setFxOn 의 키)
+    const onOffRow = (k, label, isOn) => {
         const row = el('div', 'set-row');
         row.appendChild(el('span', 'set-k', t(label)));
         row.appendChild(segmented([{ id: 'off', label: t('set.off') }, { id: 'on', label: t('set.on') }],
             isOn() ? 'on' : 'off', id => { setFxOn(k, id === 'on'); box.replaceWith(settingsBody()); }));
         box.appendChild(row);
-    }
-    // 몬스터 흔들림 [0] [1] [2] [3](0 = 번쩍임만) —피격 반응이 꺼져 있으면 먹지 않으므로 흐려져 안 눌린다(값은 남는다 · ADR-0454)
+    };
+    onOffRow('skill', 'set.skillFx', skillFxOn);
+    onOffRow('hit', 'set.hitFx', hitFxOn);
+    // 피격 시 흔들림 [0] [1] [2] [3](0 = 번쩍임만) —피격 반응이 꺼져 있으면 먹지 않으므로 흐려져 안 눌린다(값은 남는다 · ADR-0454)
     const row = el('div', 'set-row');
     row.appendChild(el('span', 'set-k', t('set.shake')));
     row.appendChild(segmented(SHAKE_LEVELS.map(n => ({ id: n, label: String(n), disabled: !hitFxOn() })),
         shakeLevel(), id => { setShakeLevel(id); box.replaceWith(settingsBody()); }));
     box.appendChild(row);
+    // 공격 시 흔들림 — 때린 카드 튀어나감 · 피격 반응과 따로 켜고 끈다(흐리지 않는다 · ADR-0468)
+    onOffRow('lunge', 'set.lunge', lungeFxOn);
     // 로그 [칸] [문장] — 관전 로그 한 줄을 네 칸 격자로 찍나 한 문장으로 찍나 (ADR-0459) · 이 줄의 버튼 글은 언어를 따른다
     const logSet = el('div', 'set-row');
     logSet.appendChild(el('span', 'set-k', t('set.log')));
     logSet.appendChild(segmented(LOG_STYLES.map(s => ({ id: s, label: t(s === 'grid' ? 'set.logGrid' : 'set.logText') })),
         logStyle(), id => { setLogStyle(id); box.replaceWith(settingsBody()); }));
     box.appendChild(logSet);
+    mountCardCompare(box, render);   // 임시 — 마지막 줄 Card [Before | After] (devcompare.js · SCREEN_DESIGN §10-2)
     return box;
 }
 
@@ -4768,7 +4781,17 @@ function renderTavern(main) {
     const grid = el('div', 'tv-cands');
     T.candidates.forEach((c, i) => {
         // 고용한 칸은 빈 채로 남는다 — 다음 리롤에 채워진다 (base_expedition_design §2-4)
-        if (!c) { grid.appendChild(el('div', 'ng-card tv-empty', t('tv.empty'))); return; }
+        //   빈 칸은 **후보 카드와 같은 높이**다 — 카드 한 장을 숨긴 채 깔아 자리를 잡는다. 글자 높이로 두면 후보가 다 고용됐을 때
+        //   줄 높이를 수색 칸이 정해 영입 후보 패널이 줄고 의뢰 줄이 늘어난다 (SCREEN_DESIGN §8-1). 로스터가 비면 깔 카드가 없다
+        if (!c) {
+            const ghost = G.heroes[0];
+            const cell = ghost ? candidateCard(ghost, `<button class="btn primary sm b-hire">${t('tv.hire', { g: B.tavern_hire_cost.toLocaleString() })}</button>`) : el('div', 'ng-card');
+            cell.classList.add('tv-empty');
+            cell.style.borderTopColor = '';
+            cell.appendChild(el('div', 'tv-empty-l', t('tv.empty')));
+            grid.appendChild(cell);
+            return;
+        }
         // 선술집을 안 지었으면 [고용]은 흐리고(눌린다) 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308)
         const card = candidateCard(c, `<button class="btn primary sm b-hire${T.open ? '' : ' dim'}" ${T.open && (full || G.resources.gold < B.tavern_hire_cost) ? 'disabled' : ''}>${t('tv.hire', { g: B.tavern_hire_cost.toLocaleString() })}</button>`);
         card.querySelector('.b-hire').onclick = () => {
@@ -5847,14 +5870,22 @@ function renderCodex(main) {
 }
 
 /** 얼굴 스타일 고르개 — 몬스터 · 캐릭터 세그먼트가 같이 쓴다. 전환은 **전역**이다(`?face=` · localStorage 와 같은 자리 — §9-1).
- *  **스타일이 하나면 안 선다** [2026-09-17] — `pixel16` 폴더가 사라져 목록이 `cartoon` 하나가 됐고,
- *  고를 것이 없는 세그먼트는 누를 수 없는 버튼 하나로 남는다. 폴더를 더하면 저절로 다시 선다 */
+ *  스타일이 하나면 고르개를 생략한다. 현재 `gemini` · `gpt`는 상단바 · 설정과 같은 고르개를 쓴다. */
 function faceStylePicker(box) {
     if (M.FACE_STYLES.length < 2) return box;
     box.appendChild(el('span', 'muted', t('ix.style')));
-    box.appendChild(segmented(M.FACE_STYLES.map(f => ({ id: f, label: f })), M.faceStyle(),
-        id => { M.setFaceStyle(id); render(); }));
+    box.appendChild(faceStyleButtons());
     return box;
+}
+
+/** 상단바 · 설정 · 도감이 같은 초상 스타일과 저장값을 공유한다. */
+function faceStyleButtons() {
+    const buttons = segmented(M.FACE_STYLES.map(id => ({ id, label: id })), M.faceStyle(),
+        id => { M.setFaceStyle(id); render(); });
+    for (const [i, button] of [...buttons.children].entries()) {
+        button.setAttribute('aria-pressed', String(M.FACE_STYLES[i] === M.faceStyle()));
+    }
+    return buttons;
 }
 
 /** 몬스터 세그먼트 — 처치 도감 (§9). 레벨의 출처는 처치 수 실집계(G.codexKills · 2026-09-21 카드 → 처치 수) */
@@ -6018,7 +6049,7 @@ function codexCharacter(p) {
     box.innerHTML = (D.classes ?? []).map(c => {
         const n = M.HERO_FACES[c.id] ?? 0;
         const tiles = Array.from({ length: n }, (_, i) =>
-            artTile(`${dir}hero/${c.id}_${i + 1}.webp`, L(M.HERO_FACE_NAMES[`${c.id}_${i + 1}`]) || `${i + 1}`, 'box'));
+            artTile(M.facePath(`hero/${c.id}_${i + 1}.webp`), L(M.HERO_FACE_NAMES[`${c.id}_${i + 1}`]) || `${i + 1}`, 'box'));
         return tiles.length ? artGroup(t('ix.g.heroCls', { cls: className(c.id) }), `${dir}hero/`, tiles) : '';
     }).join('');
     p.appendChild(box);

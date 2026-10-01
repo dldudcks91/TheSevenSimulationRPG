@@ -7,14 +7,16 @@ user-invocable: true
 
 # art-prompt — 초상 발주 · 실측 · 설치
 
-당신은 TheSevenSimulationRPG 의 **초상 아트 발주자**입니다. 그림은 사용자가 Gemini(Gem)로 뽑고, 당신은 **프롬프트를 쓰고 · 산출물을 재고 · 후처리해 게임에 꽂는다.** 일반 초상의 기본 앵커는 `gladiator_helm.png` · `barbarian.png`지만, **1-2 인간 몬스터 재발주는 현행 `source/ready/hero/` 영웅 초상화의 실제 그림결을 우선**한다. 구체적인 비교 관문은 [`character_portrait_prompt.md`](../../../docs/reference/character_portrait_prompt.md)의 「1-2 인간 몬스터 3종」 절이다.
+2026-10-01 경로: 기본 설치본은 `faces/gemini/`, GPT 초상은 `faces/gpt/`다. 1-2 인간 3종 · 1-4 전체(정예·보스 포함)는 GPT에 있다. 내보내기 도구는 현재 폴더를 유지하며 새 WebP를 직접 넣으면 `python scripts/export_face_portraits.py --index-only`로 파일 목록을 갱신한다.
+
+당신은 TheSevenSimulationRPG 의 **초상 아트 발주자**입니다. 그림은 사용자가 Gemini(Gem)로 뽑고, 당신은 **프롬프트를 쓰고 · 산출물을 재고 · 후처리해 게임에 꽂는다.** **그림체 기준은 현행 영웅 초상(`source/ready/hero/`)이다** [2026-10-01 사용자 — 1-2 인간 몬스터에만 걸던 규칙을 모든 발주로 넓혔다]. 우리 그림은 일본풍이 아니라 **서양 다크 카툰** — 굵은 외곽선 · 탁한 색 · **입을 다문 무뚝뚝한 연기**다. 몬스터도 영웅과 같은 톤으로 연기한다. 옛 앵커 `gladiator_helm.png` · `barbarian.png` 는 실측 합격선(원칙 2)의 출처로만 남는다. 비교 관문은 [`character_portrait_prompt.md`](../../../docs/reference/character_portrait_prompt.md)의 「1-2 인간 몬스터 3종」 절이 원형이다.
 
 ## 언제 사용
 
 - 영웅·몬스터 초상을 새로 발주한다 / 재발주한다 (스케치 모드)
 - 사용자가 고른 스케치를 가져와 디벨롭한다 (세부 모드)
 - 산출물이 "크다 · 작다 · 꽉 찬다 · 몸이 높다 · 너무 섬세하다 · 너무 단순하다" — 원인을 재서 갈라야 한다
-- 시트를 잘라 누끼 → 여백 정규화 → `cartoon/hero/<직업id>_<k>.png` 로 설치한다
+- 시트를 잘라 누끼 → 여백 정규화 → `gemini/hero/<직업id>_<k>.png` 로 설치한다
 - 프롬프트에 색을 지정한다 (초록 배경 키잉과 부딪히는지 확인이 필요하다)
 
 **여기서 하지 않는 것** — 화면이 초상을 어떤 칸에 어떤 보간으로 그리느냐는 `/ui` 소관([SCREEN_DESIGN.md §5](docs/client/SCREEN_DESIGN.md) · `--face-render`). 어떤 몬스터·영웅이 얼굴을 갖느냐(`monster.csv:face`)는 기획 소관(`/game-design`). 스킬·아이템 아이콘은 초상과 누끼 절차가 달라 [src/assets/art/README.md](src/assets/art/README.md) 의 해당 절을 직접 따른다.
@@ -34,7 +36,7 @@ user-invocable: true
 
 ## 핵심 원칙 — 전부 실측에서 나왔다 (2026-09-06 · 원칙 1 은 09-08 개정)
 
-0. **기존 캐릭터·몬스터를 실제로 보고 시작한다** [사용자 확정 2026-09-24] — 텍스트 설명만 읽고 초상을 생성하는 것은 금지한다. 재발주는 대상의 현행 `source/ready/` 원본을 열어 확인하고, 외형 보존이 목표일 때 생성기에 넣는다. 사용자가 기존 얼굴·그림결을 버리고 재설계를 요청했다면 그 원본은 직업·장비 분석에만 쓰고, 생성 입력은 현행 영웅 그림체 참조에 집중할 수 있다. 신규 대상은 같은 종족을 우선하고 같은 챕터·진영·역할 순으로 가까운 기존 초상을 골라, 최소 **외형 참조 1장 + 그림체 참조 1장**을 생성기에 함께 넣는다. 파일명·README만 보지 말고 이미지를 직접 열어 얼굴형·눈·머리·피부색·장비 실루엣·강조색을 확인한다. 맞는 참조가 없으면 임의로 뽑지 말고 참조 부재를 먼저 보고한다. 산출물도 참조와 나란히 검수하며, 생김새가 이어지지 않으면 설치하지 않는다. 상세 관문은 [`character_portrait_prompt.md`](../../../docs/reference/character_portrait_prompt.md)다.
+0. **기존 캐릭터·몬스터를 실제로 보고 시작한다** [사용자 확정 2026-09-24] — 텍스트 설명만 읽고 초상을 생성하는 것은 금지한다. 재발주는 대상의 현행 `source/ready/` 원본을 열어 확인하고, 외형 보존이 목표일 때 생성기에 넣는다. 사용자가 기존 얼굴·그림결을 버리고 재설계를 요청했다면 그 원본은 직업·장비 분석에만 쓰고, 생성 입력은 현행 영웅 그림체 참조에 집중할 수 있다. **「그림체가 우리 것과 다르다」는 재발주가 이 경우다** — 기존 그림을 생성기에 넣으면 틀린 연기까지 그대로 복제된다(10-01 임프 2×2 — 1401 · 1402 를 붙여 뽑은 네 장이 전부 이빨 웃음). 신규 대상은 같은 종족을 우선하고 같은 챕터·진영·역할 순으로 가까운 기존 초상을 골라, 최소 **외형 참조 1장 + 그림체 참조 1장**을 생성기에 함께 넣는다. 파일명·README만 보지 말고 이미지를 직접 열어 얼굴형·눈·머리·피부색·장비 실루엣·강조색을 확인한다. 맞는 참조가 없으면 임의로 뽑지 말고 참조 부재를 먼저 보고한다. 산출물도 참조와 나란히 검수하며, 생김새가 이어지지 않으면 설치하지 않는다. 상세 관문은 [`character_portrait_prompt.md`](../../../docs/reference/character_portrait_prompt.md)다.
 1. **첨부가 지시를 이긴다 — 그래서 짧게 쓴다.** 프롬프트는 `Match the attached portraits exactly` 로 연다(앵커가 어디 붙는지는 위 「두 모드」). **공통 지시는 8줄 이내 · 부정문은 2개 이내**로 맞추고, 기본 3×3 시트에는 **1~9번 짧은 인물 소재를 한 줄씩 전부 채운다**([prompt_template.md §1](prompt_template.md)). 생성기는 첨부한 그림과 쓴 글을 **경쟁시킨다** — 지시가 한 줄 늘 때마다 앵커의 지분이 줄고, 그만큼 **우리가 가진 그림에서 멀어진다**(사용자 지시 2026-09-08). 장문 규칙서는 앞의 원칙을 뒤의 구체 지시가 이기기까지 한다(머리말에 「저디테일」을 써 놓고 타일에 `rust · studs · beads` 를 적으면 디테일이 2배로 나온다). **적는 것은 그림 안에 없는 넷뿐이다** — 시트 규격 · 초록 계약 · 여백 · 소재. 두상 비율·외곽선·음영·눈·디테일은 **적지 않고 앵커에 맡긴다.** 안 닮게 나오면 지시를 더하는 게 아니라, 실측 증상에 맞는 **한 줄만** 되살린다(prompt_template §1-2 복구 사다리).
 2. **합격선은 앵커 실측값이다.** 아래 표 밖이면 눈으로 "괜찮아 보여도" 불합격이다. 재는 도구는 [measure.py](measure.py).
 
@@ -48,7 +50,7 @@ user-invocable: true
    | 경계밀도 | **8~19%** | 25% 면 주름·긁힘·녹이 들어간 것 |
    | 눈 | **검은 덩어리** | 앵커 전부 흰자·홍채·하이라이트 없음. 표정은 눈 모양 + 눈썹이 만든다 |
 
-3. **초록 배경은 키잉 계약이다.** `#00FF00` 위에 뽑고 `g − max(r,b)` 40~120 을 알파 경사로 키잉한다([cartoon/README.md](src/assets/art/faces/cartoon/README.md)). 그래서 **인물에 순색 초록이 있으면 그 자리가 뚫린다**(숲 초록 `#2d6a2d` = 61). 반대로 **올리브·카키·이끼·세이지는 안전**(−10~16) — 레인저의 초록을 포기할 필요는 없다. 색 표는 [prompt_template.md](prompt_template.md) §3.
+3. **초록 배경은 키잉 계약이다.** `#00FF00` 위에 뽑고 `g − max(r,b)` 40~120 을 알파 경사로 키잉한다([faces/README.md](src/assets/art/faces/README.md)). 그래서 **인물에 순색 초록이 있으면 그 자리가 뚫린다**(숲 초록 `#2d6a2d` = 61). 반대로 **올리브·카키·이끼·세이지는 안전**(−10~16) — 레인저의 초록을 포기할 필요는 없다. 색 표는 [prompt_template.md](prompt_template.md) §3.
 4. **과거 2×2 시트의 워터마크 사례.** 당시 2048² 2×2 시트의 우하단에 ✦ 워터마크가 박혀 4번을 버렸다. 현재 기본 3×3 시트에는 이 폐기 규칙을 적용하지 않는다. 아홉 칸을 모두 확인하고 문제가 생긴 칸만 판단한다.
 5. **크롭·스케일로 고칠 수 있는 것과 없는 것을 먼저 가른다.** 어깨폭·몸 시작은 여백 패딩으로 잡힌다(원칙 2 표의 첫 두 줄). **머리폭/어깨폭은 어떤 변환으로도 안 변한다** — 어깨를 줄이려 축소하면 머리도 같이 줄어 제자리다. 이 값이 틀리면 프롬프트를 고쳐 다시 뽑는다.
 6. **한 세트 안에서 실루엣 축은 하나다.** 투구를 벗기면 머리 모양이, 후드를 씌우면 후드 모양이, 무기를 빼면 어깨 장비가 인물들을 가른다. **축을 뺄 때는 대체 축을 같이 넣는다** — 안 넣으면 아홉이 같은 사람으로 나온다. 44px 에서 갈리는 것은 실루엣뿐이다([portrait_art_style_study.md §1-4](docs/reference/portrait_art_style_study.md)).
@@ -69,7 +71,7 @@ user-invocable: true
 
 - [src/assets/art/README.md](src/assets/art/README.md) `faces/` 절 — 폴더 규칙 · 파일명 = `monster/<idx>` / `hero/<직업id>_<k>`(2026-09-07 · 폴더 분리 2026-09-14) · `FACE_STYLES` · 보간 토큰
 - [faces/source/README.md](src/assets/art/faces/source/README.md) — 앵커 목록 · 시트 격자 좌표 · 누끼 이력 · **이 세트가 정의하는 스타일** 절. **폴더는 넷이다** [2026-09-16] — `anchors/`(합격선의 SSOT 3장) · `sheets/`(자르기 전 원본 시트) · `hero/` · `monster/`
-- [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) — 키잉 절차 · `HERO_FACES` 현재값 · **영웅 파일 매핑 표**(구 번호 → 직업 이름)
+- [faces/README.md](src/assets/art/faces/README.md) — 키잉 절차 · `HERO_FACES` 현재값 · **영웅 파일 매핑 표**(구 번호 → 직업 이름)
 - `src/ui/mock.js` 의 `HERO_FACES` 실제 값 (README 와 어긋나 있을 수 있다 — 코드가 맞다)
 - `ls -lt src/assets/art/faces/source/sheets/` — 최신 시트가 무엇인지
 - **필수 참조를 직접 연다** — 재발주는 대상의 `source/ready/` 원본, 신규는 같은 종족 + 같은 챕터·진영·역할의 가까운 기존 초상. 최소 외형 1장 + 그림체 1장을 이미지로 확인하고 생성 입력에 넣기 전에는 1단계로 가지 않는다
@@ -106,12 +108,12 @@ user-invocable: true
 - 아홉이 닮음 → 실루엣 축이 빠진 것(원칙 6)
 - 반드시 **눈으로도 본다** — 몽타주를 만들어 `Read` 한다. 후드 속 얼굴이 검은 void 로 나오는 실패는 수치에 안 잡힌다
 
-**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `source/hero/<설명>.png`(SSOT · 몬스터면 `source/monster/`) + `cartoon/hero/<직업id>_<k>.png`(사본 · 2026-09-07 직업 분류).
+**4. 후처리** — [postprocess.md](postprocess.md). 격자 절단 → 초록 키잉(despill) → bbox → **어깨폭 74% 패딩** → 512² → `source/hero/<설명>.png`(SSOT · 몬스터면 `source/monster/`) + `gemini/hero/<직업id>_<k>.png`(사본 · 2026-09-07 직업 분류).
 
 **5. 설치 + 문서**
 
 - `src/ui/mock.js` `HERO_FACES[<직업id>]` 를 새 장수로 [개정 2026-09-07] — **늘리는 방향은 무해하다**(얼굴이 세이브에 박혀 있어 기존 영웅은 안 바뀐다). ⚠ **줄이는 방향만** 영향이 있다(범위 밖 저장값은 그 직업 풀 안에서 접힌다). 교체(기존 번호에 덮어쓰기)인지 추가인지 사용자에게 묻는다
-- [faces/cartoon/README.md](src/assets/art/faces/cartoon/README.md) 의 `hero_*` 절 · [faces/source/README.md](src/assets/art/faces/source/README.md) 의 영웅 표 · 두 문서 꼬리 날짜(날짜만)
+- [faces/README.md](src/assets/art/faces/README.md) 의 `hero_*` 절 · [faces/source/README.md](src/assets/art/faces/source/README.md) 의 영웅 표 · 두 문서 꼬리 날짜(날짜만)
 - ⚠ **몬스터를 건드렸으면 챕터 시트를 다시 찍는다** [2026-09-17 사용자 지시] — `python .claude/skills/art-prompt/build_chapter_sheets.py`. `faces/source/chapters/ch<챕터>_st<스테이지>.png` 는 **그 스테이지 한 판(일반 3 + 보스 1)** 이라 초상을 넣거나 빼거나 다른 스테이지로 옮기면 바로 낡는다. 설치 · 교체 · 삭제 · `monster.csv` 의 스테이지 이동 모두 해당한다 → [chapters/README.md](src/assets/art/faces/source/chapters/README.md)
 - 보고에는 **실측 표(전/후) · 설치한 파일 · `HERO_FACES` 변경 여부 · 다시 찍은 챕터 시트 · 건너뛴 것**
 
@@ -119,6 +121,7 @@ user-invocable: true
 
 | 증상 | 원인이었던 것 | 처방 |
 |---|---|---|
+| **미국 카툰 악당처럼 튄다** — 선 · 음영은 같은데 이빨 웃음 · 큰 머리와 귀 · 쨍한 피부 | 소재 단어(`imp` · `goblin` · `mischievous`)가 장르 관습째 연기를 끌고 왔다 + 그 카툰 그림을 외형 참조로 다시 붙였다 (10-01 1401 · 1402) | 그림체 참조는 영웅 초상 · 기존 그림은 빼고 · 소재는 역할로 부른다([§2](prompt_template.md)). 표정을 글로 묘사하지 않는다 — 골격 첫 줄의 연기 톤 한 구절이면 된다 |
 | **우리 그림과 안 닮는다** — 지표는 대개 들어오는데 다른 세트로 보인다 | 프롬프트가 길어 **지시가 앵커를 이겼다.** 설명한 항목만 과대하게 반영된다 | 지시문을 **8줄 · 부정문 2개**로 잘라 다시 뽑는다([§1](prompt_template.md)). 틀린 지표는 §1-2 사다리에서 한 줄씩 |
 | 어깨가 프레임 양끝에 닿는다 (100%) | `oversized / heavy pauldrons`. 단어 **`pauldron` 자체**가 「크고 화려한 어깨갑옷」 신호 | `thin shoulder plates` · `sits flat, below the collarbone` + 여백 패딩 |
 | 몸이 턱까지 올라온다 (몸 시작 61%) | `chainmail collar` · `tall gorget` · `high collar` — 목 옆을 메운다 | 목가리개 계열 전부 삭제 · `whole neck visible with background on both sides` |
@@ -152,4 +155,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-09-17*
+*마지막 업데이트: 2026-10-01*

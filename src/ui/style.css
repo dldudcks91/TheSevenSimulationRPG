@@ -187,7 +187,7 @@
 }
 /* 배경 도트 스타일 — 보간하면 도트가 뭉간다. 기본값(일러스트)은 반대로 켜 두여야 축소할 때 선이 안 끊긴다
    (512를 26px 칸에 넣으면 20픽셀 중 1픽셀만 남는다 — 초상에서 겪은 것과 같은 함정).
-   ⚠ 얼굴 쪽 형제 토큰은 `--face-render` 다. 스타일이 `cartoon` 하나뿐이라 **재정의가 없다**
+   ⚠ 얼굴 쪽 형제 토큰은 `--face-render` 다. `gemini` · `gpt` 모두 손그림이라 **재정의가 없다**
       [2026-09-17 — `faces/pixel16/` 폴더가 사라져 `:root[data-face="pixel16"]` 규칙을 걷었다].
       ⚠ 스타일을 안 타는 자리 둘 — `#stage::before`(거점)는 계승 도트 한 벌뿐이라 `pixelated` 를 박고,
       `.ex-map`(탐험 지도)은 신규 카툰 아트라 아예 안 건다 (2026-09-04) */
@@ -332,6 +332,7 @@ html, body { height: 100%; overflow: hidden; }
 .tab-seg .btn.seg-live.on { border-color: var(--color-info); }
 .tab-seg .btn.seg-over.on { border-color: var(--color-error); }
 .resources { display: flex; gap: 18px; font-size: var(--fs-sm); }
+.resources .face-style-buttons { align-items: center; flex-wrap: nowrap; }
 .resources span b { color: var(--text-primary); margin-left: 6px; }
 .resources span { color: var(--text-muted); }
 /* 플레이 시간 — 골드와 같은 모양 · 숫자 폭을 고르게 둬 1초마다 바뀌어도 옆 버튼이 안 흔들린다 (SCREEN_DESIGN §2 · ADR-0356) */
@@ -3529,11 +3530,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    **2026-09-08 에 전부 삭제됐다** — 카드가 `.ng-card` 규격을 그대로 탄다. 남는 것은 명단 격자와
    선술집에만 있는 조각들(고용 버튼 · 빈 칸 · 수색 칸)뿐이다 */
 /* 고용한 칸 — 빈 채로 남는다. 카드 자리를 지켜야 명단이 「줄었다」가 아니라 「비었다」로 읽힌다.
-   그래서 격자의 `align-items: start` 를 **여기서만 되돌린다** — 빈 칸이 글자 높이로 쪼그라들면 자리가 사라진다 */
-.tv-cands .tv-empty {
-    align-self: stretch;
+   그래서 격자의 `align-items: start` 를 **여기서만 되돌린다** — 빈 칸이 글자 높이로 쪼그라들면 자리가 사라진다.
+   **높이는 숨긴 카드 한 장이 정한다** [2026-09-30 사용자 지시 · SCREEN_DESIGN §8-1] — 칸 안에 후보 카드를 안 보이게 깔고 글은 그 위에 얹는다.
+   후보가 다 고용돼도 줄 높이가 카드 높이라 영입 후보 패널 · 의뢰 줄의 높이가 안 바뀐다 */
+.tv-cands .tv-empty { align-self: stretch; position: relative; border-style: dashed; background: none; }
+.tv-cands .tv-empty > * { visibility: hidden; }
+.tv-cands .tv-empty > .tv-empty-l {
+    visibility: visible; position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center; text-align: center;
-    color: var(--text-muted); font-size: var(--fs-sm); border-style: dashed; background: none;
+    color: var(--text-muted); font-size: var(--fs-sm);
 }
 .tv-cands .b-hire { width: 100%; margin-top: 7px; }
 /* 수색 칸 — 후보 카드와 **같은 크기**다 (2026-09-01 사용자 지시 · SCREEN_DESIGN §8-1 · 실동작 ADR-0062).
