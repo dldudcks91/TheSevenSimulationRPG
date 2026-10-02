@@ -63,6 +63,7 @@ export const PORTRAIT_FILES = {
     "monster/3401.webp",
     "monster/3402.webp",
     "monster/3403.webp",
+    "monster/4203.webp",
     "monster/4303.webp",
     "monster/4303_elite.webp",
     "monster/goblin_worker.webp"
@@ -121,6 +122,26 @@ export const PORTRAIT_FILES = {
     "monster/2301.webp",
     "monster/2303.webp",
     "monster/2350.webp",
-    "monster/2401.webp"
+    "monster/2401.webp",
+    "monster/2402.webp",
+    "monster/2403.webp",
+    "monster/2900.webp",
+    "monster/3103.webp",
+    "monster/3103_elite.webp",
+    "monster/3201.webp",
+    "monster/3201_elite.webp",
+    "monster/3202.webp",
+    "monster/3202_elite.webp",
+    "monster/3203.webp",
+    "monster/3203_elite.webp",
+    "monster/3301.webp",
+    "monster/3302.webp",
+    "monster/3303.webp",
+    "monster/3401.webp",
+    "monster/3402.webp",
+    "monster/3403.webp",
+    "monster/4303.webp",
+    "monster/4303_elite.webp",
+    "monster/goblin_worker.webp"
   ]
 };

@@ -12,8 +12,9 @@
  *     챕터보스 스테이지는 **보스 1라운드**다 (base_expedition_design §1-2 개정 2026-09-11). 편성은 round_budget.csv ·
  *     스테이지 컨셉이 편성을 바꾸는 예외는 spawn_rule.js (monster_design §4 · 2026-09-18)
  *   · 행동 주기 단일 축 (공격/캐스팅 같은 시계), 한 차례에 하나
- *   · **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 차례가 와도 준비된 스킬이 없으면
- *     **찬 채로 기다렸다가** 스킬이 준비되는 틱에 곧바로 시전한다(`noBasic` · 틱 루프). 영웅 · 몬스터 같은 규칙 · rng 0
+ *   · **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 시전 게이지는 **칸 충전식**이다(R200 · `chargeTick`):
+ *     한 바퀴에 칸 하나(상한 [balance.csv:cast_charge_max]) · 시전 한 번에 칸 하나 · 쌓인 칸만큼 틱마다 연달아. 영웅 · 몬스터 같은 규칙 · rng 0
+ *   · **행동 게이지는 빈 채로 출발한다** [2026-10-02 · 사용자 확정 · R200 · battle_design §6] — 첫 차례(첫 칸)는 한 바퀴 뒤
  *   · **몬스터도 영웅과 같은 모양이다** — 직업 · 기본 능력치 7종 · 고유 스킬 · 장비 (monster_design §5-1 · 사용자 지시 2026-09-11).
  *     ~~몬스터 소재값(monster.csv) × 등급 배율(spawn_grade.csv)~~ 은 폐기 — `hp`·`attack`·`action_period` 컬럼이 없어졌다
  *   · 용어는 "사망"이 아니라 **전투불능** — 라운드 사이 회복 없음. 회복은 전투 안에서만 일어나고
@@ -299,7 +300,11 @@ export function createBattleSystem(data) {
             regen: c.hp_regen ?? 0, regenBase: c.hp_regen ?? 0, regenAcc: 0,
             cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축(비율) — 시전 시점에 곱한다
             period: c.action_period, basePeriod: c.action_period,
-            next: 0,
+            // 행동 게이지는 **빈 채로 출발한다** [2026-10-02 · 사용자 확정 · R200 · battle_design §6 — ~~`next: 0` 곧바로 차례~~] — 첫 차례(마법 무기는 첫 칸)는 한 바퀴 뒤.
+            //   자리가 정하는 엇갈림(파티 편성 차례 · 적 등장 지연)은 부르는 쪽이 extra 로 더 얹는다 · `fillAt` = 그 게이지가 차기 시작하는 시각(재생기 표시값)
+            next: c.action_period, fillAt: 0,
+            // 마법 무기의 쌓인 칸 [2026-10-02 · R200 · battle_design §3] — `noBasic` 만 읽는다 · 상한 [balance.csv:cast_charge_max]
+            charges: 0,
             // 물리 경직 (battle_design §2-3 · R110) — 타격 회복(비율)이 경직 시간을 줄이고, `stagUntil` 은 경직이 끝나는 시각이다(`stagger`)
             fhr: c.fhr ?? 0, stagUntil: 0,
             // 스턴이 끝나는 시각(`stun` · battle_design §2-7) · 중독 틱 누산(`poisonTick` · §2-6) — 전투 안에서만 사는 값 (2026-09-28 · R178)
@@ -573,7 +578,8 @@ export function createBattleSystem(data) {
             key: `p${i}`, uid: p.uid,
             stats: p.stats ?? null,      // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10)
             rank: p.rank ?? 0,           // 진형 — 편성이 정한 자리 (state.formationState · 배치가 없으면 전열)
-            next: i * 0.3,               // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다
+            // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다. 빈 게이지 한 바퀴 **뒤에** 얹는다 (R200 · INTERFACE §5-3)
+            next: p.combat.action_period + i * 0.3, fillAt: i * 0.3,
             reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
             potionReadyAt: 0,            // 제 물약이 다시 준비되는 시각 — **준비 상태로 출발한다**(스킬과 같은 규칙 · R103). 갈아입기(`refit`)가 안 건드린다
             // 칸 순서 = 출처 자리. **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 첫 준비 시각 0.
@@ -671,6 +677,7 @@ export function createBattleSystem(data) {
             ...(e.hero ? { hero: e.hero, rank: e.rank } : {}),
             key: e.key, monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? null,
             traits: e.traits ?? null, hpMax: e.hpMax, period: e.period,
+            fillAt: r1(e.fillAt),   // 첫 게이지가 차기 시작하는 시각 — 빈 채로 출발한다 (R200 · INTERFACE §2-6)
             atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, noBasic: e.noBasic,   // noBasic = 행동 게이지 색 (마법 무기 — R198 · SCREEN_DESIGN §4-2 · ADR-0476)
             stats: e.stats ? { ...e.stats } : null,
             ...slotView(e),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
@@ -687,7 +694,8 @@ export function createBattleSystem(data) {
             // 09-14 로 레벨업이 능력치를 안 올려(R83) 복사의 원래 이유는 사라졌다.
             // 전투에는 안 쓰이고 타임라인에도 안 들어가므로 rng·골든 지문과 무관하다
             // noBasic 은 행동 게이지 색이다(마법 무기 = 파랑 · R198 · SCREEN_DESIGN §4-2 · ADR-0476)
-            party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period,
+            // fillAt = 첫 게이지가 차기 시작하는 시각 — 게이지가 빈 채로 출발한다 (R200)
+            party: party.map(p => ({ key: p.key, uid: p.uid, hpMax: p.hpMax, period: p.period, fillAt: r1(p.fillAt),
                 atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType, noBasic: p.noBasic, stats: p.stats ? { ...p.stats } : null,
                 ...slotView(p) })),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             // 보상 칸(xpTotal · gold · kills · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
@@ -820,8 +828,12 @@ export function createBattleSystem(data) {
             // 적 스킬도 **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 등장 라운드 시작 시각에 곧바로 쓴다. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
             //   꺼진 칸(무기가 안 맞는 배운 칸 · R187 · R197 — 몬스터는 배운 칸이 없어 지금은 없다)은 그대로 둔다 — 되돌리면 켜진다
             for (const e of units.enemies) for (const a of e.actives) if (!a.off) a.readyAt = t;
-            // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게)
-            for (const e of units.enemies) e.next = 0.4 + rng() * 0.6;
+            // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게) — 게이지는 등장한 순간부터 빈 채로 찬다 (R200)
+            for (const e of units.enemies) {
+                const lag = 0.4 + rng() * 0.6;
+                e.next = e.period + lag;
+                e.fillAt = t + lag;
+            }
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
             out.rounds.push(roundLog);
             timeline.push({ t: r1(t), e: 'round', n: round, kind: sp.type, enemies: units.enemies.map(enemyView) });
@@ -935,6 +947,8 @@ export function createBattleSystem(data) {
                     refreshDerived(m);
                 }
                 m.next = m.period;
+                m.fillAt = at;                 // 빈 게이지가 이 시각부터 찬다 (R200)
+                m.charges = 0;                 // 되살아나도 칸은 0 에서 (R200)
                 for (const a of m.actives) if (!a.off) a.readyAt = at;   // 꺼진 칸은 그대로 (R187)
             }
             // 오오라 — 라운드 시작과 같은 함수다. 이미 걸린 유닛은 칸에서 오오라가 빠져 있어 다시 안 걸린다
@@ -1025,6 +1039,32 @@ export function createBattleSystem(data) {
             for (const a of u.actives) if (a.readyAt > t + EPS) a.readyAt += cd;
             u.stunUntil = end;
             return cd;
+        }
+
+        /**
+         * 마법 무기의 한 틱 — **칸 충전식** [2026-10-02 · 사용자 확정 · R200 · battle_design §3 — ~~찬 채로 기다렸다가 준비되는 틱에 시전~~(R198)].
+         *   ① 채우기 — 칸이 상한([balance.csv:cast_charge_max]) 밑이면 게이지(`next`)가 돌고, 다 차면 칸 하나 · `charge` 이벤트 · 다음 칸을 새로 채운다.
+         *      칸이 다 차면 게이지가 선다(`next` 를 안 줄인다 — 그 값은 시전이 다시 세운다)
+         *   ② 시전 — 칸이 있고 · 경직 · 스턴이 아니고 · 고를 스킬이 있으면 칸 하나를 쓰고 시전한다. **틱 하나에 하나** — 쌓인 칸만큼 틱마다 연달아 나간다.
+         *      다 찬 채 서 있던 게이지는 이 순간 다시 돈다 · 차던 게이지는 안 건드린다(충전식). `act` 가 아무것도 안 했으면(적이 없다) 칸을 되돌린다
+         *   경직 · 스턴은 `next` 를 밀어 채우기를 멈춘다(`stagger` · `stun` 그대로) — 시전은 위 조건이 막는다. rng 0
+         */
+        function chargeTick(u) {
+            const max = B.cast_charge_max;
+            if (u.charges < max) {
+                u.next -= TICK;
+                if (u.next <= STEP_EPS) {
+                    u.charges += 1;
+                    u.next = u.period;
+                    timeline.push({ t: r1(t), e: 'charge', u: u.key, ch: u.charges });
+                }
+            }
+            // 멈춤 판정은 끝 시각과 같은 여유로 — `t += TICK` 의 누적 오차가 틱 하나를 더 막지 않게 (#69 와 같은 이유)
+            if (u.charges <= 0 || u.stagUntil > t + STEP_EPS || (u.stunUntil ?? 0) > t + STEP_EPS || !rt.pick(u, t)) return;
+            const full = u.charges >= max;
+            u.charges -= 1;
+            if (!rt.act(u, t)) { u.charges += 1; return; }
+            if (full) u.next = u.period;
         }
 
         /**
@@ -1281,6 +1321,7 @@ export function createBattleSystem(data) {
                     t: r1(t), e: 'refit', u: u.key, hpMax: u.hpMax, dhp: u.hp, period: u.period,
                     atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax, atkType: u.atkType,
                     noBasic: u.noBasic,   // 무기를 바꾸면 행동 게이지 색도 바뀐다 (REFIT_FIELDS · ADR-0476)
+                    ch: u.charges,        // 쌓인 칸 — 갈아입기가 안 건드린다 · 마법 무기만 읽는다 (R200)
                     stats: u.stats ? { ...u.stats } : null,
                     ...slotView(u),
                 });
@@ -1344,12 +1385,10 @@ export function createBattleSystem(data) {
                 if (potionLeft > 0) drinkPotions();
                 for (const u of [...party, ...units.enemies]) {
                     if (u.hp <= 0) continue;
+                    if (u.noBasic) { chargeTick(u); continue; }
                     u.next -= TICK;
                     // 같은 여유로 판정한다 — `next -= TICK` 의 꼬리(5.0 − 0.1 × 50 > 0)가 틱 하나를 더 먹지 않게 (DEV_PLAN §4 #69)
                     if (u.next <= STEP_EPS) {
-                        // 마법 무기는 평타가 없다 [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 준비된 스킬이 없으면 **찬 채로 기다린다**:
-                        //   차례를 세우지 않고(`next = 0` — 경직 · 스턴이 미는 몫은 여기서부터 더해진다) 다음 틱에 다시 본다 → 준비되는 틱에 곧바로 시전. rng 0
-                        if (u.noBasic && !rt.pick(u, t)) { u.next = 0; continue; }
                         u.next = u.period;
                         rt.act(u, t);
                     }

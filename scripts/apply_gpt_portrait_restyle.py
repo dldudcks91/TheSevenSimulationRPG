@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import json
 import shutil
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from export_face_portraits import FACES, SIZES, export_one
 
@@ -94,6 +95,8 @@ def verify() -> None:
     for entry in data["targets"]:
         assert sha(FACES / entry["original"]) == entry["original_sha256"], entry["id"]
     for entry in installed:
+        assert sha(FACES / entry["generated"]) == entry["generated_sha256"], entry["id"]
+        assert sha(FACES / entry["game"]) == entry["game_sha256"], entry["id"]
         for key in ("generated", "ready", "game"):
             with Image.open(FACES / entry[key]) as portrait:
                 assert portrait.getchannel("A").getextrema() == (0, 255), entry["id"]
@@ -103,9 +106,53 @@ def verify() -> None:
     print(f"Verified {len(installed)}/{len(data['targets'])} GPT variants; originals unchanged")
 
 
+def compare() -> None:
+    """Build review sheets and a local gallery from actual game exports."""
+    entries = read_manifest()["targets"]
+    destination = SESSION / "comparisons"
+    destination.mkdir(exist_ok=True)
+    font = ImageFont.truetype("C:/Windows/Fonts/segoeui.ttf", 16)
+    cards = []
+    for start in range(0, len(entries), 8):
+        count = min(8, len(entries) - start)
+        sheet = Image.new("RGB", (720, 60 + ((count + 1) // 2) * 220), "#20232a")
+        draw = ImageDraw.Draw(sheet)
+        draw.text((16, 10), f"Gemini / GPT — {start + 1}–{min(start + 8, len(entries))}", font=font, fill="white")
+        for slot, entry in enumerate(entries[start:start + 8]):
+            identity = entry["id"]
+            x, y = (slot % 2) * 360, 44 + (slot // 2) * 220
+            draw.text((x + 16, y), identity, font=font, fill="white")
+            figures = []
+            for column, style in enumerate(("gemini", "gpt")):
+                path = FACES / style / f"{identity}.webp"
+                draw.text((x + 16 + column * 176, y + 23), style, font=font, fill="#bbbfc9")
+                if path.exists():
+                    with Image.open(path) as opened:
+                        pixels = opened.convert("RGBA").resize((160, 160), Image.Resampling.LANCZOS)
+                    sheet.paste(pixels, (x + 16 + column * 176, y + 48), pixels)
+                    relative = f"../../{style}/{identity}.webp"
+                    content = f'<img loading="lazy" src="{html.escape(relative)}" alt="{style} {html.escape(identity)}">'
+                else:
+                    draw.text((x + 16 + column * 176, y + 116), "Unavailable", font=font, fill="#bbbfc9")
+                    content = '<div class="missing">생성되지 않음</div>'
+                figures.append(f'<figure><figcaption>{style}</figcaption>{content}</figure>')
+            cards.append(f'<article data-id="{html.escape(identity)}"><h2>{html.escape(identity)}</h2><div class="pair">{"".join(figures)}</div></article>')
+        sheet.save(destination / f"comparison_{start // 8 + 1:02}.png")
+    installed = sum(e["status"] == "installed" for e in entries)
+    gallery = '''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gemini · GPT 초상 비교</title><style>
+body{margin:24px;background:#20232a;color:#eceef4;font:16px system-ui}h1{font-size:24px}input{padding:10px;background:#303640;color:white;border:1px solid #626975;border-radius:6px;width:min(360px,90%)}
+main{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:20px;margin-top:24px}article{padding:12px;background:#292e37;border-radius:8px}article[hidden]{display:none}h2{font-size:16px;margin:0 0 8px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}figure{margin:0}figcaption{margin-bottom:8px;color:#b8bec9}img,.missing{width:100%;aspect-ratio:1;object-fit:contain;background:#22262e}.missing{display:grid;place-items:center;color:#b8bec9}
+</style><h1>Gemini · GPT 초상 비교</h1>'''
+    gallery += f'<p>GPT 추가 {installed}/{len(entries)}장 · 왼쪽 Gemini, 오른쪽 GPT</p><input aria-label="초상 ID 검색" placeholder="초상 ID 검색"><main>{"".join(cards)}</main>'
+    gallery += '''<script>document.querySelector('input').addEventListener('input',e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('article').forEach(a=>a.hidden=!a.dataset.id.toLowerCase().includes(q));});</script></html>'''
+    (SESSION / "comparison.html").write_text(gallery, encoding="utf-8")
+    print(f"Built gallery and {(len(entries) + 7) // 8} comparison sheets")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("init", "install", "verify"))
+    parser.add_argument("action", choices=("init", "install", "verify", "compare"))
     parser.add_argument("--id")
     parser.add_argument("--generated", type=Path)
     args = parser.parse_args()
@@ -115,8 +162,10 @@ def main() -> None:
         if not args.id or not args.generated:
             parser.error("install requires --id and --generated")
         install(args.id, args.generated)
-    else:
+    elif args.action == "verify":
         verify()
+    else:
+        compare()
 
 
 if __name__ == "__main__":

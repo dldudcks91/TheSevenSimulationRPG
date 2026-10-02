@@ -567,7 +567,13 @@
       "id": "monster/2201",
       "original": "source/ready/monster/2201.png",
       "original_sha256": "b6184d745e7f51d86b72ffecbfa47cef0d63f2f18f23f89dd13e13727a53e08b",
-      "status": "pending"
+      "status": "blocked",
+      "reason": "Built-in image_gen rejected generated output 3 times (moderation_blocked, category other). No GPT image was installed.",
+      "request_ids": [
+        "e25920e3-f7a8-45e0-bf3a-2f8d82ca9f23",
+        "521e1d27-f93e-4ba3-9d2f-1a8d60eb041a",
+        "5da271d2-5304-4976-b701-622542e0bdc9"
+      ]
     },
     {
       "id": "monster/2301",
@@ -621,121 +627,249 @@
       "id": "monster/2402",
       "original": "source/ready/monster/2402.png",
       "original_sha256": "de996de2c10eb90375a0a2574f6c41e6a0648d5e54a8161134afb9682145aa94",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/2402.png",
+      "ready": "source/ready/gpt/monster/2402.png",
+      "game": "gpt/monster/2402.webp",
+      "generated_sha256": "a067f47b6833bf52f9cae77511a2e640cd71d66a8a45fc320e0cdf2e6a4fc74a",
+      "game_sha256": "db266c0f58e3d9cd2fbc804bdb9019103bfe860f9c0316217189adc0cfe52fd5",
+      "game_bytes": 23044
     },
     {
       "id": "monster/2403",
       "original": "source/ready/monster/2403.png",
       "original_sha256": "9958eaad7c894c16d2e1e58b6db961ee17d9f0c4794a0747234961a44c7ea0d3",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/2403.png",
+      "ready": "source/ready/gpt/monster/2403.png",
+      "game": "gpt/monster/2403.webp",
+      "generated_sha256": "f70c1f9bd0ba032a29970ad9914ba609d71b31abd1fdb890b4398a417fcb473a",
+      "game_sha256": "c195788674f86f6c359dcb41e0954be5ffee060868c9e56ed207e94d4df0352e",
+      "game_bytes": 19826
     },
     {
       "id": "monster/2900",
       "original": "source/ready/monster/2900.png",
       "original_sha256": "000c199c51fd61ce59268a0c411c9691ba14fa62ca779bbc833f3765a75bdf9e",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/2900.png",
+      "ready": "source/ready/gpt/monster/2900.png",
+      "game": "gpt/monster/2900.webp",
+      "generated_sha256": "7cb39b067e93aaac31688921213c76dd25f65ca7ea148a726f904f2e89150ae1",
+      "game_sha256": "b323485f898072804aa838f24b031015e6a92057d007b176c76c097002278a61",
+      "game_bytes": 21326
     },
     {
       "id": "monster/3103",
       "original": "source/ready/monster/3103.png",
       "original_sha256": "e7c4dc62f77c54a7ac30a2f22b6636003b5f67312ff0fd51f89d9c4783cfa7c8",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3103.png",
+      "ready": "source/ready/gpt/monster/3103.png",
+      "game": "gpt/monster/3103.webp",
+      "generated_sha256": "784c8bede3004194b9da0255b296e7f7295665db153ddaef07a38b1577f10728",
+      "game_sha256": "b2bad198706a211ffed7c7561f0b9ef6f54c62013c4f64419104f995b6125900",
+      "game_bytes": 22108
     },
     {
       "id": "monster/3103_elite",
       "original": "source/ready/monster/3103_elite.png",
       "original_sha256": "287198d0c469150c4272161ded96d10a1eaae86c48d4ba2403b42c1b8788ca50",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3103_elite.png",
+      "ready": "source/ready/gpt/monster/3103_elite.png",
+      "game": "gpt/monster/3103_elite.webp",
+      "generated_sha256": "416bb4c86cddad8c6138dc7ac61ad7371b94b5a3b629f4f6373a871e38c8b4e8",
+      "game_sha256": "bf0b5df2853b3dc149f17dabe9920dffb7d190faaf2eb2ab132e06ba45357655",
+      "game_bytes": 25090
     },
     {
       "id": "monster/3201",
       "original": "source/ready/monster/3201.png",
       "original_sha256": "b1e8134fe7a42b8f144e184eb02aa4148ecd543781f4170d0bb5c413369c181d",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3201.png",
+      "ready": "source/ready/gpt/monster/3201.png",
+      "game": "gpt/monster/3201.webp",
+      "generated_sha256": "b3d22e7d6af391d4e91f9c1769a0c80820bcc0096eb269442d0961d53edc4bba",
+      "game_sha256": "41a3b83dded781a78bd8da75164d980431a84f6e5cc814030797e6ac8f89965c",
+      "game_bytes": 15886
     },
     {
       "id": "monster/3201_elite",
       "original": "source/ready/monster/3201_elite.png",
       "original_sha256": "0de21e10a37aa78635d1fe4aadb526290f791f9603df47079ee7d58e121a846c",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3201_elite.png",
+      "ready": "source/ready/gpt/monster/3201_elite.png",
+      "game": "gpt/monster/3201_elite.webp",
+      "generated_sha256": "d0034d374e3a3486ecb7517ef4ab09a131fa90b000ce4fc6f79c2430970b92d4",
+      "game_sha256": "d1e9c9273caf4e8b421d63d196389d246179e182cf1c8a8d2bfc52901106d36b",
+      "game_bytes": 18088
     },
     {
       "id": "monster/3202",
       "original": "source/ready/monster/3202.png",
       "original_sha256": "383cd0a0d54a29786f2b518cf8f094affbe7acc7840b7aad41241ebc233d076f",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3202.png",
+      "ready": "source/ready/gpt/monster/3202.png",
+      "game": "gpt/monster/3202.webp",
+      "generated_sha256": "8a9f35954480673a7395b9ed15c9d6776b4daf5248f93a3aef24418947ca31d6",
+      "game_sha256": "cbbccc34a2a5a0e76203e91f0045f8b36db2d649b746a869fd45e9b63cc90e0c",
+      "game_bytes": 15594
     },
     {
       "id": "monster/3202_elite",
       "original": "source/ready/monster/3202_elite.png",
       "original_sha256": "d63bfa5b63da59935e5098839c1e830647990daedefdc5fa62880c573d3a1678",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3202_elite.png",
+      "ready": "source/ready/gpt/monster/3202_elite.png",
+      "game": "gpt/monster/3202_elite.webp",
+      "generated_sha256": "1de2bc221ee906b4bcd7d84991dcbf47f7ccf3ca2c873dc4e53efa385f09fc57",
+      "game_sha256": "50c132f2d6f7b5c45cdf64fa909da75b8c110b1f4bc2fc4e471631e5de67f5db",
+      "game_bytes": 21728
     },
     {
       "id": "monster/3203",
       "original": "source/ready/monster/3203.png",
       "original_sha256": "2de498e4671f22f7650ecb4c2fa169cb9989ce1d99ac6714f6c26b9dcfdf57c8",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3203.png",
+      "ready": "source/ready/gpt/monster/3203.png",
+      "game": "gpt/monster/3203.webp",
+      "generated_sha256": "b397f27012c43e04244001d537a2217d76bc397590752fe0e79ea55b45459791",
+      "game_sha256": "750a723f6a47e58dd7b131efb765304d97e963413b07a5f22f96d2affa25e0b8",
+      "game_bytes": 17572
     },
     {
       "id": "monster/3203_elite",
       "original": "source/ready/monster/3203_elite.png",
       "original_sha256": "be2724d30fd13edf8a19305ccdd5ab91128efb7d4b2fdefd92cc97526e020798",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3203_elite.png",
+      "ready": "source/ready/gpt/monster/3203_elite.png",
+      "game": "gpt/monster/3203_elite.webp",
+      "generated_sha256": "ef3b51558043890c40c25a42e7f823a685f310b39128b70739f5a18acb33b2ae",
+      "game_sha256": "21a16fac12ad357addd39c49a7a11a5766bceb1d0acad7cd5f70a8272e37def4",
+      "game_bytes": 21706
     },
     {
       "id": "monster/3301",
       "original": "source/ready/monster/3301.png",
       "original_sha256": "2930e5cd0d31263060a5a68e4a0e227a96c64034cc28f1f86aace679ae5804f6",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3301.png",
+      "ready": "source/ready/gpt/monster/3301.png",
+      "game": "gpt/monster/3301.webp",
+      "generated_sha256": "78bb87a00ddda8d9ca2e062c1081609f2ed7e5fc23640d7164c443d765f0765d",
+      "game_sha256": "dda9756dba520b9d79d82421284237158566ff2f8adbdf84e3a736bea7b4e5da",
+      "game_bytes": 17426
     },
     {
       "id": "monster/3302",
       "original": "source/ready/monster/3302.png",
       "original_sha256": "ee3a4453088a4502036542b37fc0d9747442aa6752bf3116423497cc9920a299",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3302.png",
+      "ready": "source/ready/gpt/monster/3302.png",
+      "game": "gpt/monster/3302.webp",
+      "generated_sha256": "9fa8c2635bfa7862008415bcbf8f7128fa780cc7f23999502a47531bf7ed7cf6",
+      "game_sha256": "587c5301e256899b84fbb66ca97f3ddbe8b3a95b63de6e0f7157763fbbbbdea1",
+      "game_bytes": 17334
     },
     {
       "id": "monster/3303",
       "original": "source/ready/monster/3303.png",
       "original_sha256": "13a2d4d4a74de88b2ceff7b073b949cbce470b9c21ae294e5b9b5cc876e24b3d",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3303.png",
+      "ready": "source/ready/gpt/monster/3303.png",
+      "game": "gpt/monster/3303.webp",
+      "generated_sha256": "f0541532d918feb684f87057a4b463076b9c43e093cbd175c0ea1278d11bb910",
+      "game_sha256": "afe14d050e570e317fee42074ab2d50c49b0dacb1384c2b56667d4d4069e15c3",
+      "game_bytes": 22028
     },
     {
       "id": "monster/3401",
       "original": "source/ready/monster/3401.png",
       "original_sha256": "b1b4c145d587ad8d35d2dd56ca639d121e25661f04222471737ff6d5518e7975",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3401.png",
+      "ready": "source/ready/gpt/monster/3401.png",
+      "game": "gpt/monster/3401.webp",
+      "generated_sha256": "7e6b001e5bb771caa3a3a66aaf190d239e3535b9417110f5af1b92fbc5b9a9d2",
+      "game_sha256": "1fa5312716b830386e053f5866c8b55a1b66745f0b1cf02f95ec4a6fa0036a48",
+      "game_bytes": 16276
     },
     {
       "id": "monster/3402",
       "original": "source/ready/monster/3402.png",
       "original_sha256": "54ed44f06196f41ea9f842c256257338efce788a5e47022cb4bf88c17bcd6f94",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3402.png",
+      "ready": "source/ready/gpt/monster/3402.png",
+      "game": "gpt/monster/3402.webp",
+      "generated_sha256": "dc60511e826ae4667789b40273b41247049fa57428e5f0d8d0e159dc5a9a9814",
+      "game_sha256": "b2610829f2834ecf1fd3a1d354c0cf4590a686e2973a9825550dfb3e644c68b6",
+      "game_bytes": 19272
     },
     {
       "id": "monster/3403",
       "original": "source/ready/monster/3403.png",
       "original_sha256": "5a1100f01284edd1b760821cb9f2aa50c3f0904b4cd1c92211d5958e0e6b3fa4",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/3403.png",
+      "ready": "source/ready/gpt/monster/3403.png",
+      "game": "gpt/monster/3403.webp",
+      "generated_sha256": "6b70a8774f351644dc1c34de9f6f3b7c99786b668667401dd9f1e3165058d2d6",
+      "game_sha256": "cc0d7c6c4b23f69da74c592401ad162432d335a4fea3bb09e1df7fa8d3b29fdc",
+      "game_bytes": 16844
     },
     {
       "id": "monster/4303",
       "original": "source/ready/monster/4303.png",
       "original_sha256": "a5b8843a0001e22d5dfc1c4cb7e5c491fd89e6ce0c5404f312e938fe6e34ed3f",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/4303.png",
+      "ready": "source/ready/gpt/monster/4303.png",
+      "game": "gpt/monster/4303.webp",
+      "generated_sha256": "366813b8ac064ed098132547b058d7009b179075eb0c4e0141ea79f16255a0a2",
+      "game_sha256": "8680d6744af61fd3a8df98e6a56d90e4de4a203224414396fc1c848775ae28a7",
+      "game_bytes": 22106
     },
     {
       "id": "monster/4303_elite",
       "original": "source/ready/monster/4303_elite.png",
       "original_sha256": "b7744bec02ace2be256bc190a2fa5c879d9db4491de86952ce4d75506f646aa2",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/4303_elite.png",
+      "ready": "source/ready/gpt/monster/4303_elite.png",
+      "game": "gpt/monster/4303_elite.webp",
+      "generated_sha256": "28224cd55ba98e20cbb16de00509c1d7c40eec3aea26d54bf6f7e7af4723f094",
+      "game_sha256": "77f6689baa2040d31d5bdc1244e4a9e9f723ce3ed4d3c31ada3284f666607690",
+      "game_bytes": 26724
     },
     {
       "id": "monster/goblin_worker",
       "original": "source/ready/monster/goblin_worker.png",
       "original_sha256": "1e7296a9c0aa513af402c64304eea1fdf23043830544c81f2c731760ce662ff6",
-      "status": "pending"
+      "status": "installed",
+      "generated": "source/gpt_restyle_20261001/generated/monster/goblin_worker.png",
+      "ready": "source/ready/gpt/monster/goblin_worker.png",
+      "game": "gpt/monster/goblin_worker.webp",
+      "generated_sha256": "265f981b738158f62a9fc045a45a74f404b049340158489e00895c62997ef229",
+      "game_sha256": "2146ccc399ae450f355ab8e439e96bc4e3f9c5998bbc315c65717d6c4cbf1746",
+      "game_bytes": 19168
     }
-  ]
+  ],
+  "finished_date": "2026-10-02",
+  "result": "64 installed; monster/2201 blocked by image generation tool",
+  "validation": {
+    "originals": "SHA-256 unchanged: 65 Gemini game portraits, 10 pre-existing GPT game portraits, 65 source PNGs",
+    "installed": "64 generated PNG hashes and game WebP hashes verified; alpha and dimensions passed",
+    "browser": "Gemini default, style switching, missing-style blanks, both character codices, settings, battle portraits, gallery; no JavaScript errors or portrait 404s",
+    "review": "Individual generated portraits and all 9 comparison sheets reviewed"
+  }
 }

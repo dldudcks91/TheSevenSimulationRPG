@@ -2938,6 +2938,7 @@ function skillCards(h) {
     });
     wrap.appendChild(grid);
     const go = el('button', 'btn sm go-tree', t('ch.skill.go'));
+    go.classList.toggle('has-points', (h.masteryPoints ?? 0) > 0);
     // 탭 이동이 아니라 **창**이다 (SCREEN_DESIGN §7 개정 2026-09-01) — 대상 영웅은 이 탭이 이미 골랐다
     // ~~해고 버튼~~ 은 2026-09-09 에 **영웅 띠의 고른 카드**로 옮겼다(사용자 지시 · §5) — 이 줄은 다시 버튼 하나다
     go.onclick = () => openModal('skill');

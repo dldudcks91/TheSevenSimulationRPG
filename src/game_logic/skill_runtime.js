@@ -252,7 +252,7 @@ export function createSkillRuntime(ctx) {
     /**
      * 기본 공격 — **평타 부여 창이 여기서 읽힌다** (skill_design §12-4·§12-5 인챈트 · 관통 사격 · 독화살).
      *   `attack_splash`  단일 → 광역. 그때 배율이 창 합(비율)이다 (창이 없으면 1배 단일)
-     *   `onhit_element`  때린 대상마다 원소 추가타 1회 — 첫 창의 원소 · 값(둘을 겹쳐 든 경우는 먼저 걸린 것) · `s` = 그 창을 건 스킬. **스킬 타격에는 안 붙는다**
+     *   `onhit_element`  때린 대상마다 원소 추가타 1회(`onhitExtra`) — **물리 스킬 시전도 같은 추가타를 낸다**(`cast` · 2026-10-02 R201)
      * ⚠ 창이 켜지면 타격 수가 늘어 rng 소비도 는다 — 창이 없을 때의 수열은 종전과 **완전히 같다**
      * @param forced 대상을 정해 준다 — **반격**이 때린 쪽을 넘긴다(battle.strikeOnce · 2026-09-18). 주면 타겟 굴림(`pickTarget`)을 **안 쓴다** ·
      *   광역 창이 켜져 있으면 평타처럼 적 전원이다(「반격은 평타와 모든 로직이 같다」 · 사용자)
@@ -264,6 +264,15 @@ export function createSkillRuntime(ctx) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
             ctx.strikeOnce(u, tgt, splash > 0 ? splash : 1, null);
         }
+        onhitExtra(u, targets);
+    }
+
+    /**
+     * 원소 추가타 — `onhit_element` 창(인챈트 · 포이즌 애로우)이 있으면 `targets` 마다 1회. 첫 창의 원소 · 값(둘을 겹쳐 든 경우는 먼저 걸린 것) ·
+     *   `s` = 그 창을 건 스킬. 기본 공격(때린 대상)과 **물리 스킬 시전**(겨눈 대상 — `cast` · 2026-10-02 · 사용자 확정 · R201 · battle_design §2-1)이 같이 쓴다.
+     *   스킬 타격 필드(`sk`)를 안 싣는다 — 능력치 계수는 평타 계수 · 추가 피해 · 결빙 없음. 시전자나 그 대상이 쓰러졌으면 건너뛴다
+     */
+    function onhitExtra(u, targets) {
         const oh = stateOf(u, 'onhit_element');
         if (!oh) return;
         const [key, win] = oh;
@@ -274,19 +283,36 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
+     * 시전 하나가 **물리로 겨눈 대상** 장부 `{u, list}` [2026-10-02 · R201] — `cast` 가 열고 닫는다(시전 안에서 열린 다른 시전 — 쓰러진 적의 자폭 — 은
+     *   제 장부를 갈아 끼웠다 되돌린다). 적는 것은 공격 대상 표의 직격(`skillStrike`) 중 **그 시전자 · 원소 태그 없는 것**뿐 — 반격(`basicAttack`)은 안 적힌다
+     */
+    let struck = null;
+
+    /** 공격 대상 표(`skill_effects.ATTACK_TARGETS`)가 부르는 직격 — `ctx.strikeOnce` 그대로이고, 장부에 대상을 처음 겨눈 순서로 적는다(rng 0) */
+    function skillStrike(u, tgt, mult, element, s, sk) {
+        if (struck?.u === u && !element && !struck.list.includes(tgt)) struck.list.push(tgt);
+        ctx.strikeOnce(u, tgt, mult, element, s, sk);
+    }
+
+    /**
      * **시전 한 번** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 시전자 능력치로 한 번 민 뒤(skill_design §13 · 2026-09-10 — 전투와 설명창이 같은 함수)
      *   **하는 일 줄을 `seq` 순으로** 실행한다. 차례(`act`)와 사건(`fire`)이 같이 쓴다 — `skill` 이벤트 · 시전 수 · 쿨은 부르는 쪽 몫이다.
      *   줄마다 살아 있는 적을 **다시 본다** — 앞 줄이 쓰러뜨린 적은 뒤 줄의 대상이 아니고, 적이 없으면 적을 쓰는 줄(`foes`)은 건너뛴다(굴림도 없다).
      *   능력치 계수는 영웅 · 몬스터가 같이 탄다 (2026-09-22 — 보류 해제 · battle_design §9-2)
+     *   줄을 다 돈 뒤 **원소 추가타** — 원소 태그 없는 공격 줄이 겨눈 대상마다 한 번(발마다가 아니다 · `onhitExtra` · 2026-10-02 R201). 창이 없으면 rng · 타임라인 불변
      */
     function cast(u, def, t) {
         const eff = SK.scaleDef(def, u.stats ?? null);
+        const outer = struck;
+        const mine = struck = { u, list: [] };
         for (const x of eff.effects) {
             const type = EFFECT_TYPES[x.effect];
             const foes = alive(foesOf(u));
             if (type.foes && foes.length === 0) continue;
             type.run(rt, u, x, t, foes);
         }
+        struck = outer;
+        onhitExtra(u, mine.list);
     }
 
     /**
@@ -321,33 +347,38 @@ export function createSkillRuntime(ctx) {
     /**
      * 한 차례 — 준비된 액티브 하나를 쓰고, 없으면 기본 공격 (battle_design §3).
      *   **마법 무기(`noBasic`)는 기본 공격이 없다** [2026-10-02 · R198] — 준비된 것이 없으면 아무것도 안 한다. 그 차례를 세우지 않는 것
-     *   (찬 채로 기다리기)은 부르는 쪽(battle.js 틱 루프)이 `pick` 으로 먼저 가른다 — 여기는 안전장치다
+     *   (칸 충전 · R200)은 부르는 쪽(battle.js `chargeTick`)이 `pick` 으로 먼저 가른다 — 여기는 안전장치다
+     * @returns 무언가 했으면 참(시전 · 기본 공격) — 마법 무기의 칸을 되돌리는 판정이 읽는다 (R200)
      */
     function act(u, t) {
         const foes = alive(foesOf(u));
-        if (foes.length === 0) return;
+        if (foes.length === 0) return false;
         const sel = pick(u, t);
         if (!sel) {
-            if (!u.noBasic) basicAttack(u, t, foes);
-            return;
+            if (u.noBasic) return false;
+            basicAttack(u, t, foes);
+            return true;
         }
         const def = sel.def;
         // 쿨은 실시간 초 — 시전 순간부터 (battle_design §6). 쿨감소는 **표기 쿨에 곱**한다 (combat_stat:cooldown_reduction)
         sel.readyAt = t + cooldownSec(B, u, def);
         out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
         // `ready` = 이 스킬이 다시 준비되는 시각. 재생기가 쿨을 **계산하지 않고** 그리게 하려고 함께 싣는다
-        timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt) });
+        //   `ch` = 마법 무기의 남은 칸 — 부르는 쪽(battle.js chargeTick)이 칸을 먼저 쓰고 부른다 (R200)
+        timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt), ...(u.noBasic ? { ch: u.charges } : {}) });
         hooks.emit('cast', u, { t, def });
         // 쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
         cast(u, def, t);
+        return true;
     }
 
     /**
      * 등록표(`skill_effects.js`)의 핸들러가 `rt.strikeOnce`·`rt.pickTarget`·`rt.rng`·`rt.F`·`rt.dealIndirect` 를 부르므로 그것도 같이 싣는다 —
      * 표가 battle.js 를 직접 import 하지 않게 하는 이음매다(표는 상태를 모르고 런타임만 안다).
+     * `rt.strikeOnce` 는 `ctx.strikeOnce` 에 시전 장부를 얹은 것이다(`skillStrike` — 원소 추가타 · R201)
      */
     const rt = {
-        rng, F, strikeOnce: ctx.strikeOnce, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
+        rng, F, strikeOnce: skillStrike, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
         alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf,
     };
     return rt;

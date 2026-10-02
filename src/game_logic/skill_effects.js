@@ -232,7 +232,7 @@ export const EFFECT_IDS = Object.keys(EFFECT_TYPES);
 /**
  * 걸린 효과의 능력치 — `skill_status.csv:stat` 어휘가 곧 이 표의 키다 (옛 `skill.csv:effect_stat` · 2026-09-22). 셋 중 하나다 [2026-09-24 · R151]:
  *   `{}`             — **창 합이 능력치를 민다.** 어느 능력치를 어떻게 미나는 아래 `ATTRS`(능력치 표)가 든다 — 한 능력치를 여러 효과가 밀면 그 능력치 한 곳에서 모은다
- *   `state: true`    — **표식**. 파생값이 없고 읽는 쪽이 `stateOf` · `sumOf` 로 본다(`taunt` · `duel` = battle.js 타겟팅 · 평타 부여 둘 = runtime 기본 공격)
+ *   `state: true`    — **표식**. 파생값이 없고 읽는 쪽이 `stateOf` · `sumOf` 로 본다(`taunt` · `duel` = battle.js 타겟팅 · 평타 부여 둘 = runtime 기본 공격 · 원소 추가타는 물리 스킬 시전도 — R201)
  *   `apply(rt, tgt, def, until, ev)` — 시전 순간 한 번. 창 밖에 따로 만들 것이 있는 효과만 든다(`def` = 시전 단위 — 걸린 효과를 푼 `value`)
  */
 export const EFFECTS = {
@@ -268,7 +268,7 @@ export const EFFECTS = {
     // 받는 피해 감소 — 감쇠 뒤 곱이고 원천별로 각각 곱한다 (battle_design §9-3). 방어·저항과 채널이 다르다
     dr_pct: {},
     // 평타 부여 둘 — 소비자는 skill_runtime 의 기본 공격이다
-    //   onhit_element  원소 추가타 1회 (인챈트 · 독화살) — 창이 든 `element` 로 때린다
+    //   onhit_element  원소 추가타 1회 (인챈트 · 독화살) — 창이 든 `element` 로 때린다 · 물리 스킬 시전도 겨눈 대상마다 1회(`cast` · 2026-10-02 R201)
     //   attack_splash  기본 공격이 단일 → 광역 (관통 사격) — 그때 배율이 창의 값(비율)이 된다
     onhit_element: { state: true },
     attack_splash: { state: true },

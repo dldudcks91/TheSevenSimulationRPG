@@ -8,6 +8,12 @@
 나머지는 거기서 잘라 **배경을 알파로 되돌리고 512×512 정사각으로 맞춘** 것이다 —
 ⚠ `gladiator_helm.png` 만 예외다(누끼 없음 · 1013×1013 원본 해상도 · 아래 참조).
 
+## Gemini 초상 → GPT 그림체 개별 편집 [2026-10-01~02]
+
+GPT에 없던 Gemini 초상 65장 중 **64장(영웅 19 · 몬스터 45)**을 내장 `image_gen`으로 각각 편집했다. 기존 초상이 외형·자세·장비·표정·구도의 기준, `ready/monster/1401.png` 화염 광신도와 `1402.png` 임프 제사장이 그림체 기준이다. 엔트 `2201`은 도구가 결과를 세 번 차단해 미생성이다. 기존 Gemini 65장 · GPT 10장과 기존 작업 PNG의 SHA-256 보존을 확인했다.
+
+새 512×512 투명 PNG는 `ready/gpt/<hero|monster>/`, 게임용 WebP는 `../gpt/<hero|monster>/`다. 원본 생성 출력과 프롬프트·등록 목록·비교 자료는 [gpt_restyle_20261001/README.md](gpt_restyle_20261001/README.md)에 있다. `scripts/apply_gpt_portrait_restyle.py verify`로 기존 파일 보존·알파·출력 크기를 다시 검사할 수 있다.
+
 ## 게임 초상 내보내기 [2026-09-24]
 
 `ready/monster/` 42장과 `ready/hero/` 19장은 게임 초상의 작업 원본이다. 더 큰 원본 시트가 남아 있는 그림은 시트도 따로 보관한다. 게임 폴더에는 PNG를 두지 않고, 몬스터 256×256 · 영웅 320×320의 투명 WebP(품질 90)를 둔다.
@@ -40,6 +46,10 @@ python scripts/export_face_portraits.py
 ## 3-3 미라 세 칸 적용 [2026-09-30]
 
 `sheets/source_sheet_ch3_st3_mummy_3x3.png`(병사 1~3 · 궁수 4~6 · 사제 7~9)에서 **2번(1행 2열 · 맨머리)**을 맨머리 미라 `3301`, **1번(1행 1열 · 청동 투구)**을 청동 미라 `3302`, **8번(3행 2열 · 높은 금관)**을 금관 미라 `3303`에 적용했다. `scripts/apply_ch3_st3_mummy_portraits.py`가 세 칸의 초록 배경을 투명화해 512×512 `ready/monster/<idx>.png`를 만들고 256×256 `cartoon/monster/<idx>.webp`로 내보낸다. 격자선은 x 674~689 · 1358~1373, y 675~689 · 1358~1372 이다. 8번은 금관 끝이 위 격자선에 잘려 있다. `chapters/ch3_st3.png`를 새로 찍었다. ⚠ 세 번호의 `monster.csv` 행은 이름만 미라다 — 종족 · 직업 · 스킬은 옛 황금 임프 · 고블린 약탈병 · 고블린 금고지기 값이 남아 있다.
+
+## 4-2 유령 대장 한 칸 적용 [2026-10-02]
+
+`sheets/source_sheet_ch4_st2_frozen_soldiers_3x3.png`(윗줄 얼어붙은 산 병사 · 가운뎃줄 유령 병사 · 아랫줄 자유 — 발주문 `docs/reference/ch4_st2_frozen_soldiers_3x3_prompt.md`)에서 **6번(2행 3열 · 부서진 볏 투구의 유령 대장)**을 기사 자리 `4203`에 적용했다(`scripts/apply_ch4_st2_ghost_captain_portrait.py`). 512×512 `ready/monster/4203.png` → 256×256 `gemini/monster/4203.webp`. 격자선은 x 668~689 · 1358~1378, y 669~689 · 1358~1379 이다. `chapters/ch4_st2.png`를 새로 찍었다. ⚠ `monster.csv` 행은 아직 고블린 빙하대장이다.
 
 ## 3-4 빈 황금 갑옷 세 칸 적용 [2026-09-30]
 

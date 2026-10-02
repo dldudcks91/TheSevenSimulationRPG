@@ -1205,10 +1205,10 @@ const STRINGS = {
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
-    // 출처 셋은 **영웅 / 책 / 전직** 이다 [2026-09-08 사용자 지시 · 2026-09-29 ~~무기~~ → 책 — R179 · ADR-0420] — ~~고유~~. 액티브 줄·후보 카드·툴팁 칩이 같은 키를 쓴다
+    // 출처 셋은 **영웅 / 습득 / 전직** 이다 [2026-09-08 사용자 지시 · 2026-09-29 ~~무기~~ → 책 — R179 · ADR-0420 · 2026-10-02 ~~책~~ → 습득 — ADR-0484] — ~~고유~~. 액티브 줄·후보 카드·툴팁 칩이 같은 키를 쓴다
     'sk.innate': { ko: '영웅', en: 'Hero' },
     // 액티브 3칸의 출처 라벨 — 칸은 출처가 정한다 (skill_design §2)
-    'sk.src.book': { ko: '책', en: 'Book' },
+    'sk.src.book': { ko: '습득', en: 'Learned' },
     'sk.src.advance': { ko: '전직', en: 'Advance' },
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
@@ -1379,13 +1379,13 @@ const STRINGS = {
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
             + '쿨은 실시간으로 돈다. 쿨이 공격 속도(초)의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
             + '기본 공격은 언제나 <b>물리</b>다 — 원소 피해는 스킬만 낸다<br>'
-            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 책 칸은 <b>배운 책</b>에서 온다. <b>책 칸만</b> 그 스킬 직업의 무기를 들어야 나간다<br>'
+            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 습득 칸은 <b>배운 책</b>에서 온다. <b>습득 칸만</b> 그 스킬 직업의 무기를 들어야 나간다<br>'
             + '⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>이다 — 지금 값은 임시다',
         en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack. <b>Magic weapons have no basic attack</b> — with nothing ready, the gauge waits full and casts the moment a skill is ready<br>'
             + 'One action per turn. A skill <b>replaces</b> that turn\'s attack and there is no mana — the action itself is the only cost<br>'
             + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of Attack Speed (seconds) → <b>CDR affixes</b> are the alignment lever<br>'
             + 'Basic attacks are always <b>physical</b> — only skills deal elemental damage<br>'
-            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the book slot from <b>the book you read</b>. <b>Only the book slot</b> needs a weapon of that skill\'s class<br>'
+            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the learned slot from <b>the book you read</b>. <b>Only the learned slot</b> needs a weapon of that skill\'s class<br>'
             + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
     },
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },

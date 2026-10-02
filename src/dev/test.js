@@ -614,7 +614,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'tavern_search_rare_base_pct', 'tavern_search_rare_per_cha_pct', 'tavern_search_rare_cap_pct', 'tavern_search_sin_echo_pct',
         'tavern_search_meet_at_pct', 'tavern_search_meet_hit_pct', 'tavern_search_meet_key_pct',
         'trade_visit_hours', 'trade_stay_hours', 'shop_equip_per_slot', 'shop_equip_weapon', 'shop_price_normal', 'shop_price_magic', 'shop_reroll_cost', 'shop_book_count', 'shop_book_gold',
-        'hero_level_cap', 'concurrent_expedition_parties', 'active_slots', 'skill_cd_floor_mult', 'skill_decay_cap_pct',
+        'hero_level_cap', 'concurrent_expedition_parties', 'active_slots', 'skill_cd_floor_mult', 'cast_charge_max', 'skill_decay_cap_pct',
         'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level',
         'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare',
         'tactic_reroll_base_cost', 'tactic_reroll_lock_mult',
@@ -3724,10 +3724,10 @@ check('battle: 반격 —맞으면 확률로 때린 적에게 기본 공격 1회
     return `반격 ${n}회 · 이벤트 ${tl.length}`;
 });
 /*
- * **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 차례가 와도 준비된 스킬이 없으면
- *   게이지가 **찬 채로 기다렸다가** 스킬이 준비되는 틱에 곧바로 시전한다. 칸이 없으면 아무것도 안 한다 · 반격도 없다 · 영웅 · 몬스터 같은 규칙
+ * **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 준비된 스킬이 없으면 아무것도 안 한다.
+ *   시전 간격은 「준비 · 칸」 중 늦은 쪽이다(칸 충전 · R200 — ~~찬 채로 기다린다~~) · 스킬 칸이 없으면 아무것도 안 한다 · 반격도 없다 · 영웅 · 몬스터 같은 규칙
  */
-check('battle: 마법 무기는 평타를 안 친다 — 준비된 스킬이 없으면 찬 채로 기다렸다가 준비되는 틱에 시전한다 · 칸이 없으면 아무것도 안 한다 (battle_design §3 · R198)', () => {
+check('battle: 마법 무기는 평타를 안 친다 — 준비된 스킬이 없으면 기다렸다가 준비되는 틱에 시전한다 · 스킬 칸이 없으면 아무것도 안 한다 (battle_design §3 · R198 · R200)', () => {
     const sk = SYS.skill.defs.mag_fireball;
     if (!sk) fail('표본 스킬 mag_fireball 이 없다');
     // 혼자 나간 마법 무기 영웅 — 쿨이 주기보다 긴 스킬 하나(기다리는 구간이 생긴다) · 신 파티의 체력이라 안 쓰러진다
@@ -3758,6 +3758,85 @@ check('battle: 마법 무기는 평타를 안 친다 — 준비된 스킬이 없
     const idle = SYS.battle.simulate(caster([]), 1013, makeRng(1));
     if (idle.timeline.some(ev => ev.a === 'p0' || (ev.e === 'skill' && ev.u === 'p0'))) fail('칸이 없는 마법 무기 p0 가 무언가 했다');
     return `막힘 없는 시전 간격 ${gaps}개 · 그중 쿨이 주기보다 길어 찬 채로 기다린 것 ${waited}`;
+});
+/*
+ * **마법 무기의 시전 게이지는 칸 충전식이다** [2026-10-02 · 사용자 확정 · R200 · battle_design §3] — 한 바퀴에 칸 하나(상한 cast_charge_max) ·
+ *   시전 한 번에 칸 하나 · 쌓인 칸만큼 틱마다 연달아 · 0 칸에서 출발 · 경직 중엔 칸을 못 쓴다.
+ *   연사 판: 게이지 1초 · 쿨 15 · 14 · 13초 스킬 셋(칸 순서) — 1 · 2 · 3초에 하나씩 쓰고 셋 다 16초에 준비된다. 그 사이 칸이 4개 쌓여
+ *   16.0 · 16.1 · 16.2초에 연달아 나가야 한다
+ */
+check('battle: 마법 무기는 칸 충전식 — 0칸 출발 · 한 바퀴에 한 칸 · 상한 · 시전 한 번에 한 칸 · 쌓인 칸만큼 틱마다 연사 · 경직 중엔 못 쓴다 (battle_design §3 · R200)', () => {
+    const max = B.cast_charge_max;
+    if (!(max >= 3)) fail(`cast_charge_max ${max} — 연사 판(셋)이 서려면 3 이상이어야 한다`);
+    const ids = ['mag_fireball', 'mag_inferno', 'mag_staticfield'];
+    for (const id of ids) if (!SYS.skill.defs[id]) fail(`표본 스킬 ${id} 이 없다`);
+    const [c0, c1, c2] = ids.map(id => SYS.skill.defs[id].cool);
+    if (!(c0 - c1 === 1 && c1 - c2 === 1)) fail(`표본 쿨 ${c0} · ${c1} · ${c2} — 1초씩 차이가 나야 16초에 셋이 겹친다`);
+    const caster = { ...godUnits()[0], weaponGroup: 'staff', actives: ids.map(id => ({ id, source: 'innate' })) };
+    caster.combat = { ...caster.combat, basic_attack: false, action_period: 1, cooldown_reduction: 0 };
+    const r = SYS.battle.simulate([caster], 1013, makeRng(3));
+    const tl = r.timeline;
+    // 칸 장부 — charge 는 +1 · skill 은 −1 · 상한 · 음수 금지
+    let ch = 0, n = 0;
+    for (const ev of tl) {
+        if (ev.u !== 'p0') continue;
+        if (ev.e === 'charge') {
+            if (ev.ch !== ch + 1 || ev.ch > max) fail(`${ev.t}초 charge ch ${ev.ch} — 앞이 ${ch} · 상한 ${max}`);
+            ch = ev.ch;
+        } else if (ev.e === 'skill') {
+            if (ch < 1) fail(`${ev.t}초 ${ev.s} — 칸이 없는데 시전했다`);
+            if (ev.ch !== ch - 1) fail(`${ev.t}초 ${ev.s} ch ${ev.ch} — 앞이 ${ch} 라 ${ch - 1} 이어야 한다`);
+            ch = ev.ch;
+            n++;
+        }
+    }
+    const casts = tl.filter(ev => ev.e === 'skill' && ev.u === 'p0');
+    // 0 칸 출발 — 스킬은 준비된 채 출발해도 첫 시전은 게이지 한 바퀴 뒤 · 칸 순서대로 1초마다 하나
+    if (r.party[0].fillAt !== 0) fail(`party[0].fillAt ${r.party[0].fillAt} — 편성 첫 자리는 0 에서 찬다`);
+    const head = casts.slice(0, 3).map(ev => `${ev.s}@${ev.t}`).join(' · ');
+    if (head !== `${ids[0]}@1 · ${ids[1]}@2 · ${ids[2]}@3`) fail(`첫 시전 셋 ${head} — 1 · 2 · 3초에 칸 순서대로여야 한다`);
+    // 연사 — 16초에 셋이 겹친다
+    const burst = casts.filter(ev => ev.t >= 15.95 && ev.t <= 16.25).map(ev => `${ev.s}@${ev.t}`).join(' · ');
+    if (burst !== `${ids[0]}@16 · ${ids[1]}@16.1 · ${ids[2]}@16.2`) fail(`16초 연사 ${burst || '없음'} — 셋이 틱마다 하나씩 나가야 한다`);
+    // 다 찬 칸에서 시전하면 게이지가 다시 돈다 — 16초에 4 → 3 이 됐으니 17초에 다시 찬다
+    if (!tl.some(ev => ev.e === 'charge' && ev.u === 'p0' && Math.abs(ev.t - 17) < 0.05)) fail('다 찬 칸을 쓴 뒤 한 바퀴 만에 다시 차지 않았다');
+    // 경직 중엔 쌓인 칸을 못 쓴다 — 모든 물리 직격이 경직을 거는 판 · 긴 경직
+    const S = buildSystems({ ...D, balance: { ...B, stagger_hp_pct: 1e-9, stagger_sec: 2 } });
+    let stagN = 0;
+    for (let seed = 1; seed <= 3; seed++) {
+        const rs = S.battle.simulate([{ ...caster, combat: { ...caster.combat, hp_max: 100000, fhr: 0 } }], 1013, makeRng(seed));
+        const wins = [];
+        for (const ev of rs.timeline) {
+            if (ev.e === 'stagger' && ev.u === 'p0') { wins.push([ev.t, ev.until]); stagN++; }
+            if (ev.e === 'skill' && ev.u === 'p0' && wins.some(([a, b]) => ev.t > a + 0.05 && ev.t < b - 0.05)) fail(`seed ${seed} ${ev.t}초 ${ev.s} — 경직 중에 칸을 썼다`);
+        }
+    }
+    if (!stagN) fail('마법 무기 영웅이 한 번도 경직되지 않았다 — 표본 없음');
+    return `시전 ${n}회 · 16초 연사 ${burst} · 경직 표본 ${stagN}`;
+});
+check('battle: 행동 게이지는 빈 채로 출발한다 — 파티 첫 차례 = 한 바퀴 + 편성 엇갈림 · 적 = 등장 지연 + 한 바퀴 · fillAt 이 그 시작을 싣는다 (battle_design §6 · R200)', () => {
+    const r = SYS.battle.simulate(godUnits(), 1013, makeRng(2));
+    const tl = r.timeline;
+    // 파티 — 첫 행동(평타 · 시전)은 fillAt + 주기 이후 · fillAt = 편성 차례 × 0.3
+    r.party.forEach((p, i) => {
+        if (Math.abs(p.fillAt - i * 0.3) > 0.051) fail(`${p.key} fillAt ${p.fillAt} — ${i * 0.3} 이어야 한다`);
+        const first = tl.find(ev => (ev.e === 'skill' && ev.u === p.key) || ((ev.e === 'hit' || ev.e === 'dodge') && ev.a === p.key && ev.s === undefined));
+        if (!first) fail(`${p.key} 가 아무것도 안 했다`);
+        if (first.t < p.fillAt + p.period - 0.15) fail(`${p.key} 첫 행동 ${first.t}초 — 게이지(${p.fillAt} + ${p.period})가 차기 전이다`);
+    });
+    // 적 — 라운드의 fillAt 은 라운드 시작 + 등장 지연 · 첫 행동은 fillAt + 주기 이후
+    let seen = 0;
+    for (const rv of tl.filter(ev => ev.e === 'round')) {
+        for (const e of rv.enemies) {
+            if (e.fillAt < rv.t + 0.35 || e.fillAt > rv.t + 1.05) fail(`라운드 ${rv.n} ${e.key} fillAt ${e.fillAt} — 라운드 시작 ${rv.t} + 등장 지연(0.4 ~ 1.0)이어야 한다`);
+            const first = tl.find(ev => ev.t >= rv.t && ((ev.e === 'skill' && ev.u === e.key) || ((ev.e === 'hit' || ev.e === 'dodge') && ev.a === e.key)));
+            if (!first) continue;
+            seen++;
+            if (first.t < e.fillAt + e.period - 0.15) fail(`라운드 ${rv.n} ${e.key} 첫 행동 ${first.t}초 — 게이지(${e.fillAt} + ${e.period})가 차기 전이다`);
+        }
+    }
+    if (!seen) fail('적 첫 행동 표본이 없다');
+    return `파티 ${r.party.length} · 적 첫 행동 ${seen}`;
 });
 check('battle: 마법 무기는 반격하지 않는다 — 반격 확률이 있어도 굴리지 않는다 (R198 · item_design §1 「투구 옵션」)', () => {
     const base = armorUnits([{ stat: 'counter_chance', v: 0.6, src: 'wrath' }]);
@@ -5808,6 +5887,64 @@ check('runtime: 평타 부여 — attack_splash 는 전원에게 · onhit_elemen
     if (cRt.hits[1].element !== 'poison') fail(`추가타 원소 ${cRt.hits[1].element}`);
     return '평타 1 · 관통 전원 · 독 추가타 1회(poison)';
 });
+/*
+ * **원소 추가타는 물리 스킬에도 붙는다** [2026-10-02 · 사용자 확정 · R201 · battle_design §2-1] — 한 번 시전에 겨눈 대상마다 한 번(발마다가 아니다) ·
+ *   본 타격이 다 끝난 뒤 · 원소 스킬은 안 붙는다 · 피어싱 샷(광역 퍼짐)은 스킬의 대상을 안 바꾼다. 추가타는 `sk` 를 안 싣는다(평타 계수 · 추가 피해 · 결빙 없음)
+ */
+check('runtime: 원소 추가타는 물리 스킬 시전에도 — 겨눈 대상마다 한 번 · 본 타격 뒤 · 원소 스킬 · 광역 창은 안 붙는다 (battle_design §2-1 · R201)', () => {
+    const run = (id, buff) => {
+        const u = rtUnit('p0', 'party');
+        const x = fakeRt([u], [rtUnit('e0', 'enemy'), rtUnit('e1', 'enemy'), rtUnit('e2', 'enemy')]);
+        if (buff) x.rt.castBuff(u, skillLine(buff), 0);
+        x.rt.cast(u, SYS.skill.defs[id], 0);
+        return { main: x.hits.filter(h => h.sk), extra: x.hits.filter(h => !h.sk), all: x.hits };
+    };
+    const pois = skillLine('arc_poison');
+    // 래피드 샷 — 한 대상에 여러 발 · 독 추가타는 한 번 · 맨 끝
+    const rap = run('arc_rapid', 'arc_poison');
+    if (rap.main.length < 2) fail(`래피드 샷 ${rap.main.length}발 — 다단 표본이 아니다`);
+    if (rap.extra.length !== 1) fail(`래피드 샷 ${rap.main.length}발에 추가타 ${rap.extra.length} — 대상마다 한 번이어야 한다`);
+    const [ex] = rap.extra;
+    if (ex.d !== rap.main[0].d || ex.element !== 'poison' || ex.s !== 'arc_poison' || Math.abs(ex.mult - pois.value) > 1e-12)
+        fail(`추가타 ${ex.d} · ${ex.element} · ${ex.s} · ${ex.mult} — ${rap.main[0].d} · poison · arc_poison · ${pois.value} 이어야 한다`);
+    if (rap.all[rap.all.length - 1] !== ex) fail('추가타가 본 타격 사이에 끼었다 — 줄을 다 돈 뒤여야 한다');
+    // 멀티샷 — 적 전원 · 대상마다 한 번
+    const ms = run('arc_multishot', 'arc_poison');
+    if (!eq(ms.extra.map(h => h.d), ['e0', 'e1', 'e2'])) fail(`멀티샷 추가타 [${ms.extra.map(h => h.d)}] — 적 전원에게 한 번씩`);
+    // 러시 — 타수가 대상 수보다 많아 겹친다 · 겨눈 대상마다 한 번(처음 겨눈 순서) · 인챈트는 화염
+    const ru = run('kni_rush', 'kni_enchant');
+    const order = [...new Set(ru.main.map(h => h.d))];
+    if (ru.main.length <= order.length) fail(`러시 ${ru.main.length}타 · 대상 ${order.length} — 겹치는 표본이 아니다`);
+    if (!eq(ru.extra.map(h => h.d), order) || ru.extra.some(h => h.element !== 'fire')) fail(`러시 추가타 [${ru.extra.map(h => `${h.d}:${h.element}`)}] ≠ [${order}] 화염`);
+    // 창이 없으면 본 타격뿐 · 원소 스킬은 안 붙는다 · 피어싱 샷은 스킬 대상을 안 바꾼다
+    if (run('arc_rapid', null).extra.length) fail('창이 없는데 추가타가 났다');
+    const fb = run('mag_fireball', 'arc_poison');
+    if (!fb.main.length || fb.main.some(h => !h.element)) fail('mag_fireball 이 원소 스킬 표본이 아니다');
+    if (fb.extra.length) fail(`원소 스킬(mag_fireball)에 추가타 ${fb.extra.length}`);
+    const pr = run('arc_snipe', 'arc_pierce');
+    if (pr.all.length !== 1) fail(`피어싱 샷 아래 스나이프 ${pr.all.length}타 — 스킬은 제 대상 그대로다`);
+    return `래피드 ${rap.main.length}발 + 독 1 · 멀티샷 독 3 · 러시 ${ru.main.length}타 + 화염 ${ru.extra.length} · 원소 스킬 0 · 피어싱 샷 아래 스나이프 1`;
+});
+check('battle: 실제 전투에서도 — 포이즌 애로우 창 아래 래피드 샷 시전마다 독 추가타가 한 번 (battle_design §2-1 · R201)', () => {
+    // 약한 궁수 — 래피드 샷 몇 발에 대상이 안 쓰러져야 추가타 자리가 선다 · 안 쓰러지게 체력만 키운다
+    const [base] = units();
+    const archer = { uid: base.uid, weaponGroup: 'bow', actives: ['arc_poison', 'arc_rapid'].map(id => ({ id, source: 'innate' })),
+        combat: { ...base.combat, atk_physical: { min: 1, max: 1 }, basic_attack: true, hp_max: 100000, level: 50 } };
+    const tl = SYS.battle.simulate([archer], 1013, makeRng(5)).timeline;
+    let casts = 0, withExtra = 0;
+    tl.forEach((ev, i) => {
+        if (ev.e !== 'skill' || ev.u !== 'p0' || ev.s !== 'arc_rapid') return;
+        casts++;
+        let extra = 0;
+        for (let j = i + 1; j < tl.length && tl[j].t === ev.t && tl[j].e !== 'skill'; j++)
+            if ((tl[j].e === 'hit' || tl[j].e === 'dodge') && tl[j].a === 'p0' && tl[j].s === 'arc_poison') extra++;
+        if (extra > 1) fail(`${ev.t}초 래피드 샷에 독 추가타 ${extra} — 한 대상에게 한 번이어야 한다`);
+        if (extra) withExtra++;
+    });
+    if (!casts) fail('래피드 샷 시전이 없다');
+    if (!withExtra) fail(`래피드 샷 ${casts}회에 독 추가타가 한 번도 안 났다`);
+    return `래피드 샷 ${casts}회 중 독 추가타 ${withExtra}회`;
+});
 check('runtime: period_pct — 창은 period 만 바꾸고 이미 예약된 next 는 안 건드린다 (INTERFACE §2-6)', () => {
     const u = rtUnit('p0', 'party', { period: 2, basePeriod: 2, next: 1.7 });
     const { rt } = fakeRt([u], []);
@@ -6108,7 +6245,7 @@ check('battle: makeEnemy 유닛의 전투 안 필드 초기값 —창·배리어
     // ~~옛 필드 값이 한 글자도 같다~~ 는 R79 로 폐기 — 계산은 computeCombat 이 하고 그 대조는 「computeCombat 을 지난다」 단정이 한다.
     //   여기 남는 것은 **몬스터만 드는 축**과 **전투 안에서만 사는 필드의 초기값**이다
     const want = {
-        key: 'e0', side: 'enemy', monsterId: id, grade, lvl, cls: m.cls, next: 0, regenAcc: 0, skillMult: 1,
+        key: 'e0', side: 'enemy', monsterId: id, grade, lvl, cls: m.cls, regenAcc: 0, skillMult: 1, charges: 0,   // 칸 0 에서 (R200)
         atkType: 'physical', monsterType: m.monster_type,   // 평타는 언제나 물리 (R198 · ~~m.attack_type~~)
         noBasic: false,                                     // 맨몸(장비 인자 없음) = 맨손 — 평타를 친다 · 마법 무기를 낀 몬스터만 안 친다(R198 · 「평타는 능력치 계수」 단정)
         expReward: D.levelXp.find(r => r.level === lvl).monsterXp * g.exp_mult * m.exp_coef,
@@ -6117,6 +6254,8 @@ check('battle: makeEnemy 유닛의 전투 안 필드 초기값 —창·배리어
     for (const [k, v] of Object.entries(want)) if (e[k] !== v) fail(`${k}: ${e[k]} ≠ ${v}`);
     if (e.hpMax !== e.hp) fail(`hpMax ${e.hpMax} ≠ hp ${e.hp}`);
     if (e.basePeriod !== e.period) fail('basePeriod ≠ period');
+    // 행동 게이지는 빈 채로 출발한다 — 첫 차례는 한 바퀴 뒤 (R200 · ~~next 0~~)
+    if (e.next !== e.period) fail(`next ${e.next} ≠ period ${e.period} — 게이지는 빈 채로 출발한다`);
     for (const k of ['Min', 'Max']) {
         if (Math.abs(e[`atk${k}Base`] * (1 + e.atkPct) - e[`atk${k}`]) > 1e-6)
             fail(`atk${k}Base ${e[`atk${k}Base`]} · atkPct ${e.atkPct} 가 atk${k} ${e[`atk${k}`]} 를 못 만든다`);

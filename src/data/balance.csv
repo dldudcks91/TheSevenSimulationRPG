@@ -8,6 +8,7 @@ wave_monster_max,3,fixed,0,라운드당 몬스터 전역 상한 — round_budget
 advance_unlock_level,30,fixed,0,전직 해금 레벨 (GAME_DESIGN §9 · 전직 3갈래 skill_design §4)
 active_slots,3,fixed,0,액티브 칸 수 — 고유 · 무기군 · 전직 각 하나 (GAME_DESIGN §9 08-26 「액티브 3」 · skill_design §2). 첫 칸은 생성 시 굴린 고유 스킬 · 나머지는 직업 액티브로 채운다(프로토타입 §9-0 개정 2026-09-01)
 skill_cd_floor_mult,0.1,proposed,1,쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로 안 내려간다. 0 이면 스킬이 매 차례 나가 예산이 무너진다 (2026-09-01 코드 상수 CD_MIN_MULT 이관 · battle_design §6)
+cast_charge_max,4,fixed,0,마법 무기 시전 게이지의 칸 수 [2026-10-02 사용자 확정 「캐스팅창을 4개로 나눠 · 채워 둔 칸을 하나씩 소모」 · R200 · battle_design §3] — 게이지 한 바퀴(행동 주기)에 칸 하나가 쌓이고 · 시전 한 번이 칸 하나를 쓴다 · 다 차면 게이지가 선다
 skill_decay_cap_pct,0.9,proposed,0,스케일링 슬롯이 민 감쇠(decay_pct)의 상한(%) — 연쇄 배율 감쇠·광역 약화·방어 감소가 민첩으로 100 에 닿으면 두 번째 대상부터 0 이 되거나 방어가 한 방에 사라진다. 슬롯이 더한 뒤에만 건다 — CSV 원값은 skill.js 의 0 이상 100 미만 검증 그대로다. 안전 상한이라 손잡이(knob)가 아니다(~~crit_cap_pct 와 같은~~ — 치명 상한은 2026-09-25 삭제) (skill_design §13-5 · DEV_PLAN R72) (2026-09-10 R72 발행)
 hero_level_cap,50,fixed,0,영웅 레벨 상한 = **만렙** [2026-09-30 사용자 「만렙50으로 갈거고」 · GAME_DESIGN §9 09-30 · hero_design §5 · R194] — 나이트메어를 깼을 때 45 ~ 50 이고 헬은 레벨이 아니라 난이도로 오른다. 상한에 닿으면 XP 를 더 쌓지 않는다. 몬스터 레벨(stage.csv:dlvl + monster.csv:level_add)도 이 값을 넘지 않는다 — HP 구간 키(hero_hp_band{b}_unit)가 만렙까지만 있다. ~~7장 끝 · 챕터 하나가 10레벨~~(2026-09-14 · R88) (2026-08-30 발행 · 2026-09-14 50 → 70 · 2026-09-30 70 → 50)
 hero_attr_min,1,fixed,0,영웅 기본 능력치 최소값 — 7종 공통 (2026-08-22 확정)

@@ -32,6 +32,7 @@
  *   같이 그린다 — 무시하면 화면 HP 가 시뮬과 어긋난다. 아이콘 · 설명만 `mock.js` 표시 사전에서 온다.
  * 행동 게이지 = 마지막 행동 이후 경과 ÷ 행동 주기. 행동 이벤트가 온 틱은 **100% 를 먼저 그리고** 다음 틱에
  *   전환 없이(스냅) 비운다 (2026-09-04) — 이벤트가 게이지를 곧장 리셋하면 「꽉 참」 프레임이 화면에 안 나온다.
+ *   게이지는 **빈 채로 출발한다**(시뮬이 싣는 `fillAt` 부터) · **마법 무기는 칸으로 갈린다**(`charge` · `skill` 의 `ch` 로 옮긴다 · R200 · ADR-0483).
  * **물리 경직**(`stagger` · R110 · ADR-0154) — 끝 시각까지 창 뱃지 줄 끝에 옅은 빨간 멈춤 칩이 서고, 그동안 행동 게이지가 선다
  *   (경직으로 선 시간을 경과에서 뺀다 — 시뮬이 행동 예약을 그만큼 밀었다). 로그 · 팝업은 없다 — 적이 판마다 수십 번 걸린다.
  *
@@ -62,8 +63,22 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
 const stalledFor = (u, now) => (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, u.lastAct)), 0);
 /** 지금 경직 중인가 — 창 뱃지 줄의 칩이 이것을 본다 */
 const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity) > now;
-/** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다) */
-const markActed = (u, at) => { u.lastAct = at; u.acted = true; u.stalls = []; };
+/** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다).
+ *  **마법 무기는 안 비운다** [R200 · ADR-0483] — 칸 충전식이라 시전이 차던 칸을 안 건드린다. 칸은 `charge` · `skill` 의 `ch` 가 옮긴다(`chargeTo`) */
+const markActed = (u, at) => { if (u.noBasic) return; u.lastAct = at; u.acted = true; u.stalls = []; };
+/** 마법 무기의 칸 수 — balance.csv 가 정한다(재생기는 세지 않고 시뮬이 실어 온 `ch` 로 옮긴다) */
+const chargeMax = () => D.balance.cast_charge_max;
+/** 칸 줄 — 칸 하나 = 틀 하나 + 채움 하나 (SCREEN_DESIGN §4-2 · ADR-0483) */
+const actSegs = () => '<span class="act-seg"><i class="act-fill k-magic"></i></span>'.repeat(chargeMax());
+/**
+ * 칸을 옮긴다 — `charge`(찼다) · `skill`(썼다) 의 `ch` 가 부른다. 시뮬 규칙 그대로(INTERFACE §2-6 「마법 무기 — 칸 충전」):
+ *   칸이 찼으면 다음 칸이 그 시각부터 찬다 · 다 찬 채 서 있던 게이지는 칸을 쓰는 순간 다시 돈다 · 차던 칸은 시전이 안 건드린다
+ */
+const chargeTo = (u, ch, at, filled) => {
+    if (ch === undefined) return;
+    if (filled || u.charges >= chargeMax()) { u.lastAct = at; u.stalls = []; }
+    u.charges = ch;
+};
 
 /** 신단 효과 한 줄 — 「데미지 +20%」 · 효과가 둘이면 「 · 」로 잇는다 · 없는 id 는 빈 글 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445) */
 export const shrineFxText = id => shrineFxList(id).map(f => f.text).join(' · ');
@@ -172,7 +187,8 @@ export function mountBattle(container, opts) {
             shownLv: h?.level ?? 1, lvPop: null,
             // 진형의 랭크 번호 (0 = 전열) — 카드 자리에만 쓴다 (2026-09-09). 가로 차례는 `layoutRanks` 가 나중에 박는다
             rank: form?.byUid?.[p.uid] ?? 0,
-            hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: -p.period, node: null,
+            // 게이지는 **빈 채로 출발한다** — 시뮬이 실어 온 `fillAt` 부터 찬다 (R200 · ADR-0483) · 마법 무기의 칸은 0 에서
+            hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: p.fillAt ?? 0, charges: 0, node: null,
             // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
             atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType,   // 툴팁 문장의 피해·회복량(범위 · R90) — 전투에는 안 쓴다 (INTERFACE §2-6)
             noBasic: p.noBasic,   // 마법 무기(평타 없음 · R198) — 행동 게이지 색 (ADR-0476)
@@ -574,8 +590,8 @@ function renderUnits(state, root) {
                             <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
                             <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
                         </div>
-                        <div class="act-row" title="${t('bt.actTitle', { s: u.period.toFixed(2) })}">
-                            <i class="act-fill ${u.noBasic ? 'k-magic' : 'k-phys'}"></i>
+                        <div class="act-row${u.noBasic ? ' segs' : ''}" title="${t('bt.actTitle', { s: u.period.toFixed(2) })}">
+                            ${u.noBasic ? actSegs() : '<i class="act-fill k-phys"></i>'}
                         </div>
                         ${skills}
                     </div>
@@ -634,12 +650,27 @@ function refreshUnit(state, u) {
     // 이벤트가 lastAct 를 곧장 리셋하면 「꽉 참」 프레임이 화면에 한 번도 안 나온다(옛 85% 발광이 때우던 구멍).
     // 리셋(내려가는 변화)은 전환 없이 스냅 — 전환이 걸리면 「비워짐」이 「흘러내림」으로 보인다.
     // **경직된 동안은 선다** (R110 · ADR-0154) — 경직으로 선 시간을 경과에서 뺀다. 시뮬이 행동 예약을 그만큼 밀었으므로 다시 차오른 끝에 행동한다
-    const act = u.node.querySelector('.act-fill');
-    if (act) {
-        const fill = u.hp <= 0 ? 0 : u.acted ? 1 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
-        act.style.transition = fill < u.actFill ? 'none' : '';
-        act.style.width = fill * 100 + '%';
-        u.actFill = fill;
+    // **마법 무기는 칸으로 갈린다** (R200 · ADR-0483) — 찬 칸 = 가득 · 지금 차는 칸 = 마지막 칸 시작 이후 경과 ÷ 주기(경직 · 스턴으로 선 시간을 뺀다) · 나머지 빈 칸.
+    //   다 찼으면 게이지가 선다. 칸이 비는 것(시전)은 스냅 — 칸마다 앞 값보다 줄면 전환을 끈다
+    const segs = u.node.querySelectorAll('.act-seg > .act-fill');
+    if (segs.length) {
+        const n = u.hp <= 0 ? 0 : u.charges ?? 0;
+        const part = n >= segs.length ? 0 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
+        u.segFill ??= [];
+        segs.forEach((el, i) => {
+            const fill = u.hp <= 0 ? 0 : i < n ? 1 : i === n ? part : 0;
+            el.style.transition = fill < (u.segFill[i] ?? 0) ? 'none' : '';
+            el.style.width = fill * 100 + '%';
+            u.segFill[i] = fill;
+        });
+    } else {
+        const act = u.node.querySelector('.act-fill');
+        if (act) {
+            const fill = u.hp <= 0 ? 0 : u.acted ? 1 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
+            act.style.transition = fill < u.actFill ? 'none' : '';
+            act.style.width = fill * 100 + '%';
+            u.actFill = fill;
+        }
     }
     // 스킬 쿨 게이지 — 시뮬이 실제로 쓴 쿨(`skill` 이벤트의 firedAt → ready)로 걷는다. 재생기는 쿨을 계산하지 않는다
     if (u.skills?.length) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
@@ -1147,7 +1178,8 @@ const unitSkillCtx = u => ({
 const enemyEntry = (e, at) => ({
     key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
     hero: e.hero ?? null, cls: e.hero?.cls,
-    name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: at, node: null,
+    // 게이지는 등장 지연 뒤 빈 채로 찬다 — 시뮬이 실어 온 `fillAt` (R200 · ADR-0483) · 마법 무기의 칸은 0 에서
+    name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: e.fillAt ?? at, charges: 0, node: null,
     rank: e.rank ?? enemyRank(e.monsterId),
     // 영웅과 **같은 자리**를 갖는다 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 카드 형태를 진영 무관 하나로 만든 결과다.
     //   skills      → **시뮬이 실어 온 그 목록**(`round` 이벤트의 `actives` — 파티의 `result.party[].actives` 와 같은 모양) [개정 2026-09-11 R79 후속 · 사용자 지적].
@@ -1210,7 +1242,12 @@ function apply(state, root, opts, ev) {
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
             const u = U(ev.u);
-            if (u) { markActed(u, ev.t); castSkill(state, u, ev); }
+            if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); }
+            break;
+        }
+        case 'charge': {  // 마법 무기의 칸이 하나 찼다 (R200) — 다음 칸이 이 시각부터 찬다 · 로그 · 팝업은 없다 (ADR-0483)
+            const u = U(ev.u);
+            if (u) { chargeTo(u, ev.ch, ev.t, true); refreshUnit(state, u); }
             break;
         }
         case 'hit': {
@@ -1369,7 +1406,7 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u);
             if (!u) break;
             const had = u.skills ?? [];
-            Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atkMin: ev.atkMin, atkMax: ev.atkMax, matkMin: ev.matkMin, matkMax: ev.matkMax, atkType: ev.atkType, noBasic: ev.noBasic, stats: ev.stats ?? null });
+            Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, period: ev.period, atkMin: ev.atkMin, atkMax: ev.atkMax, matkMin: ev.matkMin, matkMax: ev.matkMax, atkType: ev.atkType, noBasic: ev.noBasic, charges: ev.ch ?? u.charges, stats: ev.stats ?? null });
             // 오오라 칸(준비 `0` · `null`)은 갈아입기로 켜짐 · 꺼짐이 바뀔 수 있어 옛 칸을 잇지 않고 새로 받는다 (R98).
             //   잇는 것은 **같은 자리의 같은 스킬**뿐이다 — 같은 스킬이 고유 · 무기 두 칸에 앉아도 칸마다 제 쿨 표시를 지킨다 (R130 · 시뮬의 칸마다 쿨과 같은 규칙)
             u.skills = (ev.actives ?? []).map((id, i) => {
