@@ -6487,7 +6487,7 @@ check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover�
     }
     return 'Alt hold → 이탈 유지 → 장비 hover 옵션 → mouseleave/keyup 닫힘';
 });
-check('tip: 몬스터 첫 장도 착용 장비다 — 영웅과 같은 카드 · 한 벌은 `round` 이벤트의 `gear` (ADR-0183)', () => {
+check('tip: 원정 몬스터는 영웅과 같은 기본 옵션 + 장비 · Alt 세부 옵션 전 행 · 한 벌은 round gear (ADR-0486)', () => {
     const G2 = newGameP(42, cands, NOW);
     const r = SYS.game.resolveBattle(G2, 1011, NOW);
     if (!r.ok) fail(r.err);
@@ -6496,22 +6496,44 @@ check('tip: 몬스터 첫 장도 착용 장비다 — 영웅과 같은 카드 ·
     // 한 벌은 시뮬이 실어 온다 — 렌더러가 굴리지 않는다 (INTERFACE §2-6 · 처치 드롭이 이 중 하나로 나간다)
     if (!Array.isArray(u.gear) || !u.gear.length) fail('round 이벤트가 gear 를 안 싣는다');
     const alt = on => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { key: 'Alt' }));
-    const base = monsterTipCard(u);
-    if (!base.classList.contains('equipment')) fail('장비 전용 너비 클래스가 없다');
-    if (!base.querySelector('.tip-equipment-face')) fail('첫 장에 착용 장비가 없다');
-    if (base.querySelector('.attr-list')) fail('첫 장에 Basic Stats 가 남았다 — 영웅과 같은 카드여야 한다');
+    let hoveredItem = null;
+    const itemCardOf = it => { hoveredItem = it; return document.createElement('div'); };
+    const base = monsterTipCard(u, itemCardOf);
+    const hero = { ...G2.heroes[0], stats: u.stats };
+    const heroCard = () => heroTipCard(hero, u.sheet, uid => G2.items[uid] ?? null, null, { all: true });
+    if (!base.classList.contains('stats-first') || !base.classList.contains('gear-below')) fail('원정 영웅과 같은 기본 옵션 + 장비 배치가 아니다');
+    if (!base.querySelector('.tip-unit-col.base .tip-gear-below .tip-equipment')) fail('기본 옵션 아래에 장비가 없다');
+    if (base.querySelector('.attr-list')?.textContent !== heroCard().querySelector('.attr-list')?.textContent) fail('영웅과 기본 옵션 막대 표기가 다르다');
+    if (base.querySelector('.tip-unit-col.d1, .tip-unit-col.d2')) fail('기본 상태에 세부 옵션이 섰다');
     if (base.querySelectorAll('.tip-equipment .pd-cell').length !== 8) fail('착용 위치가 8칸이 아니다');
     const filled = base.querySelectorAll('.tip-equipment .pd-cell.filled').length;
     if (filled !== u.gear.length) fail(`찬 칸 ${filled} ≠ 입은 부위 ${u.gear.length}`);
     let held;
-    try { alt(true); held = monsterTipCard(u); } finally { alt(false); }
+    const tip = document.createElement('div');
+    tip.id = 'tooltip'; document.body.appendChild(tip);
+    try {
+        alt(true);
+        held = base._rebuild();
+        tip.appendChild(held);
+        const heroHeld = heroCard();
+        for (const page of ['d1', 'd2']) {
+            if (held.querySelector(`.tip-unit-col.${page}`)?.innerHTML !== heroHeld.querySelector(`.tip-unit-col.${page}`)?.innerHTML) fail(`영웅과 세부 옵션 ${page} 표기가 다르다`);
+        }
+        const cell = held.querySelector('.tip-equipment .pd-cell.filled');
+        if (!cell?.classList.contains('tip-optionable')) fail('Alt 장비 hover가 연결되지 않았다');
+        cell.onmouseenter();
+        if (!u.gear.includes(hoveredItem)) fail('장비 설명창이 몬스터가 입은 개체를 받지 못했다');
+        cell.onmouseleave();
+    } finally { alt(false); tip.remove(); document.querySelector('#equipment-item-tooltip')?.remove(); }
+    if (held.querySelector('.tip-unit-col.base')?.innerHTML !== base.querySelector('.tip-unit-col.base')?.innerHTML) fail('Alt 전후 기본 옵션 · 장비가 바뀌었다');
     if (!held.querySelector('.tip-equipment')) fail('Alt 에서 착용 장비가 사라졌다');
     if (held.querySelectorAll('.tip-unit-col.d1, .tip-unit-col.d2').length !== 2) fail('Alt 세부 옵션 두 열이 아니다');
     const rows = held.querySelectorAll('.tip-unit-col.d1 .cs-row, .tip-unit-col.d2 .cs-row').length;
-    // 몬스터는 옵션이 여는 축이 없다(battle.js 가 시트에서 option_fx 를 뺀다) — 세부 옵션 1 은 전투 능력치 행 전부 · 2 는 값이 있는 줄만 (ADR-0291 · ADR-0381)
-    const want = sheetPages(u.sheet ?? null, true).flat().length;
+    // 영웅 관전 카드와 같이 0인 옵션까지 전 행을 같은 자리에 둔다 (ADR-0486).
+    const want = sheetPages(u.sheet ?? null).flat().length;
     if (rows !== want) fail(`Alt 세부 옵션 ${rows}행 ≠ ${want}`);
     if (held.querySelectorAll('.tip-unit-col.d1 .cs-row').length < sheetPages()[0].filter(x => !x.fx).length) fail('Alt 세부 옵션 1 에서 전투 능력치 행이 빠졌다');
+    if (held._rebuild().querySelector('.tip-unit-col.d1, .tip-unit-col.d2')) fail('Alt를 뗀 뒤 세부 옵션이 접히지 않았다');
     return `${u.monsterId} · 장비 8칸(착용 ${filled}) · Alt 세부 ${rows}행`;
 });
 check('tip: 스킬 문장 — 37행 전부 문장을 낸다 · 숫자가 강조된다 · ko/en 둘 다 (SCREEN_DESIGN §4-2)', () => {

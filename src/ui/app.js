@@ -330,7 +330,7 @@ const FORM_RANK_LABELS = { 1: ['exp.form.front'], 2: ['exp.form.front', 'exp.for
 const state = {
     screen: 'start',        // start | game
     tab: 'expedition',
-    arena: { owner: null, selected: [], ranks: {}, team: null, opponent: null, match: null, last: null },
+    arena: { owner: null, selectionKey: null, team: null, opponent: null, match: null, last: null },
     // 도박장 창 (SCREEN_DESIGN §8-1 · ADR-0331) — 고른 판돈 단계 · 마지막 결과 · 재생 위치. 세이브 아님 —
     //   결과는 이미 세이브에 들어가 있고(`gambleSpin`) 이것은 **다시 보여 줄 거리**다
     gb: { step: 1, last: null, anim: null },
@@ -1212,9 +1212,8 @@ const expScreen = () => (state.exp === 'battle' && state.battle ? 'battle' : sta
 function renderArena(main) {
     const A = state.arena;
     if (A.owner !== G) {
-        Object.assign(A, { owner: G, selected: G.heroes.slice(0, 3).map(h => h.uid), ranks: {}, team: null, opponent: null, match: null, last: null });
+        Object.assign(A, { owner: G, selectionKey: null, team: null, opponent: null, match: null, last: null });
     }
-    A.selected = A.selected.filter(uid => G.heroes.some(h => h.uid === uid));
     const back = () => { A.match = null; A.team = null; A.opponent = null; render(); };
     if (A.match) {
         const page = el('div', 'bt-page page arena-watch');
@@ -1233,40 +1232,42 @@ function renderArena(main) {
         });
         return;
     }
+    const ps = SYS.game.presetState(G);
+    const picked = SYS.game.partyOf(G).map(heroById).filter(Boolean);
+    const ranks = formState().byUid;
+    // 편성 번호·인원·진형이 바뀌면 그 팀으로 찾았던 상대를 다시 찾는다. 진행 중인 결투는 위의 스냅샷을 쓴다.
+    const selectionKey = JSON.stringify([ps.activeNo, picked.map(h => [h.uid, ranks[h.uid]])]);
+    if (A.selectionKey !== selectionKey) {
+        A.selectionKey = selectionKey;
+        A.team = null;
+        A.opponent = null;
+    }
     const page = el('div', 'panel page arena-page');
     main.appendChild(page);
     page.appendChild(el('h2', '', `${t('nav.arena')} <small>${t('ar.practice')}</small>`));
     const selection = el('div', 'arena-selection');
-    selection.appendChild(el('h3', 'sub-h', t('ar.select', { n: A.selected.length })));
-    const roster = el('div', 'hero-strip arena-roster');
-    const invalidate = () => { A.team = null; A.opponent = null; };
-    for (const h of G.heroes) {
-        const picked = A.selected.includes(h.uid);
-        const card = arenaHeroCard(h, picked);
-        card.disabled = !picked && A.selected.length >= 3;
-        card.onclick = () => {
-            if (picked) A.selected = A.selected.filter(uid => uid !== h.uid);
-            else if (A.selected.length < 3) A.selected.push(h.uid);
-            invalidate(); render();
-        };
-        roster.appendChild(card);
-    }
-    selection.appendChild(roster);
+    selection.appendChild(presetSeg(ps));
+    const selectionHead = el('div', 'arena-selection-head');
+    selectionHead.appendChild(el('h3', 'sub-h', t('ar.select', { n: picked.length })));
+    const edit = el('button', 'btn sm', t('ar.edit'));
+    edit.onclick = () => { state.tab = 'party'; clearBagSel(); render(); };
+    selectionHead.appendChild(edit);
+    selection.appendChild(selectionHead);
+    if (picked.length !== SYS.arena.teamSize) selection.appendChild(el('span', 'muted', t('ar.needTeam')));
     page.appendChild(selection);
     const teams = el('div', 'arena-teams');
     const ours = el('div', 'arena-team');
     ours.appendChild(el('h3', 'sub-h', t('ar.ours')));
-    const picked = A.selected.map(uid => G.heroes.find(h => h.uid === uid));
     const ourCards = el('div', 'arena-team-cards');
-    picked.forEach((h, i) => {
+    for (let i = 0; i < SYS.arena.teamSize; i++) {
+        const h = picked[i];
         const cell = el('div', 'arena-seat');
-        const rank = A.ranks[h.uid] ?? (i === 0 ? 0 : 1);
-        cell.appendChild(arenaHeroCard(h));
-        const toggle = el('button', 'btn sm', t(rank === 0 ? 'ar.front' : 'ar.backRank'));
-        toggle.onclick = () => { A.ranks[h.uid] = 1 - rank; invalidate(); render(); };
-        cell.appendChild(toggle);
+        if (h) {
+            cell.appendChild(arenaHeroCard(h));
+            cell.appendChild(el('span', 'muted', t(ranks[h.uid] === 0 ? 'ar.front' : 'ar.backRank')));
+        } else cell.appendChild(el('div', 'arena-empty muted', t('ar.empty')));
         ourCards.appendChild(cell);
-    });
+    }
     ours.appendChild(ourCards);
     const theirs = el('div', 'arena-team');
     theirs.appendChild(el('h3', 'sub-h', t('ar.opponent')));
@@ -1285,7 +1286,7 @@ function renderArena(main) {
     const find = el('button', 'btn', t(A.opponent ? 'ar.reroll' : 'ar.find'));
     find.disabled = picked.length !== SYS.arena.teamSize;
     find.onclick = () => {
-        A.team = SYS.arena.snapshotTeam(picked, G.items, A.ranks);
+        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks);
         A.opponent = SYS.arena.rollOpponent(A.team, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
         render();
     };
@@ -1293,7 +1294,7 @@ function renderArena(main) {
     fight.disabled = !A.opponent || picked.length !== SYS.arena.teamSize;
     fight.onclick = () => {
         // 찾은 뒤 장비를 바꿨을 수 있어 출전 순간 다시 찍는다. 상대는 확인한 그대로다.
-        A.team = SYS.arena.snapshotTeam(picked, G.items, A.ranks);
+        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks);
         const result = SYS.arena.fight(A.team, A.opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
         A.last = result;
         A.match = { team: A.team, opponent: A.opponent, result, resume: null };
@@ -1306,12 +1307,10 @@ function renderArena(main) {
     page.appendChild(controls);
 }
 
-function arenaHeroCard(h, selected = null) {
-    const card = el(selected === null ? 'div' : 'button', `hs-card arena-hero${selected ? ' on' : ''}`);
-    if (selected !== null) card.type = 'button';
+function arenaHeroCard(h) {
+    const card = el('div', 'hs-card arena-hero');
     card.style.borderTopColor = tierColor(h);
     card.setAttribute('aria-label', L(h.name));
-    if (selected !== null) card.setAttribute('aria-pressed', String(selected));
     const face = el('div', 'hero-face');
     const src = M.heroFace(h);
     if (src) { const img = document.createElement('img'); img.src = src; img.alt = ''; face.appendChild(img); }

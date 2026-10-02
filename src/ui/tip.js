@@ -6,8 +6,8 @@
  * `build()` 가 붙일 노드를 돌려준다.
  *
  * 다만 **영웅 카드 · 스킬 카드는 여기 둔다**: 두 렌더러가 같은 카드를 띄우기 때문이다(영웅 띠 ↔ 관전 유닛 카드).
- * 몬스터 카드(관전 적 카드 · 2026-09-14)도 여기 있다 — **첫 장까지 영웅과 같은 카드다**: 착용 장비 3×3 + Alt 세부 옵션 두 열
- * (ADR-0171 · 몬스터 2026-09-21 ADR-0183). 갈리는 것은 **한 벌의 출처** 하나뿐이다 — 영웅은 `equipped`(위치 → uid) · 몬스터는 `gear`(부위 배열).
+ * 관전 영웅 · 몬스터는 **기본 옵션 + 그 아래 착용 장비 3×3 + Alt 세부 옵션 두 열**을 같은 함수로 조립한다(ADR-0486).
+ * 한 벌의 출처는 영웅 `equipped`(위치 → uid) · 몬스터 `gear`(부위 배열)다.
  * 그 몸통의 줄 조립(`attrRowsHtml` · `sheetRowsHtml`)은 **캐릭터 탭의 기본 옵션 · 세부 옵션도 부른다** — 두 자리가 한 표기다.
  * 아이템 비교 카드는 `app.js` 에 남는다 — 희귀도 · 접사 · 무기군처럼 app 쪽 헬퍼를 많이 타서 옮기면 그게 따라온다.
  *
@@ -541,23 +541,22 @@ function bindEquipmentCells(c, equipment, itemCardOf) {
 }
 
 /**
- * 편성 탭 영웅 카드 — 첫 장 **기본 옵션**(능력치 7 막대 + 액티브 스킬 그림 셋) · **Alt 동안 그 바깥쪽에** 장비 3×3 · 세부 옵션 1 · 2
+ * 기본 옵션 첫 장 카드 — 편성 영웅은 능력치 7 막대 + 액티브 스킬 그림 셋, 관전 양 진영은 능력치 7 막대 + 그 아래 장비 3×3.
+ * Alt 동안 그 바깥쪽에 세부 옵션 1 · 2를 붙인다. 편성 카드는 장비도 Alt 동안 별도 열에 선다.
  * [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]. 기본 옵션 열은 Alt 에도 **안 사라진다** — 폭을 못박아 제자리에 선다(style.css `.stats-first`).
  * 대표값은 안 싣는다 — 세부 옵션 1 머리에 있다. 스킬 칸은 그림만이다(캐릭터 탭 스킬 칸과 같은 규칙) — 툴팁 속에 설명창을 걸면 한 자리를 두 카드가 다툰다.
  * 붙는 쪽은 유닛 카드와 같다 — 카드 왼쪽에 선 툴팁은 열이 왼쪽으로 자란다(ADR-0126 · 격자가 자리를 정하고 DOM 순서는 그대로다)
  * @param skills 액티브 칸 셋 — 스킬 개체 또는 `null`(빈 칸). 부르는 쪽이 넘긴다(`app.js:activeCells` — 이 파일은 `G` 를 모른다)
  */
-function statsFirstCard(h, combat, itemOf, itemCardOf, skills, gearBelow = false) {
-    const color = tierOf(h).color;
+function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { skills = null, gearBelow = false, cls = '' } = {}) {
     const side = anchorSide === 'left' ? ' grow-left' : '';
     const open = altHeld;
-    // [실험 HERO_TIP_ALL] `gearBelow` — 장비가 기본 옵션 **아래**에 늘 서고 Alt 는 세부 옵션 1 · 2 만 연다
-    const c = el('div', `tip-card unit stats-first${open ? ' alt' : ''}${gearBelow ? ' gear-below' : ''}${side}`);
+    // 관전 양 진영의 `gearBelow` — 장비가 기본 옵션 아래에 늘 서고 Alt는 세부 옵션 1 · 2만 연다 (ADR-0486).
+    const c = el('div', `tip-card unit stats-first${open ? ' alt' : ''}${gearBelow ? ' gear-below' : ''}${side}${cls ? ` ${cls}` : ''}`);
     c.dataset.alt = '1';
-    c._rebuild = () => statsFirstCard(h, combat, itemOf, itemCardOf, skills, gearBelow);
+    c._rebuild = rebuild;
     c.style.setProperty('--unit-line', color);
     const icons = (skills ?? []).map(s => `<span class="tip-skill${s ? '' : ' vacant'}">${s ? skillImg(s) : ''}</span>`).join('');
-    const equipment = open || gearBelow ? equipmentHtml(wornOfHero(h, itemOf)) : null;
     const more = open ? (gearBelow ? '' : `
             <div class="tip-unit-col gear">${equipment.html}</div>`) + sheetPages(combat, !gearBelow).map((rows, i) => `
             <div class="tip-unit-col d${i + 1}">
@@ -568,7 +567,7 @@ function statsFirstCard(h, combat, itemOf, itemCardOf, skills, gearBelow = false
         <div class="tip-unit">
             <div class="tip-unit-col base">
                 <div class="tip-col-h">${t('ch.attr.h')}</div>
-                <div class="attr-list">${attrRowsHtml(h.stats, color)}</div>
+                <div class="attr-list">${attrRowsHtml(stats, color)}</div>
                 ${skills ? `<div class="tip-skills">${icons}</div>` : ''}
                 ${gearBelow ? `<div class="tip-gear-below">${equipment.html}</div>` : ''}
                 <div class="tip-foot">${t(gearBelow ? 'tip.unit.altHint' : 'tip.unit.altHintGear')}</div>
@@ -578,8 +577,8 @@ function statsFirstCard(h, combat, itemOf, itemCardOf, skills, gearBelow = false
     return c;
 }
 
-/** [실험 2026-09-27] true = 원정 영웅 hover 가 기본 옵션 + 그 아래 장비 · Alt 로 세부 옵션 1 · 2 · false 로 끄면 옛 카드(장비 + Alt 세부 옵션)로 돌아간다 */
-const HERO_TIP_ALL = true;
+/** 관전 양 진영: 기본 옵션 + 그 아래 장비 · Alt로 세부 옵션 1 · 2. false면 양 진영 모두 장비 첫 장으로 돌아간다 (ADR-0486). */
+const UNIT_TIP_ALL = true;
 
 /**
  * 영웅 카드 — 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0171).
@@ -593,9 +592,10 @@ const HERO_TIP_ALL = true;
  */
 export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null, all = false } = {}) {
     if (!h) return null;
-    if (statsFirst) return statsFirstCard(h, combat, itemOf, itemCardOf, skills);
-    // [실험 2026-09-27] 원정 관전 카드만 `all` 을 준다 — 기본 옵션 + 그 아래 장비 · Alt 로 세부 옵션 1 · 2
-    if (all && HERO_TIP_ALL) return statsFirstCard(h, combat, itemOf, itemCardOf, null, true);
+    if (statsFirst || (all && UNIT_TIP_ALL)) return statsFirstCard(h.stats, tierOf(h).color, combat,
+        equipmentHtml(wornOfHero(h, itemOf)), itemCardOf,
+        () => heroTipCard(h, combat, itemOf, itemCardOf, { statsFirst, skills, all }),
+        { skills: statsFirst ? skills : null, gearBelow: !statsFirst });
     return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat, itemOf, itemCardOf), '',
         equipmentHtml(wornOfHero(h, itemOf)), itemCardOf);
 }
@@ -604,7 +604,7 @@ export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, 
 const GRADE_LINE = { normal: 'var(--enemy-line)', elite: 'var(--color-warning)', stage_boss: 'var(--boss-line)', chapter_boss: 'var(--boss-line)' };
 
 /**
- * 몬스터 카드 — 착용 장비 · (Alt) 세부 옵션. **영웅 카드와 같은 첫 장이다** (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · ADR-0183).
+ * 몬스터 카드 — 기본 옵션 + 그 아래 착용 장비 · (Alt) 세부 옵션. 관전 영웅과 같은 조립 함수 · 배치 · 전 행이다 (ADR-0486).
  * 한 벌은 `round` 이벤트의 `gear`(그 몬스터가 입고 있는 장비 — 처치 드롭이 이 중 하나로 나간다 · INTERFACE §2-6),
  * 세부 옵션은 같은 이벤트의 `sheet`(R94) 그대로다 — 렌더러는 계산하지 않는다.
  * 이름 · 직업 · 등급 줄은 없다 — 올린 카드의 이름 줄 · 테두리 색이 이미 든다 (ADR-0134)
@@ -614,10 +614,13 @@ const GRADE_LINE = { normal: 'var(--enemy-line)', elite: 'var(--color-warning)',
 export function monsterTipCard(u, itemCardOf = null) {
     if (!u) return null;
     // 어두운 등급 색(일반 `--enemy-line` · 보스 `--boss-line`)은 막대만 밝힌다 — 검은 막대 바탕에 묻힌다. 정예(노랑)는 그대로 (2026-09-15 · SCREEN_DESIGN §2).
-    //   장비 첫 장에는 막대가 없어 지금은 안 쓰이지만, Basic Stats 몸통을 되살리면 그대로 걸린다
     const lift = u.grade === 'elite' ? '' : 'bar-lift';
-    return unitCard(u.stats, GRADE_LINE[u.grade] ?? GRADE_LINE.normal, u.sheet ?? null, () => monsterTipCard(u, itemCardOf), lift,
-        equipmentHtml(wornOfMonster(u.gear)), itemCardOf);
+    const color = GRADE_LINE[u.grade] ?? GRADE_LINE.normal;
+    const equipment = equipmentHtml(wornOfMonster(u.gear));
+    const rebuild = () => monsterTipCard(u, itemCardOf);
+    if (UNIT_TIP_ALL) return statsFirstCard(u.stats, color, u.sheet ?? null, equipment, itemCardOf, rebuild,
+        { gearBelow: true, cls: lift });
+    return unitCard(u.stats, color, u.sheet ?? null, rebuild, lift, equipment, itemCardOf);
 }
 
 /**
