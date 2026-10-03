@@ -579,11 +579,12 @@ function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { 
     return c;
 }
 
-/** 관전 양 진영: 기본 옵션 + 그 아래 장비 · Alt로 세부 옵션 1 · 2. false면 양 진영 모두 장비 첫 장으로 돌아간다 (ADR-0486). */
+/** 유닛 툴팁 전부: 기본 옵션 + 그 아래 장비 · Alt로 세부 옵션 1 · 2. false면 영웅 · 몬스터 모두 장비 첫 장으로 돌아간다 (ADR-0486 · 관전 밖 영웅도 ADR-0498). */
 const UNIT_TIP_ALL = true;
 
 /**
- * 영웅 카드 — 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0171).
+ * 영웅 카드 — 기본 옵션 + 그 아래 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0486 · ADR-0498).
+ * 관전 · 편성 · 출정 창 · 상점 · 제련소 · 훈련장 — 서는 자리 전부 같은 카드다 [2026-10-03 사용자 지시 · ADR-0498].
  * 능력치는 `h.stats` 에서 그대로 읽는다. 세부 옵션은 **부르는 쪽이 넘긴다** — `game.heroCombat` 은 상태 `G` 가 있어야 하는데 이 파일은 `G` 를 모른다.
  * 이름 · 직업 · 레벨 · 죄종 · 등급 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134)
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
@@ -592,11 +593,11 @@ const UNIT_TIP_ALL = true;
  * @param statsFirst 첫 장이 **기본 옵션**인 편성 탭 카드(`statsFirstCard`) — 편성 탭(띠 · 진형 칸)이 **스위치가 켜져 있을 때만** 준다(`app.js:PARTY_TIP_STATS` · 꺼 둠 · ADR-0318) [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]
  * @param skills     `statsFirst` 카드의 액티브 칸 셋(스킬 개체 또는 `null`)
  */
-export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null, all = false } = {}) {
+export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null } = {}) {
     if (!h) return null;
-    if (statsFirst || (all && UNIT_TIP_ALL)) return statsFirstCard(h.stats, tierOf(h).color, combat,
+    if (statsFirst || UNIT_TIP_ALL) return statsFirstCard(h.stats, tierOf(h).color, combat,
         equipmentHtml(wornOfHero(h, itemOf)), itemCardOf,
-        () => heroTipCard(h, combat, itemOf, itemCardOf, { statsFirst, skills, all }),
+        () => heroTipCard(h, combat, itemOf, itemCardOf, { statsFirst, skills }),
         { skills: statsFirst ? skills : null, gearBelow: !statsFirst });
     return unitCard(h.stats, tierOf(h).color, combat, () => heroTipCard(h, combat, itemOf, itemCardOf), '',
         equipmentHtml(wornOfHero(h, itemOf)), itemCardOf);
@@ -1083,7 +1084,7 @@ const needWeaponChip = (def, off) => {
 };
 
 /**
- * 스킬 설명창의 **몸통** — 아이콘 + 이름 + 능력치 칩 · 맨 끝 필요 무기(한 줄 · ADR-0496) / 칩(출처 · 태그 · 종류) / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주(기본 상태 · 괄호가 붙을 숫자가 있을 때만).
+ * 스킬 설명창의 **몸통** — 아이콘 + 이름 + 능력치 칩 · 맨 끝 필요 무기(한 줄 · ADR-0496) / 칩(출처 · 태그 · 종류) / **문장**(추가 피해가 있으면 둘째 문장). 각주는 없다(ADR-0499).
  * 스킬 카드가 부른다 (~~아이템 툴팁의 스킬 칸~~ 은 2026-09-29 걷혔다 · ADR-0421).
  * 칩은 **출처 칩**(영웅·책·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **종류 칩**(피해를 내는 스킬만 — 물리 · 원소 이름 `st.atkType.*` · 줄 순 · 같은 종류는 한 번 · ADR-0480) · **능력치 칩**이다.
  * 능력치 칩은 스케일링 슬롯(하는 일 줄의 `scales` — 줄 순 · 2026-09-22)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
@@ -1104,6 +1105,5 @@ function skillBodyHtml(s, ctx) {
     return `
         ${skillNameHtml(s, attrs, need)}
         ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
-        ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}
-        ${R.fx && !R.alt ? `<div class="tip-foot">${t('sk.altHint')}</div>` : ''}`;
+        ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}`;
 }

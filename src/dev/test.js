@@ -6519,15 +6519,13 @@ check('skill: previewOf 확률은 1(= 100%) 에서 자른다 — parts.procChanc
     if (Math.abs(low - (raw + 0.2)) > 1e-9) fail(`1 아래는 그대로여야 한다 ${low} ≠ ${raw + 0.2}`);
     return `원값 ${raw} · 민 값 ${pushed} → 설명창 ${pc.value} · 운 1 이면 ${low}`;
 });
-check('tip: 영웅 첫 장은 착용 장비 · Alt 는 장비를 둔 채 세부 옵션 둘만 추가 · Basic Stats 는 숨긴다 (ADR-0171)', () => {
+check('tip: 영웅 툴팁은 어디서나 원정과 같은 기본 옵션 + 장비 · Alt 는 둘을 둔 채 세부 옵션 전 행 둘을 추가 (ADR-0486 · ADR-0498)', () => {
     const h = G.heroes[0], combat = SYS.game.heroCombat(G, h), findItem = uid => G.items[uid] ?? null;
     const alt = on => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { key: 'Alt' }));
     const base = heroTipCard(h, combat, findItem);
-    if (!base.classList.contains('equipment')) fail('장비 전용 너비 클래스가 없다');
-    if (!base.querySelector('.tip-equipment')) fail('첫 장에 착용 장비가 없다');
-    if (!base.querySelector('.tip-equipment-face')) fail('장비 화면 레이어가 없다');
-    if (!base.querySelector('.tip-equipment-probe')) fail('기본 높이를 잡는 세부 옵션 1 기준이 없다');
-    if (base.querySelector('.attr-list')) fail('첫 장에 Basic Stats 가 남았다');
+    if (!base.classList.contains('stats-first') || !base.classList.contains('gear-below')) fail('원정과 같은 기본 옵션 + 장비 배치가 아니다');
+    if (!base.querySelector('.tip-unit-col.base .attr-list')) fail('첫 장에 기본 옵션 막대가 없다');
+    if (!base.querySelector('.tip-unit-col.base .tip-gear-below .tip-equipment')) fail('기본 옵션 아래에 장비가 없다');
     if (base.querySelector('.tip-unit-col.d1, .tip-unit-col.d2')) fail('기본 상태에 세부 옵션이 섰다');
     if (base.querySelectorAll('.tip-equipment .pd-cell').length !== 8) fail('착용 위치가 8칸이 아니다');
     const worn = Object.values(h.equipped).filter(uid => findItem(uid)).length;
@@ -6537,23 +6535,18 @@ check('tip: 영웅 첫 장은 착용 장비 · Alt 는 장비를 둔 채 세부 
         alt(true);
         held = heroTipCard(h, combat, findItem);
     } finally { alt(false); }
-    if (!held.querySelector('.tip-equipment')) fail('Alt 에서 착용 장비가 사라졌다');
-    if (held.querySelector('.tip-equipment-probe')) fail('Alt 에서 높이 기준이 실제 세부 옵션 1과 중복됐다');
-    if (held.querySelector('.attr-list')) fail('Alt 에 Basic Stats 가 섰다');
+    if (!held.querySelector('.tip-unit-col.base .attr-list')) fail('Alt 에서 기본 옵션이 사라졌다');
+    if (!held.querySelector('.tip-unit-col.base .tip-gear-below .tip-equipment')) fail('Alt 에서 장비가 자리를 옮겼다');
     if (held.querySelectorAll('.tip-unit-col.d1, .tip-unit-col.d2').length !== 2) fail('Alt 세부 옵션 두 열이 아니다');
+    // 세부 옵션은 캐릭터 탭의 전 행 — 같은 순서 · 같은 묶음 간격 (ADR-0486 · ADR-0396)
+    const [p1, p2] = sheetPages(combat);
     const detailRows = held.querySelectorAll('.tip-unit-col.d1 .cs-row, .tip-unit-col.d2 .cs-row').length;
-    // 세부 옵션 1 = 전투 능력치 행 전부 + 옵션 줄은 값이 있을 때만 · 2 = **전 줄이 값이 있을 때만** (ADR-0291 · ADR-0381) — 캐릭터 탭은 다 세운다
-    const [p1, p2] = sheetPages();
-    const [s1, s2] = sheetPages(combat, true);
-    if (detailRows !== s1.length + s2.length) fail(`Alt 세부 옵션 ${detailRows}행 ≠ 값이 있는 줄까지 ${s1.length + s2.length}행`);
-    if (p1.filter(s => !s.fx).some(s => !s1.some(r => r.id === s.id))) fail('Alt 세부 옵션 1 에서 전투 능력치 행이 빠졌다');
-    for (const s of s2) if (!(s.fx ? true : combat[s.id])) fail(`Alt 세부 옵션 2 에 값이 0 인 ${s.id} 가 섰다`);
-    // 간격은 묶음 경계마다 — 1 은 두 자리(최대 HP 아래 · 물리 방어 위) · 2 는 남은 묶음 수 − 1 (ADR-0396)
-    if (held.querySelectorAll('.tip-unit-col.d1 .cs-row.gap').length !== s1.filter(s => s.gap).length) fail('세부 옵션 1 간격이 묶음 경계와 다르다 (ADR-0396)');
-    if (held.querySelectorAll('.tip-unit-col.d2 .cs-row.gap').length !== s2.filter(s => s.gap).length) fail('세부 옵션 2 간격이 묶음 경계와 다르다 (ADR-0396)');
+    if (detailRows !== p1.length + p2.length) fail(`Alt 세부 옵션 ${detailRows}행 ≠ 캐릭터 탭 ${p1.length + p2.length}행`);
+    if (held.querySelectorAll('.tip-unit-col.d1 .cs-row.gap').length !== p1.filter(s => s.gap).length) fail('세부 옵션 1 간격이 묶음 경계와 다르다 (ADR-0396)');
+    if (held.querySelectorAll('.tip-unit-col.d2 .cs-row.gap').length !== p2.filter(s => s.gap).length) fail('세부 옵션 2 간격이 묶음 경계와 다르다 (ADR-0396)');
     const full = `${p1.length} / ${p2.length}`;
     if (full !== '17 / 16') fail(`캐릭터 탭 세부 옵션 ${full} — 17 / 16 이어야 한다 (ADR-0381 · 고정 피해 감소는 피해 감소 줄)`);
-    return `장비 8칸(착용 ${worn}) · Alt 세부 ${detailRows}행 · 캐릭터 탭 ${full}`;
+    return `기본 옵션 + 장비 8칸(착용 ${worn}) · Alt 세부 ${detailRows}행 · 캐릭터 탭 ${full}`;
 });
 check('tip: Alt 영웅 툴팁은 카드 밖에서도 남고 · 찬 장비 hover는 옵션 카드를 열고 · 키를 떼면 모두 닫힌다 (ADR-0182)', () => {
     const h = G.heroes[0], combat = SYS.game.heroCombat(G, h), findItem = uid => G.items[uid] ?? null;
@@ -6609,7 +6602,7 @@ check('tip: 원정 몬스터는 영웅과 같은 기본 옵션 + 장비 · Alt �
     const itemCardOf = it => { hoveredItem = it; return document.createElement('div'); };
     const base = monsterTipCard(u, itemCardOf);
     const hero = { ...G2.heroes[0], stats: u.stats };
-    const heroCard = () => heroTipCard(hero, u.sheet, uid => G2.items[uid] ?? null, null, { all: true });
+    const heroCard = () => heroTipCard(hero, u.sheet, uid => G2.items[uid] ?? null, null);
     if (!base.classList.contains('stats-first') || !base.classList.contains('gear-below')) fail('원정 영웅과 같은 기본 옵션 + 장비 배치가 아니다');
     if (!base.querySelector('.tip-unit-col.base .tip-gear-below .tip-equipment')) fail('기본 옵션 아래에 장비가 없다');
     if (base.querySelector('.attr-list')?.textContent !== heroCard().querySelector('.attr-list')?.textContent) fail('영웅과 기본 옵션 막대 표기가 다르다');
@@ -6790,7 +6783,7 @@ check('tip: 숫자 자리 셋 — 기본 · Alt 를 누르는 동안 값 + 괄�
     const nLines = base.querySelectorAll('.tip-line').length;
     if (nLines !== 2) fail(`추가 피해 둘째 문장이 없다 (${nLines}줄)`);
     if (base.querySelector('.tip-fx')) fail('기본 상태에 식이 섰다');
-    if (!base.querySelector('.tip-foot')) fail('기본 상태에 「Alt 계산식」 각주가 없다');
+    if (base.querySelector('.tip-foot')) fail('「Alt 계산식」 각주가 섰다 (ADR-0499)');
     let held;
     try {
         alt(true);

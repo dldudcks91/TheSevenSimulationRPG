@@ -2770,7 +2770,7 @@ function heroCardHtml(h, { leader = false } = {}) {
  *   한 띠에 한 뜻만 선다 — 편성에서는 클릭이 곧 편성이라 「본 영웅」 표시가 설 자리가 없고,
  *   09-08 판은 그 자리에 `heroUid` 를 그려서 **눌러도 아무 변화가 없는 화면**이 돼 있었다.
  * 카드 = 초상(카드 전체) + 위칸(왼쪽 지금 하는 일 · 오른쪽 이름) — SCREEN_DESIGN §5 (2026-08-27)
- * 올려놓으면 착용 장비 툴팁, Alt 동안 세부 옵션 (ui/tip.js heroTipCard · ADR-0171) — `tip: false` 면 안 뜬다(캐릭터 탭 · 2026-09-15 · ADR-0116)
+ * 올려놓으면 기본 옵션 + 장비 툴팁(원정과 같은 카드), Alt 동안 세부 옵션 (ui/tip.js heroTipCard · ADR-0498) — `tip: false` 면 안 뜬다(캐릭터 탭 · 2026-09-15 · ADR-0116)
  * leaderUid — 편성 화면만 준다. 파티 첫 슬롯 = 리더 (옛 파티 행의 리더 표시를 띠가 이어받았다)
  * flat — 편성 패널처럼 이미 패널 안에 들어갈 때. 패널 껍데기(테두리·배경·여백)를 벗는다
  * reorder — 카드를 끌어 다른 카드에 놓으면 두 영웅의 로스터 자리를 맞바꾼다 (캐릭터 탭 · 2026-09-15 · ADR-0136)
@@ -6945,7 +6945,8 @@ async function boot() {
         for (const iuid of [...G.bag]) SYS.game.equip(G, uid0, iuid);   // 거절되는 것(직업 전속 등)은 가방에 남는다
         runBattle(D.stageOrder[0], { instant: true });
         // `&t=potion` 은 **물약 카드**를 본다 — 칸이 편성 탭에 있으므로 이 길만 탭이 갈린다 (§2 「물약 툴팁 규격」 · ADR-0315)
-        state.tab = new URLSearchParams(location.search).get('t') === 'potion' ? 'party' : 'character';
+        //   `&t=hero` 는 **편성 띠의 영웅 툴팁** — 관전 밖 영웅 카드도 관전과 같은 카드인지 본다 (§2 「유닛 툴팁 규격」 · ADR-0498)
+        state.tab = ['potion', 'hero'].includes(new URLSearchParams(location.search).get('t')) ? 'party' : 'character';
     }
     if (dev === 'offline') {   // 반복을 켠 채 게임을 껐다 다시 켠 것처럼 — 런 마무리 배너 확인용
         if (!G) startGame();
@@ -6981,11 +6982,12 @@ async function boot() {
        `render()` **뒤에** 걸린다: 카드는 `bindTipNode` 가 붙인 `mouseenter` 가 만들고, 그 핸들러는 render 마다 새로 붙는다.
        기본은 **가방 첫 칸**(비교 두 장 — 이 툴팁의 가장 넓은 모양) · `&t=doll` 이면 페이퍼돌 무기 칸(한 장) ·
        `&t=skill` 이면 **액티브 카드의 스킬 설명창**(출처 · 태그 · 능력치 칩 — ADR-0118) ·
-       `&t=potion` 이면 **편성 탭 물약 칸의 물약 카드**(위 setup 이 탭을 편성으로 돌린다 · ADR-0315) */
+       `&t=potion` 이면 **편성 탭 물약 칸의 물약 카드**(위 setup 이 탭을 편성으로 돌린다 · ADR-0315) ·
+       `&t=hero` 면 **편성 띠 첫 영웅의 유닛 툴팁**(ADR-0498) */
     if (dev === 'tip') {
         const q = new URLSearchParams(location.search);
         // `&i=n` — n번째 찬 칸(1부터). 가방에 무엇이 떨어질지는 시드가 정하므로 **무기 칸을 골라 잡는 유일한 길**이다
-        const cell = { doll: '.pd-cell.filled', skill: '.sk-card', potion: '.pt-slot' }[q.get('t')] ?? '.inv-cell.filled';
+        const cell = { doll: '.pd-cell.filled', skill: '.sk-card', potion: '.pt-slot', hero: '.hs-card' }[q.get('t')] ?? '.inv-cell.filled';
         const list = document.querySelectorAll(`${cell}[data-tip]`);
         const node = list[Math.max(1, Number(q.get('i')) || 1) - 1];
         // 커서 자리는 왼쪽 위 — 카드 두 장(최대 640px)이 접힘 보정 없이 그대로 펴진다

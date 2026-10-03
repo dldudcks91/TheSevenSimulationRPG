@@ -1358,8 +1358,7 @@ const STRINGS = {
     'sk.amt.healFx': { ko: '{f} 만큼', en: 'HP equal to {f}' },
     /* 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다(Alt 의 괄호 식이 값 바로 뒤에 서게). 초는 `time.s` · % 는 기호 그대로 */
     'sk.u.times': { ko: '{v}번', en: '{v} times' },
-    /* 각주 — 기본 설명창 바닥 한 줄. 괄호를 붙일 수 있는 숫자가 있을 때만 선다 (SCREEN_DESIGN §2 「스킬 설명창 규격」) */
-    'sk.altHint': { ko: 'Alt 계산식', en: 'Alt: formula' },
+    // ~~`sk.altHint`(「Alt 계산식」 각주)~~ 는 2026-10-03 삭제 [사용자 지시 · ADR-0499]
     /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill_status.csv:stat` 어휘 그대로(옛 `skill.csv:effect_stat` · 2026-09-22) · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
     'sk.eff.atk_pct': { ko: '데미지 +{v} 를 건다', en: '+{v} Damage' },
     // 주기를 줄이는 창 = 빨라진다 → 「공격 속도 +」 — 옵션 `aspd_pct`(주기 × (1 − 값))와 같은 방향 · 같은 수 (ADR-0358)

@@ -155,6 +155,7 @@ export function mountBattle(container, opts) {
         round: 0, timer: null, timeouts: [],
         // 공격자 포커스 (개발용 비교 · `focusMode`) — 지금 행동 {key, t, keys, rising} · 세움이 풀리는 실제 시각(ms · 0 = 안 세움)
         focus: null, hold: 0,
+        roundWait: 0,            // 라운드 사이 숨을 이미 쉰 라운드 번호 — 숨이 풀린 뒤 그 `round` 를 다시 세우지 않게 (`ROUND_GAP_MS`)
         // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
         wall: resume?.wall ?? opts.now(),
         auto: false,             // 결과 띠가 다음 런을 세는 중 — 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
@@ -503,6 +504,10 @@ const RISE_MS = 150;    // ① 올라가는 실제 시간 — style.css `.fx-adv
 const PEAK_MS = 100;    // ① 다 올라간 뒤 타격 전에 서 있는 시간 — 「올라가면서 때림」이 아니라 「올라가서 때림」으로 읽히게
 const FOCUS_MS = 300;   // ② 나간 채로 세우는 실제 시간 · 셋 다 배속이 오르면 연출처럼 준다(`SPEED_K`)
 export const focusMode = () => { const v = document.documentElement.dataset.focus; return FOCUS_MODES.includes(v) ? v : FOCUS_DEFAULT; };
+/* 라운드 사이 숨 [2026-10-03 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0500] — 마지막 몬스터가 쓰러지면 쓰러진 카드를 이만큼 보인 뒤 다음 라운드를 세운다.
+   **재생만 선다** — 시뮬의 라운드 사이 쉬는 시간은 그대로 0 이다(결과 · 오프라인 불변). 세우는 길은 공격자 포커스의 세움(`waitFocus`)과 같다 ·
+   배속이 오르면 연출처럼 준다(`SPEED_K`) · ⚠ 세운 만큼 관전 중인 원정이 실제 시간으로 늦게 간다 — 포커스와 같은 이유 */
+const ROUND_GAP_MS = 1000;
 /** 행동의 주인 — 시전 · 타격 · 빗나감 · 반격 · 불러내기. 나머지 사건(쓰러짐 · 창 · 재생 · 중독 틱 …)은 주인이 없다 — 같은 순간의 앞 행동에 딸린다 */
 const actorOf = ev => (ev.e === 'skill' || ev.e === 'counter' || ev.e === 'call') ? ev.u : (ev.e === 'hit' || ev.e === 'dodge') ? ev.a : null;
 /** 그 사건이 지금 행동에 딸리나 — 같은 순간이고 다른 유닛의 행동이 아니다 */
@@ -668,7 +673,7 @@ function renderUnits(state, root) {
             // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
             // Alt 동안 카드 밖으로 나가도 유지 — 장비 칸 hover 로 아이템 카드를 여는 규칙이 양 진영 같다 (ADR-0176 · ADR-0182 · ADR-0183)
             if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null, state.itemOf,
-                it => state.itemTipOf?.(u.hero, it) ?? null, { all: true }), { anchor: true, holdOnAlt: true });
+                it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
             // 몬스터 장비의 아이템 카드도 영웅 · 캐릭터 탭과 같다 — 스킬 칸의 숫자는 그 몬스터의 표시값이다 (ADR-0183 · ADR-0312)
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
                 it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });
@@ -1229,6 +1234,12 @@ function drain(state, root, opts) {
     const focus = !state.catchUp && focusMode() !== 'off';   // 되감기는 세우지 않는다
     while (state.idx < tl.length && tl[state.idx].t <= state.t + 1e-9) {
         const ev = tl[state.idx];
+        // 라운드 사이 숨 — 다음 라운드가 서기 전에 쓰러진 카드를 보인다(`ROUND_GAP_MS`). 첫 라운드 · 되감기는 안 선다 ·
+        //   앞 행동의 포커스가 남았으면 그 세움이 먼저 끝난다(아래 `waitFocus(FOCUS_MS)`) — 숨은 그다음 걸음에
+        if (ev.e === 'round' && state.enemies.length && !state.catchUp && state.roundWait !== ev.n) {
+            if (!state.focus) { state.roundWait = ev.n; waitFocus(state, root, opts, ROUND_GAP_MS); }
+            break;
+        }
         // 공격자 포커스 — 다음 사건이 다른 순간이거나 다른 유닛의 행동이면 지금 행동이 끝난 것이다. 거기서 세우고 남은 사건은 풀린 뒤에.
         //   행동이 없을 때 주인이 있는 사건이 오면 새 행동을 연다 — 올라가는 동안(①)은 적용하지 않고 선다
         if (focus) {
