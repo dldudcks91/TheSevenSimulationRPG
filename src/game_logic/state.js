@@ -476,6 +476,10 @@ export function createGameSystem(deps) {
             .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
         for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
         for (const it of Object.values(s.items ?? {})) if (it && 'skill' in it) delete it.skill;
+        // 캐스팅 속도 [2026-10-03 · R203 · 버전 무변경 — INTERFACE §4] — 마법 무기의 나태 칸은 `cast_speed_pct` 다. 그 전에 굴린 마법 무기의 `aspd_pct` 를
+        //   **같은 값으로 이름만** 옮긴다 — 같은 행 자리 · 같은 굴림이라 지금 굴렸어도 같은 값이 났다 · 옮기지 않으면 캐스터에게 아무 일도 안 하는 줄이 남는다
+        for (const it of Object.values(s.items ?? {}))
+            if (I?.groupOf?.(it)?.damageKind === 'magic') for (const a of it.affixes ?? []) if (a.stat === 'aspd_pct') a.stat = 'cast_speed_pct';
         s.advancing = (Array.isArray(s.advancing) ? s.advancing : []).filter(w => {
             const h = w && s.heroes.find(x => x.uid === w.uid);
             return h && !h.advance && advanceById[w.branch]?.cls === h.cls && Number.isFinite(w.since) && Number.isFinite(w.until);
@@ -501,9 +505,9 @@ export function createGameSystem(deps) {
     const heroById = (state, uid) => state.heroes.find(h => h.uid === uid);
     const heroItems = (state, h) => Object.values(h.equipped).filter(Boolean).map(uid => state.items[uid]).filter(Boolean);
     /**
-     * 착용 무기의 무기군 — **배운 칸의 스킬이 나가는가의 입력**이다 [2026-09-29 · R187 · 개정 2026-10-02 · R197 · skill_design §2-2 — ~~액티브 2번 칸(무기군)의 입력~~].
+     * 착용 무기의 무기군 — **무기가 필요한 스킬이 나가는가의 입력**이다 [2026-09-29 · R187 · 개정 2026-10-03 · R204 · skill_design §2-2 — ~~배운 칸의 스킬~~ R197 · ~~액티브 2번 칸(무기군)의 입력~~].
      * 장비를 아는 층은 여기뿐이라 이 조회도 여기 있다 — `skill.js` 는 아이템을 모른다.
-     * 맨손이면 `null` 이고, 그러면 배운 칸의 직업 스킬이 꺼진다(`partyUnits` → battle · 고유 · 전직 칸은 무기를 안 본다).
+     * 맨손이면 `null` 이고, 그러면 무기가 필요한 스킬(타격 · 회복 · 소환)이 칸을 가리지 않고 꺼진다(`partyUnits` → battle · `skill.fitsWeapon`).
      */
     const weaponGroupOf = (state, h) => {
         const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
@@ -1368,7 +1372,7 @@ export function createGameSystem(deps) {
                 uid, combat: heroCombat(state, h, list, no, tactic),  // 전술 조건도 이 인원으로 센다 — 원정은 나간 인원이다 (R92) · 칸은 나간 편성의 것 (R129) · 출발 때 켜진 것만 (R130)
                 stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
                 actives: SK.activesFor(h),                // 둘째 칸 = 책으로 배운 스킬(`h.bookSkill`) — ~~무기가 든 스킬~~ 2026-09-29 R179
-                weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 배운 칸의 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · R197 · skill_design §2-2)
+                weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 무기가 필요한 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · R204 · skill_design §2-2)
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
             };
         });
@@ -2978,6 +2982,12 @@ export function createGameSystem(deps) {
         return TC.bonusOf(tacticState(state, party, no).slots.filter(s => s.open && s.active).map(s => s.option));
     }
 
+    /** 결투장이 편성 `no` 에서 가져가는 것 — 전술 보너스 · 재고에서 채운 물약 칸 · 칸 수 (INTERFACE §2-17 · 2026-10-03). 상태 불변 · rng 0 */
+    function arenaLoadout(state, no = state.preset) {
+        const p = presetAt(state, no) ?? curPreset(state);
+        return { tactic: tacticBonus(state, p.party, no), potions: fillSlots(state, p), slotMax: limitsOf(state).potionSlots };
+    }
+
     /** 고른 편성의 전술 칸 세이브 — 없으면 빈 자리를 세운다 (옛 세이브 · 테스트가 `{slots}` 만 꽂은 경우) */
     const ownTactics = state => {
         const p = curPreset(state);
@@ -3126,7 +3136,7 @@ export function createGameSystem(deps) {
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget,
         bookState, learnBook, craftBook,
         masteryState, learnMastery, unlearnMastery, resetMastery,
-        tacticState, tacticBonus, rerollTactic, toggleTacticLock, weaponGroupOf,
+        tacticState, tacticBonus, arenaLoadout, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, bonusOf, needOf, peakTotal,
     };
 }

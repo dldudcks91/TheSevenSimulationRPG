@@ -25,6 +25,7 @@
 | 주제 | 세부 문서 (주요 절) | SSOT CSV (`src/data/`) | 코드 반영 확인처 |
 |---|---|---|---|
 | 원정 · 거점 · 파견 · 탐험 · 선술집 | [base_expedition_design.md](docs/game_design/base_expedition_design.md) §1 원정 · §1-2 스테이지 구조 · §2 파견처 · §2-4 선술집 · §3 파견 · §3-1 탐험 · **§4 방치형 계약** · §5 스코프 가드 | `balance.csv` · `stage.csv` · `stage_round.csv` · `round_budget.csv` | DEV_PLAN §3-2 (거점·파견·탐험) · §3-3 R9 |
+| 결투장 · 온라인/오프라인 · 치팅 | [arena_design.md](docs/game_design/arena_design.md) §0 확정 · §2 적법성 검사 · §4 인증 리그 | 미발행 (기존 CSV 범위를 읽는다) | `game_logic/arena.js` (지금은 AI 연습전) |
 | 전투 · 피해 계산 | [battle_design.md](docs/game_design/battle_design.md) §2 행동 주기 · §3 발동 규칙 · §5 액티브 · §6 쿨타임 · §8 전투 능력치 · §8-1 몬스터 · **§9 피해 계산**(§9-1~§9-6) · §9-9 미결 | `combat_stat.csv` · `balance.csv` · `round_budget.csv` | DEV_PLAN §3-3 R1~R8 · R10 |
 | 영웅 · 능력치 · 성장 | [hero_design.md](docs/game_design/hero_design.md) §1 2층 구조 · §2 직업 · §3 정체성 분담 · §4 능력치 · §4-1 기본 능력치 · §4-1-1 미결 · §4-2 불변식 · §5 성장 · §6 미탑재 | `hero_attribute.csv` · `combat_stat.csv` · `balance.csv` | DEV_PLAN §3-3 R7 · R12 |
 | 스킬 · 마스터리 · 전직 | [skill_design.md](docs/game_design/skill_design.md) §0 확정 · §1 구조 · §2 액티브 · §3 마스터리 · §4 전직 특화 · §5 롤백 · **§7 미확정** · §9 직업 액티브 초안 | `skill.csv` (노드 테이블 · 무기군 액티브 · 고유 스킬 풀 · 포인트 키는 **미발행**) | DEV_PLAN §3-2 (스킬 효과) |

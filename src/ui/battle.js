@@ -43,7 +43,7 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
-import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 피격 반응 + 공격 시 흔들림(셋 다 기본 On) — 셋 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468)
+import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 피격 반응 + 공격 시 흔들림(셋 다 기본 On) — 셋 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468)
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -153,6 +153,8 @@ export function mountBattle(container, opts) {
         lvUnseen: opts.lvUnseen ?? null, onLvSeen: opts.onLvSeen ?? null,
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
+        // 공격자 포커스 (개발용 비교 · `focusMode`) — 지금 행동 {key, t, keys, rising} · 세움이 풀리는 실제 시각(ms · 0 = 안 세움)
+        focus: null, hold: 0,
         // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
         wall: resume?.wall ?? opts.now(),
         auto: false,             // 결과 띠가 다음 런을 세는 중 — 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
@@ -422,13 +424,20 @@ const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
     : u.grade === 'stage_boss' ? t('kind.boss')
     : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '';
 const identOf = (u, state) => u.hero ? `${lvSpan(state, u, u.hero.level)} · ${clsName(u.cls)}` : gradeLabel(u);
-/* 개편판 신원 — **양 진영 같은** `Lv.n · 직업` [2026-09-21 사용자 지시 · ADR-0275]. 정예 · 보스 라벨은 띠 오른쪽(`gradeLabel`)으로 간다.
+/* 몬스터의 종족 — `monster.csv:monster_type` 의 이름(의뢰가 검증한 `SYS.commission.races`) [2026-10-03 사용자 지시 · ADR-0494].
+   영웅(결투장의 적 영웅 포함)은 종족이 없다 */
+const raceLabel = u => {
+    const type = u.hero ? null : D.monsters?.[u.monsterId]?.monster_type;
+    const r = type ? SYS.commission?.races?.find(x => x.id === type) : null;
+    return r ? L(r.name) : '';
+};
+/* 개편판 신원 — **양 진영 같은** `Lv.n · 직업` [2026-09-21 사용자 지시 · ADR-0275] · 몬스터는 그 뒤에 `· 종족`(ADR-0494). 정예 · 보스 라벨은 띠 오른쪽(`gradeLabel`)으로 간다.
    몬스터 레벨 = 결과가 싣는 세부 능력치의 레벨(`sheet.level` — 이번 런의 스테이지 레벨 · 몬스터도 영웅과 같은 computeCombat 을 지난다) ·
    직업 = `monster.csv:cls`(영웅과 같은 다섯 직업). 값이 없으면 그 조각만 빠진다 — 지어내지 않는다 */
 const identV2 = (u, state) => {
     const lv = u.side === 'party' ? (u.hero?.level ?? 1) : u.sheet?.level;
     const cls = u.hero?.cls ?? D.monsters?.[u.monsterId]?.cls;
-    return [lv != null ? lvSpan(state, u, lv) : '', cls ? clsName(cls) : ''].filter(Boolean).join(' · ');
+    return [lv != null ? lvSpan(state, u, lv) : '', cls ? clsName(cls) : '', raceLabel(u)].filter(Boolean).join(' · ');
 };
 /* 신원의 레벨 칸 — `Lv.n` 을 제 칸(`.unit-lv`)에 든다. **영웅이 본 적 없는 레벨업이면 반짝인다**(`lv-new` — 그 영웅 카드를 누르면 걷힌다)
    [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440 · 누르는 자리 ADR-0463]. 본 레벨은 앱의 화면 상태다(`opts.lvUnseen` — 세이브 밖 · 새로고침하면 걷힌다) */
@@ -478,6 +487,61 @@ function layoutRanks(list) {
    개발용 전/후 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-card="v1|v2">` 로 **이 브라우저에서만** 덮어쓴다 */
 const CARD_V2 = true;
 export const cardV2 = () => { const v = document.documentElement.dataset.card; return v ? v === 'v2' : CARD_V2; };
+
+/* 공격자 포커스 [2026-10-03 사용자 지시 · 비교용 임시 — SCREEN_DESIGN §10-2] — 한 유닛이 행동하면 **재생 시각을 세우고 그 행동을 세 박자로 보인다**:
+     ① 올라감 — 행동한 카드가 상대 진영 쪽으로 나간다(`fx-advance`). 그동안 그 행동의 사건은 아직 안 적용한다
+     ② 타격 — 나간 채로 그 행동의 사건(시전 · 타격 · 회복 · 창 · 쓰러짐)을 적용하고 잠깐 선다 — 맞는 반응 · 숫자가 이때 뜬다
+     ③ 내려옴 — 세움이 풀리면 제자리로 돌아오고 재생이 이어진다
+   다른 카드의 행동 게이지 · 창 시간 · 다음 사건은 ①②동안 멈춰 시선이 행동한 카드에 모인다.
+   「공격 시 흔들림」(fx.js:lungeFxOn)이 꺼져 있으면 ①③ 없이 ②의 세움만 한다.
+   `stop` = 세우기만 · `dim` = 세운 동안 그 행동에 안 낀 카드를 어둡게 · `off` = 지금 화면.
+   개발용 비교 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-focus="off|stop|dim">` 로 **이 브라우저에서만** 고른다.
+   ⚠ 세운 만큼 **관전 중인 원정이 실제 시간으로 늦게 간다** — 관전 중엔 재생기가 시계다(숨긴 탭 · 안 보는 부대는 앱 시계라 안 늦는다) */
+export const FOCUS_MODES = ['off', 'stop', 'dim'];
+const FOCUS_DEFAULT = 'off';
+const RISE_MS = 150;    // ① 올라가는 실제 시간 — style.css `.fx-advance` 의 전환 길이와 같다
+const PEAK_MS = 100;    // ① 다 올라간 뒤 타격 전에 서 있는 시간 — 「올라가면서 때림」이 아니라 「올라가서 때림」으로 읽히게
+const FOCUS_MS = 300;   // ② 나간 채로 세우는 실제 시간 · 셋 다 배속이 오르면 연출처럼 준다(`SPEED_K`)
+export const focusMode = () => { const v = document.documentElement.dataset.focus; return FOCUS_MODES.includes(v) ? v : FOCUS_DEFAULT; };
+/** 행동의 주인 — 시전 · 타격 · 빗나감 · 반격 · 불러내기. 나머지 사건(쓰러짐 · 창 · 재생 · 중독 틱 …)은 주인이 없다 — 같은 순간의 앞 행동에 딸린다 */
+const actorOf = ev => (ev.e === 'skill' || ev.e === 'counter' || ev.e === 'call') ? ev.u : (ev.e === 'hit' || ev.e === 'dodge') ? ev.a : null;
+/** 그 사건이 지금 행동에 딸리나 — 같은 순간이고 다른 유닛의 행동이 아니다 */
+const inFocus = (f, ev) => { const who = actorOf(ev); return ev.t <= f.t + 1e-9 && (who == null || who === f.key); };
+/** 행동 하나를 연다 — `i` 번째 사건(주인이 있다)부터 그 행동에 딸린 사건을 미리 훑어 낀 유닛(`keys` — 어둡게 안 할 카드)을 모은다.
+ *  올라갈 수 있으면 ①을 시작하고 참을 돌려준다 — 그 행동은 올라간 뒤에 적용한다 */
+function openFocus(state, root, opts, tl, i) {
+    const f = state.focus = { key: actorOf(tl[i]), t: tl[i].t, keys: new Set(), rising: false };
+    for (let j = i; j < tl.length && inFocus(f, tl[j]); j++) {
+        const ev = tl[j];
+        for (const k of [ev.u, ev.a, ev.d]) if (k != null) f.keys.add(k);
+        for (const e of ev.units ?? []) f.keys.add(e.key);   // 불러내기 — 불린 무리
+    }
+    if (focusMode() === 'dim') {
+        root.querySelector('.arena')?.classList.add('focus-dim');
+        for (const k of f.keys) state.units.get(k)?.node?.parentElement?.classList.add('focus-in');
+    }
+    const slot = state.units.get(f.key)?.node?.parentElement;
+    if (!lungeFxOn() || !slot?.isConnected) return false;
+    slot.style.setProperty('--fx-k', SPEED_K[state.speed] ?? 1);   // 전환 길이가 세우는 길이와 같은 배수를 타게 — 연출이 아직 안 선 칸은 비어 있다
+    slot.classList.add('fx-advance');
+    f.rising = true;
+    waitFocus(state, root, opts, RISE_MS + PEAK_MS);
+    return true;
+}
+/** 실제 시간으로 `ms` 세운다 — 눈금(TICK)을 기다리지 않고 제때 깨운다 */
+function waitFocus(state, root, opts, ms) {
+    const d = ms * (SPEED_K[state.speed] ?? 1);
+    state.hold = opts.now() + d;
+    state.timeouts.push(setTimeout(() => step(state, root, opts), d + 1));
+}
+/** ③ — 세움이 풀렸다. 나간 카드가 돌아오고(전환은 CSS) 어둡게 한 것을 걷는다 */
+function endFocus(state, root) {
+    state.hold = 0;
+    state.focus = null;
+    root.querySelector('.arena')?.classList.remove('focus-dim');
+    for (const n of root.querySelectorAll('.unit-slot.focus-in')) n.classList.remove('focus-in');
+    for (const n of root.querySelectorAll('.unit-slot.fx-advance')) n.classList.remove('fx-advance');
+}
 
 /* 신단 카드 [2026-09-29 사용자 지시 · SCREEN_DESIGN §4-2 「신단」 · ADR-0449] — 이긴 칸 뒤 적 진영에 몬스터 카드와 **같은 틀**로 선다.
    띠 오른쪽(정예 · 보스 라벨 자리) = 「신단 획득」 · 초상 = 신단 그림 · 이름 줄 = 이름뿐(이름이 죄종을 말한다) ·
@@ -590,7 +654,7 @@ function renderUnits(state, root) {
                             <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
                             <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
                         </div>
-                        <div class="act-row${u.noBasic ? ' segs' : ''}" title="${t('bt.actTitle', { s: u.period.toFixed(2) })}">
+                        <div class="act-row${u.noBasic ? ' segs' : ''}" title="${t(u.noBasic ? 'bt.castTitle' : 'bt.actTitle', { s: u.period.toFixed(2) })}">
                             ${u.noBasic ? actSegs() : '<i class="act-fill k-phys"></i>'}
                         </div>
                         ${skills}
@@ -1140,10 +1204,17 @@ function start(state, root, opts) {
  * 꺼진 것으로 마무리하는 판단은 앱 시계 한 곳이 한다(`app.js:closeFrozenRun`)
  */
 function step(state, root, opts) {
-    const at = opts.now(), gap = at - state.wall;
+    const at = opts.now(), prev = state.wall, gap = at - prev;
     state.wall = at;   // 세워 둔 동안에도 민다 — 다시 틀 때 세워 둔 시간이 한꺼번에 흐르지 않게
     if (!state.running || state.ended || !(gap > 0) || gap > opts.frozenMs) return;
-    state.t += gap / 1000 * state.speed;
+    // 공격자 포커스(개발용 비교) — 세운 동안은 시각을 안 민다 · 풀린 눈금은 풀린 뒤의 몫만 민다
+    let run = gap;
+    if (state.hold) {
+        if (at < state.hold) return;
+        if (state.focus?.rising) { state.focus.rising = false; state.hold = 0; run = 0; }   // ① 다 올라갔다 — 시각은 그대로 두고 그 행동을 적용한다(②)
+        else { run = at - Math.max(prev, state.hold); endFocus(state, root); }               // ② 끝 — 내려오고(③) 재생이 이어진다
+    }
+    state.t += run / 1000 * state.speed;
     opts.onTime?.(state.t, state.speed);    // 끝난 라운드를 정산하고 다음 라운드를 붙인다 — 붙은 뒤에 적용해야 경계 너머 사건이 한 눈금 늦지 않는다 (R89)
     drain(state, root, opts);
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
@@ -1155,11 +1226,21 @@ function step(state, root, opts) {
 /** 현재 시각까지의 이벤트를 전부 적용한다 */
 function drain(state, root, opts) {
     const tl = opts.result.timeline;
+    const focus = !state.catchUp && focusMode() !== 'off';   // 되감기는 세우지 않는다
     while (state.idx < tl.length && tl[state.idx].t <= state.t + 1e-9) {
-        apply(state, root, opts, tl[state.idx]);
+        const ev = tl[state.idx];
+        // 공격자 포커스 — 다음 사건이 다른 순간이거나 다른 유닛의 행동이면 지금 행동이 끝난 것이다. 거기서 세우고 남은 사건은 풀린 뒤에.
+        //   행동이 없을 때 주인이 있는 사건이 오면 새 행동을 연다 — 올라가는 동안(①)은 적용하지 않고 선다
+        if (focus) {
+            if (state.focus) { if (!inFocus(state.focus, ev)) break; }
+            else if (actorOf(ev) != null && openFocus(state, root, opts, tl, state.idx)) break;
+        }
+        apply(state, root, opts, ev);
         state.idx += 1;
         if (state.ended) break;
     }
+    if (state.ended) { if (state.focus) endFocus(state, root); }   // 끝난 판에 나간 카드가 남지 않게
+    else if (state.focus && !state.hold) waitFocus(state, root, opts, FOCUS_MS);   // ② 그 행동을 다 적용했다 — 나간 채로 선다
 }
 
 /**

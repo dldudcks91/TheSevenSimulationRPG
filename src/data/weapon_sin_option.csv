@@ -1,6 +1,7 @@
 sin,applies_to,stat,scale,min,max,description_kr
 wrath,all,crit_damage,flat,0.04,0.09,분노 — 치명타 피해(낮은 값 · 치명 배수를 귀하게 둔다) ⚠제안 수치 (item_design §1 「무기 옵션」 · 2026-09-11 R78)
-sloth,all,aspd_pct,flat,0.02,0.05,나태 — 공격속도 증가 ⚠제안 수치
+sloth,physical,aspd_pct,flat,0.02,0.05,나태(물리 무기) — 공격 속도 증가 ⚠제안 수치
+sloth,magic,cast_speed_pct,flat,0.02,0.05,나태(마법 무기) — 캐스팅 속도 증가 · 공격 속도와 별개 옵션 — 마법 무기 유닛의 주기는 이것만 줄인다(2026-10-03 R203 · battle_design §2) ⚠제안 수치
 lust,all,life_steal,flat,0.01,0.03,색욕 — 흡혈 ⚠제안 수치
 envy,physical,def_ignore,flat,0.03,0.08,시기(물리 무기) — 방어력 무시 % ⚠제안 수치
 envy,mage,res_reduction,flat,0.03,0.08,시기(마법사 무기) — 원소 저항 무시 %p · 그 타격의 원소에 걸린다 ⚠제안 수치

@@ -162,9 +162,10 @@
          스테이지 목록·챕터 줄과 세로를 다투지 않는다. 이 값은 적 칸(4개)과 진형 축(3칸)이 **같이** 읽는다.
        **1600×800 한 장 기준 고정값**이다 (ADR-0087) */
     --fm-slot: 118px;
-    /* 뒤 랭크가 내려가는 **한 단** [2026-09-21 사용자 지시 · ADR-0234] — 관전의 `--form-step`(21px)이 유닛 카드에서
-       차지하는 비율과 같은 0.22배다. 보드는 줄이 아니라 이 단으로 랭크를 말하므로 높이가 **칸 + 단** 하나다 */
-    --fm-step: calc(var(--fm-slot) * 0.22);
+    /* 뒤 랭크가 내려가는 **한 단** [2026-09-21 사용자 지시 · ADR-0234] — 칸 한 변의 0.35배다 [2026-10-03 사용자 지시 · ADR-0491] —
+       관전의 `--form-step`(0.22배)보다 넉넉하다: 고치는 화면이라 앞뒤가 한눈에 갈려야 한다.
+       보드는 줄이 아니라 이 단으로 랭크를 말하므로 높이가 **칸 + 단** 하나다 */
+    --fm-step: calc(var(--fm-slot) * 0.35);
     /* 칸 아래 랭크 라벨(전열 · 후열) 한 줄 + 칸과의 틈 [2026-09-21 · ADR-0269] — 보드 높이가 `칸 + 단 + 라벨` 이다 */
     --fm-lab-h: 20px;
     --fm-board-h: calc(var(--fm-slot) + var(--fm-step) + var(--fm-lab-h));
@@ -971,7 +972,16 @@ html, body { height: 100%; overflow: hidden; }
     flex: none; width: 42px; height: 42px; margin: 0;
     padding: 3px; background: var(--bg-input); border: 1px solid var(--border-primary);
 }
+/* 이름 줄 [2026-10-03 사용자 지시 · ADR-0496] — 이름 **바로 뒤에** 능력치 칩(`.tip-name-attr`) · **맨 오른쪽 끝에** 필요 무기(`.tip-name-side` · `.need` — 무기가 필요한 스킬만).
+   출처 · 태그 · 종류 칩은 이름 아래 제 줄(`.tip-chips`)에 남는다. 이름은 접히고 필요 무기는 남는 폭을 밀어 끝에 붙는다 ·
+   이름 줄의 굵은 글자 · 크기를 칩이 물려받지 않게 되돌린다 */
 .tip-card.skill .tip-chips { margin-top: 10px; gap: 5px; }
+.tip-card.skill .tip-name-text { flex: 0 1 auto; min-width: 0; }
+.tip-card.skill .tip-name-attr { flex: none; display: flex; gap: 4px; margin-left: -4px; font-weight: 400; }
+.tip-card.skill .tip-name-side { flex: none; margin-left: auto; font-weight: 400; }
+.tip-card.skill .tip-name .tip-chip { white-space: nowrap; }
+.tip-card.skill .tip-chip.need { color: var(--text-secondary); border-color: var(--border-primary); }
+.tip-card.skill .tip-chip.need.off { color: var(--danger-fg); border-color: var(--danger-fg); }
 .tip-card.skill .tip-chip { background: none; border-color: var(--border-dark); color: var(--text-muted); }
 .tip-card.skill .tip-chip.attr { color: var(--bronze-fg); border-color: var(--bronze-line); }
 .tip-card.skill .tip-line { max-width: none; margin-top: 11px; line-height: 1.6; }
@@ -1392,6 +1402,26 @@ html, body { height: 100%; overflow: hidden; }
 .arena-vs { align-self: center; color: var(--text-muted); font-size: var(--fs-lg); }
 .arena-actions { display: flex; gap: 12px; align-items: center; margin-top: auto; }
 .arena-watch .battle-panel { height: 100%; }
+/* 우리 팀 아래 진형 · 물약 · 전술 [2026-10-03 사용자 지시 · ADR-0497] — 카드 줄 바로 아래에 **늘 선다**.
+   두 열이다 — 왼쪽 진형 위 물약 · 오른쪽 파티 전술. 셋을 한 줄로 쌓으면 전술 7칸에서 결투 버튼이 한 장(1600×800) 밖으로 밀렸다(실측).
+   Party 버튼을 누르면 진형 → 물약 → 전술 순으로 내려온다. 움직임은 누른 직후 한 번(`.unfold` 를 JS 가 첫 그리기에만 단다 — `.sort-fold.anim` 과 같은 수법) */
+.arena-load { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 12px 28px; margin-top: 16px; align-items: start; }
+.arena-load > .arena-load-form { grid-column: 1; grid-row: 1; }
+.arena-load > .dw-pot { grid-column: 1; grid-row: 2; }
+.arena-load > .dw-tac { grid-column: 2; grid-row: 1 / span 2; flex: none; }
+.arena-load .sub-h { margin: 0 0 6px; }
+.arena-load .dw-tac-row { margin-bottom: 3px; }
+.arena-form-tpl { margin-bottom: 4px; }
+.arena-form-row { display: flex; gap: 10px; font-size: var(--fs-sm); }
+.arena-form-row > .muted { flex: none; min-width: 3em; }
+.arena-load.unfold > * { animation: arena-load-item .26s ease-out both; }
+.arena-load.unfold > :nth-child(2) { animation-delay: .1s; }
+.arena-load.unfold > :nth-child(3) { animation-delay: .2s; }
+@keyframes arena-load-item {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .arena-load.unfold > * { animation: none; } }
 .bt-page > .panel + .panel { margin-top: 0; }
 .bt-page > .battle-panel { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
 .battle-panel > .battle-body { flex: 1 1 0; min-height: 0; }
@@ -1995,6 +2025,14 @@ html, body { height: 100%; overflow: hidden; }
 /* 불러낸 무리 — 떠오르며 선다 */
 .unit-slot.fx-appear { animation: fx-appear calc(380ms * var(--fx-k, 1)) ease-out backwards; }
 @keyframes fx-appear { 0% { transform: translateY(12px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+/* 공격자 포커스 (개발용 비교 · 임시 — battle.js:openFocus · SCREEN_DESIGN §10-2)
+   올라감 — 행동한 카드가 상대 진영 쪽으로 나간 채 선다(`.fx-advance` · 들어갈 때 전환 = battle.js:RISE_MS) · 풀리면 아래 기본 전환으로 내려온다.
+   `Dim` — 재생을 세운 동안 그 행동에 안 낀 카드를 어둡게 */
+.arena .unit-slot { transition: filter 90ms ease-out, transform calc(180ms * var(--fx-k, 1)) ease-in-out; }
+.arena .unit-slot.fx-advance { transition: filter 90ms ease-out, transform calc(150ms * var(--fx-k, 1)) ease-out; }
+.side-party .unit-slot.fx-advance { transform: translateY(-14px); }
+.side-enemy .unit-slot.fx-advance { transform: translateY(14px); }
+.arena.focus-dim .unit-slot:not(.focus-in) { filter: brightness(.45) saturate(.5); }
 
 /* ── 그림 한 장 [2026-09-28 · ADR-0411 → **지금은 안 쓴다** · ADR-0412 — `fx.js:ART_ON` 이 꺼져 있다 · 나중에 전직 스킬 그림이 쓴다] — 켜면 종류마다 `assets/art/fx/<종류>.webp` 가 **있을 때** 위의 코드 모양 대신 선다.
    크기 보통 83 · 치명 101(초상 101 안 — 수치 열을 안 덮는다). 움직임은 종류가 정한다(fx.js `MOTION`) — 터짐(타격 · 자폭) · 떠오름(회복 · 강화) · 내려앉음(약화) · 부풂(방벽) ── */
@@ -2928,9 +2966,8 @@ html, body { height: 100%; overflow: hidden; }
 .sk-card .sk-lock { display: inline-flex; width: 45%; height: 45%; color: var(--text-muted); }
 .sk-card .sk-lock svg { width: 100%; height: 100%; }
 /* 무기가 안 맞아 꺼진 칸 [2026-09-29 · R187 · SCREEN_DESIGN §6 · ADR-0446] — 그림은 서되 흑백으로 흐리다(「있지만 안 돈다」 — 빈 칸 · 자물쇠와 다른 뜻) ·
-   툴팁 맨 위 한 줄(`.tip-need`)이 필요한 무기를 말한다 */
+   툴팁은 이름 줄의 필요 무기 칩이 위험색이 된다(`.tip-chip.need.off` · ADR-0496 — ~~맨 위 한 줄 `.tip-need`~~) */
 .sk-card.off .ico img { filter: grayscale(1); opacity: .45; }
-.tip-need { color: var(--danger-fg); font-size: var(--fs-sm); margin-bottom: 4px; }
 /* 스킬북 줄 [2026-09-29 · R179 · 서고 탭 SCREEN_DESIGN §17 · ADR-0422] — 한 줄 = 그림 + 이름 + 버튼 · ~~캐릭터 탭 스킬북 창~~ 은 걷혔다(ADR-0426) */
 .bk-box { display: flex; flex-direction: column; gap: 14px; font-size: var(--fs-sm); overflow-y: auto; padding-right: 4px; }
 .bk-sec { display: flex; flex-direction: column; gap: 6px; }

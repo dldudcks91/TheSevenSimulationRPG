@@ -11,7 +11,7 @@
  *
  * **퍼센트는 비율이다** [2026-09-17 · R111] — 접사 · 마스터리 · 전술 · 도감이 넣는 % 채널과 여기서 내는 % 능력치가 전부 0.05 = 5% 눈금이다.
  *
- * `computeCombat` 은 Σ 상시 피해 %(`atk_pct_sum`)를 따로도 낸다 — 전투 중 스킬 버프가 **새 곱셈 층이 아니라
+ * `computeCombat` 은 Σ 상시 피해 %(`atk_pct_sum` — 무기 % 는 빠진다 · 2026-10-03)를 따로도 낸다 — 전투 중 스킬 버프가 **새 곱셈 층이 아니라
  *   같은 괄호에 덧셈**으로 들어가야 해서(battle_design §9-2) battle.js 가 그 괄호를 다시 쓸 수 있어야 한다.
  *
  * **마스터리(패시브 수치층)는 접사와 같은 채널에 더한다** (skill_design §3-1~§3-4 확정 2026-08-28).
@@ -436,6 +436,8 @@ export function createHeroSystem(data) {
                 flat[it.implicit.stat] = (flat[it.implicit.stat] ?? 0) + v;
             }
             for (const a of it.affixes ?? []) {
+                // 무기에 붙은 데미지 % 는 괄호에 안 섞는다 — 무기 양끝에만 따로 곱한다(아래 `weaponPct` · 2026-10-03 battle_design §9-1)
+                if (it.slot === 'weapon' && a.stat === 'atk_pct') continue;
                 flat[a.stat] = (flat[a.stat] ?? 0) + a.v;
                 if (a.stat === 'damage_reduction') drList.push(a.v);
             }
@@ -456,13 +458,17 @@ export function createHeroSystem(data) {
         //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
         const range = weapon ? F.weaponDamage(weapon.ilvl, group, weapon.up) : { min: B.unarmed_atk, max: B.unarmed_atk };
         const atkFlat = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0);
-        // 데미지 % 괄호 = Σ 데미지 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
+        // 무기 % = **무기 슬롯 접사의 데미지 %**(고정 옵션 「데미지 +%」) — 무기 양끝에만 곱하고 양끝마다 한 번 반올림한다
+        //   [2026-10-03 · 사용자 확정 · battle_design §9-1 — D2 의 무기 ED]. `item.weaponDamageFixed` 와 같은 값이다(툴팁 표기 = 계산)
+        const weaponPct = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_pct' ? a.v : 0), 0);
+        // 데미지 % 괄호 = **무기 % 를 뺀** Σ 데미지 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
         //   + **도감 「데미지」** [2026-09-18 · battle_design §9-1 — ~~괄호 밖에서 따로 곱한다~~ → 같은 괄호의 덧셈]. 조건부 % 는 타격마다 전투가 같은 괄호에 끼운다(formula.strike)
         const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level + (codex.atk_pct ?? 0);
         // 공격력 = **순수 무기 밑수** [개정 2026-09-10 · battle_design §9-1] — ~~`attrMult(magic ? int : str) ×`~~ 는 걷었다.
         //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
-        //   양끝마다 데미지 % 괄호 하나를 곱하고 반올림한다 — 범위 안의 굴림은 전투(formula.strike)가 한다 (R90 · 괄호 하나 2026-09-18)
-        const scaleAtk = end => Math.round((end + atkFlat) * (1 + atkPctSum));
+        //   양끝마다 무기 % 를 곱해 반올림 → 고정 공격력을 더하고 데미지 % 괄호를 곱해 반올림 — 범위 안의 굴림은 전투(formula.strike)가 한다
+        //   (R90 · 괄호 하나 2026-09-18 · 무기 % 를 따로 곱한다 2026-10-03)
+        const scaleAtk = end => Math.round((Math.round(end * (1 + weaponPct)) + atkFlat) * (1 + atkPctSum));
         const atk = { min: scaleAtk(range.min), max: scaleAtk(range.max) };
 
         // 최대 HP — 레벨 1 값은 ~~전 영웅 공통~~ **직업마다**(`class.csv:hp_base` · 2026-10-02)이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
@@ -486,10 +492,13 @@ export function createHeroSystem(data) {
         const groupAspd = worn.reduce((s, g) => s + (g.aspdPct ?? 0), 0);
         const groupCdr = worn.reduce((s, g) => s + (g.cdrPct ?? 0), 0);
         // 신발 오만 「레벨당 공격 속도」 — 영웅 레벨 × 값이 공속 합에 더해진다 [2026-09-18 · item_design §1 신발 행] (합산은 더하기 — 원천별 곱 여부는 GAME_DESIGN §10)
+        // **공격 속도와 캐스팅 속도는 별개 옵션이다** [2026-10-03 · 사용자 · R203 · battle_design §2] — 마법 무기는 `cast_speed_pct` 만, 물리 무기 · 맨손은 공격 속도 계열만
+        //   주기를 줄인다. 민첩 계수는 둘 다(능력치) · 버프 · 상태이상의 주기 창은 battle 이 따로 건다. 원천 배분의 나머지는 GAME_DESIGN §10 「캐스팅 속도의 원천」
+        const speed = magic ? f('cast_speed_pct') : f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd;
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
             / attrMult('agi', A.agi)
-            * (1 - (f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd)));
+            * (1 - speed));
 
         const resAll = f('res_all');
         const luckMult = attrMult('luck', A.luck);

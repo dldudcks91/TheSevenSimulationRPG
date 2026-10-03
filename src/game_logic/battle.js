@@ -120,9 +120,10 @@ export function createBattleSystem(data) {
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
     /**
-     * 무기 판정 [2026-09-29 · R187 · 개정 2026-10-02 · R197 · skill_design §2-2] — **배운 스킬 칸만** 그 스킬 직업의 무기군을 들어야 나간다
-     *   (규칙은 `skill.fitsWeapon` · 칸을 가리는 것은 `slotOf`). 고유 · 전직 칸은 무기를 안 본다 — ~~직업 스킬 전부 · 출처 무관~~(09-29).
-     *   무기군 → 직업 목록은 여기서 푼다(skill.js 는 아이템을 모른다). 맨손 · 모르는 무기군 = `null` → 배운 직업 스킬이 안 맞는다.
+     * 무기 판정 [2026-09-29 · R187 · 개정 2026-10-03 · R204 · skill_design §2-2] — **무기의 힘을 끌어다 쓰는 스킬**(타격 · 회복 · 소환)은
+     *   칸을 가리지 않고 그 스킬 직업의 무기군을 들어야 나간다 · 걸린 효과만 거는 스킬은 무기를 안 본다(규칙은 `skill.fitsWeapon` 하나).
+     *   ~~배운 스킬 칸만~~(10-02 · R197) 대체. 몬스터도 같은 규칙이다 — 지금 데이터는 전부 제 무기군과 맞아 꺼지는 칸이 없다.
+     *   무기군 → 직업 목록은 여기서 푼다(skill.js 는 아이템을 모른다). 맨손 · 모르는 무기군 = `null` → 무기가 필요한 스킬이 안 맞는다.
      *   무기군 키가 **없는** 파티 유닛(`undefined` — 직업을 손으로 실은 검증 파티)은 판정하지 않는다 (INTERFACE §2-6)
      */
     const fitterOf = group => {
@@ -131,12 +132,12 @@ export function createBattleSystem(data) {
         return def => SK.fitsWeapon(def, classes);
     };
     /**
-     * 칸 하나를 전투에 세운다 — 정의를 풀고 준비 시각을 얹는다. **무기가 안 맞는 배운 칸은 꺼진 채 선다**(R187 · R197 · battle_design §6):
+     * 칸 하나를 전투에 세운다 — 정의를 풀고 준비 시각을 얹는다. **무기가 안 맞는 칸은 꺼진 채 선다**(R187 · R204 · battle_design §6):
      *   `readyAt = Infinity` 라 `pickReady` 가 안 고르고(차례를 안 먹는다) 쿨이 멈춘다 · 남은 쿨은 `frozen`(초).
-     *   무기를 보는 것은 **배운 칸(`source = book`)뿐**이다 — 고유 · 전직(몬스터 보스 셋째 칸 포함) 칸은 늘 켜진다 (2026-10-02 · R197)
+     *   **출처를 안 본다** — 고유 · 배운 · 전직(몬스터 보스 셋째 칸 포함) 칸 모두 스킬이 정한다(2026-10-03 · R204 — ~~배운 칸(`source = book`)뿐~~ R197)
      * @param frozen 꺼질 때 멈춰 둘 쿨(초) — 전투 시작 · 등장은 0(준비 상태로 출발 · R100)
      */
-    const slotOf = (a, def, fits, readyAt, frozen = 0) => (a.source !== 'book' || fits(def)
+    const slotOf = (a, def, fits, readyAt, frozen = 0) => (fits(def)
         ? { id: a.id, def, readyAt, source: a.source }
         : { id: a.id, def, readyAt: Infinity, source: a.source, off: true, frozen });
     // 처치 XP 기준값 — 몬스터 레벨 → `level_xp.csv:monster_xp` (2026-09-28 · ~~monster_xp_base × monster_xp_growth ^ (lvl − 1)~~).
@@ -408,7 +409,7 @@ export function createBattleSystem(data) {
         const slots = g.skill_slots;
         // ⚠ `activesFor` 는 **인스턴스**(`{id, source}`)를 낸다 — 파티 경로와 같이 **정의를 풀고 `readyAt` 을 얹어야** 한다.
         //   안 풀면 `skill.castable(def, …)` 이 undefined 를 읽는다 (INTERFACE §2-6 「전투 유닛」 actives 행)
-        //   무기 판정은 영웅과 같은 규칙이다 — 무기를 보는 것은 배운 칸뿐이고 몬스터는 배운 칸이 없어 **칸이 늘 켜진다** (R197 · skill_design §2-2)
+        //   무기 판정은 영웅과 같은 규칙이다 — 무기가 필요한 스킬이 `monster.csv:weapon_group` 과 안 맞으면 꺼진다 · 지금 데이터는 전부 맞는다 (R204 · skill_design §2-2)
         const fits = fitterOf(m.weapon_group);
         const acts = SK ? SK.activesFor({ innate: m.innate_skill }, {
             thirdSkill: slots >= 3 ? thirdSkill : null,
@@ -584,7 +585,7 @@ export function createBattleSystem(data) {
             potionReadyAt: 0,            // 제 물약이 다시 준비되는 시각 — **준비 상태로 출발한다**(스킬과 같은 규칙 · R103). 갈아입기(`refit`)가 안 건드린다
             // 칸 순서 = 출처 자리. **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 첫 준비 시각 0.
             //   동시 준비는 칸 순서라(`SK.pickReady`) 첫 차례는 1번 칸이다. rng 0
-            //   든 무기가 안 맞는 **배운 칸**은 꺼진 채 선다 — 멈춘 쿨 0 (R187 · R197 · `slotOf`)
+            //   든 무기가 안 맞는 칸(무기가 필요한 스킬 · 출처 무관)은 꺼진 채 선다 — 멈춘 쿨 0 (R187 · R204 · `slotOf`)
             actives: (fits => (SK ? p.actives ?? [] : []).map(a => {
                 const def = SK.resolve(a);
                 if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
@@ -609,7 +610,7 @@ export function createBattleSystem(data) {
             const applied = [];
             for (const p of side) {
                 if (!p.actives.some(a => a.def.cast === 'aura')) continue;
-                // **꺼진 오오라는 안 켠다** [2026-09-29 · R187] — 무기가 안 맞는 배운 칸(`off` · R197)이다. 칸에서 빼는 것은 켜진 오오라와 같다
+                // **꺼진 오오라는 안 켠다** [2026-09-29 · R187] — 무기가 안 맞는 칸(`off`)이다 — 오오라는 걸린 효과만 걸어 지금은 무기를 안 보므로(R204) 꺼질 일이 없다. 칸에서 빼는 것은 켜진 오오라와 같다
                 const aura = p.actives.find(a => a.def.cast === 'aura' && !a.off) ?? null;
                 p.slotIds = p.actives.map(a => a.id);
                 p.auraOn = aura?.id ?? null;
@@ -656,7 +657,7 @@ export function createBattleSystem(data) {
             // **칸마다** 준비 시각 — 같은 스킬이 두 칸에 앉으면 앞 칸부터 하나씩 짝짓는다(id 로 묶으면 두 칸이 한 값으로 합쳐진다 · R130).
             //   칸에 없는 id 는 오오라다(전투 시작에 칸에서 뺐다) — 켜진 것 0 · 안 켜진 것 null
             const left = u.actives.slice();
-            //   꺼진 칸(무기가 안 맞는 배운 칸 · R187 · R197)은 안 켜진 오오라와 같은 `null` — 재생기가 「안 도는 칸」으로 그린다
+            //   꺼진 칸(무기가 안 맞는 칸 · R187 · R204)은 안 켜진 오오라와 같은 `null` — 재생기가 「안 도는 칸」으로 그린다
             const ready = ids.map(id => {
                 const i = left.findIndex(a => a.id === id);
                 if (i >= 0) {
@@ -826,7 +827,7 @@ export function createBattleSystem(data) {
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
             const enemyAuras = applyAuras(units.enemies);
             // 적 스킬도 **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 등장 라운드 시작 시각에 곧바로 쓴다. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
-            //   꺼진 칸(무기가 안 맞는 배운 칸 · R187 · R197 — 몬스터는 배운 칸이 없어 지금은 없다)은 그대로 둔다 — 되돌리면 켜진다
+            //   꺼진 칸(무기가 안 맞는 칸 · R187 · R204 — 몬스터 데이터는 전부 맞아 지금은 없다)은 그대로 둔다 — 되돌리면 켜진다
             for (const e of units.enemies) for (const a of e.actives) if (!a.off) a.readyAt = t;
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게) — 게이지는 등장한 순간부터 빈 채로 찬다 (R200)
             for (const e of units.enemies) {
@@ -1443,9 +1444,10 @@ export function createBattleSystem(data) {
     }
 
     // makeEnemy 는 검증(dev/test.js)이 몬스터→유닛 변환 규칙을 직접 볼 수 있도록 함께 내보낸다 — stagePool 과 같은 이유
-    function simulateTeams(party, enemies, rng) {
+    // 결투장 단판 — 물약은 `createRun` 과 같은 칸(파티만 마신다 · 안 주면 물약 없음 · 2026-10-03)
+    function simulateTeams(party, enemies, rng, potions = null, slotMax = B.potion_slot_max) {
         if (!party.length || !enemies.length) throw new Error('battle: both teams must have units');
-        const run = createRun(party, null, rng, 1, [], 0, enemies);
+        const run = createRun(party, null, rng, 1, potions, slotMax, enemies);
         while (run.next()?.ended === false);
         return { ...run.result, mode: 'arena' };
     }

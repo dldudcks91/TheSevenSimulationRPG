@@ -424,8 +424,10 @@ export function sheetRowsHtml(rows, c) {
         const shown = s.id === 'defense' && has ? Math.round(v) : v;
         // 피해 감소 = **고정 / %** 한 줄 [2026-09-27 사용자 지시 · SCREEN_DESIGN §6] — 고정 피해 감소(`option_fx.drFlat` · 모든 감소 뒤에 뺀다)는 제 줄을 잃었다
         const text = s.id === 'damage_reduction' && has ? `${c.option_fx?.drFlat ?? 0} / ${fmtCombat(s, v)}` : fmtCombat(s, shown);
+        // 속도 행 이름 — 마법 무기(평타 없음)를 든 유닛은 「캐스팅 속도」 [2026-10-03 · R202 · ADR-0492] — 값은 같은 주기다
+        const name = s.id === 'action_period' && c?.basic_attack === false ? t('sk.castSpeed') : L(s);
         return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}${s.gap ? ' gap' : ''}">
-            <span class="cs-n">${L(s)}</span>
+            <span class="cs-n">${name}</span>
             <span class="cs-v">${text}${extra}</span></div>`;
     }).join('');
 }
@@ -618,9 +620,11 @@ export function monsterTipCard(u, itemCardOf = null) {
     const color = GRADE_LINE[u.grade] ?? GRADE_LINE.normal;
     const equipment = equipmentHtml(wornOfMonster(u.gear));
     const rebuild = () => monsterTipCard(u, itemCardOf);
-    if (UNIT_TIP_ALL) return statsFirstCard(u.stats, color, u.sheet ?? null, equipment, itemCardOf, rebuild,
+    // 시트는 평타 여부를 안 싣는다(battle.js 가 뺀다) — 속도 행 이름은 재생기 유닛의 `noBasic` 으로 고른다 (ADR-0492)
+    const sheet = u.sheet ? { ...u.sheet, basic_attack: !u.noBasic } : null;
+    if (UNIT_TIP_ALL) return statsFirstCard(u.stats, color, sheet, equipment, itemCardOf, rebuild,
         { gearBelow: true, cls: lift });
-    return unitCard(u.stats, color, u.sheet ?? null, rebuild, lift, equipment, itemCardOf);
+    return unitCard(u.stats, color, sheet, rebuild, lift, equipment, itemCardOf);
 }
 
 /**
@@ -1048,7 +1052,8 @@ export function skillLineHtml(s, ctx = {}) {
  * 스킬 카드 — **몸통**(`skillBodyHtml`) (SCREEN_DESIGN §2 「스킬 설명창 규격」).
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 **같은 인자로** 다시 만든다 — 그래서 카드가 제 인자를 쥔 `_rebuild` 를 든다(유닛 카드와 같은 장치).
  * @param s   `.id` 만 있으면 된다 — 정의는 `SYS.skill.defs` 에서 집는다(호출처마다 다른 모양을 받아 왔다)
- * @param ctx {period, atkMin, atkMax, matkMin, matkMax, hpMax, atkType, stats, source} — 모르는 값은 생략한다. 그 숫자 자리가 식으로 접힌다
+ * @param ctx {period, atkMin, atkMax, matkMin, matkMax, hpMax, atkType, stats, source, off} — 모르는 값은 생략한다. 그 숫자 자리가 식으로 접힌다 ·
+ *            `off` = 무기가 안 맞아 꺼진 칸(캐릭터 탭) — 필요 무기 칩이 위험색이 된다 (ADR-0496)
  */
 export function skillTipCard(s, ctx = {}) {
     if (!s) return null;
@@ -1061,14 +1066,24 @@ export function skillTipCard(s, ctx = {}) {
 
 /* ~~`skillTipSection`(아이템 툴팁의 스킬 칸)~~ — 2026-09-29 걷었다(R179 · ADR-0421): 무기가 스킬을 안 담는다 */
 
-/** 스킬 이름 줄 — 아이콘 + 이름. 정의를 못 찾으면(행이 지워진 옛 세이브) id 를 이름으로 낸다 */
-const skillNameHtml = s => {
+/**
+ * 스킬 이름 줄 — 아이콘 + 이름 + **이름 바로 뒤에 능력치 칩** · **맨 오른쪽 끝에 필요 무기** [2026-10-03 · ADR-0496]. 정의를 못 찾으면(행이 지워진 옛 세이브) id 를 이름으로 낸다
+ * @param attrs 이름 뒤에 설 능력치 칩 html 목록 · @param need 필요 무기 칩 html(없으면 null)
+ */
+const skillNameHtml = (s, attrs = [], need = null) => {
     const def = SYS.skill?.defs?.[s.id] ?? null;
-    return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span>${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</div>`;
+    return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span><span class="tip-name-text">${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</span>`
+        + `${attrs.length ? `<span class="tip-name-attr">${attrs.join('')}</span>` : ''}${need ? `<span class="tip-name-side">${need}</span>` : ''}</div>`;
+};
+/** 필요 무기 칩 — 무기가 필요한 스킬(`def.needsWeapon` · skill_design §2-2)만. 그 스킬 직업(`def.classId`)의 무기군 이름을 `weapon_group.csv` 순서로 잇는다 */
+const needWeaponChip = (def, off) => {
+    if (!def?.needsWeapon) return null;
+    const names = (D.weaponGroupList ?? []).filter(g => g.classes.includes(def.classId)).map(g => L(g));
+    return names.length ? `<i class="tip-chip need${off ? ' off' : ''}">${names.join(' · ')}</i>` : null;
 };
 
 /**
- * 스킬 설명창의 **몸통** — 아이콘 + 이름 / 칩 / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주(기본 상태 · 괄호가 붙을 숫자가 있을 때만).
+ * 스킬 설명창의 **몸통** — 아이콘 + 이름 + 능력치 칩 · 맨 끝 필요 무기(한 줄 · ADR-0496) / 칩(출처 · 태그 · 종류) / **문장**(추가 피해가 있으면 둘째 문장) / 「Alt 계산식」 각주(기본 상태 · 괄호가 붙을 숫자가 있을 때만).
  * 스킬 카드가 부른다 (~~아이템 툴팁의 스킬 칸~~ 은 2026-09-29 걷혔다 · ADR-0421).
  * 칩은 **출처 칩**(영웅·책·전직 — 부르는 자리가 `ctx.source` 를 줄 때만. 출처가 글자로 이미 선 자리는 안 준다 · ADR-0121) · **태그 칩**(파생 포함 — `skill_tag.csv` 가 이름의 SSOT) · **종류 칩**(피해를 내는 스킬만 — 물리 · 원소 이름 `st.atkType.*` · 줄 순 · 같은 종류는 한 번 · ADR-0480) · **능력치 칩**이다.
  * 능력치 칩은 스케일링 슬롯(하는 일 줄의 `scales` — 줄 순 · 2026-09-22)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
@@ -1076,16 +1091,18 @@ const skillNameHtml = s => {
  */
 function skillBodyHtml(s, ctx) {
     const def = SYS.skill?.defs?.[s.id] ?? null;
+    // 이름 아래 칩 줄 — 출처 · 태그 · 종류 / 이름 바로 뒤 — 능력치 칩 / 이름 줄 맨 끝 — 필요 무기 (2026-10-03 · ADR-0496)
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
     for (const tg of (def ? SYS.skill.tagsOf(def) : [])) chips.push(`<i class="tip-chip">${L(skillTagName(tg))}</i>`);
     for (const ty of new Set((def?.effects ?? []).map(e => damageTypeOf(e, ctx.atkType)).filter(Boolean))) chips.push(`<i class="tip-chip dmg">${t(`st.atkType.${ty}`)}</i>`);
-    for (const at of new Set((def?.effects ?? []).flatMap(e => e.scales).map(x => x.attr))) chips.push(`<i class="tip-chip attr">${abbrOf(at)}</i>`);
+    const attrs = [...new Set((def?.effects ?? []).flatMap(e => e.scales).map(x => x.attr))].map(at => `<i class="tip-chip attr">${abbrOf(at)}</i>`);
+    const need = needWeaponChip(def, ctx.off);
     // 정의를 못 찾으면(행이 지워진 옛 세이브) 이름만 낸다 — 던지지 않는다
     const R = { alt: altHeld, fx: false };
     const lines = def ? skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, R) : null;
     return `
-        ${skillNameHtml(s)}
+        ${skillNameHtml(s, attrs, need)}
         ${chips.length ? `<div class="tip-chips">${chips.join('')}</div>` : ''}
         ${(lines ?? []).map(l => `<div class="tip-line">${l}</div>`).join('')}
         ${R.fx && !R.alt ? `<div class="tip-foot">${t('sk.altHint')}</div>` : ''}`;

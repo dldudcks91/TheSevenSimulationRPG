@@ -60,7 +60,7 @@ import * as CLOUD from './cloud.js';
 import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
-import { mountCardCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 버튼(⚙ 설정 탭 마지막 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
+import { mountCardCompare, mountFocusCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 · 공격자 포커스 버튼(⚙ 설정 탭 끝 두 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
 import { skillFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 피격 반응 · 공격 시 흔들림 켜고 끄기 · 피격 시 흔들림 단계 (SCREEN_DESIGN §2-2 · ADR-0414 · ADR-0454 · ADR-0468)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
@@ -330,7 +330,8 @@ const FORM_RANK_LABELS = { 1: ['exp.form.front'], 2: ['exp.form.front', 'exp.for
 const state = {
     screen: 'start',        // start | game
     tab: 'expedition',
-    arena: { owner: null, selectionKey: null, team: null, opponent: null, match: null, last: null },
+    // `unfold` = Party 버튼을 누른 직후 첫 그리기에만 우리 팀 아래 진형 · 물약 · 전술이 차례로 내려오는 연출을 단다(그 그리기가 끈다 · ADR-0497)
+    arena: { owner: null, selectionKey: null, team: null, opponent: null, match: null, last: null, unfold: false },
     // 도박장 창 (SCREEN_DESIGN §8-1 · ADR-0331) — 고른 판돈 단계 · 마지막 결과 · 재생 위치. 세이브 아님 —
     //   결과는 이미 세이브에 들어가 있고(`gambleSpin`) 이것은 **다시 보여 줄 거리**다
     gb: { step: 1, last: null, anim: null },
@@ -627,7 +628,7 @@ function segmented(items, current, onPick) {
 }
 
 /**
- * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · Card(개발용 임시 — devcompare.js).
+ * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · Card · Focus(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
  * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 초상을 바꾼다.
  */
@@ -661,7 +662,8 @@ function settingsBody() {
     logSet.appendChild(segmented(LOG_STYLES.map(s => ({ id: s, label: t(s === 'grid' ? 'set.logGrid' : 'set.logText') })),
         logStyle(), id => { setLogStyle(id); box.replaceWith(settingsBody()); }));
     box.appendChild(logSet);
-    mountCardCompare(box, render);   // 임시 — 마지막 줄 Card [Before | After] (devcompare.js · SCREEN_DESIGN §10-2)
+    mountCardCompare(box, render);   // 임시 — 끝 두 줄 Card [Before | After] · Focus [Off | Stop | Dim] (devcompare.js · SCREEN_DESIGN §10-2)
+    mountFocusCompare(box);
     return box;
 }
 
@@ -1212,7 +1214,7 @@ const expScreen = () => (state.exp === 'battle' && state.battle ? 'battle' : sta
 function renderArena(main) {
     const A = state.arena;
     if (A.owner !== G) {
-        Object.assign(A, { owner: G, selectionKey: null, team: null, opponent: null, match: null, last: null });
+        Object.assign(A, { owner: G, selectionKey: null, team: null, opponent: null, match: null, last: null, unfold: false });
     }
     const back = () => { A.match = null; A.team = null; A.opponent = null; render(); };
     if (A.match) {
@@ -1246,7 +1248,12 @@ function renderArena(main) {
     main.appendChild(page);
     page.appendChild(el('h2', '', `${t('nav.arena')} <small>${t('ar.practice')}</small>`));
     const selection = el('div', 'arena-selection');
-    selection.appendChild(presetSeg(ps));
+    // Party 버튼 = 우리 팀을 그 편성으로 바꾼다 — 아래 진형 · 물약 · 전술이 위에서 아래로 다시 내려온다 (ADR-0497)
+    selection.appendChild(presetSeg(ps, no => {
+        if (no !== ps.activeNo) { SYS.game.selectPreset(G, no); save(); }
+        A.unfold = true;
+        render();
+    }));
     const selectionHead = el('div', 'arena-selection-head');
     selectionHead.appendChild(el('h3', 'sub-h', t('ar.select', { n: picked.length })));
     const edit = el('button', 'btn sm', t('ar.edit'));
@@ -1269,6 +1276,8 @@ function renderArena(main) {
         ourCards.appendChild(cell);
     }
     ours.appendChild(ourCards);
+    ours.appendChild(arenaLoadPanel(picked, ranks, A.unfold));
+    A.unfold = false;
     const theirs = el('div', 'arena-team');
     theirs.appendChild(el('h3', 'sub-h', t('ar.opponent')));
     const enemyCards = el('div', 'arena-team-cards');
@@ -1286,16 +1295,18 @@ function renderArena(main) {
     const find = el('button', 'btn', t(A.opponent ? 'ar.reroll' : 'ar.find'));
     find.disabled = picked.length !== SYS.arena.teamSize;
     find.onclick = () => {
-        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks);
+        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks, SYS.game.arenaLoadout(G));
         A.opponent = SYS.arena.rollOpponent(A.team, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
         render();
     };
     const fight = el('button', 'btn primary arena-fight', t('ar.fight'));
     fight.disabled = !A.opponent || picked.length !== SYS.arena.teamSize;
     fight.onclick = () => {
-        // 찾은 뒤 장비를 바꿨을 수 있어 출전 순간 다시 찍는다. 상대는 확인한 그대로다.
-        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks);
-        const result = SYS.arena.fight(A.team, A.opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
+        // 찾은 뒤 장비 · 전술 · 물약을 바꿨을 수 있어 출전 순간 다시 찍는다. 상대는 확인한 그대로다.
+        //   전술 · 물약은 고른 편성의 것이다 — 물약은 재고에서 채우지만 결투는 재고를 안 줄인다 (ADR-0495)
+        const loadout = SYS.game.arenaLoadout(G);
+        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks, loadout);
+        const result = SYS.arena.fight(A.team, A.opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), loadout);
         A.last = result;
         A.match = { team: A.team, opponent: A.opponent, result, resume: null };
         render();
@@ -1318,6 +1329,30 @@ function arenaHeroCard(h) {
     const info = el('small', 'muted'); info.textContent = `Lv.${h.level} · ${className(h.cls)}`;
     card.append(face, name, info);
     return card;
+}
+
+/**
+ * 우리 팀 카드 **아래에 늘 서는** 고른 편성의 **진형 → 물약 → 파티 전술** [2026-10-03 사용자 지시 · ADR-0497 — ~~Party 버튼 아래 겹쳐 뜨는 판~~ ADR-0495].
+ * **읽는 자리다** — 고치는 자리는 편성 탭이고, 물약 · 전술은 출정 창의 「들고 가는 것」과 같은 그림이다(`potionReadBlock` · `tacticReadBlock`).
+ * 진형은 모양 이름(`formation_template.csv`) + 전열 · 후열에 선 영웅 이름. 정원 0 인 랭크(「모두 전열」의 후열)는 줄이 안 선다
+ * @param unfold Party 버튼을 누른 직후 첫 그리기 — 칸마다 차례로 내려오는 연출을 단다
+ */
+function arenaLoadPanel(picked, ranks, unfold) {
+    const f = formState();
+    const panel = el('div', `arena-load${unfold ? ' unfold' : ''}`);
+    const form = el('div', 'dw-block arena-load-form');
+    form.appendChild(el('div', 'sub-h', t('exp.form.h')));
+    form.appendChild(el('div', 'arena-form-tpl', L(D.formationTemplates?.[f.tpl]) || f.tpl));
+    f.caps.forEach((cap, r) => {
+        if (!cap) return;
+        const names = picked.filter(h => (ranks[h.uid] ?? 0) === r).map(h => L(h.name));
+        form.appendChild(el('div', 'arena-form-row',
+            `<span class="muted">${t(r === 0 ? 'ar.front' : 'ar.backRank')}</span><span>${names.length ? names.join(' · ') : '—'}</span>`));
+    });
+    panel.appendChild(form);
+    panel.appendChild(potionReadBlock(SYS.game.presetState(G)));
+    panel.appendChild(tacticReadBlock('ar.noTactic'));
+    return panel;
 }
 
 function renderExpedition(main) {
@@ -1660,12 +1695,20 @@ function bindCardDrag(node, sel, onDrop) {
 
 /** 소제목 + `?` 표시 — 글씨 바로 오른쪽에 서고 **올리면** 설명 툴팁이 선다 (SCREEN_DESIGN §15 · ADR-0464). 누르는 자리가 아니다.
  *  카드는 물약 카드와 같은 모양이다 — 첫 줄 그 칸 이름 · 선 아래 설명 한두 문장 (`tip.js:potionTipCard` 의 클래스 그대로)
+ *  폭은 **오른쪽 구분선(파티 전술의 왼쪽 선)까지** 편다 [2026-10-03 사용자 지시] — 커서 옆 16px 에서 시작하므로 `?` 오른변부터 선까지에서 그만큼 뺀다.
+ *  선을 못 찾으면(전술 칸이 없는 배치) CSS 의 기본 폭(`.q-tip` max-width)에 맡긴다
  *  @param text () => string — 설명 문장 (올릴 때 짓는다) */
 function subHelp(key, text) {
     const h = el('div', 'sub-h', t(key));
     const q = el('span', 'q-btn', '?');
-    bindTipNode(q, () => el('div', 'tip-card q-tip',
-        `<div class="tip-effect-head"><div class="tip-name">${t(key)}</div></div><div class="tip-effect-summary">${text()}</div>`));
+    bindTipNode(q, () => {
+        const card = el('div', 'tip-card q-tip',
+            `<div class="tip-effect-head"><div class="tip-name">${t(key)}</div></div><div class="tip-effect-summary">${text()}</div>`);
+        const line = q.closest('.pt-mid')?.querySelector(':scope > .pt-tactics');
+        const w = line ? stageRect(line).left - stageRect(q).right - 16 : 0;
+        if (w > 300) { card.style.width = `${Math.floor(w)}px`; card.style.maxWidth = 'none'; }
+        return card;
+    });
     h.appendChild(q);
     return h;
 }
@@ -1763,9 +1806,9 @@ function formBox() {
 
 /** 편성 고르개 — **박스 맨 위 한 줄**이다 [2026-09-21 사용자 지시 · ADR-0251 — 진형 칸 안(ADR-0229)에서 올렸다].
  *  전술 칸까지 편성마다가 되어(ADR-0250) 아래 셋(진형 · 물약 · 전술)을 전부 가르므로 셋 모두의 위에 선다. 도는 원정의 편성은 「원정 중」을 단다 */
-function presetSeg(ps) {
-    const seg = segmented(ps.presets.map(p => ({ id: p.no, label: presetLabel(p.no, ps) })), ps.activeNo,
-        no => { SYS.game.selectPreset(G, no); save(); render(); });
+//   `onPick` 을 주면 누름을 그쪽이 받는다 — 결투장은 고르면서 판을 펼친다 (ADR-0495)
+function presetSeg(ps, onPick = no => { SYS.game.selectPreset(G, no); save(); render(); }) {
+    const seg = segmented(ps.presets.map(p => ({ id: p.no, label: presetLabel(p.no, ps) })), ps.activeNo, onPick);
     seg.classList.add('pt-pick');
     return seg;
 }
@@ -2064,9 +2107,15 @@ function presetPick() {
  */
 function loadBox() {
     const box = el('div', 'dw-load');
+    box.appendChild(tacticReadBlock());
+    box.appendChild(potionReadBlock(SYS.game.presetState(G)));
+    return box;
+}
 
-    // 전술 — 열린 칸의 **효과 줄**만. 조건 문장은 툴팁이 들고(칸이 좁다), 조건을 못 채운 칸은 흐리다.
-    //   값은 `tacticState` 가 **고른 편성의 칸 · 파티**로 센다 (§15 · ADR-0250)
+/** 전술 읽기 칸 — 열린 칸의 **효과 줄**만. 조건 문장은 툴팁이 들고(칸이 좁다), 조건을 못 채운 칸은 흐리다.
+ *  값은 `tacticState` 가 **고른 편성의 칸 · 파티**로 센다 (§15 · ADR-0250). 출정 창과 결투장 판(ADR-0495)이 같이 쓴다
+ *  @param emptyKey 열린 칸이 없을 때 찍을 문구 키 — 없으면 아무것도 안 찍는다(출정 창) */
+function tacticReadBlock(emptyKey = null) {
     const tac = el('div', 'dw-block dw-tac');
     tac.appendChild(el('div', 'sub-h', t('rs.h')));
     for (const s of SYS.game.tacticState(G).slots) {
@@ -2077,10 +2126,12 @@ function loadBox() {
         row.title = `${condText(s.option)} · ${t(s.active ? 'rs.on' : 'rs.off')}`;
         tac.appendChild(row);
     }
-    box.appendChild(tac);
+    if (emptyKey && tac.childElementCount === 1) tac.appendChild(el('span', 'muted', t(emptyKey)));
+    return tac;
+}
 
-    // 물약 — 고른 편성의 칸 넷. 편성 탭과 같은 칸이고 **모자란 칸은 흐린 점선**이다(그 칸은 빈 채로 나간다)
-    const ps = SYS.game.presetState(G);
+/** 물약 읽기 칸 — 고른 편성의 칸. 편성 탭과 같은 칸이고 **모자란 칸은 흐린 점선**이다(그 칸은 빈 채로 나간다) · 출정 창과 결투장 판이 같이 쓴다 */
+function potionReadBlock(ps) {
     const pot = el('div', 'dw-block dw-pot');
     pot.appendChild(el('div', 'sub-h', t('pt.potion.h')));
     const belt = el('div', 'p-belt');
@@ -2091,8 +2142,7 @@ function loadBox() {
         belt.appendChild(c);
     }
     pot.appendChild(belt);
-    box.appendChild(pot);
-    return box;
+    return pot;
 }
 
 /**
@@ -2900,19 +2950,13 @@ function skillCards(h) {
     // 소제목은 이름뿐이다 (2026-09-08 사용자 지시) — 공격 속도는 **세부 옵션 1 의 제 행**이 든다
     // (`combat_stat.csv:action_period` — 세부 옵션 1 대표값). §4-1 「값은 항상 찍는다」는 그 행이 지킨다
     wrap.appendChild(el('div', 'sub-h', t('ch.skill.h')));
-    // 꺼진 칸 [2026-09-29 · R187 · §6 · ADR-0446] — **배운 칸**의 직업 스킬이 든 무기의 무기군과 안 맞으면 전투에서 안 나간다(2026-10-02 · R197 — 고유 · 전직 칸은 무기를 안 본다).
-    //   판정은 `skill.fitsWeapon`(맨손 = 무기군 없음) · 어느 칸이 무기를 보나는 전투(`battle.slotOf`)와 같다
+    // 꺼진 칸 [2026-09-29 · R187 · §6 · ADR-0446] — **무기가 필요한 스킬**(타격 · 회복 · 소환)이 든 무기의 무기군과 안 맞으면 전투에서 안 나간다 ·
+    //   칸을 가리지 않는다(2026-10-03 · R204 — ~~배운 칸만~~ R197). 판정은 `skill.fitsWeapon`(맨손 = 무기군 없음) 하나 — 전투(`battle.slotOf`)와 같다
     const worn = G?.items?.[h.equipped?.weapon] ?? null;
     const classes = worn ? D.weaponGroups[worn.group]?.classes ?? null : null;
-    const isOff = a => a.source === 'book' && !SYS.skill.fitsWeapon(SYS.skill.resolve(a), classes);
-    // 툴팁 맨 위 한 줄 — 그 스킬 직업의 무기군 이름(`weapon_group.csv` 순서). Alt 로 다시 그려도 줄이 남게 `_rebuild` 를 감싼다
-    const needTip = a => {
-        const own = SYS.skill.resolve(a)?.ownerId;
-        const card = skillTipCard(a, tipCtx);
-        card.prepend(el('div', 'tip-need', t('sk.needWeapon', { w: D.weaponGroupList.filter(g => g.classes.includes(own)).map(g => L(g)).join(' · ') })));
-        card._rebuild = () => needTip(a);
-        return card;
-    };
+    const isOff = a => !SYS.skill.fitsWeapon(SYS.skill.resolve(a), classes);
+    // 꺼진 칸의 설명창 — 이름 줄 맨 오른쪽의 필요 무기 칩이 위험색이 된다(`ctx.off` · 2026-10-03 · ADR-0496 — ~~맨 위 한 줄 `.tip-need`~~ ADR-0446)
+    const needTip = a => skillTipCard(a, { ...tipCtx, off: true });
     const grid = el('div', 'sk-cards');
     activeCells(h).forEach((a, i) => {
         const off = !!a && isOff(a);
@@ -3568,8 +3612,10 @@ function tipCard(item, headText, hints = [], skCtx) {
             item.element ? t(`st.atkType.${item.element}`) : ''));
         // 속도 줄 = **공격 속도**, 값은 초 / 1회 [2026-09-25 사용자 지시 · ADR-0357 초 · ADR-0358 이름 — 초당 공격속도(ADR-0081)를 걷었다].
         //   이름 · 값 꼴이 세부 옵션 머리의 그 행과 같다(`combat_stat.csv:action_period` · `sk.cycleSec`) — 값은 무기군 밑수(민첩 · 공격 속도 % 전)
+        //   마법 무기는 이름이 「캐스팅 속도」다 — 같은 주기 · 이름만 [2026-10-03 · R202 · ADR-0492]
         const cycleStat = statRow('action_period');
-        baseRows.push(baseRow(cycleStat ? L(cycleStat) : t('sk.cycle'), t('sk.cycleSec', { s: g.period.toFixed(2) })));
+        const cycleName = g.damageKind === 'magic' ? t('sk.castSpeed') : cycleStat ? L(cycleStat) : t('sk.cycle');
+        baseRows.push(baseRow(cycleName, t('sk.cycleSec', { s: g.period.toFixed(2) })));
     }
     // 방어구 고유값 — 고정 옵션 「방어력 +%」를 먹인 값(`item.implicitFixed` · ADR-0309)
     if (imp) baseRows.push(baseRow(L(M.statLabel(imp.stat)), M.baseValue(imp.stat, imp.v)));
@@ -3647,7 +3693,7 @@ function activeSlots(h, title) {
     const p = el('div', 'panel');
     // 공격 주기는 **제목 줄 오른쪽**에 선다 [2026-09-27 사용자 지시 「탭 높이를 줄여」] — 옛 자리(제목 아래 한 줄)가 창 높이를 먹었다
     p.appendChild(el('h2', '', `<span>${title ?? t('sk.slots.h')}</span>
-        <small class="cycle-line">${t('sk.cycle')} <b>${t('sk.cycleSec', { s: cycle.toFixed(2) })}</b></small>`));
+        <small class="cycle-line">${t(cb.basic_attack === false ? 'sk.castSpeed' : 'sk.cycle')} <b>${t('sk.cycleSec', { s: cycle.toFixed(2) })}</b></small>`));
     const box = el('div', 'slot-list');
     activeCells(h).forEach((a, i) => {
         const innate = ACTIVE_SOURCES[i] === 'innate';

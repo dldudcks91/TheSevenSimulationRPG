@@ -68,6 +68,16 @@ export const EVENT_IDS = Object.keys(EVENT_TRIGGERS);
 const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0, onHit: def.onHit ?? null });
 
 /**
+ * 전열만 남긴다 — battle.js `frontOf` 와 같은 규칙(랭크가 없으면 전열 · 전열 생존자가 없으면 받은 목록 그대로).
+ * **「모두」·「후열」을 밝히지 않은 스킬은 전열부터다** [사용자 지시 2026-10-03 · battle_design §3-1] —
+ *   순환 · 최고 방어 · HP 최대는 이 모집단 안에서 고르고, 연쇄는 전원을 돌되 전열을 먼저 돈다. 고르는 기준만 좁아져 rng 소비는 그대로다
+ */
+const frontOf = foes => {
+    const front = foes.filter(f => (f.rank ?? 0) === 0);
+    return front.length ? front : foes;
+};
+
+/**
  * **공격 대상** 5종 — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
  * @param rt   skill_runtime 이 만든 런타임 — `rng` · `strikeOnce` · `pickTarget` 을 쓴다
  * @param u    시전자 · @param def 시전 단위(`skill.scaleDef` 가 낸 `hit` 줄 — 스킬 id · 실효값) · @param foes **생존** 적 배열(호출자가 걸러 준다)
@@ -99,26 +109,31 @@ export const ATTACK_TARGETS = {
             if (tgt.hp > 0) rt.strikeOnce(u, tgt, primary === null || tgt === primary ? def.mult : weak, def.element, def.id, sk);
         }
     },
-    /** 순환 — 시작점만 굴리고(rng 1회) 배열 순으로 돌아가며 `hits` 회. 대상이 모자라면 같은 대상에 겹친다 */
+    /** 순환 — 시작점만 굴리고(rng 1회) **전열**을 배열 순으로 돌아가며 `hits` 회. 대상이 모자라면 같은 대상에 겹친다 */
     enemy_rotate: (rt, u, def, foes) => {
-        // 시작점은 **고르는 행위**라 전열 우선을 탄다 (battle_design §3-1 개정 2026-09-09) —
-        //   `pickTarget` 이 굴림 1회를 그대로 쓰므로 소비 수열은 안 밀린다. 도는 것은 배열 전체다
-        const start = foes.indexOf(rt.pickTarget(u, foes));
+        // 시작점은 `pickTarget` 의 굴림 1회 그대로다 (battle_design §3-1 개정 2026-09-09) —
+        //   도는 것은 **전열**이다 [2026-10-03 · ~~배열 전체~~]. 지목 · 도발이 후열을 집었으면 그 하나를 고리 앞에 세운다(진형을 무시하는 좁은 계약)
+        const first = rt.pickTarget(u, foes);
+        const front = frontOf(foes);
+        const ring = front.includes(first) ? front : [first, ...front];
+        const start = ring.indexOf(first);
         const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0) break;
-            const tgt = foes[(start + k) % foes.length];
+            const tgt = ring[(start + k) % ring.length];
             if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
         }
     },
     /**
      * 최고 방어 대상 다단 — **가장 방어값이 높은 적**을 골라 `hits` 회. 동률이면 배열 순 앞이라 **rng 를 안 쓴다**.
      * 타격마다 그 대상의 방어값이 `decay` 만큼 준다(누적 곱) — 가이드에로우 (skill_design §12-5).
-     * 09-08 기본 타겟팅 확정의 **예외 둘째**다 — 대상 선택을 바꾸는 경로라 §7 이 늘리지 말라고 적어 둔 자리다
+     * 09-08 기본 타겟팅 확정의 **예외 둘째**다 — 대상 선택을 바꾸는 경로라 §7 이 늘리지 말라고 적어 둔 자리다.
+     * 고르는 모집단은 **전열**이다 [2026-10-03 · ~~생존 적 전원~~]
      */
     enemy_highest_def: (rt, u, def, foes) => {
-        let tgt = foes[0];
-        for (const f of foes) if (f.def > tgt.def) tgt = f;
+        const pool = frontOf(foes);
+        let tgt = pool[0];
+        for (const f of pool) if (f.def > tgt.def) tgt = f;
         const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
@@ -133,13 +148,20 @@ export const ATTACK_TARGETS = {
             }
         }
     },
-    /** 연쇄 — 시작점만 굴리고(rng 1회 · **전열 우선**) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다 */
+    /**
+     * 연쇄 — 시작점만 굴리고(rng 1회 · **전열 우선**) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다.
+     * 도는 순서는 **전열 먼저**다 [2026-10-03] — 시작점부터 전열을 한 바퀴 돈 뒤 나머지를 배열 순으로(센 앞 순번이 후열로 새지 않는다)
+     */
     enemy_chain: (rt, u, def, foes) => {
-        const start = foes.indexOf(rt.pickTarget(u, foes));   // 시작점만 고른다 — 전열 우선 (§3-1)
+        const first = rt.pickTarget(u, foes);                 // 시작점만 고른다 — 전열 우선 (§3-1)
+        const front = frontOf(foes);
+        const i = front.indexOf(first);
+        const head = i < 0 ? [first] : [...front.slice(i), ...front.slice(0, i)];
+        const order = [...head, ...foes.filter(f => !head.includes(f))];
         const sk = skillHit(def);
-        for (let k = 0; k < foes.length; k++) {
+        for (let k = 0; k < order.length; k++) {
             if (u.hp <= 0) break;
-            const tgt = foes[(start + k) % foes.length];
+            const tgt = order[k];
             if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult * Math.pow(1 - def.decay, k), def.element, def.id, sk);
         }
     },
@@ -163,7 +185,7 @@ export const HIT_DECAY = {
  *                    `party_adjacent` = `party` 배열의 양 옆(자기 제외) — ⚠ 위치 개념은 미확정이고(§9-1 규칙 5) 배열 순서를 자리로 읽는 **임시 규칙**이다 (§7)
  *   `side = enemy` — **적에게 거는 창**(디버프 · 지목). 새 채널이 아니라 같은 창을 **음수 `effect_value`** 로 쓴다 [사용자 확정 2026-09-09].
  *                    몬스터도 같은 유닛 생성자를 지나 `buffs` 를 들기 때문에 성립한다 (battle.js:makeUnit).
- *                    `enemy_hp_max` = 생존 적 중 **HP 최대** 하나(결투의 지목 · skill_design §12-4 ⚠ 「rng 소비 0 유지」 조건) —
+ *                    `enemy_hp_max` = 생존 **전열** 중 **HP 최대** 하나(전열이 비면 생존자 전원 중 · 2026-10-03 · 결투의 지목 · skill_design §12-4 ⚠ 「rng 소비 0 유지」 조건) —
  *                    ~~`enemy_single` 이 공격(전열 우선 무작위)과 이 뜻 둘을 들었다~~ 2026-09-24 에 이름 하나에 뜻 하나로 갈랐다
  */
 export const PICK_TARGETS = {
@@ -188,7 +210,7 @@ export const PICK_TARGETS = {
     enemy_hp_max: {
         side: 'enemy',
         pick: (rt, u) => {
-            const foes = rt.alive(rt.foesOf(u));
+            const foes = frontOf(rt.alive(rt.foesOf(u)));     // 전열 안에서 고른다 [2026-10-03]
             return foes.length === 0 ? [] : [foes.reduce((a, b) => (b.hp > a.hp ? b : a))];
         },
     },
@@ -201,6 +223,8 @@ export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...Object.ke
  * 하는 일 — 이 표의 키가 곧 `skill_effect.csv:effect` 어휘다 [2026-09-22 · R136 · 옛 `kind` 의 「무엇을 하나」 절반].
  *   `casts`                  — 그 일을 싣는 나가는 방식. `skill.js` 가 로드 때 짝을 검증한다(옛 kind 일곱이 그대로 남는 짝이다)
  *   `foes`                   — 살아 있는 적이 없으면 그 줄을 건너뛴다(굴림도 없다 · `skill_runtime.cast` · 2026-09-24)
+ *   `weapon`                 — **그 직업의 무기를 들어야 나간다** [2026-10-03 · R204 · skill_design §2-2] — 무기의 힘을 배율로 끌어다 쓰는 일(타격 · 회복 · 소환).
+ *                              이런 줄이 하나라도 있는 스킬은 칸(고유 · 배운 · 전직)을 가리지 않고 무기를 본다 · 걸린 효과만 거는 스킬은 무기와 상관없다(`skill.fitsWeapon`)
  *   `run(rt, u, x, t, foes)` — 한 줄의 실행. `x` = 시전 단위(`skill.scaleDef` 가 낸 줄 하나 — 스킬 id · 그 줄의 대상 · 실효값 · 걸린 효과를 푼 값)
  *   `apply`  — 걸린 효과를 건다(버프 · 적에게 거는 창 · 오오라). 오오라(`cast = aura`)는 차례에 안 나가고 battle.js 가 전투 시작에 건다
  *   `summon` — **HP 를 가진 유닛**을 세운다 (skill_design §12-6 프로즌월). 행동하지 않고 대상 풀에만 들어간다
@@ -211,10 +235,10 @@ export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...Object.ke
  *              `event` 스킬이라 사건(`rt.fire`)이 부른다 [`run` 2026-09-24 R151 — ~~`battle.js:blast` 전용 함수~~]
  */
 export const EFFECT_TYPES = {
-    hit: { casts: ['turn'], foes: true, run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
-    heal: { casts: ['turn'], run: (rt, u, x, t) => rt.castHeal(u, x, t) },
+    hit: { casts: ['turn'], foes: true, weapon: true, run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
+    heal: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castHeal(u, x, t) },
     apply: { casts: ['turn', 'aura'], run: (rt, u, x, t) => rt.castBuff(u, x, t) },
-    summon: { casts: ['turn'], run: (rt, u, x, t) => rt.castSummon(u, x, t) },
+    summon: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castSummon(u, x, t) },
     call: { casts: ['turn'], run: (rt, u, x, t) => rt.castCall(u, x, t) },
     fixed: {
         casts: ['event'],

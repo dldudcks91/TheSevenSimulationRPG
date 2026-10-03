@@ -92,6 +92,7 @@ export const AFFIX_LABELS = {
     crit_rate: { ko: '치명타 확률', en: 'Crit Chance', fmt: 'pct' },
     crit_damage: { ko: '치명타 피해', en: 'Crit Damage', fmt: 'pct' },
     aspd_pct: { ko: '공격 속도', en: 'Attack Speed', fmt: 'pct' },
+    cast_speed_pct: { ko: '캐스팅 속도', en: 'Casting Speed', fmt: 'pct' },   // 마법 무기 유닛의 주기만 줄인다 — 공격 속도와 별개 옵션 (R203 · battle_design §2)
     life_steal: { ko: '흡혈', en: 'Life Steal', fmt: 'pct' },
     def_ignore: { ko: '방어 무시', en: 'Defense Ignore', fmt: 'pct' },
     reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', fmt: 'pct' },

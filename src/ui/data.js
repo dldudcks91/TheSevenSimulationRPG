@@ -517,6 +517,7 @@ export function buildSystems(d, dev = {}) {
     const skill = createSkillSystem({
         balance: d.balance, rows: d.skillRows ?? [], effectRows: d.skillEffectRows ?? [], statusRows: d.skillStatusRows ?? [],
         tagRows: d.skillTagRows ?? [], attributes: d.heroAttributes ?? [],
+        advances: d.advanceRows ?? [],   // 전직 갈래 → 직업 — 전직 스킬의 무기 판정 (2026-10-03 · R204 · skill_design §2-2)
     });
     /**
      * 직업 풀 `{classId: [skillId...]}` — **1스킬 = 1직업** (skill_design §12-1 확정 2026-09-08).

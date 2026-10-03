@@ -458,11 +458,19 @@ export function createSkillSystem(data) {
     const defs = {};
     const seen = {};                  // 출처(owner_kind#owner_id) 별 priority 중복 검출
     const applied = new Set();        // 누가 거는 걸린 효과인가 — 아무도 안 거는 행은 읽히지 않는 행이다 (표 사이 검사 ④)
+    // 전직 갈래 → 직업 (`advance.csv:class_id`) — 전직 스킬의 `owner_id` 는 갈래라 무기 판정에 쓸 직업을 여기서 푼다 [2026-10-03 · R204].
+    //   표를 안 넘긴 검증 조립은 비어 있고, 그때 전직 스킬의 `classId` 는 null(무기를 안 본다). 넘겼는데 모르는 갈래면 던진다
+    const advClass = new Map((data.advances ?? []).map(r => [r.advance_id, r.class_id]));
     list.forEach((d, i) => {
         const lineRows = lineRowsOf.get(d.id).slice().sort((a, b) => a.seq - b.seq);
         d.effects = lineRows.map(normalizeLine);
         validate(d, rows[i], lineRows);
         d.derived = derivedTagsOf(d);
+        // 무기 판정의 재료 — **CSV 칸이 없다**(파생 · skill_design §2-2 · 2026-10-03 R204). 직업 = 직업 스킬은 `owner_id` · 전직 스킬은 그 갈래의 직업 · 그 밖 null.
+        //   무기가 필요한가 = 무기의 힘을 끌어다 쓰는 줄(`EFFECT_TYPES[effect].weapon` — 타격 · 회복 · 소환)이 하나라도 있는가
+        if (d.ownerKind === 'advance' && advClass.size && !advClass.has(d.ownerId)) throw new Error(`skill: ${d.id} — 전직 갈래 '${d.ownerId}' 가 advance.csv 에 없다`);
+        d.classId = d.ownerKind === 'job' ? d.ownerId : d.ownerKind === 'advance' ? (advClass.get(d.ownerId) ?? null) : null;
+        d.needsWeapon = d.classId !== null && d.effects.some(e => EFFECT_TYPES[e.effect].weapon === true);
         if (defs[d.id]) throw new Error(`skill: ${d.id} — skill_id 중복`);
         defs[d.id] = d;
         const owner = `${d.ownerKind}#${d.ownerId}`;
@@ -564,13 +572,14 @@ export function createSkillSystem(data) {
     const tagsOf = def => [...(def?.derived ?? []), ...(def?.tags ?? [])];
 
     /**
-     * **이 스킬이 이 무기로 나가나** [신설 2026-09-29 · R187 · skill_design §2-2] — 직업 스킬은 그 직업의 무기군을 들어야 나간다.
-     *   전직 · 몬스터 전용 스킬은 무기와 상관없다. 새 CSV 칸이 없다 — 스킬의 직업(`ownerId`)과 무기군의 직업(`weapon_group.csv:classes`)에서 읽는다.
+     * **이 스킬이 이 무기로 나가나** [신설 2026-09-29 · R187 · 개정 2026-10-03 · R204 · skill_design §2-2] — **무기의 힘을 끌어다 쓰는 스킬**(`def.needsWeapon` —
+     *   타격 · 회복 · 소환 줄이 있다)은 그 스킬 직업(`def.classId` — 전직 스킬은 갈래의 직업)의 무기군을 들어야 나간다. 걸린 효과만 거는 스킬
+     *   (함성 · 오오라 · 축복 · 저주 · 자기 버프)과 몬스터 전용 스킬은 무기와 상관없다. 새 CSV 칸이 없다 — 하는 일 줄과 무기군의 직업(`weapon_group.csv:classes`)에서 읽는다.
+     *   **칸을 가리지 않는다** — 고유 · 배운 · 전직 칸 모두 같은 판정이다(~~배운 칸만~~ 10-02 · R197 대체).
      *   이 모듈은 아이템을 모르므로 무기군 → `classes` 는 부르는 쪽이 푼다. 안 맞는 칸을 어떻게 돌리나(건너뛰기 · 쿨 멈춤)는 battle 의 일이다.
-     *   **부르는 쪽은 배운 칸(`source = book`)에만 묻는다** [2026-10-02 · R197] — 고유 · 전직 칸은 무기를 안 본다(battle `slotOf` · 캐릭터 탭 꺼진 칸)
      * @param classes [classId] — 든 무기군의 `classes` · 맨손 `null`
      */
-    const fitsWeapon = (def, classes) => def?.ownerKind !== 'job' || !!classes?.includes(def.ownerId);
+    const fitsWeapon = (def, classes) => !def?.needsWeapon || !!classes?.includes(def.classId);
 
     /**
      * **스킬 계수 공용 계산** (skill_design §13 · battle_design §9-2 · 2026-09-10 R72) — 전투와 미리보기가 **같은 함수**를 쓴다.

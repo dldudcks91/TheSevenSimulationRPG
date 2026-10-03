@@ -14,13 +14,13 @@
 import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES, fillStory, pickJosa, STORY_TOKEN } from '../ui/data.js';
 import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard, sheetPages, detailLayoutIds } from '../ui/tip.js';
-import { setLang, t as i18nT } from '../ui/i18n.js';
+import { setLang, t as i18nT, L as i18nL } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { parseCsv } from '../game_logic/csv.js';
 import { createFormula } from '../game_logic/formula.js';
 import { createSkillSystem } from '../game_logic/skill.js';
-import { ATTACK_TARGETS, AILMENT_IDS, refreshDerived, weaponOnHit } from '../game_logic/skill_effects.js';
+import { ATTACK_TARGETS, PICK_TARGETS, AILMENT_IDS, refreshDerived, weaponOnHit } from '../game_logic/skill_effects.js';
 import { createSkillRuntime, createHooks, cooldownSec } from '../game_logic/skill_runtime.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
 import { createCommission } from '../game_logic/commission.js';
@@ -79,7 +79,7 @@ check('결투장: 인간 3인 상대 · 평균 레벨 · 전열/후열 · 원본
     team[0].hero.stats.str = -1;
     return JSON.stringify(g) === before;
 });
-check('결투장: 같은 입력/시드 = 같은 결과 · 단판 · 보상/도감/물약 없음', () => {
+check('결투장: 같은 입력/시드 = 같은 결과 · 단판 · 보상/도감 없음 · loadout 없으면 물약 칸 0', () => {
     const g = SYS.game.newGame(81, SYS.hero.rollCandidates(makeRng(81), 3), 0);
     const team = SYS.arena.snapshotTeam(g.heroes.slice(0, 3), g.items);
     const enemy = SYS.arena.rollOpponent(team, makeRng(82));
@@ -90,6 +90,20 @@ check('결투장: 같은 입력/시드 = 같은 결과 · 단판 · 보상/도�
         && a.rounds.length === 1 && a.xpTotal === 0 && a.gold === 0 && !Object.keys(a.kills).length
         && !a.drops.length && !a.books.length && a.potion.max === 0 && a.potion.used === 0
         && a.timeline.some(e => e.e === 'end');
+});
+check('결투장: 고른 편성의 전술 · 물약 칸을 싣는다 · 전술 몫은 원정과 같다 · 세이브 불변', () => {
+    const g = SYS.game.newGame(101, SYS.hero.rollCandidates(makeRng(101), 3), 0);
+    for (const h of g.heroes.slice(0, 3)) if (!SYS.game.partyOf(g).includes(h.uid)) SYS.game.toggleParty(g, h.uid, 0);
+    const heroes = SYS.game.partyOf(g).map(uid => g.heroes.find(h => h.uid === uid));
+    if (heroes.length !== 3) fail(`편성 인원 ${heroes.length}`);
+    const before = JSON.stringify(g);
+    const lo = SYS.game.arenaLoadout(g);
+    // 도감이 빈 새 게임이라 원정의 전투 능력치(전술 · 도감 포함)와 한 글자도 같아야 한다
+    const team = SYS.arena.snapshotTeam(heroes, g.items, {}, lo);
+    if (team.some((p, i) => JSON.stringify(p.combat) !== JSON.stringify(SYS.game.heroCombat(g, heroes[i])))) fail('전술 몫이 원정과 다르다');
+    const r = SYS.arena.fight(team, SYS.arena.rollOpponent(team, makeRng(102)), makeRng(103), lo);
+    if (r.potion.max !== lo.slotMax || JSON.stringify(r.potion.slots) !== JSON.stringify(lo.potions)) fail(`물약 칸 ${JSON.stringify(r.potion)}`);
+    return JSON.stringify(g) === before;
 });
 check('결투장: 3명 미만/중복 선택 거절', () => {
     const g = SYS.game.newGame(91, SYS.hero.rollCandidates(makeRng(91), 3), 0);
@@ -788,7 +802,7 @@ check('장신구 옵션 표: scale 3분류 · perIlvl 은 band 에만 · 라벨 
     if (!['res_fire', 'res_cold', 'res_lightning', 'res_poison'].every(s => D.accessoryCommonOptions.some(d => d.stat === s))) fail('원소별 저항 4종 없음');
     if (rows.some(d => d.stat === 'atk_flat')) fail('atk_flat 은 퇴역했다 — 최소/최대 피해 보류 (R78)');
     // 반지 기준 — 두 칸이라 두 번 쌓인다. 곱이 되는 것(치명 피해 · % 피해 감소 · 최대 저항 · 공속 · 데미지 +%)은 반지에 없다 (item_design §1)
-    const multy = ['crit_damage', 'damage_reduction', 'res_max_bonus', 'aspd_pct', 'atk_pct'];
+    const multy = ['crit_damage', 'damage_reduction', 'res_max_bonus', 'aspd_pct', 'cast_speed_pct', 'atk_pct'];
     const ringHas = rows.filter(d => (d.slot === 'ring' || d.slot === undefined) && multy.includes(d.stat));
     if (ringHas.length) fail(`반지에 곱이 되는 옵션: ${ringHas.map(d => d.stat).join(',')}`);
     return `죄종 칸 ${D.accessorySinOptions.length} · 공통 ${D.accessoryCommonOptions.length}`;
@@ -2753,9 +2767,10 @@ check('item: weaponDamageFixed — 무기 피해 양끝 × (1 + 고정 「데미
         const d = SYS.item.weaponDamage(it), got = SYS.item.weaponDamageFixed(it);
         const want = { min: Math.round(d.min * (1 + fixed.v)), max: Math.round(d.max * (1 + fixed.v)) };
         if (got.min !== want.min || got.max !== want.max) fail(`${it.group} ${got.min}~${got.max} ≠ ${want.min}~${want.max} (고정 ${fixed.v})`);
-        // 전투와 같은 숫자 — 고정 줄 하나만 남긴 무기를 낀 영웅. 마스터리 등 다른 % 가 괄호에 들면 비교할 수 없어 건너뛴다
+        // 전투와 같은 숫자 — 고정 줄 하나만 남긴 무기를 낀 영웅. 무기 % 는 괄호 밖이라(2026-10-03) 괄호가 비어 있을 때만 같다 —
+        //   마스터리 등 다른 % 가 괄호에 들면 비교할 수 없어 건너뛴다
         const c = SYS.hero.computeCombat(h, [{ ...it, affixes: [fixed] }]);
-        if (c.atk_pct_sum === fixed.v) {
+        if (c.atk_pct_sum === 0) {
             same++;
             const a = c.atk_physical ?? c.atk_magic;
             if (a.min !== got.min || a.max !== got.max) fail(`전투 ${a.min}~${a.max} ≠ 툴팁 ${got.min}~${got.max}`);
@@ -3260,6 +3275,34 @@ check('combat: 방어구 갈래의 공속 · 쿨감은 낀 방어구마다 제 �
     if (SYS.hero.computeCombat(h, [w]).cooldown_reduction !== 0) fail('무기군이 방어구 갈래로 읽혔다');
     return `중갑 주기 ${c0.action_period} → ${cH.action_period} · 로브 쿨감 ${M.pctNum(cR.cooldown_reduction)}%`;
 });
+check('combat: 공격 속도와 캐스팅 속도는 별개 옵션 — 마법 무기는 cast_speed_pct 만 · 물리 무기 · 맨손은 공격 속도 계열만 · 옛 세이브의 마법 무기 aspd_pct 는 로드가 같은 값으로 옮긴다 (2026-10-03 · R203 · INTERFACE §2-3 · §4)', () => {
+    const h = { ...G.heroes[0], mastery: {} };
+    const staff = mkItem('weapon', [], { group: 'staff' }), axe = mkItem('weapon', [], { group: 'axe' });
+    const asp = mkItem('ring', [{ stat: 'aspd_pct', v: 0.1 }]), cast = mkItem('ring', [{ stat: 'cast_speed_pct', v: 0.1 }]);
+    const heavy = mkItem('armor', [], { group: 'heavy' });
+    const p = (...xs) => SYS.hero.computeCombat(h, xs).action_period;
+    if (p(staff, asp) !== p(staff)) fail(`마법 무기가 공격 속도를 먹었다 ${p(staff)} → ${p(staff, asp)}`);
+    if (!(p(staff, cast) < p(staff))) fail(`마법 무기가 캐스팅 속도를 안 먹는다 ${p(staff)} → ${p(staff, cast)}`);
+    if (p(axe, cast) !== p(axe)) fail('물리 무기가 캐스팅 속도를 먹었다');
+    if (p(cast) !== p()) fail('맨손이 캐스팅 속도를 먹었다');
+    if (!(p(axe, asp) < p(axe))) fail('물리 무기가 공격 속도를 안 먹는다');
+    // 나태 칸 — 무기 종류마다 후보가 한 줄이라 소비 수 · 굴린 값이 행을 가르기 전과 같다
+    for (const kind of ['physical', 'magic']) {
+        const rows = D.weaponSinOptions.filter(r => r.sin === 'sloth' && (r.appliesTo === 'all' || r.appliesTo === kind));
+        const want = kind === 'magic' ? 'cast_speed_pct' : 'aspd_pct';
+        if (rows.length !== 1 || rows[0].stat !== want) fail(`나태 ${kind} 행 ${rows.map(r => r.stat)}`);
+    }
+    // 옛 세이브 — 마법 무기의 aspd_pct 는 cast_speed_pct 로 · 물리 무기는 그대로 (버전 무변경)
+    const old = JSON.parse(JSON.stringify(SYS.game.serialize(G, NOW)));
+    const [mag, phy] = [...new Set(Object.values(old.items).filter(it => it.slot === 'weapon').concat(Object.values(old.items)))].slice(0, 2);
+    Object.assign(mag, { slot: 'weapon', group: 'staff', affixes: [...(mag.affixes ?? []), { stat: 'aspd_pct', v: 0.03, src: 'sloth' }] });
+    Object.assign(phy, { slot: 'weapon', group: 'axe', affixes: [...(phy.affixes ?? []), { stat: 'aspd_pct', v: 0.04, src: 'sloth' }] });
+    const back = SYS.game.deserialize(old);
+    const m2 = back.items[mag.uid].affixes.at(-1), p2 = back.items[phy.uid].affixes.at(-1);
+    if (m2.stat !== 'cast_speed_pct' || m2.v !== 0.03) fail(`마법 무기 이관 ${JSON.stringify(m2)}`);
+    if (p2.stat !== 'aspd_pct' || p2.v !== 0.04) fail(`물리 무기가 바뀌었다 ${JSON.stringify(p2)}`);
+    return `스태프 ${p(staff)} → 캐스팅 +10% ${p(staff, cast)} · 공속 +10% ${p(staff, asp)} · 중갑 ${p(staff, heavy)} · 도끼 ${p(axe)} → 공속 ${p(axe, asp)}`;
+});
 check('formula: 절대값 피해 감소는 모든 감소 뒤에 뺀다 · 원소별 최대 저항은 그 원소의 상한에만 · 흡혈은 체력 회복 +% 를 탄다 (2026-09-18 · INTERFACE §2-3)', () => {
     const a = { atkMin: 500, atkMax: 500, atkType: 'physical', lvl: 50, crit: 0, critDmg: 1.5 };
     const d = { def: 0, res: { fire: 0.9, cold: 0.9, lightning: 0, poison: 0 }, resMaxBonus: 0, dr: 0, lvl: 1 };
@@ -3693,6 +3736,23 @@ check('hero: 도감 「데미지」는 데미지 % 괄호에 더한다 — 따�
     const want = Math.round(bare * (1 + c0.atk_pct_sum + 1));
     if (Math.abs(c1[k].max - want) > 1) fail(`도감 데미지 100% → ${c1[k].max} ≠ ${want} (따로 곱하면 ${c0[k].max * 2} 근처)`);
     return `${c0[k].max} → ${c1[k].max} (한 괄호 ${want} · 따로 곱 ${c0[k].max * 2})`;
+});
+check('hero: 무기에 붙은 데미지 % 는 따로 곱한다 — 무기 양끝 × (1 + 무기 %) 위에 그 외 데미지 % 괄호 · atk_pct_sum 에 안 든다 (battle_design §9-1 · 2026-10-03)', () => {
+    const h = { ...G.heroes[0], mastery: {} };
+    const w = { slot: 'weapon', group: 'mace', ilvl: 60, up: 0, affixes: [{ stat: 'atk_pct', v: 1, src: 'fixed' }] };
+    const gloves = mkItem('gloves', [{ stat: 'atk_pct', v: 0.5 }]);
+    const c0 = SYS.hero.computeCombat(h, [w]), c1 = SYS.hero.computeCombat(h, [w, gloves]);
+    if (c0.atk_pct_sum !== 0) fail(`무기 % 가 괄호 합에 들었다 ${c0.atk_pct_sum}`);
+    if (c1.atk_pct_sum !== 0.5) fail(`장갑 % 괄호 합 ${c1.atk_pct_sum} (0.5 이어야)`);
+    const fixedR = SYS.item.weaponDamageFixed(w);
+    const a0 = c0.atk_physical, a1 = c1.atk_physical;
+    if (a0.min !== fixedR.min || a0.max !== fixedR.max) fail(`괄호가 비면 툴팁 범위와 같아야 — 전투 ${a0.min}~${a0.max} · 툴팁 ${fixedR.min}~${fixedR.max}`);
+    const want = Math.round(fixedR.max * 1.5);                 // 곱 = 2 × 1.5 = 3배 · 한 괄호였다면 (1 + 1 + 0.5) = 2.5배
+    if (a1.max !== want) fail(`무기 +100% × 장갑 +50% → ${a1.max} ≠ ${want} (한 괄호면 ${Math.round(SYS.item.weaponDamage(w).max * 2.5)})`);
+    // 무기가 아닌 슬롯의 atk_pct 는 그대로 괄호다 — 반지에 같은 값을 달면 장갑과 같다
+    const c2 = SYS.hero.computeCombat(h, [w, mkItem('ring', [{ stat: 'atk_pct', v: 0.5, src: 'wrath' }])]);
+    if (c2.atk_physical.max !== a1.max) fail(`반지 % ${c2.atk_physical.max} ≠ 장갑 % ${a1.max}`);
+    return `mace ilvl60 +100% ${a0.min}~${a0.max} → 장갑 +50% ${a1.min}~${a1.max}`;
 });
 check('battle: 반격 —맞으면 확률로 때린 적에게 기본 공격 1회 · counter 바로 뒤에 그 타격이 잇는다 · 경직 중엔 없다 · 차례를 쓴다 · 몬스터도 입은 대로 갖는다 (2026-09-18 · INTERFACE §2-6 「반격」)', () => {
     const r = SOFT.battle.simulate(armorUnits([{ stat: 'counter_chance', v: 0.6, src: 'wrath' }]), 1013, makeRng(5));   // 반격 표본 — 약한 몬스터(SOFT)
@@ -4622,92 +4682,112 @@ check('skill: activesFor — 칸은 출처가 정한다 · 고유 / 배운 스�
     return `${MAIN.length}직업 × (고유 · 배운 스킬) · 전직 칸은 빈다`;
 });
 
-/* ── 무기 판정 — 배운 칸의 직업 스킬은 그 직업의 무기군을 들어야 나간다 [2026-09-29 · R187 · 개정 2026-10-02 · R197 · skill_design §2-2 · battle_design §6] ──
- *   `fitsWeapon` 은 스킬 하나의 규칙이고, 그 규칙을 **배운 칸(`source = book`)에만** 묻는 것은 battle(`slotOf`) · 캐릭터 탭이다 — 고유 · 전직 칸은 무기를 안 본다 */
+/* ── 무기 판정 — 무기의 힘을 끌어다 쓰는 스킬은 그 직업의 무기군을 들어야 나간다 [2026-09-29 · R187 · 개정 2026-10-03 · R204 · skill_design §2-2 · battle_design §6] ──
+ *   `fitsWeapon` 이 규칙 전부다 — **칸(출처)을 안 본다**(~~배운 칸만~~ R197). 무기가 필요한가는 하는 일 줄에서 파생한다(타격 · 회복 · 소환 = `EFFECT_TYPES[].weapon`) */
 
-check('skill: fitsWeapon — 직업 스킬은 그 직업의 무기군을 들어야 나간다 · 전직 · 몬스터 전용은 무관 · 맨손은 거짓 (skill_design §2-2 · R187)', () => {
-    const job = SYS.skill.list.filter(d => d.ownerKind === 'job');
-    for (const d of job) {
-        const own = D.weaponGroupList.filter(g => g.classes.includes(d.ownerId));
-        if (!own.length) fail(`${d.id} — ${d.ownerId} 의 무기군이 없다(그 스킬은 영원히 안 나간다)`);
+check('skill: fitsWeapon — 타격 · 회복 · 소환은 그 직업의 무기군을 들어야 나간다 · 걸린 효과만 거는 스킬 · 몬스터 전용은 무관 · 전직은 갈래의 직업 · 맨손은 거짓 (skill_design §2-2 · R204)', () => {
+    const WEAPON = new Set(['hit', 'heal', 'summon']);
+    const ADV = Object.fromEntries((D.advanceRows ?? []).map(r => [r.advance_id, r.class_id]));
+    let need = 0, free = 0;
+    for (const d of SYS.skill.list) {
+        // 직업 — 직업 스킬은 제 owner · 전직 스킬은 갈래의 직업(`advance.csv:class_id`) · 몬스터 전용은 없다
+        const cls = d.ownerKind === 'job' ? d.ownerId : d.ownerKind === 'advance' ? ADV[d.ownerId] : null;
+        if (d.ownerKind === 'advance' && !cls) fail(`${d.id} — 전직 갈래 ${d.ownerId} 의 직업을 못 푼다`);
+        if (d.classId !== (cls ?? null)) fail(`${d.id} — classId ${d.classId} ≠ ${cls}`);
+        const want = cls !== null && cls !== undefined && d.effects.some(e => WEAPON.has(e.effect));
+        if (d.needsWeapon !== want) fail(`${d.id} — needsWeapon ${d.needsWeapon} ≠ ${want}(줄 ${d.effects.map(e => e.effect).join('+')})`);
+        if (!want) {
+            free++;
+            if (!SYS.skill.fitsWeapon(d, null)) fail(`${d.id} — 무기와 상관없어야 하는데 맨손으로 안 나간다`);
+            for (const g of D.weaponGroupList) if (!SYS.skill.fitsWeapon(d, g.classes)) fail(`${d.id} — 무기와 상관없어야 하는데 ${g.id} 로 안 나간다`);
+            continue;
+        }
+        need++;
+        const own = D.weaponGroupList.filter(g => g.classes.includes(cls));
+        if (!own.length) fail(`${d.id} — ${cls} 의 무기군이 없다(그 스킬은 영원히 안 나간다)`);
         for (const g of own) if (!SYS.skill.fitsWeapon(d, g.classes)) fail(`${d.id} — 제 직업 무기 ${g.id} 로 안 나간다`);
-        for (const g of D.weaponGroupList) if (!g.classes.includes(d.ownerId) && SYS.skill.fitsWeapon(d, g.classes)) fail(`${d.id} — 남의 무기 ${g.id} 로 나간다`);
+        for (const g of D.weaponGroupList) if (!g.classes.includes(cls) && SYS.skill.fitsWeapon(d, g.classes)) fail(`${d.id} — 남의 무기 ${g.id} 로 나간다`);
         if (SYS.skill.fitsWeapon(d, null)) fail(`${d.id} — 맨손으로 나간다`);
     }
-    const free = SYS.skill.list.filter(d => d.ownerKind !== 'job');
-    for (const d of free) if (!SYS.skill.fitsWeapon(d, null)) fail(`${d.id}(${d.ownerKind}) — 무기와 상관없어야 하는데 맨손으로 안 나간다`);
-    // ~~몬스터 — 고유가 제 무기군과 어긋나면 조용히 꺼진다~~ — 2026-10-02 R197 로 고유는 무기를 안 본다(몬스터는 배운 칸이 없다 · 아래 「적도 같은 규칙」 단정)
-    return `직업 스킬 ${job.length} · 무관 ${free.length}`;
+    // 대표 — 10-03 사용자 확정 분류의 갈림목(함성 · 평타 부여 = 무관 · 힐 · 벽 = 무기 · 전직은 갈래의 직업 무기)
+    const pin = { war_shout: false, kni_might: false, arc_pierce: false, arc_poison: false, kni_enchant: false, pri_cure: true, mag_frozenwall: true, war_whirlwind: true, war_ragnarok: false };
+    for (const [id, v] of Object.entries(pin)) if (SYS.skill.defs[id] && SYS.skill.defs[id].needsWeapon !== v) fail(`${id} — needsWeapon ${SYS.skill.defs[id].needsWeapon} — 확정 분류는 ${v}`);
+    return `무기 필요 ${need} · 무관 ${free}`;
 });
 
 /** p0 에게만 칸을 싣고 무기군을 쥐여 준 이길 수 있는 파티 — 나머지는 칸이 없다(평타만) */
 const armedKit = (acts, group) => godUnits().map((u, i) => (i === 0 ? { ...u, actives: acts, weaponGroup: group } : { ...u, actives: [] }));
 
-check('battle: 무기가 안 맞는 배운 칸은 건너뛴다 — 차례를 안 먹어 칸이 없는 것과 한 글자도 안 다르다 · 맞으면 나간다 · 꺼진 오오라는 안 켠다 (battle_design §6 · R187 · R197)', () => {
-    // 배운 칸(`book`)만 무기를 본다 — 칸 둘을 다 책 출처로 싣는다(실제 영웅의 책 칸은 하나지만 규칙은 칸마다다)
-    const kit = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura').slice(0, 2)
-        .map(d => ({ id: d.id, source: 'book' }));
-    if (kit.length < 2) fail('궁수 직업 스킬이 둘이 안 된다 — 표본 없음');
-    const ids = kit.map(a => a.id);
+check('battle: 무기가 안 맞는 칸은 건너뛴다 — 출처(고유 · 배운 · 전직) 무관 · 차례를 안 먹어 칸이 없는 것과 한 글자도 안 다르다 · 맞으면 나간다 · 걸린 효과만 거는 칸은 무기를 안 본다 (battle_design §6 · R187 · R204)', () => {
+    // 무기가 필요한 궁수 직업 스킬 둘(타격) — 출처 셋 모두에 실어 본다(규칙은 칸이 아니라 스킬이다 · ~~배운 칸만~~ R197)
+    const pick = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura' && d.needsWeapon).slice(0, 2);
+    if (pick.length < 2) fail('무기가 필요한 궁수 직업 스킬이 둘이 안 된다 — 표본 없음');
+    const ids = pick.map(d => d.id);
     let cast = 0;
-    for (let seed = 1; seed <= 5; seed++) {
-        // ① 남의 무기(도끼) · 맨손 — p0 의 칸은 없는 것과 같다(타임라인 · 결과가 한 글자도 안 다르다 = 차례를 안 먹고 rng 도 안 민다)
-        const bare = SYS.battle.simulate(armedKit([], 'axe'), 1013, makeRng(seed));
-        for (const g of ['axe', null]) {
-            const r = SYS.battle.simulate(armedKit(kit, g), 1013, makeRng(seed));
-            if (JSON.stringify(r.timeline) !== JSON.stringify(bare.timeline)) fail(`seed ${seed} 무기 ${g} — 꺼진 칸이 전투를 바꿨다(차례를 먹었거나 쿨이 돌았다)`);
-            if (!eq(r.party[0].actives, ids) || !r.party[0].ready.every(v => v === null)) fail(`seed ${seed} 무기 ${g} — 칸 표시 ${JSON.stringify(r.party[0])} — 꺼진 칸은 null`);
-        }
-        // ② 제 무기(활 · 석궁) — 나간다
-        for (const g of ['bow', 'crossbow']) {
-            const r = SYS.battle.simulate(armedKit(kit, g), 1013, makeRng(seed));
-            const n = r.timeline.filter(ev => ev.e === 'skill' && ev.u === 'p0').length;
-            if (!n) fail(`seed ${seed} 무기 ${g} — 제 직업 무기인데 스킬이 한 번도 안 나갔다`);
-            if (!eq(r.party[0].ready, [0, 0])) fail(`seed ${seed} 무기 ${g} — 첫 준비 ${JSON.stringify(r.party[0].ready)} — 준비 상태로 출발해야`);
-            cast += n;
+    for (const source of ['innate', 'book', 'advance']) {
+        const kit = pick.map(d => ({ id: d.id, source }));
+        for (let seed = 1; seed <= 3; seed++) {
+            // ① 남의 무기(도끼) · 맨손 — p0 의 칸은 없는 것과 같다(타임라인 · 결과가 한 글자도 안 다르다 = 차례를 안 먹고 rng 도 안 민다)
+            const bare = SYS.battle.simulate(armedKit([], 'axe'), 1013, makeRng(seed));
+            for (const g of ['axe', null]) {
+                const r = SYS.battle.simulate(armedKit(kit, g), 1013, makeRng(seed));
+                if (JSON.stringify(r.timeline) !== JSON.stringify(bare.timeline)) fail(`${source} seed ${seed} 무기 ${g} — 꺼진 칸이 전투를 바꿨다(차례를 먹었거나 쿨이 돌았다)`);
+                if (!eq(r.party[0].actives, ids) || !r.party[0].ready.every(v => v === null)) fail(`${source} seed ${seed} 무기 ${g} — 칸 표시 ${JSON.stringify(r.party[0])} — 꺼진 칸은 null`);
+            }
+            // ② 제 무기(활 · 석궁) — 나간다
+            for (const g of ['bow', 'crossbow']) {
+                const r = SYS.battle.simulate(armedKit(kit, g), 1013, makeRng(seed));
+                const n = r.timeline.filter(ev => ev.e === 'skill' && ev.u === 'p0').length;
+                if (!n) fail(`${source} seed ${seed} 무기 ${g} — 제 직업 무기인데 스킬이 한 번도 안 나갔다`);
+                if (!eq(r.party[0].ready, [0, 0])) fail(`${source} seed ${seed} 무기 ${g} — 첫 준비 ${JSON.stringify(r.party[0].ready)} — 준비 상태로 출발해야`);
+                cast += n;
+            }
         }
     }
-    // ③ 오오라 — 책으로 배운 기사 오오라를 활로 들면 안 켜진다 · 양손검이면 켜진다
+    // ③ 걸린 효과만 거는 칸 — 기사 오오라 · 전사 함성은 남의 무기 · 맨손에서도 켜지고 나간다(어느 출처든 · R204)
     const aura = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'knight' && d.cast === 'aura');
-    const auraOn = (g, source = 'book') => SYS.battle.simulate(armedKit([{ id: aura.id, source }], g), 1013, makeRng(1));
-    const off = auraOn('bow'), on = auraOn('sword2h');
-    if (off.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id) || off.party[0].ready[0] !== null) fail(`${aura.id} — 활로 켜졌다`);
-    if (!on.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id) || on.party[0].ready[0] !== 0) fail(`${aura.id} — 양손검으로 안 켜졌다`);
-    // ④ **고유 칸은 무기를 안 본다** [2026-10-02 · R197] — 같은 스킬을 고유로 실으면 남의 무기 · 맨손에서도 나가고 켜진다
-    for (const g of ['axe', null]) {
-        const innate = SYS.battle.simulate(armedKit(kit.map(a => ({ ...a, source: 'innate' })), g), 1013, makeRng(1));
-        if (!innate.timeline.some(ev => ev.e === 'skill' && ev.u === 'p0')) fail(`무기 ${g} — 고유 칸이 안 나갔다(고유는 무기를 안 본다 · R197)`);
-        if (!innate.party[0].ready.every(v => v === 0)) fail(`무기 ${g} — 고유 칸 표시 ${JSON.stringify(innate.party[0].ready)} — 꺼지면 안 된다`);
-        const ia = auraOn(g, 'innate');
-        if (!ia.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id)) fail(`무기 ${g} — 고유 오오라가 안 켜졌다`);
+    const shout = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'warrior' && d.cast === 'turn' && !d.needsWeapon);
+    if (!aura || !shout) fail('기사 오오라 · 무기 무관 전사 스킬 표본이 없다');
+    if (aura.needsWeapon) fail(`${aura.id} — 오오라가 무기를 본다`);
+    for (const source of ['innate', 'book']) for (const g of ['bow', null]) {
+        const on = SYS.battle.simulate(armedKit([{ id: aura.id, source }], g), 1013, makeRng(1));
+        if (!on.timeline.some(ev => ev.e === 'buff' && ev.s === aura.id) || on.party[0].ready[0] !== 0) fail(`${aura.id} ${source} 무기 ${g} — 안 켜졌다(오오라는 무기를 안 본다)`);
+        const sh = SYS.battle.simulate(armedKit([{ id: shout.id, source }], g), 1013, makeRng(1));
+        if (!sh.timeline.some(ev => ev.e === 'skill' && ev.u === 'p0' && ev.s === shout.id) || sh.party[0].ready[0] !== 0) fail(`${shout.id} ${source} 무기 ${g} — 안 나갔다(걸린 효과만 거는 스킬은 무기를 안 본다)`);
     }
-    return `꺼진 배운 칸 = 칸 없음(5 시드 × 도끼 · 맨손) · 활 · 석궁 시전 ${cast} · ${aura.id} 책 · 활 꺼짐 · 양손검 켜짐 · 고유는 도끼 · 맨손에서도 켜짐`;
+    return `꺼진 칸 = 칸 없음(출처 셋 × 3 시드 × 도끼 · 맨손) · 활 · 석궁 시전 ${cast} · ${aura.id} · ${shout.id} 는 활 · 맨손에서도 켜짐`;
 });
 
-check('battle: 적도 같은 규칙 — 몬스터는 배운 칸이 없어 무기가 안 맞아도 직업 스킬이 나간다 · 칸이 안 꺼진다 (skill_design §2-2 · R187 · R197)', () => {
-    // 모든 몬스터에게 제 직업이 아닌 무기군을 쥐여 준 판 — 고유 · 보스 셋째 칸은 무기를 안 보므로 칸이 켜진 채 나가야 한다
-    //   ~~남의 무기 판에서는 직업 스킬이 안 나간다~~(09-29 · R187) — 2026-10-02 R197 로 무기를 보는 것은 배운 칸뿐이다
+check('battle: 적도 같은 규칙 — 지금 몬스터는 꺼지는 칸이 없다 · 무기를 바꿔 쥐이면 무기가 필요한 스킬만 꺼진다 (skill_design §2-2 · R187 · R204)', () => {
+    const offs = (S, seed) => {
+        const r = S.battle.simulate(godUnits(), 1013, makeRng(seed));
+        const out = [];
+        for (const ev of r.timeline.filter(e => e.e === 'round'))
+            for (const e of ev.enemies) (e.actives ?? []).forEach((id, i) => {
+                if (S.skill.defs[id]?.cast !== 'aura' && e.ready[i] === null) out.push({ id, at: `라운드 ${ev.n} ${e.monsterId}` });
+            });
+        return out;
+    };
+    // ① 실제 데이터 — 직업 · 무기군 · 고유가 다 맞아 꺼지는 칸이 없다
+    for (let seed = 1; seed <= 5; seed++) for (const o of offs(SYS, seed)) fail(`seed ${seed} ${o.at} — ${o.id} 칸이 꺼졌다(몬스터 무기군이 제 스킬과 안 맞는다)`);
+    // ② 모든 몬스터에게 제 직업이 아닌 무기군을 쥐여 준 판 — 무기가 필요한 칸만 꺼지고 걸린 효과만 거는 칸은 켜진 채다
     const swap = Object.fromEntries(Object.entries(D.monsters).map(([id, m]) =>
         [id, { ...m, weapon_group: D.weaponGroupList.find(g => !g.classes.includes(m.cls)).id }]));
     const S2 = buildSystems({ ...D, monsters: swap });
-    let after = 0;
-    for (let seed = 1; seed <= 5; seed++) {
-        const jobCasts = (S, r) => r.timeline.filter(ev => ev.e === 'skill' && ev.u.startsWith('e') && S.skill.defs[ev.s]?.ownerKind === 'job').length;
-        const r = S2.battle.simulate(godUnits(), 1013, makeRng(seed));
-        after += jobCasts(S2, r);
-        for (const ev of r.timeline.filter(e => e.e === 'round'))
-            for (const e of ev.enemies) (e.actives ?? []).forEach((id, i) => {
-                if (S2.skill.defs[id]?.cast !== 'aura' && e.ready[i] === null) fail(`seed ${seed} 라운드 ${ev.n} ${e.monsterId} — ${id} 칸이 꺼졌다(몬스터는 배운 칸이 없다 · R197)`);
-            });
-    }
-    if (!after) fail('남의 무기를 든 몬스터가 직업 스킬을 한 번도 안 썼다 — 고유가 무기를 봤다(R197)');
-    return `남의 무기 판 몬스터 직업 스킬 ${after}회 (5 시드)`;
+    let off = 0;
+    for (let seed = 1; seed <= 5; seed++)
+        for (const o of offs(S2, seed)) {
+            if (!S2.skill.defs[o.id]?.needsWeapon) fail(`seed ${seed} ${o.at} — ${o.id} 는 무기를 안 보는데 꺼졌다`);
+            off++;
+        }
+    if (!off) fail('남의 무기를 든 몬스터의 칸이 하나도 안 꺼졌다 — 몬스터가 무기를 안 봤다(R204)');
+    return `실제 데이터 꺼짐 0 · 남의 무기 판 꺼진 칸 ${off}(5 시드 · 전부 무기가 필요한 스킬)`;
 });
 
-check('createRun.refit: 무기를 바꿔 배운 칸이 꺼지면 쿨이 멈추고 · 되돌리면 멈춘 자리에서 잇는다 — 뺐다 끼워도 쿨이 안 되돌아간다 (battle_design §6 · R187 · R197)', () => {
-    const sk = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura' && (d.cool ?? 0) > 3);
-    if (!sk) fail('궁수 직업 스킬 중 쿨 3초 넘는 것이 없다 — 표본 없음');
-    // 데미지 1 — 쿨 한 바퀴를 넘겨 기다리는 동안 라운드가 끝나지 않게 한다(HP 는 godUnits 그대로라 안 쓰러진다) · 무기를 보는 것은 배운 칸뿐이다(R197)
+check('createRun.refit: 무기를 바꿔 칸이 꺼지면 쿨이 멈추고 · 되돌리면 멈춘 자리에서 잇는다 — 뺐다 끼워도 쿨이 안 되돌아간다 (battle_design §6 · R187 · R204)', () => {
+    const sk = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura' && d.needsWeapon && (d.cool ?? 0) > 3);
+    if (!sk) fail('무기가 필요한 궁수 직업 스킬 중 쿨 3초 넘는 것이 없다 — 표본 없음');
+    // 데미지 1 — 쿨 한 바퀴를 넘겨 기다리는 동안 라운드가 끝나지 않게 한다(HP 는 godUnits 그대로라 안 쓰러진다) · 칸 출처는 무관하다(R204 — 책 칸으로 싣는다)
     const kit = g => armedKit([{ id: sk.id, source: 'book' }], g).map(u => ({ ...u, combat: { ...u.combat, atk_physical: { min: 1, max: 1 } } }));
     const tenth = v => Math.round(v * 10) / 10;       // battle.js r1 과 같은 자릿수 (아래 같은 이름은 이 단정보다 뒤에 선다)
     const lastFit = run => run.result.timeline.findLast(ev => ev.e === 'refit' && ev.u === 'p0');
@@ -5268,6 +5348,35 @@ check('runtime: enemy_rotate — hits 가 대상 수보다 많으면 배열 순�
     if (!eq(hits.map(h => h.d), want)) fail(`${hits.map(h => h.d).join(',')} ≠ ${want.join(',')}`);
     if (hits.some(h => Math.abs(h.mult - def.mult) > 1e-12)) fail('순환은 배율이 줄지 않는다');
     return `${want.join(' → ')} (hits ${def.hits} / 대상 ${foes.length})`;
+});
+check('runtime: 「모두」·「후열」을 밝히지 않은 스킬은 전열부터 — 순환 · 최고 방어 · HP 최대는 전열 안 · 연쇄는 전열을 먼저 돈다 · rng 그대로 (battle_design §3-1 · 2026-10-03)', () => {
+    const u = rtUnit('p0', 'party');
+    // e0·e2 전열 · e1·e3 후열 — 후열이 방어 · HP 가 더 높아 옛 규칙이면 거기로 샌다
+    const mk = () => [rtUnit('e0', 'enemy', { rank: 0, def: 10, hp: 100, hpMax: 100 }), rtUnit('e1', 'enemy', { rank: 1, def: 90, hp: 900, hpMax: 900 }),
+        rtUnit('e2', 'enemy', { rank: 0, def: 20, hp: 200, hpMax: 200 }), rtUnit('e3', 'enemy', { rank: 1, def: 80, hp: 800, hpMax: 800 })];
+    // 순환 — 전열 둘만 돈다
+    let foes = mk(), f = fakeRt([u], foes);
+    const rot = skillLine('kni_rush');
+    ATTACK_TARGETS.enemy_rotate(f.rt, u, rot, foes);
+    if (f.count.rng !== 1) fail(`순환 시작점 굴림 ${f.count.rng}회`);
+    const wantRot = Array.from({ length: rot.hits }, (_, k) => ['e0', 'e2'][k % 2]);
+    if (!eq(f.hits.map(h => h.d), wantRot)) fail(`순환 ${f.hits.map(h => h.d).join(',')} ≠ ${wantRot.join(',')}`);
+    // 최고 방어 — 후열 e1(90)이 아니라 전열 e2(20)
+    foes = mk(); f = fakeRt([u], foes);
+    const hd = Object.values(SYS.skill.defs).find(d => d.target === 'enemy_highest_def');
+    ATTACK_TARGETS.enemy_highest_def(f.rt, u, skillLine(hd.id), foes);
+    if (f.count.rng !== 0 || f.hits.some(h => h.d !== 'e2')) fail(`최고 방어 ${f.hits.map(h => h.d).join(',')} · rng ${f.count.rng}`);
+    // 연쇄 — 전원을 돌되 전열(e0 → e2) 먼저, 후열은 배열 순(e1 → e3)
+    foes = mk(); f = fakeRt([u], foes);
+    ATTACK_TARGETS.enemy_chain(f.rt, u, skillLine('mag_chain'), foes);
+    if (f.count.rng !== 1 || !eq(f.hits.map(h => h.d), ['e0', 'e2', 'e1', 'e3'])) fail(`연쇄 ${f.hits.map(h => h.d).join(',')} · rng ${f.count.rng}`);
+    // HP 최대(결투 지목) — 후열 e1(900)이 아니라 전열 e2(200) · 전열이 비면 전원 중
+    foes = mk(); f = fakeRt([u], foes);
+    const pick = PICK_TARGETS.enemy_hp_max.pick(f.rt, u);
+    if (pick.length !== 1 || pick[0].key !== 'e2') fail(`HP 최대 ${pick.map(x => x.key)}`);
+    foes[0].hp = 0; foes[2].hp = 0;
+    if (PICK_TARGETS.enemy_hp_max.pick(f.rt, u)[0]?.key !== 'e1') fail('전열이 비었는데 후열 HP 최대를 안 골랐다');
+    return `순환 ${wantRot.join('→')} · 최고 방어 e2 · 연쇄 e0→e2→e1→e3 · HP 최대 e2 (전열 전멸 뒤 e1)`;
 });
 check('runtime: enemy_all — 생존 적 전원 각 1회 · 타겟 rng 0회 (skill_design §9-3)', () => {
     const u = rtUnit('p0', 'party');
@@ -6616,12 +6725,11 @@ check('tip: 피해를 내는 문장은 값 · 식 모두 종류를 말한다 —
                     const card = skillTipCard({ id: def.id }, c);
                     const txt = card.querySelector('.tip-line')?.textContent ?? '';
                     if (!txt.toLowerCase().includes(word)) fail(`${lang} ${def.id} ${tag} 문장에 「${word}」가 없다: ${txt}`);
-                    // 종류 칩 — 태그 칩 뒤 · 능력치 칩 앞에 한 번 (ADR-0480)
-                    const chips = [...card.querySelectorAll('.tip-chip')];
+                    // 종류 칩 — 이름 아래 칩 줄의 태그 칩 뒤에 한 번 (ADR-0480 · 능력치 칩은 이름 줄 오른쪽으로 갔다 — ADR-0496)
+                    const chips = [...card.querySelectorAll('.tip-chips > .tip-chip')];
                     const dmg = chips.filter(x => x.classList.contains('dmg'));
                     if (dmg.length !== 1 || dmg[0].textContent.toLowerCase() !== word) fail(`${lang} ${def.id} ${tag} 종류 칩 [${dmg.map(x => x.textContent)}] ≠ 「${word}」`);
-                    const at = chips.findIndex(x => x.classList.contains('attr'));
-                    if (at >= 0 && at < chips.indexOf(dmg[0])) fail(`${lang} ${def.id} 종류 칩이 능력치 칩 뒤에 섰다`);
+                    if (chips.slice(chips.indexOf(dmg[0]) + 1).some(x => !x.classList.contains('dmg'))) fail(`${lang} ${def.id} 종류 칩 뒤에 태그 칩이 섰다`);
                 }
                 n += 1;
             }
@@ -6631,6 +6739,26 @@ check('tip: 피해를 내는 문장은 값 · 식 모두 종류를 말한다 —
         }
     } finally { setLang('ko'); }
     return `${n / 2} 스킬 × 값 · 식 × ko/en — 문장 · 종류 칩`;
+});
+check('tip: 스킬 설명창 이름 줄 — 이름 바로 뒤 능력치 칩 · 맨 끝 필요 무기(무기가 필요한 스킬만 · 그 직업 무기군 이름) · 출처 · 태그 · 종류는 아래 칩 줄 · 꺼진 칸이면 위험색 (SCREEN_DESIGN §2 · ADR-0496 · R204)', () => {
+    let need = 0;
+    for (const def of SYS.skill.list) {
+        const card = skillTipCard({ id: def.id }, { source: 'innate' });
+        const chips = [...card.querySelectorAll('.tip-name .tip-chip')];
+        if (chips.some(x => !(x.classList.contains('attr') && x.closest('.tip-name-attr')) && !(x.classList.contains('need') && x.closest('.tip-name-side'))))
+            fail(`${def.id} — 이름 줄 칩 자리가 틀렸다(능력치는 이름 바로 뒤 · 필요 무기는 맨 끝만)`);
+        const below = [...card.querySelectorAll('.tip-chips > .tip-chip')];
+        if (!below.some(x => x.classList.contains('src')) || below.some(x => x.classList.contains('attr') || x.classList.contains('need'))) fail(`${def.id} — 아래 칩 줄 [${below.map(x => x.className)}] — 출처 · 태그 · 종류만`);
+        const nc = chips.filter(x => x.classList.contains('need'));
+        if (!def.needsWeapon) { if (nc.length) fail(`${def.id} — 무기가 필요 없는데 필요 무기 칩이 섰다`); continue; }
+        const want = D.weaponGroupList.filter(g => g.classes.includes(def.classId)).map(g => i18nL(g)).join(' · ');
+        if (nc.length !== 1 || nc[0].textContent !== want) fail(`${def.id} — 필요 무기 칩 [${nc.map(x => x.textContent)}] ≠ 「${want}」`);
+        if (chips[chips.length - 1] !== nc[0]) fail(`${def.id} — 필요 무기 칩이 맨 끝이 아니다`);
+        if (nc[0].classList.contains('off')) fail(`${def.id} — 꺼진 칸이 아닌데 위험색`);
+        if (!skillTipCard({ id: def.id }, { off: true }).querySelector('.tip-chip.need.off')) fail(`${def.id} — 꺼진 칸인데 위험색이 아니다`);
+        need++;
+    }
+    return `필요 무기 칩 ${need} 스킬 · 나머지는 칩 없음`;
 });
 check('tip: 피해 · 회복량은 범위로 찍힌다 — 양끝이 다르면 「최소~최대」 · 같으면 한 수 · ko/en (SCREEN_DESIGN §2 · ADR-0108 · R90)', () => {
     const def = SYS.skill.defs.war_bash;

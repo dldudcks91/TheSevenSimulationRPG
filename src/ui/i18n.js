@@ -475,6 +475,7 @@ const STRINGS = {
     'ar.front': { ko: '전열', en: 'Front' },
     'ar.backRank': { ko: '후열', en: 'Back' },
     'ar.noOpponent': { ko: '상대를 찾으면 팀이 나타난다', en: 'Find an opponent to reveal their team' },
+    'ar.noTactic': { ko: '열린 전술 칸 없음', en: 'No tactic slots open' },   // Party 판의 전술 칸이 빌 때 (ADR-0495)
     'ar.find': { ko: '상대 찾기', en: 'Find opponent' },
     'ar.reroll': { ko: '다른 상대 찾기', en: 'Find another opponent' },
     'ar.fight': { ko: '결투 시작', en: 'Start duel' },
@@ -482,8 +483,8 @@ const STRINGS = {
     'ar.draw': { ko: '무승부', en: 'Draw' },
     'ar.last': { ko: '지난 결투: {result} · {sec}초', en: 'Last duel: {result} · {sec}s' },
     'ar.help': {
-        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전한다. 인원과 진형은 편성 탭에서 수정한다. 영웅 3명을 채우고 상대를 찾는다. 상대는 무작위 인간 3명이며 선택한 팀의 평균 레벨로 나온다.<br>개인 능력치·장비·스킬로 단판 전투를 한다. 파티 전술·도감 보너스·물약은 적용하지 않는다. 제한시간이 지나면 무승부다.<br>연습 결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없다. 찾은 상대와 결과는 재접속하면 초기화된다.',
-        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes, then find an opponent. Three random human heroes appear at your team’s average level.<br>A single round uses individual stats, gear and skills. Party tactics, codex bonuses and potions do not apply. Reaching the time limit ends in a draw.<br>Practice duels run independently of expeditions, with no rewards, codex kills or resource costs. Opponents and results reset when you reload.',
+        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전한다. 인원과 진형은 편성 탭에서 수정한다. 영웅 3명을 채우고 상대를 찾는다. 상대는 무작위 인간 3명이며 선택한 팀의 평균 레벨로 나온다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 한다. 도감 보너스는 적용하지 않고, 상대는 파티 전술·물약이 없다. 제한시간이 지나면 무승부다.<br>연습 결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없다. 마신 물약도 재고에서 줄지 않는다. 찾은 상대와 결과는 재접속하면 초기화된다.',
+        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes, then find an opponent. Three random human heroes appear at your team’s average level.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents have no tactics or potions. Reaching the time limit ends in a draw.<br>Practice duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Opponents and results reset when you reload.',
     },
     'nav.party': { ko: '편성', en: 'Party' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
@@ -1205,6 +1206,8 @@ const STRINGS = {
     'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
     // 인게임 이름은 「공격 속도」 하나다 — 값은 초 / 1회 그대로 (2026-09-25 사용자 지시 · ADR-0358)
     'sk.cycle': { ko: '공격 속도', en: 'Attack Speed' },
+    // 마법 무기를 든 유닛은 같은 주기를 「캐스팅 속도」라 부른다 — 이름만 · 값 그대로 (2026-10-03 사용자 지시 · R202 · ADR-0492)
+    'sk.castSpeed': { ko: '캐스팅 속도', en: 'Casting Speed' },
     'sk.cycleSec': { ko: '{s}초', en: '{s}s' },
     'sk.cycle.sub': { ko: '민첩 + 무기군 속도 (물리·마법 단일 축)', en: 'Agility + weapon-group speed (one clock for melee & magic)' },
     'sk.emptySlot': { ko: '빈 칸', en: 'Empty' },
@@ -1218,8 +1221,7 @@ const STRINGS = {
     // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-30 사용자 지시 · SCREEN_DESIGN §6 · ADR-0466 — ~~`sk.lockLv` 「Level n+」~~(ADR-0428) 를 칸마다의 문장으로] · {n} = 책 `skillbook_learn_level` · 전직 `advance_unlock_level`
     'sk.lock.book': { ko: 'Lv{n}이 되면 서고에서 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned at the Library.' },
     'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
-    // 무기가 안 맞아 꺼진 액티브 칸 — 툴팁 맨 위 한 줄 [2026-09-29 · R187 · SCREEN_DESIGN §6 · ADR-0446] · {w} = 그 스킬 직업의 무기군 이름을 ` · ` 로 이은 것
-    'sk.needWeapon': { ko: '{w} 필요', en: 'Needs {w}' },
+    // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 서고 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
     'bk.learned.h': { ko: '배운 스킬', en: 'Learned Skill' },
     'bk.noneLearned': { ko: '없음', en: 'None' },
@@ -1382,13 +1384,13 @@ const STRINGS = {
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
             + '쿨은 실시간으로 돈다. 쿨이 공격 속도(초)의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
             + '기본 공격은 언제나 <b>물리</b>다 — 원소 피해는 스킬만 낸다<br>'
-            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 습득 칸은 <b>배운 책</b>에서 온다. <b>습득 칸만</b> 그 스킬 직업의 무기를 들어야 나간다<br>'
+            + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 습득 칸은 <b>배운 책</b>에서 온다. <b>타격 · 회복 · 소환</b> 스킬은 어느 칸에 있든 그 스킬 직업의 무기를 들어야 나가고, 함성 · 오오라 · 축복 같은 <b>버프 · 디버프</b>는 무기를 안 본다<br>'
             + '⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>이다 — 지금 값은 임시다',
         en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack. <b>Magic weapons have no basic attack</b> — with nothing ready, the gauge waits full and casts the moment a skill is ready<br>'
             + 'One action per turn. A skill <b>replaces</b> that turn\'s attack and there is no mana — the action itself is the only cost<br>'
             + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of Attack Speed (seconds) → <b>CDR affixes</b> are the alignment lever<br>'
             + 'Basic attacks are always <b>physical</b> — only skills deal elemental damage<br>'
-            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the learned slot from <b>the book you read</b>. <b>Only the learned slot</b> needs a weapon of that skill\'s class<br>'
+            + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the learned slot from <b>the book you read</b>. <b>Attack, heal and summon</b> skills need a weapon of that skill\'s class in any slot; <b>buffs and debuffs</b> such as shouts, auras and blessings work with any weapon<br>'
             + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
     },
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
@@ -1609,6 +1611,7 @@ const STRINGS = {
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },
     'bt.actTitle': { ko: '공격 속도 {s}초 — 다 차면 이 유닛이 행동한다', en: 'Attack Speed {s}s — acts when the gauge fills' },
+    'bt.castTitle': { ko: '캐스팅 속도 {s}초 — 다 차면 칸이 하나 쌓인다', en: 'Casting Speed {s}s — stores a charge when the gauge fills' },
     'bt.tab.dmg': { ko: '누적 데미지', en: 'Damage' },
     'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack' },
     'bt.reflectLabel': { ko: '반사', en: 'Reflect' },
