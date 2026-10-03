@@ -61,7 +61,7 @@ import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
 import { mountCardCompare, mountFocusCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 · 공격자 포커스 버튼(⚙ 설정 탭 끝 두 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
-import { skillFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 피격 반응 · 공격 시 흔들림 켜고 끄기 · 피격 시 흔들림 단계 (SCREEN_DESIGN §2-2 · ADR-0414 · ADR-0454 · ADR-0468)
+import { skillFxOn, basicFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 기본 공격 이펙트 · 피격 반응 · 공격 시 흔들림 켜고 끄기 · 피격 시 흔들림 단계 (SCREEN_DESIGN §2-2 · ADR-0414 · ADR-0454 · ADR-0468 · ADR-0501)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
@@ -628,7 +628,7 @@ function segmented(items, current, onPick) {
 }
 
 /**
- * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · Card · Focus(개발용 임시 — devcompare.js).
+ * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · Card · Focus(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
  * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 초상을 바꾼다.
  */
@@ -638,7 +638,7 @@ function settingsBody() {
     artRow.appendChild(el('span', 'set-k', t('set.artStyle')));
     artRow.appendChild(faceStyleButtons());
     box.appendChild(artRow);
-    // [Off] [On] 한 줄 — 스킬 이펙트 · 피격 반응 · 공격 시 흔들림이 같은 틀이다 (`k` = fx.js:setFxOn 의 키)
+    // [Off] [On] 한 줄 — 스킬 이펙트 · 기본 공격 이펙트 · 피격 반응 · 공격 시 흔들림이 같은 틀이다 (`k` = fx.js:setFxOn 의 키)
     const onOffRow = (k, label, isOn) => {
         const row = el('div', 'set-row');
         row.appendChild(el('span', 'set-k', t(label)));
@@ -647,6 +647,7 @@ function settingsBody() {
         box.appendChild(row);
     };
     onOffRow('skill', 'set.skillFx', skillFxOn);
+    onOffRow('basic', 'set.basicFx', basicFxOn);   // 기본 공격 · 반격의 무기 모양 — 스킬 이펙트와 따로 (ADR-0501)
     onOffRow('hit', 'set.hitFx', hitFxOn);
     // 피격 시 흔들림 [0] [1] [2] [3](0 = 번쩍임만) —피격 반응이 꺼져 있으면 먹지 않으므로 흐려져 안 눌린다(값은 남는다 · ADR-0454)
     const row = el('div', 'set-row');

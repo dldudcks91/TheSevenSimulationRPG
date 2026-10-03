@@ -43,7 +43,7 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
-import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 피격 반응 + 공격 시 흔들림(셋 다 기본 On) — 셋 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468)
+import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 const SPEEDS = [1, 2, 4];
 const TICK = 0.1;
@@ -1326,7 +1326,7 @@ function apply(state, root, opts, ev) {
             }
             // 카드가 늘었으면 진형 줄을 다시 세운다(라운드 시작과 같은 함수) — 되살아남만이면 자리 그대로다
             if (grew) renderUnits(state, root);
-            for (const e of ev.units) fxAppear(state, U(e.key));   // 불린 무리가 떠오르며 선다 — 카드를 지은 뒤 (ADR-0409)
+            for (const e of ev.units) fxAppear(state, U(e.key), ev.s);   // 불린 무리가 떠오르며 선다 — 카드를 지은 뒤 · 부른 스킬의 생김새가 같이 선다 (ADR-0409 · ADR-0511)
             const a = U(ev.u);
             // 대상 칸 = 불린 무리(쉼표) — 처음 선 것과 되살아난 것을 가르지 않는다 · 값 칸은 빈다 (ADR-0189)
             if (a) logLine(state, root, a.side, 'call', L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), ev.units.map(e => L(U(e.key)?.name ?? enemyName(e))).join(', '), '');
@@ -1351,7 +1351,7 @@ function apply(state, root, opts, ev) {
                 popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty, ev.crit));
                 refreshUnit(state, d);
             }
-            fxHit(state, a, d, ev);   // 스킬 이펙트는 스킬만 · 피격 반응은 모든 타격(켜져 있을 때) (ADR-0409 · ADR-0410)
+            fxHit(state, a, d, ev);   // 스킬 이펙트는 스킬마다 다른 생김새(ADR-0511) · 피격 반응은 모든 타격(켜져 있을 때) · 기본 공격 · 반격은 대각선 베기 한 줄 (ADR-0409 · ADR-0410 · ADR-0505)
             if (a && d) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)

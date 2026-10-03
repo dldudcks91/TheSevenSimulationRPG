@@ -287,7 +287,8 @@ function injectStyle() {
     s.textContent = `
 .dp-btn { margin-left: 4px; min-width: 30px; }
 .dp-panel {
-    position: absolute; right: 12px; top: 56px; z-index: 90; width: 280px;
+    /* 폭 300 — 설정 탭의 가장 긴 영어 이름(「Basic Attack Effects」 · ADR-0501)과 버튼 셋 줄(Focus)이 한 줄에 든다 (280 에서는 셋째 버튼이 접혔다) */
+    position: absolute; right: 12px; top: 56px; z-index: 90; width: 300px;
     background: #101010; border: 1px solid #444; padding: 10px 12px;
     font-size: 12px; color: #e8e8e8; box-shadow: 0 8px 28px rgba(0,0,0,.8);
     /* 슬라이더가 아홉 개라 넘친다 — 판 안에서 굴린다. 높이는 한 장 기준(%)이다 — 한 장 안에서는 vh 를 안 쓴다 (ADR-0087) */

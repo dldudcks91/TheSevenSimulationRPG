@@ -522,6 +522,7 @@ const STRINGS = {
     'set.h': { ko: '설정', en: 'Settings' },
     'set.artStyle': { ko: '아트 스타일', en: 'Art Style' },
     'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
+    'set.basicFx': { ko: '기본 공격 이펙트', en: 'Basic Attack Effects' },   // 기본 공격 · 반격의 대각선 베기 한 줄(무채색) (2026-10-03 · ADR-0501 · ADR-0505)
     'set.hitFx': { ko: '피격 반응', en: 'Hit Reactions' },
     'set.shake': { ko: '피격 시 흔들림', en: 'Shake on Hit' },
     'set.lunge': { ko: '공격 시 흔들림', en: 'Shake on Attack' },
