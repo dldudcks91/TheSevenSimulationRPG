@@ -1,0 +1,101 @@
+{
+  "mode": "restored legacy",
+  "skills": [
+    {
+      "id": "war_bash",
+      "file": "war_bash",
+      "name": "배시",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "slash",
+      "size": 92,
+      "duration": 360,
+      "quake": false,
+      "cell": 1
+    },
+    {
+      "id": "war_doubleswing",
+      "file": "war_doubleswing",
+      "name": "더블스윙",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "cross",
+      "size": 90,
+      "duration": 400,
+      "quake": false,
+      "cell": 2
+    },
+    {
+      "id": "war_quake",
+      "file": "war_quake",
+      "name": "어스스플릿",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "ground",
+      "size": 96,
+      "duration": 480,
+      "quake": true,
+      "cell": 3
+    },
+    {
+      "id": "war_leap",
+      "file": "war_leap",
+      "name": "리프 어택",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "land",
+      "size": 94,
+      "duration": 460,
+      "quake": true,
+      "cell": 4
+    },
+    {
+      "id": "war_taunt",
+      "file": "war_taunt",
+      "name": "타운트",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "inward",
+      "size": 90,
+      "duration": 540,
+      "quake": false,
+      "cell": 5
+    },
+    {
+      "id": "war_shout",
+      "file": "war_shout",
+      "name": "워 크라이",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "wave",
+      "size": 90,
+      "duration": 580,
+      "quake": false,
+      "cell": 6
+    },
+    {
+      "id": "war_battleorders",
+      "file": "war_battleorders",
+      "name": "배틀오더스",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "orders",
+      "size": 88,
+      "duration": 580,
+      "quake": false,
+      "cell": 7
+    },
+    {
+      "id": "war_ironskin",
+      "file": "war_ironskin",
+      "name": "아이언 스킨",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "shell",
+      "size": 94,
+      "duration": 540,
+      "quake": false,
+      "cell": 8
+    }
+  ]
+}

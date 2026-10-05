@@ -609,7 +609,7 @@ export function createItemSystem(data) {
      *  ~~매직~~ → 일반 [2026-09-14 사용자 확정 · R86 · hero_design §1] — 시작 장비는 일반 무기 + 일반 갑옷이다.
      *  ~~스킬은 직업 기본기 풀에서 굴린다 · `avoidSkill`~~ 은 **2026-09-29 폐지**(R179 — 무기가 스킬을 안 담는다) —
      *  첫 파티의 딜 · 힐 보장은 **고유 스킬**로 옮겨 갔다(`hero.rollStartParty` · hero_design §1).
-     *  09-10 장착 개방 뒤에도 시작만은 자기 직업 무기로 준다. 갈아 끼우는 것은 자유다(`canEquip` 은 아무것도 거절하지 않는다). */
+     *  09-10 장착 개방 뒤에도 시작만은 자기 직업 무기로 준다. 갈아 끼우는 것은 자유다(`canEquip` 은 직업을 안 가린다 — 요구 레벨만 · R215). */
     function startingWeapon(rng, cls) {
         const gs = groupsFor(cls);
         return build(rng, 'weapon', 'normal', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups));
@@ -627,13 +627,15 @@ export function createItemSystem(data) {
     /** 무기군 정의 — 무기가 아니거나 모르는 군이면 null */
     const groupOf = item => (item && item.slot === 'weapon' ? WG[item.group] : null) ?? null;
 
-    /** 착용 가능 판정 — **거절 사유가 없다** [2026-09-10 사용자 확정 · hero_design §2].
-     *  ~~무기는 직업 전속 무기군뿐~~ 폐기: 어느 직업이든 어느 무기든 낀다. `weapon_group.csv:classes` 는
-     *  이제 장착 게이트가 아니라 **그 무기에 어느 직업의 스킬이 붙는가**를 정한다(위 `build` 의 스킬 굴림).
-     *  양손/보조 배타는 09-01 한손 폐지로, `class` 는 09-10 개방으로 사라졌다 — 남은 것은 없다.
-     *  **함수를 지우지 않는 이유**: 요구 레벨 게이트가 들어올 자리다(착용 제약 = 요구 레벨만 — hero_design §4-2). */
+    /** 착용 요구 레벨 = 아이템 레벨 · **만렙에서 멈춘다** [2026-10-06 사용자 확정 · R215 · item_design §2] —
+     *  아이템 레벨은 등급 가산(`spawn_grade.csv:gear_ilvl_add`)만큼 만렙 위로 올라가므로, 상한이 없으면 그 드롭은 영원히 못 낀다 */
+    const reqLevel = item => Math.min(item.ilvl, B.hero_level_cap);
+
+    /** 착용 가능 판정 — **거절 사유는 요구 레벨 하나** [2026-10-06 · R215] — 영웅 레벨이 `reqLevel` 미만이면 `level`.
+     *  ~~무기는 직업 전속 무기군뿐~~ 폐기(2026-09-10): 어느 직업이든 어느 무기든 낀다 — `class` 는 그때 사라졌다.
+     *  **착용할 때만 본다** — 이미 낀 장비는 레벨이 모자라도 벗기지 않는다(옛 세이브 · 방치형 계약) · 몬스터 장비는 여기를 안 지난다 */
     function canEquip(hero, item) {
-        return null;
+        return hero.level < reqLevel(item) ? 'level' : null;
     }
 
     // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루는 제작 재료 — item_design §7-1 · 반환량은 §5-3 미정)
@@ -682,6 +684,21 @@ export function createItemSystem(data) {
         return pct ? { ...imp, v: Math.round(imp.v * (1 + pct)) } : imp;
     }
 
+    /**
+     * 옵션 줄의 출처 태그 — `affixes` 와 같은 길이 · 순서로 `'fixed'` · 죄종 id · `'random'` [2026-10-06 사용자 지시 · SCREEN_DESIGN §6 · ADR-0518].
+     * **죄종 id 는 메인 죄종 줄만** — `src` 가 `item.sins` 의 죄종이고 그 죄종의 **첫 줄**일 때(메인 줄은 `sins` 순서대로 랜덤 줄보다 앞에 선다 — `familyOptions`).
+     * 죄종 계열 굴림의 랜덤 줄도 `src` 에 계열 죄종을 들지만(메인과 같은 계열이어도) 태그는 `'random'` 이다. `src` 가 없는 옛 접사도 `'random'`.
+     * 접사는 안 바꾼다 — `src` 와 `sins` 만 읽으므로 옛 세이브에도 맞는다
+     */
+    function optionSources(item) {
+        const main = new Set(item?.sins ?? []);
+        return (item?.affixes ?? []).map(a => {
+            if (a.src === 'fixed') return 'fixed';
+            if (main.delete(a.src)) return a.src;
+            return 'random';
+        });
+    }
+
     const upgradeMax = () => B.equip_upgrade_max;
 
     /** 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화하지 않는다 (item_design §7-2 · R95). 부위만 본다 */
@@ -716,5 +733,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources };
 }

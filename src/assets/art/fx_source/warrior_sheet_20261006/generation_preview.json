@@ -1,0 +1,46 @@
+﻿{
+    "created_on":  "2026-10-06",
+    "version":  "v2",
+    "source_document":  "docs/reference/basic_skill_fx_sheet_prompts.md",
+    "source_section":  "2. 시트 1 — 전사 8 + 아이언 스킨 다른 안",
+    "source_prompt_sha256":  "1CA93F02BC72C6D9E5169989E50E474D823FCBA7B59D5C116523BAFC262C0004",
+    "mode":  "built-in image_gen",
+    "applied_to_game":  false,
+    "reference_portrait":  "src/assets/art/faces/gemini/hero/warrior_1.webp",
+    "reference_effect_sheet":  null,
+    "final_image":  "warrior_fx_sheet_final.png",
+    "prompts":  [
+                    "source_prompt.txt",
+                    "prompt.txt",
+                    "prompt_revision.txt",
+                    "prompt_inset.txt"
+                ],
+    "requested_size":  [
+                           2048,
+                           2048
+                       ],
+    "actual_size":  [
+                        1254,
+                        1254
+                    ],
+    "background_requested":  "#FF00FF",
+    "background_sample_at_30_30":  "#FA03F6",
+    "sha256":  "BCEC519A4E60FE1C543C90730488B86CE17B8FAE48BCCD2CB2EDE07BEA785B9F",
+    "cells":  [
+                  "배시",
+                  "더블스윙",
+                  "어스스플릿",
+                  "리프 어택",
+                  "타운트",
+                  "워 크라이",
+                  "배틀오더스",
+                  "아이언 스킨 — 강철판",
+                  "아이언 스킨 — 귀퉁이 번쩍임"
+              ],
+    "notes":  [
+                  "Raw generated PNG retained without postprocessing.",
+                  "Updated edge-based bust composition, bright chunky forms, and no head-surrounding rings.",
+                  "Composition revisions preserve face clearance and inset artwork from the grid.",
+                  "Resolution and background color differ from exact production specifications. This is a generated review sheet, not an installed asset."
+              ]
+}

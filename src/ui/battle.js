@@ -209,7 +209,7 @@ export function mountBattle(container, opts) {
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
-    fxPreload();   // 전사 기본 스킬 이미지를 미리 읽는다(ADR-0515) · 종류 공통 그림은 꺼져 있다
+    fxPreload();   // 기본 직업 스킬 이미지를 미리 읽는다(ADR-0515 · ADR-0520) · 종류 공통 그림은 꺼져 있다
     const dom = buildDom(state, stage, stageId, opts.shrine ?? null, !!opts.buffsOf, opts);
     container.appendChild(dom);
     bindControls(state, container, opts);

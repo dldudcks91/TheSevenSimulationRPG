@@ -62,6 +62,7 @@ import { makeRng } from '../game_logic/rng.js';
 import { mountDevPalette } from './devpalette.js';
 import { mountCardCompare, mountFocusCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 · 공격자 포커스 버튼(⚙ 설정 탭 끝 두 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
 import { skillFxOn, basicFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel, previewOf, fxPreview, fxPreload } from './fx.js';   // ⚙ 설정 · 도감 이펙트 탭 (SCREEN_DESIGN §2-2 · §9-1 · ADR-0513 · ADR-0515)
+import { SKILL_ART } from './skill_art.js';   // Aura art preview in the codex (ADR-0520)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
@@ -371,7 +372,9 @@ const state = {
     bagSelMode: false, bagSel: new Set(), bagSortMode: null, bagSortAnim: false,
     // 고르기 메뉴 [2026-09-29 · ADR-0447] — 펼친 줄('rarity' · 'ilvl' · null) · 올라오는 / 펼치는 움직임을 첫 그리기에만 다는 표시(그 그리기가 끈다)
     bagPickFold: null, bagPickAnim: false, bagFoldAnim: false,
-    bagTab: 'equip',             // 인벤토리 칸의 탭 — 'equip' | 'mat' (SCREEN_DESIGN §6 · ADR-0379) · 창고 칸은 안 갈린다
+    stashTab: 'equip',           // 창고 칸의 탭 — 'equip' | 'mat' (SCREEN_DESIGN §6 · ADR-0379 · 자리 ADR-0524) · 인벤토리 칸은 안 갈린다
+    invNo: 1,                    // 보고 있는 인벤토리의 부대 번호 — 부대 버튼이 고른다 · 해제 · 꺼내기 · 구매 · 제작이 여기로 간다 (§6 · ADR-0521) · 세이브 아님
+    invWatch: 0,                 // 관전이 마지막으로 맞춘 부대 — 보는 부대가 바뀌면 `invNo` 를 그 부대로 옮긴다 (§4-2 · ADR-0521)
     autoArm: false,              // 자동 분해 창 — [지금 인벤토리에도 적용]을 한 번 눌러 확인 줄이 선 상태 (ADR-0203) · 창을 닫으면 풀린다
     bookArm: null,               // 서고 탭 — [배우기]를 한 번 눌러 [덮어쓰기]로 바뀐 책 id (§3 · ADR-0422) · 영웅을 바꾸면 풀린다 · 세이브 아님
     repSel: null,                // 리포트에서 고른 런 — null 이면 맨 위를 따라간다 (SCREEN_DESIGN §4-3 · ADR-0063 · ADR-0123)
@@ -409,6 +412,7 @@ const state = {
 let stopBattle = null;
 let stopArena = null;
 let battleBag = null;       // 관전 아래 보관 칸 — 라운드 정산 때 이것만 갈아 끼운다 (R89 · `refreshBattleBag` · ADR-0341)
+let invWatchPrev = 0;       // 바로 앞 그리기가 관전 보관 칸을 그린 부대 번호(아니면 0) — 관전에 들어오거나 보는 부대가 바뀔 때만 부대 버튼을 옮긴다 (ADR-0521)
 /**
  * 그 부대의 세이브 칸 [v38 · 2026-09-23 다부대] — `G.runs` 는 편성 번호로 색인된다(자리 + 1 = 번호).
  * 번호를 안 주면 **지금 관전 중인 런의 편성**, 그것도 없으면 고른 편성이다 — 화면이 부대 하나만 보던 때의 `G.run` 자리를 그대로 메운다.
@@ -471,10 +475,7 @@ function renderShell() {
     $('.resources').appendChild(langBtn);
     // Admin — 켜면 건물로 막힌 탭 · 기능 · 상한이 열린 척한다 (devadmin.js) · **켤 때 골드를 `admin_gold` 까지 채운다**(진짜 골드 · 2026-09-27 · SCREEN_DESIGN §10-3)
     mountAdmin($('.resources'), render, () => { const g = D.balance.admin_gold; if (G && G.resources.gold < g) { G.resources.gold = g; save(); } });
-    const artPicker = faceStyleButtons();
-    artPicker.classList.add('face-style-buttons');
-    artPicker.setAttribute('aria-label', t('set.artStyle'));
-    $('.resources').appendChild(artPicker);
+    // 아트 스타일 고르개는 상단바에 안 선다 — ⚙ 설정 첫 줄 · 도감에 있다 [2026-10-06 사용자 지시 · SCREEN_DESIGN §2-2]
     // 원정 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · 2026-10-05 · ADR-0514]. `data-exp-time` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshExpTime`)
     if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'exp-time', `${t('ui.expTime')}<b data-exp-time>${fmtExpTime(G.expMs)}</b>`));
     // ⚙ — 판의 탭 둘: 설정(스킬 이펙트 · 피격 반응 — 속은 여기 `settingsBody`) · Palette(배경 · 글자 색을 눈으로 맞추는 개발 장치)
@@ -498,6 +499,7 @@ function render() {
     if (document.hidden) return;
     clockRender = false;      // 무엇 때문에 그리든 지금 상태를 그린다 — 미뤄 둔 앱 시계 그리기는 여기서 풀린다 (ADR-0338)
     bagStale = false;         // 관전 보관 칸도 새로 선다 (ADR-0341)
+    invWatchPrev = state.invWatch; state.invWatch = 0;   // 이번 그리기가 관전 보관 칸을 그리면 다시 선다 (ADR-0521)
     // 자원 자리의 선택 창은 탭 본문 밖(한 장 바로 아래)에 선다 — 본문과 함께 안 지워지므로 여기서 걷는다 (`dpPickPanel` · ADR-0373)
     //   보관 칸 우클릭 메뉴도 같은 자리 · 같은 틀이다 (`itemMenuPanel` · ADR-0451)
     document.querySelectorAll('#stage > .dp-pick, #stage > .dp-pick-back, #stage > .item-menu, #stage > .item-menu-back').forEach(n => n.remove());
@@ -1192,8 +1194,16 @@ function expNavBox(phase = battlePhase(state.battle)) {
     const watching = watchNo();
     const cells = Array.from({ length: n }, (_, i) => {
         const no = i + 1, H = state.battles[no] ?? null;
-        return { id: `battle${no}`, label: t('exp.seg.party', { n: M.roman(no) }), disabled: !H,
-            cls: `seg-${H && H === state.battle ? phase : battlePhase(H)}` };
+        // 원정이 있는 부대는 이름 뒤에 **그 부대가 있는 스테이지**를 단다(「Party I - 파멸의 진영 II」 · ADR-0517) — 안 나간 부대는 이름만.
+        //   상단바가 모자라면 **스테이지 글자만** 줄여 「…」로 끝난다 — 부대 이름은 안 줄인다(style.css `.seg-where`)
+        //   **도는 중의 색은 파랑이 아니라 그 스테이지의 챕터 죄종 색**이다 — 글자 · 고른 칸 테두리 전부(스테이지 목록 줄 · 출정 창과 같은 색 · ADR-0519).
+        //   **끝나도(져도) 그 색 그대로다** — 빨강으로 안 바뀐다(ADR-0522) · 없음 회색만 갈린다
+        const at = H ? D.stages[H.stageId] : null;
+        const ph = H && H === state.battle ? phase : battlePhase(H);
+        const label = at ? t('exp.seg.partyAt', { n: M.roman(no), where: `<span class="seg-where">${L(stageName(at))}</span>` })
+            : t('exp.seg.party', { n: M.roman(no) });
+        return { id: `battle${no}`, label, disabled: !H, cls: `seg-party seg-${ph}`,
+            color: at ? sinColor(chapterOf(at.chapter)?.sin ?? 'wrath') : undefined };
     });
     // 고른 칸 — **원정 탭에서만** 선다(밖에서는 보고 있는 원정 화면이 없다 · ADR-0353) · 관전을 보고 있으면 **보는 부대의** 칸이다
     const scr = expScreen();
@@ -1440,7 +1450,12 @@ function renderExpedition(main) {
         });
         // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 라운드를 이길 때마다 드롭이 들어오고(`refreshBattleBag`)
         //   여기서 바꾼 장비는 **그 순간** 먹는다 — 보스 라운드 도중은 다음 런 (R130 · ADR-0272). 칸 · 그림 크기는 캐릭터 탭 가방과 같다 (`.bag` · ADR-0097)
-        battleBag = itemsPanel(heroById(state.heroUid), { showTarget: true });
+        //   인벤토리는 **보는 부대의 것**으로 연다 — 관전에 들어오거나 보는 부대가 바뀔 때만 부대 버튼을 그 부대로 옮긴다.
+        //   보는 동안 버튼으로 고른 것은 다시 그려도 그대로다 (§4-2 · ADR-0521)
+        const wn = watchNo() ?? 0;
+        if (wn && wn !== invWatchPrev) state.invNo = wn;
+        state.invWatch = wn;
+        battleBag = itemsPanel(heroById(state.heroUid));
         page.appendChild(battleBag);
         return;
     }
@@ -2480,7 +2495,7 @@ function refreshBattleBag() {
     bagStale = false;
     if (!battleBag?.isConnected) return;
     hideTip();                        // 갈아 끼울 칸 위에 떠 있던 툴팁이 주인을 잃는다 — 손이 빈 눈금에만 오므로 대개 빈 손이다
-    const fresh = itemsPanel(heroById(state.heroUid), { showTarget: true });
+    const fresh = itemsPanel(heroById(state.heroUid));
     battleBag.replaceWith(fresh);
     battleBag = fresh;
 }
@@ -2879,7 +2894,7 @@ function paperdoll(h, { onPick = null, selUid = null } = {}) {
                 cell.onclick = () => {
                     if (onPick) { onPick(it); return; }
                     const before = runTacticsNow();
-                    const r = SYS.game.unequip(G, h.uid, pos);
+                    const r = SYS.game.unequip(G, h.uid, pos, invNo());   // 벗긴 것은 보고 있는 인벤토리로 (ADR-0521)
                     if (!r.ok) flash(`ch.err.${r.err}`); else { save(); runChangeFlash(h.uid, before); }   // 원정 중 교체 — 보스전 · 꺼진 전술 (R130)
                     render();
                 };
@@ -3166,6 +3181,11 @@ function detailPanels(h) {
 
 /* ── 보관 (③ 아이템) ── */
 
+/** 보고 있는 인벤토리의 부대 번호 — 부대 버튼이 고른 것(ADR-0521) · 열린 편성 수 안으로 자른다 */
+const invNo = () => Math.min(Math.max(1, state.invNo), G.presets.length);
+/** 보고 있는 인벤토리 — 읽기만 한다 */
+const invBag = () => SYS.game.bagOf(G, invNo()) ?? [];
+
 /** 고르는 중을 푼다 [ADR-0184] — 탭을 떠날 때와 실행 · 취소 뒤에 부른다 */
 function clearBagSel() {
     state.bagSelMode = false;
@@ -3178,10 +3198,10 @@ function clearBagSel() {
 /** 보관 — **왼쪽 창고 / 오른쪽 인벤토리 두 칸** [2026-09-11 사용자 확정 · SCREEN_DESIGN §6 · item_design §1].
  *  **갈래 탭은 없다 — 장비만 든다** [2026-09-21 · ADR-0188]. 재료(가루 · 낙인)는 셸 머리의 자원 줄이 이미 찍고 있어
  *  같은 값을 두 번 보여주던 칸이었다. 드롭이 쌓이는 곳은 인벤토리 하나뿐이고(압력은 그쪽이 든다) 창고는 **유저가 옮긴 것만** 든다 */
-function itemsPanel(h, { showTarget = false, onPick = null, selUid = null } = {}) {
+function itemsPanel(h, { onPick = null, selUid = null } = {}) {
     const row = el('div', 'bag-row');
     row.appendChild(storagePanel(h, 'stash', { onPick, selUid }));
-    row.appendChild(storagePanel(h, 'bag', { showTarget, onPick, selUid }));
+    row.appendChild(storagePanel(h, 'bag', { onPick, selUid }));
     return row;
 }
 
@@ -3225,7 +3245,7 @@ function bagSelectBar() {
  * 움직임은 올라올 때(`bagPickAnim`) · 펼칠 때(`bagFoldAnim`) 한 번씩 — 통째로 다시 그리는 화면이라 늘 달면 체크마다 다시 움직인다
  */
 function bagPickMenu() {
-    const open = G.bag.map(itemOf).filter(it => it && !it.locked);
+    const open = invBag().map(itemOf).filter(it => it && !it.locked);   // 보고 있는 인벤토리만 (ADR-0521)
     const pop = el('div', `sel-pop${state.bagPickAnim ? ' anim' : ''}`);
     state.bagPickAnim = false;
     // 레벨 구간 — 폭 = 아이템 구간 폭(무기 피해 · 방어구 방어력이 오르는 구간) · 만렙까지 자르고 그 위(등급 보정으로 넘는 ilvl)는 하나로
@@ -3302,14 +3322,14 @@ function autoSalvageBody() {
     lRow.appendChild(steps);
     box.appendChild(lRow);
 
-    // [지금 인벤토리에도 적용] — 첫 누름이 그 자리를 확인 줄로 바꾼다. 걸리는 것이 없으면 꺼진다 · 인벤토리만 · 잠근 것 제외
-    const pv = SYS.game.autoSalvagePreview(G);
+    // [지금 인벤토리에도 적용] — 첫 누름이 그 자리를 확인 줄로 바꾼다. 걸리는 것이 없으면 꺼진다 · 보고 있는 인벤토리만(ADR-0521) · 잠근 것 제외
+    const pv = SYS.game.autoSalvagePreview(G, invNo());
     const act = el('div', 'auto-act');
     if (state.autoArm && pv.n > 0) {
         act.appendChild(el('span', 'auto-confirm', t('ch.auto.confirm', { n: pv.n })));
         const ok = el('button', 'btn sm primary', t('ch.auto.ok'));
         ok.onclick = () => {
-            const r = SYS.game.applyAutoSalvage(G);
+            const r = SYS.game.applyAutoSalvage(G, invNo());
             if (r.n) { flash('ch.sel.salvaged', { n: r.n, d: r.dust }); save(); }
             state.autoArm = false;
             render();
@@ -3350,7 +3370,7 @@ function sortTools(where) {
         for (const key of ['rarity', 'ilvl', 'slot']) {
             const k = el('button', 'btn sm', t(`ch.sort.${key}`));
             k.onclick = () => {
-                if (SYS.game.sortStorage(G, where, key).ok) save();
+                if (SYS.game.sortStorage(G, where, key, invNo()).ok) save();
                 clearBagSel();
                 render();
             };
@@ -3361,24 +3381,26 @@ function sortTools(where) {
     return wrap;
 }
 
-/** 도구 줄 — 이름 + (인벤토리 쪽에만) [분해] · [자동 분해] 또는 그 모드의 줄 + [정렬](칸마다) + 칸 수. 관전에서는 장착 대상도 (§6 · §4-2) */
-function storageTools(h, where, { showTarget = false } = {}) {
+/** 도구 줄 — 이름 + (인벤토리 쪽에만) 부대 버튼 ─ 오른쪽 끝으로 창고는 [장비|재료] · [정렬] / 인벤토리는 [분해] · [자동 분해] 또는 그 모드의 줄 + [정렬].
+ *  장착 대상 글자는 없다 — 아레나에서 고른 카드가 든다 (§6 · §4-2 · ADR-0523 · ADR-0524) */
+function storageTools(where) {
     const tools = el('div', 'items-tools');
     tools.appendChild(el('span', 'items-name', t(where === 'stash' ? 'ch.bag.stash' : 'ch.bag.inv')));
     // 분해 · 자동 분해는 **한 벌만** 둔다 — 두 칸에 같이 걸리는 축이라 칸마다 두면 어느 쪽 것인지 읽을 수 없다 (ADR-0184).
     //   [정렬]만 칸마다다 — 누른 칸 하나만 줄 세운다 (ADR-0242). 고르는 중에는 두 칸 다 안 선다
-    // 인벤토리 칸에만 장비 · 재료 탭 [2026-09-27 · ADR-0379] — 재료 탭에서는 장비에 걸린 버튼 · 칸 수가 안 선다.
-    //   탭을 바꾸면 고르는 중 · 정렬 펼침이 풀린다(재료 칸에는 걸 것이 없다)
-    const matTab = where === 'bag' && state.bagTab === 'mat';
-    if (where === 'bag') {
+    // 창고 칸에만 장비 · 재료 탭 [2026-09-27 · ADR-0379 · 자리 2026-10-06 ADR-0524] — 재료는 부대가 나눠 갖지 않는다(창고처럼 하나다).
+    //   재료 탭에서는 창고의 [정렬]이 안 선다 · 탭을 바꾸면 고르는 중 · 정렬 펼침이 풀린다(재료 칸에는 걸 것이 없다)
+    const matTab = where === 'stash' && state.stashTab === 'mat';
+    // 부대 버튼은 인벤토리 이름 바로 오른쪽 · 버튼은 둘 다 오른쪽 끝으로 — 빈 칸(`.tools-push`)이 민다 [2026-10-06 사용자 지시 · ADR-0523 · ADR-0524]
+    if (where === 'bag') tools.appendChild(bagPartyTools());
+    tools.appendChild(el('span', 'tools-push'));
+    if (where === 'stash') {
         const seg = segmented([{ id: 'equip', label: t('ch.bag.equip') }, { id: 'mat', label: t('ch.bag.mat') }], matTab ? 'mat' : 'equip',
-            id => { clearBagSel(); state.bagTab = id; render(); });
+            id => { clearBagSel(); state.stashTab = id; render(); });
         seg.classList.add('bag-tabs');
         tools.appendChild(seg);
-    }
-    if (matTab) return tools;
-    if (where === 'stash') { if (!state.bagSelMode) tools.appendChild(sortTools('stash')); }
-    else {
+        if (!matTab && !state.bagSelMode) tools.appendChild(sortTools('stash'));
+    } else {
         if (state.bagSelMode) {
             // [분해하기] 바로 위로 고르기 메뉴가 뜬다 — 방금 누른 [분해] 자리다 [2026-09-29 사용자 지시 · ADR-0447].
             //   메뉴는 도구 줄 밖(위 패널 위)에 서므로 줄은 한 줄 그대로다
@@ -3397,20 +3419,26 @@ function storageTools(h, where, { showTarget = false } = {}) {
             const au = el('button', `btn sm toggle${rule.rarity || rule.ilvlBelow > 0 ? ' on' : ''}`, t('ch.auto.btn'));
             au.onclick = () => openModal('autoSalvage');
             tools.appendChild(au);
-            tools.appendChild(sortTools('bag'));           // 맨 오른쪽 — 펼치면 그 오른쪽으로 기준이 나온다 (ADR-0242 · ADR-0247)
+            tools.appendChild(sortTools('bag'));           // 맨 오른쪽 — 펼치면 그 위로 기준이 뜬다 (ADR-0242 · ADR-0247 · ADR-0523)
         }
     }
-    const n = where === 'stash' ? (G.stash ?? []).length : G.bag.length;
-    const cap = SYS.game.limitsOf(G)[where === 'stash' ? 'stash' : 'bag'];
-    const meta = el('span', 'items-meta muted',
-        `${t('ch.items.sub', { n, cap })}${showTarget ? ` · ${t('bt.items.target', { name: L(h.name) })}` : ''}`);
-    meta.title = meta.textContent;               // 줄이 좁으면 말줄임으로 양보한다 — 전문은 여기 (ADR-0247)
-    tools.appendChild(meta);
+    // 칸 수 글자 · 장착 대상 글자는 없다 — 빈 칸까지 격자가 상한만큼 그리고, 장착 대상은 아레나의 고른 카드가 든다 [2026-10-06 사용자 지시 · ADR-0521 · ADR-0523]
     return tools;
 }
 
 /**
- * 인벤토리 재료 탭 — 채광 · 채집 · 벌목이 한 줄씩 (SCREEN_DESIGN §6 · ADR-0379). 어느 칸이 서는지는 `materialsState` 가 정한다 —
+ * 부대 버튼 — 인벤토리 도구 줄의 이름 바로 오른쪽 [2026-10-06 사용자 지시 · ADR-0521 · 자리 ADR-0523]. 인벤토리는 부대마다 하나고 누른 부대의 것이 격자에 선다.
+ * 열린 편성 수만큼 선다(이름은 편성 탭 · 관전 칸과 같은 「Party n」). 고르는 중에는 꺼진다 — 체크가 안 보이는 인벤토리로 숨지 않게
+ */
+function bagPartyTools() {
+    const items = G.presets.map((_, i) => ({ id: i + 1, label: t('pt.preset', { n: M.roman(i + 1) }), disabled: state.bagSelMode }));
+    const seg = segmented(items, invNo(), no => { clearBagSel(); state.invNo = no; render(); });
+    seg.classList.add('bag-party');
+    return seg;
+}
+
+/**
+ * 창고 재료 탭 — 채광 · 채집 · 벌목이 한 줄씩 (SCREEN_DESIGN §6 · ADR-0379 · 자리 ADR-0524). 어느 칸이 서는지는 `materialsState` 가 정한다 —
  * 진행 챕터까지는 0 개여도 서고 그 위 단계는 가진 것만. 칸 = 재료 그림(없으면 종류 실루엣) + 오른쪽 아래 보유 수량 · 조회만.
  * **장비 격자와 같은 격자 · 같은 칸 수다** [2026-09-27 사용자 지시 「아이템 아이콘과 같은 크기 · 인벤토리나 창고 크기가 바뀌면 안 돼」] —
  * 줄 머리 글자는 없다(사용자 지시 「왼쪽에 채광 채집 벌목 글씨 삭제」) — 재료 칸은 `grid-row` 로 제 줄에 붙어 첫 칸부터 선다. 남는 칸은 빈 칸으로 메워 탭을 바꿔도 패널 높이가 같다
@@ -3418,7 +3446,7 @@ function storageTools(h, where, { showTarget = false } = {}) {
 function materialGrid() {
     const grid = el('div', 'inv-cells wide mat-grid');
     const nodes = { mine: D.mineNodes, gather: D.gatherNodes, log: D.logNodes };
-    const total = Math.max(SYS.game.limitsOf(G).bag, G.bag.length);   // 장비 격자와 같은 칸 수 (storagePanel)
+    const total = Math.max(SYS.game.limitsOf(G).stash, (G.stash ?? []).length);   // 창고 장비 격자와 같은 칸 수 (storagePanel · ADR-0524)
     let used = 0;
     SYS.game.materialsState(G).rows.forEach((r, ri) => {
         for (const x of r.items) {
@@ -3441,13 +3469,22 @@ function materialGrid() {
     return grid;
 }
 
+/** 반대편으로 보낸다 — `Ctrl`+클릭 · 끌어 놓기가 같이 쓴다(같은 함수라 거절 코드도 같다 · ADR-0187). 인벤토리로는 보고 있는 부대의 것으로(ADR-0521).
+ *  창고로 보냈는데 창고가 재료 탭이면 **장비 탭으로 돌려** 들어간 것을 보인다 (ADR-0524) */
+function sendAcross(where, it) {
+    const r = where === 'stash' ? SYS.game.moveToBag(G, it.uid, invNo()) : SYS.game.moveToStash(G, it.uid);
+    if (!r.ok) { flash(`ch.err.${r.err}`); return; }
+    if (where !== 'stash') state.stashTab = 'equip';
+    save();
+}
+
 /** 보관 한 칸 — `where` 가 'stash' 면 창고, 'bag' 이면 인벤토리. 칸 수는 그 칸의 상한이 정한다.
  *  `onPick` 을 주면 모드 밖의 칸 클릭이 장착이 아니라 **고르기**다 — 제련소 강화 (§8-2 · ADR-0364) · `selUid` 칸은 강조 테두리 */
-function storagePanel(h, where, { showTarget = false, onPick = null, selUid = null } = {}) {
+function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
     const p = el('div', `panel bag ${where === 'stash' ? 'store-stash' : 'store-bag'}`);
-    p.appendChild(storageTools(h, where, { showTarget }));
-    if (where === 'bag' && state.bagTab === 'mat') { p.appendChild(materialGrid()); return p; }
-    const uids =where === 'stash' ? (G.stash ?? []) : G.bag;
+    p.appendChild(storageTools(where));
+    if (where === 'stash' && state.stashTab === 'mat') { p.appendChild(materialGrid()); return p; }   // 재료 탭은 창고 칸 (ADR-0524)
+    const uids = where === 'stash' ? (G.stash ?? []) : invBag();   // 인벤토리는 부대 버튼이 고른 부대의 것 (ADR-0521)
     const items = uids.map(itemOf).filter(Boolean);
     const cap = SYS.game.limitsOf(G)[where === 'stash' ? 'stash' : 'bag'];
     // 고르는 중은 파선 테두리 — 「지금 칸을 누르면 장착이 아니다」 (ADR-0184)
@@ -3463,11 +3500,13 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
             const us = SYS.game.upgradeState(G, it.uid);
             // 모서리 배지 넷 [2026-09-21 · ADR-0168 · ADR-0184 · ADR-0185] — 왼쪽 위 = 체크(고르는 중에만) ·
             //   오른쪽 위 = 유저가 쌓은 강화(0 이면 안 선다) · 왼쪽 아래 = 자물쇠(잠근 것만) · 오른쪽 아래 = 태어날 때 박힌 ilvl(언제나 선다)
+            //   ilvl 배지는 **장착 대상이 못 끼면 빨강**(요구 레벨 미달 · R215 · ADR-0525) — 칸 클릭이 장착인 자리에서만(제련소 고르기는 그대로)
+            const noLv = !onPick && h && SYS.item.canEquip(h, it) === 'level';
             cell.innerHTML = `<span class="inv-icon">${itemImg(it)}</span>`
                 + (picked ? '<span class="inv-check">✓</span>' : '')
                 + (us && us.up > 0 ? `<span class="inv-up">+${us.up}</span>` : '')
                 + (it.locked ? '<span class="inv-lock">🔒</span>' : '')
-                + `<span class="inv-lv">${t('ch.itemLv', { n: it.ilvl })}</span>`;
+                + `<span class="inv-lv${noLv ? ' no' : ''}">${t('ch.itemLv', { n: it.ilvl })}</span>`;
             if (it.rarity === 'unique') cell.classList.add('shine');
             // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
             const target = SYS.game.equipTarget(h, it);
@@ -3480,11 +3519,7 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
                 actions: moding ? null : () => itemActions(h, it) });
             // **끌어서 반대편 격자에 놓아도 옮겨진다** [2026-09-21 · ADR-0187] — `Ctrl`+클릭과 **같은 함수**라 거절 코드도 같다.
             //   고르는 중에는 안 건다 — 체크를 붙이는 손짓과 끄는 손짓이 같은 칸에서 싸운다 (ADR-0184)
-            if (!moding) bindCardDrag(cell, where === 'stash' ? '.store-bag' : '.store-stash', () => {
-                const r = where === 'stash' ? SYS.game.moveToBag(G, it.uid) : SYS.game.moveToStash(G, it.uid);
-                if (!r.ok) flash(`ch.err.${r.err}`); else save();
-                return true;
-            });
+            if (!moding) bindCardDrag(cell, where === 'stash' ? '.store-bag' : '.store-stash', () => { sendAcross(where, it); return true; });
             cell.onclick = (e) => {
                 if (formDragEnded) return;              // 방금 끌어 놓은 손짓의 클릭 한 번은 삼킨다
                 if (state.bagSelMode) {
@@ -3492,8 +3527,7 @@ function storagePanel(h, where, { showTarget = false, onPick = null, selUid = nu
                     if (state.bagSel.has(it.uid)) state.bagSel.delete(it.uid); else state.bagSel.add(it.uid);
                 } else if (e.ctrlKey || e.metaKey) {
                     // **Ctrl + 클릭 = 반대편으로** [2026-09-11 사용자 확정] — 창고 ↔ 인벤토리. Mac 은 Cmd 가 같은 자리다
-                    const r = where === 'stash' ? SYS.game.moveToBag(G, it.uid) : SYS.game.moveToStash(G, it.uid);
-                    if (!r.ok) flash(`ch.err.${r.err}`); else save();
+                    sendAcross(where, it);
                 } else if (onPick) {
                     onPick(it);   // 제련소 — 고르기만 한다 (ADR-0364) · 다시 그리기는 onPick 이 한다
                     return;
@@ -3549,7 +3583,7 @@ function itemActions(h, it) {
 function itemMenuPanel() {
     const { uid, hero, x, y } = state.itemMenu;
     const it = itemOf(uid), h = heroById(hero);
-    if (!it || !h || !(G.bag.includes(uid) || (G.stash ?? []).includes(uid))) { state.itemMenu = null; return; }
+    if (!it || !h || !SYS.game.holderOf(G, uid)) { state.itemMenu = null; return; }
     const close = () => { state.itemMenu = null; render(); };
     const back = el('div', 'item-menu-back');
     back.onclick = close;
@@ -3601,8 +3635,12 @@ function tipCard(item, headText, hints = [], skCtx) {
     const g = SYS.item.groupOf(item);            // 무기군 — 직업 전속·행동 주기·공격 타입의 출처 (weapon_group.csv)
     // 메인 옵션은 **먹인 값**을 찍는다 — 강화 배율 · 그 아이템의 고정 옵션까지. 툴팁 숫자가 캐릭터 시트와 갈리면 안 된다 (SCREEN_DESIGN §6 · ADR-0309)
     const imp = SYS.item.implicitFixed(item);
-    // 머리글 오른쪽 끝 = 아이템 레벨 하나 [2026-10-02 사용자 지시 · ADR-0473 · 무기군은 안 싣는다 ADR-0474] — 가방 칸 배지와 같은 글(`ch.itemLv`)이다
-    const meta = t('ch.itemLv', { n: item.ilvl });
+    // 머리글 오른쪽 끝 = 종류 + 아이템 레벨 [2026-10-02 · ADR-0473 자리 · 2026-10-06 사용자 지시 · ADR-0526 종류] — 레벨은 가방 칸 배지와 같은 글(`ch.itemLv`)이다.
+    //   종류 = 무기군 · 갑옷군 · 투구 · 장갑 · 신발은 갈래 + 부위(갈래 id 가 부위마다 겹친다 — `leather`) · 갈래가 없으면(목걸이 · 반지 · 시작 장비) 부위 이름
+    const part = slotDef(item.slot);
+    const ag = item.slot === 'weapon' ? null : D.armorGroups?.[item.slot]?.[item.group];
+    const kind = g ? L(g) : !ag ? (part ? L(part) : '') : item.slot === 'armor' ? L(ag) : t('tip.kindPart', { group: L(ag), part: L(part) });
+    const meta = `${kind ? `<span class="tip-kind">${kind}</span>` : ''}${t('ch.itemLv', { n: item.ilvl })}`;
     // **강화 줄은 없다** (2026-09-08 사용자 지시 · §6) — 단계는 이름 앞의 `+n` 이 이미 들고, 비용·상한은 제련소(§8-2)의 값이다.
     // 그래서 여기서 `game.upgradeState` 를 안 부른다 — 가방 칸의 `+n` 배지와 제련소는 그대로 부른다
     // ~~스킬 칸~~ — 2026-09-29 걷었다(R179 · ADR-0421): 무기가 스킬을 안 담는다(skill_design §2-1). 카드는 다섯 줄이다
@@ -3629,15 +3667,17 @@ function tipCard(item, headText, hints = [], skCtx) {
     }
     // 방어구 고유값 — 고정 옵션 「방어력 +%」를 먹인 값(`item.implicitFixed` · ADR-0309)
     if (imp) baseRows.push(baseRow(L(M.statLabel(imp.stat)), M.baseValue(imp.stat, imp.v)));
+    const srcs = SYS.item.optionSources(item);   // 옵션 줄 출처 태그 — 죄종은 메인 죄종 줄만 (ADR-0518)
     c.innerHTML = `
         <div class="tip-head tip-head-row"><span>${headText}</span><span class="tip-meta">${meta}</span></div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${item.up > 0 ? `+${item.up} ` : ''}${L(item.name)}</div>
         ${baseRows.length ? `<div class="tip-base">${baseRows.join('')}</div>` : ''}
-        ${/* 출처 태그 셋 — **데이터가 든 `src` 를 그대로 읽는다** (SCREEN_DESIGN §6 · ADR-0100): 고정 · 죄종 이름(그 죄종 색) · 랜덤.
+        ${/* 출처 태그 셋 — 고정 · 죄종 이름(그 죄종 색) · 랜덤 (SCREEN_DESIGN §6 · ADR-0100). **죄종 이름은 메인 죄종 줄만** — 계열 굴림의 랜덤 줄도
+              `src` 에 계열 죄종을 들지만 태그는 랜덤이다. 어느 줄이 메인인지는 `item.optionSources` 가 낸다 — 줄 자리로 세지 않는다 (2026-10-06 사용자 지시 · ADR-0518).
               순서도 아이템이 든 순서 그대로다 — 렌더러가 정렬하지 않는다. 출처가 없는 옛 접사는 랜덤으로 찍는다 */''}
         ${/* 목걸이는 **첫 줄이 발동 스킬**이다 — 고정 옵션 자리(`[고정]`) · 문장은 발동 조건마다 하나 · 간격 초는 `skill.procIntervalSec` 가 낸다.
               전투가 아직 안 읽는 줄은 끝에 「(미적용)」 — 발동 줄과 `inert` 표지가 붙은 stat (SCREEN_DESIGN §6 · ADR-0213) */''}
-        <ul>${procLine(item)}${(item.affixes ?? []).map(a => `<li>${srcTag(a.src)}${affixText(a)}${M.statInert(a.stat) ? inertTag() : ''}</li>`).join('')
+        <ul>${procLine(item)}${(item.affixes ?? []).map((a, i) => `<li>${srcTag(srcs[i])}${affixText(a)}${M.statInert(a.stat) ? inertTag() : ''}</li>`).join('')
             || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>
         ${hintTags ? `<div class="tip-sins">${hintTags}</div>` : ''}`;
     return c;
@@ -3810,7 +3850,7 @@ function masteryTipCard(node, rankLabel = t('sk.tip.rank', { n: node.rank, max: 
     const color = masteryAccent(owner);
     if (color) card.style.borderTopColor = color;
     const gate = masteryGateText(node.gate, owner.cls, owner);
-    // 「지금 장비로는 꺼짐」 꼬리는 뺐다 [2026-09-27 사용자 지시] — 꺼진 것은 칸이 흐린 것이 말한다
+    // 「지금 장비로는 꺼짐」 꼬리는 뺐다 [2026-09-27 사용자 지시] · 꺼진 칸도 흐리지 않는다 [2026-10-06 · ADR-0516]
     const gateLine = gate ? `<div class="tip-line tip-gate">${gate}</div>` : '';
     // 조건부 칸(죄종 T2-2 · T2-3)은 조건이 효과의 일부다 — 장비 조건과 같은 자리 · 같은 모양 한 줄 (2026-10-05)
     const cond = masteryCondText(node.cond);
@@ -3826,13 +3866,13 @@ function masteryTipCard(node, rankLabel = t('sk.tip.rank', { n: node.rank, max: 
 /**
  * 확정된 모든 마스터리 칸은 노드 ID별 아이콘을 표시한다. 세부 정보는 hover 툴팁이 보여준다.
  * 잠긴 칸은 필요 레벨, 모든 칸은 현재 랭크를 그림 위에 별도로 표시한다.
- * 낀 장비가 안 켠 칸(`on === false`)은 그림을 흐리게만 한다(빗금 · 「꺼짐」 문구는 2026-09-27 삭제) — 찍기는 그대로 된다(랭크는 캐릭터에 쌓인다 · skill_design §3-5)
+ * 낀 장비가 안 켠 칸(`on === false`)도 켜진 칸과 같은 모양이다(흐림은 2026-10-06 삭제 · ADR-0516) — 찍기는 그대로 된다(랭크는 캐릭터에 쌓인다 · skill_design §3-5)
  */
 function masteryCell(node, owner = {}) {
     if (!node) return `<div class="sk-cell empty"></div>`;
     const taken = node.rank > 0;
     const cls = `sk-cell icon-only${taken ? ' taken' : ''}${node.rank >= node.maxRank ? ' full' : ''}`
-        + `${node.unlocked ? '' : ' locked'}${node.canLearn ? ' can' : ' dim'}${node.gate && !node.on ? ' off' : ''}`;
+        + `${node.unlocked ? '' : ' locked'}${node.canLearn ? ' can' : ' dim'}`;
     const label = masteryDisplayName(node, owner.cls);
     const gate = masteryGateText(node.gate, owner.cls, owner);
     return `<div class="${cls}" data-node="${node.id}"
@@ -5489,7 +5529,7 @@ const forgePick = it => { state.forgeItem = it.uid; state.forgeTab = 'up'; rende
 
 /** 강화 대상 맞추기 — 누구의 것이든 된다(착용품 · 인벤토리 · 창고). 사라졌으면 고른 영웅의 첫 착용품, 그것도 없으면 비운다 (ADR-0364) */
 function forgeTarget(h) {
-    const owned = new Set([...G.bag, ...(G.stash ?? [])]);
+    const owned = new Set([...G.bags.flat(), ...(G.stash ?? [])]);   // 부대 인벤토리 전부 (v40)
     for (const x of G.heroes) for (const uid of Object.values(x.equipped ?? {})) if (uid) owned.add(uid);
     if (!owned.has(state.forgeItem)) state.forgeItem = M.PAPERDOLL.flat().map(pos => pos && h.equipped[pos]).find(Boolean) ?? null;
 }
@@ -5540,7 +5580,7 @@ function forgeMake(p) {
     });
     col.appendChild(lv);
 
-    const ms = SYS.game.makeState(G, part, level);
+    const ms = SYS.game.makeState(G, part, level, invNo());   // 만든 것은 보고 있는 인벤토리로 — 가득 판정도 그것으로 (ADR-0521)
     if (!ms) return;
     // 필요 재료 칸 셋 — 그림 자리에 **재료 이름 글자**(재료 아트가 없다 · 상점 재료 칸과 같은 규칙) · 칸 아래 `보유/필요`.
     //   필요량은 부위마다 한 줄이라 모든 줄이 같은 칸을 든다 (ADR-0263)
@@ -5561,7 +5601,7 @@ function forgeMake(p) {
         go.disabled = !shut && !ms.canMake;
         go.onclick = () => {
             if (shut) { flashNeed('make_level', levels.findIndex(l => l.level === level) + 1); return; }
-            const r = SYS.game.makeItem(G, part, level, k.id);
+            const r = SYS.game.makeItem(G, part, level, k.id, invNo());
             if (!r.ok) flash(`fg.err.${r.err}`);
             else { flash('fg.made', { name: L(G.items[r.uid].name) }); save(); }
             render();
@@ -5972,7 +6012,7 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
             return;
         }
         if (src !== 'equip') { flash('todo.lead'); render(); return; }
-        const r = SYS.game.shopBuy(G, state.shopSel.i, state.shopSel.cycle, now());
+        const r = SYS.game.shopBuy(G, state.shopSel.i, state.shopSel.cycle, now(), invNo());   // 산 것은 보고 있는 인벤토리로 (ADR-0521)
         if (r.ok) { flash('td.bought', { name: sel.name, g: r.gold.toLocaleString() }); save(); }
         else if (r.err === 'unbuilt') { flashNeed('shop'); return; }
         else flash(`td.err.${r.err === 'missing' ? 'stale' : r.err}`);
@@ -6059,7 +6099,7 @@ function renderCodex(main) {
 }
 
 /** 얼굴 스타일 고르개 — 몬스터 · 캐릭터 세그먼트가 같이 쓴다. 전환은 **전역**이다(`?face=` · localStorage 와 같은 자리 — §9-1).
- *  스타일이 하나면 고르개를 생략한다. 현재 `gemini` · `gpt`는 상단바 · 설정과 같은 고르개를 쓴다. */
+ *  스타일이 하나면 고르개를 생략한다. 설정 판과 같은 고르개를 쓴다. */
 function faceStylePicker(box) {
     if (M.FACE_STYLES.length < 2) return box;
     box.appendChild(el('span', 'muted', t('ix.style')));
@@ -6067,7 +6107,7 @@ function faceStylePicker(box) {
     return box;
 }
 
-/** 상단바 · 설정 · 도감이 같은 초상 스타일과 저장값을 공유한다. */
+/** 설정 · 도감이 같은 초상 스타일과 저장값을 공유한다. */
 function faceStyleButtons() {
     const buttons = segmented(M.FACE_STYLES.map(id => ({ id, label: id })), M.faceStyle(),
         id => { M.setFaceStyle(id); render(); });
@@ -6369,12 +6409,12 @@ function codexSkill(p) {
  * 스킬 세그먼트의 **이펙트 탭** [2026-10-05 사용자 지시 · §9-1 · ADR-0513] — 관전의 유닛 카드와 같은 카드를 스킬 하나에 한 장씩 깔고,
  * 카드를 누르면 그 스킬의 관전 이펙트가 그 카드에 선다(연출은 fx.js 가 관전 그대로 그린다 · 설정의 켜고 끄기와 상관없이 선다).
  * 묶음 = 기본 공격 → 직업(`class.csv` 행 순 · 안은 티어 → CSV 순 — 일반 탭과 같다) → 전직(직업 순 → `advance.csv:sort_order`) → 몬스터.
- * 오오라는 늘 켜져 있어 연출이 없으므로 안 선다. 사건이 둘인 스킬은 한 박자씩 차례로 선다
+ * 그림이 준비된 오오라는 도감에서만 미리 본다(전투의 상시 오오라 제외는 유지). 사건이 둘인 스킬은 한 박자씩 차례로 선다
  */
 let fxPreviewN = 0;   // 몇 번째 재생인가 — 흩어짐이 매번 달라진다(관전에서 사건마다 다른 것과 같다)
 function codexSkillFx(p, bar) {
     fxPreload();
-    const rows = (D.skillRows ?? []).filter(r => r.cast !== 'aura'), effs = D.skillEffectRows ?? [];
+    const rows = (D.skillRows ?? []).filter(r => r.cast !== 'aura' || SKILL_ART[r.skill_id]), effs = D.skillEffectRows ?? [];
     const groups = [{ title: t('bt.basicAttack'), cards: [{ id: null, kinds: ['basic'], ty: 'physical' }] }];
     const add = (title, rs) => {
         if (rs.length) groups.push({ title, cards: rs.map(r => ({ id: r.skill_id, ...previewOf(r.skill_id, effs.filter(e => e.skill_id === r.skill_id), r.target) })) });
@@ -6925,7 +6965,13 @@ async function boot() {
     if (Number.isInteger(heroNo) && G?.heroes?.[heroNo - 1]) state.heroUid = G.heroes[heroNo - 1].uid;
     // 인벤토리 칸의 탭 — 탭은 클릭으로만 바뀐다(SCREEN_DESIGN §10 · §6 · ADR-0379)
     const bg = new URLSearchParams(location.search).get('bag');
-    if (['equip', 'mat'].includes(bg)) state.bagTab = bg;
+    if (['equip', 'mat'].includes(bg)) state.stashTab = bg;   // 창고 칸의 탭 (ADR-0524)
+    // `&bag=sort` · `sort:stash` — 인벤토리 · 창고 [정렬]을 펼친 채 · `&bag=sel` · `sel:rarity` · `sel:ilvl` — 고르는 중(고르기 메뉴 · 그 줄을 펼친 채) (§10 · ADR-0523 — 클릭으로만 열려 헤드리스가 못 닿는다)
+    if (bg?.startsWith('sort')) state.bagSortMode = bg === 'sort:stash' ? 'stash' : 'bag';
+    if (bg?.startsWith('sel')) { state.bagSelMode = true; state.bagPickFold = ['rarity', 'ilvl'].includes(bg.split(':')[1]) ? bg.split(':')[1] : null; }
+    // `&inv=n` — 부대 n 의 인벤토리를 본 채 (§10 · ADR-0521)
+    const invQ = Number(new URLSearchParams(location.search).get('inv'));
+    if (Number.isInteger(invQ) && invQ >= 1) state.invNo = invQ;
     // `&bld=<건물 id>` — 건설 탭에서 그 건물을 고른 채 연다 (§10 · §13-1 · ADR-0354). 부지는 클릭으로만 골라져 헤드리스가 못 닿는다
     const bld = new URLSearchParams(location.search).get('bld');
     if (bld) state.cnPick = bld;
@@ -7020,7 +7066,7 @@ async function boot() {
         devParty();
         const uid0 = G.heroes[0].uid;
         runBattle(D.stageOrder[0], { instant: true });
-        for (const iuid of [...G.bag]) SYS.game.equip(G, uid0, iuid);   // 거절되는 것(직업 전속 등)은 가방에 남는다
+        for (const iuid of G.bags.flat()) SYS.game.equip(G, uid0, iuid);   // 거절되는 것(요구 레벨 미달 · R215)은 가방에 남는다
         runBattle(D.stageOrder[0], { instant: true });
         // `&t=potion` 은 **물약 카드**를 본다 — 칸이 편성 탭에 있으므로 이 길만 탭이 갈린다 (§2 「물약 툴팁 규격」 · ADR-0315)
         //   `&t=hero` 는 **편성 띠의 영웅 툴팁** — 관전 밖 영웅 카드도 관전과 같은 카드인지 본다 (§2 「유닛 툴팁 규격」 · ADR-0498)

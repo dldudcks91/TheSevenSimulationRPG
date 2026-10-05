@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-06",
+  "generator": "built-in image_gen",
+  "source_document": "docs/reference/basic_skill_fx_sheet_prompts.md",
+  "sheet": "sheet.png",
+  "sheet_sha256": "bcec519a4e60fe1c543c90730488b86ce17b8fae48bccd2cb2ede07bea785b9f",
+  "framing": "whole cell; no alpha-bbox normalization",
+  "keying": "min(r,b)-g ramp 40..120, magenta edge unmixing, premultiplied resize",
+  "installed": true,
+  "skills": [
+    {
+      "id": "war_bash",
+      "file": "war_bash",
+      "name": "배시",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "slash",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 360,
+      "quake": false,
+      "cell": 1
+    },
+    {
+      "id": "war_doubleswing",
+      "file": "war_doubleswing",
+      "name": "더블스윙",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "cross",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 400,
+      "quake": false,
+      "cell": 2
+    },
+    {
+      "id": "war_quake",
+      "file": "war_quake",
+      "name": "어스스플릿",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "ground",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 480,
+      "quake": true,
+      "cell": 3
+    },
+    {
+      "id": "war_leap",
+      "file": "war_leap",
+      "name": "리프 어택",
+      "job": "warrior",
+      "kind": "hit",
+      "motion": "land",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 460,
+      "quake": true,
+      "cell": 4
+    },
+    {
+      "id": "war_taunt",
+      "file": "war_taunt",
+      "name": "타운트",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "edge-burst",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 540,
+      "quake": false,
+      "cell": 5
+    },
+    {
+      "id": "war_shout",
+      "file": "war_shout",
+      "name": "워 크라이",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "edge-wave",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 580,
+      "quake": false,
+      "cell": 6
+    },
+    {
+      "id": "war_battleorders",
+      "file": "war_battleorders",
+      "name": "배틀오더스",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "edge-orders",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 580,
+      "quake": false,
+      "cell": 7
+    },
+    {
+      "id": "war_ironskin",
+      "file": "war_ironskin",
+      "name": "아이언 스킨",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "edge-shell",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 540,
+      "quake": false,
+      "cell": 8
+    }
+  ],
+  "alternates": [
+    {
+      "id": "war_ironskin",
+      "file": "war_ironskin_glints",
+      "name": "아이언 스킨",
+      "job": "warrior",
+      "kind": "buff",
+      "motion": "edge-shell",
+      "size": 101,
+      "fit": "portrait",
+      "duration": 540,
+      "quake": false,
+      "cell": 9
+    }
+  ]
+}

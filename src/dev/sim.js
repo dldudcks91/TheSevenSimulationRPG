@@ -89,13 +89,14 @@ const scoreOf = (c, slot) => slot === 'weapon' ? (atkOf(c).min + atkOf(c).max) /
 
 function botEquip(SYS, G) {
     let n = 0;
-    for (const uid of G.bag.slice()) {
+    for (const uid of G.bags.flat()) {                 // 부대마다 인벤토리 (v40) — 봇은 전부 본다
         const it = G.items[uid];
-        if (!it || !G.bag.includes(uid)) continue;
+        if (!it || SYS.game.holderOf(G, uid) !== 'bag') continue;
         let best = null;
         for (const h of partyHeroes(SYS, G)) {
             const pos = SYS.game.equipTarget(h, it);
             if (!pos) continue;
+            if (SYS.item.canEquip(h, it)) continue;   // 요구 레벨 미달 (R215) — 거절될 영웅을 최선으로 뽑으면 낄 수 있는 다른 영웅이 놓친다
             if (it.slot === 'weapon' && ![].concat(D.weaponGroups[it.group]?.classes ?? []).includes(h.cls)) continue;   // 다른 직업의 무기
             const now = SYS.game.heroCombat(G, h), next = SYS.game.heroCombatIf(G, h, uid);
             if (it.slot === 'weapon' && next.basic_attack !== now.basic_attack) continue;   // 물리 ↔ 마법 — 평타가 바뀐다
@@ -108,9 +109,9 @@ function botEquip(SYS, G) {
 }
 
 function salvageBag(SYS, G) {
-    const before = G.bag.length;
-    for (const uid of G.bag.slice()) SYS.game.salvage(G, uid);
-    return before - G.bag.length;
+    const before = G.bags.flat().length;
+    for (const uid of G.bags.flat()) SYS.game.salvage(G, uid);
+    return before - G.bags.flat().length;
 }
 
 function stripParty(SYS, G) {

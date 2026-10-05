@@ -1,0 +1,362 @@
+{
+  "runtime": {
+    "runtime_checks": {
+      "image_kni_smite": true,
+      "format_kni_smite": true,
+      "motion_kni_smite": true,
+      "image_kni_holyshield": true,
+      "format_kni_holyshield": true,
+      "motion_kni_holyshield": true,
+      "image_kni_charge": true,
+      "format_kni_charge": true,
+      "motion_kni_charge": true,
+      "image_kni_rush": true,
+      "format_kni_rush": true,
+      "motion_kni_rush": true,
+      "image_kni_duel": true,
+      "format_kni_duel": true,
+      "motion_kni_duel": true,
+      "image_kni_duel_guard": true,
+      "format_kni_duel_guard": true,
+      "motion_kni_duel_guard": true,
+      "image_kni_enchant": true,
+      "format_kni_enchant": true,
+      "motion_kni_enchant": true,
+      "image_kni_might": true,
+      "format_kni_might": true,
+      "motion_kni_might": true,
+      "image_kni_fanaticism": true,
+      "format_kni_fanaticism": true,
+      "motion_kni_fanaticism": true,
+      "image_kni_defiance": true,
+      "format_kni_defiance": true,
+      "motion_kni_defiance": true,
+      "image_mag_fireball": true,
+      "format_mag_fireball": true,
+      "motion_mag_fireball": true,
+      "image_mag_inferno": true,
+      "format_mag_inferno": true,
+      "motion_mag_inferno": true,
+      "image_mag_iceblast": true,
+      "format_mag_iceblast": true,
+      "motion_mag_iceblast": true,
+      "image_mag_frostnova": true,
+      "format_mag_frostnova": true,
+      "motion_mag_frostnova": true,
+      "image_mag_lightning": true,
+      "format_mag_lightning": true,
+      "motion_mag_lightning": true,
+      "image_mag_chain": true,
+      "format_mag_chain": true,
+      "motion_mag_chain": true,
+      "image_mag_focus": true,
+      "format_mag_focus": true,
+      "motion_mag_focus": true,
+      "image_mag_frozenwall": true,
+      "format_mag_frozenwall": true,
+      "motion_mag_frozenwall": true,
+      "image_arc_snipe": true,
+      "format_arc_snipe": true,
+      "motion_arc_snipe": true,
+      "image_arc_rapid": true,
+      "format_arc_rapid": true,
+      "motion_arc_rapid": true,
+      "image_arc_multishot": true,
+      "format_arc_multishot": true,
+      "motion_arc_multishot": true,
+      "image_arc_guided": true,
+      "format_arc_guided": true,
+      "motion_arc_guided": true,
+      "image_arc_pierce": true,
+      "format_arc_pierce": true,
+      "motion_arc_pierce": true,
+      "image_arc_poison": true,
+      "format_arc_poison": true,
+      "motion_arc_poison": true,
+      "image_pri_judgment": true,
+      "format_pri_judgment": true,
+      "motion_pri_judgment": true,
+      "image_pri_heal": true,
+      "format_pri_heal": true,
+      "motion_pri_heal": true,
+      "image_pri_grace": true,
+      "format_pri_grace": true,
+      "motion_pri_grace": true,
+      "image_pri_haste": true,
+      "format_pri_haste": true,
+      "motion_pri_haste": true,
+      "image_pri_cure": true,
+      "format_pri_cure": true,
+      "motion_pri_cure": true,
+      "image_pri_regen": true,
+      "format_pri_regen": true,
+      "motion_pri_regen": true,
+      "image_pri_penitence": true,
+      "format_pri_penitence": true,
+      "motion_pri_penitence": true,
+      "image_pri_bind": true,
+      "format_pri_bind": true,
+      "motion_pri_bind": true,
+      "skill_off_all_event_types": true,
+      "preview_overrides_setting": true,
+      "catchup_suppressed": true,
+      "disconnected_suppressed": true,
+      "aura_suppressed_in_battle": true,
+      "duel_positive_enemy_mark": true,
+      "duel_self_guard": true,
+      "negative_buff_uses_bad_image": true,
+      "barrier_uses_protective_image": true,
+      "speed16": true,
+      "multiple_hits_have_independent_sprites": true,
+      "popup_above": true,
+      "basic_keeps_code": true,
+      "advanced_keeps_code": true,
+      "cap_all_event_types": true,
+      "animation_cleanup": true,
+      "warrior_image_preserved": true
+    },
+    "events": [
+      {
+        "skill": "kni_smite",
+        "kind": "hit",
+        "file": "kni_smite",
+        "motion": "fx-skill-burst",
+        "duration": "0.36s"
+      },
+      {
+        "skill": "kni_holyshield",
+        "kind": "buff",
+        "file": "kni_holyshield",
+        "motion": "fx-skill-shell",
+        "duration": "0.54s"
+      },
+      {
+        "skill": "kni_charge",
+        "kind": "hit",
+        "file": "kni_charge",
+        "motion": "fx-skill-thrust",
+        "duration": "0.36s"
+      },
+      {
+        "skill": "kni_rush",
+        "kind": "hit",
+        "file": "kni_rush",
+        "motion": "fx-skill-thrust",
+        "duration": "0.34s"
+      },
+      {
+        "skill": "kni_duel",
+        "kind": "bad",
+        "file": "kni_duel",
+        "motion": "fx-skill-inward",
+        "duration": "0.52s"
+      },
+      {
+        "skill": "kni_duel",
+        "kind": "buff",
+        "file": "kni_duel_guard",
+        "motion": "fx-skill-shell",
+        "duration": "0.54s"
+      },
+      {
+        "skill": "kni_enchant",
+        "kind": "buff",
+        "file": "kni_enchant",
+        "motion": "fx-skill-orders",
+        "duration": "0.54s"
+      },
+      {
+        "skill": "kni_might",
+        "kind": "buff",
+        "file": "kni_might",
+        "motion": "fx-skill-wave",
+        "duration": "0.56s"
+      },
+      {
+        "skill": "kni_fanaticism",
+        "kind": "buff",
+        "file": "kni_fanaticism",
+        "motion": "fx-skill-orders",
+        "duration": "0.42s"
+      },
+      {
+        "skill": "kni_defiance",
+        "kind": "buff",
+        "file": "kni_defiance",
+        "motion": "fx-skill-shell",
+        "duration": "0.54s"
+      },
+      {
+        "skill": "mag_fireball",
+        "kind": "hit",
+        "file": "mag_fireball",
+        "motion": "fx-skill-burst",
+        "duration": "0.42s"
+      },
+      {
+        "skill": "mag_inferno",
+        "kind": "hit",
+        "file": "mag_inferno",
+        "motion": "fx-skill-pillar",
+        "duration": "0.5s"
+      },
+      {
+        "skill": "mag_iceblast",
+        "kind": "hit",
+        "file": "mag_iceblast",
+        "motion": "fx-skill-burst",
+        "duration": "0.42s"
+      },
+      {
+        "skill": "mag_frostnova",
+        "kind": "hit",
+        "file": "mag_frostnova",
+        "motion": "fx-skill-wave",
+        "duration": "0.48s"
+      },
+      {
+        "skill": "mag_lightning",
+        "kind": "hit",
+        "file": "mag_lightning",
+        "motion": "fx-skill-strike",
+        "duration": "0.34s"
+      },
+      {
+        "skill": "mag_chain",
+        "kind": "hit",
+        "file": "mag_chain",
+        "motion": "fx-skill-thrust",
+        "duration": "0.36s"
+      },
+      {
+        "skill": "mag_focus",
+        "kind": "buff",
+        "file": "mag_focus",
+        "motion": "fx-skill-orbit",
+        "duration": "0.62s"
+      },
+      {
+        "skill": "mag_frozenwall",
+        "kind": "call",
+        "file": "mag_frozenwall",
+        "motion": "fx-skill-pillar",
+        "duration": "0.56s"
+      },
+      {
+        "skill": "arc_snipe",
+        "kind": "hit",
+        "file": "arc_snipe",
+        "motion": "fx-skill-thrust",
+        "duration": "0.34s"
+      },
+      {
+        "skill": "arc_rapid",
+        "kind": "hit",
+        "file": "arc_rapid",
+        "motion": "fx-skill-thrust",
+        "duration": "0.34s"
+      },
+      {
+        "skill": "arc_multishot",
+        "kind": "hit",
+        "file": "arc_multishot",
+        "motion": "fx-skill-rain",
+        "duration": "0.44s"
+      },
+      {
+        "skill": "arc_guided",
+        "kind": "hit",
+        "file": "arc_guided",
+        "motion": "fx-skill-thrust",
+        "duration": "0.4s"
+      },
+      {
+        "skill": "arc_pierce",
+        "kind": "buff",
+        "file": "arc_pierce",
+        "motion": "fx-skill-sweep",
+        "duration": "0.52s"
+      },
+      {
+        "skill": "arc_poison",
+        "kind": "buff",
+        "file": "arc_poison",
+        "motion": "fx-skill-orders",
+        "duration": "0.58s"
+      },
+      {
+        "skill": "pri_judgment",
+        "kind": "hit",
+        "file": "pri_judgment",
+        "motion": "fx-skill-strike",
+        "duration": "0.48s"
+      },
+      {
+        "skill": "pri_heal",
+        "kind": "heal",
+        "file": "pri_heal",
+        "motion": "fx-skill-heal",
+        "duration": "0.64s"
+      },
+      {
+        "skill": "pri_grace",
+        "kind": "buff",
+        "file": "pri_grace",
+        "motion": "fx-skill-sweep",
+        "duration": "0.58s"
+      },
+      {
+        "skill": "pri_haste",
+        "kind": "buff",
+        "file": "pri_haste",
+        "motion": "fx-skill-orders",
+        "duration": "0.4s"
+      },
+      {
+        "skill": "pri_cure",
+        "kind": "heal",
+        "file": "pri_cure",
+        "motion": "fx-skill-burst",
+        "duration": "0.52s"
+      },
+      {
+        "skill": "pri_regen",
+        "kind": "buff",
+        "file": "pri_regen",
+        "motion": "fx-skill-heal",
+        "duration": "0.82s"
+      },
+      {
+        "skill": "pri_penitence",
+        "kind": "bad",
+        "file": "pri_penitence",
+        "motion": "fx-skill-sink",
+        "duration": "0.62s"
+      },
+      {
+        "skill": "pri_bind",
+        "kind": "bad",
+        "file": "pri_bind",
+        "motion": "fx-skill-inward",
+        "duration": "0.58s"
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "fallback": {
+    "runtime_checks": {
+      "heal_load_failure_fallback": true,
+      "summon_load_failure_fallback": true
+    },
+    "events": [],
+    "errors": [],
+    "ok": true
+  },
+  "codex": {
+    "ok": true,
+    "cards": 31,
+    "images": 31,
+    "aura_cards": 3
+  }
+}

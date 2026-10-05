@@ -25,7 +25,9 @@
  *       죄종·직업 마스터리가 한 풀을 공유한다 (skill_design §1-4). 전직 전용 포인트는 전직 미구현이라 없다
  *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
  *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
- *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], tactics: {slots}}], preset: n, items: {uid: item}, bag: [uid],
+ *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], tactics: {slots}}], preset: n, items: {uid: item}, bags: [[uid]],
+ *     — bags = **부대마다 인벤토리 — v40** [2026-10-06 · SCREEN_DESIGN ADR-0521] · 길이 = presets · 자리 + 1 = 편성 번호(`runs` 와 같은 색인) · 상한은 하나마다 `limitsOf.bag`.
+ *       드롭은 나간 부대의 것에 · 해제 · 꺼내기 · 구매 · 제작은 부르는 쪽이 넘긴 번호(`no`)에 들어간다 (옛 `bag` 하나 → v39 까지)
  *     — presets = **편성**(v32 · R122 · 길이 = `limitsOf(state).presets` — 원정 랭크가 연다 · R156) · preset = 고른 편성 번호(1 부터).
  *       party = **편성한 순서 그대로** · `party[0]` 이 리더 · **새 게임은 전부 빈 배열**이다 (2026-09-09).
  *       **한 영웅은 한 편성에만 든다 — v38** [2026-09-23 · 다부대] — 편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다.
@@ -72,7 +74,7 @@
  *   progress.peakTotal              — 로스터 합산 레벨의 **도달 최고치**(v37) — 해고가 합산을 내리기 전에 적는다(건설 문턱 `total:`)
  * }
  *
- * **버전** — `deserialize` 는 **v38 · v39 를 연다** — v38 은 `upgradeV38` 이 한 단계 올린다(2026-09-29 · 스테이지 칸 구조). 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
+ * **버전** — `deserialize` 는 **v38 · v39 · v40 을 연다** — v38 은 `upgradeV38`(2026-09-29 · 스테이지 칸 구조) · v39 는 `upgradeV39`(2026-10-06 · 부대마다 인벤토리)가 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
  *   [2026-09-23 · 사용자 지시 「끊어」 · 다부대]. 다음 버전이 생기면 같은 자리에서 한 단계씩 올린다 (INTERFACE §4)
  */
 
@@ -84,7 +86,7 @@ import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 39;
+export const SAVE_VERSION = 40;
 
 /**
  * @param {object} deps
@@ -304,7 +306,7 @@ export function createGameSystem(deps) {
             dispatch: [],    // 자원 파견 자리 [{post, tier, uid, since, at, carry}] — 한 자리에 한 명 (2026-09-27 · ADR-0373) · `at` · `carry` = 산출 시계(§3-3)
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
             books: {},       // 스킬북 재고 {skillId: 1} — 처치가 떨군다 · 서고가 만든다 (2026-09-29 · R179)
-            heroes: [], items: {}, bag: [], stash: [],
+            heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
             progress: { cleared: [], peakTotal: 0 },   // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제
             codexKills: {},
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0 },
@@ -394,10 +396,22 @@ export function createGameSystem(deps) {
         return s;
     }
 
-    /** **v38 · v39 를 연다** — v38 은 `upgradeV38` 이 올린다 · 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조). 다음 버전이 생기면 여기서 한 단계씩 올린다 */
+    /**
+     * v39 → v40 [2026-10-06 · 부대마다 인벤토리 · SCREEN_DESIGN ADR-0521 · INTERFACE §4] — 판단 하나:
+     *   옛 인벤토리(`bag`)는 **편성 1 의 인벤토리**가 된다. 나머지 부대의 빈 인벤토리는 `deserialize` 가 편성 수에 맞춰 붙인다(`fitBags`) · rng 0
+     */
+    function upgradeV39(s) {
+        s.bags = [Array.isArray(s.bag) ? s.bag : []];
+        delete s.bag;
+        s.version = 40;
+        return s;
+    }
+
+    /** **v38 · v39 · v40 을 연다** — 옛 버전은 한 단계씩 올린다(v38 → `upgradeV38` · v39 → `upgradeV39`) · 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
-        const src = obj.version === 38 ? upgradeV38(clone(obj)) : obj;
+        let src = obj.version === 38 ? upgradeV38(clone(obj)) : obj;
+        if (src.version === 39) src = upgradeV39(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(src);
@@ -456,6 +470,8 @@ export function createGameSystem(deps) {
         dedupeParties(s);
         // 부대 — 편성 수에 맞춘다(넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다). 도는 채로 저장된 부대는 **끊긴 것**이라 `closeRun` 이 걷는다 (v38)
         s.runs = fitRuns(s, s.runs);
+        // 부대 인벤토리 — 편성 수에 맞춘다. 남는 인벤토리는 지우지 않고 마지막 것 뒤에 붙인다(아이템은 소유물 · v40 · `fitBags`)
+        s.bags = fitBags(s, s.bags);
         // 알아서 분해 — 없으면 「꺼짐」이 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R125)
         s.autoSalvage = { rarity: null, ilvlBelow: 0, ...(s.autoSalvage ?? {}) };
         // 같이 깬 칸 수 — 1 이상 정수만 남긴다 (v36 · R134 · 뜻 개정 2026-09-29 — 옛 값(같이 나간 런 수)은 그대로 읽는다)
@@ -616,10 +632,16 @@ export function createGameSystem(deps) {
 
     /** 가방 → 착용. 그 위치의 착용품은 가방으로 (가방이 차면 실패). position 은 생략 가능.
      *  양손↔보조 배타는 2026-09-01 한손 개념 폐지로 사라졌다 — 되돌아오는 것은 언제나 그 자리에 있던 하나뿐이다 */
-    /** 그 아이템이 어느 보관함에 있나 — 인벤토리(`bag`) / 창고(`stash`) / 없음(null) [v24] */
+    /** 그 아이템이 어느 보관함에 있나 — 인벤토리(`bag` — 어느 부대의 것이든) / 창고(`stash`) / 없음(null) [v24 · 부대 v40] */
     const holderOf = (state, uid) =>
-        state.bag.includes(uid) ? 'bag' : (state.stash ?? []).includes(uid) ? 'stash' : null;
+        bagNoOf(state, uid) ? 'bag' : (state.stash ?? []).includes(uid) ? 'stash' : null;
     const capOf = (state, where) => (where === 'bag' ? limitsOf(state).bag : limitsOf(state).stash);
+    /** 그 아이템이 든 보관 줄을 뺀 새 줄로 바꾼다 — 인벤토리면 **그 부대의 것** [v40] */
+    const dropFrom = (state, uid) => {
+        const no = bagNoOf(state, uid);
+        if (no) state.bags[no - 1] = state.bags[no - 1].filter(u => u !== uid);
+        else state.stash = (state.stash ?? []).filter(u => u !== uid);
+    };
 
     function equip(state, heroUid, itemUid, position) {
         const h = heroById(state, heroUid), it = state.items[itemUid];
@@ -633,24 +655,28 @@ export function createGameSystem(deps) {
         const back = [];
         if (h.equipped[pos]) back.push(h.equipped[pos]);
         // **교체품은 꺼낸 쪽으로 돌아간다** [v24] — 창고에서 낌 것을 인벤으로 돌려보내면
-        // 인벤이 찼을 때 거절이 나서 「창고에서 바로 장착」(item_design §1)이 깨진다. 칸 수는 그대로다
-        const list = from === 'bag' ? state.bag : state.stash;
+        // 인벤이 찼을 때 거절이 나서 「창고에서 바로 장착」(item_design §1)이 깨진다. 칸 수는 그대로다.
+        // 인벤토리면 **꺼낸 그 부대의 인벤토리**다 [v40 · ADR-0521]
+        const no = from === 'bag' ? bagNoOf(state, itemUid) : 0;
+        const list = from === 'bag' ? state.bags[no - 1] : state.stash;
         if (list.length - 1 + back.length > capOf(state, from)) return { ok: false, err: from === 'bag' ? 'bagFull' : 'stashFull' };
 
         const rest = list.filter(u => u !== itemUid);
         for (const u of back) rest.push(u);
-        if (from === 'bag') state.bag = rest; else state.stash = rest;
+        if (from === 'bag') state.bags[no - 1] = rest; else state.stash = rest;
         h.equipped[pos] = itemUid;
         return { ok: true, back, position: pos, from };
     }
 
-    function unequip(state, heroUid, position) {
+    /** 벗긴 것은 **부대 `no` 의 인벤토리 끝**으로 [v40 · 기본 1 — 화면은 보고 있는 인벤토리 번호를 넘긴다 · ADR-0521] */
+    function unequip(state, heroUid, position, no = 1) {
         const h = heroById(state, heroUid);
         const uid = h?.equipped[position];
-        if (!uid) return { ok: false, err: 'missing' };
-        if (state.bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        const bag = bagOf(state, no);
+        if (!uid || !bag) return { ok: false, err: 'missing' };
+        if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
         h.equipped[position] = null;
-        state.bag.push(uid);
+        bag.push(uid);
         return { ok: true };
     }
 
@@ -662,29 +688,29 @@ export function createGameSystem(deps) {
         // 잠금은 **분해만** 막는다 [2026-09-21 · ADR-0185] — 여러 개를 한 번에 지우는 길이 열려 보호 태그가 필요해졌다
         if (it.locked) return { ok: false, err: 'locked' };
         const dust = I.salvageDust(it);
-        if (from === 'bag') state.bag = state.bag.filter(u => u !== itemUid);
-        else state.stash = state.stash.filter(u => u !== itemUid);
+        dropFrom(state, itemUid);
         delete state.items[itemUid];
         state.resources.dust += dust;
         return { ok: true, dust, from };
     }
 
-    /** 인벤토리 → 창고 [v24]. 받는 쪽이 차 있으면 `stashFull` · 창고를 안 지었으면 `unbuilt`(꺼내기는 막지 않는다 — 넣어 둔 것이 갇히지 않게 · R137) */
+    /** 인벤토리(어느 부대의 것이든) → 창고 [v24 · 부대 v40]. 받는 쪽이 차 있으면 `stashFull` · 창고를 안 지었으면 `unbuilt`(꺼내기는 막지 않는다 — 넣어 둔 것이 갇히지 않게 · R137) */
     function moveToStash(state, itemUid) {
         if (!hasFeature(state, 'storage')) return { ok: false, err: 'unbuilt' };
         if (holderOf(state, itemUid) !== 'bag') return { ok: false, err: 'missing' };
         if (state.stash.length >= capOf(state, 'stash')) return { ok: false, err: 'stashFull' };
-        state.bag = state.bag.filter(u => u !== itemUid);
+        dropFrom(state, itemUid);
         state.stash.push(itemUid);
         return { ok: true };
     }
 
-    /** 창고 → 인벤토리 [v24]. 받는 쪽이 차 있으면 `bagFull` */
-    function moveToBag(state, itemUid) {
-        if (holderOf(state, itemUid) !== 'stash') return { ok: false, err: 'missing' };
-        if (state.bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+    /** 창고 → **부대 `no` 의 인벤토리** [v24 · 부대 v40 · 기본 1]. 받는 쪽이 차 있으면 `bagFull` · 없는 번호면 `missing` */
+    function moveToBag(state, itemUid, no = 1) {
+        const bag = bagOf(state, no);
+        if (!bag || holderOf(state, itemUid) !== 'stash') return { ok: false, err: 'missing' };
+        if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
         state.stash = state.stash.filter(u => u !== itemUid);
-        state.bag.push(itemUid);
+        bag.push(itemUid);
         return { ok: true };
     }
 
@@ -703,18 +729,19 @@ export function createGameSystem(deps) {
     // 고른 기준 다음으로 남은 둘 — 유저가 그 기준 안에서 다음으로 볼 것
     const SORT_KEYS = { rarity: ['rarity', 'ilvl', 'slot'], ilvl: ['ilvl', 'rarity', 'slot'], slot: ['slot', 'rarity', 'ilvl'] };
 
-    /** 보관 한 칸을 줄 세운다 — 순서만 바꾸고 개체 · 개수는 그대로 · 다 같으면 원래 순서(`Array.sort` 는 안정 정렬) · rng 0 */
-    function sortStorage(state, where, key) {
+    /** 보관 한 칸을 줄 세운다 — 순서만 바꾸고 개체 · 개수는 그대로 · 다 같으면 원래 순서(`Array.sort` 는 안정 정렬) · rng 0.
+     *  `'bag'` 이면 **부대 `no` 의 인벤토리**(기본 1 · v40) */
+    function sortStorage(state, where, key, no = 1) {
         const keys = SORT_KEYS[key];
-        if (!keys || (where !== 'bag' && where !== 'stash')) return { ok: false, err: 'invalid' };
-        const list = where === 'bag' ? state.bag : (state.stash ?? []);
+        if (!keys || (where !== 'bag' && where !== 'stash') || (where === 'bag' && !bagOf(state, no))) return { ok: false, err: 'invalid' };
+        const list = where === 'bag' ? bagOf(state, no) : (state.stash ?? []);
         const sorted = list.slice().sort((ua, ub) => {
             const a = state.items[ua], b = state.items[ub];
             if (!a || !b) return 0;
             for (const k of keys) { const d = CMP[k](a, b); if (d) return d; }
             return 0;
         });
-        if (where === 'bag') state.bag = sorted; else state.stash = sorted;
+        if (where === 'bag') state.bags[no - 1] = sorted; else state.stash = sorted;
         return { ok: true };
     }
 
@@ -757,22 +784,22 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    // [지금 인벤토리에도 적용]이 갈 것 — **인벤토리만**(창고는 옮겨 둔 것이 곧 「남긴다」) · 잠근 것 제외
-    const autoTargets = state => {
+    // [지금 인벤토리에도 적용]이 갈 것 — **부대 `no` 의 인벤토리만**(창고는 옮겨 둔 것이 곧 「남긴다」 · 다른 부대의 것은 안 보이는 칸이다 · v40) · 잠근 것 제외
+    const autoTargets = (state, no) => {
         const rule = autoRuleOf(state);
-        return state.bag.map(u => state.items[u]).filter(it => it && !it.locked && autoSalvageHits(rule, it));
+        return (bagOf(state, no) ?? []).map(u => state.items[u]).filter(it => it && !it.locked && autoSalvageHits(rule, it));
     };
 
-    /** 지금 적용하면 갈릴 개수와 가루 — 확인 창이 이 숫자를 보여 준다. 상태를 안 바꾼다 */
-    function autoSalvagePreview(state) {
-        const list = autoTargets(state);
+    /** 지금 적용하면 갈릴 개수와 가루 — 확인 창이 이 숫자를 보여 준다. 상태를 안 바꾼다 · `no` = 부대(기본 1 · v40) */
+    function autoSalvagePreview(state, no = 1) {
+        const list = autoTargets(state, no);
         return { n: list.length, dust: list.reduce((a, it) => a + I.salvageDust(it), 0) };
     }
 
-    /** 인벤토리에서 선에 걸린 것을 분해한다 — `salvage` 를 그대로 부르므로 반환량 · 거절 규칙이 같다 */
-    function applyAutoSalvage(state) {
+    /** 부대 `no`(기본 1 · v40)의 인벤토리에서 선에 걸린 것을 분해한다 — `salvage` 를 그대로 부르므로 반환량 · 거절 규칙이 같다 */
+    function applyAutoSalvage(state, no = 1) {
         let n = 0, dust = 0;
-        for (const it of autoTargets(state)) {
+        for (const it of autoTargets(state, no)) {
             const r = salvage(state, it.uid);
             if (r.ok) { n++; dust += r.dust; }
         }
@@ -876,10 +903,12 @@ export function createGameSystem(deps) {
      * `cost` = [{kind: 'ore'|'timber'|'dust', id, need, have}] — 광석 · 목재의 `id` 는 산출물 id · 가루는 null. 필요량은 부위마다라 **종류와 무관**하다.
      * `err` = 지금 누르면 나올 거절(`unbuilt` → `materials` → `bagFull` 순) 또는 null. 없는 부위 · 레벨이면 null.
      *   `unbuilt` = 그 레벨이 안 열렸다(제련소 랭크가 연다 — `makeLevels(state)` 의 `open` · R137)
+     * `bagFull` 은 **부대 `no` 의 인벤토리**로 잰다(기본 1 · v40 — 만든 것이 들어갈 곳) · 없는 번호면 null
      */
-    function makeState(state, part, level) {
+    function makeState(state, part, level, no = 1) {
         const r = recipes[part], l = makeLevels(state).find(x => x.level === level);
-        if (!r || !l) return null;
+        const bag = bagOf(state, no);
+        if (!r || !l || !bag) return null;
         const mats = state.materials ?? {};
         const cost = [
             { kind: 'ore', id: l.ore, need: r.ore, have: mats[l.ore] ?? 0 },
@@ -888,7 +917,7 @@ export function createGameSystem(deps) {
         ];
         const err = !l.open ? 'unbuilt'
             : cost.some(c => c.have < c.need) ? 'materials'
-            : state.bag.length >= capOf(state, 'bag') ? 'bagFull' : null;
+            : bag.length >= capOf(state, 'bag') ? 'bagFull' : null;
         // 줄마다 **만들어질 베이스**(`baseId`)와 그 이름을 든다 — 무기는 무기군 줄에 그 레벨의 세부 베이스(`weaponBaseAt` · 2026-09-21) · 무기 외는 베이스 그 자체
         const kinds = I.basesAt(part, level).map(k => {
             if (part !== 'weapon') return { ...k, baseId: k.id };
@@ -899,14 +928,14 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 제작 1회 — 재료를 내고 **고른 종류**의 장비 하나를 **인벤토리 끝**에 넣는다. 거절은 `missing`(없는 부위 · 레벨 · 목록 밖 종류) → `unbuilt` → `materials` → `bagFull` 순이고
+     * 제작 1회 — 재료를 내고 **고른 종류**의 장비 하나를 **부대 `no` 의 인벤토리 끝**(기본 1 · v40)에 넣는다. 거절은 `missing`(없는 부위 · 레벨 · 목록 밖 종류) → `unbuilt` → `materials` → `bagFull` 순이고
      * 거절이면 아무것도 안 바뀐다. rng 는 제작 전용 스트림(`seed ^ 0xC4AF` · `counters.make` 선증가) — 전투 · 선술집 · 전술 수열과 안 섞인다 (INTERFACE §5-1).
      * 소비: `item.rollGear` 한 벌 — 베이스는 고른 종류라 **0회**(무기 = `weaponGroup` · 무기 외 = `itemBase`) → 희귀도(제작 가중치) → build (INTERFACE §5-2).
      * 무기의 세부 베이스는 레벨이 정한다(`weaponBase` — build 의 베이스 굴림 1회는 그대로 돌고 값만 버린다 · 2026-09-21).
      * ilvl 은 고른 레벨 그대로다 — ~~레벨대 안 균등 1회~~ 는 2026-09-21 폐기
      */
-    function makeItem(state, part, level, kind) {
-        const s = makeState(state, part, level);
+    function makeItem(state, part, level, kind, no = 1) {
+        const s = makeState(state, part, level, no);
         const k = s?.kinds.find(x => x.id === kind);
         if (!k) return { ok: false, err: 'missing' };
         if (s.err) return { ok: false, err: s.err };
@@ -920,7 +949,7 @@ export function createGameSystem(deps) {
         const fix = part === 'weapon' ? { weaponGroup: kind, weaponBase: k.baseId ?? undefined } : { itemBase: kind };
         const [it] = I.rollGear(rng, { slots: [part], ilvl: level, rarityWeights: MAKE_WEIGHTS, ...fix });
         addItem(state, it);
-        state.bag.push(it.uid);
+        bagOf(state, no).push(it.uid);
         return { ok: true, uid: it.uid };
     }
 
@@ -1068,6 +1097,21 @@ export function createGameSystem(deps) {
        편성이 곧 부대라서, 「2부대」는 「편성 2 가 나간 원정」이다 */
     /** 새 게임의 부대 자리 — 전부 비어 있다 */
     const newRuns = (state = null) => Array.from({ length: limitsOf(state).presets }, () => null);
+    /** 새 게임의 부대 인벤토리 — 편성마다 빈 것 하나 [v40 · ADR-0521] */
+    const newBags = (state = null) => Array.from({ length: limitsOf(state).presets }, () => []);
+    /** 부대 인벤토리를 편성 수에 맞춘다 [v40] — 모자라면 빈 인벤토리를 붙이고, 편성이 줄어 남는 것은 **마지막 열린 인벤토리 뒤에 붙인다**
+     *  (아이템은 소유물이라 지우지 않는다 — 넘친 채 두고 새 드롭 · 옮기기만 막힌다 · R137 과 같은 규칙) */
+    const fitBags = (state, list) => {
+        const src = (Array.isArray(list) ? list : []).map(b => (Array.isArray(b) ? b : []));
+        const n = limitsOf(state).presets;
+        const out = Array.from({ length: n }, (_, i) => src[i] ?? []);
+        for (const extra of src.slice(n)) out[n - 1].push(...extra);
+        return out;
+    };
+    /** 부대 `no`(편성 번호 · 1 부터)의 인벤토리 — **복사본이 아니다** · 없는 번호면 null [v40 · INTERFACE §2-7] */
+    const bagOf = (state, no) => (Number.isInteger(no) && no >= 1 ? state.bags?.[no - 1] ?? null : null);
+    /** 그 아이템이 든 부대 인벤토리의 번호 — 없으면 0 */
+    const bagNoOf = (state, uid) => (state.bags ?? []).findIndex(b => b.includes(uid)) + 1;
     /** 불러온 부대 자리를 편성 수에 맞춘다 — 넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다 */
     const fitRuns = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) => {
         const r = Array.isArray(list) ? list[i] : null;
@@ -1962,6 +2006,8 @@ export function createGameSystem(deps) {
             // 도감 레벨의 출처 — 이긴 라운드의 처치 수 (monster_design §8 · 2026-09-21 카드 걷음)
             for (const [id, n] of Object.entries(s.kills)) state.codexKills[id] = (state.codexKills[id] ?? 0) + n;
             const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(버린 것은 안 든다 · R153)
+            // 드롭은 **나간 부대의 인벤토리**로 — 차면 그 부대의 몫만 버린다 (v40 · ADR-0521)
+            const bag = bagOf(state, run.preset) ?? state.bags[0];
             for (const it of s.drops) {
                 // 알아서 분해 [2026-09-21 · R125 · item_design §6-5] — **가방 참 검사보다 먼저** 선을 본다: 걸린 것은 칸을 안 먹고 버린 수에도 안 든다.
                 //   「그 런이 준 것」이라 uid 를 받아 리포트 `drops` 에 남긴 뒤 곧바로 지운다 — 화면은 흐린 빈 칸으로 그린다(SCREEN_DESIGN §4-3) · rng 0
@@ -1973,9 +2019,9 @@ export function createGameSystem(deps) {
                     delete state.items[gone.uid];
                     continue;
                 }
-                if (state.bag.length >= capOf(state, 'bag')) { R.discarded++; continue; }
+                if (bag.length >= capOf(state, 'bag')) { R.discarded++; continue; }
                 const added = addItem(state, it);
-                state.bag.push(added.uid);
+                bag.push(added.uid);
                 R.drops.push(added.uid);
                 gained.push(added);
             }
@@ -2222,9 +2268,10 @@ export function createGameSystem(deps) {
        장비 목록은 **방문 회차마다** 새로 굴린다(상인이 오는 순간 같이 갈린다). 시드 + 회차라 저장하지 않는다 — 선술집 명단과 같은 문법.
        ⚠ 구매는 아직 없다(화면이 미착수 안내를 낸다) — 그래서 「산 칸」도 세이브에 없다 */
     const HOUR_MS = 60 * 60 * 1000;
-    const SHOP_PRICE = { normal: B.shop_price_normal, magic: B.shop_price_magic };
-    /** 상단 희귀도 가중치 — 드롭 가중치에서 **레어만 뺀다**(0) · 굴림 수는 그대로 1회 [2026-09-27 사용자 지시 「레어템은 상점에서 못사도록」 · base_expedition_design §2-6] */
-    const SHOP_RARITY = { normal: B.rarity_w_normal, magic: B.rarity_w_magic, rare: 0 };
+    /** 희귀도마다 한 값 — 상단 희귀도는 **드롭 가중치 그대로**(`rollGear` 에 가중치를 안 넘긴다 · 레어도 선다) [2026-10-06 사용자 지시 「상점가중치 10으로 올려」 · base_expedition_design §2-6] */
+    const SHOP_PRICE = { normal: B.shop_price_normal, magic: B.shop_price_magic, rare: B.shop_price_rare };
+    /** 장비 한 점의 값 — 희귀도 값 × 배율 ^ 레벨 구간(`shop_price_step_levels` 마다 한 번 · 첫 구간 = 희귀도 값 그대로) [2026-10-06 사용자 지시 「10레벨 단위로」] */
+    const shopPriceOf = item => Math.round(SHOP_PRICE[item.rarity] * B.shop_price_step_mult ** Math.floor((item.ilvl - 1) / B.shop_price_step_levels));
 
     /** 방문 시계 — rng 를 안 쓰고 아무것도 안 바꾼다. 앱 시계가 틱마다 불러 방문이 바뀌는 순간을 잰다(목록 굴림과 갈라 둔 이유) */
     function shopVisit(state, now) {
@@ -2283,8 +2330,8 @@ export function createGameSystem(deps) {
         for (const part of shopParts)
             for (let i = 0; i < shopCountOf(state, part); i++) {
                 const ilvl = band.lo + Math.floor(rng() * (band.hi - band.lo + 1));
-                const [item] = I.rollGear(rng, { slots: [part], ilvl, rarityWeights: SHOP_RARITY });
-                equip.push({ item, gold: SHOP_PRICE[item.rarity], sold: !!bought?.sold.includes(equip.length) });
+                const [item] = I.rollGear(rng, { slots: [part], ilvl });
+                equip.push({ item, gold: shopPriceOf(item), sold: !!bought?.sold.includes(equip.length) });
             }
         // `open` = 상단 · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 목록 · 시계는 닫혀 있어도 같은 값이다(시드 + 회차)
         // 물약 — **정해진 셋을 늘 판다** [2026-09-28 사용자 지시 · base_expedition §2-6] — `potion.csv:shop_gold` 가 선 행만 · 회차 · 매진이 없다
@@ -2368,23 +2415,25 @@ export function createGameSystem(deps) {
     /**
      * 상단 장비 한 칸을 산다 [2026-09-27 · base_expedition_design §2-6 — 기본상단이 장비를 판다(09-27 개정)].
      * 거절 순서 `unbuilt` → `stale` → `missing` → `sold` → `gold` → `bagFull` — 거절이면 아무것도 안 바뀐다.
-     * 목록을 `shopState` 로 다시 굴려 **같은 물건**을 얻는다 — 새 스트림을 안 연다 (INTERFACE §2-7)
+     * 목록을 `shopState` 로 다시 굴려 **같은 물건**을 얻는다 — 새 스트림을 안 연다 (INTERFACE §2-7).
+     * 산 것은 **부대 `no` 의 인벤토리 끝**(기본 1 · v40 — 화면은 보고 있는 인벤토리 번호) · 없는 번호면 `missing`
      */
-    function shopBuy(state, i, cycle, now) {
+    function shopBuy(state, i, cycle, now, no = 1) {
         if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
         const S = shopState(state, now);
         if (cycle !== S.cycle) return { ok: false, err: 'stale' };
         const g = S.equip[i];
-        if (!g) return { ok: false, err: 'missing' };
+        const bag = bagOf(state, no);
+        if (!g || !bag) return { ok: false, err: 'missing' };
         if (g.sold) return { ok: false, err: 'sold' };
         if (state.resources.gold < g.gold) return { ok: false, err: 'gold' };
-        if (state.bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
         // 회차의 첫 구매가 레벨대를 박는다 — 그 뒤로 이 회차의 목록은 이 챕터로 굴린다
         if (state.shop?.cycle !== S.cycle) state.shop = { cycle: S.cycle, chapter: S.chapter, sold: [], books: [] };
         state.shop.sold.push(i);
         state.resources.gold -= g.gold;
         const it = addItem(state, g.item);
-        state.bag.push(it.uid);
+        bag.push(it.uid);
         return { ok: true, uid: it.uid, gold: g.gold };
     }
 
@@ -2904,6 +2953,7 @@ export function createGameSystem(deps) {
         //   부대 자리도 편성과 같은 길이로 맞춘다(`fitRuns` — 편성이 원정 랭크로 느는 길이 생겼다 · R156)
         state.presets = fitPresets(state, state.presets);
         state.runs = fitRuns(state, state.runs);
+        state.bags = fitBags(state, state.bags);   // 새 편성은 빈 인벤토리를 갖고 연다 (v40 · ADR-0521)
         return { ok: true, rank: nx.rank };
     }
 
@@ -3129,7 +3179,7 @@ export function createGameSystem(deps) {
         newGame, serialize, deserialize, canLoad, addExpTime,
         heroById, heroItems, heroCombat, heroCombatIf, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
-        equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf,
+        equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,

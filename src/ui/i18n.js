@@ -329,7 +329,8 @@ const STRINGS = {
     'ch.auto.apply': { ko: '지금 인벤토리에도 적용', en: 'Apply to inventory now' },
     'ch.auto.confirm': { ko: '인벤토리의 {n}개가 분해된다', en: '{n} items in the inventory will be salvaged' },
     'ch.auto.ok': { ko: '확인', en: 'Confirm' },
-    'ch.err.class': { ko: '이 직업의 무기군이 아니다', en: "Not this class's weapon group" },
+    // ~~'ch.err.class'~~ 은 2026-10-06 삭제 — 09-10 장착 개방 뒤로 내는 곳이 없다. 거절 사유는 요구 레벨 하나 (R215 · ADR-0525)
+    'ch.err.level': { ko: '레벨이 모자라 낄 수 없다', en: 'Level too low to equip' },
     'ch.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
     'ch.err.stashFull': { ko: '창고가 가득 찼다', en: 'Stash is full' },
     'ch.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
@@ -696,6 +697,8 @@ const STRINGS = {
        `exp.seg.battle` 은 도움말 제목으로만 산다 */
     'exp.seg.battle': { ko: '전투 관전', en: 'Spectate' },
     'exp.seg.party': { ko: 'Party {n}', en: 'Party {n}' },
+    /* 원정이 있는 부대 칸 — 이름 뒤에 그 부대가 있는 스테이지(`data.js:stageName`) [2026-10-06 사용자 지시 · ADR-0517] */
+    'exp.seg.partyAt': { ko: 'Party {n} - {where}', en: 'Party {n} - {where}' },
     'exp.seg.report': { ko: 'Report', en: 'Report' },
     'exp.oneParty': {
         ko: '전투 파티는 한 팀 — 원정이 곧 전투다. 세 상태가 한 탭 안에서 이어진다',
@@ -899,7 +902,6 @@ const STRINGS = {
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
     'ch.skill.go': { ko: '마스터리 열기', en: 'Open Mastery' },
     'ch.items.h': { ko: '아이템', en: 'Items' },
-    'ch.items.sub': { ko: '{n} / {cap} 칸', en: '{n} / {cap} slots' },
 
     /* ── 툴팁 ── */
     'tip.equipped': { ko: '착용 중', en: 'Equipped' },
@@ -907,6 +909,8 @@ const STRINGS = {
     // 교체될 자리가 빈 경우 — 옛 판의 「비어 있음」 빈 카드 한 장을 대신하는 하단 힌트 한 줄 (SCREEN_DESIGN §6 개정 2026-09-08)
     'tip.noneEquipped': { ko: '착용 중 없음', en: 'Nothing equipped' },
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
+    // 머리글 오른쪽 끝 종류 — 투구 · 장갑 · 신발은 갈래 + 부위(`가죽 장갑`) · 갈래 id 가 부위마다 겹쳐 갈래만으론 못 읽는다 (§6 · ADR-0526)
+    'tip.kindPart': { ko: '{group} {part}', en: '{group} {part}' },
     /* 목걸이 발동 스킬 줄 [신설 2026-09-21 · §6 · ADR-0213] — 발동 조건은 베이스가 정한다(amulet_proc.csv). {p} = 확률(% 포함) · {sec} = 간격 초 · {skill} = 스킬 이름.
        ⚠ 발동은 전투에 아직 안 걸린다 — 줄 끝에 `tip.inert` 가 붙는다 */
     'tip.proc.hit': { ko: '타격 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} on hit' },
@@ -1684,7 +1688,6 @@ const STRINGS = {
     'bt.logh.skill': { ko: '스킬', en: 'Skill' },
     'bt.logh.target': { ko: '대상', en: 'Target' },
     'bt.logh.val': { ko: '데미지', en: 'Damage' },
-    'bt.items.target': { ko: '장착 대상 {name}', en: 'equip target {name}' },
     // 라운드 줄 — 종류(일반 · 정예 · 보스)는 괄호가 아니라 글 왼쪽의 칩이다(렌더러가 `kind.*` 로 붙인다 · 2026-09-21 · ADR-0205)
     'log.roundStart': { ko: '<b>라운드 {n}</b> — {list}', en: '<b>Round {n}</b> — {list}' },
     // 로그 값 칸 (2026-09-21 · ADR-0189) — 격자 방식의 한 줄은 네 칸(주체 이름 · 스킬 그림 · 대상 이름 · 값)이다. 문장 방식의 틀은 아래 `log.say.*`.

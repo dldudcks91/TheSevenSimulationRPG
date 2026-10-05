@@ -209,16 +209,19 @@ buildings/
 ## fx/ — 관전 스킬 이펙트 그림
 
 ```
-fx/skills/<skill_id>.webp  전사 기본 스킬 8종 설치본 — 관전 · 도감 이펙트 탭이 읽는다
+fx/skills/<file>.webp      기본 5직업 39스킬 · 40장 설치본 — 관전 · 도감 이펙트 탭이 읽는다
 fx/<종류>.webp            종류 공통 후보 5종 — physical · fire · cold · lightning · poison (꺼져 있다)
-fx_source/warrior_basic_20261005/  전사 생성 원본 · prompts.json · measurements.json · preview.png
+fx_source/warrior_basic_20261005/  전사 적용본 생성 원본 · 프롬프트 · 측정 · 비교
+fx_source/warrior_sheet_20261006/  새 시트 보관 · 후보 · 백업 · 91px 비교 · 적용/복원 검증
+fx_source/party_basic_20261006/    다른 4직업 생성 원본 · 프롬프트 · 측정 · 직업별 비교 · 검증
 fx_source/<종류>.png      종류 공통 후보 원본 — 게임은 안 읽는다
 ```
 
-- **전사 8종** — `ui/skill_art.js:SKILL_ART`가 스킬·사건별 이미지와 움직임을 정한다(ADR-0515). 배시 사선 셋 · 더블스윙 X · 어스스플릿 균열 · 리프 어택 착지 파문 · 타운트 붉은 고리 · 워 크라이 금빛 음파 · 배틀오더스 상승 꺾쇠 · 아이언 스킨 강철 막. 준비되지 않은 그림은 기존 `skill_looks.js` 코드 조합으로 표시한다.
-- **표시** — 맞은 카드 또는 강화받는 카드의 초상 둘레 안 · 약 0.4~0.6초 · 스킬마다 등장·수축·확산·상승 동작 · 게임 배속을 따른다. 관전과 도감 이펙트 탭은 같은 표시 함수를 쓴다.
-- **규격** — 투명 배경 · 중앙 내용 86% · 384×384 WebP(알파) q90 · 굵은 암색 외곽선 + 평면 색 · 보호 고리와 강철 막은 가운데가 빈다.
-- **빌드** — `python scripts/build_warrior_skill_fx.py`. 전사 8종만 만들고 원본·프롬프트·측정·초상 위 비교 시트를 보관한다. [전사 발주 기록](../../../docs/reference/warrior_basic_fx_art.md).
+- **전사 8종** — `ui/skill_art.js:SKILL_ART`가 스킬·사건별 이미지와 움직임을 정한다(ADR-0515 · ADR-0528). 배시 사선 셋 · 더블스윙 X · 어스스플릿 균열 · 리프 어택 착지 파문 · 타운트 붉은 고리 · 워 크라이 금빛 음파 · 배틀오더스 상승 꺾쇠 · 아이언 스킨 강철 막. 준비되지 않은 그림은 기존 `skill_looks.js` 코드 조합으로 표시한다.
+- **다른 4직업 31종 · 32장** [2026-10-06 · ADR-0520] — 기사 9 · 마법사 8 · 궁수 6 · 사제 8. 결투는 적의 지목과 시전자의 보호를 별도 그림으로 표시한다. 타격 · 강화 · 약화 · 회복 · 소환에 연결하며, 기사 오오라 셋은 도감에서만 미리 본다. `python scripts/build_party_skill_fx.py`로 재빌드한다. [발주·최종 프롬프트·비교·검증](../../../docs/reference/party_basic_fx_art.md).
+- **표시** — 맞은 카드 · 강화/약화/회복을 받는 카드 · 불러낸 카드의 초상 둘레 안 · 약 0.4~0.6초 · 스킬마다 등장·수축·확산·상승 동작 · 게임 배속을 따른다. 관전과 도감 이펙트 탭은 같은 표시 함수를 쓴다.
+- **규격** — 투명 배경 · 중앙 내용 86% · 384×384 WebP(알파) q90 · 굵은 암색 외곽선 + 평면 색 · 보호 고리와 강철 막은 가운데가 빈다. 가장자리 배치 새 전사 시트는 원본과 변환본을 보관한다.
+- **전사 빌드·복원·검증** — 현재 그림 빌드는 `python scripts/build_warrior_skill_fx.py`, 적용 직전 백업 복원은 `python scripts/restore_warrior_skill_fx.py`, 복원 검증은 `python scripts/verify_warrior_skill_fx.py --legacy`다. [현재 발주 기록](../../../docs/reference/warrior_basic_fx_art.md) · [보관한 새 시트 기록](../../../docs/reference/warrior_sheet_fx_art.md).
 - **종류 공통 후보** — `fx.js:ART_ON`은 꺼져 있다. 기존 다섯 장의 지시문은 [fx_art_prompt.md](../../../docs/reference/fx_art_prompt.md).
 
 ---
