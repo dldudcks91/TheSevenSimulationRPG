@@ -452,7 +452,11 @@ export function refreshDerived(u) {
  *   공격력 감소는 **든 무기의 피해 종류가 맞는 대상**에만 — 물리 감소 = 물리 무기 · 맨손 · 마법 감소 = 마법 무기(`noBasic`)
  *     [개정 2026-10-02 · R198 — ~~평타의 공격 타입(물리 · 원소)~~ — 평타가 언제나 물리라 마법 감소가 아무에게도 안 걸리게 됐다]
  * @param u 공격자 · @param fx 공격자의 무기 옵션 묶음(`hero.computeCombat:option_fx`) · @param d 대상 · @param type 그 타격의 공격 타입
- * @param t 지금 시각(초) · @param sec `{def, res, atk}` 창 길이 — [balance.csv:weapon_def_down_sec] · `weapon_res_down_sec` · `weapon_atk_down_sec`
+ *   **방어력 감소 겹**(`fx.defStack` — 무기 시기 ② · 2026-10-05 R206 · item_design §1) = 대상의 창 `wx:def_stack` **하나에 겹이 쌓인다** —
+ *     겹 수 `n` 은 `sec.stackMax` 까지 · 겹 값 `per` 는 지금까지 건 것 중 가장 센 값(⚠제안 — 여러 영웅의 겹이 한 줄에 함께 쌓인다) · 값 = `−per × n` ·
+ *     **시간으로 안 풀린다**(`until = ∞`) — 적은 라운드마다 새로 서고 파티 유닛의 이 창은 `battle.beginRound` 가 지운다
+ * @param t 지금 시각(초) · @param sec `{def, res, atk, stackMax}` 창 길이 — [balance.csv:weapon_def_down_sec] · `weapon_res_down_sec` · `weapon_atk_down_sec` ·
+ *   최대 겹 [balance.csv:weapon_def_down_stack_max]
  * @returns 창이 하나라도 섰는가
  */
 export function weaponOnHit(u, fx, d, type, t, sec) {
@@ -463,6 +467,13 @@ export function weaponOnHit(u, fx, d, type, t, sec) {
         changed = true;
     };
     if (fx.defDown > 0) strongest('wx:def_down', 'def_pct', fx.defDown, sec.def);
+    if (fx.defStack > 0) {
+        const cur = d.buffs['wx:def_stack'];
+        const n = Math.min(sec.stackMax ?? 1, (cur?.n ?? 0) + 1);
+        const per = Math.max(cur?.per ?? 0, fx.defStack);
+        d.buffs['wx:def_stack'] = { stat: 'def_pct', v: -per * n, n, per, until: Infinity, element: null, by: u.key, quiet: true };
+        changed = true;
+    }
     const atkDown = d.noBasic ? fx.atkDownMag : fx.atkDownPhys;
     if (atkDown > 0) strongest('wx:atk_down', 'atk_pct', atkDown, sec.atk);
     if (fx.resDown > 0 && type !== 'physical' && type in d.res) {

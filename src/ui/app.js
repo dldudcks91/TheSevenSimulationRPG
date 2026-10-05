@@ -61,7 +61,7 @@ import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
 import { mountCardCompare, mountFocusCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 · 공격자 포커스 버튼(⚙ 설정 탭 끝 두 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
-import { skillFxOn, basicFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel } from './fx.js';   // ⚙ 판의 설정 탭 — 스킬 이펙트 · 기본 공격 이펙트 · 피격 반응 · 공격 시 흔들림 켜고 끄기 · 피격 시 흔들림 단계 (SCREEN_DESIGN §2-2 · ADR-0414 · ADR-0454 · ADR-0468 · ADR-0501)
+import { skillFxOn, basicFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel, previewOf, fxPreview, fxPreload } from './fx.js';   // ⚙ 설정 · 도감 이펙트 탭 (SCREEN_DESIGN §2-2 · §9-1 · ADR-0513 · ADR-0515)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
@@ -179,8 +179,8 @@ function fmtDuration(ms) {
     if (m > 0) return sec > 0 && m < 10 ? t('time.ms', { m, s: sec }) : t('time.m', { m });
     return t('time.s', { s: sec });
 }
-/** 플레이 시간 `H:MM:SS` — 시는 24를 넘어도 일로 안 접는다 (SCREEN_DESIGN §2 · ADR-0356) */
-function fmtPlayTime(ms) {
+/** 원정 플레이 시간 `H:MM:SS` — 시는 24를 넘어도 일로 안 접는다 (SCREEN_DESIGN §2 · ADR-0356 · ADR-0514) */
+function fmtExpTime(ms) {
     const s = Math.floor(Math.max(0, ms ?? 0) / 1000);
     const pad = n => String(n).padStart(2, '0');
     return `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
@@ -193,7 +193,13 @@ const classWeapons = id => D.weaponGroupList.filter(g => g.classes.includes(id))
 const classLine = id => { const c = classDef(id); return c ? `${L(c.role)} · ${classWeapons(id)}` : t('class.unassigned'); };
 const slotDef = id => D.slots.find(s => s.id === id);                                   // 부위
 const posDef = pos => slotDef(D.equipSlots.find(s => s.id === pos)?.part);             // 착용 위치 → 부위 정의
-const affixText = a => L(M.affixText(a.stat, a.v));
+/** 옵션 한 줄 — **발동 옵션**(`AFFIX_LABELS[..].proc` · 2026-10-05 R206)은 목걸이 발동 줄과 같은 문장(`tip.proc.<조건>` · 확률 + 스킬 이름)이다 */
+const affixText = a => {
+    const proc = M.statLabel(a.stat).proc;
+    if (!proc) return L(M.affixText(a.stat, a.v));
+    const def = a.skill ? SYS.skill.defs[a.skill] : null;
+    return t(`tip.proc.${proc}`, { p: M.pctText(a.v), skill: def ? L(def.name) : '—' });
+};
 
 /* 스테이지 표시 — 수치도 이름도 D.stages(stage.csv) · 조립은 data.js:stageName */
 const stageTitle = row => `${L(chapterOf(row.chapter)?.name)} — ${L(stageName(row))}`;
@@ -469,8 +475,8 @@ function renderShell() {
     artPicker.classList.add('face-style-buttons');
     artPicker.setAttribute('aria-label', t('set.artStyle'));
     $('.resources').appendChild(artPicker);
-    // 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356]. `data-play` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshPlayTime`)
-    if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'play-time', `${t('ui.playTime')}<b data-play>${fmtPlayTime(G.playMs)}</b>`));
+    // 원정 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · 2026-10-05 · ADR-0514]. `data-exp-time` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshExpTime`)
+    if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'exp-time', `${t('ui.expTime')}<b data-exp-time>${fmtExpTime(G.expMs)}</b>`));
     // ⚙ — 판의 탭 둘: 설정(스킬 이펙트 · 피격 반응 — 속은 여기 `settingsBody`) · Palette(배경 · 글자 색을 눈으로 맞추는 개발 장치)
     //   [2026-09-28 사용자 지시 · SCREEN_DESIGN §2-2 · ADR-0414]
     mountDevPalette($('.resources'), { label: t('set.h'), body: settingsBody });
@@ -2425,6 +2431,9 @@ function advanceBattle(B, tNow, at, speed = 1) {
     if (!B?.run || B.run.done) return 0;
     // 걸음 — 엔진을 이 시각까지만 민다. 첫머리가 그 순간의 장비 · 스킬 트리로 갈아입히므로 원정 중 교체가 **바꾼 시각에** 먹는다 (R130)
     const n = SYS.game.stepRun(G, B.run, tNow).rounds ?? 0;
+    // 원정 플레이 시간 — 이 걸음에 재생 시각이 나아간 만큼을 부대별로 모은다(런의 끝에서 자른다 · 되감기는 안 나아간다) · 더하는 것은 `expTimeTick` (ADR-0514)
+    const reach = Math.min(tNow, runEnd(B)), from = B.expT ?? B.resume?.t ?? 0;
+    if (reach > from) { const k = B.run.preset ?? 0; expPend[k] = (expPend[k] ?? 0) + (reach - from); B.expT = reach; }
     // 끝난 순간 — 런의 끝에 **처음** 닿은 이 걸음이 적는다 [2026-09-22 · ADR-0300]. 끝을 넘어 민 만큼을 배속으로 되돌려 실제 시각으로 잰다.
     //   반복의 다음 출발(`game.nextRepeat`)이 이 값에서 센다 — 관전 재생기는 끝난 뒤에도 벽시계를 밀어서 걷을 때의 재생 위치로는 못 되짚는다
     if (B.run.done && B.endedAt == null) B.endedAt = at - Math.max(0, tNow - runEnd(B)) / speed * 1000;
@@ -2446,23 +2455,23 @@ function refreshGold() {
     if (gold) gold.textContent = G.resources.gold.toLocaleString();
 }
 
-/* 플레이 시간 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · **2026-09-29 · ADR-0443**] — **게임 화면이 떠 있는 동안** 앱 시계 눈금 사이를 더한다.
-   **숨긴 탭도 센다** — 원정은 끝없이 돌아 켜 둔 시간이 곧 플레이다(ADR-0443) · 멈춤 문턱을 넘은 공백(절전)은 안 더한다 — 멈춤 판정과 같은 문턱이다(ADR-0102).
-   **저장은 따로 안 건다** — 다른 저장(정산 · 조작)에 실려 간다. 세이브를 한 번 더 쓰면 같은 게임을 연 다른 탭이 멈춘다(`freeze` · §2-1) —
-   닫힐 때(`pagehide`) 쓰던 것을 그래서 걷었다: 옛 탭을 닫는 순간 새 탭이 멈춤 창에 섰다 (2026-09-25 실측). 마지막 저장 뒤의 몫은 버려진다 */
-let playAt = null;            // 플레이 시간을 마지막으로 잰 실제 시각 — 세지 않는 동안은 null
-function playTick(at) {
-    const on = !!G && authenticated && state.screen === 'game';
-    if (on && playAt != null && at - playAt <= FROZEN_GAP_MS) SYS.game.addPlayTime(G, at - playAt);
-    playAt = on ? at : null;
-    if (on && !document.hidden) refreshPlayTime();
+/* 원정 플레이 시간 [2026-10-05 · SCREEN_DESIGN §2 · ADR-0514] — 원정이 전투를 진행한 **게임 속 시간**이다(배속을 탄다).
+   시각을 미는 두 쪽(관전 재생기 · 앱 시계)이 함께 지나는 `advanceBattle` 이 부대마다 나아간 재생 시각을 모으고, 앱 시계 눈금 끝에
+   **가장 많이 나아간 부대**의 몫을 더한다 — 부대를 합치지 않는다. 일시정지 · 다음 런 대기 · 라운드 사이 섬 · 절전 공백은 재생 시각이 안 나아가 저절로 빠진다.
+   **저장은 따로 안 건다** — 다른 저장(정산 · 조작)에 실려 간다. 세이브를 한 번 더 쓰면 같은 게임을 연 다른 탭이 멈춘다(`freeze` · §2-1 · ADR-0356). 마지막 저장 뒤의 몫은 버려진다 */
+let expPend = {};             // 이 눈금에 부대(편성 번호)마다 나아간 재생 시각(초) — `advanceBattle` 이 모은다
+function expTimeTick() {
+    const sec = Math.max(0, ...Object.values(expPend));
+    expPend = {};
+    if (sec > 0) SYS.game.addExpTime(G, sec * 1000);
+    if (!document.hidden) refreshExpTime();
 }
 
-/** 상단바의 플레이 시간 숫자만 — 글자가 바뀔 때만 쓴다(1초에 한 번) · 골드(`refreshGold`)와 같은 길 */
-function refreshPlayTime() {
-    const n = $('.resources [data-play]');
+/** 상단바의 원정 플레이 시간 숫자만 — 글자가 바뀔 때만 쓴다(1초에 한 번) · 골드(`refreshGold`)와 같은 길 */
+function refreshExpTime() {
+    const n = $('.resources [data-exp-time]');
     if (!n) return;
-    const txt = fmtPlayTime(G.playMs);
+    const txt = fmtExpTime(G.expMs);
     if (n.textContent !== txt) n.textContent = txt;
 }
 
@@ -2481,7 +2490,6 @@ function expTick() {
     const at = now();
     const gap = beatAt == null ? 0 : at - beatAt;
     beatAt = at;
-    playTick(at);                // 멈춤 판정보다 먼저 — 공백은 `playTick` 이 같은 문턱으로 거른다 (ADR-0356)
     // 멈췄다 깨어났다 — 게임을 껐다 켠 것과 같이 본다 (ADR-0102). 재생기가 먼저 깨어나도 그쪽은 공백을 밀지 않고 여기로 미룬다
     if (gap > FROZEN_GAP_MS) { closeFrozenRun(at); return; }
     if (!G || state.screen !== 'game') return;
@@ -2502,6 +2510,7 @@ function expTick() {
         if (H === state.battle && stopBattle) continue;
         tickBattle(H, at);
     }
+    expTimeTick();               // 원정 플레이 시간 — 이 눈금까지 나아간 몫(관전 재생기가 민 것 포함)을 더한다 (ADR-0514)
     // 앱 시계가 미뤄 둔 그리기 — 손이 빈 첫 눈금에 한 번 (SCREEN_DESIGN §4 · ADR-0338) · 관전 화면이면 보관 칸만 (ADR-0341)
     if ((clockRender || bagStale) && !document.hidden && !handBusy()) {
         if (clockRender) render();
@@ -3751,7 +3760,7 @@ const masteryIconHtml = (id, owner, cls) => {
 
 /** T2 장비 조건 — 공통 무기 노드는 현재 직업이 실제로 들 수 있는 무기군만 보여준다. */
 function masteryGateGroups(gate, cls) {
-    if (!gate) return [];
+    if (!gate || gate.slot === 'sin_gear') return [];   // 죄종 T2-1 은 갈래가 아니라 장비 수가 켠다 (2026-10-05)
     const table = gate.slot === 'weapon' ? D.weaponGroups : D.armorGroups?.armor;
     const usable = gate.slot === 'weapon' && cls
         ? gate.groups.filter(id => table?.[id]?.classes.includes(cls))
@@ -3759,10 +3768,23 @@ function masteryGateGroups(gate, cls) {
     return (usable.length ? usable : gate.groups).map(id => table?.[id] ?? id);
 }
 
-function masteryGateText(gate, cls) {
+function masteryGateText(gate, cls, owner = {}) {
     if (!gate) return '';
+    // 죄종 T2-1 — 「분노 장비 3개 이상일 때 (2/3)」 · 지금 낀 수는 masteryState.sinGear (2026-10-05 · skill_design §3-2)
+    if (gate.slot === 'sin_gear')
+        return t('sk.gate.sin_gear', { sin: owner.sin ? sinName(owner.sin) : '', n: owner.sinGear ?? 0, need: gate.need });
     const groups = masteryGateGroups(gate, cls).map(L).join(' · ');
     return t(`sk.gate.${gate.slot}`, { groups });
+}
+
+/** 죄종 T2-2 · T2-3 의 조건 한 줄 — 문턱 · 겹 값은 balance 에서 읽는다(화면이 숫자를 안 든다) · 조건 없는 칸은 빈 문자열 (2026-10-05) */
+function masteryCondText(cond) {
+    if (!cond) return '';
+    const B = D.balance;
+    return t(`sk.cond.${cond}`, {
+        pct: `${Math.round((B.mastery_t2_hp_threshold_pct ?? 0) * 100)}%`,
+        sec: B.mastery_sloth_t2_tick_sec, max: B.mastery_sloth_t2_max_stack,
+    });
 }
 
 function masteryDisplayName(node, cls) {
@@ -3787,14 +3809,17 @@ function masteryTipCard(node, rankLabel = t('sk.tip.rank', { n: node.rank, max: 
     const card = el('div', 'tip-card skill mastery');
     const color = masteryAccent(owner);
     if (color) card.style.borderTopColor = color;
-    const gate = masteryGateText(node.gate, owner.cls);
+    const gate = masteryGateText(node.gate, owner.cls, owner);
     // 「지금 장비로는 꺼짐」 꼬리는 뺐다 [2026-09-27 사용자 지시] — 꺼진 것은 칸이 흐린 것이 말한다
     const gateLine = gate ? `<div class="tip-line tip-gate">${gate}</div>` : '';
+    // 조건부 칸(죄종 T2-2 · T2-3)은 조건이 효과의 일부다 — 장비 조건과 같은 자리 · 같은 모양 한 줄 (2026-10-05)
+    const cond = masteryCondText(node.cond);
+    const condLine = cond ? `<div class="tip-line tip-gate">${cond}</div>` : '';
     card.innerHTML = `<div class="tip-name">
             <span class="tip-title"><span class="tip-sk-ico">${masteryIconHtml(node.id, owner, 'tip-sk-img')}</span>${name}</span>
             <span class="tip-rank">${rankLabel}</span>
         </div>
-        <div class="tip-line">${effect}</div>${gateLine}`;
+        <div class="tip-line">${effect}</div>${condLine}${gateLine}`;
     return card;
 }
 
@@ -3809,7 +3834,7 @@ function masteryCell(node, owner = {}) {
     const cls = `sk-cell icon-only${taken ? ' taken' : ''}${node.rank >= node.maxRank ? ' full' : ''}`
         + `${node.unlocked ? '' : ' locked'}${node.canLearn ? ' can' : ' dim'}${node.gate && !node.on ? ' off' : ''}`;
     const label = masteryDisplayName(node, owner.cls);
-    const gate = masteryGateText(node.gate, owner.cls);
+    const gate = masteryGateText(node.gate, owner.cls, owner);
     return `<div class="${cls}" data-node="${node.id}"
                  aria-label="${label} ${node.rank}/${node.maxRank}${gate ? `, ${gate}` : ''}">
                 ${masteryIconHtml(node.id, owner, 'sk-icon-art')}
@@ -3826,8 +3851,8 @@ function masteryCell(node, owner = {}) {
  * 프레임(3줄 × 3칸)은 CSV 행 수와 무관하게 고정 — 비어 있어도 그려야 어디까지 갈 수 있는지가 보인다.
  * 죄종·직업 판은 프레임 아래에 빈 칸 하나를 더 둔다.
  */
-function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraSlot = false, preview = false, sin = null, cls = null }) {
-    const owner = { sin, cls };
+function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraSlot = false, preview = false, sin = null, cls = null, sinGear = null }) {
+    const owner = { sin, cls, sinGear };   // sinGear = 낀 죄종 장비 수 — 죄종 T2-1 의 「2/3」 (2026-10-05)
     const color = masteryAccent(owner);
     // `locked` — true = 흐린 판(도감의 미기획 판) · 문자열 = 격자 위 잠김 베일 + 그 한 줄(스킬 창의 전직 판)
     const box = el('div', `sk-box${locked === true ? ' locked' : ''}${color ? ' mastery-colored' : ''}`);
@@ -3938,7 +3963,7 @@ function skillTreeBody() {
     // 판 머리는 **제목 한 줄**이다 — 부제(공유 · 직업 줄 · 전직 해금)는 뺐다 [2026-09-27 사용자 지시]
     wrap.appendChild(masteryBox({
         title: t('sk.sinTree', { sin }),
-        nodes: ms.nodes.filter(n => n.treeKind === 'sin'), onLearn: learn, onUnlearn: unlearn, extraSlot: true, sin: h.sin,
+        nodes: ms.nodes.filter(n => n.treeKind === 'sin'), onLearn: learn, onUnlearn: unlearn, extraSlot: true, sin: h.sin, sinGear: ms.sinGear,
     }));
     wrap.appendChild(masteryBox({
         title: t('sk.mastery', { cls }),
@@ -6012,7 +6037,7 @@ const CODEX_SEGS = ['monster', 'character', 'item', 'skill', 'mastery'];
 const CODEX_GRADES = ['normal', 'elite'];
 /** 아이템 안쪽 분류 — 무기와 비무기 장비(방어구 · 장신구)를 가르고, 소모품인 물약이 셋째다 (ADR-0179 · 물약 ADR-0314) */
 const CODEX_ITEM_SEGS = ['weapon', 'armor', 'potion'];
-const CODEX_SKILL_SEGS = ['basic', 'adv'];
+const CODEX_SKILL_SEGS = ['basic', 'adv', 'fx'];   // fx = 이펙트 탭 (§9-1 · ADR-0513)
 const CODEX_MASTERY_SEGS = ['sin', 'class', 'adv'];
 /** 챕터보스 카드가 차지하는 격자 칸 수 — 보스라서 두 칸이다 (ADR-0257). 남은 칸은 `???` 자리가 채운다 */
 const CX_BOSS_SPAN = 2;
@@ -6293,6 +6318,7 @@ function codexSkill(p) {
     bar.appendChild(segmented(CODEX_SKILL_SEGS.map(id => ({ id, label: t(`ix.seg.${id}`) })), state.codexSkillSeg,
         id => { state.codexSkillSeg = id; render(); }));
     p.appendChild(bar);
+    if (state.codexSkillSeg === 'fx') return codexSkillFx(p, bar);
 
     // **조밀 격자** (ADR-0075) — 그림만 작아지고 묶는 문법 · 타일이 든 것은 그대로다
     const box = el('div', 'ix-body dense box-body');
@@ -6339,6 +6365,56 @@ function codexSkill(p) {
         bindTipNode(n, () => skillTipCard({ id: n.dataset.skill }, { source: n.dataset.src }));
 }
 
+/**
+ * 스킬 세그먼트의 **이펙트 탭** [2026-10-05 사용자 지시 · §9-1 · ADR-0513] — 관전의 유닛 카드와 같은 카드를 스킬 하나에 한 장씩 깔고,
+ * 카드를 누르면 그 스킬의 관전 이펙트가 그 카드에 선다(연출은 fx.js 가 관전 그대로 그린다 · 설정의 켜고 끄기와 상관없이 선다).
+ * 묶음 = 기본 공격 → 직업(`class.csv` 행 순 · 안은 티어 → CSV 순 — 일반 탭과 같다) → 전직(직업 순 → `advance.csv:sort_order`) → 몬스터.
+ * 오오라는 늘 켜져 있어 연출이 없으므로 안 선다. 사건이 둘인 스킬은 한 박자씩 차례로 선다
+ */
+let fxPreviewN = 0;   // 몇 번째 재생인가 — 흩어짐이 매번 달라진다(관전에서 사건마다 다른 것과 같다)
+function codexSkillFx(p, bar) {
+    fxPreload();
+    const rows = (D.skillRows ?? []).filter(r => r.cast !== 'aura'), effs = D.skillEffectRows ?? [];
+    const groups = [{ title: t('bt.basicAttack'), cards: [{ id: null, kinds: ['basic'], ty: 'physical' }] }];
+    const add = (title, rs) => {
+        if (rs.length) groups.push({ title, cards: rs.map(r => ({ id: r.skill_id, ...previewOf(r.skill_id, effs.filter(e => e.skill_id === r.skill_id), r.target) })) });
+    };
+    const classes = D.classes ?? [], advs = D.advanceRows ?? [];
+    for (const c of classes) add(t('ix.g.skillCls', { cls: className(c.id) }),
+        rows.filter(r => r.owner_kind === 'job' && r.owner_id === c.id).sort((a, b) => a.tier - b.tier));
+    for (const c of classes) for (const a of advs.filter(a => a.class_id === c.id).sort((x, y) => Number(x.sort_order) - Number(y.sort_order)))
+        add(L({ ko: a.name_kr, en: a.name_en }), rows.filter(r => r.owner_kind === 'advance' && r.owner_id === a.advance_id));
+    add(t('cx.seg.monster'), rows.filter(r => r.owner_kind === 'monster'));
+
+    // 카드 = 관전 카드(`.unit` — 초상 칸 + 오른쪽 칸 · 팝업 층)를 그대로 쓰고 오른쪽 칸만 스킬 그림 · 이름이다. 맞는 쪽은 몬스터 카드
+    const card = (c, gi, ci) => {
+        const icon = c.id ? M.skillIcon(c.id) : null, name = c.id ? L(skillInfo(c.id).name) : t('bt.basicAttack');
+        return `<div class="unit-slot cx-fx-card"><div class="unit enemy" data-g="${gi}" data-c="${ci}"${c.id ? ` data-skill="${c.id}"` : ''}>` +
+            `<div class="unit-body"><div class="sprite"></div><div class="cx-fx-info">` +
+            `${icon ? `<img src="${icon}" alt="" loading="lazy" onerror="this.remove()">` : ''}<span>${name}</span></div></div>` +
+            `<div class="pop-layer"></div></div></div>`;
+    };
+    const box = el('div', 'ix-body box-body cx-fx');
+    box.dataset.keep = 'codex:skill:fx';
+    box.innerHTML = groups.map((g, gi) => `<div class="ix-group"><div class="ix-head"><span class="ix-title">${g.title}</span>` +
+        `<button class="btn sm cx-fx-play" data-g="${gi}">▶</button></div>` +
+        `<div class="cx-fx-grid">${g.cards.map((c, ci) => card(c, gi, ci)).join('')}</div></div>`).join('');
+    p.appendChild(box);
+
+    // 카드 하나 재생 — 다시 그리지 않는다(카드 안에 조각만 붙었다 스스로 걷힌다)
+    const play = c => c.kinds.forEach((k, i) => setTimeout(() => fxPreview(++fxPreviewN, c.u, c.id, k, c.ty), i * 600));
+    for (const n of box.querySelectorAll('.unit[data-g]')) {
+        const c = groups[+n.dataset.g].cards[+n.dataset.c];
+        c.u = { key: c.id ?? 'basic', side: 'enemy', node: n };
+        n.onclick = () => play(c);
+        if (c.id) bindTipNode(n, () => skillTipCard({ id: c.id }, {}));
+    }
+    for (const b of box.querySelectorAll('.cx-fx-play')) b.onclick = () => groups[+b.dataset.g].cards.forEach(play);
+    const all = el('button', 'btn sm cx-fx-all', t('ix.fx.playAll'));
+    all.onclick = () => groups.forEach(g => g.cards.forEach(play));
+    bar.appendChild(all);
+}
+
 /** 마스터리 세그먼트 — 죄종 · 직업 · 전직별로 인게임 판을 세 개씩 편다. 실제 랭크·영웅 소속은 읽지 않는다. */
 function codexMastery(p) {
     const rows = D.masteryNodes ?? [];
@@ -6355,6 +6431,7 @@ function codexMastery(p) {
             value: D.balance[row.value_key], maxRank: D.balance[row.max_rank_key],
             rank: 0, total: 0, unlockLevel, unlocked: unlockLevel <= 1,
             canLearn: false, gate, on: true,
+            cond: SYS.hero.masteryById[row.node_id]?.cond ?? null,   // 조건부 칸의 조건 한 줄 (2026-10-05)
         };
     };
     const nodesFor = (tree, owner) => rows

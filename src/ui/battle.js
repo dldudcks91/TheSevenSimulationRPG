@@ -45,8 +45,11 @@ import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
 import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
-const SPEEDS = [1, 2, 4];
+const SPEEDS = [1, 2, 4, 16];   // ×16 — 2026-10-05 사용자 지시 (SCREEN_DESIGN §4-2)
 const TICK = 0.1;
+/* 눈금 간격의 하한(ms) — 간격은 `TICK / 배속`이라 ×16 이면 6ms 마다 그린다. 시각은 실제 경과 × 배속으로 밀어(`step`) 간격은 그리는 빈도일 뿐이므로
+   ×4 의 간격에서 멈춘다 — 게임 수치가 아니라 브라우저 사정이라 CSV 가 아니다 */
+const STEP_MIN_MS = 25;
 
 const kindLabel = k => t(`kind.${k}`);
 /* 스킬 아이콘 그림 — `app.js:skillImg` 와 같은 규칙이다 (SCREEN_DESIGN §2). 두 파일이 서로를 import 하지
@@ -206,7 +209,7 @@ export function mountBattle(container, opts) {
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
-    fxPreload();   // 스킬 이펙트 그림을 미리 읽는다 — 지금은 그림이 꺼져 있어 아무것도 안 한다 (ADR-0411 · ADR-0412)
+    fxPreload();   // 전사 기본 스킬 이미지를 미리 읽는다(ADR-0515) · 종류 공통 그림은 꺼져 있다
     const dom = buildDom(state, stage, stageId, opts.shrine ?? null, !!opts.buffsOf, opts);
     container.appendChild(dom);
     bindControls(state, container, opts);
@@ -1199,7 +1202,7 @@ function paintCaughtUp(state, root) {
 
 function start(state, root, opts) {
     clearInterval(state.timer);
-    state.timer = setInterval(() => step(state, root, opts), TICK * 1000 / state.speed);
+    state.timer = setInterval(() => step(state, root, opts), Math.max(STEP_MIN_MS, TICK * 1000 / state.speed));
 }
 
 /**

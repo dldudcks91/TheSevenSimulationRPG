@@ -19,6 +19,8 @@
  *   전부 수치 노드(T1·T2)뿐이다. 반응형(T3)은 전투 중 사건에 붙어 이 파일이 아니라 battle.js 의 몫이고
  *   값이 전부 미정이라 아직 없다. 노드 정의는 `mastery_node.csv`, 랭크당 값은 `balance.csv` 다.
  *   직업 T2 세 칸은 **낀 장비가 켠다**(T2-1 · T2-2 = 든 무기군 · T2-3 = 갑옷 칸의 갑옷군 — `requires` · 2026-09-22 R138).
+ *   죄종 T2 [2026-10-05 · skill_design §3-2] — T2-1 은 **그 죄종 장비 수**가 켠다(`requires = sin_gear`) · T2-2 · T2-3 은 **조건부**(`cond`)라
+ *   상시 값에 안 더하고 `mastery_cond` 로 내보낸다 — 판정은 전투가 타격마다 한다(battle.js `strikeOnce`).
  *   ⚠ **포인트 지급 곡선은 기획 미확정**(skill_design §7) — `mastery_point_per_level` 은 임시 형태다.
  *
  * 전투 계수가 실제로 걸리는 축은 둘뿐 [개정 2026-09-10 · battle_design §8 · DEV_PLAN R72] — 민첩(행동 주기) ·
@@ -73,10 +75,19 @@ export function createHeroSystem(data) {
     /* ── 마스터리 노드 (skill_design §3) — 정의는 CSV · 값은 balance.csv · 랭크는 영웅이 든다 ── */
 
     const TREE_KINDS = ['sin', 'class'];
-    const ANY = '*';                       // owner_id 가 `*` = 그 tree_kind 의 주인 전부 (T1 공통 3종)
+    const ANY = '*';                       // owner_id 가 `*` = 그 tree_kind 의 주인 전부 (직업 T2 공통 무기 노드 — ~~죄종 T1 공통 3종~~ 2026-10-05 폐지)
     // `requires` = 그 칸의 **낀 장비 갈래가 켜는 노드** [2026-09-22 · skill_design §3-5 · §3-6 · R138] — `<칸>:<갈래>|<갈래>` 또는 `-`.
     //   무기 칸은 무기군(`weapon_group.csv`) · 갑옷 칸은 갑옷군(`armor_group.csv` 의 armor 행)을 본다. 편성 시점에 정해져 전투 중 계산 · rng 가 없다
+    //   **`sin_gear`** [2026-10-05 · skill_design §3-2] — 낀 장비 중 그 영웅 죄종 장비가 `[balance.csv:mastery_t2_sin_gear_min]` 개 이상일 때 켜진다(죄종 T2-1)
     const GATE_TABLES = { weapon: () => data.weaponGroups ?? {}, armor: () => data.armorGroups?.armor ?? {} };
+    const SIN_GEAR = 'sin_gear';
+    // `cond` = 전투가 타격마다 판정하는 조건 [2026-10-05 · skill_design §3-2 · INTERFACE §2-6 「마스터리 조건부」] — 조건마다 쓸 수 있는 능력치가 정해져 있다.
+    //   때리는 쪽 능력치(치명 · 방어 무시 · 데미지 % · 강타 · 흡혈)와 맞는 쪽 능력치(피해 감소 · 모든 저항 · 반사) · 겹(`tick`)은 피해 감소 · 쿨감만
+    const COND_HIT = ['crit_rate', 'crit_damage', 'def_ignore', 'atk_pct', 'crushing_blow_pct', 'life_steal', 'damage_reduction', 'res_all', 'reflect_damage'];
+    const COND_STATS = {
+        wounded: COND_HIT, sated: COND_HIT, stronger: COND_HIT, weaker: COND_HIT, elite: COND_HIT, ailing: COND_HIT,
+        tick: ['damage_reduction', 'cooldown_reduction'],
+    };
 
     /** 로드 시 전수 검증 — 키가 balance 에 없으면 값이 undefined 로 조용히 새므로 즉시 던진다 */
     const masteryNodes = (data.masteryNodes ?? []).map(row => {
@@ -92,7 +103,10 @@ export function createHeroSystem(data) {
         if (row.tree_kind === 'class' && row.owner_id !== ANY && !data.classes.some(c => c.id === row.owner_id)) bad(`직업 '${row.owner_id}'`);
         if (!(row.tier >= 1)) bad(`tier ${row.tier}`);
         let gate = null;
-        if (row.requires && row.requires !== '-') {
+        if (row.requires === SIN_GEAR) {
+            if (row.tree_kind !== 'sin') bad('sin_gear 는 죄종 트리 노드만 쓴다');
+            gate = { slot: SIN_GEAR, need: num('mastery_t2_sin_gear_min') };
+        } else if (row.requires && row.requires !== '-') {
             const [slot, list = ''] = String(row.requires).split(':');
             if (!GATE_TABLES[slot]) bad(`requires 칸 '${slot}'`);
             const groups = list.split('|').filter(Boolean);
@@ -111,23 +125,38 @@ export function createHeroSystem(data) {
                 if (usable.length !== 1) bad(`${cls} 직업의 표시 무기군 ${usable.length}개 (1개 필요)`);
             }
         }
+        const cond = row.cond && row.cond !== '-' ? row.cond : null;
+        if (cond) {
+            if (!COND_STATS[cond]) bad(`cond '${cond}'`);
+            if (!COND_STATS[cond].includes(row.stat)) bad(`cond '${cond}' 에 못 쓰는 능력치 '${row.stat}'`);
+            if (gate) bad('cond 와 requires 를 같이 쓸 수 없다');
+        }
         return {
             id: row.node_id, treeKind: row.tree_kind, ownerId: row.owner_id, tier: row.tier,
             stat: row.stat, name: { ko: row.name_kr, en: row.name_en },
             value: num(row.value_key), maxRank: num(row.max_rank_key),
             // 해금 없음(`-`)은 레벨 1 — 「T1 은 1레벨부터」(§1-4)를 숫자 하나로 표현한 것
             unlockLevel: row.unlock_key === '-' ? 1 : num(row.unlock_key),
-            gate,
+            gate, cond,
         };
     });
     const masteryById = Object.fromEntries(masteryNodes.map(n => [n.id, n]));
+    // 조건부 노드가 있으면 전투가 읽는 키도 있어야 한다 — 없으면 판정이 undefined 로 조용히 샌다
+    if (masteryNodes.some(n => n.cond === 'wounded' || n.cond === 'sated') && typeof B.mastery_t2_hp_threshold_pct !== 'number')
+        throw new Error('mastery: balance.csv 에 mastery_t2_hp_threshold_pct 가 없다');
+    if (masteryNodes.some(n => n.cond === 'tick') && !(B.mastery_sloth_t2_tick_sec > 0 && B.mastery_sloth_t2_max_stack >= 0))
+        throw new Error('mastery: balance.csv 의 mastery_sloth_t2_tick_sec · mastery_sloth_t2_max_stack 이 없거나 틀렸다');
+
+    /** 낀 장비 중 그 영웅 죄종을 가진 장비 수 — 장비당 같은 죄종 최대 1 이라 장비 수와 같다 (item_design §1 · 2026-10-05) */
+    const sinGearCount = (hero, items) => (items ?? []).filter(it => hero?.sin && (it?.sins ?? []).includes(hero.sin)).length;
 
     /**
      * 그 노드가 **지금 낀 장비로 켜졌나** — 게이트 없는 노드는 언제나 켜져 있다. 랭크는 캐릭터에 쌓이고 켜는 것만 장비가 정한다(§3-5 「누적형」 소멸).
-     * `items` 를 모르면(null) 게이트 노드는 꺼진 것으로 친다 — 맨몸과 같다
+     * `items` 를 모르면(null) 게이트 노드는 꺼진 것으로 친다 — 맨몸과 같다 · `sin_gear` 는 `hero` 도 알아야 한다(모르면 꺼짐)
      */
-    const gateOn = (n, items) => !n.gate
-        || (items ?? []).some(it => it?.slot === n.gate.slot && n.gate.groups.includes(it.group));
+    const gateOn = (n, items, hero = null) => !n.gate
+        || (n.gate.slot === SIN_GEAR ? sinGearCount(hero, items) >= n.gate.need
+            : (items ?? []).some(it => it?.slot === n.gate.slot && n.gate.groups.includes(it.group)));
 
     /** 이 영웅의 트리에 걸린 노드 — 죄종·직업 둘 다. 죄종도 직업도 생성 시 확정이라 목록은 안 바뀐다 (§1-4) */
     const masteryNodesFor = hero => masteryNodes.filter(n =>
@@ -137,18 +166,20 @@ export function createHeroSystem(data) {
     /**
      * 찍은 랭크 → 접사와 **같은 채널**의 가산치. 새 곱셈 층을 만들지 않는다 (battle_design §9-2 「괄호는 둘뿐」).
      * 피해 감소만 따로 낸다 — 원천별 곱이라 합치면 안 된다(§9-3). **노드 하나 = 원천 하나**.
-     * `items` = 낀 장비 — 무기 · 갑옷이 켜는 노드(`gate`)를 가린다 (skill_design §3-5 · R138)
+     * `items` = 낀 장비 — 무기 · 갑옷 · 죄종 장비 수가 켜는 노드(`gate`)를 가린다 (skill_design §3-5 · R138 · §3-2 2026-10-05)
+     * **조건부 노드(`cond`)는 상시 값에 안 더한다** — `cond` 로 따로 내고 전투가 타격마다 판정한다 (2026-10-05 · INTERFACE §2-6 「마스터리 조건부」)
      */
     function masteryBonus(hero, items = null) {
-        const flat = {}, dr = [];
+        const flat = {}, dr = [], cond = [];
         const ranks = hero?.mastery ?? {};
         for (const n of masteryNodesFor(hero)) {
             const r = Math.min(ranks[n.id] ?? 0, n.maxRank);   // 상한 초과는 세이브 손상 — 계산에선 잘라 쓴다
-            if (!(r > 0) || !gateOn(n, items)) continue;
-            if (n.stat === 'damage_reduction') dr.push(n.value * r);
+            if (!(r > 0) || !gateOn(n, items, hero)) continue;
+            if (n.cond) cond.push({ cond: n.cond, stat: n.stat, v: n.value * r });
+            else if (n.stat === 'damage_reduction') dr.push(n.value * r);
             else flat[n.stat] = (flat[n.stat] ?? 0) + n.value * r;
         }
-        return { flat, dr };
+        return { flat, dr, cond };
     }
 
     /* ── 생성 ── */
@@ -446,6 +477,9 @@ export function createHeroSystem(data) {
         const mb = masteryBonus(hero, items);
         for (const k of Object.keys(mb.flat)) flat[k] = (flat[k] ?? 0) + mb.flat[k];
         for (const v of mb.dr) drList.push(v);
+        // 파티 정산의 제 몫 — 파티 단위 출처(전술 · 신단)를 더하기 **전**의 골드 · 드랍 · 매직 [2026-10-05 · INTERFACE §2-6 「파티 골드 · 드랍 · 매직 배율」].
+        //   파티 몫은 전원에게 같은 값이라 합산하면 인원수만큼 불어난다 — 전투가 한 번만 더한다(`find_party`)
+        const ownFind = { gold: flat.gold_find ?? 0, item: flat.item_find ?? 0, magic: flat.magic_find ?? 0 };
         // 파티 전술도 같은 채널로 합류한다 — 새 곱셈 층을 만들지 않는다 (tactic_card_design §2-4)
         for (const k of Object.keys(party?.flat ?? {})) flat[k] = (flat[k] ?? 0) + party.flat[k];
         for (const v of party?.dr ?? []) drList.push(v);
@@ -468,8 +502,12 @@ export function createHeroSystem(data) {
         //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
         //   양끝마다 무기 % 를 곱해 반올림 → 고정 공격력을 더하고 데미지 % 괄호를 곱해 반올림 — 범위 안의 굴림은 전투(formula.strike)가 한다
         //   (R90 · 괄호 하나 2026-09-18 · 무기 % 를 따로 곱한다 2026-10-03)
-        const scaleAtk = end => Math.round((Math.round(end * (1 + weaponPct)) + atkFlat) * (1 + atkPctSum));
-        const atk = { min: scaleAtk(range.min), max: scaleAtk(range.max) };
+        //   **색욕 최소 · 최대 데미지 · 오만 레벨당 최대 데미지**(고정 수치)는 무기 % 를 곱한 양끝 **뒤**, 괄호 **앞**에 더한다 — 고정 공격력과 같은 자리다.
+        //   최소가 최대를 넘으면 최대 = 최소 + 1 [2026-10-05 · 사용자 확정 · R206 · item_design §1 — D2 방식]. 셋이 0 이면 종전과 같은 값이다
+        const lo = Math.round(range.min * (1 + weaponPct)) + atkFlat + f('dmg_min_flat');
+        const hi0 = Math.round(range.max * (1 + weaponPct)) + atkFlat + f('dmg_max_flat') + Math.round(f('dmg_max_per_level') * hero.level);
+        const hi = lo > hi0 ? lo + 1 : hi0;
+        const atk = { min: Math.round(lo * (1 + atkPctSum)), max: Math.round(hi * (1 + atkPctSum)) };
 
         // 최대 HP — 레벨 1 값은 ~~전 영웅 공통~~ **직업마다**(`class.csv:hp_base` · 2026-10-02)이고 **레벨 성장분만 건강을 탄다** [확정 2026-09-10 · hero_design §4-1].
         //   성장분 = **구간 단위의 누적합**(`hpUnitSum`) × 건강 계수 [확정 2026-09-14 · R84]. 레벨 1 에서 누적합이 0 이라
@@ -494,7 +532,8 @@ export function createHeroSystem(data) {
         // 신발 오만 「레벨당 공격 속도」 — 영웅 레벨 × 값이 공속 합에 더해진다 [2026-09-18 · item_design §1 신발 행] (합산은 더하기 — 원천별 곱 여부는 GAME_DESIGN §10)
         // **공격 속도와 캐스팅 속도는 별개 옵션이다** [2026-10-03 · 사용자 · R203 · battle_design §2] — 마법 무기는 `cast_speed_pct` 만, 물리 무기 · 맨손은 공격 속도 계열만
         //   주기를 줄인다. 민첩 계수는 둘 다(능력치) · 버프 · 상태이상의 주기 창은 battle 이 따로 건다. 원천 배분의 나머지는 GAME_DESIGN §10 「캐스팅 속도의 원천」
-        const speed = magic ? f('cast_speed_pct') : f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd;
+        //   마법 무기 오만 ② 「레벨당 캐스팅 속도」 — 영웅 레벨 × 값이 캐스팅 속도에 더해진다 [2026-10-05 · R208 · item_design §1 「마법사 · 사제 무기」]
+        const speed = magic ? f('cast_speed_pct') + f('cast_speed_per_level_pct') * hero.level : f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd;
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
             / attrMult('agi', A.agi)
@@ -530,11 +569,20 @@ export function createHeroSystem(data) {
             // 명중률 — 레벨 차 적중률에 **더한다** · 기준 적중률을 넘지 않는다(formula.hitChance) [2026-09-22 · 궁수 T1-3 · battle_design §9-4 · R138].
             //   08-26 에 폐지된 명중(`accuracy` — 회피와 짝)과 다른 축이라 id 를 따로 둔다
             hitBonus: f('hit_bonus'),
+            // ── 죄종 계열 옵션이 여는 축 [2026-10-05 · R206 · R208 · item_design §1 「무기 옵션 — 죄종 계열」 · 「마법사 · 사제 무기」] — 소비자는 battle.js · skill_runtime
+            defStack: f('def_down_stack_pct'),    // 방어력 감소 겹 하나의 값 — 대상 한 줄에 겹쳐 쌓인다(skill_effects.weaponOnHit · 최대 겹 [balance.csv:weapon_def_down_stack_max])
+            staggerDur: f('stagger_dur_pct'),     // 내가 건 경직 +% (battle.stagger)
+            castRefund: f('cast_refund_chance'),  // 시전 시 칸 하나를 돌려받을 확률 (battle.chargeTick — rng 1회 · 옵션이 있을 때만)
+            castStack: f('cast_stack_pct'),       // 시전 누적 겹 하나의 데미지 % — 라운드 동안 (battle.chargeTick · 최대 겹 [balance.csv:cast_stack_max])
+            statusDur: f('status_dur_pct'),       // 내가 건 상태이상 +% (skill_runtime.applyStatus)
+            debuffDur: f('debuff_dur_pct'),       // 내가 적에게 건 상태이상 아닌 창 +% (skill_runtime.applyStatus)
+            healOut: f('heal_out_pct'),           // 내가 거는 회복 스킬 +% — 받는 쪽 체력 회복 +% 와 곱(⚠제안 · skill_runtime.castHeal)
         };
         const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.xpGain,
-            fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus].some(v => v !== 0);
+            fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,
+            fx.defStack, fx.staggerDur, fx.castRefund, fx.castStack, fx.statusDur, fx.debuffDur, fx.healOut].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
             // **평타는 언제나 물리다** [2026-10-02 · 사용자 확정 · R198 · battle_design §2-1 — ~~원소 옵션이 없는 마법 무기의 기본 공격은 물리~~(09-11 · R80) 대체].
@@ -586,6 +634,21 @@ export function createHeroSystem(data) {
             main_attr_mult: F.statCoef(A?.str),
             gold_find: F.roundPct(f('gold_find') * luckMult),
             item_find: F.roundPct(f('item_find') * luckMult),
+            // 파티 정산의 재료 [2026-10-05 · ~~파티 평균~~ → 합산 + 체감 · INTERFACE §2-4] — 위 둘은 표시값(파티 몫까지 더한 값)이다.
+            //   `find_own` = 제 몫 × 운 계수(1% 단위) · `find_party` = 파티 단위 출처의 원값(운 계수 안 탄다 · 셋 다 0 이면 null). **`combat_stat.csv` 행이 아니다**
+            find_own: {
+                gold: F.roundPct(ownFind.gold * luckMult), item: F.roundPct(ownFind.item * luckMult), magic: F.roundPct(ownFind.magic * luckMult),
+            },
+            find_party: (() => {
+                const p = party?.flat ?? {};
+                const v = { gold: p.gold_find ?? 0, item: p.item_find ?? 0, magic: p.magic_find ?? 0 };
+                return v.gold || v.item || v.magic ? v : null;
+            })(),
+            // 죄종 T2 조건부 줄 [2026-10-05 · skill_design §3-2 · INTERFACE §2-4] — 전투가 타격마다 판정한다. 치명 피해 줄은 **치명 보너스 몫과 같은 운 계수**를 먹여 낸다
+            //   (위 `crit_damage` 의 C안). **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 비면 null
+            mastery_cond: mb.cond.length
+                ? mb.cond.map(c => c.stat === 'crit_damage' ? { ...c, v: c.v * F.statCoef(A?.luck) } : { ...c })
+                : null,
             // Σ 상시 피해(비율) — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면
             // (battle_design §9-2 "괄호는 둘뿐") 그 괄호 안의 합을 따로 알아야 한다 (battle.js atkBase/atkPct)
             atk_pct_sum: atkPctSum,
@@ -595,6 +658,6 @@ export function createHeroSystem(data) {
 
     return {
         rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
-        masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn,
+        masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn, sinGearCount,
     };
 }

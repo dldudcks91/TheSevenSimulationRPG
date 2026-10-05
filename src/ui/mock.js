@@ -155,6 +155,27 @@ export const AFFIX_LABELS = {
     buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
     // 명중률 — 장비 옵션이 아니라 궁수 마스터리 T1-3 의 축이다(레벨 차 적중률에 더한다 · 2026-09-22 R138). 폐지된 `accuracy` 와 다른 id
     hit_bonus: { ko: '명중률', en: 'Hit Bonus', fmt: 'pct' },
+    // ── 죄종 계열 옵션 (item_design §1 「무기 옵션 — 죄종 계열」 · 「마법사 · 사제 무기」 · 「갑옷 옵션 — 죄종 계열」 · 2026-10-05 · R206 · R208 · R209)
+    dmg_min_flat: { ko: '최소 데미지', en: 'Minimum Damage', fmt: 'n' },
+    dmg_max_flat: { ko: '최대 데미지', en: 'Maximum Damage', fmt: 'n' },
+    dmg_max_per_level: { ko: '레벨당 최대 데미지', en: 'Maximum Damage per Level', fmt: 'n' },
+    def_down_stack_pct: { ko: '타격 시 대상 방어력 감소 (겹침)', en: 'Stacking Defense Shred on Hit', fmt: 'pct' },
+    stagger_dur_pct: { ko: '경직 시간 증가', en: 'Stagger Duration', fmt: 'pct' },
+    cast_refund_chance: { ko: '시전 시 시전 칸 충전', en: 'Charge Refund on Cast', fmt: 'pct' },
+    status_dur_pct: { ko: '상태이상 시간 증가', en: 'Ailment Duration', fmt: 'pct' },
+    cast_speed_per_level_pct: { ko: '레벨당 캐스팅 속도', en: 'Casting Speed per Level', fmt: 'pct' },
+    cast_stack_pct: { ko: '시전 누적 데미지', en: 'Stacking Damage per Cast', fmt: 'pct' },
+    heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', fmt: 'pct' },
+    debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', fmt: 'pct' },
+    hp_regen: { ko: 'HP 재생', en: 'HP Regen', fmt: 'n' },
+    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`) · `inert` = 전투가 아직 안 읽는다(목걸이 발동과 같다)
+    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
+    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
+    proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+    proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+    proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+    proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
+    proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */

@@ -1,0 +1,100 @@
+{
+  "generator": "built-in image_gen",
+  "date": "2026-10-05",
+  "image_count": 8,
+  "images": [
+    {
+      "skill": "war_bash",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_bash.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-slash",
+      "duration": "0.36s"
+    },
+    {
+      "skill": "war_doubleswing",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_doubleswing.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-cross",
+      "duration": "0.4s"
+    },
+    {
+      "skill": "war_quake",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_quake.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-ground",
+      "duration": "0.48s"
+    },
+    {
+      "skill": "war_leap",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_leap.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-land",
+      "duration": "0.46s"
+    },
+    {
+      "skill": "war_taunt",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_taunt.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-inward",
+      "duration": "0.54s"
+    },
+    {
+      "skill": "war_shout",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_shout.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-wave",
+      "duration": "0.58s"
+    },
+    {
+      "skill": "war_battleorders",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_battleorders.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-orders",
+      "duration": "0.58s"
+    },
+    {
+      "skill": "war_ironskin",
+      "src": "http://localhost:18976/assets/art/fx/skills/war_ironskin.webp",
+      "width": 384,
+      "height": 384,
+      "motion": "fx-skill-stamp fx-skill-shell",
+      "duration": "0.54s"
+    }
+  ],
+  "runtime_checks": {
+    "skill_off": true,
+    "preview_overrides_setting": true,
+    "catchup_suppressed": true,
+    "disconnected_suppressed": true,
+    "popup_above": true,
+    "speed16": true,
+    "two_hits": true,
+    "other_class_keeps_code": true,
+    "basic_keeps_code": true,
+    "cap": true,
+    "load_failure_fallback": true
+  },
+  "page_errors": [],
+  "suite": {
+    "title": "FAIL 508/515",
+    "failure_count": 7,
+    "effect_modules_requested": [],
+    "csv_changes_since_task_start": [],
+    "failure_categories": [
+      "potionState",
+      "heal_received",
+      "departRun_potion_inventory",
+      "preset_potion_inventory",
+      "construction_start_resources",
+      "golden_start_party",
+      "golden_battle_fingerprints"
+    ]
+  }
+}

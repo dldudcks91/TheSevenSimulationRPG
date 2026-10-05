@@ -1,31 +1,58 @@
-slot,sin,stat,scale,min,max,per_ilvl,description_kr
-armor,wrath,fhr,flat,0.1,0.25,-,갑옷 분노 — 타격 회복(물리 경직 시간 −%) ⚠제안 수치 (item_design §1 「갑옷 옵션」 · 2026-09-17)
-armor,sloth,hp_recovery_pct,flat,0.05,0.12,-,갑옷 나태 — 체력 회복 +%(받는 힐 · 재생 · 흡혈 · 물약에 곱한다 · 보호막 제외) ⚠제안 수치 (2026-09-16 · 범위 2026-09-18)
-armor,lust,hp_flat,growth,8,20,-,갑옷 색욕 — 체력 +수치 ⚠제안 수치 (옛 affix hp_flat 과 같은 대역)
-armor,envy,reflect_damage,flat,0.03,0.08,-,갑옷 시기 — 반사 피해 ⚠제안 수치 (옛 affix 와 같은 대역)
-armor,pride,def_per_level,band,1,2,0,갑옷 오만 — 레벨당 방어력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0 = 아이템 레벨과 무관) ⚠제안 수치 — 한 칸이 크다(레벨 50 에서 +50~100 · 경갑 고유 100)
-armor,gluttony,res_all,flat,0.03,0.1,-,갑옷 폭식 — 모든 원소 저항 ⚠제안 수치
-armor,greed,magic_find,flat,0.05,0.15,-,갑옷 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치 (무기와 같은 대역)
-armor,greed,gold_find,flat,0.05,0.12,-,갑옷 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
-armor,greed,item_find,flat,0.04,0.1,-,갑옷 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치
-helmet,wrath,counter_chance,flat,0.05,0.12,-,투구 분노 — 반격 확률 · 맞으면 때린 적에게 기본 공격 1회(내 차례를 쓴다 · 평타와 같은 규칙) · max 는 1 미만(로드 검증) ⚠제안 수치 (item_design §1 「투구 옵션」 · 2026-09-17 · 형태 2026-09-18)
-helmet,sloth,def_flat,band,2,6,0.3,투구 나태 — 방어력 +수치 ⚠제안 수치 (옛 affix def_flat 과 같은 대역)
-helmet,lust,life_steal,flat,0.01,0.03,-,투구 색욕 — 흡혈 ⚠제안 수치
-helmet,envy,res_max_fire,flat,0.02,0.05,-,투구 시기 — 랜덤한 원소 하나의 최대 저항 + · 드롭 때 넷 중 하나 · 불 ⚠제안 수치 (2026-09-17 · 원소별 넷 2026-09-18)
-helmet,envy,res_max_cold,flat,0.02,0.05,-,투구 시기 — 최대 저항 + · 냉기 ⚠제안 수치
-helmet,envy,res_max_lightning,flat,0.02,0.05,-,투구 시기 — 최대 저항 + · 전기 ⚠제안 수치
-helmet,envy,res_max_poison,flat,0.02,0.05,-,투구 시기 — 최대 저항 + · 독 ⚠제안 수치
-helmet,pride,hp_per_level,band,2,5,0,투구 오만 — 레벨당 체력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0) ⚠제안 수치 — 레벨 50 에서 +100~250
-helmet,gluttony,res_all,flat,0.03,0.1,-,투구 폭식 — 모든 원소 저항 ⚠제안 수치 (갑옷 폭식과 같다)
-helmet,greed,magic_find,flat,0.05,0.15,-,투구 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치
-helmet,greed,gold_find,flat,0.05,0.12,-,투구 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
-helmet,greed,item_find,flat,0.04,0.1,-,투구 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치
-boots,wrath,aspd_pct,flat,0.02,0.05,-,신발 분노 — 공격 속도 % ⚠제안 수치 (item_design §1 신발 행 · 2026-09-18)
-boots,sloth,res_cold,flat,0.06,0.2,-,신발 나태 — 냉기 저항 ⚠제안 수치 (옛 affix 와 같은 대역)
-boots,lust,res_fire,flat,0.06,0.2,-,신발 색욕 — 화염 저항 ⚠제안 수치
-boots,envy,res_poison,flat,0.06,0.2,-,신발 시기 — 독 저항 ⚠제안 수치
-boots,pride,aspd_per_level_pct,fine,0.001,0.002,-,신발 오만 — 레벨당 공격 속도(영웅 레벨 × 값 · 0.1% 단위) ⚠제안 수치 — 레벨 50 에서 5~10%
-boots,gluttony,res_lightning,flat,0.06,0.2,-,신발 폭식 — 전기 저항 ⚠제안 수치
-boots,greed,magic_find,flat,0.05,0.15,-,신발 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치
-boots,greed,gold_find,flat,0.05,0.12,-,신발 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
-boots,greed,item_find,flat,0.04,0.1,-,신발 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치
+slot,sin,option,stat,scale,min,max,per_ilvl,description_kr
+armor,wrath,1,fhr,flat,0.1,0.25,-,갑옷 분노 ① — 타격 회복(물리 경직 시간 −%) ⚠제안 수치 (item_design §1 「갑옷 옵션 — 죄종 계열」 · 2026-10-05 · R209)
+armor,wrath,2,damage_reduction,flat,0.02,0.05,-,갑옷 분노 ② — 피해 감소(조건 없음 · 원천별 곱) · 탱커가 모든 갑옷에서 찾는 줄이 되기 쉬워 값은 낮게 ⚠제안 수치
+armor,wrath,3,res_fire,flat,0.06,0.2,-,갑옷 분노 ③ — 화염 저항 ⚠제안 수치
+armor,sloth,1,hp_pct,flat,0.03,0.08,-,갑옷 나태 ① — 최대 체력 +% ⚠제안 수치
+armor,sloth,2,xp_gain_pct,flat,0.05,0.12,-,갑옷 나태 ② — 경험치 획득 증가(낀 영웅 본인 몫) ⚠제안 수치
+armor,sloth,3,res_cold,flat,0.06,0.2,-,갑옷 나태 ③ — 냉기 저항 ⚠제안 수치
+armor,lust,1,hp_flat,growth,8,20,-,갑옷 색욕 ① — 체력 +수치 ⚠제안 수치
+armor,lust,2,hp_regen,tenth,0.2,0.6,-,갑옷 색욕 ② — 체력 재생(초당 고정 · 0.1 단위) · ⚠ 아이템 레벨을 따라 자라는지 미정 ⚠제안 수치
+armor,lust,3,res_lightning,flat,0.06,0.2,-,갑옷 색욕 ③ — 전기 저항 ⚠제안 수치
+armor,envy,1,reflect_damage,flat,0.03,0.08,-,갑옷 시기 ① — 반사 피해 ⚠제안 수치
+armor,envy,2,proc_struck_debuff,flat,0.05,0.12,-,갑옷 시기 ② — 피격 시 디버프 스킬 발동 확률 · 저주 중 드롭 때 하나 · ⚠ 전투 미적용 ⚠제안 수치
+armor,envy,3,res_poison,flat,0.06,0.2,-,갑옷 시기 ③ — 독 저항 ⚠제안 수치
+armor,pride,1,def_per_level,band,1,2,0,갑옷 오만 ① — 레벨당 방어력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0 = 아이템 레벨과 무관) ⚠제안 수치
+armor,pride,2,hp_per_level,band,2,5,0,갑옷 오만 ② — 레벨당 체력(영웅 레벨 × 값을 더한다 · 정수 · 투구 오만과 같은 대역) ⚠제안 수치
+armor,pride,3,proc_struck_buff,flat,0.05,0.12,-,갑옷 오만 ③ — 피격 시 버프 스킬 발동 확률 · ⚠임시 풀 = 무기 나태와 같은 버프 풀(「방어 쪽으로 한정」 목록 미정) · ⚠ 전투 미적용 ⚠제안 수치
+armor,gluttony,1,vs_elite_dr,flat,0.04,0.1,-,갑옷 폭식 ① — 정예·보스에게 받는 피해 감소 ⚠제안 수치
+armor,gluttony,2,vs_normal_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소(셋 중 하나 — 변형) · 일반(Normal) ⚠제안 수치
+armor,gluttony,2,vs_demon_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소 · 데몬(Demon) ⚠제안 수치
+armor,gluttony,2,vs_undead_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소 · 언데드(Undead) ⚠제안 수치
+armor,gluttony,3,res_all,flat,0.03,0.1,-,갑옷 폭식 ③ — 모든 원소 저항 ⚠제안 수치
+armor,greed,1,magic_find,flat,0.05,0.15,-,갑옷 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치 (무기와 같은 대역)
+armor,greed,2,gold_find,flat,0.05,0.12,-,갑옷 탐욕 ② — 골드 획득 ⚠제안 수치
+armor,greed,3,item_find,flat,0.04,0.1,-,갑옷 탐욕 ③ — 아이템 드랍확률 ⚠제안 수치
+helmet,wrath,1,counter_chance,flat,0.05,0.12,-,투구 분노 — 반격 확률 · 맞으면 때린 적에게 기본 공격 1회(내 차례를 쓴다 · 평타와 같은 규칙) · max 는 1 미만(로드 검증) ⚠제안 수치 (item_design §1 「투구 옵션」 · 2026-09-17 · 형태 2026-09-18)
+helmet,sloth,1,def_flat,band,2,6,0.3,투구 나태 — 방어력 +수치 ⚠제안 수치 (옛 affix def_flat 과 같은 대역)
+helmet,lust,1,life_steal,flat,0.01,0.03,-,투구 색욕 — 흡혈 ⚠제안 수치
+helmet,envy,1,res_max_fire,flat,0.02,0.05,-,투구 시기 — 랜덤한 원소 하나의 최대 저항 + · 드롭 때 넷 중 하나 · 불 ⚠제안 수치 (2026-09-17 · 원소별 넷 2026-09-18)
+helmet,envy,1,res_max_cold,flat,0.02,0.05,-,투구 시기 — 최대 저항 + · 냉기 ⚠제안 수치
+helmet,envy,1,res_max_lightning,flat,0.02,0.05,-,투구 시기 — 최대 저항 + · 전기 ⚠제안 수치
+helmet,envy,1,res_max_poison,flat,0.02,0.05,-,투구 시기 — 최대 저항 + · 독 ⚠제안 수치
+helmet,pride,1,hp_per_level,band,2,5,0,투구 오만 — 레벨당 체력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0) ⚠제안 수치 — 레벨 50 에서 +100~250
+helmet,gluttony,1,res_all,flat,0.03,0.1,-,투구 폭식 — 모든 원소 저항 ⚠제안 수치 (갑옷 폭식과 같다)
+helmet,greed,1,magic_find,flat,0.05,0.15,-,투구 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치
+helmet,greed,1,gold_find,flat,0.05,0.12,-,투구 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
+helmet,greed,1,item_find,flat,0.04,0.1,-,투구 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치
+gloves,wrath,1,crit_damage,flat,0.04,0.09,-,장갑 분노 — 치명타 피해 · ⚠임시 — 옛 무기 죄종 표 행을 그대로 옮겼다(item_design §1 「장갑 행 = 무기 행을 그대로 쓴다」 · 2026-10-05 무기 표가 계열표로 바뀌어 이 자리에 굳혔다 · 굴림 · 값 불변)
+gloves,sloth,1,aspd_pct,flat,0.02,0.05,-,장갑 나태 — 공격 속도 증가 · 둘 중 하나(옛 무기 표의 물리 · 마법 행을 둘 다 읽던 그대로) ⚠임시
+gloves,sloth,1,cast_speed_pct,flat,0.02,0.05,-,장갑 나태 — 캐스팅 속도 증가 · 둘 중 하나 ⚠임시
+gloves,lust,1,life_steal,flat,0.01,0.03,-,장갑 색욕 — 흡혈 ⚠임시
+gloves,envy,1,def_ignore,flat,0.03,0.08,-,장갑 시기 — 방어력 무시 % · 넷 중 하나 ⚠임시
+gloves,envy,1,res_reduction,flat,0.03,0.08,-,장갑 시기 — 원소 저항 무시 %p · 넷 중 하나 ⚠임시
+gloves,envy,1,atk_down_phys_pct,flat,0.05,0.1,-,장갑 시기 — 타격 시 대상 물리 데미지 감소 % · 물리 무기를 든 몬스터에만 · 넷 중 하나 ⚠임시
+gloves,envy,1,atk_down_mag_pct,flat,0.05,0.1,-,장갑 시기 — 타격 시 대상 마법 데미지 감소 % · 마법 무기를 든 몬스터에만 · 넷 중 하나 ⚠임시
+gloves,pride,1,dmg_per_level_pct,fine,0.002,0.005,-,장갑 오만 — 영웅 레벨당 데미지 +% ⚠임시
+gloves,gluttony,1,crushing_blow_pct,flat,0.01,0.03,-,장갑 폭식 — 강타(현재 체력 대비) ⚠임시
+gloves,greed,1,magic_find,flat,0.05,0.15,-,장갑 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠임시
+gloves,greed,1,gold_find,flat,0.05,0.12,-,장갑 탐욕 — 골드 획득 · 셋 중 하나 ⚠임시
+gloves,greed,1,item_find,flat,0.04,0.1,-,장갑 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠임시
+boots,wrath,1,aspd_pct,flat,0.02,0.05,-,신발 분노 — 공격 속도 % ⚠제안 수치 (item_design §1 신발 행 · 2026-09-18)
+boots,sloth,1,res_cold,flat,0.06,0.2,-,신발 나태 — 냉기 저항 ⚠제안 수치 (옛 affix 와 같은 대역)
+boots,lust,1,res_fire,flat,0.06,0.2,-,신발 색욕 — 화염 저항 ⚠제안 수치
+boots,envy,1,res_poison,flat,0.06,0.2,-,신발 시기 — 독 저항 ⚠제안 수치
+boots,pride,1,aspd_per_level_pct,fine,0.001,0.002,-,신발 오만 — 레벨당 공격 속도(영웅 레벨 × 값 · 0.1% 단위) ⚠제안 수치 — 레벨 50 에서 5~10%
+boots,gluttony,1,res_lightning,flat,0.06,0.2,-,신발 폭식 — 전기 저항 ⚠제안 수치
+boots,greed,1,magic_find,flat,0.05,0.15,-,신발 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치
+boots,greed,1,gold_find,flat,0.05,0.12,-,신발 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
+boots,greed,1,item_find,flat,0.04,0.1,-,신발 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치

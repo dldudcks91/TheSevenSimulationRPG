@@ -42,7 +42,7 @@ export const D = {
     heroAttributes: [],       // hero_attribute.csv — [{id, ko, en, abbr, combatStat, dispatch}]
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
     armorGroups: null,        // armor_group.csv — {slot: {groupId: {id, slot, ko, en, classes, defMult, aspdPct, cdrPct, release}}} · 방어구 갈래 — 갑옷군 3 (2026-09-16 · R107) + 투구 3 · 장갑 2 · 신발 2 (2026-09-18)
-    armorSinOptions: [],      // armor_sin_option.csv — [{slot, sin, stat, scale, min, max, perIlvl?}] · 방어구 죄종 칸 후보 · CSV 행 순서 (2026-09-18)
+    armorSinOptions: [],      // armor_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 방어구 죄종 칸 후보(갑옷은 죄종 계열표 · 2026-10-05) · CSV 행 순서 (2026-09-18)
     armorCommonOptions: [],   // armor_common_option.csv — [{slot, group, family, stat, scale, min, max, perIlvl?}] · 방어구 공통옵션 후보 · CSV 행 순서 (2026-09-18)
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
@@ -78,8 +78,8 @@ export const D = {
     accessorySinOptions: [],  // accessory_sin_option.csv — [{slot, sin, stat, scale, min, max, perIlvl?}] · 반지 · 목걸이 죄종 칸 후보 · CSV 행 순서 (2026-09-21 · R127)
     accessoryCommonOptions: [], // accessory_common_option.csv — [{family, stat, scale, min, max, perIlvl?}] · 두 부위 한 풀 · CSV 행 순서 (R127)
     amuletProcs: [],          // amulet_proc.csv — [{baseId, trigger, min, max}] · 목걸이 베이스마다 발동 조건 하나 · CSV 행 순서 (R127)
-    weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, appliesTo, stat, scale, min, max}] · 무기 죄종 칸 후보 · CSV 행 순서 (2026-09-11 R78)
-    weaponCommonOptions: [],  // weapon_common_option.csv — [{family, stat, appliesTo, scale, min, max}] · 무기 통합옵션 후보 · CSV 행 순서 (R78)
+    weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, option, appliesTo, stat, scale, min, max}] · 무기 죄종 계열표 · CSV 행 순서 (2026-09-11 R78 · 계열표 2026-10-05 R206)
+    // ~~weaponCommonOptions~~ — weapon_common_option.csv 퇴역 (2026-10-05 R206 — 무기 옵션은 전부 죄종 계열 중 하나다)
     heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
     heroTraitPool: [],        // hero_trait.csv — [{ko,en}] · CSV 행 순서
     searchStories: [],        // search_story.csv 원시 행 — 수색 진행 문구. 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다)
@@ -117,7 +117,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
-    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'weapon_common_option', 'make_recipe', 'potion', 'armor_group',
+    'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
     'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine'];
@@ -135,7 +135,7 @@ export async function loadData(base = './data/') {
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
         searchMeetingRow, searchAnswerRow,
-        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, weaponCommonOptionRow, makeRecipeRow, potionRow, armorGroupRow,
+        gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
         slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow] = texts.map(parseCsv);
@@ -207,7 +207,7 @@ export async function loadData(base = './data/') {
     // 방어구 옵션 표 둘 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 방어구 네 부위도 고정 1 + 죄종 칸 + 공통옵션을 받고 `affix.csv` 를 안 쓴다.
     //   `perIlvl` 은 `band` 행만 든다(affix.csv 와 같은 규약) · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     const bandIlvl = r => (r.scale === 'band' ? { perIlvl: r.per_ilvl } : {});
-    D.armorSinOptions = armorSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
+    D.armorSinOptions = armorSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, option: r.option, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
     D.armorCommonOptions = armorCommonOptionRow.map(r => ({
         slot: r.slot, group: r.group, family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r),
     }));
@@ -233,10 +233,9 @@ export async function loadData(base = './data/') {
     D.weaponBases = {};
     // `make_level` — 제작에서 이 베이스가 나오는 레벨 [2026-09-21 사용자 지시 · item_design §7-1] (드롭은 아직 안 읽는다)
     for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en, makeLevel: Number(r.make_level) });
-    // 무기 옵션 표 둘 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — 무기는 고정 1 + 죄종 칸 + 통합옵션을 받고 `affix.csv` 를 안 쓴다.
-    //   `applies_to` = `all` · damage_kind · 직업 id — 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
-    D.weaponSinOptions = weaponSinOptionRow.map(r => ({ sin: r.sin, appliesTo: r.applies_to, stat: r.stat, scale: r.scale, min: r.min, max: r.max }));
-    D.weaponCommonOptions = weaponCommonOptionRow.map(r => ({ family: r.family, stat: r.stat, appliesTo: r.applies_to, scale: r.scale, min: r.min, max: r.max }));
+    // 무기 죄종 계열표 [2026-09-11 · R78 · 계열표 2026-10-05 · R206 · item_design §1 「무기 옵션 — 죄종 계열」] — 무기는 고정 1 + 메인 줄 + 랜덤 줄을 받고 `affix.csv` 를 안 쓴다.
+    //   `option` = 계열 안의 옵션 번호(1 · 2 · 3 — 같은 번호의 행 여럿은 변형) · `applies_to` = `all` · damage_kind · 직업 id — 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
+    D.weaponSinOptions = weaponSinOptionRow.map(r => ({ sin: r.sin, option: r.option, appliesTo: r.applies_to, stat: r.stat, scale: r.scale, min: r.min, max: r.max }));
     D.skillRows = skillRow;
     D.skillEffectRows = skillEffectRow;
     D.skillStatusRows = skillStatusRow;
@@ -548,7 +547,9 @@ export function buildSystems(d, dev = {}) {
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
         itemBases: d.itemBases, weaponBases: d.weaponBases,
         naming,                                     // 이름 조립기 — 죄종 단어 표까지 든다 (2026-09-19 · ~~composeName 하나~~)
-        weaponSinOptions: d.weaponSinOptions ?? [], weaponCommonOptions: d.weaponCommonOptions ?? [],   // 무기 옵션 표 둘 (R78)
+        weaponSinOptions: d.weaponSinOptions ?? [],   // 무기 죄종 계열표 (R78 · 계열표 2026-10-05 R206 — ~~통합옵션 표~~ 퇴역)
+        // 발동 옵션의 스킬 풀 재료 — 직업 스킬 전부 · 풀 규칙(1티어 공격 · 버프 · 저주)은 item.js 가 든다 (2026-10-05 · R206 · INTERFACE §2-5) · 행 순서가 결정론 계약
+        procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target })),
         armorSinOptions: d.armorSinOptions ?? [], armorCommonOptions: d.armorCommonOptions ?? [],       // 방어구 옵션 표 둘 (2026-09-18)
         // 반지 · 목걸이 옵션 표 셋 + 발동 스킬 후보 [2026-09-21 · R127] — 후보는 `skill.csv:amulet_pool = 1` · 직업을 안 가리는 한 풀 · 행 순서가 결정론 계약
         accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],

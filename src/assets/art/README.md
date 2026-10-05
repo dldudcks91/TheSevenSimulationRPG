@@ -206,17 +206,20 @@ buildings/
 
 ---
 
-## fx/ — 관전 스킬 이펙트 그림 **· 지금은 게임이 안 읽는다** [신설 2026-09-28 사용자 지시 · ADR-0411 → ADR-0412]
+## fx/ — 관전 스킬 이펙트 그림
 
 ```
-fx/<종류>.webp        설치본 — 있는 것: physical · fire · cold · lightning · poison (읽는 장치가 꺼져 있다)
-fx_source/<종류>.png  원본(1024 투명 PNG) — 게임은 안 읽는다
+fx/skills/<skill_id>.webp  전사 기본 스킬 8종 설치본 — 관전 · 도감 이펙트 탭이 읽는다
+fx/<종류>.webp            종류 공통 후보 5종 — physical · fire · cold · lightning · poison (꺼져 있다)
+fx_source/warrior_basic_20261005/  전사 생성 원본 · prompts.json · measurements.json · preview.png
+fx_source/<종류>.png      종류 공통 후보 원본 — 게임은 안 읽는다
 ```
 
-- **지금** — 스킬 이펙트는 코드로 그린 모양이다(`ui/fx.js` · SCREEN_DESIGN §4-2 「연출」 · ADR-0412). 그림을 띄우는 장치는 **꺼져 있다**(`fx.js:ART_ON`) — **나중에 전직 스킬 그림**을 넣을 때 켜고 「전직 스킬일 때만」 조건을 붙인다. 여기 있는 다섯 장은 그때의 출발점이다
-- **켜면 서는 자리** — 그 카드의 초상 위에 약 83px(치명 101px)로 0.4~0.6초 · 움직임은 종류가 정한다(터짐 · 떠오름 · 내려앉음 · 부풂) · 그림이 없는 종류는 코드 모양 · 읽는 이름은 `fx.js:ART_KINDS`
-- **규격** — 투명 배경 · 효과가 한가운데에 선다 · 내용이 변의 86% · 384×384 WebP(알파) q90 · 방벽은 가운데가 빈다(초상이 비친다)
-- **발주** — Codex 내장 이미지 생성 · 지시문과 설치 절차는 [docs/reference/fx_art_prompt.md](../../../docs/reference/fx_art_prompt.md) 한 곳이다
+- **전사 8종** — `ui/skill_art.js:SKILL_ART`가 스킬·사건별 이미지와 움직임을 정한다(ADR-0515). 배시 사선 셋 · 더블스윙 X · 어스스플릿 균열 · 리프 어택 착지 파문 · 타운트 붉은 고리 · 워 크라이 금빛 음파 · 배틀오더스 상승 꺾쇠 · 아이언 스킨 강철 막. 준비되지 않은 그림은 기존 `skill_looks.js` 코드 조합으로 표시한다.
+- **표시** — 맞은 카드 또는 강화받는 카드의 초상 둘레 안 · 약 0.4~0.6초 · 스킬마다 등장·수축·확산·상승 동작 · 게임 배속을 따른다. 관전과 도감 이펙트 탭은 같은 표시 함수를 쓴다.
+- **규격** — 투명 배경 · 중앙 내용 86% · 384×384 WebP(알파) q90 · 굵은 암색 외곽선 + 평면 색 · 보호 고리와 강철 막은 가운데가 빈다.
+- **빌드** — `python scripts/build_warrior_skill_fx.py`. 전사 8종만 만들고 원본·프롬프트·측정·초상 위 비교 시트를 보관한다. [전사 발주 기록](../../../docs/reference/warrior_basic_fx_art.md).
+- **종류 공통 후보** — `fx.js:ART_ON`은 꺼져 있다. 기존 다섯 장의 지시문은 [fx_art_prompt.md](../../../docs/reference/fx_art_prompt.md).
 
 ---
 

@@ -8,7 +8,7 @@
  * 세이브 형식 v37 (2026-09-22)
  * {
  *   version, seed, createdAt, savedAt,
- *   playMs   — **누적 플레이 시간**(ms). 더하는 것은 `addPlayTime` 하나 · 언제 더할지는 화면이 정한다 · 없으면 0 · 버전 무변경 (2026-09-25 · ADR-0356)
+ *   expMs    — **누적 원정 플레이 시간**(ms · 배속을 탄다). 더하는 것은 `addExpTime` 하나 · 얼마를 더할지는 화면이 정한다 · 없으면 0 · 버전 무변경 (2026-10-05 · ADR-0514 — 옛 `playMs` 는 로드가 지운다)
  *   resources: {gold, dust, stigma},
  *   materials: {yieldId: n}   — 제작 재료(광석 · 목재 — 산출물 id 가 키). 없으면 {} · 버전 무변경 (2026-09-15 · R96)
  *   potions: {potionId: n}    — 물약 재고(v32 · R124). 마시면 준다(`advanceRun`) · 만들면 는다 · 0 이면 키가 없다. 새 게임 = `start_owned` 개수. 칸 구성은 편성이 든다
@@ -297,7 +297,7 @@ export function createGameSystem(deps) {
     function newGame(seed, candidates, now) {
         const state = {
             version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
-            playMs: 0,       // 누적 플레이 시간 — 화면이 보이는 동안만 더한다(`addPlayTime` · ADR-0356)
+            expMs: 0,        // 누적 원정 플레이 시간 — 원정의 재생 시각이 나아간 만큼 화면이 더한다(`addExpTime` · ADR-0514)
             resources: { gold: B.start_gold, dust: B.start_dust, stigma: B.start_stigma },
             materials: {},   // 제작 재료(광석 · 목재) — 파견이 채운다(미구현 · R96)
             advancing: [],   // 전직하는 중 [{uid, branch, since, until}] (2026-09-28 · R16)
@@ -347,12 +347,12 @@ export function createGameSystem(deps) {
     const serialize = (state, now) => ({ ...clone(state), version: SAVE_VERSION, savedAt: now });
 
     /**
-     * 누적 플레이 시간에 더한다 [2026-09-25 · ADR-0356 · INTERFACE §2-7] — in-place · 새 누적 값을 돌려준다.
-     * **0 이하 · 유한수가 아닌 값은 무시**한다(시계가 뒤로 가도 줄지 않는다). 무엇을 더할지(보이는 동안만 · 절전 공백 제외)는 부르는 쪽이 정한다
+     * 누적 원정 플레이 시간에 더한다 [2026-10-05 · ADR-0514 · INTERFACE §2-7] — in-place · 새 누적 값을 돌려준다.
+     * **0 이하 · 유한수가 아닌 값은 무시**한다(시계가 뒤로 가도 줄지 않는다). 무엇을 더할지(재생 시각이 나아간 만큼 · 가장 많이 간 부대)는 부르는 쪽이 정한다
      */
-    function addPlayTime(state, ms) {
-        if (Number.isFinite(ms) && ms > 0) state.playMs = (state.playMs ?? 0) + ms;
-        return state.playMs ?? 0;
+    function addExpTime(state, ms) {
+        if (Number.isFinite(ms) && ms > 0) state.expMs = (state.expMs ?? 0) + ms;
+        return state.expMs ?? 0;
     }
 
     /**
@@ -461,8 +461,10 @@ export function createGameSystem(deps) {
         // 같이 깬 칸 수 — 1 이상 정수만 남긴다 (v36 · R134 · 뜻 개정 2026-09-29 — 옛 값(같이 나간 런 수)은 그대로 읽는다)
         s.bonds = Object.fromEntries(Object.entries(s.bonds && typeof s.bonds === 'object' ? s.bonds : {}).filter(([, n]) => Number.isInteger(n) && n > 0));
         s.progress.peakTotal = Number.isInteger(s.progress.peakTotal) && s.progress.peakTotal > 0 ? s.progress.peakTotal : 0;
-        // 플레이 시간 — 없으면 0 부터 센다. 흘러간 몫은 기록이 없어 소급할 판단이 없다 → 버전을 안 올린다 (INTERFACE §4 · ADR-0356)
-        s.playMs = Number.isFinite(s.playMs) && s.playMs > 0 ? s.playMs : 0;
+        // 원정 플레이 시간 — 없으면 0 부터 센다. 흘러간 몫은 기록이 없어 소급할 판단이 없다 → 버전을 안 올린다 (INTERFACE §4 · ADR-0514).
+        //   옛 누적 플레이 시간(`playMs`)은 뜻이 달라 옮기지 않고 지운다
+        s.expMs = Number.isFinite(s.expMs) && s.expMs > 0 ? s.expMs : 0;
+        delete s.playMs;
         // 전직 — 없으면 「아무도 안 한다 · 전직 안 함」이 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-09-28 · R16).
         //   모르는 갈래 · 직업이 안 맞는 갈래는 지운다 · 배운 스킬이 그 갈래의 것이 아니면 빈 칸으로 (표가 바뀌어도 못 여는 세이브가 없게)
         for (const h of s.heroes) {
@@ -3051,6 +3053,8 @@ export function createGameSystem(deps) {
         const items = heroItems(state, h);
         return {
             points,
+            // 지금 낀 장비 중 그 영웅 죄종 장비 수 — 죄종 T2-1 의 「2/3」 표시 [2026-10-05 · skill_design §3-2]
+            sinGear: H.sinGearCount(h, items),
             nodes: H.masteryNodesFor(h).map(n => {
                 const rank = h.mastery?.[n.id] ?? 0;
                 const unlocked = h.level >= n.unlockLevel;
@@ -3061,7 +3065,10 @@ export function createGameSystem(deps) {
                     canLearn: unlocked && rank < n.maxRank && points > 0,
                     // 낀 장비가 켜는 칸 [2026-09-22 · skill_design §3-5 · R138] — `gate` = {slot, groups} 또는 null · `on` = 지금 장비로 켜졌나.
                     //   꺼져 있어도 찍을 수 있다 — 랭크는 캐릭터에 쌓이고 장비를 바꾸면 켜진다
-                    gate: n.gate, on: H.gateOn(n, items),
+                    //   죄종 T2-1 은 `{slot: 'sin_gear', need}` — 그 영웅 죄종 장비 수가 켠다(2026-10-05)
+                    gate: n.gate, on: H.gateOn(n, items, h),
+                    // 조건부 칸 [2026-10-05] — 조건 id 또는 null. 켜짐은 전투가 타격마다 판정하므로 여기선 문구만 고른다
+                    cond: n.cond,
                 };
             }),
         };
@@ -3119,7 +3126,7 @@ export function createGameSystem(deps) {
     }
 
     return {
-        newGame, serialize, deserialize, canLoad, addPlayTime,
+        newGame, serialize, deserialize, canLoad, addExpTime,
         heroById, heroItems, heroCombat, heroCombatIf, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
         equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf,

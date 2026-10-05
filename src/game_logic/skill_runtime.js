@@ -127,7 +127,8 @@ export function createSkillRuntime(ctx) {
      */
     function castHeal(u, def, t) {
         const matk = u.matkMin + rng() * (u.matkMax - u.matkMin);   // 회복량 굴림 — 대상 선택 앞 · 양끝이 같아도 1회 (R90)
-        const amt = Math.round(matk * def.mult * (def.statMult ?? 1));  // 배율은 비율 (R111) · 능력치 계수는 곱 (2026-09-18)
+        // 배율은 비율 (R111) · 능력치 계수는 곱 (2026-09-18) · **회복량 증가**(거는 쪽 — 사제 무기 시기 ② · 2026-10-05 R208)는 곱 — 0 이면 ×1 이라 종전 값
+        const amt = Math.round(matk * def.mult * (def.statMult ?? 1) * (u.healOut ? 1 + u.healOut : 1));
         const targets = targetsOf(u, def);
         for (const tgt of targets) {
             // 받는 쪽의 체력 회복 +%(갑옷 나태 · 2026-09-18) — 그 대상만 늘어난다 · 이벤트의 `amt` 가 받은 양이다. 0 이면 종전과 같다(rng 0)
@@ -160,6 +161,9 @@ export function createSkillRuntime(ctx) {
     function applyStatus(u, tgt, x, t) {
         let dur = x.dur * (1 + (u.buffDur ?? 0));
         const ail = x.ailment ? AILMENTS[x.ailment] : null;
+        // 거는 쪽의 시간 증가 [2026-10-05 · R208 · item_design §1 「마법사 · 사제 무기」] — 상태이상 = `statusDur`(마법사 시기 ③) ·
+        //   **다른 편에 거는** 상태이상 아닌 창 = `debuffDur`(사제 시기 ③). 0 이면 곱하지 않는다 — 부동소수가 종전과 같다
+        if (ail ? u.statusDur : (u.debuffDur && tgt.side !== u.side)) dur *= 1 + (ail ? u.statusDur : u.debuffDur);
         const cut = ail ? (tgt[ail.cut] ?? 0) : 0;
         if (cut) dur *= 1 - cut;
         if (!(dur > 0)) return;

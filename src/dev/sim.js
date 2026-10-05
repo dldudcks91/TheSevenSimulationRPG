@@ -48,7 +48,7 @@ const dealtOf = rp => sum(rp.contrib ?? [], c => c.dealt ?? 0);
 /* ── 봇 — 규칙을 바꾸면 이 글도 같이 고친다(결과의 meta 로 나간다) ── */
 
 const BOT = {
-    greedy: '가방 순서대로 한 개씩 — 파티 영웅마다 「끼면」 전투 수치(heroCombatIf)를 지금과 비교한다: 무기 = 공격력 범위의 평균 · 그 밖 = 방어. '
+    greedy: '가방 순서대로 한 개씩 — 파티 영웅마다 「끼면」 전투 수치(heroCombatIf)를 지금과 비교한다: 무기 = 공격력 범위의 평균 ÷ 행동 주기(초당 세기) · **제 직업의 무기군만**(weapon_group.csv:classes) · 평타가 생기거나 없어지는 무기(물리 ↔ 마법)는 안 낀다 · 그 밖 = 방어. '
         + '가장 많이 오르는 영웅에게 끼고, 안 올라도 그 자리가 비어 있으면 낀다. 벗은 것 · 남은 가방은 분해한다',
     off: '장착하지 않는다 · 가방은 분해한다',
 };
@@ -82,7 +82,10 @@ const ASSUME = [
 ];
 
 const atkOf = c => c.atk_physical ?? c.atk_magic ?? { min: 0, max: 0 };
-const scoreOf = (c, slot) => slot === 'weapon' ? (atkOf(c).min + atkOf(c).max) / 2 : c.defense;
+/* 무기는 **초당 세기**로 잰다 [2026-10-05] — 한 대 평균만 보면 느린 무기를 고른다(주기는 무기군이 정한다).
+   **제 직업의 무기군만** 고른다(`botEquip`) — 장착은 직업을 안 가리는데(`item.canEquip`) 다른 직업 무기를 끼면 약해진다:
+   옛 봇은 그걸 끼어 장비 낀 쪽이 안 낀 쪽보다 약했다(1-1 III 승률 12% vs 45% · 직업 무기만 끼면 80%). 평타 여부가 바뀌는 무기(R198)도 거른다 */
+const scoreOf = (c, slot) => slot === 'weapon' ? (atkOf(c).min + atkOf(c).max) / 2 / (c.action_period || 1) : c.defense;
 
 function botEquip(SYS, G) {
     let n = 0;
@@ -93,7 +96,10 @@ function botEquip(SYS, G) {
         for (const h of partyHeroes(SYS, G)) {
             const pos = SYS.game.equipTarget(h, it);
             if (!pos) continue;
-            const gain = scoreOf(SYS.game.heroCombatIf(G, h, uid), it.slot) - scoreOf(SYS.game.heroCombat(G, h), it.slot);
+            if (it.slot === 'weapon' && ![].concat(D.weaponGroups[it.group]?.classes ?? []).includes(h.cls)) continue;   // 다른 직업의 무기
+            const now = SYS.game.heroCombat(G, h), next = SYS.game.heroCombatIf(G, h, uid);
+            if (it.slot === 'weapon' && next.basic_attack !== now.basic_attack) continue;   // 물리 ↔ 마법 — 평타가 바뀐다
+            const gain = scoreOf(next, it.slot) - scoreOf(now, it.slot);
             if ((gain > 0 || (gain === 0 && !h.equipped[pos])) && (!best || gain > best.gain)) best = { h, gain };
         }
         if (best && SYS.game.equip(G, best.h.uid, uid).ok) n++;

@@ -117,6 +117,12 @@ export function createFormula(balance) {
     }
 
     /**
+     * 무기 피해의 **가운데 값**(강화 · 폭 없음 · 반올림 없음) [신설 2026-10-05 · R206] — 무기 옵션 `wdmg` 스케일(색욕 최소 · 최대 데미지)이
+     * 「무기 피해와 같이 자란다」(item_design §1 · battle_design §9-0)를 지키려고 이 값에 비율을 곱한다. `weaponDamage` 와 같은 표를 읽는다
+     */
+    const weaponMid = ilvl => atIlvl(weaponMidTable, ilvl);
+
+    /**
      * 물리 감쇠율 −1~1 — 롤(LoL) 방식. **`def_curve_k` 는 상수다** (§9-3, 08-26 개정).
      * 뜻은 "감쇠가 정확히 50% 가 되는 방어값". 실효 체력 = HP × (1 + 방어/K) 라 방어 1점의 가치가 항상 같다.
      * 면역 없음(1에 닿지 않는다) · 무의미 없음(0 근처가 가장 가파르다) → 상한 규칙이 필요 없다.
@@ -236,7 +242,7 @@ export function createFormula(balance) {
     const effectiveCd = (cd, period) => Math.ceil(cd / period) * period;
 
     return {
-        roundPct, pctOption, growthMult, upgradeMult, weaponDamage, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
+        roundPct, pctOption, growthMult, upgradeMult, weaponDamage, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
         hitChance, statCoef, strike, indirect, leech, effectiveCd,
     };
 }

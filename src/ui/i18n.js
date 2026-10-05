@@ -512,7 +512,7 @@ const STRINGS = {
     'res.stigma': { ko: '낙인', en: 'Stigma' },
     'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
     'ui.close': { ko: '닫기', en: 'Close' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
-    'ui.playTime': { ko: '플레이 시간', en: 'Playtime' },   // 상단바 ⚙ 왼쪽 — 누적 플레이 시간의 라벨 (SCREEN_DESIGN §2 · ADR-0356)
+    'ui.expTime': { ko: '원정 플레이 시간', en: 'Expedition Playtime' },   // 상단바 ⚙ 왼쪽 — 누적 원정 플레이 시간(배속을 탄다)의 라벨 (SCREEN_DESIGN §2 · ADR-0514)
     /* 창 안에서 답하는 버튼 둘 (2026-09-09) — 어느 창이든 같은 말을 쓴다. 「확인」은 **읽었다/한다**,
        「취소」는 **안 한다**. 창을 그냥 닫는 길(X · 바깥 · Esc)은 그대로 있고, 이 둘은 그것을 **눈에 보이게** 한다 */
     'ui.ok': { ko: '확인', en: 'OK' },
@@ -911,6 +911,7 @@ const STRINGS = {
        ⚠ 발동은 전투에 아직 안 걸린다 — 줄 끝에 `tip.inert` 가 붙는다 */
     'tip.proc.hit': { ko: '타격 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} on hit' },
     'tip.proc.struck': { ko: '피격 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} when struck' },
+    'tip.proc.cast': { ko: '시전 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} on cast' },   // 마법 무기 발동 옵션 (2026-10-05 · R208)
     'tip.proc.interval': { ko: '{sec}초마다 {skill} 발동', en: 'Casts {skill} every {sec}s' },
     'tip.inert': { ko: '(미적용)', en: '(inactive)' },
     /* 스킬 칸 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
@@ -1164,6 +1165,16 @@ const STRINGS = {
     'sk.tip.effect': { ko: '{effect}. (랭크당 {perRank})', en: '{effect}. (Per rank {perRank})' },
     'sk.gate.weapon': { ko: '착용 무기: {groups}일 때 효과 적용', en: 'Active with weapon: {groups}' },
     'sk.gate.armor': { ko: '착용 갑옷: {groups}일 때 효과 적용', en: 'Active with armor: {groups}' },
+    // 죄종 T2-1 — 그 죄종 장비 수가 켠다 [2026-10-05 · skill_design §3-2] · {n} = 지금 낀 수 · {need} = 문턱
+    'sk.gate.sin_gear': { ko: '{sin} 장비 {need}개 이상일 때 효과 적용 ({n}/{need})', en: 'Active with {need}+ {sin} items ({n}/{need})' },
+    // 죄종 T2-2 · T2-3 조건 [2026-10-05 · skill_design §3-2] — 효과 문장 위 한 줄. 판정은 전투가 타격마다 한다
+    'sk.cond.wounded': { ko: '내 HP 가 {pct} 미만일 때', en: 'While below {pct} HP' },
+    'sk.cond.sated': { ko: '내 HP 가 {pct} 이상일 때', en: 'While at {pct} HP or more' },
+    'sk.cond.stronger': { ko: '상대의 HP 가 나보다 많을 때', en: 'When the foe has more HP than you' },
+    'sk.cond.weaker': { ko: '상대의 HP 가 나보다 적을 때', en: 'When the foe has less HP than you' },
+    'sk.cond.elite': { ko: '정예 · 보스에게', en: 'Against elites and bosses' },
+    'sk.cond.ailing': { ko: '상태이상에 걸린 대상에게', en: 'Against ailing targets' },
+    'sk.cond.tick': { ko: '라운드 {sec}초마다 한 겹 · 최대 {max}겹', en: 'One stack per {sec}s in a round · up to {max}' },
     /* 마스터리 효과 문장 — 「무엇이 n 증가한다」 (SCREEN_DESIGN §7 · ADR-0332). 축마다 **통째로** 든다 — 조사(이/가)와
        동사(증가/감소)를 렌더러가 고르지 않는다. 이름이 「감소」인 축은 줄어드는 것이 주어다. {v} 는 부호 없는 값.
        사전에 없는 축은 맨 위 틀로 떨어진다 */
@@ -1182,6 +1193,7 @@ const STRINGS = {
     'sk.masteryEffect.gold_find': { ko: '골드 획득이 {v} 증가한다', en: 'Gold Find increases by {v}' },
     'sk.masteryEffect.hit_bonus': { ko: '명중률이 {v} 증가한다', en: 'Hit Bonus increases by {v}' },
     'sk.masteryEffect.hp_pct': { ko: '최대 HP가 {v} 증가한다', en: 'Max HP increases by {v}' },
+    'sk.masteryEffect.hp_flat': { ko: '최대 HP가 {v} 증가한다', en: 'Max HP increases by {v}' },
     'sk.masteryEffect.hp_recovery_pct': { ko: '체력 회복이 {v} 증가한다', en: 'HP Recovery increases by {v}' },
     'sk.masteryEffect.hp_regen': { ko: 'HP 재생이 {v} 증가한다', en: 'HP Regen increases by {v}' },
     'sk.masteryEffect.item_find': { ko: '드랍률이 {v} 증가한다', en: 'Item Find increases by {v}' },
@@ -1579,6 +1591,9 @@ const STRINGS = {
     // 스킬 세그먼트의 안쪽 분류 [2026-09-24 · §9-1 · ADR-0335] — 직업은 탭이 아니라 일반 탭의 묶음이다(0299 의 직업 탭 대체)
     'ix.seg.basic': { ko: '일반 스킬', en: 'Basic Skills' },
     'ix.seg.adv': { ko: '전직 스킬', en: 'Advanced Skills' },
+    // 이펙트 탭 [2026-10-05 · §9-1 · ADR-0513] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
+    'ix.seg.fx': { ko: '이펙트', en: 'Effects' },
+    'ix.fx.playAll': { ko: '▶ 전부 재생', en: '▶ Play All' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]
     'ix.tier': { ko: '{n}티어', en: 'Tier {n}' },
     /* 전직 스킬 묶음의 이름 — `ix.adv.*`(전직) · `ix.sk.*`(스킬) 11 키는 2026-10-02 삭제. 묶음 머리는 `advance.csv`,

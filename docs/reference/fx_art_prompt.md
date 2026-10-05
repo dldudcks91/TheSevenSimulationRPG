@@ -1,4 +1,6 @@
-# 스킬 이펙트 그림 프롬프트 — Codex 발주 (관전 연출)
+# 종류 공통 스킬 이펙트 후보 프롬프트 — Codex 발주
+
+> **현재 전사 기본 스킬 8종은 별도 이미지 이펙트를 사용한다.** 스킬별 원본·프롬프트·설치 절차는 [warrior_basic_fx_art.md](warrior_basic_fx_art.md)와 [ADR-0515](../client/adr/0515-전사-기본-스킬은-이미지-이펙트를-쓴다.md)를 본다. 아래의 종류 공통 그림 후보는 여전히 꺼져 있다.
 
 > 화면: [SCREEN_DESIGN §4-2 「연출」](../client/SCREEN_DESIGN.md) · 결정 [ADR-0411](../client/adr/0411-스킬-이펙트는-종류마다-그림-한-장이-먼저다-그림이-없으면-코드-모양.md) → [ADR-0412](../client/adr/0412-스킬-이펙트는-코드-모양이다-그림은-나중에-전직-스킬에만.md) · 코드 `src/ui/fx.js`
 > 도구: **Codex 내장 이미지 생성(imagegen)** — 투명 배경으로 뽑은 선례는 [output/ch2_ent_concepts/3x3_generation_prompt.md](../../output/ch2_ent_concepts/3x3_generation_prompt.md)

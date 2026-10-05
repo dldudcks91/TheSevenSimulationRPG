@@ -5,54 +5,59 @@
  *   `bad`(나쁜 창) · `heal`(회복) · `call`(불러낸 카드). 조각 하나 = `[이름, 값]` — 이름과 값의 뜻은 fx.js:PIECES, 색 이름은 fx.js:PALETTE.
  * **표에 없는 스킬**(새로 생긴 스킬)은 피해 종류 모양 · 일반 창 · 일반 회복으로 선다 — 스킬을 늘리면 여기 한 줄을 더한다.
  * 오오라(`cast=aura`)는 늘 켜져 있어 연출이 없다(줄이 없다). 피해 숫자의 색은 늘 피해 종류다(이 표와 무관).
+ * 전사 기본 스킬은 skill_art.js의 이미지가 준비되면 먼저 쓰고, 여기 조합은 로딩 중·읽기 실패의 폴백이다(ADR-0515).
  * 표시 사전이다 — 게임 로직은 이 표를 모른다(이식 대상이 아니다 · 문서가 규격을 든다).
  */
 export const SKILL_LOOKS = {
+    /* 직업 스킬(전사 · 기사 · 궁수 · 마법사 · 사제)은 **초상 둘레 안**에 머문다 — 초상(101)을 크게 안 넘는 값이다(ADR-0512).
+       줄 길이 ≤ 120 · 날아드는 바늘 ≤ 76 · 고리 · 문양 ≤ 84 · 원판 ≤ 76 · 빛기둥 높이 ≤ 100 · 번개 높이 52 · 갈라짐 깊이 50 · 튐 거리 ≤ 52 · 비 거리 50.
+       전직 · 몬스터 스킬은 제한이 없다 */
+
     /* ── 전사 — 하늘빛 흰 백호 줄 · 땅 ── */
-    war_bash: { hit: [['claws', { c: 'tiger' }]] },                                                       // 배시 — 백호 줄 셋(백호참)
-    war_doubleswing: { hit: [['cross', { c: 'tiger', a: -45, len: 230, w: 12, halo: true, t: 400 }], ['flare', { c: 'tiger', s: 50, dl: 90 }]] },   // 더블스윙 — X 자
-    war_quake: { hit: [['crack', { c: 'earth' }], ['spikes', { c: 'earth', n: 5 }], ['quake']] },          // 어스스플릿 — 갈라짐 + 땅 가시
-    war_leap: { hit: [['streak', { c: 'steel', a: 90, jit: 6, len: 170, w: 10, sh: -40 }], ['ring', { c: 'earth', fy: 0.35, oy: 26, n: 2, s: 110 }], ['quake']] },   // 리프 어택 — 내리꽂힘 + 땅 고리
-    war_taunt: { buff: [['ring', { c: 'blood', r0: 1.3, r1: 0.5, n: 2, s: 110 }], ['flash', { c: 'blood' }]] },   // 타운트 — 붉은 고리가 조여든다
-    war_shout: { buff: [['ring', { c: 'gold', n: 3, s: 100, w: 3, step: 110 }]] },                        // 워 크라이 — 소리 고리 셋
+    war_bash: { hit: [['claws', { c: 'tiger', len: 120, w: 10, gap: 14 }]] },                             // 배시 — 백호 줄 셋(백호참)
+    war_doubleswing: { hit: [['cross', { c: 'tiger', a: -45, len: 120, w: 10, halo: true, t: 400 }], ['flare', { c: 'tiger', s: 50, dl: 90 }]] },   // 더블스윙 — X 자
+    war_quake: { hit: [['crack', { c: 'earth', h: 50 }], ['spikes', { c: 'earth', n: 5 }], ['quake']] },   // 어스스플릿 — 갈라짐 + 땅 가시
+    war_leap: { hit: [['streak', { c: 'steel', a: 90, jit: 6, len: 100, w: 10, sh: -20 }], ['ring', { c: 'earth', fy: 0.35, oy: 26, n: 2, s: 80 }], ['quake']] },   // 리프 어택 — 내리꽂힘 + 땅 고리
+    war_taunt: { buff: [['ring', { c: 'blood', r0: 1.3, r1: 0.5, n: 2, s: 84 }], ['flash', { c: 'blood' }]] },   // 타운트 — 붉은 고리가 조여든다
+    war_shout: { buff: [['ring', { c: 'gold', n: 3, s: 80, w: 3, step: 110 }]] },                         // 워 크라이 — 소리 고리 셋
     war_battleorders: { buff: [['sweep', { c: 'gold' }], ['chevron', { c: 'gold', n: 3 }]] },             // 배틀오더스 — 금빛 훑음 + 꺾쇠
     war_ironskin: { buff: [['shell', { c: 'steel' }], ['flash', { c: 'steel' }]] },                       // 아이언 스킨 — 강철 막
 
     /* ── 기사 — 성광 · 강철 ── */
-    kni_smite: { hit: [['pillar', { c: 'holy', w: 34 }], ['flare', { c: 'holy', s: 70, dl: 110 }]] },     // 스마이트 — 빛기둥
-    kni_holyshield: { buff: [['shell', { c: 'holy' }], ['sigil', { c: 'holy', s: 96 }]] },               // 홀리 실드 — 성광 막 + 문양
-    kni_charge: { hit: [['streak', { c: 'steel', a: 'in', len: 160, w: 14 }], ['flare', { c: 'steel', s: 64, dl: 80 }], ['ring', { c: 'steel', s: 70, dl: 80 }]] },   // 차지 — 굵은 창끝이 날아든다
-    kni_rush: { hit: [['streak', { c: 'steel', a: 'in', n: 2, len: 120, w: 6, gap: 14, step: 40 }]] },   // 러시 — 짧은 찌르기 둘
-    kni_duel: { bad: [['xmark', { c: 'blood', s: 34 }], ['sigil', { c: 'blood', s: 88 }]], buff: [['shell', { c: 'blood' }]] },   // 듀얼 — 상대는 붉은 × · 나는 붉은 막
-    kni_enchant: { buff: [['streak', { c: 'holy', a: -60, len: 120, w: 5 }], ['rise', { c: 'holy', n: 10, shape: 'shard' }]] },   // 인챈트 — 칼날에 빛 + 빛 조각
+    kni_smite: { hit: [['pillar', { c: 'holy', w: 34, h: 90 }], ['flare', { c: 'holy', s: 66, dl: 110 }]] },   // 스마이트 — 빛기둥
+    kni_holyshield: { buff: [['shell', { c: 'holy' }], ['sigil', { c: 'holy', s: 80 }]] },               // 홀리 실드 — 성광 막 + 문양
+    kni_charge: { hit: [['streak', { c: 'steel', a: 'in', len: 72, w: 12 }], ['flare', { c: 'steel', s: 60, dl: 80 }], ['ring', { c: 'steel', s: 66, dl: 80 }]] },   // 차지 — 굵은 창끝이 날아든다
+    kni_rush: { hit: [['streak', { c: 'steel', a: 'in', n: 2, len: 60, w: 6, gap: 14, step: 40 }]] },    // 러시 — 짧은 찌르기 둘
+    kni_duel: { bad: [['xmark', { c: 'blood', s: 34 }], ['sigil', { c: 'blood', s: 80 }]], buff: [['shell', { c: 'blood' }]] },   // 듀얼 — 상대는 붉은 × · 나는 붉은 막
+    kni_enchant: { buff: [['streak', { c: 'holy', a: -60, len: 100, w: 5 }], ['rise', { c: 'holy', n: 10, shape: 'shard' }]] },   // 인챈트 — 칼날에 빛 + 빛 조각
 
     /* ── 궁수 — 바람 ── */
-    arc_snipe: { hit: [['streak', { c: 'wind', a: 'in', len: 190, w: 4 }], ['flare', { c: 'wind', s: 40, dl: 70 }]] },   // 스나이프 — 가늘고 긴 바늘
-    arc_rapid: { hit: [['streak', { c: 'wind', a: 'in', n: 3, len: 110, w: 3, gap: 10, step: 25 }]] },    // 래피드 샷 — 짧은 바늘 셋
-    arc_multishot: { hit: [['rain', { c: 'wind', n: 5 }]] },                                              // 멀티샷 — 화살 비
-    arc_guided: { hit: [['sigil', { c: 'wind', s: 60, t: 360 }], ['streak', { c: 'wind', a: 'in', len: 160, w: 5, dl: 120 }]] },   // 가이디드 애로우 — 표식 뒤 바늘
-    arc_pierce: { buff: [['sweep', { c: 'wind' }], ['streak', { c: 'wind', a: 0, jit: 0, len: 150, w: 4 }]] },   // 피어싱 샷 — 바람 훑음 + 가로 줄
+    arc_snipe: { hit: [['streak', { c: 'wind', a: 'in', len: 76, w: 3 }], ['flare', { c: 'wind', s: 40, dl: 70 }]] },   // 스나이프 — 가늘고 긴 바늘
+    arc_rapid: { hit: [['streak', { c: 'wind', a: 'in', n: 3, len: 52, w: 3, gap: 10, step: 25 }]] },     // 래피드 샷 — 짧은 바늘 셋
+    arc_multishot: { hit: [['rain', { c: 'wind', n: 5, far: 50 }]] },                                     // 멀티샷 — 화살 비
+    arc_guided: { hit: [['sigil', { c: 'wind', s: 60, t: 360 }], ['streak', { c: 'wind', a: 'in', len: 72, w: 5, dl: 120 }]] },   // 가이디드 애로우 — 표식 뒤 바늘
+    arc_pierce: { buff: [['sweep', { c: 'wind' }], ['streak', { c: 'wind', a: 0, jit: 0, len: 104, w: 4 }]] },   // 피어싱 샷 — 바람 훑음 + 가로 줄
     arc_poison: { buff: [['sweep', { c: 'poison' }], ['rise', { c: 'poison', n: 8, shape: 'drop' }]] },  // 포이즌 애로우 — 독 훑음 + 방울
 
     /* ── 마법사 — 원소 ── */
-    mag_fireball: { hit: [['flare', { c: 'fire', s: 96 }], ['spray', { c: 'fire', n: 12, up: 20 }]] },   // 파이어볼 — 터짐 + 불똥
-    mag_inferno: { hit: [['pillar', { c: 'fire', w: 44 }], ['rise', { c: 'fire', n: 12 }]] },            // 인페르노 — 불기둥 + 불티
-    mag_iceblast: { hit: [['flare', { c: 'cold', s: 74 }], ['spray', { c: 'cold', n: 11, shape: 'shard' }]] },   // 아이스 블라스트 — 터짐 + 얼음 조각
-    mag_frostnova: { hit: [['ring', { c: 'cold', s: 120, w: 5 }], ['ring', { c: 'cold', fy: 0.35, oy: 24, s: 120, dl: 80 }], ['spray', { c: 'cold', n: 6, shape: 'shard', r0: 20, r1: 46 }]] },   // 프로스트 노바 — 냉기 고리 둘
-    mag_lightning: { hit: [['flare', { c: 'lightning', s: 68 }], ['bolt', { c: 'lightning', n: 3 }]] },  // 라이트닝 — 번개 셋
-    mag_chain: { hit: [['bolt', { c: 'lightning', n: 2, from: 'side' }], ['spray', { c: 'lightning', n: 6, shape: 'dash', r0: 20, r1: 50 }]] },   // 체인 라이트닝 — 옆에서 이어지는 번개
-    mag_focus: { buff: [['sigil', { c: 'cold', s: 100 }], ['rise', { c: 'cold', n: 6 }]] },              // 포커스 — 푸른 문양
+    mag_fireball: { hit: [['flare', { c: 'fire', s: 76 }], ['spray', { c: 'fire', n: 12, up: 8, r0: 26, r1: 52 }]] },   // 파이어볼 — 터짐 + 불똥
+    mag_inferno: { hit: [['pillar', { c: 'fire', w: 44, h: 96 }], ['rise', { c: 'fire', n: 12 }]] },     // 인페르노 — 불기둥 + 불티
+    mag_iceblast: { hit: [['flare', { c: 'cold', s: 68 }], ['spray', { c: 'cold', n: 11, shape: 'shard', r0: 26, r1: 48 }]] },   // 아이스 블라스트 — 터짐 + 얼음 조각
+    mag_frostnova: { hit: [['ring', { c: 'cold', s: 84, w: 5 }], ['ring', { c: 'cold', fy: 0.35, oy: 24, s: 84, dl: 80 }], ['spray', { c: 'cold', n: 6, shape: 'shard', r0: 20, r1: 44 }]] },   // 프로스트 노바 — 냉기 고리 둘
+    mag_lightning: { hit: [['flare', { c: 'lightning', s: 64 }], ['bolt', { c: 'lightning', n: 3, h: 52 }]] },   // 라이트닝 — 번개 셋
+    mag_chain: { hit: [['bolt', { c: 'lightning', n: 2, from: 'side' }], ['spray', { c: 'lightning', n: 6, shape: 'dash', r0: 20, r1: 46 }]] },   // 체인 라이트닝 — 옆에서 이어지는 번개
+    mag_focus: { buff: [['sigil', { c: 'cold', s: 80 }], ['rise', { c: 'cold', n: 6 }]] },               // 포커스 — 푸른 문양
     mag_frozenwall: { call: [['spikes', { c: 'cold', n: 6 }], ['shell', { c: 'cold' }]] },               // 프로즌 월 — 얼음 가시 + 막
 
     /* ── 사제 — 성광 · 회복 · 그림자 ── */
-    pri_judgment: { hit: [['pillar', { c: 'holy', w: 50 }], ['ring', { c: 'holy', s: 100, dl: 120 }]] }, // 심판 — 굵은 빛기둥 + 고리
+    pri_judgment: { hit: [['pillar', { c: 'holy', w: 50, h: 100 }], ['ring', { c: 'holy', s: 80, dl: 120 }]] },   // 심판 — 굵은 빛기둥 + 고리
     pri_heal: { heal: [['rise', { c: 'heal', n: 12 }], ['sweep', { c: 'heal' }]] },                      // 힐링 라이트 — 초록 알갱이 + 훑음
     pri_grace: { buff: [['sweep', { c: 'holy' }], ['rise', { c: 'holy', n: 6 }]] },                      // 그레이스 — 성광 훑음
     pri_haste: { buff: [['chevron', { c: 'wind', n: 4, t: 380 }]] },                                      // 헤이스트 — 빠른 꺾쇠 넷
-    pri_cure: { heal: [['flare', { c: 'heal', s: 60 }], ['rise', { c: 'heal', n: 6 }], ['ring', { c: 'heal', s: 80 }]] },   // 힐 — 초록 터짐 + 고리
-    pri_regen: { buff: [['sigil', { c: 'heal', s: 90 }], ['rise', { c: 'heal', n: 5, t: 900 }]] },       // 프레이어 오브 리제너레이션 — 초록 문양 + 느린 알갱이
-    pri_penitence: { buff: [['haze', { c: 'shadow' }], ['ring', { c: 'shadow', fy: 0.35, oy: 26, s: 110 }]] },   // 페니턴스 — 그림자 + 땅 고리
-    pri_bind: { buff: [['sigil', { c: 'shadow', s: 84 }], ['streak', { c: 'shadow', a: 0, jit: 0, n: 2, gap: 30, len: 130, w: 5 }]] },   // 바인드 — 문양 + 묶는 가로 줄
+    pri_cure: { heal: [['flare', { c: 'heal', s: 60 }], ['rise', { c: 'heal', n: 6 }], ['ring', { c: 'heal', s: 76 }]] },   // 힐 — 초록 터짐 + 고리
+    pri_regen: { buff: [['sigil', { c: 'heal', s: 76 }], ['rise', { c: 'heal', n: 5, t: 900 }]] },       // 프레이어 오브 리제너레이션 — 초록 문양 + 느린 알갱이
+    pri_penitence: { buff: [['haze', { c: 'shadow' }], ['ring', { c: 'shadow', fy: 0.35, oy: 26, s: 84 }]] },   // 페니턴스 — 그림자 + 땅 고리
+    pri_bind: { buff: [['sigil', { c: 'shadow', s: 76 }], ['streak', { c: 'shadow', a: 0, jit: 0, n: 2, gap: 30, len: 100, w: 5 }]] },   // 바인드 — 문양 + 묶는 가로 줄
 
     /* ── 몬스터 ── */
     mon_summon_goblin: { call: [['ring', { c: 'earth', fy: 0.35, oy: 30, s: 110 }], ['rise', { c: 'earth', n: 6, shape: 'shard' }]] },   // 고블린 소환 — 흙 고리 + 흙 조각
