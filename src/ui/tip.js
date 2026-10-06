@@ -799,7 +799,7 @@ const amountSlot = (part, R) => slot({
 }, R);
 
 /**
- * 하는 일 줄 하나의 **피해 종류** — `physical` 또는 원소 id · 피해를 안 내는 줄은 `null`. 문장(`amountPhrase`)과 종류 칩(`skillBodyHtml`)이 같이 쓴다 (ADR-0477 · ADR-0480).
+ * 하는 일 줄 하나의 **피해 종류** — `physical` · 원소 id · `fixed`(고정 피해 — 사제 직격 · R221 · 문장은 원소와 같은 틀 「{v} 의 고정 피해」) · 피해를 안 내는 줄은 `null`. 문장(`amountPhrase`)과 종류 칩(`skillBodyHtml`)이 같이 쓴다 (ADR-0477 · ADR-0480).
  * 타격 · 고정 = 그 타격이 상대하는 방어 — **스킬의 원소 태그가 먼저**고 없으면 쓰는 이의 공격 타입이다 (전투 `strikeOnce` 와 같은 순서 · battle_design §2-1).
  *   원소는 이름으로 말한다 — 「마법 피해」는 없다. 공격 타입만 보면 09-11 뒤 원소 스킬까지 「물리 피해」로 찍힌다 (2026-09-15).
  *   공격 타입은 언제나 물리라(2026-10-02) 주인이 없는 자리(`atkType` 없음)도 같은 답을 낸다 — 그래서 식도 종류를 말한다.
@@ -1043,8 +1043,10 @@ function addTouchBar(node, ev) {
  * ⚠ `desc`(고정 설명)는 **안 낸다** — 줄에서 뺐다(같은 지시). 설명창도 2026-09-15 에 뗐다(ADR-0118).
  * @returns {string} 틀이 없는 스킬이면 빈 문자열
  */
+/** 설명창 · 액티브 줄이 읽는 정의 — **스킬 레벨을 얹은 것**이다(`s.up` · `skill.resolve` · 2026-10-06 · R216 · ADR-0529). 행이 지워진 옛 세이브는 null */
+const defOf = s => SYS.skill?.resolve?.({ id: s?.id, up: s?.up ?? 0 }) ?? null;
 export function skillLineHtml(s, ctx = {}) {
-    const def = SYS.skill?.defs?.[s?.id] ?? null;
+    const def = defOf(s);
     if (!def) return '';
     return (skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, { alt: false, fx: false }) ?? []).join('<br>');
 }
@@ -1072,8 +1074,10 @@ export function skillTipCard(s, ctx = {}) {
  * @param attrs 이름 뒤에 설 능력치 칩 html 목록 · @param need 필요 무기 칩 html(없으면 null)
  */
 const skillNameHtml = (s, attrs = [], need = null) => {
-    const def = SYS.skill?.defs?.[s.id] ?? null;
-    return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span><span class="tip-name-text">${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</span>`
+    const def = defOf(s);
+    // 영웅이 든 스킬이면 이름 뒤에 `Lv.n` (스킬 레벨 · 2026-10-06 · R216 · ADR-0529) — 부르는 자리가 `s.lv` 를 줄 때만(몬스터 · 도감은 안 준다)
+    const lv = Number.isFinite(s.lv) ? `<span class="tip-name-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '';
+    return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span><span class="tip-name-text">${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</span>${lv}`
         + `${attrs.length ? `<span class="tip-name-attr">${attrs.join('')}</span>` : ''}${need ? `<span class="tip-name-side">${need}</span>` : ''}</div>`;
 };
 /** 필요 무기 칩 — 무기가 필요한 스킬(`def.needsWeapon` · skill_design §2-2)만. 그 스킬 직업(`def.classId`)의 무기군 이름을 `weapon_group.csv` 순서로 잇는다 */
@@ -1091,7 +1095,7 @@ const needWeaponChip = (def, off) => {
  * 고정 설명(`def.desc`)은 **안 낸다** — 문장이 같은 말을 값까지 넣어 한다(같은 ADR).
  */
 function skillBodyHtml(s, ctx) {
-    const def = SYS.skill?.defs?.[s.id] ?? null;
+    const def = defOf(s);
     // 이름 아래 칩 줄 — 출처 · 태그 · 종류 / 이름 바로 뒤 — 능력치 칩 / 이름 줄 맨 끝 — 필요 무기 (2026-10-03 · ADR-0496)
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);

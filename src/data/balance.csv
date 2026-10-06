@@ -5,7 +5,7 @@ roster_cap,5,fixed,0,영웅 보유 상한 **기본값** — 건설 전 값이고
 concurrent_expedition_parties,3,fixed,0,동시에 낼 수 있는 **부대 수** — 부대 = 편성이라 편성 수를 넘지 않는다(`limitsOf` 가 자른다) · 화면의 관전 칸도 이 수만큼 선다(둘 이상이면 부대마다 · ADR-0316) · **이 키는 건물이 안 늘린다 — 편성이 기본 1 · 원정 r3 · r6 으로 열리므로 부대도 1 → 2 → 3 으로 따라 열린다**(2026-09-25 사용자 지시 · R156 · ~~처음부터 3부대~~ 09-24 「일단 열고 나중에 닫아도」 · ~~1 (2026-08-21)~~)
 stages_per_chapter,5,fixed,0,챕터당 **장소** 수 — 장소마다 칸(stage.csv 의 cell · 9라운드 독립 스테이지)이 선다 · 칸 수는 키가 아니라 stage.csv 의 행 수다 (2026-09-29 · 스테이지 칸 구조 · PLAN_stage_segments) · 마지막 장소는 챕터보스 단독 1라운드 한 칸 (2026-09-11 개정 4→5 · base_expedition_design §1-2 — 08-21 의 계승 stage_info 골격 4 를 대체). 라운드 수는 키가 아니라 stage_round.csv 세트의 행 수다 (rounds_per_stage 퇴역)
 wave_monster_max,3,fixed,0,라운드당 몬스터 전역 상한 — round_budget.csv 의 어떤 편성도 이 값을 넘지 못한다 (2026-08-22 역할 정리)
-advance_unlock_level,30,fixed,0,전직 해금 레벨 (GAME_DESIGN §9 · 전직 3갈래 skill_design §4)
+advance_unlock_level,30,fixed,0,전직 해금 레벨 — 첫 전직 포인트도 여기서 받는다(그 포인트로 전직 스킬을 배운다 · 2026-10-06) (GAME_DESIGN §9 · 전직 3갈래 skill_design §4)
 active_slots,3,fixed,0,액티브 칸 수 — 고유 · 무기군 · 전직 각 하나 (GAME_DESIGN §9 08-26 「액티브 3」 · skill_design §2). 첫 칸은 생성 시 굴린 고유 스킬 · 나머지는 직업 액티브로 채운다(프로토타입 §9-0 개정 2026-09-01)
 skill_cd_floor_mult,0.1,proposed,1,쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로 안 내려간다. 0 이면 스킬이 매 차례 나가 예산이 무너진다 (2026-09-01 코드 상수 CD_MIN_MULT 이관 · battle_design §6)
 cast_charge_max,4,fixed,0,마법 무기 시전 게이지의 칸 수 [2026-10-02 사용자 확정 「캐스팅창을 4개로 나눠 · 채워 둔 칸을 하나씩 소모」 · R200 · battle_design §3] — 게이지 한 바퀴(행동 주기)에 칸 하나가 쌓이고 · 시전 한 번이 칸 하나를 쓴다 · 다 차면 게이지가 선다
@@ -49,19 +49,19 @@ armor_def_band_levels,10,fixed,0,방어구 고유 방어력 구간 폭(레벨) [
 armor_def_band1_unit,0.2,proposed,1,방어구 부위 기준 방어력의 구간 1 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) (2026-09-16)
 armor_def_band2_unit,0.35,proposed,1,방어구 부위 기준 방어력의 구간 2 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) (2026-09-16)
 armor_def_band3_unit,0.65,proposed,1,방어구 부위 기준 방어력의 구간 3 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) (2026-09-16)
-armor_def_band4_unit,1.2,proposed,1,방어구 부위 기준 방어력의 구간 4 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) (2026-09-16)
-armor_def_band5_unit,2.15,proposed,1,방어구 부위 기준 방어력의 구간 5 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) · 5~8 구간은 같은 값을 잇는다 (2026-09-16)
-armor_def_band6_unit,2.15,proposed,1,방어구 부위 기준 방어력의 구간 6 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) (2026-09-16)
-armor_def_band7_unit,2.15,proposed,1,방어구 부위 기준 방어력의 구간 7 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) (2026-09-16)
-armor_def_band8_unit,2.15,proposed,1,방어구 부위 기준 방어력의 구간 8 레벨업 1회 상승분 ⚠제안 — ilvl 1 에서 5 · ilvl 50 에서 50 이 되도록 잡았다(체력 구간 단위 × 0.0248) · 구간 8 은 ilvl 이 만렙을 넘는 자리를 받는다 (2026-09-16)
-armor_def_slot_armor,2.0,proposed,1,부위 배수 — 갑옷 [2026-09-16 사용자 확정] — 갑옷군 마스터리가 걸리는 유일한 칸이라 가장 큰 몫. ilvl 50 에서 100
-armor_def_slot_helmet,1.0,proposed,1,부위 배수 — 투구. 기준 부위다. ilvl 50 에서 50
-armor_def_slot_gloves,0.6,proposed,1,부위 배수 — 장갑. 방어 무시·공속이 붙는 칸이라 방어 몫은 작게. ilvl 50 에서 30
-armor_def_slot_boots,0.6,proposed,1,부위 배수 — 신발. 장갑과 같다. ilvl 50 에서 30
+armor_def_band4_unit,0.72,proposed,1,방어구 부위 기준 방어력의 구간 4 레벨업 1회 상승분 ⚠제안 — ~~1.2 · ilvl 50 에서 50~~ → 2026-10-06 사용자 「50레벨 방어구 기본 방어력 100」(중갑 고유) — 레벨 1~30(구간 1~3)은 그대로 두고 31~50 만 눕혔다 · ilvl 50 부위 기준 31.2 (2026-09-16) (R223)
+armor_def_band5_unit,0.72,proposed,1,방어구 부위 기준 방어력의 구간 5 레벨업 1회 상승분 ⚠제안 — 구간 4 와 같은 값(~~2.15~~ 2026-10-06 · 중갑 고유 ilvl 50 = 100) · 5~8 구간은 같은 값을 잇는다 (2026-09-16) (R223)
+armor_def_band6_unit,0.72,proposed,1,방어구 부위 기준 방어력의 구간 6 레벨업 1회 상승분 ⚠제안 — 구간 5 를 잇는다(~~2.15~~ 2026-10-06 · R223) (2026-09-16)
+armor_def_band7_unit,0.72,proposed,1,방어구 부위 기준 방어력의 구간 7 레벨업 1회 상승분 ⚠제안 — 구간 5 를 잇는다(~~2.15~~ 2026-10-06 · R223) (2026-09-16)
+armor_def_band8_unit,0.72,proposed,1,방어구 부위 기준 방어력의 구간 8 레벨업 1회 상승분 ⚠제안 — 구간 5 를 잇는다(~~2.15~~ 2026-10-06 · R223) · 구간 8 은 ilvl 이 만렙을 넘는 자리를 받는다 (2026-09-16)
+armor_def_slot_armor,2.0,proposed,1,부위 배수 — 갑옷 [2026-09-16 사용자 확정] — 갑옷군 마스터리가 걸리는 유일한 칸이라 가장 큰 몫. ilvl 50 에서 약 62(경갑) · 중갑 ×1.6 = 100 (2026-10-06 — ~~100~~)
+armor_def_slot_helmet,1.0,proposed,1,부위 배수 — 투구. 기준 부위다. ilvl 50 에서 약 31 (2026-10-06 — ~~50~~)
+armor_def_slot_gloves,0.6,proposed,1,부위 배수 — 장갑. 방어 무시·공속이 붙는 칸이라 방어 몫은 작게. ilvl 50 에서 약 19 (2026-10-06 — ~~30~~)
+armor_def_slot_boots,0.6,proposed,1,부위 배수 — 신발. 장갑과 같다. ilvl 50 에서 약 19 (2026-10-06 — ~~30~~)
 base_crit_pct,0.05,proposed,0,기본 치명타 확률(%) — 기본 능력치 보정 없음 (combat_stat.csv) (2026-08-25 초반 루프 구현하면서 발생)
 base_crit_damage_pct,1.5,proposed,0,기본 치명타 피해(%) (2026-08-25 초반 루프 구현하면서 발생)
 dmg_variance_pct,0.15,proposed,0,**타격 범위 폭** 기본값(±%) [뜻 이동 2026-09-14 · R90] — 무기 피해 범위의 양끝 = 가운데 x (1 ∓ 폭) · 직격마다 그 사이를 굴린다. 무기군 값이 있으면 weapon_group.csv:variance_pct 가 우선 (battle_design §9-1). ~~무기 개체 편차 — 드롭 때 한 번 굴려 개체 데미지에 박는다~~ 폐지 (2026-08-26 수치 대역 재설계)
-def_curve_k,100,proposed,1,물리 감쇠 곡선 상수 — 감쇠율 = 방어값/(방어값+K). **상수다**(롤 방식). 뜻은 — 감쇠가 정확히 50%가 되는 방어값. 실효 체력 = HP x (1 + 방어/K) 라 방어 1점의 가치가 항상 같다. 레벨 앵커(K = k x 공격자 레벨)는 폐기 (battle_design §9-3) (2026-08-26 수치 대역 재설계)
+def_curve_k,200,proposed,1,물리 감쇠 곡선 상수 — 감쇠율 = 방어값/(방어값+K). **상수다**(롤 방식). 뜻은 — 감쇠가 정확히 50%가 되는 방어값 · K x 3 이면 75%(= 저항 상한과 같은 감소). 실효 체력 = HP x (1 + 방어/K) 라 방어 1점의 가치가 항상 같다. 레벨 앵커(K = k x 공격자 레벨)는 폐기 (battle_design §9-3) (2026-08-26 수치 대역 재설계) (2026-10-06 사용자 「K=200으로」 — ~~100~~ · PvP 기준 · 레벨 30 · 명중 0 에서 결투장 탱커 상대 물리 ≈ 마법 · 명중 줄이 들어오면 150 쪽을 다시 본다 · 언제든 바꾸는 손잡이 · R223)
 monster_def_scale,1.0,proposed,1,몬스터 **물리 방어** 전역 배율 — 소재값 x spawn_grade.def_mult 위에 곱한다. 원소 저항은 직접 %라 이 배율을 받지 않는다 (등급 가산은 spawn_grade.res_add) (2026-08-26 수치 대역 재설계)
 dmg_min,1,proposed,0,최종 피해 하한 — 감쇠 뒤에도 이만큼은 들어간다 (battle_design §9-3) (2026-08-26 피해 공식 확정하면서 발생)
 attr_dmg_pivot,10,fixed,1,능력치 계수의 **기준 능력치** — 이 값에서 계수가 1 이다(정해진 데미지) [2026-09-18 사용자 확정 · battle_design §9-2] — 평타는 직업 메인 스탯 · 스킬은 데미지 슬롯이 적은 능력치 · 회복량 · 소환 HP 도 같다 · 몬스터도 같다(2026-09-22 사용자 — 보류 해제)
@@ -73,9 +73,10 @@ stagger_hp_pct,0.05,proposed,1,물리 경직 문턱(**비율** — 0.05 = 5%) [2
 stagger_sec,0.5,proposed,1,물리 경직 시간(초) [2026-09-16 사용자 확정 · battle_design §2-3] — 고정(피해에 비례하지 않는다) · 행동 차례만 멈추고 스킬 쿨은 계속 돈다 · 경직 중 다시 걸리면 시간만 새로 시작(더하지 않는다) · 타격 회복(fhr)이 %로 줄인다
 burn_heal_cut,0.5,proposed,1,화상의 받는 회복 감소(**비율** — 0.5 = 50%) [2026-09-28 사용자 「일단 50%」 · battle_design §2-6] — 모든 화상이 같다 · 회복 스킬 · 재생 · 물약 · 흡혈 전부 · 체력 회복 +% 와 곱
 dot_tick_sec,1,proposed,1,지속 피해(중독) 틱 간격(초) [2026-09-28 · battle_design §2-6] — 이 간격마다 초당 피해 × 간격을 한 번에 뺀다
-hit_base_pct,1,proposed,1,적중률 기준(%) — 공격자 레벨이 방어자 레벨 이상이면 이 값. 오버레벨 초과 이득 없음 (battle_design §9-4) (2026-08-26 수치 대역 재설계)
-hit_per_level_deficit_pct,0.05,fixed,1,레벨 1 부족당 적중률 감소(%p) — 적중률 = clamp(hit_base_pct - 부족레벨 x 이 값) 을 hit_min_pct ~ hit_base_pct 로 자른다 (2026-08-26 수치 대역 재설계) (2026-09-22 사용자 확정 0.05 — 같은 날 0.04→0.2 를 거쳐 「5%로」 · 영웅·몬스터 양쪽에 같이 걸린다)
-hit_min_pct,0.3,fixed,1,적중률 하한(%) — 레벨이 아무리 모자라도 이만큼은 맞는다. 0이면 영원히 못 넘는 벽이 되고 너무 높으면 게이트가 안 걸린다. (명중/회피 폐지로 hit_floor_pct 를 대체 — 의미가 다르므로 키를 새로 만들었다) (2026-08-26 수치 대역 재설계) (2026-09-22 사용자 확정 0.3 — 같은 날 0.05 를 거쳐 되돌렸다)
+hit_base_pct,0.75,fixed,1,기본 적중률(%) — 물리 직격의 출발값. 적중률 = 이 값 x (1 + 명중률) x (1 - 명중 감소) x 레벨 계수 → hit_min_pct ~ 100% 로 자른다 · 마법 무기를 든 공격자는 굴리지 않는다(항상 맞는다) · 영웅 · 몬스터 같은 값 (battle_design §9-4) (2026-08-26 수치 대역 재설계) (2026-10-06 사용자 확정 75% — ~~1 · 레벨 이상이면 100%~~ · 회피 없이 명중률이 같은 레벨에서도 듣게 · R219)
+hit_per_level_deficit_pct,0.03,fixed,1,레벨 1 부족당 **레벨 계수** 감소(비율 · 곱) — 레벨 계수 = max(hit_level_mult_min · 1 - 부족레벨 x 이 값) 이고 적중률에 곱한다 · 오버레벨은 1 에서 멈춘다 (2026-08-26 수치 대역 재설계) (2026-09-22 사용자 확정 0.05) (2026-10-06 사용자 「너무 심해」 → 3% · ~~적중률에서 %p 를 뺀다~~ → 곱 · 영웅 · 몬스터 양쪽에 같이 걸린다 · R219)
+hit_level_mult_min,0.7,fixed,1,레벨 계수 하한 — 레벨이 아무리 모자라도 계수가 이 아래로 안 내려간다(3% 로 10레벨 부족한 자리 · 명중 보너스 0 이면 기본 적중률 x 이 값 = 52.5%) · 그 아래는 명중 감소만 연다 (battle_design §9-4) (2026-10-06 사용자 「하한을 53% 로」 → 「레벨 계수에 하한을 걸어 보자」 · R219)
+hit_min_pct,0.3,fixed,1,**최종** 적중률 하한(%) — 명중 감소를 겹쳐도 이만큼은 맞는다(「절대 못 맞춘다」 방지). 레벨만으로는 hit_level_mult_min 에서 멈춰 여기 안 닿는다. (명중/회피 폐지로 hit_floor_pct 를 대체 — 의미가 다르므로 키를 새로 만들었다) (2026-08-26 수치 대역 재설계) (2026-09-22 사용자 확정 0.3 — 같은 날 0.05 를 거쳐 되돌렸다) (2026-10-06 레벨 하한이 계수로 옮겨 가 명중 감소의 바닥이 됐다 · R219)
 monster_hp_base,50,proposed,1,몬스터 레벨 1 최대 HP 바탕 — 영웅의 hero_hp_base 자리를 몬스터에서 대신한다 [2026-09-14 사용자 지시 · 영웅 100 / 몬스터 50 · R91 → 2026-09-22 사용자 지시 「일단」 50→100 → 2026-09-23 사용자 지시 100→50 · 캘리브레이션 재측정 안 함]. 그 위에 레벨 성장분(hero_hp_band{b}_unit 누적합 × 건강 계수)과 장비 HP 가 더해지고 등급 배율(spawn_grade.csv:hp_mult)과 monster_hp_scale 이 곱해진다 — 식은 영웅과 같은 함수다(hero.js computeCombat 의 hpBase 입력)
 monster_hp_scale,1.0,proposed,1,몬스터 HP 전역 배율 — 소재값 x 등급배율 위에 곱한다 (라운드 소요를 round_budget.time_target_sec 에 맞추는 주 손잡이) (2026-08-27 캘리브레이션 — 2.4→1.0 · 킬 속도가 라운드 목표 시간보다 한참 느렸다)
 monster_atk_scale,0.5,proposed,1,몬스터 데미지 전역 배율 (캘리브레이션 손잡이) (2026-09-24 사용자 1→0.5 · 캘리브레이션 재측정 전) (2026-09-22 사용자 「일단 1」 0.2→1 — 몬스터 전투 계수를 영웅과 똑같이 · 같은 날 능력치 계수 보류 해제와 한 묶음 · 캘리브레이션 재측정 전) (2026-08-31 재보정 — 0.1→0.2 · 101~103 이 전부 승률 100% 로 목표 대역을 위로 벗어나 있었다. 승률이 100% 인 원인은 킬 속도가 아니라 **파티가 안 죽는 것**이었으므로(101~103 의 avg downed 가 0.00) 데미지 축으로 잡았다. 0.25 는 102 를 20% 로 0.3 은 0% 로 떨어뜨려 대역 아래로 지나친다 · monster_hp_scale 과 hero_hp_base 는 안 건드렸다 — 같은 축을 두 손잡이로 동시에 돌리면 어느 쪽이 효과를 냈는지 못 읽는다) (2026-08-27 캘리브레이션 — 0.25→0.1 · dmg_min 바닥에 깔릴 정도로 더 내리면 등급별 데미지 차이가 무의미해진다)
@@ -83,6 +84,9 @@ battle_timeout_sec,600,proposed,0,전투 제한시간(초) — 넘으면 `timeou
 gold_rate,0.3,proposed,1,처치 골드 = monster_gold_base 곡선 × exp_mult × exp_coef × gold_mult × gold_rate (2026-09-28 처치 XP 와 분리 — 값은 그대로) — ~~exp_reward~~ 는 2026-09-14 R85 로 exp_coef 가 됐다 (2026-08-25 초반 루프 구현하면서 발생)
 drop_chance_pct,0.05,proposed,0,드롭 판정 1회의 기본 성공 확률(비율 — 1 = 100%) — 등급 배율은 spawn_grade.drop_chance_mult · 처치당 최대 1개 (item_design §1) (2026-08-25 초반 루프 구현하면서 발생 · 2026-08-28 판정 1회로 개정)
 boss_guaranteed_drop,1,proposed,0,보스 처치 시 최소 드롭 개수 (2026-08-25 초반 루프 구현하면서 발생)
+drop_ilvl_spread_pct,0.15,proposed,1,몬스터 장비 아이템 레벨의 반폭 비율 — 가운데(스테이지 레벨 + spawn_grade.gear_ilvl_add) × 이 값을 반올림한 만큼 위아래로 부위마다 균등하게 굴린다 · 모든 등급 같은 비율 · ⚠제안 — 사용자 「폭은 레벨의 10~20%」 안에서 가운데 값으로 시작 [2026-10-06 · item_design §1 3단계 · ~~drop_ilvl_spread~~ 퇴역 키와 다르다]
+drop_ilvl_spread_min,1,proposed,0,몬스터 장비 아이템 레벨 반폭의 하한 — 낮은 레벨에서 반올림이 0 이 되어 굴림이 사라지지 않게 한다 [2026-10-06 사용자 확정(추천안) · item_design §1 3단계]
+drop_material_pct,0.05,proposed,1,처치 재료(챕터 단계의 광석 · 목재 · 약초 중 하나) 판정의 기본 확률(비율) — 장비 · 책의 처치당 1개와 따로 굴린다 · 등급 배율은 spawn_grade.drop_chance_mult · 파티 드랍률이 곱해진다 [2026-10-06 사용자 「5%」 · item_design §1 「처치 재료」]
 rarity_w_normal,60,proposed,0,드롭 희귀도 가중치 — **일반** [신설 2026-09-14 사용자 지시 · item_design §1 · R86] — 훑는 순서는 일반 → 매직 → 레어 · 매직아이템 획득확률은 레어 가중치에만 곱한다(일반·매직은 그대로)
 rarity_w_magic,30,proposed,0,드롭 희귀도 가중치 — 매직 (2026-08-25 초반 루프 구현하면서 발생 · 2026-09-14 사용자 지시 ~~78~~ → 30)
 rarity_w_rare,10,proposed,0,드롭 희귀도 가중치 — 레어 (크래프트·유니크는 드롭 미연결) (2026-08-25 초반 루프 구현하면서 발생 · 2026-09-14 사용자 지시 ~~22~~ → 10)
@@ -147,7 +151,7 @@ gamble_hold_respins,3,proposed,0,홀드 앤 스핀의 리스핀 수 — 새 코�
 gamble_hold_coin_pct,0.06,proposed,1,리스핀마다 빈 칸 하나가 코인을 받을 확률(비율) ⚠제안 — dev 시뮬: 홀드 약 1/74판 · 그랜드 약 1/7500판 [신설 2026-09-24 · R149]
 trade_visit_hours,4,proposed,1,특수상단 방문 주기(시간) — 이만큼마다 상인이 온다 · 시계는 게임을 만든 시각(createdAt)에서 세고 오프라인에도 흐른다. 상단 장비 목록도 이 주기로 같이 갈린다 ⚠임시 [신설 2026-09-21 사용자 지시 「4시간마다 와서 1시간 머무는걸로 일단」 · base_expedition §2-6 · SCREEN_DESIGN §8-3]
 trade_stay_hours,1,proposed,1,특수상단 체류(시간) — 온 뒤 이만큼 머물고 떠난다. 주기(trade_visit_hours)보다 작아야 떠나 있는 시간이 생긴다 ⚠임시 [신설 2026-09-21 사용자 지시]
-shop_equip_per_slot,1,proposed,1,상단 장비 목록 — **부위마다** 이만큼 · 상단 랭크 3 이 +1 (무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 순 · 같은 부위가 붙어 선다) · 방문 회차마다 새로 굴린다(item.rollGear — 드롭 희귀도 가중치) ⚠임시 [신설 2026-09-21 · 3 → 1 2026-09-27 사용자 지시 「처음에 각 종류별로 1개씩」]
+shop_equip_per_slot,1,proposed,1,상단 장비 목록 — **부위마다** 이만큼 · 건물이 늘리지 않는다(~~상단 랭크 3 이 +1~~ 2026-10-06 사용자 지시 삭제) (무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 순 · 같은 부위가 붙어 선다) · 방문 회차마다 새로 굴린다(item.rollGear — 드롭 희귀도 가중치) ⚠임시 [신설 2026-09-21 · 3 → 1 2026-09-27 사용자 지시 「처음에 각 종류별로 1개씩」]
 shop_equip_weapon,3,proposed,1,상단 장비 목록 — **무기만 따로** 이만큼(한 묶음으로 맨 윗줄을 혼자 채운다) · 나머지 부위는 shop_equip_per_slot ⚠임시 [신설 2026-09-21 · 6 → 3 2026-09-27 사용자 지시 「무기도 3개만」]
 shop_price_normal,600,proposed,1,상단 장비 가격(골드) — 일반 ⚠임시 · 구매는 아직 없다(화면이 미착수 안내) [신설 2026-09-21 · 150 → 600 2026-09-30 사용자 지시 「노말아이템 1~10레벨까지는 600원」]
 shop_price_magic,1500,proposed,1,상단 장비 가격(골드) — 매직 ⚠임시 [신설 2026-09-21 · 500 → 1500 2026-09-30 사용자 지시 「매직은 1500원」]
@@ -157,6 +161,7 @@ shop_price_step_mult,2.5,proposed,1,상단 장비 가격의 구간마다 배율 
 shop_reroll_cost,600,proposed,1,상단 목록 [교체]의 **첫 유료** 값(골드) — 방문 회차마다 첫 교체는 무료 · 그 뒤로 할 때마다 두 배(600 → 1200 → 2400 … 상한 없음) · 다음 상인이 오면 다시 무료 ⚠임시 [신설 2026-09-30 사용자 지시 「특수상단 올때마다 무료로 변경 · 변경하는 가격 600원에 2배씩」]
 mastery_t1_max_rank,5,proposed,1,T1·T2 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
 mastery_t2_unlock_level,10,proposed,0,마스터리 T2 해금 레벨 — 죄종 T2 · 직업 T2 공통 (2026-08-28 확정 · 2026-10-05 죄종 T2 = 조건부 층)
+mastery_t3_unlock_level,20,fixed,0,마스터리 T3 해금 영웅 레벨 — 죄종 · 직업 T3 공통 · 스킬북(skillbook_learn_level)과 전직(advance_unlock_level) 사이 [2026-10-06 사용자 확정 「20레벨에서 마스터리 3번째꺼를 찍을 수 있게」 · ~~전직과 같은 레벨~~(09-07) 대체 · skill_design §3-3 · R216 — T3 노드가 아직 없어 코드는 안 읽는다]
 mastery_wrath_t1_atkspeed_pct,0.01,proposed,1,분노 마스터리 T1-1 격분 — 랭크당 [combat_stat.csv:action_period] 감소 % · 레벨 1 (skill_design §3-1 · 2026-10-05 옛 T2-1 을 당겼다 · 옛 공통 T1 은 폐지)
 mastery_wrath_t1_critchance_pct,0.01,proposed,1,분노 마스터리 T1-2 살의 — 랭크당 [combat_stat.csv:crit_rate] % (skill_design §3-1 · 2026-10-05)
 mastery_wrath_t1_critdamage_pct,0.005,proposed,1,분노 마스터리 T1-3 피의 갈망 — 랭크당 [combat_stat.csv:crit_damage] % · 치명 배수 마스터리 금지 원칙의 **유일한** 예외(분노만) · 낮은 계수로 캡 (skill_design §3 · 2026-09-22 0.02 → 0.005 · 2026-10-05 T1 로)
@@ -210,7 +215,7 @@ mastery_envy_t3_defshred_flat,1,proposed,1,시기 마스터리 T3-1 — 타격 �
 mastery_sloth_t3_reflect_pct,0.01,proposed,1,나태 마스터리 T3-1 — 피격 시 [combat_stat.csv:reflect_damage] % · 값(n%) 미정 · 캘리브레이션 대기 (2026-08-28 방향 확정 · 값 미정)
 mastery_gluttony_t3_atkstack_pct,0.01,proposed,1,폭식 마스터리 T3-1 — 타격할 때마다 물리 데미지 소폭 누적(같은 라운드 내 한정 · 라운드 종료 시 초기화) · 값 미정 · 캘리브레이션 대기 (2026-08-28 방향 확정 · 값 미정)
 mastery_lust_t3_defsteal_flat,1,proposed,1,색욕 마스터리 T3-1 — 타격 시 대상 방어력을 고정치만큼 깎아 자신의 [combat_stat.csv:defense] 로 획득(스틸) · 값 미정 · 캘리브레이션 대기 (2026-08-28 방향 확정 · 값 미정)
-mastery_point_per_level,1,proposed,1,레벨업 1회당 받는 마스터리 포인트 — 죄종·직업 마스터리가 **한 풀을 공유**한다(skill_design §1-4). 전직 전용 포인트는 별개이고 전직 미구현이라 키도 미발행. ⚠ 지급 곡선 자체가 기획 미확정(skill_design §7 「포인트 지급 곡선」)이라 「레벨당 정액」은 임시 형태다 (2026-08-28 마스터리 구현하면서 발행)
+mastery_point_per_level,1,proposed,1,레벨업 1회당 받는 마스터리 포인트 — 죄종·직업 마스터리가 **한 풀을 공유**한다(skill_design §1-4). 전직 포인트는 별개다 — `advance_point_interval`(2026-10-06 · skill_design §4). ⚠ 지급 곡선 자체가 기획 미확정(skill_design §7 「포인트 지급 곡선」)이라 「레벨당 정액」은 임시 형태다 (2026-08-28 마스터리 구현하면서 발행)
 mastery_warrior_t1_hp_pct,0.01,proposed,1,전사 직업 마스터리 T1 — 랭크당 [combat_stat.csv:hp_max] % · 5랭크 상한 [balance.csv:mastery_t1_max_rank]. 죄종 T1 체력과 같은 채널·같은 값 — 겹치는 것은 의도이고 포인트 풀 공유가 기회비용을 만든다 (skill_design §3-4) (2026-08-28 방향 확정 · 값 미정)
 mastery_warrior_t1_resall_pct,0.02,proposed,1,전사 직업 마스터리 T1 — 랭크당 원소 저항 4종 동시 %p · 5랭크 상한 [balance.csv:mastery_t1_max_rank]. ⚠ 저항은 상한형이라 [balance.csv:res_cap_base] 대비로 역산해야 한다 — 5랭크 10%p 는 상한의 1/7 을 잡는 임시값 (skill_design §3-4) (2026-08-28 방향 확정 · 값 미정)
 mastery_knight_t1_hp_pct,0.01,proposed,1,기사 직업 마스터리 T1-1 — 랭크당 [combat_stat.csv:hp_max] % · 5랭크 상한 [balance.csv:mastery_t1_max_rank] (skill_design §3-4 확정 2026-09-07)
@@ -224,7 +229,7 @@ mastery_priest_t1_cdr_pct,0.01,proposed,1,사제 직업 마스터리 T1-2 — �
 mastery_priest_t1_buffdur_pct,0.03,proposed,1,사제 직업 마스터리 T1-3 — 랭크당 버프 지속시간 +%(`buff_dur_pct` — 반지 · 목걸이 공통옵션과 같은 채널 · 거는 버프 창이 길어진다) · ⚠제안 — 5랭크 = 장비 한 줄(0.05~0.15)의 윗단 (skill_design §3-4 · 2026-09-22 · R138)
 mastery_archer_t1_atkspeed_pct,0.01,proposed,1,궁수 직업 마스터리 T1-1 — 랭크당 [combat_stat.csv:action_period] 감소 %. 죄종 T1 공속과 같은 값 (skill_design §3-4 · 2026-09-22 · R138)
 mastery_archer_t1_critchance_pct,0.01,proposed,1,궁수 직업 마스터리 T1-2 — 랭크당 [combat_stat.csv:crit_rate] %. 분노 T2-2 와 같은 값 (skill_design §3-4 · 2026-09-22 T1-3 → T1-2)
-mastery_archer_t1_hitbonus_pct,0.02,proposed,1,궁수 직업 마스터리 T1-3 — 랭크당 [combat_stat.csv:hit_bonus] 명중률(레벨 차 적중률에 더한다 · [balance.csv:hit_base_pct] 를 넘지 않는다) · ⚠제안 — 5랭크 = 레벨 2 부족분([balance.csv:hit_per_level_deficit_pct] × 2) (skill_design §3-4 · battle_design §9-4 · 2026-09-22 · R138)
+mastery_archer_t1_hitbonus_pct,0.02,proposed,1,궁수 직업 마스터리 T1-3 — 랭크당 [combat_stat.csv:hit_bonus] 명중률(적중률에 (1 + 명중률)로 곱한다 · 2026-10-06 R219 — ~~레벨 차 적중률에 더한다~~) · ⚠제안 — 5랭크 값은 ~~레벨 2 부족분~~ 기준이 사라져 다시 정한다(같은 레벨 100% 까지 약 +33%) (skill_design §3-4 · battle_design §9-4 · 2026-09-22 · R138)
 mastery_t2_weapon_damage_pct,0.02,proposed,1,직업 마스터리 T2-1 — 랭크당 상시 피해 %(데미지 % 괄호) · **든 무기가 켠다**(빠른 무기 — 둔기 · 창 · 오브 · 십자가 · 활 · `mastery_node.csv:requires`) · 죄종 T1 데미지와 같은 값 (skill_design §3-5 · 2026-09-22 · R138)
 mastery_t2_weapon_atkspeed_pct,0.01,proposed,1,직업 마스터리 T2-2 — 랭크당 [combat_stat.csv:action_period] 감소 % · **든 무기가 켠다**(느린 무기 — 도끼 · 양손검 · 스태프 · 성경 · 석궁) · 죄종 T1 공속과 같은 값 (skill_design §3-5 · 2026-09-22 · R138)
 mastery_heavy_t2_atkspeed_pct,0.02,proposed,1,중갑 마스터리(전사 · 기사 T2-3) — 랭크당 [combat_stat.csv:action_period] 감소 % · **갑옷 칸이 중갑일 때만**. ⚠제안 — 5랭크 = 중갑의 공속 손해([armor_group.csv:heavy.aspd_pct])를 되산다 (skill_design §3-5 · §3-6 · 2026-09-22 · R138)
@@ -238,23 +243,44 @@ tactic_reroll_base_cost,600,proposed,1,전술 **전체 리롤**의 기본가(지
 tactic_reroll_lock_mult,2,proposed,1,전술 리롤 비용이 **잠금 1개마다** 곱해지는 배수 — 가파른 곱이라 다 잠그고 하나만 굴리기가 가장 비싸다 (tactic_card_design §5-6 · 2026-09-22 사용자 확정 「잠금마다 ×2 · 나중에 더 올린다」). 1 미만이면 로드가 멈춘다(지킬수록 싸지면 안 된다)
 admin_gold,1000000,fixed,0,**개발 장치** — 관리자 모드(Admin)를 켤 때 골드를 이 값까지 채운다(모자란 만큼 · 진짜 골드 · 세이브에 남는다) · 게임 기능이 아니다 [2026-09-27 사용자 지시 「Admin 누르면 돈 100만 쓸 수 있도록」 · SCREEN_DESIGN §10-3]
 dispatch_offline_cap_hours,3,proposed,1,자원 파견 산출의 **오프라인 상한**(시간) — 정산과 정산 사이의 공백을 여기서 자른다. 켜 둔 동안은 앱 시계가 자주 정산해 끝없이 흐르고 껐다 켠 첫 정산만 걸린다 [2026-09-27 사용자 「오프라인에선 최대 3시간 · 접속 중엔 계속」 · 「일단 3시간」 · base_expedition §3-3]
-dw_gap_min_sec,12,proposed,1,⚠임시 파견 관전 창 미니게임 — 판과 판 사이 **최소** 간격(초) · 창을 보고 있을 때만 흐른다 · 창을 열고 첫 판도 이만큼 뒤 [시험 구현 2026-09-29 · PLAN_dispatch_watch D7]
-dw_gap_max_sec,24,proposed,1,⚠임시 판과 판 사이 **최대** 간격(초) — 최소와 최대 사이에서 판마다 굴린다
-dw_bonus_sec,8,proposed,1,⚠임시 만점 한 판의 보상 — 영웅이 이만큼(초) 일한 것으로 친다(다음 1개가 빨리 온다) · 셋 공통 · 벌목은 이은 비율만큼
-dw_bonus_cap_sec,600,proposed,1,⚠임시 한 시간(시계 기준)에 앞당길 수 있는 합(초) — 셋 합산 · 닿으면 그 시간엔 판이 안 뜬다
-dw_strike_ms,1200,proposed,1,⚠임시 채광 「한 방 맞히기」 — 링이 표적까지 줄어드는 시간(ms) · 그 순간에 누르면 성공
-dw_strike_win_ms,120,proposed,1,⚠임시 채광 — 맞힌 것으로 치는 폭(± ms)
-dw_pick_count,4,proposed,1,⚠임시 채집 「골라 따기」 — 잎 수 · 그중 하나가 진짜
-dw_pick_swaps,4,proposed,1,⚠임시 채집 — 뒤집은 뒤 섞는 횟수
-dw_pick_step_ms,450,proposed,1,⚠임시 채집 — 진짜가 반짝이는 시간이자 한 번 섞는 시간(ms)
-dw_pick_limit_ms,4000,proposed,1,⚠임시 채집 — 다 섞인 뒤 고를 수 있는 시간(ms) · 넘기면 놓친 판
-dw_beat_count,5,proposed,1,⚠임시 벌목 「박자 잇기」 — 표시 수 · 점수 = 가장 길게 이은 수 ÷ 표시 수
-dw_beat_ms,700,proposed,1,⚠임시 벌목 — 박자 간격(ms) · 표시 i 가 선에 닿는 시각 = (i+1) × 이 값
-dw_beat_win_ms,150,proposed,1,⚠임시 벌목 — 맞힌 것으로 치는 폭(± ms) · 표시 밖의 누름은 이음을 끊는다
+mg_lives,3,proposed,1,⚠임시 자원 미니게임 한 판의 목숨 — 불안정한 바위 · 독초 · 가지에 맞으면 하나 · 다 쓰면 그 판이 끝난다(그때까지 캔 것은 받는다) · 판 수 상한은 없다(ADR-0533) [2026-10-06 사용자 「따로 미니게임을 해서 캐는 방식」 · PLAN_dispatch_watch D8]
+mg_rare_value,3,proposed,1,⚠임시 귀한 것 하나(귀한 광맥 · 귀한 약초 · 귀한 마디)가 재료 몇 개로 치나 — 콤보 배수 전
+mg_combo_step,10,proposed,1,⚠임시 콤보가 이만큼 쌓일 때마다 배수가 한 번 오른다 · 좋은 것을 놓치거나 나쁜 것에 맞으면 0 부터
+mg_combo_add,0.5,proposed,1,⚠임시 콤보 배수가 한 번 오를 때 더하는 값 — 배수 = 1 + 단계 수 × 이 값
+mg_combo_max,2,proposed,1,⚠임시 콤보 배수 상한
+mg_sec,40,proposed,1,⚠임시 채광 · 채집 한 판의 길이(초) — 벌목은 길이 대신 나무 높이와 시간 막대가 끝을 정한다
+mg_rare_pct,0.1,proposed,1,⚠임시 귀한 것의 비율 — 채광 반짝임 · 채집 떨어지는 것 · 벌목 토막마다 이 확률
+mg_bad_pct,0.15,proposed,1,⚠임시 나쁜 것의 비율 — 채광 불안정한 바위 · 채집 독초
+mg_tap_cols,5,proposed,1,⚠임시 채광 「반짝임 연타」 — 벽 칸의 열 수
+mg_tap_rows,3,proposed,1,⚠임시 채광 — 벽 칸의 줄 수
+mg_tap_gap_start_ms,1200,proposed,1,⚠임시 채광 — 판 처음의 반짝임 사이 간격(ms) · 판 끝으로 갈수록 끝 값으로 준다 · 판마다 ±30% 흔든다
+mg_tap_gap_end_ms,650,proposed,1,⚠임시 채광 — 판 끝의 반짝임 사이 간격(ms)
+mg_tap_life_ms,2800,proposed,1,⚠임시 채광 — 광맥 · 바위가 떠 있는 시간(ms) · 못 깨고 사라지면 콤보만 끊긴다
+mg_tap_rare_life_ms,1900,proposed,1,⚠임시 채광 — 귀한 광맥이 떠 있는 시간(ms) · 보통보다 짧다
+mg_tap_hp,4,proposed,1,⚠임시 채광 — 광맥 하나를 깨는 데 드는 클릭 수
+mg_tap_rare_hp,8,proposed,1,⚠임시 채광 — 귀한 광맥을 깨는 데 드는 클릭 수
+mg_tap_stun_ms,1000,proposed,1,⚠임시 채광 — 불안정한 바위를 쳐 낙석에 맞은 뒤 못 치는 시간(ms)
+mg_tap_rest_ms,500,proposed,1,⚠임시 채광 — 한 칸의 반짝임이 사라진 뒤 그 칸에 다음 것이 뜨기까지 쉬는 시간(ms) · 막 비운 칸에 바위가 곧장 서지 않게
+mg_catch_gap_start_ms,1000,proposed,1,⚠임시 채집 「받아내기」 — 판 처음의 떨어뜨리는 간격(ms) · 판 끝으로 갈수록 끝 값으로 준다 · 판마다 ±30% 흔든다
+mg_catch_gap_end_ms,500,proposed,1,⚠임시 채집 — 판 끝의 떨어뜨리는 간격(ms)
+mg_catch_fall_start_ms,2600,proposed,1,⚠임시 채집 — 판 처음에 위에서 바구니 줄까지 떨어지는 시간(ms) · 판 끝으로 갈수록 빨라진다
+mg_catch_fall_end_ms,1500,proposed,1,⚠임시 채집 — 판 끝의 떨어지는 시간(ms)
+mg_catch_basket,0.16,proposed,1,⚠임시 채집 — 바구니 폭(판 폭 대비) · 떨어진 자리가 바구니 가운데에서 이 폭의 절반 안이면 받는다
+mg_catch_rare_fall,0.7,proposed,1,⚠임시 채집 — 귀한 약초의 떨어지는 시간 배수(작을수록 빠르다)
+mg_catch_sway,0.12,proposed,1,⚠임시 채집 — 귀한 약초가 좌우로 흔들리는 폭(판 폭 대비) · 바구니 줄에 닿는 순간엔 제자리
+mg_chop_height,40,proposed,1,⚠임시 벌목 「팀버맨」 — 나무 한 그루의 토막 수 · 다 베면 판이 끝난다
+mg_chop_branch_pct,0.6,proposed,1,⚠임시 벌목 — 빈 토막 위 토막에 가지가 붙을 확률(좌우 반반) · 가지 바로 위 토막은 늘 비운다
+mg_chop_drain_start,0.15,proposed,1,⚠임시 벌목 — 시간 막대(가득 = 1)가 1초에 주는 양 · 첫 도끼질부터 준다 · 벤 토막 수에 따라 끝 값까지 오른다
+mg_chop_drain_end,0.4,proposed,1,⚠임시 벌목 — 마지막 토막에서 시간 막대가 1초에 주는 양
+mg_chop_refill,0.06,proposed,1,⚠임시 벌목 — 한 번 벨 때 시간 막대가 차는 양
 advance_hours,2,proposed,1,전직에 걸리는 시간(시간) — 훈련장 전직 칸에 넣은 영웅이 이만큼 지나면 전직이 끝난다 · 그동안 원정 · 수색 · 자원 자리에 못 나간다 [2026-09-28 사용자 「시간 키만 두고 ⚠임시값」 · skill_design §4 · GAME_DESIGN §10 「전직 작업의 값」]
-skillbook_learn_level,10,proposed,0,스킬북을 쓸 수 있는 영웅 레벨 — 둘째 액티브 칸(배운 스킬)의 문턱 · 1장 끝 · 마스터리 T2 와 같은 무렵 [2026-09-28 사용자 확정 「10 레벨에 1개의 액티브 스킬」 · skill_design §2-1 · R179]
+advance_point_interval,5,fixed,0,전직 포인트 간격(레벨) — 전직 레벨(advance_unlock_level)에 첫 포인트 · 그 뒤 이 간격마다 하나씩 만렙(hero_level_cap)까지 · 첫 포인트로 전직 스킬을 배운다 · 나머지는 스킬 레벨과 가지 셋(② 특수 · ③ 변형 · ④ 필살기)에 · 마스터리 포인트와 따로 · 스킬을 바꾸면 전부 돌아온다 [2026-10-06 사용자 확정 「30에찍고 5레벨단위로」 · skill_design §4 · R216 — 미구현]
+skillbook_learn_level,10,proposed,0,스킬북을 쓸 수 있는 영웅 레벨 — 둘째 액티브 칸(배운 스킬)의 문턱 · 같은 책 업그레이드도 이 문턱(2026-10-06) · 1장 끝 · 마스터리 T2 와 같은 무렵 [2026-09-28 사용자 확정 「10 레벨에 1개의 액티브 스킬」 · skill_design §2-1 · R179]
 drop_book_pct,0.25,proposed,1,드롭이 난 처치에서 **장비 대신 스킬북**이 나올 확률(비율) — 처치당 1개는 그대로 · 그 몬스터의 고유 스킬 책(영웅이 못 배우는 몬스터 전용이면 장비) · ⚠임시 · 등급마다 다른가는 GAME_DESIGN §10 「스킬북의 남은 설계」 ⑧ [2026-09-28 사용자 「처치당 1개 · 장비냐 책이냐를 굴린다」 · item_design §1 드롭 1-2 · R179]
 book_craft_gold,1000,proposed,1,서고 **기본 책 제작**의 골드 — 기본 책 = `skill.csv:starter_pool` · ⚠임시 [2026-09-28 사용자 「아주 기본적인 책만 만든다」 · construction_draft §2 서고 · R179]
 book_craft_dust,10,proposed,1,서고 **기본 책 제작**의 가루 · ⚠임시 [2026-09-28 · construction_draft §2 서고 · R179]
+skillbook_upgrade_max,9,proposed,0,기본 스킬(고유 · 배운 칸) 업그레이드 상한 — 같은 책을 읽을 때마다 한 단계 · 다른 책으로 덮어쓰면 쌓은 단계도 사라진다 [2026-10-06 사용자 「최대업그레이드 수치는 9정도」 · skill_design §2-3 · R216 — 미구현]
+skillbook_upgrade_books_1,1,proposed,0,첫 업그레이드에 드는 같은 책 수 — 셋째부터는 앞 두 단계의 합(피보나치 · 둘째는 skillbook_upgrade_books_2) [2026-10-06 사용자 「피보나치 수열로」 · skill_design §2-3 · R216 — 미구현]
+skillbook_upgrade_books_2,2,proposed,0,둘째 업그레이드에 드는 같은 책 수 — 셋째부터는 앞 두 단계의 합(피보나치) [2026-10-06 · skill_design §2-3 · R216 — 미구현]
 shop_book_count,3,proposed,1,상단이 **방문 회차마다** 파는 스킬북 수 — 후보 = 직업 스킬 중 기본 책(`skill.csv:starter_pool`)이 아닌 것 · 같은 회차에 같은 책 둘 없음 · 장비 탭 맨 윗줄 무기 오른쪽 · ⚠임시 [2026-09-29 사용자 「상점에서 책 3개 정도 파는 걸로 해볼까」 · base_expedition_design §2-6]
 shop_book_gold,1500,proposed,1,상단 스킬북 한 권의 골드 — 서고 기본 책 제작(book_craft_gold + 가루)보다 비싸다 · ⚠임시 [2026-09-29 · base_expedition_design §2-6]

@@ -1,11 +1,11 @@
 building_id,rank,require,cost,status
 expedition,1,-,-,proposed
-expedition,2,stage:1051,gold:1000,proposed
-expedition,3,-,gold:1000,proposed
-expedition,4,stage:2051,gold:3000,proposed
-expedition,5,stage:3051,gold:3000,proposed
-expedition,6,-,gold:3000,proposed
-expedition,7,stage:4051,gold:12000,proposed
+expedition,2,stage:1051,gold:1000|ore_t1:15|timber_t1:15,proposed
+expedition,3,-,gold:2500|ore_t2:15|timber_t2:15,proposed
+expedition,4,stage:2051,gold:6250|ore_t2:15|timber_t2:15,proposed
+expedition,5,stage:3051,gold:15625|ore_t3:15|timber_t3:15,proposed
+expedition,6,-,gold:39063|ore_t4:15|timber_t4:15,proposed
+expedition,7,stage:4051,gold:97656|ore_t4:15|timber_t4:15,proposed
 forge,1,stage:1023,gold:600,proposed
 forge,2,stage:1051|building:expedition:2,gold:3000|dust:30,proposed
 forge,3,stage:2051|building:expedition:3,gold:6000|dust:60,proposed

@@ -86,10 +86,13 @@ Normal(자연 생물) / Demon(지옥 계열) / Undead(언데드) — 장비 `vs_
 전투 스탯 = 기본 능력치 7종 + 낀 장비  →  영웅과 같은 함수  →  × 몬스터 전용 전역 배율
             (몸값 defense · res_* 는 그 위에 더한다)
             [balance.csv:monster_hp_scale · monster_atk_scale · monster_def_scale]
-장비의 아이템 레벨 = 스테이지(칸) 레벨(stage.csv:dlvl) + [spawn_grade.csv:gear_ilvl_add]
+장비의 아이템 레벨 = 가운데 ± 폭 (부위마다 · 폭 안 균등 · 하한 레벨 1)
+                    — 가운데 = 스테이지(칸) 레벨(stage.csv:dlvl) + [spawn_grade.csv:gear_ilvl_add]
+                    — 폭 = 가운데 × [balance.csv:drop_ilvl_spread_pct] 반올림 · 하한 [balance.csv:drop_ilvl_spread_min]
 장비의 희귀도     = 등급의 가중치 [spawn_grade.csv:gear_rarity_w_normal · _magic · _rare]
                     — 그중 레어 가중치 × (1 + 파티 매직찬스% + [spawn_grade.csv:gear_rare_bonus_pct]%)   ※ 파티 매직찬스% = 합산 + 체감 후의 실효 값(2026-10-05 — item_design.md §1)
 ```
+**[2026-10-06 사용자 확정]** 아이템 레벨은 ~~굴리지 않는다~~ → **가운데 ± 폭 안에서 굴린다**(item_design.md §1 3단계) — 드롭이 입은 장비라 **몬스터의 세기도 같이 흔들린다**(사용자가 알고 받아들였다) · 부위마다 따로라 한 마리 안에서는 높고 낮은 것이 섞인다.
 **[2026-09-23 사용자 지시]** 일반 몬스터는 **일반 + 가끔 매직**(레어 가중치 0 — 매직찬스도 레어를 못 만든다) · 정예는 **일반 + 매직 + 가끔 레어**. 드롭 = 입은 장비라 **드롭 희귀도도 등급을 따른다**. 보스는 종전 드롭 가중치와 같은 값으로 시작한다.
 **[코드 반영 2026-09-11 · DEV_PLAN R79]** 옛 식(~~`monster.csv` 소재값 × `spawn_grade` 배율 × 전역 스케일~~)은 폐기됐다 — `hp`·`attack`·`action_period` **컬럼이 삭제**되고 그 자리를 능력치·장비가 낸다 (§7).
 
@@ -275,4 +278,4 @@ Normal(자연 생물) / Demon(지옥 계열) / Undead(언데드) — 장비 `vs_
 
 ---
 
-*마지막 업데이트: 2026-10-05*
+*마지막 업데이트: 2026-10-06*

@@ -116,7 +116,8 @@ const ACTIVE_SOURCES = ['innate', 'book', 'advance'];
    둘째 칸은 **책으로 배운 스킬**이다(`hero.bookSkill` · 2026-09-29 R179 · ADR-0420 — ~~무기가 담은 스킬~~) */
 const activeCells = h => {
     const list = (h ? SYS.skill.activesFor(h) : [])
-        .map(a => ({ ...skillInfo(a.id), source: a.source }));
+        // 스킬 레벨 [2026-10-06 · R216 · ADR-0529] — `up`(쌓은 단계)을 실어 설명창 · 줄이 레벨을 얹은 정의를 읽게 하고(`tip.js:defOf`) · `lv` 가 이름 뒤 `Lv.n` 이다
+        .map(a => ({ ...skillInfo(a.id), source: a.source, up: a.up ?? 0, lv: 1 + (a.up ?? 0) }));
     return ACTIVE_SOURCES.map(src => list.find(a => a.source === src) ?? null);
 };
 /* 빈 칸의 사유 — 왜 비었는지가 칸 안에서 답해져야 한다 (「빈 칸」만 찍으면 고장으로 읽힌다).
@@ -577,6 +578,8 @@ const MODALS = {
     gamble: { title: 'gb.h', body: gambleBody, cls: 'gb-modal' },
     // 파견 관전 — 자원 단의 [자세히 보기]가 연다 (SCREEN_DESIGN §8 · ADR-0415) · 머리 = 앉은 자리마다 탭 · 자리가 전부 비면 닫힌다(`gone`)
     dpWatch: { head: dpWatchHead, body: dpWatchBody, cls: 'dpw-modal', gone: () => !dwCur() },
+    // 자원 미니게임 — 자원 단의 [미니게임]이 연다 (SCREEN_DESIGN §8 · ADR-0532) · 머리 = 열린 단계마다 탭 · 열린 단계가 없으면 닫힌다(`gone`)
+    mg: { head: mgHead, body: mgBody, cls: 'mg-modal', gone: () => !mgCur() },
 };
 
 function renderModal() {
@@ -1519,10 +1522,18 @@ function renderExpIdle(main) {
     /* 챕터 세그먼트 — **한 챕터가 한 화면**이다 [2026-09-09 사용자 지시 · ADR-0067 · 도감 몬스터 세그먼트와 같은 문법(§9)].
        **전 챕터가 선다** — 잠긴 챕터도 눌러 볼 수 있다. 이 절이 원래부터 잠긴 스테이지를 그리는 근거
        (「어디까지 가야 하는지가 보여야 한다」)를 챕터 단위로 넓힌 것이고, 막는 자리는 **보내기**(`canDepart`) 하나다.
-       넘기면 **전진 패널을 닫는다** — 패널은 스테이지 행에 딸려 있어서, 안 닫으면 영웅 띠만 흐린 채 보드가 사라진다 */
+       넘기면 **전진 패널을 닫는다** — 패널은 스테이지 행에 딸려 있어서, 안 닫으면 영웅 띠만 흐린 채 보드가 사라진다.
+       ⚠ 단 **어느 건물 랭크로도 안 열리는 챕터**(`needOf('chapters', n)` 이 null)는 자물쇠 + 꺼진 버튼이다 [2026-10-06 사용자 지시 · ADR-0531] —
+       갈 길이 없어 보여 줄 「어디까지」가 없다. 번호를 박지 않고 표를 읽으므로 그 장을 여는 줄이 생기면 저절로 풀린다.
+       그 장의 스테이지가 하나라도 열렸으면 안 잠근다 — 관리자 모드(`openAll`)는 장 잠금을 건너뛰고 모든 스테이지를 연다 */
     const curCh = expChapter();
     const cb = el('div', 'sub-bar');
-    cb.appendChild(segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}`, color: sinColor(c.sin) })), curCh,
+    const sealed = id => !SYS.game.needOf('chapters', id) && !D.stageList.some(s => s.chapter === id && SYS.game.stageUnlocked(G, s.stage_id));
+    cb.appendChild(segmented(D.chapterList.map(c => {
+        const label = `Ch${c.id} ${L(c.name)}`;
+        return sealed(c.id) ? { id: c.id, label: `<span class="lock-ico">${lockIcon(true)}</span>${label}`, color: sinColor(c.sin), disabled: true, cls: 'seg-lock' }
+            : { id: c.id, label, color: sinColor(c.sin) };
+    }), curCh,
         id => { state.expChapter = id; state.expStage = null; render(); }));
     zp.appendChild(cb);
     /* **장소 한 줄 = 버튼 하나** [2026-09-29 사용자 지시 「원정 스테이지는 기존처럼 1-1 1개만 클릭할 수 있게하고 안에서 조정할 수 있게」 ·
@@ -2282,7 +2293,11 @@ function dropSection(p, R) {
     head.appendChild(tail);
     const box = el('div', 'rep-drops rep-cut');
     p.appendChild(box);
-    if (!R.drops.length && !books.length) { box.appendChild(el('div', 'muted rep-note', t('rep.drops.none'))); return; }
+    // 처치 재료 — 재료 하나가 칸 하나 · 광석 → 목재 → 약초 순 (§4-3 · ADR-0530 · 옛 리포트는 `materials` 가 없다)
+    const KIND_ORDER = ['ore', 'wood', 'herb'];
+    const mats = Object.entries(R.materials ?? {}).filter(([, n]) => n > 0)
+        .sort(([a], [b]) => KIND_ORDER.indexOf(resKind(a)) - KIND_ORDER.indexOf(resKind(b)));
+    if (!R.drops.length && !books.length && !mats.length) { box.appendChild(el('div', 'muted rep-note', t('rep.drops.none'))); return; }
     const grid = el('div', 'inv-cells wide');
     for (const uid of R.drops) {
         const d = itemOf(uid);
@@ -2306,6 +2321,16 @@ function dropSection(p, R) {
         const cell = el('div', 'inv-cell filled book-cell');
         cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(b.id))}</span><span class="inv-check book-tag">${t('rep.book')}</span>`;
         bindTipNode(cell, () => skillTipCard({ id: b.id }, {}));
+        grid.appendChild(cell);
+    }
+    // 처치 재료 칸 — 창고 재료 탭(§6)과 같은 그림 · 같은 오른쪽 아래 숫자(이 런이 준 수) · 흐려지지 않는다(전부 재고에 든다) · 올리면 이름 + 획득 수 (ADR-0530)
+    for (const [id, n] of mats) {
+        const icon = M.materialIcon(id);
+        const kind = resKind(id);
+        const cell = el('div', 'inv-cell filled mat-cell');
+        cell.innerHTML = `<span class="inv-icon res-${kind}">${icon ? `<img src="${icon}" alt="" draggable="false">` : M.RES_ART[kind] ?? ''}</span>`
+            + `<span class="inv-lv">${n.toLocaleString()}</span>`;
+        bindTipNode(cell, () => el('div', 'tip-card', `<div class="tip-name">${resName(id)}</div><div class="tip-sub">${t('rep.matGot', { n: n.toLocaleString() })}</div>`));
         grid.appendChild(cell);
     }
     box.appendChild(grid);
@@ -2403,7 +2428,8 @@ let clockRender = false;
    그것도 다음 눈금 · 손이 빈 뒤다. 곧바로 바꾸면 칸 위의 툴팁이 주인을 잃어 접혔다(4배속이면 몇 초마다) */
 let bagStale = false;
 let pointerHeld = false;      // 누르고 있는 중 — `startClocks` 가 창 전체에서 잰다
-const handBusy = () => pointerHeld || !!$('#tooltip')?.classList.contains('show');
+// 자원 미니게임이 도는 동안도 손이 바쁘다 — 미뤄 둔 그리기가 판 도중에 창을 다시 세우지 않게 (§8 · ADR-0532)
+const handBusy = () => pointerHeld || !!$('#tooltip')?.classList.contains('show') || mgRun?.phase === 'play';
 
 /** 런이 끝나는 시각 — **마지막 라운드가 계산되기 전엔 모른다**(무한대). 계산되면 결과의 `reason` 이 서고 그 끝이 곧 런의 끝이다 (R89) */
 const runEnd = B => (B.result.reason != null ? B.result.durationSec : Infinity);
@@ -3067,10 +3093,11 @@ function dismissBody() {
 
 /** 스킬북 줄 하나 — 그림 + 이름 + (오른쪽) 버튼 자리. 그림 · 이름에 올리면 그 영웅 기준 설명창 */
 const bookIcon = id => `<span class="bk-ico">${skillImg(skillInfo(id))}</span>`;
-function bookRow(id, tipCtx, extra = '') {
+function bookRow(id, tipCtx, extra = '', up = null) {
     const r = el('div', 'bk-row');
     const who = el('div', 'bk-who', `${bookIcon(id)}<span class="bk-name">${L(skillInfo(id).name)}</span>${extra}`);
-    bindTipNode(who, () => skillTipCard({ id }, tipCtx));
+    // 이미 가진 스킬이면 지금 레벨의 설명창(`up` · R216) — 새로 배울 책은 레벨 없이
+    bindTipNode(who, () => skillTipCard(up === null ? { id } : { id, up, lv: up + 1 }, tipCtx));
     r.appendChild(who);
     return r;
 }
@@ -3083,8 +3110,9 @@ function bookLearnInto(box, h, bs) {
     // 머리 줄 — 배운 스킬 · 막힘 한 줄
     const head = el('div', 'bk-head');
     const cur = bs.hero.skill;
-    const curNode = el('div', 'bk-who', cur ? `${bookIcon(cur)}<span class="bk-name">${L(skillInfo(cur).name)}</span>` : `<span class="bk-ico vacant"></span><span class="bk-name muted">${t('bk.noneLearned')}</span>`);
-    if (cur) bindTipNode(curNode, () => skillTipCard({ id: cur }, tipCtx));
+    const curUp = cur ? (bs.hero.lv[cur] ?? 0) : 0;   // 배운 스킬의 업그레이드 횟수 — 이름 뒤 `Lv.n` (R216 · ADR-0529)
+    const curNode = el('div', 'bk-who', cur ? `${bookIcon(cur)}<span class="bk-name">${L(skillInfo(cur).name)}</span><span class="bk-lv">${t('sk.lvTag', { n: curUp + 1 })}</span>` : `<span class="bk-ico vacant"></span><span class="bk-name muted">${t('bk.noneLearned')}</span>`);
+    if (cur) bindTipNode(curNode, () => skillTipCard({ id: cur, up: curUp, lv: curUp + 1 }, tipCtx));
     head.appendChild(el('div', 'sub-h', t('bk.learned.h')));
     const headRow = el('div', 'bk-row');
     headRow.appendChild(curNode);
@@ -3097,18 +3125,22 @@ function bookLearnInto(box, h, bs) {
     if (!bs.books.length) own.appendChild(el('div', 'muted bk-empty', t('bk.none')));
     for (const b of bs.books) {
         // 권수 `×n` — 이름 바로 뒤 · 1권도 찍는다(책은 쌓인다 · 물약 칸과 같은 표기 · ADR-0460)
-        const r = bookRow(b.id, tipCtx, `<span class="bk-n">×${b.n}</span>`);
-        const same = b.id === cur;
+        // 이 영웅이 이 책을 읽으면 — `learn`(새로 배운다 · 배운 칸을 덮어쓴다) | `upgrade`(이미 가진 스킬 — 고유 · 배운 칸) (`game.bookState` · R216 · ADR-0529)
+        const p = b.plan;
+        const up = p?.act === 'upgrade';
+        const r = bookRow(b.id, tipCtx, `<span class="bk-n">×${b.n}</span>${up ? `<span class="bk-lv">${t('sk.lvTag', { n: p.lv + 1 })}</span>` : ''}`, up ? p.lv : null);
         const armed = state.bookArm === b.id;
-        const btn = el('button', `btn sm${armed ? ' danger' : ''}`, t(same ? 'bk.same' : armed ? 'bk.overwrite' : 'bk.learn'));
-        btn.disabled = same || !!err;
+        // 업그레이드 줄은 드는 책 수를 버튼이 말한다(피보나치라 단계마다 다르다) · 상한이면 「최대」
+        const label = up ? (p.err === 'maxUp' ? t('bk.max') : t('bk.upgrade', { n: p.need })) : t(armed ? 'bk.overwrite' : 'bk.learn');
+        const btn = el('button', `btn sm${armed ? ' danger' : ''}`, label);
+        btn.disabled = !!err || (up && !!p.err);
         btn.onclick = () => {
-            // 이미 배운 영웅은 **두 번 누른다** — 덮어쓰면 앞의 스킬이 사라지고 책으로 안 돌아온다 (§3)
-            if (cur && state.bookArm !== b.id) { state.bookArm = b.id; render(); return; }
+            // 새로 배우는데 이미 배운 영웅은 **두 번 누른다** — 덮어쓰면 앞의 스킬과 그 레벨이 사라지고 책으로 안 돌아온다 (§3) · 업그레이드는 한 번 (ADR-0529)
+            if (!up && cur && state.bookArm !== b.id) { state.bookArm = b.id; render(); return; }
             state.bookArm = null;
             const res = SYS.game.learnBook(G, h.uid, b.id);
             if (!res.ok) flash(`bk.err.${res.err}`, { n: bs.need.need });
-            else { save(); flash('bk.learned', { name: L(h.name), skill: L(skillInfo(b.id).name) }); }
+            else { save(); flash(res.upgraded ? 'bk.upgraded' : 'bk.learned', { name: L(h.name), skill: L(skillInfo(b.id).name), n: (res.lv ?? 0) + 1 }); }
             render();
         };
         r.appendChild(btn);
@@ -3760,8 +3792,8 @@ function activeSlots(h, title) {
             const line = skillLineHtml(a, { ...tipCtx, source: ACTIVE_SOURCES[i] });
             row.innerHTML = `
                 <span class="no">${no}</span><span class="ico">${skillImg(a)}</span>
-                <span class="nm"><span class="t">${L(a.name)}</span>
-                    <span class="cd">${secText(coolSecOf(a.id))}</span>
+                <span class="nm"><span class="t">${L(a.name)}</span><span class="lv">${t('sk.lvTag', { n: a.lv })}</span>
+                    <span class="cd">${secText(SYS.skill.resolve(a)?.cool ?? coolSecOf(a.id))}</span>
                     ${line ? `<span class="ln">${line}</span>` : ''}
                 </span>`;
         }
@@ -3941,6 +3973,50 @@ function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraS
 }
 
 /**
+ * 스킬 창 전직 판 — **윗줄 가운데 스킬 칸 + 둘째 줄 가지 셋** [2026-10-06 · R216 · SCREEN_DESIGN §7 · ADR-0529].
+ *   스킬 칸 = 그 스킬 그림 + `Lv.n` · 누르면 전직 포인트 1 로 +1(`game.advanceLevelUp`) · 올리면 스킬 설명창(레벨을 얹은 숫자).
+ *   가지 셋 = ② 특수 · ③ 변형 · ④ 필살기 — 효과가 없어(`advance_node.csv` · 설명만) 누를 수 없다 · 올리면 칸 이름 + 설명 + 「준비 중」.
+ *   판정(레벨 · 포인트 · 가지)은 `game.advanceState` 가 낸다 — 화면은 그리기만 한다
+ */
+const ADV_SLOT_MARK = { 2: '②', 3: '③', 4: '④' };
+function advanceBoard(h, adv) {
+    const id = adv.hero.skill;
+    const lv = adv.hero.lv;
+    const nodes = adv.nodes[id] ?? [];
+    const box = el('div', 'sk-box adv-board');
+    const can = adv.hero.points.free > 0;
+    const cell = `<div class="sk-cell icon-only taken${can ? ' can' : ' dim'}" data-advskill="1" aria-label="${L(skillInfo(id).name)} ${t('sk.lvTag', { n: lv })}">`
+        + `<span class="adv-ico" aria-hidden="true">${skillImg({ id })}</span><span class="sk-icon-rank" aria-hidden="true">${t('sk.lvTag', { n: lv })}</span></div>`;
+    const branch = n => `<div class="sk-cell icon-only locked adv-node" data-slot="${n.slot}"><span class="adv-slot" aria-hidden="true">${ADV_SLOT_MARK[n.slot] ?? n.slot}</span></div>`;
+    box.innerHTML = `
+        <div class="sk-box-head"><span class="sk-title">${t('sk.advTree')}</span></div>
+        <div class="sk-grid">
+            <div class="sk-row"><div class="sk-cell empty"></div>${cell}<div class="sk-cell empty"></div></div>
+            <div class="sk-row">${nodes.map(branch).join('')}</div>
+        </div>`;
+    const sc = box.querySelector('[data-advskill]');
+    const cb = combatOf(h);
+    // 설명창 — 레벨을 얹은 숫자다(`up` = 배운 뒤 더 넣은 포인트 · tip.js `defOf`) · 맥락은 액티브 줄과 같다
+    bindTipNode(sc, () => skillTipCard({ id, up: lv - 1, lv }, { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats }));
+    // 한 번 누름 — 되돌리기는 훈련장 [되돌리기]가 전부 환급한다 (§7 · §16)
+    sc.onclick = () => {
+        const r = SYS.game.advanceLevelUp(G, h.uid);
+        if (r.ok) { save(); flash('sk.adv.leveled', { skill: L(skillInfo(id).name), n: r.lv }); runChangeFlash(h.uid); }
+        else if (r.err === 'downed') flash('sk.err.downed');
+        else if (r.err === 'points') flash('sk.err.advPoints');
+        render();
+    };
+    box.querySelectorAll('.adv-node').forEach(c => {
+        const n = nodes.find(x => x.slot === Number(c.dataset.slot));
+        const name = `${ADV_SLOT_MARK[n.slot] ?? n.slot} ${t(`sk.adv.slot.${n.slot}`)}`;
+        // 툴팁은 그 가지의 효과만 — 보류 칸은 「보류」 · 아래 한 줄이 「준비 중」 (CLAUDE.md 규칙 7)
+        bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${name}</div><div class="tip-line">${n.desc ? L(n.desc) : t('sk.adv.hold')}</div><div class="tip-line muted">${t('sk.adv.pending')}</div>`));
+        c.setAttribute('aria-label', name);
+    });
+    return box;
+}
+
+/**
  * 스킬 트리 — **창 본문**이다 (SCREEN_DESIGN §7 개정 2026-09-01 사용자 지시).
  * 옛 스킬 탭에서 옮겨 왔고, 옮기며 **영웅 띠 한 벌이 사라졌다** — 대상 영웅은 캐릭터 탭이 이미 골랐다.
  * 배치·규칙(판 셋이 나란히 · 판 안에서 단계가 세로)은 탭이던 시절 그대로다.
@@ -3982,6 +4058,9 @@ function skillTreeBody() {
         <div style="font-size:var(--fs-xl);text-align:center">${ms.points}
             <span class="muted" style="font-size:var(--fs-sm)">/ ${ms.points + spent}</span>
             <span class="muted" style="font-size:var(--fs-xs);margin-left:6px">${t('sk.points.left')}</span></div>`));
+    // 전직 포인트 — 전직했으면 둘째 줄 `남은 / 받은` (마스터리와 따로 · 2026-10-06 · R216 · SCREEN_DESIGN §7 · ADR-0529)
+    const adv = SYS.game.advanceState(G, h.uid, now());
+    if (h.advance) pp.appendChild(el('div', 'sk-adv-pts', `<b>${adv.hero.points.free}</b> <span class="muted">/ ${adv.hero.points.have}</span> <span class="muted sk-adv-pts-l">${t('sk.advPoints')}</span>`));
     // 초기화는 **한 번 클릭** — 무료·수시이고 전액 환급이라 되돌릴 수 없는 행동이 아니다 (SCREEN_DESIGN §7)
     const reset = el('button', 'btn sm', t('sk.reset'));
     reset.disabled = spent === 0;
@@ -4009,10 +4088,10 @@ function skillTreeBody() {
         title: t('sk.mastery', { cls }),
         nodes: ms.nodes.filter(n => n.treeKind === 'class'), onLearn: learn, onUnlearn: unlearn, extraSlot: true, cls: h.cls,
     }));
-    // 전직 층은 구현이 없다 — **같은 프레임의 빈 판**으로 자리만 남긴다. 생김새가 갈리면 같은 층으로 안 읽힌다
-    wrap.appendChild(masteryBox({
+    // 전직 판 [2026-10-06 · R216 · SCREEN_DESIGN §7 · ADR-0529] — 전직 전 · 스킬을 안 배웠으면 **같은 프레임의 빈 판 + 잠김 베일** · 배웠으면 스킬 칸 + 가지 셋
+    wrap.appendChild(h.advance && adv.hero.skill ? advanceBoard(h, adv) : masteryBox({
         title: t('sk.advTree'),
-        nodes: [], locked: t('sk.advNeed'),
+        nodes: [], locked: t(h.advance ? 'sk.advSkillNeed' : 'sk.advNeed'),
     }));
     return wrap;
 }
@@ -4387,7 +4466,9 @@ function advanceBody(body) {
     if (!h) return;
     const A = SYS.game.advanceState(G, h.uid, now());
     const lvOk = A.need.have >= A.need.need;
-    body.appendChild(el('div', 'tr-adv-hero', `<b>${L(h.name)}</b><span class="${lvOk ? 'muted' : 'no'}">${t('tr.adv.level', A.need)}</span>`));
+    // 전직했으면 줄 오른쪽에 전직 포인트 `남은 / 받은` (2026-10-06 · R216 · SCREEN_DESIGN §16 · ADR-0529)
+    const pts = A.hero.advance ? `<span class="muted tr-adv-pts">${t('tr.adv.points', A.hero.points)}</span>` : '';
+    body.appendChild(el('div', 'tr-adv-hero', `<b>${L(h.name)}</b><span class="${lvOk ? 'muted' : 'no'}">${t('tr.adv.level', A.need)}</span>${pts}`));
     const branchName = id => L(A.branches.find(b => b.id === id)?.name ?? { ko: id, en: id });
     // 스킬 한 줄 — 그림 · 이름 · 설명(`skill.csv:desc_*` — 효과만) · 올리면 스킬 설명창(캐릭터 탭 · 도감과 같은 카드) (ADR-0402)
     const skillRow = (id, tail = null) => {
@@ -4417,7 +4498,7 @@ function advanceBody(body) {
         body.appendChild(box);
         return;
     }
-    // 전직 후 — 그 갈래의 스킬 셋 · 하나만 배운다 · 배운 것은 무료로 되돌린다
+    // 전직 후 — 그 갈래의 스킬 셋 · 하나만 배운다(첫 전직 포인트) · 되돌리면 쓴 포인트가 전부 돌아온다 (R216)
     if (A.hero.advance) {
         const br = A.branches.find(b => b.id === A.hero.advance);
         const rows = [];
@@ -4425,13 +4506,13 @@ function advanceBody(body) {
             const learned = A.hero.skill === id;
             const tail = el('span', 'tr-adv-act');
             if (learned) {
-                tail.appendChild(el('span', 'tr-adv-got', t('tr.adv.learned')));
+                tail.appendChild(el('span', 'tr-adv-got', t('tr.adv.learnedLv', { n: A.hero.lv })));
                 const b = el('button', 'btn sm', t('tr.adv.forget'));
                 b.onclick = () => { const r = SYS.game.advanceForget(G, h.uid); if (!r.ok) flash(`tr.err.${r.err}`); else save(); render(); };
                 tail.appendChild(b);
             } else {
                 const b = el('button', 'btn sm', t('tr.adv.learn'));
-                b.disabled = !!A.hero.skill;
+                b.disabled = !!A.hero.skill || A.hero.points.free < 1;   // 첫 전직 포인트로 배운다 (R216)
                 b.onclick = () => { const r = SYS.game.advanceLearn(G, h.uid, id); if (!r.ok) flash(`tr.err.${r.err}`); else save(); render(); };
                 tail.appendChild(b);
             }
@@ -4568,6 +4649,11 @@ function renderResource(main) {
         // 인원(「1인」)은 안 찍는다 [2026-09-21 사용자 지시 · ADR-0224] — 1인 배치 / 파티 파견의 차이는 탭이 든다
         // 이름 줄은 소제목 모양(`sub-h`) — 밑줄이 단계 상자와 가른다 [2026-09-24 사용자 지시 · ADR-0320]
         c.innerHTML = `<span class="dp-n sub-h">${t(post.label)}<i class="dp-attr" title="${t('dp.attrTitle')}">${attr}</i></span>`;
+        // [미니게임] — [자세히 보기] 왼쪽 · 영웅 없이 직접 캐는 판을 연다 (§8 · ADR-0532). 열린 단계가 없으면 흐리고 안 눌린다
+        const play = el('button', 'btn sm dp-mg', t('mg.play'));
+        if (!open) { play.disabled = true; play.title = needText('resource_tier', 1); }
+        else play.onclick = ev => { ev.stopPropagation(); mgOpen(post.id); };
+        c.querySelector('.dp-n').appendChild(play);
         // [자세히 보기] — 이름 줄 오른쪽 끝 · 앉은 영웅이 없으면 흐리고 안 눌린다 (§8 · ADR-0415)
         const mine = dwSeats().find(s => s.post === post.id);
         const watch = el('button', 'btn sm dp-watch', t('dp.watch'));
@@ -4648,7 +4734,7 @@ function dpPickPanel(stack) {
    [개정 2026-09-29 사용자 지시 「원정 전투창처럼 · 챕터 배경 · 1:1」 · ADR-0416] **원정 관전의 부품 그대로** — `battle-panel` › `arena`(챕터 배경) ›
    적 진영(대상 카드 1) · VS · 파티 진영(영웅 카드 1). 카드는 관전 카드(`unit v2`)와 같은 뼈대 · 타격은 관전 연출 클래스(`fx-lunge` · `fx-shake` · `fx-flash` · `.pop`).
    **보기 전용** — 대상의 HP 바는 `dispatchProgress.frac` 을 뒤집을 뿐이라 바가 한 바퀴 도는 순간이 정산의 1개 틱 그대로다(창을 열든 닫든 산출이 같다).
-   ⚠ 대상 그림은 활동별 그림이 올 때까지 산출물 아이콘이 대신 선다 · 보고 있을 때 손댈 표식은 기획 미정(PLAN_dispatch_watch) */
+   ⚠ 대상 그림은 활동별 그림이 올 때까지 산출물 아이콘이 대신 선다 · 손으로 캐는 미니게임은 이 창이 아니라 따로 선 창이다(`mg*` · ADR-0532) */
 const DW_HIT_MS = 1000;   // 타격 박자 — 화면 연출의 길이라 CSV 가 아니다(TOAST_MS 와 같은 선례). 모션은 관전 연출 클래스가 든다
 const DW_REFILL_MS = 350; // 다 닳은 대상이 0 으로 서 있다가 다시 차기까지 — 연출의 길이다
 /** 앉은 자리 전부 — 파견처 순 · 단계 순. 창의 머리 탭이 이 순서다 */
@@ -4666,11 +4752,6 @@ function dpWatchHead() {
     const wrap = el('div', 'dpw-head');
     wrap.appendChild(segmented(dwSeats().map(s => ({ id: `${s.post}:${s.tier}`, label: `${t(POSTS.find(p => p.id === s.post).label)} ${s.tier}` })),
         `${cur.post}:${cur.tier}`, id => { const [post, tier] = id.split(':'); state.dw = { post, tier: Number(tier) }; render(); }));
-    // [미니게임] — 오른쪽 위(닫기 왼쪽) · 누르면 기다리지 않고 바로 한 판 [시험 구현 2026-09-29 사용자 지시 · PLAN_dispatch_watch D7].
-    //   판이 도는 중 · 이번 시간 상한이면 흐리다(앱 시계가 `dwgTick` 에서 갈아 끼운다)
-    const go = el('button', 'btn sm dwg-go', t('dw.play'));
-    go.onclick = () => { const box = document.querySelector('.dpw-arena'); if (box) dwgTick(box, now(), true); };
-    wrap.appendChild(go);
     return wrap;
 }
 
@@ -4741,170 +4822,10 @@ function dpWatchBody() {
 
 /** 앱 시계가 자원 탭일 때 눈금마다 부른다 — 바 폭 · 남은 초만 갈아 끼우고 박자마다 타격 연출(전체 다시 그림이 아니다).
  *  박자 사이에 흐른 양 = 흐른 시간 ÷ 간격 — 바가 넘어간 만큼 「+n 산출물」이 떨어진다. 긴 공백(숨긴 탭에서 돌아옴)은 연출 없이 맞추기만 */
-/* ─── 파견 관전 창 미니게임 [시험 구현 2026-09-29 사용자 「최대한 빠르고 단순하게 · 확인만 하게」 · PLAN_dispatch_watch D7] ───
-   채광 = 한 방 맞히기 · 채집 = 골라 따기 · 벌목 = 박자 잇기. 판의 내용 · 채점 · 보상은 전부 `game.dwRound` · `dwJudge` · `dwClaim` 이 정한다 —
-   화면은 그리고, 누른 시각(판 시작부터 ms)을 재서 넘길 뿐이다. **보고 있을 때만** — 앱 시계는 자원 탭 · 탭이 보일 때만 부르고,
-   창이 닫히거나 다시 그려지면 하던 판은 사라진다(받지 않은 판 · D5) */
-const DWG_TILE_PX = 72;        // 골라 따기 잎 한 칸의 폭(잎 64 + 틈 8) — 배치의 치수다
-const DWG_BEAT_TRAVEL = 2.5;   // 박자 표시가 판을 가로지르는 데 드는 박자 수 — 연출의 속도다
-const DWG_BEAT_LINE = 0.2;     // 선의 자리(판 왼쪽에서의 비) — 표시는 오른쪽 끝에서 와 이 선에 닿는다
-const DWG_REST_MS = 900;       // 판이 끝나고 결과를 보여 두는 시간 — 연출의 길이다
-let dwg = null;                // {key, box, busy, nextAt, round, post, tier, layer, timers, done}
-function dwgStop() {
-    if (!dwg) return;
-    (dwg.timers ?? []).forEach(clearTimeout);
-    dwg.layer?.remove();
-    dwg = null;
-}
-/** 판 사이의 흐름 — 창을 연(또는 자리를 바꾼) 뒤 최소 간격이 지나면 첫 판 · 판이 끝나면 그 판이 굴린 간격 뒤 다음 판.
- *  `force` = 머리의 [미니게임] 버튼 — 간격을 기다리지 않고 바로 연다(판이 도는 중 · 상한이면 안 연다) */
-function dwgTick(box, at, force = false) {
-    const key = box.dataset.dw, gapMin = D.balance.dw_gap_min_sec * 1000;
-    if (!dwg || dwg.key !== key) { dwgStop(); dwg = { key, box, busy: false, nextAt: at + gapMin }; }
-    if (dwg.box !== box) {   // 창이 다시 그려졌다 — 하던 판은 버리고 새 판을 기다린다
-        if (dwg.busy) { (dwg.timers ?? []).forEach(clearTimeout); dwg.busy = false; dwg.nextAt = at + gapMin; }
-        dwg.box = box;
-    }
-    const S = SYS.game.dwState(G, at);
-    let info = box.querySelector('.dwg-info');
-    if (!info) { info = el('div', 'dwg-info'); box.appendChild(info); }
-    info.textContent = t('dw.info', { n: Math.round(S.usedSec), cap: S.capSec });
-    const go = document.querySelector('.dwg-go');
-    if (go) go.disabled = dwg.busy || S.usedSec >= S.capSec;
-    if (dwg.busy || (!force && at < dwg.nextAt)) return;
-    const [post, tier] = key.split(':');
-    const r = SYS.game.dwRound(G, post, at);
-    if (!r.ok) { dwg.nextAt = at + gapMin; return; }   // 이번 시간 상한 — 시간이 바뀌면 다시 뜬다
-    save();
-    Object.assign(dwg, { busy: true, done: false, round: r.round, post, tier: Number(tier), timers: [] });
-    if (go) go.disabled = true;
-    dwgStart(box, r.round);
-}
-/** 창 안 한 점의 자리(판 기준 %) — 줌이 걸려도 비로 재니 맞는다 */
-const dwgAt = (box, node) => {
-    const a = box.getBoundingClientRect(), r = (node ?? box).getBoundingClientRect();
-    return { x: (r.left + r.width / 2 - a.left) / a.width * 100, y: (r.top + r.height / 2 - a.top) / a.height * 100 };
-};
-function dwgStart(box, round) {
-    const layer = el('div', `dwg dwg-${round.kind}`);
-    layer.appendChild(el('div', 'dwg-hint', t(`dw.hint.${round.kind}`)));
-    box.appendChild(layer);
-    dwg.layer = layer;
-    const later = (ms, fn) => dwg.timers.push(setTimeout(fn, ms));
-    const t0 = performance.now();
-    const since = () => performance.now() - t0;
-    if (round.kind === 'strike') {
-        // 한 방 맞히기 — 링이 표적까지 줄어드는 순간에 한 번 누른다(판 아무 데나)
-        const c = dwgAt(box, box.querySelector('.side-enemy .sprite'));
-        const at = el('div', 'dwg-at', `<i class="dwg-core"></i><i class="dwg-ring" style="animation-duration:${round.strike.ms}ms"></i>`);
-        at.style.cssText = `left:${c.x}%;top:${c.y}%`;
-        layer.appendChild(at);
-        layer.onpointerdown = ev => { ev.preventDefault(); dwgEnd(since()); };
-        later(round.strike.ms + round.strike.win + 50, () => dwgEnd(NaN));
-    }
-    if (round.kind === 'pick') {
-        // 골라 따기 — 진짜가 반짝 → 뒤집혀 섞인다 → 하나 고른다. 넘기는 값은 고른 잎의 **처음 자리**
-        const { n, answer, swaps, step, limit } = round.pick;
-        const row = dwgRowOf(round);
-        const c = dwgAt(box, box.querySelector('.side-enemy .unit'));
-        const wrap = el('div', 'dwg-row');
-        wrap.style.cssText = `left:${c.x}%;top:${c.y}%;width:${n * DWG_TILE_PX}px`;
-        const icon = M.materialIcon(row.yieldId);
-        const slot = [];   // slot[i] = 지금 i 자리에 선 잎
-        for (let i = 0; i < n; i++) {
-            const b = el('button', `dwg-leaf${i === answer ? ' hot' : ''}`, icon ? `<img src="${icon}" alt="" draggable="false">` : '');
-            b.style.left = `${i * DWG_TILE_PX}px`;
-            b.style.transitionDuration = `${step}ms`;
-            b.dataset.orig = i;
-            b.onclick = () => {
-                if (!layer.classList.contains('armed')) return;
-                layer.classList.remove('armed');
-                for (const x of slot) x.classList.remove('shut');
-                slot.find(x => Number(x.dataset.orig) === answer)?.classList.add('good');
-                if (Number(b.dataset.orig) !== answer) b.classList.add('bad');
-                dwgEnd(Number(b.dataset.orig));
-            };
-            slot.push(b);
-            wrap.appendChild(b);
-        }
-        layer.appendChild(wrap);
-        later(step, () => slot.forEach(x => { x.classList.remove('hot'); x.classList.add('shut'); }));
-        swaps.forEach(([i, j], k) => later(step * (k + 2), () => {
-            [slot[i], slot[j]] = [slot[j], slot[i]];
-            slot[i].style.left = `${i * DWG_TILE_PX}px`;
-            slot[j].style.left = `${j * DWG_TILE_PX}px`;
-        }));
-        const armAt = step * (swaps.length + 2);
-        later(armAt, () => layer.classList.add('armed'));
-        later(armAt + limit, () => { layer.classList.remove('armed'); dwgEnd(-1); });
-    }
-    if (round.kind === 'beat') {
-        // 박자 잇기 — 표시 i 가 선에 닿는 시각 = (i+1) × 박자. 누를 때마다 채점해 맞힌 표시를 칠한다
-        const { n, ms, win } = round.beat;
-        const c = dwgAt(box, box.querySelector('.divider'));
-        const track = el('div', 'dwg-track', `<i class="dwg-line" style="left:${DWG_BEAT_LINE * 100}%"></i><b class="dwg-combo"></b>`);
-        track.style.cssText = `left:${c.x}%;top:${c.y}%`;
-        const travel = ms * DWG_BEAT_TRAVEL;
-        const marks = Array.from({ length: n }, (_, i) => {
-            const m = el('i', 'dwg-mark');
-            // 오른쪽 끝(100%) → 왼쪽 끝(0%) 을 `travel` 동안 — 선(왼쪽에서 DWG_BEAT_LINE)에 닿는 것은 출발 뒤 (1 − 선) × travel
-            m.style.animationDuration = `${travel}ms`;
-            m.style.animationDelay = `${(i + 1) * ms - (1 - DWG_BEAT_LINE) * travel}ms`;
-            track.appendChild(m);
-            return m;
-        });
-        layer.appendChild(track);
-        const presses = [];
-        let hits = 0;
-        layer.onpointerdown = ev => {
-            ev.preventDefault();
-            presses.push(since());
-            const j = SYS.game.dwJudge(round, presses);
-            const cnt = j.hit.filter(Boolean).length;
-            j.hit.forEach((h, i) => marks[i].classList.toggle('hit', h));
-            if (cnt === hits) { track.classList.remove('miss'); void track.offsetWidth; track.classList.add('miss'); }
-            hits = cnt;
-            track.querySelector('.dwg-combo').textContent = j.best ? `×${j.best}` : '';
-        };
-        later(n * ms + win + 200, () => dwgEnd(presses));
-    }
-}
-const dwgRowOf = round => D[POSTS.find(p => p.id === round.post).tiers].find(x => x.tier === dwg.tier);
-/** 판 끝 — 받고(채점 · 보상은 `dwClaim`) 결과를 영웅 카드 위에 띄운 뒤 판을 걷는다 */
-function dwgEnd(input) {
-    if (!dwg?.busy || dwg.done) return;
-    dwg.done = true;
-    const { box, layer, round, post, tier } = dwg;
-    dwg.timers.forEach(clearTimeout);
-    dwg.timers = [];
-    layer.onpointerdown = null;
-    const res = SYS.game.dwClaim(G, post, tier, input, now());
-    const pop = (cls, text) => {
-        const lay = box.querySelector('.side-party .pop-layer');
-        if (!lay) return;
-        const f = el('span', `pop ${cls}`, text);
-        f.onanimationend = () => f.remove();
-        lay.appendChild(f);
-    };
-    if (res.ok && res.ms > 0) pop('heal', t('dw.bonus', { s: Math.round(res.ms / 1000) }));
-    else pop('dmg dt-physical', t('dw.miss'));
-    const got = res.ok ? Object.values(res.gained).reduce((a, b) => a + b, 0) : 0;
-    if (got > 0) { const row = dwgRowOf(round); pop('heal', t('dp.watch.gain', { n: got, item: L({ ko: row.yieldKo, en: row.yieldEn }) })); }
-    save();
-    dwLast = null;   // 체력 바를 앞당긴 몫에 맞춰 다시 그린다(연출 없이)
-    dwg.timers.push(setTimeout(() => {
-        layer.remove();
-        if (!dwg) return;
-        dwg.busy = false;
-        dwg.nextAt = now() + round.gapMs;
-    }, DWG_REST_MS));
-}
-
 let dwLast = null;
 function refreshDispatchWatch(at) {
     const box = document.querySelector('.dpw-arena');
-    if (!box) { dwLast = null; dwgStop(); return; }
-    dwgTick(box, at);
+    if (!box) { dwLast = null; return; }
     const key = box.dataset.dw, [post, tier] = key.split(':');
     const p = SYS.game.dispatchProgress(G, post, Number(tier), at);
     if (!p) return;
@@ -4948,6 +4869,290 @@ function refreshDispatchWatch(at) {
         pop('.side-party', 'heal', t('dp.watch.gain', { n: got, item: L({ ko: n.yieldKo, en: n.yieldEn }) }));
         setTimeout(() => { if (box.isConnected) paint(left); }, DW_REFILL_MS);
     } else paint(left);
+}
+
+/* ═══════════ 자원 미니게임 (SCREEN_DESIGN §8 · ADR-0532) ═══════════
+   [2026-10-06 사용자 「+효과가 아니라 아예 따로 미니게임을 해서 캐는 방식」 · 「영웅을 넣지 않는다 · 스탯 상관없음」 · PLAN_dispatch_watch D8]
+   단 이름 줄의 [미니게임]이 창 하나를 연다 — 채광 = 반짝임 연타 · 채집 = 받아내기 · 벌목 = 팀버맨. 플레이어가 **직접** 캐고 판 점수(내림)가 곧 재료다.
+   판의 내용 · 채점 · 보상은 전부 `game.mgRound` · `mgJudge` · `mgClaim` 이 정한다 — 화면은 판 시계를 재고 입력(누른 칸 · 바구니 자리 · 도끼질)을 모아
+   프레임마다 `mgJudge(판, 입력, 판 시계)` 가 돌려준 모습을 그릴 뿐이다. 판 시계는 **프레임마다 흐른 시간**(한 프레임 `MG_STEP_MS` 까지)이라
+   숨긴 탭에선 멈춘다. 창이 닫히면(× · 바깥 · Esc) 그때까지 캔 것을 받고 끝난다 · 판 도중 다시 그려져도 판은 이어진다(그림만 새로 세운다) */
+const MG_STEP_MS = 100;     // 한 프레임에 판 시계가 나아가는 최대 — 숨긴 탭 · 멈춘 프레임 뒤에 판이 건너뛰지 않게(연출의 길이다)
+const MG_KEY_SPEED = 1.4;   // 방향키로 바구니가 1초에 가는 거리(판 폭 대비) — 조작감이라 CSV 가 아니다
+const MG_LINE = 0.84;       // 받아내기의 바구니 줄(판 높이 대비) — 배치의 치수다
+const MG_TRUNK_SHOW = 6;    // 팀버맨이 보여 주는 토막 수 — 배치의 치수다
+const MG_SWAY_TURNS = 1.5;  // 귀한 약초가 떨어지며 좌우로 오가는 횟수 — 연출이다(닿는 자리는 판이 정한다)
+let mgRun = null;           // {key, post, tier, round, input, t, at, raf, phase: 'play'|'done', snap, bx, keys, field, drops, icon, result}
+
+/** 열린 단계 — 자리 칸과 같은 문(`limitsOf.resourceTiers` · 앞에서부터) */
+const mgTiers = post => (D[POSTS.find(p => p.id === post)?.tiers] ?? []).slice(0, SYS.game.limitsOf(G).resourceTiers);
+/** 창이 보는 판 — 고른 파견처 · 단계 · 고른 단계가 닫혔으면 열린 첫 단계 · 하나도 없으면 null(창이 닫힌다) */
+const mgCur = () => {
+    if (!G || !state.mg) return null;
+    const rows = mgTiers(state.mg.post);
+    const row = rows.find(n => n.tier === state.mg.tier) ?? rows[0];
+    return row ? { post: state.mg.post, row } : null;
+};
+const mgItem = row => L({ ko: row.yieldKo, en: row.yieldEn });
+const mgRowOf = run => (D[POSTS.find(p => p.id === run.post)?.tiers] ?? []).find(n => n.tier === run.tier);
+function mgOpen(post) {
+    if (mgRun?.phase !== 'play') mgRun = null;   // 지난 결과는 걷는다
+    state.mg = { post, tier: state.mgTier?.[post] ?? 1 };   // 파견처마다 마지막에 고른 단계로 연다
+    openModal('mg');
+}
+
+function mgHead() {
+    const cur = mgCur();
+    const busy = mgRun?.phase === 'play';
+    const wrap = el('div', 'mg-head');
+    wrap.appendChild(el('h2', '', t('mg.title', { post: t(POSTS.find(p => p.id === cur.post).label) })));
+    // 단계 탭 — 열린 단계마다 산출물 그림 + 번호(그림이 없으면 이름) · 판 도중엔 못 바꾼다
+    wrap.appendChild(segmented(mgTiers(cur.post).map(n => {
+        const icon = M.materialIcon(n.yieldId);
+        return { id: n.tier, label: icon ? `<img class="mg-tab-ico" src="${icon}" alt="" draggable="false">${n.tier}` : `${n.tier} · ${mgItem(n)}`, disabled: busy && n.tier !== cur.row.tier };
+    }), cur.row.tier, id => {
+        if (mgRun?.phase === 'play') return;
+        state.mg.tier = id;
+        state.mgTier = { ...state.mgTier, [cur.post]: id };
+        mgRun = null;
+        render();
+    }));
+    return wrap;
+}
+
+function mgBody() {
+    const cur = mgCur();
+    const field = el('div', `mg-field mg-${cur.post}`);
+    field.dataset.mg = `${cur.post}:${cur.row.tier}`;
+    const run = mgRun?.post === cur.post && mgRun?.tier === cur.row.tier ? mgRun : null;
+    if (run?.phase === 'play') { mgBind(field, run); return field; }   // 판의 그림은 프레임이 세운다(`mgFrame` → `mgBuild`)
+    // 시작 판 · 결과 판 — 산출물 그림 + 이름 · 한 줄 조작 안내 + [시작] / 받은 양 · 끝난 까닭 · 최고 콤보 + [다시]
+    const icon = M.materialIcon(cur.row.yieldId);
+    const res = run?.result;
+    const card = el('div', 'mg-card', (icon ? `<img class="mg-card-icon" src="${icon}" alt="" draggable="false">` : '')
+        + (res
+            ? `<div class="mg-got">${t('dp.watch.gain', { n: res.items, item: mgItem(cur.row) })}</div><div class="mg-sub">${t(`mg.why.${res.why}`)} · ${t('mg.best', { n: res.best })}</div>`
+            : `<div class="mg-name">${mgItem(cur.row)}</div><div class="mg-sub">${t(`mg.hint.${cur.post}`)}</div>`));
+    const go = el('button', 'btn mg-go', t(res ? 'mg.again' : 'mg.start'));
+    go.onclick = () => mgStart(cur.post, cur.row.tier);
+    card.appendChild(go);
+    field.appendChild(card);
+    return field;
+}
+
+function mgStart(post, tier) {
+    const r = SYS.game.mgRound(G, post, tier);
+    if (!r.ok) { flash(`mg.err.${r.err}`); render(); return; }
+    save();
+    mgRun = { key: `${post}:${tier}`, post, tier, round: r.round, input: [], t: 0, at: null, raf: 0, phase: 'play', snap: null,
+        bx: 0.5, keys: { L: 0, R: 0 }, field: null, drops: null, icon: null, result: null };
+    render();
+    mgRun.raf = requestAnimationFrame(mgFrame);
+}
+
+/** 판의 입력 — 시각은 판 시계(마지막 프레임)로 적는다 · 채점은 다음 프레임의 `mgJudge` 가 한다 */
+function mgBind(field, run) {
+    const x = ev => { const a = field.getBoundingClientRect(); return Math.min(1, Math.max(0, (ev.clientX - a.left) / a.width)); };
+    const kind = run.round.kind;
+    if (kind === 'tap') field.onpointerdown = ev => {
+        ev.preventDefault();
+        const c = ev.target.closest?.('[data-cell]');
+        if (c && run.phase === 'play') run.input.push({ t: run.t, cell: Number(c.dataset.cell) });
+    };
+    if (kind === 'catch') field.onpointermove = field.onpointerdown = ev => { run.bx = x(ev); };
+    if (kind === 'chop') field.onpointerdown = ev => { ev.preventDefault(); mgChop(run, x(ev) < 0.5 ? 'L' : 'R'); };
+}
+const mgChop = (run, side) => { if (run.phase === 'play') run.input.push({ t: run.t, side }); };
+/** 방향키 — 받아내기는 누르고 있는 동안 바구니가 간다 · 팀버맨은 누를 때마다 한 번(누르고 있어도 한 번) */
+function mgKey(e, down) {
+    const run = mgRun;
+    if (run?.phase !== 'play' || state.modal !== 'mg') return;
+    const side = { ArrowLeft: 'L', ArrowRight: 'R', a: 'L', d: 'R', A: 'L', D: 'R' }[e.key];
+    if (!side) return;
+    e.preventDefault();
+    if (run.round.kind === 'chop') { if (down && !e.repeat) mgChop(run, side); }
+    else run.keys[side] = down ? 1 : 0;
+}
+
+function mgFrame(ts) {
+    const run = mgRun;
+    if (!run || run.phase !== 'play') return;
+    const field = document.querySelector('.mg-field');
+    // 창이 닫혔다(또는 다른 판을 보고 있다) — 그때까지 캔 것을 받고 끝낸다
+    if (!field || state.modal !== 'mg' || field.dataset.mg !== run.key) { mgFinish(run, false); return; }
+    const dt = run.at == null ? 0 : Math.min(MG_STEP_MS, Math.max(0, ts - run.at));
+    run.at = ts;
+    run.t += dt;
+    const r = run.round;
+    if (r.kind === 'catch') {
+        run.bx = Math.min(1, Math.max(0, run.bx + (run.keys.R - run.keys.L) * MG_KEY_SPEED * dt / 1000));
+        // 바구니 줄에 닿은 것마다 **그 순간의 바구니 자리**를 적는다 — 받았는지는 채점이 정한다
+        r.drops.forEach((d, i) => { if (run.input[i] == null && d.at + d.fall <= run.t) run.input[i] = run.bx; });
+    }
+    const snap = SYS.game.mgJudge(r, run.input, run.t);
+    if (field !== run.field) mgBuild(field, run);
+    mgDraw(field, run, snap);
+    run.snap = snap;
+    if (snap.over) { mgFinish(run, true); return; }
+    run.raf = requestAnimationFrame(mgFrame);
+}
+
+/** 판 끝 — 받는다(`mgClaim` 이 다시 굴려 채점한다). 창 안에서 끝나면 결과 판을 그리고, 창 밖에서 끝나면 받은 양을 플래시로 */
+function mgFinish(run, shown) {
+    cancelAnimationFrame(run.raf);
+    run.phase = 'done';
+    const res = SYS.game.mgClaim(G, run.input);
+    if (res.ok) save();
+    const items = res.ok ? res.items : 0;
+    run.result = { items, best: run.snap?.best ?? 0, why: run.snap?.why ?? 'time' };
+    if (shown) { render(); return; }
+    mgRun = null;
+    const row = mgRowOf(run);
+    if (items > 0 && row) flash('dp.watch.gain', { n: items, item: mgItem(row) });
+}
+
+/** 판의 뼈대 — 판이 시작되거나 창이 다시 그려졌을 때 한 번. 움직이는 것은 `mgDraw` 가 프레임마다 갈아 끼운다 */
+function mgBuild(field, run) {
+    const r = run.round;
+    run.field = field;
+    run.drops = new Map();   // 받아내기 — 떨어지는 중인 것의 DOM(번호 → 노드)
+    run.icon = M.materialIcon(mgRowOf(run)?.yieldId);
+    const img = run.icon ? `<img src="${run.icon}" alt="" draggable="false">` : '';
+    // 판 그림(바구니 · 토막 · 가지 · 나무꾼) — 경로는 `mock.js:MG_ART` 가 쥐고 CSS 는 `--mg-<이름>` 변수로 읽는다 (ADR-0534).
+    // 변수 속 상대 주소는 변수를 **쓰는** 스타일시트(`ui/style.css`) 기준으로 풀리므로 문서 기준 절대 주소로 바꿔 넣는다
+    for (const [id, src] of Object.entries(M.MG_ART)) field.style.setProperty(`--mg-${id.replace(/_/g, '-')}`, `url("${new URL(src, document.baseURI).href}")`);
+    // 머리 — 목숨 · 콤보 · 받은 양 · 남은 시간 막대
+    field.innerHTML = `<div class="mg-hud"><span class="mg-lives"></span><span class="mg-combo"></span><span class="mg-items">${img}<b></b></span></div><i class="mg-time"><b></b></i>`;
+    if (r.kind === 'tap') {
+        const wall = el('div', 'mg-wall');
+        wall.style.gridTemplateColumns = `repeat(${r.cols}, 1fr)`;
+        wall.style.gridTemplateRows = `repeat(${r.rows}, 1fr)`;
+        for (let i = 0; i < r.cols * r.rows; i++) {
+            const c = el('div', 'mg-cell');
+            c.dataset.cell = i;
+            wall.appendChild(c);
+        }
+        field.appendChild(wall);
+    }
+    if (r.kind === 'catch') {
+        const line = el('i', 'mg-line'), b = el('div', 'mg-basket');
+        line.style.top = b.style.top = `${MG_LINE * 100}%`;
+        b.style.width = `${r.basket * 100}%`;
+        field.append(el('div', 'mg-sky'), line, b);
+    }
+    // 나무 기둥 · 나무꾼 · 좌우 표시(판의 왼쪽 반 · 오른쪽 반을 누르는 것과 방향키가 같다)
+    if (r.kind === 'chop') field.append(el('div', 'mg-tree'), el('div', 'mg-jack L'), el('span', 'mg-key L', '◀'), el('span', 'mg-key R', '▶'));
+    field.appendChild(el('div', 'mg-fx'));
+}
+
+const mgReplay = (node, cls) => { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); };
+/** 떠오르는 숫자 — 판 기준 비(0~1) 자리에 */
+function mgPopAt(field, x, y, cls, text) {
+    const f = el('span', `mg-pop ${cls}`, text);
+    f.style.left = `${x * 100}%`;
+    f.style.top = `${y * 100}%`;
+    f.onanimationend = () => f.remove();
+    field.querySelector('.mg-fx')?.appendChild(f);
+}
+const mgPop = (field, node, cls, text) => {
+    const a = field.getBoundingClientRect(), b = node.getBoundingClientRect();
+    mgPopAt(field, (b.left + b.width / 2 - a.left) / a.width, (b.top + b.height / 2 - a.top) / a.height, cls, text);
+};
+
+/** 프레임마다 — `snap`(지금 모습)과 `run.snap`(앞 프레임)을 견줘 바뀐 것만 팝업을 띄운다 */
+function mgDraw(field, run, snap) {
+    const r = run.round, prev = run.snap;
+    const hud = field.querySelector('.mg-hud');
+    hud.querySelector('.mg-lives').textContent = '♥'.repeat(Math.max(0, snap.lives)) + '♡'.repeat(Math.max(0, r.lives - snap.lives));
+    hud.querySelector('.mg-combo').textContent = snap.combo ? t('mg.combo', { n: snap.combo, m: snap.mult }) : '';
+    hud.querySelector('.mg-items b').textContent = `${snap.items}`;
+    // 남은 시간 — 채광 · 채집 = 판 길이에서 흐른 몫 · 벌목 = 시간 막대
+    field.querySelector('.mg-time b').style.width = `${(r.kind === 'chop' ? snap.bar : Math.max(0, 1 - run.t / r.ms)) * 100}%`;
+    if (r.kind === 'tap') mgDrawTap(field, run, snap, prev);
+    if (r.kind === 'catch') mgDrawCatch(field, run, snap, prev);
+    if (r.kind === 'chop') mgDrawChop(field, run, snap, prev);
+}
+
+/** 반짝임 연타 — 칸마다 지금 떠 있는 것 · 금(남은 타수) · 남은 시간 줄 */
+function mgDrawTap(field, run, snap, prev) {
+    const r = run.round, cells = field.querySelectorAll('.mg-cell');
+    const live = new Map();
+    r.spawns.forEach((s, i) => { if (!snap.spawns[i].done && s.at <= run.t && run.t < s.at + s.life) live.set(s.cell, i); });
+    cells.forEach((c, k) => {
+        const i = live.get(k);
+        const key = i == null ? '' : String(i);
+        if (c.dataset.on !== key) {   // 칸의 주인이 바뀌었다 — 속을 새로 세운다
+            c.dataset.on = key;
+            const s = i == null ? null : r.spawns[i];
+            c.className = `mg-cell${s ? ` on ${s.kind}` : ''}`;
+            const src = s?.kind === 'bad' ? M.MG_ART.mine_hazard : run.icon;   // 불안정한 바위는 제 그림 · 광맥은 산출물 그림
+            c.innerHTML = s ? `${src ? `<img src="${src}" alt="" draggable="false">` : ''}<i class="mg-left"></i>` : '';
+        }
+        if (i == null) return;
+        const s = r.spawns[i];
+        c.style.setProperty('--hp', snap.spawns[i].hp / s.hp);
+        c.style.setProperty('--left', 1 - (run.t - s.at) / s.life);
+        if (prev && prev.spawns[i].hp !== snap.spawns[i].hp) mgReplay(c, 'hit');
+    });
+    snap.spawns.forEach((x, i) => {
+        if (!x.done || x.done === prev?.spawns[i].done) return;
+        const c = cells[r.spawns[i].cell];
+        if (x.done === 'broke') mgPop(field, c, 'good', `+${r.spawns[i].kind === 'rare' ? r.score.rare : 1}`);
+        if (x.done === 'boom') { mgPop(field, c, 'bad', '♥'); mgReplay(field, 'shake'); }
+    });
+    field.classList.toggle('stun', run.t < snap.stun);
+}
+
+/** 받아내기 — 떨어지는 것의 자리 · 바구니 · 받거나 맞은 순간의 팝업 */
+function mgDrawCatch(field, run, snap, prev) {
+    const r = run.round, sky = field.querySelector('.mg-sky');
+    r.drops.forEach((d, i) => {
+        const p = (run.t - d.at) / d.fall;
+        let n = run.drops.get(i);
+        if (p >= 0 && p < 1 && !snap.over) {
+            if (!n) {
+                const src = d.kind === 'bad' ? M.MG_ART.gather_poison : run.icon;   // 독초는 제 그림 · 나머지는 산출물 그림
+                n = el('div', `mg-drop ${d.kind}`, src ? `<img src="${src}" alt="" draggable="false">` : '');
+                sky.appendChild(n);
+                run.drops.set(i, n);
+            }
+            // 귀한 것은 좌우로 오가며 온다 — 줄에 닿는 순간엔 제자리(`d.x`)다
+            const x = d.x + d.sway * Math.sin(2 * Math.PI * MG_SWAY_TURNS * (1 - p));
+            n.style.left = `${Math.min(1, Math.max(0, x)) * 100}%`;
+            n.style.top = `${p * MG_LINE * 100}%`;
+        } else if (n) { n.remove(); run.drops.delete(i); }
+    });
+    field.querySelector('.mg-basket').style.left = `${run.bx * 100}%`;
+    snap.drops.forEach((x, i) => {
+        if (!x || x === prev?.drops[i]) return;
+        const d = r.drops[i];
+        if (x === 'got') mgPopAt(field, d.x, MG_LINE, 'good', `+${d.kind === 'rare' ? r.score.rare : 1}`);
+        if (x === 'hit') { mgPopAt(field, d.x, MG_LINE, 'bad', '♥'); mgReplay(field, 'shake'); }
+    });
+}
+
+/** 팀버맨 — 맨 아래부터 `MG_TRUNK_SHOW` 토막 · 나무꾼 자리 · 벨 때 · 맞을 때의 팝업 */
+function mgDrawChop(field, run, snap, prev) {
+    const r = run.round, tree = field.querySelector('.mg-tree');
+    const key = `${snap.cut}:${snap.hit.length}`;
+    if (tree.dataset.k !== key) {   // 토막이 내려오거나 가지가 부러질 때만 다시 세운다 — 맨 아래가 나무꾼 높이의 토막이다
+        tree.dataset.k = key;
+        const broke = new Set(snap.hit);
+        tree.innerHTML = Array.from({ length: MG_TRUNK_SHOW }, (_, k) => {
+            const i = snap.cut + k, s = r.segs[i];
+            if (!s) return '<div class="mg-seg gone"></div>';
+            const b = broke.has(i) ? null : s.b;
+            return `<div class="mg-seg${s.rare ? ' rare' : ''}">${b ? `<i class="mg-branch ${b}"></i>` : ''}</div>`;
+        }).join('');
+    }
+    const jack = field.querySelector('.mg-jack');
+    jack.classList.toggle('L', snap.side === 'L');
+    jack.classList.toggle('R', snap.side === 'R');
+    if (prev && snap.cut > prev.cut) {
+        mgReplay(jack, 'swing');
+        mgPopAt(field, snap.side === 'L' ? 0.6 : 0.4, 0.82, 'good', `+${r.segs[snap.cut - 1].rare ? r.score.rare : 1}`);
+    }
+    if (prev && snap.hit.length > prev.hit.length) { mgPopAt(field, snap.side === 'L' ? 0.3 : 0.7, 0.66, 'bad', '♥'); mgReplay(field, 'shake'); }
 }
 
 /* ═══════════ 탐험 — 파티 파견 (SCREEN_DESIGN §8-4) ═══════════
@@ -6741,6 +6946,9 @@ async function boot() {
     onSaveWrittenElsewhere(freeze);
     // 창을 닫는 셋째 길 — 닫기 버튼 · 판 바깥 클릭 · 여기 (SCREEN_DESIGN §2 창 레이어). 한 번만 건다 · 닫는 길이 없는 창(`lock`)은 뺀다
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.modal && !MODALS[state.modal]?.lock) closeModal(); });
+    // 자원 미니게임의 방향키 (§8 · ADR-0532) — 판이 도는 동안만 먹는다
+    document.addEventListener('keydown', e => mgKey(e, true));
+    document.addEventListener('keyup', e => mgKey(e, false));
     // 자원 자리의 선택 창도 Esc 로 닫는다 (ADR-0373)
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.dpPick && !state.modal) { state.dpPick = null; render(); } });
     // 보관 칸 우클릭 메뉴도 Esc 로 닫는다 (ADR-0451)
@@ -6911,6 +7119,12 @@ async function boot() {
         h0.masteryPoints = D.balance.mastery_t1_max_rank;
         const first = SYS.game.masteryState(G, h0.uid).nodes.find(n => n.canLearn);
         if (first) SYS.game.learnMastery(G, h0.uid, first.id);
+        // `&adv=1` — 전직 판이 서게 영웅 0 을 전직시키고 스킬을 배워 한 단계 올려 둔다 · 전직 포인트 하나가 남아 스킬 칸이 눌린다 (2026-10-06 · R216 · ADR-0529)
+        if (new URLSearchParams(location.search).get('adv') === '1') {
+            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_point_interval * 2));
+            const br = SYS.game.advanceState(G, h0.uid, now()).branches[0];
+            if (br) { h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); SYS.game.advanceLevelUp(G, h0.uid); }
+        }
     }
     if (dev === 'book') {   // 책을 쥔 **서고 탭** (§17 · §10 · ADR-0422 · ADR-0426) — 서고 · 레벨 10 · 책이 있어야 버튼이 산다.
         if (!G) startGame();
@@ -6919,9 +7133,10 @@ async function boot() {
         h0.level = Math.max(h0.level, D.balance.skillbook_learn_level);
         // 책 셋 — 제 직업 기본기 둘 · 남의 직업 하나 · 그중 하나를 이미 배운 채로(덮어쓰기 줄이 보이게). 골드 · 가루는 만들기 줄이 켜지게
         //   제 직업 책은 두 권씩 — 배운 책은 한 권이 남아 「배움」 줄에도 권수가 서고 둘째 책은 `×2` (책은 쌓인다 · ADR-0460)
-        const own = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === h0.cls).map(d => d.id);
+        //   고유와 같은 책은 업그레이드라(R216) 배우기 표본에서 빼고 **고유 책 한 권**을 따로 쥐여 업그레이드 줄이 둘 서게 한다(배운 책 남은 한 권 · 고유 책 · ADR-0529)
+        const own = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === h0.cls).map(d => d.id).filter(id => id !== h0.innate);
         const other = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId !== h0.cls)?.id;
-        for (const [id, n] of [[own[0], 2], [own[1], 2], [other, 1]]) if (id) G.books[id] = n;
+        for (const [id, n] of [[own[0], 2], [own[1], 2], [other, 1], [h0.innate, 1]]) if (id) G.books[id] = n;
         SYS.game.learnBook(G, h0.uid, own[0]);
         G.resources.gold = Math.max(G.resources.gold, D.balance.book_craft_gold * 3);
         G.resources.dust = Math.max(G.resources.dust, D.balance.book_craft_dust * 3);
@@ -6956,6 +7171,17 @@ async function boot() {
         state.tab = 'resource';
         if (q.get('open') !== '0') state.modal = 'dpWatch';
         save();
+    }
+    if (dev === 'mg') {   // 자원 미니게임 창 (§8 · §10 · ADR-0532) — 단계는 자원 랭크가 연다 · `&mg=<파견처>` · `&go=1` 이면 판을 연 채
+        if (!G) startGame();
+        devBuild('resource');
+        const q = new URLSearchParams(location.search);
+        const post = POSTS.some(p => p.id === q.get('mg')) ? q.get('mg') : POSTS[0].id;
+        state.mg = { post, tier: 1 };
+        state.tab = 'resource';
+        state.modal = 'mg';
+        save();
+        if (q.get('go') === '1') setTimeout(() => { if (state.modal === 'mg') mgStart(post, 1); }, 0);
     }
     // `&fg=` — 제련소의 작업 탭을 고른 채 연다 (§10 · ADR-0142). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const fg = new URLSearchParams(location.search).get('fg');

@@ -11,7 +11,7 @@
  *   · 라운드 구조는 **스테이지가 고르는 세트** — stage.csv:round_set → stage_round.csv. 보통 스테이지는 9라운드(정예 3·6 / 보스 9),
  *     챕터보스 스테이지는 **보스 1라운드**다 (base_expedition_design §1-2 개정 2026-09-11). 편성은 round_budget.csv ·
  *     스테이지 컨셉이 편성을 바꾸는 예외는 spawn_rule.js (monster_design §4 · 2026-09-18)
- *   · 행동 주기 단일 축 (공격/캐스팅 같은 시계), 한 차례에 하나
+ *   · 행동 주기 단일 축 (공격/캐스팅 같은 시계), 한 차례에 스킬 하나 + 기본 공격 (2026-10-06 R218 · `skill_runtime.act`)
  *   · **마법 무기는 평타를 치지 않는다** [2026-10-02 · 사용자 확정 · R198 · battle_design §3] — 시전 게이지는 **칸 충전식**이다(R200 · `chargeTick`):
  *     한 바퀴에 칸 하나(상한 [balance.csv:cast_charge_max]) · 시전 한 번에 칸 하나 · 쌓인 칸만큼 틱마다 연달아. 영웅 · 몬스터 같은 규칙 · rng 0
  *   · **행동 게이지는 빈 채로 출발한다** [2026-10-02 · 사용자 확정 · R200 · battle_design §6] — 첫 차례(첫 칸)는 한 바퀴 뒤
@@ -71,13 +71,14 @@
  *   · **드롭 = 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · item_design §1 2단계]. **처치당 최대 1개**(08-27)는
  *     그대로이고 판정도 1회 · 등급은 확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 바뀐 것은 **무엇이 떨어지나** —
  *     판정 뒤 **입은 부위 중 하나**를 골라 그 아이템을 그대로 낸다. 파이프라인 3~6단계(ilvl · 희귀도 · 접사 · 개체 굴림)는
- *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = `스테이지 레벨 + gear_ilvl_add`(굴림 없음) ·
+ *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = 가운데 `스테이지 레벨 + gear_ilvl_add` ± 반폭(부위마다 균등 · ~~굴림 없음~~ 2026-10-06) ·
  *     희귀도 = 등급의 가중치(`gear_rarity_w_*` · 2026-09-23 — 일반 등급은 레어 0) · 레어 가중에 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
  *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
  *   · **그 한 개는 장비 또는 스킬북이다** [2026-09-29 · R179 · item_design §1 드롭 1-2] — 판정 뒤 종류 1회 · 책은 그 몬스터의 고유 스킬 책(`result.books`).
+ *   · **처치 재료는 그 1개와 따로다** [2026-10-06 · item_design §1 「처치 재료」] — 판정 1회 → 종류 1회(`MATERIAL_KINDS`) · `result.materials` 는 종류만 센다(단계는 state 가 정한다).
  */
 
-import { createFormula } from './formula.js';
+import { createFormula, FIXED_DMG } from './formula.js';
 // 원소 어휘만 가져온다 — 시스템 주입이 아니다 (skill.js 와 같은 취급 · INTERFACE §1)
 import { ELEMENTS } from './hero.js';
 import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js';
@@ -93,6 +94,8 @@ const TICK = 0.1;
 const STEP_EPS = 1e-6;
 /** 공격력이 없는 쪽의 범위 — 소환 · 마법 무기가 아닌 쪽의 회복 밑수 (R90) */
 const NO_DMG = Object.freeze({ min: 0, max: 0 });
+/** 처치 재료의 종류 — **이 순서가 종류 굴림의 인덱스**다(INTERFACE §5-3 · 2026-10-06). 광석 · 목재 · 약초(item_design §5-1 표 순서) */
+const MATERIAL_KINDS = Object.freeze(['ore', 'timber', 'herb']);
 
 /**
  * @param {object} data
@@ -151,6 +154,9 @@ export function createBattleSystem(data) {
 
     /** 입는 부위 — `monster.csv:wear_slots` 를 `|` 로 가른다. **이 순서가 장비 굴림 순서**다 (INTERFACE §5-2) */
     const wearSlots = m => String(m.wear_slots ?? '').split('|').filter(Boolean);
+    /** 몬스터 장비 아이템 레벨의 반폭 — 가운데 × `[balance.csv:drop_ilvl_spread_pct]` 반올림 · 하한 `[balance.csv:drop_ilvl_spread_min]`
+     *  [2026-10-06 · item_design §1 3단계 · 반올림 자릿수는 INTERFACE §5-3] */
+    const ilvlSpreadOf = center => Math.max(B.drop_ilvl_spread_min, Math.round(center * B.drop_ilvl_spread_pct));
 
     /*
      * 몬스터 모양 검증 — **로드에서 멈춘다** (`roundSets` 검사와 같은 이유 · 2026-09-11 R79). 오타가 조용히 새면
@@ -186,7 +192,8 @@ export function createBattleSystem(data) {
      * 편성 화면이 "이 스테이지는 어느 저항을 요구하나"를 표시하려면 필요한데(§9-8),
      * 렌더러가 몬스터 테이블을 훑어 계산하면 규칙이 화면 층에 새므로 여기 둔다. rng 0
      */
-    const skillElement = id => (SK?.defs[id]?.effects ?? []).find(e => e.element)?.element ?? null;
+    //   고정 피해(`fixed` · 사제 직격 — R221)는 원소가 아니라 저항을 요구하지 않으므로 건너뛴다
+    const skillElement = id => (SK?.defs[id]?.effects ?? []).find(e => e.element && e.element !== FIXED_DMG)?.element ?? null;
     const stageElement = stage =>
         stageMonsters(stage).map(m => skillElement(m.innate_skill)).find(Boolean) ?? 'physical';
 
@@ -275,6 +282,9 @@ export function createBattleSystem(data) {
             // 평타를 안 친다 — 마법 무기 [2026-10-02 · R198 · battle_design §3]. 차례에 준비된 스킬이 없으면 찬 채로 기다린다(틱 루프) · 반격도 없다.
             //   `basic_attack` 을 모르는 입력(소환 · 손으로 만든 검증 유닛)은 평타를 친다
             noBasic: c.basic_attack === false,
+            // 적중을 굴리지 않는다 — **마법 무기를 든 시전자는 항상 맞는다** [2026-10-06 · 사용자 확정 · R219 · battle_design §9-4]. 판정은 무기(위 평타 여부와 같은 출처)이지
+            //   타격의 원소가 아니다 — 물리 무기의 원소 추가타는 굴린다 · `formula.strike` 가 읽는다
+            sureHit: c.basic_attack === false,
             // 창이 미는 축은 **밑수를 따로 든다** — `refreshDerived` 가 창 합으로 파생값을 다시 쓰고,
             //   창이 하나도 없을 때 원값으로 돌아갈 자리가 필요해서다 (skill_effects:EFFECTS.derive)
             def: c.defense, defBase: c.defense,
@@ -284,7 +294,7 @@ export function createBattleSystem(data) {
             res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             resBase: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 레벨 (§9-4 · R87)
-            hitBonus: c.option_fx?.hitBonus ?? 0,     // 명중률 — 적중률에 더한다(궁수 T1-3 · 2026-09-22 R138 · formula.hitChance). 없으면 0
+            hitBonus: c.option_fx?.hitBonus ?? 0,     // 명중률 — 적중률에 (1 + 명중률)로 곱한다(궁수 T1-3 · 2026-09-22 R138 · 곱 2026-10-06 R219 · formula.hitChance). 없으면 0
             resMaxBonus: c.res_max_bonus, dr: c.damage_reduction, drBase: c.damage_reduction,
             // 방어구 옵션 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 원소별 최대 저항 · 절대값 피해 감소 · 반격 확률 · 체력 회복 +%.
             //   `strike` 가 앞의 둘을 읽고(방어자) · 반격은 `strikeOnce` 끝 · 회복은 재생 · 회복 스킬 · 흡혈 · 물약이 읽는다. 없으면 0 — 종전과 같다
@@ -343,7 +353,7 @@ export function createBattleSystem(data) {
 
     /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
-    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType', 'noBasic',
+    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType', 'noBasic', 'sureHit',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
         'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur',
         'staggerDur', 'castRefund', 'castStack', 'statusDur', 'debuffDur', 'healOut',
@@ -530,11 +540,14 @@ export function createBattleSystem(data) {
         const list = kept.map((s, k) => {
             const m = data.monsters[s.id];
             const g = data.grades[s.grade];
-            // 아이템 레벨은 **굴리지 않는다** — 던전 레벨 + 등급 가산이다 (item_design §1 3단계 · 사용자 확정 2026-09-11)
+            // 아이템 레벨 = 가운데(던전 레벨 + 등급 가산) ± 반폭 — **부위마다** `rollGear` 가 굴린다 [개정 2026-10-06 · 사용자 확정 · item_design §1 3단계 — ~~굴리지 않는다~~(09-11)].
+            //   반폭 = 가운데 × 비율 반올림 · 하한 — 모든 등급이 같은 비율이라 평균은 종전과 같다. 몬스터가 입는 장비라 그 세기도 같이 흔들린다(사용자가 알고 택했다)
             // 제 줄 = (씨앗 · 라운드 · 목록 자리) — 앞 몬스터의 굴림 수가 뒤 몬스터의 장비도 전투 수열도 안 민다 (INTERFACE §5-1 · 2026-09-22)
+            const center = level + g.gear_ilvl_add;
             const gear = data.itemSystem.rollGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), {
                 slots: wearSlots(m),
-                ilvl: level + g.gear_ilvl_add,
+                ilvl: center,
+                ilvlSpread: ilvlSpreadOf(center),
                 magicFind,
                 rareBonusPct: g.gear_rare_bonus_pct,
                 // 희귀도 가중치는 **등급이 쥔다** — 일반 = 일반 + 가끔 매직(레어 0) · 정예 = 일반 + 매직 + 가끔 레어 (2026-09-23 사용자 지시)
@@ -725,7 +738,8 @@ export function createBattleSystem(data) {
             // 보상 칸(xpTotal · gold · kills · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
             // killGrades = kills 를 처치 순간의 등급으로 가른 것 `{monsterId: {grade: n}}` — 의뢰 「정예 · 보스 n마리」가 읽는다 (R153 · 세는 것뿐이라 rng 0)
             // books = 떨어진 스킬북의 스킬 id — 처치당 1개를 장비와 나눠 쓴다(onKill · 2026-09-29 R179) · drops 와 같이 이긴 라운드의 몫만
-            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, drops: [], books: [], downed: [],
+            // materials = 처치 재료의 종류별 개수 `{ore?, timber?, herb?}` — 장비 · 책의 1개와 따로 굴린다(onKill · 2026-10-06) · drops 와 같이 이긴 라운드의 몫만
+            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, drops: [], books: [], materials: {}, downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -750,7 +764,7 @@ export function createBattleSystem(data) {
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
         // xpByLevel = xp 를 **몬스터 레벨**로 가른 것 `{lvl: xp}` — 정산이 영웅마다 레벨 차 감쇠를 건다 (2026-09-30 · hero_design §5 · 세는 것뿐이라 rng 0)
-        const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, drops: [], books: [] });
+        const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, drops: [], books: [], materials: {} });
         let loot = newLoot();
         const bank = () => {
             out.xpTotal += loot.xp;
@@ -762,6 +776,7 @@ export function createBattleSystem(data) {
             }
             out.drops.push(...loot.drops);
             out.books.push(...loot.books);
+            for (const [k, n] of Object.entries(loot.materials)) out.materials[k] = (out.materials[k] ?? 0) + n;
         };
 
         let t = 0, round = 1;
@@ -915,6 +930,16 @@ export function createBattleSystem(data) {
                 if (book && bookId) { loot.books.push(bookId); continue; }
                 if (!worn.length) continue;
                 loot.drops.push(worn[Math.floor(rng() * worn.length)]);
+            }
+            /*
+             * **처치 재료** [2026-10-06 · 사용자 확정 · item_design §1 「처치 재료」] — 장비 · 책의 1개와 **따로** 판정 1회 → (성공 시) 종류 1회.
+             *   확률 = `drop_material_pct` × 등급 배율(장비와 같은 `drop_chance_mult`) × 파티 드랍률(사용자 「당연히 붙어야지」) · 보스 보장은 안 걸린다.
+             *   **판정은 처치마다 언제나 1회 소비한다**(확률 0 이어도 · 맨몸이어도) — 소비 수가 몬스터에 의존하면 같은 시드가 다른 수열을 낸다(INTERFACE §5-2).
+             *   battle 은 **종류만** 낸다 — 어느 단계의 재료인지는 state 가 스테이지의 챕터로 정한다(`settleRound`)
+             */
+            if (rng() < B.drop_material_pct * e.dropChanceMult * dropMult) {
+                const kind = MATERIAL_KINDS[Math.floor(rng() * MATERIAL_KINDS.length)];
+                loot.materials[kind] = (loot.materials[kind] ?? 0) + 1;
             }
         };
 
@@ -1285,7 +1310,8 @@ export function createBattleSystem(data) {
             timeline.push(ev);
             // 물리 경직 (battle_design §2-3 · R110) — **물리 직격으로 실제로 줄어든 HP**(배리어 몫 빼고 · 강타 몫 넣고)가 최대 HP 의 비율 이상일 때만.
             //   원소 타격은 경직 대신 상태이상의 몫이다. 소환은 차례가 없다 · 쓰러진 대상은 멈출 차례가 없다. 이벤트는 그 `hit` 바로 뒤다
-            if (hitType === 'physical' && target.hp > 0 && !target.summon
+            //   **고정 피해(사제 직격)도 건다** — 물리였을 때 걸던 것을 그대로 둔다(2026-10-06 R221 — 감소만 건너뛴다)
+            if ((hitType === 'physical' || hitType === FIXED_DMG) && target.hp > 0 && !target.summon
                 && hpBefore - target.hp >= target.hpMax * B.stagger_hp_pct) stagger(target, u);
             // 타격 시 창 — 무기 옵션의 방어력 · 저항 · 공격력 감소 (skill_effects.weaponOnHit · R78). rng 0 · 이벤트 없음(`quiet`)
             if (fx && target.hp > 0) weaponOnHit(u, fx, target, hitType, t, windowSec);
@@ -1340,7 +1366,7 @@ export function createBattleSystem(data) {
         };
         /**
          * 라운드 하나의 요약 — `n` 번째 라운드가 `t` 초에 끝났다 · 이겼나(`cleared`) · 런이 끝났나(`ended`) ·
-         * **그 라운드의 몫**(`xp` · `xpByLevel` · `gold` · `kills` · `drops` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
+         * **그 라운드의 몫**(`xp` · `xpByLevel` · `gold` · `kills` · `drops` · `books` · `materials` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
          */
         const summary = cleared => {
             const s = {

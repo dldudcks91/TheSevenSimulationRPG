@@ -568,9 +568,11 @@ export function createItemSystem(data) {
     /**
      * **한 벌** — 주어진 부위마다 아이템 하나 [신설 2026-09-11 · R79 · monster_design §5-1 · item_design §1].
      * 몬스터가 **입고 있는** 장비가 이것이고, 처치 드롭은 그중 하나가 **그대로** 나간다(2단계 = 입은 부위 중 하나).
-     * rng 소비 순서(계약 — INTERFACE §5-2): 부위 배열 순서대로 — 베이스(무기는 `weaponGroup` 을 주면 **0회**) → 희귀도 1 → `build`.
+     * rng 소비 순서(계약 — INTERFACE §5-2): 부위 배열 순서대로 — (`ilvlSpread > 0` 이면) 아이템 레벨 1 → 베이스(무기는 `weaponGroup` 을 주면 **0회**) → 희귀도 1 → `build`.
      *   ⚠ **부위 배열 순서가 계약이다** — 같은 부위 묶음이라도 순서가 바뀌면 같은 시드가 다른 한 벌을 낸다.
-     * @param opts `{slots, ilvl, magicFind?, rareBonusPct?, weaponGroup?, rarityWeights?}`
+     * @param opts `{slots, ilvl, ilvlSpread?, magicFind?, rareBonusPct?, weaponGroup?, rarityWeights?}`
+     *   · `ilvlSpread` 아이템 레벨의 반폭(정수) — 부위마다 `ilvl ± ilvlSpread` 에서 균등 1회 · 하한 1 [2026-10-06 · item_design §1 3단계].
+     *     몬스터 장비만 넘긴다(`battle.spawnRound`) — 없거나 0 이면 굴리지 않아 제작 · 상단 · 시작 장비의 수열이 그대로다
      *   · `magicFind` 파티 평균(비율) · `rareBonusPct` 등급이 미는 레어 가중(비율 · `spawn_grade.csv:gear_rare_bonus_pct`) — **둘은 같은 채널**이다
      *   · `weaponGroup` 무기군 고정. 몬스터는 제 무기군(`monster.csv:weapon_group`)을 들고, 안 주면 본편 무기군에서 굴린다
      *   · `itemBase` 무기 외 베이스 고정(`itemBases` 의 id — **소비 0**). 제작이 고른 종류를 넘긴다(2026-09-21) · 후보 밖인지는 부르는 쪽이 본다
@@ -578,10 +580,14 @@ export function createItemSystem(data) {
      *   · `rarityWeights` 희귀도 가중치 `{normal, magic, rare}` — 제작이 넘긴다(없으면 드롭 가중치 · 굴림 수 불변 · R96)
      */
     function rollGear(rng, opts) {
-        const { slots, ilvl } = opts;
+        const { slots } = opts;
+        const spread = opts.ilvlSpread ?? 0;
         const rareBonus = (opts.magicFind ?? 0) + (opts.rareBonusPct ?? 0);
         const out = [];
         for (const slot of slots) {
+            // 아이템 레벨 — 반폭을 받으면 **부위마다** 가운데 ± 반폭에서 균등 1회 (2026-10-06 · item_design §1 3단계).
+            //   레벨 1 은 아이템 레벨의 바닥이라 그 아래로 굴러가면 1 로 세운다(INTERFACE §5-3) · 반폭이 없으면 굴리지 않는다
+            const ilvl = spread > 0 ? Math.max(1, opts.ilvl - spread + Math.floor(rng() * (2 * spread + 1))) : opts.ilvl;
             // 무기군을 지정받으면 굴리지 않는다 — 그 몬스터가 어느 무기를 드는지는 데이터가 정한다(드롭 편향의 단위)
             // 무기 외는 **그 ilvl 의 티어 행**에서 굴린다(2026-09-18) — 후보만 좁고 소비는 1회 그대로다 · `itemBase` 를 받으면 굴리지 않는다(제작 · 2026-09-21)
             const base = slot === 'weapon'

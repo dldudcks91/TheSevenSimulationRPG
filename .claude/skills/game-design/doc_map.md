@@ -28,7 +28,7 @@
 | 결투장 · 온라인/오프라인 · 치팅 | [arena_design.md](docs/game_design/arena_design.md) §0 확정 · §2 적법성 검사 · §4 인증 리그 | 미발행 (기존 CSV 범위를 읽는다) | `game_logic/arena.js` (지금은 AI 연습전) |
 | 전투 · 피해 계산 | [battle_design.md](docs/game_design/battle_design.md) §2 행동 주기 · §3 발동 규칙 · §5 액티브 · §6 쿨타임 · §8 전투 능력치 · §8-1 몬스터 · **§9 피해 계산**(§9-1~§9-6) · §9-9 미결 | `combat_stat.csv` · `balance.csv` · `round_budget.csv` | DEV_PLAN §3-3 R1~R8 · R10 |
 | 영웅 · 능력치 · 성장 | [hero_design.md](docs/game_design/hero_design.md) §1 2층 구조 · §2 직업 · §3 정체성 분담 · §4 능력치 · §4-1 기본 능력치 · §4-1-1 미결 · §4-2 불변식 · §5 성장 · §6 미탑재 | `hero_attribute.csv` · `combat_stat.csv` · `balance.csv` | DEV_PLAN §3-3 R7 · R12 |
-| 스킬 · 마스터리 · 전직 | [skill_design.md](docs/game_design/skill_design.md) §0 확정 · §1 구조 · §2 액티브 · §3 마스터리 · §4 전직 특화 · §5 롤백 · **§7 미확정** · §9 직업 액티브 초안 | `skill.csv` (노드 테이블 · 무기군 액티브 · 고유 스킬 풀 · 포인트 키는 **미발행**) | DEV_PLAN §3-2 (스킬 효과) |
+| 스킬 · 마스터리 · 전직 | [skill_design.md](docs/game_design/skill_design.md) §0 확정 · §1 구조 · §2 액티브 · §2-3 스킬 레벨 · §3 마스터리 · §4 전직 특화 · §5 롤백 · **§7 미확정** · §9 직업 액티브 초안 | `skill.csv` · `mastery_node.csv` · `balance.csv`(포인트 · 스킬 레벨 키 — 10-06) (전직 노드 테이블 · 고유 스킬 풀 · 스킬 레벨이 올리는 칸은 **미발행**) | DEV_PLAN §3-2 (스킬 효과) |
 | 아이템 · 접사 · 자원 | [item_design.md](docs/game_design/item_design.md) §1 구조 · §2 변경점 · §2-1 ilvl 스케일링 · §4 이관 · §5 자원 · **§5-3 미확정** | `equipment_option_override.csv` · `weapon_group.csv` · `inherited/` (읽기 전용) | DEV_PLAN §3-2 (크래프트·낙인·유니크) · §3-3 R11 |
 | 전술카드 | [tactic_card_design.md](docs/game_design/tactic_card_design.md) §1 정의 · §1-1 인접 개념 구분 · §2 확정 원칙 · §3 이관 · **§4 미확정** | **미발행** | DEV_PLAN §3-2 (전술카드) · §3-3 R14 |
 | 몬스터 · 스테이지 · 도감 | [monster_design.md](docs/game_design/monster_design.md) §0 데이터 재작성 · §1 타입 · §2 공격 타입 · §4 스테이지 구성 · §5 스폰 등급 · §6 정예 특성 · §7 데이터 구조 · §7-1 방어·저항 규칙 · §8 도감 · §9 이스터에그 몬스터 | `monster.csv` · `stage.csv` · `stage_round.csv` · `round_budget.csv` · `spawn_grade.csv` · `codex_level.csv` | DEV_PLAN §3-2 (정예 특성 · 도감 계열 스탯) |
@@ -75,4 +75,4 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 - 어느 문서를 먼저 고치는지의 표는 [DEV_PLAN.md](docs/client/DEV_PLAN.md) §7
 
 ---
-*마지막 업데이트: 2026-09-14*
+*마지막 업데이트: 2026-10-06*

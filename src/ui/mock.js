@@ -153,7 +153,7 @@ export const AFFIX_LABELS = {
     burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct' },   // 화상이 읽는다(R178)
     stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct' },   // 스턴이 읽는다(R178)
     buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
-    // 명중률 — 장비 옵션이 아니라 궁수 마스터리 T1-3 의 축이다(레벨 차 적중률에 더한다 · 2026-09-22 R138). 폐지된 `accuracy` 와 다른 id
+    // 명중률 — 지금은 궁수 마스터리 T1-3 의 축이다(적중률에 (1 + 명중률)로 곱한다 · 2026-09-22 R138 · 곱 2026-10-06 R219). 폐지된 `accuracy` 와 다른 id
     hit_bonus: { ko: '명중률', en: 'Hit Bonus', fmt: 'pct' },
     // ── 죄종 계열 옵션 (item_design §1 「무기 옵션 — 죄종 계열」 · 「마법사 · 사제 무기」 · 「갑옷 옵션 — 죄종 계열」 · 2026-10-05 · R206 · R208 · R209)
     dmg_min_flat: { ko: '최소 데미지', en: 'Minimum Damage', fmt: 'n' },
@@ -796,6 +796,14 @@ export const materialIcon = id => {
     const g = Object.values(MATERIAL_ICONS).find(x => x.ids.includes(id));
     return g ? `${g.dir}${id}${ICON_EXT}` : null;
 };
+
+/**
+ * 자원 미니게임 그림 — 판 위의 바위 · 독초 · 바구니 · 토막 · 귀한 토막 · 가지 · 나무꾼 (SCREEN_DESIGN §8 · ADR-0534) · 파일명 = 키.
+ * 가지 · 나무꾼은 오른쪽을 보는 한 장이다 — 반대쪽은 화면이 뒤집는다.
+ */
+const MG_ART_DIR = './assets/art/icons/minigame/';
+export const MG_ART = Object.fromEntries(['mine_hazard', 'gather_poison', 'gather_basket', 'log_trunk', 'log_trunk_rare', 'log_branch', 'log_jack']
+    .map(id => [id, `${MG_ART_DIR}${id}${ICON_EXT}`]));
 
 /**
  * 재화 실루엣 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.

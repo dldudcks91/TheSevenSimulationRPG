@@ -6,7 +6,8 @@
  *   런타임은 그것을 **제자리에서** 바꾼다(HP·창·배리어·쿨은 전투 안에서만 사는 값이라 세이브에 안 들어간다 · INTERFACE §4).
  *
  * battle_design.md / skill_design.md 확정 규칙:
- *   · 한 차례에 하나 (battle_design §3) — 준비된 것이 없으면 기본 공격 · **마법 무기는 기본 공격이 없다**(R198 — 기다리기는 battle.js). 발동 선택은 rng 를 쓰지 않는다
+ *   · 한 차례에 스킬 하나 + 기본 공격 (battle_design §3 · 2026-10-06 R218 — ~~스킬이 기본 공격을 대체~~) — 준비된 것이 없으면 기본 공격만 ·
+ *     **마법 무기는 기본 공격이 없다**(R198 — 기다리기는 battle.js). 발동 선택은 rng 를 쓰지 않는다
  *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **처음엔 준비 상태다**(전투 시작 · 등장 — battle.js 가 박는다 · R100) · 원정 도중 새로 생긴 스킬만 첫 준비 시각에 같은 식을 쓴다
  *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 효과의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
@@ -349,7 +350,10 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * 한 차례 — 준비된 액티브 하나를 쓰고, 없으면 기본 공격 (battle_design §3).
+     * 한 차례 — 준비된 액티브 하나를 쓰고 **이어서 기본 공격**, 없으면 기본 공격만 (battle_design §3).
+     *   **스킬 뒤 기본 공격** [2026-10-06 · R218 · 사용자 확정 — ~~스킬이 그 차례의 기본 공격을 대체~~] — 스킬 종류(버프 · 힐 포함)와 무관하다.
+     *   스킬이 끝난 뒤 **살아 있는 적을 다시 본다** — 스킬이 다 쓰러뜨렸으면 치지 않고, 대상은 평소처럼 고른다(`basicAttack` 그대로).
+     *   시전자가 스킬 도중 쓰러졌으면 `basicAttack` 이 건너뛴다(`u.hp <= 0`)
      *   **마법 무기(`noBasic`)는 기본 공격이 없다** [2026-10-02 · R198] — 준비된 것이 없으면 아무것도 안 한다. 그 차례를 세우지 않는 것
      *   (칸 충전 · R200)은 부르는 쪽(battle.js `chargeTick`)이 `pick` 으로 먼저 가른다 — 여기는 안전장치다
      * @returns 무언가 했으면 참(시전 · 기본 공격) — 마법 무기의 칸을 되돌리는 판정이 읽는다 (R200)
@@ -373,6 +377,11 @@ export function createSkillRuntime(ctx) {
         hooks.emit('cast', u, { t, def });
         // 쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
         cast(u, def, t);
+        // 스킬 뒤 기본 공격 (R218) — 적 목록은 스킬이 끝난 뒤의 것이다. 적이 없으면 굴림도 없다
+        if (!u.noBasic) {
+            const left = alive(foesOf(u));
+            if (left.length > 0) basicAttack(u, t, left);
+        }
         return true;
     }
 

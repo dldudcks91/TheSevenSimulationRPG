@@ -282,7 +282,7 @@ const STRINGS = {
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
     'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
     /* 도감 카드 줄 셋(rep.cards · rep.cardsNone · rep.cardLevelUp)은 2026-09-21 삭제 — 도감 카드를 걷었다 (monster_design §8 · SCREEN_DESIGN §4-3) */
-    /* 빗나감 — 레벨 부족의 전용 신호 (battle_design §9-8). 파티 기준 {맞지 않은 타격}/{총 타격} */
+    /* 빗나감 — 레벨 · 명중 부족의 신호 (battle_design §9-8 · 마법 무기는 안 빗나간다 — R219). 파티 기준 {맞지 않은 타격}/{총 타격} */
     'rep.miss': { ko: '빗나감', en: 'Misses' },
     'rep.missN': { ko: '{m} / {n} ({p}%)', en: '{m} / {n} ({p}%)' },
 
@@ -792,6 +792,7 @@ const STRINGS = {
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
     'rep.drops.none': { ko: '떨어진 장비 없음', en: 'No loot' },
     'rep.book': { ko: '책', en: 'Book' },   // 획득 격자의 스킬북 칸 배지 (R179 · ADR-0420)
+    'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
     'rep.list.h': { ko: '원정 기록', en: 'Runs' },
@@ -836,6 +837,8 @@ const STRINGS = {
     'st.atkType.cold': { ko: '냉기', en: 'Cold' },
     'st.atkType.lightning': { ko: '전기', en: 'Lightning' },
     'st.atkType.poison': { ko: '독', en: 'Poison' },
+    // 고정 피해 — 사제의 직격(skill_effect 원소 칸 `fixed` · 2026-10-06 R221 · battle_design §9). 설명창 「{v} 의 고정 피해」 · 종류 칩이 이 이름을 쓴다
+    'st.atkType.fixed': { ko: '고정', en: 'True' },
     'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated' },
     // 세부 옵션 — 옵션이 여는 축 줄 (combat_stat 행이 아니다 · SCREEN_DESIGN §6 · ADR-0291). 한 줄짜리는 아이템 옵션 줄 이름(`M.AFFIX_LABELS`)을 그대로 쓴다
     'st.fx.part': { ko: '{n} {v}', en: '{n} {v}' },
@@ -1068,6 +1071,8 @@ const STRINGS = {
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
     'tr.adv.learn': { ko: '배우기', en: 'Learn' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
+    'tr.adv.learnedLv': { ko: '배움 · Lv.{n}', en: 'Learned · Lv.{n}' },   // 배운 전직 스킬 줄 — 지금 스킬 레벨 (2026-10-06 · R216 · ADR-0529)
+    'tr.adv.points': { ko: '전직 포인트 {free} / {have}', en: 'Advance Points {free} / {have}' },   // 고른 영웅 줄 오른쪽 — 남은 / 받은 (R216)
     'tr.adv.forget': { ko: '되돌리기', en: 'Unlearn' },
     'tr.err.unbuilt': { ko: '훈련장 3랭크가 전직을 연다', en: 'Training Grounds Rank 3 opens advancement' },
     'tr.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
@@ -1082,6 +1087,7 @@ const STRINGS = {
     'tr.err.skill': { ko: '이 갈래의 스킬이 아니다', en: 'Not a skill of this path' },
     'tr.err.empty': { ko: '배운 전직 스킬이 없다', en: 'No advancement skill learned' },
     'tr.err.downed': { ko: '원정에서 쓰러져 있다', en: 'Downed on an expedition' },
+    'tr.err.points': { ko: '전직 포인트가 없다', en: 'No Advance Points left' },   // advanceLearn — 첫 전직 포인트로 배운다 (R216)
     'tr.train.todo': {
         ko: '훈련 칸에 영웅을 넣어 두면 경험치가 오른다. 원정 경험치 획득 %도 훈련장의 연구다<br>'
             + '넣어 둔 시간만큼 오르는지 · 어디까지 오르는지 · 훈련 중인 영웅을 원정에 쓸 수 있는지는 기획 미정이라 미착수',
@@ -1090,9 +1096,9 @@ const STRINGS = {
     },
     'tr.adv.todo': {
         ko: '<b>훈련장</b> 3랭크가 열면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
-            + '전직 스킬은 셋 중 하나만 배우고 언제든 무료로 되돌린다 — 배운 것이 액티브 전직 칸이다',
+            + '전직 스킬은 셋 중 하나를 <b>첫 전직 포인트</b>로 배운다 — 배운 것이 액티브 전직 칸이다. 되돌리면 쓴 전직 포인트가 전부 돌아온다',
         en: '<b>Training Grounds</b> Rank 3 opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions, searches or resource posts<br>'
-            + 'Learn one of the three advancement skills and unlearn it for free at any time — the learned one fills the Advance active slot',
+            + 'Learn one of the three advancement skills with your <b>first Advance Point</b> — the learned one fills the Advance active slot. Unlearning refunds every Advance Point spent',
     },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
@@ -1104,14 +1110,21 @@ const STRINGS = {
     'dp.watch': { ko: '자세히 보기', en: 'Details' },
     'dp.watch.none': { ko: '보낸 영웅이 없다', en: 'No hero sent' },
     'dp.watch.gain': { ko: '+{n} {item}', en: '+{n} {item}' },
-    // 파견 관전 창 미니게임 [시험 구현 2026-09-29 · PLAN_dispatch_watch D7]
-    'dw.hint.strike': { ko: '링이 표적에 닿을 때 누르기', en: 'Tap when the ring meets the mark' },
-    'dw.hint.pick': { ko: '반짝인 잎을 눈으로 따라가 고르기', en: 'Follow the glowing leaf and pick it' },
-    'dw.hint.beat': { ko: '표시가 선에 닿을 때마다 누르기', en: 'Tap as each mark hits the line' },
-    'dw.bonus': { ko: '+{s}초 앞당김', en: '+{s}s sooner' },
-    'dw.miss': { ko: '빗나감', en: 'Miss' },
-    'dw.play': { ko: '미니게임', en: 'Minigame' },
-    'dw.info': { ko: '앞당긴 시간 {n} / {cap}초 (이번 시간)', en: 'Sped up {n} / {cap}s (this hour)' },
+    // 자원 미니게임 — 단 이름 줄의 버튼 · 창 머리 · 시작 / 결과 판 · 판 위 머리 (2026-10-06 · SCREEN_DESIGN §8 · ADR-0532)
+    'mg.play': { ko: '미니게임', en: 'Minigame' },
+    'mg.title': { ko: '{post} 미니게임', en: '{post} Minigame' },
+    'mg.start': { ko: '시작', en: 'Start' },
+    'mg.again': { ko: '다시', en: 'Again' },
+    'mg.hint.mine': { ko: '반짝이는 광맥을 연타해 깬다 · 붉은 바위는 치지 않는다', en: 'Mash glowing veins to break them · Leave red rocks alone' },
+    'mg.hint.gather': { ko: '바구니를 움직여 받는다 · 독초는 피한다', en: 'Move the basket to catch · Dodge poison herbs' },
+    'mg.hint.log': { ko: '왼쪽 · 오른쪽을 눌러 벤다 · 내 쪽 가지를 피한다', en: 'Chop from the left or right · Dodge branches on your side' },
+    'mg.combo': { ko: '콤보 {n} ×{m}', en: 'Combo {n} ×{m}' },
+    'mg.best': { ko: '최고 콤보 {n}', en: 'Best combo {n}' },
+    'mg.why.time': { ko: '시간 끝', en: "Time's up" },
+    'mg.why.lives': { ko: '목숨을 다 썼다', en: 'Out of lives' },
+    'mg.why.done': { ko: '나무를 다 베었다', en: 'Tree felled' },
+    'mg.err.locked': { ko: '아직 열리지 않은 단계다', en: 'This tier is not open yet' },
+    'mg.err.post': { ko: '미니게임이 없는 곳이다', en: 'No minigame here' },
     'rs.on': { ko: 'On', en: 'On' },
     'rs.off': { ko: 'Off', en: 'Off' },
     // 전체 리롤 + 잠금 [2026-09-22 · R28 · tactic_card_design §5-6] — 버튼 하나가 안 잠근 칸을 전부 굴리고, 비용은 잠근 칸 수가 정한다
@@ -1235,6 +1248,10 @@ const STRINGS = {
     'sk.src.advance': { ko: '전직', en: 'Advance' },
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
+    'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 이름 뒤 (설명창 · 액티브 줄 · 서고 · 전직 판 · 2026-10-06 · R216 · ADR-0529)
+    'sk.advPoints': { ko: '전직 포인트', en: 'Advance Points' },   // 포인트 패널 둘째 줄 — 마스터리와 따로 (R216)
+    'sk.err.advPoints': { ko: '전직 포인트가 없다', en: 'No Advance Points left' },
+    'sk.adv.leveled': { ko: '{skill} Lv.{n}', en: '{skill} Lv.{n}' },   // 전직 판 스킬 칸을 눌러 레벨이 올랐다 (R216)
     // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-30 사용자 지시 · SCREEN_DESIGN §6 · ADR-0466 — ~~`sk.lockLv` 「Level n+」~~(ADR-0428) 를 칸마다의 문장으로] · {n} = 책 `skillbook_learn_level` · 전직 `advance_unlock_level`
     'sk.lock.book': { ko: 'Lv{n}이 되면 서고에서 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned at the Library.' },
     'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
@@ -1246,18 +1263,20 @@ const STRINGS = {
     'bk.none': { ko: '가진 책이 없다', en: 'No books' },
     'bk.learn': { ko: '배우기', en: 'Learn' },
     'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite' },
-    'bk.same': { ko: '배움', en: 'Learned' },
+    'bk.upgrade': { ko: '업그레이드 · {n}권', en: 'Upgrade · {n}' },   // 같은 책 — 이번에 드는 책 수 (2026-10-06 · R216 · ADR-0529 — ~~`bk.same` 「배움」~~ 퇴역)
+    'bk.max': { ko: '최대', en: 'Max' },
     'bk.craft.h': { ko: '기본 책 만들기', en: 'Craft Basic Books' },
     'bk.make': { ko: '만들기', en: 'Craft' },
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}' },
     'bk.crafted': { ko: '{skill} 스킬북을 만들었다', en: 'Crafted a {skill} book' },
+    'bk.upgraded': { ko: '{name} — {skill} Lv.{n}', en: '{name} — {skill} Lv.{n}' },   // 같은 책 업그레이드 (R216)
     // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.bookState` (INTERFACE §3)
     'bk.err.unbuilt': { ko: '서고를 지어야 한다', en: 'Build the Library first' },
     'bk.err.level': { ko: 'Lv.{n} 부터', en: 'From Lv.{n}' },
     'bk.err.downed': { ko: '쓰러진 영웅이다', en: 'This hero is down' },
     'bk.err.missing': { ko: '배울 수 없는 스킬이다', en: 'Cannot be learned' },
-    'bk.err.book': { ko: '그 책이 없다', en: 'You do not have that book' },
-    'bk.err.same': { ko: '이미 배운 스킬이다', en: 'Already learned' },
+    'bk.err.book': { ko: '책이 모자란다', en: 'Not enough books' },   // 없거나 업그레이드에 드는 권수보다 적다 (R216)
+    'bk.err.maxUp': { ko: '이미 최대 레벨이다', en: 'Already at max level' },   // 업그레이드 상한 (R216 — ~~`bk.err.same`~~ 퇴역)
     'bk.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'bk.err.materials': { ko: '가루가 모자란다', en: 'Not enough dust' },
     /* 스킬 툴팁 문장 [전면 개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2]
@@ -1428,11 +1447,17 @@ const STRINGS = {
     },
     'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
     'sk.advNeed': { ko: '전직 필요', en: 'Advancement required' },   // 전직 판의 잠김 베일 (§7 · §13-1)
+    'sk.advSkillNeed': { ko: '전직 스킬 필요', en: 'Advance skill required' },   // 전직했지만 스킬을 안 배운 판의 잠김 베일 (R216 · ADR-0529)
+    'sk.adv.slot.2': { ko: '특수', en: 'Special' },   // 전직 가지 칸 이름 — ② · ③ · ④ (skill_design §4)
+    'sk.adv.slot.3': { ko: '변형', en: 'Variant' },
+    'sk.adv.slot.4': { ko: '필살기', en: 'Ultimate' },
+    'sk.adv.pending': { ko: '준비 중', en: 'Coming later' },   // 가지 칸 — 효과 미구현 (R216)
+    'sk.adv.hold': { ko: '보류', en: 'On hold' },   // 기획이 보류 · 미정으로 둔 가지 칸
     'sk.advTree.missing': {
-        ko: '<b>액티브를 주는 층은 전직 하나</b>다 — 두 마스터리는 전부 패시브다. 전직 3갈래 중 하나를 고르면 그 전직이 액티브 3을 주고, <b>그중 1개를 찍은 것만</b> 칸에 올라 트리의 뿌리가 된다.<br>'
-            + '⚠ 미구현 — 뿌리 45개가 필요해졌고 <b>트리 형태(깊은 트리 vs 얕은 티어)</b>가 미정이라 총량을 못 정한다. 본 프로젝트 최대의 콘텐츠 부채다.',
-        en: '<b>Advancement is the only layer that grants actives</b> — both masteries are purely passive. Picking one of three advancements grants three actives, and <b>only the one you invest in</b> takes the slot and becomes a tree root.<br>'
-            + '⚠ Not built — 45 roots are now required and the <b>tree shape (deep tree vs shallow tiers)</b> is undecided, so the total is unbounded. The project\'s largest content debt.',
+        ko: '<b>액티브를 주는 층은 전직 하나</b>다 — 두 마스터리는 전부 패시브다. 전직 3갈래 중 하나를 고르면 그 전직이 액티브 3을 주고, <b>그중 1개를 배운 것만</b> 칸에 오른다.<br>'
+            + '<b>전직 포인트</b>는 마스터리와 따로다 — 전직할 때 1점, 그 뒤 일정 레벨마다 1점을 받는다. 첫 포인트로 스킬을 배우고 나머지로 <b>스킬 레벨</b>을 올린다. 가지 셋(특수 · 변형 · 필살기)은 아직 찍을 수 없다.',
+        en: '<b>Advancement is the only layer that grants actives</b> — both masteries are purely passive. Picking one of three advancements grants three actives, and <b>only the one you learn</b> takes the slot.<br>'
+            + '<b>Advance Points</b> are separate from mastery — 1 when you advance and 1 more every few levels. The first point learns the skill and the rest raise its <b>skill level</b>. The three branches (Special · Variant · Ultimate) cannot be taken yet.',
     },
     'sk.lockedSuffix': { ko: ' (잠김)', en: ' (locked)' },
     'sk.grid.note': {

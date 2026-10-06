@@ -472,7 +472,7 @@
 
 - **화폐는 골드** — 골드의 소모처 하나다(2026-09-24 골드는 모든 행동이 먹는다 — item_design.md §5-1 · ~~GAME_DESIGN.md §10 「골드의 소모처」~~ 해소)
 - ~~**장비는 안 판다** [확정 09-03]~~ → **기본상단이 장비를 판다** [개정 2026-09-27 사용자 지시 — 화면 09-21 · 구매 09-27] — 「장비를 돈으로 산다」의 금지를 푼다. 대신 상단 장비는 **빠른 길이지 더 좋은 길이 아니다**:
-  - 목록 = 부위마다 `[balance.csv:shop_equip_per_slot]` 개 · 무기만 `[balance.csv:shop_equip_weapon]` 개(상단 랭크가 늘린다 — construction_draft.md §2)
+  - 목록 = 부위마다 `[balance.csv:shop_equip_per_slot]` 개 · 무기만 `[balance.csv:shop_equip_weapon]` 개 · **건물이 늘리지 않는다**(~~상단 랭크가 늘린다~~ — 2026-10-06 사용자 지시 · construction_draft.md §2)
   - 희귀도는 **드롭 가중치 그대로 — 일반 · 매직 · 레어**(`[balance.csv:rarity_w_normal]` · `rarity_w_magic` · `rarity_w_rare`) [2026-10-06 사용자 지시 「상점가중치 10으로 올려」 — ~~레어는 상단에서 못 산다~~(09-27) 대체] · 유니크는 없다(유니크의 창구는 선술집 · §2-4) · ilvl 은 **진행 중인 챕터의 레벨대**(제작의 레벨대와 같은 범위 — item_design.md §7) · 가격은 희귀도마다 `[balance.csv:shop_price_normal]` · `shop_price_magic` · `shop_price_rare` 가 첫 레벨 구간의 값이고 **장비 레벨 `[balance.csv:shop_price_step_levels]` 마다 `[balance.csv:shop_price_step_mult]` 배씩 오른다** [2026-10-06 사용자 지시 「상점 아이템 가격을 10레벨 단위로」] ⚠임시 — 처치 골드보다 빨리 오르면 뒤 구간일수록 상점이 무겁다
   - **산 칸은 그 회차 동안 팔림**으로 남고 다음 회차에 목록과 함께 풀린다 · **그 회차에 처음 산 순간 레벨대가 고정된다**(산 뒤에 챕터가 열려도 목록이 안 바뀐다)
   - 골드는 원정에서만 나오므로(item_design.md §5-1) 문은 여전히 원정이다 · **특수상단은 장비를 안 판다**(아래 미확정 표)

@@ -566,7 +566,7 @@ export function createHeroSystem(data) {
             burnDur: f('burn_dur_reduction'), stunDur: f('stun_dur_reduction'),
             // 버프 지속시간 +% — **낀 영웅이 거는 버프 창**이 길어진다(적에게 거는 창 포함 · skill_runtime.castBuff) [2026-09-21 · 반지 · 목걸이 공통옵션 · R127]
             buffDur: f('buff_dur_pct'),
-            // 명중률 — 레벨 차 적중률에 **더한다** · 기준 적중률을 넘지 않는다(formula.hitChance) [2026-09-22 · 궁수 T1-3 · battle_design §9-4 · R138].
+            // 명중률 — 적중률에 **(1 + 명중률)로 곱한다**(formula.hitChance) [2026-09-22 · 궁수 T1-3 · R138 · 곱 2026-10-06 R219 · battle_design §9-4 — ~~레벨 차 적중률에 더한다~~].
             //   08-26 에 폐지된 명중(`accuracy` — 회피와 짝)과 다른 축이라 id 를 따로 둔다
             hitBonus: f('hit_bonus'),
             // ── 죄종 계열 옵션이 여는 축 [2026-10-05 · R206 · R208 · item_design §1 「무기 옵션 — 죄종 계열」 · 「마법사 · 사제 무기」] — 소비자는 battle.js · skill_runtime

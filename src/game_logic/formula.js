@@ -11,8 +11,9 @@
  *
  * 직격 1회 = 적중 게이트 → 타격 피해 → 감소 (§9-2 ~ §9-5)
  *
- *   적중률   = clamp(hit_base_pct − 부족레벨 × hit_per_level_deficit_pct, hit_min_pct, hit_base_pct)   (비율)
- *              **레벨 차만이 정한다** — 명중·회피 스탯은 폐지됐다 (§9-4). 오버레벨 초과 이득 없음
+ *   적중률   = clamp(hit_base_pct × (1 + 명중률) × (1 − 명중 감소) × 레벨 계수, hit_min_pct, 1)   (비율 · 2026-10-06 R219)
+ *              레벨 계수 = max(hit_level_mult_min, 1 − 부족레벨 × hit_per_level_deficit_pct) · 회피는 없다 (§9-4)
+ *              **마법 무기를 든 공격자는 굴리지 않는다** — 항상 맞는다(`sureHit`)
  *   타격피해 = 데미지 × 스킬 배율 × 능력치 계수 × 치명 배수 × 추가 피해 배수 × (1 + 피해량)      [2026-09-18 · §9-1 · §9-2]
  *              데미지 = 무기 범위 굴림 × (1 + Σ 데미지 %) — 상시 · 창 · 도감 「데미지」 · **그 타격의 조건부 %** 가 한 괄호의 덧셈
  *              능력치 계수 = (1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot) — 복리 곱 · ~~능력치 항 덧셈(09-10)~~ 폐기
@@ -21,6 +22,7 @@
  *   물리     × (1 − 방어값/(방어값 + def_curve_k))     K 는 **상수**다 — 공격자 레벨 무관 (§9-3)
  *   원소     × (1 − 적용저항)                           저항은 소재값이 아니라 **직접 비율**, 상한형 (§9-5)
  *   공통     × (1 − 피해감소)                           원천별 곱은 호출자가 reductionMult 로 합쳐 온다
+ *   고정     감소 단계를 통째로 건너뛴다                  사제의 직격 — `FIXED_DMG` (2026-10-06 R221)
  *   최종피해 = max(dmg_min, round(…))
  *
  * 성장 축은 둘이다 (§9-0) — **구간 직선**(무기 피해 · 방어구 고유값 · 최대 HP)과 **곱셈 곡선**(growthMult — HP flat 접사 · HP 재생 바탕값).
@@ -34,6 +36,12 @@
  *   이 함수 하나를 쓴다. `createFormula(...).reductionMult` 도 같은 함수다 (INTERFACE §2-3)
  */
 export const reductionMult = pcts => (pcts ?? []).reduce((m, p) => m * (1 - (p ?? 0)), 1);
+
+/**
+ * 고정 피해의 피해 종류 id [2026-10-06 · 사용자 확정 · R221 · battle_design §9] — `skill_effect.csv:element` 칸에 원소 대신 들어가는 값.
+ *   그 타격은 방어 · 저항 · 피해 감소를 안 받는다(`strike`). 원소가 아니라서 원소 조건 · 저항 감소 창 · 원소 추가타 장부가 잡지 않는다
+ */
+export const FIXED_DMG = 'fixed';
 
 export function createFormula(balance) {
     const B = balance;
@@ -155,16 +163,19 @@ export function createFormula(balance) {
     // 피해 감소 `reductionMult` 는 모듈 위에 선다 — 밸런스 값을 안 읽어서 버프 창(`skill_effects`)도 같은 함수를 부른다. 반환 목록은 그 함수를 그대로 싣는다
 
     /**
-     * 적중률(비율) — **레벨 차 하나로 정해진다** (§9-4). 명중·회피 스탯 폐지.
-     * 오버레벨은 hit_base_pct 에서 멈추고(초과 이득 없음), 아무리 모자라도 hit_min_pct 는 맞는다.
-     * 적정 레벨에서는 분산이 0 — 분산은 언더레벨 도전을 자발적으로 택했을 때만 생긴다.
-     * `bonus` = 공격자의 **명중률**(비율 · 궁수 T1-3 — 2026-09-22 R138) — 레벨 차로 나온 값에 더하고 hit_base_pct 를 넘지 않는다.
-     *   오버레벨이면 이미 기준이라 아무 일도 안 하고, 레벨이 모자란 스테이지에서만 듣는다 (§9-4). 없으면 0 이라 종전과 같다
+     * 적중률(비율) [개정 2026-10-06 · 사용자 확정 · R219 · §9-4 — ~~레벨 차 하나로 정한다 · 명중률은 더한다~~] — **곱 넷**이다.
+     *   적중률 = hit_base_pct × (1 + 명중률) × (1 − 명중 감소) × 레벨 계수 → hit_min_pct ~ 1 로 자른다
+     *   레벨 계수 = 1 − 부족레벨 × hit_per_level_deficit_pct 이고 hit_level_mult_min 아래로 안 내려간다 — **레벨만으로는 하한에 안 닿는다.**
+     *   그 아래는 명중 감소가 연다 · 최종 하한 hit_min_pct 는 명중 감소를 겹쳐도 「절대 못 맞춘다」가 안 되게 막는다.
+     *   오버레벨은 계수 1 에서 멈춘다(초과 이득 없음) · 100% 는 **최종 결과에서만** 자른다 — 명중을 넘치게 쌓은 만큼 레벨 부족 · 명중 감소를 메운다.
+     * `bonus` = 공격자의 **명중률**(비율 — 궁수 T1-3 · 물리 무기 옵션) · `down` = 공격자에게 걸린 **명중 감소**(비율 — 걸린 것 중 가장 센 하나를 넘긴다).
+     *   없으면 0 이다. 마법 무기를 든 공격자는 이 함수를 안 지난다(`strike` 의 `sureHit` — 항상 맞는다)
      */
-    const hitChance = (attackerLevel, defenderLevel, bonus = 0) =>
-        Math.min(B.hit_base_pct,
-            clamp(B.hit_base_pct - Math.max(0, (defenderLevel ?? 1) - (attackerLevel ?? 1)) * B.hit_per_level_deficit_pct,
-                B.hit_min_pct, B.hit_base_pct) + (bonus || 0));
+    const hitChance = (attackerLevel, defenderLevel, bonus = 0, down = 0) => {
+        const lack = Math.max(0, (defenderLevel ?? 1) - (attackerLevel ?? 1));
+        const lvMult = Math.max(B.hit_level_mult_min, 1 - lack * B.hit_per_level_deficit_pct);
+        return clamp(B.hit_base_pct * (1 + (bonus || 0)) * (1 - (down || 0)) * lvMult, B.hit_min_pct, 1);
+    };
 
     /**
      * 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — `(1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot)`.
@@ -177,9 +188,11 @@ export function createFormula(balance) {
     /**
      * 직격 1회. rng 는 이 순서로 쓴다 — 적중 → **피해** → 치명 → (추가 피해 확률이 있는 타격만) 추가 피해.
      * 빗나가면 한 번 · 확률이 0 인 적중은 세 번 · 확률이 있는 적중은 네 번이다 (INTERFACE §5-2 · 2026-09-10 · 피해 굴림 2026-09-14 R90).
+     * **`sureHit`(마법 무기를 든 공격자)는 적중을 굴리지 않는다** — 소비가 하나씩 적다(두 번 · 세 번) [2026-10-06 · R219 · §9-4].
      * 순서를 바꾸면 같은 시드가 다른 전투가 되므로 이식 대조가 깨진다.
      *
-     * @param a 공격자 {atkMin, atkMax, atkType, lvl, hitBonus?, crit, critDmg, defIgnore, resReduction, resReductionEl?, skillMult, dmgPct, condPct, statMult, bonusPct, procChance, procMult}
+     * @param a 공격자 {atkMin, atkMax, atkType, lvl, hitBonus?, hitDown?, sureHit?, crit, critDmg, defIgnore, resReduction, resReductionEl?, skillMult, dmgPct, condPct, statMult, bonusPct, procChance, procMult}
+     *          `hitBonus` = 명중률 · `hitDown` = 걸린 명중 감소 중 가장 센 값 · `sureHit` = 마법 무기 — 적중 굴림 없음 (2026-10-06 R219)
      *          `atkMin`·`atkMax` = 데미지 범위 — 데미지 % 괄호(`dmgPct` = 그 괄호 안의 합)까지 **이미 곱해진** 값이다(시트 · 회복이 같은 값을 읽는다)
      *          `condPct` = **그 타격의** 조건부 % — 같은 괄호 안에 더한다(괄호를 `1 + dmgPct` 에서 `1 + dmgPct + condPct` 로 바꿔 끼운다 · 2026-09-18)
      *          `statMult` = 능력치 계수(`statCoef` — 평타 = 메인 스탯 · 스킬 = 슬롯의 능력치) · `bonusPct` = **피해량**(괄호와 합치지 않고 따로 곱한다)
@@ -189,7 +202,8 @@ export function createFormula(balance) {
      *          [2026-09-18 · item_design §1 「투구 옵션」] — 둘 다 없으면 0 이라 종전과 같다. rng 소비는 안 바뀐다
      */
     function strike(rng, a, d) {
-        if (rng() >= hitChance(a.lvl, d.lvl, a.hitBonus)) return { hit: false, dmg: 0, crit: false, proc: false };
+        // 적중 게이트 — 마법 무기는 항상 맞는다(굴림 없음 · 2026-10-06 R219 · §9-4). 물리는 곱 넷(`hitChance`)
+        if (!a.sureHit && rng() >= hitChance(a.lvl, d.lvl, a.hitBonus, a.hitDown)) return { hit: false, dmg: 0, crit: false, proc: false };
 
         // 피해 굴림 [2026-09-14 · R90 · battle_design §9-1] — 적중 뒤 · 치명 앞에 **한 번**, 데미지 범위 양끝 사이 연속 균등.
         //   양끝이 같아도 소비한다 — 소비 수가 무기에 의존하면 같은 시드가 다른 전투를 낸다
@@ -212,6 +226,9 @@ export function createFormula(balance) {
             if (proc) v *= a.procMult ?? 1;
         }
 
+        // 고정 피해 [2026-10-06 · 사용자 확정 · R221 · battle_design §9] — 사제의 직격(원소 칸 `fixed`). **방어 · 저항 · 피해 감소 · 절대값 감소를 하나도 안 뺀다** ·
+        //   무기 피해 굴림 · 배율 · 데미지 % · 치명 · 추가 피해는 위에서 이미 받았다(사망 폭발의 고정 피해와 다른 점 — 그쪽은 굴림 · 치명이 없다). rng 소비는 같다
+        if (a.atkType === FIXED_DMG) return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
         if (a.atkType === 'physical') {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
         } else {

@@ -15,7 +15,7 @@
  *     **배운 스킬은 스킬북으로 배운 것**(`hero.bookSkill` — 2026-09-29 · R179 · §2-1 · ~~무기 개체가 든 것 `ctx.weaponSkill`~~) · 전직은 배운 전직 스킬(`hero.advanceSkill`).
  *     총 칸 수는 [balance.csv:active_slots] 에서 자른다
  *   · 발동(battle_design §3) — 준비된 것 중 `readyAt` 최소(가장 오래 기다린 것) → 동률이면 **칸 순서**.
- *     없으면 기본 공격. **한 차례에 하나**
+ *     차례당 스킬은 하나 · 기본 공격은 스킬 뒤에 이어서 친다(마법 무기 제외 · 2026-10-06 R218 · `skill_runtime.act`)
  *   · 쿨은 실시간 초(battle_design §6) — **전투 시작 때 준비 상태로 출발한다**(2026-09-15 R100 — 동시 준비는 칸 순서라 첫 차례는 1번 칸 · 원정 도중 새로 생긴 스킬만 쿨 한 바퀴 뒤)
  *   · 발동 조건(§9-3) — 거짓이면 **준비된 것으로 치지 않는다**(쿨은 그대로, 그 차례엔 다른 것이 나간다)
  *   · 태그(skill_design §11) — 어휘·대분류·표시 이름의 SSOT 는 **`skill_tag.csv`**(주입 `tagRows`)다. 직접 적는 것
@@ -27,8 +27,9 @@
  *     · 고유 — 영웅이 생성 시 **제 직업 풀**에서 하나를 굴려 온다(hero.rollInnate · §12-1 규칙 1 · 첫 파티는 기본기 풀 — 2026-09-29)
  *     · 배운 스킬 — **스킬북으로 배운 것**(`hero.bookSkill` · source `book`) [2026-09-29 · R179 — ~~무기 개체가 든 스킬 `item.skill` · source `weapon_group`~~ 대체]
  *     · 전직 — 배운 전직 스킬(`hero.advanceSkill` · 2026-09-28 R16) · 몬스터 보스는 `ctx.thirdSkill`
- *   고유와 같은 스킬의 책을 배우면 **칸은 둘이고 쿨도 둘이다**
- *     (§12-1 규칙 3 · 2026-09-09 R66 — ~~앞선 출처만 남아 칸이 하나로 준다~~ 폐기 · 2026-09-29 무기 → 책으로 옮겨 산다).
+ *   ~~고유와 같은 스킬의 책을 배우면 칸은 둘이고 쿨도 둘이다~~(§12-1 규칙 3 · 2026-09-09 R66) → **2026-10-06 같은 책은 그 스킬의 레벨을 올린다**
+ *     (`state.learnBook` · R216 · skill_design §2-3) — 칸이 둘이면 쿨도 둘이라는 전투 규칙 자체는 그대로다.
+ *   스킬 레벨 [2026-10-06 · R216] — 인스턴스의 `up`(쌓은 단계)을 `resolve` 가 정의에 얹는다(`skill_effect.csv:level_field` · `level_step`).
  *   **직업 풀 37 이 전부 발행됐다** (2026-09-09 · DEV_PLAN R61) — 다만 다섯은 **근사**다:
  *     오오라(칸 순서 첫 하나를 전투 시작에 자동으로 켠다 — 고르는 화면이 없다) ·
  *     「라운드 종료까지」(창 999초 + 라운드마다 적 배열이 갈리는 것으로 근사) ·
@@ -55,7 +56,7 @@
  */
 
 import { ELEMENTS } from './hero.js';
-import { createFormula } from './formula.js';
+import { createFormula, FIXED_DMG } from './formula.js';
 import {
     CASTS, CAST_IDS, EVENT_IDS, EFFECT_TYPES, TARGETS, ATTACK_TARGETS, HIT_DECAY, PICK_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS, AILMENTS, AILMENT_IDS,
 } from './skill_effects.js';
@@ -92,6 +93,11 @@ const SCALE_FIELDS = {
     decay_pct: 'decay', proc_chance_pct: 'procChance', proc_mult_pct: 'procMult',
 };
 const SCALE_FIELD_IDS = Object.keys(SCALE_FIELDS);
+/**
+ * 스킬 레벨이 밀 수 있는 칸 [2026-10-06 · R216 · skill_design §2-3] — `skill_effect.csv:level_field` 의 어휘. 슬롯이 미는 항 + 스킬의 쿨(`cool_sec` — 첫 줄만 적는다).
+ *   레벨은 **그 스킬의 숫자 하나**를 올린다 — 스킬마다 레벨 줄은 많아야 하나다
+ */
+const LEVEL_FIELDS = [...SCALE_FIELD_IDS, 'cool_sec'];
 /** 미리보기 `amount` 의 밑수 — **하는 일**로 가른다: 때린다는 공격력 · 회복은 마법 공격력 · 소환은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
 const AMOUNT_BASIS = { hit: 'atk', heal: 'matk', summon: 'hpMax', fixed: 'atk' };   // fixed(자폭)의 밑수도 공격력이다 — 단 범위를 굴리지 않고 중앙값을 쓴다 (아래 previewOf · skill_effects EFFECT_TYPES.fixed · 2026-09-21)
 /** 밑수의 양끝 — 공격 · 회복은 범위(`atkMin`~`atkMax` · `matkMin`~`matkMax` · R90), 벽은 한 점(`hpMax`) */
@@ -208,6 +214,9 @@ export function createSkillSystem(data) {
         status: dash(row.status),
         // 스케일링 슬롯 — **채운 것만** `{field, attr, coef}` (skill_design §13-1). `-` 슬롯은 빠진다
         scales: slotsOf(row).filter(s => s.field !== NONE).map(({ field, attr, coef }) => ({ field, attr, coef })),
+        // 스킬 레벨 줄 [2026-10-06 · R216 · skill_design §2-3] — 레벨이 올리는 칸과 한 단계(부호가 방향 — 체인 라이트닝은 음수라 덜 약해진다). `-` 면 null
+        levelField: dash(row.level_field),
+        levelStep: dash(row.level_step),
     });
 
     /** 걸린 효과 1행 정규화(`skill_status.csv`) — 값은 비율 그대로 · 시간 0 = 상시(오오라가 거는 것) */
@@ -318,7 +327,9 @@ export function createSkillSystem(data) {
         if (!type) bad(`effect '${e.effect}'`);
         // 나가는 방식 ↔ 하는 일 — 싣는 방식은 등록표가 든다(hit·heal·summon·call = turn · apply = turn·aura · fixed = event)
         if (!type.casts.includes(d.cast)) bad(`cast '${d.cast}' 스킬은 '${e.effect}' 를 못 한다 — ${type.casts.join('·')} 만`);
-        if (e.element !== null && !ELEMENTS.includes(e.element)) bad(`element '${e.element}'`);
+        // 원소 칸 — 원소 넷 또는 **고정 피해**(`fixed` · 타격 줄만 · 사제 직격 — 2026-10-06 R221 · battle_design §9)
+        if (e.element === FIXED_DMG ? e.effect !== 'hit' : e.element !== null && !ELEMENTS.includes(e.element))
+            bad(`element '${e.element}'${e.element === FIXED_DMG ? ' — 고정 피해는 타격(hit) 줄만' : ''}`);
         // 걸린 효과는 **apply 줄만** 건다 (옛 「effect_stat 은 buff·aura 만 쓴다」)
         if (e.effect === 'apply') {
             const st = statuses[e.status];
@@ -420,6 +431,21 @@ export function createSkillSystem(data) {
             seenField.add(s.field);
             if (!slotFits(d, e, s.field)) bad(`${at}_field '${s.field}' — ${d.cast}·${e.effect}·${t} 에는 그 항이 없다`);
         }
+        // 스킬 레벨 줄 [2026-10-06 · R216 · skill_design §2-3] — 칸과 한 단계는 **한 쌍**이다. 없는 칸을 미는 레벨은 조용히 0 이 되므로 로드에서 막는다
+        if ((e.levelField === null) !== (e.levelStep === null)) bad(`level_field '${e.levelField}' · level_step '${e.levelStep}' — 둘 다 '-' 이거나 둘 다 채운다`);
+        if (e.levelField !== null) {
+            if (!LEVEL_FIELDS.includes(e.levelField)) bad(`level_field '${e.levelField}' — 레벨이 밀 수 있는 칸이 아니다(${LEVEL_FIELDS.join('·')})`);
+            if (typeof e.levelStep !== 'number' || !Number.isFinite(e.levelStep) || e.levelStep === 0) bad(`level_step '${e.levelStep}' — 0 이 아닌 숫자`);
+            if (e.levelField === 'cool_sec') {
+                // 쿨은 스킬 것이다 — 첫 줄에만 적어 줄마다 쿨이 있는 것처럼 읽히지 않게 한다
+                if (e.seq !== 1) bad('level_field cool_sec 은 첫 줄(seq 1)만 적는다 — 쿨은 스킬 것이다');
+                if (!(d.cool > 0)) bad(`level_field cool_sec 인데 cool_sec ${d.cool}`);
+            } else if (!slotFits(d, e, e.levelField)) {
+                bad(`level_field '${e.levelField}' — ${d.cast}·${e.effect}·${t} 에는 그 칸이 없다`);
+            } else if (e.levelField === 'decay_pct' && !(e.decay > 0)) {
+                bad(`level_field decay_pct 인데 decay_pct ${e.decay} — 감쇠가 없는 줄이다`);
+            }
+        }
     }
 
     /**
@@ -465,6 +491,8 @@ export function createSkillSystem(data) {
         const lineRows = lineRowsOf.get(d.id).slice().sort((a, b) => a.seq - b.seq);
         d.effects = lineRows.map(normalizeLine);
         validate(d, rows[i], lineRows);
+        // 레벨은 그 스킬의 숫자 **하나**를 올린다 — 레벨 줄이 둘이면 어느 숫자가 레벨인지 두 곳을 봐야 한다 (2026-10-06 · R216 · skill_design §2-3)
+        if (d.effects.filter(e => e.levelField !== null).length > 1) throw new Error(`skill_effect: ${d.id} — 레벨 줄(level_field)이 둘 이상이다 — 스킬마다 많아야 한 줄`);
         d.derived = derivedTagsOf(d);
         // 무기 판정의 재료 — **CSV 칸이 없다**(파생 · skill_design §2-2 · 2026-10-03 R204). 직업 = 직업 스킬은 `owner_id` · 전직 스킬은 그 갈래의 직업 · 그 밖 null.
         //   무기가 필요한가 = 무기의 힘을 끌어다 쓰는 줄(`EFFECT_TYPES[effect].weapon` — 타격 · 회복 · 소환)이 하나라도 있는가
@@ -515,13 +543,17 @@ export function createSkillSystem(data) {
             //   그 몬스터 직업 풀에서 스폰 때 굴린 것이다 (skill_design §2 · monster_design §5-1). **영웅 경로는 동작이 안 바뀐다.**
             //   ⚠ 그 칸이 전직 칸인지 고유 둘째인지는 기획 미정(GAME_DESIGN §10)이라 `source` 는 잠정적으로 `advance` 그대로다.
             third ? { id: third.id, source: 'advance' } : null,
-        ].filter(Boolean);
+        ].filter(Boolean).map(a => {
+            // 쌓은 단계 `up` [2026-10-06 · R216 · skill_design §2-3] — 고유 · 배운 칸 = `hero.skillLv[id]`(같은 책 업그레이드) ·
+            //   전직 칸 = `hero.advanceUp`(배운 뒤 더 넣은 전직 포인트). 몬스터 보스 셋째 칸(`ctx.thirdSkill`)은 없다 · 0 이면 키를 안 단다(정의는 `resolve` 가 얹는다)
+            const up = a.source === 'advance' ? (ctx.thirdSkill ? 0 : hero?.advanceUp ?? 0) : (hero?.skillLv?.[a.id] ?? 0);
+            return up > 0 ? { ...a, up } : a;
+        });
         // ~~같은 스킬이 두 출처에서 오면 앞선 출처만 남긴다~~ **폐기 2026-09-09** [사용자 지시].
         //   **칸은 출처 자리다**(§2) — 출처가 둘이면 칸도 둘이고, 그 둘에 같은 스킬이 앉는 것도 칸이다.
-        //   중복을 걷으면 화면의 「무기」 칸이 비어 **무기가 무엇을 담았는지 읽을 수 없었다** — 고유와 겹쳤을 뿐인데
-        //   맨손과 같은 그림이 되므로 인과가 안 읽힌다(CLAUDE.md 철학 2 통제성).
-        //   ⚠ **딸린 규칙 — 칸이 둘이면 쿨도 둘이다.** `battle.js` 가 칸마다 `readyAt` 을 따로 들므로
-        //   겹친 스킬은 **두 배로 나간다**. 겹침이 손해가 아니라 이득이 되는 쪽을 고른 것이다.
+        //   ⚠ **딸린 규칙 — 칸이 둘이면 쿨도 둘이다.** `battle.js` 가 칸마다 `readyAt` 을 따로 들므로 겹친 스킬은 두 배로 나간다.
+        //   ~~고유와 같은 스킬의 책을 배우면 실제로 일어난다~~ → **2026-10-06 같은 책은 칸을 늘리지 않고 업그레이드한다**(`state.learnBook` · R216) —
+        //   이 모양은 옛 세이브에만 남는다(옮기지 않는다 — 옛 세이브는 새로 시작한다).
         const order = hero?.skillOrder ?? null;
         if (!order) return base.slice(0, B.active_slots);
         // 플레이어가 고른 순서를 앞에 — 목록에 없는 id·중복은 무시하고, 안 적힌 것은 기본 순서대로 뒤에 붙는다
@@ -537,7 +569,38 @@ export function createSkillSystem(data) {
      * 배정 인스턴스 → 정의. 정의에 없는 id(행이 지워진 옛 세이브)는 `null` 이다 — 던지면 세이브를 못 연다.
      * ⚠ 변형 노드가 오면 `active.override` 를 **여기서** 덧씌운다 — 배정 단위가 id 가 아니라 인스턴스인 이유다.
      */
-    const resolve = active => defs[active?.id] ?? null;
+    const resolve = active => {
+        const d = defs[active?.id] ?? null;
+        const up = active?.up ?? 0;
+        if (!d || !(up > 0)) return d;
+        // 스킬 레벨 [2026-10-06 · R216 · skill_design §2-3] — 정의는 공유물이라 복사본에 얹는다. 같은 (id, up) 은 같은 객체다
+        const key = `${d.id}#${up}`;
+        if (!leveled.has(key)) leveled.set(key, levelDef(d, up));
+        return leveled.get(key);
+    };
+    const leveled = new Map();
+    /**
+     * 레벨을 얹은 정의 — 레벨 줄(`levelField` · `levelStep`)의 값에 `up × levelStep` 을 더한다. 스킬마다 레벨 줄은 많아야 하나다(로드 검사).
+     *   `effect_value` · `duration_sec` 은 줄이 아니라 **걸린 효과**의 값이라 `lvAdd` 로 실어 `scaleLine` 이 크기에 더한다(부호 유지 — 슬롯과 같은 규칙)
+     *   쿨은 원값 × `[balance.csv:skill_cd_floor_mult]` 밑으로 · 감쇠는 0 ~ `[balance.csv:skill_decay_cap_pct]` 로 자른다 · 확률은 1 에서 자른다
+     */
+    function levelDef(d, up) {
+        let cool = d.cool;
+        const effects = d.effects.map(e => {
+            if (e.levelField === null) return e;
+            const add = up * e.levelStep;
+            switch (e.levelField) {
+                case 'mult_pct': return { ...e, mult: e.mult + add };
+                case 'hits': return { ...e, hits: e.hits + add };                       // 소수 그대로 — `scaleLine` 이 버린다
+                case 'decay_pct': return { ...e, decay: Math.min(Math.max(0, e.decay + add), Math.max(e.decay, B.skill_decay_cap_pct)) };
+                case 'proc_chance_pct': return { ...e, procChance: Math.min(1, e.procChance + add) };
+                case 'proc_mult_pct': return { ...e, procMult: e.procMult + add };
+                case 'cool_sec': cool = Math.max(d.cool * B.skill_cd_floor_mult, d.cool + add); return e;
+                default: return { ...e, lvAdd: { [e.levelField]: add } };              // effect_value · duration_sec
+            }
+        });
+        return { ...d, cool, effects, up };
+    }
 
     /**
      * 발동 조건 (§9-3) — 거짓이면 그 차례엔 준비된 것으로 치지 않는다. 판정 자체는 등록표가 든다.
@@ -615,8 +678,9 @@ export function createSkillSystem(data) {
             }
             sum[s.field] = (sum[s.field] ?? 0) + (stats?.[s.attr] ?? 0) * s.coef;
         }
-        // 크기에 더하고 부호 유지 — raw 0 은 + 쪽이다
-        const grow = (raw, field) => (raw < 0 ? -(-raw + (sum[field] ?? 0)) : raw + (sum[field] ?? 0));
+        // 크기에 더하고 부호 유지 — raw 0 은 + 쪽이다. 스킬 레벨이 얹은 몫(`lvAdd` — `resolve` · R216)도 같은 자리에 더한다
+        const addOf = field => (sum[field] ?? 0) + (e.lvAdd?.[field] ?? 0);
+        const grow = (raw, field) => (raw < 0 ? -(-raw + addOf(field)) : raw + addOf(field));
         const hits = Math.floor(e.hits + (sum.hits ?? 0));
         const decayAdd = sum.decay_pct ?? 0;
         // 거는 걸린 효과 — 값 · 시간은 **이 줄의 슬롯**이 민다(S5). 창의 열쇠는 걸린 효과 id(`status`)다

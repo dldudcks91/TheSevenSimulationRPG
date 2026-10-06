@@ -914,8 +914,8 @@ function dmgEntry(state, u) {
     if (!state.dmg.has(u.key)) state.dmg.set(u.key, { name: u.name, unit: u, dealt: dmgLedger(), taken: dmgLedger() });
     return state.dmg.get(u.key);
 }
-/* 막대 조각 — 물리 · 마법(원소 전부 — 저항으로 깎이는 쪽) · 기타(종류를 안 싣는 반사 · 자폭) (ADR-0252) */
-const dmgKind = ty => !ty ? 'etc' : ty === 'physical' ? 'phys' : 'magic';
+/* 막대 조각 — 물리 · 마법(원소 전부 — 저항으로 깎이는 쪽) · 기타(종류를 안 싣는 반사 · 자폭 · **고정 피해** — 깎이지 않는 쪽 · R221) (ADR-0252) */
+const dmgKind = ty => !ty || ty === 'fixed' ? 'etc' : ty === 'physical' ? 'phys' : 'magic';
 function tally(g, key, dmg, kind) {
     g.total += dmg;
     g.kind[kind] += dmg;
@@ -1020,7 +1020,8 @@ function levelCheck(state, root) {
         const foe = Math.max(0, ...state.enemies.map(e => e.sheet?.level ?? 0));
         const bonus = state.combatOf?.(u.hero)?.option_fx?.hitBonus ?? 0;
         const a = SYS.formula.hitChance(from, foe, bonus), b = SYS.formula.hitChance(lv, foe, bonus);
-        const sub = foe > 0 && b > a ? t('pop.lvupHit', { a: M.pctNum(a), b: M.pctNum(b) }) : null;
+        // 마법 무기는 적중을 굴리지 않아(항상 맞는다 · 2026-10-06 R219) 적중 변화가 없다
+        const sub = !u.noBasic && foe > 0 && b > a ? t('pop.lvupHit', { a: M.pctNum(a), b: M.pctNum(b) }) : null;
         u.lvPop = { until: performance.now() + LVUP_MS, sub };
         popLevel(state, u);
     }

@@ -324,7 +324,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · materials/ores · materials/timbers · materials/herbs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · materials/ores · materials/timbers · materials/herbs · minigame). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -350,6 +350,12 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 ## icons/materials/ — 재료 아이콘 [신설 2026-09-27]
 
 `ores/<ore_id>.png` 7장(`ore_t1` 구리 ~ `ore_t7` 오리하르콘 — 파일명 = `mine_node.csv:ore_id`) — 512 투명 · 어두운 모암 + 광물 강조색 한 점 · 단계마다 다른 실루엣 · 긴 변 0.88 · 중앙(정규화 — 원본은 크기 77~89% · 중심이 제각각이었다). 원본은 `ores/source/v3/`(t1~t5 지금 판) · `v2/`(t6 · t7 지금 판 · t1~t5 는 폐기) · `v1/`(원색 돌덩이 판 — 폐기) · 발주 첨부용 앵커 `source/anchor_items.png`(설치된 아이템 6장) — 셋 다 게임이 안 읽는다. ⚠ `ore_t2`(철)는 어두운 회색 덩이라 어두운 상자 바탕에서 가장 약하게 읽힌다 · 경계밀도 5% 로 합격선 하단 밖. 화면은 자원 탭 단계 상자의 산출물 칸(`mock.js:MATERIAL_ICONS` · SCREEN_DESIGN §8 · ADR-0377). **빈 것** — 약초(`gather_node`) · 목재(`log_node`) 7장씩 · 건설 재료 칸은 아직 광석 실루엣(`RES_ART`)
+
+## icons/minigame/ — 자원 미니게임 그림 [신설 2026-10-06]
+
+`<이름>.png` 7장 — 512 투명 · 긴 변 0.88 · 중앙. 자원 미니게임(ADR-0532)이 지금 도형으로 그리는 것을 대신할 그림이다: `mine_hazard`(채광 — 피할 바위 · 붉은 틈이 해골) · `gather_poison`(채집 — 독초) · `gather_basket`(바구니 — 가로 약 3:1) · `log_trunk`(벌목 토막) · `log_trunk_rare`(금 고리 토막) · `log_branch`(가지 — 끝이 오른쪽) · `log_jack`(나무꾼 — 한 포즈). 원본 시트 `source/sheet_01_codex.png`(Codex 이미지 생성 · 3×3 · 재료 시트 셋을 첨부) · 지시문 `source/sheet_01_prompt.txt` · 대안 디자인 둘은 `unused/`(`log_jack_alt` · `gather_poison_alt`).
+
+화면은 미니게임 판(`mock.js:MG_ART` · SCREEN_DESIGN §8 · ADR-0534) — 바위 · 독초는 `<img>`, 바구니 · 토막 · 가지 · 나무꾼은 CSS 배경이고 칸은 그림 안 내용의 비율로 잡는다(`style.css` `.mg-*` 머리 주석 — 그림을 갈면 그 비를 다시 잰다). 가지 · 나무꾼은 오른쪽을 본다. ⚠ 경계밀도 9~29% — 재료 아이콘(4~13%)보다 질감이 거칠다(48px 몽타주에선 다 읽혔다).
 
 ## icons/skills/ — 스킬 아이콘 [신설 2026-09-03]
 
@@ -617,4 +623,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-09-30*
+*마지막 업데이트: 2026-10-06*

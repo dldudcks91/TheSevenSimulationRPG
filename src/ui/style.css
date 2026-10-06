@@ -2536,6 +2536,12 @@ html, body { height: 100%; overflow: hidden; }
     gap: 16px; margin-bottom: 14px;
 }
 .segmented { display: flex; gap: 4px; flex-wrap: wrap; }
+/* 자물쇠 챕터 — 어느 건물로도 안 열리는 장(원정 챕터 세그먼트 · SCREEN_DESIGN §4-1 · ADR-0531). 꺼진 버튼(`.btn:disabled` 흐림)이라
+   올려도 밝아지지 않는다 · 자물쇠는 글자 높이(`.cp-btn .lock-ico` 와 같은 1em) — `.rs-pin-ico` 의 block 을 줄 안으로 접는다 */
+.btn.seg-lock { display: inline-flex; align-items: center; gap: 5px; }
+.btn.seg-lock:hover { border-color: var(--border-secondary); background: var(--bg-tertiary); }
+.btn.seg-lock .lock-ico { display: inline-flex; flex: 0 0 auto; }
+.btn.seg-lock .lock-ico svg { width: 1em; height: 1em; }
 /* 도감 챕터 버튼 — 상단바 탭 세그먼트와 같은 크기 (SCREEN_DESIGN §9 · 2026-09-21 사용자 지시).
    둘 다 `.btn.sm` 인데 메인만 `zoom: .9` 를 타서 한 단 작았다 — 이 줄만 배율을 되돌린다 */
 .cx-ch-seg { zoom: calc(1 / .9); }
@@ -3341,6 +3347,16 @@ html, body { height: 100%; overflow: hidden; }
 .bk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 가진 책 권수 `×n` — 이름 바로 뒤 · 흐린 글씨 · 이름이 줄어도 안 밀린다 (책은 쌓인다 · ADR-0460) */
 .bk-n { flex: none; color: var(--text-muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+/* 스킬 레벨 `Lv.n` — 이름 뒤 (2026-10-06 · R216 · SCREEN_DESIGN §2 · §7 · §16 · §17 · ADR-0529) */
+.bk-lv, .tip-name-lv, .act-slot .nm .lv { flex: none; color: var(--text-secondary); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.bk-lv, .tip-name-lv { margin-left: 6px; }
+.act-slot .nm .lv { margin-right: 6px; }
+.tr-adv-pts { margin-left: auto; font-variant-numeric: tabular-nums; }
+/* 스킬 창 — 전직 포인트 줄 · 전직 판의 스킬 칸 · 가지 셋 */
+.sk-adv-pts { text-align: center; font-variant-numeric: tabular-nums; }
+.sk-adv-pts-l { font-size: var(--fs-xs); margin-left: 4px; }
+.adv-board .adv-ico img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.adv-board .adv-slot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: var(--fs-lg); color: var(--text-muted); pointer-events: none; }
 .bk-err { flex: none; font-size: var(--fs-xs); }
 .bk-empty { font-size: var(--fs-xs); }
 .bk-cost { display: flex; gap: 10px; margin-left: auto; flex: none; color: var(--text-muted); font-size: var(--fs-xs); }
@@ -3794,8 +3810,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 산출 게이지 [2026-09-27 · §8] — 찬 칸 맨 아래 가는 줄 · 다음 1개까지 찬 비율. 폭은 앱 시계가 갈아 끼운다(`refreshDispatchBars`) */
 .dp-gauge { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(var(--veil-rgb), .7); }
 .dp-gauge > b { display: block; height: 100%; background: var(--color-success); }
-/* 단 이름 줄의 [자세히 보기] — 오른쪽 끝 (§8 · ADR-0415) */
-.dp-n .dp-watch { margin-left: auto; align-self: center; font-weight: normal; }
+/* 단 이름 줄의 [미니게임] · [자세히 보기] — 오른쪽 끝에 나란히 (§8 · ADR-0415 · ADR-0532) */
+.dp-n .dp-mg { margin-left: auto; align-self: center; font-weight: normal; }
+.dp-n .dp-watch { margin-left: 6px; align-self: center; font-weight: normal; }
 /* 파견 관전 창 [2026-09-28 · ADR-0415 → 개정 2026-09-29 · ADR-0416 「원정 전투창처럼」] — **원정 관전의 부품 그대로**:
    `battle-panel` › `arena`(챕터 배경) › 적 진영(대상 카드) · VS · 파티 진영(영웅 카드). 카드 · 바 · 팝업 · 타격 모션은 관전 규칙이 든다 —
    여기엔 창의 크기와 카드 속 한 줄(`dpw-line`)만 둔다 */
@@ -3807,46 +3824,88 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dpw-line { font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dpw-panel .act-fill { transition: width .2s linear; }
 .dpw-panel .bar.hp > i { transition: width .15s ease-out; }   /* 맞을 때만 준다 — 짧게 끊어 떨어진다 (ADR-0418) */
-/* 파견 관전 창 미니게임 [시험 구현 2026-09-29 · PLAN_dispatch_watch D7] — 판 위에 한 겹(`.dwg`)을 얹는다. 자리는 `app.js:dwgAt` 가 % 로 준다 */
-.dwg { position: absolute; inset: 0; z-index: 5; user-select: none; }
-/* 머리 줄 — 자리 탭은 왼쪽 · [미니게임]은 오른쪽 끝(닫기 왼쪽) */
+/* 머리 줄 — 자리 탭 */
 .dpw-head { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
-.dpw-head .dwg-go { margin-left: auto; }
-.dwg-strike, .dwg-beat { cursor: pointer; }
-.dwg-pick { pointer-events: none; }
-.dwg-pick.armed .dwg-leaf { pointer-events: auto; cursor: pointer; }
-.dwg-hint { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 3px 12px; border-radius: 12px;
-    background: rgba(0, 0, 0, .6); color: var(--text-primary); font-size: var(--fs-sm); white-space: nowrap; pointer-events: none; }
-.dwg-info { position: absolute; right: 12px; top: 8px; z-index: 6; font-size: var(--fs-xs); color: var(--text-secondary); pointer-events: none; }
-/* 채광 — 한 방 맞히기: 표적(가운데 원) 위로 흰 링이 줄어든다 */
-.dwg-at { position: absolute; width: 0; height: 0; }
-.dwg-core, .dwg-ring { position: absolute; left: -28px; top: -28px; width: 56px; height: 56px; border-radius: 50%; box-sizing: border-box; }
-.dwg-core { border: 3px solid var(--color-warning); background: rgba(255, 200, 80, .18); box-shadow: 0 0 14px var(--color-warning); }
-.dwg-ring { border: 3px solid #fff; animation: dwg-shrink linear forwards; }
-@keyframes dwg-shrink { from { transform: scale(3); opacity: .35; } to { transform: scale(1); opacity: 1; } }
-/* 채집 — 골라 따기: 잎 한 줄 · 반짝 → 뒤집혀 섞인다(자리 이동은 `left` 전이) */
-.dwg-row { position: absolute; height: 64px; transform: translate(-50%, -50%); }
-.dwg-leaf { position: absolute; top: 0; width: 64px; height: 64px; padding: 6px; border-radius: 10px; border: 2px solid var(--border-dark);
-    background: var(--surface-1); transition-property: left, transform; transition-timing-function: ease-in-out; }
-.dwg-leaf img { width: 100%; height: 100%; object-fit: contain; }
-.dwg-leaf.hot, .dwg-leaf.good { border-color: var(--color-success); box-shadow: 0 0 16px var(--color-success); }
-.dwg-leaf.hot { transform: scale(1.12); }
-.dwg-leaf.bad { border-color: var(--color-error); }
-.dwg-leaf.shut img { visibility: hidden; }
-.dwg-leaf.shut::after { content: '?'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: var(--text-secondary); }
-.dwg-pick.armed .dwg-leaf:hover { transform: translateY(-3px); }
-/* 벌목 — 박자 잇기: 표시가 오른쪽에서 와 노란 선에 닿는다 */
-.dwg-track { position: absolute; width: 400px; height: 38px; transform: translate(-50%, -50%); border-radius: 19px; overflow: hidden;
-    background: rgba(0, 0, 0, .6); border: 1px solid var(--border-dark); }
-.dwg-track.miss { animation: dwg-miss .3s; }
-@keyframes dwg-miss { from { border-color: var(--color-error); box-shadow: 0 0 12px var(--color-error); } }
-.dwg-line { position: absolute; top: 3px; bottom: 3px; width: 4px; margin-left: -2px; background: var(--color-warning); box-shadow: 0 0 8px var(--color-warning); }
-.dwg-mark { position: absolute; top: 8px; left: 100%; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: #fff;
-    animation-name: dwg-slide; animation-timing-function: linear; animation-fill-mode: both; }
-.dwg-mark.hit { background: var(--color-success); }
-/* 선(왼쪽 20% = `app.js:DWG_BEAT_LINE`)을 지나면 흐려진다 — 지나간 표시가 왼쪽 끝에 쌓이지 않게 */
-@keyframes dwg-slide { 0% { left: 100%; opacity: 1; } 80% { left: 20%; opacity: 1; } 100% { left: 0%; opacity: 0; } }
-.dwg-combo { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--color-warning); font-weight: bold; }
+/* 자원 미니게임 [2026-10-06 · SCREEN_DESIGN §8 · ADR-0532 · ADR-0533 · ADR-0534] — 창 하나 · 머리 = 제목 · 단계 탭 · 속 = 판 하나(`.mg-field`).
+   판 위에서 움직이는 것의 자리는 `app.js:mgDraw` 가 % 로 준다 · 그림 = 산출물 아이콘 + 판 그림(`mock.js:MG_ART` → `--mg-<이름>` 변수).
+   판 그림은 정사각 한 장 안에 내용이 가운데 서 있다 — 칸은 **내용의 가로세로 비**로 잡고 배경을 「정사각 ÷ 내용」배로 키워 내용이 칸에 맞게 한다.
+   비는 `icons_source/minigame/` 실측(512 안의 내용 bbox) — 그림을 갈면 다시 잰다 */
+.modal-box.mg-modal { width: min(880px, 100%); }
+.mg-head { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mg-head h2 { white-space: nowrap; }
+.mg-tab-ico { width: 18px; height: 18px; object-fit: contain; vertical-align: middle; margin-right: 3px; }
+.mg-field { position: relative; height: 480px; overflow: hidden; border-radius: 6px; border: 1px solid var(--border-primary);
+    background: linear-gradient(180deg, var(--surface-7), var(--surface-1)); user-select: none; touch-action: none; }
+.mg-field.shake { animation: fx-shake .3s; }
+/* 시작 판 · 결과 판 — 판 가운데 한 덩어리 */
+.mg-card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 0 24px; }
+.mg-card-icon { width: 96px; height: 96px; object-fit: contain; }
+.mg-name { font-size: var(--fs-lg); font-weight: bold; color: var(--text-primary); }
+.mg-got { font-size: var(--fs-xl); font-weight: bold; color: var(--color-success); }
+.mg-sub { font-size: var(--fs-sm); color: var(--text-secondary); }
+.mg-go { min-width: 120px; margin-top: 6px; }
+/* 판 위 머리 — 목숨 · 콤보 · 받은 양(오른쪽) · 맨 위 가는 막대 = 남은 시간 */
+.mg-hud { position: absolute; left: 14px; right: 14px; top: 12px; z-index: 3; display: flex; align-items: center; gap: 18px; pointer-events: none; font-size: var(--fs-md); }
+.mg-lives { color: var(--hp-fill); letter-spacing: 2px; }
+.mg-combo { color: var(--color-warning); font-weight: bold; }
+.mg-items { margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--text-primary); font-weight: bold; }
+.mg-items img { width: 24px; height: 24px; object-fit: contain; }
+.mg-time { position: absolute; left: 0; right: 0; top: 0; height: 4px; z-index: 3; background: rgba(var(--veil-rgb), .8); pointer-events: none; }
+.mg-time > b { display: block; height: 100%; background: var(--color-warning); }
+.mg-fx { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.mg-pop { position: absolute; transform: translate(-50%, -50%); font-weight: bold; font-size: var(--fs-lg); white-space: nowrap; animation: mg-pop .7s ease-out forwards; }
+.mg-pop.good { color: var(--color-success); }
+.mg-pop.bad { color: var(--color-error); }
+@keyframes mg-pop { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -40px; } }
+/* 채광 — 반짝임 연타: 벽 칸 격자 · 떠 있는 칸은 빛난다(보통 금색 · 귀한 것 파랑 · 불안정한 바위 빨강) · 칠수록 금이 가고(`--hp`) 아래 줄이 남은 시간(`--left`) */
+.mg-wall { position: absolute; left: 24px; right: 24px; top: 48px; bottom: 24px; display: grid; gap: 10px; }
+.mg-cell { position: relative; display: grid; place-items: center; overflow: hidden; border-radius: 10px; border: 2px solid var(--border-dark); background: var(--surface-4); }
+.mg-cell.on { cursor: pointer; }
+.mg-cell img { width: 60%; height: 60%; object-fit: contain; pointer-events: none; transform: scale(calc(.75 + .25 * var(--hp, 1))); }
+.mg-cell.good { border-color: var(--color-warning); box-shadow: inset 0 0 18px color-mix(in srgb, var(--color-warning) 40%, transparent); }
+.mg-cell.rare { border-color: var(--color-info); box-shadow: inset 0 0 22px color-mix(in srgb, var(--color-info) 55%, transparent), 0 0 12px var(--color-info); }
+.mg-cell.bad { border-color: var(--color-error); background: color-mix(in srgb, var(--color-error) 22%, var(--surface-4));
+    box-shadow: inset 0 0 22px color-mix(in srgb, var(--color-error) 60%, transparent); animation: mg-throb .6s ease-in-out infinite alternate; }
+@keyframes mg-throb { to { box-shadow: inset 0 0 8px color-mix(in srgb, var(--color-error) 30%, transparent); } }
+.mg-cell.on::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: calc(1 - var(--hp, 1));
+    background: repeating-linear-gradient(55deg, transparent 0 14px, rgba(var(--shadow-rgb), .55) 14px 16px), repeating-linear-gradient(-35deg, transparent 0 19px, rgba(var(--shadow-rgb), .45) 19px 21px); }
+.mg-cell.hit { animation: mg-hit .12s; }
+@keyframes mg-hit { 50% { transform: scale(.94); } }
+.mg-left { position: absolute; left: 0; bottom: 0; height: 4px; width: calc(var(--left, 1) * 100%); background: var(--text-muted); pointer-events: none; }
+.mg-field.stun .mg-wall { filter: grayscale(1) brightness(.6); }
+/* 채집 — 받아내기: 떨어지는 것 · 바구니 줄(점선) · 바구니(줄 위에 걸친다) */
+.mg-sky { position: absolute; inset: 0; }
+.mg-drop { position: absolute; width: 52px; height: 52px; margin: -26px 0 0 -26px; display: grid; place-items: center; pointer-events: none; }
+.mg-drop img { width: 100%; height: 100%; object-fit: contain; }
+.mg-drop.rare img { filter: drop-shadow(0 0 6px var(--color-info)) drop-shadow(0 0 2px var(--color-info)); }
+.mg-drop.bad img { filter: drop-shadow(0 0 5px var(--color-error)) drop-shadow(0 0 2px var(--color-error)); }
+.mg-line { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--border-primary); pointer-events: none; }
+/* 바구니 — 폭은 판이 준다(`mg_catch_basket`) · 높이는 그림 내용의 비(451 : 180) */
+.mg-basket { position: absolute; aspect-ratio: 451 / 180; transform: translate(-50%, -30%); pointer-events: none;
+    background: var(--mg-gather-basket) center / calc(100% * 512 / 451) auto no-repeat; }
+/* 벌목 — 팀버맨: 땅 · 기둥(맨 아래부터 토막 · `column-reverse`) · 가지는 토막 좌우 · 나무꾼은 맨 아래 토막 옆 · 좌우 표시 */
+.mg-field.mg-log { cursor: pointer; }
+.mg-field.mg-log::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: var(--surface-4); border-top: 1px solid var(--border-primary); }
+.mg-tree { position: absolute; left: 50%; bottom: 40px; width: 84px; height: 380px; transform: translateX(-50%); display: flex; flex-direction: column-reverse; }
+/* 토막 — 내용 폭을 칸 폭에 맞추고 위아래는 칸이 자른다(통나무 윗면이 잘려 기둥이 이어져 보인다) · 비: 토막 451 폭 · 귀한 토막 392 폭 */
+.mg-seg { position: relative; flex: 1; background: var(--mg-log-trunk) center / calc(100% * 512 / 451) auto no-repeat; }
+.mg-seg.gone { visibility: hidden; }
+.mg-seg.rare { background-image: var(--mg-log-trunk-rare); background-size: calc(100% * 512 / 392) auto; }
+/* 가지 — 오른쪽을 보는 한 장 · 왼쪽 가지는 좌우를 뒤집는다 · 비 451 : 184 */
+.mg-branch { position: absolute; top: 50%; width: 130px; aspect-ratio: 451 / 184; translate: 0 -50%; pointer-events: none;
+    background: var(--mg-log-branch) center / calc(100% * 512 / 451) auto no-repeat; }
+.mg-branch.L { right: 100%; scale: -1 1; }
+.mg-branch.R { left: 100%; }
+/* 나무꾼 — 오른쪽을 보는 한 장 · 나무 오른쪽에 서면 좌우를 뒤집어 나무를 본다 · 비 363 : 451 · 휘두름(`transform`)과 뒤집기(`scale`)는 따로 겹친다 */
+.mg-jack { position: absolute; bottom: 40px; height: 88px; aspect-ratio: 363 / 451; pointer-events: none;
+    background: var(--mg-log-jack) center / auto calc(100% * 512 / 451) no-repeat; }
+.mg-jack.L { right: calc(50% + 46px); }
+.mg-jack.R { left: calc(50% + 46px); scale: -1 1; }
+.mg-jack.swing { animation: mg-swing .12s; }
+@keyframes mg-swing { 50% { transform: translateY(-4px) rotate(-6deg); } }
+.mg-key { position: absolute; bottom: 6px; font-size: 24px; color: var(--text-muted); pointer-events: none; }
+.mg-key.L { left: 20px; }
+.mg-key.R { right: 20px; }
 /* 자리 칸의 선택 창 [2026-09-27 · SCREEN_DESIGN §8 · ADR-0373] — 칸 옆에 선다. 자리는 툴팁과 같은 **한 장 좌표**(`app.js:dpPickPanel` · `stageRect`)라
    `position: fixed` 가 한 장(#stage)에 붙는다. 깔개(`.dp-pick-back`)는 한 장 전체 — 바깥 클릭이 닫기다 */
 .dp-pick-back { position: fixed; inset: 0; z-index: 38; }
