@@ -190,6 +190,8 @@ export function createSkillSystem(data) {
         amuletPool: row.amulet_pool === 1,
         // 시작 무기 스킬 후보인가 [2026-09-27 사용자 지시 · hero_design §1] — 새 게임 · 선술집 영웅의 첫 무기가 직업 기본기를 담게
         starterPool: row.starter_pool === 1,
+        // 갑옷 특정 스킬 +n 후보인가 — 방어 관련 기본 스킬 [2026-10-08 · R225 · item_design §1 「10-07 옵션 개정」] — 풀은 `item.js` 가 갑옷군 직업으로 좁힌다
+        armorPool: row.armor_pool === 1,
         // 직업 스킬의 티어 1 · 2 · 3 [2026-10-02 · skill_design §12-10] — 표시 전용(도감) · 직업 밖은 `-` → null
         tier: dash(row.tier ?? '-'),
         note: row.note,
@@ -310,6 +312,9 @@ export function createSkillSystem(data) {
         // 직업 기본기 [2026-09-27 · 2026-09-29 R179 — 첫 파티의 고유 · 서고 기본 책 · ~~시작 무기 스킬~~] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
         if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
+        // 갑옷 특정 스킬 +n 후보 [2026-10-08 · R225] — 0/1 · **기본 스킬(직업 스킬)만** — 풀은 직업 스킬만 읽어 다른 행의 1 은 조용히 버려진다
+        if (row.armor_pool !== 0 && row.armor_pool !== 1) bad(`armor_pool ${row.armor_pool} — 0 또는 1`);
+        if (row.armor_pool === 1 && d.ownerKind !== 'job') bad(`armor_pool 1 인데 owner_kind ${d.ownerKind} — 특정 스킬 +n 은 기본 스킬만`);
         // 티어 [2026-10-02 · skill_design §12-10] — 직업 스킬은 1 · 2 · 3, 그 밖은 `-`
         if (d.ownerKind === 'job' ? ![1, 2, 3].includes(d.tier) : d.tier !== null) bad(`tier '${row.tier}' — 직업 스킬은 1 · 2 · 3, 그 밖은 -`);
         if (d.icon === '') bad('icon 이 비었다');
@@ -517,6 +522,7 @@ export function createSkillSystem(data) {
      * hero 를 통째로 받는 이유: 전직 출처가 붙어도 이 함수 안만 바뀌게 하려는 것.
      * ~~@param ctx.weaponSkill 착용 무기 개체가 든 스킬 id~~ — **2026-09-29 폐지 · R179** (skill_design §2-1) — 둘째 칸은 `hero.bookSkill`(책으로 배운 것)이다
      * @param hero.skillOrder [skillId] — 플레이어가 정한 칸 순서(선택 필드). 지금은 아무도 싣지 않아 기본 순서가 곧 결과다
+     * @param ctx.skillPlus {skillId: n} — 낀 장비의 특정 스킬 +n(`item.skillPlusOf` · 2026-10-08 · R225). 고유 · 배운 칸의 `up` 에 더한다 · 안 넘기면 종전과 같다
      */
     const activesFor = (hero, ctx = {}) => {
         // 정의에 없는 id(행이 지워진 옛 세이브)는 **빈 고유 칸**으로 친다 — 던지면 세이브를 못 연다
@@ -546,7 +552,9 @@ export function createSkillSystem(data) {
         ].filter(Boolean).map(a => {
             // 쌓은 단계 `up` [2026-10-06 · R216 · skill_design §2-3] — 고유 · 배운 칸 = `hero.skillLv[id]`(같은 책 업그레이드) ·
             //   전직 칸 = `hero.advanceUp`(배운 뒤 더 넣은 전직 포인트). 몬스터 보스 셋째 칸(`ctx.thirdSkill`)은 없다 · 0 이면 키를 안 단다(정의는 `resolve` 가 얹는다)
-            const up = a.source === 'advance' ? (ctx.thirdSkill ? 0 : hero?.advanceUp ?? 0) : (hero?.skillLv?.[a.id] ?? 0);
+            //   **장비의 특정 스킬 +n**(`ctx.skillPlus` — `item.skillPlusOf` · 2026-10-08 · R225)은 고유 · 배운 칸에만 더한다(기본 스킬만 · 책 업그레이드 상한을 안 본다 — 상한은 `state.learnBook` 의 규칙)
+            const up = a.source === 'advance' ? (ctx.thirdSkill ? 0 : hero?.advanceUp ?? 0)
+                : (hero?.skillLv?.[a.id] ?? 0) + (ctx.skillPlus?.[a.id] ?? 0);
             return up > 0 ? { ...a, up } : a;
         });
         // ~~같은 스킬이 두 출처에서 오면 앞선 출처만 남긴다~~ **폐기 2026-09-09** [사용자 지시].

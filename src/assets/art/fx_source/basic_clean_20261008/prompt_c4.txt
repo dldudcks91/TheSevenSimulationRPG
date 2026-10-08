@@ -1,0 +1,32 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Do not write code, do not run commands, do not edit any files. When the image is saved, reply with only its absolute file path.
+
+Two reference images are attached: (1) a sheet of our game's CODE-DRAWN battle effects over a goblin portrait: THIS IS THE LOOK WE WANT, clean and simple; (2) a character portrait from our game, to show what the effects flash over.
+
+PROMPT:
+Skill effects for a dark-fantasy party RPG whose battle screen is CLEAN and minimal. Each effect flashes for half a second over a small head-and-shoulders portrait.
+
+LOOK: match the attached code-drawn effects. CLEAN AND SIMPLE.
+- only 1 to 3 main shapes per effect (a few strokes, a ring, a pillar, chevrons), plus at most a few small plain dots
+- each stroke is a smooth, even, slim shape: a bright near-white core stripe with a soft colored band around it, like a lit stroke of light
+- flat colors, crisp smooth edges, NO texture, NO brush grain, NO hatching, NO cracks or chips inside shapes, NO painted shading
+- lots of empty space; the shapes are slim and light, never heavy masses
+- soft, slightly muted colors that read clearly on a dark background
+
+DO NOT:
+- no detailed illustration, no rendered rock / ice / fire texture, no debris piles, no fragments scattered everywhere
+- no rough woodcut look, no thick charcoal outlines, no painterly strokes
+- no sparkles or twinkle stars, no diamond confetti, no gem facets, no glossy shine, no lens flare, no neon
+- no semi-transparent glow, haze or smoke: every shape is fully opaque with a crisp edge (it will be cut out of the magenta)
+- no faces, characters or portraits in the cells: effects only
+
+SHEET: square image, 2x2 grid of four separate pictures, straight 16px pure black gridlines running fully from edge to edge, solid flat pure magenta #FF00FF background in every cell, no text anywhere. Nothing in the pictures may be pink, magenta or purple.
+Each picture stays inside its own cell with a clear strip of magenta before the gridlines.
+Each of the FOUR CELLS is a DIFFERENT picture. Buff, shield and heal effects keep the MIDDLE HALF of the cell EMPTY magenta (the face shows there) and frame it; strikes may cross the middle.
+Cells marked FALL show something dropping from above: its point is LOW in the cell (at the stated height) with thin speed lines above it. Cells marked IMPACT LOW are centered low in the cell at the stated height.
+
+COLORS (core / band): sky = near-white / pale sky blue · earth = light tan / ochre brown · blood = warm white / deep red · gold = pale cream / muted gold · verdigris = pale mint / muted teal green · steel = white / cool gray · holy = white / pale gold · fire = pale yellow / soft orange · ice = white / pale ice blue · lightning = white / pale yellow · wind = white / pale sage green · poison = pale yellow-green / olive green · heal = pale mint / soft green · shadow = light gray / dark slate · arcane = white / muted steel blue
+
+1. DUEL MARK (a curse on one enemy): ONE slim X mark in the middle inside ONE thin ring. blood.
+2. DUEL GUARD (a buff; face clear): ONE slim rounded frame around the middle with small corner ticks. blood.
+3. ENCHANT (a buff: fire on the blade; face clear): ONE slim diagonal blade-shaped stroke along the left side with THREE small clean flame tongues rising along it. fire.
+4. MIGHT (an aura; face clear): a thin clean magic circle made of TWO concentric rings around the middle, with a thin FIVE-POINTED STAR drawn inside it in thin lines. arcane.

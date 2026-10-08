@@ -8,12 +8,12 @@ armor,sloth,3,res_cold,flat,0.06,0.2,-,갑옷 나태 ③ — 냉기 저항 ⚠�
 armor,lust,1,hp_flat,growth,8,20,-,갑옷 색욕 ① — 체력 +수치 ⚠제안 수치
 armor,lust,2,hp_regen,tenth,0.2,0.6,-,갑옷 색욕 ② — 체력 재생(초당 고정 · 0.1 단위) · ⚠ 아이템 레벨을 따라 자라는지 미정 ⚠제안 수치
 armor,lust,3,res_lightning,flat,0.06,0.2,-,갑옷 색욕 ③ — 전기 저항 ⚠제안 수치
-armor,envy,1,reflect_damage,flat,0.03,0.08,-,갑옷 시기 ① — 반사 피해 ⚠제안 수치
+armor,envy,1,counter_chance,flat,0.05,0.12,-,갑옷 시기 ① — 반격 확률(맞으면 때린 적에게 기본 공격 1회 · 차례를 쓴다) · 투구 반격과 같은 대역 ⚠제안 수치 (2026-10-06 사용자 — ~~반사 피해~~ 대체 · 장비 반사 피해 폐지 · item_design §1 「10-06 옵션 개정」 · R225)
 armor,envy,2,proc_struck_debuff,flat,0.05,0.12,-,갑옷 시기 ② — 피격 시 디버프 스킬 발동 확률 · 저주 중 드롭 때 하나 · ⚠ 전투 미적용 ⚠제안 수치
 armor,envy,3,res_poison,flat,0.06,0.2,-,갑옷 시기 ③ — 독 저항 ⚠제안 수치
-armor,pride,1,def_per_level,band,1,2,0,갑옷 오만 ① — 레벨당 방어력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0 = 아이템 레벨과 무관) ⚠제안 수치
-armor,pride,2,hp_per_level,band,2,5,0,갑옷 오만 ② — 레벨당 체력(영웅 레벨 × 값을 더한다 · 정수 · 투구 오만과 같은 대역) ⚠제안 수치
-armor,pride,3,proc_struck_buff,flat,0.05,0.12,-,갑옷 오만 ③ — 피격 시 버프 스킬 발동 확률 · ⚠임시 풀 = 무기 나태와 같은 버프 풀(「방어 쪽으로 한정」 목록 미정) · ⚠ 전투 미적용 ⚠제안 수치
+armor,pride,1,skill_plus,band,1,2,0,갑옷 오만 ① — 특정 스킬 +n · 그 갑옷군 직업의 기본 스킬 중 방어 관련(skill.csv:armor_pool = 1)에서 드롭 때 하나 · 후보가 없는 갑옷(시작 칸 · 경갑)엔 안 뜬다 · 정수 ⚠제안 수치 (2026-10-07 · item_design §1 「10-07 옵션 개정」 · R225)
+armor,pride,2,def_per_level,band,1,2,0,갑옷 오만 ② — 레벨당 방어력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0 = 아이템 레벨과 무관) ⚠제안 수치 (2026-10-07 ① → ②)
+armor,pride,3,hp_per_level,band,2,5,0,갑옷 오만 ③ — 레벨당 체력(영웅 레벨 × 값을 더한다 · 정수 · 투구 오만과 같은 대역) ⚠제안 수치 (2026-10-07 ② → ③)
 armor,gluttony,1,vs_elite_dr,flat,0.04,0.1,-,갑옷 폭식 ① — 정예·보스에게 받는 피해 감소 ⚠제안 수치
 armor,gluttony,2,vs_normal_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소(셋 중 하나 — 변형) · 일반(Normal) ⚠제안 수치
 armor,gluttony,2,vs_demon_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소 · 데몬(Demon) ⚠제안 수치

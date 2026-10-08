@@ -36,6 +36,7 @@ GAME_DIRS = [
     "items/weapon_base/*",
     "mastery/sin",
     "mastery/class",
+    "mastery/advance",
     "materials/ores",
     "materials/timbers",
     "materials/herbs",

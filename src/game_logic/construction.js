@@ -30,7 +30,10 @@ export const TARGETS = {
     storage: U(true), codex: U(true), hire: U(true), search: U(true), shop: U(true), shop_special: U(true),
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
-    explore: U(false), raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
+    raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
+    // 탐험 — 준비 중이어도 짓는다(탐험 r1 · 2026-10-08 사용자 지시 「건설에 탐험 열어봐」) — 지으면 탐험 탭이 열리고 세계지도가 선다(SCREEN_DESIGN §8-4).
+    //   파견 기능이 서면 `live` 만 true 로
+    explore: { ...U(false), build: true },
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
     // 서고 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook`) · 기본 책 제작(`craftBook`).

@@ -16,7 +16,7 @@ export function createArenaSystem({ hero, item, skill, battle }) {
             const combat = hero.computeCombat(h, gear.map(item.effective), {}, loadout?.tactic ?? null);
             return {
                 uid: h.uid, hero: h, gear, combat, stats: h.stats,
-                actives: skill.activesFor(h), weaponGroup: gear.find(it => it.slot === 'weapon')?.group ?? null,
+                actives: skill.activesFor(h, { skillPlus: item.skillPlusOf(gear) }), weaponGroup: gear.find(it => it.slot === 'weapon')?.group ?? null,
                 rank: ranks[h.uid] ?? (i === 0 ? 0 : 1),
             };
         });

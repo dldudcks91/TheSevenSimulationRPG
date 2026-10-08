@@ -1,0 +1,228 @@
+{
+ "errors": [
+  "Failed to load resource: the server responded with a status of 404 (File not found)"
+ ],
+ "skills": {
+  "mag_lightning": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    828.7648315429688,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_lightning.webp",
+     "cls": "fx-skill-stamp fx-skill-bolt",
+     "anim": "fx-skill-bolt",
+     "dur": "0.38s",
+     "delay": "0s",
+     "w": 124,
+     "marginTop": "-111.6px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "30": [
+     [
+      "mag_lightning.webp",
+      358,
+      469,
+      818,
+      930,
+      1
+     ]
+    ],
+    "76": [
+     [
+      "mag_lightning.webp",
+      358,
+      469,
+      819,
+      931,
+      1
+     ]
+    ],
+    "140": [
+     [
+      "mag_lightning.webp",
+      358,
+      469,
+      819,
+      931,
+      1
+     ]
+    ],
+    "300": [
+     [
+      "mag_lightning.webp",
+      358,
+      469,
+      819,
+      931,
+      0.6
+     ]
+    ]
+   }
+  },
+  "mag_iceblast": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    605.578369140625,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_iceblast.webp",
+     "cls": "fx-skill-stamp fx-skill-fall",
+     "anim": "fx-skill-fall",
+     "dur": "0.26s",
+     "delay": "0s",
+     "w": 110,
+     "marginTop": "-95.7px",
+     "loaded": true
+    },
+    {
+     "src": "mag_iceblast_shatter.webp",
+     "cls": "fx-skill-stamp fx-skill-shatter",
+     "anim": "fx-skill-shatter",
+     "dur": "0.38s",
+     "delay": "0.26s",
+     "w": 110,
+     "marginTop": "-97.9px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "0": [
+     [
+      "mag_iceblast.webp",
+      281,
+      380,
+      602,
+      701,
+      0
+     ],
+     [
+      "mag_iceblast_shatter.webp",
+      388,
+      467,
+      611,
+      691,
+      0
+     ]
+    ],
+    "120": [
+     [
+      "mag_iceblast.webp",
+      290,
+      389,
+      602,
+      701,
+      1
+     ],
+     [
+      "mag_iceblast_shatter.webp",
+      388,
+      467,
+      612,
+      691,
+      0
+     ]
+    ],
+    "250": [
+     [
+      "mag_iceblast.webp",
+      362,
+      461,
+      603,
+      702,
+      1
+     ],
+     [
+      "mag_iceblast_shatter.webp",
+      388,
+      467,
+      612,
+      692,
+      0
+     ]
+    ],
+    "300": [
+     [
+      "mag_iceblast.webp",
+      372,
+      471,
+      603,
+      702,
+      1
+     ],
+     [
+      "mag_iceblast_shatter.webp",
+      372,
+      469,
+      603,
+      701,
+      0.91
+     ]
+    ],
+    "420": [
+     [
+      "mag_iceblast_shatter.webp",
+      370,
+      470,
+      602,
+      702,
+      1
+     ]
+    ],
+    "600": [
+     [
+      "mag_iceblast_shatter.webp",
+      369,
+      471,
+      601,
+      703,
+      0.1
+     ]
+    ]
+   }
+  },
+  "mag_fireball": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    382.39166259765625,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_fireball.webp",
+     "cls": "fx-skill-stamp fx-skill-burst",
+     "anim": "fx-skill-burst",
+     "dur": "0.42s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "150": [
+     [
+      "mag_fireball.webp",
+      417,
+      499,
+      387,
+      469,
+      1
+     ]
+    ]
+   }
+  }
+ }
+}

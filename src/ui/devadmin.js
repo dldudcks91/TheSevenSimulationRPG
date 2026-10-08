@@ -11,13 +11,18 @@
  *
  * **켤 때 골드를 채운다** [2026-09-27 사용자 지시] — `onEnable` 콜백이 앱의 세이브를 만진다(`app.js` · 값 `balance.csv:admin_gold`). 이것만은 세이브에 남는다.
  *
- * ⚠ 걷어내려면 이 파일과 `app.js` 의 import · 호출 두 줄, `data.js` 의 import · 주입 두 줄을 지운다.
+ * **켜 둔 동안 `+Lv30` 이 옆에 선다** [2026-10-08 사용자 지시] — 전사 · 마법사 · 기사를 `balance.csv:admin_hero_level` 로 로스터에 넣는다(`mountAdminHeroes`). 이것도 세이브에 남는다.
+ *
+ * ⚠ 걷어내려면 이 파일과 `app.js` 의 import · 호출 세 줄, `data.js` 의 import · 주입 두 줄을 지운다(`state.adminHero` 는 `openAll` 이 꺼져 있으면 거절만 한다).
  * ⚠ 문구는 영어다 — 다국어 대상이 아니다(유저에게 안 보인다 · devcompare.js 와 같다).
  */
 
 const KEY = 'devAdmin';
 const read = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
 const write = v => { try { if (v) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch { /* 사생활 모드 */ } };
+
+/** `+Lv30` 이 넣는 직업 — 이 순서로 들어가고 로스터 자리가 모자라면 앞에서부터 들어가는 만큼만 [2026-10-08 사용자 지시] */
+export const ADMIN_HERO_CLASSES = ['warrior', 'mage', 'knight'];
 
 let on = read();
 /** 지금 켜져 있나 — `data.js` 가 `openAll` 로 주입한다 */
@@ -32,6 +37,21 @@ export function mountAdmin(container, rerender, onEnable = null) {
     b.textContent = 'Admin';
     b.title = 'Dev — every building counts as max rank · every stage open · gold topped up when turned on';
     b.onclick = () => { on = !on; write(on); if (on) onEnable?.(); rerender(); };
+    container.appendChild(b);
+}
+
+/**
+ * `+Lv<n>` — **켜져 있을 때만** `Admin` 오른쪽에 선다 [2026-10-08 사용자 「30레벨 전사, 마법사, 기사 … 키우기 귀찮아서」 · SCREEN_DESIGN §10-3].
+ * 누르면 `onClick` 이 영웅을 넣는다(앱이 `state.adminHero` 를 부른다 · 진짜 영웅이라 세이브에 남는다). `full` 이면 흐리고 안 눌린다(로스터가 찼다)
+ */
+export function mountAdminHeroes(container, level, full, onClick) {
+    if (!on) return;
+    const b = document.createElement('button');
+    b.className = 'btn sm da-b';
+    b.textContent = `+Lv${level}`;
+    b.title = full ? 'Roster full' : `Dev — add Warrior · Mage · Knight at level ${level} (real heroes · saved)`;
+    b.disabled = full;
+    b.onclick = onClick;
     container.appendChild(b);
 }
 

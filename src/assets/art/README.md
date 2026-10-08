@@ -11,7 +11,9 @@
 |---|---|
 | `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 15장(Ch1~Ch3 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] · `background_stage_101.webp` 은 **로그인 첫 화면 배경도 겸한다** — 로그인은 스타일 설정 이전이라 CSS 가 이 폴더를 직접 박는다(거점 `pixel/town.webp` 와 같은 예외 · 2026-09-18 사용자 지시) |
 | `pixel/` | **스테이지 배경 설치본 — 도트 스타일** 15장(Ch1~Ch3) + `town.webp`(앱 전역 배경 · 한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110). **비교용으로 남긴다**(`?bg=pixel`) · 거점 배경은 스타일을 안 타고 늘 여기서 읽는다 |
-| `explore_chapter_1.webp` | **탐험 탭 — 챕터 1 지도** ⚠ 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
+| `explore_world.webp` | **탐험 탭 — 세계지도 한 장 · 일곱 챕터가 구간** [2026-10-08 사용자 지시 · ADR-0537] ⚠ 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
+| `explore_world_mask/<챕터 id>.png` | **탐험 지도 — 잠긴 챕터 구간의 막 모양** [2026-10-08 · ADR-0543] — 그림과 같은 크기의 알파 그림(땅만 · 물은 안 든다). `python scripts/build_explore_masks.py` 가 짓는다 (아래 「구간 마스크」) |
+| `explore_chapter_1.webp` | **지금은 아무도 안 읽는다** [2026-10-08] — 09-04 의 챕터 1 지도. 세계지도가 대체했고 파일은 남겨 둔다 (아래 「옛 챕터 1 지도」) |
 | `login.webp` | **지금은 아무도 안 읽는다** [2026-09-18 사용자 지시] — 로그인 화면이 스테이지 1-1 그림(`illustrate/background_stage_101.webp`)을 그대로 깔게 바뀌었다. 원본은 `source/illustrate/Gemini_Generated_Image_v1efev1efev1efev.png`(성벽에 일곱 깃발)이고, 크롭 없이 RGB WebP q92 로 설치해 둔 사본이 남아 있다 |
 | `source/pixel/` · `source/illustrate/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 워터마크 띠를 잘라 만든다 (아래) |
 
@@ -20,17 +22,41 @@
 **한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 없는 자리는 CSS 그라디언트로 폴백한다(`.arena` 기본 배경). **두 스타일 다 챕터 1~3 열다섯 장을 갖췄고, 챕터 4 이후는 어느 스타일에도 없다.**
 ⚠ **화면은 `source/` 원본을 직접 안 읽는다** [2026-09-11 사용자 지시] — 오른쪽 아래 생성기 워터마크(✦) 띠를 잘라 낸 설치본을 읽는다(아래 레시피). 계승 원본은 재동기화 사본으로 `source/pixel/` 에 그대로 둔다.
 
-### ⚠ 탐험 지도는 스테이지 배경이 아니다 [2026-09-04 사용자 지시 · 자리 개정 2026-09-16]
+### ⚠ 탐험 지도는 스테이지 배경이 아니다 [2026-09-04 사용자 지시 · 자리 개정 2026-09-16 · 세계지도 2026-10-08]
 
-`explore_chapter_1.webp` 는 스타일 폴더 옆 **루트에 혼자 선다** — 스테이지 배경과 성격이 다르다:
+`explore_world.webp` 는 스타일 폴더 옆 **루트에 혼자 선다** — 스테이지 배경과 성격이 다르다:
 
-- **스타일 축이 없다** — 챕터 하나에 한 장이고 도트/일러스트로 갈릴 것이 아니다. 그래서 `backgrounds/` 루트다
-- **픽셀아트가 아니다** — 굵은 외곽선 + 플랫 셀의 카툰 지도라 화면에서 `image-rendering` 을 **아예 안 건다**
+- **스타일 축이 없다** — 세계지도는 한 장이고 도트/일러스트로 갈릴 것이 아니다. 그래서 `backgrounds/` 루트다
+- **픽셀아트가 아니다** — 굵은 외곽선의 카툰 지도라 화면에서 `image-rendering` 을 **아예 안 건다**
   (`.ex-map` — `src/ui/style.css`). 스테이지 배경은 반대로 `--bg-render` 로 늘 건다
-- **이름 규칙이 다르다** — 챕터 id 를 쓴다(`explore_chapter_<chapter_id>.webp` — `src/data/chapter.csv`). 스테이지 id 가 아니다
-- 재고 목록은 `src/ui/mock.js:EXPLORE_MAP_CHAPTERS` — 지금은 **챕터 1 하나**뿐이고, 없는 챕터는 화면이 지도 칸째로 뺀다
+- **챕터 구간이 그림에 묶여 있다** — 막 모양은 `explore_world_mask/<챕터 id>.png`(아래 「구간 마스크」) · 자물쇠 자리는 `src/ui/mock.js:EXPLORE_REGIONS` 의 `at` · 크기는 `EXPLORE_WORLD_SIZE`. **그림을 바꾸면 셋을 같이 다시 잡는다**
 
-#### 내용과 규격 [재작성 2026-09-04 사용자 지시]
+#### 세계지도 — 내용과 규격 [2026-10-08 사용자 지시]
+
+**Codex(ChatGPT 로그인)로 세 장씩 뽑아 골랐다** — 옛 챕터 1 지도(아래)를 화풍 앵커로 넘겼다. 첫 판(3:2 · 잔 묘사가 촘촘)은 같은 날 사용자 지시(「화면이 가로로 더 길어서 가득 차야」 · 「그림이 지금 너무 디테일해」 · ADR-0540)로 갈았다. 둘째 판 지시문의 요점 — **앵커보다 더 단순하게**(큰 덩어리 · 바탕색 하나 · 그림자 한 톤 · 잔돌 · 잔나무 금지) · **땅은 가운데 70% 띠에만**(위아래 15% 는 빈 바다 — 잘라 낼 자리) · 대륙이 좌우 끝까지 · 땅마다 동굴 · 폐허 · 마차 정확히 하나씩 · 글자 없음. 셋 중 땅 덩어리가 가장 크고 강줄기 경계가 가장 또렷한 것을 골랐다.
+
+- **배치 — 일곱 땅이 가로로 늘어서고 길 하나가 지그재그로 잇는다**: 1 왼쪽 아래 불타는 전장(인간의 땅 — 불탄 농지 · 목책 마을) · 2 왼쪽 위 뒤틀린 숲 · 3 가운데 왼쪽 아래 황금의 사막 · 4 가운데 위 망각의 동토 · 5 가운데 오른쪽 아래 심연의 동굴(거대한 함몰) · 6 오른쪽 위 타락한 궁전 · 7 오른쪽 끝 높은 산의 신의 폐허 (`src/data/chapter.csv`)
+- 땅마다 **동굴 · 폐허 · 상단 마차**가 하나씩 서 있다 — 기획 논의 중인 탐험 자리의 그림 자리다
+- **글자는 한 자도 없다** — 라벨 · 자물쇠는 UI 가 얹는다(CLAUDE.md 규칙 6)
+- **규격 1536×714 (2.15:1) — 지도 칸(1600×800 에서 약 1234×575)을 가로로 가득 채우는 비** — Codex 는 3:2 로만 내므로 원본 `source/explore_world.png`(1536×1024 RGB PNG 약 2MB)에서 **위 155 px 부터 714 px** 를 잘라 **WebP q88 · method 6**(약 220KB). Codex 그림엔 생성기 워터마크가 없다:
+
+```python
+from PIL import Image
+im = Image.open(src).convert('RGB')
+im.crop((0, 155, 1536, 155 + 714)).save(dst, 'WEBP', quality=88, method=6)
+```
+
+#### 구간 마스크 [2026-10-08 사용자 「그 가둬주는 명암을 좀 섬세하게 따봐」 · ADR-0543]
+
+잠긴 챕터 구간의 막은 챕터마다 알파 그림 한 장(`explore_world_mask/<챕터 id>.png` · 1536×714 · 장당 약 20~30KB)이 모양을 낸다. **`python scripts/build_explore_masks.py`** 가 원본 PNG 를 설치본과 같이 잘라 짓는다(`--overlay <out.png>` 를 주면 구간을 색칠한 확인 그림도 낸다). 그 스크립트가 든 규칙:
+
+- **바다** = 가장자리에 닿은 바다색 덩어리 · **물** = 바다와 이어진 고채도 파랑(강 · 해안 테두리) + 다리에 끊긴 강 토막(두 땅의 씨앗 경계를 따라 흐르는 것) — 둘 다 어느 구간에도 안 든다. 얼음 호수 · 오아시스는 한 땅 한가운데라 그 땅에 남는다
+- **땅** = 씨앗 다각형(스크립트의 `SEEDS` · 손으로 찍은 대략)을 안쪽으로 깎은 곳에서 출발해 색 경계(강 · 벼랑 · 외곽선)까지 워터셰드로 채운다
+- **동토의 청회색 벼랑면은 동토에 붙인다** — 색 경계만 보면 벼랑의 윗선이 가장 세서 아래 땅(사막)에 붙는다
+- 땅을 다듬고 구멍을 메운 **뒤에** 물을 뺀다 — 거꾸로면 다리로 막힌 강 토막이 「구멍」으로 메워진다
+- ⚠ 이 기계에선 scipy 가 anaconda DLL 을 PATH 에 붙여야 뜬다 — `PATH="/c/Users/user/anaconda3/Library/bin:$PATH" python scripts/build_explore_masks.py`
+
+#### 옛 챕터 1 지도 — 내용과 규격 [재작성 2026-09-04 사용자 지시 · 2026-10-08 부터 안 읽는다]
 
 **1판은 폐기했다 — 「지옥」으로 그려졌다.** 챕터 1 은 지옥이 아니라 **아우레아(인간의 땅)** 이고, 불은 사탄의 군세가 지른 것이지
 땅이 용암인 게 아니다 (`docs/game_design/story/prologue.md` 씬 4·5). 2판은 **불타는 농지 · 강 · 침엽수림**으로 다시 그렸다.
@@ -57,8 +83,7 @@ from PIL import Image
 Image.open(src).convert('RGB').crop((0, 0, 2752, 1211)).save(dst, 'WEBP', quality=88, method=6)
 ```
 
-⚠ **자를 수 있었던 것은 배치를 위쪽 70% 안으로 몰아 그리게 했기 때문**이다 — 다음 챕터 지도도 같은 규칙으로 뽑는다.
-⚠ **가로로 긴 비를 유지할 것** — 세로가 길어지면 화면에서 미착수 안내를 밀어내 세로 예산 예외가 되살아난다 (`src/ui/README.md`).
+자를 수 있었던 것은 배치를 위쪽 70% 안으로 몰아 그리게 했기 때문이다. 화면비 제약(가로로 긴 비)은 세계지도부터 없다 — 지도가 남는 세로에 맞춰 선다 (`src/ui/README.md`).
 
 #### 후처리 — 분노 오염 그라디언트 [2026-09-04 사용자 지시]
 
@@ -209,11 +234,19 @@ buildings/
 ## fx/ — 관전 스킬 이펙트 그림
 
 ```
-fx/skills/<file>.webp      기본 5직업 39스킬 · 40장 설치본 — 관전 · 도감 이펙트 탭이 읽는다
+fx/skills/<file>.webp      기본 5직업 39스킬 41장 + 전직 45스킬 54장(두 장 스킬의 둘째 = <skill_id>_impact) 설치본 — 관전 · 도감 이펙트 탭이 읽는다
+fx/skills/<file>_clean.webp 기본 41장 깔끔판(ADR-0551) — 지금 skill_art.js 가 가리킨다 · 같은 이름의 앞 판(투박한 초상 그림체)은 지우지 않고 남겨 둔다
 fx/<종류>.webp            종류 공통 후보 5종 — physical · fire · cold · lightning · poison (꺼져 있다)
 fx_source/warrior_basic_20261005/  전사 적용본 생성 원본 · 프롬프트 · 측정 · 비교
 fx_source/warrior_sheet_20261006/  새 시트 보관 · 후보 · 백업 · 91px 비교 · 적용/복원 검증
 fx_source/party_basic_20261006/    다른 4직업 생성 원본 · 프롬프트 · 측정 · 직업별 비교 · 검증
+fx_source/mage_drop_20261008/     마법사 라이트닝 · 아이스 블라스트 시트 · 후보 · 프롬프트 · 바꾸기 전 두 장(previous/)
+fx_source/warrior_style_20261008/ 전사 그림체 시트 · 후보(A · B) · 비교 · 프롬프트 · 함성 시안(shout/) · 바꾸기 전 여덟 장(previous/)
+fx_source/knight_style_20261008/  기사 그림체 시안(첫 판 · redraw/ · 투박 crude/) · 오오라 마법진(aura/ · 합성본 aura/set/) · 바꾸기 전 세 장(previous/)
+fx_source/job_style_20261008/     마법사 6 · 궁수 6 · 사제 8 투박 시트 · 프롬프트 · 기준 그림 · 바꾸기 전 27장(previous/)
+fx_source/advance_20261008/       전직 45종 시트 16 · 지시문 · 기준 그림(anchor/) · 칸 문안과 미리보기 값(spec.py) · 자른 칸(cut/ — B안 포함) · 직업별 GIF(gif/) · 설치 = scripts/build_advance_fx.py
+fx_source/basic_size_20261008/    기본 스킬 크기 · 길이 비교 GIF · 코드 모양 vs 투박한 그림 비교 GIF(code_vs_art_*)
+fx_source/basic_clean_20261008/   기본 41장 깔끔판 시트 11 · 지시문 · 기준 그림(anchor/ — 게임에서 찍은 코드 모양) · 칸 문안(spec.py) · 자른 칸과 B안(new/) · 비교 GIF(gif/) · 설치 = scripts/build_basic_clean_fx.py
 fx_source/<종류>.png      종류 공통 후보 원본 — 게임은 안 읽는다
 ```
 
@@ -324,7 +357,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · materials/ores · materials/timbers · materials/herbs · minigame). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · minigame). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -334,6 +367,8 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 **게임이 읽는 것은 `sin/<node_id>.webp`(죄종 판 24) · `class/<node_id>.webp`(직업 판 22)** [2026-09-27] — 원 고리 + 가운데 기호(정면 · 정지)의 회색 `#d8d8e6` 한 벌(512 투명 · 고리가 파일의 91.4%). 화면이 판 색 마스크로 칠한다(`app.js:masteryIconHtml` · SCREEN_DESIGN §7 · ADR-0378 · ADR-0380 · ADR-0382). 같은 능력치는 두 판에서 같은 기호이고 죄종 T2 만 테마 이름 그림이다. 원본은 SVG(세션 작업본 — 기호를 이미지 생성기로 다시 뽑으면 같은 틀에 합성한다).
 
 아래 옛 봉인 문양(`nodes/` · `nodes/variants/` · `*_seal.png` · `generate.ps1` · `IconRenderer.cs` · `icon_plan.csv` · `ART_DIRECTION.md`)은 **이제 어디서도 안 읽힌다** — 비교용으로 남겨 두었다.
+
+**`advance/<skill_id>_<slot>.webp` — 전직 트리 가지 칸 121** [2026-10-08] — 파일명 = `advance_node.csv` 의 `skill_id` + `slot`(2 · 3 · 4) · 보류 칸(`hold = 1` · 14)은 그림이 없다. 위 둘과 문법이 다르다 — **고리 + 기호가 아니라 전직 스킬 그림과 같은 투톤**(회백 `#d8d9e6` 실루엣 + 효과 도형 하나만 강조색 · 512 투명 · 긴 변 0.88)이고 화면이 칠하지 않는다(`app.js:advanceNodeIconPath` · SCREEN_DESIGN §7 · ADR-0547). 그린 것 111 + 효과가 같아 그림을 같이 쓰는 10(기절 · 경직 · 화상 · 빙결 · 적 공격 속도 감소 · 추가 피해 확률 — 같은 파일 복사본). 원본은 `advance/source/` — Codex 이미지 생성 시트 13장(`sheet_NN_codex.png` · 앵커 = `skills/source/war_advanced_skills_sheet.png`) · 지시문 `sheet_NN_prompt.txt` · 칸 문장 표 `plan.py`(노드 키 → 그림 문장 · 같은 효과 표) · 투톤 칠 `tone.py`(검정 → 회백 · 흰 틈 → 투명 · 강조색은 채도가 아니라 **색 차(max − min)** 로 가른다 — 채도로 가르면 검정의 미세한 색 잡티가 강조색으로 남아 실루엣이 얼룩진다). 지시문에 「grim · old · brutal」 같은 분위기 말을 넣으면 실루엣에 금 · 이음매가 들어차 40px 에서 얼룩으로 보였다(첫 시트 폐기 — 지금 시트 01 은 그 말을 뺀 재발주)
 
 ## shrines/ — 신단 그림 [신설 2026-09-29]
 
@@ -623,4 +658,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-06*
+*마지막 업데이트: 2026-10-08*

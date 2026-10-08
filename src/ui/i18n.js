@@ -921,6 +921,8 @@ const STRINGS = {
     'tip.proc.cast': { ko: '시전 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} on cast' },   // 마법 무기 발동 옵션 (2026-10-05 · R208)
     'tip.proc.interval': { ko: '{sec}초마다 {skill} 발동', en: 'Casts {skill} every {sec}s' },
     'tip.inert': { ko: '(미적용)', en: '(inactive)' },
+    /* 특정 스킬 +n 줄 [신설 2026-10-08 · §6 · ADR-0535 · R225] — {skill} = 스킬 이름 · {v} = 단계 수 */
+    'tip.skillPlus': { ko: '{skill} +{v}', en: '+{v} to {skill}' },
     /* 스킬 칸 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
        공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 칸은 스킬 설명창 몸통 그대로라 문구도 설명창 키를 쓴다.
        ~~`tip.skill`~~(「담은 스킬」 라벨)은 2026-09-15 삭제 [사용자 지시 · ADR-0139] */
@@ -1063,17 +1065,14 @@ const STRINGS = {
     'tr.slot': { ko: '훈련 칸 {n}', en: 'Slot {n}' },
     'tr.slot.empty': { ko: '비었다', en: 'Empty' },
     'tr.slot.put': { ko: '영웅 넣기', en: 'Assign Hero' },
-    // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §16) — 거절은 `tr.err.<코드>`(game.advanceStart · advanceLearn · advanceForget)
+    // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §16) — 거절은 `tr.err.<코드>`(game.advanceStart · 마스터리 전직 트리의 advanceLearn · advanceForget — ADR-0542)
     'tr.adv.level': { ko: 'Lv.{have} / {need}', en: 'Lv.{have} / {need}' },
-    'tr.adv.go': { ko: '전직', en: 'Advance' },
-    'tr.adv.confirm': { ko: '한 번 더 — 되돌릴 수 없다', en: 'Again — cannot be undone' },
+    'tr.adv.go': { ko: '전직', en: 'Advance' },   // 패널 제목 오른쪽 버튼 — 갈래를 골라야 켜진다 (ADR-0536 · ADR-0539)
     'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}' },
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
-    'tr.adv.learn': { ko: '배우기', en: 'Learn' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
     'tr.adv.learnedLv': { ko: '배움 · Lv.{n}', en: 'Learned · Lv.{n}' },   // 배운 전직 스킬 줄 — 지금 스킬 레벨 (2026-10-06 · R216 · ADR-0529)
     'tr.adv.points': { ko: '전직 포인트 {free} / {have}', en: 'Advance Points {free} / {have}' },   // 고른 영웅 줄 오른쪽 — 남은 / 받은 (R216)
-    'tr.adv.forget': { ko: '되돌리기', en: 'Unlearn' },
     'tr.err.unbuilt': { ko: '훈련장 3랭크가 전직을 연다', en: 'Training Grounds Rank 3 opens advancement' },
     'tr.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
     'tr.err.class': { ko: '이 직업의 갈래가 아니다', en: 'Not a path of this class' },
@@ -1096,9 +1095,9 @@ const STRINGS = {
     },
     'tr.adv.todo': {
         ko: '<b>훈련장</b> 3랭크가 열면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
-            + '전직 스킬은 셋 중 하나를 <b>첫 전직 포인트</b>로 배운다 — 배운 것이 액티브 전직 칸이다. 되돌리면 쓴 전직 포인트가 전부 돌아온다',
+            + '전직하면 <b>마스터리</b>의 전직 트리가 열린다 — 갈래의 전직 스킬 셋 중 하나를 <b>첫 전직 포인트</b>로 배우고, 배운 것이 액티브 전직 칸이다. 되돌리면 쓴 전직 포인트가 전부 돌아온다',
         en: '<b>Training Grounds</b> Rank 3 opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions, searches or resource posts<br>'
-            + 'Learn one of the three advancement skills with your <b>first Advance Point</b> — the learned one fills the Advance active slot. Unlearning refunds every Advance Point spent',
+            + 'Advancing opens the Advancement Tree in <b>Mastery</b> — learn one of the path\'s three advancement skills with your <b>first Advance Point</b>; the learned one fills the Advance active slot. Unlearning refunds every Advance Point spent',
     },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
@@ -1447,7 +1446,6 @@ const STRINGS = {
     },
     'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
     'sk.advNeed': { ko: '전직 필요', en: 'Advancement required' },   // 전직 판의 잠김 베일 (§7 · §13-1)
-    'sk.advSkillNeed': { ko: '전직 스킬 필요', en: 'Advance skill required' },   // 전직했지만 스킬을 안 배운 판의 잠김 베일 (R216 · ADR-0529)
     'sk.adv.slot.2': { ko: '특수', en: 'Special' },   // 전직 가지 칸 이름 — ② · ③ · ④ (skill_design §4)
     'sk.adv.slot.3': { ko: '변형', en: 'Variant' },
     'sk.adv.slot.4': { ko: '필살기', en: 'Ultimate' },

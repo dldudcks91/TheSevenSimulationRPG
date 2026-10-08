@@ -381,10 +381,12 @@ const PIECES = {
     shell(L, o, x) { piece(L, 'fp-shell', o, x, { t: ms(o.t ?? 540) }); },
     /** 카드 — 한 번 번쩍인다 */
     flash(L, o, x) { piece(L, 'fx-card fp-flash', o, x, { t: ms(o.t ?? 360) }); },
-    /** 맞은 카드가 쿵 내려앉는다 — 공격자 포커스(개발용)가 내보낸 칸은 건너뛴다(`lunge` 와 같은 이유) */
+    /** 맞은 카드가 쿵 내려앉는다 — 공격자 포커스(개발용)가 내보낸 칸은 건너뛴다(`lunge` 와 같은 이유) · `o.dl` = 늦춤(배속을 탄다) */
     quake(L, o, x) {
         const slot = x.d.node.parentElement;
-        if (slot && !slot.classList.contains('fx-advance')) play(slot, 'fp-quake', SLOT);
+        if (!slot || slot.classList.contains('fx-advance')) return;
+        slot.style.setProperty('--qdl', ms(o.dl ?? 0));
+        play(slot, 'fp-quake', SLOT);
     },
 };
 /** 표의 조각 목록 하나를 그 카드에 띄운다 */
@@ -417,7 +419,7 @@ let skillReady;
 /** 관전 · 도감 이펙트 탭이 설 때 부른다 — 직업 스킬 그림은 한 번만 읽는다. 종류 공통 그림은 ART_ON을 따른다 */
 export function fxPreload() {
     if (!skillReady) {
-        const files = new Set(Object.values(SKILL_ART).flatMap(events => Object.values(events).map(x => x.file)));
+        const files = new Set(Object.values(SKILL_ART).flatMap(events => Object.values(events).flatMap(x => [x.file, x.then?.file]).filter(Boolean)));
         skillReady = Promise.all([...files].map(file => new Promise(resolve => {
             const im = new Image();
             im.onload = () => { skillArt.set(file, im.src); resolve(); };
@@ -437,18 +439,31 @@ export function fxPreload() {
 }
 /** 준비된 스킬 그림을 초상 위에 띄운다 — 없으면 기존 조각을 부르는 쪽으로 돌아간다 */
 function skillStamp(L, s, kind, x) {
-    const def = SKILL_ART[s]?.[kind], src = def && skillArt.get(def.file);
-    if (!src) return false;
+    const def = SKILL_ART[s]?.[kind];
+    if (!def || !skillArt.has(def.file)) return false;
+    // 이어 서는 그림(`then`)은 앞 그림이 끝나는 때에 선다 — 아이스 블라스트의 떨어짐 → 깨짐 (ADR-0541)
+    for (let d = def, dl = 0; d && skillArt.has(d.file); dl += d.duration, d = d.then) stampArt(L, s, d, x.crit, dl);
+    // 강화 · 회복 그림엔 코드의 훑어 오름(그 스킬 색의 띠가 카드를 아래에서 위로)이 늘 같이 선다 — 색은 그 스킬 코드 조합의 훑음 색 · 없으면 첫 조각 색 (ADR-0551)
+    if (kind === 'buff' || kind === 'heal') {
+        const look = SKILL_LOOKS[s]?.[kind] ?? SKILL_LOOKS[s]?.buff ?? [];
+        PIECES.sweep(L, { c: (look.find(([name]) => name === 'sweep') ?? look[0])?.[1]?.c ?? 'gold' }, x);
+    }
+    // 두 장이면 흔들림은 둘째 그림(터짐)이 설 때 — 메테오 · 토르의 분노 (ADR-0550)
+    if (def.quake) PIECES.quake(L, { dl: def.then && skillArt.has(def.then.file) ? def.duration : 0 }, x);
+    return true;
+}
+/** 그림 한 장 — `ay` 는 그림에서 초상 가운데에 닿는 높이(0 = 위 끝 · 1 = 아래 끝 · 없으면 가운데) · `dl` 은 늦춤(배속을 탄다) */
+function stampArt(L, s, def, crit, dl) {
     const size = def.fit === 'portrait' ? parseFloat(L.style.getPropertyValue('--sw')) || def.size : def.size;
-    const im = spawn(L, `fx-skill-stamp fx-skill-${def.motion}${x.crit ? ' crit' : ''}`, {
+    const im = spawn(L, `fx-skill-stamp fx-skill-${def.motion}${crit ? ' crit' : ''}`, {
         sz: px(size), t: ms(def.duration),
+        ...(def.ay != null && { oy: px((.5 - def.ay) * size) }),
+        ...(dl && { dl: ms(dl) }),
     }, 'img');
     im.alt = '';
     im.draggable = false;
     im.dataset.skill = s;
-    im.src = src;
-    if (def.quake) PIECES.quake(L, {}, x);
-    return true;
+    im.src = skillArt.get(def.file);
 }
 /* 움직임은 종류가 정한다 — 좋은 것은 오르고 나쁜 것은 내려앉는다 · 방벽은 부푼다 · 나머지(타격 · 자폭)는 커지며 돌고 터진다 */
 const MOTION = { heal: 'rise', buff: 'rise', debuff: 'sink', barrier: 'pulse' };

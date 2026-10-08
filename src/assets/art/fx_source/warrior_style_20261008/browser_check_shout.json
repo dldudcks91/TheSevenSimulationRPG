@@ -1,0 +1,136 @@
+{
+ "errors": [
+  "Failed to load resource: the server responded with a status of 404 (File not found)"
+ ],
+ "skills": {
+  "war_taunt": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/hero/warrior_1.webp\")",
+   "sprite": [
+    383.375,
+    479.625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_taunt.webp",
+     "cls": "fx-skill-stamp fx-skill-wave",
+     "anim": "fx-skill-wave",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "150": [
+     [
+      "war_taunt.webp",
+      492,
+      558,
+      396,
+      462,
+      1
+     ]
+    ],
+    "400": [
+     [
+      "war_taunt.webp",
+      485,
+      566,
+      388,
+      469,
+      1
+     ]
+    ]
+   }
+  },
+  "war_shout": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/hero/warrior_1.webp\")",
+   "sprite": [
+    606.5625,
+    479.625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_shout.webp",
+     "cls": "fx-skill-stamp fx-skill-wave",
+     "anim": "fx-skill-wave",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "150": [
+     [
+      "war_shout.webp",
+      492,
+      558,
+      619,
+      685,
+      1
+     ]
+    ],
+    "400": [
+     [
+      "war_shout.webp",
+      485,
+      566,
+      612,
+      693,
+      1
+     ]
+    ]
+   }
+  },
+  "war_battleorders": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/hero/warrior_1.webp\")",
+   "sprite": [
+    829.75,
+    479.625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_battleorders.webp",
+     "cls": "fx-skill-stamp fx-skill-wave",
+     "anim": "fx-skill-wave",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "150": [
+     [
+      "war_battleorders.webp",
+      492,
+      558,
+      842,
+      908,
+      1
+     ]
+    ],
+    "400": [
+     [
+      "war_battleorders.webp",
+      485,
+      566,
+      835,
+      916,
+      1
+     ]
+    ]
+   }
+  }
+ }
+}

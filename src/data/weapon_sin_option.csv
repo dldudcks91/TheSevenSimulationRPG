@@ -10,7 +10,8 @@ sloth,3,physical,proc_hit_buff,flat,0.05,0.12,나태 ③(물리) — 타격 시 
 sloth,3,magic,proc_cast_buff,flat,0.05,0.12,나태 ③(마법) — 시전 시 버프 스킬 발동 확률 · ⚠ 전투 미적용 ⚠제안 수치 (R208)
 lust,1,physical,life_steal,flat,0.01,0.03,색욕 ①(물리) — 흡혈 ⚠제안 수치
 lust,1,magic,cast_refund_chance,flat,0.05,0.12,색욕 ①(마법) — 시전 시 확률로 시전 칸 1 충전 · 마법 무기는 흡혈을 안 받는다(10-04) ⚠제안 수치 (R208)
-lust,2,all,dmg_min_flat,wdmg,0.04,0.1,색욕 ② — 최소 데미지(고정 수치) · 값 = 이 비율 × 그 아이템 레벨의 무기 피해 가운데 값(무기 피해와 같이 자란다) · 무기 % · 강화를 곱한 범위 뒤에 더한다 ⚠제안 수치
+lust,2,physical,hit_bonus,flat,0.1,0.2,색욕 ②(물리) — 명중률 · 적중률에 (1 + 명중률)로 곱한다(battle_design §9-4) · 한 줄로 같은 레벨 100% 를 다 못 채우게 ⚠제안 수치 (2026-10-07 — ~~최소 데미지~~ 대체 · item_design §1 「10-07 옵션 개정」 · R225)
+lust,2,magic,dmg_min_flat,wdmg,0.04,0.1,색욕 ②(마법) — 최소 데미지(고정 수치) · 값 = 이 비율 × 그 아이템 레벨의 무기 피해 가운데 값(무기 피해와 같이 자란다) · 무기 % · 강화를 곱한 범위 뒤에 더한다 · 물리 무기는 2026-10-07 명중률 ⚠제안 수치
 lust,3,all,dmg_max_flat,wdmg,0.06,0.15,색욕 ③ — 최대 데미지(고정 수치) · 최소가 최대를 넘으면 최대 = 최소 + 1 ⚠제안 수치
 envy,1,physical,def_ignore,flat,0.03,0.08,시기 ①(물리) — 방어력 무시 % ⚠제안 수치
 envy,2,physical,def_down_stack_pct,flat,0.01,0.03,시기 ②(물리) — 타격 시 대상 방어력 감소 · 겹 하나의 값 · 겹쳐 쌓인다(최대 겹 [balance.csv:weapon_def_down_stack_max]) · 시간으로 안 풀린다 ⚠제안 수치
@@ -23,9 +24,8 @@ envy,3,mage,status_dur_pct,flat,0.1,0.3,시기 ③(마법사) — 상태이상 �
 envy,1,priest,proc_cast_debuff,flat,0.05,0.12,시기 ①(사제) — 시전 시 디버프 스킬 발동 확률 · 저주(페니턴스 · 바인드) 중 드롭 때 하나 · ⚠ 전투 미적용 ⚠제안 수치 (R208)
 envy,2,priest,heal_out_pct,flat,0.04,0.1,시기 ②(사제) — 회복량 증가 % · 이 사제가 거는 회복 스킬의 양(주는 쪽) · 받는 쪽 체력 회복 +% 와 곱(⚠제안) ⚠제안 수치
 envy,3,priest,debuff_dur_pct,flat,0.1,0.3,시기 ③(사제) — 디버프 시간 증가 · 내가 적에게 건 상태이상 아닌 창이 길어진다 ⚠제안 수치
-pride,1,all,dmg_per_level_pct,fine,0.002,0.005,오만 ① — 영웅 레벨당 데미지 +% · 데미지 % 괄호 ⚠임시 수치
-pride,2,physical,aspd_per_level_pct,fine,0.001,0.002,오만 ②(물리) — 레벨당 공격 속도(영웅 레벨 × 값 · 신발 오만과 같은 축) ⚠제안 수치
-pride,2,magic,cast_speed_per_level_pct,fine,0.001,0.002,오만 ②(마법) — 레벨당 캐스팅 속도 ⚠제안 수치 (R208)
+pride,1,all,skill_plus,band,1,2,오만 ① — 특정 스킬 +n · 그 무기군 직업의 기본 스킬 중 드롭 때 하나 · 그 스킬이 없는 영웅엔 효과 없음 · 책 업그레이드 상한을 넘는다 · 정수 ⚠제안 수치 (2026-10-07 · item_design §1 「10-07 옵션 개정」 · R225)
+pride,2,all,dmg_per_level_pct,fine,0.002,0.005,오만 ② — 영웅 레벨당 데미지 +% · 데미지 % 괄호 ⚠임시 수치 (2026-10-07 ① → ②)
 pride,3,all,dmg_max_per_level,tenth,0.2,0.5,오만 ③ — 레벨당 최대 데미지(고정 수치 × 영웅 레벨 · 0.1 단위) ⚠제안 수치
 gluttony,1,physical,crushing_blow_pct,flat,0.01,0.03,폭식 ①(물리) — 강타: 맞기 직전 대상 현재 체력 × % 고정 피해 · 직격만 · 치명·방어·저항 무관 ⚠제안 수치
 gluttony,1,magic,cast_stack_pct,flat,0.01,0.02,폭식 ①(마법) — 시전 누적: 시전마다 데미지 % 한 겹 · 라운드 동안 · 최대 겹 [balance.csv:cast_stack_max] ⚠제안 수치 (R208)

@@ -552,7 +552,7 @@ export function buildSystems(d, dev = {}) {
         naming,                                     // 이름 조립기 — 죄종 단어 표까지 든다 (2026-09-19 · ~~composeName 하나~~)
         weaponSinOptions: d.weaponSinOptions ?? [],   // 무기 죄종 계열표 (R78 · 계열표 2026-10-05 R206 — ~~통합옵션 표~~ 퇴역)
         // 발동 옵션의 스킬 풀 재료 — 직업 스킬 전부 · 풀 규칙(1티어 공격 · 버프 · 저주)은 item.js 가 든다 (2026-10-05 · R206 · INTERFACE §2-5) · 행 순서가 결정론 계약
-        procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target })),
+        procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target, armorPool: sk.armorPool })),
         armorSinOptions: d.armorSinOptions ?? [], armorCommonOptions: d.armorCommonOptions ?? [],       // 방어구 옵션 표 둘 (2026-09-18)
         // 반지 · 목걸이 옵션 표 셋 + 발동 스킬 후보 [2026-09-21 · R127] — 후보는 `skill.csv:amulet_pool = 1` · 직업을 안 가리는 한 풀 · 행 순서가 결정론 계약
         accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],

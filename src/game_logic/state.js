@@ -1431,7 +1431,8 @@ export function createGameSystem(deps) {
             return {
                 uid, combat: heroCombat(state, h, list, no, tactic),  // 전술 조건도 이 인원으로 센다 — 원정은 나간 인원이다 (R92) · 칸은 나간 편성의 것 (R129) · 출발 때 켜진 것만 (R130)
                 stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
-                actives: SK.activesFor(h),                // 둘째 칸 = 책으로 배운 스킬(`h.bookSkill`) — ~~무기가 든 스킬~~ 2026-09-29 R179
+                // 둘째 칸 = 책으로 배운 스킬(`h.bookSkill`) — ~~무기가 든 스킬~~ 2026-09-29 R179 · 낀 장비의 특정 스킬 +n 이 고유 · 배운 칸 레벨에 더해진다(2026-10-08 · R225)
+                actives: SK.activesFor(h, { skillPlus: I.skillPlusOf(heroItems(state, h)) }),
                 weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 무기가 필요한 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · R204 · skill_design §2-2)
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
             };
@@ -2474,6 +2475,23 @@ export function createGameSystem(deps) {
         state.tavern.hired.push(index);
         return { ok: true, hero: h };
     }
+    /**
+     * 관리자 모드 — 그 직업 영웅 한 명을 그 레벨로 로스터 끝에 넣는다 [2026-10-08 사용자 「30레벨 전사, 마법사, 기사 … 키우기 귀찮아서」 · 개발 장치 · SCREEN_DESIGN §10-3].
+     *   굴림은 선술집 후보와 같다(`hero.rollHeroOf` — 등급도 굴린다 · 그 영웅이 받을 번호의 전용 스트림) · 고용과 같은 시작 장비 한 벌 ·
+     *   레벨은 1 에서 그 레벨까지의 필요 XP 합을 한 번에 준다 — **레벨업을 차례로 거쳐** 마스터리 포인트가 오른 수만큼 붙는다(`grantXp` · 상한 `hero_level_cap`). 골드를 안 쓴다
+     */
+    function adminHero(state, cls, level) {
+        if (!openAll()) return { ok: false, err: 'admin' };
+        if (state.heroes.length >= limitsOf(state).roster) return { ok: false, err: 'roster' };
+        const rolled = H.rollHeroOf(makeRng(deriveSeed(state.seed ^ 0xAD31, state.counters.hero + 1)), cls);
+        if (!rolled) return { ok: false, err: 'class' };
+        const h = addHero(state, rolled);
+        equipStarter(state, h, recruitRng(state));
+        let xp = 0;
+        for (let l = 1; l < Math.min(level, B.hero_level_cap); l++) xp += H.xpNeeded(l);
+        H.grantXp(h, xp, null);   // rng 를 안 쓴다(INTERFACE §2-4)
+        return { ok: true, hero: h };
+    }
 
     /* ── 상점 — 특수상단 방문 시계 · 상단 장비 목록 (base_expedition_design §2-6 · SCREEN_DESIGN §8-3 · 2026-09-21 사용자 지시 · ADR-0223) ──
        시계는 **게임을 만든 시각에서 센다** — `trade_visit_hours` 마다 상인이 오고 `trade_stay_hours` 머문다. 벽시계라 오프라인에도 흐른다.
@@ -3396,7 +3414,7 @@ export function createGameSystem(deps) {
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         runLock, runTactics, runTacticsIf, runBuffs,
-        tavernCandidates, tavernState, tavernReroll, hire, dismissState, dismiss, swapHeroes,
+        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, swapHeroes,
         shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,

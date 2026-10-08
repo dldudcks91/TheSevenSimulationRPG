@@ -1,0 +1,172 @@
+{
+ "errors": [
+  "Failed to load resource: the server responded with a status of 404 (File not found)"
+ ],
+ "skills": {
+  "war_bash": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    382.39227294921875,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_bash.webp",
+     "cls": "fx-skill-stamp fx-skill-slash",
+     "anim": "fx-skill-slash",
+     "dur": "0.36s",
+     "delay": "0s",
+     "w": 92,
+     "marginTop": "-46px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "120": [
+     [
+      "war_bash.webp",
+      363,
+      447,
+      386,
+      470,
+      1
+     ]
+    ]
+   }
+  },
+  "war_doubleswing": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    604.9194946289062,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_doubleswing.webp",
+     "cls": "fx-skill-stamp fx-skill-cross",
+     "anim": "fx-skill-cross",
+     "dur": "0.4s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "120": [
+     [
+      "war_doubleswing.webp",
+      364,
+      446,
+      610,
+      691,
+      1
+     ]
+    ]
+   }
+  },
+  "war_quake": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1051.955322265625,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_quake.webp",
+     "cls": "fx-skill-stamp fx-skill-ground",
+     "anim": "fx-skill-ground",
+     "dur": "0.48s",
+     "delay": "0s",
+     "w": 96,
+     "marginTop": "-48px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "150": [
+     [
+      "war_quake.webp",
+      362,
+      449,
+      1053,
+      1140,
+      1
+     ]
+    ]
+   }
+  },
+  "war_leap": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1275.143310546875,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_leap.webp",
+     "cls": "fx-skill-stamp fx-skill-land",
+     "anim": "fx-skill-land",
+     "dur": "0.46s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "150": [
+     [
+      "war_leap.webp",
+      364,
+      449,
+      1278,
+      1363,
+      1
+     ]
+    ]
+   }
+  },
+  "war_ironskin": {
+   "bg": "url(\"http://127.0.0.1:8791/assets/art/faces/gemini/hero/warrior_1.webp\")",
+   "sprite": [
+    829.75,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_ironskin.webp",
+     "cls": "fx-skill-stamp fx-skill-shell",
+     "anim": "fx-skill-shell",
+     "dur": "0.54s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "rects": {
+    "180": [
+     [
+      "war_ironskin.webp",
+      362,
+      448,
+      832,
+      918,
+      1
+     ]
+    ]
+   }
+  }
+ }
+}

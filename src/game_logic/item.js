@@ -81,7 +81,7 @@ import { createFormula } from './formula.js';
  *                         `appliesTo` = `all` · 무기군 `damageKind`(physical/magic) · 직업 id(그 무기군의 classes 에 있으면).
  *                         옵션 = (죄종, `option`) · 같은 옵션에서 그 무기군에 붙는 행 여럿 = 변형 · **행 순서가 결정론 계약**
  *   ~~weaponCommonOptions~~ — 2026-10-05 R206 퇴역(`weapon_common_option.csv` 삭제 — 무기 옵션은 전부 죄종 계열 중 하나다)
- *   procSkillDefs — [{id, cls, tier, tags, target}] ← skill.csv 의 직업 스킬 — 발동 옵션의 스킬 풀을 여기서 짓는다 (2026-10-05 · R206) · **행 순서가 결정론 계약**
+ *   procSkillDefs — [{id, cls, tier, tags, target, armorPool}] ← skill.csv 의 직업 스킬 — 발동 옵션 · 특정 스킬 +n 의 스킬 풀을 여기서 짓는다 (2026-10-05 · R206 · `armorPool` 2026-10-08 · R225) · **행 순서가 결정론 계약**
  *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, …}}} ← armor_group.csv — **부위 → 갈래** (갑옷군 2026-09-16 · 투구 · 장갑 · 신발 2026-09-18).
  *                  고유 방어력의 갈래 계수(`defMult`)를 여기서 읽는다 — 갈래 id 는 부위마다 겹친다(`leather`)
  *   armorSinOptions    — [{slot, sin, option, stat, scale, min, max, perIlvl?}] ← armor_sin_option.csv — 방어구 죄종 칸 후보 (2026-09-18 · `option` 2026-10-05).
@@ -146,6 +146,17 @@ export function createItemSystem(data) {
         return kind === 'attack' ? [...new Set(classes.flatMap(procAttack))]
             : kind === 'buff' ? PROC_BUFF : kind === 'curse' ? PROC_CURSE : [];
     };
+    /**
+     * 특정 스킬 +n [2026-10-08 · R225 · item_design §1 「10-07 옵션 개정」 · INTERFACE §5-3 `SKILL_PLUS`] — 줄이 `skill` 을 박고 값은 단계 수(정수)다.
+     * 전투 능력치가 아니라 스킬 레벨이다 — `skillPlusOf` 가 모아 `skill.activesFor` 의 `ctx.skillPlus` 로 넘어간다
+     */
+    const SKILL_PLUS = 'skill_plus';
+    /** 랜덤 줄에 안 뜨는 죄종 — 이름에 뜰 때 메인 줄로만 붙는다 [2026-10-06 오만 규칙 · R225 · INTERFACE §5-3 `MAIN_ONLY_SINS`] (구조 상수) */
+    const MAIN_ONLY_SINS = new Set(['pride']);
+    // 특정 스킬 +n 의 풀 — **기본 스킬(직업 스킬)만** · 행 순서 = CSV 순서(결정론 계약 · INTERFACE §2-5 「특정 스킬 +n 풀」).
+    //   무기 = 그 무기군 직업의 직업 스킬 전부 / 갑옷 = 그 갑옷군 직업의 직업 스킬 중 `armorPool`(방어 관련 — `skill.csv:armor_pool`)
+    const plusPoolWeapon = classes => procDefs.filter(s => classes.includes(s.cls)).map(s => s.id);
+    const plusPoolArmor = classes => procDefs.filter(s => s.armorPool && classes.includes(s.cls)).map(s => s.id);
 
     /** 드롭·시작 무기에 쓰는 무기군 = 본편(release=main)뿐 — 확장 직업의 무기는 아직 아무도 못 드니 굴리지 않는다 */
     // ~~classSkills · starterSkills~~ 는 2026-09-29 걷었다(R179) — 무기가 스킬을 안 담는다
@@ -201,6 +212,8 @@ export function createItemSystem(data) {
             const opts = FAMILY_SLOTS.has(r.slot) ? FAMILY_OPTIONS : [1];
             if (!opts.includes(r.option)) throw new Error(`item: armor_sin_option ${r.slot} ${r.sin} ${r.stat} option '${r.option}'`);
             if (isProc(r.stat) && !PROC_POOL[r.stat]) throw new Error(`item: armor_sin_option 발동 '${r.stat}' 의 풀이 없다 (PROC_POOL)`);
+            // 특정 스킬 +n 은 계열 굴림(`familyOptions`)만 스킬을 박는다 — 세 층 부위에 서면 스킬 없는 줄이 조용히 생긴다 (R225)
+            if (r.stat === SKILL_PLUS && !FAMILY_SLOTS.has(r.slot)) throw new Error(`item: armor_sin_option ${r.slot} 의 ${SKILL_PLUS} — 계열표 부위(${[...FAMILY_SLOTS]})만 든다`);
             // 반격은 반격을 부른다(평타와 같은 규칙 · INTERFACE §2-6) — 한 출처가 1 이면 양쪽이 끝없이 되받아 친다
             if (r.stat === 'counter_chance' && !(r.max < 1)) throw new Error(`item: armor_sin_option counter_chance max ${r.max} — 1 미만이어야 한다`);
         }
@@ -357,23 +370,27 @@ export function createItemSystem(data) {
     /**
      * 죄종 계열 옵션 — 메인 줄 → 랜덤 줄 [2026-10-05 · 사용자 확정 · R206 · R208 · R209 · R210 · item_design §1 「무기 옵션 — 죄종 계열」 · INTERFACE §2-5].
      * 옵션 = (죄종, `option`) — `rows` 는 **그 아이템에 붙는 행만** 받는다(무기 = `appliesTo` · 갑옷 = 그 부위). 같은 옵션의 행 여럿은 변형(종족 셋 · 원소 셋)이다.
-     *   메인 줄 — `sins` 마다 그 죄종의 옵션 중 아직 안 붙은 것에서 하나(**반드시**) · 랜덤 줄 — `n` 개 · 21 옵션 중 아직 안 붙은 것에서(계열 무관 — 겹쳐도 된다)
+     *   메인 줄 — `sins` 마다 그 죄종의 옵션 중 아직 안 붙은 것에서 하나(**반드시**) · 랜덤 줄 — `n` 개 · 계열표 옵션 중 아직 안 붙은 것에서(계열 무관 — 겹쳐도 된다)
      *   **같은 옵션은 한 번** · **발동은 아이템당 하나**(발동 옵션이 붙으면 다른 발동 옵션이 후보에서 빠진다) · **대역은 하나**(메인 · 랜덤 같은 범위)
+     *   **오만(`MAIN_ONLY_SINS`)은 랜덤 줄 후보가 아니다** — 이름에 오만이 뜰 때 메인 줄 하나로만 붙는다(2026-10-06 오만 규칙 · R225)
+     *   **풀이 빈 특정 스킬 +n 옵션은 후보가 아니다**(갈래 없는 시작 갑옷 · 방어 관련 스킬이 없는 갑옷군 — R225)
      *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다 — 메인 줄은 `sins` 순서대로 앞에 선다
-     * rng 소비(계약 — INTERFACE §5-2): 줄마다 **옵션 1 → 변형 1 → 값 1 → 스킬 1** — 스킬은 발동이 아니어도 소비하고, 후보가 비어도 4회 그대로다
+     * rng 소비(계약 — INTERFACE §5-2): 줄마다 **옵션 1 → 변형 1 → 값 1 → 스킬 1** — 스킬은 발동 · 특정 스킬 +n 이 아니어도 소비하고, 후보가 비어도 4회 그대로다
      * @param classes 발동 공격 풀의 직업(무기 = 무기군 직업 · 갑옷 = [])
+     * @param plusPool 특정 스킬 +n 의 스킬 후보(무기 `plusPoolWeapon` · 갑옷 `plusPoolArmor`) — 비면 그 옵션이 안 뜬다
      */
-    function familyOptions(rng, rows, sins, n, ilvl, classes) {
+    function familyOptions(rng, rows, sins, n, ilvl, classes, plusPool = []) {
         const options = [], byKey = {};
         for (const r of rows) {                                       // 첫 등장 순 = CSV 행 순서
             const key = `${r.sin}:${r.option}`;
-            if (!byKey[key]) options.push(byKey[key] = { key, sin: r.sin, rows: [], proc: false });
+            if (!byKey[key]) options.push(byKey[key] = { key, sin: r.sin, rows: [], proc: false, plus: false });
             byKey[key].rows.push(r);
             if (isProc(r.stat)) byKey[key].proc = true;
+            if (r.stat === SKILL_PLUS) byKey[key].plus = true;
         }
         const out = [], used = new Set();
         let procTaken = false;
-        const open = o => !used.has(o.key) && !(procTaken && o.proc);
+        const open = o => !used.has(o.key) && !(procTaken && o.proc) && !(o.plus && !plusPool.length);
         const line = cands => {
             const or = rng(), sr = rng(), vr = rng(), kr = rng();
             if (!cands.length) return;
@@ -386,10 +403,11 @@ export function createItemSystem(data) {
                 const pool = procPool(d.stat, classes);
                 a.skill = pool.length ? pool[Math.floor(kr * pool.length)] : null;
             }
+            if (d.stat === SKILL_PLUS) a.skill = plusPool[Math.floor(kr * plusPool.length)];   // 풀이 비면 `open` 이 이미 뺐다
             out.push(a);
         };
         for (const sin of sins) line(options.filter(o => o.sin === sin && open(o)));
-        for (let i = 0; i < n; i++) line(options.filter(open));
+        for (let i = 0; i < n; i++) line(options.filter(o => open(o) && !MAIN_ONLY_SINS.has(o.sin)));
         return out;
     }
 
@@ -403,7 +421,7 @@ export function createItemSystem(data) {
         // 고정 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 고정 옵션)
         const out = [{ stat: 'atk_pct', v: F.pctOption(lo + rng() * (hi - lo)), src: 'fixed' }];
         const n = byRarity(rarity, B.weapon_common_opt_normal, B.weapon_common_opt_magic, B.weapon_common_opt_rare);
-        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, n, ilvl, g.classes ?? []));
+        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, n, ilvl, g.classes ?? [], plusPoolWeapon(g.classes ?? [])));
     }
 
     /**
@@ -419,7 +437,8 @@ export function createItemSystem(data) {
         const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + rng() * (hi - lo)), src: 'fixed' }];
         if (FAMILY_SLOTS.has(slot)) {
             const n = byRarity(rarity, B.armor_common_opt_normal, B.armor_common_opt_magic, B.armor_common_opt_rare);
-            return out.concat(familyOptions(rng, armorSinOpts.filter(r => r.slot === slot), sins, n, ilvl, []));
+            // 특정 스킬 +n 의 풀은 **갑옷군의 직업**이 정한다 — 갈래가 없는 시작 칸은 직업이 없어 비고 그 옵션이 안 뜬다 (R225)
+            return out.concat(familyOptions(rng, armorSinOpts.filter(r => r.slot === slot), sins, n, ilvl, [], plusPoolArmor(groupDef(slot, group)?.classes ?? [])));
         }
         // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(탐욕 셋 · 투구 시기 원소 넷 · 장갑 시기 넷) 그중 하나를 굴린다
         for (const sin of sins) {
@@ -705,6 +724,17 @@ export function createItemSystem(data) {
         });
     }
 
+    /**
+     * 특정 스킬 +n 합 `{skillId: n}` [2026-10-08 · R225 · INTERFACE §2-5] — 낀 장비의 `skill_plus` 줄을 스킬별로 **더한다**(⚠ 여러 부위 더하기 — 제안).
+     * `skill` 이 없는 줄은 건너뛴다 · 순수 · rng 0. 받는 쪽은 `skill.activesFor(hero, {skillPlus})`
+     */
+    function skillPlusOf(items) {
+        const out = {};
+        for (const it of items ?? []) for (const a of it?.affixes ?? [])
+            if (a.stat === SKILL_PLUS && a.skill) out[a.skill] = (out[a.skill] ?? 0) + a.v;
+        return out;
+    }
+
     const upgradeMax = () => B.equip_upgrade_max;
 
     /** 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화하지 않는다 (item_design §7-2 · R95). 부위만 본다 */
@@ -739,5 +769,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, skillPlusOf };
 }

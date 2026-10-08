@@ -2176,7 +2176,7 @@ html, body { height: 100%; overflow: hidden; }
     animation-name: fx-shell; animation-timing-function: ease-out;
 }
 /* 맞은 카드가 쿵 — 칸이 아래로 내려앉았다 한 번 튀고 돌아온다(아레나 전체는 안 흔든다) */
-.unit-slot.fp-quake { animation: fp-quake calc(300ms * var(--fx-k, 1)) ease-out; }
+.unit-slot.fp-quake { animation: fp-quake calc(300ms * var(--fx-k, 1)) ease-out; animation-delay: calc(var(--qdl, 0ms) * var(--fx-k, 1)); }
 @keyframes fp-quake { 0%, 10% { transform: none; } 25% { transform: translateY(5px); } 45% { transform: translateY(-1.5px); } 65% { transform: translateY(1px); } 100% { transform: none; } }
 /* 회복 — 초록 빛 알갱이가 초상 아래쪽에서 오른다 */
 .fx-mote {
@@ -2233,12 +2233,14 @@ html, body { height: 100%; overflow: hidden; }
 .side-enemy .unit-slot.fx-advance { transform: translateY(14px); }
 .arena.focus-dim .unit-slot:not(.focus-in) { filter: brightness(.45) saturate(.5); }
 
-/* 기본 직업 스킬의 투명 이미지 — 초상 둘레 안 · 배속과 정리는 기존 조각과 같다(ADR-0515 · ADR-0520).
-   이미지는 그림의 색을 그대로 쓰고, CSS는 등장·이동·사라짐만 정한다. */
+/* 기본 직업 스킬의 투명 이미지 — 초상 둘레 안 · 전직 스킬은 크게 카드 밖까지(ADR-0550) · 배속과 정리는 기존 조각과 같다(ADR-0515 · ADR-0520).
+   이미지는 그림의 색을 그대로 쓰고, CSS는 등장·이동·사라짐만 정한다.
+   `--oy` 는 그림을 위아래로 옮긴다(SKILL_ART `ay`) · `--dl` 은 이어 서는 그림의 늦춤이다 — 둘 다 없으면 0 (ADR-0541) */
 .fx-skill-stamp {
-    width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
+    width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2 + var(--oy, 0px)) 0 0 calc(var(--sz) / -2);
     object-fit: contain; image-rendering: auto;
     animation: fx-skill-slash calc(var(--t) * var(--fx-k, 1)) ease-out both;
+    animation-delay: calc(var(--dl, 0ms) * var(--fx-k, 1));
 }
 .fx-skill-stamp.crit { filter: brightness(1.12); }
 .fx-skill-cross { animation-name: fx-skill-cross; }
@@ -2257,7 +2259,21 @@ html, body { height: 100%; overflow: hidden; }
 .fx-skill-sweep { animation-name: fx-skill-sweep; }
 .fx-skill-heal { animation-name: fx-skill-heal; }
 .fx-skill-sink { animation-name: fx-skill-sink; }
-/* 전사 버프 — 칸 전체를 초상에 맞추고 가장자리의 그림을 그 자리에서 움직인다. */
+/* 마법사 라이트닝 · 아이스 블라스트 — 초상 바깥 위에서 떨어진다(ADR-0541).
+   번개는 위에서 아래로 그어지고 한 번 깜빡인다 · 얼음은 초상 한 칸 위에서 점점 빨라지며 떨어지고 · 깨짐은 맞은 자리에서 터진다 */
+.fx-skill-bolt { animation-name: fx-skill-bolt; animation-timing-function: linear; }
+.fx-skill-fall { animation-name: fx-skill-fall; animation-timing-function: cubic-bezier(.32, 0, .67, 0); }
+.fx-skill-shatter { animation-name: fx-skill-shatter; transform-origin: 50% 89%; }
+/* 전직 휠윈드 · 재장전 — 칼날 바퀴 · 화살 고리가 한 바퀴 가까이 돈다(ADR-0550) */
+.fx-skill-spin { animation-name: fx-skill-spin; animation-timing-function: linear; }
+@keyframes fx-skill-spin {
+    0% { transform: rotate(0deg) scale(.85); opacity: 0; }
+    12% { opacity: 1; }
+    15% { transform: rotate(48deg) scale(1); }
+    78% { opacity: 1; }
+    100% { transform: rotate(320deg) scale(1.04); opacity: 0; }
+}
+/* 전사 버프 —칸 전체를 초상에 맞추고 가장자리의 그림을 그 자리에서 움직인다. */
 .fx-skill-edge-burst { animation-name: fx-skill-edge-burst; transform-origin: 50% 100%; }
 .fx-skill-edge-wave { animation-name: fx-skill-edge-wave; }
 .fx-skill-edge-orders { animation-name: fx-skill-edge-orders; }
@@ -2387,6 +2403,25 @@ html, body { height: 100%; overflow: hidden; }
     25% { opacity: 1; }
     70% { transform: translateY(1px) scale(1); opacity: 1; }
     100% { transform: translateY(4px); opacity: 0; }
+}
+@keyframes fx-skill-bolt {
+    0% { clip-path: inset(0 0 100%); opacity: 1; }
+    20% { clip-path: inset(0); opacity: 1; }
+    28% { opacity: .45; }
+    36% { opacity: 1; }
+    65% { clip-path: inset(0); opacity: 1; }
+    100% { clip-path: inset(0); opacity: 0; }
+}
+@keyframes fx-skill-fall {
+    0% { transform: translateY(calc(var(--sh, 101px) * -1)); opacity: 0; }
+    15% { opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes fx-skill-shatter {
+    0% { transform: scale(.8); opacity: 0; }
+    14% { transform: scale(1); opacity: 1; }
+    60% { opacity: 1; }
+    100% { transform: translateY(2px) scale(1.03); opacity: 0; }
 }
 
 /* ── 종류 공통 그림 — `fx.js:ART_ON`이 꺼져 있다. 직업 스킬 이미지는 위의 별도 규칙을 쓴다.
@@ -3356,7 +3391,17 @@ html, body { height: 100%; overflow: hidden; }
 .sk-adv-pts { text-align: center; font-variant-numeric: tabular-nums; }
 .sk-adv-pts-l { font-size: var(--fs-xs); margin-left: 4px; }
 .adv-board .adv-ico img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+/* 못 배우는 칸은 그림이 흐리다 — 다른 스킬을 배웠거나 전직 포인트가 없다(배운 칸은 포인트가 없어도 그대로) · 스킬 그림의 금테가 칸마다 같아 칸 테두리만으로는 안 갈린다 (ADR-0542) */
+.adv-board .sk-cell.dim:not(.taken) .adv-ico img { opacity: .35; filter: grayscale(1); }
 .adv-board .adv-slot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: var(--fs-lg); color: var(--text-muted); pointer-events: none; }
+/* 가지 칸은 제 열의 위 칸(스킬 → ② → ③ → ④)과 세로 선으로 잇는다 — 줄 사이(`.sk-grid` gap 14px) + 제 윗변 1px 을 건너 위 칸 아랫변에 닿는다 ·
+   배운 스킬의 열은 칸이 또렷하고 선이 밝다 (2026-10-08 사용자 지시 「아래로 나열 · 선도 그어줘」 · ADR-0544) */
+.adv-board .adv-node::before { content: ''; position: absolute; left: 50%; bottom: 100%; width: 2px; height: 15px; margin-left: -1px; background: var(--bronze-line); pointer-events: none; }
+.adv-board .adv-node.on { opacity: 1; }
+/* 가지 칸 그림 — 전직 스킬 그림과 같은 투톤이라 칠하지 않는다 · 번호는 오른쪽 아래 꼬리표로 물러난다(보류 칸은 그림 없이 번호만 가운데) (ADR-0547) */
+.adv-board .adv-node-art { position: absolute; left: 8%; top: 8%; width: 84%; height: 84%; object-fit: contain; pointer-events: none; }
+.adv-board .adv-node.has-art .adv-slot { inset: auto 3px 1px auto; font-size: var(--fs-xs); }
+.adv-board .adv-node.on::before { background: var(--text-accent); }
 .bk-err { flex: none; font-size: var(--fs-xs); }
 .bk-empty { font-size: var(--fs-xs); }
 .bk-cost { display: flex; gap: 10px; margin-left: auto; flex: none; color: var(--text-muted); font-size: var(--fs-xs); }
@@ -3949,21 +3994,46 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .todo-badge { font-size: var(--fs-xs); color: var(--color-warning); border: 1px solid var(--color-warning); padding: 0 6px; margin-left: 6px; vertical-align: middle; }
 .panel.todo .note-body { max-width: 70ch; }
 
-/* 탐험 지도 — 탭 머리에 전폭으로 서는 **아트 한 장** [신설 2026-09-04 사용자 지시 · SCREEN_DESIGN §8-4]
-   ⚠ **클릭을 안 받는다** — 노드·경로가 기획 백지라 손잡이가 없다. `cursor` 도 안 바꾼다(누를 수 있는 것처럼 보이면 안 된다)
+/* 탐험 지도 — **세계지도 한 장 · 일곱 챕터가 구간** [개정 2026-10-08 사용자 지시 · SCREEN_DESIGN §8-4 · ADR-0537]
+   ⚠ **클릭을 안 받는다** — 노드·경로가 데이터가 없어 손잡이가 없다. `cursor` 도 안 바꾼다(누를 수 있는 것처럼 보이면 안 된다)
    ⚠ **`image-rendering` 을 아예 안 건다** — 스테이지·거점 배경(`--bg-render` · `#stage::before`)과 달리
       이건 신규 카툰 아트라 픽셀아트가 아니다. 보간을 꺼 두면 축소할 때 선이 끊긴다 (§5 얼굴 스타일에서 겪은 것과 같은 함정)
-   화면비는 자산 그대로다 — `cover` 가 잘라 내는 곳이 없다. **2752×1211 (2.27:1)** [개정 2026-09-04]:
-   생성 원본은 1536 높이였고 **아래 띠(생성기 워터마크 자리)를 잘라 낸** 것이 이 값이다. 세로가 짧아지면서
-   같은 날 등재했던 **세로 예산 예외가 해소됐다** — 하한 1280×700 에서 지도와 미착수 안내가 함께 선다 (src/ui/README.md) */
+   **너비가 아니라 남는 세로에 맞춘다** — 그림이 3:2 라 전폭이면 세로가 넘쳐 미착수 안내를 밀어낸다.
+   칸(`.ex-map-wrap` · 쌓인 판의 `.fill`)이 크기 컨테이너가 되고, 지도는 `cqw` · `cqh` 중 먼저 닿는 쪽에 맞춰 제 비(`--ex-ar` —
+   `mock.js:EXPLORE_WORLD_SIZE` 를 렌더러가 넣는다)로 가장 크게 선다. 그림의 비를 칸 비(1600×800 에서 약 2.15:1)에 맞춰 그려
+   칸을 가로로 가득 채운다(ADR-0540) — 칸 비가 조금 달라지는 자리(영어 미착수 안내가 길다)에서만 좌우가 조금 빈다 */
+.ex-map-wrap { container-type: size; overflow: hidden; }
 .ex-map {
-    aspect-ratio: 2752 / 1211;
-    background-size: cover;
-    background-position: center;
+    position: relative;
+    width: min(100cqw, calc(100cqh * var(--ex-ar)));
+    aspect-ratio: var(--ex-ar);
+    margin: 0 auto;
+    background-size: 100% 100%;
     border: 1px solid var(--border-secondary);
-    /* `.panel + .panel` 규칙이 안 걸리는 자리다(지도는 패널이 아니다) — 아래 미착수 패널과의 간격을 여기서 든다 */
-    margin-bottom: 14px;
 }
+/* 안 열린 챕터 구간 — 그 구간의 땅(마스크)만 덮는 **빛 바랜 막**. 바다는 안 덮는다.
+   통째 검은 막(`.lock-veil`)이 아니다 — 잠긴 땅의 생김새가 보여야 「다음에 갈 곳」이 읽힌다(처음엔 일곱 중 여섯이 잠겨 있다) */
+.ex-veil {
+    position: absolute; inset: 0;
+    background: rgba(var(--veil-rgb), .3);
+    backdrop-filter: grayscale(.85) brightness(.68);
+    /* 구간 모양 = 그림에서 딴 마스크(`mock.js:exploreMask` · 알파) — 그림 주소는 렌더러가 인라인 `mask-image` 로 넣는다. 그림과 같은 크기라 늘 겹친다 */
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+/* 자물쇠 + 왜 잠겼나 한 줄 — 구간의 자물쇠 자리(`at`)에 가운데를 맞춘다. 색 · 크기는 잠김 베일(`.lock-veil`)과 같다 */
+.ex-lock {
+    position: absolute; transform: translate(-50%, -50%);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; white-space: nowrap;
+    background: rgba(var(--veil-rgb), .82);
+    border: 1px solid var(--border-dark);
+    color: var(--color-warning); font-size: calc(var(--fs-sm) + 2px);
+}
+.ex-lock .lock-ico { display: inline-flex; }
+.ex-lock .lock-ico svg { width: 1.1em; height: 1.1em; }
+/* 지도 칸과 아래 미착수 패널 사이 — `.panel + .panel` 규칙이 안 걸리는 자리다(지도 칸은 패널이 아니다) */
+.ex-map-wrap + .panel { margin-top: 14px; }
 .items-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
 /* 보관 도구 줄 — 이름(인벤토리는 + 부대 버튼)이 왼쪽, **버튼은 오른쪽 끝**으로 민다 — 빈 칸 하나가 민다 [2026-10-06 · SCREEN_DESIGN §6 · ADR-0523 · ADR-0524] */
 .tools-push { margin-left: auto; }
@@ -4394,17 +4464,31 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 훈련장은 **영웅 띠 아래 패널 둘이 나란히**(ADR-0395) — 훈련 · 전직이 반반 · 둘 다 띠 아래 남는 세로까지 서고 넘치면 제 본문이 스크롤한다 */
 .c-train-band { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); min-height: 0; }
 .c-train-band > .panel { display: flex; flex-direction: column; min-height: 0; }
+/* 훈련장만 — 전직이 훈련보다 넓다 2 : 3 (2026-10-08 사용자 지시 「전직 칸의 가로를 조금 더 키워줘」 · ADR-0538). 서고는 위 반반 그대로 */
+.c-train-band.tr-band { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
 /* 전직 카드 (§16 · R16) — 고른 영웅 줄 · 갈래 셋이 나란히(전직 전) · 한 갈래(전직 후) · 막대(전직하는 중) */
 .tr-adv-hero { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+/* 지금 가진 스킬 — 이름 줄 아래 한 줄 · 칸마다 그림 · 이름 · Lv.n (2026-10-08 사용자 지시 · ADR-0539) · 그림 칸은 갈래 스킬 줄의 `.tr-adv-ico` 를 작게 */
+.tr-adv-cur { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: -4px 0 12px; }
+.tr-adv-cur-sk { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.tr-adv-cur-sk .tr-adv-ico { width: 28px; height: 28px; }
+.tr-adv-cur-sk .muted { font-size: var(--fs-xs); }
 .tr-adv-hero b { color: var(--text-primary); }
 .tr-adv-hero .no { color: var(--color-warning); }
-/* 갈래는 세로로 쌓인다 · 갈래마다 가로로 긴 카드 = 왼쪽 칸(갈래 이름 + 버튼) | 오른쪽 스킬 줄 셋 (ADR-0402) */
-.tr-adv-row { display: flex; flex-direction: column; gap: 6px; }
+/* 갈래는 세로로 쌓인다 · 갈래마다 가로로 긴 카드 = 왼쪽 칸(갈래 이름 + 설명) | 오른쪽 스킬 줄 셋 (ADR-0402 · ADR-0403) */
+/* 갈래 카드 셋은 **높이가 같다** — 가장 긴 카드에 맞춘다(설명이 두 줄로 접힌 스킬이 한 카드만 늘리지 않게 · 2026-10-08 사용자 지시 · ADR-0538) */
+.tr-adv-row { display: grid; grid-auto-rows: 1fr; gap: 6px; }
 .tr-adv-branch { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 12px; padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border-secondary); }
+/* 전직 전 — 카드를 눌러 갈래를 고른다(ADR-0536) · 고른 것은 파란 테두리(아래 `.pick`) */
+.tr-adv-branch.can-pick { cursor: pointer; }
+.tr-adv-branch.can-pick:hover { border-color: var(--border-primary); }
+/* 고른 테두리는 카드 **안쪽**에 그린다 — 카드가 스크롤 본문(`.box-body` · overflow)의 양 끝에 붙어 바깥 테두리는 잘렸다 (ADR-0538) */
+.tr-adv-branch.pick { outline: 2px solid var(--color-info); outline-offset: -2px; }
+.tr-adv-go { font-weight: normal; }   /* [전직] 은 패널 제목 오른쪽(`.panel > h2` 가 양 끝으로 민다) · 제목의 굵기를 안 받는다 (ADR-0539) */
 .tr-adv-bh { display: flex; flex-direction: column; justify-content: center; gap: 4px; }
 .tr-adv-bdesc { font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.5; }
 .tr-adv-bh b { color: var(--text-primary); }
-.tr-adv-sks { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tr-adv-sks { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }   /* 키를 맞춰 남는 세로는 위아래로 나눈다 */
 .tr-adv-sk { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .tr-adv-ico { flex: none; width: 36px; height: 36px; display: grid; place-items: center; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .tr-adv-ico img, .tr-adv-ico .sk-noart { width: 100%; height: 100%; object-fit: contain; }

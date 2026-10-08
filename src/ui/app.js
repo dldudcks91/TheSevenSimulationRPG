@@ -63,7 +63,7 @@ import { mountDevPalette } from './devpalette.js';
 import { mountCardCompare, mountFocusCompare } from './devcompare.js';   // 임시 — 관전 카드 개편 전/후 · 공격자 포커스 버튼(⚙ 설정 탭 끝 두 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
 import { skillFxOn, basicFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel, previewOf, fxPreview, fxPreload } from './fx.js';   // ⚙ 설정 · 도감 이펙트 탭 (SCREEN_DESIGN §2-2 · §9-1 · ADR-0513 · ADR-0515)
 import { SKILL_ART } from './skill_art.js';   // Aura art preview in the codex (ADR-0520)
-import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
+import { mountAdmin, mountAdminHeroes, ADMIN_HERO_CLASSES } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 
 const $ = sel => document.querySelector(sel);
 const el = (tag, cls, html) => {
@@ -115,7 +115,9 @@ const ACTIVE_SOURCES = ['innate', 'book', 'advance'];
    **칸은 출처 자리다** — 책을 안 배운 영웅은 「책」 칸이 비고, 전직 전이면 「전직」 칸이 빈다.
    둘째 칸은 **책으로 배운 스킬**이다(`hero.bookSkill` · 2026-09-29 R179 · ADR-0420 — ~~무기가 담은 스킬~~) */
 const activeCells = h => {
-    const list = (h ? SYS.skill.activesFor(h) : [])
+    // 낀 장비의 특정 스킬 +n 까지 더한 레벨 — 전투와 같은 숫자다(§2 · ADR-0535 · 2026-10-08)
+    const plus = h && G ? SYS.item.skillPlusOf(SYS.game.heroItems(G, h)) : {};
+    const list = (h ? SYS.skill.activesFor(h, { skillPlus: plus }) : [])
         // 스킬 레벨 [2026-10-06 · R216 · ADR-0529] — `up`(쌓은 단계)을 실어 설명창 · 줄이 레벨을 얹은 정의를 읽게 하고(`tip.js:defOf`) · `lv` 가 이름 뒤 `Lv.n` 이다
         .map(a => ({ ...skillInfo(a.id), source: a.source, up: a.up ?? 0, lv: 1 + (a.up ?? 0) }));
     return ACTIVE_SOURCES.map(src => list.find(a => a.source === src) ?? null);
@@ -197,10 +199,12 @@ const slotDef = id => D.slots.find(s => s.id === id);                           
 const posDef = pos => slotDef(D.equipSlots.find(s => s.id === pos)?.part);             // 착용 위치 → 부위 정의
 /** 옵션 한 줄 — **발동 옵션**(`AFFIX_LABELS[..].proc` · 2026-10-05 R206)은 목걸이 발동 줄과 같은 문장(`tip.proc.<조건>` · 확률 + 스킬 이름)이다 */
 const affixText = a => {
-    const proc = M.statLabel(a.stat).proc;
-    if (!proc) return L(M.affixText(a.stat, a.v));
+    const lab = M.statLabel(a.stat);
     const def = a.skill ? SYS.skill.defs[a.skill] : null;
-    return t(`tip.proc.${proc}`, { p: M.pctText(a.v), skill: def ? L(def.name) : '—' });
+    // 특정 스킬 +n — 「파이어볼 +1」 (§6 · ADR-0535 · 2026-10-08)
+    if (lab.skill) return t('tip.skillPlus', { skill: def ? L(def.name) : '—', v: a.v });
+    if (!lab.proc) return L(M.affixText(a.stat, a.v));
+    return t(`tip.proc.${lab.proc}`, { p: M.pctText(a.v), skill: def ? L(def.name) : '—' });
 };
 
 /* 스테이지 표시 — 수치도 이름도 D.stages(stage.csv) · 조립은 data.js:stageName */
@@ -387,6 +391,7 @@ const state = {
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
     cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
     shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · 방문 회차가 넘어가면 풀린다
+    advSel: null,                // 훈련장 전직 카드에서 고른 갈래 {uid, branch} — 띠에서 다른 영웅을 고르면 안 먹는다 (§16 · ADR-0536)
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
     battle: null,           // {result, stageId} — **보는 부대**의 핸들 (아래 `battles` 의 한 칸을 가리키는 이름이다)
     /* 부대마다 한 핸들 [2026-09-24 · ADR-0316 · 다부대] — 편성 번호 → `{run, result, stageId, form, resume}`.
@@ -476,6 +481,11 @@ function renderShell() {
     $('.resources').appendChild(langBtn);
     // Admin — 켜면 건물로 막힌 탭 · 기능 · 상한이 열린 척한다 (devadmin.js) · **켤 때 골드를 `admin_gold` 까지 채운다**(진짜 골드 · 2026-09-27 · SCREEN_DESIGN §10-3)
     mountAdmin($('.resources'), render, () => { const g = D.balance.admin_gold; if (G && G.resources.gold < g) { G.resources.gold = g; save(); } });
+    // `+Lv30` — 켜져 있을 때만 · 전사 · 마법사 · 기사를 `admin_hero_level` 로 로스터 끝에(진짜 영웅 · 자리가 모자라면 들어가는 만큼) [2026-10-08 사용자 지시 · SCREEN_DESIGN §10-3]
+    if (!pre && G) mountAdminHeroes($('.resources'), D.balance.admin_hero_level, G.heroes.length >= SYS.game.limitsOf(G).roster, () => {
+        for (const cls of ADMIN_HERO_CLASSES) if (!SYS.game.adminHero(G, cls, D.balance.admin_hero_level).ok) break;
+        save(); render();
+    });
     // 아트 스타일 고르개는 상단바에 안 선다 — ⚙ 설정 첫 줄 · 도감에 있다 [2026-10-06 사용자 지시 · SCREEN_DESIGN §2-2]
     // 원정 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · 2026-10-05 · ADR-0514]. `data-exp-time` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshExpTime`)
     if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'exp-time', `${t('ui.expTime')}<b data-exp-time>${fmtExpTime(G.expMs)}</b>`));
@@ -3821,6 +3831,9 @@ const masteryIconPath = id => {
     const row = D.masteryNodes.find(r => r.node_id === id);
     return `./assets/art/icons/mastery/${row?.tree_kind === 'class' ? 'class' : 'sin'}/${id}${M.ICON_EXT}`;
 };
+// 전직 트리 가지 칸 그림 — `icons/mastery/advance/<skill_id>_<slot>.webp` · 전직 스킬 그림과 같은 투톤(회백 실루엣 + 강조색 하나)이라 **칠하지 않는다** ·
+//   보류 칸(`advance_node.csv:hold = 1`)은 그림이 없다 (2026-10-08 · ADR-0547)
+const advanceNodeIconPath = (skillId, slot) => `./assets/art/icons/mastery/advance/${skillId}_${slot}${M.ICON_EXT}`;
 /** 칸 · 툴팁의 노드 그림 — 회색 실루엣을 **판 색 마스크**로 칠한다. 판 주인이 없는 자리(색을 못 정함)는 회색 그대로 */
 const masteryIconHtml = (id, owner, cls) => {
     const src = masteryIconPath(id);
@@ -3973,41 +3986,70 @@ function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraS
 }
 
 /**
- * 스킬 창 전직 판 — **윗줄 가운데 스킬 칸 + 둘째 줄 가지 셋** [2026-10-06 · R216 · SCREEN_DESIGN §7 · ADR-0529].
- *   스킬 칸 = 그 스킬 그림 + `Lv.n` · 누르면 전직 포인트 1 로 +1(`game.advanceLevelUp`) · 올리면 스킬 설명창(레벨을 얹은 숫자).
- *   가지 셋 = ② 특수 · ③ 변형 · ④ 필살기 — 효과가 없어(`advance_node.csv` · 설명만) 누를 수 없다 · 올리면 칸 이름 + 설명 + 「준비 중」.
+ * 스킬 창 전직 판 — **윗줄 = 고른 갈래의 전직 스킬 셋 · 그 아래 세 줄 = 스킬마다 제 열에 가지 셋(② · ③ · ④)이 세로로 · 칸 사이를 세로 선이 잇는다**
+ *   [2026-10-06 · R216 · 개정 2026-10-08 · SCREEN_DESIGN §7 · ADR-0542 · 열 · 선 ADR-0544].
+ *   **전직하면 판이 열린다** — 전직 스킬은 여기서 배운다(훈련장은 갈래만 고른다 · 2026-10-08 사용자 지시 「전직스킬은 마스터리에서 배우는거야」).
+ *   스킬 칸 = 그림(배운 것은 `Lv.n`) · 안 배운 칸 누르기 = 첫 전직 포인트로 배우기(`game.advanceLearn` — 하나만) · 배운 칸 누르기 = +1(`game.advanceLevelUp`) ·
+ *   배운 칸 우클릭(손가락은 길게 눌러 뜬 툴팁의 [되돌리기]) = 되돌리기 — 쓴 전직 포인트 전부 환급(`game.advanceForget`) · 올리면 스킬 설명창(레벨을 얹은 숫자).
+ *   가지 셋 = ② 특수 · ③ 변형 · ④ 필살기 — 효과가 없어(`advance_node.csv` · 설명만) 누를 수 없다 · 올리면 칸 이름 + 설명 + 「준비 중」 · 배우기 전에도 셋 다 선다(스킬마다 무엇이 이어지나를 견준다).
  *   판정(레벨 · 포인트 · 가지)은 `game.advanceState` 가 낸다 — 화면은 그리기만 한다
  */
 const ADV_SLOT_MARK = { 2: '②', 3: '③', 4: '④' };
 function advanceBoard(h, adv) {
-    const id = adv.hero.skill;
+    const learned = adv.hero.skill;
     const lv = adv.hero.lv;
-    const nodes = adv.nodes[id] ?? [];
+    const free = adv.hero.points.free;
+    const skills = adv.branches.find(b => b.id === adv.hero.advance)?.skills ?? [];
+    const nodeOf = (id, slot) => (adv.nodes[id] ?? []).find(x => x.slot === slot) ?? null;
     const box = el('div', 'sk-box adv-board');
-    const can = adv.hero.points.free > 0;
-    const cell = `<div class="sk-cell icon-only taken${can ? ' can' : ' dim'}" data-advskill="1" aria-label="${L(skillInfo(id).name)} ${t('sk.lvTag', { n: lv })}">`
-        + `<span class="adv-ico" aria-hidden="true">${skillImg({ id })}</span><span class="sk-icon-rank" aria-hidden="true">${t('sk.lvTag', { n: lv })}</span></div>`;
-    const branch = n => `<div class="sk-cell icon-only locked adv-node" data-slot="${n.slot}"><span class="adv-slot" aria-hidden="true">${ADV_SLOT_MARK[n.slot] ?? n.slot}</span></div>`;
+    // 칸이 눌리나 — 배운 칸은 레벨을 올릴 포인트 · 안 배운 칸은 아직 하나도 안 배웠고 첫 포인트가 있어야 한다
+    const cell = id => {
+        const mine = id === learned;
+        const can = mine ? free > 0 : !learned && free > 0;
+        const lvTag = mine ? t('sk.lvTag', { n: lv }) : '';
+        return `<div class="sk-cell icon-only${mine ? ' taken' : ''}${can ? ' can' : ' dim'}" data-advskill="${id}" aria-label="${L(skillInfo(id).name)}${mine ? ` ${lvTag}` : ''}">`
+            + `<span class="adv-ico" aria-hidden="true">${skillImg({ id })}</span>${mine ? `<span class="sk-icon-rank" aria-hidden="true">${lvTag}</span>` : ''}</div>`;
+    };
+    // 가지 칸 — 그 스킬의 열 · 위 칸과 세로 선으로 잇는다(`.adv-node::before`) · 배운 스킬의 열은 선이 밝다(`.on`) · 표에 없는 칸은 빈 프레임
+    const branch = (id, slot) => {
+        const n = nodeOf(id, slot);
+        if (!n) return '<div class="sk-cell empty"></div>';
+        // 그림이 선 칸은 번호가 오른쪽 아래 작은 꼬리표로 물러난다 · 보류 칸은 번호만 가운데 (ADR-0547)
+        const art = n.hold ? '' : `<img class="adv-node-art" src="${advanceNodeIconPath(id, slot)}" alt="" aria-hidden="true">`;
+        return `<div class="sk-cell icon-only locked adv-node${id === learned ? ' on' : ''}${art ? ' has-art' : ''}" data-skill="${id}" data-slot="${slot}">${art}<span class="adv-slot" aria-hidden="true">${ADV_SLOT_MARK[slot] ?? slot}</span></div>`;
+    };
     box.innerHTML = `
         <div class="sk-box-head"><span class="sk-title">${t('sk.advTree')}</span></div>
         <div class="sk-grid">
-            <div class="sk-row"><div class="sk-cell empty"></div>${cell}<div class="sk-cell empty"></div></div>
-            <div class="sk-row">${nodes.map(branch).join('')}</div>
+            <div class="sk-row">${skills.map(cell).join('')}</div>
+            ${[2, 3, 4].map(slot => `<div class="sk-row">${skills.map(id => branch(id, slot)).join('')}</div>`).join('')}
         </div>`;
-    const sc = box.querySelector('[data-advskill]');
     const cb = combatOf(h);
-    // 설명창 — 레벨을 얹은 숫자다(`up` = 배운 뒤 더 넣은 포인트 · tip.js `defOf`) · 맥락은 액티브 줄과 같다
-    bindTipNode(sc, () => skillTipCard({ id, up: lv - 1, lv }, { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats }));
-    // 한 번 누름 — 되돌리기는 훈련장 [되돌리기]가 전부 환급한다 (§7 · §16)
-    sc.onclick = () => {
-        const r = SYS.game.advanceLevelUp(G, h.uid);
-        if (r.ok) { save(); flash('sk.adv.leveled', { skill: L(skillInfo(id).name), n: r.lv }); runChangeFlash(h.uid); }
-        else if (r.err === 'downed') flash('sk.err.downed');
-        else if (r.err === 'points') flash('sk.err.advPoints');
-        render();
-    };
+    const tipCtx = { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats };
+    const done = r => { if (r.ok) { save(); runChangeFlash(h.uid); } else flash(r.err === 'downed' ? 'sk.err.downed' : r.err === 'points' ? 'sk.err.advPoints' : `tr.err.${r.err}`); render(); };
+    /** 되돌리기 — 무료 · 전부 환급이라 확인을 묻지 않는다(마스터리 우클릭과 같은 문법 · §7) */
+    const forget = () => done(SYS.game.advanceForget(G, h.uid));
+    box.querySelectorAll('[data-advskill]').forEach(sc => {
+        const id = sc.dataset.advskill;
+        const mine = id === learned;
+        // 설명창 — 배운 것은 레벨을 얹은 숫자다(`up` = 배운 뒤 더 넣은 포인트 · tip.js `defOf`) · 안 배운 것은 Lv.1 · 맥락은 액티브 줄과 같다
+        bindTipNode(sc, () => skillTipCard(mine ? { id, up: lv - 1, lv } : { id }, tipCtx),
+            { actions: () => (mine ? [{ label: t('sk.unlearn'), run: forget }] : []) });   // 손가락은 우클릭이 없다 (ADR-0374)
+        sc.onclick = () => {
+            if (!mine) {
+                const r = SYS.game.advanceLearn(G, h.uid, id);   // 첫 전직 포인트 — 이미 하나를 배웠으면 `learned`(먼저 되돌린다)
+                if (r.ok) flash('sk.adv.leveled', { skill: L(skillInfo(id).name), n: 1 });
+                done(r);
+                return;
+            }
+            const r = SYS.game.advanceLevelUp(G, h.uid);
+            if (r.ok) flash('sk.adv.leveled', { skill: L(skillInfo(id).name), n: r.lv });
+            done(r);
+        };
+        sc.oncontextmenu = e => { e.preventDefault(); if (mine && !isTouchInput()) forget(); };
+    });
     box.querySelectorAll('.adv-node').forEach(c => {
-        const n = nodes.find(x => x.slot === Number(c.dataset.slot));
+        const n = nodeOf(c.dataset.skill, Number(c.dataset.slot));
         const name = `${ADV_SLOT_MARK[n.slot] ?? n.slot} ${t(`sk.adv.slot.${n.slot}`)}`;
         // 툴팁은 그 가지의 효과만 — 보류 칸은 「보류」 · 아래 한 줄이 「준비 중」 (CLAUDE.md 규칙 7)
         bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${name}</div><div class="tip-line">${n.desc ? L(n.desc) : t('sk.adv.hold')}</div><div class="tip-line muted">${t('sk.adv.pending')}</div>`));
@@ -4088,10 +4130,11 @@ function skillTreeBody() {
         title: t('sk.mastery', { cls }),
         nodes: ms.nodes.filter(n => n.treeKind === 'class'), onLearn: learn, onUnlearn: unlearn, extraSlot: true, cls: h.cls,
     }));
-    // 전직 판 [2026-10-06 · R216 · SCREEN_DESIGN §7 · ADR-0529] — 전직 전 · 스킬을 안 배웠으면 **같은 프레임의 빈 판 + 잠김 베일** · 배웠으면 스킬 칸 + 가지 셋
-    wrap.appendChild(h.advance && adv.hero.skill ? advanceBoard(h, adv) : masteryBox({
+    // 전직 판 [2026-10-06 · R216 · 개정 2026-10-08 · SCREEN_DESIGN §7 · ADR-0542] — 전직 전이면 **같은 프레임의 빈 판 + 잠김 베일** ·
+    //   **전직하면 열린다** — 갈래의 전직 스킬 셋을 여기서 배운다(스킬을 안 배운 채로도 판이 선다)
+    wrap.appendChild(h.advance ? advanceBoard(h, adv) : masteryBox({
         title: t('sk.advTree'),
-        nodes: [], locked: t(h.advance ? 'sk.advSkillNeed' : 'sk.advNeed'),
+        nodes: [], locked: t('sk.advNeed'),
     }));
     return wrap;
 }
@@ -4390,7 +4433,7 @@ function renderTraining(main) {
     const page = el('div', 'char-stack page c-train');
     // 영웅 띠 — 툴팁은 켠다(상점 띠와 같은 이유 · ADR-0359). 띠를 골라도 두 카드는 아직 안 바뀐다 — 로직이 없다
     page.appendChild(heroStrip(pickHero));
-    const band = el('div', 'cols c-train-band');
+    const band = el('div', 'cols c-train-band tr-band');   // 훈련장만 전직 쪽이 넓다(`.tr-band` · ADR-0538) — 서고는 같은 짜임에 반반
     band.appendChild(trainingCard('train'));
     band.appendChild(trainingCard('adv'));
     page.appendChild(band);
@@ -4429,7 +4472,8 @@ function renderLibrary(main) {
 function trainingCard(tab) {
     const p = el('div', 'panel');
     // 미착수 배지는 훈련만 — 전직은 섰다(2026-09-28 · R16)
-    p.appendChild(el('h2', '', tab === 'train' ? `${t('tr.seg.train')} <small class="todo-badge">${t('todo.badge')}</small>` : t('tr.seg.adv')));
+    const head = el('h2', '', tab === 'train' ? `${t('tr.seg.train')} <small class="todo-badge">${t('todo.badge')}</small>` : t('tr.seg.adv'));
+    p.appendChild(head);
     // 박스 (ADR-0097) — 제목은 서 있고 본문이 스크롤한다. 두 패널이 스크롤 자리를 따로 든다
     const body = el('div', 'box-body');
     body.dataset.keep = `training-${tab}`;
@@ -4449,7 +4493,8 @@ function trainingCard(tab) {
         }
         body.appendChild(grid);
     } else {
-        advanceBody(body);
+        const go = advanceBody(body);
+        if (go) head.appendChild(go);   // [전직] 은 패널 제목 오른쪽 — 본문이 스크롤해도 서 있다 (ADR-0539)
         p.appendChild(body);
         return p;
     }
@@ -4460,7 +4505,7 @@ function trainingCard(tab) {
     return p;
 }
 
-/** 전직 카드의 속 — 띠에서 고른 영웅 하나 (§16 · R16). 판정은 전부 `game.advanceState` 가 낸다 */
+/** 전직 카드의 속 — 띠에서 고른 영웅 하나 (§16 · R16). 판정은 전부 `game.advanceState` 가 낸다 · 전직 전이면 [전직] 버튼을 돌려준다(패널 제목 오른쪽에 붙는다) */
 function advanceBody(body) {
     const h = heroById(state.heroUid);
     if (!h) return;
@@ -4469,6 +4514,18 @@ function advanceBody(body) {
     // 전직했으면 줄 오른쪽에 전직 포인트 `남은 / 받은` (2026-10-06 · R216 · SCREEN_DESIGN §16 · ADR-0529)
     const pts = A.hero.advance ? `<span class="muted tr-adv-pts">${t('tr.adv.points', A.hero.points)}</span>` : '';
     body.appendChild(el('div', 'tr-adv-hero', `<b>${L(h.name)}</b><span class="${lvOk ? 'muted' : 'no'}">${t('tr.adv.level', A.need)}</span>${pts}`));
+    // 지금 가진 스킬 — 이름 줄 아래 한 줄 · 액티브 칸 중 찬 것만(그림 · 이름 · `Lv.n`) · 올리면 스킬 설명창(출처 칩이 선다) (2026-10-08 사용자 지시 · ADR-0539)
+    const cur = activeCells(h).filter(Boolean);
+    if (cur.length) {
+        const ctx = heroSkillCtx(h);
+        const line = el('div', 'tr-adv-cur');
+        for (const a of cur) {
+            const c = el('span', 'tr-adv-cur-sk', `<span class="tr-adv-ico">${skillImg(a)}</span><b class="tr-adv-nm">${L(a.name)}</b><span class="muted">${t('sk.lvTag', { n: a.lv })}</span>`);
+            bindTipNode(c, () => skillTipCard(a, { ...ctx, source: a.source }));
+            line.appendChild(c);
+        }
+        body.appendChild(line);
+    }
     const branchName = id => L(A.branches.find(b => b.id === id)?.name ?? { ko: id, en: id });
     // 스킬 한 줄 — 그림 · 이름 · 설명(`skill.csv:desc_*` — 효과만) · 올리면 스킬 설명창(캐릭터 탭 · 도감과 같은 카드) (ADR-0402)
     const skillRow = (id, tail = null) => {
@@ -4498,34 +4555,39 @@ function advanceBody(body) {
         body.appendChild(box);
         return;
     }
-    // 전직 후 — 그 갈래의 스킬 셋 · 하나만 배운다(첫 전직 포인트) · 되돌리면 쓴 포인트가 전부 돌아온다 (R216)
+    // 전직 후 — 고른 갈래 카드 한 장 · 배운 줄 끝에 「배움 · Lv.n」(상태만). **배우기 · 되돌리기는 마스터리 창 전직 판이다** — 버튼이 없다 (2026-10-08 사용자 지시 · ADR-0542)
     if (A.hero.advance) {
         const br = A.branches.find(b => b.id === A.hero.advance);
-        const rows = [];
-        for (const id of br?.skills ?? []) {
-            const learned = A.hero.skill === id;
-            const tail = el('span', 'tr-adv-act');
-            if (learned) {
-                tail.appendChild(el('span', 'tr-adv-got', t('tr.adv.learnedLv', { n: A.hero.lv })));
-                const b = el('button', 'btn sm', t('tr.adv.forget'));
-                b.onclick = () => { const r = SYS.game.advanceForget(G, h.uid); if (!r.ok) flash(`tr.err.${r.err}`); else save(); render(); };
-                tail.appendChild(b);
-            } else {
-                const b = el('button', 'btn sm', t('tr.adv.learn'));
-                b.disabled = !!A.hero.skill || A.hero.points.free < 1;   // 첫 전직 포인트로 배운다 (R216)
-                b.onclick = () => { const r = SYS.game.advanceLearn(G, h.uid, id); if (!r.ok) flash(`tr.err.${r.err}`); else save(); render(); };
-                tail.appendChild(b);
-            }
-            rows.push(skillRow(id, tail));
-        }
+        const rows = (br?.skills ?? []).map(id => skillRow(id, A.hero.skill === id
+            ? el('span', 'tr-adv-act', `<span class="tr-adv-got">${t('tr.adv.learnedLv', { n: A.hero.lv })}</span>`) : null));
         if (br) body.appendChild(branchCard(br, rows, true));
         return;
     }
-    // 전직 전 — 그 직업의 갈래 셋이 세로로 쌓인다(ADR-0402). ⚠ [전직] 버튼은 일단 뺐다(ADR-0403 · 사용자 지시) —
-    //   시작은 `game.advanceStart` 가 그대로 받는다. 되살리면 두 번 누름(§3 · 화면 상태 `advArm` · 문구 `tr.adv.go` · `tr.adv.confirm`)
+    // 전직 전 — 그 직업의 갈래 셋이 세로로 쌓인다(ADR-0402). **카드를 누르면 그 갈래가 골라지고**(파란 겉 테두리 · 하나만 · 다시 누르면 풀린다)
+    //   패널 제목 오른쪽 [전직] 이 켜진다 — 고르기 + 누르기가 두 번 누름이다(§3 · 상점 「고르고 산다」와 같은 문법 · ADR-0536 · 자리 ADR-0539)
+    const pick = state.advSel?.uid === h.uid && A.branches.some(b => b.id === state.advSel.branch) ? state.advSel.branch : null;
     const row = el('div', 'tr-adv-row');
-    for (const br of A.branches) row.appendChild(branchCard(br, br.skills.map(id => skillRow(id))));
+    for (const br of A.branches) {
+        const card = branchCard(br, br.skills.map(id => skillRow(id)));
+        card.classList.add('can-pick');
+        if (br.id === pick) card.classList.add('pick');
+        card.onclick = () => { state.advSel = br.id === pick ? null : { uid: h.uid, branch: br.id }; render(); };
+        row.appendChild(card);
+    }
     body.appendChild(row);
+    // [전직] — 거절(레벨 · 원정 · 수색)은 플래시로 말하고 고른 채 둔다 · 훈련장을 안 지었으면 잠김 베일이 본문을 덮으니 버튼을 안 세운다
+    if (!A.open) return null;
+    const b = el('button', 'btn sm primary tr-adv-go', t('tr.adv.go'));
+    b.disabled = !pick;
+    b.onclick = () => {
+        const r = SYS.game.advanceStart(G, h.uid, pick, now());
+        if (!r.ok) { flash(`tr.err.${r.err}`); return; }
+        state.advSel = null;
+        flash('tr.adv.started', { name: L(h.name), b: branchName(pick) });
+        save();
+        render();
+    };
+    return b;
 }
 
 /** 전직 막대 · 남은 시간만 — 앱 시계가 훈련장 탭이 보일 때 눈금마다 부른다(자원 게이지와 같은 길 · 전체 다시 그림이 아니다) */
@@ -5158,23 +5220,35 @@ function mgDrawChop(field, run, snap, prev) {
 /* ═══════════ 탐험 — 파티 파견 (SCREEN_DESIGN §8-4) ═══════════
    2026-09-04 사용자 지시 — 마을의 마지막 칸에서 자기 탭이 됐다. 가르는 것은 **인원**이다: 자원 탭은 1인 배치, 여기는 파티.
 
-   **지도 아트 한 장 + 미착수 안내** [개정 2026-09-04 사용자 지시] — 같은 날의 「지도를 안 그린다」를 뒤집는다.
-   ⚠ **뒤집힌 것은 그림 한 장뿐이다** — 노드 · 경로 · 판정 4축 · 보상은 여전히 기획 백지라 **아무것도 얹지 않고**,
-      **클릭도 안 받는다**(`.ex-map` 에 핸들러가 없다). 「없는 기능에 가짜 수치를 그리지 않는다」(§8-2)는 그대로 유효하다.
-   **챕터 1 고정** — 자산이 그 하나뿐이다(`mock.js:EXPLORE_MAP_CHAPTERS`). 진행 챕터를 따라가는 규칙은
-      지도의 알맹이와 함께 정해진다 — 렌더러가 진행도로 챕터를 **계산하지 않는다** (ui 원칙 2).
-   문구는 기존 키(`nav.explore` · `ex.todo`)를 그대로 부른다 — 도움말이 쓰던 그 문구다 (§11 · ui 원칙 4) */
+   **세계지도 한 장 + 잠긴 챕터 구간 + 미착수 안내** [개정 2026-10-08 사용자 지시 · ADR-0537] — 09-04 의 「챕터 1 지도 한 장」을 대체한다.
+   일곱 챕터가 한 장의 구간이고(`mock.js:EXPLORE_REGIONS` · 구간 모양은 그림에서 딴 마스크 `exploreMask(ch)`), 장이 안 열렸으면 그 구간에 빛 바랜 막 + 자물쇠 + 한 줄이 선다.
+      열렸나는 원정과 같은 `game.chapterOpen` · 한 줄은 `needText('chapters', n)` — 렌더러가 진행도로 **계산하지 않는다** (ui 원칙 2).
+   ⚠ 노드 · 경로 · 판정 4축 · 보상은 여전히 데이터가 없어 **아무것도 얹지 않고**, **클릭도 안 받는다**(`.ex-map` 에 핸들러가 없다).
+      「없는 기능에 가짜 수치를 그리지 않는다」(§8-2)는 그대로 유효하다.
+   문구는 기존 키(`nav.explore` · `ex.todo` · `cn.need` · `cn.pending`)를 그대로 부른다 (§11 · ui 원칙 4) */
 function renderExplore(main) {
-    // 박스 (ADR-0097) — 지도는 제 비로 서고 안내가 남는 세로를 받는다
+    // 박스 (ADR-0097) — 지도 칸이 남는 세로를 받고(.fill) 지도는 그 칸 안에서 제 비로 가장 크게 선다 · 안내는 제 높이
     const page = el('div', 'page page-stack');
-    const map = M.exploreMap(1);
-    if (map) {
-        const box = el('div', 'ex-map');
-        box.style.backgroundImage = `url('${map}')`;
-        page.appendChild(box);
+    const wrap = el('div', 'ex-map-wrap fill');
+    const map = el('div', 'ex-map');
+    const [w, h] = M.EXPLORE_WORLD_SIZE;
+    map.style.backgroundImage = `url('${M.EXPLORE_WORLD_MAP}')`;
+    map.style.setProperty('--ex-ar', w / h);
+    for (const [id, r] of Object.entries(M.EXPLORE_REGIONS)) {
+        const ch = Number(id);
+        if (SYS.game.chapterOpen(G, ch)) continue;
+        const veil = el('div', 'ex-veil');
+        // 인라인으로 건다 — CSS 변수에 넣으면 상대 경로가 style.css(/ui/) 기준으로 풀려 그림을 못 찾는다
+        veil.style.webkitMaskImage = veil.style.maskImage = `url('${M.exploreMask(ch)}')`;
+        map.appendChild(veil);
+        const lock = el('div', 'ex-lock', `<span class="lock-ico">${lockIcon(true)}</span><span>${needText('chapters', ch)}</span>`);
+        lock.style.left = `${r.at[0]}%`;
+        lock.style.top = `${r.at[1]}%`;
+        map.appendChild(lock);
     }
+    wrap.appendChild(map);
+    page.appendChild(wrap);
     const todo = todoPanel('nav.explore', 'ex.todo');
-    todo.classList.add('fill');
     todo.dataset.keep = 'explore';
     page.appendChild(todo);
     main.appendChild(page);

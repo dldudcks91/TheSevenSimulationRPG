@@ -437,8 +437,10 @@ export function createBattleSystem(data) {
         //   안 풀면 `skill.castable(def, …)` 이 undefined 를 읽는다 (INTERFACE §2-6 「전투 유닛」 actives 행)
         //   무기 판정은 영웅과 같은 규칙이다 — 무기가 필요한 스킬이 `monster.csv:weapon_group` 과 안 맞으면 꺼진다 · 지금 데이터는 전부 맞는다 (R204 · skill_design §2-2)
         const fits = fitterOf(m.weapon_group);
+        //   낀 장비의 특정 스킬 +n 은 **영웅과 같은 규칙**으로 고유 칸 레벨에 더해진다(보스 셋째 칸은 안 받는다 · 2026-10-08 · R225)
         const acts = SK ? SK.activesFor({ innate: m.innate_skill }, {
             thirdSkill: slots >= 3 ? thirdSkill : null,
+            skillPlus: data.itemSystem?.skillPlusOf?.(gear) ?? {},
         }).map(a => {
             const def = SK.resolve(a);
             if (!def) throw new Error(`battle: 몬스터 ${monsterId} 의 알 수 없는 스킬 ${a?.id ?? a}`);

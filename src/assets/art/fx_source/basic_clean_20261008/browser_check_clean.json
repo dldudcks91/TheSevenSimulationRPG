@@ -1,0 +1,1621 @@
+{
+ "errors": [
+  "Failed to load resource: the server responded with a status of 404 (File not found)"
+ ],
+ "skills": {
+  "war_bash": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    382.392822265625,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_bash_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-slash",
+     "anim": "fx-skill-slash",
+     "dur": "0.36s",
+     "delay": "0s",
+     "w": 92,
+     "marginTop": "-46px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "144": [
+     [
+      "war_bash_clean.webp",
+      363,
+      447,
+      386,
+      470,
+      1
+     ]
+    ]
+   }
+  },
+  "war_doubleswing": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    605.5786743164062,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_doubleswing_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-cross",
+     "anim": "fx-skill-cross",
+     "dur": "0.4s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "160": [
+     [
+      "war_doubleswing_clean.webp",
+      364,
+      446,
+      609,
+      691,
+      1
+     ]
+    ]
+   }
+  },
+  "war_quake": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1051.296142578125,
+    360.20050048828125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_quake_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-ground",
+     "anim": "fx-skill-ground",
+     "dur": "0.48s",
+     "delay": "0s",
+     "w": 96,
+     "marginTop": "-48px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card fp-quake",
+    0,
+    "0ms"
+   ],
+   "rects": {
+    "192": [
+     [
+      "war_quake_clean.webp",
+      362,
+      449,
+      1053,
+      1140,
+      1
+     ]
+    ]
+   }
+  },
+  "war_leap": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1275.139892578125,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_leap_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-land",
+     "anim": "fx-skill-land",
+     "dur": "0.46s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card fp-quake",
+    0,
+    "0ms"
+   ],
+   "rects": {
+    "184": [
+     [
+      "war_leap_clean.webp",
+      363,
+      449,
+      1278,
+      1363,
+      1
+     ]
+    ]
+   }
+  },
+  "war_taunt": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    383.375,
+    479.625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_taunt_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-wave",
+     "anim": "fx-skill-wave",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "232": [
+     [
+      "war_taunt_clean.webp",
+      488,
+      562,
+      392,
+      465,
+      1
+     ]
+    ]
+   }
+  },
+  "war_shout": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    479.625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_shout_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-wave",
+     "anim": "fx-skill-wave",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "232": [
+     [
+      "war_shout_clean.webp",
+      488,
+      562,
+      615,
+      689,
+      1
+     ]
+    ]
+   }
+  },
+  "war_battleorders": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    829.75,
+    479.625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_battleorders_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-wave",
+     "anim": "fx-skill-wave",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "232": [
+     [
+      "war_battleorders_clean.webp",
+      488,
+      562,
+      839,
+      912,
+      1
+     ]
+    ]
+   }
+  },
+  "war_ironskin": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    829.75,
+    359.65625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_ironskin_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-shell",
+     "anim": "fx-skill-shell",
+     "dur": "0.54s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "216": [
+     [
+      "war_ironskin_clean.webp",
+      362,
+      448,
+      832,
+      918,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_smite": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    382.3917541503906,
+    651.25,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_smite_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-burst",
+     "anim": "fx-skill-burst",
+     "dur": "0.36s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "144": [
+     [
+      "kni_smite_clean.webp",
+      657,
+      737,
+      387,
+      467,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_holyshield": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    651.25,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_holyshield_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-shell",
+     "anim": "fx-skill-shell",
+     "dur": "0.54s",
+     "delay": "0s",
+     "w": 92,
+     "marginTop": "-46px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "216": [
+     [
+      "kni_holyshield_clean.webp",
+      655,
+      739,
+      610,
+      694,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_charge": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1051.951904296875,
+    651.25,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_charge_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-thrust",
+     "anim": "fx-skill-thrust",
+     "dur": "0.36s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "144": [
+     [
+      "kni_charge_clean.webp",
+      657,
+      736,
+      1059,
+      1138,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_rush": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    828.764892578125,
+    651.25,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_rush_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-thrust",
+     "anim": "fx-skill-thrust",
+     "dur": "0.34s",
+     "delay": "0s",
+     "w": 84,
+     "marginTop": "-42px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "136": [
+     [
+      "kni_rush_clean.webp",
+      659,
+      734,
+      837,
+      912,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_duel": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    383.375,
+    680.21875,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_duel_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-inward",
+     "anim": "fx-skill-inward",
+     "dur": "0.52s",
+     "delay": "0s",
+     "w": 86,
+     "marginTop": "-43px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "208": [
+     [
+      "kni_duel_clean.webp",
+      693,
+      758,
+      396,
+      461,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_enchant": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1276.125,
+    560.25,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_enchant_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-orders",
+     "anim": "fx-skill-orders",
+     "dur": "0.54s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "216": [
+     [
+      "kni_enchant_clean.webp",
+      568,
+      644,
+      1284,
+      1359,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_might": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    680.21875,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_might_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-orbit",
+     "anim": "fx-skill-orbit",
+     "dur": "0.62s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "248": [
+     [
+      "kni_might_clean.webp",
+      687,
+      764,
+      614,
+      690,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_fanaticism": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    829.75,
+    680.21875,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_fanaticism_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-orbit",
+     "anim": "fx-skill-orbit",
+     "dur": "0.62s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "248": [
+     [
+      "kni_fanaticism_clean.webp",
+      687,
+      764,
+      837,
+      914,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_defiance": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1052.9375,
+    680.21875,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_defiance_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-orbit",
+     "anim": "fx-skill-orbit",
+     "dur": "0.62s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "248": [
+     [
+      "kni_defiance_clean.webp",
+      687,
+      764,
+      1060,
+      1137,
+      1
+     ]
+    ]
+   }
+  },
+  "mag_fireball": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    382.39251708984375,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_fireball_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-burst",
+     "anim": "fx-skill-burst",
+     "dur": "0.42s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "168": [
+     [
+      "mag_fireball_clean.webp",
+      417,
+      499,
+      387,
+      469,
+      1
+     ]
+    ]
+   }
+  },
+  "mag_inferno": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1051.295166015625,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_inferno_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-pillar",
+     "anim": "fx-skill-pillar",
+     "dur": "0.5s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "200": [
+     [
+      "mag_inferno_clean.webp",
+      416,
+      501,
+      1054,
+      1139,
+      1
+     ]
+    ]
+   }
+  },
+  "mag_iceblast": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    605.5778198242188,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_iceblast_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-fall",
+     "anim": "fx-skill-fall",
+     "dur": "0.26s",
+     "delay": "0s",
+     "w": 110,
+     "marginTop": "-95.7px",
+     "loaded": true
+    },
+    {
+     "src": "mag_iceblast_shatter_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-shatter",
+     "anim": "fx-skill-shatter",
+     "dur": "0.38s",
+     "delay": "0.26s",
+     "w": 110,
+     "marginTop": "-97.9px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "104": [
+     [
+      "mag_iceblast_clean.webp",
+      287,
+      386,
+      602,
+      701,
+      1
+     ],
+     [
+      "mag_iceblast_shatter_clean.webp",
+      388,
+      467,
+      611,
+      691,
+      0
+     ]
+    ]
+   }
+  },
+  "mag_frostnova": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1274.483642578125,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_frostnova_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-wave",
+     "anim": "fx-skill-wave",
+     "dur": "0.48s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "192": [
+     [
+      "mag_frostnova_clean.webp",
+      420,
+      496,
+      1282,
+      1358,
+      1
+     ]
+    ]
+   }
+  },
+  "mag_lightning": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    828.1106567382812,
+    412.84375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_lightning_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-bolt",
+     "anim": "fx-skill-bolt",
+     "dur": "0.38s",
+     "delay": "0s",
+     "w": 124,
+     "marginTop": "-111.6px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "152": [
+     [
+      "mag_lightning_clean.webp",
+      358,
+      469,
+      818,
+      929,
+      1
+     ]
+    ]
+   }
+  },
+  "mag_chain": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    381.7317810058594,
+    532.8125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_chain_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-thrust",
+     "anim": "fx-skill-thrust",
+     "dur": "0.36s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "144": [
+     [
+      "mag_chain_clean.webp",
+      538,
+      619,
+      388,
+      469,
+      1
+     ]
+    ]
+   }
+  },
+  "mag_focus": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    532.8125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_focus_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-orbit",
+     "anim": "fx-skill-orbit",
+     "dur": "0.62s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "248": [
+     [
+      "mag_focus_clean.webp",
+      541,
+      616,
+      614,
+      690,
+      1
+     ]
+    ]
+   }
+  },
+  "mag_frozenwall": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    829.75,
+    542.8279418945312,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "mag_frozenwall_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-pillar",
+     "anim": "fx-skill-pillar",
+     "dur": "0.56s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card fx-appear",
+    0,
+    ""
+   ],
+   "rects": {
+    "224": [
+     [
+      "mag_frozenwall_clean.webp",
+      546,
+      631,
+      833,
+      918,
+      1
+     ]
+    ]
+   }
+  },
+  "arc_snipe": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    382.3934631347656,
+    679.4375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "arc_snipe_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-thrust",
+     "anim": "fx-skill-thrust",
+     "dur": "0.34s",
+     "delay": "0s",
+     "w": 84,
+     "marginTop": "-42px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "136": [
+     [
+      "arc_snipe_clean.webp",
+      687,
+      763,
+      391,
+      466,
+      1
+     ]
+    ]
+   }
+  },
+  "arc_rapid": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    605.5813598632812,
+    679.4375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "arc_rapid_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-thrust",
+     "anim": "fx-skill-thrust",
+     "dur": "0.34s",
+     "delay": "0s",
+     "w": 84,
+     "marginTop": "-42px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "136": [
+     [
+      "arc_rapid_clean.webp",
+      687,
+      763,
+      614,
+      690,
+      1
+     ]
+    ]
+   }
+  },
+  "arc_multishot": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1051.9530029296875,
+    679.4375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "arc_multishot_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-rain",
+     "anim": "fx-skill-rain",
+     "dur": "0.44s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "176": [
+     [
+      "arc_multishot_clean.webp",
+      685,
+      766,
+      1058,
+      1139,
+      1
+     ]
+    ]
+   }
+  },
+  "arc_guided": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1275.1424560546875,
+    679.4375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "arc_guided_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-thrust",
+     "anim": "fx-skill-thrust",
+     "dur": "0.4s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "160": [
+     [
+      "arc_guided_clean.webp",
+      685,
+      764,
+      1282,
+      1361,
+      1
+     ]
+    ]
+   }
+  },
+  "arc_pierce": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    383.375,
+    412.40625,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "arc_pierce_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-sweep",
+     "anim": "fx-skill-sweep",
+     "dur": "0.52s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "208": [
+     [
+      "arc_pierce_clean.webp",
+      417,
+      498,
+      388,
+      469,
+      1
+     ]
+    ]
+   }
+  },
+  "arc_poison": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    829.75,
+    292.4375,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "arc_poison_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-orders",
+     "anim": "fx-skill-orders",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "232": [
+     [
+      "arc_poison_clean.webp",
+      300,
+      376,
+      837,
+      913,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_judgment": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    382.39276123046875,
+    584.03125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_judgment_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-strike",
+     "anim": "fx-skill-strike",
+     "dur": "0.48s",
+     "delay": "0s",
+     "w": 94,
+     "marginTop": "-47px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "192": [
+     [
+      "pri_judgment_clean.webp",
+      587,
+      672,
+      385,
+      470,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_heal": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    584.03125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_heal_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-heal",
+     "anim": "fx-skill-heal",
+     "dur": "0.64s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "256": [
+     [
+      "pri_heal_clean.webp",
+      592,
+      667,
+      614,
+      690,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_grace": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1052.9375,
+    584.03125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_grace_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-sweep",
+     "anim": "fx-skill-sweep",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "232": [
+     [
+      "pri_grace_clean.webp",
+      589,
+      668,
+      1059,
+      1138,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_haste": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    383.375,
+    680,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_haste_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-orders",
+     "anim": "fx-skill-orders",
+     "dur": "0.4s",
+     "delay": "0s",
+     "w": 84,
+     "marginTop": "-42px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "160": [
+     [
+      "pri_haste_clean.webp",
+      690,
+      762,
+      393,
+      465,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_cure": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    829.75,
+    560.03125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_cure_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-burst",
+     "anim": "fx-skill-burst",
+     "dur": "0.52s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "208": [
+     [
+      "pri_cure_clean.webp",
+      565,
+      646,
+      835,
+      915,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_regen": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    1276.125,
+    560.03125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_regen_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-heal",
+     "anim": "fx-skill-heal",
+     "dur": "0.82s",
+     "delay": "0s",
+     "w": 88,
+     "marginTop": "-44px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "328": [
+     [
+      "pri_regen_clean.webp",
+      568,
+      643,
+      1284,
+      1359,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_penitence": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    680,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_penitence_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-sink",
+     "anim": "fx-skill-sink",
+     "dur": "0.62s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "248": [
+     [
+      "pri_penitence_clean.webp",
+      686,
+      764,
+      613,
+      691,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_bind": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    829.75,
+    680,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_bind_clean.webp",
+     "cls": "fx-skill-stamp fx-skill-inward",
+     "anim": "fx-skill-inward",
+     "dur": "0.58s",
+     "delay": "0s",
+     "w": 90,
+     "marginTop": "-45px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    0,
+    ""
+   ],
+   "rects": {
+    "232": [
+     [
+      "pri_bind_clean.webp",
+      691,
+      760,
+      841,
+      909,
+      1
+     ]
+    ]
+   }
+  },
+  "war_command": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    412.875,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "war_command.webp",
+     "cls": "fx-skill-stamp fx-skill-orders",
+     "anim": "fx-skill-orders",
+     "dur": "0.62s",
+     "delay": "0s",
+     "w": 132,
+     "marginTop": "-66px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "248": [
+     [
+      "war_command.webp",
+      402,
+      516,
+      595,
+      709,
+      1
+     ]
+    ]
+   }
+  },
+  "kni_lastbastion": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    383.375,
+    584.5,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "kni_lastbastion.webp",
+     "cls": "fx-skill-stamp fx-skill-shell",
+     "anim": "fx-skill-shell",
+     "dur": "0.62s",
+     "delay": "0s",
+     "w": 134,
+     "marginTop": "-67px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "248": [
+     [
+      "kni_lastbastion.webp",
+      569,
+      691,
+      368,
+      490,
+      1
+     ]
+    ]
+   }
+  },
+  "pri_benediction": {
+   "bg": "url(\"http://127.0.0.1:8794/assets/art/faces/gemini/monster/1102.webp\")",
+   "sprite": [
+    606.5625,
+    413.125,
+    90.890625,
+    90.890625
+   ],
+   "stamps": [
+    {
+     "src": "pri_benediction.webp",
+     "cls": "fx-skill-stamp fx-skill-heal",
+     "anim": "fx-skill-heal",
+     "dur": "0.76s",
+     "delay": "0s",
+     "w": 136,
+     "marginTop": "-68px",
+     "loaded": true
+    }
+   ],
+   "qdl": [
+    "unit-slot cx-fx-card",
+    1,
+    ""
+   ],
+   "rects": {
+    "304": [
+     [
+      "pri_benediction.webp",
+      400,
+      517,
+      593,
+      711,
+      1
+     ]
+    ]
+   }
+  }
+ }
+}

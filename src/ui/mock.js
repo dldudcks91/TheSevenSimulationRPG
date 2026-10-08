@@ -176,6 +176,8 @@ export const AFFIX_LABELS = {
     proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
     proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
     proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
+    // 특정 스킬 +n — 줄에 스킬 id(`a.skill`)를 든다. `skill` = 툴팁 문장 `tip.skillPlus`(「파이어볼 +1」 · app.js `affixText`) [2026-10-08 · R225 · ADR-0535]
+    skill_plus: { ko: '스킬 레벨', en: 'Skill Level', fmt: 'n', skill: true },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
@@ -579,15 +581,26 @@ export const TOWN_BG = BG_DIR + 'pixel/town.webp';
 export const stageBg = id => bgDir() + `background_stage_${id}.webp`;
 
 /**
- * 탐험 지도 — 챕터 하나에 한 장 (SCREEN_DESIGN §8-4 · 2026-09-04 사용자 지시).
+ * 탐험 지도 — **세계지도 한 장 · 일곱 챕터가 구간** (SCREEN_DESIGN §8-4 · 2026-10-08 사용자 지시 · ADR-0537).
  *
  * ⚠ 위 넷과 달리 **계승이 아니라 신규 아트**다 — 같은 폴더에 섞여 있을 뿐이고, **픽셀아트가 아니다.**
  *   `image-rendering: pixelated` 를 걸면 뭉갠다 (`.ex-map` 이 안 거는 이유 — style.css).
- * **가진 챕터가 SSOT 를 안 갖는다** — `stage.csv:bg` 같은 열이 없으므로 여기 목록이 자산 재고다
- *   (`HERO_FACES` 와 같은 문법). 없는 챕터는 null 이라 화면이 지도 칸째로 빠진다 — 빈 액자를 안 그린다.
+ * 구간 = **그림에서 딴 마스크 한 장**(`explore_world_mask/<챕터 id>.png` · 그림과 같은 크기 · 알파가 구간) — 땅만 덮고 바다는 안 덮는다.
+ *   마스크는 `scripts/build_explore_masks.py` 가 짓는다(씨앗 다각형 → 강 · 벼랑 · 외곽선까지 워터셰드) — **그림을 바꾸면 다시 돌린다**.
+ * `EXPLORE_REGIONS` = 챕터 id → 자물쇠 자리 `at`(그림 크기 대비 %). 목록에 있는 챕터만 구간을 갖는다.
  */
-export const EXPLORE_MAP_CHAPTERS = [1];
-export const exploreMap = ch => (EXPLORE_MAP_CHAPTERS.includes(ch) ? BG_DIR + `explore_chapter_${ch}.webp` : null);
+export const EXPLORE_WORLD_MAP = BG_DIR + 'explore_world.webp';
+export const EXPLORE_WORLD_SIZE = [1536, 714];
+export const exploreMask = ch => BG_DIR + `explore_world_mask/${ch}.png`;
+export const EXPLORE_REGIONS = {
+    1: { at: [11, 62] },
+    2: { at: [17, 18] },
+    3: { at: [38, 66] },
+    4: { at: [47, 26] },
+    5: { at: [68, 72] },
+    6: { at: [72, 30] },
+    7: { at: [91, 58] },
+};
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
@@ -777,7 +790,7 @@ export const BUILDING_ART = {
 /**
  * 건물 그림 — **일러스트 아트** [2026-09-23 사용자 지시] · `src/assets/art/buildings/<building_id>.webp` (시트 `buildings/source/sheet_01_buildings.png` 를 잘랐다).
  * 부지 네모를 꽉 채우고(`cover`) 상세 머리에도 선다. **목록에 있는 건물만 그림을 읽는다** — 없는 건물은 위 단색 실루엣(`BUILDING_ART`)으로 폴백한다.
- * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`EXPLORE_MAP_CHAPTERS` 와 같은 재고 목록)
+ * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`CLASS_ICON_FILES` 와 같은 재고 목록)
  */
 export const BUILDING_IMG_DIR = './assets/art/buildings/';
 export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'storage', 'library'];

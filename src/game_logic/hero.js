@@ -355,6 +355,21 @@ export function createHeroSystem(data) {
      */
     const rollCandidates = (rng, n, tiers = null) => rollParty(rng, n, tiers);
 
+    /**
+     * 직업을 정한 영웅 1명 [2026-10-08 · 개발 장치 — 관리자 모드가 그 직업을 넣는 자리 · `state.adminHero`].
+     * 이름 · 죄종 · 특성 · 등급은 선술집 후보처럼 굴리고(고유는 직업 풀) **얼굴은 맨 마지막**(`rollParty` 와 같은 이유).
+     * 소비 = 이름 1 → 죄종 1 → 특성 1 → `rollHero` 10 → 얼굴 1 = 언제나 14회 · 메인 직업이 아니면 `null`(소비 0)
+     */
+    function rollHeroOf(rng, cls) {
+        if (!mainClasses.includes(cls)) return null;
+        const [name] = drawDistinct(rng, data.namePool, 1);
+        const [sin] = drawDistinct(rng, data.sins, 1);
+        const [trait] = drawDistinct(rng, data.traitPool, 1);
+        const h = rollHero(rng, { name, sin, cls, trait });
+        h.face = rollFace(rng, cls);
+        return h;
+    }
+
     /* ── 성장 ── */
 
     /**
@@ -469,6 +484,8 @@ export function createHeroSystem(data) {
             for (const a of it.affixes ?? []) {
                 // 무기에 붙은 데미지 % 는 괄호에 안 섞는다 — 무기 양끝에만 따로 곱한다(아래 `weaponPct` · 2026-10-03 battle_design §9-1)
                 if (it.slot === 'weapon' && a.stat === 'atk_pct') continue;
+                // 특정 스킬 +n 은 전투 능력치가 아니라 스킬 레벨이다 — `item.skillPlusOf` → `skill.activesFor` 가 읽는다 (2026-10-08 · R225 · INTERFACE §2-5)
+                if (a.stat === 'skill_plus') continue;
                 flat[a.stat] = (flat[a.stat] ?? 0) + a.v;
                 if (a.stat === 'damage_reduction') drList.push(a.v);
             }
@@ -657,7 +674,7 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, rollHeroOf, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn, sinGearCount,
     };
 }
