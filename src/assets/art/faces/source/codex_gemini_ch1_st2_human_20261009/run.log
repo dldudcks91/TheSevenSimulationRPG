@@ -1,0 +1,94 @@
+12:56:02 batch ['v1_1201', 'v1_1202', 'v1_1203', 'v2_1201', 'v2_1202', 'v2_1203', 'v3_1201', 'v3_1202', 'v3_1203'] par=3 exe=openai.chatgpt-26.51007.21434-win32-x64
+12:56:02 v1_1202 start refs=['hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+12:56:02 v1_1203 start refs=['hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+12:57:20 v1_1201 ok C:\Users\Semi\.codex\generated_images\01a11ecd-c10d-7323-b83a-4b30ce1c62c0\exec-4086d282-d68f-4a98-8d65-db39afe523af.png (78s)
+12:57:20 v2_1201 start refs=['monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+12:57:20 v1_1202 ok C:\Users\Semi\.codex\generated_images\01a11ecd-c115-7830-ad5f-974e55b60863\exec-a670b776-dfa9-4db0-9ad1-67e22a8476d3.png (78s)
+12:57:20 v2_1202 start refs=['monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+12:57:24 v1_1203 ok C:\Users\Semi\.codex\generated_images\01a11ecd-c113-7cf0-b396-07cdb1451564\exec-2698f925-e4dd-4ca4-b30c-65d70565724a.png (82s)
+12:57:24 v2_1203 start refs=['monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+12:58:18 v2_1203 ok C:\Users\Semi\.codex\generated_images\01a11ece-fff1-7ad0-bea8-9cc7967d3fc1\exec-0218627c-62f1-4147-b6be-4700c0db9d05.png (53s)
+12:58:18 v3_1201 start refs=['hero/knight_4', 'hero/warrior_4', 'hero/knight_5']
+12:58:37 v2_1202 ok C:\Users\Semi\.codex\generated_images\01a11ece-f0d8-7553-8555-e7e8ea6192ed\exec-8ef35403-add5-41ff-8c27-8631a5c2660e.png (76s)
+12:58:37 v3_1202 start refs=['hero/archer_1', 'hero/mage_1', 'hero/priest_2']
+12:58:56 v2_1201 ok C:\Users\Semi\.codex\generated_images\01a11ece-f0ac-7e32-b38f-fd1fee89ade7\exec-ff71e773-26d2-4afd-a383-2063811ce4ee.png (95s)
+12:58:56 v3_1203 start refs=['hero/knight_1', 'hero/knight_2', 'hero/warrior_1']
+12:59:39 v3_1202 ok C:\Users\Semi\.codex\generated_images\01a11ed0-1aee-7090-be71-8148e6f13787\exec-4c4fab33-e7a9-4cbb-ba31-128f78ac4bef.png (62s)
+12:59:47 v3_1201 ok C:\Users\Semi\.codex\generated_images\01a11ecf-d071-7ef3-9ec2-e4e3be070cb3\exec-5ad28f03-e880-497b-82e2-5f22a04761d1.png (90s)
+13:00:17 v3_1203 ok C:\Users\Semi\.codex\generated_images\01a11ed0-6534-7e10-9a1d-aa0d7fc805d2\exec-558927b9-e953-4510-8051-60229eceadbc.png (81s)
+13:00:17 done v1_1201=ok v1_1202=ok v1_1203=ok v2_1201=ok v2_1202=ok v2_1203=ok v3_1201=ok v3_1202=ok v3_1203=ok
+13:03:26 batch r2a ['v1_1201', 'v2_1202', 'v3_1203'] par=3
+13:03:26 r2a/v3_1203 start refs=['hero/knight_1', 'hero/knight_2', 'hero/warrior_1']
+13:03:26 r2a/v1_1201 start refs=['hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:03:26 r2a/v2_1202 start refs=['monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:04:25 r2a/v2_1202 ok (60s)
+13:04:34 r2a/v3_1203 ok (68s)
+13:04:35 r2a/v1_1201 ok (69s)
+13:04:35 done r2a v1_1201=ok v2_1202=ok v3_1203=ok
+13:04:35 batch r2b ['v1_1201', 'v2_1202', 'v3_1203'] par=3
+13:04:35 r2b/v1_1201 start refs=['hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:04:35 r2b/v2_1202 start refs=['hero/archer_1', 'monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:04:35 r2b/v3_1203 start refs=['hero/knight_1', 'hero/knight_2', 'hero/warrior_1']
+13:05:41 r2b/v3_1203 ok (66s)
+13:06:00 r2b/v2_1202 ok (85s)
+13:06:05 r2b/v1_1201 ok (89s)
+13:06:05 done r2b v1_1201=ok v2_1202=ok v3_1203=ok
+13:06:43 batch r3 ['v1_1201', 'v1_1202', 'v1_1203', 'v2_1201', 'v2_1202', 'v2_1203', 'v3_1201', 'v3_1202', 'v3_1203'] par=3
+13:06:43 r3/v1_1201 start refs=['hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:06:43 r3/v1_1203 start refs=['hero/knight_1', 'hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:07:46 r3/v1_1201 ok (64s)
+13:07:46 r3/v2_1201 start refs=['hero/knight_4', 'monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:07:57 r3/v1_1203 ok (75s)
+13:07:57 r3/v2_1202 start refs=['hero/archer_1', 'monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:07:59 r3/v1_1202 ok (77s)
+13:07:59 r3/v2_1203 start refs=['hero/knight_1', 'monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:09:09 r3/v2_1201 ok (83s)
+13:09:09 r3/v3_1201 start refs=['hero/knight_4', 'hero/warrior_4', 'hero/knight_5']
+13:09:10 r3/v2_1203 ok (70s)
+13:09:10 r3/v3_1202 start refs=['hero/archer_1', 'hero/mage_1', 'hero/priest_2']
+13:09:13 r3/v2_1202 ok (76s)
+13:09:13 r3/v3_1203 start refs=['hero/knight_1', 'hero/knight_2', 'hero/warrior_1']
+13:10:25 r3/v3_1203 ok (72s)
+13:10:29 r3/v3_1202 ok (79s)
+13:10:30 r3/v3_1201 ok (81s)
+13:10:30 done r3 v1_1201=ok v1_1202=ok v1_1203=ok v2_1201=ok v2_1202=ok v2_1203=ok v3_1201=ok v3_1202=ok v3_1203=ok
+13:11:36 batch r4 ['v1_1201', 'v1_1202', 'v1_1203', 'v2_1201', 'v2_1202', 'v2_1203', 'v3_1201', 'v3_1202', 'v3_1203'] par=3
+13:11:36 r4/v1_1202 start refs=['hero/priest_2', 'hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:11:36 r4/v1_1203 start refs=['hero/knight_2', 'hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:11:36 r4/v1_1201 start refs=['hero/priest_1', 'hero/knight_4', 'hero/archer_1', 'hero/warrior_5']
+13:12:48 r4/v1_1201 ok (72s)
+13:12:48 r4/v2_1201 start refs=['hero/warrior_3', 'monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:12:52 r4/v1_1203 ok (76s)
+13:12:52 r4/v2_1202 start refs=['hero/mage_2', 'monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:13:02 r4/v1_1202 ok (86s)
+13:13:02 r4/v2_1203 start refs=['hero/knight_5', 'monster/1101', 'monster/1301', 'monster/1250', 'hero/priest_1']
+13:14:13 r4/v2_1202 FAIL rc=0 last='The image tool returned no file path, so I can’t provide its saved location.' (81s)
+13:14:13 r4/v3_1201 start refs=['hero/knight_5', 'hero/knight_4', 'hero/warrior_4']
+13:14:17 r4/v2_1201 FAIL rc=0 last='The image tool completed, but I couldn’t retrieve its saved file path.' (88s)
+13:14:17 r4/v3_1202 start refs=['hero/warrior_5', 'hero/archer_1', 'hero/mage_1', 'hero/priest_2']
+13:14:26 r4/v2_1203 ok (84s)
+13:14:26 r4/v3_1203 start refs=['hero/warrior_4', 'hero/knight_1', 'hero/knight_2', 'hero/warrior_1']
+13:15:34 r4/v3_1201 ok (81s)
+13:15:36 r4/v3_1202 ok (79s)
+13:15:46 r4/v3_1203 ok (80s)
+13:15:46 done r4 v1_1201=ok v1_1202=ok v1_1203=ok v2_1201=FAIL v2_1202=FAIL v2_1203=ok v3_1201=ok v3_1202=ok v3_1203=ok
+13:20:11 batch r5 ['d_h1', 'd_h2', 'd_h3', 'd_h4', 'd_h5', 'd_h6', 'd_h7', 'd_h8', 'd_h9'] par=3
+13:20:11 r5/d_h1 start refs=['hero/priest_1', 'hero/knight_4', 'hero/archer_1', 'hero/warrior_5']
+13:20:11 r5/d_h2 start refs=['hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:20:11 r5/d_h3 start refs=['hero/warrior_5', 'hero/knight_4', 'hero/priest_1', 'hero/archer_1']
+13:21:33 r5/d_h3 ok (82s)
+13:21:33 r5/d_h4 start refs=['hero/archer_1', 'hero/knight_4', 'hero/priest_1', 'hero/warrior_5']
+13:21:37 r5/d_h1 ok (86s)
+13:21:37 r5/d_h5 start refs=['hero/priest_1', 'hero/knight_4', 'hero/archer_1', 'hero/warrior_5']
+13:21:39 r5/d_h2 ok (88s)
+13:21:39 r5/d_h6 start refs=['hero/knight_5', 'hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:22:52 r5/d_h6 ok (73s)
+13:22:52 r5/d_h7 start refs=['hero/warrior_4', 'hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:23:04 r5/d_h5 ok (87s)
+13:23:04 r5/d_h8 start refs=['hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:23:15 r5/d_h4 ok (102s)
+13:23:15 r5/d_h9 start refs=['hero/priest_2', 'hero/knight_4', 'hero/priest_1', 'hero/archer_1', 'hero/warrior_5']
+13:24:13 r5/d_h7 ok (81s)
+13:24:19 r5/d_h9 ok (64s)
+13:24:21 r5/d_h8 ok (77s)
+13:24:21 done r5 d_h1=ok d_h2=ok d_h3=ok d_h4=ok d_h5=ok d_h6=ok d_h7=ok d_h8=ok d_h9=ok

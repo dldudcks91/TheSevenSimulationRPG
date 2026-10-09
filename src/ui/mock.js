@@ -375,11 +375,13 @@ export const SKILL_ICON_FILES = [
     'mag_chain', 'mag_focus', 'mag_frozenwall', 'mag_inferno',
     'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
     'pri_penitence', 'pri_bind', 'pri_haste',
-    // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 전사 · 기사 · 마법사 · 사제 36. 궁수 9 는 발주 대기(검은 칸)
+    // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 다섯 직업 45 전부(궁수 9 는 2026-10-09)
     'war_ragnarok', 'war_berserk', 'war_mutualruin', 'war_whirlwind', 'war_thorswrath', 'war_shockwave',
     'war_lionsroar', 'war_command', 'war_intimidate',
     'kni_lastbastion', 'kni_unbreakablewill', 'kni_divinejudgment', 'kni_unyieldingoath', 'kni_holywar', 'kni_vow',
     'kni_retribution', 'kni_condemnation', 'kni_showdown',
+    'arc_trueaim', 'arc_singlestrike', 'arc_reload', 'arc_quickdraw', 'arc_fulldraw', 'arc_chaindraw',
+    'arc_huntersmark', 'arc_supportingfire', 'arc_trap',
     'mag_meteor', 'mag_firewall', 'mag_hydra', 'mag_frozenorb', 'mag_blizzard', 'mag_frostburst',
     'mag_thunderstrike', 'mag_nova', 'mag_staticfield',
     'pri_aegis', 'pri_benediction', 'pri_resurrection', 'pri_punishment', 'pri_atonement', 'pri_excommunication',
@@ -585,22 +587,28 @@ export const stageBg = id => bgDir() + `background_stage_${id}.webp`;
  *
  * ⚠ 위 넷과 달리 **계승이 아니라 신규 아트**다 — 같은 폴더에 섞여 있을 뿐이고, **픽셀아트가 아니다.**
  *   `image-rendering: pixelated` 를 걸면 뭉갠다 (`.ex-map` 이 안 거는 이유 — style.css).
- * 구간 = **그림에서 딴 마스크 한 장**(`explore_world_mask/<챕터 id>.png` · 그림과 같은 크기 · 알파가 구간) — 땅만 덮고 바다는 안 덮는다.
- *   마스크는 `scripts/build_explore_masks.py` 가 짓는다(씨앗 다각형 → 강 · 벼랑 · 외곽선까지 워터셰드) — **그림을 바꾸면 다시 돌린다**.
- * `EXPLORE_REGIONS` = 챕터 id → 자물쇠 자리 `at`(그림 크기 대비 %). 목록에 있는 챕터만 구간을 갖는다.
+ * 잠긴 구간 = **미리 구운 「빛 바랜 땅」 조각**(`explore_world_locked/<챕터 id>.webp` · 그 장의 땅만 알파 · 구간 크기로 잘랐다) — 땅만 덮고 바다는 안 덮는다.
+ *   `scripts/build_explore_locked.py` 가 그림 + 마스크(`explore_world_mask/<챕터 id>.png` — `build_explore_masks.py` 가 짓는다)로 굽는다 — **그림 · 마스크를 바꾸면 다시 돌린다**.
+ *   실행 중에 필터 · 마스크를 안 돌린다 [2026-10-09 — 지도 전체에 거는 필터 + 1536×714 마스크 여러 장은 탭을 열 때마다 큰 층을 다시 구워 늦게 켜졌다].
+ * `EXPLORE_REGIONS` = 챕터 id → 자물쇠 자리 `at` · **지점 아이콘 자리 `spots`**(그림 속 동굴 · 폐허 · 마차) · **잠긴 조각 자리 `tile`**(`[x, y, w, h]` — 굽는 스크립트가 찍는 값) — 셋 다 그림 크기 대비 % ·
+ *   **아이콘 테두리 색 `ring`**(그 땅의 바탕색 — 2026-10-09 사용자 「테두리를 각 배경에 맞는 색으로」 · ADR-0553). 목록에 있는 챕터만 구간을 갖는다.
+ *   **그림을 바꾸면 `at` · `spots` · `ring` · `tile` 을 같이 다시 잡는다.**
  */
 export const EXPLORE_WORLD_MAP = BG_DIR + 'explore_world.webp';
 export const EXPLORE_WORLD_SIZE = [1536, 714];
-export const exploreMask = ch => BG_DIR + `explore_world_mask/${ch}.png`;
+export const exploreLocked = ch => BG_DIR + `explore_world_locked/${ch}.webp`;
 export const EXPLORE_REGIONS = {
-    1: { at: [11, 62] },
-    2: { at: [17, 18] },
-    3: { at: [38, 66] },
-    4: { at: [47, 26] },
-    5: { at: [68, 72] },
-    6: { at: [72, 30] },
-    7: { at: [91, 58] },
+    1: { at: [11, 62], ring: '#c4432e', tile: [0.00, 34.87, 24.41, 57.70], spots: { cave: [3.9, 44.5], ruins: [13.3, 49.7], caravan: [11.2, 57.1] } },
+    2: { at: [17, 18], ring: '#4f8a34', tile: [0.00, 2.80, 34.51, 48.60], spots: { cave: [2.9, 28.7], ruins: [21.2, 33.2], caravan: [14.5, 36.0] } },
+    3: { at: [38, 66], ring: '#e3ad3c', tile: [20.18, 35.01, 35.55, 60.50], spots: { cave: [28.6, 69.3], ruins: [47.9, 73.5], caravan: [43.3, 80.3] } },
+    4: { at: [47, 26], ring: '#9cc8e6', tile: [31.84, 2.52, 32.81, 56.02], spots: { cave: [35.8, 29.8], ruins: [57.3, 40.6], caravan: [42.3, 37.8] } },
+    5: { at: [68, 72], ring: '#5f5f6b', tile: [51.11, 49.44, 33.40, 44.68], spots: { cave: [56.6, 60.2], ruins: [78.1, 72.1], caravan: [61.5, 72.1] } },
+    6: { at: [72, 30], ring: '#7a4ca0', tile: [61.00, 2.38, 27.15, 56.72], spots: { cave: [67.7, 31.5], ruins: [80.7, 41.3], caravan: [73.9, 39.2] } },
+    7: { at: [91, 58], ring: '#dfe5ec', tile: [81.97, 1.40, 18.03, 94.12], spots: { cave: [89.5, 47.6], ruins: [91.5, 58.5], caravan: [89.8, 66.9] } },
 };
+/** 탐험 지점 아이콘 — `src/assets/art/icons/explore/<지점>.webp` · **테두리 없는 그림 원판**(테두리는 화면이 땅 색으로 두른다 · ADR-0553) */
+export const EXPLORE_ICON_DIR = './assets/art/icons/explore/';
+export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
@@ -783,8 +791,7 @@ export const BUILDING_ART = {
     codex: rsSvg('<path d="M4 17 32 4l28 13Z"/><path d="M6 19h52v3H6Z"/><path d="M10 23h5v18h-5ZM22 23h5v18h-5ZM37 23h5v18h-5ZM49 23h5v18h-5Z"/><path d="M4 42h56v4H4Z"/>'),
     // 지휘 천막 — 작전 천막 + 깃발
     command: rsSvg('<path fill-rule="evenodd" d="M4 46 32 11l28 35ZM26 46l6-13 6 13Z"/><path d="M31.3 11V1h1.4v10ZM32.7 1.2 42 4l-9.3 2.8Z"/>'),
-    // 훈련장 — 과녁 · 허수아비 · 창걸이
-    training: rsSvg('<path fill-rule="evenodd" d="M12 18a9 9 0 1 1 0 18a9 9 0 1 1 0-18Zm0 3.2a5.8 5.8 0 1 0 0 11.6a5.8 5.8 0 1 0 0-11.6Zm0 3.4a2.4 2.4 0 1 1 0 4.8a2.4 2.4 0 1 1 0-4.8Z"/><path d="M11.3 36h1.4v8h-1.4ZM30.6 44V20h2.8v24ZM22 24h20v2.6H22ZM26 28h12v11H26Z"/><circle cx="32" cy="14.5" r="5"/><path d="M49.3 44V10h1.4v34ZM55.3 44V13h1.4v31ZM50 4l2.2 6h-4.4ZM56 7l2.2 6h-4.4ZM46 31h14v2H46Z"/><path d="M2 44h60v3H2Z"/>'),
+    // ~~훈련장~~ — 2026-10-09 건물째 걷혔다(ADR-0567 · construction_draft §2)
 };
 
 /**
@@ -793,7 +800,7 @@ export const BUILDING_ART = {
  * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`CLASS_ICON_FILES` 와 같은 재고 목록)
  */
 export const BUILDING_IMG_DIR = './assets/art/buildings/';
-export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'training', 'shop', 'resource', 'explore', 'codex', 'storage', 'library'];
+export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'shop', 'resource', 'explore', 'codex', 'storage', 'library'];   // ~~training~~ 2026-10-09 (그림 파일은 남아 있다)
 export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${id}.webp` : null);
 
 /**
@@ -852,7 +859,3 @@ export const gambleArt = id => {
     return src ? `<i class="gb-ico sk-icon-mask" aria-hidden="true" style="background:${SINS[sin].color};-webkit-mask-image:url('${src}');mask-image:url('${src}')"></i>` : '';
 };
 
-/* ═══════════ 훈련장 — ⚠ 목업 (SCREEN_DESIGN §16 · ADR-0297, 2026-09-22 사용자 지시) ═══════════
- * 훈련(영웅을 넣어 경험치)의 형태 · 칸 수 · 여는 축은 기획 미정(construction_draft §10) → **CSV 로 가지 않는다**(확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다).
- * slots — ⚠ 지어낸 칸 수. 훈련장 랭크가 칸을 늘린다는 것만 섰다 */
-export const TRAINING = { slots: 2 };

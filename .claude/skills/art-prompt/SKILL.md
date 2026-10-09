@@ -141,7 +141,7 @@ user-invocable: true
 
 | 파일 | 어느 단계에서 |
 |---|---|
-| [prompt_template.md](prompt_template.md) | 1단계 — 스케치: **기본형 골격(8줄)** · **§1-2 복구 사다리** · 원형 블록 · 타일 배치 / 세부: **§6 디벨롭 골격** / 공통: 금지어 표 · 키잉 안전 색 표 |
+| [prompt_template.md](prompt_template.md) | 1단계 — 스케치: **기본형 골격(8줄)** · **§1-2 복구 사다리** · 원형 블록 · 타일 배치 / 세부: **§6 디벨롭 골격** / Codex: **§7 Gemini 결 편집형** (Gemini 원본을 바탕으로 사람만 갈아 끼운다) / 공통: 금지어 표 · 키잉 안전 색 표 |
 | [measure.py](measure.py) | 3단계 — 실측 스크립트. 앵커 합격선 내장. ASCII 출력(콘솔이 cp949) |
 | [postprocess.md](postprocess.md) | 4~5단계 — 격자 좌표 · 키잉 코드 · 74% 패딩 · 설치 · README 갱신 자리 |
 | [build_chapter_sheets.py](build_chapter_sheets.py) | 5단계 — **몬스터를 건드린 뒤** 챕터 시트(`faces/source/chapters/`)를 `monster.csv` 기준으로 다시 찍는다. 인자 없으면 전부 · `1 3` 이면 그 스테이지만 · `--prune` 은 아트가 0 이 된 장을 지운다 |
@@ -155,4 +155,4 @@ user-invocable: true
 ## 사용자 요청: $ARGUMENTS
 
 ---
-*마지막 업데이트: 2026-10-01*
+*마지막 업데이트: 2026-10-09*

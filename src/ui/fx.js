@@ -14,12 +14,13 @@
  *   (기본 켜짐 · ADR-0410 · ADR-0413). **공격 시 흔들림**(때린 카드 튀어나감)은 피격 반응에서 떼어 또 따로 켠다(기본 켜짐 · ADR-0468).
  *
  * 넷의 켜고 끄기는 **`⚙` 판의 설정 탭**(app.js · devpalette.js · SCREEN_DESIGN §2-2)이 `setFxOn` 으로 건다 — 이 브라우저에만 남는다(아래 「켜고 끄기」).
+ * 스킬 이펙트의 **그림체**(깔끔한 그림 · 수묵 · 초상 그림체 · 코드 모양)도 같은 탭이 `setFxArtStyle` 로 고른다(ADR-0561).
  *
  * 모양 · 색 · 길이는 style.css 「관전 연출」 규칙이 든다 — 여기는 **어느 카드에 무엇을 붙이나**와 조각마다 다른 값(방향 · 크기 · 늦춤)만 정한다.
  * **스킬마다 생김새가 다르다** — 이미지 표는 skill_art.js, 코드 조각(`PIECES`)의 표는 skill_looks.js다(ADR-0511 · ADR-0515).
  */
 import { SKILL_LOOKS } from './skill_looks.js';
-import { SKILL_ART } from './skill_art.js';
+import { SKILL_ART, ART_STYLES, ART_DEFAULT, artFile } from './skill_art.js';
 
 /* ═══ 켜고 끄기 — `⚙` 판의 설정 탭이 건다 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414) ═══ */
 
@@ -70,6 +71,44 @@ export function setShakeLevel(n) {
     if (!SHAKE_LEVELS.includes(n)) return;
     shake = n;
     try { localStorage.setItem(SHAKE_KEY, String(n)); } catch { /* 저장 실패는 무해 */ }
+}
+
+/* 이펙트 그림체 — 관전의 스킬 이펙트를 어느 그림체 파일로 그리나(`skill_art.js:ART_STYLES` · SCREEN_DESIGN §2-2 · ADR-0561) */
+const ART_KEY = 'thesevensim.fxArt';
+let artPref = (() => {
+    try {
+        const v = localStorage.getItem(ART_KEY);
+        return ART_STYLES.includes(v) ? v : ART_DEFAULT;
+    } catch { return ART_DEFAULT; }
+})();
+/** 고른 그림체 — 스킬 그림을 띄울 때마다 읽는다 */
+export const fxArtStyle = () => artPref;
+/** 그림체를 고른다 — 누른 순간부터 다음 사건에 먹는다(그 그림체 그림을 바로 읽기 시작한다 · 덜 읽힌 칸은 그동안 코드 조합으로 선다) */
+export function setFxArtStyle(s) {
+    if (!ART_STYLES.includes(s)) return;
+    artPref = artStyle = s;
+    fxPreload(s);
+    try { localStorage.setItem(ART_KEY, s); } catch { /* 저장 실패는 무해 */ }
+}
+
+/* 스킬 이펙트 투명도(%) — 스킬 조각(그림 · 코드 조각 · 카드 훑음)만 옅게 한다 · 기본 공격 · 피격 반응은 그대로 · 도감 미리보기에도 먹는다 (SCREEN_DESIGN §2-2 · ADR-0562) */
+export const FX_ALPHA_STEPS = [0, 25, 50, 75];   // 0 = 그대로 · 100 은 끈 것과 같아 없다
+export const FX_ALPHA_DEFAULT = 0;
+const ALPHA_KEY = 'thesevensim.fxAlpha';
+let fxAlpha = (() => {
+    try {
+        const s = localStorage.getItem(ALPHA_KEY);   // 없으면 null — Number(null) 이 0 이라 먼저 거른다
+        const v = s === null ? NaN : Number(s);
+        return FX_ALPHA_STEPS.includes(v) ? v : FX_ALPHA_DEFAULT;
+    } catch { return FX_ALPHA_DEFAULT; }
+})();
+/** 고른 투명도 — 스킬 조각을 붙일 때마다 읽는다 */
+export const fxTransparency = () => fxAlpha;
+/** 투명도를 고른다 — 누른 순간부터 다음 사건에 먹는다 · 이미 떠 있는 조각은 제 진하기로 마저 돈다 */
+export function setFxTransparency(n) {
+    if (!FX_ALPHA_STEPS.includes(n)) return;
+    fxAlpha = n;
+    try { localStorage.setItem(ALPHA_KEY, String(n)); } catch { /* 저장 실패는 무해 */ }
 }
 
 /* 배속이 오르면 연출이 짧아진다 — ×4 에서 원래 길이면 사건이 겹겹이 쌓인다. 배수는 칸(`.unit-slot`)에 걸어 카드 · 조각이 물려받는다.
@@ -140,6 +179,18 @@ function layerOf(u) {
     }
     u.node.insertBefore(el, u.node.querySelector(':scope > .pop-layer'));
     return el;
+}
+
+/** 스킬이 그리는 동안 이 층에 붙은 조각에 표시(`.fx-sk`)와 진하기(`--fx-skill-a`)를 단다 — 투명도는 표시 단 조각에만 먹는다(style.css · ADR-0562).
+ *  조각은 늘 끝에 붙고(`spawn`) 그리는 동안에는 걷히지 않는다(걷힘은 애니메이션 끝) — 그래서 그리기 전 개수 뒤가 전부 이 스킬의 조각이다 */
+function asSkill(L, draw) {
+    const n0 = L.childElementCount;
+    draw();
+    const a = String(1 - fxAlpha / 100);
+    for (let i = n0; i < L.children.length; i++) {
+        L.children[i].classList.add('fx-sk');
+        L.children[i].style.setProperty('--fx-skill-a', a);
+    }
 }
 
 /** 조각 하나 — 끝나면 스스로 걷힌다. 조각마다 다른 값은 인라인 변수다(유닛마다 다른 `order` 와 같은 이유) */
@@ -415,17 +466,24 @@ const ART_KINDS = ['physical', 'fire', 'cold', 'lightning', 'poison', 'blast', '
 const art = new Map();   // 종류 → 읽힌 주소 (읽히기 전 · 파일이 없는 종류는 비어 있다)
 let preloaded = false;
 const skillArt = new Map();   // 스킬 그림 파일 → 준비된 주소 · 실패한 그림은 코드 조합으로 표시한다
-let skillReady;
-/** 관전 · 도감 이펙트 탭이 설 때 부른다 — 직업 스킬 그림은 한 번만 읽는다. 종류 공통 그림은 ART_ON을 따른다 */
-export function fxPreload() {
-    if (!skillReady) {
-        const files = new Set(Object.values(SKILL_ART).flatMap(events => Object.values(events).flatMap(x => [x.file, x.then?.file]).filter(Boolean)));
-        skillReady = Promise.all([...files].map(file => new Promise(resolve => {
+const skillReady = new Map();   // 그림체 → 그 그림체 그림을 다 읽었나(Promise)
+/* 지금 그림을 띄우는 그림체 — 관전은 설정이 고른 것(`artPref`) · 도감 이펙트 세그먼트의 미리보기(`fxPreview`)가 부르는 동안만 그 탭의 것 (ADR-0559 · ADR-0561) */
+let artStyle = artPref;
+/** 그 그림체로 바꾼 그림 정의 — 이어 서는 그림(`then`)도 같이. 코드 모양이면 파일이 없다(null) */
+const styled = (def, style) => def && { ...def, file: artFile(def.file, style), ...(def.then && { then: styled(def.then, style) }) };
+/** 관전 · 도감 이펙트 세그먼트가 설 때 부른다 — 스킬 그림은 그림체마다 한 번만 읽는다(관전은 설정이 고른 그림체). 종류 공통 그림은 ART_ON을 따른다 */
+export function fxPreload(style = artPref) {
+    if (!skillReady.has(style)) {
+        const files = new Set(Object.values(SKILL_ART).flatMap(events => Object.values(events).flatMap(x => {
+            const d = styled(x, style);
+            return [d.file, d.then?.file];
+        })).filter(Boolean));
+        skillReady.set(style, Promise.all([...files].map(file => new Promise(resolve => {
             const im = new Image();
             im.onload = () => { skillArt.set(file, im.src); resolve(); };
-            im.onerror = () => resolve();   // 읽기 실패가 관전 부팅을 막지 않는다
+            im.onerror = () => resolve();   // 읽기 실패가 관전 부팅을 막지 않는다 — 그 칸은 코드 조합으로 선다
             im.src = `${ART_DIR}skills/${file}.webp`;
-        })));
+        }))));
     }
     if (!preloaded && ART_ON) {
         preloaded = true;
@@ -435,12 +493,12 @@ export function fxPreload() {
             im.src = `${ART_DIR}${k}.webp`;
         }
     }
-    return skillReady;
+    return skillReady.get(style);
 }
-/** 준비된 스킬 그림을 초상 위에 띄운다 — 없으면 기존 조각을 부르는 쪽으로 돌아간다 */
+/** 준비된 스킬 그림을 초상 위에 띄운다 — 없으면 기존 조각을 부르는 쪽으로 돌아간다(코드 모양 그림체도 이쪽이다) */
 function skillStamp(L, s, kind, x) {
-    const def = SKILL_ART[s]?.[kind];
-    if (!def || !skillArt.has(def.file)) return false;
+    const def = styled(SKILL_ART[s]?.[kind], artStyle);
+    if (!def?.file || !skillArt.has(def.file)) return false;
     // 이어 서는 그림(`then`)은 앞 그림이 끝나는 때에 선다 — 아이스 블라스트의 떨어짐 → 깨짐 (ADR-0541)
     for (let d = def, dl = 0; d && skillArt.has(d.file); dl += d.duration, d = d.then) stampArt(L, s, d, x.crit, dl);
     // 강화 · 회복 그림엔 코드의 훑어 오름(그 스킬 색의 띠가 카드를 아래에서 위로)이 늘 같이 선다 — 색은 그 스킬 코드 조합의 훑음 색 · 없으면 첫 조각 색 (ADR-0551)
@@ -484,19 +542,22 @@ function impact(state, d, ty, crit, s) {
     const L = layerOf(d);
     if (L.childElementCount > FX_CAP) return;
     const sd = seedOf(state, d), look = SKILL_LOOKS[s]?.hit;
-    if (skillStamp(L, s, 'hit', { sd, crit, d })) return;
-    if (look) return playLook(L, look, { sd, crit, d });
-    if (!stamp(L, ty ?? 'blast', sd, crit)) (SHAPES[ty] ?? ring)(L, sd, crit);
+    asSkill(L, () => {
+        if (skillStamp(L, s, 'hit', { sd, crit, d })) return;
+        if (look) return playLook(L, look, { sd, crit, d });
+        if (!stamp(L, ty ?? 'blast', sd, crit)) (SHAPES[ty] ?? ring)(L, sd, crit);
+    });
 }
 
 /* ═══ 재생기가 부르는 자리 — 사건 하나에 하나 ═══ */
 
-/** 타격(`hit`) — 피격 반응은 모든 타격(켜져 있을 때) · 스킬 이펙트는 스킬(`s`)만 — 그 스킬의 생김새(ADR-0511) · 그 밖(기본 공격 · 반격)은 대각선 베기 한 줄(ADR-0505) */
-export function fxHit(state, a, d, ev) {
+/** 타격(`hit`) — 피격 반응은 모든 타격(켜져 있을 때) · 스킬 이펙트는 스킬(`s`)만 — 그 스킬의 생김새(ADR-0511) · 그 밖(기본 공격 · 반격)은 대각선 베기 한 줄(ADR-0505).
+ *  afterSkill = 스킬을 쓴 차례에 이어진 기본 공격이다(재생기가 같은 시각을 본다) — 베기를 안 띄운다(스킬 이펙트와 겹치지 않게 · ADR-0564) */
+export function fxHit(state, a, d, ev, afterSkill = false) {
     lunge(state, a);
     struck(state, d, ev.crit);
     if (ev.s) impact(state, d, ev.ty, ev.crit, ev.s);
-    else swing(state, d, ev.crit);
+    else if (!afterSkill) swing(state, d, ev.crit);
 }
 /** 반사(`reflect`) — 비직격 · 스킬이 아니다. 맞은 카드만 흔들린다(친 쪽이 튀어나가지 않는다 — 되받아 친 것이다) */
 export function fxReflect(state, d) {
@@ -528,12 +589,14 @@ export function fxHeal(state, d, ev) {
     prep(state, d);
     const L = layerOf(d), sd = seedOf(state, d), look = SKILL_LOOKS[ev.s]?.heal;
     if (L.childElementCount > FX_CAP) return;
-    if (skillStamp(L, ev.s, 'heal', { sd, crit: false, d })) return;
-    if (look) return playLook(L, look, { sd, crit: false, d });
-    if (stamp(L, 'heal', sd, false)) return;   // 그림이 있으면 그림 한 장 (ADR-0411)
-    for (let i = 0; i < 12; i++) {   // 조금 더 강력하게 — 8 → 12 · 크기 한 단 (ADR-0506)
-        spawn(L, 'fx-mote', { dx: px(-44 + 88 * (i + rnd(sd, i)) / 12), y0: px(26 + 20 * rnd(sd, i + 9)), y1: px(-38 - 30 * rnd(sd, i + 19)), dl: ms(220 * rnd(sd, i + 29)), sz: px(7 + 4 * rnd(sd, i + 39)) });
-    }
+    asSkill(L, () => {
+        if (skillStamp(L, ev.s, 'heal', { sd, crit: false, d })) return;
+        if (look) return playLook(L, look, { sd, crit: false, d });
+        if (stamp(L, 'heal', sd, false)) return;   // 그림이 있으면 그림 한 장 (ADR-0411)
+        for (let i = 0; i < 12; i++) {   // 조금 더 강력하게 — 8 → 12 · 크기 한 단 (ADR-0506)
+            spawn(L, 'fx-mote', { dx: px(-44 + 88 * (i + rnd(sd, i)) / 12), y0: px(26 + 20 * rnd(sd, i + 9)), y1: px(-38 - 30 * rnd(sd, i + 19)), dl: ms(220 * rnd(sd, i + 29)), sz: px(7 + 4 * rnd(sd, i + 39)) });
+        }
+    });
 }
 /** 창(`buff`) — 스킬만 · 오오라(`until: null`)는 없다. 좋음/나쁨은 **창 뱃지 칩과 같은 규칙**(상태이상 `k` 이거나 값이 음수면 나쁨).
  *  결투의 지목(`stat: duel`)은 값이 양수여도 적에게 건 표식이다. 나쁜 창은 `bad`(없으면 `buff`) · 좋은 창 · 방벽은 `buff` (ADR-0511 · ADR-0520). 타격 스킬이 건 상태이상은 표에 창이 없어 아래 일반 모양이다 */
@@ -543,10 +606,12 @@ export function fxBuff(state, u, ev) {
     const kind = ev.stat === 'barrier_pct' ? 'barrier' : (ev.stat === 'duel' || ev.k || (ev.v ?? 0) < 0) ? 'debuff' : 'buff';
     const L = layerOf(u), look = SKILL_LOOKS[ev.s], list = kind === 'debuff' ? (look?.bad ?? look?.buff) : look?.buff;
     if (L.childElementCount > FX_CAP) return;
-    if (skillStamp(L, ev.s, kind === 'debuff' ? 'bad' : 'buff', { sd: seedOf(state, u), crit: false, d: u })) return;
-    if (list) return playLook(L, list, { sd: seedOf(state, u), crit: false, d: u });
-    if (stamp(L, kind, seedOf(state, u), false)) return;   // 그림이 있으면 그림 한 장 — 초상 위 (ADR-0411)
-    spawn(L, { barrier: 'fx-shell', debuff: 'fx-card fx-haze', buff: 'fx-card fx-sweep' }[kind]);
+    asSkill(L, () => {
+        if (skillStamp(L, ev.s, kind === 'debuff' ? 'bad' : 'buff', { sd: seedOf(state, u), crit: false, d: u })) return;
+        if (list) return playLook(L, list, { sd: seedOf(state, u), crit: false, d: u });
+        if (stamp(L, kind, seedOf(state, u), false)) return;   // 그림이 있으면 그림 한 장 — 초상 위 (ADR-0411)
+        spawn(L, { barrier: 'fx-shell', debuff: 'fx-card fx-haze', buff: 'fx-card fx-sweep' }[kind]);
+    });
 }
 /** 불러낸 무리(`call`) — 떠오르며 선다 · 부른 스킬(`s`)의 생김새(`SKILL_LOOKS[s].call`)가 있으면 불린 카드에 같이 선다. 카드를 새로 지은 뒤에 부른다 */
 export function fxAppear(state, u, s = null) {
@@ -555,9 +620,11 @@ export function fxAppear(state, u, s = null) {
     play(u.node.parentElement, 'fx-appear', SLOT);
     const L = layerOf(u);
     if (L.childElementCount > FX_CAP) return;
-    if (skillStamp(L, s, 'call', { sd: seedOf(state, u), crit: false, d: u })) return;
-    const look = SKILL_LOOKS[s]?.call;
-    if (look) playLook(L, look, { sd: seedOf(state, u), crit: false, d: u });
+    asSkill(L, () => {
+        if (skillStamp(L, s, 'call', { sd: seedOf(state, u), crit: false, d: u })) return;
+        const look = SKILL_LOOKS[s]?.call;
+        if (look) playLook(L, look, { sd: seedOf(state, u), crit: false, d: u });
+    });
 }
 
 /* ═══ 도감의 이펙트 탭 — 스킬 하나의 이펙트를 그 카드에 띄운다 (2026-10-05 사용자 지시 · SCREEN_DESIGN §9-1 · ADR-0513) ═══
@@ -574,12 +641,18 @@ export function previewOf(s, effRows = [], target = '') {
     const kind = ef === 'hit' || ef === 'fixed' ? 'hit' : ef === 'heal' ? 'heal' : ef === 'summon' || ef === 'call' ? 'call' : /enemy/.test(tg ?? '') ? 'bad' : 'buff';
     return { kinds: [kind], ty };
 }
-/** 사건 하나를 띄운다 — kind = 'basic'(기본 공격) | 'hit' | 'bad' | 'buff' | 'heal' | 'call' · n = 몇 번째 재생인가(흩어짐이 매번 달라진다) · 때린 카드는 없다(공격 시 흔들림이 안 선다) */
-export function fxPreview(n, u, s, kind, ty = 'physical') {
+/** 사건 하나를 띄운다 — kind = 'basic'(기본 공격) | 'hit' | 'bad' | 'buff' | 'heal' | 'call' · n = 몇 번째 재생인가(흩어짐이 매번 달라진다) · 때린 카드는 없다(공격 시 흔들림이 안 선다).
+ *  style = 그림체(`ART_STYLES` — 이 호출 동안만 · 그림은 아래 fxHit … 안에서 같은 호출로 선다 · ADR-0559) */
+export function fxPreview(n, u, s, kind, ty = 'physical', style = artPref) {
     const st = { idx: n, speed: 1, catchUp: false, preview: true }, none = { key: '', node: null };
-    if (kind === 'basic') fxHit(st, none, u, { crit: false });
-    else if (kind === 'hit') fxHit(st, none, u, { s, ty, crit: false });
-    else if (kind === 'heal') fxHeal(st, u, { s });
-    else if (kind === 'call') fxAppear(st, u, s);
-    else fxBuff(st, u, { s, until: 1, v: kind === 'bad' ? -1 : 1 });
+    artStyle = style;
+    try {
+        if (kind === 'basic') fxHit(st, none, u, { crit: false });
+        else if (kind === 'hit') fxHit(st, none, u, { s, ty, crit: false });
+        else if (kind === 'heal') fxHeal(st, u, { s });
+        else if (kind === 'call') fxAppear(st, u, s);
+        else fxBuff(st, u, { s, until: 1, v: kind === 'bad' ? -1 : 1 });
+    } finally {
+        artStyle = artPref;
+    }
 }

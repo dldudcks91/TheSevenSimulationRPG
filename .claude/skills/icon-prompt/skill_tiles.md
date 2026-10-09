@@ -343,7 +343,7 @@ as a finger, so they never merge into one mass.
 | 전사 9 | **설치** (`source/war_advanced_skills_sheet.png`) | — (이 시트가 전직 앵커다) |
 | 기사 · 사제 9 | **설치** (`source/kni_advanced_skills_sheet.png` · `pri_advanced_skills_sheet.png` — 사제는 1254px · 검정에 잡티가 있어 투톤 칠은 밝기 문턱도 본다) | 전사 전직 시트 |
 | 마법사 9 | **설치** (`source/mage_elemental_skills_sheet.png` — 흰 실루엣 8장 대체 · `mag_staticfield` 는 기획 미정이라 그림은 임시) | 전사 전직 시트 |
-| 궁수 9 | 발주 대기 | 전사 전직 시트 |
+| 궁수 9 | **설치** (`source/arc_advanced_skills_sheet.png` — 09-28 에 받아 둔 시트를 2026-10-09 에 잘라 넣었다 · 아래 궁수 블록 그대로) | 전사 전직 시트 |
 
 ### 공통 머리 (앵커 = 전사 전직 시트를 첨부)
 

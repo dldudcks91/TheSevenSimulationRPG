@@ -584,7 +584,7 @@ const UNIT_TIP_ALL = true;
 
 /**
  * 영웅 카드 — 기본 옵션 + 그 아래 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0486 · ADR-0498).
- * 관전 · 편성 · 출정 창 · 상점 · 제련소 · 훈련장 — 서는 자리 전부 같은 카드다 [2026-10-03 사용자 지시 · ADR-0498].
+ * 관전 · 편성 · 출정 창 · 상점 · 제련소 · 서고 — 서는 자리 전부 같은 카드다 [2026-10-03 사용자 지시 · ADR-0498].
  * 능력치는 `h.stats` 에서 그대로 읽는다. 세부 옵션은 **부르는 쪽이 넘긴다** — `game.heroCombat` 은 상태 `G` 가 있어야 하는데 이 파일은 `G` 를 모른다.
  * 이름 · 직업 · 레벨 · 죄종 · 등급 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134)
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
@@ -1075,9 +1075,9 @@ export function skillTipCard(s, ctx = {}) {
  */
 const skillNameHtml = (s, attrs = [], need = null) => {
     const def = defOf(s);
-    // 영웅이 든 스킬이면 이름 뒤에 `Lv.n` (스킬 레벨 · 2026-10-06 · R216 · ADR-0529) — 부르는 자리가 `s.lv` 를 줄 때만(몬스터 · 도감은 안 준다)
-    const lv = Number.isFinite(s.lv) ? `<span class="tip-name-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '';
-    return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}</span><span class="tip-name-text">${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</span>${lv}`
+    // 영웅이 든 스킬이면 아이콘 오른쪽 아래에 `Lv.n` — 아이템 칸과 같은 글 (스킬 레벨 · R216 · ADR-0576) — 부르는 자리가 `s.lv` 를 줄 때만(몬스터 · 도감은 안 준다)
+    const lv = Number.isFinite(s.lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '';
+    return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}${lv}</span><span class="tip-name-text">${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</span>`
         + `${attrs.length ? `<span class="tip-name-attr">${attrs.join('')}</span>` : ''}${need ? `<span class="tip-name-side">${need}</span>` : ''}</div>`;
 };
 /** 필요 무기 칩 — 무기가 필요한 스킬(`def.needsWeapon` · skill_design §2-2)만. 그 스킬 직업(`def.classId`)의 무기군 이름을 `weapon_group.csv` 순서로 잇는다 */

@@ -59,6 +59,18 @@ const skillImg = s => {
     // 제 그림이 없는 스킬은 **검은 칸** — 남의 그림을 안 빌린다 (2026-09-18 · ADR-0162). 스킬이 없는 칸(`s` 없음)은 그대로 빈다
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : s?.id ? '<i class="sk-noart"></i>' : '';
 };
+/* 카드의 스킬 칸 배치 — 칸 수는 `active_slots`(든 것이 더 많으면 그만큼) · 빈 칸은 null [2026-10-09 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0572].
+   **전직 스킬(`skill.csv:owner_kind=advance`)은 늘 맨 오른쪽 칸이다** — 책 칸이 비어도 가운데로 당겨지지 않는다 · 나머지는 앞에서부터 찬다.
+   칸 순서는 화면만의 것이다 — `u.skills` 는 시뮬이 실어 온 차례 그대로라 쿨 · 로그 · 누적 판이 읽는 차례는 안 바뀐다 */
+const isAdvance = s => SYS.skill?.defs?.[s.id]?.ownerKind === 'advance';
+function cdSlots(u) {
+    const list = u.skills ?? [];
+    const out = Array(Math.max(D.balance.active_slots, list.length)).fill(null);
+    const adv = list.filter(isAdvance);
+    list.filter(s => !isAdvance(s)).forEach((s, i) => { out[i] = s; });
+    adv.forEach((s, i) => { out[out.length - adv.length + i] = s; });
+    return out;
+}
 const clamp01 = v => Math.max(0, Math.min(1, v));
 /* 물리 경직 (R110 · SCREEN_DESIGN §4-2 · ADR-0154) — 유닛은 마지막 행동 이후의 경직 창 `stalls [{from, to}]` 를 든다(`stagger` 이벤트가 쌓고 행동이 비운다).
    창은 행동을 넘지 않는다 — 시뮬이 행동 예약을 끝 시각 뒤로 밀기 때문이다(INTERFACE §2-6 「경직」). 계산이 아니라 이벤트 시각을 빼는 표시값이다 */
@@ -488,9 +500,9 @@ function layoutRanks(list) {
 /* 관전 카드 개편판 [2026-09-21 사용자 지시 · ADR-0262] — 이름 띠(신원 · 이름이 카드 맨 위 전폭 띠로)와 **뒤따르는 카드 개편 전부**가
    이 스위치 하나 아래에 선다: JS 는 `cardV2()` 로 가르고 CSS 는 `.unit.v2` 아래에만 둔다 — 그래야 한 번에 개편 전으로 돌아간다.
    **되돌림** — `CARD_V2 = false` 한 줄이면 모든 브라우저에서 개편 전 카드(ADR-0017 모양)다.
-   개발용 전/후 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-card="v1|v2">` 로 **이 브라우저에서만** 덮어쓴다 */
+   개편판으로 고정 [2026-10-09 사용자 지시 · ADR-0566] — 개발용 전/후 버튼(`<html data-card>` 로 이 브라우저에서만 덮어쓰던 것)은 걷었다 */
 const CARD_V2 = true;
-export const cardV2 = () => { const v = document.documentElement.dataset.card; return v ? v === 'v2' : CARD_V2; };
+const cardV2 = () => CARD_V2;
 
 /* 공격자 포커스 [2026-10-03 사용자 지시 · 비교용 임시 — SCREEN_DESIGN §10-2] — 한 유닛이 행동하면 **재생 시각을 세우고 그 행동을 세 박자로 보인다**:
      ① 올라감 — 행동한 카드가 상대 진영 쪽으로 나간다(`fx-advance`). 그동안 그 행동의 사건은 아직 안 적용한다
@@ -630,7 +642,8 @@ function renderUnits(state, root) {
             // 칸이 사라지면 카드마다 줄 길이가 달라져 같은 격자로 안 읽히고, 「스킬이 둘」과 「셋째가 미정」이 구분되지 않는다
             // [개정 2026-09-03 사용자 지시] **몬스터도 같은 줄을 그린다** — 옛 규칙(「몬스터는 액티브가 없어 쿨 칸도 없다」)을 폐기한다.
             // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 등급이 연 만큼(`spawn_grade.csv:skill_slots`) 차고 나머지가 빈 칸이다 [2026-09-11 R79 후속 — 그 전엔 전부 비어 있었다]
-            const slots = Array.from({ length: Math.max(D.balance.active_slots, u.skills?.length ?? 0) }, (_, i) => u.skills?.[i] ?? null);
+            // 칸 자리는 `cdSlots` 가 정한다 — 전직 스킬은 늘 맨 오른쪽 칸 (ADR-0572)
+            const slots = cdSlots(u);
             // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
             // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
             const skills = `<div class="cd-list">${slots.map(s => s
@@ -688,8 +701,8 @@ function renderUnits(state, root) {
             if (u.skills) n.querySelectorAll('.cd-slot').forEach((slot, i) => {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
                 // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
-                if (u.skills[i]) bindTipNode(slot, () => skillTipCard(u.skills[i],
-                    { ...unitSkillCtx(u), source: u.skills[i].source }));
+                const s = slots[i];
+                if (s) bindTipNode(slot, () => skillTipCard(s, { ...unitSkillCtx(u), source: s.source }));
             });
             u.node = n;
             if (u.lvPop) popLevel(state, u);   // 떠 있던 레벨업 글자는 다시 지은 카드에도 이어서 선다 — 경계의 `round` 가 카드를 새로 짓는다 (ADR-0435)
@@ -745,8 +758,9 @@ function refreshUnit(state, u) {
         }
     }
     // 스킬 쿨 게이지 — 시뮬이 실제로 쓴 쿨(`skill` 이벤트의 firedAt → ready)로 걷는다. 재생기는 쿨을 계산하지 않는다
-    if (u.skills?.length) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
-        const s = u.skills[i];
+    const slots = u.skills?.length ? cdSlots(u) : null;
+    if (slots) u.node.querySelectorAll('.cd-slot').forEach((slot, i) => {
+        const s = slots[i];
         if (!s) return;                 // 빈 칸 — 걷을 쿨이 없다 (SCREEN_DESIGN §4-2)
         // 오오라 칸 (R98 · ADR-0127) — 켜진 오오라는 준비 `0` 이라 아래 식이 늘 걷힌 칸을 낸다 · 안 켜진 오오라는 `Infinity` 라 늘 덮는다
         const span = Math.max(1e-6, s.readyAt - s.firedAt);
@@ -889,7 +903,7 @@ function castSkill(state, u, ev) {
     s.firedAt = ev.t;
     s.readyAt = ev.ready ?? ev.t;   // 준비 시각은 시뮬이 실어 보낸다 (INTERFACE §2-6)
     if (!state.catchUp && u.node) {   // 되감기 중에는 연출을 태우지 않는다
-        const slot = u.node.querySelectorAll('.cd-slot')[i];
+        const slot = u.node.querySelectorAll('.cd-slot')[cdSlots(u).indexOf(s)];   // 화면의 칸 자리 — 전직 스킬은 맨 오른쪽 (ADR-0572)
         if (slot) {
             slot.classList.remove('fire');
             void slot.offsetWidth;    // 연속 발동에도 애니메이션이 다시 돈다
@@ -1338,7 +1352,7 @@ function apply(state, root, opts, ev) {
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
             const u = U(ev.u);
-            if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); }
+            if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); u.skillT = ev.t; }   // 시각을 적어 둔다 — 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564)
             break;
         }
         case 'charge': {  // 마법 무기의 칸이 하나 찼다 (R200) — 다음 칸이 이 시각부터 찬다 · 로그 · 팝업은 없다 (ADR-0483)
@@ -1355,7 +1369,9 @@ function apply(state, root, opts, ev) {
                 popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty, ev.crit));
                 refreshUnit(state, d);
             }
-            fxHit(state, a, d, ev);   // 스킬 이펙트는 스킬마다 다른 생김새(ADR-0511) · 피격 반응은 모든 타격(켜져 있을 때) · 기본 공격 · 반격은 대각선 베기 한 줄 (ADR-0409 · ADR-0410 · ADR-0505)
+            // 스킬 이펙트는 스킬마다 다른 생김새(ADR-0511) · 피격 반응은 모든 타격(켜져 있을 때) · 기본 공격 · 반격은 대각선 베기 한 줄 (ADR-0409 · ADR-0410 · ADR-0505)
+            //   같은 공격자가 같은 시각에 스킬을 냈으면(한 차례 = 스킬 뒤 기본 공격 · R218) 그 기본 공격은 베기를 안 띄운다 (ADR-0564)
+            fxHit(state, a, d, ev, !ev.s && a?.skillT === ev.t);
             if (a && d) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)

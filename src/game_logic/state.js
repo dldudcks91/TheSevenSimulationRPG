@@ -102,7 +102,7 @@ export const SAVE_VERSION = 40;
  *   construction — 건설 시스템(`construction.js` · 표 넷을 든다 · INTERFACE §2-14 · R137)
  *   gamble — 도박장 슬롯(`gamble.js` · 표 넷을 든다 · 한 판을 굴린다 · INTERFACE §2-15 · R149)
  *   commission — 의뢰(`commission.js` · 표 넷을 든다 · 카드 한 장을 굴리고 처치 · 드롭을 대조한다 · INTERFACE §2-16 · R153)
- *   openAll — `() → bool` 선택 · **개발 장치**(관리자 모드) — 켜져 있으면 「무엇이 열렸나」가 모든 건물을 최대 랭크로 친다(`openRanks`) · 스테이지도 전부 열린다(`stageUnlocked` · INTERFACE §2-7)
+ *   openAll — `() → bool` 선택 · **개발 장치**(관리자 모드) — 켜져 있으면 「무엇이 열렸나」가 모든 건물을 최대 랭크로 친다(`openRanks`) · 스테이지도 `chapter_open_max` 장까지 전부 열린다(`stageUnlocked` · INTERFACE §2-7 · 그 뒤의 장은 켜도 잠긴다 · R227)
  */
 export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, commission: CM, balance: B } = deps;
@@ -255,7 +255,7 @@ export function createGameSystem(deps) {
     /**
      * 「무엇이 열렸나」가 세는 랭크 — 세이브의 `buildings` · **`deps.openAll()` 이 켜져 있으면 모든 건물의 최대 랭크** [2026-09-24 · 개발 장치 — 관리자 모드 · INTERFACE §2-7].
      *   세는 자리는 셋이다(`limitsOf` · `hasFeature` · `constructionState.tabs`). 짓기 쪽(건설 탭의 랭크 · 다음 랭크 · `construct`)은 안 거친다 — 실제 랭크를 본다.
-     *   스테이지는 이 랭크가 아니라 `stageUnlocked` 가 `openAll()` 을 직접 본다(장 잠금 · 직전 클리어를 같이 건너뛴다)
+     *   스테이지는 이 랭크가 아니라 `stageUnlocked` 가 `openAll()` 을 직접 본다(직전 클리어를 건너뛴다 · 장 잠금은 `chapter_open_max` 까지 그대로 · R227)
      */
     const openAll = deps.openAll ?? (() => false);
     const maxRanks = Object.fromEntries(CN.list.map(b => [b.id, b.maxRank]));
@@ -281,6 +281,7 @@ export function createGameSystem(deps) {
             chapters: 0,   // 들어갈 수 있는 장 — 건물만 연다(원정 랭크마다 +1 · r1 은 처음부터 지어져 1장) (2026-09-24 · R152)
             commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 더하기 대상이지만 지금 표엔 늘리는 랭크가 없다 (R153 · R162)
             resourceTiers: 0,   // 열린 자원 단계 수 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼 · 건물만 연다(자원 랭크마다 +1 · 2026-09-27 · 자원 탭 자리 칸 · ADR-0372)
+            exploreSlots: B.explore_slots,   // 동시 탐험 건수 — 탐험 건물의 `explore_slots` 가 더한다 (2026-10-09 · 탐험 최소 루프)
         };
         for (const [target, n] of Object.entries(CN.opened(openRanks(state)).adds)) {
             const key = ADD_KEY[target] ?? target;
@@ -290,13 +291,16 @@ export function createGameSystem(deps) {
         if (openAll()) {
             out.makeLevels = Math.max(out.makeLevels, makeLevelList.length);
             out.potionTier = Math.max(out.potionTier, ...potionRows.map(p => p.tier));
+            out.chapters = Math.max(out.chapters, B.chapter_open_max);
         }
+        // 장은 이번 버전이 여는 마지막 장까지 — 표가 더 열어도 · 관리자 모드여도 그 뒤는 안 열린다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
+        out.chapters = Math.min(out.chapters, B.chapter_open_max);
         // 부대는 편성 하나에 하나다 — 편성보다 많은 부대를 낼 수 없다 [2026-09-23 · 다부대]
         out.expeditions = Math.min(out.expeditions, out.presets);
         return out;
     }
     /** 더하기 대상 이름 → 상한 키 — 표의 단계 셋만 이름이 다르다(나머지는 같은 이름에 붙는다) */
-    const ADD_KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots', commission_slots: 'commissionSlots', resource_tier: 'resourceTiers' };
+    const ADD_KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots', commission_slots: 'commissionSlots', resource_tier: 'resourceTiers', explore_slots: 'exploreSlots' };
 
     function newGame(seed, candidates, now) {
         const state = {
@@ -311,11 +315,13 @@ export function createGameSystem(deps) {
             heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
             progress: { cleared: [], peakTotal: 0 },   // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제
             codexKills: {},
-            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0 },
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [], paid: 0 },
             shop: null,      // 상단에서 산 칸 — 산 적이 없으면 null (2026-09-27 · INTERFACE §4)
             search: null,
+            explores: [],    // 나가 있는 탐험 [{chapter, spot, heroes, startedAt, no}] — 한 지점에 한 줄 (2026-10-09 · INTERFACE §4)
+            joins: [],       // 선술집 가입 희망 칸 [{no, hero, arrivedAt, leavesAt}] — 도착 순 (2026-10-09 · INTERFACE §4)
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
             commissions: { cards: [] },
             // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
@@ -444,6 +450,16 @@ export function createGameSystem(deps) {
         s.search = s.search ?? null;
         if (s.search) s.search.answer = s.search.answer ?? null;   // 만남 이전에 나간 수색 (2026-09-09)
         s.counters.search = s.counters.search ?? 0;
+        // 탐험 — 없으면 「보낸 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
+        //   모양이 틀린 줄(없는 지점 · 빈 명단)은 지운다 — 셀 수 없는 줄이 영웅을 붙잡지 않게
+        s.counters.explore = s.counters.explore ?? 0;
+        s.explores = (Array.isArray(s.explores) ? s.explores : [])
+            .filter(x => x && EXPLORE_SPOTS.includes(x.spot) && Number.isInteger(x.chapter) && Array.isArray(x.heroes) && x.heroes.length);
+        // 가입 희망 — 없으면 「온 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
+        //   모양이 틀린 줄(영웅 개체 · 번호 · 시각이 없는 줄)은 지운다 — 고용할 수 없는 줄이 칸을 막지 않게
+        s.counters.join = s.counters.join ?? 0;
+        s.joins = (Array.isArray(s.joins) ? s.joins : [])
+            .filter(j => j && j.hero && typeof j.hero === 'object' && Number.isInteger(j.no) && Number.isFinite(j.arrivedAt) && Number.isFinite(j.leavesAt));
         // 제작 재료 · 회차 — 없으면 「가진 재료가 없다 · 만든 적이 없다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R96)
         s.materials = s.materials ?? {};
         s.counters.make = s.counters.make ?? 0;
@@ -463,6 +479,10 @@ export function createGameSystem(deps) {
         // 건설 — **표에 맞춘다**(없는 건물은 지우고 최대 랭크에서 자르고 시작 랭크보다 낮으면 올린다 · 연구도 없는 항목을 지운다) (v37 · R137).
         //   「무엇이 열렸나」를 저장하지 않으므로 표가 바뀌어도 이관이 필요 없다 — 여기서 랭크만 표의 범위로 들인다.
         //   **편성보다 먼저** 맞춘다 — 편성 수 · 물약 칸 수가 건물 랭크의 더하기를 읽는다(`limitsOf` · 2단계)
+        //   옛 훈련장(`training` · 2026-10-09 삭제 · R231) — r3(전직)까지 지었으면 서고를 r2(전직)까지 올린다 · 전직이 닫히지 않게 · 버전 무변경.
+        //   표에 없는 건물이라 `fitRanks` 가 지운다 — 훈련장에 쓴 골드는 돌려주지 않는다 (construction_draft §2)
+        if (s.buildings && Number.isInteger(s.buildings.training) && s.buildings.training >= 3)
+            s.buildings.library = Math.max(Number.isInteger(s.buildings.library) ? s.buildings.library : 0, 2);
         s.buildings = CN.fitRanks(s.buildings);
         s.research = CN.fitResearch(s.research);
         // 편성 — **편성 수 · 칸 수를 그 세이브의 상한에 맞춘다**(모자라면 빈 편성 · 빈 칸을 붙이고 넘치면 뒤를 자른다) · 고른 번호는 범위로 자른다 (INTERFACE §2-7 · R122)
@@ -1081,6 +1101,8 @@ export function createGameSystem(deps) {
     //   기본값은 0 이어도 된다 — 시작 랭크(처음부터 지어진 랭크)의 더하기를 얹은 수가 1 이상이면 된다 (R156 · 지금 표는 기본값 1 · R161)
     const startPresets = B.party_preset_count + (CN.opened(CN.startRanks()).adds.presets ?? 0);
     if (!(Number.isInteger(B.party_preset_count) && B.party_preset_count >= 0 && startPresets >= 1)) throw new Error(`balance: party_preset_count ${B.party_preset_count} · 시작 편성 ${startPresets} — 기본값은 0 이상 정수 · 시작 랭크의 편성은 1 이상이어야 한다 (INTERFACE §2-7)`);
+    // 이번 버전이 여는 마지막 장 — 없거나 1 미만이면 모든 장이 조용히 잠기므로 멈춘다 (R227)
+    if (!(Number.isInteger(B.chapter_open_max) && B.chapter_open_max >= 1)) throw new Error(`balance: chapter_open_max ${B.chapter_open_max} — 1 이상 정수여야 한다 (INTERFACE §2-7)`);
     const emptyPreset = state => ({ party: [], formation: { tpl: DEFAULT_TPL, ranks: [[], []] }, potionSlots: padSlots(state, []), tactics: { slots: {}, locked: [] } });
     /** 불러온 전술 칸 — 없으면 리롤한 적이 없는 상태 (R129) · 잠금은 CSV 에 있는 칸 번호만 남긴다(칸이 줄면 잘린다 · v35 · R28) */
     const fitTactics = t => ({
@@ -1166,6 +1188,7 @@ export function createGameSystem(deps) {
         if (!p) return 'missing';
         if (p.party.length === 0) return 'noParty';
         if (p.party.some(uid => heroBusy(state, uid) === 'search')) return 'searching';
+        if (p.party.some(uid => heroBusy(state, uid) === 'explore')) return 'exploring';   // 탐험 나감 (2026-10-09)
         if (p.party.some(uid => heroBusy(state, uid) === 'advance')) return 'advancing';   // 전직하는 중 (2026-09-28 · R16)
         if (p.party.some(uid => { const at = runOf(state, uid); return at !== null && at !== no; })) return 'busy';
         const going = runningNos(state);
@@ -1335,6 +1358,7 @@ export function createGameSystem(deps) {
         // 편성이 막는 상태는 **수색 하나**다 [2026-09-09] — 전투 밖에 쓰러져 있는 영웅은 없지만(나오면 전원 회복)
         //   수색 나간 영웅은 마을에 없다. 출정 중 아웃은 편성이 아니라 출발이 본다
         if (heroBusy(state, uid) === 'search') return { ok: false, err: 'searching' };
+        if (heroBusy(state, uid) === 'explore') return { ok: false, err: 'exploring' };   // 탐험 나간 영웅도 마을에 없다 (2026-10-09)
         if (p.party.length >= limitsOf(state).party) return { ok: false, err: 'full' };
         // **한 영웅은 한 편성에만** [v38 · 2026-09-23 다부대] — 다른 편성에 들어 있으면 거기서 뺀다(거절이 아니라 이동 · 그 편성의 진형에서도 빠진다).
         //   편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다. 도는 부대는 나간 인원 그대로 싸우므로 흔들리지 않는다 —
@@ -1358,11 +1382,12 @@ export function createGameSystem(deps) {
     const chapterOpen = (state, chapter) => chapter <= limitsOf(state).chapters;
 
     /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 ·
-     *  관리자 모드면 표의 모든 스테이지가 열린 척한다(클리어 기록은 안 쓴다 · 2026-09-24 · R155 · INTERFACE §2-7) */
+     *  관리자 모드면 열린 장의 모든 스테이지가 열린 척한다(클리어 기록은 안 쓴다 · 2026-09-24 · R155 · INTERFACE §2-7) —
+     *  **장 잠금은 관리자 모드도 못 건너뛴다**: `chapter_open_max` 뒤의 장은 언제나 잠겼다 [2026-10-09 사용자 지시 · ADR-0552 · R227] */
     function stageUnlocked(state, stageId) {
         const i = deps.stageOrder.indexOf(stageId);
-        if (i >= 0 && openAll()) return true;
         if (i < 0 || !chapterOpen(state, deps.stages[stageId]?.chapter)) return false;
+        if (openAll()) return true;
         return i === 0 || state.progress.cleared.includes(deps.stageOrder[i - 1]);
     }
 
@@ -1499,18 +1524,19 @@ export function createGameSystem(deps) {
     /**
      * 영웅이 지금 하는 일 — `'run'`(**나가 있는 어느 부대든** 그 인원 · 칸 사이 포함 · 철수해야 풀린다 · `runParty` · 어느 부대인지는 `runOf`) · `'search'`(수색 나감) · `null`(마을) [신설 2026-09-22 · INTERFACE §2-7].
      * **영웅을 붙잡는 활동의 판정은 여기 한 곳이다** — 편성 · 출발 · 해고 · 수색 · 화면의 「지금 하는 일」이 모두 이것을 읽는다.
-     *   파견 · 훈련처럼 영웅을 붙잡는 활동이 생기면 여기에 더한다(흩어져 있던 `runParty(…).includes` · `search.heroUid ===` 를 걷었다 — 2026-09-22 구조 감사).
+     *   파견 · 전직처럼 영웅을 붙잡는 활동이 생기면 여기에 더한다(흩어져 있던 `runParty(…).includes` · `search.heroUid ===` 를 걷었다 — 2026-09-22 구조 감사).
      * 둘은 겹치지 않는다 — 싸우는 영웅은 수색에 못 나가고(`searchSend`) 수색 나간 영웅이 든 편성은 못 나간다(`canDepart`).
      * 쓰러짐(`run.fallen`)은 하는 일이 아니라 **전투 안의 상태**라 따로다(`fallenOf` — 스킬 트리 잠금)
      */
     function heroBusy(state, uid) {
         if (state.search?.heroUid === uid) return 'search';
+        if (exploreOf(state, uid)) return 'explore';   // 탐험 나감 — 결과를 받을 때까지 (2026-10-09)
         if (runParty(state).includes(uid)) return 'run';
-        if (advancingOf(state, uid)) return 'advance';   // 훈련장에서 전직하는 중 (2026-09-28 · R16)
+        if (advancingOf(state, uid)) return 'advance';   // 서고에서 전직하는 중 (2026-09-28 · R16 · 서고 2026-10-09)
         return dispatchOf(state, uid) ? 'dispatch' : null;
     }
 
-    /* ── 전직 — 훈련장 작업 [신설 2026-09-28 · R16 · skill_design §4 · GAME_DESIGN §9 09-27 · INTERFACE §2-7] ──
+    /* ── 전직 — 서고 작업 [신설 2026-09-28 · R16 · skill_design §4 · GAME_DESIGN §9 09-27 · INTERFACE §2-7 · 2026-10-09 ~~훈련장~~ → 서고 r2 · R231] ──
        갈래는 직업마다 셋(`advance.csv`) · **갈래는 되돌릴 수 없다** · 영웅을 넣어 두면 `[balance.csv:advance_hours]` 뒤에 끝난다.
        전직 스킬은 그 갈래의 `skill.csv` 행(`owner_kind=advance`) 중 **하나를 첫 전직 포인트로 배운다 · 되돌리면 포인트가 전부 돌아온다** — 배운 것이 액티브 전직 칸(`skill.activesFor`)
        [2026-10-06 · R216 · skill_design §4 — ~~무료로 되돌린다~~] 전직 포인트는 마스터리와 따로다 — 남은 것을 스킬 레벨(`advanceLevelUp`)에 쓴다 · 가지 셋은 설명만(`advance_node.csv`) */
@@ -1590,6 +1616,7 @@ export function createGameSystem(deps) {
         const busy = heroBusy(state, uid);
         if (busy === 'run') return 'running';
         if (busy === 'search') return 'searching';
+        if (busy === 'explore') return 'exploring';   // 탐험 나감 (2026-10-09)
         return null;
     };
     function advanceState(state, uid, now) {
@@ -1783,10 +1810,11 @@ export function createGameSystem(deps) {
         const busy = heroBusy(state, uid);
         if (busy === 'run') return 'running';      // 원정 파티를 바꾸는 것은 편성 탭의 일이다 (사용자 확정 2026-09-27)
         if (busy === 'search') return 'searching';
+        if (busy === 'explore') return 'exploring';   // 탐험 나감 (2026-10-09)
         if (busy === 'advance') return 'advancing';   // 전직하는 중 (2026-09-28 · R16)
         return null;
     };
-    /** 자리에서 빼기 — 원정 · 수색으로 떠날 때 · 해고할 때 부른다. 벌이 없다(base_expedition §3-2) */
+    /** 자리에서 빼기 — 원정 · 수색 · 탐험으로 떠날 때 · 해고할 때 부른다. 벌이 없다(base_expedition §3-2) */
     const unseat = (state, uid) => { if (state.dispatch) state.dispatch = state.dispatch.filter(x => x.uid !== uid); };
 
     function dispatchPick(state, post, tier) {
@@ -2891,6 +2919,7 @@ export function createGameSystem(deps) {
         const err = !h ? 'missing'
             : heroBusy(state, uid) === 'run' ? 'running'
             : heroBusy(state, uid) === 'search' ? 'searching'
+            : heroBusy(state, uid) === 'explore' ? 'exploring'   // 탐험 나감 — 수색과 같은 이유로 장비보다 먼저 (2026-10-09)
             : heroBusy(state, uid) === 'advance' ? 'advancing'
             : Object.values(h.equipped ?? {}).some(Boolean) ? 'equipped'
             : state.heroes.length <= 1 ? 'last'
@@ -2924,15 +2953,15 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 로스터 순서 맞바꾸기 — 캐릭터 탭 영웅 띠의 드래그 [신설 2026-09-15 사용자 지시 · INTERFACE §2-7 · SCREEN_DESIGN §5 · ADR-0136].
+     * 로스터 순서 옮기기 — 캐릭터 탭 영웅 띠의 드래그 [2026-10-09 사용자 지시 · INTERFACE §2-7 · SCREEN_DESIGN §5 · ADR-0571 — 0136 의 맞바꾸기를 대체].
+     * 영웅을 빼서 **옮긴 뒤 `to` 번째**에 끼운다 — 사이의 영웅은 한 칸씩 밀리거나 당겨진다.
      * 순서를 읽는 곳은 **표시뿐**이다(영웅 띠 · 수색 후보) — 파티 · 리더(`party[0]`) · 진형은 따로 들고 있어 안 흔들린다.
-     * 그래서 원정 중 · 수색 중에도 막을 것이 없다. 같은 영웅이면 바꿀 것이 없어 그대로 통과한다
+     * 그래서 원정 중 · 수색 중에도 막을 것이 없다. 제자리면 바꿀 것이 없어 그대로 통과한다
      */
-    function swapHeroes(state, uidA, uidB) {
-        const i = state.heroes.findIndex(h => h.uid === uidA);
-        const j = state.heroes.findIndex(h => h.uid === uidB);
-        if (i < 0 || j < 0) return { ok: false, err: 'missing' };
-        [state.heroes[i], state.heroes[j]] = [state.heroes[j], state.heroes[i]];
+    function moveHero(state, uid, to) {
+        const i = state.heroes.findIndex(h => h.uid === uid);
+        if (i < 0 || !Number.isInteger(to) || to < 0 || to >= state.heroes.length) return { ok: false, err: 'missing' };
+        state.heroes.splice(to, 0, ...state.heroes.splice(i, 1));
         return { ok: true };
     }
 
@@ -3017,7 +3046,7 @@ export function createGameSystem(deps) {
             echoPct: B.tavern_search_sin_echo_pct,
             // 안 나가 있을 때 보낼 수 있는 사람 — **지금 싸우는 영웅만 뺀다**(전투 밖에 쓰러져 있는 영웅이 없다 · §1-1 · R92).
             //   편성에 든 영웅도 보낸다 — 편성은 계획이고, 그 편성의 출발이 `searching` 으로 막힌다 (`canDepart` · 2026-09-21)
-            ready: s ? [] : state.heroes.filter(h => !['run', 'advance'].includes(heroBusy(state, h.uid))).map(h => h.uid),
+            ready: s ? [] : state.heroes.filter(h => !['run', 'advance', 'explore'].includes(heroBusy(state, h.uid))).map(h => h.uid),
             out: !!s, hero: null, sent: null, startedAt: 0, endsAt: 0, remainMs: 0, done: false,
             beats: [], result: null, rarePct: 0, canHire: false, err: null,
             rumor: null, meetAt: 0, meetOpen: false, answers: [], answer: null, discountPct: 0,
@@ -3063,6 +3092,7 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         if (heroBusy(state, uid) === 'advance') return { ok: false, err: 'advancing' };   // 전직하는 중 (2026-09-28 · R16)
+        if (heroBusy(state, uid) === 'explore') return { ok: false, err: 'exploring' };   // 탐험 나감 (2026-10-09)
         if (heroBusy(state, uid) === 'run') return { ok: false, err: 'party' };   // 지금 싸우는 영웅만 막는다 — 편성은 계획이다(출발이 `searching` 으로 막는다 · R92 · 2026-09-21)
         unseat(state, uid);   // 자원 자리에서 빠진다 — 벌이 없다 (2026-09-27 · ADR-0373)
         state.counters.search += 1;
@@ -3119,6 +3149,181 @@ export function createGameSystem(deps) {
     function searchDrop(state) {
         if (!state.search) return { ok: false, err: 'none' };
         state.search = null;
+        return { ok: true };
+    }
+
+    /* ── 선술집 가입 희망 — 탐험 마차(보호)에서 이긴 적 영웅이 찾아와 기다리는 칸 [신설 2026-10-09 · base_expedition §2-4 「가입 희망」 · INTERFACE §2-7] ──
+       창구는 선술집 하나라 마차가 영웅을 바로 들이지 않고 여기로 보낸다. **영웅 개체를 통째로 박는다** — 시드로 재현할 출처(마차 전투)가 아직 없다.
+       칸 `tavern_join_slots` · 머무는 시간 `tavern_join_hours`(벽시계 — ⚠ 떠나는 것은 방치형 계약과 부딪힌다 · 기획 §10 「마차(보호)의 세부」 ⑤).
+       **떠난 줄은 쓰는 쪽(`joinAdd` · `joinHire`)이 걷고 읽는 쪽(`joinState`)은 거르기만 한다** — 상태 함수가 세이브를 안 바꾼다 */
+    const joinMs = () => Math.max(0, B.tavern_join_hours ?? 0) * 3600000;
+    const joinLive = (state, now) => (state.joins ?? []).filter(j => now < j.leavesAt);
+    /** 지금 고용하면 나올 거절 — 명단 고용과 같은 둘(⚠ 고용비는 일단 명단과 같다 · 기획 §10 ⑦) */
+    const joinErr = state => state.heroes.length >= limitsOf(state).roster ? 'roster'
+        : state.resources.gold < B.tavern_hire_cost ? 'gold' : null;
+    /** 화면 상태 한 덩어리 — `list` 는 아직 안 떠난 줄만 도착 순 · rng 0 · 아무것도 안 바꾼다 */
+    function joinState(state, now) {
+        return {
+            open: hasFeature(state, 'hire'), slots: B.tavern_join_slots, cost: B.tavern_hire_cost, hours: B.tavern_join_hours,
+            list: joinLive(state, now).map(j => ({ no: j.no, hero: j.hero, arrivedAt: j.arrivedAt, leavesAt: j.leavesAt, remainMs: j.leavesAt - now })),
+            err: joinErr(state),
+        };
+    }
+    /**
+     * 가입 희망 영웅이 온다 — **부르는 쪽은 탐험 마차의 승리다**(⚠ 아직 없다 · 지금은 개발 경로뿐 · DEV_PLAN R232).
+     *   칸이 차 있으면 `full` — 조용히 버리지 않는다(찼을 때의 규칙은 기획 미정 · §10 ⑥) · rng 0
+     */
+    function joinAdd(state, hero, now) {
+        state.joins = joinLive(state, now);
+        if (state.joins.length >= B.tavern_join_slots) return { ok: false, err: 'full' };
+        state.counters.join = (state.counters.join ?? 0) + 1;
+        state.joins.push({ no: state.counters.join, hero: clone(hero), arrivedAt: now, leavesAt: now + joinMs() });
+        return { ok: true, no: state.counters.join };
+    }
+    /**
+     * 고용 — **번호로 고른다**(자리 순서는 누가 떠나면 밀린다 — 화면이 그린 줄과 고용하는 줄이 갈리지 않게).
+     *   거절 순서 `unbuilt` → `missing`(떠났거나 이미 고용) → `roster` → `gold` · 명단 고용과 같은 시작 장비 한 벌(영웅 번호 스트림)
+     */
+    function joinHire(state, no, now) {
+        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };   // 명단과 같은 문 — 선술집이 연다 (R137)
+        state.joins = joinLive(state, now);
+        const j = state.joins.find(x => x.no === no);
+        if (!j) return { ok: false, err: 'missing' };
+        const err = joinErr(state);
+        if (err) return { ok: false, err };
+        state.resources.gold -= B.tavern_hire_cost;
+        const h = addHero(state, clone(j.hero));
+        equipStarter(state, h, recruitRng(state));
+        state.joins = state.joins.filter(x => x !== j);
+        return { ok: true, hero: h };
+    }
+
+    /* ── 탐험 — 지점 아이콘 → 보내기 → 수령 [신설 2026-10-09 · base_expedition §3-1 · SCREEN_DESIGN §8-4 · ADR-0553 · INTERFACE §2-7] ──
+       「어디를」 = 열린 장 · 「무엇을」 = 지점(`EXPLORE_SPOTS`) · **한 지점에 한 건** · 동시 건수는 `limitsOf.exploreSlots`.
+       결과는 저장하지 않는다 — 번호(`no` = 보낼 때의 `counters.explore`)와 시드가 재현한다(수색과 같은 문법).
+       **산출이 있는 것은 동굴 하나**(장비 — 보낸 인원 × `explore_cave_items_per_hero` 점 · 그 장의 레벨대) · 폐허 · 마차는 `pending`.
+       판정 4축 · 죄종 궁합은 기획 백지라 안 본다 — 결과의 크기는 보낸 인원만 정한다 */
+    /** 지점 어휘 — **이 순서가 `exploreState.spots` 의 지점 순서**다 (INTERFACE §5-3) */
+    const EXPLORE_SPOTS = ['cave', 'ruins', 'caravan'];
+    /** 산출이 있는 지점 → 가져오는 것. 없는 지점은 아직 산출이 기획에서 안 정해졌다 */
+    const EXPLORE_YIELD = { cave: 'gear' };
+    const exploreList = state => state.explores ?? [];
+    const exploreAt = (state, chapter, spot) => exploreList(state).find(x => x.chapter === chapter && x.spot === spot) ?? null;
+    /** 그 영웅이 나가 있는 탐험 — 없으면 null (`heroBusy` 의 `'explore'`) */
+    const exploreOf = (state, uid) => exploreList(state).find(x => x.heroes.includes(uid)) ?? null;
+    const exploreMs = () => Math.max(0, B.explore_hours ?? 0) * 3600000;
+    /** 탐험이 서는 장 — 레벨대가 선 장(`stage.csv` 가 가진 장) 순 */
+    const exploreChapters = chapterBands.map(b => b.band);
+
+    /**
+     * 결과 굴림 — **저장하지 않는다.** `seed ^ 0xE7A1` 과 그 탐험의 번호가 매번 같은 장비를 낸다.
+     * rng 소비 순서가 계약이다 (INTERFACE §5-2) — 점마다 **ilvl 1(그 장의 레벨대 균등) → `rollDrop` 한 점**.
+     * 아이템은 `uid` 가 없다 — 받을 때 `addItem` 이 붙인다
+     */
+    function exploreRoll(state, x) {
+        if (EXPLORE_YIELD[x.spot] !== 'gear') return [];
+        const band = chapterBands.find(b => b.band === x.chapter) ?? chapterBands[0];
+        const rng = makeRng(deriveSeed(state.seed ^ 0xE7A1, x.no));
+        const n = x.heroes.length * Math.max(0, B.explore_cave_items_per_hero ?? 0);
+        const out = [];
+        for (let i = 0; i < n; i++) {
+            const ilvl = band.lo + Math.floor(rng() * (band.hi - band.lo + 1));
+            out.push(I.rollDrop(rng, ilvl));
+        }
+        return out;
+    }
+
+    /** 보내면 나올 거절 — `exploreSend` 와 화면(출발 버튼)이 이 하나를 읽는다. 순서가 계약이다 (INTERFACE §2-7) */
+    function exploreErr(state, chapter, spot, uids) {
+        if (!hasFeature(state, 'explore')) return 'unbuilt';   // 탐험 r1 (2026-10-08)
+        if (!EXPLORE_SPOTS.includes(spot) || !exploreChapters.includes(chapter)) return 'missing';
+        if (!chapterOpen(state, chapter)) return 'locked';
+        if (!EXPLORE_YIELD[spot]) return 'pending';
+        if (exploreAt(state, chapter, spot)) return 'busy';
+        if (exploreList(state).length >= limitsOf(state).exploreSlots) return 'slots';
+        const list = Array.isArray(uids) ? uids : [];
+        if (!list.length) return 'noParty';
+        if (list.length > limitsOf(state).party) return 'full';
+        if (new Set(list).size !== list.length || list.some(uid => !heroById(state, uid))) return 'missing';
+        for (const uid of list) {
+            const busy = heroBusy(state, uid);
+            if (busy === 'run') return 'running';
+            if (busy === 'search') return 'searching';
+            if (busy === 'explore') return 'exploring';
+            if (busy === 'advance') return 'advancing';
+        }
+        return null;
+    }
+
+    /**
+     * 탐험 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`searchState` 와 같은 규칙) · 상태 불변.
+     * `spots` = 장 × 지점 전부 · `out.items` 는 **끝났을 때만** 가져올 장비다(받으면 같은 것이 온다)
+     */
+    function exploreState(state, now) {
+        const span = exploreMs();
+        const spots = [];
+        for (const chapter of exploreChapters)
+            for (const spot of EXPLORE_SPOTS) {
+                const x = exploreAt(state, chapter, spot);
+                let out = null;
+                if (x) {
+                    const endsAt = x.startedAt + span;
+                    const done = now >= endsAt;
+                    out = {
+                        heroes: x.heroes.slice(), startedAt: x.startedAt, endsAt, remainMs: Math.max(0, endsAt - now), done,
+                        frac: span > 0 ? Math.min(1, Math.max(0, (now - x.startedAt) / span)) : 1,
+                        items: done ? exploreRoll(state, x) : null,
+                    };
+                }
+                spots.push({ chapter, spot, open: chapterOpen(state, chapter), live: !!EXPLORE_YIELD[spot], out });
+            }
+        const L = limitsOf(state);
+        return {
+            open: hasFeature(state, 'explore'),
+            hours: B.explore_hours, slots: L.exploreSlots, used: exploreList(state).length, partyMax: L.party,
+            perHero: B.explore_cave_items_per_hero,
+            // 보낼 수 있는 사람 — 싸우는 · 수색 · 탐험 · 전직 중인 영웅만 뺀다. 자원 자리에 앉은 영웅은 든다(보내면 저절로 빠진다)
+            ready: state.heroes.filter(h => !['run', 'search', 'explore', 'advance'].includes(heroBusy(state, h.uid))).map(h => h.uid),
+            spots,
+        };
+    }
+
+    /** 보내기 — 거절은 `exploreErr` 하나. 자원 자리는 정산하고 빠진다(벌이 없다 · 수색 · 전직과 같다) */
+    function exploreSend(state, chapter, spot, uids, now) {
+        const err = exploreErr(state, chapter, spot, uids);
+        if (err) return { ok: false, err };
+        if (uids.some(uid => dispatchOf(state, uid))) {
+            dispatchSettle(state, now);
+            for (const uid of uids) unseat(state, uid);
+        }
+        state.counters.explore = (state.counters.explore ?? 0) + 1;
+        state.explores = [...exploreList(state), { chapter, spot, heroes: uids.slice(), startedAt: now, no: state.counters.explore }];
+        return { ok: true, endsAt: now + exploreMs() };
+    }
+
+    /**
+     * 수령 — 결과 장비를 **부대 `no` 의 인벤토리 끝**에 넣고 줄을 걷는다(영웅이 돌아온다).
+     * 거절 `none` → `notDone` → `missing`(없는 인벤토리) → `bagFull`(다 안 들어가면 하나도 안 넣는다) — 거절이면 아무것도 안 바뀐다
+     */
+    function exploreTake(state, chapter, spot, now, no = 1) {
+        const x = exploreAt(state, chapter, spot);
+        if (!x) return { ok: false, err: 'none' };
+        if (now < x.startedAt + exploreMs()) return { ok: false, err: 'notDone' };
+        const bag = bagOf(state, no);
+        if (!bag) return { ok: false, err: 'missing' };
+        const items = exploreRoll(state, x);
+        if (bag.length + items.length > capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        const uids = items.map(it => addItem(state, it).uid);
+        bag.push(...uids);
+        state.explores = exploreList(state).filter(e => e !== x);
+        return { ok: true, items: uids };
+    }
+
+    /** 취소 — 나가 있으면 불러들이고 결과가 와 있으면 버린다. **결과 없이 영웅만 돌아온다**(넣은 것이 없다) */
+    function exploreDrop(state, chapter, spot) {
+        const x = exploreAt(state, chapter, spot);
+        if (!x) return { ok: false, err: 'none' };
+        state.explores = exploreList(state).filter(e => e !== x);
         return { ok: true };
     }
 
@@ -3198,9 +3403,10 @@ export function createGameSystem(deps) {
 
     /**
      * **창구 — 무엇을 지어야 열리나** `{id, name, rank}` · 표에 없으면 null(`construction.reach`) — 잠긴 자리가 「선술집 2랭크」를 말할 때 읽는다.
-     *   켜기는 이름만(`needOf('search')`) · 더하기는 **기본값 위로 몇이 필요한가**(`needOf('tactic_slots', 3)` = 셋째 전술 칸 · 제작 레벨 · 물약 단계 · 전술 칸은 기본값이 0 이라 순번 그대로). 상태를 안 본다
+     *   켜기는 이름만(`needOf('search')`) · 더하기는 **기본값 위로 몇이 필요한가**(`needOf('tactic_slots', 3)` = 셋째 전술 칸 · 제작 레벨 · 물약 단계 · 전술 칸은 기본값이 0 이라 순번 그대로). 상태를 안 본다 ·
+     *   **장은 `chapter_open_max` 뒤면 표와 무관하게 null** — 이번 버전이 안 여는 장이다(`limitsOf` 가 같은 값으로 자른다 · R227)
      */
-    const needOf = (target, n = 1) => CN.reach(target, n);
+    const needOf = (target, n = 1) => (target === 'chapters' && n > B.chapter_open_max ? null : CN.reach(target, n));
 
     /**
      * 전술 조건이 세는 파티 — **편성 순서대로**(첫 칸이 리더 · §5-8) · 죄종 · 직업 · 입은 장비 · **전열에 섰나**.
@@ -3414,10 +3620,12 @@ export function createGameSystem(deps) {
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         runLock, runTactics, runTacticsIf, runBuffs,
-        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, swapHeroes,
+        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
         shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         searchState, searchSend, searchTake, searchDrop, searchAnswer,
+        joinState, joinAdd, joinHire,
+        exploreState, exploreErr, exploreSend, exploreTake, exploreDrop,
         dispatchOf, dispatchSeat, dispatchPick, dispatchAssign, dispatchRecall, dispatchSettle, dispatchProgress, materialsState,
         mgRound, mgJudge, mgClaim,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp,

@@ -4,9 +4,9 @@
 Start Chrome on port 9222 first (docs/reference/image_generation_tools.md), then:
   python scripts/gemini_web.py shot [OUT.png]
   python scripts/gemini_web.py act STEP [STEP ...] [--out OUT.png]
-      STEP = goto:URL | click:X,Y | type:@file.txt | type:TEXT | press:KEY | wait:SEC | scroll:DY
+      STEP = goto:URL | click:X,Y | type:@file.txt | type:TEXT | press:KEY | wait:SEC | scroll:DY | attach:A.png|B.png
   python scripts/gemini_web.py download OUT.png
-  python scripts/gemini_web.py run GEM_URL PROMPT.txt OUT_DIR N [PREFIX]
+  python scripts/gemini_web.py run GEM_URL PROMPT.txt OUT_DIR N [PREFIX] [--attach A.png|B.png]
   python scripts/gemini_web.py close
 Every command except close/run ends with a screenshot (default: %TEMP%/gemini_web_shot.png).
 """
@@ -38,6 +38,21 @@ def icon_button(page, name):
     return page.evaluate_handle(ICON_BTN, name).as_element()
 
 
+def attach(page, paths):
+    """Attach local files to the prompt box: '+' (plus) -> 'attach_file' menu item -> file chooser."""
+    icon_button(page, 'plus').click()
+    page.wait_for_timeout(1000)
+    item = page.evaluate_handle(ICON_BTN.replace("querySelectorAll('button')", "querySelectorAll('button, [role=menuitem]')"),
+                                'attach_file').as_element()
+    if item is None:
+        raise RuntimeError('upload menu item not found')
+    with page.expect_file_chooser(timeout=15000) as fc:
+        item.click()
+    fc.value.set_files(paths)
+    page.wait_for_timeout(2500 + 1000 * len(paths))
+    print('ATTACHED', len(paths))
+
+
 def screenshot(page, out=SHOT):
     page.wait_for_timeout(800)
     page.screenshot(path=out)
@@ -62,6 +77,8 @@ def act(page, steps):
             page.keyboard.press(val)
         elif kind == 'wait':
             time.sleep(float(val))
+        elif kind == 'attach':
+            attach(page, val.split('|'))
         elif kind == 'scroll':
             vw, vh = page.evaluate('() => [innerWidth, innerHeight]')
             page.mouse.move(vw / 2, vh / 2)
@@ -89,23 +106,36 @@ def download_last(page, out_path):
     print('SAVED', out_path)
 
 
-def wait_new_image(page, before, timeout=300):
+DONE_REPLIES = "() => [...document.querySelectorAll('button mat-icon')].filter(m => (m.getAttribute('fonticon') || m.textContent.trim()) === 'thumb_up' && m.offsetParent !== null).length"
+LAST_REPLY = "() => { const r = [...document.querySelectorAll('model-response')]; return r.length ? r.at(-1).innerText.slice(0, 300) : ''; }"
+
+
+def wait_new_image(page, before, timeout=300, done_before=None):
+    """Wait for a new big image. If the reply finishes (a new thumb_up) with no image, fail fast with its text."""
     t0 = time.time()
+    finished = None
     while time.time() - t0 < timeout:
         if page.evaluate(BIG_IMGS) > before:
             return time.time() - t0
+        if done_before is not None and page.evaluate(DONE_REPLIES) > done_before:
+            finished = finished or time.time()
+            if time.time() - finished > 8:
+                raise RuntimeError('text reply, no image: ' + page.evaluate(LAST_REPLY).replace('\n', ' '))
         page.wait_for_timeout(2000)
     raise TimeoutError('no image after %ds' % timeout)
 
 
-def run(page, gem_url, prompt, out_dir, n, prefix):
-    """N fresh chats of one Gem with the same prompt; each image downloaded at original size."""
+def run(page, gem_url, prompt, out_dir, n, prefix, files=()):
+    """N fresh chats of one Gem with the same prompt (+ the same attached files); each image downloaded at original size."""
     for k in range(1, n + 1):
         page.goto(gem_url)
         page.wait_for_selector('div[contenteditable="true"]', timeout=30000)
         page.wait_for_timeout(1500)
+        if files:
+            attach(page, list(files))
         before = page.evaluate(BIG_IMGS)
-        page.locator('div[contenteditable="true"]').last.click()
+        done_before = page.evaluate(DONE_REPLIES)
+        page.locator('div[contenteditable="true"] >> visible=true').last.click()  # 숨은 ql-clipboard 를 피한다
         page.keyboard.insert_text(prompt)
         page.wait_for_timeout(500)
         send = icon_button(page, 'arrow_upward')
@@ -113,7 +143,7 @@ def run(page, gem_url, prompt, out_dir, n, prefix):
             page.keyboard.press('Enter')
         else:
             send.click()
-        secs = wait_new_image(page, before)
+        secs = wait_new_image(page, before, done_before=done_before)
         page.wait_for_timeout(3000)
         download_last(page, os.path.join(out_dir, '%s_%d.png' % (prefix, k)))
         print('RUN %d/%d: image after %.0fs | chat %s' % (k, n, secs, page.url), flush=True)
@@ -125,6 +155,11 @@ def main(argv):
     if '--out' in args:
         i = args.index('--out')
         out = args[i + 1]
+        del args[i:i + 2]
+    files = ()
+    if '--attach' in args:
+        i = args.index('--attach')
+        files = args[i + 1].split('|')
         del args[i:i + 2]
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp(CDP)
@@ -146,7 +181,7 @@ def main(argv):
             prefix = args[4] if len(args) > 4 else 'sheet'
             with open(prompt_file, encoding='utf-8') as f:
                 prompt = f.read().strip()
-            run(page, gem_url, prompt, out_dir, n, prefix)
+            run(page, gem_url, prompt, out_dir, n, prefix, files)
         else:
             raise SystemExit(__doc__)
 

@@ -41,6 +41,7 @@ GAME_DIRS = [
     "materials/timbers",
     "materials/herbs",
     "minigame",
+    "explore",
 ]
 
 

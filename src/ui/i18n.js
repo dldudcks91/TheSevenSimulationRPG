@@ -234,6 +234,7 @@ const STRINGS = {
     'exp.noParty': { ko: '편성이 비어 있다 — 편성 탭에서 영웅을 넣는다', en: 'This party is empty — add heroes in the Party tab' },
     'exp.departSearching': { ko: '편성에 수색 나간 영웅이 있다', en: 'A hero in this party is out on a search' },
     'exp.departAdvancing': { ko: '편성에 전직 중인 영웅이 있다', en: 'A hero in this party is advancing' },
+    'exp.departExploring': { ko: '편성에 탐험 나간 영웅이 있다', en: 'A hero in this party is out exploring' },
     // 출정 확인 창의 문장 — 문구는 사용자 지시 그대로다 (SCREEN_DESIGN §4-1 · ADR-0467)
     'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
@@ -362,6 +363,7 @@ const STRINGS = {
     'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
     'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
     'ch.err.advancing': { ko: '전직 중인 영웅이다', en: 'That hero is advancing' },
+    'ch.err.exploring': { ko: '탐험 나간 영웅이다', en: 'That hero is out exploring' },
     'ch.err.running': { ko: '원정에 나가 있는 영웅이다 — 철수해야 해고할 수 있다', en: 'That hero is out on an expedition — retreat first' },   // 원정은 저절로 안 끝난다 — 철수가 풀어 준다 (2026-09-29 · ADR-0433)
     'ch.err.last': { ko: '마지막 영웅은 해고할 수 없다', en: "Can't dismiss your last hero" },
     /* ~~'ch.err.downed'~~ 은 2026-09-28 삭제 — 쓰러진 영웅도 장비를 바꾼다 (R176 · ADR-0400) */
@@ -383,6 +385,10 @@ const STRINGS = {
     'tv.err.roster': { ko: '영웅 로스터가 가득 찼다 ({cap})', en: 'Hero roster full ({cap})' },
     'tv.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
+    // 가입 희망 칸 — 탐험 마차에서 이긴 적 영웅이 기다리는 세로 줄 (SCREEN_DESIGN §8-1 · ADR-0574 · 2026-10-09)
+    'tv.join.h': { ko: '가입 희망', en: 'Wants to Join' },
+    'tv.join.left': { ko: '{t} 뒤 떠난다', en: 'Leaves in {t}' },
+    'tv.join.gone': { ko: '이미 떠났다', en: 'Already gone' },
     /* 수색 칸 [신설 2026-09-01 · **실동작 2026-09-09** — SCREEN_DESIGN §8-1 · ADR-0062].
        ⚠ 진행 중 이야기 문장은 여기 없다 — `search_story.csv` 가 든다(막 수·죄종 필터가 굴림의 입력이라
        표시 문구가 아니라 게임 데이터다). 화면은 `searchState().beats[].text` 를 `L()` 로 풀 뿐이다 */
@@ -402,6 +408,7 @@ const STRINGS = {
     'tv.search.dropped': { ko: '{name} 을(를) 돌려보냈다', en: 'Sent {name} away' },
     'tv.err.busy': { ko: '이미 수색 중이다', en: 'A search is already out' },
     'tv.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot be sent' },
+    'tv.err.exploring': { ko: '탐험 중인 영웅은 보낼 수 없다', en: 'Heroes out exploring cannot be sent' },
     'tv.err.party': { ko: '원정 파티는 보낼 수 없다', en: "Party members can't be sent" },
     'tv.err.missing': { ko: '영웅을 찾을 수 없다', en: 'Hero not found' },
     'tv.err.none': { ko: '나간 수색이 없다', en: 'No search is out' },
@@ -450,7 +457,8 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 12 [개정 2026-09-24 사용자 지시 · ADR-0348] — 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 제련소 · 훈련장 · 자원 · 탐험 · 도감 · 도움말 (SCREEN_DESIGN §1).
+    /* 탭 13 [개정 2026-10-09 사용자 지시 · ADR-0567] — 훈련장이 빠졌다 · 순서와 묶음은 `app.js:NAV_GROUPS` 가 든다 (SCREEN_DESIGN §1).
+       [개정 2026-09-24 사용자 지시 · ADR-0348] 탭 12 — 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 제련소 · 훈련장 · 자원 · 탐험 · 도감 · 도움말.
        [개정 2026-09-21 사용자 지시 · ADR-0253] 탭 11 — 원정 · 편성 · 캐릭터 · 건설 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 도감 · 도움말.
        연구가 「건설」이 되어 캐릭터 바로 뒤로 왔다 — 키(`nav.research`)는 옛 이름 그대로다.
        [개정 2026-09-08 사용자 지시] 탭 10 — 원정 · 캐릭터 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
@@ -494,14 +502,17 @@ const STRINGS = {
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.shop': { ko: '상점', en: 'Shop' },
     'nav.forge': { ko: '제련소', en: 'Smeltery' },
-    // 훈련장 [2026-09-22 사용자 지시 · ADR-0297] — 제련소 뒤(ADR-0348) · 건설의 훈련장 가지 이름도 이 키를 쓴다
-    'nav.training': { ko: '훈련장', en: 'Training Grounds' },
-    // 서고 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422] — 훈련장 뒤 · 건물 이름(`building.csv`)과 같은 말
+    // 서고 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422] — 제련소 뒤 · 건물 이름(`building.csv`)과 같은 말 · ~~`nav.training`~~ 은 2026-10-09 훈련장 탭과 함께 걷혔다(ADR-0567)
     'nav.library': { ko: '서고', en: 'Library' },
     'nav.resource': { ko: '자원', en: 'Resources' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
+    // 탭 묶음 머리 — 누를 수 없는 작은 회색 글씨 (SCREEN_DESIGN §1 · ADR-0554). 순서 = `app.js:NAV_GROUPS`
+    'nav.grp.battle': { ko: '전투', en: 'Combat' },
+    'nav.grp.town': { ko: '마을', en: 'Town' },
+    'nav.grp.dispatch': { ko: '파견', en: 'Dispatch' },
+    'nav.grp.etc': { ko: '기타', en: 'Other' },
     // 흐린 탭을 누르면 — 탭은 안 바뀌고 이 문장이 플래시로 선다 (SCREEN_DESIGN §1 · ADR-0311). `{b}` = 건물 이름 · 조사 없이 「부터」
     'nav.unbuilt': { ko: '건설 탭에서 {b}부터 지어야 한다', en: 'Build the {b} first — in the Construction tab' },
     'nav.pending': { ko: '{b} — 아직 준비 중이다', en: '{b} — coming later' },
@@ -523,6 +534,8 @@ const STRINGS = {
     'set.h': { ko: '설정', en: 'Settings' },
     'set.artStyle': { ko: '아트 스타일', en: 'Art Style' },
     'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
+    'set.fxArt': { ko: '이펙트 그림체', en: 'Effect Style' },   // 관전 스킬 이펙트의 그림체 — 버튼 글은 ix.fxs.* (2026-10-09 · ADR-0561)
+    'set.fxAlpha': { ko: '이펙트 투명도(%)', en: 'Transparency (%)' },   // 영어는 짧게 — 이름 칸이 넓어지면 다른 줄 버튼까지 접힌다   // 스킬 조각만 옅게 — 버튼 글은 0 · 25 · 50 · 75 (단위는 이 이름이 든다 · 2026-10-09 · ADR-0562)
     'set.basicFx': { ko: '기본 공격 이펙트', en: 'Basic Attack Effects' },   // 기본 공격 · 반격의 대각선 베기 한 줄(무채색) (2026-10-03 · ADR-0501 · ADR-0505)
     'set.hitFx': { ko: '피격 반응', en: 'Hit Reactions' },
     'set.shake': { ko: '피격 시 흔들림', en: 'Shake on Hit' },
@@ -556,10 +569,37 @@ const STRINGS = {
     'dp.err.running': { ko: '원정 중인 영웅은 보낼 수 없다', en: 'Heroes on an expedition cannot be sent' },
     'dp.err.searching': { ko: '수색 중인 영웅은 보낼 수 없다', en: 'Heroes on a search cannot be sent' },
     'dp.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot be sent' },
+    'dp.err.exploring': { ko: '탐험 중인 영웅은 보낼 수 없다', en: 'Heroes out exploring cannot be sent' },
     'dp.err.unbuilt': { ko: '아직 열리지 않은 자리다', en: 'This spot is not open yet' },
     'dp.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
     'dp.err.empty': { ko: '빈 자리다', en: 'This spot is empty' },
     'dp.solo': { ko: '1인', en: 'Solo' },
+    /* ── 탐험 탭 — 지도 위 지점 아이콘 → 아이콘 옆 지점 창 (SCREEN_DESIGN §8-4 · ADR-0553 · ADR-0558 · 2026-10-09) ──
+       거절은 `game.exploreErr` · `exploreTake` · `exploreDrop` 의 결과 코드와 짝 (`ex.err.<code>`) · 규칙 문장은 도움말(`ex.help`) · 창엔 설명 글줄이 없다(ADR-0560) */
+    // 지점 이름은 장마다 다르다 — 화면 문구가 아니라 데이터라 `explore_spot.csv` 가 든다 (ADR-0563)
+    'ex.go': { ko: '출발', en: 'Set out' },
+    'ex.left': { ko: '남은 시간 {t}', en: '{t} left' },
+    'ex.take': { ko: '수령', en: 'Collect' },
+    'ex.cancel': { ko: '불러들이기', en: 'Call back' },
+    'ex.cancelConfirm': { ko: '정말? 한 번 더 누르면 불러들인다', en: 'Really? Click again to call back' },
+    'ex.sent': { ko: '{spot} 탐험 출발', en: 'Off to the {spot}' },
+    'ex.taken': { ko: '장비 {n}개를 받았다', en: 'Collected {n} gear' },
+    'ex.canceled': { ko: '탐험을 불러들였다', en: 'Exploration called back' },
+    'ex.err.unbuilt': { ko: '탐험을 아직 안 지었다', en: 'Exploration is not built yet' },
+    'ex.err.missing': { ko: '없는 지점이다', en: 'No such spot' },
+    'ex.err.locked': { ko: '아직 열리지 않은 땅이다', en: 'This land is not open yet' },
+    'ex.err.pending': { ko: '준비 중', en: 'Coming later' },
+    'ex.err.busy': { ko: '이미 탐험 중인 지점이다', en: 'Someone is already out there' },
+    'ex.err.slots': { ko: '동시 탐험은 {n}건까지다', en: 'Up to {n} exploration(s) at a time' },
+    'ex.err.noParty': { ko: '보낼 영웅을 고른다', en: 'Pick who goes' },
+    'ex.err.full': { ko: '{n}명까지 보낼 수 있다', en: 'Up to {n} heroes' },
+    'ex.err.running': { ko: '원정 중인 영웅은 보낼 수 없다', en: 'Heroes on an expedition cannot go' },
+    'ex.err.searching': { ko: '수색 중인 영웅은 보낼 수 없다', en: 'Heroes on a search cannot go' },
+    'ex.err.exploring': { ko: '이미 탐험 나간 영웅이다', en: 'That hero is already exploring' },
+    'ex.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot go' },
+    'ex.err.none': { ko: '나간 탐험이 없다', en: 'Nobody is out there' },
+    'ex.err.notDone': { ko: '아직 안 돌아왔다', en: 'Not back yet' },
+    'ex.err.bagFull': { ko: '인벤토리 자리가 모자란다 — {n}칸 필요', en: 'Not enough inventory space — {n} needed' },
     'dp.party': { ko: '파티', en: 'Party' },
     'dp.attrTitle': { ko: '담당 능력치', en: 'Governing attribute' },
     // 단계 트랙은 머리 줄이 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다.
@@ -671,11 +711,16 @@ const STRINGS = {
     'todo.badge': { ko: '미착수', en: 'Not started' },
     'todo.lead': { ko: '기획은 확정됐고 화면이 아직 없다 — 지금 여기서 할 수 있는 일은 없다', en: 'The design is settled; the screen is not built yet — there is nothing to do here yet' },
     'ex.h': { ko: '탐험', en: 'Exploration' },
-    'ex.todo': {
-        ko: '탐험은 <b>미착수</b> — 1인 배치가 아니라 <b>파티를 꾸려 보내는</b> 활동이다. 원정의 문법(편성 → 출발 → 리포트)을 빌리되 <b>전투가 아니라서 오프라인</b> 쪽에 든다<br>'
-            + '인원 · 산출 · 판정(민첩·건강·통솔)이 미정이다 (base_expedition_design §3-1)',
-        en: 'Exploration is <b>not started</b> — you send <b>a whole party</b>, not one hero to a post. It borrows the expedition grammar (form up → depart → report) but is <b>not combat</b>, so it runs offline<br>'
-            + 'Party size, yield and the checks (Agility · Vitality · Leadership) are undecided (base_expedition_design §3-1)',
+    // 탐험 규칙 — 도움말 탐험 절 (2026-10-09 · 옛 `ex.todo`(미착수 안내)를 대체 · 지점 패널은 규칙 문장을 안 든다 · SCREEN_DESIGN §8-4)
+    'ex.help': {
+        ko: '지도에서 <b>열린 땅의 지점</b>(동굴 · 폐허 · 마차)을 누르고 <b>위 영웅 띠</b>에서 보낼 영웅을 고른다 — 혼자도, 파티(최대 {n}명)도 된다<br>'
+            + '<b>{h}시간</b> 뒤 돌아오고 오프라인에도 흐른다 · 결과는 받아 갈 때까지 남는다 · 동시 탐험 {s}건 · 한 지점에 한 건<br>'
+            + '<b>동굴</b>은 장비를 가져온다 — 보낸 영웅 1명당 {k}개 · 그 땅의 레벨대 · 폐허 · 마차는 준비 중<br>'
+            + '탐험 나간 영웅은 받을 때까지 원정 · 수색 · 자원 자리에 못 나간다 · 불러들이면 결과 없이 돌아온다',
+        en: 'Click a <b>spot in an open land</b> (cave · ruins · caravan) and pick who goes from the <b>hero strip</b> above — one hero or a party of up to {n}<br>'
+            + 'They return after <b>{h}h</b>, offline too · the haul waits until you collect it · {s} exploration(s) at a time · one per spot<br>'
+            + 'The <b>cave</b> brings back gear — {k} per hero sent · at that land\'s level band · ruins and caravan are coming later<br>'
+            + 'Heroes out exploring can\'t join expeditions, searches or resource posts until collected · calling them back returns them empty-handed',
     },
     'help.title': { ko: '도움말', en: 'Help' },
     'help.newgame': { ko: '새 게임', en: 'New Game' },
@@ -758,6 +803,8 @@ const STRINGS = {
     },
     'exp.deploy': { ko: '보내기', en: 'Deploy' },
     'exp.foes': { ko: '적 구성', en: 'Enemies' },
+    /* 적 구성 초상 아래 스킬 칸 줄의 「?」 칸 — 보스가 스폰 때 직업 풀에서 굴리는 셋째 칸 (§4-1 · ADR-0568) */
+    'exp.foe.rolled': { ko: '전투마다 바뀌는 직업 스킬', en: 'Class skill — changes every fight' },
     /* 출정 창의 칸 이름 둘 [2026-09-10 사용자 지시 · ADR-0084] — 「적 구성」·「진형」과 **같은 규격**으로 선다.
        `exp.heroes.h` 는 창 안으로 들어온 영웅 띠의 이름이다 — 탭 최상단에 있던 시절엔 이름이 없었다(패널의 첫 줄이라
        무엇인지 물을 것이 없었다). 창 안에서는 네 칸이 나란히 서므로 칸마다 이름이 있어야 경계가 읽힌다.
@@ -823,6 +870,7 @@ const STRINGS = {
     /* 수색 중 [신설 2026-09-09] — 나가 있으면 편성이 막히므로(state.js:toggleParty) 띠가 그 이유를 든다 */
     'hs.doing.search': { ko: '수색 중', en: 'On a search' },
     'hs.doing.advance': { ko: '전직 중', en: 'Advancing' },
+    'hs.doing.explore': { ko: '탐험 중', en: 'Exploring' },
     'hs.doing.dispatch': { ko: '{post} {tier}', en: '{post} {tier}' },   // 자원 자리 — 「채광 2」 (2026-09-27 · ADR-0373)
     /* ~~'hs.doing.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 띠의 「지금 하는 일」은 **대기 하나**다 (SCREEN_DESIGN §5) */
 
@@ -958,6 +1006,7 @@ const STRINGS = {
     // ~~`pt.potion.short`~~ (「모자람 — 런에서 빈 채 시작한다」) 는 2026-09-24 삭제 — 툴팁은 효과만 든다(CLAUDE.md 규칙 7). 모자란 칸은 칸이 흐린 점선으로 말한다
     'pt.err.full': { ko: '파티가 찼다', en: 'Party full' },
     'pt.err.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
+    'pt.err.exploring': { ko: '탐험 나가 있다 — 돌아와야 편성한다', en: 'Out exploring — needs to return first' },
     'pt.err.missing': { ko: '없는 칸이다', en: 'No such slot' },
     'pt.err.slotsFull': { ko: '물약 칸이 다 찼다', en: 'All potion slots are full' },
     'pt.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
@@ -1015,7 +1064,6 @@ const STRINGS = {
     'cn.t.monster_card': { ko: '몬스터 카드를 모은다', en: 'Collect monster cards' },
     'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission Board' },   // 선술집 r2 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-25)
     'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r4 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
-    'cn.t.training': { ko: '영웅을 훈련시켜 경험치를 올린다', en: 'Train heroes to gain experience' },
     'cn.t.advance': { ko: '영웅을 전직시킨다', en: "Advance a hero's class" },
     'cn.t.skill_depth': { ko: '영웅 스킬에 포인트를 더 찍는다', en: 'Invest more points into hero skills' },
     // 더하기는 「대상 +n」 한 토막 — 서술형 문장으로 늘리지 않는다 (ADR-0329) · 「증가」 도 안 붙인다 — 「+」 가 이미 말한다 (ADR-0351)
@@ -1042,7 +1090,6 @@ const STRINGS = {
     'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
     'cn.t.gear_sets': { ko: '장비 세트 +{n}', en: 'Gear sets +{n}' },
     'cn.t.commission_slots': { ko: '동시 의뢰 +{n}', en: 'Parallel commissions +{n}' },
-    'cn.t.training_slots': { ko: '훈련 칸 +{n}', en: 'Training slots +{n}' },
     'cn.t.recruit_quality': { ko: '고용 · 수색 영웅 품질 +{n}', en: 'Hire and search hero quality +{n}' },
     'cn.t.research': { ko: '연구 상한 +{n}', en: 'Research cap +{n}' },
     // 건설 [2026-09-21 ADR-0253] — 옛 「연구」. 본문은 위쪽 탭(ADR-0192 로 걷힘)을 설명하던 것을 지금 화면 기준으로 다시 썼다
@@ -1058,22 +1105,17 @@ const STRINGS = {
     /* 건설 버튼 · 완료 표시 — 탭 이름 키(`rs.research.h`)와 같은 옛 접두를 그대로 쓴다. 나머지 건설 문구는 `cn.*` (2026-09-22 · R137) */
     'rs.rs.done': { ko: '완료', en: 'Done' },
     'rs.rs.go': { ko: '건설', en: 'Build' },   // 탭 이름은 명사(Construction) · 버튼은 동작(Build) — ADR-0253
-    /* 훈련장 탭 [2026-09-22 ADR-0297 · SCREEN_DESIGN §16] — ⚠ 목업. 작업 탭 훈련 · 전직(훈련장의 뒤 랭크가 연다 · ADR-0310).
-       건물 줄은 건설 탭의 랭크 칸과 같은 문구(`cn.*`)를 쓴다(판정이 같다). 안내 둘은 도움말도 같은 키로 부른다 */
-    'tr.seg.train': { ko: '훈련', en: 'Training' },
+    /* 전직 패널 — 서고 탭 오른쪽 [2026-10-09 · SCREEN_DESIGN §17 · ADR-0567 — 옛 훈련장 탭의 전직 카드 · 접두 `tr.` 은 그대로 둔다].
+       ~~`tr.seg.train` · `tr.slot*` · `tr.train.todo`~~ 는 훈련장과 함께 걷혔다. 전직 안내(`tr.adv.todo`)는 도움말이 같은 키로 부른다 */
     'tr.seg.adv': { ko: '전직', en: 'Advance' },
-    'tr.slot': { ko: '훈련 칸 {n}', en: 'Slot {n}' },
-    'tr.slot.empty': { ko: '비었다', en: 'Empty' },
-    'tr.slot.put': { ko: '영웅 넣기', en: 'Assign Hero' },
-    // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §16) — 거절은 `tr.err.<코드>`(game.advanceStart · 마스터리 전직 트리의 advanceLearn · advanceForget — ADR-0542)
+    // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §17) — 거절은 `tr.err.<코드>`(game.advanceStart · 마스터리 전직 트리의 advanceLearn · advanceForget — ADR-0542)
     'tr.adv.level': { ko: 'Lv.{have} / {need}', en: 'Lv.{have} / {need}' },
     'tr.adv.go': { ko: '전직', en: 'Advance' },   // 패널 제목 오른쪽 버튼 — 갈래를 골라야 켜진다 (ADR-0536 · ADR-0539)
     'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}' },
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
-    'tr.adv.learnedLv': { ko: '배움 · Lv.{n}', en: 'Learned · Lv.{n}' },   // 배운 전직 스킬 줄 — 지금 스킬 레벨 (2026-10-06 · R216 · ADR-0529)
     'tr.adv.points': { ko: '전직 포인트 {free} / {have}', en: 'Advance Points {free} / {have}' },   // 고른 영웅 줄 오른쪽 — 남은 / 받은 (R216)
-    'tr.err.unbuilt': { ko: '훈련장 3랭크가 전직을 연다', en: 'Training Grounds Rank 3 opens advancement' },
+    'tr.err.unbuilt': { ko: '서고를 더 지어야 전직이 열린다', en: 'Build the Library further to open advancement' },
     'tr.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
     'tr.err.class': { ko: '이 직업의 갈래가 아니다', en: 'Not a path of this class' },
     'tr.err.done': { ko: '이미 전직했다', en: 'Already advanced' },
@@ -1081,22 +1123,17 @@ const STRINGS = {
     'tr.err.level': { ko: '레벨이 모자라다', en: 'Level too low' },
     'tr.err.running': { ko: '원정에서 싸우는 중이다', en: 'Fighting on an expedition' },
     'tr.err.searching': { ko: '수색 나가 있다', en: 'Out on a search' },
+    'tr.err.exploring': { ko: '탐험 나가 있다', en: 'Out exploring' },
     'tr.err.none': { ko: '아직 전직하지 않았다', en: 'Not advanced yet' },
     'tr.err.learned': { ko: '이미 하나를 배웠다 — 먼저 되돌린다', en: 'Already learned one — unlearn it first' },
     'tr.err.skill': { ko: '이 갈래의 스킬이 아니다', en: 'Not a skill of this path' },
     'tr.err.empty': { ko: '배운 전직 스킬이 없다', en: 'No advancement skill learned' },
     'tr.err.downed': { ko: '원정에서 쓰러져 있다', en: 'Downed on an expedition' },
     'tr.err.points': { ko: '전직 포인트가 없다', en: 'No Advance Points left' },   // advanceLearn — 첫 전직 포인트로 배운다 (R216)
-    'tr.train.todo': {
-        ko: '훈련 칸에 영웅을 넣어 두면 경험치가 오른다. 원정 경험치 획득 %도 훈련장의 연구다<br>'
-            + '넣어 둔 시간만큼 오르는지 · 어디까지 오르는지 · 훈련 중인 영웅을 원정에 쓸 수 있는지는 기획 미정이라 미착수',
-        en: 'Heroes placed in a training slot gain experience. Expedition experience gain % is also researched here<br>'
-            + 'How gain scales with time, where it caps and whether training heroes can still go on expeditions are undecided, so it is not started',
-    },
     'tr.adv.todo': {
-        ko: '<b>훈련장</b> 3랭크가 열면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
+        ko: '<b>서고</b>를 더 지으면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
             + '전직하면 <b>마스터리</b>의 전직 트리가 열린다 — 갈래의 전직 스킬 셋 중 하나를 <b>첫 전직 포인트</b>로 배우고, 배운 것이 액티브 전직 칸이다. 되돌리면 쓴 전직 포인트가 전부 돌아온다',
-        en: '<b>Training Grounds</b> Rank 3 opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions, searches or resource posts<br>'
+        en: 'Building the <b>Library</b> further opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions, searches or resource posts<br>'
             + 'Advancing opens the Advancement Tree in <b>Mastery</b> — learn one of the path\'s three advancement skills with your <b>first Advance Point</b>; the learned one fills the Advance active slot. Unlearning refunds every Advance Point spent',
     },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
@@ -1198,6 +1235,7 @@ const STRINGS = {
     'sk.masteryEffect.aspd_pct': { ko: '공격 속도가 {v} 증가한다', en: 'Attack Speed increases by {v}' },
     'sk.masteryEffect.atk_pct': { ko: '데미지가 {v} 증가한다', en: 'Damage increases by {v}' },
     'sk.masteryEffect.buff_dur_pct': { ko: '버프 지속시간이 {v} 증가한다', en: 'Buff Duration increases by {v}' },
+    'sk.masteryEffect.cast_speed_pct': { ko: '캐스팅 속도가 {v} 증가한다', en: 'Casting Speed increases by {v}' },
     'sk.masteryEffect.cooldown_reduction': { ko: '쿨타임이 {v} 감소한다', en: 'Cooldowns are reduced by {v}' },
     'sk.masteryEffect.crit_damage': { ko: '치명타 피해가 {v} 증가한다', en: 'Crit Damage increases by {v}' },
     'sk.masteryEffect.crit_rate': { ko: '치명타 확률이 {v} 증가한다', en: 'Crit Chance increases by {v}' },
@@ -1247,7 +1285,7 @@ const STRINGS = {
     'sk.src.advance': { ko: '전직', en: 'Advance' },
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
-    'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 이름 뒤 (설명창 · 액티브 줄 · 서고 · 전직 판 · 2026-10-06 · R216 · ADR-0529)
+    'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 서고 · 전직 판 · R216 · ADR-0576) · 그림이 없는 서고 읽기 줄만 이름 뒤
     'sk.advPoints': { ko: '전직 포인트', en: 'Advance Points' },   // 포인트 패널 둘째 줄 — 마스터리와 따로 (R216)
     'sk.err.advPoints': { ko: '전직 포인트가 없다', en: 'No Advance Points left' },
     'sk.adv.leveled': { ko: '{skill} Lv.{n}', en: '{skill} Lv.{n}' },   // 전직 판 스킬 칸을 눌러 레벨이 올랐다 (R216)
@@ -1256,8 +1294,7 @@ const STRINGS = {
     'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 서고 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
-    'bk.learned.h': { ko: '배운 스킬', en: 'Learned Skill' },
-    'bk.noneLearned': { ko: '없음', en: 'None' },
+    'bk.learned.h': { ko: '지금 가진 스킬', en: 'Current Skills' },   // 배우기 머리 — 액티브 칸 중 찬 것 전부 (2026-10-09 · ADR-0567 — ~~배운 스킬~~)
     'bk.own.h': { ko: '가진 책', en: 'Books Owned' },
     'bk.none': { ko: '가진 책이 없다', en: 'No books' },
     'bk.learn': { ko: '배우기', en: 'Learn' },
@@ -1492,6 +1529,7 @@ const STRINGS = {
     'cx.seg.character': { ko: '캐릭터', en: 'Characters' },
     'cx.seg.item': { ko: '아이템', en: 'Items' },
     'cx.seg.skill': { ko: '스킬', en: 'Skills' },
+    'cx.seg.fx': { ko: '이펙트', en: 'Effects' },
     'cx.seg.mastery': { ko: '마스터리', en: 'Masteries' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
     'cx.sub': { ko: '누적 처치 {list}마리에서 레벨이 오른다 — 스테이지 계열 스탯이 오른다', en: 'Levels up at {list} total kills — raises the stage\'s stat line' },
@@ -1612,15 +1650,18 @@ const STRINGS = {
     'ix.mastery.sin': { ko: '죄종', en: 'Sin' },
     'ix.mastery.class': { ko: '직업', en: 'Class' },
     'ix.mastery.adv': { ko: '전직', en: 'Advancement' },
-    'ix.g.masteryAdv': { ko: '{cls} 전직 트리', en: '{cls} Advancement Tree' },
-    'ix.mastery.unplanned': { ko: '확정된 노드 없음', en: 'No confirmed nodes' },
     'ix.mastery.previewRank': { ko: '1/{max}랭크 예시', en: 'Rank 1/{max} preview' },
     // 스킬 세그먼트의 안쪽 분류 [2026-09-24 · §9-1 · ADR-0335] — 직업은 탭이 아니라 일반 탭의 묶음이다(0299 의 직업 탭 대체)
     'ix.seg.basic': { ko: '일반 스킬', en: 'Basic Skills' },
     'ix.seg.adv': { ko: '전직 스킬', en: 'Advanced Skills' },
-    // 이펙트 탭 [2026-10-05 · §9-1 · ADR-0513] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
-    'ix.seg.fx': { ko: '이펙트', en: 'Effects' },
+    // 이펙트 세그먼트 [2026-10-05 · §9-1 · ADR-0513 · 세그먼트로 2026-10-09 ADR-0559] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
     'ix.fx.playAll': { ko: '▶ 전부 재생', en: '▶ Play All' },
+    // 이펙트 세그먼트의 그림체 탭 [2026-10-09 · §9-1 · ADR-0559] — 키 = skill_art.js:ART_STYLES · 실전 그림체에는 live 가 이름을 감싼다
+    'ix.fxs.clean': { ko: '깔끔한 그림', en: 'Clean' },          // 영어는 짧게 — 설정 판(§2-2)의 좁은 줄에 넷이 선다
+    'ix.fxs.ink': { ko: '수묵', en: 'Ink' },
+    'ix.fxs.portrait': { ko: '초상 그림체', en: 'Portrait' },
+    'ix.fxs.code': { ko: '코드 모양', en: 'Code' },
+    'ix.fxs.live': { ko: '{name} · 실전', en: '{name} · In Battle' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]
     'ix.tier': { ko: '{n}티어', en: 'Tier {n}' },
     /* 전직 스킬 묶음의 이름 — `ix.adv.*`(전직) · `ix.sk.*`(스킬) 11 키는 2026-10-02 삭제. 묶음 머리는 `advance.csv`,

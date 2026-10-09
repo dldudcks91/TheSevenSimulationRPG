@@ -27,7 +27,7 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 2250,2,2,아비주,Abyzou,0,0,Normal,Lizardman,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_snipe,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,71,0.22,0.22,0.22,0.22,1,0,,,시기의 어머니 — 깨어나지 않는 알을 품는 자
 2301,2,3,우상족 사냥꾼,Idolfolk Hunter,1,0,Normal,Human,normal,line,warrior,10,5,3,14,3,4,5,war_quake,mace,weapon|armor|helmet,2,60,0.23,0.23,0.23,0.23,1,0,,,나무 가면을 쓰고 창을 든 우상족 전사
 2302,2,3,우상족 추적자,Idolfolk Stalker,0,0,Normal,Human,normal,ranged,archer,3,11,3,7,10,4,5,arc_pierce,bow,weapon|armor|gloves,1,47,0.23,0.23,0.23,0.23,1,0,,,숲 그늘에 숨어 독침을 쏘는 우상족
-2303,2,3,우상족 주술사,Idolfolk Shaman,1,0,Normal,Human,normal,caster,priest,3,11,10,7,3,4,10,pri_haste,crucifix,weapon|armor|amulet,2,26,0.23,0.23,0.23,0.23,1,0,,,우상 인비디아를 모시는 우상족 주술사
+2303,2,3,우상족 주술사,Idolfolk Shaman,1,0,Normal,Human,normal,caster,priest,3,11,10,7,3,4,10,mon_summon_idolfolk,crucifix,weapon|armor|amulet,2,26,0.23,0.23,0.23,0.23,1,0,,,우상 인비디아를 모시는 우상족 주술사
 2350,2,3,인비디아,Invidia,1,0,Demon,Gargoyle,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_frostnova,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,73,0.09,0.32,0.23,0.23,1,0,,,우상족이 섬기는 살아 있는 우상 — 시기의 신
 2401,2,4,나가 전사,Naga Warrior,1,0,Demon,Naga,normal,line,warrior,10,9,3,10,3,4,5,war_leap,axe,weapon|armor|helmet,2,55,0.24,0.24,0.24,0.24,1,0,,,레비아탄의 연못을 지키는 뱀족 병사
 2402,2,4,나가 주술사,Naga Shaman,1,0,Demon,Naga,normal,caster,priest,3,11,10,7,3,4,10,pri_penitence,bible,weapon|armor|amulet,2,26,0.24,0.24,0.1,0.33,1,0,,,적의 힘을 빼앗는 뱀족 주술사
@@ -42,31 +42,31 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 3202,3,2,스켈레톤 궁수,Skeleton Archer,1,1,Undead,Skeleton,normal,ranged,archer,3,11,3,6,8,4,5,arc_snipe,bow,weapon|armor|gloves,1,47,0.27,0.27,0.27,0.27,1,0,,,지하묘지 함정 지킴이
 3203,3,2,스켈레톤 기사,Skeleton Knight,1,1,Undead,Skeleton,normal,elite_line,knight,13,9,3,15,3,10,5,kni_rush,spear,weapon|armor|helmet|ring,2,61,0.27,0.27,0.27,0.27,1,0,,,지하묘지를 지키는 스켈레톤 기사
 3250,3,2,카론,Charon,0,0,Undead,Skeleton,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,77,0.27,0.27,0.27,0.27,1,0,,,탐욕의 뱃사공 — 대가 없이는 건너지 못한다
-3301,3,3,맨머리 미라,Bareheaded Mummy,1,0,Demon,Imp,normal,caster,mage,3,14,11,7,3,4,5,mag_fireball,orb,weapon|armor|amulet,1,28,0.39,0.11,0.28,0.28,1,0,,,보물고의 마법 수비수
-3302,3,3,청동 미라,Bronze Mummy,1,0,Demon,Goblin,normal,skirmish,archer,3,14,3,8,8,4,5,arc_rapid,bow,weapon|armor|boots,1,42,0.28,0.28,0.28,0.28,1,0,,,잔꾀형 보물 약탈자
-3303,3,3,금관 미라,Gold-Crowned Mummy,1,0,Demon,Goblin,normal,heavy,knight,11,11,3,14,3,4,5,kni_duel,spear,weapon|armor|helmet|gloves,2,90,0.28,0.28,0.28,0.28,1,0,,,황금 갑옷의 거대 고블린 대장
+3301,3,3,맨머리 미라,Bareheaded Mummy,1,0,Undead,Mummy,normal,caster,priest,3,8,10,9,3,4,10,pri_penitence,bible,weapon|armor|amulet,1,28,0.28,0.28,0.28,0.28,1,0,,,보물고에 함께 묻힌 사제 — 머리를 민 채 저주를 건다
+3302,3,3,청동 미라,Bronze Mummy,1,0,Undead,Mummy,normal,line,warrior,10,6,3,11,3,4,5,war_doubleswing,axe,weapon|armor|helmet,1,58,0.28,0.28,0.28,0.28,1,0,,,보물고를 지키다 함께 묻힌 병사
+3303,3,3,금관 미라,Gold-Crowned Mummy,1,0,Undead,Mummy,normal,caster,mage,3,8,11,8,3,4,5,mag_fireball,staff,weapon|armor|amulet,2,28,0.39,0.11,0.28,0.28,1,0,,,황금과 함께 묻히기를 택한 왕
 3350,3,3,메피스토펠레스,Mephistopheles,0,0,Demon,Gargoyle,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_shout,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,79,0.28,0.28,0.28,0.28,1,0,,,황금의 거래자 — 영혼 거래의 아이콘
 3401,3,4,황궁 근위병,Palace Guard,1,0,Demon,Goblin,normal,line,warrior,8,12,3,9,3,4,5,war_battleorders,mace,weapon|armor|helmet,1,60,0.3,0.3,0.3,0.3,1,0,,,맘몬의 금고를 지키는 정규 위병
 3402,3,4,황궁 근위궁수,Palace Guard Archer,1,0,Demon,Goblin,normal,ranged,archer,3,11,3,6,8,4,5,arc_multishot,bow,weapon|armor|gloves,1,47,0.3,0.3,0.3,0.3,1,0,,,황금궁 회랑을 지키는 근위 사수
 3403,3,4,황궁 근위대장,Palace Guard Captain,1,0,Demon,Goblin,normal,heavy,knight,11,11,3,13,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,92,0.3,0.3,0.3,0.3,1,0,,,황금 근위대를 지휘하는 대장
 3450,3,4,플루토스,Plutus,0,0,Demon,Goblin,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_bash,mace,weapon|helmet|armor|gloves|boots|amulet|ring,2,80,0.3,0.3,0.3,0.3,1,0,,,탐욕자들의 원을 지키는 자 — 황금궁의 문을 막아선 늑대 악마
 3900,3,5,맘몬,Mammon,0,0,Demon,Gargoyle,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,80,0.3,0.3,0.3,0.3,1,0,,,탐욕의 왕 — 황금 왕국의 지배자
-4101,4,1,서리 원혼,Frost Wraith,0,0,Undead,Ghost,normal,caster,mage,3,10,9,2,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,29,0.12,0.42,0.3,0.3,1,0,,,냉기 마법의 얼어붙은 영혼
-4102,4,1,동결 곡성귀,Frozen Wailer,0,0,Undead,Ghost,normal,caster,mage,3,10,9,2,3,4,5,mag_frostnova,orb,weapon|armor|amulet,1,29,0.12,0.42,0.3,0.3,1,0,,,빙결 저주 디버프형
-4103,4,1,빙결 좀비,Frostbitten Zombie,0,0,Undead,Zombie,normal,heavy,knight,11,4,3,18,3,4,5,kni_fanaticism,sword2h,weapon|armor|helmet|gloves,2,93,0.3,0.3,0.3,0.3,1,0,,,얼음에 묻혀있던 거대 시체
+4101,4,1,트롤 전사,Troll Warrior,0,0,Normal,Troll,normal,line,warrior,10,6,3,12,3,4,5,war_bash,mace,weapon|armor|helmet,2,60,0.3,0.3,0.3,0.3,1,0,,,얼어붙은 평원을 떠도는 트롤
+4102,4,1,트롤 주술사,Troll Shaman,0,0,Normal,Troll,normal,caster,priest,3,8,10,9,3,4,10,pri_judgment,bible,weapon|armor|amulet,2,29,0.3,0.3,0.3,0.3,1,0,,,트롤 무리에게 심판을 내려 주는 주술사
+4103,4,1,트롤 서리술사,Troll Frostcaller,0,0,Normal,Troll,normal,caster,mage,3,8,10,8,3,4,5,mag_iceblast,staff,weapon|armor|amulet,2,29,0.12,0.42,0.3,0.3,1,0,,,냉기를 부리는 트롤 술사
 4150,4,1,유키온나,Yuki-onna,0,0,Undead,Ghost,stage_boss,boss,mage,3,10,10,10,3,15,5,mag_frostnova,staff,weapon|helmet|armor|gloves|boots|amulet|ring,2,81,0.12,0.42,0.3,0.3,1,0,,,동토의 설녀 — 눈보라 속 유령 여인
-4201,4,2,서리 고블린 병사,Frost Goblin Soldier,0,0,Demon,Goblin,normal,line,warrior,8,12,3,9,3,4,5,war_quake,mace,weapon|armor|helmet,1,62,0.32,0.32,0.32,0.32,1,0,,,빙하 요새 경비병
-4202,4,2,얼음 임프,Ice Imp,0,0,Demon,Imp,normal,caster,mage,3,14,11,7,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,1,30,0.13,0.44,0.32,0.32,1,0,,,냉기 마법 원거리
-4203,4,2,고블린 빙하대장,Goblin Glacier Chief,1,0,Demon,Goblin,normal,heavy,knight,11,11,3,13,3,4,5,kni_defiance,spear,weapon|armor|helmet|gloves,2,95,0.32,0.32,0.32,0.32,1,0,,,얼음 갑옷의 거대 고블린 대장
+4201,4,2,서리 원혼,Frost Wraith,0,0,Undead,Ghost,normal,caster,mage,3,10,9,2,3,4,5,mag_frostnova,orb,weapon|armor|amulet,1,30,0.13,0.44,0.32,0.32,1,0,,,요새와 함께 얼어붙은 병사의 넋 — 냉기 마법
+4202,4,2,동결 곡성귀,Frozen Wailer,0,0,Undead,Ghost,normal,caster,priest,3,10,9,2,3,4,10,pri_bind,crucifix,weapon|armor|amulet,1,30,0.13,0.44,0.32,0.32,1,0,,,빙결 저주 디버프형 — 요새에 남은 자들의 곡소리
+4203,4,2,망령 백인대장,Phantom Centurion,1,0,Undead,Ghost,normal,heavy,knight,11,11,3,13,3,4,5,kni_defiance,spear,weapon|armor|helmet|gloves,2,95,0.32,0.32,0.32,0.32,1,0,,,얼어붙은 군단을 이끌던 백인대장의 망령
 4250,4,2,아스타로스,Astaroth,0,0,Demon,Gargoyle,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,2,83,0.32,0.32,0.32,0.32,1,0,,,빙하의 태공 — 게으름과 허영의 악마
-4301,4,3,예티 척후,Yeti Scout,0,0,Normal,Yeti,normal,skirmish,archer,3,10,3,7,9,4,5,arc_multishot,crossbow,weapon|armor|boots,2,45,0.33,0.33,0.33,0.33,1,0,,,설인 정찰병
-4302,4,3,예티 투석병,Yeti Slinger,0,0,Normal,Yeti,normal,ranged,archer,3,10,3,7,11,4,5,arc_guided,crossbow,weapon|armor|gloves,2,52,0.33,0.33,0.33,0.33,1,0,,,얼음 덩이를 던지는 원거리
-4303,4,3,트롤 빙하거인,Troll Glacier Giant,1,1,Normal,Troll,normal,heavy,knight,10,5,3,15,3,4,5,kni_smite,sword2h,weapon|armor|helmet|gloves,3,97,0.33,0.33,0.33,0.33,1,0,,,얼어붙은 피부의 거대 트롤
+4301,4,3,예티,Yeti,0,0,Normal,Yeti,normal,line,warrior,11,8,3,6,3,4,5,war_doubleswing,axe,weapon|armor|helmet,2,64,0.33,0.33,0.33,0.33,1,0,,,영구동토의 설인
+4302,4,3,예티 투석병,Yeti Slinger,0,0,Normal,Yeti,normal,ranged,archer,3,10,3,7,11,4,5,arc_multishot,crossbow,weapon|armor|gloves,2,52,0.33,0.33,0.33,0.33,1,0,,,얼음 덩이를 던지는 원거리
+4303,4,3,예티 빙하거인,Yeti Glacier Giant,1,1,Normal,Yeti,normal,heavy,knight,10,5,3,15,3,4,5,kni_smite,sword2h,weapon|armor|helmet|gloves,3,97,0.33,0.33,0.33,0.33,1,0,,,얼어붙은 털의 거대 예티
 4350,4,3,파주주,Pazuzu,0,0,Normal,Troll,stage_boss,boss,warrior,10,4,3,10,3,15,5,war_taunt,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,85,0.33,0.33,0.33,0.33,1,0,,,얼어붙은 바람왕 — 동토에 영원히 얼어붙은 자
-4401,4,4,동결 임프,Frozen Imp,0,0,Demon,Imp,normal,caster,mage,3,14,11,7,3,4,5,mag_iceblast,orb,weapon|armor|amulet,1,31,0.14,0.49,0.35,0.35,1,0,,,동결왕좌의 냉기를 관리하는 임프
-4402,4,4,왕좌 고블린 위병,Throne Goblin Sentry,0,0,Demon,Goblin,normal,line,warrior,8,12,3,9,3,4,5,war_shout,mace,weapon|armor|helmet,1,65,0.35,0.35,0.35,0.35,1,0,,,벨페고르의 옥좌를 지키는 위병
-4403,4,4,고블린 동결기사,Goblin Frost Knight,0,0,Demon,Goblin,normal,heavy,knight,11,11,3,13,3,4,5,kni_charge,spear,weapon|armor|helmet|gloves,2,99,0.35,0.35,0.35,0.35,1,0,,,서리 갑주를 두른 고블린 기사
-4450,4,4,힙노스,Hypnos,0,0,Demon,Imp,stage_boss,boss,mage,3,11,10,10,3,15,5,mag_frostnova,orb,weapon|helmet|armor|gloves|boots|amulet|ring,2,87,0.14,0.49,0.35,0.35,1,0,,,잠의 신 — 깨어 있는 자를 끝나지 않는 잠에 빠뜨린다
+4401,4,4,왕좌 수호상,Throne Guardian,0,0,Demon,Gargoyle,normal,heavy,knight,10,6,3,13,3,4,5,kni_duel,spear,weapon|armor|helmet|gloves,3,99,0.35,0.35,0.35,0.35,1,0,,,벨페고르의 왕좌 앞을 막아선 석상
+4402,4,4,서리 석상,Frost Statue,0,0,Demon,Gargoyle,normal,caster,mage,3,9,9,8,3,4,5,mag_iceblast,orb,weapon|armor|amulet,2,33,0.14,0.49,0.35,0.35,1,0,,,냉기가 깃든 빙궁의 석상
+4403,4,4,날개 석상,Winged Statue,0,0,Demon,Gargoyle,normal,ranged,archer,3,9,3,7,9,4,5,arc_snipe,bow,weapon|armor|gloves,2,54,0.35,0.35,0.35,0.35,1,0,,,빙궁 처마에서 내려다보는 날개 달린 석상
+4450,4,4,힙노스,Hypnos,0,0,Undead,Lich,stage_boss,boss,mage,3,11,10,10,3,15,5,mag_frostnova,orb,weapon|helmet|armor|gloves|boots|amulet|ring,2,87,0.14,0.49,0.35,0.35,1,0,,,잠의 신 — 깨어 있는 자를 끝나지 않는 잠에 빠뜨린다
 4900,4,5,벨페고르,Belphegor,0,0,Demon,Gargoyle,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,87,0.14,0.49,0.35,0.35,1,0,,,나태의 왕 — 모든 것이 멈추기를 원하는 자
 5101,5,1,부식 좀비,Corroded Zombie,0,0,Undead,Zombie,normal,line,warrior,5,5,3,13,3,4,5,war_battleorders,axe,weapon|armor|helmet,2,66,0.35,0.35,0.35,0.35,1,0,,,삼켜진 시체가 움직이는 형태
 5102,5,1,리치 수행자,Lich Acolyte,0,0,Undead,Lich,normal,caster,priest,3,10,11,4,3,4,11,pri_regen,bible,weapon|armor|amulet,2,31,0.35,0.35,0.14,0.5,1,0,,,심연의 마법을 다루는 하급 리치

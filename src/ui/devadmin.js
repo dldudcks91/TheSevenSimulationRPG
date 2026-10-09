@@ -1,15 +1,15 @@
 /**
  * devadmin.js — 관리자 모드 `Admin` (**개발 장치** · 2026-09-24 사용자 지시 · SCREEN_DESIGN §10-3)
  *
- * 상단바 언어 버튼 오른쪽의 `Admin` — 켜 두면 건물 때문에 막힌 것(탭 · 기능 · 상한)과 **스테이지가 전부 열린 척한다.** **게임 기능이 아니다.**
+ * 상단바 언어 버튼 오른쪽의 `Admin` — 켜 두면 건물 때문에 막힌 것(탭 · 기능 · 상한)과 **스테이지가 열린 척한다**(이번 버전의 장까지 — 6 · 7장은 켜도 잠긴다 · ADR-0552). **게임 기능이 아니다.**
  *
  * 어떻게 동작하나 — 판정은 `game_logic` 이 한다. `data.js` 가 조립 때 `adminOn` 을 `createGameSystem({openAll})` 로 넘기고,
  *   「무엇이 열렸나」를 세는 셋(`limitsOf` · `hasFeature` · `constructionState.tabs`)이 이 값이 참이면 모든 건물을 최대 랭크로 친다 ·
- *   `stageUnlocked` 는 모든 스테이지에 참이다(INTERFACE §2-7).
+ *   `stageUnlocked` 는 `balance.csv:chapter_open_max` 장까지의 모든 스테이지에 참이다(INTERFACE §2-7 · R227).
  *   **건물은 안 짓고 클리어 기록도 안 쓴다** — 세이브는 그대로라 끄면 원래 진행으로 돌아간다. 누르면 앱이 전체를 다시 그린다
  *   (새로고침이 아니다 — 새로고침은 도는 원정을 끊는다). 켠 상태는 이 브라우저에만 남는다(localStorage).
  *
- * **켤 때 골드를 채운다** [2026-09-27 사용자 지시] — `onEnable` 콜백이 앱의 세이브를 만진다(`app.js` · 값 `balance.csv:admin_gold`). 이것만은 세이브에 남는다.
+ * **켤 때 골드 · 재료를 채운다** [2026-09-27 · 재료 2026-10-09 사용자 지시] — `onEnable` 콜백이 앱의 세이브를 만진다(`app.js` · 값 `balance.csv:admin_gold` · `admin_materials`). 이것만은 세이브에 남는다.
  *
  * **켜 둔 동안 `+Lv30` 이 옆에 선다** [2026-10-08 사용자 지시] — 전사 · 마법사 · 기사를 `balance.csv:admin_hero_level` 로 로스터에 넣는다(`mountAdminHeroes`). 이것도 세이브에 남는다.
  *
@@ -35,7 +35,7 @@ export function mountAdmin(container, rerender, onEnable = null) {
     const b = document.createElement('button');
     b.className = `btn sm da-b${on ? ' on' : ''}`;
     b.textContent = 'Admin';
-    b.title = 'Dev — every building counts as max rank · every stage open · gold topped up when turned on';
+    b.title = 'Dev — every building counts as max rank · every stage open up to this version\'s last chapter · gold and materials topped up when turned on';
     b.onclick = () => { on = !on; write(on); if (on) onEnable?.(); rerender(); };
     container.appendChild(b);
 }

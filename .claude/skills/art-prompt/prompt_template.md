@@ -1,6 +1,6 @@
 # prompt_template — 발주 프롬프트 골격 · 금지어 · 안전 색
 
-SKILL.md 1단계에서 편다 — 스케치(1-S)는 §0~§5, 세부(1-D)는 §6. 둘 다 §2 금지어 · §3 안전 색이 걸린다.
+SKILL.md 1단계에서 편다 — 스케치(1-S)는 §0~§5, 세부(1-D)는 §6, Codex 로 Gemini 결을 낼 때는 §7. 모두 §2 금지어 · §3 안전 색이 걸린다.
 
 > **지시문이 늘면 앵커의 지분이 준다.** 생성기는 첨부한 그림과 쓴 글을 **경쟁시킨다** — 글이 이긴 만큼 우리 세트에서 멀어진다.
 > 그래서 기본값은 **공통 지시문 8줄 이내 · 부정문 2개 · 짧은 소재 9줄**이고, 나머지는 §1-2 에서 **실측이 틀렸을 때 한 줄씩 되살린다.** [2026-09-08 · 2026-09-25 사용자 지시]
@@ -208,5 +208,30 @@ Change only this:
 - 뽑는 장수 · 모양이 대화에서 달라지면 두 번째 문단을 고친다
 - ⚠ **첫 결과를 재서 이 절을 고친다** — 특히 첫 문단이 스케치를 얼마나 지키는지
 
+## 7. Codex 로 Gemini 결 새 인물 — 편집형 [2026-10-09 실측]
+
+⚠ **새 캐릭터는 Gemini Gem(§1)으로 뽑는다** [2026-10-09 사용자 확정] — Codex 는 이 편집형으로도 얼굴 비율 · 피부 온도 · 선 질감이 Gemini 와 어긋나고 바탕의 소품이 샌다. Codex 는 **이미 있는 Gemini 그림의 부분 수정 · 세트 리스타일** 같은 편집 보조로 쓰고, Gem 을 못 쓸 때만 이 절로 새 인물을 그린다.
+
+Codex(ChatGPT 로그인 · 부르는 법 [image_generation_tools.md](../../../docs/reference/image_generation_tools.md))로 **Gemini 설치본과 같은 결의 새 인물**을 그릴 때 쓴다. 한 번에 한 장 · 투명 배경으로 나온다.
+
+**참조만 붙이고 「같은 그림체로 새 인물」을 시키면 안 된다** — Codex 는 녹 반점 · 긁힘 · 붓결을 덧붙이고, 어깨는 넓게, 머리는 작게 그린다. 글로 결을 설명하면 매끈해지지만 벡터 그림처럼 젊은 얼굴이 된다. **Gemini 원본 한 장을 바탕(Image 1)으로 주고 사람만 갈아 끼우게 하면** 선 · 평면 채색 · 검은 눈 · 머리 크기 · 여백이 바탕을 따라온다.
+
+```
+Image 1 is a portrait from our game; the other attached images are more portraits from the same set.
+
+PROMPT:
+Edit Image 1: replace the character with a completely NEW person: [인물 한 줄].
+Keep exactly Image 1's drawing style: the same outline weight, the same smooth flat cartoon coloring and soft shadow shapes, the same muted palette, the same solid black eye shapes, and the same head size, position, scale, crop and headroom.
+Render every surface as smooth flat color with one soft shadow shape, like Image 1; no grain, scratches, rust spots or brush texture.
+Replace the face, hair, headgear and clothing entirely; nothing of the original person remains.
+Play the character straight and grim. One square portrait, genuine transparent background, no text.
+```
+
+- **인물 한 줄 = 생김새가 갈리는 자리** — 나이 · 성별 · 피부색 · 머리 · 수염 · 체형 · 머리에 쓴 것 · 옷 하나. 예: `an old human veteran in his sixties, bald, with a thick white walrus mustache and heavy jowls, in a plain leather jerkin`. 이 줄만 바꿔 9명(붉은 머리 소년 · 바다코끼리 수염 노병 · 수염 거한 · 땋은 머리 여자 · 흑인 창병 · 홀쭉한 하사 · 금발 땋은 수염 기사 · 모히칸 · 뚱뚱한 보급관)을 뽑아도 스타일이 하나로 유지됐다. §2 금지어가 그대로 걸린다
+- **Image 1(바탕)** — `faces/source/ready/<hero|monster>/` 의 Gemini 원본 중 **머리 차림과 몸 크기가 새 인물에 가까운 것.** 생김새는 바탕을 안 따라간다 — 같은 `priest_1` 바탕에서 붉은 머리 소년과 흑인 창병이 나왔다. 대신 **바탕의 어깨폭 · 의상 재질 · 소품은 샌다**(`knight_5` → 사슬갑옷 · `archer_1` → 시키지 않은 화살통 · `warrior_4` → 붉은 망토) — 새 인물에 없을 것을 든 바탕은 피한다
+- **Image 2~4** — 아무 Gemini 원본 2~3장. 결은 바탕이 정하고 이 묶음은 거의 영향이 없다(세 묶음이 같은 결로 수렴했다)
+- **검수** — grain(면 안쪽 잔결)이 Gemini 0.5~1.8 · 이 프롬프트 1.3~2.4. 피부 채도는 Gemini 보다 조금 따뜻하게 나온다(평균 채도 29 대 21). 재는 도구와 판별 기록은 [codex_gemini_ch1_st2_human_20261009/](../../../src/assets/art/faces/source/codex_gemini_ch1_st2_human_20261009/README.md). 어깨가 넓으면 여백 패딩으로 잡는다(SKILL.md 원칙 5)
+- ⚠ 사람 · 인간형으로만 시험했다 — 몬스터에 처음 쓸 때는 같은 종족의 Gemini 원본을 바탕으로 3장 먼저 뽑아 본다
+
 ---
-*마지막 업데이트: 2026-10-01*
+*마지막 업데이트: 2026-10-09*

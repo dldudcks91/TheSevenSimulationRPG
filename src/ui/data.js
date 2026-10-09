@@ -94,6 +94,7 @@ export const D = {
     researchRows: [],         // research.csv — 연구 항목 (지금은 머리줄뿐 — 항목은 나중에)
     levelXp: [],              // level_xp.csv — 레벨순 [{level, xpNeed, monsterXp}] · 레벨업 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28)
     advanceNodeRows: [],      // advance_node.csv — 전직 가지 [{skill_id, slot, hold, desc_kr, desc_en}] (skill_design §4 · §10 · R216 · 2026-10-06 — 설명만)
+    exploreSpots: {},         // explore_spot.csv — {'장:지점': {chapter, spot, name:{ko,en}, story:{ko,en}}} · 탐험 지점 이름 · 두 줄 이야기(줄바꿈 풀어 둠) (SCREEN_DESIGN §8-4 · ADR-0563 · 화면만 읽는다)
     advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
     // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
     slotSymbolRows: [],       // slot_symbol.csv — 심볼(종류 · 산출 · 가중치 · 배당 · 이름)
@@ -121,7 +122,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -139,7 +140,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -357,6 +358,11 @@ export async function loadData(base = './data/') {
     D.slotCoinRows = slotCoinRow;
     D.slotLineRows = slotLineRow;
     D.slotStakeRows = slotStakeRow;
+    // 탐험 지점 — 장 × 지점마다 이름 · 두 줄 이야기 (2026-10-09 · ADR-0563). 표시 문자열뿐이라 game_logic 에 안 넘긴다 — 빈 칸 · 줄 수는 단정이 잡는다
+    //   이야기의 줄바꿈은 셀 안의 `\n` 두 글자다(스테이지 이야기와 같은 규약 — `storyLines`)
+    D.exploreSpots = Object.fromEntries(exploreSpotRow.map(r => [`${r.chapter}:${r.spot}`, {
+        chapter: r.chapter, spot: r.spot, name: { ko: r.name_kr, en: r.name_en }, story: { ko: storyLines(r.story_kr), en: storyLines(r.story_en) },
+    }]));
 
     SYS = buildSystems(D, { openAll: adminOn });
     return D;
