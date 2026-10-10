@@ -34,7 +34,7 @@ export const D = {
     roundSets: {},            // stage_round.csv — {round_set: [{round_num, round_type}]} · 스테이지가 stage.csv:round_set 으로 하나를 고른다
     budgets: null, grades: null, eliteRounds: [], bossRound: 0,   // eliteRounds · bossRound = 첫 스테이지 세트의 배치(도움말 표기)
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
-    codexLevels: [],          // codex_level.csv — 레벨순 kills_total (누적 처치 문턱)
+    codexLevels: [],          // codex_level.csv — 레벨순 exp_total (누적 도감 경험치 문턱 · 2026-10-10 R239)
     codexBonus: [],           // codex_level.csv — 레벨순 bonus_pct
     codexSeries: null,        // codex_series.csv — {stage_num: statKey}
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
@@ -94,6 +94,9 @@ export const D = {
     researchRows: [],         // research.csv — 연구 항목 (지금은 머리줄뿐 — 항목은 나중에)
     levelXp: [],              // level_xp.csv — 레벨순 [{level, xpNeed, monsterXp}] · 레벨업 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28)
     advanceNodeRows: [],      // advance_node.csv — 전직 가지 [{skill_id, slot, hold, desc_kr, desc_en}] (skill_design §4 · §10 · R216 · 2026-10-06 — 설명만)
+    exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
+    difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelAdd, codexExp}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239)
+    difficulties: {},         // 같은 것 byId
     exploreSpots: {},         // explore_spot.csv — {'장:지점': {chapter, spot, name:{ko,en}, story:{ko,en}}} · 탐험 지점 이름 · 두 줄 이야기(줄바꿈 풀어 둠) (SCREEN_DESIGN §8-4 · ADR-0563 · 화면만 읽는다)
     advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
     // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
@@ -122,7 +125,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -140,7 +143,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -171,12 +174,16 @@ export async function loadData(base = './data/') {
     D.eliteRounds = baseRounds.filter(r => r.round_type === 'elite').map(r => r.round_num);
     D.bossRound = baseRounds.find(r => r.round_type === 'boss')?.round_num ?? baseRounds.length;
     const codexByLevel = codexLevel.slice().sort((a, b) => a.level - b.level);
-    D.codexLevels = codexByLevel.map(r => r.kills_total);   // 누적 처치 문턱 (2026-09-21 — 카드 → 처치 수)
+    D.codexLevels = codexByLevel.map(r => r.exp_total);   // 누적 도감 경험치 문턱 (2026-09-21 카드 → 처치 수 · 2026-10-10 처치 수 → 도감 경험치)
     D.codexBonus = codexByLevel.map(r => r.bonus_pct);
     D.codexSeries = Object.fromEntries(codexSeries.map(r => [r.stage_num, r.stat]));
     D.chapterList = chapter.slice().sort((a, b) => a.chapter_id - b.chapter_id)
         .map(r => ({ id: r.chapter_id, sin: r.sin, name: { ko: r.name_kr, en: r.name_en } }));
     D.chapters = indexBy(D.chapterList, 'id');
+    // 난이도 바퀴 — 순서대로 · 첫 단이 처음부터 열린 단이다. 검증 · 해금 · 레벨은 game_logic/state.js (base_expedition_design §1-4 · R236)
+    D.difficultyList = difficultyTierRow.slice().sort((a, b) => a.order - b.order)
+        .map(r => ({ id: r.difficulty_id, order: r.order, name: { ko: r.name_kr, en: r.name_en }, levelAdd: r.level_add, codexExp: r.codex_exp }));
+    D.difficulties = indexBy(D.difficultyList, 'id');
     // 기본 능력치 7종 — hero.js 는 id 만 읽고, 화면은 ko/en/abbr 을 읽는다 (같은 한 줄이 둘을 먹인다)
     D.heroAttributes = heroAttr.map(r => ({
         id: r.attr_id, ko: r.attr_kr, en: r.attr_en, abbr: r.abbr,
@@ -327,6 +334,7 @@ export async function loadData(base = './data/') {
     // 수색 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
     // 여기서 가공하면 구조가 두 곳에 생긴다. 무결성 검증은 state.js 가 로드 시 한다
     D.searchStories = searchStoryRow;
+    D.exploreStories = exploreStoryRow;   // 탐험 진행 문구 — 수색과 같은 이유로 원시 행 그대로 (지점마다 막 · R235)
     // 만남 — 원시 행 그대로. 두 컬럼(`need_sin` 누가 갔나 → 보인다 · `hit_sin` 누굴 만났나 → 먹힌다)이 규칙 전부라
     // 여기서 가공할 것이 없다. 무결성 검증은 state.js 가 로드 시 한다
     D.searchMeetings = searchMeetingRow;
@@ -612,9 +620,11 @@ export function buildSystems(d, dev = {}) {
     const game = createGameSystem({
         hero, item, battle, skill, tactic, construction, gamble, commission, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
+        difficulties: d.difficultyList ?? [],   // 난이도 바퀴 — 순서대로 · 첫 단 = 처음부터 열림 (state.js · R236)
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
         // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
         sins, searchStories: d.searchStories ?? [],
+        exploreStories: d.exploreStories ?? [],   // 탐험 이야기 — 지점마다 막 · 순서는 표가 정한다 (state.js:explorePhases · R235)
         searchMeetings: d.searchMeetings ?? [], searchAnswers: d.searchAnswers ?? [],
         // 진형 — 템플릿의 정원. 첫 행이 기본값이다(`formation_template.csv` 행 순서가 곧 화면 순서)
         formationTemplates: d.formationTemplates ?? {},

@@ -42,6 +42,8 @@ export const PORTRAIT_FILES = {
     "monster/2103_elite.webp",
     "monster/2150.webp",
     "monster/2201.webp",
+    "monster/2202.webp",
+    "monster/2203.webp",
     "monster/2301.webp",
     "monster/2303.webp",
     "monster/2350.webp",
@@ -63,9 +65,12 @@ export const PORTRAIT_FILES = {
     "monster/3401.webp",
     "monster/3402.webp",
     "monster/3403.webp",
+    "monster/3900.webp",
     "monster/4203.webp",
     "monster/4303.webp",
     "monster/4303_elite.webp",
+    "monster/4900.webp",
+    "monster/5900.webp",
     "monster/goblin_worker.webp"
   ],
   "gpt": [

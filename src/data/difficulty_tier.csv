@@ -1,0 +1,4 @@
+difficulty_id,order,name_kr,name_en,level_add,codex_exp,description_kr
+normal,1,노말,Normal,0,1,첫 바퀴 — 몬스터 레벨 = 칸의 기본 레벨(stage.csv:dlvl) 그대로 · 처음부터 열려 있다 · codex_exp = 처치 하나가 그 몬스터에게 주는 도감 경험치(monster_design §8 · 사용자 「노말 1 · 나이트메어 2 · 헬 4」 2026-10-10)
+nightmare,2,나이트메어,Nightmare,20,2,둘째 바퀴 — 칸 레벨 + 이 값 · 5장 보스 칸이 만렙에 닿는다(나이트메어를 깨면 45 ~ 50 — base_expedition_design §1-4) · 사용자 「기본레벨 +20으로 해보자」(2026-10-10 · 나중에 밸런싱)
+hell,3,헬,Hell,50,4,셋째 바퀴 — 더하기가 만렙(balance.csv:hero_level_cap)만큼이라 모든 칸이 만렙에서 잘려 평평하다 · 헬의 세기는 레벨이 아니라 난이도가 낸다(저항 페널티 · 면역 · 정예 특성 — 아직 없음 · GAME_DESIGN §10 「난이도 단의 내용물」)

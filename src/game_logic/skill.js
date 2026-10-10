@@ -309,7 +309,7 @@ export function createSkillSystem(data) {
         if (row.amulet_pool !== 0 && row.amulet_pool !== 1) bad(`amulet_pool ${row.amulet_pool} — 0 또는 1`);
         if (row.amulet_pool === 1 && (d.ownerKind === 'monster' || d.cast !== 'turn' || d.effects.some(e => e.effect === 'summon' || e.effect === 'call')))
             bad(`amulet_pool 1 인데 ${d.ownerKind} · ${d.cast} · ${d.effects.map(e => e.effect).join('+')} — 발동 스킬 후보가 될 수 없다`);
-        // 직업 기본기 [2026-09-27 · 2026-09-29 R179 — 첫 파티의 고유 · 서고 기본 책 · ~~시작 무기 스킬~~] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
+        // 직업 기본기 [2026-09-27 · 2026-09-29 R179 — 첫 파티의 고유 · 도서관 기본 책 · ~~시작 무기 스킬~~] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
         if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
         // 갑옷 특정 스킬 +n 후보 [2026-10-08 · R225] — 0/1 · **기본 스킬(직업 스킬)만** — 풀은 직업 스킬만 읽어 다른 행의 1 은 조용히 버려진다

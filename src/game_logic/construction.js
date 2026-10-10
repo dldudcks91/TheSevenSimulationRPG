@@ -35,11 +35,11 @@ export const TARGETS = {
     explore: U(true),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
-    // 서고 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook`) · 기본 책 제작(`craftBook`).
-    //   ~~제련소 r5 `skill_card`~~ 줄은 걷었다(서고가 받는다 — 스킬 카드는 정의가 없어 대상만 남는다)
+    // 도서관 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook`) · 기본 책 제작(`craftBook`).
+    //   ~~제련소 r5 `skill_card`~~ 줄은 걷었다(도서관이 받는다 — 스킬 카드는 정의가 없어 대상만 남는다)
     skillbook: U(true), book_craft: U(true),
-    // 전직 — 서고 r2 (2026-10-09 · R231 · construction_draft §2 — ~~훈련장 r3~~ · 훈련장은 `training` · `training_slots` 와 함께 걷혔다).
-    //   전직은 섰다(R16 · 2026-09-28) · 「영웅 스킬을 더 찍는다」(서고 r3)는 준비 중이라 그 랭크는 못 짓는다
+    // 전직 — 도서관 r2 (2026-10-09 · R231 · construction_draft §2 — ~~훈련장 r3~~ · 훈련장은 `training` · `training_slots` 와 함께 걷혔다).
+    //   전직은 섰다(R16 · 2026-09-28) · 「영웅 스킬을 더 찍는다」(도서관 r3)는 준비 중이라 그 랭크는 못 짓는다
     advance: U(true), skill_depth: U(false),
     // 더하기 — 지금 있는 상한(`state.limitsOf` 의 키) · 단계
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),

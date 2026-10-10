@@ -219,7 +219,7 @@ buildings/
 │     expedition · command · forge · tavern · training · shop · resource · explore · codex · storage · library
 ├── source/
 │   ├── sheet_01_buildings.png   ← 원본 시트 2752×1536 · 4×3 = 12칸 · 칸 사이 검은 홈 — 게임이 안 읽는다
-│   └── library.png              ← 서고 원본 1448×1086(4:3 한 장) — 게임이 안 읽는다
+│   └── library.png              ← 도서관 원본 1448×1086(4:3 한 장) — 게임이 안 읽는다
 └── unused/
     └── codex_alt.webp   ← 11번 칸(도감 두 번째 판) · id 없는 여분
 ```
@@ -228,7 +228,7 @@ buildings/
 - **칸 → 파일** — 1~10 번 칸이 부지 순서(원정 · 지휘 천막 · 제련소 · 선술집 · 훈련장 · 상단 · 자원 · 탐험 · 도감 · 창고)다. 11 = 도감 여분(`unused/codex_alt`) · 12 = 자원 여분인데 **생성기 ✦ 가 박혀** 안 잘랐다(시트에만 남는다)
 - **자르기** — 검은 홈을 실측(열 평균 밝기 < 30)으로 찾고 칸 안쪽 3px 을 더 걷어 홈 가장자리를 뺐다 → 장당 **666~667 × 494~495**(약 4:3). 화면의 부지는 3:2 라 `cover` 가 위아래를 조금 자른다(`center 40%`) — **카드 비율이 바뀌어도 다시 자를 필요가 없게** 칸을 통째로 뒀다
 - **인코딩** — WebP q90 · 장당 29~51KB. ⚠ 이 PC 에 Python 이 없어 **Edge 캔버스(`toDataURL('image/webp', 0.9)`)로** 자르고 쌌다 — 다른 폴더의 PIL 레시피와 도구가 다르다. 다시 자를 땐 어느 쪽이든 같은 좌표(홈 안쪽 3px)면 된다
-- **서고(`library`)는 따로 한 장이다** [2026-09-30] — 시트를 첨부해 「그 시트의 새 칸 하나」로 발주했다(둥근 돌 탑 · 도감의 기둥 신전 · 11번 목조 팔각과 실루엣을 가른다). 원본이 4:3 한 장이라 자르지 않고 **667×500 으로 줄여**(PIL Lanczos) WebP q90 으로 쌌다 — 시트 칸과 폭이 같다
+- **도서관(`library`)는 따로 한 장이다** [2026-09-30] — 시트를 첨부해 「그 시트의 새 칸 하나」로 발주했다(둥근 돌 탑 · 도감의 기둥 신전 · 11번 목조 팔각과 실루엣을 가른다). 원본이 4:3 한 장이라 자르지 않고 **667×500 으로 줄여**(PIL Lanczos) WebP q90 으로 쌌다 — 시트 칸과 폭이 같다
 - 그림이 없는 건물은 `ui/mock.js:BUILDING_ART` 의 단색 실루엣(SVG)으로 폴백한다 — 건물이 늘면 파일을 넣고 `BUILDING_IMAGES` 에 id 를 더한다
 
 ---
@@ -236,9 +236,9 @@ buildings/
 ## fx/ — 관전 스킬 이펙트 그림
 
 ```
-fx/skills/<file>.webp      기본 5직업 39스킬 41장 + 전직 45스킬 54장(두 장 스킬의 둘째 = <skill_id>_impact) 설치본 — 관전 · 도감 이펙트 세그먼트가 읽는다(접미 없는 기본 41장은 「초상 그림체」 탭만)
-fx/skills/<file>_clean.webp 기본 41장 깔끔판(ADR-0551) — 지금 skill_art.js 가 가리킨다 · 같은 이름의 앞 판(투박한 초상 그림체)은 지우지 않고 남겨 둔다
-fx/skills/<앞 판 이름>_ink.webp 수묵 붓 95장(기본 41 + 전직 54) — 도감 이펙트 세그먼트의 「수묵」 그림체 탭만 읽는다 · 관전은 안 읽는다(ADR-0559) · 이름 규칙 = skill_art.js:artFile
+fx/skills/<file>.webp      기본 5직업 39스킬 41장 + 전직 45스킬 54장(두 장 스킬의 둘째 = <skill_id>_impact) 설치본 — 투박한 초상 그림체 · 관전의 기본 그림체(ADR-0584) · 이름 = skill_art.js:SKILL_ART 표의 이름
+fx/skills/<file>_ink.webp  수묵 붓 95장(기본 41 + 전직 54 · ADR-0559) — 그림체 탭 · 설정이 고르면 관전 · 이름 규칙 = skill_art.js:artFile
+fx/skills/<file>_<pen|charcoal|oil>.webp 고딕 펜화 · 목탄 · 유화 시안 셋 × 95장(ADR-0584) — 초상 그림체 · 수묵에 비슷한 그림체를 스킬마다 견준다 · 그림체 탭 · 설정이 고르면 관전
 fx/<종류>.webp            종류 공통 후보 5종 — physical · fire · cold · lightning · poison (꺼져 있다)
 fx_source/warrior_basic_20261005/  전사 적용본 생성 원본 · 프롬프트 · 측정 · 비교
 fx_source/warrior_sheet_20261006/  새 시트 보관 · 후보 · 백업 · 91px 비교 · 적용/복원 검증
@@ -250,7 +250,9 @@ fx_source/job_style_20261008/     마법사 6 · 궁수 6 · 사제 8 투박 시
 fx_source/advance_20261008/       전직 45종 시트 16 · 지시문 · 기준 그림(anchor/) · 칸 문안과 미리보기 값(spec.py) · 자른 칸(cut/ — B안 포함) · 직업별 GIF(gif/) · 설치 = scripts/build_advance_fx.py
 fx_source/basic_size_20261008/    기본 스킬 크기 · 길이 비교 GIF · 코드 모양 vs 투박한 그림 비교 GIF(code_vs_art_*)
 fx_source/basic_clean_20261008/   기본 41장 깔끔판 시트 11 · 지시문 · 기준 그림(anchor/ — 게임에서 찍은 코드 모양) · 칸 문안(spec.py) · 자른 칸과 B안(new/) · 비교 GIF(gif/) · 설치 = scripts/build_basic_clean_fx.py
+fx_source/removed_20261010/       게임에서 걷은 그림(ADR-0584) — clean/ 깔끔판 41장(ADR-0551) · trial/ 픽셀 · 목판화 · 스테인드글라스 90장(ADR-0579) · 게임은 안 읽는다
 fx_source/ink_20261009/           수묵 95장 시트 25(i · w · n) · 지시문 · 기준 그림(anchor/ — 다섯 그림체 비교에서 고른 수묵 시트) · 발주 스크립트(ink*.py) · 칸 표(picks.py — B안 셋) · 설치 = scripts/build_ink_fx.py
+fx_source/styles_20261010/        그림체 시안 시트 · 지시문 · 발주 스크립트(style.py — 칸 문안은 수묵 판 지시문에서 붓 낱말만 걷는다 · 그림체마다 i1 이 기준 그림) — 2차 고딕 펜화 · 목탄 · 유화 시트 25 × 3(설치 = scripts/build_style_fx.py) · 1차 픽셀 · 목판화 · 스테인드글라스 시트 8 × 3(걷음)
 fx_source/<종류>.png      종류 공통 후보 원본 — 게임은 안 읽는다
 ```
 
@@ -666,4 +668,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-09*
+*마지막 업데이트: 2026-10-10*

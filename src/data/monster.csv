@@ -22,8 +22,8 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 2103,2,1,오크 주술사,Orc Shaman,1,1,Demon,Orc,normal,caster,priest,3,11,10,7,3,4,10,pri_grace,crucifix,weapon|armor|amulet,2,26,0.2,0.2,0.08,0.28,1,0,,,짐승 두개골 관을 쓴 오크 주술사
 2150,2,1,라합,Rahab,1,0,Demon,Orc,stage_boss,boss,warrior,10,9,3,12,3,15,5,war_battleorders,mace,weapon|helmet|armor|gloves|boots|amulet|ring,3,69,0.2,0.2,0.2,0.2,1,0,,,잊힌 바다의 군주 — 레비아탄과 같이 불리던 이름
 2201,2,2,엔트,Ent,1,0,Normal,Ent,normal,skirmish,archer,3,14,3,5,9,4,5,arc_poison,bow,weapon|armor|boots,1,42,0.22,0.22,0.22,0.22,1,0,,,남의 둥지를 노리는 독화살 사수
-2202,2,2,엔트 저주사,Ent Curser,0,0,Normal,Ent,normal,caster,priest,3,12,11,9,3,4,11,pri_bind,crucifix,weapon|armor|amulet,1,25,0.22,0.22,0.09,0.3,1,0,,,독 주술로 숨을 막는 무리의 주술사
-2203,2,2,엔트 돌격병,Ent Charger,0,0,Normal,Ent,normal,heavy,knight,12,10,3,15,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,81,0.22,0.22,0.22,0.22,1,0,,,비대해진 몸으로 밀어붙이는 거대 엔트
+2202,2,2,썩어가는 엔트,Rotting Ent,1,0,Normal,Ent,normal,caster,priest,3,12,11,9,3,4,11,pri_bind,crucifix,weapon|armor|amulet,1,25,0.22,0.22,0.09,0.3,1,0,,,독 주술로 숨을 막는 무리의 주술사
+2203,2,2,지혜로운 엔트,Wise Ent,1,0,Normal,Ent,normal,caster,mage,3,12,11,9,3,4,5,mag_lightning,staff,weapon|armor|amulet,2,25,0.22,0.22,0.09,0.3,1,0,,,오래 묵은 숲의 지혜로 번개를 부르는 늙은 엔트
 2250,2,2,아비주,Abyzou,0,0,Normal,Lizardman,stage_boss,boss,archer,3,11,3,10,10,15,5,arc_snipe,crossbow,weapon|helmet|armor|gloves|boots|amulet|ring,2,71,0.22,0.22,0.22,0.22,1,0,,,시기의 어머니 — 깨어나지 않는 알을 품는 자
 2301,2,3,우상족 사냥꾼,Idolfolk Hunter,1,0,Normal,Human,normal,line,warrior,10,5,3,14,3,4,5,war_quake,mace,weapon|armor|helmet,2,60,0.23,0.23,0.23,0.23,1,0,,,나무 가면을 쓰고 창을 든 우상족 전사
 2302,2,3,우상족 추적자,Idolfolk Stalker,0,0,Normal,Human,normal,ranged,archer,3,11,3,7,10,4,5,arc_pierce,bow,weapon|armor|gloves,1,47,0.23,0.23,0.23,0.23,1,0,,,숲 그늘에 숨어 독침을 쏘는 우상족
@@ -50,7 +50,7 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 3402,3,4,황궁 근위궁수,Palace Guard Archer,1,0,Demon,Goblin,normal,ranged,archer,3,11,3,6,8,4,5,arc_multishot,bow,weapon|armor|gloves,1,47,0.3,0.3,0.3,0.3,1,0,,,황금궁 회랑을 지키는 근위 사수
 3403,3,4,황궁 근위대장,Palace Guard Captain,1,0,Demon,Goblin,normal,heavy,knight,11,11,3,13,3,4,5,kni_might,spear,weapon|armor|helmet|gloves,2,92,0.3,0.3,0.3,0.3,1,0,,,황금 근위대를 지휘하는 대장
 3450,3,4,플루토스,Plutus,0,0,Demon,Goblin,stage_boss,boss,warrior,10,10,3,10,3,15,5,war_bash,mace,weapon|helmet|armor|gloves|boots|amulet|ring,2,80,0.3,0.3,0.3,0.3,1,0,,,탐욕자들의 원을 지키는 자 — 황금궁의 문을 막아선 늑대 악마
-3900,3,5,맘몬,Mammon,0,0,Demon,Gargoyle,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,80,0.3,0.3,0.3,0.3,1,0,,,탐욕의 왕 — 황금 왕국의 지배자
+3900,3,5,맘몬,Mammon,1,0,Demon,Gargoyle,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_leap,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,80,0.3,0.3,0.3,0.3,1,0,,,탐욕의 왕 — 황금 왕국의 지배자
 4101,4,1,트롤 전사,Troll Warrior,0,0,Normal,Troll,normal,line,warrior,10,6,3,12,3,4,5,war_bash,mace,weapon|armor|helmet,2,60,0.3,0.3,0.3,0.3,1,0,,,얼어붙은 평원을 떠도는 트롤
 4102,4,1,트롤 주술사,Troll Shaman,0,0,Normal,Troll,normal,caster,priest,3,8,10,9,3,4,10,pri_judgment,bible,weapon|armor|amulet,2,29,0.3,0.3,0.3,0.3,1,0,,,트롤 무리에게 심판을 내려 주는 주술사
 4103,4,1,트롤 서리술사,Troll Frostcaller,0,0,Normal,Troll,normal,caster,mage,3,8,10,8,3,4,5,mag_iceblast,staff,weapon|armor|amulet,2,29,0.12,0.42,0.3,0.3,1,0,,,냉기를 부리는 트롤 술사
@@ -67,7 +67,7 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 4402,4,4,서리 석상,Frost Statue,0,0,Demon,Gargoyle,normal,caster,mage,3,9,9,8,3,4,5,mag_iceblast,orb,weapon|armor|amulet,2,33,0.14,0.49,0.35,0.35,1,0,,,냉기가 깃든 빙궁의 석상
 4403,4,4,날개 석상,Winged Statue,0,0,Demon,Gargoyle,normal,ranged,archer,3,9,3,7,9,4,5,arc_snipe,bow,weapon|armor|gloves,2,54,0.35,0.35,0.35,0.35,1,0,,,빙궁 처마에서 내려다보는 날개 달린 석상
 4450,4,4,힙노스,Hypnos,0,0,Undead,Lich,stage_boss,boss,mage,3,11,10,10,3,15,5,mag_frostnova,orb,weapon|helmet|armor|gloves|boots|amulet|ring,2,87,0.14,0.49,0.35,0.35,1,0,,,잠의 신 — 깨어 있는 자를 끝나지 않는 잠에 빠뜨린다
-4900,4,5,벨페고르,Belphegor,0,0,Demon,Gargoyle,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,87,0.14,0.49,0.35,0.35,1,0,,,나태의 왕 — 모든 것이 멈추기를 원하는 자
+4900,4,5,벨페고르,Belphegor,1,0,Demon,Gargoyle,chapter_boss,boss,mage,3,6,10,10,3,15,5,mag_frozenwall,staff,weapon|helmet|armor|gloves|boots|amulet|ring,3,87,0.14,0.49,0.35,0.35,1,0,,,나태의 왕 — 모든 것이 멈추기를 원하는 자
 5101,5,1,부식 좀비,Corroded Zombie,0,0,Undead,Zombie,normal,line,warrior,5,5,3,13,3,4,5,war_battleorders,axe,weapon|armor|helmet,2,66,0.35,0.35,0.35,0.35,1,0,,,삼켜진 시체가 움직이는 형태
 5102,5,1,리치 수행자,Lich Acolyte,0,0,Undead,Lich,normal,caster,priest,3,10,11,4,3,4,11,pri_regen,bible,weapon|armor|amulet,2,31,0.35,0.35,0.14,0.5,1,0,,,심연의 마법을 다루는 하급 리치
 5103,5,1,부식 리치,Corroded Lich,0,0,Undead,Lich,normal,elite_line,knight,13,8,3,11,3,10,5,kni_rush,sword2h,weapon|armor|helmet|ring,2,69,0.35,0.35,0.14,0.5,1,0,,,부식 마법을 다루는 상급 리치
@@ -84,7 +84,7 @@ monster_idx,chapter,stage_num,monster_name_kr,monster_name_en,face,face_elite,mo
 5402,5,4,오크 대식가,Orc Glutton,0,0,Demon,Orc,normal,line,warrior,11,9,3,8,3,4,5,war_shout,axe,weapon|armor|helmet,2,70,0.4,0.4,0.4,0.4,1,0,,,연회에 참석한 오크 폭식자
 5403,5,4,대가고일 집사,Grand Gargoyle Butler,0,0,Demon,Gargoyle,normal,heavy,knight,10,6,3,13,3,4,5,kni_defiance,sword2h,weapon|armor|helmet|gloves,3,106,0.4,0.4,0.4,0.4,1,0,,,연회를 준비하는 거대 가고일
 5450,5,4,케르베로스,Cerberus,0,0,Demon,Gargoyle,stage_boss,boss,warrior,10,5,3,10,3,15,5,war_battleorders,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,93,0.4,0.4,0.4,0.4,1,0,,,탐식자들의 원을 지키는 세 머리 개 — 연회의 문지기
-5900,5,5,바알제붑,Beelzebub,0,0,Demon,Gargoyle,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_bash,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,93,0.4,0.4,0.4,0.4,1,0,,,폭식의 왕 — 모든 것을 삼키는 심연의 군주
+5900,5,5,바알제붑,Beelzebub,1,0,Demon,Gargoyle,chapter_boss,boss,warrior,10,5,3,10,3,15,5,war_bash,axe,weapon|helmet|armor|gloves|boots|amulet|ring,3,93,0.4,0.4,0.4,0.4,1,0,,,폭식의 왕 — 모든 것을 삼키는 심연의 군주
 6101,6,1,서큐버스 유혹자,Succubus Seductress,0,0,Demon,Succubus,normal,caster,mage,3,10,10,9,3,4,5,mag_frozenwall,orb,weapon|armor|amulet,2,34,0.58,0.16,0.41,0.41,1,0,,,타락한 정원의 유혹 마녀
 6102,6,1,화염 임프,Flame Imp,0,0,Demon,Imp,normal,caster,mage,3,14,9,6,3,4,5,mag_fireball,orb,weapon|armor|amulet,1,34,0.58,0.16,0.41,0.41,1,0,,,정원을 지키는 임프 마법사
 6103,6,1,대임프 사제,Grand Imp Priest,0,0,Demon,Imp,normal,elite_line,priest,3,12,11,13,3,10,11,pri_bind,crucifix,weapon|armor|helmet|ring,2,74,0.58,0.16,0.41,0.41,1,0,,,타락 의식을 집행하는 사제

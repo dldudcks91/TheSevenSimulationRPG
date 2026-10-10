@@ -235,9 +235,12 @@ const STRINGS = {
     'exp.departSearching': { ko: '편성에 수색 나간 영웅이 있다', en: 'A hero in this party is out on a search' },
     'exp.departAdvancing': { ko: '편성에 전직 중인 영웅이 있다', en: 'A hero in this party is advancing' },
     'exp.departExploring': { ko: '편성에 탐험 나간 영웅이 있다', en: 'A hero in this party is out exploring' },
+    'exp.departRespawn': { ko: '보스가 아직 돌아오지 않았다', en: 'The boss has not returned yet' },   // 챕터보스 재등장 대기 (R240 · ADR-0590)
     // 출정 확인 창의 문장 — 문구는 사용자 지시 그대로다 (SCREEN_DESIGN §4-1 · ADR-0467)
     'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
+    // 난이도 줄 오른쪽 — 다음에 열릴 단의 조건 (SCREEN_DESIGN §4-1 · ADR-0586). {d} = 앞 단 이름 · {ch} = `balance.csv:difficulty_unlock_chapter`
+    'exp.diff.need': { ko: '{d} {ch}장 보스 클리어 필요', en: 'Clear the {d} Ch{ch} boss first' },
     /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 폐지로 「위험도 {lv}」 → 「레벨 {lv}」]. {lv} = `stage.csv:dlvl` */
     'exp.stageMeta': { ko: '레벨 {lv} · 약 {m}분', en: 'Level {lv} · ~{m} min' },
     /* 장소 한 줄 — 스테이지 목록 줄의 잔글씨 [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0436]. {lv} · {m} 는 칸들의 범위(`1~3`)거나 한 값이다.
@@ -440,6 +443,7 @@ const STRINGS = {
        갈 칸이 바뀌면 「다음 칸」 · 같은 칸이면 「다시」. ~~bt.retry · bt.nextStage · bt.nextRun~~ 은 같은 날 삭제 — 두 버튼을 걷었다 */
     'bt.nextCell': { ko: '{s}초 뒤 다음 칸 — {name}', en: 'Next stage in {s}s — {name}' },
     'bt.again': { ko: '{s}초 뒤 다시 — {name}', en: 'Again in {s}s — {name}' },
+    'bt.respawnWait': { ko: '보스 재등장까지 {s}초 — {name}', en: 'Boss returns in {s}s — {name}' },   // 챕터보스 재등장 대기 (R240 · ADR-0590)
     // 신단 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445) — 효과 줄은 `shrine.csv` 의 능력치마다 한 키 · {v} = %
     'bt.shrineGot': { ko: '신단 획득', en: 'Shrine blessing' },
     'bt.shrineKeep': { ko: '신단 유지', en: 'Shrine kept' },
@@ -502,8 +506,8 @@ const STRINGS = {
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.shop': { ko: '상점', en: 'Shop' },
     'nav.forge': { ko: '제련소', en: 'Smeltery' },
-    // 서고 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422] — 제련소 뒤 · 건물 이름(`building.csv`)과 같은 말 · ~~`nav.training`~~ 은 2026-10-09 훈련장 탭과 함께 걷혔다(ADR-0567)
-    'nav.library': { ko: '서고', en: 'Library' },
+    // 도서관 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422 · 이름 2026-10-10 ~~서고~~] — 제련소 뒤 · 건물 이름(`building.csv`)과 같은 말 · ~~`nav.training`~~ 은 2026-10-09 훈련장 탭과 함께 걷혔다(ADR-0567)
+    'nav.library': { ko: '도서관', en: 'Library' },
     'nav.resource': { ko: '자원', en: 'Resources' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.codex': { ko: '도감', en: 'Codex' },
@@ -591,12 +595,12 @@ const STRINGS = {
     'ex.err.pending': { ko: '준비 중', en: 'Coming later' },
     'ex.err.busy': { ko: '이미 탐험 중인 지점이다', en: 'Someone is already out there' },
     'ex.err.slots': { ko: '동시 탐험은 {n}건까지다', en: 'Up to {n} exploration(s) at a time' },
-    'ex.err.noParty': { ko: '보낼 영웅을 고른다', en: 'Pick who goes' },
-    'ex.err.full': { ko: '{n}명까지 보낼 수 있다', en: 'Up to {n} heroes' },
-    'ex.err.running': { ko: '원정 중인 영웅은 보낼 수 없다', en: 'Heroes on an expedition cannot go' },
-    'ex.err.searching': { ko: '수색 중인 영웅은 보낼 수 없다', en: 'Heroes on a search cannot go' },
-    'ex.err.exploring': { ko: '이미 탐험 나간 영웅이다', en: 'That hero is already exploring' },
-    'ex.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot go' },
+    // 편성 쪽 거절 — 탐험은 편성으로 보낸다 (2026-10-10 · ADR-0582 · ~~`ex.err.full`~~ 은 편성이 인원을 못 넘어 걷었다)
+    'ex.err.noParty': { ko: '빈 편성이다', en: 'That party is empty' },
+    'ex.err.running': { ko: '원정에 나가 있다 — 철수가 먼저다', en: 'On an expedition — withdraw first' },
+    'ex.err.searching': { ko: '수색 나간 영웅이 있다', en: 'Someone in it is out searching' },
+    'ex.err.exploring': { ko: '이미 탐험 중이다', en: 'Already out exploring' },
+    'ex.err.advancing': { ko: '전직 중인 영웅이 있다', en: 'Someone in it is advancing' },
     'ex.err.none': { ko: '나간 탐험이 없다', en: 'Nobody is out there' },
     'ex.err.notDone': { ko: '아직 안 돌아왔다', en: 'Not back yet' },
     'ex.err.bagFull': { ko: '인벤토리 자리가 모자란다 — {n}칸 필요', en: 'Not enough inventory space — {n} needed' },
@@ -713,14 +717,14 @@ const STRINGS = {
     'ex.h': { ko: '탐험', en: 'Exploration' },
     // 탐험 규칙 — 도움말 탐험 절 (2026-10-09 · 옛 `ex.todo`(미착수 안내)를 대체 · 지점 패널은 규칙 문장을 안 든다 · SCREEN_DESIGN §8-4)
     'ex.help': {
-        ko: '지도에서 <b>열린 땅의 지점</b>(동굴 · 폐허 · 마차)을 누르고 <b>위 영웅 띠</b>에서 보낼 영웅을 고른다 — 혼자도, 파티(최대 {n}명)도 된다<br>'
+        ko: '지도에서 <b>열린 땅의 지점</b>(동굴 · 폐허 · 마차)을 누르고 보낼 <b>편성</b>을 고른다 — 한 명짜리 편성도 된다(최대 {n}명) · 원정 중인 편성은 철수가 먼저다<br>'
             + '<b>{h}시간</b> 뒤 돌아오고 오프라인에도 흐른다 · 결과는 받아 갈 때까지 남는다 · 동시 탐험 {s}건 · 한 지점에 한 건<br>'
             + '<b>동굴</b>은 장비를 가져온다 — 보낸 영웅 1명당 {k}개 · 그 땅의 레벨대 · 폐허 · 마차는 준비 중<br>'
-            + '탐험 나간 영웅은 받을 때까지 원정 · 수색 · 자원 자리에 못 나간다 · 불러들이면 결과 없이 돌아온다',
-        en: 'Click a <b>spot in an open land</b> (cave · ruins · caravan) and pick who goes from the <b>hero strip</b> above — one hero or a party of up to {n}<br>'
+            + '탐험 나간 편성은 받을 때까지 사람을 바꿀 수 없고 원정 · 수색 · 자원 자리에 못 나간다 · 불러들이면 편성째 결과 없이 돌아온다',
+        en: 'Click a <b>spot in an open land</b> (cave · ruins · caravan) and pick which <b>party</b> goes — a one-hero party works too (up to {n}) · a party on an expedition must withdraw first<br>'
             + 'They return after <b>{h}h</b>, offline too · the haul waits until you collect it · {s} exploration(s) at a time · one per spot<br>'
             + 'The <b>cave</b> brings back gear — {k} per hero sent · at that land\'s level band · ruins and caravan are coming later<br>'
-            + 'Heroes out exploring can\'t join expeditions, searches or resource posts until collected · calling them back returns them empty-handed',
+            + 'A party out exploring can\'t change members or join expeditions, searches or resource posts until collected · calling it back returns the whole party empty-handed',
     },
     'help.title': { ko: '도움말', en: 'Help' },
     'help.newgame': { ko: '새 게임', en: 'New Game' },
@@ -805,6 +809,7 @@ const STRINGS = {
     'exp.foes': { ko: '적 구성', en: 'Enemies' },
     /* 적 구성 초상 아래 스킬 칸 줄의 「?」 칸 — 보스가 스폰 때 직업 풀에서 굴리는 셋째 칸 (§4-1 · ADR-0568) */
     'exp.foe.rolled': { ko: '전투마다 바뀌는 직업 스킬', en: 'Class skill — changes every fight' },
+    'exp.foe.grave': { ko: '{name} — 재등장까지 {t}', en: '{name} — returns in {t}' },   // 무덤 명패의 읽는 이름 (R240 · ADR-0590)
     /* 출정 창의 칸 이름 둘 [2026-09-10 사용자 지시 · ADR-0084] — 「적 구성」·「진형」과 **같은 규격**으로 선다.
        `exp.heroes.h` 는 창 안으로 들어온 영웅 띠의 이름이다 — 탭 최상단에 있던 시절엔 이름이 없었다(패널의 첫 줄이라
        무엇인지 물을 것이 없었다). 창 안에서는 네 칸이 나란히 서므로 칸마다 이름이 있어야 경계가 읽힌다.
@@ -904,6 +909,48 @@ const STRINGS = {
     'st.fx.poison': { ko: '독', en: 'Poison' },
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
+    /* 능력치 설명 카드 — 줄에 올리면 이름 / 선 아래 **효과** (2026-10-10 사용자 지시 · SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」 · ADR-0581).
+       키 = 줄 id(기본 능력치 `hero_attribute.csv:attr_id` · 세부 옵션 `tip.js:DETAIL_LAYOUT`). 효과만 · 수치 없음 (CLAUDE.md 규칙 7) · 효과가 여럿이면 `<br>` 로 한 줄에 하나 */
+    'st.desc.str': { ko: '평타와 물리 스킬의 피해가 늘어난다<br>채광이 빨라진다', en: 'Increases basic attack and physical skill damage<br>Faster mining' },
+    'st.desc.agi': { ko: '공격 속도와 캐스팅 속도가 빨라진다<br>일부 스킬의 타수와 효과가 늘어난다', en: 'Faster attack and casting speed<br>More hits and stronger effects for some skills' },
+    'st.desc.int': { ko: '마법 스킬의 피해가 늘어난다<br>채집이 빨라진다', en: 'Increases magic skill damage<br>Faster gathering' },
+    'st.desc.vit': { ko: '레벨업마다 오르는 최대 HP 가 커진다<br>버프가 더 오래 간다<br>벌목이 빨라진다', en: 'More Max HP per level-up<br>Longer-lasting buffs<br>Faster logging' },
+    'st.desc.luck': { ko: '치명타 피해 · 드랍률 · 골드 획득이 늘어난다<br>일부 스킬의 추가 피해가 커진다', en: 'Increases Crit Damage, Item Find and Gold Find<br>Boosts bonus damage of some skills' },
+    'st.desc.ldr': { ko: '아군에게 거는 버프가 강해진다', en: 'Strengthens the buffs you give allies' },
+    'st.desc.cha': { ko: '회복량과 적에게 거는 효과가 커진다<br>수색에서 레어 영웅을 만나기 쉬워진다', en: 'Increases healing and the effects you put on enemies<br>Better odds of a Rare hero in searches' },
+    'st.desc.atk_physical': { ko: '평타와 물리 스킬 피해의 바탕이 되는 값', en: 'The base of basic attack and physical skill damage' },
+    'st.desc.atk_magic': { ko: '마법 스킬 피해와 회복량의 바탕이 되는 값', en: 'The base of magic skill damage and healing' },
+    'st.desc.action_period': { ko: '한 번 행동하는 데 걸리는 시간 — 짧을수록 자주 행동한다', en: 'Time per action — the lower, the more often you act' },
+    'st.desc.hp_max': { ko: 'HP 의 최대치 — 0 이 되면 쓰러진다', en: 'Maximum HP — the hero falls at 0' },
+    'st.desc.crit_rate': { ko: '공격이 치명타로 들어갈 확률', en: 'Chance for an attack to be a critical hit' },
+    'st.desc.crit_damage': { ko: '치명타가 주는 피해 배율', en: 'Damage multiplier of critical hits' },
+    'st.desc.def_ignore': { ko: '적의 물리 방어를 이 비율만큼 무시한다', en: "Ignores this share of the enemy's Physical Defense" },
+    'st.desc.cooldown_reduction': { ko: '스킬 쿨타임이 이 비율만큼 줄어든다', en: 'Shortens skill cooldowns by this %' },
+    'st.desc.defense': { ko: '받는 물리 피해를 줄인다 — 옆의 감쇠 % 만큼 덜 받는다', en: 'Reduces physical damage taken — by the mitigation % beside it' },
+    'st.desc.damage_reduction': { ko: '받는 피해를 % 만큼 줄이고 고정값만큼 더 뺀다 (고정 / %)', en: 'Cuts damage taken by the %, then subtracts the flat amount (flat / %)' },
+    'st.desc.fhr': { ko: '물리 공격에 맞아 경직되는 시간이 줄어든다', en: 'Shortens the stagger from physical hits' },
+    'st.desc.res_fire': { ko: '받는 불 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Fire damage taken by this % — up to the cap beside it' },
+    'st.desc.res_cold': { ko: '받는 냉기 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Cold damage taken by this % — up to the cap beside it' },
+    'st.desc.res_lightning': { ko: '받는 전기 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Lightning damage taken by this % — up to the cap beside it' },
+    'st.desc.res_poison': { ko: '받는 독 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Poison damage taken by this % — up to the cap beside it' },
+    'st.desc.fx_ele': { ko: '불 · 냉기 · 전기 · 독 피해가 원소마다 늘어난다', en: 'Increases Fire / Cold / Lightning / Poison damage, each on its own' },
+    'st.desc.fx_res_red': { ko: '그 원소로 때릴 때 적의 저항을 이만큼 깎는다', en: "Lowers the enemy's resistance when you hit with that element" },
+    'st.desc.fx_vs_type': { ko: '일반 · 데몬 · 언데드 적에게 주는 피해가 늘어난다', en: 'More damage to Normal, Demon and Undead enemies' },
+    'st.desc.fx_dr_type': { ko: '일반 · 데몬 · 언데드 적에게 받는 피해가 줄어든다', en: 'Less damage taken from Normal, Demon and Undead enemies' },
+    'st.desc.fx_vs_target': { ko: '정예 · 보스와 전열 · 후열 적에게 주는 피해가 늘어난다', en: 'More damage to Elites & Bosses and to front / back row enemies' },
+    'st.desc.fx_dr_target': { ko: '정예 · 보스와 전열 · 후열 적에게 받는 피해가 줄어든다', en: 'Less damage taken from Elites & Bosses and from front / back row enemies' },
+    'st.desc.fx_crush': { ko: '맞힐 때 대상의 현재 HP 에 비례한 피해를 더한다', en: "Hits add damage based on the target's current HP" },
+    'st.desc.fx_hit': { ko: '공격이 맞을 확률이 오른다', en: 'Raises the chance for attacks to hit' },
+    'st.desc.fx_counter': { ko: '맞으면 이 확률로 때린 적에게 기본 공격을 돌려준다', en: 'Chance to strike back with a basic attack when hit' },
+    'st.desc.reflect_damage': { ko: '받은 피해의 이 % 를 때린 적에게 돌려준다', en: 'Returns this % of damage taken to the attacker' },
+    'st.desc.life_steal': { ko: '준 피해의 이 % 만큼 HP 를 회복한다', en: 'Heals for this % of damage dealt' },
+    'st.desc.hp_regen': { ko: '초마다 HP 를 이만큼 회복한다', en: 'Restores this much HP every second' },
+    'st.desc.fx_recv': { ko: '받는 회복량이 늘어난다', en: 'Increases healing received' },
+    'st.desc.fx_buff_dur': { ko: '내가 거는 버프와 적에게 거는 효과가 더 오래 간다', en: 'Your buffs and the effects you put on enemies last longer' },
+    'st.desc.item_find': { ko: '적이 떨어뜨리는 아이템이 늘어난다', en: 'Enemies drop more items' },
+    'st.desc.fx_magic_find': { ko: '더 높은 등급의 아이템이 나오기 쉬워진다', en: 'Higher-rarity items drop more often' },
+    'st.desc.gold_find': { ko: '적에게서 얻는 골드가 늘어난다', en: 'More gold from enemies' },
+    'st.desc.fx_xp': { ko: '얻는 경험치가 늘어난다', en: 'More experience gained' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
     'eq.sins.note': {
         ko: '착용 장비의 죄종 — 아이템 이름에 붙은 죄종 태그(접두 · 접미)다. <b>파티 전술</b>이 이 수를 센다<br>'
@@ -1055,7 +1102,7 @@ const STRINGS = {
     'cn.t.craft': { ko: '매직 장비에 전용 옵션을 더한다', en: 'Add a special option to magic gear' },
     'cn.t.stigma_craft': { ko: '낙인으로 장비를 크래프트한다', en: 'Craft equipment with stigmas' },
     'cn.t.skill_card': { ko: '스킬 카드를 합성한다', en: 'Fuse skill cards' },
-    'cn.t.skillbook': { ko: '스킬북으로 스킬을 배운다', en: 'Learn skills from skill books' },   // 서고 r1 (R179 · construction_draft §2)
+    'cn.t.skillbook': { ko: '스킬북으로 스킬을 배운다', en: 'Learn skills from skill books' },   // 도서관 r1 (R179 · construction_draft §2)
     'cn.t.book_craft': { ko: '기본 스킬북을 만든다', en: 'Craft basic skill books' },
     'cn.t.explore': { ko: '파티를 탐험에 보낸다', en: 'Send a party to explore' },
     'cn.t.raid': { ko: '목표를 털어 전리품을 얻는다', en: 'Raid a target for loot' },
@@ -1105,7 +1152,7 @@ const STRINGS = {
     /* 건설 버튼 · 완료 표시 — 탭 이름 키(`rs.research.h`)와 같은 옛 접두를 그대로 쓴다. 나머지 건설 문구는 `cn.*` (2026-09-22 · R137) */
     'rs.rs.done': { ko: '완료', en: 'Done' },
     'rs.rs.go': { ko: '건설', en: 'Build' },   // 탭 이름은 명사(Construction) · 버튼은 동작(Build) — ADR-0253
-    /* 전직 패널 — 서고 탭 오른쪽 [2026-10-09 · SCREEN_DESIGN §17 · ADR-0567 — 옛 훈련장 탭의 전직 카드 · 접두 `tr.` 은 그대로 둔다].
+    /* 전직 패널 — 도서관 탭 오른쪽 [2026-10-09 · SCREEN_DESIGN §17 · ADR-0567 — 옛 훈련장 탭의 전직 카드 · 접두 `tr.` 은 그대로 둔다].
        ~~`tr.seg.train` · `tr.slot*` · `tr.train.todo`~~ 는 훈련장과 함께 걷혔다. 전직 안내(`tr.adv.todo`)는 도움말이 같은 키로 부른다 */
     'tr.seg.adv': { ko: '전직', en: 'Advance' },
     // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §17) — 거절은 `tr.err.<코드>`(game.advanceStart · 마스터리 전직 트리의 advanceLearn · advanceForget — ADR-0542)
@@ -1115,7 +1162,7 @@ const STRINGS = {
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
     'tr.adv.points': { ko: '전직 포인트 {free} / {have}', en: 'Advance Points {free} / {have}' },   // 고른 영웅 줄 오른쪽 — 남은 / 받은 (R216)
-    'tr.err.unbuilt': { ko: '서고를 더 지어야 전직이 열린다', en: 'Build the Library further to open advancement' },
+    'tr.err.unbuilt': { ko: '도서관을 더 지어야 전직이 열린다', en: 'Build the Library further to open advancement' },
     'tr.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
     'tr.err.class': { ko: '이 직업의 갈래가 아니다', en: 'Not a path of this class' },
     'tr.err.done': { ko: '이미 전직했다', en: 'Already advanced' },
@@ -1131,7 +1178,7 @@ const STRINGS = {
     'tr.err.downed': { ko: '원정에서 쓰러져 있다', en: 'Downed on an expedition' },
     'tr.err.points': { ko: '전직 포인트가 없다', en: 'No Advance Points left' },   // advanceLearn — 첫 전직 포인트로 배운다 (R216)
     'tr.adv.todo': {
-        ko: '<b>서고</b>를 더 지으면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
+        ko: '<b>도서관</b>을 더 지으면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
             + '전직하면 <b>마스터리</b>의 전직 트리가 열린다 — 갈래의 전직 스킬 셋 중 하나를 <b>첫 전직 포인트</b>로 배우고, 배운 것이 액티브 전직 칸이다. 되돌리면 쓴 전직 포인트가 전부 돌아온다',
         en: 'Building the <b>Library</b> further opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions, searches or resource posts<br>'
             + 'Advancing opens the Advancement Tree in <b>Mastery</b> — learn one of the path\'s three advancement skills with your <b>first Advance Point</b>; the learned one fills the Advance active slot. Unlearning refunds every Advance Point spent',
@@ -1285,16 +1332,15 @@ const STRINGS = {
     'sk.src.advance': { ko: '전직', en: 'Advance' },
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
-    'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 서고 · 전직 판 · R216 · ADR-0576) · 그림이 없는 서고 읽기 줄만 이름 뒤
+    'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 도서관 · 전직 판 · R216 · ADR-0576) · 그림이 없는 도서관 읽기 줄만 이름 뒤
     'sk.advPoints': { ko: '전직 포인트', en: 'Advance Points' },   // 포인트 패널 둘째 줄 — 마스터리와 따로 (R216)
     'sk.err.advPoints': { ko: '전직 포인트가 없다', en: 'No Advance Points left' },
     'sk.adv.leveled': { ko: '{skill} Lv.{n}', en: '{skill} Lv.{n}' },   // 전직 판 스킬 칸을 눌러 레벨이 올랐다 (R216)
     // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-30 사용자 지시 · SCREEN_DESIGN §6 · ADR-0466 — ~~`sk.lockLv` 「Level n+」~~(ADR-0428) 를 칸마다의 문장으로] · {n} = 책 `skillbook_learn_level` · 전직 `advance_unlock_level`
-    'sk.lock.book': { ko: 'Lv{n}이 되면 서고에서 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned at the Library.' },
+    'sk.lock.book': { ko: 'Lv{n}이 되면 도서관에서 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned at the Library.' },
     'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
-    /* 스킬북 [2026-09-29 · R179 · 서고 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
-    'bk.learned.h': { ko: '지금 가진 스킬', en: 'Current Skills' },   // 배우기 머리 — 액티브 칸 중 찬 것 전부 (2026-10-09 · ADR-0567 — ~~배운 스킬~~)
+    /* 스킬북 [2026-09-29 · R179 · 도서관 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
     'bk.own.h': { ko: '가진 책', en: 'Books Owned' },
     'bk.none': { ko: '가진 책이 없다', en: 'No books' },
     'bk.learn': { ko: '배우기', en: 'Learn' },
@@ -1307,7 +1353,7 @@ const STRINGS = {
     'bk.crafted': { ko: '{skill} 스킬북을 만들었다', en: 'Crafted a {skill} book' },
     'bk.upgraded': { ko: '{name} — {skill} Lv.{n}', en: '{name} — {skill} Lv.{n}' },   // 같은 책 업그레이드 (R216)
     // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.bookState` (INTERFACE §3)
-    'bk.err.unbuilt': { ko: '서고를 지어야 한다', en: 'Build the Library first' },
+    'bk.err.unbuilt': { ko: '도서관을 지어야 한다', en: 'Build the Library first' },
     'bk.err.level': { ko: 'Lv.{n} 부터', en: 'From Lv.{n}' },
     'bk.err.downed': { ko: '쓰러진 영웅이다', en: 'This hero is down' },
     'bk.err.missing': { ko: '배울 수 없는 스킬이다', en: 'Cannot be learned' },
@@ -1532,22 +1578,22 @@ const STRINGS = {
     'cx.seg.fx': { ko: '이펙트', en: 'Effects' },
     'cx.seg.mastery': { ko: '마스터리', en: 'Masteries' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
-    'cx.sub': { ko: '누적 처치 {list}마리에서 레벨이 오른다 — 스테이지 계열 스탯이 오른다', en: 'Levels up at {list} total kills — raises the stage\'s stat line' },
+    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오른다 — 처치 하나에 {per} · 스테이지 계열 스탯이 오른다', en: 'Levels up at {list} codex EXP — each kill gives {per} · raises the stage\'s stat line' },
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
     'cx.completion': { ko: '완주', en: 'Completion' },
-    'cx.kills': { ko: '처치 {n}', en: '{n} kills' },
+    'cx.exp': { ko: '경험치 {n}', en: '{n} EXP' },   // 그 몬스터의 누적 도감 경험치 — 카드 진행 줄 · 핍 툴팁 (ADR-0587 · ~~cx.kills 처치 {n}~~)
     'cx.lvTitle': { ko: '도감 Lv.{lv}', en: 'Codex Lv.{lv}' },
     // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 (SCREEN_DESIGN §9 · ADR-0206)
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story' },
     'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },    'cx.note': {
-        ko: '그 몬스터를 잡은 수가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
-            + '처치 수는 이긴 라운드의 것만 센다 · 문턱과 레벨별 보정은 codex_level.csv(⚠제안값) · 보스 등급별 차등은 후속<br>'
-            + '카드에 마우스를 올리면 그 몬스터의 이야기와 처치 단계가 뜬다',
-        en: "Each time a monster's kill count passes a cumulative threshold, <b>its codex level</b> rises and that stage's stat line goes up — <b>farming pushes the codex</b><br>"
-            + 'Only kills from rounds you win count · thresholds and per-level bonuses live in codex_level.csv (⚠ proposed) · boss-grade scaling comes later<br>'
-            + "Hover a card to see the monster's story and kill milestones",
+        ko: '그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
+            + '처치 하나의 도감 경험치는 그 원정의 난이도가 정한다 — 높은 난이도일수록 빨리 찬다 · 이긴 라운드의 처치만 센다 · 문턱과 레벨별 보정은 codex_level.csv(⚠제안값) · 보스 등급별 차등은 후속<br>'
+            + '카드에 마우스를 올리면 그 몬스터의 이야기와 레벨 단계가 뜬다',
+        en: "Each time the codex EXP gathered from a monster passes a cumulative threshold, <b>its codex level</b> rises and that stage's stat line goes up — <b>farming pushes the codex</b><br>"
+            + "Each kill's codex EXP is set by the expedition's difficulty — higher difficulties fill it faster · only kills from rounds you win count · thresholds and per-level bonuses live in codex_level.csv (⚠ proposed) · boss-grade scaling comes later<br>"
+            + "Hover a card to see the monster's story and level milestones",
     },
 
     /* ── 도감 — 자산 세그먼트 (SCREEN_DESIGN §9-1 · 신설 2026-09-06 · 탭 흡수 2026-09-08) ──
@@ -1657,9 +1703,11 @@ const STRINGS = {
     // 이펙트 세그먼트 [2026-10-05 · §9-1 · ADR-0513 · 세그먼트로 2026-10-09 ADR-0559] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
     'ix.fx.playAll': { ko: '▶ 전부 재생', en: '▶ Play All' },
     // 이펙트 세그먼트의 그림체 탭 [2026-10-09 · §9-1 · ADR-0559] — 키 = skill_art.js:ART_STYLES · 실전 그림체에는 live 가 이름을 감싼다
-    'ix.fxs.clean': { ko: '깔끔한 그림', en: 'Clean' },          // 영어는 짧게 — 설정 판(§2-2)의 좁은 줄에 넷이 선다
+    'ix.fxs.portrait': { ko: '초상 그림체', en: 'Portrait' },     // 영어는 짧게 — 설정 판(§2-2)의 좁은 줄에 여섯이 선다
     'ix.fxs.ink': { ko: '수묵', en: 'Ink' },
-    'ix.fxs.portrait': { ko: '초상 그림체', en: 'Portrait' },
+    'ix.fxs.pen': { ko: '고딕 펜화', en: 'Gothic Pen' },          // 초상 그림체 · 수묵에 비슷한 시안 셋 [2026-10-10 · ADR-0584]
+    'ix.fxs.charcoal': { ko: '목탄', en: 'Charcoal' },
+    'ix.fxs.oil': { ko: '유화', en: 'Oil Paint' },
     'ix.fxs.code': { ko: '코드 모양', en: 'Code' },
     'ix.fxs.live': { ko: '{name} · 실전', en: '{name} · In Battle' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]

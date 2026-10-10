@@ -40,12 +40,14 @@
  *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
  *     heroes[*].skillLv = {skillId: n}(선택 필드 · 2026-10-06 · R216) — 기본 스킬(고유 · 배운 칸)의 업그레이드 횟수 · 같은 책을 읽으면 +1
  *     heroes[*].advanceUp = n(선택 필드 · R216) — 전직 스킬을 배운 뒤 더 넣은 전직 포인트(레벨 = 1 + n)
- *   progress: {cleared: [stageId], peakTotal},   // ~~levelUp = 스테이지별 올린 양~~(R87) — **2026-09-29 위험도 폐지로 삭제** · 로드가 지운다 (몬스터 레벨 = `stage.csv:dlvl` 고정)
- *   codexKills: {monsterId: n}   — **도감 레벨의 출처** — 누적 처치 수 (monster_design §8 · 2026-09-21 카드 → 처치 수)
+ *   progress: {cleared: [stageId], clearedIn: {단: [stageId]}, peakTotal},   // ~~levelUp = 스테이지별 올린 양~~(R87) — **2026-09-29 위험도 폐지로 삭제** · 로드가 지운다 · cleared = 첫 단(노말) · clearedIn = 나머지 단 (2026-10-10 · R236 · 버전 무변경)
+ *   difficulty: 단 id            — **고른 난이도** (2026-10-10 · R236 · 없으면 첫 단) · 부대 자리 · 리포트의 `difficulty` = 그 런의 단 (몬스터 레벨 = `stage.csv:dlvl` + 단의 더하기 · 만렙에서 자른다)
+ *   codexExp: {monsterId: n}     — **도감 레벨의 출처** — 누적 도감 경험치 · 처치 하나 = 그 런 단의 `codex_exp` (monster_design §8 · 2026-10-10 · R239 — ~~codexKills 누적 처치 수~~ 09-21)
+ *   bossDown: {"단|stageId": ms} — **챕터보스가 죽은 실제 시각** (2026-10-10 · R240 · 버전 무변경) — 돌아오는 시각 = 값 + `boss_respawn_sec` 초 · 그동안 그 칸 × 단으로는 어느 부대도 못 나간다 (base_expedition_design §1-2)
  *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make, gamble, commission},   // upgrade 는 R95(2026-09-15)부터 안 오른다 — 강화가 rng 를 안 쓴다 · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, tier, done}` — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
  *   commissions: {cards: [{no, tpl, kind, axis, ref, need, grade, gold, have?}]}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3).
  *     자리 순서 그대로 · **굴린 순간의 내용을 박는다**(대상 풀이 그때의 진행에 달려 있다 — 수색 스냅샷과 같은 이유) · `have` 가 있으면 받아 둔 것 · 없으면 게시판에 걸린 것
- *   runs: [{stageId, preset, repeat, auto, lastAt, durationSec, active, fallen?} | null],   // **부대마다 하나 — v38** [2026-09-23 · 다부대 · GAME_DESIGN §1-1] — 옛 `run`(단수) 대체.
+ *   runs: [{stageId, preset, difficulty, repeat, auto, lastAt, durationSec, active, fallen?} | null],   // **부대마다 하나 — v38** [2026-09-23 · 다부대 · GAME_DESIGN §1-1] — 옛 `run`(단수) 대체.
  *     길이 = presets 와 같고 **자리 + 1 = 편성 번호**(부대 = 편성이다) · 안 나간 편성은 null · 동시에 active 일 수 있는 수는 `limitsOf(state).expeditions`.
  *     active = 그 부대가 도는 중(v25 · R89) — 불러온 세이브에 서 있으면 끊긴 원정이다 · preset = 나간 편성 번호(자리와 같다 · v32) ·
  *     fallen = 이 런에서 쓰러져 있는 영웅(R130 · 없으면 [] — 옛 v16 `downed` 와 다른 필드) ·
@@ -93,7 +95,7 @@ export const SAVE_VERSION = 40;
 /**
  * @param {object} deps
  *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
- *   monsters(byId) / codex {levels:[kills_total...](codex_level.csv 레벨순 — 누적 처치 문턱), bonus:[레벨별 보정 — 비율](codex_level.csv:bonus_pct), statByNum:{stage_num: statKey}(codex_series.csv)}
+ *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), bonus:[레벨별 보정 — 비율](codex_level.csv:bonus_pct), statByNum:{stage_num: statKey}(codex_series.csv)}
  *   sins [죄종 id...] — 수색 이야기의 `sin` 컬럼 검증에만 쓴다
  *   searchStories — `search_story.csv` 파싱 행. **막의 어휘도 순서도 코드에 없다** — 아래 `searchPhases` 참조
  *   searchMeetings / searchAnswers — `search_meeting.csv` · `search_answer.csv` 파싱 행 (만남 · 답)
@@ -311,16 +313,20 @@ export function createGameSystem(deps) {
             advancing: [],   // 전직하는 중 [{uid, branch, since, until}] (2026-09-28 · R16)
             dispatch: [],    // 자원 파견 자리 [{post, tier, uid, since, at, carry}] — 한 자리에 한 명 (2026-09-27 · ADR-0373) · `at` · `carry` = 산출 시계(§3-3)
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
-            books: {},       // 스킬북 재고 {skillId: 1} — 처치가 떨군다 · 서고가 만든다 (2026-09-29 · R179)
+            books: {},       // 스킬북 재고 {skillId: 1} — 처치가 떨군다 · 도서관이 만든다 (2026-09-29 · R179)
             heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
-            progress: { cleared: [], peakTotal: 0 },   // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제
-            codexKills: {},
+            // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제 ·
+            //   cleared = **첫 단(노말)의** 깬 칸 · clearedIn = 나머지 단의 깬 칸 {단: [stageId]} (2026-10-10 · R236)
+            progress: { cleared: [], clearedIn: {}, peakTotal: 0 },
+            difficulty: BASE_DIFF,   // 고른 난이도 단 — 원정 탭이 고른다(`selectDifficulty`) · 부대는 나간 단을 제 자리에 든다 (2026-10-10 · R236)
+            codexExp: {},   // 몬스터별 누적 도감 경험치 (2026-10-10 · R239)
+            bossDown: {},   // 죽어 있는 챕터보스 {"단|칸": 죽은 실제 시각} — 런이 끝난 순간 `noteRunEnd` 가 적는다 (2026-10-10 · R240)
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [], paid: 0 },
             shop: null,      // 상단에서 산 칸 — 산 적이 없으면 null (2026-09-27 · INTERFACE §4)
             search: null,
-            explores: [],    // 나가 있는 탐험 [{chapter, spot, heroes, startedAt, no}] — 한 지점에 한 줄 (2026-10-09 · INTERFACE §4)
+            explores: [],    // 나가 있는 탐험 [{chapter, spot, preset, squad, heroes, startedAt, no}] (편성 2026-10-10 · R234) — 한 지점에 한 줄 (2026-10-09 · INTERFACE §4)
             joins: [],       // 선술집 가입 희망 칸 [{no, hero, arrivedAt, leavesAt}] — 도착 순 (2026-10-09 · INTERFACE §4)
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
             commissions: { cards: [] },
@@ -439,7 +445,12 @@ export function createGameSystem(deps) {
             }
         }
         // 도감 카드는 걷혔다 [2026-09-21 · 버전 무변경] — 레벨은 이미 있던 `codexKills` 에서 다시 계산되므로 소급할 판단이 없다 · 필드만 지운다 (INTERFACE §4)
-        delete s.codexCards; s.codexKills = s.codexKills ?? {};
+        delete s.codexCards;
+        // 처치 수 → 도감 경험치 [2026-10-10 · R239 · 버전 무변경] — 난이도 단(R236) 전의 처치는 전부 노말(처치 하나 = 하나)이라 1:1 로 옮긴다 · 둘 다 있으면 `codexExp` (INTERFACE §4)
+        s.codexExp = s.codexExp ?? s.codexKills ?? {}; delete s.codexKills;
+        // 죽어 있는 챕터보스 — 없으면 「죽어 있는 보스가 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-10 · R240).
+        //   유한한 시각이 아닌 값은 지운다 — 셀 수 없는 줄이 칸을 막지 않게
+        s.bossDown = Object.fromEntries(Object.entries(s.bossDown && typeof s.bossDown === 'object' ? s.bossDown : {}).filter(([, at]) => Number.isFinite(at)));
         s.reports = s.reports ?? []; s.notice = s.notice ?? null;
         s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
         s.tavern.paid = s.tavern.paid ?? 0;   // 유료 리롤 횟수 — 없으면 0 이 정확한 초기 상태라 버전을 안 올린다 (2026-09-30 · INTERFACE §4)
@@ -455,6 +466,8 @@ export function createGameSystem(deps) {
         s.counters.explore = s.counters.explore ?? 0;
         s.explores = (Array.isArray(s.explores) ? s.explores : [])
             .filter(x => x && EXPLORE_SPOTS.includes(x.spot) && Number.isInteger(x.chapter) && Array.isArray(x.heroes) && x.heroes.length);
+        //   보낸 편성 · 그 순간의 편성 [2026-10-10 · R234 · 버전 무변경] — 없으면 null 이 정확하다(그 전의 탐험은 편성이 아니라 고른 명단이었다 · 잠글 편성이 없다)
+        for (const x of s.explores) { x.preset = Number.isInteger(x.preset) ? x.preset : null; x.squad = x.squad ?? null; }
         // 가입 희망 — 없으면 「온 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
         //   모양이 틀린 줄(영웅 개체 · 번호 · 시각이 없는 줄)은 지운다 — 고용할 수 없는 줄이 칸을 막지 않게
         s.counters.join = s.counters.join ?? 0;
@@ -479,7 +492,7 @@ export function createGameSystem(deps) {
         // 건설 — **표에 맞춘다**(없는 건물은 지우고 최대 랭크에서 자르고 시작 랭크보다 낮으면 올린다 · 연구도 없는 항목을 지운다) (v37 · R137).
         //   「무엇이 열렸나」를 저장하지 않으므로 표가 바뀌어도 이관이 필요 없다 — 여기서 랭크만 표의 범위로 들인다.
         //   **편성보다 먼저** 맞춘다 — 편성 수 · 물약 칸 수가 건물 랭크의 더하기를 읽는다(`limitsOf` · 2단계)
-        //   옛 훈련장(`training` · 2026-10-09 삭제 · R231) — r3(전직)까지 지었으면 서고를 r2(전직)까지 올린다 · 전직이 닫히지 않게 · 버전 무변경.
+        //   옛 훈련장(`training` · 2026-10-09 삭제 · R231) — r3(전직)까지 지었으면 도서관을 r2(전직)까지 올린다 · 전직이 닫히지 않게 · 버전 무변경.
         //   표에 없는 건물이라 `fitRanks` 가 지운다 — 훈련장에 쓴 골드는 돌려주지 않는다 (construction_draft §2)
         if (s.buildings && Number.isInteger(s.buildings.training) && s.buildings.training >= 3)
             s.buildings.library = Math.max(Number.isInteger(s.buildings.library) ? s.buildings.library : 0, 2);
@@ -499,6 +512,12 @@ export function createGameSystem(deps) {
         // 같이 깬 칸 수 — 1 이상 정수만 남긴다 (v36 · R134 · 뜻 개정 2026-09-29 — 옛 값(같이 나간 런 수)은 그대로 읽는다)
         s.bonds = Object.fromEntries(Object.entries(s.bonds && typeof s.bonds === 'object' ? s.bonds : {}).filter(([, n]) => Number.isInteger(n) && n > 0));
         s.progress.peakTotal = Number.isInteger(s.progress.peakTotal) && s.progress.peakTotal > 0 ? s.progress.peakTotal : 0;
+        // 난이도 바퀴 [2026-10-10 · R236 · 버전 무변경 — INTERFACE §4] — 없으면 「첫 단 · 다른 단은 깬 적 없음」이 새 게임과 같은 초기 상태라 소급할 판단이 없다.
+        //   표에 없는 단의 기록은 지운다(첫 단의 기록은 `cleared` 라 여기 안 든다) · 고른 단 · 부대의 단은 표에 없으면 첫 단으로
+        const inn = s.progress.clearedIn && typeof s.progress.clearedIn === 'object' && !Array.isArray(s.progress.clearedIn) ? s.progress.clearedIn : {};
+        s.progress.clearedIn = Object.fromEntries(DIFF_IDS.slice(1).filter(d => Array.isArray(inn[d])).map(d => [d, [...new Set(inn[d])]]));
+        s.difficulty = DIFF_IDS.includes(s.difficulty) ? s.difficulty : BASE_DIFF;
+        for (const r of s.runs) if (r) r.difficulty = DIFF_IDS.includes(r.difficulty) ? r.difficulty : BASE_DIFF;
         // 원정 플레이 시간 — 없으면 0 부터 센다. 흘러간 몫은 기록이 없어 소급할 판단이 없다 → 버전을 안 올린다 (INTERFACE §4 · ADR-0514).
         //   옛 누적 플레이 시간(`playMs`)은 뜻이 달라 옮기지 않고 지운다
         s.expMs = Number.isFinite(s.expMs) && s.expMs > 0 ? s.expMs : 0;
@@ -513,7 +532,7 @@ export function createGameSystem(deps) {
         }
         // 스킬북 [2026-09-29 · R179 · 버전 무변경 — INTERFACE §4] — 없으면 「가진 책이 없다 · 안 배웠다」가 정확한 초기 상태다.
         //   책은 쌓인다(권수 그대로 · 2026-09-30) · 정의에 없는 id · 양의 정수가 아닌 값은 지운다 · 배운 스킬이 정의에 없으면 빈 칸으로. **무기의 `skill` 은 지운다**(무기가 스킬을 안 담는다 —
-        //   옛 무기 스킬을 배운 스킬로 옮기지 않는다: 소급하면 책의 문턱(레벨 · 서고)을 우회한다)
+        //   옛 무기 스킬을 배운 스킬로 옮기지 않는다: 소급하면 책의 문턱(레벨 · 도서관)을 우회한다)
         s.books = Object.fromEntries(Object.entries(s.books && typeof s.books === 'object' && !Array.isArray(s.books) ? s.books : {})
             .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
         for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
@@ -571,22 +590,22 @@ export function createGameSystem(deps) {
     /* ~~`isOut(state, uid)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기(base_expedition_design §1-1 개정).
        아웃은 **그 런 안에서만** 산다(전투 유닛의 HP 0) — 전투 밖에 아웃된 영웅이 존재하지 않는다. */
 
-    /* ── 도감 — 처치 수 모델 (monster_design §8 · 2026-09-21 카드 → 처치 수) ── */
+    /* ── 도감 — 도감 경험치 모델 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239) ── */
 
     /**
-     * 누적 처치 수 → 도감 레벨. codex_level.csv 의 kills_total 은 **누적 문턱**이라 그대로 비교한다
-     * (~~cards_to_next — 레벨당 증분~~ 은 2026-09-21 대체). 처치 수는 줄지 않으므로 레벨은 역행하지 않는다.
+     * 누적 도감 경험치 → 도감 레벨. codex_level.csv 의 exp_total 은 **누적 문턱**이라 그대로 비교한다
+     * (~~cards_to_next — 레벨당 증분~~ 은 2026-09-21 대체). 경험치는 줄지 않으므로 레벨은 역행하지 않는다.
      */
-    function codexLevel(kills) {
+    function codexLevel(exp) {
         let lv = 0;
         for (const need of deps.codex.levels) {
-            if (kills >= need) lv += 1; else break;
+            if (exp >= need) lv += 1; else break;
         }
         return lv;
     }
-    /** 다음 레벨의 누적 처치 문턱 — 최종 레벨이면 null */
-    function codexNext(kills) {
-        return deps.codex.levels[codexLevel(kills)] ?? null;
+    /** 다음 레벨의 누적 경험치 문턱 — 최종 레벨이면 null */
+    function codexNext(exp) {
+        return deps.codex.levels[codexLevel(exp)] ?? null;
     }
     const codexMaxLevel = () => deps.codex.levels.length;
     /** 레벨 lv 까지의 누적 보정 — 비율 (codex_level.csv:bonus_pct · R111) */
@@ -600,12 +619,12 @@ export function createGameSystem(deps) {
      */
     function codexBonus(state) {
         const out = Object.fromEntries(Object.values(deps.codex.statByNum).map(k => [k, 0]));
-        for (const [id, kills] of Object.entries(state.codexKills)) {
+        for (const [id, exp] of Object.entries(state.codexExp)) {
             const m = deps.monsters[id];
             if (!m) continue;
             const key = deps.codex.statByNum[m.stage_num];
             if (key === undefined) continue;
-            out[key] += codexBonusAt(codexLevel(kills));
+            out[key] += codexBonusAt(codexLevel(exp));
         }
         return out;
     }
@@ -1300,6 +1319,7 @@ export function createGameSystem(deps) {
                     no: i + 1, party: p.party.slice(), formation: clone(p.formation),
                     potionSlots: padSlots(state, p.potionSlots ?? []).map((id, k) => (id ? { id, short: !filled[k] } : null)),
                     running: going.includes(i + 1),
+                    exploring: !!exploreOfPreset(state, i + 1),   // 탐험에 나간 편성 — 고르개의 「탐험 중」 · 명단이 잠긴다 (2026-10-10 · R234)
                     err: presetErr(state, p, i + 1),
                 };
             }),
@@ -1350,6 +1370,8 @@ export function createGameSystem(deps) {
         // 원정 중에도 넣고 뺀다 [2026-09-14 · R92 · 사용자 지시] — 도는 원정은 나간 인원 그대로 싸우고(`runParty`), 바꾼 인원은 다음 원정부터다
         //   **고른 편성**에 작용한다 [2026-09-21 · R122]
         const p = curPreset(state);
+        // **탐험 중인 편성은 명단이 잠긴다** — 넣기도 빼기도 거절 · 바꾸려면 편성째 부른다 [2026-10-10 · R234 · base_expedition §3-1]
+        if (exploreOfPreset(state, state.presets.indexOf(p) + 1)) return { ok: false, err: 'exploring' };
         if (p.party.includes(uid)) {
             p.party = p.party.filter(u => u !== uid);
             normalizeFormation(p);                        // 뺀 자리를 뒤가 메운다 (진형 2026-09-09)
@@ -1376,6 +1398,69 @@ export function createGameSystem(deps) {
     /* ~~`returnToTown(state)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기로 **귀환이 회복할 것이 없다**.
        회복은 런이 끝나는 순간 자동이고 상태에 남는 것이 없다(HP 는 애초에 세이브에 없다 — INTERFACE §4). */
 
+    /* ── 난이도 바퀴 [신설 2026-10-10 · R236 · base_expedition_design §1-4] ──
+       `difficulty_tier.csv` 순서대로 선다 · **첫 단이 처음부터 열린 단**이고 그 단의 깬 기록이 `progress.cleared` 다(건설 · 탐험 · 의뢰가 읽는 그 기록 — 옛 세이브도 그대로).
+       나머지 단의 기록은 `progress.clearedIn[단]` · 단이 바꾸는 것은 지금 **몬스터 레벨**(`level_add` — 만렙에서 자른다)과 **처치 하나의 도감 경험치**(`codex_exp` · R239) 둘 */
+    const DIFFS = (() => {
+        const rows = deps.difficulties?.length ? deps.difficulties : [{ id: 'normal', levelAdd: 0, codexExp: 1 }];   // 표가 없는 조립 = 노말 한 단
+        const bad = why => { throw new Error(`difficulty_tier: ${why}`); };
+        const seen = new Set();
+        for (const d of rows) {
+            if (!d.id || seen.has(d.id)) bad(`id '${d.id}' 가 비었거나 겹친다`);
+            if (!(Number.isInteger(d.levelAdd) && d.levelAdd >= 0)) bad(`${d.id} — level_add '${d.levelAdd}'`);
+            if (!(Number.isInteger(d.codexExp) && d.codexExp >= 1)) bad(`${d.id} — codex_exp '${d.codexExp}'`);   // 처치 하나의 도감 경험치 (2026-10-10 · R239)
+            seen.add(d.id);
+        }
+        return rows.map(d => ({ id: d.id, levelAdd: d.levelAdd, codexExp: d.codexExp }));
+    })();
+    const DIFF_IDS = DIFFS.map(d => d.id);
+    const BASE_DIFF = DIFF_IDS[0];
+    const diffById = Object.fromEntries(DIFFS.map(d => [d.id, d]));
+    /** 다음 단을 여는 칸 — `[balance.csv:difficulty_unlock_chapter]` 장의 **보스 칸**(`boss_grade` = `chapter_boss`) · 단이 하나면 null · 없으면 만들 때 던진다 */
+    const DIFF_GATE = (() => {
+        if (DIFFS.length < 2) return null;
+        const id = (deps.stageOrder ?? []).find(s => deps.stages[s].chapter === B.difficulty_unlock_chapter && deps.stages[s].boss_grade === 'chapter_boss');
+        if (id == null) throw new Error(`difficulty: ${B.difficulty_unlock_chapter}장에 보스 칸(chapter_boss)이 없다 (balance.csv:difficulty_unlock_chapter)`);
+        return id;
+    })();
+    /** 그 단의 깬 칸 — **원본**이다(읽기만 한다 · 더하기는 `markCleared`). 첫 단 = `progress.cleared` */
+    const clearedList = (state, diff) => (diff === BASE_DIFF ? state.progress.cleared : state.progress.clearedIn?.[diff] ?? []);
+    const markCleared = (state, diff, stageId) => {
+        const list = diff === BASE_DIFF ? state.progress.cleared : ((state.progress.clearedIn ??= {})[diff] ??= []);
+        if (!list.includes(stageId)) list.push(stageId);
+    };
+    /** 그 단이 열렸나 — 첫 단 · 관리자 모드는 언제나 · 아니면 **앞 단에서 여는 칸(`DIFF_GATE`)을 깼다** · 표에 없는 단은 거짓 */
+    function difficultyOpen(state, diff) {
+        const i = DIFF_IDS.indexOf(diff);
+        if (i < 0) return false;
+        if (i === 0 || openAll()) return true;
+        return clearedList(state, DIFF_IDS[i - 1]).includes(DIFF_GATE);
+    }
+    /** 지금 고른 단 — 표에 없거나 **안 열린** 단(관리자 모드를 끈 뒤 등)이면 첫 단 */
+    const curDiff = state => (difficultyOpen(state, state?.difficulty) ? state.difficulty : BASE_DIFF);
+    /** 그 단에서 그 칸의 몬스터 레벨 — 칸의 기본 레벨 `stage.csv:dlvl` + 단의 더하기 · 만렙 `[balance.csv:hero_level_cap]` 에서 자른다 · rng 0 */
+    /** 그 단에서 처치 하나가 그 몬스터에게 주는 도감 경험치 `[difficulty_tier.csv:codex_exp]` — 표에 없는 단은 첫 단 · rng 0 (2026-10-10 · R239 · monster_design §8) */
+    const codexExpOf = diff => (diffById[diff] ?? diffById[BASE_DIFF]).codexExp;
+    const stageLevel = (stageId, diff = BASE_DIFF) => Math.min(B.hero_level_cap ?? Infinity, deps.stages[stageId].dlvl + (diffById[diff]?.levelAdd ?? 0));
+    /** 그 단에서 그 칸을 깼나 — 안 주면 고른 단 · rng 0 */
+    const stageCleared = (state, stageId, diff = curDiff(state)) => clearedList(state, diff).includes(stageId);
+
+    /** 난이도 고르기 [신설 2026-10-10 · R236] — `state.difficulty = id`. err: `missing`(표에 없는 단) · `locked`(안 열렸다). 도는 부대는 제 단을 들고 있어 안 바뀐다 · rng 0 */
+    function selectDifficulty(state, id) {
+        if (!DIFF_IDS.includes(id)) return { ok: false, err: 'missing' };
+        if (!difficultyOpen(state, id)) return { ok: false, err: 'locked' };
+        state.difficulty = id;
+        return { ok: true };
+    }
+
+    /** 난이도 줄 [신설 2026-10-10 · R236 · SCREEN_DESIGN §4-1] — `cur` = 지금 고른 단(`curDiff`) · 단마다 열렸나 · `gate` = 열려면 깰 것(앞 단 · 칸 — 첫 단은 null) · rng 0 */
+    function difficultyState(state) {
+        return {
+            cur: curDiff(state),
+            list: DIFFS.map((d, i) => ({ id: d.id, open: difficultyOpen(state, d.id), levelAdd: d.levelAdd, gate: i === 0 ? null : { from: DIFF_IDS[i - 1], stageId: DIFF_GATE } })),
+        };
+    }
+
     /* ── 스테이지 · 원정 ── */
 
     /** 그 장이 원정 랭크로 열렸나 — 보스를 깨도 다음 장은 저절로 안 열린다 (2026-09-24 · R152 · construction_draft §2) */
@@ -1383,12 +1468,14 @@ export function createGameSystem(deps) {
 
     /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 ·
      *  관리자 모드면 열린 장의 모든 스테이지가 열린 척한다(클리어 기록은 안 쓴다 · 2026-09-24 · R155 · INTERFACE §2-7) —
-     *  **장 잠금은 관리자 모드도 못 건너뛴다**: `chapter_open_max` 뒤의 장은 언제나 잠겼다 [2026-10-09 사용자 지시 · ADR-0552 · R227] */
-    function stageUnlocked(state, stageId) {
+     *  **장 잠금은 관리자 모드도 못 건너뛴다**: `chapter_open_max` 뒤의 장은 언제나 잠겼다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
+     *  **난이도 `diff`(기본 고른 단)** [2026-10-10 · R236] — 그 단이 안 열렸으면 거짓 · 직전 칸은 **그 단의 기록**으로 센다(나이트메어는 1-1 부터) */
+    function stageUnlocked(state, stageId, diff = curDiff(state)) {
         const i = deps.stageOrder.indexOf(stageId);
         if (i < 0 || !chapterOpen(state, deps.stages[stageId]?.chapter)) return false;
+        if (!difficultyOpen(state, diff)) return false;
         if (openAll()) return true;
-        return i === 0 || state.progress.cleared.includes(deps.stageOrder[i - 1]);
+        return i === 0 || clearedList(state, diff).includes(deps.stageOrder[i - 1]);
     }
 
     /** 두 스테이지가 **같은 장소**의 칸인가 — 장소 = (`chapter`, `stage_num`) · 칸 = `cell` (2026-09-29 · PLAN_stage_segments D1 · D4) */
@@ -1401,20 +1488,51 @@ export function createGameSystem(deps) {
      * 이긴 런 다음에 갈 칸 [신설 2026-09-29 · PLAN_stage_segments D8 · base_expedition_design §1] — rng 0 · 상태를 안 바꾼다.
      *   `cycle`(반복 켬) = **장소 안 순환** — 다음 칸 · 마지막 칸 뒤는 첫 칸 · 칸이 하나인 장소는 그 칸.
      *   아니면 **전진** — 표 순서의 다음 칸. 그 칸이 **잠겼거나(장이 안 열림) 없으면 같은 칸**을 다시 돈다(멈추지 않는다)
+     *   `diff` = 그 부대가 도는 단 — 잠김을 그 단의 기록으로 센다 · **바퀴 끝에서 다음 단으로 안 넘어간다** (2026-10-10 · R236)
      */
-    function nextStageOf(state, stageId, cycle) {
+    function nextStageOf(state, stageId, cycle, diff = curDiff(state)) {
         if (cycle) {
             const cells = deps.stageOrder.filter(id => samePlace(id, stageId));
             return cells[(cells.indexOf(stageId) + 1) % cells.length] ?? stageId;
         }
         const nx = deps.stageOrder[deps.stageOrder.indexOf(stageId) + 1];
-        return nx != null && stageUnlocked(state, nx) ? nx : stageId;
+        return nx != null && stageUnlocked(state, nx, diff) ? nx : stageId;
     }
 
-    function canDepart(state, stageId, now, no = state.preset) {
+    /* ── 챕터보스 재등장 [신설 2026-10-10 · R240 · base_expedition_design §1-2 · 사용자 「보스는 죽으면 … 1분동안 대기」] ──
+       죽은 챕터보스는 [balance.csv:boss_respawn_sec] 동안 안 돌아온다 — **부대가 아니라 칸 × 단의 상태**라 그동안 어느 부대도 그 칸으로 못 나간다.
+       세이브에는 **죽은 실제 시각**을 적는다(돌아오는 시각이 아니라) — 손잡이를 바꾸면 곧바로 먹는다. 실제 시각은 화면 층만 알아서(배속) 런이 끝난 순간 알려 준다 */
+    const bossKey = (diff, stageId) => `${diff}|${stageId}`;
+    const isChapterBoss = stageId => deps.stages[stageId]?.boss_grade === 'chapter_boss';
+
+    /** 그 칸 × 단의 챕터보스가 돌아오는 시각(ms) — 적힌 것이 없으면 null · 지난 시각이어도 돌려준다(비교는 부르는 쪽의 `now`) · rng 0 */
+    function bossRespawnAt(state, stageId, diff = curDiff(state)) {
+        const at = state.bossDown?.[bossKey(diff, stageId)];
+        return Number.isFinite(at) ? at + B.boss_respawn_sec * 1000 : null;
+    }
+    const respawnErr = (state, stageId, diff, now) => (bossRespawnAt(state, stageId, diff) ?? -Infinity) > now ? 'respawn' : null;
+
+    /**
+     * 런이 실제로 끝난 순간을 알린다 — **이긴 챕터보스 칸**이면 그 칸 × 단의 보스가 그 순간 죽은 것으로 적는다(같은 키는 덮는다 · 이미 돌아온 키는 걷는다).
+     * `endedAt` = `nextRepeat` 에 넘기는 것과 같은 값(화면 층이 잰다 · `resolveBattle` 은 자기 `now`) · 진 런 · 철수 · 끊김 · 다른 칸은 아무것도 안 한다 · rng 0
+     * @returns 적었나
+     */
+    function noteRunEnd(state, run, endedAt) {
+        if (!run?.done || run.report?.won !== true || !isChapterBoss(run.stageId) || !Number.isFinite(endedAt)) return false;
+        const down = state.bossDown ?? (state.bossDown = {});
+        for (const [k, at] of Object.entries(down)) if (at + B.boss_respawn_sec * 1000 <= endedAt) delete down[k];
+        down[bossKey(run.difficulty ?? BASE_DIFF, run.stageId)] = endedAt;
+        return true;
+    }
+
+    function canDepart(state, stageId, now, no = state.preset, diff = curDiff(state)) {
         // **그 편성의** 원정이 도는 중이어도 막지 않는다 — 보내면 `departRun` 이 그 부대를 끊는다 (R92 · 다른 부대는 안 건드린다)
         //   원정은 건물 밖이다 — 처음부터 열려 있어 `hasFeature` 를 묻지 않는다 (2026-09-25 · R161 · 원정 r1 은 장만 연다)
-        if (!stageUnlocked(state, stageId)) return 'locked';
+        //   난이도 `diff`(기본 고른 단 · R236) — 그 단이 안 열렸거나 그 단에서 아직 못 들어가는 칸이면 `locked`
+        if (!stageUnlocked(state, stageId, diff)) return 'locked';
+        // 챕터보스가 죽어 있다 — 그 칸 × 단의 보스가 돌아올 때까지 어느 편성도 못 나간다 (2026-10-10 · R240)
+        const wait = respawnErr(state, stageId, diff, now);
+        if (wait) return wait;
         // 편성 `no`(기본 고른 편성)로 나간다 [2026-09-21 · R122] — 없는 편성 · 빈 파티 · **수색 나간 영웅이 든 편성**은 못 나간다.
         //   편성은 계획이라 든 채로 수색을 보낼 수 있고 여기서 막는다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
         //   아웃이 런을 넘지 않으므로 언제나 전원이 나간다 (base_expedition_design §1-1)
@@ -1532,11 +1650,11 @@ export function createGameSystem(deps) {
         if (state.search?.heroUid === uid) return 'search';
         if (exploreOf(state, uid)) return 'explore';   // 탐험 나감 — 결과를 받을 때까지 (2026-10-09)
         if (runParty(state).includes(uid)) return 'run';
-        if (advancingOf(state, uid)) return 'advance';   // 서고에서 전직하는 중 (2026-09-28 · R16 · 서고 2026-10-09)
+        if (advancingOf(state, uid)) return 'advance';   // 도서관에서 전직하는 중 (2026-09-28 · R16 · 도서관 2026-10-09)
         return dispatchOf(state, uid) ? 'dispatch' : null;
     }
 
-    /* ── 전직 — 서고 작업 [신설 2026-09-28 · R16 · skill_design §4 · GAME_DESIGN §9 09-27 · INTERFACE §2-7 · 2026-10-09 ~~훈련장~~ → 서고 r2 · R231] ──
+    /* ── 전직 — 도서관 작업 [신설 2026-09-28 · R16 · skill_design §4 · GAME_DESIGN §9 09-27 · INTERFACE §2-7 · 2026-10-09 ~~훈련장~~ → 도서관 r2 · R231] ──
        갈래는 직업마다 셋(`advance.csv`) · **갈래는 되돌릴 수 없다** · 영웅을 넣어 두면 `[balance.csv:advance_hours]` 뒤에 끝난다.
        전직 스킬은 그 갈래의 `skill.csv` 행(`owner_kind=advance`) 중 **하나를 첫 전직 포인트로 배운다 · 되돌리면 포인트가 전부 돌아온다** — 배운 것이 액티브 전직 칸(`skill.activesFor`)
        [2026-10-06 · R216 · skill_design §4 — ~~무료로 되돌린다~~] 전직 포인트는 마스터리와 따로다 — 남은 것을 스킬 레벨(`advanceLevelUp`)에 쓴다 · 가지 셋은 설명만(`advance_node.csv`) */
@@ -1691,8 +1809,8 @@ export function createGameSystem(deps) {
         return { ok: true, lv: 1 + h.advanceUp };
     }
 
-    /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 서고 · INTERFACE §2-7] ──
-       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound`) 상단이 팔고 기본 책만 서고가 만든다 —
+    /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 도서관 · INTERFACE §2-7] ──
+       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound`) 상단이 팔고 기본 책만 도서관이 만든다 —
        **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다).
        배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0
        **같은 책이면 업그레이드다** [2026-10-06 · R216 · skill_design §2-3 — ~~`same` 거절~~] — 이미 가진 스킬(고유 · 배운 칸)의 책은 칸을 늘리지 않고
@@ -2072,12 +2190,16 @@ export function createGameSystem(deps) {
      * **이어 가기** [2026-09-29 사용자 지시] — `from` = 그 부대의 앞 런 핸들. 주면 **그 부대가 처음 나간 편성 그대로**(핸들의 `squad` — 인원 · 진형 · 물약 칸 · 전술 칸) 나간다.
      *   편성을 고쳐도 나가 있는 부대는 안 바뀐다 — 고친 편성으로 나가려면 철수하고 다시 보낸다(`from` 없이 보내면 지금 편성을 새로 굳힌다).
      *   `from` 이 그 부대의 마지막 런이 아니거나(뒤에 새 런이 섰다) 부대가 멈췄으면(철수 · 끊김) `stopped`
-     * @returns `{ok, run, report}` — `run` = 핸들 `{stageId, preset, report, result, done, squad}` (INTERFACE §2-7)
+     * **난이도** [2026-10-10 · R236] — `diff`(기본 고른 단)로 나간다 · 이어 가는 런은 **앞 런의 단 그대로**(`from.difficulty` — 그새 고른 단이 바뀌어도).
+     *   몬스터 레벨 = `stageLevel(stageId, 단)` · 단은 부대 자리 · 리포트 · 핸들의 `difficulty` 에 남는다
+     * @returns `{ok, run, report}` — `run` = 핸들 `{stageId, preset, difficulty, report, result, done, squad}` (INTERFACE §2-7)
      */
-    function departRun(state, stageId, now, no = state.preset, from = null) {
+    function departRun(state, stageId, now, no = state.preset, from = null, diff = curDiff(state)) {
         if (from && !continuable(state, from, no)) return { ok: false, err: 'stopped' };
+        const dif = from ? from.difficulty ?? BASE_DIFF : diff;
         // 이어 가는 런은 **굳힌 편성**으로 판정한다 — 그 인원은 칸 사이에도 나가 있어(`runParty`) 다른 일에 붙잡힐 틈이 없다
-        const why = from ? (stageUnlocked(state, stageId) ? presetErr(state, from.squad, no) : 'locked') : canDepart(state, stageId, now, no);
+        //   챕터보스가 죽어 있는 칸은 이어 가는 런도 못 나간다 — 반복은 `nextRepeat` 이 돌아오는 시각까지 기다리게 한다 (2026-10-10 · R240)
+        const why = from ? (stageUnlocked(state, stageId, dif) ? respawnErr(state, stageId, dif, now) ?? presetErr(state, from.squad, no) : 'locked') : canDepart(state, stageId, now, no, dif);
         if (why) return { ok: false, err: why };
         // **그 부대의** 원정이 돌고 있으면 **먼저 끊는다** — 철수와 같다(진행 중이던 라운드는 없던 것 · 리포트 `retreat` · 반복 off) [2026-09-14 · R92 · 사용자 지시].
         //   보상은 이긴 라운드에만 들어오므로 끊고 다시 보내는 것이 가속 수단이 안 된다. 옛 핸들은 리포트 판정이 서서 `done` 으로 거절된다.
@@ -2097,8 +2219,9 @@ export function createGameSystem(deps) {
         const view = from ? withSquad(state, no, squad) : state;
         // 자원 자리에 앉아 있던 인원은 **저절로 빠진다** — 회수에 벌이 없다(base_expedition §3-2 · 2026-09-27 · ADR-0373). rng 0
         for (const uid of going) unseat(state, uid);
-        // 몬스터 레벨 = **칸의 기본 레벨 `stage.csv:dlvl`** — 위험도가 폐지돼 바뀌지 않는다(2026-09-29 · ~~올린 양 포함 · R87~~). rng 를 안 쓰므로 수열이 안 밀린다
-        const level = deps.stages[stageId].dlvl;
+        // 몬스터 레벨 = **칸의 기본 레벨 `stage.csv:dlvl` + 단의 더하기**(만렙에서 자른다 · `stageLevel` · 2026-10-10 R236) — 위험도가 폐지돼 플레이어가 바꾸는 숫자는 없다
+        //   (2026-09-29 · ~~올린 양 포함 · R87~~). 노말은 더하기가 없어 `dlvl` 그대로다. rng 를 안 쓰므로 수열이 안 밀린다
+        const level = stageLevel(stageId, dif);
         // 물약 — **이 런을 열 때** 그 편성의 칸 구성을 재고에서 앞 칸부터 채운다(모자란 칸은 빈다). 재고는 마실 때 준다(`advanceRun`).
         //   원정 도중에 만든 물약은 다음 런부터 든다 (battle_design §7-1 · R124). rng 0
         // 전술은 **이 순간 켜진 것만** 산다 — 핸들의 `tactics` 로 굳힌다 (R130 · tactic_card_design §2-1). rng 0
@@ -2116,6 +2239,7 @@ export function createGameSystem(deps) {
 
         const report = {
             at: now, stageId, level, preset: no, won: false, reason: null, durationSec: 0,   // reason null = 진행 중 · preset = 어느 부대의 런인가 (v38 · 다부대)
+            difficulty: dif,                                                                  // 이 런의 난이도 단 — 옛 리포트엔 없다(= 첫 단 · 2026-10-10 R236)
             shrine,                                                                           // 이 런이 입은 신단 id · 없으면 null (2026-09-29)
             gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
             downed: [], party: going.slice(), drops: [], books: [], materials: {}, discarded: 0,   // materials = 처치 재료 {산출물 id: n} (2026-10-06 · 옛 리포트엔 없다)
@@ -2132,6 +2256,7 @@ export function createGameSystem(deps) {
         const prev = runAt(state, no);
         state.runs[no - 1] = {
             stageId, preset: no, repeat: samePlace(prev?.stageId, stageId) ? prev.repeat === true : false, auto: true,
+            difficulty: dif,   // 그 부대가 도는 단 — 다음 칸(`nextRepeat`)을 이 단의 기록으로 고른다 (2026-10-10 · R236)
             // fallen = 이 런에서 쓰러져 있는 영웅 — `stepRun` 이 채운다 · 스킬 트리 잠금(`downed`)이 읽는다 (R130 · 옛 v16 `downed` 와 다른 필드)
             lastAt: now, durationSec: 0, active: true, fallen: [],
             shrine: shrine ? { id: shrine, stageId } : null,   // 이 런이 입는 신단 — 칸이 끝나면 `settleRound` 가 다음 칸의 것으로 바꾸거나 지운다 (2026-09-29 · 09-30)
@@ -2140,7 +2265,7 @@ export function createGameSystem(deps) {
         //   ~~첫 라운드까지 계산한다~~: 미래를 미리 계산해 두면 원정 중 교체가 그 순간 먹을 자리가 없다(base_expedition_design §1-5)
         battle.advance(0);
         // `seq` = 이 런의 전투 번호 — 신단 뽑기 스트림의 두 번째 인자(다른 부대가 그새 나가도 같은 신단 · INTERFACE §5-1)
-        return { ok: true, report, run: { stageId, preset: no, report, result: battle.result, done: false, battle, rng, party: going, tactics, fixed, squad, seq: state.counters.battle } };
+        return { ok: true, report, run: { stageId, preset: no, difficulty: dif, report, result: battle.result, done: false, battle, rng, party: going, tactics, fixed, squad, seq: state.counters.battle } };
     }
 
     /** 편성 `no` 자리에 굳힌 편성을 끼운 **읽기 전용 얕은 사본** — 이어 가는 런의 전술 칸 · 진형을 처음 나간 편성으로 센다(`wearing` 의 사본과 같은 수법 · 원본 불변) */
@@ -2234,8 +2359,9 @@ export function createGameSystem(deps) {
             state.resources.gold += s.gold;
             R.gold += s.gold;
             // ~~처치가 뱉는 가루~~ 는 2026-09-09 삭제 — 가루의 공급원은 **분해** 하나다(`salvage` · item_design §5-3)
-            // 도감 레벨의 출처 — 이긴 라운드의 처치 수 (monster_design §8 · 2026-09-21 카드 걷음)
-            for (const [id, n] of Object.entries(s.kills)) state.codexKills[id] = (state.codexKills[id] ?? 0) + n;
+            // 도감 레벨의 출처 — 이긴 라운드의 처치 × 그 런 단의 도감 경험치 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239)
+            const cxPer = codexExpOf(run.difficulty ?? BASE_DIFF);
+            for (const [id, n] of Object.entries(s.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * cxPer;
             const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(버린 것은 안 든다 · R153)
             // 드롭은 **나간 부대의 인벤토리**로 — 차면 그 부대의 몫만 버린다 (v40 · ADR-0521)
             const bag = bagOf(state, run.preset) ?? state.bags[0];
@@ -2299,7 +2425,8 @@ export function createGameSystem(deps) {
         if (s.ended) {
             R.won = res.won;
             R.reason = res.reason;
-            if (res.won && !state.progress.cleared.includes(run.stageId)) state.progress.cleared.push(run.stageId);
+            // 깬 기록은 **그 런의 단**에 — 첫 단 = `progress.cleared` · 나머지 = `progress.clearedIn[단]` (2026-10-10 · R236)
+            if (res.won) markCleared(state, run.difficulty ?? BASE_DIFF, run.stageId);
             // 같이 깬 칸 수 — **칸을 이길 때마다 +1**(나간 인원 그대로 · 처음 깬 칸이든 다시 깬 칸이든) · 진 칸 · 철수 · 끊김은 안 센다 [2026-09-29 사용자 지시 · tactic_card_design §5-8]
             if (res.won) { state.bonds = state.bonds ?? {}; state.bonds[bondKey(run.party)] = bondOf(state, run.party) + 1; }
             run.done = true;
@@ -2393,10 +2520,11 @@ export function createGameSystem(deps) {
      * 골든 · 단정 · 캘리브레이션 · `?dev=battle` 이 쓴다. **게임 화면은 안 쓴다** — 화면은 `departRun` → `stepRun` 을 시간에 맞춰 부른다(R130).
      * **한 판으로 끝나는 원정이다** [2026-09-29] — 끝나면 이어 가기를 끈다(`auto` false). 안 끄면 다음 칸을 낼 핸들이 없는데 그 인원이 칸 사이에 붙잡혀 있다(`runParty`)
      */
-    function resolveBattle(state, stageId, now, no = state.preset) {
-        const d = departRun(state, stageId, now, no);
+    function resolveBattle(state, stageId, now, no = state.preset, diff = curDiff(state)) {
+        const d = departRun(state, stageId, now, no, null, diff);
         if (!d.ok) return d;
         while (!advanceRun(state, d.run, now).done);
+        noteRunEnd(state, d.run, now);   // 즉시 계산의 끝난 순간 = 부른 `now` — 챕터보스를 이겼으면 재등장 대기가 선다 (2026-10-10 · R240)
         const slot = runAt(state, d.run.preset);
         if (slot && !slot.active) slot.auto = false;
         return { ok: true, result: d.run.result, report: d.report };
@@ -2444,10 +2572,14 @@ export function createGameSystem(deps) {
         if (!run || run.active || run.auto !== true) return null;
         const report = state.reports.find(r => r.preset === no && r.at === run.lastAt);
         if (!report || report.reason == null || report.reason === 'retreat' || report.reason === 'closed') return null;
-        const stageId = report.won ? nextStageOf(state, run.stageId, run.repeat === true) : run.stageId;
+        // 다음 칸은 **그 부대가 도는 단**의 기록으로 고른다 — 고른 단이 그새 바뀌어도 부대는 제 단을 돈다 (2026-10-10 · R236)
+        const stageId = report.won ? nextStageOf(state, run.stageId, run.repeat === true, run.difficulty ?? BASE_DIFF) : run.stageId;
         // 다음 런이 이어받을 신단 — 그 칸의 것일 때만(`departRun` 과 같은 판정) · `fresh` = 막 이긴 칸 뒤에 선 것 — 진 칸 뒤엔 신단이 없어 늘 참이다 (2026-09-29 · 09-30)
         const sh = run.shrine?.stageId === stageId && shrineById[run.shrine.id] ? { id: run.shrine.id, fresh: report.won } : null;
-        return { stageId, preset: run.preset, at: endedAt + B.repeat_restart_sec * 1000, shrine: sh };
+        // 챕터보스 재등장 — 다음 칸의 보스가 죽어 있으면 돌아오는 시각까지 기다린다(재출발 초와 늦은 쪽) · 화면의 [건너뛰기]는 `respawn` 앞으로 못 당긴다 (2026-10-10 · R240)
+        const dif = run.difficulty ?? BASE_DIFF;
+        const respawn = bossRespawnAt(state, stageId, dif);
+        return { stageId, preset: run.preset, difficulty: dif, at: Math.max(endedAt + B.repeat_restart_sec * 1000, respawn ?? -Infinity), shrine: sh, respawn };
     }
 
     /* ── 선술집 — 명단 · 리롤 쿨다운 (base_expedition_design §2-4 확정 2026-08-26) ── */
@@ -2544,10 +2676,10 @@ export function createGameSystem(deps) {
         return { cycle, here, arriveAt, leaveAt, nextAt, remainMs: (here ? leaveAt : nextAt) - now };
     }
 
-    /** 지금 진행 중인 챕터 — 열린 스테이지 중 **가장 뒤의 것**의 챕터 */
+    /** 지금 진행 중인 챕터 — 열린 스테이지 중 **가장 뒤의 것**의 챕터 · **첫 단(노말)의 기록**으로 센다 — 고른 난이도와 무관 (2026-10-10 · R236) */
     function frontierChapter(state) {
         let ch = chapterBands[0]?.band ?? 1;
-        for (const id of deps.stageOrder) if (stageUnlocked(state, id)) ch = deps.stages[id]?.chapter ?? ch;
+        for (const id of deps.stageOrder) if (stageUnlocked(state, id, BASE_DIFF)) ch = deps.stages[id]?.chapter ?? ch;
         return ch;
     }
 
@@ -2621,7 +2753,7 @@ export function createGameSystem(deps) {
         return { ok: true, gold, free: gold === 0 };
     }
 
-    /** 상단이 파는 책의 후보 — 직업 스킬 중 기본 책이 아닌 것(기본 책은 서고가 만든다 · 보스 고유는 드롭만) · `skill.csv` 행 순서 */
+    /** 상단이 파는 책의 후보 — 직업 스킬 중 기본 책이 아닌 것(기본 책은 도서관이 만든다 · 보스 고유는 드롭만) · `skill.csv` 행 순서 */
     const shopBookPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && !d.starterPool).map(d => d.id);
     /** 그 회차의 책 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
     function shopBookIds(state, cycle, rerolls = 0) {
@@ -2800,7 +2932,7 @@ export function createGameSystem(deps) {
     function commissionCtx(state) {
         const chapters = new Set(), monsters = new Set();
         for (const id of deps.stageOrder) {
-            if (!stageUnlocked(state, id)) continue;
+            if (!stageUnlocked(state, id, BASE_DIFF)) continue;   // 첫 단(노말)의 기록 — 고른 난이도와 무관 (2026-10-10 · R236)
             const st = deps.stages[id];
             chapters.add(st.chapter);
             for (const m of BT.stagePool(st)) monsters.add(m);
@@ -3211,6 +3343,8 @@ export function createGameSystem(deps) {
     const exploreAt = (state, chapter, spot) => exploreList(state).find(x => x.chapter === chapter && x.spot === spot) ?? null;
     /** 그 영웅이 나가 있는 탐험 — 없으면 null (`heroBusy` 의 `'explore'`) */
     const exploreOf = (state, uid) => exploreList(state).find(x => x.heroes.includes(uid)) ?? null;
+    /** 그 편성이 나가 있는 탐험 — 없으면 null · **명단이 잠긴다**(`toggleParty`) · 편성 고르개의 「탐험 중」(`presetState`) [2026-10-10 · R234] */
+    const exploreOfPreset = (state, no) => exploreList(state).find(x => x.preset === no) ?? null;
     const exploreMs = () => Math.max(0, B.explore_hours ?? 0) * 3600000;
     /** 탐험이 서는 장 — 레벨대가 선 장(`stage.csv` 가 가진 장) 순 */
     const exploreChapters = chapterBands.map(b => b.band);
@@ -3233,26 +3367,77 @@ export function createGameSystem(deps) {
         return out;
     }
 
-    /** 보내면 나올 거절 — `exploreSend` 와 화면(출발 버튼)이 이 하나를 읽는다. 순서가 계약이다 (INTERFACE §2-7) */
-    function exploreErr(state, chapter, spot, uids) {
+    /* ── 탐험 이야기 — `explore_story.csv` [신설 2026-10-10 · R235 · base_expedition §3-1 「이야기 줄」 · SCREEN_DESIGN §8-4] ──
+       수색 이야기(`searchPhases`)와 같은 문법에 **지점 열**이 붙었다 — 막 = `phase` · 순서 = `phase_order` · 지점마다 따로.
+       코드가 아는 것은 「막마다 한 줄을 굴린다」뿐이다. 산출이 있는 지점(`EXPLORE_YIELD`)은 표에 막이 있어야 한다(없으면 throw) */
+    const exploreStoryRows = deps.exploreStories ?? [];
+    const explorePhases = (() => {
+        const bad = why => { throw new Error(`explore_story: ${why}`); };
+        const bySpot = {};
+        for (const r of exploreStoryRows) {
+            if (!r.story_id) bad('story_id 가 없다');
+            if (!EXPLORE_SPOTS.includes(r.spot)) bad(`${r.story_id} — 지점 '${r.spot}'`);
+            if (!r.phase) bad(`${r.story_id} — phase 가 없다`);
+            if (!(r.phase_order >= 1)) bad(`${r.story_id} — phase_order ${r.phase_order}`);
+            if (r.sin !== '-' && !(deps.sins ?? []).includes(r.sin)) bad(`${r.story_id} — 죄종 '${r.sin}'`);
+            if (!r.text_kr || !r.text_en) bad(`${r.story_id} — 문구가 비었다`);
+            const order = bySpot[r.spot] ?? (bySpot[r.spot] = new Map());
+            const had = order.get(r.phase);
+            if (had !== undefined && had !== r.phase_order) bad(`${r.spot} ${r.phase} 의 phase_order 가 둘이다 (${had} · ${r.phase_order})`);
+            order.set(r.phase, r.phase_order);
+        }
+        const out = {};
+        for (const [spot, order] of Object.entries(bySpot)) {
+            const list = [...order.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
+            list.forEach((id, i) => { if (order.get(id) !== i + 1) bad(`${spot} — phase_order 가 1부터 연속이 아니다 (${id} = ${order.get(id)})`); });
+            // 막마다 **공통(`-`) 행이 하나는 있어야** 어느 편성이 와도 후보가 비지 않는다 — 「막마다 굴림 1회」의 전제다
+            for (const id of list) if (!exploreStoryRows.some(r => r.spot === spot && r.phase === id && r.sin === '-')) bad(`${spot} ${id} 에 공통(-) 행이 없다`);
+            out[spot] = list;
+        }
+        for (const spot of Object.keys(EXPLORE_YIELD)) if (!out[spot]) bad(`산출이 있는 지점 '${spot}' 의 이야기가 없다`);
+        return out;
+    })();
+
+    /**
+     * 이야기 굴림 — **저장하지 않는다.** `seed ^ 0xE7A2` 와 그 탐험의 번호가 매번 같은 줄을 낸다 —
+     * 결과(`^ 0xE7A1`)와 스트림을 가른다: 이야기는 나가 있는 내내 굴리고 결과는 끝난 뒤에만 굴리며, 표가 늘어도 장비가 안 바뀌어야 한다.
+     * rng 소비 순서가 계약이다 (INTERFACE §5-2) — **막마다 1회.** 후보 = 공통 + **편성원 죄종 모두**의 줄(CSV 행 순서)
+     */
+    function exploreStory(state, x) {
+        const sins = new Set(x.heroes.map(uid => heroById(state, uid)?.sin).filter(Boolean));
+        const rng = makeRng(deriveSeed(state.seed ^ 0xE7A2, x.no));
+        return (explorePhases[x.spot] ?? []).map(ph => {
+            const pool = exploreStoryRows.filter(r => r.spot === x.spot && r.phase === ph && (r.sin === '-' || sins.has(r.sin)));
+            return pool[Math.floor(rng() * pool.length)];        // 후보가 빌 수 없다 — 로드 검증이 막았다
+        });
+    }
+
+    /**
+     * 그 편성을 탐험에 보내면 나올 거절 — **지점과 무관한 편성 쪽 판정** [2026-10-10 · R234 · base_expedition §3-1 「편성으로 보낸다」].
+     * `exploreErr` 의 뒤 절반이고 `exploreState.squads[].err` 가 같은 것을 낸다. 순서가 계약이다 (INTERFACE §2-7):
+     * 없는 편성 `missing` → 빈 편성 `noParty` → **원정에 나간 편성** · 다른 부대에서 싸우는 편성원 `running`(철수가 먼저다 — 한 동작으로 만들지 않는다 · GAME_DESIGN §1-1)
+     * → `searching` → 그 편성 · 편성원이 이미 탐험 중 `exploring` → `advancing`. 자원 자리에 앉은 편성원은 막지 않는다(보내면 정산하고 빠진다)
+     */
+    function squadErr(state, no) {
+        const p = presetAt(state, no);
+        if (!p) return 'missing';
+        if (!p.party.length) return 'noParty';
+        if (runningNos(state).includes(no) || p.party.some(uid => heroBusy(state, uid) === 'run')) return 'running';
+        if (p.party.some(uid => heroBusy(state, uid) === 'search')) return 'searching';
+        if (exploreOfPreset(state, no) || p.party.some(uid => heroBusy(state, uid) === 'explore')) return 'exploring';
+        if (p.party.some(uid => heroBusy(state, uid) === 'advance')) return 'advancing';
+        return null;
+    }
+
+    /** 보내면 나올 거절 — `exploreSend` 와 화면(출발 버튼)이 이 하나를 읽는다. 지점 판정 → 편성 판정(`squadErr`) · 순서가 계약이다 (INTERFACE §2-7) */
+    function exploreErr(state, chapter, spot, no) {
         if (!hasFeature(state, 'explore')) return 'unbuilt';   // 탐험 r1 (2026-10-08)
         if (!EXPLORE_SPOTS.includes(spot) || !exploreChapters.includes(chapter)) return 'missing';
         if (!chapterOpen(state, chapter)) return 'locked';
         if (!EXPLORE_YIELD[spot]) return 'pending';
         if (exploreAt(state, chapter, spot)) return 'busy';
         if (exploreList(state).length >= limitsOf(state).exploreSlots) return 'slots';
-        const list = Array.isArray(uids) ? uids : [];
-        if (!list.length) return 'noParty';
-        if (list.length > limitsOf(state).party) return 'full';
-        if (new Set(list).size !== list.length || list.some(uid => !heroById(state, uid))) return 'missing';
-        for (const uid of list) {
-            const busy = heroBusy(state, uid);
-            if (busy === 'run') return 'running';
-            if (busy === 'search') return 'searching';
-            if (busy === 'explore') return 'exploring';
-            if (busy === 'advance') return 'advancing';
-        }
-        return null;
+        return squadErr(state, no);
     }
 
     /**
@@ -3269,10 +3454,17 @@ export function createGameSystem(deps) {
                 if (x) {
                     const endsAt = x.startedAt + span;
                     const done = now >= endsAt;
+                    // 이야기 줄 — 막마다 하나 · 소요 시간을 막 수로 나눠 차례로 열린다(`searchState.beats` 와 같은 모양 · R235)
+                    const story = exploreStory(state, x);
+                    const beats = story.map((r, i) => {
+                        const at = x.startedAt + Math.round(span * i / story.length);
+                        return { id: r.story_id, at, open: now >= at, text: { ko: r.text_kr, en: r.text_en } };
+                    });
                     out = {
-                        heroes: x.heroes.slice(), startedAt: x.startedAt, endsAt, remainMs: Math.max(0, endsAt - now), done,
+                        preset: x.preset ?? null, heroes: x.heroes.slice(), startedAt: x.startedAt, endsAt, remainMs: Math.max(0, endsAt - now), done,
                         frac: span > 0 ? Math.min(1, Math.max(0, (now - x.startedAt) / span)) : 1,
                         items: done ? exploreRoll(state, x) : null,
+                        beats,
                     };
                 }
                 spots.push({ chapter, spot, open: chapterOpen(state, chapter), live: !!EXPLORE_YIELD[spot], out });
@@ -3282,22 +3474,29 @@ export function createGameSystem(deps) {
             open: hasFeature(state, 'explore'),
             hours: B.explore_hours, slots: L.exploreSlots, used: exploreList(state).length, partyMax: L.party,
             perHero: B.explore_cave_items_per_hero,
-            // 보낼 수 있는 사람 — 싸우는 · 수색 · 탐험 · 전직 중인 영웅만 뺀다. 자원 자리에 앉은 영웅은 든다(보내면 저절로 빠진다)
-            ready: state.heroes.filter(h => !['run', 'search', 'explore', 'advance'].includes(heroBusy(state, h.uid))).map(h => h.uid),
+            // 편성마다 보낼 수 있나 — 지점과 무관한 편성 쪽 판정(`squadErr`) · 편성 번호 순 [2026-10-10 · R234 — ~~`ready`(보낼 수 있는 영웅)~~ 대체]
+            squads: state.presets.map((p, i) => ({ no: i + 1, party: p.party.slice(), err: squadErr(state, i + 1) })),
             spots,
         };
     }
 
-    /** 보내기 — 거절은 `exploreErr` 하나. 자원 자리는 정산하고 빠진다(벌이 없다 · 수색 · 전직과 같다) */
-    function exploreSend(state, chapter, spot, uids, now) {
-        const err = exploreErr(state, chapter, spot, uids);
+    /**
+     * 편성 `no` 를 보낸다 — 거절은 `exploreErr` 하나. 자원 자리는 정산하고 빠진다(벌이 없다 · 수색 · 전직과 같다).
+     * **보내는 순간의 편성을 떠서 간다**(`squad` — 사람 · 진형 · 물약 칸 · 전술 · 결투장 `snapshotTeam` 과 같은 문법) — 떠난 뒤 고친 것은 다음 탐험부터.
+     * 탐험 중인 편성은 명단이 잠긴다(`toggleParty`) · 바꾸려면 편성째 부른다(`exploreDrop`) [2026-10-10 · R234 · base_expedition §3-1]
+     */
+    function exploreSend(state, chapter, spot, no, now) {
+        const err = exploreErr(state, chapter, spot, no);
         if (err) return { ok: false, err };
+        const p = presetAt(state, no);
+        const uids = p.party.slice();
         if (uids.some(uid => dispatchOf(state, uid))) {
             dispatchSettle(state, now);
             for (const uid of uids) unseat(state, uid);
         }
+        const squad = { party: uids.slice(), formation: clone(p.formation ?? null), potionSlots: clone(p.potionSlots ?? []), tactics: clone(p.tactics ?? null) };
         state.counters.explore = (state.counters.explore ?? 0) + 1;
-        state.explores = [...exploreList(state), { chapter, spot, heroes: uids.slice(), startedAt: now, no: state.counters.explore }];
+        state.explores = [...exploreList(state), { chapter, spot, preset: no, squad, heroes: uids, startedAt: now, no: state.counters.explore }];
         return { ok: true, endsAt: now + exploreMs() };
     }
 
@@ -3319,7 +3518,7 @@ export function createGameSystem(deps) {
         return { ok: true, items: uids };
     }
 
-    /** 취소 — 나가 있으면 불러들이고 결과가 와 있으면 버린다. **결과 없이 영웅만 돌아온다**(넣은 것이 없다) */
+    /** 취소 — 나가 있으면 불러들이고 결과가 와 있으면 버린다. **편성째 돌아온다**(한 사람만 빼는 길은 없다 · R234) · **결과 없이 영웅만 돌아온다**(넣은 것이 없다) */
     function exploreDrop(state, chapter, spot) {
         const x = exploreAt(state, chapter, spot);
         if (!x) return { ok: false, err: 'none' };
@@ -3614,11 +3813,13 @@ export function createGameSystem(deps) {
     return {
         newGame, serialize, deserialize, canLoad, addExpTime,
         heroById, heroItems, heroCombat, heroCombatIf, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
-        codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus,
+        codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus, codexExpOf,
         equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
+        noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
+        difficultyState, selectDifficulty, stageLevel, stageCleared,
         runLock, runTactics, runTacticsIf, runBuffs,
         tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
         shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, shopReroll, gambleState, gambleSpin, gambleSpinBatch,

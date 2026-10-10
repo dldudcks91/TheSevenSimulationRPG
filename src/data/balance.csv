@@ -124,6 +124,7 @@ inventory_cap,36,proposed,0,인벤토리 칸 수 — **부대(편성)마다 하�
 stash_cap,36,proposed,0,창고 칸 수 — **고정**(건물 랭크가 늘리지 않는다 · 2026-09-22 사용자 지시) · 플레이어가 옮긴 것만
 report_keep,20,proposed,0,리포트 목록이 남기는 런 수 — 반복 원정이 이어지면 오래된 런부터 밀려난다. 세이브 크기의 손잡이다 (2026-09-09 발행 · SCREEN_DESIGN §4-3)
 repeat_restart_sec,10,fixed,0,반복 원정의 다음 런이 앞 런이 끝난 뒤 나가기까지의 초 — **관전 여부와 무관하다**(관전 결과 띠가 이만큼 세고 · 다른 탭이어도 앱 시계가 이 시각에 출발시킨다) · 옛 관전 띠의 세기 3초를 규칙으로 올렸다 [신설 2026-09-22 사용자 「3초 카운트가 적용되도록」 · base_expedition_design §1-1 · 부채 #57] · 3 → 10 · 보고 있으면 결과 띠의 [건너뛰기]로 곧바로 나간다 [2026-09-29 사용자 「기본 10초 · 건너뛰기 선택 가능」 · ADR-0453]
+boss_respawn_sec,60,proposed,1,챕터보스가 죽은 뒤 다시 나타나기까지의 초 — **칸 × 난이도의 상태**라 그동안 어느 부대도 그 챕터보스 칸으로 못 나가고 이어 가는 반복은 기다렸다가 나간다(건너뛸 수 없다) · 이긴 런만 센다 · 시간당 공급의 손잡이 — 판당 보상은 높게 두고 이 값이 시간당 양을 맞춘다 [신설 2026-10-10 사용자 「보스는 죽으면 초상화가 무덤 명패로 바뀌고 1분동안 대기」 · base_expedition_design §1-2 · R240]
 tavern_candidates,2,fixed,0,선술집 명단 후보 수 — 수색 결과 1칸과 합쳐 3칸 (2026-08-26 확정) · **이것이 최대이고 건물이 늘리지 않는다**(2026-09-24 사용자 지시 · 선술집 r3 · r6 의 tavernCandidates 줄 삭제 · ~~기본값 + 선술집 r3 · r6 더하기~~ R137)
 tavern_refresh_hours,6,fixed,0,리롤 쿨다운(시간) — 자동 갱신 없음. 플레이어가 리롤한 뒤 이만큼 지나야 무료 리롤 · 오프라인에도 진행 (2026-08-26 확정)
 tavern_hire_cost,600,proposed,0,영웅 고용 비용(골드) — 명단·수색 결과 공통 (2026-08-25 초반 루프 구현하면서 발생)
@@ -245,6 +246,7 @@ tactic_grade_weight_rare,5,proposed,1,전술 옵션 리롤이 **레어**를 낼 
 tactic_reroll_base_cost,600,proposed,1,전술 **전체 리롤**의 기본가(지금은 골드) — 잠근 칸이 없을 때의 값. 비용 = 이 값 × tactic_reroll_lock_mult ^ 잠근 칸 수. 칸이 몇 개 열렸든 같은 기본가다(일단) (tactic_card_design §5-6 · 2026-09-22 사용자 「일단 600」). ⚠ 값 임시 — 밸런스 때 올린다 · 재화가 낙인으로 바뀌어도 키 이름은 그대로
 tactic_reroll_lock_mult,2,proposed,1,전술 리롤 비용이 **잠금 1개마다** 곱해지는 배수 — 가파른 곱이라 다 잠그고 하나만 굴리기가 가장 비싸다 (tactic_card_design §5-6 · 2026-09-22 사용자 확정 「잠금마다 ×2 · 나중에 더 올린다」). 1 미만이면 로드가 멈춘다(지킬수록 싸지면 안 된다)
 chapter_open_max,5,fixed,0,**이번 버전이 여는 마지막 장** — 이 장보다 뒤(6 · 7장)는 **무엇으로도 안 열린다**: 원정 랭크의 더하기(`limitsOf.chapters`)가 여기서 잘리고 · 관리자 모드(Admin)도 이 장까지만 연다 · 그 장을 여는 곳(`needOf`)도 이 뒤면 null(챕터 세그먼트 자물쇠). 다음 버전에서 장을 열 때 이 값을 올린다 [2026-10-09 사용자 지시 「챕터6이랑 7은 admin이고 뭐고 이번 버전에서는 절대 안열거야」 · ADR-0552 · R227]
+difficulty_unlock_chapter,5,fixed,0,**다음 난이도를 여는 장** — 한 난이도에서 이 장의 보스 칸(`stage.csv:boss_grade` = `chapter_boss`)을 깨면 `difficulty_tier.csv` 의 다음 단이 열린다(노말은 처음부터 · 관리자 모드는 전부) [2026-10-10 사용자 「챕터 5보스를 깰 때마다 다음 난이도가 열리는식」 · base_expedition_design §1-4 · R236]. `chapter_open_max` 와 따로다 — 6 · 7장이 열려도 바퀴는 1 ~ 5장을 돈다
 admin_gold,1000000,fixed,0,**개발 장치** — 관리자 모드(Admin)를 켤 때 골드를 이 값까지 채운다(모자란 만큼 · 진짜 골드 · 세이브에 남는다) · 게임 기능이 아니다 [2026-09-27 사용자 지시 「Admin 누르면 돈 100만 쓸 수 있도록」 · SCREEN_DESIGN §10-3]
 admin_materials,100,fixed,0,**개발 장치** — 관리자 모드(Admin)를 켤 때 재료(채광 · 채집 · 벌목 산출물 전 단계 + 분해 가루 · 낙인)를 종류마다 이 값까지 채운다(모자란 만큼 · 진짜 재료 · 세이브에 남는다) · 게임 기능이 아니다 [2026-10-09 사용자 지시 「admin 누르면 모든 재료들도 100개씩 주도록」 · SCREEN_DESIGN §10-3]
 admin_hero_level,30,fixed,0,**개발 장치** — 관리자 모드(Admin)의 `+Lv` 버튼이 넣는 영웅(전사 · 마법사 · 기사)의 레벨 — 1 에서 이 레벨까지 레벨업을 차례로 거친다(마스터리 포인트가 그만큼 붙는다 · 상한 hero_level_cap) · 진짜 영웅 · 게임 기능이 아니다 [2026-10-08 사용자 「30레벨 전사 · 마법사 · 기사 … 키우기 귀찮아서」 · SCREEN_DESIGN §10-3 · state.adminHero]
@@ -282,14 +284,14 @@ mg_chop_refill,0.06,proposed,1,⚠임시 벌목 — 한 번 벨 때 시간 막�
 explore_hours,1,proposed,1,⚠제안 탐험 한 번에 걸리는 시간(시간) — 오프라인에도 흐르고 끝나면 결과는 받아 갈 때까지 남는다 · 수색(tavern_search_hours)과 같은 값에서 시작 [2026-10-09 사용자 「아이콘 클릭하면 해당 행동을 진행」 · base_expedition §3-1 · SCREEN_DESIGN §8-4]
 explore_slots,1,proposed,0,⚠제안 동시 탐험 건수 기본값 — 탐험 건물의 explore_slots 더하기가 여기 얹힌다(limitsOf.exploreSlots) · 한 지점에는 한 건 [2026-10-09 · base_expedition §3-1]
 explore_cave_items_per_hero,1,proposed,1,⚠제안 동굴 탐험이 보낸 영웅 1명당 가져오는 장비 수 — 장비는 그 챕터 레벨대(상단과 같은 범위)에서 균등 · 희귀도는 드롭 가중치 그대로 · 판정 4축이 서기 전의 임시 산출이다 [2026-10-09 · base_expedition §3-1 「동굴 = 보물 → 장비」]
-advance_hours,0,proposed,1,전직에 걸리는 시간(시간) — 서고 전직 칸(2026-10-09 ~~훈련장~~)에 넣은 영웅이 이만큼 지나면 전직이 끝난다 · 그동안 원정 · 수색 · 자원 자리에 못 나간다 · 0 이면 시작하자마자 끝난다 [2026-09-28 사용자 「시간 키만 두고 ⚠임시값」 · 2026-10-08 사용자 「전직 바로 끝나게」 2 → 0 · skill_design §4 · GAME_DESIGN §10 「전직 작업의 값」]
+advance_hours,0,proposed,1,전직에 걸리는 시간(시간) — 도서관 전직 칸(2026-10-09 ~~훈련장~~)에 넣은 영웅이 이만큼 지나면 전직이 끝난다 · 그동안 원정 · 수색 · 자원 자리에 못 나간다 · 0 이면 시작하자마자 끝난다 [2026-09-28 사용자 「시간 키만 두고 ⚠임시값」 · 2026-10-08 사용자 「전직 바로 끝나게」 2 → 0 · skill_design §4 · GAME_DESIGN §10 「전직 작업의 값」]
 advance_point_interval,5,fixed,0,전직 포인트 간격(레벨) — 전직 레벨(advance_unlock_level)에 첫 포인트 · 그 뒤 이 간격마다 하나씩 만렙(hero_level_cap)까지 · 첫 포인트로 전직 스킬을 배운다 · 나머지는 스킬 레벨과 가지 셋(② 특수 · ③ 변형 · ④ 필살기)에 · 마스터리 포인트와 따로 · 스킬을 바꾸면 전부 돌아온다 [2026-10-06 사용자 확정 「30에찍고 5레벨단위로」 · skill_design §4 · R216 — 미구현]
 skillbook_learn_level,10,proposed,0,스킬북을 쓸 수 있는 영웅 레벨 — 둘째 액티브 칸(배운 스킬)의 문턱 · 같은 책 업그레이드도 이 문턱(2026-10-06) · 1장 끝 · 마스터리 T2 와 같은 무렵 [2026-09-28 사용자 확정 「10 레벨에 1개의 액티브 스킬」 · skill_design §2-1 · R179]
 drop_book_pct,0.25,proposed,1,드롭이 난 처치에서 **장비 대신 스킬북**이 나올 확률(비율) — 처치당 1개는 그대로 · 그 몬스터의 고유 스킬 책(영웅이 못 배우는 몬스터 전용이면 장비) · ⚠임시 · 등급마다 다른가는 GAME_DESIGN §10 「스킬북의 남은 설계」 ⑧ [2026-09-28 사용자 「처치당 1개 · 장비냐 책이냐를 굴린다」 · item_design §1 드롭 1-2 · R179]
-book_craft_gold,1000,proposed,1,서고 **기본 책 제작**의 골드 — 기본 책 = `skill.csv:starter_pool` · ⚠임시 [2026-09-28 사용자 「아주 기본적인 책만 만든다」 · construction_draft §2 서고 · R179]
-book_craft_dust,10,proposed,1,서고 **기본 책 제작**의 가루 · ⚠임시 [2026-09-28 · construction_draft §2 서고 · R179]
+book_craft_gold,1000,proposed,1,도서관 **기본 책 제작**의 골드 — 기본 책 = `skill.csv:starter_pool` · ⚠임시 [2026-09-28 사용자 「아주 기본적인 책만 만든다」 · construction_draft §2 도서관 · R179]
+book_craft_dust,10,proposed,1,도서관 **기본 책 제작**의 가루 · ⚠임시 [2026-09-28 · construction_draft §2 도서관 · R179]
 skillbook_upgrade_max,9,proposed,0,기본 스킬(고유 · 배운 칸) 업그레이드 상한 — 같은 책을 읽을 때마다 한 단계 · 다른 책으로 덮어쓰면 쌓은 단계도 사라진다 [2026-10-06 사용자 「최대업그레이드 수치는 9정도」 · skill_design §2-3 · R216 — 미구현]
 skillbook_upgrade_books_1,1,proposed,0,첫 업그레이드에 드는 같은 책 수 — 셋째부터는 앞 두 단계의 합(피보나치 · 둘째는 skillbook_upgrade_books_2) [2026-10-06 사용자 「피보나치 수열로」 · skill_design §2-3 · R216 — 미구현]
 skillbook_upgrade_books_2,2,proposed,0,둘째 업그레이드에 드는 같은 책 수 — 셋째부터는 앞 두 단계의 합(피보나치) [2026-10-06 · skill_design §2-3 · R216 — 미구현]
 shop_book_count,3,proposed,1,상단이 **방문 회차마다** 파는 스킬북 수 — 후보 = 직업 스킬 중 기본 책(`skill.csv:starter_pool`)이 아닌 것 · 같은 회차에 같은 책 둘 없음 · 장비 탭 맨 윗줄 무기 오른쪽 · ⚠임시 [2026-09-29 사용자 「상점에서 책 3개 정도 파는 걸로 해볼까」 · base_expedition_design §2-6]
-shop_book_gold,1500,proposed,1,상단 스킬북 한 권의 골드 — 서고 기본 책 제작(book_craft_gold + 가루)보다 비싸다 · ⚠임시 [2026-09-29 · base_expedition_design §2-6]
+shop_book_gold,1500,proposed,1,상단 스킬북 한 권의 골드 — 도서관 기본 책 제작(book_craft_gold + 가루)보다 비싸다 · ⚠임시 [2026-09-29 · base_expedition_design §2-6]

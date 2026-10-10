@@ -426,7 +426,7 @@ export function sheetRowsHtml(rows, c) {
         const text = s.id === 'damage_reduction' && has ? `${c.option_fx?.drFlat ?? 0} / ${fmtCombat(s, v)}` : fmtCombat(s, shown);
         // 속도 행 이름 — 마법 무기(평타 없음)를 든 유닛은 「캐스팅 속도」 [2026-10-03 · R202 · ADR-0492] — 값은 같은 주기다
         const name = s.id === 'action_period' && c?.basic_attack === false ? t('sk.castSpeed') : L(s);
-        return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}${s.gap ? ' gap' : ''}">
+        return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}${s.gap ? ' gap' : ''}" data-stat="${s.id}">
             <span class="cs-n">${name}</span>
             <span class="cs-v">${text}${extra}</span></div>`;
     }).join('');
@@ -440,7 +440,7 @@ function fxRowHtml(s, c) {
         : s.slash ? parts.map(([, v]) => fmtCombat(s, v)).join('/')
         : parts.length === 1 ? fmtCombat(s, parts[0][1])
         : on.length ? on.map(([n, v]) => t('st.fx.part', { n, v: fmtCombat(s, v) })).join(' · ') : '—';
-    return `<div class="cs-row${c ? '' : ' off'}${s.gap ? ' gap' : ''}">
+    return `<div class="cs-row${c ? '' : ' off'}${s.gap ? ' gap' : ''}" data-stat="${s.id}">
             <span class="cs-n">${s.name()}</span>
             <span class="cs-v">${shown}</span></div>`;
 }
@@ -456,11 +456,28 @@ export function attrRowsHtml(stats, color) {
     return D.heroAttributes.map(s => {
         const v = stats?.[s.id];
         const pct = v === undefined ? 0 : Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
+        // 설명 카드는 세 칸에 각각 단다 — 줄(`.attr-row`)이 `display: contents` 라 상자가 없다 (`bindStatTips`)
         return `<div class="attr-row">
-            <span class="attr-n">${L(s)}<i class="cs-a">${s.abbr}</i></span>
-            <span class="attr-bar"><i style="width:${pct}%;background:${color}"></i></span>
-            <span class="attr-v">${v ?? '—'}</span></div>`;
+            <span class="attr-n" data-stat="${s.id}">${L(s)}<i class="cs-a">${s.abbr}</i></span>
+            <span class="attr-bar" data-stat="${s.id}"><i style="width:${pct}%;background:${color}"></i></span>
+            <span class="attr-v" data-stat="${s.id}">${v ?? '—'}</span></div>`;
     }).join('');
+}
+
+/**
+ * 능력치 설명 카드 [2026-10-10 사용자 지시 · SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」 · ADR-0581] — `root` 안의 `data-stat` 줄마다
+ * 올리면 **이름 / 선 아래 효과**(`st.desc.<줄 id>` — 효과가 여럿이면 한 줄에 하나). 물약 카드 · 창 뱃지와 같은 모양이다. 값은 안 든다 — 올린 줄이 이미 든다.
+ * 캐릭터 탭 기본 옵션 · 세부 옵션 · 후보 카드만 부른다 — 툴팁 속 같은 줄(유닛 툴팁)은 툴팁 위에 툴팁을 겹치지 않아 안 부른다.
+ * 이름은 **그 줄이 찍은 이름**(줄의 첫 칸)이다 — 마법 무기의 「캐스팅 속도」 · 옵션 줄 이름이 줄 조립과 갈리지 않게. 기본 능력치는 약어 배지를 뺀 이름
+ */
+export function bindStatTips(root) {
+    root.querySelectorAll('[data-stat]').forEach(n => {
+        const id = n.dataset.stat;
+        const attr = D.heroAttributes.find(a => a.id === id);
+        const name = attr ? L(attr) : n.firstElementChild?.textContent ?? '';
+        bindTipNode(n, () => el('div', 'tip-card stat-tip',
+            `<div class="tip-effect-head"><div class="tip-name">${name}</div></div><div class="tip-effect-summary">${t(`st.desc.${id}`)}</div>`));
+    });
 }
 
 /** 대표값을 뺀 쪽 — 몬스터 카드는 첫 장이 대표값을 이미 든다 */
@@ -584,7 +601,7 @@ const UNIT_TIP_ALL = true;
 
 /**
  * 영웅 카드 — 기본 옵션 + 그 아래 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0486 · ADR-0498).
- * 관전 · 편성 · 출정 창 · 상점 · 제련소 · 서고 — 서는 자리 전부 같은 카드다 [2026-10-03 사용자 지시 · ADR-0498].
+ * 관전 · 편성 · 출정 창 · 상점 · 제련소 · 도서관 — 서는 자리 전부 같은 카드다 [2026-10-03 사용자 지시 · ADR-0498].
  * 능력치는 `h.stats` 에서 그대로 읽는다. 세부 옵션은 **부르는 쪽이 넘긴다** — `game.heroCombat` 은 상태 `G` 가 있어야 하는데 이 파일은 `G` 를 모른다.
  * 이름 · 직업 · 레벨 · 죄종 · 등급 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134)
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`
@@ -630,9 +647,9 @@ export function monsterTipCard(u, itemCardOf = null) {
 
 /**
  * 도감 몬스터 툴팁 — **두 장**: 왼쪽 선술집 후보 카드 · 오른쪽 이야기 · 단계 (SCREEN_DESIGN §9 · ADR-0206 · ADR-0233).
- * 오른쪽 장 = 「스토리」 머리글 + 이야기 · 아래 「보너스 효과」 머리글 + 단계(초상 · 이름 · 직업은 왼쪽 장이 든다). 처치 수는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
+ * 오른쪽 장 = 「스토리」 머리글 + 이야기 · 아래 「보너스 효과」 머리글 + 단계(초상 · 이름 · 직업은 왼쪽 장이 든다). 도감 경험치는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
  * 단계의 보정은 **그 단계에서 더해지는 값**(`codex_level.csv:bonus_pct`)이다 — 카드의 「다음 … +x%」와 같은 수. 합은 스테이지 행이 든다
- * @param m `{id, kills, boss}` — 도감 카드 한 장의 집계
+ * @param m `{id, exp, boss}` — 도감 카드 한 장의 집계(exp = 누적 도감 경험치 · ADR-0587)
  * @param grade 초상 등급 — 일반 / 정예 고르개를 그대로 따른다 (ADR-0167)
  * @param stat 그 스테이지의 계열 라벨 `{ko, en}` — 없으면(챕터보스 단독 5스테이지) 보정 칸이 `—` 다 (§9 · GAME_DESIGN §10)
  * @returns `[후보 카드 장, 이야기 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
@@ -640,9 +657,9 @@ export function monsterTipCard(u, itemCardOf = null) {
 export function codexMonsterTipCard(m, grade, stat) {
     // 이름은 자리표시자다(`{m:1900|이/가}` — 이름의 SSOT 는 monster.csv · 스테이지 이야기와 같은 규칙). 몬스터 이야기는 `{leader}` 를 안 쓴다
     const story = fillStory(L(monsterStory(m.id)), lang());
-    const lv = SYS.game.codexLevel(m.kills);
+    const lv = SYS.game.codexLevel(m.exp);
     // 단계는 **늘 전부 선다** — 닿지 않은 단계도 보여야 「다음에 무엇을 받나」가 읽힌다 · 닿은 단계만 켜진다.
-    //   **레벨만 든다** — 「몇 마리 잡아야 열린다」는 적지 않는다(다음 문턱은 카드가 든다 · ADR-0209)
+    //   **레벨만 든다** — 「경험치를 얼마 모아야 열린다」는 적지 않는다(다음 문턱은 카드가 든다 · ADR-0209)
     const steps = D.codexBonus.map((bonus, i) => `
         <div class="cx-step${i < lv ? ' on' : ''}">
             <span class="cx-step-lv">${t('cx.tip.lv', { lv: i + 1 })}</span>

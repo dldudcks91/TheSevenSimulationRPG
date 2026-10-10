@@ -157,6 +157,50 @@ export function createBattleSystem(data) {
     /** 몬스터 장비 아이템 레벨의 반폭 — 가운데 × `[balance.csv:drop_ilvl_spread_pct]` 반올림 · 하한 `[balance.csv:drop_ilvl_spread_min]`
      *  [2026-10-06 · item_design §1 3단계 · 반올림 자릿수는 INTERFACE §5-3] */
     const ilvlSpreadOf = center => Math.max(B.drop_ilvl_spread_min, Math.round(center * B.drop_ilvl_spread_pct));
+    /** 등급의 장비 희귀도 가중치 `{normal, magic, rare}` (spawn_grade.csv:gear_rarity_w_*) */
+    const gearWeights = g => ({ normal: g.gear_rarity_w_normal, magic: g.gear_rarity_w_magic, rare: g.gear_rarity_w_rare });
+    /**
+     * 한 마리의 차림 — 스폰 2단과 실험실(`rollMonsterDrop`)이 **같은 이 함수**를 부른다 [2026-10-10 · 스폰에서 뺐다 · rng 순서 불변 · INTERFACE §5-2].
+     * 아이템 레벨 = 가운데(스테이지 레벨 + 등급 가산) ± 반폭 — **부위마다** `rollGear` 가 굴린다 [개정 2026-10-06 · 사용자 확정 · item_design §1 3단계 — ~~굴리지 않는다~~(09-11)].
+     *   반폭 = 가운데 × 비율 반올림 · 하한 — 모든 등급이 같은 비율이라 평균은 종전과 같다. 몬스터가 입는 장비라 그 세기도 같이 흔들린다(사용자가 알고 택했다)
+     * @param level 스테이지 레벨 — `level_add` 는 안 탄다(INTERFACE §2-6 `lvl`)
+     */
+    const wearGear = (rng, m, g, level, magicFind) => {
+        const center = level + g.gear_ilvl_add;
+        return data.itemSystem.rollGear(rng, {
+            slots: wearSlots(m),
+            ilvl: center,
+            ilvlSpread: ilvlSpreadOf(center),
+            magicFind,
+            rareBonusPct: g.gear_rare_bonus_pct,
+            // 희귀도 가중치는 **등급이 쥔다** — 일반 = 일반 + 가끔 매직(레어 0) · 정예 = 일반 + 매직 + 가끔 레어 (2026-09-23 사용자 지시)
+            rarityWeights: gearWeights(g),
+            weaponGroup: m.weapon_group,
+        });
+    };
+
+    /**
+     * 그 몬스터가 그 등급 · 그 스테이지 레벨로 설 때 입는 장비의 조건 [신설 2026-10-10 · 실험실 · INTERFACE §2-6] —
+     * `wearGear` 가 `rollGear` 에 넘기는 값 그대로다(아이템 레벨 아래 끝은 `rollGear` 와 같이 1). 없는 몬스터 · 등급이면 null · rng 0
+     */
+    function monsterGearSpec(monsterId, grade, level) {
+        const m = data.monsters[monsterId], g = data.grades[grade];
+        if (!m || !g) return null;
+        const center = level + g.gear_ilvl_add, s = ilvlSpreadOf(center);
+        return { slots: wearSlots(m), weaponGroup: m.weapon_group, ilvlMin: Math.max(1, center - s), ilvlMax: center + s, rarityWeights: gearWeights(g) };
+    }
+
+    /**
+     * 그 몬스터 한 마리의 차림 + 처치 드롭 하나 [신설 2026-10-10 · 실험실 아이템 생성기 · INTERFACE §2-6 · §5-2] —
+     * 차림은 스폰과 같은 `wearGear` · 드롭은 `onKill` 의 장비 자리와 같은 식(입은 부위 중 하나 1회). **드롭이 났다고 치고 장비만 낸다** —
+     * 판정 · 종류(책) · 처치 재료는 안 굴린다. 게임 경로는 안 부른다 — 부르는 쪽이 제 rng 를 준다. 없는 몬스터 · 등급이면 null
+     */
+    function rollMonsterDrop(rng, monsterId, grade, level, magicFind = 0) {
+        const m = data.monsters[monsterId], g = data.grades[grade];
+        if (!m || !g) return null;
+        const worn = wearGear(rng, m, g, level, magicFind);
+        return { worn, drop: worn.length ? worn[Math.floor(rng() * worn.length)] : null };
+    }
 
     /*
      * 몬스터 모양 검증 — **로드에서 멈춘다** (`roundSets` 검사와 같은 이유 · 2026-09-11 R79). 오타가 조용히 새면
@@ -542,20 +586,9 @@ export function createBattleSystem(data) {
         const list = kept.map((s, k) => {
             const m = data.monsters[s.id];
             const g = data.grades[s.grade];
-            // 아이템 레벨 = 가운데(던전 레벨 + 등급 가산) ± 반폭 — **부위마다** `rollGear` 가 굴린다 [개정 2026-10-06 · 사용자 확정 · item_design §1 3단계 — ~~굴리지 않는다~~(09-11)].
-            //   반폭 = 가운데 × 비율 반올림 · 하한 — 모든 등급이 같은 비율이라 평균은 종전과 같다. 몬스터가 입는 장비라 그 세기도 같이 흔들린다(사용자가 알고 택했다)
+            // 차림 — 아이템 레벨 · 희귀도 가중치 규칙은 `wearGear` 한 곳이다(실험실이 같은 함수를 부른다 · 2026-10-10)
             // 제 줄 = (씨앗 · 라운드 · 목록 자리) — 앞 몬스터의 굴림 수가 뒤 몬스터의 장비도 전투 수열도 안 민다 (INTERFACE §5-1 · 2026-09-22)
-            const center = level + g.gear_ilvl_add;
-            const gear = data.itemSystem.rollGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), {
-                slots: wearSlots(m),
-                ilvl: center,
-                ilvlSpread: ilvlSpreadOf(center),
-                magicFind,
-                rareBonusPct: g.gear_rare_bonus_pct,
-                // 희귀도 가중치는 **등급이 쥔다** — 일반 = 일반 + 가끔 매직(레어 0) · 정예 = 일반 + 매직 + 가끔 레어 (2026-09-23 사용자 지시)
-                rarityWeights: { normal: g.gear_rarity_w_normal, magic: g.gear_rarity_w_magic, rare: g.gear_rarity_w_rare },
-                weaponGroup: m.weapon_group,
-            });
+            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, magicFind);
             // 셋째 칸 — 보스만. ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙)
             let thirdSkill = null;
             if (g.skill_slots >= 3) {
@@ -1592,5 +1625,5 @@ export function createBattleSystem(data) {
         return { ...run.result, mode: 'arena' };
     }
 
-    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, makeEnemy };
+    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, makeEnemy, monsterGearSpec, rollMonsterDrop };
 }

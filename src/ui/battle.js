@@ -108,6 +108,20 @@ export const shrineChip = id => {
     return s ? `<span class="shrine-chip" title="${shrineFxText(id)}"><img src="${s.img}" alt="">${L(s.name)}</span>` : '';
 };
 
+/** 무덤 명패의 남은 시간 — `m:ss` · 지났으면 `0:00` (ADR-0590) */
+export const graveLeftText = ms => {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+/** 무덤 명패 — 죽어 있는 챕터보스의 초상 자리 [2026-10-10 사용자 지시 · SCREEN_DESIGN §4-2 「무덤 명패」 · ADR-0590].
+ *  비석 모양은 CSS(`.grave-plaque` — 테마 토큰)가 칠하고 여기는 이름 · 남은 시간만 든다. 툴팁이 없다.
+ *  `data-respawn` = 돌아오는 시각 — 앱 시계(출정 창)와 결과 띠의 세기(관전)가 `.grave-left` 글자만 간다.
+ *  관전 카드 · 출정 창 적 구성이 같이 쓴다 */
+export const gravePlaque = (name, until, at) => {
+    const left = graveLeftText(until - at);
+    return `<span class="grave-plaque" data-respawn="${until}" role="img" aria-label="${t('exp.foe.grave', { name, t: left })}"><b class="grave-name">${name}</b><span class="grave-left">${left}</span></span>`;
+};
+
 /* [버프] 창 [2026-09-30 · SCREEN_DESIGN §4-2 「버프」 · ADR-0461 · 버튼 자리 ADR-0462] — 그 런의 버프를 **출처별 세 줄**(신단 · 전술 · 도감)로 적는다.
    합치기(같은 능력치 · 피해 감소는 따로)는 `game.runBuffs` 가 했다 — 여기는 옮겨 적을 뿐이다 */
 /** 도감 계열 번호 — `codex_series.csv` 의 그 능력치 행 */
@@ -153,6 +167,8 @@ function openBuffPop(btn, b) {
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
  *   shrine = 이 런이 입은 신단 id(없으면 null) — 헤드의 칩 (ADR-0445)
  *   upNext() = 다음 런 `{stageId, at, shrine}`(앱이 `game.nextRepeat` 로 답한다) · 멈춘 부대(철수 · 끊김 뒤)면 null — 결과 띠는 이 답이 있으면 **언제나** 센다 (ADR-0430).
+ *     `respawn` 이 지금보다 뒤면 다음 칸의 챕터보스가 죽어 있다 — 세기 글이 「보스 재등장까지」 · [건너뛰기] 없음 (ADR-0590)
+ *   graveAt() = 이 런의 칸 챕터보스가 돌아오는 시각(ms) 또는 null(앱이 `game.bossRespawnAt` 로 답한다) — 이겨서 끝났고 지금보다 뒤면 쓰러진 보스 카드의 초상이 무덤 명패다 (ADR-0590)
  *     ~~onRetry()[다시 도전] · onNext()[다음 스테이지] · repeat · restartAt~~ 은 2026-09-29 삭제 — 원정이 멈추지 않아 이어 가기가 두 버튼의 일을 한다
  * @returns 정리 함수
  */
@@ -175,6 +191,8 @@ export function mountBattle(container, opts) {
         wall: resume?.wall ?? opts.now(),
         auto: false,             // 결과 띠가 다음 런을 세는 중 — 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
         shrineCard: null,        // 이긴 끝에 적 진영에 선 신단 id — 서면 적 진영이 몬스터 대신 이 카드를 그린다 (ADR-0449)
+        grave: null,             // 죽어 있는 챕터보스가 돌아오는 시각(ms) — 서면 쓰러진 보스 카드의 초상이 무덤 명패다 (ADR-0590)
+        clock: opts.now,         // 명패의 남은 시간을 그리는 시계 — 재생 시각이 아니라 실제 시각이다
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않고 DOM 도 안 만진다(끝에 `paintCaughtUp` 이 한 번 그린다)
@@ -633,7 +651,12 @@ function renderUnits(state, root) {
             //   몬스터에 남아 있던 것은 이름 **이니셜 글자 하나**였고, 같은 이유로 그림 위에 비쳤다.
             //   09-03 에 죄종 색 원판을 이미 걷었으므로(「카드 형태를 똑같이」·「죄종 안 보이게」) 이제 폴백은 완전히 빈 칸이다
             // ~~경험치 줄~~(ADR-0435)은 같은 날 걷었다 — 사용자 「보라색 선 필요없음」 (ADR-0439)
-            const sprite = face
+            // 죽어 있는 챕터보스 — 결과 띠가 재등장을 세는 동안 쓰러진 보스 카드의 초상 자리에 무덤 명패 (§4-2 · ADR-0590) · 카드는 흐려지지 않는다
+            const grave = state.grave != null && u.side === 'enemy' && u.grade === 'chapter_boss' && u.hp <= 0;
+            if (grave) n.classList.add('grave');
+            const sprite = grave
+                ? `<div class="sprite grave">${gravePlaque(name, state.grave, state.clock())}</div>`
+                : face
                 ? `<div class="sprite has-face"><img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
                 : `<div class="sprite"></div>`;
             // 가로형 본문 하나 — 왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 칸 (2026-09-03 위칸 폐기) — SCREEN_DESIGN §4-2
@@ -1559,11 +1582,20 @@ function showResult(state, root, opts, won) {
         const show = () => { state.shrineCard = nx.shrine.id; renderUnits(state, root); };
         if (state.catchUp) show(); else state.timeouts.push(setTimeout(show, 800));
     }
+    // 이겨서 끝난 챕터보스 칸 — 보스가 돌아올 때까지 쓰러진 보스 카드의 초상이 무덤 명패다(신단 카드와 같은 박자 뒤) (ADR-0590).
+    //   돌아오는 시각은 앱이 답한다(`game.bossRespawnAt`) — 다음 런이 다른 칸으로 가도 이 보스는 죽어 있다
+    const graveAt = won ? opts.graveAt?.() ?? null : null;
+    if (graveAt != null && graveAt > opts.now()) {
+        const show = () => { state.grave = graveAt; renderUnits(state, root); };
+        if (state.catchUp) show(); else state.timeouts.push(setTimeout(show, 800));
+    }
+    // 다음 칸의 챕터보스가 죽어 있다 — 세기 글이 「보스 재등장까지」이고 [건너뛰기]가 안 선다(출발은 보스가 돌아오는 시각 · ADR-0590)
+    const waiting = !!nx && (nx.respawn ?? -Infinity) > opts.now();
     box.innerHTML = `
         <span class="${won ? 'up' : 'down'} verdict">${t(opts.result.mode === 'arena' && opts.result.reason === 'timeout' ? 'ar.draw' : won ? 'bt.won' : 'bt.lost')}</span>
         ${nx ? `<span class="muted b-next"></span>` : ''}
         ${nx?.shrine && !nx.shrine.fresh ? `<span class="b-shrine">${shrineChip(nx.shrine.id)}<span class="muted">${t('bt.shrineKeep')} — ${shrineFxText(nx.shrine.id)}</span></span>` : ''}
-        ${nx ? `<button class="btn sm b-go">${t('bt.skipWait')}</button>` : ''}
+        ${nx && !waiting ? `<button class="btn sm b-go">${t('bt.skipWait')}</button>` : ''}
         <button class="btn primary sm b-report">${t(opts.resultLabel ?? 'bt.toReport')}</button>`;
     box.classList.add('show');
     // 리포트로 간다 — 세기는 **안 끊는다**(멈추는 길은 철수 · 게임 끄기뿐이다). 걷힌 세기는 앱 시계가 잇는다
@@ -1576,7 +1608,7 @@ function showResult(state, root, opts, won) {
         // 세는 초 = 다음 런이 나가는 시각까지 남은 초 — 그 시각(끝난 순간 + [balance.csv:repeat_restart_sec])은 앱이 준다(`game.nextRepeat` · ADR-0300).
         //   끝난 뒤에 관전을 다시 열었으면 이미 흐른 만큼 덜 센다 — 출발 시각은 세기가 아니라 그 답이 정한다
         const next = D.stages[nx.stageId];
-        const key = nx.stageId === opts.stageId ? 'bt.again' : 'bt.nextCell';
+        const key = waiting ? 'bt.respawnWait' : nx.stageId === opts.stageId ? 'bt.again' : 'bt.nextCell';
         const name = next ? `Ch${next.chapter}-${next.stage_num} ${L(stageName(next))}` : '';
         let left = Math.max(0, Math.ceil((nx.at - opts.now()) / 1000)), beat = opts.now();
         const tick = () => {
@@ -1585,6 +1617,8 @@ function showResult(state, root, opts, won) {
             if (at - beat > opts.frozenMs) return;
             beat = at;
             box.querySelector('.b-next').textContent = t(key, { s: left, name });
+            // 무덤 명패의 남은 시간 — 글자만 간다(카드를 다시 짓지 않는다 · ADR-0590)
+            if (state.grave != null) for (const g of root.querySelectorAll('.grave-plaque .grave-left')) g.textContent = graveLeftText(state.grave - at);
             if (left <= 0) { opts.onEnd(true); return; }
             left -= 1;
             state.timeouts.push(setTimeout(tick, 1000));
