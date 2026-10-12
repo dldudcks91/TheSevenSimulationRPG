@@ -1,0 +1,422 @@
+{
+  "date": "2026-10-12",
+  "grid": 6,
+  "styles": {
+    "darktoon": {
+      "ko": "다크 카툰",
+      "en": "Dark Cartoon",
+      "description": "DARK FANTASY CARTOON VFX designed for the chunky, grim, strongly silhouetted characters in the attached game reference. Broad angular cel-shaded silhouettes, thick uneven near-black contour, two decisive colour planes and a small crisp highlight. Punchy asymmetric action gestures, rugged armour-like facets, a few large shards. Fire has blunt hooked flame shapes; ice is heavy faceted crystal; lightning is a forceful jagged ribbon; physical hits have a solid curved steel slash and a few crimson flecks. Buffs frame the face with bold sparse symbols. An expressive combat animation drawing: clean intentional shapes, no paper grain, no painterly brush marks or printmaking texture. Darkly heroic, serious, muscular, never cute or a glossy mobile sticker."
+    },
+    "cinder": {
+      "ko": "강철·잿불",
+      "en": "Steel & Cinder",
+      "description": "CLASSIC DARK ACTION-RPG VFX built from the materials of this game's ruined battlefield: cold worn steel, soot, scorched rock and dull embers. Semi-realistic game-sprite volume, strong sculpted silhouettes, chipped chunky fragments, a restrained directional light and a short kinetic trail. Sharp metal edges and rugged surfaces, no drawn contour. Fire is solid burning ember tongues with black charred interiors; ice is heavy translucent-looking crystal rendered as opaque blue facets; lightning is a bright pale-gold core with only one narrow darker rim; physical attacks are cold metallic crescents with rust-crimson impact shards. Holy and healing retain readable subdued gold/green energy. A weighty grounded combat effect, never photorealistic scenery, paint daubs, crosshatching or a softly blurred fog bank. Keep details coarse enough to read at 90px."
+    },
+    "ritual": {
+      "ko": "고대 주술",
+      "en": "Ancient Ritual",
+      "description": "ANCIENT OCCULT FANTASY VFX for this game's severe warlords, hooded mages and goblin shamans. Clean graphic silhouettes made of fractured angular energy ribbons, broken ceremonial arcs, a few bold abstract incisions and sparse pointed sigil fragments. Flat dark inner shapes bounded by a thin desaturated luminous edge; no thick black cartoon contour, no real material shading, no painterly texture. The energy looks forbidden, old and deliberate, with asymmetric broken geometry rather than ornate lace. Preserve each named action: a slash remains a slash, an arrow remains an arrow and an ice shard remains an ice shard; add at most one restrained broken arc or geometric accent within the existing gesture. Never turn every attack into a magic circle. Buffs/heals use sparse incomplete sigil arcs around the empty face centre. No readable alphabet, no text, no pentagram unless the cell explicitly names one, no neon bloom or confetti. Make strong simple marks that survive reduction to 90px."
+    }
+  },
+  "sheets": [
+    {
+      "id": "01",
+      "cells": [
+        {
+          "file": "war_bash",
+          "content": "BASH, second version (a strike): ONE single heavy diagonal slash stroke from the upper right to the lower left with a burst of flecks at its middle. Physical colors."
+        },
+        {
+          "file": "war_doubleswing",
+          "content": "DOUBLE SWING (a strike): TWO fast slash strokes crossing in one X through the middle of the cell, with a small splash at the crossing. Physical colors."
+        },
+        {
+          "file": "war_quake",
+          "content": "EARTHSPLIT (a strike on every enemy): ONE heavy horizontal stroke cracking across the lower half of the cell, with FIVE short pointed earth spikes flicked up from it. Earth colors."
+        },
+        {
+          "file": "war_leap",
+          "content": "LEAP ATTACK (a strike on every enemy): ONE heavy vertical stroke slamming straight down into the lower middle of the cell, landing in a flat splash ring spreading sideways on the ground. Physical stroke, earth ring."
+        },
+        {
+          "file": "war_taunt",
+          "content": "TAUNT (a buff, face clear): EIGHT short tapered flicks around the OUTER EDGE of the cell, each pointing inward toward the middle but staying in the outer quarter of the cell. Blood colors."
+        },
+        {
+          "file": "war_shout",
+          "content": "WAR CRY (a buff, face clear): exactly the same drawing as cell 1 — EIGHT short tapered flicks around the outer edge pointing inward — only the color differs. Gold colors."
+        },
+        {
+          "file": "war_battleorders",
+          "content": "BATTLE ORDERS (a buff, face clear): exactly the same drawing as cell 1 — EIGHT short tapered flicks around the outer edge pointing inward — only the color differs. Verdigris colors."
+        },
+        {
+          "file": "war_ironskin",
+          "content": "IRON SKIN (a buff, face clear): TWO heavy curved strokes arcing around the LEFT and RIGHT sides of the cell like a shell of iron around the face, each made of three overlapping plate-like strokes. Steel colors."
+        },
+        {
+          "file": "war_ragnarok",
+          "content": "RAGNAROK — BIG (a buff: the berserker becomes a war god, face clear): a towering crown of dark crimson flame strokes rising from behind the shoulders up to the top edge, flanked by two sweeping curved strokes like horns. Blood colors with a dull red-orange."
+        },
+        {
+          "file": "war_berserk",
+          "content": "BERSERK — BIG (a buff: he burns his own blood for fury, face clear): a ring of SIX fierce blood-red slashes bursting OUTWARD from around the middle toward the cell edges, with heavy flung blood drops. Blood colors."
+        },
+        {
+          "file": "war_mutualruin",
+          "content": "MUTUAL DESTRUCTION — BIG (a strike): ONE massive diagonal cleave stroke from the upper right corner to the lower left corner, wider than a face, trailing a thick dark-crimson smear. Physical stroke, blood trail."
+        },
+        {
+          "file": "war_mutualruin_impact",
+          "content": "MUTUAL DESTRUCTION, IMPACT — BIG (the moment after the cleave): a big ragged splash of dark-crimson blood bursting out from the middle in FIVE heavy uneven tongues. Blood colors."
+        },
+        {
+          "file": "war_whirlwind",
+          "content": "WHIRLWIND — BIG (a strike on several enemies): THREE long curved slash strokes swirling around the middle of the cell like a whirlwind, spreading to the cell edges. Physical colors."
+        },
+        {
+          "file": "war_thorswrath",
+          "content": "THOR'S WRATH — BIG, FALL (a strike from above): a huge war-hammer head formed in a few heavy strokes, dropping straight down, its face at 86% of the cell height, with heavy speed strokes trailing up to the top edge. Steel colors."
+        },
+        {
+          "file": "war_thorswrath_impact",
+          "content": "THOR'S WRATH, IMPACT — BIG (the hammer lands): a heavy burst of cracked ground splashing out from the middle and sideways, with a flat shockwave stroke. Earth and steel colors."
+        },
+        {
+          "file": "war_shockwave",
+          "content": "SHOCKWAVE — BIG (a strike on every enemy): TWO wide flat ellipse ring strokes spreading out low across the ground around the middle of the cell, with dust flicked up along the outer ring. Earth colors."
+        },
+        {
+          "file": "war_lionsroar",
+          "content": "LION'S ROAR — BIG (a strike on every enemy): THREE huge crescent sound-wave strokes sweeping from the left toward the right across the cell, each larger than the last. Gold colors."
+        },
+        {
+          "file": "war_command",
+          "content": "COMMAND — BIG (a buff on the whole party, face clear): THREE big upward-pointing chevron strokes rising on the LEFT and RIGHT sides of the cell, with flecks lifting upward. Gold colors with a dull crimson accent."
+        },
+        {
+          "file": "war_intimidate",
+          "content": "INTIMIDATE — BIG (a curse on every enemy): jagged dark strokes stabbing INWARD from all four edges of the cell toward the middle, crimson and charcoal, the middle left open. Blood colors with charcoal."
+        },
+        {
+          "file": "mag_fireball",
+          "content": "FIREBALL, second version (fire, hits one enemy, bursting at the middle of the cell): a compact fireball impact — one swirling stroke of fire wrapping around a hot center, with a few flecks thrown off."
+        },
+        {
+          "file": "mag_inferno",
+          "content": "INFERNO (fire on every enemy, rising from below): a wall of flame strokes rising from the bottom of the cell to about two-thirds of its height."
+        },
+        {
+          "file": "mag_iceblast",
+          "content": "ICE BLAST — FALL (ice, one enemy): ONE big jagged ice shard formed with a few hard strokes, point down, dropping from above; its point at 87% of the cell height, a short cold trail above it."
+        },
+        {
+          "file": "mag_iceblast_shatter",
+          "content": "ICE BLAST — IMPACT LOW (the shard breaking on the target): a burst of broken ice strokes splashing outward, centered at 89% of the cell height, mostly spreading sideways and up."
+        },
+        {
+          "file": "mag_frostnova",
+          "content": "FROST NOVA (ice on every enemy, bursting outward): a ring of cold strokes and a few ice spikes bursting outward low around the middle of the cell; the middle stays open."
+        },
+        {
+          "file": "mag_lightning",
+          "content": "LIGHTNING, second version — FALL (lightning, one enemy): ONE thick lightning stroke with two sharp bends from the top edge down to 90% of the cell height, splitting into a short splash fork where it lands."
+        },
+        {
+          "file": "mag_chain",
+          "content": "CHAIN LIGHTNING (lightning jumping between enemies): ONE jagged lightning stroke running HORIZONTALLY across the middle of the cell from left to right, with one short fork."
+        },
+        {
+          "file": "mag_frozenwall",
+          "content": "FROZEN WALL (ice, a barrier rises): a row of THREE or FOUR tall jagged ice spikes rising from the bottom of the cell, formed with hard upward strokes."
+        },
+        {
+          "file": "arc_poison",
+          "content": "POISON ARROW (a buff on the archer, face clear): TWO wavering strokes of murky poison rising up the LEFT and RIGHT sides of the cell, with a few drops; the middle stays empty."
+        },
+        {
+          "file": "pri_judgment",
+          "content": "JUDGMENT (holy, strikes one enemy from above): ONE broad vertical stroke of pale dull-gold light coming straight down from the top edge onto the middle of the cell, with a small flat splash ring where it lands."
+        },
+        {
+          "file": "kni_smite",
+          "content": "SMITE (a strike): ONE crescent stroke (a shield edge) slamming in from the upper left, with ONE round flash ring where it hits the middle. steel crescent, holy flash."
+        },
+        {
+          "file": "kni_holyshield",
+          "content": "HOLY SHIELD (a buff; face clear): ONE rounded shield-shaped frame around the middle, with ONE small plain cross at its top. holy."
+        },
+        {
+          "file": "kni_charge",
+          "content": "CHARGE (a strike): ONE lance-tip stroke flying in from the left with its point at the middle, ONE ring around the point. steel."
+        },
+        {
+          "file": "kni_rush",
+          "content": "RUSH (a strike): TWO short parallel thrust strokes flying in from the left toward the middle. steel."
+        },
+        {
+          "file": "kni_might",
+          "content": "MIGHT (an aura; face clear): a magic circle made of TWO concentric rings around the middle, with a FIVE-POINTED STAR drawn inside it in lines. arcane."
+        },
+        {
+          "file": "kni_fanaticism",
+          "content": "FANATICISM (an aura; face clear): the SAME magic circle of TWO concentric rings, with FOUR curved PINWHEEL blades drawn inside it in lines. arcane."
+        },
+        {
+          "file": "kni_defiance",
+          "content": "DEFIANCE (an aura; face clear): the SAME magic circle of TWO concentric rings, with a SQUARE INSIDE A SQUARE (the inner one turned 45 degrees) drawn inside it in lines. arcane."
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "cells": [
+        {
+          "file": "kni_enchant",
+          "content": "ENCHANT (a buff: fire on the blade; face clear): ONE diagonal blade-shaped stroke along the left side with THREE small flame tongues rising along it. fire."
+        },
+        {
+          "file": "kni_duel",
+          "content": "DUEL MARK (a curse on one enemy): ONE X mark in the middle inside ONE ring. blood."
+        },
+        {
+          "file": "kni_duel_guard",
+          "content": "DUEL GUARD (a buff; face clear): ONE rounded frame around the middle with small corner ticks. blood."
+        },
+        {
+          "file": "mag_focus",
+          "content": "FOCUS (a buff; face clear): ONE dotted magic circle around the middle with FOUR small ice crystals at the diagonals. ice."
+        },
+        {
+          "file": "arc_snipe",
+          "content": "SNIPE (a strike): ONE long arrow stroke flying in from the left with its head at the middle, ONE small round flash at the head. wind."
+        },
+        {
+          "file": "arc_rapid",
+          "content": "RAPID SHOT (a strike): THREE short arrow strokes flying in from the left toward the middle, stacked one above another. wind."
+        },
+        {
+          "file": "arc_multishot",
+          "content": "MULTISHOT (a strike on every enemy): FIVE arrow strokes raining steeply down from the upper left. wind."
+        },
+        {
+          "file": "arc_guided",
+          "content": "GUIDED ARROW (a strike): ONE arrow stroke curving in a big hook from the upper right into the middle, ending in ONE target ring. wind."
+        },
+        {
+          "file": "arc_pierce",
+          "content": "PIERCING SHOT (a buff; face clear): ONE long horizontal arrow stroke across the LOWER THIRD, piercing through THREE rings. wind."
+        },
+        {
+          "file": "pri_heal",
+          "content": "HEALING LIGHT (a heal; face clear): TWO ribbons rising up the left and right sides, with FOUR small round motes rising. heal."
+        },
+        {
+          "file": "pri_grace",
+          "content": "GRACE (a buff; face clear): ONE arc sweeping over the top of the middle, with THREE small leaf shapes rising. holy."
+        },
+        {
+          "file": "pri_haste",
+          "content": "HASTE (a buff; face clear): FOUR upward chevrons (^) stacked on the left side and FOUR on the right side. wind."
+        },
+        {
+          "file": "pri_cure",
+          "content": "HEAL (a heal; face clear): ONE ring around the middle with FOUR short rays pointing outward and FOUR small round motes. heal."
+        },
+        {
+          "file": "pri_regen",
+          "content": "PRAYER OF REGENERATION (a buff; face clear): ONE magic circle around the middle with FOUR small leaf shapes at the diagonals. heal."
+        },
+        {
+          "file": "pri_penitence",
+          "content": "PENITENCE (a curse; face clear): TWO wavy shadow streams sinking down from the top corners, and THREE downward-pointing shards along the bottom edge. shadow."
+        },
+        {
+          "file": "pri_bind",
+          "content": "BIND (a curse): TWO horizontal binding bands crossing the cell (one in the upper third, one in the lower third), with ONE sigil ring behind them. shadow."
+        },
+        {
+          "file": "kni_lastbastion",
+          "content": "BIG: LAST BASTION (a party buff: the guardian becomes the party's fortress; face clear): a wall of FIVE tall dented steel tower shields standing side by side in a U-shaped arc around the bottom and both sides of the cell, rivets and scratches, with a crenellated stone battlement rim along their tops. Steel gray and muted stone blue."
+        },
+        {
+          "file": "kni_unbreakablewill",
+          "content": "BIG: UNBREAKABLE WILL (a buff: the guardian's body turns hard as iron; face clear): THREE thick riveted iron bands wrapped around the portrait in a ring, one over another, dented and scraped, with TWO big stone chunks breaking off the outside while the bands hold. Dark steel-blue iron and stone gray."
+        },
+        {
+          "file": "kni_divinejudgment",
+          "content": "BIG: DIVINE JUDGMENT (a buff: a thick holy barrier that throws blows back; face clear): a heavy round barrier ring of pale-gold metal plates around the portrait, with SIX short sword blades sticking OUTWARD from it like spikes. Pale gold and steel gray."
+        },
+        {
+          "file": "kni_unyieldingoath",
+          "content": "BIG: UNYIELDING OATH (a party buff: an oath that shields everyone; face clear): a thick pale-gold round shield rim around the portrait, an old parchment oath ribbon wrapping around it twice, and an upright sword hilt standing at the top. Pale gold and parchment cream."
+        },
+        {
+          "file": "kni_holywar",
+          "content": "BIG: HOLY WAR (a party buff: a holy-war barrier for everyone; face clear): a thick dull-gold ring around the portrait wreathed in FIVE tall muted red-orange flame tongues rising from its top half, with a crude cross mark at the bottom of the ring. Dull gold and muted red-orange."
+        },
+        {
+          "file": "kni_vow",
+          "content": "BIG: VOW (a party heal: a vow that raises everyone's max health and heals them; face clear): THREE thick pale-green healing ribbons spiraling up around the sides of the portrait, a big pale-gold oath ring around the top, and FOUR fat healing drops rising. Muted pale green and pale gold."
+        },
+        {
+          "file": "kni_retribution",
+          "content": "BIG: RETRIBUTION (a buff: the crusader turns endured wounds into fury; face clear): TWO great wings, each made of FIVE jagged crimson sword blades, fanning up and out behind the left and right shoulders, with a few dark-red drops. Dark crimson and steel gray."
+        },
+        {
+          "file": "kni_condemnation",
+          "content": "BIG: CONDEMNATION, FALL (a strike: a judgment blow that finishes a foe): ONE huge executioner's greatsword plunging straight down point-first, its tip in the bottom quarter of the cell, with THREE thick vertical speed streaks above it to the top edge. Steel gray with a crimson-wrapped hilt."
+        },
+        {
+          "file": "kni_condemnation_impact",
+          "content": "BIG: CONDEMNATION, IMPACT: a big cross-shaped crack burst centered: FOUR heavy crimson-and-steel jagged arms (up, down, left, right, of uneven lengths, NOT a perfect star) with broken stone chunks. Crimson and steel gray."
+        },
+        {
+          "file": "kni_showdown",
+          "content": "BIG: SHOWDOWN (a buff: the crusader challenges one foe to a fight to the end; face clear): TWO huge swords crossing ABOVE the head (their crossing point near the top edge), blades running down along both sides of the cell, with a ring of FOUR crimson jagged challenge streaks. Steel gray and crimson."
+        },
+        {
+          "file": "mag_meteor",
+          "content": "BIG: METEOR, FALL (a burning boulder from the sky): ONE huge cracked burning boulder dropping steeply from the upper right, the boulder low in the cell near the bottom center, a thick tail of FOUR big flame tongues streaming back to the upper-right corner. Muted red-orange flame and dark charcoal-brown rock."
+        },
+        {
+          "file": "mag_meteor_impact",
+          "content": "BIG: METEOR, IMPACT: a heavy fire-and-rock blast centered: FIVE big uneven flame tongues bursting out with FIVE broken rock chunks flying, a cracked crater rim at the bottom. Muted red-orange and charcoal brown."
+        },
+        {
+          "file": "mag_firewall",
+          "content": "BIG: FIREWALL (a strike on every enemy: a wall of fire): a tall wall of fire spanning the FULL WIDTH of the cell, SIX thick flame tongues of uneven height rising from a broken burning ground line at the bottom. Muted red-orange and dark ember brown."
+        },
+        {
+          "file": "mag_hydra",
+          "content": "BIG: HYDRA (a strike: fire serpent heads bite again and again): THREE crude fire serpent heads made of flame, fanged jaws open, lunging in from the left, the right and the top toward the middle, their necks trailing off to the cell edges. Muted red-orange and charcoal."
+        },
+        {
+          "file": "mag_frozenorb",
+          "content": "BIG: FROZEN ORB (a strike: a big ice orb hurled at one enemy): ONE big round ice orb with chunky white cracks sitting at the middle of the cell, flying in from the left, with a trail of THREE fat ice shards behind it reaching the left edge. Clear muted blue ice with white cracks and a bright pale core."
+        },
+        {
+          "file": "mag_frozenorb_impact",
+          "content": "BIG: FROZEN ORB, IMPACT: the orb shatters at the middle: EIGHT big ice shards flung outward in a slight spiral (uneven, not a symmetrical star), a cracked ice core left in the middle. Clear muted blue ice with white cracks."
+        },
+        {
+          "file": "mag_blizzard",
+          "content": "BIG: BLIZZARD (a strike on every enemy: a storm cloud of ice): a heavy lumpy blue-gray snow cloud across the TOP THIRD of the cell (opaque, thick outline), with SEVEN thick ice shards and big snow clumps slanting down from it to the bottom of the cell. Muted blue ice, white and slate gray."
+        },
+        {
+          "file": "mag_frostburst",
+          "content": "BIG: FROST BURST (a strike: frost closes in on one enemy): a thick uneven cracked ring of TEN short heavy ice spikes closing in around the middle, all pointing inward. Clear muted blue ice with white cracks."
+        },
+        {
+          "file": "mag_frostburst_impact",
+          "content": "BIG: FROST BURST, IMPACT (the frost explodes): SIX huge jagged ice spikes bursting OUTWARD from the middle in uneven lengths, with a few big ice chunks. Clear muted blue ice and white."
+        },
+        {
+          "file": "mag_thunderstrike",
+          "content": "BIG: THUNDER STRIKE, FALL (a massive bolt from the sky): ONE very thick jagged lightning bolt coming straight down from the top edge and ending in the bottom quarter of the cell, with TWO short forks. Pale yellow with a white core and a dark charcoal outline."
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "cells": [
+        {
+          "file": "mag_thunderstrike_impact",
+          "content": "BIG: THUNDER STRIKE, IMPACT: a jagged electric blast centered: FIVE thick zigzag lightning arms of uneven length crackling out, with scorched black cracked ground chunks. Pale yellow and charcoal."
+        },
+        {
+          "file": "mag_nova",
+          "content": "BIG: NOVA (a strike on every enemy: a ring of lightning bursts out): a big jagged ring of crackling lightning bursting outward around the middle, with SIX forked branches reaching toward the cell edges, the middle empty. Pale yellow and white with a charcoal outline."
+        },
+        {
+          "file": "mag_staticfield",
+          "content": "BIG: STATIC FIELD (a strike: static electricity crawls over one enemy): a crude cage of FOUR thick zigzag lightning arcs wrapped around the middle like a net, crossing each other, with FOUR heavy knots where they cross. Pale yellow and white with a charcoal outline."
+        },
+        {
+          "file": "arc_trueaim",
+          "content": "BIG: TRUE AIM (a buff: the sniper takes perfect aim; face clear): a big crude sniper reticle around the portrait: a thick broken ring with FOUR heavy tick marks pointing in from the top, bottom, left and right, and ONE fat arrow lying across the top of the ring. Bone-white with a muted sage-green rim."
+        },
+        {
+          "file": "arc_singlestrike",
+          "content": "BIG: SINGLE STRIKE (a strike: one gigantic arrow): ONE gigantic fat arrow, as long as the cell, flying in from the left with its iron head at the middle of the cell, THREE thick motion streaks along its shaft, feathers at the left edge. Bone-white shaft with a muted sage-green rim and a dark iron head."
+        },
+        {
+          "file": "arc_singlestrike_impact",
+          "content": "BIG: SINGLE STRIKE, IMPACT: a heavy piercing hit centered: a deep jagged crack burst with FIVE big splinters and TWO broken armor plates flying out to the right. Bone-white, muted sage green and iron gray."
+        },
+        {
+          "file": "arc_reload",
+          "content": "BIG: RELOAD (a buff: the sniper reloads faster; face clear): SIX fat arrows circling around the portrait head-to-tail like a revolving quiver, with a thick curved motion streak behind them. Bone-white with a muted sage-green rim."
+        },
+        {
+          "file": "arc_quickdraw",
+          "content": "BIG: QUICK DRAW (a buff: the bowmaster shoots very fast; face clear): THREE thick bow-string arcs repeated around the left side of the portrait like a fast motion blur, and FIVE thick speed streaks on the right side. Bone-white and muted sage green."
+        },
+        {
+          "file": "arc_fulldraw",
+          "content": "BIG: FULL DRAW (a buff: every normal shot hits much harder; face clear): ONE huge longbow bent into a deep curve over the top of the portrait from corner to corner, and ONE fat arrow lying across the bottom of the cell with its iron head pointing right, plus FOUR thick power streaks. Bone-white wood, muted sage green and dark iron."
+        },
+        {
+          "file": "arc_chaindraw",
+          "content": "BIG: CHAIN DRAW (a buff: every normal shot pierces through all enemies; face clear): FIVE fat arrows linked head-to-tail by thick iron chain links, curving in a big arc around the lower half and sides of the portrait. Bone-white arrows with a muted sage-green rim and a dark iron chain."
+        },
+        {
+          "file": "arc_huntersmark",
+          "content": "BIG: HUNTER'S MARK (a curse on every enemy: the ranger marks them as prey; face clear): a big crude hunter's target formed in dull red-ochre war paint: a thick broken ring around the middle with FOUR heavy claw-like slashes crossing its edges, the middle left empty. Dull red ochre and dark brown."
+        },
+        {
+          "file": "arc_supportingfire",
+          "content": "BIG: SUPPORTING FIRE (a party buff: covering arrows for everyone; face clear): a volley of SIX fat arrows rising steeply up past both sides of the portrait from the bottom corners, fanning out toward the top edge. Bone-white with a muted sage-green rim."
+        },
+        {
+          "file": "arc_trap",
+          "content": "BIG: TRAP (a strike: a hidden trap snaps on one enemy): ONE big rusty iron bear trap snapping shut from below, its TWO jagged-toothed jaws clamping up around the lower half of the cell, a chain hanging off it, FOUR torn leaves and dirt clumps flying. Rusty brown iron and muted moss green."
+        },
+        {
+          "file": "pri_aegis",
+          "content": "BIG: AEGIS (a party buff: a thick holy shield for everyone; face clear): a great round holy shield rim around the portrait made of FOUR heavy bone-white plates joined by pale-gold rivets, with crude cross marks at the top and bottom of the rim. Bone-white and pale gold."
+        },
+        {
+          "file": "pri_benediction",
+          "content": "BIG: BENEDICTION (a party heal: a great blessing that restores everyone; face clear): FIVE thick pale-gold ray wedges (solid, outlined, not glowing) falling from the top edge on both sides of the portrait, and FOUR fat muted-green healing leaves and drops rising from the bottom. Pale gold and muted green."
+        },
+        {
+          "file": "pri_resurrection",
+          "content": "BIG: RESURRECTION (a heal: calls an ally back from death's door; face clear): TWO large crude feathered wings spreading out behind the portrait to the left and right edges, chunky feathers in a few big rows, with a thick pale-gold halo ring floating above the head near the top edge. Bone-white feathers and pale gold."
+        },
+        {
+          "file": "pri_punishment",
+          "content": "BIG: DIVINE PUNISHMENT, FALL (a judgment that falls from heaven on every enemy): ONE huge jagged bone-white stake of hard light dropping straight down, its point in the bottom quarter of the cell, with TWO thick black-and-ash streaks above it reaching the top edge. Bone-white, ash gray and charcoal black."
+        },
+        {
+          "file": "pri_punishment_impact",
+          "content": "BIG: DIVINE PUNISHMENT, IMPACT: a heavy cracked blast centered: FIVE jagged bone-white and charcoal-black shards bursting out unevenly, with dull dried-blood-red cracks in broken ground at the bottom. Bone-white, charcoal black and dull dried-blood red."
+        },
+        {
+          "file": "pri_atonement",
+          "content": "BIG: ATONEMENT (a curse on every enemy: black chains of penance; face clear): FOUR heavy black iron chains with crude barbed hooks reaching in from the four corners toward the middle, dull dried-blood-red drips hanging from the hooks, the middle left empty. Charcoal black iron and dull dried-blood red."
+        },
+        {
+          "file": "pri_excommunication",
+          "content": "BIG: EXCOMMUNICATION (a strike: the black priest casts one enemy out): ONE big round black iron seal stamp slamming onto the middle, its face carved with a crude broken cross, THREE bone-white cracks splitting out from it and dried-blood spatter. Charcoal black, bone-white and dull dried-blood red."
+        },
+        {
+          "file": "pri_diamondbody",
+          "content": "BIG: DIAMOND BODY (a buff: the monk's body becomes hard as bronze; face clear): a thick rough bronze ring around the portrait like a temple bell rim, FOUR heavy bronze plates locked on it, and a crude vajra (a short double-ended prayer weapon) standing above the head near the top edge. Weathered bronze and saffron ochre."
+        },
+        {
+          "file": "pri_sweep",
+          "content": "BIG: SWEEP (a strike on every enemy: the monk sweeps them with a staff): ONE huge sweeping arc of a heavy wooden staff swinging across the FULL WIDTH of the cell from left to right, a thick curved swoosh trail, the staff's iron-capped end at the right, FOUR dust clumps kicked up. Saffron ochre, brown wood and iron gray."
+        },
+        {
+          "file": "pri_counter",
+          "content": "BIG: COUNTER (a buff: the monk guards and strikes back; face clear): FOUR big clenched fists wrapped in cloth bandages punching OUTWARD from around the portrait at the four diagonals, each with a thick impact streak behind it. Weathered bronze skin and saffron cloth."
+        }
+      ]
+    }
+  ],
+  "references": [
+    "character_reference.png",
+    "battle_reference.png"
+  ]
+}

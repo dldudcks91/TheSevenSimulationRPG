@@ -826,16 +826,18 @@ export const MG_ART = Object.fromEntries(['mine_hazard', 'gather_poison', 'gathe
     .map(id => [id, `${MG_ART_DIR}${id}${ICON_EXT}`]));
 
 /**
- * 재화 실루엣 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.
- * viewBox 32×32 · 채움은 CSS 의 currentColor(칸마다 `.res-<종류>` 가 색을 준다). 아트가 오면 이 표만 이미지로 갈아 끼운다.
+ * 재화 그림 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). **골드 · 분해 가루는 그림**(`icons/currency/`) · 낙인은 ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.
+ * 제작 재료(광석 · 목재 · 약초)는 칸이 먼저 그 단계의 재료 아이콘(`materialIcon`)을 읽는다 — 아래 ore · wood · herb 실루엣은 아이콘 없는 재료의 폴백이다.
+ * 실루엣은 viewBox 32×32 · 채움은 CSS 의 currentColor(칸마다 `.res-<종류>` 가 색을 준다). 아트가 오면 이 표의 그 줄만 `resImg` 로 갈아 끼운다.
  * 종류 = 자원 셋(gold · dust · stigma) · 제작 재료는 그 재료가 나는 파견처로 가른다(ore 채광 · wood 벌목 · herb 채집 — `app.js:resKind`)
  */
 const resSvg = body => `<svg viewBox="0 0 32 32" aria-hidden="true">${body}</svg>`;
+const resImg = id => `<img src="./assets/art/icons/currency/${id}${ICON_EXT}" alt="" draggable="false">`;
 export const RES_ART = {
-    // 금화 — 테 두른 동전 둘(앞 동전의 가운데 홈)
-    gold: resSvg('<path d="M19 6a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z" opacity=".45"/><path fill-rule="evenodd" d="M13 8a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-1.5 3h3v8h-3Z"/>'),
-    // 분해 가루 — 낮은 더미 위 흩날리는 알갱이
-    dust: resSvg('<path d="M3 27c3-6 7.5-9 13-9s10 3 13 9Z"/><circle cx="9" cy="11" r="1.8"/><circle cx="16" cy="6" r="1.5"/><circle cx="23" cy="10" r="2"/><circle cx="13" cy="14" r="1.2"/><circle cx="20" cy="15" r="1.1"/>'),
+    // 금화 — 왕관을 찍은 주화 한 닢 (Codex · 2026-10-12)
+    gold: resImg('gold'),
+    // 분해 가루 — 돌절구에 수북한 잿빛 가루 (Codex · 2026-10-12)
+    dust: resImg('dust'),
     // 낙인 — 속이 빈 마름모 인장
     stigma: resSvg('<path fill-rule="evenodd" d="M16 2 28 16 16 30 4 16Zm0 7-6 7 6 7 6-7Z"/><path d="M15 14h2v4h-2Z"/>'),
     // 광석 — 모난 돌덩이 둘
@@ -847,15 +849,14 @@ export const RES_ART = {
 };
 
 /**
- * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331). 심볼 일곱 = **죄종 일곱** — 칸마다 그 죄종 아이콘(`sinIcon`)을 든다 (2026-09-28 사용자 지시).
+ * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331 · 그림 ADR-0608). 심볼 일곱 = **죄종 일곱** (2026-09-28 사용자 지시).
  * 짝은 뜻으로 맞췄다 — 최고 심볼 = 오만 · 와일드 = 탐욕(탐욕 = 도박) · 골드 = 색욕 · 광석 = 분노(대장간 불) · 목재 = 시기(숲 챕터) · 가루 = 나태(쌓인 먼지) · 코인 = 폭식(쌓아 먹는다).
- * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만. 무엇을 받는지는 배당표가 읽힌다
+ * 그림은 그 죄종의 **문장(죄종 아이콘)을 물건 한 점으로 그린 것**이다 — 오만 = 무쇠 왕관 · 탐욕 = 금 인장 반지(「탐욕의 인장」) · 색욕 = 장미 · 분노 = 화로의 불 ·
+ * 시기 = 가시 박힌 눈 · 나태 = 모래시계 · 폭식 = 아가리를 찍은 동전 · 잭팟 코인 = 루비 박힌 금화 (Codex · 2026-10-12 · 원본 `icons_source/gamble/`).
+ * 파일명 = `slot_symbol.csv` 의 `symbol_id` · 잭팟 코인 한 장은 `slot_coin.csv` 의 kind(`jackpot`).
+ * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만. 무엇을 받는지는 배당표가 읽힌다.
+ * ~~`slotArt`~~ 는 장비 빈 칸 그림이 이미 쓰는 이름이다
  */
-const GAMBLE_SIN = { seven: 'pride', wild: 'greed', gold: 'lust', ore: 'wrath', timber: 'envy', dust: 'sloth', coin: 'gluttony' };
-/** 심볼 그림 — 흰 단색 죄종 아이콘을 **마스크**로 써 그 죄종 색(`SINS.color`)으로 칠한다(`sk-icon-mask` 와 같은 수법). 글자는 색을 안 든다.
- *  ~~`slotArt`~~ 는 장비 빈 칸 그림이 이미 쓰는 이름이다 */
-export const gambleArt = id => {
-    const sin = GAMBLE_SIN[id], src = sinIcon(sin);
-    return src ? `<i class="gb-ico sk-icon-mask" aria-hidden="true" style="background:${SINS[sin].color};-webkit-mask-image:url('${src}');mask-image:url('${src}')"></i>` : '';
-};
+const GAMBLE_ART_DIR = './assets/art/icons/gamble/';
+export const gambleArt = id => `<img class="gb-ico" src="${GAMBLE_ART_DIR}${id}${ICON_EXT}" alt="" draggable="false">`;
 

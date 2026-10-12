@@ -239,7 +239,7 @@ const STRINGS = {
     // 출정 확인 창의 문장 — 문구는 사용자 지시 그대로다 (SCREEN_DESIGN §4-1 · ADR-0467)
     'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
-    // 난이도 줄 오른쪽 — 다음에 열릴 단의 조건 (SCREEN_DESIGN §4-1 · ADR-0586). {d} = 앞 단 이름 · {ch} = `balance.csv:difficulty_unlock_chapter`
+    // 난이도 탭 바로 옆 — 다음에 열릴 단의 조건 (SCREEN_DESIGN §4-1 · ADR-0586 · ADR-0596). {d} = 앞 단 이름 · {ch} = `balance.csv:difficulty_unlock_chapter`
     'exp.diff.need': { ko: '{d} {ch}장 보스 클리어 필요', en: 'Clear the {d} Ch{ch} boss first' },
     /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 폐지로 「위험도 {lv}」 → 「레벨 {lv}」]. {lv} = `stage.csv:dlvl` */
     'exp.stageMeta': { ko: '레벨 {lv} · 약 {m}분', en: 'Level {lv} · ~{m} min' },
@@ -392,6 +392,9 @@ const STRINGS = {
     'tv.join.h': { ko: '가입 희망', en: 'Wants to Join' },
     'tv.join.left': { ko: '{t} 뒤 떠난다', en: 'Leaves in {t}' },
     'tv.join.gone': { ko: '이미 떠났다', en: 'Already gone' },
+    // 영웅 보내기 칸 — 오른쪽 열 위 · 고른 영웅의 얼굴이 서는 자리 (SCREEN_DESIGN §8-1 · ADR-0593)
+    'tv.send.h': { ko: '영웅 보내기', en: 'Send a Hero' },
+    'tv.send.back': { ko: '돌아왔다', en: 'Back home' },
     /* 수색 칸 [신설 2026-09-01 · **실동작 2026-09-09** — SCREEN_DESIGN §8-1 · ADR-0062].
        ⚠ 진행 중 이야기 문장은 여기 없다 — `search_story.csv` 가 든다(막 수·죄종 필터가 굴림의 입력이라
        표시 문구가 아니라 게임 데이터다). 화면은 `searchState().beats[].text` 를 `L()` 로 풀 뿐이다 */
@@ -483,10 +486,6 @@ const STRINGS = {
     'ar.edit': { ko: '편성 수정', en: 'Edit party' },
     'ar.needTeam': { ko: '편성에 영웅 3명을 채워야 한다', en: 'Assign three heroes to this party' },
     'ar.empty': { ko: '빈 자리', en: 'Empty slot' },
-    'ar.ours': { ko: '우리 팀', en: 'Your team' },
-    'ar.opponent': { ko: '상대 팀', en: 'Opponent team' },
-    'ar.front': { ko: '전열', en: 'Front' },
-    'ar.backRank': { ko: '후열', en: 'Back' },
     'ar.noOpponent': { ko: '상대를 찾으면 팀이 나타난다', en: 'Find an opponent to reveal their team' },
     'ar.noTactic': { ko: '열린 전술 칸 없음', en: 'No tactic slots open' },   // Party 판의 전술 칸이 빌 때 (ADR-0495)
     'ar.find': { ko: '상대 찾기', en: 'Find opponent' },
@@ -688,8 +687,9 @@ const STRINGS = {
     // 옛 `tip.up.max` — 2026-09-08 에 툴팁의 강화 줄이 죽으면서 **제련소 전용**이 되어 접두를 옮겼다 (문구·인자 동일)
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
     'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
-    'fg.worn': { ko: '착용 중', en: 'Equipped' },
-    'fg.bag': { ko: '가방', en: 'Bag' },
+    // 강화 진열의 메타 — 누가 끼고 있나 · 안 끼었으면 있는 곳(`ch.bag.inv` · `ch.bag.stash`) (ADR-0604 · ~~`fg.worn` 착용 중 · `fg.bag` 가방~~)
+    'fg.wornBy': { ko: '{name} 착용', en: 'Worn by {name}' },
+    'fg.stage': { ko: '강화 단계', en: 'Upgrade level' },   // 강화 작업 칸의 눈금 머리 (ADR-0604)
     'fg.pick': { ko: '장비를 고른다', en: 'Pick an item' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade' },
     // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
@@ -1341,14 +1341,17 @@ const STRINGS = {
     'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 도서관 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
-    'bk.own.h': { ko: '가진 책', en: 'Books Owned' },
+    'bk.up.h': { ko: '스킬 업그레이드', en: 'Skill Upgrade' },   // 도서관 오른쪽 위 카드 제목 (2026-10-12 사용자 지시 · ADR-0597 — ~~`bk.own.h` 「가진 책」~~)
+    'bk.up.help': { ko: '보유한 스킬북을 통해 스킬 레벨을 업그레이드 할 수 있습니다.', en: 'Use the skill books you own to upgrade skill levels.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0603)
     'bk.none': { ko: '가진 책이 없다', en: 'No books' },
     'bk.learn': { ko: '배우기', en: 'Learn' },
     'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite' },
     'bk.upgrade': { ko: '업그레이드 · {n}권', en: 'Upgrade · {n}' },   // 같은 책 — 이번에 드는 책 수 (2026-10-06 · R216 · ADR-0529 — ~~`bk.same` 「배움」~~ 퇴역)
     'bk.max': { ko: '최대', en: 'Max' },
-    'bk.craft.h': { ko: '기본 책 만들기', en: 'Craft Basic Books' },
+    'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting' },   // 도서관 오른쪽 아래 카드 제목 (2026-10-12 사용자 지시 · ADR-0597)
     'bk.make': { ko: '만들기', en: 'Craft' },
+    'bk.craft.help': { ko: '스킬 도안을 얻으면 그 스킬북을 만들 수 있습니다.', en: 'Obtain a skill blueprint to craft that skill book.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0600)
+    'bk.craft.none': { ko: '스킬 도안이 없다', en: 'No skill blueprints' },   // 제작 칸이 하나도 없을 때 (ADR-0600)
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}' },
     'bk.crafted': { ko: '{skill} 스킬북을 만들었다', en: 'Crafted a {skill} book' },
     'bk.upgraded': { ko: '{name} — {skill} Lv.{n}', en: '{name} — {skill} Lv.{n}' },   // 같은 책 업그레이드 (R216)
@@ -1361,6 +1364,7 @@ const STRINGS = {
     'bk.err.maxUp': { ko: '이미 최대 레벨이다', en: 'Already at max level' },   // 업그레이드 상한 (R216 — ~~`bk.err.same`~~ 퇴역)
     'bk.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'bk.err.materials': { ko: '가루가 모자란다', en: 'Not enough dust' },
+    'bk.err.blueprint': { ko: '스킬 도안이 없다', en: 'No skill blueprint' },   // craftBook — 그 스킬의 도안이 아직 없다 (R241)
     /* 스킬 툴팁 문장 [전면 개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2]
        ~~`표기 6초 · 실효 7.2초 (+20%)`~~ 를 버리고 **데이터로 조립한 한 문장**을 낸다.
        틀은 `kind` × `target` 이 고르고 숫자만 강조색으로 뽑는다. **조각을 이어붙이지 않는다** —
@@ -1703,11 +1707,14 @@ const STRINGS = {
     // 이펙트 세그먼트 [2026-10-05 · §9-1 · ADR-0513 · 세그먼트로 2026-10-09 ADR-0559] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
     'ix.fx.playAll': { ko: '▶ 전부 재생', en: '▶ Play All' },
     // 이펙트 세그먼트의 그림체 탭 [2026-10-09 · §9-1 · ADR-0559] — 키 = skill_art.js:ART_STYLES · 실전 그림체에는 live 가 이름을 감싼다
-    'ix.fxs.portrait': { ko: '초상 그림체', en: 'Portrait' },     // 영어는 짧게 — 설정 판(§2-2)의 좁은 줄에 여섯이 선다
+    'ix.fxs.portrait': { ko: '초상 그림체', en: 'Portrait' },     // 영어는 짧게 — 설정 판(§2-2)의 좁은 줄에 선다
     'ix.fxs.ink': { ko: '수묵', en: 'Ink' },
     'ix.fxs.pen': { ko: '고딕 펜화', en: 'Gothic Pen' },          // 초상 그림체 · 수묵에 비슷한 시안 셋 [2026-10-10 · ADR-0584]
     'ix.fxs.charcoal': { ko: '목탄', en: 'Charcoal' },
     'ix.fxs.oil': { ko: '유화', en: 'Oil Paint' },
+    'ix.fxs.darktoon': { ko: '다크 카툰', en: 'Dark Cartoon' },
+    'ix.fxs.cinder': { ko: '강철·잿불', en: 'Steel & Cinder' },
+    'ix.fxs.ritual': { ko: '고대 주술', en: 'Ancient Ritual' },
     'ix.fxs.code': { ko: '코드 모양', en: 'Code' },
     'ix.fxs.live': { ko: '{name} · 실전', en: '{name} · In Battle' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]

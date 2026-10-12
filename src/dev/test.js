@@ -614,7 +614,7 @@ check('csv: 로더가 읽는 목록 = src/data/*.csv 전부 — 읽히지 않는
     return `${loaded.length}개 일치`;
 });
 check('balance: 시스템이 쓰는 키가 전부 있다', () => {
-    const need = ['skillbook_learn_level', 'drop_book_pct', 'book_craft_gold', 'book_craft_dust',   // 스킬북 (R179)
+    const need = ['skillbook_learn_level', 'drop_book_pct', 'book_craft_gold', 'book_craft_dust', 'codex_blueprint_level',   // 스킬북 (R179) · 스킬 도안 (R241)
         'skillbook_upgrade_max', 'skillbook_upgrade_books_1', 'skillbook_upgrade_books_2', 'advance_point_interval',   // 스킬 레벨 · 전직 포인트 (R216)
         'dispatch_offline_cap_hours',
         // 자원 미니게임 (2026-10-06 · PLAN_dispatch_watch D8)
@@ -2222,6 +2222,28 @@ check('강화: 베이스는 **파생이다** — 무기 피해 범위는 up 으�
     if (!(got.max > before.max)) fail(`+4강인데 최대 피해가 안 올랐다 ${before.max} → ${got.max}`);
     if (SYS.item.effective(it) !== it) fail('무기는 사본에 먹일 고유값이 없다 — effective 가 원본을 돌려줘야 한다');
     return `${before.min}~${before.max} → +4강 ${got.min}~${got.max}`;
+});
+
+check('강화 미리보기: `upgradeState.next` = 한 단계 올린 뒤의 툴팁 값 · 아이템은 안 바뀐다 · 상한 · 반지는 null (SCREEN_DESIGN §8-2 「지금 → 다음」)', () => {
+    const out = [];
+    for (const item of [SYS.item.startingWeapon(makeRng(11), 'warrior'), mkItem('armor', [{ stat: 'crit_pct', v: 0.05 }], { implicit: { stat: 'def_flat', v: 10 } })]) {
+        const { g, it } = upgradeFixture(item);
+        let n = 0;
+        for (;;) {
+            const before = JSON.stringify(it);
+            const s = SYS.game.upgradeState(g, it.uid);
+            if (JSON.stringify(it) !== before) fail('미리보기가 아이템을 바꿨다');
+            if (s.cost == null) { if (s.next !== null) fail(`상한인데 next ${JSON.stringify(s.next)}`); break; }
+            if (!SYS.game.upgradeItem(g, it.uid).ok) fail(`${it.slot} +${n + 1} 실패`);
+            const want = { up: it.up, dmg: SYS.item.weaponDamageFixed(it), imp: SYS.item.implicitFixed(it) };
+            if (!eq(s.next, want)) fail(`${it.slot} +${it.up} 미리보기 ${JSON.stringify(s.next)} ≠ 실제 ${JSON.stringify(want)}`);
+            if (++n > 50) fail('상한에서 안 멈춘다');
+        }
+        out.push(`${it.slot} +${n}`);
+    }
+    const { g, it } = upgradeFixture(mkItem('ring', [{ stat: 'gold_find', v: 0.05 }]));
+    if (SYS.game.upgradeState(g, it.uid).next !== null) fail('반지에 미리보기가 있다');
+    return `${out.join(' · ')} 까지 미리보기 = 실제 · 반지 null`;
 });
 
 check('강화: up=0 이면 effective 가 **원본 객체 그대로**다 (매 렌더·매 전투가 부르는 자리라 할당을 아낀다)', () => {
@@ -12226,14 +12248,26 @@ check('advance: 전직 포인트 — 전직 레벨에 1 · 그 뒤 advance_point
     }
     return `포인트 만렙 ${capPts} · 간격 ${iv}`;
 });
-check('book: 기본 책 제작 — 도서관 r1 · starter_pool 만 · 골드 · 가루를 낸다 · 가진 책도 만든다(쌓인다 · 2026-09-30) (R179 · construction_draft §2)', () => {
+check('book: 책 제작 — 도서관 r1 · 스킬 도안(그 몬스터 도감 codex_blueprint_level)이 열린 책만 · 기본 책도 도안이 있어야 · 골드 · 가루를 낸다 · 가진 책도 만든다(쌓인다 · 2026-09-30) (R179 · R241 · skill_design §2-1)', () => {
     const g = SYS.game.newGame(94, cands, NOW);
-    const starter = SYS.skill.list.filter(d => d.starterPool && d.innatePool && d.ownerKind === 'job').map(d => d.id);
-    const id = starter[0], other = SYS.skill.list.find(d => d.ownerKind === 'job' && !d.starterPool).id;
+    // 도안을 줄 몬스터 — 고유가 책이 되는 직업 스킬인 첫 몬스터 · 그 고유가 곧 만들 책
+    const mon = Object.values(D.monsters).find(m => SYS.skill.defs[m.innate_skill]?.ownerKind === 'job');
+    const id = mon.innate_skill, mid = String(mon.monster_idx);
+    const starter = SYS.skill.list.find(d => d.starterPool && d.ownerKind === 'job' && d.id !== id).id;   // 도안이 없는 기본 책
+    const monOnly = SYS.skill.list.find(d => d.ownerKind === 'monster')?.id;
+    const at = D.codexLevels[B.codex_blueprint_level - 1];   // 도안이 열리는 누적 도감 경험치
     if (SYS.game.craftBook(g, id).err !== 'unbuilt') fail('도서관 전인데 만들었다');
     g.buildings.library = 1;
-    if (!eq(SYS.game.bookState(g).craft.map(c => c.id), starter)) fail('제작 목록이 기본기 풀과 다르다');
-    if (SYS.game.craftBook(g, other).err !== 'missing') fail(`기본 책 밖(${other})을 만들었다`);
+    if (SYS.game.bookState(g).craft.length !== 0) fail('새 게임인데 제작 목록이 있다 — 도안 없이는 아무 책도 못 만든다');
+    if (SYS.game.craftBook(g, id).err !== 'blueprint') fail('도안 없이 만들었다');
+    if (monOnly && SYS.game.craftBook(g, monOnly).err !== 'missing') fail(`몬스터 전용(${monOnly})을 만들었다`);
+    g.codexExp[mid] = at - 1;
+    if (SYS.game.craftBook(g, id).err !== 'blueprint') fail('도감 문턱 바로 밑인데 도안이 열렸다');
+    g.codexExp[mid] = at;
+    const list = SYS.game.bookState(g).craft.map(c => c.id);
+    const want = SYS.skill.list.map(d => d.id).filter(sid => Object.entries(g.codexExp).some(([m, x]) => D.monsters[m]?.innate_skill === sid && SYS.game.codexLevel(x) >= B.codex_blueprint_level));
+    if (!list.includes(id) || !eq(list, want)) fail(`제작 목록 ${JSON.stringify(list)} — 도안 ${JSON.stringify(want)}`);
+    if (SYS.game.craftBook(g, starter).err !== 'blueprint') fail(`도안이 없는 기본 책(${starter})을 만들었다 — 모든 책이 도안을 요구한다`);
     g.resources.gold = B.book_craft_gold - 1; g.resources.dust = B.book_craft_dust;
     if (SYS.game.craftBook(g, id).err !== 'gold') fail('골드 부족인데 만들었다');
     g.resources.gold = B.book_craft_gold; g.resources.dust = B.book_craft_dust - 1;
@@ -12244,7 +12278,7 @@ check('book: 기본 책 제작 — 도서관 r1 · starter_pool 만 · 골드 ·
     if (SYS.game.bookState(g).craft.find(c => c.id === id).err !== null) fail('가진 책인데 만들기가 막혔다');
     if (!SYS.game.craftBook(g, id).ok || g.books[id] !== 2) fail(`가진 책을 또 만들면 두 권 — 재고 ${g.books[id]}`);
     if (SYS.game.bookState(g).books.find(b => b.id === id)?.n !== 2) fail('bookState 가 권수를 안 낸다');
-    return `기본 책 ${starter.length}종 · 골드 ${B.book_craft_gold} · 가루 ${B.book_craft_dust}`;
+    return `도안 = 도감 Lv${B.codex_blueprint_level}(${mid} → ${id}) · 골드 ${B.book_craft_gold} · 가루 ${B.book_craft_dust}`;
 });
 check('battle: 처치 드롭은 장비 또는 스킬북 — drop_book_pct 0 이면 책 없음 · 1 이면 책이 나오고 전부 그 몬스터의 고유 · 몬스터 전용 스킬은 책이 없다 (R179 · item_design §1 드롭 1-2 · INTERFACE §5-2)', () => {
     const S0 = buildSystems({ ...D, balance: { ...B, drop_book_pct: 0 } });

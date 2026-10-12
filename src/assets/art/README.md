@@ -363,7 +363,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · minigame · explore). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · minigame · explore · currency). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -390,7 +390,35 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ## icons/materials/ — 재료 아이콘 [신설 2026-09-27]
 
-`ores/<ore_id>.png` 7장(`ore_t1` 구리 ~ `ore_t7` 오리하르콘 — 파일명 = `mine_node.csv:ore_id`) — 512 투명 · 어두운 모암 + 광물 강조색 한 점 · 단계마다 다른 실루엣 · 긴 변 0.88 · 중앙(정규화 — 원본은 크기 77~89% · 중심이 제각각이었다). 원본은 `ores/source/v3/`(t1~t5 지금 판) · `v2/`(t6 · t7 지금 판 · t1~t5 는 폐기) · `v1/`(원색 돌덩이 판 — 폐기) · 발주 첨부용 앵커 `source/anchor_items.png`(설치된 아이템 6장) — 셋 다 게임이 안 읽는다. ⚠ `ore_t2`(철)는 어두운 회색 덩이라 어두운 상자 바탕에서 가장 약하게 읽힌다 · 경계밀도 5% 로 합격선 하단 밖. 화면은 자원 탭 단계 상자의 산출물 칸(`mock.js:MATERIAL_ICONS` · SCREEN_DESIGN §8 · ADR-0377). **빈 것** — 약초(`gather_node`) · 목재(`log_node`) 7장씩 · 건설 재료 칸은 아직 광석 실루엣(`RES_ART`)
+`ores/<ore_id>.png` 7장(`ore_t1` 구리 ~ `ore_t7` 오리하르콘 — 파일명 = `mine_node.csv:ore_id`) — 512 투명 · 어두운 모암 + 광물 강조색 한 점 · 단계마다 다른 실루엣 · 긴 변 0.88 · 중앙(정규화 — 원본은 크기 77~89% · 중심이 제각각이었다). 원본은 `ores/source/v3/`(t1~t5 지금 판) · `v2/`(t6 · t7 지금 판 · t1~t5 는 폐기) · `v1/`(원색 돌덩이 판 — 폐기) · 발주 첨부용 앵커 `source/anchor_items.png`(설치된 아이템 6장) — 셋 다 게임이 안 읽는다. ⚠ `ore_t2`(철)는 어두운 회색 덩이라 어두운 상자 바탕에서 가장 약하게 읽힌다 · 경계밀도 5% 로 합격선 하단 밖. 화면은 자원 탭 단계 상자의 산출물 칸(`mock.js:MATERIAL_ICONS` · SCREEN_DESIGN §8 · ADR-0377). 약초(`herbs/<id>` · `gather_node`) · 목재(`timbers/<id>` · `log_node`) 7장씩도 섰다(`MATERIAL_ICONS`) · 건설 「다음 랭크」 의 재료 칸도 이 그림을 읽는다(`app.js:matTile` · SCREEN_DESIGN §13-1)
+
+## icons/currency/ — 재화 그림 [신설 2026-10-12]
+
+`<재화 id>.png` 2장 — 512 투명 · 긴 변 0.88 · 중앙 · 파일명 = 자원 셋 id(`app.js:resKind`). 화면은 건설 「다음 랭크」 의 재료 칸(`mock.js:RES_ART` · SCREEN_DESIGN §13-1 · ADR-0323).
+
+| 파일 | 그림 | 원본 시트 (Codex 이미지 생성 · 2×2) | 대안 (`unused/`) | 실측 색 수 · 경계밀도 · 외곽선 |
+|---|---|---|---|---|
+| `gold.png` | 왕관을 찍은 금화 한 닢 | `source/sheet_01_codex.png` (미니게임 · 목재 시트 첨부) | `gold_hole` 네모 구멍 · `gold_star` 별 · `gold_skull` 해골 | 140 · 12% · 16 |
+| `dust.png` | 돌절구에 수북한 잿빛 가루(보라 기) | `source/sheet_02_codex.png` (미니게임 · 광석 앵커 · 금화 첨부) | `dust_heap` 강철 조각 섞인 더미 · `dust_pouch` 쏟아진 가죽 주머니 · `dust_sack` 찢어진 자루 | 114 · 15% · 4 |
+
+지시문은 같은 폴더 `sheet_<번호>_prompt.txt`. 실측은 재료 · 미니게임 설치본 범위 안이다(장비 아이콘 합격선의 색 수 130 은 금화가 조금 넘는다). **빈 것** — 낙인(`stigma` · 죄종별 7종)은 아직 `RES_ART` 의 임시 실루엣이다
+
+## icons/gamble/ — 도박장 슬롯 심볼 [신설 2026-10-12]
+
+`<symbol_id>.png` 7장 + `jackpot.png` — 512 투명 · 긴 변 0.88 · 중앙 · 파일명 = `slot_symbol.csv` 의 `symbol_id`(잭팟 코인만 `slot_coin.csv` 의 kind). 화면은 도박장 창의 판 · 배당표 · 선술집 도박장 칸의 죄종 띠(`mock.js:gambleArt` · SCREEN_DESIGN §8-1 · ADR-0608).
+
+| 파일 | 그림 (죄종) | 원본 |
+|---|---|---|
+| `seven.png` | 보라 보석 박힌 무쇠 왕관 (오만) | `source/sheet_01_codex.png` 1 |
+| `wild.png` | 금 인장 반지 — 「탐욕의 인장」 (탐욕) | 시트 01 · 2 |
+| `gold.png` | 장미 (색욕) | 시트 01 · 3 |
+| `ore.png` | 화로의 불 (분노) | 시트 01 · 4 |
+| `timber.png` | 가시 박힌 초록 눈 (시기) | 시트 01 · 5 |
+| `dust.png` | 모래시계 (나태) | 시트 01 · 6 |
+| `coin.png` | 아가리를 찍은 동전 (폭식) | 시트 01 · 7 |
+| `jackpot.png` | 루비 박힌 금화 — 잭팟 코인 | `source/sheet_02_codex.png` 8 |
+
+원본 시트 둘은 Codex 이미지 생성 · 3×3 · 미니게임 · 금화 시트를 첨부해 같은 그림체로 뽑았다(지시문 `source/sheet_0N_prompt.txt`). 대안 열 장은 `unused/`(`seven_mirror` · `wild_sack` · `wild_key` · `gold_flask` · `ore_fist` · `ore_skull` · `timber_snake` · `dust_candle` · `dust_snail` · `coin_bitten`). 실측 색 수 107~268 · 경계밀도 13~25% · 외곽선 ≤6 — 금화 · 미니게임 그림과 같은 계열이고 옛 장비 아이콘 합격선보다 거칠다 · 64 · 42 · 24px 몽타주에서 여덟 장이 다 갈렸다
 
 ## icons/explore/ — 탐험 지점 아이콘 [신설 2026-10-09]
 
@@ -668,4 +696,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-10*
+*마지막 업데이트: 2026-10-12*

@@ -865,16 +865,20 @@ export function createGameSystem(deps) {
      * 강화 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`tavernState`·`masteryState` 와 같은 규칙).
      * `upgradeable` = 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화 대상이 아니다(`cost` 도 null).
      * 얼마가 나가고 무엇이 걸려 있는지를 화면이 계산하지 않는다. ~~optionAt~~ 은 옵션 계단과 함께 퇴역 (R95)
+     * `next` = 한 단계 올린 뒤의 베이스 값 미리보기 [2026-10-12 · SCREEN_DESIGN §8-2 「지금 → 다음」] — `up + 1` **사본**에 툴팁과 같은 함수를 부른다(아이템은 안 바뀐다).
+     *   올릴 수 없으면(`cost` null — 상한 · 목걸이 · 반지) null
      */
     function upgradeState(state, itemUid) {
         const it = state.items[itemUid];
         if (!it) return null;
         const up = it.up ?? 0, max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
         const open = hasFeature(state, 'upgrade_item');   // 제련소가 연다 (R137)
+        const peek = cost == null ? null : { ...it, up: up + 1 };
         return {
             up, max, cost, gold: state.resources.gold, open,
             upgradeable: I.upgradeable(it),
             canUpgrade: open && cost != null && state.resources.gold >= cost,
+            next: peek && { up: peek.up, dmg: I.weaponDamageFixed(peek), imp: I.implicitFixed(peek) },
         };
     }
 
@@ -1810,13 +1814,24 @@ export function createGameSystem(deps) {
     }
 
     /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 도서관 · INTERFACE §2-7] ──
-       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound`) 상단이 팔고 기본 책만 도서관이 만든다 —
+       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound`) 상단이 팔고 **스킬 도안(도감 보상)이 열린 책을** 도서관이 만든다(2026-10-12 · R241 — ~~기본 책만~~) —
        **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다).
        배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0
        **같은 책이면 업그레이드다** [2026-10-06 · R216 · skill_design §2-3 — ~~`same` 거절~~] — 이미 가진 스킬(고유 · 배운 칸)의 책은 칸을 늘리지 않고
        그 스킬의 레벨을 올린다(`hero.skillLv` · 드는 책은 피보나치 · 상한 `skillbook_upgrade_max`) · 다른 책으로 덮어쓰면 쌓은 레벨도 사라진다 */
-    /** 기본 책 — `skill.csv:starter_pool = 1` 인 직업 스킬(`ui/data.js:starterSkills` 와 같은 조건) · 행 순서 */
-    const craftableBooks = () => (SK?.list ?? []).filter(d => d.starterPool && d.innatePool && d.ownerKind === 'job').map(d => d.id);
+    /**
+     * 스킬 도안이 열린 책 [2026-10-12 · R241 · skill_design §2-1 · monster_design §8 — ~~`starter_pool = 1` 기본 책~~] —
+     * 도감 레벨이 `codex_blueprint_level` 이상인 몬스터의 고유 스킬 중 책이 되는 것(`bookable`) · `skill.csv` 행 순서.
+     * 도안은 세이브에 따로 없다 — 도감 경험치에서 읽는다(레벨이 역행하지 않으니 한 번 열리면 영구) · rng 0
+     */
+    function craftableBooks(state) {
+        const open = new Set();
+        for (const [id, exp] of Object.entries(state.codexExp ?? {})) {
+            const sk = deps.monsters[id]?.innate_skill;
+            if (sk && bookable(sk) && codexLevel(exp) >= B.codex_blueprint_level) open.add(sk);
+        }
+        return (SK?.list ?? []).filter(d => open.has(d.id)).map(d => d.id);
+    }
     /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 */
     function addBook(state, id) {
         state.books = state.books ?? {};
@@ -1833,7 +1848,8 @@ export function createGameSystem(deps) {
     }
     function craftGate(state, id) {
         if (!hasFeature(state, 'book_craft')) return 'unbuilt';
-        if (!craftableBooks().includes(id)) return 'missing';
+        if (!bookable(id)) return 'missing';
+        if (!craftableBooks(state).includes(id)) return 'blueprint';
         if (state.resources.gold < B.book_craft_gold) return 'gold';
         if (state.resources.dust < B.book_craft_dust) return 'materials';
         return null;
@@ -1864,7 +1880,7 @@ export function createGameSystem(deps) {
             need: { have: h?.level ?? 0, need: B.skillbook_learn_level },
             books: Object.keys(state.books ?? {}).filter(id => state.books[id] > 0)
                 .map(id => ({ id, n: state.books[id], ...(h ? { plan: bookPlan(state, h, id) } : {}) })),
-            craft: craftableBooks().map(id => ({ id, gold: B.book_craft_gold, dust: B.book_craft_dust, err: craftGate(state, id) })),
+            craft: craftableBooks(state).map(id => ({ id, gold: B.book_craft_gold, dust: B.book_craft_dust, err: craftGate(state, id) })),
             hero: uid ? { skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h) } : null,
         };
     }

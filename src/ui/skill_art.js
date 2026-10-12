@@ -148,10 +148,10 @@ export const SKILL_ART = {
 
 /* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).
    버튼 · 탭 순서 = 이 배열 순서 · 기본값 = 한 번도 안 고른 사람의 관전(초상 그림체 · ADR-0584) */
-export const ART_STYLES = ['portrait', 'ink', 'pen', 'charcoal', 'oil', 'code'];
+export const ART_STYLES = ['portrait', 'ink', 'pen', 'charcoal', 'oil', 'darktoon', 'cinder', 'ritual', 'code'];
 export const ART_DEFAULT = 'portrait';
-/* 접미 그림체 — 파일 이름 = `<표의 이름>_<그림체>` · 수묵(ADR-0559) · 고딕 펜화 · 목탄 · 유화(ADR-0584) */
-const SUFFIXED = new Set(['ink', 'pen', 'charcoal', 'oil']);
+/* 접미 그림체 — 파일 이름 = `<표의 이름>_<그림체>` · 기존 후보(ADR-0584) · 캐릭터/세계관 후보(ADR-0599) */
+const SUFFIXED = new Set(['ink', 'pen', 'charcoal', 'oil', 'darktoon', 'cinder', 'ritual']);
 /** 그 그림체의 파일 이름 — 초상 그림체는 표의 이름 그대로 · 접미 그림체는 `<표의 이름>_<그림체>` · 코드 모양은 그림이 없다(null — 조각 조합이 선다) */
 export function artFile(file, style) {
     return style === 'portrait' ? file : SUFFIXED.has(style) ? `${file}_${style}` : null;

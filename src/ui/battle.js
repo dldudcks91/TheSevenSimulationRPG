@@ -659,52 +659,9 @@ function renderUnits(state, root) {
                 : face
                 ? `<div class="sprite has-face"><img src="${face}" alt="${name}" loading="lazy" onerror="this.remove()"></div>`
                 : `<div class="sprite"></div>`;
-            // 가로형 본문 하나 — 왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 칸 (2026-09-03 위칸 폐기) — SCREEN_DESIGN §4-2
-            // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
-            // 칸 수는 언제나 active_slots — 스킬이 둘인 영웅도 셋째 칸이 **빈 채로** 남는다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
-            // 칸이 사라지면 카드마다 줄 길이가 달라져 같은 격자로 안 읽히고, 「스킬이 둘」과 「셋째가 미정」이 구분되지 않는다
-            // [개정 2026-09-03 사용자 지시] **몬스터도 같은 줄을 그린다** — 옛 규칙(「몬스터는 액티브가 없어 쿨 칸도 없다」)을 폐기한다.
-            // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 등급이 연 만큼(`spawn_grade.csv:skill_slots`) 차고 나머지가 빈 칸이다 [2026-09-11 R79 후속 — 그 전엔 전부 비어 있었다]
-            // 칸 자리는 `cdSlots` 가 정한다 — 전직 스킬은 늘 맨 오른쪽 칸 (ADR-0572)
+            // 카드 본문 — 이름 띠 · 초상 · 이름 줄 · HP · 행동 게이지 · 스킬 칸. 결투장 대기 화면의 카드(`unitPreview`)도 같은 조각이다 (ADR-0606)
             const slots = cdSlots(u);
-            // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
-            // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
-            const skills = `<div class="cd-list">${slots.map(s => s
-                ? `<div class="cd-slot"><span class="cd-g">${skillImg(s)}</span><i class="cd-mask"></i></div>`
-                : `<div class="cd-slot empty"></div>`).join('')}</div>`;
-            // 이름 띠 — **양 진영 같다** (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2). 같은 날 아침에 걷었던 위칸의 재도입이고,
-            // 걷은 이유(이름·죄종 칩·정예 태그가 한 줄에 뒤엉킴)는 **이름만 남기는 것**으로 푼다 — 「무엇인가」는 띠 색(등급)이 든다.
-            // 몬스터가 카드에서 이름을 되찾는 자리이기도 하다 — 위칸이 없던 동안은 초상으로만 어느 몬스터인지 구분해야 했다
-            // 이름·신원은 **두 줄**이다 (개정 2026-09-07 사용자 지시 — 09-03 「첫 줄 하나」 폐기 · SCREEN_DESIGN §4-2) —
-            // 윗줄 = 무채색 신원(`Lv.n · 직업` / 정예·보스 라벨) · 아랫줄 = 이름, 둘 다 **오른쪽 정렬**(재개정 2026-09-07 사용자 지시 — 정렬만 뒤집었다).
-            // 한 줄 합침은 좁은 열(~104px)에서 신원(고정 조각)이 줄을 먼저 먹어 이름이 짜부라졌다.
-            // 일반 몬스터는 윗줄이 **빈 채**로 자리만 잡는다 — 줄 위치·카드 높이가 카드마다 같아야 격자로 읽힌다
-            const ident = identOf(u, state);
-            // 개편판(cardV2) — 맨 위 띠가 신원을 들고, HP 바 바로 위 이름 줄이 **왼쪽 죄종 칩 · 오른쪽 이름**이다 (ADR-0262 · ADR-0270 · ADR-0274).
-            //   죄종 칩은 다른 화면과 같은 `sin-chip`(죄종 색 글씨) · 몬스터는 죄종을 가진 정예만 — 일반 · 보스는 `sin` 이 없다
-            const sin = v2 && u.sin && M.SINS[u.sin] ? `<span class="sin-chip" style="color:${M.SINS[u.sin].color}">${L(M.SINS[u.sin])}</span>` : '';
-            const grade = v2 ? gradeLabel(u) : '';
-            const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u, state)}</span>${grade ? `<span class="unit-grade">${grade}</span>` : ''}</div>` : '';
-            const idRow = v2
-                ? `<div class="unit-id">${sin}<span class="unit-name">${name}</span></div>`
-                : `<div class="unit-id"><span class="unit-ident">${ident}</span><span class="unit-name">${name}</span></div>`;
-            n.innerHTML = `
-                ${top}
-                <div class="unit-body">
-                    ${sprite}
-                    <div class="unit-info">
-                        ${idRow}
-                        <div class="hp-row">
-                            <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
-                            <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
-                        </div>
-                        <div class="act-row${u.noBasic ? ' segs' : ''}" title="${t(u.noBasic ? 'bt.castTitle' : 'bt.actTitle', { s: u.period.toFixed(2) })}">
-                            ${u.noBasic ? actSegs() : '<i class="act-fill k-phys"></i>'}
-                        </div>
-                        ${skills}
-                    </div>
-                </div>
-                <div class="pop-layer"></div>`;
+            n.innerHTML = unitInner(u, state, v2, sprite, slots);
             // 올려놓으면 뜬다 — **양 진영이 같은 카드다**: 착용 장비 첫 장 + Alt 세부 옵션 (SCREEN_DESIGN §2 · ADR-0171 · 몬스터 ADR-0183). 스킬 칸은 그 스킬.
             // 세부 옵션은 영웅이 앱이 넘긴 `combatOf`(= game.heroCombat) · 몬스터가 `round` 이벤트의 `sheet`,
             //   한 벌은 영웅이 `itemOf` 로 푼 `equipped` · 몬스터가 같은 이벤트의 `gear` 다. 소환물(벽)은 둘 다 아니라 안 뜬다.
@@ -745,6 +702,91 @@ function renderUnits(state, root) {
             side.appendChild(cell);
         }
     }
+}
+
+/**
+ * 유닛 카드 본문 — `renderUnits`(관전)와 `unitPreview`(결투장 대기 화면 · ADR-0606)가 **같은 조각**을 쓴다. 둘로 갈리면 같은 영웅이 두 얼굴로 읽힌다.
+ * @param state 재생 상태 — 신원의 반짝이는 레벨(`lvUnseen`)만 읽는다 · 전투 밖은 null
+ * @param ready 스킬 칸을 걷힌 채(준비 상태)로 — 전투 밖 카드는 쿨을 걷을 재생이 없다
+ */
+function unitInner(u, state, v2, sprite, slots, ready = false) {
+    const name = L(u.name);
+    // 가로형 본문 하나 — 왼쪽 초상 / 오른쪽 HP · 행동 게이지 · 스킬 쿨 칸 (2026-09-03 위칸 폐기) — SCREEN_DESIGN §4-2
+    // 쿨 칸은 아이콘뿐이다 — 이름 · 표기/실효 쿨 · 설명은 툴팁이 든다. 남은 쿨은 아이콘을 덮은 판(.cd-mask)이 위에서부터 걷히며 보여준다
+    // 칸 수는 언제나 active_slots — 스킬이 둘인 영웅도 셋째 칸이 **빈 채로** 남는다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
+    // 칸이 사라지면 카드마다 줄 길이가 달라져 같은 격자로 안 읽히고, 「스킬이 둘」과 「셋째가 미정」이 구분되지 않는다
+    // [개정 2026-09-03 사용자 지시] **몬스터도 같은 줄을 그린다** — 옛 규칙(「몬스터는 액티브가 없어 쿨 칸도 없다」)을 폐기한다.
+    // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 등급이 연 만큼(`spawn_grade.csv:skill_slots`) 차고 나머지가 빈 칸이다 [2026-09-11 R79 후속 — 그 전엔 전부 비어 있었다]
+    // 칸 자리는 `cdSlots` 가 정한다 — 전직 스킬은 늘 맨 오른쪽 칸 (ADR-0572)
+    // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
+    // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
+    const mask = ready ? '<i class="cd-mask" style="height:0"></i>' : '<i class="cd-mask"></i>';
+    const skills = `<div class="cd-list">${slots.map(s => s
+        ? `<div class="cd-slot"><span class="cd-g">${skillImg(s)}</span>${mask}</div>`
+        : `<div class="cd-slot empty"></div>`).join('')}</div>`;
+    // 이름 띠 — **양 진영 같다** (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2). 같은 날 아침에 걷었던 위칸의 재도입이고,
+    // 걷은 이유(이름·죄종 칩·정예 태그가 한 줄에 뒤엉킴)는 **이름만 남기는 것**으로 푼다 — 「무엇인가」는 띠 색(등급)이 든다.
+    // 몬스터가 카드에서 이름을 되찾는 자리이기도 하다 — 위칸이 없던 동안은 초상으로만 어느 몬스터인지 구분해야 했다
+    // 이름·신원은 **두 줄**이다 (개정 2026-09-07 사용자 지시 — 09-03 「첫 줄 하나」 폐기 · SCREEN_DESIGN §4-2) —
+    // 윗줄 = 무채색 신원(`Lv.n · 직업` / 정예·보스 라벨) · 아랫줄 = 이름, 둘 다 **오른쪽 정렬**(재개정 2026-09-07 사용자 지시 — 정렬만 뒤집었다).
+    // 한 줄 합침은 좁은 열(~104px)에서 신원(고정 조각)이 줄을 먼저 먹어 이름이 짜부라졌다.
+    // 일반 몬스터는 윗줄이 **빈 채**로 자리만 잡는다 — 줄 위치·카드 높이가 카드마다 같아야 격자로 읽힌다
+    const ident = identOf(u, state);
+    // 개편판(cardV2) — 맨 위 띠가 신원을 들고, HP 바 바로 위 이름 줄이 **왼쪽 죄종 칩 · 오른쪽 이름**이다 (ADR-0262 · ADR-0270 · ADR-0274).
+    //   죄종 칩은 다른 화면과 같은 `sin-chip`(죄종 색 글씨) · 몬스터는 죄종을 가진 정예만 — 일반 · 보스는 `sin` 이 없다
+    const sin = v2 && u.sin && M.SINS[u.sin] ? `<span class="sin-chip" style="color:${M.SINS[u.sin].color}">${L(M.SINS[u.sin])}</span>` : '';
+    const grade = v2 ? gradeLabel(u) : '';
+    const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u, state)}</span>${grade ? `<span class="unit-grade">${grade}</span>` : ''}</div>` : '';
+    const idRow = v2
+        ? `<div class="unit-id">${sin}<span class="unit-name">${name}</span></div>`
+        : `<div class="unit-id"><span class="unit-ident">${ident}</span><span class="unit-name">${name}</span></div>`;
+    return `
+        ${top}
+        <div class="unit-body">
+            ${sprite}
+            <div class="unit-info">
+                ${idRow}
+                <div class="hp-row">
+                    <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
+                    <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
+                </div>
+                <div class="act-row${u.noBasic ? ' segs' : ''}" title="${t(u.noBasic ? 'bt.castTitle' : 'bt.actTitle', { s: u.period.toFixed(2) })}">
+                    ${u.noBasic ? actSegs() : '<i class="act-fill k-phys"></i>'}
+                </div>
+                ${skills}
+            </div>
+        </div>
+        <div class="pop-layer"></div>`;
+}
+
+/**
+ * 전투 밖에 세우는 관전 카드 한 칸 — **결투장 대기 화면**의 두 팀 [2026-10-12 사용자 지시 · ADR-0606].
+ * 관전과 같은 칸(`.unit-slot`) · 같은 카드 · 같은 툴팁(영웅 카드 · 스킬 칸)이다. 재생이 없으니 HP 는 가득 · 행동 게이지는 빈 채 · 스킬 칸은 걷힌 채로 선다.
+ * 진형 자리는 관전처럼 칸의 `data-rank` 가 들고(미는 폭 · 방향은 CSS `.side-*`) 가로 차례는 부르는 쪽이 넣는 순서다.
+ * @param u 관전 유닛과 같은 모양 — `{side, hero, name, sin, cls, hp, hpMax, period, noBasic, skills, atkMin…, stats, sheet, rank}`
+ * @param opts.combatOf · itemOf · itemTipOf — 관전 `mountBattle` 의 같은 이름 손잡이 (영웅 툴팁)
+ */
+export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = null } = {}) {
+    const v2 = cardV2();
+    const n = document.createElement('div');
+    n.className = `unit ${u.side}${v2 ? ' v2' : ''}`;
+    const tierLine = u.hero ? heroTierColor(u.hero) : null;
+    if (tierLine) n.style.setProperty('--tier-line', tierLine);
+    const face = u.hero ? M.heroFace(u.hero) : null;
+    const sprite = face ? `<div class="sprite has-face"><img src="${face}" alt="${L(u.name)}" loading="lazy" onerror="this.remove()"></div>` : '<div class="sprite"></div>';
+    const slots = cdSlots(u);
+    n.innerHTML = unitInner(u, null, v2, sprite, slots, true);
+    if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, combatOf?.(u.hero) ?? null, itemOf,
+        it => itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
+    n.querySelectorAll('.cd-slot').forEach((slot, i) => {
+        const s = slots[i];
+        if (s) bindTipNode(slot, () => skillTipCard(s, { ...unitSkillCtx(u), source: s.source }));
+    });
+    const cell = document.createElement('div');
+    cell.className = `unit-slot${v2 ? ' v2' : ''}`;
+    cell.dataset.rank = u.rank ?? 0;
+    cell.appendChild(n);
+    return cell;
 }
 
 function refreshUnit(state, u) {
