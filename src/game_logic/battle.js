@@ -105,8 +105,9 @@ const MATERIAL_KINDS = Object.freeze(['ore', 'timber', 'herb']);
  *   skillSystem — skill.js (정의·발동 선택). 없으면 액티브 없이 기본 공격만 돈다,
  *   heroSystem — hero.js. **몬스터도 `computeCombat` 을 지난다** (§8-1 「계산이 한 곳」 · 신설 2026-09-11 R79),
  *   classSkills {classId: [skillId]} — 보스 셋째 스킬 칸의 후보 풀. item·hero 에 넘기는 **같은 표**다 (신설 2026-09-11 R79),
- *   slots [partId] — 장비 부위 어휘. `monster.csv:wear_slots` 검증에만 쓴다 (신설 2026-09-11 R79),
+ *   slots [partId] — 장비 부위 어휘. 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 검증에만 쓴다 (신설 2026-09-11 R79 · 개정 2026-10-12 R245),
  *   levelXp [{level, monsterXp}] — `level_xp.csv`. 몬스터 레벨 → 처치 XP 기준값 (신설 2026-09-28 · 1 ~ 만렙을 덮어야 한다),
+ *   difficulties [{id, wearChance}] — `difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245),
  *   monsterRoles {role: {rank}} — `monster_role.csv`. **적의 자리**를 정한다 (진형 확정 2026-09-09).
  *     모르는 역할은 **전열(0)** 로 떨어뜨린다 — 빠뜨린 몬스터가 뒤에 숨어 무적이 되는 것보다 앞에 서는 편이 안전하다
  */
@@ -152,8 +153,16 @@ export function createBattleSystem(data) {
     for (let l = 1; l <= B.hero_level_cap; l++)
         if (!(MONSTER_XP.get(l) > 0)) throw new Error(`battle: level_xp.csv 에 레벨 ${l} 의 monster_xp 가 없다 (상한 ${B.hero_level_cap})`);
 
-    /** 입는 부위 — `monster.csv:wear_slots` 를 `|` 로 가른다. **이 순서가 장비 굴림 순서**다 (INTERFACE §5-2) */
-    const wearSlots = m => String(m.wear_slots ?? '').split('|').filter(Boolean);
+    /** 부위 목록 칸 — `|` 로 가른다. **이 순서가 장비 굴림 순서**다 (INTERFACE §5-2) */
+    const partsOf = v => String(v ?? '').split('|').filter(Boolean);
+    /**
+     * 입는 부위는 **등급이 정한다** [2026-10-12 · R245 · monster_design §5-1 — ~~`monster.csv:wear_slots`~~ 몬스터마다] —
+     *   `fixed` = 언제나 입는다(`spawn_grade.csv:wear_fixed` — 무기 · 갑옷) · `optional` = 부위마다 그 단의 확률로 입는다(`wear_optional`)
+     */
+    const wearOf = g => ({ fixed: partsOf(g.wear_fixed), optional: partsOf(g.wear_optional) });
+    /** 난이도 단 — 선택 부위 착용 확률 `[difficulty_tier.csv:wear_chance]` · 안 준 단 · 표에 없는 단은 첫 단 · 표가 없는 조립은 1(다 입는다) */
+    const DIFFS = data.difficulties ?? [];
+    const wearChanceOf = diff => (DIFFS.find(d => d.id === diff) ?? DIFFS[0])?.wearChance ?? 1;
     /** 몬스터 장비 아이템 레벨의 반폭 — 가운데 × `[balance.csv:drop_ilvl_spread_pct]` 반올림 · 하한 `[balance.csv:drop_ilvl_spread_min]`
      *  [2026-10-06 · item_design §1 3단계 · 반올림 자릿수는 INTERFACE §5-3] */
     const ilvlSpreadOf = center => Math.max(B.drop_ilvl_spread_min, Math.round(center * B.drop_ilvl_spread_pct));
@@ -163,12 +172,18 @@ export function createBattleSystem(data) {
      * 한 마리의 차림 — 스폰 2단과 실험실(`rollMonsterDrop`)이 **같은 이 함수**를 부른다 [2026-10-10 · 스폰에서 뺐다 · rng 순서 불변 · INTERFACE §5-2].
      * 아이템 레벨 = 가운데(스테이지 레벨 + 등급 가산) ± 반폭 — **부위마다** `rollGear` 가 굴린다 [개정 2026-10-06 · 사용자 확정 · item_design §1 3단계 — ~~굴리지 않는다~~(09-11)].
      *   반폭 = 가운데 × 비율 반올림 · 하한 — 모든 등급이 같은 비율이라 평균은 종전과 같다. 몬스터가 입는 장비라 그 세기도 같이 흔들린다(사용자가 알고 택했다)
+     * **입는 부위** [2026-10-12 · R245] — 등급의 고정 부위는 언제나 · 선택 부위는 **부위마다 「입나」 1회**(`rng() < chance`)를 먼저 굴린다.
+     *   확률이 0 · 1 이어도 소비한다 — 소비 수가 단에 의존하면 같은 시드가 단마다 다른 차림 줄을 낸다 (INTERFACE §5-2)
      * @param level 스테이지 레벨 — `level_add` 는 안 탄다(INTERFACE §2-6 `lvl`)
+     * @param chance 선택 부위 착용 확률 — 그 런의 단(`wearChanceOf`)
      */
-    const wearGear = (rng, m, g, level, magicFind) => {
+    const wearGear = (rng, m, g, level, magicFind, chance) => {
+        const { fixed, optional } = wearOf(g);
+        const worn = [];
+        for (const part of optional) if (rng() < chance) worn.push(part);
         const center = level + g.gear_ilvl_add;
         return data.itemSystem.rollGear(rng, {
-            slots: wearSlots(m),
+            slots: [...fixed, ...worn],
             ilvl: center,
             ilvlSpread: ilvlSpreadOf(center),
             magicFind,
@@ -181,24 +196,30 @@ export function createBattleSystem(data) {
 
     /**
      * 그 몬스터가 그 등급 · 그 스테이지 레벨로 설 때 입는 장비의 조건 [신설 2026-10-10 · 실험실 · INTERFACE §2-6] —
-     * `wearGear` 가 `rollGear` 에 넘기는 값 그대로다(아이템 레벨 아래 끝은 `rollGear` 와 같이 1). 없는 몬스터 · 등급이면 null · rng 0
+     * `wearGear` 가 `rollGear` 에 넘기는 값 그대로다(아이템 레벨 아래 끝은 `rollGear` 와 같이 1). 없는 몬스터 · 등급이면 null · rng 0.
+     * 부위는 등급이 정한다 — `slots` = 입을 수 있는 부위(고정 → 선택) · 선택 부위는 `wearChance`(그 단 · 안 주면 첫 단)로 입는다 [2026-10-12 · R245]
      */
-    function monsterGearSpec(monsterId, grade, level) {
+    function monsterGearSpec(monsterId, grade, level, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
         const center = level + g.gear_ilvl_add, s = ilvlSpreadOf(center);
-        return { slots: wearSlots(m), weaponGroup: m.weapon_group, ilvlMin: Math.max(1, center - s), ilvlMax: center + s, rarityWeights: gearWeights(g) };
+        const { fixed, optional } = wearOf(g);
+        return {
+            slots: [...fixed, ...optional], fixed, optional, wearChance: wearChanceOf(difficulty),
+            weaponGroup: m.weapon_group, ilvlMin: Math.max(1, center - s), ilvlMax: center + s, rarityWeights: gearWeights(g),
+        };
     }
 
     /**
      * 그 몬스터 한 마리의 차림 + 처치 드롭 하나 [신설 2026-10-10 · 실험실 아이템 생성기 · INTERFACE §2-6 · §5-2] —
      * 차림은 스폰과 같은 `wearGear` · 드롭은 `onKill` 의 장비 자리와 같은 식(입은 부위 중 하나 1회). **드롭이 났다고 치고 장비만 낸다** —
-     * 판정 · 종류(책) · 처치 재료는 안 굴린다. 게임 경로는 안 부른다 — 부르는 쪽이 제 rng 를 준다. 없는 몬스터 · 등급이면 null
+     * 판정 · 종류(책) · 처치 재료는 안 굴린다. 게임 경로는 안 부른다 — 부르는 쪽이 제 rng 를 준다. 없는 몬스터 · 등급이면 null.
+     * `difficulty` = 선택 부위 착용 확률을 고르는 단 — 안 주면 첫 단(스폰과 같은 뜻 · 2026-10-12 · R245)
      */
-    function rollMonsterDrop(rng, monsterId, grade, level, magicFind = 0) {
+    function rollMonsterDrop(rng, monsterId, grade, level, magicFind = 0, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
-        const worn = wearGear(rng, m, g, level, magicFind);
+        const worn = wearGear(rng, m, g, level, magicFind, wearChanceOf(difficulty));
         return { worn, drop: worn.length ? worn[Math.floor(rng() * worn.length)] : null };
     }
 
@@ -213,13 +234,18 @@ export function createBattleSystem(data) {
             if (!(m.cls in CLASS_SKILLS)) throw new Error(`battle: 몬스터 ${at} 의 직업 '${m.cls}' 를 모른다`);
             if (!data.itemSystem.groupOf({ slot: 'weapon', group: m.weapon_group })) throw new Error(`battle: 몬스터 ${at} 의 무기군 '${m.weapon_group}' 를 모른다`);
             if (m.innate_skill !== '-' && SK && !SK.defs[m.innate_skill]) throw new Error(`battle: 몬스터 ${at} 의 고유 스킬 '${m.innate_skill}' 를 모른다`);
-            const ws = wearSlots(m);
-            if (!ws.includes('weapon')) throw new Error(`battle: 몬스터 ${at} 의 wear_slots 에 weapon 이 없다 — 무기가 밑수다`);
-            if (PARTS.size) for (const s of ws) if (!PARTS.has(s)) throw new Error(`battle: 몬스터 ${at} 의 wear_slots 부위 '${s}' 를 모른다`);
         }
         for (const g of Object.values(data.grades)) {
             if (!(g.skill_slots >= 1)) throw new Error(`battle: 등급 ${g.grade} 의 skill_slots 가 없다 (spawn_grade.csv)`);
+            // 입는 부위 — 등급이 정한다 (2026-10-12 · R245). 무기가 밑수라 고정 부위에 무기가 없으면 세기가 성립하지 않는다
+            const { fixed, optional } = wearOf(g), all = [...fixed, ...optional];
+            if (!fixed.includes('weapon')) throw new Error(`battle: 등급 ${g.grade} 의 wear_fixed 에 weapon 이 없다 — 무기가 밑수다 (spawn_grade.csv)`);
+            if (new Set(all).size !== all.length) throw new Error(`battle: 등급 ${g.grade} 의 입는 부위에 같은 부위가 두 번 (spawn_grade.csv:wear_fixed · wear_optional)`);
+            if (PARTS.size) for (const s of all) if (!PARTS.has(s)) throw new Error(`battle: 등급 ${g.grade} 의 입는 부위 '${s}' 를 모른다 (spawn_grade.csv)`);
         }
+        for (const d of DIFFS)
+            if (!(typeof d.wearChance === 'number' && d.wearChance >= 0 && d.wearChance <= 1))
+                throw new Error(`battle: 난이도 ${d.id} 의 wear_chance '${d.wearChance}' — 0 ~ 1 이어야 한다 (difficulty_tier.csv)`);
     }
 
     const stageMonsters = stage => Object.values(data.monsters)
@@ -543,8 +569,9 @@ export function createBattleSystem(data) {
      * @param magicFind 파티 평균 매직아이템 획득확률(비율) — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
      * @param level 몬스터 레벨 = **이번 런의 스테이지 레벨** — 안 주면 기본 레벨 `dlvl` (2026-09-14 · R87)
      * @param gearSeed 몬스터 차림 줄의 씨앗 — `createRun` 이 런을 열 때 전투 줄에서 한 번 뽑는다 (2026-09-22)
+     * @param wearChance 선택 부위 착용 확률 — 그 런의 단 (2026-10-12 · R245 · `wearGear`)
      */
-    function spawnRound(rng, gearSeed, stage, pool, n, magicFind = 0, level = stage.dlvl) {
+    function spawnRound(rng, gearSeed, stage, pool, n, magicFind = 0, level = stage.dlvl, wearChance = 1) {
         const type = stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
         const budgetKey = type === 'boss' ? stage.boss_grade : type;
         const bd = data.budgets[budgetKey];
@@ -588,7 +615,7 @@ export function createBattleSystem(data) {
             const g = data.grades[s.grade];
             // 차림 — 아이템 레벨 · 희귀도 가중치 규칙은 `wearGear` 한 곳이다(실험실이 같은 함수를 부른다 · 2026-10-10)
             // 제 줄 = (씨앗 · 라운드 · 목록 자리) — 앞 몬스터의 굴림 수가 뒤 몬스터의 장비도 전투 수열도 안 민다 (INTERFACE §5-1 · 2026-09-22)
-            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, magicFind);
+            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, magicFind, wearChance);
             // 셋째 칸 — 보스만. ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙)
             let thirdSkill = null;
             if (g.skill_slots >= 3) {
@@ -624,8 +651,10 @@ export function createBattleSystem(data) {
      *   (`{locked, changed}` — 보스 라운드 도중이면 `locked` · R130 · `fill` = 가득 채울 영웅 uid — 레벨업 · R182) · `status()` = `{t, round, kind, inRound}` ·
      *   `result` = 걸음마다 자라는 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      * @param slotMax 물약 칸 수 — 게임은 그 세이브의 상한(`state.limitsOf(state).potionSlots`)을 넘긴다 · 안 주면 CSV 기본값 [balance.csv:potion_slot_max] (2026-09-22)
+     * @param difficulty 이번 런의 난이도 단 id — 몬스터가 선택 부위를 입을 확률만 고른다(레벨은 `level` 이 든다) · 안 주면 첫 단 (2026-10-12 · R245)
      */
-    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null) {
+    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null, difficulty = null) {
+        const wearChance = wearChanceOf(difficulty);
         // 결투장은 스테이지 스폰 대신 영웅 팀 스냅샷을 받아 같은 전투 루프를 단판으로 돈다.
         const stage = encounter ? { dlvl: level ?? 1 } : data.stages[stageId];
         const potionSlots = potions ?? [];
@@ -906,7 +935,7 @@ export function createBattleSystem(data) {
                 rank: p.rank ?? 0, stats: p.stats, sheet: { ...p.combat }, gear: p.gear,
                 reactions: p.reactions ?? [],
                 actives: (p.actives ?? []).map(a => slotOf(a, SK.resolve(a), fitterOf(p.weaponGroup), 0)),
-            })) } : spawnRound(rng, gearSeed, stage, pool, round, magicFind, stageLevel);
+            })) } : spawnRound(rng, gearSeed, stage, pool, round, magicFind, stageLevel, wearChance);
             units.enemies = sp.list;
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
@@ -1610,8 +1639,8 @@ export function createBattleSystem(data) {
      * 런 하나를 **한 번에 끝까지** — `createRun` 을 끝날 때까지 이어 부른다. 전투 결과만 보는 쪽(단정 · 캘리브레이션)이 쓴다.
      * @returns 결과 + 타임라인 (`createRun` 의 `result` 와 같은 모양)
      */
-    function simulate(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max) {
-        const run = createRun(partyUnits, stageId, rng, level, potions, slotMax);
+    function simulate(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, difficulty = null) {
+        const run = createRun(partyUnits, stageId, rng, level, potions, slotMax, null, difficulty);
         while (run.next()?.ended === false);
         return run.result;
     }

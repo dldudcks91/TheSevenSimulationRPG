@@ -448,7 +448,7 @@ check('csv: 보스 능력치 = 그 스테이지 일반몹 평균 대역 — 등�
     }
     return `최대 이탈 ×${worst.toFixed(3)}`;
 });
-check('csv: monster 모양 — 직업·무기군·고유 스킬·입는 부위가 실재하고 능력치 7종이 대역 안 (monster_design §7 · R79)', () => {
+check('csv: monster 모양 — 직업·무기군·고유 스킬이 실재하고 능력치 7종이 대역 안 · 입는 부위는 등급 칸(R245) (monster_design §7 · R79)', () => {
     const AX = ['str', 'agi', 'int', 'vit', 'luck', 'ldr', 'cha'];
     const parts = new Set(D.slots.map(s => s.id));
     const cls = new Set(D.classes.filter(c => c.stage === 'main').map(c => c.id));
@@ -462,16 +462,17 @@ check('csv: monster 모양 — 직업·무기군·고유 스킬·입는 부위�
         // 제 직업 풀이거나 **몬스터 전용**이다 (2026-09-18 · skill_design §12-9 — 영웅 풀 공유 규칙의 예외)
         if (m.innate_skill !== '-' && SYS.skill.defs[m.innate_skill].ownerKind !== 'monster' && SYS.skill.defs[m.innate_skill].ownerId !== m.cls)
             fail(`${m.monster_idx} 고유 스킬이 제 직업 풀도 몬스터 전용도 아니다`);
-        const ws = String(m.wear_slots).split('|');
-        if (!ws.includes('weapon')) fail(`${m.monster_idx} wear_slots 에 weapon 이 없다`);
-        if (new Set(ws).size !== ws.length) fail(`${m.monster_idx} wear_slots 에 같은 부위가 두 번`);
-        for (const s of ws) { if (!parts.has(s)) fail(`${m.monster_idx} 부위 ${s}`); seen.part.add(s); }
+        // 입는 부위는 **등급이 정한다** (2026-10-12 · R245) — 몬스터 행에 칸이 남아 있으면 읽히지 않는 SSOT 다
+        if ('wear_slots' in m) fail(`${m.monster_idx} wear_slots 가 남아 있다 — 입는 부위는 등급이 정한다 (R245)`);
         for (const a of AX) {
             if (!Number.isInteger(m[a])) fail(`${m.monster_idx} ${a} 가 정수가 아니다 (${m[a]})`);
             if (m[a] < B.hero_attr_min || m[a] > B.hero_attr_max) fail(`${m.monster_idx} ${a}=${m[a]} 대역 밖`);
         }
         seen.cls.add(m.cls); seen.grp.add(m.weapon_group); seen.sk.add(m.innate_skill);
     }
+    // 부위의 공급원은 등급의 입는 부위다 (R245) — 등급 넷을 합쳐 부위 7종이 다 서야 한다
+    for (const g of Object.values(D.grades))
+        for (const s of `${g.wear_fixed}|${g.wear_optional}`.split('|')) { if (!parts.has(s)) fail(`등급 ${g.grade} 부위 ${s}`); seen.part.add(s); }
     // 직업 5종 전부 · 본편 무기군 10종 전부 · 부위 7종 전부가 공급원을 갖는다 — 안 나오는 무기·부위가 있으면 파밍 경로가 없다
     if (seen.cls.size !== cls.size) fail(`직업 ${seen.cls.size}/${cls.size} 만 쓰인다`);
     if (seen.part.size !== parts.size) fail(`부위 ${seen.part.size}/${parts.size} 만 공급원이 있다`);
@@ -701,6 +702,53 @@ check('spawn_grade.csv: 장비 희귀도 — 일반 = 일반 + 가끔 매직(레
     if (!seen.magic || seen.magic > seen.normal) fail(`일반 ${seen.normal} · 매직 ${seen.magic} — 「가끔 매직」이 아니다`);
     return `일반 ${nn}/${nm}/${nr} · 정예 ${en}/${em}/${er} · 일반 굴림 600 → 일반 ${seen.normal} · 매직 ${seen.magic}`;
 });
+/*
+ * **입는 부위는 등급이 정한다** [2026-10-12 · 사용자 「무기와 갑옷은 무조건 입고있고 나머지는 입을수도있고 안입을 수도」 · 「난이도에 따라 조절」 ·
+ *   monster_design §5-1 · INTERFACE §5-2 · R245] — 일반 = 무기 · 갑옷 + (투구 · 장갑 · 신발) · 정예 = + 반지 · 스테이지보스 이상 = + 목걸이.
+ *   선택 부위는 그 단의 `wear_chance` 로 부위마다 「입나」 1회 — 확률이 1 이어도 소비한다. 단 순서로 확률이 줄지 않는다(바퀴가 오를수록 더 입는다)
+ */
+check('spawn_grade.csv: 입는 부위 — 일반 = 무기 · 갑옷 + 투구 · 장갑 · 신발 · 정예 = + 반지 · 보스 = + 목걸이 · 선택 부위는 단의 확률로 부위마다 1회 (R245)', () => {
+    const P = g => ({ fixed: String(D.grades[g].wear_fixed).split('|'), optional: String(D.grades[g].wear_optional).split('|') });
+    const n = P('normal'), e = P('elite'), sb = P('stage_boss'), cb = P('chapter_boss');
+    if (!eq(n.fixed, ['weapon', 'armor'])) fail(`일반 고정 ${n.fixed} ≠ 무기 · 갑옷`);
+    for (const [g, p] of [['elite', e], ['stage_boss', sb], ['chapter_boss', cb]]) if (!eq(p.fixed, n.fixed)) fail(`${g} 고정 ${p.fixed} — 등급마다 무기 · 갑옷이다`);
+    if (!eq([...n.optional].sort(), ['boots', 'gloves', 'helmet'])) fail(`일반 선택 ${n.optional} ≠ 투구 · 장갑 · 신발`);
+    if (!eq(e.optional, [...n.optional, 'ring'])) fail(`정예 선택 ${e.optional} ≠ 일반 + 반지`);
+    if (!eq(sb.optional, [...e.optional, 'amulet']) || !eq(cb.optional, sb.optional)) fail(`보스 선택 ${sb.optional} / ${cb.optional} ≠ 정예 + 목걸이`);
+    // 확률 — 0 ~ 1 · 단 순서로 줄지 않는다
+    const ch = D.difficultyList.map(d => d.wearChance);
+    ch.forEach((c, i) => { if (!(c >= 0 && c <= 1) || (i && c < ch[i - 1])) fail(`wear_chance ${ch.join(' · ')} — 0 ~ 1 · 단 순서로 줄지 않아야 한다`); });
+    // 굴림 — `rollMonsterDrop` 은 스폰과 같은 함수(`wearGear`)다. 손으로 같은 순서를 밟아 대조한다:
+    //   선택 부위마다 1회(확률이 1 이어도) → 고정 + 입은 선택 부위로 `rollGear` (INTERFACE §5-2)
+    const g = D.grades.stage_boss, mid = D.stages[1011].boss_monster_idx, lv = 10, c = lv + g.gear_ilvl_add;
+    const spread = Math.max(B.drop_ilvl_spread_min, Math.round(c * B.drop_ilvl_spread_pct));
+    const avg = {};
+    for (const d of D.difficultyList) {
+        const sp = SYS.battle.monsterGearSpec(mid, 'stage_boss', lv, d.id);
+        if (sp.wearChance !== d.wearChance) fail(`${d.id} wearChance ${sp.wearChance} ≠ ${d.wearChance}`);
+        if (!eq(sp.fixed, sb.fixed) || !eq(sp.optional, sb.optional) || !eq(sp.slots, [...sb.fixed, ...sb.optional])) fail(`${d.id} 부위 ${sp.slots}`);
+        let parts = 0;
+        for (let s = 1; s <= 40; s++) {
+            const r = SYS.battle.rollMonsterDrop(makeRng(s), mid, 'stage_boss', lv, 0, d.id);
+            const rb = makeRng(s);
+            const worn = sb.optional.filter(() => rb() < d.wearChance);
+            const gear = SYS.item.rollGear(rb, { slots: [...sb.fixed, ...worn], ilvl: c, ilvlSpread: spread, magicFind: 0,
+                rareBonusPct: g.gear_rare_bonus_pct, rarityWeights: { normal: g.gear_rarity_w_normal, magic: g.gear_rarity_w_magic, rare: g.gear_rarity_w_rare },
+                weaponGroup: D.monsters[mid].weapon_group });
+            if (!eq(r.worn, gear)) fail(`${d.id} 시드 ${s}: 손으로 밟은 순서와 차림이 다르다 — 선택 부위마다 1회 → rollGear`);
+            if (!eq(r.worn.slice(0, sb.fixed.length).map(it => it.slot), sb.fixed)) fail(`${d.id} 시드 ${s}: 무기 · 갑옷을 안 입었다`);
+            parts += r.worn.length;
+        }
+        avg[d.id] = parts / 40;
+    }
+    // 확률 1 인 단은 다 입는다 · 1 보다 작은 단은 덜 입는다
+    const all = sb.fixed.length + sb.optional.length;
+    for (const d of D.difficultyList) {
+        if (d.wearChance === 1 && avg[d.id] !== all) fail(`${d.id}(1) 평균 ${avg[d.id]} ≠ ${all}`);
+        if (d.wearChance < 1 && !(avg[d.id] < all)) fail(`${d.id}(${d.wearChance}) 인데 다 입었다`);
+    }
+    return `고정 ${n.fixed.join('·')} · 선택 일반 ${n.optional.length} · 정예 ${e.optional.length} · 보스 ${sb.optional.length} · 보스 평균 부위 ${D.difficultyList.map(d => `${d.id} ${avg[d.id].toFixed(2)}`).join(' · ')}`;
+});
 check('stage_round: 첫 스테이지 세트 — 정예 3·6 / 보스 9', () => eq(D.eliteRounds, [3, 6]) && D.bossRound === 9);
 check('stage_round: 세트마다 round_num 1..N 연속 · 보스 라운드는 **있으면** 마지막 하나(칸 I · II 의 `elite_end` 는 정예로 끝난다 — 2026-09-29) · 스테이지는 있는 세트를 가리킨다 (base_expedition_design §1-2 · R75)', () => {
     for (const [set, rows] of Object.entries(D.roundSets)) {
@@ -826,6 +874,19 @@ check('능력치 설명 카드 — 기본 능력치 · 세부 옵션 줄 id 전�
         if (card.querySelector('.tip-effect-summary')?.innerHTML !== i18nT(`st.desc.${n.dataset.stat}`)) fail(`${n.dataset.stat} — 효과 줄이 문구와 다르다`);
     }
     return `${ids.length}줄 · 자리 ${nodes.length}`;
+});
+check('tip: 세부 옵션의 정수형(fmt=n) 줄은 부동소수 찌꺼기를 안 찍는다 — 자릿수는 안 깎는다(HP 재생 0.096 그대로) (부채 #38 회귀)', () => {
+    const rows = sheetPages().flat().filter(s => s.id === 'hp_max' || s.id === 'hp_regen');
+    if (rows.length !== 2) fail(`세부 옵션에 hp_max · hp_regen 줄이 ${rows.length}개`);
+    const valOf = (c, id) => {
+        const box = document.createElement('div');
+        box.innerHTML = sheetRowsHtml(rows, c);
+        return box.querySelector(`[data-stat="${id}"] .cs-v`)?.textContent.trim();
+    };
+    const got = { hp: valOf({ hp_max: 30.799999999999997, hp_regen: 0.1 + 0.2 }, 'hp_max'), rg: valOf({ hp_max: 100, hp_regen: 0.1 + 0.2 }, 'hp_regen'), fine: valOf({ hp_max: 100, hp_regen: 0.096 }, 'hp_regen') };
+    if (got.hp !== '30.8' || got.rg !== '0.3') fail(`찌꺼기가 남았다 ${JSON.stringify(got)}`);
+    if (got.fine !== '0.096') fail(`뜻 있는 소수를 깎았다 ${got.fine}`);
+    return `30.799999999999997 → ${got.hp} · 0.1+0.2 → ${got.rg} · 0.096 → ${got.fine}`;
 });
 check('hero_attribute.csv: 감각 → 운 (2026-08-26 재정의) · 자리 유지 · 직업 메인 스탯(class.csv:key_attr · 2026-09-18 · 사제 매력 2026-09-27)', () => {
     const ids = D.heroAttributes.map(s => s.id);
@@ -1466,17 +1527,21 @@ check('save: v39 → v40 — 옛 인벤토리(`bag`)는 편성 1 의 것이 된�
     return `bag ${old.bag.length} 개(상한 ${cap}) → 편성 1 · 부대 인벤토리 ${s.bags.length}`;
 });
 check('인벤토리 — 부대마다 하나 · 드롭은 나간 부대의 것 · 해제 · 꺼내기 · 정렬 · 자동 분해는 넘긴 번호 · 장착 교체품은 꺼낸 인벤토리로 · 상한은 하나마다 (ADR-0521 · INTERFACE §2-7)', () => {
-    // 시드 32 — 31 은 스킬 차례 기본 공격(2026-10-06 R218)으로 전투 수열이 바뀌어 첫 런에 드롭이 안 났다
-    const g = openAll(SYS.game.newGame(32, cands, NOW));
-    if (g.presets.length < 3) fail(`편성 ${g.presets.length} — 셋이 열려야 한다`);
-    const [a, b, c] = g.heroes.map(h => h.uid);
-    // 셋을 편성 2 로 옮겨 보낸다 — 드롭은 편성 2 의 인벤토리에만
-    SYS.game.selectPreset(g, 2);
-    for (const u of [a, b, c]) SYS.game.toggleParty(g, u, NOW);
-    const r = SYS.game.resolveBattle(g, 1011, NOW, 2);
-    if (!r.ok) fail(`출발 ${r.err}`);
-    const kept = r.report.drops.filter(u => g.items[u]);
-    if (!kept.length) fail('드롭이 없었다 — 시드를 바꾼다');
+    // 드롭이 나는 첫 시드를 32 부터 찾는다 — 박아 둔 시드는 전투 수열이 바뀔 때마다 헛돌았다
+    //   (31 → 32 · 스킬 차례 기본 공격 2026-10-06 R218 · 32 도 몬스터 차림을 등급 · 단이 정하게 되며 2026-10-12 R245)
+    let g, a, b, c, kept = [];
+    for (let seed = 32; seed < 72 && !kept.length; seed++) {
+        g = openAll(SYS.game.newGame(seed, cands, NOW));
+        if (g.presets.length < 3) fail(`편성 ${g.presets.length} — 셋이 열려야 한다`);
+        [a, b, c] = g.heroes.map(h => h.uid);
+        // 셋을 편성 2 로 옮겨 보낸다 — 드롭은 편성 2 의 인벤토리에만
+        SYS.game.selectPreset(g, 2);
+        for (const u of [a, b, c]) SYS.game.toggleParty(g, u, NOW);
+        const r = SYS.game.resolveBattle(g, 1011, NOW, 2);
+        if (!r.ok) fail(`출발 ${r.err}`);
+        kept = r.report.drops.filter(u => g.items[u]);
+    }
+    if (!kept.length) fail('40 시드에 드롭이 없었다');
     if (!eq(g.bags[1], kept) || g.bags[0].length || g.bags[2].length) fail(`드롭 ${JSON.stringify(g.bags.map(x => x.length))}`);
     if (SYS.game.bagOf(g, 2) !== g.bags[1] || SYS.game.bagOf(g, 0) !== null || SYS.game.bagOf(g, 4) !== null) fail('bagOf');
     // 해제는 넘긴 번호로 · 없는 번호는 missing
@@ -5078,14 +5143,14 @@ check('battle: 몬스터는 computeCombat 을 지난다 — 다른 것은 몸값
     return `elite res ${ELEMENTS.map(el => e.res[el]).join('/')} · hp ${e.hp} · crit ${e.crit}`;
 });
 /*
- * **몬스터도 장비를 낀다** [R79] — `gear` 는 `wear_slots` 를 그 순서로 채운 한 벌이고, 무기는 `monster.csv:weapon_group` 이다.
+ * **몬스터도 장비를 낀다** [R79] — `gear` 는 입은 부위(등급이 정한다 — R245)를 그 순서로 채운 한 벌이고, 무기는 `monster.csv:weapon_group` 이다.
  *   장비가 세기를 낸다는 것이 뒤집은 이유이므로(monster_design §5-1) **맨몸보다 세다**는 것도 같이 잰다.
  */
-check('battle: 몬스터가 장비를 낀다 — 부위는 wear_slots · 무기군은 제 것 · 맨몸보다 세다 (R79)', () => {
+check('battle: 몬스터가 장비를 낀다 — 부위는 등급이 정한다(R245) · 무기군은 제 것 · 맨몸보다 세다 (R79)', () => {
     // 1101(활 1.4)로 잰다 — 아래 주기 줄이 맨몸(`unarmed_period` 1.3)과 갈리는지를 보므로 **주기가 1.3 이 아닌 무기군**이어야 한다
     //   [2026-09-16] 1103 이 십자가(1.3)를 든 고블린 주술사가 되면서 그 줄이 헛돌았다 — 둔기 · 창 · 오브도 1.3 이라 같은 함정이다
     const id = 1101, m = D.monsters[id];
-    const slots = String(m.wear_slots).split('|');
+    const slots = SYS.battle.monsterGearSpec(id, 'normal', 10).slots;   // 일반 등급이 입을 수 있는 부위 전부 (R245)
     const gear = SYS.item.rollGear(makeRng(12), { slots, ilvl: 10, weaponGroup: m.weapon_group });
     const armed = SYS.battle.makeEnemy('e0', id, 'normal', 10, gear);
     const bare = SYS.battle.makeEnemy('e0', id, 'normal', 10);
@@ -5106,7 +5171,7 @@ check('battle: 몬스터가 장비를 낀다 — 부위는 wear_slots · 무기�
  */
 check('battle: 몬스터 스킬 칸은 등급이 연다 — 일반 1(고유) · 정예 1(둘째 칸 비움 · R179) · 보스 고유 + 셋째 (R79)', () => {
     const id = 1103, m = D.monsters[id];
-    const slots = String(m.wear_slots).split('|');
+    const slots = SYS.battle.monsterGearSpec(id, 'normal', 10).slots;   // 입는 부위는 등급이 정한다 (R245)
     const gear = SYS.item.rollGear(makeRng(12), { slots, ilvl: 10, weaponGroup: m.weapon_group });
     const of = (grade, third) => SYS.battle.makeEnemy('e0', id, grade, 10, gear, { thirdSkill: third }).actives;
     const n = of('normal', 'kni_duel'), el = of('elite', 'kni_duel'), bo = of('stage_boss', 'kni_duel');
@@ -7698,13 +7763,13 @@ check('resolveBattle: 골드·처치·드롭·전투불능이 상태에 반영 �
 });
 /*
  * **드롭은 몬스터가 입고 있던 장비다** [사용자 지시 2026-09-11 · R79 · item_design §1 2단계].
- *   떨어진 아이템은 ① 그 스테이지 몬스터의 `wear_slots` 안의 부위이고 ② 무기면 그 몬스터들의 `weapon_group` 중 하나이며
+ *   떨어진 아이템은 ① 그 스테이지에 서는 등급들이 입을 수 있는 부위이고(등급이 정한다 — R245) ② 무기면 그 몬스터들의 `weapon_group` 중 하나이며
  *   ③ ilvl 이 `dlvl + gear_ilvl_add`(등급 하나)를 가운데로 ± 반폭 안이다(~~굴림 없이~~ → 2026-10-06 부위마다 굴린다). 옛 경로(부위 균등 · 무기군 균등 · ilvl 한쪽 퍼짐)면 셋 다 깨진다.
  */
 check('simulate: 드롭은 입은 장비다 — 부위·무기군은 그 스테이지 몬스터의 것 · ilvl 은 dlvl + 등급 가산 ± 반폭 (R79 · 2026-10-06)', () => {
     const st = D.stages[1013];
     const ids = [...SYS.battle.stagePool(st), st.boss_monster_idx];
-    const parts = new Set(ids.flatMap(id => String(D.monsters[id].wear_slots).split('|')));
+    const parts = new Set(['normal', 'elite', st.boss_grade].flatMap(gr => SYS.battle.monsterGearSpec(st.boss_monster_idx, gr, st.dlvl).slots));
     const groups = new Set(ids.map(id => D.monsters[id].weapon_group));
     const bands = Object.values(D.grades).map(g => ilvlBand(st.dlvl + g.gear_ilvl_add));
     const ilvls = { has: v => bands.some(([lo, hi]) => v >= lo && v <= hi) };
@@ -7785,7 +7850,7 @@ check('battle: 몬스터 레벨은 값만 바꾼다 — HP · 드롭 아이템 �
     // 장비 굴림 수는 아이템 레벨과 무관하다 — 같은 시드에서 굴린 뒤 다음 수가 같다
     const m = D.monsters[D.stages[1011].boss_monster_idx];
     const ra = makeRng(3), rb = makeRng(3);
-    const slots = String(m.wear_slots).split('|');
+    const slots = SYS.battle.monsterGearSpec(m.monster_idx, D.stages[1011].boss_grade, base).slots;   // 등급이 정한다 (R245)
     SYS.item.rollGear(ra, { slots, ilvl: base, weaponGroup: m.weapon_group });
     SYS.item.rollGear(rb, { slots, ilvl: top, weaponGroup: m.weapon_group });
     if (ra() !== rb()) fail('아이템 레벨이 장비 굴림 횟수를 바꿨다');
@@ -11763,16 +11828,18 @@ check('construction: 상한이 줄어든 세이브 — 가방은 넘친 채 둔�
     if (!eq(back.presets[0].party, g.presets[0].party)) fail('남는 편성의 파티가 흔들렸다');
     return `가방 ${back.bags[0].length} / 상한 ${L.bag} 그대로 · 편성 ${g.presets.length} → ${back.presets.length} · 칸 ${g.presets[0].potionSlots.length} → ${back.presets[0].potionSlots.length}`;
 });
-check('construction: 진짜 표 — 첫 건설(새 게임에 안 지어졌고 문턱이 없는 첫 랭크 · 준비 중 제외)은 시작 재화로 바로 짓는다 (construction_draft §4 조건 ① · R137)', () => {
-    const g = SYS.game.newGame(83, cands, NOW);
-    const firsts = SYS.game.constructionState(g).buildings.filter(b => b.rank === 0 && b.next.err !== 'pending' && !b.ranks[0].require.length);
-    const need = {};
-    for (const b of firsts) for (const c of b.next.cost) need[c.res] = (need[c.res] ?? 0) + c.need;
-    const wallet = { gold: g.resources.gold, dust: g.resources.dust, stigma: g.resources.stigma };
-    const short = Object.entries(need).filter(([res, n]) => (wallet[res] ?? g.materials[res] ?? 0) < n);
-    if (short.length) fail(`시작 재화로 첫 건설을 다 못 짓는다 ${JSON.stringify(short)} (가진 것 ${JSON.stringify(wallet)})`);
-    for (const b of firsts) if (!SYS.game.construct(g, b.id).ok) fail(`${b.id} 를 못 짓는다`);
-    return `${firsts.map(b => b.name.ko).join(' → ') || '없음'} · 비용 ${JSON.stringify(need)} ≤ 시작 ${JSON.stringify(wallet)}`;
+check('construction: 진짜 표 — 첫 건설(새 게임에 안 지어졌고 문턱이 없는 첫 랭크 · 준비 중 제외)은 어느 것이든 한 채를 시작 재화로 바로 짓는다 (construction_draft §4 조건 ① · R137 · 2026-10-12 두 채 → 한 채 · R244)', () => {
+    const g0 = SYS.game.newGame(83, cands, NOW);
+    const firsts = SYS.game.constructionState(g0).buildings.filter(b => b.rank === 0 && b.next.err !== 'pending' && !b.ranks[0].require.length);
+    if (!firsts.length) fail('첫 건설이 없다 — 이 단정이 헛돈다');
+    const wallet = { gold: g0.resources.gold, dust: g0.resources.dust, stigma: g0.resources.stigma };
+    for (const b of firsts) {
+        const short = b.next.cost.filter(c => (wallet[c.res] ?? g0.materials[c.res] ?? 0) < c.need);
+        if (short.length) fail(`시작 재화로 ${b.id} 를 못 짓는다 ${JSON.stringify(short)} (가진 것 ${JSON.stringify(wallet)})`);
+        const g = SYS.game.newGame(83, cands, NOW);   // 한 채씩 — 새 판에서
+        if (!SYS.game.construct(g, b.id).ok) fail(`${b.id} 를 못 짓는다`);
+    }
+    return `${firsts.map(b => `${b.name.ko} ${b.next.cost.map(c => `${c.res} ${c.need}`).join(' + ')}`).join(' · ')} — 한 채씩 ≤ 시작 ${JSON.stringify(wallet)}`;
 });
 check('construction: 관리자 모드(openAll) — 켜면 기능 · 상한 · 탭이 모든 건물 최대 랭크로 열린 척 · 스테이지도 chapter_open_max 장까지 전부 열림(그 뒤는 잠김 · R227) · 세이브와 건설 탭의 실제 랭크는 그대로 · 끄면 돌아온다 (INTERFACE §2-7 · SCREEN_DESIGN §10-3 · R155)', () => {
     let on = false;
@@ -11882,6 +11949,35 @@ check('difficulty: 새 게임은 첫 단만 열림 · 고르기 거절(missing �
     if (S.game.canDepart(h, D.stageOrder[0], NOW) !== null) fail(`끈 뒤 첫 칸 출발 ${S.game.canDepart(h, D.stageOrder[0], NOW)} — 노말로 나가야`);
     return `열림 ${gate} 으로 한 단씩 · 단마다 기록 · 관리자 모드 전부 · 끄면 노말`;
 });
+check('difficulty: 장 순서 해금이 없는 단(chapter_gate 0 · 헬)은 단이 열리는 순간 열린 장마다 첫 칸이 열린다 — 장 안은 직전 칸을 그 단에서 깨야 · 안 열린 장은 잠김 · 나이트메어는 앞 장을 깨야 · chapter_gate 가 0 · 1 이 아니면 조립이 던진다 (2026-10-12 · R242 · INTERFACE §2-7)', () => {
+    const gates = D.difficultyList.map(d => d.chapterGate);
+    if (!eq(gates, [1, 1, 0])) fail(`chapter_gate ${gates}`);
+    const gate = diffGate();
+    const S = buildSystems(D);
+    const g = S.game.newGame(94, cands, NOW);
+    for (const b of S.construction.list) g.buildings[b.id] = b.maxRank;   // 장을 chapter_open_max 까지 연다
+    const byOrder = ids => ids.slice().sort((a, b) => D.stageOrder.indexOf(a) - D.stageOrder.indexOf(b));
+    const open = diff => D.stageOrder.filter(id => S.game.stageUnlocked(g, id, diff));
+    g.progress.cleared.push(gate);
+    if (open('hell').length) fail(`나이트메어의 해금 칸 전에 헬 칸이 열렸다 ${open('hell')}`);
+    g.progress.clearedIn = { nightmare: [gate] };
+    const firsts = D.stageOrder.filter((id, i) => S.game.chapterOpen(g, D.stages[id].chapter) && (i === 0 || D.stages[D.stageOrder[i - 1]].chapter !== D.stages[id].chapter));
+    if (firsts.length < 2) fail(`시험 조건 — 열린 장이 ${firsts.length}`);
+    if (!eq(open('hell'), firsts)) fail(`헬 기록 없이 열린 칸 ${open('hell')} — 장마다 첫 칸 ${firsts} 이어야`);
+    // 장 안은 순서 — 둘째 장의 첫 칸을 깨면 그 다음 칸 하나만 더 열린다
+    const f2 = firsts[1], next2 = D.stageOrder[D.stageOrder.indexOf(f2) + 1];
+    if (D.stages[next2]?.chapter !== D.stages[f2].chapter) fail(`시험 조건 — ${f2} 다음 칸이 같은 장이 아니다`);
+    if (S.game.canDepart(g, next2, NOW, 1, 'hell') !== 'locked') fail(`헬 ${next2} — 앞 칸을 안 깼는데 출발이 locked 가 아니다`);
+    g.progress.clearedIn.hell = [f2];
+    if (!eq(open('hell'), byOrder([...firsts, next2]))) fail(`헬 ${f2} 를 깬 뒤 ${open('hell')} — ${next2} 하나만 더 열려야`);
+    if (S.game.canDepart(g, firsts.at(-1), NOW, 1, 'hell') === 'locked') fail(`헬 마지막 장 첫 칸 ${firsts.at(-1)} 출발이 locked`);
+    // 나이트메어는 그대로 — 해금 칸(보스)만 깬 기록으로는 앞 장을 안 깬 장의 첫 칸이 안 열린다
+    if (S.game.stageUnlocked(g, f2, 'nightmare')) fail(`나이트메어 ${f2} 가 앞 장을 안 깼는데 열렸다`);
+    let threw = false;
+    try { buildSystems({ ...D, difficultyList: D.difficultyList.map((x, i) => (i === 2 ? { ...x, chapterGate: 2 } : x)) }); } catch (e) { threw = /chapter_gate/.test(e.message); }
+    if (!threw) fail('chapter_gate 2 를 받아들였다');
+    return `헬 기록 없이 장 ${firsts.length}개의 첫 칸만 · ${f2} 를 깨면 ${next2} 하나 더 · 나이트메어는 앞 장을 깨야`;
+});
 check('difficulty: 런의 몬스터 레벨 = min(만렙, dlvl + level_add) — 노말은 dlvl · 헬은 만렙에 평평 · 리포트 · 부대 자리 · 핸들에 단 · 깬 기록은 그 단에만 · 이어 가는 런은 고른 단이 바뀌어도 앞 런의 단 · 세이브 왕복 · 옛 세이브(필드 없음)는 노말 (2026-10-10 · R236 · INTERFACE §2-7 · §4)', () => {
     const add = D.difficulties.nightmare.levelAdd, cap = B.hero_level_cap;
     for (const id of D.stageOrder) {
@@ -11934,8 +12030,8 @@ check('difficulty: 런의 몬스터 레벨 = min(만렙, dlvl + level_add) — �
     return `${D.stageOrder[0]} 나이트메어 Lv ${d.report.level} · 기록 분리 · 이어 가기 나이트메어 · 왕복 · 옛 세이브 노말`;
 });
 check('codex: 처치 하나 = 그 런 단의 codex_exp — 같은 판을 단만 바꿔 돌리면 도감 경험치가 단의 비율대로 · 표에 없는 단은 첫 단 · codex_exp 가 1 미만이면 조립이 던진다 (2026-10-10 · R239 · monster_design §8 · INTERFACE §2-7)', () => {
-    // 단의 레벨 더하기를 0 으로 둔 판 — 단마다 같은 전투가 나와 처치가 같다(레벨이 아니라 도감 몫을 본다) · 관리자 모드로 단을 다 연다
-    const S = buildSystems({ ...D, difficultyList: D.difficultyList.map(x => ({ ...x, levelAdd: 0 })) }, { openAll: () => true });
+    // 단의 레벨 더하기를 0 · 몬스터 착용 확률을 첫 단 값으로 둔 판(R245) — 단마다 같은 전투가 나와 처치가 같다(레벨 · 차림이 아니라 도감 몫을 본다) · 관리자 모드로 단을 다 연다
+    const S = buildSystems({ ...D, difficultyList: D.difficultyList.map(x => ({ ...x, levelAdd: 0, wearChance: D.difficultyList[0].wearChance })) }, { openAll: () => true });
     for (const d of D.difficultyList) if (S.game.codexExpOf(d.id) !== d.codexExp) fail(`codexExpOf(${d.id}) ${S.game.codexExpOf(d.id)} ≠ 표 ${d.codexExp}`);
     if (S.game.codexExpOf('nope') !== D.difficultyList[0].codexExp) fail('표에 없는 단이 첫 단으로 안 떨어졌다');
     const runAt = (seed, diff) => {
@@ -12410,7 +12506,7 @@ check('battle: rollMonsterDrop — 스폰의 차림 줄을 주면 스폰이 입�
         const sp = SYS.battle.monsterGearSpec(mid, grade, lv);
         const g = D.grades[grade];
         const [lo, hi] = ilvlBand(lv + g.gear_ilvl_add);
-        if (!eq(sp.slots, String(D.monsters[mid].wear_slots).split('|'))) fail(`${mid} 부위 ${sp.slots} — wear_slots 순서가 아니다`);
+        if (!eq(sp.slots, `${g.wear_fixed}|${g.wear_optional}`.split('|'))) fail(`${mid}(${grade}) 부위 ${sp.slots} — 등급의 고정 → 선택 순서가 아니다 (R245)`);
         if (sp.weaponGroup !== D.monsters[mid].weapon_group) fail(`${mid} 무기군 ${sp.weaponGroup}`);
         if (sp.ilvlMin !== lo || sp.ilvlMax !== hi) fail(`${mid}(${grade}) Lv${lv} 아이템 레벨 ${sp.ilvlMin}~${sp.ilvlMax} ≠ ${lo}~${hi}`);
         if (!eq(sp.rarityWeights, { normal: g.gear_rarity_w_normal, magic: g.gear_rarity_w_magic, rare: g.gear_rarity_w_rare })) fail(`${grade} 가중치 ${JSON.stringify(sp.rarityWeights)}`);
@@ -12418,7 +12514,10 @@ check('battle: rollMonsterDrop — 스폰의 차림 줄을 주면 스폰이 입�
         for (let s = 1; s <= 80; s++) {
             const r = SYS.battle.rollMonsterDrop(makeRng(s), mid, grade, lv);
             if (!r.worn.includes(r.drop)) fail(`${mid} 시드 ${s}: 드롭이 입은 것 중 하나가 아니다`);
-            if (!eq(r.worn.map(it => it.slot), sp.slots)) fail(`${mid} 시드 ${s}: 입은 부위 ${r.worn.map(it => it.slot)}`);
+            // 고정 부위는 언제나 · 선택 부위는 확률로 — 입은 것은 「고정 → 선택 중 일부(순서대로)」다 (R245)
+            const ws = r.worn.map(it => it.slot), rest = ws.slice(sp.fixed.length);
+            if (!eq(ws.slice(0, sp.fixed.length), sp.fixed) || !eq(rest, sp.optional.filter(p => rest.includes(p))))
+                fail(`${mid} 시드 ${s}: 입은 부위 ${ws} — 고정 → 선택(순서대로)이 아니다`);
             for (const it of r.worn) {
                 if (it.ilvl < lo || it.ilvl > hi) fail(`${mid} 시드 ${s}: ${it.slot} ilvl ${it.ilvl} — ${lo}~${hi} 밖`);
                 if (!(sp.rarityWeights[it.rarity] > 0)) fail(`${mid}(${grade}) 시드 ${s}: 가중치 0 인 ${it.rarity} 가 나왔다`);

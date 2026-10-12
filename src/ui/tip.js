@@ -266,7 +266,7 @@ const wornOfHero = (h, itemOf) => {
     return w;
 };
 /**
- * 몬스터의 한 벌 — `round` 이벤트의 `gear` 는 **부위**(`monster.csv:wear_slots`) 배열이라 위치가 없다 (INTERFACE §2-6 · ADR-0183).
+ * 몬스터의 한 벌 — `round` 이벤트의 `gear` 는 **부위**(등급이 정한 입은 부위 — R245) 배열이라 위치가 없다 (INTERFACE §2-6 · ADR-0183).
  * 같은 부위의 착용 위치에 **앞 칸부터** 앉힌다 — 부위 하나에 위치가 둘인 반지가 그 자리다. 안 입는 부위는 빈 칸으로 남는다.
  */
 const wornOfMonster = gear => {
@@ -320,12 +320,13 @@ function equipmentHtml(worn) {
 /** 상한이 걸리는 저항 4행 — 값만으로는 "몇 %까지 의미가 있나"를 못 읽는다 (battle_design §9-5) */
 const RES_ROWS = ['res_fire', 'res_cold', 'res_lightning', 'res_poison'];
 
-/** 전투 능력치 표기 — 단위 붙이기는 여기 한 곳에서만 · `pct` 는 비율로 와서 찍을 때만 100 을 곱한다(소수 1자리 · R111) */
+/** 전투 능력치 표기 — 단위 붙이기는 여기 한 곳에서만 · `pct` 는 비율로 와서 찍을 때만 100 을 곱한다(소수 1자리 · R111)
+ *  `n` 은 자릿수를 안 깎고 **부동소수 찌꺼기만** 걷는다(유효숫자 12자리) — 소수 1자리 implicit 을 여러 부위 더하면 `30.799999999999997` 이 떴다 · `hp_regen` 0.096 은 그대로 (부채 #38) */
 const fmtCombat = (def, v) => v === undefined ? '—'
     : typeof v === 'object' ? rangeText(v)          // 공격력 두 줄은 범위 {min, max} (R90 · ADR-0108)
     : def.fmt === 'pct' ? `${Math.round(M.pctNum(v) * 10) / 10}%`
     : def.fmt === 'sec' ? t('sk.cycleSec', { s: v.toFixed(2) })
-    : String(v);
+    : String(+v.toPrecision(12));
 
 /** 묶은 줄의 한 조각 이름 — 값이 있는 것만 이름을 붙여 찍는다 (`일반 10% · 데몬 5%`) */
 const typeParts = o => ['normal', 'demon', 'undead'].map(k => [t(`st.fx.${k}`), o?.[k] ?? 0]);

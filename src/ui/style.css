@@ -5240,3 +5240,43 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 재고 한 칸 — 그림(아레나와 같은 `.p-slot`) + 개수 `×n`. 편성 탭의 「가진 물약」도 이것을 쓴다 (R124) */
 .p-stock { display: inline-flex; align-items: center; gap: 2px; }
 .p-stock b { font-weight: normal; font-size: var(--fs-xs); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+
+/* ───────── 실험실 (SCREEN_DESIGN §18 · ADR-0580 · ADR-0610) ─────────
+   개발 장치 — 걷어내려면 이 섹션째 지운다. 왼쪽 조건 · 오른쪽 결과가 박스 높이를 나눠 갖고 각 열이 따로 스크롤한다 */
+.lab-item { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; min-height: 0; overflow: hidden; }
+.lab-cond, .lab-out { display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow-y: auto; }
+.lab-row { display: grid; grid-template-columns: minmax(6em, max-content) minmax(0, 1fr); align-items: center; gap: 10px; }
+.lab-row.top { align-items: start; }
+.lab-h { color: var(--text-muted); font-size: var(--fs-xs); white-space: nowrap; }
+/* 몬스터 — 장소마다 한 줄: 장소 이름 + 칩(얼굴 + 이름) · 보스 이름은 강조색 */
+.lab-places { display: flex; flex-direction: column; gap: 6px; }
+.lab-place { display: grid; grid-template-columns: minmax(7em, max-content) minmax(0, 1fr); gap: 8px; align-items: center; }
+.lab-place-name { font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; }
+.lab-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.lab-mon {
+    display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 2px;
+    background: var(--bg-input); border: 1px solid var(--border-dark); border-radius: 15px;
+    color: var(--text-secondary); font: inherit; font-size: var(--fs-xs); cursor: pointer;
+}
+.lab-mon:hover { border-color: var(--border-secondary); color: var(--text-primary); }
+.lab-mon.on { border-color: var(--text-accent); color: var(--text-primary); }
+.lab-mon.boss .lab-mon-name { color: var(--text-accent); }
+.lab-lv { display: inline-flex; align-items: center; gap: 6px; }
+.lab-lv-n { min-width: 2.5em; text-align: center; font-variant-numeric: tabular-nums; }
+/* 조건 줄 — 로직이 낸 값(`monsterGearSpec`). 언제나 입는 부위는 밝게 · 확률로 입는 부위는 흐린 점선 칸 + 그 단의 확률 (ADR-0610) */
+.lab-spec { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border: 1px solid var(--border-dark); background: var(--bg-secondary); }
+.lab-parts { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.lab-part {
+    display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+    background: var(--bg-input); border: 1px solid var(--border-secondary);
+}
+.lab-part img { width: 26px; height: 26px; object-fit: contain; image-rendering: var(--face-render); }
+.lab-part.opt { opacity: .45; border-style: dashed; }
+.lab-chance { margin-left: 4px; color: var(--text-secondary); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.lab-foot { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+/* 결과 — 마지막 드롭 카드(툴팁과 같은 카드 · 배경 · 테두리는 툴팁 몫이라 여기서 준다) · 그 아래 기록 칸(탐험 결과 칸과 같은 한 변) */
+.lab-card { flex: none; }
+.lab-card .tip-card { background: var(--bg-card); border: 1px solid var(--border-secondary); }
+.lab-log-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--fs-xs); }
+.lab-log { grid-template-columns: repeat(auto-fill, 52px); gap: 6px; align-content: start; }

@@ -314,11 +314,12 @@ const itemImg = it => {
 // **결투장**은 도감 바로 앞에 선다 [2026-10-02 사용자 지시] — 처음엔 원정 바로 뒤였다
 // 탭은 **묶음 넷**으로 선다 [2026-10-09 사용자 지시 · SCREEN_DESIGN §1 · ADR-0554] — 순서는 그대로고 묶음 머리(`nav.grp.*`)가 끊어 읽게 할 뿐이다.
 //   순서의 SSOT 는 이 표 하나 — `TABS` 는 펴낸 것이라 부지 순서 · crumb · `?tab=` 은 그대로 돈다. 탭이 새로 서면 묶음도 같이 정한다
+// **실험실**이 기타 묶음 끝에 선다 [2026-10-10 사용자 지시 · SCREEN_DESIGN §18 · ADR-0580] — 탭 13 → 14 · 개발 장치(건물 없음 · 늘 열림) · 화면 코드는 2026-10-12 에 섰다
 const NAV_GROUPS = [
     ['battle', ['expedition', 'party', 'character']],
     ['town', ['research', 'tavern', 'shop', 'forge', 'library']],
     ['dispatch', ['resource', 'explore']],
-    ['etc', ['arena', 'codex', 'help']],
+    ['etc', ['arena', 'codex', 'help', 'lab']],
 ];
 const TABS = NAV_GROUPS.flatMap(([, ids]) => ids);
 
@@ -384,6 +385,9 @@ const state = {
     codexFxStyle: fxArtStyle(),
     // 마스터리 세그먼트의 안쪽 분류 — 죄종 | 직업 | 전직. 각 분류의 판은 가로 세 개씩 선다 · 세이브 아님
     codexMasterySeg: 'sin',
+    // 실험실 아이템 생성기 (SCREEN_DESIGN §18 · ADR-0580 · ADR-0610) — 고른 챕터 · 몬스터(null = 그 챕터 첫 몬스터) · 등급 · 단(null = 첫 단) ·
+    //   스테이지 레벨(null = 그 장소 첫 칸의 그 단 레벨 — `game.stageLevel`) · 굴린 드롭(최신순 · `LAB_KEEP` 개까지). **세이브 아님** — 다른 탭에 다녀와도 남고 새로고침이면 빈다
+    lab: { chapter: 1, monster: null, grade: 'normal', diff: null, level: null, rolls: [] },
     roll: 1, candidates: [], confirmOverwrite: false,
     // 보관의 「고르는 중」 [2026-09-21 · ADR-0184] — [분해]로 들어가고 [분해하기] · [취소]로 나온다.
     // 고르는 동안 칸 클릭은 **체크를 토글할 뿐**이라 오클릭이 파괴가 되지 않는다 — 옛 `salvageMode` 는 클릭이 곧 분해였다.
@@ -587,6 +591,7 @@ function render() {
         explore: renderExplore,
         codex: renderCodex,
         help: renderHelp,
+        lab: renderLab,
     })[state.tab](main);
     for (const n of main.querySelectorAll('[data-keep]')) if (kept.has(n.dataset.keep)) n.scrollTop = kept.get(n.dataset.keep);
     if (state.itemMenu && authenticated && G) itemMenuPanel();   // 보관 칸 우클릭 메뉴 — 본문 뒤에 선다 (ADR-0451)
@@ -6048,6 +6053,20 @@ function gamblePlay() {
 /** 보여 줄 판 — 한 판이면 그 판 · n판 돌리기면 마지막 판 */
 const gbShown = () => { const L0 = state.gb.last; return !L0 ? null : L0.kind === 'one' ? L0.spin : L0.spins[L0.spins.length - 1]; };
 
+/** 한 판에서 **받은** 잭팟 id — 홀드 앤 스핀에 붙은 잭팟 코인(붙은 수만큼) + 판이 다 차면 그 행.
+ *  홀드가 안 선 판의 코인은 값을 버리므로(`gamble.js` `spin`) 판에 잭팟 코인이 서 있어도 없다 (ADR-0609) */
+function gbJackpotsOf(sp) {
+    const GB = SYS.gamble;
+    if (!sp?.hold) return [];
+    const isJp = id => GB.coins.find(c => c.id === id)?.kind === 'jackpot';
+    return [...sp.hold.held.filter(id => id && isJp(id)), ...(sp.hold.full ? [GB.fill] : [])];
+}
+
+/** 받은 잭팟 → 표지 조각 — 잭팟 띠 순서 · 같은 것이 둘 이상이면 「이름 ×n」 (§8-1 「계기판」 · ADR-0609) */
+const gbJackpotTags = ids => SYS.gamble.coins.filter(c => c.kind === 'jackpot')
+    .map(c => ({ c, n: ids.filter(id => id === c.id).length })).filter(x => x.n)
+    .map(({ c, n }) => n > 1 ? t('gb.jpN', { name: L(c.name), n }) : L(c.name));
+
 /** 심볼 칸의 속 — **그림만** (이름은 배당표가 든다 · ADR-0601) */
 const gbSymHtml = s => `<span class="gb-art">${M.gambleArt(s.id)}</span>`;
 
@@ -6159,12 +6178,11 @@ function gambleBoard() {
 }
 
 /** 잭팟 띠 (§8-1 「잭팟 띠」 · ADR-0601) — 잭팟 넷의 **지금 판돈** 골드. 판이 다 차야 주는 것(그랜드)은 칸이 넓고 그 말을 함께 든다.
- *  재생이 끝난 한 판에 선 잭팟은 그 칸이 금빛으로 찬다 — 맞은 라인 표지와 같은 「무엇이 섰나」라는 사실이다 */
+ *  재생이 끝난 한 판에서 **받은** 잭팟만 그 칸이 금빛으로 찬다 — 홀드가 안 선 판의 코인은 값을 버리므로 안 켠다 (ADR-0609) */
 function gambleJackpots(S) {
     const GB = SYS.gamble, L0 = state.gb.last;
     const sp = L0?.kind === 'one' && !state.gb.anim ? L0.spin : null;
-    const hit = new Set(sp ? [...sp.coinAt, ...(sp.hold?.steps ?? []).flatMap(st => st.landed.map(x => x.coin))] : []);
-    if (sp?.hold?.full) hit.add(GB.fill);
+    const hit = new Set(gbJackpotsOf(sp));
     const box = el('div', 'gb-jp');
     for (const c of GB.coins.filter(x => x.kind === 'jackpot')) {
         const gold = S.pays.coins.find(x => x.id === c.id).gold;
@@ -6179,7 +6197,7 @@ function gambleJackpots(S) {
  * 아직 안 돌렸거나 도는 중이면 받음 · 순손익이 「—」다. 받음이 금색으로 밝아지는 것은 순손익이 + 일 때뿐 — 판돈보다 적게 받은 판을 당첨처럼 꾸미지 않는다 (ADR-0331)
  */
 function gambleMeter() {
-    const GB = SYS.gamble, L0 = state.gb.last, anim = state.gb.anim;
+    const L0 = state.gb.last, anim = state.gb.anim;
     // 합계(n판)든 한 판이든 gold · mats · stake · net 이 같은 모양이다
     const res = !L0 || anim ? null : L0.kind === 'all' ? L0 : L0.spin;
     const spin = L0?.kind === 'one' ? L0.spin : null;
@@ -6189,10 +6207,11 @@ function gambleMeter() {
         const k = gbHoldK(spin, anim);
         tag = `${t('gb.hold')} · ${t('gb.respins', { n: k ? spin.hold.steps[k - 1].left : D.balance.gamble_hold_respins })}`;
     } else if (res && L0.kind === 'all') {
-        tag = t('gb.spins', { n: L0.spins.length });
+        // n판 — 판 수 뒤에 그 판들에서 받은 잭팟 (ADR-0609)
+        tag = [t('gb.spins', { n: L0.spins.length }), ...gbJackpotTags(L0.spins.flatMap(gbJackpotsOf))].join(' · ');
     } else if (res) {
         tag = [...res.lines.map(h => t('gb.line', { n: h.line })), ...(res.hold ? [t('gb.hold')] : []),
-            ...(res.hold?.full ? [L(GB.coins.find(c => c.id === GB.fill).name)] : [])].join(' · ');
+            ...gbJackpotTags(gbJackpotsOf(res))].join(' · ');
     }
     const stake = res ? res.stake : anim && spin ? spin.stake : null;
     const g = n => `${n.toLocaleString()} G`;
@@ -7563,6 +7582,168 @@ function helpSections() {
     ];
 }
 
+/* ═══════════ 실험실 (SCREEN_DESIGN §18 · ADR-0580 · ADR-0610) ═══════════
+   **개발 장치다** — 게임의 굴림을 손으로 돌려 본다. 굴림은 로직이 한다(`battle.rollMonsterDrop` — 스폰 · 처치와 같은 함수) ·
+   조건 줄도 로직이 낸다(`battle.monsterGearSpec` · `game.stageLevel`). 렌더러는 고른 값과 씨앗만 넘긴다.
+   **세이브와 무관하다** — 굴린 것은 `state.lab.rolls` 에만 산다(인벤토리에 안 들어간다).
+   걷어내려면 `NAV_GROUPS` 의 `lab` · 이 묶음 · `?lab=` 분기 · style.css 「실험실」 섹션 · i18n `nav.lab` · `lab.*` (§18) */
+
+/** 도구 — 지금은 아이템 생성기 하나 · 늘면 도구 탭 줄에 붙는다 (ADR-0580) */
+const LAB_TOOLS = ['item'];
+/** 기록 칸 상한 — 넘치면 오래된 것부터 빠진다 · 화면 상수다(CSV 가 아니다 · §18) */
+const LAB_KEEP = 60;
+
+/** 지금 고른 것 — 챕터 · 그 챕터 장소들 · 몬스터 · 등급 · 단 · 스테이지 레벨. 고른 값이 사라졌으면 첫 것으로 떨어진다 */
+function labPick() {
+    const L0 = state.lab;
+    const ch = chapterOf(L0.chapter) ?? D.chapterList[0];
+    // 장소마다 일반몹(idx 순) + 보스 — 도감 몬스터 목록과 같은 몬스터 · 전투에 안 나오는 `???` 자리는 없다 (§18)
+    const places = codexStages().filter(st => st.chapter === ch.id);
+    const all = places.flatMap(st => st.monsters.map(m => ({ ...m, place: st })));
+    const pick = all.find(m => m.id === L0.monster) ?? all[0];
+    // 보스는 제 등급 하나(누를 수 없다) · 일반몹은 일반 · 정예
+    const grade = pick.boss ? D.monsters[pick.id].spawn_grade : L0.grade === 'elite' ? 'elite' : 'normal';
+    const diff = D.difficulties[L0.diff] ? L0.diff : D.difficultyList[0].id;
+    // 스테이지 레벨 — 안 정했으면 그 장소 첫 칸의 그 단 레벨이다 (§18 · ADR-0610)
+    const level = L0.level ?? SYS.game.stageLevel(pick.place.id, diff);
+    return { ch, places, pick, grade, diff, level };
+}
+
+/** n 번 굴린다 — 한 번 = 그 몬스터 한 마리에 차림을 입히고 하나를 떨어뜨린다. 씨앗은 결투장과 같은 무작위 · 파티가 없어 매직찬스 0 */
+function labRoll(n) {
+    const { pick, grade, level, diff } = labPick();
+    for (let i = 0; i < n; i++) {
+        const r = SYS.battle.rollMonsterDrop(makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), pick.id, grade, level, 0, diff);
+        if (r?.drop) state.lab.rolls.unshift(r.drop);
+    }
+    state.lab.rolls.length = Math.min(state.lab.rolls.length, LAB_KEEP);
+}
+
+function renderLab(main) {
+    // 도구 탭 줄 — 도감 세그먼트와 같은 자리(박스 바로 위 · ADR-0580)
+    const tabs = segmented(LAB_TOOLS.map(id => ({ id, label: t(`lab.tool.${id}`) })), LAB_TOOLS[0], () => render());
+    tabs.classList.add('cx-tabs');
+    main.appendChild(tabs);
+    const p = el('div', 'panel page lab');
+    labItem(p);
+    main.appendChild(p);
+}
+
+/** 아이템 생성기 — 왼쪽 조건 · 오른쪽 결과 (§18) */
+function labItem(p) {
+    const cur = labPick();
+    const body = el('div', 'box-body lab-item');
+    body.appendChild(labCond(cur));
+    body.appendChild(labOut());
+    p.appendChild(body);
+}
+
+/** 조건 패널 — 챕터 · 몬스터 · 등급 · 난이도 · 스테이지 레벨 · 조건 줄 · [굴리기] [×10] */
+function labCond({ ch, places, pick, grade, diff, level }) {
+    const col = el('div', 'lab-cond');
+    col.dataset.keep = 'lab:cond';
+    const row = (key, node) => {
+        const r = el('div', 'lab-row');
+        r.appendChild(el('span', 'lab-h', t(key)));
+        r.appendChild(node);
+        col.appendChild(r);
+        return r;
+    };
+    // 챕터 — 도감 몬스터와 같은 줄 · 죄종 색 · 표에 있는 전부(6 · 7장도 · §18)
+    const chSeg = segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}`, color: sinColor(c.sin) })), ch.id,
+        id => { Object.assign(state.lab, { chapter: id, monster: null, level: null }); render(); });
+    row('lab.h.chapter', chSeg);
+    // 몬스터 — 장소마다 한 줄: 장소 이름 + 칩(얼굴 + 이름 · 일반몹 뒤에 보스). 고르면 레벨은 그 장소 첫 칸으로 돌아간다
+    const mons = el('div', 'lab-places');
+    for (const st of places) {
+        const line = el('div', 'lab-place');
+        line.appendChild(el('span', 'lab-place-name', `<span class="muted">${M.roman(st.num)}</span> ${L(st.name)}`));
+        const chips = el('div', 'lab-chips');
+        for (const m of st.monsters) {
+            const b = el('button', `lab-mon${m.id === pick.id ? ' on' : ''}${m.boss ? ' boss' : ''}`,
+                `${faceChip(m.id)}<span class="lab-mon-name">${L(monsterName(m.id))}</span>`);
+            b.onclick = () => { Object.assign(state.lab, { monster: m.id, level: null }); render(); };
+            chips.appendChild(b);
+        }
+        line.appendChild(chips);
+        mons.appendChild(line);
+    }
+    row('lab.h.monster', mons).classList.add('top');
+    // 등급 — 보스는 제 등급 하나(누를 수 없다) · 등급을 바꿔도 레벨은 그대로다
+    const grades = pick.boss ? [{ id: grade, label: t('kind.boss'), disabled: true }]
+        : ['normal', 'elite'].map(id => ({ id, label: t(`kind.${id}`) }));
+    row('lab.h.grade', segmented(grades, grade, id => { state.lab.grade = id; render(); }));
+    // 난이도 — 원정 난이도 탭과 같은 이름 · 바꾸면 레벨이 그 단으로 돌아간다 (ADR-0610)
+    row('lab.h.diff', segmented(D.difficultyList.map(d => ({ id: d.id, label: L(d.name) })), diff,
+        id => { Object.assign(state.lab, { diff: id, level: null }); render(); }));
+    // 스테이지 레벨 — `−` 숫자 `+` · 1 ~ 만렙
+    const lv = el('div', 'lab-lv');
+    const step = d => { state.lab.level = Math.max(1, Math.min(D.balance.hero_level_cap, level + d)); render(); };
+    const minus = el('button', 'btn sm', '−'); minus.onclick = () => step(-1); minus.disabled = level <= 1;
+    const plus = el('button', 'btn sm', '+'); plus.onclick = () => step(1); plus.disabled = level >= D.balance.hero_level_cap;
+    lv.append(minus, el('b', 'lab-lv-n', String(level)), plus);
+    row('lab.h.level', lv);
+
+    // 조건 줄 — 로직이 낸 값 그대로 (`monsterGearSpec`) · 언제나 입는 부위는 밝게 · 확률로 입는 부위는 흐리게 + 그 단의 확률 (ADR-0610)
+    const sp = SYS.battle.monsterGearSpec(pick.id, grade, level, diff);
+    const cond = el('div', 'lab-spec');
+    const part = (id, opt) => {
+        const def = slotDef(id), art = M.slotArt(id);
+        return `<span class="lab-part${opt ? ' opt' : ''}" title="${L(def)}">${art ? `<img src="${art}" alt="" loading="lazy" onerror="this.remove()">` : def?.icon ?? ''}</span>`;
+    };
+    const chance = sp.optional.length ? `<span class="lab-chance">${Math.round(sp.wearChance * 100)}%</span>` : '';
+    cond.innerHTML = `
+        <div class="lab-row"><span class="lab-h">${t('lab.h.slots')}</span><span class="lab-parts">${sp.fixed.map(id => part(id, false)).join('')}${sp.optional.map(id => part(id, true)).join('')}${chance}</span></div>
+        <div class="lab-row"><span class="lab-h">${t('lab.h.ilvl')}</span><b>${sp.ilvlMin} ~ ${sp.ilvlMax}</b></div>
+        <div class="lab-row"><span class="lab-h">${t('lab.h.weights')}</span><span>${['normal', 'magic', 'rare']
+            .map(r => `<span style="color:${rarity(r).color}">${L(rarity(r))} ${sp.rarityWeights[r]}</span>`).join(' · ')}</span></div>`;
+    col.appendChild(cond);
+
+    // [굴리기] · [×10]
+    const foot = el('div', 'lab-foot');
+    for (const [key, n] of [['lab.roll', 1], ['lab.roll10', 10]]) {
+        const b = el('button', `btn${n === 1 ? ' primary' : ''}`, t(key));
+        b.onclick = () => { labRoll(n); render(); };
+        foot.appendChild(b);
+    }
+    col.appendChild(foot);
+    return col;
+}
+
+/** 결과 패널 — 마지막 드롭의 아이템 카드(펼친 채) · 기록 칸(최신순 · 인벤토리 칸 모양 · 올리면 카드) · 머리 줄 개수 · [비우기] */
+function labOut() {
+    const col = el('div', 'lab-out');
+    col.dataset.keep = 'lab:out';         // 다시 그려도 스크롤을 되찾는다 (ADR-0097) — 열이 따로 스크롤한다
+    const rolls = state.lab.rolls;
+    const card = el('div', 'lab-card');
+    const last = tipCard(rolls[0], t('tip.this'));
+    if (last) card.appendChild(last); else card.appendChild(el('span', 'muted', '—'));
+    col.appendChild(card);
+
+    const head = el('div', 'lab-log-head');
+    const by = Object.keys(M.RARITY).map(r => [r, rolls.filter(it => it.rarity === r).length]).filter(([, n]) => n);
+    head.appendChild(el('span', 'lab-log-count', `${t('lab.count', { n: rolls.length })}${by.length ? ` · ${by
+        .map(([r, n]) => `<span style="color:${rarity(r).color}">${L(rarity(r))} ${n}</span>`).join(' · ')}` : ''}`));
+    // 비우기 — 한 번 누름(화면 상태뿐이라 잃는 것이 없다 · §18)
+    const clear = el('button', 'btn sm', t('lab.clear'));
+    clear.disabled = !rolls.length;
+    clear.onclick = () => { state.lab.rolls = []; render(); };
+    head.appendChild(clear);
+    col.appendChild(head);
+
+    const grid = el('div', 'inv-cells lab-log');
+    for (const it of rolls) {
+        const cell = el('div', 'inv-cell filled');
+        cell.style.borderColor = rarity(it.rarity).color;
+        cell.innerHTML = `<span class="inv-icon">${itemImg(it)}</span><span class="inv-lv">${t('ch.itemLv', { n: it.ilvl })}</span>`;
+        if (it.rarity === 'unique') cell.classList.add('shine');
+        bindTip(cell, it);                 // 가방에 없는 것 = 「이 아이템」(탐험 결과 칸과 같다)
+        grid.appendChild(cell);
+    }
+    col.appendChild(grid);
+    return col;
+}
+
 function renderHelp(main) {
     const secs = helpSections();
     // panel — 다른 탭과 같은 바탕. 전역 거점 아트(#stage::before)가 글자 뒤로 비치면 본문을 읽을 수 없다
@@ -8148,6 +8329,15 @@ async function boot() {
     }
     // ?tab= 은 dev 분기 **뒤에** 건다 — startGame() 이 탭을 원정으로 되돌리므로 앞에 두면 먹히지 않는다
     if (TABS.includes(tab)) state.tab = tab;
+    // 실험실 — 고르기 · 굴리기는 클릭으로만 돼 헤드리스가 못 닿는다 (SCREEN_DESIGN §10 · §18 · ADR-0580 · ADR-0610).
+    //   `&lab=<monster_idx>` 그 몬스터(챕터도 옮긴다 · 레벨은 그 장소 첫 칸) · `&labg=elite` · `&labd=<단 id>` · `&labn=n` n 번 굴린 채 · 모르는 값이면 무시
+    const lq = new URLSearchParams(location.search);
+    const labId = Number(lq.get('lab'));
+    if (D.monsters[labId]) Object.assign(state.lab, { chapter: D.monsters[labId].chapter, monster: labId, level: null });
+    if (lq.get('labg') === 'elite') state.lab.grade = 'elite';
+    if (D.difficulties[lq.get('labd')]) state.lab.diff = lq.get('labd');
+    const labN = Number(lq.get('labn'));
+    if (labN > 0) labRoll(Math.min(labN, LAB_KEEP));
     render();
     /* 플래시 — 클릭으로만 뜨고 제 시간에 사라져 헤드리스가 못 닿는다 (SCREEN_DESIGN §2 · §10 · ADR-0113).
        `?flash=<i18n 키>` 는 `?dev=` · `?tab=` 에 겹쳐 쓴다 — 창 위에 서는지는 `?dev=tree&flash=sk.err.points`. `{name}` 에는 로스터 첫 영웅.

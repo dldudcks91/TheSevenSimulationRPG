@@ -511,6 +511,7 @@ const STRINGS = {
     'nav.explore': { ko: '탐험', en: 'Exploration' },
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
+    'nav.lab': { ko: '실험실', en: 'Lab' },   // 개발 장치 — 기타 묶음 끝 (SCREEN_DESIGN §18 · ADR-0580)
     // 탭 묶음 머리 — 누를 수 없는 작은 회색 글씨 (SCREEN_DESIGN §1 · ADR-0554). 순서 = `app.js:NAV_GROUPS`
     'nav.grp.battle': { ko: '전투', en: 'Combat' },
     'nav.grp.town': { ko: '마을', en: 'Town' },
@@ -662,6 +663,7 @@ const STRINGS = {
     'gb.line': { ko: '라인 {n}', en: 'Line {n}' },
     'gb.hold': { ko: '홀드 앤 스핀', en: 'Hold & Spin' },
     'gb.respins': { ko: '리스핀 {n}', en: 'Respins {n}' },
+    'gb.jpN': { ko: '{name} ×{n}', en: '{name} ×{n}' },   // 받은 잭팟이 둘 이상 — 계기판 표지 (ADR-0609)
     'gb.pay.h': { ko: '배당표', en: 'Paytable' },
     'gb.pay.hold': { ko: '코인 {n}개 이상 → 홀드 앤 스핀', en: '{n}+ coins → Hold & Spin' },
     'gb.pay.fill': { ko: '판이 다 차면', en: 'Full board' },
@@ -1570,6 +1572,21 @@ const STRINGS = {
         en: '<b>Unique</b> — fixed name, class, and sin + 1 signature skill (hero-exclusive); one copy per roster. Capped at 15 in the base game (3 per class)<br>'
             + '<b>Rare</b> — everything rolled; signature skill assigned from the shared pool. Covers all 35 sin × class cells',
     },
+
+    /* ── 실험실 (SCREEN_DESIGN §18 · ADR-0580 · ADR-0610) — 개발 장치 · 패널에 규칙 문장이 없다(숫자 · 이름 · 버튼만) ── */
+    'lab.tool.item': { ko: '아이템 생성기', en: 'Item Generator' },
+    'lab.h.chapter': { ko: '챕터', en: 'Chapter' },
+    'lab.h.monster': { ko: '몬스터', en: 'Monster' },
+    'lab.h.grade': { ko: '등급', en: 'Grade' },
+    'lab.h.diff': { ko: '난이도', en: 'Difficulty' },
+    'lab.h.level': { ko: '스테이지 레벨', en: 'Stage Level' },
+    'lab.h.slots': { ko: '부위', en: 'Slots' },
+    'lab.h.ilvl': { ko: '아이템 레벨', en: 'Item Level' },
+    'lab.h.weights': { ko: '희귀도 가중치', en: 'Rarity Weights' },
+    'lab.roll': { ko: '굴리기', en: 'Roll' },
+    'lab.roll10': { ko: '×10', en: '×10' },
+    'lab.clear': { ko: '비우기', en: 'Clear' },
+    'lab.count': { ko: '{n}개', en: '{n} items' },
 
     /* ── 도감 ── */
     /* 세그먼트 다섯 [마스터리 추가 2026-09-24 — SCREEN_DESIGN §9] — 몬스터(카드 수집)만 이 블록이 든다.

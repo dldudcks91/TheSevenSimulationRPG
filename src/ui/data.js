@@ -95,7 +95,7 @@ export const D = {
     levelXp: [],              // level_xp.csv — 레벨순 [{level, xpNeed, monsterXp}] · 레벨업 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28)
     advanceNodeRows: [],      // advance_node.csv — 전직 가지 [{skill_id, slot, hold, desc_kr, desc_en}] (skill_design §4 · §10 · R216 · 2026-10-06 — 설명만)
     exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
-    difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelAdd, codexExp}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239)
+    difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelAdd, codexExp, chapterGate}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239) · chapterGate = 장 순서 해금 1/0(R242)
     difficulties: {},         // 같은 것 byId
     exploreSpots: {},         // explore_spot.csv — {'장:지점': {chapter, spot, name:{ko,en}, story:{ko,en}}} · 탐험 지점 이름 · 두 줄 이야기(줄바꿈 풀어 둠) (SCREEN_DESIGN §8-4 · ADR-0563 · 화면만 읽는다)
     advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
@@ -182,7 +182,8 @@ export async function loadData(base = './data/') {
     D.chapters = indexBy(D.chapterList, 'id');
     // 난이도 바퀴 — 순서대로 · 첫 단이 처음부터 열린 단이다. 검증 · 해금 · 레벨은 game_logic/state.js (base_expedition_design §1-4 · R236)
     D.difficultyList = difficultyTierRow.slice().sort((a, b) => a.order - b.order)
-        .map(r => ({ id: r.difficulty_id, order: r.order, name: { ko: r.name_kr, en: r.name_en }, levelAdd: r.level_add, codexExp: r.codex_exp }));
+        .map(r => ({ id: r.difficulty_id, order: r.order, name: { ko: r.name_kr, en: r.name_en }, levelAdd: r.level_add, codexExp: r.codex_exp, chapterGate: r.chapter_gate,
+            wearChance: r.wear_chance }));   // 몬스터 선택 부위 착용 확률 — battle.js 가 읽는다 (monster_design §5-1 · R245)
     D.difficulties = indexBy(D.difficultyList, 'id');
     // 기본 능력치 7종 — hero.js 는 id 만 읽고, 화면은 ko/en/abbr 을 읽는다 (같은 한 줄이 둘을 먹인다)
     D.heroAttributes = heroAttr.map(r => ({
@@ -598,8 +599,9 @@ export function buildSystems(d, dev = {}) {
         monsterRoles: d.monsterRoles ?? {},        // 적의 랭크 — 진형 (battle_design §3-1)
         // 몬스터도 영웅과 같은 경로로 전투 능력치를 얻는다 (2026-09-11 R79 · battle_design §8-1 · monster_design §5-1) —
         //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스 셋째 칸의 후보 풀(hero 와 같은 표)
-        //   이고 `slots` 는 `monster.csv:wear_slots` 어휘 검증용이다
+        //   이고 `slots` 는 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 어휘 검증용이다 (R245)
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
+        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, wearChance: x.wearChance })),   // 선택 부위 착용 확률 — 런의 단이 고른다 (R245)
     });
     // 건설 — 표 넷이 무엇을 여는지 정하고 이 시스템은 센다 (construction_draft §11 · INTERFACE §2-14 · R137).
     //   비용이 적을 수 있는 재화 = 자원 셋 + 제작 재료(파견처 산출물 id — 공급은 파견이 한다 · 미구현)

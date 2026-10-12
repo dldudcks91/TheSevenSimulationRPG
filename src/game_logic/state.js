@@ -1404,18 +1404,20 @@ export function createGameSystem(deps) {
 
     /* ── 난이도 바퀴 [신설 2026-10-10 · R236 · base_expedition_design §1-4] ──
        `difficulty_tier.csv` 순서대로 선다 · **첫 단이 처음부터 열린 단**이고 그 단의 깬 기록이 `progress.cleared` 다(건설 · 탐험 · 의뢰가 읽는 그 기록 — 옛 세이브도 그대로).
-       나머지 단의 기록은 `progress.clearedIn[단]` · 단이 바꾸는 것은 지금 **몬스터 레벨**(`level_add` — 만렙에서 자른다)과 **처치 하나의 도감 경험치**(`codex_exp` · R239) 둘 */
+       나머지 단의 기록은 `progress.clearedIn[단]` · 단이 바꾸는 것은 지금 **몬스터 레벨**(`level_add` — 만렙에서 자른다)과 **처치 하나의 도감 경험치**(`codex_exp` · R239) ·
+       **장 순서 해금**(`chapter_gate` — 0 이면 그 단이 열리는 순간 열린 장마다 첫 칸이 열린다 · 장 안은 그대로 순서 · 헬 · R242) 셋 */
     const DIFFS = (() => {
-        const rows = deps.difficulties?.length ? deps.difficulties : [{ id: 'normal', levelAdd: 0, codexExp: 1 }];   // 표가 없는 조립 = 노말 한 단
+        const rows = deps.difficulties?.length ? deps.difficulties : [{ id: 'normal', levelAdd: 0, codexExp: 1, chapterGate: 1 }];   // 표가 없는 조립 = 노말 한 단
         const bad = why => { throw new Error(`difficulty_tier: ${why}`); };
         const seen = new Set();
         for (const d of rows) {
             if (!d.id || seen.has(d.id)) bad(`id '${d.id}' 가 비었거나 겹친다`);
             if (!(Number.isInteger(d.levelAdd) && d.levelAdd >= 0)) bad(`${d.id} — level_add '${d.levelAdd}'`);
             if (!(Number.isInteger(d.codexExp) && d.codexExp >= 1)) bad(`${d.id} — codex_exp '${d.codexExp}'`);   // 처치 하나의 도감 경험치 (2026-10-10 · R239)
+            if (d.chapterGate !== 0 && d.chapterGate !== 1) bad(`${d.id} — chapter_gate '${d.chapterGate}' (0 · 1)`);   // 장 순서 해금 (2026-10-12 · R242)
             seen.add(d.id);
         }
-        return rows.map(d => ({ id: d.id, levelAdd: d.levelAdd, codexExp: d.codexExp }));
+        return rows.map(d => ({ id: d.id, levelAdd: d.levelAdd, codexExp: d.codexExp, chapterGate: d.chapterGate === 1 }));
     })();
     const DIFF_IDS = DIFFS.map(d => d.id);
     const BASE_DIFF = DIFF_IDS[0];
@@ -1473,13 +1475,16 @@ export function createGameSystem(deps) {
     /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 ·
      *  관리자 모드면 열린 장의 모든 스테이지가 열린 척한다(클리어 기록은 안 쓴다 · 2026-09-24 · R155 · INTERFACE §2-7) —
      *  **장 잠금은 관리자 모드도 못 건너뛴다**: `chapter_open_max` 뒤의 장은 언제나 잠겼다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
-     *  **난이도 `diff`(기본 고른 단)** [2026-10-10 · R236] — 그 단이 안 열렸으면 거짓 · 직전 칸은 **그 단의 기록**으로 센다(나이트메어는 1-1 부터) */
+     *  **난이도 `diff`(기본 고른 단)** [2026-10-10 · R236] — 그 단이 안 열렸으면 거짓 · 직전 칸은 **그 단의 기록**으로 센다(나이트메어는 1-1 부터)
+     *  **장 순서 해금이 없는 단**(`chapter_gate` = 0 · 헬) [2026-10-12 사용자 · R242] — 단이 열렸으면 열린 장마다 **첫 칸**이 참(앞 장의 마지막 칸을 안 본다) · 장 안의 칸은 그대로 직전 칸 */
     function stageUnlocked(state, stageId, diff = curDiff(state)) {
         const i = deps.stageOrder.indexOf(stageId);
         if (i < 0 || !chapterOpen(state, deps.stages[stageId]?.chapter)) return false;
         if (!difficultyOpen(state, diff)) return false;
-        if (openAll()) return true;
-        return i === 0 || clearedList(state, diff).includes(deps.stageOrder[i - 1]);
+        if (openAll() || i === 0) return true;
+        const prev = deps.stageOrder[i - 1];
+        if (!diffById[diff].chapterGate && deps.stages[prev].chapter !== deps.stages[stageId].chapter) return true;
+        return clearedList(state, diff).includes(prev);
     }
 
     /** 두 스테이지가 **같은 장소**의 칸인가 — 장소 = (`chapter`, `stage_num`) · 칸 = `cell` (2026-09-29 · PLAN_stage_segments D1 · D4) */
@@ -2249,7 +2254,8 @@ export function createGameSystem(deps) {
         const had = runAt(state, no)?.shrine;
         const shrine = from && had?.stageId === stageId && shrineById[had.id] ? had.id : null;
         const fixed = { front: going.filter(uid => (byUid[uid] ?? 0) === 0), bond: bondOf(state, going), byUid, shrine };
-        const battle = BT.createRun(partyUnits(view, going, no, tactics, fixed), stageId, rng, level, fillSlots(state, squad), limitsOf(state).potionSlots);
+        // 단 = 몬스터가 선택 부위를 입을 확률을 고른다(레벨은 위 `level` 이 이미 든다 · 2026-10-12 · R245)
+        const battle = BT.createRun(partyUnits(view, going, no, tactics, fixed), stageId, rng, level, fillSlots(state, squad), limitsOf(state).potionSlots, null, dif);
         // 같이 깬 칸 수(`bonds`)는 **출발에서 안 센다** — 칸을 이긴 순간 +1 이다(`settleRound`) · 이 런의 판정은 지금까지 센 값(위 `fixed.bond`).
         //   ~~출발할 때 +1~~ (v36) 은 2026-09-29 사용자 지시로 걷었다 — 출정 → 철수를 연타하면 한 판도 안 싸우고 올랐다 (tactic_card_design §5-8)
 

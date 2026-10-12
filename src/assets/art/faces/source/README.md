@@ -35,6 +35,14 @@ python scripts/export_face_portraits.py
 
 `sheets/source_sheet_ch2_st2_ent_3x3.png`는 사용자가 넣은 1024×1024 **3×3 엔트 시트**다(초록 배경 · 격자선 x 337~343 · 680~686 · y 338~344 · 679~685 — 그 옆 1px 안티에일리어스도 절단에서 뺐다). 사용자 지시로 **2번(1행 2열 · 가지에 짐승 두개골을 매단 보라 눈 엔트)을 `2202` 썩어가는 엔트**, **4번(2행 1열 · 깎은 가면 얼굴 · 깃털 · 지팡이)을 `2203` 지혜로운 엔트**에 적용했다(`monster.csv:face = 1`). `scripts/apply_ch2_st2_ent_3x3_portraits.py`가 칸 `(345, 0, 679, 334)` · `(2, 346, 334, 678)`을 키잉해 512² 로 키운다(우상족 3×3 과 같은 방식). `chapters/ch2_st2.png`를 다시 찍었다. 나머지 일곱 칸은 배정 없음.
 
+## 2-2 엔트 정예 3×3 시트 [2026-10-12]
+
+`sheets/source_sheet_ch2_st2_ent_elite_3x3_a.png` · `_b.png` 는 정예 Gem(`TheSevenSimulationART-몬스터(정예)`)에서 뽑은 2048×2048 **3×3 시트** 둘이다(초록 배경 · 격자선 a = x · y 674~687 · 1360~1373 · b = 676~687 · 1360~1371). 일반 초상 `2201`~`2203` 셋과 영웅 `warrior_3` 을 함께 붙이고 아홉 줄을 「Elite Ent · Elite Rotting Ent · Elite Wise Ent」 이름만 적었다 — 한 줄에 한 종. 사용자 지시로 **a 1번 → `2201_elite`** · **b 4번 → `2202_elite`** · **b 7번 → `2203_elite`** 에 적용했다(`monster.csv:face_elite = 1`). `scripts/apply_ch2_st2_ent_elite_portraits.py` 가 칸을 키잉해 512² 로 줄인다. 일반 초상과 같은 구도라 정렬은 따로 하지 않았다. `chapters/ch2_st2.png` 를 다시 찍었다.
+
+## 2-3 우상족 추적자 3×3 시트 [2026-10-12]
+
+`sheets/source_sheet_ch2_st3_idolfolk_stalker_3x3.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트**다(초록 배경 · 격자선 x · y 670~691 · 1356~1377). 사냥꾼 `2301` · 주술사 `2303` · 영웅 `warrior_3` 을 붙이고 아홉 줄을 「Idolfolk Stalker, shooting poison darts from a blowgun」 한 줄로 채웠다. 사용자 지시로 **1번(널빤지 가면 · 독침 대롱)을 `2302` 우상족 추적자**에 적용했다(`monster.csv:face = 1`). `scripts/apply_ch2_st3_idolfolk_stalker_portrait.py` 가 칸을 키잉해 512² 로 줄인다. `chapters/ch2_st3.png` 를 다시 찍었다.
+
 ## 챕터 3~5 챕터 보스 [2026-10-10]
 
 `sheets/source_sheet_ch3_5_chapter_bosses_3x3.png`는 사용자가 넣은 1024×1024 **3×3 죄종 군주 시트**다(초록 배경 · 격자선 x · y 339~344 · 679~684 — 그 옆 1px 도 절단에서 뺐다). 줄마다 죄종 하나 — 1행 탐욕(황금 고블린) · 2행 나태(이끼 낀 돌 뿔) · 3행 폭식(파리). 사용자 지시로 가운데 열을 **2번 → `3900` 맘몬 · 5번 → `4900` 벨페고르 · 8번 → `5900` 바알제붑**에 적용했다(`monster.csv:face = 1`). `scripts/apply_ch3_5_chapter_boss_portraits.py`가 칸 `(346, 3, 678, 335)` · `(346, 346, 678, 678)` · `(346, 688, 678, 1020)`을 키잉해 512² 로 키운다(황금 갑옷 3×3 과 같은 방식). `chapters/ch3_st5.png` · `ch4_st5.png` · `ch5_st5.png`를 새로 찍었다. 나머지 여섯 칸은 배정 없음.
@@ -867,4 +875,4 @@ Gem 재발주 산출물(2048² · 불투명 **초록 `#00FF00` 배경**). 초록
 이 스타일의 굵고 어두운 외곽선(약 `#0B060C`)이 자동 누끼를 가능하게 한다 — 픽셀아트나 회화체면 같은 방법이 안 통한다.
 
 ---
-*마지막 업데이트: 2026-10-10*
+*마지막 업데이트: 2026-10-12*
