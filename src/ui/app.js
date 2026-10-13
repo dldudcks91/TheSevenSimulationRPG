@@ -3462,13 +3462,19 @@ function clearBagSel() {
     state.itemMenu = null;   // 우클릭 메뉴도 탭 밖으로 안 샌다 (ADR-0451)
 }
 
+const BAG_ROWS = 3;   // 보관 격자의 줄 수 — 가방 높이가 원정 화면과 같고 안 줄어든다(ADR-0384)
 /** 보관 — **왼쪽 창고 / 오른쪽 인벤토리 두 칸** [2026-09-11 사용자 확정 · SCREEN_DESIGN §6 · item_design §1].
  *  **갈래 탭은 없다 — 장비만 든다** [2026-09-21 · ADR-0188]. 재료(가루 · 낙인)는 셸 머리의 자원 줄이 이미 찍고 있어
  *  같은 값을 두 번 보여주던 칸이었다. 드롭이 쌓이는 곳은 인벤토리 하나뿐이고(압력은 그쪽이 든다) 창고는 **유저가 옮긴 것만** 든다 */
 function itemsPanel(h, { onPick = null, selUid = null } = {}) {
     const row = el('div', 'bag-row');
-    row.appendChild(storagePanel(h, 'stash', { onPick, selUid }));
-    row.appendChild(storagePanel(h, 'bag', { onPick, selUid }));
+    // **줄은 3 으로 박고 열은 칸 수가 정한다** — 열 = 상한 ÷ 3 · 두 칸이 열 수만큼 폭을 나눠 가져 칸 크기가 같다(style.css `.bag-row`)
+    const lim = SYS.game.limitsOf(G);
+    for (const where of ['stash', 'bag']) {
+        const p = storagePanel(h, where, { onPick, selUid });
+        p.style.setProperty('--cols', String(Math.ceil(lim[where] / BAG_ROWS)));
+        row.appendChild(p);
+    }
     return row;
 }
 
@@ -6974,11 +6980,14 @@ function monsterCard(m, grade, stat) {
         : `<span class="face none${m.boss ? ' boss' : ''}" style="background:${c}22;border-color:${c}66" title="${t('face.noArt', { name })}"></span>`;
     const pips = Array.from({ length: maxLv }, (_, i) =>
         `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.exp', { n: cum[i].toLocaleString() })}"></span>`).join('');
+    // 윗줄 오른쪽 끝 = 직업 — 이름은 class.csv 그대로 · 글자색은 그 직업 색 (ADR-0615 · 0588 이 비워 둔 줄)
+    const cls = D.monsters[m.id]?.cls;
     // `data-mid` — 그린 뒤 몬스터 툴팁을 거는 손잡이 (`codexMonster` · ADR-0206)
     return `
         <div class="mon-card${m.boss ? ' boss' : ''}${lv === maxLv ? ' maxed' : ''}" data-mid="${m.id}">
             ${faceHtml}
             <div class="mon-body">
+                <span class="mon-top"${cls && classColor(cls) ? ` style="color:${classColor(cls)}"` : ''}>${cls ? className(cls) : ''}</span>
                 <span class="mon-name">${name}${m.boss ? `<span class="b-tag">${t('kind.boss')}</span>` : ''}</span>
                 <div class="mon-mid">
                     <span class="pips">${pips}</span>
@@ -7118,6 +7127,7 @@ function codexUnknownRow(chapter, num, n) {
         <div class="mon-card unknown">
             <span class="face none"></span>
             <div class="mon-body">
+                <span class="mon-top"></span>
                 <span class="mon-name">???</span>
                 <div class="mon-mid">
                     <span class="pips">${'<span class="pip"></span>'.repeat(D.codexLevels.length)}</span>

@@ -380,6 +380,14 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 `<죄종 id>.webp` 7장(`wrath` · `sloth` · `lust` · `envy` · `pride` · `gluttony` · `greed`) — 512 투명 · 내용 88% · 원본 `shrines/source/<id>.png`(1024 · 게임이 안 읽는다). 결과 띠 · 관전 헤드 · 리포트의 신단 칩이 읽는다(`data.js:shrineInfo` · SCREEN_DESIGN §4-2 「신단」 · ADR-0445) · 파일명 = `shrine.csv:shrine_id`. 발주 지시문 · 규격 [docs/reference/shrine_art_prompt.md](../../../docs/reference/shrine_art_prompt.md)
 
+## grave/ — 무덤 명패 비석 [신설 2026-10-13]
+
+`tombstone.webp` 한 장 — 죽어 있는 챕터보스의 초상 자리에 서는 비석(일곱 보스가 같은 그림 · CSS `.grave-stone` 이 깐다 · SCREEN_DESIGN §4-2 「무덤 명패」 · ADR-0611). 256 투명 · 내용 세로 94% · 아치 위 뿔 달린 악마 해골 · **앞면에 흰 비문**(제목 한 줄 · 구분선 · 네 줄 — 글이 새겨진 것처럼 보이지만 **읽히는 글자가 아니다** · ADR-0614). 화면은 비석 위에 아무 글자도 안 얹는다 — 남은 초는 칸 구석이다.
+
+- **발주** — Codex(ChatGPT 로그인) · `source/run_codex.py`(지시문 = 파일 안 `COMMON` + 변형 한 줄 · 앵커 = 보스 초상 `faces/gemini/monster/1900` · 신단 `shrines/wrath` 를 PNG 로 바꿔 붙인다 · 작업 폴더 · 앵커 자리는 환경 변수 `GRAVE_WORK` · `GRAVE_ANCHOR`). 후보 셋 `source/cand_a|b|c.png`(뿔 해골 · 부러진 왕관 · 녹슨 사슬과 칼) 중 **a 를 골랐다** · 지시문 `source/prompt_<id>.txt`
+- **비문 편집** — `source/run_codex_edit.py` — `cand_a.png` 를 입력으로 주고 「앞면만 바꿔 읽히지 않는 흰 비문을 새겨라 · 나머지 · 투명 배경은 그대로」 + 배치 한 줄. 배치 셋 `source/cand_ins1|2|3.png`(제목 + 구분선 + 네 줄 · 고른 다섯 줄 · 제목 + 가운데 문양 + 두 줄) 중 **ins1 을 설치했다**(초상 크기에서 「글귀」로 가장 또렷하다 · ins3 은 문양이 십자가로 나왔다). 편집본은 원본과 크기 · 자리가 그대로 맞았다(1254 · 같은 내용 상자)
+- **설치** — `python source/install.py [후보 id]` — 잔털 알파를 걷고 내용 상자로 잘라 256 정사각 가운데에 세로 94% 로 앉힌다(WebP q90) · 판 사각을 % 로 찍는다(비문이 생긴 뒤로 화면은 이 값을 안 쓴다 — 앞면에 글자를 다시 얹을 때의 자리다)
+
 ## icons/sins/ — 죄종 아이콘 [신설 2026-09-27]
 
 `<죄종 id>.png` 7장(`wrath` · `envy` · `greed` · `sloth` · `gluttony` · `lust` · `pride`) — 스킬 아이콘과 같은 규격(512 투명 · 회색 `#d8d8e6` 단색 실루엣 · 긴 변 0.88 · 실선 21px · 파낸 선 15px)이다. 화면은 알파를 마스크로 써 판 색으로 칠한다(`mock.js:sinIcon` · SCREEN_DESIGN §7 · ADR-0368). 원본은 같은 폴더 `source.html`(SVG) — 고치면 512 로 렌더해 다시 자른다.
@@ -696,4 +704,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-12*
+*마지막 업데이트: 2026-10-13*

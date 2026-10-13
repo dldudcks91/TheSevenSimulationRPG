@@ -108,18 +108,16 @@ export const shrineChip = id => {
     return s ? `<span class="shrine-chip" title="${shrineFxText(id)}"><img src="${s.img}" alt="">${L(s.name)}</span>` : '';
 };
 
-/** 무덤 명패의 남은 시간 — `m:ss` · 지났으면 `0:00` (ADR-0590) */
-export const graveLeftText = ms => {
-    const s = Math.max(0, Math.ceil(ms / 1000));
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-};
+/** 무덤 명패의 남은 시간 — `00:ss` 에 남은 초 전부(`00:60` → `00:59` …) · 단위 글자가 없어 언어를 안 탄다 · 지났으면 `00:00` (ADR-0613) */
+export const graveLeftText = ms => `00:${String(Math.max(0, Math.ceil(ms / 1000))).padStart(2, '0')}`;
 /** 무덤 명패 — 죽어 있는 챕터보스의 초상 자리 [2026-10-10 사용자 지시 · SCREEN_DESIGN §4-2 「무덤 명패」 · ADR-0590].
- *  비석 모양은 CSS(`.grave-plaque` — 테마 토큰)가 칠하고 여기는 이름 · 남은 시간만 든다. 툴팁이 없다.
+ *  칸을 채우는 틀(`.grave-plaque`) 안에 비석 그림(`.grave-stone` — CSS 가 깐다 · ADR-0611)과 **칸 구석의 남은 초**(`.grave-left` · ADR-0614)가 선다.
+ *  이름은 안 적는다(ADR-0612 · 읽는 이름 `aria-label` 에만). 툴팁이 없다.
  *  `data-respawn` = 돌아오는 시각 — 앱 시계(출정 창)와 결과 띠의 세기(관전)가 `.grave-left` 글자만 간다.
  *  관전 카드 · 출정 창 적 구성이 같이 쓴다 */
 export const gravePlaque = (name, until, at) => {
     const left = graveLeftText(until - at);
-    return `<span class="grave-plaque" data-respawn="${until}" role="img" aria-label="${t('exp.foe.grave', { name, t: left })}"><b class="grave-name">${name}</b><span class="grave-left">${left}</span></span>`;
+    return `<span class="grave-plaque" data-respawn="${until}" role="img" aria-label="${t('exp.foe.grave', { name, t: left })}"><span class="grave-stone"></span><span class="grave-left">${left}</span></span>`;
 };
 
 /* [버프] 창 [2026-09-30 · SCREEN_DESIGN §4-2 「버프」 · ADR-0461 · 버튼 자리 ADR-0462] — 그 런의 버프를 **출처별 세 줄**(신단 · 전술 · 도감)로 적는다.

@@ -818,25 +818,23 @@ html, body { height: 100%; overflow: hidden; }
 /* 보스는 **윗변 색**이 든다 — 등급을 윗변이 말하는 것은 관전 카드와 같은 문법이다 (ADR-0021) */
 .foe-cell.boss { border-top-color: var(--text-accent); }
 /* 무덤 명패 — 죽어 있는 챕터보스의 초상 자리 [2026-10-10 사용자 지시 · SCREEN_DESIGN §4-2 「무덤 명패」 · ADR-0590].
-   그림이 아니라 **토큰으로 칠한 비석**이다: 위가 둥근 돌판 · 가운데 이름 · 아래 남은 시간. 관전 카드(.sprite.grave)와 출정 창 적 칸(.foe-cell.grave)이 같이 쓴다 */
-.grave-plaque {
-    position: absolute; left: 16%; right: 16%; top: 10%; bottom: 6%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    padding: 16% 6% 6%;
-    background: linear-gradient(var(--border-secondary), var(--bg-input));
-    border: 1px solid var(--border-secondary);
-    border-radius: 50% 50% 3px 3px / 30% 30% 3px 3px;
-    box-shadow: inset 0 -3px 8px rgba(var(--shadow-rgb), .6);
-    text-align: center;
+   **비석 그림 한 장**(.grave-stone)이다 [2026-10-13 사용자 지시 · ADR-0611] — 일곱 챕터보스가 같은 그림이고 앞면의 흰 비문도 그림이다(읽히는 글자가 아니다 · ADR-0614).
+   명패(.grave-plaque)는 칸을 가득 채우는 틀이고, 그림은 칸 높이를 채우는 정사각 · 남은 초는 칸 오른쪽 아래 구석에 선다.
+   관전 카드(.sprite.grave)와 출정 창 적 칸(.foe-cell.grave)이 같이 쓴다 */
+.grave-plaque { position: absolute; inset: 0; }
+.grave-stone {
+    position: absolute; left: 50%; bottom: 0; height: 100%; aspect-ratio: 1; transform: translateX(-50%);
+    background: url('../assets/art/grave/tombstone.webp') center / contain no-repeat;
 }
-.grave-name {
-    font-size: var(--fs-xs); font-weight: 600; line-height: 1.2; color: var(--text-secondary);
-    text-shadow: 0 1px 0 rgba(var(--shadow-rgb), .9);   /* 새긴 글씨 — 아래로 그늘이 진다 */
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+/* 남은 초 — 비석 밖 **칸 오른쪽 아래 구석** [2026-10-13 사용자 지시 「초를 다른곳으로 빼볼까」 · ADR-0614].
+   초상의 레벨(.hs-lv)과 같은 문법 · 같은 구석 — 판 없이 검은 테두리를 두른 작은 글자 */
+.grave-left {
+    position: absolute; right: 4px; bottom: 3px; z-index: 1;
+    font-size: var(--fs-xs); line-height: 1; font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap;
+    text-shadow: 0 1px 1px #000, 0 -1px 1px #000, 1px 0 1px #000, -1px 0 1px #000, 0 0 3px #000;
 }
-.grave-left { font-size: var(--fs-sm); font-variant-numeric: tabular-nums; color: var(--text-primary); }
 .foe-cell.grave { background: var(--bg-input); }
-.foe-cell.grave .grave-plaque { top: 24%; }   /* 위 이름 띠(.hs-band) 아래에서 선다 */
+.foe-cell.grave .grave-stone { height: 80%; }   /* 위 이름 띠(.hs-band) 아래에서 선다 — 띠에는 그림 위 여백 · 뿔 끝만 걸린다 */
 /* 초상 + 그 아래 스킬 칸 줄 = **한 몸** [2026-10-09 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0568] — 적 구성 · 편성 초상이 같이 쓴다.
    폭은 초상 한 변이라 적 넷 ↔ 영웅 셋이 위아래로 마주 서는 열이 그대로다 */
 .dw-seat { flex: 0 0 auto; display: flex; flex-direction: column; gap: 5px; width: var(--fm-slot); }
@@ -1507,20 +1505,25 @@ html, body { height: 100%; overflow: hidden; }
 .battle-panel > .battle-body { flex: 1 1 0; min-height: 0; }
 .battle-panel > .battle-body:not(.split) { display: flex; flex-direction: column; }
 /* 가방은 칸 · 그림이 한 단 크다 — **관전과 캐릭터 탭이 같은 크기**다(`.bag` = `itemsPanel` 의 패널 · ADR-0097).
-   **보관은 두 칸이다** [2026-09-11 사용자 확정] — 왼쪽 창고 · 오른쪽 인벤토리가 나란히 서고 **각각 12열 × 3줄**이다.
-   열 수를 `auto-fill` 이 아니라 **12 로 박는다** — 칸 수(`stash_cap` · `inventory_cap`)가 줄 수를 정하고 폭은 칸이 나눠 갖는다.
-   판 안 1337 을 두 칸이 나누면(사이 14) 한 칸 661 · 12열 + 간격 11 → **한 변 약 51.5** 로 09-11 이전(52)과 같다 */
+   **보관은 두 칸이다** [2026-09-11 사용자 확정] — 왼쪽 창고 · 오른쪽 인벤토리가 나란히 서고 **둘 다 3줄**이다.
+   열 수는 `auto-fill` 이 아니라 **칸 수 ÷ 3**(`--cols` — `stash_cap` · `inventory_cap` · app.js itemsPanel)이다 — 줄 수를 박고 폭은 열 수대로 나눈다.
+   두 칸의 열 합이 24 면(12 · 12 · 9 · 15 …) 판 안 1337 에서 **한 변 약 51.5** 로 09-11 이전(52)과 같다 */
 /* 두 칸은 **윗변 · 칸 줄 · 아랫변이 맞는다** [2026-09-14 사용자 지시] — 도구 줄에 버튼([분해] · 고르는 중 줄)이 서는 것은 인벤토리 쪽뿐이라
    창고 쪽 도구 줄이 글자 높이만큼 낮고, `align-items: start` 였던 창고 패널이 약 3px 짧았다. 두 패널을 행 높이로 늘리고 **모자란 높이는 도구 줄이 받는다** —
    칸 격자는 두 칸이 같은 높이라 아래에 붙어 칸 줄까지 맞는다. 버튼 높이를 px 로 박지 않는다(글꼴이 바뀌면 다시 어긋난다) */
-.bag-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
-.bag-row > .bag { display: flex; flex-direction: column; }
-.bag-row > .bag > .items-tools { flex: 1 0 auto; }
+/* 두 칸의 폭은 **열 수(`--cols` = 상한 ÷ 3 · app.js itemsPanel)대로** 나눈다 — 바탕 30 = 패널 좌우 여백 · 테두리 34 − 칸 간격 4 라
+   남는 폭이 열 수에 비례해 붙으면 (칸 + 간격)이 두 칸에서 같다 → 창고 · 인벤토리 칸 크기가 같다. 12 · 12 면 옛 1fr 1fr 과 같은 폭이다 */
+.bag-row { display: flex; gap: 14px; align-items: stretch; }
+.bag-row > .bag { display: flex; flex-direction: column; flex: var(--cols, 12) 1 30px; min-width: 0; }
+/* 모자란 높이는 **도구 줄 아래 빈자리**가 받는다(격자가 아랫변에 붙는다) — ~~도구 줄이 늘어난다~~ 는 두 칸의 줄 수가 다를 때(인벤토리 4줄 시안 2026-10-13)
+   늘어난 도구 줄 가운데로 창고 이름이 내려앉았다. 이름 줄은 제 높이로 윗변에 붙는다 */
+.bag-row > .bag > .items-tools { flex: 0 0 auto; }
+.bag-row > .bag > .items-tools + * { margin-top: auto; }
 /* ⚠ 격자 안의 둘째 패널에도 `.panel + .panel` 의 세로 마진이 붙는다 — 열이 나란한데 **위 마진이 행 높이에 더해져**
    관전(flex 부모)은 227, 캐릭터 탭(grid 부모)은 눌려 218.9 로 **두 화면 크기가 갈렸다**(ADR-0097 「두 탭이 같은 크기」 위반 · 09-11 실측).
    `.cols` 가 이미 같은 예외를 갖고 있다 — 새 컨테이너에도 같은 줄이 필요하다 */
 .bag-row > .panel + .panel { margin-top: 0; }
-.bag .inv-cells.wide { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.bag .inv-cells.wide { grid-template-columns: repeat(var(--cols, 12), minmax(0, 1fr)); }
 .bag .inv-icon { width: 40px; height: 40px; }
 /* 칸 이름 — 「창고」 / 「인벤토리」. 도구 줄 맨 왼쪽에 서고 나머지([분해] 또는 고르는 중 줄 · 칸 수)가 그 오른쪽이다.
    글씨는 **패널 제목(`.panel > h2`)과 같다** [2026-09-21 사용자 지시 「Equipment 처럼」 · SCREEN_DESIGN §6] — 크기 · 굵기 · 색만.
@@ -2977,8 +2980,11 @@ html, body { height: 100%; overflow: hidden; }
 .mon-card .face img { width: 100%; height: 100%; object-fit: cover; }
 
 .mon-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-/* 위 한 칸은 빈다 — 진행 줄(경험치 · Lv)이 걷힌 만큼 이름 · 핍이 한 줄씩 내려서고 막대 자리는 그대로다 (ADR-0588) */
-.mon-body::before { content: ''; height: calc(var(--fs-xs) * 1.2); flex: none; }
+/* 윗줄 = 직업(오른쪽 끝) — 진행 줄이 걷혀 비었던 칸이라(ADR-0588) 높이는 그 빈 칸 그대로고 이름 · 핍 · 막대는 안 움직인다 (ADR-0615) */
+.mon-top {
+    height: calc(var(--fs-xs) * 1.2); flex: none; line-height: 1.2;
+    font-size: var(--fs-xs); text-align: right; white-space: nowrap; overflow: hidden;
+}
 /* 이름이 윗줄을 통째로 쓴다 — 카드 수(장수) 칸은 2026-09-21 걷혔다(사용자 지시 · ADR-0200). 넘치면 말줄임 */
 .mon-name {
     min-width: 0;

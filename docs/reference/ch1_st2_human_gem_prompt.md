@@ -15,7 +15,7 @@
 
 | `sheets/source_sheet_ch1_st2_human_gem_numbered_1.png` | `1. 인간 궁수` `2. 인간 보병` `3. 인간 기사` … 9줄만 · 영웅 4장 첨부 | 첫 시도에 19초 · 열마다 궁수 · 보병 · 기사로 번호를 지켰다 · 얼굴은 영웅 그림체 · 1번이 `archer_1`, 2번이 `knight_4` 복제 · `knight_4` 의 금테 · 녹 얼룩이 기사 칸에 샌다 |
 
-**첨부 + 인물 묘사는 그림이 안 나온다** — 위 전문(9줄 묘사)에 영웅 4장을 붙이면 8번 모두 그림 없이 끝났다: 거절(「I'm having a hard time fulfilling your request」) · 글로 쓴 시트 사양 · 「something went wrong」. `dark-skinned` · `young` · `woman` 을 하나씩 빼도, 첨부를 2장으로 줄여도, 9줄 대신 「all nine differ in age, hair, beard and build」 한 줄로 바꿔도 같았다. 같은 9줄은 첨부 없이 두 번 다 됐고, 첨부는 한국어 한 줄 대상(`인간 보병, 인간 궁수, 인간 기사`)과는 두 번 다 됐다.
+**첨부 + 인물 묘사는 그림이 안 나온다** — 위 전문(9줄 묘사)에 영웅 4장을 붙이면 8번 모두 그림 없이 끝났다: 거절(「I'm having a hard time fulfilling your request」) · 글로 쓴 시트 사양 · 「something went wrong」. `dark-skinned` · `young` · `woman` 을 하나씩 빼도, 첨부를 2장으로 줄여도, 9줄 대신 「all nine differ in age, hair, beard and build」 한 줄로 바꿔도 같았다. 같은 9줄은 첨부 없이 두 번 다 됐고, 첨부는 한국어 한 줄 대상(`인간 보병, 인간 궁수, 인간 기사`)과는 두 번 다 됐다. **칸마다 생김새 대신 머리에 쓴 것(장비)만 적으면 첨부와 함께 된다**(10-13 · 정예 Gem 두 번 · 초상화 Gem 두 번). ✦ 워터마크는 2×2 면 4번 칸, 3×3 이면 9번 칸 — 시트 오른쪽 아래 같은 자리에 인물 위로 찍힌다(10-13).
 
 **Gem 지식 그림은 생성기에 안 가는 것으로 보인다** — 몬스터(정예) Gem 지식은 정예 `1103_elite` · `1301_elite` · 영웅 `warrior_3` 이고, 초상화 Gem 지식은 영웅 `warrior_1~3` 인데 한 줄 프롬프트로는 둘 다 녹 · 때 결이 나왔다. 영웅 초상을 **요청마다 첨부**하자 얼굴 · 팔레트가 영웅 쪽으로 왔다(Gem 메인 프롬프트도 「The user attaches our hero portraits with each request」다). 남는 질감은 「중세 병사」 소재가 끌고 오며, 기본형의 짧은 공통 지시가 그것을 누른다(`gem_eyes_1` 잔결 1.9).
 
@@ -44,7 +44,7 @@ every face, age and head shape is different.
 9. Human knight, a bareheaded grey-haired captain with a scar across the chin
 ```
 
-**게임 초상은 교체하지 않았다.**
+**10-13 에 Gemini 판 `1201`~`1203` 을 넣었다** — 진홍 천 시트 · 첨부 · 프롬프트는 [faces/source/README.md](../../src/assets/art/faces/source/README.md) 「1-2 인간 Gemini 판」.
 
 ---
-*마지막 업데이트: 2026-10-09*
+*마지막 업데이트: 2026-10-13*

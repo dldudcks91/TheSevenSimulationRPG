@@ -39,9 +39,49 @@ python scripts/export_face_portraits.py
 
 `sheets/source_sheet_ch2_st2_ent_elite_3x3_a.png` · `_b.png` 는 정예 Gem(`TheSevenSimulationART-몬스터(정예)`)에서 뽑은 2048×2048 **3×3 시트** 둘이다(초록 배경 · 격자선 a = x · y 674~687 · 1360~1373 · b = 676~687 · 1360~1371). 일반 초상 `2201`~`2203` 셋과 영웅 `warrior_3` 을 함께 붙이고 아홉 줄을 「Elite Ent · Elite Rotting Ent · Elite Wise Ent」 이름만 적었다 — 한 줄에 한 종. 사용자 지시로 **a 1번 → `2201_elite`** · **b 4번 → `2202_elite`** · **b 7번 → `2203_elite`** 에 적용했다(`monster.csv:face_elite = 1`). `scripts/apply_ch2_st2_ent_elite_portraits.py` 가 칸을 키잉해 512² 로 줄인다. 일반 초상과 같은 구도라 정렬은 따로 하지 않았다. `chapters/ch2_st2.png` 를 다시 찍었다.
 
-## 2-3 우상족 추적자 3×3 시트 [2026-10-12]
+## 2-3 우상족 추적자 [2026-10-12]
 
-`sheets/source_sheet_ch2_st3_idolfolk_stalker_3x3.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트**다(초록 배경 · 격자선 x · y 670~691 · 1356~1377). 사냥꾼 `2301` · 주술사 `2303` · 영웅 `warrior_3` 을 붙이고 아홉 줄을 「Idolfolk Stalker, shooting poison darts from a blowgun」 한 줄로 채웠다. 사용자 지시로 **1번(널빤지 가면 · 독침 대롱)을 `2302` 우상족 추적자**에 적용했다(`monster.csv:face = 1`). `scripts/apply_ch2_st3_idolfolk_stalker_portrait.py` 가 칸을 키잉해 512² 로 줄인다. `chapters/ch2_st3.png` 를 다시 찍었다.
+`2302` 우상족 추적자(널빤지 가면 · 독침 대롱)는 정예 Gem 3×3 시트의 1번 칸에서 잘랐다. **원본 시트와 절단 스크립트는 지웠다**(10-13 사용자) — 원본은 `ready/monster/2302.png` 하나다.
+
+## 2-3 우상족 정예 3×3 시트 [2026-10-13]
+
+`sheets/source_sheet_ch2_st3_idolfolk_elite_3x3_a.png` ~ `_d.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 넷이다(초록 배경 · 격자선 a = x 677~685 · 1362~1370 · y 678~686 · 1362~1371 · b = 678~687 · 1360~1370 · c = 676~689 · 1360~1371 · d = 678~686 · 1360~1370). 일반 초상 `2301` · `2302` · `2303` 과 영웅 `warrior_3` 을 붙이고 아래 두 줄 + 이름만 적은 아홉 줄로 뽑았다 — **1행 사냥꾼 · 2행 추적자 · 3행 주술사**. 사용자 지시는 「생긴 틀은 유지하면서 가면과 무기를 더 화려하게」다.
+
+```text
+Keep each monster exactly as it is — same mask shape, same body, same pose and framing.
+Only the mask and the weapon (spear, blowgun, staff) become more ornate: carved and painted patterns, bone and feather trim, never bright green.
+```
+
+사용자 지시로 **b 2번 → `2301_elite`** · **b 5번 → `2302_elite`** · **b 8번 → `2303_elite`** 에 적용했다(`monster.csv:face_elite = 1`). `scripts/apply_ch2_st3_idolfolk_elite_portraits.py` 가 칸을 키잉해 512² 로 줄인다. 일반 초상과 같은 구도라 정렬은 따로 하지 않았다. `chapters/ch2_st3.png` 를 다시 찍었다. ⚠ 시트마다 9번 칸 우하단에 ✦ 워터마크가 있다.
+
+## 1-2 인간 Gemini 판 [2026-10-13]
+
+`sheets/source_sheet_ch1_st2_human_crimson_elite_1.png` · `_2.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 둘이다(초록 배경 · 격자선 1 = x · y 676~685 · 1361~1371 · 2 = x 668~689 · 1358~1379 · y 669~690 · 1357~1378). 영웅 `priest_1` · `warrior_2` · `mage_1` · `knight_2` · `knight_4`(경계밀도 9~18 — 결이 깨끗한 다섯)를 붙이고 아래 두 줄 + 병종만 적은 아홉 줄로 뽑았다 — 매 행 **보병 → 궁수 → 기사**, 9번은 워터마크 자리라 「Human Soldier」. GPT 판(`ready/monster/1201~1203`)은 참조하지 않았다.
+
+```text
+Human soldiers of a burning battlefield, crimson cloth over dark steel and leather.
+Copy the attached human portraits' style exactly — same big heads, clean flat shading, clean skin. New faces. Leave margin around each figure.
+```
+
+사용자 지시로 **1번 1 → `1201`**(철모자) · **2번 2 → `1202`**(갈색 두건 · 화살통) · **1번 3 → `1203`**(깃털 장식 바이저 투구 · 금테 견갑)에 적용했다. `scripts/apply_ch1_st2_human_gemini_portraits.py` 가 칸을 키잉해 512² 로 줄여 **`ready/gemini/monster/`** 에 두므로 같은 id 의 GPT 판은 그대로다. **얼굴로 앉혔다** — 칸을 그대로 줄이면 눈 사이가 73~82px 로 다른 1장 몬스터(93~96)보다 얼굴이 작아서, 눈 사이 90 · 눈 중점 (300, 250) 으로 맞췄다(눈 좌표는 자른 칸에서 읽어 스크립트에 박았다 · 눈높이를 226 보다 내린 건 투구가 원형 칸 위에 닿지 않게). `chapters/ch1_st2.png` 를 다시 찍었다. 경계밀도 18~22 · 색 수 68~96 으로 영웅보다 결이 거칠다. `1202` 화살 끝은 칸 왼쪽 격자선에, `1203` 깃털 끝은 시트 맨 위에 닿아 잘려 있다 — 원형 칸이 가리는 자리다. `1203` 투구 · 금테는 첨부한 `knight_2` · `knight_4` 를 닮았다. 같은 날 그을음 판 넷(`source_sheet_ch1_st2_human_burning_1` · `_2` · `burning_elite_1` · `_2`)도 뽑았으나 배정 없음.
+
+## 2-4 나가 다시 그리기 3×3 시트 [2026-10-13]
+
+`sheets/source_sheet_ch2_st4_naga_redraw_3x3_a.png` ~ `_d.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 넷이다(초록 배경 · 격자선 a = x 678~690 · 1357~1369 · y 678~691 · 1356~1369 · b = 676~686 · 1360~1371 · c = x 670~691 · 1356~1377 · y 670~691 · 1357~1379 · d = x 671~689 · 1358~1376 · y 674~691 · 1356~1373). 현행 `2401` · `2402` · `2403` 과 영웅 `warrior_3` 을 붙이고 아래 세 줄 + 이름만 적은 아홉 줄로 뽑았다 — **1행 전사 · 2행 주술사 · 3행 마법사**. 나가 생김새(지느러미 볏 · 비늘)는 지키고 그림체 · 직업 소품만 새로 — 옛 그림은 눈에 호박색 홍채가 있고 주술사(사제)에 사제 소품이 없었다. 사용자 지시로 **a 1번 → `2401`**(좌우 뒤집어 오른쪽을 보게) · **a 4번 → `2402`** · **a 8번 → `2403`** 에 적용했다. `scripts/apply_ch2_st4_naga_redraw_portraits.py` 가 칸을 키잉해 512² 로 줄이고 `gemini/monster/` 로만 내보낸다(GPT 판은 옛 그림 그대로). 정렬은 따로 하지 않았다. `chapters/ch2_st4.png` 를 다시 찍었다. ⚠ 시트마다 1번 칸은 옛 `2401` 을 거의 그대로 옮겼다(c1 · d1 은 홍채도 남았다).
+
+## 2-4 나가 정예 3×3 시트 [2026-10-13]
+
+`sheets/source_sheet_ch2_st4_naga_elite_3x3_a.png` ~ `_d.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 넷이다(초록 배경 · 격자선 a = x 670~691 · 1356~1376 · y 670~691 · 1365~1385 · b = x 676~689 · 1359~1372 · y 676~689 · 1364~1378 · c = x 671~687 · 1360~1376 · y 674~691 · 1357~1373 · d = x 674~688 · 1359~1373 · y 676~691 · 1362~1376). 일반 `2401`(오른쪽을 보는 판) · `2402` · `2403` 과 영웅 `warrior_3` 을 붙이고 아래 두 줄 + 이름만 적은 아홉 줄로 뽑았다 — **1행 전사 · 2행 주술사 · 3행 마법사**. 일반과 44px 에서 갈리도록 **머리 장식으로 실루엣을 바꾸게** 했다. **아직 배정 없음.**
+
+```text
+Keep each monster's face, body, pose and framing exactly as it is.
+Make each one an elite: a bigger, clearly different headpiece that changes the head silhouette, and a more ornate weapon (trident, holy book, ice orb) — engraved bronze, shells, coral and bone, never bright green.
+```
+
+```text
+Keep the naga race look — fin crests and scaly skin — but redraw them in our hero's style. Eyes are solid black shapes.
+Warrior: bronze helmet. Shaman: a priest of the sea with a holy book. Mage: an ice orb.
+```
 
 ## 챕터 3~5 챕터 보스 [2026-10-10]
 
@@ -73,7 +113,7 @@ python scripts/export_face_portraits.py
 
 ## 2-4 나가 전사·주술사 초상 적용 [2026-09-25]
 
-사용자가 확인한 **원본 4칸 포함 시트** `sheets/source_sheet_ch2_st4_naga_original_expanded_3x3.png`에서 **1번(1행 1열)**을 나가 전사 `2401`, **6번(2행 3열)**을 나가 주술사 `2402`, **2번(1행 2열)**을 나가 마법사 `2403`에 적용했다. `scripts/apply_ch2_st4_naga_portraits.py`가 세 칸의 초록 배경을 투명화해 512×512 `ready/monster/<idx>.png`를 만들고, 게임용 256×256 `cartoon/monster/<idx>.webp`로 내보낸다. 최종 적용 직전 파일은 `_scratch/ch2_st4_naga_before_original_expanded/`에 보관했다. `chapters/ch2_st4.png`의 나가 세 칸도 갱신했다.
+사용자가 확인한 **원본 4칸 포함 시트** `sheets/source_sheet_ch2_st4_naga_original_expanded_3x3.png`에서 **1번(1행 1열)**을 나가 전사 `2401`, **6번(2행 3열)**을 나가 주술사 `2402`, **2번(1행 2열)**을 나가 마법사 `2403`에 적용했다. `scripts/apply_ch2_st4_naga_portraits.py`가 세 칸의 초록 배경을 투명화해 512×512 `ready/monster/<idx>.png`를 만들고, 게임용 256×256 `cartoon/monster/<idx>.webp`로 내보낸다. 최종 적용 직전 파일은 `_scratch/ch2_st4_naga_before_original_expanded/`에 보관했다. `chapters/ch2_st4.png`의 나가 세 칸도 갱신했다. ⚠ **10-13 에 세 칸 모두 「2-4 나가 다시 그리기」 시트로 바뀌었다** — 이 스크립트를 다시 돌리면 옛 초상으로 되돌아간다(다른 스크립트들이 여기의 `key_green` 을 빌려 써서 파일은 남겨 둔다).
 
 ## 1-2 인간 몬스터 초상 교체 [2026-09-25]
 
@@ -875,4 +915,4 @@ Gem 재발주 산출물(2048² · 불투명 **초록 `#00FF00` 배경**). 초록
 이 스타일의 굵고 어두운 외곽선(약 `#0B060C`)이 자동 누끼를 가능하게 한다 — 픽셀아트나 회화체면 같은 방법이 안 통한다.
 
 ---
-*마지막 업데이트: 2026-10-12*
+*마지막 업데이트: 2026-10-13*
