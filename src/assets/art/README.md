@@ -363,7 +363,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · minigame · explore · currency). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · minigame · explore · currency · gamble · forge). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -427,6 +427,13 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 | `jackpot.png` | 루비 박힌 금화 — 잭팟 코인 | `source/sheet_02_codex.png` 8 |
 
 원본 시트 둘은 Codex 이미지 생성 · 3×3 · 미니게임 · 금화 시트를 첨부해 같은 그림체로 뽑았다(지시문 `source/sheet_0N_prompt.txt`). 대안 열 장은 `unused/`(`seven_mirror` · `wild_sack` · `wild_key` · `gold_flask` · `ore_fist` · `ore_skull` · `timber_snake` · `dust_candle` · `dust_snail` · `coin_bitten`). 실측 색 수 107~268 · 경계밀도 13~25% · 외곽선 ≤6 — 금화 · 미니게임 그림과 같은 계열이고 옛 장비 아이콘 합격선보다 거칠다 · 64 · 42 · 24px 몽타주에서 여덟 장이 다 갈렸다
+
+## icons/forge/ — 강화 연출의 모루 · 망치 [신설 2026-10-14]
+
+`anvil.png` · `hammer.png` — 512 투명 · 긴 변 0.88 · 중앙. 제련소 강화 칸의 연출([강화]를 누르면 진열 칸에서 망치가 모루를 세 번 내려친다)이 읽는다(`mock.js:FORGE_ART` · SCREEN_DESIGN §8-2 · ADR-0626). **연출이 그림의 생김새에 기댄다** — 모루는 옆에서 본 모습 · 뿔이 왼쪽 · 윗면이 수평(그 위에 아이템 그림이 앉는다) · 통나무 받침, 망치는 수평으로 누운 옆모습 · 머리가 왼쪽 · 때리는 면이 아래 · 손잡이가 오른쪽(화면이 손잡이 끝을 축으로 돌린다 — 축 자리는 `style.css` 의 `.fg-hammer`). 다른 그림으로 바꾸면 이 방향을 지켜야 연출이 맞는다.
+
+- **원본** — Codex 이미지 생성 · 2×2 시트 셋(같은 지시문 `source/sheet_prompt.txt` · 도박장 시트 01 · 재화 시트 01 첨부) — 칸마다 받침 없는 모루 · 대장 망치 · 통나무 받침 모루 · 피 묻은 메. **설치는 `source/sheet_01_codex.png` 의 통나무 받침 모루(왼쪽 아래) + 대장 망치(오른쪽 위)** — 02 · 03 은 같은 지시문의 다른 판(대안)
+- **누끼** — 흰 배경을 가장자리에서 이어진 밝은 무채 픽셀로 잡아 지우고, 배경과 맞닿은 띠는 흰 위에 섞인 색으로 보고 알파 · 색을 되푼다(외곽선이 검정이라 어두운 바탕에서 흰 테두리가 안 남는다) · 내용 상자로 잘라 긴 변 0.88 로 앉혔다
 
 ## icons/explore/ — 탐험 지점 아이콘 [신설 2026-10-09]
 
@@ -704,4 +711,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-13*
+*마지막 업데이트: 2026-10-14*

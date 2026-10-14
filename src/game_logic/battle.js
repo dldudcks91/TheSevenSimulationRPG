@@ -811,6 +811,8 @@ export function createBattleSystem(data) {
             // 아래 `contrib` 맵이 세고 전투가 끝나면 여기로 옮긴다. **rng 를 안 쓰고 타임라인에도 안 들어간다** —
             // 세는 것뿐이라 전투 결과도 골든 수열도 안 건드린다 (`strikes` 와 같은 취급)
             contrib: [],
+            // 진 런 · 시간 초과의 사실 — 쓰러진 순서 · 남은 적 · 레벨 차 (`finish` 가 클리어가 아니면 채운다 · 리포트 「왜 졌나」 · ADR-0623). 세는 것뿐이라 rng 0
+            fall: null,
             // 이 런의 물약 칸 [2026-09-15 · R103 · 모양 R104 · 빈 칸 R124] — 재생기가 칸의 첫 상태를 그린다: `max` = 칸 수 · `slots` = 받은 칸 그대로(자리 순 · `null` = 빈 칸 · 목록 뒤도 빈 채 출발) ·
             //   `used` = 마신 수(`potion` 이벤트 수와 같다). 물약 없는 런도 칸은 선다(`slots: []`)
             potion: { max: slotMax, slots: potionSlots.map(p => (p ? { id: p.id, heal: p.heal } : null)), used: 0 },
@@ -824,6 +826,21 @@ export function createBattleSystem(data) {
         const credit = u => (u.side === 'party' && !u.summon) ? (contrib.get(u.uid) ?? null) : null;
         /** 지금까지의 기여 — 정수로 낸다(리포트가 그대로 찍는 값이고, 부동소수 꼬리는 이식 대조에서 잡음이 된다) */
         const contribNow = () => [...contrib.values()].map(c => ({ ...c, dealt: Math.round(c.dealt), taken: Math.round(c.taken) }));
+        /* 쓰러짐 기록 — 진 런 리포트의 「언제 · 무엇에 · 얼마나」 [2026-10-14 · SCREEN_DESIGN §4-3 · ADR-0623] — 영웅마다 받은 피해를 **때린 몬스터 id 별로** 모으고
+           쓰러지는 순간 가장 많이 때린 몬스터와 그 몫을 적는다(마지막 일격이 아니다). 세는 것뿐이라 rng 0 · 타임라인 무관 — 기여와 같은 취급 · 소환물은 안 센다 */
+        const takenFrom = new Map();   // uid → Map(monsterId → 받은 피해)
+        const noteTaken = (d, src, dmg) => {
+            if (!credit(d) || !src?.monsterId) return;
+            const m = takenFrom.get(d.uid) ?? new Map();
+            takenFrom.set(d.uid, m);
+            m.set(src.monsterId, (m.get(src.monsterId) ?? 0) + dmg);
+        };
+        const falls = [];
+        const noteFall = u => {
+            let by = null, top = 0, sum = 0;
+            for (const [id, v] of takenFrom.get(u.uid) ?? []) { sum += v; if (v > top) { top = v; by = id; } }
+            falls.push({ uid: u.uid, t: r1(t), round, by, dmg: Math.round(top), taken: Math.round(sum) });
+        };
 
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
@@ -1023,6 +1040,7 @@ export function createBattleSystem(data) {
             const ca = credit(a), cd = credit(d);
             if (ca) ca.dealt += dmg;
             if (cd) cd.taken += dmg;
+            noteTaken(d, a, dmg);
             if (d.hp <= 0) {
                 if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1;
                 downed(d);
@@ -1038,7 +1056,7 @@ export function createBattleSystem(data) {
             //   **보상은 한 마리당 처음 쓰러질 때 한 번**이다 [2026-09-18 · INTERFACE §2-6 `rewarded`] — 불러내기로 되살아난 무리가 다시 쓰러지면
             //   onKill 을 안 지난다(경험치 · 골드 · 카드 · 드롭 · 처치 기록 없음 · rng 0). 같은 장비가 두 번 떨어지지 않는다
             if (u.side === 'enemy') { if (!u.summon && !u.rewarded) { u.rewarded = true; onKill(u); } }
-            else if (!u.summon) out.downed.push(u.uid);
+            else if (!u.summon) { out.downed.push(u.uid); noteFall(u); }
             // 처치 정산(드롭 rng)이 **먼저** 돌아야 훅이 rng 를 써도 순서가 잠긴다 (INTERFACE §5-2)
             hooks.emit('down', u, { t });
             // 사건 `on_death` — 그 유닛의 사건 스킬(자폭)이 **죽음이 다 정산된 뒤에** 나간다. 자폭은 rng 0 이라 위 순서를 안 건드린다 (§9-6 · 2026-09-24 R151 — ~~`blast(u)`~~)
@@ -1225,6 +1243,7 @@ export function createBattleSystem(data) {
             const ca = src ? credit(src) : null, cd = credit(u);
             if (ca) ca.dealt += dmg;
             if (cd) cd.taken += dmg;
+            noteTaken(u, src, dmg);
             if (u.hp <= 0) {
                 if (ca && u.side !== 'party' && !u.summon && !u.rewarded) ca.kills += 1;
                 downed(u);
@@ -1358,6 +1377,7 @@ export function createBattleSystem(data) {
             const cA = credit(u), cD = credit(target);
             if (cA) cA.dealt += total;
             if (cD) cD.taken += total;
+            noteTaken(target, u, total);
             // `ty` — 그 타격의 피해 종류(`hitType`). 표시용이다 — 관전 로그가 피해 숫자를 종류 색으로 칠한다 (INTERFACE §2-6 · SCREEN_DESIGN §4-2)
             const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: total, crit, dhp: target.hp, ty: hitType };
             if (cb) ev.cb = cb;                              // 강타 몫 — 강타가 들어간 타격에만 키가 선다(`dmg` 는 합 · 흡혈 · 반사는 강타 몫을 안 먹는다)
@@ -1394,6 +1414,7 @@ export function createBattleSystem(data) {
                 timeline.push({ t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp });
                 if (cD) cD.dealt += back;                       // 반사도 **가한 피해**다 — 때린 쪽이 아니라 되받은 쪽의 몫
                 if (cA) cA.taken += back;
+                noteTaken(u, target, back);
                 if (u.hp <= 0) { if (cD && u.side !== 'party' && !u.rewarded) cD.kills += 1; downed(u); }
             }
             if (target.hp <= 0) {
@@ -1420,11 +1441,18 @@ export function createBattleSystem(data) {
 
         // `between` = 이긴 라운드의 요약을 냈고 다음 라운드를 **아직 안 열었다**(라운드 사이) — 다음 걸음의 첫머리가 연다 (R130)
         let started = false, ended = false, between = false;
+        /** 진 런 · 시간 초과의 사실 — 쓰러진 순서 · 끝난 순간 서 있던 적 · 레벨 차(마지막 라운드 적 중 가장 높은 레벨 − 파티에서 가장 낮은 레벨 · 0 아래면 0) (ADR-0623) */
+        const fallNow = () => {
+            const foes = units.enemies.filter(e => !e.summon), heroes = party.filter(p => !p.summon);
+            const gap = foes.length && heroes.length ? Math.max(0, Math.max(...foes.map(e => e.lvl)) - Math.min(...heroes.map(p => p.lvl))) : 0;
+            return { downs: falls.map(f => ({ ...f })), foes: foes.filter(e => e.hp > 0).map(e => ({ id: e.monsterId, hp: Math.round(e.hp), max: e.hpMax })), gap };
+        };
         /** 런을 닫는다 — 끝 시각 · 기여를 굳히고 `end` 이벤트를 낸다. 전멸 · 시간 초과 · 마지막 라운드 클리어 셋이 여기로 온다 */
         const finish = reason => {
             out.reason = reason;
             out.durationSec = r1(t);
             out.contrib = contribNow();
+            if (reason !== 'clear') out.fall = fallNow();
             timeline.push({ t: r1(t), e: 'end', won: out.won, reason: out.reason });
             ended = true;
         };

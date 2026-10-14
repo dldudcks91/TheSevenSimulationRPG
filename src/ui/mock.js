@@ -868,3 +868,10 @@ export const RES_ART = {
 const GAMBLE_ART_DIR = './assets/art/icons/gamble/';
 export const gambleArt = id => `<img class="gb-ico" src="${GAMBLE_ART_DIR}${id}${ICON_EXT}" alt="" draggable="false">`;
 
+/**
+ * 강화 연출의 모루 · 망치 (SCREEN_DESIGN §8-2 · ADR-0626 · Codex · 원본 `icons_source/forge/`).
+ * 연출이 그림의 방향에 기댄다 — 모루는 뿔이 왼쪽 · 윗면 수평, 망치는 머리가 왼쪽 · 때리는 면이 아래 · 손잡이 끝이 회전축(`style.css:.fg-hammer`)
+ */
+const FORGE_ART_DIR = './assets/art/icons/forge/';
+export const FORGE_ART = { anvil: `${FORGE_ART_DIR}anvil${ICON_EXT}`, hammer: `${FORGE_ART_DIR}hammer${ICON_EXT}` };
+

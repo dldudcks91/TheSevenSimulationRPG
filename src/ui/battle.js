@@ -526,11 +526,11 @@ const cardV2 = () => CARD_V2;
      ③ 내려옴 — 세움이 풀리면 제자리로 돌아오고 재생이 이어진다
    다른 카드의 행동 게이지 · 창 시간 · 다음 사건은 ①②동안 멈춰 시선이 행동한 카드에 모인다.
    「공격 시 흔들림」(fx.js:lungeFxOn)이 꺼져 있으면 ①③ 없이 ②의 세움만 한다.
-   `stop` = 세우기만 · `dim` = 세운 동안 그 행동에 안 낀 카드를 어둡게 · `off` = 지금 화면.
+   `stop` = 세우기만 · `dim` = 세운 동안 그 행동에 안 낀 카드를 어둡게 · `off` = 세움 없는 재생 · 기본은 `dim`(ADR-0621).
    개발용 비교 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-focus="off|stop|dim">` 로 **이 브라우저에서만** 고른다.
    ⚠ 세운 만큼 **관전 중인 원정이 실제 시간으로 늦게 간다** — 관전 중엔 재생기가 시계다(숨긴 탭 · 안 보는 부대는 앱 시계라 안 늦는다) */
 export const FOCUS_MODES = ['off', 'stop', 'dim'];
-const FOCUS_DEFAULT = 'off';
+const FOCUS_DEFAULT = 'dim';
 const RISE_MS = 150;    // ① 올라가는 실제 시간 — style.css `.fx-advance` 의 전환 길이와 같다
 const PEAK_MS = 100;    // ① 다 올라간 뒤 타격 전에 서 있는 시간 — 「올라가면서 때림」이 아니라 「올라가서 때림」으로 읽히게
 const FOCUS_MS = 300;   // ② 나간 채로 세우는 실제 시간 · 셋 다 배속이 오르면 연출처럼 준다(`SPEED_K`)

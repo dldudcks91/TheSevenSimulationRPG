@@ -958,6 +958,17 @@ check('formula: statBetter — 클수록 좋다 · 공격 속도(초)만 작을�
     }
     return `${cases.length} 경우`;
 });
+check('formula: hitLevelMult — 모자란 레벨만큼 깎이고 하한에서 멈춘다 · 오버레벨은 1 · hitChance 의 곱과 같은 값 (리포트 레벨 차 · ADR-0623 · 2026-10-14)', () => {
+    if (F.hitLevelMult(5, 5) !== 1 || F.hitLevelMult(9, 5) !== 1) fail('같은 레벨 · 오버레벨이 1 이 아니다');
+    const want4 = Math.max(B.hit_level_mult_min, 1 - 4 * B.hit_per_level_deficit_pct);
+    if (F.hitLevelMult(1, 5) !== want4) fail(`4 모자람 ${F.hitLevelMult(1, 5)} ≠ ${want4}`);
+    if (F.hitLevelMult(1, 1000) !== B.hit_level_mult_min) fail('하한에서 안 멈춘다');
+    for (const [a, d] of [[1, 1], [1, 4], [3, 9], [10, 2], [1, 1000]]) {
+        const want = Math.min(1, Math.max(B.hit_min_pct, B.hit_base_pct * F.hitLevelMult(a, d)));
+        if (F.hitChance(a, d) !== want) fail(`hitChance(${a}, ${d}) ${F.hitChance(a, d)} ≠ ${want}`);
+    }
+    return `4 모자람 → ×${want4.toFixed(2)}`;
+});
 check('formula: def_curve_k 는 상수 — 감쇠가 레벨과 무관하다 (08-26 레벨 앵커 폐기)', () => {
     if (F.mitigation(50) !== F.mitigation(50, 99)) fail('레벨 인자가 아직 곡선을 흔든다');
     if (F.mitigation(50, 1) !== F.mitigation(50, 10)) fail('레벨별로 다르다');
@@ -1756,6 +1767,49 @@ check('resolveBattle: 리포트는 목록에 쌓이고 상한을 넘으면 오�
     }
     return `${keep + 3}판 → ${keep}칸 · 최신이 앞`;
 });
+check('리포트: 남기는 런 수는 부대마다 — 한 부대가 상한을 넘겨 돌아도 다른 부대의 리포트는 안 밀려난다 · preset 없는 옛 리포트는 1부대로 센다 (ADR-0622 · 2026-10-14)', () => {
+    const keep = D.balance.report_keep;
+    const G2 = newGameP(4243, cands, NOW);
+    // 다른 부대(2)의 리포트 셋 · 부대 번호가 없는 옛 리포트 둘 — 정리 규칙은 `preset` 만 읽는다
+    const other = [0, 1, 2].map(i => ({ at: NOW - 100 - i, stageId: 1011, preset: 2, won: false, reason: 'wipe' }));
+    const legacy = [0, 1].map(i => ({ at: NOW - 200 - i, stageId: 1011, won: true, reason: 'clear' }));
+    G2.reports.push(...other, ...legacy);
+    for (let i = 0; i < keep + 3; i++) {
+        const r = SYS.game.resolveBattle(G2, 1011, NOW + i * 1000, 1);
+        if (!r.ok) fail(`resolveBattle #${i} ${r.err}`);
+    }
+    const mine = G2.reports.filter(R => (R.preset ?? 1) === 1);
+    if (mine.length !== keep) fail(`1부대 ${mine.length} / ${keep}`);
+    if (!other.every(R => G2.reports.includes(R))) fail('다른 부대의 리포트가 밀려났다');
+    if (legacy.some(R => G2.reports.includes(R))) fail('부대 번호 없는 옛 리포트가 1부대로 안 세졌다(안 밀려났다)');
+    if (G2.reports[0].at !== NOW + (keep + 2) * 1000) fail('최신이 맨 앞이 아니다');
+    return `1부대 ${keep + 3}판 → ${keep}칸 · 2부대 ${other.length}칸 그대로 · 옛 리포트 밀려남`;
+});
+check('리포트: 진 런은 fall 을 든다 — 쓰러진 순서 = downed · 가장 많이 때린 몬스터 · 그 몫 ≤ 받은 피해 · 남은 적은 서 있는 적 · 클리어 런엔 없다 (ADR-0623 · 2026-10-14)', () => {
+    // 진 런 — 장비를 다 벗긴 시작 파티로 1-1 I · 클리어 런 — 그대로의 시작 파티로 1-1 I (새 게임은 1-1 만 열려 있다)
+    const G2 = newGameP(4244, cands, NOW);
+    for (const h of G2.heroes) for (const pos of Object.keys(h.equipped)) h.equipped[pos] = null;
+    const G3 = newGameP(4245, cands, NOW);
+    let lost = null, won = null;
+    for (let i = 0; i < 8 && !(lost && won); i++) {
+        const a = SYS.game.resolveBattle(G2, 1011, NOW + i * 1000, 1), b = SYS.game.resolveBattle(G3, 1011, NOW + i * 1000, 1);
+        if (!a.ok || !b.ok) fail(`resolveBattle ${a.err ?? b.err}`);
+        if (!a.report.won && ['wipe', 'timeout'].includes(a.report.reason)) lost ??= a.report;
+        if (b.report.won) won ??= b.report;
+    }
+    if (!lost) fail('fixture: 진 런이 없다');
+    const f = lost.fall ?? fail('진 런에 fall 이 없다');
+    if (f.downs.map(d => d.uid).join() !== lost.downed.join()) fail(`쓰러진 순서 ${f.downs.map(d => d.uid)} ≠ downed ${lost.downed}`);
+    for (const d of f.downs) {
+        if (d.by !== null && !D.monsters[d.by]) fail(`모르는 몬스터 ${d.by}`);
+        if (!(d.dmg <= d.taken) || !(d.t >= 0) || !(d.round >= 1)) fail(`쓰러짐 ${JSON.stringify(d)}`);
+    }
+    if (lost.reason === 'wipe' && !f.downs.length) fail('전멸인데 쓰러진 영웅이 없다');
+    if (f.foes.some(e => !(e.hp > 0 && e.hp <= e.max) || !D.monsters[e.id])) fail(`남은 적 ${JSON.stringify(f.foes)}`);
+    if (!Number.isInteger(f.gap) || f.gap < 0) fail(`레벨 차 ${f.gap}`);
+    if (won && 'fall' in won) fail('클리어 런에 fall 이 있다');
+    return `${lost.reason} · 쓰러짐 ${f.downs.map(d => `${d.by}:${d.taken ? Math.round(100 * d.dmg / d.taken) : 0}%`).join(' ')} · 남은 적 ${f.foes.length} · 레벨 차 ${f.gap}${won ? ' · 클리어 런 fall 없음' : ''}`;
+});
 /**
  * 처치는 가루를 안 뱉는다 (2026-09-09 확정 · item_design §5-3 · R63).
  * **회귀 그물** — 정예·보스가 도는 전투를 한 판 돌려 결과·리포트 어디에도 가루 칸이 없고
@@ -2216,7 +2270,7 @@ check('masteryState: 판정을 한 번에 낸다 — 랭크·상한·해금·찍
     return `${h.cls}/${h.sin} → 노드 ${ms.nodes.length} (T1 ${t1.length} · T2 ${t2.length})`;
 });
 
-/* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95) ── */
+/* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95 · 2026-10-14 R253 성공 확률) ── */
 
 /** 강화 시험용 판 — 가방에 아이템 하나를 넣고 골드를 넉넉히 준다 (본판 G 를 흔들지 않는다) */
 function upgradeFixture(item) {
@@ -2228,14 +2282,25 @@ function upgradeFixture(item) {
     return { g, it };
 }
 
+/** 성공할 때까지 눌러 `n` 단계까지 올린다 — 강화에 실패가 있다(R253). 누른 횟수를 돌려준다 */
+function upTo(g, it, n) {
+    let k = 0;
+    while ((it.up ?? 0) < n) {
+        const r = SYS.game.upgradeItem(g, it.uid);
+        if (!r.ok) fail(`+${it.up} 에서 ${r.err}`);
+        if (++k > 500) fail(`+${it.up} 에서 500번 눌러도 안 오른다`);
+    }
+    return k;
+}
+
 check('강화: 상한 = limitsOf.upgrade(기본값 [balance.csv:equip_upgrade_max] + 제련소 랭크) · 상한 뒤 비용은 null 이고 `maxUp` 을 낸다 (R137)', () => {
     const { g, it } = upgradeFixture(mkItem('gloves', [{ stat: 'crit_pct', v: 0.05 }]));
     let n = 0;
-    while (SYS.game.upgradeItem(g, it.uid).ok) if (++n > 50) fail('상한에서 안 멈춘다');
+    while (SYS.game.upgradeItem(g, it.uid).ok) if (++n > 500) fail('상한에서 안 멈춘다');
     if (it.up !== SYS.game.limitsOf(g).upgrade) fail(`up ${it.up} ≠ 상한 ${SYS.game.limitsOf(g).upgrade}`);
     if (SYS.item.upgradeCost(it) !== null) fail('상한인데 비용이 있다');
     const r = SYS.game.upgradeItem(g, it.uid);
-    return r.err === 'maxUp' ? `+${it.up} 에서 멈춤 · ${n}단계` : fail(`err ${r.err}`);
+    return r.err === 'maxUp' ? `+${it.up} 에서 멈춤 · ${n}번 눌러서` : fail(`err ${r.err}`);
 });
 
 check('강화: 골드가 모자라면 `gold` — 단계도 골드도 안 움직인다', () => {
@@ -2291,7 +2356,7 @@ check('강화: 베이스는 **파생이다** — 무기 피해 범위는 up 으�
     const { g, it } = upgradeFixture(w);
     const before = SYS.item.weaponDamage(it);
     const keys = Object.keys(it).sort().join(',');
-    for (let i = 0; i < 4; i++) SYS.game.upgradeItem(g, it.uid);
+    upTo(g, it, 4);
     if ('watk' in it) fail('무기에 공격력 값이 박혔다 — 범위는 파생이다');
     if (Object.keys(it).sort().join(',') !== keys) fail('강화가 아이템에 새 필드를 박았다');
     const got = SYS.item.weaponDamage(it);
@@ -2312,7 +2377,7 @@ check('강화 미리보기: `upgradeState.next` = 한 단계 올린 뒤의 툴�
             const s = SYS.game.upgradeState(g, it.uid);
             if (JSON.stringify(it) !== before) fail('미리보기가 아이템을 바꿨다');
             if (s.cost == null) { if (s.next !== null) fail(`상한인데 next ${JSON.stringify(s.next)}`); break; }
-            if (!SYS.game.upgradeItem(g, it.uid).ok) fail(`${it.slot} +${n + 1} 실패`);
+            upTo(g, it, it.up + 1);                                   // 실패한 판은 단계가 그대로라 미리보기도 그대로다 — 오를 때까지 누른다 (R253)
             const want = { up: it.up, dmg: SYS.item.weaponDamageFixed(it), imp: SYS.item.implicitFixed(it) };
             if (!eq(s.next, want)) fail(`${it.slot} +${it.up} 미리보기 ${JSON.stringify(s.next)} ≠ 실제 ${JSON.stringify(want)}`);
             if (++n > 50) fail('상한에서 안 멈춘다');
@@ -2337,22 +2402,75 @@ check('강화: 전투 능력치가 실제로 오른다 — heroCombat 이 effect
     const h = g.heroes[0], w = g.items[h.equipped.weapon];
     const atkOf = c => (c.atk_physical ?? c.atk_magic).max;      // 채널 키는 무기군이 정한다 (§2-4) · 값은 범위 — 최대 끝으로 본다 (R90)
     const atk0 = atkOf(SYS.game.heroCombat(g, h));
-    for (let i = 0; i < B.equip_upgrade_max; i++) SYS.game.upgradeItem(g, w.uid);
+    upTo(g, w, B.equip_upgrade_max);
     const atk1 = atkOf(SYS.game.heroCombat(g, h));
     return atk1 > atk0 ? `공격력 ${atk0} → ${atk1} (+${B.equip_upgrade_max}강)` : fail(`안 올랐다: ${atk0} → ${atk1}`);
 });
 
-check('강화: rng 를 안 쓴다 — 시드가 달라도 같은 결과 · `counters.upgrade` 가 안 오른다 (R95 · INTERFACE §5-1)', () => {
-    const run = seed => {
-        const { g, it } = upgradeFixture(mkItem('armor', [{ stat: 'crit_pct', v: 0.05 }, { stat: 'hp_pct', v: 0.03 }, { stat: 'res_fire', v: 0.07 }], { implicit: { stat: 'def_flat', v: 10 } }));
-        g.seed = seed;
-        const c0 = g.counters.upgrade;
-        const log = [];
-        for (let i = 0; i < B.equip_upgrade_max; i++) log.push(JSON.stringify(SYS.game.upgradeItem(g, it.uid)));
-        if (g.counters.upgrade !== c0) fail(`counters.upgrade ${c0} → ${g.counters.upgrade}`);
-        return log.join('|') + JSON.stringify(SYS.item.effective(it));
-    };
-    return run(12345) === run(777) ? `${B.equip_upgrade_max}단계 · 시드 둘 동일` : fail('시드가 강화 결과를 바꿨다');
+check('강화 확률: 결과 = 제 스트림 `deriveSeed(seed ^ 0xF0C5, counters.upgrade)` 첫 값 < 확률 · 실패해도 비용은 나가고 up 그대로 · 성공이면 +1 (R253 · INTERFACE §5-1)', () => {
+    const { g, it } = upgradeFixture(mkItem('armor', [{ stat: 'crit_pct', v: 0.05 }], { implicit: { stat: 'def_flat', v: 10 } }));
+    const max = SYS.game.limitsOf(g).upgrade;
+    let win = 0, lose = 0;
+    for (let i = 0; i < 40; i++) {
+        it.up = 4;                                                // 다음 단계 = +5 — 확률이 1 보다 작은 칸
+        const p = SYS.item.upgradeChance(it, max), cost = SYS.item.upgradeCost(it, max);
+        if (!(p > 0 && p < 1)) fail(`+5 확률 ${p} — 시험 전제(0 < p < 1)가 깨졌다`);
+        const gold = g.resources.gold, c0 = g.counters.upgrade;
+        const r = SYS.game.upgradeItem(g, it.uid);
+        if (g.counters.upgrade !== c0 + 1) fail(`회차가 하나 안 올랐다 ${c0} → ${g.counters.upgrade}`);
+        const want = makeRng(deriveSeed(g.seed ^ 0xF0C5, c0 + 1))() < p;
+        if (r.success !== want) fail(`회차 ${c0 + 1} 결과 ${r.success} ≠ 스트림 ${want}`);
+        if (r.cost !== cost || g.resources.gold !== gold - cost) fail('비용은 성패와 상관없이 나가야 한다');
+        if (it.up !== (want ? 5 : 4) || r.up !== it.up) fail(`up ${it.up} · r.up ${r.up} (성공 ${want})`);
+        want ? win++ : lose++;
+    }
+    return win && lose ? `+4 → +5 40번 — 성공 ${win} · 실패 ${lose} · 실패도 비용은 나간다` : fail(`한쪽만 나왔다 — 성공 ${win} · 실패 ${lose}`);
+});
+
+check('강화 확률: 거절이면 스트림을 안 연다(`gold` · `maxUp` — 회차 그대로) · 확률 1 인 단계도 회차를 하나 쓴다 (R253 · INTERFACE §5-2)', () => {
+    const { g, it } = upgradeFixture(mkItem('boots', [{ stat: 'hp_pct', v: 0.03 }]));
+    const c0 = g.counters.upgrade;
+    g.resources.gold = 0;
+    if (SYS.game.upgradeItem(g, it.uid).err !== 'gold') fail('골드 0 인데 gold 가 아니다');
+    it.up = SYS.game.limitsOf(g).upgrade; g.resources.gold = 1e9;
+    if (SYS.game.upgradeItem(g, it.uid).err !== 'maxUp') fail('상한인데 maxUp 이 아니다');
+    if (g.counters.upgrade !== c0) fail(`거절인데 회차가 움직였다 ${c0} → ${g.counters.upgrade}`);
+    it.up = 0;
+    if (SYS.item.upgradeChance(it) !== 1) return `+1 확률이 1 이 아니다(${SYS.item.upgradeChance(it)}) — 거절 둘만 확인`;
+    const r = SYS.game.upgradeItem(g, it.uid);
+    if (!r.success || it.up !== 1) fail(`확률 1 인데 ${JSON.stringify(r)}`);
+    return g.counters.upgrade === c0 + 1 ? '거절 둘 — 회차 그대로 · 확률 1 도 회차 하나' : fail(`확률 1 단계가 회차를 안 썼다 ${g.counters.upgrade}`);
+});
+
+check('강화 확률: `upgrade_chance.csv` 가 다 지은 상한까지 덮는다 · `upgradeState.chance` = 그 단계의 표 값 · 상한 · 반지는 null (R253 · SCREEN_DESIGN §8-2)', () => {
+    const { g, it } = upgradeFixture(mkItem('helmet', [{ stat: 'hp_flat', v: 4 }]));
+    const max = SYS.game.limitsOf(g).upgrade, rows = D.upgradeChanceRows;
+    if (rows.length < max) fail(`표 ${rows.length}줄 < 다 지은 상한 +${max}`);
+    const got = [];
+    for (let up = 0; up < max; up++) {
+        it.up = up;
+        const s = SYS.game.upgradeState(g, it.uid);
+        if (s.chance !== rows[up].chance) fail(`+${up + 1} 확률 ${s.chance} ≠ 표 ${rows[up].chance}`);
+        got.push(`${Math.round(s.chance * 100)}%`);
+    }
+    it.up = max;
+    if (SYS.game.upgradeState(g, it.uid).chance !== null) fail('상한인데 확률이 있다');
+    const ring = upgradeFixture(mkItem('ring', [{ stat: 'gold_find', v: 0.05 }]));
+    if (SYS.game.upgradeState(ring.g, ring.it.uid).chance !== null) fail('반지에 확률이 있다');
+    return `+1 ~ +${max}: ${got.join(' · ')} · 표 ${rows.length}줄`;
+});
+
+check('강화 확률: `upgrade_chance.csv` 검증 — 단계가 끊기거나 확률이 0 이하 · 1 초과면 생성 때 던진다 (R253 · INTERFACE §2-5)', () => {
+    const threw = rows => { try { buildSystems({ ...D, upgradeChanceRows: rows }); return null; } catch (e) { return String(e.message); } };
+    const ok = D.upgradeChanceRows;
+    const bad = [
+        ['끊긴 단계', ok.map((r, i) => (i === 1 ? { ...r, step: 3 } : r))],
+        ['확률 0', ok.map((r, i) => (i === 0 ? { ...r, chance: 0 } : r))],
+        ['확률 1 초과', ok.map((r, i) => (i === 0 ? { ...r, chance: 1.2 } : r))],
+    ];
+    for (const [why, rows] of bad) if (!threw(rows)) fail(`${why} 을 받아들였다`);
+    const e = threw(ok);
+    return e === null ? `나쁜 표 ${bad.length}종 거절 · 본 표 통과` : fail(`본 표가 던졌다 — ${e}`);
 });
 
 check('강화: 드롭·시작 무기는 up=0 으로 나온다 — 강화는 굴림이 아니다', () => {
@@ -4199,6 +4317,24 @@ check('알아서 분해: 가방이 가득 차도 걸린 드롭은 버린 수에 
         if (g.bags[0].length !== B.inventory_cap) fail(`seed ${seed}: 가방 ${g.bags[0].length}`);
         if (R.drops.some(u => g.items[u])) fail(`seed ${seed}: 걸린 드롭이 items 에 남았다`);
         return `seed ${seed}: 가득 찬 가방 · 드롭 ${R.drops.length} 전부 가루 · 버린 수 0`;
+    }
+    return fail('40 시드 동안 드롭이 없었다');
+});
+check('넘친 드롭: 인벤토리가 가득 차면 버리지 않고 분해해 가루로 받는다 — discarded = 넘쳐 분해한 수 · drops 에 남고 items 에선 지워진다 · 가방은 그대로 (ADR-0625 · 2026-10-14)', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+        const g = newGameP(seed, cands, NOW);
+        while (g.bags[0].length < B.inventory_cap) { const f = mkItem('gloves', []); f.uid = `iF${g.bags[0].length}`; g.items[f.uid] = f; g.bags[0].push(f.uid); }
+        const dust0 = g.resources.dust;
+        const d = SYS.game.departRun(g, 1011, NOW);
+        if (!d.ok) fail(`depart ${d.err}`);
+        while (!SYS.game.advanceRun(g, d.run, NOW).done);
+        const R = d.run.report;
+        if (!R.drops.length) continue;
+        if (R.discarded !== R.drops.length) fail(`seed ${seed}: 넘쳐 분해 ${R.discarded} ≠ 드롭 ${R.drops.length}`);
+        if (R.drops.some(u => g.items[u])) fail(`seed ${seed}: 넘친 드롭이 items 에 남았다`);
+        if (g.bags[0].length !== B.inventory_cap) fail(`seed ${seed}: 가방 ${g.bags[0].length}`);
+        if (!(g.resources.dust > dust0)) fail(`seed ${seed}: 가루가 안 늘었다 ${dust0} → ${g.resources.dust}`);
+        return `seed ${seed}: 가득 찬 가방 · 드롭 ${R.drops.length} 전부 분해 · 가루 ${dust0} → ${g.resources.dust}`;
     }
     return fail('40 시드 동안 드롭이 없었다');
 });
@@ -11844,7 +11980,7 @@ check('commission: 처치가 센다 — 이긴 라운드의 처치만 · 지역 
     if (play({ kind: 'kill', axis: 'chapter', ref: 1, need: 2 }).c.have !== 2) fail('need 에서 안 자른다');
     return `시드 ${seed} · 1013 처치 ${kills} · 정예 ${graded(['elite'])} · 보스 ${graded(['stage_boss', 'chapter_boss'])} · ${race} ${byRace}`;
 });
-check('commission: 들어온 드롭이 채운다 — 희귀도가 맞는 것만 · 알아서 분해로 녹은 것도 · 가방이 차서 버린 것은 빼고 (INTERFACE §2-7)', () => {
+check('commission: 들어온 드롭이 채운다 — 희귀도가 맞는 것만 · 알아서 분해로 녹은 것도 · 가방이 차서 넘쳐 분해된 것은 빼고 (INTERFACE §2-7)', () => {
     const play = (seed, setup) => {
         const g = cmGame(seed);
         const c = cmHold(g, { kind: 'collect', axis: 'rarity', ref: 'magic' });
@@ -11867,7 +12003,7 @@ check('commission: 들어온 드롭이 채운다 — 희귀도가 맞는 것만 
         const cap = SYS.game.limitsOf(g).bag;
         for (let i = g.bags[0].length; i < cap; i++) { const f = mkItem('gloves', []); f.uid = `iF${i}`; g.items[f.uid] = f; g.bags[0].push(f.uid); }
     });
-    if (full.c.have !== 0) fail('가방이 차서 버린 드롭을 센다');
+    if (full.c.have !== 0) fail('가방이 차서 넘쳐 분해된 드롭을 센다');
     const rare = play(seed, g => { g.commissions.cards[0].ref = 'rare'; });
     const rareN = rare.r.report.drops.filter(u => rare.g.items[u]?.rarity === 'rare').length;
     if (rare.c.have !== rareN) fail(`레어 ${rare.c.have} ≠ ${rareN}`);
@@ -12213,12 +12349,18 @@ check('advance: 전직 — 도서관 r2(2026-10-09 · 옛 훈련장 r3) · 레�
     const back = S.game.deserialize(JSON.parse(JSON.stringify(S.game.serialize(g, NOW))));
     const hb = back.heroes.find(x => x.uid === h.uid);
     if (hb.advance !== br.id || hb.advanceSkill !== br.skills[2]) fail('전직 · 배운 스킬이 세이브 왕복에서 바뀌었다');
-    // 관리자 모드 — 레벨 · 건물 문턱 없이 곧바로
+    // 관리자 모드 — 건물 문턱 없이 곧바로 · **레벨 문턱은 켜도 본다** (2026-10-14 사용자 「30레벨이 안됬는데 전직이 되는데?」 — 회귀 단정)
     on = true;
     const g2 = S.game.newGame(92, cands, NOW);
     const h2 = g2.heroes[0];
     const b2 = S.game.advanceState(g2, h2.uid, NOW).branches[2];
+    h2.level = D.balance.advance_unlock_level - 1;
+    if (S.game.advanceStart(g2, h2.uid, b2.id, NOW).err !== 'level' || h2.advance) fail('관리자 모드에서 레벨 미달인데 전직됐다');
+    h2.level = D.balance.advance_unlock_level;
     if (!S.game.advanceStart(g2, h2.uid, b2.id, NOW).ok || h2.advance !== b2.id) fail('관리자 모드인데 곧바로 안 끝났다');
+    // 문턱 아래에서 전직한 옛 세이브도 포인트를 거저 받지 않는다(옛 「관리자 모드는 최소 1」 걷음)
+    h2.level = D.balance.advance_unlock_level - 1;
+    if (S.game.advanceState(g2, h2.uid, NOW).hero.points.have !== 0) fail('관리자 모드에서 레벨 미달 영웅이 전직 포인트를 받았다');
     on = false;
     return `${h.cls} ${br.id} · 스킬 ${br.skills.join(' · ')} · ${D.balance.advance_hours}시간`;
 });

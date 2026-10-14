@@ -44,7 +44,7 @@
  *   difficulty: 단 id            — **고른 난이도** (2026-10-10 · R236 · 없으면 첫 단) · 부대 자리 · 리포트의 `difficulty` = 그 런의 단 (몬스터 레벨 = `stage.csv:dlvl` + 단의 더하기 · 만렙에서 자른다)
  *   codexExp: {monsterId: n}     — **도감 레벨의 출처** — 누적 도감 경험치 · 처치 하나 = 그 런 단의 `codex_exp` (monster_design §8 · 2026-10-10 · R239 — ~~codexKills 누적 처치 수~~ 09-21)
  *   bossDown: {"단|stageId": ms} — **챕터보스가 죽은 실제 시각** (2026-10-10 · R240 · 버전 무변경) — 돌아오는 시각 = 값 + `boss_respawn_sec` 초 · 그동안 그 칸 × 단으로는 어느 부대도 못 나간다 (base_expedition_design §1-2)
- *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make, gamble, commission},   // upgrade 는 R95(2026-09-15)부터 안 오른다 — 강화가 rng 를 안 쓴다 · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, tier, done}` — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
+ *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make, gamble, commission},   // upgrade = 강화 굴림 회차(R253 · 2026-10-14 다시 오른다 — R95(2026-09-15)부터 그때까지는 자리만 있었다 · 옛 값에서 이어 센다) · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, tier, done}` — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
  *   commissions: {cards: [{no, tpl, kind, axis, ref, need, grade, gold, have?}]}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3).
  *     자리 순서 그대로 · **굴린 순간의 내용을 박는다**(대상 풀이 그때의 진행에 달려 있다 — 수색 스냅샷과 같은 이유) · `have` 가 있으면 받아 둔 것 · 없으면 게시판에 걸린 것
  *   runs: [{stageId, preset, difficulty, repeat, auto, lastAt, durationSec, active, fallen?} | null],   // **부대마다 하나 — v38** [2026-09-23 · 다부대 · GAME_DESIGN §1-1] — 옛 `run`(단수) 대체.
@@ -53,7 +53,7 @@
  *     fallen = 이 런에서 쓰러져 있는 영웅(R130 · 없으면 [] — 옛 v16 `downed` 와 다른 필드) ·
  *     **auto — v39** = 그 부대가 **이어 가는 중**(런이 끝나면 다음 런이 나간다 · 출발이 켜고 철수 · 끊기가 끈다) ·
  *     repeat = **장소 안 순환**(v39 부터 — 끄면 다음 칸으로 전진 · base_expedition_design §1 · PLAN_stage_segments D7 · D8)
- *   reports: [{...}]             — 리포트 목록. **최신이 맨 앞**이고 [balance.csv:report_keep] 개까지 남는다 (v21).
+ *   reports: [{...}]             — 리포트 목록. **최신이 맨 앞**이고 **부대마다** [balance.csv:report_keep] 개까지 남는다 (v21 · 부대마다 2026-10-14 · ADR-0622).
  *     반복 원정은 이기는 동안 런을 잇는데, 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3)
  *   notice: {kind:'runClosed', runs: [{stageId, at}], stageId, at, seenAt} | null   — 재접속 알림 (배너 1회).
  *     `runs` = **끊은 부대마다 한 줄 — v38**(편성 번호 순) · `stageId`·`at` 은 그중 첫 줄을 그대로 둔 것이다(한 부대만 돌던 화면이 안 깨지게)
@@ -873,12 +873,13 @@ export function createGameSystem(deps) {
         return { ok: true, n, dust };
     }
 
-    /* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95) ── */
+    /* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95 · 2026-10-14 R253 성공 확률) ── */
 
     /**
      * 강화 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`tavernState`·`masteryState` 와 같은 규칙).
      * `upgradeable` = 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화 대상이 아니다(`cost` 도 null).
      * 얼마가 나가고 무엇이 걸려 있는지를 화면이 계산하지 않는다. ~~optionAt~~ 은 옵션 계단과 함께 퇴역 (R95)
+     * `chance` = 다음 단계의 성공 확률(비율 · `upgrade_chance.csv`) — 누르기 전에 보인다 [2026-10-14 · R253]. `cost` 가 null 이면 null
      * `next` = 한 단계 올린 뒤의 베이스 값 미리보기 [2026-10-12 · SCREEN_DESIGN §8-2 「지금 → 다음」] — `up + 1` **사본**에 툴팁과 같은 함수를 부른다(아이템은 안 바뀐다).
      *   올릴 수 없으면(`cost` null — 상한 · 목걸이 · 반지) null
      */
@@ -889,7 +890,7 @@ export function createGameSystem(deps) {
         const open = hasFeature(state, 'upgrade_item');   // 제련소가 연다 (R137)
         const peek = cost == null ? null : { ...it, up: up + 1 };
         return {
-            up, max, cost, gold: state.resources.gold, open,
+            up, max, cost, chance: I.upgradeChance(it, max), gold: state.resources.gold, open,
             upgradeable: I.upgradeable(it),
             canUpgrade: open && cost != null && state.resources.gold >= cost,
             next: peek && { up: peek.up, dmg: I.weaponDamageFixed(peek), imp: I.implicitFixed(peek) },
@@ -897,21 +898,27 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 강화 1단계 — 골드를 내고 `up` 을 올린다. 거절은 `missing` → `unbuilt`(제련소를 안 지었다 · R137) → `noBase` → `maxUp` → `gold` 순으로 본다.
+     * 강화 1단계 — 골드를 내고 **굴려서** 성공하면 `up` 을 올린다. 거절은 `missing` → `unbuilt`(제련소를 안 지었다 · R137) → `noBase` → `maxUp` → `gold` 순으로 본다.
+     * 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
      * **가방·착용을 가리지 않는다** — 소유물에 하는 일이지 자리에 하는 일이 아니다(분해와 갈리는 지점).
-     * **rng 를 안 쓴다** (R95) — 옵션 계단이 사라져 굴릴 것이 없다. `counters.upgrade` 도 더 오르지 않는다 (INTERFACE §5-1).
+     * **실패하면 골드만 나간다** [2026-10-14 사용자 · R253 · item_design §7-2] — `up` 그대로 · 파괴 · 하락 없음. 반환의 `up` 은 굴린 **뒤**의 단계다.
+     * rng = `deriveSeed(seed ^ 0xF0C5, counters.upgrade)` 선증가 · **언제나 1회**(확률 1 인 단계도) — 회차 번호가 결과를 정해 새로고침으로 되굴릴 수 없다.
+     *   ~~솔트 0xF0C3~~ 은 R95 퇴역 스트림이라 재사용하지 않는다 (INTERFACE §5-1)
      */
     function upgradeItem(state, itemUid) {
         const it = state.items[itemUid];
         if (!it) return { ok: false, err: 'missing' };
         if (!hasFeature(state, 'upgrade_item')) return { ok: false, err: 'unbuilt' };
         if (!I.upgradeable(it)) return { ok: false, err: 'noBase' };
-        const cost = I.upgradeCost(it, limitsOf(state).upgrade);
+        const max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
         if (cost == null) return { ok: false, err: 'maxUp' };
         if (state.resources.gold < cost) return { ok: false, err: 'gold' };
+        const chance = I.upgradeChance(it, max);
         state.resources.gold -= cost;
-        const r = I.upgrade(it);
-        return { ok: true, up: r.up, cost };
+        state.counters.upgrade = (state.counters.upgrade ?? 0) + 1;
+        const success = makeRng(deriveSeed(state.seed ^ 0xF0C5, state.counters.upgrade))() < chance;
+        const up = success ? I.upgrade(it).up : (it.up ?? 0);
+        return { ok: true, up, cost, success };
     }
 
     /* ── 제작 (item_design §7-1 확정 2026-09-15 — R96) ── */
@@ -1730,14 +1737,12 @@ export function createGameSystem(deps) {
     })();
     /**
      * 전직 포인트 [2026-10-06 · R216 · skill_design §4] — 마스터리 포인트와 **따로**다. 전직했으면 전직 레벨 `[balance.csv:advance_unlock_level]` 에 1 ·
-     *   그 뒤 `[balance.csv:advance_point_interval]` 레벨마다 1. 첫 포인트로 전직 스킬을 배우고 나머지를 스킬 레벨에 쓴다(가지는 아직 못 찍는다).
-     *   관리자 모드는 최소 1 — 레벨 문턱을 안 보고 전직하는 개발 장치(`advanceErr`)와 짝이다
+     *   그 뒤 `[balance.csv:advance_point_interval]` 레벨마다 1. 첫 포인트로 전직 스킬을 배우고 나머지를 스킬 레벨에 쓴다(가지는 아직 못 찍는다)
      */
     const advancePointsOf = h => {
         if (!h?.advance) return 0;
         const over = h.level - B.advance_unlock_level;
-        const n = over >= 0 ? 1 + Math.floor(over / Math.max(1, B.advance_point_interval)) : 0;
-        return openAll() ? Math.max(1, n) : n;
+        return over >= 0 ? 1 + Math.floor(over / Math.max(1, B.advance_point_interval)) : 0;
     };
     /** 쓴 전직 포인트 — 배운 것이 첫 포인트 + 배운 뒤 더 넣은 것(`advanceUp`) */
     const advanceSpentOf = h => (h?.advanceSkill ? 1 : 0) + (h?.advanceUp ?? 0);
@@ -1753,7 +1758,7 @@ export function createGameSystem(deps) {
         if (branchId !== null && advanceById[branchId]?.cls !== h.cls) return 'class';
         if (h.advance) return 'done';
         if (advancingOf(state, uid)) return 'working';
-        if (!openAll() && h.level < B.advance_unlock_level) return 'level';   // 관리자 모드는 레벨 문턱을 안 본다(개발 장치)
+        if (h.level < B.advance_unlock_level) return 'level';   // 관리자 모드도 본다 (2026-10-14 사용자 「30레벨이 안됬는데 전직이 되는데?」 · 스킬북 문턱과 같다)
         const busy = heroBusy(state, uid);
         if (busy === 'run') return 'running';
         if (busy === 'search') return 'searching';
@@ -2308,9 +2313,14 @@ export function createGameSystem(deps) {
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
             contrib: going.map(uid => ({ uid, dealt: 0, taken: 0, kills: 0 })),
         };
-        // 목록의 맨 앞에 넣고 상한만큼만 남긴다 — 오래된 런부터 밀려난다 (v21)
+        // 목록의 맨 앞에 넣고 **그 부대의** 상한만큼만 남긴다 — 그 부대의 오래된 런부터 밀려난다 (v21 · 부대마다 2026-10-14 · ADR-0622).
+        //   다른 부대의 런은 안 밀어낸다 — 짧은 런을 도는 부대가 긴 런을 도는 부대의 기록을 지우지 않게 · `preset` 이 없는 옛 리포트는 1부대
         state.reports.unshift(report);
-        if (state.reports.length > B.report_keep) state.reports.length = B.report_keep;
+        let mine = 0;
+        for (let i = 0; i < state.reports.length; i++) {
+            if ((state.reports[i].preset ?? 1) !== no) continue;
+            if (++mine > B.report_keep) state.reports.splice(i--, 1);
+        }
         // 부대의 자리에만 쓴다 — 다른 부대의 칸은 그대로다. 반복(장소 안 순환) 플래그는 **그 부대가 같은 장소를 돌던 중**이었을 때만 이어받는다
         //   (v38 · 다부대 · v39 — ~~같은 스테이지~~ → 같은 장소: 순환이 칸을 옮겨도 안 꺼진다) · **출발하면 이어 가는 중이다**(`auto` — 철수 · 끊기가 끈다 · v39)
         const prev = runAt(state, no);
@@ -2422,21 +2432,23 @@ export function createGameSystem(deps) {
             // 도감 레벨의 출처 — 이긴 라운드의 처치 × 그 런 단의 도감 경험치 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239)
             const cxPer = codexExpOf(run.difficulty ?? BASE_DIFF);
             for (const [id, n] of Object.entries(s.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * cxPer;
-            const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(버린 것은 안 든다 · R153)
-            // 드롭은 **나간 부대의 인벤토리**로 — 차면 그 부대의 몫만 버린다 (v40 · ADR-0521)
+            const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(알아서 분해로 녹은 것은 든다 · 넘쳐 분해된 것은 안 든다 — 칸에 못 들어왔다 · R153 · 2026-10-14)
+            // 드롭은 **나간 부대의 인벤토리**로 — 차면 그 부대의 몫만 분해된다 (v40 · ADR-0521 · 2026-10-14 ADR-0625)
             const bag = bagOf(state, run.preset) ?? state.bags[0];
             for (const it of s.drops) {
                 // 알아서 분해 [2026-09-21 · R125 · item_design §6-5] — **가방 참 검사보다 먼저** 선을 본다: 걸린 것은 칸을 안 먹고 버린 수에도 안 든다.
                 //   「그 런이 준 것」이라 uid 를 받아 리포트 `drops` 에 남긴 뒤 곧바로 지운다 — 화면은 흐린 빈 칸으로 그린다(SCREEN_DESIGN §4-3) · rng 0
-                if (autoSalvageHits(autoRuleOf(state), it)) {
+                //   **인벤토리가 차 있어도 같은 길이다** [2026-10-14 사용자 지시 「넘쳐서 못획득한 장비는 분해한 아이템을 얻도록」 · GAME_DESIGN §9 · item_design §6-5] —
+                //   넘친 드롭은 버리지 않고 가루로 받는다. 그 수는 `discarded`(이름은 그대로 — 넘쳐 분해한 수 · 알아서 분해에 걸린 것은 안 센다) · rng 0
+                const auto = autoSalvageHits(autoRuleOf(state), it);
+                if (auto || bag.length >= capOf(state, 'bag')) {
                     const gone = addItem(state, it);
                     R.drops.push(gone.uid);
-                    gained.push(gone);
+                    if (auto) gained.push(gone); else R.discarded++;
                     state.resources.dust += I.salvageDust(gone);
                     delete state.items[gone.uid];
                     continue;
                 }
-                if (bag.length >= capOf(state, 'bag')) { R.discarded++; continue; }
                 const added = addItem(state, it);
                 bag.push(added.uid);
                 R.drops.push(added.uid);
@@ -2485,6 +2497,7 @@ export function createGameSystem(deps) {
         if (s.ended) {
             R.won = res.won;
             R.reason = res.reason;
+            if (res.fall) R.fall = clone(res.fall);   // 진 런 · 시간 초과의 사실 — 리포트 「왜 졌나」 (SCREEN_DESIGN §4-3 · ADR-0623)
             // 깬 기록은 **그 런의 단**에 — 첫 단 = `progress.cleared` · 나머지 = `progress.clearedIn[단]` (2026-10-10 · R236)
             if (res.won) markCleared(state, run.difficulty ?? BASE_DIFF, run.stageId);
             // 같이 깬 칸 수 — **칸을 이길 때마다 +1**(나간 인원 그대로 · 처음 깬 칸이든 다시 깬 칸이든) · 진 칸 · 철수 · 끊김은 안 센다 [2026-09-29 사용자 지시 · tactic_card_design §5-8]

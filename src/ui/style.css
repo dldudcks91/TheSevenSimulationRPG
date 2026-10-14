@@ -1295,6 +1295,9 @@ html, body { height: 100%; overflow: hidden; }
    **두 열의 높이는 박스가 정한다** (ADR-0097) — 목록은 `contain: size` 라 격자 행 높이에 안 들어가고, 받은 높이를 채운 뒤
    넘치는 줄은 안에서 스크롤한다. 줄은 [balance.csv:report_keep] 까지 쌓이므로 목록이 높이를 정하면 런이 쌓일수록 화면이 늘어난다 */
 .rep-runs { display: flex; flex-direction: column; }
+/* 부대 탭 — 목록 위 · 고른 부대의 런만 선다 (SCREEN_DESIGN §4-3 · ADR-0622) */
+.rep-runs .rep-party { margin-bottom: 8px; }
+.rep-empty { padding: 6px 2px; font-size: var(--fs-sm); }
 .rep-list {
     display: flex; flex-direction: column; gap: 4px;
     flex: 1 1 0; min-height: 0; contain: size;
@@ -1348,7 +1351,7 @@ html, body { height: 100%; overflow: hidden; }
    「가한」·「받은」은 **같은 폭 · 같은 모양**이고, 막대는 각자 **자기 칸의 최대**를 기준으로 그 칸 배경에 깔린다 */
 .rep-ct { font-size: var(--fs-sm); margin-bottom: 4px; }
 .rep-ct .ct-row {
-    display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(150px, 2fr) minmax(150px, 2fr) minmax(56px, .6fr);
+    display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(130px, 1.8fr) minmax(130px, 1.8fr) minmax(56px, .6fr) minmax(0, 1.5fr);
     gap: 10px; align-items: center; border-bottom: 1px solid var(--border-dark);
 }
 .rep-ct .ct-row.head { font-size: var(--fs-xs); color: var(--text-muted); letter-spacing: 1px; padding-bottom: 5px; }
@@ -1377,6 +1380,13 @@ html, body { height: 100%; overflow: hidden; }
 .rep-ct .v { color: var(--text-secondary); white-space: nowrap; text-align: right; padding: 5px 7px; }
 /* 합계 — 줄이 아니라 기준선이라 테두리를 지우고 이름만 흐리게 */
 .rep-ct .ct-row.total { border-bottom: none; }
+/* 쓰러짐 칸 — `시각 ← 몬스터 몫%` · 왼쪽 정렬 · 줄 높이는 초상이 정해 두 줄까지 든다 (SCREEN_DESIGN §4-3 · ADR-0623) */
+.rep-ct .f { font-size: var(--fs-xs); color: var(--text-secondary); padding: 5px 7px; line-height: 1.35; }
+.rep-ct .ct-row.head span:nth-child(5) { text-align: left; }
+/* 남은 적 줄 — 기여 표 아래 · 모든 런이 자리를 잡는다 (ADR-0623) */
+.rep-foes { display: flex; align-items: baseline; gap: 10px; padding: 10px 0 2px; font-size: var(--fs-sm); }
+.rep-foes > span { flex: none; font-size: var(--fs-xs); color: var(--text-muted); }
+.rep-foes > b { font-weight: normal; color: var(--text-secondary); }
 .rep-ct .ct-row.total .n > b { color: var(--text-muted); }
 /* 가방을 떠난 드롭 — **있었다는 사실만** 남긴다. 분해했으면 정의가 없어 빈 칸이고, 착용 중이면 그림째 흐리다 */
 .inv-cell.gone { opacity: .38; cursor: default; }
@@ -4336,6 +4346,14 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .tv-send > .tv-send-ph { visibility: hidden; }   /* 완료 — 버튼 줄의 자리만 지킨다 */
 .tv-send-face { grid-area: f; aspect-ratio: 1; overflow: hidden; background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-top-width: 2px; }
 .tv-send-face.empty { background: none; border: 1px dashed var(--border-secondary); }
+/* 수색 완료 — 얼굴 칸이 「+」 버튼이 된다 · 누르면 수색 칸이 결과 카드(ADR-0627). **실선**이라 점선 빈 칸(「아직 안 골랐다」)과 갈린다 ·
+   + 는 초록(「수색」 띠 · 완료 줄과 같은 색) · 카드가 선 동안 `.on` = 결과 얼굴의 눌린 표시와 같은 안쪽 선 */
+.tv-send-face.plus {
+    position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0; cursor: pointer;
+    border: 1px solid var(--border-secondary); color: var(--color-success); font-size: calc(var(--tv-face) * .5); font-weight: 300; line-height: 1;
+}
+.tv-send-face.plus:hover { border-color: var(--border-highlight); background: var(--surface-6); }
+.tv-send-face.plus.on::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--border-highlight); pointer-events: none; }
 .tv-send-face .hero-face { width: 100%; height: 100%; border: 0; background: none; }
 .tv-send-info { grid-area: i; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
 .tv-send-info .n { font-size: var(--fs-sm); overflow-wrap: anywhere; }
@@ -4361,6 +4379,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     font-size: var(--fs-xs); text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 .tv-join-slot.search .tv-join-left { color: var(--color-success); }
+/* 수색 칸이 결과 카드를 든 동안 — 결과 얼굴이 눌린 채다(hover 와 같은 안쪽 선 · 두께로 갈린다) (ADR-0624) */
+.tv-join-slot.on::after, .tv-join-slot.on:hover::after { content: '';position: absolute; inset: 0; border: 2px solid var(--border-highlight); pointer-events: none; }
 /* 수색 결과가 처음 보일 때 한 번 스며 나온다 — 길이는 `app.js:JOIN_FRESH_MS` 와 같다(다시 그리면 흐른 만큼 당겨 이어 간다) */
 .tv-join-slot.fresh { animation: tv-fresh .9s ease-out both; }
 @keyframes tv-fresh { from { opacity: 0; transform: scale(.86); filter: brightness(1.8); } to { opacity: 1; transform: none; filter: none; } }
@@ -4393,8 +4413,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .tv-search-spec { font-size: var(--fs-sm); }
 .tv-search-who { font-size: var(--fs-md); font-weight: 600; }
 .tv-search-odds { font-size: var(--fs-xs); }
-/* 수색 결과 창의 카드 — 명단 카드와 **같은 규격** · 버튼 둘이 [고용] 자리에 전폭으로 선다 (ADR-0593 — 옛 결과 카드가 창으로 왔다) */
-.tv-search-res .b-take, .tv-search-res .b-drop { width: 100%; margin-top: 7px; }
+/* 수색 결과 카드 — 수색 칸 자리에 선다 · 명단 카드와 **같은 규격** · 버튼 둘이 [고용] 자리에 **한 줄로 나란히** —
+   명단 카드의 [고용] 한 줄과 높이가 같아 영입 후보 패널이 안 흔들린다(글이 길면 줄을 안 바꾸고 말줄임) (ADR-0624) */
+.tv-res-btns { display: flex; gap: 6px; margin-top: 7px; }
+.tv-res-btns > .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* 이야기 줄 — 막마다 하나씩 열린다 (ADR-0062). 목록 기호를 안 쓴다: 항목이 아니라 문장이라
    점을 찍으면 「설정값 목록」으로 읽힌다. 새 줄이 아래에 쌓이므로 **왼쪽 선**이 하나로 묶는다 */
 .tv-story {
@@ -5076,6 +5098,96 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .fg-up-cost img { width: 22px; height: 22px; object-fit: contain; }
 .fg-up-cost b { font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
 .fg-up-cost.no b { color: var(--color-error); }
+/* 확률 칩 — 비용 칩 앞 · 같은 칩 모양 (R253 · ADR-0626) */
+.fg-up-chance { display: inline-flex; align-items: center; padding: 6px 12px; font-size: var(--fs-md); font-variant-numeric: tabular-nums;
+    color: var(--text-secondary); background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 2px; }
+/* 강화 연출 — 진열 칸 위 무대 (§8-2 · ADR-0626). 결과는 이미 저장됐고 여기는 재생이다. 박자는 app.js(`FG_*`)가 변수로 준다 —
+   `--fg-e` = 흐른 시간이라 모든 지연에서 빼면 다시 그려져도 이어서 돈다. 무대 판 200×250 안의 자리는 그림의 생김새에 맞췄다:
+   모루 윗면(그림 13% 높이 · 33~93% 폭) 가운데에 아이템이 앉고, 망치 머리(그림 15% 폭 · 아래 끝 73%)가 그 위에 닿게 놓아 손잡이 끝(94% · 53%)을 축으로 돌린다 */
+.fg-up-show { position: relative; }
+.fg-up-show.anim > :not(.fg-anim) { visibility: hidden; }   /* 재생 중엔 무대만 — 이름 · 메타는 끝나면 새 단계로 돌아온다 */
+.fg-up.anim { cursor: pointer; }                              /* 누르면 결과로 건너뛴다 */
+.fg-anim { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: radial-gradient(ellipse 70% 40% at 46% 78%, color-mix(in srgb, var(--fx-fire) 22%, transparent), transparent 70%);
+    --d0: calc(0ms - var(--fg-e));                                                  /* 모루 · 그림이 들어오는 시작 */
+    --d-hit: calc(var(--fg-in) - var(--fg-e));                                      /* 첫 망치 */
+    --d-last: calc(var(--fg-in) + var(--fg-hit) * (var(--fg-hits) - 1) - var(--fg-e)); /* 마지막 망치 */
+    --d-res: calc(var(--d-last) + var(--fg-hit) * .78); }                           /* 마지막 망치가 닿는 순간 = 결과 */
+.fg-rig { position: relative; flex: none; width: 200px; height: 250px; animation: fg-shake var(--fg-hit) linear var(--d-hit) var(--fg-hits); }
+.fg-rig > * { position: absolute; }
+.fg-anvil { left: 4px; top: 114px; width: 136px; height: 136px; animation: fg-rise var(--fg-in) ease-out var(--d0) both; }
+.fg-anim-item { left: 61px; top: 77px; width: 58px; height: 58px; display: flex; align-items: flex-end; justify-content: center; font-size: 40px;
+    animation: fg-drop var(--fg-in) ease-in var(--d0) both; }
+.fg-anim-item img { width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 100%;
+    animation: fg-squash var(--fg-hit) linear var(--d-hit) var(--fg-hits) both; }
+.fg-anim.win .fg-anim-item img { animation: fg-squash var(--fg-hit) linear var(--d-hit) var(--fg-hits) both, fg-glow 700ms ease-out var(--d-res) both; }
+.fg-anim.lose .fg-anim-item img { animation: fg-squash var(--fg-hit) linear var(--d-hit) var(--fg-hits) both, fg-dim 600ms ease-out var(--d-res) both; }
+.fg-hammer { left: 74px; top: 3px; width: 104px; height: 104px; transform-origin: 93.8% 53.2%;
+    animation: fg-fade var(--fg-in) ease-out var(--d0) both, fg-swing var(--fg-hit) linear var(--d-hit) var(--fg-hits) both; }
+/* 성공 — 마지막 망치가 닿은 뒤 물러나 사라진다(`+n` 을 가리지 않게) */
+.fg-anim.win .fg-hammer { animation: fg-fade var(--fg-in) ease-out var(--d0) both, fg-swing var(--fg-hit) linear var(--d-hit) var(--fg-hits) both,
+    fg-out 300ms ease-in calc(var(--d-res) + 150ms) forwards; }
+/* 실패 — 앞의 망치는 같고 마지막 한 번이 닿은 뒤 튕겨 나간다(늦게 적은 애니메이션이 이긴다 · 지연 전엔 안 끼어든다 — `forwards`) */
+.fg-anim.lose .fg-hammer { animation: fg-fade var(--fg-in) ease-out var(--d0) both,
+    fg-swing var(--fg-hit) linear var(--d-hit) calc(var(--fg-hits) - 1) both,
+    fg-swing-fail calc(var(--fg-hit) * 1.6) linear var(--d-last) 1 forwards; }
+/* 불꽃 — 망치가 닿을 때마다(한 박의 78%) 작은 불똥 여섯 */
+.fg-spark { left: 90px; top: 78px; width: 0; height: 0; animation: fg-spark var(--fg-hit) linear var(--d-hit) var(--fg-hits) both; }
+.fg-spark::before { content: ''; position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--fx-fire-core);
+    box-shadow: 16px -12px 0 1px var(--color-warning), -18px -9px 0 var(--fx-fire-core), 24px 3px 0 var(--fx-fire), -12px -22px 0 1px var(--color-warning),
+        6px -24px 0 var(--fx-fire-core), -26px 1px 0 var(--fx-fire), 0 0 14px 6px color-mix(in srgb, var(--color-warning) 60%, transparent); }
+/* 성공 — 큰 불꽃(빛 덩이 + 멀리 튀는 불똥) */
+.fg-burst { left: 90px; top: 84px; width: 180px; height: 180px; margin: -90px 0 0 -90px; border-radius: 50%;
+    background: radial-gradient(circle, var(--fx-fire-core) 0 10%, color-mix(in srgb, var(--color-warning) 80%, transparent) 22%,
+        color-mix(in srgb, var(--fx-fire) 45%, transparent) 42%, transparent 66%);
+    animation: fg-burst 650ms ease-out var(--d-res) both; }
+.fg-burst::after { content: ''; position: absolute; left: 87px; top: 87px; width: 6px; height: 6px; border-radius: 50%; background: var(--fx-fire-core);
+    box-shadow: 52px -40px 0 1px var(--color-warning), -58px -30px 0 1px var(--fx-fire-core), 70px 10px 0 var(--fx-fire), -36px -62px 0 1px var(--color-warning),
+        14px -72px 0 var(--fx-fire-core), -74px 6px 0 var(--fx-fire), 40px 46px 0 var(--color-warning), -46px 40px 0 var(--fx-fire-core); }
+/* 실패 — 회색 연기 두 덩이가 피어오른다 */
+.fg-smoke { left: 90px; top: 82px; width: 0; height: 0; animation: fg-smoke 1000ms ease-out var(--d-res) both; }
+.fg-smoke::before, .fg-smoke::after { content: ''; position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--fx-basic) 80%, transparent) 0 35%, transparent 70%); }
+.fg-smoke::before { left: -40px; top: -30px; width: 50px; height: 42px; }
+.fg-smoke::after { left: -6px; top: -38px; width: 54px; height: 46px; }
+/* 결과 표지 — 성공 `+n`(금빛) · 실패 표지(빨강). 마지막 망치가 닿는 순간 솟는다 */
+.fg-anim-res { left: 0; right: 0; top: 0; text-align: center; font-size: calc(var(--fs-lg) * 1.7); font-weight: bold; pointer-events: none;
+    color: var(--color-warning); text-shadow: 0 2px 0 var(--border-dark), 0 0 12px color-mix(in srgb, var(--color-warning) 55%, transparent);
+    animation: fg-res 800ms ease-out var(--d-res) both; }
+.fg-anim.lose .fg-anim-res { color: var(--color-error); text-shadow: 0 2px 0 var(--border-dark); }
+@keyframes fg-rise { from { transform: translateY(46px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fg-drop { 0% { transform: translateY(-70px); opacity: 0; } 70% { transform: translateY(3px); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes fg-fade { from { opacity: 0; } to { opacity: 1; } }
+/* 망치 한 박 — 든 채로 시작 → 조금 더 젖혔다가(55%) → 빠르게 내려쳐 닿고(78%) → 살짝 튀었다가 → 다시 든다 */
+@keyframes fg-swing {
+    0% { transform: rotate(32deg); animation-timing-function: ease-out; }
+    55% { transform: rotate(38deg); animation-timing-function: cubic-bezier(.6, 0, 1, 1); }
+    78% { transform: rotate(-2deg); animation-timing-function: ease-out; }
+    86% { transform: rotate(6deg); animation-timing-function: ease-in-out; }
+    100% { transform: rotate(32deg); }
+}
+/* 실패한 마지막 한 박 — 닿는 순간(48.75% = 위 한 박의 78%)까지는 같고, 그 뒤 위로 튕겨 돌며 사라진다 */
+@keyframes fg-swing-fail {
+    0% { transform: rotate(32deg); animation-timing-function: ease-out; }
+    34% { transform: rotate(38deg); animation-timing-function: cubic-bezier(.6, 0, 1, 1); }
+    48.75% { transform: rotate(-2deg); animation-timing-function: ease-out; }
+    64% { transform: translate(10px, -20px) rotate(52deg); opacity: 1; }
+    100% { transform: translate(38px, -64px) rotate(112deg); opacity: 0; }
+}
+@keyframes fg-spark { 0%, 76% { opacity: 0; transform: scale(.3); } 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.7); } }
+@keyframes fg-shake { 0%, 77% { transform: none; } 80% { transform: translate(-3px, 2px); } 84% { transform: translate(3px, -1px); } 88% { transform: translate(-2px, 1px); } 92%, 100% { transform: none; } }
+@keyframes fg-squash { 0%, 77% { transform: none; } 80% { transform: scale(1.14, .82); } 90%, 100% { transform: none; } }
+@keyframes fg-glow { 0% { filter: none; } 30% { filter: drop-shadow(0 0 10px var(--color-warning)) brightness(1.4); } 100% { filter: drop-shadow(0 0 6px var(--color-warning)); } }
+@keyframes fg-dim { to { filter: grayscale(.6) brightness(.7); } }
+@keyframes fg-burst { 0% { opacity: 0; transform: scale(.2); } 18% { opacity: 1; } 100% { opacity: 0; transform: scale(1.8); } }
+@keyframes fg-smoke { 0% { opacity: 0; transform: translateY(6px) scale(.5); } 25% { opacity: .9; } 100% { opacity: 0; transform: translateY(-18px) scale(1.35); } }
+@keyframes fg-out { to { opacity: 0; transform: translate(14px, -18px) rotate(40deg); } }
+@keyframes fg-res { 0% { opacity: 0; transform: translateY(14px) scale(.6); } 25% { opacity: 1; transform: translateY(0) scale(1.18); } 45% { transform: scale(1); } 100% { opacity: 1; transform: translateY(-10px); } }
+/* 움직임 줄이기 — 무대만 멈춰 선다(모루 · 그림 · 망치 · 결과 표지). 결과는 같은 시각에 끝난다 */
+@media (prefers-reduced-motion: reduce) {
+    .fg-anim *, .fg-anim *::before, .fg-anim *::after { animation: none !important; }
+    .fg-spark, .fg-burst, .fg-smoke { display: none; }
+}
 /* 제작 칸 (§8-2 · R96 · ADR-0230 · ADR-0263) — 위 고르개 줄(부위 · 물약 — 강화 필터와 같은 가로 줄) + 레벨 줄 + 종류 목록 · 또는 물약 */
 .fg-make { display: flex; flex-direction: column; gap: 6px; }
 .fg-make .segmented { flex-wrap: wrap; }

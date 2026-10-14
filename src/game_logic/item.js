@@ -51,6 +51,8 @@
  *   베이스(무기 피해 범위 · 방어구 implicit)는 `up` 하나로 **파생**한다 — 단계마다 반올림이 쌓이지 않고 드롭 시 굴린 개체값이 원본 그대로 남는다.
  *   ~~3강마다 접사 하나의 값을 올려 박는다~~ 는 R95 퇴역 — 강화는 접사를 **전혀** 안 건드리고 rng 를 안 쓴다.
  *   **목걸이 · 반지는 강화하지 않는다** — 베이스가 없다(`baseless`). 옛 세이브에 남은 `up` 은 그대로 두고, 파생할 것이 없어 무해하다.
+ *   **단계마다 성공 확률이 있다** [2026-10-14 사용자 · R253] — `upgradeChance` 가 `upgrade_chance.csv` 에서 답한다. 굴림은 여기가 아니라
+ *   `state.upgradeItem` 이 한다(제 스트림) — 실패하면 비용만 나가고 `up` 은 그대로다(파괴 · 하락 없음).
  *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
@@ -89,6 +91,8 @@ import { createFormula } from './formula.js';
  *   armorCommonOptions — [{slot, group, family, stat, scale, min, max, perIlvl?}] ← armor_common_option.csv — 방어구 공통옵션 후보 (2026-09-18).
  *                         `group` = `all` 또는 그 부위의 갈래 id · **행 순서가 결정론 계약**
  *   naming       — game_logic/naming.js 의 조립기 — `composeName(prefixSin, base, suffixSin|null, words)` · `wordCount(sin)`
+ *   upgradeChances — [{step, chance}] ← upgrade_chance.csv — 강화 단계마다 성공 확률(비율) (2026-10-14 · R253).
+ *                    단계는 1 부터 이어지고 `0 < chance ≤ 1` — 어기면 생성 때 던진다
  */
 export function createItemSystem(data) {
     const B = data.balance;
@@ -773,6 +777,22 @@ export function createItemSystem(data) {
         return Math.round(B.equip_upgrade_gold_base * Math.pow(B.equip_upgrade_gold_growth, up));
     }
 
+    /** 강화 단계마다 성공 확률 — 인덱스 = 단계 − 1 (R253). 단계는 1 부터 이어지고 확률은 0 초과 1 이하 — 어기면 생성 때 던진다 */
+    const UP_CHANCE = (data.upgradeChances ?? []).map((r, i) => {
+        if (r.step !== i + 1) throw new Error(`upgrade_chance: ${i + 1}번째 줄의 step 이 ${r.step} — 단계는 1 부터 이어져야 한다`);
+        if (!(r.chance > 0 && r.chance <= 1)) throw new Error(`upgrade_chance: 단계 ${r.step} 의 chance ${r.chance} — 0 초과 1 이하여야 한다`);
+        return r.chance;
+    });
+
+    /** 다음 한 단계의 성공 확률(비율) [2026-10-14 · R253]. `upgradeCost` 가 null 이면(상한 · 강화 대상 아님) null · `max` 도 같다.
+     *  표에 그 단계가 없으면 **던진다** — 조용히 막으면 강화가 이유 없이 잠긴다(표가 상한을 덮는지는 단정이 본다) */
+    function upgradeChance(item, max = B.equip_upgrade_max) {
+        if (upgradeCost(item, max) == null) return null;
+        const step = (item.up ?? 0) + 1;
+        if (UP_CHANCE[step - 1] == null) throw new Error(`upgrade_chance: 단계 ${step} 줄이 없다`);
+        return UP_CHANCE[step - 1];
+    }
+
     /**
      * 강화 1단계 — **in-place**. 상한 · 부위 검사는 호출자(state.js)가 한다.
      * **rng 를 안 쓰고 접사를 건드리지 않는다** — 베이스는 `up` 에서 파생하므로 올릴 것이 `up` 하나뿐이다.
@@ -794,5 +814,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
 }

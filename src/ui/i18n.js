@@ -286,7 +286,7 @@ const STRINGS = {
     'rep.reason.closed': { ko: '게임이 꺼져 끊겼다', en: 'Cut off — the game was closed' },
 
     'rep.roundsCleared': { ko: '{n} / {total}', en: '{n} / {total}' },
-    'rep.discarded': { ko: '가방이 가득 차 {n}개를 버렸다', en: '{n} dropped — bag was full' },
+    'rep.discarded': { ko: '가방이 가득 차 {n}개를 분해했다', en: '{n} salvaged — bag was full' },   // 넘친 드롭은 가루가 된다 (ADR-0625 · 2026-10-14)
     /* 도감 카드 줄 셋(rep.cards · rep.cardsNone · rep.cardLevelUp)은 2026-09-21 삭제 — 도감 카드를 걷었다 (monster_design §8 · SCREEN_DESIGN §4-3) */
     /* 빗나감 — 레벨 · 명중 부족의 신호 (battle_design §9-8 · 마법 무기는 안 빗나간다 — R219). 파티 기준 {맞지 않은 타격}/{총 타격} */
     'rep.miss': { ko: '빗나감', en: 'Misses' },
@@ -699,6 +699,10 @@ const STRINGS = {
     // 강화 진열의 메타 — 누가 끼고 있나 · 안 끼었으면 있는 곳(`ch.bag.inv` · `ch.bag.stash`) (ADR-0604 · ~~`fg.worn` 착용 중 · `fg.bag` 가방~~)
     'fg.wornBy': { ko: '{name} 착용', en: 'Worn by {name}' },
     'fg.stage': { ko: '강화 단계', en: 'Upgrade level' },   // 강화 작업 칸의 눈금 머리 (ADR-0604)
+    // 강화 성공 확률 · 실패 [2026-10-14 · R253 · ADR-0626] — 확률 칩(비용 칩 앞) · 실패 플래시 · 연출의 실패 표지
+    'fg.chance': { ko: '성공 {p}%', en: '{p}% success' },
+    'fg.upFail': { ko: '강화 실패 · +{n} 그대로 · {g}G', en: 'Upgrade failed · still +{n} · {g}G' },
+    'fg.failMark': { ko: '실패', en: 'Failed' },
     'fg.pick': { ko: '장비를 고른다', en: 'Pick an item' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade' },
     // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
@@ -849,15 +853,23 @@ const STRINGS = {
         ko: '기다릴 것이 없다 — <b>런이 끝나는 순간</b> 전투불능도 깎인 HP도 전원 무료로 회복된다. 다음 런에는 전원이 다시 나간다',
         en: 'Nothing to wait for — <b>the moment the run ends</b> both downed heroes and lost HP are restored, free. Everyone goes out again on the next run',
     },
-    'rep.drops.h': { ko: '획득 장비', en: 'Loot' },
+    'rep.drops.h': { ko: '획득 아이템', en: 'Loot' },   // 책 · 재료도 이 격자에 선다 (ADR-0625)
     'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
-    'rep.drops.none': { ko: '떨어진 장비 없음', en: 'No loot' },
+    'rep.drops.none': { ko: '떨어진 아이템 없음', en: 'No loot' },
     'rep.book': { ko: '책', en: 'Book' },   // 획득 격자의 스킬북 칸 배지 (R179 · ADR-0420)
     'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
     'rep.list.h': { ko: '원정 기록', en: 'Runs' },
     'rep.list.sub': { ko: '{n}판', en: '{n} runs' },
+    'rep.list.empty': { ko: '기록 없음', en: 'No runs' },   // 런이 없는 부대 탭 (SCREEN_DESIGN §4-3 · ADR-0622)
+    // 진 런의 「왜 졌나」 — 기여 표 쓰러짐 칸 · 그 아래 남은 적 줄 (SCREEN_DESIGN §4-3 · ADR-0623). 판정 문구는 없다 — 사실만
+    'rep.fall.h': { ko: '쓰러짐', en: 'Fell' },
+    'rep.fall.cell': { ko: '{t} ← {who} {p}%', en: '{t} ← {who} {p}%' },
+    'rep.foes': { ko: '남은 적', en: 'Enemies left' },
+    'rep.foes.one': { ko: '{name} {p}%', en: '{name} {p}%' },
+    'rep.foes.many': { ko: '{name} {p}% ×{n}', en: '{name} {p}% ×{n}' },
+    'rep.gap': { ko: '레벨 차 {n} → 명중 −{p}%', en: 'Level gap {n} → Hit −{p}%' },
     'rep.ago.now': { ko: '방금', en: 'just now' },
     'rep.ago.m': { ko: '{n}분 전', en: '{n}m ago' },
     'rep.ago.h': { ko: '{n}시간 전', en: '{n}h ago' },

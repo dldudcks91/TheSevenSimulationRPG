@@ -189,11 +189,14 @@ export function createFormula(balance) {
      * `bonus` = 공격자의 **명중률**(비율 — 궁수 T1-3 · 물리 무기 옵션) · `down` = 공격자에게 걸린 **명중 감소**(비율 — 걸린 것 중 가장 센 하나를 넘긴다).
      *   없으면 0 이다. 마법 무기를 든 공격자는 이 함수를 안 지난다(`strike` 의 `sureHit` — 항상 맞는다)
      */
-    const hitChance = (attackerLevel, defenderLevel, bonus = 0, down = 0) => {
+    /** 레벨 계수 — 공격자가 모자란 레벨만큼 적중을 깎는다 · 하한 `hit_level_mult_min` · 오버레벨은 1. `hitChance` 의 곱 하나이고
+     *  리포트의 「레벨 차 → 명중」이 같은 식을 부른다 [2026-10-14 떼어 냄 · ADR-0623 — 값은 그대로] */
+    const hitLevelMult = (attackerLevel, defenderLevel) => {
         const lack = Math.max(0, (defenderLevel ?? 1) - (attackerLevel ?? 1));
-        const lvMult = Math.max(B.hit_level_mult_min, 1 - lack * B.hit_per_level_deficit_pct);
-        return clamp(B.hit_base_pct * (1 + (bonus || 0)) * (1 - (down || 0)) * lvMult, B.hit_min_pct, 1);
+        return Math.max(B.hit_level_mult_min, 1 - lack * B.hit_per_level_deficit_pct);
     };
+    const hitChance = (attackerLevel, defenderLevel, bonus = 0, down = 0) =>
+        clamp(B.hit_base_pct * (1 + (bonus || 0)) * (1 - (down || 0)) * hitLevelMult(attackerLevel, defenderLevel), B.hit_min_pct, 1);
 
     /**
      * 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — `(1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot)`.
@@ -278,6 +281,6 @@ export function createFormula(balance) {
 
     return {
         roundPct, pctOption, growthMult, upgradeMult, weaponDamage, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
-        hitChance, statCoef, strike, indirect, leech, effectiveCd, statBetter,
+        hitChance, hitLevelMult, statCoef, strike, indirect, leech, effectiveCd, statBetter,
     };
 }

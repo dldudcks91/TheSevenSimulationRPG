@@ -44,6 +44,7 @@ GAME_DIRS = [
     "explore",
     "currency",
     "gamble",
+    "forge",
 ]
 
 

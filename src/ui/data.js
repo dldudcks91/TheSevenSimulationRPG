@@ -104,6 +104,7 @@ export const D = {
     slotCoinRows: [],         // slot_coin.csv — 홀드 앤 스핀 코인 값 · 잭팟 4단(on_fill = 판이 다 찼을 때)
     slotLineRows: [],         // slot_line.csv — 라인(릴마다 행 번호)
     slotStakeRows: [],        // slot_stake.csv — 판돈 단계 배수
+    upgradeChanceRows: [],    // upgrade_chance.csv — 강화 단계마다 성공 확률 [{step, chance}] (2026-10-14 · R253)
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
@@ -125,7 +126,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -143,7 +144,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -367,6 +368,8 @@ export async function loadData(base = './data/') {
     D.slotCoinRows = slotCoinRow;
     D.slotLineRows = slotLineRow;
     D.slotStakeRows = slotStakeRow;
+    // 강화 성공 확률 — 단계마다 한 줄 (2026-10-14 · R253 · item_design §7-2). 원시 행 그대로 — 검증은 item.js 가 생성 때 한다
+    D.upgradeChanceRows = upgradeChanceRow;
     // 탐험 지점 — 장 × 지점마다 이름 · 두 줄 이야기 (2026-10-09 · ADR-0563). 표시 문자열뿐이라 game_logic 에 안 넘긴다 — 빈 칸 · 줄 수는 단정이 잡는다
     //   이야기의 줄바꿈은 셀 안의 `\n` 두 글자다(스테이지 이야기와 같은 규약 — `storyLines`)
     D.exploreSpots = Object.fromEntries(exploreSpotRow.map(r => [`${r.chapter}:${r.spot}`, {
@@ -565,6 +568,7 @@ export function buildSystems(d, dev = {}) {
         balance: d.balance, slots: d.slots.map(s => s.id), sins, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
         itemBases: d.itemBases, weaponBases: d.weaponBases,
         naming,                                     // 이름 조립기 — 죄종 단어 표까지 든다 (2026-09-19 · ~~composeName 하나~~)
+        upgradeChances: d.upgradeChanceRows ?? [],  // 강화 단계마다 성공 확률 (2026-10-14 · R253)
         weaponSinOptions: d.weaponSinOptions ?? [],   // 무기 죄종 계열표 (R78 · 계열표 2026-10-05 R206 — ~~통합옵션 표~~ 퇴역)
         // 발동 옵션의 스킬 풀 재료 — 직업 스킬 전부 · 풀 규칙(1티어 공격 · 버프 · 저주)은 item.js 가 든다 (2026-10-05 · R206 · INTERFACE §2-5) · 행 순서가 결정론 계약
         procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target, armorPool: sk.armorPool })),
