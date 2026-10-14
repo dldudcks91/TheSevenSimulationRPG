@@ -13,6 +13,7 @@
  *
  * **Alt 상태도 여기 든다** (2026-09-10 · SCREEN_DESIGN §2 · ADR-0089 · ADR-0114) — 누르는 동안만 켜지고,
  * 떠 있는 **`data-alt` 를 단 것**(스킬 카드 · 유닛 카드 · 아이템 카드의 스킬 칸 — ADR-0139)만 그 자리에서 다시 그린다. 스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 안 본다.
+ * **Shift 상태도 여기 든다** (2026-10-14 · SCREEN_DESIGN §2 · §6 · ADR-0617) — 같은 장치로 **`data-shift` 를 단 것**(아이템 카드 — 옵션 줄 범위)만 다시 그린다.
  *
  * **겹쳐 붙은 툴팁** — 관전 유닛 카드(영웅) 안에 스킬 칸이 들어 있다. 칸에서 나가 카드로 돌아올 때
  * `mouseenter` 는 다시 안 뜨므로(자식에서 부모로 돌아오는 건 진입이 아니다) 여기서 조상의 툴팁을 되살린다.
@@ -197,6 +198,7 @@ export function hideTip() {
     anchorNode = null;
     // 손가락이 켠 [세부]는 그 툴팁 한 장의 것이다 — 닫히면 꺼진다 (ADR-0374). 툴팁이 이미 닫히니 다시 그릴 것이 없다
     if (altByTouch) { altByTouch = false; altHeld = false; }
+    if (shiftByTouch) { shiftByTouch = false; shiftHeld = false; }
     touchOpen = false;
     hideEquipmentItemTip();
     $tip()?.classList.remove('show', 'interactive');
@@ -410,40 +412,80 @@ export const leadStats = () => LEAD_IDS.map(rowOf);
  * 방어 소재값 → 감쇠율 · 저항 → 현재 상한은 `formula` 가 낸다 — 같은 곡선을 두 번 구현하지 않는다 (battle_design §9-8).
  * @param rows `sheetPages()` 의 한 쪽 또는 `leadStats()`
  * @param c    computeCombat 모양 — 영웅 `game.heroCombat` · 몬스터 `round` 이벤트의 `sheet`. 없으면 전 행이 흐린 `—`
+ * @param base 견줄 시트 — 주면 표기가 바뀐 줄에 방향 클래스(`up` · `down` · `mixed`)가 붙는다. 캐릭터 탭 보관 칸 미리보기만 준다 (SCREEN_DESIGN §6 · ADR-0619)
  */
-export function sheetRowsHtml(rows, c) {
-    // 저항 행의 상한 = 기본 + 최대 저항 증가 + **그 원소의** 최대 저항 증가(투구 시기 칸 · `res_max_el` · 2026-09-18) — 곡선은 `formula.resCap` 하나다
-    const resCap = id => SYS.formula.resCap(c?.res_max_bonus ?? 0, c?.res_max_el?.[id.slice(4)] ?? 0);   // `res_fire` → `fire`
+export function sheetRowsHtml(rows, c, base = null) {
     return rows.map(s => {
-        if (s.fx) return fxRowHtml(s, c);
-        const v = c?.[s.id];
-        const has = v !== undefined;
-        const extra = RES_ROWS.includes(s.id) ? ` <span class="muted">${t('st.resCap', { cap: M.pctNum(resCap(s.id)) })}</span>`
-            : s.id === 'defense' && has ? ` <span class="muted">${t('st.mitigation', { p: Math.round(SYS.formula.mitigation(v) * 100) })}</span>` : '';
-        // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
-        //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
-        const shown = s.id === 'defense' && has ? Math.round(v) : v;
-        // 피해 감소 = **고정 / %** 한 줄 [2026-09-27 사용자 지시 · SCREEN_DESIGN §6] — 고정 피해 감소(`option_fx.drFlat` · 모든 감소 뒤에 뺀다)는 제 줄을 잃었다
-        const text = s.id === 'damage_reduction' && has ? `${c.option_fx?.drFlat ?? 0} / ${fmtCombat(s, v)}` : fmtCombat(s, shown);
-        // 속도 행 이름 — 마법 무기(평타 없음)를 든 유닛은 「캐스팅 속도」 [2026-10-03 · R202 · ADR-0492] — 값은 같은 주기다
-        const name = s.id === 'action_period' && c?.basic_attack === false ? t('sk.castSpeed') : L(s);
-        return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}${s.gap ? ' gap' : ''}" data-stat="${s.id}">
-            <span class="cs-n">${name}</span>
-            <span class="cs-v">${text}${extra}</span></div>`;
+        const [text, extra] = rowCells(s, c);
+        const has = s.fx ? !!c : c?.[s.id] !== undefined;
+        const mark = base && rowCells(s, base).join('|') !== [text, extra].join('|') ? ` ${DIR_CLS[rowDir(s, base, c)]}` : '';
+        return `<div class="cs-row${has ? '' : ' off'}${s.lead ? ' lead' : ''}${s.gap ? ' gap' : ''}${mark}" data-stat="${s.id}">
+            <span class="cs-n">${rowName(s, c)}</span>
+            <span class="cs-v">${text}${extra ? ` <span class="muted">${extra}</span>` : ''}</span></div>`;
     }).join('');
 }
 
-/** 옵션이 여는 축 한 줄 — 묶은 줄은 값이 있는 조각만 이름을 붙이고 전부 0이면 `—` · 세부 옵션이 없는 카드(`c` 없음)는 흐린 `—` (ADR-0291) */
-function fxRowHtml(s, c) {
+/** 저항 행의 상한 = 기본 + 최대 저항 증가 + **그 원소의** 최대 저항 증가(투구 시기 칸 · `res_max_el` · 2026-09-18) — 곡선은 `formula.resCap` 하나다 */
+const resCapOf = (c, id) => SYS.formula.resCap(c?.res_max_bonus ?? 0, c?.res_max_el?.[id.slice(4)] ?? 0);   // `res_fire` → `fire`
+
+/** 줄 이름 — 속도 행은 마법 무기(평타 없음)를 든 유닛이면 「캐스팅 속도」 [2026-10-03 · R202 · ADR-0492] — 값은 같은 주기다 */
+const rowName = (s, c) => (s.fx ? s.name() : s.id === 'action_period' && c?.basic_attack === false ? t('sk.castSpeed') : L(s));
+
+/**
+ * 한 줄의 표기 `[값, 덧붙임]` — 덧붙임 = 저항 상한 · 물리 방어 감쇠율(없으면 `''` · 흐린 글씨는 부르는 쪽이 싼다).
+ * 세부 옵션 줄(`sheetRowsHtml`)과 착용 델타(`sheetDeltaRows`)가 **같은 글자**를 쓴다 — 두 자리의 표기가 갈리면 안 된다 (2026-10-14 · ADR-0618)
+ */
+function rowCells(s, c) {
+    if (s.fx) return [fxText(s, c), ''];
+    const v = c?.[s.id];
+    const has = v !== undefined;
+    const extra = RES_ROWS.includes(s.id) ? t('st.resCap', { cap: M.pctNum(resCapOf(c, s.id)) })
+        : s.id === 'defense' && has ? t('st.mitigation', { p: Math.round(SYS.formula.mitigation(v) * 100) }) : '';
+    // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
+    //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
+    const shown = s.id === 'defense' && has ? Math.round(v) : v;
+    // 피해 감소 = **고정 / %** 한 줄 [2026-09-27 사용자 지시 · SCREEN_DESIGN §6] — 고정 피해 감소(`option_fx.drFlat` · 모든 감소 뒤에 뺀다)는 제 줄을 잃었다
+    return [s.id === 'damage_reduction' && has ? `${c.option_fx?.drFlat ?? 0} / ${fmtCombat(s, v)}` : fmtCombat(s, shown), extra];
+}
+
+/** 옵션이 여는 축 한 줄의 값 — 묶은 줄은 값이 있는 조각만 이름을 붙이고 전부 0이면 `—` · 세부 옵션이 없는 카드(`c` 없음)는 흐린 `—` (ADR-0291) */
+function fxText(s, c) {
     const parts = fxParts(s, c);
     const on = parts.filter(([, v]) => v);
-    const shown = !c ? '—'
+    return !c ? '—'
         : s.slash ? parts.map(([, v]) => fmtCombat(s, v)).join('/')
         : parts.length === 1 ? fmtCombat(s, parts[0][1])
         : on.length ? on.map(([n, v]) => t('st.fx.part', { n, v: fmtCombat(s, v) })).join(' · ') : '—';
-    return `<div class="cs-row${c ? '' : ' off'}${s.gap ? ' gap' : ''}" data-stat="${s.id}">
-            <span class="cs-n">${s.name()}</span>
-            <span class="cs-v">${shown}</span></div>`;
+}
+
+/** 줄을 이루는 값 — 방향을 묻는 단위다(착용 델타 · 미리보기). 묶은 줄은 조각마다 · 피해 감소는 고정 + % · 저항은 값 + 상한 */
+const rowVals = (s, c) => (s.fx ? fxParts(s, c).map(([, v]) => v)
+    : s.id === 'damage_reduction' ? [c?.option_fx?.drFlat ?? 0, c?.[s.id]]
+        : RES_ROWS.includes(s.id) ? [c?.[s.id], resCapOf(c, s.id)] : [c?.[s.id]]);
+/**
+ * 줄의 방향 — 값마다 `formula.statBetter` 를 묻고 모은다: 전부 같거나 좋아짐 → `1` · 전부 같거나 나빠짐 → `-1` · 섞임 → `0`.
+ * 좋고 나쁨은 로직이 답한다(공격 속도는 초라 줄어야 좋다) — 렌더러는 크기를 견주지 않는다 (ADR-0618)
+ */
+function rowDir(s, a, b) {
+    const x = rowVals(s, a), y = rowVals(s, b);
+    const d = x.map((v, i) => SYS.formula.statBetter(s.id, v, y[i]));
+    return d.every(v => v >= 0) && d.some(v => v > 0) ? 1 : d.every(v => v <= 0) && d.some(v => v < 0) ? -1 : 0;
+}
+/** 방향 → 줄 클래스 (style.css `.cs-row.up` · `.down` · `.mixed`) */
+const DIR_CLS = { 1: 'up', '-1': 'down', 0: 'mixed' };
+
+/**
+ * 착용 델타 — 세부 옵션 줄 가운데 **표기가 바뀌는 줄만** `[{id, name, from, to, dir}]` [2026-10-14 · SCREEN_DESIGN §6 「비교 툴팁 규격」 · ADR-0618].
+ * 줄 · 순서 · 값 꼴은 세부 옵션 1 · 2 그대로(`sheetPages` · `rowCells`) — 바뀌었나는 **찍힌 글자**로 가른다(표기가 같으면 바뀐 것이 아니다).
+ * 값이 같고 덧붙임만 바뀐 줄(최대 저항 증가가 올린 저항 상한)은 덧붙임을 `from → to` 로 낸다 · `dir` 은 `rowDir`
+ */
+export function sheetDeltaRows(before, after) {
+    return sheetPages().flat().map(s => {
+        const [ft, fe] = rowCells(s, before), [tt, te] = rowCells(s, after);
+        if (ft === tt && fe === te) return null;
+        const [from, to] = ft !== tt ? [ft, tt] : [fe, te];
+        return { id: s.id, name: rowName(s, after), from, to, dir: rowDir(s, before, after) };
+    }).filter(Boolean);
 }
 
 /**
@@ -970,6 +1012,31 @@ window.addEventListener('keyup', ev => { if (ev.key === 'Alt') { ev.preventDefau
 window.addEventListener('blur', () => setAlt(false));
 window.addEventListener('mousemove', ev => { lastMove = ev; }, { passive: true });
 
+/* ───────── Shift 범위 — 누르는 동안만 (SCREEN_DESIGN §2 · §6 「비교 툴팁 규격」 · ADR-0617) ─────────
+   Alt 와 같은 장치다 — 토글이 아니고 떠 있는 툴팁도 **즉시** 바뀐다. 바꾸는 것은 **`data-shift` 를 단 것**(아이템 카드 · 비교 묶음)뿐이고
+   제 인자를 쥔 `_rebuild` 로 같은 것을 새로 짓는다. 기본 동작은 막지 않는다(Shift 는 브라우저 메뉴로 포커스를 안 넘긴다) */
+let shiftHeld = false;
+/** 지금 Shift 를 누르고 있나 — 아이템 카드(`app.js:bindTip`)가 짓는 순간 읽는다 */
+export const isShiftHeld = () => shiftHeld;
+/** [범위]로 켠 Shift 인가 — 툴팁이 닫히면 끈다(`hideTip`) */
+let shiftByTouch = false;
+
+function setShift(on) {
+    if (shiftHeld === on) return;
+    shiftHeld = on;
+    const tip = $tip();
+    if (!tip?.classList.contains('show')) return;
+    const cards = tip.querySelectorAll('[data-shift]');
+    for (const c of cards) c.replaceWith(c._rebuild());
+    // 줄 끝 괄호로 카드가 넓어질 수 있다 — 넘치면 왼쪽 · 위로 옮긴다
+    if (cards.length && (anchorNode || lastMove)) moveTip(lastMove);
+    tip.querySelector('.tip-touch-range')?.classList.toggle('on', on);
+}
+
+window.addEventListener('keydown', ev => { if (ev.key === 'Shift') setShift(true); });
+window.addEventListener('keyup', ev => { if (ev.key === 'Shift') setShift(false); });
+window.addEventListener('blur', () => setShift(false));
+
 /* ───────── 손가락 — 길게 누르기 · 바깥 탭 · 버튼 줄 (SCREEN_DESIGN §2 「터치 조작」 · ADR-0374) ─────────
    **입력마다** 가른다 — 마지막 포인터가 손가락이면 손가락 방식이다. 기기(`pointer: coarse`)로 가르면 터치 노트북의 마우스가 죽는다.
    마우스 쪽 길(hover · Alt 키 · 우클릭)은 하나도 안 바뀐다 */
@@ -1037,11 +1104,17 @@ function addTouchBar(node, ev) {
     if (!tip) return;
     const acts = node._tipActions?.() ?? [];
     const hasAlt = !!tip.querySelector('[data-alt]');
-    if (!hasAlt && !acts.length) return;
+    const hasShift = !!tip.querySelector('[data-shift]');   // [범위] = Shift — 범위를 다는 줄이 있는 아이템 카드만 (ADR-0617)
+    if (!hasAlt && !hasShift && !acts.length) return;
     const bar = el('div', 'tip-touch');
     if (hasAlt) {
         const b = el('button', `btn tip-touch-alt${altHeld ? ' on' : ''}`, t('tip.touch.alt'));
         b.onclick = () => { const on = !altHeld; altByTouch = on; setAlt(on); };
+        bar.appendChild(b);
+    }
+    if (hasShift) {
+        const b = el('button', `btn tip-touch-range${shiftHeld ? ' on' : ''}`, t('tip.touch.range'));
+        b.onclick = () => { const on = !shiftHeld; shiftByTouch = on; setShift(on); };
         bar.appendChild(b);
     }
     for (const a of acts) {

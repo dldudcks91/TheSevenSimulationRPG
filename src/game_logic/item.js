@@ -725,6 +725,31 @@ export function createItemSystem(data) {
     }
 
     /**
+     * 옵션 줄 하나가 **굴릴 수 있었던 범위** `{min, max}` [신설 2026-10-14 · SCREEN_DESIGN §6 「비교 툴팁 규격」 Shift 범위 · ADR-0617 · INTERFACE §2-5].
+     * 그 줄의 표 행을 **굴림이 고른 것과 같은 표**에서 찾는다 — `stat` · `src`(죄종 id · `fixed` · `random`) · 부위 · 무기군(`appliesTo`) · 방어구 갈래.
+     * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 고정 옵션은 `pctOption`)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
+     * 행을 못 찾으면(표에서 빠진 옛 옵션 · `src` 가 없는 줄 · 옛 무기의 `random` 줄) `null`. 목걸이 `proc` 은 `affixes` 밖이라 안 든다
+     */
+    function optionRange(item, i) {
+        const a = item?.affixes?.[i];
+        if (!a) return null;
+        if (a.src === 'fixed') {
+            const lohi = a.stat === 'atk_pct' ? [B.weapon_fixed_atk_pct_min, B.weapon_fixed_atk_pct_max]
+                : a.stat === 'armor_def_pct' ? [B.armor_fixed_def_pct_min, B.armor_fixed_def_pct_max] : null;
+            return lohi ? { min: F.pctOption(lohi[0]), max: F.pctOption(lohi[1]) } : null;
+        }
+        const slot = item.slot, src = a.src;
+        const g = slot === 'weapon' ? WG[item.group] ?? null : null;
+        // 굴림이 읽은 표 — 무기 · 갑옷은 죄종 계열표(`familyOptions`) · 투구 · 장갑 · 신발은 죄종 칸 / 공통 · 목걸이 · 반지는 죄종 칸 / 공통 한 풀
+        const rows = slot === 'weapon' ? (g ? sinOpts.filter(r => r.sin === src && appliesTo(r, g)) : [])
+            : FAMILY_SLOTS.has(slot) ? armorSinOpts.filter(r => r.slot === slot && r.sin === src)
+                : isArmor(slot) ? (src === 'random' ? armorCommonRows(slot, item.group ?? null) : armorSinRows(slot, src))
+                    : baseless(slot) ? (src === 'random' ? accCommonOpts : accSinRows(slot, src)) : [];
+        const d = rows.find(r => r.stat === a.stat);
+        return d ? { min: valueOf(d, d.min, item.ilvl), max: valueOf(d, d.max, item.ilvl) } : null;
+    }
+
+    /**
      * 특정 스킬 +n 합 `{skillId: n}` [2026-10-08 · R225 · INTERFACE §2-5] — 낀 장비의 `skill_plus` 줄을 스킬별로 **더한다**(⚠ 여러 부위 더하기 — 제안).
      * `skill` 이 없는 줄은 건너뛴다 · 순수 · rng 0. 받는 쪽은 `skill.activesFor(hero, {skillPlus})`
      */
@@ -769,5 +794,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, skillPlusOf };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
 }

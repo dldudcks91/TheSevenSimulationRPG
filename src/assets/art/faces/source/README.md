@@ -71,7 +71,9 @@ Copy the attached human portraits' style exactly — same big heads, clean flat 
 
 ## 2-4 나가 정예 3×3 시트 [2026-10-13]
 
-`sheets/source_sheet_ch2_st4_naga_elite_3x3_a.png` ~ `_d.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 넷이다(초록 배경 · 격자선 a = x 670~691 · 1356~1376 · y 670~691 · 1365~1385 · b = x 676~689 · 1359~1372 · y 676~689 · 1364~1378 · c = x 671~687 · 1360~1376 · y 674~691 · 1357~1373 · d = x 674~688 · 1359~1373 · y 676~691 · 1362~1376). 일반 `2401`(오른쪽을 보는 판) · `2402` · `2403` 과 영웅 `warrior_3` 을 붙이고 아래 두 줄 + 이름만 적은 아홉 줄로 뽑았다 — **1행 전사 · 2행 주술사 · 3행 마법사**. 일반과 44px 에서 갈리도록 **머리 장식으로 실루엣을 바꾸게** 했다. **아직 배정 없음.**
+`sheets/source_sheet_ch2_st4_naga_elite_3x3_a.png` ~ `_d.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 넷이다(초록 배경 · 격자선 a = x 670~691 · 1356~1376 · y 670~691 · 1365~1385 · b = x 676~689 · 1359~1372 · y 676~689 · 1364~1378 · c = x 671~687 · 1360~1376 · y 674~691 · 1357~1373 · d = x 674~688 · 1359~1373 · y 676~691 · 1362~1376). 일반 `2401`(오른쪽을 보는 판) · `2402` · `2403` 과 영웅 `warrior_3` 을 붙이고 아래 두 줄 + 이름만 적은 아홉 줄로 뽑았다 — **1행 전사 · 2행 주술사 · 3행 마법사**. 일반과 44px 에서 갈리도록 **머리 장식으로 실루엣을 바꾸게** 했다.
+
+사용자 지시로 **d 3번 → `2401_elite`** · **d 6번 → `2402_elite`** · **d 9번 → `2403_elite`** 에 적용했다(`monster.csv:face_elite` 0 → 1 · 2026-10-14). `scripts/apply_ch2_st4_naga_elite_portraits.py` 가 칸을 키잉해 512² 로 줄이고 `gemini/monster/` 로 내보낸다. 일반과 같은 구도 · 같은 방향이라 뒤집기 · 정렬은 하지 않았다. **9번 칸 로브에 ✦ 워터마크가 걸려 있어 자르기 전에 걷는다** — ✦ 는 모든 2048 시트의 같은 자리(x · y 1760~1855)에 얹힌 흰 반투명(최대 불투명도 0.36)이라, 초록 위에 얹힌 시트 넷(`goblin_armor` · `goblin_scout` · `goblin_troop_2` · `ch2_st3_undead_2x2`)에서 불투명도를 재 `scripts/gemini_watermark_alpha.png`(96²)에 두고 `원본 = (보이는 값 − a·255) / (1 − a)` 로 되돌린다. 3배 확대로 흔적이 안 보인다. `chapters/ch2_st4.png` 는 일반 초상만 싣는 판이라 다시 찍어도 픽셀이 같아 그대로 뒀다.
 
 ```text
 Keep each monster's face, body, pose and framing exactly as it is.
@@ -81,6 +83,26 @@ Make each one an elite: a bigger, clearly different headpiece that changes the h
 ```text
 Keep the naga race look — fin crests and scaly skin — but redraw them in our hero's style. Eyes are solid black shapes.
 Warrior: bronze helmet. Shaman: a priest of the sea with a holy book. Mage: an ice orb.
+```
+
+## 3-1 사막 도마뱀 3×3 시트 [2026-10-14]
+
+`sheets/source_sheet_ch3_st1_desert_lizard_3x3_a.png` ~ `_d.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 넷이다(초록 배경 · 격자선 a = x 676~692 · 1355~1371 · y 676~692 · 1356~1371 · b = x · y 670~689 · 1358~1377 · c = x · y 674~688 · 1359~1373 · d = x 671~689 · 1358~1376 · y 674~691 · 1356~1373). 같은 종족(Lizardman) 초상이 없어 **파충류 얼굴 참조로 나가 `2402`**, 그림체로 직업이 맞는 영웅 `archer_1` · `priest_1` 을 붙이고 아래 세 줄 + 아홉 줄로 뽑았다 — **1행 약탈자(궁수) · 2행 주술사(사제) · 3행 섞음**. a · b 는 주둥이가 긴 도마뱀, c · d 는 주둥이가 짧아 나가 참조를 닮았다. 나가(Demon)와 종족이 달라 긴 주둥이로 가르기로 하고, 사용자 지시로 **b 2번 → `3101`** · **b 5번 → `3102`** 에 적용했다(`monster.csv:face` 0 → 1). `scripts/apply_ch3_st1_desert_lizard_portraits.py` 가 칸을 키잉해 512² 로 줄이고 `gemini/monster/` 로 내보낸다. 둘 다 이미 오른쪽을 봐 뒤집지 않았다. `chapters/ch3_st1.png` 를 다시 찍었다. ⚠ 시트마다 9번 칸 목 부근에 ✦ 워터마크가 있다(걷는 법은 위 2-4 나가 정예 절).
+
+```text
+Image 1 is a naga from our game — use it only for how a scaly reptile face looks in our style. Images 2-3 are our hero portraits, for style only; do not copy their faces or clothes.
+Desert lizardmen of a sand-buried golden ruin: lizard heads with long snouts and sand-colored scales, no fins. Eyes are solid black shapes.
+Top row raiders (archers with a bow), middle row shamans (desert priests carrying a holy cross), bottom row a mix of both.
+```
+
+## 3-1 사막 도마뱀 정예 3×3 시트 [2026-10-14]
+
+`sheets/source_sheet_ch3_st1_desert_lizard_elite_3x3_a.png` ~ `_d.png` 는 정예 Gem 에서 뽑은 2048×2048 **3×3 시트** 넷이다(초록 배경 · 격자선 a · b = x · y 676~687 · 1360~1371 · c = x 678~685 · 1362~1369 · y 678~686 · 1362~1370 · d = x 674~686 · 1361~1373 · y 675~686 · 1361~1373). 일반 `3101` · `3102` 와 영웅 `warrior_3` 을 붙이고 아래 세 줄 + 이름만 적은 아홉 줄로 뽑았다 — **1행 약탈자 · 2행 주술사 · 3행 약탈자 · 주술사 · 약탈자**. a 가 가장 화려하고(뿔 · 해골 · 사슬) b · d 가 일반에 가장 가깝다. 사용자 지시로 **c 2번 → `3101_elite`** · **c 5번 → `3102_elite`** 에 적용했다(`monster.csv:face_elite` 0 → 1). `scripts/apply_ch3_st1_desert_lizard_elite_portraits.py` 가 칸을 키잉해 512² 로 줄이고 `gemini/monster/` 로 내보낸다. 일반과 같은 구도 · 같은 방향이라 뒤집기 · 정렬은 하지 않았다. `chapters/ch3_st1.png` 는 일반 초상만 싣는 판이라 그대로다. ⚠ `3102_elite` 영대의 룬이 글자처럼 읽힌다(「글자 없음」 계약 위반 — `1103_elite` 의 R 과 같은 경우). ⚠ 시트마다 9번 칸 목 부근에 ✦ 워터마크가 있다.
+
+```text
+Image 1 is our Desert Lizardman Raider, image 2 our Desert Lizardman Shaman. Image 3 is our hero portrait, for style only.
+Keep each monster's face, body, pose and framing exactly as it is.
+Make each one an elite: a bigger, clearly different headpiece that changes the head silhouette, and more ornate gear (quiver, holy cross) — looted gold, bronze and bone, never bright green.
 ```
 
 ## 챕터 3~5 챕터 보스 [2026-10-10]
@@ -915,4 +937,4 @@ Gem 재발주 산출물(2048² · 불투명 **초록 `#00FF00` 배경**). 초록
 이 스타일의 굵고 어두운 외곽선(약 `#0B060C`)이 자동 누끼를 가능하게 한다 — 픽셀아트나 회화체면 같은 방법이 안 통한다.
 
 ---
-*마지막 업데이트: 2026-10-13*
+*마지막 업데이트: 2026-10-14*

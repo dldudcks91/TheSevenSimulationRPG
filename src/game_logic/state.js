@@ -661,6 +661,20 @@ export function createGameSystem(deps) {
         return w ? heroCombat(w.state, w.me) : heroCombat(state, h);
     }
 
+    /** 「이 물건을 끼면」의 임시 uid — 발급 uid(`i<n>`)와 겹치지 않는다 (`heroCombatWith`) */
+    const PROBE_UID = '__probe';
+    /**
+     * **「이 물건을 끼면」 — 가방에 없는 물건도** [신설 2026-10-14 · 착용 델타 · SCREEN_DESIGN §6 · ADR-0618 · INTERFACE §2-7].
+     * 그 개체가 `state.items` 에 있으면 `heroCombatIf` 그대로. 없으면(상점 상단 장비 — `uid` 가 없다) 사본의 `items` 에 임시 uid 로 넣고 같은 계산을 한다.
+     * 원본 · 세이브 무관 · rng 0. `canEquip`(요구 레벨)은 안 본다 — 못 끼는 물건의 「끼면」도 화면이 보인다
+     */
+    function heroCombatWith(state, h, item) {
+        if (!item) return heroCombat(state, h);
+        if (item.uid && state.items[item.uid] === item) return heroCombatIf(state, h, item.uid);
+        const items = { ...state.items, [PROBE_UID]: { ...item, uid: PROBE_UID } };
+        return heroCombatIf({ ...state, items }, h, PROBE_UID);
+    }
+
     /**
      * 「그 아이템을 끼면」의 사본 — `heroCombatIf` · `runTacticsIf` 가 같이 쓴다. 자리는 `equipTarget` 이 고르고, 다른 영웅이 끼고 있으면
      *   그 사본에서 뺀다(한 개체가 두 몸에 서지 않는다). 원본은 안 건드린다. 이미 끼고 있거나 아이템이 없으면 null
@@ -1841,6 +1855,30 @@ export function createGameSystem(deps) {
     function addBook(state, id) {
         state.books = state.books ?? {};
         state.books[id] = (state.books[id] ?? 0) + 1;
+    }
+    /* 책 정렬 [2026-10-14 · ADR-0620 · SCREEN_DESIGN §6] — 장비 정렬(`sortStorage`)과 같은 문법: 고른 기준 다음으로 남은 둘.
+       권수는 많은 것이 앞 · 직업은 `class.csv` 행 순서(전직 스킬은 제 직업) · 티어는 1 이 앞(티어가 없는 전직 스킬은 뒤) */
+    const cmpNum = (x, y) => (x > y) - (x < y);
+    const BOOK_CMP = {
+        count: (a, b) => b.n - a.n,
+        class: (a, b) => orderIn(H.classIds, a.cls) - orderIn(H.classIds, b.cls),
+        tier: (a, b) => cmpNum(a.tier ?? Infinity, b.tier ?? Infinity),
+    };
+    const BOOK_SORT_KEYS = { count: ['count', 'class', 'tier'], class: ['class', 'tier', 'count'], tier: ['tier', 'class', 'count'] };
+    /** 가진 책의 **키 순서**를 한 번 다시 세운다 — `bookState.books` 가 그 순서다(창고 스킬북 탭 · 도서관). 셋이 다 같으면 `skill.csv` 행 순서 · 권수 그대로 · rng 0 */
+    function sortBooks(state, key) {
+        const keys = BOOK_SORT_KEYS[key];
+        if (!keys) return { ok: false, err: 'invalid' };
+        const rows = (SK?.list ?? []).map(d => d.id);
+        const list = Object.entries(state.books ?? {}).map(([id, n]) => ({
+            id, n, cls: SK?.defs?.[id]?.classId ?? null, tier: SK?.defs?.[id]?.tier ?? null, row: orderIn(rows, id),
+        }));
+        list.sort((a, b) => {
+            for (const k of keys) { const d = BOOK_CMP[k](a, b); if (d) return d; }
+            return a.row - b.row;
+        });
+        state.books = Object.fromEntries(list.map(x => [x.id, x.n]));
+        return { ok: true };
     }
     /** 배우기의 책 밖 거절 — `learnBook` 과 `bookState.hero.err` 가 같은 판정을 쓴다 */
     function learnGate(state, h) {
@@ -3834,7 +3872,7 @@ export function createGameSystem(deps) {
 
     return {
         newGame, serialize, deserialize, canLoad, addExpTime,
-        heroById, heroItems, heroCombat, heroCombatIf, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
+        heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexBonusAt, codexBonus, codexExpOf,
         equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
@@ -3852,7 +3890,7 @@ export function createGameSystem(deps) {
         dispatchOf, dispatchSeat, dispatchPick, dispatchAssign, dispatchRecall, dispatchSettle, dispatchProgress, materialsState,
         mgRound, mgJudge, mgClaim,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp,
-        bookState, learnBook, craftBook,
+        bookState, learnBook, craftBook, sortBooks,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, arenaLoadout, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, bonusOf, needOf, peakTotal,

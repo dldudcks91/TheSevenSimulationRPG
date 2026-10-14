@@ -225,6 +225,14 @@ export const baseValue = (stat, v, fallback) => {
     return `${pct ? pctNum(v) : v}${pct ? '%' : ''}`;
 };
 
+/** 범위만 — `최소~최대` · 양끝이 같으면 한 수(데미지 범위와 같다 — ADR-0108) · 부호 없음 · 단위(%)는 끝에 한 번
+ *  (아이템 툴팁 옵션 줄의 Shift 범위 — SCREEN_DESIGN §6 · ADR-0617). 단위를 붙이는 곳은 이 파일 하나다 */
+export const rangeValue = (stat, min, max, fallback) => {
+    const pct = statLabel(stat, fallback).fmt === 'pct';
+    const n = v => (pct ? pctNum(v) : v);
+    return `${min === max ? n(min) : `${n(min)}~${n(max)}`}${pct ? '%' : ''}`;
+};
+
 /** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
  *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
  *  2026-09-01 재배치 — 보조 슬롯 폐지(한손 개념 폐지)로 위치가 9 → 8 이 되어 4행이 3행으로 줄었다.

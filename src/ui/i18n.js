@@ -72,6 +72,8 @@ const STRINGS = {
     'app.turn.skip': { ko: '이대로 계속하기', en: 'Continue as is' },
     // 손가락 툴팁 버튼 줄 — [세부] = Alt 를 누른 것과 같다 (SCREEN_DESIGN §2 「터치 조작」 · ADR-0374)
     'tip.touch.alt': { ko: '세부', en: 'Details' },
+    // [범위] = Shift 를 누른 것과 같다 — 아이템 툴팁의 옵션 줄 범위 (SCREEN_DESIGN §2 「터치 조작」 · ADR-0617)
+    'tip.touch.range': { ko: '범위', en: 'Range' },
     /* ── 새 게임 (2026-08-24) ── */
     'ng.h': { ko: '새 게임', en: 'New Game' },
     'ng.title': { ko: '첫 파티', en: 'Your First Party' },
@@ -305,12 +307,17 @@ const STRINGS = {
     'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
     'ch.bag.equip': { ko: '장비', en: 'Gear' },
     'ch.bag.mat': { ko: '재료', en: 'Materials' },
+    'ch.bag.book': { ko: '스킬북', en: 'Skill Books' },   // 창고 셋째 탭 — 가진 책 (2026-10-14 사용자 지시 · SCREEN_DESIGN §6 · ADR-0616)
     // 정렬 — 칸마다 제 [정렬] · 누르면 그 오른쪽으로 기준 셋이 나온다 (ADR-0242 · ADR-0247).
     //   영어는 「By」를 뺀다 — [Sort] 바로 옆에 서서 뜻이 이미 서고, 펼친 채로 도구 줄 한 줄에 들어가야 한다
     'ch.sort.start': { ko: '정렬', en: 'Sort' },
     'ch.sort.rarity': { ko: '등급순', en: 'Rarity' },
     'ch.sort.ilvl': { ko: '레벨순', en: 'Level' },
     'ch.sort.slot': { ko: '부위순', en: 'Slot' },
+    // 창고 스킬북 탭의 기준 셋 (2026-10-14 사용자 지시 · SCREEN_DESIGN §6 · ADR-0620)
+    'ch.sort.count': { ko: '개수순', en: 'Count' },
+    'ch.sort.class': { ko: '직업순', en: 'Class' },
+    'ch.sort.tier': { ko: '티어순', en: 'Tier' },
     'ch.sortHint': { ko: '[정렬]은 누른 칸을 한 번 줄 세운다 — 등급순 · 레벨순 · 부위순 중 하나를 고르고, 높은 것이 앞에 선다. 그 뒤 들어오는 장비는 끝에 붙는다',
         en: '[Sort] lines up that panel once — pick by rarity, by level or by slot, highest first. Gear that arrives afterwards goes to the end' },
     // 고르는 중 — [분해]로 들어가고 [분해하기] · [취소]로 나온다 (ADR-0184)
@@ -1031,6 +1038,13 @@ const STRINGS = {
     'tip.tacticOff': { ko: '끼우면 전술이 꺼진다 — {eff}', en: 'Equipping turns a tactic off — {eff}' },
     // 아이템 툴팁 각주 — 기본은 「이 아이템」 한 장이고 Alt 동안 착용품 카드가 붙는다 (SCREEN_DESIGN §6 · 2026-09-29 · ADR-0448)
     'tip.item.altHint': { ko: 'Alt 비교', en: 'Alt: compare' },
+    // Shift 범위 각주 — 비교가 있는 카드는 둘을 한 줄에 · 범위를 다는 줄이 없는 카드엔 안 선다 (SCREEN_DESIGN §6 · ADR-0617)
+    'tip.item.shiftHint': { ko: 'Shift 범위', en: 'Shift: range' },
+    'tip.item.keysHint': { ko: 'Alt 비교 · Shift 범위', en: 'Alt: compare · Shift: range' },
+    'tip.range': { ko: '({r})', en: '({r})' },
+    // 착용 델타 — 「이 아이템」 카드의 옵션 아래 (SCREEN_DESIGN §6 · ADR-0618). 조사가 받침에 따라 갈리지 않게 「착용 시」
+    'tip.delta.h': { ko: '{name} 착용 시', en: 'If {name} equips' },
+    'tip.delta.none': { ko: '변화 없음', en: 'No change' },
     // ~~`tip.up.first`·`tip.up.next`~~ 는 2026-09-08 삭제 [사용자 지시] — 툴팁의 강화 줄이 통째로 죽었다.
     // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
     // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)

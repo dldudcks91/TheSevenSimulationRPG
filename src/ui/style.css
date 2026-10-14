@@ -1249,7 +1249,20 @@ html, body { height: 100%; overflow: hidden; }
 }
 .tip-src.sin { border-color: currentColor; }
 /* 「(미적용)」 — 전투가 아직 안 읽는 옵션 줄 끝 (SCREEN_DESIGN §6 · ADR-0213). 값보다 한 단 흐리게 — 줄을 지우지 않고 상태만 알린다 */
-.tip-inert { font-style: normal; font-size: var(--fs-2xs); color: var(--text-muted); }
+.tip-inert { font-style: normal; font-size: var(--fs-2xs); color: var(--text-muted); white-space: nowrap; }
+/* Shift 범위 — 옵션 줄 끝 `(최소~최대)` · 값보다 흐리게 (SCREEN_DESIGN §6 · ADR-0617) */
+.tip-range { font-style: normal; color: var(--text-muted); white-space: nowrap; }
+/* 착용 델타 — 옵션 아래 · 힌트 위 「{영웅} 착용 시」 (SCREEN_DESIGN §6 · ADR-0618). 줄 = 이름 | 지금 → 낀 뒤 | 화살표 —
+   글씨는 옵션 줄과 같은 단이고 화살표 칸은 폭을 박아 줄마다 값이 같은 x 에서 끝난다 */
+.tip-card .tip-delta { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-dark); }
+.tip-card .tip-delta-h { font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 2px; }
+.tip-card .tip-delta .r { display: flex; align-items: baseline; gap: 6px; font-size: var(--fs-xs); padding: 1px 0; }
+.tip-card .tip-delta .n { flex: 1 1 auto; color: var(--text-secondary); word-break: keep-all; }
+.tip-card .tip-delta .v { white-space: nowrap; color: var(--text-primary); }
+.tip-card .tip-delta b { flex: none; width: 1em; text-align: center; font-weight: normal; }
+.tip-card .tip-delta b.up { color: var(--color-success); }
+.tip-card .tip-delta b.down { color: var(--color-error); }
+.tip-card .tip-delta .r.none { color: var(--text-muted); }
 /* 하단 태그 줄 — 죄종 태그 + 힌트(반지 칸 · 착용 중 없음). 둘 다 없으면 렌더러가 줄째 안 낸다(구분선만 남으면 안 된다).
    간격은 `gap` 이 든다 — 옛 판은 태그마다 인라인 `margin-right` 였고 힌트는 그 규칙 밖이었다 (2026-09-08) */
 .tip-card .tip-sins {
@@ -1536,6 +1549,8 @@ html, body { height: 100%; overflow: hidden; }
 .mat-cell .inv-icon svg { width: 70%; height: 70%; fill: currentColor; }
 .mat-cell.zero .inv-icon { opacity: .35; }
 .mat-cell.zero .inv-lv { color: var(--text-muted); }
+/* 창고 스킬북 탭 [2026-10-14 · SCREEN_DESIGN §6 · ADR-0616] — 재료 탭과 같은 장비 격자 · 칸은 리포트 책 칸(`.book-cell`)의 그림 · 조회만 */
+.stash-books .inv-cell { cursor: default; }
 
 .arena {
     /* 적(위) / 파티(아래) 상하 대치 — 가로형 카드가 진영마다 한 줄로 나란히 (2026-08-27 좌우 대치를 시도했다가 사용자 지시로 상하 복귀) */
@@ -3399,6 +3414,10 @@ html, body { height: 100%; overflow: hidden; }
 /* 살짝 띄우는 줄 [2026-09-27 · 2026-09-28 사용자 지시 · ADR-0396] — 세부 옵션 두 칸의 묶음 경계마다(`tip.js:sheetPages`).
    ~~묶음마다 간격~~(ADR-0381)은 ADR-0389 가 걷었다 */
 .cs-row.gap { margin-top: 6px; }
+/* 보관 칸 미리보기 — 끼면 바뀌는 줄의 값 색 (SCREEN_DESIGN §6 · ADR-0619): 좋아짐 · 나빠짐 · 조각마다 갈림 */
+.cs-row.up .cs-v { color: var(--color-success); }
+.cs-row.down .cs-v { color: var(--color-error); }
+.cs-row.mixed .cs-v { color: var(--color-warning); }
 
 /* 버튼은 **칸 바닥에 못 박는다** (2026-09-08) — 스킬 블록이 위로 올라간 뒤 남는 세로를 이 auto 가 먹는다 */
 /* 버튼 높이 24 → 26 [2026-09-21 사용자 지시 「Open Mastery 버튼 조금만 키워」] — 위아래 여백만 1px 씩(글씨 크기는 `.btn.sm` 그대로).

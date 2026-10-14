@@ -13,7 +13,7 @@
 
 import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES, fillStory, pickJosa, STORY_TOKEN } from '../ui/data.js';
-import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard, sheetPages, detailLayoutIds, attrRowsHtml, sheetRowsHtml, bindStatTips } from '../ui/tip.js';
+import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard, sheetPages, detailLayoutIds, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips } from '../ui/tip.js';
 import { setLang, t as i18nT, L as i18nL } from '../ui/i18n.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
@@ -944,6 +944,19 @@ check('formula: 감쇠 곡선 — D=K 에서 정확히 50%, 면역 없음, 0에�
     if (F.mitigation(1e9) >= 1) fail('면역 발생');
     if (!(F.mitigation(K * 4) > F.mitigation(K))) fail('단조 증가 아님');
     return `K=${K} · D=4K → ${(F.mitigation(K * 4) * 100).toFixed(0)}%`;
+});
+check('formula: statBetter — 클수록 좋다 · 공격 속도(초)만 작을수록 좋다 · 범위는 양끝이 같은 쪽일 때만 · 없거나 섞이면 0 (착용 델타 · ADR-0618 · 2026-10-14)', () => {
+    const cases = [
+        ['crit_rate', 0.05, 0.07, 1], ['crit_rate', 0.07, 0.05, -1], ['crit_rate', 0.05, 0.05, 0],
+        ['action_period', 1.6, 1.4, 1], ['action_period', 1.4, 1.6, -1],
+        ['atk_physical', { min: 16, max: 21 }, { min: 8, max: 11 }, -1], ['atk_physical', { min: 8, max: 11 }, { min: 8, max: 12 }, 1],
+        ['atk_physical', { min: 8, max: 11 }, { min: 9, max: 10 }, 0], ['atk_physical', undefined, { min: 8, max: 11 }, 0],
+    ];
+    for (const [id, a, b, want] of cases) {
+        const got = F.statBetter(id, a, b);
+        if (got !== want) fail(`${id} ${JSON.stringify(a)} → ${JSON.stringify(b)} = ${got} ≠ ${want}`);
+    }
+    return `${cases.length} 경우`;
 });
 check('formula: def_curve_k 는 상수 — 감쇠가 레벨과 무관하다 (08-26 레벨 앵커 폐기)', () => {
     if (F.mitigation(50) !== F.mitigation(50, 99)) fail('레벨 인자가 아직 곡선을 흔든다');
@@ -3459,6 +3472,24 @@ check('item: optionSources — 죄종 태그는 메인 죄종 줄만 · 계열 �
     if (old.join() !== 'random,wrath') fail(`옛 접사 ${old}`);
     return `무기 · 갑옷 ${n}개 · 메인과 같은 계열의 랜덤 줄 ${sameFamily}`;
 });
+check('item: optionRange — 굴린 값은 늘 그 줄의 범위 안 · 새 드롭은 줄마다 범위가 있다 · 고정 줄 = 고정 옵션 키 · src 없는 옛 줄은 null (Shift 범위 · ADR-0617 · 2026-10-14)', () => {
+    const rng = makeRng(617);
+    let n = 0, wide = 0;
+    for (let i = 0; i < 3000; i++) {
+        const it = SYS.item.rollDrop(rng, 1 + (i % 50));
+        it.affixes.forEach((a, k) => {
+            const r = SYS.item.optionRange(it, k) ?? fail(`${it.slot} Lv${it.ilvl} ${a.stat}(${a.src}) 범위를 못 찾았다`);
+            n++;
+            if (!(r.min <= a.v && a.v <= r.max)) fail(`${it.slot} Lv${it.ilvl} ${a.stat}(${a.src}) ${a.v} ∉ [${r.min}, ${r.max}]`);
+            if (r.max > r.min) wide++;
+        });
+    }
+    const w = SYS.item.startingWeapon(makeRng(4), 'mage');
+    const f = SYS.item.optionRange(w, 0);
+    if (!f || f.min !== F.pctOption(B.weapon_fixed_atk_pct_min) || f.max !== F.pctOption(B.weapon_fixed_atk_pct_max)) fail(`무기 고정 줄 ${JSON.stringify(f)}`);
+    if (SYS.item.optionRange({ slot: 'weapon', group: w.group, ilvl: 1, affixes: [{ stat: 'atk_pct', v: 0.1 }] }, 0) !== null) fail('src 없는 옛 줄이 범위를 낸다');
+    return `줄 ${n} · 폭이 있는 줄 ${wide}`;
+});
 check('item: 발동 옵션의 스킬 — 공격 = 무기군 직업의 1티어 공격 · 버프 = 도발 · 저주 · 오오라 제외 · 저주 = 저주 · 발동 아닌 줄엔 skill 이 없다 · 전투는 발동 줄을 안 읽는다 (R206 · R208 · R209)', () => {
     const rng = makeRng(206);
     const seen = {};
@@ -4064,6 +4095,26 @@ check('equip: heroCombatIf 「이 아이템을 끼면」 = 실제로 낀 뒤의 
     const got = J(SYS.game.heroCombat(g, a));
     return inBag === got ? `${a.cls} ← ${b.cls} 무기 · 낀 뒤 값과 같다` : fail(`다르다: ${inBag} ≠ ${got}`);
 });
+check('equip: heroCombatWith 「이 물건을 끼면」 — 가방의 것은 heroCombatIf 와 같다 · uid 없는 물건(상점)도 같은 값 · 원본 불변 · 낀 것과 같은 물건은 착용 델타가 비고 다른 무기는 줄이 선다 (ADR-0618 · INTERFACE §2-7 · 2026-10-14)', () => {
+    const g = newGameP(7, cands, NOW);
+    const [a, b] = g.heroes;
+    const wb = b.equipped.weapon ?? fail('fixture: 시작 무기가 없다');
+    if (!SYS.game.unequip(g, b.uid, 'weapon').ok) fail('fixture: 무기를 못 벗긴다');
+    const J = x => JSON.stringify(x);
+    const viaIf = J(SYS.game.heroCombatIf(g, a, wb));
+    const snap = J(g);
+    if (J(SYS.game.heroCombatWith(g, a, g.items[wb])) !== viaIf) fail('가방의 물건인데 heroCombatIf 와 다르다');
+    const loose = { ...g.items[wb], uid: null };                // 상점 상단 장비처럼 uid 가 없는 사본
+    if (J(SYS.game.heroCombatWith(g, a, loose)) !== viaIf) fail('uid 없는 같은 물건인데 값이 다르다');
+    if (J(g) !== snap) fail('원본 상태가 바뀌었다');
+    const now = SYS.game.heroCombat(g, a);
+    if (J(SYS.game.heroCombatWith(g, a, null)) !== J(now)) fail('물건이 없는데 heroCombat 과 다르다');
+    if (sheetDeltaRows(now, SYS.game.heroCombatWith(g, a, g.items[a.equipped.weapon])).length) fail('이미 낀 무기인데 착용 델타에 줄이 선다');
+    const rows = sheetDeltaRows(now, SYS.game.heroCombatWith(g, a, loose));
+    if (!rows.length) fail('fixture: 무기를 바꿔도 착용 델타가 빈다 — 비교가 헛돈다');
+    if (rows.some(r => ![1, -1, 0].includes(r.dir) || r.from === r.to)) fail(`줄 모양 ${J(rows)}`);
+    return `${a.cls} ← ${b.cls} 무기 · 델타 ${rows.map(r => `${r.id}${r.dir > 0 ? '▲' : r.dir < 0 ? '▼' : ''}`).join(' ')}`;
+});
 check('salvage: 가방에서 사라지고 가루가 는다', () => {
     // 제 판 · 제 아이템 — 판을 돌려 쓰던 때는 앞의 반지 단정이 가방에 남긴 반지를 분해했다(그 단정 없이는 가방이 비어 빨간불 · 2026-09-22)
     const { g, it } = upgradeFixture(mkItem('gloves', [{ stat: 'crit_pct', v: 0.05 }]));
@@ -4210,6 +4261,31 @@ check('정렬: 등급순 · 레벨순 · 부위순이 각자의 동점 규칙으
         if (r.ok || r.err !== 'invalid') fail(`${w}/${k} → ${JSON.stringify(r)}`);
     }
     return Object.entries(want).map(([k, w]) => `${k} ${w}`).join(' · ');
+});
+
+/** 책 정렬 [신설 2026-10-14 · ADR-0620] — 가진 책의 키 순서를 한 번 다시 세운다 · 기준마다 동점 규칙이 다르다 · 권수 그대로 · 세이브 왕복에도 순서가 산다 · rng 0 */
+check('책 정렬: 개수순 · 직업순 · 티어순이 각자의 동점 규칙으로 키 순서를 세운다 · 전직 스킬은 제 직업 · 티어 뒤 · 권수 · 왕복 그대로', () => {
+    const g = SYS.game.newGame(5, cands, NOW);
+    const L = SYS.skill.list.filter(d => d.ownerKind !== 'monster');
+    const cls = SYS.hero.classIds;
+    const pick = (c, tier) => L.find(d => d.classId === c && d.tier === tier)?.id;
+    // c0 = 앞 직업(티어 1 · 2 · 전직 스킬이 다 있다) · c1 = 그 뒤 직업(티어 1)
+    const c0 = cls.find(c => pick(c, 1) && pick(c, 2) && L.some(d => d.ownerKind === 'advance' && d.classId === c));
+    const c1 = cls.slice(cls.indexOf(c0) + 1).find(c => pick(c, 1));
+    const ids = { a: pick(c0, 2), b: pick(c1, 1), c: L.find(d => d.ownerKind === 'advance' && d.classId === c0)?.id, d: pick(c0, 1) };
+    if (Object.values(ids).some(v => !v)) fail(`표에 고를 책이 없다 ${JSON.stringify(ids)}`);
+    g.books = { [ids.a]: 1, [ids.b]: 3, [ids.c]: 3, [ids.d]: 1 };
+    const tag = Object.fromEntries(Object.entries(ids).map(([k, v]) => [v, k]));
+    const run = key => { const r = SYS.game.sortBooks(g, key); if (!r.ok) fail(`${key} ${r.err}`); return Object.keys(g.books).map(id => tag[id]).join(''); };
+    // a = c0 티어 2 · 1권 / b = c1 티어 1 · 3권 / c = c0 전직(티어 없음) · 3권 / d = c0 티어 1 · 1권
+    const want = { count: 'cbda', class: 'dacb', tier: 'dbac' };
+    for (const [key, w] of Object.entries(want)) { const got = run(key); if (got !== w) fail(`${key}: ${got} ≠ ${w}`); }
+    if (g.books[ids.a] !== 1 || g.books[ids.b] !== 3 || g.books[ids.c] !== 3 || g.books[ids.d] !== 1 || Object.keys(g.books).length !== 4) fail(`권수가 바뀌었다 ${JSON.stringify(g.books)}`);
+    const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))));
+    if (Object.keys(back.books).map(id => tag[id]).join('') !== want.tier) fail(`세이브 왕복에서 순서가 바뀌었다 ${Object.keys(back.books)}`);
+    if (SYS.game.bookState(g).books.map(b => tag[b.id]).join('') !== want.tier) fail('bookState 가 정렬 순서를 안 따른다');
+    if (SYS.game.sortBooks(g, 'name').err !== 'invalid') fail('모르는 기준');
+    return `${c0} · ${c1} — ` + Object.entries(want).map(([k, w]) => `${k} ${w}`).join(' · ');
 });
 
 /**

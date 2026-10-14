@@ -43,6 +43,24 @@ export const reductionMult = pcts => (pcts ?? []).reduce((m, p) => m * (1 - (p ?
  */
 export const FIXED_DMG = 'fixed';
 
+/**
+ * 시트 값 둘 중 어느 쪽이 좋은가 [신설 2026-10-14 · 착용 델타 · SCREEN_DESIGN §6 · ADR-0618] — `1` = `b` 가 좋다 · `-1` = `b` 가 나쁘다 · `0` = 같거나 섞였거나 한쪽이 없다.
+ * **작을수록 좋은 축은 행동 주기 하나다**(`action_period` — 초 / 1회) — 나머지 시트 축은 클수록 좋다. 수치가 아니라 축의 뜻이라 INTERFACE §5-3 표에 안 든다.
+ * 범위 `{min, max}`(데미지 두 줄)는 양끝을 따로 견줘 같은 쪽으로만 움직였을 때 답한다 — 한 끝은 오르고 한 끝은 내리면 섞였다(0).
+ * **밸런스 값을 안 읽어 팩토리 밖에 선다**(`reductionMult` 와 같다) — 화면(착용 델타 · 세부 옵션 미리보기)이 `createFormula(...).statBetter` 로 부른다
+ */
+const LOWER_BETTER = new Set(['action_period']);
+export function statBetter(id, a, b) {
+    const ends = v => (typeof v === 'number' ? [v, v] : v && typeof v === 'object' ? [v.min, v.max] : null);
+    const x = ends(a), y = ends(b);
+    if (!x || !y) return 0;
+    const dir = LOWER_BETTER.has(id) ? -1 : 1;
+    const d = [Math.sign(y[0] - x[0]) * dir, Math.sign(y[1] - x[1]) * dir];
+    if (d.every(s => s >= 0) && d.some(s => s > 0)) return 1;
+    if (d.every(s => s <= 0) && d.some(s => s < 0)) return -1;
+    return 0;
+}
+
 export function createFormula(balance) {
     const B = balance;
     const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -260,6 +278,6 @@ export function createFormula(balance) {
 
     return {
         roundPct, pctOption, growthMult, upgradeMult, weaponDamage, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
-        hitChance, statCoef, strike, indirect, leech, effectiveCd,
+        hitChance, statCoef, strike, indirect, leech, effectiveCd, statBetter,
     };
 }

@@ -676,5 +676,6 @@ export function createHeroSystem(data) {
     return {
         rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, rollHeroOf, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn, sinGearCount,
+        classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
     };
 }

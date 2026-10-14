@@ -53,7 +53,7 @@
 import * as M from './mock.js';
 import { t, L, has, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle, unitPreview, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText } from './battle.js';
-import { bindTipNode, hideTip, isTouchInput, isAltHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, bindStatTips, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
+import { bindTipNode, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadCloudLink, writeCloudLink, clearCloudLink, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
@@ -151,6 +151,13 @@ const srcTag = src => src === 'fixed' ? `<i class="tip-src">${t('tip.src.fixed')
         : `<i class="tip-src">${t('tip.src.random')}</i>`;
 /** 「(미적용)」 표지 — 전투가 아직 안 읽는 옵션 줄 끝 (SCREEN_DESIGN §6 · ADR-0213) */
 const inertTag = () => ` <i class="tip-inert">${t('tip.inert')}</i>`;
+/** Shift 범위 — 옵션 줄 끝의 `(최소~최대)` (SCREEN_DESIGN §6 · ADR-0617). 값은 `item.optionRange` 가 낸다 · 행을 못 찾는 줄(옛 옵션)은 빈 문자열 */
+const rangeTag = (item, i) => {
+    const r = SYS.item.optionRange(item, i);
+    return r ? ` <i class="tip-range">${t('tip.range', { r: M.rangeValue(item.affixes[i].stat, r.min, r.max) })}</i>` : '';
+};
+/** 범위를 다는 줄이 하나라도 있나 — 각주 「Shift 범위」 · 카드의 `data-shift` 를 이것이 정한다 */
+const hasRanges = item => (item?.affixes ?? []).some((_, i) => SYS.item.optionRange(item, i));
 /**
  * 목걸이 발동 스킬 줄 — `[고정]` + 발동 조건 문장 + 「(미적용)」 (§6 · ADR-0213 · item_design §1 「목걸이 고정 옵션」).
  * `item.proc` 이 없으면(목걸이가 아니다) 빈 문자열. 스킬이 없으면(`null` — 후보 풀이 빈 데이터) 「—」 로 찍는다
@@ -398,7 +405,7 @@ const state = {
     bagSelMode: false, bagSel: new Set(), bagSortMode: null, bagSortAnim: false,
     // 고르기 메뉴 [2026-09-29 · ADR-0447] — 펼친 줄('rarity' · 'ilvl' · null) · 올라오는 / 펼치는 움직임을 첫 그리기에만 다는 표시(그 그리기가 끈다)
     bagPickFold: null, bagPickAnim: false, bagFoldAnim: false,
-    stashTab: 'equip',           // 창고 칸의 탭 — 'equip' | 'mat' (SCREEN_DESIGN §6 · ADR-0379 · 자리 ADR-0524) · 인벤토리 칸은 안 갈린다
+    stashTab: 'equip',           // 창고 칸의 탭 — 'equip' | 'mat' | 'book' (SCREEN_DESIGN §6 · ADR-0379 · 자리 ADR-0524 · 스킬북 ADR-0616) · 인벤토리 칸은 안 갈린다
     invNo: 1,                    // 보고 있는 인벤토리의 부대 번호 — 부대 버튼이 고른다 · 해제 · 꺼내기 · 구매 · 제작이 여기로 간다 (§6 · ADR-0521) · 세이브 아님
     invWatch: 0,                 // 관전이 마지막으로 맞춘 부대 — 보는 부대가 바뀌면 `invNo` 를 그 부대로 옮긴다 (§4-2 · ADR-0521)
     autoArm: false,              // 자동 분해 창 — [지금 인벤토리에도 적용]을 한 번 눌러 확인 줄이 선 상태 (ADR-0203) · 창을 닫으면 풀린다
@@ -3439,10 +3446,29 @@ function detailPanels(h) {
         const p = el('div', 'panel');
         p.appendChild(el('h2', '', t('ch.detail.hn', { n: pi + 1 })));
         const list = el('div', 'cs-scroll');
+        list.dataset.sheet = String(pi);   // 보관 칸 미리보기가 이 목록을 그 자리에서 다시 쓴다 (ADR-0619)
         list.innerHTML = sheetRowsHtml(rows, c);
         bindStatTips(list);   // 값이 `—` 인 줄도 — 비어 있는 축이 다음 장비의 자리다 (ADR-0581)
         p.appendChild(list);
         return p;
+    });
+}
+
+/**
+ * 세부 옵션 미리보기 [2026-10-14 · SCREEN_DESIGN §6 「세부 옵션 1 · 2」 · ADR-0619] — 보관 칸에 올린 동안 두 목록을 「끼면」 시트로 **그 자리에서** 다시 쓴다.
+ * 바뀐 줄은 방향 색(`sheetRowsHtml` 의 견줄 시트 · `formula.statBetter`) · `it` 이 없으면 지금 값으로 되돌린다.
+ * 「통째로 다시 그린다」의 예외다 — 올린 동안의 표시라 상태가 아니고(Alt 카드를 그 자리에서 다시 짓는 것과 같은 종류) 다음 `render()` 가 지운다.
+ * 목록(`.cs-scroll[data-sheet]`)이 없는 화면은 할 일이 없다
+ */
+function previewSheet(h, it) {
+    const lists = document.querySelectorAll('.cs-scroll[data-sheet]');
+    if (!lists.length || !h) return;
+    const now = combatOf(h);
+    const shown = it ? SYS.game.heroCombatWith(G, h, it) : now;
+    const pages = sheetPages();
+    lists.forEach(list => {
+        list.innerHTML = sheetRowsHtml(pages[+list.dataset.sheet], shown, it ? now : null);
+        bindStatTips(list);
     });
 }
 
@@ -3625,12 +3651,16 @@ function autoSalvageBody() {
  * [정렬] + 펼친 기준 셋 — 칸마다 제 것 [2026-09-21 · ADR-0242 · ADR-0247]. 누르면 **[정렬] 오른쪽으로 [등급순] · [레벨순] · [부위순]이
  * 차례로 미끄러져 나오고**, [정렬]을 다시 누르면 접힌다. 기준을 고르면 그 칸을 **한 번** 줄 세우고 접힌다.
  * 펼치면 한 번에 한 모드라 다른 칸의 펼침 · 고르는 중은 풀린다.
- * 움직임은 **펼친 직후 한 번만** 단다(`bagSortAnim`) — 통째로 다시 그리는 화면이라 그냥 두면 관전 갱신마다 다시 미끄러진다
+ * 움직임은 **펼친 직후 한 번만** 단다(`bagSortAnim`) — 통째로 다시 그리는 화면이라 그냥 두면 관전 갱신마다 다시 미끄러진다.
+ * **창고는 탭마다 기준이 다르다** [2026-10-14 사용자 지시 · ADR-0620] — 장비 = 등급 · 레벨 · 부위 / 스킬북 = 개수 · 직업 · 티어(`game.sortBooks`) /
+ * 재료 = **꺼진 채 선다**(줄 세울 것이 없다 — 숨기지 않아 탭을 바꿔도 버튼이 같은 자리다)
  */
-function sortTools(where) {
-    const open = state.bagSortMode === where;
+function sortTools(where, tab = 'equip') {
+    const off = tab === 'mat';
+    const open = state.bagSortMode === where && !off;
     const wrap = el('div', 'sort-tools');
     const b = el('button', `btn sm toggle${open ? ' on' : ''}`, t('ch.sort.start'));
+    b.disabled = off;
     b.onclick = () => {
         clearBagSel();
         if (!open) { state.bagSortMode = where; state.bagSortAnim = true; }
@@ -3640,10 +3670,11 @@ function sortTools(where) {
     if (open) {
         const fold = el('div', `sort-fold${state.bagSortAnim ? ' anim' : ''}`);
         state.bagSortAnim = false;
-        for (const key of ['rarity', 'ilvl', 'slot']) {
+        const book = tab === 'book';
+        for (const key of book ? ['count', 'class', 'tier'] : ['rarity', 'ilvl', 'slot']) {
             const k = el('button', 'btn sm', t(`ch.sort.${key}`));
             k.onclick = () => {
-                if (SYS.game.sortStorage(G, where, key, invNo()).ok) save();
+                if ((book ? SYS.game.sortBooks(G, key) : SYS.game.sortStorage(G, where, key, invNo())).ok) save();
                 clearBagSel();
                 render();
             };
@@ -3654,25 +3685,25 @@ function sortTools(where) {
     return wrap;
 }
 
-/** 도구 줄 — 이름 + (인벤토리 쪽에만) 부대 버튼 ─ 오른쪽 끝으로 창고는 [장비|재료] · [정렬] / 인벤토리는 [분해] · [자동 분해] 또는 그 모드의 줄 + [정렬].
- *  장착 대상 글자는 없다 — 아레나에서 고른 카드가 든다 (§6 · §4-2 · ADR-0523 · ADR-0524) */
+/** 도구 줄 — 이름 + (인벤토리 쪽에만) 부대 버튼 ─ 오른쪽 끝으로 창고는 [장비|재료|스킬북] · [정렬] / 인벤토리는 [분해] · [자동 분해] 또는 그 모드의 줄 + [정렬].
+ *  장착 대상 글자는 없다 — 아레나에서 고른 카드가 든다 (§6 · §4-2 · ADR-0523 · ADR-0524 · ADR-0616) */
 function storageTools(where) {
     const tools = el('div', 'items-tools');
     tools.appendChild(el('span', 'items-name', t(where === 'stash' ? 'ch.bag.stash' : 'ch.bag.inv')));
     // 분해 · 자동 분해는 **한 벌만** 둔다 — 두 칸에 같이 걸리는 축이라 칸마다 두면 어느 쪽 것인지 읽을 수 없다 (ADR-0184).
     //   [정렬]만 칸마다다 — 누른 칸 하나만 줄 세운다 (ADR-0242). 고르는 중에는 두 칸 다 안 선다
-    // 창고 칸에만 장비 · 재료 탭 [2026-09-27 · ADR-0379 · 자리 2026-10-06 ADR-0524] — 재료는 부대가 나눠 갖지 않는다(창고처럼 하나다).
-    //   재료 탭에서는 창고의 [정렬]이 안 선다 · 탭을 바꾸면 고르는 중 · 정렬 펼침이 풀린다(재료 칸에는 걸 것이 없다)
-    const matTab = where === 'stash' && state.stashTab === 'mat';
+    // 창고 칸에만 장비 · 재료 · 스킬북 탭 [2026-09-27 · ADR-0379 · 자리 2026-10-06 ADR-0524 · 스킬북 2026-10-14 ADR-0616] — 재료 · 책은 부대가 나눠 갖지 않는다(창고처럼 하나다).
+    //   [정렬]은 세 탭 모두 맨 오른쪽 같은 자리 — 기준은 탭이 정하고 재료 탭에서는 꺼진 채다(ADR-0620) · 탭을 바꾸면 고르는 중 · 정렬 펼침이 풀린다
+    const tab = where === 'stash' && ['mat', 'book'].includes(state.stashTab) ? state.stashTab : 'equip';
     // 부대 버튼은 인벤토리 이름 바로 오른쪽 · 버튼은 둘 다 오른쪽 끝으로 — 빈 칸(`.tools-push`)이 민다 [2026-10-06 사용자 지시 · ADR-0523 · ADR-0524]
     if (where === 'bag') tools.appendChild(bagPartyTools());
     tools.appendChild(el('span', 'tools-push'));
     if (where === 'stash') {
-        const seg = segmented([{ id: 'equip', label: t('ch.bag.equip') }, { id: 'mat', label: t('ch.bag.mat') }], matTab ? 'mat' : 'equip',
+        const seg = segmented([{ id: 'equip', label: t('ch.bag.equip') }, { id: 'mat', label: t('ch.bag.mat') }, { id: 'book', label: t('ch.bag.book') }], tab,
             id => { clearBagSel(); state.stashTab = id; render(); });
         seg.classList.add('bag-tabs');
         tools.appendChild(seg);
-        if (!matTab && !state.bagSelMode) tools.appendChild(sortTools('stash'));
+        if (!state.bagSelMode) tools.appendChild(sortTools('stash', tab));
     } else {
         if (state.bagSelMode) {
             // [분해하기] 바로 위로 고르기 메뉴가 뜬다 — 방금 누른 [분해] 자리다 [2026-09-29 사용자 지시 · ADR-0447].
@@ -3736,14 +3767,33 @@ function materialGrid() {
             used++;
         }
     });
-    // 스킬북은 여기 안 선다 — 도서관 탭(§17)에서만 보인다 [2026-09-30 사용자 지시 · ADR-0460]
+    // 스킬북은 여기 안 선다 — 제 탭(`bookStashGrid`)이 있다 [2026-09-30 사용자 지시 · ADR-0460 · 2026-10-14 ADR-0616]
     // 빈 칸 — 자리가 정해진 칸들 사이의 구멍을 앞에서부터 메운다(격자 자동 배치)
     for (let i = used; i < total; i++) grid.appendChild(el('div', 'inv-cell'));
     return grid;
 }
 
+/**
+ * 창고 스킬북 탭 — **가진 책만** [2026-10-14 사용자 지시 「창고의 재료 오른쪽에 스킬북 탭 만들고 거기에 내가 보유한 스킬북 나오도록」 · SCREEN_DESIGN §6 · ADR-0616].
+ * 격자는 재료 탭과 같다(장비 격자 · 창고 칸 수) · 순서는 도서관 스킬 업그레이드 칸과 같다(`game.bookState` — 영웅 없이 부르면 `books` 만 읽힌다).
+ * 칸 = 스킬 그림 + 오른쪽 아래 `×n`(도서관 칸과 같은 글자) · 올리면 주인 없는 설명창(리포트 책 칸과 같다) · 조회만 — 배우기는 도서관(§17)
+ */
+function bookStashGrid() {
+    const grid = el('div', 'inv-cells wide stash-books');
+    const books = SYS.game.bookState(G).books;
+    for (const b of books) {
+        const cell = el('div', 'inv-cell filled book-cell', `<span class="inv-icon">${skillImg(skillInfo(b.id))}</span><span class="inv-lv">×${b.n}</span>`);
+        bindTipNode(cell, () => skillTipCard({ id: b.id }, {}));
+        grid.appendChild(cell);
+    }
+    // 빈 칸 — 창고 장비 격자와 같은 칸 수 · 넘친 책도 그린다(장비 격자의 넘침과 같다)
+    const total = Math.max(SYS.game.limitsOf(G).stash, (G.stash ?? []).length);
+    for (let i = books.length; i < total; i++) grid.appendChild(el('div', 'inv-cell'));
+    return grid;
+}
+
 /** 반대편으로 보낸다 — `Ctrl`+클릭 · 끌어 놓기가 같이 쓴다(같은 함수라 거절 코드도 같다 · ADR-0187). 인벤토리로는 보고 있는 부대의 것으로(ADR-0521).
- *  창고로 보냈는데 창고가 재료 탭이면 **장비 탭으로 돌려** 들어간 것을 보인다 (ADR-0524) */
+ *  창고로 보냈는데 창고가 재료 · 스킬북 탭이면 **장비 탭으로 돌려** 들어간 것을 보인다 (ADR-0524 · ADR-0616) */
 function sendAcross(where, it) {
     const r = where === 'stash' ? SYS.game.moveToBag(G, it.uid, invNo()) : SYS.game.moveToStash(G, it.uid);
     if (!r.ok) { flash(`ch.err.${r.err}`); return; }
@@ -3757,6 +3807,7 @@ function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
     const p = el('div', `panel bag ${where === 'stash' ? 'store-stash' : 'store-bag'}`);
     p.appendChild(storageTools(where));
     if (where === 'stash' && state.stashTab === 'mat') { p.appendChild(materialGrid()); return p; }   // 재료 탭은 창고 칸 (ADR-0524)
+    if (where === 'stash' && state.stashTab === 'book') { p.appendChild(bookStashGrid()); return p; }   // 스킬북 탭도 창고 칸 (ADR-0616)
     const uids = where === 'stash' ? (G.stash ?? []) : invBag();   // 인벤토리는 부대 버튼이 고른 부대의 것 (ADR-0521)
     const items = uids.map(itemOf).filter(Boolean);
     const cap = SYS.game.limitsOf(G)[where === 'stash' ? 'stash' : 'bag'];
@@ -3788,8 +3839,11 @@ function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
             //   ~~스킬 칸의 맥락(`heroCombatIf`)~~ 은 2026-09-29 걷었다 — 아이템 툴팁에 스킬 칸이 없다(ADR-0421)
             //   반지 칸 줄은 비교의 줄이라 Alt 동안만 선다 · 전술 줄은 기본 카드에도 선다 (ADR-0448)
             //   손가락 툴팁의 버튼 줄 = 우클릭 메뉴와 같은 둘 (ADR-0374 · ADR-0451) — 고르는 중엔 안 선다
-            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [runTacticHint(h, it)], altHints: [ringHint],
+            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [runTacticHint(h, it)], altHints: [ringHint], hero: h,
                 actions: moding ? null : () => itemActions(h, it) });
+            // 캐릭터 탭이면 세부 옵션 1 · 2 가 「끼면」 값을 미리 보인다 — 올린 동안만 (§6 · ADR-0619). 목록이 없는 화면(관전 · 제련소)은 할 일이 없다
+            cell.addEventListener('mouseenter', () => { if (!isTouchInput()) previewSheet(h, it); });
+            cell.addEventListener('mouseleave', () => previewSheet(h, null));
             // **끌어서 반대편 격자에 놓아도 옮겨진다** [2026-09-21 · ADR-0187] — `Ctrl`+클릭과 **같은 함수**라 거절 코드도 같다.
             //   고르는 중에는 안 건다 — 체크를 붙이는 손짓과 끄는 손짓이 같은 칸에서 싸운다 (ADR-0184)
             if (!moding) bindCardDrag(cell, where === 'stash' ? '.store-bag' : '.store-stash', () => { sendAcross(where, it); return true; });
@@ -3899,8 +3953,9 @@ function renderCharacter(main) {
  * @param skCtx 스킬 칸의 계산 맥락(`{period,atkMin,atkMax,matkMin,matkMax,hpMax,atkType,stats}`) — 착용 중 카드 = 그 영웅의 `game.heroCombat` ·
  *   「이 아이템」 카드 = `game.heroCombatIf`(장착 대상 영웅이 그 무기를 낀 것으로 · ADR-0139) · 몬스터 장비 카드 = 그 몬스터의 표시값(ADR-0312).
  *   생략하면 식이 접힌 채 나온다.
+ * @param opts.ranges Shift 동안 옵션 줄 끝에 굴림 범위(ADR-0617) · `opts.delta` = 착용 델타 블록 HTML — 옵션 아래 · 힌트 위에 선다(ADR-0618)
  */
-function tipCard(item, headText, hints = [], skCtx) {
+function tipCard(item, headText, hints = [], skCtx, { ranges = false, delta = '' } = {}) {
     if (!item) return null;                      // 빈 카드는 안 세운다 (§6 개정 2026-09-08 — 아래 bindTip)
     const c = el('div', 'tip-card');
     // 죄종은 **이름이 든다** — `composeName` 이 「격노와 찬탈의 둔기」로 죄종 단어를 다 싣는다. 이름은 희귀도 한 색이고 죄종 색은 옵션 줄 태그가 든다 (2026-09-08 사용자 지시 · 2026-09-19 ADR-0175).
@@ -3919,7 +3974,8 @@ function tipCard(item, headText, hints = [], skCtx) {
     c.innerHTML = `
         <div class="tip-head tip-head-row"><span>${headText}</span><span class="tip-meta">${meta}</span></div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${item.up > 0 ? `+${item.up} ` : ''}${L(item.name)}</div>
-        ${itemBodyHtml(item)}
+        ${itemBodyHtml(item, { ranges })}
+        ${delta}
         ${hintTags ? `<div class="tip-sins">${hintTags}</div>` : ''}`;
     return c;
 }
@@ -3928,8 +3984,9 @@ function tipCard(item, headText, hints = [], skCtx) {
  * 아이템 카드의 **몸** — 메인 옵션 행 + 옵션 줄(출처 태그 · 목걸이 발동 줄 · 「(미적용)」).
  * 툴팁 카드(`tipCard`)와 제련소 강화 칸의 옵션 열(SCREEN_DESIGN §8-2 · ADR-0605)이 **같은 함수**를 부른다 — 두 자리의 옵션 표기가 갈리면 안 된다.
  * 클래스는 `.tip-card` 안의 규칙을 탄다 — 강화 칸은 열에 `tip-card` 를 같이 단다
+ * @param opts.ranges Shift 동안 — 옵션 줄 끝에 굴림 범위 `(최소~최대)`(`item.optionRange` · ADR-0617). 강화 칸은 안 넘긴다(툴팁이 아니다)
  */
-function itemBodyHtml(item) {
+function itemBodyHtml(item, { ranges = false } = {}) {
     const g = SYS.item.groupOf(item);            // 무기군 — 직업 전속·행동 주기·공격 타입의 출처 (weapon_group.csv)
     // 메인 옵션은 **먹인 값**을 찍는다 — 강화 배율 · 그 아이템의 고정 옵션까지. 툴팁 숫자가 캐릭터 시트와 갈리면 안 된다 (SCREEN_DESIGN §6 · ADR-0309)
     const imp = SYS.item.implicitFixed(item);
@@ -3963,7 +4020,7 @@ function itemBodyHtml(item) {
               순서도 아이템이 든 순서 그대로다 — 렌더러가 정렬하지 않는다. 출처가 없는 옛 접사는 랜덤으로 찍는다 */''}
         ${/* 목걸이는 **첫 줄이 발동 스킬**이다 — 고정 옵션 자리(`[고정]`) · 문장은 발동 조건마다 하나 · 간격 초는 `skill.procIntervalSec` 가 낸다.
               전투가 아직 안 읽는 줄은 끝에 「(미적용)」 — 발동 줄과 `inert` 표지가 붙은 stat (SCREEN_DESIGN §6 · ADR-0213) */''}
-        <ul>${procLine(item)}${(item.affixes ?? []).map((a, i) => `<li>${srcTag(srcs[i])}${affixText(a)}${M.statInert(a.stat) ? inertTag() : ''}</li>`).join('')
+        <ul>${procLine(item)}${(item.affixes ?? []).map((a, i) => `<li>${srcTag(srcs[i])}${affixText(a)}${ranges ? rangeTag(item, i) : ''}${M.statInert(a.stat) ? inertTag() : ''}</li>`).join('')
             || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>`;
 }
 
@@ -3980,6 +4037,9 @@ function itemBodyHtml(item) {
  * @param opts.ctx        `item` 카드의 스킬 칸 계산 맥락 — 페이퍼돌은 그 영웅의 `heroCombat` · 가방 · 창고는 `heroCombatIf`(그 무기를 낀 것으로 · ADR-0139)
  * @param opts.compareCtx `compare` 카드의 계산 맥락 — `compare` 는 언제나 착용 중인 것이라(§6) 있으면 준다(itemsPanel)
  * @param opts.actions    손가락 툴팁 버튼 줄의 행동(`tip.js:bindTipNode` 그대로) — 보관 칸의 [착용] · [잠금] (ADR-0451)
+ * @param opts.hero       장착 대상 영웅 — 주면 「이 아이템」 카드 옵션 아래에 착용 델타 「{영웅} 착용 시」가 선다(기본 상태에도 · §6 · ADR-0618)
+ *
+ * **Shift 범위** [2026-10-14 · §6 · ADR-0617] — 범위를 다는 줄이 있는 카드만 `data-shift` 를 달아 `tip.js:setShift` 가 다시 짓고, 각주에 「Shift 범위」가 더해진다
  *
  * **두 장이면 사이에 `VS`** — 원정 관전의 두 진영 사이와 같은 글자다. DOM 은 늘 `[이 아이템, VS, 착용 중]` 이고,
  * 툴팁이 커서 왼쪽으로 접히면 CSS 가 순서를 뒤집어 「이 아이템」이 커서 쪽에 남는다(`tip.js:moveTip` 의 `at-left` · §6 · ADR-0337)
@@ -3991,24 +4051,56 @@ function itemBodyHtml(item) {
  * 기본 상태엔 `alt-only` 로 **보이지 않게 자리만** 잡는다. 폭 · 높이 · 접힘(`moveTip`)이 두 상태에서 같아 Alt 로 「이 아이템」 카드가 안 움직인다.
  * 카드 바닥은 **Alt 줄**(반지 칸 · 착용 중 없음 — `alt-only`) 위 · **각주 「Alt 비교」** 맨 아래 — 각주는 Alt 동안에도 선다 [2026-09-30 사용자 지시 · ADR-0456]
  */
-function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints = [], ctx, compareCtx, actions = null } = {}) {
-    if (compare === undefined) { bindTipNode(node, () => tipCard(item, t(head), hints, ctx), { actions }); return; }
+function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints = [], ctx, compareCtx, actions = null, hero = null } = {}) {
+    // 「이 아이템」 카드 — Shift 동안 옵션 줄 범위(ADR-0617) · 장착 대상 영웅이 있으면 옵션 아래에 착용 델타(ADR-0618 · 기본 상태에도)
+    const ranged = hasRanges(item);
+    const card = () => tipCard(item, t(head), hints, ctx, { ranges: ranged && isShiftHeld(), delta: hero ? deltaHtml(hero, item) : '' });
+    if (compare === undefined) {
+        // 비교가 없는 자리(리포트 드롭 · 페이퍼돌 · 탐험 결과) — 범위를 다는 줄이 있으면 각주 「Shift 범위」 한 줄
+        const one = () => {
+            const c = card();
+            if (c && ranged) {
+                c.appendChild(el('div', 'tip-foot', t('tip.item.shiftHint')));
+                c.dataset.shift = '1';
+                c._rebuild = one;
+            }
+            return c;
+        };
+        bindTipNode(node, one, { actions });
+        return;
+    }
     const altLines = [].concat(altHints, compare === null ? t('tip.noneEquipped') : []).filter(Boolean);
+    const shiftable = ranged || hasRanges(compare);
     const build = () => {
         const w = el('div', `tip-compare${isAltHeld() ? ' alt' : ''}`);
         w.dataset.alt = '1';
+        if (shiftable) w.dataset.shift = '1';
         w._rebuild = build;
-        const c = tipCard(item, t(head), hints, ctx);
+        const c = card();
         if (altLines.length) c.appendChild(el('div', 'tip-sins alt-only', altLines.map(x => `<span class="muted">${x}</span>`).join('')));
-        c.appendChild(el('div', 'tip-foot', t('tip.item.altHint')));
+        c.appendChild(el('div', 'tip-foot', t(shiftable ? 'tip.item.keysHint' : 'tip.item.altHint')));
         w.appendChild(c);
         if (compare) {
             w.appendChild(el('div', 'tip-vs alt-only', '<span>VS</span>'));
-            w.appendChild(tipCard(compare, t('tip.equipped'), [], compareCtx)).classList.add('alt-only');
+            w.appendChild(tipCard(compare, t('tip.equipped'), [], compareCtx, { ranges: isShiftHeld() })).classList.add('alt-only');
         }
         return w;
     };
     bindTipNode(node, build, { actions });
+}
+
+/**
+ * 착용 델타 블록 — 머리 「{영웅} 착용 시」 + **바뀌는 세부 옵션 줄만** `이름 · 지금 → 낀 뒤 · ▲/▼` [2026-10-14 · SCREEN_DESIGN §6 · ADR-0618].
+ * 값은 `game.heroCombat` ↔ `game.heroCombatWith`(가방에 없는 상점 물건도) · 줄 조립 · 방향은 `tip.js:sheetDeltaRows`(세부 옵션 1 · 2 와 같은 글자 · `formula.statBetter`).
+ * 화살표는 좋아짐 ▲ · 나빠짐 ▼ — 섞인 줄은 비운다 · 바뀌는 줄이 없으면 「변화 없음」. 「총합 더 좋음」은 없다(item_design §6-3)
+ */
+function deltaHtml(h, item) {
+    const rows = sheetDeltaRows(combatOf(h), SYS.game.heroCombatWith(G, h, item));
+    const arrow = d => (d > 0 ? '<b class="up">▲</b>' : d < 0 ? '<b class="down">▼</b>' : '<b></b>');
+    const body = rows.length
+        ? rows.map(r => `<div class="r"><span class="n">${r.name}</span><span class="v">${r.from} → ${r.to}</span>${arrow(r.dir)}</div>`).join('')
+        : `<div class="r none">${t('tip.delta.none')}</div>`;
+    return `<div class="tip-delta"><div class="tip-delta-h">${t('tip.delta.h', { name: L(h.name) })}</div>${body}</div>`;
 }
 
 /* ═══════════ 스킬 ═══════════ */
@@ -6843,10 +6935,11 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
             // 장비 — 인벤토리 칸과 같은 그림 · 희귀도 테두리 · 오른쪽 아래 ilvl.
             //   툴팁은 캐릭터 탭 가방 칸과 같은 VS 카드 — 상대는 **고른 영웅이 그 아이템을 끼울 자리**의 착용품이다 (§8-3 · ADR-0359).
             //   「이 아이템」 카드는 맥락이 없다(식으로 선다) — `heroCombatIf` 가 가진 아이템의 uid 만 받는다.
+            //   착용 델타는 선다 — `heroCombatWith` 가 가방에 없는 물건도 받는다 (§6 · ADR-0618)
             //   반지 칸 힌트 · 「끼우면 꺼지는 전술」 줄은 안 단다 — 사는 것은 끼우는 것이 아니다
             cell.style.borderColor = g.color;
             cell.innerHTML = `<span class="inv-icon">${itemImg(g.item)}</span><span class="inv-lv">${t('ch.itemLv', { n: g.item.ilvl })}</span>`;
-            bindTip(cell, g.item, h ? { compare: itemOf(h.equipped[SYS.game.equipTarget(h, g.item)]), compareCtx: heroSkillCtx(h) } : {});
+            bindTip(cell, g.item, h ? { compare: itemOf(h.equipped[SYS.game.equipTarget(h, g.item)]), compareCtx: heroSkillCtx(h), hero: h } : {});
         } else {
             // 재료 — 그림 자리에 글자(재료 아이콘 아트가 없다 · 사용자 지시) · 오른쪽 아래 수량
             cell.innerHTML = `<span class="td-mat">${t('td.matIcon')}</span><span class="inv-lv">×${g.mat.n}</span>`;
@@ -8180,7 +8273,7 @@ async function boot() {
     if (Number.isInteger(heroNo) && G?.heroes?.[heroNo - 1]) state.heroUid = G.heroes[heroNo - 1].uid;
     // 인벤토리 칸의 탭 — 탭은 클릭으로만 바뀐다(SCREEN_DESIGN §10 · §6 · ADR-0379)
     const bg = new URLSearchParams(location.search).get('bag');
-    if (['equip', 'mat'].includes(bg)) state.stashTab = bg;   // 창고 칸의 탭 (ADR-0524)
+    if (['equip', 'mat', 'book'].includes(bg)) state.stashTab = bg;   // 창고 칸의 탭 (ADR-0524 · 스킬북 ADR-0616)
     // `&bag=sort` · `sort:stash` — 인벤토리 · 창고 [정렬]을 펼친 채 · `&bag=sel` · `sel:rarity` · `sel:ilvl` — 고르는 중(고르기 메뉴 · 그 줄을 펼친 채) (§10 · ADR-0523 — 클릭으로만 열려 헤드리스가 못 닿는다)
     if (bg?.startsWith('sort')) state.bagSortMode = bg === 'sort:stash' ? 'stash' : 'bag';
     if (bg?.startsWith('sel')) { state.bagSelMode = true; state.bagPickFold = ['rarity', 'ilvl'].includes(bg.split(':')[1]) ? bg.split(':')[1] : null; }
