@@ -204,13 +204,14 @@ const classWeapons = id => D.weaponGroupList.filter(g => g.classes.includes(id))
 const classLine = id => { const c = classDef(id); return c ? `${L(c.role)} · ${classWeapons(id)}` : t('class.unassigned'); };
 const slotDef = id => D.slots.find(s => s.id === id);                                   // 부위
 const posDef = pos => slotDef(D.equipSlots.find(s => s.id === pos)?.part);             // 착용 위치 → 부위 정의
-/** 옵션 한 줄 — **발동 옵션**(`AFFIX_LABELS[..].proc` · 2026-10-05 R206)은 목걸이 발동 줄과 같은 문장(`tip.proc.<조건>` · 확률 + 스킬 이름)이다 */
-const affixText = a => {
+/** 옵션 한 줄 — **발동 옵션**(`AFFIX_LABELS[..].proc` · 2026-10-05 R206)은 목걸이 발동 줄과 같은 문장(`tip.proc.<조건>` · 확률 + 스킬 이름)이다.
+ *  이름은 부위가 바꿀 수 있다 — 무기 칸의 데미지 % 는 「무기 데미지」(`M.itemAffixText` · ADR-0628 · 2026-10-15) */
+const affixText = (a, slot) => {
     const lab = M.statLabel(a.stat);
     const def = a.skill ? SYS.skill.defs[a.skill] : null;
     // 특정 스킬 +n — 「파이어볼 +1」 (§6 · ADR-0535 · 2026-10-08)
     if (lab.skill) return t('tip.skillPlus', { skill: def ? L(def.name) : '—', v: a.v });
-    if (!lab.proc) return L(M.affixText(a.stat, a.v));
+    if (!lab.proc) return L(M.itemAffixText(slot, a.stat, a.v));
     return t(`tip.proc.${lab.proc}`, { p: M.pctText(a.v), skill: def ? L(def.name) : '—' });
 };
 
@@ -703,7 +704,7 @@ function segmented(items, current, onPick) {
 /**
  * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 이펙트 그림체 · 이펙트 투명도 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · Focus(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
- * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 초상을 바꾼다.
+ * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 초상과 스테이지 배경을 함께 바꾼다.
  */
 function settingsBody() {
     const box = el('div', 'set-box');
@@ -2170,8 +2171,9 @@ function goBox(z) {
     const go = el('button', 'btn lg primary', t('exp.deploy'));
     // 출발하면 창은 할 일이 끝났다 — 안 닫으면 관전 화면 위에 편성 창이 그대로 떠 있는다 · 창의 반복 스위치를 새 런에 싣는다 (ADR-0432)
     //   **다른 일을 하던 영웅이 끼어 있으면 먼저 묻는다** [2026-09-30 사용자 지시 · ADR-0467] — 나갈 수 있는 편성일 때만이다(거절될 출발은 묻지 않고 지금처럼 플래시)
+    //   **원정 중인 제 부대를 끊을 때도 묻는다** [2026-10-15 · ADR-0629 — ~~묻지 않고 끊는다~~(ADR-0111)]
     go.onclick = () => {
-        if (departPulls(z.stage_id)) { openModal('departConfirm'); return; }
+        if (departPulls(z.stage_id) || departCuts(z.stage_id)) { openModal('departConfirm'); return; }
         state.modal = null; runBattle(z.stage_id, { repeat: state.expRepeat });
     };
     actions.appendChild(rep);
@@ -2387,15 +2389,21 @@ function departBody() {
 }
 
 /** 이 출발이 **다른 일을 하던 영웅을 데려가나** — 고른 편성이 나갈 수 있고(`game.canDepart`) 그 안에 하던 일이 있는 영웅이 있을 때 참이다.
- *  판정은 `game.heroBusy` 가 낸다 · `'run'` 은 안 센다 — 나갈 수 있는 편성에서 그것은 **제 부대**이고, 다시 보내기는 그 부대를 끊고 나가는 일이다(ADR-0111) */
+ *  판정은 `game.heroBusy` 가 낸다 · `'run'` 은 여기서 안 센다 — 나갈 수 있는 편성에서 그것은 **제 부대**이고 끊는 일은 `departCuts` 가 따로 묻는다(ADR-0629) */
 const departPulls = stageId => SYS.game.canDepart(G, stageId, now()) === null
     && SYS.game.partyOf(G).some(uid => { const busy = SYS.game.heroBusy(G, uid); return busy !== null && busy !== 'run'; });
+/** 이 출발이 **원정 중인 제 부대를 끊나** — 고른 편성이 나갈 수 있고 그 안에 지금 원정에서 싸우는 영웅이 있을 때 참이다
+ *  [2026-10-15 · PLAN_user_review 2-5 · ADR-0629 — ~~묻지 않고 끊는다~~(ADR-0111)]. 끊는 일 자체는 그대로다(철수와 같다) */
+const departCuts = stageId => SYS.game.canDepart(G, stageId, now()) === null
+    && SYS.game.partyOf(G).some(uid => SYS.game.heroBusy(G, uid) === 'run');
 
 /** 출정 확인 창 — 문장 하나 + [확인] · [취소] [2026-09-30 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0467]. 해고 창과 같은 상자다(`.dismiss-box`).
  *  [확인] = 출정 창의 [보내기]가 하던 일 그대로 · [취소] = 출정 창으로 돌아간다(고른 칸 · 편성 · 반복 스위치는 화면 상태라 그대로다) */
 function departConfirmBody() {
     const box = el('div', 'dismiss-box');
-    box.appendChild(el('div', '', t('exp.departBusy')));
+    // 문장은 까닭마다 한 줄 — 제 부대를 끊는다(ADR-0629) · 다른 일을 하던 영웅을 데려간다(ADR-0467). 둘 다면 둘 다 선다
+    if (departCuts(state.expStage)) box.appendChild(el('div', '', t('exp.departCut')));
+    if (departPulls(state.expStage)) box.appendChild(el('div', '', t('exp.departBusy')));
     const actions = el('div', 'dismiss-actions');
     const ok = el('button', 'btn primary', t('ui.ok'));
     ok.onclick = () => { state.modal = null; runBattle(state.expStage, { repeat: state.expRepeat }); };
@@ -2478,19 +2486,20 @@ function runListPanel(list, idx, no) {
  *  **리포트는 보기 전용이다** [2026-09-21 · ADR-0186] — 분해 · 장착 · 이동은 전부 캐릭터 탭(§6)이 든다.
  *  **자리가 런마다 같다** (ADR-0086) — 격자는 한 줄 높이로 못박히고 「없음」도 그 안에 선다. 넘쳐 분해한 수는 머리 줄 안으로 (ADR-0625) */
 function dropSection(p, R) {
-    // 떨어진 스킬북도 이 격자에 선다 — 장비 칸 뒤에 이어서 · 개수는 장비 + 책 (§4-3 · ADR-0420 · 옛 리포트는 `books` 가 없다)
+    // 떨어진 스킬북도 이 격자에 선다 — 장비 칸 뒤에 이어서 (§4-3 · ADR-0420 · 옛 리포트는 `books` 가 없다)
     const books = R.books ?? [];
-    const head = el('h2', '', `<span>${t('rep.drops.h')} <small>${t('rep.drops.sub', { n: R.drops.length + books.length })}</small></span>`);
+    // 처치 재료 — 재료 하나가 칸 하나 · 광석 → 목재 → 약초 순 (§4-3 · ADR-0530 · 옛 리포트는 `materials` 가 없다)
+    const KIND_ORDER = ['ore', 'wood', 'herb'];
+    const mats = Object.entries(R.materials ?? {}).filter(([, n]) => n > 0)
+        .sort(([a], [b]) => KIND_ORDER.indexOf(resKind(a)) - KIND_ORDER.indexOf(resKind(b)));
+    // 머리 줄의 개수 = **격자의 칸 수**(장비 + 책 + 재료 칸 — 재료는 개수 합이 아니라 칸 하나) [2026-10-15 · ADR-0630 — ~~장비 + 책~~]
+    const head = el('h2', '', `<span>${t('rep.drops.h')} <small>${t('rep.drops.sub', { n: R.drops.length + books.length + mats.length })}</small></span>`);
     p.appendChild(head);
     const tail = el('span', 'rep-h-tail');
     if (R.discarded) tail.appendChild(el('small', 'down', t('rep.discarded', { n: R.discarded })));
     head.appendChild(tail);
     const box = el('div', 'rep-drops rep-cut');
     p.appendChild(box);
-    // 처치 재료 — 재료 하나가 칸 하나 · 광석 → 목재 → 약초 순 (§4-3 · ADR-0530 · 옛 리포트는 `materials` 가 없다)
-    const KIND_ORDER = ['ore', 'wood', 'herb'];
-    const mats = Object.entries(R.materials ?? {}).filter(([, n]) => n > 0)
-        .sort(([a], [b]) => KIND_ORDER.indexOf(resKind(a)) - KIND_ORDER.indexOf(resKind(b)));
     if (!R.drops.length && !books.length && !mats.length) { box.appendChild(el('div', 'muted rep-note', t('rep.drops.none'))); return; }
     const grid = el('div', 'inv-cells wide');
     for (const uid of R.drops) {
@@ -4047,7 +4056,7 @@ function itemBodyHtml(item, { ranges = false } = {}) {
         // 공격력의 **이름은 무기군이 정한다**(물리 ↔ 마법) — 그 이름의 SSOT 는 `combat_stat.csv` 다.
         // 원소는 마법 무기 **개체**가 든 값이라 이름 옆 주석으로 붙인다 — 「마법 공격력 (마법)」은 같은 말을 두 번 한다
         const atkStat = statRow(g.damageKind === 'physical' ? 'atk_physical' : 'atk_magic');
-        // 값은 **피해 범위** `최소~최대` — 강화 배율 · **고정 옵션 「데미지 +%」**까지 든 파생값이다(`item.weaponDamageFixed` · ADR-0108 · ADR-0307)
+        // 값은 **피해 범위** `최소~최대` — 강화 배율 · **고정 옵션 「무기 데미지 +%」**까지 든 파생값이다(`item.weaponDamageFixed` · ADR-0108 · ADR-0307)
         baseRows.push(baseRow(atkStat ? L(atkStat) : t('st.atk'), rangeText(SYS.item.weaponDamageFixed(item)),
             item.element ? t(`st.atkType.${item.element}`) : ''));
         // 속도 줄 = **공격 속도**, 값은 초 / 1회 [2026-09-25 사용자 지시 · ADR-0357 초 · ADR-0358 이름 — 초당 공격속도(ADR-0081)를 걷었다].
@@ -4067,7 +4076,7 @@ function itemBodyHtml(item, { ranges = false } = {}) {
               순서도 아이템이 든 순서 그대로다 — 렌더러가 정렬하지 않는다. 출처가 없는 옛 접사는 랜덤으로 찍는다 */''}
         ${/* 목걸이는 **첫 줄이 발동 스킬**이다 — 고정 옵션 자리(`[고정]`) · 문장은 발동 조건마다 하나 · 간격 초는 `skill.procIntervalSec` 가 낸다.
               전투가 아직 안 읽는 줄은 끝에 「(미적용)」 — 발동 줄과 `inert` 표지가 붙은 stat (SCREEN_DESIGN §6 · ADR-0213) */''}
-        <ul>${procLine(item)}${(item.affixes ?? []).map((a, i) => `<li>${srcTag(srcs[i])}${affixText(a)}${ranges ? rangeTag(item, i) : ''}${M.statInert(a.stat) ? inertTag() : ''}</li>`).join('')
+        <ul>${procLine(item)}${(item.affixes ?? []).map((a, i) => `<li>${srcTag(srcs[i])}${affixText(a, item.slot)}${ranges ? rangeTag(item, i) : ''}${M.statInert(a.stat) ? inertTag() : ''}</li>`).join('')
             || `<li class="tip-empty">${t('tip.noAffix')}</li>`}</ul>`;
 }
 
@@ -7238,7 +7247,7 @@ function faceStylePicker(box) {
     return box;
 }
 
-/** 설정 · 도감이 같은 초상 스타일과 저장값을 공유한다. */
+/** 설정 · 도감이 같은 아트 묶음(초상·스테이지 배경)과 저장값을 공유한다. */
 function faceStyleButtons() {
     const buttons = segmented(M.FACE_STYLES.map(id => ({ id, label: id })), M.faceStyle(),
         id => { M.setFaceStyle(id); render(); });
@@ -7743,7 +7752,6 @@ function helpSections() {
             groups: [
                 { h: t('tv.h'), sub: t('tv.sub'), body: [t('tv.tiers.note')] },
                 { h: t('tv.reroll.free'), body: [t('tv.reroll.note')] },
-                { h: t('tv.uniqueTodo.h'), body: [t('tv.uniqueTodo.b')] },
                 { h: t('exp.commission.h'), body: [t('exp.commission.note')] },
                 // 도박장 규칙 — 창에는 숫자 · 버튼만 서고 규칙 문장은 여기 하나다 (ADR-0331). 값은 인게임과 같은 balance · 표에서
                 { h: t('gb.h'), body: [t('gb.help', {

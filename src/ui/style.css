@@ -5103,7 +5103,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     color: var(--text-secondary); background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 2px; }
 /* 강화 연출 — 진열 칸 위 무대 (§8-2 · ADR-0626). 결과는 이미 저장됐고 여기는 재생이다. 박자는 app.js(`FG_*`)가 변수로 준다 —
    `--fg-e` = 흐른 시간이라 모든 지연에서 빼면 다시 그려져도 이어서 돈다. 무대 판 200×250 안의 자리는 그림의 생김새에 맞췄다:
-   모루 윗면(그림 13% 높이 · 33~93% 폭) 가운데에 아이템이 앉고, 망치 머리(그림 15% 폭 · 아래 끝 73%)가 그 위에 닿게 놓아 손잡이 끝(94% · 53%)을 축으로 돌린다 */
+   모루 윗면(그림 10% 높이 · 31~94% 폭) 가운데에 아이템이 앉고, 망치 머리(그림 15% 폭 · 아래 끝 71%)가 그 위에 닿게 놓아 손잡이 끝(94% · 55%)을 축으로 돌린다 */
 .fg-up-show { position: relative; }
 .fg-up-show.anim > :not(.fg-anim) { visibility: hidden; }   /* 재생 중엔 무대만 — 이름 · 메타는 끝나면 새 단계로 돌아온다 */
 .fg-up.anim { cursor: pointer; }                              /* 누르면 결과로 건너뛴다 */
@@ -5116,13 +5116,13 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .fg-rig { position: relative; flex: none; width: 200px; height: 250px; animation: fg-shake var(--fg-hit) linear var(--d-hit) var(--fg-hits); }
 .fg-rig > * { position: absolute; }
 .fg-anvil { left: 4px; top: 114px; width: 136px; height: 136px; animation: fg-rise var(--fg-in) ease-out var(--d0) both; }
-.fg-anim-item { left: 61px; top: 77px; width: 58px; height: 58px; display: flex; align-items: flex-end; justify-content: center; font-size: 40px;
+.fg-anim-item { left: 59px; top: 73px; width: 58px; height: 58px; display: flex; align-items: flex-end; justify-content: center; font-size: 40px;
     animation: fg-drop var(--fg-in) ease-in var(--d0) both; }
 .fg-anim-item img { width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 100%;
     animation: fg-squash var(--fg-hit) linear var(--d-hit) var(--fg-hits) both; }
 .fg-anim.win .fg-anim-item img { animation: fg-squash var(--fg-hit) linear var(--d-hit) var(--fg-hits) both, fg-glow 700ms ease-out var(--d-res) both; }
 .fg-anim.lose .fg-anim-item img { animation: fg-squash var(--fg-hit) linear var(--d-hit) var(--fg-hits) both, fg-dim 600ms ease-out var(--d-res) both; }
-.fg-hammer { left: 74px; top: 3px; width: 104px; height: 104px; transform-origin: 93.8% 53.2%;
+.fg-hammer { left: 72px; top: 1px; width: 104px; height: 104px; transform-origin: 93.8% 54.5%;
     animation: fg-fade var(--fg-in) ease-out var(--d0) both, fg-swing var(--fg-hit) linear var(--d-hit) var(--fg-hits) both; }
 /* 성공 — 마지막 망치가 닿은 뒤 물러나 사라진다(`+n` 을 가리지 않게) */
 .fg-anim.win .fg-hammer { animation: fg-fade var(--fg-in) ease-out var(--d0) both, fg-swing var(--fg-hit) linear var(--d-hit) var(--fg-hits) both,
@@ -5132,12 +5132,12 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     fg-swing var(--fg-hit) linear var(--d-hit) calc(var(--fg-hits) - 1) both,
     fg-swing-fail calc(var(--fg-hit) * 1.6) linear var(--d-last) 1 forwards; }
 /* 불꽃 — 망치가 닿을 때마다(한 박의 78%) 작은 불똥 여섯 */
-.fg-spark { left: 90px; top: 78px; width: 0; height: 0; animation: fg-spark var(--fg-hit) linear var(--d-hit) var(--fg-hits) both; }
+.fg-spark { left: 88px; top: 74px; width: 0; height: 0; animation: fg-spark var(--fg-hit) linear var(--d-hit) var(--fg-hits) both; }
 .fg-spark::before { content: ''; position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--fx-fire-core);
     box-shadow: 16px -12px 0 1px var(--color-warning), -18px -9px 0 var(--fx-fire-core), 24px 3px 0 var(--fx-fire), -12px -22px 0 1px var(--color-warning),
         6px -24px 0 var(--fx-fire-core), -26px 1px 0 var(--fx-fire), 0 0 14px 6px color-mix(in srgb, var(--color-warning) 60%, transparent); }
 /* 성공 — 큰 불꽃(빛 덩이 + 멀리 튀는 불똥) */
-.fg-burst { left: 90px; top: 84px; width: 180px; height: 180px; margin: -90px 0 0 -90px; border-radius: 50%;
+.fg-burst { left: 88px; top: 80px; width: 180px; height: 180px; margin: -90px 0 0 -90px; border-radius: 50%;
     background: radial-gradient(circle, var(--fx-fire-core) 0 10%, color-mix(in srgb, var(--color-warning) 80%, transparent) 22%,
         color-mix(in srgb, var(--fx-fire) 45%, transparent) 42%, transparent 66%);
     animation: fg-burst 650ms ease-out var(--d-res) both; }
@@ -5145,7 +5145,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     box-shadow: 52px -40px 0 1px var(--color-warning), -58px -30px 0 1px var(--fx-fire-core), 70px 10px 0 var(--fx-fire), -36px -62px 0 1px var(--color-warning),
         14px -72px 0 var(--fx-fire-core), -74px 6px 0 var(--fx-fire), 40px 46px 0 var(--color-warning), -46px 40px 0 var(--fx-fire-core); }
 /* 실패 — 회색 연기 두 덩이가 피어오른다 */
-.fg-smoke { left: 90px; top: 82px; width: 0; height: 0; animation: fg-smoke 1000ms ease-out var(--d-res) both; }
+.fg-smoke { left: 88px; top: 78px; width: 0; height: 0; animation: fg-smoke 1000ms ease-out var(--d-res) both; }
 .fg-smoke::before, .fg-smoke::after { content: ''; position: absolute; border-radius: 50%;
     background: radial-gradient(circle, color-mix(in srgb, var(--fx-basic) 80%, transparent) 0 35%, transparent 70%); }
 .fg-smoke::before { left: -40px; top: -30px; width: 50px; height: 42px; }

@@ -9,19 +9,32 @@
 
 | 자리 | 쓰는 곳 |
 |---|---|
-| `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 15장(Ch1~Ch3 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] · `background_stage_101.webp` 은 **로그인 첫 화면 배경도 겸한다** — 로그인은 스타일 설정 이전이라 CSS 가 이 폴더를 직접 박는다(거점 `pixel/town.webp` 와 같은 예외 · 2026-09-18 사용자 지시) |
+| `gpt/` | **GPT 스테이지 배경 25장(Ch1~Ch5)** — 설정·도감의 `gpt` 버튼으로 초상과 함께 선택한다. 1~3장은 새 그림 15장, 4~5장은 먼저 만든 10장을 그대로 복사했다. 원본·프롬프트는 `source/gpt/` (ADR-0632) |
+| `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 25장(Ch1~Ch5 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] · `background_stage_101.webp` 은 **로그인 첫 화면 배경도 겸한다** — 로그인은 스타일 설정 이전이라 CSS 가 이 폴더를 직접 박는다(거점 `pixel/town.webp` 와 같은 예외 · 2026-09-18 사용자 지시) |
 | `pixel/` | **스테이지 배경 설치본 — 도트 스타일** 15장(Ch1~Ch3) + `town.webp`(앱 전역 배경 · 한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110). **비교용으로 남긴다**(`?bg=pixel`) · 거점 배경은 스타일을 안 타고 늘 여기서 읽는다 |
 | `explore_world.webp` | **탐험 탭 — 세계지도 한 장 · 일곱 챕터가 구간** [2026-10-08 사용자 지시 · ADR-0537] ⚠ 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
 | `explore_world_mask/<챕터 id>.png` | **탐험 지도 — 잠긴 챕터 구간의 막 모양** [2026-10-08 · ADR-0543] — 그림과 같은 크기의 알파 그림(땅만 · 물은 안 든다). `python scripts/build_explore_masks.py` 가 짓는다 (아래 「구간 마스크」) · **게임은 안 읽는다** — 아래 조각의 재료다 |
 | `explore_world_locked/<챕터 id>.webp` | **탐험 지도 — 잠긴 구간에 얹는 「빛 바랜 땅」 조각** [2026-10-09] — 그림을 회색 · 어둡게 칠해(CSS `grayscale(.85)` · `brightness(.48)` 과 같은 값) 그 장의 마스크로 잘라 **구간 크기로** 굽는다(장당 약 400×400 · 20KB 안팎). `python scripts/build_explore_locked.py` 가 짓고 조각 자리(`tile` %)를 찍는다 → `mock.js:EXPLORE_REGIONS` 에 옮긴다. 실행 중 필터 · 마스크를 안 돌리려고 굽는다(탭이 늦게 켜졌다) — **그림 · 마스크를 바꾸면 다시 돌린다** |
 | `explore_chapter_1.webp` | **지금은 아무도 안 읽는다** [2026-10-08] — 09-04 의 챕터 1 지도. 세계지도가 대체했고 파일은 남겨 둔다 (아래 「옛 챕터 1 지도」) |
 | `login.webp` | **지금은 아무도 안 읽는다** [2026-09-18 사용자 지시] — 로그인 화면이 스테이지 1-1 그림(`illustrate/background_stage_101.webp`)을 그대로 깔게 바뀌었다. 원본은 `source/illustrate/Gemini_Generated_Image_v1efev1efev1efev.png`(성벽에 일곱 깃발)이고, 크롭 없이 RGB WebP q92 로 설치해 둔 사본이 남아 있다 |
-| `source/pixel/` · `source/illustrate/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 워터마크 띠를 잘라 만든다 (아래) |
+| `source/pixel/` · `source/illustrate/` · `source/gpt/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 게임용 비율로 잘라 만든다. 기존 Gemini 원본은 워터마크 띠도 제외한다 (아래) |
 
-파일명의 숫자는 `stage.csv` 의 stage_id 다 — 스테이지와 배경이 id로 1:1 대응한다.
-**스타일 하나 = 폴더 하나** [2026-09-16 사용자 지시 · `faces/` 와 같은 규칙] — 화면은 `mock.js:bgDir()` 이 고른 폴더 **하나만** 읽고, 고르는 순서는 얼굴과 같다(URL `?bg=<스타일>` → localStorage → `BG_STYLES` 첫 항목). 새 스타일은 폴더를 만들고 `BG_STYLES` 에 이름을 더하면 끝이다.
-**한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 없는 자리는 CSS 그라디언트로 폴백한다(`.arena` 기본 배경). **두 스타일 다 챕터 1~3 열다섯 장을 갖췄고, 챕터 4 이후는 어느 스타일에도 없다.**
+파일명의 숫자는 `stage.csv` 의 `chapter * 100 + stage_num` 이다 — 같은 스테이지의 세 구간은 배경 한 장을 공유한다(`stage_id` 는 구간까지 포함한 네 자리).
+**스타일 하나 = 폴더 하나** — 화면은 `mock.js:bgDir()` 이 고른 폴더 **하나만** 읽는다. 설정·도감의 아트 버튼과 `?face=`가 초상·배경을 함께 고른다: `gemini` → `illustrate/`, `gpt` → `gpt/`. 배경만 비교하려면 `?bg=illustrate|gpt|pixel`로 재정의한다. URL·저장값의 우선순위는 [SCREEN_DESIGN §10](../../../docs/client/SCREEN_DESIGN.md), 결정은 ADR-0632다.
+**한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 없는 자리는 CSS 그라디언트로 폴백한다(`.arena` 기본 배경). **일러스트와 GPT는 각각 챕터 1~5 스물다섯 장, 도트는 챕터 1~3 열다섯 장을 갖췄다. 챕터 6~7은 아직 없다.**
 ⚠ **화면은 `source/` 원본을 직접 안 읽는다** [2026-09-11 사용자 지시] — 오른쪽 아래 생성기 워터마크(✦) 띠를 잘라 낸 설치본을 읽는다(아래 레시피). 계승 원본은 재동기화 사본으로 `source/pixel/` 에 그대로 둔다.
+
+### GPT 배경 원본과 재내보내기 [2026-10-15]
+
+`backgrounds/source/gpt/background_stage_<id>.png`는 챕터 1~5의 생성 원본 25장이다. **내장 image_gen**으로 만든 1~3장 새 그림 15장과 앞서 생성한 4~5장 10장을 보관한다. Gemini 원본·설치본(`source/illustrate/`·`illustrate/`)과 분리해 관리한다.
+
+게임용은 `backgrounds/gpt/`의 **1376×615 RGB WebP q92**. `python scripts/build_gpt_backgrounds.py`로 원본 위쪽을 같은 비율로 잘라 축소한다. `--chapters 1 2 3`처럼 필요한 챕터만 내보낼 수도 있다. 색 보정은 하지 않는다. 원본은 바꾸지 않는다.
+
+스토리의 기준은 `stage.csv:story_kr`이며, 원고와 이름이 갈린 곳도 CSV를 따른다. 103의 첫 생성본에 섞인 설경은 편집으로 제거했고 최종본만 설치했다. 303은 계약서·봉인·보물 상자가 있는 실내로 만들었다.
+
+- 프롬프트: [`ch1_ch3_prompts.json`](backgrounds/source/gpt/ch1_ch3_prompts.json) · [`ch4_ch5_prompts.json`](backgrounds/source/gpt/ch4_ch5_prompts.json).
+- 전체 25장 미리보기: [`gpt_all_chapters_preview.jpg`](backgrounds/source/gpt/gpt_all_chapters_preview.jpg).
+- 기존 그림과 비교: [`chapter_1_comparison.jpg`](backgrounds/source/gpt/chapter_1_comparison.jpg) · [`chapter_2_comparison.jpg`](backgrounds/source/gpt/chapter_2_comparison.jpg) · [`chapter_3_comparison.jpg`](backgrounds/source/gpt/chapter_3_comparison.jpg).
 
 ### ⚠ 탐험 지도는 스테이지 배경이 아니다 [2026-09-04 사용자 지시 · 자리 개정 2026-09-16 · 세계지도 2026-10-08]
 
@@ -170,7 +183,30 @@ Image.open(src_png).convert('RGB').save(dst_webp, 'WEBP', quality=88, method=6)
 | `background_stage_305.webp` | **신규** 2752×1536 → **2752×1230** | 435KB |
 | `town.webp` | 1376×768 → **1376×680** | 105KB → 102KB |
 
-**`illustrate/` 는 열다섯 장이다** [2026-09-16] — 챕터 1~3 전부(101~305). 원본이 전부 2752×1536 이라 **50% 로 줄인 뒤 아래 20% 를 잘라** `pixel/` 과 같은 1376×615 로 맞췄다(WebP q92 · 86~232KB). 생성기 ✦ 는 열다섯 장 다 잘려 나가는 띠 안에 있었다(가장 높은 104 도 80% 선 아래) — **그림을 새로 들이면 이 확인부터 한다**.
+**`illustrate/` 는 스물다섯 장이다** — 챕터 1~3(101~305)의 원본은 전부 2752×1536 이라 **50% 로 줄인 뒤 아래 20% 를 잘라** 1376×615 로 맞췄다(WebP q92 · 86~232KB). 생성기 ✦ 는 이 열다섯 장 다 잘려 나가는 띠 안에 있었다(가장 높은 104 도 80% 선 아래). 챕터 4~5 열 장도 같은 설치 규격이며, 생성 방식과 레시피는 아래와 같다.
+
+### 챕터 4~5 일러스트 배경 [2026-10-15]
+
+`stage.csv:story_kr` 를 기준으로, 챕터 1~3 원본 둘(`201` · `305`)을 그림체 기준으로 첨부해 **Gemini 웹**으로 스테이지마다 한 장씩 생성했다(「렌더링만 따르고 색 · 소재는 따르지 말 것」 · 챕터 공통 블록 + 스테이지 블록). 원고와 게임의 이름이 다른 곳은 CSV 를 따른다. 보스는 별도 전투 요소이므로 배경에는 장소와 사물로 이야기를 담았다. GPT 판은 `gpt/` · `source/gpt/` 에 따로 있다.
+
+| id | 장소 | 이야기의 시각 요소 |
+|---|---|---|
+| 401 | 얼어붙은 평원 | 떠나지 못한 마을 · 짐을 실은 채 선 수레 · 멀리 얼어 선 주민 형상 |
+| 402 | 빙하 요새 | 요새 안 얼어붙은 호수 · 빈 의자와 미끼 없는 낚싯대 · 손 안 댄 도끼 |
+| 403 | 영구동결의 심부 | 바람 없는 협곡 · 얼어붙은 회오리 · 빳빳하게 늘어진 깃발 · 얼음에 박힌 검은 깃털 |
+| 404 | 잠든 빙궁 | 닫힌 문 · 얼음에 갇힌 양귀비 · 얼어붙은 촛불 · 고요한 안개 |
+| 405 | 벨페고르의 동결왕좌 | 높은 단의 빈 왕좌에서 퍼지는 얼음 |
+| 501 | 탐식의 입구 | 동토의 서리 · 버려진 쇠뇌 · 빵 · 삼키는 동굴 |
+| 502 | 맥동하는 미로 | 수축하는 듯한 통로 · 벽에 삼켜진 사물 · 거인의 발자국 |
+| 503 | 소화의 심연 | 가라앉은 석상과 건축 잔해 · 소화액 웅덩이 |
+| 504 | 연회의 대문 | 조금 열린 문 · 세 개의 빈 먹이 그릇 · 쇠사슬 |
+| 505 | 바알제붑의 연회장 | 높은 단의 식탁과 빈 의자 · 끝없이 쌓이는 빈 식기 |
+
+- 원본: `backgrounds/source/illustrate/background_stage_{401~405,501~505}.png` — 생성 결과를 그대로 보관한다.
+- 설치본: `backgrounds/illustrate/` 의 같은 이름 WebP — **1376×615 · RGB · q92 · method 6**, 열 장 합계 약 1.56 MiB. 원본 위쪽에서 가로세로 비율을 유지해 자른 뒤 축소하며, 색은 보정하지 않는다. 아래 여백 약 20% 가 제외된다. 생성기 ✦ 는 열 장 모두 높이 약 84% 로 잘려 나가는 띠 안에 있다.
+- 생성 지시문: [`backgrounds/source/illustrate/ch4_ch5_prompts.json`](backgrounds/source/illustrate/ch4_ch5_prompts.json). 402 · 503 은 세 번째 판이다(402 는 밝기 · 소품 높이, 503 은 가운데 선 석상 · 벽 색을 프롬프트에 못박아 다시 뽑았다).
+- 재내보내기: `python scripts/build_ch4_ch5_backgrounds.py` — 위 열 장만 내보내고 [`ch4_ch5_preview.jpg`](backgrounds/source/illustrate/ch4_ch5_preview.jpg) 비교 시트를 만든다.
+- `stage.csv` 의 챕터 4·5 **26개 구간 모두 `bg=1`**. `stageBgOf` 가 같은 스테이지의 배경을 공유한다. 도트 비교 스타일의 챕터 4·5 파일은 없으므로 기존 그라디언트 폴백을 쓴다.
 
 **왜** — 계승 원본 넷 모두 **오른쪽 아래에 생성기 워터마크(✦)가 박혀 있다**(끝에서 가로 · 세로 약 64~160px · `town` 은 절반인 32~80px). 화면은 그림을 `cover` 로 채우므로 **틀의 비율이 워터마크를 가리거나 드러낸다** — 2026-09-11 넓게 보기 아레나(약 2.66:1)는 아래가 12% 잘려 우연히 가려졌고, 나눔 보기(약 1.97:1)는 3% 만 잘려 드러났다(사용자 제보). `town` 은 상점 · 선술집 패널 오른쪽 아래에 어두운 막 아래로 희미하게 보였다.
 
@@ -413,11 +449,11 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ## icons/gamble/ — 도박장 슬롯 심볼 [신설 2026-10-12]
 
-`<symbol_id>.png` 7장 + `jackpot.png` — 512 투명 · 긴 변 0.88 · 중앙 · 파일명 = `slot_symbol.csv` 의 `symbol_id`(잭팟 코인만 `slot_coin.csv` 의 kind). 화면은 도박장 창의 판 · 배당표 · 선술집 도박장 칸의 죄종 띠(`mock.js:gambleArt` · SCREEN_DESIGN §8-1 · ADR-0608).
+`<symbol_id>.png` 7장 + `jackpot.png` — 512 투명 · 긴 변 0.88 · 중앙 · 파일명 = `slot_symbol.csv` 의 `symbol_id`(잭팟 코인만 `slot_coin.csv` 의 kind). 화면은 도박장 창의 판 · 배당표 · 선술집 도박장 칸의 죄종 띠(`mock.js:gambleArt` · SCREEN_DESIGN §8-1 · ADR-0608 · ADR-0631).
 
 | 파일 | 그림 (죄종) | 원본 |
 |---|---|---|
-| `seven.png` | 보라 보석 박힌 무쇠 왕관 (오만) | `source/sheet_01_codex.png` 1 |
+| `seven.png` | 숫자 7 실루엣 — 윗변이 무쇠 왕관 띠(가시 다섯 · 보라 보석 셋) (오만) | `source/sheet_03_codex.png` 2 (ADR-0631) |
 | `wild.png` | 금 인장 반지 — 「탐욕의 인장」 (탐욕) | 시트 01 · 2 |
 | `gold.png` | 장미 (색욕) | 시트 01 · 3 |
 | `ore.png` | 화로의 불 (분노) | 시트 01 · 4 |
@@ -426,13 +462,15 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 | `coin.png` | 아가리를 찍은 동전 (폭식) | 시트 01 · 7 |
 | `jackpot.png` | 루비 박힌 금화 — 잭팟 코인 | `source/sheet_02_codex.png` 8 |
 
-원본 시트 둘은 Codex 이미지 생성 · 3×3 · 미니게임 · 금화 시트를 첨부해 같은 그림체로 뽑았다(지시문 `source/sheet_0N_prompt.txt`). 대안 열 장은 `unused/`(`seven_mirror` · `wild_sack` · `wild_key` · `gold_flask` · `ore_fist` · `ore_skull` · `timber_snake` · `dust_candle` · `dust_snail` · `coin_bitten`). 실측 색 수 107~268 · 경계밀도 13~25% · 외곽선 ≤6 — 금화 · 미니게임 그림과 같은 계열이고 옛 장비 아이콘 합격선보다 거칠다 · 64 · 42 · 24px 몽타주에서 여덟 장이 다 갈렸다
+원본 시트 01 · 02 는 Codex 이미지 생성 · 3×3 · 미니게임 · 금화 시트를 첨부해 같은 그림체로 뽑았다(지시문 `source/sheet_0N_prompt.txt`). 시트 03 은 2×2 · 시트 01 과 옛 왕관을 첨부한 「7 로 읽히는 오만」 후보 넷이다(78px 판 시안 `source/sheet_03_board_preview.png` · 경계밀도 26% 로 위 범위를 조금 넘지만 판 시안에서 갈렸다). 대안 열넷은 `unused/`(`seven_crown`(옛 오만 왕관) · `seven7_slab` · `seven7_stone` · `seven7_scepter` · `seven_mirror` · `wild_sack` · `wild_key` · `gold_flask` · `ore_fist` · `ore_skull` · `timber_snake` · `dust_candle` · `dust_snail` · `coin_bitten`). 실측 색 수 107~268 · 경계밀도 13~25% · 외곽선 ≤6 — 금화 · 미니게임 그림과 같은 계열이고 옛 장비 아이콘 합격선보다 거칠다 · 64 · 42 · 24px 몽타주에서 여덟 장이 다 갈렸다
 
 ## icons/forge/ — 강화 연출의 모루 · 망치 [신설 2026-10-14]
 
 `anvil.png` · `hammer.png` — 512 투명 · 긴 변 0.88 · 중앙. 제련소 강화 칸의 연출([강화]를 누르면 진열 칸에서 망치가 모루를 세 번 내려친다)이 읽는다(`mock.js:FORGE_ART` · SCREEN_DESIGN §8-2 · ADR-0626). **연출이 그림의 생김새에 기댄다** — 모루는 옆에서 본 모습 · 뿔이 왼쪽 · 윗면이 수평(그 위에 아이템 그림이 앉는다) · 통나무 받침, 망치는 수평으로 누운 옆모습 · 머리가 왼쪽 · 때리는 면이 아래 · 손잡이가 오른쪽(화면이 손잡이 끝을 축으로 돌린다 — 축 자리는 `style.css` 의 `.fg-hammer`). 다른 그림으로 바꾸면 이 방향을 지켜야 연출이 맞는다.
 
-- **원본** — Codex 이미지 생성 · 2×2 시트 셋(같은 지시문 `source/sheet_prompt.txt` · 도박장 시트 01 · 재화 시트 01 첨부) — 칸마다 받침 없는 모루 · 대장 망치 · 통나무 받침 모루 · 피 묻은 메. **설치는 `source/sheet_01_codex.png` 의 통나무 받침 모루(왼쪽 아래) + 대장 망치(오른쪽 위)** — 02 · 03 은 같은 지시문의 다른 판(대안)
+- **그림체 — 건물 그림과 같은 단순한 카툰** [2026-10-15 사용자 「너무 AI슬롭같에 · 너무 섬세하니까 좀 단순한느낌으로」] — 굵고 고른 외곽선 · 재질마다 평평한 색 + 그림자 한 톤 · 결 · 잔금 · 깎은 면 · 광택 없음. 첫 판(10-14)은 도박장 · 재화 시트를 기준 그림으로 붙여 그 「잘게 깎은 면(low-poly)」 결이 옮았다 — 기준 그림을 **건물 그림**(`buildings/forge` · `shop` — 제련소 그림엔 모루도 있다)으로 바꾸고 결 · 잔금 · 광택을 지시문에서 금지했다
+- **원본** — Codex 이미지 생성 · 2×2 시트(칸마다 받침 있는 모루 · 대장 망치 · 받침 없는 모루 · 메). **설치는 `source/sheet_04_codex.png` 의 통나무 받침 모루(왼쪽 위) + 대장 망치(오른쪽 위)** — 외곽선이 가장 굵고 덩어리가 커서 건물 그림과 결이 가장 가깝다. 05 · 06 은 같은 지시문 `source/sheet_simple_prompt.txt` 의 다른 판(대안 누끼 `unused/anvil_v2b` · `v2c` · `hammer_v2b` · `v2c`). 첫 판 시트 01 ~ 03(지시문 `source/sheet_prompt.txt`)과 그 설치본은 `unused/anvil_v1` · `hammer_v1` 로 남겼다
+- **그림을 바꾸면 연출 자리도 다시 잰다** — 모루 윗면 높이 · 폭, 망치 머리의 가운데 · 아래 끝, 손잡이 끝을 % 로 재 `style.css` 의 `.fg-anvil` · `.fg-anim-item` · `.fg-hammer`(`transform-origin`) · 불꽃 자리를 맞춘다(지금 값의 근거는 그 규칙 위 주석)
 - **누끼** — 흰 배경을 가장자리에서 이어진 밝은 무채 픽셀로 잡아 지우고, 배경과 맞닿은 띠는 흰 위에 섞인 색으로 보고 알파 · 색을 되푼다(외곽선이 검정이라 어두운 바탕에서 흰 테두리가 안 남는다) · 내용 상자로 잘라 긴 변 0.88 로 앉혔다
 
 ## icons/explore/ — 탐험 지점 아이콘 [신설 2026-10-09]
@@ -449,41 +487,20 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ```
 icons_source/skills/
-├── source/                       ← 원본 시트 — **게임이 안 읽는다.** `sheet_<번호>_<내용>.png` · 번호가 곧 받은 순서다 [개명 2026-09-09 · 폴더 2026-09-14]
-│   ├── sheet_01_color.png        ← 1차 (2×2 · 컬러 카툰) — 이 스타일은 **폐기**됐다. 옛 설치본의 출처로만 남는다
-│   ├── sheet_02_mono_anchor.png  ← 2차 (2×2 · 단색 실루엣) · **지금의 앵커** — 새 시트를 발주할 때 이것을 첨부한다
-│   ├── sheet_03_warrior.png      ← 3차 (3×3 · 전사 7 + 여분 2)
-│   ├── sheet_04_knight.png       ← 4차 (3×3 · 기사 7 + `war_quake` 재발주 + 여분 1). ⚠ 그 앞의 기사 1차 시트는 여섯이 반려돼 **폴더에 없다**
-│   ├── sheet_05_archer.png       ← 5차 (3×3 · 궁수 6 + `war_shout` 재발주 + 여분 2)
-│   ├── sheet_06_ironskin.png     ← 6차 (2×2 · 아이언 스킨 4안, 오른쪽 아래 채택)
-│   └── Gemini_Generated_Image_*.png  ← 3장 · 받은 이름 그대로다(아직 `sheet_<번호>` 로 개명 안 됨)
-├── war_bash.png          ← 배시       (2026-09-25 재작업 직전 버전으로 복원)
-├── war_doubleswing.png   ← 더블스윙   (교차한 도끼 두 자루)
-├── war_quake.png         ← 지각균열   (땅에 박힌 도끼 + 흰 틈 균열)
-├── war_leap.png          ← 리프어택   (포물선 도약 궤적 + 방사 충격선)
-├── war_taunt.png         ← 도발       (고함치는 옆얼굴 + 음파)
-├── war_shout.png         ← 외침       (뿔나팔 + 음파)
-├── war_battleorders.png  ← 배틀오더스 (군기 + 셰브론 음파)
-├── war_ironskin.png      ← 아이언 스킨 (갑옷처럼 굳은 전사의 상반신)
-├── kni_smite.png         ← 스마이트   (정면 방패 + 충격성)
-├── kni_holyshield.png    ← 홀리 실드  (기울인 방패 — 테 · 끝이 벌어진 십자 틈 + 뒤로 퍼지는 빛살) · **코드로 그렸다**(시트 없음 · 2026-09-30)
-├── kni_charge.png        ← 차지       (질주하는 전사 + 에너지 파동)
-├── kni_rush.png          ← 질         (부채꼴로 겹친 검 셋 — 잔상)
-├── kni_duel.png          ← 결투 선언  (마주 선 전사 둘 + **VS**)
-├── kni_enchant.png       ← 인챈트     (검 + 감아 오르는 혓불)
-├── kni_might.png         ← 마이트     (원 배지 + 굽힌 팔)
-├── kni_fanaticism.png    ← 파나티시즘 (원 배지 + 날개)
-├── kni_defiance.png      ← 디파이언스 (원 배지 + 방패)
-├── arc_snipe.png         ← 저격       (과녁 한가운데 박힌 화살)
-├── arc_rapid.png         ← 연사       (줄지어 나는 화살 셋)
-├── arc_guided.png        ← 가이드에로우 (휜 궤적 + 금 간 판)
-├── arc_multishot.png     ← 멀티플 샷  (부챗살로 퍼지는 화살 다섯)
-├── arc_pierce.png        ← 관통 사격  (판 셋을 꿰뚫은 화살)
-├── arc_poison.png        ← 독화살     (화살촉 + 떨어지는 방울 셋)
-├── pri_judgment.png      ← 심판       (검 + 번개 균열)          [2차 시트]
-├── (전직 45) war_ragnarok … · kni_lastbastion … · arc_trueaim … arc_trap · mag_meteor … mag_staticfield · pri_aegis … ← **전직 다섯 직업 각 9 — 투톤**(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 마법사 8 은 흰 실루엣 판을 대체 · 궁수 9 는 2026-10-09 설치 — `mastery/advance/source/tone.py` 로 칠했다). 강조색 픽셀(채도 높은 쪽)은 그대로 두고 검정만 회백으로 칠한다. 전직 시트의 스타일 앵커가 이 시트다
-└── unused/               ← id 가 없는 여분 (`swords_cross` · `shield_impact` · `chevron_burst` · `quiver` · `bow`)
+├── <skill_id>.png        ← 설치 원본 512 · 파일명 = skill_id — 기본 스킬 50 은 단색 실루엣(회백 #d8d9e6) · 전직 45 는 투톤(아래)
+├── source/               ← 원본 시트 — **게임이 안 읽는다**
+│   ├── sheet_07_codex_warrior.png … sheet_12_codex_extra.png  ← 기본 50 을 다시 뽑은 시트(2026-10-15 · Codex 이미지 생성 · 3×3 여섯) — 설치한 것은 새 스킬 14 칸뿐 · 지시문 sheet_NN_codex_<직업>_prompt.txt
+│   ├── sheet_07_12_anchor_installed_mono.png  ← 그 여섯에 붙인 기준 그림 — 그때 설치돼 있던 기본 아이콘 9장을 흰 바탕 검정으로 되돌린 것
+│   ├── <직업>_advanced_skills_sheet.png  ← 전직 45 투톤 시트 다섯 (2026-09-28 · 전직 시트의 앵커는 war_ 시트)
+│   └── sheet_01 ~ 06 · Gemini_Generated_Image_*  ← 9월 Gemini 시트 — 지금 설치된 기존 기본 36 의 출처 · sheet_02_mono_anchor 가 그때의 앵커
+└── unused/               ← id 가 없는 여분 · 10-15 「새 B」 넷(`war_frenzy_b` · `arc_evade_b` · `pri_halo_b` · `pri_doom_b`)
 ```
+
+**새 기본 스킬 14 — 2026-10-15 Codex 단색 발주** — skill_design §12 의 직업마다 10(50)을 전부 다시 뽑았고, **그림이 없던 새 스킬 14 만 설치했다**(사용자 「기존꺼 내버려두고 새로 뽑힌 애들만」) — 기존 36 은 9월 그림 그대로이고 그 36 의 새 판은 원본 시트에만 있다. 같은 단색 실루엣 형태를 지키려고 설치돼 있던 그림을 기준 그림으로 붙였고, 칸 문장은 `.claude/skills/icon-prompt/skill_tiles.md` 의 타일을 따랐다(새 스킬은 시트 지시문이 원문). 실측 — 장변 88 · 중앙 50/50 · 단색(기존 설치본과 같은 값). 지시와 다르게 나온 칸 — `arc_overdraw`(큰 화살 대신 활 쏘는 사람) · 40px 에서 약한 칸 — `arc_arrowrain`(가는 화살) · `arc_overdraw`
+
+- ⚠ **새 스킬 14 의 파일 이름은 가안 id 다** — `war_frenzy` · `war_warcry` · `war_battlecry` · `kni_sweep` · `kni_holyfire` · `arc_arrowrain` · `arc_evade` · `arc_overdraw` · `mag_ignite` · `mag_deepfreeze` · `mag_surge` · `mag_echo` · `pri_halo` · `pri_doom`. `skill.csv` 에 행이 없고 `mock.js:SKILL_ICON_FILES` 에도 없어 **화면에 아직 안 나온다** — 행을 낼 때(DEV_PLAN R246 ~ R250) 이 id 를 쓰거나 파일 이름을 맞춘다
+- 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall` — CSV 행이 남아 있다)은 다시 뽑지 않았다 — 옛 그림 그대로
+- **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 강조색 픽셀은 그대로 두고 검정만 회백으로 칠한다
 
 **오오라 셋은 「원 배지」로 갈렸다** [2026-09-09] — D2 팔라딘 오오라 아이콘 **14개 중 12개**가 「원형 테 + 그 안에 갇힌 작은 심볼」이고,
 일반 전투 스킬(Zeal·Smite)은 원 없이 오브젝트가 칸을 꽉 채운다. **오오라임을 말하는 것은 심볼이 아니라 「가둔다」는 구조**라 그것만 가져왔다.
@@ -494,21 +511,21 @@ Might(굽은 갈고리 → **굽힌 팔**) · Fanaticism(가는 평행 줄무늬
 원본이 검정이라 어두운 UI(`--bg-card: #161624`)에서 안 보여서 **밝은 청회(`#d8d9e6`)로 칠해** 설치한다 — 알파는 그대로 두고 RGB 만 단색으로 채우므로 축소 헤일로가 없다.
 `icon-prompt` 의 스킬 합격선(색 수 110~160 · 경계 12~21%)은 **컬러 앵커 기준이라 이 세트에는 안 맞는다** — 설치본 실측은 `colors 1 · edge 0% · dark 219~221` 이고 **프레이밍(장변 88 · 중앙 50/50)만 그대로 유효**하다.
 
-### 채워진 것 / 빈 것 — 직업 스킬 풀 39 (skill_design §12)
+### 채워진 것 / 빈 것 — 기본 스킬 50 (skill_design §12 · 2026-10-15)
 
-| 직업 | 있음 | 없음 |
-|---|---|---|
-| 전사 8 | **8종 전부** | — |
-| 기사 9 | **9종 전부** | — |
-| 궁수 6 | **6종 전부** | — |
-| 사제 8 | `pri_judgment` | 나머지 7 |
-| 마법사 8 | — | 전부 |
+| 직업 | 그림 | 화면에 나온다 | 아직 안 나온다 (CSV 행 전 · 가안 id) |
+|---|---|---|---|
+| 전사 10 | **10** | 7 | `war_frenzy` · `war_warcry` · `war_battlecry` |
+| 기사 10 | **10** | 8 | `kni_sweep` · `kni_holyfire` |
+| 궁수 10 | **10** | 7 | `arc_arrowrain` · `arc_evade` · `arc_overdraw` |
+| 마법사 10 | **10** | 6 | `mag_ignite` · `mag_deepfreeze` · `mag_surge` · `mag_echo` |
+| 사제 10 | **10** | 8 | `pri_halo` · `pri_doom` |
 
-발주 프롬프트와 **타일 문장**(무엇을 그리는가)은 `.claude/skills/icon-prompt/skill_tiles.md` 가 든다 — 전사 7 은 §3 에 확정본이 있다.
+발주 프롬프트와 **타일 문장**(무엇을 그리는가)은 `.claude/skills/icon-prompt/skill_tiles.md` 가 든다.
 
 **파일명 = `src/data/skill.csv` 의 `skill_id`.** 초상의 `monster/<idx>.png` 와 같은 문법이라, 화면이 CSV 만 보고 경로를 조립한다 — 조립하는 곳은 `ui/mock.js:skillIcon` 하나다.
 
-**아직 8종뿐이라 그림이 없는 스킬 29종은 id 안정 해시로 이 여덟 중 하나를 쓴다** (`mock.js:SKILL_ICON_FILES`). ⚠ **목록의 길이가 곧 해시의 나머지**라 자산이 늘 때마다 그림 없는 스킬의 임시 그림이 전부 재배정된다(무해하지만 화면이 통째로 달라 보인다). 같은 스킬은 어디서나 같은 그림이지만 **제 그림은 아니다** — 자산이 늘면 그 목록에 파일명을 더하는 것으로 제 그림이 붙는다. 스타일 폴더가 없는 이유도 이것이다(세트가 하나뿐이라 `faces/` 의 `?face=` 축이 성립하지 않는다).
+**`mock.js:SKILL_ICON_FILES` 에 없는 스킬은 검은 칸이다**(2026-09-18 · ADR-0162 — 해시 폴백 폐기). 스타일 폴더가 없는 이유는 세트가 하나뿐이라 `faces/` 의 `?face=` 축이 성립하지 않기 때문이다.
 
 ### 규격
 
@@ -711,4 +728,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-14*
+*마지막 업데이트: 2026-10-15*

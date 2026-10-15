@@ -2664,7 +2664,9 @@ export function createGameSystem(deps) {
     function tavernCandidates(state) {
         const rng = makeRng(deriveSeed(state.seed ^ 0x5A17, state.counters.tavern));
         const hired = state.tavern?.hired ?? [];
-        return H.rollCandidates(rng, limitsOf(state).tavernCandidates).map((c, i) => (hired.includes(i) ? null : c));
+        // 내 영웅과 같은 이름은 피한다 — rng 를 안 쓰고 고용한 칸(`null`)은 건너뛴다 (`hero.avoidNames` · 2026-10-15 · PLAN_user_review 2-5)
+        const list = H.rollCandidates(rng, limitsOf(state).tavernCandidates).map((c, i) => (hired.includes(i) ? null : c));
+        return H.avoidNames(list, state.heroes.map(h => h.name));
     }
     /**
      * 선술집에서 온 영웅(명단 · 수색)의 시작 장비 스트림 [2026-09-25 사용자 지시] — **그 영웅의 번호**(`addHero` 가 올린 `counters.hero`)가 정한다.
@@ -3226,7 +3228,7 @@ export function createGameSystem(deps) {
     function searchRoll(state, snap) {
         const rng = makeRng(deriveSeed(state.seed ^ 0x5EA7, snap.no));
         const tier = rng() < searchRarePct(snap.cha) ? SEARCH_TIER_HI : SEARCH_TIER_LO;
-        const [hero] = H.rollCandidates(rng, 1, [tier]);
+        const [hero] = H.avoidNames(H.rollCandidates(rng, 1, [tier]), state.heroes.map(h => h.name));   // 내 영웅과 같은 이름은 피한다 — rng 0 (2026-10-15)
         if (rng() < B.tavern_search_sin_echo_pct && snap.sin) hero.sin = snap.sin;
         const story = searchPhases.map(ph => {
             const pool = storyPool(ph, snap.sin);

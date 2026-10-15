@@ -356,6 +356,29 @@ export function createHeroSystem(data) {
     const rollCandidates = (rng, n, tiers = null) => rollParty(rng, n, tiers);
 
     /**
+     * 이름 겹침 피하기 [2026-10-15 사용자 · PLAN_user_review 2-5 「노엘 → 노엘」 · hero_design §1] — 굴린 뒤 **이미 있는 이름(`taken`)과 겹치는 후보만** 이름을 바꾼다.
+     *   **rng 를 안 쓴다** — 소비 순서 계약(INTERFACE §5-2)과 골든이 그대로다. 새 이름 = 이름 풀에서 **원래 이름 다음 자리부터** 돌며 처음 비는 이름.
+     *   피하는 이름 = `taken` ∪ 이 목록의 이름 — 명단에서 한 명을 고용해도(그 이름이 후보 → 로스터로 옮겨 갈 뿐) 남은 후보의 이름이 안 흔들린다.
+     *   `null` 칸(고용한 명단 칸)은 건너뛴다 · 풀이 다 차면 그대로 둔다. 목록의 영웅을 **고쳐 쓰고** 그 목록을 돌려준다
+     */
+    function avoidNames(list, taken) {
+        const key = n => n?.ko ?? n;
+        const hit = new Set((taken ?? []).map(key));
+        if (!hit.size) return list;
+        const used = new Set([...hit, ...list.filter(Boolean).map(h => key(h.name))]);
+        const pool = data.namePool;
+        for (const h of list) {
+            if (!h || !hit.has(key(h.name))) continue;
+            const at = pool.findIndex(n => key(n) === key(h.name));
+            for (let k = 1; k <= pool.length; k++) {
+                const n = pool[(at + k) % pool.length];
+                if (!used.has(key(n))) { h.name = n; used.add(key(n)); break; }
+            }
+        }
+        return list;
+    }
+
+    /**
      * 직업을 정한 영웅 1명 [2026-10-08 · 개발 장치 — 관리자 모드가 그 직업을 넣는 자리 · `state.adminHero`].
      * 이름 · 죄종 · 특성 · 등급은 선술집 후보처럼 굴리고(고유는 직업 풀) **얼굴은 맨 마지막**(`rollParty` 와 같은 이유).
      * 소비 = 이름 1 → 죄종 1 → 특성 1 → `rollHero` 10 → 얼굴 1 = 언제나 14회 · 메인 직업이 아니면 `null`(소비 0)
@@ -509,7 +532,7 @@ export function createHeroSystem(data) {
         //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
         const range = weapon ? F.weaponDamage(weapon.ilvl, group, weapon.up) : { min: B.unarmed_atk, max: B.unarmed_atk };
         const atkFlat = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0);
-        // 무기 % = **무기 슬롯 접사의 데미지 %**(고정 옵션 「데미지 +%」) — 무기 양끝에만 곱하고 양끝마다 한 번 반올림한다
+        // 무기 % = **무기 슬롯 접사의 데미지 %**(고정 옵션 「무기 데미지 +%」 — 화면 이름 2026-10-15 · ADR-0628) — 무기 양끝에만 곱하고 양끝마다 한 번 반올림한다
         //   [2026-10-03 · 사용자 확정 · battle_design §9-1 — D2 의 무기 ED]. `item.weaponDamageFixed` 와 같은 값이다(툴팁 표기 = 계산)
         const weaponPct = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_pct' ? a.v : 0), 0);
         // 데미지 % 괄호 = **무기 % 를 뺀** Σ 데미지 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
@@ -674,7 +697,7 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, rollHeroOf, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn, sinGearCount,
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
     };

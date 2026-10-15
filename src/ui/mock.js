@@ -233,6 +233,19 @@ export const rangeValue = (stat, min, max, fallback) => {
     return `${min === max ? n(min) : `${n(min)}~${n(max)}`}${pct ? '%' : ''}`;
 };
 
+/**
+ * 부위가 이름을 갈라 쓰는 줄 — 같은 stat 이라도 **무기 칸의 데미지 % 는 「무기 데미지」**다
+ * [2026-10-15 사용자 「무기 데미지와 데미지+%는 다른 개념」 · 「무기에 붙는 데미지+%를 무기데미지로」 · SCREEN_DESIGN §6 · ADR-0628].
+ * 계산은 이미 따로다 — 무기 피해 범위에만 곱하고 데미지 % 괄호에는 안 든다(hero.js `weaponPct` · battle_design §9-1).
+ * stat id(`atk_pct`)는 그대로라 세이브 · 계산이 안 바뀐다 — 이름만 여기서 갈린다
+ */
+const SLOT_LABELS = { weapon: { atk_pct: { ko: '무기 데미지', en: 'Weapon Damage', fmt: 'pct' } } };
+/** 아이템 옵션 한 줄 — {ko, en}. 부위가 이름을 바꾸는 줄(`SLOT_LABELS`)만 갈리고 나머지는 `affixText` 그대로다 */
+export const itemAffixText = (slot, stat, v) => {
+    const d = SLOT_LABELS[slot]?.[stat];
+    return d ? { ko: `${d.ko} ${statValue(stat, v)}`, en: `${statValue(stat, v)} ${d.en}` } : affixText(stat, v);
+};
+
 /** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
  *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
  *  2026-09-01 재배치 — 보조 슬롯 폐지(한손 개념 폐지)로 위치가 9 → 8 이 되어 4행이 3행으로 줄었다.
@@ -536,13 +549,14 @@ export const itemArt = (slot, group, uid, baseId) => {
 
 /**
  * 배경 이미지 — `src/assets/art/backgrounds/<스타일>/background_stage_<id>.webp`.
- * 파일이름이 스테이지 id(101/102/…)를 그대로 쓰므로 stage_id ↔ 배경이 1:1로 붙는다.
+ * 파일 숫자는 chapter * 100 + stage_num(101/102/…)이다. 같은 장소의 세 구간이 배경 한 장을 공유한다.
  *
  * **스타일 하나 = 폴더 하나** [2026-09-16 사용자 지시 · `faces/` 와 같은 규칙]. 새 스타일을 넣는 방법은 둘뿐이다:
  *   ① `backgrounds/` 아래 폴더를 만들고 같은 이름 규칙(`background_stage_<id>.webp`)으로 그림을 넣는다
  *   ② 아래 `BG_STYLES` 에 그 폴더 이름을 더한다
  * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `bgDir()` 하나뿐이라서다.
- * 고르는 순서는 얼굴과 같다: URL `?bg=<스타일>` → localStorage → 목록의 **첫 항목**.
+ * 아트 버튼·`?face=`는 초상과 함께 선택한다(gemini → illustrate, gpt → gpt).
+ * 명시적인 `?bg=`는 비교용 재정의이며, 버튼을 누르면 그 아트 묶음의 배경으로 돌아간다.
  * **한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 그림이 없으면 그 자리는 그라디언트로 떨어진다.
  *   그리는 중인 스타일로도 게임이 돈다 (⚠ 자리를 여는 것은 `stage.csv:bg` 지 폴더 재고가 아니다 — `ui/data.js:stageBgOf`.
  *   `bg=1` 인데 그 스타일에 파일이 없으면 404 가 한 번 난다).
@@ -552,18 +566,31 @@ export const itemArt = (slot, group, uid, baseId) => {
  * 경로는 문서(src/index.html) 기준 상대경로 — JS가 인라인 스타일로 넣기 때문이다.
  */
 export const BG_DIR = './assets/art/backgrounds/';
-export const BG_STYLES = ['illustrate', 'pixel'];   // **첫 항목이 기본값이다** — 정식 배경은 일러스트다 [2026-09-16 사용자 지시 · ADR-0152]
+export const BG_STYLES = ['illustrate', 'gpt', 'pixel'];
+const FACE_STORE_KEY = 'thesevensim.faceStyle';
+const FACE_BG_STYLES = { gemini: 'illustrate', gpt: 'gpt' };
 const BG_STORE_KEY = 'thesevensim.bgStyle';
 
 let bgStyleCur = (() => {
-    const q = new URLSearchParams(location.search).get('bg');
+    const query = new URLSearchParams(location.search);
+    const q = query.get('bg');
     // `?face=` 와 같이 **그 자리에서 저장한다** — 스타일에는 UI 스위치가 없어서, 저장하지 않으면 매번 다시 붙여야 한다
     if (BG_STYLES.includes(q)) {
         try { localStorage.setItem(BG_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 스타일 */ }
         return q;
     }
+    // 명시적인 배경 URL은 비교용. 그 외에는 초상과 같은 아트 묶음을 고른다.
+    const faceQuery = query.get('face');
+    if (Object.hasOwn(FACE_BG_STYLES, faceQuery)) {
+        const style = FACE_BG_STYLES[faceQuery];
+        try { localStorage.setItem(BG_STORE_KEY, style); } catch { /* 저장 실패는 무해 */ }
+        return style;
+    }
     try {
         const saved = localStorage.getItem(BG_STORE_KEY);
+        if (saved === 'pixel') return saved; // 기존 도트 비교 선택은 유지한다.
+        const face = localStorage.getItem(FACE_STORE_KEY);
+        if (Object.hasOwn(FACE_BG_STYLES, face)) return FACE_BG_STYLES[face];
         if (BG_STYLES.includes(saved)) return saved;
     } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
     return BG_STYLES[0];
@@ -632,7 +659,6 @@ export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
 export const FACE_STYLES = ['gemini', 'gpt']; // 첫 항목이 기본값. 기존 cartoon 저장값도 gemini로 돌아간다.
-const FACE_STORE_KEY = 'thesevensim.faceStyle';
 
 let faceStyleCur = (() => {
     const q = new URLSearchParams(location.search).get('face');
@@ -649,11 +675,12 @@ let faceStyleCur = (() => {
 })();
 
 export const faceStyle = () => faceStyleCur;
-/** 스타일 전환 — 얼굴은 매 렌더에 경로를 다시 만들므로 호출한 쪽이 render() 하면 그대로 갈린다 */
+/** 아트 묶음 전환 — 설정·도감의 같은 버튼이 초상과 스테이지 배경을 함께 바꾼다. */
 export function setFaceStyle(id) {
     if (!FACE_STYLES.includes(id)) return;
     faceStyleCur = id;
     try { localStorage.setItem(FACE_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
+    setBgStyle(FACE_BG_STYLES[id]);
     applyDocumentFace();
 }
 /** `<html data-face>` 동기화 — CSS 가 **초상 축소 보간**을 스타일별로 가르는 유일한 신호다
@@ -859,7 +886,7 @@ export const RES_ART = {
 /**
  * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331 · 그림 ADR-0608). 심볼 일곱 = **죄종 일곱** (2026-09-28 사용자 지시).
  * 짝은 뜻으로 맞췄다 — 최고 심볼 = 오만 · 와일드 = 탐욕(탐욕 = 도박) · 골드 = 색욕 · 광석 = 분노(대장간 불) · 목재 = 시기(숲 챕터) · 가루 = 나태(쌓인 먼지) · 코인 = 폭식(쌓아 먹는다).
- * 그림은 그 죄종의 **문장(죄종 아이콘)을 물건 한 점으로 그린 것**이다 — 오만 = 무쇠 왕관 · 탐욕 = 금 인장 반지(「탐욕의 인장」) · 색욕 = 장미 · 분노 = 화로의 불 ·
+ * 그림은 그 죄종의 **문장(죄종 아이콘)을 물건 한 점으로 그린 것**이다 — 오만 = 윗변이 무쇠 왕관 띠인 숫자 7(최고 심볼이 7 로 읽히게 · ADR-0631) · 탐욕 = 금 인장 반지(「탐욕의 인장」) · 색욕 = 장미 · 분노 = 화로의 불 ·
  * 시기 = 가시 박힌 눈 · 나태 = 모래시계 · 폭식 = 아가리를 찍은 동전 · 잭팟 코인 = 루비 박힌 금화 (Codex · 2026-10-12 · 원본 `icons_source/gamble/`).
  * 파일명 = `slot_symbol.csv` 의 `symbol_id` · 잭팟 코인 한 장은 `slot_coin.csv` 의 kind(`jackpot`).
  * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만. 무엇을 받는지는 배당표가 읽힌다.

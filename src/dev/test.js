@@ -1928,9 +1928,9 @@ check('csv: mastery_node 68행 — 죄종 T1 21(7×3) + 죄종 T2 21(7×3 — �
     // 조건은 죄종마다 다르다 (skill_design §3-2 — 분노 · 폭식 · 시기 · 오만 · 탐욕 · 색욕 · 나태)
     const conds = Object.keys(M.SINS).map(sin => D.masteryNodes.find(n => n.owner_id === sin && n.tier === 2 && n.cond !== '-').cond);
     if (new Set(conds).size !== conds.length) fail(`조건이 겹친다 ${conds.join()}`);
-    // 직업 T1 표 (skill_design §3-4 · 09-22 · 10-09 R230 마법사 · 사제 캐스팅 속도 · 마법사 데미지 %) — 칸 순서가 곧 화면 순서다
+    // 직업 T1 표 (skill_design §3-4 · 09-22 · 10-09 R230 마법사 · 사제 캐스팅 속도 · 마법사 데미지 % · 10-15 전사 · 기사 체력 +상수) — 칸 순서가 곧 화면 순서다
     const T1 = {
-        warrior: 'hp_pct,res_all,atk_pct', knight: 'hp_pct,def_flat,damage_reduction',
+        warrior: 'hp_flat,res_all,atk_pct', knight: 'hp_flat,def_flat,damage_reduction',
         mage: 'cast_speed_pct,cooldown_reduction,atk_pct', priest: 'cast_speed_pct,cooldown_reduction,buff_dur_pct',
         archer: 'aspd_pct,crit_rate,hit_bonus',
     };
@@ -2123,18 +2123,24 @@ check('mastery: 죄종 T1 21칸 — 칸마다 찍으면 전투 능력치가 움�
     }
     return `${moved}칸 전부 상시 반응`;
 });
-check('mastery: 체력 +상수(나태 · 폭식 T1-1)는 체력 % 보다 먼저 더해진다 — % 가 상수에도 곱해진다 (2026-10-05 사용자)', () => {
+check('mastery: 체력 +상수(나태 · 폭식 · 전사 · 기사 T1-1)는 체력 % 보다 먼저 더해진다 — % 가 상수에도 곱해진다 (2026-10-05 사용자 · 직업 2026-10-15)', () => {
     const r = B.mastery_t1_max_rank;
     const h = { ...G.heroes[0], sin: 'sloth', cls: 'warrior', mastery: {} };
     const flat = B.mastery_sloth_t1_hp_flat * r;
-    const hp = m => SYS.hero.computeCombat({ ...h, mastery: m }, []).hp_max;
+    const hp = (m, items = [], cls = 'warrior') => SYS.hero.computeCombat({ ...h, cls, mastery: m }, items).hp_max;
     const d0 = hp({ sin_sloth_t1_hp: r }) - hp({});
     if (d0 !== flat) fail(`상수만 +${d0} ≠ +${flat}`);
-    // 전사 T1-1 체력 % 와 같이 찍으면 상수 몫에도 % 가 곱해진다 — 반올림 1 여유
-    const pct = B.mastery_warrior_t1_hp_pct * r;
-    const d1 = hp({ sin_sloth_t1_hp: r, cls_warrior_t1_hp: r }) - hp({ cls_warrior_t1_hp: r });
+    // 전사 · 기사 T1-1 도 상수다 — 나태와 같이 찍으면 그대로 더해진다 (2026-10-15)
+    const war = B.mastery_warrior_t1_hp_flat * r, kni = B.mastery_knight_t1_hp_flat * r;
+    const d2 = hp({ sin_sloth_t1_hp: r, cls_warrior_t1_hp: r }) - hp({});
+    if (d2 !== flat + war) fail(`나태 + 전사 +${d2} ≠ +${flat + war}`);
+    const dk = hp({ cls_knight_t1_hp: r }, [], 'knight') - hp({}, [], 'knight');
+    if (dk !== kni) fail(`기사 +${dk} ≠ +${kni}`);
+    // 체력 % 장비와 같이 끼면 상수 몫에도 % 가 곱해진다 — 반올림 1 여유
+    const pct = 0.05, gear = [mkItem('boots', [{ stat: 'hp_pct', v: pct }])];
+    const d1 = hp({ sin_sloth_t1_hp: r }, gear) - hp({}, gear);
     if (Math.abs(d1 - flat * (1 + pct)) > 1) fail(`% 와 같이 +${d1} ≠ ${flat} × ${1 + pct}`);
-    return `+${flat} → 체력 ${M.pctNum(pct)}% 와 같이 +${d1}`;
+    return `+${flat} · 전사와 같이 +${d2} · 기사 +${dk} → 체력 ${M.pctNum(pct)}% 장비와 같이 +${d1}`;
 });
 check('mastery: 죄종 T2-1 은 그 죄종 장비가 문턱 이상일 때 켜진다 — 다른 죄종 장비는 안 센다 (2026-10-05 · skill_design §3-2)', () => {
     const r = B.mastery_t1_max_rank, need = B.mastery_t2_sin_gear_min;
@@ -9326,6 +9332,32 @@ check('원정 결정론 — 같은 세이브면 resolveBattle 두 번이 같고,
 });
 
 /* ── 선술집 ── */
+check('tavern: 명단 · 결투장 상대의 이름은 내 영웅과 안 겹친다 — rng 를 안 써서 이름 말고는 그대로 · 고용해도 남은 후보 이름이 안 흔들린다 (2026-10-15 · PLAN_user_review 2-5)', () => {
+    const G2 = newGameP(42, cands, NOW);
+    const raw = SYS.game.tavernCandidates(G2);
+    // 겹침을 만든다 — 로스터 한 명의 이름을 둘째 후보의 이름으로
+    G2.heroes[0].name = raw[1].name;
+    const roster = () => new Set(G2.heroes.map(h => h.name.ko));
+    const c = SYS.game.tavernCandidates(G2);
+    if (c.some(x => x && roster().has(x.name.ko))) fail('후보가 로스터 이름과 겹친다');
+    if (new Set(c.map(x => x.name.ko)).size !== c.length) fail('후보끼리 겹친다');
+    if (c[1].name.ko === raw[1].name.ko) fail('겹친 후보가 그대로다');
+    const strip = x => ({ ...x, name: null });
+    if (!eq(c.map(strip), raw.map(strip))) fail('이름 말고 다른 것이 바뀌었다 — rng 가 밀렸다');
+    // 고용 — 남은 칸의 이름이 그대로다
+    const names = () => SYS.game.tavernCandidates(G2).map(x => (x ? x.name.ko : null));
+    const before = names();
+    G2.resources.gold = B.tavern_hire_cost * 10;
+    if (!SYS.game.hire(G2, 0).ok) fail('hire');
+    const after = names();
+    if (after[0] !== null || !eq(after.slice(1), before.slice(1))) fail(`고용 뒤 남은 이름이 바뀌었다 ${before} → ${after}`);
+    // 결투장 상대 — 같은 rng 로 미리 굴린 첫 이름을 팀에 박아 겹침을 만든다
+    const team = SYS.arena.snapshotTeam(G2.heroes.slice(0, 3), G2.items);
+    team[0].hero.name = SYS.hero.rollCandidates(makeRng(73), 3)[0].name;
+    const opp = SYS.arena.rollOpponent(team, makeRng(73));
+    if (opp.some(p => team.some(m => m.hero.name.ko === p.hero.name.ko))) fail('결투장 상대가 우리 팀 이름과 겹친다');
+    return `명단 ${c.length} · 겹친 칸 「${raw[1].name.ko}」 → 「${c[1].name.ko}」 · 고용 뒤 그대로 · 결투장 상대 「${opp[0].hero.name.ko}」`;
+});
 check('tavern: 후보는 카운터에 결정론, 고용은 골드·상한을 지킨다 · 고용한 칸만 빈다 (base_expedition §2-4)', () => {
     const G2 = newGameP(42, cands, NOW);
     const a = SYS.game.tavernCandidates(G2), b = SYS.game.tavernCandidates(G2);

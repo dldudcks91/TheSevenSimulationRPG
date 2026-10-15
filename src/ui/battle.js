@@ -1598,7 +1598,10 @@ function apply(state, root, opts, ev) {
             state.ended = true;
             clearInterval(state.timer);
             levelCheck(state, root);   // 마지막 라운드의 레벨업 — 런이 닫혀 `refit` 이 없다 (ADR-0435)
-            logWide(state, root, t(ev.won ? 'log.end.win' : 'log.end.lose'));
+            // 결투는 스테이지가 아니다 — 끝 줄은 결과 띠의 판정 그대로(승리 · 패배 · 무승부) [2026-10-15 · PLAN_user_review 2-5]
+            const arena = opts.result?.mode === 'arena';
+            logWide(state, root, t(arena ? (opts.result.reason === 'timeout' ? 'ar.draw' : ev.won ? 'bt.won' : 'bt.lost')
+                : ev.won ? 'log.end.win' : 'log.end.lose'));
             showResult(state, root, opts, ev.won);
             // 재생이 끝에 닿았다고 앱에 알린다 — 상단 세그먼트의 관전 칸이 「전투 종료」로 바뀐다 (ADR-0147).
             //   되감아 선 끝(재개 mount)은 알리지 않는다 — 앱은 넘긴 재생 위치로 이미 안다

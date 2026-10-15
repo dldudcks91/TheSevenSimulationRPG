@@ -680,7 +680,7 @@ export function createItemSystem(data) {
     const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, WG[item.group] ?? null, item.up) : null);
 
     /**
-     * 무기 피해 범위에 **고정 옵션 「데미지 +%」**(`src: 'fixed'` 의 `atk_pct`)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
+     * 무기 피해 범위에 **고정 옵션 「무기 데미지 +%」**(`src: 'fixed'` 의 `atk_pct` — 화면 이름 2026-10-15)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
      * 양끝마다 곱하고 한 번 반올림한다 — `hero.computeCombat` 의 괄호 곱과 같은 규칙. 다른 % (죄종 칸 · 랜덤 · 마스터리 · 도감)는 안 든다 —
      * 그 합은 영웅이 정하는 괄호라 캐릭터 시트가 든다. 고정 줄이 없는 옛 무기는 `weaponDamage` 그대로.
      * **색욕 최소 · 최대 데미지**(`dmg_min_flat` · `dmg_max_flat` · 고정 수치)는 무기 % 를 곱한 양끝 **뒤에** 더하고, 최소가 최대를 넘으면 최대 = 최소 + 1 이다

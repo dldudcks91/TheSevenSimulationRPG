@@ -24,7 +24,8 @@ export function createArenaSystem({ hero, item, skill, battle }) {
 
     function rollOpponent(team, rng) {
         const level = Math.max(1, Math.round(team.reduce((n, p) => n + p.hero.level, 0) / teamSize));
-        const heroes = hero.rollCandidates(rng, teamSize);
+        // 우리 팀과 같은 이름은 피한다 — rng 0 이라 뒤의 굴림이 안 밀린다 (`hero.avoidNames` · 2026-10-15 · PLAN_user_review 2-5 「노엘 → 노엘」)
+        const heroes = hero.avoidNames(hero.rollCandidates(rng, teamSize), team.map(p => p.hero.name));
         const items = {};
         heroes.forEach((h, i) => {
             h.uid = `arena-enemy-${i}`;

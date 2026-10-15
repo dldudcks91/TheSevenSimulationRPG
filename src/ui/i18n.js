@@ -90,19 +90,17 @@ const STRINGS = {
     'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
     'ng.note': {
         ko: '첫 파티는 <b>레어 1 + 매직 1 + 일반 1</b>이다 — 첫 화면부터 영웅 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
-            + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 ([hero_tier.csv:attr_total_min/max] — 등급끼리 대역이 <b>겹칠 수 있다</b>) — '
+            + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 (등급끼리 대역이 <b>겹칠 수 있다</b>) — '
             + '세 장의 차이는 양과 <b>모양</b> 둘이다: 레어 · 일반은 고르게 나고, 매직은 <b>한 축이 크게 튈 수 있다</b>. 장비로도 레벨업으로도 오르지 않으니 여기서 나온 값은 <b>평생 간다</b><br>'
-            + '<b>등급 차이는 끝까지 간다</b> — 상한은 [balance.csv:hero_attr_max] 하나로 전 영웅 공통이지만 레벨업으로 능력치가 안 올라 <b>굴린 모양이 곧 그 영웅의 끝</b>이다<br>'
-            + '최대 HP는 굴리지 않는다 — 전 영웅 [balance.csv:hero_hp_base] 공통 시작<br>'
-            + '메인 죄종은 죄종 마스터리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>폐기</b> — 파티 전술로 이관 (tactic_card_design.md §4)<br>'
+            + '<b>등급 차이는 끝까지 간다</b> — 상한은 전 영웅 공통이지만 레벨업으로 능력치가 안 올라 <b>굴린 모양이 곧 그 영웅의 끝</b>이다<br>'
+            + '메인 죄종은 죄종 마스터리(탭1)와 파견 적성을 정한다 — 장비 궁합(세트포인트)은 <b>폐기</b> — 파티 전술로 이관<br>'
             + '리롤은 <b>무제한·무료</b>다 — 시작 선택을 도박으로 만들지 않는다<br>'
             + '<b>미확정</b>: 등급 대역·분포 모양·등장 비중(전부 제안값) · 특성 효과(이름표만 굴린다) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부',
         en: 'Your first party is <b>1 Rare + 1 Magic + 1 Normal</b> — the roster shows its <b>tiers</b> from the first screen. The 15 Uniques are a fixed roster and are not spent at the start<br>'
-            + 'Attributes roll per axis but their <b>total lands in the band its tier sets</b> ([hero_tier.csv:attr_total_min/max] — tier bands <b>may overlap</b>) — '
+            + 'Attributes roll per axis but their <b>total lands in the band its tier sets</b> (tier bands <b>may overlap</b>) — '
             + 'the three differ in amount and in <b>shape</b>: Rare and Normal roll evenly, Magic can <b>spike on one axis</b>. Neither gear nor level-ups raise them, so what you roll here <b>lasts forever</b><br>'
-            + '<b>The tier gap lasts to the end</b> — the cap is a single [balance.csv:hero_attr_max] shared by every hero, but level-ups never raise attributes, so <b>the shape you roll is where that hero ends</b><br>'
-            + 'Max HP is not rolled — every hero starts at [balance.csv:hero_hp_base]<br>'
-            + 'The main sin decides the sin mastery (tab 1) and dispatch aptitude — gear affinity (set points) is <b>dropped</b> — moved to party tactics (tactic_card_design.md §4)<br>'
+            + '<b>The tier gap lasts to the end</b> — the cap is shared by every hero, but level-ups never raise attributes, so <b>the shape you roll is where that hero ends</b><br>'
+            + 'The main sin decides the sin mastery (tab 1) and dispatch aptitude — gear affinity (set points) is <b>dropped</b> — moved to party tactics<br>'
             + 'Rerolling is <b>unlimited and free</b> — the opening choice is not a gamble<br>'
             + '<b>Open</b>: the tier bands, spread shapes and appearance weights (all proposed values) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed',
     },
@@ -240,6 +238,7 @@ const STRINGS = {
     'exp.departRespawn': { ko: '보스가 아직 돌아오지 않았다', en: 'The boss has not returned yet' },   // 챕터보스 재등장 대기 (R240 · ADR-0590)
     // 출정 확인 창의 문장 — 문구는 사용자 지시 그대로다 (SCREEN_DESIGN §4-1 · ADR-0467)
     'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
+    'exp.departCut': { ko: '이 파티는 지금 원정 중입니다. 진행 중인 원정을 접고 새로 출격할까요?', en: 'This party is on an expedition. End the current run and deploy anew?' },
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     // 난이도 탭 바로 옆 — 다음에 열릴 단의 조건 (SCREEN_DESIGN §4-1 · ADR-0586 · ADR-0596). {d} = 앞 단 이름 · {ch} = `balance.csv:difficulty_unlock_chapter`
     'exp.diff.need': { ko: '{d} {ch}장 보스 클리어 필요', en: 'Clear the {d} Ch{ch} boss first' },
@@ -781,36 +780,34 @@ const STRINGS = {
         en: 'This party cannot depart',
     },
     'exp.party.note': {
-        ko: '런이 끝나면 깎인 HP도 <b>전투불능도 무료·즉시 회복</b> — 비용은 <b>그 런이 얇아지는 것</b>이다 (개정 2026-09-08 — ~~그 출정 동안~~)<br>'
-            + '파티 버프는 스탯이 아니라 스킬 효과다 — 통솔의 전투 계수는 없다 (08-25)',
+        ko: '런이 끝나면 깎인 HP도 <b>전투불능도 무료·즉시 회복</b> — 비용은 <b>그 런이 얇아지는 것</b>이다<br>'
+            + '파티 버프는 스탯이 아니라 스킬 효과다 — 통솔의 전투 계수는 없다',
         en: 'Lost HP <b>and downed heroes are restored free and instantly</b> when the run ends — the cost is <b>a thinner party for the rest of that run</b><br>'
-            + 'Party buffs are skill effects, not a stat — Leadership has no combat coefficient (08-25)',
+            + 'Party buffs are skill effects, not a stat — Leadership has no combat coefficient',
     },
     'exp.bench.h': { ko: '벤치', en: 'Bench' },
     'exp.bench.note': {
-        ko: '파견 화면은 <b>미착수</b> — 파견처 6(영입·교역·제련·채광·채집·<b>벌목</b>) + 탐험(파티 단위)은 확정, 화면은 후속 (base_expedition_design §2·§3)<br>'
-            + '<b>건설은 파견이 아니다</b> — 영웅을 보내지 않고 진행하는 별도 시스템이라 건설 탭이 든다 (2026-08-31 연구소 삭제)<br>'
-            + '보낸 영웅은 잠기지 않는다 — 언제든 불러들이고 <b>흐른 만큼 비례해 받는다</b> (§3-2)',
-        en: 'Dispatch screen <b>not started</b> — 6 posts (recruit · trade · smelt · mining · gathering · <b>logging</b>) + party-based Exploration are confirmed; the screen comes later (base_expedition_design §2·§3)<br>'
-            + '<b>Construction is not a dispatch</b> — it runs without sending heroes, so the Construction tab owns it (the Lab post was removed 2026-08-31)<br>'
-            + 'Dispatched heroes are never locked — recall any time and receive <b>pro rata for the time elapsed</b> (§3-2)',
+        ko: '<b>건설은 파견이 아니다</b> — 영웅을 보내지 않고 진행하는 별도 시스템이라 건설 탭이 든다<br>'
+            + '보낸 영웅은 잠기지 않는다 — 언제든 불러들이고 <b>흐른 만큼 비례해 받는다</b>',
+        en: '<b>Construction is not a dispatch</b> — it runs without sending heroes, so the Construction tab owns it<br>'
+            + 'Dispatched heroes are never locked — recall any time and receive <b>pro rata for the time elapsed</b>',
     },
     'exp.commission.h': { ko: '의뢰', en: 'Commissions' },
     'exp.commission.note': {
-        ko: '의뢰는 <b>받아 두는 목표</b>다 — 전장이 열리지 않는다. 게시판에서 골라 받아 두면 <b>평소 활동 위에 얹혀</b> 저절로 진행된다 (2026-09-07 확정)<br>'
+        ko: '의뢰는 <b>받아 두는 목표</b>다 — 전장이 열리지 않는다. 게시판에서 골라 받아 두면 <b>평소 활동 위에 얹혀</b> 저절로 진행된다<br>'
             + '유형은 <b>둘</b> — <b>처치</b>(「x를 잡아라」 · 돌던 전투가 저절로 센다) · <b>수집</b>(「x를 모아라」 · 드롭과 파견·탐험 산출이 채운다)<br>'
             + '<b>오프라인에도 진행된다</b> — 자리를 비운 사이에도 목표가 나아간다. 그래서 따로 나갈 파티도, 의뢰만의 전장도 없다<br>'
             + '카드는 <b>틀 · 등급 · 대상</b>을 굴려 선다 — 대상은 지금 갈 수 있는 곳에서만 나온다. 등급은 <b>일반 · 매직 · 레어</b> — 윗 등급일수록 드물고 목표당 골드가 좋다<br>'
             + '<b>수락하면 그 카드가 소진된다</b> — 받은 카드는 그 자리에서 진행 중이 되고, 받아 둘 수 있는 수는 선술집 랭크가 늘린다. 그래서 「어느 의뢰를 받을까」가 결정이 된다<br>'
-            + '<b>받은 뒤</b> 이긴 라운드의 처치와 들어온 드롭만 센다(가방이 차서 버린 것은 빼고) · 모든 부대가 같이 채운다 · <b>기한은 없다</b><br>'
-            + '다 채우면 <b>[수령]</b>으로 골드를 받는다 · <b>[포기]</b>는 벌이 없다(진행만 버린다) — 비는 자리에는 새 카드가 선다. 명성은 보류다 (base_expedition_design §1-3)',
-        en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b> (settled 2026-09-07)<br>'
+            + '<b>받은 뒤</b> 이긴 라운드의 처치와 들어온 드롭만 센다(가방이 차서 넘쳐 분해된 것은 빼고) · 모든 부대가 같이 채운다 · <b>기한은 없다</b><br>'
+            + '다 채우면 <b>[수령]</b>으로 골드를 받는다 · <b>[포기]</b>는 벌이 없다(진행만 버린다) — 비는 자리에는 새 카드가 선다. 명성은 보류다',
+        en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b><br>'
             + 'There are <b>two kinds</b> — <b>Slay</b> ("kill x" · the battles you already run count it) and <b>Collect</b> ("gather x" · drops and dispatch/exploration yields fill it)<br>'
             + '<b>It advances offline too</b> — the goal moves while you are away. So there is no party to send and no commission-only battlefield<br>'
             + 'Each card rolls a <b>template, grade and target</b> — targets only come from places you can reach now. Grades are <b>Normal · Magic · Rare</b> — higher grades are rarer and pay more gold per goal<br>'
             + '<b>Accepting spends that card</b> — it turns into an active commission in place, and the Tavern rank raises how many you can hold. That is what makes "which one do I take" a decision<br>'
-            + 'Only kills in won rounds and drops that come in <b>after you accept</b> count (items thrown away on a full bag do not) · every party fills it · <b>there is no deadline</b><br>'
-            + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place. Fame is on hold (base_expedition_design §1-3)',
+            + 'Only kills in won rounds and drops that come in <b>after you accept</b> count (items salvaged because the bag was full do not) · every party fills it · <b>there is no deadline</b><br>'
+            + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place. Fame is on hold',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     // 원정 지역 [개정 2026-09-29 · PLAN_stage_segments D1] — 챕터 = 장소 {p} · 장소마다 칸 I · II · III · 칸 하나가 한 런이다(도움말 · SCREEN_DESIGN §12)
@@ -975,9 +972,9 @@ const STRINGS = {
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins' },
     'eq.sins.note': {
         ko: '착용 장비의 죄종 — 아이템 이름에 붙은 죄종 태그(접두 · 접미)다. <b>파티 전술</b>이 이 수를 센다<br>'
-            + '<b>죄종 세트효과는 폐기</b> — 파티 전술로 이관됐다 (tactic_card_design.md §4, 08-26)',
+            + '<b>죄종 세트효과는 폐기</b> — 파티 전술로 이관됐다',
         en: 'Sins on worn gear — the sin tags in item names (prefix and suffix). <b>Party tactics</b> count them<br>'
-            + '<b>Sin set effects are dropped</b> — they moved to party tactics (tactic_card_design.md §4, 08-26)',
+            + '<b>Sin set effects are dropped</b> — they moved to party tactics',
     },
     'eq.sins.none': { ko: '접사 없음', en: 'No affixes' },
     'eq.filter.all': { ko: '전체', en: 'All' },
@@ -991,15 +988,11 @@ const STRINGS = {
     'ch.attr.h': { ko: '기본 옵션', en: 'Basic Stats' },
     'ch.attr.sub': { ko: '장비 불변', en: 'Gear-immutable' },
     'ch.attr.note': {
-        ko: '기본 능력치 7종은 <b>영웅이 갖고 태어난다</b> — 장비는 단 1도 올리지 않는다 '
-            + '([balance.csv:attr_equip_bonus] = 0).<br>'
-            + '하는 일은 둘뿐이다: <b>전투 능력치의 계수</b>(오른쪽 칸의 괄호 표기)와 <b>파견 판정</b>.<br>'
-            + '최대 HP는 어떤 능력치도 담당하지 않는다 — 전 영웅 같은 값에서 시작해 레벨·장비로만 자란다',
-        en: 'The 7 attributes are <b>innate to the hero</b> — gear never raises them by even 1 '
-            + '([balance.csv:attr_equip_bonus] = 0).<br>'
+        ko: '기본 능력치 7종은 <b>영웅이 갖고 태어난다</b> — 장비는 단 1도 올리지 않는다.<br>'
+            + '하는 일은 둘뿐이다: <b>전투 능력치의 계수</b>(오른쪽 칸의 괄호 표기)와 <b>파견 판정</b>.',
+        en: 'The 7 attributes are <b>innate to the hero</b> — gear never raises them by even 1.<br>'
             + 'They do exactly two things: <b>scale combat stats</b> (shown in parentheses on the right) '
-            + 'and <b>decide dispatch outcomes</b>.<br>'
-            + 'No attribute governs Max HP — every hero starts at the same value and grows it only by level and gear',
+            + 'and <b>decide dispatch outcomes</b>.',
     },
     'ch.detail.h': { ko: '세부 옵션', en: 'Detailed Stats' },
     'ch.detail.hn': { ko: '세부 옵션 {n}', en: 'Detailed Stats {n}' },
@@ -1281,12 +1274,10 @@ const STRINGS = {
     'sk.points.note': {
         ko: '죄종 마스터리와 직업 마스터리가 <b>포인트 풀을 공유</b>한다 — 같은 축이 양쪽에 있어도 중복이 아니라 <b>기회비용이 있는 선택</b>이다.<br>'
             + '레벨업마다 받고, <b>초기화는 무료·수시</b>다 — 전액 돌려받으므로 잘못 찍어 영웅 하나를 버리는 일이 없다.<br>'
-            + '한 칸만 물리려면 그 칸을 <b>우클릭</b>한다 — 랭크가 1 줄고 포인트가 1 돌아온다. 잠긴 칸에 찍어 둔 것도 그렇게 뺀다.<br>'
-            + '⚠ 전직 전용 포인트는 별개 풀인데 <b>전직 층이 미구현</b>이라 아직 없다.',
+            + '한 칸만 물리려면 그 칸을 <b>우클릭</b>한다 — 랭크가 1 줄고 포인트가 1 돌아온다. 잠긴 칸에 찍어 둔 것도 그렇게 뺀다.',
         en: 'Sin mastery and class mastery <b>share one point pool</b> — the same axis appearing on both sides is not redundancy but a <b>choice with opportunity cost</b>.<br>'
             + 'You earn points on level-up, and <b>resetting is free and always available</b> — a full refund, so no hero is ever ruined by a bad pick.<br>'
-            + 'To undo just one node, <b>right-click</b> it — one rank comes off and one point comes back. Works on locked nodes you had already invested in.<br>'
-            + '⚠ Advancement points are a separate pool, absent until the advancement layer exists.',
+            + 'To undo just one node, <b>right-click</b> it — one rank comes off and one point comes back. Works on locked nodes you had already invested in.',
     },
     'sk.points.left': { ko: '남은 포인트', en: 'Points left' },
     'sk.tip.rank': { ko: 'Rank {n}/{max}', en: 'Rank {n}/{max}' },
@@ -1531,13 +1522,13 @@ const STRINGS = {
     'sk.slots.note': {
         ko: '차례가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격. <b>마법 무기는 기본 공격이 없다</b> — 준비된 스킬이 없으면 게이지가 찬 채로 기다렸다가 스킬이 준비되는 순간 시전한다<br>'
             + '한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없다 — 행동 1회가 유일한 비용<br>'
-            + '쿨은 실시간으로 돈다. 쿨이 공격 속도(초)의 정수배일 때 손실 0 → <b>쿨감 옵션</b>이 정렬 손잡이<br>'
+            + '쿨은 실시간으로 돈다<br>'
             + '기본 공격은 언제나 <b>물리</b>다 — 원소 피해는 스킬만 낸다<br>'
             + '스킬은 <b>직업에 귀속</b>된다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 습득 칸은 <b>배운 책</b>에서 온다. <b>타격 · 회복 · 소환</b> 스킬은 어느 칸에 있든 그 스킬 직업의 무기를 들어야 나가고, 함성 · 오오라 · 축복 같은 <b>버프 · 디버프</b>는 무기를 안 본다<br>'
             + '⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>이다 — 지금 값은 임시다',
         en: 'When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack. <b>Magic weapons have no basic attack</b> — with nothing ready, the gauge waits full and casts the moment a skill is ready<br>'
             + 'One action per turn. A skill <b>replaces</b> that turn\'s attack and there is no mana — the action itself is the only cost<br>'
-            + 'Cooldowns run in real time. Zero loss when a cooldown is a whole multiple of Attack Speed (seconds) → <b>CDR affixes</b> are the alignment lever<br>'
+            + 'Cooldowns run in real time<br>'
             + 'Basic attacks are always <b>physical</b> — only skills deal elemental damage<br>'
             + 'Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the learned slot from <b>the book you read</b>. <b>Attack, heal and summon</b> skills need a weapon of that skill\'s class in any slot; <b>buffs and debuffs</b> such as shouts, auras and blessings work with any weapon<br>'
             + '⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders',
@@ -1545,10 +1536,8 @@ const STRINGS = {
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
     'sk.sinTree.sub': { ko: '모든 {sin} 영웅 공유', en: 'Shared by all {sin} heroes' },
     'sk.sinTree.missing': {
-        ko: '<b>맨 윗줄은 7죄종이 전부 같다</b> — 죄종마다 다르게 주면 파워가 갈려 약한 죄종 영웅이 영웅 로스터에서 버려진다. 바닥을 통일하고 <b>죄종의 개성은 그 아랫줄부터</b> 준다.<br>'
-            + '둘째 줄이 {sin} 만의 축이고, <b>맨 아랫줄(반응형)은 기획이 방향만 정했다</b> — 「~하면 ~한다」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없다.',
-        en: '<b>The top row is identical for all 7 sins</b> — differing power there would strand heroes of the weaker sins on the bench. The floor is shared and <b>each sin\'s identity starts one row down</b>.<br>'
-            + 'The second row is {sin}\'s own axis. <b>The bottom row (reactive) has direction but no numbers</b> — "when X, then Y" scales with trigger frequency, and there is no yardstick for that yet.',
+        ko: '<b>맨 아랫줄(반응형)은 기획이 방향만 정했다</b> — 「~하면 ~한다」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없다.',
+        en: '<b>The bottom row (reactive) has direction but no numbers</b> — "when X, then Y" scales with trigger frequency, and there is no yardstick for that yet.',
     },
     'sk.mastery': { ko: '{cls} 마스터리', en: '{cls} Mastery' },
     'sk.mastery.missing': {
@@ -1586,11 +1575,6 @@ const STRINGS = {
     'tv.reroll.note': {
         ko: '선술집 리롤 = <b>아이템 파밍의 영웅판</b> — 굴림 루프는 <b>레어 층</b>에 산다. 죄종 × 직업 35칸을 전부 여기서 공급한다',
         en: 'Tavern rerolls are <b>item farming for heroes</b> — the rolling loop lives in the <b>rare tier</b>, which supplies all 35 sin × class combinations',
-    },
-    'tv.uniqueTodo.h': { ko: '유니크 영웅 — 선술집 희귀 등장', en: 'Unique heroes — rare tavern appearances' },
-    'tv.uniqueTodo.b': {
-        ko: '명단·수색 어느 쪽에서도 희귀 등장 — 매력 영웅 배치가 등장 확률·품질을 올린다 (hero_design.md §1)',
-        en: 'Appears rarely in both the roster and searches — stationing a high-Charisma hero raises the odds and quality (hero_design.md §1)',
     },
     'tv.tiers.note': {
         ko: '<b>유니크</b> — 이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용), 영웅 로스터에 1명만. 본편 15명(직업별 3)이 상한<br>'
@@ -1636,10 +1620,10 @@ const STRINGS = {
     'cx.tip.story': { ko: '스토리', en: 'Story' },
     'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },    'cx.note': {
         ko: '그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
-            + '처치 하나의 도감 경험치는 그 원정의 난이도가 정한다 — 높은 난이도일수록 빨리 찬다 · 이긴 라운드의 처치만 센다 · 문턱과 레벨별 보정은 codex_level.csv(⚠제안값) · 보스 등급별 차등은 후속<br>'
+            + '처치 하나의 도감 경험치는 그 원정의 난이도가 정한다 — 높은 난이도일수록 빨리 찬다 · 이긴 라운드의 처치만 센다 · 보스 등급별 차등은 후속<br>'
             + '카드에 마우스를 올리면 그 몬스터의 이야기와 레벨 단계가 뜬다',
         en: "Each time the codex EXP gathered from a monster passes a cumulative threshold, <b>its codex level</b> rises and that stage's stat line goes up — <b>farming pushes the codex</b><br>"
-            + "Each kill's codex EXP is set by the expedition's difficulty — higher difficulties fill it faster · only kills from rounds you win count · thresholds and per-level bonuses live in codex_level.csv (⚠ proposed) · boss-grade scaling comes later<br>"
+            + "Each kill's codex EXP is set by the expedition's difficulty — higher difficulties fill it faster · only kills from rounds you win count · boss-grade scaling comes later<br>"
             + "Hover a card to see the monster's story and level milestones",
     },
 
