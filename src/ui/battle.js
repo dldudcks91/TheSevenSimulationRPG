@@ -865,6 +865,7 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'guard_pct': return v < 0 ? 'bt.effect.guard.down' : 'bt.effect.guard.up';
             case 'def_pct': return v < 0 ? 'bt.effect.def.down' : 'bt.effect.def.up';
             case 'res_elem': return v < 0 ? 'bt.effect.res.down' : 'bt.effect.res.up';
+            case 'res_pct': return v < 0 ? 'bt.effect.resAll.down' : 'bt.effect.resAll.up';
             case 'hp_max_pct': return v < 0 ? 'bt.effect.hp.down' : 'bt.effect.hp.up';
             case 'regen_pct': return v < 0 ? 'bt.effect.regen.down' : 'bt.effect.regen.up';
             case 'dr_pct': return v < 0 ? 'bt.effect.taken.up' : 'bt.effect.taken.down';

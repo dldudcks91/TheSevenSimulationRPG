@@ -36,6 +36,7 @@ export const D = {
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
     codexLevels: [],          // codex_level.csv — 레벨순 exp_total (누적 도감 경험치 문턱 · 2026-10-10 R239)
     codexBonus: [],           // codex_level.csv — 레벨순 bonus_pct
+    skillCodex: [],           // skill_codex_level.csv — 레벨순 [{level, expTotal, upgradeCap}] · 0 행 = 도감 전 (스킬 도감 · 2026-10-16 R266)
     codexSeries: null,        // codex_series.csv — {stage_num: statKey}
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
     chapterList: [],
@@ -71,7 +72,7 @@ export const D = {
     tacticScores: [],         // tactic_score.csv 원시 행 — 점수 하나 = 등급별 배수 ⚠제안 (§5-8)
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
-    classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, stage, color}] (stage = CSV 의 release)
+    classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
     sinWords: null,           // sin_word.csv — {sinId: [{ko, en}...]} **단 순서**(tier 로 정렬) · 아이템 이름의 죄종 단어 (item_design §1 「이름」 · 2026-09-19)
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
     // ~~affixDefs~~ (affix.csv) — 2026-09-21 R127 퇴역. 반지 · 목걸이가 아래 세 표로 옮겼다
@@ -126,7 +127,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'skill_codex_level'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -144,7 +145,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, skillCodexLevelRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -177,6 +178,9 @@ export async function loadData(base = './data/') {
     const codexByLevel = codexLevel.slice().sort((a, b) => a.level - b.level);
     D.codexLevels = codexByLevel.map(r => r.exp_total);   // 누적 도감 경험치 문턱 (2026-09-21 카드 → 처치 수 · 2026-10-10 처치 수 → 도감 경험치)
     D.codexBonus = codexByLevel.map(r => r.bonus_pct);
+    // 스킬 도감 — 스킬마다 누적 문턱과 그 레벨의 책 업그레이드 상한. 검증은 game_logic/state.js (monster_design §8-1 · R266)
+    D.skillCodex = skillCodexLevelRow.slice().sort((a, b) => a.level - b.level)
+        .map(r => ({ level: r.level, expTotal: r.exp_total, upgradeCap: r.upgrade_cap }));
     D.codexSeries = Object.fromEntries(codexSeries.map(r => [r.stage_num, r.stat]));
     D.chapterList = chapter.slice().sort((a, b) => a.chapter_id - b.chapter_id)
         .map(r => ({ id: r.chapter_id, sin: r.sin, name: { ko: r.name_kr, en: r.name_en } }));
@@ -321,6 +325,8 @@ export async function loadData(base = './data/') {
     D.classes = classRow.map(r => ({
         id: r.class_id, keyAttr: r.key_attr, ko: r.name_kr, en: r.name_en,
         role: { ko: r.role_kr, en: r.role_en }, stage: r.release, color: r.color_hex || null,
+        // 싸움에서 하는 일 한 문장 — 시작 화면 안내 띠의 직업 줄 (2026-10-16 · app.js:startGuide)
+        roleText: { ko: r.role_text_kr, en: r.role_text_en },
         // 레벨 1 최대 HP — 빈 칸(확장 직업)이면 null 이고 hero.js 가 `balance.csv:hero_hp_base` 로 떨어진다 (2026-10-02)
         hpBase: r.hp_base === '' || r.hp_base == null ? null : Number(r.hp_base),
     }));
@@ -549,9 +555,10 @@ export function buildSystems(d, dev = {}) {
      */
     const classSkills = Object.fromEntries((d.classes ?? []).map(c =>
         [c.id, skill.list.filter(sk => sk.innatePool && sk.ownerKind === 'job' && sk.ownerId === c.id).map(sk => sk.id)]));
-    // 직업 기본기 — 직업 풀 중 `starter_pool = 1` 인 것 · **첫 파티의 고유**를 여기서 굴린다 (2026-09-29 · R179 · hero_design §1 — ~~시작 무기의 스킬~~ 에서 옮겼다) · 행 순서가 결정론 계약
+    // 직업 풀 중 **1티어**(`skill.csv:tier = 1`)인 것 · **첫 파티의 고유**를 여기서 굴린다 [2026-10-16 · R271 · hero_design §1 —
+    //   ~~직업 기본기 `starter_pool = 1`(딜 · 힐)~~ 2026-09-29 R179 대체] · 소환(불러내기)은 직업 풀 밖이라 저절로 빠진다 · 행 순서가 결정론 계약
     const starterSkills = Object.fromEntries(Object.entries(classSkills).map(([c, ids]) =>
-        [c, ids.filter(id => skill.defs[id].starterPool)]));
+        [c, ids.filter(id => skill.defs[id].tier === 1)]));
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
         levelXp: d.levelXp,   // 레벨업 필요 XP 표 (level_xp.csv)
@@ -564,7 +571,7 @@ export function buildSystems(d, dev = {}) {
         heroTiers: d.heroTiers,   // 인자 `d` 에서 읽는다 — 전역 `D` 를 읽으면 테스트가 바꿔 끼운 표가 조용히 무시됐다 (2026-09-22 · 부채 #58)
         // 고유 스킬 풀 — **직업별**이다 (skill_design §12-1 규칙 1). hero 는 skill 시스템이 아니라 id 목록을 받는다
         skillPool: classSkills,
-        starterPool: starterSkills,   // 첫 파티의 고유 — 직업 기본기(딜 · 힐) (2026-09-29 · R179)
+        starterPool: starterSkills,   // 첫 파티의 고유 — 직업 풀의 1티어 (2026-10-16 · R271)
     });
     const item = createItemSystem({
         // ~~elements~~ 는 2026-09-11 R80 으로 주입 목록에서 빠졌다 — 마법 무기 원소 굴림이 사라져 item.js 가 원소 어휘를 안 읽는다
@@ -631,6 +638,7 @@ export function buildSystems(d, dev = {}) {
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         difficulties: d.difficultyList ?? [],   // 난이도 바퀴 — 순서대로 · 첫 단 = 처음부터 열림 (state.js · R236)
         codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
+        skillCodex: d.skillCodex ?? [],   // 스킬 도감 — 도안(Lv1) · 책 업그레이드 상한 (state.js · R266)
         // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
         sins, searchStories: d.searchStories ?? [],
         exploreStories: d.exploreStories ?? [],   // 탐험 이야기 — 지점마다 막 · 순서는 표가 정한다 (state.js:explorePhases · R235)

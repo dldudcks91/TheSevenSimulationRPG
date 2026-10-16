@@ -98,8 +98,8 @@ const SCALE_FIELD_IDS = Object.keys(SCALE_FIELDS);
  *   레벨은 **그 스킬의 숫자 하나**를 올린다 — 스킬마다 레벨 줄은 많아야 하나다
  */
 const LEVEL_FIELDS = [...SCALE_FIELD_IDS, 'cool_sec'];
-/** 미리보기 `amount` 의 밑수 — **하는 일**로 가른다: 때린다는 공격력 · 회복은 마법 공격력 · 소환은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
-const AMOUNT_BASIS = { hit: 'atk', heal: 'matk', summon: 'hpMax', fixed: 'atk' };   // fixed(자폭)의 밑수도 공격력이다 — 단 범위를 굴리지 않고 중앙값을 쓴다 (아래 previewOf · skill_effects EFFECT_TYPES.fixed · 2026-09-21)
+/** 미리보기 `amount` 의 밑수 — **하는 일**로 가른다: 때린다는 공격력 · 회복은 마법 공격력 · 소환 · 자기 회복(리커버리 · 2026-10-16)은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
+const AMOUNT_BASIS = { hit: 'atk', heal: 'matk', mend: 'hpMax', summon: 'hpMax', fixed: 'atk' };   // fixed(자폭)의 밑수도 공격력이다 — 단 범위를 굴리지 않고 중앙값을 쓴다 (아래 previewOf · skill_effects EFFECT_TYPES.fixed · 2026-09-21)
 /** 밑수의 양끝 — 공격 · 회복은 범위(`atkMin`~`atkMax` · `matkMin`~`matkMax` · R90), 벽은 한 점(`hpMax`) */
 const basisEnds = (basis, ctx) => (basis === 'hpMax' ? [ctx.hpMax, ctx.hpMax] : [ctx[`${basis}Min`], ctx[`${basis}Max`]]);
 
@@ -157,7 +157,7 @@ export function createSkillSystem(data) {
     /** 그 줄에 그 항이 있는가 — 없는 항을 미는 슬롯은 조용히 무시되므로 로드에서 막는다 (§13-1).
      *  `effect_value` · `duration_sec` 은 `apply` 줄이 거는 걸린 효과의 값 · 시간이다 — 시간은 창을 거는 쪽(`turn`)만 있다(오오라는 상시) */
     const slotFits = (d, e, field) => ({
-        mult_pct: e.effect === 'hit' || e.effect === 'heal' || e.effect === 'summon',
+        mult_pct: e.effect === 'hit' || e.effect === 'heal' || e.effect === 'mend' || e.effect === 'summon',
         hits: e.effect === 'hit',
         // 걸린 효과의 값 · 시간 — `apply` 줄, 그리고 **걸린 효과를 든 `hit` 줄**(맞은 대상에게 거는 결빙 · 2026-09-28 R177)
         effect_value: e.effect === 'apply' || (e.effect === 'hit' && e.status !== null),
@@ -325,7 +325,7 @@ export function createSkillSystem(data) {
         //   고유 · 기본 책을 막는다 · 목걸이는 바로 위 검사 · 책 · 도안은 `bookable` 이 막는다
         if (d.effects.some(e => e.effect === 'call') && (row.innate_pool !== 0 || row.starter_pool !== 0))
             bad(`불러내기인데 innate_pool ${row.innate_pool} · starter_pool ${row.starter_pool} — 영웅은 무리가 없어 안 나간다 · 둘 다 0`);
-        // 직업 기본기 [2026-09-27 · 2026-09-29 R179 — 첫 파티의 고유 · 도서관 기본 책 · ~~시작 무기 스킬~~] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
+        // 직업 기본기 [2026-09-27 · 2026-09-29 R179] — 지금 하는 일은 **상단이 안 파는 책**(`state.js:shopBookPool`) 하나 · ~~첫 파티의 고유~~(2026-10-16 R271 — 첫 파티는 직업 풀의 1티어 · `ui/data.js:starterSkills`) · ~~도서관 기본 책~~(10-12 R241 — 제작 목록은 도안) · ~~시작 무기 스킬~~ — 0/1 · 직업 스킬만
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
         if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
         // 갑옷 특정 스킬 +n 후보 [2026-10-08 · R225] — 0/1 · **기본 스킬(직업 스킬)만** — 풀은 직업 스킬만 읽어 다른 행의 1 은 조용히 버려진다
@@ -411,7 +411,7 @@ export function createSkillSystem(data) {
             //   `ally_single` · `party_adjacent` 오오라는 여기를 지나면 조용히 편 전체에 걸리므로 막는다
             if (d.cast === 'aura' && t !== 'self' && t !== 'party') bad(`aura 인데 target '${t}' — 오오라는 self · party 만`);
             if (e.hits !== 0) bad(`${e.effect} 인데 hits ${e.hits} — 타수는 hit 만 쓴다`);
-            if (e.effect === 'heal' && !(e.mult > 0)) bad(`heal 인데 mult_pct ${e.mult}`);
+            if ((e.effect === 'heal' || e.effect === 'mend') && !(e.mult > 0)) bad(`${e.effect} 인데 mult_pct ${e.mult}`);
             if (e.effect === 'apply' && e.mult !== 0) bad(`apply 인데 mult_pct ${e.mult} — 세기는 걸린 효과의 value 다`);
         }
         // 광역·연쇄는 **대상 수가 타수를 정한다** — hits 를 따로 적으면 두 곳 관리가 된다 (§9-3).

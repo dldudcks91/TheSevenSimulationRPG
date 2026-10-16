@@ -491,6 +491,7 @@ icons_source/skills/
 ├── source/               ← 원본 시트 — **게임이 안 읽는다**
 │   ├── sheet_07_codex_warrior.png … sheet_12_codex_extra.png  ← 기본 50 을 다시 뽑은 시트(2026-10-15 · Codex 이미지 생성 · 3×3 여섯) — 설치한 것은 새 스킬 14 칸뿐 · 지시문 sheet_NN_codex_<직업>_prompt.txt
 │   ├── sheet_07_12_anchor_installed_mono.png  ← 그 여섯에 붙인 기준 그림 — 그때 설치돼 있던 기본 아이콘 9장을 흰 바탕 검정으로 되돌린 것
+│   ├── sheet_13_codex_inferno.png · sheet_14_codex_summon.png  ← 인페르노 · 소환 2×2 (2026-10-16 · Codex) — 둘 다 1번 칸을 설치 · 기준 그림 = 같은 직업 설치본 9장(`sheet_13_anchor_installed_mage` · `sheet_14_anchor_installed_priest`) · 지시문 `*_prompt.txt`
 │   ├── <직업>_advanced_skills_sheet.png  ← 전직 45 투톤 시트 다섯 (2026-09-28 · 전직 시트의 앵커는 war_ 시트)
 │   └── sheet_01 ~ 06 · Gemini_Generated_Image_*  ← 9월 Gemini 시트 — 지금 설치된 기존 기본 36 의 출처 · sheet_02_mono_anchor 가 그때의 앵커
 └── unused/               ← id 가 없는 여분 · 10-15 「새 B」 넷(`war_frenzy_b` · `arc_evade_b` · `pri_halo_b` · `pri_doom_b`)
@@ -498,7 +499,8 @@ icons_source/skills/
 
 **새 기본 스킬 14 — 2026-10-15 Codex 단색 발주** — skill_design §12 의 직업마다 10(50)을 전부 다시 뽑았고, **그림이 없던 새 스킬 14 만 설치했다**(사용자 「기존꺼 내버려두고 새로 뽑힌 애들만」) — 기존 36 은 9월 그림 그대로이고 그 36 의 새 판은 원본 시트에만 있다. 같은 단색 실루엣 형태를 지키려고 설치돼 있던 그림을 기준 그림으로 붙였고, 칸 문장은 `.claude/skills/icon-prompt/skill_tiles.md` 의 타일을 따랐다(새 스킬은 시트 지시문이 원문). 실측 — 장변 88 · 중앙 50/50 · 단색(기존 설치본과 같은 값). 지시와 다르게 나온 칸 — `arc_overdraw`(큰 화살 대신 활 쏘는 사람) · 40px 에서 약한 칸 — `arc_arrowrain`(가는 화살) · `arc_overdraw`
 
-- **새 스킬 13 이 화면에 나온다** [2026-10-16 · DEV_PLAN R246 ~ R250] — 가안 id 그대로 `skill.csv` 행이 섰고 `mock.js:SKILL_ICON_FILES` 에 들었다. **`pri_halo` 는 쓸 곳이 없다**(헤일로가 같은 날 지워져 소환으로 — 파일만 남는다) · **소환(`pri_summon`)은 그림이 없어 검은 칸**이다 — 발주 전
+- **새 스킬 13 이 화면에 나온다** [2026-10-16 · DEV_PLAN R246 ~ R250] — 가안 id 그대로 `skill.csv` 행이 섰고 `mock.js:SKILL_ICON_FILES` 에 들었다. **`pri_halo` 는 쓸 곳이 없다**(헤일로가 같은 날 지워져 소환으로 — 파일만 남는다)
+- **인페르노 · 소환** [2026-10-16 · Codex 단색] — 인페르노는 「불의 고리」로 갈아 끼웠고(옛 각진 분사는 git 이력에만) 소환은 「별을 그린 의식 원에서 솟는 뿔 해골」이다. 설치본 실측 장변 88 · 중앙 50/50 · 단색
 - 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
 - **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 강조색 픽셀은 그대로 두고 검정만 회백으로 칠한다
 
@@ -519,7 +521,7 @@ Might(굽은 갈고리 → **굽힌 팔**) · Fanaticism(가는 평행 줄무늬
 | 기사 10 | **10** | 10 | — |
 | 궁수 10 | **10** | 10 | — (퀵 드로우는 전직 투톤 그림 그대로) |
 | 마법사 10 | **10** | 10 | — |
-| 사제 10 | **9** | 9 | **소환(`pri_summon`) — 그림 없음 · 검은 칸** |
+| 사제 10 | **10** | 10 | — |
 
 발주 프롬프트와 **타일 문장**(무엇을 그리는가)은 `.claude/skills/icon-prompt/skill_tiles.md` 가 든다.
 

@@ -6,15 +6,13 @@
 export const SKILL_ART = {
     war_bash: { hit: { file: 'war_bash', motion: 'slash', size: 92, duration: 360 } },
     war_doubleswing: { hit: { file: 'war_doubleswing', motion: 'cross', size: 90, duration: 400 } },
-    war_quake: { hit: { file: 'war_quake', motion: 'ground', size: 96, duration: 480, quake: true } },
     war_leap: { hit: { file: 'war_leap', motion: 'land', size: 94, duration: 460, quake: true } },
     // 함성 셋 — 같은 집중선 · 색만 다르다 · 움직임도 퍼짐 하나(ADR-0546).
     war_shout: { buff: { file: 'war_shout', motion: 'wave', size: 90, duration: 580 } },
     war_battleorders: { buff: { file: 'war_battleorders', motion: 'wave', size: 90, duration: 580 } },
     war_ironskin: { buff: { file: 'war_ironskin', motion: 'shell', size: 94, duration: 540 } },
 
-    // 기사 — 스마이트는 물리 충돌, 인챈트는 실제 추가 피해인 화염이다.
-    kni_smite: { hit: { file: 'kni_smite', motion: 'burst', size: 88, duration: 360 } },
+    // 기사 — 인챈트는 실제 추가 피해인 화염이다. ~~스마이트~~ 는 2026-10-16 삭제(레지스탕스 실드 — 그림 없음 · 코드 연출 `skill_looks`)
     kni_holyshield: { buff: { file: 'kni_holyshield', motion: 'shell', size: 92, duration: 540 } },
     kni_charge: { hit: { file: 'kni_charge', motion: 'thrust', size: 88, duration: 360 } },
     kni_rush: { hit: { file: 'kni_rush', motion: 'thrust', size: 84, duration: 340 } },

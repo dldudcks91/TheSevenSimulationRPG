@@ -1,5 +1,5 @@
 /**
- * 대량 실행 — `qa` 스킬 기획 모드의 도구 (.claude/skills/qa · src/dev/README.md 「대량 실행」).
+ * 대량 실행 — `qa-fun` 스킬(재미 검수)의 도구 (.claude/skills/qa-fun · src/dev/README.md 「대량 실행」).
  *
  * 시드를 바꿔 같은 조건을 여러 번 돌리고 요약 표와 JSON 을 찍는다 — 헤드리스 `--dump-dom` 으로 읽는다.
  * 캘리브레이션 표(test.html)는 손잡이 조정용 **고정 표**이고 이쪽은 약속 검사용 **분포**다.

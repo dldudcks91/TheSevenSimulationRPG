@@ -879,7 +879,7 @@ function damageTypeOf(line, atkType) {
 function amountPhrase(line, part, atkType, R) {
     if (!part) return null;
     const d = amountSlot(part, R);
-    if (line.effect === 'heal') return part.value == null ? t('sk.amt.healFx', { f: d }) : t('sk.amt.heal', { v: d });
+    if (line.effect === 'heal' || line.effect === 'mend') return part.value == null ? t('sk.amt.healFx', { f: d }) : t('sk.amt.heal', { v: d });
     const type = damageTypeOf(line, atkType);
     const elem = type && type !== 'physical';
     if (part.value == null) return elem ? t('sk.amt.elemFx', { f: d, e: t(`st.atkType.${type}`) }) : t('sk.amt.physicalFx', { f: d });
@@ -940,6 +940,11 @@ function skillLines(def, pv, atkType, R) {
     if (e.effect === 'heal') {
         const d = amountPhrase(e, P.amount, atkType, R);
         return d === null ? null : [t(def.target === 'ally_single' ? 'sk.line.healOne' : 'sk.line.heal', { n, d })];
+    }
+    // 자기 회복 — 리커버리 (2026-10-16) · 밑수가 최대 HP 라 회복과 같은 구절에 틀만 「자신」이다
+    if (e.effect === 'mend') {
+        const d = amountPhrase(e, P.amount, atkType, R);
+        return d === null ? null : [t('sk.line.mend', { n, d })];
     }
     // 소환 — 벽의 HP 가 `시전자 최대 HP × 배율 + 능력치 항` 이다 (skill_design §12-6). 피해가 아니라 구절 없이 자리만 쓴다
     if (e.effect === 'summon') return P.amount ? [t('sk.line.summon', { n, d: amountSlot(P.amount, R) })] : null;

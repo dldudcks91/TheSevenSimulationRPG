@@ -40,14 +40,23 @@ import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
 /** 스테이지 라운드 구조 (base_expedition_design §1-2) — 구조는 고정, 내용물만 랜덤 */
 
 /** 죄종 — en 은 chapter_info.csv 의 sin_en 그대로. adj 는 아이템/정예 접두 형용사 */
+/* `line` — 그 죄종이 어떤 영웅을 만드나 한 문장 · 시작 화면 안내 띠의 죄종 줄 (2026-10-16 · app.js:startGuide).
+   문장은 죄종 마스터리 1티어(skill_design §3-1)의 방향을 풀어 쓴 것이다 — 1티어 축이 바뀌면 같이 고친다 */
 export const SINS = {
-    wrath: { ko: '분노', en: 'Wrath', adj: 'Wrathful', color: '#e03030' },
-    envy: { ko: '시기', en: 'Envy', adj: 'Envious', color: '#30b050' },
-    greed: { ko: '탐욕', en: 'Greed', adj: 'Greedy', color: '#d0a020' },
-    sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#7087a8' },   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
-    gluttony: { ko: '폭식', en: 'Gluttony', adj: 'Gluttonous', color: '#e07020' },
-    lust: { ko: '색욕', en: 'Lust', adj: 'Lustful', color: '#e03080' },
-    pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0' },
+    wrath: { ko: '분노', en: 'Wrath', adj: 'Wrathful', color: '#e03030',
+        line: { ko: '빠르고 거세게 몰아치며 치명타를 노린다', en: 'Strikes fast and hard and hunts critical hits' } },
+    envy: { ko: '시기', en: 'Envy', adj: 'Envious', color: '#30b050',
+        line: { ko: '적의 방어를 깎고 받은 만큼 되돌려 준다', en: 'Strips enemy defenses and pays back what it takes' } },
+    greed: { ko: '탐욕', en: 'Greed', adj: 'Greedy', color: '#d0a020',
+        line: { ko: '더 많은 골드와 전리품을 긁어모은다', en: 'Hoards more gold and loot' } },
+    sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#7087a8',   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
+        line: { ko: '피해를 덜 받으며 버티고 스킬을 더 자주 쓴다', en: 'Shrugs off damage and uses skills more often' } },
+    gluttony: { ko: '폭식', en: 'Gluttony', adj: 'Gluttonous', color: '#e07020',
+        line: { ko: '단단한 몸으로 원소를 견디고 적의 체력을 뜯어 먹는다', en: 'Endures the elements and devours enemy health' } },
+    lust: { ko: '색욕', en: 'Lust', adj: 'Lustful', color: '#e03080',
+        line: { ko: '적의 피를 빨아 버티고 걸린 축복을 오래 끈다', en: 'Drinks enemy blood to endure and makes blessings linger' } },
+    pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0',
+        line: { ko: '흔들리지 않고 더 큰 데미지를 낸다', en: 'Stands unshaken and hits harder' } },
 };
 
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
@@ -389,18 +398,19 @@ export const SKILL_ICON_DIR = './assets/art/icons/skills/';
 //   목록에 없는 스킬은 검은 칸이다(2026-09-18 · ADR-0162 — 해시 폴백 폐기)
 export const SKILL_ICON_FILES = [
     // 기본 스킬 50 [2026-10-16 · skill_design §12 · R246 ~ R250 · R258] — 9월 단색 36 + 10-15 Codex 단색 13(그림만 먼저 와 있던 새 스킬 · 가안 id 그대로 행이 섰다).
-    //   ~~`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`~~ 은 행이 지워져 뺐다(그림 파일은 폴더에 남는다) · **소환(`pri_summon`)은 그림이 없어 검은 칸**이다
+    //   ~~`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`~~ 은 행이 지워져 뺐다(그림 파일은 폴더에 남는다) · 소환(`pri_summon`) · 인페르노 새 그림은 2026-10-16 Codex 단색(직업 설치본을 기준 그림으로)
     //   · `pri_halo` 그림은 헤일로가 같은 날 지워져 쓸 곳이 없다(폴더에만 있다)
-    'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_shout', 'war_battleorders', 'war_ironskin',
+    //   · `war_quake` · `kni_smite` 도 2026-10-16 행이 지워져 뺐다 — 자리에 선 리커버리 · 레지스탕스 실드는 그림이 없어 검은 칸이다
+    'war_bash', 'war_doubleswing', 'war_leap', 'war_shout', 'war_battleorders', 'war_ironskin',
     'war_frenzy', 'war_warcry', 'war_battlecry',
-    'kni_smite', 'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_enchant',
+    'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_enchant',
     'kni_might', 'kni_fanaticism', 'kni_defiance', 'kni_sweep', 'kni_holyfire',
     'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
     'arc_arrowrain', 'arc_evade', 'arc_overdraw',
     'mag_fireball', 'mag_iceblast', 'mag_frostnova', 'mag_lightning',
     'mag_chain', 'mag_inferno', 'mag_ignite', 'mag_deepfreeze', 'mag_surge', 'mag_echo',
     'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
-    'pri_penitence', 'pri_bind', 'pri_haste', 'pri_doom',
+    'pri_penitence', 'pri_bind', 'pri_haste', 'pri_doom', 'pri_summon',
     // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 다섯 직업 45 전부(궁수 9 는 2026-10-09)
     //   · `arc_quickdraw` 는 2026-10-16 궁수 기본 스킬로 내려왔다(R247) — 그림은 전직 투톤 그대로 둔다
     'war_ragnarok', 'war_berserk', 'war_mutualruin', 'war_whirlwind', 'war_thorswrath', 'war_shockwave',

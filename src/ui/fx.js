@@ -638,7 +638,7 @@ export function previewOf(s, effRows = [], target = '') {
     const ty = !hit ? 'physical' : hit.effect === 'fixed' ? null : (hit.element && hit.element !== '-' ? hit.element : 'physical');
     if (look) return { kinds: PREVIEW_KINDS.filter(k => look[k]), ty };
     const e = effRows[0], ef = e?.effect, tg = e?.target && e.target !== '-' ? e.target : target;
-    const kind = ef === 'hit' || ef === 'fixed' ? 'hit' : ef === 'heal' ? 'heal' : ef === 'summon' || ef === 'call' ? 'call' : /enemy/.test(tg ?? '') ? 'bad' : 'buff';
+    const kind = ef === 'hit' || ef === 'fixed' ? 'hit' : ef === 'heal' || ef === 'mend' ? 'heal' : ef === 'summon' || ef === 'call' ? 'call' : /enemy/.test(tg ?? '') ? 'bad' : 'buff';
     return { kinds: [kind], ty };
 }
 /** 사건 하나를 띄운다 — kind = 'basic'(기본 공격) | 'hit' | 'bad' | 'buff' | 'heal' | 'call' · n = 몇 번째 재생인가(흩어짐이 매번 달라진다) · 때린 카드는 없다(공격 시 흔들림이 안 선다).

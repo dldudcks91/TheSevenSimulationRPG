@@ -140,6 +140,19 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
+     * 자기 회복 — 시전자 **최대 HP** × 배율 × 능력치 계수 [2026-10-16 · 리커버리 · skill_design §12-3]. **굴리지 않는다(rng 0)** —
+     *   마법 공격력이 없는 직업(전사)의 회복이라 밑수가 최대 HP 다. 회복량 증가(거는 쪽) · 체력 회복 +%(받는 쪽)는 `castHeal` 과 같다 · 이벤트도 `heal` 이다
+     */
+    function castMend(u, def, t) {
+        const amt = Math.round(u.hpMax * def.mult * (def.statMult ?? 1) * (u.healOut ? 1 + u.healOut : 1));
+        for (const tgt of targetsOf(u, def)) {
+            const got = tgt.recv ? Math.round(amt * (1 + tgt.recv)) : amt;
+            tgt.hp = Math.min(tgt.hpMax, tgt.hp + got);
+            timeline.push({ t: r1(t), e: 'heal', a: u.key, d: tgt.key, amt: got, dhp: tgt.hp, s: def.id });
+        }
+    }
+
+    /**
      * 버프 창 — 중첩 없음, 같은 효과 재시전은 `until` 갱신. 창 밖에 만들 것이 있는 효과는 표의 `apply` 가 한다.
      * **적에게도 건다** — 대상이 적 쪽(`PICK_TARGETS[..].side = enemy`)이면 음수 값의 디버프다 [사용자 확정 2026-09-09].
      * 창에 함께 싣는 것 — `element`(평타 부여가 무슨 원소로 때리나) · `by`(지목한 자가 누구인가) · `s`(건 스킬 — 이벤트의 `s`) · `roundEnd`(라운드 경계 규칙).
@@ -403,7 +416,7 @@ export function createSkillRuntime(ctx) {
      */
     const rt = {
         rng, F, strikeOnce: skillStrike, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
-        alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf,
+        alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf,
     };
     return rt;
 }

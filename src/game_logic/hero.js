@@ -49,8 +49,8 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다. **1스킬 = 1직업**(skill_design §12-1
  *                  확정 2026-09-08)이라 ~~전 행에서 균등~~ 이 아니라 **제 직업 풀**에서 굴린다 —
  *                  「마법사가 배쉬를 드는 일은 없다」
- *   starterPool  — `skillPool` 과 같은 모양 ← skill.csv:starter_pool = 1(직업 기본기 — 딜 · 힐) — **첫 파티의 고유만** 여기서 굴린다
- *                  [2026-09-29 · R179 · hero_design §1 — ~~시작 무기의 스킬~~ 에서 옮겨 왔다] · 그 직업이 비면 직업 풀 · 행 순서가 결정론 계약
+ *   starterPool  — `skillPool` 과 같은 모양 ← 직업 풀 중 skill.csv:tier = 1 — **첫 파티의 고유만** 여기서 굴린다
+ *                  [2026-10-16 · R271 · hero_design §1 — ~~직업 기본기 starter_pool(딜 · 힐)~~ 2026-09-29 R179 대체] · 그 직업이 비면 직업 풀 · 행 순서가 결정론 계약
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
  *   heroTiers    — 영웅 등급 표 [{id, weight, totalMin, totalMax, shape}...] ← `hero_tier.csv` (**행 순서가 굴림 결과를 정한다**).
  *                  `weight = 0` 인 행은 생성기가 안 뽑는다(유니크는 수작업). 등급을 가르는 것은 **총합 대역과 분포 모양 둘뿐**이다
@@ -66,7 +66,7 @@ export function createHeroSystem(data) {
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
     const skillPool = data.skillPool ?? {};      // {classId: [skillId...]} — 직업 풀 (skill_design §12)
-    const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 기본기 · 첫 파티 고유만 (2026-09-29 · R179)
+    const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 풀의 1티어 · 첫 파티 고유만 (2026-10-16 · R271)
     const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
     const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
     // 레벨 1 최대 HP — **직업마다** [2026-10-02 사용자 「궁수 · 마법사 50 · 사제 70」] · 빈 칸이면 전역 `hero_hp_base`
@@ -288,8 +288,8 @@ export function createHeroSystem(data) {
      *   ~~`skill.csv` 전 행에서 균등~~(09-01)은 「1스킬 = 1직업」 확정으로 폐기됐다.
      * ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 직업에 의존하면 같은 시드가 다른 파티를 낸다
      *   (초상 굴림이 09-07 에 같은 이유로 같은 규칙이 됐다 · INTERFACE §5-2).
-     * `starter` = **첫 파티** — 직업 기본기 풀(`starterPool` — 딜 · 힐)에서 굴린다 [2026-09-29 · R179 · hero_design §1].
-     *   무기가 스킬을 안 담게 되어 레벨 10(스킬북) 전엔 고유 한 칸뿐이라 보장이 여기로 왔다. **소비는 1회 그대로**(풀만 좁다) · 기본기가 비면 직업 풀
+     * `starter` = **첫 파티** — 직업 풀의 1티어(`starterPool`)에서 굴린다 [2026-10-16 · R271 · hero_design §1 — ~~직업 기본기(딜 · 힐)~~ 2026-09-29 R179 대체].
+     *   무기가 스킬을 안 담게 되어 레벨 10(스킬북) 전엔 고유 한 칸뿐이다. **소비는 1회 그대로**(풀만 좁다) · 1티어가 비면 직업 풀
      */
     const rollInnate = (rng, cls, starter = false) => {
         const pool = (starter && starterPool[cls]?.length ? starterPool[cls] : skillPool[cls]) ?? [];
@@ -297,7 +297,7 @@ export function createHeroSystem(data) {
         return pool.length ? pool[Math.floor(r * pool.length)] : null;
     };
 
-    /** 생성 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollParty 쪽의 일 · `starter` = 첫 파티(고유를 기본기 풀에서 — rollInnate) */
+    /** 생성 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollParty 쪽의 일 · `starter` = 첫 파티(고유를 1티어에서 — rollInnate) */
     function rollHero(rng, { sin, cls, name, trait, tier, starter = false }) {
         // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 등급 1 → 총합 1 → 능력치 7 → 고유 1 = **언제나 10회**.
         // 객체 리터럴 안에서 부르면 평가 순서가 문장으로 안 보여 순서가 조용히 밀린다.

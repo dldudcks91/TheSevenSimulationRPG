@@ -362,7 +362,7 @@ const ROLL_SEED = 20260824;
 const FORM_RANK_LABELS = { 1: ['exp.form.front'], 2: ['exp.form.front', 'exp.form.back'] };
 
 const state = {
-    screen: 'start',        // start | game
+    screen: 'menu',         // menu | start | prologue | game — 켜면 메뉴 (SCREEN_DESIGN §3 · ADR-0641)
     tab: 'expedition',
     // `unfold` = Party 버튼을 누른 직후 첫 그리기에만 우리 팀 아래 진형 · 물약 · 전술이 차례로 내려오는 연출을 단다(그 그리기가 끈다 · ADR-0497)
     arena: { owner: null, selectionKey: null, team: null, opponent: null, match: null, last: null, unfold: false },
@@ -425,8 +425,8 @@ const state = {
     makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
     cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
-    shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · 방문 회차가 넘어가면 풀린다
-    advSel: null,                // 도서관 전직 패널에서 고른 갈래 {uid, branch} — 띠에서 다른 영웅을 고르면 안 먹는다 (§17 · ADR-0536 · ADR-0567)
+    shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · `cycle` = 그 격자의 번호(상단 = 목록 번호 `list` · 특수상단 = 방문 회차) · 바뀌면 풀린다
+advSel: null,                // 도서관 전직 패널에서 고른 갈래 {uid, branch} — 띠에서 다른 영웅을 고르면 안 먹는다 (§17 · ADR-0536 · ADR-0567)
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
     battle: null,           // {result, stageId} — **보는 부대**의 핸들 (아래 `battles` 의 한 칸을 가리키는 이름이다)
     /* 부대마다 한 핸들 [2026-09-24 · ADR-0316 · 다부대] — 편성 번호 → `{run, result, stageId, form, resume}`.
@@ -547,7 +547,7 @@ function renderShell() {
     // crumb — 게임 화면이면 **탭 이름 전부를 한 칸에 겹쳐 두고 고른 것만 보인다** [2026-09-24 · SCREEN_DESIGN §2 · ADR-0353].
     //   폭 = 그 언어에서 가장 긴 탭 이름이라 탭을 옮겨도 오른쪽 원정 세그먼트가 안 움직인다 (라벨 칸이라 고정 px 이 아니다 · style.css `.crumb`)
     const crumb = $('.crumb');
-    if (pre) crumb.textContent = state.screen === 'prologue' ? t('pro.h') : t('ng.h');
+    if (pre) crumb.textContent = state.screen === 'prologue' ? t('pro.h') : state.screen === 'menu' ? '' : t('ng.h');
     else crumb.replaceChildren(...TABS.map(id => el('span', id === state.tab ? '' : 'ghost', t(`nav.${id}`))));
     // 원정 세그먼트 — **모든 탭에 선다** [2026-09-24 사용자 지시 · SCREEN_DESIGN §2 · §4 · ADR-0353] — 다른 일을 하다가도 부대 상태 · 끝난 원정이 보이고 누르면 그리로 간다.
     //   원정 탭이 닫혀 있으면(건물 표) 안 선다 — 갈 곳이 없다
@@ -584,6 +584,7 @@ function render() {
     const kept = new Map([...main.querySelectorAll('[data-keep]')].map(n => [n.dataset.keep, n.scrollTop]));
     main.innerHTML = '';
     if (state.screen === 'prologue' && G) renderPrologue(main);
+    else if (state.screen === 'menu') renderMenu(main);
     else if (state.screen === 'start' || !G) renderStart(main);
     // 안 지은 건물의 탭도 **제 화면**을 편다 — 건설 화면은 건설 탭에만 선다 (§1 · ADR-0308)
     else ({
@@ -845,33 +846,62 @@ function candidateCard(h, extra = '') {
     return c;
 }
 
+/** 카드 아래 안내 띠 — **지금 세 장에 든** 직업 · 죄종만 한 줄씩 편다 · 카드 안은 안 건드린다 (SCREEN_DESIGN §3 · ADR-0642 · 사용자 「카드 내부는 건드리지 말고 주변을」).
+ *  줄마다 **어떤 역할을 하나** 한 문장 [2026-10-16 사용자 「어떤 형태의 역할을 하는지 적는 게 좋다」 — 마스터리 축 나열을 대체] —
+ *  직업 = `class.csv:role_text` · 죄종 = `mock.js:SINS.line`. 역할 줄(「근접 물리」)은 카드가 이미 들어 띠에서는 안 되풀이한다 */
+function startGuide(cands) {
+    const uniq = key => [...new Set(cands.map(h => h[key]).filter(Boolean))];
+    const clsText = c => classDef(c) ? L(classDef(c).roleText) || L(classDef(c).role) : t('class.unassigned');
+    const rows = list => list.map(([name, color, text]) =>
+        `<b${color ? ` style="color:${color}"` : ''}>${name}</b><span>${text}</span>`).join('');
+    const col = (h, sub, list) => `<div class="ng-gd-col">
+        <div class="ng-gd-h"><b>${h}</b><span class="muted">${sub}</span></div>
+        <div class="ng-gd-rows">${rows(list)}</div></div>`;
+    return el('div', 'ng-guide',
+        col(t('ng.guide.cls'), t('ng.guide.clsSub'),
+            uniq('cls').map(c => [className(c), classColor(c), clsText(c)]))
+        + col(t('ng.guide.sin'), t('ng.guide.sinSub'),
+            uniq('sin').map(s => [sinName(s), sinColor(s), L(M.SINS[s]?.line) || ''])));
+}
+
+/** 메뉴 — 켜면 먼저 선다 · 새 게임이 위 · 불러오기가 아래 (SCREEN_DESIGN §3 · ADR-0641 · 사용자 「처음 시작 화면이 메뉴 느낌으로」).
+ *  불러오기는 **열 수 있는 세이브가 있을 때만** 눌린다 — 없으면 흐리고, 못 여는 옛 세이브면 흐린 채 사유를 단다(판정은 `game.canLoad` · ADR-0303).
+ *  세이브 요약(저장 시각 · 영웅 · 클리어 · 골드)은 불러오기 아래 — 옛 시작 화면의 이어하기 칸이 이리 왔다 */
+/** 뒤로가기 화살표 — 촉 + 몸통 · 색은 버튼 글자색(currentColor)을 따른다 (자물쇠 `lockIcon` 과 같은 그리기) */
+const backIcon = '<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">'
+    + '<path d="M13 8H3.5M7.5 4L3.5 8l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function renderMenu(main) {
+    const saved = loadSave();
+    const live = !!saved && SYS.game.canLoad(saved);
+    const wrap = el('div', 'mn-wrap');
+    // 워드마크는 브랜드 칸의 것을 그대로 든다 — 화면이 게임 이름을 따로 안 갖는다
+    wrap.appendChild(el('div', 'mn-logo', $('.brand').innerHTML));
+    const nb = el('button', 'btn lg mn-btn', t('ng.h'));
+    nb.onclick = () => { state.screen = 'start'; state.confirmOverwrite = false; render(); };
+    const lb = el('button', 'btn lg mn-btn', t('mn.load'));
+    lb.disabled = !live;
+    lb.onclick = () => { if (continueGame()) render(); };
+    wrap.append(nb, lb);
+    if (saved) wrap.appendChild(el('div', `mn-save${live ? '' : ' down'}`, live
+        ? `${t('ng.hasSave', { t: new Date(saved.savedAt).toLocaleString() })}<small>${t('ng.saveLine', {
+            h: saved.heroes.length, c: saved.progress.cleared.length, g: saved.resources.gold.toLocaleString() })}</small>`
+        : t('ng.oldSave', { v: saved.version })));
+    main.appendChild(wrap);
+}
+
 function renderStart(main) {
     const wrap = el('div', 'ng-wrap');
     const saved = loadSave();
     // 열 수 있는 세이브인가 — 판정은 `deserialize` 가 한다(화면이 버전 숫자를 안 본다). v37 전 세이브는 못 연다 (INTERFACE §4 · ADR-0303)
     const live = !!saved && SYS.game.canLoad(saved);
 
-    const head = el('div', 'ng-title');
-    head.innerHTML = `<h1>${t('ng.title')}</h1>`;
-    wrap.appendChild(head);
-
-    if (saved) {
-        const box = el('div', 'ng-continue');
-        const old = !live;
-        box.innerHTML = `
-            <div class="l">${t('ng.hasSave', { t: new Date(saved.savedAt).toLocaleString() })}
-                <small${old ? ' class="down"' : ''}>${old
-                    ? t('ng.oldSave', { v: saved.version })
-                    : t('ng.saveLine', { h: saved.heroes.length, c: saved.progress.cleared.length, g: saved.resources.gold.toLocaleString() })}</small></div>
-            ${old ? '' : `<button class="btn primary b-continue">${t('ng.continue')}</button>`}`;
-        const cb = box.querySelector('.b-continue');
-        if (cb) cb.onclick = () => { if (continueGame()) render(); };
-        wrap.appendChild(box);
-    }
-
+    // 제목(「첫 파티」)은 걷었다 (ADR-0643 · 사용자 「거슬린다 · 아예 없애봐」) — 화면 이름은 상단바 crumb(「새 게임」)이 든다.
+    //   키 `ng.title` 은 도움말 「새 게임」 절의 머리가 계속 쓴다
     const row = el('div', 'ng-row');
     for (const h of state.candidates) row.appendChild(candidateCard(h));
     wrap.appendChild(row);
+    wrap.appendChild(startGuide(state.candidates));
 
     const actions = el('div', 'ng-actions');
     const reroll = el('button', 'btn', t('ng.reroll'));
@@ -885,6 +915,11 @@ function renderStart(main) {
         // 파티 확정 = 캐릭터 생성. 여기서만 프롤로그를 지난다 (§3-1) — 이어하기는 안 지난다
         startGame({ prologue: true });
     };
+    // 뒤로가기 = 메뉴 — 화면 왼쪽 위 · 아이콘 + 글 (ADR-0643 · 사용자 지시). 새 게임을 잘못 눌렀으면 여기서 불러오기로 돌아간다.
+    //   버튼 줄에서 뺐다 — 되돌릴 수 없는 [세이브를 지우고 시작] 옆에 서 있었다
+    const back = el('button', 'ng-back', `${backIcon}<span>${t('ng.back')}</span>`);
+    back.onclick = () => { state.screen = 'menu'; state.confirmOverwrite = false; render(); };
+    main.appendChild(back);
     actions.appendChild(el('span', 'ng-count muted', t('ng.roll', { n: state.roll })));
     actions.appendChild(reroll);
     actions.appendChild(start);
@@ -3223,8 +3258,10 @@ function bookLearnInto(box, h, bs) {
     const bar = el('div', 'td-buy bk-buy', sel
         ? `<span class="td-buy-n">${L(skillInfo(sel.id).name)}${up ? `<span class="bk-lv">${t('sk.lvTag', { n: p.lv + 1 })}</span>` : ''}</span>`
         : '<span class="td-buy-n muted">—</span>');
-    // 업그레이드는 드는 책 수를 버튼이 말한다(피보나치라 단계마다 다르다) · 상한이면 「최대」
-    const label = up ? (p.err === 'maxUp' ? t('bk.max') : t('bk.upgrade', { n: p.need })) : t(over ? 'bk.overwrite' : 'bk.learn');
+    // 업그레이드는 드는 책 수를 버튼이 말한다(피보나치라 단계마다 다르다) · 상한의 끝이면 「최대」 ·
+    //   스킬 도감이 연 상한에 닿았으면 그 상한을 올려 줄 도감 레벨 「도감 Lv.n」 (2026-10-16 · R266 · ADR-0640)
+    const label = up ? (p.err === 'maxUp' ? t('bk.max') : p.err === 'codexCap' ? t('bk.codexCap', { n: p.codexNeed }) : t('bk.upgrade', { n: p.need }))
+        : t(over ? 'bk.overwrite' : 'bk.learn');
     const btn = el('button', `btn sm ${over ? 'danger' : 'primary'}`, label);
     btn.disabled = !sel || !!err || (up && !!p.err);
     btn.onclick = () => {
@@ -3958,12 +3995,30 @@ function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints 
  * 화살표는 좋아짐 ▲ · 나빠짐 ▼ — 섞인 줄은 비운다 · 바뀌는 줄이 없으면 「변화 없음」. 「총합 더 좋음」은 없다(item_design §6-3)
  */
 function deltaHtml(h, item) {
-    const rows = sheetDeltaRows(combatOf(h), SYS.game.heroCombatWith(G, h, item));
+    // 켜지고 꺼지는 스킬 줄이 맨 위 [2026-10-16 · §6 · ADR-0639] — 세부 옵션 줄과 같은 꼴이라 한 목록으로 잇는다
+    const rows = [...skillFlipRows(h, item), ...sheetDeltaRows(combatOf(h), SYS.game.heroCombatWith(G, h, item))];
     const arrow = d => (d > 0 ? '<b class="up">▲</b>' : d < 0 ? '<b class="down">▼</b>' : '<b></b>');
     const body = rows.length
         ? rows.map(r => `<div class="r"><span class="n">${r.name}</span><span class="v">${r.from} → ${r.to}</span>${arrow(r.dir)}</div>`).join('')
         : `<div class="r none">${t('tip.delta.none')}</div>`;
     return `<div class="tip-delta"><div class="tip-delta-h">${t('tip.delta.h', { name: L(h.name) })}</div>${body}</div>`;
+}
+
+/**
+ * 착용 델타의 스킬 줄 [2026-10-16 · SCREEN_DESIGN §6 · ADR-0639] — 그 영웅의 액티브 칸 셋 가운데 **이 물건을 끼면 켜짐 ↔ 꺼짐이 바뀌는 스킬**만
+ * `{name, from, to, dir}`(`sheetDeltaRows` 와 같은 꼴). 판정은 액티브 칸 흑백(`skillCardGrid` · ADR-0446)과 같은 `skill.fitsWeapon` 을
+ * 지금 든 무기군 · 낀 뒤 무기군으로 두 번 부를 뿐이다. 무기가 아닌 물건은 무기군이 안 바뀌어 빈 목록이다
+ */
+function skillFlipRows(h, item) {
+    if (item?.slot !== 'weapon') return [];
+    const classesOf = it => (it ? D.weaponGroups[it.group]?.classes ?? null : null);
+    const now = classesOf(G?.items?.[h.equipped?.weapon] ?? null), next = classesOf(item);
+    const word = on => t(on ? 'tip.delta.on' : 'tip.delta.off');
+    return activeCells(h).filter(Boolean).flatMap(a => {
+        const def = SYS.skill.resolve(a);
+        const was = SYS.skill.fitsWeapon(def, now), will = SYS.skill.fitsWeapon(def, next);
+        return was === will ? [] : [{ name: L(a.name), from: word(was), to: word(will), dir: will ? 1 : -1 }];
+    });
 }
 
 /* ═══════════ 스킬 ═══════════ */
@@ -6680,9 +6735,10 @@ function forgeUpgrade(p) {
  */
 function renderShop(main) {
     const S = SYS.game.shopState(G, now());
-    state.shopShown = { cycle: S.cycle, here: S.here };     // 앱 시계가 이것과 비교해 다시 그릴 순간을 잰다(`shopTick`)
-    // 고른 칸은 **그 회차의 것**이다 — 상인이 바뀌면 장비 목록도 새로 굴려지므로 풀린다 (§8-3)
-    if (state.shopSel && state.shopSel.cycle !== S.cycle) state.shopSel = null;
+    // 앱 시계가 이것과 비교해 다시 그릴 순간을 잰다(`shopTick`) — 특수상단이 오고 가는 순간 · 상단 무료 교체가 열리는 순간
+    state.shopShown = { cycle: S.cycle, here: S.here, freeAt: S.freeAt, free: S.free };
+    // 고른 칸은 **그 목록의 것**이다 — 상단 칸은 목록 번호(`list` — [교체]마다 바뀐다 · ADR-0648), 특수상단 칸은 방문 회차가 바뀌면 풀린다 (§8-3)
+    if (state.shopSel && state.shopSel.cycle !== (state.shopSel.src === 'special' ? S.cycle : S.list)) state.shopSel = null;
 
     // 캐릭터 탭과 같은 세로 3단 — 띠 / 왼쪽 영웅 장비 · 오른쪽 상점 열(상단 | 특수상단 나란히) / 아이템창 (§8-3 · ADR-0365 · ADR-0367)
     const h = heroById(state.heroUid);
@@ -6694,17 +6750,24 @@ function renderShop(main) {
     band.appendChild(gearPanel(h));
     const col = el('div', 'cols c-shop-col');
     const p = el('div', 'panel');
-    // 제목 줄 오른쪽 끝 [교체] — 방문 회차의 첫 교체는 무료 · 그 뒤로 두 배씩 (§8-3 · 2026-09-30 사용자 지시 — 미착수 표지 자리)
-    const head = el('h2', '', t('dp.post.trade'));
-    const rr = el('button', `btn sm${S.open ? '' : ' dim'}`, S.rerollCost ? t('td.reroll', { g: S.rerollCost.toLocaleString() }) : t('td.reroll.free'));
+    // 제목 「상단」 바로 오른쪽 `?` — 교체 규칙 두 문장(편성 탭 소제목 `?` 와 같은 표시 · ADR-0464 · ADR-0648)
+    const head = el('h2', '', `<span>${t('dp.post.trade')}</span>`);
+    head.firstChild.appendChild(helpMark('dp.post.trade', () => t('td.reroll.help', { h: D.balance.shop_refresh_hours })));
+    // 제목 줄 오른쪽 끝 [교체] — **고른 영웅의 레벨**을 찍고 그 레벨로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · ADR-0648).
+    //   무료가 닫혀 있으면 버튼 왼쪽에 남은 시간 — 앱 시계가 글자만 간다(`shopTick` · 선술집 `tv-wait` 와 같은 글자)
+    const roll = el('span', 'td-roll');
+    if (!S.free) roll.appendChild(el('span', 'tv-wait', tavernWaitText(S.freeAt - now())));
+    const lv = h?.level ?? 1;
+    const rr = el('button', `btn sm${S.open ? '' : ' dim'}`, S.rerollCost ? t('td.reroll', { lv, g: S.rerollCost.toLocaleString() }) : t('td.reroll.free', { lv }));
     rr.disabled = S.open && G.resources.gold < S.rerollCost;
     rr.onclick = () => {
         if (!S.open) { flashNeed('shop'); return; }
-        const r = SYS.game.shopReroll(G, S.cycle, now());
-        if (r.ok) { state.shopSel = null; save(); } else flash('td.err.' + r.err);
+        const r = SYS.game.shopReroll(G, S.list, now(), h?.uid);
+        if (r.ok) { state.shopSel = null; save(); } else flash('td.err.' + (r.err === 'missing' ? 'stale' : r.err));
         render();
     };
-    head.appendChild(rr);
+    roll.appendChild(rr);
+    head.appendChild(roll);
     p.appendChild(head);
     // 박스 (ADR-0097) — 제목은 서 있고 본문이 스크롤한다. 두 패널이 스크롤 자리를 따로 든다
     const body = el('div', 'box-body td-body');   // 목록이 패널 가운데에 선다 (§8-3 · 2026-09-30)
@@ -6712,7 +6775,7 @@ function renderShop(main) {
 
     // 탭 없이 장비 목록 하나 [2026-09-30 사용자 지시 「장비와 재료 탭 삭제」] — 맨 윗줄 오른쪽에 정해진 물약 셋(2026-09-28) ·
     //   그 사이(무기 바로 오른쪽)에 스킬북 셋 [2026-09-29 사용자 지시 · §8-3 · ADR-0423]
-    body.appendChild(shopGoods(S.equip.map(equipGood), 'equip', S.cycle, S.potions.map(potionGood), S.books.map(bookGood)));
+    body.appendChild(shopGoods(S.equip.map(equipGood), 'equip', S.list, S.potions.map(potionGood), S.books.map(bookGood)));
 
     p.appendChild(body);
     col.appendChild(p);
@@ -6753,8 +6816,12 @@ function shopTick(at) {
     const v = SYS.game.shopVisit(G, at);
     const shown = state.shopShown;
     if (!shown || shown.cycle !== v.cycle || shown.here !== v.here) { render(); return; }
+    // 상단 무료 교체가 열리는 순간 — 버튼이 무료로 바뀐다(손이 바쁘면 다음 빈 눈금 · `tavernTick` 과 같다 · ADR-0648)
+    if ((at >= shown.freeAt) !== shown.free) { if (handBusy()) clockRender = true; else render(); return; }
     const txt = shopClockText(v);
     for (const n of document.querySelectorAll('.td-clock')) if (n.textContent !== txt) n.textContent = txt;
+    const wait = tavernWaitText(shown.freeAt - at);
+    for (const n of document.querySelectorAll('.td-roll .tv-wait')) if (n.textContent !== wait) n.textContent = wait;
 }
 
 /** 남은 시간 글자 — 와 있으면 떠나기까지, 없으면 다음 상인까지. 앱 시계가 **이 글자만** 갈아 끼운다(`shopTick`) */
@@ -7883,8 +7950,10 @@ async function boot() {
     });
     await loadData();
     state.candidates = rollCandidates();
-    // 로그인이 없다 — 세이브가 있으면 곧장 이어 한다. 플레이 기록은 네트워크를 기다리지 않는다(`startClocks` · SCREEN_DESIGN §2-1 · ADR-0633)
-    if (loadSave()) continueGame();
+    // 켜면 메뉴가 선다 — 세이브는 [불러오기]를 눌러야 연다 (`renderMenu` · ADR-0641). 플레이 기록은 네트워크를 기다리지 않는다(`startClocks` · SCREEN_DESIGN §2-1 · ADR-0633).
+    //   개발용 경로(`?dev=` · `?tab=`)만 예전처럼 세이브가 있으면 곧장 이어 하고 없으면 시작 화면이다 — 헤드리스 검증이 메뉴에서 멈추지 않게
+    const boot = new URLSearchParams(location.search);
+    if (boot.has('dev') || boot.has('tab')) { state.screen = 'start'; if (loadSave()) continueGame(); }
     // 같은 브라우저의 다른 탭이 세이브를 쓰면 이 탭은 멈춘다 (§2-1)
     onSaveWrittenElsewhere(freeze);
     // 창을 닫는 셋째 길 — 닫기 버튼 · 판 바깥 클릭 · 여기 (SCREEN_DESIGN §2 창 레이어). 한 번만 건다 · 닫는 길이 없는 창(`lock`)은 뺀다
@@ -8120,8 +8189,12 @@ async function boot() {
         G.resources.gold = Math.max(G.resources.gold, D.balance.book_craft_gold * 3);
         G.resources.dust = Math.max(G.resources.dust, D.balance.book_craft_dust * 3);
         state.heroUid = h0.uid;
-        // 스킬 도안 — 1장 몬스터의 도감을 도안 레벨까지 채운다: 그 고유 스킬 책들이 제작 칸에 선다(새 게임엔 칸이 없다 · R241 · ADR-0600)
-        for (const m of Object.values(D.monsters)) if (Number(m.chapter) === 1) G.codexExp[m.monster_idx] = Math.max(G.codexExp[m.monster_idx] ?? 0, D.codexLevels[D.balance.codex_blueprint_level - 1]);
+        // 스킬 도안 — 1장 몬스터의 고유 스킬마다 스킬 도감을 Lv1 문턱까지 채운다: 그 책들이 제작 칸에 선다(새 게임엔 칸이 없다 · R241 · ADR-0600 · 2026-10-16 R266 스킬 도감)
+        const bp = SYS.game.skillCodexNext(0);
+        for (const m of Object.values(D.monsters)) {
+            const sk = m.innate_skill;
+            if (Number(m.chapter) === 1 && SYS.skill.bookable(sk)) G.skillCodexExp[sk] = Math.max(G.skillCodexExp[sk] ?? 0, bp);
+        }
         // 책 만들기 첫 칸 · 가진 책 둘째 책(배운 칸이 차 있어 [덮어쓰기]가 선다)을 고른 채 — 두 위 줄이 다 서게 (ADR-0570 · ADR-0573)
         state.bookCraftSel = SYS.game.bookState(G, h0.uid).craft[0]?.id ?? null;
         state.bookSel = own[1] ?? null;

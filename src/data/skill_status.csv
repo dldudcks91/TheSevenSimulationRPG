@@ -1,11 +1,12 @@
 status_id,stat,value,duration_sec,element,round_end,ailment,hit_status,note
 war_shout,guard_pct,0.25,10,-,keep,-,-,-
 war_battleorders,hp_max_pct,0.2,12,-,keep,-,-,-
-war_ironskin,guard_pct,0.4,10,-,keep,-,-,-
+war_ironskin,def_pct,0.4,10,-,keep,-,-,-
 war_frenzy,frenzy,0.04,10,-,keep,-,-,겹마다 공속 — 겹은 직격 적중마다 +1 · 상한 [balance.csv:frenzy_stack_max] · ⚠값 임시 2026-10-16
 war_warcry,phys_pct,-0.2,10,-,keep,-,-,물리 타격의 데미지 % — 적에게 음수 · ⚠값 임시 2026-10-16
 war_battlecry,def_pct,-0.25,10,-,keep,-,-,방어값 % — 적에게 음수 · ⚠값 임시 2026-10-16
 kni_holyshield,barrier_pct,0.25,10,-,keep,-,-,-
+kni_resistshield,res_pct,0.4,10,-,keep,-,-,-
 kni_enchant,onhit_element,0.6,10,fire,keep,-,-,-
 kni_might,atk_pct,0.15,0,-,keep,-,-,-
 kni_fanaticism,period_pct,0.12,0,-,keep,-,-,-

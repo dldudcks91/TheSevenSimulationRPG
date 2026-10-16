@@ -105,7 +105,7 @@ render()
   - 테두리 `--border-primary` `--border-secondary` `--border-highlight` `--border-dark`
   - 글자 `--text-primary` `--text-secondary` `--text-muted` `--text-accent`
   - 의미색 `--color-success` `--color-warning` `--color-error` `--color-info`
-  - 폰트 `--font-main`(본문) · `--font-display`(브랜드 워드마크 전용 — 픽셀 폰트라 안티에일리어싱을 끈다)
+  - 폰트 `--font-main`(본문) · `--font-display`(브랜드 · 메뉴 워드마크 전용 — Cinzel · 2026-10-16 픽셀 글꼴을 걷었다)
   - 크기 `--fs-xs` `--fs-sm` `--fs-md` `--fs-lg` `--fs-xl`
 - 팔레트는 형제 프로젝트와 공유한다 — 값을 바꾸면 그 사실을 파일 머리 주석에 남긴다
 - 섹션 주석 `/* ───── 이름 ───── */` 순서: 게임 화면 기본기 · 셸 · 공통 조각 · 원정 · 로스터 · 장비 · 리포트 · 전투 관전 · 행동 게이지/쿨 게이지 · 서브 바/세그먼트 · 스킬 · 선술집 · 도감 · **도감 — 자산 세그먼트**(`.ix-*` · 옛 「이미지 도감」) · 페이퍼돌 · 인벤토리 격자 · 접이식 · 캐릭터 탭 · 새 게임 · 초반 루프 실동작 · 도움말 탭. 새 규칙은 해당 섹션 **안에** 넣는다

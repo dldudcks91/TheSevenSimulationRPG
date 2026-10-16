@@ -16,14 +16,14 @@ export const SKILL_LOOKS = {
     /* ── 전사 — 하늘빛 흰 백호 줄 · 땅 ── */
     war_bash: { hit: [['claws', { c: 'tiger', len: 120, w: 10, gap: 14 }]] },                             // 배시 — 백호 줄 셋(백호참)
     war_doubleswing: { hit: [['cross', { c: 'tiger', a: -45, len: 120, w: 10, halo: true, t: 400 }], ['flare', { c: 'tiger', s: 50, dl: 90 }]] },   // 더블스윙 — X 자
-    war_quake: { hit: [['crack', { c: 'earth', h: 50 }], ['spikes', { c: 'earth', n: 5 }], ['quake']] },   // 어스스플릿 — 갈라짐 + 땅 가시
+    war_recovery: { heal: [['flare', { c: 'heal', s: 60 }], ['rise', { c: 'heal', n: 6 }]] },             // 리커버리 — 초록 터짐 + 알갱이 (2026-10-16 · ~~어스스플릿~~ 자리)
     war_leap: { hit: [['streak', { c: 'steel', a: 90, jit: 6, len: 100, w: 10, sh: -20 }], ['ring', { c: 'earth', fy: 0.35, oy: 26, n: 2, s: 80 }], ['quake']] },   // 리프 어택 — 내리꽂힘 + 땅 고리
     war_shout: { buff: [['ring', { c: 'gold', n: 3, s: 80, w: 3, step: 110 }]] },                         // 워 크라이 — 소리 고리 셋
     war_battleorders: { buff: [['sweep', { c: 'gold' }], ['chevron', { c: 'gold', n: 3 }]] },             // 배틀오더스 — 금빛 훑음 + 꺾쇠
     war_ironskin: { buff: [['shell', { c: 'steel' }], ['flash', { c: 'steel' }]] },                       // 아이언 스킨 — 강철 막
 
     /* ── 기사 — 성광 · 강철 ── */
-    kni_smite: { hit: [['pillar', { c: 'holy', w: 34, h: 90 }], ['flare', { c: 'holy', s: 66, dl: 110 }]] },   // 스마이트 — 빛기둥
+    kni_resistshield: { buff: [['shell', { c: 'holy' }], ['ring', { c: 'holy', n: 3, s: 80, w: 3, step: 110 }]] },   // 레지스탕스 실드 — 성광 막 + 고리 (2026-10-16 · ~~스마이트~~ 자리)
     kni_holyshield: { buff: [['shell', { c: 'holy' }], ['sigil', { c: 'holy', s: 80 }]] },               // 홀리 실드 — 성광 막 + 문양
     kni_charge: { hit: [['streak', { c: 'steel', a: 'in', len: 72, w: 12 }], ['flare', { c: 'steel', s: 60, dl: 80 }], ['ring', { c: 'steel', s: 66, dl: 80 }]] },   // 차지 — 굵은 창끝이 날아든다
     kni_rush: { hit: [['streak', { c: 'steel', a: 'in', n: 2, len: 60, w: 6, gap: 14, step: 40 }]] },    // 러시 — 짧은 찌르기 둘

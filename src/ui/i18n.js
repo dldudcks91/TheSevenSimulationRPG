@@ -88,6 +88,11 @@ const STRINGS = {
        값(`hero.trait`)은 살아 있고 화면에만 없다. 다시 보이게 할 자리는 영웅 툴팁(§5)이 1순위라 키는 남긴다 */
     'ng.trait': { ko: '시작 특성', en: 'Starting Trait' },
     'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
+    // 카드 아래 안내 띠 — 지금 세 장의 직업 · 죄종 (SCREEN_DESIGN §3 · ADR-0642 · app.js:startGuide)
+    'ng.guide.cls': { ko: '직업', en: 'Class' },
+    'ng.guide.clsSub': { ko: '싸움에서 맡는 일', en: 'Role in battle' },
+    'ng.guide.sin': { ko: '죄종', en: 'Sin' },
+    'ng.guide.sinSub': { ko: '직업과 상관없이 붙는 성향', en: 'A trait apart from class' },
     'ng.note': {
         ko: '첫 파티는 <b>레어 1 + 매직 1 + 일반 1</b>이다 — 첫 화면부터 영웅 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
             + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 (등급끼리 대역이 <b>겹칠 수 있다</b>) — '
@@ -106,7 +111,9 @@ const STRINGS = {
     },
 
     /* ── 새 게임 · 세이브 (2026-08-25) ── */
-    'ng.continue': { ko: '이어하기', en: 'Continue' },
+    // 메뉴 — 켜면 먼저 선다 · 새 게임(`ng.h`) 아래 (SCREEN_DESIGN §3 · ADR-0641 · app.js:renderMenu) · 뒤로가기(ADR-0643)
+    'mn.load': { ko: '불러오기', en: 'Load Game' },
+    'ng.back': { ko: '뒤로가기', en: 'Back' },
     'ng.hasSave': { ko: '저장된 게임이 있다 — {t}', en: 'A saved game exists — {t}' },
     'ng.saveLine': { ko: '영웅 {h}명 · 클리어 {c} · 골드 {g}', en: '{h} heroes · {c} cleared · {g} gold' },
     'ng.oldSave': {
@@ -122,21 +129,18 @@ const STRINGS = {
     'cl.frozen.reload': { ko: '이 탭에서 이어하기', en: 'Continue in this tab' },
 
     /* ── 프롤로그 (2026-09-03 · SCREEN_DESIGN §3-1) ──
-       본문·씬 제목은 **한국어만** 넣는다 (사용자 지시 2026-09-03) — `en` 이 없으면 t() 가 ko 로 폴백하므로
-       영어에서도 한국어 본문이 나온다. 「ko/en 나란히」의 의도된 예외이고 번역은 나중에 채운다 (DEV_PLAN 부채 #30).
-       조작 문구(다음 · 건너뛰기 · 시작한다 · 진행)는 ko/en 둘 다 있다.
-       원문은 docs/game_design/story/prologue.md — 화면이 문장을 새로 쓰지 않는다.
-       줄바꿈은 이스케이프로 들어가고, 펴는 것은 CSS(.pro-body { white-space: pre-line }) 다. */
+       원문은 docs/game_design/story/prologue.md(정본 2026-09-14) — 화면이 문장을 새로 쓰지 않는다. `en` 은 그 직역이다 (2026-10-16 · ADR-0646).
+       줄바꿈은 이스케이프로 들어간다 — **빈 줄(`\n\n`)이 문단을 가르고**(app.js:renderPrologue 가 `<p>` 로 접는다) 한 줄 바꿈은 CSS(pre-line)가 편다 */
     'pro.h': { ko: '프롤로그', en: 'Prologue' },
-    /* 맨 윗줄 — 프롤로그 넷(씬 1~4)이 든다. 챕터가 열리는 마지막 씬은 그 자리를 `pro.end` 가 가져간다 (SCREEN_DESIGN §3-1) */
-    'pro.title': { ko: 'Prologue. 그날 밤' },
+    /* 맨 윗줄 — 프롤로그 씬(1~3)이 든다. Chapter 1 씬(4~5)은 그 자리를 `pro.end` 가 가져간다 (SCREEN_DESIGN §3-1) */
+    'pro.title': { ko: 'Prologue. 그날 밤', en: 'Prologue. That Night' },
     'pro.step': { ko: '{n} / {m}', en: '{n} / {m}' },
     'pro.back': { ko: '뒤로', en: 'Back' },
     'pro.next': { ko: '다음', en: 'Next' },
     'pro.skip': { ko: '건너뛰기', en: 'Skip' },
     'pro.begin': { ko: '시작한다', en: 'Begin' },
 
-    'pro.s1.h': { ko: '왕좌' },
+    'pro.s1.h': { ko: '왕좌', en: 'The Throne' },
     'pro.s1.b': {
         ko: '지옥에는 왕이 있었다.\n\n'
             + '바알. 대악마.\n'
@@ -144,9 +148,15 @@ const STRINGS = {
             + '7개의 감정을 나누어 부하에게 깃들게 했다.\n\n'
             + '분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n'
             + '그것은 지옥을 유지하는 균형이었다.',
+        en: 'Hell had a king.\n\n'
+            + 'Baal. Archdemon.\n'
+            + 'Everything in this land was his,\n'
+            + 'and he set seven emotions to dwell in his servants.\n\n'
+            + 'Wrath, Envy, Greed, Sloth, Gluttony, Lust, Pride.\n\n'
+            + 'That was the balance that held Hell together.',
     },
 
-    'pro.s2.h': { ko: '배신의 밤' },
+    'pro.s2.h': { ko: '배신의 밤', en: 'Night of Betrayal' },
     'pro.s2.b': {
         ko: '그 밤, 7개의 칼이 등에 꽂혔다.\n\n'
             + '뒤를 돌아봤다.\n'
@@ -155,9 +165,16 @@ const STRINGS = {
             + '하지만 힘의 반이 이미 빠져나간 뒤였다.\n'
             + '묶여있던 것이 풀려있었다. 누군가가 열쇠를 넘겼다.\n\n'
             + '밀려난다. 발밑이 무너진다.',
+        en: 'That night, seven blades sank into his back.\n\n'
+            + 'He looked back.\n'
+            + 'Every face was one he knew.\n\n'
+            + 'He fought.\n'
+            + 'But half his power had already drained away.\n'
+            + 'What had been bound was undone. Someone had handed over the key.\n\n'
+            + 'Pushed back. The ground gives way beneath him.',
     },
 
-    'pro.s3.h': { ko: '추락' },
+    'pro.s3.h': { ko: '추락', en: 'The Fall' },
     'pro.s3.b': {
         ko: '떨어졌다.\n\n'
             + '지옥의 빛이 멀어진다.\n'
@@ -171,28 +188,59 @@ const STRINGS = {
             + '그리고 — 몸에 무언가가 새겨지는 감각.\n'
             + '뜨겁다. 살이 타는 것 같다.\n'
             + '낙인이다. 이 추락이 남긴 저주.',
+        en: 'He fell.\n\n'
+            + 'The light of Hell grows distant.\n'
+            + 'His strength drains away.\n'
+            + 'The throne, his servants’ faces, the order of that night — all of it blurs.\n\n'
+            + 'Who raised a blade.\n'
+            + 'Who turned their back first.\n'
+            + 'Whether there were seven, or not.\n\n'
+            + 'One thing is certain.\n\n'
+            + 'He was betrayed.\n\n'
+            + 'And then — the feeling of something carved into his body.\n'
+            + 'It burns. As if his flesh were on fire.\n'
+            + 'A brand. The curse this fall left behind.',
     },
 
-    'pro.s4.h': { ko: '마을' },
+    'pro.s4.h': { ko: '마을', en: 'The Village' },
     'pro.s4.b': {
         ko: '눈을 떴을 때, 누군가가 물을 먹이고 있었다.\n'
             + '늙은 인간이다.\n\n'
             + '몸이 무겁다. 배가 고프다. 숨이 가쁘다.\n'
             + '전부 처음이다. 전부 불쾌하다.\n\n'
+            + '며칠이 지났다.\n'
             + '인간들이 음식을 나눠줬다. 자기들도 부족하면서.\n'
             + '다친 곳을 감싸줬다. 이름도 모르는 자에게.\n\n'
             + '이해할 수 없다.\n'
             + '왜 이것들은 나를 살리려 하는가.\n\n'
             + '지옥에서는 쓰러진 자를 밟고 지나간다.\n'
             + '약한 것은 버려진다. 그것이 당연하다.\n\n'
-            + '내 이름은 기억한다. 바알.\n'
+            + '이것들은 당연한 것을 하지 않는다.\n\n'
+            + '이름은 기억한다. 바알.\n'
             + '왕이었다는 것도. 빼앗겼다는 것도.\n'
             + '하지만 그 밤이 선명하지 않다.\n'
             + '7개의 칼. 아는 얼굴들. 무너지는 발밑.\n'
             + '그 사이의 것들이 — 뒤섞여 있다.',
+        en: 'When he opened his eyes, someone was giving him water.\n'
+            + 'An old human.\n\n'
+            + 'His body is heavy. He is hungry. His breath is short.\n'
+            + 'All of it is new. All of it is unpleasant.\n\n'
+            + 'Days passed.\n'
+            + 'The humans shared their food. Though they had too little themselves.\n'
+            + 'They bound his wounds. For one whose name they did not know.\n\n'
+            + 'He cannot understand it.\n'
+            + 'Why do these things try to keep me alive?\n\n'
+            + 'In Hell, you step over those who fall.\n'
+            + 'The weak are cast aside. That is only natural.\n\n'
+            + 'These things do not do what is natural.\n\n'
+            + 'He remembers his name. Baal.\n'
+            + 'That he was a king. That it was taken from him.\n'
+            + 'But that night is not clear.\n'
+            + 'Seven blades. Familiar faces. The ground giving way.\n'
+            + 'What lies between — is tangled.',
     },
 
-    'pro.s5.h': { ko: '불길' },
+    'pro.s5.h': { ko: '불길', en: 'Flames' },
     'pro.s5.b': {
         ko: '그 날 밤, 지평선이 붉어졌다.\n\n'
             + '불길. 군세. 분노의 기운.\n'
@@ -202,13 +250,24 @@ const STRINGS = {
             + '왕이 바닥에 있다는 걸 감지한 것이다.\n\n'
             + '마을이 불탄다. 인간들이 비명을 지른다.\n\n'
             + '바알은 일어섰다.\n'
-            + '마을을 지키려는 게 아니다.\n'
-            + '저놈이 자기를 죽이러 왔으니까 싸우는 것이다.\n\n'
-            + '적어도, 그렇게 생각했다.',
+            + '더 이상 직접 싸울 힘은 없다.\n'
+            + '하지만 지휘하는 법은 잊지 않았다.\n\n'
+            + '선술집에서 만난 용병들에게 명했다.',
+        en: 'That night, the horizon turned red.\n\n'
+            + 'Flames. An army. The air of wrath.\n'
+            + 'He knows this air. He cannot forget it.\n\n'
+            + 'Satan.\n'
+            + 'The one Baal had banished from Hell.\n'
+            + 'He had sensed that the king lay in the dirt.\n\n'
+            + 'The village burns. The humans scream.\n\n'
+            + 'Baal rose.\n'
+            + 'He no longer had the strength to fight himself.\n'
+            + 'But he had not forgotten how to command.\n\n'
+            + 'He gave his order to the mercenaries he had met at the tavern.',
     },
     /* 마지막 씬에만 선다 — 본문과 층이 다르다 (SCREEN_DESIGN §3-1) */
-    'pro.s5.q': { ko: '"꺼져라. 여긴 네 전장이 아니다."' },
-    'pro.end': { ko: 'Chapter 1. 분노 / 불타는 전장' },
+    'pro.s5.q': { ko: '"저놈들을 쓸어라. 내가 뒤에서 이끈다."', en: '"Sweep them away. I will lead from behind."' },
+    'pro.end': { ko: 'Chapter 1. 분노 / 불타는 전장', en: 'Chapter 1. Wrath / Burning Battlefield' },
 
     /* ── 원정 (실동작) ── */
     'exp.noParty': { ko: '편성이 비어 있다 — 편성 탭에서 영웅을 넣는다', en: 'This party is empty — add heroes in the Party tab' },
@@ -599,9 +658,11 @@ const STRINGS = {
     /* 상점 (SCREEN_DESIGN §8-3 · ADR-0223) — 패널 머리는 `dp.post.trade`(상단) 재사용. 상단은 탭 없이 장비 목록 하나(2026-09-30),
        오른쪽 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
     'td.tab.mat': { ko: '재료', en: 'Materials' },   // 특수상단 재료 칸 툴팁 머리
-    // 상단 목록 교체 — 방문 회차의 첫 교체는 무료 · 그 뒤로 두 배씩 (§8-3 · game.shopReroll · 2026-09-30)
-    'td.reroll': { ko: '교체 ({g} 골드)', en: 'Refresh ({g} gold)' },
-    'td.reroll.free': { ko: '교체 (무료)', en: 'Refresh (free)' },
+    // 상단 목록 교체 — 고른 영웅의 레벨({lv})로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · game.shopReroll · ADR-0648)
+    'td.reroll': { ko: '교체 · Lv {lv} ({g} 골드)', en: 'Refresh · Lv {lv} ({g} gold)' },
+    'td.reroll.free': { ko: '교체 · Lv {lv} (무료)', en: 'Refresh · Lv {lv} (free)' },
+    // 상단 제목 옆 `?` — 올리면 뜨는 두 문장 · {h} = [balance.csv:shop_refresh_hours] (ADR-0464 · ADR-0648)
+    'td.reroll.help': { ko: '교체하면 고른 영웅 레벨에 맞춰 다시 들어온다. 무료 교체 뒤 {h}시간이 지나면 다시 무료.', en: 'A refresh restocks at the selected hero\'s level. After a free refresh, it is free again in {h} hours.' },
     // 재료 칸의 그림 자리 — 재료 아이콘 아트가 없어 글자로 선다 (사용자 지시 「일단 재료라고만」)
     'td.matIcon': { ko: '재료', en: 'Mat.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
@@ -614,7 +675,7 @@ const STRINGS = {
     'td.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'td.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
     'td.err.sold': { ko: '이미 팔린 물건이다', en: 'Already sold' },
-    'td.err.stale': { ko: '상인이 바뀌었다', en: 'The trader has changed' },
+    'td.err.stale': { ko: '목록이 바뀌었다', en: 'The stock has changed' },   // 그리는 사이 다른 탭에서 [교체]했다 (ADR-0648 — 상단 목록은 방문 회차와 무관)
     'td.stock': { ko: '수량 {n}', en: '{n} in stock' },
 
     /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
@@ -1031,6 +1092,9 @@ const STRINGS = {
     // 착용 델타 — 「이 아이템」 카드의 옵션 아래 (SCREEN_DESIGN §6 · ADR-0618). 조사가 받침에 따라 갈리지 않게 「착용 시」
     'tip.delta.h': { ko: '{name} 착용 시', en: 'If {name} equips' },
     'tip.delta.none': { ko: '변화 없음', en: 'No change' },
+    // 착용 델타 맨 위의 스킬 줄 값 — 「라이트닝 · 켜짐 → 꺼짐 ▼」 (SCREEN_DESIGN §6 · ADR-0639)
+    'tip.delta.on': { ko: '켜짐', en: 'On' },
+    'tip.delta.off': { ko: '꺼짐', en: 'Off' },
     // ~~`tip.up.first`·`tip.up.next`~~ 는 2026-09-08 삭제 [사용자 지시] — 툴팁의 강화 줄이 통째로 죽었다.
     // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
     // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
@@ -1390,6 +1454,7 @@ const STRINGS = {
     'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite' },
     'bk.upgrade': { ko: '업그레이드 · {n}권', en: 'Upgrade · {n}' },   // 같은 책 — 이번에 드는 책 수 (2026-10-06 · R216 · ADR-0529 — ~~`bk.same` 「배움」~~ 퇴역)
     'bk.max': { ko: '최대', en: 'Max' },
+    'bk.codexCap': { ko: '도감 Lv.{n}', en: 'Codex Lv.{n}' },   // 스킬 도감이 연 상한에 닿았다 — n = 상한을 올려 줄 스킬 도감 레벨 (2026-10-16 · R266 · ADR-0640)
     'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting' },   // 도서관 오른쪽 아래 카드 제목 (2026-10-12 사용자 지시 · ADR-0597)
     'bk.make': { ko: '만들기', en: 'Craft' },
     'bk.craft.help': { ko: '스킬 도안을 얻으면 그 스킬북을 만들 수 있습니다.', en: 'Obtain a skill blueprint to craft that skill book.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0600)
@@ -1404,6 +1469,7 @@ const STRINGS = {
     'bk.err.missing': { ko: '배울 수 없는 스킬이다', en: 'Cannot be learned' },
     'bk.err.book': { ko: '책이 모자란다', en: 'Not enough books' },   // 없거나 업그레이드에 드는 권수보다 적다 (R216)
     'bk.err.maxUp': { ko: '이미 최대 레벨이다', en: 'Already at max level' },   // 업그레이드 상한 (R216 — ~~`bk.err.same`~~ 퇴역)
+    'bk.err.codexCap': { ko: '스킬 도감 레벨이 모자란다', en: 'Skill codex level too low' },   // 스킬 도감이 연 상한 (2026-10-16 · R266 · ADR-0640)
     'bk.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'bk.err.materials': { ko: '가루가 모자란다', en: 'Not enough dust' },
     'bk.err.blueprint': { ko: '스킬 도안이 없다', en: 'No skill blueprint' },   // craftBook — 그 스킬의 도안이 아직 없다 (R241)
@@ -1463,6 +1529,11 @@ const STRINGS = {
     'sk.line.healOne': {
         ko: '{n}초마다 가장 위태로운 아군의 HP 를 {d} 되돌린다',
         en: 'Every {n}s, restores {d} to the most wounded ally',
+    },
+    /* 자기 회복 — 리커버리 (2026-10-16 · {d} = 최대 HP × 배율) */
+    'sk.line.mend': {
+        ko: '{n}초마다 자신의 HP 를 {d} 되돌린다',
+        en: 'Every {n}s, restores {d} to yourself',
     },
     /* 가이디드 애로우 — **단타 + 방어 감소** [개정 2026-09-10 · ADR-0089] — ~~{h}번 때려 매번~~ 다단은 1단계 스킬 변경으로 단타가 됐다.
        {k} = 그 적의 방어를 깎는 비율(`decay_pct`) — 대상 방어에 영구히 쌓인다 */
@@ -1580,6 +1651,7 @@ const STRINGS = {
     'sk.eff.phys_pct': { ko: '물리 데미지 +{v} 를 건다', en: '+{v} Physical Damage' },
     'sk.eff.phys_pct.neg': { ko: '물리 데미지 −{v} 를 건다', en: '−{v} Physical Damage' },
     'sk.eff.def_pct': { ko: '방어력 +{v} 를 건다', en: '+{v} Defense' },
+    'sk.eff.res_pct': { ko: '모든 원소 저항 +{v} 를 건다', en: '+{v} all resistances' },
     'sk.eff.def_pct.neg': { ko: '방어력 −{v} 를 건다', en: '−{v} Defense' },
     'sk.eff.dr_pct.neg': { ko: '받는 피해 +{v} 를 건다', en: '+{v} damage taken' },
     'sk.eff.basic_pct': { ko: '기본 공격 피해 +{v} 를 건다', en: '+{v} Basic Attack Damage' },
@@ -1868,6 +1940,8 @@ const STRINGS = {
     'bt.effect.def.down': { ko: '방어력 {v}% 감소', en: 'Defense −{v}%' },
     'bt.effect.res.up': { ko: '{e} 저항 {v}% 증가', en: '{e} resistance +{v}%' },
     'bt.effect.res.down': { ko: '{e} 저항 {v}% 감소', en: '{e} resistance −{v}%' },
+    'bt.effect.resAll.up': { ko: '모든 원소 저항 {v}% 증가', en: 'All resistances +{v}%' },
+    'bt.effect.resAll.down': { ko: '모든 원소 저항 {v}% 감소', en: 'All resistances −{v}%' },
     'bt.effect.hp.up': { ko: '최대 HP {v}% 증가', en: 'Max HP +{v}%' },
     'bt.effect.hp.down': { ko: '최대 HP {v}% 감소', en: 'Max HP −{v}%' },
     'bt.effect.regen.up': { ko: 'HP 재생 {v}% 증가', en: 'HP regeneration +{v}%' },

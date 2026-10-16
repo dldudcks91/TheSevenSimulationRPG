@@ -541,6 +541,9 @@ export function createBattleSystem(data) {
             goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
             // 떨굴 수 있는 스킬북 = 고유 스킬 — 영웅이 배울 수 있는 것만(몬스터 전용 · 불러내기는 책이 없다 — `skill.bookable` · 2026-10-16 R258) [2026-09-29 · R179 · skill_design §2-1] · rng 0
             bookSkill: m.innate_skill && SK?.bookable(m.innate_skill) ? m.innate_skill : null,
+            // 스킬 도감이 세는 스킬 = 스폰 때 든 칸 중 책이 되는 것 [2026-10-16 · R266 · monster_design §8-1] — 오오라는 라운드 시작에 `actives` 에서 빠지므로
+            //   **여기서** 적는다 · 꺼진 칸도 든다(썼는지는 안 본다) · 같은 id 는 하나 · rng 0
+            codexSkills: SK ? [...new Set(acts.map(a => a.id))].filter(id => SK.bookable(id)) : [],
             ...rest,
         });
     }
@@ -803,7 +806,7 @@ export function createBattleSystem(data) {
             // killGrades = kills 를 처치 순간의 등급으로 가른 것 `{monsterId: {grade: n}}` — 의뢰 「정예 · 보스 n마리」가 읽는다 (R153 · 세는 것뿐이라 rng 0)
             // books = 떨어진 스킬북의 스킬 id — 처치당 1개를 장비와 나눠 쓴다(onKill · 2026-09-29 R179) · drops 와 같이 이긴 라운드의 몫만
             // materials = 처치 재료의 종류별 개수 `{ore?, timber?, herb?}` — 장비 · 책의 1개와 따로 굴린다(onKill · 2026-10-06) · drops 와 같이 이긴 라운드의 몫만
-            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, drops: [], books: [], materials: {}, downed: [],
+            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, skillKills: {}, drops: [], books: [], materials: {}, downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -845,7 +848,8 @@ export function createBattleSystem(data) {
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
         // xpByLevel = xp 를 **몬스터 레벨**로 가른 것 `{lvl: xp}` — 정산이 영웅마다 레벨 차 감쇠를 건다 (2026-09-30 · hero_design §5 · 세는 것뿐이라 rng 0)
-        const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, drops: [], books: [], materials: {} });
+        // skillKills = 스킬 도감의 처치 수 `{skillId: n}` — 처치마다 그 유닛의 `codexSkills` 하나하나에 +1 (2026-10-16 · R266 · 세는 것뿐이라 rng 0)
+        const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, skillKills: {}, drops: [], books: [], materials: {} });
         let loot = newLoot();
         const bank = () => {
             out.xpTotal += loot.xp;
@@ -855,6 +859,7 @@ export function createBattleSystem(data) {
                 const to = (out.killGrades[id] ??= {});
                 for (const [g, n] of Object.entries(byGrade)) to[g] = (to[g] ?? 0) + n;
             }
+            for (const [id, n] of Object.entries(loot.skillKills)) out.skillKills[id] = (out.skillKills[id] ?? 0) + n;
             out.drops.push(...loot.drops);
             out.books.push(...loot.books);
             for (const [k, n] of Object.entries(loot.materials)) out.materials[k] = (out.materials[k] ?? 0) + n;
@@ -981,6 +986,7 @@ export function createBattleSystem(data) {
             loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
             const byGrade = (loot.killGrades[e.monsterId] ??= {});
             byGrade[e.grade] = (byGrade[e.grade] ?? 0) + 1;
+            for (const id of e.codexSkills ?? []) loot.skillKills[id] = (loot.skillKills[id] ?? 0) + 1;   // 스킬 도감 (R266 · rng 0)
             loot.xp += e.expReward;
             loot.xpByLevel[e.lvl] = (loot.xpByLevel[e.lvl] ?? 0) + e.expReward;
             loot.gold += Math.round(e.goldReward * e.goldMult * B.gold_rate * goldMult);
@@ -1753,5 +1759,5 @@ export function createBattleSystem(data) {
         return { ...run.result, mode: 'arena' };
     }
 
-    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, makeEnemy, monsterGearSpec, rollMonsterDrop };
+    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf };
 }

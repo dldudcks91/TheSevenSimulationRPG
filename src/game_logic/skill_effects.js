@@ -255,6 +255,8 @@ export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...Object.ke
 export const EFFECT_TYPES = {
     hit: { casts: ['turn'], foes: true, weapon: true, run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
     heal: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castHeal(u, x, t) },
+    // 자기 회복 — 시전자 최대 HP 비율만큼 바로(리커버리 · 2026-10-16) · 굴리지 않는다(rng 0) · 무기의 힘을 안 끌어 쓰므로 `weapon` 이 없다
+    mend: { casts: ['turn'], run: (rt, u, x, t) => rt.castMend(u, x, t) },
     apply: { casts: ['turn', 'aura'], run: (rt, u, x, t) => rt.castBuff(u, x, t) },
     summon: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castSummon(u, x, t) },
     call: { casts: ['turn'], run: (rt, u, x, t) => rt.castCall(u, x, t) },
@@ -292,8 +294,10 @@ export const EFFECTS = {
     },
     // 방어값 비율 + 전 저항(같은 비율을 더한다)을 **함께** 민다 — 전사 외침. 한 행이 채널 하나만 들어서 둘을 한 효과로 묶었다
     guard_pct: {},
-    // ── 무기 옵션 창 둘 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **스킬 행은 쓰지 않는다**(`battle.strikeOnce` 가 타격 시 건다).
-    // 방어값 % — 물리 무기 통합옵션 「타격 시 대상 방어력 감소」(음수)
+    // 전 원소 저항 %p — 레지스탕스 실드(2026-10-16). `guard_pct` 의 저항 몫과 같은 자리에 더하고 방어는 안 민다
+    res_pct: {},
+    // ── 무기 옵션 창 둘 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — `battle.strikeOnce` 가 타격 시 건다.
+    // 방어값 % — 물리 무기 통합옵션 「타격 시 대상 방어력 감소」(음수) · 스킬 행은 아이언 스킨 하나(2026-10-16 — ~~guard_pct~~ 에서 원소 저항을 뺐다)
     def_pct: {},
     // 원소 하나의 저항 %p — 마법 무기 통합옵션 「타격 시 그 원소의 대상 저항 감소」(음수). 창이 든 `element` 칸만 민다
     res_elem: {},
@@ -434,9 +438,9 @@ const ATTRS = [
     u => { u.period = u.basePeriod * (1 - sumOf(u, 'period_pct') - stackSum(u, 'frenzy')); },
     // 방어 = 무기 옵션 방어 % + 외침(guard) — 같은 축을 미는 둘을 한 번에 모은다
     u => { u.def = defScaled(u.defBase, sumOf(u, 'def_pct') + sumOf(u, 'guard_pct')); },
-    // 저항 = 밑수 + 외침(guard · 전 원소) 에 원소 하나의 창(무기 옵션 · `element` 칸만)을 **창 순서대로** 더한다
+    // 저항 = 밑수 + 외침(guard · 전 원소) + 레지스탕스 실드(res_pct · 전 원소) 에 원소 하나의 창(무기 옵션 · `element` 칸만)을 **창 순서대로** 더한다
     u => {
-        const guard = sumOf(u, 'guard_pct');
+        const guard = sumOf(u, 'guard_pct') + sumOf(u, 'res_pct');
         for (const k of Object.keys(u.res)) u.res[k] = u.resBase[k] + guard;
         for (const b of Object.values(u.buffs)) if (b.stat === 'res_elem' && b.element in u.res) u.res[b.element] += b.v;
     },
