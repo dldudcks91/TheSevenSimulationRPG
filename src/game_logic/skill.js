@@ -233,6 +233,8 @@ export function createSkillSystem(data) {
         // 상태이상의 종류 — `ailment` 칸(`AILMENTS` 의 키) · `-` 면 null. 세기가 다른 행 여럿이 같은 상태이상일 수 있다
         //   (2026-09-28 · R178 · battle_design §2-4 — ~~R177 의 「id 가 `AILMENTS` 의 키면 상태이상」~~)
         ailment: dash(row.ailment ?? '-'),
+        // 창 동안 그 원소 스킬 타격에 거는 상태이상 행 — `imbue` 창만 든다(이그나이트 · 딥 프리즈 · 서지 · 2026-10-16 R250) · `-` 면 null
+        hitStatus: dash(row.hit_status ?? '-'),
         note: row.note,
     });
 
@@ -254,6 +256,16 @@ export function createSkillSystem(data) {
         // 결투 — value 는 **시전자가 받는 피해 감소(비율)** 다 (skill_design §13-5 · 2026-09-10). 음수면 받는 피해가 는다.
         //   실제 감소는 결투의 둘째 줄(`dr_pct`)이 걸고 이 값은 `buff` 이벤트 `v` · 설명창 문장이 읽는다 (2026-09-24 · R151)
         if (st.stat === 'duel' && !(st.value >= 0)) bad(`duel 인데 value ${st.value} — 시전자 피해 감소라 0 이상`);
+        // 원소 부여 상태이상 [2026-10-16 · R250] — `imbue` 는 원소 · 거는 행이 둘 다 있고 값은 거는 확률(0 초과 1 이하) · 그 밖의 행은 `hit_status` 를 안 쓴다.
+        //   가리킨 행이 상태이상인지는 표가 다 선 뒤에 본다(아래)
+        if (st.stat === 'imbue') {
+            if (st.element === null || st.hitStatus === null) bad(`imbue 인데 element '${st.element}' · hit_status '${st.hitStatus}' — 둘 다 있어야 한다`);
+            if (!(st.value > 0 && st.value <= 1)) bad(`imbue 인데 value ${st.value} — 거는 확률 0 초과 1 이하`);
+        } else if (st.hitStatus !== null) {
+            bad(`hit_status '${st.hitStatus}' — imbue 행만 쓴다`);
+        }
+        // 이베이드 — 값은 피하는 횟수(반올림해 1 이상)
+        if (st.stat === 'evade' && !(st.value >= 0.5)) bad(`evade 인데 value ${st.value} — 피하는 횟수라 반올림해 1 이상`);
     }
 
     /**
@@ -309,14 +321,18 @@ export function createSkillSystem(data) {
         if (row.amulet_pool !== 0 && row.amulet_pool !== 1) bad(`amulet_pool ${row.amulet_pool} — 0 또는 1`);
         if (row.amulet_pool === 1 && (d.ownerKind === 'monster' || d.cast !== 'turn' || d.effects.some(e => e.effect === 'summon' || e.effect === 'call')))
             bad(`amulet_pool 1 인데 ${d.ownerKind} · ${d.cast} · ${d.effects.map(e => e.effect).join('+')} — 발동 스킬 후보가 될 수 없다`);
+        // 불러내기는 영웅이 손에 넣지 않는다 [2026-10-16 · R258] — 무리(`band`)는 편성만 만들어 영웅이 들면 안 나간다(고블린 일꾼은 GAME_DESIGN §10).
+        //   고유 · 기본 책을 막는다 · 목걸이는 바로 위 검사 · 책 · 도안은 `bookable` 이 막는다
+        if (d.effects.some(e => e.effect === 'call') && (row.innate_pool !== 0 || row.starter_pool !== 0))
+            bad(`불러내기인데 innate_pool ${row.innate_pool} · starter_pool ${row.starter_pool} — 영웅은 무리가 없어 안 나간다 · 둘 다 0`);
         // 직업 기본기 [2026-09-27 · 2026-09-29 R179 — 첫 파티의 고유 · 도서관 기본 책 · ~~시작 무기 스킬~~] — 0/1 · 직업 스킬만. 실제 후보는 직업 풀(innate_pool 1)과의 교집합이다(`ui/data.js:starterSkills`)
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
         if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
         // 갑옷 특정 스킬 +n 후보 [2026-10-08 · R225] — 0/1 · **기본 스킬(직업 스킬)만** — 풀은 직업 스킬만 읽어 다른 행의 1 은 조용히 버려진다
         if (row.armor_pool !== 0 && row.armor_pool !== 1) bad(`armor_pool ${row.armor_pool} — 0 또는 1`);
         if (row.armor_pool === 1 && d.ownerKind !== 'job') bad(`armor_pool 1 인데 owner_kind ${d.ownerKind} — 특정 스킬 +n 은 기본 스킬만`);
-        // 티어 [2026-10-02 · skill_design §12-10] — 직업 스킬은 1 · 2 · 3, 그 밖은 `-`
-        if (d.ownerKind === 'job' ? ![1, 2, 3].includes(d.tier) : d.tier !== null) bad(`tier '${row.tier}' — 직업 스킬은 1 · 2 · 3, 그 밖은 -`);
+        // 티어 [2026-10-02 · skill_design §12-10 · 두 층 2026-10-15 — 3티어 없음] — 직업 스킬은 1 · 2, 그 밖은 `-`
+        if (d.ownerKind === 'job' ? ![1, 2].includes(d.tier) : d.tier !== null) bad(`tier '${row.tier}' — 직업 스킬은 1 · 2, 그 밖은 -`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
     }
@@ -373,7 +389,8 @@ export function createSkillSystem(data) {
             if (!(e.mult > 0)) bad(`summon 인데 mult_pct ${e.mult} — 시전자 최대 HP 의 % 다`);
         } else if (e.effect === 'call') {
             // 불러내기 — 누구를 부르나는 편성(무리 · spawn_rule.js)이 정하고 세기는 그 몬스터가 든다. 스킬 행이 드는 것은 쿨뿐이다 (§12-9)
-            if (d.ownerKind !== 'monster') bad(`call 인데 owner_kind '${d.ownerKind}' — 불러내기는 몬스터 전용이다`);
+            // 사제 기본 스킬 「소환」이 몬스터 소환 셋을 합쳤다 [2026-10-16 · R258 · skill_design §12-7] — 영웅이 손에 넣는 길은 스킬 검사(`validate`)가 막는다
+            if (d.ownerKind !== 'monster' && d.ownerKind !== 'job') bad(`call 인데 owner_kind '${d.ownerKind}' — 불러내기는 몬스터 · 직업 스킬만`);
             if (t !== 'self') bad(`call 인데 target '${t}' — 시전자의 무리를 세운다`);
             if (e.hits !== 0 || e.mult !== 0) bad(`call 인데 hits ${e.hits} · mult_pct ${e.mult} — 둘 다 0`);
             if (d.cond !== 'band_missing') bad(`call 인데 cast_condition '${d.cond}' — band_missing 이어야 빈 부름이 안 나간다`);
@@ -399,7 +416,7 @@ export function createSkillSystem(data) {
         }
         // 광역·연쇄는 **대상 수가 타수를 정한다** — hits 를 따로 적으면 두 곳 관리가 된다 (§9-3).
         //   ⚠ `hit` 에만 건다 — 같은 대상어를 **적에게 거는 창**(참회·속박)도 쓰는데 그쪽은 타수가 0 이다
-        if (e.effect === 'hit' && (t === 'enemy_all' || t === 'enemy_chain') && e.hits !== 1)
+        if (e.effect === 'hit' && (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') && e.hits !== 1)
             bad(`${t} 인데 hits ${e.hits} — 타수는 대상 수가 정한다`);
         // 감쇠 — 세 공격 대상이 쓴다(`HIT_DECAY`). 뜻이 다르다: 연쇄는 **배율**이 줄고, 최고 방어 다단은 **대상의 방어값**이 주고,
         //   광역 공격은 **주 대상 밖의 배율**이 준다(멀티샷 광역 약화 · skill_design §13-5 · 2026-09-10).
@@ -463,7 +480,7 @@ export function createSkillSystem(data) {
         const hit = d.effects.find(e => e.effect === 'hit');
         if (!hit) return out;
         const t = lineTarget(d, hit);
-        if (t === 'enemy_all' || t === 'enemy_chain') out.push('aoe');
+        if (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') out.push('aoe');
         if (t === 'enemy_single' || t === 'enemy_highest_def') out.push('single');
         if (hit.hits > 1) out.push('multihit');
         return out;
@@ -476,6 +493,13 @@ export function createSkillSystem(data) {
         validateStatus(st);
         if (statuses[st.id]) throw new Error(`skill_status: ${st.id} — status_id 중복`);
         statuses[st.id] = st;
+    }
+    // 원소 부여가 가리키는 행 — 있고 · 상태이상이다 (2026-10-16 · R250)
+    for (const st of Object.values(statuses)) {
+        if (st.hitStatus === null) continue;
+        const to = statuses[st.hitStatus];
+        if (!to) throw new Error(`skill_status: ${st.id} — hit_status '${st.hitStatus}' 가 skill_status 에 없다`);
+        if (!to.ailment) throw new Error(`skill_status: ${st.id} — hit_status '${st.hitStatus}' 는 상태이상이 아니다(맞은 대상에게 거는 것은 상태이상뿐)`);
     }
 
     const list = rows.map(normalize);
@@ -510,7 +534,11 @@ export function createSkillSystem(data) {
         const key = `${owner}#${d.priority}`;
         if (seen[key]) throw new Error(`skill: ${d.id} — ${owner} 안에서 priority ${d.priority} 가 ${seen[key]} 와 겹친다`);
         seen[key] = d.id;
-        for (const e of d.effects) if (e.status !== null) applied.add(e.status);
+        for (const e of d.effects) if (e.status !== null) {
+            applied.add(e.status);
+            // 원소 부여 창이 거는 상태이상도 「누가 거나」가 있다 — 그 창을 거는 스킬이 건다 (2026-10-16 · R250)
+            if (statuses[e.status]?.hitStatus) applied.add(statuses[e.status].hitStatus);
+        }
     });
     for (const id of Object.keys(statuses))
         if (!applied.has(id)) throw new Error(`skill_status: ${id} — 아무 스킬도 안 건다(skill_effect.csv 의 apply · hit 줄이 가리키지 않는다)`);
@@ -694,6 +722,9 @@ export function createSkillSystem(data) {
         // 거는 걸린 효과 — 값 · 시간은 **이 줄의 슬롯**이 민다(S5). 창의 열쇠는 걸린 효과 id(`status`)다
         const st = e.status === null ? null : statuses[e.status];
         const sv = st ? { stat: st.stat, value: grow(st.value, 'effect_value'), dur: grow(st.dur, 'duration_sec'), element: st.element, roundEnd: st.roundEnd, ailment: st.ailment } : null;
+        // 원소 부여 창이 거는 상태이상 — 그 행의 원값 그대로(슬롯 · 레벨은 창의 값 · 시간만 민다 · 2026-10-16 R250). 창(`applyStatus`)이 `hit` 으로 싣는다
+        const to = st?.hitStatus ? statuses[st.hitStatus] : null;
+        if (sv && to) sv.hit = { id: def.id, status: to.id, stat: to.stat, value: to.value, dur: to.dur, element: to.element, roundEnd: to.roundEnd, ailment: to.ailment };
         return {
             ...e,
             id: def.id,
@@ -789,5 +820,14 @@ export function createSkillSystem(data) {
         return d ? Math.round(d.cool * (mult ?? 1) * 10) / 10 : null;
     };
 
-    return { defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, fitsWeapon, scaleDef, previewOf, procIntervalSec, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
+    /**
+     * 책이 될 수 있는 스킬 [2026-10-16 · R258 — ~~state.js · battle.js 가 각자 「몬스터 전용이 아니다」~~] — 정의가 있고 · 몬스터 전용이 아니고 ·
+     *   **불러내기 줄이 없다**(사제 「소환」 — 영웅은 무리가 없어 안 나간다 · 고블린 일꾼은 GAME_DESIGN §10). 처치 책 · 세이브의 책 · 도서관 도안 · 상단이 같은 함수를 쓴다
+     */
+    const bookable = id => {
+        const d = defs[id];
+        return !!d && d.ownerKind !== 'monster' && !d.effects.some(e => e.effect === 'call');
+    };
+
+    return { defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, fitsWeapon, scaleDef, previewOf, procIntervalSec, bookable, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

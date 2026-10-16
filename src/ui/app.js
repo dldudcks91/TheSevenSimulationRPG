@@ -42,20 +42,20 @@
  *   정원·템플릿은 `formation_template.csv`, 규칙은 `game.formationState`/`setFormation`/`placeFormation` 이 든다.
  *   동사는 그대로 갈린다: **클릭은 소속**(로스터 띠 = 파티 넣고 빼기) · **드래그는 자리**(칩).
  *
- * 2026-09-14 — **계정 · 클라우드 세이브** (SCREEN_DESIGN §2-1 · ADR-0112). 로그인하면 세이브 사본이 Google 계정을 따라간다 —
- *   로컬 저장(save)은 그대로 · 클라우드는 모아서 통째로(cloudPush) · 다른 탭이 쓰면 멈춤 창(freeze).
- *   2026-09-30 — 갈리면 **클라우드가 이긴다**(ADR-0458): 켤 때는 받고 · 도중엔 멈춤 창. 고르는 창은 없다.
- *   Firebase 는 cloud.js 만 만진다. 개발용 경로 ?dev=cloud (계정 창 · &c=taken 멈춤 창(다른 곳) · &c=frozen 멈춤 창(다른 탭))
+ * 2026-10-16 — **플레이 기록** (SCREEN_DESIGN §2-1 · ADR-0633) — Google 로그인을 걷었다. 로컬 저장(save)은 그대로 · 다른 탭이 쓰면 멈춤 창(freeze).
+ *   배포 주소에서만 익명 계정으로 진행 요약 + 세이브 사본을 모아서 한 방향으로 올린다(trackPush) — 받는 길은 없다.
+ *   Firebase 는 cloud.js 만 만진다. 개발용 경로 ?dev=frozen (멈춤 창)
  *
  * 개발용 URL: ?dev=prologue (프롤로그 첫 씬) / ?dev=newgame (현재 후보로 즉시 시작) / ?dev=battle (첫 스테이지 1회 즉시 정산 → 리포트 · &runs=n 이면 n번 연달아 = 런 목록이 쌓인 상태 · &live=1 이면 그 위에 원정을 하나 더 띄운 채) / ?dev=play (첫 스테이지 관전 재생 · &bt=log|dmg 면 그 판을 고른 채(보이는 것은 나눔 배치뿐) · &lay=split 이면 옛 나눔 배치 · &rep=1 이면 반복 원정을 켠 채 · &logf=party|enemy 면 로그를 그 주체로 거른 채 · &dmgf=taken 이면 누적 판을 받은 피해로 고른 채) / ?tab=character 등 (탭 바로 열기) / ?dev=offline (반복 켠 채 껐다 켠 상황 — 런 마무리 배너) / ?dev=form (출정 창이 열린 상태 · &open=0 이면 창을 닫은 목록) / ?dev=tactics (연구 탭 — 전술 칸이 전부 열린 상태) / ?dev=mats (제작 재료를 쥔 제련소)
  */
 
 import * as M from './mock.js';
+import { MG_SCENES, MG_SPRITES } from './minigame_art.js';
 import { t, L, has, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle, unitPreview, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText } from './battle.js';
 import { bindTipNode, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
-import { loadSave, writeSave, clearSave, loadCloudLink, writeCloudLink, clearCloudLink, onSaveWrittenElsewhere } from './storage.js';
+import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
 import { makeRng } from '../game_logic/rng.js';
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
@@ -77,10 +77,8 @@ const el = (tag, cls, html) => {
 
 let G = null;                          // 세이브의 실체. null 이면 시작 화면
 const now = () => Date.now();          // 시계는 UI 층에서만 읽는다
-// 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 클라우드 올리기를 멈춘다(멈춤 창 · SCREEN_DESIGN §2-1 · ADR-0112)
+// 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 기록 올리기를 멈춘다(멈춤 창 · SCREEN_DESIGN §2-1)
 let frozen = false;
-let authenticated = false;
-let unlockBoot = null;
 function save() { if (G && !frozen) writeSave(SYS.game.serialize(G, now())); }
 
 const heroById = uid => G?.heroes.find(h => h.uid === uid);
@@ -415,8 +413,8 @@ const state = {
     repSel: null,                // 리포트에서 고른 런 — null 이면 맨 위를 따라간다 (SCREEN_DESIGN §4-3 · ADR-0063 · ADR-0123)
     repNo: null,                 // 리포트가 보는 부대 — null 이면 고른 편성 · 탭이 바꾸고 관전 · 철수에서 넘어오면 그 부대 (§4-3 · ADR-0622)
     searchUid: null,             // 수색 칸에서 고른 영웅 — 영웅 보내기 칸에 얼굴로 선다 · 보내면 비운다 (SCREEN_DESIGN §8-1)
-    searchSeen: null,            // 수색 결과 얼굴을 처음 본 때 `{key: startedAt, at}` — 스며 나오기를 한 번만 (ADR-0593 · 세이브 아님)
-    searchCard: null,            // 수색 칸이 결과 카드를 든 수색의 `startedAt` — 결과 얼굴을 누를 때마다 켜고 끈다 · 다음 수색엔 안 묻어간다 (ADR-0624 · 세이브 아님)
+    searchSeen: null,            // 막 끝난 수색 결과 얼굴을 처음 본 때 `{key: 수색 번호, at}` — 스며 나오기를 한 번만 (ADR-0593 · 세이브 아님)
+    searchCard: null,            // 수색 칸이 결과 카드를 든 결과의 수색 번호(`no`) — 결과 얼굴을 누를 때마다 켜고 끈다 · 다음 수색엔 안 묻어간다 (ADR-0624 · 세이브 아님)
     exSel: null,                 // 탐험 — 고른 지점 {chapter, spot} = **열린 지점 창** · 없으면 창 없이 지도만 · 탭에 들어올 때 · ✕ 로 비운다 (SCREEN_DESIGN §8-4 · ADR-0585 · 세이브 아님)
     joinSel: null,               // 선술집 가입 희망 창이 보여 주는 줄 번호(`joins[].no`) (SCREEN_DESIGN §8-1 · 세이브 아님)
     exArm: null,                 // 탐험 — 불러들이기 첫 누름이 걸린 지점 키(`장:지점`) · 두 번 누르기 (§3)
@@ -483,21 +481,24 @@ function renderShell() {
     // 프롤로그도 시작 화면과 같은 셸이다 (§3-1) — 탭 바도 자원 띠도 없다. 게임 화면은 'game' 하나뿐
     const pre = state.screen !== 'game';
     $('#app').classList.toggle('pregame', pre);
-    $('#app').classList.toggle('login-gate', !authenticated);
+    $('#app').classList.remove('booting');   // 첫 그리기 전의 셸 — 빈 브랜드 · 상단바 · 내비가 안 비친다 (index.html · ADR-0349)
 
     const nav = $('.nav');
     nav.innerHTML = '';
     // 안 지은 건물의 탭은 흐리고 **눌러도 안 들어간다** [2026-09-23 · SCREEN_DESIGN §1 · ADR-0311] — 누르면 지을 건물을 플래시로 말한다 · 판정은 `constructionState`
     const cs = !pre && G ? SYS.game.constructionState(G) : null;
     const tabOpen = cs ? cs.tabs : {};
+    // 할 일 점 [2026-10-16 · §1 · ADR-0637] — 하면 꺼지는 일이 기다리는 탭 · 흐린 탭엔 안 단다(그 자리는 자물쇠) · 그리기 사이는 `refreshNavTodo`
+    const todo = !pre && G ? SYS.game.navTodo(G, now()) : {};
     // 묶음마다 누를 수 없는 머리 한 줄이 먼저 선다 [2026-10-09 · §1 · ADR-0554] — 묶음 사이 간격은 머리의 윗여백(style.css `.nav-grp`)
     if (!pre) for (const [grp, ids] of NAV_GROUPS) {
         nav.appendChild(el('div', 'nav-grp', t(`nav.grp.${grp}`)));
         for (const id of ids) {
             const shut = tabOpen[id] === false;
             // 흐린 탭은 오른쪽 끝에 닫힌 자물쇠(잠김 베일과 같은 그림 · 이름과 같은 회색으로 같이 흐린다) [2026-09-28 사용자 지시 · §1]
-            const b = el('button', `${id === state.tab ? 'on' : ''}${shut ? ' dim' : ''}`,
+            const b = el('button', `${id === state.tab ? 'on' : ''}${shut ? ' dim' : ''}${!shut && todo[id] ? ' todo' : ''}`,
                 shut ? `<span class="nav-lbl">${t(`nav.${id}`)}</span><span class="nav-lock">${lockIcon(true)}</span>` : t(`nav.${id}`));
+            b.dataset.tab = id;
             // 탭을 떠나면 **고르는 중이 풀린다** [ADR-0184] — 모드 상태가 화면 밖으로 새지 않는다 · 탐험 지점 창도 닫힌다(들어오면 지도만 · ADR-0585)
             b.onclick = shut ? () => flashUnbuilt(cs, id) : () => { state.tab = id; clearBagSel(); state.cmArm = null; state.dpPick = null; state.exSel = null; state.exArm = null; render(); };
             nav.appendChild(b);
@@ -516,7 +517,6 @@ function renderShell() {
     $('.resources').innerHTML = pre || !r ? '' : `
         <span>${t('res.gold')}<b data-res="gold">${r.gold.toLocaleString()}</b></span>`;
 
-    if (authenticated) $('.resources').appendChild(cloudBtn());
     const langBtn = el('button', 'btn sm lang-btn', t('ui.langBtn'));
     langBtn.onclick = () => { setLang(lang() === 'ko' ? 'en' : 'ko'); render(); };
     $('.resources').appendChild(langBtn);
@@ -539,7 +539,7 @@ function renderShell() {
     });
     // 아트 스타일 고르개는 상단바에 안 선다 — ⚙ 설정 첫 줄 · 도감에 있다 [2026-10-06 사용자 지시 · SCREEN_DESIGN §2-2]
     // 원정 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · 2026-10-05 · ADR-0514]. `data-exp-time` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshExpTime`)
-    if (!pre && G && authenticated) $('.resources').appendChild(el('span', 'exp-time', `${t('ui.expTime')}<b data-exp-time>${fmtExpTime(G.expMs)}</b>`));
+    if (!pre && G) $('.resources').appendChild(el('span', 'exp-time', `${t('ui.expTime')}<b data-exp-time>${fmtExpTime(G.expMs)}</b>`));
     // ⚙ — 판의 탭 둘: 설정(스킬 이펙트 · 피격 반응 — 속은 여기 `settingsBody`) · Palette(배경 · 글자 색을 눈으로 맞추는 개발 장치)
     //   [2026-09-28 사용자 지시 · SCREEN_DESIGN §2-2 · ADR-0414]
     mountDevPalette($('.resources'), { label: t('set.h'), body: settingsBody });
@@ -547,13 +547,13 @@ function renderShell() {
     // crumb — 게임 화면이면 **탭 이름 전부를 한 칸에 겹쳐 두고 고른 것만 보인다** [2026-09-24 · SCREEN_DESIGN §2 · ADR-0353].
     //   폭 = 그 언어에서 가장 긴 탭 이름이라 탭을 옮겨도 오른쪽 원정 세그먼트가 안 움직인다 (라벨 칸이라 고정 px 이 아니다 · style.css `.crumb`)
     const crumb = $('.crumb');
-    if (!authenticated || pre) crumb.textContent = !authenticated ? t('cl.signIn') : state.screen === 'prologue' ? t('pro.h') : t('ng.h');
+    if (pre) crumb.textContent = state.screen === 'prologue' ? t('pro.h') : t('ng.h');
     else crumb.replaceChildren(...TABS.map(id => el('span', id === state.tab ? '' : 'ghost', t(`nav.${id}`))));
     // 원정 세그먼트 — **모든 탭에 선다** [2026-09-24 사용자 지시 · SCREEN_DESIGN §2 · §4 · ADR-0353] — 다른 일을 하다가도 부대 상태 · 끝난 원정이 보이고 누르면 그리로 간다.
     //   원정 탭이 닫혀 있으면(건물 표) 안 선다 — 갈 곳이 없다
     const seg = $('.tab-seg');
     seg.innerHTML = '';
-    if (authenticated && !pre && G && tabOpen.expedition !== false) seg.appendChild(expNavBox());
+    if (!pre && G && tabOpen.expedition !== false) seg.appendChild(expNavBox());
 }
 
 function render() {
@@ -583,8 +583,7 @@ function render() {
     // 박스 안 스크롤 위치 — 다시 그려도 남는다 (SCREEN_DESIGN §2 「박스」 · ADR-0097). 박스는 매번 새로 서므로 `data-keep` 이름으로 되찾는다
     const kept = new Map([...main.querySelectorAll('[data-keep]')].map(n => [n.dataset.keep, n.scrollTop]));
     main.innerHTML = '';
-    if (!authenticated) renderLogin(main);
-    else if (state.screen === 'prologue' && G) renderPrologue(main);
+    if (state.screen === 'prologue' && G) renderPrologue(main);
     else if (state.screen === 'start' || !G) renderStart(main);
     // 안 지은 건물의 탭도 **제 화면**을 편다 — 건설 화면은 건설 탭에만 선다 (§1 · ADR-0308)
     else ({
@@ -605,7 +604,7 @@ function render() {
         lab: renderLab,
     })[state.tab](main);
     for (const n of main.querySelectorAll('[data-keep]')) if (kept.has(n.dataset.keep)) n.scrollTop = kept.get(n.dataset.keep);
-    if (state.itemMenu && authenticated && G) itemMenuPanel();   // 보관 칸 우클릭 메뉴 — 본문 뒤에 선다 (ADR-0451)
+    if (state.itemMenu && G) itemMenuPanel();   // 보관 칸 우클릭 메뉴 — 본문 뒤에 선다 (ADR-0451)
     renderModal();
     hideTip();
 }
@@ -627,11 +626,9 @@ const MODALS = {
     // 출정 확인 — 다른 일을 하던 영웅이 낀 편성을 [보내기] 했을 때만 뜬다 · [취소]는 출정 창으로 돌아간다 (SCREEN_DESIGN §4-1 · ADR-0467)
     //   **머리 줄이 없다**(`bare`) [2026-09-30 사용자 지시 「보내기 글자는 지워」 · 「x버튼삭제」] — 제목도 닫기 X 도 없이 문장과 버튼 둘만 선다 · 바깥 · `Esc` 는 닫는다
     departConfirm: { bare: true, body: departConfirmBody },
-    // 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112). `lock` 인 창은 닫는 길이 없다 — 멈춤 창 하나뿐인 의도된 예외다:
-    //   닫을 수 있으면 멈춘 탭이 다시 저장해 다른 탭 · 다른 곳의 진행을 덮는다. 멈춤 창은 까닭이 둘이라 글자만 갈린다 (ADR-0458)
-    cloud: { title: 'cl.h', body: cloudBody },
-    frozen: { title: 'cl.frozen.h', body: frozenBody('cl.frozen.reload'), lock: true },
-    cloudTaken: { title: 'cl.taken.h', body: frozenBody('cl.taken.reload'), lock: true },
+    // 멈춤 창 — 다른 탭이 세이브를 썼다 (SCREEN_DESIGN §2-1). `lock` 인 창은 닫는 길이 없다 — 이것 하나뿐인 의도된 예외다:
+    //   닫을 수 있으면 멈춘 탭이 다시 저장해 다른 탭의 진행을 덮는다
+    frozen: { title: 'cl.frozen.h', body: frozenBody, lock: true },
     // 자동 분해 — 보관 도구 줄 [자동 분해]가 연다 (SCREEN_DESIGN §6 · ADR-0203 · item_design §6-5)
     //   `cls` 는 머리 글씨를 줄이는 데만 쓴다 — 작은 창이라 기본 h2 가 속보다 두 단 넘게 컸다(2026-09-21 사용자 지시)
     autoSalvage: { title: 'ch.auto.h', body: autoSalvageBody, cls: 'auto-modal' },
@@ -702,7 +699,7 @@ function segmented(items, current, onPick) {
 }
 
 /**
- * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 이펙트 그림체 · 이펙트 투명도 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · Focus(개발용 임시 — devcompare.js).
+ * `⚙` 판 설정 탭의 속 — 아트 스타일 [gemini] [gpt] · 스킬 이펙트 · 이펙트 그림체 · 이펙트 투명도 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · 로그 · 닉네임 · Focus(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
  * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 초상과 스테이지 배경을 함께 바꾼다.
  */
@@ -749,6 +746,23 @@ function settingsBody() {
     logSet.appendChild(segmented(LOG_STYLES.map(s => ({ id: s, label: t(s === 'grid' ? 'set.logGrid' : 'set.logText') })),
         logStyle(), id => { setLogStyle(id); box.replaceWith(settingsBody()); }));
     box.appendChild(logSet);
+    // 닉네임 — 퍼널 페이지가 유저를 알아보는 이름 · 게임 안엔 안 찍힌다 · 이 브라우저에만 (§2-1 · §2-2 · ADR-0633).
+    //   칸을 떠나거나 Enter 로 정한다 — 다시 그리지 않는다(다음 올리기가 가져간다)
+    const nickRow = el('div', 'set-row');
+    nickRow.appendChild(el('span', 'set-k', t('set.nick')));
+    const nick = el('input', 'set-nick');
+    nick.maxLength = NICK_MAX;
+    nick.spellcheck = false;
+    nick.value = loadTrack().nick;
+    nick.onchange = () => {
+        const rec = loadTrack();
+        rec.nick = nick.value.trim().slice(0, NICK_MAX);
+        writeTrack(rec);
+        nick.value = rec.nick;
+    };
+    nick.onkeydown = e => { if (e.key === 'Enter') nick.blur(); };
+    nickRow.appendChild(nick);
+    box.appendChild(nickRow);
     mountFocusCompare(box);   // 임시 — 마지막 줄 Focus [Off | Stop | Dim] (devcompare.js · SCREEN_DESIGN §10-2) · Card [Before | After] 는 걷었다(ADR-0566)
     return box;
 }
@@ -761,7 +775,6 @@ function settingsBody() {
  * 기본값이 꺼짐인 이유는 **개발용 경로**다 — ?dev=battle 같은 길이 프롤로그에서 멈추면 헤드리스 검증이 막힌다.
  */
 function startGame({ prologue = false } = {}) {
-    if (!authenticated) return;
     clearSave();
     G = SYS.game.newGame(now() >>> 0, state.candidates, now());
     save();
@@ -780,7 +793,6 @@ function dropBattles() {
 }
 
 function continueGame() {
-    if (!authenticated) return false;
     const saved = loadSave();
     if (!saved) return false;
     try { G = SYS.game.deserialize(saved); }
@@ -833,29 +845,6 @@ function candidateCard(h, extra = '') {
     return c;
 }
 
-function renderLogin(main) {
-    // 켤 때 복원하는 중이고 이 브라우저에 로그인 기록이 있으면 비운다 — 곧 게임이 선다. 로그인 화면이 떴다가 바뀌지 않는다 (§2-1 · ADR-0349)
-    if (cloud.resuming && loadCloudLink()) return;
-    const page = el('section', 'login-page');
-    const card = el('div', 'login-card');
-    card.appendChild(el('h1', 'login-logo', 'THE<b>SEVEN</b>'));
-    if (cloud.err) card.appendChild(el('div', 'login-error', t(`cl.err.${cloud.err}`)));
-    const button = el('button', 'login-google login-required');
-    button.innerHTML = `<span class="login-google-mark">G</span><span>${t(cloud.busy ? 'cl.st.checking' : 'cl.signIn')}</span>`;
-    button.disabled = cloud.busy;
-    button.setAttribute('aria-busy', String(cloud.busy));
-    button.onpointerenter = () => CLOUD.warm();
-    button.onclick = cloudSignIn;
-    card.appendChild(button);
-    if (isDevHost()) {
-        const guest = el('button', 'login-guest', t('cl.guest'));
-        guest.onclick = guestEnter;
-        card.appendChild(guest);
-    }
-    page.appendChild(card);
-    main.appendChild(page);
-}
-
 function renderStart(main) {
     const wrap = el('div', 'ng-wrap');
     const saved = loadSave();
@@ -903,278 +892,82 @@ function renderStart(main) {
     main.appendChild(wrap);
 }
 
-/* ═══════════ 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112) ═══════════
-   로그인하면 세이브 사본이 Google 계정을 따라간다. 로컬 저장(`save`)은 그대로이고, 클라우드는 모아서 **통째로** 올린다.
-   이 브라우저가 마지막으로 맞춘 사본은 `storage.js` 의 연결 기록 `{uid, rev, savedAt, pending?}` 이 든다 —
-   「이 브라우저가 바뀌었나」는 세이브의 `savedAt` 으로, 「클라우드가 먼저 바뀌었나」는 저장 번호 `rev` 로 가른다(기기마다 시계가 달라서).
-   `pending` 은 올리는 중인 세이브의 `savedAt` — 응답이 끊겨 번호를 못 받은 사본을 다음에 받았을 때 제 것으로 알아본다 (ADR-0458).
-   갈리면 **클라우드가 이긴다** — 켤 때는 묻지 않고 받고, 하는 도중엔 멈춤 창을 세운다(새로고침이 켜는 길로 받는다) */
+/* ═══════════ 플레이 기록 (SCREEN_DESIGN §2-1 · ADR-0633) ═══════════
+   로그인이 없다. 배포 주소에서 켠 게임만 익명 계정으로 **진행 요약 + 세이브 사본**을 한 방향으로 올린다 — 받는 길은 없다(세이브의 주인은 이 브라우저다).
+   개발 환경 · `?dev=` 주소는 안 올린다 — 개발자의 시험 플레이 · 헤드리스 검증이 퍼널(`dev/funnel.html`)을 더럽히지 않게.
+   실패는 조용하다 — 게임은 그대로 돌고 다음 간격에 다시 올린다 */
 
-// 올리는 간격 — 로컬은 바뀔 때마다지만 클라우드 무료 한도는 **쓰기 횟수**라 모아서 올린다. 게임 수치가 아니라 저장소 사정이라 CSV 가 아니다 (ADR-0102 선례)
-const CLOUD_PUSH_MS = 60 * 1000;
-// 켤 때 계정 복원 + 받기를 기다리는 상한 — 넘으면 이 브라우저 세이브로 켜고 다음 간격에 다시 붙는다. 같은 이유로 CSV 가 아니다
-const CLOUD_BOOT_WAIT_MS = 8 * 1000;
-// 이 탭의 연결 — 화면 상태가 아니라서 `state` 밖에 둔다. status: off · checking · on · saving · error
-// resuming — 켤 때 계정을 복원하는 중(`cloudResume`). 로그인 기록이 있으면 그동안 로그인 화면을 안 그린다 (ADR-0349)
-const cloud = { status: 'off', user: null, err: null, busy: false, resuming: false };
-
-/** 계정 버튼 — 글자가 곧 상태다 */
-function cloudBtn() {
-    const s = cloud.status;
-    const b = el('button', `btn sm cloud-btn cl-${s}`, t(s === 'off' ? 'cl.signIn' : `cl.st.${s}`));
-    if (cloud.user) b.title = cloud.user.email;
-    // 로그인 창은 클릭 직후에 떠야 브라우저가 막지 않는다 — 마우스가 올라오면 SDK 를 미리 불러 둔다
-    b.onpointerenter = () => { if (s === 'off') CLOUD.warm(); };
-    b.onclick = () => {
-        if (frozen || s === 'checking') return;
-        if (s === 'off' || (s === 'error' && !cloud.user)) cloudSignIn();
-        else openModal('cloud');
-    };
-    return b;
-}
-
-/** 상태가 바뀌었다 — **버튼만** 갈아 끼운다(관전을 걷지 않는다 · `refreshBattleBag` 와 같은 장치). 계정 창이 떠 있으면 창도 */
-function setCloud(status) {
-    cloud.status = status;
-    if (status !== 'error') cloud.err = null;
-    if (!authenticated) { render(); return; }
-    $('.cloud-btn')?.replaceWith(cloudBtn());
-    if (state.modal === 'cloud') renderModal();
-}
-
-/** 하는 도중 클라우드가 다른 곳에서 바뀌었다 — 덮어쓰지도 곧장 받지도 않고 멈춘다. 멈춤 창의 새로고침이 켜는 길로 받는다 (ADR-0458).
- *  곧장 받으면 두 곳이 다 켜져 있을 때 1분마다 서로를 새로고침시킨다 */
-function takenElsewhere() {
-    setCloud('on');
-    freeze('cloudTaken');
-}
-
-/** 받는다 — 로컬 세이브와 연결 기록을 클라우드 사본으로 맞춘다. 켤 때 · 로그인 버튼만 탄다 — 열 수 있는 사본만 온다(`linkAccount` ①) */
-function adoptRemote(remote, { booting }) {
-    // 도중이면 새로고침까지 이 탭이 옛 상태를 다시 저장하지 않게 먼저 멈춘다
-    if (!booting) frozen = true;
-    writeSave(remote.save);
-    writeCloudLink({ uid: cloud.user.uid, rev: remote.rev, savedAt: remote.savedAt });
-    setCloud('on');
-    // 도는 원정 · 재생기 · 화면 상태를 새 세이브에 맞추는 가장 짧은 길 — 켜는 길을 한 번 더 탄다. 받은 세이브의 원정은 거기서 끊긴다(§4)
-    if (!booting) location.reload();
-}
-
-/**
- * 계정과 이 브라우저를 잇는다 — 켤 때(`booting`) · 로그인 버튼(`login`) · 끊겼다 다시 붙을 때가 **같은 규칙**을 탄다 (SCREEN_DESIGN §2-1 「언제 올리고 받나」).
- * **클라우드가 이긴다** (ADR-0458):
- * ① 클라우드가 비었거나 열 수 없는 사본(v37 전 · ADR-0303)이다 → 올린다
- * ② 이 브라우저가 이 계정과 마지막으로 맞춘 뒤 클라우드가 안 바뀌었다(올리다 응답이 끊긴 제 사본 — `pending` — 포함) → 이 브라우저 세이브 그대로
- * ③ 두 세이브가 같다 → 기록만 맞춘다
- * ④ 그 밖(다른 곳에서 바뀌었다 · 이 계정과 맞춘 적이 없다) → 받는다 — 켤 때 · 로그인 버튼이면 곧장, 다시 붙을 때면 멈춤 창
- */
-function linkAccount(remote, { booting, login = false }) {
-    const uid = cloud.user.uid;
-    const link = loadCloudLink();
-    const local = loadSave();
-    const mine = link?.uid === uid;
-    // 열 수 없는 사본은 빈 클라우드와 같다 — 받지도 묻지도 않고 이 브라우저 세이브가 그 위에 올라간다(그 사본의 저장 번호에서 잇는다 · §2-1 · ADR-0303)
-    if (!remote || !SYS.game.canLoad(remote.save)) {
-        writeCloudLink({ uid, rev: remote?.rev ?? 0, savedAt: null });
-        setCloud('on');
-        if (!booting) cloudPush();          // 켤 때는 부팅 끝의 `cloudPush` 가 올린다
-        return;
-    }
-    if (mine && remote.rev === link.rev) { setCloud('on'); return; }
-    // 올리다 응답이 끊긴 제 사본이거나(②) 두 세이브가 같다(③) — 번호만 받아 적는다. 그 뒤의 저장은 다음 올리기가 올린다
-    if ((mine && link.pending != null && remote.savedAt === link.pending) || (local && local.savedAt === remote.savedAt)) {
-        writeCloudLink({ uid, rev: remote.rev, savedAt: remote.savedAt });
-        setCloud('on');
-        return;
-    }
-    if (booting || login) adoptRemote(remote, { booting });
-    else takenElsewhere();
-}
-
-/** 켤 때 — 전에 로그인해 둔 브라우저면 계정을 복원하고 클라우드와 맞춘 **뒤에** 세이브를 연다 */
-async function cloudResume() {
-    cloud.busy = true;
-    cloud.resuming = true;
-    setCloud('checking');
-    const steps = (async () => {
-        const u = await CLOUD.restoreUser();
-        if (!u.ok || !u.user) return u;
-        return { ...(await CLOUD.pullSave(u.user.uid)), user: u.user };
-    })();
-    // 상한을 넘으면 늦게 온 결과는 버린다 — 이미 연 세이브 위에 받은 사본을 쓰면 옛 상태가 클라우드를 덮는다
-    const late = new Promise(res => setTimeout(() => res({ ok: false, err: 'network' }), CLOUD_BOOT_WAIT_MS));
-    const result = await Promise.race([steps, late]);
-    cloud.busy = false;
-    cloud.resuming = false;
-    applyResume(result, { booting: true });
-    if (result.ok && result.user) authenticated = true;
-    render();
-}
-
-/** 복원 결과를 건다 — 켤 때 · 다시 붙을 때(`cloudTick`) · 로그인 버튼(`login`)이 같이 쓴다 */
-function applyResume(r, how) {
-    if (r.user) cloud.user = r.user;
-    if (!r.ok) { cloud.err = r.err; setCloud('error'); return; }
-    // 로그아웃된 채다 — 세션이 끝났거나 다른 곳에서 로그아웃했다. 이 브라우저 세이브는 그대로 둔다
-    if (!r.user) { clearCloudLink(); cloud.user = null; setCloud('off'); return; }
-    linkAccount(r.remote, how);
-}
-
-/** 간격마다 — 끊겼으면 다시 붙고, 붙어 있으면 바뀐 것을 올린다 */
-async function cloudTick() {
-    if (frozen || cloud.busy) return;
-    if (cloud.status !== 'error' || !(cloud.user || loadCloudLink())) { cloudPush(); return; }
-    cloud.busy = true;
-    const u = cloud.user ? { ok: true, user: cloud.user } : await CLOUD.restoreUser();
-    const r = u.ok && u.user ? { ...(await CLOUD.pullSave(u.user.uid)), user: u.user } : u;
-    cloud.busy = false;
-    if (!frozen) applyResume(r, { booting: false });
-}
-
-/** 올리기 — 마지막으로 맞춘 뒤 바뀐 것이 있을 때만. 클라우드가 다른 곳에서 먼저 바뀌었으면 덮어쓰지 않고 멈춘다 (ADR-0458) */
-async function cloudPush({ manual = false } = {}) {
-    const link = loadCloudLink();
-    if (frozen || cloud.busy || cloud.status !== 'on' || !cloud.user || !link) return;
-    const local = loadSave();
-    if (!local || local.savedAt === link.savedAt) {
-        if (manual) { flash('cl.upToDate'); render(); }
-        return;
-    }
-    const uid = cloud.user.uid;
-    cloud.busy = true;
-    setCloud('saving');
-    // 올리는 세이브를 먼저 적어 둔다 — 올라갔는데 응답이 끊기면 다음에 받은 사본을 이것으로 알아본다(`linkAccount` ②)
-    writeCloudLink({ ...link, pending: local.savedAt });
-    const r = await CLOUD.pushSave(uid, local, link.rev);
-    cloud.busy = false;
-    if (cloud.user?.uid !== uid) return;      // 올리는 사이 로그아웃했다
-    // 번호가 달라도 클라우드 사본이 방금 올린 세이브면 제 것이다 — 응답이 끊긴 트랜잭션을 Firestore 가 다시 돌리면 제 사본을 읽는다
-    const rev = r.ok ? r.rev : r.err === 'conflict' && r.remote.savedAt === local.savedAt ? r.remote.rev : null;
-    if (rev != null) {
-        writeCloudLink({ uid, rev, savedAt: local.savedAt });
-        setCloud('on');
-        if (manual) { flash('cl.pushed'); render(); }
-    } else if (r.err === 'conflict') takenElsewhere();
-    else { cloud.err = r.err; setCloud('error'); }
-}
-
-/** 로그인 버튼 — Google 창 → 받기 → 잇기 */
-async function cloudSignIn() {
-    if (cloud.busy) return;
-    cloud.busy = true;
-    setCloud('checking');
-    const s = await CLOUD.signIn();
-    if (!s.ok) {
-        cloud.busy = false;
-        setCloud('off');
-        flash(`cl.err.${s.err}`);
-        render();
-        return;
-    }
-    const p = await CLOUD.pullSave(s.user.uid);
-    cloud.busy = false;
-    if (!frozen) {
-        applyResume({ ...p, user: s.user }, { booting: !authenticated, login: true });
-        if (p.ok && s.user && !authenticated) {
-            authenticated = true;
-            unlockBoot?.();
-        }
-    }
-}
-
-/** 개발 환경 — 게스트 버튼 · URL 게스트 진입이 여기서만 선다 (SCREEN_DESIGN §2-1 · ADR-0385) */
+// 올리는 간격 — 로컬은 바뀔 때마다지만 무료 한도는 **쓰기 횟수**라 모아서 올린다. 게임 수치가 아니라 저장소 사정이라 CSV 가 아니다 (ADR-0102 선례)
+const TRACK_PUSH_MS = 60 * 1000;
+// 닉네임 글자 수 상한 — 퍼널 페이지 표의 한 칸이다. 같은 이유로 CSV 가 아니다
+const NICK_MAX = 16;
 const isDevHost = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-/** URL 로 곧장 게스트 — `?guest=1` 또는 `?dev=` (헤드리스는 버튼을 못 누른다) */
-const guestByUrl = () => {
-    const q = new URLSearchParams(location.search);
-    return isDevHost() && (q.get('guest') === '1' || q.has('dev'));
-};
+const TRACK_ON = !isDevHost() && !new URLSearchParams(location.search).has('dev');
+// 이 탭이 마지막으로 올린 것(세이브 저장 시각 + 닉네임) — 같으면 안 올린다. 화면 상태가 아니라서 `state` 밖에 둔다
+const track = { sent: null, busy: false };
 
-/** 게스트 — 클라우드를 안 켠 채 이 브라우저 세이브로 들어간다. 계정 버튼으로 나중에 연결한다 */
-function guestEnter() {
-    if (authenticated || !isDevHost()) return;
-    cloud.busy = false;
-    cloud.err = null;
-    authenticated = true;
-    setCloud('off');
-    unlockBoot?.();
+/** 진행 요약 — 세이브에서 칸을 **고르기만** 한다. 칸의 뜻은 INTERFACE §4 「플레이 기록」 */
+function trackSummary(local, rec) {
+    const head = { nick: rec.nick, lang: lang(), sessions: rec.sessions, reach: rec.reach, started: !!local };
+    if (!local) return head;
+    return {
+        ...head, version: local.version, createdAt: local.createdAt, savedAt: local.savedAt, expMs: local.expMs ?? 0,
+        difficulty: local.difficulty, cleared: local.progress.cleared, clearedIn: local.progress.clearedIn ?? {},
+        peakTotal: local.progress.peakTotal ?? 0, heroes: local.heroes.length,
+        maxLevel: Math.max(0, ...local.heroes.map(h => h.level)), counters: local.counters,
+    };
 }
 
-/** 로그아웃 — 이 브라우저 세이브는 남는다 */
-async function cloudSignOut() {
-    if (cloud.busy) return;
-    cloud.busy = true;
-    const result = await CLOUD.signOut();
-    cloud.busy = false;
-    if (!result.ok) { flash(`cl.err.${result.err}`); return; }
-    clearCloudLink();
-    Object.assign(cloud, { user: null, err: null });
-    state.modal = null;
-    setCloud('off');
-    leaveSession();
+/** 노말 깬 칸마다 처음 본 순간의 원정 플레이 시간(`at`)을 적는다 — 적힌 칸은 안 바뀐다. 적은 것이 있으면 true */
+function noteReach(local, rec, at) {
+    let added = false;
+    for (const id of local?.progress.cleared ?? []) if (!(id in rec.reach)) { rec.reach[id] = at; added = true; }
+    return added;
 }
 
-function leaveSession() {
-    authenticated = false;
-    frozen = true;
-    dropBattles();
-    G = null;
-    state.screen = 'start';
-    state.modal = null;
-    render();
-    location.reload();
+/** 켤 때 — 켠 횟수를 하나 올린다. 이 브라우저의 첫 기록이면 이미 깬 칸은 「언제 깼는지 모름」(null)으로 둔다 —
+ *  지금 시간을 적으면 퍼널의 걸린 시간이 거짓이 된다 */
+function trackSession() {
+    if (!TRACK_ON) return;
+    const rec = loadTrack();
+    if (rec.sessions === 0) noteReach(loadSave(), rec, null);
+    rec.sessions++;
+    writeTrack(rec);
 }
 
-/** 다른 탭이 세이브를 썼다(`frozen`) · 다른 곳이 클라우드에 먼저 올렸다(`cloudTaken` · ADR-0458) — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고
- *  멈춤 창만 남긴다. 먼저 쓴 쪽이 남는다 (ADR-0112) */
-function freeze(modal = 'frozen') {
+/** 올리기 — 마지막으로 올린 뒤 세이브나 닉네임이 바뀌었을 때만 */
+async function trackPush() {
+    if (!TRACK_ON || frozen || track.busy) return;
+    const local = loadSave();
+    const rec = loadTrack();
+    if (noteReach(local, rec, local?.expMs ?? 0)) writeTrack(rec);
+    const sent = `${local?.savedAt ?? ''}|${rec.nick}`;
+    if (sent === track.sent) return;
+    track.busy = true;
+    const r = await CLOUD.pushTrack(trackSummary(local, rec), local);
+    track.busy = false;
+    if (r.ok) track.sent = sent;
+}
+
+/** 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고 멈춤 창만 남긴다. 먼저 쓴 쪽이 남는다 (§2-1) */
+function freeze() {
     if (frozen) return;
     frozen = true;
     if (stopBattle) { stopBattle(); stopBattle = null; }
     state.battle = null;
     state.battles = {};          // 부대 핸들도 전부 놓는다 — 이 탭은 더 이상 원정을 안 민다 (ADR-0316)
     if (state.exp === 'battle') state.exp = 'idle';
-    state.modal = modal;
+    state.modal = 'frozen';
     render();
 }
 
-/** 계정 창 — 계정 · 클라우드 사본의 저장 시각 · 오류 한 줄 · 지금 올리기 · 로그아웃 */
-function cloudBody() {
-    const box = el('div', 'cl-account');
-    const link = loadCloudLink();
-    const row = (key, value) => {
-        const r = el('div', 'cl-row', `<span>${t(key)}</span>`);
-        const b = el('b');
-        b.textContent = value;               // 이메일은 바깥에서 온 글자라 innerHTML 에 넣지 않는다
-        r.appendChild(b);
-        return r;
-    };
-    box.appendChild(row('cl.account', cloud.user?.email ?? '—'));
-    box.appendChild(row('cl.cloudAt', link?.savedAt ? new Date(link.savedAt).toLocaleString() : t('cl.never')));
-    if (cloud.err) box.appendChild(el('div', 'down', t(`cl.err.${cloud.err}`)));
-    const actions = el('div', 'cl-actions');
-    const push = el('button', 'btn sm primary', t('cl.pushNow'));
-    push.disabled = cloud.busy || frozen || cloud.status === 'checking';
-    // 연결 실패 중이면 다시 붙기부터 한다 (§2-1)
-    push.onclick = () => (cloud.status === 'error' ? cloudTick() : cloudPush({ manual: true }));
-    const out = el('button', 'btn sm', t('cl.signOut'));
-    out.disabled = cloud.busy;
-    out.onclick = cloudSignOut;
-    actions.append(push, out);
-    box.appendChild(actions);
+/** 멈춤 창 — 닫는 길이 없다(`lock`). 새로고침이 이 탭을 다른 탭이 쓴 세이브 위에 다시 세운다 */
+function frozenBody() {
+    const box = el('div', 'cl-frozen');
+    const b = el('button', 'btn primary', t('cl.frozen.reload'));
+    b.onclick = () => location.reload();
+    box.appendChild(b);
     return box;
-}
-
-/** 멈춤 창 — 닫는 길이 없다(`lock`). 새로고침이 이 탭을 다른 탭이 쓴 세이브 · 클라우드 사본(켜는 길이 받는다) 위에 다시 세운다.
- *  까닭이 둘이라 버튼 글자만 받는다 (ADR-0458) */
-function frozenBody(key) {
-    return () => {
-        const box = el('div', 'cl-frozen');
-        const b = el('button', 'btn primary', t(key));
-        b.onclick = () => location.reload();
-        box.appendChild(b);
-        return box;
-    };
 }
 
 /* ═══════════ 원정 (편성 · 전투 · 리포트) ═══════════ */
@@ -2741,6 +2534,18 @@ function expTimeTick() {
     if (!document.hidden) refreshExpTime();
 }
 
+/* 탭 할 일 점 [2026-10-16 · SCREEN_DESIGN §1 · ADR-0637] — 탭 바는 그리기 때 서고, 그 사이 상태가 바뀌면(탐험이 끝났다 · 상인이 왔다)
+   앱 시계가 **점만** 갈아 끼운다 — 골드 숫자(`refreshGold`)와 같은 길이라 관전 재생기를 안 걷는다. 판정이 상태 함수 넷을 부르므로 1초에 한 번 */
+const NAV_TODO_MS = 1000;
+let navTodoAt = 0;
+function refreshNavTodo(at) {
+    if (at - navTodoAt < NAV_TODO_MS) return;
+    navTodoAt = at;
+    const todo = SYS.game.navTodo(G, at);
+    for (const b of document.querySelectorAll('.nav button[data-tab]'))
+        b.classList.toggle('todo', !b.classList.contains('dim') && !!todo[b.dataset.tab]);
+}
+
 /** 상단바의 원정 플레이 시간 숫자만 — 글자가 바뀔 때만 쓴다(1초에 한 번) · 골드(`refreshGold`)와 같은 길 */
 function refreshExpTime() {
     const n = $('.resources [data-exp-time]');
@@ -2781,6 +2586,8 @@ function expTick() {
     if (state.tab === 'explore' && !document.hidden) exploreTick(at);
     // 원정 탭 — 출정 창 적 구성의 무덤 명패: 남은 시간 글자만 갈고 보스가 돌아오는 순간 다시 그린다 (SCREEN_DESIGN §4-1 · ADR-0590)
     if (state.tab === 'expedition' && !document.hidden) respawnTick(at);
+    // 탭 할 일 점 — 다른 탭에서 탐험이 끝나거나 상인이 온 순간을 탭 바가 따라간다 (SCREEN_DESIGN §1 · ADR-0637)
+    if (!document.hidden) refreshNavTodo(at);
     /* **부대마다 민다** [2026-09-24 · ADR-0316] — 보는 부대는 관전이 떠 있으면 **재생기가 시계다**(애니메이션이 그 눈금 위에 산다 ·
        브라우저 탭이 숨으면 재생기를 걷으므로(`onVisibility`) 숨긴 탭의 시계는 언제나 이쪽이다) — 그 하나만 건너뛰고,
        안 보는 부대는 여기서 배속 1 로 실제 흐른 시간만큼 간다. 목록을 먼저 뜬다 — `tickBattle` 이 반복으로 핸들을 갈아 끼운다 */
@@ -2875,7 +2682,7 @@ function closeFrozenRun(at) {
 function onVisibility() {
     if (document.hidden) {
         if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
-        cloudPush();   // 숨길 때 올린다 — 이대로 닫힐 수도 있다 (SCREEN_DESIGN §2-1)
+        trackPush();   // 숨길 때 올린다 — 이대로 닫힐 수도 있다 (SCREEN_DESIGN §2-1)
         return;
     }
     expTick();
@@ -3364,7 +3171,7 @@ function dismissBody() {
         const ok = el('button', 'btn danger', t('ui.ok'));
         ok.onclick = () => {
             const name = L(h.name);
-            const r = SYS.game.dismiss(G, h.uid);
+            const r = SYS.game.dismiss(G, h.uid, now());
             if (!r.ok) { flash(`ch.err.${r.err}`); render(); return; }
             // 지운 영웅이 이 탭의 선택이었으므로 선택을 비운다 — 다음 render 가 첫 영웅으로 되돌린다
             state.heroUid = null;
@@ -4734,7 +4541,7 @@ function nextRankBox(b) {
     const go = el('button', 'btn primary cn-go', t('rs.rs.go'));
     go.disabled = !!b.next.err;
     go.onclick = () => {
-        const res = SYS.game.construct(G, b.id);
+        const res = SYS.game.construct(G, b.id, now());
         state.cnPick = b.id;    // 지은 건물에 머문다 — 안 고른 채 지으면 기본 고르기가 다음 건물로 넘어간다
         if (res.ok) { flash('cn.built', { b: L(b.name), n: res.rank }); save(); }
         else flash(`cn.err.${res.err}`);
@@ -4837,7 +4644,8 @@ function renderLibrary(main) {
     const right = el('div', 'lib-col');
     // 박스 (ADR-0097) — 카드마다 제목은 서 있고 본문이 스크롤한다 · 스크롤 자리를 따로 든다
     //   `help` 를 주면 제목 바로 오른쪽에 `?`(편성 탭 소제목과 같은 표시 · 제목 줄이 양 끝으로 밀어도 글씨에 붙게 한 덩이로 · ADR-0600)
-    const card = (title, keep, fill, help = null) => {
+    //   `lock` 을 주면 그 기능이 안 열렸을 때 몸을 잠김 베일로 덮는다 — 제목 줄 · `?` 는 베일 밖(ADR-0635 · 열렸나는 `hasFeature` 하나)
+    const card = (title, keep, fill, help = null, lock = null) => {
         const p = el('div', 'panel');
         const head = el('h2', '', `<span>${t(title)}</span>`);
         if (help) head.firstChild.appendChild(helpMark(title, help));
@@ -4845,11 +4653,12 @@ function renderLibrary(main) {
         const body = el('div', 'box-body bk-box lib-body');
         body.dataset.keep = keep;
         if (bs) fill(body);
+        if (lock && !SYS.game.hasFeature(G, lock)) { body.classList.add('lock-host'); body.appendChild(lockVeil(lock)); }
         p.appendChild(body);
         right.appendChild(p);
     };
     card('bk.up.h', 'library-learn', body => bookLearnInto(body, h, bs), () => t('bk.up.help'));   // 제목 옆 `?` (ADR-0603)
-    card('bk.craft.h', 'library-craft', body => bookCraftInto(body, h, bs), () => t('bk.craft.help'));
+    card('bk.craft.h', 'library-craft', body => bookCraftInto(body, h, bs), () => t('bk.craft.help'), 'book_craft');   // 책 제작 = 도서관 r2 (2026-10-16)
     band.appendChild(right);
     page.appendChild(band);
     main.appendChild(page);
@@ -4947,7 +4756,7 @@ function advanceBody(body, locked = false) {
         row.appendChild(card);
     }
     main.appendChild(row);
-    // [전직] — 거절(레벨 · 원정 · 수색)은 플래시로 말하고 고른 채 둔다 · 전직이 안 열렸으면(도서관 r2 전) 잠김 베일이 갈래 자리를 덮으니 버튼을 안 세운다
+    // [전직] — 거절(레벨 · 원정 · 수색)은 플래시로 말하고 고른 채 둔다 · 전직이 안 열렸으면(도서관 r3 전 — 2026-10-16) 잠김 베일이 갈래 자리를 덮으니 버튼을 안 세운다
     if (!A.open) return null;
     const b = el('button', 'btn sm primary tr-adv-go', t('tr.adv.go'));
     b.disabled = !pick;
@@ -4997,9 +4806,8 @@ const postAttr = postId => D.heroAttributes.filter(a => (a.dispatch ?? '').split
  *
  * [개정 2026-09-09 사용자 지시] 한 단계가 **상자**다 — 얇은 줄이 아니라 두 줄(이름 · 산출물)을 든 칸이고,
  * 상자 일곱이 단의 남은 세로를 균등 분할한다(높이 배분은 CSS `.dp-tier-list`).
- * 산출물은 각 표의 산출물 컬럼(`ore_*` / `herb_*` / `timber_*` → 조립이 `yield*` 로 모은다) — **이름만** 찍는다.
- * 시간당 산출(`yield_per_hour`)은 안 찍는다:
- * 표가 스스로 「구조 검증용 자리채움」이라 적은 ⚠임시 수치라 화면에 서면 확정으로 읽힌다 (§8-2 「없는 기능에 가짜 수치를 그리지 않는다」).
+ * 산출물 이름과 기본 생산량, 현재 생산량과 배치 효율을 찍는다(ADR-0636).
+ * 생산량 계산은 `game.dispatchProgress` 하나가 맡고, 미배치 장소도 기본 생산 게이지를 그린다.
  */
 /** 자리 칸의 게이지 — 다음 1개까지 찬 비율 [2026-09-27 사용자 지시 · §8 · base_expedition §3-3]. 앱 시계가 폭만 갈아 끼운다(`refreshDispatchBars`) */
 const dpGauge = (postId, tier) => {
@@ -5011,12 +4819,24 @@ const dpRateText = (postId, n) => {
     const p = SYS.game.dispatchProgress(G, postId, n.tier, now());
     return p ? `\n${t('dp.rate', { item: L({ ko: n.yieldKo, en: n.yieldEn }), s: Math.round(p.intervalSec) })}` : '';
 };
+const dpRateNumber = n => String(Math.round(n * 10) / 10);
+const dpEfficiencyText = efficiency => t('dp.efficiency', { n: dpRateNumber((efficiency - 1) * 100) });
+/** 기본 생산과 배치 후 생산을 장소 본문에 보여준다. 수치는 로직의 계산 결과만 쓴다. */
+function dpProductionText(p) {
+    if (!p) return '';
+    return `<span>${t('dp.currentRate', { n: dpRateNumber(p.perHour) })}${p.bonusPerHour > 0 ? ` · ${dpEfficiencyText(p.efficiency)}` : ''}</span>`;
+}
 /** 게이지 폭만 — 앱 시계가 자원 탭이 보일 때 눈금마다 부른다(골드 · 플레이 시간과 같은 길 · 전체 다시 그림이 아니다) */
 function refreshDispatchBars(at) {
     for (const b of document.querySelectorAll('[data-dpbar]')) {
         const [post, tier] = b.dataset.dpbar.split(':');
         const p = SYS.game.dispatchProgress(G, post, Number(tier), at);
         if (p) b.style.width = `${(p.frac * 100).toFixed(1)}%`;
+    }
+    for (const node of document.querySelectorAll('[data-dprate]')) {
+        const [post, tier] = node.dataset.dprate.split(':');
+        const html = dpProductionText(SYS.game.dispatchProgress(G, post, Number(tier), at));
+        if (node.innerHTML !== html) node.innerHTML = html;
     }
 }
 
@@ -5030,6 +4850,7 @@ function tierTrack(post, open = 0) {
         const n = own[i];
         // 안 열린 단계는 상자째 잠김 베일(자물쇠 + 「자원 n랭크 필요」 · §8 · §13-1 · 2026-09-27 사용자 지시)
         const shut = i >= open;
+        const production = n && !shut ? SYS.game.dispatchProgress(G, post.id, n.tier, now()) : null;
         const li = el('li', `dp-tier${n ? '' : ' empty'}${shut ? ' lock-host' : ''}`);
         // 자리 칸 — 단계 하나에 영웅 한 명 [2026-09-27 사용자 지시 · ADR-0372]. 상자 **오른쪽 끝**에 상자 높이만큼의 정사각.
         //   열린 단계(앞에서부터 `limitsOf.resourceTiers` 개)에만 선다 — 잠긴 단계는 놓을 수 없어 칸을 안 그린다.
@@ -5039,13 +4860,14 @@ function tierTrack(post, open = 0) {
         const on = n && state.dpPick?.post === post.id && state.dpPick?.tier === n.tier ? ' on' : '';
         const slot = !n || i >= open ? ''
             : h ? `<span class="dp-slot${on}" data-seat="${post.id}:${n.tier}" title="${L(h.name)}${dpRateText(post.id, n)}">${heroFace(h)}<span class="hs-lv">${t('ch.lv', { n: h.level })}</span>${dpGauge(post.id, n.tier)}</span>`
-            : `<span class="dp-slot empty${on}" data-seat="${post.id}:${n.tier}">+</span>`;
+            : `<span class="dp-slot empty${on}" data-seat="${post.id}:${n.tier}">+${dpGauge(post.id, n.tier)}</span>`;
         // 산출물 아이콘 — 번호와 글자 사이 · 그림이 없는 재료는 칸째 빠진다 (ADR-0377)
         const icon = n ? M.materialIcon(n.yieldId) : null;
         li.innerHTML = `<i class="dp-t-n">${n?.tier ?? s.tier}</i>${icon ? `<img class="dp-t-icon" src="${icon}" alt="" draggable="false">` : ''}
             <span class="dp-t-body">
                 <span class="dp-t-name">${n ? L({ ko: n.ko, en: n.en }) : '—'}</span>
-                <span class="dp-t-ore">${n ? L({ ko: n.yieldKo, en: n.yieldEn }) : '—'}</span>
+                <span class="dp-t-ore">${n ? L({ ko: n.yieldKo, en: n.yieldEn }) : '—'}${production ? ` · ${t('dp.baseRate', { n: dpRateNumber(production.basePerHour) })}` : ''}</span>
+                ${production ? `<span class="dp-t-rate" data-dprate="${post.id}:${n.tier}">${dpProductionText(production)}</span>` : ''}
             </span>${slot}`;
         const cell = li.querySelector('.dp-slot');
         // 단의 클릭(고르기)까지 안 올라가게 끊는다 · 같은 칸을 다시 누르면 닫는다
@@ -5124,16 +4946,16 @@ function dpPickPanel(stack) {
     const postDef = POSTS.find(x => x.id === post);
     box.appendChild(el('div', 'dp-pick-h', `${t(postDef.label)} ${tier}<i class="dp-attr">${abbr}</i>`));
     const list = el('div', 'dp-pick-list');
-    const row = (h, extra, cls = '') => {
+    const row = (h, extra, cls = '', efficiency = null) => {
         const r = el('div', `dp-pick-row${cls}`);
         r.innerHTML = `${heroFace(h)}<span class="dp-pick-name">${L(h.name)}<i>${t('ch.lv', { n: h.level })}</i></span>`
-            + `<span class="dp-pick-val">${abbr} <b>${P.attr ? (h.stats?.[P.attr] ?? 0) : '—'}</b></span>` + extra;
+            + `<span class="dp-pick-val">${abbr} <b>${P.attr ? (h.stats?.[P.attr] ?? 0) : '—'}</b>${efficiency == null ? '' : `<small>${dpEfficiencyText(efficiency)}</small>`}</span>` + extra;
         return r;
     };
     // 찬 칸 — 지금 앉은 영웅 + 회수 (벌이 없어 확인 없이 한 번 · base_expedition §3-2)
     if (P.seated) {
         const h = heroById(P.seated);
-        const r = row(h, `<button class="btn dp-recall">${t('dp.recall')}</button>`, ' seated');
+        const r = row(h, `<button class="btn dp-recall">${t('dp.recall')}</button>`, ' seated', SYS.game.dispatchProgress(G, post, tier, now())?.efficiency);
         r.querySelector('.dp-recall').onclick = () => {
             const res = SYS.game.dispatchRecall(G, post, tier, now());   // 흐른 만큼 받고 부른다 (base_expedition §3-2)
             if (!res.ok) flash(`dp.err.${res.err}`); else save();
@@ -5143,7 +4965,7 @@ function dpPickPanel(stack) {
     }
     for (const x of P.heroes) {
         const h = heroById(x.uid);
-        const r = row(h, `<span class="dp-pick-doing ${heroDoing(h).cls}">${heroDoing(h).text}</span>`, x.ok ? '' : ' off');
+        const r = row(h, `<span class="dp-pick-doing ${heroDoing(h).cls}">${heroDoing(h).text}</span>`, x.ok ? '' : ' off', x.efficiency);
         if (x.ok) r.onclick = () => {
             const res = SYS.game.dispatchAssign(G, post, tier, x.uid, now());
             if (!res.ok) flash(`dp.err.${res.err}`); else save();
@@ -5305,22 +5127,12 @@ function refreshDispatchWatch(at) {
     } else paint(left);
 }
 
-/* ═══════════ 자원 미니게임 (SCREEN_DESIGN §8 · ADR-0532) ═══════════
-   [2026-10-06 사용자 「+효과가 아니라 아예 따로 미니게임을 해서 캐는 방식」 · 「영웅을 넣지 않는다 · 스탯 상관없음」 · PLAN_dispatch_watch D8]
-   단 이름 줄의 [미니게임]이 창 하나를 연다 — 채광 = 반짝임 연타 · 채집 = 받아내기 · 벌목 = 팀버맨. 플레이어가 **직접** 캐고 판 점수(내림)가 곧 재료다.
-   판의 내용 · 채점 · 보상은 전부 `game.mgRound` · `mgJudge` · `mgClaim` 이 정한다 — 화면은 판 시계를 재고 입력(누른 칸 · 바구니 자리 · 도끼질)을 모아
-   프레임마다 `mgJudge(판, 입력, 판 시계)` 가 돌려준 모습을 그릴 뿐이다. 판 시계는 **프레임마다 흐른 시간**(한 프레임 `MG_STEP_MS` 까지)이라
-   숨긴 탭에선 멈춘다. 창이 닫히면(× · 바깥 · Esc) 그때까지 캔 것을 받고 끝난다 · 판 도중 다시 그려져도 판은 이어진다(그림만 새로 세운다) */
-const MG_STEP_MS = 100;     // 한 프레임에 판 시계가 나아가는 최대 — 숨긴 탭 · 멈춘 프레임 뒤에 판이 건너뛰지 않게(연출의 길이다)
-const MG_KEY_SPEED = 1.4;   // 방향키로 바구니가 1초에 가는 거리(판 폭 대비) — 조작감이라 CSV 가 아니다
-const MG_LINE = 0.84;       // 받아내기의 바구니 줄(판 높이 대비) — 배치의 치수다
-const MG_TRUNK_SHOW = 6;    // 팀버맨이 보여 주는 토막 수 — 배치의 치수다
-const MG_SWAY_TURNS = 1.5;  // 귀한 약초가 떨어지며 좌우로 오가는 횟수 — 연출이다(닿는 자리는 판이 정한다)
-let mgRun = null;           // {key, post, tier, round, input, t, at, raf, phase: 'play'|'done', snap, bx, keys, field, drops, icon, result}
-
-/** 열린 단계 — 자리 칸과 같은 문(`limitsOf.resourceTiers` · 앞에서부터) */
+/* ═══════════ 자원 미니게임 — 2026-10-16 전면 개편 ═══════════
+   규칙·채점·보상은 game_logic. 화면은 활성 플레이 시간과 입력만 모은다. */
+const MG_STEP_MS = 100;
+const MG_TRUNK_SHOW = 6;
+let mgRun = null;
 const mgTiers = post => (D[POSTS.find(p => p.id === post)?.tiers] ?? []).slice(0, SYS.game.limitsOf(G).resourceTiers);
-/** 창이 보는 판 — 고른 파견처 · 단계 · 고른 단계가 닫혔으면 열린 첫 단계 · 하나도 없으면 null(창이 닫힌다) */
 const mgCur = () => {
     if (!G || !state.mg) return null;
     const rows = mgTiers(state.mg.post);
@@ -5329,21 +5141,19 @@ const mgCur = () => {
 };
 const mgItem = row => L({ ko: row.yieldKo, en: row.yieldEn });
 const mgRowOf = run => (D[POSTS.find(p => p.id === run.post)?.tiers] ?? []).find(n => n.tier === run.tier);
+const mgArt = (post, rare = false) => MG_SPRITES[post === 'mine' ? (rare ? 'rare' : 'ore') : post === 'gather' ? (rare ? 'herb_rare' : 'herb') : 'jack'];
 function mgOpen(post) {
-    if (mgRun?.phase !== 'play') mgRun = null;   // 지난 결과는 걷는다
-    state.mg = { post, tier: state.mgTier?.[post] ?? 1 };   // 파견처마다 마지막에 고른 단계로 연다
+    if (mgRun?.phase !== 'play') mgRun = null;
+    state.mg = { post, tier: state.mgTier?.[post] ?? 1 };
     openModal('mg');
 }
-
 function mgHead() {
-    const cur = mgCur();
-    const busy = mgRun?.phase === 'play';
+    const cur = mgCur(), busy = mgRun?.phase === 'play';
     const wrap = el('div', 'mg-head');
     wrap.appendChild(el('h2', '', t('mg.title', { post: t(POSTS.find(p => p.id === cur.post).label) })));
-    // 단계 탭 — 열린 단계마다 산출물 그림 + 번호(그림이 없으면 이름) · 판 도중엔 못 바꾼다
     wrap.appendChild(segmented(mgTiers(cur.post).map(n => {
         const icon = M.materialIcon(n.yieldId);
-        return { id: n.tier, label: icon ? `<img class="mg-tab-ico" src="${icon}" alt="" draggable="false">${n.tier}` : `${n.tier} · ${mgItem(n)}`, disabled: busy && n.tier !== cur.row.tier };
+        return { id: n.tier, label: icon ? `<img class="mg-tab-ico" src="${icon}" alt="" draggable="false">${n.tier}` : `${n.tier}`, disabled: busy && n.tier !== cur.row.tier };
     }), cur.row.tier, id => {
         if (mgRun?.phase === 'play') return;
         state.mg.tier = id;
@@ -5353,138 +5163,153 @@ function mgHead() {
     }));
     return wrap;
 }
-
 function mgBody() {
-    const cur = mgCur();
-    const field = el('div', `mg-field mg-${cur.post}`);
+    const cur = mgCur(), field = el('div', `mg-field mg-${cur.post}`);
     field.dataset.mg = `${cur.post}:${cur.row.tier}`;
+    field.style.setProperty('--mg-scene', `url("${new URL(MG_SCENES[cur.post], document.baseURI).href}")`);
     const run = mgRun?.post === cur.post && mgRun?.tier === cur.row.tier ? mgRun : null;
-    if (run?.phase === 'play') { mgBind(field, run); return field; }   // 판의 그림은 프레임이 세운다(`mgFrame` → `mgBuild`)
-    // 시작 판 · 결과 판 — 산출물 그림 + 이름 · 한 줄 조작 안내 + [시작] / 받은 양 · 끝난 까닭 · 최고 콤보 + [다시]
-    const icon = M.materialIcon(cur.row.yieldId);
-    const res = run?.result;
-    const card = el('div', 'mg-card', (icon ? `<img class="mg-card-icon" src="${icon}" alt="" draggable="false">` : '')
-        + (res
-            ? `<div class="mg-got">${t('dp.watch.gain', { n: res.items, item: mgItem(cur.row) })}</div><div class="mg-sub">${t(`mg.why.${res.why}`)} · ${t('mg.best', { n: res.best })}</div>`
-            : `<div class="mg-name">${mgItem(cur.row)}</div><div class="mg-sub">${t(`mg.hint.${cur.post}`)}</div>`));
-    const go = el('button', 'btn mg-go', t(res ? 'mg.again' : 'mg.start'));
+    if (run?.phase === 'play') { mgBind(field, run); return field; }
+    const res = run?.result, icon = M.materialIcon(cur.row.yieldId);
+    field.classList.add('mg-cover');
+    const card = el('div', 'mg-card', `<div class="mg-eyebrow">${t(res ? 'mg.finished' : 'mg.eyebrow')}</div>`
+        + `<div class="mg-cover-art">${mgArt(cur.post, !!res && res.items > 0)}</div>`
+        + `<h3>${res ? t('mg.result') : t(`mg.name.${cur.post}`)}</h3>`
+        + (res ? `<div class="mg-got">${icon ? `<img src="${icon}" alt="">` : ''}<b>+${res.items}</b><span>${mgItem(cur.row)}</span></div><div class="mg-sub">${t(`mg.why.${res.why}`)}</div><div class="mg-best">${t('mg.best', { n: res.best })}</div>`
+            : `<div class="mg-sub">${t(`mg.hint.${cur.post}`)}</div><div class="mg-rule-badges"><span>${t(`mg.rule.${cur.post}`)}</span><span>${t('mg.direct')}</span></div>`));
+    const go = el('button', 'btn mg-go', `${t(res ? 'mg.again' : 'mg.start')} <span aria-hidden="true">↗</span>`);
     go.onclick = () => mgStart(cur.post, cur.row.tier);
     card.appendChild(go);
-    field.appendChild(card);
+    field.append(card, el('div', 'mg-reward-line', `${t('mg.reward')} <b>${mgItem(cur.row)}</b> · ${cur.row.tier}`));
     return field;
 }
-
 function mgStart(post, tier) {
     const r = SYS.game.mgRound(G, post, tier);
     if (!r.ok) { flash(`mg.err.${r.err}`); render(); return; }
     save();
-    mgRun = { key: `${post}:${tier}`, post, tier, round: r.round, input: [], t: 0, at: null, raf: 0, phase: 'play', snap: null,
-        bx: 0.5, keys: { L: 0, R: 0 }, field: null, drops: null, icon: null, result: null };
+    mgRun = { key: `${post}:${tier}`, post, tier, round: r.round, input: [], t: -2400, at: null, raf: 0, phase: 'play', snap: null, field: null, hold: null, result: null };
     render();
     mgRun.raf = requestAnimationFrame(mgFrame);
 }
-
-/** 판의 입력 — 시각은 판 시계(마지막 프레임)로 적는다 · 채점은 다음 프레임의 `mgJudge` 가 한다 */
-function mgBind(field, run) {
-    const x = ev => { const a = field.getBoundingClientRect(); return Math.min(1, Math.max(0, (ev.clientX - a.left) / a.width)); };
-    const kind = run.round.kind;
-    if (kind === 'tap') field.onpointerdown = ev => {
-        ev.preventDefault();
-        const c = ev.target.closest?.('[data-cell]');
-        if (c && run.phase === 'play') run.input.push({ t: run.t, cell: Number(c.dataset.cell) });
-    };
-    if (kind === 'catch') field.onpointermove = field.onpointerdown = ev => { run.bx = x(ev); };
-    if (kind === 'chop') field.onpointerdown = ev => { ev.preventDefault(); mgChop(run, x(ev) < 0.5 ? 'L' : 'R'); };
+function mgActivePlant(run) {
+    return run.round.plants.findIndex((p, i) => p.at <= run.t && run.t < p.at + p.life && !run.snap?.plants[i]);
 }
-const mgChop = (run, side) => { if (run.phase === 'play') run.input.push({ t: run.t, side }); };
-/** 방향키 — 받아내기는 누르고 있는 동안 바구니가 간다 · 팀버맨은 누를 때마다 한 번(누르고 있어도 한 번) */
+function mgHoldStart(run, source) {
+    if (run.phase !== 'play' || run.t < 0 || run.hold) return;
+    const i = mgActivePlant(run);
+    if (i < 0) return;
+    if (run.round.plants[i].kind === 'bad') { run.input.push({ t: run.t, plant: i, held: 0 }); return; }
+    run.hold = { plant: i, t: run.t, source };
+}
+function mgHoldEnd(run, source, cancel = false) {
+    if (!run.hold || run.hold.source !== source) return;
+    if (!cancel && run.phase === 'play') run.input.push({ t: run.t, plant: run.hold.plant, held: Math.max(0, run.t - run.hold.t) });
+    run.hold = null;
+}
+function mgBind(field, run) {
+    field.oncontextmenu = ev => ev.preventDefault();
+    field.onpointerdown = ev => {
+        if (ev.button !== 0 || run.phase !== 'play' || run.t < 0) return;
+        if (run.round.kind === 'tap' && ev.target.closest('.mg-wall')) {
+            ev.preventDefault();
+            const cell = ev.target.closest('[data-cell]');
+            run.input.push({ t: run.t, cell: cell ? Number(cell.dataset.cell) : -1 });
+        }
+        if (run.round.kind === 'pluck' && ev.target.closest('.mg-pluck-action')) {
+            ev.preventDefault();
+            field.setPointerCapture(ev.pointerId);
+            mgHoldStart(run, ev.pointerId);
+        }
+        if (run.round.kind === 'chop' && ev.target.closest('.mg-chop-area, .mg-chop-control')) {
+            ev.preventDefault();
+            const box = field.getBoundingClientRect();
+            mgChop(run, ev.clientX - box.left < box.width / 2 ? 'L' : 'R');
+        }
+    };
+    field.onpointerup = ev => mgHoldEnd(run, ev.pointerId);
+    field.onpointercancel = ev => mgHoldEnd(run, ev.pointerId, true);
+    field.onlostpointercapture = ev => mgHoldEnd(run, ev.pointerId, true);
+}
+// 브라우저 밖에서 뗀 키·취소된 터치는 수확 입력으로 만들지 않는다.
+window.addEventListener('blur', () => { if (mgRun) mgRun.hold = null; });
+document.addEventListener('visibilitychange', () => {
+    if (mgRun && document.hidden) { mgRun.hold = null; mgRun.at = null; }
+});
+const mgChop = (run, side) => { if (run.phase === 'play' && run.t >= 0) run.input.push({ t: run.t, side }); };
 function mgKey(e, down) {
     const run = mgRun;
     if (run?.phase !== 'play' || state.modal !== 'mg') return;
+    if (run.round.kind === 'pluck' && (e.code === 'Space' || e.code === 'Enter')) {
+        e.preventDefault();
+        if (down && !e.repeat) mgHoldStart(run, 'key');
+        if (!down) mgHoldEnd(run, 'key');
+        return;
+    }
     const side = { ArrowLeft: 'L', ArrowRight: 'R', a: 'L', d: 'R', A: 'L', D: 'R' }[e.key];
-    if (!side) return;
-    e.preventDefault();
-    if (run.round.kind === 'chop') { if (down && !e.repeat) mgChop(run, side); }
-    else run.keys[side] = down ? 1 : 0;
+    if (side && run.round.kind === 'chop') { e.preventDefault(); if (down && !e.repeat) mgChop(run, side); }
 }
-
 function mgFrame(ts) {
     const run = mgRun;
     if (!run || run.phase !== 'play') return;
     const field = document.querySelector('.mg-field');
-    // 창이 닫혔다(또는 다른 판을 보고 있다) — 그때까지 캔 것을 받고 끝낸다
     if (!field || state.modal !== 'mg' || field.dataset.mg !== run.key) { mgFinish(run, false); return; }
-    const dt = run.at == null ? 0 : Math.min(MG_STEP_MS, Math.max(0, ts - run.at));
-    run.at = ts;
+    const dt = run.at == null || document.hidden ? 0 : Math.min(MG_STEP_MS, Math.max(0, ts - run.at));
+    run.at = document.hidden ? null : ts;
     run.t += dt;
-    const r = run.round;
-    if (r.kind === 'catch') {
-        run.bx = Math.min(1, Math.max(0, run.bx + (run.keys.R - run.keys.L) * MG_KEY_SPEED * dt / 1000));
-        // 바구니 줄에 닿은 것마다 **그 순간의 바구니 자리**를 적는다 — 받았는지는 채점이 정한다
-        r.drops.forEach((d, i) => { if (run.input[i] == null && d.at + d.fall <= run.t) run.input[i] = run.bx; });
+    if (run.hold) {
+        const h = run.hold, p = run.round.plants[h.plant];
+        if (run.t >= p.at + p.life) run.hold = null;
+        else if (run.t - h.t > p.power) mgHoldEnd(run, h.source);
     }
-    const snap = SYS.game.mgJudge(r, run.input, run.t);
+    const snap = SYS.game.mgJudge(run.round, run.input, Math.max(0, run.t));
     if (field !== run.field) mgBuild(field, run);
     mgDraw(field, run, snap);
     run.snap = snap;
     if (snap.over) { mgFinish(run, true); return; }
     run.raf = requestAnimationFrame(mgFrame);
 }
-
-/** 판 끝 — 받는다(`mgClaim` 이 다시 굴려 채점한다). 창 안에서 끝나면 결과 판을 그리고, 창 밖에서 끝나면 받은 양을 플래시로 */
 function mgFinish(run, shown) {
+    if (run.phase !== 'play') return;
     cancelAnimationFrame(run.raf);
     run.phase = 'done';
+    run.hold = null;
     const res = SYS.game.mgClaim(G, run.input);
     if (res.ok) save();
     const items = res.ok ? res.items : 0;
-    run.result = { items, best: run.snap?.best ?? 0, why: run.snap?.why ?? 'time' };
+    run.result = { items, best: run.snap?.best ?? 0, why: run.snap?.over ? run.snap.why : 'quit' };
     if (shown) { render(); return; }
     mgRun = null;
     const row = mgRowOf(run);
     if (items > 0 && row) flash('dp.watch.gain', { n: items, item: mgItem(row) });
 }
-
-/** 판의 뼈대 — 판이 시작되거나 창이 다시 그려졌을 때 한 번. 움직이는 것은 `mgDraw` 가 프레임마다 갈아 끼운다 */
 function mgBuild(field, run) {
-    const r = run.round;
+    const r = run.round, icon = M.materialIcon(mgRowOf(run)?.yieldId);
     run.field = field;
-    run.drops = new Map();   // 받아내기 — 떨어지는 중인 것의 DOM(번호 → 노드)
-    run.icon = M.materialIcon(mgRowOf(run)?.yieldId);
-    const img = run.icon ? `<img src="${run.icon}" alt="" draggable="false">` : '';
-    // 판 그림(바구니 · 토막 · 가지 · 나무꾼) — 경로는 `mock.js:MG_ART` 가 쥐고 CSS 는 `--mg-<이름>` 변수로 읽는다 (ADR-0534).
-    // 변수 속 상대 주소는 변수를 **쓰는** 스타일시트(`ui/style.css`) 기준으로 풀리므로 문서 기준 절대 주소로 바꿔 넣는다
-    for (const [id, src] of Object.entries(M.MG_ART)) field.style.setProperty(`--mg-${id.replace(/_/g, '-')}`, `url("${new URL(src, document.baseURI).href}")`);
-    // 머리 — 목숨 · 콤보 · 받은 양 · 남은 시간 막대
-    field.innerHTML = `<div class="mg-hud"><span class="mg-lives"></span><span class="mg-combo"></span><span class="mg-items">${img}<b></b></span></div><i class="mg-time"><b></b></i>`;
+    field.innerHTML = `<div class="mg-hud"><div class="mg-hud-title"><small>${t(`mg.name.${run.post}`)}</small><span class="mg-lives"></span></div><div class="mg-combo"></div><div class="mg-items">${icon ? `<img src="${icon}" alt="">` : ''}<b>0</b><small>${t('mg.harvest')}</small></div><div class="mg-clock"></div></div><div class="mg-time"><b></b></div>`;
     if (r.kind === 'tap') {
         const wall = el('div', 'mg-wall');
         wall.style.gridTemplateColumns = `repeat(${r.cols}, 1fr)`;
         wall.style.gridTemplateRows = `repeat(${r.rows}, 1fr)`;
         for (let i = 0; i < r.cols * r.rows; i++) {
-            const c = el('div', 'mg-cell');
-            c.dataset.cell = i;
+            const c = el('button', 'mg-cell');
+            c.type = 'button'; c.dataset.cell = i;
+            c.setAttribute('aria-label', t('mg.cell', { n: i + 1 }));
             wall.appendChild(c);
         }
         field.appendChild(wall);
     }
-    if (r.kind === 'catch') {
-        const line = el('i', 'mg-line'), b = el('div', 'mg-basket');
-        line.style.top = b.style.top = `${MG_LINE * 100}%`;
-        b.style.width = `${r.basket * 100}%`;
-        field.append(el('div', 'mg-sky'), line, b);
+    if (r.kind === 'pluck') {
+        field.appendChild(el('div', 'mg-pluck-stage', `<div class="mg-plant-halo"></div><button class="mg-pluck-action" type="button" aria-label="${t('mg.hold')}"><span class="mg-plant-art"></span></button><div class="mg-plant-label"></div><div class="mg-pull-panel"><div class="mg-pull-label"><span>${t('mg.power')}</span><b>${t('mg.hold')}</b></div><div class="mg-pull-track"><i class="mg-pull-zone"></i><i class="mg-pull-perfect"></i><b class="mg-pull-needle"></b></div><div class="mg-plant-life"><b></b></div></div>`));
     }
-    // 나무 기둥 · 나무꾼 · 좌우 표시(판의 왼쪽 반 · 오른쪽 반을 누르는 것과 방향키가 같다)
-    if (r.kind === 'chop') field.append(el('div', 'mg-tree'), el('div', 'mg-jack L'), el('span', 'mg-key L', '◀'), el('span', 'mg-key R', '▶'));
-    field.appendChild(el('div', 'mg-fx'));
+    if (r.kind === 'chop') {
+        field.appendChild(el('div', 'mg-chop-area', '<div class="mg-tree"></div><div class="mg-jack L">' + MG_SPRITES.jack + '</div>'));
+        for (const side of ['L', 'R']) field.appendChild(el('button', `mg-chop-control ${side}`, `<kbd>${side === 'L' ? '← / A' : 'D / →'}</kbd><span>${t(side === 'L' ? 'mg.left' : 'mg.right')}</span>`));
+    }
+    field.append(el('div', 'mg-instruction', t(`mg.controls.${run.post}`)), el('div', 'mg-fx'), el('div', 'mg-ready', '<b></b><span>' + t('mg.ready') + '</span>'));
 }
-
 const mgReplay = (node, cls) => { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); };
-/** 떠오르는 숫자 — 판 기준 비(0~1) 자리에 */
 function mgPopAt(field, x, y, cls, text) {
     const f = el('span', `mg-pop ${cls}`, text);
-    f.style.left = `${x * 100}%`;
-    f.style.top = `${y * 100}%`;
+    f.style.left = `${x * 100}%`; f.style.top = `${y * 100}%`;
     f.onanimationend = () => f.remove();
     field.querySelector('.mg-fx')?.appendChild(f);
 }
@@ -5492,102 +5317,90 @@ const mgPop = (field, node, cls, text) => {
     const a = field.getBoundingClientRect(), b = node.getBoundingClientRect();
     mgPopAt(field, (b.left + b.width / 2 - a.left) / a.width, (b.top + b.height / 2 - a.top) / a.height, cls, text);
 };
-
-/** 프레임마다 — `snap`(지금 모습)과 `run.snap`(앞 프레임)을 견줘 바뀐 것만 팝업을 띄운다 */
 function mgDraw(field, run, snap) {
     const r = run.round, prev = run.snap;
-    const hud = field.querySelector('.mg-hud');
-    hud.querySelector('.mg-lives').textContent = '♥'.repeat(Math.max(0, snap.lives)) + '♡'.repeat(Math.max(0, r.lives - snap.lives));
-    hud.querySelector('.mg-combo').textContent = snap.combo ? t('mg.combo', { n: snap.combo, m: snap.mult }) : '';
-    hud.querySelector('.mg-items b').textContent = `${snap.items}`;
-    // 남은 시간 — 채광 · 채집 = 판 길이에서 흐른 몫 · 벌목 = 시간 막대
-    field.querySelector('.mg-time b').style.width = `${(r.kind === 'chop' ? snap.bar : Math.max(0, 1 - run.t / r.ms)) * 100}%`;
+    field.querySelector('.mg-lives').textContent = r.kind === 'tap' ? t('mg.onechance') : '♥ '.repeat(Math.max(0, snap.lives)) + '♡ '.repeat(Math.max(0, r.lives - snap.lives));
+    field.querySelector('.mg-combo').innerHTML = snap.combo ? `<b>×${snap.mult.toFixed(1)}</b><small>${t('mg.comboCount', { n: snap.combo })}</small>` : `<small>${t('mg.comboWait')}</small>`;
+    field.querySelector('.mg-items b').textContent = snap.items;
+    const left = r.kind === 'chop' ? snap.bar : Math.max(0, 1 - Math.max(0, run.t) / r.ms);
+    field.querySelector('.mg-time b').style.width = `${left * 100}%`;
+    field.querySelector('.mg-clock').textContent = r.kind === 'chop' ? `${snap.cut} / ${r.segs.length}` : `${Math.ceil(Math.max(0, r.ms - Math.max(0, run.t)) / 1000)}s`;
+    field.classList.toggle('mg-urgent', left < 0.2);
+    const ready = field.querySelector('.mg-ready');
+    ready.hidden = run.t >= 0;
+    if (run.t < 0) ready.querySelector('b').textContent = Math.ceil(-run.t / 800);
     if (r.kind === 'tap') mgDrawTap(field, run, snap, prev);
-    if (r.kind === 'catch') mgDrawCatch(field, run, snap, prev);
+    if (r.kind === 'pluck') mgDrawPluck(field, run, snap, prev);
     if (r.kind === 'chop') mgDrawChop(field, run, snap, prev);
 }
-
-/** 반짝임 연타 — 칸마다 지금 떠 있는 것 · 금(남은 타수) · 남은 시간 줄 */
 function mgDrawTap(field, run, snap, prev) {
-    const r = run.round, cells = field.querySelectorAll('.mg-cell');
-    const live = new Map();
+    const r = run.round, cells = field.querySelectorAll('.mg-cell'), live = new Map();
     r.spawns.forEach((s, i) => { if (!snap.spawns[i].done && s.at <= run.t && run.t < s.at + s.life) live.set(s.cell, i); });
     cells.forEach((c, k) => {
-        const i = live.get(k);
-        const key = i == null ? '' : String(i);
-        if (c.dataset.on !== key) {   // 칸의 주인이 바뀌었다 — 속을 새로 세운다
+        const i = live.get(k), key = i == null ? '' : String(i);
+        if (c.dataset.on !== key) {
             c.dataset.on = key;
             const s = i == null ? null : r.spawns[i];
             c.className = `mg-cell${s ? ` on ${s.kind}` : ''}`;
-            const src = s?.kind === 'bad' ? M.MG_ART.mine_hazard : run.icon;   // 불안정한 바위는 제 그림 · 광맥은 산출물 그림
-            c.innerHTML = s ? `${src ? `<img src="${src}" alt="" draggable="false">` : ''}<i class="mg-left"></i>` : '';
+            c.innerHTML = s ? `<span class="mg-vein">${MG_SPRITES[s.kind === 'bad' ? 'hazard' : s.kind === 'rare' ? 'rare' : 'ore']}</span><span class="mg-target-tag">${t(`mg.target.${s.kind}`)}</span><i class="mg-left"></i>` : '<i class="mg-empty-mark"></i>';
+            c.setAttribute('aria-label', s ? t(`mg.target.${s.kind}`) : t('mg.empty'));
         }
-        if (i == null) return;
-        const s = r.spawns[i];
-        c.style.setProperty('--hp', snap.spawns[i].hp / s.hp);
-        c.style.setProperty('--left', 1 - (run.t - s.at) / s.life);
-        if (prev && prev.spawns[i].hp !== snap.spawns[i].hp) mgReplay(c, 'hit');
+        if (i != null) c.style.setProperty('--left', 1 - (run.t - r.spawns[i].at) / r.spawns[i].life);
     });
     snap.spawns.forEach((x, i) => {
         if (!x.done || x.done === prev?.spawns[i].done) return;
-        const c = cells[r.spawns[i].cell];
-        if (x.done === 'broke') mgPop(field, c, 'good', `+${r.spawns[i].kind === 'rare' ? r.score.rare : 1}`);
-        if (x.done === 'boom') { mgPop(field, c, 'bad', '♥'); mgReplay(field, 'shake'); }
-    });
-    field.classList.toggle('stun', run.t < snap.stun);
-}
-
-/** 받아내기 — 떨어지는 것의 자리 · 바구니 · 받거나 맞은 순간의 팝업 */
-function mgDrawCatch(field, run, snap, prev) {
-    const r = run.round, sky = field.querySelector('.mg-sky');
-    r.drops.forEach((d, i) => {
-        const p = (run.t - d.at) / d.fall;
-        let n = run.drops.get(i);
-        if (p >= 0 && p < 1 && !snap.over) {
-            if (!n) {
-                const src = d.kind === 'bad' ? M.MG_ART.gather_poison : run.icon;   // 독초는 제 그림 · 나머지는 산출물 그림
-                n = el('div', `mg-drop ${d.kind}`, src ? `<img src="${src}" alt="" draggable="false">` : '');
-                sky.appendChild(n);
-                run.drops.set(i, n);
-            }
-            // 귀한 것은 좌우로 오가며 온다 — 줄에 닿는 순간엔 제자리(`d.x`)다
-            const x = d.x + d.sway * Math.sin(2 * Math.PI * MG_SWAY_TURNS * (1 - p));
-            n.style.left = `${Math.min(1, Math.max(0, x)) * 100}%`;
-            n.style.top = `${p * MG_LINE * 100}%`;
-        } else if (n) { n.remove(); run.drops.delete(i); }
-    });
-    field.querySelector('.mg-basket').style.left = `${run.bx * 100}%`;
-    snap.drops.forEach((x, i) => {
-        if (!x || x === prev?.drops[i]) return;
-        const d = r.drops[i];
-        if (x === 'got') mgPopAt(field, d.x, MG_LINE, 'good', `+${d.kind === 'rare' ? r.score.rare : 1}`);
-        if (x === 'hit') { mgPopAt(field, d.x, MG_LINE, 'bad', '♥'); mgReplay(field, 'shake'); }
+        if (x.done === 'broke') {
+            const cell = cells[r.spawns[i].cell];
+            mgPop(field, cell, 'good', `+${r.spawns[i].kind === 'rare' ? r.score.rare : 1}`);
+            mgReplay(cell, 'collected');
+        }
     });
 }
-
-/** 팀버맨 — 맨 아래부터 `MG_TRUNK_SHOW` 토막 · 나무꾼 자리 · 벨 때 · 맞을 때의 팝업 */
+function mgDrawPluck(field, run, snap, prev) {
+    const r = run.round, stage = field.querySelector('.mg-pluck-stage'), i = mgActivePlant({ ...run, snap }), p = r.plants[i];
+    const key = String(i);
+    if (stage.dataset.plant !== key) {
+        stage.dataset.plant = key;
+        stage.className = `mg-pluck-stage${p ? ` ${p.kind}` : ' waiting'}`;
+        stage.querySelector('.mg-plant-art').innerHTML = p ? MG_SPRITES[p.kind === 'bad' ? 'poison' : p.kind === 'rare' ? 'herb_rare' : 'herb'] : '';
+        stage.querySelector('.mg-plant-label').textContent = p ? t(`mg.plant.${p.kind}`) : t('mg.next');
+        stage.querySelector('.mg-pluck-action').disabled = !p;
+        if (p) for (const [cls, left, width] of [['.mg-pull-zone', p.from, p.to - p.from], ['.mg-pull-perfect', (p.from + p.to - r.perfect) / 2, r.perfect]]) {
+            const zone = stage.querySelector(cls); zone.style.left = `${left * 100}%`; zone.style.width = `${width * 100}%`;
+        }
+    }
+    const holding = !!run.hold && run.hold.plant === i;
+    const power = holding && p ? Math.min(1, (run.t - run.hold.t) / p.power) : 0;
+    stage.classList.toggle('holding', holding);
+    stage.classList.toggle('sweet', !!p && power >= p.from && power <= p.to);
+    stage.style.setProperty('--pull', power);
+    stage.querySelector('.mg-pull-needle').style.left = `${power * 100}%`;
+    stage.querySelector('.mg-pull-label b').textContent = p?.kind === 'bad' ? t('mg.leave') : holding ? t(power >= p.from && power <= p.to ? 'mg.release' : 'mg.keepHolding') : t('mg.hold');
+    stage.querySelector('.mg-plant-life b').style.width = `${p ? Math.max(0, 1 - (run.t - p.at) / p.life) * 100 : 0}%`;
+    snap.plants.forEach((x, k) => {
+        if (!x || x === prev?.plants[k]) return;
+        if (x === 'got' || x === 'perfect') mgPopAt(field, 0.5, 0.43, 'good', x === 'perfect' ? t('mg.perfect') : `+${r.plants[k].kind === 'rare' ? r.score.rare : 1}`);
+        if (x === 'hit') { mgPopAt(field, 0.5, 0.43, 'bad', t('mg.failed')); mgReplay(field, 'shake'); }
+    });
+}
 function mgDrawChop(field, run, snap, prev) {
-    const r = run.round, tree = field.querySelector('.mg-tree');
-    const key = `${snap.cut}:${snap.hit.length}`;
-    if (tree.dataset.k !== key) {   // 토막이 내려오거나 가지가 부러질 때만 다시 세운다 — 맨 아래가 나무꾼 높이의 토막이다
+    const r = run.round, tree = field.querySelector('.mg-tree'), key = `${snap.cut}:${snap.hit.length}`;
+    if (tree.dataset.k !== key) {
         tree.dataset.k = key;
         const broke = new Set(snap.hit);
         tree.innerHTML = Array.from({ length: MG_TRUNK_SHOW }, (_, k) => {
             const i = snap.cut + k, s = r.segs[i];
             if (!s) return '<div class="mg-seg gone"></div>';
             const b = broke.has(i) ? null : s.b;
-            return `<div class="mg-seg${s.rare ? ' rare' : ''}">${b ? `<i class="mg-branch ${b}"></i>` : ''}</div>`;
+            return `<div class="mg-seg${s.rare ? ' rare' : ''}">${MG_SPRITES.trunk}${s.rare ? '<i class="mg-amber-knot">✦</i>' : ''}${b ? `<i class="mg-branch ${b}">${MG_SPRITES.branch}</i>` : ''}</div>`;
         }).join('');
     }
     const jack = field.querySelector('.mg-jack');
-    jack.classList.toggle('L', snap.side === 'L');
-    jack.classList.toggle('R', snap.side === 'R');
-    if (prev && snap.cut > prev.cut) {
-        mgReplay(jack, 'swing');
-        mgPopAt(field, snap.side === 'L' ? 0.6 : 0.4, 0.82, 'good', `+${r.segs[snap.cut - 1].rare ? r.score.rare : 1}`);
-    }
-    if (prev && snap.hit.length > prev.hit.length) { mgPopAt(field, snap.side === 'L' ? 0.3 : 0.7, 0.66, 'bad', '♥'); mgReplay(field, 'shake'); }
+    jack.classList.toggle('L', snap.side === 'L'); jack.classList.toggle('R', snap.side === 'R');
+    if (prev && snap.cut > prev.cut) { mgReplay(jack, 'swing'); mgPopAt(field, snap.side === 'L' ? 0.6 : 0.4, 0.75, 'good', `+${r.segs[snap.cut - 1].rare ? r.score.rare : 1}`); }
+    if (prev && snap.hit.length > prev.hit.length) { mgPopAt(field, snap.side === 'L' ? 0.3 : 0.7, 0.65, 'bad', '−♥'); mgReplay(field, 'shake'); }
 }
+
 
 /* ═══════════ 탐험 — 지도 위 지점 아이콘 → 지점 패널 (SCREEN_DESIGN §8-4) ═══════════
    2026-09-04 사용자 지시 — 마을의 마지막 칸에서 자기 탭이 됐다. 가르는 것은 **인원**이다: 자원 탭은 1인 배치, 여기는 파티.
@@ -5908,24 +5721,26 @@ const joinLeftText = (ms, long = false) => (long ? t('tv.join.left', { t: fmtDur
 const JOIN_FRESH_MS = 900;
 /**
  * 오른쪽 열 아래 2×2 — 제목 + 칸 `slots` 개(찬 칸 = 초상 + 남은 시간 띠 · 빈 칸 = 점선) · 초상을 누르면 가입 희망 창 (ADR-0593).
- * **수색 결과가 맨 앞 칸에 선다** — 띠는 「수색」(떠나지 않는다) · 처음 보일 때 한 번 스며 나온다: 처음 본 시각을 받아 두고
- * 흐른 만큼 애니메이션을 당겨(음수 지연) 다시 그려도 되풀이하지 않는다. ⚠ 결과가 칸 수에 드는지는 기획 미정 — 넘치면 줄이 는다.
- * 결과 얼굴은 창을 안 연다 — 누를 때마다 **수색 칸이 결과 카드가 됐다 이야기로 돌아왔다** 한다(켜진 동안 `.on`) (ADR-0624)
+ * **기다리는 수색 결과가 전부 앞 칸에 선다**(보관 순 · 막 끝난 것이 맨 뒤) — 띠는 「수색」(떠나지 않는다) · 결과는 이 칸 수를 가입 희망과 나눠 쓴다(로직 `full`).
+ * 막 끝난 결과만 처음 보일 때 한 번 스며 나온다: 처음 본 시각을 받아 두고 흐른 만큼 애니메이션을 당겨(음수 지연) 다시 그려도 되풀이하지 않는다.
+ * 결과 얼굴은 창을 안 연다 — 누를 때마다 **수색 칸이 그 결과의 카드가 됐다 돌아왔다** 한다(켜진 동안 `.on` · 수색 번호로 가른다) (ADR-0624)
  */
 function joinColumn(S) {
     const J = SYS.game.joinState(G, now());
     const col = el('div', 'tv-join');
     col.appendChild(el('div', 'tv-join-h', t('tv.join.h')));
     const grid = el('div', 'tv-join-grid');
-    if (S.done && S.result) {
-        const shown = state.searchCard === S.startedAt;
-        const b = el('button', `tv-join-slot search${shown ? ' on' : ''}`, `${heroFace(S.result)}<span class="tv-join-left">${t('tv.search.h')}</span>`);
-        b.style.borderColor = tierColor(S.result);
-        b.title = L(S.result.name);
-        if (state.searchSeen?.key !== S.startedAt) state.searchSeen = { key: S.startedAt, at: now() };
-        const age = now() - state.searchSeen.at;
-        if (age < JOIN_FRESH_MS) { b.classList.add('fresh'); b.style.animationDelay = `${-age}ms`; }
-        b.onclick = () => { state.searchCard = shown ? null : S.startedAt; render(); };
+    for (const r of S.results) {
+        const shown = state.searchCard === r.no;
+        const b = el('button', `tv-join-slot search${shown ? ' on' : ''}`, `${heroFace(r.result)}<span class="tv-join-left">${t('tv.search.h')}</span>`);
+        b.style.borderColor = tierColor(r.result);
+        b.title = L(r.result.name);
+        if (r.no === S.no) {
+            if (state.searchSeen?.key !== r.no) state.searchSeen = { key: r.no, at: now() };
+            const age = now() - state.searchSeen.at;
+            if (age < JOIN_FRESH_MS) { b.classList.add('fresh'); b.style.animationDelay = `${-age}ms`; }
+        }
+        b.onclick = () => { state.searchCard = shown ? null : r.no; render(); };
         grid.appendChild(b);
     }
     for (const j of J.list) {
@@ -5941,18 +5756,21 @@ function joinColumn(S) {
 }
 /**
  * 영웅 보내기 칸 — 오른쪽 열 위 · **얼굴 하나** + 이름 · 한 줄 + 버튼 (SCREEN_DESIGN §8-1 · ADR-0593).
- * 대기 = 수색 칸에서 고른 영웅(안 골랐으면 점선 빈 칸 + 흐린 [수색 보내기]) · 수색 중 = 보낸 영웅 + 남은 시간 + [취소] ·
- * 완료 = 얼굴 칸이 **「+」 버튼** + 보낸 영웅 이름 · 「돌아왔다」 — 누르면 수색 칸이 결과 카드가 된다(결과 얼굴과 같은 켜고 끄기 · ADR-0627).
+ * 수색 중 = 보낸 영웅 + 남은 시간 + [취소] · 그 밖엔 [수색 보내기] — **끝난 수색이 있어도 다시 보낸다**(결과는 가입 희망 칸에서 기다린다 · 2026-10-16).
+ * 대기 = 수색 칸에서 고른 영웅(안 골랐으면 점선 빈 칸 + 꺼진 [수색 보내기]) ·
+ * 완료 + 안 골랐다 = 얼굴 칸이 **「+」 버튼** + 보낸 영웅 이름 · 「돌아왔다」 — 누르면 수색 칸이 막 끝난 결과 카드가 된다(결과 얼굴과 같은 켜고 끄기 · ADR-0627) ·
+ *   고르면 얼굴 칸이 그 영웅이 된다. 돌아올 칸이 없으면(`full`) [수색 보내기]는 흐리고(눌린다) 누르면 이유를 말한다.
  * 판정은 `searchState` · `searchSend` · `searchDrop` 이 낸다
  */
 function sendBox(S) {
     const box = el('div', 'tv-send');
     box.appendChild(el('div', 'tv-join-h', t('tv.send.h')));
-    const who = S.out ? S.hero : S.open && S.ready.includes(state.searchUid) ? heroById(state.searchUid) : null;
-    if (S.done && S.result) {
-        const shown = state.searchCard === S.startedAt;
+    const live = S.out && !S.done;
+    const who = live ? S.hero : S.open && S.ready.includes(state.searchUid) ? heroById(state.searchUid) : null;
+    if (S.done && !who) {
+        const shown = state.searchCard === S.no;
         const plus = el('button', `tv-send-face plus${shown ? ' on' : ''}`, '+');
-        plus.onclick = () => { state.searchCard = shown ? null : S.startedAt; render(); };
+        plus.onclick = () => { state.searchCard = shown ? null : S.no; render(); };
         box.appendChild(plus);
     } else {
         const face = el('div', `tv-send-face${who ? '' : ' empty'}`, who ? heroFace(who) : '');
@@ -5960,58 +5778,56 @@ function sendBox(S) {
         box.appendChild(face);
     }
     const info = el('div', 'tv-send-info');
-    if (who || S.out) info.appendChild(el('b', 'n', who ? L(who.name) : '—'));
-    if (!S.out && who) info.appendChild(el('span', 'm', `<i class="sin-chip">${sinName(who.sin)}</i><i class="cha">${chaAbbr()} ${who.stats[CHA]}</i>`));
-    else if (S.done) info.appendChild(el('span', 'm muted', t('tv.send.back')));
-    else if (S.out) {
+    if (who || S.out) info.appendChild(el('b', 'n', who ? L(who.name) : S.hero ? L(S.hero.name) : '—'));
+    if (live) {
         const left = el('span', 'm muted', t('tv.search.left', { t: fmtDuration(S.remainMs) }));
         left.dataset.searchends = S.endsAt;
         info.appendChild(left);
-    }
+    } else if (who) info.appendChild(el('span', 'm', `<i class="sin-chip">${sinName(who.sin)}</i><i class="cha">${chaAbbr()} ${who.stats[CHA]}</i>`));
+    else if (S.done) info.appendChild(el('span', 'm muted', t('tv.send.back')));
     box.appendChild(info);
-    if (S.out && !S.done) {
+    if (live) {
         const stop = el('button', 'btn sm', t('tv.search.cancel'));
         stop.onclick = () => { if (SYS.game.searchDrop(G).ok) { flash('tv.search.canceled'); save(); } render(); };
         box.appendChild(stop);
-    } else if (!S.out) {
-        // 안 열렸으면 흐리고(눌린다) 누르면 지을 랭크를 말한다 (§13-1 · R137)
-        const go = el('button', `btn primary sm${S.open ? '' : ' dim'}`, t('tv.search.go'));
-        go.disabled = S.open && !who;
-        go.onclick = () => {
-            if (!S.open) { flashNeed('search'); return; }
-            const r = SYS.game.searchSend(G, who.uid, now());
-            if (r.ok) { flash('tv.search.sent', { name: L(who.name) }); state.searchUid = null; save(); }
-            else flash(`tv.err.${r.err}`);
-            render();
-        };
-        box.appendChild(go);
-    } else {
-        // 완료 — 버튼이 없어도 그 줄의 자리는 지킨다(가입 희망 칸이 상태마다 위아래로 안 흔들린다)
-        box.appendChild(el('button', 'btn sm tv-send-ph', t('tv.search.cancel')));
+        return box;
     }
+    // 안 열렸거나 돌아올 칸이 없으면 흐리고(눌린다) 누르면 이유를 말한다 — 지을 랭크 · 가득 찬 가입 희망 칸 (§13-1 · R137)
+    const go = el('button', `btn primary sm${S.open && !S.full ? '' : ' dim'}`, t('tv.search.go'));
+    go.disabled = S.open && !S.full && !who;
+    go.onclick = () => {
+        if (!S.open) { flashNeed('search'); return; }
+        if (S.full) { flash('tv.err.full'); return; }
+        const r = SYS.game.searchSend(G, who.uid, now());
+        if (r.ok) { flash('tv.search.sent', { name: L(who.name) }); state.searchUid = null; state.searchCard = null; save(); }
+        else flash(`tv.err.${r.err}`);
+        render();
+    };
+    box.appendChild(go);
     return box;
 }
 /** 고른 가입 희망 줄 — 떠났거나 고용했으면 null(창이 닫힌다) */
 const joinPicked = () => SYS.game.joinState(G, now()).list.find(j => j.no === state.joinSel) ?? null;
 /**
  * 수색 결과 카드 — 명단 **셋째 칸(수색 칸) 자리**에 선다 · 명단과 **같은 후보 카드** + [고용](만남 할인이 묻은 값) · [돌려보내기] (ADR-0624).
- * 버튼 둘은 **한 줄에 나란히** — 명단 카드의 [고용] 한 줄과 높이가 같아 영입 후보 패널이 안 흔들린다
+ * 버튼 둘은 **한 줄에 나란히** — 명단 카드의 [고용] 한 줄과 높이가 같아 영입 후보 패널이 안 흔들린다.
+ * `R` = `searchState.results` 의 한 장 — 버튼은 **그 결과에만** 걸린다(수색 번호로 집는다 · 2026-10-16)
  */
-function searchResultCard(S) {
-    const card = candidateCard(S.result, `<div class="tv-res-btns">
-        <button class="btn primary sm b-take"${S.canHire ? '' : ' disabled'}>${S.discountPct >= 1 ? t('tv.search.cutAll') : t('tv.hire', { g: S.cost.toLocaleString() })}</button>
+function searchResultCard(R) {
+    const card = candidateCard(R.result, `<div class="tv-res-btns">
+        <button class="btn primary sm b-take"${R.canHire ? '' : ' disabled'}>${R.discountPct >= 1 ? t('tv.search.cutAll') : t('tv.hire', { g: R.cost.toLocaleString() })}</button>
         <button class="btn sm b-drop">${t('tv.search.drop')}</button>
     </div>`);
     card.classList.add('tv-search-res');
     card.querySelector('.b-take').onclick = () => {
-        const r = SYS.game.searchTake(G, now());
+        const r = SYS.game.searchTake(G, now(), R.no);
         if (r.ok) { flash('tv.hired', { name: L(r.hero.name) }); state.searchCard = null; save(); }
         else flash(`tv.err.${r.err}`, { cap: SYS.game.limitsOf(G).roster });
         render();
     };
     card.querySelector('.b-drop').onclick = () => {
-        const name = L(S.result.name);
-        if (SYS.game.searchDrop(G).ok) { flash('tv.search.dropped', { name }); state.searchCard = null; save(); }
+        const name = L(R.result.name);
+        if (SYS.game.searchDrop(G, R.no).ok) { flash('tv.search.dropped', { name }); state.searchCard = null; save(); }
         render();
     };
     return card;
@@ -6080,10 +5896,11 @@ function renderTavern(main) {
     });
     // 수색 칸 — 명단 **오른쪽 셋째 칸**. 격자는 원래 3열이었고(후보 2 + 수색 1 = base_expedition §2-4)
     // 그동안 비어 있던 자리다. **2026-09-09 실동작** — 대기 / 수색 중 / 완료 셋이 이 한 칸에 선다 (SCREEN_DESIGN §8-1)
-    //   완료면 가입 희망 칸의 결과 얼굴이 이 칸을 **결과 카드**로 켜고 끈다 — 창이 안 뜬다 (ADR-0624)
+    //   가입 희망 칸의 결과 얼굴이 이 칸을 **그 결과의 카드**로 켜고 끈다 — 창이 안 뜬다 (ADR-0624)
     const S = SYS.game.searchState(G, now());
     const row = el('div', 'tv-row');
-    grid.appendChild(S.done && S.result && state.searchCard === S.startedAt ? searchResultCard(S) : searchCell(S));
+    const shownRes = S.results.find(r => r.no === state.searchCard);
+    grid.appendChild(shownRes ? searchResultCard(shownRes) : searchCell(S));
     row.appendChild(grid);
     // 오른쪽 열 — 위 영웅 보내기 · 아래 가입 희망 2×2(수색 결과가 맨 앞 칸에 얼굴로 온다) · 줄의 **맨 끝**을 늘 지킨다 (SCREEN_DESIGN §8-1 · ADR-0593)
     const right = el('div', 'tv-right');
@@ -6443,7 +6260,7 @@ function gambleBody() {
 
 /**
  * 수색 칸 (SCREEN_DESIGN §8-1 · 자리는 ADR-0011 · **실동작 ADR-0062**) — 후보 카드와 **같은 크기**의 칸 하나.
- * 상태 셋이 같은 자리에 선다: **대기**(보낼 영웅 목록 — 얼굴 없이) · **수색 중**(산 것 + 이야기) · **완료**(「수색 완료」 + 이야기).
+ * 상태 둘이 같은 자리에 선다: **대기**(보낼 영웅 목록 — 얼굴 없이 · 수색이 끝났을 때도) · **수색 중**(산 것 + 이야기).
  * 얼굴 · 버튼은 오른쪽 열의 영웅 보내기 칸(`sendBox`)이, 결과 영웅은 가입 희망 칸(`joinColumn`)이 든다 (ADR-0593).
  * 판정은 하나도 안 한다 — `searchState` 가 낸 것을 그리기만 한다 (ui 원칙 2).
  * 이야기 문장은 i18n 이 아니라 `search_story.csv` 에서 온다 — `beats[].text` 를 `L()` 로 풀 뿐이다.
@@ -6495,14 +6312,13 @@ function searchCell(S) {
     const c = el('div', 'ng-card tv-search');
     c.appendChild(el('div', 'tv-search-h', t('tv.search.h')));
 
-    /* 수색 중 · 완료 — 누가 · **이 선택이 산 것** · 이야기 줄. 남은 시간 · [취소]는 영웅 보내기 칸이 들고(ADR-0593),
-       완료면 결과 영웅은 가입 희망 칸에 얼굴로 선다 — 이 칸은 대기 · 수색 중과 같은 크기라 명단 줄 높이가 안 흔들린다 */
-    if (S.out) {
-        if (!S.done) c.appendChild(el('div', 'tv-search-who', t('tv.search.out', { name: S.hero ? L(S.hero.name) : '—' })));
+    /* 수색 중 — 누가 · **이 선택이 산 것** · 이야기 줄. 남은 시간 · [취소]는 영웅 보내기 칸이 든다(ADR-0593).
+       끝나면 결과 영웅은 가입 희망 칸에 얼굴로 서고 이 칸은 **대기로 돌아간다** — 결과를 둔 채 다시 보낸다 (2026-10-16) */
+    if (S.out && !S.done) {
+        c.appendChild(el('div', 'tv-search-who', t('tv.search.out', { name: S.hero ? L(S.hero.name) : '—' })));
         // 보내고 나면 왜 그 사람을 보냈는지가 화면에서 사라지는 것을 막는다 (§4-1 「값은 항상 찍는다」)
         c.appendChild(el('div', 'tv-search-odds muted', t('tv.search.odds', { r: M.pctNum(S.rarePct), e: M.pctNum(S.echoPct) })));
-        const log = el('div', `tv-story${S.done ? ' done' : ''}`);
-        if (S.done) log.appendChild(el('i', '', t('tv.search.done')));
+        const log = el('div', 'tv-story');
         // **열린 막만 그린다** — 안 열린 줄의 자리를 미리 잡으면 이야기가 아니라 진행 막대가 된다.
         //   다음 막이 열리는 시각을 달아 두면 앱 시계가 그 순간 다시 그린다(`tavernTick`)
         for (const b of S.beats) if (b.open) log.appendChild(el('p', '', L(b.text)));
@@ -6524,7 +6340,8 @@ function searchCell(S) {
         c.appendChild(el('div', 'tv-story muted', `<p>${t('tv.search.noHero')}</p>`));
         return c;
     }
-    c.appendChild(el('div', 'tv-search-odds muted', t('tv.search.pick')));
+    // 돌아올 칸이 없으면 그 이유가 「보낼 영웅」 줄 자리에 선다 — 목록은 그대로(미리 골라 둘 수 있다)
+    c.appendChild(el('div', 'tv-search-odds muted', t(S.full ? 'tv.err.full' : 'tv.search.pick')));
     const pick = el('div', 'tv-pick');
     for (const uid of S.ready) {
         const h = heroById(uid);
@@ -8066,20 +7883,7 @@ async function boot() {
     });
     await loadData();
     state.candidates = rollCandidates();
-    // 전에 로그인해 둔 브라우저면 클라우드와 먼저 맞춘다 — 받은 사본이 있으면 그것을 연다 (SCREEN_DESIGN §2-1 · ADR-0112)
-    //   개발 환경의 `?guest=1` · `?dev=` 는 세션 확인 없이 게스트로 — 네트워크를 안 탄다 (ADR-0385)
-    if (guestByUrl()) guestEnter();
-    else await cloudResume();
-    if (!authenticated) await new Promise(resolve => { unlockBoot = resolve; });
-    unlockBoot = null;
-    // 게스트는 계정이 없어 감시할 것이 없다
-    if (cloud.user) {
-        const sessionUid = cloud.user.uid;
-        await CLOUD.watchUser(user => {
-            if (user?.uid !== sessionUid) leaveSession();
-        });
-    }
-    if (!authenticated) return;
+    // 로그인이 없다 — 세이브가 있으면 곧장 이어 한다. 플레이 기록은 네트워크를 기다리지 않는다(`startClocks` · SCREEN_DESIGN §2-1 · ADR-0633)
     if (loadSave()) continueGame();
     // 같은 브라우저의 다른 탭이 세이브를 쓰면 이 탭은 멈춘다 (§2-1)
     onSaveWrittenElsewhere(freeze);
@@ -8303,7 +8107,7 @@ async function boot() {
     }
     if (dev === 'book') {   // 책을 쥔 **도서관 탭** (§17 · §10 · ADR-0422 · ADR-0426) — 도서관 · 레벨 10 · 책이 있어야 버튼이 산다.
         if (!G) startGame();
-        devBuild('library');             // 도서관 끝까지 — 책(r1) · 전직(r2)이 함께 열린다 · 문턱을 건너뛴다 (ADR-0567)
+        devBuild('library');             // 도서관 끝까지 — 책 배우기(r1) · 책 제작(r2) · 전직(r3)이 함께 열린다 · 문턱을 건너뛴다 (ADR-0567 · 2026-10-16)
         const h0 = G.heroes[0];
         h0.level = Math.max(h0.level, D.balance.skillbook_learn_level);
         // 책 셋 — 제 직업 기본기 둘 · 남의 직업 하나 · 그중 하나를 이미 배운 채로(덮어쓰기 줄이 보이게). 골드 · 가루는 만들기 줄이 켜지게
@@ -8435,6 +8239,9 @@ async function boot() {
         //   헤드리스가 닿을 길이 따로 필요하다 (§10 · 클릭으로만 만들어지는 상태와 같은 취급)
         if (new URLSearchParams(location.search).get('key') === '1')
             G.heroes[0].sin = SYS.game.searchState(G, now()).rumor.sin;
+        // `&kept=n` — 결과 n 개가 보관에서 기다리는 판(가입 희망 칸 수 − 1 까지) — 끝날 때마다 둔 채 다시 보낸 모양 (2026-10-16)
+        const keep = Math.max(0, Math.min(D.balance.tavern_join_slots - 1, Number(new URLSearchParams(location.search).get('kept')) || 0));
+        for (let i = 0; i < keep; i++) SYS.game.searchSend(G, G.heroes[0].uid, now() - Math.round(span * (keep - i + back)));
         SYS.game.searchSend(G, G.heroes[0].uid, now() - Math.round(span * back));
         // `&ans=n` — n번째 열린 답을 미리 고른 상태 (답은 클릭으로만 만들어져 헤드리스가 못 닿는다 · §10)
         const ai = Number(new URLSearchParams(location.search).get('ans'));
@@ -8538,14 +8345,11 @@ async function boot() {
         runSlot(G.preset).repeat = true;
         SYS.game.closeRun(G, now()); save();
     }
-    // 계정 · 멈춤 창 — 로그인 · 다른 기기 · 다른 탭으로만 닿는 화면이라 길을 따로 낸다 (SCREEN_DESIGN §2-1 · §10).
-    //   가짜 계정이고 연결 기록을 안 쓰므로 `cloudPush` 가 네트워크를 안 탄다 · `&c=taken` = 다른 곳에서 이어졌다(ADR-0458)
-    if (dev === 'cloud') {
+    // 멈춤 창 — 다른 탭이 세이브를 써야만 닿는 화면이라 길을 따로 낸다 (SCREEN_DESIGN §2-1 · §10)
+    if (dev === 'frozen') {
         if (!G) startGame();
-        const c = new URLSearchParams(location.search).get('c');
-        if (c === 'frozen') { frozen = true; state.modal = 'frozen'; }
-        else if (c === 'taken') { frozen = true; cloud.status = 'on'; state.modal = 'cloudTaken'; }
-        else { cloud.status = 'on'; state.modal = 'cloud'; }
+        frozen = true;
+        state.modal = 'frozen';
     }
     // ?tab= 은 dev 분기 **뒤에** 건다 — startGame() 이 탭을 원정으로 되돌리므로 앞에 두면 먹히지 않는다
     if (TABS.includes(tab)) state.tab = tab;
@@ -8607,10 +8411,11 @@ function startClocks() {
     for (const ev of ['pointerup', 'pointercancel', 'blur']) window.addEventListener(ev, () => { pointerHeld = false; }, true);
     // 브라우저 탭을 숨기고 돌아올 때 — 숨긴 탭의 시계는 앱 시계 하나다 (ADR-0102)
     document.addEventListener('visibilitychange', onVisibility);
-    // 클라우드 — 모아서 올린다 · 끊겼으면 다시 붙는다 · 닫힐 때 한 번 더 (SCREEN_DESIGN §2-1 · ADR-0112)
-    setInterval(cloudTick, CLOUD_PUSH_MS);
-    window.addEventListener('pagehide', () => cloudPush());
-    cloudPush();
+    // 플레이 기록 — 켠 횟수를 세고 · 모아서 올린다 · 닫힐 때 한 번 더 (SCREEN_DESIGN §2-1 · ADR-0633)
+    trackSession();
+    setInterval(trackPush, TRACK_PUSH_MS);
+    window.addEventListener('pagehide', () => trackPush());
+    trackPush();
 }
 
 boot().catch(e => {

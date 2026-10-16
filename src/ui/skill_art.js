@@ -9,7 +9,6 @@ export const SKILL_ART = {
     war_quake: { hit: { file: 'war_quake', motion: 'ground', size: 96, duration: 480, quake: true } },
     war_leap: { hit: { file: 'war_leap', motion: 'land', size: 94, duration: 460, quake: true } },
     // 함성 셋 — 같은 집중선 · 색만 다르다 · 움직임도 퍼짐 하나(ADR-0546).
-    war_taunt: { buff: { file: 'war_taunt', motion: 'wave', size: 90, duration: 580 } },
     war_shout: { buff: { file: 'war_shout', motion: 'wave', size: 90, duration: 580 } },
     war_battleorders: { buff: { file: 'war_battleorders', motion: 'wave', size: 90, duration: 580 } },
     war_ironskin: { buff: { file: 'war_ironskin', motion: 'shell', size: 94, duration: 540 } },
@@ -19,10 +18,6 @@ export const SKILL_ART = {
     kni_holyshield: { buff: { file: 'kni_holyshield', motion: 'shell', size: 92, duration: 540 } },
     kni_charge: { hit: { file: 'kni_charge', motion: 'thrust', size: 88, duration: 360 } },
     kni_rush: { hit: { file: 'kni_rush', motion: 'thrust', size: 84, duration: 340 } },
-    kni_duel: {
-        bad: { file: 'kni_duel', motion: 'inward', size: 86, duration: 520 },
-        buff: { file: 'kni_duel_guard', motion: 'shell', size: 90, duration: 540 },
-    },
     kni_enchant: { buff: { file: 'kni_enchant', motion: 'orders', size: 88, duration: 540 } },
     // 상시 오오라의 그림은 도감에서만 재생한다(fxBuff의 until: null 제외).
     // 오오라 셋 — 같은 푸른 마법진 원 · 안쪽 문양만 다르다 · 크기 · 움직임도 하나(ADR-0548).
@@ -41,8 +36,6 @@ export const SKILL_ART = {
     mag_frostnova: { hit: { file: 'mag_frostnova', motion: 'wave', size: 94, duration: 480 } },
     mag_lightning: { hit: { file: 'mag_lightning', motion: 'bolt', size: 124, ay: .9, duration: 380 } },
     mag_chain: { hit: { file: 'mag_chain', motion: 'thrust', size: 90, duration: 360 } },
-    mag_focus: { buff: { file: 'mag_focus', motion: 'orbit', size: 88, duration: 620 } },
-    mag_frozenwall: { call: { file: 'mag_frozenwall', motion: 'pillar', size: 94, duration: 560 } },
 
     // 궁수 — 단발 · 연사 · 광역 · 유도 · 관통 · 독 강화.
     arc_snipe: { hit: { file: 'arc_snipe', motion: 'thrust', size: 84, duration: 340 } },

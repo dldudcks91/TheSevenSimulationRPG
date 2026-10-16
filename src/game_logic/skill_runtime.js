@@ -179,7 +179,9 @@ export function createSkillRuntime(ctx) {
         // 다른 스킬이 갱신하면 옛 칩을 닫는다 — 상태이상은 재생기가 `k` 로 칩을 들어 필요 없다 (R178)
         if (!ail && old && !old.quiet && (old.s ?? key) !== x.id) timeline.push({ t: r1(t), e: 'buffEnd', u: tgt.key, s: old.s ?? key });
         const wasMax = tgt.hpMax;
-        tgt.buffs[key] = { stat: x.stat, v: x.value, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep', ...(ail ? { ail: x.ailment } : {}) };
+        tgt.buffs[key] = { stat: x.stat, v: x.value, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep', ...(ail ? { ail: x.ailment } : {}),
+            // 원소 부여 창(이그나이트 · 딥 프리즈 · 서지 · 2026-10-16 R250)은 창 동안 거는 상태이상을 든다 — `battle.strikeOnce` 가 읽는다
+            ...(x.hit ? { hit: x.hit } : {}) };
         const ev = { t: r1(t), e: 'buff', u: tgt.key, s: x.id, stat: x.stat, v: x.value, until: r1(until) };
         if (ail) ev.k = x.ailment;
         // 스턴 — 행동 예약 · 스킬 쿨을 미는 일은 그것을 아는 battle.js 가 한다. 민 쿨 초를 재생기에 싣는다
@@ -265,9 +267,12 @@ export function createSkillRuntime(ctx) {
     function basicAttack(u, t, foes, forced = null) {
         const splash = sumOf(u, 'attack_splash');
         const targets = splash > 0 ? foes.slice() : [forced ?? ctx.pickTarget(u, foes)];
+        // 평타 피해 % [2026-10-16 · R247 · 퀵 드로우 · 오버드로우] — 평타 배율에 곱한다(원소 추가타 · 스킬은 안 받는다). 창이 없으면 곱하지 않는다 — 종전 값 그대로
+        const bp = sumOf(u, 'basic_pct');
+        const mult = splash > 0 ? splash : 1;
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
-            ctx.strikeOnce(u, tgt, splash > 0 ? splash : 1, null);
+            ctx.strikeOnce(u, tgt, bp ? Math.max(0, mult * (1 + bp)) : mult, null);
         }
         onhitExtra(u, targets);
     }
@@ -306,7 +311,7 @@ export function createSkillRuntime(ctx) {
      *   능력치 계수는 영웅 · 몬스터가 같이 탄다 (2026-09-22 — 보류 해제 · battle_design §9-2)
      *   줄을 다 돈 뒤 **원소 추가타** — 원소 태그 없는 공격 줄이 겨눈 대상마다 한 번(발마다가 아니다 · `onhitExtra` · 2026-10-02 R201). 창이 없으면 rng · 타임라인 불변
      */
-    function cast(u, def, t) {
+    function cast(u, def, t, echoing = false) {
         const eff = SK.scaleDef(def, u.stats ?? null);
         const outer = struck;
         const mine = struck = { u, list: [] };
@@ -318,6 +323,12 @@ export function createSkillRuntime(ctx) {
         }
         struck = outer;
         onhitExtra(u, mine.list);
+        // 에코 [2026-10-16 · R250 · skill_design §12-6] — 공격 스킬(`hit` 줄이 있다)이 창 동안 **한 번 더** — 대상은 평소 규칙대로 다시 고르고(그 스킬의 굴림이 한 번 더)
+        //   쿨 · 시전 수 · `skill` 이벤트 · `cast` 훅은 없다 · 에코로 나간 시전은 다시 에코하지 않는다. 창이 없으면 아무 일도 없다(rng · 타임라인 불변)
+        if (echoing || u.hp <= 0 || !def.effects.some(e => e.effect === 'hit')) return;
+        if (!stateOf(u, 'echo') || alive(foesOf(u)).length === 0) return;
+        timeline.push({ t: r1(t), e: 'echo', u: u.key, s: def.id });
+        cast(u, def, t, true);
     }
 
     /**

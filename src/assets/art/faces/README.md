@@ -4,19 +4,21 @@
 상단 Admin 오른쪽의 `gemini` · `gpt` 버튼, ⚙ 설정의 「아트 스타일」, 도감의 고르개는 같은 값을 바꾸며 localStorage에 저장한다. URL은 `?face=gemini` / `?face=gpt`다. 옛 `cartoon` 저장값은 기본값 `gemini`로 돌아간다.
 
 - `gemini/hero/`: 기존 영웅 전체(19장).
-- `gemini/monster/`: 기존 Gemini 몬스터(52장). 원본을 보존한다.
+- `gemini/monster/`: Gemini 몬스터 72장. 원본을 보존한다.
 - `gpt/hero/`: Gemini 영웅 19장의 GPT 그림체 변형(2026-10-02 추가).
-- `gpt/monster/`: 기존 1-2 인간 · 1-4 몰록의 화로 초상 10장과 Gemini 몬스터의 GPT 그림체 변형 45장(총 55장). 레기온 `1250`도 양쪽 스타일에 있다. 1-2 인간 `1201`~`1203` 은 10-13 에 Gemini 판이 생겨 양쪽 스타일에 있다(Gemini 원본 = `source/ready/gemini/monster/`).
+- `gpt/monster/`: GPT 몬스터 103장. 2026-10-16 챕터 1–4 일반형·정예형 48장을 추가했다. 레기온 `1250`도 양쪽 스타일에 있다. 1-2 인간 `1201`~`1203` 은 10-13 에 Gemini 판이 생겨 양쪽 스타일에 있다(Gemini 원본 = `source/ready/gemini/monster/`).
 
 2026-10-01~02: GPT에 없던 Gemini 초상 65장을 개별 편집해 **64장(영웅 19 · 몬스터 45)**을 추가했다. `source/ready/monster/1401.png` 화염 광신도와 `1402.png` 임프 제사장은 선·채색의 기준이며, 각 원본은 외형·자세·장비·표정·구도의 기준이다. **엔트 `2201`은 이미지 생성 도구가 결과를 세 번 차단해 GPT에 추가하지 못했다.** GPT 선택 시 이 초상은 빈 칸이다. 작업 PNG는 `source/ready/gpt/`, 생성 원본·프롬프트·파일 검증 기록·비교 자료는 [이번 작업 기록](source/gpt_restyle_20261001/README.md)에 있다.
 
-선택한 스타일의 파일만 표시하고, 해당 초상이 없으면 빈 칸이다. 같은 캐릭터의 다른 버전은 상대 폴더에 같은 파일명으로 넣으면 된다.
+2026-10-16: 보스를 제외한 챕터 1–4의 일반형·정예형을 **94/96장**까지 채웠다. 추가분은 일반형 16장 · 정예형 32장이며, 화염 광신도와 임프 제사장이 그림체 기준이다. 엔트 `2201` 일반형·정예형 2장은 생성 도구가 결과를 차단해 남았다. [일반·정예 비교](source/gpt_monsters_ch1_4_20261016/gallery.html) · [원본·전체 프롬프트·검증 기록](source/gpt_monsters_ch1_4_20261016/README.md).
+
+선택한 스타일의 파일만 표시한다. 정예 전용 그림이 없으면 같은 스타일의 일반형을 쓰고, 일반형도 없으면 빈 칸이다. 같은 캐릭터의 다른 버전은 상대 폴더에 같은 파일명으로 넣으면 된다.
 파일 목록 `portrait_files.js`는 exporter가 자동 갱신한다. WebP를 직접 추가·이동했다면 `python scripts/export_face_portraits.py --index-only`를 실행한다.
 512×512 작업 PNG와 시트는 `source/`에 보존한다. 새 비교 원본은 `source/ready/<gemini|gpt>/<hero|monster>/`에 둘 수 있으며, exporter는 해당 스타일로 내보낸다. 기존 `source/ready/<hero|monster>/` 원본은 현재 게임 파일이 있는 폴더로 내보낸다.
 
 아래는 기존 전체 초상 매핑과 후처리 이력이다. 과거의 `cartoon/` 경로는 폴더 분리 전 경로다.
 
-원본 PNG는 [`source/ready/`](source/ready/)에 영웅·몬스터 id별로 보관한다. 현재 게임용 WebP는 Gemini 71장 · GPT 74장(총 145장, 81개 파일명)이다. 원본 시트와 스타일 앵커도 `source/`에 남는다.
+원본 PNG는 [`source/ready/`](source/ready/)에 영웅·몬스터 id별로 보관한다. 현재 게임용 WebP는 Gemini 91장 · GPT 122장(총 213장, 127개 파일명)이다. 원본 시트와 스타일 앵커도 `source/`에 남는다.
 몬스터는 256×256, 영웅은 320×320, WebP 품질 90이다. 내보내기 명령은 [`scripts/export_face_portraits.py`](../../../../scripts/export_face_portraits.py)에 있다.
 **정예 전용 초상은 `monster/<idx>_elite.webp`** [2026-09-17] — 있는 몬스터만 `monster.csv:face_elite = 1` 이고, 0 이면 정예도 기본 `<idx>.webp` 를 그대로 쓴다.
 
@@ -123,6 +125,7 @@
 늘리는 쪽은 기존 영웅에 무해하다.
 
 **⚠ 영웅 초상은 18장 · 5직업 풀(`HERO_FACES = {warrior:5, knight:5, mage:3, archer:1, priest:4}`)이다**
+[2026-10-16 — **`hero/warrior_4` 레오니다스 교체**(장수 그대로) — 시트 `source_sheet_warrior_leonidas_redraw_3x3_1` 의 2번 타일 → `../source/hero/warrior_leonidas_bronze`. 옛 그림은 `../source/hero/warrior_leonidas` 원본만 남는다 · `gpt/hero/warrior_4` 는 옛 그림 그대로다.]
 [2026-09-21 — **전사 2종 추가 · warrior 3 → 5** — 시트 `source_sheet_warrior_2`(아킬레우스 · 레오니다스 · 삼손 · 여포)의 **2 · 3번 타일**:
 `hero/warrior_4` = `../source/hero/warrior_leonidas` **레오니다스** · `hero/warrior_5` = `../source/hero/warrior_samson` **삼손**.
 `hero_unique_candidates.csv` 의 `WARRIOR-P2`·`WARRIOR-P4` 가 confirmed 로 올라갔다. 둘 다 `align_hero_faces.py` 로 앉혔다 —
@@ -155,7 +158,7 @@
 | `hero_1` | `hero/warrior_1` | 검투사 (⚠ 누끼 보류 — 배경 불투명) | `../source/gladiator_helm` |
 | `hero_2` | `hero/warrior_2` | 바바리안 (맨몸 문신) | `../source/barbarian` |
 | `hero_7` | `hero/warrior_3` | 백발백염 기사 · 태양 문장 | `../source/knight_sun_greybeard` |
-| — (신규) | `hero/warrior_4` | **레오니다스** — 코린트식 철투구 · 진홍 말총 볏 · 수염 · 진홍 망토 | `../source/hero/warrior_leonidas` |
+| — (신규) | `hero/warrior_4` | **레오니다스** — 청동 코린트식 투구를 이마로 올렸다(얼굴이 보인다) · 검은 볏 · 희끗한 수염 · 진홍 망토 (10-16 교체) | `../source/hero/warrior_leonidas_bronze` |
 | — (신규) | `hero/warrior_5` | **삼손** — 헝클어진 갈색 장발·수염 · 흉터 난 맨몸 | `../source/hero/warrior_samson` |
 | `hero_3` | `hero/knight_1` | 무안면 로마군 (붉은 볏) | `../source/roman_mane_red` |
 | `hero_4` | `hero/knight_2` | 무안면 로마군 (검은 볏) | `../source/roman_mane_black` |
@@ -185,4 +188,4 @@
 - ⚠ **「화면에서 깨져 보인다」를 해상도 문제로 읽지 말 것** (2026-09-01) — 원인은 `image-rendering: pixelated` 가 이 스타일에도 걸려 있던 것이었다. 512는 가장 큰 칸(152px @ DPR2 = 304px)을 덮는 정상 해상도다. 줄이는 것은 **용량**을 위한 선택이지 화질을 위한 선택이 아니다 (`../../README.md` 규격)
 
 ---
-*마지막 업데이트: 2026-10-14*
+*마지막 업데이트: 2026-10-16*

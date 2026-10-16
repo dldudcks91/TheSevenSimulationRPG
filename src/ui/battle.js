@@ -872,6 +872,14 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'attack_splash': return 'bt.effect.splash';
             case 'duel': return 'bt.effect.duel';
             case 'taunt': return 'bt.effect.taunt';
+            // 기본 스킬 50 의 창 (2026-10-16)
+            case 'phys_pct': return v < 0 ? 'bt.effect.phys.down' : 'bt.effect.phys.up';
+            case 'basic_pct': return v < 0 ? 'bt.effect.basic.down' : 'bt.effect.basic.up';
+            case 'frenzy': return 'bt.effect.frenzy';
+            case 'evade': return 'bt.effect.evade';
+            case 'imbue': return 'bt.effect.imbue';
+            case 'pulse': return 'bt.effect.pulse';
+            case 'echo': return 'bt.effect.echo';
             default: return 'bt.effect.active';
         }
     })();
@@ -1482,6 +1490,22 @@ function apply(state, root, opts, ev) {
             if (a && d) logLine(state, root, a.side, 'miss', L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss'));
             break;
         }
+        case 'evade': {   // 이베이드로 피한 직격 (2026-10-16 · R247) — 빗나감과 같은 자리 · 같은 모양 · 값 칸만 「회피」
+            const a = U(ev.a), d = U(ev.d);
+            if (a) markActed(a, ev.t);
+            if (d) popup(state, d, t('pop.evade'), 'miss');
+            fxMiss(state, a, d);
+            if (a && d) logLine(state, root, a.side, 'miss', L(a.name), dmgIcon(ev.s ?? 'basic'), strikeLabel(ev.s), L(d.name), t('log.v.evade'));
+            break;
+        }
+        case 'echo': {   // 에코 (2026-10-16 · R250) — 같은 스킬이 한 번 더 나간다. 뒤에 그 타격 이벤트가 잇는다 · 반격과 같은 자리
+            const u = U(ev.u);
+            if (u) {
+                popup(state, u, t('pop.echo'), 'counter');
+                logLine(state, root, u.side, 'counter', L(u.name), dmgIcon(ev.s), strikeLabel(ev.s), '', t('log.v.echo'));
+            }
+            break;
+        }
         case 'stagger': {   // 물리 경직 (R110) — 끝 시각까지 창 뱃지 줄에 칩 하나 · 그동안 행동 게이지가 선다. 로그 · 팝업은 없다 (SCREEN_DESIGN §4-2 · ADR-0154)
             const u = U(ev.u);
             if (!u) break;
@@ -1498,7 +1522,8 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty)); refreshUnit(state, d); }
             if (a && d) {
-                logLine(state, root, a.side, 'dot', L(a.name), ev.s ? dmgIcon(ev.s) : '', t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
+                // 이름 = 상태이상 · 오오라 피해(`k = pulse` — 홀리 파이어 · 2026-10-16)는 상태이상이 아니라 그 스킬 이름이다
+                logLine(state, root, a.side, 'dot', L(a.name), ev.s ? dmgIcon(ev.s) : '', ev.k === 'pulse' ? strikeLabel(ev.s) : t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
                 addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
             }
             break;

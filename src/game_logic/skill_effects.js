@@ -78,7 +78,7 @@ const frontOf = foes => {
 };
 
 /**
- * **공격 대상** 5종 — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
+ * **공격 대상** 7종(열 전원 둘 2026-10-16) — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
  * @param rt   skill_runtime 이 만든 런타임 — `rng` · `strikeOnce` · `pickTarget` 을 쓴다
  * @param u    시전자 · @param def 시전 단위(`skill.scaleDef` 가 낸 `hit` 줄 — 스킬 id · 실효값) · @param foes **생존** 적 배열(호출자가 걸러 준다)
  */
@@ -165,7 +165,25 @@ export const ATTACK_TARGETS = {
             if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult * Math.pow(1 - def.decay, k), def.element, def.id, sk);
         }
     },
+    /**
+     * 열 전원 둘 [2026-10-16 · R249 · R247 · skill_design §12-4 스윕 · §12-5 애로우 레인] — **전열** 전원 · **후열** 전원을 배열 순으로 1회씩.
+     *   고르지 않으므로 **rng 0회**다. 후열은 `frontOf` 의 거울 — 후열 생존자가 없으면 받은 목록(생존 전원) 그대로다
+     */
+    enemy_front: (rt, u, def, foes) => strikeEach(rt, u, def, frontOf(foes)),
+    enemy_back: (rt, u, def, foes) => {
+        const back = foes.filter(f => (f.rank ?? 0) !== 0);
+        strikeEach(rt, u, def, back.length ? back : foes);
+    },
 };
+
+/** 목록 전원에게 1회씩 — 열 전원 둘이 쓴다. 시전자가 쓰러지면 멈추고 쓰러진 대상은 건너뛴다(광역과 같은 가드) */
+function strikeEach(rt, u, def, list) {
+    const sk = skillHit(def);
+    for (const tgt of list) {
+        if (u.hp <= 0) break;
+        if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
+    }
+}
 
 /**
  * 공격 대상이 `decay` 를 **무슨 뜻으로** 쓰나 [2026-09-24 · R151 — ~~`skill.js:usesDecayOf` 하드코딩~~]. 한 칸이 대상마다 뜻이 달라서
@@ -216,7 +234,7 @@ export const PICK_TARGETS = {
     },
 };
 
-/** `skill.csv:target` · `skill_effect.csv:target` 어휘 전체 — 공격 대상 5 ∪ 고르는 대상 6 (`enemy_all` 은 둘 다 — 공격이면 광역 타격, 창이면 적 전원) */
+/** `skill.csv:target` · `skill_effect.csv:target` 어휘 전체 — 공격 대상 7 ∪ 고르는 대상 6 (`enemy_all` 은 둘 다 — 공격이면 광역 타격, 창이면 적 전원) */
 export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...Object.keys(PICK_TARGETS)])];
 
 /**
@@ -307,6 +325,29 @@ export const EFFECTS = {
     burn: {},
     poison: { state: true },
     stun: { state: true },
+    // 기본 스킬 50 의 장치 일곱 [2026-10-16 · R246 · R247 · R249 · R250 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 전부 표식이고 읽는 쪽이 따로 있다:
+    //   phys_pct   물리 타격의 데미지 % (워 크라이 — 적에게 음수) — battle.strikeOnce 가 그 타격의 condPct 에 더한다
+    //   basic_pct  평타 피해 % (퀵 드로우 · 오버드로우) — skill_runtime.basicAttack 이 배율에 곱한다
+    //   frenzy     겹마다 공속 (프렌지) — 창이 겹 `n` 을 들고 적중마다 battle.strikeOnce 가 올린다 · 주기 파생(아래 능력치 표)이 `v × n` 을 읽는다
+    //   evade      받는 직격 n 번 무효 (이베이드) — 창이 횟수 `n` 을 든다 · battle.strikeOnce 첫머리가 쓴다
+    //   imbue      창 동안 그 원소 스킬 타격에 상태이상 (이그나이트 · 딥 프리즈 · 서지) — 창이 `hit`(거는 상태이상)를 든다 · battle.strikeOnce
+    //   pulse      오오라 피해 (홀리 파이어) — battle.js 의 틱이 간격마다 적 전원에게 비직격
+    //   echo       공격 스킬 한 번 더 (에코) — skill_runtime.cast 끝
+    phys_pct: { state: true },
+    basic_pct: { state: true },
+    frenzy: { state: true },
+    evade: {
+        state: true,
+        // 횟수는 정수 — 능력치 · 레벨이 민 값을 반올림하고 1 밑으로 안 내린다
+        apply: (rt, tgt, def, until, ev) => {
+            const n = Math.max(1, Math.round(def.value));
+            tgt.buffs[def.status ?? def.id].n = n;
+            ev.n = n;
+        },
+    },
+    imbue: { state: true },
+    pulse: { state: true },
+    echo: { state: true },
 };
 
 export const EFFECT_STATS = Object.keys(EFFECTS);
@@ -350,6 +391,13 @@ export function sumOf(u, stat) {
     return s;
 }
 
+/** 겹 창의 합 — 창마다 `v × n`(겹 · 없으면 0) [2026-10-16 · 프렌지 · R246]. 주기 파생이 쓴다 */
+export function stackSum(u, stat) {
+    let s = 0;
+    for (const b of Object.values(u.buffs)) if (b.stat === stat) s += b.v * (b.n ?? 0);
+    return s;
+}
+
 /**
  * 표식 조회 — 그 능력치의 **첫 창** `[열쇠, 창]` 또는 null. 첫 창 = 삽입 순서(INTERFACE §8 항목 15) — 도발자 · 지목 · 원소 추가타가 이것을 읽는다
  */
@@ -382,8 +430,8 @@ const ATTRS = [
         u.atkMin = u.atkMinBase * mult; u.atkMax = u.atkMaxBase * mult;
         u.matkMin = u.matkMinBase * mult; u.matkMax = u.matkMaxBase * mult;
     },
-    // 행동 주기
-    u => { u.period = u.basePeriod * (1 - sumOf(u, 'period_pct')); },
+    // 행동 주기 — 프렌지 겹(`v × n` · 2026-10-16 R246)도 같은 괄호다. 프렌지 창이 없으면 0 을 빼므로 부동소수가 종전과 같다
+    u => { u.period = u.basePeriod * (1 - sumOf(u, 'period_pct') - stackSum(u, 'frenzy')); },
     // 방어 = 무기 옵션 방어 % + 외침(guard) — 같은 축을 미는 둘을 한 번에 모은다
     u => { u.def = defScaled(u.defBase, sumOf(u, 'def_pct') + sumOf(u, 'guard_pct')); },
     // 저항 = 밑수 + 외침(guard · 전 원소) 에 원소 하나의 창(무기 옵션 · `element` 칸만)을 **창 순서대로** 더한다

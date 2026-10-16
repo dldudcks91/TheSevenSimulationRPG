@@ -29,7 +29,7 @@
    └──────────────────────────┘
             ui/i18n.js (STRINGS ko/en · t())      index.html (한 장 `#stage` 안에 셸 DOM + 툴팁 · 창 레이어)
             ui/tip.js  (툴팁 기계장치 · 영웅/스킬 카드 — 두 렌더러 공용)
-            ui/cloud.js (Google 로그인 · 클라우드 세이브 사본 — Firebase 를 만지는 유일한 파일 · 시작 시 SDK 로 인증을 확인한다)
+            ui/cloud.js (익명 계정 · 플레이 기록 올리기 — Firebase 를 만지는 유일한 파일 · 받는 길은 없다)
 ```
 
 ---
@@ -41,7 +41,7 @@
 | 데이터 | `data/*.csv` | 수치·구조의 SSOT | 엔진별 포맷 | **그대로** |
 | 로직 | `game_logic/*` | 규칙·상태 전이·시뮬·직렬화 | DOM·저장소·시계·`Math.random` | **이식** |
 | 조립 | `ui/data.js` | fetch → 파싱 → 시스템 생성자 주입 | 계산 | 교체 (엔진의 파일 로더) |
-| 저장 | `ui/storage.js` · `ui/cloud.js` | 문자열 넣고 빼기 · 다른 탭 감지 · 로그인 시 계정별 사본 올리기/받기 | 형식 결정 (state.js 가 정한다) · 병합 | 교체 (파일/클라우드 — 계정은 플랫폼 계정이 대신할 가능성이 크다) |
+| 저장 | `ui/storage.js` · `ui/cloud.js` | 문자열 넣고 빼기 · 다른 탭 감지 · 플레이 기록(진행 요약 · 세이브 사본) 한 방향 올리기 | 형식 결정 (state.js 가 정한다) · 받기 · 병합 | 교체 (파일 · 기록은 플랫폼 텔레메트리가 대신할 가능성이 크다) |
 | 표시 사전 | `ui/mock.js` · `ui/i18n.js` | 이름 ko/en · 아이콘 · 얼굴 · 문구 | 수치 | 재작성 — 단 ⚠게임 데이터는 CSV 로 먼저 빼낸다 |
 | 렌더 | `ui/app.js` · `ui/battle.js` · `style.css` | 상태 읽기 · 시스템 호출 · save() · 재생 | 계산 · 난수 · 한국어 리터럴 | **재작성** ([SCREEN_DESIGN.md](SCREEN_DESIGN.md) 기준) |
 | 검증 | `dev/test.*` | 단정 · 캘리브레이션 | | 엔진 테스트로 재작성 — 단정 목록은 계승 |
@@ -65,11 +65,11 @@
 ```
 loadData()            CSV 27개 fetch → D 채움 → SYS 조립  (`ui/data.js:FILES` 가 목록 — src/data/*.csv 전부여야 한다)
 rollCandidates()      새 게임 후보 3명 (고정 시드 — 세이브 밖)
-cloudResume()         전에 로그인한 브라우저면 계정 복원 + 클라우드 사본 받기 → 맞춘다 (받으면 로컬에 쓴다 · 기다림 상한을 넘은 결과는 버린다 — SCREEN_DESIGN §2-1)
 loadSave() → continueGame()
     deserialize (버전 불일치면 catch → G=null → 시작 화면)
     closeRun (재접속 — 원정을 끊는다 → save)   ← tickInjuries 는 v11(2026-09-03)에서 삭제
 ?screen / ?dev / ?tab  개발용 라우팅 (순서 고정 — ?tab 은 마지막)
+startClocks()         원정 시계 · 플레이 기록 간격(trackPush — 배포 주소만 · 익명 계정은 첫 올리기가 기다리지 않고 만든다 — SCREEN_DESIGN §2-1)
 render()
 ```
 
@@ -127,7 +127,7 @@ render()
 | 의존 | 위치 | 비고 |
 |---|---|---|
 | Galmuri · Pretendard 웹폰트 (CDN **2개**) | `index.html` | 오프라인이면 폴백 폰트 (하이브리드 폰트 도입 08-27 — DEV_PLAN 부채 #11) |
-| Firebase JS SDK (gstatic CDN — `app` · `auth` · `firestore-lite`) + Firebase Authentication(Google) · Firestore | `ui/cloud.js` · `ui/firebase_config.js` | 시작 시 동적 import 로 인증과 클라우드를 확인한다. **Google 로그인 필수** — 확인 실패 시 로컬 게임을 열지 않고 재시도를 기다린다. 세이브 사본은 `saves/<uid>` 문서 하나(JSON 문자열) · 보안 규칙은 「자기 문서만」 (SCREEN_DESIGN §2-1) |
+| Firebase JS SDK (gstatic CDN — `app` · `auth` · `firestore-lite`) + Firebase Authentication(**익명**) · Firestore | `ui/cloud.js` · `ui/firebase_config.js` | 배포 주소에서만 첫 올리기 때 동적 import — **게임은 기다리지 않는다**(실패해도 그대로 돈다). 진행 요약 `players/<uid>` + 세이브 사본 `saves/<uid>` 를 한 방향으로 · 보안 규칙은 「자기 문서만 쓴다 · 관리자 uid 만 남의 것을 읽는다」 (SCREEN_DESIGN §2-1 · 규칙 본문은 `src/dev/README.md` 「퍼널」). 관리자 페이지 `dev/funnel.html` 만 Google 로그인을 쓴다 |
 | Python `http.server` | `serve.py` (← `start.bat`) | ES Modules 가 `file://` 에서 막혀서. `serve.py` 는 그걸 얇게 감싸 **`Cache-Control: no-cache` + ETag**(수정 시각 + 크기)만 더한다 — 같은 파일명으로 아트를 갈아끼우면 브라우저 휴리스틱 캐시가 옛 그림을 계속 쓴다. 쓸 때마다 재검증하고 안 바뀐 파일은 304 (2026-09-24 · 옛 `no-store` 는 다시 그릴 때마다 그림을 본문째 다시 받았다) |
 
 패키지 매니저·빌드 도구·프레임워크 없음.
@@ -167,11 +167,11 @@ render()
 | `game_logic/naming.js` | 1:1 이식. 난수를 안 쓰므로 결정론 부담은 없다 — 다만 **문자열 조립 규칙**(어순·조사)이 그대로여야 골든 지문의 아이템 이름이 맞는다 |
 | `game_logic/hero.js` · `item.js` · `skill.js` · `tactic.js` · `battle.js` · `state.js` | 1:1 이식. rng 호출 순서 보존 |
 | `ui/data.js` | 엔진 리소스 로더 + 조립 |
-| `ui/storage.js` · `ui/cloud.js` | `user://` / `PlayerPrefs` / 파일 어댑터 — 계정 · 클라우드 사본은 플랫폼 계정(스팀 클라우드 등)이 대신할 가능성이 크다 (ADR-0112) |
+| `ui/storage.js` · `ui/cloud.js` | `user://` / `PlayerPrefs` / 파일 어댑터 — 플레이 기록은 플랫폼 텔레메트리가 대신할 가능성이 크다 (ADR-0633) |
 | `ui/mock.js` 게임 데이터 | **CSV 로 선이관** (이식 전) — 08-31 로 3항목만 남았다 (§9) |
 | `ui/app.js` · `ui/battle.js` · `ui/tip.js` · `style.css` · `i18n.js` | 재작성 — [SCREEN_DESIGN.md](SCREEN_DESIGN.md) 가 스펙, `i18n.js:STRINGS` 는 문구 사전으로 계승 |
 | `dev/test.js` · **`dev/golden.js`·`golden.json`** | 엔진 테스트 — **골든 시드 지문 대조**가 핵. 지문 계약은 [INTERFACE.md §5-5](INTERFACE.md), 절차는 [DEV_PLAN §6](DEV_PLAN.md#6-phase-2--엔진-이식-계획) |
 
 ---
 
-*마지막 업데이트: 2026-09-24*
+*마지막 업데이트: 2026-10-16*

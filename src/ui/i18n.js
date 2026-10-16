@@ -117,29 +117,9 @@ const STRINGS = {
     'ng.overwriteConfirm': { ko: '정말? 한 번 더 누르면 지운다', en: 'Really? Click again to delete' },
     'ng.startWeapon': { ko: '직업 전속 무기군의 무기 1개를 쥐고 시작한다', en: 'Starts with one weapon from a class-exclusive weapon group' },
 
-    // 계정 · 클라우드 세이브 (SCREEN_DESIGN §2-1 · ADR-0112) — 버튼 글자가 곧 상태다
-    'cl.signIn': { ko: 'Google 로그인', en: 'Sign in with Google' },
-    'cl.guest': { ko: '게스트로 시작', en: 'Play as Guest' },
-    'cl.st.checking': { ko: '☁ 확인 중', en: '☁ Checking' },
-    'cl.st.on': { ko: '☁ 연결됨', en: '☁ Connected' },
-    'cl.st.saving': { ko: '☁ 저장 중', en: '☁ Saving' },
-    'cl.st.error': { ko: '☁ 연결 실패', en: '☁ Offline' },
-    'cl.h': { ko: '클라우드 세이브', en: 'Cloud Save' },
-    'cl.account': { ko: '계정', en: 'Account' },
-    'cl.cloudAt': { ko: '클라우드 사본', en: 'Cloud copy' },
-    'cl.never': { ko: '없음', en: 'None' },
-    'cl.pushNow': { ko: '지금 올리기', en: 'Upload now' },
-    'cl.signOut': { ko: '로그아웃', en: 'Sign out' },
-    'cl.pushed': { ko: '클라우드에 올렸다', en: 'Uploaded to the cloud' },
-    'cl.upToDate': { ko: '클라우드 사본이 최신이다', en: 'The cloud copy is up to date' },
-    'cl.err.network': { ko: '클라우드에 연결하지 못했다', en: 'Could not reach the cloud' },
-    'cl.err.signIn': { ko: '로그인하지 못했다', en: 'Sign-in failed' },
-    'cl.err.tooLarge': { ko: '세이브가 너무 커서 올리지 못했다', en: 'The save is too large to upload' },
+    // 멈춤 창 — 같은 브라우저의 다른 탭이 세이브를 썼다 (SCREEN_DESIGN §2-1)
     'cl.frozen.h': { ko: '다른 탭에서 게임이 열렸다', en: 'The game is open in another tab' },
     'cl.frozen.reload': { ko: '이 탭에서 이어하기', en: 'Continue in this tab' },
-    // 멈춤 창의 둘째 까닭 — 다른 기기 · 브라우저가 클라우드에 먼저 올렸다. 새로고침이 클라우드 사본을 받는다 (ADR-0458)
-    'cl.taken.h': { ko: '다른 곳에서 게임이 이어졌다', en: 'The game continued elsewhere' },
-    'cl.taken.reload': { ko: '클라우드 세이브로 이어하기', en: 'Continue from the cloud save' },
 
     /* ── 프롤로그 (2026-09-03 · SCREEN_DESIGN §3-1) ──
        본문·씬 제목은 **한국어만** 넣는다 (사용자 지시 2026-09-03) — `en` 이 없으면 t() 가 ko 로 폴백하므로
@@ -412,13 +392,13 @@ const STRINGS = {
     'tv.search.out': { ko: '수색 중 · {name}', en: 'Searching · {name}' },
     'tv.search.left': { ko: '남은 시간 {t}', en: '{t} left' },
     'tv.search.odds': { ko: '레어 {r}% · 같은 죄종 {e}%', en: 'Rare {r}% · same sin {e}%' },
-    'tv.search.done': { ko: '수색 완료', en: 'Search complete' },
     'tv.search.cancel': { ko: '취소', en: 'Cancel' },
     'tv.search.drop': { ko: '돌려보내기', en: 'Send away' },
     'tv.search.sent': { ko: '{name} 수색 출발', en: '{name} sets out' },
     'tv.search.canceled': { ko: '수색을 취소했다', en: 'Search called off' },
     'tv.search.dropped': { ko: '{name} 을(를) 돌려보냈다', en: 'Sent {name} away' },
     'tv.err.busy': { ko: '이미 수색 중이다', en: 'A search is already out' },
+    'tv.err.full': { ko: '가입 희망 칸이 가득 찼다', en: 'Waiting slots are full' },
     'tv.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot be sent' },
     'tv.err.exploring': { ko: '탐험 중인 영웅은 보낼 수 없다', en: 'Heroes out exploring cannot be sent' },
     'tv.err.party': { ko: '원정 파티는 보낼 수 없다', en: "Party members can't be sent" },
@@ -556,6 +536,7 @@ const STRINGS = {
     'set.log': { ko: '로그', en: 'Log' },
     'set.logGrid': { ko: '칸', en: 'Grid' },
     'set.logText': { ko: '문장', en: 'Text' },
+    'set.nick': { ko: '닉네임', en: 'Nickname' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
 
     /* ── 자원 탭 [개정 2026-09-04] — 파견처는 **카드 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
        탐험은 자기 탭(§8-4)으로 나가 이 목록에 없다 — 셋 다 1인 배치라 `dp.party` 를 쓰는 칸이 없다.
@@ -1124,7 +1105,7 @@ const STRINGS = {
     'cn.t.stigma_craft': { ko: '낙인으로 장비를 크래프트한다', en: 'Craft equipment with stigmas' },
     'cn.t.skill_card': { ko: '스킬 카드를 합성한다', en: 'Fuse skill cards' },
     'cn.t.skillbook': { ko: '스킬북으로 스킬을 배운다', en: 'Learn skills from skill books' },   // 도서관 r1 (R179 · construction_draft §2)
-    'cn.t.book_craft': { ko: '기본 스킬북을 만든다', en: 'Craft basic skill books' },
+    'cn.t.book_craft': { ko: '스킬북을 제작한다', en: 'Craft skill books' },   // 도서관 r2 (2026-10-16 · R263 — 도안이 열린 책 · ~~기본 책~~ 10-12)
     'cn.t.explore': { ko: '파티를 탐험에 보낸다', en: 'Send a party to explore' },
     'cn.t.raid': { ko: '목표를 털어 전리품을 얻는다', en: 'Raid a target for loot' },
     'cn.t.escort': { ko: '의뢰인의 상단을 호위한다', en: "Escort a client's caravan" },
@@ -1152,7 +1133,7 @@ const STRINGS = {
     'cn.t.chapters': { ko: '챕터 {total} 해금', en: 'Unlocks Chapter {total}' },
     'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}' },
     // 자원 단계도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 단계 (2026-09-27 사용자 지시 「랭크1에 채광, 채집, 벌목 n단계 해금」)
-    'cn.t.resource_tier': { ko: '채광 · 채집 · 벌목 {total}단계 해금', en: 'Unlocks Mining, Gathering and Logging Tier {total}' },
+    'cn.t.resource_tier': { ko: '채광 · 채집 · 벌목 {total}단계 해금 · 자동 생산', en: 'Unlocks Mining, Gathering and Logging Tier {total} · Automatic production' },
     'cn.t.shop_layers': { ko: '상단 품목 층 +{n}', en: 'Ware tiers +{n}' },
     'cn.t.explore_regions': { ko: '탐험 지역 +{n}', en: 'Exploration regions +{n}' },
     'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
@@ -1210,6 +1191,9 @@ const STRINGS = {
     // 한국어도 On / Off 그대로 [2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 · SCREEN_DESIGN §15]
     // 자원 자리 칸 제목의 둘째 줄 — 산출 속도 (2026-09-27 · SCREEN_DESIGN §8)
     'dp.rate': { ko: '{item} 1개 / {s}초', en: '1 {item} / {s}s' },
+    'dp.baseRate': { ko: '기본 {n}/시간', en: 'Base {n}/h' },
+    'dp.currentRate': { ko: '현재 {n}/시간', en: 'Current {n}/h' },
+    'dp.efficiency': { ko: '효율 +{n}%', en: 'Efficiency +{n}%' },
     // 파견 관전 창 — 단 이름 줄의 버튼 · 대상 바 밑 · 떨어지는 재료 (2026-09-28 · SCREEN_DESIGN §8 · ADR-0415)
     'dp.watch': { ko: '자세히 보기', en: 'Details' },
     'dp.watch.none': { ko: '보낸 영웅이 없다', en: 'No hero sent' },
@@ -1217,13 +1201,52 @@ const STRINGS = {
     // 자원 미니게임 — 단 이름 줄의 버튼 · 창 머리 · 시작 / 결과 판 · 판 위 머리 (2026-10-06 · SCREEN_DESIGN §8 · ADR-0532)
     'mg.play': { ko: '미니게임', en: 'Minigame' },
     'mg.title': { ko: '{post} 미니게임', en: '{post} Minigame' },
-    'mg.start': { ko: '시작', en: 'Start' },
-    'mg.again': { ko: '다시', en: 'Again' },
-    'mg.hint.mine': { ko: '반짝이는 광맥을 연타해 깬다 · 붉은 바위는 치지 않는다', en: 'Mash glowing veins to break them · Leave red rocks alone' },
-    'mg.hint.gather': { ko: '바구니를 움직여 받는다 · 독초는 피한다', en: 'Move the basket to catch · Dodge poison herbs' },
+    'mg.start': { ko: '플레이', en: 'Play' },
+    'mg.again': { ko: '한 판 더', en: 'Play again' },
+    'mg.hint.mine': { ko: '잠깐 반짝이는 광맥을 한 번에. 위험한 바위와 빈 곳은 피하세요.', en: 'One click for each fleeting vein. Avoid unstable rocks and empty spots.' },
+    'mg.hint.gather': { ko: '약초를 꾹 잡고, 초록 구간에서 놓으세요. 독초는 그대로 두세요.', en: 'Hold the herb, release in the green zone. Leave poison plants alone.' },
     'mg.hint.log': { ko: '왼쪽 · 오른쪽을 눌러 벤다 · 내 쪽 가지를 피한다', en: 'Chop from the left or right · Dodge branches on your side' },
     'mg.combo': { ko: '콤보 {n} ×{m}', en: 'Combo {n} ×{m}' },
     'mg.best': { ko: '최고 콤보 {n}', en: 'Best combo {n}' },
+    'mg.name.mine': { ko: '찰나의 광맥', en: 'Fleeting Veins' },
+    'mg.name.gather': { ko: '약초의 숨결', en: 'Herbal Rhythm' },
+    'mg.name.log': { ko: '숲의 박자', en: 'Timber Rhythm' },
+    'mg.eyebrow': { ko: '손끝으로 모으는 작은 모험', en: 'A LITTLE HANDS-ON ADVENTURE' },
+    'mg.finished': { ko: '오늘의 수확', en: 'YOUR HARVEST' },
+    'mg.result': { ko: '수확을 마쳤어요', en: 'Harvest complete' },
+    'mg.rule.mine': { ko: '30초 · 오클릭 한 번이면 종료', en: '30 seconds · One mistake ends the run' },
+    'mg.rule.gather': { ko: '30초 · 중앙에 놓으면 추가 수확', en: '30 seconds · Center release earns a bonus' },
+    'mg.rule.log': { ko: '40마디 · 가지를 피해 좌우로', en: '40 logs · Switch sides to dodge branches' },
+    'mg.direct': { ko: '캔 만큼 바로 획득', en: 'Keep everything you harvest' },
+    'mg.reward': { ko: '이번 수확', en: 'HARVESTING' },
+    'mg.harvest': { ko: '수확', en: 'harvested' },
+    'mg.onechance': { ko: '오클릭 시 종료', en: 'One mistake ends the run' },
+    'mg.comboCount': { ko: '{n} 연속', en: '{n} streak' },
+    'mg.comboWait': { ko: '콤보를 이어보세요', en: 'Build your streak' },
+    'mg.controls.mine': { ko: '광맥 = 한 번 클릭  ·  붉은 경고 바위·빈 곳 = 종료  ·  놓쳐도 계속', en: 'Vein: click once  ·  Red warning rock / empty spot: run ends  ·  Missing a vein is safe' },
+    'mg.controls.gather': { ko: '약초를 꾹 누르기 → 초록 구간에 놓기  ·  스페이스키도 가능  ·  독초는 건너뛰기', en: 'Hold herb → release in green  ·  Or hold Space  ·  Skip poison plants' },
+    'mg.controls.log': { ko: '왼쪽·오른쪽 클릭 또는 ← → / A D  ·  내려올 가지를 보고 반대쪽에서 베기', en: 'Click left / right or use ← → / A D  ·  Chop opposite the incoming branch' },
+    'mg.ready': { ko: '준비하세요', en: 'GET READY' },
+    'mg.cell': { ko: '채광 지점 {n}', en: 'Mining spot {n}' },
+    'mg.target.good': { ko: '광맥', en: 'VEIN' },
+    'mg.target.rare': { ko: '희귀 +3', en: 'RARE +3' },
+    'mg.target.bad': { ko: '위험', en: 'DANGER' },
+    'mg.empty': { ko: '빈 곳 · 누르면 종료', en: 'Empty spot · clicking ends the run' },
+    'mg.hold': { ko: '꾹 누르세요', en: 'HOLD' },
+    'mg.power': { ko: '당기는 힘', en: 'PULL STRENGTH' },
+    'mg.release': { ko: '지금 놓으세요!', en: 'RELEASE NOW!' },
+    'mg.keepHolding': { ko: '초록 구간까지…', en: 'Aim for green…' },
+    'mg.leave': { ko: '손대지 마세요', en: 'DO NOT PICK' },
+    'mg.plant.good': { ko: '싱싱한 약초', en: 'FRESH HERB' },
+    'mg.plant.rare': { ko: '희귀 약초 · 수확 3배', en: 'RARE HERB · TRIPLE HARVEST' },
+    'mg.plant.bad': { ko: '독초 · 건드리지 않기', en: 'POISON · LEAVE IT ALONE' },
+    'mg.next': { ko: '다음 약초를 찾는 중…', en: 'Finding the next herb…' },
+    'mg.perfect': { ko: '완벽! +1', en: 'PERFECT! +1' },
+    'mg.failed': { ko: '실패 −♥', en: 'MISSED −♥' },
+    'mg.left': { ko: '왼쪽 베기', en: 'Chop left' },
+    'mg.right': { ko: '오른쪽 베기', en: 'Chop right' },
+    'mg.why.mistake': { ko: '잘못된 곳을 눌렀어요 · 지금까지 캔 재료는 받았어요', en: 'Wrong target · Your harvest is safe' },
+    'mg.why.quit': { ko: '수확을 마무리했어요', en: 'Harvest collected' },
     'mg.why.time': { ko: '시간 끝', en: "Time's up" },
     'mg.why.lives': { ko: '목숨을 다 썼다', en: 'Out of lives' },
     'mg.why.done': { ko: '나무를 다 베었다', en: 'Tree felled' },
@@ -1443,6 +1466,45 @@ const STRINGS = {
     },
     /* 가이디드 애로우 — **단타 + 방어 감소** [개정 2026-09-10 · ADR-0089] — ~~{h}번 때려 매번~~ 다단은 1단계 스킬 변경으로 단타가 됐다.
        {k} = 그 적의 방어를 깎는 비율(`decay_pct`) — 대상 방어에 영구히 쌓인다 */
+    /* 열 전원 둘 [2026-10-16 · R247 · R249] — 스윕(전열) · 애로우 레인(후열 — 후열이 없으면 남은 적) */
+    'sk.line.front': {
+        ko: '{n}초마다 적 전열 전원에게 {d}를 가한다',
+        en: 'Every {n}s, deals {d} to every enemy in the front row',
+    },
+    'sk.line.back': {
+        ko: '{n}초마다 적 후열 전원에게 {d}를 가한다',
+        en: 'Every {n}s, deals {d} to every enemy in the back row',
+    },
+    /* 기본 스킬 50 의 자기 창 [2026-10-16] — 틀이 문장을 다 든다. {v} = 값 자리(이베이드는 횟수 · 나머지는 %) · {m} = 프렌지 겹 상한 · {e} = 원소 */
+    'sk.line.evade': {
+        ko: '{n}초마다 {s} 동안 받는 공격 {v}을 통째로 피한다',
+        en: 'Every {n}s, for {s} completely avoids incoming attacks {v}',
+    },
+    'sk.line.frenzy': {
+        ko: '{n}초마다 {s} 동안 때릴 때마다 공격 속도가 {v} 씩 오른다 — 최대 {m}겹',
+        en: 'Every {n}s, for {s} each hit adds {v} Attack Speed — up to {m} stacks',
+    },
+    'sk.line.echo': {
+        ko: '{n}초마다 {s} 동안 공격 스킬이 무작위 적에게 한 번 더 나간다',
+        en: 'Every {n}s, for {s} your attack skills fire once more at a random enemy',
+    },
+    'sk.line.imbue.burn': {
+        ko: '{n}초마다 {s} 동안 {e} 스킬이 맞힌 적에게 화상을 입힌다',
+        en: 'Every {n}s, for {s} your {e} skills inflict burn',
+    },
+    'sk.line.imbue.freeze': {
+        ko: '{n}초마다 {s} 동안 {e} 스킬이 거는 결빙이 더 세고 길어진다',
+        en: 'Every {n}s, for {s} your {e} skills freeze harder and longer',
+    },
+    'sk.line.imbue.stun': {
+        ko: '{n}초마다 {s} 동안 {e} 스킬이 맞힌 적을 {v} 확률로 스턴시킨다',
+        en: 'Every {n}s, for {s} your {e} skills have a {v} chance to stun',
+    },
+    /* 오오라 피해 [2026-10-16 · R249 홀리 파이어] — 쿨이 없어 {n} 을 안 든다 · {t} = 간격([balance.csv:aura_pulse_sec]) · {v} = 공격력의 몇 % · {e} = 원소 */
+    'sk.line.auraPulse': {
+        ko: '항상 켜져 있다 — {t}초마다 적 전원에게 공격력 {v} 의 {e} 피해를 준다',
+        en: 'Always on — every {t}s, deals {v} of attack as {e} damage to every enemy',
+    },
     'sk.line.guided': {
         ko: '{n}초마다 방어가 가장 두꺼운 적에게 {d}를 가하고 그 적의 방어를 {k} 깎는다',
         en: 'Every {n}s, deals {d} to the best-armored enemy and strips {k} of its defense',
@@ -1514,6 +1576,16 @@ const STRINGS = {
     'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v} 로 퍼진다', en: 'basic attacks spread to all enemies at {v}' },
     'sk.eff.atk_pct.neg': { ko: '데미지 −{v} 를 건다', en: '−{v} Damage' },
     'sk.eff.period_pct.neg': { ko: '공격 속도 −{v} 를 건다', en: '−{v} Attack Speed' },
+    // 기본 스킬 50 [2026-10-16] — 워 크라이(물리 데미지 −) · 배틀 크라이(방어력 −) · 둠(받는 피해 +) · 퀵 드로우 · 오버드로우(평타 피해 ±)
+    'sk.eff.phys_pct': { ko: '물리 데미지 +{v} 를 건다', en: '+{v} Physical Damage' },
+    'sk.eff.phys_pct.neg': { ko: '물리 데미지 −{v} 를 건다', en: '−{v} Physical Damage' },
+    'sk.eff.def_pct': { ko: '방어력 +{v} 를 건다', en: '+{v} Defense' },
+    'sk.eff.def_pct.neg': { ko: '방어력 −{v} 를 건다', en: '−{v} Defense' },
+    'sk.eff.dr_pct.neg': { ko: '받는 피해 +{v} 를 건다', en: '+{v} damage taken' },
+    'sk.eff.basic_pct': { ko: '기본 공격 피해 +{v} 를 건다', en: '+{v} Basic Attack Damage' },
+    'sk.eff.basic_pct.neg': { ko: '기본 공격 피해 −{v} 를 건다', en: '−{v} Basic Attack Damage' },
+    // 여러 줄 스킬의 구절 잇기 (퀵 드로우 · 오버드로우 — 2026-10-16)
+    'sk.join': { ko: ' · ', en: ' · ' },
     /* 그 스킬의 **표기 쿨** [개정 2026-09-08 2차 사용자 지시] — 어느 영웅이 들든 같은 수다.
        ~~`sk.base`·`sk.eff`·`sk.aligned`~~ (1차 폐기) → ~~`sk.every`(`{s}초마다`)~~ → **`sk.cool`**.
        **말까지 바꾼 이유는 값이 바뀌었기 때문**이다 — 「{s}초마다」는 빈도의 약속인데 표기 쿨은 빈도가 아니다
@@ -1806,6 +1878,16 @@ const STRINGS = {
     'bt.effect.splash': { ko: '기본 공격이 적 전원에게 {v}% 피해', en: 'Basic attacks deal {v}% damage to all enemies' },
     'bt.effect.duel': { ko: '시전자만 공격', en: 'Can only attack the caster' },
     'bt.effect.taunt': { ko: '적의 공격 대상을 자신으로 고정', en: 'Forces enemies to target this unit' },
+    // 기본 스킬 50 의 창 [2026-10-16] — {v} = % · {n} = 횟수 · {e} = 원소
+    'bt.effect.phys.up': { ko: '물리 데미지 {v}% 증가', en: 'Physical damage +{v}%' },
+    'bt.effect.phys.down': { ko: '물리 데미지 {v}% 감소', en: 'Physical damage −{v}%' },
+    'bt.effect.basic.up': { ko: '기본 공격 피해 {v}% 증가', en: 'Basic attack damage +{v}%' },
+    'bt.effect.basic.down': { ko: '기본 공격 피해 {v}% 감소', en: 'Basic attack damage −{v}%' },
+    'bt.effect.frenzy': { ko: '때릴 때마다 공격 속도 {v}% 씩 증가', en: 'Attack Speed +{v}% per hit' },
+    'bt.effect.evade': { ko: '받는 공격 {n}번 회피', en: 'Avoids the next {n} attacks' },
+    'bt.effect.imbue': { ko: '{e} 스킬에 상태이상 추가', en: '{e} skills inflict an ailment' },
+    'bt.effect.pulse': { ko: '일정 간격으로 적 전원에게 {e} 피해', en: '{e} damage to every enemy at intervals' },
+    'bt.effect.echo': { ko: '공격 스킬이 한 번 더', en: 'Attack skills fire twice' },
     'bt.effect.stagger': { ko: '행동 게이지 정지', en: 'Action gauge stopped' },
     // 상태이상 (2026-09-28 · R178 · ADR-0405) — 칩 이름 · 로그 이름 · 툴팁 적용값
     'bt.ail.freeze': { ko: '결빙', en: 'Freeze' },
@@ -1840,6 +1922,8 @@ const STRINGS = {
     //   글자로 서는 값만 여기 든다 — 피해 · 회복량은 숫자 그대로다. 팝업(`pop.*`)은 영어가 대문자라 따로 든다
     'log.v.miss': { ko: '빗나감', en: 'miss' },
     'log.v.counter': { ko: '반격', en: 'counter' },
+    'log.v.evade': { ko: '회피', en: 'evaded' },     // 이베이드로 피한 직격 (2026-10-16)
+    'log.v.echo': { ko: '한 번 더', en: 'again' },   // 에코 (2026-10-16)
     'log.v.slain': { ko: '처치', en: 'slain' },
     'log.v.downed': { ko: '전투 불능', en: 'downed' },
     'log.v.up': { ko: '발동', en: 'up' },
@@ -1869,7 +1953,9 @@ const STRINGS = {
     'log.say.call': { ko: '{a|이/가} {ico|으로/로} {d} 소환', en: '{a} summoned {d} with {ico}' },
     'log.say.lvup': { ko: '{a} 레벨 {v} 달성', en: '{a} reached Lv.{v}' },
     'pop.dodge': { ko: '빗나감', en: 'MISS' },
-    'pop.counter': { ko: '반격', en: 'COUNTER' },   // 반격한 카드에 뜬다 (ADR-0158)
+    'pop.counter': { ko: '반격', en: 'COUNTER' },
+    'pop.evade': { ko: '회피', en: 'EVADE' },   // 이베이드 (2026-10-16)
+    'pop.echo': { ko: '에코', en: 'ECHO' },     // 에코 (2026-10-16)   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
     // 레벨업 (2026-09-29 · ADR-0435) — 오른 카드의 금색 글자 · 영웅 레벨이 적보다 낮았으면 아래 작은 줄에 적중 변화

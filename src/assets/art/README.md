@@ -399,7 +399,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · minigame · explore · currency · gamble · forge). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -477,11 +477,11 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 `<지점>.png` 3장(`cave` · `ruins` · `caravan` — 파일명 = `state.js:EXPLORE_SPOTS`) — 512 투명 · **원형 그림 원판**(양피지색 바탕 + 그림 · 가장자리는 검은 선) · **테두리가 없다** — 화면이 땅 색 테두리를 두른다(`mock.js:EXPLORE_REGIONS[장].ring` · `exploreIcon` · SCREEN_DESIGN §8-4 · ADR-0553). 원본 `source/codex_explore_icons_sheet.png`(Codex 이미지 생성 · 2132×738 · 지도 그림을 스타일 기준으로 붙인 청동 테두리 메달 셋) — 메달마다 원을 맞춰 자르고 청동 테두리를 걷어 낸 안쪽 검은 선까지가 원판이다(테두리를 박으면 땅 색마다 7 × 3 장이 된다)
 
-## icons/minigame/ — 자원 미니게임 그림 [신설 2026-10-06]
+## minigames/ — 자원 미니게임 [전면 교체 2026-10-16]
 
-`<이름>.png` 7장 — 512 투명 · 긴 변 0.88 · 중앙. 자원 미니게임(ADR-0532)이 지금 도형으로 그리는 것을 대신할 그림이다: `mine_hazard`(채광 — 피할 바위 · 붉은 틈이 해골) · `gather_poison`(채집 — 독초) · `gather_basket`(바구니 — 가로 약 3:1) · `log_trunk`(벌목 토막) · `log_trunk_rare`(금 고리 토막) · `log_branch`(가지 — 끝이 오른쪽) · `log_jack`(나무꾼 — 한 포즈). 원본 시트 `source/sheet_01_codex.png`(Codex 이미지 생성 · 3×3 · 재료 시트 셋을 첨부) · 지시문 `source/sheet_01_prompt.txt` · 대안 디자인 둘은 `unused/`(`log_jack_alt` · `gather_poison_alt`).
+`mine_scene.webp`·`gather_scene.webp`·`log_scene.webp` — 1536×1024, 광산·약초 정원·노을 숲 배경. Built-in `image_gen`으로 새로 생성했고 PNG 원본은 `source/`, 사용한 프롬프트는 `prompts.json`에 저장한다. 게임은 WebP 세 장만 읽는다(전체 약 924 KiB).
 
-화면은 미니게임 판(`mock.js:MG_ART` · SCREEN_DESIGN §8 · ADR-0534) — 바위 · 독초는 `<img>`, 바구니 · 토막 · 가지 · 나무꾼은 CSS 배경이고 칸은 그림 안 내용의 비율로 잡는다(`style.css` `.mg-*` 머리 주석 — 그림을 갈면 그 비를 다시 잰다). 가지 · 나무꾼은 오른쪽을 본다. ⚠ 경계밀도 9~29% — 재료 아이콘(4~13%)보다 질감이 거칠다(48px 몽타주에선 다 읽혔다).
+광맥·희귀 광맥·위험 바위·일반/희귀 약초·독초·나무·가지·나무꾼은 `ui/minigame_art.js:MG_SPRITES`의 새 인라인 SVG다. `MG_SCENES`가 배경 경로를 소유하고, `style.css`의 `--mg-*` 색 토큰과 함께 사용한다. 이전 `icons/minigame/`·`icons_source/minigame/`는 삭제했다. `build_icons.py`의 대상이 아니다. (ADR-0638)
 
 ## icons/skills/ — 스킬 아이콘 [신설 2026-09-03]
 
@@ -498,8 +498,8 @@ icons_source/skills/
 
 **새 기본 스킬 14 — 2026-10-15 Codex 단색 발주** — skill_design §12 의 직업마다 10(50)을 전부 다시 뽑았고, **그림이 없던 새 스킬 14 만 설치했다**(사용자 「기존꺼 내버려두고 새로 뽑힌 애들만」) — 기존 36 은 9월 그림 그대로이고 그 36 의 새 판은 원본 시트에만 있다. 같은 단색 실루엣 형태를 지키려고 설치돼 있던 그림을 기준 그림으로 붙였고, 칸 문장은 `.claude/skills/icon-prompt/skill_tiles.md` 의 타일을 따랐다(새 스킬은 시트 지시문이 원문). 실측 — 장변 88 · 중앙 50/50 · 단색(기존 설치본과 같은 값). 지시와 다르게 나온 칸 — `arc_overdraw`(큰 화살 대신 활 쏘는 사람) · 40px 에서 약한 칸 — `arc_arrowrain`(가는 화살) · `arc_overdraw`
 
-- ⚠ **새 스킬 14 의 파일 이름은 가안 id 다** — `war_frenzy` · `war_warcry` · `war_battlecry` · `kni_sweep` · `kni_holyfire` · `arc_arrowrain` · `arc_evade` · `arc_overdraw` · `mag_ignite` · `mag_deepfreeze` · `mag_surge` · `mag_echo` · `pri_halo` · `pri_doom`. `skill.csv` 에 행이 없고 `mock.js:SKILL_ICON_FILES` 에도 없어 **화면에 아직 안 나온다** — 행을 낼 때(DEV_PLAN R246 ~ R250) 이 id 를 쓰거나 파일 이름을 맞춘다
-- 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall` — CSV 행이 남아 있다)은 다시 뽑지 않았다 — 옛 그림 그대로
+- **새 스킬 13 이 화면에 나온다** [2026-10-16 · DEV_PLAN R246 ~ R250] — 가안 id 그대로 `skill.csv` 행이 섰고 `mock.js:SKILL_ICON_FILES` 에 들었다. **`pri_halo` 는 쓸 곳이 없다**(헤일로가 같은 날 지워져 소환으로 — 파일만 남는다) · **소환(`pri_summon`)은 그림이 없어 검은 칸**이다 — 발주 전
+- 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
 - **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 강조색 픽셀은 그대로 두고 검정만 회백으로 칠한다
 
 **오오라 셋은 「원 배지」로 갈렸다** [2026-09-09] — D2 팔라딘 오오라 아이콘 **14개 중 12개**가 「원형 테 + 그 안에 갇힌 작은 심볼」이고,
@@ -511,15 +511,15 @@ Might(굽은 갈고리 → **굽힌 팔**) · Fanaticism(가는 평행 줄무늬
 원본이 검정이라 어두운 UI(`--bg-card: #161624`)에서 안 보여서 **밝은 청회(`#d8d9e6`)로 칠해** 설치한다 — 알파는 그대로 두고 RGB 만 단색으로 채우므로 축소 헤일로가 없다.
 `icon-prompt` 의 스킬 합격선(색 수 110~160 · 경계 12~21%)은 **컬러 앵커 기준이라 이 세트에는 안 맞는다** — 설치본 실측은 `colors 1 · edge 0% · dark 219~221` 이고 **프레이밍(장변 88 · 중앙 50/50)만 그대로 유효**하다.
 
-### 채워진 것 / 빈 것 — 기본 스킬 50 (skill_design §12 · 2026-10-15)
+### 채워진 것 / 빈 것 — 기본 스킬 50 (skill_design §12 · 2026-10-16)
 
-| 직업 | 그림 | 화면에 나온다 | 아직 안 나온다 (CSV 행 전 · 가안 id) |
+| 직업 | 그림 | 화면에 나온다 | 빈 것 |
 |---|---|---|---|
-| 전사 10 | **10** | 7 | `war_frenzy` · `war_warcry` · `war_battlecry` |
-| 기사 10 | **10** | 8 | `kni_sweep` · `kni_holyfire` |
-| 궁수 10 | **10** | 7 | `arc_arrowrain` · `arc_evade` · `arc_overdraw` |
-| 마법사 10 | **10** | 6 | `mag_ignite` · `mag_deepfreeze` · `mag_surge` · `mag_echo` |
-| 사제 10 | **10** | 8 | `pri_halo` · `pri_doom` |
+| 전사 10 | **10** | 10 | — |
+| 기사 10 | **10** | 10 | — |
+| 궁수 10 | **10** | 10 | — (퀵 드로우는 전직 투톤 그림 그대로) |
+| 마법사 10 | **10** | 10 | — |
+| 사제 10 | **9** | 9 | **소환(`pri_summon`) — 그림 없음 · 검은 칸** |
 
 발주 프롬프트와 **타일 문장**(무엇을 그리는가)은 `.claude/skills/icon-prompt/skill_tiles.md` 가 든다.
 
@@ -728,4 +728,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-15*
+*마지막 업데이트: 2026-10-16*

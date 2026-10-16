@@ -926,6 +926,9 @@ function skillLines(def, pv, atkType, R) {
         else if (def.target === 'enemy_rotate') line = t('sk.line.rotate', { n, d, h: h() });
         // 가이디드 — 단타 + 방어 감소(감쇠 칸이 그 적의 방어를 깎는 비율이다 · skill.csv note)
         else if (def.target === 'enemy_highest_def') line = t('sk.line.guided', { n, d, k: k() });
+        // 열 전원 둘 — 스윕 · 애로우 레인 (2026-10-16 · R247 · R249)
+        else if (def.target === 'enemy_front') line = t('sk.line.front', { n, d });
+        else if (def.target === 'enemy_back') line = t('sk.line.back', { n, d });
         else {
             // 타수 슬롯이 있으면 여럿일 수 있으므로(모르면 식) 다타 틀로 — 버림은 `scaleDef` 가 이미 했다
             const many = P.hits ? (P.hits.value == null || P.hits.value > 1) : e.hits > 1;
@@ -951,6 +954,9 @@ function skillLines(def, pv, atkType, R) {
     if (e.effect !== 'apply' || !st) return null;
     // 오오라 — **쿨이 없다.** 그래서 이 문장만 `{n}` 을 안 든다 (skill_design §1-5)
     if (def.cast === 'aura') {
+        // 오오라 피해 — 홀리 파이어 (2026-10-16 · R249). 파티에 거는 것이 아니라 간격마다 적 전원을 친다 · 피해 종류(원소)를 말한다 (ADR-0477)
+        if (st.stat === 'pulse')
+            return [t('sk.line.auraPulse', { t: sec(D.balance.aura_pulse_sec), v: at(st.value, 'value', UNIT.pct), e: t(`st.atkType.${st.element ?? 'fire'}`) })];
         const ph = effectPhrase(st, P, R);
         return ph === null ? null : [t('sk.line.aura', { e: ph })];
     }
@@ -959,7 +965,18 @@ function skillLines(def, pv, atkType, R) {
         if (st.stat === 'taunt') return [t('sk.line.taunt', { n, s: s() })];
         // 지목은 창의 길이를 안 말한다 — 「라운드가 끝날 때까지」라 초로 셀 것이 아니다. 효과값은 그동안 **시전자가 받는 피해 감소**다
         if (st.stat === 'duel') return [t('sk.line.duel', { n, v: at(Math.abs(st.value), 'value', UNIT.pct) })];
-        const ph = effectPhrase(st, P, R);
+        // 기본 스킬 50 의 자기 창 넷 — 틀이 문장을 다 든다(「자신에게 … 를 건다」로는 안 읽힌다 · 2026-10-16)
+        if (st.stat === 'evade') return [t('sk.line.evade', { n, s: s(), v: at(st.value, 'value', UNIT.times) })];
+        if (st.stat === 'frenzy') return [t('sk.line.frenzy', { n, s: s(), v: at(st.value, 'value', UNIT.pct), m: hl(num(D.balance.frenzy_stack_max)) })];
+        if (st.stat === 'echo') return [t('sk.line.echo', { n, s: s() })];
+        if (st.stat === 'imbue') {
+            const key = `sk.line.imbue.${SYS.skill.statuses[st.hitStatus]?.ailment}`;
+            return STRINGS_HAS(key) ? [t(key, { n, s: s(), e: t(`st.atkType.${st.element}`), v: at(st.value, 'value', UNIT.pct) })] : null;
+        }
+        // 여러 줄(퀵 드로우 · 오버드로우 · 2026-10-16) — 같은 대상에 거는 apply 줄의 구절을 잇는다. 둘째 줄부터는 슬롯 식 없이 원값이다(설명창 재료는 첫 줄 — skill.previewOf)
+        const more = def.effects.slice(1).filter(x => x.effect === 'apply' && (x.target ?? def.target) === def.target)
+            .map(x => SYS.skill.statuses[x.status]).filter(Boolean).map(x => effectPhrase(x, {}, R));
+        const ph = [effectPhrase(st, P, R), ...more].includes(null) ? null : [effectPhrase(st, P, R), ...more].join(t('sk.join'));
         if (ph === null) return null;
         const key = def.target === 'party' ? 'sk.line.buffParty'
             : def.target === 'party_adjacent' ? 'sk.line.buffAdjacent'

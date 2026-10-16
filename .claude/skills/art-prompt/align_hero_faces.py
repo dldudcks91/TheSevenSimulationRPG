@@ -153,7 +153,7 @@ def despeckle(img, min_area=100):
 SPEC = [
     ('mage_2', 'mage_poseidon', 'mage_2', 'BL'),
     ('mage_3', 'mage_nostradamus', 'mage_3', 'BL'),
-    ('warrior_2', 'warrior_leonidas', 'warrior_4', 'TR'),
+    # warrior_4 = warrior_leonidas_bronze (10-16) -- a 3x3 tile seated by hand: eye_gap 88.2, crest off the top, cut shoulder at x 0
     ('warrior_2', 'warrior_samson', 'warrior_5', 'BL', {'eye_gap': 85, 'eye_y': 245}),   # eyes = warrior_3 (user 09-21)
 ]
 

@@ -82,7 +82,7 @@ import { createFormula, FIXED_DMG } from './formula.js';
 // 원소 어휘만 가져온다 — 시스템 주입이 아니다 (skill.js 와 같은 취급 · INTERFACE §1)
 import { ELEMENTS } from './hero.js';
 import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js';
-import { refreshDerived, weaponOnHit, stateOf, strongestOf } from './skill_effects.js';
+import { refreshDerived, weaponOnHit, stateOf, strongestOf, sumOf } from './skill_effects.js';
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
 import { STAGE_SPAWN_RULES, spawnRuleKey } from './spawn_rule.js';
 // 몬스터 차림 줄 — 전투 줄에서 씨앗 하나만 받아 몬스터마다 제 줄을 연다 (INTERFACE §5-1 · 2026-09-22)
@@ -539,8 +539,8 @@ export function createBattleSystem(data) {
             expReward: MONSTER_XP.get(lvl) * g.exp_mult * m.exp_coef,
             goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * g.exp_mult * m.exp_coef,
             goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
-            // 떨굴 수 있는 스킬북 = 고유 스킬 — 영웅이 배울 수 있는 것만(몬스터 전용 `owner_kind=monster` 는 책이 없다) [2026-09-29 · R179 · skill_design §2-1] · rng 0
-            bookSkill: m.innate_skill && SK?.defs[m.innate_skill] && SK.defs[m.innate_skill].ownerKind !== 'monster' ? m.innate_skill : null,
+            // 떨굴 수 있는 스킬북 = 고유 스킬 — 영웅이 배울 수 있는 것만(몬스터 전용 · 불러내기는 책이 없다 — `skill.bookable` · 2026-10-16 R258) [2026-09-29 · R179 · skill_design §2-1] · rng 0
+            bookSkill: m.innate_skill && SK?.bookable(m.innate_skill) ? m.innate_skill : null,
             ...rest,
         });
     }
@@ -1251,6 +1251,39 @@ export function createBattleSystem(data) {
         }
 
         /**
+         * 오오라 피해 틱 한 유닛 [2026-10-16 · R249 · skill_design §12-4 홀리 파이어 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 첫 `pulse` 창이 있으면 `pulseAcc` 를 쌓고
+         *   [balance.csv:aura_pulse_sec] 에 닿을 때마다 그 유닛의 생존 적마다(배열 순) `공격력 중앙값 × 창 값` 을 **그 원소의 저항만** 거쳐 HP 에서 바로 뺀다 —
+         *   중독과 같은 비직격(배리어 · 방어 · 피해 감소 · 적중 · 치명 · 흡혈 · 반사 · 경직 · 훅 없음). 기여 · 처치는 이 유닛의 몫 · 쓰러지면 `down`.
+         *   창이 없으면 누산을 비운다. 그 밖에 rng 0(처치 정산의 드롭 굴림만 — INTERFACE §5-2)
+         */
+        function pulseTick(u) {
+            const w = stateOf(u, 'pulse')?.[1];
+            if (!w) { u.pulseAcc = 0; return; }
+            u.pulseAcc = (u.pulseAcc ?? 0) + TICK;
+            if (u.pulseAcc + EPS < B.aura_pulse_sec) return;
+            u.pulseAcc -= B.aura_pulse_sec;
+            const el = w.element ?? 'fire';
+            const base = ((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * w.v;
+            const ca = credit(u);
+            for (const d of alive(rt.foesOf(u))) {
+                const resist = F.appliedResist(d.res?.[el] ?? 0, d.resMaxBonus ?? 0, d.resMaxEl?.[el] ?? 0);
+                const dmg = F.indirect(base * (1 - resist));
+                if (!(dmg > 0)) continue;
+                d.hp = Math.max(0, d.hp - dmg);
+                timeline.push({ t: r1(t), e: 'dot', a: u.key, d: d.key, k: 'pulse', s: w.s, dmg, dhp: d.hp, ty: el });
+                const cd = credit(d);
+                if (ca) ca.dealt += dmg;
+                if (cd) cd.taken += dmg;
+                noteTaken(d, u, dmg);
+                if (d.hp <= 0) {
+                    if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1;
+                    downed(d);
+                }
+                if (u.hp <= 0) break;
+            }
+        }
+
+        /**
          * 무기 옵션의 조건부 추가 피해 % — **데미지 % 괄호에 덧셈**이다 (battle_design §9-1 · item_design §1 「무기 옵션」 · R78 · ~~조건부 괄호~~ 2026-09-18 한 괄호).
          *   vs 종족(`monster.csv:monster_type`) · vs 등급(normal 이 아니면 정예 · 보스) · vs 열(`rank` 0 전열 · 1 후열) · 원소(그 타격의 공격 타입)
          */
@@ -1313,6 +1346,22 @@ export function createBattleSystem(data) {
          * @param sk `{statMult, procChance, procMult}` — **스킬 타격만** 넘긴다(skill_effects 공격 대상 표). 기본 공격은 안 넘긴다 — 능력치 계수는 평타 계수(`mainMult`) · 추가 피해 0
          */
         function strikeOnce(u, target, mult, element, s, sk = null) {
+            // 이베이드 [2026-10-16 · R247 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 횟수가 남은 창이 있으면 **굴리지 않고** 통째로 피한다.
+            //   피해 · 경직 · 창 · 훅 · 반사 · 반격 · 집계 없음. 다 쓰면 그 창을 닫는다. 창이 없으면 아무 일도 없다(rng 불변)
+            const ev0 = stateOf(target, 'evade');
+            if (ev0 && ev0[1].n > 0) {
+                const [key, w] = ev0;
+                w.n -= 1;
+                const dodge = { t: r1(t), e: 'evade', a: u.key, d: target.key, n: w.n };
+                if (s) dodge.s = s;
+                timeline.push(dodge);
+                if (w.n <= 0) {
+                    delete target.buffs[key];
+                    timeline.push({ t: r1(t), e: 'buffEnd', u: target.key, s: w.s ?? key });
+                    refreshDerived(target);
+                }
+                return;
+            }
             const mult0 = u.skillMult, type0 = u.atkType, stat0 = u.statMult, chance0 = u.procChance, pmult0 = u.procMult, cond0 = u.condPct;
             const fx = u.fx;                                 // 무기 옵션 묶음 — 없으면 null (R78)
             const hitType = element || u.atkType;            // 그 타격의 공격 타입 — 원소 조건 · 저항 감소 창이 읽는다
@@ -1325,6 +1374,11 @@ export function createBattleSystem(data) {
             u.procMult = sk?.procMult ?? 0;
             // 조건부 추가 피해 — vs 종족 · 등급 · 열 · 원소를 그 타격 동안만 얹는다. strike 가 **데미지 % 괄호 안에** 더한다 (battle_design §9-1 · R78 · 2026-09-18). rng 0
             u.condPct = fx ? condPct(fx, target, hitType) : 0;
+            // 물리 데미지 % [2026-10-16 · R246 · 워 크라이 — 적에게 음수] — 물리 타격만 같은 괄호에 더한다. 창이 없으면 안 더한다(부동소수 그대로)
+            if (hitType === 'physical') {
+                const phys = sumOf(u, 'phys_pct');
+                if (phys) u.condPct += phys;
+            }
             // 죄종 마스터리 T2 조건부 [2026-10-05] — 둘 다 **때리기 전 HP** 로 판정한다. 때리는 쪽 몫은 치명 · 치명 피해 · 방어 무시 · 데미지 %(같은 괄호) ·
             //   강타 · 흡혈 · 맞는 쪽 몫은 피해 감소(노드마다 원천 하나) · 모든 저항 · 반사. 없으면 null 이라 종전과 같다 · rng 0
             const ma = u.mcond ? condSum(u, target, true) : null;
@@ -1392,6 +1446,12 @@ export function createBattleSystem(data) {
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
             timeline.push(ev);
+            // 프렌지 겹 [2026-10-16 · R246] — 적중할 때마다 겹 +1(상한 [balance.csv:frenzy_stack_max]) · 주기는 다음 차례 예약부터 바뀐다. 창이 없으면 아무 일도 없다 · rng 0
+            const fz = u.hp > 0 ? stateOf(u, 'frenzy') : null;
+            if (fz && (fz[1].n ?? 0) < B.frenzy_stack_max) {
+                fz[1].n = (fz[1].n ?? 0) + 1;
+                refreshDerived(u);
+            }
             // 물리 경직 (battle_design §2-3 · R110) — **물리 직격으로 실제로 줄어든 HP**(배리어 몫 빼고 · 강타 몫 넣고)가 최대 HP 의 비율 이상일 때만.
             //   원소 타격은 경직 대신 상태이상의 몫이다. 소환은 차례가 없다 · 쓰러진 대상은 멈출 차례가 없다. 이벤트는 그 `hit` 바로 뒤다
             //   **고정 피해(사제 직격)도 건다** — 물리였을 때 걸던 것을 그대로 둔다(2026-10-06 R221 — 감소만 건너뛴다)
@@ -1402,6 +1462,15 @@ export function createBattleSystem(data) {
             // 맞은 대상에게 거는 걸린 효과 — 결빙 [2026-09-28 · R177 · battle_design §2-4]. **스킬 타격만**(`sk` — 기본 공격 · 반격 · 평타 부여 추가타는 없다) ·
             //   살아 있고 행동하는 대상에게만(벽은 차례가 없다) · 사건 훅 · 반사 · 전투불능 · 반격보다 앞. rng 0 — `buff` 이벤트는 그 `hit`(· `stagger`) 뒤
             if (sk?.onHit && target.hp > 0 && !target.summon) rt.applyStatus(u, target, sk.onHit, t);
+            // 원소 부여 [2026-10-16 · R250 · 이그나이트 · 딥 프리즈 · 서지] — **스킬 타격**의 원소가 창의 원소와 같으면 창이 든 상태이상(`hit`)을 건다.
+            //   창마다 삽입 순서 · 확률이 1 이면 굴리지 않는다 · 1 미만이면 **rng 1회**(INTERFACE §5-2). 결빙은 같은 열쇠라 센 쪽(나중 것)이 덮는다
+            if (sk && element && target.hp > 0 && !target.summon) {
+                for (const w of Object.values(u.buffs)) {
+                    if (w.stat !== 'imbue' || w.element !== element || !w.hit) continue;
+                    if (w.v >= 1 || rng() < w.v) rt.applyStatus(u, target, w.hit, t);
+                    if (target.hp <= 0) break;
+                }
+            }
             // 사건 훅 — 등록된 반응이 없으면 아무 일도 없다. 핸들러가 rng 를 쓰면 **이 자리에서** 소비한다
             hooks.emit('hit', u, { t, d: target, dmg, crit, s, proc });
             hooks.emit('hitTaken', target, { t, a: u, dmg, crit, s, proc });
@@ -1599,6 +1668,8 @@ export function createBattleSystem(data) {
                 for (const u of [...party, ...units.enemies]) if (u.mtick) u.cdr = u.cdrBase + tickSum(u, 'cooldown_reduction');
                 // 중독 틱 — 창 만료 **뒤** · 재생 **앞** (2026-09-28 · R178 · INTERFACE §5-2). 앞 유닛의 틱이 쓰러뜨려도 배열은 그대로 돈다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) poisonTick(u);
+                // 오오라 피해 틱 — 중독 틱 **뒤** · 재생 **앞** (홀리 파이어 · 2026-10-16 · R249 · INTERFACE §5-2). 창이 없으면 누산만 비운다
+                for (const u of [...party, ...units.enemies]) if (u.hp > 0) pulseTick(u);
                 // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다
                 // (매 틱 소수점을 더하면 타임라인이 흘러넘치고 재생기가 정수 HP 와 어긋난다). rng 를 안 쓴다
                 for (const u of [...party, ...units.enemies]) {

@@ -18,7 +18,6 @@ export const SKILL_LOOKS = {
     war_doubleswing: { hit: [['cross', { c: 'tiger', a: -45, len: 120, w: 10, halo: true, t: 400 }], ['flare', { c: 'tiger', s: 50, dl: 90 }]] },   // 더블스윙 — X 자
     war_quake: { hit: [['crack', { c: 'earth', h: 50 }], ['spikes', { c: 'earth', n: 5 }], ['quake']] },   // 어스스플릿 — 갈라짐 + 땅 가시
     war_leap: { hit: [['streak', { c: 'steel', a: 90, jit: 6, len: 100, w: 10, sh: -20 }], ['ring', { c: 'earth', fy: 0.35, oy: 26, n: 2, s: 80 }], ['quake']] },   // 리프 어택 — 내리꽂힘 + 땅 고리
-    war_taunt: { buff: [['ring', { c: 'blood', r0: 1.3, r1: 0.5, n: 2, s: 84 }], ['flash', { c: 'blood' }]] },   // 타운트 — 붉은 고리가 조여든다
     war_shout: { buff: [['ring', { c: 'gold', n: 3, s: 80, w: 3, step: 110 }]] },                         // 워 크라이 — 소리 고리 셋
     war_battleorders: { buff: [['sweep', { c: 'gold' }], ['chevron', { c: 'gold', n: 3 }]] },             // 배틀오더스 — 금빛 훑음 + 꺾쇠
     war_ironskin: { buff: [['shell', { c: 'steel' }], ['flash', { c: 'steel' }]] },                       // 아이언 스킨 — 강철 막
@@ -28,7 +27,6 @@ export const SKILL_LOOKS = {
     kni_holyshield: { buff: [['shell', { c: 'holy' }], ['sigil', { c: 'holy', s: 80 }]] },               // 홀리 실드 — 성광 막 + 문양
     kni_charge: { hit: [['streak', { c: 'steel', a: 'in', len: 72, w: 12 }], ['flare', { c: 'steel', s: 60, dl: 80 }], ['ring', { c: 'steel', s: 66, dl: 80 }]] },   // 차지 — 굵은 창끝이 날아든다
     kni_rush: { hit: [['streak', { c: 'steel', a: 'in', n: 2, len: 60, w: 6, gap: 14, step: 40 }]] },    // 러시 — 짧은 찌르기 둘
-    kni_duel: { bad: [['xmark', { c: 'blood', s: 34 }], ['sigil', { c: 'blood', s: 80 }]], buff: [['shell', { c: 'blood' }]] },   // 듀얼 — 상대는 붉은 × · 나는 붉은 막
     kni_enchant: { buff: [['streak', { c: 'holy', a: -60, len: 100, w: 5 }], ['rise', { c: 'holy', n: 10, shape: 'shard' }]] },   // 인챈트 — 칼날에 빛 + 빛 조각
 
     /* ── 궁수 — 바람 ── */
@@ -46,8 +44,6 @@ export const SKILL_LOOKS = {
     mag_frostnova: { hit: [['ring', { c: 'cold', s: 84, w: 5 }], ['ring', { c: 'cold', fy: 0.35, oy: 24, s: 84, dl: 80 }], ['spray', { c: 'cold', n: 6, shape: 'shard', r0: 20, r1: 44 }]] },   // 프로스트 노바 — 냉기 고리 둘
     mag_lightning: { hit: [['flare', { c: 'lightning', s: 64 }], ['bolt', { c: 'lightning', n: 3, h: 52 }]] },   // 라이트닝 — 번개 셋
     mag_chain: { hit: [['bolt', { c: 'lightning', n: 2, from: 'side' }], ['spray', { c: 'lightning', n: 6, shape: 'dash', r0: 20, r1: 46 }]] },   // 체인 라이트닝 — 옆에서 이어지는 번개
-    mag_focus: { buff: [['sigil', { c: 'cold', s: 80 }], ['rise', { c: 'cold', n: 6 }]] },               // 포커스 — 푸른 문양
-    mag_frozenwall: { call: [['spikes', { c: 'cold', n: 6 }], ['shell', { c: 'cold' }]] },               // 프로즌 월 — 얼음 가시 + 막
 
     /* ── 사제 — 성광 · 회복 · 그림자 ── */
     pri_judgment: { hit: [['pillar', { c: 'holy', w: 50, h: 100 }], ['ring', { c: 'holy', s: 80, dl: 120 }]] },   // 심판 — 굵은 빛기둥 + 고리
@@ -60,7 +56,7 @@ export const SKILL_LOOKS = {
     pri_bind: { buff: [['sigil', { c: 'shadow', s: 76 }], ['streak', { c: 'shadow', a: 0, jit: 0, n: 2, gap: 30, len: 100, w: 5 }]] },   // 바인드 — 문양 + 묶는 가로 줄
 
     /* ── 몬스터 ── */
-    mon_summon_goblin: { call: [['ring', { c: 'earth', fy: 0.35, oy: 30, s: 110 }], ['rise', { c: 'earth', n: 6, shape: 'shard' }]] },   // 고블린 소환 — 흙 고리 + 흙 조각
+    pri_summon: { call: [['ring', { c: 'earth', fy: 0.35, oy: 30, s: 110 }], ['rise', { c: 'earth', n: 6, shape: 'shard' }]] },   // 소환 — 흙 고리 + 흙 조각 (옛 고블린 소환 · 2026-10-16 R258)
     mon_selfdestruct: { hit: [['flare', { c: 'blood', s: 110 }], ['ring', { c: 'fire', s: 110, w: 6 }], ['spray', { c: 'fire', n: 10, shape: 'shard' }]] },   // 자폭 — 큰 붉은 터짐
 
     /* ── 광전사 — 피 ── */

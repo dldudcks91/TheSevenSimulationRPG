@@ -308,7 +308,7 @@ export const PAPERDOLL = [
    mage_1 마법사(수정구 예언자 — 09-07 밤, 마지막 직업 공백이 닫혔다) ·
    mage_2 포세이돈(청록 장발·수염 노인) · mage_3 노스트라다무스(황도 기호 로브 · 회백 장발 노인)
    — 2026-09-16 사용자 지시로 mage 1 → 3. 늘리는 방향이라 기존 영웅 얼굴은 안 바뀐다(faces/cartoon/README).
-   warrior_4 레오니다스(코린트식 투구 · 진홍 볏) · warrior_5 삼손(헝클어진 장발·수염 · 맨몸)
+   warrior_4 레오니다스(청동 투구를 이마로 올림 · 검은 볏 — 10-16 교체) · warrior_5 삼손(헝클어진 장발·수염 · 맨몸)
    — 2026-09-21 사용자 지시로 warrior 3 → 5. 역시 늘리는 방향이다.
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
    풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
@@ -331,7 +331,7 @@ export const HERO_FACE_NAMES = {
     warrior_1: { ko: '막시무스', en: 'Maximus' },          // 검투사
     warrior_2: { ko: '바바리안', en: 'Barbarian' },        // 바바리안
     warrior_3: { ko: '검황', en: 'Sword Emperor' },        // 백발백염
-    warrior_4: { ko: '레오니다스', en: 'Leonidas' },       // 코린트식 투구 · 진홍 볏
+    warrior_4: { ko: '레오니다스', en: 'Leonidas' },       // 청동 투구를 이마로 올림 · 검은 볏
     warrior_5: { ko: '삼손', en: 'Samson' },               // 헝클어진 장발·수염
     knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
@@ -388,15 +388,21 @@ export const SKILL_ICON_DIR = './assets/art/icons/skills/';
 //   `wg_sword2h` → `war_taunt`·`war_doubleswing`·`war_quake`)은 **그림째 교체**돼 옛 컬러 자산이 남아 있지 않다.
 //   목록에 없는 스킬은 검은 칸이다(2026-09-18 · ADR-0162 — 해시 폴백 폐기)
 export const SKILL_ICON_FILES = [
-    'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_taunt', 'war_shout', 'war_battleorders', 'war_ironskin',
-    'kni_smite', 'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_duel', 'kni_enchant',
-    'kni_might', 'kni_fanaticism', 'kni_defiance',
+    // 기본 스킬 50 [2026-10-16 · skill_design §12 · R246 ~ R250 · R258] — 9월 단색 36 + 10-15 Codex 단색 13(그림만 먼저 와 있던 새 스킬 · 가안 id 그대로 행이 섰다).
+    //   ~~`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`~~ 은 행이 지워져 뺐다(그림 파일은 폴더에 남는다) · **소환(`pri_summon`)은 그림이 없어 검은 칸**이다
+    //   · `pri_halo` 그림은 헤일로가 같은 날 지워져 쓸 곳이 없다(폴더에만 있다)
+    'war_bash', 'war_doubleswing', 'war_quake', 'war_leap', 'war_shout', 'war_battleorders', 'war_ironskin',
+    'war_frenzy', 'war_warcry', 'war_battlecry',
+    'kni_smite', 'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_enchant',
+    'kni_might', 'kni_fanaticism', 'kni_defiance', 'kni_sweep', 'kni_holyfire',
     'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
+    'arc_arrowrain', 'arc_evade', 'arc_overdraw',
     'mag_fireball', 'mag_iceblast', 'mag_frostnova', 'mag_lightning',
-    'mag_chain', 'mag_focus', 'mag_frozenwall', 'mag_inferno',
+    'mag_chain', 'mag_inferno', 'mag_ignite', 'mag_deepfreeze', 'mag_surge', 'mag_echo',
     'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
-    'pri_penitence', 'pri_bind', 'pri_haste',
+    'pri_penitence', 'pri_bind', 'pri_haste', 'pri_doom',
     // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 다섯 직업 45 전부(궁수 9 는 2026-10-09)
+    //   · `arc_quickdraw` 는 2026-10-16 궁수 기본 스킬로 내려왔다(R247) — 그림은 전직 투톤 그대로 둔다
     'war_ragnarok', 'war_berserk', 'war_mutualruin', 'war_whirlwind', 'war_thorswrath', 'war_shockwave',
     'war_lionsroar', 'war_command', 'war_intimidate',
     'kni_lastbastion', 'kni_unbreakablewill', 'kni_divinejudgment', 'kni_unyieldingoath', 'kni_holywar', 'kni_vow',
@@ -851,14 +857,6 @@ export const materialIcon = id => {
     const g = Object.values(MATERIAL_ICONS).find(x => x.ids.includes(id));
     return g ? `${g.dir}${id}${ICON_EXT}` : null;
 };
-
-/**
- * 자원 미니게임 그림 — 판 위의 바위 · 독초 · 바구니 · 토막 · 귀한 토막 · 가지 · 나무꾼 (SCREEN_DESIGN §8 · ADR-0534) · 파일명 = 키.
- * 가지 · 나무꾼은 오른쪽을 보는 한 장이다 — 반대쪽은 화면이 뒤집는다.
- */
-const MG_ART_DIR = './assets/art/icons/minigame/';
-export const MG_ART = Object.fromEntries(['mine_hazard', 'gather_poison', 'gather_basket', 'log_trunk', 'log_trunk_rare', 'log_branch', 'log_jack']
-    .map(id => [id, `${MG_ART_DIR}${id}${ICON_EXT}`]));
 
 /**
  * 재화 그림 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). **골드 · 분해 가루는 그림**(`icons/currency/`) · 낙인은 ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.

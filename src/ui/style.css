@@ -2,6 +2,17 @@
    팔레트는 형제 프로젝트(TheSevenRPG / TheSevenSimulation)와 공유 */
 
 :root {
+    /* Minigame art colors are independent of the surrounding monochrome UI. */
+    --mg-ink: #172526;
+    --mg-ink-rgb: 23, 37, 38;
+    --mg-cream: #f7efd8;
+    --mg-fog: #c4ccbd;
+    --mg-line: #4a5d58;
+    --mg-mint: #90ded1;
+    --mg-sage: #b7d99b;
+    --mg-honey: #eac48c;
+    --mg-rose: #f2a29c;
+    --mg-track: #394942;
     /* ── 표면 계단 [2026-09-14] ── 밝기 순 사다리 하나. 배경 · hover · 선택이 전부 여기서 값을 받는다.
        리터럴로 흩어져 있던 여덟 단계를 모은 것이다 — 같은 역할인데 값이 제각각이면 테마를 못 바꾼다.
        ⚙ 개발용 RGB 피커(`ui/devpalette.js`)는 이 여덟 개만 갈아 끼운다 → 화면 전체가 따라온다 */
@@ -42,7 +53,6 @@
     --text-secondary: #e3e3e3;
     --text-muted: #aaaaaa;
     --text-accent: #e03030;
-    --google-blue: #4285f4;
     --color-success: #40d870;
     --color-warning: #f8b830;
     --color-error: #f04040;
@@ -396,9 +406,6 @@ html, body { height: 100%; overflow: hidden; }
     88%  { opacity: 1; transform: none; }
     100% { opacity: 0; transform: translateY(-12px); }
 }
-/* 계정 버튼 — 언어 토글 앞 · 글자가 곧 상태다 (SCREEN_DESIGN §2-1 · ADR-0112). 끊겼으면 경고색 */
-.cloud-btn { margin-left: 4px; white-space: nowrap; }
-.cloud-btn.cl-error { color: var(--color-warning); border-color: var(--color-warning); }
 
 .nav {
     grid-area: nav;
@@ -431,6 +438,13 @@ html, body { height: 100%; overflow: hidden; }
 .nav button.dim .nav-lbl, .nav button.dim .nav-lock { opacity: .45; }
 .nav .nav-lock { display: inline-flex; color: inherit; }
 .nav .nav-lock svg { width: 1.1em; height: 1.1em; }
+/* 할 일 점 [2026-10-16 · SCREEN_DESIGN §1 · ADR-0637] — 하면 꺼지는 일이 기다리는 탭 · 이름 오른쪽 끝(흐린 탭의 자물쇠 자리 — 둘은 같이 안 선다) ·
+   건설 부지의 초록 점(`.cn-lot.ready::after`)과 같은 색 · 같은 크기 · 숫자 없음 */
+.nav button.todo { position: relative; }
+.nav button.todo::after {
+    content: ''; position: absolute; top: 50%; right: 16px; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%;
+    background: var(--color-success);
+}
 .nav .tag {
     float: right; font-size: var(--fs-xs); color: var(--bg-primary);
     background: var(--color-warning); padding: 0 5px; border-radius: 2px;
@@ -3455,6 +3469,14 @@ html, body { height: 100%; overflow: hidden; }
 .set-box { display: grid; grid-template-columns: max-content auto; gap: 14px 18px; align-items: center; font-size: var(--fs-sm); }
 .set-row { display: contents; }
 .set-k { color: var(--text-secondary); white-space: nowrap; }
+/* 닉네임 칸 — 판에서 하나뿐인 글 입력 (§2-2 · ADR-0633). 게임 화면 기본기(①②)가 죽인 선택 · 캐럿을 이 칸만 살린다 */
+.set-nick {
+    justify-self: start; width: 13em; padding: 4px 8px;   /* em — 한글 한 자가 ch 보다 넓다 */
+    font: inherit; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--border-highlight);
+    -webkit-user-select: text; user-select: text; caret-color: auto;
+}
+.set-nick:focus { border-color: var(--text-accent); }
 /* 고른 버튼 — 빨강 테두리 · 짙은 붉은 바탕 · 흰 굵은 글씨 (2026-10-09 사용자 지시 · §2-2). 공용 `.btn.sm.on` 은 바탕이 한 단 바뀔 뿐이라 On · Off 가 안 갈렸다.
    안 고른 버튼은 공용 그대로 — 흐리지 않는다(흐린 것은 못 누르는 버튼 `:disabled` 이다) */
 .set-box .btn.on { background: var(--btn-primary-bg); border-color: var(--text-accent); color: var(--text-primary); font-weight: 700; }
@@ -3566,56 +3588,10 @@ html, body { height: 100%; overflow: hidden; }
 #app.pregame { grid-template-areas: "brand topbar" "main main"; }
 #app.pregame .nav { display: none; }
 
-/* 로그인 첫 화면은 브랜드와 Google 로그인 한 가지 행동만 가운데 둔다. */
-#app.login-gate {
-    display: block;
-}
-#app.login-gate > .brand,
-#app.login-gate > .topbar,
-#app.login-gate > .nav { display: none; }
-#app.login-gate > .main { width: 100%; height: 100%; padding: 0; overflow: hidden; }
-.login-page {
-    position: relative; isolation: isolate;
-    width: 100%; height: 100%;
-    display: grid; place-items: center;
-}
-.login-page::before {
-    content: ''; position: absolute; inset: 0; z-index: -2;
-    /* 거점(`#stage::before`)과 같이 스타일 폴더를 직접 박는다 — 로그인은 설정 이전이라 기본값 `illustrate` 고정 (2026-09-18) */
-    background: url('../assets/art/backgrounds/illustrate/background_stage_101.webp') center / cover no-repeat;
-}
-.login-page::after {
-    content: ''; position: absolute; inset: 0; z-index: -1;
-    background: rgba(var(--surface-0-rgb), .38);
-}
-.login-card {
-    width: 360px; text-align: center;
-}
-.login-logo {
-    margin-bottom: 34px;
-    font-family: var(--font-display); font-size: 38px; font-weight: normal; letter-spacing: 3px;
-}
-.login-logo b { color: var(--text-accent); }
-.login-error {
-    margin-bottom: 12px; color: var(--color-warning); font-size: var(--fs-sm);
-}
-.login-google {
-    width: 100%; min-height: 54px; padding: 0 20px;
-    display: grid; grid-template-columns: 28px 1fr 28px; align-items: center; gap: 10px;
-    border: 1px solid var(--border-highlight); background: var(--text-primary); color: var(--bg-primary);
-    font: inherit; font-weight: 600; cursor: pointer; transition: transform .14s ease, filter .14s ease;
-}
-.login-google:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(.92); }
-.login-google:active:not(:disabled) { transform: translateY(0); }
-.login-google:disabled { cursor: wait; opacity: .68; }
-.login-google-mark { color: var(--google-blue); font-family: Arial, sans-serif; font-size: var(--fs-lg); font-weight: 700; }
-/* 게스트 — 개발 환경에서만 선다(§2-1 · ADR-0385). Google 버튼보다 한 단 낮게 읽히도록 윤곽선만 */
-.login-guest {
-    width: 100%; min-height: 40px; margin-top: 10px;
-    border: 1px solid var(--border-highlight); background: transparent; color: var(--text-primary);
-    font: inherit; cursor: pointer;
-}
-.login-guest:hover { background: rgba(var(--surface-0-rgb), .5); }
+/* 첫 그리기 전의 셸 — 빈 브랜드 · 상단바 · 내비가 비치지 않게 숨긴다. 첫 `renderShell` 이 걷는다 (index.html · ADR-0349 · ADR-0633) */
+#app.booting > .brand,
+#app.booting > .topbar,
+#app.booting > .nav { display: none; }
 
 .ng-wrap {
     max-width: 1060px; margin: 0 auto;
@@ -3911,11 +3887,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     display: flex; align-items: center; justify-content: center;
     font-size: var(--fs-lg); line-height: 1;
 }
-/* 계정 창 · 선택 창 · 멈춤 창 (SCREEN_DESIGN §2-1 · ADR-0112) — 껍데기는 창 공통 그대로, 속만 여기서 */
-.cl-account { display: flex; flex-direction: column; gap: 10px; min-width: min(420px, 100%); }
-.cl-row { display: flex; justify-content: space-between; gap: 24px; font-size: var(--fs-sm); }
-.cl-row span { color: var(--text-muted); }
-.cl-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+/* 멈춤 창 (SCREEN_DESIGN §2-1) — 껍데기는 창 공통 그대로, 속만 여기서 */
 .cl-frozen { display: flex; justify-content: center; padding: 8px 0 4px; }
 
 /* ───────── 파견 목록 (SCREEN_DESIGN §8) ─────────
@@ -3985,6 +3957,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dp-t-name { font-size: var(--fs-md); color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 산출물 — 이 단계가 무엇을 주는가. 값이 없으면 `—` 가 선다 (§4-1) */
 .dp-t-ore { font-size: var(--fs-xs); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-t-rate { display: flex; flex-direction: column; font-size: var(--fs-xs); line-height: 1.2; color: var(--text-secondary); }
+.dp-t-rate span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-t-rate span:last-child { color: var(--color-success); }
 /* 자리 칸 — 단계 하나에 영웅 한 명 [2026-09-27 사용자 지시 · ADR-0372]. 상자 **오른쪽 끝** · **상자 높이만큼의 정사각**
    (`align-self: stretch` + `aspect-ratio`) — 1600×800 에서 한 변 50px 안팎. 글자 칸(`.dp-t-body`)이 남는 폭을 갖고 넘치면 말줄임이다.
    빈 칸은 점선 `+`(놓을 곳이 보여야 한다) · 찬 칸은 띠 카드와 같은 얼굴 · 레벨(오른쪽 아래 `.hs-lv`) */
@@ -4016,86 +3991,141 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dpw-panel .bar.hp > i { transition: width .15s ease-out; }   /* 맞을 때만 준다 — 짧게 끊어 떨어진다 (ADR-0418) */
 /* 머리 줄 — 자리 탭 */
 .dpw-head { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
-/* 자원 미니게임 [2026-10-06 · SCREEN_DESIGN §8 · ADR-0532 · ADR-0533 · ADR-0534] — 창 하나 · 머리 = 제목 · 단계 탭 · 속 = 판 하나(`.mg-field`).
-   판 위에서 움직이는 것의 자리는 `app.js:mgDraw` 가 % 로 준다 · 그림 = 산출물 아이콘 + 판 그림(`mock.js:MG_ART` → `--mg-<이름>` 변수).
-   판 그림은 정사각 한 장 안에 내용이 가운데 서 있다 — 칸은 **내용의 가로세로 비**로 잡고 배경을 「정사각 ÷ 내용」배로 키워 내용이 칸에 맞게 한다.
-   비는 `icons_source/minigame/` 실측(512 안의 내용 bbox) — 그림을 갈면 다시 잰다 */
-.modal-box.mg-modal { width: min(880px, 100%); }
-.mg-head { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
-.mg-head h2 { white-space: nowrap; }
-.mg-tab-ico { width: 18px; height: 18px; object-fit: contain; vertical-align: middle; margin-right: 3px; }
-.mg-field { position: relative; height: 480px; overflow: hidden; border-radius: 6px; border: 1px solid var(--border-primary);
-    background: linear-gradient(180deg, var(--surface-7), var(--surface-1)); user-select: none; touch-action: none; }
-.mg-field.shake { animation: fx-shake .3s; }
-/* 시작 판 · 결과 판 — 판 가운데 한 덩어리 */
-.mg-card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 0 24px; }
-.mg-card-icon { width: 96px; height: 96px; object-fit: contain; }
-.mg-name { font-size: var(--fs-lg); font-weight: bold; color: var(--text-primary); }
-.mg-got { font-size: var(--fs-xl); font-weight: bold; color: var(--color-success); }
-.mg-sub { font-size: var(--fs-sm); color: var(--text-secondary); }
-.mg-go { min-width: 120px; margin-top: 6px; }
-/* 판 위 머리 — 목숨 · 콤보 · 받은 양(오른쪽) · 맨 위 가는 막대 = 남은 시간 */
-.mg-hud { position: absolute; left: 14px; right: 14px; top: 12px; z-index: 3; display: flex; align-items: center; gap: 18px; pointer-events: none; font-size: var(--fs-md); }
-.mg-lives { color: var(--hp-fill); letter-spacing: 2px; }
-.mg-combo { color: var(--color-warning); font-weight: bold; }
-.mg-items { margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--text-primary); font-weight: bold; }
-.mg-items img { width: 24px; height: 24px; object-fit: contain; }
-.mg-time { position: absolute; left: 0; right: 0; top: 0; height: 4px; z-index: 3; background: rgba(var(--veil-rgb), .8); pointer-events: none; }
-.mg-time > b { display: block; height: 100%; background: var(--color-warning); }
-.mg-fx { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.mg-pop { position: absolute; transform: translate(-50%, -50%); font-weight: bold; font-size: var(--fs-lg); white-space: nowrap; animation: mg-pop .7s ease-out forwards; }
-.mg-pop.good { color: var(--color-success); }
-.mg-pop.bad { color: var(--color-error); }
-@keyframes mg-pop { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -40px; } }
-/* 채광 — 반짝임 연타: 벽 칸 격자 · 떠 있는 칸은 빛난다(보통 금색 · 귀한 것 파랑 · 불안정한 바위 빨강) · 칠수록 금이 가고(`--hp`) 아래 줄이 남은 시간(`--left`) */
-.mg-wall { position: absolute; left: 24px; right: 24px; top: 48px; bottom: 24px; display: grid; gap: 10px; }
-.mg-cell { position: relative; display: grid; place-items: center; overflow: hidden; border-radius: 10px; border: 2px solid var(--border-dark); background: var(--surface-4); }
-.mg-cell.on { cursor: pointer; }
-.mg-cell img { width: 60%; height: 60%; object-fit: contain; pointer-events: none; transform: scale(calc(.75 + .25 * var(--hp, 1))); }
-.mg-cell.good { border-color: var(--color-warning); box-shadow: inset 0 0 18px color-mix(in srgb, var(--color-warning) 40%, transparent); }
-.mg-cell.rare { border-color: var(--color-info); box-shadow: inset 0 0 22px color-mix(in srgb, var(--color-info) 55%, transparent), 0 0 12px var(--color-info); }
-.mg-cell.bad { border-color: var(--color-error); background: color-mix(in srgb, var(--color-error) 22%, var(--surface-4));
-    box-shadow: inset 0 0 22px color-mix(in srgb, var(--color-error) 60%, transparent); animation: mg-throb .6s ease-in-out infinite alternate; }
-@keyframes mg-throb { to { box-shadow: inset 0 0 8px color-mix(in srgb, var(--color-error) 30%, transparent); } }
-.mg-cell.on::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: calc(1 - var(--hp, 1));
-    background: repeating-linear-gradient(55deg, transparent 0 14px, rgba(var(--shadow-rgb), .55) 14px 16px), repeating-linear-gradient(-35deg, transparent 0 19px, rgba(var(--shadow-rgb), .45) 19px 21px); }
-.mg-cell.hit { animation: mg-hit .12s; }
-@keyframes mg-hit { 50% { transform: scale(.94); } }
-.mg-left { position: absolute; left: 0; bottom: 0; height: 4px; width: calc(var(--left, 1) * 100%); background: var(--text-muted); pointer-events: none; }
-.mg-field.stun .mg-wall { filter: grayscale(1) brightness(.6); }
-/* 채집 — 받아내기: 떨어지는 것 · 바구니 줄(점선) · 바구니(줄 위에 걸친다) */
-.mg-sky { position: absolute; inset: 0; }
-.mg-drop { position: absolute; width: 52px; height: 52px; margin: -26px 0 0 -26px; display: grid; place-items: center; pointer-events: none; }
-.mg-drop img { width: 100%; height: 100%; object-fit: contain; }
-.mg-drop.rare img { filter: drop-shadow(0 0 6px var(--color-info)) drop-shadow(0 0 2px var(--color-info)); }
-.mg-drop.bad img { filter: drop-shadow(0 0 5px var(--color-error)) drop-shadow(0 0 2px var(--color-error)); }
-.mg-line { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--border-primary); pointer-events: none; }
-/* 바구니 — 폭은 판이 준다(`mg_catch_basket`) · 높이는 그림 내용의 비(451 : 180) */
-.mg-basket { position: absolute; aspect-ratio: 451 / 180; transform: translate(-50%, -30%); pointer-events: none;
-    background: var(--mg-gather-basket) center / calc(100% * 512 / 451) auto no-repeat; }
-/* 벌목 — 팀버맨: 땅 · 기둥(맨 아래부터 토막 · `column-reverse`) · 가지는 토막 좌우 · 나무꾼은 맨 아래 토막 옆 · 좌우 표시 */
-.mg-field.mg-log { cursor: pointer; }
-.mg-field.mg-log::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: var(--surface-4); border-top: 1px solid var(--border-primary); }
-.mg-tree { position: absolute; left: 50%; bottom: 40px; width: 84px; height: 380px; transform: translateX(-50%); display: flex; flex-direction: column-reverse; }
-/* 토막 — 내용 폭을 칸 폭에 맞추고 위아래는 칸이 자른다(통나무 윗면이 잘려 기둥이 이어져 보인다) · 비: 토막 451 폭 · 귀한 토막 392 폭 */
-.mg-seg { position: relative; flex: 1; background: var(--mg-log-trunk) center / calc(100% * 512 / 451) auto no-repeat; }
+/* Resource minigames — painted scenes, native illustrated objects (2026-10-16). */
+.modal-box.mg-modal { width: min(940px, 100%); padding: 16px; border-radius: 14px; border-color: var(--mg-line); background: var(--mg-ink); box-shadow: 0 24px 100px rgba(var(--shadow-rgb), .7); }
+.mg-modal .modal-head { padding-bottom: 12px; margin-bottom: 0; border: 0; }
+.mg-head { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; }
+.mg-head h2 { font-size: var(--fs-md); color: var(--mg-cream); white-space: nowrap; letter-spacing: .03em; }
+.mg-head .segmented { flex-wrap: wrap; }
+.mg-tab-ico { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; margin-right: 5px; }
+.mg-field { --mg-accent: var(--mg-mint); position: relative; height: 540px; isolation: isolate; overflow: hidden; border-radius: 9px; border: 1px solid var(--mg-line); background: var(--mg-ink) var(--mg-scene) center / cover no-repeat; user-select: none; touch-action: none; color: var(--mg-cream); }
+.mg-field.mg-gather { --mg-accent: var(--mg-sage); }
+.mg-field.mg-log { --mg-accent: var(--mg-honey); }
+.mg-field::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(var(--mg-ink-rgb), .52), transparent 25%, transparent 75%, rgba(var(--mg-ink-rgb), .8)); }
+.mg-field.shake { animation: fx-shake .25s; }
+.mg-field button { -webkit-tap-highlight-color: transparent; }
+.mg-field button:focus-visible { outline: 2px solid var(--mg-cream); outline-offset: 3px; }
+.mg-cover::before { background: linear-gradient(90deg, rgba(var(--mg-ink-rgb), .42), rgba(var(--mg-ink-rgb), .72) 50%, rgba(var(--mg-ink-rgb), .42)); }
+.mg-card { position: absolute; inset: 28px 16px 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 13px; text-align: center; }
+.mg-eyebrow { color: var(--mg-accent); font-size: var(--fs-xs); letter-spacing: .2em; font-weight: 600; }
+.mg-cover-art { width: 132px; height: 132px; margin: 0 0 -6px; filter: drop-shadow(0 8px 20px rgba(var(--shadow-rgb), .5)); }
+.mg-cover-art svg { width: 100%; height: 100%; }
+.mg-card h3 { margin: 0; color: var(--mg-cream); font-size: calc(var(--fs-xl) * 1.5); font-weight: 700; letter-spacing: -.035em; line-height: 1.25; }
+.mg-sub { font-size: var(--fs-sm); line-height: 1.7; color: var(--mg-fog); max-width: 520px; }
+.mg-rule-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 2px 0 4px; font-size: var(--fs-xs); color: var(--mg-fog); }
+.mg-rule-badges span { padding: 5px 10px; border: 1px solid var(--mg-line); border-radius: 20px; background: rgba(var(--mg-ink-rgb), .5); }
+.mg-go.btn { display: flex; align-items: center; justify-content: space-between; gap: 36px; min-width: 180px; padding: 12px 22px; margin-top: 5px; border: 1px solid var(--mg-accent); border-radius: 5px; background: var(--mg-accent); color: var(--mg-ink); font-size: var(--fs-md); font-weight: 700; transition: transform .15s, filter .15s; }
+.mg-go.btn:hover { background: var(--mg-accent); color: var(--mg-ink); filter: brightness(1.1); transform: translateY(-2px); }
+.mg-reward-line { position: absolute; bottom: 16px; left: 20px; right: 20px; text-align: center; font-size: var(--fs-xs); color: var(--mg-fog); letter-spacing: .04em; }
+.mg-reward-line b { color: var(--mg-cream); margin-left: 8px; }
+.mg-got { display: flex; align-items: center; gap: 10px; color: var(--mg-accent); }
+.mg-got img { width: 38px; height: 38px; object-fit: contain; }
+.mg-got b { font-size: calc(var(--fs-xl) * 1.6); font-variant-numeric: tabular-nums; }
+.mg-got span { font-size: var(--fs-md); color: var(--mg-cream); }
+.mg-best { color: var(--mg-accent); font-size: var(--fs-xs); padding: 5px 14px; border: 1px solid var(--mg-line); border-radius: 20px; }
+.mg-hud { position: absolute; left: 18px; right: 18px; top: 16px; z-index: 4; display: flex; align-items: center; gap: 18px; padding: 11px 16px; border: 1px solid var(--mg-line); border-radius: 7px; background: rgba(var(--mg-ink-rgb), .91); pointer-events: none; }
+.mg-hud-title { display: flex; flex-direction: column; gap: 5px; min-width: 160px; }
+.mg-hud-title small { font-size: var(--fs-xs); color: var(--mg-fog); }
+.mg-lives { font-size: var(--fs-xs); color: var(--mg-rose); letter-spacing: .05em; }
+.mg-combo { display: flex; flex-direction: column; gap: 2px; color: var(--mg-accent); text-align: center; flex: 1; }
+.mg-combo b { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.mg-combo small { font-size: var(--fs-xs); }
+.mg-items { display: flex; align-items: center; gap: 6px; }
+.mg-items img { width: 28px; height: 28px; object-fit: contain; }
+.mg-items b { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; }
+.mg-items small { color: var(--mg-fog); font-size: var(--fs-xs); }
+.mg-clock { min-width: 58px; padding-left: 14px; border-left: 1px solid var(--mg-line); font-size: var(--fs-lg); font-variant-numeric: tabular-nums; text-align: right; }
+.mg-time { position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 5; background: rgba(var(--mg-ink-rgb), .8); pointer-events: none; }
+.mg-time > b { display: block; height: 100%; background: var(--mg-accent); }
+.mg-urgent .mg-time > b { background: var(--mg-rose); }
+.mg-instruction { position: absolute; bottom: 0; left: 0; right: 0; padding: 14px 16px; z-index: 4; background: rgba(var(--mg-ink-rgb), .88); color: var(--mg-fog); text-align: center; font-size: var(--fs-xs); line-height: 1.5; pointer-events: none; }
+.mg-ready { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; background: rgba(var(--mg-ink-rgb), .72); }
+.mg-ready[hidden] { display: none; }
+.mg-ready b { font-size: calc(var(--fs-xl) * 3); line-height: 1; color: var(--mg-accent); }
+.mg-ready span { font-size: var(--fs-sm); letter-spacing: .15em; }
+.mg-fx { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+.mg-pop { position: absolute; transform: translate(-50%, -50%); font-weight: 700; font-size: var(--fs-lg); text-shadow: 0 2px 6px var(--mg-ink); white-space: nowrap; animation: mg-pop .75s ease-out forwards; }
+.mg-pop.good { color: var(--mg-mint); }
+.mg-pop.bad { color: var(--mg-rose); }
+@keyframes mg-pop { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -44px; } }
+/* Mine: quiet sockets, short-lived illustrated veins; no repeated-hit UI. */
+.mg-wall { position: absolute; left: 12%; right: 12%; top: 100px; bottom: 64px; display: grid; gap: 12px; }
+.mg-cell { --target-color: var(--mg-mint); position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--mg-line); background: rgba(var(--mg-ink-rgb), .35); cursor: crosshair; padding: 4px; color: var(--mg-fog); overflow: hidden; }
+.mg-empty-mark { width: 5px; height: 5px; border-radius: 50%; background: var(--mg-line); }
+.mg-cell.on { border-color: var(--target-color); background: rgba(var(--mg-ink-rgb), .73); animation: mg-appear .12s ease-out; }
+.mg-cell.collected { animation: mg-collected .3s ease-out; }
+@keyframes mg-collected { from { border-color: var(--mg-mint); box-shadow: inset 0 0 24px color-mix(in srgb, var(--mg-mint) 30%, transparent); } to { border-color: var(--mg-line); box-shadow: none; } }
+.mg-cell.rare { --target-color: var(--mg-honey); }
+.mg-cell.bad { --target-color: var(--mg-rose); }
+.mg-cell.on:hover { background: color-mix(in srgb, var(--target-color) 12%, var(--mg-ink)); }
+.mg-vein { display: block; width: 88px; height: 80px; max-height: calc(100% - 16px); pointer-events: none; }
+.mg-vein svg { width: 100%; height: 100%; }
+.mg-target-tag { font-size: var(--fs-2xs); color: var(--target-color); letter-spacing: .12em; pointer-events: none; }
+.mg-left { position: absolute; left: 10%; bottom: 0; height: 3px; width: calc(var(--left, 1) * 80%); background: var(--target-color); pointer-events: none; }
+@keyframes mg-appear { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+/* Gather: one herb, hold/release gauge. The green target and white center are fixed per herb. */
+.mg-pluck-stage { position: absolute; inset: 96px 16px 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.mg-plant-halo { position: absolute; top: 8px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--mg-accent) 28%, transparent), transparent 68%); pointer-events: none; }
+.mg-pluck-action { position: relative; z-index: 1; padding: 0; border: 0; background: transparent; cursor: grab; width: 180px; height: 190px; flex: 0 0 190px; }
+.mg-pluck-action:disabled { cursor: default; }
+.mg-plant-art { display: block; width: 100%; height: 100%; transform-origin: 50% 90%; transform: translateY(calc(var(--pull, 0) * -18px)) rotate(calc(var(--pull, 0) * -5deg)); transition: filter .12s; }
+.mg-plant-art svg { width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(var(--shadow-rgb), .5)); pointer-events: none; }
+.mg-pluck-stage.holding .mg-pluck-action { cursor: grabbing; }
+.mg-pluck-stage.sweet .mg-plant-art { filter: drop-shadow(0 0 9px var(--mg-sage)); }
+.mg-plant-label { z-index: 1; color: var(--mg-cream); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .08em; padding: 5px 14px; border-radius: 20px; background: rgba(var(--mg-ink-rgb), .8); }
+.mg-pluck-stage.bad .mg-plant-label { color: var(--mg-rose); }
+.mg-pluck-stage.rare .mg-plant-label { color: var(--mg-mint); }
+.mg-pull-panel { width: min(340px, 80%); padding: 14px 18px 12px; border: 1px solid var(--mg-line); border-radius: 8px; background: rgba(var(--mg-ink-rgb), .94); z-index: 1; }
+.mg-pull-label { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--mg-fog); margin-bottom: 12px; }
+.mg-pull-label b { color: var(--mg-cream); font-weight: 500; }
+.sweet .mg-pull-label b { color: var(--mg-sage); }
+.mg-pull-track { height: 16px; position: relative; background: var(--mg-track); border-radius: 3px; }
+.mg-pull-zone, .mg-pull-perfect { position: absolute; top: 0; bottom: 0; background: var(--mg-sage); }
+.mg-pull-perfect { background: var(--mg-cream); opacity: .7; }
+.mg-pull-needle { position: absolute; top: -5px; bottom: -5px; width: 3px; background: var(--mg-cream); box-shadow: 0 0 0 1px var(--mg-ink); transform: translateX(-50%); border-radius: 2px; }
+.mg-plant-life { margin-top: 12px; height: 2px; background: var(--mg-line); }
+.mg-plant-life b { display: block; height: 100%; background: var(--mg-fog); }
+.mg-pluck-stage.waiting .mg-pull-panel, .mg-pluck-stage.bad .mg-pull-track { opacity: .25; }
+/* Timber: connected illustrated bark, readable incoming branches and two large controls. */
+.mg-chop-area { position: absolute; inset: 88px 0 110px; cursor: pointer; }
+.mg-tree { position: absolute; left: 50%; top: -3px; bottom: 0; width: 102px; transform: translateX(-50%); display: flex; flex-direction: column-reverse; }
+.mg-seg { position: relative; flex: 1; min-height: 0; }
+.mg-seg > svg { display: block; width: 100%; height: 100%; overflow: hidden; }
 .mg-seg.gone { visibility: hidden; }
-.mg-seg.rare { background-image: var(--mg-log-trunk-rare); background-size: calc(100% * 512 / 392) auto; }
-/* 가지 — 오른쪽을 보는 한 장 · 왼쪽 가지는 좌우를 뒤집는다 · 비 451 : 184 */
-.mg-branch { position: absolute; top: 50%; width: 130px; aspect-ratio: 451 / 184; translate: 0 -50%; pointer-events: none;
-    background: var(--mg-log-branch) center / calc(100% * 512 / 451) auto no-repeat; }
-.mg-branch.L { right: 100%; scale: -1 1; }
-.mg-branch.R { left: 100%; }
-/* 나무꾼 — 오른쪽을 보는 한 장 · 나무 오른쪽에 서면 좌우를 뒤집어 나무를 본다 · 비 363 : 451 · 휘두름(`transform`)과 뒤집기(`scale`)는 따로 겹친다 */
-.mg-jack { position: absolute; bottom: 40px; height: 88px; aspect-ratio: 363 / 451; pointer-events: none;
-    background: var(--mg-log-jack) center / auto calc(100% * 512 / 451) no-repeat; }
-.mg-jack.L { right: calc(50% + 46px); }
-.mg-jack.R { left: calc(50% + 46px); scale: -1 1; }
-.mg-jack.swing { animation: mg-swing .12s; }
-@keyframes mg-swing { 50% { transform: translateY(-4px) rotate(-6deg); } }
-.mg-key { position: absolute; bottom: 6px; font-size: 24px; color: var(--text-muted); pointer-events: none; }
-.mg-key.L { left: 20px; }
-.mg-key.R { right: 20px; }
+.mg-amber-knot { position: absolute; inset: 0; display: grid; place-items: center; color: var(--mg-honey); font-size: var(--fs-xl); text-shadow: 0 0 10px var(--mg-honey); }
+.mg-branch { position: absolute; top: 28%; width: 128px; height: 50px; pointer-events: none; }
+.mg-branch svg { width: 100%; height: 100%; }
+.mg-branch.L { right: 88%; transform: scaleX(-1); }
+.mg-branch.R { left: 88%; }
+.mg-jack { position: absolute; bottom: -7px; height: 124px; width: 124px; pointer-events: none; }
+.mg-jack svg { width: 100%; height: 100%; }
+.mg-jack.L { right: calc(50% + 40px); }
+.mg-jack.R { left: calc(50% + 40px); scale: -1 1; }
+.mg-jack.swing { animation: mg-swing .14s ease-out; }
+@keyframes mg-swing { 50% { transform: translateY(-5px) rotate(-9deg); } }
+.mg-chop-control { position: absolute; bottom: 58px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 20px; min-width: 170px; color: var(--mg-cream); border: 1px solid var(--mg-line); border-radius: 6px; background: rgba(var(--mg-ink-rgb), .88); cursor: pointer; }
+.mg-chop-control.L { left: 12%; }.mg-chop-control.R { right: 12%; }
+.mg-chop-control:hover { border-color: var(--mg-honey); background: var(--mg-ink); }
+.mg-chop-control kbd { font-family: inherit; font-size: var(--fs-xs); color: var(--mg-honey); }
+.mg-chop-control span { font-size: var(--fs-xs); }
+@media (max-width: 650px) {
+    .modal-box.mg-modal { padding: 10px; }
+    .mg-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .mg-field { height: 520px; }
+    .mg-card h3 { font-size: calc(var(--fs-xl) * 1.2); }
+    .mg-hud { left: 8px; right: 8px; gap: 8px; padding: 10px; }
+    .mg-hud-title { min-width: 100px; }.mg-items small { display: none; }
+    .mg-clock { padding-left: 8px; min-width: 40px; }
+    .mg-wall { left: 5%; right: 5%; gap: 8px; }
+    .mg-chop-control { min-width: 0; padding: 12px; gap: 8px; }
+    .mg-chop-control.L { left: 6%; }.mg-chop-control.R { right: 6%; }
+    .mg-chop-control span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .mg-cell.on, .mg-jack.swing, .mg-field.shake { animation: none; }
+    .mg-pop { animation-duration: .1s; }.mg-go.btn { transition: none; }
+}
+
 /* 자리 칸의 선택 창 [2026-09-27 · SCREEN_DESIGN §8 · ADR-0373] — 칸 옆에 선다. 자리는 툴팁과 같은 **한 장 좌표**(`app.js:dpPickPanel` · `stageRect`)라
    `position: fixed` 가 한 장(#stage)에 붙는다. 깔개(`.dp-pick-back`)는 한 장 전체 — 바깥 클릭이 닫기다 */
 .dp-pick-back { position: fixed; inset: 0; z-index: 38; }
@@ -4125,6 +4155,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dp-pick-name i { font-style: normal; color: var(--text-secondary); font-size: var(--fs-xs); margin-left: 6px; }
 .dp-pick-val { flex: 0 0 auto; font-size: var(--fs-sm); color: var(--text-secondary); }
 .dp-pick-val b { color: var(--text-primary); }
+.dp-pick-val small { display: block; color: var(--color-success); font-size: var(--fs-xs); }
 .dp-pick-doing { flex: 0 0 auto; min-width: 56px; text-align: right; font-size: var(--fs-xs); color: var(--text-muted); }
 .dp-pick-doing.exp { color: var(--color-warning); }
 /* 못 고르는 줄(원정 · 수색 중) — 흐리고 안 눌린다. 이유는 `title` */
@@ -4343,7 +4374,6 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .tv-send { display: grid; grid-template-columns: var(--tv-face) minmax(0, 1fr); grid-template-areas: "h h" "f i" "b b"; gap: 8px; }
 .tv-send > .tv-join-h { grid-area: h; }
 .tv-send > .btn { grid-area: b; width: 100%; }
-.tv-send > .tv-send-ph { visibility: hidden; }   /* 완료 — 버튼 줄의 자리만 지킨다 */
 .tv-send-face { grid-area: f; aspect-ratio: 1; overflow: hidden; background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-top-width: 2px; }
 .tv-send-face.empty { background: none; border: 1px dashed var(--border-secondary); }
 /* 수색 완료 — 얼굴 칸이 「+」 버튼이 된다 · 누르면 수색 칸이 결과 카드(ADR-0627). **실선**이라 점선 빈 칸(「아직 안 골랐다」)과 갈린다 ·
@@ -4425,9 +4455,6 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     font-size: var(--fs-sm); color: var(--text-secondary);
 }
 .tv-story p { margin: 0; }
-/* 완료 줄 — 이야기 맨 위 「수색 완료」 · 왼쪽 선이 초록이 된다 (결과 영웅은 가입 희망 칸 · ADR-0593) */
-.tv-story.done { border-left-color: var(--color-success); }
-.tv-story.done i { display: block; color: var(--color-success); font-style: normal; font-size: var(--fs-xs); }
 /* 소문 — 만날 사람의 죄종을 **보내기 전에** 말한다 (ADR-0068). 죄종 칩을 그대로 쓴다:
    화제를 숨기지 않는 것이 이 기능의 전제라 별도 표기를 발명하지 않는다 */
 .tv-rumor {

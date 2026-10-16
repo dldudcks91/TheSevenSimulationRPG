@@ -389,13 +389,16 @@ export const monsterName = id => {
 };
 /** 얼굴 이미지가 있는 몬스터만 경로를 돌려준다 (monster.csv:face).
  *  **정예는 제 초상을 가질 수 있다** [2026-09-17] — `monster.csv:face_elite` 가 1 이면 `<idx>_elite.webp`,
- *  아니면 기본 `<idx>.webp` 로 떨어진다. `facePath`는 선택한 스타일의 파일 목록을 읽고,
- *  해당 파일이 없으면 null을 돌려준다. */
+ *  아니면 기본 `<idx>.webp` 로 떨어진다. 선택한 스타일에 정예 그림이 없으면
+ *  같은 스타일의 일반형을 쓴다. 다른 스타일의 그림을 대신 쓰지는 않는다. */
 export const monsterFace = (id, grade = 'normal') => {
     const r = D.monsters?.[id];
     if (!r?.face) return null;
-    const v = grade === 'elite' && r.face_elite ? '_elite' : '';
-    return M.facePath(`monster/${id}${v}.webp`);
+    if (grade === 'elite' && r.face_elite) {
+        const elite = M.facePath(`monster/${id}_elite.webp`);
+        if (elite) return elite;
+    }
+    return M.facePath(`monster/${id}.webp`);
 };
 /** 몬스터 id 앞자리 = 챕터 (1101 → 1챕터) */
 export const monsterSin = id => D.chapters?.[Math.floor(id / 1000)]?.sin ?? 'wrath';

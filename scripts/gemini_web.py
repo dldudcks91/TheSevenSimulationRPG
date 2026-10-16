@@ -40,11 +40,17 @@ def icon_button(page, name):
 
 def attach(page, paths):
     """Attach local files to the prompt box: '+' (plus) -> 'attach_file' menu item -> file chooser."""
-    icon_button(page, 'plus').click()
-    page.wait_for_timeout(1000)
-    item = page.evaluate_handle(ICON_BTN.replace("querySelectorAll('button')", "querySelectorAll('button, [role=menuitem]')"),
-                                'attach_file').as_element()
-    if item is None:
+    # 새 채팅 직후엔 + 메뉴가 안 열릴 때가 있다(연속 run 의 둘째 판부터) — 닫고 다시 연다
+    for _ in range(4):
+        icon_button(page, 'plus').click()
+        page.wait_for_timeout(1500)
+        item = page.evaluate_handle(ICON_BTN.replace("querySelectorAll('button')", "querySelectorAll('button, [role=menuitem]')"),
+                                    'attach_file').as_element()
+        if item is not None:
+            break
+        page.keyboard.press('Escape')
+        page.wait_for_timeout(2000)
+    else:
         raise RuntimeError('upload menu item not found')
     with page.expect_file_chooser(timeout=15000) as fc:
         item.click()
@@ -145,7 +151,22 @@ def run(page, gem_url, prompt, out_dir, n, prefix, files=()):
             send.click()
         secs = wait_new_image(page, before, done_before=done_before)
         page.wait_for_timeout(3000)
-        download_last(page, os.path.join(out_dir, '%s_%d.png' % (prefix, k)))
+        out_path = os.path.join(out_dir, '%s_%d.png' % (prefix, k))
+        download_last(page, out_path)
+        # 생성 직후 받은 파일이 0바이트로 끊길 때가 있다 — 그 채팅을 다시 열어, 그림이 뜬 뒤에 받는다
+        chat = page.url
+        for _ in range(2):
+            if os.path.getsize(out_path) > 0:
+                break
+            page.goto(chat)
+            for _ in range(30):
+                if page.evaluate(BIG_IMGS) > 0:
+                    break
+                page.wait_for_timeout(1000)
+            page.wait_for_timeout(2000)
+            download_last(page, out_path)
+        if os.path.getsize(out_path) == 0:
+            print('EMPTY %s | chat %s' % (out_path, chat), flush=True)
         print('RUN %d/%d: image after %.0fs | chat %s' % (k, n, secs, page.url), flush=True)
 
 
