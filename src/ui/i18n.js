@@ -57,6 +57,8 @@ export const has = key => Object.prototype.hasOwnProperty.call(STRINGS, key);
 export function t(key, params) {
     const e = STRINGS[key];
     let s = e ? (e[current] ?? e.ko) : key;
+    // 단수 · 복수 — 값이 `{one, other}` 면 수가 1 일 때 `one` [2026-10-17 · 「1 items」] · 수는 `{n}`, 없으면 `{v}` (천 단위 쉼표를 단 문자열도 받는다)
+    if (s && typeof s === 'object') s = Number(String(params?.n ?? params?.v ?? '').replaceAll(',', '')) === 1 ? s.one : s.other;
     if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, v);
     return s;
 }
@@ -281,13 +283,10 @@ const STRINGS = {
     'exp.locked': { ko: '이전 스테이지 클리어 필요', en: 'Clear the previous stage first' },
     // 난이도 탭 바로 옆 — 다음에 열릴 단의 조건 (SCREEN_DESIGN §4-1 · ADR-0586 · ADR-0596). {d} = 앞 단 이름 · {ch} = `balance.csv:difficulty_unlock_chapter`
     'exp.diff.need': { ko: '{d} {ch}장 보스 클리어 필요', en: 'Clear the {d} Ch{ch} boss first' },
-    /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 폐지로 「위험도 {lv}」 → 「레벨 {lv}」]. {lv} = `stage.csv:dlvl` */
-    'exp.stageMeta': { ko: '레벨 {lv} · 약 {m}분', en: 'Level {lv} · ~{m} min' },
-    /* 장소 한 줄 — 스테이지 목록 줄의 잔글씨 [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0436]. {lv} · {m} 는 칸들의 범위(`1~3`)거나 한 값이다.
-       en 은 「~」를 안 붙인다 — 범위의 「~」와 겹쳐 `~4~5 min` 으로 읽혔다 */
-    'exp.placeMeta': { ko: 'Lv {lv} · 약 {m}분', en: 'Lv {lv} · {m} min' },
-    /* 스테이지 원소 — 어느 저항을 챙겨야 하는지의 신호 (battle_design §9-8) */
-    'exp.element': { ko: '원소 {e}', en: 'Element {e}' },
+    /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-10-17 · SCREEN_DESIGN §4-1 · ADR-0649 — 소요 · 원소를 걷어 레벨만]. {lv} = 고른 난이도의 몬스터 레벨 */
+    'exp.stageMeta': { ko: '레벨 {lv}', en: 'Level {lv}' },
+    /* 장소 줄 잔글씨의 챕터보스 이름 — 「분노의 사탄」 [2026-10-17 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0649]. {sin} = 죄종 이름 · {name} = 몬스터 이름 */
+    'exp.sinBoss': { ko: '{sin}의 {name}', en: '{name} of {sin}' },
     /* 출발 칸 줄의 라벨 — 출정 창 출정 방식 칸 맨 위 [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 줄(ADR-0104)을 걷은 자리] */
     'exp.cell.h': { ko: '출발 칸', en: 'Starting stage' },
     // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 보스전 중이면 다음 런부터 · 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
@@ -376,7 +375,7 @@ const STRINGS = {
     'ch.auto.ilvlOff': { ko: '안 봄', en: 'Off' },
     'ch.auto.ilvlBelow': { ko: 'Lv.{n} 미만', en: 'Below Lv.{n}' },
     'ch.auto.apply': { ko: '지금 인벤토리에도 적용', en: 'Apply to inventory now' },
-    'ch.auto.confirm': { ko: '인벤토리의 {n}개가 분해된다', en: '{n} items in the inventory will be salvaged' },
+    'ch.auto.confirm': { ko: '인벤토리의 {n}개가 분해된다', en: { one: '{n} item in the inventory will be salvaged', other: '{n} items in the inventory will be salvaged' } },
     'ch.auto.ok': { ko: '확인', en: 'Confirm' },
     // ~~'ch.err.class'~~ 은 2026-10-06 삭제 — 09-10 장착 개방 뒤로 내는 곳이 없다. 거절 사유는 요구 레벨 하나 (R215 · ADR-0525)
     'ch.err.level': { ko: '레벨이 모자라 낄 수 없다', en: 'Level too low to equip' },
@@ -686,16 +685,16 @@ const STRINGS = {
     'cm.drop': { ko: '포기', en: 'Abandon' },
     'cm.dropConfirm': { ko: '정말 포기', en: 'Confirm abandon' },
     'cm.slots': { ko: '받음 {n} / {max}', en: 'Taken {n} / {max}' },
-    'cm.goal.chapter': { ko: '{t}의 몬스터 {n}마리', en: '{n} monsters in the {t}' },
-    'cm.goal.race': { ko: '{t} 종족 {n}마리', en: '{n} {t} foes' },
+    'cm.goal.chapter': { ko: '{t}의 몬스터 {n}마리', en: { one: '{n} monster in the {t}', other: '{n} monsters in the {t}' } },
+    'cm.goal.race': { ko: '{t} 종족 {n}마리', en: { one: '{n} {t} foe', other: '{n} {t} foes' } },
     'cm.goal.monster': { ko: '{t} {n}마리', en: '{t} ×{n}' },
-    'cm.goal.elite': { ko: '정예 {n}마리', en: '{n} elites' },
-    'cm.goal.boss': { ko: '보스 {n}마리', en: '{n} bosses' },
-    'cm.goal.rarity': { ko: '{t} 장비 {n}개', en: '{n} {t} items' },
+    'cm.goal.elite': { ko: '정예 {n}마리', en: { one: '{n} elite', other: '{n} elites' } },
+    'cm.goal.boss': { ko: '보스 {n}마리', en: { one: '{n} boss', other: '{n} bosses' } },
+    'cm.goal.rarity': { ko: '{t} 장비 {n}개', en: { one: '{n} {t} item', other: '{n} {t} items' } },
     'cm.taken': { ko: '의뢰를 받았다 — {goal}', en: 'Commission taken — {goal}' },
     'cm.claimed': { ko: '의뢰 완료 — {g} G', en: 'Commission complete — {g} G' },
     'cm.dropped': { ko: '의뢰를 포기했다', en: 'Commission abandoned' },
-    'cm.err.full': { ko: '의뢰는 {n}개까지 받아 둘 수 있다', en: 'You can hold up to {n} commissions' },
+    'cm.err.full': { ko: '의뢰는 {n}개까지 받아 둘 수 있다', en: { one: 'You can hold up to {n} commission', other: 'You can hold up to {n} commissions' } },
     'cm.err.notDone': { ko: '아직 목표를 다 채우지 않았다', en: 'The goal is not filled yet' },
     /* 도박장 (SCREEN_DESIGN §8-1 · ADR-0322 자리 · ADR-0331 슬롯) — 의뢰 오른쪽 칸이 창을 연다. 창은 3×3 슬롯이다.
        심볼 · 잭팟 이름은 여기 없다 — `slot_symbol.csv` · `slot_coin.csv` 의 `_kr`/`_en` 쌍을 `L()` 로 푼다. 규칙 문장은 도움말(`gb.help`)만 든다 */
@@ -707,7 +706,7 @@ const STRINGS = {
     'gb.spinN': { ko: '{n}판 돌리기', en: 'Spin ×{n}' },
     'gb.won': { ko: '받음', en: 'Won' },
     'gb.net': { ko: '순손익', en: 'Net' },
-    'gb.spins': { ko: '{n}판', en: '{n} spins' },
+    'gb.spins': { ko: '{n}판', en: { one: '{n} spin', other: '{n} spins' } },
     'gb.line': { ko: '라인 {n}', en: 'Line {n}' },
     'gb.hold': { ko: '홀드 앤 스핀', en: 'Hold & Spin' },
     'gb.respins': { ko: '리스핀 {n}', en: 'Respins {n}' },
@@ -893,14 +892,14 @@ const STRINGS = {
         en: 'Nothing to wait for — <b>the moment the run ends</b> both downed heroes and lost HP are restored, free. Everyone goes out again on the next run',
     },
     'rep.drops.h': { ko: '획득 아이템', en: 'Loot' },   // 책 · 재료도 이 격자에 선다 (ADR-0625)
-    'rep.drops.sub': { ko: '{n}개', en: '{n} items' },
+    'rep.drops.sub': { ko: '{n}개', en: { one: '{n} item', other: '{n} items' } },
     'rep.drops.none': { ko: '떨어진 아이템 없음', en: 'No loot' },
     'rep.book': { ko: '책', en: 'Book' },   // 획득 격자의 스킬북 칸 배지 (R179 · ADR-0420)
     'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
     'rep.list.h': { ko: '원정 기록', en: 'Runs' },
-    'rep.list.sub': { ko: '{n}판', en: '{n} runs' },
+    'rep.list.sub': { ko: '{n}판', en: { one: '{n} run', other: '{n} runs' } },
     'rep.list.empty': { ko: '기록 없음', en: 'No runs' },   // 런이 없는 부대 탭 (SCREEN_DESIGN §4-3 · ADR-0622)
     // 진 런의 「왜 졌나」 — 기여 표 쓰러짐 칸 · 그 아래 남은 적 줄 (SCREEN_DESIGN §4-3 · ADR-0623). 판정 문구는 없다 — 사실만
     'rep.fall.h': { ko: '쓰러짐', en: 'Fell' },
@@ -946,7 +945,7 @@ const STRINGS = {
     'st.range': { ko: '{a}~{b}', en: '{a}–{b}' },
     'st.atkType.physical': { ko: '물리', en: 'Physical' },
     'st.atkType.magic': { ko: '마법', en: 'Magic' },
-    'st.atkType.fire': { ko: '불', en: 'Fire' },
+    'st.atkType.fire': { ko: '화염', en: 'Fire' },
     'st.atkType.cold': { ko: '냉기', en: 'Cold' },
     'st.atkType.lightning': { ko: '전기', en: 'Lightning' },
     'st.atkType.poison': { ko: '독', en: 'Poison' },
@@ -962,8 +961,8 @@ const STRINGS = {
     'st.fx.demon': { ko: '데몬', en: 'Demon' },
     'st.fx.undead': { ko: '언데드', en: 'Undead' },
     'st.fx.ele': { ko: '원소 피해량 증가', en: 'Elemental Damage Increase' },
-    'st.fx.resRed': { ko: '적 원소 저항 감소', en: 'Enemy Resist Reduction' },   // 불/냉기/전기/독 네 값 (2026-09-28 사용자 지시) · 영어는 「Elemental」을 뺐다 — 두 줄로 꺾여 칸 바닥에 닿았다(저항은 원소뿐이다)
-    'st.fx.fire': { ko: '불', en: 'Fire' },
+    'st.fx.resRed': { ko: '적 원소 저항 감소', en: 'Enemy Resist Reduction' },   // 화염/냉기/전기/독 네 값 (2026-09-28 사용자 지시) · 영어는 「Elemental」을 뺐다 — 두 줄로 꺾여 칸 바닥에 닿았다(저항은 원소뿐이다)
+    'st.fx.fire': { ko: '화염', en: 'Fire' },
     'st.fx.cold': { ko: '냉기', en: 'Cold' },
     'st.fx.lightning': { ko: '전기', en: 'Lightning' },
     'st.fx.poison': { ko: '독', en: 'Poison' },
@@ -989,11 +988,11 @@ const STRINGS = {
     'st.desc.defense': { ko: '받는 물리 피해를 줄인다 — 옆의 감쇠 % 만큼 덜 받는다', en: 'Reduces physical damage taken — by the mitigation % beside it' },
     'st.desc.damage_reduction': { ko: '받는 피해를 % 만큼 줄이고 고정값만큼 더 뺀다 (고정 / %)', en: 'Cuts damage taken by the %, then subtracts the flat amount (flat / %)' },
     'st.desc.fhr': { ko: '물리 공격에 맞아 경직되는 시간이 줄어든다', en: 'Shortens the stagger from physical hits' },
-    'st.desc.res_fire': { ko: '받는 불 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Fire damage taken by this % — up to the cap beside it' },
+    'st.desc.res_fire': { ko: '받는 화염 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Fire damage taken by this % — up to the cap beside it' },
     'st.desc.res_cold': { ko: '받는 냉기 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Cold damage taken by this % — up to the cap beside it' },
     'st.desc.res_lightning': { ko: '받는 전기 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Lightning damage taken by this % — up to the cap beside it' },
     'st.desc.res_poison': { ko: '받는 독 피해를 이 % 만큼 줄인다 — 옆의 상한까지', en: 'Reduces Poison damage taken by this % — up to the cap beside it' },
-    'st.desc.fx_ele': { ko: '불 · 냉기 · 전기 · 독 피해가 원소마다 늘어난다', en: 'Increases Fire / Cold / Lightning / Poison damage, each on its own' },
+    'st.desc.fx_ele': { ko: '화염 · 냉기 · 전기 · 독 피해가 원소마다 늘어난다', en: 'Increases Fire / Cold / Lightning / Poison damage, each on its own' },
     'st.desc.fx_res_red': { ko: '그 원소로 때릴 때 적의 저항을 이만큼 깎는다', en: "Lowers the enemy's resistance when you hit with that element" },
     'st.desc.fx_vs_type': { ko: '일반 · 데몬 · 언데드 적에게 주는 피해가 늘어난다', en: 'More damage to Normal, Demon and Undead enemies' },
     'st.desc.fx_dr_type': { ko: '일반 · 데몬 · 언데드 적에게 받는 피해가 줄어든다', en: 'Less damage taken from Normal, Demon and Undead enemies' },
@@ -1412,7 +1411,7 @@ const STRINGS = {
     'sk.masteryEffect.res_reduction': { ko: '적의 원소 저항이 {v} 감소한다', en: 'Enemy resistances are reduced by {v}' },
     'sk.reset': { ko: '초기화', en: 'Reset' },
     'sk.unlearn': { ko: '되돌리기', en: 'Refund' },
-    'sk.reset.done': { ko: '{n} 포인트를 돌려받았다', en: 'Refunded {n} points' },
+    'sk.reset.done': { ko: '{n} 포인트를 돌려받았다', en: { one: 'Refunded {n} point', other: 'Refunded {n} points' } },
     'sk.needLv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'sk.err.locked': { ko: 'Lv.{lv} 부터 찍을 수 있다', en: 'Available from Lv.{lv}' },
     'sk.err.maxRank': { ko: '이미 최대 랭크다', en: 'Already at max rank' },
@@ -1631,7 +1630,7 @@ const STRINGS = {
     'sk.amt.heal': { ko: '{v} 만큼', en: '{v} HP' },
     'sk.amt.healFx': { ko: '{f} 만큼', en: 'HP equal to {f}' },
     /* 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다(Alt 의 괄호 식이 값 바로 뒤에 서게). 초는 `time.s` · % 는 기호 그대로 */
-    'sk.u.times': { ko: '{v}번', en: '{v} times' },
+    'sk.u.times': { ko: '{v}번', en: { one: '{v} time', other: '{v} times' } },
     // ~~`sk.altHint`(「Alt 계산식」 각주)~~ 는 2026-10-03 삭제 [사용자 지시 · ADR-0499]
     /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill_status.csv:stat` 어휘 그대로(옛 `skill.csv:effect_stat` · 2026-09-22) · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
     'sk.eff.atk_pct': { ko: '데미지 +{v} 를 건다', en: '+{v} Damage' },
@@ -1740,7 +1739,7 @@ const STRINGS = {
     'lab.roll': { ko: '굴리기', en: 'Roll' },
     'lab.roll10': { ko: '×10', en: '×10' },
     'lab.clear': { ko: '비우기', en: 'Clear' },
-    'lab.count': { ko: '{n}개', en: '{n} items' },
+    'lab.count': { ko: '{n}개', en: { one: '{n} item', other: '{n} items' } },
 
     /* ── 도감 ── */
     /* 세그먼트 다섯 [마스터리 추가 2026-09-24 — SCREEN_DESIGN §9] — 몬스터(카드 수집)만 이 블록이 든다.
@@ -1762,7 +1761,14 @@ const STRINGS = {
     // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 (SCREEN_DESIGN §9 · ADR-0206)
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story' },
-    'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },    'cx.note': {
+    'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },
+    // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 단계 (SCREEN_DESIGN §9-1 · ADR-0650)
+    'cx.tip.source': { ko: '획득처', en: 'Found On' },
+    'cx.tip.roll': { ko: '보스 · 무작위 칸', en: 'Bosses · random slot' },   // 셋째 칸(직업 풀 굴림)에서 나올 수 있는 보스 — 고정 칸 몬스터와 따로 묶는다
+    'cx.tip.at': { ko: '{c}-{s}', en: '{c}-{s}' },   // 초상 아래 장-장소
+    'cx.tip.blueprint': { ko: '스킬 도안', en: 'Skill Blueprint' },
+    'cx.tip.cap': { ko: '업그레이드 상한 {n}', en: 'Upgrade cap {n}' },   // skill_codex_level.csv:upgrade_cap
+    'cx.note': {
         ko: '그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
             + '처치 하나의 도감 경험치는 그 원정의 난이도가 정한다 — 높은 난이도일수록 빨리 찬다 · 이긴 라운드의 처치만 센다 · 보스 등급별 차등은 후속<br>'
             + '카드에 마우스를 올리면 그 몬스터의 이야기와 레벨 단계가 뜬다',
@@ -1878,21 +1884,20 @@ const STRINGS = {
     // 이펙트 세그먼트 [2026-10-05 · §9-1 · ADR-0513 · 세그먼트로 2026-10-09 ADR-0559] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
     'ix.fx.playAll': { ko: '▶ 전부 재생', en: '▶ Play All' },
     // 이펙트 세그먼트의 그림체 탭 [2026-10-09 · §9-1 · ADR-0559] — 키 = skill_art.js:ART_STYLES · 실전 그림체에는 live 가 이름을 감싼다
-    'ix.fxs.portrait': { ko: '초상 그림체', en: 'Portrait' },     // 영어는 짧게 — 설정 판(§2-2)의 좁은 줄에 선다
     'ix.fxs.ink': { ko: '수묵', en: 'Ink' },
-    'ix.fxs.pen': { ko: '고딕 펜화', en: 'Gothic Pen' },          // 초상 그림체 · 수묵에 비슷한 시안 셋 [2026-10-10 · ADR-0584]
-    'ix.fxs.charcoal': { ko: '목탄', en: 'Charcoal' },
-    'ix.fxs.oil': { ko: '유화', en: 'Oil Paint' },
     'ix.fxs.darktoon': { ko: '다크 카툰', en: 'Dark Cartoon' },
-    'ix.fxs.cinder': { ko: '강철·잿불', en: 'Steel & Cinder' },
-    'ix.fxs.ritual': { ko: '고대 주술', en: 'Ancient Ritual' },
+    'ix.fxs.cel2d': { ko: '셀 2D', en: 'Cel 2D' },
+    'ix.fxs.comic2d': { ko: '플랫 코믹', en: 'Flat Comic' },
+    'ix.fxs.mobile2d': { ko: '클린 모바일', en: 'Clean Mobile' },
+    'ix.fxs.spirit2d': { ko: '도깨비불 2D', en: 'Spirit Flame 2D' },
+    'ix.fxs.pixel2d': { ko: '클린 도트', en: 'Clean Pixel' },
     'ix.fxs.code': { ko: '코드 모양', en: 'Code' },
     'ix.fxs.live': { ko: '{name} · 실전', en: '{name} · In Battle' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]
     'ix.tier': { ko: '{n}티어', en: 'Tier {n}' },
     /* 전직 스킬 묶음의 이름 — `ix.adv.*`(전직) · `ix.sk.*`(스킬) 11 키는 2026-10-02 삭제. 묶음 머리는 `advance.csv`,
        타일 이름은 `skill.csv` 가 든다(§9-1 · ADR-0472) */
-    'ix.count': { ko: '{n}장', en: '{n} images' },
+    'ix.count': { ko: '{n}장', en: { one: '{n} image', other: '{n} images' } },
     'ix.style': { ko: '얼굴 스타일', en: 'Face style' },
     'ix.hero': { ko: '영웅 {n}', en: 'Hero {n}' },
 
@@ -1958,7 +1963,7 @@ const STRINGS = {
     'bt.effect.basic.up': { ko: '기본 공격 피해 {v}% 증가', en: 'Basic attack damage +{v}%' },
     'bt.effect.basic.down': { ko: '기본 공격 피해 {v}% 감소', en: 'Basic attack damage −{v}%' },
     'bt.effect.frenzy': { ko: '때릴 때마다 공격 속도 {v}% 씩 증가', en: 'Attack Speed +{v}% per hit' },
-    'bt.effect.evade': { ko: '받는 공격 {n}번 회피', en: 'Avoids the next {n} attacks' },
+    'bt.effect.evade': { ko: '받는 공격 {n}번 회피', en: { one: 'Avoids the next {n} attack', other: 'Avoids the next {n} attacks' } },
     'bt.effect.imbue': { ko: '{e} 스킬에 상태이상 추가', en: '{e} skills inflict an ailment' },
     'bt.effect.pulse': { ko: '일정 간격으로 적 전원에게 {e} 피해', en: '{e} damage to every enemy at intervals' },
     'bt.effect.echo': { ko: '공격 스킬이 한 번 더', en: 'Attack skills fire twice' },

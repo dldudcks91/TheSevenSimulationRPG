@@ -73,7 +73,7 @@ im.crop((0, 155, 1536, 155 + 714)).save(dst, 'WEBP', quality=88, method=6)
 
 #### 옛 챕터 1 지도 — 내용과 규격 [재작성 2026-09-04 사용자 지시 · 2026-10-08 부터 안 읽는다]
 
-**1판은 폐기했다 — 「지옥」으로 그려졌다.** 챕터 1 은 지옥이 아니라 **아우레아(인간의 땅)** 이고, 불은 사탄의 군세가 지른 것이지
+**1판은 폐기했다 — 「지옥」으로 그려졌다.** 챕터 1 은 지옥이 아니라 **아우레아(인간의 땅)** 이고, 화염은 사탄의 군세가 지른 것이지
 땅이 용암인 게 아니다 (`docs/game_design/story/prologue.md` 씬 4·5). 2판은 **불타는 농지 · 강 · 침엽수림**으로 다시 그렸다.
 
 담은 자리 **일곱** — 배치는 아래가 안전하고 위로 갈수록 위험하다:
@@ -84,9 +84,9 @@ im.crop((0, 155, 1536, 155 + 714)).save(dst, 'WEBP', quality=88, method=6)
 | 왼쪽 아래 | **잿불 갱도** (광석 수레가 선 갱도 어귀) | `src/data/mine_node.csv:ember_pit` (`unlock_chapter=1`) |
 | 오른쪽 아래 | **이름 없는 동굴** | ⚠ 의도적으로 안 붙였다 — 탐험 노드 자리인데 기획 백지 |
 | 왼쪽 가운데 | 핏빛 교전지대 | `src/data/stage.csv:102` |
-| 오른쪽 가운데 | 원한의 묘지 (불이 없는 유일한 자리 — 언데드) | `stage.csv:103` |
+| 오른쪽 가운데 | 원한의 묘지 (화염이 없는 유일한 자리 — 언데드) | `stage.csv:103` |
 | 왼쪽 위 | 파멸의 진영 (마귀 야영지) | `stage.csv:101` |
-| 오른쪽 위 | **사탄의 제단** — 불의 고리를 두른 유일한 자리 · 가장 크다 | `stage.csv:104` (챕터 보스) |
+| 오른쪽 위 | **사탄의 제단** — 화염의 고리를 두른 유일한 자리 · 가장 크다 | `stage.csv:104` (챕터 보스) |
 
 **글자는 한 자도 없다** — ko/en 라벨은 UI 가 그림 위에 얹어야 하기 때문이다(CLAUDE.md 규칙 6).
 
@@ -108,7 +108,7 @@ Image.open(src).convert('RGB').crop((0, 0, 2752, 1211)).save(dst, 'WEBP', qualit
 from PIL import Image, ImageEnhance
 WRATH = (0xe0, 0x30, 0x30)                       # ui/mock.js:SINS.wrath
 lut = [min(255, int(255*((i/255)**1.55))) for i in range(256)] * 3
-im = ImageEnhance.Color(im.point(lut)).enhance(0.88)   # 중간톤만 눌러 불(밝은 값)은 남긴다
+im = ImageEnhance.Color(im.point(lut)).enhance(0.88)   # 중간톤만 눌러 화염(밝은 값)은 남긴다
 R, G, B = im.split()                                    # 파랑을 빼 흙을 붉은 쪽으로
 f = lambda c, k: c.point(lambda v: min(255, int(v*k)))
 im = Image.merge('RGB', (f(R,1.04), f(G,0.89), f(B,0.82)))
@@ -271,35 +271,18 @@ buildings/
 
 ## fx/ — 관전 스킬 이펙트 그림
 
-```
-fx/skills/<file>.webp      기본 5직업 39스킬 41장 + 전직 45스킬 54장(두 장 스킬의 둘째 = <skill_id>_impact) 설치본 — 투박한 초상 그림체 · 관전의 기본 그림체(ADR-0584) · 이름 = skill_art.js:SKILL_ART 표의 이름
-fx/skills/<file>_ink.webp  수묵 붓 95장(기본 41 + 전직 54 · ADR-0559) — 그림체 탭 · 설정이 고르면 관전 · 이름 규칙 = skill_art.js:artFile
-fx/skills/<file>_<pen|charcoal|oil>.webp 고딕 펜화 · 목탄 · 유화 시안 셋 × 95장(ADR-0584) — 초상 그림체 · 수묵에 비슷한 그림체를 스킬마다 견준다 · 그림체 탭 · 설정이 고르면 관전
-fx/<종류>.webp            종류 공통 후보 5종 — physical · fire · cold · lightning · poison (꺼져 있다)
-fx_source/warrior_basic_20261005/  전사 적용본 생성 원본 · 프롬프트 · 측정 · 비교
-fx_source/warrior_sheet_20261006/  새 시트 보관 · 후보 · 백업 · 91px 비교 · 적용/복원 검증
-fx_source/party_basic_20261006/    다른 4직업 생성 원본 · 프롬프트 · 측정 · 직업별 비교 · 검증
-fx_source/mage_drop_20261008/     마법사 라이트닝 · 아이스 블라스트 시트 · 후보 · 프롬프트 · 바꾸기 전 두 장(previous/)
-fx_source/warrior_style_20261008/ 전사 그림체 시트 · 후보(A · B) · 비교 · 프롬프트 · 함성 시안(shout/) · 바꾸기 전 여덟 장(previous/)
-fx_source/knight_style_20261008/  기사 그림체 시안(첫 판 · redraw/ · 투박 crude/) · 오오라 마법진(aura/ · 합성본 aura/set/) · 바꾸기 전 세 장(previous/)
-fx_source/job_style_20261008/     마법사 6 · 궁수 6 · 사제 8 투박 시트 · 프롬프트 · 기준 그림 · 바꾸기 전 27장(previous/)
-fx_source/advance_20261008/       전직 45종 시트 16 · 지시문 · 기준 그림(anchor/) · 칸 문안과 미리보기 값(spec.py) · 자른 칸(cut/ — B안 포함) · 직업별 GIF(gif/) · 설치 = scripts/build_advance_fx.py
-fx_source/basic_size_20261008/    기본 스킬 크기 · 길이 비교 GIF · 코드 모양 vs 투박한 그림 비교 GIF(code_vs_art_*)
-fx_source/basic_clean_20261008/   기본 41장 깔끔판 시트 11 · 지시문 · 기준 그림(anchor/ — 게임에서 찍은 코드 모양) · 칸 문안(spec.py) · 자른 칸과 B안(new/) · 비교 GIF(gif/) · 설치 = scripts/build_basic_clean_fx.py
-fx_source/removed_20261010/       게임에서 걷은 그림(ADR-0584) — clean/ 깔끔판 41장(ADR-0551) · trial/ 픽셀 · 목판화 · 스테인드글라스 90장(ADR-0579) · 게임은 안 읽는다
-fx_source/ink_20261009/           수묵 95장 시트 25(i · w · n) · 지시문 · 기준 그림(anchor/ — 다섯 그림체 비교에서 고른 수묵 시트) · 발주 스크립트(ink*.py) · 칸 표(picks.py — B안 셋) · 설치 = scripts/build_ink_fx.py
-fx_source/styles_20261010/        그림체 시안 시트 · 지시문 · 발주 스크립트(style.py — 칸 문안은 수묵 판 지시문에서 붓 낱말만 걷는다 · 그림체마다 i1 이 기준 그림) — 2차 고딕 펜화 · 목탄 · 유화 시트 25 × 3(설치 = scripts/build_style_fx.py) · 1차 픽셀 · 목판화 · 스테인드글라스 시트 8 × 3(걷음)
-fx_source/<종류>.png      종류 공통 후보 원본 — 게임은 안 읽는다
+```text
+fx/skills/<file>_darktoon.webp  다크 카툰 — 기존 원본·설치본 유지, 기본 그림체
+fx/skills/<file>_ink.webp       수묵 — 기존 원본·설치본 유지
+fx/skills/<file>_<style>.webp   새 2D 시안 — cel2d / comic2d / mobile2d / spirit2d / pixel2d
+fx_source/clean_20261017/       다섯 방향의 생성 시트·최종 프롬프트·manifest·비교표·내보내기 검사
+fx_source/ink_20261009/         보존한 수묵 원본
+fx_source/world_styles_20261012/sheet_darktoon_*.png  보존한 다크 카툰 원본
 ```
 
-- **전사 8종** — `ui/skill_art.js:SKILL_ART`가 스킬·사건별 이미지와 움직임을 정한다(ADR-0515 · ADR-0528). 배시 사선 셋 · 더블스윙 X · 어스스플릿 균열 · 리프 어택 착지 파문 · 타운트 붉은 고리 · 워 크라이 금빛 음파 · 배틀오더스 상승 꺾쇠 · 아이언 스킨 강철 막. 준비되지 않은 그림은 기존 `skill_looks.js` 코드 조합으로 표시한다.
-- **다른 4직업 31종 · 32장** [2026-10-06 · ADR-0520] — 기사 9 · 마법사 8 · 궁수 6 · 사제 8. 결투는 적의 지목과 시전자의 보호를 별도 그림으로 표시한다. 타격 · 강화 · 약화 · 회복 · 소환에 연결하며, 기사 오오라 셋은 도감에서만 미리 본다. `python scripts/build_party_skill_fx.py`로 재빌드한다. [발주·최종 프롬프트·비교·검증](../../../docs/reference/party_basic_fx_art.md).
-- **표시** — 맞은 카드 · 강화/약화/회복을 받는 카드 · 불러낸 카드의 초상 둘레 안 · 약 0.4~0.6초 · 스킬마다 등장·수축·확산·상승 동작 · 게임 배속을 따른다. 관전과 도감 이펙트 탭은 같은 표시 함수를 쓴다.
-- **규격** — 투명 배경 · 중앙 내용 86% · 384×384 WebP(알파) q90 · 굵은 암색 외곽선 + 평면 색 · 보호 고리와 강철 막은 가운데가 빈다. 가장자리 배치 새 전사 시트는 원본과 변환본을 보관한다.
-- **전사 빌드·복원·검증** — 현재 그림 빌드는 `python scripts/build_warrior_skill_fx.py`, 적용 직전 백업 복원은 `python scripts/restore_warrior_skill_fx.py`, 복원 검증은 `python scripts/verify_warrior_skill_fx.py --legacy`다. [현재 발주 기록](../../../docs/reference/warrior_basic_fx_art.md) · [보관한 새 시트 기록](../../../docs/reference/warrior_sheet_fx_art.md).
-- **종류 공통 후보** — `fx.js:ART_ON`은 꺼져 있다. 기존 다섯 장의 지시문은 [fx_art_prompt.md](../../../docs/reference/fx_art_prompt.md).
+그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 새 다섯 방향은 현재 표가 읽는 파일 전부를 실제 투명 배경으로 생성했다. 최종 설치는 `python scripts/build_clean_fx.py`, 비교표는 `python scripts/build_clean_fx.py --compare`다. 이미지 생성은 내장 imagegen을 사용했다.
 
----
+다크 카툰·수묵 외의 이전 이펙트 이미지는 설치본·보관본·비교 이미지까지 삭제했다([ADR-0651](../../../docs/client/adr/0651-이펙트는-다크카툰과-수묵을-남기고-깔끔한-2D-다섯을-견준다.md)). 오래된 발주 문서·스크립트는 과거 기록이며, 삭제된 그림의 재빌드 경로로 사용하지 않는다. 배경·초상·아이콘은 이 정리 범위와 무관하다.
 
 ## faces/ — 몬스터 얼굴 아이콘 · **스타일 하나 = 폴더 하나** [2026-08-30]
 
@@ -456,7 +439,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 | `seven.png` | 숫자 7 실루엣 — 윗변이 무쇠 왕관 띠(가시 다섯 · 보라 보석 셋) (오만) | `source/sheet_03_codex.png` 2 (ADR-0631) |
 | `wild.png` | 금 인장 반지 — 「탐욕의 인장」 (탐욕) | 시트 01 · 2 |
 | `gold.png` | 장미 (색욕) | 시트 01 · 3 |
-| `ore.png` | 화로의 불 (분노) | 시트 01 · 4 |
+| `ore.png` | 화로의 화염 (분노) | 시트 01 · 4 |
 | `timber.png` | 가시 박힌 초록 눈 (시기) | 시트 01 · 5 |
 | `dust.png` | 모래시계 (나태) | 시트 01 · 6 |
 | `coin.png` | 아가리를 찍은 동전 (폭식) | 시트 01 · 7 |
@@ -492,6 +475,8 @@ icons_source/skills/
 │   ├── sheet_07_codex_warrior.png … sheet_12_codex_extra.png  ← 기본 50 을 다시 뽑은 시트(2026-10-15 · Codex 이미지 생성 · 3×3 여섯) — 설치한 것은 새 스킬 14 칸뿐 · 지시문 sheet_NN_codex_<직업>_prompt.txt
 │   ├── sheet_07_12_anchor_installed_mono.png  ← 그 여섯에 붙인 기준 그림 — 그때 설치돼 있던 기본 아이콘 9장을 흰 바탕 검정으로 되돌린 것
 │   ├── sheet_13_codex_inferno.png · sheet_14_codex_summon.png  ← 인페르노 · 소환 2×2 (2026-10-16 · Codex) — 둘 다 1번 칸을 설치 · 기준 그림 = 같은 직업 설치본 9장(`sheet_13_anchor_installed_mage` · `sheet_14_anchor_installed_priest`) · 지시문 `*_prompt.txt`
+│   ├── war_recovery_20261017.png · kni_resistshield_20261017.png  ← 리커버리 · 레지스탕스 실드 단독 생성 원본(내장 image_gen · 투명 배경) · 지시문 `*_20261017_prompt.txt` · 내보내기 기록 `missing_basic_20261017.json`
+│   ├── missing_basic_20261017_preview.png  ← 새 아이콘과 같은 직업 기존 아이콘을 28 · 32 · 44px로 비교
 │   ├── <직업>_advanced_skills_sheet.png  ← 전직 45 투톤 시트 다섯 (2026-09-28 · 전직 시트의 앵커는 war_ 시트)
 │   └── sheet_01 ~ 06 · Gemini_Generated_Image_*  ← 9월 Gemini 시트 — 지금 설치된 기존 기본 36 의 출처 · sheet_02_mono_anchor 가 그때의 앵커
 └── unused/               ← id 가 없는 여분 · 10-15 「새 B」 넷(`war_frenzy_b` · `arc_evade_b` · `pri_halo_b` · `pri_doom_b`)
@@ -500,7 +485,8 @@ icons_source/skills/
 **새 기본 스킬 14 — 2026-10-15 Codex 단색 발주** — skill_design §12 의 직업마다 10(50)을 전부 다시 뽑았고, **그림이 없던 새 스킬 14 만 설치했다**(사용자 「기존꺼 내버려두고 새로 뽑힌 애들만」) — 기존 36 은 9월 그림 그대로이고 그 36 의 새 판은 원본 시트에만 있다. 같은 단색 실루엣 형태를 지키려고 설치돼 있던 그림을 기준 그림으로 붙였고, 칸 문장은 `.claude/skills/icon-prompt/skill_tiles.md` 의 타일을 따랐다(새 스킬은 시트 지시문이 원문). 실측 — 장변 88 · 중앙 50/50 · 단색(기존 설치본과 같은 값). 지시와 다르게 나온 칸 — `arc_overdraw`(큰 화살 대신 활 쏘는 사람) · 40px 에서 약한 칸 — `arc_arrowrain`(가는 화살) · `arc_overdraw`
 
 - **새 스킬 13 이 화면에 나온다** [2026-10-16 · DEV_PLAN R246 ~ R250] — 가안 id 그대로 `skill.csv` 행이 섰고 `mock.js:SKILL_ICON_FILES` 에 들었다. **`pri_halo` 는 쓸 곳이 없다**(헤일로가 같은 날 지워져 소환으로 — 파일만 남는다)
-- **인페르노 · 소환** [2026-10-16 · Codex 단색] — 인페르노는 「불의 고리」로 갈아 끼웠고(옛 각진 분사는 git 이력에만) 소환은 「별을 그린 의식 원에서 솟는 뿔 해골」이다. 설치본 실측 장변 88 · 중앙 50/50 · 단색
+- **인페르노 · 소환** [2026-10-16 · Codex 단색] — 인페르노는 「화염의 고리」로 갈아 끼웠고(옛 각진 분사는 git 이력에만) 소환은 「별을 그린 의식 원에서 솟는 뿔 해골」이다. 설치본 실측 장변 88 · 중앙 50/50 · 단색
+- **리커버리 · 레지스탕스 실드** [2026-10-17 · 내장 image_gen 단색] — 기본 스킬 50행과 화면 등록 목록 · 설치 파일을 대조해 비어 있던 두 스킬을 채웠다. 리커버리는 회복 십자를 파낸 건틀릿과 회복 화살표, 레지스탕스 실드는 화염 · 얼음 · 번개를 파낸 방패와 보호 호다. 생성 알파를 유지하고 회백 `#d8d9e6`으로 칠해 장변 88% · 중앙 50/50인 512 PNG로 정규화했다. 게임용은 기존 인코더로 256 WebP 두 장만 내보냈고 `mock.js:SKILL_ICON_FILES`에도 등록했다
 - 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
 - **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 강조색 픽셀은 그대로 두고 검정만 회백으로 칠한다
 
@@ -513,7 +499,7 @@ Might(굽은 갈고리 → **굽힌 팔**) · Fanaticism(가는 평행 줄무늬
 원본이 검정이라 어두운 UI(`--bg-card: #161624`)에서 안 보여서 **밝은 청회(`#d8d9e6`)로 칠해** 설치한다 — 알파는 그대로 두고 RGB 만 단색으로 채우므로 축소 헤일로가 없다.
 `icon-prompt` 의 스킬 합격선(색 수 110~160 · 경계 12~21%)은 **컬러 앵커 기준이라 이 세트에는 안 맞는다** — 설치본 실측은 `colors 1 · edge 0% · dark 219~221` 이고 **프레이밍(장변 88 · 중앙 50/50)만 그대로 유효**하다.
 
-### 채워진 것 / 빈 것 — 기본 스킬 50 (skill_design §12 · 2026-10-16)
+### 채워진 것 / 빈 것 — 기본 스킬 50 (skill_design §12 · 2026-10-17)
 
 | 직업 | 그림 | 화면에 나온다 | 빈 것 |
 |---|---|---|---|
@@ -730,4 +716,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-16*
+*마지막 업데이트: 2026-10-17*

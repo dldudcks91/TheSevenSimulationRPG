@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-17",
+  "generator": "built-in image_gen",
+  "purpose": "Fill the only two missing basic skill icons out of 50 owner_kind=job rows.",
+  "normalization": {
+    "source_size": [
+      512,
+      512
+    ],
+    "runtime_size": [
+      256,
+      256
+    ],
+    "rgb": [
+      216,
+      217,
+      230
+    ],
+    "alpha": "Generated alpha, cropped to >8 bounds and LANCZOS resized, centered at 88% long edge. No alpha threshold applied to artwork.",
+    "encoder": "scripts/build_icons.py:encode"
+  },
+  "assets": [
+    {
+      "skill_id": "war_recovery",
+      "source": "src/assets/art/icons_source/skills/source/war_recovery_20261017.png",
+      "prompt": "src/assets/art/icons_source/skills/source/war_recovery_20261017_prompt.txt",
+      "source_sha256": "f252d6d2a509dbadb4769be30b5a184b78dd158b7b3699e2d989b7f91ab75734",
+      "generated_size": [
+        1254,
+        1254
+      ],
+      "alpha_crop_threshold": 8,
+      "crop_bbox": [
+        129,
+        49,
+        1180,
+        1228
+      ],
+      "normalized_art_size": [
+        402,
+        451
+      ],
+      "normalized_offset": [
+        55,
+        30
+      ],
+      "source_png": "src/assets/art/icons_source/skills/war_recovery.png",
+      "runtime_webp": "src/assets/art/icons/skills/war_recovery.webp",
+      "runtime_bytes": 19004
+    },
+    {
+      "skill_id": "kni_resistshield",
+      "source": "src/assets/art/icons_source/skills/source/kni_resistshield_20261017.png",
+      "prompt": "src/assets/art/icons_source/skills/source/kni_resistshield_20261017_prompt.txt",
+      "source_sha256": "a5b18b9de569c85d7559799cd39b7fafc5ff6cd3de36f502562869ae4540f184",
+      "generated_size": [
+        1254,
+        1254
+      ],
+      "alpha_crop_threshold": 8,
+      "crop_bbox": [
+        57,
+        66,
+        1178,
+        1200
+      ],
+      "normalized_art_size": [
+        446,
+        451
+      ],
+      "normalized_offset": [
+        33,
+        30
+      ],
+      "source_png": "src/assets/art/icons_source/skills/kni_resistshield.png",
+      "runtime_webp": "src/assets/art/icons/skills/kni_resistshield.webp",
+      "runtime_bytes": 16868
+    }
+  ],
+  "validation": {
+    "basic_skill_count": 50,
+    "all_registered_and_source_and_runtime_present": true,
+    "actual_codex_rendered_image_count": 50,
+    "actual_codex_all_256px": true,
+    "browser_page_errors": [],
+    "source_measurement": {
+      "long_percent": 88,
+      "cx_percent": 50,
+      "cy_percent": 50,
+      "colors": 1
+    },
+    "visual_preview": "src/assets/art/icons_source/skills/source/missing_basic_20261017_preview.png"
+  }
+}

@@ -268,6 +268,34 @@ export function createBattleSystem(data) {
         stageMonsters(stage).map(m => skillElement(m.innate_skill)).find(Boolean) ?? 'physical';
 
     /**
+     * 스킬의 획득처 — 그 스킬을 **칸에 들고 나오는** 몬스터 [2026-10-17 · SCREEN_DESIGN §9-1 · ADR-0650 · monster_design §8-1].
+     *   그 처치가 스킬 도감 경험치 · 스킬북을 준다. 칸 규칙은 `makeEnemy` · `spawnRound` 와 같은 출처를 본다 —
+     *   `fixed` = 고유 칸이 그 스킬 · `roll` = 고유는 아니지만 셋째 칸(등급 `skill_slots` ≥ 3 — 보스)의 직업 풀에 그 스킬이 든다.
+     *   장소마다 일반몹 풀(`stagePool` — 정예도 여기서 승급한다) + 그 장소의 보스 · **열리는 장(`chapter_open_max`)까지만** ·
+     *   칸 I · II · III 은 몬스터가 같아 장소 하나에 한 번. 렌더러가 몬스터 표를 훑어 칸 규칙을 다시 짜지 않게 여기 둔다(`stageElement` 와 같은 이유) · rng 0
+     */
+    function skillCarriers(skillId) {
+        const fixed = [], roll = [], seen = new Set();
+        const openMax = B.chapter_open_max ?? Infinity;
+        const places = Object.values(data.stages).filter(s => s.chapter <= openMax)
+            .sort((a, b) => a.chapter - b.chapter || a.stage_num - b.stage_num);
+        for (const st of places) {
+            const place = `${st.chapter}-${st.stage_num}`;
+            if (seen.has(place)) continue;
+            seen.add(place);
+            const seats = [...stagePool(st).map(id => [id, 'normal']), ...(st.boss_monster_idx ? [[st.boss_monster_idx, st.boss_grade]] : [])];
+            for (const [id, grade] of seats) {
+                const m = data.monsters[id];
+                if (!m) continue;
+                const at = { monsterId: id, chapter: st.chapter, stageNum: st.stage_num, boss: grade !== 'normal' };
+                if (m.innate_skill === skillId) fixed.push(at);
+                else if (data.grades[grade]?.skill_slots >= 3 && (CLASS_SKILLS[m.cls] ?? []).includes(skillId)) roll.push(at);
+            }
+        }
+        return { fixed, roll };
+    }
+
+    /**
      * 스테이지의 라운드 줄 — `stage.csv:round_set` 이 `stage_round.csv` 의 세트 하나를 고른다 (base_expedition_design §1-2 · 2026-09-11).
      * **라운드 수 = 그 세트의 행 수**다 — 전역 라운드 수 키(~~`rounds_per_stage`~~)는 없다. 챕터보스 스테이지는 보스 한 줄뿐이다.
      * 화면(라운드 트랙 · 예상 소요 · 리포트 총수)도 이것을 부른다 — 렌더러가 세트를 고르면 규칙이 화면 층에 샌다 (`stageElement` 와 같은 이유)
@@ -1759,5 +1787,5 @@ export function createBattleSystem(data) {
         return { ...run.result, mode: 'arena' };
     }
 
-    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf };
+    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, skillCarriers, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf };
 }

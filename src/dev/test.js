@@ -15,6 +15,7 @@ import * as M from '../ui/mock.js';
 import { loadData, buildSystems, D, FILES, fillStory, pickJosa, STORY_TOKEN } from '../ui/data.js';
 import { bindTipNode, heroTipCard, monsterTipCard, skillTipCard, sheetPages, detailLayoutIds, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips } from '../ui/tip.js';
 import { setLang, t as i18nT, L as i18nL } from '../ui/i18n.js';
+import { paceAt, paceStep, paceCfg } from '../ui/pace.js';
 import { ELEMENTS } from '../game_logic/hero.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { parseCsv } from '../game_logic/csv.js';
@@ -4036,12 +4037,12 @@ check('combat: 원소별 저항 감소는 그 원소의 타격에만 · res_redu
     const coldNone = F.strike(zero, { ...a, atkType: 'cold' }, d).dmg;
     const physEl = F.strike(zero, { ...a, atkType: 'physical', resReductionEl: el }, d).dmg;
     const physNone = F.strike(zero, { ...a, atkType: 'physical' }, d).dmg;
-    if (fireEl !== fireAll) fail(`불 타격 ${fireEl} ≠ res_reduction 0.1 과 같아야 ${fireAll}`);
-    if (coldEl !== coldNone) fail(`냉기 타격이 불 저항 감소를 받았다 ${coldEl} ≠ ${coldNone}`);
+    if (fireEl !== fireAll) fail(`화염 타격 ${fireEl} ≠ res_reduction 0.1 과 같아야 ${fireAll}`);
+    if (coldEl !== coldNone) fail(`냉기 타격이 화염 저항 감소를 받았다 ${coldEl} ≠ ${coldNone}`);
     if (physEl !== physNone) fail(`물리 타격이 저항 감소를 받았다 ${physEl} ≠ ${physNone}`);
     const c = SYS.hero.computeCombat(G.heroes[0], [mkItem('ring', [{ stat: 'res_reduction_fire', v: 0.07, src: 'envy' }])]);
     if (c.res_reduction_el?.fire !== 0.07 || c.res_reduction_el.cold !== 0) fail(`res_reduction_el ${JSON.stringify(c.res_reduction_el)}`);
-    return `불 ${fireEl} = 전 원소 감소 ${fireAll} · 냉기 ${coldEl} = 없음 ${coldNone}`;
+    return `화염 ${fireEl} = 전 원소 감소 ${fireAll} · 냉기 ${coldEl} = 없음 ${coldNone}`;
 });
 check('combat: 고정 「방어력 +%」는 그 아이템 자신의 고유 방어력에만 곱한다 · 레벨당 방어력 · 체력 · 공격 속도는 영웅 레벨 × 값을 더한다 (item_design §1 「갑옷 옵션」 · 2026-09-18)', () => {
     const h = { ...G.heroes[0], mastery: {} };
@@ -4111,12 +4112,12 @@ check('formula: 절대값 피해 감소는 모든 감소 뒤에 뺀다 · 원소
     const fire = { ...a, atkType: 'fire' };
     const f0 = hit(fire, d).dmg, fEl = hit(fire, { ...d, resMaxEl: { fire: 0.05 } }).dmg, fCold = hit(fire, { ...d, resMaxEl: { cold: 0.05 } }).dmg;
     // 상한 75% → 80% — 남는 피해 25% → 20%
-    if (Math.abs(fEl - f0 * 0.8) > 1) fail(`불 상한 +5%p ${f0} → ${fEl}`);
-    if (fCold !== f0) fail('냉기 상한이 불 타격에 걸렸다');
+    if (Math.abs(fEl - f0 * 0.8) > 1) fail(`화염 상한 +5%p ${f0} → ${fEl}`);
+    if (fCold !== f0) fail('냉기 상한이 화염 타격에 걸렸다');
     if (Math.abs(F.resCap(0.02, 0.05) - Math.min(B.res_cap_base + 0.07, B.res_cap_absolute)) > 1e-12) fail(`resCap ${F.resCap(0.02, 0.05)}`);
     if (F.resCap(0.02) !== F.resCap(0.02, 0)) fail('원소 몫이 없으면 종전과 같아야 한다');
     if (F.leech(100, 0.1) !== 10 || F.leech(100, 0.1, 0.5) !== 15) fail(`흡혈 ${F.leech(100, 0.1)} · ${F.leech(100, 0.1, 0.5)}`);
-    return `물리 ${p0.dmg} → ${p3.dmg} · 불 ${f0} → ${fEl}`;
+    return `물리 ${p0.dmg} → ${p3.dmg} · 화염 ${f0} → ${fEl}`;
 });
 check('equip: 방어구 착용 → 방어력 상승, 해제 → 가방 복귀', () => {
     const G = freshG();                 // 제 판 — 시작 갑옷을 벗기고 갑옷을 가방에 남긴다
@@ -4536,6 +4537,58 @@ check('simulate: 직격마다 피해를 굴린다 — 같은 라운드 · 같은
 });
 check('simulate: 다른 시드 = 다른 전투', () => !eq(SYS.battle.simulate(units(), 1013, makeRng(5)).timeline, SYS.battle.simulate(units(), 1013, makeRng(6)).timeline));
 
+/* ── 원정 박자 (ui/pace.js · ADR-0654) — 관전 재생기와 앱 시계가 같이 쓰는 걸음. 세움이 실제 시간에 들고, 쪼개 걸어도 같은 자리에 선다 ── */
+/** 끝(`end`)까지 걷는 데 든 실제 ms — `steps` 가 비면 한 걸음에 끝까지 */
+const paceMs = (tl, cfg, steps = null, reach = null) => {
+    const p = paceAt(tl, 0);
+    let spent = 0;
+    for (let n = 0; !p.done && n < 1e6; n++) {
+        const ms = steps ? steps[n % steps.length] : 1e9;
+        spent += ms - paceStep(p, tl, ms, cfg, reach);
+    }
+    if (!p.done) fail('박자가 끝에 안 닿았다');
+    return spent;
+};
+check('pace: 세움 없이(Off) 끝까지 = 시뮬 시간 ÷ 배속 + 라운드 사이 숨 — 첫 라운드는 안 선다 (ADR-0500)', () => {
+    const r = SYS.battle.simulate(godUnits(), 1013, makeRng(5)), tl = r.timeline;
+    const rounds = tl.filter(e => e.e === 'round').length;
+    if (rounds < 2) fail(`라운드 ${rounds} — 숨을 볼 수 없다`);
+    for (const [speed, k] of [[1, 1], [2, 0.75], [16, 0.3]]) {
+        const want = r.durationSec * 1000 / speed + (rounds - 1) * 1000 * k;
+        const got = paceMs(tl, paceCfg('off', true, speed, k));
+        if (Math.abs(got - want) > 1e-3) fail(`×${speed}: ${got.toFixed(3)}ms — 기대 ${want.toFixed(3)}ms`);
+    }
+    return `${rounds}라운드 · ${r.durationSec}s`;
+});
+check('pace: Stop · Dim 은 행동마다 같은 세움 · 흔들림 Off 면 ① 이 빠진다 — 세움이 실제 시간에 든다', () => {
+    const tl = SYS.battle.simulate(godUnits(), 1013, makeRng(5)).timeline;
+    const off = paceMs(tl, paceCfg('off', true, 1)), stop = paceMs(tl, paceCfg('stop', true, 1)), dim = paceMs(tl, paceCfg('dim', true, 1));
+    const flat = paceMs(tl, paceCfg('dim', false, 1));
+    if (Math.abs(stop - dim) > 1e-6) fail(`Stop ${stop} ≠ Dim ${dim}`);
+    if (!(dim > flat && flat > off)) fail(`세움이 안 든다 — off ${off} · 흔들림 없음 ${flat} · dim ${dim}`);
+    // 흔들림이 더하는 것은 행동마다 ① 한 번(RISE + PEAK = 250ms) — 차이가 그 배수여야 한다
+    const acts = (dim - flat) / 250;
+    if (Math.abs(acts - Math.round(acts)) > 1e-6) fail(`① 차이 ${dim - flat}ms 가 250 의 배수가 아니다`);
+    return `off ${(off / 1000).toFixed(1)}s · 흔들림 없음 ${(flat / 1000).toFixed(1)}s · Dim ${(dim / 1000).toFixed(1)}s (행동 ${Math.round(acts)})`;
+});
+check('pace: 걸음을 쪼개도 같은 자리에 선다 — 재생기 눈금(100ms) · 앱 시계(200ms) · 숨긴 탭(1분)이 같은 실제 시간에 끝난다', () => {
+    const tl = SYS.battle.simulate(godUnits(), 1013, makeRng(5)).timeline, cfg = paceCfg('dim', true, 1);
+    const one = paceMs(tl, cfg);
+    for (const steps of [[100], [200], [60000], [37, 250, 3]]) {
+        const got = paceMs(tl, cfg, steps);
+        if (Math.abs(got - one) > 1e-3) fail(`${steps.join('/')}ms 걸음 — ${got.toFixed(3)}ms ≠ 한 번에 ${one.toFixed(3)}ms`);
+    }
+    return `${(one / 1000).toFixed(1)}s`;
+});
+check('pace: 엔진은 박자보다 1초(재생 시각)까지만 앞서 민다 — 숨긴 탭이 깨어도 보이는 재생보다 먼저 정산하지 않는다', () => {
+    const tl = SYS.battle.simulate(godUnits(), 1013, makeRng(5)).timeline, cfg = paceCfg('dim', true, 1);
+    const p = paceAt(tl, 0);
+    let ahead = 0;
+    paceStep(p, tl, 60000, cfg, s => { ahead = Math.max(ahead, s - p.t); });
+    if (ahead > 1 + 1e-9) fail(`엔진이 ${ahead.toFixed(3)}s 앞섰다`);
+    return `최대 ${ahead.toFixed(2)}s 앞`;
+});
+
 /* ── 방어구 옵션 — 전투 (INTERFACE §2-6 「반격」 · 「조건부 받는 피해 감소」 · 「체력 회복」 · 2026-09-18) ── */
 /** 방어구 옵션을 손으로 얹은 파티 — 영웅마다 투구 한 칸을 더 입힌다(실제 합산 경로 `computeCombat` 을 지난다) */
 const armorUnits = affixes => SYS.game.partyOf(G).map(uid => {
@@ -4609,8 +4662,10 @@ check('battle: 평타는 능력치 계수(힘)를 곱한다 — 같은 시드의
     if (!(d1 >= 10)) fail(`표본이 작다 ${d1}`);
     if (Math.abs(d2 / d1 - 2) > 0.1) fail(`계수 10 → 20 인데 ${d1} → ${d2} (×${(d2 / d1).toFixed(2)})`);
     // 몬스터도 영웅과 같다 [2026-09-22 사용자 — 보류 해제] — 낀 무기의 피해 종류(맨손 = 물리)로 `monster.csv` 기본 능력치의 계수를 탄다 [2026-09-27]
-    const e = SYS.battle.makeEnemy('e0', 1101, 'normal', 1);
-    const mRow = D.monsters[1101];
+    // 표본 = 힘이 기준값이 아닌 첫 일반몹 — 계수 1 이면 못 가른다 (2026-10-17 R279 로 1101 의 힘이 기준값이 됐다)
+    const mId = Object.values(D.monsters).find(m => m.spawn_grade === 'normal' && Number(m.str) !== B.attr_dmg_pivot).monster_idx;
+    const e = SYS.battle.makeEnemy('e0', mId, 'normal', 1);
+    const mRow = D.monsters[mId];
     const mWant = F.statCoef(Number(mRow.str));
     if (Math.abs(e.mainMult - mWant) > 1e-12) fail(`맨손 몬스터 계수 mainMult ${e.mainMult} ≠ statCoef(str ${mRow.str}) = ${mWant}`);
     if (e.mainMult === 1) fail('표본 몬스터의 힘이 기준값이라 계수를 못 가른다 — 다른 몬스터로 잰다');
@@ -4871,6 +4926,37 @@ check('battle: 스테이지 원소 = 몬스터 고유 스킬의 원소 — attac
         if (got !== 'physical') n++;
     }
     return `원소 스테이지 ${n}/${D.stageList.length}`;
+});
+check('battle: skillCarriers — 스킬 도감 획득처 = 그 스킬을 칸에 들고 나오는 몬스터 · 열리는 장만 · 처치가 세는 스킬(codexSkills)과 어긋나지 않는다 (INTERFACE §2-6 · ADR-0650)', () => {
+    const openMax = D.balance.chapter_open_max;
+    const ids = SYS.skill.list.filter(d => SYS.skill.bookable(d.id)).map(d => d.id);
+    const carriers = Object.fromEntries(ids.map(id => [id, SYS.battle.skillCarriers(id)]));
+    let nf = 0, nr = 0;
+    for (const [id, c] of Object.entries(carriers)) {
+        for (const s of [...c.fixed, ...c.roll]) if (s.chapter > openMax) fail(`${id} ← ${s.monsterId} 가 ${s.chapter}장 — 열리는 장(${openMax}) 너머`);
+        for (const s of c.fixed) if (D.monsters[s.monsterId].innate_skill !== id) fail(`${id} 고정 칸 ← ${s.monsterId} 의 고유가 다르다`);
+        for (const s of c.roll) if (!s.boss) fail(`${id} 무작위 칸 ← ${s.monsterId} 가 보스가 아니다`);
+        nf += c.fixed.length; nr += c.roll.length;
+    }
+    // 스폰과 같은 출처인가 — 장소의 일반몹 · 보스(셋째 칸 후보 하나하나)를 세워 처치가 세는 스킬이 전부 그 몬스터를 획득처로 드는지 본다
+    const has = (sk, mid, kind) => carriers[sk]?.[kind].some(s => s.monsterId === mid);
+    let units = 0;
+    for (const st of D.stageList.filter(s => s.chapter <= openMax)) {
+        for (const mid of SYS.battle.stagePool(st)) {
+            units++;
+            for (const sk of SYS.battle.makeEnemy('e0', mid, 'normal', st.dlvl).codexSkills)
+                if (!has(sk, mid, 'fixed')) fail(`${st.stage_id} 일반몹 ${mid} 가 ${sk} 를 드는데 고정 칸 획득처에 없다`);
+        }
+        const b = st.boss_monster_idx;
+        if (!b) continue;
+        const pool = SYS.skill.list.filter(d => d.innatePool && d.ownerKind === 'job' && d.ownerId === D.monsters[b].cls).map(d => d.id);
+        for (const third of pool) {
+            units++;
+            for (const sk of SYS.battle.makeEnemy('e0', b, st.boss_grade, st.dlvl, [], { thirdSkill: third }).codexSkills)
+                if (!has(sk, b, 'fixed') && !has(sk, b, 'roll')) fail(`${st.stage_id} 보스 ${b} 가 ${sk} 를 드는데 획득처에 없다`);
+        }
+    }
+    return `책 스킬 ${ids.length} · 고정 칸 ${nf} · 무작위 칸 ${nr} · 세운 유닛 ${units}`;
 });
 check('battle: 조건부 받는 피해 감소 — 때린 쪽의 열이 맞으면 그 타격만 한 원천으로 곱한다 · 전투에 안 닿는 방어구 옵션(경험치)은 타임라인을 한 글자도 안 바꾼다 (2026-09-18)', () => {
     const lvl = 40;
@@ -5246,7 +5332,7 @@ check('battle: 타격 시 창 — 방어 · 공격 감소는 센 값 하나 · �
     weaponOnHit(p0, { ...FX0, resDown: 0.05 }, d, 'fire', 3, sec);
     weaponOnHit(p1, { ...FX0, resDown: 0.05 }, d, 'fire', 3, sec);
     weaponOnHit(p0, { ...FX0, resDown: 0.05 }, d, 'fire', 3.5, sec);
-    if (Math.abs(d.res.fire - (res0 - 0.1)) > 1e-9) fail(`불 저항 ${res0} → ${d.res.fire} (두 영웅 -10% 이어야 한다)`);
+    if (Math.abs(d.res.fire - (res0 - 0.1)) > 1e-9) fail(`화염 저항 ${res0} → ${d.res.fire} (두 영웅 -10% 이어야 한다)`);
     if (d.res.cold !== d.resBase.cold) fail('다른 원소 저항이 깎였다');
     weaponOnHit(p0, { ...FX0, atkDownMag: 0.3 }, d, 'fire', 4, sec);
     if (d.atkMax !== atk0) fail('물리 무기(맨손) 몬스터에 마법 공격력 감소가 걸렸다');

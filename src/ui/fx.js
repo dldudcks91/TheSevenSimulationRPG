@@ -112,7 +112,7 @@ export function setFxTransparency(n) {
 }
 
 /* 배속이 오르면 연출이 짧아진다 — ×4 에서 원래 길이면 사건이 겹겹이 쌓인다. 배수는 칸(`.unit-slot`)에 걸어 카드 · 조각이 물려받는다.
-   관전의 공격자 포커스(battle.js:waitFocus · 개발용 비교)도 세우는 길이에 같은 배수를 쓴다 */
+   관전의 세움(공격자 포커스 · 라운드 숨 — battle.js:paceOf → pace.js)도 세우는 길이에 같은 배수를 쓴다 */
 export const SPEED_K = { 1: 1, 2: 0.75, 4: 0.55, 16: 0.3 };
 /* 한 카드에 조각이 이만큼 떠 있으면 새 조각을 안 띄운다 — 광역 다단히트가 ×4 로 몰려도 화면이 조각으로 덮이지 않게 */
 const FX_CAP = 60;
@@ -216,7 +216,7 @@ function struck(state, d, crit) {
 /** 때린 카드 — 상대 진영 쪽으로 튀어나갔다 돌아온다(방향은 CSS 가 진영으로 가른다) · 피격 반응이 아니라 「공격 시 흔들림」을 따른다 (ADR-0468) */
 function lunge(state, a) {
     if (!lungeFxOn() || !live(state, a)) return;
-    // 공격자 포커스(개발용 비교)가 이미 내보낸 카드 — 튀김 키프레임이 돌면 나간 자리에서 제자리로 끌려왔다 다시 나간다 (battle.js:openFocus)
+    // 공격자 포커스(개발용 비교)가 이미 내보낸 카드 — 튀김 키프레임이 돌면 나간 자리에서 제자리로 끌려왔다 다시 나간다 (battle.js:syncFocus)
     if (a.node.parentElement?.classList.contains('fx-advance')) return;
     prep(state, a);
     play(a.node.parentElement, 'fx-lunge', SLOT);

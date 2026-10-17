@@ -385,6 +385,7 @@ strike(rng, a, d):
 | `stagePool(stage)` | `→ monsterIdx[]` | 해당 챕터·스테이지의 `spawn_grade === 'normal'` 몬스터. **챕터보스 스테이지는 빈 배열**이다 — 보스 단독이라 호위도 0 이고 풀을 한 번도 안 뽑는다 (2026-09-11 R75). **편성 예외(§2-13)가 줄이기 전의 풀**이다 — 출정 창의 적 구성이 이것을 쓴다 |
 | `stageRounds(stage)` | `(stage 행 객체) → [{round_num, round_type}]` | 그 스테이지의 라운드 줄 = `roundSets[stage.round_set]`(round_num 순). **라운드 수 = 길이.** 챕터보스 스테이지는 `boss` 한 줄뿐이다(base_expedition_design §1-2). 화면의 라운드 트랙 · 예상 소요 · 리포트 총수도 이것을 부른다 — 렌더러가 세트를 직접 고르지 않게 여기 둔다(`stageElement` 와 같은 이유 · 2026-09-11 R75) |
 | `stageElement(stage)` | `(stage 행 객체) → elementId` \| `'physical'` | 그 스테이지 몬스터(행 순서)의 **고유 스킬이 든 원소** 중 첫 값 — 고유 스킬의 하는 일 줄 중 원소 태그(`skill_effect.csv:element`)를 든 첫 줄(고정 피해 `fixed` 는 건너뛴다 — 저항을 요구하지 않는다 · R221) · 없으면 `'physical'` [개정 2026-10-02 · R198 — ~~몬스터의 `attack_type` 중 physical 이 아닌 첫 값~~ · 원소 피해는 스킬만 낸다]. 보스 셋째 칸은 스폰 굴림이라 안 본다 · `skillSystem` 이 없으면 `'physical'`. 편성 화면의 "이 스테이지가 요구하는 저항"(§9-8) — 렌더러가 몬스터 테이블을 훑지 않게 여기 둔다 · rng 0 |
+| `skillCarriers(skillId)` | `→ {fixed: [{monsterId, chapter, stageNum, boss}], roll: [같은 모양]}` | **그 스킬을 칸에 들고 나오는 몬스터** — 스킬 도감 툴팁의 획득처 [신설 2026-10-17 · SCREEN_DESIGN §9-1 · ADR-0650 · monster_design §8-1]. `fixed` = **고유 칸**(`monster.csv:innate_skill`)이 그 스킬인 몬스터 · `roll` = 고유는 아니지만 **셋째 칸 굴림 풀**(등급 `skill_slots` ≥ 3 — 보스 · 그 직업 풀 `classSkills`)에 그 스킬이 든 몬스터. 스폰과 같은 출처를 본다 — 장소마다 `stagePool`(일반몹 · 정예도 이 풀에서 승급한다) + 그 장소의 보스(`stage.boss_monster_idx` · 등급 `boss_grade`) · **열리는 장(`balance.csv:chapter_open_max`)까지만** · 장소 하나(칸 I · II · III 이 같다)에 한 번 · 순서는 장 → 장소 → 일반몹(idx 순) → 보스 · `boss` = 그 자리의 등급이 `normal` 이 아니다. 없는 스킬이면 둘 다 빈 배열. 렌더러가 몬스터 표를 훑어 칸 규칙을 다시 짜지 않게 여기 둔다(`stageElement` 와 같은 이유) · rng 0 |
 | `monsterGearSpec(monsterId, grade, level, difficulty?)` | `→ {slots:[partId], fixed:[partId], optional:[partId], wearChance, weaponGroup, ilvlMin, ilvlMax, rarityWeights:{normal, magic, rare}}` \| `null` | **그 몬스터가 그 등급 · 그 스테이지 레벨로 설 때 입는 장비의 조건** [신설 2026-10-10 · 실험실 아이템 생성기 · SCREEN_DESIGN §18] — 스폰 2단(`spawnRound`)이 `rollGear` 에 넘기는 값 그대로다: 부위 = **등급이 정한다** [개정 2026-10-12 · R245 — ~~`wear_slots` 순서~~] — `fixed` = 언제나 입는 부위(`spawn_grade.csv:wear_fixed`) · `optional` = 확률로 입는 부위(`wear_optional`) · `slots` = 둘을 그 순서로 이은 **입을 수 있는 부위** · `wearChance` = 그 단의 선택 부위 착용 확률(`difficulty` 안 주면 첫 단) · 무기군 = `weapon_group` · 아이템 레벨 = 가운데(`level + grade.gear_ilvl_add`) ± 반폭(`drop_ilvl_spread_pct` · `_min`) · 아래 끝은 1 · 희귀도 가중치 = 등급의 `gear_rarity_w_*`(파티 매직찬스 · `gear_rare_bonus_pct` 가 레어 쪽을 밀기 **전**). `level` 은 **스테이지 레벨**이다 — `monster.csv:level_add` 는 장비에 안 탄다(아래 `lvl`). 없는 몬스터 · 등급이면 `null` · rng 0 |
 | `ilvlSpreadOf(center)` | `→ 정수` | **아이템 레벨의 반폭** — 가운데 × `drop_ilvl_spread_pct` 반올림 · 하한 `drop_ilvl_spread_min`(§5-3). 몬스터 장비(`spawnRound` · `monsterGearSpec`)와 **상단 목록**(`state.shopState` — 「드롭이랑 똑같이」 2026-10-16 사용자)이 같은 이 식을 쓴다 · rng 0 [내보냄 2026-10-16] |
 | `rollMonsterDrop(rng, monsterId, grade, level, magicFind?, difficulty?)` | `→ {worn:[item], drop:item\|null}` \| `null` | **그 몬스터 한 마리의 차림과 처치 드롭 하나** [신설 2026-10-10 · 실험실 아이템 생성기 · SCREEN_DESIGN §18] — `worn` = 스폰 2단과 **같은 함수**가 굴린 한 벌(같은 rng · 같은 단을 주면 스폰이 입히는 차림과 같다 · `difficulty` 안 주면 첫 단 · 2026-10-12 · R245) · `drop` = 그중 하나(`onKill` 의 「입은 부위 중 하나 1회」와 같은 굴림 · 맨몸이면 `null`). **드롭이 났다고 치고 장비만 낸다** — 드롭 판정 · 종류(책) · 처치 재료는 굴리지 않는다. `magicFind` 는 스폰과 같은 뜻(파티 평균 · 비율 · 안 주면 0). 게임 경로는 안 부른다 — 부르는 쪽이 제 rng 를 준다(런의 수열과 안 섞인다). 없는 몬스터 · 등급이면 `null` |
@@ -1391,6 +1392,7 @@ strike(rng, a, d):
 
 - 재생기는 **계산하지 않는다.** HP 는 이벤트의 `dhp` / `ahp` 를 그대로 쓴다. **최대 HP 도 마찬가지다** [2026-09-21 · 부채 #50] — 첫 값은 `party[]` · `round` 의 `hpMax`, 그 뒤로는 `refit` 과 **최대 HP 를 민 `buff`·`buffEnd`** 가 실어 준다. 재생기가 창의 `stat`·`v` 로 최대치를 되계산하지 않는다
 - 시각 `t` 까지의 이벤트를 배열 순서로 적용한다. 배속·일시정지는 진행 속도의 문제다. **철수는 결과의 문제다** — 진행 중 라운드를 버리므로 재생기가 아니라 앱(`state.retreatRun`)이 한다 [R89 — 옛 「건너뛰기」]
+- **세움은 시계의 일이다** [2026-10-17 · ADR-0654] — 재생 시각을 세우는 연출(라운드 사이 숨 · 공격자 포커스)은 원정 빠르기를 바꾸므로 재생기 혼자 정하지 않는다: `ui/pace.js:paceStep` 이 언제 · 얼마나 서나를 정하고(사건 시각 기준 — 걸음을 쪼개도 같은 자리) 앱 시계(안 보는 부대 · 숨긴 탭)도 같은 걸음으로 민다. 앞을 보려고 `opts.onTime` 을 **재생 시각보다 앞선 시각**(최대 1초)으로 부른다. 런이 끝난 순간은 박자가 `end` 에 닿은 실제 시각이다(`opts.onDone`). Phase 2 재생기도 같은 박자를 써야 「보든 안 보든 같다」가 선다
 - **타임라인은 걸음마다 자란다** [R89 · **개정 2026-09-21 · R130** — ~~라운드마다~~] — 재생기는 배열 끝에서 멈춰 기다린다. 시각을 밀기 **전에** `opts.onTime(t)` 을 부르면 앱이 **그 시각까지 계산하고**(`state.stepRun` — 끝난 라운드는 정산하고 다음 라운드를 연다) 그만큼 붙인다. 재생기는 정산하지 않는다. **`refit` 은 라운드 도중에도 온다** — 원정 중 교체가 그 시각에 먹는다(보스 라운드 도중은 안 온다). 재생기는 경계에서와 같이 받는다(최대 HP · 현재 HP · 스킬 칸 — **쿨 표시는 칸마다 잇는다**: 같은 자리에 같은 스킬이면 옛 칸을 그대로 둔다)
 - `round` 이벤트에서 적 유닛을 통째로 다시 만든다 — 그래서 `round` 가 첫 이벤트여야 한다 · **스킬 칸도 그 이벤트의 `actives` 로 채운다** [2026-09-11 · R79 후속] — 적의 `skill` 이벤트는 그 칸에서 찾으므로, 칸이 비면 시전(칸 번쩍임 · 이름 팝업)이 **조용히 사라진다**(옛 판의 `skills: []`)
 - 모르는 `e` 는 무시한다. 모르는 유닛 키도 무시한다 (현재는 **조용히** — [부채 #6](DEV_PLAN.md))
@@ -1467,11 +1469,11 @@ strike(rng, a, d):
 
 | # | 위반 | 위치 |
 |---|---|---|
-| 4 | 예상 소요 시간 집계가 렌더러에 있음 | ui/app.js |
 | 5 | §7 의 mock 잔류 데이터 — **9항목 → 3항목**(2026-08-31 M7). 남은 `SINS`·`SIN_TRAITS`·`COMMON_TRAITS` 는 죄종 매핑 확정을 기다린다 | ui/mock.js |
 
 해소됨(2026-08-26) — #1 `dmgBonus`↔`bonusPct` 필드명 불일치(이름 통일, 회귀 단정 있음) · #8 `res` 타입 이원성(§8 항목 11).
 해소됨(2026-08-30) — #3 실효 쿨 공식: `ui/app.js` · `ui/tip.js` 의 사본을 `formula.effectiveCd` 로 갈아끼웠다. 이제 공식은 `game_logic` 한 곳에만 있다.
+해소됨(2026-10-17) — #4 예상 소요 집계: 화면이 소요를 안 찍게 되어 렌더러의 집계째 지웠다(ADR-0649).
 #2(`codexBonus` 의 `acc_pct` 를 아무도 읽지 않음)는 **코드 결함이 아니라 기획 공백으로 옮겨갔다** — 명중 폐지로 계열 하나가 비었다 ([GAME_DESIGN §10](../game_design/GAME_DESIGN.md)).
 
 ---

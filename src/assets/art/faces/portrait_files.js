@@ -82,6 +82,7 @@ export const PORTRAIT_FILES = {
     "monster/3401.webp",
     "monster/3402.webp",
     "monster/3403.webp",
+    "monster/3800.webp",
     "monster/3900.webp",
     "monster/4101.webp",
     "monster/4102.webp",

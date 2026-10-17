@@ -52,8 +52,9 @@
 import * as M from './mock.js';
 import { MG_SCENES, MG_SPRITES } from './minigame_art.js';
 import { t, L, has, lang, setLang, applyDocumentLang } from './i18n.js';
-import { mountBattle, unitPreview, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText } from './battle.js';
-import { bindTipNode, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, potionTipCard } from './tip.js';
+import { mountBattle, unitPreview, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText, paceOf } from './battle.js';
+import { paceAt, paceStep } from './pace.js';   // 원정 박자 — 관전 재생기와 같은 걸음으로 안 보는 부대 · 숨긴 탭을 민다(세움 포함 · ADR-0654)
+import { bindTipNode, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, codexSkillTipCard, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
@@ -217,13 +218,16 @@ const affixText = (a, slot) => {
 const stageTitle = row => `${L(chapterOf(row.chapter)?.name)} — ${L(stageName(row))}`;
 /** 두 칸이 **같은 장소**인가 — 장소 = (chapter, stage_num) · 반복 스위치는 장소에 딸린다 (2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0432 · PLAN_stage_segments D8) */
 const samePlace = (a, b) => !!D.stages[a] && !!D.stages[b] && placeKey(D.stages[a]) === placeKey(D.stages[b]);
-/** 예상 소요 = 그 스테이지의 라운드별 목표 전투시간 합 (round_budget.csv) — 라운드 줄은 `battle.stageRounds` (챕터보스 스테이지는 보스 하나 · 2026-09-11) */
-function stageMinutes(stage) {
-    const sec = SYS.battle.stageRounds(stage).reduce((a, r) => {
-        const key = r.round_type === 'boss' ? stage.boss_grade : r.round_type;
-        return a + (D.budgets[key]?.time_target_sec ?? 0);
-    }, 0);
-    return Math.max(1, Math.round(sec / 60));
+/** 장소 줄의 몬스터 이름 — 일반 풀(`battle.stagePool` — 칸 셋이 같다) 순서 + 그 장소에 보스 라운드가 있으면 **보스 이름을 끝에**(색은 안 바꾼다).
+ *  챕터보스 장소는 풀이 비어 보스 하나고, 이름 앞에 죄종이 붙는다(「분노의 사탄」 · `exp.sinBoss`) (SCREEN_DESIGN §4-1 · ADR-0649 — ~~레벨 · 예상 소요 · 원소~~) */
+function placeFoes(place) {
+    const head = place.cells[0];
+    const names = SYS.battle.stagePool(head).map(id => L(monsterName(id)));
+    if (place.cells.some(z => SYS.battle.stageRounds(z).some(r => r.round_type === 'boss'))) {
+        const id = head.boss_monster_idx, name = L(monsterName(id));
+        names.push(head.boss_grade === 'chapter_boss' ? t('exp.sinBoss', { sin: sinName(monsterSin(id)), name }) : name);
+    }
+    return names.join(' · ');
 }
 
 /**
@@ -621,7 +625,7 @@ const MODALS = {
     dismiss: { title: 'ch.dismiss', body: dismissBody },
     /* 출정 — 스테이지를 누르면 뜨는 창 [2026-09-10 사용자 지시 · ADR-0084 · SCREEN_DESIGN §4-1].
        옛 접이식 전진 패널이 통째로 이 창이 됐다. `head` 를 주는 첫 창이다 — 제목이 i18n 키 하나가 아니라
-       **고른 스테이지의 신원**(죄종 · Ch-스테이지 이름 · 레벨 · 소요 · 원소)이기 때문이다:
+       **고른 스테이지의 신원**(죄종 · Ch-스테이지 이름 · 레벨)이기 때문이다:
        접이식이 바로 위 행에 붙어 말하던 「어느 지역의 편성인가」를 창에서는 머리가 든다 */
     depart: { head: departHead, body: departBody, cls: 'depart-box' },
     // 출정 확인 — 다른 일을 하던 영웅이 낀 편성을 [보내기] 했을 때만 뜬다 · [취소]는 출정 창으로 돌아간다 (SCREEN_DESIGN §4-1 · ADR-0467)
@@ -805,14 +809,18 @@ function continueGame() {
     return true;
 }
 
-/** 후보 한 장 — 이 카드가 곧 선택의 전부라 능력치 7종까지 다 편다 */
-function candidateCard(h, extra = '') {
+/** 후보 한 장 — 이 카드가 곧 선택의 전부라 능력치 7종까지 다 편다.
+ *  `fresh` = 새 게임의 시작 카드 — 세이브를 지우고 시작하는 자리라 지금 판(`G`)의 도감 보너스를 섞지 않는다 */
+function candidateCard(h, extra = '', fresh = false) {
     const c = el('div', 'ng-card');
     c.style.borderTopColor = tierColor(h);
     const total = D.heroAttributes.reduce((a, s) => a + h.stats[s.id], 0);
     // 액티브 3칸 중 **고유 하나만** 싣는다 (§3) — 2·3번 칸은 직업이 정하므로 직업 줄이 이미 답한다.
     //   어느 칸이 고유인지는 인스턴스의 `source` 가 말한다 — 화면이 「1번 칸」이라고 판정하지 않는다
     const innate = activeCells(h).find(a => a?.source === 'innate') ?? null;
+    // 최대 HP — **고용하면 캐릭터 탭에 설 값**이다(장비 없음 · 지금 판의 도감 보너스 포함 · `game.heroCombat`). 레벨 1 값이 직업마다 달라
+    //   (`class.csv:hp_base` · 10-02) 공통값을 찍으면 첫 전투에서 반이 된다 (DEV_PLAN §4 #74). 시작 카드는 판이 없거나 지울 판이라 영웅 혼자의 값
+    const hpMax = (fresh || !G ? SYS.hero.computeCombat(h, []) : SYS.game.heroCombat(G, h)).hp_max;
     // 죄종 칩만 그 죄종 색이다 (SCREEN_DESIGN §3 · ADR-0155) — 윗변 · 막대는 등급 색 그대로(ADR-0023)
     c.innerHTML = `
         <div class="ng-head">
@@ -829,7 +837,7 @@ function candidateCard(h, extra = '') {
             </div>
         </div>
         <div class="attr-list">${attrRowsHtml(h.stats, tierColor(h))}</div>
-        <div class="ng-line sep" data-stat="hp_max"><span>${t('st.maxhp')}</span><b>${D.balance.hero_hp_base}</b></div>
+        <div class="ng-line sep" data-stat="hp_max"><span>${t('st.maxhp')}</span><b>${hpMax.toLocaleString()}</b></div>
         <div class="ng-line"><span>${t('ng.total')}</span><b>${total}</b></div>
         ${extra}`;
     // 툴팁은 관전·캐릭터 탭과 **같은 카드**다 (이름 · 칩 · 문장) — 카드 본문은 아이콘과 이름만 든다.
@@ -899,7 +907,7 @@ function renderStart(main) {
     // 제목(「첫 파티」)은 걷었다 (ADR-0643 · 사용자 「거슬린다 · 아예 없애봐」) — 화면 이름은 상단바 crumb(「새 게임」)이 든다.
     //   키 `ng.title` 은 도움말 「새 게임」 절의 머리가 계속 쓴다
     const row = el('div', 'ng-row');
-    for (const h of state.candidates) row.appendChild(candidateCard(h));
+    for (const h of state.candidates) row.appendChild(candidateCard(h, '', true));
     wrap.appendChild(row);
     wrap.appendChild(startGuide(state.candidates));
 
@@ -1313,6 +1321,9 @@ function renderExpedition(main) {
             now, frozenMs: FROZEN_GAP_MS,   // 시각은 실제로 흐른 시간이 민다 · 문턱을 넘은 공백은 밀지 않는다 (ADR-0102)
             // 라운드 넘기기 — 재생기가 시각을 밀기 **전에** 부른다: 그 시각까지 끝난 라운드를 정산하고 다음 라운드를 붙인다 (R89)
             onTime: (tNow, speed) => advanceBattle(state.battle, tNow, now(), speed),
+            // 박자 — 런 핸들의 것을 빌려 준다: 앱 시계와 한 벌이라 걷었다 다시 세워도 세움이 이어지고, 보든 안 보든 같은 빠르기다 (ADR-0654) ·
+            //   `end` 에 닿은 실제 시각은 결과 띠가 다음 런을 세기 전에 받는다
+            pace: paceOfRun(state.battle), onDone: at => noteEnded(state.battle, at),
             // 재생이 런의 끝에 닿았다 — 상단 세그먼트만 갈아 끼워 관전 칸을 「전투 종료」로 (ADR-0147). 재생기를 걷지 않는다 —
             //   다시 그리면 아레나 · 로그 · 결과 띠가 통째로 다시 선다(라운드 정산이 보관 칸만 갈아 끼우는 `refreshBattleBag` 와 같은 길)
             onOver: () => $('.tab-seg')?.replaceChildren(expNavBox('over')),
@@ -1323,6 +1334,7 @@ function renderExpedition(main) {
                 if (stopBattle) { const pos = stopBattle(); if (B) B.resume = { ...pos, auto: false }; stopBattle = null; }
                 if (B) {
                     const done = B.run.done;
+                    noteEnded(B, now());   // 엔진은 끝났는데 박자가 마지막 세움에 서 있던 런 — 끝난 순간을 비워 두지 않는다(챕터보스 재등장 · ADR-0654)
                     SYS.game.retreatRun(G, B.run, now());   // 끝난 런이 이어 가는 중이 아니면(이미 멈췄다) 거절될 뿐이다 — 리포트로 가는 것은 같다
                     if (samePlace(runSlot(B.run.preset)?.stageId, state.expStage)) state.expRepeat = false;   // 철수는 반복도 끈다 — 출정 창의 버튼과 어긋나지 않게
                     if (!done) {
@@ -1500,16 +1512,14 @@ function renderExpIdle(main) {
         }
         /* ⚠ **접이식 「구성 보기」는 없다** [2026-09-10 사용자 지시 · ADR-0080] — 줄 높이는 못박혀 있고(`style.css .zone`) 골라도 안 바뀐다.
            등장 몬스터는 출정 창의 적 구성 칸이 든다 (ADR-0078).
-           줄 = 죄종 · `Ch1-1 장소 이름`(로마 숫자 없이) · 잔글씨 레벨 범위 · 소요 · 원소 — 레벨은 **고른 난이도의 몬스터 레벨**(`game.stageLevel` — 노말은 `stage.csv:dlvl` · 위험도 폐지 · ADR-0437 · ADR-0586) */
-        const lv = spanText(place.cells.map(z => SYS.game.stageLevel(z.stage_id, ds.cur)));   // 고른 단의 몬스터 레벨 (ADR-0586)
-        const m = spanText(place.cells.map(stageMinutes));
+           줄 = 죄종 · `Ch1-1 장소 이름`(로마 숫자 없이) · 잔글씨로 나오는 몬스터 이름만(`placeFoes` — 레벨은 출정 창 머리가 든다 · ADR-0649) */
         row.innerHTML = `
             <div>
                 <div class="title">
                     <span class="sin-chip" style="color:${sinColor(sin)}">${sinName(sin)}</span>
                     <span>Ch${head.chapter}-${head.stage_num} ${L(placeName(head))}</span>
                 </div>
-                <div class="meta">${t('exp.placeMeta', { lv, m })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(head)}`) })}</div>
+                <div class="meta">${placeFoes(place)}</div>
             </div>
             <div>${unlocked ? '' : `<span class="zone-lock"><span class="lock-ico">${lockIcon(true)}</span>${stageLockText(head)}</span>`}</div>`;
         // ⚠ 클리어 표시 · 「원정」 칩은 없다 [2026-09-15 사용자 지시 · ADR-0151] — 오른쪽 끝은 잠긴 줄의 이유만 든다.
@@ -1527,12 +1537,6 @@ function renderExpIdle(main) {
         zp.appendChild(row);
     }
     main.appendChild(zp);
-}
-
-/** 값 여럿을 한 조각으로 — 같으면 하나(`10`) · 다르면 범위(`1~3`). 목록 장소 줄의 레벨 · 소요 (§4-1 · ADR-0436) */
-function spanText(vals) {
-    const lo = Math.min(...vals), hi = Math.max(...vals);
-    return lo === hi ? String(lo) : `${lo}~${hi}`;
 }
 
 /** 장소 줄을 눌렀을 때 **처음 골라진 칸** [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0436 · PLAN_expedition_window D5] —
@@ -1923,7 +1927,7 @@ function tacticsBlock() {
 
 /** 창 머리 — **고른 칸의 신원**. 접이식이던 시절엔 바로 위 행이 말하던 것이라 패널에 머리가 없었는데
  *  (2026-08-28 「머리 통째로 삭제」), 창은 목록에서 떨어져 뜨므로 **여기가 그 자리를 이어받는다** (ADR-0084).
- *  줄 하나에 죄종 칩 · Ch-칸 이름 · 잔글씨로 레벨/소요/원소. 레벨은 **고른 난이도의 몬스터 레벨**(`game.stageLevel` · ADR-0586 — 보기만) —
+ *  줄 하나에 죄종 칩 · Ch-칸 이름 · 잔글씨로 레벨(소요 · 원소는 걷었다 · 몬스터는 아래 적 구성이 든다 — ADR-0649). 레벨은 **고른 난이도의 몬스터 레벨**(`game.stageLevel` · ADR-0586 — 보기만) —
  *  위험도가 폐지돼 바꾸는 조작이 없다 [2026-09-29 사용자 「위험도 없어 이제」 · ADR-0437 · ~~`stageLevelState` 의 지금 레벨~~] */
 function departHead() {
     const z = D.stages[state.expStage];
@@ -1932,7 +1936,7 @@ function departHead() {
     h.innerHTML = `
         <span class="sin-chip" style="color:${sinColor(sin)}">${sinName(sin)}</span>
         <span>Ch${z.chapter}-${z.stage_num} ${L(stageName(z))}</span>
-        <small>${t('exp.stageMeta', { lv: stageLv(z), m: stageMinutes(z) })} · ${t('exp.element', { e: t(`st.atkType.${SYS.battle.stageElement(z)}`) })}</small>`;
+        <small>${t('exp.stageMeta', { lv: stageLv(z) })}</small>`;
     return h;
 }
 
@@ -2301,7 +2305,7 @@ function runListPanel(list, idx, no) {
             </div>
             <div class="r">
                 <div class="g">${R.gold.toLocaleString()}</div>
-                <div class="s muted">${t('rep.drops.sub', { n: R.drops.length })}</div>
+                <div class="s muted">${t('rep.drops.sub', { n: dropCount(R) })}</div>
             </div>`;
         row.onclick = () => { state.repSel = i === 0 ? null : R; render(); };   // 맨 위를 고르면 따라가기로 돌아간다 (ADR-0123)
         box.appendChild(row);
@@ -2310,18 +2314,22 @@ function runListPanel(list, idx, no) {
     return p;
 }
 
+/** 처치 재료 칸 — 재료 하나가 칸 하나 · 광석 → 목재 → 약초 순 (§4-3 · ADR-0530 · 옛 리포트는 `materials` 가 없다) */
+const DROP_KIND_ORDER = ['ore', 'wood', 'herb'];
+const dropMats = R => Object.entries(R.materials ?? {}).filter(([, n]) => n > 0)
+    .sort(([a], [b]) => DROP_KIND_ORDER.indexOf(resKind(a)) - DROP_KIND_ORDER.indexOf(resKind(b)));
+/** 획득 아이템 수 = **격자의 칸 수**(장비 + 책 + 재료 칸 — 재료는 개수 합이 아니라 칸 하나) [ADR-0630] — 상세 머리 줄과
+ *  원정 기록 줄이 **같은 셈**을 부른다 [2026-10-17 · ADR-0652] (옛 리포트는 `books` · `materials` 가 없어 장비 수 그대로) */
+const dropCount = R => R.drops.length + (R.books ?? []).length + dropMats(R).length;
+
 /** 획득 아이템 — **가방 칸과 같은 그림 · 같은 테두리 · 같은 비교 툴팁**(§6).
  *  **리포트는 보기 전용이다** [2026-09-21 · ADR-0186] — 분해 · 장착 · 이동은 전부 캐릭터 탭(§6)이 든다.
  *  **자리가 런마다 같다** (ADR-0086) — 격자는 한 줄 높이로 못박히고 「없음」도 그 안에 선다. 넘쳐 분해한 수는 머리 줄 안으로 (ADR-0625) */
 function dropSection(p, R) {
     // 떨어진 스킬북도 이 격자에 선다 — 장비 칸 뒤에 이어서 (§4-3 · ADR-0420 · 옛 리포트는 `books` 가 없다)
     const books = R.books ?? [];
-    // 처치 재료 — 재료 하나가 칸 하나 · 광석 → 목재 → 약초 순 (§4-3 · ADR-0530 · 옛 리포트는 `materials` 가 없다)
-    const KIND_ORDER = ['ore', 'wood', 'herb'];
-    const mats = Object.entries(R.materials ?? {}).filter(([, n]) => n > 0)
-        .sort(([a], [b]) => KIND_ORDER.indexOf(resKind(a)) - KIND_ORDER.indexOf(resKind(b)));
-    // 머리 줄의 개수 = **격자의 칸 수**(장비 + 책 + 재료 칸 — 재료는 개수 합이 아니라 칸 하나) [2026-10-15 · ADR-0630 — ~~장비 + 책~~]
-    const head = el('h2', '', `<span>${t('rep.drops.h')} <small>${t('rep.drops.sub', { n: R.drops.length + books.length + mats.length })}</small></span>`);
+    const mats = dropMats(R);
+    const head = el('h2', '', `<span>${t('rep.drops.h')} <small>${t('rep.drops.sub', { n: dropCount(R) })}</small></span>`);
     p.appendChild(head);
     const tail = el('span', 'rep-h-tail');
     if (R.discarded) tail.appendChild(el('small', 'down', t('rep.discarded', { n: R.discarded })));
@@ -2376,7 +2384,8 @@ function dropSection(p, R) {
  * 정렬은 가한 피해 내림차순 — 재생 중에는 앞서는 순서가 그대로 뒤바뀐다(누가 앞서나가 보인다).
  * **영웅에게 일어난 일도 이름 칸이 든다** (ADR-0086) — 이름 아래 레벨업 `▲ Lv.a → b` · 쓰러졌으면 초상이 회색.
  *   줄 높이는 초상이 정하므로 표시가 붙어도 표가 안 자란다. `marks` = `{ up: Map(uid → {from, to}), down: Set(uid), xp: Map(uid → 받은 경험치) }`
- *   **받은 경험치도 이름 아래**다 (R89) — 쓰러진 영웅은 그 뒤 라운드 몫이 없어 영웅마다 다르다. 레벨업은 그 줄 끝에 붙는다
+ *   **받은 경험치도 이름 아래**다 (R89) — 쓰러진 영웅은 그 뒤 라운드 몫이 없어 영웅마다 다르다.
+ *   레벨업 · 경험치는 **한 줄씩 쌓는다**(위 레벨업 · 아래 경험치) — 한 줄에 이으면 이름 칸이 좁아 레벨업이 잘렸다 [2026-10-17 · ADR-0653]
  */
 function contribRowsHtml(list, marks) {
     const rows = [...list].sort((a, b) => b.dealt - a.dealt);
@@ -2398,10 +2407,9 @@ function contribRowsHtml(list, marks) {
         const h = heroById(c.uid);
         const lu = marks.up.get(c.uid), down = marks.down.has(c.uid), xp = marks.xp?.get(c.uid);
         const up = lu ? t('rep.contrib.levelUp', { a: lu.from, b: lu.to }) : '';
-        // 이름 아랫줄 — 받은 경험치(+ 레벨업). 경험치 칸이 없는 옛 표시(`xp` 없음)는 레벨업만 (ADR-0086)
-        const sub = xp != null
-            ? `<em class="xp">${t('rep.contrib.xp', { n: xp.toLocaleString() })}${up ? ` <span class="up">${up}</span>` : ''}</em>`
-            : (up ? `<em class="up">${up}</em>` : '');
+        // 이름 아래 — 레벨업 한 줄(오른 영웅만) · 그 아래 받은 경험치 한 줄. 경험치가 없는 옛 표시(`xp` 없음)는 레벨업만 (ADR-0086 · ADR-0653)
+        const sub = (up ? `<em class="up">${up}</em>` : '')
+            + (xp != null ? `<em class="xp">${t('rep.contrib.xp', { n: xp.toLocaleString() })}</em>` : '');
         return `<div class="ct-row">
             <span class="n${down ? ' dead' : ''}"${down ? ` title="${t('rep.downed')}"` : ''}>${h ? heroFace(h) : ''}<span class="nm"><b>${h ? L(h.name) : '—'}</b>${sub}</span></span>
             ${cell('dealt', Math.round(c.dealt), sumD)}
@@ -2533,15 +2541,23 @@ function advanceBattle(B, tNow, at, speed = 1) {
     // 원정 플레이 시간 — 이 걸음에 재생 시각이 나아간 만큼을 부대별로 모은다(런의 끝에서 자른다 · 되감기는 안 나아간다) · 더하는 것은 `expTimeTick` (ADR-0514)
     const reach = Math.min(tNow, runEnd(B)), from = B.expT ?? B.resume?.t ?? 0;
     if (reach > from) { const k = B.run.preset ?? 0; expPend[k] = (expPend[k] ?? 0) + (reach - from); B.expT = reach; }
-    // 끝난 순간 — 런의 끝에 **처음** 닿은 이 걸음이 적는다 [2026-09-22 · ADR-0300]. 끝을 넘어 민 만큼을 배속으로 되돌려 실제 시각으로 잰다.
-    //   반복의 다음 출발(`game.nextRepeat`)이 이 값에서 센다 — 관전 재생기는 끝난 뒤에도 벽시계를 밀어서 걷을 때의 재생 위치로는 못 되짚는다
-    if (B.run.done && B.endedAt == null) {
-        B.endedAt = at - Math.max(0, tNow - runEnd(B)) / speed * 1000;
-        SYS.game.noteRunEnd(G, B.run, B.endedAt);   // 챕터보스를 이긴 런이면 그 순간부터 재등장 대기가 선다 — `nextRepeat` 과 같은 끝난 순간 (R240)
-    }
     if (n) { save(); onRoundsSettled(); }
     return n;
 }
+
+/**
+ * 런이 끝난 순간 [2026-09-22 · ADR-0300 · **개정 2026-10-17 · ADR-0654**] — 박자(`pace.js`)가 `end` 에 닿은 실제 시각을 적는다.
+ * 엔진이 끝난 순간이 아니다 — 엔진은 박자가 내다보는 만큼 앞서 가고, 그 사이 세움(마지막 행동의 ①)이 남아 있을 수 있다.
+ * 반복의 다음 출발(`game.nextRepeat`) · 챕터보스 재등장(`noteRunEnd` · R240)이 이 값에서 센다 — 관전 재생기(`onDone`)와 앱 시계(`tickBattle`)가 같이 부른다
+ */
+function noteEnded(B, at) {
+    if (!B?.run?.done || B.endedAt != null) return;
+    B.endedAt = at;
+    SYS.game.noteRunEnd(G, B.run, B.endedAt);
+}
+
+/** 그 부대의 박자 — 런 핸들이 든다(새 런 = 새 핸들 = 새 박자). 없으면 재생 위치에서 연다 */
+const paceOfRun = B => (B.pace ??= paceAt(B.result.timeline, B.resume?.t ?? 0));
 
 /** 라운드가 정산됐다 — 가방 · 골드 · 레벨 · 리포트가 바뀌었다. 관전이 떠 있으면 재생기를 걷지 않고 **골드는 곧바로 · 보관 칸은 다음 눈금에**,
  *  아니면 보던 화면을 **다음 앱 시계 눈금에** 다시 그린다 — 둘 다 조작(툴팁 · 누름) 중이면 끝날 때까지 미룬다 (ADR-0338 · ADR-0341) */
@@ -2651,17 +2667,20 @@ function tickBattle(H, at) {
         const r = B.resume ?? { t: 0, speed: 1, running: true, tab: 'log' };
         // 유저가 세워 둔 것 — 시계를 멈추는 것은 이것 하나다. 세워 둔 동안에도 박자는 민다(다시 틀 때 그 시간이 한꺼번에 흐르지 않게)
         if (r.running === false) { B.resume = { ...r, wall: at }; return; }
-        if (r.t >= runEnd(B) && !r.auto) return;   // 끝난 런. `auto` = 결과 띠가 다음 런을 세던 도중에 걷혔다 — 이어서 세운다
+        const p = paceOfRun(B);
+        if (p.done && !r.auto) return;   // 끝난 런. `auto` = 결과 띠가 다음 런을 세던 도중에 걷혔다 — 이어서 세운다
         const speed = r.speed ?? 1;
-        const tNow = r.t + Math.max(0, at - (r.wall ?? at)) / 1000 * speed;
-        // 그 시각까지 끝난 라운드를 정산하고 다음 라운드를 붙인다 — 한 눈금에 여러 라운드를 넘을 수 있다(숨긴 탭은 1분에 한 번 깬다 · R89)
-        advanceBattle(B, tNow, at, speed);
-        const end = runEnd(B);               // 마지막 라운드가 계산되기 전엔 끝을 모른다(무한대)
-        B.resume = { ...r, t: Math.min(end, tNow), wall: at, auto: false };
-        if (tNow < end) return;
+        if (!p.done) {
+            // 박자로 민다 — 관전 재생기와 **같은 걸음**이라 세움(라운드 숨 · Focus 의 행동 세움)이 여기서도 먹는다 [2026-10-17 사용자 지시 · ADR-0654].
+            //   내다보는 시각까지 엔진을 먼저 민다 — 끝난 라운드를 정산하고 다음 라운드를 붙인다 · 한 눈금에 여러 라운드를 넘을 수 있다(숨긴 탭은 1분에 한 번 깬다 · R89)
+            const left = paceStep(p, B.result.timeline, Math.max(0, at - (r.wall ?? at)), paceOf(speed), s => advanceBattle(B, s, at, speed));
+            B.resume = { ...r, t: p.t, wall: at, auto: false };
+            if (!p.done) return;
+            noteEnded(B, at - left);   // 끝난 순간 = 이 눈금에서 박자가 쓰고 남긴 시간만큼 앞
+        } else B.resume = { ...r, wall: at, auto: false };
         // 끝 — 다음 런은 `game.nextRepeat` 가 정한 칸 · 시각(끝난 순간 + [balance.csv:repeat_restart_sec])에 나간다 — 멈춘 부대(철수 · 끊김)만 null 이다 (v39 · ADR-0430).
         //   관전 결과 띠의 세기와 **같은 답**이다 — 어느 탭에서 끝났든 같은 시각이다 (ADR-0300)
-        const nx = SYS.game.nextRepeat(G, B.endedAt ?? at - (tNow - end) / speed * 1000, B.run?.preset ?? G.preset);
+        const nx = SYS.game.nextRepeat(G, B.endedAt ?? at, B.run?.preset ?? G.preset);
         if (nx) {
             // 그 시각 전이면 끝난 런을 붙든 채 기다린다 — `auto` 가 다음 눈금에 이 자리로 다시 데려온다. 기다리는 동안 멈춤이 오면 `closeFrozenRun` 이 반복만 끈다
             if (at < nx.at) { B.resume = { ...B.resume, auto: true }; return; }
@@ -2699,7 +2718,12 @@ function closeFrozenRun(at) {
     //   **도는 부대를 전부** 끊는다(`closeRun`) — 핸들도 부대마다 정리한다 (2026-09-24 · ADR-0316)
     SYS.game.closeRun(G, at);
     for (const [no, H] of Object.entries(state.battles)) {
-        if (H.run.done) { H.resume = { ...(H.resume ?? { t: 0, speed: 1 }), t: H.result.durationSec, wall: at, auto: false }; }
+        if (H.run.done) {
+            H.resume = { ...(H.resume ?? { t: 0, speed: 1 }), t: H.result.durationSec, wall: at, auto: false };
+            // 박자도 끝에 세운다 — 마지막 세움에 서 있던 런이 깨어난 뒤 남은 세움을 마저 돌지 않게 (ADR-0654)
+            H.pace = { ...paceAt(H.result.timeline, H.result.durationSec), i: H.result.timeline.length, done: true };
+            noteEnded(H, at);
+        }
         else {
             delete state.battles[no];                              // 버린 라운드는 다시 볼 것이 없다
             if (H === state.battle) state.battle = null;
@@ -7371,11 +7395,31 @@ function codexItem(p) {
  * 아이콘은 **게임이 부르는 그림 그대로**다: `skillIcon` 은 제 파일이 없으면 해시 폴백으로 남의 그림을 잡는다
  * (`slotArt`·`itemArt` 와 다르다 — 스킬은 「제 그림은 아니어도 늘 같은 그림」이면 되기 때문).
  * 그래서 여기서 빈 칸 신호는 그림이 아니라 **파일명 줄**이다 — 파일명이 스킬 id 와 다르면 아직 제 그림이 없다 (§9-1).
+ *
+ * **일반 스킬 탭은 스킬 도감이다** [2026-10-17 · ADR-0650] — 타일이 파일명 줄 대신 몬스터 카드의 레벨 핍 · 진행 막대를 들고
+ * (파일명은 그림의 작은 툴팁 — 몬스터 초상과 같은 자리), 툴팁은 스킬 카드 + 획득처 · 단계 두 장이다(`tip.js:codexSkillTipCard`).
  */
 function codexSkill(p) {
     const rows = D.skillRows ?? [];
     // 출처 칩은 안 단다 — 그룹 머리가 이미 직업을 말하고, `owner_kind` 는 이제 전부 `job` 이라 더 말해 주는 것이 없다
-    const tile = r => artTile(M.skillIcon(r.skill_id), L(skillInfo(r.skill_id).name), 'box', `data-skill="${r.skill_id}"`, true);
+    // 일반 스킬 타일 = 그림 · 이름 · 레벨 핍 · 진행 막대 — 핍 · 막대는 몬스터 카드(`monsterCard`)와 같은 모양 · 같은 계산이다.
+    //   책이 안 되는 스킬(`skill.bookable` — 사제 소환)은 도감 경험치가 안 쌓여 핍 · 막대가 없다 · `data-codex` = 두 장 툴팁을 거는 손잡이
+    const tile = r => {
+        const id = r.skill_id, src = M.skillIcon(id), name = L(skillInfo(id).name);
+        const file = src ? src.split('/').pop().replace(/\.[^.]+$/, '') : '';
+        const art = `<span class="ix-art box"${file ? ` title="${file}"` : ''}>${src ? `<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span>`;
+        if (!SYS.skill.bookable(id)) return `<div class="ix-tile ix-codex" data-skill="${id}">${art}<span class="ix-name">${name}</span></div>`;
+        const exp = G.skillCodexExp?.[id] ?? 0;
+        const cum = D.skillCodex.slice(1).map(x => x.expTotal);   // 레벨별 **누적 문턱** 그대로 — 0 행(도감 전)은 핍이 아니다
+        const lv = SYS.game.skillCodexLevel(exp);
+        const next = SYS.game.skillCodexNext(exp);
+        const prev = lv > 0 ? cum[lv - 1] : 0;
+        const pct = next ? Math.min(100, (exp - prev) / (next - prev) * 100) : 100;
+        const pips = cum.map((need, i) =>
+            `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.exp', { n: need.toLocaleString() })}"></span>`).join('');
+        return `<div class="ix-tile ix-codex" data-skill="${id}" data-codex="1">${art}<span class="ix-name">${name}</span>` +
+            `<span class="ix-track"><span class="pips">${pips}</span><span class="bar"><i style="width:${pct}%"></i></span></span></div>`;
+    };
 
     // 안쪽 탭 — **일반 스킬 · 전직 스킬** (ADR-0335 — ADR-0299 의 직업 탭 다섯 대체). 직업은 탭이 아니라 묶음이다.
     //   아이템 안쪽 세그먼트(ADR-0179)와 같은 자리 · 같은 모양
@@ -7425,8 +7469,12 @@ function codexSkill(p) {
 
     // 툴팁은 DOM 이 선 **뒤에** 건다 (격자가 문자열이라 노드가 없다). 카드는 캐릭터 탭 · 관전과 같은 것을 그대로 부른다 —
     // 화면 전용 문구를 새로 쓰지 않는다 (§12 · tip.js:skillTipCard). 전투 맥락(주기 · 공격력)은 없으므로 문장이 그 조각을 접는다
-    for (const n of box.querySelectorAll('[data-skill]'))
-        bindTipNode(n, () => skillTipCard({ id: n.dataset.skill }, { source: n.dataset.src }));
+    //   책이 되는 일반 스킬은 **두 장 · 카드 옆에 붙는다**(스킬 카드 + 획득처 · 단계 — ADR-0650 · 몬스터 툴팁과 같은 이유 · ADR-0206)
+    for (const n of box.querySelectorAll('[data-skill]')) {
+        const id = n.dataset.skill;
+        if (n.dataset.codex) bindTipNode(n, () => codexSkillTipCard(id, G.skillCodexExp?.[id] ?? 0), { anchor: true });
+        else bindTipNode(n, () => skillTipCard({ id }, { source: n.dataset.src }));
+    }
 }
 
 /**
@@ -8464,6 +8512,9 @@ async function boot() {
         // `&alt=1` — 올린 뒤 **Alt 를 누른 채** — 비교 두 장도 누르는 동안만 선다(ADR-0448 · `?dev=play` 의 `&alt=1` 과 같다)
         if (q.get('alt') === '1') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt' }));
     }
+    // `&cxtip=<skill_id>` — 도감 스킬 타일의 툴팁이 뜬 채 (§9-1 · §10 · ADR-0650) · 카드 옆에 붙는 툴팁이라 커서 자리는 상관없다
+    const cxtip = new URLSearchParams(location.search).get('cxtip');
+    if (cxtip) document.querySelector(`.ix-tile[data-skill="${CSS.escape(cxtip)}"]`)?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
     startClocks();
 }
 

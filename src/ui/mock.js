@@ -94,7 +94,7 @@ export const AFFIX_LABELS = {
     hp_pct: { ko: '최대 HP', en: 'Max HP', fmt: 'pct' },
     def_flat: { ko: '물리 방어', en: 'Physical Defense', fmt: 'n' },
     res_all: { ko: '모든 원소 저항', en: 'All Resistances', fmt: 'pct' },
-    res_fire: { ko: '불 저항', en: 'Fire Resist', fmt: 'pct' },
+    res_fire: { ko: '화염 저항', en: 'Fire Resist', fmt: 'pct' },
     res_cold: { ko: '냉기 저항', en: 'Cold Resist', fmt: 'pct' },
     res_lightning: { ko: '전기 저항', en: 'Lightning Resist', fmt: 'pct' },
     res_poison: { ko: '독 저항', en: 'Poison Resist', fmt: 'pct' },
@@ -123,7 +123,7 @@ export const AFFIX_LABELS = {
     vs_front_dmg: { ko: '전열 대상 추가 피해', en: 'Damage vs Front Row', fmt: 'pct' },
     vs_back_dmg: { ko: '후열 대상 추가 피해', en: 'Damage vs Back Row', fmt: 'pct' },
     def_down_pct: { ko: '타격 시 대상 방어력 감소', en: 'Defense Shred on Hit', fmt: 'pct' },
-    fire_dmg_pct: { ko: '불 피해', en: 'Fire Damage', fmt: 'pct' },
+    fire_dmg_pct: { ko: '화염 피해', en: 'Fire Damage', fmt: 'pct' },
     cold_dmg_pct: { ko: '냉기 피해', en: 'Cold Damage', fmt: 'pct' },
     lightning_dmg_pct: { ko: '전기 피해', en: 'Lightning Damage', fmt: 'pct' },
     poison_dmg_pct: { ko: '독 피해', en: 'Poison Damage', fmt: 'pct' },
@@ -138,7 +138,7 @@ export const AFFIX_LABELS = {
     hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', fmt: 'n' },
     aspd_per_level_pct: { ko: '레벨당 공격 속도', en: 'Attack Speed per Level', fmt: 'pct' },
     counter_chance: { ko: '반격 확률', en: 'Counter Chance', fmt: 'pct' },
-    res_max_fire: { ko: '최대 불 저항', en: 'Max Fire Resist', fmt: 'pct' },
+    res_max_fire: { ko: '최대 화염 저항', en: 'Max Fire Resist', fmt: 'pct' },
     res_max_cold: { ko: '최대 냉기 저항', en: 'Max Cold Resist', fmt: 'pct' },
     res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', fmt: 'pct' },
     res_max_poison: { ko: '최대 독 저항', en: 'Max Poison Resist', fmt: 'pct' },
@@ -155,7 +155,7 @@ export const AFFIX_LABELS = {
     poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
     // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
     //    원소별 저항 감소는 무기 시기 칸 `res_reduction`(저항 감소)과 같은 메커니즘이라 이름도 그 계열로 둔다 — **그 원소의 타격에만** 붙는다
-    res_reduction_fire: { ko: '불 저항 감소', en: 'Fire Resist Reduction', fmt: 'pct' },
+    res_reduction_fire: { ko: '화염 저항 감소', en: 'Fire Resist Reduction', fmt: 'pct' },
     res_reduction_cold: { ko: '냉기 저항 감소', en: 'Cold Resist Reduction', fmt: 'pct' },
     res_reduction_lightning: { ko: '전기 저항 감소', en: 'Lightning Resist Reduction', fmt: 'pct' },
     res_reduction_poison: { ko: '독 저항 감소', en: 'Poison Resist Reduction', fmt: 'pct' },
@@ -400,10 +400,10 @@ export const SKILL_ICON_FILES = [
     // 기본 스킬 50 [2026-10-16 · skill_design §12 · R246 ~ R250 · R258] — 9월 단색 36 + 10-15 Codex 단색 13(그림만 먼저 와 있던 새 스킬 · 가안 id 그대로 행이 섰다).
     //   ~~`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`~~ 은 행이 지워져 뺐다(그림 파일은 폴더에 남는다) · 소환(`pri_summon`) · 인페르노 새 그림은 2026-10-16 Codex 단색(직업 설치본을 기준 그림으로)
     //   · `pri_halo` 그림은 헤일로가 같은 날 지워져 쓸 곳이 없다(폴더에만 있다)
-    //   · `war_quake` · `kni_smite` 도 2026-10-16 행이 지워져 뺐다 — 자리에 선 리커버리 · 레지스탕스 실드는 그림이 없어 검은 칸이다
-    'war_bash', 'war_doubleswing', 'war_leap', 'war_shout', 'war_battleorders', 'war_ironskin',
+    //   · `war_quake` · `kni_smite` 도 2026-10-16 행이 지워져 뺐다 — 자리에 선 리커버리 · 레지스탕스 실드는 2026-10-17 Codex 단색으로 채웠다
+    'war_bash', 'war_doubleswing', 'war_recovery', 'war_leap', 'war_shout', 'war_battleorders', 'war_ironskin',
     'war_frenzy', 'war_warcry', 'war_battlecry',
-    'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_enchant',
+    'kni_resistshield', 'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_enchant',
     'kni_might', 'kni_fanaticism', 'kni_defiance', 'kni_sweep', 'kni_holyfire',
     'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
     'arc_arrowrain', 'arc_evade', 'arc_overdraw',
@@ -893,8 +893,8 @@ export const RES_ART = {
 
 /**
  * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331 · 그림 ADR-0608). 심볼 일곱 = **죄종 일곱** (2026-09-28 사용자 지시).
- * 짝은 뜻으로 맞췄다 — 최고 심볼 = 오만 · 와일드 = 탐욕(탐욕 = 도박) · 골드 = 색욕 · 광석 = 분노(대장간 불) · 목재 = 시기(숲 챕터) · 가루 = 나태(쌓인 먼지) · 코인 = 폭식(쌓아 먹는다).
- * 그림은 그 죄종의 **문장(죄종 아이콘)을 물건 한 점으로 그린 것**이다 — 오만 = 윗변이 무쇠 왕관 띠인 숫자 7(최고 심볼이 7 로 읽히게 · ADR-0631) · 탐욕 = 금 인장 반지(「탐욕의 인장」) · 색욕 = 장미 · 분노 = 화로의 불 ·
+ * 짝은 뜻으로 맞췄다 — 최고 심볼 = 오만 · 와일드 = 탐욕(탐욕 = 도박) · 골드 = 색욕 · 광석 = 분노(대장간 화염) · 목재 = 시기(숲 챕터) · 가루 = 나태(쌓인 먼지) · 코인 = 폭식(쌓아 먹는다).
+ * 그림은 그 죄종의 **문장(죄종 아이콘)을 물건 한 점으로 그린 것**이다 — 오만 = 윗변이 무쇠 왕관 띠인 숫자 7(최고 심볼이 7 로 읽히게 · ADR-0631) · 탐욕 = 금 인장 반지(「탐욕의 인장」) · 색욕 = 장미 · 분노 = 화로의 화염 ·
  * 시기 = 가시 박힌 눈 · 나태 = 모래시계 · 폭식 = 아가리를 찍은 동전 · 잭팟 코인 = 루비 박힌 금화 (Codex · 2026-10-12 · 원본 `icons_source/gamble/`).
  * 파일명 = `slot_symbol.csv` 의 `symbol_id` · 잭팟 코인 한 장은 `slot_coin.csv` 의 kind(`jackpot`).
  * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만. 무엇을 받는지는 배당표가 읽힌다.

@@ -332,7 +332,7 @@ const fmtCombat = (def, v) => v === undefined ? '—'
 
 /** 묶은 줄의 한 조각 이름 — 값이 있는 것만 이름을 붙여 찍는다 (`일반 10% · 데몬 5%`) */
 const typeParts = o => ['normal', 'demon', 'undead'].map(k => [t(`st.fx.${k}`), o?.[k] ?? 0]);
-/** 원소 넷 — 순서는 저항 4행과 같다(불 · 냉기 · 전기 · 독 — `RES_ROWS`) */
+/** 원소 넷 — 순서는 저항 4행과 같다(화염 · 냉기 · 전기 · 독 — `RES_ROWS`) */
 const eleParts = o => RES_ROWS.map(id => id.slice(4)).map(e => [t(`st.fx.${e}`), o?.[e] ?? 0]);
 const one = v => [[null, v ?? 0]];
 
@@ -347,7 +347,7 @@ const one = v => [[null, v ?? 0]];
  * 타격 시 방어 · 저항 약화 · 타격 시 대상 데미지 감소는 **전투가 읽지만 세우지 않는다** [2026-09-22 사용자 지시 · ADR-0294 — 원소 피해 · 저항 감소는 2026-09-27 에 다시 섰다]
  */
 const FX_ROWS = [
-    // 원소 두 줄은 **네 값을 늘 `/` 로 잇는다**(불 / 냉기 / 전기 / 독 — 저항 4행과 같은 순서 · 0 도 찍는다) [2026-09-28 사용자 지시]
+    // 원소 두 줄은 **네 값을 늘 `/` 로 잇는다**(화염 / 냉기 / 전기 / 독 — 저항 4행과 같은 순서 · 0 도 찍는다) [2026-09-28 사용자 지시]
     { id: 'fx_ele', fmt: 'pct', slash: true, name: () => t('st.fx.ele'), parts: x => eleParts(x?.ele) },
     // 저항 감소 — 모든 원소 타격(`res_reduction` · combat_stat 행)과 그 원소의 타격에만(`res_reduction_el` · 반지 시기 칸) 을 한 줄로 묶는다 [2026-09-27]
     //   적 원소 저항 감소 = 원소마다 **모든 원소(`res_reduction`) + 그 원소(`res_reduction_el`)** — 그 원소 타격에 실제로 먹는 값(formula.strike)
@@ -383,7 +383,7 @@ const DETAIL_LAYOUT = [
         ['crit_rate', 'crit_damage', 'def_ignore', 'cooldown_reduction'],
         // 피해 감소 줄이 고정 피해 감소를 함께 든다(`고정 / %`) [2026-09-27 사용자 지시]
         ['defense', 'damage_reduction', 'fhr'],
-        // 저항 넷 아래에 원소 두 줄(불/냉기/전기/독 네 값) · 타격 회복과 불 저항 사이를 띄운다 [2026-09-28 사용자 지시]
+        // 저항 넷 아래에 원소 두 줄(화염/냉기/전기/독 네 값) · 타격 회복과 화염 저항 사이를 띄운다 [2026-09-28 사용자 지시]
         ['res_fire', 'res_cold', 'res_lightning', 'res_poison', 'fx_ele', 'fx_res_red'],
     ],
     [
@@ -721,6 +721,46 @@ export function codexMonsterTipCard(m, grade, stat) {
     const cand = codexCandCard(m, grade);
     card.style.borderTopColor = cand.style.borderTopColor;
     return [cand, card];
+}
+
+/**
+ * 도감 스킬 툴팁 — **두 장**: 왼쪽 스킬 카드 그대로 · 오른쪽 획득처 · 단계 (SCREEN_DESIGN §9-1 · ADR-0650).
+ * 오른쪽 장은 몬스터 툴팁의 오른쪽 장과 같은 모양이다 — 「획득처」 머리글 + 작은 초상 · 아래 「보너스 효과」 머리글 + 단계(바닥에 붙는다).
+ * 몬스터 툴팁의 능력치 자리에 스킬은 「무엇을 잡나」가 선다. 도감 경험치는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
+ * 획득처는 `battle.skillCarriers` 가 답한다(칸 규칙은 로직의 것) — 고정 칸 몬스터가 먼저, 셋째 칸 굴림 보스는 작은 머리 아래 따로
+ * @param id  스킬 id — 책이 되는 스킬만 부른다(`skill.bookable`)
+ * @param exp 그 스킬의 누적 스킬 도감 경험치
+ * @returns `[스킬 카드, 획득처 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
+ */
+export function codexSkillTipCard(id, exp) {
+    const lv = SYS.game.skillCodexLevel(exp);
+    const src = SYS.battle.skillCarriers(id);
+    // 작은 원형 초상 — 보스는 보스 테두리 · 아트가 없으면 죄종 색 빈 원(도감 몬스터 카드와 같은 규칙) · 아래 장-장소
+    const face = s => {
+        const img = monsterFace(s.monsterId, 'normal');
+        const c = M.SINS[monsterSin(s.monsterId)]?.color ?? 'var(--text-muted)';
+        const pic = img
+            ? `<span class="face${s.boss ? ' boss' : ''}"><img src="${img}" alt="${L(monsterName(s.monsterId))}" loading="lazy" onerror="this.remove()"></span>`
+            : `<span class="face none${s.boss ? ' boss' : ''}" style="background:${c}22;border-color:${c}66"></span>`;
+        return `<div class="cx-src-cell">${pic}<span class="cx-src-at muted">${t('cx.tip.at', { c: s.chapter, s: s.stageNum })}</span></div>`;
+    };
+    // 셋째 칸 굴림 보스(`roll`)는 한 단 작게 — 직업이 같은 보스가 전부 서서 고정 칸 몬스터보다 많다(주인공은 고정 칸이다)
+    const grid = (list, cls = '') => `<div class="cx-src${cls}">${list.map(face).join('')}</div>`;
+    const body = (src.fixed.length ? grid(src.fixed) : '')
+        + (src.roll.length ? `<div class="cx-src-h muted">${t('cx.tip.roll')}</div>${grid(src.roll, ' roll')}` : '');
+    // 단계 — Lv1 = 스킬 도안 · 그 뒤는 그 레벨의 업그레이드 상한(skill_codex_level.csv · 0 행 = 도감 전은 단계가 아니다).
+    //   **레벨만 든다** — 경험치 문턱은 타일의 핍이 든다(몬스터 툴팁과 같은 규칙 · ADR-0209)
+    const steps = D.skillCodex.slice(1).map(r => `
+        <div class="cx-step${r.level <= lv ? ' on' : ''}">
+            <span class="cx-step-lv">${t('cx.tip.lv', { lv: r.level })}</span>
+            <span class="cx-step-b">${r.level === 1 ? t('cx.tip.blueprint') : t('cx.tip.cap', { n: r.upgradeCap })}</span>
+        </div>`).join('');
+    const card = el('div', 'tip-card cx-tip cx-sk-tip', `
+        <div class="cx-tip-h">${t('cx.tip.source')}</div>
+        <div class="cx-src-box">${body || '<span class="muted">—</span>'}</div>
+        <div class="cx-tip-h">${t('cx.tip.effects')}</div>
+        <div class="cx-steps">${steps}</div>`);
+    return [skillTipCard({ id }), card];
 }
 
 /**

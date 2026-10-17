@@ -18,6 +18,8 @@
  *   사건마다 그리던 옛 판은 관전 중 클릭(가방 칸 · 영웅 카드)마다 그 런의 사건 수만큼 카드를 다시 짓고 로그 줄마다 레이아웃을 강제해
  *   클릭 한 번에 수백 ms 멈췄다(나눔 배치 실측 300~520ms · 런이 길수록 길다).
  * **시각은 실제로 흐른 시간 × 배속이다** (2026-09-11 · ADR-0102) — 눈금 수로 밀지 않는다. 브라우저가 숨긴 탭의 눈금을 늦추기 때문이다.
+ *   세움(라운드 숨 · 공격자 포커스) 동안은 안 간다 — 언제 · 얼마나 서나는 `pace.js` 의 걸음이 정하고, 앱 시계(안 보는 부대 · 숨긴 탭)도
+ *   같은 걸음을 써서 보든 안 보든 원정이 같은 빠르기로 간다 (2026-10-17 · ADR-0654).
  *   시계는 `opts.now` 로 읽고(wall = 마지막으로 시각을 민 실제 시각), 공백이 `opts.frozenMs` 를 넘으면 JS 가 멈춰 있었던 것이라 밀지 않는다.
  *   auto = 결과 띠가 다음 런을 세던 중 — 그 도중에 걷히면 앱 시계가 이어서 세운다. 숨긴 탭에서는 앱이 이 재생기를 걷는다.
  * 유닛 카드 = **왼쪽 초상 + 오른쪽 수치 열**뿐이다 [개정 2026-09-03 사용자 지시] — 이름·죄종 칩·정예/보스 태그를 들던 위칸을 통째로 걷었다.
@@ -43,6 +45,7 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
+import { paceAt, paceStep, paceCfg, actorOf } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
 import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 const SPEEDS = [1, 2, 4, 16];   // ×16 — 2026-10-05 사용자 지시 (SCREEN_DESIGN §4-2)
@@ -161,6 +164,8 @@ function openBuffPop(btn, b) {
  * @param opts { result, stageId, heroes: [hero...], upNext(), onEnd(auto), onOver(), onTime(t), onRetreat(), now(), frozenMs }
  *   onOver() = 재생이 런의 끝에 닿았다(결과 띠가 선 순간 · 되감기로 선 끝은 안 부른다) — 앱이 상단 세그먼트의 관전 칸을 「전투 종료」로 바꾼다 (ADR-0147)
  *   now = 실제 시각(ms)을 읽는 시계 · frozenMs = 「멈췄다」의 문턱 — 둘 다 앱이 넘긴다 (ADR-0102)
+ *   pace = 런 핸들의 박자(`pace.js` — 재생기가 그대로 밀고 앱 시계가 이어 민다 · 없으면 재생 위치에서 제 것을 연다) ·
+ *   onDone(at) = 박자가 `end` 에 닿은 실제 시각 — 결과 띠가 다음 런을 세기 전에 부른다 (ADR-0654)
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
  *   shrine = 이 런이 입은 신단 id(없으면 null) — 헤드의 칩 (ADR-0445)
@@ -182,9 +187,12 @@ export function mountBattle(container, opts) {
         lvUnseen: opts.lvUnseen ?? null, onLvSeen: opts.onLvSeen ?? null,
         t: 0, idx: 0, speed: resume?.speed ?? 1, running: resume?.running ?? true, ended: false,
         round: 0, timer: null, timeouts: [],
-        // 공격자 포커스 (개발용 비교 · `focusMode`) — 지금 행동 {key, t, keys, rising} · 세움이 풀리는 실제 시각(ms · 0 = 안 세움)
-        focus: null, hold: 0,
-        roundWait: 0,            // 라운드 사이 숨을 이미 쉰 라운드 번호 — 숨이 풀린 뒤 그 `round` 를 다시 세우지 않게 (`ROUND_GAP_MS`)
+        // 박자 (`pace.js` · ADR-0654) — 재생 시각 · 세움 · 지난 사건 자리. 런이면 **런 핸들의 것을 빌린다**(`opts.pace` — 앱 시계와 한 벌이라
+        //   걷었다 다시 세워도 세움이 이어진다) · 결투 · 개발 재생은 제 것을 연다. 재생기는 `pace.i` 앞까지 적용한다
+        pace: opts.pace ?? paceAt(result.timeline, resume?.t ?? 0),
+        focusG: -1,              // 그리고 있는 세운 행동의 첫 사건 자리(-1 = 없음) — 바뀐 걸음에만 다시 그린다 (`syncFocus`)
+        wake: 0,                 // 세움이 풀리는 순간의 깨우기 (`wake`)
+        doneSent: false,         // 박자가 `end` 에 닿은 순간을 앱에 알렸나 (`opts.onDone`)
         // 마지막으로 시각을 민 **실제 시각**(ms) — 눈금 수가 아니라 이것과의 차이가 시각을 민다. 앱 시계와 주고받는다 (ADR-0102)
         wall: resume?.wall ?? opts.now(),
         auto: false,             // 결과 띠가 다음 런을 세는 중 — 걷히면(탭 이동 · 숨김) 앱 시계가 이어서 세운다 (ADR-0102)
@@ -245,17 +253,22 @@ export function mountBattle(container, opts) {
     // t=0 의 이벤트(첫 라운드 편성)를 먼저 적용해서 첫 프레임부터 적이 서 있게 한다.
     // 재개(resume)면 그 시각까지 조용히 되감는다 — 팝업 없이. 로그·게이지·누적은 다시 쌓인다 (2026-08-27).
     //   되감는 동안은 상태만 적용하고 그리는 것은 끝에 한 번이다 (2026-09-24 · `paintCaughtUp`)
-    if (resume) { state.t = resume.t; state.catchUp = true; }
+    //   지금 순간에 걸린 사건(첫 라운드 편성 · 오오라)을 박자가 먼저 지난다 — 흐른 시간 0 이라 세울 사건이면 그 자리에서 세움만 시작한다
+    state.doneSent = state.pace.done;
+    paceStep(state.pace, result.timeline, 0, paceOf(state.speed), s => opts.onTime?.(s, state.speed));
+    state.t = state.pace.t;
+    if (resume) state.catchUp = true;
     drain(state, container, opts);
     if (state.catchUp) { state.catchUp = false; paintCaughtUp(state, container); }
     scrollLog(state, container);
-    if (!state.ended) start(state, container, opts);
+    if (!state.ended) { start(state, container, opts); wake(state, container, opts); }   // 세운 자리에 다시 섰으면 풀리는 순간에 깨운다
     renderDmg(state, container);
 
     // 정리 함수 — 재생 위치를 돌려준다. 렌더러가 state.battle.resume 에 담아 다음 mount 에 넘기면 이어서 재생된다
     return () => {
         clearInterval(state.timer); state.timer = null;
         for (const id of state.timeouts) clearTimeout(id);
+        clearTimeout(state.wake);
         // wall · auto (ADR-0102) — 앱 시계가 이 자리에서 이어 민다: 마지막으로 시각을 민 실제 시각 · 결과 띠가 다음 런을 세던 중이었나
         return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, logf: state.logf, dmgf: state.dmgf, wall: state.wall, auto: state.auto };
     };
@@ -528,55 +541,46 @@ const cardV2 = () => CARD_V2;
    「공격 시 흔들림」(fx.js:lungeFxOn)이 꺼져 있으면 ①③ 없이 ②의 세움만 한다.
    `stop` = 세우기만 · `dim` = 세운 동안 그 행동에 안 낀 카드를 어둡게 · `off` = 세움 없는 재생 · 기본은 `dim`(ADR-0621).
    개발용 비교 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-focus="off|stop|dim">` 로 **이 브라우저에서만** 고른다.
-   ⚠ 세운 만큼 **관전 중인 원정이 실제 시간으로 늦게 간다** — 관전 중엔 재생기가 시계다(숨긴 탭 · 안 보는 부대는 앱 시계라 안 늦는다) */
+   **세움은 시계의 일이다** [2026-10-17 사용자 지시 · ADR-0654] — 언제 · 얼마나 서나는 `pace.js` 의 걸음이 정하고 재생기는 그 박자를 그린다.
+   앱 시계(안 보는 부대 · 숨긴 탭)도 같은 걸음을 쓰므로 세운 만큼 원정이 늦게 가는 것은 **보든 안 보든 같다** */
 export const FOCUS_MODES = ['off', 'stop', 'dim'];
 const FOCUS_DEFAULT = 'dim';
-const RISE_MS = 150;    // ① 올라가는 실제 시간 — style.css `.fx-advance` 의 전환 길이와 같다
-const PEAK_MS = 100;    // ① 다 올라간 뒤 타격 전에 서 있는 시간 — 「올라가면서 때림」이 아니라 「올라가서 때림」으로 읽히게
-const FOCUS_MS = 300;   // ② 나간 채로 세우는 실제 시간 · 셋 다 배속이 오르면 연출처럼 준다(`SPEED_K`)
 export const focusMode = () => { const v = document.documentElement.dataset.focus; return FOCUS_MODES.includes(v) ? v : FOCUS_DEFAULT; };
-/* 라운드 사이 숨 [2026-10-03 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0500] — 마지막 몬스터가 쓰러지면 쓰러진 카드를 이만큼 보인 뒤 다음 라운드를 세운다.
-   **재생만 선다** — 시뮬의 라운드 사이 쉬는 시간은 그대로 0 이다(결과 · 오프라인 불변). 세우는 길은 공격자 포커스의 세움(`waitFocus`)과 같다 ·
-   배속이 오르면 연출처럼 준다(`SPEED_K`) · ⚠ 세운 만큼 관전 중인 원정이 실제 시간으로 늦게 간다 — 포커스와 같은 이유 */
-const ROUND_GAP_MS = 1000;
-/** 행동의 주인 — 시전 · 타격 · 빗나감 · 반격 · 불러내기. 나머지 사건(쓰러짐 · 창 · 재생 · 중독 틱 …)은 주인이 없다 — 같은 순간의 앞 행동에 딸린다 */
-const actorOf = ev => (ev.e === 'skill' || ev.e === 'counter' || ev.e === 'call') ? ev.u : (ev.e === 'hit' || ev.e === 'dodge') ? ev.a : null;
-/** 그 사건이 지금 행동에 딸리나 — 같은 순간이고 다른 유닛의 행동이 아니다 */
-const inFocus = (f, ev) => { const who = actorOf(ev); return ev.t <= f.t + 1e-9 && (who == null || who === f.key); };
-/** 행동 하나를 연다 — `i` 번째 사건(주인이 있다)부터 그 행동에 딸린 사건을 미리 훑어 낀 유닛(`keys` — 어둡게 안 할 카드)을 모은다.
- *  올라갈 수 있으면 ①을 시작하고 참을 돌려준다 — 그 행동은 올라간 뒤에 적용한다 */
-function openFocus(state, root, opts, tl, i) {
-    const f = state.focus = { key: actorOf(tl[i]), t: tl[i].t, keys: new Set(), rising: false };
-    for (let j = i; j < tl.length && inFocus(f, tl[j]); j++) {
-        const ev = tl[j];
-        for (const k of [ev.u, ev.a, ev.d]) if (k != null) f.keys.add(k);
-        for (const e of ev.units ?? []) f.keys.add(e.key);   // 불러내기 — 불린 무리
-    }
-    if (focusMode() === 'dim') {
-        root.querySelector('.arena')?.classList.add('focus-dim');
-        for (const k of f.keys) state.units.get(k)?.node?.parentElement?.classList.add('focus-in');
-    }
-    const slot = state.units.get(f.key)?.node?.parentElement;
-    if (!lungeFxOn() || !slot?.isConnected) return false;
-    slot.style.setProperty('--fx-k', SPEED_K[state.speed] ?? 1);   // 전환 길이가 세우는 길이와 같은 배수를 타게 — 연출이 아직 안 선 칸은 비어 있다
-    slot.classList.add('fx-advance');
-    f.rising = true;
-    waitFocus(state, root, opts, RISE_MS + PEAK_MS);
-    return true;
-}
-/** 실제 시간으로 `ms` 세운다 — 눈금(TICK)을 기다리지 않고 제때 깨운다 */
-function waitFocus(state, root, opts, ms) {
-    const d = ms * (SPEED_K[state.speed] ?? 1);
-    state.hold = opts.now() + d;
-    state.timeouts.push(setTimeout(() => step(state, root, opts), d + 1));
-}
-/** ③ — 세움이 풀렸다. 나간 카드가 돌아오고(전환은 CSS) 어둡게 한 것을 걷는다 */
-function endFocus(state, root) {
-    state.hold = 0;
-    state.focus = null;
+/** 지금 설정의 세움 길이 — 포커스 · 공격 시 흔들림 · 배속 배수(`SPEED_K`). 재생기와 앱 시계가 같이 읽는다 (`pace.js:paceCfg`) ·
+ *  라운드 사이 숨(ADR-0500)은 포커스와 상관없이 선다 */
+export const paceOf = speed => paceCfg(focusMode(), lungeFxOn(), speed, SPEED_K[speed] ?? 1);
+/** 박자가 세운 행동을 그린다 — 세움이 바뀐 걸음에만. ① 동안은 행동한 카드가 나가 있고(그 행동은 아직 안 적용) ② 동안은 적용한 채 나가 있다 ·
+ *  Dim 이면 그 행동에 안 낀 카드를 어둡게 · 세움이 풀리면 ③ 돌아온다(전환은 CSS). 라운드 숨은 그림이 없다 */
+function syncFocus(state, root, opts) {
+    if (state.catchUp) return;   // 되감는 동안은 카드가 없다 — 되감기 뒤 첫 걸음이 그린다
+    const p = state.pace, tl = opts.result.timeline;
+    const g = (p.phase === 'rise' || p.phase === 'focus') && !state.ended ? p.g0 : -1;
+    if (g === state.focusG) return;
+    state.focusG = g;
     root.querySelector('.arena')?.classList.remove('focus-dim');
     for (const n of root.querySelectorAll('.unit-slot.focus-in')) n.classList.remove('focus-in');
     for (const n of root.querySelectorAll('.unit-slot.fx-advance')) n.classList.remove('fx-advance');
+    if (g < 0) return;
+    const key = actorOf(tl[g]);
+    if (focusMode() === 'dim') {
+        const keys = new Set();   // 그 행동에 낀 유닛 — 행동한 쪽 · 맞은 쪽 · 창을 받은 쪽 · 불린 무리
+        for (let j = g; j < p.g1; j++) {
+            const ev = tl[j];
+            for (const k of [ev.u, ev.a, ev.d]) if (k != null) keys.add(k);
+            for (const e of ev.units ?? []) keys.add(e.key);
+        }
+        root.querySelector('.arena')?.classList.add('focus-dim');
+        for (const k of keys) state.units.get(k)?.node?.parentElement?.classList.add('focus-in');
+    }
+    const slot = state.units.get(key)?.node?.parentElement;
+    if (!lungeFxOn() || !slot?.isConnected) return;
+    slot.style.setProperty('--fx-k', SPEED_K[state.speed] ?? 1);   // 전환 길이가 세우는 길이와 같은 배수를 타게 — 연출이 아직 안 선 칸은 비어 있다
+    slot.classList.add('fx-advance');
+}
+/** 세움이 풀리는 순간에 깨운다 — 눈금(TICK)을 기다리지 않는다. 늦게 깨도 박자는 안 틀린다(걸음이 흐른 시간을 그대로 갚는다) */
+function wake(state, root, opts) {
+    clearTimeout(state.wake);
+    state.wake = state.pace.phase && state.running && !state.ended ? setTimeout(() => step(state, root, opts), state.pace.hold + 1) : 0;
 }
 
 /* 신단 카드 [2026-09-29 사용자 지시 · SCREEN_DESIGN §4-2 「신단」 · ADR-0449] — 이긴 칸 뒤 적 진영에 몬스터 카드와 **같은 틀**로 선다.
@@ -1302,46 +1306,32 @@ function step(state, root, opts) {
     const at = opts.now(), prev = state.wall, gap = at - prev;
     state.wall = at;   // 세워 둔 동안에도 민다 — 다시 틀 때 세워 둔 시간이 한꺼번에 흐르지 않게
     if (!state.running || state.ended || !(gap > 0) || gap > opts.frozenMs) return;
-    // 공격자 포커스(개발용 비교) — 세운 동안은 시각을 안 민다 · 풀린 눈금은 풀린 뒤의 몫만 민다
-    let run = gap;
-    if (state.hold) {
-        if (at < state.hold) return;
-        if (state.focus?.rising) { state.focus.rising = false; state.hold = 0; run = 0; }   // ① 다 올라갔다 — 시각은 그대로 두고 그 행동을 적용한다(②)
-        else { run = at - Math.max(prev, state.hold); endFocus(state, root); }               // ② 끝 — 내려오고(③) 재생이 이어진다
-    }
-    state.t += run / 1000 * state.speed;
-    opts.onTime?.(state.t, state.speed);    // 끝난 라운드를 정산하고 다음 라운드를 붙인다 — 붙은 뒤에 적용해야 경계 너머 사건이 한 눈금 늦지 않는다 (R89)
+    // 박자 (`pace.js` · ADR-0654) — 흐른 시간만큼 민다. 세움(① 올라감 · ② 타격 · 라운드 숨) 동안은 시각이 안 간다 · 앱 시계와 같은 걸음이다.
+    //   앞을 내다보기 전에 `onTime` 이 엔진을 그 시각까지 민다 — 끝난 라운드를 정산하고 사건을 붙인다 (R89 · R130)
+    const t0 = state.t, i0 = state.idx;
+    const left = paceStep(state.pace, opts.result.timeline, gap, paceOf(state.speed), s => opts.onTime?.(s, state.speed));
+    // 박자가 `end` 에 닿은 순간 — 다음 런 · 챕터보스 재등장이 이 실제 시각에서 센다(결과 띠가 그 답을 읽으므로 적용보다 먼저)
+    if (state.pace.done && !state.doneSent) { state.doneSent = true; opts.onDone?.(at - left); }
+    state.t = state.pace.t;
     drain(state, root, opts);
+    wake(state, root, opts);
+    if (state.t === t0 && state.idx === i0) return;   // 선 채 — 그릴 것이 없다(② 동안 행동한 카드의 게이지가 꽉 찬 채 남는다)
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
     for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
     scrollLog(state, root);   // 이 걸음에 붙은 줄이 몇이든 목록은 한 번만 맞춘다
     if (state.dmgDirty) { state.dmgDirty = false; renderDmg(state, root); }   // 누적 판도 한 번 (숨어 있으면 `renderDmg` 가 그냥 지나간다)
 }
 
-/** 현재 시각까지의 이벤트를 전부 적용한다 */
+/** 박자가 지난 사건(`pace.i` 앞)을 전부 적용하고 세운 행동을 그린다 — 언제 서나는 박자가 정했다(라운드 숨 동안은 다음 `round` 가 안 지났고 ① 동안은 그 행동이 안 지났다) */
 function drain(state, root, opts) {
-    const tl = opts.result.timeline;
-    const focus = !state.catchUp && focusMode() !== 'off';   // 되감기는 세우지 않는다
-    while (state.idx < tl.length && tl[state.idx].t <= state.t + 1e-9) {
-        const ev = tl[state.idx];
-        // 라운드 사이 숨 — 다음 라운드가 서기 전에 쓰러진 카드를 보인다(`ROUND_GAP_MS`). 첫 라운드 · 되감기는 안 선다 ·
-        //   앞 행동의 포커스가 남았으면 그 세움이 먼저 끝난다(아래 `waitFocus(FOCUS_MS)`) — 숨은 그다음 걸음에
-        if (ev.e === 'round' && state.enemies.length && !state.catchUp && state.roundWait !== ev.n) {
-            if (!state.focus) { state.roundWait = ev.n; waitFocus(state, root, opts, ROUND_GAP_MS); }
-            break;
-        }
-        // 공격자 포커스 — 다음 사건이 다른 순간이거나 다른 유닛의 행동이면 지금 행동이 끝난 것이다. 거기서 세우고 남은 사건은 풀린 뒤에.
-        //   행동이 없을 때 주인이 있는 사건이 오면 새 행동을 연다 — 올라가는 동안(①)은 적용하지 않고 선다
-        if (focus) {
-            if (state.focus) { if (!inFocus(state.focus, ev)) break; }
-            else if (actorOf(ev) != null && openFocus(state, root, opts, tl, state.idx)) break;
-        }
-        apply(state, root, opts, ev);
+    const tl = opts.result.timeline, end = Math.min(state.pace.i, tl.length);
+    if (state.focusG >= 0 && state.focusG !== state.pace.g0) syncFocus(state, root, opts);   // 앞 행동의 그림을 먼저 걷는다 — 다음 행동의 팝업이 어두운 막 아래 안 뜨게
+    while (state.idx < end) {
+        apply(state, root, opts, tl[state.idx]);
         state.idx += 1;
         if (state.ended) break;
     }
-    if (state.ended) { if (state.focus) endFocus(state, root); }   // 끝난 판에 나간 카드가 남지 않게
-    else if (state.focus && !state.hold) waitFocus(state, root, opts, FOCUS_MS);   // ② 그 행동을 다 적용했다 — 나간 채로 선다
+    syncFocus(state, root, opts);   // 끝난 판이면 걷기만 한다 — 나간 카드가 남지 않게
 }
 
 /**

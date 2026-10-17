@@ -1,5 +1,5 @@
 /** 기본 직업 · 전직 스킬의 이미지 연출 — 사건 · 그림 · 움직임 (ADR-0515 · ADR-0520 · ADR-0528 · ADR-0550 · ADR-0551).
- * 표의 파일 이름 = 초상 그림체 판(투박한 초상 그림체 · ADR-0549 · ADR-0550) — 다른 그림체는 `artFile` 이 접미를 붙인다(ADR-0584).
+ * 표의 파일 이름은 스킬 모양의 키이며 `artFile` 이 그림체 접미를 붙인다(ADR-0651).
  * 게임 로직과 슬롯 아이콘은 이 표를 모른다. 그림이 준비되지 않으면
  * fx.js가 skill_looks.js의 기존 조각 조합을 표시한다.
  */
@@ -23,7 +23,7 @@ export const SKILL_ART = {
     kni_fanaticism: { buff: { file: 'kni_fanaticism', motion: 'orbit', size: 90, duration: 620 } },
     kni_defiance: { buff: { file: 'kni_defiance', motion: 'orbit', size: 90, duration: 620 } },
 
-    // 마법사 — 불 · 냉기 · 번개 · 집중 · 얼음 벽 소환.
+    // 마법사 — 화염 · 냉기 · 번개 · 집중 · 얼음 벽 소환.
     // 아이스 블라스트 · 라이트닝은 초상 바깥 위에서 떨어진다(ADR-0541) — `ay` = 그림에서 초상 가운데에 닿는 높이 · `then` = 이어 서는 그림.
     mag_fireball: { hit: { file: 'mag_fireball', motion: 'burst', size: 90, duration: 420 } },
     mag_inferno: { hit: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500 } },
@@ -139,11 +139,11 @@ export const SKILL_ART = {
 
 /* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).
    버튼 · 탭 순서 = 이 배열 순서 · 기본값 = 한 번도 안 고른 사람의 관전(다크 카툰 · ADR-0621) */
-export const ART_STYLES = ['portrait', 'ink', 'pen', 'charcoal', 'oil', 'darktoon', 'cinder', 'ritual', 'code'];
+export const ART_STYLES = ['darktoon', 'ink', 'cel2d', 'comic2d', 'mobile2d', 'spirit2d', 'pixel2d', 'code'];
 export const ART_DEFAULT = 'darktoon';
-/* 접미 그림체 — 파일 이름 = `<표의 이름>_<그림체>` · 기존 후보(ADR-0584) · 캐릭터/세계관 후보(ADR-0599) */
-const SUFFIXED = new Set(['ink', 'pen', 'charcoal', 'oil', 'darktoon', 'cinder', 'ritual']);
-/** 그 그림체의 파일 이름 — 초상 그림체는 표의 이름 그대로 · 접미 그림체는 `<표의 이름>_<그림체>` · 코드 모양은 그림이 없다(null — 조각 조합이 선다) */
+/* 다크 카툰·수묵 보존 + 깔끔한 2D 다섯 — 파일 이름 = `<표의 이름>_<그림체>`(ADR-0651). */
+const SUFFIXED = new Set(ART_STYLES.filter(style => style !== 'code'));
+/** 그 그림체의 파일 이름 — 코드 모양·없는 그림체는 그림이 없다(null — 조각 조합이 선다). */
 export function artFile(file, style) {
-    return style === 'portrait' ? file : SUFFIXED.has(style) ? `${file}_${style}` : null;
+    return SUFFIXED.has(style) ? `${file}_${style}` : null;
 }
