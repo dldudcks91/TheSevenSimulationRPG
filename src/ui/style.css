@@ -1511,6 +1511,21 @@ html, body { height: 100%; overflow: hidden; }
       (1600×800 실측 — 전투 판 아랫변 596.3 · 캐릭터 탭 네 칸 583.7). 간격은 `gap` 이 들고, 한 칸(재료 탭 · `.panel.bag`)에 붙던 마진은 걷는다 — 안 걷으면 28 */
 .bt-page { display: flex; flex-direction: column; gap: 14px; }
 .arena-page { gap: 18px; }
+/* 두 갈래 [2026-10-17 · ADR-0656] — 갈래 고르개 · 등급 칩 · 상대의 출처가 **한 줄**이다(판이 한 장에 빠듯해 줄을 안 늘린다).
+   온라인은 그 아래 글상자 둘이 나란히 — 글상자는 낮게(코드는 길어도 한두 줄만 보이면 된다 · 안에서 스크롤) */
+.arena-bar { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.arena-bar .segmented { margin: 0; }
+/*   고른 갈래 · 등급 — 도감 · 제련소 탭과 같은 표시(공통 `.segmented` 에는 고른 칸 표시가 없다) */
+.arena-bar .btn.on { color: var(--text-primary); border-color: var(--text-accent); }
+.arena-from { margin-left: auto; color: var(--text-secondary); font-size: var(--fs-sm); }
+/*   한 칸 = 「제목 · 글상자 · 버튼」 한 줄 — 세 줄로 쌓으면 [결투 시작]이 한 장 밖으로 밀렸다(1600×800 실측). 사유 줄은 그 아래 */
+.arena-code { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 24px; align-items: start; }
+.arena-code-box { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.arena-code-box .sub-h { margin: 0; white-space: nowrap; }
+.arena-code-text { flex: 1 1 0; min-width: 0; height: 28px; resize: none; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary);
+    font-size: var(--fs-xs); font-family: var(--font-main); padding: 3px 6px; word-break: break-all; overflow: hidden; user-select: text; caret-color: auto; }
+.arena-code-btns { display: flex; gap: 8px; }
+.arena-bad { flex-basis: 100%; color: var(--color-error); font-size: var(--fs-sm); margin: 0; padding: 0; list-style: none; }
 .arena-selection { display: flex; flex-direction: column; gap: 12px; }
 .arena-selection-head { display: flex; gap: 14px; align-items: center; }
 .arena-selection-head .sub-h { margin: 0; }

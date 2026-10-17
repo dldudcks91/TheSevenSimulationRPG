@@ -369,7 +369,9 @@ const state = {
     screen: 'menu',         // menu | start | prologue | game — 켜면 메뉴 (SCREEN_DESIGN §3 · ADR-0641)
     tab: 'expedition',
     // `unfold` = Party 버튼을 누른 직후 첫 그리기에만 우리 팀 아래 진형 · 물약 · 전술이 차례로 내려오는 연출을 단다(그 그리기가 끈다 · ADR-0497)
-    arena: { owner: null, selectionKey: null, team: null, opponent: null, match: null, last: null, unfold: false },
+    //   `mode` = 갈래(offline · online) · `tier` = 고른 등급 · `from` = 선 상대의 출처(ai · ghost) · `code` · `paste` = 두 글상자 · `problems` · `broken` = 불러오기 결과 —
+    //   전부 화면 상태다(세이브 아님 · ADR-0656)
+    arena: { owner: null, team: null, opponent: null, match: null, last: null, unfold: false, mode: 'offline', tier: null, from: null, code: '', paste: '', problems: null, broken: false },
     // 도박장 창 (SCREEN_DESIGN §8-1 · ADR-0331) — 고른 판돈 단계 · 마지막 결과 · 재생 위치. 세이브 아님 —
     //   결과는 이미 세이브에 들어가 있고(`gambleSpin`) 이것은 **다시 보여 줄 거리**다
     gb: { step: 1, last: null, anim: null },
@@ -1134,14 +1136,28 @@ function expNavBox(phase = battlePhase(state.battle)) {
  *  셸의 세그먼트(고른 칸)와 `renderExpedition`(서는 화면)이 같은 답을 쓴다 — 셸이 먼저 그려도 둘이 안 어긋난다 (ADR-0353) */
 const expScreen = () => (state.exp === 'battle' && state.battle ? 'battle' : state.exp === 'report' && doneReports().length ? 'report' : 'idle');
 
-/** 결투장이 찾은 상대의 열쇠 — 편성 번호 · 인원 · 진형. 이게 바뀌면 상대를 지운다 (`?dev=arena` 도 이 열쇠로 상대를 세운다) */
-const arenaKey = (ps, picked, ranks) => JSON.stringify([ps.activeNo, picked.map(h => [h.uid, ranks[h.uid]])]);
+/** 결투장 화면 상태를 그 세이브의 처음으로 — 갈래는 오프라인 · 등급은 첫 등급 (ADR-0656) */
+const arenaReset = A => Object.assign(A, {
+    owner: G, team: null, opponent: null, match: null, last: null, unfold: false,
+    mode: 'offline', tier: SYS.arena.tiers[0]?.id ?? null, from: null, code: '', paste: '', problems: null, broken: false,
+});
+/** 상대를 지운다 — 갈래 · 등급이 바뀌면 (상대는 우리 팀과 무관하게 서므로 편성이 바뀌어도 남는다 · ADR-0656) */
+const arenaDrop = A => Object.assign(A, { team: null, opponent: null, from: null, problems: null, broken: false });
+
+/** 팀 코드 ↔ 글상자 문자열 — UTF-8 JSON 을 base64 로 싼다. 운반 포장은 화면의 일이다(로직은 엔진 중립 JSON 까지 · INTERFACE §2-17) */
+const encodeTeam = payload => {
+    let s = '';
+    for (const b of new TextEncoder().encode(JSON.stringify(payload))) s += String.fromCharCode(b);
+    return btoa(s);
+};
+/** 못 풀면 null — 사유는 화면이 「코드를 읽을 수 없다」 한 줄로 낸다 */
+const decodeTeam = text => {
+    try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(text.replace(/\s+/g, '')), c => c.charCodeAt(0)))); } catch { return null; }
+};
 
 function renderArena(main) {
     const A = state.arena;
-    if (A.owner !== G) {
-        Object.assign(A, { owner: G, selectionKey: null, team: null, opponent: null, match: null, last: null, unfold: false });
-    }
+    if (A.owner !== G) arenaReset(A);
     const back = () => { A.match = null; A.team = null; A.opponent = null; render(); };
     if (A.match) {
         const page = el('div', 'bt-page page arena-watch');
@@ -1163,16 +1179,26 @@ function renderArena(main) {
     const ps = SYS.game.presetState(G);
     const picked = SYS.game.partyOf(G).map(heroById).filter(Boolean);
     const f = formState(), ranks = f.byUid;
-    // 편성 번호·인원·진형이 바뀌면 그 팀으로 찾았던 상대를 다시 찾는다. 진행 중인 결투는 위의 스냅샷을 쓴다.
-    const selectionKey = arenaKey(ps, picked, ranks);
-    if (A.selectionKey !== selectionKey) {
-        A.selectionKey = selectionKey;
-        A.team = null;
-        A.opponent = null;
-    }
     const page = el('div', 'panel page arena-page');
     main.appendChild(page);
-    page.appendChild(el('h2', '', `${t('nav.arena')} <small>${t('ar.practice')}</small>`));
+    page.appendChild(el('h2', '', `${t('nav.arena')} <small>${t(`ar.mode.${A.mode}`)}</small>`));
+    // 갈래 고르개 — 박스 맨 위 한 줄 [오프라인 | 온라인] · 아래 한 줄만 갈래마다 다르다 (ADR-0656)
+    const mode = segmented(['offline', 'online'].map(id => ({ id, label: t(`ar.mode.${id}`) })), A.mode, id => {
+        if (id !== A.mode) { A.mode = id; arenaDrop(A); }
+        render();
+    });
+    mode.classList.add('arena-mode');
+    // 한 줄에 모은다 — 갈래 · (오프라인) 등급 칩 · 오른쪽 끝에 상대의 출처. 판이 한 장(1600×800)에 빠듯해 줄을 늘리지 않는다
+    const bar = el('div', 'arena-bar');
+    bar.appendChild(mode);
+    if (A.mode === 'offline') bar.appendChild(arenaTierRow(A));
+    // 상대의 출처 — AI 는 AI 라고 적는다(사람인 척하지 않는다 · arena_design §7 · ADR-0656)
+    if (A.opponent) {
+        const tier = SYS.arena.tiers.find(x => x.id === A.tier);
+        bar.appendChild(el('span', 'arena-from', A.from === 'ghost' ? t('ar.ghostTeam') : t('ar.aiTeam', { tier: tier ? L(tier.name) : '' })));
+    }
+    page.appendChild(bar);
+    if (A.mode === 'online') page.appendChild(arenaCodeRow(A, picked, ranks));
     const selection = el('div', 'arena-selection');
     // Party 버튼 = 우리 팀을 그 편성으로 바꾼다 — 아래 물약 · 전술이 위에서 아래로 다시 내려온다 (ADR-0497)
     selection.appendChild(presetSeg(ps, no => {
@@ -1205,7 +1231,7 @@ function renderArena(main) {
         const byRank = [];
         for (const p of A.opponent) (byRank[p.rank] ??= []).push(p);
         for (const { r, i } of formSeats(Array.from(byRank, m => m?.length ?? 0))) enemySide.appendChild(unitPreview(arenaUnit(byRank[r][i], 'enemy'), tips));
-    } else enemySide.appendChild(arenaVacant('enemy', t('ar.noOpponent')));
+    } else enemySide.appendChild(arenaVacant('enemy', t(A.mode === 'online' ? 'ar.noGhost' : 'ar.noOpponent')));
     // 우리 팀은 고른 편성의 진형 칸 그대로라 빈자리도 제 칸에 선다
     const partySide = el('div', 'side side-party');
     for (const { r, i } of formSeats(f.caps)) {
@@ -1217,13 +1243,17 @@ function renderArena(main) {
     page.appendChild(arenaLoadPanel(A.unfold));
     A.unfold = false;
     const controls = el('div', 'arena-actions');
-    const find = el('button', 'btn', t(A.opponent ? 'ar.reroll' : 'ar.find'));
-    find.disabled = picked.length !== SYS.arena.teamSize;
-    find.onclick = () => {
-        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks, SYS.game.arenaLoadout(G));
-        A.opponent = SYS.arena.rollOpponent(A.team, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
-        render();
-    };
+    // 상대 찾기 — 오프라인만 · 그 등급의 AI 팀을 굴린다(우리 팀과 무관해 늘 열린다 · 이름만 우리 팀과 안 겹치게) — 온라인은 위 [불러오기]가 상대를 세운다
+    if (A.mode === 'offline') {
+        const find = el('button', 'btn', t(A.opponent ? 'ar.reroll' : 'ar.find'));
+        find.disabled = !A.tier;
+        find.onclick = () => {
+            A.opponent = SYS.arena.rollTierOpponent(A.tier, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), picked.map(h => h.name));
+            A.from = 'ai';
+            render();
+        };
+        controls.appendChild(find);
+    }
     const fight = el('button', 'btn primary arena-fight', t('ar.fight'));
     fight.disabled = !A.opponent || picked.length !== SYS.arena.teamSize;
     fight.onclick = () => {
@@ -1236,7 +1266,7 @@ function renderArena(main) {
         A.match = { team: A.team, opponent: A.opponent, result, resume: null };
         render();
     };
-    controls.append(find, fight);
+    controls.appendChild(fight);
     if (A.last) controls.appendChild(el('span', 'arena-last muted', t('ar.last', {
         result: t(A.last.reason === 'timeout' ? 'ar.draw' : A.last.won ? 'bt.won' : 'bt.lost'), sec: A.last.durationSec,
     })));
@@ -1281,6 +1311,75 @@ function arenaLoadPanel(unfold) {
     panel.appendChild(potionReadBlock(SYS.game.presetState(G)));
     panel.appendChild(tacticReadBlock('ar.noTactic'));
     return panel;
+}
+
+/** 오프라인 — 등급 칩 한 줄(`arena_tier.csv` 순서 · 칩 = 이름 + Lv) · 바꾸면 상대를 지운다 (ADR-0656) */
+function arenaTierRow(A) {
+    const seg = segmented(SYS.arena.tiers.map(x => ({ id: x.id, label: t('ar.tier', { name: L(x.name), lv: x.level }) })), A.tier, id => {
+        if (id !== A.tier) { A.tier = id; arenaDrop(A); }
+        render();
+    });
+    seg.classList.add('arena-tiers');
+    return seg;
+}
+
+/**
+ * 온라인 — 글상자 둘이 나란히 (ADR-0656). 왼쪽 = 내 팀 코드(고른 편성의 세 영웅 · `exportTeam` → 문자열) · 오른쪽 = 받은 코드(`importTeam` 이 검사한다).
+ * 글상자에 친 글은 다시 그리지 않고 화면 상태에만 담는다(치는 동안 커서를 안 잃는다). ⚠ 서버가 없어 운반은 복사 · 붙여넣기다
+ */
+function arenaCodeRow(A, picked, ranks) {
+    const row = el('div', 'arena-code');
+    const mine = el('div', 'arena-code-box');
+    mine.appendChild(el('h3', 'sub-h', t('ar.code.mine')));
+    const out = el('textarea', 'arena-code-text');
+    out.readOnly = true;
+    out.value = A.code;
+    mine.appendChild(out);
+    const mineBtns = el('div', 'arena-code-btns');
+    const make = el('button', 'btn sm', t('ar.code.make'));
+    make.disabled = picked.length !== SYS.arena.teamSize;
+    make.onclick = () => { A.code = encodeTeam(SYS.arena.exportTeam(picked, G.items, ranks)); render(); };
+    const copy = el('button', 'btn sm', t('ar.code.copy'));
+    copy.disabled = !A.code;
+    // 클립보드가 막힌 환경이면 글을 골라 둔다 — 손으로 복사한다
+    copy.onclick = () => navigator.clipboard?.writeText(A.code).then(() => flash('ar.code.copied'), () => out.select()) ?? out.select();
+    mineBtns.append(make, copy);
+    mine.appendChild(mineBtns);
+
+    const got = el('div', 'arena-code-box');
+    got.appendChild(el('h3', 'sub-h', t('ar.code.paste')));
+    const inp = el('textarea', 'arena-code-text');
+    inp.value = A.paste;
+    inp.placeholder = t('ar.code.placeholder');
+    inp.oninput = () => { A.paste = inp.value; };
+    got.appendChild(inp);
+    const gotBtns = el('div', 'arena-code-btns');
+    const load = el('button', 'btn sm primary', t('ar.code.load'));
+    load.onclick = () => {
+        const payload = decodeTeam(A.paste);
+        arenaDrop(A);
+        if (!payload) A.broken = true;
+        else {
+            const r = SYS.arena.importTeam(payload);
+            if (r.ok) { A.opponent = r.team; A.from = 'ghost'; }
+            // 사유 줄의 이름은 검사를 통과한 줄에만 싣는다 — 걸린 코드의 문자열은 화면 HTML 에 안 넣는다(`text` 사유)
+            //   같은 영웅의 같은 사유는 한 줄로 모은다(옵션 줄이 여럿 걸려도)
+            else A.problems = [...new Map(r.problems.map(p => [`${p.hero ?? '-'}:${p.code}`, { code: p.code, hero: p.hero ?? null }])).values()];
+        }
+        render();
+    };
+    gotBtns.appendChild(load);
+    got.appendChild(gotBtns);
+    if (A.broken) got.appendChild(el('div', 'arena-bad', t('ar.code.broken')));
+    if (A.problems) {
+        const list = el('ul', 'arena-bad');
+        for (const p of A.problems) list.appendChild(el('li', '', t('ar.bad.row', {
+            who: p.hero === null ? t('ar.bad.team') : t('ar.bad.hero', { n: p.hero + 1 }), why: t(`ar.bad.${p.code}`),
+        })));
+        got.appendChild(list);
+    }
+    row.append(mine, got);
+    return row;
 }
 
 function renderExpedition(main) {
@@ -7639,7 +7738,12 @@ function helpSections() {
         },
         {
             title: t('nav.arena'),
-            groups: [{ h: t('ar.practice'), body: [t('ar.help')] }],
+            // 두 갈래 (ADR-0656) — 갈래마다 상대가 어디서 오나 · 그다음 둘이 같이 따르는 결투 규칙
+            groups: [
+                { h: t('ar.mode.offline'), body: [t('ar.help.offline')] },
+                { h: t('ar.mode.online'), body: [t('ar.help.online')] },
+                { h: t('ar.rules'), body: [t('ar.help')] },
+            ],
         },
         {
             // 편성 — 파티 전술 묶음이 건설(옛 연구) 섹션에서 이사 왔다(칸을 굴리는 자리가 편성 탭이다 · §12 · §15 · 2026-09-21)
@@ -8256,17 +8360,29 @@ async function boot() {
         // 책은 도서관 탭에서만 보인다(ADR-0426 · ADR-0460) — 옛 `&lib=1` · `&mat=1` 은 읽지 않는다
         state.tab = 'library';
     }
-    if (dev === 'arena') {   // 결투장 — **상대를 찾은 채** · 상대는 [상대 찾기] 클릭으로만 굴러 헤드리스가 못 닿는다 (ADR-0602)
+    if (dev === 'arena') {   // 결투장 — **상대를 세운 채** · 상대는 [상대 찾기] · [불러오기] 클릭으로만 서서 헤드리스가 못 닿는다 (ADR-0602 · ADR-0656)
         if (!G) startGame();
         const q = new URLSearchParams(location.search);
         // `&tpl=<formation_template.csv:tpl_id>` — 고른 편성의 진형 (`2-1` · `1-2` · `0-3`) · `&find=0` 이면 상대 없이
         if (q.get('tpl')) SYS.game.setFormation(G, q.get('tpl'));
         state.tab = 'arena';
-        const ps = SYS.game.presetState(G), picked = SYS.game.partyOf(G).map(heroById).filter(Boolean), ranks = formState().byUid;
-        if (q.get('find') !== '0' && picked.length === SYS.arena.teamSize) {
-            const team = SYS.arena.snapshotTeam(picked, G.items, ranks, SYS.game.arenaLoadout(G));
-            Object.assign(state.arena, { owner: G, selectionKey: arenaKey(ps, picked, ranks), team, opponent: SYS.arena.rollOpponent(team, makeRng(1)) });
-        }
+        const A = arenaReset(state.arena);
+        const picked = SYS.game.partyOf(G).map(heroById).filter(Boolean), ranks = formState().byUid;
+        // `&tier=<arena_tier.csv:tier_id>` 그 등급 · `&am=online` 온라인 — 내 팀 코드를 만들고 그 코드를 불러온 채(자기 팀과 붙는다)
+        if (SYS.arena.tiers.some(x => x.id === q.get('tier'))) A.tier = q.get('tier');
+        if (q.get('am') === 'online') {
+            A.mode = 'online';
+            if (q.get('find') !== '0' && picked.length === SYS.arena.teamSize) {
+                const payload = SYS.arena.exportTeam(picked, G.items, ranks);
+                A.code = encodeTeam(payload);
+                // `&bad=1` — 받은 코드의 첫 영웅 레벨을 만렙 위로 바꿔 불러온 채(검사에 걸린 사유 줄을 헤드리스로 본다)
+                if (q.get('bad') === '1') payload.heroes[0].hero.level = D.balance.hero_level_cap + 1;
+                A.paste = encodeTeam(payload);
+                const r = SYS.arena.importTeam(decodeTeam(A.paste));
+                if (r.ok) Object.assign(A, { opponent: r.team, from: 'ghost' });
+                else A.problems = r.problems.map(p => ({ code: p.code, hero: p.hero ?? null }));
+            }
+        } else if (q.get('find') !== '0' && A.tier) Object.assign(A, { opponent: SYS.arena.rollTierOpponent(A.tier, makeRng(1), picked.map(h => h.name)), from: 'ai' });
     }
     if (dev === 'tactics') {   // 전술 칸이 전부 열린 상태 — 칸은 지휘 천막 랭크로만 열리므로 헤드리스가 닿을 길을 따로 낸다
         if (!G) startGame();

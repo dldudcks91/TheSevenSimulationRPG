@@ -2,7 +2,7 @@
 
 > 대상: `src/data/skill.csv` 의 `war_ironskin` (전사 · 아이언 스킨 — 한동안 자신의 방어력과 모든 저항을 크게 올린다)
 > 짝 문서: [.claude/skills/icon-prompt/skill_tiles.md](../../.claude/skills/icon-prompt/skill_tiles.md) §3 (전사 타일) · [prompt_template.md](../../.claude/skills/icon-prompt/prompt_template.md) (금지어)
-> 상태: **설치 완료** — 생성 시트 `src/assets/art/icons_source/skills/source/sheet_06_ironskin.png`의 오른쪽 아래 안을 채택해 `war_ironskin.png`와 게임용 WebP로 설치했다(2026-09-30).
+> 상태: **2026-10-17 수정본 설치 완료** — 리커버리와 같은 사람 상반신을 바탕으로, 십자 대신 적은 갑옷 선으로 차이를 줬다. 현재 원본·프롬프트·이전 그림·비교는 [수정 기록](../../src/assets/art/icons_source/skills/source/body_shield_revision_20261017/manifest.json)을 따른다. 아래는 2026-09-30의 첫 발주와 설치 기록이다.
 
 ## 1. 무엇을 그리나
 
@@ -104,4 +104,4 @@ amount of detail.
 8. **문서** — `src/assets/art/README.md` 「icons/skills/」 트리에 `war_ironskin.png` 줄을 넣고 표의 전사 행을 「8종 전부」로 · `skill_tiles.md` §0 · §3 의 「발주 대기」를 걷는다
 
 ---
-*마지막 업데이트: 2026-09-30*
+*마지막 업데이트: 2026-10-17*

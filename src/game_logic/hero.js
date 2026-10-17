@@ -436,6 +436,7 @@ export function createHeroSystem(data) {
      *   계수 = `mult_base_pct` + 능력치 × `mult_per_point_pct` — 둘 다 **비율**이다(2026-09-17 R111 · ~~`/ 100`~~)
      *   대부분 축은 `1 + 0.01n` 이라 옛 `1 + n × attr_bonus_per_point` 과 같은 값을 낸다.
      *   **건강만 모양이 다르다** — 곱해지는 대상이 HP 레벨업 상승분이라 계수가 1 보다 작은 쪽에서 시작한다.
+     *   **민첩은 이 선형을 안 쓴다** — 아래 `speedCoef`(복리 · 2026-10-17). hero_attribute.csv 민첩 행의 두 칸은 `-` 다.
      *   값은 전부 `hero_attribute.csv` 에 있다. 바꿀 때 이 파일이 아니라 CSV 를 고친다.
      */
     const attrCoef = Object.fromEntries(data.stats.map(s => [s.id, {
@@ -445,8 +446,17 @@ export function createHeroSystem(data) {
     const attrMult = (id, v) => {
         const c = attrCoef[id];
         if (!c) throw new Error(`attrMult: 축 '${id}' 가 hero_attribute.csv 에 없다`);
+        // 칸이 `-` 인 축(민첩)을 여기로 부르면 NaN 이 조용히 퍼진다 — 던진다
+        if (!Number.isFinite(c.base) || !Number.isFinite(c.per)) throw new Error(`attrMult: 축 '${id}' 는 선형 계수가 없다 (hero_attribute.csv mult 칸)`);
         return c.base + (v ?? 0) * c.per;
     };
+    /**
+     * 민첩의 행동 주기 계수 — **복리** [2026-10-17 사용자 확정 · hero_design §4-1] — `(1 + attr_speed_step_pct) ^ (민첩 − attr_dmg_pivot)`.
+     *   피해 계수(`formula.statCoef`)와 기준이 같고 비율은 절반이다 — 민첩 = 모든 직업의 속도 축. ~~`attrMult('agi')` 선형 1 + 0.01n~~ 대체.
+     *   기준 아래면 1 보다 작다(주기가 무기 주기보다 길어진다) · 0 에 안 닿는다 · 능력치를 모르면 1 · 몬스터도 같은 길(`battle.makeEnemy`)
+     */
+    if (!(B.attr_speed_step_pct > 0)) throw new Error(`hero: balance.csv 의 attr_speed_step_pct 가 없거나 0 이하다`);
+    const speedCoef = v => (Number.isFinite(v) ? Math.pow(1 + B.attr_speed_step_pct, v - B.attr_dmg_pivot) : 1);
 
     /**
      * 최대 HP 의 레벨 성장 — **10레벨 구간마다 직선** [확정 2026-09-14 사용자 · hero_design §4-1 · battle_design §8 · R84].
@@ -576,7 +586,7 @@ export function createHeroSystem(data) {
         const speed = magic ? f('cast_speed_pct') + f('cast_speed_per_level_pct') * hero.level : f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd;
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
-            / attrMult('agi', A.agi)
+            / speedCoef(A?.agi)
             * (1 - speed));
 
         const resAll = f('res_all');
@@ -700,5 +710,6 @@ export function createHeroSystem(data) {
         rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn, sinGearCount,
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
+        mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)
     };
 }

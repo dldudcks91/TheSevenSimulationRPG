@@ -98,6 +98,7 @@ export const D = {
     exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
     difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelAdd, codexExp, chapterGate}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239) · chapterGate = 장 순서 해금 1/0(R242)
     difficulties: {},         // 같은 것 byId
+    arenaTiers: [],           // arena_tier.csv 원시 행 — 결투장 오프라인 등급 · 검증 · 정렬은 game_logic/arena.js (arena_design §7 · 2026-10-17)
     exploreSpots: {},         // explore_spot.csv — {'장:지점': {chapter, spot, name:{ko,en}, story:{ko,en}}} · 탐험 지점 이름 · 두 줄 이야기(줄바꿈 풀어 둠) (SCREEN_DESIGN §8-4 · ADR-0563 · 화면만 읽는다)
     advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
     // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
@@ -127,7 +128,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'skill_codex_level'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'skill_codex_level', 'arena_tier'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -145,7 +146,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, skillCodexLevelRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, skillCodexLevelRow, arenaTierRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -190,6 +191,7 @@ export async function loadData(base = './data/') {
         .map(r => ({ id: r.difficulty_id, order: r.order, name: { ko: r.name_kr, en: r.name_en }, levelAdd: r.level_add, codexExp: r.codex_exp, chapterGate: r.chapter_gate,
             wearChance: r.wear_chance }));   // 몬스터 선택 부위 착용 확률 — battle.js 가 읽는다 (monster_design §5-1 · R245)
     D.difficulties = indexBy(D.difficultyList, 'id');
+    D.arenaTiers = arenaTierRow;   // 결투장 오프라인 등급 — 원시 행 그대로 · 정렬 · 검증은 arena.js (2026-10-17)
     // 기본 능력치 7종 — hero.js 는 id 만 읽고, 화면은 ko/en/abbr 을 읽는다 (같은 한 줄이 둘을 먹인다)
     D.heroAttributes = heroAttr.map(r => ({
         id: r.attr_id, ko: r.attr_kr, en: r.attr_en, abbr: r.abbr,
@@ -663,6 +665,13 @@ export function buildSystems(d, dev = {}) {
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
-    const arena = createArenaSystem({ hero, item, skill, battle });
+    // 결투장 — 오프라인 등급 표 · 온라인 팀 검사기가 볼 끝값 둘을 함께 넘긴다 (INTERFACE §2-17 · 2026-10-17).
+    //   강화 상한은 **건물을 다 지었을 때**다 — 남이 올린 팀이 어디까지 지었는지 모르므로 검사기는 끝을 본다 · 스킬 업그레이드는 스킬 도감 마지막 행
+    const arena = createArenaSystem({
+        hero, item, skill, battle, balance: d.balance, equipSlots: d.equipSlots, advances: d.advanceRows ?? [], classSkills,
+        tiers: d.arenaTiers ?? [],
+        upgradeCeiling: game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])) }).upgrade,
+        skillCapMax: (d.skillCodex ?? []).at(-1)?.upgradeCap ?? 0,
+    });
     return { hero, item, battle, arena, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
 }

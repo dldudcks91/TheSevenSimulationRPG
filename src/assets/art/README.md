@@ -274,15 +274,17 @@ buildings/
 ```text
 fx/skills/<file>_darktoon.webp  다크 카툰 — 기존 원본·설치본 유지, 기본 그림체
 fx/skills/<file>_ink.webp       수묵 — 기존 원본·설치본 유지
-fx/skills/<file>_<style>.webp   새 2D 시안 — cel2d / comic2d / mobile2d / spirit2d / pixel2d
-fx_source/clean_20261017/       다섯 방향의 생성 시트·최종 프롬프트·manifest·비교표·내보내기 검사
+fx/skills/<file>_pixel2d.webp   클린 도트 — 기존 원본·설치본 유지
+fx/skills/<file>_<style>.webp   새 재료 시안 — papercut / pastel / foil / riso / clay
+fx_source/clean_20261017/       보존한 클린 도트 원본·최종 프롬프트·대응표
+fx_source/material_20261017/    새 다섯 그림체의 원본 15장·최종 프롬프트·대응표·비교표·검사 기록
 fx_source/ink_20261009/         보존한 수묵 원본
 fx_source/world_styles_20261012/sheet_darktoon_*.png  보존한 다크 카툰 원본
 ```
 
-그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 새 다섯 방향은 현재 표가 읽는 파일 전부를 실제 투명 배경으로 생성했다. 최종 설치는 `python scripts/build_clean_fx.py`, 비교표는 `python scripts/build_clean_fx.py --compare`다. 이미지 생성은 내장 imagegen을 사용했다.
+그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 새 다섯 방향은 같은 스킬 형태를 서로 다른 재료 표현으로 생성했다. 각 88장, 총 440장의 실제 투명 WebP다. 최종 설치는 `python scripts/build_material_fx.py`, 비교표는 `python scripts/build_material_fx.py --compare`, 브라우저 검사는 `python scripts/verify_material_fx.py`다. 이미지 생성은 내장 imagegen을 사용했다.
 
-다크 카툰·수묵 외의 이전 이펙트 이미지는 설치본·보관본·비교 이미지까지 삭제했다([ADR-0651](../../../docs/client/adr/0651-이펙트는-다크카툰과-수묵을-남기고-깔끔한-2D-다섯을-견준다.md)). 오래된 발주 문서·스크립트는 과거 기록이며, 삭제된 그림의 재빌드 경로로 사용하지 않는다. 배경·초상·아이콘은 이 정리 범위와 무관하다.
+클린 도트·다크 카툰·수묵 외의 이전 이펙트 데이터는 설치본·보관본·비교 이미지·생성 프롬프트까지 삭제했다([ADR-0655](../../../docs/client/adr/0655-이펙트는-클린도트-다크카툰-수묵과-서로-다른-재료의-다섯-그림체다.md)). 오래된 발주 문서·스크립트는 과거 기록이며, 삭제된 그림의 재빌드 경로로 사용하지 않는다. 배경·초상·아이콘은 이 정리 범위와 무관하다.
 
 ## faces/ — 몬스터 얼굴 아이콘 · **스타일 하나 = 폴더 하나** [2026-08-30]
 
@@ -477,6 +479,7 @@ icons_source/skills/
 │   ├── sheet_13_codex_inferno.png · sheet_14_codex_summon.png  ← 인페르노 · 소환 2×2 (2026-10-16 · Codex) — 둘 다 1번 칸을 설치 · 기준 그림 = 같은 직업 설치본 9장(`sheet_13_anchor_installed_mage` · `sheet_14_anchor_installed_priest`) · 지시문 `*_prompt.txt`
 │   ├── war_recovery_20261017.png · kni_resistshield_20261017.png  ← 리커버리 · 레지스탕스 실드 단독 생성 원본(내장 image_gen · 투명 배경) · 지시문 `*_20261017_prompt.txt` · 내보내기 기록 `missing_basic_20261017.json`
 │   ├── missing_basic_20261017_preview.png  ← 새 아이콘과 같은 직업 기존 아이콘을 28 · 32 · 44px로 비교
+│   ├── body_shield_revision_20261017/  ← 리커버리 · 아이언 스킨의 공통 몸, 홀리 실드형 레지스탕스 실드 수정본 · `*_generated.png` · `*_prompt.txt` · `manifest.json` · 비교 `comparison.png` · 이전 설치본 `previous/`
 │   ├── <직업>_advanced_skills_sheet.png  ← 전직 45 투톤 시트 다섯 (2026-09-28 · 전직 시트의 앵커는 war_ 시트)
 │   └── sheet_01 ~ 06 · Gemini_Generated_Image_*  ← 9월 Gemini 시트 — 지금 설치된 기존 기본 36 의 출처 · sheet_02_mono_anchor 가 그때의 앵커
 └── unused/               ← id 가 없는 여분 · 10-15 「새 B」 넷(`war_frenzy_b` · `arc_evade_b` · `pri_halo_b` · `pri_doom_b`)
@@ -486,7 +489,8 @@ icons_source/skills/
 
 - **새 스킬 13 이 화면에 나온다** [2026-10-16 · DEV_PLAN R246 ~ R250] — 가안 id 그대로 `skill.csv` 행이 섰고 `mock.js:SKILL_ICON_FILES` 에 들었다. **`pri_halo` 는 쓸 곳이 없다**(헤일로가 같은 날 지워져 소환으로 — 파일만 남는다)
 - **인페르노 · 소환** [2026-10-16 · Codex 단색] — 인페르노는 「화염의 고리」로 갈아 끼웠고(옛 각진 분사는 git 이력에만) 소환은 「별을 그린 의식 원에서 솟는 뿔 해골」이다. 설치본 실측 장변 88 · 중앙 50/50 · 단색
-- **리커버리 · 레지스탕스 실드** [2026-10-17 · 내장 image_gen 단색] — 기본 스킬 50행과 화면 등록 목록 · 설치 파일을 대조해 비어 있던 두 스킬을 채웠다. 리커버리는 회복 십자를 파낸 건틀릿과 회복 화살표, 레지스탕스 실드는 화염 · 얼음 · 번개를 파낸 방패와 보호 호다. 생성 알파를 유지하고 회백 `#d8d9e6`으로 칠해 장변 88% · 중앙 50/50인 512 PNG로 정규화했다. 게임용은 기존 인코더로 256 WebP 두 장만 내보냈고 `mock.js:SKILL_ICON_FILES`에도 등록했다
+- **리커버리 · 레지스탕스 실드 초판** [2026-10-17 · 내장 image_gen 단색] — 기본 스킬 50행과 화면 등록 목록 · 설치 파일을 대조해 비어 있던 두 스킬을 채우고 `mock.js:SKILL_ICON_FILES`에 등록했다. 건틀릿과 회복 화살표 · 원소 방패와 보호 호로 만든 첫 그림은 같은 날 아래 수정본으로 교체했다. 원본과 지시문은 `source/`, 당시 설치본은 수정 폴더의 `previous/`에 남는다
+- **리커버리 · 아이언 스킨 · 레지스탕스 실드 수정** [2026-10-17 · 사용자 지시 · 내장 image_gen 편집] — 리커버리와 아이언 스킨은 같은 정면 사람 상반신을 쓴다. 리커버리는 몸 가운데 큰 십자 구멍, 아이언 스킨은 십자 대신 목 · 어깨 · 가슴 · 복부의 적은 갑옷 선으로만 구분한다. 레지스탕스 실드는 홀리 실드의 방패 외형 · 테두리 · 바깥 광선을 기준으로 안쪽 십자를 화염 · 얼음 · 번개로 바꿨다. 회백 `#d8d9e6`, 생성 알파 유지, 512 PNG · 장변 88% · 중앙 50/50, 게임용 256 WebP 세 장만 기존 인코더로 내보냈다. 원본 · 프롬프트 · 이전 설치본 · 크기 비교는 [`body_shield_revision_20261017/`](icons_source/skills/source/body_shield_revision_20261017/manifest.json)에 기록한다
 - 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
 - **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 강조색 픽셀은 그대로 두고 검정만 회백으로 칠한다
 

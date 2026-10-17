@@ -114,6 +114,126 @@ check('결투장: 3명 미만/중복 선택 거절', () => {
     }
     return rejected === 2;
 });
+/* 결투장 두 갈래 (2026-10-17 · arena_design §0 · §7 · INTERFACE §2-17) — 등급 AI 상대 · 팀 코드 · 적법성 검사 */
+/** 등급 팀 → 팀 코드 재료(영웅 · 장비 표 · 랭크) — 스냅샷의 영웅이 아직 장비 uid 를 들고 있다 */
+const arenaParts = team => ({
+    heroes: team.map(p => p.hero),
+    items: Object.fromEntries(team.flatMap(p => p.gear.map(it => [it.uid, it]))),
+    ranks: Object.fromEntries(team.map(p => [p.uid, p.rank])),
+});
+/** 단정이 손으로 다시 세우는 식 — 코드와 같은 식을 쓰면 서로를 못 잡는다 */
+const advPointsAt = lv => lv < B.advance_unlock_level ? 0 : 1 + Math.floor((lv - B.advance_unlock_level) / B.advance_point_interval);
+const skillCapEnd = D.skillCodex[D.skillCodex.length - 1].upgradeCap;
+const upCap = SYS.game.limitsOf({ buildings: Object.fromEntries(SYS.construction.list.map(b => [b.id, b.maxRank])) }).upgrade;   // 건물을 다 지었을 때의 강화 상한
+check('결투장: 등급 상대 — 레벨 · 착용 위치 전부 · 아이템 레벨 · 강화 · 마스터리 · 책 · 전직 · 스킬 업그레이드가 등급과 게임 규칙대로 (arena_design §7)', () => {
+    const tiers = SYS.arena.tiers;
+    if (!tiers.length) fail('등급이 없다');
+    for (const t of tiers) {
+        const team = SYS.arena.rollTierOpponent(t.id, makeRng(500 + t.order), ['아무개']);
+        const tag = `${t.id}:`;
+        if (team.length !== 3 || new Set(team.map(p => p.hero.cls)).size !== 3) fail(`${tag} 직업 셋이 다르지 않다`);
+        const names = team.map(p => p.hero.name?.ko ?? p.hero.name);
+        if (new Set(names).size !== 3 || names.includes('아무개')) fail(`${tag} 이름 겹침 ${names}`);
+        const front = team.filter(p => p.rank === 0);
+        if (front.length !== 1 || team.some(p => p.combat.hp_max > front[0].combat.hp_max)) fail(`${tag} 전열은 최대 HP 가 가장 큰 하나`);
+        for (const p of team) {
+            const h = p.hero, who = `${tag}${h.cls}`;
+            if (h.level !== t.level) fail(`${who} 레벨 ${h.level}`);
+            if (p.gear.length !== D.equipSlots.length || D.equipSlots.some(s => !h.equipped[s.id])) fail(`${who} 빈 위치`);
+            for (const it of p.gear) {
+                if (it.ilvl !== t.level) fail(`${who} ${it.slot} 아이템 레벨 ${it.ilvl}`);
+                if ((it.up ?? 0) !== (SYS.item.upgradeable(it) ? Math.min(t.up, upCap) : 0)) fail(`${who} ${it.slot} 강화 ${it.up}`);
+            }
+            // 마스터리 — 레벨이 준 포인트를 다 썼다(남았다면 찍을 노드가 없어서다)
+            const spent = Object.values(h.mastery).reduce((s, r) => s + r, 0);
+            const budget = (t.level - 1) * B.mastery_point_per_level;
+            const open = SYS.hero.masteryNodesFor(h).filter(n => n.unlockLevel <= h.level && (h.mastery[n.id] ?? 0) < n.maxRank && SYS.hero.gateOn(n, p.gear, h));
+            if (spent + (h.masteryPoints ?? 0) !== budget || ((h.masteryPoints ?? 0) > 0 && open.length)) fail(`${who} 마스터리 ${spent}/${budget} 남음 ${h.masteryPoints}`);
+            if ((t.level >= B.skillbook_learn_level) !== !!h.bookSkill) fail(`${who} 책 ${h.bookSkill}`);
+            if ((t.level >= B.advance_unlock_level) !== !!h.advanceSkill) fail(`${who} 전직 ${h.advance}/${h.advanceSkill}`);
+            if (h.advanceSkill && 1 + (h.advanceUp ?? 0) !== advPointsAt(t.level)) fail(`${who} 전직 포인트 ${1 + (h.advanceUp ?? 0)} ≠ ${advPointsAt(t.level)}`);
+            const wantLv = Math.min(t.skillUp, skillCapEnd);
+            for (const id of [h.innate, h.bookSkill].filter(Boolean))
+                if ((h.skillLv?.[id] ?? 0) !== wantLv) fail(`${who} ${id} 업그레이드 ${h.skillLv?.[id]} ≠ ${wantLv}`);
+            if (p.actives.length !== [h.innate, h.bookSkill, h.advanceSkill].filter(Boolean).length) fail(`${who} 액티브 칸 ${p.actives.length}`);
+        }
+    }
+    return `등급 ${tiers.map(t => `${t.id} Lv${t.level}`).join(' · ')}`;
+});
+check('결투장: 등급 상대 — 같은 시드 = 같은 팀 · 다른 시드 = 다른 팀 · 모르는 등급은 던진다', () => {
+    const id = SYS.arena.tiers[SYS.arena.tiers.length - 1].id;
+    const a = SYS.arena.rollTierOpponent(id, makeRng(7)), b = SYS.arena.rollTierOpponent(id, makeRng(7)), c = SYS.arena.rollTierOpponent(id, makeRng(8));
+    if (!eq(a, b)) fail('같은 시드가 다른 팀');
+    if (eq(a, c)) fail('다른 시드가 같은 팀');
+    try { SYS.arena.rollTierOpponent('없는등급', makeRng(1)); } catch { return true; }
+    fail('모르는 등급을 받았다');
+});
+check('결투장: 생성한 등급 팀은 적법성 검사를 지난다 — 검사기가 AI 상대의 상한이다 (arena_design §2 · §7)', () => {
+    let n = 0;
+    for (const t of SYS.arena.tiers) for (const seed of [11, 12, 13]) {
+        const { heroes, items, ranks } = arenaParts(SYS.arena.rollTierOpponent(t.id, makeRng(seed * 100 + t.order)));
+        const problems = SYS.arena.validateTeam(SYS.arena.exportTeam(heroes, items, ranks));
+        if (problems.length) fail(`${t.id} 시드 ${seed} — ${JSON.stringify(problems)}`);
+        n++;
+    }
+    return `${n} 팀 통과`;
+});
+check('결투장: 팀 코드 — 내보내고 들이면 같은 능력치 · 같은 스킬 · 같은 결과 · 원본 불변 (INTERFACE §2-17)', () => {
+    const g = SYS.game.newGame(131, SYS.hero.rollCandidates(makeRng(131), 3), 0);
+    const mine = g.heroes.slice(0, 3);
+    const before = JSON.stringify(g);
+    const ranks = { [mine[0].uid]: 0, [mine[1].uid]: 1, [mine[2].uid]: 1 };
+    // 운반은 문자열이다 — 직렬화 왕복을 거친 것을 들인다
+    const payload = JSON.parse(JSON.stringify(SYS.arena.exportTeam(mine, g.items, ranks)));
+    if (payload.heroes.some(e => 'uid' in e.hero || e.gear.some(x => 'uid' in x.item) || 'combat' in e)) fail('uid · 능력치가 실렸다');
+    const got = SYS.arena.importTeam(payload);
+    if (!got.ok) fail(`새 게임 팀이 검사에 걸렸다 — ${JSON.stringify(got.problems)}`);
+    const direct = SYS.arena.snapshotTeam(mine, g.items, ranks);
+    got.team.forEach((p, i) => {
+        if (!eq(p.combat, direct[i].combat)) fail(`${i} 능력치가 다르다`);
+        if (!eq(p.actives, direct[i].actives) || p.rank !== direct[i].rank) fail(`${i} 스킬 · 진형이 다르다`);
+    });
+    const enemy = SYS.arena.rollTierOpponent(SYS.arena.tiers[0].id, makeRng(132));
+    if (!eq(SYS.arena.fight(got.team, enemy, makeRng(133)), SYS.arena.fight(got.team, enemy, makeRng(133)))) fail('같은 시드가 다른 결과');
+    return JSON.stringify(g) === before;
+});
+check('결투장: 검사기 — 판 · 직업 · 레벨 · 마스터리 · 전직 · 위치 · 강화 · 옵션 범위를 어기면 그 사유로 거절한다 (arena_design §2)', () => {
+    const base = SYS.arena.exportTeam(...Object.values(arenaParts(SYS.arena.rollTierOpponent(SYS.arena.tiers[0].id, makeRng(141)))));
+    const codesOf = mutate => { const p = JSON.parse(JSON.stringify(base)); mutate(p); return SYS.arena.validateTeam(p).map(x => x.code); };
+    const expect = (code, mutate, why) => { if (!codesOf(mutate).includes(code)) fail(`${why} → ${code} 가 안 나왔다 (${codesOf(mutate)})`); };
+    if (SYS.arena.validateTeam(base).length) fail('기준 팀이 이미 걸린다');
+    expect('format', p => { p.v = 999; }, '판');
+    expect('format', p => { p.heroes.pop(); }, '인원');
+    const notMain = D.classes.map(c => c.id).find(c => !SYS.hero.mainClasses.includes(c));
+    if (notMain) expect('class', p => { p.heroes[0].hero.cls = notMain; }, '본편 밖 직업');
+    expect('level', p => { p.heroes[0].hero.level = B.hero_level_cap + 1; }, '만렙 초과');
+    expect('stats', p => { const k = Object.keys(p.heroes[0].hero.stats)[0]; p.heroes[0].hero.stats[k] = B.hero_attr_max + 1; }, '능력치 상한 초과');
+    expect('masteryPoints', p => {
+        const h = p.heroes[0].hero;
+        h.mastery = Object.fromEntries(SYS.hero.masteryNodesFor(h).filter(n => n.unlockLevel <= h.level).map(n => [n.id, n.maxRank]));
+    }, '포인트 초과');
+    expect('mastery', p => { p.heroes[0].hero.mastery = { 없는노드: 1 }; }, '트리 밖 노드');
+    expect('advance', p => {
+        const h = p.heroes[0].hero;
+        h.advance = (D.advanceRows ?? []).find(r => r.class_id === h.cls)?.advance_id ?? 'x';   // 등급 첫 줄은 전직 레벨 아래다
+    }, '전직 레벨 미달');
+    expect('slot', p => { const g = p.heroes[0].gear; const w = g.find(x => x.pos === 'weapon'), a = g.find(x => x.pos === 'armor'); [w.item, a.item] = [a.item, w.item]; }, '위치와 부위가 다르다');
+    expect('up', p => { p.heroes[0].gear.find(x => x.item.slot === 'weapon').item.up = 99; }, '강화 상한 초과');
+    expect('up', p => { p.heroes[0].gear.find(x => x.item.slot === 'ring').item.up = 1; }, '반지 강화');
+    expect('option', p => {
+        for (const e of p.heroes) for (const x of e.gear) for (let k = 0; k < (x.item.affixes ?? []).length; k++) {
+            const r = SYS.item.optionRange(x.item, k);
+            if (r) { x.item.affixes[k].v = Math.max(r.min, r.max) + 1000; return; }
+        }
+        fail('범위를 아는 옵션 줄이 하나도 없다');
+    }, '옵션 범위 밖');
+    expect('reqLevel', p => { const x = p.heroes[0].gear.find(y => y.item.slot === 'weapon'); x.item.ilvl = B.hero_level_cap; }, '착용 요구 미달');
+    // 받은 문자열은 화면 HTML 로 들어간다 — 태그를 여는 이름 · 장비 이름 · 이상한 초상 id 를 막는다
+    expect('text', p => { p.heroes[0].hero.name = '<img src=x onerror=alert(1)>'; }, '이름에 태그');
+    expect('text', p => { p.heroes[1].gear[0].item.name = { ko: 'a"b', en: 'x' }; }, '장비 이름에 따옴표');
+    expect('format', p => { p.heroes[0].hero.face = 'x" onerror="alert(1)'; }, '초상 id 모양');
+    return true;
+});
 const AGROUP = D.armorGroups;                    // armor_group.csv — {slot: {groupId: def}} · 갑옷군 3갈래 (2026-09-16 · R107) + 투구 · 장갑 · 신발 갈래 (2026-09-18)
 /** 무기 피해 가운데 — 구간 직선의 누적합 (R105). 단정이 공식을 손으로 다시 세운다: 코드와 같은 식을 쓰면 서로를 못 잡는다 */
 const bandMid = ilvl => {
@@ -620,6 +740,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
     // ~~codex_blueprint_level · skillbook_upgrade_max~~ — 2026-10-16 스킬 도감(skill_codex_level.csv)으로 옮겼다 (R266)
     const need = ['skillbook_learn_level', 'drop_book_pct', 'book_craft_gold', 'book_craft_dust',   // 스킬북 (R179)
         'skillbook_upgrade_books_1', 'skillbook_upgrade_books_2', 'advance_point_interval',   // 스킬 레벨 · 전직 포인트 (R216)
+        'arena_ai_main_tree_weight', 'arena_ai_continue_weight',   // 결투장 등급 AI 의 마스터리 가중치 (2026-10-17 · INTERFACE §2-17)
         'dispatch_offline_cap_hours', 'dispatch_base_ratio',
         // 자원 미니게임 (2026-10-06 · PLAN_dispatch_watch D8)
         'mg_lives', 'mg_rare_value', 'mg_combo_step', 'mg_combo_add', 'mg_combo_max', 'mg_sec', 'mg_rare_pct', 'mg_bad_pct',
@@ -633,7 +754,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'armor_fixed_def_pct_min', 'armor_fixed_def_pct_max', 'armor_common_opt_normal', 'armor_common_opt_magic', 'armor_common_opt_rare',
         'armor_def_slot_armor', 'armor_def_slot_helmet', 'armor_def_slot_gloves', 'armor_def_slot_boots',
         'base_crit_pct', 'base_crit_damage_pct', 'dmg_variance_pct', 'monster_hp_scale', 'monster_atk_scale', 'monster_def_scale', 'battle_timeout_sec',
-        'def_curve_k', 'dmg_min', 'res_cap_base', 'res_cap_absolute', 'attr_dmg_pivot', 'attr_dmg_step_pct',
+        'def_curve_k', 'dmg_min', 'res_cap_base', 'res_cap_absolute', 'attr_dmg_pivot', 'attr_dmg_step_pct', 'attr_speed_step_pct',
         'hit_base_pct', 'hit_per_level_deficit_pct', 'hit_level_mult_min', 'hit_min_pct',   // 적중 = 곱 넷 (R219)
         'gold_rate', 'drop_chance_pct', 'boss_guaranteed_drop', 'drop_ilvl_spread_pct', 'drop_ilvl_spread_min', 'drop_material_pct', 'rarity_w_normal', 'rarity_w_magic', 'rarity_w_rare', 'make_rarity_w_normal', 'make_rarity_w_magic', 'make_rarity_w_rare',
         'accessory_common_opt_normal', 'accessory_common_opt_magic', 'accessory_common_opt_rare', 'weapon_common_opt_normal', 'weapon_common_opt_magic', 'weapon_common_opt_rare', 'weapon_fixed_atk_pct_min', 'weapon_fixed_atk_pct_max', 'weapon_def_down_sec', 'weapon_res_down_sec', 'weapon_atk_down_sec', 'weapon_def_down_stack_max', 'cast_stack_max', 'salvage_dust_magic', 'salvage_dust_rare',
@@ -3043,8 +3164,26 @@ check('combat: 무기가 공격력을 올린다', () => {
  *   — ~~원소 옵션이 없는 마법 무기의 기본 공격은 물리다~~(09-11 · R80) 대체. 세기 채널(`atk_magic` = 스킬 · 회복의 밑수)은 그대로 마법이다.
  *   `attack_type` 은 어떤 무기에서도 `physical` · `basic_attack` 은 마법 무기만 거짓이다.
  */
+/**
+ * 민첩의 행동 주기 계수 [2026-10-17 · 사용자 확정 · hero_design §4-1] — `무기 주기 ÷ (1 + attr_speed_step_pct) ^ (민첩 − attr_dmg_pivot)`.
+ * 피해 계수와 같은 기준 · 비율은 따로 · ~~선형 1 + 0.01n~~ 대체 — 기준이면 무기 주기 그대로 · 1점마다 같은 비율 · 기준 아래면 느려진다
+ */
+check('combat: 민첩 행동 주기 계수는 복리 — 기준 민첩이면 무기 주기 그대로 · 1점마다 같은 비율 · 기준 아래면 느려진다 (hero_design §4-1 · 2026-10-17)', () => {
+    const p = B.attr_dmg_pivot, s = B.attr_speed_step_pct;
+    if (!(s > 0)) fail(`balance.csv 손잡이 attr_speed_step_pct ${s}`);
+    const h = { ...G.heroes[0], mastery: {} };
+    const axe = mkItem('weapon', [], { group: 'axe' });
+    const per = agi => SYS.hero.computeCombat({ ...h, stats: { ...h.stats, agi } }, [axe]).action_period;
+    // 주기는 소수 셋째 자리로 반올림돼 나온다 — 비율은 그만큼 느슨하게 본다
+    if (Math.abs(per(p) - WG.axe.period) > 1e-3) fail(`기준 민첩 ${p} 인데 주기 ${per(p)} ≠ 도끼 ${WG.axe.period}`);
+    if (Math.abs(per(p) / per(p + 10) - Math.pow(1 + s, 10)) > 1e-2) fail(`기준 +10 → 속도 ×${(per(p) / per(p + 10)).toFixed(3)} (${Math.pow(1 + s, 10).toFixed(3)} 이어야)`);
+    if (Math.abs(per(p + 1) / per(p + 2) - (1 + s)) > 2e-3) fail('1점마다 같은 비율로 빨라지지 않는다 — 복리가 아니다');
+    if (!(per(B.hero_attr_min) > per(p))) fail(`민첩 ${B.hero_attr_min} 인데 기준보다 안 느리다 ${per(B.hero_attr_min)} / ${per(p)}`);
+    return `도끼 ${WG.axe.period}s — 민첩 ${B.hero_attr_min} ${per(B.hero_attr_min)}s · ${p} ${per(p)}s · ${B.hero_attr_max} ${per(B.hero_attr_max)}s`;
+});
 check('combat: 무기군이 물리/마법을 정하고 attack_type 은 언제나 물리 · 마법 무기는 basic_attack 거짓 (§2-1 · §3 · R198)', () => {
-    const h = { ...G.heroes[0], stats: { ...G.heroes[0].stats, int: 20, str: 1 } };
+    // 민첩은 기준값 — 기준 아래면 주기가 무기 주기보다 길어진다(복리 · 2026-10-17). 아래 「period from group」 은 무기 주기를 넘지 않는지만 본다
+    const h = { ...G.heroes[0], stats: { ...G.heroes[0].stats, int: 20, str: 1, agi: B.attr_dmg_pivot } };
     const staff = SYS.item.startingWeapon(makeRng(2), 'mage');
     if (!['staff', 'orb'].includes(staff.group)) fail(`mage weapon ${staff.group}`);
     if ('element' in staff) fail('마법 무기가 element 를 들었다 — 생성 때 굴리지 않는다 (R80)');

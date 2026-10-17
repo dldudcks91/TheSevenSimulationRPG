@@ -8,6 +8,28 @@
 나머지는 거기서 잘라 **배경을 알파로 되돌리고 512×512 정사각으로 맞춘** 것이다 —
 ⚠ `gladiator_helm.png` 만 예외다(누끼 없음 · 1013×1013 원본 해상도 · 아래 참조).
 
+## 5장 일반몹 12종 스케치 3×3 시트 [2026-10-17]
+
+몬스터(정예) Gem 에서 `scripts/gemini_web.py run` 으로 뽑은 2048² 3×3 시트 여덟 장이다 — 스테이지 하나에 시트 둘 · **한 행에 한 종**(1행 · 2행 · 3행 = 그 스테이지의 `monster_idx` 01 · 02 · 03). 아래 세 줄 + 이름만 적은 아홉 줄로 보냈다. 격자선은 x · y ≈ 670~692 · 1356~1379. **배정 없음 — 선택용**이다.
+
+| 시트 | 종 (행 순) | 첨부 (외형 · 그림체) | 결과 |
+|---|---|---|---|
+| `sheets/source_sheet_ch5_st1_ghoul_3x3_1~2` | 굶주린 구울 · 구울 사냥꾼 · 구울 주술사 | `3301`(죽은 얼굴만) · 영웅 `warrior_3` · `priest_1` | 1 = 사람 같은 시체 · 2 = 해골에 가까운 구울(이 드러남) |
+| `sheets/source_sheet_ch5_st2_orc_3x3_1~2` | 오크 대식가 · 오크 작살꾼 · 오크 요리장 | `2101` · `2102` · `2103` · 영웅 `warrior_3` | 2장 오크 피부 · 엄니가 이어진다. 색 수 70~103 으로 거칠다 |
+| `sheets/source_sheet_ch5_st3_maggot_3x3_1` | 거대 구더기 · 번데기 · 어미 구더기 | `5900`(곤충 살만) · 영웅 `warrior_3` | 분홍 몸 · 하이라이트 구슬 눈 — 마스코트처럼 귀엽게 흘렀다 |
+| `sheets/source_sheet_ch5_st3_maggot_grim_3x3_1~2` | 위와 같음 | 위와 같음 | 둘째 줄만 「때 묻은 회황색 살 · 무거운 눈썹 · 움푹한 검은 눈」으로 바꿨다 → 톤이 맞는다. grim_2 6번 고치 껍질이 반투명 초록 |
+| `sheets/source_sheet_ch5_st4_fly_3x3_1~2` | 파리 사수 · 파리 마법사 · 파리 시종장 | `5900` · 영웅 `archer_1` · `mage_1` | 날개가 반투명이라 초록이 비친다(키잉하면 날개가 뚫린다). fly_2 1번은 사람 얼굴 · fly_1 6번 로브 룬이 글자처럼 읽힌다 |
+
+공통 — 경계밀도 19~31(앵커 8~19) · 머리가 설치본보다 작고 몸이 크다(무기 · 소품이 어깨폭을 100% 로 민다). 설치하려면 1-2 인간 Gemini 판처럼 얼굴로 앉혀야 한다. 9번 칸은 모두 ✦ 워터마크.
+
+```text
+Image 1 is an undead from our game — use it only for how a dead face looks in our style. Images 2-3 are our hero portraits, for style only; do not copy their faces or clothes.
+Ghouls of the underworld of gluttony: gaunt corpses with bare grey skin, sunken cheeks and a long hungry jaw, in ragged scraps of cloth. Eyes are solid black shapes.
+Top row starving ghouls with an axe, middle row ghoul hunters with a crossbow, bottom row ghoul shamans carrying a holy book.
+```
+
+나머지 셋은 같은 골격이다 — 오크 `Orcs of a never-ending feast hall of gluttony.` + `Top row orc gluttons, enormously fat, with a spear. Middle row orc harpooners with a harpoon crossbow. Bottom row orc chefs with a meat cleaver and an apron.` · 구더기 `Giant maggots in the digestive abyss of gluttony: swollen grubs of dirty grey-yellow flesh, a heavy grim brow over sunken solid black eyes, a round mouth.` + `Top row giant maggots bloated with swallowed armor and bones. Middle row maggot pupae, hard cocoons with a half-formed fly face showing through. Bottom row brood mothers crowned with clusters of eggs.` · 파리 `Fly-headed servants of the lord of gluttony's banquet: fly heads with big dark compound eyes and a short proboscis, dull folded wings behind the shoulders.` + `Top row fly marksmen with a bow, middle row fly mages with a staff, bottom row fly stewards in butler's coats carrying a holy book.`
+
 ## 3장 이스터에그 황금고블린 [2026-10-17]
 
 몬스터(정예) Gem 에 `ready/monster/1101.png`(외형) · `ready/hero/goblin_butler.png`(어깨에 짐을 멘 구도)를 첨부해 `scripts/gemini_web.py run` 으로 뽑은 2048² 3×3 시트 여덟 장이다. 격자선은 x · y ≈ 670~692 · 1356~1379(시트마다 몇 px 흔들린다). 9번 칸은 모든 시트에 워터마크가 인물 위로 찍혔다.

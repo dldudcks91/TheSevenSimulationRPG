@@ -1,4 +1,4 @@
-"""Prepare and export the five clean 2D effect directions (2026-10-17).
+"""Prepare/export the retained clean pixel style and share alpha-aware atlas export.
 
 Generation uses the built-in imagegen tool. This script only writes prompts,
 crops equal atlas cells, preserves their alpha, and exports runtime WebP files.
@@ -18,26 +18,11 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "src/assets/art/fx_source/clean_20261017"
 OUT = ROOT / "src/assets/art/fx/skills"
 STYLES = {
-    "cel2d": {
-        "ko": "셀 2D", "en": "Cel 2D",
-        "description": "Traditional hand-drawn 2D action animation cels, with smooth tapered dark-blue contour lines, broad elegant silhouettes and exactly two flat shading planes. Restrained steel gray, warm orange, blue and sage. The contour is fine and even, never thick ragged black. Similar in visual weight to a serious fantasy cartoon, but much cleaner and simpler. Crisp stylized animation drawing, no material texture. Strong asymmetrical action gestures, a few large fragments, generous negative space.",
-    },
-    "comic2d": {
-        "ko": "플랫 코믹", "en": "Flat Comic",
-        "description": "Clean flat 2D comic animation effects: bold rounded yet sharply tapered shapes, one consistent dark navy outline, solid graphic fills, one small cream highlight. Emphasize instantly readable silhouettes and a compact graphic impact. Maximum three flat colors per effect. Less pointed and more rhythmic than the cel direction, no intricate interior divisions. Serious energetic fantasy game effects, not cute stickers or UI icons.",
-    },
-    "mobile2d": {
-        "ko": "클린 모바일", "en": "Clean Mobile",
-        "description": "Polished contemporary Korean mobile RPG 2D skill effects. Extremely clean smooth-edged sweeping energy ribbons, no black outlines, strong readable silhouettes, pale luminous cores enclosed by one saturated colored rim. Broad 2-3 tone color areas with only a short smooth color transition. Confident curved motion trails, airy sparse fragments. Controlled tiny highlights, no hazy glow cloud. Attractive vivid but balanced colors on a dark battlefield. Skill shapes remain readable and the portrait remains visible. A professional clean 2D VFX animation keyframe, not a photorealistic rendering or a detailed painted object.",
-    },
-    "spirit2d": {
-        "ko": "도깨비불 2D", "en": "Spirit Flame 2D",
-        "description": "Clean 2D Korean fantasy spirit-energy VFX. Smooth flowing flame-like silhouettes, elegant hook-shaped tips and curved wisps, crisp pale centers with rich colored edges, NO contour outlines. A refined modern mobile game feel, using a few large coherent flowing shapes and very little visual clutter. Each element keeps its own palette: orange fire, icy cyan, golden lightning, sage healing, steel slashes. Blue spirit energy may be a restrained secondary accent, not a universal recolor. No traditional ink painting or paper texture, no watercolor, no brush grain, no ornate symbols. Flowing airy silhouette is the defining difference from the mobile direction.",
-    },
     "pixel2d": {
-        "ko": "클린 도트", "en": "Clean Pixel",
-        "description": "Clean premium 2D pixel-animation combat VFX inspired by the clarity of modern Korean retro mobile RPGs. Each effect is designed on a strict 64x64 logical pixel grid, enlarged with crisp nearest-neighbor pixel edges. Deliberate coherent pixel clusters, precise stepped curves, 3-4 colors per effect, no dithering, no single-pixel noise, no blur or smooth antialiasing. Broad simple silhouettes and spare spark clusters. Bright clear elemental colors balanced for dark backgrounds. Fluid modern pixel animation keyframe, not 3D voxel art, not a smooth illustration with a pixel filter.",
-    },
+        "ko": "클린 도트",
+        "en": "Clean Pixel",
+        "description": "Clean premium 2D pixel-animation combat VFX inspired by the clarity of modern Korean retro mobile RPGs. Each effect is designed on a strict 64x64 logical pixel grid, enlarged with crisp nearest-neighbor pixel edges. Deliberate coherent pixel clusters, precise stepped curves, 3-4 colors per effect, no dithering, no single-pixel noise, no blur or smooth antialiasing. Broad simple silhouettes and spare spark clusters. Bright clear elemental colors balanced for dark backgrounds. Fluid modern pixel animation keyframe, not 3D voxel art, not a smooth illustration with a pixel filter."
+    }
 }
 
 COMMON = """Use case: stylized-concept.
@@ -69,10 +54,10 @@ def prepare() -> None:
             (SOURCE / f"prompt_{style}_{sheet['id']}.txt").write_text(COMMON.format(description=spec["description"]) + body + "\n", encoding="utf-8")
     manifest = {"date": "2026-10-17", "mode": "built-in imagegen", "grid": 6, "styles": STYLES, "sheets": previous["sheets"], "active_files": sorted(active)}
     (SOURCE / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Prepared {len(STYLES)} directions, {len(active)} active sprites each, 15 atlas prompts.")
+    print(f"Prepared {len(STYLES)} directions, {len(active)} active sprites each, 3 atlas prompts.")
 
 
-def cell_boundaries(alpha: np.ndarray, axis: int) -> list[int]:
+def cell_boundaries(alpha: np.ndarray, axis: int, search_fraction: float = .20) -> list[int]:
     """Find transparent gutters near the intended six equal grid boundaries.
 
     Generated sheets can drift a few pixels from an exact grid, particularly
@@ -86,7 +71,7 @@ def cell_boundaries(alpha: np.ndarray, axis: int) -> list[int]:
     cuts = [0]
     for index in range(1, 6):
         intended = round(index * step)
-        lo, hi = round(intended - .20 * step), round(intended + .20 * step)
+        lo, hi = round(intended - search_fraction * step), round(intended + search_fraction * step)
         values = smoothed[lo:hi]
         candidates = np.flatnonzero(values <= values.min() + .004) + lo
         cuts.append(int(candidates[np.argmin(abs(candidates - intended))]))
@@ -107,11 +92,13 @@ def install(styles: list[str], manifest: dict) -> None:
                 raise ValueError(f"{path.name}: expected square atlas with transparent space, got {atlas.size} alpha={atlas.getextrema()[3]}")
             alpha_atlas = np.asarray(atlas)[..., 3]
             columns = cell_boundaries(alpha_atlas, 0)
-            rows = cell_boundaries(alpha_atlas, 1)
+            rows = cell_boundaries(alpha_atlas, 1, sheet.get("row_search_fraction", .20))
             for i, entry in enumerate(sheet["cells"]):
                 if entry["file"] not in active:
                     continue
                 x, y = i % 6, i // 6
+                if manifest.get("row_local_gutters"):
+                    columns = cell_boundaries(alpha_atlas[rows[y]:rows[y + 1]], 0)
                 inset = max(1, round(min(columns[x + 1] - columns[x], rows[y + 1] - rows[y]) * .02))
                 bounds = (columns[x], rows[y], columns[x + 1], rows[y + 1])
                 box = (bounds[0] + inset, bounds[1] + inset, bounds[2] - inset, bounds[3] - inset)

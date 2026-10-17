@@ -139,11 +139,11 @@ export const SKILL_ART = {
 
 /* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).
    버튼 · 탭 순서 = 이 배열 순서 · 기본값 = 한 번도 안 고른 사람의 관전(다크 카툰 · ADR-0621) */
-export const ART_STYLES = ['darktoon', 'ink', 'cel2d', 'comic2d', 'mobile2d', 'spirit2d', 'pixel2d', 'code'];
+export const ART_STYLES = ['darktoon', 'ink', 'pixel2d', 'papercut', 'pastel', 'foil', 'riso', 'clay'];
 export const ART_DEFAULT = 'darktoon';
-/* 다크 카툰·수묵 보존 + 깔끔한 2D 다섯 — 파일 이름 = `<표의 이름>_<그림체>`(ADR-0651). */
-const SUFFIXED = new Set(ART_STYLES.filter(style => style !== 'code'));
-/** 그 그림체의 파일 이름 — 코드 모양·없는 그림체는 그림이 없다(null — 조각 조합이 선다). */
+/* 보존 셋 + 서로 다른 재료로 그린 다섯 — 같은 스킬 구도·재생으로 그림체만 견준다(ADR-0655). */
+const SUFFIXED = new Set(ART_STYLES);
+/** 그 그림체의 파일 이름 — 없는 그림체는 null, 그림 없는 스킬은 기존 조각 조합을 쓴다. */
 export function artFile(file, style) {
     return SUFFIXED.has(style) ? `${file}_${style}` : null;
 }

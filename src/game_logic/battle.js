@@ -1186,13 +1186,18 @@ export function createBattleSystem(data) {
          *   타격 회복은 **비율**이다(0.5 = 50% · R111 단위 규약 — `/ 100` 을 붙이지 않는다).
          * 멈추는 방법은 **행동 예약(`next`)을 미는 것**이다 — 틱을 건너뛰면 같은 틱에 먼저 행동한 유닛과 아직 안 한 유닛의 경직이 한 틱 갈리지만,
          *   예약을 밀면 배열 순서와 무관하게 차례가 정확히 그만큼 늦는다.
-         * 경직 중에 다시 걸리면 **끝나는 시각만 새로 잡는다**(남은 시간에 더하지 않는다) — 그래서 옛 끝과 새 끝의 차이만 민다. rng 0
+         * 경직 중에 다시 걸리면 **끝나는 시각만 새로 잡는다**(남은 시간에 더하지 않는다) — 그래서 옛 끝과 새 끝의 차이만 민다 · 새 끝이 더 이르면 아무것도 안 한다(2026-10-17). rng 0
          * `a` = 경직을 건 쪽 — **경직 시간 증가**(`a.staggerDur` · 무기 시기 ③ · 2026-10-05 R206)가 길이에 곱해진다. 0 · 모름이면 ×1 이라 종전 값이다
          */
         function stagger(u, a = null) {
             const dur = B.stagger_sec * (a?.staggerDur ? 1 + a.staggerDur : 1) * Math.max(0, 1 - u.fhr);
             if (!(dur > 0)) return;
             const end = t + dur;
+            // 늦게 끝나는 쪽만 [2026-10-17] — 경직 시간 증가(R206)로 걸 때마다 길이가 달라져, 짧은 경직이 긴 경직을 덮으면 `end − from` 이 음수가 되어
+            //   차례를 오히려 당기고 끝을 줄였다(경직 중에 마법 무기가 칸을 썼다). 스턴(`stun`)과 같은 규칙 — 더 일찍 끝나는 경직은 차례 · 끝을 안 건드린다.
+            //   이벤트는 남긴다 — 「경직이 걸릴 피해면 그 hit 바로 뒤에 stagger」 계약 그대로이고 `until` 은 **지금 걸린 끝**이다(재생이 그 시각까지 경직으로 그린다).
+            //   끝이 같으면 종전 그대로 — 0 만큼 밀고 이벤트를 남긴다(같은 틱에 여러 대 맞는 판)
+            if (end < u.stagUntil) { timeline.push({ t: r1(t), e: 'stagger', u: u.key, until: r1(u.stagUntil) }); return; }
             // 스턴과 누적하지 않는다 [2026-09-28 · R178 · battle_design §2-7] — 스턴이 더 늦게 끝나면 그 뒤로 넘는 몫만 민다. 스턴이 없으면 종전 그대로
             const from = Math.max(u.stagUntil, t);
             u.next += u.stunUntil > from ? Math.max(0, end - u.stunUntil) : end - from;

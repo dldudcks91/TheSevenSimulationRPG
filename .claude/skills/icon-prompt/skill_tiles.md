@@ -76,7 +76,7 @@
 | 5 | `war_taunt` | 도발 | 함성 · 디버프 | 고함치는 옆얼굴 + 끝이 **안으로 말린** 음파 호 셋 |
 | 6 | `war_shout` | 외침 | 함성 · 버프 | 뿔나팔 + **각진 방패꼴** 음파 호 셋 |
 | 7 | `war_battleorders` | 배틀오더스 | 함성 · 버프 | 치켜든 군기 + **위로 꺾인** 음파 호 셋 |
-| 8 | `war_ironskin` | 아이언 스킨 | 버프 | **상반신만**(머리 · 어깨 · 허리까지) — 몸이 갑옷처럼 단단해 보인다(겹친 어깨 판 · 가슴판 · 배의 띠 판) · 몸만 · 곁가지 없음 — **6차 시트 오른쪽 아래 설치** · 프롬프트와 설치 절차는 `docs/reference/skill_icon_ironskin_prompt.md` |
+| 8 | `war_ironskin` | 아이언 스킨 | 버프 | **리커버리와 같은 사람 상반신**(머리 · 어깨 · 허리까지) — 몸 윤곽은 같고, 리커버리의 중앙 십자 대신 적은 갑옷 구획선만 넣는다 · 몸만 · 곁가지 없음 — **2026-10-17 내장 image_gen 수정본 설치** · 현재 원본·프롬프트는 `src/assets/art/icons_source/skills/source/body_shield_revision_20261017/manifest.json` · 이전 발주 기록은 `docs/reference/skill_icon_ironskin_prompt.md` |
 
 **갈라 둔 것**
 

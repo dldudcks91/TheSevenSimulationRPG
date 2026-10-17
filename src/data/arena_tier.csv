@@ -1,0 +1,6 @@
+tier_id,tier_order,name_kr,name_en,hero_level,rarity_w_normal,rarity_w_magic,rarity_w_rare,gear_up,skill_up,description_kr
+bronze,1,브론즈,Bronze,10,70,25,5,0,0,⚠임시 — 결투장 오프라인 등급 [2026-10-17 사용자 「등급을 만들어서 해당 등급에 맞게 영웅들이 장비와 스킬을 갖추고 나오도록」 · arena_design §7 · INTERFACE §2-17] · hero_level = 상대 영웅 레벨(= 장비 아이템 레벨 · 1 ~ balance.csv:hero_level_cap) · rarity_w_* = 상대 장비 희귀도 가중치(일반 · 매직 · 레어 — 합이 0 이면 안 된다) · gear_up = 상대 장비 강화 단계(강화 대상 부위만 · 0 ~ 건물을 다 지었을 때의 상한) · skill_up = 고유 · 배운 스킬의 업그레이드 단계(0 ~ skill_codex_level.csv 마지막 upgrade_cap) · 레벨 10 = 스킬북(balance.csv:skillbook_learn_level)
+silver,2,실버,Silver,20,50,40,10,1,1,⚠임시 · 레벨 20 = 마스터리 T3(balance.csv:mastery_t3_unlock_level)
+gold,3,골드,Gold,30,30,50,20,2,2,⚠임시 · 레벨 30 = 전직(balance.csv:advance_unlock_level)
+platinum,4,플래티넘,Platinum,40,15,50,35,3,3,⚠임시
+diamond,5,다이아,Diamond,50,0,40,60,5,5,⚠임시 · 레벨 50 = 만렙
