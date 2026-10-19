@@ -27,7 +27,8 @@ export const TARGETS = {
     //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열리고 원정 r1 은 장만 연다 (2026-09-25 사용자 지시 · R161)
     upgrade_item: U(true), make: U(true),
     potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 제련소 r2)
-    storage: U(true), codex: U(true), hire: U(true), search: U(true), shop: U(true), shop_special: U(true),
+    //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
+    storage: U(true), codex: U(true), hire: U(true), shop: U(true), shop_special: U(true),
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
     raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
@@ -43,8 +44,8 @@ export const TARGETS = {
     advance: U(true), skill_depth: U(false),
     // 더하기 — 지금 있는 상한(`state.limitsOf` 의 키) · 단계
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),
-    // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정 + 수색 결과이고 건물이 안 늘린다 [2026-09-24 사용자 지시]
-    searchSlots: A(true), shopPerSlot: A(true), shopWeapon: A(true),
+    // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정이고 건물이 안 늘린다 [2026-09-24 사용자 지시] · ~~`searchSlots`~~ 2026-10-19 수색 삭제
+    shopPerSlot: A(true), shopWeapon: A(true),
     make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
     chapters: A(true),   // 들어갈 수 있는 장 — 원정 랭크마다 +1 · 기본값 0 (`state.limitsOf` · `stageUnlocked` · 2026-09-24 · R152)
     commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)

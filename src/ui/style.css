@@ -4146,6 +4146,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 단계 작은 줄 — 열린 단계 = 산출물 아이콘 · 잠긴 단계 = 흐린 점. 개수는 CSV 표가 정한다 */
 .dp-line-tiers { display: flex; align-items: center; gap: 3px; }
 .dp-line-tiers img { width: 18px; height: 18px; object-fit: contain; }
+.dp-line-tiers .dp-line-lv { font-size: var(--fs-xs); font-weight: 400; color: var(--text-muted); }   /* 찾아온 영웅 줄 — 단계 자리에 Lv · 닫힘 (ADR-0672) */
 .dp-line-tiers i { display: block; width: 18px; height: 18px; position: relative; }
 .dp-line-tiers i::after { content: ''; position: absolute; left: 6px; top: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--border-primary); }
 .dp-offline { flex: 0 0 auto; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--border-primary); font-size: var(--fs-xs); color: var(--text-muted); }
@@ -4569,34 +4570,14 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .tv-cands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; flex: 0 1 1060px; min-width: 0; max-width: 1060px; }
 /* 명단 한 줄 — 격자 + 오른쪽 열 [2026-10-12 사용자 지시 · SCREEN_DESIGN §8-1 · ADR-0593] */
 .tv-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
-/* 오른쪽 열 — 위 영웅 보내기 · 아래 가입 희망 2×2. **늘 서고 격자 오른쪽 남는 폭을 다 받는다** [2026-10-12 사용자 「초상화를 약간 키워서 좌우 빈 공간 맞춰」] —
-   왼쪽 빈 공간 = 줄의 틈(카드 사이와 같다) · 오른쪽 = 패널 안쪽 여백이라 좌우가 맞는다. 가입 희망 칸은 그 폭을 반씩 나눠 커진다.
-   밑폭 = 보내기 칸 얼굴 둘 + 틈 — 격자 상한(1060) 오른쪽 남는 폭이 이보다 넓어 명단 카드가 안 줄어든다.
-   **열 전체가 후보 카드 한 장 높이 안에 든다** — 가입 희망이 커진 만큼 보내기 칸 얼굴 · 두 칸 사이 틈을 줄였다(넘치면 의뢰 줄이 밀린다) */
+/* 오른쪽 열 — 찾아온 영웅 2×2 하나 [2026-10-12 ADR-0593 · 2026-10-19 ADR-0671 — 영웅 보내기 칸을 걷었다]. **늘 서고 격자 오른쪽 남는 폭을 다 받는다** —
+   왼쪽 빈 공간 = 줄의 틈(카드 사이와 같다) · 오른쪽 = 패널 안쪽 여백이라 좌우가 맞는다. 칸은 그 폭을 반씩 나눠 커진다.
+   밑폭 = 얼굴 둘 + 틈 — 격자 상한(1060) 오른쪽 남는 폭이 이보다 넓어 명단 카드가 안 줄어든다 */
 .tv-right { --tv-face: 90px; flex: 1 1 0; min-width: calc(var(--tv-face) * 2 + 8px); display: flex; flex-direction: column; gap: 10px; }
 .tv-join-h { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
-/* 영웅 보내기 — 얼굴 하나(왼쪽) + 이름 · 한 줄(오른쪽) + 버튼(아래 전폭). 안 골랐으면 얼굴 칸이 점선(가입 희망 빈 칸과 같은 말투) */
-.tv-send { display: grid; grid-template-columns: var(--tv-face) minmax(0, 1fr); grid-template-areas: "h h" "f i" "b b"; gap: 8px; }
-.tv-send > .tv-join-h { grid-area: h; }
-.tv-send > .btn { grid-area: b; width: 100%; }
-.tv-send-face { grid-area: f; aspect-ratio: 1; overflow: hidden; background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-top-width: 2px; }
-.tv-send-face.empty { background: none; border: 1px dashed var(--border-secondary); }
-/* 수색 완료 — 얼굴 칸이 「+」 버튼이 된다 · 누르면 수색 칸이 결과 카드(ADR-0627). **실선**이라 점선 빈 칸(「아직 안 골랐다」)과 갈린다 ·
-   + 는 초록(「수색」 띠 · 완료 줄과 같은 색) · 카드가 선 동안 `.on` = 결과 얼굴의 눌린 표시와 같은 안쪽 선 */
-.tv-send-face.plus {
-    position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0; cursor: pointer;
-    border: 1px solid var(--border-secondary); color: var(--color-success); font-size: calc(var(--tv-face) * .5); font-weight: 300; line-height: 1;
-}
-.tv-send-face.plus:hover { border-color: var(--border-highlight); background: var(--surface-6); }
-.tv-send-face.plus.on::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--border-highlight); pointer-events: none; }
-.tv-send-face .hero-face { width: 100%; height: 100%; border: 0; background: none; }
-.tv-send-info { grid-area: i; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
-.tv-send-info .n { font-size: var(--fs-sm); overflow-wrap: anywhere; }
-.tv-send-info .m { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
-.tv-send-info .cha { font-style: normal; color: var(--text-accent); }
-/* 가입 희망 칸 [2026-10-09 ADR-0574 · 2×2 2026-10-12 ADR-0593] — 두 칸씩 줄짓는다. **늘 선다**(빈 칸 포함).
-   초상 칸은 정사각 · 테두리 = 등급 색(렌더러가 넣는다 — 명단 카드 윗선과 같은 색) · 아래 띠 = 남은 시간(앱 시계가 글자만 간다).
-   빈 칸은 명단 빈 칸 · 자원 빈 자리(`.dp-slot.empty`)와 같은 점선이다. 수색 결과는 맨 앞 칸 · 띠가 「수색」(초록 — 이야기의 완료 줄과 같은 색) */
+/* 찾아온 영웅 칸 [2026-10-09 ADR-0574 · 2×2 2026-10-12 ADR-0593 · 2026-10-19 ADR-0671] — 두 칸씩 줄짓는다. **늘 선다**(빈 칸 포함).
+   초상 칸은 정사각 · 테두리 = 등급 색(렌더러가 넣는다 — 명단 카드 윗선과 같은 색) · 아래 띠 = 출처(「찾아옴」 · 「마차」 — 떠나지 않아 시간이 없다).
+   빈 칸은 명단 빈 칸과 같은 점선이다 */
 .tv-join { display: flex; flex-direction: column; gap: 8px; }
 .tv-join-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .tv-join-slot {
@@ -4613,16 +4594,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     background: rgba(var(--veil-rgb), .78); color: var(--text-primary);
     font-size: var(--fs-xs); text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums;
 }
-.tv-join-slot.search .tv-join-left { color: var(--color-success); }
-/* 수색 칸이 결과 카드를 든 동안 — 결과 얼굴이 눌린 채다(hover 와 같은 안쪽 선 · 두께로 갈린다) (ADR-0624) */
+/* 셋째 칸이 그 영웅의 카드를 든 동안 — 그 얼굴이 눌린 채다(hover 와 같은 안쪽 선 · 두께로 갈린다) (ADR-0624 · ADR-0671) */
 .tv-join-slot.on::after, .tv-join-slot.on:hover::after { content: '';position: absolute; inset: 0; border: 2px solid var(--border-highlight); pointer-events: none; }
-/* 수색 결과가 처음 보일 때 한 번 스며 나온다 — 길이는 `app.js:JOIN_FRESH_MS` 와 같다(다시 그리면 흐른 만큼 당겨 이어 간다) */
+/* 막 온 얼굴이 처음 보일 때 한 번 스며 나온다 — 길이는 `app.js:JOIN_FRESH_MS` 와 같다(다시 그리면 흐른 만큼 당겨 이어 간다) */
 .tv-join-slot.fresh { animation: tv-fresh .9s ease-out both; }
 @keyframes tv-fresh { from { opacity: 0; transform: scale(.86); filter: brightness(1.8); } to { opacity: 1; transform: none; filter: none; } }
-/* 가입 희망 창 — 명단과 같은 후보 카드 한 장 + 떠나기까지 남은 시간. 폭은 명단 카드 한 장쯤(카드의 초상 비율이 같게 선다) */
-.tv-join-modal { width: 340px; display: flex; flex-direction: column; gap: 8px; }
-.tv-join-leave { font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.tv-join-modal .b-hire { width: 100%; margin-top: 7px; }   /* 명단 카드의 [고용]과 같은 자리 · 같은 폭(`.tv-cands .b-hire`) */
 /* 크기를 정하던 값들(초상 clamp · 카드 패딩 · 이름 글씨 · 고유 스킬 칸 · 능력치 줄간격 · 아래 두 줄)은
    **2026-09-08 에 전부 삭제됐다** — 카드가 `.ng-card` 규격을 그대로 탄다. 남는 것은 명단 격자와
    선술집에만 있는 조각들(고용 버튼 · 빈 칸 · 수색 칸)뿐이다 */
@@ -4638,18 +4614,18 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     color: var(--text-muted); font-size: var(--fs-sm);
 }
 .tv-cands .b-hire { width: 100%; margin-top: 7px; }
-/* 수색 칸 — 후보 카드와 **같은 크기**다 (2026-09-01 사용자 지시 · SCREEN_DESIGN §8-1 · 실동작 ADR-0062).
-   격자가 늘 3열이라(후보 2 + 수색 1) 폭은 저절로 같고, 높이는 같은 행의 카드가 정한다.
-   내용이 적어 버튼이 위로 붙지 않게 `margin-top:auto` 로 **아래에 앉힌다** — 카드의 고용 버튼과 같은 자리다.
-   상태 셋이 이 한 칸에 선다: 대기(보낼 영웅 목록) · 수색 중(이야기) · 완료(이야기 + 완료 줄). 얼굴 · 버튼은 오른쪽 열의 영웅 보내기 칸이 든다 (ADR-0593) */
-.tv-search { align-self: stretch; display: flex; flex-direction: column; gap: 8px; }
-.tv-search-h { font-size: var(--fs-lg); }
-.tv-search-h .todo-badge { vertical-align: middle; }
-.tv-search-spec { font-size: var(--fs-sm); }
-.tv-search-who { font-size: var(--fs-md); font-weight: 600; }
-.tv-search-odds { font-size: var(--fs-xs); }
-/* 수색 결과 카드 — 수색 칸 자리에 선다 · 명단 카드와 **같은 규격** · 버튼 둘이 [고용] 자리에 **한 줄로 나란히** —
-   명단 카드의 [고용] 한 줄과 높이가 같아 영입 후보 패널이 안 흔들린다(글이 길면 줄을 안 바꾸고 말줄임) (ADR-0624) */
+/* 찾아온 영웅 칸 — 안내 [2026-10-19 · SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 칸~~ 자리 그대로]. 후보 카드와 **같은 크기**다 —
+   격자가 늘 3열이라(후보 2 + 이 칸) 폭은 저절로 같고, 높이는 같은 행의 카드가 정한다(`align-self: stretch`).
+   제목 · 사양 · 레어 확률 · 상태 한 줄(다음 도착까지 — 앱 시계가 글자만 간다 · 멈춤 · 닫힘 · 지을 랭크) */
+.tv-visit { align-self: stretch; display: flex; flex-direction: column; gap: 8px; }
+.tv-visit-h { font-size: var(--fs-lg); }
+.tv-visit-spec { font-size: var(--fs-sm); }
+.tv-visit-odds { font-size: var(--fs-sm); color: var(--text-secondary); }
+.tv-visit-state { font-size: var(--fs-sm); }
+.tv-visit-state.warn { color: var(--color-warning); }
+.tv-visit-next { font-size: var(--fs-md); font-variant-numeric: tabular-nums; }   /* 1초마다 갈려 숫자 폭을 고정한다 */
+/* 고른 찾아온 영웅의 카드 — 셋째 칸 자리에 선다 · 명단 카드와 **같은 규격** · 버튼 둘이 [고용] 자리에 **한 줄로 나란히** —
+   명단 카드의 [고용] 한 줄과 높이가 같아 영입 후보 패널이 안 흔들린다(글이 길면 줄을 안 바꾸고 말줄임) (ADR-0624 · ADR-0671) */
 .tv-res-btns { display: flex; gap: 6px; margin-top: 7px; }
 .tv-res-btns > .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* 이야기 줄 — 막마다 하나씩 열린다 (ADR-0062). 목록 기호를 안 쓴다: 항목이 아니라 문장이라
@@ -4660,50 +4636,6 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     font-size: var(--fs-sm); color: var(--text-secondary);
 }
 .tv-story p { margin: 0; }
-/* 소문 — 만날 사람의 죄종을 **보내기 전에** 말한다 (ADR-0068). 죄종 칩을 그대로 쓴다:
-   화제를 숨기지 않는 것이 이 기능의 전제라 별도 표기를 발명하지 않는다 */
-.tv-rumor {
-    display: flex; align-items: baseline; gap: 6px;
-    padding: 6px 8px; background: var(--bg-input);
-    border-left: 2px solid var(--border-highlight);
-    font-size: var(--fs-sm); color: var(--text-secondary);
-}
-.tv-rumor .sin-chip { flex: 0 0 auto; }
-/* 만남 — 질문 하나 + 답 몇 개. 이야기 줄(.tv-story)과 **다른 테두리**를 준다:
-   이야기는 읽는 것이고 만남은 **누르는 것**이라 같은 문법으로 서면 클릭할 수 있다는 게 안 읽힌다 */
-.tv-meet { display: flex; flex-direction: column; gap: 5px; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-highlight); }
-.tv-meet.done { border-color: var(--border-primary); }
-.tv-meet-h { font-size: var(--fs-xs); color: var(--text-muted); }
-.tv-meet-h .sin-chip { margin-left: 4px; }
-.tv-meet-q { font-size: var(--fs-sm); color: var(--text-primary); }
-.tv-ans {
-    display: block; width: 100%; text-align: left; padding: 5px 7px;
-    background: var(--bg-card); border: 1px solid var(--border-primary);
-    color: var(--text-secondary); font-size: var(--fs-xs); cursor: pointer;
-}
-.tv-ans:hover { border-color: var(--border-highlight); color: var(--text-primary); }
-/* 보낸 영웅이 연 답 — **왜 열렸는지를 그 줄이 든다.** 열렸다는 사실만으로는 인과가 안 읽힌다 */
-.tv-ans.key { border-color: var(--color-warning); }
-.tv-ans .why { display: block; font-style: normal; font-size: var(--fs-xs); color: var(--color-warning); margin-bottom: 2px; }
-.tv-ans.picked { cursor: default; border-color: var(--border-secondary); color: var(--text-primary); }
-.tv-meet-cut { font-size: var(--fs-xs); }
-.tv-meet-cut.up { color: var(--color-success); }
-
-/* 보낼 영웅 칩 — **고르는 자리에 결정 입력(매력 · 죄종)이 함께 선다** (SCREEN_DESIGN §8-1).
-   얼굴은 안 든다 — 누르면 영웅 보내기 칸에 선다 (ADR-0593). 2열 · 고정 px 을 안 쓴다(폭 정책) */
-.tv-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-.tv-chip {
-    display: flex; align-items: center; gap: 6px; min-width: 0; text-align: left;
-    padding: 4px 5px; background: var(--bg-card);
-    border: 1px solid var(--border-primary); border-top: 2px solid var(--border-secondary);
-    color: var(--text-primary); cursor: pointer;
-}
-.tv-chip:hover { border-color: var(--border-highlight); }
-.tv-chip.on { border-color: var(--border-highlight); background: var(--bg-tertiary); }
-.tv-chip-b { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.tv-chip .n { font-size: var(--fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tv-chip .m { display: flex; align-items: center; gap: 4px; font-size: var(--fs-xs); }
-.tv-chip .cha { font-style: normal; color: var(--text-accent); }
 .tv-tools { display: flex; align-items: center; gap: 10px; }
 .tv-wait { color: var(--text-muted); font-variant-numeric: tabular-nums; }   /* 무료까지 남은 시간 — 1초마다 갈려 숫자 폭을 고정한다 */
 /* 선술집은 **위아래 둘** — 위 영입 후보(제 내용 높이) · 아랫줄(`.tv-low` = 의뢰 | 도박장 — 남는 세로를 받아 박스 끝까지)

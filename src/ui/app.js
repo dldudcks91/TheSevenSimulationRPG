@@ -345,6 +345,11 @@ const POSTS = [
     { id: 'gather', label: 'dp.post.gather', tiers: 'gatherNodes' },
     { id: 'log', label: 'dp.post.log', tiers: 'logNodes' },
 ];
+/* 연구소 줄 「찾아온 영웅」 [2026-10-19 · SCREEN_DESIGN §8 · ADR-0672] — 단계 표가 없는 칸 하나라 `POSTS`(단계 줄 — 미니게임 · 생산 게이지가 읽는다) 밖에 따로 선다.
+   줄 목록은 `LAB_LINES` 를 읽는다 · 아이콘은 선술집 건물 그림을 빌린다(전용 줄 아이콘이 서면 `icons/lab/visit`) */
+const LAB_VISIT = { id: 'visit', label: 'dp.post.visit', visit: true };
+const LAB_LINES = [...POSTS, LAB_VISIT];
+const labLineIcon = post => (post.visit ? M.buildingImg('tavern') : M.labIcon(post.id));
 
 /* 시작 파티 후보의 기준 시드 — 고정값이라 같은 리롤 횟수면 언제나 같은 3명 (결정론 확인용).
    마스터 시드(전투·드롭)는 확정 시각으로 찍는다 — 플레이마다 다른 전투, 같은 세이브 안에선 같은 전투. */
@@ -418,11 +423,9 @@ const state = {
     bookCraftSel: null,          // 도서관 탭 — 책 만들기 칸에서 고른 기본 책 id (§17 · ADR-0570) · 만들어도 고른 채 남는다 · 영웅과 무관 · 세이브 아님
     repSel: null,                // 리포트에서 고른 런 — null 이면 맨 위를 따라간다 (SCREEN_DESIGN §4-3 · ADR-0063 · ADR-0123)
     repNo: null,                 // 리포트가 보는 부대 — null 이면 고른 편성 · 탭이 바꾸고 관전 · 철수에서 넘어오면 그 부대 (§4-3 · ADR-0622)
-    searchUid: null,             // 수색 칸에서 고른 영웅 — 영웅 보내기 칸에 얼굴로 선다 · 보내면 비운다 (SCREEN_DESIGN §8-1)
-    searchSeen: null,            // 막 끝난 수색 결과 얼굴을 처음 본 때 `{key: 수색 번호, at}` — 스며 나오기를 한 번만 (ADR-0593 · 세이브 아님)
-    searchCard: null,            // 수색 칸이 결과 카드를 든 결과의 수색 번호(`no`) — 결과 얼굴을 누를 때마다 켜고 끈다 · 다음 수색엔 안 묻어간다 (ADR-0624 · 세이브 아님)
+    joinCard: null,              // 선술집 셋째 칸이 카드를 든 찾아온 영웅의 줄 번호(`joins[].no`) — 얼굴을 누를 때마다 켜고 끈다 (SCREEN_DESIGN §8-1 · ADR-0671 · 세이브 아님)
+    joinSeen: {},                // 찾아온 영웅 얼굴을 처음 본 때 `{줄 번호: at}` — 스며 나오기를 한 번만 (ADR-0671 · 세이브 아님)
     exSel: null,                 // 탐험 — 고른 지점 {chapter, spot} = **열린 지점 창** · 없으면 창 없이 지도만 · 탭에 들어올 때 · ✕ 로 비운다 (SCREEN_DESIGN §8-4 · ADR-0585 · 세이브 아님)
-    joinSel: null,               // 선술집 가입 희망 창이 보여 주는 줄 번호(`joins[].no`) (SCREEN_DESIGN §8-1 · 세이브 아님)
     exArm: null,                 // 탐험 — 불러들이기 첫 누름이 걸린 지점 키(`장:지점`) · 두 번 누르기 (§3)
     cmArm: null,                 // 의뢰 [포기]를 한 번 누른 카드 번호 — 두 번째 누름이 버린다(§3 · ADR-0352) · 탭을 떠나면 풀린다 · 세이브 아님
     forgeItem: null,             // 제련소에서 고른 장비 uid
@@ -647,8 +650,7 @@ const MODALS = {
     autoSalvage: { title: 'ch.auto.h', body: autoSalvageBody, cls: 'auto-modal' },
     // 도박장 — 선술집 의뢰 오른쪽 칸의 [입장]이 연다 (SCREEN_DESIGN §8-1 · ADR-0322) · 속은 3×3 슬롯(ADR-0331)
     gamble: { title: 'gb.h', body: gambleBody, cls: 'gb-modal' },
-    // 가입 희망 — 선술집 가입 희망 칸의 초상이 연다 (SCREEN_DESIGN §8-1 · ADR-0574) · 그 영웅이 떠났거나 고용되면 닫힌다(`gone`)
-    join: { title: 'tv.join.h', body: joinBody, cls: 'tv-join-box', gone: () => !joinPicked() },
+    // ~~가입 희망 창(`join`)~~ — 2026-10-19 걷었다: 찾아온 영웅 얼굴은 출처와 무관하게 선술집 셋째 칸을 그 영웅의 카드로 켠다 (ADR-0671)
     // ~~파견 관전(`dpWatch`)~~ — 2026-10-18 연구소에서 영웅 배치를 걷어 창째 없앴다 (ADR-0665)
     // 자원 미니게임 — 연구소 단의 [미니게임]이 연다 (SCREEN_DESIGN §8 · ADR-0532) · 머리 = 열린 단계마다 탭 · 열린 단계가 없으면 닫힌다(`gone`)
     mg: { head: mgHead, body: mgBody, cls: 'mg-modal', gone: () => !mgCur() },
@@ -1048,7 +1050,7 @@ function runBattle(stageId, { instant = false, tab = null, logf = null, dmgf = n
         }
         if (!focus) return;                 // 안 보는 부대의 다음 런이 거절됐다 — 보던 화면에 플래시를 얹지 않는다
         if (r.err === 'locked') flashStageLock(D.stages[stageId]);
-        else flash({ noParty: 'exp.noParty', searching: 'exp.departSearching', exploring: 'exp.departExploring', advancing: 'exp.departAdvancing', respawn: 'exp.departRespawn' }[r.err] ?? 'exp.cantDepart');
+        else flash({ noParty: 'exp.noParty', exploring: 'exp.departExploring', advancing: 'exp.departAdvancing', respawn: 'exp.departRespawn' }[r.err] ?? 'exp.cantDepart');
         if (defer) { clockRender = true; return; }   // 앱 시계가 낸 다음 런이 거절됐다 — 알리기만 하고 보던 화면은 그대로다 (ADR-0431)
         state.exp = 'idle';
         render(); return;
@@ -2241,7 +2243,7 @@ function goBox(z) {
     const pst = SYS.game.presetState(G), perr = pst.presets[pst.activeNo - 1]?.err;
     //   챕터보스가 죽어 있는 칸이면 그 줄이 먼저다 — 편성과 무관하게 아무도 못 나간다 (ADR-0590)
     const waiting = (SYS.game.bossRespawnAt(G, z.stage_id) ?? -Infinity) > now();
-    side.appendChild(el('div', 'down exp-warn', waiting ? t('exp.departRespawn') : { noParty: t('exp.noParty'), searching: t('exp.departSearching'), exploring: t('exp.departExploring'), advancing: t('exp.departAdvancing') }[perr] ?? ''));
+    side.appendChild(el('div', 'down exp-warn', waiting ? t('exp.departRespawn') : { noParty: t('exp.noParty'), exploring: t('exp.departExploring'), advancing: t('exp.departAdvancing') }[perr] ?? ''));
 
     const actions = el('div', 'form-actions');
     // 반복 원정은 처음부터 열려 있다 (2026-09-24 · R152 · ~~원정 건물 랭크가 연다 — 흐린 버튼~~)
@@ -2881,6 +2883,9 @@ function expTick() {
     if (!G || state.screen !== 'game') return;
     // 자원 파견 산출 [2026-09-27 · base_expedition §3-3] — 켜 둔 동안 눈금마다 정산한다. 껐다 켠 첫 정산만 오프라인 상한(3시간)에 걸린다
     if (SYS.game.dispatchSettle(G, at).total) save();
+    // 찾아온 영웅 [2026-10-19 · base_expedition §2-4] — 시계가 지난 사람을 칸에 세운다(꺼져 있던 시간도 · 칸이 차면 멈춘다).
+    //   누가 오면 선술집 칸 · 탭 할 일 점이 바뀌므로 다시 그린다(손이 바쁘면 다음 빈 눈금)
+    if (SYS.game.visitSettle(G, at).arrived.length) { save(); if (handBusy()) clockRender = true; else render(); }
     // 전직 — 끝난 것을 확정한다 (2026-09-28 · R16 · SCREEN_DESIGN §16). 끝나면 카드 · 띠가 바뀌므로 다시 그린다
     if (SYS.game.advanceSettle(G, at).done.length) { save(); render(); }
     else if (state.tab === 'library' && !document.hidden) refreshAdvanceBars(at);
@@ -3142,10 +3147,8 @@ function renderPrologue(main) {
  * 파견은 미구현이라 아직 대기로 뭉뚱그린다. ~~출정 아웃~~ 은 2026-09-08 폐기(아웃이 런을 넘지 않는다).
  */
 function heroDoing(h) {
-    // 수색이 먼저다 — 나가 있으면 원정에 못 들어가고 싸우는 영웅은 수색에 못 나가므로(state.js:toggleParty · searchSend) 두 상태가 겹칠 수 없다
-    //   판정은 `game.heroBusy` 하나다 — 편성 · 해고 · 수색이 막는 판정과 같은 답이다 (2026-09-22)
+    // 판정은 `game.heroBusy` 하나다 — 편성 · 해고 · 출발이 막는 판정과 같은 답이다 (2026-09-22 · ~~수색~~ 2026-10-19 삭제)
     const busy = SYS.game.heroBusy(G, h.uid);
-    if (busy === 'search') return { cls: 'exp', text: t('hs.doing.search') };
     if (busy === 'advance') return { cls: 'exp', text: t('hs.doing.advance') };   // 도서관에서 전직하는 중 (2026-09-28 · R16 · 도서관 2026-10-09)
     if (busy === 'explore') return { cls: 'exp', text: t('hs.doing.explore') };   // 탐험 나감 — 받을 때까지 (2026-10-09 · SCREEN_DESIGN §8-4)
     // ~~자원 자리 「채광 2」~~ — 2026-10-18 연구소에 영웅이 안 앉는다 (ADR-0665)
@@ -5160,11 +5163,13 @@ const dpPick = postId => state.labTier?.[postId] ?? 1;
 /** 줄 목록의 한 줄 — 줄 아이콘 · 이름 · 단계 작은 줄(열린 단계 = 산출물 아이콘 · 잠긴 단계 = 흐린 점) */
 function dpLine(post, open) {
     const b = el('button', `dp-line${post.id === state.post ? ' on' : ''}`);
-    const marks = postTiers(post, open).map(({ row, open: o }) => {
+    // 찾아온 영웅 줄은 단계가 없다 — 작은 줄 자리에 Lv(0 이면 「닫힘」) (ADR-0672)
+    const vlv = post.visit ? SYS.game.visitState(G, now()).lv : 0;
+    const marks = post.visit ? `<b class="dp-line-lv">${vlv ? t('dp.lv', { n: vlv }) : t('dp.visit.closed')}</b>` : postTiers(post, open).map(({ row, open: o }) => {
         const icon = row && o ? M.materialIcon(row.yieldId) : null;
         return icon ? `<img src="${icon}" alt="" draggable="false">` : '<i></i>';
     }).join('');
-    b.innerHTML = `<img class="dp-line-ico" src="${M.labIcon(post.id)}" alt="" draggable="false">
+    b.innerHTML = `<img class="dp-line-ico" src="${labLineIcon(post)}" alt="" draggable="false">
         <span class="dp-line-b"><span class="dp-line-n">${t(post.label)}</span><span class="dp-line-tiers">${marks}</span></span>`;
     b.onclick = () => { state.post = post.id; render(); };
     return b;
@@ -5236,21 +5241,70 @@ function dpSelected(post, tier, open) {
     return box;
 }
 
+/**
+ * 찾아온 영웅 줄의 칸 하나 (SCREEN_DESIGN §8 · ADR-0672) — 큰 아이콘 · 이름 · n시간마다 한 명 · **레어 확률 지금 → 올린 뒤** · Lv 눈금 ·
+ * 비용(골드 한 칸 — 재료 없음) · [레벨 올리기]. 레벨 0 은 「닫힘」이고 0 → 1 이 줄을 연다(그 순간부터 찾아오는 시계가 선다 — §8-1).
+ * 값 · 비용 · 거절은 `game.visitLevelInfo` 가 낸다(화면은 계산하지 않는다) · 연구소 전이면 잠김 문구만
+ */
+function visitSelected() {
+    const box = el('div', 'dp-sel');
+    const icon = M.buildingImg('tavern');
+    box.appendChild(el('div', 'dp-sel-h', `${icon ? `<img class="dp-sel-ico" src="${icon}" alt="" draggable="false">` : ''}
+        <span class="dp-sel-t"><span class="dp-sel-n">${t('dp.post.visit')}</span><span class="dp-sel-y">${t('dp.visit.every', { h: D.balance.visit_hours })}</span></span>`));
+    const info = SYS.game.visitLevelInfo(G);
+    if (!info) {
+        box.classList.add('locked');
+        box.appendChild(el('div', 'dp-sel-lock', `<span class="lock-ico">${lockIcon(true)}</span><span>${needText('resource_tier', 1)}</span>`));
+        return box;
+    }
+    const rare = pct => t('dp.visit.rare', { r: M.pctNum(pct) });
+    const now0 = info.lv ? rare(info.rarePct) : t('dp.visit.closed');
+    const body = el('div', 'dp-sel-b');
+    body.appendChild(el('div', 'dp-sel-rate', info.next
+        ? `<b>${now0}</b><span class="dp-sel-arrow">→</span><b class="up">${rare(info.next.rarePct)}</b>`
+        : `<b>${now0}</b>`));
+    body.appendChild(el('div', 'dp-sel-lv', `<span>${t('dp.lvOf', { n: info.lv, max: info.max })}</span>
+        <span class="dp-pips">${Array.from({ length: info.max }, (_, i) => `<i${i < info.lv ? ' class="on"' : ''}></i>`).join('')}</span>`));
+    box.appendChild(body);
+    if (!info.next) { box.appendChild(el('div', 'dp-sel-top', t('dp.lvTop'))); return box; }
+    const act = el('div', 'dp-sel-act');
+    act.appendChild(el('div', 'cn-mats', matTile({ res: 'gold', need: info.next.gold, have: G.resources.gold ?? 0 })));
+    const go = el('button', 'btn primary dp-sel-go', t('dp.lvUp'));
+    go.disabled = !!info.err;
+    go.onclick = () => {
+        const r = SYS.game.visitLevelUp(G, now());
+        if (!r.ok) { flash(`dp.err.${r.err}`); render(); return; }
+        flash('dp.lvDone', { name: t('dp.post.visit'), n: r.lv });
+        save();
+        render();
+    };
+    act.appendChild(go);
+    box.appendChild(act);
+    return box;
+}
+
 function renderResource(main) {
     // 열린 단계 수 — 연구소 랭크가 연다 (`limitsOf.resourceTiers`)
     const open = SYS.game.limitsOf(G).resourceTiers;
-    const post = POSTS.find(p => p.id === state.post) ?? POSTS[0];
+    const post = LAB_LINES.find(p => p.id === state.post) ?? POSTS[0];
     const wrap = el('div', 'dp-wrap page');
     // 왼쪽 — 줄 목록 · 넘치면 목록만 스크롤한다(오른쪽은 고른 줄 하나의 것)
     const lines = el('div', 'panel dp-lines');
     const list = el('div', 'dp-line-list');
     list.dataset.keep = 'dp-lines';
-    for (const p of POSTS) list.appendChild(dpLine(p, open));
+    for (const p of LAB_LINES) list.appendChild(dpLine(p, open));
     lines.appendChild(list);
     lines.appendChild(el('div', 'dp-offline', t('dp.offline', { h: D.balance.dispatch_offline_cap_hours })));
     wrap.appendChild(lines);
-    // 오른쪽 — 고른 줄 머리([미니게임]) · 단계 트랙 · 고른 칸
+    // 오른쪽 — 고른 줄 머리([미니게임]) · 단계 트랙 · 고른 칸 / 찾아온 영웅 줄은 머리 + 칸 하나 (ADR-0672)
     const det = el('div', 'panel dp-detail');
+    if (post.visit) {
+        det.appendChild(el('h2', '', `<span>${t(post.label)}</span>`));
+        det.appendChild(visitSelected());
+        wrap.appendChild(det);
+        main.appendChild(wrap);
+        return;
+    }
     const head = el('h2', '', `<span>${t(post.label)}</span>`);
     // [미니게임] — 영웅 없이 직접 캐는 판을 연다 (§8 · ADR-0532). 열린 단계가 없으면 흐리고 안 눌린다
     const play = el('button', 'btn sm dp-mg', t('mg.play'));
@@ -5715,7 +5769,7 @@ function exploreIdleBody(body, S, sel) {
 
 /**
  * 이야기 줄 — 그 안에서 일어나는 일 · 막마다 한 줄 · **열린 줄만** 위에서부터 쌓는다 [2026-10-10 사용자 「선술집 보내는 것처럼」 · ADR-0583].
- * 안 열린 줄의 자리를 미리 잡지 않는다(잡으면 이야기가 아니라 진행 막대가 된다 — 수색 `searchCell` 과 같은 이유) · 말투도 수색과 같다(`.tv-story`).
+ * 안 열린 줄의 자리를 미리 잡지 않는다(잡으면 이야기가 아니라 진행 막대가 된다 — 옛 수색 칸과 같은 이유) · 말투도 수색과 같다(`.tv-story`).
  * 문장은 i18n 이 아니라 `explore_story.csv` 에서 온다 — `beats[].text` 를 `L()` 로 풀 뿐이다. 열린 수(`data-n`)는 탐험 시계가 잰다
  */
 function exploreLog(out, key) {
@@ -5825,67 +5879,50 @@ function respawnTick(at) {
 }
 
 function tavernTick(at) {
+    // 찾아온 영웅 — 다음 도착까지 남은 시간 글자만 간다. 도착은 앱 시계의 `visitSettle` 이 세우고 다시 그린다 (SCREEN_DESIGN §8-1 · ADR-0671)
+    for (const n of document.querySelectorAll('[data-visitnext]')) {
+        const s = visitNextText(Number(n.dataset.visitnext) - at);
+        if (n.textContent !== s) n.textContent = s;
+    }
     // 무료 시각은 리롤로만 바뀌고 리롤은 다시 그린다 — 그린 순간 받아 둔 값을 쓴다(`tavernState` 는 명단을 굴려 눈금마다 부르기엔 무겁다)
     const { freeAt, free } = state.tavernShown ?? {};
     if (freeAt == null) return;
     if ((at >= freeAt) !== free) { if (handBusy()) clockRender = true; else render(); return; }
     const txt = tavernWaitText(freeAt - at);
     for (const n of document.querySelectorAll('.tv-wait')) if (n.textContent !== txt) n.textContent = txt;
-    // 가입 희망 — 남은 시간 글자만 간다 · 누가 떠나는 순간 다시 그린다(칸이 비고 · 그 영웅의 창이면 닫힌다 — `MODALS.join.gone`) (ADR-0574)
-    for (const n of document.querySelectorAll('[data-joinleaves]')) {
-        const left = Number(n.dataset.joinleaves) - at;
-        if (left <= 0) { if (handBusy()) clockRender = true; else render(); return; }
-        const s = joinLeftText(left, !!n.dataset.joinlong);
-        if (n.textContent !== s) n.textContent = s;
-    }
-    // 수색 — 영웅 보내기 칸의 남은 시간 글자만 간다 · 다음 이야기 막이 열리거나 끝나는 순간 다시 그린다(결과 얼굴이 가입 희망 칸에 선다 · ADR-0593)
-    for (const n of document.querySelectorAll('[data-searchbeat]')) {
-        if (at >= Number(n.dataset.searchbeat)) { if (handBusy()) clockRender = true; else render(); return; }
-    }
-    for (const n of document.querySelectorAll('[data-searchends]')) {
-        const left = Number(n.dataset.searchends) - at;
-        if (left <= 0) { if (handBusy()) clockRender = true; else render(); return; }
-        const s = t('tv.search.left', { t: fmtDuration(left) });
-        if (n.textContent !== s) n.textContent = s;
-    }
 }
 
-/* ═══ 가입 희망 칸 — 탐험 마차에서 이긴 적 영웅이 찾아와 기다리는 자리 (SCREEN_DESIGN §8-1 · ADR-0574 · base_expedition §2-4) ═══
-   판정은 전부 `game.joinState` · `joinHire` 가 낸다 — 화면은 초상 · 남은 시간을 그리고 창을 열 뿐이다.
-   영웅이 오는 길(마차 전투)은 아직 없다 — 그동안 칸은 비어 선다(`?dev=join` 이 채운다) */
-/** 남은 시간 — 칸의 띠는 시간만(「23시간 12분」) · 창은 문장으로(「23시간 12분 뒤 떠난다」) */
-const joinLeftText = (ms, long = false) => (long ? t('tv.join.left', { t: fmtDuration(ms) }) : fmtDuration(ms));
-/** 수색 결과 칸이 스며 나오는 시간 (ms) — `.tv-join-slot.fresh` 의 애니메이션 길이와 같다 */
+/* ═══ 찾아온 영웅 — 명단 셋째 칸(안내 · 고른 얼굴의 카드) + 오른쪽 열 2×2 (SCREEN_DESIGN §8-1 · ADR-0671 · base_expedition §2-4) ═══
+   판정은 전부 `game.visitState` · `joinState` · `joinHire` · `joinDrop` 이 낸다 — 화면은 안내 · 초상 · 출처를 그리고 카드를 켜고 끌 뿐이다.
+   출처(시간 · 마차)를 가리지 않고 같은 길로 고른다 — 마차에서 오는 길(탐험 마차의 승리)은 아직 없다(`?dev=join` 이 채운다) */
+/** 다음 도착까지 — 시:분:초 두 자리씩(`tavernWaitText` 와 같은 모양) · 앱 시계가 **이 글자만** 갈아 끼운다(`tavernTick`) */
+function visitNextText(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const p = n => String(n).padStart(2, '0');
+    return t('tv.visit.next', { t: `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}` });
+}
+/** 얼굴이 스며 나오는 시간 (ms) — `.tv-join-slot.fresh` 의 애니메이션 길이와 같다 */
 const JOIN_FRESH_MS = 900;
+/** 이보다 먼저 와 있던 얼굴은 처음 그려도 스며 나오지 않는다 (ms) — 꺼져 있던 동안 · 탭 밖에서 온 사람. 앱 시계 눈금(1초)보다 넉넉하다 */
+const JOIN_FRESH_WINDOW_MS = 5000;
 /**
- * 오른쪽 열 아래 2×2 — 제목 + 칸 `slots` 개(찬 칸 = 초상 + 남은 시간 띠 · 빈 칸 = 점선) · 초상을 누르면 가입 희망 창 (ADR-0593).
- * **기다리는 수색 결과가 전부 앞 칸에 선다**(보관 순 · 막 끝난 것이 맨 뒤) — 띠는 「수색」(떠나지 않는다) · 결과는 이 칸 수를 가입 희망과 나눠 쓴다(로직 `full`).
- * 막 끝난 결과만 처음 보일 때 한 번 스며 나온다: 처음 본 시각을 받아 두고 흐른 만큼 애니메이션을 당겨(음수 지연) 다시 그려도 되풀이하지 않는다.
- * 결과 얼굴은 창을 안 연다 — 누를 때마다 **수색 칸이 그 결과의 카드가 됐다 돌아왔다** 한다(켜진 동안 `.on` · 수색 번호로 가른다) (ADR-0624)
+ * 오른쪽 열 2×2 — 제목 + 칸 `slots` 개(찬 칸 = 초상 + 출처 띠 · 빈 칸 = 점선) · 도착 순 (ADR-0593 · ADR-0671).
+ * 얼굴을 누르면 셋째 칸이 그 영웅의 카드가 됐다 돌아왔다 한다(켜진 동안 `.on` · 줄 번호로 가른다).
+ * **막 온 얼굴만 처음 보일 때 한 번** 스며 나온다: 처음 본 시각을 받아 두고 흐른 만큼 애니메이션을 당겨(음수 지연) 다시 그려도 되풀이하지 않는다
  */
-function joinColumn(S) {
-    const J = SYS.game.joinState(G, now());
+function joinColumn(J) {
     const col = el('div', 'tv-join');
-    col.appendChild(el('div', 'tv-join-h', t('tv.join.h')));
+    col.appendChild(el('div', 'tv-join-h', t('tv.visit.h')));
     const grid = el('div', 'tv-join-grid');
-    for (const r of S.results) {
-        const shown = state.searchCard === r.no;
-        const b = el('button', `tv-join-slot search${shown ? ' on' : ''}`, `${heroFace(r.result)}<span class="tv-join-left">${t('tv.search.h')}</span>`);
-        b.style.borderColor = tierColor(r.result);
-        b.title = L(r.result.name);
-        if (r.no === S.no) {
-            if (state.searchSeen?.key !== r.no) state.searchSeen = { key: r.no, at: now() };
-            const age = now() - state.searchSeen.at;
-            if (age < JOIN_FRESH_MS) { b.classList.add('fresh'); b.style.animationDelay = `${-age}ms`; }
-        }
-        b.onclick = () => { state.searchCard = shown ? null : r.no; render(); };
-        grid.appendChild(b);
-    }
     for (const j of J.list) {
-        const b = el('button', 'tv-join-slot', `${heroFace(j.hero)}<span class="tv-join-left" data-joinleaves="${j.leavesAt}">${joinLeftText(j.remainMs)}</span>`);
+        const shown = state.joinCard === j.no;
+        const b = el('button', `tv-join-slot${shown ? ' on' : ''}`, `${heroFace(j.hero)}<span class="tv-join-left">${t(`tv.visit.src.${j.src}`)}</span>`);
         b.style.borderColor = tierColor(j.hero);
         b.title = L(j.hero.name);
-        b.onclick = () => { state.joinSel = j.no; openModal('join'); };
+        state.joinSeen[j.no] ??= now() - j.arrivedAt > JOIN_FRESH_WINDOW_MS ? 0 : now();
+        const age = now() - state.joinSeen[j.no];
+        if (age < JOIN_FRESH_MS) { b.classList.add('fresh'); b.style.animationDelay = `${-age}ms`; }
+        b.onclick = () => { state.joinCard = shown ? null : j.no; render(); };
         grid.appendChild(b);
     }
     for (let i = grid.childElementCount; i < J.slots; i++) grid.appendChild(el('div', 'tv-join-slot empty'));
@@ -5893,105 +5930,51 @@ function joinColumn(S) {
     return col;
 }
 /**
- * 영웅 보내기 칸 — 오른쪽 열 위 · **얼굴 하나** + 이름 · 한 줄 + 버튼 (SCREEN_DESIGN §8-1 · ADR-0593).
- * 수색 중 = 보낸 영웅 + 남은 시간 + [취소] · 그 밖엔 [수색 보내기] — **끝난 수색이 있어도 다시 보낸다**(결과는 가입 희망 칸에서 기다린다 · 2026-10-16).
- * 대기 = 수색 칸에서 고른 영웅(안 골랐으면 점선 빈 칸 + 꺼진 [수색 보내기]) ·
- * 완료 + 안 골랐다 = 얼굴 칸이 **「+」 버튼** + 보낸 영웅 이름 · 「돌아왔다」 — 누르면 수색 칸이 막 끝난 결과 카드가 된다(결과 얼굴과 같은 켜고 끄기 · ADR-0627) ·
- *   고르면 얼굴 칸이 그 영웅이 된다. 돌아올 칸이 없으면(`full`) [수색 보내기]는 흐리고(눌린다) 누르면 이유를 말한다.
- * 판정은 `searchState` · `searchSend` · `searchDrop` 이 낸다
+ * 셋째 칸 — **안내**(얼굴을 안 켰을 때) · 후보 카드와 같은 크기라 명단 격자가 안 흔들린다.
+ * 제목 + 사양(n시간마다 한 명 · 칸 m) + 레어 확률 + 상태 한 줄: 흐르는 중 = 다음 도착까지(`data-visitnext` — 앱 시계가 글자만 간다) ·
+ * 칸이 다 차 멈춤 = 그 사실 + 멈춘 남은 시간 · 줄이 닫혔다 = 「연구소에서 연다」 · 연구소 전 = 지을 랭크 한 줄. 값은 전부 `visitState` 가 낸다
  */
-function sendBox(S) {
-    const box = el('div', 'tv-send');
-    box.appendChild(el('div', 'tv-join-h', t('tv.send.h')));
-    const live = S.out && !S.done;
-    const who = live ? S.hero : S.open && S.ready.includes(state.searchUid) ? heroById(state.searchUid) : null;
-    if (S.done && !who) {
-        const shown = state.searchCard === S.no;
-        const plus = el('button', `tv-send-face plus${shown ? ' on' : ''}`, '+');
-        plus.onclick = () => { state.searchCard = shown ? null : S.no; render(); };
-        box.appendChild(plus);
-    } else {
-        const face = el('div', `tv-send-face${who ? '' : ' empty'}`, who ? heroFace(who) : '');
-        if (who) face.style.borderColor = tierColor(who);
-        box.appendChild(face);
+function visitCell(V) {
+    const c = el('div', 'ng-card tv-visit');
+    c.appendChild(el('div', 'tv-visit-h', t('tv.visit.h')));
+    c.appendChild(el('div', 'tv-visit-spec muted', t('tv.visit.spec', { h: V.hours, n: V.slots })));
+    if (!V.labOpen) { c.appendChild(el('div', 'tv-visit-state muted', needText('resource_tier', 1))); return c; }
+    if (!V.open) { c.appendChild(el('div', 'tv-visit-state muted', t('tv.visit.closed'))); return c; }
+    c.appendChild(el('div', 'tv-visit-odds', t('tv.visit.odds', { r: M.pctNum(V.rarePct) })));
+    if (V.paused) {
+        // 칸이 다 차 시계가 멈췄다 — 돌려보내거나 고용하면 그때부터 이 남은 시간 뒤에 온다 (기획 §2-4)
+        c.appendChild(el('div', 'tv-visit-state warn', t('tv.visit.full')));
+        c.appendChild(el('div', 'tv-visit-next muted', visitNextText(V.remainMs)));
+        return c;
     }
-    const info = el('div', 'tv-send-info');
-    if (who || S.out) info.appendChild(el('b', 'n', who ? L(who.name) : S.hero ? L(S.hero.name) : '—'));
-    if (live) {
-        const left = el('span', 'm muted', t('tv.search.left', { t: fmtDuration(S.remainMs) }));
-        left.dataset.searchends = S.endsAt;
-        info.appendChild(left);
-    } else if (who) info.appendChild(el('span', 'm', `<i class="sin-chip">${sinName(who.sin)}</i><i class="cha">${chaAbbr()} ${who.stats[CHA]}</i>`));
-    else if (S.done) info.appendChild(el('span', 'm muted', t('tv.send.back')));
-    box.appendChild(info);
-    if (live) {
-        const stop = el('button', 'btn sm', t('tv.search.cancel'));
-        stop.onclick = () => { if (SYS.game.searchDrop(G).ok) { flash('tv.search.canceled'); save(); } render(); };
-        box.appendChild(stop);
-        return box;
-    }
-    // 안 열렸거나 돌아올 칸이 없으면 흐리고(눌린다) 누르면 이유를 말한다 — 지을 랭크 · 가득 찬 가입 희망 칸 (§13-1 · R137)
-    const go = el('button', `btn primary sm${S.open && !S.full ? '' : ' dim'}`, t('tv.search.go'));
-    go.disabled = S.open && !S.full && !who;
-    go.onclick = () => {
-        if (!S.open) { flashNeed('search'); return; }
-        if (S.full) { flash('tv.err.full'); return; }
-        const r = SYS.game.searchSend(G, who.uid, now());
-        if (r.ok) { flash('tv.search.sent', { name: L(who.name) }); state.searchUid = null; state.searchCard = null; save(); }
-        else flash(`tv.err.${r.err}`);
-        render();
-    };
-    box.appendChild(go);
-    return box;
+    const next = el('div', 'tv-visit-next', visitNextText(V.remainMs));
+    next.dataset.visitnext = V.nextAt;
+    c.appendChild(next);
+    return c;
 }
-/** 고른 가입 희망 줄 — 떠났거나 고용했으면 null(창이 닫힌다) */
-const joinPicked = () => SYS.game.joinState(G, now()).list.find(j => j.no === state.joinSel) ?? null;
 /**
- * 수색 결과 카드 — 명단 **셋째 칸(수색 칸) 자리**에 선다 · 명단과 **같은 후보 카드** + [고용](만남 할인이 묻은 값) · [돌려보내기] (ADR-0624).
- * 버튼 둘은 **한 줄에 나란히** — 명단 카드의 [고용] 한 줄과 높이가 같아 영입 후보 패널이 안 흔들린다.
- * `R` = `searchState.results` 의 한 장 — 버튼은 **그 결과에만** 걸린다(수색 번호로 집는다 · 2026-10-16)
+ * 셋째 칸 — **고른 얼굴의 카드**: 명단과 같은 후보 카드 + [고용](명단과 같은 값) · [돌려보내기]가 한 줄 (ADR-0624 모양 · ADR-0671 — 출처 무관).
+ * 선술집을 안 지었으면 [고용]은 흐리고(눌린다) 누르면 지을 랭크를 말한다 — 명단 카드와 같은 규칙 (§13-1 · ADR-0308) · 버튼은 **그 줄에만** 걸린다(줄 번호로 집는다)
  */
-function searchResultCard(R) {
-    const card = candidateCard(R.result, `<div class="tv-res-btns">
-        <button class="btn primary sm b-take"${R.canHire ? '' : ' disabled'}>${R.discountPct >= 1 ? t('tv.search.cutAll') : t('tv.hire', { g: R.cost.toLocaleString() })}</button>
-        <button class="btn sm b-drop">${t('tv.search.drop')}</button>
+function joinCardBox(J, j) {
+    const card = candidateCard(j.hero, `<div class="tv-res-btns">
+        <button class="btn primary sm b-take${J.open ? '' : ' dim'}"${J.open && J.err ? ' disabled' : ''}>${t('tv.hire', { g: J.cost.toLocaleString() })}</button>
+        <button class="btn sm b-drop">${t('tv.visit.drop')}</button>
     </div>`);
-    card.classList.add('tv-search-res');
+    card.classList.add('tv-join-card');
     card.querySelector('.b-take').onclick = () => {
-        const r = SYS.game.searchTake(G, now(), R.no);
-        if (r.ok) { flash('tv.hired', { name: L(r.hero.name) }); state.searchCard = null; save(); }
-        else flash(`tv.err.${r.err}`, { cap: SYS.game.limitsOf(G).roster });
+        if (!J.open) { flashNeed('hire'); return; }
+        const r = SYS.game.joinHire(G, j.no, now());
+        if (r.ok) { flash('tv.hired', { name: L(r.hero.name) }); state.joinCard = null; save(); }
+        else flash({ roster: 'tv.err.roster', gold: 'tv.err.gold' }[r.err] ?? 'tv.visit.gone', { cap: SYS.game.limitsOf(G).roster });
         render();
     };
     card.querySelector('.b-drop').onclick = () => {
-        const name = L(R.result.name);
-        if (SYS.game.searchDrop(G, R.no).ok) { flash('tv.search.dropped', { name }); state.searchCard = null; save(); }
+        const name = L(j.hero.name);
+        if (SYS.game.joinDrop(G, j.no, now()).ok) { flash('tv.visit.dropped', { name }); state.joinCard = null; save(); }
         render();
     };
     return card;
-}
-/** 가입 희망 창 — 명단과 **같은 후보 카드** + 떠나기까지 남은 시간 + [고용](명단과 같은 값 · 같은 흐린/잠긴 규칙) */
-function joinBody() {
-    const J = SYS.game.joinState(G, now());
-    const j = J.list.find(x => x.no === state.joinSel);
-    const wrap = el('div', 'tv-join-modal');
-    if (!j) return wrap;
-    const left = el('div', 'tv-join-leave', joinLeftText(j.remainMs, true));
-    left.dataset.joinleaves = j.leavesAt;
-    left.dataset.joinlong = '1';
-    wrap.appendChild(left);
-    // 선술집을 안 지었으면 [고용]은 흐리고(눌린다) 누르면 지을 랭크를 말한다 — 명단 카드와 같은 규칙 (§13-1 · ADR-0308)
-    const card = candidateCard(j.hero, `<button class="btn primary sm b-hire${J.open ? '' : ' dim'}" ${J.open && J.err ? 'disabled' : ''}>${t('tv.hire', { g: J.cost.toLocaleString() })}</button>`);
-    card.querySelector('.b-hire').onclick = () => {
-        if (!J.open) { flashNeed('hire'); return; }
-        const r = SYS.game.joinHire(G, j.no, now());
-        if (r.ok) { flash('tv.hired', { name: L(r.hero.name) }); save(); closeModal(); return; }
-        if (r.err === 'missing') flash('tv.join.gone');
-        else flash(r.err === 'roster' ? 'tv.err.roster' : 'tv.err.gold', { cap: SYS.game.limitsOf(G).roster });
-        render();
-    };
-    wrap.appendChild(card);
-    return wrap;
 }
 function renderTavern(main) {
     const B = D.balance;
@@ -6032,18 +6015,18 @@ function renderTavern(main) {
         };
         grid.appendChild(card);
     });
-    // 수색 칸 — 명단 **오른쪽 셋째 칸**. 격자는 원래 3열이었고(후보 2 + 수색 1 = base_expedition §2-4)
-    // 그동안 비어 있던 자리다. **2026-09-09 실동작** — 대기 / 수색 중 / 완료 셋이 이 한 칸에 선다 (SCREEN_DESIGN §8-1)
-    //   가입 희망 칸의 결과 얼굴이 이 칸을 **그 결과의 카드**로 켜고 끈다 — 창이 안 뜬다 (ADR-0624)
-    const S = SYS.game.searchState(G, now());
+    // 셋째 칸 — **찾아온 영웅** (SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 칸~~ 2026-10-19). 오른쪽 열 얼굴을 켰으면 그 영웅의 카드 · 아니면 안내.
+    //   켠 줄이 고용 · 돌려보내기로 사라졌으면 안내로 돌아간다
+    const V = SYS.game.visitState(G, now());
+    const J = SYS.game.joinState(G, now());
+    const picked = J.list.find(j => j.no === state.joinCard) ?? null;
+    if (!picked) state.joinCard = null;
     const row = el('div', 'tv-row');
-    const shownRes = S.results.find(r => r.no === state.searchCard);
-    grid.appendChild(shownRes ? searchResultCard(shownRes) : searchCell(S));
+    grid.appendChild(picked ? joinCardBox(J, picked) : visitCell(V));
     row.appendChild(grid);
-    // 오른쪽 열 — 위 영웅 보내기 · 아래 가입 희망 2×2(수색 결과가 맨 앞 칸에 얼굴로 온다) · 줄의 **맨 끝**을 늘 지킨다 (SCREEN_DESIGN §8-1 · ADR-0593)
+    // 오른쪽 열 — 찾아온 영웅 2×2 하나 · 줄의 **맨 끝**을 늘 지킨다 (SCREEN_DESIGN §8-1 · ADR-0593 · ADR-0671 — 영웅 보내기 칸을 걷었다)
     const right = el('div', 'tv-right');
-    right.appendChild(sendBox(S));
-    right.appendChild(joinColumn(S));
+    right.appendChild(joinColumn(J));
     row.appendChild(right);
     body.appendChild(row);
 
@@ -6394,107 +6377,6 @@ function gambleBody() {
     box.appendChild(main);
     box.appendChild(gamblePaytable(S));
     return box;
-}
-
-/**
- * 수색 칸 (SCREEN_DESIGN §8-1 · 자리는 ADR-0011 · **실동작 ADR-0062**) — 후보 카드와 **같은 크기**의 칸 하나.
- * 상태 둘이 같은 자리에 선다: **대기**(보낼 영웅 목록 — 얼굴 없이 · 수색이 끝났을 때도) · **수색 중**(산 것 + 이야기).
- * 얼굴 · 버튼은 오른쪽 열의 영웅 보내기 칸(`sendBox`)이, 결과 영웅은 가입 희망 칸(`joinColumn`)이 든다 (ADR-0593).
- * 판정은 하나도 안 한다 — `searchState` 가 낸 것을 그리기만 한다 (ui 원칙 2).
- * 이야기 문장은 i18n 이 아니라 `search_story.csv` 에서 온다 — `beats[].text` 를 `L()` 로 풀 뿐이다.
- */
-/**
- * 소문 한 줄 — **만날 사람의 죄종을 숨기지 않는다** (ADR-0068). 이걸 읽고 누굴 보낼지 정하는 것이 결정이라
- * 화제를 화면에 그대로 띄운다(삼국지 11 설전이 화제를 중앙에 띄운 자리와 같다). 문장은 `search_meeting.csv`.
- * **지금은 안 부른다** — 만남(`meetBlock`)과 함께 잠깐 안 그린다 [2026-10-12 사용자 「영웅과의 대화는 잠깐 삭제」 · ADR-0593]
- */
-function rumorLine(rumor) {
-    const box = el('div', 'tv-rumor');
-    box.innerHTML = `<i class="sin-chip">${sinName(rumor.sin)}</i><span>${L(rumor.rumor)}</span>`;
-    return box;
-}
-
-/**
- * 만남 — 질문 하나 + 답 몇 개. **답은 고용비만 깎는다**(결과 영웅은 이미 시드가 정했다).
- * 시간 제한이 없다 — 만난 뒤 **수령할 때까지** 언제든 고를 수 있고, 안 골라도 정가일 뿐이다 (방치형 계약 ③).
- * `key` 가 붙은 답은 **보낸 영웅의 죄종이 연 것**이라, 왜 열렸는지를 그 줄이 직접 말한다.
- * **지금은 안 부른다** — 영웅과의 대화를 잠깐 안 그린다(로직 `searchAnswer` · 할인은 남는다) [2026-10-12 · ADR-0593]
- */
-function meetBlock(S) {
-    const box = el('div', `tv-meet${S.answer ? ' done' : ''}`);
-    box.appendChild(el('div', 'tv-meet-h', `${t('tv.search.met')} <i class="sin-chip">${sinName(S.rumor.sin)}</i>`));
-    box.appendChild(el('div', 'tv-meet-q', L(S.rumor.prompt)));
-    if (S.answer) {
-        box.appendChild(el('div', 'tv-ans picked', L(S.answer.text)));
-        box.appendChild(el('div', `tv-meet-cut${S.discountPct ? ' up' : ' muted'}`,
-            S.discountPct >= 1 ? t('tv.search.cutAll')             // 할인은 비율 — 1 = 전액 (R111)
-                : S.discountPct > 0 ? t('tv.search.cut', { n: M.pctNum(S.discountPct) })
-                    : t('tv.search.cutNone')));
-        return box;
-    }
-    for (const a of S.answers) {
-        const b = el('button', `tv-ans${a.key ? ' key' : ''}`);
-        // 열린 이유를 그 줄이 든다 — 열렸다는 사실만으로는 인과가 안 읽힌다 (ADR-0068)
-        b.innerHTML = `${a.key ? `<i class="why">${t('tv.search.key', { sin: sinName(S.sent.sin) })}</i>` : ''}<span>${L(a.text)}</span>`;
-        b.onclick = () => {
-            const r = SYS.game.searchAnswer(G, a.id, now());
-            if (r.ok) save(); else flash(`tv.err.${r.err}`);
-            render();
-        };
-        box.appendChild(b);
-    }
-    return box;
-}
-
-function searchCell(S) {
-    const c = el('div', 'ng-card tv-search');
-    c.appendChild(el('div', 'tv-search-h', t('tv.search.h')));
-
-    /* 수색 중 — 누가 · **이 선택이 산 것** · 이야기 줄. 남은 시간 · [취소]는 영웅 보내기 칸이 든다(ADR-0593).
-       끝나면 결과 영웅은 가입 희망 칸에 얼굴로 서고 이 칸은 **대기로 돌아간다** — 결과를 둔 채 다시 보낸다 (2026-10-16) */
-    if (S.out && !S.done) {
-        c.appendChild(el('div', 'tv-search-who', t('tv.search.out', { name: S.hero ? L(S.hero.name) : '—' })));
-        // 보내고 나면 왜 그 사람을 보냈는지가 화면에서 사라지는 것을 막는다 (§4-1 「값은 항상 찍는다」)
-        c.appendChild(el('div', 'tv-search-odds muted', t('tv.search.odds', { r: M.pctNum(S.rarePct), e: M.pctNum(S.echoPct) })));
-        const log = el('div', 'tv-story');
-        // **열린 막만 그린다** — 안 열린 줄의 자리를 미리 잡으면 이야기가 아니라 진행 막대가 된다.
-        //   다음 막이 열리는 시각을 달아 두면 앱 시계가 그 순간 다시 그린다(`tavernTick`)
-        for (const b of S.beats) if (b.open) log.appendChild(el('p', '', L(b.text)));
-        const next = S.beats.find(b => !b.open);
-        if (next) log.dataset.searchbeat = next.at;
-        c.appendChild(log);
-        return c;
-    }
-
-    /* 대기 — 사양 + 보낼 영웅 목록. **고르는 자리에 결정 입력이 함께 선다**(매력 → 레어 확률 · 죄종 → 같은 죄종).
-       얼굴은 목록이 아니라 영웅 보내기 칸이 든다 — 누르면 거기 선다 (ADR-0593) */
-    c.appendChild(el('div', 'tv-search-spec muted', t('tv.search.spec', { n: S.slots, h: S.hours })));
-    // 안 열렸으면 목록 대신 **지을 건물** 한 줄 — 칸은 그대로 서서 명단 격자가 안 흔들린다 (R137)
-    if (!S.open) {
-        c.appendChild(el('div', 'tv-story muted', `<p>${needText('search')}</p>`));
-        return c;
-    }
-    if (!S.ready.length) {
-        c.appendChild(el('div', 'tv-story muted', `<p>${t('tv.search.noHero')}</p>`));
-        return c;
-    }
-    // 돌아올 칸이 없으면 그 이유가 「보낼 영웅」 줄 자리에 선다 — 목록은 그대로(미리 골라 둘 수 있다)
-    c.appendChild(el('div', 'tv-search-odds muted', t(S.full ? 'tv.err.full' : 'tv.search.pick')));
-    const pick = el('div', 'tv-pick');
-    for (const uid of S.ready) {
-        const h = heroById(uid);
-        if (!h) continue;
-        const chip = el('button', `tv-chip${uid === state.searchUid ? ' on' : ''}`);
-        chip.style.borderTopColor = tierColor(h);
-        chip.innerHTML = `<span class="tv-chip-b">
-            <b class="n">${L(h.name)}</b>
-            <span class="m"><i class="sin-chip">${sinName(h.sin)}</i><i class="cha">${chaAbbr()} ${h.stats[CHA]}</i></span>
-        </span>`;
-        chip.onclick = () => { state.searchUid = uid; render(); };
-        pick.appendChild(chip);
-    }
-    c.appendChild(pick);
-    return c;
 }
 
 /**
@@ -8402,50 +8284,32 @@ async function boot() {
     const bld = new URLSearchParams(location.search).get('bld');
     if (bld) state.cnPick = bld;
     // `&td=away` — 특수상단이 **떠나 있는** 상점 (§10 · §8-3). 방문은 시간으로만 갈리고 새 게임은 상인이 와 있는 채로 시작하므로
-    //   게임을 만든 시각을 체류 시간(+1분)만큼 과거로 당긴다 — `?dev=search` 가 보낸 시각을 당기는 것과 같은 장치
+    //   게임을 만든 시각을 체류 시간(+1분)만큼 과거로 당긴다 — `?dev=visit` 이 줄을 연 시각을 당기는 것과 같은 장치
     if (G && new URLSearchParams(location.search).get('td') === 'away')
         G.createdAt = now() - D.balance.trade_stay_hours * 3600000 - 60000;
     // `&ps=n` — 편성 n 을 고른 채 연다 (§10 · §15). 고르개는 클릭으로만 바뀌어 헤드리스가 못 닿는다 — 편성 탭 · 출정 창이 같은 값을 든다
     pickPs();
     // `?dev=forge` · `?dev=trade` 는 삭제됐다 (2026-09-03 · SCREEN_DESIGN §10) — 강화·상점이 탭이 되어
     // `?tab=forge` · `?tab=shop` 이 바로 닿는다. `?dev=*` 는 클릭으로만 만들어지는 상태에 길을 내는 장치다
-    /* 가입 희망 — 영웅이 오는 길(탐험 마차의 승리)이 아직 없어 헤드리스가 닿을 길을 낸다 (SCREEN_DESIGN §8-1 · §10 · ADR-0574).
-       선술집만 지은 판에 `&n=`(기본 3 · 칸 수까지) 명이 와 있다 — 도착을 과거로 당겨 남은 시간이 거의 다 됨 · 절반 · 갓 옴으로 갈린다.
-       영웅은 명단 후보와 같은 굴림(`hero.rollCandidates`)이고 시드가 고정이라 매번 같은 사람이다 */
+    /* 찾아온 영웅 칸의 마차 영웅 — 영웅이 오는 길(탐험 마차의 승리)이 아직 없어 헤드리스가 닿을 길을 낸다 (SCREEN_DESIGN §8-1 · §10 · ADR-0671).
+       선술집만 지은 판에 `&n=`(기본 3 · 칸 수까지) 명이 와 있다 — 영웅은 명단 후보와 같은 굴림(`hero.rollCandidates`)이고 시드가 고정이라 매번 같은 사람이다 */
     if (dev === 'join') {
         if (!G) startGame();
         devBuild('tavern');
-        const span = D.balance.tavern_join_hours * 3600000;
         const n = Math.max(0, Math.min(D.balance.tavern_join_slots, Number(new URLSearchParams(location.search).get('n') ?? 3)));
-        const back = [0.97, 0.5, 0.02, 0.75];
-        SYS.hero.rollCandidates(makeRng(0x4A01), n).forEach((h, i) => SYS.game.joinAdd(G, h, now() - Math.round(span * back[i % back.length])));
-        // `&srch=1` — 수색도 끝난 판: 여백 칸(이야기 · 만남 · ADR-0144)이 가입 희망 줄 왼쪽에 함께 선 모양
-        if (new URLSearchParams(location.search).get('srch') === '1')
-            SYS.game.searchSend(G, G.heroes[0].uid, now() - Math.round(D.balance.tavern_search_hours * 3600000 * 1.2));
+        SYS.hero.rollCandidates(makeRng(0x4A01), n).forEach((h, i) => SYS.game.joinAdd(G, h, now() - (n - i) * 60000, 'caravan'));
         state.tab = 'tavern'; save();
     }
-    /* 수색 — 세 상태(대기 · 수색 중 · 완료)가 **시간으로만** 갈리므로 헤드리스가 닿을 길을 낸다 (SCREEN_DESIGN §10).
-       `&s=out` 은 갓 보낸 상태(첫 막만 열림) · `&s=mid` 는 중간 막까지 · 기본은 **완료**(결과 카드).
-       보내는 사람은 로스터 첫 영웅이고, 시작 시각을 과거로 당겨 상태를 만든다 — `searchSend` 는 `now` 를 받는다 */
-    if (dev === 'search') {
+    /* 찾아온 영웅 — 시간으로만 오므로 헤드리스가 닿을 길을 낸다 (SCREEN_DESIGN §8-1 · §10 · ADR-0671).
+       선술집 · 연구소를 지은 판에 줄 레벨 1 을 `visit_hours × n`(+1분) 전에 올려 두고 지금까지 정산한다 —
+       `&n=`(기본 2 · 칸 수까지 · 칸 수면 다 차 시계가 멈춘 상태). 여는 값만큼 골드를 얹어 판의 골드는 그대로 남는다 */
+    if (dev === 'visit') {
         if (!G) startGame();
-        devBuild('tavern');              // 수색은 선술집 랭크가 연다 (R137)
-        const span = D.balance.tavern_search_hours * 3600000;
-        const back = { out: 0.05, mid: 0.5 }[new URLSearchParams(location.search).get('s')] ?? 1.2;
-        // `&key=1` — 보내는 영웅의 죄종을 **소문에 맞춘다**. 열쇠 답이 열린 화면은 죄종이 맞아야만 나오므로
-        //   헤드리스가 닿을 길이 따로 필요하다 (§10 · 클릭으로만 만들어지는 상태와 같은 취급)
-        if (new URLSearchParams(location.search).get('key') === '1')
-            G.heroes[0].sin = SYS.game.searchState(G, now()).rumor.sin;
-        // `&kept=n` — 결과 n 개가 보관에서 기다리는 판(가입 희망 칸 수 − 1 까지) — 끝날 때마다 둔 채 다시 보낸 모양 (2026-10-16)
-        const keep = Math.max(0, Math.min(D.balance.tavern_join_slots - 1, Number(new URLSearchParams(location.search).get('kept')) || 0));
-        for (let i = 0; i < keep; i++) SYS.game.searchSend(G, G.heroes[0].uid, now() - Math.round(span * (keep - i + back)));
-        SYS.game.searchSend(G, G.heroes[0].uid, now() - Math.round(span * back));
-        // `&ans=n` — n번째 열린 답을 미리 고른 상태 (답은 클릭으로만 만들어져 헤드리스가 못 닿는다 · §10)
-        const ai = Number(new URLSearchParams(location.search).get('ans'));
-        if (ai >= 1) {
-            const list = SYS.game.searchState(G, now()).answers;
-            if (list[ai - 1]) SYS.game.searchAnswer(G, list[ai - 1].id, now());
-        }
+        devBuild('tavern', 'resource');
+        const n = Math.max(0, Math.min(D.balance.tavern_join_slots, Number(new URLSearchParams(location.search).get('n') ?? 2)));
+        G.resources.gold += SYS.game.visitLevelInfo(G)?.next?.gold ?? 0;
+        SYS.game.visitLevelUp(G, now() - n * D.balance.visit_hours * 3600000 - 60000);
+        SYS.game.visitSettle(G, now());
         state.tab = 'tavern'; save();
     }
     /* 탐험 — 지점 패널의 상태(대기 · 나가 있음 · 완료 · 준비 중)가 **시간으로만** 갈리므로 헤드리스가 닿을 길을 낸다 (SCREEN_DESIGN §8-4 · §10).

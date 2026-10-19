@@ -345,12 +345,12 @@ export function createHeroSystem(data) {
      */
     const START_TIERS = ['rare', 'magic', 'normal'];
 
-    // 첫 파티만 고유를 직업 기본기 풀에서 굴린다 [2026-09-29 · R179 · hero_design §1] — 선술집 · 수색(`rollCandidates`)은 직업 풀 그대로
+    // 첫 파티만 고유를 직업 기본기 풀에서 굴린다 [2026-09-29 · R179 · hero_design §1] — 선술집 · 찾아온 영웅(`rollCandidates`)은 직업 풀 그대로
     const rollStartParty = (rng, n) => rollParty(rng, n, START_TIERS, true);
 
     /**
      * 선술집 후보 — 시작 파티와 같은 굴림이되 **등급도 굴린다** (첫 파티만 지정이다).
-     * `tiers` 를 주면 그 등급으로 굳는다 — **수색이 매력으로 등급을 미는 자리**다 (state.searchResult).
+     * `tiers` 를 주면 그 등급으로 굳는다 — **찾아온 영웅이 줄 레벨로 등급을 미는 자리**다 (state.visitRoll · ~~수색~~ 2026-10-19).
      *   `rollTier` 가 지정이어도 굴림을 태우므로(위 계약) **소비 수는 지정 여부와 무관하게 같다**.
      */
     const rollCandidates = (rng, n, tiers = null) => rollParty(rng, n, tiers);

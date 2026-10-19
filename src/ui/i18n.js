@@ -273,7 +273,6 @@ const STRINGS = {
 
     /* ── 원정 (실동작) ── */
     'exp.noParty': { ko: '편성이 비어 있다 — 편성 탭에서 영웅을 넣는다', en: 'This party is empty — add heroes in the Party tab' },
-    'exp.departSearching': { ko: '편성에 수색 나간 영웅이 있다', en: 'A hero in this party is out on a search' },
     'exp.departAdvancing': { ko: '편성에 전직 중인 영웅이 있다', en: 'A hero in this party is advancing' },
     'exp.departExploring': { ko: '편성에 탐험 나간 영웅이 있다', en: 'A hero in this party is out exploring' },
     'exp.departRespawn': { ko: '보스가 아직 돌아오지 않았다', en: 'The boss has not returned yet' },   // 챕터보스 재등장 대기 (R240 · ADR-0590)
@@ -408,7 +407,6 @@ const STRINGS = {
     /* 오류 키는 결과 코드와 짝을 맞춘다(`<탭>.err.<코드>`) — 창이 미리 막으므로 플래시로는 잘 안 뜨지만,
        코드가 있으면 문구도 있어야 한다. `last` 는 창 본문도 이 키를 그대로 쓴다(같은 말을 두 키에 두지 않는다) */
     'ch.err.equipped': { ko: '장비를 모두 벗어야 한다', en: 'Unequip everything first' },
-    'ch.err.searching': { ko: '수색 나간 영웅이다', en: 'That hero is out on a search' },
     'ch.err.advancing': { ko: '전직 중인 영웅이다', en: 'That hero is advancing' },
     'ch.err.exploring': { ko: '탐험 나간 영웅이다', en: 'That hero is out exploring' },
     'ch.err.running': { ko: '원정에 나가 있는 영웅이다 — 철수해야 해고할 수 있다', en: 'That hero is out on an expedition — retreat first' },   // 원정은 저절로 안 끝난다 — 철수가 풀어 준다 (2026-09-29 · ADR-0433)
@@ -432,48 +430,19 @@ const STRINGS = {
     'tv.err.roster': { ko: '영웅 로스터가 가득 찼다 ({cap})', en: 'Hero roster full ({cap})' },
     'tv.err.unbuilt': { ko: '건물을 먼저 지어야 한다', en: 'Build it first' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
-    // 가입 희망 칸 — 탐험 마차에서 이긴 적 영웅이 기다리는 세로 줄 (SCREEN_DESIGN §8-1 · ADR-0574 · 2026-10-09)
-    'tv.join.h': { ko: '가입 희망', en: 'Wants to Join' },
-    'tv.join.left': { ko: '{t} 뒤 떠난다', en: 'Leaves in {t}' },
-    'tv.join.gone': { ko: '이미 떠났다', en: 'Already gone' },
-    // 영웅 보내기 칸 — 오른쪽 열 위 · 고른 영웅의 얼굴이 서는 자리 (SCREEN_DESIGN §8-1 · ADR-0593)
-    'tv.send.h': { ko: '영웅 보내기', en: 'Send a Hero' },
-    'tv.send.back': { ko: '돌아왔다', en: 'Back home' },
-    /* 수색 칸 [신설 2026-09-01 · **실동작 2026-09-09** — SCREEN_DESIGN §8-1 · ADR-0062].
-       ⚠ 진행 중 이야기 문장은 여기 없다 — `search_story.csv` 가 든다(막 수·죄종 필터가 굴림의 입력이라
-       표시 문구가 아니라 게임 데이터다). 화면은 `searchState().beats[].text` 를 `L()` 로 풀 뿐이다 */
-    'tv.search.h': { ko: '수색', en: 'Search' },
-    'tv.search.go': { ko: '수색 보내기', en: 'Send search' },
-    'tv.search.spec': { ko: '{n}명 · {h}시간', en: '{n} hero · {h}h' },
-    'tv.search.pick': { ko: '보낼 영웅', en: 'Who goes' },
-    'tv.search.noHero': { ko: '대기 중인 영웅이 없다 — 원정 파티는 못 보낸다', en: 'Nobody on the bench — party members stay home' },
-    'tv.search.out': { ko: '수색 중 · {name}', en: 'Searching · {name}' },
-    'tv.search.left': { ko: '남은 시간 {t}', en: '{t} left' },
-    'tv.search.odds': { ko: '레어 {r}% · 같은 죄종 {e}%', en: 'Rare {r}% · same sin {e}%' },
-    'tv.search.cancel': { ko: '취소', en: 'Cancel' },
-    'tv.search.drop': { ko: '돌려보내기', en: 'Send away' },
-    'tv.search.sent': { ko: '{name} 수색 출발', en: '{name} sets out' },
-    'tv.search.canceled': { ko: '수색을 취소했다', en: 'Search called off' },
-    'tv.search.dropped': { ko: '{name} 을(를) 돌려보냈다', en: 'Sent {name} away' },
-    'tv.err.busy': { ko: '이미 수색 중이다', en: 'A search is already out' },
-    'tv.err.full': { ko: '가입 희망 칸이 가득 찼다', en: 'Waiting slots are full' },
-    'tv.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot be sent' },
-    'tv.err.exploring': { ko: '탐험 중인 영웅은 보낼 수 없다', en: 'Heroes out exploring cannot be sent' },
-    'tv.err.party': { ko: '원정 파티는 보낼 수 없다', en: "Party members can't be sent" },
-    'tv.err.missing': { ko: '영웅을 찾을 수 없다', en: 'Hero not found' },
-    'tv.err.none': { ko: '나간 수색이 없다', en: 'No search is out' },
-    'tv.err.notDone': { ko: '아직 안 돌아왔다', en: 'Not back yet' },
-    /* 만남 [신설 2026-09-09 · ADR-0068] — 소문 · 질문 · 답 문장은 전부 `search_meeting.csv`·`search_answer.csv` 다.
-       여기 있는 것은 **그 문장을 감싸는 라벨**뿐이다 (문구가 굴림의 입력이라 사전이 아니라 게임 데이터다) */
-    'tv.search.rumor': { ko: '소문', en: 'Word going around' },
-    'tv.search.met': { ko: '만났다', en: 'You meet someone' },
-    'tv.search.key': { ko: '{sin} 전용 — 보내서 열렸다', en: '{sin} only — opened by who you sent' },
-    'tv.search.picked': { ko: '이렇게 답했다', en: 'You answered' },
-    'tv.search.cut': { ko: '고용비 {n}% 깎았다', en: 'Hire cost cut {n}%' },
-    'tv.search.cutAll': { ko: '고용비를 안 받는다', en: 'They ask for nothing' },
-    'tv.search.cutNone': { ko: '값은 그대로다', en: 'Full price' },
-    'tv.err.answered': { ko: '이미 답했다', en: 'Already answered' },
-    'tv.err.notOpen': { ko: '아직 만나지 않았다', en: 'You have not met them yet' },
+    /* 찾아온 영웅 [2026-10-19 · SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 · 영웅 보내기 · 가입 희망~~ 대체] — 명단 셋째 칸(안내 · 고른 얼굴의 카드) · 오른쪽 열 2×2 */
+    'tv.visit.h': { ko: '찾아온 영웅', en: 'Visiting Heroes' },
+    'tv.visit.spec': { ko: '{h}시간마다 한 명 · {n}칸', en: 'One every {h}h · {n} slots' },
+    'tv.visit.odds': { ko: '레어 {r}%', en: 'Rare {r}%' },
+    'tv.visit.next': { ko: '다음 도착까지 {t}', en: 'Next arrival in {t}' },
+    'tv.visit.full': { ko: '칸이 다 찼다 — 돌려보내야 온다', en: 'Slots full — send someone away' },
+    'tv.visit.closed': { ko: '연구소에서 연다', en: 'Opened at the Laboratory' },
+    'tv.visit.drop': { ko: '돌려보내기', en: 'Send away' },
+    'tv.visit.dropped': { ko: '{name} 을(를) 돌려보냈다', en: 'Sent {name} away' },
+    'tv.visit.gone': { ko: '이미 칸에 없다', en: 'No longer here' },
+    // 칸 띠 — 어떻게 왔나(출처 · `state.js:JOIN_SRC`). 찾아오는 방식이 늘면 한 줄씩 는다
+    'tv.visit.src.visit': { ko: '찾아옴', en: 'Visitor' },
+    'tv.visit.src.caravan': { ko: '마차', en: 'Caravan' },
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
     'time.m': { ko: '{m}분', en: '{m}m' },
@@ -674,6 +643,11 @@ const STRINGS = {
     'dp.post.mine': { ko: '채광', en: 'Mining' },
     'dp.post.gather': { ko: '채집', en: 'Gathering' },
     'dp.post.log': { ko: '벌목', en: 'Logging' },
+    // 연구소 줄 「찾아온 영웅」 — 단계 없는 칸 하나 (SCREEN_DESIGN §8 · ADR-0672 · 2026-10-19)
+    'dp.post.visit': { ko: '찾아온 영웅', en: 'Visiting Heroes' },
+    'dp.visit.every': { ko: '{h}시간마다 한 명', en: 'One every {h}h' },
+    'dp.visit.rare': { ko: '레어 {r}%', en: 'Rare {r}%' },
+    'dp.visit.closed': { ko: '닫힘', en: 'Closed' },
     'dp.solo': { ko: '1인', en: 'Solo' },
     /* ── 탐험 탭 — 지도 위 지점 아이콘 → 아이콘 옆 지점 창 (SCREEN_DESIGN §8-4 · ADR-0553 · ADR-0558 · 2026-10-09) ──
        거절은 `game.exploreErr` · `exploreTake` · `exploreDrop` 의 결과 코드와 짝 (`ex.err.<code>`) · 규칙 문장은 도움말(`ex.help`) · 창엔 설명 글줄이 없다(ADR-0560) */
@@ -695,7 +669,6 @@ const STRINGS = {
     // 편성 쪽 거절 — 탐험은 편성으로 보낸다 (2026-10-10 · ADR-0582 · ~~`ex.err.full`~~ 은 편성이 인원을 못 넘어 걷었다)
     'ex.err.noParty': { ko: '빈 편성이다', en: 'That party is empty' },
     'ex.err.running': { ko: '원정에 나가 있다 — 철수가 먼저다', en: 'On an expedition — withdraw first' },
-    'ex.err.searching': { ko: '수색 나간 영웅이 있다', en: 'Someone in it is out searching' },
     'ex.err.exploring': { ko: '이미 탐험 중이다', en: 'Already out exploring' },
     'ex.err.advancing': { ko: '전직 중인 영웅이 있다', en: 'Someone in it is advancing' },
     'ex.err.none': { ko: '나간 탐험이 없다', en: 'Nobody is out there' },
@@ -824,11 +797,11 @@ const STRINGS = {
         ko: '지도에서 <b>열린 땅의 지점</b>(동굴 · 폐허 · 마차)을 누르고 보낼 <b>편성</b>을 고른다 — 한 명짜리 편성도 된다(최대 {n}명) · 원정 중인 편성은 철수가 먼저다<br>'
             + '<b>{h}시간</b> 뒤 돌아오고 오프라인에도 흐른다 · 결과는 받아 갈 때까지 남는다 · 동시 탐험 {s}건 · 한 지점에 한 건<br>'
             + '<b>동굴</b>은 장비를 가져온다 — 보낸 영웅 1명당 {k}개 · 그 땅의 레벨대 · 폐허 · 마차는 준비 중<br>'
-            + '탐험 나간 편성은 받을 때까지 사람을 바꿀 수 없고 원정 · 수색에 못 나간다 · 불러들이면 편성째 결과 없이 돌아온다',
+            + '탐험 나간 편성은 받을 때까지 사람을 바꿀 수 없고 원정에 못 나간다 · 불러들이면 편성째 결과 없이 돌아온다',
         en: 'Click a <b>spot in an open land</b> (cave · ruins · caravan) and pick which <b>party</b> goes — a one-hero party works too (up to {n}) · a party on an expedition must withdraw first<br>'
             + 'They return after <b>{h}h</b>, offline too · the haul waits until you collect it · {s} exploration(s) at a time · one per spot<br>'
             + 'The <b>cave</b> brings back gear — {k} per hero sent · at that land\'s level band · ruins and caravan are coming later<br>'
-            + 'A party out exploring can\'t change members or join expeditions or searches until collected · calling it back returns the whole party empty-handed',
+            + 'A party out exploring can\'t change members or join expeditions until collected · calling it back returns the whole party empty-handed',
     },
     'help.title': { ko: '도움말', en: 'Help' },
     'help.newgame': { ko: '새 게임', en: 'New Game' },
@@ -984,7 +957,6 @@ const STRINGS = {
     /* 원정이 **실제로 도는 동안**만 뜬다 [신설 2026-09-08 사용자 지시] — 파티에 편성만 해 둔 상태는 대기다 (SCREEN_DESIGN §5) */
     'hs.doing.expedition': { ko: '원정 중', en: 'On expedition' },
     /* 수색 중 [신설 2026-09-09] — 나가 있으면 편성이 막히므로(state.js:toggleParty) 띠가 그 이유를 든다 */
-    'hs.doing.search': { ko: '수색 중', en: 'On a search' },
     'hs.doing.advance': { ko: '전직 중', en: 'Advancing' },
     'hs.doing.explore': { ko: '탐험 중', en: 'Exploring' },
     /* ~~'hs.doing.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 띠의 「지금 하는 일」은 **대기 하나**다 (SCREEN_DESIGN §5) */
@@ -1028,7 +1000,7 @@ const STRINGS = {
     'st.desc.vit': { ko: '레벨업마다 오르는 최대 HP 가 커진다<br>버프가 더 오래 간다', en: 'More Max HP per level-up<br>Longer-lasting buffs' },
     'st.desc.luck': { ko: '치명타 피해 · 드랍률 · 골드 획득이 늘어난다<br>일부 스킬의 추가 피해가 커진다', en: 'Increases Crit Damage, Item Find and Gold Find<br>Boosts bonus damage of some skills' },
     'st.desc.ldr': { ko: '아군에게 거는 버프가 강해진다', en: 'Strengthens the buffs you give allies' },
-    'st.desc.cha': { ko: '회복량과 적에게 거는 효과가 커진다<br>수색에서 레어 영웅을 만나기 쉬워진다', en: 'Increases healing and the effects you put on enemies<br>Better odds of a Rare hero in searches' },
+    'st.desc.cha': { ko: '회복량과 적에게 거는 효과가 커진다', en: 'Increases healing and the effects you put on enemies' },
     'st.desc.atk_physical': { ko: '평타와 물리 스킬 피해의 바탕이 되는 값', en: 'The base of basic attack and physical skill damage' },
     'st.desc.atk_magic': { ko: '마법 스킬 피해와 회복량의 바탕이 되는 값', en: 'The base of magic skill damage and healing' },
     'st.desc.action_period': { ko: '한 번 행동하는 데 걸리는 시간 — 짧을수록 자주 행동한다', en: 'Time per action — the lower, the more often you act' },
@@ -1169,7 +1141,6 @@ const STRINGS = {
     'pt.help.potion': { ko: 'HP가 {n}% 아래로 떨어진 영웅이 자동으로 물약을 마십니다.', en: 'A hero whose HP falls below {n}% drinks a potion automatically.' },
     // ~~`pt.potion.short`~~ (「모자람 — 런에서 빈 채 시작한다」) 는 2026-09-24 삭제 — 툴팁은 효과만 든다(CLAUDE.md 규칙 7). 모자란 칸은 칸이 흐린 점선으로 말한다
     'pt.err.full': { ko: '파티가 찼다', en: 'Party full' },
-    'pt.err.searching': { ko: '수색 나가 있다 — 돌아와야 편성한다', en: 'Out on a search — needs to return first' },
     'pt.err.exploring': { ko: '탐험 나가 있다 — 돌아와야 편성한다', en: 'Out exploring — needs to return first' },
     'pt.err.missing': { ko: '없는 칸이다', en: 'No such slot' },
     'pt.err.slotsFull': { ko: '물약 칸이 다 찼다', en: 'All potion slots are full' },
@@ -1213,7 +1184,6 @@ const STRINGS = {
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록한다', en: 'Record monsters you meet in the codex' },
     // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 제련소와 같은 시험 중 — SCREEN_DESIGN §13-1]
     'cn.t.hire': { ko: '영웅 고용', en: 'Hero Hiring' },
-    'cn.t.search': { ko: '영웅 수색', en: 'Hero Search' },
     'cn.t.shop': { ko: '상단에서 장비와 재료를 산다', en: 'Buy gear and materials at the trading house' },
     'cn.t.shop_special': { ko: '특수상단이 찾아온다', en: 'The special merchant starts visiting' },
     'cn.t.craft': { ko: '매직 장비에 전용 옵션을 더한다', en: 'Add a special option to magic gear' },
@@ -1237,7 +1207,6 @@ const STRINGS = {
     'cn.t.presets': { ko: '편성 +{n}', en: 'Party presets +{n}' },
     'cn.t.potionSlots': { ko: '원정 물약 칸 +{n}', en: 'Expedition potion slots +{n}' },
     'cn.t.upgrade': { ko: '강화 상한 +{n}', en: 'Upgrade cap +{n}' },
-    'cn.t.searchSlots': { ko: '동시 수색 +{n}', en: 'Parallel searches +{n}' },
     'cn.t.shopPerSlot': { ko: '상단 부위별 품목 +{n}', en: 'Wares per slot +{n}' },
     'cn.t.shopWeapon': { ko: '상단 무기 품목 +{n}', en: 'Weapon wares +{n}' },
     'cn.t.make_level': { ko: '제작 레벨 +{n}', en: 'Smithing level +{n}' },
@@ -1254,7 +1223,7 @@ const STRINGS = {
     'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
     'cn.t.gear_sets': { ko: '장비 세트 +{n}', en: 'Gear sets +{n}' },
     'cn.t.commission_slots': { ko: '동시 의뢰 +{n}', en: 'Parallel commissions +{n}' },
-    'cn.t.recruit_quality': { ko: '고용 · 수색 영웅 품질 +{n}', en: 'Hire and search hero quality +{n}' },
+    'cn.t.recruit_quality': { ko: '고용 · 찾아온 영웅 품질 +{n}', en: 'Hire and visiting hero quality +{n}' },
     'cn.t.research': { ko: '연구 상한 +{n}', en: 'Research cap +{n}' },
     // 건설 [2026-09-21 ADR-0253] — 옛 「연구」. 본문은 위쪽 탭(ADR-0192 로 걷힘)을 설명하던 것을 지금 화면 기준으로 다시 썼다
     'rs.research.h': { ko: '건설', en: 'Construction' },
@@ -1286,7 +1255,6 @@ const STRINGS = {
     'tr.err.working': { ko: '전직하는 중이다', en: 'Already advancing' },
     'tr.err.level': { ko: '레벨이 모자라다', en: 'Level too low' },
     'tr.err.running': { ko: '원정에서 싸우는 중이다', en: 'Fighting on an expedition' },
-    'tr.err.searching': { ko: '수색 나가 있다', en: 'Out on a search' },
     'tr.err.exploring': { ko: '탐험 나가 있다', en: 'Out exploring' },
     'tr.err.none': { ko: '아직 전직하지 않았다', en: 'Not advanced yet' },
     'tr.err.learned': { ko: '이미 하나를 배웠다 — 먼저 되돌린다', en: 'Already learned one — unlearn it first' },

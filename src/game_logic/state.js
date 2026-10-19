@@ -47,7 +47,7 @@
  *   codexExp: {monsterId: n}     — **도감 레벨의 출처** — 누적 도감 경험치 · 처치 하나 = 그 런 단의 `codex_exp` (monster_design §8 · 2026-10-10 · R239 — ~~codexKills 누적 처치 수~~ 09-21)
  *   skillCodexExp: {skillId: n}  — **스킬 도감** — 처치마다 그 유닛이 든 책이 되는 스킬 하나하나에 그 런 단의 `codex_exp` · 스킬 도안(Lv1)과 책 업그레이드 상한의 출처 (monster_design §8-1 · 2026-10-16 · R266 · 버전 무변경)
  *   bossDown: {"단|stageId": ms} — **챕터보스가 죽은 실제 시각** (2026-10-10 · R240 · 버전 무변경) — 돌아오는 시각 = 값 + `boss_respawn_sec` 초 · 그동안 그 칸 × 단으로는 어느 부대도 못 나간다 (base_expedition_design §1-2)
- *   counters: {hero, item, battle, tavern, tactic, upgrade, search, make, gamble, commission, shop},   // shop = 상단 목록 번호(교체마다 +1 · 2026-10-16 · 없으면 0) · upgrade = 강화 굴림 회차(R253 · 2026-10-14 다시 오른다 — R95(2026-09-15)부터 그때까지는 자리만 있었다 · 옛 값에서 이어 센다) · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, tier, done}` — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
+ *   counters: {hero, item, battle, tavern, tactic, upgrade, visit, make, gamble, commission, shop},   // visit = 찾아온 영웅 번호(시간으로 온 영웅마다 +1 · 2026-10-19 · ~~search~~ 수색 회차는 로드가 지운다) · shop =상단 목록 번호(교체마다 +1 · 2026-10-16 · 없으면 0) · upgrade = 강화 굴림 회차(R253 · 2026-10-14 다시 오른다 — R95(2026-09-15)부터 그때까지는 자리만 있었다 · 옛 값에서 이어 센다) · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, tier, done}` — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
  *   commissions: {cards: [{no, tpl, kind, axis, ref, need, grade, gold, have?}]}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3).
  *     자리 순서 그대로 · **굴린 순간의 내용을 박는다**(대상 풀이 그때의 진행에 달려 있다 — 수색 스냅샷과 같은 이유) · `have` 가 있으면 받아 둔 것 · 없으면 게시판에 걸린 것
  *   runs: [{stageId, preset, difficulty, repeat, auto, lastAt, durationSec, active, fallen?} | null],   // **부대마다 하나 — v38** [2026-09-23 · 다부대 · GAME_DESIGN §1-1] — 옛 `run`(단수) 대체.
@@ -62,16 +62,12 @@
  *     `runs` = **끊은 부대마다 한 줄 — v38**(편성 번호 순) · `stageId`·`at` 은 그중 첫 줄을 그대로 둔 것이다(한 부대만 돌던 화면이 안 깨지게)
  *   tavern: {rerolledAt: ms|null, hired: [슬롯번호], paid}   — 리롤 쿨다운의 기준 시각(**마지막 무료 리롤** — 유료는 안 옮긴다 · 10-16) · 이번 명단에서 산 칸 · 무료 뒤 유료 리롤 횟수(값이 두 배씩 · 09-30).
  *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
- *   search: {heroUid, startedAt: ms, no, sin, cha, answer: 답 id|null} | null   — 나가 있는 수색 1건 (base_expedition_design §2-4).
- *     `answer` = 만남에서 고른 답. **고용비만 깎는다** — 결과 영웅은 안 건드리므로 언제 답하든 같은 사람이 온다.
- *     결과도 이야기도 저장하지 않는다 — `no`(= 그때의 `counters.search`)와 시드가 재현한다. 명단과 같은 문법이다.
- *     ⚠ **판정 입력(`sin`·`cha`)을 보낼 때 함께 박는다** — 수색 중에 그 영웅이 레벨업해도 결과가 뒤바뀌면 안 된다.
- *     「보낼 때의 그 사람이 물어온 결과」가 계약이라 스냅샷이 세이브에 든다.
- *     **버전을 안 올린 필드다** — 없으면 `null`(= 수색을 한 적이 없다)이고 그것이 정확한 초기 상태라
- *     이관이 소급할 판단이 하나도 없다 (v5 의 `tavern` 은 「쿨다운이 열린 상태」라는 판단이 필요했다 · INTERFACE §4)
- *   searchKept: [{no, startedAt, sin, cha, answer}]   — 끝났는데 아직 안 받은 수색 결과 · 보관 순 [2026-10-16 사용자 — 결과를 둔 채 다시 보낸다].
- *     끝난 `search` 가 다음 보내기 때 `heroUid` 를 떼고 여기로 옮겨 온다 — **영웅을 안 잡는다**. 결과는 `search` 와 같이 `no` 와 시드가 재현한다.
- *     **버전을 안 올린 필드다** — 없으면 `[]` 이 정확한 초기 상태다(`search` 와 같은 이유)
+ *   joins: [{no, hero, arrivedAt, src}]   — **찾아온 영웅 칸** · 도착 순 (2026-10-09 가입 희망 · 2026-10-19 찾아온 영웅 · base_expedition_design §2-4).
+ *     `src` = 어떻게 왔나 — `'visit'`(연구소 줄이 연 시계) · `'caravan'`(탐험 마차 · 지금은 개발 경로뿐). **떠나지 않는다** — 돌려보낼 때까지 남는다(~~leavesAt~~ 2026-10-19).
+ *     `hero` = 후보 개체를 통째로 박는다 — 굴린 순간의 것이 계약이다(다시 굴리지 않는다). **버전을 안 올린 필드다**(INTERFACE §4)
+ *   visit: {nextAt: ms|null, left: ms|null} | null   — **찾아온 영웅 시계** [2026-10-19]. null = 그 줄을 연 적이 없다(레벨 0).
+ *     흐르는 중 = `nextAt`(다음 사람이 오는 시각) · **칸이 다 차 멈춘 동안** = `left`(멈췄을 때 남은 시간) — 비면 그때부터 `left` 뒤에 온다.
+ *     꺼져 있어도 흐른다(연구소의 오프라인 상한을 안 받는다 — 칸 수가 상한이다). 줄 레벨은 `labLevels.visit`
  *   presets[*].tactics: {slots: {칸번호: {id, grade}}, locked: [칸번호]}   — **리롤로 바꾼 칸만** 담는다 (v34 부터 편성마다 · 그 전엔 최상위 `tactics` 하나).
  *     안 담긴 칸은 시드에서 파생되는 첫 배정이다(tactic.initialAssign · **모든 편성이 같다**) — 선술집 명단과 같은 규칙:
  *     저장하는 건 「플레이어가 바꾼 것」뿐이고 나머지는 시드가 재현한다. 열린 칸 수는 계정(합산 레벨)이라 세이브에 없다.
@@ -101,9 +97,7 @@ export const SAVE_VERSION = 40;
  * @param {object} deps
  *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
  *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), steps:[{reward, value}](같은 표 — 레벨 n 이 여는 단계 · 2026-10-18 R286), options:[{monsterId, stat, value}](codex_option.csv — Lv4 몬스터다운 전투 옵션)}
- *   sins [죄종 id...] — 수색 이야기의 `sin` 컬럼 검증에만 쓴다
- *   searchStories — `search_story.csv` 파싱 행. **막의 어휘도 순서도 코드에 없다** — 아래 `searchPhases` 참조
- *   searchMeetings / searchAnswers — `search_meeting.csv` · `search_answer.csv` 파싱 행 (만남 · 답)
+ *   sins [죄종 id...] — 탐험 이야기의 `sin` 컬럼 검증에만 쓴다 (~~수색 이야기 · 만남 · 답~~ 표는 2026-10-19 수색과 함께 삭제)
  *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · mineNodes / logNodes — 재료 단계 표 [{id, tier, yieldId, …}] (제작 · R96)
  *   potions [{id, kind, tier, ko, en, heal, craftGold, startOwned}] (potion.csv 행 순서) — 물약 단계 표 · startOwned = 시작 개수 (battle_design §7-1 · item_design §7-4 · R103 · R124) · 만들 수 있는 단계는 제련소 랭크가 연다(R137)
  *   construction — 건설 시스템(`construction.js` · 표 넷을 든다 · INTERFACE §2-14 · R137)
@@ -117,71 +111,6 @@ export function createGameSystem(deps) {
 
     const positions = deps.equipSlots.map(s => s.id);
     const positionsOf = part => deps.equipSlots.filter(s => s.part === part).map(s => s.id);
-
-    /* ── 수색 이야기 — `search_story.csv` (2026-09-09 신설 · base_expedition_design §2-4) ──
-       **막을 늘리는 일이 CSV 행 추가뿐이어야 한다.** 그래서 막의 어휘도 순서도 코드에 없다:
-       막 = `phase` 종류이고 순서는 `phase_order` 가 정한다. 코드가 아는 것은 「막마다 한 줄을 굴린다」뿐이다.
-       (`tactic_slot.csv` 의 「칸 수 = 행 수」와 같은 문법 — 표가 구조를 든다) */
-    const storyRows = deps.searchStories ?? [];
-    const searchPhases = (() => {
-        const bad = why => { throw new Error(`search_story: ${why}`); };
-        if (!storyRows.length) bad('행이 없다');
-        const order = new Map();
-        for (const r of storyRows) {
-            if (!r.story_id) bad('story_id 가 없다');
-            if (!r.phase) bad(`${r.story_id} — phase 가 없다`);
-            if (!(r.phase_order >= 1)) bad(`${r.story_id} — phase_order ${r.phase_order}`);
-            if (r.sin !== '-' && !(deps.sins ?? []).includes(r.sin)) bad(`${r.story_id} — 죄종 '${r.sin}'`);
-            if (!r.text_kr || !r.text_en) bad(`${r.story_id} — 문구가 비었다`);
-            const had = order.get(r.phase);
-            if (had !== undefined && had !== r.phase_order) bad(`${r.phase} 의 phase_order 가 둘이다 (${had} · ${r.phase_order})`);
-            order.set(r.phase, r.phase_order);
-        }
-        const list = [...order.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
-        list.forEach((id, i) => { if (order.get(id) !== i + 1) bad(`phase_order 가 1부터 연속이 아니다 (${id} = ${order.get(id)})`); });
-        // 막마다 **공통(`-`) 행이 하나는 있어야** 어느 죄종이 와도 후보가 비지 않는다 — 「막마다 굴림 1회」의 전제다
-        for (const id of list) if (!storyRows.some(r => r.phase === id && r.sin === '-')) bad(`${id} 에 공통(-) 행이 없다`);
-        return list;
-    })();
-    /** 그 막에서 이 죄종이 뽑을 수 있는 줄 — 공통 + 제 죄종. **CSV 행 순서가 굴림 순서다** (INTERFACE §5-2) */
-    const storyPool = (phase, sin) => storyRows.filter(r => r.phase === phase && (r.sin === '-' || r.sin === sin));
-
-    /* ── 수색 만남 — `search_meeting.csv` · `search_answer.csv` (2026-09-09 신설 · ADR-0068) ──
-       **컬럼 둘이 서로 다른 질문에 답한다**, 이것이 이 표의 전부다:
-         · `need_sin` — **누가 갔느냐.** 그 죄종을 보냈을 때만 이 답이 **보인다**(`-` 는 언제나 보임)
-         · `hit_sin`  — **누구를 만났느냐.** 만난 사람의 죄종과 같으면 이 답이 **먹힌다**
-       그래서 보상이 두 층이다: 소문을 읽고 맞히면 `meet_hit_pct` · 맞는 죄종을 보내서 연 답이면 `meet_key_pct`.
-       (Wartales 의 「관계 좋은 동료가 자기 선택지를 빌려준다」 · FTL 의 「장비를 갖추면 안전 선택지가 생긴다」와 같은 문법) */
-    const meetRows = deps.searchMeetings ?? [];
-    const answerRows = deps.searchAnswers ?? [];
-    (() => {
-        const bad = why => { throw new Error(`search_meeting: ${why}`); };
-        if (!meetRows.length) bad('행이 없다');
-        const sins = deps.sins ?? [];
-        const seen = new Set();
-        for (const m of meetRows) {
-            if (!m.meeting_id || seen.has(m.meeting_id)) bad(`meeting_id '${m.meeting_id}'`);
-            seen.add(m.meeting_id);
-            if (!sins.includes(m.sin)) bad(`${m.meeting_id} — 죄종 '${m.sin}'`);
-            if (!m.rumor_kr || !m.rumor_en || !m.prompt_kr || !m.prompt_en) bad(`${m.meeting_id} — 문구가 비었다`);
-        }
-        const aSeen = new Set();
-        for (const a of answerRows) {
-            if (!a.answer_id || aSeen.has(a.answer_id)) bad(`answer_id '${a.answer_id}'`);
-            aSeen.add(a.answer_id);
-            if (!seen.has(a.meeting_id)) bad(`${a.answer_id} — 없는 만남 '${a.meeting_id}'`);
-            if (a.need_sin !== '-' && !sins.includes(a.need_sin)) bad(`${a.answer_id} — need_sin '${a.need_sin}'`);
-            if (!sins.includes(a.hit_sin)) bad(`${a.answer_id} — hit_sin '${a.hit_sin}'`);
-            if (!a.answer_kr || !a.answer_en) bad(`${a.answer_id} — 문구가 비었다`);
-        }
-        // 만남마다 **누구나 보이는 답이 최소 하나** — 없으면 그 죄종을 안 보낸 판에서 고를 것이 0개가 된다
-        for (const m of meetRows)
-            if (!answerRows.some(a => a.meeting_id === m.meeting_id && a.need_sin === '-'))
-                bad(`${m.meeting_id} 에 공통(-) 답이 없다`);
-    })();
-    /** 그 만남에서 이 죄종이 **볼 수 있는** 답 — 공통 + 보낸 영웅의 죄종으로 열린 것 */
-    const answersFor = (meetingId, sentSin) =>
-        answerRows.filter(a => a.meeting_id === meetingId && (a.need_sin === '-' || a.need_sin === sentSin));
 
     /* ── 신단 [2026-09-29 · base_expedition_design §1-2] — 이긴 칸 뒤 칸 I → II · II → III 으로 넘어갈 때 하나가 서고 다음 칸의 파티 전원이 입는다 ── */
 
@@ -269,7 +198,7 @@ export function createGameSystem(deps) {
     /**
      * 상한 — **이 세이브가 쓸 수 있는 칸 · 인원 · 단계의 수를 여기 한 곳이 답한다** [신설 2026-09-22 · INTERFACE §2-7 · construction_draft §9].
      *   bag 가방 · stash 창고 · roster 로스터 · party 파티 인원 · presets 편성 수 · **expeditions 동시 원정 부대 수**(v38 · 편성 수를 넘지 않는다) · potionSlots 물약 칸 · upgrade 강화 단계 ·
-     *   tavernCandidates 고용 후보 · searchSlots 동시 수색 · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기) · commissionSlots 동시 의뢰(R153)
+     *   tavernCandidates 고용 후보 · ~~searchSlots 동시 수색~~(2026-10-19 수색 삭제) · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기) · commissionSlots 동시 의뢰(R153)
      *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 · **chapters 들어갈 수 있는 장**(원정 랭크 · R152) — 이 넷은 기본값이 0 이다(건물만 연다)
      * **값 = balance.csv 기본값 + 지어진 건물 랭크의 더하기** [2단계 2026-09-22 · R137 · construction_draft §11-2] — 기본값은 **건설 전** 값이고
      *   더하기는 `building_effect.csv` 가 든다(이름이 같은 키에 붙는다 · 단계 셋은 `ADD_KEY`). 판정 · 불러오기 · 전투 입력 · 강화 비용 · 화면이 모두 이것을 읽는다.
@@ -280,7 +209,7 @@ export function createGameSystem(deps) {
             bag: B.inventory_cap, stash: B.stash_cap, roster: B.roster_cap, party: B.party_size_max,
             presets: B.party_preset_count, expeditions: B.concurrent_expedition_parties,
             potionSlots: B.potion_slot_max, upgrade: B.equip_upgrade_max,
-            tavernCandidates: B.tavern_candidates, searchSlots: B.tavern_search_slots,
+            tavernCandidates: B.tavern_candidates,
             shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon,
             makeLevels: 0, potionTier: 0, tacticSlots: 0,
             gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 — 건물이 안 늘린다 · 도박장이 열리면 다 열린다 (2026-09-27 사용자 지시 · 옛 선술집 r5 · r7 더하기)
@@ -327,14 +256,13 @@ export function createGameSystem(deps) {
             codexExp: {},   // 몬스터별 누적 도감 경험치 (2026-10-10 · R239)
             skillCodexExp: {},   // 스킬별 누적 스킬 도감 경험치 — 도안 · 책 업그레이드 상한 (2026-10-16 · R266)
             bossDown: {},   // 죽어 있는 챕터보스 {"단|칸": 죽은 실제 시각} — 런이 끝난 순간 `noteRunEnd` 가 적는다 (2026-10-10 · R240)
-            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, search: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0, shop: 0 },
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, visit: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0, shop: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [], paid: 0 },
             shop: null,      // 상단 목록 `{level, rerolledAt, paid, sold, books}` — 교체도 구매도 한 적 없으면 null(레벨 1 · 무료 열림) (2026-09-27 · 2026-10-16 · INTERFACE §4)
-            search: null,
-            searchKept: [],  // 안 받은 수색 결과 — 끝난 수색을 둔 채 다시 보내면 여기로 온다 (2026-10-16 · INTERFACE §4)
             explores: [],   // 나가 있는 탐험 [{chapter, spot, preset, squad, heroes, startedAt, no}] (편성 2026-10-10 · R234) — 한 지점에 한 줄 (2026-10-09 · INTERFACE §4)
-            joins: [],       // 선술집 가입 희망 칸 [{no, hero, arrivedAt, leavesAt}] — 도착 순 (2026-10-09 · INTERFACE §4)
+            joins: [],       // 찾아온 영웅 칸 [{no, hero, arrivedAt, src}] — 도착 순 · 돌려보낼 때까지 남는다 (2026-10-09 · 2026-10-19 · INTERFACE §4)
+            visit: null,     // 찾아온 영웅 시계 {nextAt, left} — 연구소 줄을 열면 선다 (2026-10-19 · INTERFACE §4)
             arena: freshArena(),       // 결투장 ELO {rating, peak, win, draw, loss} — `arenaRecord` 만 바꾼다 (2026-10-18 · arena_design §8 · INTERFACE §4)
             colosseum: { cleared: 0 }, // 콜로세움 오른 층 — `colosseumRecord` 만 바꾼다 (2026-10-18 · arena_design §7)
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
@@ -469,17 +397,12 @@ export function createGameSystem(deps) {
         s.reports = s.reports ?? []; s.notice = s.notice ?? null;
         s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
         s.tavern.paid = s.tavern.paid ?? 0;   // 유료 리롤 횟수 — 없으면 0 이 정확한 초기 상태라 버전을 안 올린다 (2026-09-30 · INTERFACE §4)
-        // 수색 — 없으면 「한 적이 없다」가 정확한 초기 상태라 **버전을 안 올린다** (INTERFACE §4 · 2026-09-09)
         s.stash = s.stash ?? [];       // 창고 — v24. 없던 세이브는 빈 채로 열린다
         // 스테이지 레벨 올린 양 — **위험도 폐지로 지운다** [2026-09-29 · PLAN_expedition_window D2 · 버전 무변경] — 몬스터 레벨은 칸의 기본 레벨 고정이라 옮길 곳이 없다
         delete s.progress.levelUp;
-        s.search = s.search ?? null;
-        if (s.search) s.search.answer = s.search.answer ?? null;   // 만남 이전에 나간 수색 (2026-09-09)
-        // 보관 결과 — 없으면 「둔 결과가 없다」가 정확한 초기 상태라 버전을 안 올린다 (2026-10-16) · 셀 수 없는 줄은 지운다 — 칸을 막지 않게
-        s.searchKept = (Array.isArray(s.searchKept) ? s.searchKept : [])
-            .filter(k => k && Number.isInteger(k.no) && Number.isFinite(k.startedAt))
-            .map(k => ({ ...k, answer: k.answer ?? null }));
-        s.counters.search = s.counters.search ?? 0;
+        // 수색 — **2026-10-19 삭제**(찾아온 영웅이 대체 · 사용자 「세이브 자체를 초기화시키면 됨」) · 버전을 안 올리고 옛 필드를 지운다 —
+        //   나가 있던 영웅은 붙잡을 것이 없어 마을에 선다(`heroBusy` 가 더는 수색을 안 본다) · 결과는 옮기지 않는다 (INTERFACE §4)
+        delete s.search; delete s.searchKept; delete s.counters.search;
         // 탐험 — 없으면 「보낸 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
         //   모양이 틀린 줄(없는 지점 · 빈 명단)은 지운다 — 셀 수 없는 줄이 영웅을 붙잡지 않게
         s.counters.explore = s.counters.explore ?? 0;
@@ -487,11 +410,21 @@ export function createGameSystem(deps) {
             .filter(x => x && EXPLORE_SPOTS.includes(x.spot) && Number.isInteger(x.chapter) && Array.isArray(x.heroes) && x.heroes.length);
         //   보낸 편성 · 그 순간의 편성 [2026-10-10 · R234 · 버전 무변경] — 없으면 null 이 정확하다(그 전의 탐험은 편성이 아니라 고른 명단이었다 · 잠글 편성이 없다)
         for (const x of s.explores) { x.preset = Number.isInteger(x.preset) ? x.preset : null; x.squad = x.squad ?? null; }
-        // 가입 희망 — 없으면 「온 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
-        //   모양이 틀린 줄(영웅 개체 · 번호 · 시각이 없는 줄)은 지운다 — 고용할 수 없는 줄이 칸을 막지 않게
+        // 찾아온 영웅 칸 — 없으면 「온 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
+        //   모양이 틀린 줄(영웅 개체 · 번호 · 시각이 없는 줄)은 지운다 — 고용할 수 없는 줄이 칸을 막지 않게 ·
+        //   **떠나지 않는다**(2026-10-19) — 옛 `leavesAt` 은 지우고 · 출처가 없는 줄은 마차(그때까지 온 길은 그것 하나였다)
         s.counters.join = s.counters.join ?? 0;
+        s.counters.visit = Number.isInteger(s.counters.visit) && s.counters.visit >= 0 ? s.counters.visit : 0;
         s.joins = (Array.isArray(s.joins) ? s.joins : [])
-            .filter(j => j && j.hero && typeof j.hero === 'object' && Number.isInteger(j.no) && Number.isFinite(j.arrivedAt) && Number.isFinite(j.leavesAt));
+            .filter(j => j && j.hero && typeof j.hero === 'object' && Number.isInteger(j.no) && Number.isFinite(j.arrivedAt))
+            .map(({ leavesAt, ...j }) => ({ ...j, src: JOIN_SRC.includes(j.src) ? j.src : 'caravan' }));
+        // 찾아온 영웅 시계 (2026-10-19 · 버전 무변경) — 없으면 null(= 그 줄을 연 적이 없다) · 둘 중 하나만 서 있어야 한다(흐름 `nextAt` · 멈춤 `left`)
+        {
+            const v = s.visit && typeof s.visit === 'object' ? s.visit : null;
+            s.visit = !v ? null
+                : Number.isFinite(v.left) ? { nextAt: null, left: Math.max(0, v.left) }
+                : Number.isFinite(v.nextAt) ? { nextAt: v.nextAt, left: null } : null;
+        }
         // 결투장 ELO · 콜로세움 층 — 없으면 「겨룬 적 · 오른 층이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-18).
         //   셀 수 없는 값은 시작값 · 0 으로 · 최고치는 지금 레이팅 이상으로
         {
@@ -610,8 +543,12 @@ export function createGameSystem(deps) {
         s.labLevels = {};
         for (const [k, v] of Object.entries(labIn)) {
             const post = k.split(':')[0];
-            if (Number.isInteger(v) && v >= 1 && DISPATCH_TABLES[post]?.some(n => labKey(post, n.tier) === k)) s.labLevels[k] = Math.min(v, B.lab_level_max);
+            const known = k === VISIT_KEY || DISPATCH_TABLES[post]?.some(n => labKey(post, n.tier) === k);   // 찾아온 영웅 줄은 단계 없이 칸 하나 (2026-10-19)
+            if (Number.isInteger(v) && v >= 1 && known) s.labLevels[k] = Math.min(v, B.lab_level_max);
         }
+        // 줄이 열려 있는데 시계가 없으면(옛 세이브 · 손으로 고친 세이브) 지금 이 순간부터 흐른다 — 열린 줄이 영영 안 오지 않게
+        if (s.labLevels[VISIT_KEY] && !s.visit) s.visit = { nextAt: s.savedAt + visitMs(), left: null };
+        if (!s.labLevels[VISIT_KEY]) s.visit = null;
         return s;
     }
 
@@ -1370,14 +1307,13 @@ export function createGameSystem(deps) {
     const partyOf = (state, no = state.preset) => (presetAt(state, no)?.party ?? []).slice();
     /**
      * 그 편성으로 지금 나가면 나올 거절 — 스테이지 무관 [다부대 2026-09-23].
-     * 없는 편성 `missing` → 빈 파티 `noParty` → 수색 나간 영웅 `searching` →
+     * 없는 편성 `missing` → 빈 파티 `noParty` → ~~수색 나간 영웅 `searching`~~(2026-10-19 수색 삭제) → 탐험 · 전직 →
      * **`busy`**(그 편성의 영웅이 **다른 부대**에서 싸우는 중 — 도는 부대의 인원은 출발 때 굳은 스냅샷이라 편성을 옮겨 두면 한 사람이 두 부대에 선다) →
      * **`full`**(도는 부대가 이미 상한만큼이다 — **그 편성이 이미 도는 중이면 안 센다**: 다시 보내는 것은 그 부대를 끊고 여는 것이라 수가 안 는다) → null
      */
     const presetErr = (state, p, no) => {
         if (!p) return 'missing';
         if (p.party.length === 0) return 'noParty';
-        if (p.party.some(uid => heroBusy(state, uid) === 'search')) return 'searching';
         if (p.party.some(uid => heroBusy(state, uid) === 'explore')) return 'exploring';   // 탐험 나감 (2026-10-09)
         if (p.party.some(uid => heroBusy(state, uid) === 'advance')) return 'advancing';   // 전직하는 중 (2026-09-28 · R16)
         if (p.party.some(uid => { const at = runOf(state, uid); return at !== null && at !== no; })) return 'busy';
@@ -1548,9 +1484,8 @@ export function createGameSystem(deps) {
             normalizeFormation(p);                        // 뺀 자리를 뒤가 메운다 (진형 2026-09-09)
             return { ok: true };
         }
-        // 편성이 막는 상태는 **수색 하나**다 [2026-09-09] — 전투 밖에 쓰러져 있는 영웅은 없지만(나오면 전원 회복)
-        //   수색 나간 영웅은 마을에 없다. 출정 중 아웃은 편성이 아니라 출발이 본다
-        if (heroBusy(state, uid) === 'search') return { ok: false, err: 'searching' };
+        // 편성이 막는 상태는 **탐험 하나**다 — 전투 밖에 쓰러져 있는 영웅은 없지만(나오면 전원 회복) 나가 있는 영웅은 마을에 없다.
+        //   출정 중 아웃은 편성이 아니라 출발이 본다 · ~~수색 나간 영웅~~ 은 2026-10-19 수색 삭제로 사라졌다
         if (heroBusy(state, uid) === 'explore') return { ok: false, err: 'exploring' };   // 탐험 나간 영웅도 마을에 없다 (2026-10-09)
         if (p.party.length >= limitsOf(state).party) return { ok: false, err: 'full' };
         // **한 영웅은 한 편성에만** [v38 · 2026-09-23 다부대] — 다른 편성에 들어 있으면 거기서 뺀다(거절이 아니라 이동 · 그 편성의 진형에서도 빠진다).
@@ -1816,14 +1751,13 @@ export function createGameSystem(deps) {
     const runOf = (state, uid) => runningNos(state).find(n => (outReport(state, n)?.party ?? []).includes(uid)) ?? null;
 
     /**
-     * 영웅이 지금 하는 일 — `'run'`(**나가 있는 어느 부대든** 그 인원 · 칸 사이 포함 · 철수해야 풀린다 · `runParty` · 어느 부대인지는 `runOf`) · `'search'`(수색 나감) · `null`(마을) [신설 2026-09-22 · INTERFACE §2-7].
+     * 영웅이 지금 하는 일 — `'run'`(**나가 있는 어느 부대든** 그 인원 · 칸 사이 포함 · 철수해야 풀린다 · `runParty` · 어느 부대인지는 `runOf`) · `'explore'`(탐험 나감) · `'advance'`(전직 중) · `null`(마을) [신설 2026-09-22 · INTERFACE §2-7].
      * **영웅을 붙잡는 활동의 판정은 여기 한 곳이다** — 편성 · 출발 · 해고 · 수색 · 화면의 「지금 하는 일」이 모두 이것을 읽는다.
      *   전직처럼 영웅을 붙잡는 활동이 생기면 여기에 더한다(흩어져 있던 `runParty(…).includes` · `search.heroUid ===` 를 걷었다 — 2026-09-22 구조 감사).
-     * 둘은 겹치지 않는다 — 싸우는 영웅은 수색에 못 나가고(`searchSend`) 수색 나간 영웅이 든 편성은 못 나간다(`canDepart`).
+     * ~~`'search'`(수색 나감)~~ 은 2026-10-19 수색 삭제로 사라졌다 — 찾아온 영웅은 영웅을 붙잡지 않는다.
      * 쓰러짐(`run.fallen`)은 하는 일이 아니라 **전투 안의 상태**라 따로다(`fallenOf` — 스킬 트리 잠금)
      */
     function heroBusy(state, uid) {
-        if (state.search?.heroUid === uid) return 'search';
         if (exploreOf(state, uid)) return 'explore';   // 탐험 나감 — 결과를 받을 때까지 (2026-10-09)
         if (runParty(state).includes(uid)) return 'run';
         if (advancingOf(state, uid)) return 'advance';   // 도서관에서 전직하는 중 (2026-09-28 · R16 · 도서관 2026-10-09)
@@ -1907,7 +1841,6 @@ export function createGameSystem(deps) {
         if (h.level < B.advance_unlock_level) return 'level';   // 관리자 모드도 본다 (2026-10-14 사용자 「30레벨이 안됬는데 전직이 되는데?」 · 스킬북 문턱과 같다)
         const busy = heroBusy(state, uid);
         if (busy === 'run') return 'running';
-        if (busy === 'search') return 'searching';
         if (busy === 'explore') return 'exploring';   // 탐험 나감 (2026-10-09)
         return null;
     };
@@ -3275,11 +3208,10 @@ export function createGameSystem(deps) {
     function dismissState(state, uid) {
         const h = heroById(state, uid);
         // 지금 싸우는 영웅은 못 지운다 — 도는 원정의 인원이다. 파티에서 뺐어도 그 원정이 끝날 때까지다 (R89 · R92)
-        // **수색을 장비보다 먼저 본다** — 나가 있는 사람에게 「장비를 벗어라」라고 하면 벗어도 안 되는 길로 보내게 된다
+        // **나가 있는 일을 장비보다 먼저 본다** — 나가 있는 사람에게 「장비를 벗어라」라고 하면 벗어도 안 되는 길로 보내게 된다 (~~수색~~ 2026-10-19 삭제)
         const err = !h ? 'missing'
             : heroBusy(state, uid) === 'run' ? 'running'
-            : heroBusy(state, uid) === 'search' ? 'searching'
-            : heroBusy(state, uid) === 'explore' ? 'exploring'   // 탐험 나감 — 수색과 같은 이유로 장비보다 먼저 (2026-10-09)
+            : heroBusy(state, uid) === 'explore' ? 'exploring'   // 탐험 나감 — 장비보다 먼저 (2026-10-09)
             : heroBusy(state, uid) === 'advance' ? 'advancing'
             : Object.values(h.equipped ?? {}).some(Boolean) ? 'equipped'
             : state.heroes.length <= 1 ? 'last'
@@ -3324,267 +3256,158 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /* ── 수색 — 대기 영웅 하나가 후보를 물어온다 (base_expedition_design §2-4 · 구현 2026-09-09) ──
-       명단이 흐름이라면 수색은 통제다. **파견 슬롯을 먹지 않는다** — 선술집 하위 기능이다.
-       저장하는 것은 「누가 · 언제 · 몇 번째」뿐이고 결과와 이야기는 시드에서 재현한다 (명단과 같은 문법).
-       **실패는 없다** — 매력이 미는 것은 성공 여부가 아니라 결과의 품질이다 (§2-4). */
-
-    const searchMs = () => B.tavern_search_hours * 60 * 60 * 1000;
-    const searchEnd = s => s.startedAt + searchMs();
+    /* ── 찾아온 영웅 — 시간마다 한 명이 선술집 칸에 저절로 온다 [신설 2026-10-19 · base_expedition §2-4 · INTERFACE §2-7 — ~~수색~~(대기 영웅 하나를 내보낸다 · 2026-09-09 ~ 10-16) 대체] ──
+       **영웅을 보내지 않는다** — 연구소 줄 「찾아온 영웅」(`labLevels.visit`)을 처음 올리면 시계가 서고 `visit_hours` 마다 한 명이 칸(`joins`)에 선다.
+       칸은 마차 영웅과 나눠 쓰고(`tavern_join_slots`) **다 차면 더 안 받는다** — 찬 동안 시계가 멈추고(`visit.left`) 고용 · 돌려보내기로 비면 그때부터 남은 시간 뒤에 온다.
+       **꺼져 있어도 흐른다** — 연구소의 오프라인 상한을 안 받는다(칸 수가 상한이다). **떠나지 않는다** — 돌려보낼 때까지 남는다.
+       온 사람은 **굴린 순간 통째로 박는다**(`joins[].hero`) — 번호(`counters.visit` 선증가)와 시드가 굴리고 다시 굴리지 않는다 */
+    const VISIT_KEY = 'visit';
+    /** 칸의 출처 어휘 — 어떻게 왔나. **찾아오는 방식이 늘면 여기에 하나씩 는다** (INTERFACE §5-3) */
+    const JOIN_SRC = ['visit', 'caravan'];
+    const visitMs = () => Math.max(0, B.visit_hours ?? 0) * 3600000;
+    /** 줄 레벨 — 0 = 닫힘 */
+    const visitLevelOf = state => state.labLevels?.[VISIT_KEY] ?? 0;
+    /* 찾아온 영웅의 두 등급 — `hero_tier.csv` 의 굴림 가능한 행 중 **위 둘**(옛 수색 그대로 · 일반은 명단에서만).
+       어휘가 코드에 있는 이유는 **어느 쪽이 위인가를 코드가 알아야** 하기 때문이다 (INTERFACE §5-3) */
+    const VISIT_TIER_HI = 'rare', VISIT_TIER_LO = 'magic';
+    /** 레어 확률(비율) — 줄 레벨 1 이 기준이고 레벨마다 더한다. ⚠ 그 일에 등록한 영웅의 몫은 등록이 선 뒤 (base_expedition §2-4) */
+    const visitRarePct = lv => Math.min(1, B.visit_rare_base_pct + Math.max(0, lv - 1) * B.visit_rare_per_level_pct);
+    /** 칸을 잡은 수 — 출처 무관 */
+    const joinUsed = state => (state.joins ?? []).length;
+    const joinFull = state => joinUsed(state) >= B.tavern_join_slots;
+    /** 줄을 열 수 있나 — 연구소가 지어졌다(단계가 하나라도 열렸다 · 연구소 랭크가 연다) */
+    const visitLabOpen = state => limitsOf(state).resourceTiers > 0;
 
     /**
-     * 가입 희망 칸을 잡은 수 — 가입 희망 영웅 + 보관 결과 + **나간 수색 1**(끝났든 아니든 — 돌아올 자리를 미리 잡는다) [2026-10-16 사용자 「가입 희망 칸 수까지」].
-     * 수색 결과와 가입 희망이 한 줄(`tavern_join_slots`)을 나눠 쓴다 — 보내기(`searchSend`)와 도착(`joinAdd`)이 같은 셈을 읽는다
+     * 한 명을 굴린다 — `deriveSeed(seed ^ 0x5EA7, no)` · **등급 1회 → `rollCandidates(rng, 1, [tier])` 10회 = 11회**(이름 겹침은 그 뒤 `avoidNames` — rng 0) (INTERFACE §5-2).
+     *   이름은 내 영웅 · 칸에 이미 선 사람과 겹치지 않게 고친다
      */
-    const tavernSlotsUsed = (state, now) => joinLive(state, now).length + (state.searchKept?.length ?? 0) + (state.search ? 1 : 0);
-
-    /** 결과 하나를 집는다 — `no` 를 안 주면 지금 나간 수색(옛 부름 그대로) · 주면 나간 수색과 보관 결과에서 그 번호 */
-    const searchPick = (state, no) => (no == null ? state.search : [state.search, ...(state.searchKept ?? [])].find(r => r?.no === no)) ?? null;
-    /** 집은 결과를 치운다 — 나간 수색이면 칸을 비우고 보관 결과면 그 줄만 뺀다 */
-    function searchUnkeep(state, rec) {
-        if (state.search === rec) state.search = null;
-        else state.searchKept = state.searchKept.filter(k => k !== rec);
+    function visitRoll(state, no) {
+        const rng = makeRng(deriveSeed(state.seed ^ 0x5EA7, no));
+        const tier = rng() < visitRarePct(visitLevelOf(state)) ? VISIT_TIER_HI : VISIT_TIER_LO;
+        const taken = [...state.heroes.map(h => h.name), ...(state.joins ?? []).map(j => j.hero?.name).filter(Boolean)];
+        const [hero] = H.avoidNames(H.rollCandidates(rng, 1, [tier]), taken);
+        return hero;
     }
-
-    /* 매력이 가르는 두 등급 — `hero_tier.csv` 의 **굴림 가능한 두 행**이다(유니크는 `weight = 0` = 수작업이라
-       수색이 못 낸다). 어휘가 코드에 있는 이유는 **어느 쪽이 위인가를 코드가 알아야** 하기 때문이다 —
-       CSV 는 대역과 모양만 들고 「좋은 쪽」이 어디인지는 말하지 않는다 (INTERFACE §5-3) */
-    const SEARCH_TIER_HI = 'rare', SEARCH_TIER_LO = 'magic';
-
-    /** 매력이 미는 것 — **레어 확률(비율) 하나**다. 상한이 있어 매력만으로 확정에 닿지 않는다 */
-    const searchRarePct = cha => Math.min(B.tavern_search_rare_cap_pct,
-        B.tavern_search_rare_base_pct + (cha ?? 0) * B.tavern_search_rare_per_cha_pct);
-
-    /**
-     * 이번 회차에 만날 사람 — **보낸 영웅과 무관하다.** 전용 스트림(`^ 0x11EE`)이 회차 번호 하나로 정하므로
-     *   **보내기 전에도 알 수 있고**, 그것이 「소문」이 거짓이 아닌 이유다 (ADR-0068).
-     * ⚠ 결과 스트림(`^ 0x5EA7`)과 **갈라 두었다** — 한 스트림에 얹으면 만남 굴림이 결과 굴림의 소비 순서를 밀어
-     *   같은 시드가 다른 영웅을 낸다. 갈라 두었기 때문에 `searchRoll` 의 15회 계약이 그대로다 (INTERFACE §5-2).
-     */
-    const searchMeetingOf = (state, no) => {
-        const rng = makeRng(deriveSeed(state.seed ^ 0x11EE, no));
-        return meetRows[Math.floor(rng() * meetRows.length)];
-    };
-
-    /**
-     * 고른 답이 깎는 고용비(비율) — **두 층이다** (ADR-0068).
-     *   · 만난 사람의 죄종에 **맞는 답**(`hit_sin`)이면 `meet_hit_pct` — 소문이 죄종을 알려주므로 **읽으면 누구나** 얻는다
-     *   · 그 위에 **보낸 영웅이 연 답**(`need_sin ≠ '-'`)이면 `meet_key_pct` — 맞는 사람을 보낸 **준비의 보상**이다
-     * 안 맞는 답은 0 이다. **어느 쪽도 벌이 아니다** — 정가가 바닥이고 답은 거기서 깎기만 한다.
-     */
-    function searchDiscount(meeting, ans) {
-        if (!meeting || !ans || ans.hit_sin !== meeting.sin) return 0;
-        return ans.need_sin === '-' ? B.tavern_search_meet_hit_pct : B.tavern_search_meet_key_pct;
+    /** 칸에 한 줄 — in-place · 번호는 `counters.join`(출처 무관 — 고용 · 돌려보내기가 번호로 집는다) */
+    function joinPush(state, hero, at, src) {
+        state.counters.join = (state.counters.join ?? 0) + 1;
+        state.joins = [...(state.joins ?? []), { no: state.counters.join, hero: clone(hero), arrivedAt: at, src }];
+        return state.counters.join;
     }
-    const searchCost = pct => Math.round(B.tavern_hire_cost * (1 - pct));          // 할인은 비율 (R111)
-    const searchMeetAt = startedAt => startedAt + Math.round(searchMs() * B.tavern_search_meet_at_pct);
-    /** 화면이 그대로 그릴 수 있는 모양으로 편다 — `key` 는 「보낸 영웅이 연 답인가」(화면이 그 이유를 찍는다) */
-    const answerView = a => a && ({ id: a.answer_id, key: a.need_sin !== '-', text: { ko: a.answer_kr, en: a.answer_en } });
-    /** 소문 — **죄종을 숨기지 않는다.** 화제를 화면에 그대로 띄우는 것이 이 기능의 전제다 (ADR-0068) */
-    const rumorView = m => m && ({ id: m.meeting_id, sin: m.sin,
-        rumor: { ko: m.rumor_kr, en: m.rumor_en }, prompt: { ko: m.prompt_kr, en: m.prompt_en } });
-
-    /**
-     * 결과 굴림 — **저장하지 않는다.** `seed ^ 0x5EA7` 과 `no`(그때의 `counters.search`)가 매번 같은 답을 낸다.
-     * rng 소비 순서가 계약이다 (INTERFACE §5-2) — **등급 1 → 후보 10 → 죄종 1 → 막마다 1**.
-     * **결과를 먼저 굴리고 이야기를 뒤에 둔다** — 이야기 행이나 막을 늘려도 나온 영웅이 안 바뀐다
-     *   (`rollFace` 를 맨 마지막에 두는 것과 같은 이유 · hero.js).
-     * 죄종 메아리는 굴린 영웅의 `sin` 을 **덮어쓴다** — 죄종은 능력치·고유 굴림의 입력이 아니므로
-     *   (주력 축은 직업이 정한다 · `rollAttributes`) 덮어써도 앞의 소비가 밀리지 않는다.
-     */
-    function searchRoll(state, snap) {
-        const rng = makeRng(deriveSeed(state.seed ^ 0x5EA7, snap.no));
-        const tier = rng() < searchRarePct(snap.cha) ? SEARCH_TIER_HI : SEARCH_TIER_LO;
-        const [hero] = H.avoidNames(H.rollCandidates(rng, 1, [tier]), state.heroes.map(h => h.name));   // 내 영웅과 같은 이름은 피한다 — rng 0 (2026-10-15)
-        if (rng() < B.tavern_search_sin_echo_pct && snap.sin) hero.sin = snap.sin;
-        const story = searchPhases.map(ph => {
-            const pool = storyPool(ph, snap.sin);
-            return pool[Math.floor(rng() * pool.length)];        // 후보가 빌 수 없다 — 로드 검증이 막았다
-        });
-        return { hero, story };
+    /** 칸이 다 찼으면 시계를 멈춘다(흐르는 중일 때만) — 남은 시간 = 다음 도착 − 찬 시각 */
+    function visitPause(state, at) {
+        const v = state.visit;
+        if (v && v.nextAt != null && joinFull(state)) state.visit = { nextAt: null, left: Math.max(0, v.nextAt - at) };
     }
-
-    /** 보관 결과 한 장 — 고용비는 그 회차의 만남과 고른 답이 정하고 · 거절은 지금의 정원 · 골드다(`searchTake` 와 같은 판정) */
-    function searchResultView(state, rec) {
-        const picked = answerRows.find(a => a.answer_id === rec.answer) ?? null;
-        const discountPct = searchDiscount(searchMeetingOf(state, rec.no), picked);
-        const cost = searchCost(discountPct);
-        const err = state.heroes.length >= limitsOf(state).roster ? 'roster' : state.resources.gold < cost ? 'gold' : null;
-        return { no: rec.no, startedAt: rec.startedAt, result: searchRoll(state, rec).hero, cost, discountPct, canHire: !err, err };
+    /** 칸이 비었으면 멈춘 시계를 다시 흘린다 — 그 순간부터 남은 시간 뒤 */
+    function visitResume(state, at) {
+        const v = state.visit;
+        if (v && v.left != null && !joinFull(state)) state.visit = { nextAt: at + v.left, left: null };
     }
-
     /**
-     * 수색 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`tavernState` 와 같은 규칙).
-     * `beats` 는 **막마다 한 줄**이고 `open` 이 「지금 읽을 수 있나」다 — 소요 시간을 막 수로 균등분할한다.
-     *   마지막 막이 열린 뒤에도 남은 시간이 있고, 결과(`result`)는 그 끝에 열린다.
-     * `sent` 는 **보낼 때 박은 스냅샷**이고 `hero` 는 지금 로스터에 있는 그 사람이다 — 둘을 섞지 않는다
-     *   (수색 중 레벨업하면 `hero.stats.cha` 는 오르지만 결과를 정한 것은 `sent.cha` 다).
+     * 정산 — `now` 까지 온 사람을 칸에 세운다 · in-place · **꺼져 있던 시간도 그대로 센다**(상한 = 칸 수).
+     *   도착 시각은 시계가 정한 그 시각이다(`arrivedAt` — 정산한 시각이 아니다) · 칸이 차면 그 도착 시각에 멈춘다(`left` = 간격 하나).
+     *   앱 시계 · 칸을 바꾸는 쪽(`joinAdd` · `joinHire` · `joinDrop` · `visitLevelUp`)이 먼저 부른다
+     * @returns `{arrived: [no...]}`
      */
-    function searchState(state, now) {
-        const s = state.search ?? null;
-        const live = !!s && now < searchEnd(s);         // 나가 있고 아직 안 끝났다 — 이때만 다시 못 보낸다 (2026-10-16)
-        const kept = (state.searchKept ?? []).map(k => searchResultView(state, k));
-        const head = {
-            // `open` = 보내기가 열렸나(선술집 랭크 · R137) — 이미 나간 수색은 닫혀 있어도 끝까지 돌고 수령된다
-            open: hasFeature(state, 'search'),
-            hours: B.tavern_search_hours, slots: limitsOf(state).searchSlots, cost: B.tavern_hire_cost,
-            echoPct: B.tavern_search_sin_echo_pct,
-            // 보낼 수 있는 사람 — **지금 싸우는 영웅만 뺀다**(전투 밖에 쓰러져 있는 영웅이 없다 · §1-1 · R92).
-            //   편성에 든 영웅도 보낸다 — 편성은 계획이고, 그 편성의 출발이 `searching` 으로 막힌다 (`canDepart` · 2026-09-21)
-            //   끝난 수색의 보낸 영웅도 선다 — 다시 보내면 그 결과가 보관으로 옮겨지며 풀린다 (2026-10-16)
-            ready: live ? [] : state.heroes.filter(h => !['run', 'advance', 'explore'].includes(heroBusy(state, h.uid))).map(h => h.uid),
-            no: 0, out: !!s, hero: null, sent: null, startedAt: 0, endsAt: 0, remainMs: 0, done: false,
-            beats: [], result: null, rarePct: 0, canHire: false, err: null,
-            rumor: null, meetAt: 0, meetOpen: false, answers: [], answer: null, discountPct: 0,
-            // 기다리는 결과 전부 — 보관 순 · 끝난 지금 수색이 맨 뒤(아래에서 붙인다) · `full` = 돌아올 칸이 없어 못 보낸다
-            results: kept, full: !live && tavernSlotsUsed(state, now) >= B.tavern_join_slots,
-        };
-        // 소문 — 안 나가 있으면 **다음 회차**의 만남이다. 이걸 읽고 누굴 보낼지 정하는 것이 이 기능의 결정이다
-        if (!s) return { ...head, rumor: rumorView(searchMeetingOf(state, (state.counters.search ?? 0) + 1)) };
-        const span = searchMs();
-        const endsAt = s.startedAt + span;
-        const done = now >= endsAt;
-        const { hero, story } = searchRoll(state, s);
-        const beats = story.map((r, i) => {
-            const at = s.startedAt + Math.round(span * i / story.length);
-            return { id: r.story_id, at, open: now >= at, text: { ko: r.text_kr, en: r.text_en } };
-        });
-        const meeting = searchMeetingOf(state, s.no);
-        const picked = answerRows.find(a => a.answer_id === s.answer) ?? null;
-        const discountPct = searchDiscount(meeting, picked);
-        const cost = searchCost(discountPct);
-        const err = state.heroes.length >= limitsOf(state).roster ? 'roster'
-            : state.resources.gold < cost ? 'gold' : null;      // `searchResultView` 와 같은 판정
-        const meetAt = searchMeetAt(s.startedAt);
+    function visitSettle(state, now) {
+        const arrived = [];
+        if (!Number.isFinite(now) || !visitLevelOf(state) || !state.visit) return { arrived };
+        visitResume(state, now);   // 칸이 비었는데 멈춰 있으면(로드가 고장 난 줄을 지웠다) 지금부터 흐른다
+        const step = visitMs();
+        while (step > 0 && state.visit.nextAt != null && state.visit.nextAt <= now && !joinFull(state)) {
+            const at = state.visit.nextAt;
+            state.counters.visit = (state.counters.visit ?? 0) + 1;
+            arrived.push(joinPush(state, visitRoll(state, state.counters.visit), at, 'visit'));
+            state.visit = { nextAt: at + step, left: null };
+            visitPause(state, at);
+        }
+        return { arrived };
+    }
+    /**
+     * 화면 상태 한 덩어리 — 상태 불변 · rng 0 · **정산하지 않는다**(앱 시계가 `visitSettle` 을 먼저 부른다).
+     * @returns `{open, labOpen, lv, max, hours, rarePct, slots, used, full, paused, nextAt, remainMs}` — `open` = 줄이 열렸다(레벨 1 이상) ·
+     *   `labOpen` = 연구소가 지어졌다(줄을 열 수 있다) · 멈춤(`paused`)이면 `remainMs` = 멈췄을 때 남은 시간이고 `nextAt` 은 null
+     */
+    function visitState(state, now) {
+        const lv = visitLevelOf(state), v = state.visit;
+        const paused = !!v && v.left != null;
+        const nextAt = v && !paused ? v.nextAt : null;
         return {
-            ...head, no: s.no, cost,
-            results: done ? [...kept, { no: s.no, startedAt: s.startedAt, result: hero, cost, discountPct, canHire: !err, err }] : kept,
-            hero: heroById(state, s.heroUid) ?? null,
-            sent: { uid: s.heroUid, sin: s.sin, cha: s.cha },
-            startedAt: s.startedAt, endsAt, remainMs: Math.max(0, endsAt - now), done,
-            beats, result: done ? hero : null, rarePct: searchRarePct(s.cha),
-            // 만남 — `meetAt` 부터 열리고 **답은 수령할 때까지 언제든**이다(시간 제한 없음 · 방치형 계약 ③)
-            rumor: rumorView(meeting), meetAt, meetOpen: now >= meetAt,
-            answers: picked ? [] : answersFor(meeting.meeting_id, s.sin).map(answerView),
-            answer: answerView(picked), discountPct,
-            canHire: done && !err, err: done ? err : null,
+            open: lv > 0, labOpen: visitLabOpen(state), lv, max: B.lab_level_max, hours: B.visit_hours,
+            rarePct: lv > 0 ? visitRarePct(lv) : 0,
+            slots: B.tavern_join_slots, used: joinUsed(state), full: joinFull(state),
+            paused, nextAt, remainMs: paused ? v.left : nextAt != null ? Math.max(0, nextAt - now) : null,
         };
     }
-
+    /** 레벨 lv → lv + 1 의 골드 — `visit_level_gold` × `lab_level_cost_growth` ^ lv · 올림 (연구소 칸과 같은 성장) */
+    const visitCost = lv => Math.ceil(B.visit_level_gold * B.lab_level_cost_growth ** lv - 1e-9);
     /**
-     * 보내기 — 대기 영웅 1명. **나가 있는 수색은 1건**(`tavern_search_slots` 는 화면 표기이고 실제 상한은 이 `busy` 다).
-     * **끝난 수색이 있어도 보낸다** [2026-10-16 사용자] — 그 결과는 영웅을 떼고 보관(`searchKept`)으로 옮겨 가고 보낸 영웅이 풀린다.
-     *   결과는 가입 희망 칸을 나눠 써서 돌아올 칸이 없으면 `full` 이다(`tavernSlotsUsed`).
-     * 판정 입력을 여기서 박는다 — 나간 뒤에 그 영웅이 자라도 결과는 보낼 때의 값이 정한다.
+     * 연구소 줄 「찾아온 영웅」 한 칸 — 지금 · 한 레벨 올린 뒤의 레어 확률과 비용 · 지금 올리면 날 거절. 연구소 전이면 null · 상태 불변 (2026-10-19)
+     * @returns `{lv, max, hours, rarePct, next: {rarePct, gold} | null, err}` — `err`: `maxUp` · `gold` · null
      */
-    function searchSend(state, uid, now) {
-        if (!hasFeature(state, 'search')) return { ok: false, err: 'unbuilt' };   // 선술집 랭크가 연다 (R137)
-        const s = state.search;
-        if (s && now < searchEnd(s)) return { ok: false, err: 'busy' };
-        if (tavernSlotsUsed(state, now) >= B.tavern_join_slots) return { ok: false, err: 'full' };
-        const h = heroById(state, uid);
-        if (!h) return { ok: false, err: 'missing' };
-        if (heroBusy(state, uid) === 'advance') return { ok: false, err: 'advancing' };   // 전직하는 중 (2026-09-28 · R16)
-        if (heroBusy(state, uid) === 'explore') return { ok: false, err: 'exploring' };   // 탐험 나감 (2026-10-09)
-        if (heroBusy(state, uid) === 'run') return { ok: false, err: 'party' };   // 지금 싸우는 영웅만 막는다 — 편성은 계획이다(출발이 `searching` 으로 막는다 · R92 · 2026-09-21)
-        if (s) state.searchKept = [...(state.searchKept ?? []), { no: s.no, startedAt: s.startedAt, sin: s.sin, cha: s.cha, answer: s.answer ?? null }];
-        state.counters.search += 1;
-        state.search = { heroUid: uid, startedAt: now, no: state.counters.search, sin: h.sin, cha: h.stats?.cha ?? 0, answer: null };
-        return { ok: true, endsAt: now + searchMs() };
+    function visitLevelInfo(state) {
+        if (!visitLabOpen(state)) return null;
+        const lv = visitLevelOf(state), max = B.lab_level_max;
+        const base = { lv, max, hours: B.visit_hours, rarePct: lv > 0 ? visitRarePct(lv) : 0 };
+        if (lv >= max) return { ...base, next: null, err: 'maxUp' };
+        const gold = visitCost(lv);
+        return { ...base, next: { rarePct: visitRarePct(lv + 1), gold }, err: (state.resources.gold ?? 0) < gold ? 'gold' : null };
     }
-
-/**
-     * 수령(고용) — 밑값은 명단과 같고(`tavern_hire_cost`) **만남에서 고른 답이 거기서 깎는다** (ADR-0068).
-     * 답을 안 골랐으면 정가다 — 안 고른 것이 벌이 아니라 **깎을 기회를 안 쓴 것**뿐이다.
-     * `no` = 받을 결과의 수색 번호 — 안 주면 지금 나간 수색이다(보관 결과는 번호로 · 2026-10-16)
-     */
-    function searchTake(state, now, no) {
-        const s = searchPick(state, no);
-        if (!s) return { ok: false, err: 'none' };
-        if (now < searchEnd(s)) return { ok: false, err: 'notDone' };
-        if (state.heroes.length >= limitsOf(state).roster) return { ok: false, err: 'roster' };
-        const picked = answerRows.find(a => a.answer_id === s.answer) ?? null;
-        const cost = searchCost(searchDiscount(searchMeetingOf(state, s.no), picked));
-        if (state.resources.gold < cost) return { ok: false, err: 'gold' };
-        const { hero } = searchRoll(state, s);
-        state.resources.gold -= cost;
-        const h = addHero(state, hero);
-        equipStarter(state, h, recruitRng(state));   // 명단 고용과 같은 한 벌 — 결과 스트림을 안 민다 (2026-09-25)
-        searchUnkeep(state, s);
-        return { ok: true, hero: h, cost };
-    }
-
     /**
-     * 만남에 답한다 — **되돌릴 수 없고 한 번뿐**이다. 고용비를 깎는 것 말고는 아무것도 안 바꾼다:
-     *   결과 영웅은 답과 무관하게 이미 시드가 정해 놓았으므로 **언제 답하든 같은 사람이 온다**.
-     * 시간 제한이 없다 — `meetAt` 부터 **수령할 때까지** 언제든. 안 답하고 수령해도 정가일 뿐 벌이 없다
-     *   (OSRS 가 강제 페널티를 「Optional Randoms」로 걷어낸 것과 같은 규칙 · 방치형 계약 ③).
-     * err: `none`(나간 수색 없음) · `answered`(이미 답했다) · `notOpen`(아직 안 만났다) · `missing`(지금 열려 있지 않은 답)
+     * 줄 레벨을 하나 올린다 — in-place · rng 0. **먼저 정산한다** — 지난 시간에 온 사람은 옛 레벨로 굴린다(소급 없음).
+     *   0 → 1 이면 줄이 열리고 **이 순간부터 시계가 선다**(첫 사람은 `visit_hours` 뒤 · 칸이 차 있으면 멈춘 채로 선다).
+     *   거절: `locked`(연구소 전) · `maxUp` · `gold` — 거절이면 정산만 한다
      */
-    function searchAnswer(state, answerId, now) {
-        const s = state.search;
-        if (!s) return { ok: false, err: 'none' };
-        if (s.answer) return { ok: false, err: 'answered' };
-        if (now < searchMeetAt(s.startedAt)) return { ok: false, err: 'notOpen' };
-        const meeting = searchMeetingOf(state, s.no);
-        const ans = answersFor(meeting.meeting_id, s.sin).find(a => a.answer_id === answerId);
-        if (!ans) return { ok: false, err: 'missing' };
-        s.answer = answerId;
-        const discountPct = searchDiscount(meeting, ans);
-        return { ok: true, discountPct, cost: searchCost(discountPct) };
+    function visitLevelUp(state, now) {
+        if (!visitLabOpen(state)) return { ok: false, err: 'locked' };
+        visitSettle(state, now);
+        const info = visitLevelInfo(state);
+        if (info.err) return { ok: false, err: info.err };
+        state.resources.gold -= info.next.gold;
+        state.labLevels = { ...(state.labLevels ?? {}), [VISIT_KEY]: info.lv + 1 };
+        if (info.lv === 0) {
+            state.visit = { nextAt: now + visitMs(), left: null };
+            visitPause(state, now);
+        }
+        return { ok: true, lv: info.lv + 1 };
     }
 
-    /**
-     * 버리기 — 나가 있으면 **취소**하고 결과가 와 있으면 **돌려보낸다**. 되돌릴 수 없다.
-     * 이 문이 없으면 로스터가 찼을 때 칸이 영원히 막힌다 — 결과는 수령할 때까지 남기 때문이다 (§2-4).
-     * 다시 보내면 `counters.search` 가 올라 **다른 결과**가 나온다. 값이 오가지 않으므로 되풀이해도 얻는 것이 없다
-     *   — 치르는 것은 그 시간뿐이다. 결과를 둔 채 다시 보내 여럿을 견줄 수도 있다 — 상한은 가입 희망 칸이다 (2026-10-16).
-     * `no` = 버릴 결과의 수색 번호 — 안 주면 지금 나간 수색이다(취소 · 끝난 결과)
-     */
-    function searchDrop(state, no) {
-        const s = searchPick(state, no);
-        if (!s) return { ok: false, err: 'none' };
-        searchUnkeep(state, s);
-        return { ok: true };
-    }
-
-    /* ── 선술집 가입 희망 — 탐험 마차(보호)에서 이긴 적 영웅이 찾아와 기다리는 칸 [신설 2026-10-09 · base_expedition §2-4 「가입 희망」 · INTERFACE §2-7] ──
-       창구는 선술집 하나라 마차가 영웅을 바로 들이지 않고 여기로 보낸다. **영웅 개체를 통째로 박는다** — 시드로 재현할 출처(마차 전투)가 아직 없다.
-       칸 `tavern_join_slots` · 머무는 시간 `tavern_join_hours`(벽시계 — ⚠ 떠나는 것은 방치형 계약과 부딪힌다 · 기획 §10 「마차(보호)의 세부」 ⑤).
-       **떠난 줄은 쓰는 쪽(`joinAdd` · `joinHire`)이 걷고 읽는 쪽(`joinState`)은 거르기만 한다** — 상태 함수가 세이브를 안 바꾼다 */
-    const joinMs = () => Math.max(0, B.tavern_join_hours ?? 0) * 3600000;
-    const joinLive = (state, now) => (state.joins ?? []).filter(j => now < j.leavesAt);
+    /* ── 찾아온 영웅 칸 — 시간으로 온 영웅 · 탐험 마차에서 이긴 적 영웅이 나눠 쓴다 [신설 2026-10-09 가입 희망 · 2026-10-19 찾아온 영웅 · base_expedition §2-4 · INTERFACE §2-7] ──
+       창구는 선술집 하나라 마차도 영웅을 바로 들이지 않고 여기로 보낸다. **영웅 개체를 통째로 박는다** · 칸 `tavern_join_slots`.
+       **떠나지 않는다**(~~`tavern_join_hours` 뒤 떠난다~~ 2026-10-19 사용자 「누가 왔던지 돌려보낼 때까지 남는 걸로」) — 고용하거나 돌려보낼 때까지 남는다.
+       칸을 바꾸는 쪽(`joinAdd` · `joinHire` · `joinDrop`)은 **먼저 정산하고 뒤에 시계를 고친다**(차면 멈추고 비면 흐른다) */
     /** 지금 고용하면 나올 거절 — 명단 고용과 같은 둘(⚠ 고용비는 일단 명단과 같다 · 기획 §10 ⑦) */
     const joinErr = state => state.heroes.length >= limitsOf(state).roster ? 'roster'
         : state.resources.gold < B.tavern_hire_cost ? 'gold' : null;
-    /** 화면 상태 한 덩어리 — `list` 는 아직 안 떠난 줄만 도착 순 · rng 0 · 아무것도 안 바꾼다 */
+    /** 화면 상태 한 덩어리 — `list` 는 도착 순 · rng 0 · 아무것도 안 바꾼다(정산도 안 한다) */
     function joinState(state, now) {
         return {
-            open: hasFeature(state, 'hire'), slots: B.tavern_join_slots, cost: B.tavern_hire_cost, hours: B.tavern_join_hours,
-            list: joinLive(state, now).map(j => ({ no: j.no, hero: j.hero, arrivedAt: j.arrivedAt, leavesAt: j.leavesAt, remainMs: j.leavesAt - now })),
+            open: hasFeature(state, 'hire'), slots: B.tavern_join_slots, cost: B.tavern_hire_cost,
+            list: (state.joins ?? []).map(j => ({ no: j.no, hero: j.hero, arrivedAt: j.arrivedAt, src: j.src })),
             err: joinErr(state),
         };
     }
     /**
-     * 가입 희망 영웅이 온다 — **부르는 쪽은 탐험 마차의 승리다**(⚠ 아직 없다 · 지금은 개발 경로뿐 · DEV_PLAN R232).
-     *   칸이 차 있으면 `full` — 조용히 버리지 않는다(찼을 때의 규칙은 기획 미정 · §10 ⑥) · rng 0
-     *   칸은 수색 결과와 나눠 쓴다 — 보관 결과 · 나간 수색도 한 칸씩 잡는다(`tavernSlotsUsed` · 2026-10-16)
+     * 칸에 영웅이 온다 — **부르는 쪽은 탐험 마차의 승리다**(⚠ 아직 없다 · 지금은 개발 경로뿐 · DEV_PLAN R232) · 시간으로 오는 사람은 `visitSettle` 이 세운다.
+     *   먼저 정산한다 · 칸이 차 있으면 `full` — 조용히 버리지 않는다(찼을 때의 규칙은 기획 미정 · §10 ⑥) · rng 0 · 세운 뒤 차면 시계가 멈춘다
      */
-    function joinAdd(state, hero, now) {
-        state.joins = joinLive(state, now);
-        if (tavernSlotsUsed(state, now) >= B.tavern_join_slots) return { ok: false, err: 'full' };
-        state.counters.join = (state.counters.join ?? 0) + 1;
-        state.joins.push({ no: state.counters.join, hero: clone(hero), arrivedAt: now, leavesAt: now + joinMs() });
-        return { ok: true, no: state.counters.join };
+    function joinAdd(state, hero, now, src = 'caravan') {
+        visitSettle(state, now);
+        if (joinFull(state)) return { ok: false, err: 'full' };
+        const no = joinPush(state, hero, now, JOIN_SRC.includes(src) ? src : 'caravan');
+        visitPause(state, now);
+        return { ok: true, no };
     }
     /**
-     * 고용 — **번호로 고른다**(자리 순서는 누가 떠나면 밀린다 — 화면이 그린 줄과 고용하는 줄이 갈리지 않게).
-     *   거절 순서 `unbuilt` → `missing`(떠났거나 이미 고용) → `roster` → `gold` · 명단 고용과 같은 시작 장비 한 벌(영웅 번호 스트림)
+     * 고용 — **번호로 고른다**(자리 순서는 누가 빠지면 밀린다 — 화면이 그린 줄과 고용하는 줄이 갈리지 않게).
+     *   거절 순서 `unbuilt` → `missing`(이미 고용했거나 돌려보냈다) → `roster` → `gold` · 명단 고용과 같은 시작 장비 한 벌(영웅 번호 스트림) · 칸이 비면 시계가 다시 흐른다
      */
     function joinHire(state, no, now) {
         if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };   // 명단과 같은 문 — 선술집이 연다 (R137)
-        state.joins = joinLive(state, now);
-        const j = state.joins.find(x => x.no === no);
+        visitSettle(state, now);
+        const j = (state.joins ?? []).find(x => x.no === no);
         if (!j) return { ok: false, err: 'missing' };
         const err = joinErr(state);
         if (err) return { ok: false, err };
@@ -3592,7 +3415,20 @@ export function createGameSystem(deps) {
         const h = addHero(state, clone(j.hero));
         equipStarter(state, h, recruitRng(state));
         state.joins = state.joins.filter(x => x !== j);
+        visitResume(state, now);
         return { ok: true, hero: h };
+    }
+    /**
+     * 돌려보내기 — 누구든 · 언제든 · 무료 [2026-10-19 사용자]. **이 문이 없으면 칸이 다 찼을 때 영원히 막힌다**(떠나지 않으므로).
+     *   다음 사람은 시계대로 오므로(비운 순간부터 남은 시간 뒤) 공짜 새로고침이 되지 않는다 · rng 0 · 거절 `missing`
+     */
+    function joinDrop(state, no, now) {
+        visitSettle(state, now);
+        const j = (state.joins ?? []).find(x => x.no === no);
+        if (!j) return { ok: false, err: 'missing' };
+        state.joins = state.joins.filter(x => x !== j);
+        visitResume(state, now);
+        return { ok: true };
     }
 
     /* ── 탐험 — 지점 아이콘 → 보내기 → 수령 [신설 2026-10-09 · base_expedition §3-1 · SCREEN_DESIGN §8-4 · ADR-0553 · INTERFACE §2-7] ──
@@ -3681,14 +3517,13 @@ export function createGameSystem(deps) {
      * 그 편성을 탐험에 보내면 나올 거절 — **지점과 무관한 편성 쪽 판정** [2026-10-10 · R234 · base_expedition §3-1 「편성으로 보낸다」].
      * `exploreErr` 의 뒤 절반이고 `exploreState.squads[].err` 가 같은 것을 낸다. 순서가 계약이다 (INTERFACE §2-7):
      * 없는 편성 `missing` → 빈 편성 `noParty` → **원정에 나간 편성** · 다른 부대에서 싸우는 편성원 `running`(철수가 먼저다 — 한 동작으로 만들지 않는다 · GAME_DESIGN §1-1)
-     * → `searching` → 그 편성 · 편성원이 이미 탐험 중 `exploring` → `advancing`
+     * → 그 편성 · 편성원이 이미 탐험 중 `exploring` → `advancing` (~~`searching`~~ 2026-10-19 수색 삭제)
      */
     function squadErr(state, no) {
         const p = presetAt(state, no);
         if (!p) return 'missing';
         if (!p.party.length) return 'noParty';
         if (runningNos(state).includes(no) || p.party.some(uid => heroBusy(state, uid) === 'run')) return 'running';
-        if (p.party.some(uid => heroBusy(state, uid) === 'search')) return 'searching';
         if (exploreOfPreset(state, no) || p.party.some(uid => heroBusy(state, uid) === 'explore')) return 'exploring';
         if (p.party.some(uid => heroBusy(state, uid) === 'advance')) return 'advancing';
         return null;
@@ -3834,18 +3669,17 @@ export function createGameSystem(deps) {
 
     /**
      * 탭 할 일 점 [신설 2026-10-16 · SCREEN_DESIGN §1 · ADR-0637] — 탭마다 **하면 꺼지는 일**이 기다리나. 키 = 화면 탭 id(`constructionState.tabs` 와 같은 어휘).
-     *   건설 = 다음 랭크를 지금 지을 수 있는 건물(부지 초록 점과 같은 `CN.nextState`) · 선술집 = 가입 희망 칸에 누가 기다린다(`searchState().results` 와
-     *   같은 정의를 굴림 없이 — 보관 결과 · 끝난 나간 수색 — 또는 가입 희망 영웅) · 다 채운 의뢰 · 상점 = 특수상인이 와 있다 · 탐험 = 끝난 탐험.
+     *   건설 = 다음 랭크를 지금 지을 수 있는 건물(부지 초록 점과 같은 `CN.nextState`) · 선술집 = 찾아온 영웅 칸에 누가 기다린다(출처 무관 ·
+     *   ~~보관 수색 결과 · 끝난 나간 수색~~ 2026-10-19) · 다 채운 의뢰 · 상점 = 특수상인이 와 있다 · 탐험 = 끝난 탐험.
+     *   **정산하지 않는다** — 시계가 지났어도 아직 안 온 사람은 안 센다(앱 시계가 `visitSettle` 을 먼저 부른다).
      *   흐린 탭은 안 본다(화면이 안 단다) · rng 0 · 상태 불변 — 앱 시계가 1초에 한 번 부른다
      * @returns `{research, tavern, shop, explore}` (bool)
      */
     function navTodo(state, now) {
         const ctx = buildCtx(state), wallet = walletOf(state);
-        const search = state.search ?? null;
         return {
             research: CN.list.some(b => !CN.nextState(b.id, state.buildings, ctx, wallet).err),
-            tavern: (state.searchKept ?? []).length > 0 || (!!search && now >= searchEnd(search))
-                || joinLive(state, now).length > 0 || commissionState(state).cards.some(c => c.taken && c.done),
+            tavern: (state.joins ?? []).length > 0 || commissionState(state).cards.some(c => c.taken && c.done),
             shop: hasFeature(state, 'shop_special') && shopVisit(state, now).here,
             explore: exploreList(state).some(x => now >= x.startedAt + exploreMs()),
         };
@@ -3884,7 +3718,7 @@ export function createGameSystem(deps) {
 
     /**
      * **창구 — 무엇을 지어야 열리나** `{id, name, rank}` · 표에 없으면 null(`construction.reach`) — 잠긴 자리가 「선술집 2랭크」를 말할 때 읽는다.
-     *   켜기는 이름만(`needOf('search')`) · 더하기는 **기본값 위로 몇이 필요한가**(`needOf('tactic_slots', 3)` = 셋째 전술 칸 · 제작 레벨 · 물약 단계 · 전술 칸은 기본값이 0 이라 순번 그대로). 상태를 안 본다 ·
+     *   켜기는 이름만(`needOf('hire')`) · 더하기는 **기본값 위로 몇이 필요한가**(`needOf('tactic_slots', 3)` = 셋째 전술 칸 · 제작 레벨 · 물약 단계 · 전술 칸은 기본값이 0 이라 순번 그대로). 상태를 안 본다 ·
      *   **장은 `chapter_open_max` 뒤면 표와 무관하게 null** — 이번 버전이 안 여는 장이다(`limitsOf` 가 같은 값으로 자른다 · R227)
      */
     const needOf = (target, n = 1) => (target === 'chapters' && n > B.chapter_open_max ? null : CN.reach(target, n));
@@ -4152,8 +3986,8 @@ export function createGameSystem(deps) {
         tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
         shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
-        searchState, searchSend, searchTake, searchDrop, searchAnswer,
-        joinState, joinAdd, joinHire,
+        visitSettle, visitState, visitLevelInfo, visitLevelUp,
+        joinState, joinAdd, joinHire, joinDrop,
         exploreState, exploreErr, exploreSend, exploreTake, exploreDrop,
         dispatchSettle, dispatchProgress, labLevelInfo, labLevelUp, materialsState,
         mgRound, mgJudge, mgClaim,

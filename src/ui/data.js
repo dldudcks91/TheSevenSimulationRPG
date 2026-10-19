@@ -83,9 +83,7 @@ export const D = {
     // ~~weaponCommonOptions~~ — weapon_common_option.csv 퇴역 (2026-10-05 R206 — 무기 옵션은 전부 죄종 계열 중 하나다)
     heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
     heroTraitPool: [],        // hero_trait.csv — [{ko,en}] · CSV 행 순서
-    searchStories: [],        // search_story.csv 원시 행 — 수색 진행 문구. 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다)
-    searchMeetings: [],       // search_meeting.csv 원시 행 — 수색 만남(소문 · 질문). ⚠ 행 순서가 굴림 순서다
-    searchAnswers: [],        // search_answer.csv 원시 행 — 만남의 답. `need_sin`(누가 갔나 → 보인다) · `hit_sin`(누굴 만났나 → 먹힌다)
+    // ~~searchStories · searchMeetings · searchAnswers~~ — search_story · search_meeting · search_answer.csv 삭제 (2026-10-19 · 수색 → 찾아온 영웅)
     heroUniqueCandidates: [], // hero_unique_candidates.csv 원시 행 — 유니크 영웅 후보 풀(hero_design §1). ⚠임시 —
                               //   `status`(confirmed/proposed) 대부분이 proposed. 아직 소비하는 화면·로직 없음(2026-09-10 논의 자료)
     // 건설 표 넷 — 원시 행 그대로 넘긴다. 검증 · 셈은 game_logic/construction.js (construction_draft §11 · 2026-09-22 · R137)
@@ -124,7 +122,7 @@ export let SYS = null;
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_option', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
-    'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
+    'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'monster_role', 'formation_template',
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
@@ -141,8 +139,7 @@ export async function loadData(base = './data/') {
         weaponGroup, skillRow, skillEffectRow, skillStatusRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
-        heroTierRow, searchStoryRow, monsterRoleRow, formationTplRow,
-        searchMeetingRow, searchAnswerRow,
+        heroTierRow, monsterRoleRow, formationTplRow,
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
@@ -343,14 +340,9 @@ export async function loadData(base = './data/') {
     });
     D.heroNamePool = heroNameRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
     D.heroTraitPool = heroTraitRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
-    // 수색 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
-    // 여기서 가공하면 구조가 두 곳에 생긴다. 무결성 검증은 state.js 가 로드 시 한다
-    D.searchStories = searchStoryRow;
-    D.exploreStories = exploreStoryRow;   // 탐험 진행 문구 — 수색과 같은 이유로 원시 행 그대로 (지점마다 막 · R235)
-    // 만남 — 원시 행 그대로. 두 컬럼(`need_sin` 누가 갔나 → 보인다 · `hit_sin` 누굴 만났나 → 먹힌다)이 규칙 전부라
-    // 여기서 가공할 것이 없다. 무결성 검증은 state.js 가 로드 시 한다
-    D.searchMeetings = searchMeetingRow;
-    D.searchAnswers = searchAnswerRow;
+    // 탐험 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
+    // 여기서 가공하면 구조가 두 곳에 생긴다. 무결성 검증은 state.js 가 로드 시 한다 (지점마다 막 · R235 · ~~수색 문구 · 만남 · 답~~ 2026-10-19 삭제)
+    D.exploreStories = exploreStoryRow;
     // 유니크 영웅 후보 풀 — 원시 행 그대로. ⚠임시(hero_design §1) — 개체 테이블이 없어 아직 아무도 안 읽는다.
     // status(confirmed/proposed)로 실제 채택 여부를 가른다. 2026-09-10 논의 자료 — commission.csv 와 같은 자리채움
     D.heroUniqueCandidates = heroUniqueCandidateRow;
@@ -644,10 +636,9 @@ export function buildSystems(d, dev = {}) {
         difficulties: d.difficultyList ?? [],   // 난이도 바퀴 — 순서대로 · 첫 단 = 처음부터 열림 (state.js · R236)
         codex: { levels: d.codexLevels, steps: d.codexSteps, options: d.codexOptions },
         skillCodex: d.skillCodex ?? [],   // 스킬 도감 — 도안(Lv1) · 책 업그레이드 상한 (state.js · R266)
-        // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
-        sins, searchStories: d.searchStories ?? [],
+        // 죄종 목록 — 탐험 이야기 표의 `sin` 컬럼 검증용 (~~수색 이야기 · 만남 · 답~~ 2026-10-19 삭제)
+        sins,
         exploreStories: d.exploreStories ?? [],   // 탐험 이야기 — 지점마다 막 · 순서는 표가 정한다 (state.js:explorePhases · R235)
-        searchMeetings: d.searchMeetings ?? [], searchAnswers: d.searchAnswers ?? [],
         // 진형 — 템플릿의 정원. 첫 행이 기본값이다(`formation_template.csv` 행 순서가 곧 화면 순서)
         formationTemplates: d.formationTemplates ?? {},
         formationTplOrder: d.formationTplOrder ?? [],
