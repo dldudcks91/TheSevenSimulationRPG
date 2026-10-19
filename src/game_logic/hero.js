@@ -477,7 +477,7 @@ export function createHeroSystem(data) {
 
     /**
      * 기본 능력치 + 장비 + 도감 보너스 + 파티 전술 → 전투 능력치.
-     * items = 착용 중 아이템 배열. codex = {atk_pct, hp_pct, dmg_pct} (없으면 0).
+     * items = 착용 중 아이템 배열. codex = 도감 Lv4 옵션 `{flat: {stat: v}}` (`state.codexOptions` · 없으면 `{}` — 2026-10-18 · R286 · ~~{atk_pct, hp_pct, dmg_pct} 계열 보정~~).
      * party = 파티 전술의 가산치 `{flat, dr}` (없으면 null) — **파티에 든 영웅에게만** 넘어온다.
      *   판정(어느 칸이 켜졌나 · 이 영웅이 파티인가)은 state.js 가 하고 여기는 받은 값을 합류시키기만 한다.
      *
@@ -527,6 +527,11 @@ export function createHeroSystem(data) {
         const mb = masteryBonus(hero, items);
         for (const k of Object.keys(mb.flat)) flat[k] = (flat[k] ?? 0) + mb.flat[k];
         for (const v of mb.dr) drList.push(v);
+        // 도감 Lv4 옵션도 같은 채널이다 [2026-10-18 · R286 · monster_design §8-2] — 장비 옵션 어휘 그대로 · 피해 감소는 **도감 전체가 원천 하나**(몬스터마다 따로 곱하지 않는다).
+        //   골드 · 아이템 · 매직 획득 줄은 없다(§8-2 뺀 줄) — 아래 제 몫(`ownFind`)에 섞여도 0 이다
+        const cxFlat = codex.flat ?? {};
+        for (const k of Object.keys(cxFlat)) flat[k] = (flat[k] ?? 0) + cxFlat[k];
+        if (cxFlat.damage_reduction) drList.push(cxFlat.damage_reduction);
         // 파티 정산의 제 몫 — 파티 단위 출처(전술 · 신단)를 더하기 **전**의 골드 · 드랍 · 매직 [2026-10-05 · INTERFACE §2-6 「파티 골드 · 드랍 · 매직 배율」].
         //   파티 몫은 전원에게 같은 값이라 합산하면 인원수만큼 불어난다 — 전투가 한 번만 더한다(`find_party`)
         const ownFind = { gold: flat.gold_find ?? 0, item: flat.item_find ?? 0, magic: flat.magic_find ?? 0 };
@@ -546,8 +551,8 @@ export function createHeroSystem(data) {
         //   [2026-10-03 · 사용자 확정 · battle_design §9-1 — D2 의 무기 ED]. `item.weaponDamageFixed` 와 같은 값이다(툴팁 표기 = 계산)
         const weaponPct = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_pct' ? a.v : 0), 0);
         // 데미지 % 괄호 = **무기 % 를 뺀** Σ 데미지 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
-        //   + **도감 「데미지」** [2026-09-18 · battle_design §9-1 — ~~괄호 밖에서 따로 곱한다~~ → 같은 괄호의 덧셈]. 조건부 % 는 타격마다 전투가 같은 괄호에 끼운다(formula.strike)
-        const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level + (codex.atk_pct ?? 0);
+        //   (~~+ 도감 「데미지」~~ 2026-10-18 계열 보정 폐지 · R286). 조건부 % 는 타격마다 전투가 같은 괄호에 끼운다(formula.strike — 도감 Lv2 상대 피해도 거기다)
+        const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level;
         // 공격력 = **순수 무기 밑수** [개정 2026-09-10 · battle_design §9-1] — ~~`attrMult(magic ? int : str) ×`~~ 는 걷었다.
         //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
         //   양끝마다 무기 % 를 곱해 반올림 → 고정 공격력을 더하고 데미지 % 괄호를 곱해 반올림 — 범위 안의 굴림은 전투(formula.strike)가 한다
@@ -570,8 +575,7 @@ export function createHeroSystem(data) {
         // 투구 오만 「레벨당 체력」은 **더하기**다 — 영웅 레벨 × 값이 체력 flat 과 같은 자리에 든다 [2026-09-17 · item_design §1 「투구 옵션」]
         const hpMax = Math.round(
             ((hero.hpBase ?? hpBaseOf(hero.cls)) + units * attrMult('vit', A.vit) + f('hp_flat') + f('hp_per_level') * hero.level)
-            * (1 + f('hp_pct'))
-            * (1 + (codex.hp_pct ?? 0)));
+            * (1 + f('hp_pct')));   // ~~× (1 + 도감 「체력」)~~ 2026-10-18 계열 보정 폐지 — 도감 Lv4 의 `hp_pct` 는 위 Σ 에 든다 (R286)
 
         // 방어구 갈래가 공속·쿨감을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — ~~갑옷 칸 하나만~~ → **낀 방어구마다 제 갈래 값을 더한다**
         //   [2026-09-18 — 네 부위가 갈래를 갖는다]. 지금 값이 있는 것은 갑옷군뿐이다 — 중갑은 음수(느려진다) · 경갑은 양수 · 로브는 0 이고 쿨감을 든다.
@@ -677,7 +681,9 @@ export function createHeroSystem(data) {
             //   출처는 갑옷 분노 칸(2026-09-18 — 첫 출처) · ⚠ 상한은 기획 미정(GAME_DESIGN §10)
             fhr: f('fhr'),
             action_period: Number(period.toFixed(3)),
-            dmg_bonus_pct: codex.dmg_pct ?? 0,    // 피해량(도감) — 데미지 % 괄호와 합치지 않고 전투가 따로 곱한다 (2026-09-18 · battle_design §9-2)
+            // 피해량 — 데미지 % 괄호와 합치지 않고 전투가 따로 곱한다 (2026-09-18 · battle_design §9-2). **지금 출처가 없어 언제나 0** —
+            //   하나뿐이던 도감 「피해량」이 2026-10-18 계열 보정 폐지로 나갔다(R286 · 칸만 남았다 — DEV_PLAN §4 부채)
+            dmg_bonus_pct: 0,
             // 평타 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — **힘**의 `formula.statCoef`.
             //   ~~마법 무기 = 지능~~(2026-09-27) 은 2026-10-02 소멸 — 마법 무기는 평타가 없다(R198). 물리 무기 · 맨손 = 힘 [2026-09-27 — ~~직업 메인 스탯~~ 대체].
             //   능력치를 모르면 1. **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 몬스터도 같은 값을 쓴다(2026-09-22)

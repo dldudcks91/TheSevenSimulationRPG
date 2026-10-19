@@ -1,0 +1,11 @@
+page.locator('[data-node=cls_warrior_t1_atk]').hover(force=True)
+page.clock.run_for(300)
+print('WARRIOR NODE',page.locator('#tooltip').inner_text(),flush=True)
+for _ in range(4):
+    press('[data-node=cls_warrior_t1_atk]')
+    tick(3)
+page.keyboard.press('Escape')
+press('.hs-card[data-uid=h2]')
+press('.go-tree')
+print('MAGE NODES',page.locator('#modal [data-node]').evaluate_all('ns=>ns.map(n=>({id:n.dataset.node,label:n.getAttribute("aria-label")}))'),flush=True)
+tick(20)

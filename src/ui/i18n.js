@@ -508,7 +508,8 @@ const STRINGS = {
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리된다', en: 'Stage clear — see the report' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning' },
 
-    /* 탭 13 [개정 2026-10-09 사용자 지시 · ADR-0567] — 훈련장이 빠졌다 · 순서와 묶음은 `app.js:NAV_GROUPS` 가 든다 (SCREEN_DESIGN §1).
+    /* [개정 2026-10-18 사용자 지시 · ADR-0660] 탐험은 원정 바로 아래 · 자원은 마을 맨 아래 — 파견 묶음(`nav.grp.dispatch`)은 걷혔다.
+       탭 13 [개정 2026-10-09 사용자 지시 · ADR-0567] — 훈련장이 빠졌다 · 순서와 묶음은 `app.js:NAV_GROUPS` 가 든다 (SCREEN_DESIGN §1).
        [개정 2026-09-24 사용자 지시 · ADR-0348] 탭 12 — 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 제련소 · 훈련장 · 자원 · 탐험 · 도감 · 도움말.
        [개정 2026-09-21 사용자 지시 · ADR-0253] 탭 11 — 원정 · 편성 · 캐릭터 · 건설 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 도감 · 도움말.
        연구가 「건설」이 되어 캐릭터 바로 뒤로 왔다 — 키(`nav.research`)는 옛 이름 그대로다.
@@ -524,14 +525,42 @@ const STRINGS = {
        nav.skill 도 탭이 아니라 **창 제목**이다 (§7). nav.base(거점)는 여전히 유일한 미사용 키다.
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
+    'nav.explore': { ko: '탐험', en: 'Exploration' },
+    // 콜로세움 [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670] — 결투장 바로 앞 · 오프라인 층 사다리 · 레일(사다리) | 판
+    'nav.colosseum': { ko: '콜로세움', en: 'Colosseum' },
+    'cs.progress': { ko: '{n} / {total}층', en: 'Floor {n} / {total}' },
+    'cs.progressDone': { ko: '{total}층 완주', en: 'All {total} floors cleared' },
+    'cs.lv': { ko: 'Lv.{a}~{b}', en: 'Lv.{a}–{b}' },
+    'cs.lv1': { ko: 'Lv.{a}', en: 'Lv.{a}' },
+    'cs.from': { ko: '{n}층 · {tier} · AI 팀', en: 'Floor {n} · {tier} · AI team' },
+    'cs.fromGate': { ko: '{n}층 · {tier} 승급전 · AI 팀', en: 'Floor {n} · {tier} promotion bout · AI team' },
+    'cs.fight': { ko: '도전', en: 'Challenge' },
+    'cs.back': { ko: '콜로세움으로', en: 'Back to Colosseum' },
+    'cs.last': { ko: '지난 도전: {result} · {sec}초', en: 'Last challenge: {result} · {sec}s' },
+    'cs.last.open': { ko: '지난 도전: {result} · {sec}초 · {n}층이 열렸다', en: 'Last challenge: {result} · {sec}s · Floor {n} unlocked' },
+    'cs.emblem': { ko: '{tier} 휘장을 얻었다', en: '{tier} emblem earned' },
+    'cs.help': {
+        ko: '콜로세움은 한 층씩 올라가는 사다리다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열린다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없다.<br>층마다 상대 AI 팀이 정해져 있다 — 같은 층은 언제 가도 같은 팀이다. 위층일수록 상대의 레벨 · 장비 · 강화 · 스킬이 오른다.<br>등급의 마지막 층은 승급전이다. 이기면 그 등급의 휘장을 얻는다.',
+        en: 'The Colosseum is a ladder you climb one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. Higher floors bring higher level, gear, upgrades and skills.<br>The last floor of each tier is a promotion bout. Win it to earn that tier’s emblem.',
+    },
     'nav.arena': { ko: '결투장', en: 'Arena' },
-    // 두 갈래 [2026-10-17 · ADR-0656] — 갈래 고르개 · 오프라인 등급 칩 · 온라인 코드 글상자 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
-    'ar.mode.offline': { ko: '오프라인', en: 'Offline' },
-    'ar.mode.online': { ko: '온라인', en: 'Online' },
-    'ar.tier': { ko: '{name} · Lv.{lv}', en: '{name} · Lv.{lv}' },
-    'ar.aiTeam': { ko: 'AI 팀 · {tier}', en: 'AI team · {tier}' },
+    // 결투장 = 온라인 ELO [2026-10-18 · ADR-0670 — ~~오프라인 | 온라인 갈래~~ ADR-0656] — 리그 카드 · 상대 후보 셋 · 친선전 창 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
+    'ar.rating': { ko: '레이팅', en: 'Rating' },
+    'ar.peak': { ko: '최고 {n}', en: 'Best {n}' },
+    'ar.record': { ko: '{w}승 {d}무 {l}패', en: '{w}W {d}D {l}L' },
+    'ar.toNext': { ko: '{tier}까지 {n}', en: '{n} to {tier}' },
+    'ar.topLeague': { ko: '최고 리그', en: 'Top league' },
+    'ar.cands': { ko: '상대 후보', en: 'Opponents' },
+    'ar.ai': { ko: 'AI 팀', en: 'AI team' },
+    'ar.from': { ko: 'AI 팀 · {tier} · {rating}', en: 'AI team · {tier} · {rating}' },
+    'ar.newCands': { ko: '새 상대', en: 'New opponents' },
+    'ar.friendly': { ko: '친선전', en: 'Friendly' },
+    'ar.friendlyCard': { ko: '친선전 · 받은 팀', en: 'Friendly · received team' },
+    'ar.unrated': { ko: '레이팅 변동 없음', en: 'Unrated' },
+    'ar.ratingFlash': { ko: '레이팅 {after} ({delta})', en: 'Rating {after} ({delta})' },
+    'ar.last.rated': { ko: '지난 결투: {result} · 레이팅 {after} ({delta})', en: 'Last duel: {result} · Rating {after} ({delta})' },
     'ar.ghostTeam': { ko: '받은 팀', en: 'Received team' },
-    'ar.noGhost': { ko: '코드를 불러오면 팀이 나타난다', en: 'Load a code to reveal the team' },
+    'ar.code.h': { ko: '친선전 — 팀 코드', en: 'Friendly — team codes' },
     'ar.code.mine': { ko: '내 팀 코드', en: 'My team code' },
     'ar.code.make': { ko: '코드 만들기', en: 'Make code' },
     'ar.code.copy': { ko: '복사', en: 'Copy' },
@@ -559,29 +588,27 @@ const STRINGS = {
     'ar.bad.up': { ko: '강화 단계가 상한을 넘는다', en: 'Upgrade level exceeds the cap' },
     'ar.bad.option': { ko: '옵션 수치가 범위를 벗어났다', en: 'An option value is out of range' },
     'ar.rules': { ko: '결투 규칙', en: 'Duel rules' },
-    'ar.help.offline': {
-        ko: '등급을 고르고 상대를 찾는다. 상대는 그 등급의 레벨에 맞춰 장비·마스터리·스킬을 갖춘 AI 팀이다.',
-        en: 'Pick a tier and find an opponent. The opponent is an AI team equipped with gear, mastery and skills for that tier’s level.',
+    'ar.help.rating': {
+        ko: '결투장은 레이팅으로 겨룬다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려간다. 레이팅이 문턱을 넘으면 리그가 오른다.<br>상대 후보 셋은 내 레이팅의 아래 · 비슷 · 위에서 나온다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅이다. 결투가 끝나면 후보가 새로 선다.<br>레이팅은 결투를 시작하는 순간 정해진다 — 관전을 닫아도 결과는 그대로다. 서버가 열리기 전까지 상대는 그 레이팅에 맞춰 갖춘 AI 팀이다.',
+        en: 'The Arena is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Three opponents are drawn from below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Until the server opens, opponents are AI teams equipped for their rating.',
     },
-    'ar.help.online': {
-        ko: '코드 만들기로 고른 편성의 세 영웅을 팀 코드로 만든다. 다른 사람의 코드를 붙여넣고 불러오면 규칙에 맞는지 검사한 뒤 그 팀이 그대로 상대로 나온다.',
-        en: 'Make code turns the chosen party’s three heroes into a team code. Paste someone else’s code and load it; once it passes the rule check, that team appears as your opponent exactly as it is.',
+    'ar.help.friendly': {
+        ko: '친선전 창에서 코드 만들기로 고른 편성의 세 영웅을 팀 코드로 만든다. 다른 사람의 코드를 붙여넣고 불러오면 규칙에 맞는지 검사한 뒤 그 팀이 그대로 상대로 나온다. 친선전은 레이팅이 바뀌지 않는다.',
+        en: 'In the Friendly window, Make code turns the chosen party’s three heroes into a team code. Paste someone else’s code and load it; once it passes the rule check, that team appears as your opponent exactly as it is. Friendly duels do not change your rating.',
     },
     'ar.select': { ko: '출전 인원 {n} / 3', en: 'Team members {n} / 3' },
     'ar.edit': { ko: '편성 수정', en: 'Edit party' },
     'ar.needTeam': { ko: '편성에 영웅 3명을 채워야 한다', en: 'Assign three heroes to this party' },
     'ar.empty': { ko: '빈 자리', en: 'Empty slot' },
-    'ar.noOpponent': { ko: '상대를 찾으면 팀이 나타난다', en: 'Find an opponent to reveal their team' },
+    'ar.noOpponent': { ko: '상대를 고르면 팀이 나타난다', en: 'Pick an opponent to reveal their team' },
     'ar.noTactic': { ko: '열린 전술 칸 없음', en: 'No tactic slots open' },   // Party 판의 전술 칸이 빌 때 (ADR-0495)
-    'ar.find': { ko: '상대 찾기', en: 'Find opponent' },
-    'ar.reroll': { ko: '다른 상대 찾기', en: 'Find another opponent' },
     'ar.fight': { ko: '결투 시작', en: 'Start duel' },
     'ar.back': { ko: '결투장으로', en: 'Back to arena' },
     'ar.draw': { ko: '무승부', en: 'Draw' },
     'ar.last': { ko: '지난 결투: {result} · {sec}초', en: 'Last duel: {result} · {sec}s' },
     'ar.help': {
-        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전한다. 인원과 진형은 편성 탭에서 수정한다. 영웅 3명을 채워야 결투를 시작할 수 있다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 한다. 도감 보너스는 적용하지 않고, 상대는 파티 전술·물약이 없다. 제한시간이 지나면 무승부다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없다. 마신 물약도 재고에서 줄지 않는다. 찾은 상대와 결과는 재접속하면 초기화된다.',
-        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents have no tactics or potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Opponents and results reset when you reload.',
+        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전한다. 인원과 진형은 편성 탭에서 수정한다. 영웅 3명을 채워야 결투를 시작할 수 있다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 한다. 도감 보너스는 적용하지 않고, 상대는 파티 전술·물약이 없다. 제한시간이 지나면 무승부다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없다. 마신 물약도 재고에서 줄지 않는다. 결투장 레이팅과 콜로세움에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화된다.',
+        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents have no tactics or potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Arena rating and Colosseum progress are saved; the picked opponent and last result reset when you reload.',
     },
     'nav.party': { ko: '편성', en: 'Party' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
@@ -592,15 +619,13 @@ const STRINGS = {
     'nav.forge': { ko: '제련소', en: 'Smeltery' },
     // 도서관 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422 · 이름 2026-10-10 ~~서고~~] — 제련소 뒤 · 건물 이름(`building.csv`)과 같은 말 · ~~`nav.training`~~ 은 2026-10-09 훈련장 탭과 함께 걷혔다(ADR-0567)
     'nav.library': { ko: '도서관', en: 'Library' },
-    'nav.resource': { ko: '자원', en: 'Resources' },
-    'nav.explore': { ko: '탐험', en: 'Exploration' },
+    'nav.resource': { ko: '연구소', en: 'Laboratory' },   // 건물 이름(`building.csv:resource`)과 같은 말 · 키는 옛 이름 그대로 (2026-10-18 · ADR-0665)
     'nav.codex': { ko: '도감', en: 'Codex' },
     'nav.help': { ko: '도움말', en: 'Help' },
     'nav.lab': { ko: '실험실', en: 'Lab' },   // 개발 장치 — 기타 묶음 끝 (SCREEN_DESIGN §18 · ADR-0580)
     // 탭 묶음 머리 — 누를 수 없는 작은 회색 글씨 (SCREEN_DESIGN §1 · ADR-0554). 순서 = `app.js:NAV_GROUPS`
     'nav.grp.battle': { ko: '전투', en: 'Combat' },
     'nav.grp.town': { ko: '마을', en: 'Town' },
-    'nav.grp.dispatch': { ko: '파견', en: 'Dispatch' },
     'nav.grp.etc': { ko: '기타', en: 'Other' },
     // 흐린 탭을 누르면 — 탭은 안 바뀌고 이 문장이 플래시로 선다 (SCREEN_DESIGN §1 · ADR-0311). `{b}` = 건물 이름 · 조사 없이 「부터」
     'nav.unbuilt': { ko: '건설 탭에서 {b}부터 지어야 한다', en: 'Build the {b} first — in the Construction tab' },
@@ -637,32 +662,18 @@ const STRINGS = {
     'set.logText': { ko: '문장', en: 'Text' },
     'set.nick': { ko: '닉네임', en: 'Nickname' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
 
-    /* ── 자원 탭 [개정 2026-09-04] — 파견처는 **카드 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
-       탐험은 자기 탭(§8-4)으로 나가 이 목록에 없다 — 셋 다 1인 배치라 `dp.party` 를 쓰는 칸이 없다.
-       자원 단은 인원 표기도 안 찍는다 [2026-09-21 사용자 지시 · ADR-0224] — `dp.solo` · `dp.party` 는 참조가 0 이다.
-       그래도 **지우지 않는다**: 배치가 구현되면 탐험 탭이 같은 문구를 쓴다.
-       `dp.post.forge`(제련소) · `dp.post.trade`(상단)는 파견처 칸에서 빠졌지만 **지우지 않는다** —
+    /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 **단 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
+       영웅은 앉지 않는다 [2026-10-18 · ADR-0665] — ~~자리 칸의 선택 창 · 회수 · `dp.err.*` · 담당 능력치(`dp.attrTitle`)~~ 를 걷었다.
+       `dp.solo` · `dp.party` 는 참조가 0 이지만 **지우지 않는다**: 탐험 탭이 같은 문구를 쓸 수 있다.
+       `dp.post.forge`(제련소) · `dp.post.trade`(상단)는 줄에서 빠졌지만 **지우지 않는다** —
        `dp.post.forge` 는 연구의 가지 이름(`mock.js` rsBranch)이, `dp.post.trade` 는 상점 탭의 패널 머리가 쓴다(§8-3).
-       담당 능력치는 문구가 아니라 `hero_attribute.csv:dispatch` 에서 온다 — 화면이 배정표를 따로 갖지 않는다.
        ⚠ **`dp.post.mine` 은 값만 「채광」(활동)으로 바뀌고 키는 옛 장소 id 그대로다** [2026-09-04 사용자 지시] —
-       `hero_attribute.csv:dispatch` 가 `mine` 을 값으로 들고 있어 `postAttr('mine')` 이 그 열을 읽는다.
-       키를 바꾸면 CSV 도 같이 바꿔야 하고, 그건 public 이름 변경이라 별도 승인 사항이다 (CLAUDE.md).
-       ⚠ **`dp.post.log`(벌목)는 기획에 없는 신규 파견처다** — 화면이 기획을 앞서간 의도된 역방향이고 사용자 지시다 (§8) */
+       키를 바꾸면 CSV 키(`mine_node.csv`)와 갈리고, 그건 public 이름 변경이라 별도 승인 사항이다 (CLAUDE.md) */
     'dp.post.trade': { ko: '상단', en: 'Trading House' },
     'dp.post.forge': { ko: '제련소', en: 'Smeltery' },
     'dp.post.mine': { ko: '채광', en: 'Mining' },
     'dp.post.gather': { ko: '채집', en: 'Gathering' },
     'dp.post.log': { ko: '벌목', en: 'Logging' },
-    // 자원 자리 칸의 선택 창 (SCREEN_DESIGN §8 · ADR-0373) — 거절은 `game.dispatchAssign` · `dispatchRecall` 의 결과 코드와 짝
-    'dp.recall': { ko: '회수', en: 'Recall' },
-    'dp.pick.none': { ko: '보낼 영웅이 없다', en: 'No heroes to send' },
-    'dp.err.running': { ko: '원정 중인 영웅은 보낼 수 없다', en: 'Heroes on an expedition cannot be sent' },
-    'dp.err.searching': { ko: '수색 중인 영웅은 보낼 수 없다', en: 'Heroes on a search cannot be sent' },
-    'dp.err.advancing': { ko: '전직 중인 영웅은 보낼 수 없다', en: 'Advancing heroes cannot be sent' },
-    'dp.err.exploring': { ko: '탐험 중인 영웅은 보낼 수 없다', en: 'Heroes out exploring cannot be sent' },
-    'dp.err.unbuilt': { ko: '아직 열리지 않은 자리다', en: 'This spot is not open yet' },
-    'dp.err.missing': { ko: '없는 영웅이다', en: 'No such hero' },
-    'dp.err.empty': { ko: '빈 자리다', en: 'This spot is empty' },
     'dp.solo': { ko: '1인', en: 'Solo' },
     /* ── 탐험 탭 — 지도 위 지점 아이콘 → 아이콘 옆 지점 창 (SCREEN_DESIGN §8-4 · ADR-0553 · ADR-0558 · 2026-10-09) ──
        거절은 `game.exploreErr` · `exploreTake` · `exploreDrop` 의 결과 코드와 짝 (`ex.err.<code>`) · 규칙 문장은 도움말(`ex.help`) · 창엔 설명 글줄이 없다(ADR-0560) */
@@ -691,7 +702,6 @@ const STRINGS = {
     'ex.err.notDone': { ko: '아직 안 돌아왔다', en: 'Not back yet' },
     'ex.err.bagFull': { ko: '인벤토리 자리가 모자란다 — {n}칸 필요', en: 'Not enough inventory space — {n} needed' },
     'dp.party': { ko: '파티', en: 'Party' },
-    'dp.attrTitle': { ko: '담당 능력치', en: 'Governing attribute' },
     // 단계 트랙은 머리 줄이 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다.
     // 무엇으로 여는가(해금 조건)는 기획 백지라 문구도 만들지 않는다 (§8)
 
@@ -814,11 +824,11 @@ const STRINGS = {
         ko: '지도에서 <b>열린 땅의 지점</b>(동굴 · 폐허 · 마차)을 누르고 보낼 <b>편성</b>을 고른다 — 한 명짜리 편성도 된다(최대 {n}명) · 원정 중인 편성은 철수가 먼저다<br>'
             + '<b>{h}시간</b> 뒤 돌아오고 오프라인에도 흐른다 · 결과는 받아 갈 때까지 남는다 · 동시 탐험 {s}건 · 한 지점에 한 건<br>'
             + '<b>동굴</b>은 장비를 가져온다 — 보낸 영웅 1명당 {k}개 · 그 땅의 레벨대 · 폐허 · 마차는 준비 중<br>'
-            + '탐험 나간 편성은 받을 때까지 사람을 바꿀 수 없고 원정 · 수색 · 자원 자리에 못 나간다 · 불러들이면 편성째 결과 없이 돌아온다',
+            + '탐험 나간 편성은 받을 때까지 사람을 바꿀 수 없고 원정 · 수색에 못 나간다 · 불러들이면 편성째 결과 없이 돌아온다',
         en: 'Click a <b>spot in an open land</b> (cave · ruins · caravan) and pick which <b>party</b> goes — a one-hero party works too (up to {n}) · a party on an expedition must withdraw first<br>'
             + 'They return after <b>{h}h</b>, offline too · the haul waits until you collect it · {s} exploration(s) at a time · one per spot<br>'
             + 'The <b>cave</b> brings back gear — {k} per hero sent · at that land\'s level band · ruins and caravan are coming later<br>'
-            + 'A party out exploring can\'t change members or join expeditions, searches or resource posts until collected · calling it back returns the whole party empty-handed',
+            + 'A party out exploring can\'t change members or join expeditions or searches until collected · calling it back returns the whole party empty-handed',
     },
     'help.title': { ko: '도움말', en: 'Help' },
     'help.newgame': { ko: '새 게임', en: 'New Game' },
@@ -834,14 +844,15 @@ const STRINGS = {
     'kind.chapterBoss': { ko: '챕터보스', en: 'Chapter Boss' },
 
     /* ── 원정: 편성 · 지역 ── */
-    /* 스테이지 · 부대 · 리포트 칸은 **ko 에서도 영어 그대로** [2026-09-24 사용자 지시 · SCREEN_DESIGN §4] — 부대 `{n}` 은 로마 숫자(`M.roman`) */
-    'exp.seg.idle': { ko: 'Stages', en: 'Stages' },
+    /* 부대 칸 · [Report] 는 **ko 에서도 영어 그대로** [2026-09-24 사용자 지시 · SCREEN_DESIGN §4] — 부대 `{n}` 은 로마 숫자(`M.roman`).
+       ~~`exp.seg.idle`(Stages)~~ 은 2026-10-18 걷혔다 — 스테이지는 원정 탭 버튼이 연다 (ADR-0661) */
     /* 관전 칸의 이름 — 부대 수가 몇이든 이름은 부대고 상태는 색만 든다 — `exp.seg.party` (SCREEN_DESIGN §4 · ADR-0316 · 하나여도 ADR-0360).
        `exp.seg.battle` 은 도움말 제목으로만 산다 */
     'exp.seg.battle': { ko: '전투 관전', en: 'Spectate' },
     'exp.seg.party': { ko: 'Party {n}', en: 'Party {n}' },
     /* 원정이 있는 부대 칸 — 이름 뒤에 그 부대가 있는 스테이지(`data.js:stageName`) [2026-10-06 사용자 지시 · ADR-0517] */
     'exp.seg.partyAt': { ko: 'Party {n} - {where}', en: 'Party {n} - {where}' },
+    // 스테이지 화면 오른쪽 위 버튼 · 도움말 소제목 (§4-1 · ADR-0661)
     'exp.seg.report': { ko: 'Report', en: 'Report' },
     'exp.oneParty': {
         ko: '전투 파티는 한 팀 — 원정이 곧 전투다. 세 상태가 한 탭 안에서 이어진다',
@@ -976,7 +987,6 @@ const STRINGS = {
     'hs.doing.search': { ko: '수색 중', en: 'On a search' },
     'hs.doing.advance': { ko: '전직 중', en: 'Advancing' },
     'hs.doing.explore': { ko: '탐험 중', en: 'Exploring' },
-    'hs.doing.dispatch': { ko: '{post} {tier}', en: '{post} {tier}' },   // 자원 자리 — 「채광 2」 (2026-09-27 · ADR-0373)
     /* ~~'hs.doing.out'(출정 아웃)~~ 은 2026-09-08 삭제 — 띠의 「지금 하는 일」은 **대기 하나**다 (SCREEN_DESIGN §5) */
 
     /* ── 장비 ── */
@@ -1011,10 +1021,11 @@ const STRINGS = {
     'st.maxhp': { ko: '최대 HP', en: 'Max HP' },
     /* 능력치 설명 카드 — 줄에 올리면 이름 / 선 아래 **효과** (2026-10-10 사용자 지시 · SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」 · ADR-0581).
        키 = 줄 id(기본 능력치 `hero_attribute.csv:attr_id` · 세부 옵션 `tip.js:DETAIL_LAYOUT`). 효과만 · 수치 없음 (CLAUDE.md 규칙 7) · 효과가 여럿이면 `<br>` 로 한 줄에 하나 */
-    'st.desc.str': { ko: '평타와 물리 스킬의 피해가 늘어난다<br>채광이 빨라진다', en: 'Increases basic attack and physical skill damage<br>Faster mining' },
+    // 힘 · 지능 · 건강의 「채광 · 채집 · 벌목이 빨라진다」 줄은 2026-10-18 걷었다 — 연구소에 영웅이 안 앉는다 (ADR-0665)
+    'st.desc.str': { ko: '평타와 물리 스킬의 피해가 늘어난다', en: 'Increases basic attack and physical skill damage' },
     'st.desc.agi': { ko: '공격 속도와 캐스팅 속도가 빨라진다<br>일부 스킬의 타수와 효과가 늘어난다', en: 'Faster attack and casting speed<br>More hits and stronger effects for some skills' },
-    'st.desc.int': { ko: '마법 스킬의 피해가 늘어난다<br>채집이 빨라진다', en: 'Increases magic skill damage<br>Faster gathering' },
-    'st.desc.vit': { ko: '레벨업마다 오르는 최대 HP 가 커진다<br>버프가 더 오래 간다<br>벌목이 빨라진다', en: 'More Max HP per level-up<br>Longer-lasting buffs<br>Faster logging' },
+    'st.desc.int': { ko: '마법 스킬의 피해가 늘어난다', en: 'Increases magic skill damage' },
+    'st.desc.vit': { ko: '레벨업마다 오르는 최대 HP 가 커진다<br>버프가 더 오래 간다', en: 'More Max HP per level-up<br>Longer-lasting buffs' },
     'st.desc.luck': { ko: '치명타 피해 · 드랍률 · 골드 획득이 늘어난다<br>일부 스킬의 추가 피해가 커진다', en: 'Increases Crit Damage, Item Find and Gold Find<br>Boosts bonus damage of some skills' },
     'st.desc.ldr': { ko: '아군에게 거는 버프가 강해진다', en: 'Strengthens the buffs you give allies' },
     'st.desc.cha': { ko: '회복량과 적에게 거는 효과가 커진다<br>수색에서 레어 영웅을 만나기 쉬워진다', en: 'Increases healing and the effects you put on enemies<br>Better odds of a Rare hero in searches' },
@@ -1123,11 +1134,11 @@ const STRINGS = {
     'tip.src.fixed': { ko: '고정', en: 'Fixed' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
     'tip.tacticOff': { ko: '끼우면 전술이 꺼진다 — {eff}', en: 'Equipping turns a tactic off — {eff}' },
-    // 아이템 툴팁 각주 — 기본은 「이 아이템」 한 장이고 Alt 동안 착용품 카드가 붙는다 (SCREEN_DESIGN §6 · 2026-09-29 · ADR-0448)
-    'tip.item.altHint': { ko: 'Alt 비교', en: 'Alt: compare' },
+    // 아이템 툴팁 각주 — 기본은 착용품과 비교 두 장이고 Alt 동안 「이 아이템」 카드에 착용 델타가 선다 (SCREEN_DESIGN §6 · 2026-10-18 · ADR-0658)
+    'tip.item.altHint': { ko: 'Alt 변화', en: 'Alt: changes' },
     // Shift 범위 각주 — 비교가 있는 카드는 둘을 한 줄에 · 범위를 다는 줄이 없는 카드엔 안 선다 (SCREEN_DESIGN §6 · ADR-0617)
     'tip.item.shiftHint': { ko: 'Shift 범위', en: 'Shift: range' },
-    'tip.item.keysHint': { ko: 'Alt 비교 · Shift 범위', en: 'Alt: compare · Shift: range' },
+    'tip.item.keysHint': { ko: 'Alt 변화 · Shift 범위', en: 'Alt: changes · Shift: range' },
     'tip.range': { ko: '({r})', en: '({r})' },
     // 착용 델타 — 「이 아이템」 카드의 옵션 아래 (SCREEN_DESIGN §6 · ADR-0618). 조사가 받침에 따라 갈리지 않게 「착용 시」
     'tip.delta.h': { ko: '{name} 착용 시', en: 'If {name} equips' },
@@ -1284,23 +1295,29 @@ const STRINGS = {
     'tr.err.downed': { ko: '원정에서 쓰러져 있다', en: 'Downed on an expedition' },
     'tr.err.points': { ko: '전직 포인트가 없다', en: 'No Advance Points left' },   // advanceLearn — 첫 전직 포인트로 배운다 (R216)
     'tr.adv.todo': {
-        ko: '<b>도서관</b>을 더 지으면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색 · 자원에 못 나간다<br>'
+        ko: '<b>도서관</b>을 더 지으면 여기서 전직한다 — 직업마다 세 갈래 중 하나를 고르고 <b>되돌릴 수 없다</b>. 넣어 두면 시간이 지나 끝나고 그동안 원정 · 수색에 못 나간다<br>'
             + '전직하면 <b>마스터리</b>의 전직 트리가 열린다 — 갈래의 전직 스킬 셋 중 하나를 <b>첫 전직 포인트</b>로 배우고, 배운 것이 액티브 전직 칸이다. 되돌리면 쓴 전직 포인트가 전부 돌아온다',
-        en: 'Building the <b>Library</b> further opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions, searches or resource posts<br>'
+        en: 'Building the <b>Library</b> further opens advancement here — each class picks one of three paths and <b>it cannot be undone</b>. It finishes after a while, during which the hero cannot go on expeditions or searches<br>'
             + 'Advancing opens the Advancement Tree in <b>Mastery</b> — learn one of the path\'s three advancement skills with your <b>first Advance Point</b>; the learned one fills the Advance active slot. Unlearning refunds every Advance Point spent',
     },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.allOpen': { ko: '전부 열렸다', en: 'All slots open' },
     // 한국어도 On / Off 그대로 [2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 · SCREEN_DESIGN §15]
-    // 자원 자리 칸 제목의 둘째 줄 — 산출 속도 (2026-09-27 · SCREEN_DESIGN §8)
-    'dp.rate': { ko: '{item} 1개 / {s}초', en: '1 {item} / {s}s' },
-    'dp.baseRate': { ko: '기본 {n}/시간', en: 'Base {n}/h' },
-    'dp.currentRate': { ko: '현재 {n}/시간', en: 'Current {n}/h' },
-    'dp.efficiency': { ko: '효율 +{n}%', en: 'Efficiency +{n}%' },
-    // 파견 관전 창 — 단 이름 줄의 버튼 · 대상 바 밑 · 떨어지는 재료 (2026-09-28 · SCREEN_DESIGN §8 · ADR-0415)
-    'dp.watch': { ko: '자세히 보기', en: 'Details' },
-    'dp.watch.none': { ko: '보낸 영웅이 없다', en: 'No hero sent' },
+    // 연구소 단계 상자 — 산출물 옆 시간당 생산량 (SCREEN_DESIGN §8 · ADR-0665 — ~~기본 · 현재 · 효율 +n%~~ 는 영웅 배치와 함께 걷었다)
+    'dp.perHour': { ko: '{n}/시간', en: '{n}/h' },
+    // 칸 레벨 — 트랙 칸의 Lv · 고른 칸의 Lv / 최대 · [레벨 올리기] · 상한 · 결과 플래시 · 줄 목록 아래 오프라인 최대 (SCREEN_DESIGN §8 · ADR-0669 · R288)
+    'dp.lv': { ko: 'Lv {n}', en: 'Lv {n}' },
+    'dp.lvOf': { ko: 'Lv {n} / {max}', en: 'Lv {n} / {max}' },
+    'dp.lvUp': { ko: '레벨 올리기', en: 'Level Up' },
+    'dp.lvTop': { ko: '최대 레벨', en: 'Max Level' },
+    'dp.lvDone': { ko: '{name} Lv {n}', en: '{name} Lv {n}' },
+    'dp.offline': { ko: '오프라인 최대 {h}시간', en: 'Offline up to {h}h' },
+    'dp.err.locked': { ko: '아직 안 열린 칸이다', en: 'Not unlocked yet' },
+    'dp.err.maxUp': { ko: '최대 레벨이다', en: 'Already at max level' },
+    'dp.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
+    'dp.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
+    // 얻은 재료 플래시 — 미니게임이 쓴다(옛 파견 관전 창의 떨어지는 재료 · 창은 2026-10-18 걷었다)
     'dp.watch.gain': { ko: '+{n} {item}', en: '+{n} {item}' },
     // 자원 미니게임 — 단 이름 줄의 버튼 · 창 머리 · 시작 / 결과 판 · 판 위 머리 (2026-10-06 · SCREEN_DESIGN §8 · ADR-0532)
     'mg.play': { ko: '미니게임', en: 'Minigame' },
@@ -1793,16 +1810,19 @@ const STRINGS = {
     'cx.seg.fx': { ko: '이펙트', en: 'Effects' },
     'cx.seg.mastery': { ko: '마스터리', en: 'Masteries' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
-    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오른다 — 처치 하나에 {per} · 스테이지 계열 스탯이 오른다', en: 'Levels up at {list} codex EXP — each kill gives {per} · raises the stage\'s stat line' },
+    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오른다 — 처치 하나에 {per} · 레벨마다 그 몬스터의 보너스 효과가 하나씩 열린다', en: 'Levels up at {list} codex EXP — each kill gives {per} · each level opens one more of that monster\'s bonus effects' },
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
-    'cx.completion': { ko: '완주', en: 'Completion' },
     'cx.exp': { ko: '경험치 {n}', en: '{n} EXP' },   // 그 몬스터의 누적 도감 경험치 — 카드 진행 줄 · 핍 툴팁 (ADR-0587 · ~~cx.kills 처치 {n}~~)
     'cx.lvTitle': { ko: '도감 Lv.{lv}', en: 'Codex Lv.{lv}' },
     // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 (SCREEN_DESIGN §9 · ADR-0206)
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story' },
     'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },
+    // 단계표의 앞 단계 — **그 몬스터에게만** 걸린다(옵션 단계는 장비 옵션 줄 표기 그대로) · `{v}` = 부호 붙은 값 (SCREEN_DESIGN §9 · ADR-0667 · monster_design §8)
+    'cx.rw.xp': { ko: '처치 경험치 {v}', en: '{v} Kill EXP' },
+    'cx.rw.vs_dmg': { ko: '상대 피해 {v}', en: '{v} Damage to It' },
+    'cx.rw.drop': { ko: '드롭 확률 {v}', en: '{v} Drop Chance' },
     // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 단계 (SCREEN_DESIGN §9-1 · ADR-0650)
     'cx.tip.source': { ko: '획득처', en: 'Found On' },
     'cx.tip.roll': { ko: '보스 · 무작위 칸', en: 'Bosses · random slot' },   // 셋째 칸(직업 풀 굴림)에서 나올 수 있는 보스 — 고정 칸 몬스터와 따로 묶는다
@@ -1810,10 +1830,10 @@ const STRINGS = {
     'cx.tip.blueprint': { ko: '스킬 도안', en: 'Skill Blueprint' },
     'cx.tip.cap': { ko: '업그레이드 상한 {n}', en: 'Upgrade cap {n}' },   // skill_codex_level.csv:upgrade_cap
     'cx.note': {
-        ko: '그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 그 스테이지의 계열 스탯이 오른다 — <b>파밍이 도감을 민다</b><br>'
+        ko: '그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 보너스 효과가 하나씩 열린다 — 앞 단계(처치 경험치 · 상대 피해 · 드롭 확률)는 <b>그 몬스터에게만</b> · 마지막 단계는 <b>그 몬스터의 전투 옵션 하나가 파티 전원에게</b> 늘 붙는다 — <b>파밍이 도감을 민다</b><br>'
             + '처치 하나의 도감 경험치는 그 원정의 난이도가 정한다 — 높은 난이도일수록 빨리 찬다 · 이긴 라운드의 처치만 센다 · 보스 등급별 차등은 후속<br>'
             + '카드에 마우스를 올리면 그 몬스터의 이야기와 레벨 단계가 뜬다',
-        en: "Each time the codex EXP gathered from a monster passes a cumulative threshold, <b>its codex level</b> rises and that stage's stat line goes up — <b>farming pushes the codex</b><br>"
+        en: "Each time the codex EXP gathered from a monster passes a cumulative threshold, <b>its codex level</b> rises and opens one more bonus effect — the early ones (kill EXP · damage to it · drop chance) apply <b>to that monster only</b> · the last one adds <b>that monster's combat option to your whole party</b> for good — <b>farming pushes the codex</b><br>"
             + "Each kill's codex EXP is set by the expedition's difficulty — higher difficulties fill it faster · only kills from rounds you win count · boss-grade scaling comes later<br>"
             + "Hover a card to see the monster's story and level milestones",
     },

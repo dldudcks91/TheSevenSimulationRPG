@@ -1,0 +1,11 @@
+page.locator('.main button').first.evaluate('n=>n.click()'); tick(15)
+press('.hs-card[data-uid=h2]')
+page.keyboard.down('Alt')
+for i in range(3):
+    page.locator('.td-grid .inv-cell.filled').nth(i).hover(force=True)
+    page.clock.run_for(300)
+    print('NEW SHOP',i,page.locator('#tooltip').inner_text(),flush=True)
+    tick(10)
+page.keyboard.up('Alt')
+note('current_wall_shop_refresh')
+shot('current_14_shop_refresh')

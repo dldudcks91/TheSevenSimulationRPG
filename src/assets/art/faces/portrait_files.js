@@ -91,6 +91,9 @@ export const PORTRAIT_FILES = {
     "monster/4303.webp",
     "monster/4303_elite.webp",
     "monster/4900.webp",
+    "monster/5101.webp",
+    "monster/5102.webp",
+    "monster/5103.webp",
     "monster/5900.webp",
     "monster/goblin_worker.webp"
   ],

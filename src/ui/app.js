@@ -54,7 +54,7 @@ import { MG_SCENES, MG_SPRITES } from './minigame_art.js';
 import { t, L, has, lang, setLang, applyDocumentLang } from './i18n.js';
 import { mountBattle, unitPreview, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText, paceOf } from './battle.js';
 import { paceAt, paceStep } from './pace.js';   // 원정 박자 — 관전 재생기와 같은 걸음으로 안 보는 부대 · 숨긴 탭을 민다(세움 포함 · ADR-0654)
-import { bindTipNode, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, codexSkillTipCard, potionTipCard } from './tip.js';
+import { bindTipNode, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, codexSkillTipCard, monsterSkillIcons, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere } from './storage.js';
 import * as CLOUD from './cloud.js';
@@ -322,26 +322,22 @@ const itemImg = it => {
 // **도서관**가 훈련장 바로 뒤에 선다 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422] — 탭 12 → 13. 둘 다 영웅을 키우는 자리다
 // **훈련장 탭을 걷는다** [2026-10-09 사용자 지시 「훈련장 없애고 전직 -> 서고」 · ADR-0567] — 탭 14 → 13 · 전직 패널은 도서관 탭 오른쪽으로 갔다
 // **결투장**은 도감 바로 앞에 선다 [2026-10-02 사용자 지시] — 처음엔 원정 바로 뒤였다
-// 탭은 **묶음 넷**으로 선다 [2026-10-09 사용자 지시 · SCREEN_DESIGN §1 · ADR-0554] — 순서는 그대로고 묶음 머리(`nav.grp.*`)가 끊어 읽게 할 뿐이다.
+// 탭은 **묶음**으로 선다 [2026-10-09 사용자 지시 · SCREEN_DESIGN §1 · ADR-0554] — 묶음 머리(`nav.grp.*`)가 순서를 끊어 읽게 할 뿐이다.
 //   순서의 SSOT 는 이 표 하나 — `TABS` 는 펴낸 것이라 부지 순서 · crumb · `?tab=` 은 그대로 돈다. 탭이 새로 서면 묶음도 같이 정한다
 // **실험실**이 기타 묶음 끝에 선다 [2026-10-10 사용자 지시 · SCREEN_DESIGN §18 · ADR-0580] — 탭 13 → 14 · 개발 장치(건물 없음 · 늘 열림) · 화면 코드는 2026-10-12 에 섰다
+// 묶음 넷 → **셋** [2026-10-18 사용자 지시 · ADR-0660] — 탐험은 원정 바로 아래 · 자원은 마을 맨 아래 · 파견 묶음은 걷혔다(부지 순서도 따라간다)
+// **콜로세움**이 결투장 바로 앞에 선다 [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670] — 탭 14 → 15 · 옛 결투장의 오프라인 갈래가 제 탭이 됐다(층 사다리) · 결투장은 온라인 ELO
 const NAV_GROUPS = [
-    ['battle', ['expedition', 'party', 'character']],
-    ['town', ['research', 'tavern', 'shop', 'forge', 'library']],
-    ['dispatch', ['resource', 'explore']],
-    ['etc', ['arena', 'codex', 'help', 'lab']],
+    ['battle', ['expedition', 'explore', 'party', 'character']],
+    ['town', ['research', 'tavern', 'shop', 'forge', 'library', 'resource']],
+    ['etc', ['colosseum', 'arena', 'codex', 'help', 'lab']],
 ];
 const TABS = NAV_GROUPS.flatMap(([, ids]) => ids);
 
-/* 파견 목록 — **카드 3** (SCREEN_DESIGN §8 개정 2026-09-04 사용자 지시: 채광 · 채집 · 벌목).
-   담당 능력치는 여기 적지 않는다: `hero_attribute.csv:dispatch` 가 능력치 → 파견처를 이미 들고 있어서
-   화면이 배정표를 또 가지면 CSV 와 갈린다. `postAttr()` 가 그 열을 거꾸로 읽는다.
-   ⚠ 탐험은 기획에서 **파견처가 아니고**(base_expedition §2-2) 「열린 파견처 수 = 동시 파견 상한」에도 안 들어간다 —
-   **탭이 되어도 그대로 유효**하다. 09-01 에 「화면에서만 나란히 선다」였던 것이 화면에서도 갈라졌을 뿐이다 (§1 · §8-4).
-   셋 다 1인 배치라 `party` 플래그를 쓰는 항목이 없다 — 인원 표기 자체는 계속 찍는다 (§8).
-   ⚠ **`mine` 은 옛 장소 id 그대로다** — 화면 라벨만 「채광」(활동)이 됐고, `hero_attribute.csv:dispatch` 가
-   `mine` 을 값으로 들고 있어 `postAttr('mine')` 이 그 열을 읽는다. 키 리네임은 CSV 동반 수정이라 별건이다.
-   ⚠ **`log`(벌목)는 화면이 기획을 앞서간 자리였다** — 2026-09-10 로 기획이 따라잡았다(base_expedition §2-2).
+/* 연구소의 줄 — **연구 하나 = 줄 하나**(SCREEN_DESIGN §8 · ADR-0669 — 지금은 채광 · 채집 · 벌목). 새 줄은 여기 한 줄 + 단계 표 + `icons/lab/<id>` 그림이면
+   왼쪽 목록에 붙는다. 영웅은 앉지 않는다 [2026-10-18 · ADR-0665] —
+   ~~담당 능력치(`hero_attribute.csv:dispatch` 를 거꾸로 읽던 `postAttr()`)~~ 는 영웅 배치와 함께 걷었다.
+   ⚠ **`mine` 은 옛 장소 id 그대로다** — 화면 라벨만 「채광」(활동)이 됐다. 키 리네임은 CSV 동반 수정이라 별건이다.
    `tiers` = 단계 표를 든 `D` 필드 이름. **셋 다 표가 있다** [2026-09-10] — `mine_node` · `gather_node` · `log_node`
    가 같은 모양이고, 조립이 산출물 이름을 `yield*` 한 이름으로 모아 줘서 여기 필드 이름만 적으면 붙는다 (§8) */
 const POSTS = [
@@ -369,9 +365,13 @@ const state = {
     screen: 'menu',         // menu | start | prologue | game — 켜면 메뉴 (SCREEN_DESIGN §3 · ADR-0641)
     tab: 'expedition',
     // `unfold` = Party 버튼을 누른 직후 첫 그리기에만 우리 팀 아래 진형 · 물약 · 전술이 차례로 내려오는 연출을 단다(그 그리기가 끈다 · ADR-0497)
-    //   `mode` = 갈래(offline · online) · `tier` = 고른 등급 · `from` = 선 상대의 출처(ai · ghost) · `code` · `paste` = 두 글상자 · `problems` · `broken` = 불러오기 결과 —
-    //   전부 화면 상태다(세이브 아님 · ADR-0656)
-    arena: { owner: null, team: null, opponent: null, match: null, last: null, unfold: false, mode: 'offline', tier: null, from: null, code: '', paste: '', problems: null, broken: false },
+    //   결투장 — `cands` = 상대 후보 셋(`arena.rollRatedCandidates`) · `pick` = 고른 칸(0 · 1 · 2 · 'ghost') · `ghost` = 친선전으로 받은 팀 · `code` · `paste` = 친선전 창의 두 글상자 ·
+    //   `problems` · `broken` = 불러오기 결과 · `fresh` = 결투 뒤 돌아오면 후보를 새로 굴린다 · `toast` = 돌아오면 띄울 플래시 —
+    //   전부 화면 상태다(세이브 아님 — 레이팅만 세이브 · ADR-0670)
+    arena: { owner: null, match: null, last: null, unfold: false, cands: null, pick: 1, ghost: null, code: '', paste: '', problems: null, broken: false, fresh: false, toast: null },
+    // 콜로세움 — `floor` = 고른 층(null = 다음 층) · `opp` = 그 층 상대의 캐시 `{key, team}`(같은 층은 같은 팀 · 그릴 때마다 다시 굴리지 않는다) · `toast` = 돌아오면 띄울 휘장 플래시 ·
+    //   화면 상태다(오른 층만 세이브 · ADR-0670)
+    colosseum: { owner: null, match: null, last: null, unfold: false, floor: null, opp: null, toast: null },
     // 도박장 창 (SCREEN_DESIGN §8-1 · ADR-0331) — 고른 판돈 단계 · 마지막 결과 · 재생 위치. 세이브 아님 —
     //   결과는 이미 세이브에 들어가 있고(`gambleSpin`) 이것은 **다시 보여 줄 거리**다
     gb: { step: 1, last: null, anim: null },
@@ -450,14 +450,15 @@ advSel: null,                // 도서관 전직 패널에서 고른 갈래 {uid
     proScene: 0,
     // 다음 프롤로그 렌더를 **암전에서 띄울지** — 챕터가 열리는 씬 하나만 켠다. 한 번 쓰고 렌더러가 끈다
     proFade: false,
-    // 자원 탭에서 열려 있는 파견처 (§8) — 들어오면 첫 칸(채광)이 골라져 있다. 비워 두면 첫 화면이 빈다
+    // 연구소 탭에서 골라 둔 줄 (§8) — 들어오면 첫 줄(채광)이 골라져 있다. 비워 두면 오른쪽이 빈다
     post: 'mine',
-    dpPick: null,           // 자원 자리 칸의 선택 창 — `{post, tier}` · 열린 칸 하나 (SCREEN_DESIGN §8 · ADR-0373) · 세이브 아님
+    // 연구소 줄마다 고른 단계 `{줄 id: 단계}` (§8 · ADR-0669) — 없으면 1. 세이브에 안 들어간다
+    labTier: {},
     itemMenu: null,         // 보관 칸 우클릭 메뉴 — `{uid, hero, x, y}` (x · y = 한 장 좌표) (SCREEN_DESIGN §6 · ADR-0451) · 세이브 아님
-    dw: null,               // 파견 관전 창이 보는 자리 — `{post, tier}` · 비었으면 첫 앉은 자리 (SCREEN_DESIGN §8 · ADR-0415) · 세이브 아님
 };
 let stopBattle = null;
 let stopArena = null;
+let arenaWatching = null;   // 관전 중인 결투의 화면 상태(`state.arena` · `state.colosseum`) — 다시 그릴 때 재생 위치를 그 `match` 에 받아 둔다
 let battleBag = null;       // 관전 아래 보관 칸 — 라운드 정산 때 이것만 갈아 끼운다 (R89 · `refreshBattleBag` · ADR-0341)
 let invWatchPrev = 0;       // 바로 앞 그리기가 관전 보관 칸을 그린 부대 번호(아니면 0) — 관전에 들어오거나 보는 부대가 바뀔 때만 부대 버튼을 옮긴다 (ADR-0521)
 /**
@@ -506,7 +507,12 @@ function renderShell() {
                 shut ? `<span class="nav-lbl">${t(`nav.${id}`)}</span><span class="nav-lock">${lockIcon(true)}</span>` : t(`nav.${id}`));
             b.dataset.tab = id;
             // 탭을 떠나면 **고르는 중이 풀린다** [ADR-0184] — 모드 상태가 화면 밖으로 새지 않는다 · 탐험 지점 창도 닫힌다(들어오면 지도만 · ADR-0585)
-            b.onclick = shut ? () => flashUnbuilt(cs, id) : () => { state.tab = id; clearBagSel(); state.cmArm = null; state.dpPick = null; state.exSel = null; state.exArm = null; render(); };
+            //   **원정 탭 버튼은 언제나 스테이지다** [2026-10-18 사용자 지시 · §4 · ADR-0661] — 관전 · 리포트를 보고 있었어도 · 이미 원정 탭이어도. 관전은 상단바 부대 칸이 연다
+            b.onclick = shut ? () => flashUnbuilt(cs, id) : () => {
+                state.tab = id; clearBagSel(); state.cmArm = null; state.exSel = null; state.exArm = null;
+                if (id === 'expedition') state.exp = 'idle';
+                render();
+            };
             nav.appendChild(b);
         }
     }
@@ -568,11 +574,10 @@ function render() {
     clockRender = false;      // 무엇 때문에 그리든 지금 상태를 그린다 — 미뤄 둔 앱 시계 그리기는 여기서 풀린다 (ADR-0338)
     bagStale = false;         // 관전 보관 칸도 새로 선다 (ADR-0341)
     invWatchPrev = state.invWatch; state.invWatch = 0;   // 이번 그리기가 관전 보관 칸을 그리면 다시 선다 (ADR-0521)
-    // 자원 자리의 선택 창은 탭 본문 밖(한 장 바로 아래)에 선다 — 본문과 함께 안 지워지므로 여기서 걷는다 (`dpPickPanel` · ADR-0373)
-    //   보관 칸 우클릭 메뉴도 같은 자리 · 같은 틀이다 (`itemMenuPanel` · ADR-0451)
-    document.querySelectorAll('#stage > .dp-pick, #stage > .dp-pick-back, #stage > .item-menu, #stage > .item-menu-back').forEach(n => n.remove());
+    // 보관 칸 우클릭 메뉴는 탭 본문 밖(한 장 바로 아래)에 선다 — 본문과 함께 안 지워지므로 여기서 걷는다 (`itemMenuPanel` · ADR-0451)
+    document.querySelectorAll('#stage > .item-menu, #stage > .item-menu-back').forEach(n => n.remove());
     // 관전 중 재렌더(가방 클릭 · 언어 전환 · 세그먼트 이동)면 재생 위치를 받아 뒀다가 다음 mount 에 넘긴다 — 처음부터 다시 틀지 않는다 (2026-08-27)
-    if (stopArena) { const pos = stopArena(); if (state.arena.match) state.arena.match.resume = pos; stopArena = null; }
+    if (stopArena) { const pos = stopArena(); if (arenaWatching?.match) arenaWatching.match.resume = pos; stopArena = null; }
     if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
     applyDocumentLang();
     M.applyDocumentFace();
@@ -596,7 +601,7 @@ function render() {
     else ({
         // 키 순서 = 탭 바 순서 (TABS) — 읽는 사람이 화면과 대조할 수 있게 맞춰 둔다
         expedition: renderExpedition,
-        arena: renderArena,
+        explore: renderExplore,
         party: renderParty,
         character: renderCharacter,
         research: renderResearch,
@@ -605,7 +610,8 @@ function render() {
         forge: renderForge,
         library: renderLibrary,
         resource: renderResource,
-        explore: renderExplore,
+        colosseum: renderColosseum,
+        arena: renderArena,
         codex: renderCodex,
         help: renderHelp,
         lab: renderLab,
@@ -643,10 +649,11 @@ const MODALS = {
     gamble: { title: 'gb.h', body: gambleBody, cls: 'gb-modal' },
     // 가입 희망 — 선술집 가입 희망 칸의 초상이 연다 (SCREEN_DESIGN §8-1 · ADR-0574) · 그 영웅이 떠났거나 고용되면 닫힌다(`gone`)
     join: { title: 'tv.join.h', body: joinBody, cls: 'tv-join-box', gone: () => !joinPicked() },
-    // 파견 관전 — 자원 단의 [자세히 보기]가 연다 (SCREEN_DESIGN §8 · ADR-0415) · 머리 = 앉은 자리마다 탭 · 자리가 전부 비면 닫힌다(`gone`)
-    dpWatch: { head: dpWatchHead, body: dpWatchBody, cls: 'dpw-modal', gone: () => !dwCur() },
-    // 자원 미니게임 — 자원 단의 [미니게임]이 연다 (SCREEN_DESIGN §8 · ADR-0532) · 머리 = 열린 단계마다 탭 · 열린 단계가 없으면 닫힌다(`gone`)
+    // ~~파견 관전(`dpWatch`)~~ — 2026-10-18 연구소에서 영웅 배치를 걷어 창째 없앴다 (ADR-0665)
+    // 자원 미니게임 — 연구소 단의 [미니게임]이 연다 (SCREEN_DESIGN §8 · ADR-0532) · 머리 = 열린 단계마다 탭 · 열린 단계가 없으면 닫힌다(`gone`)
     mg: { head: mgHead, body: mgBody, cls: 'mg-modal', gone: () => !mgCur() },
+    // 친선전 — 결투장 레일의 [친선전]이 연다 · 팀 코드 글상자 둘(SCREEN_DESIGN §1 · ADR-0670) · 받은 팀이 서면 닫힌다
+    arenaCode: { title: 'ar.code.h', body: arenaCodeBody, cls: 'ar-code-modal' },
 };
 
 function renderModal() {
@@ -1094,7 +1101,8 @@ function watchBattle(no) {
  *   글자는 부대 이름 · 상태는 색만 든다(없음 회색 · 도는 중 파랑 · 끝남 빨강 — ADR-0147). **부대가 하나뿐이어도 「Party I」 칸이다** [2026-09-25 사용자 지시 · ADR-0360].
  * `phase` 는 보통 재생 위치로 정한다(`battlePhase`) — 관전이 떠 있는 동안의 위치는 재생기가 들고 있어서, 끝나는 순간만 `onOver` 가 'over' 를 넘긴다.
  *   그 `phase` 는 **보는 부대의 것**이고 다른 칸은 제 핸들에서 읽는다.
- * **모든 탭에 선다** [2026-09-24 사용자 지시 · ADR-0353] — 채우는 것은 셸(`renderShell`)이다. 원정 탭 밖에서는 고른 칸이 없고 누르면 원정 탭의 그 화면으로 간다
+ * **모든 탭에 선다** [2026-09-24 사용자 지시 · ADR-0353] — 채우는 것은 셸(`renderShell`)이다. 원정 탭 밖에서는 고른 칸이 없고 누르면 원정 탭의 그 관전으로 간다
+ * **부대 칸만 선다** [2026-10-18 사용자 지시 · ADR-0661] — ~~Stages · Report 칸~~ 은 걷혔다: 스테이지는 원정 탭 버튼 · 리포트는 스테이지 화면 오른쪽 위의 [Report](`renderExpIdle`)
  */
 function expNavBox(phase = battlePhase(state.battle)) {
     const n = SYS.game.limitsOf(G).expeditions;
@@ -1113,22 +1121,14 @@ function expNavBox(phase = battlePhase(state.battle)) {
         return { id: `battle${no}`, label, disabled: !H, cls: `seg-party seg-${ph}`,
             color: at ? sinColor(chapterOf(at.chapter)?.sin ?? 'wrath') : undefined };
     });
-    // 고른 칸 — **원정 탭에서만** 선다(밖에서는 보고 있는 원정 화면이 없다 · ADR-0353) · 관전을 보고 있으면 **보는 부대의** 칸이다
-    const scr = expScreen();
-    const cur = state.tab !== 'expedition' ? null : scr === 'battle' ? `battle${watching}` : scr;
-    return segmented([
-        { id: 'idle', label: t('exp.seg.idle') },
-        ...cells,
-        { id: 'report', label: t('exp.seg.report'), disabled: !doneReports().length },
-    ], cur, id => {
-        // 다른 탭에서 눌렀다 — 원정 탭의 그 화면으로 간다. 탭 버튼과 같이 고르는 중이 풀린다 (ADR-0184 · ADR-0353)
+    // 고른 칸 — **원정 탭에서 관전을 볼 때만** 선다(밖에서는 보고 있는 원정 화면이 없다 · ADR-0353) · **보는 부대의** 칸이다
+    const cur = state.tab === 'expedition' && expScreen() === 'battle' ? `battle${watching}` : null;
+    return segmented(cells, cur, id => {
+        // 다른 탭에서 눌렀다 — 원정 탭의 그 관전으로 간다. 탭 버튼과 같이 고르는 중이 풀린다 (ADR-0184 · ADR-0353)
         if (state.tab !== 'expedition') { state.tab = 'expedition'; clearBagSel(); }
-        if (id.startsWith('battle')) {
-            const no = Number(id.slice(6));
-            if (no === watchNo()) { state.exp = 'battle'; render(); return; }   // 보던 부대 — 관전 그대로 (재생기를 걷지 않는다)
-            watchBattle(no); return;
-        }
-        state.exp = id; render();
+        const no = Number(id.slice(6));
+        if (no === watchNo()) { state.exp = 'battle'; render(); return; }   // 보던 부대 — 관전 그대로 (재생기를 걷지 않는다)
+        watchBattle(no);
     });
 }
 
@@ -1136,13 +1136,27 @@ function expNavBox(phase = battlePhase(state.battle)) {
  *  셸의 세그먼트(고른 칸)와 `renderExpedition`(서는 화면)이 같은 답을 쓴다 — 셸이 먼저 그려도 둘이 안 어긋난다 (ADR-0353) */
 const expScreen = () => (state.exp === 'battle' && state.battle ? 'battle' : state.exp === 'report' && doneReports().length ? 'report' : 'idle');
 
-/** 결투장 화면 상태를 그 세이브의 처음으로 — 갈래는 오프라인 · 등급은 첫 등급 (ADR-0656) */
+/* ═══════════ 콜로세움 · 결투장 (SCREEN_DESIGN §1 · ADR-0670) ═══════════
+   두 탭은 뼈대가 같다 — 왼쪽 레일(상대의 출처 · 결과가 움직이는 것)만 다르고 오른쪽 판은 `arenaStage` 하나가 그린다 */
+
+/** 결투장 화면 상태를 그 세이브의 처음으로 — 후보는 처음 그릴 때 굴린다 */
 const arenaReset = A => Object.assign(A, {
-    owner: G, team: null, opponent: null, match: null, last: null, unfold: false,
-    mode: 'offline', tier: SYS.arena.tiers[0]?.id ?? null, from: null, code: '', paste: '', problems: null, broken: false,
+    owner: G, match: null, last: null, unfold: false, cands: null, pick: 1, ghost: null, code: '', paste: '', problems: null, broken: false, fresh: false, toast: null,
 });
-/** 상대를 지운다 — 갈래 · 등급이 바뀌면 (상대는 우리 팀과 무관하게 서므로 편성이 바뀌어도 남는다 · ADR-0656) */
-const arenaDrop = A => Object.assign(A, { team: null, opponent: null, from: null, problems: null, broken: false });
+/** 콜로세움 화면 상태를 그 세이브의 처음으로 — 고른 층은 다음 층부터 */
+const colosseumReset = C => Object.assign(C, { owner: G, match: null, last: null, unfold: false, floor: null, opp: null, toast: null });
+/** 고른 편성의 영웅 — 판 · 후보 이름 피하기가 같이 쓴다 */
+const arenaPicked = () => SYS.game.partyOf(G).map(heroById).filter(Boolean);
+/** 결과 한 단어 — 시간이 다 되면 무승부 (`arenaRecord` 의 outcome 어휘) */
+const arenaOutcome = result => (result.reason === 'timeout' ? 'draw' : result.won ? 'win' : 'loss');
+const ARENA_OUTCOME_KEY = { win: 'bt.won', draw: 'ar.draw', loss: 'bt.lost' };
+/** 레이팅 변화 표기 — `+16` · `−8` · `±0` */
+const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '±0');
+/** 결투장 상대 후보 셋을 새로 굴린다 — 내 레이팅 근처 · 이름은 고른 편성과 안 겹친다 · 가운데(비슷)가 골라진다 */
+function arenaRollCands(A) {
+    A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), arenaPicked().map(h => h.name));
+    A.pick = A.pick === 'ghost' && A.ghost ? 'ghost' : 1;
+}
 
 /** 팀 코드 ↔ 글상자 문자열 — UTF-8 JSON 을 base64 로 싼다. 운반 포장은 화면의 일이다(로직은 엔진 중립 JSON 까지 · INTERFACE §2-17) */
 const encodeTeam = payload => {
@@ -1155,50 +1169,199 @@ const decodeTeam = text => {
     try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(text.replace(/\s+/g, '')), c => c.charCodeAt(0)))); } catch { return null; }
 };
 
+/** 결투 관전 — 두 탭이 같은 재생기를 쓴다. 돌아오는 버튼 · 제목만 다르다 · 재생 위치는 `arenaWatching` 이 받아 둔다 */
+function arenaWatchPage(main, A, title, backLabel) {
+    const page = el('div', 'bt-page page arena-watch');
+    main.appendChild(page);
+    const all = [...A.match.team, ...A.match.opponent];
+    const items = Object.fromEntries(all.flatMap(p => p.gear.map(it => [it.uid, it])));
+    const back = () => { A.match = null; render(); };
+    arenaWatching = A;
+    stopArena = mountBattle(page, {
+        result: A.match.result, heroes: A.match.team.map(p => p.hero), resume: A.match.resume,
+        title, background: '', roundRows: [{ round_num: 1, round_type: 'normal' }],
+        form: { byUid: Object.fromEntries(A.match.team.map(p => [p.uid, p.rank])) },
+        combatOf: h => all.find(p => p.uid === h.uid)?.combat,
+        itemOf: uid => items[uid] ?? null,
+        itemTipOf: (h, it) => tipCard(it, t('tip.equipped'), [], all.find(p => p.uid === h.uid)?.combat),
+        resultLabel: backLabel, returnLabel: backLabel,
+        layout: 'split', now, frozenMs: FROZEN_GAP_MS, onEnd: back, onRetreat: back,
+    });
+}
+
+/** 관전에서 돌아온 첫 그리기 — 결과를 미리 흘리지 않게 미뤄 둔 플래시를 여기서 띄운다 */
+const arenaToast = A => { if (A.toast) { flash(A.toast.key, A.toast.params); A.toast = null; } };
+
+/** 박스 — 머리(탭 그림 + 탭 이름) + 왼쪽 레일 | 오른쪽 판 · `art` = `icons/arena/` 의 장식 그림(콜로세움 · 결투) */
+function arenaShell(main, title, art, rail, stage) {
+    const page = el('div', 'panel page arena-page');
+    main.appendChild(page);
+    page.appendChild(el('h2', 'arena-h', `${M.arenaArt(art, 'arena-h-ico')}${title}`));
+    const wrap = el('div', 'arena-wrap');
+    wrap.append(rail, stage);
+    page.appendChild(wrap);
+}
+
+function renderColosseum(main) {
+    const C = state.colosseum;
+    if (C.owner !== G) colosseumReset(C);
+    if (C.match) { arenaWatchPage(main, C, t('nav.colosseum'), 'cs.back'); return; }
+    arenaToast(C);
+    const floors = SYS.arena.floors, cs = SYS.game.colosseumState(G), top = floors.length;
+    // 고른 층 — 깬 층 · 다음 층만 고를 수 있다 · 처음엔 다음 층(다 깼으면 마지막 층)
+    if (!(C.floor >= 1 && C.floor <= Math.min(cs.next, top))) C.floor = Math.min(cs.next, top);
+    const F = floors.find(x => x.no === C.floor), tier = SYS.arena.tiers.find(x => x.id === F.tier);
+    // 같은 층은 같은 팀이다 — 이름만 우리 팀을 피하므로 층 · 우리 이름이 같으면 굴린 팀을 다시 쓴다
+    const names = arenaPicked().map(h => h.name);
+    const key = `${F.no}|${JSON.stringify(names)}`;
+    if (C.opp?.key !== key) C.opp = { key, team: SYS.arena.rollFloorOpponent(F.no, names) };
+    const last = C.last;
+    arenaShell(main, t('nav.colosseum'), 'colosseum', colosseumRail(C, cs), arenaStage(C, {
+        opponent: C.opp.team,
+        from: t(F.gate ? 'cs.fromGate' : 'cs.from', { n: F.no, tier: L(tier.name) }),
+        fightLabel: t('cs.fight'),
+        onFight: result => {
+            const outcome = arenaOutcome(result);
+            const r = SYS.game.colosseumRecord(G, F.no, outcome === 'win');
+            save();
+            C.last = { outcome, sec: result.durationSec, opened: r.advanced && F.no < top ? F.no + 1 : null };
+            if (r.advanced) {
+                C.floor = Math.min(F.no + 1, top);
+                if (F.gate) C.toast = { key: 'cs.emblem', params: { tier: L(tier.name) } };
+            }
+        },
+        last: last ? t(last.opened ? 'cs.last.open' : 'cs.last', { result: t(ARENA_OUTCOME_KEY[last.outcome]), sec: last.sec, n: last.opened }) : null,
+    }));
+}
+
+/**
+ * 콜로세움 레일 — 사다리. 등급마다 한 줄 · **맨 위 = 가장 높은 등급**(올라가는 모양) · 줄 = 휘장 + 이름 · 레벨 대역 + 층 칸.
+ * 층 칸: 깬 층 `clear`(채움) · 다음 층 `next`(강조) · 안 열린 층 `locked`(못 누름) · 승급전 `gate`(검투사 투구) · 고른 층 `on`.
+ * 휘장은 그 등급의 승급전을 이겼을 때 제 색이고, 아니면 흐린 회색이다 (arena_design §7)
+ */
+function colosseumRail(C, cs) {
+    const floors = SYS.arena.floors, top = floors.length;
+    const rail = el('div', 'arena-rail cs-rail');
+    rail.appendChild(el('div', 'cs-progress', cs.cleared >= top ? t('cs.progressDone', { total: top }) : t('cs.progress', { n: cs.cleared, total: top })));
+    const ladder = el('div', 'cs-ladder');
+    for (const tier of [...SYS.arena.tiers].reverse()) {
+        const mine = floors.filter(x => x.tier === tier.id);
+        const earned = cs.cleared >= mine.at(-1).no;
+        const row = el('div', `cs-tier${earned ? ' earned' : ''}${mine.some(x => x.no === cs.next) ? ' current' : ''}`);
+        row.appendChild(el('span', 'cs-emblem', M.arenaArt(tier.id)));
+        const body = el('div', 'cs-tier-body');
+        const lo = mine[0].kit.level, hi = mine.at(-1).kit.level;
+        body.appendChild(el('div', 'cs-tier-name', `${L(tier.name)}<small>${lo === hi ? t('cs.lv1', { a: lo }) : t('cs.lv', { a: lo, b: hi })}</small>`));
+        const steps = el('div', 'cs-floors');
+        for (const x of mine) {
+            const st = x.no <= cs.cleared ? 'clear' : x.no === cs.next ? 'next' : 'locked';
+            const b = el('button', `cs-floor ${st}${x.gate ? ' gate' : ''}${x.no === C.floor ? ' on' : ''}`,
+                `${x.gate ? M.arenaArt('gladiator') : ''}<b>${x.no}</b>`);
+            b.disabled = st === 'locked';
+            b.onclick = () => { if (C.floor !== x.no) { C.floor = x.no; render(); } };
+            steps.appendChild(b);
+        }
+        body.appendChild(steps);
+        row.appendChild(body);
+        ladder.appendChild(row);
+    }
+    rail.appendChild(ladder);
+    return rail;
+}
+
 function renderArena(main) {
     const A = state.arena;
     if (A.owner !== G) arenaReset(A);
-    const back = () => { A.match = null; A.team = null; A.opponent = null; render(); };
-    if (A.match) {
-        const page = el('div', 'bt-page page arena-watch');
-        main.appendChild(page);
-        const all = [...A.match.team, ...A.match.opponent];
-        const items = Object.fromEntries(all.flatMap(p => p.gear.map(it => [it.uid, it])));
-        stopArena = mountBattle(page, {
-            result: A.match.result, heroes: A.match.team.map(p => p.hero), resume: A.match.resume,
-            title: t('nav.arena'), background: '', roundRows: [{ round_num: 1, round_type: 'normal' }],
-            form: { byUid: Object.fromEntries(A.match.team.map(p => [p.uid, p.rank])) },
-            combatOf: h => all.find(p => p.uid === h.uid)?.combat,
-            itemOf: uid => items[uid] ?? null,
-            itemTipOf: (h, it) => tipCard(it, t('tip.equipped'), [], all.find(p => p.uid === h.uid)?.combat),
-            resultLabel: 'ar.back', returnLabel: 'ar.back',
-            layout: 'split', now, frozenMs: FROZEN_GAP_MS, onEnd: back, onRetreat: back,
-        });
-        return;
-    }
-    const ps = SYS.game.presetState(G);
-    const picked = SYS.game.partyOf(G).map(heroById).filter(Boolean);
-    const f = formState(), ranks = f.byUid;
-    const page = el('div', 'panel page arena-page');
-    main.appendChild(page);
-    page.appendChild(el('h2', '', `${t('nav.arena')} <small>${t(`ar.mode.${A.mode}`)}</small>`));
-    // 갈래 고르개 — 박스 맨 위 한 줄 [오프라인 | 온라인] · 아래 한 줄만 갈래마다 다르다 (ADR-0656)
-    const mode = segmented(['offline', 'online'].map(id => ({ id, label: t(`ar.mode.${id}`) })), A.mode, id => {
-        if (id !== A.mode) { A.mode = id; arenaDrop(A); }
-        render();
+    if (A.match) { arenaWatchPage(main, A, t('nav.arena'), 'ar.back'); return; }
+    arenaToast(A);
+    // 결투 뒤 돌아오면 후보를 새로 굴린다 — 같은 상대를 되풀이 고르지 않게 (ADR-0670)
+    if (!A.cands || A.fresh) { arenaRollCands(A); A.fresh = false; }
+    if (A.pick === 'ghost' && !A.ghost) A.pick = 1;
+    const ghost = A.pick === 'ghost';
+    const cand = ghost ? null : A.cands[A.pick] ?? null;
+    const tierName = id => L(SYS.arena.tiers.find(x => x.id === id)?.name ?? { ko: id, en: id });
+    const last = A.last;
+    arenaShell(main, t('nav.arena'), 'duel', arenaRail(A), arenaStage(A, {
+        opponent: ghost ? A.ghost : cand?.team ?? null,
+        from: ghost ? t('ar.friendlyCard') : cand ? t('ar.from', { tier: tierName(cand.tier), rating: cand.rating }) : null,
+        fightLabel: t('ar.fight'),
+        onFight: result => {
+            const outcome = arenaOutcome(result);
+            // 친선전은 레이팅을 안 움직인다 · 랭크전은 **싸운 순간** 적는다 — 관전 중에 창을 닫아도 이미 적혔다 (arena_design §8)
+            if (ghost) { A.last = { outcome, sec: result.durationSec, rated: false }; return; }
+            const r = SYS.game.arenaRecord(G, cand.rating, outcome);
+            save();
+            A.last = { outcome, rated: true, after: r.after, delta: r.delta };
+            A.fresh = true;
+            A.toast = { key: 'ar.ratingFlash', params: { after: r.after, delta: signed(r.delta) } };
+        },
+        last: !last ? null : last.rated
+            ? t('ar.last.rated', { result: t(ARENA_OUTCOME_KEY[last.outcome]), after: last.after, delta: signed(last.delta) })
+            : t('ar.last', { result: t(ARENA_OUTCOME_KEY[last.outcome]), sec: last.sec }),
+    }));
+}
+
+/**
+ * 결투장 레일 — 리그 카드(휘장 · 리그 · 레이팅 · 다음 리그까지 막대 · 최고 · 전적) + 상대 후보 셋(± 레이팅) + [새 상대] · [친선전].
+ * 후보 카드의 + / − 는 `arenaStakes` 그대로 — 고르기 전에 보여야 고르기가 판단이 된다 (arena_design §8)
+ */
+function arenaRail(A) {
+    const s = SYS.game.arenaState(G), tiers = SYS.arena.tiers;
+    const i = tiers.findIndex(x => x.id === SYS.arena.tierOfRating(s.rating)), T = tiers[i], N = tiers[i + 1];
+    const rail = el('div', 'arena-rail ar-rail');
+    const card = el('div', 'ar-league');
+    card.appendChild(el('span', 'ar-league-ico', M.arenaArt(T.id)));
+    const info = el('div', 'ar-league-info');
+    info.appendChild(el('div', 'ar-league-name', L(T.name)));
+    info.appendChild(el('div', 'ar-rating', `<b>${s.rating}</b><small>${t('ar.rating')}</small>`));
+    // 막대 — 지금 리그 문턱에서 다음 문턱까지 어디쯤인가(마지막 리그면 가득 · 첫 문턱 아래면 빈 채)
+    const pct = N ? Math.max(0, Math.min(1, (s.rating - T.ratingMin) / (N.ratingMin - T.ratingMin))) : 1;
+    info.appendChild(el('div', 'ar-bar', `<i style="width:${(pct * 100).toFixed(1)}%"></i>`));
+    info.appendChild(el('div', 'ar-next muted', N ? t('ar.toNext', { tier: L(N.name), n: N.ratingMin - s.rating }) : t('ar.topLeague')));
+    card.appendChild(info);
+    rail.appendChild(card);
+    rail.appendChild(el('div', 'ar-record muted', `${t('ar.peak', { n: s.peak })} · ${t('ar.record', { w: s.win, d: s.draw, l: s.loss })}`));
+    rail.appendChild(el('h3', 'sub-h ar-cands-h', t('ar.cands')));
+    const list = el('div', 'ar-cands');
+    A.cands.forEach((c, k) => {
+        const st = SYS.game.arenaStakes(G, c.rating);
+        const b = el('button', `ar-cand${A.pick === k ? ' on' : ''}`,
+            `${M.arenaArt(c.tier)}<span class="ar-cand-r"><b>${c.rating}</b><small>${t('ar.ai')}</small></span>`
+            + `<span class="ar-cand-stake"><em class="up">${signed(st.win)}</em><em class="down">${signed(st.loss)}</em></span>`);
+        b.onclick = () => { if (A.pick !== k) { A.pick = k; render(); } };
+        list.appendChild(b);
     });
-    mode.classList.add('arena-mode');
-    // 한 줄에 모은다 — 갈래 · (오프라인) 등급 칩 · 오른쪽 끝에 상대의 출처. 판이 한 장(1600×800)에 빠듯해 줄을 늘리지 않는다
-    const bar = el('div', 'arena-bar');
-    bar.appendChild(mode);
-    if (A.mode === 'offline') bar.appendChild(arenaTierRow(A));
-    // 상대의 출처 — AI 는 AI 라고 적는다(사람인 척하지 않는다 · arena_design §7 · ADR-0656)
-    if (A.opponent) {
-        const tier = SYS.arena.tiers.find(x => x.id === A.tier);
-        bar.appendChild(el('span', 'arena-from', A.from === 'ghost' ? t('ar.ghostTeam') : t('ar.aiTeam', { tier: tier ? L(tier.name) : '' })));
+    if (A.ghost) {
+        const b = el('button', `ar-cand ghost${A.pick === 'ghost' ? ' on' : ''}`,
+            `${M.arenaArt('duel')}<span class="ar-cand-r"><b>${t('ar.friendly')}</b><small>${t('ar.ghostTeam')}</small></span><span class="ar-cand-stake muted">${t('ar.unrated')}</span>`);
+        b.onclick = () => { if (A.pick !== 'ghost') { A.pick = 'ghost'; render(); } };
+        list.appendChild(b);
     }
-    page.appendChild(bar);
-    if (A.mode === 'online') page.appendChild(arenaCodeRow(A, picked, ranks));
+    rail.appendChild(list);
+    const btns = el('div', 'ar-rail-btns');
+    const fresh = el('button', 'btn sm', t('ar.newCands'));
+    fresh.onclick = () => { arenaRollCands(A); render(); };
+    const friendly = el('button', 'btn sm', t('ar.friendly'));
+    friendly.onclick = () => openModal('arenaCode');
+    btns.append(fresh, friendly);
+    rail.appendChild(btns);
+    // 리그 표 — 어느 문턱을 넘으면 무엇이 되는지가 늘 보인다(맨 위 = 가장 높은 리그 · 내 리그 강조 · 위 리그는 흐린 휘장)
+    const lgs = el('div', 'ar-leagues');
+    tiers.forEach((x, k) => lgs.prepend(el('div', `ar-lg${k === i ? ' on' : k > i ? ' above' : ''}`, `${M.arenaArt(x.id)}<span>${L(x.name)}</span><em>${x.ratingMin}</em>`)));
+    rail.appendChild(lgs);
+    return rail;
+}
+
+/**
+ * 오른쪽 판 — 두 탭이 같다 (SCREEN_DESIGN §1 「판」 · ADR-0670 · ADR-0606 · 0497 · 0490).
+ * @param o.opponent 선 상대(`snapshotTeam` 모양) · null 이면 점선 카드 · `o.from` = 고르개 줄 오른쪽 끝의 출처 글 · `o.fightLabel` ·
+ *        `o.onFight(result)` = 결과를 적는 쪽(세이브 · 결과 줄) · `o.last` = 결과 줄 글
+ */
+function arenaStage(A, o) {
+    const ps = SYS.game.presetState(G);
+    const picked = arenaPicked();
+    const f = formState(), ranks = f.byUid;
+    const page = el('div', 'arena-main');
     const selection = el('div', 'arena-selection');
     // Party 버튼 = 우리 팀을 그 편성으로 바꾼다 — 아래 물약 · 전술이 위에서 아래로 다시 내려온다 (ADR-0497)
     selection.appendChild(presetSeg(ps, no => {
@@ -1206,20 +1369,21 @@ function renderArena(main) {
         A.unfold = true;
         render();
     }));
-    const selectionHead = el('div', 'arena-selection-head');
-    selectionHead.appendChild(el('h3', 'sub-h', t('ar.select', { n: picked.length })));
+    selection.appendChild(el('h3', 'sub-h', t('ar.select', { n: picked.length })));
     const edit = el('button', 'btn sm', t('ar.edit'));
     edit.onclick = () => { state.tab = 'party'; clearBagSel(); render(); };
-    selectionHead.appendChild(edit);
-    selection.appendChild(selectionHead);
+    selection.appendChild(edit);
     if (picked.length !== SYS.arena.teamSize) selection.appendChild(el('span', 'muted', t('ar.needTeam')));
+    // 상대의 출처 — AI 는 AI 라고 적는다(사람인 척하지 않는다 · arena_design §7)
+    if (o.from) selection.appendChild(el('span', 'arena-from', o.from));
     page.appendChild(selection);
+    const opponent = o.opponent;
     /* 두 팀 = **관전 판 그대로** [2026-10-12 사용자 지시 · ADR-0606] — 위 상대 · VS · 아래 우리 팀, 카드도 관전 카드(`battle.js:unitPreview`).
        진형도 관전과 같다 — 후열만 VS 반대쪽으로 물러서고(칸의 `data-rank` · CSS `.side-*`) 가로 차례는 편성 보드와 같은 식(`formSeats`)이다.
        카드 값은 결투가 쓰는 스냅샷이다(도감 제외 · 고른 편성의 전술 — ADR-0495). 3명이 안 차면 스냅샷을 못 찍어 그 영웅의 지금 값으로 선다 */
     const snap = picked.length === SYS.arena.teamSize ? SYS.arena.snapshotTeam(picked, G.items, ranks, SYS.game.arenaLoadout(G)) : null;
-    const all = [...(snap ?? []), ...(A.opponent ?? [])];
-    const gear = Object.fromEntries((A.opponent ?? []).flatMap(p => p.gear.map(it => [it.uid, it])));
+    const all = [...(snap ?? []), ...(opponent ?? [])];
+    const gear = Object.fromEntries((opponent ?? []).flatMap(p => p.gear.map(it => [it.uid, it])));
     const tips = {
         combatOf: h => all.find(p => p.uid === h.uid)?.combat ?? combatOf(h),
         itemOf: uid => gear[uid] ?? itemOf(uid),
@@ -1227,11 +1391,11 @@ function renderArena(main) {
     };
     const board = el('div', 'arena arena-prep');
     const enemySide = el('div', 'side side-enemy');
-    if (A.opponent) {
+    if (opponent) {
         const byRank = [];
-        for (const p of A.opponent) (byRank[p.rank] ??= []).push(p);
+        for (const p of opponent) (byRank[p.rank] ??= []).push(p);
         for (const { r, i } of formSeats(Array.from(byRank, m => m?.length ?? 0))) enemySide.appendChild(unitPreview(arenaUnit(byRank[r][i], 'enemy'), tips));
-    } else enemySide.appendChild(arenaVacant('enemy', t(A.mode === 'online' ? 'ar.noGhost' : 'ar.noOpponent')));
+    } else enemySide.appendChild(arenaVacant('enemy', t('ar.noOpponent')));
     // 우리 팀은 고른 편성의 진형 칸 그대로라 빈자리도 제 칸에 선다
     const partySide = el('div', 'side side-party');
     for (const { r, i } of formSeats(f.caps)) {
@@ -1243,34 +1407,22 @@ function renderArena(main) {
     page.appendChild(arenaLoadPanel(A.unfold));
     A.unfold = false;
     const controls = el('div', 'arena-actions');
-    // 상대 찾기 — 오프라인만 · 그 등급의 AI 팀을 굴린다(우리 팀과 무관해 늘 열린다 · 이름만 우리 팀과 안 겹치게) — 온라인은 위 [불러오기]가 상대를 세운다
-    if (A.mode === 'offline') {
-        const find = el('button', 'btn', t(A.opponent ? 'ar.reroll' : 'ar.find'));
-        find.disabled = !A.tier;
-        find.onclick = () => {
-            A.opponent = SYS.arena.rollTierOpponent(A.tier, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), picked.map(h => h.name));
-            A.from = 'ai';
-            render();
-        };
-        controls.appendChild(find);
-    }
-    const fight = el('button', 'btn primary arena-fight', t('ar.fight'));
-    fight.disabled = !A.opponent || picked.length !== SYS.arena.teamSize;
+    const fight = el('button', 'btn primary arena-fight', o.fightLabel);
+    fight.disabled = !opponent || picked.length !== SYS.arena.teamSize;
     fight.onclick = () => {
-        // 찾은 뒤 장비 · 전술 · 물약을 바꿨을 수 있어 출전 순간 다시 찍는다. 상대는 확인한 그대로다.
+        // 고른 뒤 장비 · 전술 · 물약을 바꿨을 수 있어 출전 순간 다시 찍는다. 상대는 확인한 그대로다.
         //   전술 · 물약은 고른 편성의 것이다 — 물약은 재고에서 채우지만 결투는 재고를 안 줄인다 (ADR-0495)
         const loadout = SYS.game.arenaLoadout(G);
-        A.team = SYS.arena.snapshotTeam(picked, G.items, ranks, loadout);
-        const result = SYS.arena.fight(A.team, A.opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), loadout);
-        A.last = result;
-        A.match = { team: A.team, opponent: A.opponent, result, resume: null };
+        const team = SYS.arena.snapshotTeam(picked, G.items, ranks, loadout);
+        const result = SYS.arena.fight(team, opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), loadout);
+        o.onFight(result);   // 결과는 관전 전에 적힌다 — 레이팅 · 오른 층 (arena_design §7 · §8)
+        A.match = { team, opponent, result, resume: null };
         render();
     };
     controls.appendChild(fight);
-    if (A.last) controls.appendChild(el('span', 'arena-last muted', t('ar.last', {
-        result: t(A.last.reason === 'timeout' ? 'ar.draw' : A.last.won ? 'bt.won' : 'bt.lost'), sec: A.last.durationSec,
-    })));
+    if (o.last) controls.appendChild(el('span', 'arena-last muted', o.last));
     page.appendChild(controls);
+    return page;
 }
 
 /** 결투장 스냅샷 한 명(`arena.snapshotTeam`) → **관전 유닛 모양** (`battle.js:unitPreview` · ADR-0606).
@@ -1313,21 +1465,14 @@ function arenaLoadPanel(unfold) {
     return panel;
 }
 
-/** 오프라인 — 등급 칩 한 줄(`arena_tier.csv` 순서 · 칩 = 이름 + Lv) · 바꾸면 상대를 지운다 (ADR-0656) */
-function arenaTierRow(A) {
-    const seg = segmented(SYS.arena.tiers.map(x => ({ id: x.id, label: t('ar.tier', { name: L(x.name), lv: x.level }) })), A.tier, id => {
-        if (id !== A.tier) { A.tier = id; arenaDrop(A); }
-        render();
-    });
-    seg.classList.add('arena-tiers');
-    return seg;
-}
-
 /**
- * 온라인 — 글상자 둘이 나란히 (ADR-0656). 왼쪽 = 내 팀 코드(고른 편성의 세 영웅 · `exportTeam` → 문자열) · 오른쪽 = 받은 코드(`importTeam` 이 검사한다).
+ * 친선전 창 — 글상자 둘이 나란히 (ADR-0670 · 옛 온라인 갈래의 글상자 줄 ADR-0656). 왼쪽 = 내 팀 코드(고른 편성의 세 영웅 · `exportTeam` → 문자열) · 오른쪽 = 받은 코드(`importTeam` 이 검사한다).
+ * 통과하면 창이 닫히고 받은 팀이 「친선전」 칸으로 골라진 채 판에 선다(레이팅 변동 없음).
  * 글상자에 친 글은 다시 그리지 않고 화면 상태에만 담는다(치는 동안 커서를 안 잃는다). ⚠ 서버가 없어 운반은 복사 · 붙여넣기다
  */
-function arenaCodeRow(A, picked, ranks) {
+function arenaCodeBody() {
+    const A = state.arena;
+    const picked = arenaPicked(), ranks = formState().byUid;
     const row = el('div', 'arena-code');
     const mine = el('div', 'arena-code-box');
     mine.appendChild(el('h3', 'sub-h', t('ar.code.mine')));
@@ -1357,11 +1502,11 @@ function arenaCodeRow(A, picked, ranks) {
     const load = el('button', 'btn sm primary', t('ar.code.load'));
     load.onclick = () => {
         const payload = decodeTeam(A.paste);
-        arenaDrop(A);
+        Object.assign(A, { problems: null, broken: false });
         if (!payload) A.broken = true;
         else {
             const r = SYS.arena.importTeam(payload);
-            if (r.ok) { A.opponent = r.team; A.from = 'ghost'; }
+            if (r.ok) { A.ghost = r.team; A.pick = 'ghost'; state.modal = null; }
             // 사유 줄의 이름은 검사를 통과한 줄에만 싣는다 — 걸린 코드의 문자열은 화면 HTML 에 안 넣는다(`text` 사유)
             //   같은 영웅의 같은 사유는 한 줄로 모은다(옵션 줄이 여럿 걸려도)
             else A.problems = [...new Map(r.problems.map(p => [`${p.hero ?? '-'}:${p.code}`, { code: p.code, hero: p.hero ?? null }])).values()];
@@ -1395,6 +1540,8 @@ function renderExpedition(main) {
         stopBattle = mountBattle(page, {
             result, stageId, heroes: G.heroes, resume: state.battle.resume,
             shrine: state.battle.run?.report?.shrine ?? null,   // 이 런이 입은 신단 — 헤드의 칩 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445)
+            // 스테이지 띠 — **그 런에 한 번**(핸들에 적는다 · 다시 그려도 안 뜬다) · 재생기는 런의 처음일 때만 띄운다 · 노말이 아닌 단은 이름을 단다 (§4-2 · ADR-0663)
+            intro: state.battle.introShown ? null : { diff: introDiff(state.battle.run?.difficulty) },
             // [버프] 창 — 그 런의 버프를 출처별로(신단 · 전술 · 도감). 누른 순간 묻는다 (SCREEN_DESIGN §4-2 「버프」 · ADR-0461)
             buffsOf: () => SYS.game.runBuffs(G, state.battle?.run),
             // 다음 런 — 어디로(칸) · 언제. 결과 띠가 남은 초와 그 칸 이름을 센다. 출발은 세기가 아니라 이 답이 정한다 (ADR-0300 · ADR-0430) · 부대마다 따로 묻는다 (v38).
@@ -1467,6 +1614,7 @@ function renderExpedition(main) {
             // ~~onNext [다음 스테이지](ADR-0141) · onRetry [다시 도전](ADR-0138 · ADR-0212)~~ 은 2026-09-29 삭제 — 원정이 멈추지 않아
             //   이긴 런은 다음 칸 · 진 런은 같은 칸으로 저절로 이어진다 (SCREEN_DESIGN §4-2 · ADR-0430)
         });
+        state.battle.introShown = true;
         // 아레나 아래 가방 — 접속 중 = 원정 전투 + 아이템 정리 (GAME_DESIGN §3). 라운드를 이길 때마다 드롭이 들어오고(`refreshBattleBag`)
         //   여기서 바꾼 장비는 **그 순간** 먹는다 — 보스 라운드 도중은 다음 런 (R130 · ADR-0272). 칸 · 그림 크기는 캐릭터 탭 가방과 같다 (`.bag` · ADR-0097)
         //   인벤토리는 **보는 부대의 것**으로 연다 — 관전에 들어오거나 보는 부대가 바뀔 때만 부대 버튼을 그 부대로 옮긴다.
@@ -1524,6 +1672,8 @@ const curDiff = () => SYS.game.difficultyState(G).cur;
 const stageLv = z => SYS.game.stageLevel(z.stage_id, curDiff());
 /** 난이도 이름 조각 — **첫 단(노말)이면 빈 글자**다 · 부대 칸 · 리포트 머리의 스테이지 앞에 선다(옛 리포트 = 단 없음 = 노말 · ADR-0586) */
 const diffTag = id => (id && id !== D.difficultyList[0]?.id && D.difficulties[id] ? `<span class="diff-tag">${L(D.difficulties[id].name)}</span> ` : '');
+/** 스테이지 띠의 난이도 이름 — 노말이 아닌 단만(노말은 null · `diffTag` 와 같은 규칙 · §4-2 · ADR-0663) */
+const introDiff = id => (id && id !== D.difficultyList[0]?.id && D.difficulties[id] ? L(D.difficulties[id].name) : null);
 
 /** 잠긴 스테이지가 왜 잠겼나 — 그 장이 안 열렸으면 「원정 n랭크 필요」(`needOf('chapters', 장)`) · 장은 열렸으면 「이전 스테이지 클리어 필요」.
  *  보스를 깨도 다음 장은 원정 랭크가 연다 (SCREEN_DESIGN §4 · R152) */
@@ -1578,6 +1728,12 @@ function renderExpIdle(main) {
         need.innerHTML = `<span class="lock-ico">${lockIcon(true)}</span>${t('exp.diff.need', { d: L(D.difficulties[shut.gate.from].name), ch: D.stages[shut.gate.stageId].chapter })}`;
         fill.appendChild(need);
     }
+    // [Report] — 스테이지 화면 오른쪽 위 · 난이도 탭 줄 끝 [2026-10-18 사용자 지시 · §4-1 · ADR-0661] — 상단바에서 옮겨 왔다.
+    //   끝난 리포트가 없으면 꺼진 채 자리를 잡는다 · 고른 부대 탭 · 줄은 그대로 연다
+    const rep = el('button', 'btn sm dt-report', t('exp.seg.report'));
+    if (!doneReports().length) rep.disabled = true;
+    else rep.onclick = () => { state.exp = 'report'; render(); };
+    fill.appendChild(rep);
     tabs.appendChild(fill);
     main.appendChild(tabs);
     zp.classList.add('diff-panel');
@@ -2114,7 +2270,7 @@ function goBox(z) {
 }
 /** 적 구성 — 창의 **위 줄 왼쪽 · 편성 초상 위** [2026-09-21 사용자 지시 · §4-1 · ADR-0214 · 옛 자리는 ADR-0088].
  *  이 스테이지에서 기다리는 것들을 **정사각 칸으로 가로 한 줄** 편다 — 칸 크기는 **진형 칸과 같은 `--fm-slot`** 이고,
- *  이름은 칸 위 띠가 들고(`foeCell` · ADR-0568) · 칸 아래에 **스킬 칸 줄**이 선다(`seatSkills` — 몬스터는 고유 칸 · 보스의 굴리는 칸은 「?」).
+ *  이름은 칸 위 띠가 들고(`foeCell` · ADR-0568) · 칸 아래에 **스킬 칸 줄**이 선다(`seatSkills` — 몬스터는 고른 단의 칸 · 보스의 굴리는 칸은 「?」 · ADR-0664).
  *  **클릭이 없는 읽는 자리**다 — 고르는 것은 목록의 장소 줄과 출발 칸 버튼이 이미 했다.
  *  「이건 적이다」를 글자로 안 써도 되는 것은 **원형이 몬스터**이기 때문이지만(§5), 칸 이름 한 줄은 둔다:
  *  진형 상자가 제목을 안 다는 근거(아이콘·전열/후열 라벨이 이미 말한다 · ADR-0060)가 여기엔 없다.
@@ -2126,22 +2282,23 @@ function foeBox(z) {
     const hasBoss = SYS.battle.stageRounds(z).some(r => r.round_type === 'boss');
     box.appendChild(el('div', 'sub-h', t('exp.foes')));
     const list = el('div', 'foe-list');
-    for (const id of SYS.battle.stagePool(z)) list.appendChild(foeSeat(id));
-    // 보스의 셋째 칸은 스폰 때 그 직업 풀에서 굴린다 — 등급이 그 칸을 열었나는 데이터를 읽는다(`battle.js:makeEnemy` 의 `slots >= 3` 과 같은 문턱)
+    // 칸은 **고른 난이도로 설 때의 칸**이다 — 칸 규칙은 전투와 같은 `battle.monsterSkillSlots` 가 답한다(나이트메어부터 2칸 · 보스의 한 칸 더 = 「?」 · ADR-0664)
+    const diff = curDiff();
+    for (const id of SYS.battle.stagePool(z)) list.appendChild(foeSeat(id, 'normal', diff));
     //   챕터보스가 죽어 있으면 그 칸의 초상이 무덤 명패다 — 그 칸 × 고른 난이도 · 돌아오는 순간 앱 시계가 다시 그린다(`respawnTick` · ADR-0590)
     const back = hasBoss ? SYS.game.bossRespawnAt(G, z.stage_id) : null;
-    if (hasBoss) list.appendChild(foeSeat(z.boss_monster_idx, 'boss', D.grades[z.boss_grade]?.skill_slots >= 3, back != null && back > now() ? back : null));
+    if (hasBoss) list.appendChild(foeSeat(z.boss_monster_idx, z.boss_grade, diff, 'boss', back != null && back > now() ? back : null));
     box.appendChild(list);
     return box;
 }
 
 /** 적 칸 하나 = 초상(이름 띠) + 스킬 칸 줄 [2026-10-09 사용자 지시 · §4-1 · ADR-0568].
- *  스킬은 **고유 칸**이다 — 배정은 전투와 같은 `skill.activesFor`(몬스터는 고유만 · 정예 둘째 칸은 비어 있다) · `rolled` = 보스의 굴리는 칸(「?」) */
-const foeSeat = (id, cls = '', rolled = false, grave = null) => {
+ *  스킬은 **그 등급 · 그 단으로 설 때의 칸**이다 — `battle.monsterSkillSlots`(정해진 칸 · `rolled` = 보스의 굴리는 칸 「?」 · ADR-0664) */
+const foeSeat = (id, grade, diff, cls = '', grave = null) => {
     // `grave` = 죽어 있는 챕터보스가 돌아오는 시각 — 있으면 초상 대신 무덤 명패(이름 띠 · 스킬 칸 줄은 그대로 · ADR-0590)
     const seat = el('div', 'dw-seat', grave != null ? foeGraveCell(id, cls, grave) : foeCell(id, cls));
-    const acts = SYS.skill.activesFor({ innate: D.monsters[id]?.innate_skill });
-    seat.appendChild(seatSkills(rolled ? [...acts, 'rolled'] : acts));
+    const sl = SYS.battle.monsterSkillSlots(id, grade, diff) ?? { fixed: [], rolled: false };
+    seat.appendChild(seatSkills(sl.rolled ? [...sl.fixed, 'rolled'] : sl.fixed));
     return seat;
 };
 
@@ -2727,7 +2884,7 @@ function expTick() {
     // 전직 — 끝난 것을 확정한다 (2026-09-28 · R16 · SCREEN_DESIGN §16). 끝나면 카드 · 띠가 바뀌므로 다시 그린다
     if (SYS.game.advanceSettle(G, at).done.length) { save(); render(); }
     else if (state.tab === 'library' && !document.hidden) refreshAdvanceBars(at);
-    if (state.tab === 'resource' && !document.hidden) { refreshDispatchBars(at); refreshDispatchWatch(at); }
+    if (state.tab === 'resource' && !document.hidden) refreshDispatchBars(at);
     // 상점 탭 — 상인이 오고 가는 순간을 화면이 따라간다 (SCREEN_DESIGN §8-3 · ADR-0223)
     if (state.tab === 'shop' && !document.hidden) shopTick(at);
     // 선술집 탭 — 무료까지 남은 시간 글자만 갈고, 무료가 열리는 순간 다시 그린다 (SCREEN_DESIGN §8-1 · 2026-09-30)
@@ -2991,11 +3148,7 @@ function heroDoing(h) {
     if (busy === 'search') return { cls: 'exp', text: t('hs.doing.search') };
     if (busy === 'advance') return { cls: 'exp', text: t('hs.doing.advance') };   // 도서관에서 전직하는 중 (2026-09-28 · R16 · 도서관 2026-10-09)
     if (busy === 'explore') return { cls: 'exp', text: t('hs.doing.explore') };   // 탐험 나감 — 받을 때까지 (2026-10-09 · SCREEN_DESIGN §8-4)
-    // 자원 자리 — 「채광 2」 (2026-09-27 · SCREEN_DESIGN §8 · ADR-0373)
-    if (busy === 'dispatch') {
-        const at = SYS.game.dispatchOf(G, h.uid);
-        return { cls: 'exp', text: t('hs.doing.dispatch', { post: t(POSTS.find(p => p.id === at.post)?.label ?? ''), tier: at.tier }) };
-    }
+    // ~~자원 자리 「채광 2」~~ — 2026-10-18 연구소에 영웅이 안 앉는다 (ADR-0665)
     return busy === 'run' ? { cls: 'exp', text: t('hs.doing.expedition') } : { cls: 'idle', text: t('hs.doing.idle') };
 }
 
@@ -3860,9 +4013,9 @@ function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
             const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
             // 원정 중이면 「끼우면 꺼지는 전술」 줄이 선다 — 끼우기 전에 말한다 (§6 · ADR-0272)
             //   ~~스킬 칸의 맥락(`heroCombatIf`)~~ 은 2026-09-29 걷었다 — 아이템 툴팁에 스킬 칸이 없다(ADR-0421)
-            //   반지 칸 줄은 비교의 줄이라 Alt 동안만 선다 · 전술 줄은 기본 카드에도 선다 (ADR-0448)
+            //   반지 칸 줄은 비교의 줄이라 전술 줄 아래에 선다 (ADR-0658)
             //   손가락 툴팁의 버튼 줄 = 우클릭 메뉴와 같은 둘 (ADR-0374 · ADR-0451) — 고르는 중엔 안 선다
-            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [runTacticHint(h, it)], altHints: [ringHint], hero: h,
+            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [runTacticHint(h, it)], compareHints: [ringHint], hero: h,
                 actions: moding ? null : () => itemActions(h, it) });
             // 캐릭터 탭이면 세부 옵션 1 · 2 가 「끼면」 값을 미리 보인다 — 올린 동안만 (§6 · ADR-0619). 목록이 없는 화면(관전 · 제련소)은 할 일이 없다
             cell.addEventListener('mouseenter', () => { if (!isTouchInput()) previewSheet(h, it); });
@@ -3925,7 +4078,7 @@ function itemActions(h, it) {
 }
 
 /**
- * 보관 칸 우클릭 메뉴 (§6 「우클릭 메뉴」 · ADR-0451) — 자원 자리의 선택 창(`dpPickPanel` · ADR-0373)과 같은 틀:
+ * 보관 칸 우클릭 메뉴 (§6 「우클릭 메뉴」 · ADR-0451) — 옛 자원 자리의 선택 창(ADR-0373 · 2026-10-18 걷음)과 같은 틀:
  * 상태(`state.itemMenu`)가 들고 그리기마다 **한 장 바로 아래**에 다시 선다 · 깔개가 바깥 클릭 · 우클릭을 받아 닫기만 한다 · `Esc` 도 닫는다.
  * 자리는 커서(한 장 좌표) — 왼쪽 위를 대고, 한 장 밖으로 넘치면 커서 반대쪽으로 접는다.
  * 장비가 보관 칸에 없으면(장착 · 분해로 사라졌다) 조용히 닫힌다
@@ -3994,8 +4147,10 @@ function tipCard(item, headText, hints = [], skCtx, { ranges = false, delta = ''
     // 그래서 여기서 `game.upgradeState` 를 안 부른다 — 가방 칸의 `+n` 배지와 제련소는 그대로 부른다
     // ~~스킬 칸~~ — 2026-09-29 걷었다(R179 · ADR-0421): 무기가 스킬을 안 담는다(skill_design §2-1). 카드는 다섯 줄이다
     const hintTags = [].concat(hints).filter(Boolean).map(x => `<span class="muted">${x}</span>`).join('');
+    // 「착용 중」은 배지다 — 좌우가 뒤집히는 두 장(ADR-0337)에서 착용품을 가르는 표지가 머리글 하나라서 (§6 · ADR-0659). 그 글이 서는 카드 전부 같다
+    const worn = headText === t('tip.equipped');
     c.innerHTML = `
-        <div class="tip-head tip-head-row"><span>${headText}</span><span class="tip-meta">${meta}</span></div>
+        <div class="tip-head tip-head-row"><span${worn ? ' class="tip-worn"' : ''}>${headText}</span><span class="tip-meta">${meta}</span></div>
         <div class="tip-name" style="color:${rarity(item.rarity).color}">${item.up > 0 ? `+${item.up} ` : ''}${L(item.name)}</div>
         ${itemBodyHtml(item, { ranges })}
         ${delta}
@@ -4055,33 +4210,32 @@ function itemBodyHtml(item, { ranges = false } = {}) {
  * @param opts.head    머리글 키. 기본은 「이 아이템」 — 「착용 중」은 페이퍼돌만 넘긴다
  * @param opts.compare 비교 상대. **`null`(교체될 자리가 빔)이면 둘째 카드를 안 세우고** 하단 힌트 한 줄로 접는다 —
  *                     「비어 있음」 넉 자에 툴팁 폭의 절반이 빈 상자로 서 있었다. `undefined` 면 비교 자체를 안 한다
- * @param opts.hints   하단 힌트 — 기본 카드에도 선다(끼우면 꺼지는 전술 — 클릭이 곧 장착이라 누르기 전에 봐야 한다)
- * @param opts.altHints 비교의 힌트 — Alt 동안만 선다(반지 칸 · ADR-0448)
+ * @param opts.hints   하단 힌트 — 두 상태 모두 선다(끼우면 꺼지는 전술 — 클릭이 곧 장착이라 누르기 전에 봐야 한다)
+ * @param opts.compareHints 비교의 힌트 — 비교 상대가 있는 자리에만 · 전술 줄 아래(반지 칸 · ADR-0658)
  * @param opts.ctx        `item` 카드의 스킬 칸 계산 맥락 — 페이퍼돌은 그 영웅의 `heroCombat` · 가방 · 창고는 `heroCombatIf`(그 무기를 낀 것으로 · ADR-0139)
  * @param opts.compareCtx `compare` 카드의 계산 맥락 — `compare` 는 언제나 착용 중인 것이라(§6) 있으면 준다(itemsPanel)
  * @param opts.actions    손가락 툴팁 버튼 줄의 행동(`tip.js:bindTipNode` 그대로) — 보관 칸의 [착용] · [잠금] (ADR-0451)
- * @param opts.hero       장착 대상 영웅 — 주면 「이 아이템」 카드 옵션 아래에 착용 델타 「{영웅} 착용 시」가 선다(기본 상태에도 · §6 · ADR-0618)
+ * @param opts.hero       장착 대상 영웅 — 주면 Alt 동안 「이 아이템」 카드 옵션 아래에 착용 델타 「{영웅} 착용 시」가 선다(§6 · ADR-0618 · ADR-0658)
  *
  * **Shift 범위** [2026-10-14 · §6 · ADR-0617] — 범위를 다는 줄이 있는 카드만 `data-shift` 를 달아 `tip.js:setShift` 가 다시 짓고, 각주에 「Shift 범위」가 더해진다
  *
  * **두 장이면 사이에 `VS`** — 원정 관전의 두 진영 사이와 같은 글자다. DOM 은 늘 `[이 아이템, VS, 착용 중]` 이고,
  * 툴팁이 커서 왼쪽으로 접히면 CSS 가 순서를 뒤집어 「이 아이템」이 커서 쪽에 남는다(`tip.js:moveTip` 의 `at-left` · §6 · ADR-0337)
  *
- * **비교는 Alt 를 누르는 동안만** [2026-09-29 사용자 지시 · §6 · ADR-0448] — 비교 상대가 있는 자리(`compare !== undefined`)는
- * `data-alt` 를 단 묶음(`.tip-compare`) 하나를 세우고 `tip.js:setAlt` 가 그 묶음을 `_rebuild` 로 다시 짓는다.
+ * **비교 두 장이 기본 · Alt 동안 착용 델타** [2026-10-18 사용자 지시 · §6 · ADR-0658] — 비교 상대가 있는 자리(`compare !== undefined`)는
+ * 묶음(`.tip-compare`) 하나를 세운다 · 델타가 서는 자리면 `data-alt` 를 달아 `tip.js:setAlt` 가 그 묶음을 `_rebuild` 로 다시 짓는다.
  * 묶음은 `display: contents` 라 두 장 · VS 는 여전히 툴팁 줄의 항목이다(style.css).
- * **처음부터 Alt 때의 모양이다** [2026-09-29 사용자 지시 「Alt 를 눌렀을 때 기준으로」 · ADR-0450] — 착용품 카드 · VS 는 두 상태 모두 짓고
- * 기본 상태엔 `alt-only` 로 **보이지 않게 자리만** 잡는다. 폭 · 높이 · 접힘(`moveTip`)이 두 상태에서 같아 Alt 로 「이 아이템」 카드가 안 움직인다.
- * 카드 바닥은 **Alt 줄**(반지 칸 · 착용 중 없음 — `alt-only`) 위 · **각주 「Alt 비교」** 맨 아래 — 각주는 Alt 동안에도 선다 [2026-09-30 사용자 지시 · ADR-0456]
+ * **Alt 로 툴팁이 안 뛴다** — 기본 상태엔 Alt 때 모양의 「이 아이템」 카드를 숨은 사본(`.tip-ghost` · 툴팁 줄 밖)으로 같이 짓고,
+ * 아래 넘침 보정(`moveTip`)이 그 키까지 잰다. 카드 바닥은 전술 · 비교 줄 위 · **각주 「Alt 변화」** 맨 아래 — 각주는 Alt 동안에도 선다(ADR-0456)
  */
-function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints = [], ctx, compareCtx, actions = null, hero = null } = {}) {
-    // 「이 아이템」 카드 — Shift 동안 옵션 줄 범위(ADR-0617) · 장착 대상 영웅이 있으면 옵션 아래에 착용 델타(ADR-0618 · 기본 상태에도)
+function bindTip(node, item, { head = 'tip.this', compare, hints = [], compareHints = [], ctx, compareCtx, actions = null, hero = null } = {}) {
+    // 「이 아이템」 카드 — Shift 동안 옵션 줄 범위(ADR-0617) · `withDelta` 면 옵션 아래에 착용 델타(ADR-0618 · Alt 동안만 — ADR-0658)
     const ranged = hasRanges(item);
-    const card = () => tipCard(item, t(head), hints, ctx, { ranges: ranged && isShiftHeld(), delta: hero ? deltaHtml(hero, item) : '' });
+    const card = (lines, withDelta = false) => tipCard(item, t(head), lines, ctx, { ranges: ranged && isShiftHeld(), delta: withDelta ? deltaHtml(hero, item) : '' });
     if (compare === undefined) {
         // 비교가 없는 자리(리포트 드롭 · 페이퍼돌 · 탐험 결과) — 범위를 다는 줄이 있으면 각주 「Shift 범위」 한 줄
         const one = () => {
-            const c = card();
+            const c = card(hints);
             if (c && ranged) {
                 c.appendChild(el('div', 'tip-foot', t('tip.item.shiftHint')));
                 c.dataset.shift = '1';
@@ -4092,21 +4246,30 @@ function bindTip(node, item, { head = 'tip.this', compare, hints = [], altHints 
         bindTipNode(node, one, { actions });
         return;
     }
-    const altLines = [].concat(altHints, compare === null ? t('tip.noneEquipped') : []).filter(Boolean);
+    // 비교 줄(반지 칸 · 착용 중 없음)은 기본 상태의 줄이다 — 전술 줄 아래 (ADR-0658)
+    const lines = [].concat(hints, compareHints, compare === null ? t('tip.noneEquipped') : []);
     const shiftable = ranged || hasRanges(compare);
+    // 각주 — Alt 가 할 일(착용 델타)이 있을 때만 「Alt 변화」 · 범위를 다는 줄이 있으면 「Shift 범위」
+    const keys = hero ? (shiftable ? 'tip.item.keysHint' : 'tip.item.altHint') : shiftable ? 'tip.item.shiftHint' : null;
+    const thisCard = withDelta => {
+        const c = card(lines, withDelta);
+        if (keys) c.appendChild(el('div', 'tip-foot', t(keys)));
+        return c;
+    };
     const build = () => {
-        const w = el('div', `tip-compare${isAltHeld() ? ' alt' : ''}`);
-        w.dataset.alt = '1';
+        const w = el('div', 'tip-compare');
+        if (hero) w.dataset.alt = '1';
         if (shiftable) w.dataset.shift = '1';
         w._rebuild = build;
-        const c = card();
-        if (altLines.length) c.appendChild(el('div', 'tip-sins alt-only', altLines.map(x => `<span class="muted">${x}</span>`).join('')));
-        c.appendChild(el('div', 'tip-foot', t(shiftable ? 'tip.item.keysHint' : 'tip.item.altHint')));
-        w.appendChild(c);
+        const alt = !!hero && isAltHeld();
+        w.appendChild(thisCard(alt));
         if (compare) {
-            w.appendChild(el('div', 'tip-vs alt-only', '<span>VS</span>'));
-            w.appendChild(tipCard(compare, t('tip.equipped'), [], compareCtx, { ranges: isShiftHeld() })).classList.add('alt-only');
+            w.appendChild(el('div', 'tip-vs', '<span>VS</span>'));
+            w.appendChild(tipCard(compare, t('tip.equipped'), [], compareCtx, { ranges: isShiftHeld() }));
         }
+        // Alt 때 모양의 「이 아이템」 카드 — 안 보이고 툴팁 줄에도 안 낀다. 아래 넘침 보정(`tip.js:moveTip`)이 이 키까지 재서
+        //   Alt 로 델타가 서도 툴팁이 위로 안 뛴다 (ADR-0658 · 취지는 ADR-0450). Alt 동안엔 실제 카드가 그 키라 안 짓는다
+        if (hero && !alt) w.appendChild(thisCard(true)).classList.add('tip-ghost');
         return w;
     };
     bindTipNode(node, build, { actions });
@@ -4963,346 +5126,143 @@ function refreshAdvanceBars(at) {
 
 /* ═══════════ 선술집 ═══════════ */
 
-/* ═══════════ 자원 — 보내 놓고 기다리는 채취 (SCREEN_DESIGN §8) ═══════════
-   2026-09-04 사용자 지시 — 탭 이름이 「마을」(장소) → 「자원」(얻는 것)이 되고 탐험이 자기 탭으로 나갔다(§8-4).
-   **같은 날 두 번째 개정 — 가로 칸 목록이 세로 카드 3장(채광 · 채집 · 벌목)이 되고 카드마다 단계 7줄이 선다.**
-   문법은 §4-1 원정 탭과 **같다**: 카드를 누르면 그 아래에 속이 열린다. 3열 격자도 새로 만들지 않는다 —
-   시작 화면(§3)·선술집 명단(§8-1)이 쓰는 `.ng-row`(같은 무게 3열)를 그대로 쓴다.
-   ⚠ **탭 이름만 바뀌고 그 안의 칸은 여전히 「파견처」(활동)다** — 그래서 `dp.*` 키와 `.dp-*` 클래스는 이름을 그대로 둔다.
-   오프라인 활동의 이름도 여전히 「파견」이다 */
+/* ═══════════ 연구소 — 줄 목록 · 고른 줄의 단계 트랙 · 칸 레벨 (SCREEN_DESIGN §8 · ADR-0669) ═══════════
+   왼쪽 = 줄 목록(줄마다 한 줄 · 같은 무게) · 오른쪽 = 고른 줄의 단계 7 트랙 + 고른 칸. **연구 하나 = 줄 하나**(GAME_DESIGN §9 10-18) —
+   새 줄은 `POSTS` 에 한 줄 + 단계 표 하나로 목록에 붙고 오른쪽 모양은 줄 수에 안 흔들린다.
+   **선은 한 줄 안에서만 단계 1 → 7 을 잇는다** — 줄끼리 잇지 않는다(트리를 안 쓴다 · base_expedition §2-1).
+   **영웅은 앉지 않는다** [2026-10-18 · ADR-0665]. 레벨은 **고른 칸에서만** 올린다 — 칸마다 버튼을 세우면 훑는 손짓과 사는 손짓이 겹친다.
+   배수 · 비용 · 거절은 `game.labLevelInfo` 가 낸다(화면은 계산하지 않는다). `dp.*` 키 · `.dp-*` 클래스 · 탭 id `resource` 는 옛 이름 그대로 둔다 */
 
-/** 담당 능력치 — `hero_attribute.csv:dispatch` 를 거꾸로 읽는다. 화면은 배정표를 갖지 않는다 (§8) */
-const postAttr = postId => D.heroAttributes.filter(a => (a.dispatch ?? '').split('|').includes(postId));
-
-/**
- * 단계 트랙 — **줄 수를 정하는 것은 CSV 표**다 (`mine_node.csv` = 채광의 단계). 코드에 개수를 박지 않는다.
- * 트랙의 길이·번호는 계속 채광 표가 정한다 — 셋이 같은 7단계라 그중 하나를 기준으로 삼는 것이고,
- * 어느 표가 짧으면 모자란 칸에 `—` 가 선다(값은 항상 찍는다 · §4-1).
- * **셋 다 그리는 이유**: 트랙을 지우면 「이 파견처는 단계가 없다」로 읽힌다. 구조가 같다는 것이 읽혀야 한다 (§8).
- * 해금 조건(`unlock_chapter`)은 그리지 않는다 — 무엇으로 여는지가 기획 백지라 문턱 키가 없다 (§4-1).
- * 채집·벌목의 표가 생기면 `post.tiers` 가 그걸 가리키고 이 함수는 그대로 돈다.
- *
- * [개정 2026-09-09 사용자 지시] 한 단계가 **상자**다 — 얇은 줄이 아니라 두 줄(이름 · 산출물)을 든 칸이고,
- * 상자 일곱이 단의 남은 세로를 균등 분할한다(높이 배분은 CSS `.dp-tier-list`).
- * 산출물 이름과 기본 생산량, 현재 생산량과 배치 효율을 찍는다(ADR-0636).
- * 생산량 계산은 `game.dispatchProgress` 하나가 맡고, 미배치 장소도 기본 생산 게이지를 그린다.
- */
-/** 자리 칸의 게이지 — 다음 1개까지 찬 비율 [2026-09-27 사용자 지시 · §8 · base_expedition §3-3]. 앱 시계가 폭만 갈아 끼운다(`refreshDispatchBars`) */
+/** 다음 1개 게이지 — 다음 1개까지 찬 비율 [base_expedition §3-3]. 앱 시계가 폭만 갈아 끼운다(`refreshDispatchBars`) */
 const dpGauge = (postId, tier) => {
     const p = SYS.game.dispatchProgress(G, postId, tier, now());
     return p ? `<i class="dp-gauge"><b data-dpbar="${postId}:${tier}" style="width:${(p.frac * 100).toFixed(1)}%"></b></i>` : '';
 };
-/** 칸 제목의 둘째 줄 — 「구리 1개 / 42초」 · 속도는 담당 능력치가 정한다 */
-const dpRateText = (postId, n) => {
-    const p = SYS.game.dispatchProgress(G, postId, n.tier, now());
-    return p ? `\n${t('dp.rate', { item: L({ ko: n.yieldKo, en: n.yieldEn }), s: Math.round(p.intervalSec) })}` : '';
-};
 const dpRateNumber = n => String(Math.round(n * 10) / 10);
-const dpEfficiencyText = efficiency => t('dp.efficiency', { n: dpRateNumber((efficiency - 1) * 100) });
-/** 기본 생산과 배치 후 생산을 장소 본문에 보여준다. 수치는 로직의 계산 결과만 쓴다. */
-function dpProductionText(p) {
-    if (!p) return '';
-    return `<span>${t('dp.currentRate', { n: dpRateNumber(p.perHour) })}${p.bonusPerHour > 0 ? ` · ${dpEfficiencyText(p.efficiency)}` : ''}</span>`;
-}
-/** 게이지 폭만 — 앱 시계가 자원 탭이 보일 때 눈금마다 부른다(골드 · 플레이 시간과 같은 길 · 전체 다시 그림이 아니다) */
+const dpRate = n => t('dp.perHour', { n: dpRateNumber(n) });
+/** 게이지 폭만 — 앱 시계가 연구소 탭이 보일 때 눈금마다 부른다(골드 · 플레이 시간과 같은 길 · 전체 다시 그림이 아니다) */
 function refreshDispatchBars(at) {
     for (const b of document.querySelectorAll('[data-dpbar]')) {
         const [post, tier] = b.dataset.dpbar.split(':');
         const p = SYS.game.dispatchProgress(G, post, Number(tier), at);
         if (p) b.style.width = `${(p.frac * 100).toFixed(1)}%`;
     }
-    for (const node of document.querySelectorAll('[data-dprate]')) {
-        const [post, tier] = node.dataset.dprate.split(':');
-        const html = dpProductionText(SYS.game.dispatchProgress(G, post, Number(tier), at));
-        if (node.innerHTML !== html) node.innerHTML = html;
-    }
 }
 
-function tierTrack(post, open = 0) {
-    const own = D[post.tiers] ?? [];         // 이 파견처의 표 — 없으면 빈 배열
-    const shape = D.mineNodes ?? [];         // 트랙의 길이·번호를 정하는 표
-    const box = el('div', 'dp-tiers');
-    // 머리 줄(「단계 N」)은 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다
-    const list = el('ol', 'dp-tier-list');
-    shape.forEach((s, i) => {
-        const n = own[i];
-        // 안 열린 단계는 상자째 잠김 베일(자물쇠 + 「자원 n랭크 필요」 · §8 · §13-1 · 2026-09-27 사용자 지시)
-        const shut = i >= open;
-        const production = n && !shut ? SYS.game.dispatchProgress(G, post.id, n.tier, now()) : null;
-        const li = el('li', `dp-tier${n ? '' : ' empty'}${shut ? ' lock-host' : ''}`);
-        // 자리 칸 — 단계 하나에 영웅 한 명 [2026-09-27 사용자 지시 · ADR-0372]. 상자 **오른쪽 끝**에 상자 높이만큼의 정사각.
-        //   열린 단계(앞에서부터 `limitsOf.resourceTiers` 개)에만 선다 — 잠긴 단계는 놓을 수 없어 칸을 안 그린다.
-        //   찬 칸 = 얼굴 + 오른쪽 아래 레벨(띠 카드와 같은 구석 · 이름은 툴팁) · 빈 칸 = 점선 `+`
-        //   칸을 누르면 칸 옆에 **선택 창**이 뜬다(`dpPickPanel` · ADR-0373)
-        const h = n && i < open ? heroById(SYS.game.dispatchSeat(G, post.id, n.tier)) : null;
-        const on = n && state.dpPick?.post === post.id && state.dpPick?.tier === n.tier ? ' on' : '';
-        const slot = !n || i >= open ? ''
-            : h ? `<span class="dp-slot${on}" data-seat="${post.id}:${n.tier}" title="${L(h.name)}${dpRateText(post.id, n)}">${heroFace(h)}<span class="hs-lv">${t('ch.lv', { n: h.level })}</span>${dpGauge(post.id, n.tier)}</span>`
-            : `<span class="dp-slot empty${on}" data-seat="${post.id}:${n.tier}">+${dpGauge(post.id, n.tier)}</span>`;
-        // 산출물 아이콘 — 번호와 글자 사이 · 그림이 없는 재료는 칸째 빠진다 (ADR-0377)
-        const icon = n ? M.materialIcon(n.yieldId) : null;
-        li.innerHTML = `<i class="dp-t-n">${n?.tier ?? s.tier}</i>${icon ? `<img class="dp-t-icon" src="${icon}" alt="" draggable="false">` : ''}
-            <span class="dp-t-body">
-                <span class="dp-t-name">${n ? L({ ko: n.ko, en: n.en }) : '—'}</span>
-                <span class="dp-t-ore">${n ? L({ ko: n.yieldKo, en: n.yieldEn }) : '—'}${production ? ` · ${t('dp.baseRate', { n: dpRateNumber(production.basePerHour) })}` : ''}</span>
-                ${production ? `<span class="dp-t-rate" data-dprate="${post.id}:${n.tier}">${dpProductionText(production)}</span>` : ''}
-            </span>${slot}`;
-        const cell = li.querySelector('.dp-slot');
-        // 단의 클릭(고르기)까지 안 올라가게 끊는다 · 같은 칸을 다시 누르면 닫는다
-        if (cell) cell.onclick = ev => {
-            ev.stopPropagation();
-            const same = state.dpPick?.post === post.id && state.dpPick?.tier === n.tier;
-            state.dpPick = same ? null : { post: post.id, tier: n.tier };
-            render();
-        };
-        if (shut) li.appendChild(lockVeil('resource_tier', i + 1));
-        list.appendChild(li);
+/**
+ * 줄의 단계 칸 — **개수를 정하는 것은 CSV 표**다(코드에 개수를 박지 않는다). 셋이 같은 7단계라 채광 표가 길이 · 번호를 정하고
+ * 어느 표가 짧으면 그 칸은 `row: null`(이름 자리에 `—`). 열린 칸 = 앞에서부터 `limitsOf.resourceTiers` 개(연구소 랭크가 연다)
+ */
+const postTiers = (post, open) => (D.mineNodes ?? []).map((s, i) => ({ tier: s.tier, row: (D[post.tiers] ?? [])[i] ?? null, open: i < open }));
+/** 그 줄에서 고른 단계 — 화면 상태(`state.labTier`) · 처음엔 1 */
+const dpPick = postId => state.labTier?.[postId] ?? 1;
+
+/** 줄 목록의 한 줄 — 줄 아이콘 · 이름 · 단계 작은 줄(열린 단계 = 산출물 아이콘 · 잠긴 단계 = 흐린 점) */
+function dpLine(post, open) {
+    const b = el('button', `dp-line${post.id === state.post ? ' on' : ''}`);
+    const marks = postTiers(post, open).map(({ row, open: o }) => {
+        const icon = row && o ? M.materialIcon(row.yieldId) : null;
+        return icon ? `<img src="${icon}" alt="" draggable="false">` : '<i></i>';
+    }).join('');
+    b.innerHTML = `<img class="dp-line-ico" src="${M.labIcon(post.id)}" alt="" draggable="false">
+        <span class="dp-line-b"><span class="dp-line-n">${t(post.label)}</span><span class="dp-line-tiers">${marks}</span></span>`;
+    b.onclick = () => { state.post = post.id; render(); };
+    return b;
+}
+
+/** 단계 트랙 — 단계 7 이 가로 한 줄이고 선으로 잇는다. 선은 열린 칸까지 밝다 · 칸을 누르면 그 칸이 골라진다(잠긴 칸도) */
+function dpTrack(post, open, pick) {
+    const cells = postTiers(post, open);
+    const track = el('ol', 'dp-track');
+    cells.forEach(({ tier, row, open: o }, i) => {
+        // 왼쪽 선 = 이 칸이 열렸나 · 오른쪽 선 = 다음 칸이 열렸나 — 열린 칸끼리 잇는 선만 밝다
+        const li = el('li', `dp-node${o ? ' open' : ''}${cells[i + 1]?.open ? ' link' : ''}${tier === pick ? ' on' : ''}`);
+        const icon = row ? M.materialIcon(row.yieldId) : null;
+        const p = row && o ? SYS.game.dispatchProgress(G, post.id, tier, now()) : null;
+        const lv = row && o ? SYS.game.labLevelInfo(G, post.id, tier)?.lv ?? 0 : 0;
+        li.innerHTML = `<span class="dp-orb">${icon ? `<img src="${icon}" alt="" draggable="false">` : ''}${o ? '' : `<span class="lock-ico">${lockIcon(true)}</span>`}${lv ? `<b class="dp-orb-lv">${t('dp.lv', { n: lv })}</b>` : ''}</span>
+            <span class="dp-node-n"><i>${tier}</i>${row ? L({ ko: row.ko, en: row.en }) : '—'}</span>
+            <span class="dp-node-r">${p ? dpRate(p.perHour) : row ? L({ ko: row.yieldKo, en: row.yieldEn }) : '—'}</span>
+            ${p ? dpGauge(post.id, tier) : ''}`;
+        if (!o) li.title = needText('resource_tier', i + 1);
+        li.onclick = () => { state.labTier = { ...(state.labTier ?? {}), [post.id]: tier }; render(); };
+        track.appendChild(li);
     });
-    box.appendChild(list);
+    return track;
+}
+
+/** 고른 칸 — 큰 산출물 아이콘 · 이름 · 시간당 지금 → 올린 뒤 · Lv · 비용 재료 칸(건설의 `matTile` 그대로) · [레벨 올리기] (한 번 누른다 — 사는 일) */
+function dpSelected(post, tier, open) {
+    const at = postTiers(post, open).find(c => c.tier === tier);
+    const box = el('div', 'dp-sel');
+    const row = at?.row;
+    if (!row) { box.appendChild(el('span', 'muted', '—')); return box; }
+    const icon = M.materialIcon(row.yieldId);
+    const place = L({ ko: row.ko, en: row.en });
+    box.appendChild(el('div', 'dp-sel-h', `${icon ? `<img class="dp-sel-ico" src="${icon}" alt="" draggable="false">` : ''}
+        <span class="dp-sel-t"><span class="dp-sel-n"><i>${tier}</i>${place}</span><span class="dp-sel-y">${L({ ko: row.yieldKo, en: row.yieldEn })}</span></span>`));
+    const info = at.open ? SYS.game.labLevelInfo(G, post.id, tier) : null;
+    // 잠긴 칸 — 무엇이 열어 주는지만 (「연구소 n랭크 필요」)
+    if (!info) {
+        box.classList.add('locked');
+        box.appendChild(el('div', 'dp-sel-lock', `<span class="lock-ico">${lockIcon(true)}</span><span>${needText('resource_tier', tier)}</span>`));
+        return box;
+    }
+    const body = el('div', 'dp-sel-b');
+    body.appendChild(el('div', 'dp-sel-rate', info.next
+        ? `<b>${dpRate(info.perHour)}</b><span class="dp-sel-arrow">→</span><b class="up">${dpRate(info.next.perHour)}</b>`
+        : `<b>${dpRate(info.perHour)}</b>`));
+    // Lv n / 최대 + 눈금 막대(상한 칸 수 · 찬 칸 = 레벨) — 칸 수는 `lab_level_max` 가 정한다
+    body.appendChild(el('div', 'dp-sel-lv', `<span>${t('dp.lvOf', { n: info.lv, max: info.max })}</span>
+        <span class="dp-pips">${Array.from({ length: info.max }, (_, i) => `<i${i < info.lv ? ' class="on"' : ''}></i>`).join('')}</span>`));
+    box.appendChild(body);
+    if (!info.next) { box.appendChild(el('div', 'dp-sel-top', t('dp.lvTop'))); return box; }
+    const act = el('div', 'dp-sel-act');
+    act.appendChild(el('div', 'cn-mats', [
+        { res: 'gold', need: info.next.gold, have: G.resources.gold ?? 0 },
+        { res: info.next.yieldId, need: info.next.n, have: G.materials?.[info.next.yieldId] ?? 0 },
+    ].map(matTile).join('')));
+    const go = el('button', 'btn primary dp-sel-go', t('dp.lvUp'));
+    go.disabled = !!info.err;
+    go.onclick = () => {
+        const r = SYS.game.labLevelUp(G, post.id, tier, now());
+        if (!r.ok) { flash(`dp.err.${r.err}`); render(); return; }
+        flash('dp.lvDone', { name: place, n: r.lv });
+        save();
+        render();
+    };
+    act.appendChild(go);
+    box.appendChild(act);
     return box;
 }
 
 function renderResource(main) {
-    // `auto 1fr` — 위 영웅 띠는 제 높이 · 단 3개가 남는 세로를 다 쓴다 (`.res-stack` · 2026-09-27 사용자 지시 · ADR-0369)
-    const stack = el('div', 'res-stack page');
-    // 영웅 띠 — **보기 전용**이다 [2026-09-27 사용자 지시 · SCREEN_DESIGN §8 · ADR-0369 — 「띠를 두지 않는다」(2026-09-01)를 대체].
-    //   누가 무슨 일을 하고 있는지(위칸 「지금 하는 일」)를 한눈에 본다 — 회색 「대기」가 남아 있으면 놀고 있는 영웅이다
-    stack.appendChild(heroStrip(() => {}, { view: true }));
-
-    // 파견처 카드 3 — 미착수 카드도 그린다. 어디까지 열리는지가 보여야 하고, 누르면 안내가 뜨므로 「고장」이 아니다 (§8)
-    const row = el('div', 'ng-row');
-    // 열린 단계 수 — 자원 랭크가 연다 (`limitsOf.resourceTiers` · ADR-0372). 누가 앉았는지는 `game.dispatchSeat` 가 답한다 (ADR-0373)
+    // 열린 단계 수 — 연구소 랭크가 연다 (`limitsOf.resourceTiers`)
     const open = SYS.game.limitsOf(G).resourceTiers;
-    for (const post of POSTS) {
-        const c = el('div', `dp-cell${post.id === state.post ? ' on' : ''}${post.live ? '' : ' todo'}`);
-        const attrs = postAttr(post.id);
-        // 담당 능력치가 미정인 카드(채집 · 벌목)도 자리를 지킨다 — 빈 칸은 "안 재고 있다"로 읽힌다 (§4-1)
-        const attr = attrs.length ? attrs.map(a => a.abbr).join(' · ') : '—';
-        // 단에는 미착수 배지를 달지 않는다 [2026-09-21 사용자 지시 · ADR-0220] — 「아직 없다」는 아래 안내 패널이 한 번 말한다
-        // 능력치는 이름 오른쪽 같은 줄이다 [2026-09-21 사용자 지시 · ADR-0222]
-        // 인원(「1인」)은 안 찍는다 [2026-09-21 사용자 지시 · ADR-0224] — 1인 배치 / 파티 파견의 차이는 탭이 든다
-        // 이름 줄은 소제목 모양(`sub-h`) — 밑줄이 단계 상자와 가른다 [2026-09-24 사용자 지시 · ADR-0320]
-        c.innerHTML = `<span class="dp-n sub-h">${t(post.label)}<i class="dp-attr" title="${t('dp.attrTitle')}">${attr}</i></span>`;
-        // [미니게임] — [자세히 보기] 왼쪽 · 영웅 없이 직접 캐는 판을 연다 (§8 · ADR-0532). 열린 단계가 없으면 흐리고 안 눌린다
-        const play = el('button', 'btn sm dp-mg', t('mg.play'));
-        if (!open) { play.disabled = true; play.title = needText('resource_tier', 1); }
-        else play.onclick = ev => { ev.stopPropagation(); mgOpen(post.id); };
-        c.querySelector('.dp-n').appendChild(play);
-        // [자세히 보기] — 이름 줄 오른쪽 끝 · 앉은 영웅이 없으면 흐리고 안 눌린다 (§8 · ADR-0415)
-        const mine = dwSeats().find(s => s.post === post.id);
-        const watch = el('button', 'btn sm dp-watch', t('dp.watch'));
-        if (!mine) { watch.disabled = true; watch.title = t('dp.watch.none'); }
-        else watch.onclick = ev => { ev.stopPropagation(); state.dw = { post: mine.post, tier: mine.tier }; openModal('dpWatch'); };
-        c.querySelector('.dp-n').appendChild(watch);
-        c.appendChild(tierTrack(post, open));
-        c.onclick = () => { state.post = post.id; render(); };
-        row.appendChild(c);
-    }
-    stack.appendChild(row);
-    // 단 아래 미착수 안내 패널은 없다 [2026-09-27 사용자 지시 · ADR-0369] — 단이 띠 아래 세로를 다 쓴다
-    main.appendChild(stack);
-    if (state.dpPick) dpPickPanel(stack);
-}
-
-/**
- * 자리 칸의 선택 창 — **칸 옆**에 선다 [2026-09-27 · SCREEN_DESIGN §8 · ADR-0373]. 판정 · 순서는 전부 `game.dispatchPick` 이 낸다
- * (고를 수 있는 영웅 → 대기 먼저 → 담당 능력치 내림차순). 원정 · 수색 중은 흐리고 못 고른다 · 찬 칸이면 맨 위에 회수 줄.
- * 자리는 툴팁과 같은 **한 장 좌표**(`stageRect`) — 칸 왼쪽, 모자라면 오른쪽 · 아래로 넘치면 올린다. 바깥(깔개) 클릭 · Esc 로 닫는다.
- * ⚠ 창은 **탭 본문 밖 — 한 장(`#stage`) 바로 아래**에 붙인다(툴팁과 같은 자리). 본문(`.main`)에는 `zoom: .9` 가 걸려 있어
- *   안에 두면 한 장 좌표가 한 번 더 0.9 배가 되어 창이 칸에서 왼쪽 위로 멀리 떨어졌다 (2026-09-27 사용자 「거리가 너무 멀다」)
- */
-function dpPickPanel(stack) {
-    const { post, tier } = state.dpPick;
-    const P = SYS.game.dispatchPick(G, post, tier);
-    const anchor = stack.querySelector(`.dp-slot[data-seat="${post}:${tier}"]`);
-    if (!P.open || !anchor) { state.dpPick = null; return; }
-    const close = () => { state.dpPick = null; render(); };
-    const back = el('div', 'dp-pick-back');
-    back.onclick = close;
-    const box = el('div', 'dp-pick panel');
-    const abbr = D.heroAttributes.find(a => a.id === P.attr)?.abbr ?? '—';
-    const postDef = POSTS.find(x => x.id === post);
-    box.appendChild(el('div', 'dp-pick-h', `${t(postDef.label)} ${tier}<i class="dp-attr">${abbr}</i>`));
-    const list = el('div', 'dp-pick-list');
-    const row = (h, extra, cls = '', efficiency = null) => {
-        const r = el('div', `dp-pick-row${cls}`);
-        r.innerHTML = `${heroFace(h)}<span class="dp-pick-name">${L(h.name)}<i>${t('ch.lv', { n: h.level })}</i></span>`
-            + `<span class="dp-pick-val">${abbr} <b>${P.attr ? (h.stats?.[P.attr] ?? 0) : '—'}</b>${efficiency == null ? '' : `<small>${dpEfficiencyText(efficiency)}</small>`}</span>` + extra;
-        return r;
-    };
-    // 찬 칸 — 지금 앉은 영웅 + 회수 (벌이 없어 확인 없이 한 번 · base_expedition §3-2)
-    if (P.seated) {
-        const h = heroById(P.seated);
-        const r = row(h, `<button class="btn dp-recall">${t('dp.recall')}</button>`, ' seated', SYS.game.dispatchProgress(G, post, tier, now())?.efficiency);
-        r.querySelector('.dp-recall').onclick = () => {
-            const res = SYS.game.dispatchRecall(G, post, tier, now());   // 흐른 만큼 받고 부른다 (base_expedition §3-2)
-            if (!res.ok) flash(`dp.err.${res.err}`); else save();
-            close();
-        };
-        list.appendChild(r);
-    }
-    for (const x of P.heroes) {
-        const h = heroById(x.uid);
-        const r = row(h, `<span class="dp-pick-doing ${heroDoing(h).cls}">${heroDoing(h).text}</span>`, x.ok ? '' : ' off', x.efficiency);
-        if (x.ok) r.onclick = () => {
-            const res = SYS.game.dispatchAssign(G, post, tier, x.uid, now());
-            if (!res.ok) flash(`dp.err.${res.err}`); else save();
-            close();
-        };
-        else r.title = t(`dp.err.${x.err}`);
-        list.appendChild(r);
-    }
-    if (!P.seated && !P.heroes.length) list.appendChild(el('div', 'muted', t('dp.pick.none')));
-    box.appendChild(list);
-    document.querySelector('#stage').append(back, box);
-    // 칸 옆에 세운다 — 왼쪽이 기본(칸이 상자 오른쪽 끝이라 오른쪽은 이웃 단을 덮는다) · 모자라면 오른쪽
-    const a = stageRect(anchor), bw = box.offsetWidth, bh = box.offsetHeight;
-    const x = a.left - 8 - bw >= 8 ? a.left - 8 - bw : Math.min(a.right + 8, a.w - bw - 8);
-    box.style.left = `${Math.max(8, x)}px`;
-    // 아래로 넘치면 올린다 — 창의 아랫변이 **그 파견처의 맨 아래 단계 상자 아랫변**을 넘지 않는 데까지 (2026-09-27 사용자 지시)
-    const floor = stageRect(anchor.closest('.dp-tier-list')?.lastElementChild ?? anchor).bottom;
-    box.style.top = `${Math.max(8, Math.min(a.top, floor - bh))}px`;
-}
-
-/* ─── 파견 관전 창 [2026-09-28 사용자 지시 · SCREEN_DESIGN §8 · ADR-0415] ───
-   [개정 2026-09-29 사용자 지시 「원정 전투창처럼 · 챕터 배경 · 1:1」 · ADR-0416] **원정 관전의 부품 그대로** — `battle-panel` › `arena`(챕터 배경) ›
-   적 진영(대상 카드 1) · VS · 파티 진영(영웅 카드 1). 카드는 관전 카드(`unit v2`)와 같은 뼈대 · 타격은 관전 연출 클래스(`fx-lunge` · `fx-shake` · `fx-flash` · `.pop`).
-   **보기 전용** — 대상의 HP 바는 `dispatchProgress.frac` 을 뒤집을 뿐이라 바가 한 바퀴 도는 순간이 정산의 1개 틱 그대로다(창을 열든 닫든 산출이 같다).
-   ⚠ 대상 그림은 활동별 그림이 올 때까지 산출물 아이콘이 대신 선다 · 손으로 캐는 미니게임은 이 창이 아니라 따로 선 창이다(`mg*` · ADR-0532) */
-const DW_HIT_MS = 1000;   // 타격 박자 — 화면 연출의 길이라 CSV 가 아니다(TOAST_MS 와 같은 선례). 모션은 관전 연출 클래스가 든다
-const DW_REFILL_MS = 350; // 다 닳은 대상이 0 으로 서 있다가 다시 차기까지 — 연출의 길이다
-/** 앉은 자리 전부 — 파견처 순 · 단계 순. 창의 머리 탭이 이 순서다 */
-const dwSeats = () => POSTS.flatMap(p => (D[p.tiers] ?? [])
-    .map(n => ({ post: p.id, tier: n.tier, uid: SYS.game.dispatchSeat(G, p.id, n.tier) }))
-    .filter(s => s.uid));
-/** 보는 자리 — 고른 자리가 비었으면 첫 앉은 자리 · 하나도 없으면 null(창이 닫힌다) */
-const dwCur = () => {
-    const all = G ? dwSeats() : [];
-    return all.find(s => s.post === state.dw?.post && s.tier === state.dw?.tier) ?? all[0] ?? null;
-};
-
-function dpWatchHead() {
-    const cur = dwCur();
-    const wrap = el('div', 'dpw-head');
-    wrap.appendChild(segmented(dwSeats().map(s => ({ id: `${s.post}:${s.tier}`, label: `${t(POSTS.find(p => p.id === s.post).label)} ${s.tier}` })),
-        `${cur.post}:${cur.tier}`, id => { const [post, tier] = id.split(':'); state.dw = { post, tier: Number(tier) }; render(); }));
-    return wrap;
-}
-
-/** 창의 배경 — 원정에서 보는 챕터(`expChapter`)의 **다음에 갈 스테이지** 그림 · 전부 깼으면 마지막 해금 스테이지 · 그림이 없으면 관전의 기본 그라디언트 */
-const dwBg = () => {
-    const ch = expChapter();
-    const rows = D.stageList.filter(s => s.chapter === ch);
-    const open = rows.filter(s => SYS.game.stageUnlocked(G, s.stage_id));
-    const pick = open.find(s => !SYS.game.stageCleared(G, s.stage_id)) ?? open[open.length - 1] ?? rows[0];
-    return pick ? stageBgOf(pick.stage_id) : null;
-};
-
-/**
- * 대상의 체력 [2026-09-29 사용자 지시 「초로 하지 말고 체력을 만들어서 때려서 닳게」 · ADR-0417] — **연출의 눈금이지 새 게임 수치가 아니다.**
- *   한 대 = 영웅의 담당 능력치(없거나 0 이면 1) · 최대 체력 = 한 대 × 1개에 드는 타격 수(간격 ÷ `DW_HIT_MS`).
- *   그래서 체력이 0 이 되는 순간이 정산의 1개 틱과 같다 — 산출은 여전히 `dispatchProgress` 가 정하고 창을 열든 닫든 같다
- */
-const dwHp = (p, post, h) => {
-    const attr = postAttr(post)[0];
-    const hit = Math.max(1, attr ? (h.stats?.[attr.id] ?? 0) : 0);
-    // 최대는 한 대의 배수 — 첫 대부터 정확히 한 대씩 준다
-    return { hit, max: hit * Math.max(1, Math.round(p.intervalSec * 1000 / DW_HIT_MS)) };
-};
-/** 보이는 체력 — 한 대 단위로 끊는다(맞을 때마다 정확히 한 대씩 준다 · 박자가 조금 밀려도 숫자가 튀지 않는다) */
-const dwHpNow = (left, hp) => Math.min(hp.max, Math.ceil(left * hp.max / hp.hit - 1e-9) * hp.hit);
-
-function dpWatchBody() {
-    const s = dwCur();
-    const post = POSTS.find(p => p.id === s.post);
-    const n = D[post.tiers].find(x => x.tier === s.tier);
-    const h = heroById(s.uid);
-    const p = SYS.game.dispatchProgress(G, s.post, s.tier, now());
-    const icon = M.materialIcon(n.yieldId);
-    const face = M.heroFace(h);
-    const attrs = postAttr(s.post);
-    const val = attrs.length ? attrs.map(a => `${a.abbr} ${h.stats?.[a.id] ?? 0}`).join(' · ') : '—';
-    const yieldName = L({ ko: n.yieldKo, en: n.yieldEn });
-    const left = p ? (1 - p.frac) : 1;
-    const hp = p ? dwHp(p, s.post, h) : null;
-    const bg = dwBg();
-    const wrap = el('div', 'panel battle-panel dpw-panel');
-    // 관전 카드와 같은 뼈대 — 맨 위 신원 띠 · 왼쪽 초상 · 오른쪽 이름 줄 · 바 (battle.js `renderUnits` · ADR-0262)
-    //   대상: 신원 = 「채광 3」 · 이름 = 단계 이름 · HP 바 · 숫자 = 체력 / 최대(`dwHp` · 관전 카드와 같은 표기) · 아래 줄 = 산출물
-    //   영웅: 신원 = `Lv.n · 직업` · 이름 · 행동 게이지 = 다음 타격까지 · 아래 줄 = 담당 능력치(= 한 대) · 초는 안 찍는다(ADR-0418)
-    const card = (side, top, sprite, name, rows) => `<div class="unit-slot v2"><div class="unit ${side} v2">
-            <div class="unit-top"><span class="unit-ident">${top}</span></div>
-            <div class="unit-body">
-                <div class="sprite${sprite ? ' has-face' : ''}">${sprite ? `<img src="${sprite}" alt="" draggable="false" onerror="this.remove()">` : ''}</div>
-                <div class="unit-info"><div class="unit-id"><span class="unit-name">${name}</span></div>${rows}</div>
-            </div>
-            <div class="pop-layer"></div>
-        </div></div>`;
-    const target = card('enemy', `${t(post.label)} ${s.tier}`, icon, L({ ko: n.ko, en: n.en }),
-        `<div class="hp-row"><div class="bar hp"><i data-dwbar style="width:${((hp ? dwHpNow(left, hp) / hp.max : left) * 100).toFixed(1)}%"></i></div>`
-        + `<span class="hp-text" data-dwhp>${hp ? `${dwHpNow(left, hp)} / ${hp.max}` : '—'}</span></div>`
-        + `<div class="dpw-line">${yieldName}</div>`);
-    const hero = card('party', `${t('ch.lv', { n: h.level })} · ${className(h.cls)}`, face, L(h.name),
-        `<div class="act-row"><i class="act-fill" data-dwact></i></div>`
-        + `<div class="dpw-line">${val}</div>`);
-    wrap.innerHTML = `<div class="battle-body"><div class="arena dpw-arena${bg ? ' has-bg' : ''}" data-dw="${s.post}:${s.tier}"${bg
-            ? ` style="background-image:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.78)),url('${bg}')"` : ''}>
-            <div class="side side-enemy">${target}</div>
-            <div class="divider"><span class="muted">VS</span></div>
-            <div class="side side-party">${hero}</div>
-        </div></div>`;
-    return wrap;
-}
-
-/** 앱 시계가 자원 탭일 때 눈금마다 부른다 — 바 폭 · 남은 초만 갈아 끼우고 박자마다 타격 연출(전체 다시 그림이 아니다).
- *  박자 사이에 흐른 양 = 흐른 시간 ÷ 간격 — 바가 넘어간 만큼 「+n 산출물」이 떨어진다. 긴 공백(숨긴 탭에서 돌아옴)은 연출 없이 맞추기만 */
-let dwLast = null;
-function refreshDispatchWatch(at) {
-    const box = document.querySelector('.dpw-arena');
-    if (!box) { dwLast = null; return; }
-    const key = box.dataset.dw, [post, tier] = key.split(':');
-    const p = SYS.game.dispatchProgress(G, post, Number(tier), at);
-    if (!p) return;
-    const left = 1 - p.frac;
-    const h = heroById(SYS.game.dispatchSeat(G, post, Number(tier)));
-    if (!h) return;
-    const hp = dwHp(p, post, h);
-    const bar = box.querySelector('[data-dwbar]'), txt = box.querySelector('[data-dwhp]'), act = box.querySelector('[data-dwact]');
-    // 체력은 **맞을 때만** 준다 [2026-09-29 사용자 지시 「초를 없애고 때려서 체력이 다 닳면 캔다」 · ADR-0418] — 눈금마다 흐르지 않는다
-    const paint = v => {
-        if (bar) bar.style.width = `${(dwHpNow(v, hp) / hp.max * 100).toFixed(1)}%`;
-        if (txt) txt.textContent = `${dwHpNow(v, hp)} / ${hp.max}`;
-    };
-    if (!dwLast || dwLast.key !== key || at - dwLast.at > DW_HIT_MS * 5) { paint(left); dwLast = { key, frac: p.frac, at }; return; }
-    // 영웅의 행동 게이지 = 다음 타격까지 (관전 카드의 `act-fill` 과 같은 자리)
-    if (act) act.style.width = `${Math.min(100, (at - dwLast.at) / DW_HIT_MS * 100).toFixed(0)}%`;
-    if (at - dwLast.at < DW_HIT_MS) return;
-    const cut = (at - dwLast.at) / (p.intervalSec * 1000);
-    const got = Math.floor(dwLast.frac + cut);
-    dwLast = { key, frac: p.frac, at };
-    if (act) act.style.width = '0%';
-    // 관전 연출 그대로 — 영웅 칸이 위로 찌르고(`fx-lunge`) 대상 카드가 흔들리고(`fx-shake`) 초상이 번쩍인다(`fx-flash`).
-    //   클래스를 뗐다 붙여 다시 튼다 — 레이아웃을 한 번 읽어야 브라우저가 처음부터 돌린다
-    const replay = (node, cls) => { if (!node) return; node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); };
-    replay(box.querySelector('.side-party .unit-slot'), 'fx-lunge');
-    replay(box.querySelector('.side-enemy .unit'), 'fx-shake');
-    replay(box.querySelector('.side-enemy .sprite'), 'fx-flash');
-    // 떠오르는 숫자 — 관전의 피해 팝업(`.pop.dmg`) · 얻은 재료는 영웅 카드 위의 회복 팝업 자리(`.pop.heal`)
-    const pop = (sel, cls, text) => {
-        const layer = box.querySelector(`${sel} .pop-layer`);
-        if (!layer) return;
-        const f = el('span', `pop ${cls}`, text);
-        f.onanimationend = () => f.remove();
-        layer.appendChild(f);
-    };
-    // 피해 숫자 = 한 대(담당 능력치) · 체력이 다 닳은 한 대면 0 까지 내려갔다가 캐고 다시 찬다
-    pop('.side-enemy', 'dmg dt-physical', `−${hp.hit}`);
-    if (got > 0) {
-        paint(0);
-        const n = D[POSTS.find(x => x.id === post).tiers].find(x => x.tier === Number(tier));
-        pop('.side-party', 'heal', t('dp.watch.gain', { n: got, item: L({ ko: n.yieldKo, en: n.yieldEn }) }));
-        setTimeout(() => { if (box.isConnected) paint(left); }, DW_REFILL_MS);
-    } else paint(left);
+    const post = POSTS.find(p => p.id === state.post) ?? POSTS[0];
+    const wrap = el('div', 'dp-wrap page');
+    // 왼쪽 — 줄 목록 · 넘치면 목록만 스크롤한다(오른쪽은 고른 줄 하나의 것)
+    const lines = el('div', 'panel dp-lines');
+    const list = el('div', 'dp-line-list');
+    list.dataset.keep = 'dp-lines';
+    for (const p of POSTS) list.appendChild(dpLine(p, open));
+    lines.appendChild(list);
+    lines.appendChild(el('div', 'dp-offline', t('dp.offline', { h: D.balance.dispatch_offline_cap_hours })));
+    wrap.appendChild(lines);
+    // 오른쪽 — 고른 줄 머리([미니게임]) · 단계 트랙 · 고른 칸
+    const det = el('div', 'panel dp-detail');
+    const head = el('h2', '', `<span>${t(post.label)}</span>`);
+    // [미니게임] — 영웅 없이 직접 캐는 판을 연다 (§8 · ADR-0532). 열린 단계가 없으면 흐리고 안 눌린다
+    const play = el('button', 'btn sm dp-mg', t('mg.play'));
+    if (!open) { play.disabled = true; play.title = needText('resource_tier', 1); }
+    else play.onclick = () => mgOpen(post.id);
+    head.appendChild(play);
+    det.appendChild(head);
+    const pick = dpPick(post.id);
+    det.appendChild(dpTrack(post, open, pick));
+    det.appendChild(dpSelected(post, pick, open));
+    wrap.appendChild(det);
+    main.appendChild(wrap);
 }
 
 /* ═══════════ 자원 미니게임 — 2026-10-16 전면 개편 ═══════════
@@ -7173,14 +7133,9 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
    레벨 계산은 SYS.game(codex_level.csv). 여기는 누적 도감 경험치를 읽어 그리기만 한다 */
 
 const codexLv = exp => SYS.game.codexLevel(exp);
-function stageBonus(stage) {
-    const total = stage.monsters.reduce((a, m) => a + SYS.game.codexBonusAt(codexLv(m.exp)), 0);
-    const complete = stage.monsters.every(m => codexLv(m.exp) === SYS.game.codexMaxLevel());
-    return { total, complete };
-}
 
-/** 카드 하나 — `grade` 는 초상만 가른다(수치는 몬스터 하나의 집계다 · ADR-0167) · `stat` 은 스테이지 계열 라벨(없으면 `—` · ADR-0098) */
-function monsterCard(m, grade, stat) {
+/** 카드 하나 — `grade` 는 초상만 가른다(수치는 몬스터 하나의 집계다 · ADR-0167) */
+function monsterCard(m, grade) {
     const cum = D.codexLevels;                 // 레벨별 **누적 도감 경험치 문턱** 그대로 (codex_level.csv:exp_total)
     const lv = codexLv(m.exp);
     const maxLv = cum.length;
@@ -7199,6 +7154,8 @@ function monsterCard(m, grade, stat) {
     const pips = Array.from({ length: maxLv }, (_, i) =>
         `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.exp', { n: cum[i].toLocaleString() })}"></span>`).join('');
     // 윗줄 오른쪽 끝 = 직업 — 이름은 class.csv 그대로 · 글자색은 그 직업 색 (ADR-0615 · 0588 이 비워 둔 줄)
+    // 이름 · 핍 두 줄 오른쪽 = 스킬 아이콘 — 두 줄 높이로 크게 · 올리지 않아도 늘 보인다 · 카드엔 보상 글자가 없다
+    // (ADR-0668 · 0666 — 칸은 `tip.js:monsterSkillIcons` 가 로직에 묻는다)
     const cls = D.monsters[m.id]?.cls;
     // `data-mid` — 그린 뒤 몬스터 툴팁을 거는 손잡이 (`codexMonster` · ADR-0206)
     return `
@@ -7206,12 +7163,10 @@ function monsterCard(m, grade, stat) {
             ${faceHtml}
             <div class="mon-body">
                 <span class="mon-top"${cls && classColor(cls) ? ` style="color:${classColor(cls)}"` : ''}>${cls ? className(cls) : ''}</span>
-                <span class="mon-name">${name}${m.boss ? `<span class="b-tag">${t('kind.boss')}</span>` : ''}</span>
-                <div class="mon-mid">
+                <div class="mon-main">
+                    <span class="mon-name">${name}${m.boss ? `<span class="b-tag">${t('kind.boss')}</span>` : ''}</span>
                     <span class="pips">${pips}</span>
-                    <span class="mon-bonus">${stat
-                        ? `<span class="up">${L(stat)} +${(SYS.game.codexBonusAt(lv) * 100).toFixed(1)}%</span>`
-                        : '<span class="muted">—</span>'}</span>
+                    ${monsterSkillIcons(m.id, 'mon-sk', 'sk-ico')}
                 </div>
                 <div class="bar"><i style="width:${pct}%"></i></div>
             </div>
@@ -7269,8 +7224,7 @@ function codexMonster(p) {
     const ch = chapterOf(state.codexChapter) ?? D.chapterList[0];
     // **해금은 안 본다** — 전 챕터·전 몬스터를 그대로 그린다 (SCREEN_DESIGN §9, 2026-09-06)
     const stages = codexStages().filter(st => st.chapter === ch.id).map(st => ({
-        ...st, stat: M.CX_STAT[st.num], completion: M.CX_DONE[st.num],
-        monsters: st.monsters.map(m => ({ ...m, exp: G.codexExp[m.id] ?? 0 })),
+        ...st, monsters: st.monsters.map(m => ({ ...m, exp: G.codexExp[m.id] ?? 0 })),
     }));
 
     const bar = el('div', 'sub-bar');
@@ -7311,27 +7265,19 @@ function codexMonster(p) {
     }
 }
 
-/** 스테이지 한 행 — 이름 줄은 상자 밖 위, 상자는 몬스터 카드 줄만 감싼다 (ADR-0254) */
+/** 스테이지 한 행 — 이름 줄은 상자 밖 위, 상자는 몬스터 카드 줄만 감싼다 (ADR-0254) · 이름 줄은 번호 · 이름만이다 — 보상이 몬스터마다라 장소 합이 없다 (ADR-0667) */
 function codexStageRow(stage) {
-    const { total, complete } = stageBonus(stage);
     const row = el('div', 'codex-stage');
-    // 계열이 없는 스테이지(챕터보스 단독 5스테이지)는 보정 칸이 **빈 칸**이다 — 계열 배정이 기획 미정이라(GAME_DESIGN §10)
-    //   라벨을 지어내지 않는다. 합산도 안 되므로(`codexBonus` 가 그 스테이지 번호를 건너뛴다) 숫자도 안 찍는다 (2026-09-11)
-    const gain = stage.stat
-        ? `<span class="up">${L(stage.stat)} +${(total * 100).toFixed(1)}%</span>
-                <span class="muted"> · ${t('cx.completion')} ${complete ? `<span class="up">${L(stage.completion)}</span>` : L(stage.completion)}</span>`
-        : '<span class="muted">—</span>';
     row.innerHTML = `
         <div class="cs-head">
             <div class="cs-title"><span class="muted">${M.roman(stage.num)}</span> ${L(stage.name)}</div>
-            <div class="cs-gain">${gain}</div>
         </div>
-        <div class="mon-strip">${stage.monsters.map(m => monsterCard(m, state.codexGrade, stage.stat)).join('')}</div>`;
+        <div class="mon-strip">${stage.monsters.map(m => monsterCard(m, state.codexGrade)).join('')}</div>`;
     // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 · **카드 옆에 붙는다**(읽는 카드라 커서를 따라가면 흔들린다 · ADR-0206 · ADR-0120).
     //   초상 · 핍의 작은 툴팁(파일명 · 문턱)은 그대로 둔다 — 사용자 지시 「나중에 수정」
     for (const node of row.querySelectorAll('.mon-card[data-mid]')) {
         const m = stage.monsters.find(x => String(x.id) === node.dataset.mid);
-        if (m) bindTipNode(node, () => codexMonsterTipCard(m, state.codexGrade, stage.stat), { anchor: true });
+        if (m) bindTipNode(node, () => codexMonsterTipCard(m, state.codexGrade), { anchor: true });
     }
     return row;
 }
@@ -7346,10 +7292,9 @@ function codexUnknownRow(chapter, num, n) {
             <span class="face none"></span>
             <div class="mon-body">
                 <span class="mon-top"></span>
-                <span class="mon-name">???</span>
-                <div class="mon-mid">
+                <div class="mon-main">
+                    <span class="mon-name">???</span>
                     <span class="pips">${'<span class="pip"></span>'.repeat(D.codexLevels.length)}</span>
-                    <span class="mon-bonus muted">—</span>
                 </div>
                 <div class="bar"><i style="width:0%"></i></div>
             </div>
@@ -7357,12 +7302,11 @@ function codexUnknownRow(chapter, num, n) {
     row.innerHTML = `
         <div class="cs-head">
             <div class="cs-title"><span class="muted">${M.roman(num)}</span> ???</div>
-            <div class="cs-gain"><span class="muted">—</span></div>
         </div>
-        <div class="mon-strip">${found.map(m => monsterCard(m, state.codexGrade, null)).join('')}${card.repeat(n - found.length)}</div>`;
+        <div class="mon-strip">${found.map(m => monsterCard(m, state.codexGrade)).join('')}${card.repeat(n - found.length)}</div>`;
     for (const node of row.querySelectorAll('.mon-card[data-mid]')) {
         const m = found.find(x => String(x.id) === node.dataset.mid);
-        if (m) bindTipNode(node, () => codexMonsterTipCard(m, state.codexGrade, null), { anchor: true });
+        if (m) bindTipNode(node, () => codexMonsterTipCard(m, state.codexGrade), { anchor: true });
     }
     return row;
 }
@@ -7737,12 +7681,11 @@ function helpSections() {
             ],
         },
         {
-            title: t('nav.arena'),
-            // 두 갈래 (ADR-0656) — 갈래마다 상대가 어디서 오나 · 그다음 둘이 같이 따르는 결투 규칙
+            // 탐험이 탭이 되면서 섹션도 갈라져 나왔다 (§8-4 · §12 신설 2026-09-04) · 자리는 탭처럼 원정 바로 뒤다(2026-10-18 · ADR-0660).
+            //   지점 패널이 안 드는 규칙 문장이 여기 있다 — 옛 미착수 안내(`ex.todo`)를 최소 루프가 서며 `ex.help` 가 대체했다 (2026-10-09 · ADR-0553) · 수치는 인게임과 같은 값
+            title: t('nav.explore'),
             groups: [
-                { h: t('ar.mode.offline'), body: [t('ar.help.offline')] },
-                { h: t('ar.mode.online'), body: [t('ar.help.online')] },
-                { h: t('ar.rules'), body: [t('ar.help')] },
+                { h: t('ex.h'), body: [t('ex.help', { n: SYS.game.limitsOf(G).party, h: D.balance.explore_hours, s: SYS.game.limitsOf(G).exploreSlots, k: D.balance.explore_cave_items_per_hero })] },
             ],
         },
         {
@@ -7815,11 +7758,17 @@ function helpSections() {
             ],
         },
         {
-            // 탐험이 탭이 되면서 섹션도 갈라져 나왔다 (§8-4 · §12 신설 2026-09-04). 지점 패널이 안 드는 규칙 문장이 여기 있다 —
-            //   옛 미착수 안내(`ex.todo`)를 최소 루프가 서며 `ex.help` 가 대체했다 (2026-10-09 · ADR-0553) · 수치는 인게임과 같은 값
-            title: t('nav.explore'),
+            title: t('nav.colosseum'),
+            // 콜로세움 — 사다리 (ADR-0670)
+            groups: [{ h: t('nav.colosseum'), body: [t('cs.help')] }],
+        },
+        {
+            title: t('nav.arena'),
+            // 결투장 — 레이팅 · 친선전 · 그다음 두 탭이 같이 따르는 결투 규칙 (ADR-0670)
             groups: [
-                { h: t('ex.h'), body: [t('ex.help', { n: SYS.game.limitsOf(G).party, h: D.balance.explore_hours, s: SYS.game.limitsOf(G).exploreSlots, k: D.balance.explore_cave_items_per_hero })] },
+                { h: t('ar.rating'), body: [t('ar.help.rating')] },
+                { h: t('ar.friendly'), body: [t('ar.help.friendly')] },
+                { h: t('ar.rules'), body: [t('ar.help')] },
             ],
         },
         {
@@ -8113,8 +8062,6 @@ async function boot() {
     // 자원 미니게임의 방향키 (§8 · ADR-0532) — 판이 도는 동안만 먹는다
     document.addEventListener('keydown', e => mgKey(e, true));
     document.addEventListener('keyup', e => mgKey(e, false));
-    // 자원 자리의 선택 창도 Esc 로 닫는다 (ADR-0373)
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.dpPick && !state.modal) { state.dpPick = null; render(); } });
     // 보관 칸 우클릭 메뉴도 Esc 로 닫는다 (ADR-0451)
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.itemMenu && !state.modal) { state.itemMenu = null; render(); } });
     // 브라우저 메뉴를 안 띄운다 — 우클릭 · 길게 누르기 둘 다 (style.css 게임 화면 기본기 ⑤ · SCREEN_DESIGN §2). 우클릭을 쓰는 칸(스킬 창)은 제 핸들러가 먼저 돈다
@@ -8292,12 +8239,7 @@ async function boot() {
         // `&grave=1` — 고른 칸의 챕터보스가 **막 죽은** 상태 — 적 구성의 무덤 명패 · 경고 줄 · 보내기 거절에 닿는 길 (ADR-0590).
         //   보스는 이겨서 끝난 런만 죽이므로 클릭으로는 그 런을 이겨야 닿는다 · 기록의 키 모양은 INTERFACE §4 `bossDown`
         if (new URLSearchParams(location.search).get('grave') === '1') G.bossDown = { ...G.bossDown, [`${G.difficulty}|${state.expStage}`]: now() };
-        // `&busy=1` — **출정 확인 창**이 뜬 상태 (§4-1 · ADR-0467) — 고른 편성의 첫 영웅을 자원 자리에 앉히고 확인 창을 연다. 창은 [보내기]로만 떠서 헤드리스가 못 닿는다
-        if (new URLSearchParams(location.search).get('busy') === '1') {
-            devBuild('resource');            // 자원 단계는 자원 랭크가 연다 — 새 게임은 0 이라 앉힐 자리가 없다 (R137)
-            const uid = SYS.game.partyOf(G)[0];
-            if (uid && SYS.game.dispatchAssign(G, POSTS[0].id, 1, uid, now()).ok && departPulls(state.expStage)) state.modal = 'departConfirm';
-        }
+        // ~~`&busy=1` 자원 자리에 앉힌 영웅의 출정 확인 창~~ — 2026-10-18 연구소 자리가 걷혀 데려갈 「하던 일」이 없다 (ADR-0665)
         // `&adv=1` — 편성 첫 영웅을 전직시키고 전직 스킬만 배운 채(책은 안 배움) — 스킬 칸 줄의 맨 오른쪽 전직 칸에 닿는 길 (ADR-0591).
         //   전직은 시간이 걸려 헤드리스가 못 닿는다 · 전직시키는 방식은 `?dev=tree&adv=1` 과 같다
         if (new URLSearchParams(location.search).get('adv') === '1') {
@@ -8360,29 +8302,41 @@ async function boot() {
         // 책은 도서관 탭에서만 보인다(ADR-0426 · ADR-0460) — 옛 `&lib=1` · `&mat=1` 은 읽지 않는다
         state.tab = 'library';
     }
-    if (dev === 'arena') {   // 결투장 — **상대를 세운 채** · 상대는 [상대 찾기] · [불러오기] 클릭으로만 서서 헤드리스가 못 닿는다 (ADR-0602 · ADR-0656)
+    if (dev === 'arena' || dev === 'colosseum') {   // 결투장 · 콜로세움 — 레이팅 · 오른 층을 꽂은 채 (ADR-0602 · ADR-0670)
         if (!G) startGame();
         const q = new URLSearchParams(location.search);
-        // `&tpl=<formation_template.csv:tpl_id>` — 고른 편성의 진형 (`2-1` · `1-2` · `0-3`) · `&find=0` 이면 상대 없이
+        // `&tpl=<formation_template.csv:tpl_id>` — 고른 편성의 진형 (`2-1` · `1-2` · `0-3`)
         if (q.get('tpl')) SYS.game.setFormation(G, q.get('tpl'));
-        state.tab = 'arena';
-        const A = arenaReset(state.arena);
+        state.tab = dev;
         const picked = SYS.game.partyOf(G).map(heroById).filter(Boolean), ranks = formState().byUid;
-        // `&tier=<arena_tier.csv:tier_id>` 그 등급 · `&am=online` 온라인 — 내 팀 코드를 만들고 그 코드를 불러온 채(자기 팀과 붙는다)
-        if (SYS.arena.tiers.some(x => x.id === q.get('tier'))) A.tier = q.get('tier');
-        if (q.get('am') === 'online') {
-            A.mode = 'online';
-            if (q.get('find') !== '0' && picked.length === SYS.arena.teamSize) {
+        // `&lv=n` — 고른 편성 영웅을 레벨 n 까지(XP 를 게임 길로 받는다 · 이긴 쪽 화면을 헤드리스로 보는 개발 장치)
+        if (Number(q.get('lv')) > 1) for (const h of picked) {
+            let xp = 0;
+            for (let l = h.level; l < Math.min(Number(q.get('lv')), D.balance.hero_level_cap); l++) xp += SYS.hero.xpNeeded(l);
+            SYS.hero.grantXp(h, xp);
+        }
+        if (dev === 'colosseum') {
+            // `&cleared=n` 오른 층 · `&floor=n` 고른 층(깬 층 · 다음 층만 — 아니면 다음 층) · 세이브에 적는다(개발 장치)
+            const C = colosseumReset(state.colosseum);
+            if (q.has('cleared')) G.colosseum = { cleared: Math.max(0, Math.min(SYS.arena.floors.length, Number(q.get('cleared')) || 0)) };
+            if (q.has('floor')) C.floor = Number(q.get('floor')) || null;
+        } else {
+            // `&rating=n` 레이팅(세이브에 적는다 · 개발 장치) · 후보는 시드 1 로 굴린다(헤드리스 재현)
+            const A = arenaReset(state.arena);
+            if (q.has('rating') && Number.isFinite(Number(q.get('rating')))) G.arena = { ...SYS.game.arenaState(G), rating: Number(q.get('rating')), peak: Math.max(SYS.game.arenaState(G).peak, Number(q.get('rating'))) };
+            A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(1), picked.map(h => h.name));
+            // `&friendly=1` 친선전 창 — 내 팀 코드를 만들고 그 코드를 불러온 채(자기 팀과 붙는다) · `&bad=1` 첫 영웅 레벨을 만렙 위로(사유 줄)
+            if (q.get('friendly') === '1' && picked.length === SYS.arena.teamSize) {
                 const payload = SYS.arena.exportTeam(picked, G.items, ranks);
                 A.code = encodeTeam(payload);
-                // `&bad=1` — 받은 코드의 첫 영웅 레벨을 만렙 위로 바꿔 불러온 채(검사에 걸린 사유 줄을 헤드리스로 본다)
                 if (q.get('bad') === '1') payload.heroes[0].hero.level = D.balance.hero_level_cap + 1;
                 A.paste = encodeTeam(payload);
                 const r = SYS.arena.importTeam(decodeTeam(A.paste));
-                if (r.ok) Object.assign(A, { opponent: r.team, from: 'ghost' });
-                else A.problems = r.problems.map(p => ({ code: p.code, hero: p.hero ?? null }));
+                if (r.ok) Object.assign(A, { ghost: r.team, pick: 'ghost' });
+                else { A.problems = r.problems.map(p => ({ code: p.code, hero: p.hero ?? null })); state.modal = 'arenaCode'; }
             }
-        } else if (q.get('find') !== '0' && A.tier) Object.assign(A, { opponent: SYS.arena.rollTierOpponent(A.tier, makeRng(1), picked.map(h => h.name)), from: 'ai' });
+            if (q.get('modal') === '1') state.modal = 'arenaCode';
+        }
     }
     if (dev === 'tactics') {   // 전술 칸이 전부 열린 상태 — 칸은 지휘 천막 랭크로만 열리므로 헤드리스가 닿을 길을 따로 낸다
         if (!G) startGame();
@@ -8400,26 +8354,32 @@ async function boot() {
         G.resources.dust = sum('dust') * levels.length;
         state.tab = 'forge';
     }
-    if (dev === 'watch') {   // 파견 관전 창이 열린 자원 탭 (§8 · §10 · ADR-0415) — 창은 클릭으로만 열리고 앉은 영웅이 있어야 버튼이 산다
-        if (!G) startGame();
-        devBuild('resource');            // 자원 단계는 자원 랭크가 연다 — 새 게임은 0 이라 앉힐 자리가 없다 (R137)
-        const q = new URLSearchParams(location.search);
-        // 로스터 앞 영웅들을 파견처마다 1단계에 하나씩 — 머리 탭이 여럿 서는 화면
-        POSTS.forEach((p, i) => { if (G.heroes[i]) SYS.game.dispatchAssign(G, p.id, 1, G.heroes[i].uid, now()); });
-        const [wp, wt] = (q.get('dw') ?? '').split(':');
-        state.dw = wp ? { post: wp, tier: Number(wt) } : null;
-        state.tab = 'resource';
-        if (q.get('open') !== '0') state.modal = 'dpWatch';
-        save();
-    }
-    if (dev === 'mg') {   // 자원 미니게임 창 (§8 · §10 · ADR-0532) — 단계는 자원 랭크가 연다 · `&mg=<파견처>` · `&go=1` 이면 판을 연 채
+    // ~~`?dev=watch` 파견 관전 창~~ — 2026-10-18 창째 걷었다 (ADR-0665)
+    if (dev === 'mg') {   // 자원 미니게임 창 (§8 · §10 · ADR-0532) — 단계는 연구소 랭크가 연다 · `&mg=<줄>` · `&go=1` 이면 판을 연 채 · `&open=0` 이면 창 없이
         if (!G) startGame();
         devBuild('resource');
         const q = new URLSearchParams(location.search);
         const post = POSTS.some(p => p.id === q.get('mg')) ? q.get('mg') : POSTS[0].id;
         state.mg = { post, tier: 1 };
+        state.post = post;
         state.tab = 'resource';
-        state.modal = 'mg';
+        // `&lv=n` — 열린 칸 전부를 칸 레벨 n 으로(상한에서 자른다) + 골드 · 재료를 채워 [레벨 올리기]가 산다 · `&tier=k` — 그 줄의 k 단계를 고른 채
+        //   (§8 · ADR-0669 — 헤드리스가 Lv 배지 · 최대 레벨 · 켜진 버튼을 본다. 칸 키 `줄:단계` 는 INTERFACE §4 `labLevels`)
+        // `&rk=n` — 연구소를 n랭크로(끝까지 지은 판 대신 · 잠긴 칸이 섞인 트랙을 본다)
+        const rk = Number(q.get('rk'));
+        if (Number.isInteger(rk) && rk >= 1) { G.buildings.resource = rk; G = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(G, now())))); }
+        const lv = Number(q.get('lv')), pickTier = Number(q.get('tier'));
+        if (Number.isInteger(lv) && lv > 0) {
+            const open = SYS.game.limitsOf(G).resourceTiers;
+            for (const p of POSTS) for (const n of (D[p.tiers] ?? []).slice(0, open)) {
+                G.labLevels = { ...(G.labLevels ?? {}), [`${p.id}:${n.tier}`]: Math.min(lv, D.balance.lab_level_max) };
+                G.materials[n.yieldId] = 9999;
+            }
+            G.resources.gold = 999999;
+        }
+        if (Number.isInteger(pickTier) && pickTier > 0) state.labTier = { [post]: pickTier };
+        // `&open=0` — 창을 닫은 채 연구소 탭만(단계가 다 열린 판 · 옛 `?dev=watch&open=0` 의 자리 · ADR-0665)
+        if (q.get('open') !== '0') state.modal = 'mg';
         save();
         if (q.get('go') === '1') setTimeout(() => { if (state.modal === 'mg') mgStart(post, 1); }, 0);
     }
@@ -8599,6 +8559,10 @@ async function boot() {
     if (D.difficulties[lq.get('labd')]) state.lab.diff = lq.get('labd');
     const labN = Number(lq.get('labn'));
     if (labN > 0) labRoll(Math.min(labN, LAB_KEEP));
+    // `&cxlv=<n>` — 모든 몬스터의 도감이 n 레벨에 닿은 채 (SCREEN_DESIGN §10 · ADR-0667) — 켜진 단계 · 켜진 추가옵션을 보는 길이다
+    //   (도감 경험치는 이긴 라운드의 처치로만 쌓여 헤드리스가 못 닿는다) · 세이브하지 않는다 · 모르는 값이면 무시
+    const cxlv = Math.min(Number(lq.get('cxlv')) || 0, D.codexLevels.length);
+    if (G && cxlv > 0) for (const id of Object.keys(D.monsters)) G.codexExp[id] = D.codexLevels[cxlv - 1];
     render();
     /* 플래시 — 클릭으로만 뜨고 제 시간에 사라져 헤드리스가 못 닿는다 (SCREEN_DESIGN §2 · §10 · ADR-0113).
        `?flash=<i18n 키>` 는 `?dev=` · `?tab=` 에 겹쳐 쓴다 — 창 위에 서는지는 `?dev=tree&flash=sk.err.points`. `{name}` 에는 로스터 첫 영웅.
@@ -8625,12 +8589,14 @@ async function boot() {
         const node = list[Math.max(1, Number(q.get('i')) || 1) - 1];
         // 커서 자리는 왼쪽 위 — 카드 두 장(최대 640px)이 접힘 보정 없이 그대로 펴진다
         node?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
-        // `&alt=1` — 올린 뒤 **Alt 를 누른 채** — 비교 두 장도 누르는 동안만 선다(ADR-0448 · `?dev=play` 의 `&alt=1` 과 같다)
+        // `&alt=1` — 올린 뒤 **Alt 를 누른 채** — 아이템 툴팁의 착용 델타도 누르는 동안만 선다(ADR-0658 · `?dev=play` 의 `&alt=1` 과 같다)
         if (q.get('alt') === '1') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt' }));
     }
     // `&cxtip=<skill_id>` — 도감 스킬 타일의 툴팁이 뜬 채 (§9-1 · §10 · ADR-0650) · 카드 옆에 붙는 툴팁이라 커서 자리는 상관없다
+    //   숫자면 몬스터 idx — 도감 몬스터 카드의 툴팁(§9 · 2칸 줄을 보는 길 · ADR-0664)
     const cxtip = new URLSearchParams(location.search).get('cxtip');
-    if (cxtip) document.querySelector(`.ix-tile[data-skill="${CSS.escape(cxtip)}"]`)?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
+    const cxSel = /^\d+$/.test(cxtip ?? '') ? `.mon-card[data-mid="${cxtip}"]` : `.ix-tile[data-skill="${CSS.escape(cxtip ?? '')}"]`;
+    if (cxtip) document.querySelector(cxSel)?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
     startClocks();
 }
 

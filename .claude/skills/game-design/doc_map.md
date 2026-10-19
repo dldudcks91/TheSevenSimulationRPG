@@ -64,6 +64,7 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 | `dragonquest/` | 참고작 드래곤퀘스트 IP 전수 조사 [2026-09-15] — 서구 ARPG·방치형 표본과 계보가 다른 **일본 커맨드 RPG 의 시조**. 「그래픽을 최소화한 파티 RPG」(GAME_DESIGN §1)의 40년 선례이되 **고정 스탯(같은 이름 = 같은 성능) 전통이라 굴림 파밍의 대조군**이지 채택 후보가 아니다. ⚠ **작품이 아니라 IP 라 판을 반드시 붙여 인용한다** — 같은 번호도 FC/SFC/DS/3DS/HD-2D 마다 시스템이 다르다(`00_overview.md §0-1`). `00_overview.md`(IP 범위·연표·전투 표현·모바일 자동전투 계열(星ドラ)·호리이 설계 철학, 완료) · `01_skills.md`(전직 계보·**얕은 한 줄(DQ8·9) vs 인접 패널(DQ10·11)**·주문 이름 계단·**작전 AI**·**대열 전열:후열 = 2:1 가중치**·におうだち/みがわり, 완료) · `02_items.md`(슬롯 계보·드롭 확률 계단·카지노·연금/대장장이·**DQ9 보물지도(자기순환 사다리)**·워크 こころ, 완료) · `03_party_monsters.md`(루이다의 술집·몬스터 동료 4단 변천·마차 XP·**DQ10 서포트 동료**·**파견형 방치 구조는 이 IP 의 전통이 아니다**, 완료) |
 | `socket_layer_reference.md` | 장비 2차 층(룬 · 차암 · 주얼 · 젬 · 카드) 참고작 전수 조사. 게임별 분할본은 `socket_layer/` — PoE1 소켓·링크·젬 색·주얼·플라스크의 상세 원문은 `socket_layer/02_diablo4_poe1.md` 게임2 절, `poe1/` 폴더와 짝 문서 |
 | `crafted_item_survey.md` | 제작품의 옵션 구조 — 드롭 레어와 **구조적으로** 무엇이 다른가 · ARPG · 방치형/아시아 · MMO 26종 · 실패 없는 긴장은 기회비용 · 도안 + 바탕 장비 + 재료 채택(2026-10-10 · item_design.md §7-1) |
+| `salvage_cube_survey.md` | 분해 큐브 · 자동분해 규칙 언어 · 조합 — **TBH(Task Bar Hero) 큐브 레벨**(태운 양 → 기능 해금 · 레벨 매치 · 9→1 합성) · Last Epoch 필터 문법 · NeverSink 엄격도 · 자동분해 유형 6 · 큐브 · 조합 다섯 갈래 · 레벨형 제작 시설(2026-10-18 · 초안 [salvage_draft.md](docs/game_design/salvage_draft.md)) · 짝 문서 `salvage_mode_survey.md`(무엇이 나오고 무엇을 거르나) · `salvage_interaction_survey.md`(어떤 조작으로) |
 | `offline_arena_survey.md` | 오프라인 결투장 — AI 팀 상대 등급 사다리의 선례 · 오프라인 대회 등급(Cyber Sleuth 컵 · Monster Rancher · DQM · 포켓몬 배틀 시설 · 철권 7) vs 비동기 사람 등급(AFK · FEH · Backpack Battles · Partyforge Idle 반면교사) · 팀 운영 리그(Teamfight Manager · Eslabong) · 봇 표기 · 만렙 뒤에 사다리가 풀리는 문제 · Steam API 수치 34종(2026-10-17 · arena_design.md) |
 | `steam_market_target_survey.md` | Steam 시장 · 타겟 — 누가 왜 하나 · 맞춤 vs 광범위 · 생존 조건. 게이머 시점(첫 10분 ~ 30시간) · 루팅 · 파티 방치 RPG 74개 리뷰 분포 · 유사작 리뷰 동기 집계 · 타겟 후보 6 비교(→ 디아블로 · PoE 경험자 ∩ 깊은 시스템 방치형) · 수치 검증표(2026-10-17 · 조사자 의견이지 결정 아님) |
 | `rune_concept_lexicon.md` | "룬 같은 개념" 사전 — 신화 · 종교 · TTRPG · 소설 · 만화 · 웹소설에서 뽑은 어휘 후보와 제약 규칙 원형. 분할본은 `rune_concepts/` |
@@ -78,4 +79,4 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 - 어느 문서를 먼저 고치는지의 표는 [DEV_PLAN.md](docs/client/DEV_PLAN.md) §7
 
 ---
-*마지막 업데이트: 2026-10-17*
+*마지막 업데이트: 2026-10-19*

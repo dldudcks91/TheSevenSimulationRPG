@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Seven Simulation RPG — 화면 목업</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="./ui/style.css">
+</head>
+<body>
+    <!-- 한 장 — 화면은 1600×800 한 장이고 창에 맞춰 통째로 줄이고 늘린다 (ADR-0087 · 크기는 style.css 의 #stage) -->
+    <div id="stage">
+        <!-- booting 으로 시작한다 — 첫 render 전에 빈 브랜드 · 상단바 · 내비가 비치지 않게 (ADR-0349 · ADR-0633). 첫 app.js:renderShell 이 걷는다 -->
+        <div id="app" class="booting">
+            <div class="brand">THE <b>SEVEN</b></div>
+            <div class="topbar">
+                <div class="crumb"></div>
+                <div class="tab-seg"></div>
+                <div class="resources"></div>
+                <!-- 플래시 자리 — 상단바 가운데에 내려왔다가 제 시간에 사라지는 한 줄 (SCREEN_DESIGN §2 · ADR-0113). 채우는 것은 app.js:flash 하나 -->
+                <div id="toast" class="toast-layer" role="status" aria-live="polite"></div>
+            </div>
+            <nav class="nav"></nav>
+            <main class="main"></main>
+        </div>
+
+        <div id="tooltip" class="tooltip"></div>
+        <!-- 창 레이어 — 탭 위에 겹쳐 뜨는 판 하나 (SCREEN_DESIGN §2). 쓰는 곳은 스킬 트리(§7) · 해고(§6) · 출정(§4-1) -->
+        <div id="modal" class="modal-layer" hidden></div>
+    </div>
+
+    <!-- 세로 창 막 — 터치 기기에서 창이 세로로 길면 창 전체를 덮는다. 한 장 밖이라 배율을 안 탄다 (SCREEN_DESIGN §2 · ADR-0371). 채우는 것은 app.js:renderTurnGate 하나 -->
+    <div id="turn" class="turn-gate" hidden></div>
+
+    <script type="module" src="./ui/app.js"></script>
+</body>
+</html>

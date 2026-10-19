@@ -1,0 +1,8 @@
+class_id,key_attr,name_kr,name_en,role_kr,role_en,role_text_kr,role_text_en,release,description_kr,color_hex,hp_base
+warrior,str,전사,Warrior,근접 물리,Melee Physical,적에게 붙어 물리 데미지를 넣는다,Closes in and deals physical damage,main,-,#7895A9,100
+knight,str,기사,Knight,탱커 · 수호,Tank · Guardian,적의 공격을 받아 내며 동료를 지킨다,Takes the blows and shields allies,main,메인 스탯 = 힘 [확정 2026-09-18 · 사용자] — ~~건강(⚠제안)~~ 대체 · 능력치 굴림에서 최고치로 밀어주는 축 (hero_design §2),#C6CDD6,100
+mage,int,마법사,Mage,마법,Magic,마법으로 적에게 데미지를 퍼붓는다,Pours magic damage onto enemies,main,-,#7878D9,50
+archer,agi,궁수,Archer,원거리 물리,Ranged Physical,멀리서 물리 데미지를 넣는다,Deals physical damage from afar,main,메인 스탯 = 민첩 [확정 2026-09-18 · 사용자] — ~~운(08-26 감각→운을 이름만 따라간 것)~~ 대체 (hero_design §2),#93A861,50
+priest,cha,사제,Priest,지원 · 회복,Support · Healing,동료를 회복시키고 힘을 북돋운다,Heals allies and bolsters them,main,메인 스탯 = 매력 [확정 2026-09-27 · 사용자] — ~~지능(2026-09-18)~~ 대체 · 매력이 회복량을 민다 · 피해(평타 · 심판)는 여전히 지능(마법 무기) · 지능을 부스탯으로 붙이는 것은 나중에 (hero_design §2) · 사제 = 순수 캐스터(전용 무기 성경·십자가 — 2026-09-07 마법사와 풀 분리),#E1CE98,70
+assassin,luck,암살자,Assassin,치명 · 속도,Crit · Speed,빠르게 파고들어 치명타로 끝낸다,Darts in and finishes with critical hits,expansion,메인 스탯 = 운 [확정 2026-09-18 · 사용자] — 종전 민첩 대체 · ⚠ 운은 드랍률 · 골드도 민다 (hero_design §2 · §4-1-1),,
+necromancer,int,네크로맨서,Necromancer,소환,Summoning,죽은 자를 불러내 대신 싸우게 한다,Raises the dead to fight in its place,expansion,-,,

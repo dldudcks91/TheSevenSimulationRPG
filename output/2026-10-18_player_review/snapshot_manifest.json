@@ -1,0 +1,581 @@
+{
+  "commit": "ec764ca24a99ce9f53528ca53f2c2fa6bf52cf40",
+  "files": {
+    "src/data/README.md": {
+      "blob": "45fb88b9229e716898ff428e0116bad44e2abae4",
+      "working_copy_differs": true
+    },
+    "src/data/accessory_common_option.csv": {
+      "blob": "7d0224663f0c26a9b7f43357b90e6a0452645512",
+      "working_copy_differs": true
+    },
+    "src/data/accessory_sin_option.csv": {
+      "blob": "504c56ee03419f91bff262c701e4e2fd0364b982",
+      "working_copy_differs": true
+    },
+    "src/data/advance.csv": {
+      "blob": "7e6f4d5d0ab80e122a0180e37404afb77cf61f74",
+      "working_copy_differs": true
+    },
+    "src/data/advance_node.csv": {
+      "blob": "807b3b1d2adf3668a0c7a4dd3f0f564cbf047f0a",
+      "working_copy_differs": true
+    },
+    "src/data/amulet_proc.csv": {
+      "blob": "faec2b1676d73bda87d3042a4daee04439fe70bf",
+      "working_copy_differs": true
+    },
+    "src/data/arena_tier.csv": {
+      "blob": "06f83ce568b83126d0b147b8915770c2098988a8",
+      "working_copy_differs": true
+    },
+    "src/data/armor_common_option.csv": {
+      "blob": "40c342f40ff5a977987bc8c4f9d67df517b6a3ba",
+      "working_copy_differs": true
+    },
+    "src/data/armor_group.csv": {
+      "blob": "d65583e6ece40524daf4e2517ff9712ae7787cff",
+      "working_copy_differs": true
+    },
+    "src/data/armor_sin_option.csv": {
+      "blob": "866595afba0b4200a813925f77dadecb570a3759",
+      "working_copy_differs": true
+    },
+    "src/data/balance.csv": {
+      "blob": "214f0e0ede7d4702f4edfba08b45926c6b11dcee",
+      "working_copy_differs": true
+    },
+    "src/data/building.csv": {
+      "blob": "d863516abafd8a51bf587a4bc91552fa0d4c1525",
+      "working_copy_differs": true
+    },
+    "src/data/building_effect.csv": {
+      "blob": "460e427f307aeac84ff77ce87d164d67158a3fb0",
+      "working_copy_differs": true
+    },
+    "src/data/building_rank.csv": {
+      "blob": "a9a7d35c6caa3d4a82426c978cf74d73c4513420",
+      "working_copy_differs": true
+    },
+    "src/data/chapter.csv": {
+      "blob": "9002278c521c8c9aff827be6863cfc8e0d3a9e4c",
+      "working_copy_differs": true
+    },
+    "src/data/class.csv": {
+      "blob": "3f92bd0cb5bf966e82438423b8067cf1e40603a4",
+      "working_copy_differs": true
+    },
+    "src/data/codex_level.csv": {
+      "blob": "037436b64fafd91b78690347544c559d13732f3c",
+      "working_copy_differs": true
+    },
+    "src/data/codex_series.csv": {
+      "blob": "58d8506ab7f2c96cf14090a1d5bd1bbfa95b047a",
+      "working_copy_differs": true
+    },
+    "src/data/combat_stat.csv": {
+      "blob": "6b7ad38bdabd8bc6359c2225750335fb2269a2c7",
+      "working_copy_differs": true
+    },
+    "src/data/commission.csv": {
+      "blob": "9f1f3f5fadc9472a8eea03a69ad1e2e01094e402",
+      "working_copy_differs": false
+    },
+    "src/data/commission_grade.csv": {
+      "blob": "0f4cbc3cc4054a59a920af4c8e4520d21328399a",
+      "working_copy_differs": false
+    },
+    "src/data/commission_kind.csv": {
+      "blob": "88957e7d44715d44c1fb365ffa8b28b222f34fd6",
+      "working_copy_differs": true
+    },
+    "src/data/difficulty_tier.csv": {
+      "blob": "a7109acc10c2713c4f6c5501767c9b9796af161c",
+      "working_copy_differs": true
+    },
+    "src/data/equip_slot.csv": {
+      "blob": "cec4804e79b6b298eeaf12ac570781868f63de5a",
+      "working_copy_differs": true
+    },
+    "src/data/explore_spot.csv": {
+      "blob": "0137004b9aaabea3d80e62d643d368f79903c1bf",
+      "working_copy_differs": true
+    },
+    "src/data/explore_story.csv": {
+      "blob": "351b41c7f264f7eae717da58d3fe26ec551e6917",
+      "working_copy_differs": true
+    },
+    "src/data/formation_template.csv": {
+      "blob": "53b4ead878d3f2d336b5d503b3b88cacac18bc86",
+      "working_copy_differs": true
+    },
+    "src/data/gather_node.csv": {
+      "blob": "8bb9e0a707feeab2c28ac46f94db3f93c201669c",
+      "working_copy_differs": true
+    },
+    "src/data/hero_attribute.csv": {
+      "blob": "f86ec50d6487cc40239f9ee8d17a36795def84c5",
+      "working_copy_differs": true
+    },
+    "src/data/hero_name.csv": {
+      "blob": "f12b46c0913425cfb6bfd9b474c19b192f7d6de6",
+      "working_copy_differs": true
+    },
+    "src/data/hero_tier.csv": {
+      "blob": "775204d65fa487cf5a2b6137c2cde3e00cff394c",
+      "working_copy_differs": true
+    },
+    "src/data/hero_trait.csv": {
+      "blob": "449eba1d66047274ee7e39f08632e60c161a2e98",
+      "working_copy_differs": true
+    },
+    "src/data/hero_unique_candidates.csv": {
+      "blob": "b7974e42a8e136dca1584f29f3d089e08f6c00f5",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/card_skill.csv": {
+      "blob": "26e4cb934940382accb4bcbb60c2e6ca4579d616",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/chapter_info.csv": {
+      "blob": "d4e6a812f81d516adb6ca55e4594411086e330bd",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/chapter_monster_pool.csv": {
+      "blob": "02a2e832951e8aff6c999d510f34ba25b3a39c5f",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/collection_group.csv": {
+      "blob": "815b3f97a13e10dbc219e0fd1b6d78b1f721082f",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/collection_group_bonus.csv": {
+      "blob": "7983a45cdd3bd067d72312483c000dac6c3f9061",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/elite_trait.csv": {
+      "blob": "f731ae368d8ecee42639053b21f9432b60caad22",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equip_drop_rate.csv": {
+      "blob": "0fa9b947452455d4f52f0aa24eae32e4f59de6d7",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equip_rarity_config.csv": {
+      "blob": "6a9bd3b530d65a825e1d25040f3271bf57674cf9",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equipment_base.csv": {
+      "blob": "567b0aa70f27b0243958770025eac4d290e66e59",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equipment_common_option.csv": {
+      "blob": "bc72ed05263cb5e4b21ab47177d43ed09599030d",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equipment_prefix.csv": {
+      "blob": "6428f5fcbde32f50c633747a63981ef946050b9f",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equipment_set_bonus.csv": {
+      "blob": "eacfdd02572164939efdebad836887f4e15c37a1",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equipment_suffix.csv": {
+      "blob": "556ddeff69aaf999488b0f5114878f4df6dc01e2",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/equipment_unique.csv": {
+      "blob": "57efb5c45de5456e2680a3a6f16bccbdd5d03f13",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/gold_drop_config.csv": {
+      "blob": "a3c25daa91dcdf3d48c157a850e05fcf28ae3d25",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/level_exp_table.csv": {
+      "blob": "cfad2f355a929dfc80f0142423544cc3bb13d935",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/monster_drop_config.csv": {
+      "blob": "669e9734fb3e486afa8628231b053d985f2cfd1a",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/monster_drop_equipment.csv": {
+      "blob": "b1833d020c730efb36711c5b94900c76e6e1e97e",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/monster_info.csv": {
+      "blob": "ce34cdda7fcb669d58327d6e31ec84a15728f9de",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/moster_score_config.csv": {
+      "blob": "e6484b26419e47f93a1a379f7887927caa7bbc84",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/spawn_grade_config.csv": {
+      "blob": "37cf436ae1132df7676a28cabf6ce9e64ffecc35",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/stage_info.csv": {
+      "blob": "416fe5869353000f57e3538e1865e31d4174bc2c",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/status_effect.csv": {
+      "blob": "228c29c3d27adebd9a2033e6cb44402b5fcaec92",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/stigma_drop_config.csv": {
+      "blob": "1ee541bf5ec632c71020a772f21532ef31bb538c",
+      "working_copy_differs": true
+    },
+    "src/data/inherited/unique_drop_rate.csv": {
+      "blob": "775529d9af8b7b557ea1d51d9b3ace4cd8d970cf",
+      "working_copy_differs": true
+    },
+    "src/data/item_base.csv": {
+      "blob": "66444cf3688a8039898b1596173afb0e6d88ba05",
+      "working_copy_differs": true
+    },
+    "src/data/level_xp.csv": {
+      "blob": "958e527fbcee9d26fb970bb1717bc1ecd9cfc8ac",
+      "working_copy_differs": true
+    },
+    "src/data/log_node.csv": {
+      "blob": "2f573eddc4fcbf3101ab1cc2a1c3a1c5cd480631",
+      "working_copy_differs": true
+    },
+    "src/data/make_recipe.csv": {
+      "blob": "0a3bcde5f44954dffce870a5f33d9a70bfff169e",
+      "working_copy_differs": true
+    },
+    "src/data/mastery_node.csv": {
+      "blob": "2ed89c377df1ecacaedf16e5a0f6127c10178ae6",
+      "working_copy_differs": true
+    },
+    "src/data/mine_node.csv": {
+      "blob": "ce6d17a38d7a973ab8768eddb94d15a530945be4",
+      "working_copy_differs": true
+    },
+    "src/data/monster.csv": {
+      "blob": "bac0e79894af703cd961ae74e187dc649d03faba",
+      "working_copy_differs": true
+    },
+    "src/data/monster_role.csv": {
+      "blob": "4e830fda9732e5f5b373fc0beb10a795ddb26088",
+      "working_copy_differs": true
+    },
+    "src/data/monster_type.csv": {
+      "blob": "c62171fab67683ac1493195aa1626f4363fcd7a5",
+      "working_copy_differs": true
+    },
+    "src/data/potion.csv": {
+      "blob": "a0f4cd0cba2b42e16857ed3a5a815d46e46d9b19",
+      "working_copy_differs": true
+    },
+    "src/data/research.csv": {
+      "blob": "509144ad3721f8d22a82b539715473500473cea7",
+      "working_copy_differs": true
+    },
+    "src/data/round_budget.csv": {
+      "blob": "0d63b368c9b8aadeaf0ab7dded416b76751cdfe1",
+      "working_copy_differs": true
+    },
+    "src/data/search_answer.csv": {
+      "blob": "a8933c39f07ec049c4b05aecc6acf997f4f12fa0",
+      "working_copy_differs": true
+    },
+    "src/data/search_meeting.csv": {
+      "blob": "c3f854b5f5c25043d79f1908b400b69be8ce9db1",
+      "working_copy_differs": true
+    },
+    "src/data/search_story.csv": {
+      "blob": "98ad9a767c4b23c306c0ad3545fbefea25c59ccd",
+      "working_copy_differs": true
+    },
+    "src/data/shrine.csv": {
+      "blob": "6fb7d6daa64909340852173aa6cb4625813995ad",
+      "working_copy_differs": true
+    },
+    "src/data/sin_word.csv": {
+      "blob": "a923944e845d3bad8ad5ef3659233abc58ea3f39",
+      "working_copy_differs": true
+    },
+    "src/data/skill.csv": {
+      "blob": "e357ac25f631916373776bf46c174a299171d3b5",
+      "working_copy_differs": true
+    },
+    "src/data/skill_codex_level.csv": {
+      "blob": "97865931518bf15d071b84c4abc59ffd0d373493",
+      "working_copy_differs": true
+    },
+    "src/data/skill_effect.csv": {
+      "blob": "8796ab1df3dd424cc679c53a7ce4b46b888de590",
+      "working_copy_differs": true
+    },
+    "src/data/skill_status.csv": {
+      "blob": "d49b4f88f13137fccedd714c1ff7f181535c98e2",
+      "working_copy_differs": true
+    },
+    "src/data/skill_tag.csv": {
+      "blob": "f12461b1620253ee4cef5522e63f441089cff807",
+      "working_copy_differs": true
+    },
+    "src/data/slot_coin.csv": {
+      "blob": "2e2811f5601fd2de16afdc48a172c90c88abbfe9",
+      "working_copy_differs": false
+    },
+    "src/data/slot_line.csv": {
+      "blob": "962a4d394c04560f58e7d5efebde844838436592",
+      "working_copy_differs": false
+    },
+    "src/data/slot_stake.csv": {
+      "blob": "600458f8887a84e1e4c66faca908fc5e51848624",
+      "working_copy_differs": true
+    },
+    "src/data/slot_symbol.csv": {
+      "blob": "a70594d11ba93a922b92c9d7f826f7525ea45def",
+      "working_copy_differs": true
+    },
+    "src/data/spawn_grade.csv": {
+      "blob": "35c15c5953662ba12308ca4a62f57d5df25aa87e",
+      "working_copy_differs": true
+    },
+    "src/data/stage.csv": {
+      "blob": "75b329e13f32d8b2e4bb252267185c76b5996330",
+      "working_copy_differs": true
+    },
+    "src/data/stage_round.csv": {
+      "blob": "d791e825d50f7a9f8ed86c73db94cc114353828b",
+      "working_copy_differs": true
+    },
+    "src/data/tactic_condition.csv": {
+      "blob": "566989fb5b2b707171224898a6194ff76a55e07e",
+      "working_copy_differs": true
+    },
+    "src/data/tactic_option.csv": {
+      "blob": "f17700eefa6bce4565f243e98e63a8717aabc901",
+      "working_copy_differs": true
+    },
+    "src/data/tactic_score.csv": {
+      "blob": "e90b13adccbc91613322bf53a875a290506d154a",
+      "working_copy_differs": true
+    },
+    "src/data/tactic_slot.csv": {
+      "blob": "09fab7688e05e1b9a6c373c3e8e221234eed5cf7",
+      "working_copy_differs": true
+    },
+    "src/data/upgrade_chance.csv": {
+      "blob": "4b78ed4eba27ceebddedb8fed3fae8902b2b73b4",
+      "working_copy_differs": true
+    },
+    "src/data/weapon_base.csv": {
+      "blob": "8553285323381b48171e45b4ede493c2d781d159",
+      "working_copy_differs": true
+    },
+    "src/data/weapon_group.csv": {
+      "blob": "f2316b4a9174308942b76f95968b33a90751dc3a",
+      "working_copy_differs": true
+    },
+    "src/data/weapon_sin_option.csv": {
+      "blob": "be40f912244680320278c0d0430648d89ae4d816",
+      "working_copy_differs": true
+    },
+    "src/dev/README.md": {
+      "blob": "6e8b680d83f74f3e11296b65663199262b903f48",
+      "working_copy_differs": true
+    },
+    "src/dev/_measure.html": {
+      "blob": "6ab6d08d8467ed1c0d02573c4700afd2c162b869",
+      "working_copy_differs": true
+    },
+    "src/dev/funnel.html": {
+      "blob": "1bae3fe7c5767fe6fe5432075b494e6f2d37d6d5",
+      "working_copy_differs": true
+    },
+    "src/dev/funnel.js": {
+      "blob": "177a1c72905c062b93e3882d524de78ad010bfb1",
+      "working_copy_differs": true
+    },
+    "src/dev/golden.js": {
+      "blob": "527bdd2a7bcc914ce3e2aeb743ad4be1b6ed9a33",
+      "working_copy_differs": true
+    },
+    "src/dev/golden.json": {
+      "blob": "94a50f1b4c66fd19bfe6cfa9080d8ee40c7c8f5f",
+      "working_copy_differs": true
+    },
+    "src/dev/sim.html": {
+      "blob": "3e42bb359c9667447f0629661e610f0e5bbf3a7b",
+      "working_copy_differs": true
+    },
+    "src/dev/sim.js": {
+      "blob": "c85d08b0206d2cd59521c5b155b493d2e0ee580b",
+      "working_copy_differs": true
+    },
+    "src/dev/test.html": {
+      "blob": "2ac3da764776c5fc93be2dd2e25d185657cac554",
+      "working_copy_differs": true
+    },
+    "src/dev/test.js": {
+      "blob": "5782c2926adc599fabb2b526936c9ded17b7718b",
+      "working_copy_differs": true
+    },
+    "src/game_logic/.gitkeep": {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "working_copy_differs": false
+    },
+    "src/game_logic/README.md": {
+      "blob": "a1726e30d82310dc4fbf55851c713467e146f406",
+      "working_copy_differs": true
+    },
+    "src/game_logic/arena.js": {
+      "blob": "2729291fd77d57e77de37bcec196d15636b11078",
+      "working_copy_differs": true
+    },
+    "src/game_logic/battle.js": {
+      "blob": "ab8cd4877c457e2e194da52b84e4cf65099480fb",
+      "working_copy_differs": true
+    },
+    "src/game_logic/commission.js": {
+      "blob": "b28f403fb2565f3cd40212900c04743001d2201e",
+      "working_copy_differs": false
+    },
+    "src/game_logic/construction.js": {
+      "blob": "4097acee06334614472a71511e0def63ce0c44ab",
+      "working_copy_differs": true
+    },
+    "src/game_logic/csv.js": {
+      "blob": "6a632b260eea31b87ecbe19f8ffa0aa7b9191280",
+      "working_copy_differs": true
+    },
+    "src/game_logic/formula.js": {
+      "blob": "bdb6ae1608fc95a75cfe9e58883c1bd69a30eb93",
+      "working_copy_differs": true
+    },
+    "src/game_logic/gamble.js": {
+      "blob": "df3b8f6f778a976f4b1f07c30e059d45f3133670",
+      "working_copy_differs": false
+    },
+    "src/game_logic/hero.js": {
+      "blob": "7acba34ad8d618e0c91caca6cfb9eb1c810b465e",
+      "working_copy_differs": true
+    },
+    "src/game_logic/item.js": {
+      "blob": "4f577bbb79f384ff66bbbe44258235444980c7da",
+      "working_copy_differs": true
+    },
+    "src/game_logic/naming.js": {
+      "blob": "775aa7126f0d51cd82eea0d7dd823abdde3d879f",
+      "working_copy_differs": true
+    },
+    "src/game_logic/rng.js": {
+      "blob": "ba8fc28ce9b6069af4dc5b806815946ea0043893",
+      "working_copy_differs": true
+    },
+    "src/game_logic/skill.js": {
+      "blob": "171dc747b6eaea1bf062c42a49d0e88c197f4370",
+      "working_copy_differs": true
+    },
+    "src/game_logic/skill_effects.js": {
+      "blob": "1b2a9e9243ef40fdcc1a118fb0087885f072df04",
+      "working_copy_differs": true
+    },
+    "src/game_logic/skill_runtime.js": {
+      "blob": "e7c50e27b615db9d49210a87ab5b954587c7d05b",
+      "working_copy_differs": true
+    },
+    "src/game_logic/spawn_rule.js": {
+      "blob": "582c6bfd24f7047e0f1a64cdad1aa7fd21804e17",
+      "working_copy_differs": true
+    },
+    "src/game_logic/state.js": {
+      "blob": "362f8dfca9540ee3f647d3ebfff9736d1df3c85e",
+      "working_copy_differs": true
+    },
+    "src/game_logic/tactic.js": {
+      "blob": "837e5bdb591e8f24b5ae8c9e5418b5798fe99ce9",
+      "working_copy_differs": true
+    },
+    "src/index.html": {
+      "blob": "b3d1ffcb94f44475de389b7b98a10d02436df0c6",
+      "working_copy_differs": true
+    },
+    "src/ui/README.md": {
+      "blob": "b89f501304db0e1768a00fa9bc5cba415abdf124",
+      "working_copy_differs": true
+    },
+    "src/ui/app.js": {
+      "blob": "a04645fbefa32b972a6d26191d1a193415921ef4",
+      "working_copy_differs": true
+    },
+    "src/ui/battle.js": {
+      "blob": "5ede411fe09745a05198dc1f93575fa65a2a7861",
+      "working_copy_differs": true
+    },
+    "src/ui/cloud.js": {
+      "blob": "95099599afb88a1512daac7640f0c9565ebe3b5d",
+      "working_copy_differs": true
+    },
+    "src/ui/data.js": {
+      "blob": "41d8de73f478a6f7df0e011654183a0696175b89",
+      "working_copy_differs": true
+    },
+    "src/ui/devadmin.js": {
+      "blob": "6e0fb64921ccdf29452aa04b163f80f26aded17b",
+      "working_copy_differs": true
+    },
+    "src/ui/devcompare.js": {
+      "blob": "52cc8a00dba92b928654c1f07e94cac3a7485d34",
+      "working_copy_differs": false
+    },
+    "src/ui/devpalette.js": {
+      "blob": "a39d4a494c6ca7ccbd6ea38317355730e59e4ecc",
+      "working_copy_differs": true
+    },
+    "src/ui/firebase_config.js": {
+      "blob": "640e78ea2b19534d705cff0d399e0a95dc00e2dc",
+      "working_copy_differs": true
+    },
+    "src/ui/fx.js": {
+      "blob": "590237c0cd822caa44aa2726314b2797885b126d",
+      "working_copy_differs": true
+    },
+    "src/ui/i18n.js": {
+      "blob": "51d30819218d51d13a6faf8c7b5e8569dfcfa1dc",
+      "working_copy_differs": true
+    },
+    "src/ui/minigame_art.js": {
+      "blob": "ee63ec98d0cba46e09bf8b514243960459ca1d77",
+      "working_copy_differs": true
+    },
+    "src/ui/mock.js": {
+      "blob": "3ef1ba4796f8ba2b9f5f1633436150f98beb6e68",
+      "working_copy_differs": true
+    },
+    "src/ui/pace.js": {
+      "blob": "120c4ebb0e9c3b4fab665fa73cf1e39d4153796c",
+      "working_copy_differs": true
+    },
+    "src/ui/skill_art.js": {
+      "blob": "6f55ff62e5485830ecd168e752120ce6e5e2778a",
+      "working_copy_differs": true
+    },
+    "src/ui/skill_looks.js": {
+      "blob": "43436be832bc10a53ccd466813e5014676338849",
+      "working_copy_differs": true
+    },
+    "src/ui/storage.js": {
+      "blob": "c9b8637bfd108d4a9cb1798abbd19ce31c29bba8",
+      "working_copy_differs": true
+    },
+    "src/ui/style.css": {
+      "blob": "dd130af023e39cd26e338593b0cb9e749852a930",
+      "working_copy_differs": true
+    },
+    "src/ui/tip.js": {
+      "blob": "e9fb8016e913a8d5190fbc479a27e132db0de6de",
+      "working_copy_differs": true
+    }
+  }
+}

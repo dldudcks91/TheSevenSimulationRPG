@@ -1,0 +1,270 @@
+{
+  "game": "TheSevenSimulationRPG",
+  "date": "2026-10-18",
+  "basis": "current_snapshot: frozen working-copy code/data; no gameplay dev presets or granted rewards",
+  "method": {
+    "party": [
+      "warrior",
+      "mage",
+      "archer"
+    ],
+    "rerolls": 0,
+    "battle_speed": 1,
+    "clock": "Playwright clock installed BEFORE navigation; run_for drives all timers",
+    "sample_size": 1,
+    "day1": "First hour online, then offline until 24h from first menu",
+    "player_actions": "UI clicks; equipment comparisons, formation, mastery, construction, shopping, salvage, crafting and one upgrade",
+    "discarded": "Earlier post-boot-clock measurements and committed-version trial are excluded"
+  },
+  "ten_minutes": {
+    "party_levels": [
+      4,
+      4,
+      4
+    ],
+    "cleared": [
+      1011,
+      1012
+    ],
+    "gold": 1076
+  },
+  "one_hour": {
+    "party_levels": [
+      10,
+      10,
+      9
+    ],
+    "cleared": [
+      1011,
+      1012,
+      1013,
+      1021,
+      1022,
+      1023,
+      1031,
+      1032,
+      1033,
+      1041,
+      1042,
+      1043,
+      1051
+    ],
+    "books": {
+      "arc_rapid": 1,
+      "arc_guided": 1,
+      "war_leap": 1,
+      "kni_charge": 2,
+      "mag_fireball": 2,
+      "war_battlecry": 1,
+      "mag_iceblast": 1
+    },
+    "book_count": 9,
+    "buildings": {
+      "expedition": 1,
+      "storage": 1,
+      "codex": 1,
+      "command": 1,
+      "resource": 1,
+      "tavern": 1,
+      "shop": 1,
+      "forge": 1
+    },
+    "gold": 10583,
+    "completed_losses": 7
+  },
+  "day1_plain": {
+    "resource_delta": {
+      "dust": 0,
+      "gold": 0,
+      "stigma": 0
+    },
+    "material_delta": {
+      "herb_t1": 180,
+      "ore_t1": 180,
+      "timber_t1": 180
+    },
+    "party_levels": [
+      10,
+      10,
+      9
+    ],
+    "first_screen_shows_material_gains": false
+  },
+  "day1_prepared": {
+    "preparation": "One search by spare worker, build exploration, manually withdraw, send Party I to cave",
+    "resource_delta": {
+      "dust": 0,
+      "gold": 0,
+      "stigma": 0
+    },
+    "material_delta": {
+      "herb_t1": 180,
+      "ore_t1": 180,
+      "timber_t1": 180
+    },
+    "exploration_gear_claimed": 3,
+    "search_results_waiting": 1,
+    "first_screen": "Stage list with menu dots; no earnings or completion summary"
+  },
+  "validation": {
+    "runtime_errors": [],
+    "http_failures": [],
+    "current_test_title": "FAIL 596/599",
+    "test_failures": [
+      "Boss attribute ratio assertion",
+      "Golden starting-party mismatch",
+      "Golden 60-run mismatch"
+    ],
+    "working_app_change_after_freeze": "Only a developer URL cxlv fixture hook; diff saved separately"
+  },
+  "events": [
+    {
+      "event": "current_first_world",
+      "user_seconds": 125.7
+    },
+    {
+      "event": "current_first_30s_battle",
+      "user_seconds": 170.9
+    },
+    {
+      "event": "current_5min_inventory",
+      "user_seconds": 311.0
+    },
+    {
+      "event": "current_8min",
+      "user_seconds": 482.9
+    },
+    {
+      "event": "current_first_weapon_upgrade",
+      "user_seconds": 531.3
+    },
+    {
+      "event": "current_10min",
+      "user_seconds": 600.0
+    },
+    {
+      "event": "current_formation_changed",
+      "user_seconds": 650.4
+    },
+    {
+      "event": "current_15min",
+      "user_seconds": 860.8
+    },
+    {
+      "event": "current_mastery_choices",
+      "user_seconds": 897.6
+    },
+    {
+      "event": "current_shop_review",
+      "user_seconds": 958.0
+    },
+    {
+      "event": "current_18min",
+      "user_seconds": 1078.4
+    },
+    {
+      "event": "current_shop_weapon_bought",
+      "user_seconds": 1089.0
+    },
+    {
+      "event": "current_gear_upgrades",
+      "user_seconds": 1109.6
+    },
+    {
+      "event": "current_23min",
+      "user_seconds": 1409.6
+    },
+    {
+      "event": "current_defeat_report",
+      "user_seconds": 1419.8
+    },
+    {
+      "event": "current_30min",
+      "user_seconds": 1800.0
+    },
+    {
+      "event": "current_first_forge_upgrade",
+      "user_seconds": 1859.1
+    },
+    {
+      "event": "current_37min",
+      "user_seconds": 2159.1
+    },
+    {
+      "event": "current_wall_shop_refresh",
+      "user_seconds": 2205.2
+    },
+    {
+      "event": "current_second_weapon_upgrade",
+      "user_seconds": 2225.5
+    },
+    {
+      "event": "current_mage_gloves",
+      "user_seconds": 2235.7
+    },
+    {
+      "event": "current_44min",
+      "user_seconds": 2535.7
+    },
+    {
+      "event": "current_45min",
+      "user_seconds": 2715.7
+    },
+    {
+      "event": "current_first_salvage",
+      "user_seconds": 2731.1
+    },
+    {
+      "event": "current_first_craft",
+      "user_seconds": 2746.4
+    },
+    {
+      "event": "current_crafted_staff_equipped",
+      "user_seconds": 2756.8
+    },
+    {
+      "event": "current_51min",
+      "user_seconds": 3056.8
+    },
+    {
+      "event": "current_54min",
+      "user_seconds": 3252.0
+    },
+    {
+      "event": "current_claymore_equipped",
+      "user_seconds": 3277.3
+    },
+    {
+      "event": "current_56min",
+      "user_seconds": 3397.3
+    },
+    {
+      "event": "current_before_hour_unlocks",
+      "user_seconds": 3487.3
+    },
+    {
+      "event": "current_1hour",
+      "user_seconds": 3600.0
+    },
+    {
+      "event": "day1_a_plain_first_screen",
+      "user_seconds": 86403.29
+    },
+    {
+      "event": "day1_b_search_sent",
+      "user_seconds": 3620.2
+    },
+    {
+      "event": "day1_b_prepared",
+      "user_seconds": 3638.3
+    },
+    {
+      "event": "day1_b_prepared_first_screen",
+      "user_seconds": 86403.28
+    },
+    {
+      "event": "day1_b_claimed_exploration",
+      "user_seconds": 86405.58
+    }
+  ]
+}

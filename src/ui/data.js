@@ -35,9 +35,9 @@ export const D = {
     budgets: null, grades: null, eliteRounds: [], bossRound: 0,   // eliteRounds · bossRound = 첫 스테이지 세트의 배치(도움말 표기)
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
     codexLevels: [],          // codex_level.csv — 레벨순 exp_total (누적 도감 경험치 문턱 · 2026-10-10 R239)
-    codexBonus: [],           // codex_level.csv — 레벨순 bonus_pct
+    codexSteps: [],           // codex_level.csv — 레벨순 [{reward, value}] · 레벨 n 이 여는 사다리 단계 (2026-10-18 R286 · ~~bonus_pct~~)
     skillCodex: [],           // skill_codex_level.csv — 레벨순 [{level, expTotal, upgradeCap}] · 0 행 = 도감 전 (스킬 도감 · 2026-10-16 R266)
-    codexSeries: null,        // codex_series.csv — {stage_num: statKey}
+    codexOptions: [],         // codex_option.csv — [{monsterId, stat, value}] · 도감 Lv4 몬스터다운 전투 옵션 · 검증은 game_logic/state.js (2026-10-18 R286 · ~~codex_series.csv~~ 삭제)
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
     chapterList: [],
     heroAttributes: [],       // hero_attribute.csv — [{id, ko, en, abbr, combatStat, dispatch}]
@@ -98,7 +98,7 @@ export const D = {
     exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
     difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelAdd, codexExp, chapterGate}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239) · chapterGate = 장 순서 해금 1/0(R242)
     difficulties: {},         // 같은 것 byId
-    arenaTiers: [],           // arena_tier.csv 원시 행 — 결투장 오프라인 등급 · 검증 · 정렬은 game_logic/arena.js (arena_design §7 · 2026-10-17)
+    arenaTiers: [],           // arena_tier.csv 원시 행 — 콜로세움 층 · 결투장 리그의 등급 · 검증 · 정렬 · 층 펴기는 game_logic/arena.js (arena_design §7 · §8 · 2026-10-18)
     exploreSpots: {},         // explore_spot.csv — {'장:지점': {chapter, spot, name:{ko,en}, story:{ko,en}}} · 탐험 지점 이름 · 두 줄 이야기(줄바꿈 풀어 둠) (SCREEN_DESIGN §8-4 · ADR-0563 · 화면만 읽는다)
     advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
     // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
@@ -122,7 +122,7 @@ export let SYS = null;
 
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
-    'codex_level', 'codex_series', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
+    'codex_level', 'codex_option', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'search_story', 'monster_role', 'formation_template', 'search_meeting', 'search_answer',
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
@@ -137,7 +137,7 @@ export async function loadData(base = './data/') {
     })));
     // 원문 보관 — 골든 스냅샷이 파일별 해시를 뜬다 (dev/golden.js). 파싱 전이라 컬럼 추가·행 순서도 걸린다
     FILES.forEach((f, i) => { D.csvText[f] = texts[i]; });
-    const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexSeries,
+    const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexOptionRow,
         weaponGroup, skillRow, skillEffectRow, skillStatusRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
@@ -178,20 +178,22 @@ export async function loadData(base = './data/') {
     D.bossRound = baseRounds.find(r => r.round_type === 'boss')?.round_num ?? baseRounds.length;
     const codexByLevel = codexLevel.slice().sort((a, b) => a.level - b.level);
     D.codexLevels = codexByLevel.map(r => r.exp_total);   // 누적 도감 경험치 문턱 (2026-09-21 카드 → 처치 수 · 2026-10-10 처치 수 → 도감 경험치)
-    D.codexBonus = codexByLevel.map(r => r.bonus_pct);
+    // 사다리 단계 — `option` 단계의 value 는 `-`(몬스터마다라 codex_option.csv 가 든다) · 검증은 game_logic/state.js (monster_design §8 · R286)
+    D.codexSteps = codexByLevel.map(r => ({ reward: r.reward, value: r.reward === 'option' ? null : r.value }));
+    D.codexOptions = codexOptionRow.map(r => ({ monsterId: String(r.monster_idx), stat: r.stat, value: r.value }));
     // 스킬 도감 — 스킬마다 누적 문턱과 그 레벨의 책 업그레이드 상한. 검증은 game_logic/state.js (monster_design §8-1 · R266)
     D.skillCodex = skillCodexLevelRow.slice().sort((a, b) => a.level - b.level)
         .map(r => ({ level: r.level, expTotal: r.exp_total, upgradeCap: r.upgrade_cap }));
-    D.codexSeries = Object.fromEntries(codexSeries.map(r => [r.stage_num, r.stat]));
     D.chapterList = chapter.slice().sort((a, b) => a.chapter_id - b.chapter_id)
         .map(r => ({ id: r.chapter_id, sin: r.sin, name: { ko: r.name_kr, en: r.name_en } }));
     D.chapters = indexBy(D.chapterList, 'id');
     // 난이도 바퀴 — 순서대로 · 첫 단이 처음부터 열린 단이다. 검증 · 해금 · 레벨은 game_logic/state.js (base_expedition_design §1-4 · R236)
     D.difficultyList = difficultyTierRow.slice().sort((a, b) => a.order - b.order)
         .map(r => ({ id: r.difficulty_id, order: r.order, name: { ko: r.name_kr, en: r.name_en }, levelAdd: r.level_add, codexExp: r.codex_exp, chapterGate: r.chapter_gate,
-            wearChance: r.wear_chance }));   // 몬스터 선택 부위 착용 확률 — battle.js 가 읽는다 (monster_design §5-1 · R245)
+            wearChance: r.wear_chance,       // 몬스터 선택 부위 착용 확률 — battle.js 가 읽는다 (monster_design §5-1 · R245)
+            skillSlots: r.skill_slots }));   // 몬스터 스킬 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §5-1 · R269)
     D.difficulties = indexBy(D.difficultyList, 'id');
-    D.arenaTiers = arenaTierRow;   // 결투장 오프라인 등급 — 원시 행 그대로 · 정렬 · 검증은 arena.js (2026-10-17)
+    D.arenaTiers = arenaTierRow;   // 콜로세움 · 결투장 등급 — 원시 행 그대로 · 정렬 · 검증은 arena.js (2026-10-17 · 층 · 레이팅 2026-10-18)
     // 기본 능력치 7종 — hero.js 는 id 만 읽고, 화면은 ko/en/abbr 을 읽는다 (같은 한 줄이 둘을 먹인다)
     D.heroAttributes = heroAttr.map(r => ({
         id: r.attr_id, ko: r.attr_kr, en: r.attr_en, abbr: r.abbr,
@@ -614,10 +616,11 @@ export function buildSystems(d, dev = {}) {
         sinTraits: M.SIN_TRAITS, commonTraits: M.COMMON_TRAITS, itemSystem: item, skillSystem: skill,
         monsterRoles: d.monsterRoles ?? {},        // 적의 랭크 — 진형 (battle_design §3-1)
         // 몬스터도 영웅과 같은 경로로 전투 능력치를 얻는다 (2026-09-11 R79 · battle_design §8-1 · monster_design §5-1) —
-        //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스 셋째 칸의 후보 풀(hero 와 같은 표)
+        //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스의 한 칸 더의 후보 풀(hero 와 같은 표)
         //   이고 `slots` 는 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 어휘 검증용이다 (R245)
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
-        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, wearChance: x.wearChance })),   // 선택 부위 착용 확률 — 런의 단이 고른다 (R245)
+        // 런의 단이 고르는 것 — 선택 부위 착용 확률(R245) · 몬스터 스킬 칸 수(R269)
+        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, wearChance: x.wearChance, skillSlots: x.skillSlots })),
     });
     // 건설 — 표 넷이 무엇을 여는지 정하고 이 시스템은 센다 (construction_draft §11 · INTERFACE §2-14 · R137).
     //   비용이 적을 수 있는 재화 = 자원 셋 + 제작 재료(파견처 산출물 id — 공급은 파견이 한다 · 미구현)
@@ -639,7 +642,7 @@ export function buildSystems(d, dev = {}) {
         hero, item, battle, skill, tactic, construction, gamble, commission, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         difficulties: d.difficultyList ?? [],   // 난이도 바퀴 — 순서대로 · 첫 단 = 처음부터 열림 (state.js · R236)
-        codex: { levels: d.codexLevels, bonus: d.codexBonus, statByNum: d.codexSeries },
+        codex: { levels: d.codexLevels, steps: d.codexSteps, options: d.codexOptions },
         skillCodex: d.skillCodex ?? [],   // 스킬 도감 — 도안(Lv1) · 책 업그레이드 상한 (state.js · R266)
         // 수색 — 이야기 표와 죄종 목록(그 표의 `sin` 컬럼 검증용). 막 수·순서는 표가 정한다 (state.js:searchPhases)
         sins, searchStories: d.searchStories ?? [],
@@ -651,8 +654,8 @@ export function buildSystems(d, dev = {}) {
         defaultFormationTpl: (d.formationTplOrder ?? [])[0],
         // 제작 — 레시피와 재료 단계 표. 레벨대 = 챕터(stages) · 재료 = 그 tier 의 산출물 (item_design §7-1 · R96)
         makeRecipes: d.makeRecipes ?? {}, mineNodes: d.mineNodes ?? [], logNodes: d.logNodes ?? [],
-        // 자원 파견 — 자리 = 파견처 × 단계(세 표) · 선택 창의 담당 능력치(`hero_attribute.csv:dispatch`) (2026-09-27 · ADR-0373)
-        gatherNodes: d.gatherNodes ?? [], heroAttributes: d.heroAttributes ?? [],
+        // 연구소 생산 — 장소 = 줄 × 단계(세 표) · ~~선택 창의 담당 능력치(`hero_attribute.csv:dispatch`)~~ 는 2026-10-18 영웅 배치 삭제로 걷었다(R283)
+        gatherNodes: d.gatherNodes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)
         potions: d.potions ?? [],
         // 신단 — 이긴 칸 뒤 칸 I → II · II → III 에 하나가 선다 (base_expedition_design §1-2 · 2026-09-29)

@@ -255,9 +255,11 @@ buildings/
 │     expedition · command · forge · tavern · training · shop · resource · explore · codex · storage · library
 ├── source/
 │   ├── sheet_01_buildings.png   ← 원본 시트 2752×1536 · 4×3 = 12칸 · 칸 사이 검은 홈 — 게임이 안 읽는다
-│   └── library.png              ← 도서관 원본 1448×1086(4:3 한 장) — 게임이 안 읽는다
+│   ├── library.png              ← 도서관 원본 1448×1086(4:3 한 장) — 게임이 안 읽는다
+│   └── laboratory.png           ← 연구소(`resource`) 원본 1448×1086(4:3 한 장) — 게임이 안 읽는다
 └── unused/
-    └── codex_alt.webp   ← 11번 칸(도감 두 번째 판) · id 없는 여분
+    ├── codex_alt.webp   ← 11번 칸(도감 두 번째 판) · id 없는 여분
+    └── resource_mine.webp ← 옛 자원 건물(갱도) — 2026-10-18 연구소로 바뀌며 내렸다
 ```
 
 - **그림체는 배경(`backgrounds/illustrate/`)과 같다** — 발주 때 `illustrate/background_stage_101.webp` · `102.webp` 두 장을 첨부하고 「렌더링만 따르고 색 · 소재는 따르지 말 것」으로 열었다(배경 발주와 같은 줄). 프롬프트는 대화에서 만들었다 — 위에 공통 형태(시트 규격 · 각도 · 아래 1/4 빈 땅 · 같은 저녁 하늘 · 글자 금지), 아래에 번호 목록(칸 번호 = 건설 탭 부지 순서)
@@ -265,6 +267,7 @@ buildings/
 - **자르기** — 검은 홈을 실측(열 평균 밝기 < 30)으로 찾고 칸 안쪽 3px 을 더 걷어 홈 가장자리를 뺐다 → 장당 **666~667 × 494~495**(약 4:3). 화면의 부지는 3:2 라 `cover` 가 위아래를 조금 자른다(`center 40%`) — **카드 비율이 바뀌어도 다시 자를 필요가 없게** 칸을 통째로 뒀다
 - **인코딩** — WebP q90 · 장당 29~51KB. ⚠ 이 PC 에 Python 이 없어 **Edge 캔버스(`toDataURL('image/webp', 0.9)`)로** 자르고 쌌다 — 다른 폴더의 PIL 레시피와 도구가 다르다. 다시 자를 땐 어느 쪽이든 같은 좌표(홈 안쪽 3px)면 된다
 - **도서관(`library`)는 따로 한 장이다** [2026-09-30] — 시트를 첨부해 「그 시트의 새 칸 하나」로 발주했다(둥근 돌 탑 · 도감의 기둥 신전 · 11번 목조 팔각과 실루엣을 가른다). 원본이 4:3 한 장이라 자르지 않고 **667×500 으로 줄여**(PIL Lanczos) WebP q90 으로 쌌다 — 시트 칸과 폭이 같다
+- **연구소(`resource`)도 따로 한 장이다** [2026-10-18 사용자 「이미지가 필요한건 모두 codex로 그려」] — 자원 건물이 연구소가 되며(GAME_DESIGN §9 10-18) 갱도 그림을 `unused/resource_mine.webp` 로 내리고 새로 그렸다. Codex 내장 이미지 생성에 **도서관 그림을 화풍 기준으로 첨부**(`-i`) — 돔 지붕 돌 작업장 · 녹색 플라스크 창 · 톱니바퀴와 파이프 · 앞에 광석 드릴 · 통나무 톱 · 약초 온실(채광 · 채집 · 벌목이 저절로 돈다). 도서관과 같이 **667×500 으로 줄여**(PIL Lanczos) WebP q90
 - 그림이 없는 건물은 `ui/mock.js:BUILDING_ART` 의 단색 실루엣(SVG)으로 폴백한다 — 건물이 늘면 파일을 넣고 `BUILDING_IMAGES` 에 id 를 더한다
 
 ---
@@ -280,7 +283,11 @@ fx_source/clean_20261017/       보존한 클린 도트 원본·최종 프롬프
 fx_source/material_20261017/    새 다섯 그림체의 원본 15장·최종 프롬프트·대응표·비교표·검사 기록
 fx_source/ink_20261009/         보존한 수묵 원본
 fx_source/world_styles_20261012/sheet_darktoon_*.png  보존한 다크 카툰 원본
+fx/ui/stage_banner.webp         관전 스테이지 띠의 붓 한 획 — 흰색 + 알파(모양만) · 2026-10-18
+fx_source/stage_banner_20261018/ 그 원본(Codex 생성 · 흰 바탕 먹) · 프롬프트 · 안 고른 시안 unused_*
 ```
+
+**스테이지 띠**(SCREEN_DESIGN §4-2 · ADR-0663)는 그림을 **모양(mask)으로만** 쓴다 — 색은 CSS 가 챕터 죄종 색으로 칠한다. 원본을 갈면 `python scripts/build_stage_banner.py`(먹의 짙기 → 알파 · 먹 둘레로 자르기 · 폭 1600 WebP).
 
 그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 새 다섯 방향은 같은 스킬 형태를 서로 다른 재료 표현으로 생성했다. 각 88장, 총 440장의 실제 투명 WebP다. 최종 설치는 `python scripts/build_material_fx.py`, 비교표는 `python scripts/build_material_fx.py --compare`, 브라우저 검사는 `python scripts/verify_material_fx.py`다. 이미지 생성은 내장 imagegen을 사용했다.
 
@@ -384,7 +391,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -457,6 +464,21 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 - **원본** — Codex 이미지 생성 · 2×2 시트(칸마다 받침 있는 모루 · 대장 망치 · 받침 없는 모루 · 메). **설치는 `source/sheet_04_codex.png` 의 통나무 받침 모루(왼쪽 위) + 대장 망치(오른쪽 위)** — 외곽선이 가장 굵고 덩어리가 커서 건물 그림과 결이 가장 가깝다. 05 · 06 은 같은 지시문 `source/sheet_simple_prompt.txt` 의 다른 판(대안 누끼 `unused/anvil_v2b` · `v2c` · `hammer_v2b` · `v2c`). 첫 판 시트 01 ~ 03(지시문 `source/sheet_prompt.txt`)과 그 설치본은 `unused/anvil_v1` · `hammer_v1` 로 남겼다
 - **그림을 바꾸면 연출 자리도 다시 잰다** — 모루 윗면 높이 · 폭, 망치 머리의 가운데 · 아래 끝, 손잡이 끝을 % 로 재 `style.css` 의 `.fg-anvil` · `.fg-anim-item` · `.fg-hammer`(`transform-origin`) · 불꽃 자리를 맞춘다(지금 값의 근거는 그 규칙 위 주석)
 - **누끼** — 흰 배경을 가장자리에서 이어진 밝은 무채 픽셀로 잡아 지우고, 배경과 맞닿은 띠는 흰 위에 섞인 색으로 보고 알파 · 색을 되푼다(외곽선이 검정이라 어두운 바탕에서 흰 테두리가 안 남는다) · 내용 상자로 잘라 긴 변 0.88 로 앉혔다
+
+## icons/arena/ — 콜로세움 · 결투장 휘장 [신설 2026-10-18]
+
+`<tier_id>.png` 여섯(`arena_tier.csv` 의 `tier_id` — 브론즈 ~ 챔피언) + `colosseum.png` · `duel.png` · `gladiator.png` — 512 투명 · 긴 변 0.88 · 중앙. 등급 휘장은 콜로세움 사다리 · 결투장 리그가 같이 읽는다(`mock.js:arenaArt` · SCREEN_DESIGN §1 · ADR-0670) · 표에 행이 늘면 같은 이름의 그림을 더한다(없으면 칸이 이름 글씨만 든다).
+
+- **휘장은 한 벌이다** — 여섯 다 같은 방패 꼴이고 등급이 오를 때마다 하나씩 붙는다(검 하나 → 교차한 검 → 월계수 → 날개 · 보석 → 큰 날개 · 다이아 → 왕관). 등급을 더 그리면 이 순서를 잇는다
+- **원본** — Codex 이미지 생성 · 3×3 시트 · 도박장 시트(`gamble/source/sheet_01_codex.png`)를 기준 그림으로 붙여 같은 low-poly 결로 뽑았다(지시문 `source/sheet_01_prompt.txt`). 같은 지시문의 다른 판은 `source/sheet_01b_codex_unused.png`
+- **자르기** — `cut.py` 의 칸 선 · 격자선 규칙이 이 시트에서 틀렸다(둘째 줄 날개가 시트 폭을 거의 채워 한 줄이 「격자선」으로 지워졌다). 고친 판이 `source/cut_sheet_01.py` 다 — 줄 선을 손으로 주고 · 격자선 규칙을 끄고 · 칸 선을 넘는 조각은 중심이 든 칸으로 보낸다
+
+## icons/lab/ — 연구소 줄 아이콘 [신설 2026-10-18]
+
+`<줄 id>.png` 셋(`mine` 채광 · `gather` 채집 · `log` 벌목 — 파일명 = `app.js:POSTS` 의 `id`) — 512 투명 · 긴 변 0.88 · **둥근 그림 원판**(양피지색 바탕 + 도구 · 가장자리는 검은 선 — 탐험 지점 아이콘과 같은 그림체). 연구소 탭 왼쪽 줄 목록이 읽는다(`mock.js:labIcon` · SCREEN_DESIGN §8 · ADR-0669). **새 줄이 서면 같은 이름의 그림을 더한다**
+
+- **원본** — Codex 이미지 생성 · 2×2 시트 · 탐험 지점 시트(`explore/source/codex_explore_icons_sheet.png`)를 기준 그림으로 붙이고 「청동 테두리 없이 원판만」을 시켰다(지시문 `source/sheet_prompt.txt` · 시트 `source/sheet_01_codex.png`). 넷째 칸(교차한 곡괭이 — 채광 둘째 판)은 `unused/mine_crossed.png`
+- **자르기** — `cut.py --grid 2x2`(흰 시트 · 원판이 칸 안에 떨어져 있어 손볼 것이 없었다)
 
 ## icons/explore/ — 탐험 지점 아이콘 [신설 2026-10-09]
 
@@ -720,4 +742,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-17*
+*마지막 업데이트: 2026-10-18*

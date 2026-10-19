@@ -1,0 +1,14 @@
+--- frozen/app.js
+
++++ working/app.js
+
+@@ -8319,4 +8319,8 @@
+
+     const labN = Number(lq.get('labn'));
+     if (labN > 0) labRoll(Math.min(labN, LAB_KEEP));
++    // `&cxlv=<n>` — 모든 몬스터의 도감이 n 레벨에 닿은 채 (SCREEN_DESIGN §10 · ADR-0667) — 켜진 단계 · 켜진 추가옵션을 보는 길이다
++    //   (도감 경험치는 이긴 라운드의 처치로만 쌓여 헤드리스가 못 닿는다) · 세이브하지 않는다 · 모르는 값이면 무시
++    const cxlv = Math.min(Number(lq.get('cxlv')) || 0, D.codexLevels.length);
++    if (G && cxlv > 0) for (const id of Object.keys(D.monsters)) G.codexExp[id] = D.codexLevels[cxlv - 1];
+     render();
+     /* 플래시 — 클릭으로만 뜨고 제 시간에 사라져 헤드리스가 못 닿는다 (SCREEN_DESIGN §2 · §10 · ADR-0113).

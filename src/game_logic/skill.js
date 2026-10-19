@@ -556,7 +556,7 @@ export function createSkillSystem(data) {
         // 정의에 없는 id(행이 지워진 옛 세이브)는 **빈 고유 칸**으로 친다 — 던지면 세이브를 못 연다
         const innate = hero?.innate && defs[hero.innate] ? { id: hero.innate, source: 'innate' } : null;
         // 배운 스킬 — **스킬북으로 배운 것**이다 [2026-09-29 · R179 · skill_design §2-1 — ~~무기 개체가 든 스킬(`ctx.weaponSkill`)~~ 대체].
-        //   영웅에 박혀 무기를 바꿔도 안 바뀐다 · 몬스터는 안 든다(정예 둘째 칸은 비어 있다 — monster_design §5-1) · 정의에 없는 id(행이 걷힌 옛 세이브)는 빈 칸
+        //   영웅에 박혀 무기를 바꿔도 안 바뀐다 · **몬스터는 나이트메어 2칸**(`monster.csv:nightmare_skill` — 단이 2칸을 열 때 `battle.slotPlan` 이 이 자리로 넘긴다 · 2026-10-18 · R269) · 정의에 없는 id(행이 걷힌 옛 세이브)는 빈 칸
         const bk = hero?.bookSkill && defs[hero.bookSkill] ? defs[hero.bookSkill] : null;
         // 셋째 칸 — **몬스터 보스가 쓰는 자리**다 [신설 2026-09-11 · R79 · monster_design §5-1]. 영웅 경로는 이것을 안 넘긴다
         //   영웅은 **배운 전직 스킬**이 이 칸이다(`hero.advanceSkill` · 2026-09-28 R16) — 정의에 없는 id(행이 걷힌 옛 세이브)는 빈 칸

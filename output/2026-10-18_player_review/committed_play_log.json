@@ -1,0 +1,1745 @@
+[
+  {
+    "label": "first_world_valid",
+    "user_seconds": 125.7,
+    "text": "THE\nSEVEN\n원정\nStages\nParty I\nReport\n골드600\nEN\nAdmin\n원정 플레이 시간0:00:00\n⚙\n전투\n원정\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n제련소\n도서관\n파견\n자원\n탐험\n기타\n결투장\n도감\n도움말\n실험실\n새 게임\n노말\n나이트메어\n헬\n노말 5장 보스 클리어 필요\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\nCh6 타락한 궁전\nCh7 신의 폐허\n분노\nCh1-1 파멸의 진영\n고블린 척후병 · 고블린 전사 · 고블린 주술사 · 아바돈\n분노\nCh1-2 핏빛 교전지대\n인간 보병 · 인간 궁수 · 인간 기사 · 라멕\n이전 스테이지 클리어 필요\n분노\nCh1-3 원한의 묘지\n스켈레톤 전사 · 스켈레톤 기사 · 스켈레톤 마법사 · 레기온\n이전 스테이지 클리어 필요\n분노\nCh1-4 몰록의 화로\n화염 광신도 · 임프 제사장 · 청동 수호상 · 몰록\n이전 스테이지 클리어 필요\n분노\nCh1-5 사탄의 제단\n분노의 사탄\n이전 스테이지 클리어 필요",
+    "save": {
+      "version": 40,
+      "seed": 1263609640,
+      "createdAt": 1792264972072,
+      "savedAt": 1792264972072,
+      "expMs": 0,
+      "resources": {
+        "gold": 600,
+        "dust": 0,
+        "stigma": 0
+      },
+      "materials": {},
+      "advancing": [],
+      "dispatch": [],
+      "resourceProduction": [],
+      "potions": {
+        "minor_healing": 20
+      },
+      "books": {},
+      "heroes": [
+        {
+          "uid": "h1",
+          "name": {
+            "ko": "발렌",
+            "en": "Valen"
+          },
+          "tier": "rare",
+          "sin": "wrath",
+          "cls": "warrior",
+          "trait": {
+            "ko": "언변",
+            "en": "Silver Tongue"
+          },
+          "face": "warrior_5",
+          "level": 1,
+          "xp": 0,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": "war_ironskin",
+          "stats": {
+            "str": 16,
+            "agi": 14,
+            "int": 7,
+            "vit": 6,
+            "luck": 10,
+            "ldr": 12,
+            "cha": 6
+          },
+          "equipped": {
+            "weapon": "i1",
+            "helmet": null,
+            "armor": "i2",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "uid": "h2",
+          "name": {
+            "ko": "이언",
+            "en": "Ian"
+          },
+          "tier": "magic",
+          "sin": "gluttony",
+          "cls": "mage",
+          "trait": {
+            "ko": "타고난 지휘관",
+            "en": "Born Commander"
+          },
+          "face": "mage_3",
+          "level": 1,
+          "xp": 0,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": "mag_lightning",
+          "stats": {
+            "str": 6,
+            "agi": 8,
+            "int": 16,
+            "vit": 9,
+            "luck": 10,
+            "ldr": 14,
+            "cha": 2
+          },
+          "equipped": {
+            "weapon": "i3",
+            "helmet": null,
+            "armor": "i4",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "uid": "h3",
+          "name": {
+            "ko": "마르고",
+            "en": "Margot"
+          },
+          "tier": "normal",
+          "sin": "sloth",
+          "cls": "archer",
+          "trait": {
+            "ko": "잔꾀",
+            "en": "Cunning"
+          },
+          "face": "archer_1",
+          "level": 1,
+          "xp": 0,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": "arc_poison",
+          "stats": {
+            "str": 11,
+            "agi": 13,
+            "int": 7,
+            "vit": 8,
+            "luck": 9,
+            "ldr": 6,
+            "cha": 11
+          },
+          "equipped": {
+            "weapon": "i5",
+            "helmet": null,
+            "armor": "i6",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "name": {
+            "ko": "고블린 일꾼",
+            "en": "Goblin Worker"
+          },
+          "tier": "normal",
+          "sin": "greed",
+          "cls": "warrior",
+          "trait": {
+            "ko": "집사",
+            "en": "Butler"
+          },
+          "face": "goblin_butler",
+          "level": 1,
+          "xp": 0,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": null,
+          "stats": {
+            "str": 5,
+            "agi": 5,
+            "int": 5,
+            "vit": 5,
+            "luck": 5,
+            "ldr": 5,
+            "cha": 5
+          },
+          "equipped": {
+            "weapon": null,
+            "helmet": null,
+            "armor": null,
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          },
+          "uid": "h4"
+        }
+      ],
+      "items": {
+        "i1": {
+          "uid": "i1",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "그레이트 액스",
+            "en": "Great Axe"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.62,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_down_stack_pct",
+              "v": 0.02,
+              "src": "envy"
+            },
+            {
+              "stat": "vs_elite_dmg",
+              "v": 0.12,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "axe",
+          "baseId": "great_axe"
+        },
+        "i2": {
+          "uid": "i2",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.78,
+              "src": "fixed"
+            },
+            {
+              "stat": "hp_flat",
+              "v": 16,
+              "src": "lust"
+            },
+            {
+              "stat": "res_poison",
+              "v": 0.16,
+              "src": "envy"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        "i3": {
+          "uid": "i3",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "엘드리치 오브",
+            "en": "Eldritch Orb"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.58,
+              "src": "fixed"
+            },
+            {
+              "stat": "gold_find",
+              "v": 0.1,
+              "src": "greed"
+            },
+            {
+              "stat": "cast_stack_pct",
+              "v": 0.01,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "orb",
+          "baseId": "eldritch_orb"
+        },
+        "i4": {
+          "uid": "i4",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.55,
+              "src": "fixed"
+            },
+            {
+              "stat": "proc_struck_debuff",
+              "v": 0.11,
+              "src": "envy",
+              "skill": "pri_bind"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.09,
+              "src": "sloth"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        "i5": {
+          "uid": "i5",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "데몬 크로스보우",
+            "en": "Demon Crossbow"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 0.62,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_ignore",
+              "v": 0.04,
+              "src": "envy"
+            },
+            {
+              "stat": "def_down_stack_pct",
+              "v": 0.03,
+              "src": "envy"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "crossbow",
+          "baseId": "demon_crossbow"
+        },
+        "i6": {
+          "uid": "i6",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.86,
+              "src": "fixed"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.09,
+              "src": "sloth"
+            },
+            {
+              "stat": "res_fire",
+              "v": 0.15,
+              "src": "wrath"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        }
+      },
+      "bags": [
+        []
+      ],
+      "stash": [],
+      "progress": {
+        "cleared": [],
+        "clearedIn": {},
+        "peakTotal": 0
+      },
+      "difficulty": "normal",
+      "codexExp": {},
+      "skillCodexExp": {},
+      "bossDown": {},
+      "counters": {
+        "hero": 4,
+        "item": 6,
+        "battle": 0,
+        "tavern": 0,
+        "tactic": 0,
+        "upgrade": 0,
+        "search": 0,
+        "make": 0,
+        "gamble": 0,
+        "commission": 0,
+        "explore": 0,
+        "join": 0,
+        "shop": 0
+      },
+      "runs": [
+        null
+      ],
+      "reports": [],
+      "notice": null,
+      "tavern": {
+        "rerolledAt": null,
+        "hired": [],
+        "paid": 0
+      },
+      "shop": null,
+      "search": null,
+      "searchKept": [],
+      "explores": [],
+      "joins": [],
+      "commissions": {
+        "cards": []
+      },
+      "presets": [
+        {
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "formation": {
+            "tpl": 3,
+            "ranks": [
+              [
+                "h1",
+                "h2",
+                "h3"
+              ],
+              []
+            ]
+          },
+          "potionSlots": [
+            "minor_healing",
+            null
+          ],
+          "tactics": {
+            "slots": {},
+            "locked": []
+          }
+        }
+      ],
+      "preset": 1,
+      "bonds": {},
+      "autoSalvage": {
+        "rarity": null,
+        "ilvlBelow": 0
+      },
+      "buildings": {
+        "expedition": 1,
+        "storage": 1,
+        "codex": 1,
+        "command": 1
+      },
+      "research": {}
+    }
+  },
+  {
+    "label": "first_30s_battle_valid",
+    "user_seconds": 170.9,
+    "text": "THE\nSEVEN\n원정\nStages\nParty I - \n파멸의 진영 I\nReport\n골드639\nEN\nAdmin\n원정 플레이 시간0:00:18\n⚙\n전투\n원정\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n제련소\n도서관\n파견\n자원\n탐험\n기타\n결투장\n도감\n도움말\n실험실\n새 게임\n불타는 전장 — 파멸의 진영 I\n1\n2\n3\n4\n5\n6\n7\n8\n9\n×1\n×2\n×4\n×16\n일시정지\n철수\n전투 로그\n누적 데미지\nLv.1 · 사제 · 데몬\n정예\n분노\n고블린 주술사\n89 / 100\nVS\nLv.1 · 전사\n분노\n발렌\n102 / 116\nLv.1 · 마법사\n폭식\n이언\n32 / 50\nLv.1 · 궁수\n나태\n마르고\n39 / 50\n버프\n창고\n장비\n재료\n스킬북\n정렬\n인벤토리\nParty I\n분해\n자동 분해\n정렬",
+    "save": {
+      "version": 40,
+      "seed": 1263609640,
+      "createdAt": 1792264972072,
+      "savedAt": 1792265106572,
+      "expMs": 14450.000000000016,
+      "resources": {
+        "gold": 639,
+        "dust": 0,
+        "stigma": 0
+      },
+      "materials": {},
+      "advancing": [],
+      "dispatch": [],
+      "resourceProduction": [],
+      "potions": {
+        "minor_healing": 20
+      },
+      "books": {},
+      "heroes": [
+        {
+          "uid": "h1",
+          "name": {
+            "ko": "발렌",
+            "en": "Valen"
+          },
+          "tier": "rare",
+          "sin": "wrath",
+          "cls": "warrior",
+          "trait": {
+            "ko": "언변",
+            "en": "Silver Tongue"
+          },
+          "face": "warrior_5",
+          "level": 1,
+          "xp": 90,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": "war_ironskin",
+          "stats": {
+            "str": 16,
+            "agi": 14,
+            "int": 7,
+            "vit": 6,
+            "luck": 10,
+            "ldr": 12,
+            "cha": 6
+          },
+          "equipped": {
+            "weapon": "i1",
+            "helmet": null,
+            "armor": "i2",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "uid": "h2",
+          "name": {
+            "ko": "이언",
+            "en": "Ian"
+          },
+          "tier": "magic",
+          "sin": "gluttony",
+          "cls": "mage",
+          "trait": {
+            "ko": "타고난 지휘관",
+            "en": "Born Commander"
+          },
+          "face": "mage_3",
+          "level": 1,
+          "xp": 98,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": "mag_lightning",
+          "stats": {
+            "str": 6,
+            "agi": 8,
+            "int": 16,
+            "vit": 9,
+            "luck": 10,
+            "ldr": 14,
+            "cha": 2
+          },
+          "equipped": {
+            "weapon": "i3",
+            "helmet": null,
+            "armor": "i4",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "uid": "h3",
+          "name": {
+            "ko": "마르고",
+            "en": "Margot"
+          },
+          "tier": "normal",
+          "sin": "sloth",
+          "cls": "archer",
+          "trait": {
+            "ko": "잔꾀",
+            "en": "Cunning"
+          },
+          "face": "archer_1",
+          "level": 1,
+          "xp": 98,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": "arc_poison",
+          "stats": {
+            "str": 11,
+            "agi": 13,
+            "int": 7,
+            "vit": 8,
+            "luck": 9,
+            "ldr": 6,
+            "cha": 11
+          },
+          "equipped": {
+            "weapon": "i5",
+            "helmet": null,
+            "armor": "i6",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "name": {
+            "ko": "고블린 일꾼",
+            "en": "Goblin Worker"
+          },
+          "tier": "normal",
+          "sin": "greed",
+          "cls": "warrior",
+          "trait": {
+            "ko": "집사",
+            "en": "Butler"
+          },
+          "face": "goblin_butler",
+          "level": 1,
+          "xp": 0,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": null,
+          "stats": {
+            "str": 5,
+            "agi": 5,
+            "int": 5,
+            "vit": 5,
+            "luck": 5,
+            "ldr": 5,
+            "cha": 5
+          },
+          "equipped": {
+            "weapon": null,
+            "helmet": null,
+            "armor": null,
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          },
+          "uid": "h4"
+        }
+      ],
+      "items": {
+        "i1": {
+          "uid": "i1",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "그레이트 액스",
+            "en": "Great Axe"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.62,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_down_stack_pct",
+              "v": 0.02,
+              "src": "envy"
+            },
+            {
+              "stat": "vs_elite_dmg",
+              "v": 0.12,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "axe",
+          "baseId": "great_axe"
+        },
+        "i2": {
+          "uid": "i2",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.78,
+              "src": "fixed"
+            },
+            {
+              "stat": "hp_flat",
+              "v": 16,
+              "src": "lust"
+            },
+            {
+              "stat": "res_poison",
+              "v": 0.16,
+              "src": "envy"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        "i3": {
+          "uid": "i3",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "엘드리치 오브",
+            "en": "Eldritch Orb"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.58,
+              "src": "fixed"
+            },
+            {
+              "stat": "gold_find",
+              "v": 0.1,
+              "src": "greed"
+            },
+            {
+              "stat": "cast_stack_pct",
+              "v": 0.01,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "orb",
+          "baseId": "eldritch_orb"
+        },
+        "i4": {
+          "uid": "i4",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.55,
+              "src": "fixed"
+            },
+            {
+              "stat": "proc_struck_debuff",
+              "v": 0.11,
+              "src": "envy",
+              "skill": "pri_bind"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.09,
+              "src": "sloth"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        "i5": {
+          "uid": "i5",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "데몬 크로스보우",
+            "en": "Demon Crossbow"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 0.62,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_ignore",
+              "v": 0.04,
+              "src": "envy"
+            },
+            {
+              "stat": "def_down_stack_pct",
+              "v": 0.03,
+              "src": "envy"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "crossbow",
+          "baseId": "demon_crossbow"
+        },
+        "i6": {
+          "uid": "i6",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.86,
+              "src": "fixed"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.09,
+              "src": "sloth"
+            },
+            {
+              "stat": "res_fire",
+              "v": 0.15,
+              "src": "wrath"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        }
+      },
+      "bags": [
+        []
+      ],
+      "stash": [],
+      "progress": {
+        "cleared": [],
+        "clearedIn": {},
+        "peakTotal": 0
+      },
+      "difficulty": "normal",
+      "codexExp": {
+        "1101": 1,
+        "1102": 2
+      },
+      "skillCodexExp": {
+        "war_bash": 2,
+        "arc_rapid": 1
+      },
+      "bossDown": {},
+      "counters": {
+        "hero": 4,
+        "item": 6,
+        "battle": 1,
+        "tavern": 0,
+        "tactic": 0,
+        "upgrade": 0,
+        "search": 0,
+        "make": 0,
+        "gamble": 0,
+        "commission": 0,
+        "explore": 0,
+        "join": 0,
+        "shop": 0
+      },
+      "runs": [
+        {
+          "stageId": 1011,
+          "preset": 1,
+          "repeat": false,
+          "auto": true,
+          "difficulty": "normal",
+          "lastAt": 1792265082772,
+          "durationSec": 14.5,
+          "active": true,
+          "fallen": [],
+          "shrine": null
+        }
+      ],
+      "reports": [
+        {
+          "at": 1792265082772,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 14.5,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 39,
+          "xp": {
+            "h1": 90,
+            "h2": 98,
+            "h3": 98
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "books": [],
+          "materials": {},
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 2,
+          "strikes": {
+            "party": {
+              "n": 14,
+              "miss": 2
+            },
+            "enemy": {
+              "n": 12,
+              "miss": 1
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 86,
+              "taken": 14,
+              "kills": 2
+            },
+            {
+              "uid": "h2",
+              "dealt": 94,
+              "taken": 18,
+              "kills": 1
+            },
+            {
+              "uid": "h3",
+              "dealt": 54,
+              "taken": 11,
+              "kills": 0
+            }
+          ]
+        }
+      ],
+      "notice": null,
+      "tavern": {
+        "rerolledAt": null,
+        "hired": [],
+        "paid": 0
+      },
+      "shop": null,
+      "search": null,
+      "searchKept": [],
+      "explores": [],
+      "joins": [],
+      "commissions": {
+        "cards": []
+      },
+      "presets": [
+        {
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "formation": {
+            "tpl": 3,
+            "ranks": [
+              [
+                "h1",
+                "h2",
+                "h3"
+              ],
+              []
+            ]
+          },
+          "potionSlots": [
+            "minor_healing",
+            null
+          ],
+          "tactics": {
+            "slots": {},
+            "locked": []
+          }
+        }
+      ],
+      "preset": 1,
+      "bonds": {},
+      "autoSalvage": {
+        "rarity": null,
+        "ilvlBelow": 0
+      },
+      "buildings": {
+        "expedition": 1,
+        "storage": 1,
+        "codex": 1,
+        "command": 1
+      },
+      "research": {}
+    }
+  },
+  {
+    "label": "first_inventory_valid",
+    "user_seconds": 316.6,
+    "text": "THE\nSEVEN\n캐릭터\nStages\nParty I - \n파멸의 진영 I\nReport\n골드927\nEN\nAdmin\n원정 플레이 시간0:01:44\n⚙\n전투\n원정\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n제련소\n도서관\n파견\n자원\n탐험\n기타\n결투장\n도감\n도움말\n실험실\n새 게임\n원정 중\n발렌\nLv.2\n원정 중\n이언\nLv.2\n원정 중\n마르고\nLv.2\n해고\n대기 중\n고블린 일꾼\nLv.1\n+\n장비\nLv.1\nLv.1\n접사 죄종\n접사 없음\n기본 옵션\n나태\nLv.2\n경험치 384 / 400\n힘\nSTR\n11\n민첩\nDEX\n13\n지능\nINT\n7\n건강\nVIT\n8\n운\nLCK\n9\n통솔\nLDR\n6\n매력\nCHA\n11\n액티브 스킬\n영웅\n습득\n전직\n마스터리 열기\n세부 옵션 1\n물리 데미지\n8~13\n마법 데미지\n—\n공격 속도\n3.20초\n최대 HP\n55\n치명타 확률\n7%\n치명타 피해\n145.5%\n방어 무시\n4%\n쿨타임 감소\n0%\n물리 방어\n41 감쇠 17%\n피해 감소\n1 / 0%\n타격 회복\n0%\n화염 저항\n15% / 상한 75%\n냉기 저항\n0% / 상한 75%\n전기 저항\n0% / 상한 75%\n독 저항\n0% / 상한 75%\n원소 피해량 증가\n0%/0%/0%/0%\n적 원소 저항 감소\n0%/0%/0%/0%\n세부 옵션 2\n타입별 추가 데미지\n—\n타입별 받는 피해 감소\n—\n정예 · 열별 추가 데미지\n—\n정예 · 열별 받는 피해 감소\n—\n강타 (현재 체력)\n0%\n명중률\n0%\n반격 확률\n0%\n반사 피해\n0%\n흡혈\n0%\nHP 재생\n0.053\n체력 회복\n0%\n버프 지속시간\n0%\n드랍률\n0%\n매직아이템 획득\n0%\n골드 획득\n0%\n경험치 획득\n9%\n창고\n장비\n재료\n스킬북\n정렬\n인벤토리\nParty I\n분해\n자동 분해\n정렬\nLv.2\n이 아이템\n투구Lv.2\n클로스 후드\n물리 방어\n7\n고정물리 방어 +47%\n랜덤치명타 확률 +2%\n랜덤피해 감소 (고정) +1\n마르고 착용 시\n치명타 확률\n5% → 7%\n▲\n물리 방어\n34 → 41\n▲\n피해 감소\n0 / 0% → 1 / 0%\n▲\nAlt 비교 · Shift 범위",
+    "save": {
+      "version": 40,
+      "seed": 1263609640,
+      "createdAt": 1792264972072,
+      "savedAt": 1792265241172,
+      "expMs": 93999.99999999945,
+      "resources": {
+        "gold": 927,
+        "dust": 0,
+        "stigma": 0
+      },
+      "materials": {
+        "herb_t1": 2
+      },
+      "advancing": [],
+      "dispatch": [],
+      "resourceProduction": [],
+      "potions": {
+        "minor_healing": 19
+      },
+      "books": {},
+      "heroes": [
+        {
+          "uid": "h1",
+          "name": {
+            "ko": "발렌",
+            "en": "Valen"
+          },
+          "tier": "rare",
+          "sin": "wrath",
+          "cls": "warrior",
+          "trait": {
+            "ko": "언변",
+            "en": "Silver Tongue"
+          },
+          "face": "warrior_5",
+          "level": 2,
+          "xp": 337,
+          "mastery": {},
+          "masteryPoints": 1,
+          "innate": "war_ironskin",
+          "stats": {
+            "str": 16,
+            "agi": 14,
+            "int": 7,
+            "vit": 6,
+            "luck": 10,
+            "ldr": 12,
+            "cha": 6
+          },
+          "equipped": {
+            "weapon": "i1",
+            "helmet": null,
+            "armor": "i2",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "uid": "h2",
+          "name": {
+            "ko": "이언",
+            "en": "Ian"
+          },
+          "tier": "magic",
+          "sin": "gluttony",
+          "cls": "mage",
+          "trait": {
+            "ko": "타고난 지휘관",
+            "en": "Born Commander"
+          },
+          "face": "mage_3",
+          "level": 2,
+          "xp": 384,
+          "mastery": {},
+          "masteryPoints": 1,
+          "innate": "mag_lightning",
+          "stats": {
+            "str": 6,
+            "agi": 8,
+            "int": 16,
+            "vit": 9,
+            "luck": 10,
+            "ldr": 14,
+            "cha": 2
+          },
+          "equipped": {
+            "weapon": "i3",
+            "helmet": null,
+            "armor": "i4",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "uid": "h3",
+          "name": {
+            "ko": "마르고",
+            "en": "Margot"
+          },
+          "tier": "normal",
+          "sin": "sloth",
+          "cls": "archer",
+          "trait": {
+            "ko": "잔꾀",
+            "en": "Cunning"
+          },
+          "face": "archer_1",
+          "level": 2,
+          "xp": 384,
+          "mastery": {},
+          "masteryPoints": 1,
+          "innate": "arc_poison",
+          "stats": {
+            "str": 11,
+            "agi": 13,
+            "int": 7,
+            "vit": 8,
+            "luck": 9,
+            "ldr": 6,
+            "cha": 11
+          },
+          "equipped": {
+            "weapon": "i5",
+            "helmet": null,
+            "armor": "i6",
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          }
+        },
+        {
+          "name": {
+            "ko": "고블린 일꾼",
+            "en": "Goblin Worker"
+          },
+          "tier": "normal",
+          "sin": "greed",
+          "cls": "warrior",
+          "trait": {
+            "ko": "집사",
+            "en": "Butler"
+          },
+          "face": "goblin_butler",
+          "level": 1,
+          "xp": 0,
+          "mastery": {},
+          "masteryPoints": 0,
+          "innate": null,
+          "stats": {
+            "str": 5,
+            "agi": 5,
+            "int": 5,
+            "vit": 5,
+            "luck": 5,
+            "ldr": 5,
+            "cha": 5
+          },
+          "equipped": {
+            "weapon": null,
+            "helmet": null,
+            "armor": null,
+            "gloves": null,
+            "boots": null,
+            "amulet": null,
+            "ring1": null,
+            "ring2": null
+          },
+          "uid": "h4"
+        }
+      ],
+      "items": {
+        "i1": {
+          "uid": "i1",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "그레이트 액스",
+            "en": "Great Axe"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.62,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_down_stack_pct",
+              "v": 0.02,
+              "src": "envy"
+            },
+            {
+              "stat": "vs_elite_dmg",
+              "v": 0.12,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "axe",
+          "baseId": "great_axe"
+        },
+        "i2": {
+          "uid": "i2",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.78,
+              "src": "fixed"
+            },
+            {
+              "stat": "hp_flat",
+              "v": 16,
+              "src": "lust"
+            },
+            {
+              "stat": "res_poison",
+              "v": 0.16,
+              "src": "envy"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        "i3": {
+          "uid": "i3",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "엘드리치 오브",
+            "en": "Eldritch Orb"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.58,
+              "src": "fixed"
+            },
+            {
+              "stat": "gold_find",
+              "v": 0.1,
+              "src": "greed"
+            },
+            {
+              "stat": "cast_stack_pct",
+              "v": 0.01,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "orb",
+          "baseId": "eldritch_orb"
+        },
+        "i4": {
+          "uid": "i4",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.55,
+              "src": "fixed"
+            },
+            {
+              "stat": "proc_struck_debuff",
+              "v": 0.11,
+              "src": "envy",
+              "skill": "pri_bind"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.09,
+              "src": "sloth"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        "i5": {
+          "uid": "i5",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "데몬 크로스보우",
+            "en": "Demon Crossbow"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 0.62,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_ignore",
+              "v": 0.04,
+              "src": "envy"
+            },
+            {
+              "stat": "def_down_stack_pct",
+              "v": 0.03,
+              "src": "envy"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "crossbow",
+          "baseId": "demon_crossbow"
+        },
+        "i6": {
+          "uid": "i6",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.86,
+              "src": "fixed"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.09,
+              "src": "sloth"
+            },
+            {
+              "stat": "res_fire",
+              "v": 0.15,
+              "src": "wrath"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        "i7": {
+          "uid": "i7",
+          "slot": "helmet",
+          "rarity": "normal",
+          "ilvl": 2,
+          "up": 0,
+          "name": {
+            "ko": "클로스 후드",
+            "en": "Cloth Hood"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 5
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.47,
+              "src": "fixed"
+            },
+            {
+              "stat": "crit_rate",
+              "v": 0.02,
+              "src": "random"
+            },
+            {
+              "stat": "dr_flat",
+              "v": 1,
+              "src": "random"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "helmet_cloth"
+        }
+      },
+      "bags": [
+        [
+          "i7"
+        ]
+      ],
+      "stash": [],
+      "progress": {
+        "cleared": [],
+        "clearedIn": {},
+        "peakTotal": 0
+      },
+      "difficulty": "normal",
+      "codexExp": {
+        "1101": 7,
+        "1102": 4,
+        "1103": 4
+      },
+      "skillCodexExp": {
+        "war_bash": 4,
+        "arc_rapid": 7
+      },
+      "bossDown": {},
+      "counters": {
+        "hero": 4,
+        "item": 7,
+        "battle": 1,
+        "tavern": 0,
+        "tactic": 0,
+        "upgrade": 0,
+        "search": 0,
+        "make": 0,
+        "gamble": 0,
+        "commission": 0,
+        "explore": 0,
+        "join": 0,
+        "shop": 0
+      },
+      "runs": [
+        {
+          "stageId": 1011,
+          "preset": 1,
+          "repeat": false,
+          "auto": true,
+          "difficulty": "normal",
+          "lastAt": 1792265082772,
+          "durationSec": 94.2,
+          "active": true,
+          "fallen": [],
+          "shrine": null
+        }
+      ],
+      "reports": [
+        {
+          "at": 1792265082772,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 94.2,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 327,
+          "xp": {
+            "h1": 537,
+            "h2": 584,
+            "h3": 584
+          },
+          "levelUps": [
+            {
+              "uid": "h1",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h2",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h3",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            }
+          ],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [
+            "i7"
+          ],
+          "books": [],
+          "materials": {
+            "herb_t1": 2
+          },
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 3,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": "wrath"
+            },
+            {
+              "n": 4,
+              "kind": "normal",
+              "killed": [
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 5,
+              "kind": "normal",
+              "killed": [
+                1103
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 6,
+              "kind": "elite",
+              "killed": [
+                1103,
+                1101,
+                1101
+              ],
+              "eliteSin": "wrath"
+            },
+            {
+              "n": 7,
+              "kind": "normal",
+              "killed": [
+                1102,
+                1103,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 8,
+              "kind": "normal",
+              "killed": [
+                1101
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 8,
+          "strikes": {
+            "party": {
+              "n": 90,
+              "miss": 21
+            },
+            "enemy": {
+              "n": 75,
+              "miss": 17
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 563,
+              "taken": 66,
+              "kills": 6
+            },
+            {
+              "uid": "h2",
+              "dealt": 569,
+              "taken": 69,
+              "kills": 6
+            },
+            {
+              "uid": "h3",
+              "dealt": 254,
+              "taken": 56,
+              "kills": 3
+            }
+          ]
+        }
+      ],
+      "notice": null,
+      "tavern": {
+        "rerolledAt": null,
+        "hired": [],
+        "paid": 0
+      },
+      "shop": null,
+      "search": null,
+      "searchKept": [],
+      "explores": [],
+      "joins": [],
+      "commissions": {
+        "cards": []
+      },
+      "presets": [
+        {
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "formation": {
+            "tpl": 3,
+            "ranks": [
+              [
+                "h1",
+                "h2",
+                "h3"
+              ],
+              []
+            ]
+          },
+          "potionSlots": [
+            "minor_healing",
+            null
+          ],
+          "tactics": {
+            "slots": {},
+            "locked": []
+          }
+        }
+      ],
+      "preset": 1,
+      "bonds": {},
+      "autoSalvage": {
+        "rarity": null,
+        "ilvlBelow": 0
+      },
+      "buildings": {
+        "expedition": 1,
+        "storage": 1,
+        "codex": 1,
+        "command": 1
+      },
+      "research": {}
+    }
+  }
+]

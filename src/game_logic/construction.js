@@ -48,8 +48,8 @@ export const TARGETS = {
     make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
     chapters: A(true),   // 들어갈 수 있는 장 — 원정 랭크마다 +1 · 기본값 0 (`state.limitsOf` · `stageUnlocked` · 2026-09-24 · R152)
     commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)
-    // 자원 단계 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼(`state.limitsOf` 의 `resourceTiers`) · 단계 하나에 영웅 한 명이라 일꾼 칸이 따로 없다
-    //   ~~`dispatch` 켜기 · `workers` 더하기~~ (2026-09-27 사용자 지시 · ADR-0372) · **2026-09-27 켰다** — 배치(`dispatchAssign`)와 산출(`dispatchSettle` · base_expedition §3-3)이 섰다
+    // 연구소(옛 자원) 단계 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼(`state.limitsOf` 의 `resourceTiers`) · 열린 단계는 표 수량대로 생산한다
+    //   ~~`dispatch` 켜기 · `workers` 더하기~~ (2026-09-27 · ADR-0372) · ~~배치(`dispatchAssign`)~~ 는 2026-10-18 영웅 배치 삭제로 걷었다 — 산출은 `dispatchSettle`(base_expedition §3-3)
     resource_tier: A(true),
     // 더하기 — 준비 중
     make_kinds: A(false), shop_layers: A(false),

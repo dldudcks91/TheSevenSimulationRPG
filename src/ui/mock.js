@@ -13,7 +13,7 @@ import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
  * ── 2026-08-28 CSV 이관 ──
  * 챕터·스테이지·몬스터 이름 · 몬스터 얼굴 유무 · 기본 능력치 7 · 전투 능력치 25 · 도감 레벨 보정·계열이
  * **전부 CSV 로 나갔다** (`chapter` · `stage` · `monster` · `hero_attribute` · `combat_stat` ·
- * `codex_level` · `codex_series`). 이름·얼굴·배경 헬퍼는 `ui/data.js` 에 있다.
+ * `codex_level` · ~~`codex_series`~~ 2026-10-18 삭제 — 도감은 `codex_option` 사다리). 이름·얼굴·배경 헬퍼는 `ui/data.js` 에 있다.
  *
  * ── 2026-08-31 CSV 이관 (M7 완료) ──
  * `CLASSES` · `SLOTS`/`EQUIP_SLOTS` · `ITEM_BASES` · `AFFIX_DEFS` · `HERO_NAME_POOL` · `HERO_TRAIT_POOL` 이
@@ -63,7 +63,7 @@ export const SINS = {
    `src/data/skill_tag.csv`(14행 — 2026-09-08 오오라 추가)로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
 
 // 매직~유니크는 equip_rarity_config.csv 의 color_hex 그대로 — **5단계** [일반 신설 2026-09-14 · 사용자 확정 · R86]
-// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · 랜덤옵션은 붙는다 · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
+// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · ~~랜덤옵션은 붙는다~~ 고정 옵션 한 줄(2026-10-18 · R285) · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
 // 통제 가능성의 계단: 일반(죄종 없음) → 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(매직 + 전용 옵션 하나 — 2026-09-15 · ~~낙인으로 죄종 지정~~) → 유니크(고정)
 export const RARITY = {
     normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
@@ -346,6 +346,8 @@ export const HERO_FACE_NAMES = {
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
     mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
     mage_3: { ko: '노스트라다무스', en: 'Nostradamus' },   // 황도 기호 로브 노인
+    priest_3: { ko: '잔 다르크', en: 'Joan of Arc' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
+    priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel' }, // 역병 의사 — 흰 부리 가면
     // knight_2 · knight_3 · knight_4 는 이름 없이 번호로 둔다 (2026-09-10 사용자 지시 — 「나중에 안 쓸 듯」)
 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).
@@ -660,6 +662,9 @@ export const EXPLORE_REGIONS = {
 /** 탐험 지점 아이콘 — `src/assets/art/icons/explore/<지점>.webp` · **테두리 없는 그림 원판**(테두리는 화면이 땅 색으로 두른다 · ADR-0553) */
 export const EXPLORE_ICON_DIR = './assets/art/icons/explore/';
 export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
+/** 연구소 줄 아이콘 — `src/assets/art/icons/lab/<줄 id>.webp`(`mine` · `gather` · `log`) · 탐험 지점 아이콘과 같은 둥근 그림 원판(Codex · ADR-0669) */
+export const LAB_ICON_DIR = './assets/art/icons/lab/';
+export const labIcon = post => LAB_ICON_DIR + post + ICON_EXT;
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
@@ -761,28 +766,10 @@ export const MASTERY_GRID = { tiers: 3, nodes: 3 };
  * 몬스터 도감 — **도감 경험치 모델** (2026-10-10 사용자 지시 · 2026-09-21 처치 수 모델의 개정, monster_design §8). 08-25 몬스터 카드 모델을 대체한다(카드는 나중에 드롭형으로).
  *
  * 그 몬스터의 누적 도감 경험치(처치 하나 = 그 런 단의 `difficulty_tier.csv:codex_exp`)가 문턱을 넘을 때마다 도감 레벨이 오른다.
- * 레벨별 누적 경험치 문턱(`codex_level.csv:exp_total`) · 레벨별 보정 %(`bonus_pct`) ·
- * 계열 배정(`codex_series.csv`) 는 전부 CSV 다 — 여기 남은 것은 **화면 전용 라벨**뿐이다.
+ * 레벨별 누적 경험치 문턱 · 단계(`codex_level.csv:exp_total` · `reward` · `value`) · Lv4 몬스터다운 전투 옵션(`codex_option.csv`)은 전부 CSV 다 —
+ * 단계의 이름은 i18n(`cx.rw.*`) · 옵션 줄의 이름은 위 `AFFIX_LABELS` 다 (2026-10-18 · R286 · ADR-0667 — ~~계열 라벨 `CX_STAT` · 완성 보상 `CX_DONE`~~ 걷음).
  * 챕터 이름·죄종은 `chapter.csv` (ui/data.js:D.chapterList · chapterOf).
  */
-
-/** 스테이지 번호별 계열 라벨 — 계열 자체는 codex_series.csv, 여기는 표시 문구뿐. 스테이지 목록은 ui/data.js:codexStages() 가 stage.csv 에서 만든다.
- *  **5(챕터보스 단독 스테이지)는 키가 없다** — codex_series.csv 에도 행이 없고 배정은 기획 미정이다(GAME_DESIGN §10). 화면이 빈 칸으로 그린다 (2026-09-11) */
-export const CX_STAT = {
-    1: { ko: '데미지', en: 'Damage' },
-    2: { ko: '체력', en: 'Health' },
-    // ⚠ 계열 3 은 **미정**이다 — 08-26 명중·회피 폐지로 `codex_series.csv:acc_pct` 가 갈 곳을 잃었고,
-    //    재배정은 GAME_DESIGN §10 대기다. 폐기된 스탯 이름을 유저에게 그리지 않는다 (2026-09-08)
-    3: { ko: '미정', en: 'TBD' },
-    4: { ko: '피해량', en: 'Damage' },
-};
-/** 완성 보상 라벨 — 표시 전용(보상 효과 미구현) */
-export const CX_DONE = {
-    1: { ko: '치명률 +2%', en: '+2% Crit Rate' },
-    2: { ko: '방어력 +2%', en: '+2% Defense' },
-    3: { ko: '미정', en: 'TBD' },                    // ⚠ 회피율도 08-26 폐지분 — 계열 3 과 같은 자리에서 대기 (§10)
-    4: { ko: '공격 속도 +2%', en: '+2% Attack Speed' },
-};
 
 /**
  * 상단 목업 — ⚠ **여기 숫자는 전부 거짓이다** (SCREEN_DESIGN §8-3 · base_expedition_design §2-6).
@@ -834,8 +821,8 @@ export const BUILDING_ART = {
     tavern: rsSvg('<path fill-rule="evenodd" d="M6 46V24L24 10l18 14v22ZM19 46V35h10v11Z"/><path d="M42 20h16v2H42Z"/><path d="M47 22h1.2v3H47ZM54 22h1.2v3H54ZM45 25h12v9H45Z"/>'),
     // 상단 — 짐마차
     shop: rsSvg('<path d="M12 33V21c0-6 8-10 19-10s19 4 19 10v12Z"/><path d="M8 33h46v4H8Z"/><path fill-rule="evenodd" d="M18 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path fill-rule="evenodd" d="M44 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path d="M54 34h9v2h-9Z"/>'),
-    // 자원 — 산 + 갱도 입구(버팀목)
-    resource: rsSvg('<path fill-rule="evenodd" d="M1 46 22 13l8 10 9-9 24 32ZM24 46V37a8 8 0 0 1 16 0v9Z"/><path d="M22.5 46V34h2.5v12ZM39 46V34h2.5v12ZM21.5 32h21v2.5h-21Z"/>'),
+    // 연구소(옛 자원) — 돔 지붕 작업장 + 굴뚝 (2026-10-18 · ~~산 + 갱도 입구~~)
+    resource: rsSvg('<path fill-rule="evenodd" d="M12 46V27h40v19ZM27 46v-9a5 5 0 0 1 10 0v9Z"/><path d="M12 26a20 17 0 0 1 40 0Z"/><path d="M30.6 9V4h2.8v5Z"/><path d="M52 46V16h6v30Z"/><circle cx="57" cy="11" r="2.4"/>'),
     // 창고 — 곳간(박공 지붕 · 빗장 걸린 널문) [2026-09-22 · R137]
     storage: rsSvg('<path fill-rule="evenodd" d="M4 46V21L32 7l28 14v25ZM19 46V29h26v17Z"/><path d="M21 31h22v3H21ZM21 37h22v3H21ZM21 43h22v3H21Z"/><path d="M31 29h2v17h-2Z"/>'),
     // 도감 — 기둥 선 서고
@@ -909,4 +896,11 @@ export const gambleArt = id => `<img class="gb-ico" src="${GAMBLE_ART_DIR}${id}$
  */
 const FORGE_ART_DIR = './assets/art/icons/forge/';
 export const FORGE_ART = { anvil: `${FORGE_ART_DIR}anvil${ICON_EXT}`, hammer: `${FORGE_ART_DIR}hammer${ICON_EXT}` };
+
+/**
+ * 콜로세움 · 결투장 휘장 (SCREEN_DESIGN §1 · ADR-0670 · Codex · 원본 `icons_source/arena/`) — 파일명 = `arena_tier.csv` 의 `tier_id`
+ * (등급이 오를수록 하나씩 붙는 한 벌) + 장식 셋 `colosseum` · `duel` · `gladiator`(승급전 층 칸). 그림이 없는 등급은 깨진 그림 대신 칸이 빈다(`onerror`)
+ */
+const ARENA_ART_DIR = './assets/art/icons/arena/';
+export const arenaArt = (id, cls = '') => `<img class="ar-ico${cls ? ` ${cls}` : ''}" src="${ARENA_ART_DIR}${id}${ICON_EXT}" alt="" draggable="false" onerror="this.remove()">`;
 

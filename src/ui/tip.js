@@ -41,6 +41,27 @@ const skillImg = s => {
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : s?.id ? '<i class="sk-noart"></i>' : '';
 };
 
+/**
+ * 도감 몬스터의 스킬 아이콘 줄 — 정해진 칸(고유 → 나이트메어 2칸)의 **그림만 가로로** · 이름은 안 적는다 (SCREEN_DESIGN §9 · ADR-0666).
+ *   칸 규칙은 로직의 것 — 단마다 `battle.monsterSkillSlots` 를 물어 처음 선 단을 붙인다 · 첫 단 뒤에 서는 칸은 `late`(오른쪽 위 모서리 표시) ·
+ *   아이콘의 `title` = 이름(· 여는 단). 목록 카드(`app.js:monsterCard`)와 툴팁 왼쪽 장(`codexCandCard`)이 같이 부른다
+ * @param cls  줄 클래스 — 목록 카드 `mon-sk` · 툴팁 `ng-skill`
+ * @param cell 칸 클래스 — 목록 카드 `sk-ico` · 툴팁 `ico sk-ico`
+ */
+export function monsterSkillIcons(id, cls, cell) {
+    const first = D.difficultyList[0]?.id;
+    const seen = new Map();
+    for (const d of D.difficultyList)
+        for (const a of SYS.battle.monsterSkillSlots(id, 'normal', d.id)?.fixed ?? [])
+            if (!seen.has(`${a.source}|${a.id}`)) seen.set(`${a.source}|${a.id}`, { a, d });
+    if (!seen.size) return '';
+    return `<span class="${cls}">${[...seen.values()].map(({ a, d }) => {
+        const late = d.id !== first;
+        const title = L(SYS.skill.defs[a.id]?.name ?? { ko: a.id, en: a.id }) + (late ? ` · ${L(d.name)}` : '');
+        return `<span class="${cell}${late ? ' late' : ''}" title="${title}">${skillImg(a)}</span>`;
+    }).join('')}</span>`;
+}
+
 /* ───────── 기계장치 ───────── */
 
 /**
@@ -165,7 +186,11 @@ export function moveTip(ev) {
     if (anchored) tip.style.left = '0px';
     // 손가락 툴팁의 버튼 줄은 툴팁 **아래 바깥**에 매달린다(`.tip-touch` · ADR-0374) — 아래 넘침 보정에 그 높이도 든다
     const bar = tip.querySelector(':scope > .tip-touch');
-    const tw = tip.offsetWidth, th = tip.offsetHeight + (bar ? bar.offsetHeight + 6 : 0);   // 배율 전 크기 = 한 장 단위
+    // 아이템 비교 툴팁의 숨은 사본(Alt 때 모양의 「이 아이템」 카드 · `.tip-ghost`)이 더 길면 그 키로 잰다 — Alt 로 델타가 서도 위로 안 뛴다 (ADR-0658).
+    //   사본은 툴팁의 안쪽 위에 붙어 툴팁 테두리를 안 든다 — 테두리 몫(offset − client)을 더한다
+    const ghost = tip.querySelector('.tip-ghost');
+    const boxH = Math.max(tip.offsetHeight, ghost ? ghost.offsetHeight + tip.offsetHeight - tip.clientHeight : 0);
+    const tw = tip.offsetWidth, th = boxH + (bar ? bar.offsetHeight + 6 : 0);   // 배율 전 크기 = 한 장 단위
     let x, y, w, h, folded = false;
     if (anchored) {
         const r = stageRect(anchorNode);
@@ -688,25 +713,32 @@ export function monsterTipCard(u, itemCardOf = null) {
     return unitCard(u.stats, color, sheet, rebuild, lift, equipment, itemCardOf);
 }
 
+/** 도감 사다리 앞 단계의 값 표기 — 비율이다(`codex_level.csv:value`) · 옵션 줄 사전에 없는 축이라 `statValue` 에 표기만 넘긴다 */
+const CX_PCT = { fmt: 'pct' };
+
 /**
  * 도감 몬스터 툴팁 — **두 장**: 왼쪽 선술집 후보 카드 · 오른쪽 이야기 · 단계 (SCREEN_DESIGN §9 · ADR-0206 · ADR-0233).
  * 오른쪽 장 = 「스토리」 머리글 + 이야기 · 아래 「보너스 효과」 머리글 + 단계(초상 · 이름 · 직업은 왼쪽 장이 든다). 도감 경험치는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
- * 단계의 보정은 **그 단계에서 더해지는 값**(`codex_level.csv:bonus_pct`)이다 — 카드의 「다음 … +x%」와 같은 수. 합은 스테이지 행이 든다
+ * 단계 줄은 **그 단계가 여는 효과**다(ADR-0667 · monster_design §8) — 종류 · 순서 · 값은 `game.codexSteps`, 옵션 단계의 줄은 `game.codexOptionOf`(장비 옵션 줄과 같은 표기 · 행이 없으면 `—`)
  * @param m `{id, exp, boss}` — 도감 카드 한 장의 집계(exp = 누적 도감 경험치 · ADR-0587)
  * @param grade 초상 등급 — 일반 / 정예 고르개를 그대로 따른다 (ADR-0167)
- * @param stat 그 스테이지의 계열 라벨 `{ko, en}` — 없으면(챕터보스 단독 5스테이지) 보정 칸이 `—` 다 (§9 · GAME_DESIGN §10)
  * @returns `[후보 카드 장, 이야기 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
  */
-export function codexMonsterTipCard(m, grade, stat) {
+export function codexMonsterTipCard(m, grade) {
     // 이름은 자리표시자다(`{m:1900|이/가}` — 이름의 SSOT 는 monster.csv · 스테이지 이야기와 같은 규칙). 몬스터 이야기는 `{leader}` 를 안 쓴다
     const story = fillStory(L(monsterStory(m.id)), lang());
     const lv = SYS.game.codexLevel(m.exp);
     // 단계는 **늘 전부 선다** — 닿지 않은 단계도 보여야 「다음에 무엇을 받나」가 읽힌다 · 닿은 단계만 켜진다.
     //   **레벨만 든다** — 「경험치를 얼마 모아야 열린다」는 적지 않는다(다음 문턱은 카드가 든다 · ADR-0209)
-    const steps = D.codexBonus.map((bonus, i) => `
+    //   앞 단계는 그 몬스터에게만 걸리는 효과(`cx.rw.<reward>`) · 옵션 단계는 그 몬스터의 전투 옵션 한 줄 (ADR-0667)
+    const opt = SYS.game.codexOptionOf(m.id);
+    const stepText = s => s.reward === 'option'
+        ? (opt ? L(M.affixText(opt.stat, opt.value)) : '—')
+        : t(`cx.rw.${s.reward}`, { v: M.statValue(s.reward, s.value, CX_PCT) });   // 셋 다 비율 — 부호 · 단위는 옵션 줄과 같은 규칙(`statValue`)
+    const steps = SYS.game.codexSteps().map((s, i) => `
         <div class="cx-step${i < lv ? ' on' : ''}">
-            <span class="cx-step-lv">${t('cx.tip.lv', { lv: i + 1 })}</span>
-            <span class="cx-step-b">${stat ? `${L(stat)} +${M.pctNum(bonus ?? 0)}%` : '—'}</span>
+            <span class="cx-step-lv">${t('cx.tip.lv', { lv: s.level })}</span>
+            <span class="cx-step-b">${stepText(s)}</span>
         </div>`).join('');
     const card = el('div', 'tip-card cx-tip', `
         <div class="cx-tip-h">${t('cx.tip.story')}</div>
@@ -746,7 +778,12 @@ export function codexSkillTipCard(id, exp) {
     };
     // 셋째 칸 굴림 보스(`roll`)는 한 단 작게 — 직업이 같은 보스가 전부 서서 고정 칸 몬스터보다 많다(주인공은 고정 칸이다)
     const grid = (list, cls = '') => `<div class="cx-src${cls}">${list.map(face).join('')}</div>`;
-    const body = (src.fixed.length ? grid(src.fixed) : '')
+    // 고정 칸은 **그 칸이 처음 열리는 단**으로 묶는다 — 첫 단(고유)이 머리 없이 먼저 · 나머지 단(나이트메어 2칸)은 단 이름 작은 머리 아래 따로 (ADR-0664).
+    //   단은 로직이 준다(`skillCarriers` 의 `difficulty`) · 머리글은 단 이름 데이터 그대로
+    const firstDiff = D.difficultyList[0]?.id ?? null;
+    const later = D.difficultyList.slice(1).map(d => [d, src.fixed.filter(s => s.difficulty === d.id)]).filter(([, list]) => list.length);
+    const body = (src.fixed.some(s => s.difficulty === firstDiff || s.difficulty == null) ? grid(src.fixed.filter(s => s.difficulty === firstDiff || s.difficulty == null)) : '')
+        + later.map(([d, list]) => `<div class="cx-src-h muted">${L(d.name)}</div>${grid(list)}`).join('')
         + (src.roll.length ? `<div class="cx-src-h muted">${t('cx.tip.roll')}</div>${grid(src.roll, ' roll')}` : '');
     // 단계 — Lv1 = 스킬 도안 · 그 뒤는 그 레벨의 업그레이드 상한(skill_codex_level.csv · 0 행 = 도감 전은 단계가 아니다).
     //   **레벨만 든다** — 경험치 문턱은 타일의 핍이 든다(몬스터 툴팁과 같은 규칙 · ADR-0209)
@@ -783,9 +820,8 @@ function codexCandCard(m, grade) {
     const cls = D.classes.find(c => c.id === row?.cls);
     const wg = D.weaponGroups?.[row?.weapon_group];
     const role = [cls ? L(cls.role) : '', wg ? L(wg) : ''].filter(Boolean).join(' · ');
-    // 스킬은 지금 **고유 하나만** — 정예의 무기 칸 · 보스의 셋째 칸은 판마다 굴려 정해진다(보스는 나중에 전직 칸까지 · ADR-0233)
-    const innate = row?.innate_skill && row.innate_skill !== '-' ? { id: row.innate_skill } : null;
-    const skName = innate ? L(SYS.skill?.defs?.[innate.id]?.name ?? { ko: innate.id, en: innate.id }) : '';
+    // 스킬은 **정해진 칸의 그림만 가로로** — 고유 → 나이트메어 2칸(모서리 표시) · 이름 없음 · 목록 카드와 같은 줄(ADR-0666) · 보스의 한 칸 더는 판마다 굴려 정해진다(ADR-0233)
+    const skills = monsterSkillIcons(m.id, 'ng-skill', 'ico sk-ico');
     // 초상은 **영웅과 같은 네모 칸**(`.hero-face` — `app.js:heroFace` 와 같은 꼴) — 이 장은 선술집 영웅 카드 그대로라
     //   도감 카드 · 관전의 원형(몬스터) 구분을 여기서만 푼다 (ADR-0237). 아트가 없으면 영웅처럼 **빈 칸**이다
     const src = monsterFace(m.id, grade);
@@ -798,7 +834,7 @@ function codexCandCard(m, grade) {
                 <div class="ng-name"><b>${L(monsterName(m.id))}</b></div>
                 <div class="ng-cls">${cls ? L(cls) : ''}</div>
                 <div class="ng-role muted">${role}</div>
-                ${innate ? `<div class="ng-skill"><span class="ico">${skillImg(innate)}</span><span class="txt"><b>${skName}</b></span></div>` : ''}
+                ${skills}
             </div>
         </div>
         <div class="attr-list">${attrRowsHtml(stats, line)}</div>
@@ -1034,10 +1070,10 @@ function skillLines(def, pv, atkType, R) {
 
 /* ───────── Alt 계산식 — 누르는 동안만 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089) ─────────
    토글이 아니다 — 켜 둔 것을 잊으면 모든 설명창이 식으로 부푼다. 떠 있는 설명창도 **즉시** 바꾼다
-   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **`data-alt` 를 단 것** — 스킬 카드(식) · 유닛 카드(세부 옵션 열 · 2026-09-14) · 아이템 비교 묶음(착용품 카드 · 2026-09-29 ADR-0448).
+   (마우스를 다시 올리게 하면 보려던 순간을 놓친다). 바꾸는 것은 **`data-alt` 를 단 것** — 스킬 카드(식) · 유닛 카드(세부 옵션 열 · 2026-09-14) · 아이템 비교 묶음(착용 델타 · 2026-10-18 ADR-0658).
    스킬 창의 줄 문장(`skillLineHtml`)은 이 상태를 **안 본다** — 판 안에 셋이 나란히 서서 식이 붙으면 세 줄이 같이 부푼다 */
 let altHeld = false;
-/** 지금 Alt 를 누르고 있나 — 카드를 `app.js` 가 짓는 아이템 비교 툴팁(ADR-0448)이 짓는 순간 읽는다 */
+/** 지금 Alt 를 누르고 있나 — 카드를 `app.js` 가 짓는 아이템 비교 툴팁(착용 델타 · ADR-0658)이 짓는 순간 읽는다 */
 export const isAltHeld = () => altHeld;
 /** 마지막 마우스 위치 — 다시 그린 카드의 높이가 달라져도 넘침 보정이 맞게 `moveTip` 을 한 번 더 부른다 */
 let lastMove = null;
@@ -1054,7 +1090,7 @@ function setAlt(on) {
     if (!on) hideEquipmentItemTip();
     const tip = $tip();
     if (!tip?.classList.contains('show')) return;
-    // 다시 그리는 것 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114) · 아이템 비교 묶음(ADR-0448 — 카드 한 장 ↔ 두 장 + VS).
+    // 다시 그리는 것 = `data-alt` 를 단 것 — 스킬 설명창 · 유닛 카드(ADR-0114) · 아이템 비교 묶음(ADR-0658 — 「이 아이템」 카드의 착용 델타).
     //   제 인자를 쥔 `_rebuild` 로 같은 것을 새로 만든다
     const cards = tip.querySelectorAll('[data-alt]');
     for (const c of cards) c.replaceWith(c._rebuild());

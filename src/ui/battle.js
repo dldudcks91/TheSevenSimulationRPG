@@ -53,6 +53,13 @@ const TICK = 0.1;
 /* 눈금 간격의 하한(ms) — 간격은 `TICK / 배속`이라 ×16 이면 6ms 마다 그린다. 시각은 실제 경과 × 배속으로 밀어(`step`) 간격은 그리는 빈도일 뿐이므로
    ×4 의 간격에서 멈춘다 — 게임 수치가 아니라 브라우저 사정이라 CSV 가 아니다 */
 const STEP_MIN_MS = 25;
+/* 스테이지 띠 (SCREEN_DESIGN §4-2 「스테이지 띠」 · ADR-0663) — ×1 의 길이 · 재생 위치가 이 초 안이면 「런의 처음」이다(첫 라운드 편성이 t=0 에 선다).
+   연출 길이라 게임 수치가 아니다 — 배속이 오르면 `SPEED_K` 만큼 짧아진다. 그림은 모양(mask)으로만 쓴다 — 못 읽으면 곧은 띠(`si-plain`) */
+const INTRO_MS = 2000;
+const INTRO_FROM_T = 0.5;
+const INTRO_ART = 'assets/art/fx/ui/stage_banner.webp';
+let introArt = null;   // 그림을 읽었나 — null 모름 · true · false. 모를 땐 그림으로 건다(첫 런 전에 거의 다 읽힌다)
+{ const img = new Image(); img.onload = () => { introArt = true; }; img.onerror = () => { introArt = false; }; img.src = INTRO_ART; }
 
 const kindLabel = k => t(`kind.${k}`);
 /* 스킬 아이콘 그림 — `app.js:skillImg` 와 같은 규칙이다 (SCREEN_DESIGN §2). 두 파일이 서로를 import 하지
@@ -125,10 +132,8 @@ export const gravePlaque = (name, until, at) => {
 
 /* [버프] 창 [2026-09-30 · SCREEN_DESIGN §4-2 「버프」 · ADR-0461 · 버튼 자리 ADR-0462] — 그 런의 버프를 **출처별 세 줄**(신단 · 전술 · 도감)로 적는다.
    합치기(같은 능력치 · 피해 감소는 따로)는 `game.runBuffs` 가 했다 — 여기는 옮겨 적을 뿐이다 */
-/** 도감 계열 번호 — `codex_series.csv` 의 그 능력치 행 */
-const cxNum = k => Object.keys(D.codexSeries ?? {}).find(n => D.codexSeries[n] === k);
-/** 옵션 줄 사전(`AFFIX_LABELS`)에 없는 축의 이름 — 전투 능력치 표 · 없으면 도감 계열 라벨(`dmg_pct` = 피해량) */
-const buffLabel = k => D.combatStats.find(s => s.id === k) ?? (cxNum(k) ? { ...M.CX_STAT[cxNum(k)], fmt: 'pct' } : undefined);
+/** 옵션 줄 사전(`AFFIX_LABELS`)에 없는 축의 이름 — 전투 능력치 표. 도감 줄도 장비 옵션 어휘라 사전이 먼저 답한다 (2026-10-18 · ADR-0667 — ~~도감 계열 라벨~~) */
+const buffLabel = k => D.combatStats.find(s => s.id === k);
 /** 효과 한 조각 — 옵션 줄과 같은 표기(「데미지 +2%」) */
 const buffStat = (k, v) => L(M.affixText(k, v, buffLabel(k)));
 /** 세 줄 — 비어 있는 출처는 「없음」(줄이 빠지지 않는다) */
@@ -169,6 +174,7 @@ function openBuffPop(btn, b) {
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
  *   shrine = 이 런이 입은 신단 id(없으면 null) — 헤드의 칩 (ADR-0445)
+ *   intro = `{ diff }` 면 재생 위치가 런의 처음일 때 스테이지 띠를 한 번 띄운다 — 「그 런에 한 번」은 앱이 정한다 · 결투장은 안 넘긴다 (ADR-0663)
  *   upNext() = 다음 런 `{stageId, at, shrine}`(앱이 `game.nextRepeat` 로 답한다) · 멈춘 부대(철수 · 끊김 뒤)면 null — 결과 띠는 이 답이 있으면 **언제나** 센다 (ADR-0430).
  *     `respawn` 이 지금보다 뒤면 다음 칸의 챕터보스가 죽어 있다 — 세기 글이 「보스 재등장까지」 · [건너뛰기] 없음 (ADR-0590)
  *   graveAt() = 이 런의 칸 챕터보스가 돌아오는 시각(ms) 또는 null(앱이 `game.bossRespawnAt` 로 답한다) — 이겨서 끝났고 지금보다 뒤면 쓰러진 보스 카드의 초상이 무덤 명패다 (ADR-0590)
@@ -263,6 +269,8 @@ export function mountBattle(container, opts) {
     scrollLog(state, container);
     if (!state.ended) { start(state, container, opts); wake(state, container, opts); }   // 세운 자리에 다시 섰으면 풀리는 순간에 깨운다
     renderDmg(state, container);
+    // 스테이지 띠 — 앱이 「그 런에 한 번」을 정하고(`opts.intro`) 여기서는 런의 처음일 때만 띄운다 · 런 도중에 들어온 관전은 안 띄운다 (ADR-0663)
+    if (opts.intro && state.t <= INTRO_FROM_T) stageIntro(state, dom, stage, opts.intro);
 
     // 정리 함수 — 재생 위치를 돌려준다. 렌더러가 state.battle.resume 에 담아 다음 mount 에 넘기면 이어서 재생된다
     return () => {
@@ -272,6 +280,29 @@ export function mountBattle(container, opts) {
         // wall · auto (ADR-0102) — 앱 시계가 이 자리에서 이어 민다: 마지막으로 시각을 민 실제 시각 · 결과 띠가 다음 런을 세던 중이었나
         return { t: state.t, speed: state.speed, running: state.running, tab: state.tab, logf: state.logf, dmgf: state.dmgf, wall: state.wall, auto: state.auto };
     };
+}
+
+/**
+ * 스테이지 띠 [2026-10-18 사용자 지시 · SCREEN_DESIGN §4-2 「스테이지 띠」 · ADR-0663] — 아레나 가운데를 붓 자국 띠가 왼쪽에서 오른쪽으로 지나가며
+ * 윗줄 `[난이도] Ch1-1 · 챕터 이름` · 아랫줄 칸 이름을 든다. **덮개일 뿐이다** — 재생 · 원정 시각을 안 세우고 누름도 안 막는다(보든 안 보든 같다 · ADR-0654).
+ * 띠 색 = 그 챕터의 죄종 색(어둡게 섞는 것은 CSS) · 다 지나가면 스스로 걷힌다 · 다시 그리면 재생기째 걷힌다
+ * @param intro { diff } — 노말이 아닌 단의 이름(노말이면 null) · 앱이 런의 단에서 낸다
+ */
+function stageIntro(state, root, stage, intro) {
+    const arena = root.querySelector('.arena');
+    if (!arena) return;
+    const ch = chapterOf(stage.chapter);
+    const node = document.createElement('div');
+    node.className = `stage-intro${introArt === false ? ' si-plain' : ''}`;
+    node.style.setProperty('--si-sin', M.SINS[ch?.sin]?.color ?? 'var(--text-muted)');
+    node.style.setProperty('--si-ms', `${Math.round(INTRO_MS * (SPEED_K[state.speed] ?? 1))}ms`);
+    node.innerHTML = `<div class="si-band"></div>
+        <div class="si-text">
+            <div class="si-sub">${intro.diff ? `<span class="si-diff">${intro.diff}</span>` : ''}<span>Ch${stage.chapter}-${stage.stage_num}</span><span>${L(ch?.name)}</span></div>
+            <div class="si-name">${L(stageName(stage))}</div>
+        </div>`;
+    node.addEventListener('animationend', e => { if (e.target === node) node.remove(); });
+    arena.appendChild(node);
 }
 
 /* ───────── 구성 ───────── */
@@ -718,7 +749,7 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
     // 칸 수는 언제나 active_slots — 스킬이 둘인 영웅도 셋째 칸이 **빈 채로** 남는다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
     // 칸이 사라지면 카드마다 줄 길이가 달라져 같은 격자로 안 읽히고, 「스킬이 둘」과 「셋째가 미정」이 구분되지 않는다
     // [개정 2026-09-03 사용자 지시] **몬스터도 같은 줄을 그린다** — 옛 규칙(「몬스터는 액티브가 없어 쿨 칸도 없다」)을 폐기한다.
-    // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 등급이 연 만큼(`spawn_grade.csv:skill_slots`) 차고 나머지가 빈 칸이다 [2026-09-11 R79 후속 — 그 전엔 전부 비어 있었다]
+    // 진영마다 줄이 있고 없으면 카드가 다른 물건으로 읽힌다. 몬스터 칸은 그 런의 단이 연 만큼(+ 보스의 한 칸 더 — `battle.monsterSkillSlots` · R269) 차고 나머지가 빈 칸이다 [2026-09-11 R79 후속 — 그 전엔 전부 비어 있었다]
     // 칸 자리는 `cdSlots` 가 정한다 — 전직 스킬은 늘 맨 오른쪽 칸 (ADR-0572)
     // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
     // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)

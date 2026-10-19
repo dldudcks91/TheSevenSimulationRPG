@@ -1,13 +1,16 @@
-/** 결투장 — 저장 상태와 독립된 3인 팀 스냅샷 · 상대 두 갈래 · `battle.simulateTeams` 단판. RNG는 상대/전투마다 주입한다.
+/** 콜로세움 · 결투장 — 저장 상태와 독립된 3인 팀 스냅샷 · 상대 셋의 출처 · `battle.simulateTeams` 단판. RNG는 상대/전투마다 주입한다.
  * 순수 — DOM · 저장소 · 시계 · `Math.random` 을 모른다 · 데이터는 생성자 주입 · 세이브를 모른다 (INTERFACE §2-17).
- * **상대는 두 갈래다** [2026-10-17 · arena_design §0 · §7] — 오프라인 = 등급에 맞춰 장비 · 스킬을 갖춘 AI 팀(`rollTierOpponent`) /
- *   온라인 = 남이 올린 팀 그대로(`exportTeam` → 운반 → `importTeam` · 받은 팀은 `validateTeam` 을 지나야 선다 — arena_design §2).
- *   운반(문자열로 싸기 · 서버)은 이 모듈 밖이다. 어느 갈래든 결과는 `snapshotTeam` 모양이라 `fight` 하나가 받는다.
+ * **상대는 셋에서 온다** [2026-10-17 · 탭 둘 2026-10-18 · arena_design §0 · §7 · §8] — 콜로세움 = 층마다 정해진 AI 팀(`rollFloorOpponent` —
+ *   시드를 층 번호로 파서 rng 를 안 받는다) / 결투장 = 레이팅 근처 AI 팀 셋(`rollRatedCandidates`) / 친선전 = 남이 올린 팀 그대로
+ *   (`exportTeam` → 운반 → `importTeam` · 받은 팀은 `validateTeam` 을 지나야 선다 — arena_design §2).
+ *   운반(문자열로 싸기 · 서버)은 이 모듈 밖이다. 어느 출처든 결과는 `snapshotTeam` 모양이라 `fight` 하나가 받는다.
+ *   레이팅 · 오른 층은 세이브라 여기 없다(`state.arenaRecord` · `colosseumRecord`).
  * 개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약 칸을 더한다(`loadout` = `state.arenaLoadout` · 2026-10-03). 도감은 제외.
- * 물약은 칸을 채운 값만 받는다 — 재고는 부르는 쪽이 안 줄인다(결투는 세이브에 영향이 없다).
- * ⚠ 등급 표 값 · AI 가중치는 임시 · 승급 기록은 없다(GAME_DESIGN §10 「결투장」 ⑦) · 팀 코드에 전술 · 물약이 없다 ·
+ * 물약은 칸을 채운 값만 받는다 — 재고는 부르는 쪽이 안 줄인다(결투는 재고에 영향이 없다).
+ * ⚠ 등급 표 값 · AI 가중치는 임시(GAME_DESIGN §10 「결투장」 ⑦) · 팀 코드에 전술 · 물약이 없다 ·
  *   검사기는 옵션 줄 수 · 기본 능력치 대역을 아직 안 본다(⑧)
  */
+import { makeRng, deriveSeed } from './rng.js';
 
 /** 팀 코드 판 — 모양을 바꾸면 올린다. 옛 판의 코드는 `format` 으로 거절한다 (세이브 판과 같은 성격 · INTERFACE §2-17) */
 const TEAM_CODE_VERSION = 1;
@@ -22,11 +25,12 @@ const UNSAFE_TEXT = /[<>"`]/;
 
 /**
  * @param deps.hero · item · skill · battle  시스템
- * @param deps.balance       balance.csv — 성장 문턱(`skillbook_learn_level` · `advance_unlock_level` · `advance_point_interval` · `mastery_point_per_level`) · 상한(`hero_level_cap` · `hero_attr_max`) · AI 가중치(`arena_ai_*`)
+ * @param deps.balance       balance.csv — 성장 문턱(`skillbook_learn_level` · `advance_unlock_level` · `advance_point_interval` · `mastery_point_per_level`) · 상한(`hero_level_cap` · `hero_attr_max`) · AI 가중치(`arena_ai_*`) ·
+ *                           후보 간격(`arena_pick_spread` · `arena_pick_jitter`) · 층 시드(`colosseum_seed`)
  * @param deps.equipSlots    착용 위치 `[{id, part}]` — 위치 순서가 장비 굴림 순서다 (equip_slot.csv)
  * @param deps.advances      advance.csv 원시 행 — 전직 갈래 → 직업
  * @param deps.classSkills   직업 풀 `{classId: [skillId]}` — 고유 스킬의 후보 (hero 와 같은 표)
- * @param deps.tiers         arena_tier.csv 원시 행 — 오프라인 등급
+ * @param deps.tiers         arena_tier.csv 원시 행 — 등급(콜로세움 층 묶음 · 결투장 리그)
  * @param deps.upgradeCeiling 건물을 다 지었을 때의 강화 상한 · `skillCapMax` 스킬 업그레이드 상한의 끝 — 검사기가 보는 끝값
  */
 export function createArenaSystem({ hero, item, skill, battle, balance = {}, equipSlots = [], advances = [], classSkills = {}, tiers = [], upgradeCeiling = 0, skillCapMax = 0 }) {
@@ -37,9 +41,9 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
 
     /* ── 표 ── */
 
-    // 오프라인 등급 — `tier_order` 순. 표가 틀리면 생성 때 던진다 (INTERFACE §2-17)
+    // 등급 — `tier_order` 순. 표가 틀리면 생성 때 던진다 (INTERFACE §2-17)
     const TIERS = (tiers ?? []).map(r => ({
-        id: r.tier_id, order: Number(r.tier_order), name: { ko: r.name_kr, en: r.name_en }, level: r.hero_level,
+        id: r.tier_id, order: Number(r.tier_order), name: { ko: r.name_kr, en: r.name_en }, ratingMin: r.rating_min, floors: r.floors, level: r.hero_level,
         rarityWeights: { normal: r.rarity_w_normal, magic: r.rarity_w_magic, rare: r.rarity_w_rare }, up: r.gear_up, skillUp: r.skill_up,
     })).sort((a, b) => a.order - b.order);
     (() => {
@@ -47,7 +51,7 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
         const within = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
         if (!TIERS.length) bad('행이 없다');
         const seen = new Set();
-        for (const t of TIERS) {
+        TIERS.forEach((t, i) => {
             if (!t.id || seen.has(t.id)) bad(`tier_id '${t.id}'`);
             seen.add(t.id);
             if (!t.name.ko || !t.name.en) bad(`${t.id} — 이름이 비었다`);
@@ -57,8 +61,36 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
             if (!within(t.skillUp, 0, Infinity)) bad(`${t.id} — skill_up '${t.skillUp}' (0 이상 정수)`);
             const w = Object.values(t.rarityWeights);
             if (w.some(x => typeof x !== 'number' || x < 0) || !(w.reduce((s, x) => s + x, 0) > 0)) bad(`${t.id} — 희귀도 가중치`);
-        }
+            if (!within(t.floors, 1, Infinity)) bad(`${t.id} — floors '${t.floors}' (1 이상 정수)`);
+            // 리그 문턱은 오름차순 — 사이를 잇는 분모가 0 이 되지 않게
+            if (!Number.isInteger(t.ratingMin) || (i > 0 && t.ratingMin <= TIERS[i - 1].ratingMin)) bad(`${t.id} — rating_min '${t.ratingMin}' (정수 · 앞 등급보다 크다)`);
+        });
     })();
+
+    /* ── 차림 — 등급 행 사이를 비율로 잇는다 (INTERFACE §2-17 「차림」) ── */
+
+    const lerp = (a, b, f) => a + (b - a) * f;
+    /** 등급 i 에서 다음 등급 쪽으로 f 만큼 — 레벨만 f 를 그대로(첫 등급 아래로 낮출 때 음수) · 나머지는 0 ~ 1 로 자른다 · 마지막 등급은 그대로 */
+    function kitAt(i, f) {
+        const T = TIERS[i], N = TIERS[i + 1] ?? T, g = Math.min(1, Math.max(0, f));
+        return {
+            level: Math.min(B.hero_level_cap, Math.max(1, Math.round(lerp(T.level, N.level, f)))),
+            rarityWeights: Object.fromEntries(Object.keys(T.rarityWeights).map(k => [k, lerp(T.rarityWeights[k], N.rarityWeights[k], g)])),
+            up: Math.round(lerp(T.up, N.up, g)), skillUp: Math.round(lerp(T.skillUp, N.skillUp, g)),
+        };
+    }
+    // 콜로세움 사다리 — 등급 순서대로 그 등급 층 수만큼 이어 붙인다 · 등급의 마지막 층이 승급전(arena_design §7)
+    const FLOORS = [];
+    TIERS.forEach((t, i) => {
+        for (let k = 0; k < t.floors; k++)
+            FLOORS.push({ no: FLOORS.length + 1, tier: t.id, step: k + 1, steps: t.floors, gate: k === t.floors - 1, kit: kitAt(i, k / t.floors) });
+    });
+    const tierIndexOfRating = rating => TIERS.reduce((at, t, i) => (t.ratingMin <= rating ? i : at), 0);
+    const tierOfRating = rating => TIERS[tierIndexOfRating(rating)].id;
+    function kitOfRating(rating) {
+        const i = tierIndexOfRating(rating), T = TIERS[i], N = TIERS[i + 1];
+        return kitAt(i, N ? (rating - T.ratingMin) / (N.ratingMin - T.ratingMin) : 0);
+    }
 
     // 전직 갈래 — 갈래의 스킬은 `skill.csv` 의 `owner_kind=advance` 행 · `priority` 순 (`state.advanceSkills` 와 같다)
     const ADV = (advances ?? []).map(r => ({ id: r.advance_id, cls: r.class_id, order: Number(r.sort_order) || 0 })).sort((a, b) => a.order - b.order);
@@ -173,9 +205,8 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
         if (Object.keys(lv).length) h.skillLv = lv;
     }
 
-    function rollTierOpponent(tierId, rng, taken = []) {
-        const T = TIERS.find(t => t.id === tierId);
-        if (!T) throw new Error(`arena: 모르는 등급 '${tierId}'`);
+    /** 차림 하나로 AI 팀 하나 — 등급 · 층 · 레이팅이 같은 길을 쓴다(rng 순서는 INTERFACE §5-2 `rollTierOpponent`) */
+    function rollKit(T, rng, taken = []) {
         const heroes = drawDistinct(rng, hero.mainClasses, teamSize).map(cls => hero.rollHeroOf(rng, cls));
         // 이름 — 부르는 쪽(`taken`)과도 서로도 안 겹친다. `avoidNames` 는 목록 안의 겹침을 안 보므로 한 명씩 앞사람을 더해 간다 (rng 0)
         const names = (taken ?? []).slice();
@@ -207,6 +238,34 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
         team.forEach((p, i) => { if (p.combat.hp_max > team[front].combat.hp_max) front = i; });
         team.forEach((p, i) => { p.rank = i === front ? RANKS[0] : RANKS[1]; });
         return team;
+    }
+
+    function rollTierOpponent(tierId, rng, taken = []) {
+        const T = TIERS.find(t => t.id === tierId);
+        if (!T) throw new Error(`arena: 모르는 등급 '${tierId}'`);
+        return rollKit(T, rng, taken);
+    }
+
+    /* ── 콜로세움 — 층마다 정해진 AI 팀 (arena_design §7) ── */
+
+    /** 같은 층 = 같은 팀 — 시드를 층 번호로 판다(rng 를 안 받는다). 이름만 `taken` 을 피해 바뀔 수 있다(rng 0) */
+    function rollFloorOpponent(no, taken = []) {
+        const F = FLOORS.find(f => f.no === no);
+        if (!F) throw new Error(`arena: 모르는 층 '${no}'`);
+        return rollKit(F.kit, makeRng(deriveSeed(B.colosseum_seed, no)), taken);
+    }
+
+    /* ── 결투장 — 레이팅 근처 AI 팀 셋 (arena_design §8) ── */
+
+    /** 아래 · 비슷 · 위 — 후보마다 흔들림 1회 → 그 팀의 굴림. 이름은 `taken` 과도 앞 후보와도 안 겹친다 */
+    function rollRatedCandidates(rating, rng, taken = []) {
+        const names = (taken ?? []).slice();
+        return [-1, 0, 1].map(d => {
+            const r = Math.max(0, Math.round(rating + d * B.arena_pick_spread + (rng() * 2 - 1) * B.arena_pick_jitter));
+            const team = rollKit(kitOfRating(r), rng, names);
+            names.push(...team.map(p => p.hero.name));
+            return { rating: r, tier: tierOfRating(r), team };
+        });
     }
 
     /* ── 온라인 — 남이 올린 팀 그대로 (arena_design §0 · §2) ── */
@@ -316,8 +375,9 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
     }
 
     return {
-        teamSize, tiers: TIERS.map(t => clone(t)),
+        teamSize, tiers: TIERS.map(t => clone(t)), floors: clone(FLOORS),
         snapshotTeam, rollOpponent, fight,
-        rollTierOpponent, exportTeam, validateTeam, importTeam,
+        rollTierOpponent, rollFloorOpponent, rollRatedCandidates, tierOfRating, kitOfRating: r => clone(kitOfRating(r)),
+        exportTeam, validateTeam, importTeam,
     };
 }
