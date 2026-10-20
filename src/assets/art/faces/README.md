@@ -170,13 +170,13 @@
 | `hero_6` | `hero/knight_4` | 민머리 · 금테 견갑 · 붉은 서코트 | `../source/knight_gold_bald` |
 | `hero_9` | `hero/knight_5` | 외치는 기사 · 사슬 코이프 | `../source/knight_shout_coif` |
 | `hero_8` | `hero/archer_1` | 후드 궁수 · 화살통 | `../source/archer_hood_black` |
-| `hero_10` | `hero/priest_1` | 반삭 · 검은 수단 · 금 십자가 | `../source/priest_cross_buzz` |
-| — (신규) | `hero/priest_2` | 올리브 후드 · 룬 문신 노인 | `../source/priest_hood_runes` |
+| `hero_10` | `hero/priest_1` | **베네딕토** — 반삭 · 검은 수단 · 금 십자가 (10-20 이름) | `../source/priest_cross_buzz` |
+| — (신규) | `hero/priest_2` | **멀린** — 올리브 후드 · 룬 문신 노인 (10-20 이름) | `../source/priest_hood_runes` |
 | — (신규) | `hero/priest_3` | **잔 다르크** — 흰 두건(윔플) · 처진 눈 · 나무 십자가 (10-18 이름) | `../source/priest_wimple_cross` |
 | — (신규) | `hero/priest_4` | **닥터 슈나벨** — 역병 의사 · 검은 챙모자 · 흰 부리 가면 (10-18 이름) | `../source/priest_plague_hat` |
 | — (신규) | `hero/mage_1` | 후드 · 안대 · 수정구 | `../source/mage_orb_eyepatch` |
 | — (신규) | `hero/mage_2` | **포세이돈** — 청록 장발·수염 · 갈색 가죽 조끼 | `../source/mage_poseidon` |
-| — (신규) | `hero/mage_3` | **노스트라다무스** — 황도 기호 검은 로브 · 회백 장발 | `../source/mage_nostradamus` |
+| — (신규) | `hero/mage_3` | **노스트라다무스** — 황도 기호 검은 로브 · 회백 장발 · ⚠ 10-20 사제로 옮긴다 — 사제 풀로 파일 이동은 아트 단계(DEV_PLAN R292) | `../source/mage_nostradamus` |
 
 ⚠ **분류는 그림의 인상으로 정한 것이다** (사용자 확정) — 백발백염(구 7)은 기사 시트에서 왔지만 전사로, 민머리(구 6)·외치는 기사(구 9)는 기사로 갔다. 위 이력 문단의 번호는 전부 **구 파일명**이라 이 표로 읽는다.
 새 파일 열은 2026-09-14 폴더 분리 뒤의 이름이다 — 09-07 ~ 09-14 사이에는 `hero_<직업id>_<k>.png` 였다(이력 문단의 `hero_priest_2` 같은 이름).
@@ -192,4 +192,4 @@
 - ⚠ **「화면에서 깨져 보인다」를 해상도 문제로 읽지 말 것** (2026-09-01) — 원인은 `image-rendering: pixelated` 가 이 스타일에도 걸려 있던 것이었다. 512는 가장 큰 칸(152px @ DPR2 = 304px)을 덮는 정상 해상도다. 줄이는 것은 **용량**을 위한 선택이지 화질을 위한 선택이 아니다 (`../../README.md` 규격)
 
 ---
-*마지막 업데이트: 2026-10-18*
+*마지막 업데이트: 2026-10-20*

@@ -1643,7 +1643,7 @@ html, body { height: 100%; overflow: hidden; }
    **보관은 두 칸이다** [2026-09-11 사용자 확정] — 왼쪽 창고 · 오른쪽 인벤토리가 나란히 서고 **둘 다 3줄**이다.
    열 수는 `auto-fill` 이 아니라 **칸 수 ÷ 3**(`--cols` — `stash_cap` · `inventory_cap` · app.js itemsPanel)이다 — 줄 수를 박고 폭은 열 수대로 나눈다.
    두 칸의 열 합이 24 면(12 · 12 · 9 · 15 …) 판 안 1337 에서 **한 변 약 51.5** 로 09-11 이전(52)과 같다 */
-/* 두 칸은 **윗변 · 칸 줄 · 아랫변이 맞는다** [2026-09-14 사용자 지시] — 도구 줄에 버튼([분해] · 고르는 중 줄)이 서는 것은 인벤토리 쪽뿐이라
+/* 두 칸은 **윗변 · 칸 줄 · 아랫변이 맞는다** [2026-09-14 사용자 지시] — 도구 줄에 버튼([분해] · [자동 분해])이 서는 것은 인벤토리 쪽뿐이라
    창고 쪽 도구 줄이 글자 높이만큼 낮고, `align-items: start` 였던 창고 패널이 약 3px 짧았다. 두 패널을 행 높이로 늘리고 **모자란 높이는 도구 줄이 받는다** —
    칸 격자는 두 칸이 같은 높이라 아래에 붙어 칸 줄까지 맞는다. 버튼 높이를 px 로 박지 않는다(글꼴이 바뀌면 다시 어긋난다) */
 /* 두 칸의 폭은 **열 수(`--cols` = 상한 ÷ 3 · app.js itemsPanel)대로** 나눈다 — 바탕 30 = 패널 좌우 여백 · 테두리 34 − 칸 간격 4 라
@@ -1660,7 +1660,7 @@ html, body { height: 100%; overflow: hidden; }
 .bag-row > .panel + .panel { margin-top: 0; }
 .bag .inv-cells.wide { grid-template-columns: repeat(var(--cols, 12), minmax(0, 1fr)); }
 .bag .inv-icon { width: 40px; height: 40px; }
-/* 칸 이름 — 「창고」 / 「인벤토리」. 도구 줄 맨 왼쪽에 서고 나머지([분해] 또는 고르는 중 줄 · 칸 수)가 그 오른쪽이다.
+/* 칸 이름 — 「창고」 / 「인벤토리」. 도구 줄 맨 왼쪽에 서고 나머지(부대 버튼 · [분해] · [정렬])가 그 오른쪽이다.
    글씨는 **패널 제목(`.panel > h2`)과 같다** [2026-09-21 사용자 지시 「Equipment 처럼」 · SCREEN_DESIGN §6] — 크기 · 굵기 · 색만.
    밑줄은 안 긋는다 — 제목 줄이 아니라 버튼과 한 줄에 선 이름이라, 선이 버튼 밑까지 안 가고 이름 밑에서 끊긴다 */
 .items-name { font-size: var(--fs-md); font-weight: bold; color: var(--text-primary); margin-right: 2px; white-space: nowrap; }
@@ -4060,10 +4060,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .unit.shrine .cd-slot .cd-g img { width: 72%; height: 72%; }
 .pop.miss { color: var(--text-muted); }
 
-/* 고르는 중 [2026-09-21 · ADR-0184] — 클릭이 **체크**가 되므로 칸 모양을 바꾼다.
-   파괴가 아니라 고르기라 위험 색을 안 쓴다 — 실제 파괴는 [분해하기] 한 번이 한다 */
+/* 분해함이 떠 있는 동안 [2026-09-21 · ADR-0184 · 함 2026-10-20 ADR-0673] — 클릭이 **함에 올리기**가 되므로 칸 모양을 바꾼다.
+   파괴가 아니라 고르기라 위험 색을 안 쓴다 — 실제 파괴는 [분해하기] 한 번이 한다. 함에 오른 칸은 흐린 빈 칸(`.gone`)이고 누르면 돌아온다 */
 .inv-cells.picking .inv-cell.filled { border-style: dashed; cursor: pointer; }
-.inv-cells.picking .inv-cell.picked { border-style: solid; box-shadow: inset 0 0 0 2px var(--color-warning); }
+.inv-cells.picking .inv-cell.cube-out { cursor: pointer; }
 .inv-cell { position: relative; }
 /* 페이퍼돌 착용 칸도 같은 자리 · 같은 모양이다 (ADR-0169) */
 .inv-up, .pd-up { position: absolute; top: 1px; right: 2px; font-size: var(--fs-xs); color: var(--color-warning); }
@@ -4125,8 +4125,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 멈춤 창 (SCREEN_DESIGN §2-1) — 껍데기는 창 공통 그대로, 속만 여기서 */
 .cl-frozen { display: flex; justify-content: center; padding: 8px 0 4px; }
 
-/* ───────── 연구소 (SCREEN_DESIGN §8 · ADR-0669) ─────────
-   왼쪽 줄 목록 + 오른쪽 고른 줄(단계 트랙 + 고른 칸). **연구 하나 = 줄 하나** — 줄이 늘면 목록에 한 줄이 붙고 오른쪽 모양은 그대로다.
+/* ───────── 연구소 (SCREEN_DESIGN §8 · ADR-0669 · ADR-0674) ─────────
+   왼쪽 줄 목록 + 오른쪽 고른 줄(두 열 — 단계 사다리 | 고른 칸). **연구 하나 = 줄 하나** — 줄이 늘면 목록에 한 줄이 붙고 오른쪽 모양은 그대로다.
    ~~`.ng-row` 3열 단 · `.dp-cell` · `.dp-tier` 상자~~(ADR-0061 · 0665)는 이 개정으로 걷었다. 라벨이 드는 칸이라 고정 px 폭을 주지 않는다 (ui/README 폭 정책) */
 .dp-wrap { display: grid; grid-template-columns: minmax(220px, 21%) minmax(0, 1fr); gap: 14px; }
 .dp-lines { display: flex; flex-direction: column; min-height: 0; }
@@ -4154,78 +4154,91 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 오른쪽 — 고른 줄. 머리는 패널 제목 규칙(`.panel > h2`)이 든다 · [미니게임]은 오른쪽 끝 */
 .dp-detail { display: flex; flex-direction: column; min-height: 0; }
 .dp-detail > h2 .dp-mg { align-self: center; font-weight: normal; }
-/* 단계 트랙 — 단계 7 이 가로 한 줄 · **선은 이 줄 안에서만** 잇는다(줄끼리 잇지 않는다 · ADR-0669).
-   칸마다 왼쪽 반 선(이 칸이 열렸나) · 오른쪽 반 선(다음 칸이 열렸나) — 열린 칸끼리 잇는 선만 밝다 */
-.dp-track {
-    --dp-orb: 96px;
-    list-style: none; margin: 10px 0 0; padding: 0;
-    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0;
+/* 머리 아래 두 열 — 단계 사다리 | 고른 칸 (ADR-0674). 고른 칸은 건설 상세 몫만큼 — 라벨 칸이라 하한만 준다 */
+.dp-body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 35%); }
+/* 단계 사다리 — 단계 7 이 세로로 한 줄씩 · 줄이 열의 세로를 나눠 가진다(빈 상자가 안 선다) · **선은 이 줄 안에서만** 잇는다(줄끼리 잇지 않는다 · ADR-0669).
+   줄마다 위 반 선(이 줄이 열렸나) · 아래 반 선(다음 줄이 열렸나) — 열린 줄끼리 잇는 선만 밝다 */
+.dp-ladder { --dp-orb: 60px; list-style: none; margin: 0; padding: 2px 18px 2px 0; display: flex; flex-direction: column; min-height: 0; }
+.dp-step {
+    position: relative; flex: 1 1 0; max-height: 96px; min-height: 0;
+    display: grid; grid-template-columns: var(--dp-orb) minmax(0, 1fr) auto minmax(118px, auto); align-items: center; gap: 0 18px;
+    padding: 0 12px; cursor: pointer; border: 1px solid transparent;
 }
-.dp-node { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 4px 14px; cursor: pointer; min-width: 0; }
-.dp-node::before, .dp-node::after {
-    content: ''; position: absolute; top: calc(6px + var(--dp-orb) / 2 - 2px); width: 50%; height: 4px;
+.dp-step::before, .dp-step::after {
+    content: ''; position: absolute; left: calc(12px + var(--dp-orb) / 2 - 2px); width: 4px; height: 50%;
     background: var(--border-dark); z-index: 0;
 }
-.dp-node::before { left: 0; }
-.dp-node::after { right: 0; }
-.dp-node:first-child::before, .dp-node:last-child::after { display: none; }
-.dp-node.open::before, .dp-node.link::after { background: var(--border-highlight); }
+.dp-step::before { top: 0; }
+.dp-step::after { bottom: 0; }
+.dp-step:first-child::before, .dp-step:last-child::after { display: none; }
+.dp-step.open::before, .dp-step.link::after { background: var(--border-highlight); }
+.dp-step:hover { background: var(--bg-secondary); }
+/* 고른 줄 — 줄 바탕이 밝고 원에 파란 겉 테두리(§5 「골랐다」와 같은 색) */
+.dp-step.on { background: var(--bg-tertiary); border-color: var(--border-primary); }
+.dp-step.on .dp-orb { outline: 2px solid var(--color-info); outline-offset: 2px; }
 .dp-orb {
     position: relative; z-index: 1; flex: 0 0 auto; width: var(--dp-orb); height: var(--dp-orb); border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     background: var(--bg-input); border: 2px solid var(--border-dark);
 }
-.dp-orb img { width: 68px; height: 68px; object-fit: contain; }
-.dp-node.open .dp-orb { border-color: var(--border-highlight); background: var(--bg-card); }
-.dp-node:not(.open) .dp-orb img { opacity: .35; filter: grayscale(.8); }
+.dp-orb img { width: 42px; height: 42px; object-fit: contain; }
+.dp-orb.sq { border-radius: 2px; overflow: hidden; }   /* 찾아온 영웅 줄 — 선술집 그림은 사각 그대로 (ADR-0672) */
+.dp-orb.sq img { width: 100%; height: 100%; object-fit: cover; }
+.dp-step.open .dp-orb { border-color: var(--border-highlight); background: var(--bg-card); }
+.dp-step:not(.open) .dp-orb img { opacity: .35; filter: grayscale(.8); }
 .dp-orb .lock-ico { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
-.dp-orb-lv {
-    position: absolute; right: -10px; bottom: -2px; padding: 0 5px;
-    font-size: var(--fs-sm); line-height: 1.4; white-space: nowrap; color: var(--text-primary);
-    background: var(--bg-primary); border: 1px solid var(--border-highlight);
-}
-/* 고른 칸 — 파란 겉 테두리(§5 「골랐다」와 같은 색) */
-.dp-node.on .dp-orb { outline: 2px solid var(--color-info); outline-offset: 2px; }
-.dp-node:hover .dp-orb { border-color: var(--border-secondary); }
-.dp-node-n { display: flex; gap: 4px; max-width: 100%; font-size: var(--fs-md); color: var(--text-primary); text-align: center; line-height: 1.25; }
-.dp-node-n i { font-style: normal; color: var(--text-muted); }
-.dp-node-r { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
-.dp-node:not(.open) .dp-node-n, .dp-node:not(.open) .dp-node-r { color: var(--text-muted); }
-/* 산출 게이지 [2026-09-27 · §8 · 자리 2026-10-18 ADR-0669] — 칸 아래 가는 줄 · 다음 1개까지 찬 비율. 폭은 앱 시계가 갈아 끼운다(`refreshDispatchBars`) */
-.dp-gauge { position: absolute; left: 14%; right: 14%; bottom: 2px; height: 3px; background: rgba(var(--veil-rgb), .7); }
+.dp-orb .lock-ico svg { width: 22px; height: 22px; }
+.dp-step-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dp-step-n { display: flex; gap: 5px; font-size: var(--fs-md); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dp-step-n i, .dp-side-n i { font-style: normal; color: var(--text-muted); }
+.dp-step-y { font-size: var(--fs-xs); color: var(--text-secondary); }
+.dp-step:not(.open) .dp-step-n, .dp-step:not(.open) .dp-step-y { color: var(--text-muted); }
+.dp-step-lv { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; font-size: var(--fs-xs); color: var(--text-secondary); }
+.dp-step-r { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.dp-step-r b { font-size: var(--fs-md); color: var(--text-primary); white-space: nowrap; }
+/* 잠긴 줄 — 눈금 · 생산량 자리에 무엇이 여는지 (§4-1 잠긴 스테이지 줄과 같은 자리) */
+.dp-step-need { grid-column: 3 / -1; justify-self: end; display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-muted); }
+/* 산출 게이지 [2026-09-27 · §8 · 자리 2026-10-20 ADR-0674] — 시간당 아래 막대 · 다음 1개까지 찬 비율. 폭은 앱 시계가 갈아 끼운다(`refreshDispatchBars`) */
+.dp-gauge { display: block; width: 100%; height: 5px; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .dp-gauge > b { display: block; height: 100%; background: var(--color-success); }
-
-/* 고른 칸 — 트랙 아래 · 큰 아이콘 · 지금 → 올린 뒤 · Lv · 비용 재료 칸(건설 `.cn-mats` 그대로) · [레벨 올리기] */
-.dp-sel {
-    flex: 1 1 auto; min-height: 0; align-content: center;
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px 20px;
-    margin-top: 22px; padding: 18px 22px; background: var(--bg-card); border: 1px solid var(--border-primary);
-}
-.dp-sel-h { display: flex; align-items: center; gap: 16px; min-width: 0; }
-.dp-sel-ico { flex: 0 0 auto; width: 120px; height: 120px; object-fit: contain; }
-.dp-sel-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.dp-sel-n { display: flex; gap: 6px; font-size: var(--fs-xl); font-weight: bold; color: var(--text-primary); }
-.dp-sel-n i { font-style: normal; color: var(--text-muted); }
-.dp-sel-y { font-size: var(--fs-md); color: var(--text-secondary); }
-.dp-sel-b { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-.dp-sel-rate { display: flex; align-items: baseline; gap: 10px; font-size: var(--fs-lg); }
-.dp-sel-rate .up { color: var(--color-success); }
-.dp-sel-arrow { color: var(--text-muted); }
-.dp-sel-lv { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); color: var(--text-secondary); }
 /* 레벨 눈금 — 칸 수 = 상한(`lab_level_max`) · 찬 칸 = 레벨 */
-.dp-pips { display: flex; gap: 3px; }
-.dp-pips i { display: block; width: 14px; height: 8px; background: var(--bg-input); border: 1px solid var(--border-dark); }
+.dp-pips { display: flex; gap: 2px; }
+.dp-pips i { display: block; width: 10px; height: 7px; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .dp-pips i.on { background: var(--color-success); border-color: var(--color-success); }
-.dp-sel-act { grid-column: 1 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 18px; padding-top: 14px; border-top: 1px solid var(--border-primary); }
-.dp-sel-go { min-width: 9em; padding-top: 10px; padding-bottom: 10px; }
-/* 재료 칸 사이 — 「보유/필요」 가 칸 폭을 넘으면 왼쪽으로 삐져나온다(ADR-0397) · 옆 칸과 안 겹치게 건설보다 넓게 띄운다 */
-.dp-sel-act .cn-mats { gap: 8px 26px; }
-.dp-sel-top { grid-column: 1 / -1; text-align: right; padding-top: 14px; border-top: 1px solid var(--border-primary); color: var(--text-muted); font-size: var(--fs-md); }
-.dp-sel.locked .dp-sel-ico { opacity: .4; filter: grayscale(.8); }
-.dp-sel-lock { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--fs-sm); }
-.dp-orb .lock-ico svg { width: 28px; height: 28px; }
-.dp-sel-lock .lock-ico { display: inline-flex; }
-.dp-sel-lock .lock-ico svg { width: 1.1em; height: 1.1em; }
+
+/* 고른 칸 — 오른쪽 열 · **늘어나지 않고 위에서부터** 머리 → 「다음 레벨」 → 지금 → 올린 뒤 → 재료 칸(건설 `.cn-mats` 그대로) + [레벨 올리기].
+   글자는 건설 상세(`.cn-side`)처럼 한 벌 +2px — 크기 토큰을 여기서 다시 선언한다 (ADR-0674) */
+.dp-side {
+    --fs-xs: 14px; --fs-sm: 15px; --fs-md: 17px; --fs-lg: 20px;
+    min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 14px;
+    padding: 6px 2px 6px 20px; border-left: 1px solid var(--border-primary);
+}
+.dp-side-h { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.dp-side-orb {
+    flex: none; width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--bg-card); border: 2px solid var(--border-highlight);
+}
+.dp-side-orb img { width: 70px; height: 70px; object-fit: contain; }
+.dp-side-orb.sq { width: 120px; height: 80px; border-radius: 2px; overflow: hidden; }
+.dp-side-orb.sq img { width: 100%; height: 100%; object-fit: cover; }
+.dp-side-h.locked .dp-side-orb { border-color: var(--border-dark); background: var(--bg-input); }
+.dp-side-h.locked .dp-side-orb img { opacity: .35; filter: grayscale(.8); }
+.dp-side-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dp-side-n { display: flex; gap: 6px; font-size: var(--fs-lg); font-weight: bold; color: var(--text-primary); }
+.dp-side-y { font-size: var(--fs-sm); color: var(--text-secondary); }
+.dp-side-lv { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--fs-xs); color: var(--text-secondary); }
+.dp-side-next { display: flex; flex-direction: column; gap: 12px; }
+.dp-side-sub { margin: 0; }
+.dp-side-rate { display: flex; align-items: baseline; gap: 10px; font-size: var(--fs-lg); }
+.dp-side-rate .up { color: var(--color-success); }
+.dp-side-arrow { color: var(--text-muted); }
+/* 재료 칸 왼쪽 · [레벨 올리기] 오른쪽 끝(바닥선) — 건설 「다음 랭크」 재료 줄과 같은 배치. 「보유/필요」 가 칸 폭을 넘으면 왼쪽으로 삐져나온다(ADR-0397) · 옆 칸과 안 겹치게 건설보다 넓게 띄운다 */
+.dp-side-act { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.dp-side-act .cn-mats { gap: 8px 22px; }
+.dp-side-go { flex: none; min-width: 8em; padding: 8px 18px; }
+.dp-side-end { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-muted); }
+.dp-step-need .lock-ico, .dp-side-end .lock-ico { display: inline-flex; }
+.dp-step-need .lock-ico svg, .dp-side-end .lock-ico svg { width: 1em; height: 1em; }
 /* Resource minigames — painted scenes, native illustrated objects (2026-10-16). */
 .modal-box.mg-modal { width: min(940px, 100%); padding: 16px; border-radius: 14px; border-color: var(--mg-line); background: var(--mg-ink); box-shadow: 0 24px 100px rgba(var(--shadow-rgb), .7); }
 .mg-modal .modal-head { padding-bottom: 12px; margin-bottom: 0; border: 0; }
@@ -4510,7 +4523,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .sort-tools, .sort-fold { display: flex; align-items: center; gap: 6px; }
 /* 펼친 기준은 **[정렬] 바로 위**에 뜬다 [2026-10-06 · ADR-0523] — 인벤토리 도구 줄에 부대 버튼이 서며 줄 안에 펼칠 자리가 없어졌다
    (영어는 [등급순]부터 칸 밖으로 · 한국어도 [부위순]이 걸쳤다). 두 칸 다 [정렬]이 줄 오른쪽 끝이라 **오른쪽 끝을 [정렬]에 맞춘다** — 제 칸 밖으로 안 나간다(ADR-0524).
-   틀은 고르기 메뉴(`.sel-pop`)와 같다 — 위 패널의 아래쪽을 덮고 칸 격자는 안 가린다 */
+   위 패널의 아래쪽을 덮고 칸 격자는 안 가린다 */
 .sort-tools { position: relative; }
 .sort-fold {
     position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 30; width: max-content;   /* 폭은 내용만큼 — 안 주면 [정렬] 폭에 묶여 한국어 글자가 세로로 꺾였다 */
@@ -4528,31 +4541,30 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 보관 도구 줄은 **한 줄을 지킨다** — 두 줄로 꺾이면 두 칸의 칸 줄이 어긋난다(위 `.bag-row`) */
 .bag-row .items-tools { flex-wrap: nowrap; }
 .bag-row .items-tools > * { flex-shrink: 0; }
-/* 고르기 메뉴 [2026-09-29 · SCREEN_DESIGN §6 · ADR-0447] — **[분해하기] 바로 위**에 뜬다(왼쪽 끝 = [분해하기] 왼쪽 끝 · 사용자 지시).
-   보관 칸은 화면 맨 아래라 **위로** 편다 — 위 패널(세부 옵션 · 관전 아레나)의 아래쪽을 덮고 칸 격자는 안 가린다.
-   선택지는 촘촘하다(여백 3 · 간격 2) — 공용 여백이면 영어의 레벨 줄(여덟 칸)이 [Salvage now] 위에서 시작해 화면 오른쪽 끝을 넘었다(09-29 실측 1619 > 1600).
-   두 열 격자라 줄 머리 폭이 같아 펼친 선택지의 시작 x 가 맞는다.
-   선택지 글자색(등급 색)은 JS 인라인이다 — 크래프트엔 `--rarity-*` 토큰이 없다. 움직임은 JS 가 첫 그리기에만 `.anim` 을 단다(정렬과 같은 이유) */
-.sel-anchor { position: relative; display: flex; }
-.sel-pop {
-    position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 30;   /* 오른쪽 끝 = [취소] 오른쪽 끝 — 버튼이 도구 줄 오른쪽 끝이라 왼쪽으로 편다 (ADR-0523) */
-    display: grid; grid-template-columns: max-content max-content; align-items: center; gap: 4px 5px;
-    padding: 4px; background: var(--bg-secondary); border: 1px solid var(--border-secondary);
-    box-shadow: 0 4px 14px rgba(var(--shadow-rgb), .6);
+/* 분해함 [2026-10-20 사용자 지시 「4x4 · 화면 가운데 · 아이템창 방해 x」 · SCREEN_DESIGN §6 · ADR-0673] — 보관 줄(`.bag-row`) **바로 위 · 박스 가로 가운데**.
+   보관 칸은 안 덮고 위 패널(세부 옵션 · 관전 아레나 · 제련소 작업 칸)을 덮는다 — 칸을 눌러 올리는 손짓이 본체라 칸이 보여야 한다.
+   왼쪽 = 필터 세 열(등급 · 레벨 · 고정) + [올리기] · 오른쪽 = 4×4 격자 + 가루 · [분해하기] · [취소]. 세 열을 세로로 둬 높이가 격자와 맞는다.
+   격자 칸은 보관 칸과 같은 크기 — 보관 칸은 폭을 열 수로 나눈 1fr 이라(위 `.bag .inv-cells.wide`) 한 장(1600) 폭에서 나온 값을 박는다.
+   필터 글자색(등급 색)은 JS 인라인이다 — 크래프트엔 `--rarity-*` 토큰이 없다 */
+.bag-row { position: relative; }
+.salv-cube {
+    position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); z-index: 30; width: max-content;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 12px 12px; background: var(--bg-secondary); border: 1px solid var(--border-secondary);
+    box-shadow: 0 6px 20px rgba(var(--shadow-rgb), .65);
 }
-.sel-head::after { content: ' \25B8'; }
-.sel-fold { display: flex; align-items: center; gap: 2px; }
-.sel-fold > .btn.sm { padding-left: 3px; padding-right: 3px; }
-.sel-pop.anim { animation: sel-rise .18s ease-out both; }
-/* 펼침은 끝 장면을 안 둔다(`backwards` + `from` 만) — 정렬의 `sort-slide both` 를 빌리면 끝난 뒤에도 불투명 1 이 남아
-   꺼진 선택지(`.btn:disabled` 흐림)가 켜진 것처럼 밝게 섰다(09-29 실측 · 빈 가방의 관전 화면) */
-.sel-fold.anim > .btn { animation: sel-slide .22s ease-out backwards; animation-delay: calc(var(--i) * .03s); }
-@keyframes sel-slide { from { opacity: 0; transform: translateX(-14px); } }
-@keyframes sel-rise {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: reduce) { .sel-pop.anim, .sel-fold.anim > .btn { animation: none; } }
+.salv-title { font-size: var(--fs-md); font-weight: bold; color: var(--text-primary); border-bottom: 1px solid var(--border-primary); padding-bottom: 5px; }
+.salv-body { display: flex; gap: 16px; align-items: stretch; }
+.salv-left { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+.salv-filters { display: flex; gap: 10px; align-items: flex-start; }
+.salv-col { display: flex; flex-direction: column; gap: 3px; }
+.salv-col > .btn.sm { padding-top: 2px; padding-bottom: 2px; }
+.salv-k { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.salv-lift { align-self: flex-start; }
+.salv-right { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+.salv-grid { display: grid; grid-template-columns: repeat(4, 50px); gap: 4px; }
+.salv-foot { display: flex; align-items: center; gap: 6px; }
+.salv-dust { margin-right: auto; padding-right: 8px; font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
 .pd-cell.filled { cursor: pointer; }
 .pd-cell.filled:hover { background: var(--surface-7); }
 

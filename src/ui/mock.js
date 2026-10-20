@@ -345,9 +345,11 @@ export const HERO_FACE_NAMES = {
     knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
     mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
-    mage_3: { ko: '노스트라다무스', en: 'Nostradamus' },   // 황도 기호 로브 노인
+    mage_3: { ko: '노스트라다무스', en: 'Nostradamus' },   // 황도 기호 로브 노인 · ⚠ 10-20 사제로 옮긴다(파일 이동 — DEV_PLAN R292)
     priest_3: { ko: '잔 다르크', en: 'Joan of Arc' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
     priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel' }, // 역병 의사 — 흰 부리 가면
+    priest_1: { ko: '베네딕토', en: 'Benedict' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
+    priest_2: { ko: '멀린', en: 'Merlin' },                // 올리브 후드 · 룬 문신 노인 (10-20 이름)
     // knight_2 · knight_3 · knight_4 는 이름 없이 번호로 둔다 (2026-09-10 사용자 지시 — 「나중에 안 쓸 듯」)
 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).

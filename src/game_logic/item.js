@@ -18,16 +18,17 @@
  *   **무기 · 갑옷은 죄종 계열표로 받는다** [2026-10-05 · 사용자 확정 · R206 · R208 · R209 · R210 · item_design §1 「무기 옵션 — 죄종 계열」 — ~~세 층(고정 · 죄종 칸 · 통합)~~] —
  *   고정 1 + **메인 줄**(이름의 죄종마다 그 계열 셋 중 하나 — 반드시 · 일반 0 · 매직 1 · 레어 2) + **랜덤 줄**(계열표 21 옵션 중 아직 안 붙은 것에서 ·
  *   같은 계열이 겹쳐도 된다). 대역은 하나 · **발동은 아이템당 하나**.
- *   **줄 수는 희귀도가 정하고 전 부위가 같다** [2026-10-18 · 사용자 확정 · R285 · item_design §1 희귀도 — ~~부위별 랜덤 줄 개수 키 아홉~~] —
- *   고정 + 죄종 줄 + 랜덤 줄 = [balance.csv:item_lines_normal · _magic · _rare] · 랜덤 줄 = 그 수 − 고정(반지 0 · 나머지 1) − 죄종 수 (`randomLines`).
- *   **매직은 고정 아닌 줄의 위끝이 [balance.csv:magic_option_max_mult] 배다**(`rollOf`) · **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
+ *   **랜덤 줄은 칸마다 붙을지 굴린다** [2026-10-20 · 사용자 확정 · R291 · item_design §1 희귀도 — ~~줄 수 `item_lines_*` · 반지는 랜덤 하나 더~~(10-18 R285)] —
+ *   매직 · 레어는 랜덤 칸 [balance.csv:item_random_slots] · 일반 0 · 전 부위 같다(`randomSlots`). 칸마다 붙을 확률은 아이템 레벨 따라 오른다(`slotChance`).
+ *   **값 굴림은 아이템 레벨 따라 치우친다 — 범위는 그대로** [2026-10-20 · R291 · item_design §2-1 — ~~매직 고점 `magic_option_max_mult`~~ 퇴역] —
+ *   1레벨 = 낮은 쪽 · 만렙 = 높은 쪽(`lean` · [balance.csv:item_roll_skew]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
  *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다. 무기 표 `weapon_sin_option.csv` · 갑옷 표 `armor_sin_option.csv` 의 갑옷 행. ~~`weapon_common_option.csv`~~ 퇴역.
  *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)를 함께 든다 — ⚠ 목걸이 `proc` 처럼 **전투는 안 읽는다**(설명에만 · GAME_DESIGN §10).
  *   **투구 · 장갑 · 신발은 세 층이다** [2026-09-18 · 사용자 확정 · item_design §1 「투구 옵션」] — 고정 「방어력 +%」 1 + 죄종 칸 +
  *   공통옵션(랜덤 줄 수 — 위). 죄종 칸은 `armor_sin_option.csv`
  *   (장갑 행은 ⚠임시 — 옛 무기 죄종 표 13행을 그대로 옮겼다 · 2026-10-05), 공통옵션은 `armor_common_option.csv`(투구는 갈래별 풀).
  *   **목걸이 · 반지도 세 층이다** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 `accessory_sin_option.csv` +
- *   공통옵션 `accessory_common_option.csv`(두 부위 한 풀 · 랜덤 줄 수 — 위). 반지는 고정이 없고(그만큼 랜덤 줄이 하나 더),
+ *   공통옵션 `accessory_common_option.csv`(두 부위 한 풀 · 랜덤 칸 — 위). 반지는 고정이 없고(~~그만큼 랜덤 줄이 하나 더~~ 2026-10-20 — 칸 수는 같다),
  *   **목걸이 고정 옵션은 발동 스킬**이라 `affixes` 가 아니라 `item.proc` 에 든다(발동 조건은 베이스 — `amulet_proc.csv`).
  *   ~~`affix.csv` 한 풀(전부 `random`)을 쓰는 것은 목걸이 · 반지뿐이다~~ — 마지막 사용자가 떠나 파일째 퇴역했다.
  *
@@ -99,6 +100,12 @@ import { createFormula } from './formula.js';
  */
 export function createItemSystem(data) {
     const B = data.balance;
+    // 랜덤 칸 · 굴림 치우침 키 (R291) — 칸 수는 0 이상 정수 · 확률은 0 ≤ 아래 ≤ 위 ≤ 1 · 치우침 1 이상(1 = 균등) · 만렙 > 1(레벨 자리의 분모)
+    if (!(Number.isInteger(B.item_random_slots) && B.item_random_slots >= 0)) throw new Error(`item: balance.csv item_random_slots '${B.item_random_slots}'`);
+    if (!(B.item_random_chance_min >= 0 && B.item_random_chance_min <= B.item_random_chance_max && B.item_random_chance_max <= 1))
+        throw new Error(`item: balance.csv item_random_chance_min ~ max '${B.item_random_chance_min}' ~ '${B.item_random_chance_max}'`);
+    if (!(B.item_roll_skew >= 1)) throw new Error(`item: balance.csv item_roll_skew '${B.item_roll_skew}' — 1 이상이어야 한다`);
+    if (!(B.hero_level_cap > 1)) throw new Error(`item: balance.csv hero_level_cap '${B.hero_level_cap}'`);
     const WG = data.weaponGroups;
     const AG = data.armorGroups ?? {};   // armor_group.csv — {slot: {groupId: def}} · 갑옷군 3 (2026-09-16 · R107) + 투구 · 장갑 · 신발 갈래 (2026-09-18)
     /** 그 부위의 갈래 정의 — 갈래가 없거나(시작 칸) 모르면 null. 갈래 id 는 부위마다 겹치므로 **부위와 함께** 찾는다 */
@@ -295,23 +302,34 @@ export function createItemSystem(data) {
         return x < wn ? 'normal' : x < wn + wm ? 'magic' : 'rare';
     };
 
-    /** 희귀도별 키 고르기 — 일반은 **제 키**를 따로 든다(값은 CSV · 2026-09-14 · R86 · 지금은 줄 수 `item_lines_*` 셋 — R285) */
-    const byRarity = (rarity, normal, magic, rare) => rarity === 'rare' ? rare : rarity === 'normal' ? normal : magic;
+    /**
+     * 랜덤 칸 수 — 매직 · 레어 `item_random_slots` · 일반 0 [2026-10-20 · 사용자 확정 · R291 · item_design §1 희귀도 · INTERFACE §2-5 —
+     * ~~줄 수 `item_lines_*` − 고정 − 죄종 수 · 반지는 고정이 없어 하나 더~~(10-18 R285)]. **전 부위 같다** — 반지도 칸을 더 받지 않는다
+     */
+    const randomSlots = rarity => rarity === 'normal' ? 0 : B.item_random_slots;
+
+    /** 아이템 레벨의 자리 — 1 → 0 · 만렙(`hero_level_cap`) → 1 · 그 위는 1 (칸 확률 · 굴림 치우침이 같이 쓴다 · R291) */
+    const levelT = ilvl => Math.min(1, Math.max(0, (ilvl - 1) / (B.hero_level_cap - 1)));
+
+    /** 랜덤 칸 하나가 붙을 확률 — `item_random_chance_min` → `_max` 를 아이템 레벨 따라 선형으로 [2026-10-20 · R291] */
+    const slotChance = ilvl => B.item_random_chance_min + levelT(ilvl) * (B.item_random_chance_max - B.item_random_chance_min);
 
     /**
-     * 랜덤 줄 수 = 줄 수 − 고정 − 죄종 수 [2026-10-18 · 사용자 확정 · R285 · item_design §1 희귀도 · INTERFACE §2-5] — 줄 수(`item_lines_*`)는 **전 부위 같다**.
-     * 고정 = 반지 0 · 나머지 1(무기 · 방어구 = 고정 옵션 · 목걸이 = 발동 스킬 `proc`) — 반지는 그만큼 랜덤 줄이 하나 더다
+     * 균등 굴림 `u` → 아이템 레벨이 치우친 굴림 [2026-10-20 · 사용자 「좌로치우친분포에서 우로치우친분포」 · R291 · item_design §2-1 · INTERFACE §2-5].
+     * `s = 2t − 1` · `a = 1 + |s| × (item_roll_skew − 1)` — 1레벨 = 낮은 쪽 삼각(`1 − (1−u)^(1/a)`) · 가운데 = 균등 · 만렙 = 높은 쪽 삼각(`u^(1/a)`).
+     * 양끝은 그대로(0 → 0 · 1 → 1) · 같은 `u` 면 레벨이 높을수록 크다 · 소비는 부르는 쪽의 `u` 하나 그대로다
      */
-    const fixedLines = slot => slot === 'ring' ? 0 : 1;
-    const randomLines = (slot, rarity, sins) =>
-        Math.max(0, byRarity(rarity, B.item_lines_normal, B.item_lines_magic, B.item_lines_rare) - fixedLines(slot) - sins.length);
+    const lean = (u, ilvl) => {
+        const s = 2 * levelT(ilvl) - 1;
+        const a = 1 + Math.abs(s) * (B.item_roll_skew - 1);
+        return s >= 0 ? u ** (1 / a) : 1 - (1 - u) ** (1 / a);
+    };
 
     /**
-     * 고정 아닌 줄(죄종 줄 · 랜덤 줄)의 굴림값 `min + vr × (위끝 − min)` — **매직은 위끝이 `max × magic_option_max_mult`** [2026-10-18 · 사용자 확정 · R285].
-     * 아래끝은 같다 · 소비는 부르는 쪽의 `vr` 하나 그대로다(희귀도가 소비 수를 안 바꾼다) · `optionRange` 도 같은 위끝을 쓴다
+     * 옵션 줄의 굴림값 `min + lean(u, ilvl) × (max − min)` — 희귀도는 범위를 안 바꾼다 [2026-10-20 · R291 — ~~매직은 위끝 × `magic_option_max_mult`~~(10-18 R285) 퇴역].
+     * `optionRange` 가 `u` = 0 · 1 로 양끝을 낸다
      */
-    const peakOf = rarity => rarity === 'magic' ? B.magic_option_max_mult : 1;
-    const rollOf = (d, vr, rarity) => d.min + vr * (d.max * peakOf(rarity) - d.min);
+    const rollOf = (d, u, ilvl) => d.min + lean(u, ilvl) * (d.max - d.min);
 
     /**
      * 값 하나 — 정의의 `scale` 이 정한다 (item_design §2-1):
@@ -347,23 +365,24 @@ export function createItemSystem(data) {
      * 목걸이 고정 옵션 — **발동 스킬 하나** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「목걸이 고정 옵션」].
      * 발동 조건은 **베이스가 정한다**(`amulet_proc.csv` — rng 0) · 스킬은 `procSkills` 에서 1회 · 값 1회(확률 · 또는 쿨타임 배수 — 0.01 단위).
      * rng 소비(계약 — INTERFACE §5-2): **스킬 1 → 값 1** — 베이스에 행이 없거나 풀이 비어도 2회 그대로다.
+     * 값은 아이템 레벨이 치우친다(`lean` · R291) — **`interval`(쿨타임 배수 — 낮을수록 좋다)만 균등 그대로**다(방향 미정 · 사용자 10-20 「나중에」)
      * ⚠ **전투는 이 값을 읽지 않는다**(사용자 지시 — 설명에만) · `affixes` 에 넣지 않아 `computeCombat` 이 합산할 길이 없다
      */
-    function amuletProc(rng, baseId) {
+    function amuletProc(rng, baseId, ilvl) {
         const p = procByBase[baseId] ?? null;
         const sr = rng(), vr = rng();
         if (!p) return null;
         return {
             trigger: p.trigger,
             skill: procSkills.length ? procSkills[Math.floor(sr * procSkills.length)] : null,
-            v: F.pctOption(p.min + vr * (p.max - p.min)),
+            v: F.pctOption(p.min + (p.trigger === 'interval' ? vr : lean(vr, ilvl)) * (p.max - p.min)),
         };
     }
 
     /**
      * 반지 · 목걸이 옵션 — 죄종 칸 → 공통옵션 [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 순서가 곧 표시 순서다.
-     * rng 소비(계약 — INTERFACE §5-2): **방어구와 같은 모양** — 죄종마다 (행 1 → 값 1) → 공통옵션마다 (종류 1 → 변형 1 → 값 1).
-     * 고정 층은 반지에 없고 목걸이는 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 소비 수는 같다
+     * rng 소비(계약 — INTERFACE §5-2): **방어구와 같은 모양** — 죄종마다 (행 1 → 값 1) → 공통 칸마다 (붙나 1 → 종류 1 → 변형 1 → 값 1 · R291).
+     * 고정 층은 반지에 없고 목걸이는 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 · 칸이 안 붙어도 소비 수는 같다
      */
     function accessoryOptions(rng, slot, sins, rarity, ilvl) {
         const out = [];
@@ -373,18 +392,19 @@ export function createItemSystem(data) {
             const pr = rng(), vr = rng();
             if (!rows.length) continue;
             const d = rows[Math.floor(pr * rows.length)];
-            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, rarity), ilvl), src: sin });
+            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: sin });
         }
         // 공통옵션 — 두 부위 한 풀. **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 상태이상 ×4 가 행 수만큼 비중을 먹지 않게) · 같은 종류는 한 번
+        //   칸마다 붙을지 먼저 굴린다(R291) — 안 붙은 칸은 종류를 안 뺀다 · 반지도 칸 수가 같다
         const families = [...new Set(accCommonOpts.map(r => r.family))];   // 첫 등장 순 = CSV 행 순서
-        const n = randomLines(slot, rarity, sins);                       // 반지는 고정이 없어 하나 더 (R285)
+        const n = randomSlots(rarity), p = slotChance(ilvl);
         for (let i = 0; i < n; i++) {
-            const fr = rng(), sr = rng(), vr = rng();
-            if (!families.length) continue;
+            const hr = rng(), fr = rng(), sr = rng(), vr = rng();
+            if (hr >= p || !families.length) continue;
             const fam = families.splice(Math.floor(fr * families.length), 1)[0];
             const variants = accCommonOpts.filter(r => r.family === fam);
             const d = variants[Math.floor(sr * variants.length)];
-            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, rarity), ilvl), src: 'random' });
+            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: 'random' });
         }
         return out;
     }
@@ -392,16 +412,18 @@ export function createItemSystem(data) {
     /**
      * 죄종 계열 옵션 — 메인 줄 → 랜덤 줄 [2026-10-05 · 사용자 확정 · R206 · R208 · R209 · R210 · item_design §1 「무기 옵션 — 죄종 계열」 · INTERFACE §2-5].
      * 옵션 = (죄종, `option`) — `rows` 는 **그 아이템에 붙는 행만** 받는다(무기 = `appliesTo` · 갑옷 = 그 부위). 같은 옵션의 행 여럿은 변형(종족 셋 · 원소 셋)이다.
-     *   메인 줄 — `sins` 마다 그 죄종의 옵션 중 아직 안 붙은 것에서 하나(**반드시**) · 랜덤 줄 — `n` 개 · 계열표 옵션 중 아직 안 붙은 것에서(계열 무관 — 겹쳐도 된다)
-     *   **같은 옵션은 한 번** · **발동은 아이템당 하나**(발동 옵션이 붙으면 다른 발동 옵션이 후보에서 빠진다) · **대역은 하나**(메인 · 랜덤 같은 범위 — 매직이면 둘 다 위끝 × mult · `rollOf`)
+     *   메인 줄 — `sins` 마다 그 죄종의 옵션 중 아직 안 붙은 것에서 하나(**반드시**) · 랜덤 줄 — 칸 `n` 개 · 칸마다 붙을지 굴려(R291) 붙으면 계열표 옵션 중 아직 안 붙은 것에서(계열 무관 — 겹쳐도 된다)
+     *   **같은 옵션은 한 번** · **발동은 아이템당 하나**(발동 옵션이 붙으면 다른 발동 옵션이 후보에서 빠진다) · **대역은 하나**(메인 · 랜덤 같은 범위 · 희귀도 무관 — `rollOf`)
      *   **오만(`MAIN_ONLY_SINS`)은 랜덤 줄 후보가 아니다** — 이름에 오만이 뜰 때 메인 줄 하나로만 붙는다(2026-10-06 오만 규칙 · R225)
      *   **풀이 빈 특정 스킬 +n 옵션은 후보가 아니다**(갈래 없는 시작 갑옷 · 방어 관련 스킬이 없는 갑옷군 — R225)
      *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다 — 메인 줄은 `sins` 순서대로 앞에 선다
-     * rng 소비(계약 — INTERFACE §5-2): 줄마다 **옵션 1 → 변형 1 → 값 1 → 스킬 1** — 스킬은 발동 · 특정 스킬 +n 이 아니어도 소비하고, 후보가 비어도 4회 그대로다
+     * rng 소비(계약 — INTERFACE §5-2): 메인 줄마다 **옵션 1 → 변형 1 → 값 1 → 스킬 1** · 랜덤 칸마다 **붙나 1** → 같은 넷(R291) —
+     *   스킬은 발동 · 특정 스킬 +n 이 아니어도 소비하고, 후보가 비어도 · 칸이 안 붙어도 소비 수는 그대로다
+     * @param n 랜덤 칸 수(`randomSlots`) — 칸마다 붙을 확률은 `slotChance(ilvl)`
      * @param classes 발동 공격 풀의 직업(무기 = 무기군 직업 · 갑옷 = [])
      * @param plusPool 특정 스킬 +n 의 스킬 후보(무기 `plusPoolWeapon` · 갑옷 `plusPoolArmor`) — 비면 그 옵션이 안 뜬다
      */
-    function familyOptions(rng, rows, sins, n, rarity, ilvl, classes, plusPool = []) {
+    function familyOptions(rng, rows, sins, n, ilvl, classes, plusPool = []) {
         const options = [], byKey = {};
         for (const r of rows) {                                       // 첫 등장 순 = CSV 행 순서
             const key = `${r.sin}:${r.option}`;
@@ -413,13 +435,14 @@ export function createItemSystem(data) {
         const out = [], used = new Set();
         let procTaken = false;
         const open = o => !used.has(o.key) && !(procTaken && o.proc) && !(o.plus && !plusPool.length);
-        const line = cands => {
+        // `on` = 그 줄이 붙나 — 메인 줄은 언제나 · 랜덤 칸은 붙나 굴림이 정한다. 안 붙어도 넷은 소비한다(R291)
+        const line = (cands, on = true) => {
             const or = rng(), sr = rng(), vr = rng(), kr = rng();
-            if (!cands.length) return;
+            if (!on || !cands.length) return;
             const o = cands[Math.floor(or * cands.length)];
             used.add(o.key);
             const d = o.rows[Math.floor(sr * o.rows.length)];
-            const a = { stat: d.stat, v: valueOf(d, rollOf(d, vr, rarity), ilvl), src: o.sin };
+            const a = { stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: o.sin };
             if (isProc(d.stat)) {
                 procTaken = true;
                 const pool = procPool(d.stat, classes);
@@ -429,7 +452,11 @@ export function createItemSystem(data) {
             out.push(a);
         };
         for (const sin of sins) line(options.filter(o => o.sin === sin && open(o)));
-        for (let i = 0; i < n; i++) line(options.filter(o => open(o) && !MAIN_ONLY_SINS.has(o.sin)));
+        const p = slotChance(ilvl);
+        for (let i = 0; i < n; i++) {
+            const hr = rng();                                          // 붙나 1 — 옵션 굴림보다 먼저 (R291)
+            line(options.filter(o => open(o) && !MAIN_ONLY_SINS.has(o.sin)), hr < p);
+        }
         return out;
     }
 
@@ -440,27 +467,25 @@ export function createItemSystem(data) {
      */
     function weaponOptions(rng, g, sins, rarity, ilvl) {
         const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
-        // 고정 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 고정 옵션)
-        const out = [{ stat: 'atk_pct', v: F.pctOption(lo + rng() * (hi - lo)), src: 'fixed' }];
-        const n = randomLines('weapon', rarity, sins);
-        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, n, rarity, ilvl, g.classes ?? [], plusPoolWeapon(g.classes ?? [])));
+        // 고정 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 고정 옵션) · 값도 아이템 레벨이 치우친다(R291)
+        const out = [{ stat: 'atk_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
+        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, randomSlots(rarity), ilvl, g.classes ?? [], plusPoolWeapon(g.classes ?? [])));
     }
 
     /**
      * 방어구 옵션 [2026-09-18 · 사용자 확정 · item_design §1 「투구 옵션」] — 순서가 곧 표시 순서.
-     *   **갑옷(계열표 부위)** = 고정 1 + 죄종 계열(`familyOptions` — 무기와 같다 · 랜덤 줄 수 `randomLines` · 2026-10-05 R209 · 2026-10-18 R285)
+     *   **갑옷(계열표 부위)** = 고정 1 + 죄종 계열(`familyOptions` — 무기와 같다 · 랜덤 칸 `randomSlots` · 2026-10-05 R209 · 2026-10-20 R291)
      *   **투구 · 장갑 · 신발** = 세 층(고정 → 죄종 칸 → 공통)
-     * rng 소비(계약 — INTERFACE §5-2): 고정 값 1 → (갑옷) `familyOptions` / (그 밖) 죄종마다 (행 1 → 값 1) → 공통옵션마다 (종류 1 → 변형 1 → 값 1).
-     * ⚠ **후보가 비어도 소비 수는 같다** — 부위 · 갈래 · 표 내용이 소비 수를 바꾸면 같은 시드가 다른 드롭을 낸다.
+     * rng 소비(계약 — INTERFACE §5-2): 고정 값 1 → (갑옷) `familyOptions` / (그 밖) 죄종마다 (행 1 → 값 1) → 공통 칸마다 (붙나 1 → 종류 1 → 변형 1 → 값 1 · R291).
+     * ⚠ **후보가 비어도 · 칸이 안 붙어도 소비 수는 같다** — 부위 · 갈래 · 표 내용 · 붙은 칸 수가 소비 수를 바꾸면 같은 시드가 다른 드롭을 낸다.
      *   고정 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 — 합산은 `hero.computeCombat` 이 아이템마다 한다
      */
     function armorOptions(rng, slot, group, sins, rarity, ilvl) {
         const lo = B.armor_fixed_def_pct_min, hi = B.armor_fixed_def_pct_max;
-        const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + rng() * (hi - lo)), src: 'fixed' }];
+        const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
         if (FAMILY_SLOTS.has(slot)) {
-            const n = randomLines(slot, rarity, sins);
             // 특정 스킬 +n 의 풀은 **갑옷군의 직업**이 정한다 — 갈래가 없는 시작 칸은 직업이 없어 비고 그 옵션이 안 뜬다 (R225)
-            return out.concat(familyOptions(rng, armorSinOpts.filter(r => r.slot === slot), sins, n, rarity, ilvl, [], plusPoolArmor(groupDef(slot, group)?.classes ?? [])));
+            return out.concat(familyOptions(rng, armorSinOpts.filter(r => r.slot === slot), sins, randomSlots(rarity), ilvl, [], plusPoolArmor(groupDef(slot, group)?.classes ?? [])));
         }
         // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(탐욕 셋 · 투구 시기 원소 넷 · 장갑 시기 넷) 그중 하나를 굴린다
         for (const sin of sins) {
@@ -468,19 +493,20 @@ export function createItemSystem(data) {
             const pr = rng(), vr = rng();
             if (!rows.length) continue;
             const d = rows[Math.floor(pr * rows.length)];
-            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, rarity), ilvl), src: sin });
+            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: sin });
         }
         // 공통옵션 — **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 종족 ×3 이 행 수만큼 비중을 먹지 않게). 한 아이템에 같은 종류는 한 번
+        //   칸마다 붙을지 먼저 굴린다(R291) — 안 붙은 칸은 종류를 안 뺀다
         const rows = armorCommonRows(slot, group);
         const families = [...new Set(rows.map(r => r.family))];      // 첫 등장 순 = CSV 행 순서
-        const n = randomLines(slot, rarity, sins);
+        const n = randomSlots(rarity), p = slotChance(ilvl);
         for (let i = 0; i < n; i++) {
-            const fr = rng(), sr = rng(), vr = rng();
-            if (!families.length) continue;
+            const hr = rng(), fr = rng(), sr = rng(), vr = rng();
+            if (hr >= p || !families.length) continue;
             const fam = families.splice(Math.floor(fr * families.length), 1)[0];
             const variants = rows.filter(r => r.family === fam);
             const d = variants[Math.floor(sr * variants.length)];
-            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, rarity), ilvl), src: 'random' });
+            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: 'random' });
         }
         return out;
     }
@@ -506,7 +532,7 @@ export function createItemSystem(data) {
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
      * opts.weaponBase = (무기) 세부 베이스 고정 — 제작이 레벨의 베이스를 넘긴다(2026-09-21 · `weaponBaseAt`). **베이스 굴림은 1회 그대로 소비한다**(값만 안 쓴다).
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직·레어) 접두 죄종 → (레어) 접미 죄종 →
-     *   **(무기 · 갑옷) 고정 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05) /
+     *   **(무기 · 갑옷) 고정 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05 · 랜덤 칸은 그 앞에 붙나 1 — 2026-10-20 R291) /
      *   **(투구 · 장갑 · 신발) 옵션 세 층**(`armorOptions` · 2026-09-18) /
  *   **(목걸이 · 반지) 옵션 세 층** [2026-09-21 · R127 — ~~접사 수 → 접사마다 (정의 선택 → 값)~~] — (목걸이) 발동 스킬 1 → 값 1 → `accessoryOptions` →
      *   **(무기) 베이스 1회** [신설 2026-09-10] · ~~(무기) 스킬 1회~~ **2026-09-29 삭제**(R179) · ~~(방어구) 개체 굴림 1회~~ **2026-09-18 삭제** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
@@ -524,7 +550,7 @@ export function createItemSystem(data) {
         const sins = [prefix, suffix].filter(Boolean);
         const words = [pre, suf].filter(Boolean).map(x => x.word);
         // 목걸이 고정 옵션(발동 스킬)은 **죄종 칸보다 앞**에서 굴린다 — 무기 · 방어구의 고정 옵션이 죄종 칸 앞인 것과 같은 자리 (2026-09-21 · R127)
-        const proc = slot === 'amulet' ? amuletProc(rng, base?.id) : null;
+        const proc = slot === 'amulet' ? amuletProc(rng, base?.id, ilvl) : null;
         const item = {
             uid: null,
             slot, rarity, ilvl,
@@ -752,7 +778,7 @@ export function createItemSystem(data) {
     /**
      * 옵션 줄 하나가 **굴릴 수 있었던 범위** `{min, max}` [신설 2026-10-14 · SCREEN_DESIGN §6 「비교 툴팁 규격」 Shift 범위 · ADR-0617 · INTERFACE §2-5].
      * 그 줄의 표 행을 **굴림이 고른 것과 같은 표**에서 찾는다 — `stat` · `src`(죄종 id · `fixed` · `random`) · 부위 · 무기군(`appliesTo`) · 방어구 갈래.
-     * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 고정 옵션은 `pctOption` · 매직의 고정 아닌 줄은 위끝 × mult — `rollOf` · R285)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
+     * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 고정 옵션은 `pctOption` · `rollOf` 의 `u` = 0 · 1 — 치우침 `lean` 은 양끝을 안 바꾼다 · R291)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
      * 행을 못 찾으면(표에서 빠진 옛 옵션 · `src` 가 없는 줄 · 옛 무기의 `random` 줄) `null`. 목걸이 `proc` 은 `affixes` 밖이라 안 든다
      */
     function optionRange(item, i) {
@@ -771,7 +797,7 @@ export function createItemSystem(data) {
                 : isArmor(slot) ? (src === 'random' ? armorCommonRows(slot, item.group ?? null) : armorSinRows(slot, src))
                     : baseless(slot) ? (src === 'random' ? accCommonOpts : accSinRows(slot, src)) : [];
         const d = rows.find(r => r.stat === a.stat);
-        return d ? { min: valueOf(d, rollOf(d, 0, item.rarity), item.ilvl), max: valueOf(d, rollOf(d, 1, item.rarity), item.ilvl) } : null;
+        return d ? { min: valueOf(d, rollOf(d, 0, item.ilvl), item.ilvl), max: valueOf(d, rollOf(d, 1, item.ilvl), item.ilvl) } : null;
     }
 
     /**

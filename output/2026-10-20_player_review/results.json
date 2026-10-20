@@ -1,0 +1,363 @@
+{
+  "game": "TheSevenSimulationRPG",
+  "date": "2026-10-20",
+  "basis": "HEAD a8aa3e2 + working copy 17:16 (app.js/style.css/i18n.js/balance.csv uncommitted) frozen to scratchpad; snapshot == working copy at end",
+  "baseline_test": "FAIL 593/596 (boss ratio 1, golden 2 - same three as 10-18)",
+  "method": {
+    "party": [
+      "warrior",
+      "mage",
+      "archer"
+    ],
+    "rerolls": 0,
+    "battle_speed": 1,
+    "clock": "Playwright 1.60 (scratch venv) clock.install BEFORE goto; run_for drives timers; user time = fake clock delta",
+    "sample_size": 1,
+    "day1": "online 0-60 min, then offline until T0+24h",
+    "player_actions": "equip by tooltip compare, mastery (HP first), formation 1-2, build lab/shop/tavern/forge/expedition2/library/explore, shop free+paid refresh, buy hatchet/hood/ring, salvage 4, craft 1 orb, upgrade x4 (1 fail), learn 2 books"
+  },
+  "ten_minutes": {
+    "user_min": 10.0,
+    "levels": [
+      4,
+      4,
+      4
+    ],
+    "cleared": [
+      1011
+    ],
+    "gold": 1610
+  },
+  "thirty_minutes": {
+    "user_min": 30.0,
+    "levels": [
+      7,
+      7,
+      7
+    ],
+    "cleared": [
+      1011,
+      1012,
+      1013,
+      1021,
+      1022,
+      1023
+    ],
+    "gold": 3106
+  },
+  "one_hour": {
+    "user_min": 60.0,
+    "levels": [
+      12,
+      12,
+      12
+    ],
+    "cleared": [
+      1011,
+      1012,
+      1013,
+      1021,
+      1022,
+      1023,
+      1031,
+      1032,
+      1033,
+      1041,
+      1042,
+      1043,
+      1051,
+      2011,
+      2012,
+      2013
+    ],
+    "gold": 11685,
+    "books_found": 8,
+    "books_learned": 2,
+    "buildings": {
+      "expedition": 2,
+      "storage": 1,
+      "codex": 1,
+      "command": 1,
+      "resource": 1,
+      "shop": 1,
+      "tavern": 1,
+      "forge": 1,
+      "library": 1,
+      "explore": 1
+    },
+    "completed_losses": 8,
+    "exp_play_ms": 1854950.9999999995
+  },
+  "milestones_min": {
+    "first_world": 1.96,
+    "first_equip_change": 5.3,
+    "first_mastery": 11.5,
+    "formation_change": 13.0,
+    "shop_built": 18.9,
+    "first_weapon_upgrade_hatchet": 22.8,
+    "forge_built": 30.1,
+    "first_forge_upgrade": 30.6,
+    "first_salvage": 31.5,
+    "first_craft": 32.0,
+    "satan_first_clear_approx": 47.3,
+    "library_built_first_skill": 50.7
+  },
+  "clear_checkpoints": [
+    [
+      1.96,
+      null
+    ],
+    [
+      2.67,
+      null
+    ],
+    [
+      5.17,
+      1011
+    ],
+    [
+      5.34,
+      1011
+    ],
+    [
+      10.0,
+      1011
+    ],
+    [
+      11.74,
+      1012
+    ],
+    [
+      12.71,
+      1012
+    ],
+    [
+      13.47,
+      1012
+    ],
+    [
+      15.79,
+      1012
+    ],
+    [
+      18.9,
+      1013
+    ],
+    [
+      20.68,
+      1021
+    ],
+    [
+      22.76,
+      1021
+    ],
+    [
+      30.0,
+      1023
+    ],
+    [
+      30.57,
+      1031
+    ],
+    [
+      31.02,
+      1031
+    ],
+    [
+      31.23,
+      1031
+    ],
+    [
+      36.44,
+      1033
+    ],
+    [
+      37.11,
+      1033
+    ],
+    [
+      42.74,
+      1042
+    ],
+    [
+      47.23,
+      1043
+    ],
+    [
+      51.01,
+      1051
+    ],
+    [
+      51.29,
+      1051
+    ],
+    [
+      60.0,
+      2013
+    ],
+    [
+      60.34,
+      2013
+    ],
+    [
+      60.66,
+      2013
+    ]
+  ],
+  "day1_plain": {
+    "resource_delta": {},
+    "material_delta": {
+      "herb_t1": 180,
+      "ore_t1": 180,
+      "timber_t1": 180
+    },
+    "levels": [
+      12,
+      12,
+      12
+    ],
+    "first_screen": "absence notice: expedition runs only while open - 2-2 run stopped; no material/earnings summary"
+  },
+  "day1_prepared": {
+    "preparation": "lab copper/herb/pine Lv1 + visitor line Lv1 (1200G), withdraw Party I, cave exploration (59 min)",
+    "resource_delta": {},
+    "material_delta": {
+      "herb_t1": 198,
+      "ore_t1": 198,
+      "timber_t1": 198
+    },
+    "visitors_arrived": 4,
+    "visitor_slots_full": true,
+    "exploration_items": 3,
+    "exploration_upgrades_for_mage": "amulet HP 179->263, helmet def 35->41 (rare orb is a downgrade)",
+    "first_screen": "stage list; nav todo dots on explore/research/tavern; no notice"
+  },
+  "observations": {
+    "upgrade_noop": "Lv1 Gothic Bow +1: 15~20 -> 15~20 (600G); hood +1: def 19 -> 19 (600G); Hatchet +2 preview 22~38 -> 22~38 then failed (810G). weaponDamage rounds ends before weapon %; hero.js:548 uses same -> combat no-op too",
+    "level_vs_power": "Lv13 hatchet 13~23 +11% vs owned Lv6 hatchet 22~38 +172%",
+    "dev_traces": "amulet/armor proc lines show (미적용); 특수상단 미착수",
+    "withdraw_no_confirm": "철수 button acts immediately"
+  },
+  "validation": {
+    "runtime_errors": [],
+    "http_failures": []
+  },
+  "events": [
+    {
+      "event": "start_party",
+      "user_seconds": 30.1
+    },
+    {
+      "event": "first_world",
+      "user_seconds": 117.7
+    },
+    {
+      "event": "first_30s_battle",
+      "user_seconds": 159.9
+    },
+    {
+      "event": "5min_character",
+      "user_seconds": 310.0
+    },
+    {
+      "event": "first_equip",
+      "user_seconds": 320.4
+    },
+    {
+      "event": "10min",
+      "user_seconds": 600.1
+    },
+    {
+      "event": "built_lab",
+      "user_seconds": 704.2
+    },
+    {
+      "event": "mastery_first",
+      "user_seconds": 762.6
+    },
+    {
+      "event": "formation_1_2",
+      "user_seconds": 808.0
+    },
+    {
+      "event": "ring_mage",
+      "user_seconds": 947.4
+    },
+    {
+      "event": "built_shop",
+      "user_seconds": 1133.8
+    },
+    {
+      "event": "shop_buy_hatchet_hood",
+      "user_seconds": 1240.8
+    },
+    {
+      "event": "first_weapon_upgrade_hatchet",
+      "user_seconds": 1365.6
+    },
+    {
+      "event": "30min",
+      "user_seconds": 1800.1
+    },
+    {
+      "event": "first_forge_upgrade",
+      "user_seconds": 1834.0
+    },
+    {
+      "event": "first_salvage",
+      "user_seconds": 1861.2
+    },
+    {
+      "event": "first_craft_equipped",
+      "user_seconds": 1873.6
+    },
+    {
+      "event": "equip_35min",
+      "user_seconds": 2186.2
+    },
+    {
+      "event": "shop_refresh_ring",
+      "user_seconds": 2226.7
+    },
+    {
+      "event": "equip_42min",
+      "user_seconds": 2564.4
+    },
+    {
+      "event": "forge_upgrades_48min",
+      "user_seconds": 2833.6
+    },
+    {
+      "event": "built_exp2_library_explore",
+      "user_seconds": 3060.3
+    },
+    {
+      "event": "library_learn",
+      "user_seconds": 3077.3
+    },
+    {
+      "event": "1hour",
+      "user_seconds": 3600.1
+    },
+    {
+      "event": "day1_a_first_screen",
+      "user_seconds": 86403.38
+    },
+    {
+      "event": "day1_b_lab_prepared",
+      "user_seconds": 3620.1
+    },
+    {
+      "event": "day1_b_prepared",
+      "user_seconds": 3639.6
+    },
+    {
+      "event": "day1_b_first_screen",
+      "user_seconds": 86403.38
+    },
+    {
+      "event": "day1_b_claimed_exploration",
+      "user_seconds": 86409.58
+    }
+  ]
+}

@@ -877,7 +877,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'hero_hp_base', 'monster_hp_base', 'hero_hp_band_levels', 'attr_bonus_per_point', 'power_growth_per_level', 'attr_growth_chance_pct', 'xp_rate', 'xp_level_gap_mult', 'monster_gold_base', 'monster_gold_growth',
         'unarmed_atk', 'unarmed_period', 'weapon_atk_base', 'weapon_atk_band_levels', 'weapon_atk_band1_unit', 'weapon_atk_band8_unit',
         'armor_def_l1', 'armor_def_band_levels', 'armor_def_band1_unit', 'armor_def_band8_unit',
-        'armor_fixed_def_pct_min', 'armor_fixed_def_pct_max', 'item_lines_normal', 'item_lines_magic', 'item_lines_rare', 'magic_option_max_mult',
+        'armor_fixed_def_pct_min', 'armor_fixed_def_pct_max', 'item_random_slots', 'item_random_chance_min', 'item_random_chance_max', 'item_roll_skew',
         'armor_def_slot_armor', 'armor_def_slot_helmet', 'armor_def_slot_gloves', 'armor_def_slot_boots',
         'base_crit_pct', 'base_crit_damage_pct', 'dmg_variance_pct', 'monster_hp_scale', 'monster_atk_scale', 'monster_def_scale', 'battle_timeout_sec',
         'def_curve_k', 'dmg_min', 'res_cap_base', 'res_cap_absolute', 'attr_dmg_pivot', 'attr_dmg_step_pct', 'attr_speed_step_pct',
@@ -3680,8 +3680,7 @@ check('item: 접사 3분류 — flat · fine 은 ilvl 60 에서도 굴림 범위
             : isArmor(it.slot) ? D.armorSinOptions.find(d => d.slot === it.slot && d.sin === a.src && d.stat === a.stat)   // 장갑도 — 옛 무기 행을 옮긴 장갑 행 (2026-10-05)
                 : D.accessorySinOptions.find(d => d.slot === it.slot && d.sin === a.src && d.stat === a.stat);
     };
-    // 매직의 고정 아닌 줄은 위끝이 max × magic_option_max_mult (R285) — 그 위끝으로 고친 정의를 넘긴다
-    const peakDef = (it, a, d) => it.rarity === 'magic' && a.src !== 'fixed' ? { ...d, max: d.max * B.magic_option_max_mult } : d;
+    // ~~매직의 고정 아닌 줄은 위끝이 max × magic_option_max_mult (R285)~~ — 2026-10-20 퇴역(R291) · 희귀도 · 치우침은 범위를 안 바꾼다
     const inRange = (d, v, ilvl) => (d.scale === 'flat' || d.scale === 'fine')
         ? v >= F.roundPct(d.min, d.scale === 'fine') && v <= F.roundPct(d.max, d.scale === 'fine')
         // band — 무기 표엔 `per_ilvl` 열이 없다(특정 스킬 +n · 2026-10-08 R225) — 코드(`valueOf`)처럼 0 으로 읽는다
@@ -3696,9 +3695,8 @@ check('item: 접사 3분류 — flat · fine 은 ilvl 60 에서도 굴림 범위
         for (let i = 0; i < 400; i++) {
             const it = SYS.item.rollDrop(rng, ilvl);
             for (const a of it.affixes) {
-                const row = defOf(it, a);
-                if (!row) fail(`${it.slot} ${a.src}/${a.stat} 의 정의 행이 없다`);
-                const d = peakDef(it, a, row);
+                const d = defOf(it, a);
+                if (!d) fail(`${it.slot} ${a.src}/${a.stat} 의 정의 행이 없다`);
                 if (!inRange(d, a.v, ilvl)) fail(`ilvl${ilvl} ${it.slot} ${a.src}/${a.stat} ${a.v} 가 ${d.scale} 대역 밖 [${d.min}, ${d.max}] — % 접사가 ilvl 을 타면 여기서 걸린다`);
                 if (d.scale === 'growth') (growth[a.stat] ??= {})[ilvl] = Math.max(growth[a.stat][ilvl] ?? 0, a.v);
             }
@@ -3838,7 +3836,7 @@ check('csv: 무기 죄종 계열표 — 본편 무기군마다 죄종 7 × 옵�
     for (const g of groups) if (opts(g) !== 21) fail(`${g.id} 옵션 ${opts(g)} — 21 이어야 한다`);
     return `행 ${D.weaponSinOptions.length} · 무기군마다 옵션 21`;
 });
-check('item: 무기 옵션 = 고정 1 + 메인 줄(이름 죄종마다 그 계열 하나 · 반드시) + 랜덤 줄(줄 수 item_lines_* 를 채운다 · 아직 안 붙은 옵션) · 같은 옵션 한 번 · 발동 하나 · 같은 계열 겹침이 실제로 난다 (R206 · R210 · R285)', () => {
+check('item: 무기 옵션 = 고정 1 + 메인 줄(이름 죄종마다 그 계열 하나 · 반드시) + 랜덤 줄(랜덤 칸 item_random_slots 중 붙은 칸 · 아직 안 붙은 옵션) · 같은 옵션 한 번 · 발동 하나 · 같은 계열 겹침이 실제로 난다 (R206 · R210 · R291)', () => {
     const rng = makeRng(78);
     let n = 0, overlap = 0, procs = 0;
     for (let i = 0; i < 4000 && n < 400; i++) {
@@ -3848,8 +3846,9 @@ check('item: 무기 옵션 = 고정 1 + 메인 줄(이름 죄종마다 그 계�
         n++;
         const g = WG[it.group];
         const rows = D.weaponSinOptions.filter(r => r.appliesTo === 'all' || r.appliesTo === g.damageKind || g.classes.includes(r.appliesTo));
-        const want = B[`item_lines_${it.rarity}`];   // 줄 수 = 고정 1 + 메인 + 랜덤 (R285)
-        if (it.affixes.length !== want) fail(`${it.rarity} ${it.group} 줄 ${it.affixes.length} ≠ ${want}`);
+        // 줄 수 = 고정 1 + 메인(죄종 수) + 붙은 랜덤 칸(0 … 칸 수 · 일반 0) (R291)
+        const lo = 1 + it.sins.length, hi = lo + (it.rarity === 'normal' ? 0 : B.item_random_slots);
+        if (it.affixes.length < lo || it.affixes.length > hi) fail(`${it.rarity} ${it.group} 줄 ${it.affixes.length} — ${lo} ~ ${hi} 밖`);
         const fixed = it.affixes[0];
         if (fixed.src !== 'fixed' || fixed.stat !== 'atk_pct' || fixed.v < B.weapon_fixed_atk_pct_min || fixed.v > B.weapon_fixed_atk_pct_max) fail(`고정 옵션 ${JSON.stringify(fixed)}`);
         const lines = it.affixes.slice(1);
@@ -3868,9 +3867,9 @@ check('item: 무기 옵션 = 고정 1 + 메인 줄(이름 죄종마다 그 계�
     if (n < 100) fail(`무기 표본 ${n}`);
     if (!overlap) fail('같은 계열이 한 무기에 두 줄 선 일이 없다 — 랜덤 줄이 계열을 막고 있다');
     if (!procs) fail('발동 옵션이 안 떴다');
-    // 시작 무기는 일반 — 일반의 줄 수만큼(지금 고정 한 줄 · R285) · 고정 뒤 줄이 있으면 그 옵션의 죄종을 src 로 든다
+    // 시작 무기는 일반 — 고정 한 줄뿐이다(일반은 랜덤 칸 0 · R291)
     const sw = SYS.item.startingWeapon(makeRng(4), 'mage');
-    if (sw.affixes.length !== B.item_lines_normal || sw.affixes[0].src !== 'fixed' || sw.affixes.slice(1).some(a => !M.SINS[a.src])) fail(`시작 무기 ${JSON.stringify(sw.affixes)}`);
+    if (sw.affixes.length !== 1 || sw.affixes[0].src !== 'fixed') fail(`시작 무기 ${JSON.stringify(sw.affixes)}`);
     return `무기 ${n}개 · 같은 계열 겹침 ${overlap} · 발동 ${procs}`;
 });
 check('item: optionSources — 죄종 태그는 메인 죄종 줄만 · 계열 굴림의 랜덤 줄은 메인과 같은 계열이어도 random · 고정은 fixed · src 없는 옛 접사는 random (툴팁 옵션 줄 · ADR-0518 · 2026-10-06)', () => {
@@ -4119,15 +4118,17 @@ check('csv: 방어구 옵션 표 둘 — 갑옷은 죄종 7 × 옵션 1 · 2 · 
     const gl = sin => D.armorSinOptions.filter(r => r.slot === 'gloves' && r.sin === sin).map(r => r.stat).sort().join('+');
     if (gl('envy') !== 'atk_down_mag_pct+atk_down_phys_pct+def_ignore+res_reduction' || gl('sloth') !== 'aspd_pct+cast_speed_pct') fail(`장갑 시기 ${gl('envy')} · 나태 ${gl('sloth')}`);
     for (const r of [...D.armorSinOptions, ...D.armorCommonOptions]) if (!M.AFFIX_LABELS[r.stat]) fail(`라벨 없음: ${r.stat}`);
-    // 공통옵션 줄 수의 최댓값 = 줄 수 − 고정 1 − 죄종 수(일반 0 · 매직 1 · 레어 2) 중 큰 것 (R285)
-    const n = Math.max(B.item_lines_normal - 1, B.item_lines_magic - 2, B.item_lines_rare - 3);
+    // 공통옵션 줄 수의 최댓값 = 랜덤 칸 수(매직 · 레어 — R291) · 칸보다 종류가 적은 풀은 끝 칸이 비어 남는다 — 던지지 않고 결과에 적는다
+    //   (10-20 칸이 셋이 되며 티아라의 옛 공통 풀(쿨타임 감소 · 경험치)이 칸보다 작아졌다 — 투구 · 신발 계열표(10-09 · R229)가 들어가면 이 풀을 안 쓴다)
+    const n = B.item_random_slots, short = [];
     for (const slot of ARMOR_PARTS) {
         const groups = [null, ...new Set((D.itemBases[slot] ?? []).map(b => b.group).filter(Boolean))];
         for (const g of groups) {
             if (g && !AGROUP[slot]?.[g]) fail(`item_base ${slot} 갈래 '${g}' 가 armor_group.csv 에 없다`);
             if (slot === 'armor') continue;                          // 갑옷은 계열표 — 공통옵션이 없다
             const fams = new Set(D.armorCommonOptions.filter(r => r.slot === slot && (!g || r.group === 'all' || r.group === g)).map(r => r.family));
-            if (fams.size < n) fail(`${slot}/${g ?? '시작'} 공통옵션 종류 ${fams.size} < 개수 ${n}`);
+            if (!fams.size) fail(`${slot}/${g ?? '시작'} 공통옵션 종류가 없다`);
+            if (fams.size < n) short.push(`${slot}/${g ?? '시작'} ${fams.size}`);
         }
     }
     // 투구 공통옵션은 갈래별 풀 — 갈래 전용 행이 그 갈래에만 뜬다 · 경험치만 셋 공통 (item_design §1 「투구 옵션」)
@@ -4140,9 +4141,9 @@ check('csv: 방어구 옵션 표 둘 — 갑옷은 죄종 7 × 옵션 1 · 2 · 
         if (!ARMOR_PARTS.includes(g.slot)) fail(`armor_group ${g.id} slot '${g.slot}'`);
         if (g.slot !== 'armor' && g.classes.length) fail(`${g.slot} 갈래 ${g.id} 가 숙련 직업을 든다 — 숙련은 갑옷 한 칸만 본다`);
     }
-    return `죄종 칸 ${D.armorSinOptions.length} · 공통 ${D.armorCommonOptions.length} · 갈래 ${D.armorGroupList.length}`;
+    return `죄종 칸 ${D.armorSinOptions.length} · 공통 ${D.armorCommonOptions.length} · 갈래 ${D.armorGroupList.length}${short.length ? ` · ⚠ 칸 ${n} 보다 작은 풀 ${short.join(' · ')}` : ''}`;
 });
-check('item: 방어구 옵션 — 갑옷은 고정 1 + 메인 줄 + 랜덤 줄(계열표 · 같은 옵션 한 번 · 발동 하나) · 투구 · 장갑 · 신발은 세 층(고정 · 죄종 칸 · 공통옵션 = 줄 수 item_lines_* 를 채운다 · 부위 · 갈래가 맞는 행만 · 같은 종류 한 번) · 장갑 시기 칸은 옛 무기 행 넷 (2026-09-18 · 2026-10-05 R209 · R285)', () => {
+check('item: 방어구 옵션 — 갑옷은 고정 1 + 메인 줄 + 랜덤 줄(계열표 · 같은 옵션 한 번 · 발동 하나) · 투구 · 장갑 · 신발은 세 층(고정 · 죄종 칸 · 공통옵션 = 랜덤 칸 중 붙은 칸 · 부위 · 갈래가 맞는 행만 · 같은 종류 한 번) · 장갑 시기 칸은 옛 무기 행 넷 (2026-09-18 · 2026-10-05 R209 · R291)', () => {
     const rng = makeRng(81);
     const seen = {};
     let overlap = 0;
@@ -4150,13 +4151,13 @@ check('item: 방어구 옵션 — 갑옷은 고정 1 + 메인 줄 + 랜덤 줄(�
         const slot = ARMOR_PARTS[i % 4];
         const ilvl = [5, 15, 35, 55][Math.floor(i / 4) % 4];
         const it = SYS.item.rollGear(rng, { slots: [slot], ilvl })[0];
-        const common = B[`item_lines_${it.rarity}`] - 1 - it.sins.length;   // 랜덤 줄 = 줄 수 − 고정 − 죄종 수 (R285)
-        if (common < 0) fail(`${slot} ${it.rarity} 줄 수 ${B[`item_lines_${it.rarity}`]} 가 고정 + 죄종 ${it.sins.length} 보다 작다`);
+        // 랜덤 줄 = 고정 · 죄종 뒤에 남은 줄 — 0 … 랜덤 칸 수(일반 0 · R291)
+        const common = it.affixes.length - 1 - it.sins.length;
+        if (common < 0 || common > (it.rarity === 'normal' ? 0 : B.item_random_slots)) fail(`${slot} ${it.rarity} 랜덤 줄 ${common} — 0 ~ 칸 수 밖`);
         const fx = it.affixes[0];
         if (fx.src !== 'fixed' || fx.stat !== 'armor_def_pct' || fx.v < B.armor_fixed_def_pct_min || fx.v > B.armor_fixed_def_pct_max) fail(`${slot} 고정 옵션 ${JSON.stringify(fx)}`);
         if (slot === 'armor') {
             // 계열표 — 메인 줄은 sins 순서대로 그 죄종 · 랜덤 줄은 그 옵션의 죄종 · 같은 옵션 한 번 · 발동 하나
-            if (it.affixes.length !== 1 + it.sins.length + common) fail(`갑옷 ${it.rarity} 줄 ${it.affixes.length}`);
             const lines = it.affixes.slice(1);
             it.sins.forEach((sin, k) => { if (lines[k].src !== sin) fail(`갑옷 메인 줄 ${k} = ${lines[k].src} ≠ ${sin}`); });
             const keys = lines.map(a => {
@@ -4219,9 +4220,9 @@ check('csv: 장신구 옵션 표 — 반지 · 목걸이 죄종 7 전부 · 시�
     for (const slot of ['ring', 'amulet']) for (const sin of Object.keys(M.SINS))
         if (!D.accessorySinOptions.some(r => r.slot === slot && r.sin === sin)) fail(`${slot} ${sin} 칸이 없다`);
     const fams = new Set(D.accessoryCommonOptions.map(r => r.family));
-    // 가장 긴 공통 줄 = 반지(고정 없음) — 줄 수 − 죄종 수(매직 1 · 레어 2) 중 큰 것 · 반지 · 목걸이는 일반이 없다 (R285)
-    const most = Math.max(B.item_lines_magic - 1, B.item_lines_rare - 2);
-    if (fams.size < most) fail(`공통 종류 ${fams.size} < 개수 ${most}`);
+    // 가장 긴 공통 줄 = 랜덤 칸 수(반지도 같다 · R291) — 칸을 다 채울 종류가 있어야 한다
+    const most = B.item_random_slots;
+    if (fams.size < most) fail(`공통 종류 ${fams.size} < 칸 ${most}`);
     const envy = slot => D.accessorySinOptions.filter(r => r.slot === slot && r.sin === 'envy').map(r => r.stat).sort().join('+');
     if (envy('ring') !== 'def_ignore+res_reduction_cold+res_reduction_fire+res_reduction_lightning+res_reduction_poison') fail(`반지 시기 ${envy('ring')} — 방어 무시 + 원소별 저항 감소 넷(다섯 균등 · 사용자 2026-09-21)`);
     if (envy('amulet') !== 'def_down_pct+res_down_pct') fail(`목걸이 시기 ${envy('amulet')} — 파티 디버프 둘`);
@@ -4250,7 +4251,7 @@ check('skill: amulet_pool — 0/1 · 오오라 · 몬스터 전용이 1 이면 �
     if (load(rows).list.some(sk => sk.amuletPool && sk.id === first.skill_id)) fail(`${first.skill_id} 를 0 으로 내렸는데 후보에 남았다`);
     return `오오라 · 몬스터 · 2 거절 · ${first.skill_id} 0 이면 빠진다`;
 });
-check('item: 반지 · 목걸이 옵션은 세 층 — 죄종 칸(죄종마다 1) + 공통(줄 수 item_lines_* − 고정 − 죄종 · 반지는 고정이 없어 하나 더) · 같은 종류 한 번 · 일반이 없다 · 목걸이만 발동 스킬(베이스 조건 · 후보 풀 · 범위) · 반지 시기 다섯이 다 뜬다 (R127 · R285)', () => {
+check('item: 반지 · 목걸이 옵션은 세 층 — 죄종 칸(죄종마다 1) + 공통(랜덤 칸 중 붙은 칸 · 반지도 칸 수가 같다) · 같은 종류 한 번 · 일반이 없다 · 목걸이만 발동 스킬(베이스 조건 · 후보 풀 · 범위) · 반지 시기 다섯이 다 뜬다 (R127 · R285 · R291)', () => {
     const rng = makeRng(127);
     const pool = SYS.skill.list.filter(sk => sk.amuletPool).map(sk => sk.id);
     const procOf = Object.fromEntries(D.amuletProcs.map(r => [r.baseId, r]));
@@ -4259,7 +4260,8 @@ check('item: 반지 · 목걸이 옵션은 세 층 — 죄종 칸(죄종마다 1
         const slot = i % 2 ? 'ring' : 'amulet';
         const it = SYS.item.rollGear(rng, { slots: [slot], ilvl: 5 + (i % 60) })[0];
         if (it.rarity === 'normal') fail(`${slot} 일반이 나왔다 — 반지 · 목걸이는 매직부터 (R285)`);
-        const common = B[`item_lines_${it.rarity}`] - (slot === 'ring' ? 0 : 1) - it.sins.length;
+        const common = it.affixes.length - it.sins.length;                 // 붙은 랜덤 칸 — 0 … 칸 수 (R291)
+        if (common < 0 || common > B.item_random_slots) fail(`${slot} ${it.rarity} 랜덤 줄 ${common} — 0 ~ ${B.item_random_slots} 밖`);
         const src = it.affixes.map(a => a.src);
         const want = [...it.sins, ...Array(common).fill('random')];
         if (!eq(src, want)) fail(`${slot} ${it.rarity} 출처 ${src.join(',')} ≠ ${want.join(',')}`);
@@ -4286,42 +4288,94 @@ check('item: 반지 · 목걸이 옵션은 세 층 — 죄종 칸(죄종마다 1
     if (!procRarity.has('magic') || !procRarity.has('rare')) fail(`발동 스킬을 든 목걸이 등급 ${[...procRarity]} — 매직 · 레어 둘 다 붙어야 한다(고정 옵션)`);
     return `반지 시기 ${[...envy].sort().join('/')} · 발동 조건 ${[...trig].sort().join('/')} · 매직 · 레어 목걸이 모두 발동 스킬`;
 });
-check('item: 옵션 줄 수 = item_lines_* 가 전 부위 같다(목걸이는 proc 이 고정 한 줄 · 반지는 고정 없이 랜덤이 하나 더) · 반지 · 목걸이는 일반이 없다 · 매직의 고정 아닌 줄은 위끝 × magic_option_max_mult — 레어 범위를 넘는 값이 실제로 나고 optionRange 도 같은 위끝 (R285 · item_design §1 희귀도)', () => {
-    const rng = makeRng(285);
+check('item: 옵션 줄 수 = 고정 + 죄종 + 붙은 랜덤 칸(0 … item_random_slots · 일반 0 · 전 부위 같다 — 반지도 칸을 더 받지 않는다) · 반지 · 목걸이는 일반이 없다 · 칸이 붙는 비율은 아이템 레벨 따라 item_random_chance_min → max · 만렙 레어에서 다 붙은 것과 덜 붙은 것이 함께 난다 · 희귀도는 옵션 범위를 안 바꾼다 (R291 · item_design §1 희귀도 — ~~줄 수 1 · 3 · 5 · 매직 고점~~ R285 대체)', () => {
+    const rng = makeRng(291);
     const slots = ['weapon', ...ARMOR_PARTS, 'amulet', 'ring'];
+    const fixedOf = slot => slot === 'ring' ? 0 : 1;                  // 목걸이의 고정은 `proc` 이 든다
     const seen = new Set();
-    let magicLines = 0, overRare = 0;
     for (let i = 0; i < 4200; i++) {
         const slot = slots[i % slots.length];
-        const it = SYS.item.rollGear(rng, { slots: [slot], ilvl: 10 + (i % 50) })[0];
-        const want = B[`item_lines_${it.rarity}`];
+        const it = SYS.item.rollGear(rng, { slots: [slot], ilvl: 1 + (i % 60) })[0];
         const lines = it.affixes.length + (it.proc ? 1 : 0);
-        if (lines !== want) fail(`${slot} ${it.rarity} 줄 ${lines} ≠ ${want}`);
+        const lo = fixedOf(slot) + it.sins.length, hi = lo + (it.rarity === 'normal' ? 0 : B.item_random_slots);
+        if (lines < lo || lines > hi) fail(`${slot} ${it.rarity} 줄 ${lines} — ${lo} ~ ${hi} 밖`);
         if (it.rarity === 'normal' && (slot === 'ring' || slot === 'amulet')) fail(`${slot} 일반이 나왔다`);
         seen.add(`${slot}:${it.rarity}`);
         if (it.rarity !== 'magic') continue;
+        // 희귀도는 범위를 안 바꾼다 — 같은 줄을 레어로 읽어도 양끝이 같다(~~매직 고점 × magic_option_max_mult~~ R291 퇴역)
         const asRare = { ...it, rarity: 'rare' };
         it.affixes.forEach((a, k) => {
-            if (a.src === 'fixed') return;
             const m = SYS.item.optionRange(it, k), r = SYS.item.optionRange(asRare, k);
             if (!m || !r) fail(`${slot} 매직 ${a.stat} 범위를 못 찾았다`);
-            if (m.min !== r.min || m.max < r.max) fail(`${slot} ${a.stat} 매직 범위 [${m.min}, ${m.max}] — 아래끝은 같고 위끝은 레어 [${r.min}, ${r.max}] 이상이어야`);
-            if (a.v > m.max) fail(`${slot} ${a.stat} 매직 값 ${a.v} > 위끝 ${m.max}`);
-            magicLines++;
-            if (a.v > r.max) overRare++;
+            if (m.min !== r.min || m.max !== r.max) fail(`${slot} ${a.stat} 매직 범위 [${m.min}, ${m.max}] ≠ 레어 [${r.min}, ${r.max}]`);
         });
     }
     for (const slot of slots) for (const rar of ['normal', 'magic', 'rare']) {
-        const baseless = slot === 'ring' || slot === 'amulet';
-        if (baseless && rar === 'normal') continue;
+        if ((slot === 'ring' || slot === 'amulet') && rar === 'normal') continue;
         if (!seen.has(`${slot}:${rar}`)) fail(`${slot} ${rar} 표본이 없다`);
     }
-    if (!overRare) fail(`매직 고정 아닌 줄 ${magicLines}개 중 레어 위끝을 넘은 값이 없다 — 고점 배율이 안 먹는다`);
-    // 고정 줄은 희귀도와 무관 — 매직 무기도 고정 옵션 범위는 고정 키 그대로
-    const mw = SYS.item.rollGear(makeRng(2851), { slots: ['weapon'], ilvl: 20, rarityWeights: { normal: 0, magic: 1, rare: 0 } })[0];
-    const fr = SYS.item.optionRange(mw, 0);
-    if (mw.rarity !== 'magic' || !fr || fr.max !== F.pctOption(B.weapon_fixed_atk_pct_max)) fail(`매직 무기 고정 줄 범위 ${JSON.stringify(fr)} — 고정 키 그대로여야`);
-    return `줄 수 ${B.item_lines_normal}/${B.item_lines_magic}/${B.item_lines_rare} · 부위×등급 ${seen.size} · 매직 줄 ${magicLines} 중 레어 위끝 초과 ${overRare}`;
+    // 칸당 붙는 비율 — 무기 · 갑옷(계열표라 후보가 바닥나지 않는다)의 레어만 모아 잰다
+    const rate = ilvl => {
+        const r = makeRng(2910 + ilvl);
+        let got = 0, full = 0, part = 0;
+        const N = 1500;
+        for (let i = 0; i < N; i++) {
+            const it = SYS.item.rollGear(r, { slots: [i % 2 ? 'armor' : 'weapon'], ilvl, rarityWeights: { normal: 0, magic: 0, rare: 1 } })[0];
+            const k = it.affixes.length - 1 - it.sins.length;
+            got += k;
+            if (k === B.item_random_slots) full++; else part++;
+        }
+        return { p: got / (N * B.item_random_slots), full, part };
+    };
+    const lo = rate(1), mid = rate(Math.round((1 + B.hero_level_cap) / 2)), hi = rate(B.hero_level_cap);
+    const near = (x, want) => Math.abs(x - want) <= 0.04;
+    if (!near(lo.p, B.item_random_chance_min)) fail(`아이템 레벨 1 칸당 ${lo.p.toFixed(3)} ≠ ${B.item_random_chance_min}`);
+    if (!near(hi.p, B.item_random_chance_max)) fail(`만렙 칸당 ${hi.p.toFixed(3)} ≠ ${B.item_random_chance_max}`);
+    if (!(lo.p < mid.p && mid.p < hi.p)) fail(`칸당 비율이 레벨 따라 안 오른다 ${lo.p} → ${mid.p} → ${hi.p}`);
+    if (!hi.full || !hi.part) fail(`만렙 레어 — 다 붙음 ${hi.full} · 덜 붙음 ${hi.part} — 둘 다 나야 한다(사용자 10-20 「다 붙을 확률이 존재」)`);
+    return `칸 ${B.item_random_slots} · 칸당 붙음 1레벨 ${lo.p.toFixed(3)} → ${mid.p.toFixed(3)} → 만렙 ${hi.p.toFixed(3)} · 만렙 레어 다 붙음 ${hi.full}/1500 · 부위×등급 ${seen.size}`;
+});
+check('item: 값 굴림은 아이템 레벨 따라 치우친다 — 1레벨은 낮은 쪽 · 가운데는 균등 · 만렙은 높은 쪽(무기 고정 옵션의 평균 자리 ≈ 1/(a+1) · 1/2 · a/(a+1) · a = item_roll_skew) · 같은 시드면 레벨이 높을수록 고정 · 메인 줄 값이 크거나 같다 (R291 · item_design §2-1)', () => {
+    const a = B.item_roll_skew;
+    if (!(a > 1)) fail(`item_roll_skew ${a} — 1 이면 어느 레벨이든 균등이라 치우침이 없다(사용자 10-20 「좌로치우친분포에서 우로치우친분포」)`);
+    const lo = F.pctOption(B.weapon_fixed_atk_pct_min), hi = F.pctOption(B.weapon_fixed_atk_pct_max);
+    const pos = ilvl => {
+        const r = makeRng(2920);
+        const N = 3000;
+        let sum = 0;
+        for (let i = 0; i < N; i++) sum += (SYS.item.rollGear(r, { slots: ['weapon'], ilvl, weaponGroup: 'axe' })[0].affixes[0].v - lo) / (hi - lo);
+        return sum / N;
+    };
+    const low = pos(1), mid = pos(Math.round((1 + B.hero_level_cap) / 2)), high = pos(B.hero_level_cap);
+    const near = (x, want) => Math.abs(x - want) <= 0.04;
+    if (!near(low, 1 / (a + 1))) fail(`1레벨 평균 자리 ${low.toFixed(3)} ≠ ${(1 / (a + 1)).toFixed(3)}`);
+    if (!near(mid, 0.5)) fail(`가운데 레벨 평균 자리 ${mid.toFixed(3)} ≠ 0.5`);
+    if (!near(high, a / (a + 1))) fail(`만렙 평균 자리 ${high.toFixed(3)} ≠ ${(a / (a + 1)).toFixed(3)}`);
+    // 같은 시드 — 붙은 칸 수가 달라도 소비가 같아 고정 · 메인 줄은 같은 굴림을 쓴다 → 높은 레벨이 크거나 같다
+    for (let s = 1; s <= 200; s++) {
+        const x = SYS.item.rollGear(makeRng(s), { slots: ['weapon'], ilvl: 5, weaponGroup: 'axe' })[0];
+        const y = SYS.item.rollGear(makeRng(s), { slots: ['weapon'], ilvl: 45, weaponGroup: 'axe' })[0];
+        if (x.rarity !== y.rarity || !eq(x.sins, y.sins)) fail(`시드 ${s} 희귀도 · 죄종이 레벨 따라 갈렸다`);
+        for (let k = 0; k <= x.sins.length; k++) {
+            if (x.affixes[k].stat !== y.affixes[k].stat) fail(`시드 ${s} 줄 ${k} 옵션이 레벨 따라 갈렸다`);
+            if (y.affixes[k].v < x.affixes[k].v) fail(`시드 ${s} 줄 ${k} ${x.affixes[k].stat} ${x.affixes[k].v} → ${y.affixes[k].v} — 레벨이 높은데 작다`);
+        }
+    }
+    return `무기 고정 옵션 평균 자리 1레벨 ${low.toFixed(3)} · 가운데 ${mid.toFixed(3)} · 만렙 ${high.toFixed(3)} · 같은 시드 200 쌍 단조`;
+});
+check('item: 랜덤 칸이 붙든 안 붙든 rng 소비 수가 같다 — 칸마다 붙나 1 + 그 줄의 굴림을 언제나 소비 · 1레벨과 만렙(붙는 칸 수가 다르다)이 같은 시드에서 같은 수를 쓴다 (R291 · INTERFACE §5-2)', () => {
+    const counted = seed => { const r = makeRng(seed); let n = 0; return { rng: () => { n++; return r(); }, count: () => n }; };
+    let diff = 0;
+    for (const slot of ['weapon', ...ARMOR_PARTS, 'amulet', 'ring']) for (let s = 1; s <= 40; s++) {
+        const opt = slot === 'weapon' ? { weaponGroup: 'axe' } : {};
+        const p = counted(s), q = counted(s);
+        const x = SYS.item.rollGear(p.rng, { slots: [slot], ilvl: 1, ...opt })[0];
+        const y = SYS.item.rollGear(q.rng, { slots: [slot], ilvl: B.hero_level_cap, ...opt })[0];
+        if (p.count() !== q.count()) fail(`${slot} 시드 ${s} 소비 ${p.count()} ≠ ${q.count()} — 붙은 칸 수가 소비를 바꿨다`);
+        if (x.affixes.length !== y.affixes.length) diff++;
+    }
+    if (!diff) fail('1레벨과 만렙의 줄 수가 한 번도 안 갈렸다 — 표본이 소비 고정을 못 잰다');
+    return `부위 7 × 시드 40 · 줄 수가 갈린 쌍 ${diff}`;
 });
 check('combat: 목걸이 발동 스킬은 전투가 읽지 않는다 — proc 을 떼어도 computeCombat · 타임라인이 같다 (사용자 지시 2026-09-21 · 설명에만)', () => {
     const party = strip => SYS.game.partyOf(G).map(uid => {
@@ -6675,8 +6729,8 @@ check('simulate: 경직 — 물리 직격으로 줄어든 HP 가 최대 HP × st
     const eleStage = D.stageList.find(s => SYS.battle.stageElement(s) !== 'physical');
     if (!eleStage) fail('원소 스테이지가 없다');
     const B = STAG_B;
-    // 경직 시간 증가의 최댓값 — 무기 표의 `stagger_dur_pct` 위끝 × 매직 고점 (R206 · R285) · 적이 건 경직의 위끝이다
-    const SD_MAX = Math.max(0, ...D.weaponSinOptions.filter(d => d.stat === 'stagger_dur_pct').map(d => d.max)) * B.magic_option_max_mult;
+    // 경직 시간 증가의 최댓값 — 무기 표의 `stagger_dur_pct` 위끝 (R206 · ~~× 매직 고점~~ R291 퇴역) · 적이 건 경직의 위끝이다
+    const SD_MAX = Math.max(0, ...D.weaponSinOptions.filter(d => d.stat === 'stagger_dur_pct').map(d => d.max));
     let on = 0, off = 0, ele = 0, foes = 0;
     // 표본은 **두 판을 합친다** [2026-09-22] — 문턱 위(경직)와 밑(안 걸림)이 둘 다 있어야 문턱을 잰다. 몬스터 데미지가 오르면 모든 직격이
     //   문턱을 넘어 「밑」이 비고(배율 0.2 → 1 에서 0 이 됐다), 내리면 「위」가 빈다 — 데미지만 1/5 인 판을 함께 돌려 어느 쪽으로 움직여도 양쪽이 선다
@@ -6701,7 +6755,7 @@ check('simulate: 경직 — 물리 직격으로 줄어든 HP 가 최대 HP × st
                 if (h.ty !== 'physical') fail(`${at} ${h.ty} 타격이 경직을 걸었다`);
                 if (!(h.dhp > 0)) fail(`${at} 쓰러진 ${ev.u} 가 경직됐다`);
                 // 맞은 쪽 타격 회복은 양쪽 다 안다(파티 = 전투 능력치 · 적 = sheet) · 건 쪽 경직 시간 증가는 **파티만** 안다 —
-                //   적의 `sheet` 는 `option_fx` 를 뺀다(battle.makeEnemy). 적이 걸었으면 길이는 [증가 0, 표의 최댓값(매직 고점 포함)] 사이다
+                //   적의 `sheet` 는 `option_fx` 를 뺀다(battle.makeEnemy). 적이 걸었으면 길이는 [증가 0, 표의 최댓값] 사이다(~~매직 고점 포함~~ R291 퇴역)
                 const len = ev.until - ev.t;
                 const base = B.stagger_sec * Math.max(0, 1 - (fx[ev.u]?.fhr ?? 0));
                 const known = h.a in partyFx;

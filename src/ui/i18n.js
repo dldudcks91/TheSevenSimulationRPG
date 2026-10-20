@@ -336,8 +336,8 @@ const STRINGS = {
     'ch.menu.lock': { ko: '잠금', en: 'Lock' },
     'ch.menu.unlock': { ko: '잠금 해제', en: 'Unlock' },
     // 도움말이 받는 힌트 — 인게임 패널에는 규칙 문구를 안 둔다 (SCREEN_DESIGN §12)
-    'ch.salvageHint': { ko: '장비를 우클릭해 [잠금]을 누르면 잠기거나 풀린다 — 잠근 장비는 분해되지 않는다. [분해]를 누르면 장비를 고를 수 있다 — 고른 뒤 [분해하기]로 가루를 얻는다. [자동 분해]에서 등급 · 아이템 레벨 선을 그으면 새로 들어오는 장비 중 하나라도 걸리는 것은 가방에 들어오기 전에 가루가 된다 — 이미 가진 것은 [지금 인벤토리에도 적용]을 눌러야 갈린다',
-        en: 'Right-click gear and press [Lock] to lock or unlock it — locked gear is never salvaged. Press [Salvage] to pick gear — then [Salvage now] turns it to dust. In [Auto salvage], set a rarity and an item-level line: new gear that hits either line turns to dust before it enters the bag — gear you already hold is only salvaged when you press [Apply to inventory now]' },
+    'ch.salvageHint': { ko: '장비를 우클릭해 [잠금]을 누르면 잠기거나 풀린다 — 잠근 장비는 분해되지 않는다. [분해]를 누르면 분해함이 뜬다 — 장비를 눌러 함에 올리거나, 등급 · 레벨 · 고정 열에서 고르고 [올리기]를 누른 뒤 [분해하기]로 가루를 얻는다. 열을 여럿 고르면 모든 열에 맞는 것만 오른다 — 고정 옵션이 높은 장비는 고정 열로 남길 수 있다. [자동 분해]에서 등급 · 아이템 레벨 선을 그으면 새로 들어오는 장비 중 하나라도 걸리는 것은 가방에 들어오기 전에 가루가 된다 — 이미 가진 것은 [지금 인벤토리에도 적용]을 눌러야 갈린다',
+        en: 'Right-click gear and press [Lock] to lock or unlock it — locked gear is never salvaged. Press [Salvage] to open the Salvage Box — click gear to put it in, or pick from the rarity, level and fixed columns and press [Add], then [Salvage now] turns it to dust. With several columns picked, only gear matching every column goes in — keep high fixed-mod gear out with the fixed column. In [Auto salvage], set a rarity and an item-level line: new gear that hits either line turns to dust before it enters the bag — gear you already hold is only salvaged when you press [Apply to inventory now]' },
     // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
     'ch.bag.stash': { ko: '창고', en: 'Stash' },
     'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
@@ -356,13 +356,19 @@ const STRINGS = {
     'ch.sort.tier': { ko: '티어순', en: 'Tier' },
     'ch.sortHint': { ko: '[정렬]은 누른 칸을 한 번 줄 세운다 — 등급순 · 레벨순 · 부위순 중 하나를 고르고, 높은 것이 앞에 선다. 그 뒤 들어오는 장비는 끝에 붙는다',
         en: '[Sort] lines up that panel once — pick by rarity, by level or by slot, highest first. Gear that arrives afterwards goes to the end' },
-    // 고르는 중 — [분해]로 들어가고 [분해하기] · [취소]로 나온다 (ADR-0184)
+    // 분해함 — [분해]로 띄우고 [취소] · Esc 로 닫는다 · 필터 세 열 + [올리기] · 가루 미리보기 (ADR-0184 · ADR-0673)
     'ch.sel.start': { ko: '분해', en: 'Salvage' },
     'ch.sel.go': { ko: '분해하기', en: 'Salvage now' },
     'ch.sel.cancel': { ko: '취소', en: 'Cancel' },
-    // 고르기 메뉴의 줄 머리 — [분해하기] 위로 올라와 누른 줄이 오른쪽으로 펼쳐진다 (ADR-0447)
+    // 분해함 필터의 열 머리 (ADR-0673)
     'ch.sel.byRarity': { ko: '등급', en: 'Rarity' },
     'ch.sel.byLevel': { ko: '레벨', en: 'Level' },
+    'ch.sel.byFixed': { ko: '고정', en: 'Fixed' },
+    'ch.sel.title': { ko: '분해함', en: 'Salvage Box' },
+    'ch.sel.lift': { ko: '올리기', en: 'Add' },
+    'ch.sel.dust': { ko: '가루 +{d}', en: 'Dust +{d}' },
+    'ch.sel.full': { ko: '분해함이 가득 찼다', en: 'The Salvage Box is full' },
+    'ch.sel.lockedNo': { ko: '잠긴 장비는 분해함에 못 올린다', en: 'Locked gear cannot go in the Salvage Box' },
     // 자동 분해 창 — 선 둘 + 지금 적용 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0203)
     'ch.auto.btn': { ko: '자동 분해', en: 'Auto salvage' },
     'ch.auto.h': { ko: '자동 분해', en: 'Auto Salvage' },
@@ -384,9 +390,7 @@ const STRINGS = {
     'ch.err.missing': { ko: '아이템을 찾을 수 없다', en: 'Item not found' },
     // 결과 플래시 — 문장을 조각내 잇지 않는다. 건너뛴 것이 있으면 키째 다른 줄을 쓴다
     'ch.sel.salvaged': { ko: '{n}개 분해 → 가루 +{d}', en: 'Salvaged {n} → dust +{d}' },
-    'ch.sel.salvagedSkip': { ko: '{n}개 분해 → 가루 +{d} · 잠긴 {s}개는 건너뛰었다',
-        en: 'Salvaged {n} → dust +{d} · skipped {s} locked' },
-    'ch.sel.allLocked': { ko: '고른 것이 모두 잠겨 있다', en: 'Every selected item is locked' },
+    // ~~'ch.sel.salvagedSkip'~~ · ~~'ch.sel.allLocked'~~ 는 2026-10-20 삭제 — 잠긴 것은 분해함에 안 올라가 건너뛸 일이 없다 (ADR-0673)
     // 툴팁이 걷은 강화 규칙 문구가 앉는 자리다 (SCREEN_DESIGN §6 개정 2026-09-08 — 조건·규칙 주석은 도움말의 몫).
     // ⚠ 「강화 모드」는 09-03 에 폐기됐는데 문구만 남아 있었다 — 없는 토글을 찾게 만든다. 자리는 제련소(§8-2).
     // 2026-09-15 — 옵션 계단이 퇴역해(R95) 「{n}강마다 옵션」을 걷고 목걸이 · 반지의 강화 없음을 넣었다 (ADR-0125)
@@ -1279,6 +1283,7 @@ const STRINGS = {
     'dp.lvOf': { ko: 'Lv {n} / {max}', en: 'Lv {n} / {max}' },
     'dp.lvUp': { ko: '레벨 올리기', en: 'Level Up' },
     'dp.lvTop': { ko: '최대 레벨', en: 'Max Level' },
+    'dp.next.h': { ko: '다음 레벨', en: 'Next Level' },   // 고른 칸의 소제목 — 건설 「다음 랭크」(`cn.next.h`)와 같은 자리 (ADR-0674)
     'dp.lvDone': { ko: '{name} Lv {n}', en: '{name} Lv {n}' },
     'dp.offline': { ko: '오프라인 최대 {h}시간', en: 'Offline up to {h}h' },
     'dp.err.locked': { ko: '아직 안 열린 칸이다', en: 'Not unlocked yet' },

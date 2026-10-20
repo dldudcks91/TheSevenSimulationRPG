@@ -7,7 +7,7 @@
 - 헤드리스는 PowerShell 도구로만 · `--headless=new` · 덤프 0바이트 = 단정이 멈춘 것 → [src/dev/README.md](src/dev/README.md) 「개발용 URL」 아래
 - CSV 가 캐시돼 바꾼 값이 안 먹는다 → 실행마다 **새 프로필 이름** · `--disk-cache-size=1` ([client/verify.md](.claude/skills/client/verify.md) §2)
 - PowerShell `Out-File -Encoding utf8` 은 BOM 을 붙인다 → 파일 쓰기는 Edit 도구나 BOM 없는 UTF-8
-- Playwright — `channel='msedge'` · **`Python312\python.exe` 는 1.63 이라 `page.clock` 이 있다**(10-17 확인 · anaconda 쪽 1.41 은 없다) · 헤드리스 기본 인자가 스크롤바를 숨긴다 · 스크립트에 한국어 리터럴을 넣지 않는다
+- Playwright — `channel='msedge'` · `page.clock` 은 1.45 이상(anaconda 1.41 은 없다) · **10-20 에 `Python312`(1.63)가 사라졌다**(`~/.local/bin/python3.12` 는 uv 트램펄린 고장) → 스크래치패드에 anaconda 로 venv 를 만들고 `pip install --only-binary=:all: playwright`(1.60 · msedge 라 브라우저 내려받기 없음) · 헤드리스 기본 인자가 스크롤바를 숨긴다 · 스크립트에 한국어 리터럴을 넣지 않는다
 - 시드 20 표로 결론 내기 → `sim.html` 요약이 시드 앞 절반 / 뒤 절반을 따로 낸다 ([qa-fun](.claude/skills/qa-fun/SKILL.md) 「결론을 쓰는 법」)
 - 대량 실행기를 고친 뒤 결과를 그대로 믿기 → 시드 1~20 을 캘리브레이션 표와 대조 ([src/dev/README.md](src/dev/README.md) 「대량 실행」)
 
@@ -34,7 +34,9 @@
 | 2026-10-16 | 상단바 「원정 플레이 시간」을 유저 시간으로 읽음 | 라운드 사이 연출 · 다음 판 대기를 빼고 세어 유저 시간의 약 절반만 늘었다(ADR-0514) — 시계 당김이 안 먹는 줄 알았다 | 유저 시간은 당긴 시계의 차이로 센다 · 그 숫자는 「전투가 돈 시간」으로만 쓴다 | 1 |
 | 2026-10-18 | 실험 변형을 URL 에 `a+b` 로 이어 붙임 | 쿼리의 `+` 가 공백으로 풀려 변형 둘이 한 덩어리로 읽혔다 — `rar:magic+rolled:1` 이 희귀도 없음(드롭 가중치 기본값)으로 돌았다 | 구분자는 `~` · 파서는 공백도 구분자로 받는다 | 1 |
 | 2026-10-18 | 긴 헤드리스를 PowerShell `Start-Job` 으로 병렬 · 9개 동시 | 도구 호출이 끝나면 작업 프로세스가 같이 죽어 덤프가 0바이트 · 동시 9개(코어 8)일 땐 일부가 빈 `<pre>` 로 끝났다 | `Start-Process` 로 Edge 를 떼어 띄우고(-Wait 없이) 덤프 파일을 나중에 읽는다 · 동시는 코어 수 아래 | 1 |
+| 2026-10-20 | 리포트 `at` 을 클리어 시각으로 읽음 | 「5분에 cleared []」인데 1-1 I 리포트 `at` 은 2.2분 — `at` 은 판 시작 쪽이고 `durationSec` 은 전투만 센다(벽시계와 안 맞는다) | 첫 클리어 시각은 `note` 체크포인트의 `progress.cleared` 로 구간을 잡는다 | 1 |
+| 2026-10-20 | 클릭이 안 먹는 것을 결함으로 볼 뻔 | 궁수 마스터리 찍기가 두 방식 다 안 먹었다 — 도는 원정에서 쓰러진 영웅은 런이 끝날 때까지 트리를 못 바꾼다(R130) | 안 먹으면 `.toast` 부터 읽는다 — 거절 사유가 거기 있다 | 1 |
 | 2026-10-18 | 부팅 뒤 `page.clock.install()` | 이미 생성된 앱 `setInterval`은 가짜 시계에 들어오지 않아, `run_for`로 시간을 당겨도 자동 진행이 덜 돌거나 절전 공백으로 오인해 원정을 끊는다 | 새 격리 페이지에서 **`clock.install` → `goto` → 부팅 대기 → `pause_at`** 순서. 기존 측정은 폐기하고 새 세이브로 재실행한다. 이번 재측정·복귀 두 갈래 근거는 `output/2026-10-18_player_review/results.json` | 1 |
 
 ---
-*마지막 업데이트: 2026-10-18*
+*마지막 업데이트: 2026-10-20*
