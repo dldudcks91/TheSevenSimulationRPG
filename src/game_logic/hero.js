@@ -41,8 +41,9 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   sins         — 죄종 id 목록
  *   classes      — 직업 정의 [{id, keyAttr, stage, hpBase}...] — `hpBase` = 레벨 1 최대 HP(null 이면 `hero_hp_base` · 2026-10-02)
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
- *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, ...}}} ← armor_group.csv — **부위 → 갈래** (2026-09-16 갑옷군 · R107 · 2026-09-18 네 부위).
- *                  **낀 방어구마다** 제 갈래의 공속 · 쿨감을 더한다 — 지금 값이 있는 것은 갑옷군뿐이다(장갑 갈래 고정값은 사용자 보류)
+ *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, trait, ...}}} ← armor_group.csv — **부위 → 갈래** (2026-09-16 갑옷군 · R107 · 2026-09-18 네 부위).
+ *                  **낀 방어구마다** 제 갈래의 공속 · 쿨감을 더한다 — 값이 있는 것은 갑옷군뿐이다. 투구 · 장갑 · 신발 갈래 특성(`trait`)은 드롭이 아이템 줄로 박아
+ *                  접사 합산이 읽는다(2026-10-21 R303)
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
  *   skillPool    — **직업별** 고유 스킬 후보 `{classId: [skillId...]}` ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
@@ -572,28 +573,31 @@ export function createHeroSystem(data) {
         //   `hpBase` 로 `monster_hp_base` 를 넘긴다. 영웅은 안 넘기므로 제 직업의 `class.csv:hp_base`(빈 칸이면 `hero_hp_base`)다. 성장분 · 장비 몫은 같은 식이다
         const units = hpUnitSum[hero.level];
         if (units === undefined) throw new Error(`hero: 레벨 ${hero.level} 은 HP 구간 밖이다(1 ~ 만렙 ${B.hero_level_cap}) — 몬스터면 stage.csv:dlvl 이 만렙을 넘었다`);
-        // 투구 오만 「레벨당 체력」은 **더하기**다 — 영웅 레벨 × 값이 체력 flat 과 같은 자리에 든다 [2026-09-17 · item_design §1 「투구 옵션」]
-        const hpMax = Math.round(
-            ((hero.hpBase ?? hpBaseOf(hero.cls)) + units * attrMult('vit', A.vit) + f('hp_flat') + f('hp_per_level') * hero.level)
-            * (1 + f('hp_pct')));   // ~~× (1 + 도감 「체력」)~~ 2026-10-18 계열 보정 폐지 — 도감 Lv4 의 `hp_pct` 는 위 Σ 에 든다 (R286)
-
-        // 방어구 갈래가 공속·쿨감을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — ~~갑옷 칸 하나만~~ → **낀 방어구마다 제 갈래 값을 더한다**
-        //   [2026-09-18 — 네 부위가 갈래를 갖는다]. 지금 값이 있는 것은 갑옷군뿐이다 — 중갑은 음수(느려진다) · 경갑은 양수 · 로브는 0 이고 쿨감을 든다.
+        // 방어구 갈래가 고정값을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — ~~갑옷 칸 하나만~~ → **낀 방어구마다 제 갈래 값을 더한다**
+        //   [2026-09-18 — 네 부위가 갈래를 갖는다]. 값이 있는 것은 갑옷군뿐이다(중갑은 음수 — 느려진다 · 경갑 공속 · 로브 쿨감).
+        //   **투구 · 장갑 · 신발 갈래 특성은 아이템의 `[고정]` 줄이다**(굴림 · 2026-10-21 R303 — ~~갈래 값 `hpPct` · `castSpeedPct` 합산~~ R299 퇴역) — 아래 접사 합산이 그대로 읽는다.
         //   갈래 id 가 부위마다 겹쳐(`leather`) 부위와 함께 찾는다. 무기의 `group`(무기군)은 `weapon` 칸이라 여기 안 걸린다
         const worn = items.map(it => (data.armorGroups ?? {})[it?.slot]?.[it?.group]).filter(Boolean);
         const groupAspd = worn.reduce((s, g) => s + (g.aspdPct ?? 0), 0);
         const groupCdr = worn.reduce((s, g) => s + (g.cdrPct ?? 0), 0);
+
+        // 투구 오만 「레벨당 체력」은 **더하기**다 — 영웅 레벨 × 값이 체력 flat 과 같은 자리에 든다 [2026-09-17 · item_design §1 「투구 옵션」]
+        const hpMax = Math.round(
+            ((hero.hpBase ?? hpBaseOf(hero.cls)) + units * attrMult('vit', A.vit) + f('hp_flat') + f('hp_per_level') * hero.level)
+            * (1 + f('hp_pct')));   // ~~× (1 + 도감 「체력」)~~ 2026-10-18 계열 보정 폐지 — 도감 Lv4 의 `hp_pct` 는 위 Σ 에 든다 (R286)
         // 신발 오만 「레벨당 공격 속도」 — 영웅 레벨 × 값이 공속 합에 더해진다 [2026-09-18 · item_design §1 신발 행] (합산은 더하기 — 원천별 곱 여부는 GAME_DESIGN §10)
         // **공격 속도와 캐스팅 속도는 별개 옵션이다** [2026-10-03 · 사용자 · R203 · battle_design §2] — 마법 무기는 `cast_speed_pct` 만, 물리 무기 · 맨손은 공격 속도 계열만
         //   주기를 줄인다. 민첩 계수는 둘 다(능력치) · 버프 · 상태이상의 주기 창은 battle 이 따로 건다. 원천 배분의 나머지는 GAME_DESIGN §10 「캐스팅 속도의 원천」
         //   마법 무기 오만 ② 「레벨당 캐스팅 속도」 — 영웅 레벨 × 값이 캐스팅 속도에 더해진다 [2026-10-05 · R208 · item_design §1 「마법사 · 사제 무기」]
+        //   장갑 가죽 특성(공격 속도 / 캐스팅 속도 — 줄)도 같은 규칙이다 · 갑옷군 공속은 물리 무기 · 맨손만 (R303)
         const speed = magic ? f('cast_speed_pct') + f('cast_speed_per_level_pct') * hero.level : f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd;
         const period = Math.max(0.4,
             (group ? group.period : B.unarmed_period)
             / speedCoef(A?.agi)
             * (1 - speed));
 
-        const resAll = f('res_all');
+        // 신발 오만 「레벨당 모든 원소 저항」 — 영웅 레벨 × 값이 모든 원소 저항에 더해진다 [2026-10-21 · R303 · item_design §1 「10-21 방어구 개정」]
+        const resAll = f('res_all') + f('res_all_per_level') * hero.level;
         const luckMult = attrMult('luck', A.luck);
         // 무기 옵션이 여는 축 한 묶음 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **전투 능력치가 아니다**(combat_stat 행 없음 · 시트에 안 선다).
         //   소비자는 battle.js 뿐이다(조건부 % · 타격 시 창 · 강타 · 매직아이템 획득확률). 전부 0 이면 null 이라 전투가 한 번도 안 읽는다
@@ -612,7 +616,10 @@ export function createHeroSystem(data) {
             vsEliteDr: f('vs_elite_dr'), vsFrontDr: f('vs_front_dr'), vsBackDr: f('vs_back_dr'),
             drFlat: f('dr_flat'),                // 절대값 피해 감소 — 모든 감소 뒤에 뺀다(formula.strike)
             counter: f('counter_chance'),        // 반격 확률 — 맞으면 때린 적에게 기본 공격 1회 · 차례를 쓴다(battle.strikeOnce)
-            recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약에 곱한다(보호막 제외)
+            recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약 · 처치 시 회복에 곱한다(보호막 제외)
+            killHeal: f('kill_heal_pct'),        // 처치 시 체력 회복 — 처치마다 제 최대 HP × 값(battle.killHeal · 투구 · 장갑 색욕 ① · 2026-10-21 R299)
+            startGauge: f('start_gauge_pct'),    // 전투 시작 시 행동 게이지 +% — 빈 게이지를 그만큼 채운 채 세운다 · 원정은 라운드마다(battle.primeGauge · 가죽 신발 특성 · R303)
+            cullNormal: f('cull_normal_pct'),    // 일반몹 처형 — 직격 뒤 등급 「일반」 몬스터의 체력이 최대 HP × 값 이하면 쓰러뜨린다(battle.strikeOnce · 장갑 폭식 ② · R303)
             xpGain: f('xp_gain_pct'),            // 경험치 획득 — **본인 몫**(state.advanceRun)
             // 상태이상 시간 감소 — **받는 쪽** 값(신발 · 반지 · 목걸이 공통옵션 · 2026-09-21 · R127). 결빙 · 중독 · 화상 · 스턴이 읽는다
             //   (battle.makeUnit → `rt.applyStatus` · 2026-09-28 · R177 · R178 · battle_design §2-4 ~ §2-7)
@@ -634,7 +641,7 @@ export function createHeroSystem(data) {
         };
         const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
-            ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.xpGain,
+            ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,
             fx.defStack, fx.staggerDur, fx.castRefund, fx.castStack, fx.statusDur, fx.debuffDur, fx.healOut].some(v => v !== 0);
         return {
@@ -676,7 +683,7 @@ export function createHeroSystem(data) {
             hp_regen: Number(
                 (B.hp_regen_base_per_level * F.growthMult(hero.level) + f('hp_regen'))
                     .toFixed(3)),
-            cooldown_reduction: f('cooldown_reduction') + groupCdr,    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js) · 로브(R107) · 티아라 공통옵션(2026-09-18)이 여기 얹힌다
+            cooldown_reduction: f('cooldown_reduction') + groupCdr,    // 표기 쿨을 줄인다 — 시전 시점에 곱한다 (battle.js) · 로브(R107) · 투구 나태 ②(2026-10-21 R299 — ~~티아라 공통옵션~~)가 여기 얹힌다
             // 타격 회복 — 물리 경직 시간을 줄인다 (battle_design §2-3 · R110 · battle.js stagger). **비율**이다(0.5 = 50% · R111 단위 규약).
             //   출처는 갑옷 분노 칸(2026-09-18 — 첫 출처) · ⚠ 상한은 기획 미정(GAME_DESIGN §10)
             fhr: f('fhr'),

@@ -43,7 +43,6 @@ export const D = {
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
     armorGroups: null,        // armor_group.csv — {slot: {groupId: {id, slot, ko, en, classes, defMult, aspdPct, cdrPct, release}}} · 방어구 갈래 — 갑옷군 3 (2026-09-16 · R107) + 투구 3 · 장갑 2 · 신발 2 (2026-09-18)
     armorSinOptions: [],      // armor_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 방어구 죄종 칸 후보(갑옷은 죄종 계열표 · 2026-10-05) · CSV 행 순서 (2026-09-18)
-    armorCommonOptions: [],   // armor_common_option.csv — [{slot, group, family, stat, scale, min, max, perIlvl?}] · 방어구 공통옵션 후보 · CSV 행 순서 (2026-09-18)
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
     weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 본편 열 전부(staff·orb·crucifix·bible·crossbow 2026-09-14) · 확장 dagger·scythe 는 없다
@@ -62,6 +61,7 @@ export const D = {
     mineNodes: [],            // mine_node.csv — 채광의 **단계 7** [{id, tier, unlockChapter, ko, en, yieldId, yieldKo, yieldEn, yieldPerHour}] · tier 순 ⚠임시
     gatherNodes: [],          // gather_node.csv — 채집의 **단계 7** · 같은 모양이고 산출물만 약초다 (yieldKo/yieldEn) · tier 순 ⚠임시
     logNodes: [],             // log_node.csv — 벌목의 **단계 7** · 같은 모양이고 산출물만 목재다 (yieldKo/yieldEn) · tier 순 ⚠임시
+    labNodes: [],             // lab_node.csv — 연구소 **지점** [{line, node, ord, unlockRank, max, base, perLv, costGold, costMatHours, costGrowth, researchMin, researchGrowth}] · 표 순 ⚠임시 (2026-10-21 · R298)
     makeRecipes: {},          // make_recipe.csv — {part: {ore, timber, dust}} · 제작 필요량 ⚠임시 (item_design §7-1 · R96)
     potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103) · 만들 수 있는 단계는 제련소 랭크(R137)
     shrines: [],              // shrine.csv — [{id, sin, ko, en, fx:{stat: value}}] · shrine_id 로 묶음 · 첫 줄 순서 = 뽑기 순서 ⚠임시값 (base_expedition_design §1-2 · 2026-09-29)
@@ -123,9 +123,9 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'mine_node', 'hero_tier', 'monster_role', 'formation_template',
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
-    'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
+    'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -140,9 +140,9 @@ export async function loadData(base = './data/') {
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, mineNodeRow,
         heroTierRow, monsterRoleRow, formationTplRow,
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
-        armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
+        armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -184,7 +184,8 @@ export async function loadData(base = './data/') {
     D.difficultyList = difficultyTierRow.slice().sort((a, b) => a.order - b.order)
         .map(r => ({ id: r.difficulty_id, order: r.order, name: { ko: r.name_kr, en: r.name_en }, levelAdd: r.level_add, codexExp: r.codex_exp, chapterGate: r.chapter_gate,
             wearChance: r.wear_chance,       // 몬스터 선택 부위 착용 확률 — battle.js 가 읽는다 (monster_design §5-1 · R245)
-            skillSlots: r.skill_slots }));   // 몬스터 스킬 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §5-1 · R269)
+            skillSlots: r.skill_slots,       // 몬스터 스킬 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §5-1 · R269)
+            monsterDmgMult: r.monster_dmg_mult, monsterHpMult: r.monster_hp_mult }));   // 몬스터 데미지 · HP 배수 — battle.js 가 읽는다 (base_expedition_design §1-4 · R301)
     D.difficulties = indexBy(D.difficultyList, 'id');
     D.arenaTiers = arenaTierRow;   // 콜로세움 · 결투장 등급 — 원시 행 그대로 · 정렬 · 검증은 arena.js (2026-10-17 · 층 · 레이팅 2026-10-18)
     // 기본 능력치 7종 — hero.js 는 id 만 읽고, 화면은 ko/en/abbr 을 읽는다 (같은 한 줄이 둘을 먹인다)
@@ -207,22 +208,23 @@ export async function loadData(base = './data/') {
         period: r.action_period, variance: r.variance_pct, damageKind: r.damage_kind, release: r.release,
     }));
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
-    // 방어구 갈래 — **부위 → 갈래** 두 단으로 묶는다. 방어 계수 · 공속 · 쿨감을 든다 (2026-09-16 갑옷군 · R107 · 2026-09-18 투구 · 장갑 · 신발).
-    //   갈래 id 가 부위마다 겹친다(`leather` — 투구 · 장갑 · 신발) — 그래서 id 하나로 색인하지 않는다. 숙련 직업(`classes`)은 갑옷만 들고 나머지는 `-`
+    // 방어구 갈래 — **부위 → 갈래** 두 단으로 묶는다. 방어 계수 · 갑옷군 고정값(공속 · 쿨감)을 든다 (2026-09-16 갑옷군 · R107 · 2026-09-18 투구 · 장갑 · 신발).
+    //   **굴리는 고정 특성** `trait` = `{stats, scale, min, max}` [2026-10-21 · R303 · item_design §1 「10-21 방어구 개정」] — 투구 · 장갑 · 신발 갈래 · 드롭이 아이템의 `[고정]` 줄로 박는다
+    //   (`stats` 가 둘 이상이면 드롭 때 하나 · `-` 면 null). 갈래 id 가 부위마다 겹친다(`leather` — 투구 · 장갑 · 신발) — 그래서 id 하나로 색인하지 않는다. 숙련 직업(`classes`)은 갑옷만 들고 나머지는 `-`
     D.armorGroupList = armorGroupRow.map(r => ({
         id: r.group_id, slot: r.slot, ko: r.group_kr, en: r.group_en,
         classes: r.classes === '-' ? [] : String(r.classes).split('|'),
-        defMult: r.def_mult, aspdPct: r.aspd_pct, cdrPct: r.cdr_pct, release: r.release,
+        defMult: r.def_mult, aspdPct: r.aspd_pct, cdrPct: r.cdr_pct,
+        trait: r.trait_stat === '-' ? null : { stats: String(r.trait_stat).split('|'), scale: r.trait_scale, min: r.trait_min, max: r.trait_max },
+        release: r.release,
     }));
     D.armorGroups = {};
     for (const g of D.armorGroupList) (D.armorGroups[g.slot] ??= {})[g.id] = g;
-    // 방어구 옵션 표 둘 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 방어구 네 부위도 고정 1 + 죄종 칸 + 공통옵션을 받고 `affix.csv` 를 안 쓴다.
+    // 방어구 옵션 표 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 방어구 네 부위의 죄종 계열표(`affix.csv` 를 안 쓴다).
+    //   ~~공통옵션 `armor_common_option.csv`~~ 2026-10-21 R303 퇴역 — 네 부위가 계열표로 굴린다(item_design §1 「10-21 방어구 개정」).
     //   `perIlvl` 은 `band` 행만 든다(affix.csv 와 같은 규약) · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     const bandIlvl = r => (r.scale === 'band' ? { perIlvl: r.per_ilvl } : {});
     D.armorSinOptions = armorSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, option: r.option, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
-    D.armorCommonOptions = armorCommonOptionRow.map(r => ({
-        slot: r.slot, group: r.group, family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r),
-    }));
     // 반지 · 목걸이 옵션 표 셋 [2026-09-21 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 · 공통옵션 한 풀 · 목걸이 발동 조건(베이스마다).
     //   방어구 표와 같은 규약 · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     D.accessorySinOptions = accSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
@@ -297,6 +299,12 @@ export async function loadData(base = './data/') {
     D.mineNodes = tierNodes(mineNodeRow, 'mine_id', 'ore');
     D.gatherNodes = tierNodes(gatherNodeRow, 'gather_id', 'herb');
     D.logNodes = tierNodes(logNodeRow, 'log_id', 'timber');
+    // 연구소 지점 — 행 순서 그대로(같은 줄 안은 `ord` 가 화면 순서). 무엇을 미는가는 지점 id 가 정한다 — 검증은 state.js (2026-10-21 · R298 · INTERFACE §5-3)
+    D.labNodes = labNodeRow.map(r => ({
+        line: r.line, node: r.node, ord: r.ord, unlockRank: r.unlock_rank, max: r.max_lv, base: r.base, perLv: r.per_lv,
+        costGold: r.cost_gold, costMatHours: r.cost_mat_hours, costGrowth: r.cost_growth,
+        researchMin: r.research_min, researchGrowth: r.research_growth,
+    }));
     // 제작 레시피 — 부위마다 광석 · 목재 · 가루 필요량(item_design §7-1 · R96). 어느 단계의 재료인지는 레벨이 든 챕터가 정한다(state.js makeLevels · 2026-09-21)
     D.makeRecipes = Object.fromEntries(makeRecipeRow.map(r => [r.part, { ore: r.ore_units, timber: r.timber_units, dust: r.dust_units }]));
     // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
@@ -575,8 +583,8 @@ export function buildSystems(d, dev = {}) {
         upgradeChances: d.upgradeChanceRows ?? [],  // 강화 단계마다 성공 확률 (2026-10-14 · R253)
         weaponSinOptions: d.weaponSinOptions ?? [],   // 무기 죄종 계열표 (R78 · 계열표 2026-10-05 R206 — ~~통합옵션 표~~ 퇴역)
         // 발동 옵션의 스킬 풀 재료 — 직업 스킬 전부 · 풀 규칙(1티어 공격 · 버프 · 저주)은 item.js 가 든다 (2026-10-05 · R206 · INTERFACE §2-5) · 행 순서가 결정론 계약
-        procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target, armorPool: sk.armorPool })),
-        armorSinOptions: d.armorSinOptions ?? [], armorCommonOptions: d.armorCommonOptions ?? [],       // 방어구 옵션 표 둘 (2026-09-18)
+        procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target, armorPool: sk.armorPool, buffPool: sk.buffPool })),
+        armorSinOptions: d.armorSinOptions ?? [],       // 방어구 옵션 표 (2026-09-18 · ~~공통옵션~~ 2026-10-21 R303 퇴역)
         // 반지 · 목걸이 옵션 표 셋 + 발동 스킬 후보 [2026-09-21 · R127] — 후보는 `skill.csv:amulet_pool = 1` · 직업을 안 가리는 한 풀 · 행 순서가 결정론 계약
         accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],
         amuletProcs: d.amuletProcs ?? [], procSkills: skill.list.filter(sk => sk.amuletPool).map(sk => sk.id),
@@ -609,8 +617,8 @@ export function buildSystems(d, dev = {}) {
         //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스의 한 칸 더의 후보 풀(hero 와 같은 표)
         //   이고 `slots` 는 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 어휘 검증용이다 (R245)
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
-        // 런의 단이 고르는 것 — 선택 부위 착용 확률(R245) · 몬스터 스킬 칸 수(R269)
-        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, wearChance: x.wearChance, skillSlots: x.skillSlots })),
+        // 런의 단이 고르는 것 — 선택 부위 착용 확률(R245) · 몬스터 스킬 칸 수(R269) · 몬스터 데미지 · HP 배수(R301)
+        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, wearChance: x.wearChance, skillSlots: x.skillSlots, monsterDmgMult: x.monsterDmgMult, monsterHpMult: x.monsterHpMult })),
     });
     // 건설 — 표 넷이 무엇을 여는지 정하고 이 시스템은 센다 (construction_draft §11 · INTERFACE §2-14 · R137).
     //   비용이 적을 수 있는 재화 = 자원 셋 + 제작 재료(파견처 산출물 id — 공급은 파견이 한다 · 미구현)
@@ -644,6 +652,8 @@ export function buildSystems(d, dev = {}) {
         makeRecipes: d.makeRecipes ?? {}, mineNodes: d.mineNodes ?? [], logNodes: d.logNodes ?? [],
         // 연구소 생산 — 장소 = 줄 × 단계(세 표) · ~~선택 창의 담당 능력치(`hero_attribute.csv:dispatch`)~~ 는 2026-10-18 영웅 배치 삭제로 걷었다(R283)
         gatherNodes: d.gatherNodes ?? [],
+        // 연구소 지점 — 줄마다 레벨과 특징 · 연구 시간 (base_expedition_design §2-1 「지점」 · 2026-10-21 · R298)
+        labNodes: d.labNodes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)
         potions: d.potions ?? [],
         // 신단 — 이긴 칸 뒤 칸 I → II · II → III 에 하나가 선다 (base_expedition_design §1-2 · 2026-09-29)

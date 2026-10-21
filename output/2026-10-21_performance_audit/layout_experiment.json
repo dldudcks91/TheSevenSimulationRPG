@@ -1,0 +1,55 @@
+{
+  "results": [
+    {
+      "mode": "original",
+      "seconds": 10,
+      "cpuRate": 4,
+      "errors": [],
+      "metrics": {
+        "TaskDuration": 5.742738,
+        "ScriptDuration": 0.636237,
+        "LayoutDuration": 0.9152279999999999,
+        "RecalcStyleDuration": 0.8863840000000001,
+        "LayoutCount": 390,
+        "RecalcStyleCount": 472
+      }
+    },
+    {
+      "mode": "transform_experiment",
+      "seconds": 10,
+      "cpuRate": 4,
+      "errors": [],
+      "metrics": {
+        "TaskDuration": 3.271706,
+        "ScriptDuration": 0.437418,
+        "LayoutDuration": 0.154215,
+        "RecalcStyleDuration": 0.723416,
+        "LayoutCount": 138,
+        "RecalcStyleCount": 419
+      }
+    }
+  ],
+  "minigame": {
+    "mine": {
+      "meanMs": 0.02019999998807907,
+      "inputs": 42,
+      "spawns": 51,
+      "plants": null,
+      "segs": null
+    },
+    "gather": {
+      "meanMs": 0.0022000000476837156,
+      "inputs": 0,
+      "spawns": null,
+      "plants": 12,
+      "segs": null
+    },
+    "log": {
+      "meanMs": 0.0012999999523162842,
+      "inputs": 0,
+      "spawns": null,
+      "plants": null,
+      "segs": 40
+    }
+  }
+}

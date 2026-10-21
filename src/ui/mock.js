@@ -65,7 +65,7 @@ export const SINS = {
    `src/data/skill_tag.csv`(14행 — 2026-09-08 오오라 추가)로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
 
 // 매직~유니크는 equip_rarity_config.csv 의 color_hex 그대로 — **5단계** [일반 신설 2026-09-14 · 사용자 확정 · R86]
-// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · ~~랜덤옵션은 붙는다~~ 고정 옵션 한 줄(2026-10-18 · R285) · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
+// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · ~~랜덤옵션은 붙는다~~ ~~고정 옵션 한 줄(2026-10-18 · R285)~~ 고정 옵션 + 랜덤 줄(2026-10-21 · R297) · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
 // 통제 가능성의 계단: 일반(죄종 없음) → 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(매직 + 전용 옵션 하나 — 2026-09-15 · ~~낙인으로 죄종 지정~~) → 유니크(고정)
 export const RARITY = {
     normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
@@ -136,6 +136,10 @@ export const AFFIX_LABELS = {
     fhr: { ko: '타격 회복', en: 'Hit Recovery', fmt: 'pct' },
     cooldown_reduction: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'pct' },
     hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', fmt: 'pct' },
+    kill_heal_pct: { ko: '처치 시 체력 회복', en: 'Heal on Kill', fmt: 'pct' },   // 처치마다 최대 HP × 값 — 투구 · 장갑 색욕 ① (2026-10-21 · R299)
+    start_gauge_pct: { ko: '전투 시작 시 행동 게이지', en: 'Action Gauge at Battle Start', fmt: 'pct' },   // 가죽 신발 특성 — 빈 게이지를 그만큼 채운 채 출발 (R303)
+    cull_normal_pct: { ko: '일반몹 처형', en: 'Culling Strike (Normal)', fmt: 'pct' },   // 장갑 폭식 ② — 직격 뒤 일반 몬스터 체력이 이 비율 이하면 쓰러뜨린다 (R303)
+    res_all_per_level: { ko: '레벨당 모든 원소 저항', en: 'All Resist per Level', fmt: 'pct' },   // 신발 오만 (R303)
     def_per_level: { ko: '레벨당 물리 방어', en: 'Physical Defense per Level', fmt: 'n' },
     hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', fmt: 'n' },
     aspd_per_level_pct: { ko: '레벨당 공격 속도', en: 'Attack Speed per Level', fmt: 'pct' },
@@ -671,6 +675,8 @@ export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
 /** 연구소 줄 아이콘 — `src/assets/art/icons/lab/<줄 id>.webp`(`mine` · `gather` · `log`) · 탐험 지점 아이콘과 같은 둥근 그림 원판(Codex · ADR-0669) */
 export const LAB_ICON_DIR = './assets/art/icons/lab/';
 export const labIcon = post => LAB_ICON_DIR + post + ICON_EXT;
+/** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp` · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · R298) */
+export const labNodeIcon = node => `${LAB_ICON_DIR}node/${node}${ICON_EXT}`;
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
@@ -893,7 +899,7 @@ export const RES_ART = {
  * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만. 무엇을 받는지는 배당표가 읽힌다.
  * ~~`slotArt`~~ 는 장비 빈 칸 그림이 이미 쓰는 이름이다
  */
-const GAMBLE_ART_DIR = './assets/art/icons/gamble/';
+export const GAMBLE_ART_DIR = './assets/art/icons/gamble/';
 export const gambleArt = id => `<img class="gb-ico" src="${GAMBLE_ART_DIR}${id}${ICON_EXT}" alt="" draggable="false">`;
 
 /**

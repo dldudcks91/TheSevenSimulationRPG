@@ -107,8 +107,8 @@ const MATERIAL_KINDS = Object.freeze(['ore', 'timber', 'herb']);
  *   classSkills {classId: [skillId]} — 보스의 한 칸 더의 후보 풀. item·hero 에 넘기는 **같은 표**다 (신설 2026-09-11 R79 · ⚠ 보스마다 정한 고유 스킬이 서기 전의 임시 · R269),
  *   slots [partId] — 장비 부위 어휘. 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 검증에만 쓴다 (신설 2026-09-11 R79 · 개정 2026-10-12 R245),
  *   levelXp [{level, monsterXp}] — `level_xp.csv`. 몬스터 레벨 → 처치 XP 기준값 (신설 2026-09-28 · 1 ~ 만렙을 덮어야 한다),
- *   difficulties [{id, wearChance, skillSlots}] — `difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
- *     몬스터 **스킬 칸 수**(난이도가 연다 — 노말 1 · 나이트메어 2 · 헬 3 · 없으면 1 · 2026-10-18 R269),
+ *   difficulties [{id, wearChance, skillSlots, monsterDmgMult, monsterHpMult}] — `difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
+ *     몬스터 **스킬 칸 수**(난이도가 연다 — 노말 1 · 나이트메어 2 · 헬 3 · 없으면 1 · 2026-10-18 R269), 몬스터 **데미지 · HP 배수**(전역 배율 위에 곱한다 · 없으면 1 · 2026-10-21 R301),
  *   monsterRoles {role: {rank}} — `monster_role.csv`. **적의 자리**를 정한다 (진형 확정 2026-09-09).
  *     모르는 역할은 **전열(0)** 로 떨어뜨린다 — 빠뜨린 몬스터가 뒤에 숨어 무적이 되는 것보다 앞에 서는 편이 안전하다
  */
@@ -127,6 +127,24 @@ export function createBattleSystem(data) {
     const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
+    /** 지금 값 자르기 — 소수 4자리 (INTERFACE §5-3 · R305). 괄호를 나눴다 곱한 공격력의 ULP 꼬리가 창 없이도 바뀐 것으로 읽히지 않게 · 표시값이라 전투는 안 읽는다 */
+    const r4 = v => (Number.isFinite(v) ? Math.round(v * 1e4) / 1e4 : v);
+    /**
+     * 유닛의 지금 값 — **세부 옵션 줄 id** 로 [2026-10-21 · R305 · INTERFACE §2-6 `stat` · SCREEN_DESIGN §2 「유닛 툴팁 규격」].
+     *   창 · 겹 · 깎인 방어 · 갈아입기가 민 뒤의 유닛 필드를 그대로 옮긴다(계산 없음). 공격력 두 줄은 그 유닛의 시트에 선 쪽(`liveAtk`)만 범위이고
+     *   다른 쪽은 `null`(시트에 없는 줄 — 갈아입어 무기 종류가 바뀌면 옛 줄이 `null` 로 간다) · 받는 회복(`recv`)은 시트의 `option_fx.recv` 자리다
+     */
+    const liveRows = u => {
+        const atk = { min: r4(u.atkMin), max: r4(u.atkMax) };
+        return {
+            atk_physical: u.liveAtk === 'atk_physical' ? atk : null, atk_magic: u.liveAtk === 'atk_magic' ? atk : null,
+            action_period: r4(u.period), hp_max: u.hpMax, defense: r4(u.def), damage_reduction: r4(u.dr),
+            res_fire: r4(u.res.fire), res_cold: r4(u.res.cold), res_lightning: r4(u.res.lightning), res_poison: r4(u.res.poison),
+            hp_regen: r4(u.regen), cooldown_reduction: r4(u.cdr), recv: r4(u.recv),
+        };
+    };
+    /** 두 줄 값이 같은가 — 범위(`{min, max}`)는 양끝 · 나머지는 `Object.is`(값이 없는 줄끼리도 같다) */
+    const sameRow = (a, b) => (a && typeof a === 'object' ? a.min === b?.min && a.max === b?.max : Object.is(a, b));
     /**
      * 무기 판정 [2026-09-29 · R187 · 개정 2026-10-03 · R204 · skill_design §2-2] — **무기의 힘을 끌어다 쓰는 스킬**(타격 · 회복 · 소환)은
      *   칸을 가리지 않고 그 스킬 직업의 무기군을 들어야 나간다 · 걸린 효과만 거는 스킬은 무기를 안 본다(규칙은 `skill.fitsWeapon` 하나).
@@ -173,6 +191,12 @@ export function createBattleSystem(data) {
      *   2칸은 영웅의 **배운 칸 자리**(`bookSkill` · source `book`)로 넘긴다 — 칸 순서 · 특정 스킬 +n 이 영웅과 같은 길을 탄다. 스폰 · 출정 창 · 획득처가 이 하나를 본다 · rng 0
      */
     const slotsOf = diff => diffOf(diff)?.skillSlots ?? 1;
+    /**
+     * 몬스터 데미지 · HP 배수 — **난이도 단이 든다** [2026-10-21 · R301 · base_expedition_design §1-4] `[difficulty_tier.csv:monster_dmg_mult · monster_hp_mult]`.
+     *   전역 배율(`monster_atk_scale` · `monster_hp_scale`) 위에 곱한다 · 표가 없는 조립은 1 · rng 0
+     */
+    const dmgMultOf = diff => diffOf(diff)?.monsterDmgMult ?? 1;
+    const hpMultOf = diff => diffOf(diff)?.monsterHpMult ?? 1;
     const slotPlan = (m, g, diff) => ({
         innate: m.innate_skill,
         second: slotsOf(diff) >= 2 && m.nightmare_skill && m.nightmare_skill !== '-' ? m.nightmare_skill : null,
@@ -268,6 +292,9 @@ export function createBattleSystem(data) {
                 throw new Error(`battle: 난이도 ${d.id} 의 wear_chance '${d.wearChance}' — 0 ~ 1 이어야 한다 (difficulty_tier.csv)`);
             if (!(Number.isInteger(d.skillSlots) && d.skillSlots >= 1))
                 throw new Error(`battle: 난이도 ${d.id} 의 skill_slots '${d.skillSlots}' — 1 이상 정수여야 한다 (difficulty_tier.csv · R269)`);
+            for (const [k, col] of [['monsterDmgMult', 'monster_dmg_mult'], ['monsterHpMult', 'monster_hp_mult']])
+                if (d[k] !== undefined && !(typeof d[k] === 'number' && d[k] > 0))
+                    throw new Error(`battle: 난이도 ${d.id} 의 ${col} '${d[k]}' — 양수여야 한다 (difficulty_tier.csv · R301)`);
         }
     }
 
@@ -404,7 +431,7 @@ export function createBattleSystem(data) {
         const atkPct = c.atk_pct_sum ?? 0;
         const matk = c.atk_magic ?? NO_DMG;
         const bracket = 1 + atkPct;                  // Σ 상시 피해는 비율 (R111)
-        return {
+        const u = {
             side,
             hp: c.hp_max, hpMax: c.hp_max,
             atkMin: atk.min, atkMax: atk.max, atkMinBase: atk.min / bracket, atkMaxBase: atk.max / bracket, atkPct,
@@ -416,6 +443,8 @@ export function createBattleSystem(data) {
             matkMin: matk.min, matkMax: matk.max,    // 회복량의 밑수 — 시전마다 그 사이를 굴린다 (battle_design §9-1 · skill_runtime.castHeal)
             // 회복 밑수도 공격력과 **같은 괄호**를 탄다 — atk_pct 창이 여기도 걸린다 (skill_effects:EFFECTS.atk_pct)
             matkMinBase: matk.min / bracket, matkMaxBase: matk.max / bracket,
+            // 세부 옵션의 공격력 줄 — 시트에 선 쪽 하나(물리 무기 = 물리 · 마법 무기 = 마법) · `stat` 이벤트가 그 줄 id 로 싣는다 (R305). 갈아입으면 따라 바뀐다
+            liveAtk: c.atk_physical ? 'atk_physical' : c.atk_magic ? 'atk_magic' : null,
             atkType: c.attack_type,                  // 평타의 공격 타입 — 언제나 physical (2026-10-02 · R198 · battle_design §2-1). 원소는 스킬 타격이 얹는다(`strikeOnce`)
             // 평타를 안 친다 — 마법 무기 [2026-10-02 · R198 · battle_design §3]. 차례에 준비된 스킬이 없으면 찬 채로 기다린다(틱 루프) · 반격도 없다.
             //   `basic_attack` 을 모르는 입력(소환 · 손으로 만든 검증 유닛)은 평타를 친다
@@ -439,6 +468,8 @@ export function createBattleSystem(data) {
             resMaxEl: c.res_max_el ?? null, drFlat: c.option_fx?.drFlat ?? 0,
             // 받는 회복 — `recvBase` = 장비의 체력 회복 +% · `recv` = 화상이 민 파생값(skill_effects `ATTRS` · 2026-09-28 R178). 창이 없으면 둘이 같다
             counter: c.option_fx?.counter ?? 0, recv: c.option_fx?.recv ?? 0, recvBase: c.option_fx?.recv ?? 0,
+            // 처치 시 체력 회복(비율 · 투구 색욕 ① · 2026-10-21 R299) — `killHeal` 이 처치마다 최대 HP × 이 값을 회복한다. 없으면 0
+            killHeal: c.option_fx?.killHeal ?? 0,
             defIgnore: c.def_ignore, resReduction: c.res_reduction,
             // 반지 · 목걸이 옵션 [2026-09-21 · R127] — 원소별 저항 무시(`strike` 가 그 타격 원소만 읽는다) · 버프 지속시간(`castBuff` 가 거는 쪽 값을 읽는다). 없으면 null · 0
             resReductionEl: c.res_reduction_el ?? null, buffDur: c.option_fx?.buffDur ?? 0,
@@ -487,16 +518,19 @@ export function createBattleSystem(data) {
             statMult: 1, condPct: 0, procChance: 0, procMult: 0,
             ...extra,
         };
+        // 지난번에 알린 지금 값 [R305 · INTERFACE §2-6 `stat`] — 처음 = 이 유닛을 만든 시트 그대로(창이 아직 없다). 갈아입어도 잇는다(`REFIT_FIELDS` 밖) · 소환물은 안 센다
+        u.shown = u.summon ? null : liveRows(u);
+        return u;
     }
 
     /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
     const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType', 'noBasic', 'sureHit',
-        'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'defIgnore', 'resReduction',
+        'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'killHeal', 'defIgnore', 'resReduction',
         'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur',
         'staggerDur', 'castRefund', 'castStack', 'statusDur', 'debuffDur', 'healOut',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'cdrBase', 'period', 'basePeriod', 'fhr',
-        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtick'];
+        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtick', 'liveAtk'];
 
     /**
      * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
@@ -538,7 +572,7 @@ export function createBattleSystem(data) {
      *   `crit_rate`·`hp_regen` 을 0 으로 덮지 않는다. 마법 무기를 낀 몬스터는 `atk_magic`(= matkMin·matkMax)을 갖는다(monster_design §5-1 이 인정).
      * 보상 축(경험치·골드·드롭 배율)은 영웅에게 없는 필드라 등급에서 따로 얹는다.
      * @param gear 그 몬스터가 **입고 있는** 아이템 배열 (`item.rollGear` 결과). 비면 맨몸이다 — 검증에서 한 마리만 만들 때 쓴다
-     * @param extra `thirdSkill`(보스의 한 칸 더 — 스폰 굴림) · `difficulty`(그 런의 단 — 스킬 칸 수 · R269)는 여기서 꺼내 스킬 칸으로 보내고 나머지는 유닛에 그대로 얹는다
+     * @param extra `thirdSkill`(보스의 한 칸 더 — 스폰 굴림) · `difficulty`(그 런의 단 — 스킬 칸 수 R269 · 몬스터 데미지 · HP 배수 R301)는 여기서 꺼내 쓰고 나머지는 유닛에 그대로 얹는다
      */
     function makeEnemy(key, monsterId, grade, lvl, gear = [], extra = {}) {
         const m = data.monsters[monsterId];
@@ -555,10 +589,11 @@ export function createBattleSystem(data) {
         const c = HS.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill, hpBase: B.monster_hp_base }, gear);
         c.defense += m.defense;                                             // ①
         for (const el of ELEMENTS) c[`res_${el}`] += m[`res_${el}`];        // ①
-        c.hp_max = Math.round(c.hp_max * g.hp_mult * B.monster_hp_scale);   // ②
-        // 공격력은 범위다 — 전역 배율은 양끝에 같이 곱한다 (R90)
+        c.hp_max = Math.round(c.hp_max * g.hp_mult * B.monster_hp_scale * hpMultOf(difficulty));   // ② · 그 런 단의 배수 (R301)
+        // 공격력은 범위다 — 전역 배율 · 단의 배수는 양끝에 같이 곱한다 (R90 · R301)
+        const dmgScale = B.monster_atk_scale * dmgMultOf(difficulty);
         for (const k of ['atk_physical', 'atk_magic']) {
-            if (c[k] !== undefined) c[k] = { min: c[k].min * B.monster_atk_scale, max: c[k].max * B.monster_atk_scale };
+            if (c[k] !== undefined) c[k] = { min: c[k].min * dmgScale, max: c[k].max * dmgScale };
         }
         c.defense *= B.monster_def_scale;
         // 능력치 계수는 **영웅과 같다** [2026-09-22 사용자 — 보류 해제 · battle_design §9-2] — 평타는 `computeCombat` 이 낸
@@ -654,8 +689,9 @@ export function createBattleSystem(data) {
         //   **무리와 함께 서는 소환사**(`standing` · 1-1 · 2026-10-21)는 대기를 안 만든다 — 채운 몫까지 라운드 시작에 선다 · 굴림은 같다
         const waits = () => specs.some(s => draw.summoners.has(s.id) && !draw.standing.has(s.id));
         const add = (id, grade, extra) => specs.push({ id, grade, extra, reserve: waits() });
+        const usable = ids => (called() ? ids.filter(id => !draw.summoners.has(id)) : ids);
         const pick = (ids = draw.roundPool) => {
-            const from = called() ? ids.filter(id => !draw.summoners.has(id)) : ids;
+            const from = usable(ids);
             return from[Math.floor(rng() * from.length)];
         };
         const between = (lo, hi) => lo + Math.floor(rng() * (hi - lo + 1));
@@ -672,7 +708,16 @@ export function createBattleSystem(data) {
                 add(pick(draw.elitePool), 'elite', { sin, traits: [data.sinTraits[sin], ...pickTwo(rng, data.commonTraits)] });
             }
             const normals = between(bd.normal_min, bd.normal_max);
-            for (let i = 0; i < normals; i++) add(pick(), 'normal');
+            // 반대 줄 보장 [2026-10-21 · R304 · 사용자 지시] — 정예가 섰으면 정예와 반대 줄(`monster_role.csv:rank`)이 하나는 선다:
+            //   마지막 한 마리까지 반대 줄이 없으면 그 한 마리는 반대 줄 후보에서 뽑는다(굴림 1회 그대로).
+            //   라운드 풀에 반대 줄이 없는 장소(5-4 — 「앞줄이 없는 판」 · 6-3 · 7-1 · 7-2)는 라운드 풀 그대로다
+            const rankOf = id => rankOfRole(data.monsters[id].role);
+            const elite = specs.find(s => s.grade === 'elite');
+            const across = elite ? draw.roundPool.filter(id => rankOf(id) !== rankOf(elite.id)) : [];
+            for (let i = 0; i < normals; i++) {
+                const owed = elite && i === normals - 1 && !specs.some(s => rankOf(s.id) !== rankOf(elite.id));
+                add(pick(owed && usable(across).length ? across : undefined), 'normal');
+            }
         }
         // 소환 — 소환사가 섰으면 라운드를 상한 [balance.csv:wave_monster_max] 까지 채운다 · 채움마다 1회 (INTERFACE §5-2).
         //   소환사 뒤의 몫은 **대기**다(`add`) — 장비는 아래 2단에서 다른 유닛과 같은 순서로 굴리고(편성 수열 불변) 서는 것만 불러내기가 한다
@@ -762,6 +807,23 @@ export function createBattleSystem(data) {
             }))(fitterOf(p.weaponGroup)),
         }));
         /*
+         * 전투 시작 시 행동 게이지 +% [2026-10-21 · 사용자 · R303 · item_design §1 「10-21 방어구 개정」 — 가죽 신발 특성 · battle_design §6] —
+         *   빈 채로 출발하는 게이지(R200)를 그 비율만큼 채운 채 세운다: 남은 시간(`next`)을 `값 × 주기` 만큼 당기고, 재생기가 보는 시작 시각(`fillAt`)도 같이 당긴다.
+         *   **상한은 한 바퀴 직전까지**(사용자 10-21) — 남은 시간이 한 틱 아래로는 안 줄어 시작과 동시에 행동하지 않는다 · 마법 무기는 다음 칸이 차는 게이지에 같다.
+         *   부르는 자리 — 파티: 전투 시작(여기) + 원정은 라운드가 바뀔 때마다(`beginRound` · 차 있던 게이지에 더한다) / 적: 등장한 라운드에 한 번(`beginRound`).
+         *   결투장은 한 판이 한 라운드라 시작 한 번이다. 당긴 초를 돌려준다 · rng 0
+         */
+        const primeGauge = u => {
+            const g = u.fx?.startGauge ?? 0;
+            if (!(g > 0) || u.hp <= 0 || u.summon) return 0;
+            const shift = Math.min(g * u.period, u.next - TICK);
+            if (!(shift > 0)) return 0;
+            u.next -= shift;
+            u.fillAt -= shift;
+            return shift;
+        };
+        for (const p of party) primeGauge(p);
+        /*
          * 오오라 — **쿨 없이 상시이고 행동을 안 먹는다** (skill_design §1-5). 그래서 액티브 칸에서 빼고
          *   전투 시작에 `until: Infinity` 창으로 건다: 창 만료가 영원히 안 걸리므로 상시가 되고,
          *   `pickReady` 가 안 보므로 차례를 안 먹는다.
@@ -782,6 +844,7 @@ export function createBattleSystem(data) {
                 // **꺼진 오오라는 안 켠다** [2026-09-29 · R187] — 무기가 안 맞는 칸(`off`)이다 — 오오라는 걸린 효과만 걸어 지금은 무기를 안 보므로(R204) 꺼질 일이 없다. 칸에서 빼는 것은 켜진 오오라와 같다
                 const aura = p.actives.find(a => a.def.cast === 'aura' && !a.off) ?? null;
                 p.slotIds = p.actives.map(a => a.id);
+                p.slotUps = p.actives.map(a => a.def.up ?? 0);   // 그 칸들의 레벨 — 빼기 전 칸 순서 그대로 (R302 · `slotView` 가 읽는다)
                 p.auraOn = aura?.id ?? null;
                 p.aura = aura;   // 켠 오오라 칸 — 칸에서 빠지므로 따로 든다. 쓰러졌다 되살아나거나 같은 창을 나눠 쓰던 시전자가 쓰러지면 이것으로 다시 건다 (R287)
                 p.actives = p.actives.filter(a => a.def.cast !== 'aura');
@@ -830,7 +893,7 @@ export function createBattleSystem(data) {
         // 타격 시 창 길이 + 방어력 감소 겹의 상한(무기 시기 ② · 2026-10-05 R206) — `weaponOnHit` 가 읽는다
         const windowSec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec, stackMax: B.weapon_def_down_stack_max };
 
-        /** 칸 표시값 [2026-09-15 · R98 · INTERFACE §2-6] — 칸 순서 그대로의 스킬 id(`actives`)와 첫 준비 시각(`ready`).
+        /** 칸 표시값 [2026-09-15 · R98 · INTERFACE §2-6] — 칸 순서 그대로의 스킬 id(`actives`)와 첫 준비 시각(`ready`) · 칸 레벨(`up` — R302).
          *  오오라도 제 칸에 선다: 켜진 오오라 `0`(쿨이 없다) · 안 켜진 오오라 `null`. 결과 `party[]` · `round` · `refit` 이 같이 쓴다 · 전투는 안 읽는다 */
         const slotView = u => {
             const ids = u.slotIds ?? u.actives.map(a => a.id);
@@ -846,7 +909,11 @@ export function createBattleSystem(data) {
                 }
                 return id === u.auraOn ? 0 : null;
             });
-            return { actives: ids, ready };
+            // 칸 레벨 [2026-10-21 · R302 · ADR-0701] — 쌓은 단계(`skill.resolve` 가 정의에 얹은 `def.up` · 칸 순서 · 오오라 칸도 제 자리).
+            //   **오른 칸이 하나라도 있을 때만** 단다 — 안 오른 유닛의 기록은 그대로다. 몬스터도 낀 장비의 특정 스킬 +n 이 고유 · 2칸을 올리면 단다(R225) —
+            //   `round` 적은 타임라인 안이라 그런 판은 골든 지문(`tl`)이 바뀐다(승패 · 보상은 그대로). 재생기의 `Lv.n` 과 관전 스킬 설명창 숫자가 읽는다 · 전투는 안 읽는다 · rng 0
+            const ups = u.slotUps ?? u.actives.map(a => a.def.up ?? 0);
+            return ups.some(n => n > 0) ? { actives: ids, ready, up: ups } : { actives: ids, ready };
         };
         /**
          * 적 하나의 표시값 — `round` 의 `enemies` 와 `call` 의 `units` 가 **같은 모양**을 쓴다 (INTERFACE §2-6 · 불러내기 2026-09-18).
@@ -1050,9 +1117,14 @@ export function createBattleSystem(data) {
                 e.next = e.period + lag;
                 e.fillAt = t + lag;
             }
+            // 전투 시작 시 행동 게이지 +%(R303 · 위 `primeGauge`) — 적은 등장한 라운드가 곧 시작이라 여기서 한 번(`fillAt` 이 `round` 이벤트에 실린다) ·
+            //   파티는 **원정의 라운드가 바뀔 때마다** 차 있던 게이지에 더한다 — 당긴 초를 `round` 이벤트의 `pg` 로 재생기에 넘긴다(첫 라운드는 전투 시작이 이미 채웠다) · rng 0
+            for (const e of units.enemies) primeGauge(e);
+            const pg = {};
+            if (round > 1) for (const p of party) { const s = primeGauge(p); if (s) pg[p.key] = r1(s); }
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
             out.rounds.push(roundLog);
-            timeline.push({ t: r1(t), e: 'round', n: round, kind: sp.type, enemies: units.enemies.map(enemyView) });
+            timeline.push({ t: r1(t), e: 'round', n: round, kind: sp.type, enemies: units.enemies.map(enemyView), ...(Object.keys(pg).length ? { pg } : {}) });
             // 오오라 창 이벤트 [2026-09-15 · R98] — `round` 바로 뒤 · 파티 몫(전투 시작 · 갈아입기) 먼저, 이 라운드 적의 것 다음.
             //   창은 이미 걸려 있다 — 이벤트만 낸다(rng 0 · 전투 결과 불변)
             for (const ev of [...auraQueue.splice(0), ...enemyAuras]) timeline.push({ t: r1(t), ...ev });
@@ -1134,8 +1206,24 @@ export function createBattleSystem(data) {
             noteTaken(d, a, dmg);
             if (d.hp <= 0) {
                 if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1;
+                killHeal(a, d);
                 downed(d);
             }
+        };
+
+        /**
+         * 처치 시 체력 회복 [2026-10-21 · 사용자 · R299 · item_design §1 「10-21 투구 개정」 — 투구 색욕 ①] — 상대 편 유닛을 쓰러뜨린 쪽이
+         *   **제 최대 HP × 값 × (1 + 체력 회복 +%)** 를 회복한다(반올림은 흡혈과 같은 `F.leech`). 처치가 아닌 쓰러짐은 안 센다 —
+         *   소환 벽 · 되살아난 무리의 두 번째 쓰러짐(보상 규칙과 같다 · 그래서 `downed` **앞**에서 부른다 — `rewarded` 가 거기서 선다).
+         *   직격 · 반사 · 비직격 · 중독 · 오오라 피해 — 처치를 세는 자리 모두가 부른다 · 몬스터도 든다(입은 투구대로) · 쓰러진 쪽이 나를 쓰러뜨려도(반사) 산 쪽만.
+         *   이벤트는 `regen` 이다(조용히 오른다 — 흡혈처럼 팝업 없음 · INTERFACE §2-6) · rng 0
+         */
+        const killHeal = (a, d) => {
+            if (!a || !(a.killHeal > 0) || a.hp <= 0 || a.side === d.side || d.summon || d.rewarded) return;
+            const amt = Math.min(a.hpMax - a.hp, F.leech(a.hpMax, a.killHeal, a.recv));
+            if (!(amt > 0)) return;
+            a.hp += amt;
+            timeline.push({ t: r1(t), e: 'regen', u: a.key, amt, dhp: a.hp });
         };
 
         const downed = u => {
@@ -1389,6 +1477,7 @@ export function createBattleSystem(data) {
             noteTaken(u, src, dmg);
             if (u.hp <= 0) {
                 if (ca && u.side !== 'party' && !u.summon && !u.rewarded) ca.kills += 1;
+                killHeal(src, u);
                 downed(u);
             }
         }
@@ -1420,6 +1509,7 @@ export function createBattleSystem(data) {
                 noteTaken(d, u, dmg);
                 if (d.hp <= 0) {
                     if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1;
+                    killHeal(u, d);
                     downed(d);
                 }
                 if (u.hp <= 0) break;
@@ -1573,7 +1663,14 @@ export function createBattleSystem(data) {
             const total = dmg + cb;
             const hpBefore = target.hp;
             applyDamage(target, total);
-            // 기여 — **감쇠 후 최종 피해**를 센다. 배리어가 먹은 몫도 포함이라 관전의 누적 데미지 판과 같은 값이다
+            // 일반몹 처형 [2026-10-21 · R303 · 장갑 폭식 ② · item_design §1 「10-21 방어구 개정」 — 정의는 10-08 대화] — 이 직격이 맞은 뒤 **등급 「일반」 몬스터**의 체력이
+            //   최대 HP × 값 이하면 그 자리에서 쓰러뜨린다 — 남은 체력이 `ev.cull` 이고 아래 처치 판정이 그대로 센다(기여 · 처치 시 회복 · 보상).
+            //   영웅(결투장 상대 포함) · 정예 · 보스 · 소환은 아니다 · 도트 · 반사 · 비직격은 안 건다 · rng 0
+            const cullR = fx?.cullNormal ?? 0;
+            const cull = cullR > 0 && target.hp > 0 && target.grade === 'normal' && !target.hero && !target.summon && target.side !== u.side
+                && target.hp <= target.hpMax * cullR ? target.hp : 0;
+            if (cull) target.hp = 0;
+            // 기여 — **감쇠 후 최종 피해**를 센다. 배리어가 먹은 몫도 포함이라 관전의 누적 데미지 판과 같은 값이다(처형으로 지운 체력은 안 센다)
             const cA = credit(u), cD = credit(target);
             if (cA) cA.dealt += total;
             if (cD) cD.taken += total;
@@ -1581,6 +1678,7 @@ export function createBattleSystem(data) {
             // `ty` — 그 타격의 피해 종류(`hitType`). 표시용이다 — 관전 로그가 피해 숫자를 종류 색으로 칠한다 (INTERFACE §2-6 · SCREEN_DESIGN §4-2)
             const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: total, crit, dhp: target.hp, ty: hitType };
             if (cb) ev.cb = cb;                              // 강타 몫 — 강타가 들어간 타격에만 키가 선다(`dmg` 는 합 · 흡혈 · 반사는 강타 몫을 안 먹는다)
+            if (cull) ev.cull = cull;                        // 처형으로 지운 체력 — 처형이 터진 타격에만 키가 선다(`dmg` 에는 안 든다 · R303)
             // 흡혈 — 직격의 최종 피해에만 비례 (§9-6). 배리어가 먹은 몫도 포함한다 (직격이 들어간 사실은 같다)
             //   마스터리 조건부 흡혈(색욕 T2-3 · 2026-10-05)은 그 타격의 흡혈에 더한다
             const ls = (u.ls ?? 0) + (ma?.sum.life_steal ?? 0);
@@ -1630,11 +1728,12 @@ export function createBattleSystem(data) {
                 if (cD) cD.dealt += back;                       // 반사도 **가한 피해**다 — 때린 쪽이 아니라 되받은 쪽의 몫
                 if (cA) cA.taken += back;
                 noteTaken(u, target, back);
-                if (u.hp <= 0) { if (cD && u.side !== 'party' && !u.rewarded) cD.kills += 1; downed(u); }
+                if (u.hp <= 0) { if (cD && u.side !== 'party' && !u.rewarded) cD.kills += 1; killHeal(target, u); downed(u); }
             }
             if (target.hp <= 0) {
                 // **적을 쓰러뜨린 것**만 센다 — 적의 소환 벽은 몬스터가 아니다 (R79) · 되살아난 무리의 두 번째 쓰러짐도 처치가 아니다(보상과 같은 규칙 · 2026-09-18)
                 if (cA && target.side !== 'party' && !target.summon && !target.rewarded) cA.kills += 1;
+                killHeal(u, target);
                 downed(target);
                 hooks.emit('kill', u, { t, d: target });
             }
@@ -1741,6 +1840,7 @@ export function createBattleSystem(data) {
                 });
                 // 칸 표시도 새로 잰다 — 새 칸에 오오라가 있으면 아래 `applyAuras` 가 다시 남긴다 (R98)
                 u.slotIds = null;
+                u.slotUps = null;
                 u.auraOn = null;
                 u.aura = null;   // 새 칸에 오오라가 없으면 비운 채 남는다 — 쓰러질 때 낡은 오오라를 다시 걸지 않게 (R287)
                 // 오오라는 다시 건다 — 이 영웅이 건 상시 창(`until: Infinity`)을 먼저 걷는다
@@ -1841,6 +1941,17 @@ export function createBattleSystem(data) {
                         u.next = u.period;
                         rt.act(u, t);
                     }
+                }
+                // 지금 값 — 행동 처리 **뒤** · 전멸 · 클리어 판정 **앞** [2026-10-21 · R305 · INTERFACE §2-6 `stat`]. 지난번에 알린 값과 달라진 줄만 싣는다 —
+                //   이벤트를 안 내는 창(무기 옵션 · 겹)과 깎인 방어 · 갈아입기까지 한 자리에서 잡는다. 표시값이라 전투는 안 읽는다 · rng 0
+                for (const u of [...party, ...units.enemies]) {
+                    if (u.hp <= 0 || !u.shown) continue;
+                    const now = liveRows(u);
+                    let v = null;
+                    for (const k of Object.keys(now)) if (!sameRow(now[k], u.shown[k])) (v ??= {})[k] = now[k];
+                    if (!v) continue;
+                    u.shown = now;
+                    timeline.push({ t: r1(t), e: 'stat', u: u.key, v });
                 }
                 // 귀환 룰 [개정 2026-09-03 — base_expedition_design §1-1] — **전멸일 때만 돌아온다.**
                 // 하나가 쓰러져도 런을 접지 않고 남은 인원으로 계속 간다. 쓰러진 영웅은 `out.downed` 에 실려

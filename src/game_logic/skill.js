@@ -57,6 +57,7 @@
 
 import { ELEMENTS } from './hero.js';
 import { createFormula, FIXED_DMG } from './formula.js';
+import { cooldownSec } from './skill_runtime.js';
 import {
     CASTS, CAST_IDS, EVENT_IDS, EFFECT_TYPES, TARGETS, ATTACK_TARGETS, HIT_DECAY, PICK_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS, AILMENTS, AILMENT_IDS,
 } from './skill_effects.js';
@@ -192,6 +193,8 @@ export function createSkillSystem(data) {
         starterPool: row.starter_pool === 1,
         // 갑옷 특정 스킬 +n 후보인가 — 방어 관련 기본 스킬 [2026-10-08 · R225 · item_design §1 「10-07 옵션 개정」] — 풀은 `item.js` 가 갑옷군 직업으로 좁힌다
         armorPool: row.armor_pool === 1,
+        // 버프 풀 — 투구 특정 스킬 +n 후보 [2026-10-21 · R299 · skill_design §11-5] — 다른 아군에게 거는 것 · 자기 공격 강화 · 회복. 직업 · 갈래를 안 가린다
+        buffPool: row.buff_pool === 1,
         // 직업 스킬의 티어 1 · 2 · 3 [2026-10-02 · skill_design §12-10] — 표시 전용(도감) · 직업 밖은 `-` → null
         tier: dash(row.tier ?? '-'),
         note: row.note,
@@ -331,6 +334,9 @@ export function createSkillSystem(data) {
         // 갑옷 특정 스킬 +n 후보 [2026-10-08 · R225] — 0/1 · **기본 스킬(직업 스킬)만** — 풀은 직업 스킬만 읽어 다른 행의 1 은 조용히 버려진다
         if (row.armor_pool !== 0 && row.armor_pool !== 1) bad(`armor_pool ${row.armor_pool} — 0 또는 1`);
         if (row.armor_pool === 1 && d.ownerKind !== 'job') bad(`armor_pool 1 인데 owner_kind ${d.ownerKind} — 특정 스킬 +n 은 기본 스킬만`);
+        // 투구 특정 스킬 +n 후보(버프 풀) [2026-10-21 · R299] — 같은 규칙 · 0/1 · 기본 스킬만
+        if (row.buff_pool !== 0 && row.buff_pool !== 1) bad(`buff_pool ${row.buff_pool} — 0 또는 1`);
+        if (row.buff_pool === 1 && d.ownerKind !== 'job') bad(`buff_pool 1 인데 owner_kind ${d.ownerKind} — 특정 스킬 +n 은 기본 스킬만`);
         // 티어 [2026-10-02 · skill_design §12-10 · 두 층 2026-10-15 — 3티어 없음] — 직업 스킬은 1 · 2, 그 밖은 `-`
         if (d.ownerKind === 'job' ? ![1, 2].includes(d.tier) : d.tier !== null) bad(`tier '${row.tier}' — 직업 스킬은 1 · 2, 그 밖은 -`);
         if (d.icon === '') bad('icon 이 비었다');
@@ -774,10 +780,11 @@ export function createSkillSystem(data) {
      *   설명창(2단계)이 이 모양을 그대로 읽는다. 실효값은 전투와 **같은 함수**(`scaleDef`)에서 온다.
      *
      * @param def 스킬 정의 (`defs[id]` 또는 `resolve(inst)`)
-     * @param ctx {atkMin, atkMax, matkMin, matkMax, hpMax, period, stats} — 전부 선택. 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     * @param ctx {atkMin, atkMax, matkMin, matkMax, hpMax, period, stats, cdr} — 전부 선택. 모르는 값의 자리는 `null` 로 낸다(화면이 그 조각을 접는다)
+     *   · `cdr` — 쓰는 이의 쿨타임 감소(비율). 없으면 0 — `coolSec` 이 표기 쿨과 같아진다 (2026-10-21 · ADR-0703)
      *   · `amount` 의 밑수 — attack `atkMin`~`atkMax` · heal `matkMin`~`matkMax` · summon `hpMax` — **양끝마다 계산해 `{min, max}` 로 낸다**(R90)
      *   · `stats` — 기본 능력치 7종. **`mult_pct` 슬롯이 있는데 없으면** `amount` 는 `null` 이다(고정 항을 모르는 피해는 틀린 숫자다)
-     * @returns {{baseSec, everySec, lossPct, amount, parts}} — `parts.amount`(mult > 0 인 hit·fixed·heal·summon) ·
+     * @returns {{baseSec, coolSec, coolCut, everySec, lossPct, amount, parts}} — `parts.amount`(mult > 0 인 hit·fixed·heal·summon) ·
      *   `parts.{hits, value, dur, decay, procChance, procMult}`(그 항에 슬롯이 1개 이상일 때만) (INTERFACE §2-8)
      * ⚠ **첫 줄(`effects[0]`)에서 낸다** — 모양이 표 셋 분리 전과 같다. 여러 줄 스킬(결투 · 2026-09-24 R151)도 첫 줄로 문장을 만든다 —
      *   줄마다(`rows`)로 넓히는 것은 SCREEN_DESIGN §2 「스킬 설명창 규격」 먼저(`/ui` · PLAN_skill_structure 2단계 「하지 않는 것」)
@@ -819,8 +826,14 @@ export function createSkillSystem(data) {
             parts[key] = { value, raw: of(raw), terms };
         }
         const everySec = period === null ? null : F.effectiveCd(def.cool, period);
+        const coolSec = cooldownSec(B, { cdr: ctx.cdr ?? 0 }, def);
         return {
             baseSec: def.cool,
+            // 실제 쿨 — 전투가 시전 순간 잡는 것과 같은 함수다(쿨감 곱 · 바닥). 전투 중에 쌓이는 쿨감(나태 T2 겹)은 안 든다 (2026-10-21 · ADR-0703)
+            coolSec,
+            // 실제로 깎인 비율 — 바닥에 걸리면 `ctx.cdr` 보다 작다. 설명창 Alt 식의 쿨감 항 (2026-10-21 · ADR-0704)
+            //   쿨감을 안 넘기면(주인을 모르는 자리) `null` — 0 과 가른다 (ADR-0706)
+            coolCut: ctx.cdr == null ? null : def.cool > 0 ? 1 - coolSec / def.cool : 0,
             everySec,
             // 실효 쿨이 표기보다 얼마나 밀리는가(비율 · R111) — 0 이면 주기와 정렬이 맞는다
             lossPct: everySec === null ? null : (everySec - def.cool) / def.cool,

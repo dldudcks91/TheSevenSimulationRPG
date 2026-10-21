@@ -45,6 +45,7 @@ GAME_DIRS = [
     "gamble",
     "forge",
     "lab",
+    "lab/node",
     "arena",
 ]
 

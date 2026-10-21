@@ -44,8 +44,8 @@
 import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
-import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard } from './tip.js';
-import { paceAt, paceStep, paceCfg, actorOf } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
+import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip } from './tip.js';
+import { paceAt, paceStep, paceCfg, actorOf, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
 import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 const SPEEDS = [1, 2, 4, 16];   // ×16 — 2026-10-05 사용자 지시 (SCREEN_DESIGN §4-2)
@@ -81,6 +81,10 @@ function cdSlots(u) {
     adv.forEach((s, i) => { out[out.length - adv.length + i] = s; });
     return out;
 }
+/* 칸 레벨 [2026-10-21 · R302 · SCREEN_DESIGN §4-2 · ADR-0701 · ADR-0705] — **양 진영 모든 칸**에 `up`(쌓은 단계 — 스킬 설명창이 그 레벨의 숫자를 낸다 · `tip.js:defOf`)과
+   `lv`(그림 오른쪽 아래 `Lv.n`)를 단다. 값은 시뮬이 실어 온 칸 레벨 `up[i]`(`party[]` · `round` 적 · `call` · `refit` — 오른 칸이 없으면 배열이 없다 · INTERFACE §2-6) —
+   몬스터는 낀 장비의 특정 스킬 +n 몫까지다(R225). 재생기는 레벨을 재지 않는다 */
+const slotLv = (up, i) => ({ up: up?.[i] ?? 0, lv: 1 + (up?.[i] ?? 0) });
 const clamp01 = v => Math.max(0, Math.min(1, v));
 /* 물리 경직 (R110 · SCREEN_DESIGN §4-2 · ADR-0154) — 유닛은 마지막 행동 이후의 경직 창 `stalls [{from, to}]` 를 든다(`stagger` 이벤트가 쌓고 행동이 비운다).
    창은 행동을 넘지 않는다 — 시뮬이 행동 예약을 끝 시각 뒤로 밀기 때문이다(INTERFACE §2-6 「경직」). 계산이 아니라 이벤트 시각을 빼는 표시값이다 */
@@ -244,7 +248,7 @@ export function mountBattle(container, opts) {
             stats: p.stats ?? null,
             // 첫 준비 시각은 결과가 싣는다(`party[].ready`). 스킬은 준비 상태로 출발해 칸은 걷힌 채 선다 (R100)
             // 오오라도 제 칸에 선다 — 켜진 오오라는 준비 `0`(늘 걷힌 칸) · 안 켜진 오오라는 `null`(늘 덮인 칸) (R98 · ADR-0127)
-            skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(p.ready?.[i], 0), firedAt: 0 })),
+            skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(p.up, i), readyAt: slotReady(p.ready?.[i], 0), firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
             stalls: [],         // 마지막 행동 이후의 경직 창 — stagger 이벤트가 쌓는다 (R110 · ADR-0154)
         };
@@ -605,8 +609,51 @@ function syncFocus(state, root, opts) {
     }
     const slot = state.units.get(key)?.node?.parentElement;
     if (!lungeFxOn() || !slot?.isConnected) return;
-    slot.style.setProperty('--fx-k', SPEED_K[state.speed] ?? 1);   // 전환 길이가 세우는 길이와 같은 배수를 타게 — 연출이 아직 안 선 칸은 비어 있다
+    const k = SPEED_K[state.speed] ?? 1;
+    slot.style.setProperty('--fx-k', k);   // 전환 길이가 세우는 길이와 같은 배수를 타게 — 연출이 아직 안 선 칸은 비어 있다
+    // 사건은 눈금 사이에 나므로 그리는 순간 ① 의 앞부분이 이미 지나 있다(×1 이면 최대 0.1초) — 남은 ① 에서 선 박자(PEAK_MS)를 빼고
+    // 그 안에 다 올라가게 전환을 줄인다. 안 줄이면 다 올라가기도 전에 때린다 [2026-10-21 사용자 「올라가면서 말고 올라가서」]
+    const rise = p.phase === 'rise' ? Math.max(0, Math.min(RISE_MS, p.hold / k - PEAK_MS)) : RISE_MS;
+    slot.style.setProperty('--rise-ms', `${Math.round(rise * k)}ms`);
     slot.classList.add('fx-advance');
+}
+/* Focus Off 의 나감 [2026-10-21 사용자 「Focus가 off일 때도 stop이나 dim일 때처럼 영웅들이 천천히 올라와서 때리고 내려가도록」 · SCREEN_DESIGN §10-2] —
+   Off 는 시각을 안 세운다. 그래서 같은 세 박자를 **시각을 따라** 그린다: 행동이 `RISE_MS + PEAK_MS` 앞으로 다가오면 그 카드가 미리 올라가기 시작해
+   행동하는 순간엔 다 나가 있고(① — Stop · Dim 과 같은 `.fx-advance`), 때린 뒤 `OFF_STAY_MS` 동안 나간 채 섰다가(②) 제자리로 내려온다(③ — 기본 전환).
+   앞의 행동을 보려고 엔진을 그 시각까지 먼저 민다(`onTime` — 걸음의 내다보기와 같은 일이다). 원정 빠르기 · 결과는 안 바뀐다.
+   어느 카드가 나가 있어야 하나는 걸음마다 타임라인에서 다시 센다 — 되감기 · 다시 그리기 뒤에도 그대로 맞는다.
+   미리 못 본 행동(되감기 직후 · 한 걸음에 다가와 지나간 행동)은 옛 튀어나감(`fx.js:lunge`)으로 그린다 */
+const OFF_STAY_MS = 200;   // ② 때린 뒤 나간 채 서 있는 시간(실제 ms · 배속 1) — 시각은 그대로 흐른다. 화면 연출의 길이라 CSV 가 아니다
+const OFF_LOOK_SEC = 1;    // 내다보는 재생 시각의 상한(초) — 걸음의 내다보기(`pace.js:LOOK_SEC`)와 같다. 높은 배속에선 올라감이 그만큼 짧아진다
+function syncOffRise(state, root, opts) {
+    const want = new Map();   // 나가 있을 카드 → 그 카드의 다가오는 행동 시각(이미 때렸으면 null)
+    if (focusMode() === 'off' && lungeFxOn() && !state.catchUp && !state.ended) {
+        const tl = opts.result.timeline, t = state.t, sp = state.speed, k = SPEED_K[sp] ?? 1;
+        // 눈금 한 칸(TICK)을 더 본다 — 눈금 사이에 다가온 행동도 올라감을 다 갖게(먼저 본 만큼 선 박자가 그 눈금 몫 길어진다)
+        const ahead = Math.min(OFF_LOOK_SEC, (RISE_MS + PEAK_MS) * k / 1000 * sp + TICK), stay = OFF_STAY_MS * k / 1000 * sp;
+        opts.onTime?.(t + ahead, sp);
+        for (let j = state.idx - 1; j >= 0 && tl[j].t >= t - stay && tl[j].e !== 'round'; j--) {
+            const key = actorOf(tl[j]);
+            if (key != null) want.set(key, null);
+        }
+        for (let j = state.idx; j < tl.length && tl[j].t <= t + ahead && tl[j].e !== 'round' && tl[j].e !== 'end'; j++) {
+            const key = actorOf(tl[j]);
+            if (key != null && !want.has(key)) want.set(key, tl[j].t);
+        }
+    }
+    const k = SPEED_K[state.speed] ?? 1;
+    for (const [key, u] of state.units) {
+        const slot = u.node?.parentElement;
+        if (!slot?.isConnected) continue;
+        if (!want.has(key)) { if (slot.classList.contains('off-rise')) slot.classList.remove('off-rise', 'fx-advance'); continue; }
+        const at = want.get(key);
+        if (at == null || slot.classList.contains('fx-advance')) continue;   // 이미 나가 있다 · 때린 뒤에 처음 보는 카드는 새로 안 올린다
+        // 남은 시간에서 선 박자(PEAK_MS)를 빼고 그 안에 다 올라가게 — 늦게 본 만큼 전환이 짧아진다(`syncFocus` 와 같은 셈)
+        const rise = Math.max(0, Math.min(RISE_MS * k, (at - state.t) / state.speed * 1000 - PEAK_MS * k));
+        slot.style.setProperty('--fx-k', k);
+        slot.style.setProperty('--rise-ms', `${Math.round(rise)}ms`);
+        slot.classList.add('off-rise', 'fx-advance');
+    }
 }
 /** 세움이 풀리는 순간에 깨운다 — 눈금(TICK)을 기다리지 않는다. 늦게 깨도 박자는 안 틀린다(걸음이 흐른 시간을 그대로 갚는다) */
 function wake(state, root, opts) {
@@ -701,7 +748,8 @@ function renderUnits(state, root) {
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
             // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
             // Alt 동안 카드 밖으로 나가도 유지 — 장비 칸 hover 로 아이템 카드를 여는 규칙이 양 진영 같다 (ADR-0176 · ADR-0182 · ADR-0183)
-            if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, state.combatOf?.(u.hero) ?? null, state.itemOf,
+            //   세부 옵션은 **지금 값**이다 — 시트 위에 `stat` 이벤트가 쌓은 줄(`u.live`)을 덮어, 지을 때마다(Alt · 떠 있는 동안 바뀔 때) 다시 읽는다 (R305 · ADR-0707)
+            if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, () => withLive(state.combatOf?.(u.hero) ?? null, u.live), state.itemOf,
                 it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
             // 몬스터 장비의 아이템 카드도 영웅 · 캐릭터 탭과 같다 — 스킬 칸의 숫자는 그 몬스터의 표시값이다 (ADR-0183 · ADR-0312)
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
@@ -715,8 +763,9 @@ function renderUnits(state, root) {
                 // 문장이 「몇 초마다 얼마나」를 말하려면 주기·공격력·공격 타입이 필요하다 (SCREEN_DESIGN §4-2)
                 // 회복량의 밑수 `matkMin`~`matkMax` · 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다 (SCREEN_DESIGN §4-2 호출 · 범위 R90)
                 const s = slots[i];
-                if (s) bindTipNode(slot, () => skillTipCard(s, { ...unitSkillCtx(u), source: s.source }));
+                if (s) bindTipNode(slot, () => skillTipCard(s, { ...unitSkillCtx(u, state.combatOf), source: s.source }));
             });
+            reanchorTip(u.node, n);   // 옛 카드에 떠 있던 툴팁은 새 카드가 이어받는다 — 지금 값이 보는 동안 계속 바뀐다 (R305 · ADR-0707)
             u.node = n;
             if (u.lvPop) popLevel(state, u);   // 떠 있던 레벨업 글자는 다시 지은 카드에도 이어서 선다 — 경계의 `round` 가 카드를 새로 짓는다 (ADR-0435)
             // 창 뱃지 줄은 **카드 밖**이다 (2026-08-31 사용자 지시) — 카드 안에 두면 그만큼 박스가 커져서
@@ -754,8 +803,10 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
     // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
     // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
     const mask = ready ? '<i class="cd-mask" style="height:0"></i>' : '<i class="cd-mask"></i>';
+    // 칸은 그림 오른쪽 아래에 `Lv.n` — 쿨 판 위에 선다(DOM 이 뒤라 위에 그려진다 · `slotLv` · R302 · ADR-0701 · ADR-0705) · 양 진영 같다
+    const lvTag = s => (Number.isFinite(s.lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '');
     const skills = `<div class="cd-list">${slots.map(s => s
-        ? `<div class="cd-slot"><span class="cd-g">${skillImg(s)}</span>${mask}</div>`
+        ? `<div class="cd-slot"><span class="cd-g">${skillImg(s)}</span>${mask}${lvTag(s)}</div>`
         : `<div class="cd-slot empty"></div>`).join('')}</div>`;
     // 이름 띠 — **양 진영 같다** (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2). 같은 날 아침에 걷었던 위칸의 재도입이고,
     // 걷은 이유(이름·죄종 칩·정예 태그가 한 줄에 뒤엉킴)는 **이름만 남기는 것**으로 푼다 — 「무엇인가」는 띠 색(등급)이 든다.
@@ -813,7 +864,7 @@ export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = nul
         it => itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
     n.querySelectorAll('.cd-slot').forEach((slot, i) => {
         const s = slots[i];
-        if (s) bindTipNode(slot, () => skillTipCard(s, { ...unitSkillCtx(u), source: s.source }));
+        if (s) bindTipNode(slot, () => skillTipCard(s, { ...unitSkillCtx(u, combatOf), source: s.source }));
     });
     const cell = document.createElement('div');
     cell.className = `unit-slot${v2 ? ' v2' : ''}`;
@@ -1345,6 +1396,7 @@ function step(state, root, opts) {
     if (state.pace.done && !state.doneSent) { state.doneSent = true; opts.onDone?.(at - left); }
     state.t = state.pace.t;
     drain(state, root, opts);
+    syncOffRise(state, root, opts);   // Focus Off — 다가오는 행동의 카드를 미리 올리고 지난 행동의 카드를 내린다
     wake(state, root, opts);
     if (state.t === t0 && state.idx === i0) return;   // 선 채 — 그릴 것이 없다(② 동안 행동한 카드의 게이지가 꽉 찬 채 남는다)
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
@@ -1371,9 +1423,12 @@ function drain(state, root, opts) {
  * 벽의 `hpMax` · 스킬 계수의 `stats` 도 결과가 싣는다(범위 R90). 카드의 스킬 칸과 **몬스터 장비의 아이템 카드**가 같이 쓴다 (ADR-0183).
  * 몬스터도 영웅과 같이 능력치 계수를 탄다 — 전투(`battle.makeEnemy`)와 같은 규칙 (SCREEN_DESIGN §2 · ADR-0298)
  */
-const unitSkillCtx = u => ({
+const unitSkillCtx = (u, combatOf = null) => ({
     period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax,
     hpMax: u.hpMax, atkType: u.atkType, stats: u.stats,
+    // 설명창의 실제 쿨 — 쿨감 (ADR-0703) = **그 유닛 툴팁 세부 옵션의 지금 값**(ADR-0708): 바탕(영웅 `combatOf` — 원정은 그 런의 전투 능력치 · 신단 포함 /
+    //   몬스터 · 결투 상대 `sheet`) 위에 `stat` 줄(`u.live` — 나태 겹 등). 파티 카드엔 `sheet` 가 없다
+    cdr: withLive(u.side === 'party' ? combatOf?.(u.hero) ?? null : u.sheet ?? null, u.live)?.cooldown_reduction ?? 0,
 });
 
 /** 적 카드 한 장의 상태 — `round` 의 `enemies` 와 `call`(불러내기 · ADR-0161)의 `units` 가 **같은 모양**이라 한 곳에서 만든다 (INTERFACE §2-6).
@@ -1394,7 +1449,7 @@ const enemyEntry = (e, at) => ({
     sheet: e.sheet ?? null,   // 세부 능력치 — 유닛 툴팁이 Alt 로 편다 (R94 · SCREEN_DESIGN §2 「유닛 툴팁 규격」)
     gear: e.gear ?? null,     // 입고 있는 한 벌 — 유닛 툴팁의 첫 장(장비 3×3)이 읽는다 (R119 · ADR-0183)
     // 첫 준비 시각 = 등장 시각 + 쿨 — 시뮬이 실어 온다(`ready` · R89). 칸은 덮인 채로 선다
-    skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], at), firedAt: at })),
+    skills: (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(e.up, i), readyAt: slotReady(e.ready?.[i], at), firedAt: at })),   // 칸 레벨 — 몬스터 · 결투장 상대 영웅 둘 다 (R302 · ADR-0705)
     buffs: new Map(),
     stalls: [],   // 경직 창 (R110 · ADR-0154)
 });
@@ -1407,6 +1462,8 @@ function apply(state, root, opts, ev) {
             for (const e of state.enemies) state.units.delete(e.key);
             state.enemies = ev.enemies.map(e => enemyEntry(e, ev.t));
             for (const e of state.enemies) state.units.set(e.key, e);
+            // 전투 시작 시 행동 게이지(R303) — 원정의 라운드가 바뀌면 파티 게이지가 그 초만큼 앞당겨진다. 시뮬이 실어 온 값을 그대로 민다(계산하지 않는다)
+            for (const [k, s] of Object.entries(ev.pg ?? {})) { const u = state.units.get(k); if (u) u.lastAct -= s; }
             renderUnits(state, root);
             paintRound(state, root);
             // 라운드 줄 — 목록에는 경계로 쌓고(지난 라운드를 거슬러 읽을 때), 머리 줄 아래 고정 칸에는 「지금」으로 건다 (ADR-0204)
@@ -1432,7 +1489,7 @@ function apply(state, root, opts, ev) {
                 // 되살아남 — 시뮬과 같다: HP 가득 · 창은 오오라(`until: null`)만 남는다 · 경직 창 비움 · 스킬은 부른 시각에 준비 (INTERFACE §2-6 `call`)
                 Object.assign(old, { hp: e.hpMax, hpMax: e.hpMax, lastAct: ev.t, stalls: [] });
                 for (const [id, b] of [...old.buffs]) if (b.until !== null) old.buffs.delete(id);
-                old.skills = (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t }));
+                old.skills = (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(e.up, i), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t }));
                 refreshUnit(state, old);
             }
             // 카드가 늘었으면 진형 줄을 다시 세운다(라운드 시작과 같은 함수) — 되살아남만이면 자리 그대로다
@@ -1580,7 +1637,7 @@ function apply(state, root, opts, ev) {
             if (u) logLine(state, root, u.side, ['potion', ev.amt], L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t');
             break;
         }
-        case 'regen': {   // HP 재생 — 조용히 오른다(팝업 없음). 정수 1 이상 쌓인 틱에만 온다
+        case 'regen': {   // HP 재생 · 처치 시 체력 회복(R299) — 조용히 오른다(팝업 없음). 재생은 정수 1 이상 쌓인 틱에만 온다
             const u = U(ev.u);
             if (u) { u.hp = ev.dhp; refreshUnit(state, u); }
             break;
@@ -1612,6 +1669,13 @@ function apply(state, root, opts, ev) {
                 ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up'));
             break;
         }
+        case 'stat': {   // 지금 값 (R305 · ADR-0707) — 달라진 세부 옵션 줄만 온다. 쌓아 두고 그 유닛의 툴팁이 떠 있으면 세부 옵션 열을 다시 짓는다 · 로그 · 팝업 없음
+            const u = U(ev.u);
+            if (!u) break;
+            u.live = { ...u.live, ...ev.v };
+            refreshTip(u.node);
+            break;
+        }
         case 'buffEnd': {
             const u = U(ev.u);
             if (!u) break;
@@ -1635,7 +1699,9 @@ function apply(state, root, opts, ev) {
                 const r = ev.ready?.[i];
                 // 꺼져 있던 칸(무기가 안 맞는 직업 스킬 — 준비 시각 무한 · R187)은 잇지 않는다 — 다시 켜지면 새 준비 시각으로 받는다
                 const old = had[i]?.id === id && had[i].readyAt !== Infinity ? had[i] : null;
-                return (r !== 0 && r !== null && old) || { ...skillInfo(id), readyAt: slotReady(r, ev.t), firedAt: ev.t };
+                // 칸 레벨은 이은 칸도 새로 받는다 — 잇는 것은 쿨 표시뿐이다 (장비의 특정 스킬 +n 이 바뀐 갈아입기 · R302)
+                const lv = slotLv(ev.up, i);
+                return (r !== 0 && r !== null && old && Object.assign(old, lv)) || { ...skillInfo(id), ...lv, readyAt: slotReady(r, ev.t), firedAt: ev.t };
             });
             renderUnits(state, root);
             levelCheck(state, root);   // 경계의 갈아입기 = 레벨이 오른 영웅(체력 가득 · R182) — 도중 갈아입기면 레벨이 그대로라 아무 일 없다 (ADR-0435)
@@ -1685,12 +1751,13 @@ function showResult(state, root, opts, won) {
         <span class="${won ? 'up' : 'down'} verdict">${t(opts.result.mode === 'arena' && opts.result.reason === 'timeout' ? 'ar.draw' : won ? 'bt.won' : 'bt.lost')}</span>
         ${nx ? `<span class="muted b-next"></span>` : ''}
         ${nx?.shrine && !nx.shrine.fresh ? `<span class="b-shrine">${shrineChip(nx.shrine.id)}<span class="muted">${t('bt.shrineKeep')} — ${shrineFxText(nx.shrine.id)}</span></span>` : ''}
-        ${nx && !waiting ? `<button class="btn sm b-go">${t('bt.skipWait')}</button>` : ''}
+        ${nx && !waiting ? `<button class="btn sm b-go">${t(won ? 'bt.skipWait' : 'bt.skipRetry')}</button>` : ''}
         <button class="btn primary sm b-report">${t(opts.resultLabel ?? 'bt.toReport')}</button>`;
     box.classList.add('show');
     // 리포트로 간다 — 세기는 **안 끊는다**(멈추는 길은 철수 · 게임 끄기뿐이다). 걷힌 세기는 앱 시계가 잇는다
     box.querySelector('.b-report').onclick = () => opts.onEnd(false);
     // 건너뛰기 — 세기를 걷고 다음 런이 **지금** 나간다. 갈 칸 · 편성 · 신단은 같은 답이고 출발 시각만 앱이 지금으로 바꾼다 (SCREEN_DESIGN §4-2 · ADR-0453)
+    //   진 런이면 글자가 「재도전」이다 — 졌으면 다음 런이 같은 칸이다(`game.nextRepeat`) · 같은 버튼 · 같은 동작 (ADR-0698)
     const go = box.querySelector('.b-go');
     if (go) go.onclick = () => opts.onEnd(true, true);
     if (nx) {

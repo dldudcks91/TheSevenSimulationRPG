@@ -8,6 +8,40 @@
 나머지는 거기서 잘라 **배경을 알파로 되돌리고 512×512 정사각으로 맞춘** 것이다 —
 ⚠ `gladiator_helm.png` 만 예외다(누끼 없음 · 1013×1013 원본 해상도 · 아래 참조).
 
+## 1-4 광신도 · 제사장 · 수호상 3×3 시트 [2026-10-21]
+
+화염 광신도 `1401` · 임프 제사장 `1402` · 청동 수호상 `1403` 의 Gemini 판 후보 — 몬스터마다 두 장(`r5_3x3_1~2`). 첨부는 그 몬스터의 GPT 원본 + 그림체 둘(광신도 · 제사장 = `1900` · 영웅, 수호상 = `3403` · `warrior_4`). 글은 두 줄뿐이다(사용자 「설명은 줄이고 Gemini 창의력을 믿어라」): `Image 1 is our flame zealot, drawn by another artist. Images 2-3 show our art style.` + `Draw the flame zealot in our style — nine takes.` **아직 배정하지 않았다.**
+
+| 시트 `sheets/source_sheet_ch1_st4_…` | 눈으로 본 것 |
+|---|---|
+| `flame_zealot_r5_3x3_1~2` | 1번 칸은 둘 다 GPT 를 이빨 웃음까지 베꼈다. 나머지는 두건 쓴 뿔 데몬 · 해골 얼굴 · 새 두개골 깃털 가면 · 흰 머리 노인 · 횃불. 이를 드러낸 칸이 섞였다 |
+| `imp_priest_r5_3x3_1~2` | `_1` 1번은 GPT 그대로. 두건에 뿔 · 구슬 · 사슬 · 해골 목걸이, 해골 얼굴 · 숫양 두개골 머리장식. 이를 드러낸 칸이 섞였다 |
+| `bronze_guardian_r5_3x3_1~2` | 부리 투구 · 창이 대부분 남았다(`_2` 1번은 GPT 그대로). 가시 왕관 · 면갑 기사 · 뿔 투구도 나왔다. ⚠ `_1` 7번 · `_2` 2 · 3 · 7번은 녹청 얼룩(초록 계열) — 누끼 때 확인 |
+
+## 1-4 몰록 다양한 방향 3×3 시트 [2026-10-21]
+
+몰록 `1450` 을 **GPT 생김새에 매이지 않고** 넓게 뽑은 2048² 3×3 시트 두 장이다(사용자 「다양한 방향」) — `ideas_a` · `ideas_b` · 칸마다 다른 디자인 18가지. GPT 원본은 붙이지 않았다. 첨부는 Gemini 판 사탄 `1900` · 영웅 `warrior_4`. 프롬프트에 칸별 디자인 9줄 + `Eyes are solid black shapes. Mouths stay closed.` **`ideas_a` 2번(금 간 청동 황소 머리 · 균열 속 불)을 `1450` Gemini 판에 설치했다**(사용자 선택).
+
+| 시트 `sheets/source_sheet_ch1_st4_…_3x3_1` | 눈으로 본 것 |
+|---|---|
+| `moloch_ideas_a` · `_b` | 붉은 데몬(GPT 에 가장 가까움 · 숫양 뿔) · 금 간 청동 황소 머리 · 화로 문 달린 청동 우상 · 사슬의 숯빛 데몬 · 황소 두개골 · 사제왕 · 해골 얼굴 · 불 갈기. 빛나는 눈이 몇 칸 섞였다 |
+
+## 1장 라멕 3×3 시트 [2026-10-21]
+
+몬스터(정예) Gem 에서 `scripts/gemini_web.py` 로 뽑은 2048² 3×3 시트 두 장이다 — **한 시트 = 라멕의 아홉 안.** 첨부는 `ready/gemini/monster/1202`(1-2 인간 병사) · 영웅 `knight_4`. 사용자 방향 (A) 카인의 표식. 격자선은 x · y ≈ 670~691 · 1354~1376. 9번 칸은 ✦ 워터마크.
+
+| 시트 `sheets/source_sheet_…` | 결과 |
+|---|---|
+| `ch1_st2_lamech_cain_3x3_1` | 표식은 룬 같은 낙인(1 · 2 · 4 · 5 · 7 · 8번) · 3 · 9번은 표식 없음 · 6번은 흉터. **2번을 `1251` 에 설치했다**(사용자 선택) |
+| `ch1_st2_lamech_cain_3x3_2` | 표식은 네모난 화상 자국(1 · 2 · 4 · 7 · 8번) · 3 · 5 · 6 · 9번은 표식 없음 |
+
+```text
+Image 1 is a human archer from our game — use it for how our human soldiers look. Image 2 is our hero portrait, for style only; do not copy his face or clothes.
+Lamech, descendant of Cain and lord of the human archers, who repays every wound seventy-seven times. Every tile shows the mark of Cain on his bare forehead — one plain dark brand, no lettering. Nine different takes on this one boss — hair and beard tell them apart.
+1. Lamech, grey-bearded, a longbow over his shoulder
+… (9. 까지 — 머리 · 수염 · 두건 · 목도리 한 마디씩)
+```
+
 ## 5장 일반몹 12종 스케치 3×3 시트 [2026-10-17]
 
 몬스터(정예) Gem 에서 `scripts/gemini_web.py run` 으로 뽑은 2048² 3×3 시트 여덟 장이다 — 스테이지 하나에 시트 둘 · **한 행에 한 종**(1행 · 2행 · 3행 = 그 스테이지의 `monster_idx` 01 · 02 · 03). 아래 세 줄 + 이름만 적은 아홉 줄로 보냈다. 격자선은 x · y ≈ 670~692 · 1356~1379. **배정은 구울 `_1` 1 · 4 · 7번 → `5101` · `5102` · `5103` 뿐**[2026-10-18] — 나머지는 선택용이다.
