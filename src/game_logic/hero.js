@@ -717,5 +717,7 @@ export function createHeroSystem(data) {
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn, sinGearCount,
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)
+        // 새 게임 첫 진형의 랭크 — `class.csv:start_row` 가 `back` 이면 1(후열) · 그 밖은 0(전열) (INTERFACE §2-4 · 2026-10-21 사용자 지시)
+        startRankOf: id => data.classes.find(c => c.id === id)?.startRow === 'back' ? 1 : 0,
     };
 }

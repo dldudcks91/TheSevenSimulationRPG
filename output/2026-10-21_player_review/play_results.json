@@ -1,0 +1,2017 @@
+{
+ "game": "TheSevenSimulationRPG",
+ "date": "2026-10-21",
+ "basis": "HEAD d35b19b + working tree 01:31 copy (other sessions' uncommitted: weapon_atk_base 6.68->13.36, class-based starting formation, skill blueprint flow); baseline test FAIL 594/600 = boss ratio 1, golden 2, formation 3",
+ "method": {
+  "party": [
+   "warrior(rare,wrath)",
+   "mage(magic,gluttony)",
+   "archer(normal,sloth)"
+  ],
+  "rerolls": 0,
+  "battle_speed": 1,
+  "clock": "Playwright 1.64, clock.install before goto, run_for drives timers, user time = fake clock delta",
+  "sample_size": "1 per persona",
+  "A": "reasonable first-timer: read prologue, equip by tooltip compare (weapons = own group, avg dmg/speed; armor = empty slot or higher def), mastery same nodes, build by todo dot priority forge>library>explore>tavern (+lab, shop, expedition rank2 by hand), shop visits ~22/33/52m, 1 forge upgrade, salvage via default filter, 3 books crafted+learned",
+  "B": "passive: skip prologue, depart once, touch nothing for 60 min"
+ },
+ "A": {
+  "metrics": {
+   "w0_10": {
+    "runs": 4,
+    "won": 2,
+    "lost": 2,
+    "wipes": 2
+   },
+   "w0_60": {
+    "runs": 34,
+    "won": 19,
+    "lost": 15,
+    "wipes": 14
+   },
+   "w10_60": {
+    "runs": 30,
+    "won": 17,
+    "lost": 13,
+    "wipes": 12
+   },
+   "longest_losing_streak": {
+    "runs": 3,
+    "from_min": 48.83,
+    "to_min": 52.52
+   },
+   "stage_tries": {
+    "1011": {
+     "runs": 3,
+     "losses_before_first_win": 2,
+     "cleared": true
+    },
+    "1012": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1013": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1021": {
+     "runs": 2,
+     "losses_before_first_win": 1,
+     "cleared": true
+    },
+    "1022": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1023": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1031": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1032": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1033": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1041": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1042": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1043": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1051": {
+     "runs": 9,
+     "losses_before_first_win": 2,
+     "cleared": true
+    },
+    "2011": {
+     "runs": 3,
+     "losses_before_first_win": 2,
+     "cleared": true
+    },
+    "2012": {
+     "runs": 4,
+     "losses_before_first_win": 3,
+     "cleared": true
+    },
+    "2013": {
+     "runs": 3,
+     "losses_before_first_win": 3,
+     "cleared": false
+    }
+   },
+   "minutes_between_clears": [
+    [
+     7.11,
+     1011
+    ],
+    [
+     1.83,
+     1012
+    ],
+    [
+     2.56,
+     1013
+    ],
+    [
+     3.72,
+     1021
+    ],
+    [
+     2.12,
+     1022
+    ],
+    [
+     3.39,
+     1023
+    ],
+    [
+     1.16,
+     1031
+    ],
+    [
+     1.56,
+     1032
+    ],
+    [
+     2.0,
+     1033
+    ],
+    [
+     2.28,
+     1041
+    ],
+    [
+     1.84,
+     1042
+    ],
+    [
+     2.08,
+     1043
+    ],
+    [
+     2.63,
+     1051
+    ],
+    [
+     12.07,
+     2011
+    ],
+    [
+     7.5,
+     2012
+    ],
+    [
+     6.15,
+     "open (no clear yet at end)"
+    ]
+   ],
+   "longest_no_clear_min": [
+    12.07,
+    2011
+   ],
+   "longest_no_event_gap": {
+    "min": 4.21,
+    "from": 55.79,
+    "to": 60.0
+   },
+   "longest_no_clear_or_levelup_gap": {
+    "min": 6.17,
+    "from": 46.35,
+    "to": 52.52
+   }
+  },
+  "events": [
+   {
+    "min": 0.57,
+    "event": "start_party",
+    "extra": {
+     "classes": [
+      "warrior(rare,wrath)",
+      "mage(magic,gluttony)",
+      "archer(normal,sloth)"
+     ],
+     "roll": 1
+    }
+   },
+   {
+    "min": 1.91,
+    "event": "first_world"
+   },
+   {
+    "min": 2.33,
+    "event": "first_depart"
+   },
+   {
+    "min": 4.67,
+    "event": "level",
+    "extra": "h2 2->3"
+   },
+   {
+    "min": 4.67,
+    "event": "level",
+    "extra": "h3 2->3"
+   },
+   {
+    "min": 5.2,
+    "event": "read_first_defeat_report"
+   },
+   {
+    "min": 5.39,
+    "event": "first_equip_try_level_short"
+   },
+   {
+    "min": 5.98,
+    "event": "level",
+    "extra": "h1 2->3"
+   },
+   {
+    "min": 5.98,
+    "event": "building",
+    "extra": "resource None->1"
+   },
+   {
+    "min": 5.98,
+    "event": "built_lab"
+   },
+   {
+    "min": 7.11,
+    "event": "clear",
+    "extra": 1011
+   },
+   {
+    "min": 7.61,
+    "event": "level",
+    "extra": "h2 3->4"
+   },
+   {
+    "min": 7.61,
+    "event": "level",
+    "extra": "h3 3->4"
+   },
+   {
+    "min": 8.44,
+    "event": "level",
+    "extra": "h1 3->4"
+   },
+   {
+    "min": 8.94,
+    "event": "clear",
+    "extra": 1012
+   },
+   {
+    "min": 10.33,
+    "event": "equip",
+    "extra": "h1 gloves Lv4 (drop)"
+   },
+   {
+    "min": 11.5,
+    "event": "clear",
+    "extra": 1013
+   },
+   {
+    "min": 11.5,
+    "event": "level",
+    "extra": "h2 4->5"
+   },
+   {
+    "min": 11.5,
+    "event": "level",
+    "extra": "h3 4->5"
+   },
+   {
+    "min": 11.5,
+    "event": "mastery",
+    "extra": "h2 gluttony hp x3, h3 archer atkspeed x3; h1 refused (downed in run)"
+   },
+   {
+    "min": 11.99,
+    "event": "mastery",
+    "extra": "h1 warrior hp x4; leftovers to same nodes"
+   },
+   {
+    "min": 12.25,
+    "event": "building",
+    "extra": "shop None->1"
+   },
+   {
+    "min": 12.25,
+    "event": "built_shop"
+   },
+   {
+    "min": 12.94,
+    "event": "shop_buy",
+    "extra": "hood + boots (1200G)"
+   },
+   {
+    "min": 13.12,
+    "event": "equip",
+    "extra": "h1 hood"
+   },
+   {
+    "min": 13.2,
+    "event": "equip",
+    "extra": "h1 boots"
+   },
+   {
+    "min": 13.27,
+    "event": "equip",
+    "extra": "h3 magic gloves lifesteal"
+   },
+   {
+    "min": 13.54,
+    "event": "built",
+    "extra": "선술집"
+   },
+   {
+    "min": 13.72,
+    "event": "building",
+    "extra": "tavern None->1"
+   },
+   {
+    "min": 13.88,
+    "event": "level",
+    "extra": "h1 4->5"
+   },
+   {
+    "min": 15.22,
+    "event": "clear",
+    "extra": 1021
+   },
+   {
+    "min": 16.55,
+    "event": "level",
+    "extra": "h2 5->6"
+   },
+   {
+    "min": 16.55,
+    "event": "level",
+    "extra": "h3 5->6"
+   },
+   {
+    "min": 16.64,
+    "event": "equip",
+    "extra": "h1 갑옷 Lv5 def 21 vs 15"
+   },
+   {
+    "min": 16.73,
+    "event": "equip",
+    "extra": "h1 반지 Lv5 def None vs -"
+   },
+   {
+    "min": 17.13,
+    "event": "mastery",
+    "extra": "spent 3"
+   },
+   {
+    "min": 17.34,
+    "event": "clear",
+    "extra": 1022
+   },
+   {
+    "min": 18.34,
+    "event": "level",
+    "extra": "h1 5->6"
+   },
+   {
+    "min": 20.43,
+    "event": "mastery",
+    "extra": "spent 1"
+   },
+   {
+    "min": 20.55,
+    "event": "built",
+    "extra": "제련소"
+   },
+   {
+    "min": 20.73,
+    "event": "clear",
+    "extra": 1023
+   },
+   {
+    "min": 20.73,
+    "event": "building",
+    "extra": "forge None->1"
+   },
+   {
+    "min": 21.73,
+    "event": "level",
+    "extra": "h2 6->7"
+   },
+   {
+    "min": 21.89,
+    "event": "clear",
+    "extra": 1031
+   },
+   {
+    "min": 22.09,
+    "event": "shop_refresh_free"
+   },
+   {
+    "min": 22.24,
+    "event": "shop_buy",
+    "extra": "h3 활 Lv5 600G"
+   },
+   {
+    "min": 22.38,
+    "event": "shop_buy",
+    "extra": "h2 투구 Lv6 1379G"
+   },
+   {
+    "min": 22.57,
+    "event": "equip",
+    "extra": "h3 활 Lv5 dps 11.9 vs 5.3"
+   },
+   {
+    "min": 22.75,
+    "event": "equip",
+    "extra": "h3 투구 Lv6 def 9 vs -"
+   },
+   {
+    "min": 22.91,
+    "event": "equip",
+    "extra": "h3 신발 Lv7 def 6 vs -"
+   },
+   {
+    "min": 23.28,
+    "event": "level",
+    "extra": "h3 6->7"
+   },
+   {
+    "min": 23.45,
+    "event": "clear",
+    "extra": 1032
+   },
+   {
+    "min": 23.95,
+    "event": "level",
+    "extra": "h1 6->7"
+   },
+   {
+    "min": 25.45,
+    "event": "clear",
+    "extra": 1033
+   },
+   {
+    "min": 26.24,
+    "event": "equip",
+    "extra": "h1 신발 Lv5 def 5 vs 4"
+   },
+   {
+    "min": 26.47,
+    "event": "equip",
+    "extra": "h2 목걸이 Lv8 def None vs -"
+   },
+   {
+    "min": 26.69,
+    "event": "equip",
+    "extra": "h2 신발 Lv1 def 4 vs -"
+   },
+   {
+    "min": 27.18,
+    "event": "mastery",
+    "extra": "spent 5"
+   },
+   {
+    "min": 27.4,
+    "event": "level",
+    "extra": "h2 7->8"
+   },
+   {
+    "min": 27.4,
+    "event": "level",
+    "extra": "h3 7->8"
+   },
+   {
+    "min": 27.73,
+    "event": "clear",
+    "extra": 1041
+   },
+   {
+    "min": 29.07,
+    "event": "level",
+    "extra": "h1 7->8"
+   },
+   {
+    "min": 29.57,
+    "event": "clear",
+    "extra": 1042
+   },
+   {
+    "min": 30.47,
+    "event": "forge_upgrade",
+    "extra": "h1 club +1 (24~39 -> 27~41) 600G"
+   },
+   {
+    "min": 31.15,
+    "event": "level",
+    "extra": "h2 8->9"
+   },
+   {
+    "min": 31.15,
+    "event": "level",
+    "extra": "h3 8->9"
+   },
+   {
+    "min": 31.65,
+    "event": "clear",
+    "extra": 1043
+   },
+   {
+    "min": 33.6,
+    "event": "equip",
+    "extra": "h2 장갑 Lv7 def 6 vs -"
+   },
+   {
+    "min": 33.85,
+    "event": "equip",
+    "extra": "h2 갑옷 Lv9 def 17 vs 16"
+   },
+   {
+    "min": 34.28,
+    "event": "clear",
+    "extra": 1051
+   },
+   {
+    "min": 34.28,
+    "event": "level",
+    "extra": "h1 8->9"
+   },
+   {
+    "min": 35.62,
+    "event": "level",
+    "extra": "h1 9->10"
+   },
+   {
+    "min": 35.62,
+    "event": "level",
+    "extra": "h2 9->10"
+   },
+   {
+    "min": 35.62,
+    "event": "level",
+    "extra": "h3 9->10"
+   },
+   {
+    "min": 37.75,
+    "event": "mastery",
+    "extra": "spent 7"
+   },
+   {
+    "min": 37.87,
+    "event": "built",
+    "extra": "도서관"
+   },
+   {
+    "min": 37.95,
+    "event": "built",
+    "extra": "탐험"
+   },
+   {
+    "min": 38.12,
+    "event": "building",
+    "extra": "library None->1"
+   },
+   {
+    "min": 38.12,
+    "event": "building",
+    "extra": "explore None->1"
+   },
+   {
+    "min": 39.12,
+    "event": "level",
+    "extra": "h2 10->11"
+   },
+   {
+    "min": 39.12,
+    "event": "level",
+    "extra": "h3 10->11"
+   },
+   {
+    "min": 40.26,
+    "event": "building",
+    "extra": "expedition 1->2"
+   },
+   {
+    "min": 40.26,
+    "event": "built",
+    "extra": "expedition rank 2 (ch2 unlock)"
+   },
+   {
+    "min": 40.58,
+    "event": "depart",
+    "extra": "ch2 2-1 I"
+   },
+   {
+    "min": 40.8,
+    "event": "level",
+    "extra": "h1 10->11"
+   },
+   {
+    "min": 42.14,
+    "event": "level",
+    "extra": "h2 11->12"
+   },
+   {
+    "min": 44.06,
+    "event": "equip",
+    "extra": "h2 투구 Lv11 def 2 vs -"
+   },
+   {
+    "min": 44.8,
+    "event": "mastery",
+    "extra": "spent 2"
+   },
+   {
+    "min": 44.92,
+    "event": "built",
+    "extra": "도서관"
+   },
+   {
+    "min": 45.0,
+    "event": "built",
+    "extra": "선술집"
+   },
+   {
+    "min": 45.18,
+    "event": "level",
+    "extra": "h3 11->12"
+   },
+   {
+    "min": 45.18,
+    "event": "building",
+    "extra": "tavern 1->2"
+   },
+   {
+    "min": 45.18,
+    "event": "building",
+    "extra": "library 1->2"
+   },
+   {
+    "min": 46.35,
+    "event": "clear",
+    "extra": 2011
+   },
+   {
+    "min": 48.61,
+    "event": "mastery",
+    "extra": "spent 3"
+   },
+   {
+    "min": 50.49,
+    "event": "salvage",
+    "extra": "15 items (default filter = all) -> dust 36"
+   },
+   {
+    "min": 51.57,
+    "event": "library_craft_learn",
+    "extra": "fireball->h2, multishot->h3 (1000G+10 dust each)"
+   },
+   {
+    "min": 51.92,
+    "event": "library_craft_learn",
+    "extra": "doubleswing->h1"
+   },
+   {
+    "min": 52.52,
+    "event": "level",
+    "extra": "h1 11->12"
+   },
+   {
+    "min": 53.35,
+    "event": "level",
+    "extra": "h2 12->13"
+   },
+   {
+    "min": 53.85,
+    "event": "clear",
+    "extra": 2012
+   },
+   {
+    "min": 54.68,
+    "event": "level",
+    "extra": "h3 12->13"
+   },
+   {
+    "min": 55.79,
+    "event": "mastery",
+    "extra": "spent 1"
+   }
+  ],
+  "runs": [
+   {
+    "min": 4.17,
+    "stage": 1011,
+    "won": false,
+    "reason": "wipe",
+    "dur": 61.9,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 300
+   },
+   {
+    "min": 5.53,
+    "stage": 1011,
+    "won": false,
+    "reason": "wipe",
+    "dur": 45.3,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 4,
+    "drops": 0,
+    "gold": 144
+   },
+   {
+    "min": 7.11,
+    "stage": 1011,
+    "won": true,
+    "reason": "clear",
+    "dur": 50,
+    "downed": [],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 372
+   },
+   {
+    "min": 8.94,
+    "stage": 1012,
+    "won": true,
+    "reason": "clear",
+    "dur": 61.8,
+    "downed": [],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 410
+   },
+   {
+    "min": 11.5,
+    "stage": 1013,
+    "won": true,
+    "reason": "clear",
+    "dur": 74.5,
+    "downed": [
+     "h1"
+    ],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 992
+   },
+   {
+    "min": 13.3,
+    "stage": 1021,
+    "won": false,
+    "reason": "wipe",
+    "dur": 67.7,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 8,
+    "drops": 1,
+    "gold": 292
+   },
+   {
+    "min": 15.22,
+    "stage": 1021,
+    "won": true,
+    "reason": "clear",
+    "dur": 65,
+    "downed": [],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 451
+   },
+   {
+    "min": 17.34,
+    "stage": 1022,
+    "won": true,
+    "reason": "clear",
+    "dur": 63.6,
+    "downed": [],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 454
+   },
+   {
+    "min": 20.73,
+    "stage": 1023,
+    "won": true,
+    "reason": "clear",
+    "dur": 111.5,
+    "downed": [
+     "h1",
+     "h3"
+    ],
+    "rounds": 9,
+    "drops": 2,
+    "gold": 1209
+   },
+   {
+    "min": 21.89,
+    "stage": 1031,
+    "won": true,
+    "reason": "clear",
+    "dur": 45.2,
+    "downed": [],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 398
+   },
+   {
+    "min": 23.45,
+    "stage": 1032,
+    "won": true,
+    "reason": "clear",
+    "dur": 52.6,
+    "downed": [],
+    "rounds": 9,
+    "drops": 2,
+    "gold": 583
+   },
+   {
+    "min": 25.45,
+    "stage": 1033,
+    "won": true,
+    "reason": "clear",
+    "dur": 67.9,
+    "downed": [
+     "h1"
+    ],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 1219
+   },
+   {
+    "min": 27.73,
+    "stage": 1041,
+    "won": true,
+    "reason": "clear",
+    "dur": 70.2,
+    "downed": [],
+    "rounds": 9,
+    "drops": 3,
+    "gold": 608
+   },
+   {
+    "min": 29.57,
+    "stage": 1042,
+    "won": true,
+    "reason": "clear",
+    "dur": 56.7,
+    "downed": [],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 527
+   },
+   {
+    "min": 31.65,
+    "stage": 1043,
+    "won": true,
+    "reason": "clear",
+    "dur": 66.5,
+    "downed": [],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 1406
+   },
+   {
+    "min": 32.32,
+    "stage": 1051,
+    "won": false,
+    "reason": "wipe",
+    "dur": 22.4,
+    "downed": [
+     "h3",
+     "h1",
+     "h2"
+    ],
+    "rounds": 1,
+    "drops": 0,
+    "gold": 0
+   },
+   {
+    "min": 32.82,
+    "stage": 1051,
+    "won": false,
+    "reason": "wipe",
+    "dur": 17.8,
+    "downed": [
+     "h3",
+     "h1",
+     "h2"
+    ],
+    "rounds": 1,
+    "drops": 0,
+    "gold": 0
+   },
+   {
+    "min": 34.28,
+    "stage": 1051,
+    "won": true,
+    "reason": "clear",
+    "dur": 13.1,
+    "downed": [],
+    "rounds": 1,
+    "drops": 1,
+    "gold": 2994
+   },
+   {
+    "min": 34.28,
+    "stage": 1051,
+    "won": false,
+    "reason": "wipe",
+    "dur": 27.4,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 1,
+    "drops": 0,
+    "gold": 0
+   },
+   {
+    "min": 35.62,
+    "stage": 1051,
+    "won": true,
+    "reason": "clear",
+    "dur": 13.2,
+    "downed": [],
+    "rounds": 1,
+    "drops": 1,
+    "gold": 2994
+   },
+   {
+    "min": 37.12,
+    "stage": 1051,
+    "won": false,
+    "reason": "wipe",
+    "dur": 21.8,
+    "downed": [
+     "h3",
+     "h1",
+     "h2"
+    ],
+    "rounds": 1,
+    "drops": 0,
+    "gold": 0
+   },
+   {
+    "min": 38.12,
+    "stage": 1051,
+    "won": true,
+    "reason": "clear",
+    "dur": 22,
+    "downed": [
+     "h1",
+     "h3"
+    ],
+    "rounds": 1,
+    "drops": 1,
+    "gold": 2994
+   },
+   {
+    "min": 39.12,
+    "stage": 1051,
+    "won": true,
+    "reason": "clear",
+    "dur": 13.1,
+    "downed": [],
+    "rounds": 1,
+    "drops": 1,
+    "gold": 2994
+   },
+   {
+    "min": 40.8,
+    "stage": 2011,
+    "won": false,
+    "reason": "retreat",
+    "dur": 0,
+    "downed": [],
+    "rounds": 0,
+    "drops": 0,
+    "gold": 0
+   },
+   {
+    "min": 40.8,
+    "stage": 1051,
+    "won": true,
+    "reason": "clear",
+    "dur": 13.8,
+    "downed": [],
+    "rounds": 1,
+    "drops": 1,
+    "gold": 2994
+   },
+   {
+    "min": 42.64,
+    "stage": 2011,
+    "won": false,
+    "reason": "wipe",
+    "dur": 69.2,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 1,
+    "gold": 318
+   },
+   {
+    "min": 46.35,
+    "stage": 2011,
+    "won": true,
+    "reason": "clear",
+    "dur": 146.6,
+    "downed": [
+     "h1",
+     "h3"
+    ],
+    "rounds": 9,
+    "drops": 2,
+    "gold": 681
+   },
+   {
+    "min": 48.83,
+    "stage": 2012,
+    "won": false,
+    "reason": "wipe",
+    "dur": 72.3,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 8,
+    "drops": 0,
+    "gold": 489
+   },
+   {
+    "min": 49.83,
+    "stage": 2012,
+    "won": false,
+    "reason": "wipe",
+    "dur": 44.2,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 4,
+    "drops": 0,
+    "gold": 192
+   },
+   {
+    "min": 52.52,
+    "stage": 2012,
+    "won": false,
+    "reason": "wipe",
+    "dur": 72.4,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 0,
+    "gold": 339
+   },
+   {
+    "min": 53.85,
+    "stage": 2012,
+    "won": true,
+    "reason": "clear",
+    "dur": 57.6,
+    "downed": [],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 723
+   },
+   {
+    "min": 56.17,
+    "stage": 2013,
+    "won": false,
+    "reason": "wipe",
+    "dur": 76.5,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 9,
+    "drops": 2,
+    "gold": 531
+   },
+   {
+    "min": 57.88,
+    "stage": 2013,
+    "won": false,
+    "reason": "wipe",
+    "dur": 54.2,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 1,
+    "gold": 318
+   },
+   {
+    "min": 60.0,
+    "stage": 2013,
+    "won": false,
+    "reason": "wipe",
+    "dur": 71.6,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 552
+   }
+  ],
+  "todo_log": [
+   [
+    3.0,
+    [
+     "건설"
+    ]
+   ],
+   [
+    13.72,
+    []
+   ],
+   [
+    34.28,
+    [
+     "건설"
+    ]
+   ]
+  ],
+  "observations": [
+   "29.9m forge preview: hood +11->+11, gloves +6->+6, boots +5->+5 (600G no change); armor 21->23; club 24~39->27~41",
+   "warrior still on starting Lv1 club at Lv8 (no axe/mace in drops or shop so far)",
+   "after 1-5 Satan first clear (34.3m) the party auto-reruns Satan (only stage left) until user builds expedition rank 2 (1000G+15 copper+15 pine) — Ch2 zones show 원정 2랭크 필요; 건설 todo dot on"
+  ],
+  "checkpoints": {
+   "10": {
+    "levels": [
+     4,
+     4,
+     4
+    ],
+    "cleared": [
+     1011,
+     1012
+    ],
+    "gold": 1466,
+    "buildings": "lab"
+   },
+   "30": {
+    "levels": [
+     8,
+     8,
+     8
+    ],
+    "cleared_last": 1042
+   },
+   "60": {
+    "levels": [
+     12,
+     13,
+     13
+    ],
+    "cleared_last": 2012,
+    "gold": 11078,
+    "dust": 6,
+    "buildings": {
+     "expedition": 2,
+     "resource": 1,
+     "shop": 1,
+     "tavern": 2,
+     "forge": 1,
+     "library": 2,
+     "explore": 1
+    }
+   }
+  },
+  "errors": [],
+  "http_failures": []
+ },
+ "B": {
+  "metrics": {
+   "w0_10": {
+    "runs": 4,
+    "won": 3,
+    "lost": 1,
+    "wipes": 1
+   },
+   "w0_60": {
+    "runs": 31,
+    "won": 6,
+    "lost": 25,
+    "wipes": 25
+   },
+   "w10_60": {
+    "runs": 27,
+    "won": 3,
+    "lost": 24,
+    "wipes": 24
+   },
+   "longest_losing_streak": {
+    "runs": 11,
+    "from_min": 44.0,
+    "to_min": 60.0
+   },
+   "stage_tries": {
+    "1011": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1012": {
+     "runs": 1,
+     "losses_before_first_win": 0,
+     "cleared": true
+    },
+    "1013": {
+     "runs": 2,
+     "losses_before_first_win": 1,
+     "cleared": true
+    },
+    "1021": {
+     "runs": 4,
+     "losses_before_first_win": 3,
+     "cleared": true
+    },
+    "1022": {
+     "runs": 9,
+     "losses_before_first_win": 8,
+     "cleared": true
+    },
+    "1023": {
+     "runs": 3,
+     "losses_before_first_win": 2,
+     "cleared": true
+    },
+    "1031": {
+     "runs": 11,
+     "losses_before_first_win": 11,
+     "cleared": false
+    }
+   },
+   "minutes_between_clears": [
+    [
+     2.69,
+     1011
+    ],
+    [
+     2.0,
+     1012
+    ],
+    [
+     4.33,
+     1013
+    ],
+    [
+     8.31,
+     1021
+    ],
+    [
+     19.67,
+     1022
+    ],
+    [
+     4.83,
+     1023
+    ],
+    [
+     18.17,
+     "open (no clear yet at end)"
+    ]
+   ],
+   "longest_no_clear_min": [
+    19.67,
+    1022
+   ],
+   "longest_no_event_gap": {
+    "min": 10.84,
+    "from": 41.83,
+    "to": 52.67
+   },
+   "longest_no_clear_or_levelup_gap": {
+    "min": 10.84,
+    "from": 41.83,
+    "to": 52.67
+   }
+  },
+  "events": [
+   {
+    "min": 0.32,
+    "event": "start_party",
+    "extra": {
+     "classes": [
+      "warrior",
+      "mage",
+      "archer"
+     ],
+     "roll": 1
+    }
+   },
+   {
+    "min": 0.34,
+    "event": "first_world"
+   },
+   {
+    "min": 0.52,
+    "event": "first_depart"
+   },
+   {
+    "min": 1.36,
+    "event": "level",
+    "extra": "h1 1->2"
+   },
+   {
+    "min": 1.36,
+    "event": "level",
+    "extra": "h2 1->2"
+   },
+   {
+    "min": 1.36,
+    "event": "level",
+    "extra": "h3 1->2"
+   },
+   {
+    "min": 2.69,
+    "event": "clear",
+    "extra": 1011
+   },
+   {
+    "min": 2.69,
+    "event": "level",
+    "extra": "h1 2->3"
+   },
+   {
+    "min": 2.69,
+    "event": "level",
+    "extra": "h2 2->3"
+   },
+   {
+    "min": 2.69,
+    "event": "level",
+    "extra": "h3 2->3"
+   },
+   {
+    "min": 4.69,
+    "event": "clear",
+    "extra": 1012
+   },
+   {
+    "min": 4.69,
+    "event": "level",
+    "extra": "h1 3->4"
+   },
+   {
+    "min": 4.69,
+    "event": "level",
+    "extra": "h2 3->4"
+   },
+   {
+    "min": 4.69,
+    "event": "level",
+    "extra": "h3 3->4"
+   },
+   {
+    "min": 7.69,
+    "event": "level",
+    "extra": "h2 4->5"
+   },
+   {
+    "min": 8.52,
+    "event": "level",
+    "extra": "h3 4->5"
+   },
+   {
+    "min": 9.02,
+    "event": "clear",
+    "extra": 1013
+   },
+   {
+    "min": 9.52,
+    "event": "level",
+    "extra": "h1 4->5"
+   },
+   {
+    "min": 15.5,
+    "event": "level",
+    "extra": "h2 5->6"
+   },
+   {
+    "min": 16.17,
+    "event": "level",
+    "extra": "h3 5->6"
+   },
+   {
+    "min": 17.33,
+    "event": "clear",
+    "extra": 1021
+   },
+   {
+    "min": 20.0,
+    "event": "level",
+    "extra": "h1 5->6"
+   },
+   {
+    "min": 25.33,
+    "event": "level",
+    "extra": "h2 6->7"
+   },
+   {
+    "min": 26.33,
+    "event": "level",
+    "extra": "h3 6->7"
+   },
+   {
+    "min": 33.33,
+    "event": "level",
+    "extra": "h1 6->7"
+   },
+   {
+    "min": 37.0,
+    "event": "clear",
+    "extra": 1022
+   },
+   {
+    "min": 37.5,
+    "event": "level",
+    "extra": "h2 7->8"
+   },
+   {
+    "min": 38.17,
+    "event": "level",
+    "extra": "h3 7->8"
+   },
+   {
+    "min": 41.83,
+    "event": "clear",
+    "extra": 1023
+   },
+   {
+    "min": 52.67,
+    "event": "level",
+    "extra": "h1 7->8"
+   },
+   {
+    "min": 52.67,
+    "event": "level",
+    "extra": "h2 8->9"
+   },
+   {
+    "min": 53.0,
+    "event": "level",
+    "extra": "h3 8->9"
+   }
+  ],
+  "runs": [
+   {
+    "min": 2.69,
+    "stage": 1011,
+    "won": true,
+    "reason": "clear",
+    "dur": 68.1,
+    "downed": [],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 408
+   },
+   {
+    "min": 4.69,
+    "stage": 1012,
+    "won": true,
+    "reason": "clear",
+    "dur": 63.1,
+    "downed": [],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 423
+   },
+   {
+    "min": 6.36,
+    "stage": 1013,
+    "won": false,
+    "reason": "wipe",
+    "dur": 54.4,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 0,
+    "gold": 211
+   },
+   {
+    "min": 9.02,
+    "stage": 1013,
+    "won": true,
+    "reason": "clear",
+    "dur": 88.1,
+    "downed": [
+     "h1"
+    ],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 1044
+   },
+   {
+    "min": 11.33,
+    "stage": 1021,
+    "won": false,
+    "reason": "wipe",
+    "dur": 77.2,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 357
+   },
+   {
+    "min": 13.5,
+    "stage": 1021,
+    "won": false,
+    "reason": "wipe",
+    "dur": 79.7,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 0,
+    "gold": 211
+   },
+   {
+    "min": 15.17,
+    "stage": 1021,
+    "won": false,
+    "reason": "wipe",
+    "dur": 51.1,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 5,
+    "drops": 1,
+    "gold": 185
+   },
+   {
+    "min": 17.33,
+    "stage": 1021,
+    "won": true,
+    "reason": "clear",
+    "dur": 66.3,
+    "downed": [
+     "h1"
+    ],
+    "rounds": 9,
+    "drops": 0,
+    "gold": 412
+   },
+   {
+    "min": 19.5,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 74.3,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 7,
+    "drops": 2,
+    "gold": 312
+   },
+   {
+    "min": 21.83,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 74.9,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 0,
+    "gold": 212
+   },
+   {
+    "min": 24.0,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 69.8,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 326
+   },
+   {
+    "min": 25.67,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 54.3,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 4,
+    "drops": 1,
+    "gold": 198
+   },
+   {
+    "min": 28.33,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 90.1,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 9,
+    "drops": 4,
+    "gold": 382
+   },
+   {
+    "min": 30.5,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 71.5,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 1,
+    "gold": 226
+   },
+   {
+    "min": 32.5,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 70.7,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 8,
+    "drops": 1,
+    "gold": 312
+   },
+   {
+    "min": 34.67,
+    "stage": 1022,
+    "won": false,
+    "reason": "wipe",
+    "dur": 65.5,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 7,
+    "drops": 2,
+    "gold": 312
+   },
+   {
+    "min": 37.0,
+    "stage": 1022,
+    "won": true,
+    "reason": "clear",
+    "dur": 76.6,
+    "downed": [
+     "h1"
+    ],
+    "rounds": 9,
+    "drops": 3,
+    "gold": 412
+   },
+   {
+    "min": 38.67,
+    "stage": 1023,
+    "won": false,
+    "reason": "wipe",
+    "dur": 57.4,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 4,
+    "drops": 2,
+    "gold": 196
+   },
+   {
+    "min": 39.83,
+    "stage": 1023,
+    "won": false,
+    "reason": "wipe",
+    "dur": 34.5,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 3,
+    "drops": 0,
+    "gold": 60
+   },
+   {
+    "min": 41.83,
+    "stage": 1023,
+    "won": true,
+    "reason": "clear",
+    "dur": 66.3,
+    "downed": [],
+    "rounds": 9,
+    "drops": 1,
+    "gold": 1089
+   },
+   {
+    "min": 44.0,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 74.7,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 6,
+    "drops": 1,
+    "gold": 226
+   },
+   {
+    "min": 46.0,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 79.2,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 7,
+    "drops": 4,
+    "gold": 298
+   },
+   {
+    "min": 47.83,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 65.8,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 7,
+    "drops": 0,
+    "gold": 284
+   },
+   {
+    "min": 49.17,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 42.8,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 6,
+    "drops": 1,
+    "gold": 184
+   },
+   {
+    "min": 50.5,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 42.7,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 5,
+    "drops": 0,
+    "gold": 184
+   },
+   {
+    "min": 52.17,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 59,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 7,
+    "drops": 0,
+    "gold": 284
+   },
+   {
+    "min": 54.17,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 68.7,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 8,
+    "drops": 3,
+    "gold": 340
+   },
+   {
+    "min": 55.17,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 35.6,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 3,
+    "drops": 0,
+    "gold": 56
+   },
+   {
+    "min": 57.0,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 69.5,
+    "downed": [
+     "h1",
+     "h3",
+     "h2"
+    ],
+    "rounds": 7,
+    "drops": 0,
+    "gold": 298
+   },
+   {
+    "min": 58.5,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 45.6,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 4,
+    "drops": 0,
+    "gold": 170
+   },
+   {
+    "min": 60.0,
+    "stage": 1031,
+    "won": false,
+    "reason": "wipe",
+    "dur": 48.3,
+    "downed": [
+     "h1",
+     "h2",
+     "h3"
+    ],
+    "rounds": 5,
+    "drops": 0,
+    "gold": 184
+   }
+  ],
+  "todo_log": [
+   [
+    0.69,
+    [
+     "건설"
+    ]
+   ]
+  ],
+  "checkpoints": {
+   "10": {
+    "levels": [
+     5,
+     5,
+     5
+    ],
+    "cleared": [
+     1011,
+     1012,
+     1013
+    ],
+    "gold": 2871
+   },
+   "30": {
+    "levels": [
+     6,
+     7,
+     7
+    ],
+    "cleared_last": 1021,
+    "gold": 5507
+   },
+   "60": {
+    "levels": [
+     8,
+     9,
+     9
+    ],
+    "cleared_last": 1023,
+    "gold": 10396,
+    "bag": 30,
+    "dust": 0
+   }
+  },
+  "errors": [],
+  "http_failures": []
+ },
+ "notes": [
+  "first-ever run of A wiped at 1-1 I round 8/9 (goblin scouts); B's first run won - RNG",
+  "no todo dot on 캐릭터 for unspent mastery points or newly equippable items; only 건설 dot appeared (0-13.7m, 34.3m-)",
+  "spectate view has no Report button; report reached by clicking 원정 tab again (toggles to stage list) then Report",
+  "warrior never found a usable axe/mace in 60 min (drops or shop) - Lv1 club +1 at Lv12",
+  "forge upgrade preview: hood +11->+11, gloves +6->+6, boots +5->+5 at 600G (no change); armor 21->23; club 24~39->27~41",
+  "after Satan first clear (34.3m) party loops Satan until expedition rank 2 is built (1000G + 15 copper + 15 pine); 6 Satan reruns gave 2994G per win",
+  "library advanced-class panel shows raw placeholders '{n}초마다 {s} 동안 ... {v}'",
+  "library book craft = blueprint + 1000G + 10 dust; dust only from salvage; salvage box default filters lift ALL bag items (incl. Lv13-15 future gear)",
+  "gold piles up unspent: A 11,078G at 60m, B 10,396G",
+  "construction lot texts show '준비 중' entries; shop shows '특수상단 미착수'; necklace '아이언 스킨 발동 (미적용)'"
+ ]
+}

@@ -7,7 +7,7 @@
 - 헤드리스는 PowerShell 도구로만 · `--headless=new` · 덤프 0바이트 = 단정이 멈춘 것 → [src/dev/README.md](src/dev/README.md) 「개발용 URL」 아래
 - CSV 가 캐시돼 바꾼 값이 안 먹는다 → 실행마다 **새 프로필 이름** · `--disk-cache-size=1` ([client/verify.md](.claude/skills/client/verify.md) §2)
 - PowerShell `Out-File -Encoding utf8` 은 BOM 을 붙인다 → 파일 쓰기는 Edit 도구나 BOM 없는 UTF-8
-- Playwright — `channel='msedge'` · `page.clock` 은 1.45 이상(anaconda 1.41 은 없다) · **10-20 에 `Python312`(1.63)가 사라졌다**(`~/.local/bin/python3.12` 는 uv 트램펄린 고장) → 스크래치패드에 anaconda 로 venv 를 만들고 `pip install --only-binary=:all: playwright`(1.60 · msedge 라 브라우저 내려받기 없음) · 헤드리스 기본 인자가 스크롤바를 숨긴다 · 스크립트에 한국어 리터럴을 넣지 않는다
+- Playwright — `channel='msedge'` · `page.clock` 은 1.45 이상(anaconda 1.41 은 없다) · **기계마다 다르다** — 옛 기계(10-20)는 anaconda venv + `pip install --only-binary=:all: playwright`(msedge 라 내려받기 없음) · ANGames-001 = `%LOCALAPPDATA%\Programs\Python\Python312`(1.64) · 출력 cp949 → `PYTHONIOENCODING=utf-8` · 헤드리스 기본 인자가 스크롤바를 숨긴다 · 스크립트에 한국어 리터럴을 넣지 않는다
 - 시드 20 표로 결론 내기 → `sim.html` 요약이 시드 앞 절반 / 뒤 절반을 따로 낸다 ([qa-fun](.claude/skills/qa-fun/SKILL.md) 「결론을 쓰는 법」)
 - 대량 실행기를 고친 뒤 결과를 그대로 믿기 → 시드 1~20 을 캘리브레이션 표와 대조 ([src/dev/README.md](src/dev/README.md) 「대량 실행」)
 
@@ -36,7 +36,9 @@
 | 2026-10-18 | 긴 헤드리스를 PowerShell `Start-Job` 으로 병렬 · 9개 동시 | 도구 호출이 끝나면 작업 프로세스가 같이 죽어 덤프가 0바이트 · 동시 9개(코어 8)일 땐 일부가 빈 `<pre>` 로 끝났다 | `Start-Process` 로 Edge 를 떼어 띄우고(-Wait 없이) 덤프 파일을 나중에 읽는다 · 동시는 코어 수 아래 | 1 |
 | 2026-10-20 | 리포트 `at` 을 클리어 시각으로 읽음 | 「5분에 cleared []」인데 1-1 I 리포트 `at` 은 2.2분 — `at` 은 판 시작 쪽이고 `durationSec` 은 전투만 센다(벽시계와 안 맞는다) | 첫 클리어 시각은 `note` 체크포인트의 `progress.cleared` 로 구간을 잡는다 | 1 |
 | 2026-10-20 | 클릭이 안 먹는 것을 결함으로 볼 뻔 | 궁수 마스터리 찍기가 두 방식 다 안 먹었다 — 도는 원정에서 쓰러진 영웅은 런이 끝날 때까지 트리를 못 바꾼다(R130) | 안 먹으면 `.toast` 부터 읽는다 — 거절 사유가 거기 있다 | 1 |
-| 2026-10-18 | 부팅 뒤 `page.clock.install()` | 이미 생성된 앱 `setInterval`은 가짜 시계에 들어오지 않아, `run_for`로 시간을 당겨도 자동 진행이 덜 돌거나 절전 공백으로 오인해 원정을 끊는다 | 새 격리 페이지에서 **`clock.install` → `goto` → 부팅 대기 → `pause_at`** 순서. 기존 측정은 폐기하고 새 세이브로 재실행한다. 이번 재측정·복귀 두 갈래 근거는 `output/2026-10-18_player_review/results.json` | 1 |
+| 2026-10-18 | 부팅 뒤 `page.clock.install()` | 이미 생성된 앱 `setInterval`은 가짜 시계에 들어오지 않아, `run_for`로 시간을 당겨도 자동 진행이 덜 돌거나 절전 공백으로 오인해 원정을 끊는다 | 새 격리 페이지에서 **`clock.install` → `goto` → 부팅 대기 → `pause_at`** 순서. 기존 측정은 폐기하고 새 세이브로 재실행한다 | 1 |
+| 2026-10-21 | 시뮬 분을 유저 분으로 읽음 | `t` = `durationSec` + 재출발뿐 — `Dim` 세움이 빠져 벽시계가 시뮬의 1.53 · 1.60 배(중간 보고 「1장 53.5분」 = 유저 83분 · 10-20 판정도 시뮬 분) | 사람 흉내 벽시계로 환산비를 재서 곱한다 · **흡수 제안** DEV_PLAN §4 77 | 2 |
+| 2026-10-21 | 지난 하네스를 그대로 실행 | `output/2026-10-20_player_review/*.py` 가 다른 기계의 `ROOT` 를 박았다 | `ROOT` 를 고친다 · **흡수 제안** — 하네스를 `src/dev/` 에 · 경로는 `__file__` 기준 | 1 |
 
 ---
-*마지막 업데이트: 2026-10-20*
+*마지막 업데이트: 2026-10-21*

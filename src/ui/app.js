@@ -655,6 +655,8 @@ const MODALS = {
     // ~~파견 관전(`dpWatch`)~~ — 2026-10-18 연구소에서 영웅 배치를 걷어 창째 없앴다 (ADR-0665)
     // 자원 미니게임 — 연구소 단의 [미니게임]이 연다 (SCREEN_DESIGN §8 · ADR-0532) · 머리 = 열린 단계마다 탭 · 열린 단계가 없으면 닫힌다(`gone`)
     mg: { head: mgHead, body: mgBody, cls: 'mg-modal', gone: () => !mgCur() },
+    // 연구소 줄 등록 — 고른 칸의 등록 자리가 연다 (SCREEN_DESIGN §8 · ADR-0677) · 줄 = 고른 줄 · 그 줄이 닫혀 있으면 닫힌다(`gone`)
+    labReg: { head: labRegHead, body: labRegBody, cls: 'lr-modal', gone: () => !G || !labRegOpen(labRegPost()) },
     // 친선전 — 결투장 레일의 [친선전]이 연다 · 팀 코드 글상자 둘(SCREEN_DESIGN §1 · ADR-0670) · 받은 팀이 서면 닫힌다
     arenaCode: { title: 'ar.code.h', body: arenaCodeBody, cls: 'ar-code-modal' },
 };
@@ -866,22 +868,17 @@ function candidateCard(h, extra = '', fresh = false) {
     return c;
 }
 
-/** 카드 아래 안내 띠 — **지금 세 장에 든** 직업 · 죄종만 한 줄씩 편다 · 카드 안은 안 건드린다 (SCREEN_DESIGN §3 · ADR-0642 · 사용자 「카드 내부는 건드리지 말고 주변을」).
- *  줄마다 **어떤 역할을 하나** 한 문장 [2026-10-16 사용자 「어떤 형태의 역할을 하는지 적는 게 좋다」 — 마스터리 축 나열을 대체] —
- *  직업 = `class.csv:role_text` · 죄종 = `mock.js:SINS.line`. 역할 줄(「근접 물리」)은 카드가 이미 들어 띠에서는 안 되풀이한다 */
-function startGuide(cands) {
-    const uniq = key => [...new Set(cands.map(h => h[key]).filter(Boolean))];
-    const clsText = c => classDef(c) ? L(classDef(c).roleText) || L(classDef(c).role) : t('class.unassigned');
-    const rows = list => list.map(([name, color, text]) =>
-        `<b${color ? ` style="color:${color}"` : ''}>${name}</b><span>${text}</span>`).join('');
-    const col = (h, sub, list) => `<div class="ng-gd-col">
-        <div class="ng-gd-h"><b>${h}</b><span class="muted">${sub}</span></div>
-        <div class="ng-gd-rows">${rows(list)}</div></div>`;
-    return el('div', 'ng-guide',
-        col(t('ng.guide.cls'), t('ng.guide.clsSub'),
-            uniq('cls').map(c => [className(c), classColor(c), clsText(c)]))
-        + col(t('ng.guide.sin'), t('ng.guide.sinSub'),
-            uniq('sin').map(s => [sinName(s), sinColor(s), L(M.SINS[s]?.line) || ''])));
+/** 카드 연장 칸 — **그 카드 영웅의** 직업 · 죄종을 한 줄씩, 어떤 역할을 하나 한 문장 (SCREEN_DESIGN §3 · ADR-0675 ·
+ *  사용자 「각 카드 아래로 연장해서 기사 / 분노 이런식으로」 — 카드 밖 안내 띠(ADR-0642)를 대체). 새 게임 카드만 `candidateCard` 의
+ *  꼬리 자리로 싣는다 — 선술집 · 찾아온 영웅 카드엔 없다.
+ *  직업 = `class.csv:role_text` · 죄종 = `mock.js:SINS.line`. 역할 줄(「근접 물리」)은 카드 머리가 이미 들어 안 되풀이한다.
+ *  이름은 **칩**이다 [2026-10-21 사용자 「전사 적에게 붙어 … 이게 뭐야」] — 맨 글자로 서면 이름이 문장의 주어로 붙어 읽혔다 */
+function startLines(h) {
+    const cls = classDef(h.cls);
+    const row = (name, color, text) => `<span class="ng-tag"${color ? ` style="color:${color}"` : ''}>${name}</span><span class="ng-tx">${text}</span>`;
+    return `<div class="ng-ext">${
+        row(className(h.cls), classColor(h.cls), cls ? L(cls.roleText) || L(cls.role) : t('class.unassigned'))
+        }${row(sinName(h.sin), sinColor(h.sin), L(M.SINS[h.sin]?.line) || '')}</div>`;
 }
 
 /** 메뉴 — 켜면 먼저 선다 · 새 게임이 위 · 불러오기가 아래 (SCREEN_DESIGN §3 · ADR-0641 · 사용자 「처음 시작 화면이 메뉴 느낌으로」).
@@ -919,9 +916,8 @@ function renderStart(main) {
     // 제목(「첫 파티」)은 걷었다 (ADR-0643 · 사용자 「거슬린다 · 아예 없애봐」) — 화면 이름은 상단바 crumb(「새 게임」)이 든다.
     //   키 `ng.title` 은 도움말 「새 게임」 절의 머리가 계속 쓴다
     const row = el('div', 'ng-row');
-    for (const h of state.candidates) row.appendChild(candidateCard(h, '', true));
+    for (const h of state.candidates) row.appendChild(candidateCard(h, startLines(h), true));
     wrap.appendChild(row);
-    wrap.appendChild(startGuide(state.candidates));
 
     const actions = el('div', 'ng-actions');
     const reroll = el('button', 'btn', t('ng.reroll'));
@@ -2577,16 +2573,18 @@ function runListPanel(list, idx, no) {
 const DROP_KIND_ORDER = ['ore', 'wood', 'herb'];
 const dropMats = R => Object.entries(R.materials ?? {}).filter(([, n]) => n > 0)
     .sort(([a], [b]) => DROP_KIND_ORDER.indexOf(resKind(a)) - DROP_KIND_ORDER.indexOf(resKind(b)));
-/** 획득 아이템 수 = **격자의 칸 수**(장비 + 책 + 재료 칸 — 재료는 개수 합이 아니라 칸 하나) [ADR-0630] — 상세 머리 줄과
- *  원정 기록 줄이 **같은 셈**을 부른다 [2026-10-17 · ADR-0652] (옛 리포트는 `books` · `materials` 가 없어 장비 수 그대로) */
-const dropCount = R => R.drops.length + (R.books ?? []).length + dropMats(R).length;
+/** 획득 아이템 수 = **격자의 칸 수**(장비 + 도안 + 재료 칸 — 재료는 개수 합이 아니라 칸 하나) [ADR-0630] — 상세 머리 줄과
+ *  원정 기록 줄이 **같은 셈**을 부른다 [2026-10-17 · ADR-0652] (옛 리포트는 `blueprints` · `materials` 가 없어 장비 수 그대로 · ~~`books`~~ 2026-10-20 R293) */
+const dropCount = R => R.drops.length + (R.blueprints ?? []).length + dropMats(R).length;
+/** 스킬 도안 칸의 왼쪽 위 배지 — 리포트 획득 격자 · 상단 도안 칸이 같은 것을 단다(그림이 책과 같은 스킬 그림이라 갈린다 · ADR-0680) */
+const bpTag = () => `<span class="inv-check bp-tag">${t('rep.blueprint')}</span>`;
 
 /** 획득 아이템 — **가방 칸과 같은 그림 · 같은 테두리 · 같은 비교 툴팁**(§6).
  *  **리포트는 보기 전용이다** [2026-09-21 · ADR-0186] — 분해 · 장착 · 이동은 전부 캐릭터 탭(§6)이 든다.
  *  **자리가 런마다 같다** (ADR-0086) — 격자는 한 줄 높이로 못박히고 「없음」도 그 안에 선다. 넘쳐 분해한 수는 머리 줄 안으로 (ADR-0625) */
 function dropSection(p, R) {
-    // 떨어진 스킬북도 이 격자에 선다 — 장비 칸 뒤에 이어서 (§4-3 · ADR-0420 · 옛 리포트는 `books` 가 없다)
-    const books = R.books ?? [];
+    // 떨어진 스킬 도안도 이 격자에 선다 — 장비 칸 뒤에 이어서 (§4-3 · ADR-0420 · ADR-0680 · 옛 리포트는 `blueprints` 가 없다)
+    const bps = R.blueprints ?? [];
     const mats = dropMats(R);
     const head = el('h2', '', `<span>${t('rep.drops.h')} <small>${t('rep.drops.sub', { n: dropCount(R) })}</small></span>`);
     p.appendChild(head);
@@ -2595,7 +2593,7 @@ function dropSection(p, R) {
     head.appendChild(tail);
     const box = el('div', 'rep-drops rep-cut');
     p.appendChild(box);
-    if (!R.drops.length && !books.length && !mats.length) { box.appendChild(el('div', 'muted rep-note', t('rep.drops.none'))); return; }
+    if (!R.drops.length && !bps.length && !mats.length) { box.appendChild(el('div', 'muted rep-note', t('rep.drops.none'))); return; }
     const grid = el('div', 'inv-cells wide');
     for (const uid of R.drops) {
         const d = itemOf(uid);
@@ -2614,10 +2612,10 @@ function dropSection(p, R) {
         bindTip(cell, d);                        // 방금 주운 것 = 「이 아이템」(기본값). ⚠ 「착용 중」이 아니다 (§6 머리글) · 맥락을 안 넘긴다 — 주인이 없어 스킬 숫자가 식으로 선다 (ADR-0139)
         grid.appendChild(cell);                  // 클릭은 안 건다 — 보기 전용이다 (ADR-0186)
     }
-    // 스킬북 칸 — 스킬 그림 + 왼쪽 위 「책」 배지 · 흐려지지 않는다(떨어진 책은 전부 재고에 쌓인다 · ADR-0460) · 올리면 설명창(주인 없음 — 식만)
-    for (const b of books) {
+    // 스킬 도안 칸 — 스킬 그림 + 왼쪽 위 「도안」 배지 · 흐려지지 않는다(떨어진 도안은 전부 재고에 쌓인다 · ADR-0680) · 올리면 설명창(주인 없음 — 식만)
+    for (const b of bps) {
         const cell = el('div', 'inv-cell filled book-cell');
-        cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(b.id))}</span><span class="inv-check book-tag">${t('rep.book')}</span>`;
+        cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(b.id))}</span>${bpTag()}`;
         bindTipNode(cell, () => skillTipCard({ id: b.id }, {}));
         grid.appendChild(cell);
     }
@@ -3170,8 +3168,8 @@ const partyTipOpts = h => (PARTY_TIP_STATS ? { statsFirst: true, skills: activeC
  * 같은 크기의 같은 영웅은 어디서나 같은 얼굴이다 — 캐릭터 · 편성 탭 띠(`heroStrip`) · 진형 보드 칸(`formBox` · ADR-0280) ·
  * 출정 창 초상(`presetPick` · ADR-0317)이 이 한 벌을 쓴다. 자리 규칙(위칸 한 줄 · 레벨 오른쪽 아래 · 리더 왼쪽 아래)은 CSS 조각이 든다(ADR-0197 · ADR-0278)
  */
-function heroCardHtml(h, { leader = false } = {}) {
-    const doing = heroDoing(h);
+function heroCardHtml(h, { leader = false, doing = heroDoing(h) } = {}) {
+    // `doing` — 위칸 왼쪽을 그 탭의 말로 갈아 끼운다(연구소 띠 · 등록 창 = 등록한 줄 · ADR-0677) · 안 주면 `heroBusy` 의 답
     return `<div class="hs-band"><span class="hs-doing ${doing.cls}">${doing.text}</span><b class="hs-name">${L(h.name)}</b></div>`
         + heroFace(h)
         + `<span class="hs-lv">${t('ch.lv', { n: h.level })}</span>`
@@ -3190,8 +3188,9 @@ function heroCardHtml(h, { leader = false } = {}) {
  * flat — 편성 패널처럼 이미 패널 안에 들어갈 때. 패널 껍데기(테두리·배경·여백)를 벗는다
  * reorder — 카드를 끌어 카드 사이 틈에 놓으면 그 영웅이 그리로 들어간다 · 사이는 한 칸씩 밀리고 당겨진다 (캐릭터 탭 · 2026-10-09 · ADR-0571)
  */
-function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, dismissable = false, deployed = false, tip = true, reorder = false, view = false } = {}) {
+function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, dismissable = false, deployed = false, tip = true, reorder = false, view = false, doing = null } = {}) {
     const p = el('div', flat ? 'hs-panel flat' : 'panel hs-panel');
+    // `doing(h)` — 카드 위칸 왼쪽을 그 탭의 말로(연구소 띠 = 등록한 줄 · ADR-0677) · 안 주면 「지금 하는 일」(`heroBusy`)
     // `view` — **보기 전용** 띠(자원 탭 · ADR-0369). 카드는 「지금 하는 일」만 보여 주고 클릭도 고른 표시도 없다 —
     //   누른 뒤 일어날 일(배치)이 아직 없다. 배치가 서면 그때 클릭을 붙인다
     // partyMode — 클릭이 파티 넣고 빼기인 띠(편성). ~~출정 아웃인 카드는 안 눌리는 티를 낸다~~ 는 2026-09-08 폐기(못 넣는 영웅이 없다)
@@ -3217,7 +3216,7 @@ function heroStrip(onPick, { leaderUid = null, flat = false, partyMode = false, 
         //   줄어드는 쪽은 여전히 「하는 일」 하나다
         // 레벨은 초상 **오른쪽 아래**(아이템 칸과 같은 구석) · 리더는 왼쪽 아래 [2026-09-21 사용자 지시 · ADR-0278 — 0202 와 구석을 맞바꿨다].
         //   왼쪽 아래는 해고(캐릭터 탭 띠)와 리더(편성 띠)가 나눠 쓰고, 레벨은 어느 카드에서도 안 가린다
-        c.innerHTML = heroCardHtml(h, { leader: h.uid === leaderUid });   // 얼굴 한 벌 — 진형 칸 · 출정 창 초상과 같다 (ADR-0317)
+        c.innerHTML = heroCardHtml(h, { leader: h.uid === leaderUid, doing: doing ? doing(h) : undefined });   // 얼굴 한 벌 — 진형 칸 · 출정 창 초상과 같다 (ADR-0317)
         /* 해고 — **고른 카드에만** 왼쪽 아래에 뜬다 [2026-09-09 사용자 지시 · SCREEN_DESIGN §5 · §6 · 자리는 ADR-0278].
            `dismissable` 을 준 띠(캐릭터 탭)에서만이다 — 편성 띠는 클릭이 파티 넣고 빼기라 여기에 파괴적 버튼을
            같이 두면 파티 빼려다 해고하는 사고가 난다. 리더 뱃지도 왼쪽 아래지만 편성 띠에만 서서 한 카드에서 안 만난다.
@@ -3538,9 +3537,9 @@ function bookLearnInto(box, h, bs) {
     const bar = el('div', 'td-buy bk-buy', sel
         ? `<span class="td-buy-n">${L(skillInfo(sel.id).name)}${up ? `<span class="bk-lv">${t('sk.lvTag', { n: p.lv + 1 })}</span>` : ''}</span>`
         : '<span class="td-buy-n muted">—</span>');
-    // 업그레이드는 드는 책 수를 버튼이 말한다(피보나치라 단계마다 다르다) · 상한의 끝이면 「최대」 ·
-    //   스킬 도감이 연 상한에 닿았으면 그 상한을 올려 줄 도감 레벨 「도감 Lv.n」 (2026-10-16 · R266 · ADR-0640)
-    const label = up ? (p.err === 'maxUp' ? t('bk.max') : p.err === 'codexCap' ? t('bk.codexCap', { n: p.codexNeed }) : t('bk.upgrade', { n: p.need }))
+    // 업그레이드는 드는 책 수를 버튼이 말한다(피보나치라 단계마다 다르다) · 상한(끝 하나 — `skillbook_upgrade_max`)이면 「최대」
+    //   (2026-10-20 · R293 · ADR-0680 — ~~스킬 도감이 연 상한 「도감 Lv.n」~~ ADR-0640)
+    const label = up ? (p.err === 'maxUp' ? t('bk.max') : t('bk.upgrade', { n: p.need }))
         : t(over ? 'bk.overwrite' : 'bk.learn');
     const btn = el('button', `btn sm ${over ? 'danger' : 'primary'}`, label);
     btn.disabled = !sel || !!err || (up && !!p.err);
@@ -3570,7 +3569,8 @@ function bookLearnInto(box, h, bs) {
  *  칸 · 고른 표시 · 줄은 상단의 것(`.inv-cell` · `.td-picked` · `.td-buy` — §8-3 「고르고 산다」)을 빌린다] */
 function bookCraftInto(box, h, bs) {
     const tipCtx = heroSkillCtx(h);
-    // 칸 = **스킬 도안이 열린 책만**(`bookState.craft` — 도감 보상 · 모든 책이 도안을 요구한다) · 하나도 없으면 한 줄 [2026-10-12 사용자 지시 · ADR-0600 — ~~기본 책~~ ADR-0570]
+    // 칸 = **가진 스킬 도안**(`bookState.craft` — 한 장 이상 · 모든 책이 도안을 요구한다) · 하나도 없으면 한 줄 [2026-10-12 사용자 지시 · ADR-0600 — ~~기본 책~~ ADR-0570 ·
+    //   2026-10-20 R293 도안은 쌓이는 소모품 — 만들면 한 장 준다 · 다 쓰면 칸이 빠져 고른 것이 저절로 풀린다 · ADR-0680]
     if (!bs.craft.length) { box.appendChild(el('div', 'muted bk-empty', t('bk.craft.none'))); return; }
     const sel = bs.craft.find(c => c.id === state.bookCraftSel) ?? null;
     // 만들기 줄 — 고른 책의 이름 · 비용(모자란 재화만 붉다) · [만들기]. 고른 것이 없으면 `—` 와 꺼진 [만들기]
@@ -3588,9 +3588,10 @@ function bookCraftInto(box, h, bs) {
     };
     bar.appendChild(btn);
     box.appendChild(bar);
-    // 아이콘 칸 — 그림만 · `skill.csv` 행 순서 · 올리면 스킬 설명창 · 누르면 고르기(다시 누르면 풀린다)
+    // 아이콘 칸 — 그림 + 오른쪽 아래 장수 `×n`(가진 책 칸의 권수와 같은 자리 · 1장도 찍는다 · ADR-0680) · `skill.csv` 행 순서 · 올리면 스킬 설명창 · 누르면 고르기(다시 누르면 풀린다)
     const grid = el('div', 'bk-grid');
-    for (const c of bs.craft) grid.appendChild(bookCell(c.id, sel === c, () => skillTipCard({ id: c.id }, tipCtx), () => { state.bookCraftSel = sel === c ? null : c.id; render(); }));
+    for (const c of bs.craft) grid.appendChild(bookCell(c.id, sel === c, () => skillTipCard({ id: c.id }, tipCtx), () => { state.bookCraftSel = sel === c ? null : c.id; render(); },
+        `<span class="inv-lv">×${c.n}</span>`));
     box.appendChild(grid);
 }
 
@@ -5187,11 +5188,11 @@ function refreshAdvanceBars(at) {
 
 /* ═══════════ 선술집 ═══════════ */
 
-/* ═══════════ 연구소 — 줄 목록 · 고른 줄의 단계 사다리 · 칸 레벨 (SCREEN_DESIGN §8 · ADR-0669 · ADR-0674) ═══════════
-   왼쪽 = 줄 목록(줄마다 한 줄 · 같은 무게) · 오른쪽 = 두 열 — 고른 줄의 단계 7 세로 사다리 | 고른 칸. **연구 하나 = 줄 하나**(GAME_DESIGN §9 10-18) —
-   새 줄은 `POSTS` 에 한 줄 + 단계 표 하나로 목록에 붙고 오른쪽 모양은 줄 수에 안 흔들린다.
-   **선은 한 줄 안에서만 단계 1 → 7 을 잇는다** — 줄끼리 잇지 않는다(트리를 안 쓴다 · base_expedition §2-1).
-   **영웅은 앉지 않는다** [2026-10-18 · ADR-0665]. 레벨은 **고른 칸에서만** 올린다 — 칸마다 버튼을 세우면 훑는 손짓과 사는 손짓이 겹친다.
+/* ═══════════ 연구소 — 한눈에 보는 트리 · 고른 칸 · 칸 레벨 (SCREEN_DESIGN §8 · ADR-0678 · 고른 칸 ADR-0674) ═══════════
+   왼쪽 = 트리(뿌리 연구소 → 줄기 → 가지 = 줄 하나: 줄 그림 노드 → 단계 노드 1 → n) · 오른쪽 = 고른 칸. **연구 하나 = 줄 하나 = 가지 하나**(GAME_DESIGN §9 10-18 · 10-21) —
+   새 줄은 `POSTS` 에 한 줄 + 단계 표 하나로 가지가 하나 더 선다.
+   **선은 뿌리 → 줄 → 단계로만** 잇는다 — 가지 사이를 잇지 않는다(선행 조건은 연구소 랭크 하나 · base_expedition §2-1).
+   **영웅은 앉지 않는다** [2026-10-18 · ADR-0665]. 레벨은 **고른 칸에서만** 올린다 — 노드마다 버튼을 세우면 훑는 손짓과 사는 손짓이 겹친다.
    배수 · 비용 · 거절은 `game.labLevelInfo` 가 낸다(화면은 계산하지 않는다). `dp.*` 키 · `.dp-*` 클래스 · 탭 id `resource` 는 옛 이름 그대로 둔다 */
 
 /** 다음 1개 게이지 — 다음 1개까지 찬 비율 [base_expedition §3-3]. 앱 시계가 폭만 갈아 끼운다(`refreshDispatchBars`) */
@@ -5218,50 +5219,64 @@ const postTiers = (post, open) => (D.mineNodes ?? []).map((s, i) => ({ tier: s.t
 /** 그 줄에서 고른 단계 — 화면 상태(`state.labTier`) · 처음엔 1 */
 const dpPick = postId => state.labTier?.[postId] ?? 1;
 
-/** 줄 목록의 한 줄 — 줄 아이콘 · 이름 · 단계 작은 줄(열린 단계 = 산출물 아이콘 · 잠긴 단계 = 흐린 점) */
-function dpLine(post, open) {
-    const b = el('button', `dp-line${post.id === state.post ? ' on' : ''}`);
-    // 찾아온 영웅 줄은 단계가 없다 — 작은 줄 자리에 Lv(0 이면 「닫힘」) (ADR-0672)
-    const vlv = post.visit ? SYS.game.visitState(G, now()).lv : 0;
-    const marks = post.visit ? `<b class="dp-line-lv">${vlv ? t('dp.lv', { n: vlv }) : t('dp.visit.closed')}</b>` : postTiers(post, open).map(({ row, open: o }) => {
-        const icon = row && o ? M.materialIcon(row.yieldId) : null;
-        return icon ? `<img src="${icon}" alt="" draggable="false">` : '<i></i>';
-    }).join('');
-    b.innerHTML = `<img class="dp-line-ico" src="${labLineIcon(post)}" alt="" draggable="false">
-        <span class="dp-line-b"><span class="dp-line-n">${t(post.label)}</span><span class="dp-line-tiers">${marks}</span></span>`;
-    b.onclick = () => { state.post = post.id; render(); };
-    return b;
-}
-
 /** Lv 눈금 — 칸 수 = 상한(`lab_level_max`) · 찬 칸 = 레벨 */
 const dpPips = (lv, max) => `<span class="dp-pips">${Array.from({ length: max }, (_, i) => `<i${i < lv ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /** 잠긴 자리의 한 줄 — 자물쇠 + 「연구소 n랭크 필요」 */
 const dpNeed = (cls, tier) => `<span class="${cls}"><span class="lock-ico">${lockIcon(true)}</span><span>${needText('resource_tier', tier)}</span></span>`;
 
 /**
- * 단계 사다리 (ADR-0674) — 단계 7 이 세로로 한 줄씩 쌓이고 그림 원끼리 세로 선으로 잇는다. 선은 열린 줄까지 밝다.
- * 한 줄 = 그림 원 · 번호와 장소 · 산출물 · Lv 눈금 · 시간당 + 게이지 / 잠긴 줄 = 그 자리에 「연구소 n랭크 필요」. 줄을 누르면 그 단계가 골라진다(잠긴 줄도)
+ * 트리 (ADR-0678 · 짜임 ADR-0681) — 칸마다 격자 자리를 박는다: 행 = 줄 하나 · 열 = 줄 카드 | 단계 1 → n. 개수는 CSV 표 · `LAB_LINES` 가 정해 CSS 변수로 넘긴다.
+ * 선은 노드 칸 한가운데를 지나는 반쪽 선 둘(`in` = 왼쪽 · `out` = 오른쪽 — 밝으면 열린 노드끼리)이 긋고, 단계 1 의 왼쪽 반 선이 카드 오른쪽 가장자리에 닿는다.
+ * 행 사이에는 선이 없다. 머리(`h2`) = 연구소 이름 · 오른쪽에 지금 랭크 · 오프라인 최대(옛 뿌리가 들던 것)
  */
-function dpLadder(post, open, pick) {
-    const cells = postTiers(post, open);
-    const ol = el('ol', 'dp-ladder');
-    cells.forEach(({ tier, row, open: o }, i) => {
-        // 위 선 = 이 줄이 열렸나 · 아래 선 = 다음 줄이 열렸나 — 열린 줄끼리 잇는 선만 밝다
-        const li = el('li', `dp-step${o ? ' open' : ''}${cells[i + 1]?.open ? ' link' : ''}${tier === pick ? ' on' : ''}`);
-        const icon = row ? M.materialIcon(row.yieldId) : null;
-        const p = row && o ? SYS.game.dispatchProgress(G, post.id, tier, now()) : null;
-        const info = row && o ? SYS.game.labLevelInfo(G, post.id, tier) : null;
-        const tail = info
-            ? `<span class="dp-step-lv"><span>${t('dp.lvOf', { n: info.lv, max: info.max })}</span>${dpPips(info.lv, info.max)}</span>
-               <span class="dp-step-r"><b>${p ? dpRate(p.perHour) : '—'}</b>${p ? dpGauge(post.id, tier) : ''}</span>`
-            : dpNeed('dp-step-need', tier);
-        li.innerHTML = `<span class="dp-orb">${icon ? `<img src="${icon}" alt="" draggable="false">` : ''}${o ? '' : `<span class="lock-ico">${lockIcon(true)}</span>`}</span>
-            <span class="dp-step-t"><span class="dp-step-n"><i>${tier}</i>${row ? L({ ko: row.ko, en: row.en }) : '—'}</span><span class="dp-step-y">${row ? L({ ko: row.yieldKo, en: row.yieldEn }) : ''}</span></span>
-            ${tail}`;
-        li.onclick = () => { state.labTier = { ...(state.labTier ?? {}), [post.id]: tier }; render(); };
-        ol.appendChild(li);
+function dpTree(open) {
+    const tree = el('div', 'panel dp-tree');
+    const b = SYS.game.constructionState(G).buildings.find(x => x.id === 'resource');
+    tree.appendChild(el('h2', '', `<span>${b ? L(b.name) : t('nav.resource')}</span><small>${b?.rank ? t('cn.rank', { n: b.rank }) : needText('resource_tier', 1)} · ${t('dp.offline', { h: D.balance.dispatch_offline_cap_hours })}</small>`));
+    const grid = el('div', 'dp-tree-grid');
+    // 열 수 = 단계 표 길이 · 행 높이는 줄 수와 무관하게 격자의 1/7(CSS `--dp-fit` · ADR-0682) — 넘치면 격자만 스크롤한다
+    grid.style.setProperty('--dp-tiers', (D.mineNodes ?? []).length);
+    const at = (node, row, col) => { node.style.gridRow = row; node.style.gridColumn = col; return node; };
+    LAB_LINES.forEach((post, i) => {
+        grid.appendChild(at(dpTreeLine(post, open), i + 1, 1));
+        if (post.visit) return;   // 찾아온 영웅 — 줄 카드가 곧 그 칸이다(단계 노드가 없다 · ADR-0672)
+        const cells = postTiers(post, open);
+        cells.forEach((c, k) => grid.appendChild(at(dpTreeNode(post, c, !!cells[k + 1]?.open, k === cells.length - 1), i + 1, 2 + k)));
     });
-    return ol;
+    tree.appendChild(grid);
+    return tree;
+}
+/** 줄 카드 (ADR-0681) — 위 줄 그림 · 이름 / `Lv n` · 「닫힘」(찾아온 영웅 — 이 카드가 곧 그 칸) · 아래 영웅 칸. 클릭 = 그 줄(마지막에 고른 칸) · 고른 줄은 왼쪽 강조선.
+ *  ~~[미니게임]~~ — 2026-10-21 숨김(사용자 「미니게임 안보이도록」 · ADR-0682) · 창(`mgOpen`)은 남아 개발용 `?dev=mg` 만 연다 */
+function dpTreeLine(post, open) {
+    const cell = el('div', 'dp-tree-line');
+    const card = el('div', `dp-card${labRegOpen(post, open) ? ' open' : ''}${labPost() === post ? ' on' : ''}`);
+    card.innerHTML = `<div class="dp-card-h"><img class="dp-card-ico${post.visit ? ' sq' : ''}" src="${labLineIcon(post)}" alt="" draggable="false"><span class="dp-card-n">${t(post.label)}</span></div>`;
+    if (post.visit) {
+        const lv = SYS.game.visitLevelInfo(G)?.lv ?? 0;
+        card.firstElementChild.appendChild(el('span', 'dp-card-lv', lv ? t('dp.lv', { n: lv }) : t('dp.visit.closed')));
+    }
+    // 영웅 칸 — 이름 오른쪽 같은 줄 · 카드 오른쪽 끝 (ADR-0683 — ~~카드 아래~~ ADR-0681)
+    const reg = dpRegRow(post, open);
+    if (reg) card.firstElementChild.appendChild(reg);
+    card.onclick = () => { state.post = post.id; render(); };
+    cell.appendChild(card);
+    return cell;
+}
+/** 단계 노드 — 위 `Lv n` · 산출물 그림 원 · 아래 시간당 + 다음 1개 게이지 / 잠긴 노드 = 흐린 원 + 자물쇠 · 아래 「n랭크」. 장소 · 산출물 이름은 `title` 과 고른 칸이 든다 */
+function dpTreeNode(post, { tier, row, open: o }, next, last) {
+    const sel = labPost() === post && tier === dpPick(post.id);
+    const n = el('div', `dp-tree-cell${o ? ' open in' : ''}${next ? ' out' : ''}${last ? ' end' : ''}${sel ? ' on' : ''}`);
+    const icon = row ? M.materialIcon(row.yieldId) : null;
+    const info = row && o ? SYS.game.labLevelInfo(G, post.id, tier) : null;
+    const p = info ? SYS.game.dispatchProgress(G, post.id, tier, now()) : null;
+    const need = needArgs('resource_tier', tier);
+    if (row) n.title = `${tier} ${L({ ko: row.ko, en: row.en })} · ${L({ ko: row.yieldKo, en: row.yieldEn })}${o ? '' : ` — ${needText('resource_tier', tier)}`}`;
+    n.innerHTML = `<span class="dp-tree-t">${info ? t('dp.lv', { n: info.lv }) : ''}</span>
+        <span class="dp-tree-orb">${icon ? `<img src="${icon}" alt="" draggable="false">` : ''}${o ? '' : `<span class="lock-ico">${lockIcon(true)}</span>`}</span>
+        <span class="dp-tree-b">${info ? `<b>${p ? dpRate(p.perHour) : '—'}</b>${p ? dpGauge(post.id, tier) : ''}` : need ? t('cn.rank', { n: need.n }) : t('cn.pending')}</span>`;
+    n.onclick = () => { state.post = post.id; state.labTier = { ...(state.labTier ?? {}), [post.id]: tier }; render(); };
+    return n;
 }
 
 /** 고른 칸의 머리 — 큰 그림(원 · 찾아온 영웅은 선술집 그림 사각) · 이름 · 부제 · Lv 눈금(잠겼으면 없다) */
@@ -5319,24 +5334,11 @@ function dpSide(post, tier, open) {
 }
 
 /**
- * 찾아온 영웅 줄 (SCREEN_DESIGN §8 · ADR-0672 · ADR-0674) — 단계가 없어 사다리 자리에 **한 줄**(선술집 그림 · 이름 · n시간마다 한 명 · Lv 눈금 · 레어 확률)이고
+ * 찾아온 영웅 줄 (SCREEN_DESIGN §8 · ADR-0672 · ADR-0678) — 단계가 없어 트리에서 **줄 그림 노드 하나**가 곧 그 칸이고(`dpTreeLine`)
  * 고른 칸은 단계 줄과 같은 문법 — **레어 확률 지금 → 올린 뒤** · 비용(골드 한 칸 — 재료 없음) · [레벨 올리기]. 레벨 0 은 「닫힘」이고 0 → 1 이 줄을 연다
  * (그 순간부터 찾아오는 시계가 선다 — §8-1). 값 · 비용 · 거절은 `game.visitLevelInfo` 가 낸다(화면은 계산하지 않는다) · 연구소 전이면 잠김 문구만
  */
 const visitRare = info => (info.lv ? t('dp.visit.rare', { r: M.pctNum(info.rarePct) }) : t('dp.visit.closed'));
-function visitStep() {
-    const info = SYS.game.visitLevelInfo(G);
-    const ol = el('ol', 'dp-ladder');
-    const li = el('li', `dp-step on${info ? ' open' : ''}`);
-    const tail = info
-        ? `<span class="dp-step-lv"><span>${t('dp.lvOf', { n: info.lv, max: info.max })}</span>${dpPips(info.lv, info.max)}</span>
-           <span class="dp-step-r"><b>${visitRare(info)}</b></span>`
-        : dpNeed('dp-step-need', 1);
-    li.innerHTML = `<span class="dp-orb sq"><img src="${M.buildingImg('tavern')}" alt="" draggable="false"></span>
-        <span class="dp-step-t"><span class="dp-step-n">${t('dp.post.visit')}</span><span class="dp-step-y">${t('dp.visit.every', { h: D.balance.visit_hours })}</span></span>${tail}`;
-    ol.appendChild(li);
-    return ol;
-}
 function visitSide() {
     const box = el('div', 'dp-side');
     const info = SYS.game.visitLevelInfo(G);
@@ -5356,34 +5358,73 @@ function visitSide() {
 function renderResource(main) {
     // 열린 단계 수 — 연구소 랭크가 연다 (`limitsOf.resourceTiers`)
     const open = SYS.game.limitsOf(G).resourceTiers;
-    const post = LAB_LINES.find(p => p.id === state.post) ?? POSTS[0];
-    const wrap = el('div', 'dp-wrap page');
-    // 왼쪽 — 줄 목록 · 넘치면 목록만 스크롤한다(오른쪽은 고른 줄 하나의 것)
-    const lines = el('div', 'panel dp-lines');
-    const list = el('div', 'dp-line-list');
-    list.dataset.keep = 'dp-lines';
-    for (const p of LAB_LINES) list.appendChild(dpLine(p, open));
-    lines.appendChild(list);
-    lines.appendChild(el('div', 'dp-offline', t('dp.offline', { h: D.balance.dispatch_offline_cap_hours })));
-    wrap.appendChild(lines);
-    // 오른쪽 — 고른 줄 머리([미니게임]) 아래 두 열: 단계 사다리 | 고른 칸 / 찾아온 영웅 줄은 사다리가 한 줄 (ADR-0672 · ADR-0674)
-    const det = el('div', 'panel dp-detail');
-    const head = el('h2', '', `<span>${t(post.label)}</span>`);
-    if (!post.visit) {
-        // [미니게임] — 영웅 없이 직접 캐는 판을 연다 (§8 · ADR-0532) · 단계 줄만. 열린 단계가 없으면 흐리고 안 눌린다
-        const play = el('button', 'btn sm dp-mg', t('mg.play'));
-        if (!open) { play.disabled = true; play.title = needText('resource_tier', 1); }
-        else play.onclick = () => mgOpen(post.id);
-        head.appendChild(play);
+    const post = labPost();
+    const page = el('div', 'page page-stack');
+    // 영웅 띠 — 탐험 탭과 같은 **보기 전용** 띠 [2026-10-21 사용자 「일단 연구소 위에 영웅 얼굴 좀 넣어봐」 · ADR-0676] ·
+    //   위칸 왼쪽은 **연구소 안에서 하는 일**(등록한 줄 · ADR-0677) · 등록은 띠가 아니라 줄 카드의 영웅 칸에서(ADR-0681)
+    page.appendChild(heroStrip(() => {}, { view: true, doing: labDoing }));
+    const wrap = el('div', 'dp-wrap fill');
+    // 왼쪽 — 한눈에 보는 트리: 줄마다 한 행(줄 카드 + 영웅 칸 → 단계 일자) (ADR-0678 · ADR-0681)
+    wrap.appendChild(dpTree(open));
+    // 오른쪽 — 고른 칸(ADR-0674 그대로) · 단계 줄은 머리에 줄 이름 / 찾아온 영웅은 고른 칸 머리가 곧 줄 이름이다
+    const side = post.visit ? visitSide() : dpSide(post, dpPick(post.id), open);
+    side.classList.add('panel');
+    if (!post.visit) side.prepend(el('h2', '', t(post.label)));
+    wrap.appendChild(side);
+    page.appendChild(wrap);
+    main.appendChild(page);
+}
+
+/* ── 연구소 줄 등록 (SCREEN_DESIGN §8 · ADR-0677 · 2026-10-21) — 영웅을 줄에 **등록**한다 · 한 영웅은 한 줄 · **효과 없음**(표시만) · 편성 · 원정과 겸직.
+   띠 위칸 = 등록한 줄 · 줄 카드의 영웅 칸 → 그 줄의 등록 창(ADR-0681). 판정 · 옮기기는 `game.labRegister` 가 한다(화면은 결과만 그린다) */
+/** 고른 줄 — 트리에서 고른 것(`state.post`) · 처음엔 첫 줄 */
+const labPost = () => LAB_LINES.find(p => p.id === state.post) ?? POSTS[0];
+/** 등록 창의 줄 — 누른 영웅 칸의 줄(`state.labRegLine` · 화면 상태) · 없으면 고른 줄. 고른 줄을 안 바꿔 오른쪽 고른 칸이 그대로다 (ADR-0681) */
+const labRegPost = () => LAB_LINES.find(p => p.id === state.labRegLine) ?? labPost();
+/** 그 줄에 등록할 수 있나 — 단계 줄은 열린 단계가 있을 때 · 찾아온 영웅 줄은 레벨 1 부터(로직의 `locked` 와 같은 문턱) */
+const labRegOpen = (post, open = SYS.game.limitsOf(G).resourceTiers) => (post.visit ? (SYS.game.visitLevelInfo(G)?.lv ?? 0) > 0 : open > 0);
+/** 연구소 띠 · 등록 창의 위칸 왼쪽 — 등록한 줄 이름(주황) / 미등록(회색). 원정 · 탐험은 안 센다(겸직 — 다른 탭이 말한다) */
+function labDoing(h) {
+    const line = LAB_LINES.find(p => p.id === SYS.game.labRegOf(G, h.uid));
+    return line ? { cls: 'exp', text: t(line.label) } : { cls: 'idle', text: t('dp.reg.none') };
+}
+/** 영웅 칸 (ADR-0681) — 줄 카드 아래 · 그 줄에 등록한 영웅의 작은 얼굴(로스터 순서) + 빈 칸 `+` · 어느 칸이든 누르면 **그 줄의** 등록 창(카드 고르기로 새지 않는다). 줄이 안 열렸으면 없다 */
+function dpRegRow(post, open) {
+    if (!labRegOpen(post, open)) return null;
+    const row = el('div', 'dp-reg-row');
+    const go = e => { e.stopPropagation(); state.labRegLine = post.id; openModal('labReg'); };
+    for (const uid of SYS.game.labRegList(G, post.id)) {
+        const h = G.heroes.find(x => x.uid === uid);
+        const b = el('button', 'dp-reg-face', heroFace(h));
+        b.title = L(h.name);
+        b.onclick = go;
+        row.appendChild(b);
     }
-    det.appendChild(head);
-    const body = el('div', 'dp-body');
-    const pick = dpPick(post.id);
-    body.appendChild(post.visit ? visitStep() : dpLadder(post, open, pick));
-    body.appendChild(post.visit ? visitSide() : dpSide(post, pick, open));
-    det.appendChild(body);
-    wrap.appendChild(det);
-    main.appendChild(wrap);
+    const add = el('button', 'dp-reg-face empty', '<span>+</span>');
+    add.onclick = go;
+    row.appendChild(add);
+    return row;
+}
+/** 등록 창 머리 — 「{줄} — 영웅 등록」 · 함수 선언이라 위 `MODALS` 가 먼저 읽어도 된다 */
+function labRegHead() { return el('h2', '', t('dp.reg.modal', { line: t(labRegPost().label) })); }
+/** 등록 창 속 — 로스터 카드(띠와 같은 얼굴 · 위칸 = 등록한 줄) · 이 줄의 카드 = 파란 겉 테두리. 클릭 = 등록 · 이 줄이면 해제 · 다른 줄이면 옮긴다 */
+function labRegBody() {
+    const post = labRegPost();
+    const grid = el('div', 'hero-strip lr-grid');
+    for (const h of G.heroes) {
+        const mine = SYS.game.labRegOf(G, h.uid) === post.id;
+        const c = el('div', `hs-card${mine ? ' on' : ''}${h.tier === 'unique' ? ' unique' : ''}`);
+        c.style.borderTopColor = tierColor(h);
+        c.innerHTML = heroCardHtml(h, { doing: labDoing(h) });
+        c.onclick = () => {
+            const r = mine ? SYS.game.labUnregister(G, h.uid) : SYS.game.labRegister(G, h.uid, post.id);
+            if (!r.ok) { flash(`dp.err.${r.err}`); render(); return; }
+            save();
+            render();
+        };
+        grid.appendChild(c);
+    }
+    return grid;
 }
 
 /* ═══════════ 자원 미니게임 — 2026-10-16 전면 개편 ═══════════
@@ -6806,8 +6847,8 @@ function renderShop(main) {
     body.dataset.keep = 'shop';
 
     // 탭 없이 장비 목록 하나 [2026-09-30 사용자 지시 「장비와 재료 탭 삭제」] — 맨 윗줄 오른쪽에 정해진 물약 셋(2026-09-28) ·
-    //   그 사이(무기 바로 오른쪽)에 스킬북 셋 [2026-09-29 사용자 지시 · §8-3 · ADR-0423]
-    body.appendChild(shopGoods(S.equip.map(equipGood), 'equip', S.list, S.potions.map(potionGood), S.books.map(bookGood)));
+    //   그 사이(무기 바로 오른쪽)에 스킬 도안 셋 [2026-09-29 사용자 지시 · §8-3 · ADR-0423 · 2026-10-20 ~~스킬북~~ → 도안 · ADR-0680]
+    body.appendChild(shopGoods(S.equip.map(equipGood), 'equip', S.list, S.potions.map(potionGood), S.blueprints.map(blueprintGood)));
 
     p.appendChild(body);
     col.appendChild(p);
@@ -6865,8 +6906,8 @@ const equipGood = ({ item, gold, sold }) => ({ item, gold, sold, name: L(item.na
 const matGood = m => ({ mat: m, gold: m.gold, name: L(m.name), color: null });
 /** 물약 칸 — `shopState.potions`(정해진 셋 · 매진 없음) · 이름은 `potion.csv` */
 const potionGood = x => { const p = D.potions.find(r => r.id === x.id); return { potion: x, gold: x.gold, name: p ? L({ ko: p.ko, en: p.en }) : x.id, color: null }; };
-/** 스킬북 칸 — `shopState.books`(회차마다 굴린 책 · 한 권씩 매진 · 가진 책도 산다 — 쌓인다 · ADR-0460) · 이름은 스킬 이름 (ADR-0423) */
-const bookGood = x => ({ book: x, gold: x.gold, sold: x.sold, name: L(skillInfo(x.id).name), color: null });
+/** 스킬 도안 칸 — `shopState.blueprints`(목록마다 굴린 도안 · 한 장씩 매진 · 가진 도안도 산다 — 쌓인다 · ADR-0460 · ADR-0680) · 이름은 스킬 이름 (ADR-0423) */
+const blueprintGood = x => ({ blueprint: x, gold: x.gold, sold: x.sold, name: L(skillInfo(x.id).name), color: null });
 
 /** 재료 칸의 툴팁 — 이름 · 수량 · 가격뿐이다 (§8-3) */
 function matTipCard(g) {
@@ -6948,14 +6989,14 @@ function commissionCard(c, CS) {
  * 고른 것은 상점 전체에서 하나다(`state.shopSel` — `src` 가 어느 격자인지 가른다).
  * @param src 'equip' | 'mat' | 'special'
  */
-function shopGoods(list, src, cycle, potions = [], books = []) {
+function shopGoods(list, src, cycle, potions = [], bps = []) {
     const box = el('div', 'td-goods');
     const grid = el('div', `td-grid${src === 'equip' ? ' grouped' : ''}`);
-    // 고른 것 — 물약 · 책은 따로 든 목록이라 `src` 가 'potion' · 'book' 이다 (2026-09-28 · 09-29)
+    // 고른 것 — 물약 · 도안은 따로 든 목록이라 `src` 가 'potion' · 'blueprint' 이다 (2026-09-28 · 09-29 · 도안 2026-10-20)
     const sel = state.shopSel?.src === src ? list[state.shopSel.i] ?? null
         : state.shopSel?.src === 'potion' && src === 'equip' ? potions[state.shopSel.i] ?? null
-        : state.shopSel?.src === 'book' && src === 'equip' ? books[state.shopSel.i] ?? null : null;
-    // 장비 탭은 두 열 — 왼쪽 장비 3 × 3(무기 줄 + 방어구 두 줄) · 오른쪽 열 맨 위 스킬북 셋 · 그 아래 물약 셋
+        : state.shopSel?.src === 'blueprint' && src === 'equip' ? bps[state.shopSel.i] ?? null : null;
+    // 장비 탭은 두 열 — 왼쪽 장비 3 × 3(무기 줄 + 방어구 두 줄) · 오른쪽 열 맨 위 스킬 도안 셋 · 그 아래 물약 셋
     //   [2026-09-29 사용자 지시 「장비 3칸씩 3줄 오른쪽 맨위에 스킬3개 그 아래 물약3종류」 · §8-3 · ADR-0424]
     const side = src === 'equip' ? el('div', 'td-side') : null;
     const poor = g => G.resources.gold < g.gold;
@@ -6994,15 +7035,16 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
             group.appendChild(slot);
         } else grid.appendChild(slot);
     });
-    // 스킬북 묶음 — 오른쪽 열 맨 위 · 스킬 그림 · 아래 가격 · 산 칸은 「팔림」 · 가진 책도 고른다(쌓인다 · 권수는 안 단다 — ADR-0460) (§8-3 · ADR-0423 · ADR-0424)
-    if (side && books.length) {
+    // 스킬 도안 묶음 — 오른쪽 열 맨 위 · 스킬 그림 + 왼쪽 위 「도안」 배지(리포트 도안 칸과 같다) · 아래 가격 · 산 칸은 「팔림」 ·
+    //   가진 도안도 고른다(쌓인다 · 장수는 안 단다 — ADR-0460) (§8-3 · ADR-0423 · ADR-0424 · ADR-0680) · 칸 클래스 `td-books` 는 자리 이름이라 그대로
+    if (side && bps.length) {
         const bg = el('div', 'td-group td-books');
-        books.forEach((g, i) => {
+        bps.forEach((g, i) => {
             const slot = el('div', 'td-slot');
             const cell = el('div', `inv-cell filled${sel === g ? ' td-picked' : ''}${g.sold ? ' gone' : ''}`);
-            cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(g.book.id))}</span>`;
-            bindTipNode(cell, () => skillTipCard({ id: g.book.id }, h ? heroSkillCtx(h) : {}));
-            if (!g.sold) cell.onclick = () => { state.shopSel = sel === g ? null : { src: 'book', i, cycle }; render(); };
+            cell.innerHTML = `<span class="inv-icon">${skillImg(skillInfo(g.blueprint.id))}</span>${bpTag()}`;
+            bindTipNode(cell, () => skillTipCard({ id: g.blueprint.id }, h ? heroSkillCtx(h) : {}));
+            if (!g.sold) cell.onclick = () => { state.shopSel = sel === g ? null : { src: 'blueprint', i, cycle }; render(); };
             slot.appendChild(cell);
             slot.appendChild(g.sold ? el('div', 'td-price muted', t('td.sold'))
                 : el('div', `td-price${poor(g) ? ' no' : ''}`, `${g.gold.toLocaleString()} G`));
@@ -7054,9 +7096,9 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
             render();
             return;
         }
-        // 스킬북 — `game.shopBookBuy` · 사면 고른 칸이 풀린다(한 권씩 매진) · 골드가 모자라면 고른 채 둔다 (ADR-0423)
-        if (sel?.book) {
-            const r = SYS.game.shopBookBuy(G, state.shopSel.i, state.shopSel.cycle, now());
+        // 스킬 도안 — `game.shopBlueprintBuy` · 사면 고른 칸이 풀린다(한 장씩 매진) · 골드가 모자라면 고른 채 둔다 (ADR-0423 · ADR-0680)
+        if (sel?.blueprint) {
+            const r = SYS.game.shopBlueprintBuy(G, state.shopSel.i, state.shopSel.cycle, now());
             if (r.ok) { flash('td.bought', { name: sel.name, g: r.gold.toLocaleString() }); save(); }
             else if (r.err === 'unbuilt') { flashNeed('shop'); return; }
             else flash(`td.err.${r.err === 'missing' ? 'stale' : r.err}`);
@@ -7388,29 +7430,19 @@ function codexItem(p) {
  * (`slotArt`·`itemArt` 와 다르다 — 스킬은 「제 그림은 아니어도 늘 같은 그림」이면 되기 때문).
  * 그래서 여기서 빈 칸 신호는 그림이 아니라 **파일명 줄**이다 — 파일명이 스킬 id 와 다르면 아직 제 그림이 없다 (§9-1).
  *
- * **일반 스킬 탭은 스킬 도감이다** [2026-10-17 · ADR-0650] — 타일이 파일명 줄 대신 몬스터 카드의 레벨 핍 · 진행 막대를 들고
- * (파일명은 그림의 작은 툴팁 — 몬스터 초상과 같은 자리), 툴팁은 스킬 카드 + 획득처 · 단계 두 장이다(`tip.js:codexSkillTipCard`).
+ * **일반 스킬 탭은 스킬 도감이다** [2026-10-20 · ADR-0680 — ~~레벨 핍 · 진행 막대~~ ADR-0650] — 레벨 없는 목록이다. 타일 = 그림 · 이름
+ * (파일명은 그림의 작은 툴팁 — 몬스터 초상과 같은 자리), 툴팁은 스킬 카드 + 획득처 · 레벨이 오르면 두 장이다(`tip.js:codexSkillTipCard`).
  */
 function codexSkill(p) {
     const rows = D.skillRows ?? [];
     // 출처 칩은 안 단다 — 그룹 머리가 이미 직업을 말하고, `owner_kind` 는 이제 전부 `job` 이라 더 말해 주는 것이 없다
-    // 일반 스킬 타일 = 그림 · 이름 · 레벨 핍 · 진행 막대 — 핍 · 막대는 몬스터 카드(`monsterCard`)와 같은 모양 · 같은 계산이다.
-    //   책이 안 되는 스킬(`skill.bookable` — 사제 소환)은 도감 경험치가 안 쌓여 핍 · 막대가 없다 · `data-codex` = 두 장 툴팁을 거는 손잡이
+    // 일반 스킬 타일 = 그림 · 이름. 책이 안 되는 스킬(`skill.bookable` — 사제 소환)은 도안이 없어 툴팁이 스킬 카드 한 장이다 ·
+    //   `data-codex` = 두 장 툴팁을 거는 손잡이
     const tile = r => {
         const id = r.skill_id, src = M.skillIcon(id), name = L(skillInfo(id).name);
         const file = src ? src.split('/').pop().replace(/\.[^.]+$/, '') : '';
         const art = `<span class="ix-art box"${file ? ` title="${file}"` : ''}>${src ? `<img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span>`;
-        if (!SYS.skill.bookable(id)) return `<div class="ix-tile ix-codex" data-skill="${id}">${art}<span class="ix-name">${name}</span></div>`;
-        const exp = G.skillCodexExp?.[id] ?? 0;
-        const cum = D.skillCodex.slice(1).map(x => x.expTotal);   // 레벨별 **누적 문턱** 그대로 — 0 행(도감 전)은 핍이 아니다
-        const lv = SYS.game.skillCodexLevel(exp);
-        const next = SYS.game.skillCodexNext(exp);
-        const prev = lv > 0 ? cum[lv - 1] : 0;
-        const pct = next ? Math.min(100, (exp - prev) / (next - prev) * 100) : 100;
-        const pips = cum.map((need, i) =>
-            `<span class="pip${i < lv ? ' on' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.exp', { n: need.toLocaleString() })}"></span>`).join('');
-        return `<div class="ix-tile ix-codex" data-skill="${id}" data-codex="1">${art}<span class="ix-name">${name}</span>` +
-            `<span class="ix-track"><span class="pips">${pips}</span><span class="bar"><i style="width:${pct}%"></i></span></span></div>`;
+        return `<div class="ix-tile ix-codex" data-skill="${id}"${SYS.skill.bookable(id) ? ' data-codex="1"' : ''}>${art}<span class="ix-name">${name}</span></div>`;
     };
 
     // 안쪽 탭 — **일반 스킬 · 전직 스킬** (ADR-0335 — ADR-0299 의 직업 탭 다섯 대체). 직업은 탭이 아니라 묶음이다.
@@ -7461,10 +7493,10 @@ function codexSkill(p) {
 
     // 툴팁은 DOM 이 선 **뒤에** 건다 (격자가 문자열이라 노드가 없다). 카드는 캐릭터 탭 · 관전과 같은 것을 그대로 부른다 —
     // 화면 전용 문구를 새로 쓰지 않는다 (§12 · tip.js:skillTipCard). 전투 맥락(주기 · 공격력)은 없으므로 문장이 그 조각을 접는다
-    //   책이 되는 일반 스킬은 **두 장 · 카드 옆에 붙는다**(스킬 카드 + 획득처 · 단계 — ADR-0650 · 몬스터 툴팁과 같은 이유 · ADR-0206)
+    //   책이 되는 일반 스킬은 **두 장 · 카드 옆에 붙는다**(스킬 카드 + 획득처 · 레벨이 오르면 — ADR-0680 · 몬스터 툴팁과 같은 이유 · ADR-0206)
     for (const n of box.querySelectorAll('[data-skill]')) {
         const id = n.dataset.skill;
-        if (n.dataset.codex) bindTipNode(n, () => codexSkillTipCard(id, G.skillCodexExp?.[id] ?? 0), { anchor: true });
+        if (n.dataset.codex) bindTipNode(n, () => codexSkillTipCard(id), { anchor: true });
         else bindTipNode(n, () => skillTipCard({ id }, { source: n.dataset.src }));
     }
 }
@@ -8234,11 +8266,11 @@ async function boot() {
         G.resources.gold = Math.max(G.resources.gold, D.balance.book_craft_gold * 3);
         G.resources.dust = Math.max(G.resources.dust, D.balance.book_craft_dust * 3);
         state.heroUid = h0.uid;
-        // 스킬 도안 — 1장 몬스터의 고유 스킬마다 스킬 도감을 Lv1 문턱까지 채운다: 그 책들이 제작 칸에 선다(새 게임엔 칸이 없다 · R241 · ADR-0600 · 2026-10-16 R266 스킬 도감)
-        const bp = SYS.game.skillCodexNext(0);
+        // 스킬 도안 — 1장 몬스터의 고유 스킬마다 한 장: 그 책들이 제작 칸에 선다 · 같은 고유를 든 몬스터가 여럿이면 `×n`
+        //   (새 게임엔 도안이 없다 · R241 · ADR-0600 · 2026-10-20 R293 — 도안은 쌓이는 소모품 · ADR-0680)
         for (const m of Object.values(D.monsters)) {
             const sk = m.innate_skill;
-            if (Number(m.chapter) === 1 && SYS.skill.bookable(sk)) G.skillCodexExp[sk] = Math.max(G.skillCodexExp[sk] ?? 0, bp);
+            if (Number(m.chapter) === 1 && SYS.skill.bookable(sk)) G.blueprints[sk] = (G.blueprints[sk] ?? 0) + 1;
         }
         // 책 만들기 첫 칸 · 가진 책 둘째 책(배운 칸이 차 있어 [덮어쓰기]가 선다)을 고른 채 — 두 위 줄이 다 서게 (ADR-0570 · ADR-0573)
         state.bookCraftSel = SYS.game.bookState(G, h0.uid).craft[0]?.id ?? null;
@@ -8329,8 +8361,12 @@ async function boot() {
             G.resources.gold = 999999;
         }
         if (Number.isInteger(pickTier) && pickTier > 0) state.labTier = { [post]: pickTier };
+        // `&reg=1` — 로스터 앞 영웅들을 단계 줄에 하나씩 등록한 채(남은 영웅은 미등록) · `&lr=1` — 고른 줄의 등록 창을 연 채
+        //   (§8 · ADR-0677 — 등록은 클릭으로만 서서 헤드리스가 띠 위칸 · 등록 자리 · 창에 못 닿는다)
+        if (q.get('reg') === '1') G.heroes.slice(0, POSTS.length).forEach((h, i) => SYS.game.labRegister(G, h.uid, POSTS[i].id));
         // `&open=0` — 창을 닫은 채 연구소 탭만(단계가 다 열린 판 · 옛 `?dev=watch&open=0` 의 자리 · ADR-0665)
-        if (q.get('open') !== '0') state.modal = 'mg';
+        if (q.get('lr') === '1') state.modal = 'labReg';
+        else if (q.get('open') !== '0') state.modal = 'mg';
         save();
         if (q.get('go') === '1') setTimeout(() => { if (state.modal === 'mg') mgStart(post, 1); }, 0);
     }

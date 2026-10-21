@@ -40,23 +40,25 @@ import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
 /** 스테이지 라운드 구조 (base_expedition_design §1-2) — 구조는 고정, 내용물만 랜덤 */
 
 /** 죄종 — en 은 chapter_info.csv 의 sin_en 그대로. adj 는 아이템/정예 접두 형용사 */
-/* `line` — 그 죄종이 어떤 영웅을 만드나 한 문장 · 시작 화면 안내 띠의 죄종 줄 (2026-10-16 · app.js:startGuide).
-   문장은 죄종 마스터리 1티어(skill_design §3-1)의 방향을 풀어 쓴 것이다 — 1티어 축이 바뀌면 같이 고친다 */
+/* `line` — 그 죄종이 어떤 영웅을 만드나 한 문장 · 새 게임 카드 연장 칸의 죄종 줄 (2026-10-16 · app.js:startLines).
+   문장은 죄종 마스터리 1티어(skill_design §3-1)의 방향을 풀어 쓴 것이다 — 1티어 축이 바뀌면 같이 고친다.
+   **하는 일을 그대로 담백하게** 적는다 — 비유 · 감탄 · 반전 토막 없이(2026-10-21 사용자가 시안 셋 중 담백형을 골랐다).
+   직업 문장(`class.csv:role_text`)은 「무기 + 역할」 소개형이다. 둘 다 **카드 한 줄에 선다** — 가장 넓은 칩(마법사 · Gluttony) 옆에서 재서 넘치지 않게 (SCREEN_DESIGN §3) */
 export const SINS = {
     wrath: { ko: '분노', en: 'Wrath', adj: 'Wrathful', color: '#e03030',
-        line: { ko: '빠르고 거세게 몰아치며 치명타를 노린다', en: 'Strikes fast and hard and hunts critical hits' } },
+        line: { ko: '공격이 빨라지고 치명타가 잘 터진다', en: 'Attacks faster and crits more often' } },
     envy: { ko: '시기', en: 'Envy', adj: 'Envious', color: '#30b050',
-        line: { ko: '적의 방어를 깎고 받은 만큼 되돌려 준다', en: 'Strips enemy defenses and pays back what it takes' } },
+        line: { ko: '방어와 저항을 뚫고 받은 피해 일부를 돌려준다', en: 'Pierces defenses and reflects damage' } },
     greed: { ko: '탐욕', en: 'Greed', adj: 'Greedy', color: '#d0a020',
-        line: { ko: '더 많은 골드와 전리품을 긁어모은다', en: 'Hoards more gold and loot' } },
+        line: { ko: '골드와 아이템을 더 많이 얻는다', en: 'Finds more gold and items' } },
     sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#7087a8',   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
-        line: { ko: '피해를 덜 받으며 버티고 스킬을 더 자주 쓴다', en: 'Shrugs off damage and uses skills more often' } },
+        line: { ko: '받는 피해가 줄고 스킬을 더 자주 쓴다', en: 'Takes less damage, shorter cooldowns' } },
     gluttony: { ko: '폭식', en: 'Gluttony', adj: 'Gluttonous', color: '#e07020',
-        line: { ko: '단단한 몸으로 원소를 견디고 적의 체력을 뜯어 먹는다', en: 'Endures the elements and devours enemy health' } },
+        line: { ko: '체력과 저항이 오르고 적 체력을 비율로 깎는다', en: 'More health and resists, % HP damage' } },
     lust: { ko: '색욕', en: 'Lust', adj: 'Lustful', color: '#e03080',
-        line: { ko: '적의 피를 빨아 버티고 걸린 축복을 오래 끈다', en: 'Drinks enemy blood to endure and makes blessings linger' } },
+        line: { ko: '때릴 때마다 체력을 흡수하고 버프가 오래 간다', en: 'Steals life on hit and buffs last longer' } },
     pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0',
-        line: { ko: '흔들리지 않고 더 큰 데미지를 낸다', en: 'Stands unshaken and hits harder' } },
+        line: { ko: '받는 피해가 줄고 공격력이 오르며 잘 안 밀린다', en: 'Tougher, hits harder, hard to stagger' } },
 };
 
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
@@ -319,9 +321,11 @@ export const PAPERDOLL = [
    — 2026-09-16 사용자 지시로 mage 1 → 3. 늘리는 방향이라 기존 영웅 얼굴은 안 바뀐다(faces/cartoon/README).
    warrior_4 레오니다스(청동 투구를 이마로 올림 · 검은 볏 — 10-16 교체) · warrior_5 삼손(헝클어진 장발·수염 · 맨몸)
    — 2026-09-21 사용자 지시로 warrior 3 → 5. 역시 늘리는 방향이다.
+   2026-10-21 사용자 지시로 노스트라다무스를 사제로 옮겼다 — mage_3 → priest_5 · mage 3 → 2 · priest 4 → 5.
+   ⚠ mage 는 **줄이는 방향**이라 세이브에 `mage_3` 이 박힌 마법사는 접혀서 mage_1 을 받는다(새 마법사 초상이 mage_3 에 들어오면 그 그림이 된다).
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
    풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
-export const HERO_FACES = { warrior: 5, knight: 5, mage: 3, archer: 1, priest: 4 };
+export const HERO_FACES = { warrior: 5, knight: 5, mage: 2, archer: 1, priest: 5 };
 
 /**
  * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
@@ -345,11 +349,11 @@ export const HERO_FACE_NAMES = {
     knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
     mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
-    mage_3: { ko: '노스트라다무스', en: 'Nostradamus' },   // 황도 기호 로브 노인 · ⚠ 10-20 사제로 옮긴다(파일 이동 — DEV_PLAN R292)
     priest_3: { ko: '잔 다르크', en: 'Joan of Arc' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
     priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel' }, // 역병 의사 — 흰 부리 가면
     priest_1: { ko: '베네딕토', en: 'Benedict' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
     priest_2: { ko: '멀린', en: 'Merlin' },                // 올리브 후드 · 룬 문신 노인 (10-20 이름)
+    priest_5: { ko: '노스트라다무스', en: 'Nostradamus' }, // 황도 기호 로브 노인 (10-21 마법사 mage_3 → 사제)
     // knight_2 · knight_3 · knight_4 는 이름 없이 번호로 둔다 (2026-09-10 사용자 지시 — 「나중에 안 쓸 듯」)
 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).

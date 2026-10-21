@@ -9,11 +9,12 @@
  *   새 모양이면 규칙 함수를 하나 더 만든다. 같은 규칙을 **두 번째 스테이지**가 쓰면 그 규칙만 CSV 칸으로 올린다.
  *   표의 몬스터 번호 · 라운드 수는 CLAUDE.md 규칙 2 의 **등록된 예외**다 (INTERFACE §5-3).
  *
- * 규칙 = 편성 단계에 끼어드는 자리의 묶음 — `{refs, pool?, elitePool?, summoners?, escorts?}`:
+ * 규칙 = 편성 단계에 끼어드는 자리의 묶음 — `{refs, pool?, elitePool?, summoners?, standing?, escorts?}`:
  *   refs              생성 시 검사가 볼 몬스터 번호 — **그 스테이지의 일반몹**이어야 한다(battle.js 가 로드에서 던진다)
  *   pool(ids, n)      n 라운드의 라운드 풀을 줄인다
  *   elitePool(ids)    정예 후보를 줄인다 — 받는 목록은 **라운드 풀**이다
  *   summoners         소환사 — 라운드에 서면 그 뒤의 뽑기와 채움이 소환사를 뺀 풀에서 돈다 · 상한까지 채운다
+ *   standing          소환사 중 **무리가 대기하지 않는 것** — 채운 몫까지 라운드 시작에 함께 선다(`summoners` 에도 든다)
  *   escorts(lo, hi)   보스 호위 수 범위를 바꾼다
  */
 
@@ -38,6 +39,12 @@ export const eliteOnly = (...ids) => ({
  */
 export const summoner = id => ({ refs: [id], summoners: [id] });
 
+/**
+ * **무리와 함께 서는 소환사** [2026-10-21 사용자 지시] — `summoner` 와 같다(서면 상한까지 채운다 · 라운드에 하나 · 무리를 든다) —
+ *   다만 **채운 몫이 대기하지 않는다**: 소환사가 선 라운드는 처음부터 상한까지 차 있고, 불러내기는 쓰러진 무리를 되살릴 때만 선다
+ */
+export const summonerWithBand = id => ({ ...summoner(id), standing: [id] });
+
 /** 보스 호위 수 범위를 바꾼다 — 호위 수 굴림 1회는 그대로 돈다 */
 export const bossEscorts = (lo, hi) => ({ refs: [], escorts: () => [lo, hi] });
 
@@ -50,8 +57,9 @@ export const bossAlone = () => bossEscorts(0, 0);
  */
 export const STAGE_SPAWN_RULES = Object.freeze({
     // 1-1 파멸의 진영 — 「주술사가 나머지를 소환한다」 [2026-09-18 사용자 지시]
-    //   주술사는 3라운드부터 · 정예는 주술사뿐 · 주술사가 서면 척후병 · 전사로 상한까지 채운다(그 몫은 「고블린 소환」이 세운다) · 아바돈은 혼자
-    '1-1': [roundFrom(1103, 3), eliteOnly(1103), summoner(1103), bossAlone()],
+    //   주술사는 3라운드부터 · 정예는 주술사뿐 · 주술사가 서면 척후병 · 전사로 상한까지 채운다 · 아바돈은 혼자
+    //   채운 몫은 **처음부터 함께 선다** [2026-10-21 사용자 「무조건 고블린전사 또는 고블린척후병과 함께 3자리를 모두 채워서」] — 「소환」은 되살림만 한다
+    '1-1': [roundFrom(1103, 3), eliteOnly(1103), summonerWithBand(1103), bossAlone()],
     // 2-3 부패한 뿌리 — 「우상족 주술사가 부족을 소환한다」 [2026-10-09 사용자 지시] — 소환만 건다(라운드 · 정예 · 보스 제약 없음 — 보스 라운드 호위로 서도 부른다)
     '2-3': [summoner(2303)],
     // 5-3 소화의 심연 — 「스카라브 여왕이 알을 낳아 무리를 부른다」 [2026-10-16 사용자 「소환사로 열어」] — 2-3 과 같은 모양(소환만 건다)

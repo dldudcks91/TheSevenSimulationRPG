@@ -22,7 +22,7 @@
  */
 
 import * as M from './mock.js';
-import { t, L, lang, has as STRINGS_HAS } from './i18n.js';
+import { t, L, lang } from './i18n.js';
 import { D, SYS, skillTagName, monsterFace, monsterName, monsterSin, monsterStory, fillStory, potionInfo } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
@@ -755,17 +755,34 @@ export function codexMonsterTipCard(m, grade) {
     return [cand, card];
 }
 
+/** 레벨 줄의 칸 이름 키 — `level_field` 하나에 하나(`cx.lv.*`). 피해 배율은 하는 일이, 감쇠는 대상이 가른다(가이디드 = 방어 깎기) · 모르는 칸은 「효과」 */
+const LV_LABEL = {
+    mult_pct: (d, e) => (e.effect === 'hit' ? 'cx.lv.mult' : 'cx.lv.heal'),
+    hits: () => 'cx.lv.hits',
+    decay_pct: d => (d.target === 'enemy_highest_def' ? 'cx.lv.strip' : 'cx.lv.decay'),
+    duration_sec: () => 'cx.lv.dur',
+    effect_value: () => 'cx.lv.value',
+    cool_sec: () => 'cx.lv.cool',
+};
+/** 레벨 줄의 값 — `level_step` **그대로**(레벨마다 더하는 양 · 부호를 단다). 시간 칸은 초 · 타수는 회 · 나머지는 비율(%) */
+function lvStepText(field, step) {
+    const sign = step < 0 ? '−' : '+';
+    const v = Math.abs(step);
+    if (field === 'duration_sec' || field === 'cool_sec') return sign + t('time.s', { s: num(v) });
+    if (field === 'hits') return sign + t('sk.u.times', { v: num(v) });
+    return `${sign}${M.pctNum(v)}%`;
+}
+
 /**
- * 도감 스킬 툴팁 — **두 장**: 왼쪽 스킬 카드 그대로 · 오른쪽 획득처 · 단계 (SCREEN_DESIGN §9-1 · ADR-0650).
- * 오른쪽 장은 몬스터 툴팁의 오른쪽 장과 같은 모양이다 — 「획득처」 머리글 + 작은 초상 · 아래 「보너스 효과」 머리글 + 단계(바닥에 붙는다).
- * 몬스터 툴팁의 능력치 자리에 스킬은 「무엇을 잡나」가 선다. 도감 경험치는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
- * 획득처는 `battle.skillCarriers` 가 답한다(칸 규칙은 로직의 것) — 고정 칸 몬스터가 먼저, 셋째 칸 굴림 보스는 작은 머리 아래 따로
+ * 도감 스킬 툴팁 — **두 장**: 왼쪽 스킬 카드 그대로(설명) · 오른쪽 획득처 · 레벨이 오르면 (SCREEN_DESIGN §9-1 · ADR-0680 — ~~단계~~ ADR-0650).
+ * 오른쪽 장은 몬스터 툴팁의 오른쪽 장과 같은 모양이다 — 「획득처」 머리글 + 작은 초상 · 아래 「레벨이 오르면」 머리글 + 한 줄(바닥에 붙는다).
+ * 몬스터 툴팁의 능력치 자리에 스킬은 「어디서 얻나」가 선다. 스킬 도감은 레벨이 없는 목록이라(monster_design §8-1 · R293) 영웅 · 세이브를 안 읽는다.
+ * 획득처는 `battle.skillCarriers` 가 답한다(칸 규칙은 로직의 것) — 고정 칸 몬스터가 먼저, 셋째 칸 굴림 보스는 작은 머리 아래 따로 ·
+ *   상단이 그 도안을 팔면(`game.shopBlueprintPool`) 맨 아래 「상단」 머리 + 건물 그림
  * @param id  스킬 id — 책이 되는 스킬만 부른다(`skill.bookable`)
- * @param exp 그 스킬의 누적 스킬 도감 경험치
- * @returns `[스킬 카드, 획득처 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
+ * @returns `[스킬 카드, 획득처 · 레벨이 오르면 장]` — 툴팁 창이 가로로 나란히 세운다
  */
-export function codexSkillTipCard(id, exp) {
-    const lv = SYS.game.skillCodexLevel(exp);
+export function codexSkillTipCard(id) {
     const src = SYS.battle.skillCarriers(id);
     // 작은 원형 초상 — 보스는 보스 테두리 · 아트가 없으면 죄종 색 빈 원(도감 몬스터 카드와 같은 규칙) · 아래 장-장소
     const face = s => {
@@ -784,20 +801,29 @@ export function codexSkillTipCard(id, exp) {
     const later = D.difficultyList.slice(1).map(d => [d, src.fixed.filter(s => s.difficulty === d.id)]).filter(([, list]) => list.length);
     const body = (src.fixed.some(s => s.difficulty === firstDiff || s.difficulty == null) ? grid(src.fixed.filter(s => s.difficulty === firstDiff || s.difficulty == null)) : '')
         + later.map(([d, list]) => `<div class="cx-src-h muted">${L(d.name)}</div>${grid(list)}`).join('')
-        + (src.roll.length ? `<div class="cx-src-h muted">${t('cx.tip.roll')}</div>${grid(src.roll, ' roll')}` : '');
-    // 단계 — Lv1 = 스킬 도안 · 그 뒤는 그 레벨의 업그레이드 상한(skill_codex_level.csv · 0 행 = 도감 전은 단계가 아니다).
-    //   **레벨만 든다** — 경험치 문턱은 타일의 핍이 든다(몬스터 툴팁과 같은 규칙 · ADR-0209)
-    const steps = D.skillCodex.slice(1).map(r => `
-        <div class="cx-step${r.level <= lv ? ' on' : ''}">
-            <span class="cx-step-lv">${t('cx.tip.lv', { lv: r.level })}</span>
-            <span class="cx-step-b">${r.level === 1 ? t('cx.tip.blueprint') : t('cx.tip.cap', { n: r.upgradeCap })}</span>
-        </div>`).join('');
+        + (src.roll.length ? `<div class="cx-src-h muted">${t('cx.tip.roll')}</div>${grid(src.roll, ' roll')}` : '')
+        + (SYS.game.shopBlueprintPool().includes(id) ? shopSource() : '');
+    // 레벨이 오르면 — 그 스킬의 레벨 줄 하나(스킬마다 많아야 한 줄 · 로드 검사) · 칸 이름 | `level_step` 그대로. 없으면 `—`
+    const def = SYS.skill.defs[id];
+    const e = def?.effects.find(x => x.levelField !== null);
+    const lvUp = e
+        ? `<div class="cx-lvup"><span>${t(LV_LABEL[e.levelField]?.(def, e) ?? 'cx.lv.value')}</span><b>${lvStepText(e.levelField, e.levelStep)}</b></div>`
+        : '<span class="muted">—</span>';
     const card = el('div', 'tip-card cx-tip cx-sk-tip', `
         <div class="cx-tip-h">${t('cx.tip.source')}</div>
         <div class="cx-src-box">${body || '<span class="muted">—</span>'}</div>
-        <div class="cx-tip-h">${t('cx.tip.effects')}</div>
-        <div class="cx-steps">${steps}</div>`);
+        <div class="cx-tip-h">${t('cx.tip.lvUp')}</div>
+        ${lvUp}`);
     return [skillTipCard({ id }), card];
+}
+
+/** 획득처의 상단 — 작은 머리 = 건물 이름(`building.csv`) · 그림 = 상단 건물 그림(몬스터 초상과 같은 크기 · 네모) · 상단을 지었는지와 상관없이 선다 (ADR-0680) */
+function shopSource() {
+    const b = SYS.construction.list.find(x => x.id === 'shop');
+    const name = b ? L(b.name) : 'shop';
+    const img = M.buildingImg('shop');
+    return `<div class="cx-src-h muted">${name}</div><div class="cx-src"><div class="cx-src-cell">` +
+        `<span class="face bld">${img ? `<img src="${img}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span></div></div>`;
 }
 
 /**
@@ -963,109 +989,46 @@ function amountPhrase(line, part, atkType, R) {
 }
 
 /**
- * 버프 효과 구절 — 이름 + 값만. 어휘에 없는 stat 이면 null(그 문장을 안 만든다).
- * **음수 값은 디버프**다 (참회 · 속박 — 같은 창을 반대로 쓴다). 부호를 문장에 그대로 흘리면
- *   「공격력 +-25%」가 되므로 절댓값을 넘기고 **`.neg` 틀이 방향을 든다**. 값 자리가 `%` 까지 든다(틀은 단위를 안 든다).
- * @param st 걸린 효과(`SYS.skill.statuses` — 능력치 · 값 · 시간 · 2026-09-22)
+ * 문장의 숫자 자리 — 스킬마다 제 틀(`skill.csv:desc_*`)이 이 이름으로 부른다 [2026-10-21 · ADR-0679]. 어휘는 `skill.js:DESC_SLOTS` 가 로드 때 본다.
+ * 자리는 **틀이 쓸 때만** 만든다(`() =>`) — 안 쓰는 자리가 `R.fx` 를 켜지 않게.
+ *   n 표기 쿨(단위 없음 — 틀이 「초마다」를 든다) · d 수량 구절(피해는 종류까지 — ADR-0477 · 벽은 HP 만) · h 타수 · k 감쇠
+ *   s · v 거는 걸린 효과의 시간 · 값(`hit` 줄이면 맞은 대상에게 거는 것 — 결빙 · 음수는 절댓값이라 방향은 틀이 든다 · 이베이드는 횟수)
+ *   v2 둘째 `apply` 줄의 값(퀵 드로우 · 오버드로우 — 슬롯 식 없이 원값 · 설명창 재료는 첫 줄 `skill.previewOf`) · m 프렌지 겹 상한 · t 오오라 피해 간격
+ *   c · x 확률로 터지는 추가 피해의 확률 · 배수(둘째 문장 `sk.line.proc` 가 쓴다)
  */
-function effectPhrase(st, P, R) {
-    const key = `sk.eff.${st.stat}${st.value < 0 ? '.neg' : ''}`;
-    if (!STRINGS_HAS(key)) return null;
-    // {e} = 얹는 원소 — 평타 부여(`onhit_element`)만 든다 (ADR-0477). 다른 틀은 안 쓰는 자리라 비워 둔다
-    const e = st.element ? t(`st.atkType.${st.element}`) : '';
-    return t(key, { v: slot({ raw: Math.abs(st.value), part: P.value, unit: UNIT.pct }, R), e });
+function descSlots(def, pv, atkType, R) {
+    const P = pv?.parts ?? {};
+    const at = (raw, key, unit) => slot({ raw, part: P[key], unit }, R);
+    const e = def.effects[0];
+    const st = e.status ? SYS.skill.statuses[e.status] ?? null : null;
+    const st2 = SYS.skill.statuses[def.effects.slice(1).find(x => x.effect === 'apply')?.status] ?? null;
+    return {
+        // 표기 쿨 — 실효 쿨은 폐기됐다 (개정 2026-09-08 2차 · ADR-0038). 어느 영웅이 들든 같은 수다
+        n: () => sec(pv?.baseSec ?? def.cool),
+        // 소환 — 벽의 HP 는 피해가 아니라 구절 없이 자리만 (skill_design §12-6)
+        d: () => e.effect === 'summon' ? (P.amount ? amountSlot(P.amount, R) : null) : amountPhrase(e, P.amount, atkType, R),
+        h: () => at(e.hits, 'hits', UNIT.times),
+        k: () => at(e.decay, 'decay', UNIT.pct),
+        s: () => st ? at(st.dur, 'dur', UNIT.sec) : null,
+        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : UNIT.pct) : null,
+        v2: () => st2 ? slot({ raw: Math.abs(st2.value), unit: UNIT.pct }, R) : null,
+        m: () => hl(num(D.balance.frenzy_stack_max)),
+        t: () => sec(D.balance.aura_pulse_sec),
+        c: () => at(e.procChance, 'procChance', UNIT.pct),
+        x: () => at(e.procMult, 'procMult', UNIT.pct),
+    };
 }
 
 /**
- * 문장 — **하는 일 × 나가는 방식 × `target`** 이 틀을 정한다(2026-09-22 — ~~`kind` × `target`~~). 틀이 없으면 `null`(설명만 뜬다).
- * 숫자 자리는 **틀이 쓸 때만** 만든다(`() =>`) — 안 쓰는 자리가 `R.fx` 를 켜서 각주가 헛서지 않게.
- * ⚠ **첫 줄(`effects[0]`)** 로만 문장을 만든다 — 여러 줄 스킬(결투 · 2026-09-24 R151)도 첫 줄 문장이다. 줄마다 문장은 SCREEN_DESIGN §2 먼저(부채 #63)
- * @returns {string[] | null} 첫째가 본 문장 · 둘째는 확률로 터지는 추가 피해(있을 때만 — **완결된 둘째 문장**이라 틀에 잇지 않는다)
+ * 문장 — **스킬마다 제 틀**이다(`skill.csv:desc_kr` · `desc_en` · 2026-10-21 사용자 지시 · ADR-0679 — ~~하는 일 × 나가는 방식 × `target` 이 고른 공용 틀~~).
+ * 틀의 `{자리}` 를 `descSlots` 가 채운다. 모르는 자리는 그대로 남긴다 — 로드 검사(`skill.js`)가 막으니 화면에 `{` 가 보이면 그쪽이 샌 것이다.
+ * @returns {string[]} 첫째가 본 문장 · 둘째는 확률로 터지는 추가 피해(있을 때만 — **완결된 둘째 문장**이라 틀에 잇지 않는다)
  */
 function skillLines(def, pv, atkType, R) {
-    const P = pv?.parts ?? {};
-    // 표기 쿨 — 실효 쿨은 폐기됐다 (개정 2026-09-08 2차 · ADR-0038). 어느 영웅이 들든 같은 수다
-    const n = sec(pv?.baseSec ?? def.cool);
-    const at = (raw, key, unit) => slot({ raw, part: P[key], unit }, R);
-    const e = def.effects[0];
-    // 거는 걸린 효과 — `apply` 줄만 든다(능력치 · 값 · 시간)
-    const st = e.status ? SYS.skill.statuses[e.status] ?? null : null;
-    if (e.effect === 'hit') {
-        const d = amountPhrase(e, P.amount, atkType, R);
-        if (d === null) return null;
-        const k = () => at(e.decay, 'decay', UNIT.pct);
-        const h = () => at(e.hits, 'hits', UNIT.times);
-        let line;
-        // 광역 — 감쇠가 있으면 **주 대상만 온전**하다(멀티샷). 감쇠가 없는 광역은 옛 틀 그대로
-        if (def.target === 'enemy_all') line = (P.decay || e.decay > 0) ? t('sk.line.allDecay', { n, d, k: k() }) : t('sk.line.all', { n, d });
-        else if (def.target === 'enemy_chain') line = t('sk.line.chain', { n, d, k: k() });
-        else if (def.target === 'enemy_rotate') line = t('sk.line.rotate', { n, d, h: h() });
-        // 가이디드 — 단타 + 방어 감소(감쇠 칸이 그 적의 방어를 깎는 비율이다 · skill.csv note)
-        else if (def.target === 'enemy_highest_def') line = t('sk.line.guided', { n, d, k: k() });
-        // 열 전원 둘 — 스윕 · 애로우 레인 (2026-10-16 · R247 · R249)
-        else if (def.target === 'enemy_front') line = t('sk.line.front', { n, d });
-        else if (def.target === 'enemy_back') line = t('sk.line.back', { n, d });
-        else {
-            // 타수 슬롯이 있으면 여럿일 수 있으므로(모르면 식) 다타 틀로 — 버림은 `scaleDef` 가 이미 했다
-            const many = P.hits ? (P.hits.value == null || P.hits.value > 1) : e.hits > 1;
-            line = many ? t('sk.line.singleN', { n, d, h: h() }) : t('sk.line.single', { n, d });
-        }
-        if (!(e.procChance > 0)) return [line];
-        return [line, t('sk.line.proc', { c: at(e.procChance, 'procChance', UNIT.pct), x: at(e.procMult, 'procMult', UNIT.pct) })];
-    }
-    if (e.effect === 'heal') {
-        const d = amountPhrase(e, P.amount, atkType, R);
-        return d === null ? null : [t(def.target === 'ally_single' ? 'sk.line.healOne' : 'sk.line.heal', { n, d })];
-    }
-    // 자기 회복 — 리커버리 (2026-10-16) · 밑수가 최대 HP 라 회복과 같은 구절에 틀만 「자신」이다
-    if (e.effect === 'mend') {
-        const d = amountPhrase(e, P.amount, atkType, R);
-        return d === null ? null : [t('sk.line.mend', { n, d })];
-    }
-    // 소환 — 벽의 HP 가 `시전자 최대 HP × 배율 + 능력치 항` 이다 (skill_design §12-6). 피해가 아니라 구절 없이 자리만 쓴다
-    if (e.effect === 'summon') return P.amount ? [t('sk.line.summon', { n, d: amountSlot(P.amount, R) })] : null;
-    // 불러내기 — 몬스터 전용 (skill_design §12-9 · 2026-09-18). 세기가 없다 — 누구를 부르나는 편성이 정한다
-    if (e.effect === 'call') return [t('sk.line.call', { n })];
-    // 자폭 — 몬스터 전용 비직격 (skill_design §12-9 · battle_design §9-6 · 2026-09-21). **쿨이 없다**(차례가 아니라 죽음이 부른다)
-    //   → 오오라처럼 `{n}` 을 안 든다. 방어 · 저항을 안 받는 고정 피해지만 그 규칙은 문장에 안 적는다(스킬 설명만 — 2026-09-21)
-    if (e.effect === 'fixed') {
-        const d = amountPhrase(e, P.amount, atkType, R);
-        return d === null ? null : [t('sk.line.selfDestruct', { d })];
-    }
-    if (e.effect !== 'apply' || !st) return null;
-    // 오오라 — **쿨이 없다.** 그래서 이 문장만 `{n}` 을 안 든다 (skill_design §1-5)
-    if (def.cast === 'aura') {
-        // 오오라 피해 — 홀리 파이어 (2026-10-16 · R249). 파티에 거는 것이 아니라 간격마다 적 전원을 친다 · 피해 종류(원소)를 말한다 (ADR-0477)
-        if (st.stat === 'pulse')
-            return [t('sk.line.auraPulse', { t: sec(D.balance.aura_pulse_sec), v: at(st.value, 'value', UNIT.pct), e: t(`st.atkType.${st.element ?? 'fire'}`) })];
-        const ph = effectPhrase(st, P, R);
-        return ph === null ? null : [t('sk.line.aura', { e: ph })];
-    }
-    if (def.cast === 'turn') {
-        const s = () => at(st.dur, 'dur', UNIT.sec);
-        if (st.stat === 'taunt') return [t('sk.line.taunt', { n, s: s() })];
-        // 지목은 창의 길이를 안 말한다 — 「라운드가 끝날 때까지」라 초로 셀 것이 아니다. 효과값은 그동안 **시전자가 받는 피해 감소**다
-        if (st.stat === 'duel') return [t('sk.line.duel', { n, v: at(Math.abs(st.value), 'value', UNIT.pct) })];
-        // 기본 스킬 50 의 자기 창 넷 — 틀이 문장을 다 든다(「자신에게 … 를 건다」로는 안 읽힌다 · 2026-10-16)
-        if (st.stat === 'evade') return [t('sk.line.evade', { n, s: s(), v: at(st.value, 'value', UNIT.times) })];
-        if (st.stat === 'frenzy') return [t('sk.line.frenzy', { n, s: s(), v: at(st.value, 'value', UNIT.pct), m: hl(num(D.balance.frenzy_stack_max)) })];
-        if (st.stat === 'echo') return [t('sk.line.echo', { n, s: s() })];
-        if (st.stat === 'imbue') {
-            const key = `sk.line.imbue.${SYS.skill.statuses[st.hitStatus]?.ailment}`;
-            return STRINGS_HAS(key) ? [t(key, { n, s: s(), e: t(`st.atkType.${st.element}`), v: at(st.value, 'value', UNIT.pct) })] : null;
-        }
-        // 여러 줄(퀵 드로우 · 오버드로우 · 2026-10-16) — 같은 대상에 거는 apply 줄의 구절을 잇는다. 둘째 줄부터는 슬롯 식 없이 원값이다(설명창 재료는 첫 줄 — skill.previewOf)
-        const more = def.effects.slice(1).filter(x => x.effect === 'apply' && (x.target ?? def.target) === def.target)
-            .map(x => SYS.skill.statuses[x.status]).filter(Boolean).map(x => effectPhrase(x, {}, R));
-        const ph = [effectPhrase(st, P, R), ...more].includes(null) ? null : [effectPhrase(st, P, R), ...more].join(t('sk.join'));
-        if (ph === null) return null;
-        const key = def.target === 'party' ? 'sk.line.buffParty'
-            : def.target === 'party_adjacent' ? 'sk.line.buffAdjacent'
-            : (def.target === 'enemy_all' || def.target === 'enemy_single') ? 'sk.line.debuffAll'
-            : 'sk.line.buffSelf';
-        return [t(key, { n, s: s(), e: ph })];
-    }
-    return null;
+    const V = descSlots(def, pv, atkType, R);
+    const line = L(def.desc).replace(/\{(\w+)\}/g, (m, k) => V[k]?.() ?? m);
+    if (!(def.effects[0].procChance > 0)) return [line];
+    return [line, t('sk.line.proc', { c: V.c(), x: V.x() })];
 }
 
 /* ───────── Alt 계산식 — 누르는 동안만 (SCREEN_DESIGN §2 「스킬 설명창 규격」 · ADR-0089) ─────────

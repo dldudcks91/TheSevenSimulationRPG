@@ -89,7 +89,7 @@ check('결투장: 같은 입력/시드 = 같은 결과 · 단판 · 보상/도�
     const b = SYS.arena.fight(team, enemy, makeRng(83));
     return JSON.stringify(a) === JSON.stringify(b) && JSON.stringify([team, enemy]) === before
         && a.rounds.length === 1 && a.xpTotal === 0 && a.gold === 0 && !Object.keys(a.kills).length
-        && !a.drops.length && !a.books.length && a.potion.max === 0 && a.potion.used === 0
+        && !a.drops.length && !a.blueprints.length && a.potion.max === 0 && a.potion.used === 0
         && a.timeline.some(e => e.e === 'end');
 });
 check('결투장: 고른 편성의 전술 · 물약 칸을 싣는다 · 전술 몫은 원정과 같다 · 세이브 불변', () => {
@@ -123,7 +123,7 @@ const arenaParts = team => ({
 });
 /** 단정이 손으로 다시 세우는 식 — 코드와 같은 식을 쓰면 서로를 못 잡는다 */
 const advPointsAt = lv => lv < B.advance_unlock_level ? 0 : 1 + Math.floor((lv - B.advance_unlock_level) / B.advance_point_interval);
-const skillCapEnd = D.skillCodex[D.skillCodex.length - 1].upgradeCap;
+const skillCapEnd = B.skillbook_upgrade_max;   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~skill_codex_level.csv 마지막 행~~)
 const upCap = SYS.game.limitsOf({ buildings: Object.fromEntries(SYS.construction.list.map(b => [b.id, b.maxRank])) }).upgrade;   // 건물을 다 지었을 때의 강화 상한
 check('결투장: 등급 상대 — 레벨 · 착용 위치 전부 · 아이템 레벨 · 강화 · 마스터리 · 책 · 전직 · 스킬 업그레이드가 등급과 게임 규칙대로 (arena_design §7)', () => {
     const tiers = SYS.arena.tiers;
@@ -861,9 +861,9 @@ check('csv: 로더가 읽는 목록 = src/data/*.csv 전부 — 읽히지 않는
     return `${loaded.length}개 일치`;
 });
 check('balance: 시스템이 쓰는 키가 전부 있다', () => {
-    // ~~codex_blueprint_level · skillbook_upgrade_max~~ — 2026-10-16 스킬 도감(skill_codex_level.csv)으로 옮겼다 (R266)
+    // ~~codex_blueprint_level~~ — 2026-10-16 퇴역 · `skillbook_upgrade_max` 는 2026-10-20 되살렸다(스킬 도감 걷음 — 상한은 끝 하나 · R293)
     const need = ['skillbook_learn_level', 'drop_book_pct', 'book_craft_gold', 'book_craft_dust',   // 스킬북 (R179)
-        'skillbook_upgrade_books_1', 'skillbook_upgrade_books_2', 'advance_point_interval',   // 스킬 레벨 · 전직 포인트 (R216)
+        'skillbook_upgrade_books_1', 'skillbook_upgrade_books_2', 'skillbook_upgrade_max', 'advance_point_interval',   // 스킬 레벨 · 상한 · 전직 포인트 (R216 · R293)
         'arena_ai_main_tree_weight', 'arena_ai_continue_weight',   // 결투장 등급 AI 의 마스터리 가중치 (2026-10-17 · INTERFACE §2-17)
         'arena_elo_start', 'arena_elo_k', 'arena_elo_scale', 'arena_pick_spread', 'arena_pick_jitter', 'colosseum_seed',   // 결투장 ELO · 후보 · 콜로세움 층 시드 (2026-10-18 · arena_design §7 · §8)
         'dispatch_offline_cap_hours',   // ~~dispatch_base_ratio~~ 2026-10-18 퇴역(영웅 배치 삭제 · R283)
@@ -1575,7 +1575,7 @@ check('newGame: 편성 1 에 시작 영웅 셋이 로스터 순서로 서 있다
     // 편성 수는 건물이 늘린다(공유 판은 다 지은 판 · R137) — 2 번부터 끝까지 빈다
     if (G.presets.length < 2) fail(`fixture: 다 지은 판인데 편성 ${G.presets.length}개`);
     for (let no = 2; no <= G.presets.length; no++) if (SYS.game.partyOf(G, no).length) fail(`편성 ${no} 가 안 비었다`);
-    // 진형도 같이 선다 — 파티 순서대로 앞 랭크부터 (기본 템플릿은 일자라 셋이 전열)
+    // 진형도 같이 선다 — 직업대로 전열 / 후열 (아래 `newGame: 첫 진형` 단정 · 2026-10-21)
     const f = SYS.game.formationState(G);
     if (f.ranks.flat().length !== party.length) fail(`진형에 ${f.ranks.flat().length}명뿐이다`);
     // 리더 = party[0] — 빼면 다음 사람이 리더가 되고 다시 넣으면 맨 뒤다 (ADR-0047 의 살아남은 절반)
@@ -1588,6 +1588,28 @@ check('newGame: 편성 1 에 시작 영웅 셋이 로스터 순서로 서 있다
     for (const u of [...SYS.game.partyOf(G)]) SYS.game.toggleParty(G, u, NOW);
     for (const h of G.heroes.slice(0, B.party_size_max)) SYS.game.toggleParty(G, h.uid, NOW);
     return `편성 1 = 로스터 ${party.length}명 · 편성 2 ~ ${G.presets.length} 빈다 · 출발 가능`;
+});
+
+/**
+ * 새 게임 첫 진형은 **직업이 정한다** [2026-10-21 사용자 지시 「전사 · 기사는 앞열 · 나머지는 후열」 · INTERFACE §2-7 `newGame`] —
+ * `class.csv:start_row` 로 열을 가르고 정원이 꼭 맞는 템플릿을 고른다 · 랭크 안은 파티 순서 · 리더(`party[0]`)는 로스터 첫 영웅 그대로
+ */
+check('newGame: 첫 진형 — 전사 · 기사는 전열 · 나머지는 후열 · 정원이 맞는 템플릿 · 랭크 안은 파티 순서', () => {
+    const row = id => D.classes.find(c => c.id === id)?.startRow;
+    if (row('warrior') !== 'front' || row('knight') !== 'front') fail(`class.csv:start_row — 전사 ${row('warrior')} · 기사 ${row('knight')} (front 여야)`);
+    const out = [];
+    for (const [i, clsList] of [['mage', 'warrior', 'knight'], ['priest', 'archer', 'mage'], ['knight', 'priest', 'archer']].entries()) {
+        const rng = makeRng(4100 + i);
+        const g = SYS.game.newGame(4100 + i, clsList.map(cls => SYS.hero.rollHeroOf(rng, cls)), NOW);
+        const party = SYS.game.partyOf(g);
+        const f = SYS.game.formationState(g);
+        const want = [0, 1].map(r => party.filter(uid => SYS.hero.startRankOf(g.heroes.find(h => h.uid === uid).cls) === r));
+        if (!eq(f.ranks, want)) fail(`${clsList.join('·')} — 진형 ${JSON.stringify(f.ranks)} ≠ ${JSON.stringify(want)}`);
+        if (!eq(f.caps, [want[0].length, want[1].length])) fail(`${clsList.join('·')} — 템플릿 ${f.tpl} 정원 ${f.caps} 가 안 맞는다`);
+        if (party[0] !== g.heroes[0].uid) fail(`${clsList.join('·')} — 리더가 로스터 첫 영웅이 아니다`);
+        out.push(`${clsList.join('·')} → ${f.tpl}`);
+    }
+    return out.join(' / ');
 });
 
 /**
@@ -4022,7 +4044,7 @@ check('skill: activesFor ctx.skillPlus — 고유 · 배운 칸 레벨에 더한
     const inn = h0.innate;
     const book = SYS.skill.list.find(d => d.ownerKind === 'job' && d.id !== inn).id;
     const advId = SYS.skill.list.find(d => d.ownerKind === 'advance').id;
-    const cap = SYS.game.skillCapMax();   // 책 상한의 끝 (스킬 도감 마지막 행 · R266)
+    const cap = SYS.game.skillCapMax();   // 책 상한 — 끝 하나 (`skillbook_upgrade_max` · R293)
     const h = { ...h0, bookSkill: book, advanceSkill: advId, advanceUp: 1, skillLv: { [inn]: cap } };
     const upOf = (list, src) => list.find(a => a.source === src)?.up ?? 0;
     const base = SYS.skill.activesFor(h);
@@ -5299,7 +5321,7 @@ check('battle: 스테이지 원소 = 몬스터 고유 스킬의 원소 — attac
     }
     return `원소 스테이지 ${n}/${D.stageList.length}`;
 });
-check('battle: skillCarriers — 스킬 도감 획득처 = 그 스킬을 칸에 들고 나오는 몬스터 · 열리는 장만 · 단마다 처치가 세는 스킬(codexSkills)과 어긋나지 않는다 · difficulty = 그 칸이 처음 열리는 단 (INTERFACE §2-6 · ADR-0650 · R269)', () => {
+check('battle: skillCarriers — 스킬 도감 획득처 = 그 스킬을 칸에 들고 나오는 몬스터 · 열리는 장만 · 단마다 처치가 떨구는 도안 후보(blueprintSkills · R293 ~~codexSkills~~)와 어긋나지 않는다 · difficulty = 그 칸이 처음 열리는 단 (INTERFACE §2-6 · ADR-0650 · R269)', () => {
     const openMax = D.balance.chapter_open_max;
     const diffs = D.difficultyList, first = diffs[0].id, second = diffs.find(d => d.skillSlots >= 2).id;
     const order = id => diffs.findIndex(d => d.id === id);
@@ -5318,14 +5340,14 @@ check('battle: skillCarriers — 스킬 도감 획득처 = 그 스킬을 칸에 
         for (const s of c.roll) { if (!s.boss) fail(`${id} 무작위 칸 ← ${s.monsterId} 가 보스가 아니다`); if (s.difficulty !== first) fail(`${id} 무작위 칸 단 ${s.difficulty}`); }
         nf += c.fixed.length; nr += c.roll.length;
     }
-    // 스폰과 같은 출처인가 — 단마다 장소의 일반몹 · 보스(한 칸 더 후보 하나하나)를 세워 처치가 세는 스킬이 전부 그 몬스터를 획득처로 들고,
+    // 스폰과 같은 출처인가 — 단마다 장소의 일반몹 · 보스(한 칸 더 후보 하나하나)를 세워 처치가 떨구는 도안 후보가 전부 그 몬스터를 획득처로 들고,
     //   그 획득처의 단이 지금 단보다 늦지 않은지 본다
     const has = (sk, mid, kind, d) => carriers[sk]?.[kind].some(s => s.monsterId === mid && order(s.difficulty) <= order(d));
     let units = 0;
     for (const d of diffs) for (const st of D.stageList.filter(s => s.chapter <= openMax)) {
         for (const mid of SYS.battle.stagePool(st)) {
             units++;
-            for (const sk of SYS.battle.makeEnemy('e0', mid, 'normal', st.dlvl, [], { difficulty: d.id }).codexSkills)
+            for (const sk of SYS.battle.makeEnemy('e0', mid, 'normal', st.dlvl, [], { difficulty: d.id }).blueprintSkills)
                 if (!has(sk, mid, 'fixed', d.id)) fail(`${d.id} ${st.stage_id} 일반몹 ${mid} 가 ${sk} 를 드는데 고정 칸 획득처에 없다`);
         }
         const b = st.boss_monster_idx;
@@ -5333,7 +5355,7 @@ check('battle: skillCarriers — 스킬 도감 획득처 = 그 스킬을 칸에 
         const pool = SYS.skill.list.filter(x => x.innatePool && x.ownerKind === 'job' && x.ownerId === D.monsters[b].cls).map(x => x.id);
         for (const third of pool) {
             units++;
-            for (const sk of SYS.battle.makeEnemy('e0', b, st.boss_grade, st.dlvl, [], { thirdSkill: third, difficulty: d.id }).codexSkills)
+            for (const sk of SYS.battle.makeEnemy('e0', b, st.boss_grade, st.dlvl, [], { thirdSkill: third, difficulty: d.id }).blueprintSkills)
                 if (!has(sk, b, 'fixed', d.id) && !has(sk, b, 'roll', d.id)) fail(`${d.id} ${st.stage_id} 보스 ${b} 가 ${sk} 를 드는데 획득처에 없다`);
         }
     }
@@ -6003,7 +6025,7 @@ check('simulate: 정예 라운드에 죄종·특성이 붙고 9라운드 구조�
     if (!boss || !boss.enemies.some(e => e.grade === D.stages[1013].boss_grade)) fail('보스 라운드');
     return `${el.sin} + 특성 ${el.traits.length} · 보스 ${boss.enemies.length}유닛`;
 });
-check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 주술사뿐 · 주술사가 서면 척후병 · 전사로 상한까지(주술사 하나) — 채운 몫은 라운드 시작에 없고 주술사가 불러낸다 · 아바돈 혼자 (2026-09-18 · INTERFACE §2-13)', () => {
+check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 주술사뿐 · 주술사가 서면 척후병 · 전사로 상한까지 채워 라운드 시작에 함께 선다(주술사 하나) · 불러내기는 되살림뿐 · 아바돈 혼자 (2026-09-18 · 2026-10-21 · INTERFACE §2-13)', () => {
     const SHAMAN = 1103, FILL = new Set([1101, 1102]);
     let rounds = 0, shamanNormal = 0, early = 0, calls = 0, bosses = 0;
     // 라운드 하나의 명단 = 시작에 선 적 + 불러낸 적. 판정은 라운드가 닫힐 때 명단 전체로 한다
@@ -6011,6 +6033,7 @@ check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 
         const roster = [...cur.roster.values()];
         const ids = roster.map(e => e.monsterId);
         const at = `${tag} 라운드 ${cur.ev.n} [시작 ${cur.ev.enemies.map(e => `${e.monsterId}:${e.grade}`).join(' ')} · 명단 ${roster.length}]`;
+        if (roster.length !== cur.ev.enemies.length) fail(`${at} 불러내기로 처음 선 적이 있다 — 1-1 무리는 대기하지 않는다`);
         const shamans = ids.filter(id => id === SHAMAN).length;
         rounds++;
         if (cur.ev.kind === 'boss') {
@@ -6024,15 +6047,11 @@ check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 
         if (shamans > 1) fail(`${at} 주술사가 둘 이상이다`);
         if (!shamans) return;
         if (cur.ev.kind === 'normal') shamanNormal++;
-        // 채운 몫(대기)은 주술사 **뒤에** 뽑혔다 — 라운드 시작에 서면 안 된다
-        const lead = cur.ev.enemies.find(e => e.monsterId === SHAMAN);
-        if (cur.ev.enemies.some(e => e.key > lead.key)) fail(`${at} 대기 몫이 라운드 시작에 섰다`);
         if (ids.some(id => id !== SHAMAN && !FILL.has(id))) fail(`${at} 무리가 척후병 · 전사가 아니다`);
-        // 불렀으면 상한까지 · 안 불렀으면 주술사가 첫 차례 전에 쓰러졌거나 부를 몫이 없었다
-        if (cur.called ? roster.length !== B.wave_monster_max : !(cur.shamanDownFirst || roster.length === B.wave_monster_max))
-            fail(`${at} 불렀나 ${cur.called} · 먼저 쓰러졌나 ${cur.shamanDownFirst} — 명단이 상한 ${B.wave_monster_max} 이 아니다`);
+        // 채운 몫은 대기하지 않는다 — 주술사가 선 라운드는 시작부터 상한이다 (2026-10-21)
+        if (cur.ev.enemies.length !== B.wave_monster_max) fail(`${at} 라운드 시작의 적이 상한 ${B.wave_monster_max} 이 아니다`);
     };
-    // 신 파티(보스까지 간다 — 정예 주술사를 첫 차례 전에 잡기도 한다) + 느린 파티(주술사가 부를 틈이 있다) · 둘 다 안 쓰러진다
+    // 신 파티(보스까지 간다) + 느린 파티(주술사가 되살릴 틈이 있다) · 둘 다 안 쓰러진다
     for (const atk of [2000, 40]) for (let seed = 1; seed <= 12; seed++) {
         const party = godUnits().map(u => ({ ...u, combat: { ...u.combat, atk_physical: { min: atk, max: atk } } }));
         const r = SYS.battle.simulate(party, 1013, makeRng(seed));
@@ -6041,14 +6060,13 @@ check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 
         for (const ev of r.timeline) {
             if (ev.e === 'round') {
                 if (cur) judge(tag, cur);
-                cur = { ev, roster: new Map(ev.enemies.map(e => [e.key, e])), called: false, shamanDownFirst: false };
+                cur = { ev, roster: new Map(ev.enemies.map(e => [e.key, e])) };
                 continue;
             }
             if (!cur) continue;
-            if (ev.e === 'down' && cur.roster.get(ev.u)?.monsterId === SHAMAN && !cur.called) cur.shamanDownFirst = true;
             if (ev.e === 'call') {
                 if (cur.roster.get(ev.u)?.monsterId !== SHAMAN) fail(`${tag} 라운드 ${cur.ev.n} 주술사가 아닌 ${ev.u} 가 불렀다`);
-                cur.called = true; calls++;
+                calls++;
                 for (const e of ev.units) cur.roster.set(e.key, e);
             }
         }
@@ -6056,9 +6074,8 @@ check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 
     }
     if (!early) fail('1 · 2라운드 표본이 없다');
     if (!bosses) fail('보스 라운드 표본이 없다');
-    if (!calls) fail('한 번도 안 불렀다 — 불러내기를 못 잰다');
     if (!shamanNormal) fail('일반 라운드에 주술사가 한 번도 안 섰다 — 일반 라운드의 채움을 못 잰다');
-    return `${rounds}라운드 · 불러내기 ${calls}회 · 일반 라운드에 선 주술사 ${shamanNormal}회`;
+    return `${rounds}라운드 · 되살림 ${calls}회 · 일반 라운드에 선 주술사 ${shamanNormal}회`;
 });
 check('battle: 고블린 소환 — 부를 것이 있을 때만 · 쿨마다 · 쓰러진 무리는 한 번에 되살아난다 · 보상은 한 마리당 한 번 (2026-09-18 · skill_design §12-9 · INTERFACE §2-6 `call`)', () => {
     const SK_ID = 'pri_summon';   // 사제 기본 스킬 「소환」 — 몬스터 소환 셋을 합쳤다 (2026-10-16 · R258)
@@ -6109,7 +6126,7 @@ check('battle: 2-3 · 5-3 편성 예외 — 소환사(우상족 주술사 · 스
     // 장소마다 [소환사 · 고유 · 칸 III(보스 라운드 포함)]
     for (const [SHAMAN, SK_ID, STAGE] of [[2303, 'pri_summon', 2033], [5303, 'pri_summon', 5033]]) {
         if (D.monsters[SHAMAN].innate_skill !== SK_ID) fail(`${SHAMAN} 고유 ${D.monsters[SHAMAN].innate_skill} ≠ ${SK_ID}`);
-        let calls = 0, full = 0;
+        let calls = 0, full = 0, fresh = 0;
         // 신 파티 + 느린 파티(소환사가 부를 틈이 있다)
         for (const atk of [2000, 40]) for (let seed = 1; seed <= 12; seed++) {
             const party = godUnits().map(u => ({ ...u, combat: { ...u.combat, atk_physical: { min: atk, max: atk } } }));
@@ -6127,12 +6144,14 @@ check('battle: 2-3 · 5-3 편성 예외 — 소환사(우상족 주술사 · 스
                 if (!cur || ev.e !== 'call') continue;
                 if (cur.roster.get(ev.u)?.monsterId !== SHAMAN || ev.s !== SK_ID) fail(`${tag} 라운드 ${cur.n} ${ev.u}(${cur.roster.get(ev.u)?.monsterId}) 가 ${ev.s} 로 불렀다`);
                 cur.called = true; calls++;
-                for (const e of ev.units) cur.roster.set(e.key, e);
+                for (const e of ev.units) { if (!cur.roster.has(e.key)) fresh++; cur.roster.set(e.key, e); }
             }
             close();
         }
         if (!calls) fail(`${STAGE} 한 번도 안 불렀다 — 소환사 규칙이 안 걸렸다`);
-        out.push(`${STAGE} 불러내기 ${calls}회 · 상한 ${full}`);
+        // 이 장소의 무리는 대기한다 — 1-1(함께 선다 · 2026-10-21)과 갈린다
+        if (!fresh) fail(`${STAGE} 불러내기로 처음 선 무리가 없다 — 대기 무리가 사라졌다`);
+        out.push(`${STAGE} 불러내기 ${calls}회 · 상한 ${full} · 처음 선 무리 ${fresh}`);
     }
     return out.join(' / ');
 });
@@ -7729,7 +7748,6 @@ check('battle: 기본 스킬 50 의 장치가 실제 전투에서 선다 — 홀
                 if (nx?.e !== 'buffEnd' || nx.u !== e.d || nx.s !== 'arc_evade') fail(`횟수를 다 쓴 뒤 ${JSON.stringify(nx)} — 그 창의 buffEnd`);
             }
         });
-        n.burn += tl(['mag_fireball', 'mag_ignite']).filter(e => e.e === 'buff' && e.k === 'burn' && e.s === 'mag_ignite').length;
         n.deep += tl(['mag_iceblast', 'mag_deepfreeze']).filter(e => e.e === 'buff' && e.k === 'freeze' && e.s === 'mag_deepfreeze' && e.v === deepV).length;
         n.stun += tl(['mag_lightning', 'mag_surge']).filter(e => e.e === 'buff' && e.k === 'stun' && e.s === 'mag_surge').length;
         n.echo += tl(['mag_fireball', 'mag_echo']).filter(e => e.e === 'echo').length;
@@ -7739,8 +7757,12 @@ check('battle: 기본 스킬 50 의 장치가 실제 전투에서 선다 — 홀
         const reactions = [{ on: 'hit', fn: x => { const w = x.buffs.war_frenzy; if (!w) return; if (w.n > B.frenzy_stack_max) fail(`프렌지 겹 ${w.n} > 상한`); n.frenzy = Math.max(n.frenzy, w.n ?? 0); } }];
         SYS.battle.simulate(kit(['war_frenzy'], { reactions }), 1013, makeRng(seed));
     }
+    // 화상은 표본이 얇다 — 이 판에선 파이어볼 · 이그나이트가 한 판에 몇 번뿐이라 화상이 거의 안 선다(1011 · 1013 · 1023 은 24시드에 0 ~ 2 · 1043 은 15).
+    //   1013 시드 1~8 의 3 은 수열 운이었다(2026-10-21 1-1 무리가 함께 서며 0) — 1013 · 1043 을 24시드 센다
+    for (let seed = 1; seed <= 24; seed++) for (const st of [1013, 1043])
+        n.burn += SYS.battle.simulate(kit(['mag_fireball', 'mag_ignite']), st, makeRng(seed)).timeline.filter(e => e.e === 'buff' && e.k === 'burn' && e.s === 'mag_ignite').length;
     const miss = Object.entries(n).filter(([, v]) => !v).map(([k]) => k);
-    if (miss.length) fail(`표본이 없다 — ${miss.join(' · ')} (시드 1~8)`);
+    if (miss.length) fail(`표본이 없다 — ${miss.join(' · ')} (시드 1~8 · 화상은 1~24)`);
     return Object.entries(n).map(([k, v]) => `${k} ${v}`).join(' · ');
 });
 check('skill · battle · state: 책이 되는 스킬 — 정의가 있고 · 몬스터 전용이 아니고 · 불러내기가 아니다 · 소환사는 책을 안 떨군다 (R258)', () => {
@@ -7749,13 +7771,13 @@ check('skill · battle · state: 책이 되는 스킬 — 정의가 있고 · �
         if (S.bookable(id) !== want) fail(`bookable(${id}) ${S.bookable(id)} ≠ ${want}`);
     for (const id of [1103, 2303, 5303]) {
         if (D.monsters[id].innate_skill !== 'pri_summon') fail(`${id} 고유 ${D.monsters[id].innate_skill}`);
-        // 책 후보 = 든 칸 중 책이 되는 것(`codexSkills` · R269 — ~~`bookSkill`~~) — 노말 소환사는 후보가 없고 · 나이트메어는 2칸 책만 든다(소환 책은 없다)
-        if (SYS.battle.makeEnemy('e0', id, 'normal', 5, [], {}).codexSkills.length !== 0) fail(`노말 소환사 ${id} 가 책을 떨군다`);
-        if (SYS.battle.makeEnemy('e0', id, 'normal', 5, [], { difficulty: 'nightmare' }).codexSkills.includes('pri_summon')) fail(`소환사 ${id} 가 소환 책을 떨군다`);
+        // 도안 후보 = 든 칸 중 책이 되는 것(`blueprintSkills` · R269 · R293 — ~~`codexSkills`~~ · ~~`bookSkill`~~) — 노말 소환사는 후보가 없고 · 나이트메어는 2칸 도안만 든다(소환 책은 없다)
+        if (SYS.battle.makeEnemy('e0', id, 'normal', 5, [], {}).blueprintSkills.length !== 0) fail(`노말 소환사 ${id} 가 책을 떨군다`);
+        if (SYS.battle.makeEnemy('e0', id, 'normal', 5, [], { difficulty: 'nightmare' }).blueprintSkills.includes('pri_summon')) fail(`소환사 ${id} 가 소환 책을 떨군다`);
     }
-    if (!eq(SYS.battle.makeEnemy('e0', 1201, 'normal', 5, [], {}).codexSkills, ['war_doubleswing'])) fail('1201 인간 보병의 노말 책이 더블스윙 하나가 아니다 (2026-10-16 — ~~아이언 스킨~~ · 전사 + 기사 장소엔 방어 스킬 없음)');
+    if (!eq(SYS.battle.makeEnemy('e0', 1201, 'normal', 5, [], {}).blueprintSkills, ['war_doubleswing'])) fail('1201 인간 보병의 노말 책이 더블스윙 하나가 아니다 (2026-10-16 — ~~아이언 스킨~~ · 전사 + 기사 장소엔 방어 스킬 없음)');
     // 나이트메어 = 고유 + 2칸 둘 다 책 후보 (「쥔 스킬이면 어느 칸이든」 · monster_design §5-1 · R269)
-    if (!eq(SYS.battle.makeEnemy('e0', 1201, 'normal', 5, [], { difficulty: 'nightmare' }).codexSkills, ['war_doubleswing', D.monsters[1201].nightmare_skill])) fail('1201 나이트메어 책 후보가 고유 + 2칸이 아니다');
+    if (!eq(SYS.battle.makeEnemy('e0', 1201, 'normal', 5, [], { difficulty: 'nightmare' }).blueprintSkills, ['war_doubleswing', D.monsters[1201].nightmare_skill])) fail('1201 나이트메어 책 후보가 고유 + 2칸이 아니다');
     return 'war_bash · 퀵 드로우 책 · 소환 · 자폭 · 없는 id 는 책이 아니다 · 소환사 셋은 소환 책을 안 떨군다 · 나이트메어 후보 = 고유 + 2칸';
 });
 check('state: 지운 기본 스킬은 대체 스킬로 옮긴다 — 고유 · 배운 칸 · 스킬 레벨(큰 쪽) · 칸 순서 · 책 권수(더한다) · 아이템 줄 · 목걸이 발동 · 가입 희망 영웅 (INTERFACE §4 · 버전 무변경 · 2026-10-16)', () => {
@@ -8674,25 +8696,25 @@ check('resolveBattle: 골드·처치·드롭·전투불능이 상태에 반영 �
     if (!rp.strikes || !(rp.strikes.party.n >= 1) || !eq(rp.strikes, r.result.strikes)) fail('리포트에 빗나감 집계가 없다 (§9-8)');
     return `${rp.won ? 'WIN' : 'LOSE'} gold+${rp.gold} drops ${rp.drops.length} codexExp ${Object.values(G2.codexExp).reduce((a, b) => a + b, 0)} downed ${rp.downed.length}`;
 });
-check('skillCodex: 처치마다 그 유닛이 든 책이 되는 스킬에 그 단의 codex_exp — 이긴 라운드만 · 몬스터 도감과 따로 · 보스가 없는 칸은 고유 스킬로 센 처치와 같다 (R266 · monster_design §8-1 · INTERFACE §2-6)', () => {
-    const sorted = o => Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+check('skillCodex 걷음: 처치가 스킬 도감 경험치를 안 쌓는다 — 결과에 skillKills 가 없다 · 새 게임 · 정산 · 세이브 왕복 어디에도 skillCodexExp 가 없다 · 같은 처치의 몬스터 도감(codexExp)은 그대로 쌓인다 · 처치가 주는 것은 도안이다(리포트 blueprints = 결과 blueprints · 재고가 그만큼) (2026-10-20 · R293 · monster_design §8-1 · ~~R266~~)', () => {
     const G2 = newGameP(42, cands, NOW);
-    if (SYS.battle.stageRounds(D.stages[1011]).some(r => r.round_type === 'boss')) fail('1011 에 보스 라운드가 섰다 — 셋째 칸이 끼어 아래 대조가 안 맞는다');
+    if ('skillCodexExp' in G2) fail('새 게임에 스킬 도감 경험치 칸이 섰다');
+    if (!eq(G2.blueprints, {})) fail(`새 게임의 도안 재고 ${JSON.stringify(G2.blueprints)} — 빈 재고로 연다`);
     const r = SYS.game.resolveBattle(G2, 1011, NOW);
     if (!r.ok) fail(r.err);
     const res = r.result;
-    // 정예 · 일반은 고유 칸 하나 — 처치 수를 고유 스킬로 모은 것과 같아야 한다(책이 안 되는 고유는 빠진다)
-    const want = {};
-    for (const [mid, n] of Object.entries(res.kills)) {
-        const sk = D.monsters[mid]?.innate_skill;
-        if (sk && SYS.skill.bookable(sk)) want[sk] = (want[sk] ?? 0) + n;
-    }
-    if (!eq(sorted(res.skillKills), sorted(want))) fail(`skillKills ${JSON.stringify(res.skillKills)} — 고유 스킬로 센 처치 ${JSON.stringify(want)}`);
-    if (!Object.keys(want).length) fail('센 스킬이 없다 — 이긴 라운드가 없거나 1011 몬스터가 책이 되는 스킬을 안 든다');
-    const per = SYS.game.codexExpOf(G2.runs[0].difficulty ?? D.difficultyList[0].id);
-    const exp = Object.fromEntries(Object.entries(want).map(([k, n]) => [k, n * per]));
-    if (!eq(sorted(G2.skillCodexExp), sorted(exp))) fail(`skillCodexExp ${JSON.stringify(G2.skillCodexExp)} ≠ ${JSON.stringify(exp)}`);
-    return Object.entries(exp).map(([k, v]) => `${k} ${v}`).join(' · ');
+    if ('skillKills' in res) fail(`결과에 skillKills 가 남았다 ${JSON.stringify(res.skillKills)}`);
+    if (!Object.values(res.kills).some(n => n > 0)) fail('처치가 없다 — 대조할 것이 없다');
+    if ('skillCodexExp' in G2) fail(`정산이 스킬 도감 경험치를 쌓았다 ${JSON.stringify(G2.skillCodexExp)}`);
+    if (!(Object.values(G2.codexExp).reduce((a, b) => a + b, 0) > 0)) fail('몬스터 도감 경험치가 안 쌓였다 — 걷은 것은 스킬 도감뿐이다');
+    const rp = r.report;
+    if ('books' in rp) fail('리포트에 옛 칸 books 가 섰다 — 처치는 도안을 준다');
+    if (!eq(rp.blueprints.map(b => b.id), res.blueprints)) fail(`리포트 도안 ${JSON.stringify(rp.blueprints)} ≠ 결과 ${JSON.stringify(res.blueprints)}`);
+    const cnt = {}; for (const id of res.blueprints) cnt[id] = (cnt[id] ?? 0) + 1;
+    if (!eq(G2.blueprints, cnt)) fail(`도안 재고 ${JSON.stringify(G2.blueprints)} ≠ 떨어진 도안 ${JSON.stringify(cnt)}`);
+    const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(G2, NOW))));
+    if ('skillCodexExp' in back || !eq(back.blueprints, G2.blueprints)) fail('세이브 왕복 — 스킬 도감 칸이 섰거나 도안 재고가 바뀌었다');
+    return `처치 ${Object.values(res.kills).reduce((a, b) => a + b, 0)} · 도안 ${res.blueprints.length} · 몬스터 도감 경험치만 쌓임`;
 });
 /*
  * **드롭은 몬스터가 입고 있던 장비다** [사용자 지시 2026-09-11 · R79 · item_design §1 2단계].
@@ -9244,10 +9266,10 @@ check('createRun: 도감 사다리(codexOf) — 값이 0 이면 결과가 한 �
             const x = go(mk, stage, seed, () => ({ xp: 0.5, vs: 0, drop: 0 })).r;
             if (sortedJson(x.kills) !== sortedJson(want.kills) || x.durationSec !== want.durationSec) fail(`${stage} seed ${seed} — 경험치 몫이 전투를 바꿨다`);
             if (Math.abs(x.xpTotal - want.xpTotal * 1.5) > 1e-6 * Math.max(1, want.xpTotal)) fail(`${stage} seed ${seed} — XP ${want.xpTotal} × 1.5 ≠ ${x.xpTotal}`);
-            // 드롭 — 확률이 1 을 넘으면 이긴 라운드의 처치마다 장비 또는 책이 하나 이상(맨몸 몬스터는 없다 — 무기 · 갑옷은 언제나 입는다)
+            // 드롭 — 확률이 1 을 넘으면 이긴 라운드의 처치마다 장비 또는 도안이 하나 이상(맨몸 몬스터는 없다 — 무기 · 갑옷은 언제나 입는다 · 2026-10-20 R293 ~~책~~)
             for (const s of go(mk, stage, seed, () => ({ xp: 0, vs: 0, drop: 1e6 })).sums) {
                 const kills = Object.values(s.kills).reduce((a, k) => a + k, 0);
-                const got = s.drops.length + (s.books ?? []).length;
+                const got = s.drops.length + s.blueprints.length;
                 if (got < kills) fail(`${stage} seed ${seed} 라운드 ${s.n} — 처치 ${kills} 에 드롭 ${got}`);
                 drops += got;
             }
@@ -10219,13 +10241,13 @@ check('shop: 장비 목록 — 부위마다 shop_equip_per_slot 개(무기만 sh
         if (item.ilvl < lo1 || item.ilvl > hi1) fail(`첫 목록 = 레벨 1 ± 반폭 ${lo1}~${hi1} 인데 ilvl ${item.ilvl}`);
     }
     // 시간이 흘러도(특수상단이 몇 번 오가도) 같은 목록 — 상단은 교체로만 바뀐다(자동 갱신 없음 · 2026-10-16 사용자 「선술집처럼」)
-    const key = s => JSON.stringify([s.equip, s.books]);
+    const key = s => JSON.stringify([s.equip, s.blueprints]);
     if (key(SYS.game.shopState(G2, NOW + 5 * P + 1)) !== key(s0)) fail('시간이 흘렀더니 목록이 바뀌었다');
     if (JSON.stringify(G2) !== snap) fail('목록 굴림이 상태(카운터 · 가방)를 바꿨다 — 저장하지 않는 문법이다');
     // 가운데 레벨 20 — 드롭과 같은 폭(`battle.ilvlSpreadOf`) · 위아래로 다 선다 · 희귀도는 드롭 가중치 그대로(레어도 판다 · 2026-10-06)
     const L = 20, [lo, hi] = ilvlBand(L);
     if (SYS.battle.ilvlSpreadOf(L) !== Math.max(B.drop_ilvl_spread_min, Math.round(L * B.drop_ilvl_spread_pct))) fail(`battle.ilvlSpreadOf(${L}) ${SYS.battle.ilvlSpreadOf(L)} 가 드롭 반폭 식과 다르다`);
-    G2.shop = { level: L, rerolledAt: null, paid: 0, sold: [], books: [] };
+    G2.shop = { level: L, rerolledAt: null, paid: 0, sold: [], blueprints: [] };
     let rares = 0, above = 0, below = 0, tier1 = 0;
     const lists = [];
     for (let c = 0; c < 20; c++) {
@@ -10254,7 +10276,7 @@ check('shop: 교체 — 고른 영웅의 레벨로 다시 굴린다 · 무료는
     const G2 = freshG();
     const H = 60 * 60 * 1000, R = B.shop_refresh_hours * H, c0 = B.shop_reroll_cost;
     if (!(R > 0)) fail(`shop_refresh_hours ${B.shop_refresh_hours} — 0 보다 커야 무료가 쿨다운을 갖는다`);
-    const key = s => JSON.stringify([s.equip.map(e => e.item), s.books.map(b => b.id)]);
+    const key = s => JSON.stringify([s.equip.map(e => e.item), s.blueprints.map(b => b.id)]);
     const [h, h2] = G2.heroes;
     if (!h2) fail('픽스처 — 영웅이 둘 이상이어야 한다');
     h.level = 17; h2.level = 9;
@@ -10368,7 +10390,7 @@ check('shop: 구매 — 거절 unbuilt → stale → missing → sold → gold �
     const diff = [...new Set([...Object.keys(got), ...Object.keys(want)])].filter(k => k !== 'uid' && JSON.stringify(got[k]) !== JSON.stringify(want[k]));
     if (diff.length) fail(`보인 물건과 산 물건이 다르다 — ${diff.map(k => `${k}: ${JSON.stringify(want[k])} → ${JSON.stringify(got[k])}`).join(' · ')}`);
     // 교체 안 한 첫 목록에서 산 것도 기록이 선다 — 레벨 1 · 무료 열림 그대로
-    if (!same(G2.shop, { level: 1, rerolledAt: null, paid: 0, sold: [0], books: [] })) fail(`첫 목록 구매 기록 ${JSON.stringify(G2.shop)}`);
+    if (!same(G2.shop, { level: 1, rerolledAt: null, paid: 0, sold: [0], blueprints: [] })) fail(`첫 목록 구매 기록 ${JSON.stringify(G2.shop)}`);
     const s1 = SYS.game.shopState(G2, NOW);
     if (!s1.equip[0].sold || s1.equip.slice(1).some(e => e.sold)) fail('sold 표시');
     if (!same(s1.equip.map(e => e.item), s0.equip.map(e => e.item)) || !s1.free) fail('산 뒤 목록이 바뀌었거나 무료가 닫혔다');
@@ -10388,22 +10410,26 @@ check('shop: 구매 — 거절 unbuilt → stale → missing → sold → gold �
     refuse(G2, 'bagFull', 1, s0.list, NOW);
     return `${s0.equip[0].item.slot} ${s0.equip[0].item.rarity} ilvl ${s0.equip[0].item.ilvl} ${s0.equip[0].gold}G → ${r.uid} · 레벨 ${s0.level} 목록`;
 });
-check('shop: 스킬북 — 목록마다 shop_book_count 권 · 직업 스킬 중 기본 책 아닌 것 · 겹치지 않음 · 결정론 · 장비 목록 불변 · 거절 unbuilt → stale → missing → sold → gold · 가진 책도 산다(쌓인다 · 2026-09-30) · 사면 books +1 · 왕복 · 교체가 sold 를 푼다 (base_expedition §2-6 · 2026-09-29)', () => {
+check('shop: 스킬 도안 — 목록마다 shop_book_count 장 · 후보 = shopBlueprintPool(직업 스킬 중 기본 책 아닌 것 — 손으로 다시 센다) · 겹치지 않음 · 결정론 · 장비 목록 불변 · 거절 unbuilt → stale → missing → sold → gold · 가진 도안도 산다(쌓인다) · 사면 blueprints +1 · 책 재고는 안 늘어난다 · 왕복 · 옛 shop.books 구매 기록은 blueprints 로 옮긴다 · 교체가 sold 를 푼다 (base_expedition §2-6 · 2026-09-29 · 2026-10-20 R293 ~~스킬북~~)', () => {
     const g = freshG();
     const P = B.trade_visit_hours * 60 * 60 * 1000;
     const s0 = SYS.game.shopState(g, NOW);
-    const ids = s0.books.map(b => b.id);
-    if (ids.length !== B.shop_book_count) fail(`책 ${ids.length} 권 ≠ ${B.shop_book_count}`);
-    if (new Set(ids).size !== ids.length) fail(`같은 책이 둘 — ${ids}`);
+    if ('books' in s0) fail('shopState 에 옛 칸 books 가 남았다 — 상단은 도안을 판다 (R293)');
+    const ids = s0.blueprints.map(b => b.id);
+    if (ids.length !== B.shop_book_count) fail(`도안 ${ids.length} 장 ≠ ${B.shop_book_count}`);
+    if (new Set(ids).size !== ids.length) fail(`같은 도안이 둘 — ${ids}`);
+    // 후보 풀 — 스킬 도감 획득처도 이것을 읽는다(R293). 코드와 같은 식을 쓰지 않고 정의에서 다시 센다
+    const pool = SYS.skill.list.filter(d => d.ownerKind === 'job' && !d.starterPool && SYS.skill.bookable(d.id)).map(d => d.id);
+    if (!eq(SYS.game.shopBlueprintPool(), pool)) fail(`shopBlueprintPool ${SYS.game.shopBlueprintPool().length} ≠ 직업 · 기본 책 아님 ${pool.length}`);
     for (const id of ids) { const d = SYS.skill.defs[id]; if (d.ownerKind !== 'job' || d.starterPool) fail(`${id} 는 파는 후보가 아니다`); }
-    if (s0.books.some(b => b.gold !== B.shop_book_gold || b.sold || 'have' in b)) fail(`새 게임 책 ${JSON.stringify(s0.books)}`);
-    if (!eq(SYS.game.shopState(g, NOW + 10 * P).books, s0.books)) fail('시간이 흘렀더니 책이 달라졌다');
-    // 목록 번호가 넘어가면 대개 다른 책 — 다섯 번호 중 한 번이라도 달라야 한다
-    const booksAt = k => { const c = g.counters.shop; g.counters.shop = k; const b = SYS.game.shopState(g, NOW).books.map(x => x.id); g.counters.shop = c; return b; };
-    if ([1, 2, 3, 4, 5].every(k => eq(booksAt(k), ids))) fail('목록 번호가 넘어가도 책이 그대로다');
+    if (s0.blueprints.some(b => b.gold !== B.shop_book_gold || b.sold || 'have' in b)) fail(`새 게임 도안 ${JSON.stringify(s0.blueprints)}`);
+    if (!eq(SYS.game.shopState(g, NOW + 10 * P).blueprints, s0.blueprints)) fail('시간이 흘렀더니 도안이 달라졌다');
+    // 목록 번호가 넘어가면 대개 다른 도안 — 다섯 번호 중 한 번이라도 달라야 한다
+    const bpAt = k => { const c = g.counters.shop; g.counters.shop = k; const b = SYS.game.shopState(g, NOW).blueprints.map(x => x.id); g.counters.shop = c; return b; };
+    if ([1, 2, 3, 4, 5].every(k => eq(bpAt(k), ids))) fail('목록 번호가 넘어가도 도안이 그대로다');
     const refuse = (st, err, ...args) => {
         const snap = JSON.stringify(st);
-        const r = SYS.game.shopBookBuy(st, ...args);
+        const r = SYS.game.shopBlueprintBuy(st, ...args);
         if (r.ok || r.err !== err) fail(`${err} 기대 — ${JSON.stringify(r)}`);
         if (JSON.stringify(st) !== snap) fail(`${err} 거절이 상태를 바꿨다`);
     };
@@ -10413,22 +10439,29 @@ check('shop: 스킬북 — 목록마다 shop_book_count 권 · 직업 스킬 중
     refuse(g, 'missing', ids.length, s0.list, NOW);
     g.resources.gold = B.shop_book_gold - 1;
     refuse(g, 'gold', 0, s0.list, NOW);
-    g.books = { [ids[0]]: 2 };   // 가진 책도 산다 — 책은 쌓인다 (2026-09-30 사용자 지시)
+    g.blueprints = { [ids[0]]: 2 };   // 가진 도안도 산다 — 쌓인다 (R293 · 책과 같은 규칙 2026-09-30)
+    g.books = { [ids[1]]: 1 };
     g.resources.gold = B.shop_book_gold * 10;
     const equip0 = JSON.stringify(s0.equip.map(e => e.item));
-    const r = SYS.game.shopBookBuy(g, 0, s0.list, NOW);
-    if (!r.ok || r.id !== ids[0] || g.books[ids[0]] !== 3 || g.resources.gold !== B.shop_book_gold * 9) fail(`구매 ${JSON.stringify(r)} · 재고 ${JSON.stringify(g.books)} · 골드 ${g.resources.gold}`);
+    const r = SYS.game.shopBlueprintBuy(g, 0, s0.list, NOW);
+    if (!r.ok || r.id !== ids[0] || g.blueprints[ids[0]] !== 3 || g.resources.gold !== B.shop_book_gold * 9) fail(`구매 ${JSON.stringify(r)} · 도안 ${JSON.stringify(g.blueprints)} · 골드 ${g.resources.gold}`);
+    // 상단은 책을 안 판다 — 책은 도서관에서만 생긴다 (skill_design §2-1 · R293)
+    if (!eq(g.books, { [ids[1]]: 1 })) fail(`도안을 샀더니 책 재고가 바뀌었다 ${JSON.stringify(g.books)}`);
     const s1 = SYS.game.shopState(g, NOW);
-    if (!s1.books[0].sold || s1.books[2].sold || s1.equip.some(e => e.sold)) fail('sold 표시');
-    if (JSON.stringify(s1.equip.map(e => e.item)) !== equip0) fail('책을 샀더니 장비 목록이 바뀌었다');
+    if (!s1.blueprints[0].sold || s1.blueprints[2].sold || s1.equip.some(e => e.sold)) fail('sold 표시');
+    if (JSON.stringify(s1.equip.map(e => e.item)) !== equip0) fail('도안을 샀더니 장비 목록이 바뀌었다');
     refuse(g, 'sold', 0, s0.list, NOW);
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))));
-    if (!SYS.game.shopState(back, NOW).books[0].sold) fail('왕복 뒤 책 sold 가 사라졌다');
-    const old = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))); delete old.shop.books;
-    if (!eq(SYS.game.deserialize(old).shop.books, [])) fail('books 없는 shop 이 [] 로 안 열린다');
-    // 교체하면 책 sold 도 풀린다(새 목록이다)
+    if (!SYS.game.shopState(back, NOW).blueprints[0].sold || back.blueprints[ids[0]] !== 3) fail('왕복 뒤 도안 sold · 재고가 사라졌다');
+    const old = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))); delete old.shop.blueprints;
+    if (!eq(SYS.game.deserialize(old).shop.blueprints, [])) fail('blueprints 없는 shop 이 [] 로 안 열린다');
+    // 옛 이름 — 같은 스트림 · 같은 자리의 스킬북 구매 기록(`shop.books`)은 도안 구매 기록으로 옮긴다(산 칸이 다시 사지지 않게 · R293)
+    const old2 = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))); old2.shop.books = old2.shop.blueprints; delete old2.shop.blueprints;
+    const o2 = SYS.game.deserialize(old2);
+    if (!eq(o2.shop.blueprints, [0]) || 'books' in o2.shop || !SYS.game.shopState(o2, NOW).blueprints[0].sold) fail(`옛 shop.books → ${JSON.stringify(o2.shop)}`);
+    // 교체하면 도안 sold 도 풀린다(새 목록이다)
     if (!SYS.game.shopReroll(g, s0.list, NOW, g.heroes[0].uid).ok) fail('무료 교체 거절');
-    if (SYS.game.shopState(g, NOW).books.some(b => b.sold)) fail('교체했는데 책 sold 가 남았다');
+    if (SYS.game.shopState(g, NOW).blueprints.some(b => b.sold)) fail('교체했는데 도안 sold 가 남았다');
     return `${ids.join(' · ')} · ${B.shop_book_gold}G`;
 });
 
@@ -10597,6 +10630,50 @@ check('lab: 연구소 칸 레벨 — 배수 · 비용(골드 + 그 칸 재료) �
     if (JSON.stringify(SYS.game.deserialize(raw).labLevels) !== '{}') fail('없는 세이브가 {} 로 안 열린다');
     if (JSON.stringify(newGameS(42).labLevels) !== '{}') fail('새 게임 칸 레벨');
     return `레벨 1 = ×${mult} · 비용 골드 ${gold0} + ${row.yieldId} ${n0} · 상한 ${B.lab_level_max}`;
+});
+check('lab: 연구소 줄 등록 — 한 영웅 한 줄(옮김) · 열린 줄만 · 겸직 · 효과 없음 · 해제 · 해고 정리 · 세이브 왕복 · 로드 정리 (GAME_DESIGN §9 10-21 · INTERFACE §2-7)', () => {
+    // 연구소 전 — 단계 줄은 locked · 모르는 줄 · 없는 영웅은 missing · 거절은 아무것도 안 쓴다
+    const raw = SYS.game.newGame(42, cands, NOW);
+    const u0 = raw.heroes[0].uid;
+    if (JSON.stringify(raw.labReg) !== '{}') fail('새 게임 등록');
+    if (SYS.game.labRegister(raw, u0, 'mine').err !== 'locked') fail('연구소 전에 등록했다');
+    if (SYS.game.labRegister(raw, u0, 'nope').err !== 'missing') fail('모르는 줄에 등록했다');
+    if (SYS.game.labRegister(raw, 'h999', 'mine').err !== 'missing') fail('없는 영웅을 등록했다');
+    if (JSON.stringify(raw.labReg) !== '{}') fail('거절이 무언가를 썼다');
+    // 연구소 뒤 — 단계 줄은 열리고 · 찾아온 영웅 줄은 레벨 0 이라 닫혀 있다
+    const g = newGameS(42);
+    const [a, b, c] = g.heroes.map(h => h.uid);
+    const ph = SYS.game.dispatchProgress(g, 'log', 1, NOW).perHour;
+    if (SYS.game.labRegister(g, a, 'visit').err !== 'locked') fail('닫힌 찾아온 영웅 줄에 등록했다');
+    if (!SYS.game.labRegister(g, a, 'mine').ok || SYS.game.labRegOf(g, a) !== 'mine') fail('등록');
+    // 한 영웅은 한 줄 — 다른 줄에 넣으면 옮긴다(거절이 아니다)
+    if (!SYS.game.labRegister(g, a, 'log').ok || SYS.game.labRegOf(g, a) !== 'log' || SYS.game.labRegList(g, 'mine').length) fail('옮기지 않았다');
+    SYS.game.labRegister(g, b, 'log');
+    if (SYS.game.labRegList(g, 'log').join() !== [a, b].join()) fail(`줄 명단 ${SYS.game.labRegList(g, 'log')} — 로스터 순서여야`);
+    if (SYS.game.labRegList(g, 'nope').length) fail('모르는 줄에 명단이 섰다');
+    // 겸직 — 등록이 영웅을 붙잡지 않는다 · 효과 없음 — 생산이 그대로
+    if (SYS.game.heroBusy(g, a) !== null) fail('등록이 영웅을 붙잡았다');
+    if (SYS.game.dispatchProgress(g, 'log', 1, NOW).perHour !== ph) fail('등록이 생산을 바꿨다');
+    // 찾아온 영웅 줄 — 열면 등록된다
+    g.resources.gold = 1e9;
+    if (!SYS.game.visitLevelUp(g, NOW).ok || !SYS.game.labRegister(g, c, 'visit').ok) fail('연 찾아온 영웅 줄에 등록이 안 된다');
+    // 해제 — 두 번째는 missing
+    if (!SYS.game.labUnregister(g, b).ok || SYS.game.labRegOf(g, b) !== null) fail('해제');
+    if (SYS.game.labUnregister(g, b).err !== 'missing') fail('등록 안 한 영웅을 해제했다');
+    // 해고 — 등록이 같이 지워진다(유령이 안 남는다)
+    const ha = g.heroes.find(h => h.uid === a);
+    for (const k of Object.keys(ha.equipped)) ha.equipped[k] = null;
+    if (!SYS.game.dismiss(g, a, NOW).ok) fail('fixture: 해고가 막혔다');
+    if (a in g.labReg || SYS.game.labRegList(g, 'log').length) fail('해고한 영웅의 등록이 남았다');
+    // 세이브 — 왕복 · 로드가 없는 영웅 · 모르는 줄을 지운다 · 없으면 {}
+    const back = SYS.game.deserialize(SYS.game.serialize(g, NOW));
+    if (!eq(back.labReg, { [c]: 'visit' })) fail(`왕복 ${JSON.stringify(back.labReg)}`);
+    const sv = SYS.game.serialize(g, NOW);
+    sv.labReg = { [b]: 'gather', h999: 'mine', [c]: 'nope' };
+    if (!eq(SYS.game.deserialize(sv).labReg, { [b]: 'gather' })) fail(`로드 정리 ${JSON.stringify(SYS.game.deserialize(sv).labReg)}`);
+    delete sv.labReg;
+    if (JSON.stringify(SYS.game.deserialize(sv).labReg) !== '{}') fail('없는 세이브가 {} 로 안 열린다');
+    return '한 줄 · 옮김 · 겸직 · 효과 없음 · 해고 정리 · 로드 정리';
 });
 check('minigame: 자원 미니게임 — 판은 판 번호로 재현 · 문(열린 단계) · 판 수 상한 없음 · 한 판 한 번 · 점수(내림) = 고른 단계 재료 · 원정 카운터 무변동 (2026-10-06 · PLAN_dispatch_watch D8 · ADR-0533 · INTERFACE §2-7)', () => {
     const mk = () => { const g = newGameS(42); g.buildings.resource = 1; return g; };
@@ -13426,15 +13503,13 @@ check('skill: 스킬 레벨 — 레벨 줄은 직업 50 중 소환 빼고 전부
     if (chain && !(SK.resolve({ id: 'mag_chain', up }).effects[0].decay < chain.effects[0].decay)) fail('체인 라이트닝이 레벨로 덜 약해지지 않는다');
     return Object.entries(seen).map(([k, n]) => `${k} ${n}`).join(' · ');
 });
-check('book: 같은 책 = 업그레이드 — 드는 책은 피보나치(키 둘) · 상한의 끝 maxUp(스킬 도감 최종 · R266) · 고유 칸도 오른다(칸은 안 는다) · 책 모자람 book · 덮어쓰면 그 레벨이 사라진다 · 인스턴스 up · 세이브 왕복 · 로드가 남의 키를 지운다 (R216 · skill_design §2-3)', () => {
+check('book: 같은 책 = 업그레이드 — 드는 책은 피보나치(키 둘) · 상한 maxUp(skillbook_upgrade_max 하나 · R293 · ~~스킬 도감 최종 R266~~) · 고유 칸도 오른다(칸은 안 는다) · 책 모자람 book · 덮어쓰면 그 레벨이 사라진다 · 인스턴스 up · 세이브 왕복 · 로드가 남의 키를 지운다 (R216 · skill_design §2-3)', () => {
     const S = buildSystems(D);
     const g = S.game.newGame(95, cands, NOW);
     const h = g.heroes[0];
     g.buildings.library = 1;
     h.level = B.skillbook_learn_level;
-    const max = S.game.skillCapMax();
-    // 상한은 스킬 도감이 연다 — 고유 스킬의 도감을 최종 레벨로 채워 끝까지 연다(단계별 상한은 아래 `skillCodex` 단정 · 2026-10-16 · R266)
-    g.skillCodexExp[h.innate] = D.skillCodex[D.skillCodex.length - 1].expTotal;
+    const max = S.game.skillCapMax();   // 상한 = 끝 하나 — 도감이 여는 문이 없다(아래 `책 상한` 단정 · 2026-10-20 · R293)
     const fib = [B.skillbook_upgrade_books_1, B.skillbook_upgrade_books_2];
     while (fib.length < max) fib.push(fib[fib.length - 1] + fib[fib.length - 2]);
     // 고유 스킬의 책 — 칸이 늘지 않고 고유가 오른다 (사용자 2026-10-06 (가))
@@ -13478,53 +13553,44 @@ check('book: 같은 책 = 업그레이드 — 드는 책은 피보나치(키 둘
     if (!r3.ok || r3.replaced !== other || other in (h.skillLv ?? {}) || h.skillLv?.[innate] !== max) fail(`덮어쓰기 ${JSON.stringify(r3)} · ${JSON.stringify(h.skillLv)}`);
     return `상한 ${max} · 책 ${fib.join(' · ')} (합 ${fib.reduce((a, b) => a + b, 0)})`;
 });
-check('skillCodex: 스킬 도감 레벨이 책 업그레이드 상한을 나눠 연다 — 도감 전 = 0 행 상한 · 레벨마다 그 행 · 열린 상한에 닿으면 codexCap(codexNeed = 상한을 올려 줄 레벨) · 끝이면 maxUp · 로드 정리 · 깨진 표는 생성 때 던진다 (R266 · monster_design §8-1)', () => {
+check('book: 책 상한은 끝 하나 — skillCapMax = skillbook_upgrade_max · 모든 스킬 · 모든 영웅이 같다 · 첫 책부터 끝까지 중간 문이 없다(plan 에 codexCap · cap · codexNeed 가 없다) · 끝이면 maxUp · 옛 세이브의 skillCodexExp 는 로드가 지우고 도안으로 보상하지 않는다 · 쌓인 책은 그대로 · skill_codex_level 표를 안 읽는다 (2026-10-20 · R293 · skill_design §2-3 · ~~R266~~)', () => {
     const S = buildSystems(D);
     const g = S.game.newGame(97, cands, NOW);
-    const h = g.heroes[0];
     g.buildings.library = 1;
-    h.level = B.skillbook_learn_level;
-    const id = h.innate;
-    const rows = D.skillCodex;
-    if (!eq(g.skillCodexExp, {})) fail(`새 게임의 스킬 도감 ${JSON.stringify(g.skillCodexExp)}`);
-    if (S.game.skillCapMax() !== rows[rows.length - 1].upgradeCap) fail(`skillCapMax ${S.game.skillCapMax()}`);
-    g.books[id] = 1e6;   // 책은 넉넉히 — 막는 것은 도감뿐
-    for (const r of rows) {
-        g.skillCodexExp[id] = r.expTotal;
-        if (S.game.skillCodexLevel(r.expTotal) !== r.level) fail(`문턱 ${r.expTotal} → 레벨 ${S.game.skillCodexLevel(r.expTotal)} ≠ ${r.level}`);
-        if (r.level > 0 && S.game.skillCodexLevel(r.expTotal - 1) !== r.level - 1) fail(`문턱 ${r.expTotal} 바로 밑인데 Lv${r.level}`);
-        if (S.game.skillCapOf(g, id) !== r.upgradeCap) fail(`Lv${r.level} 상한 ${S.game.skillCapOf(g, id)} ≠ ${r.upgradeCap}`);
-        while (S.game.learnBook(g, h.uid, id).ok);   // 열린 상한까지 올린다
-        if ((h.skillLv?.[id] ?? 0) !== r.upgradeCap) fail(`Lv${r.level} 에서 ${h.skillLv?.[id]} 까지 — 상한 ${r.upgradeCap}`);
+    const max = B.skillbook_upgrade_max;
+    if (!(Number.isInteger(max) && max >= 1)) fail(`skillbook_upgrade_max ${max} — 1 이상 정수`);
+    if (S.game.skillCapMax() !== max) fail(`skillCapMax ${S.game.skillCapMax()} ≠ skillbook_upgrade_max ${max}`);
+    if ('skillCodex' in D || 'skillCodexLevel' in S.game || 'skillCapOf' in S.game || 'skillCodexNext' in S.game) fail('스킬 도감 표 · 함수가 남았다 (R293 걷음)');
+    if ('skillCodexExp' in g) fail(`새 게임에 스킬 도감 칸 ${JSON.stringify(g.skillCodexExp)}`);
+    // 영웅 둘(고유가 다르게) — 둘 다 첫 책부터 같은 끝까지 오른다 · 매 단계 plan 이 막지 않는다
+    const pair = g.heroes.filter((x, i, a) => a.findIndex(y => y.innate === x.innate) === i).slice(0, 2);
+    if (pair.length < 2) fail('픽스처 — 고유가 다른 영웅이 둘이어야 한다');
+    for (const h of pair) {
+        h.level = B.skillbook_learn_level;
+        const id = h.innate;
+        g.books[id] = 1e6;   // 책은 넉넉히 — 막는 것은 끝 하나뿐이어야 한다
+        for (let k = 0; k < max; k++) {
+            const p = S.game.bookState(g, h.uid).books.find(b => b.id === id).plan;
+            if (p.err !== null || 'cap' in p || 'codexNeed' in p) fail(`${id} Lv${k + 1} plan ${JSON.stringify(p)} — 끝 전에 막혔거나 옛 칸이 남았다`);
+            const r = S.game.learnBook(g, h.uid, id);
+            if (!r.ok || r.lv !== k + 1) fail(`${id} ${k + 1}번째 업그레이드 ${JSON.stringify(r)}`);
+        }
         const p = S.game.bookState(g, h.uid).books.find(b => b.id === id).plan;
-        const nxt = rows.find(x => x.upgradeCap > r.upgradeCap);
-        if (p.cap !== r.upgradeCap || (nxt ? (p.err !== 'codexCap' || p.codexNeed !== nxt.level) : p.err !== 'maxUp')) fail(`Lv${r.level} plan ${JSON.stringify(p)}`);
-        if (S.game.learnBook(g, h.uid, id).err !== p.err) fail(`Lv${r.level} — learnBook 이 plan 과 다른 거절`);
+        if (p.err !== 'maxUp' || S.game.learnBook(g, h.uid, id).err !== 'maxUp') fail(`${id} 끝에서 ${JSON.stringify(p)}`);
+        if (h.skillLv?.[id] !== max) fail(`${id} 레벨 ${h.skillLv?.[id]} ≠ ${max}`);
     }
-    // 로드 — 책이 안 되는 스킬 · 양의 정수가 아닌 값은 지운다 · 없으면 {} · 옛 몬스터 도감은 옮기지 않는다 (INTERFACE §4)
-    const monOnly = S.skill.list.find(d => d.ownerKind === 'monster')?.id;
+    // 옛 세이브 — 스킬 도감 경험치는 지운다 · 이미 연 도안을 도안으로 보상하지 않는다 · 쌓인 책은 그대로 (사용자 2026-10-21 · INTERFACE §4)
+    const job = S.skill.list.find(d => d.ownerKind === 'job' && S.skill.bookable(d.id)).id;
     const sv = JSON.parse(JSON.stringify(S.game.serialize(g, NOW)));
-    sv.skillCodexExp = { ...sv.skillCodexExp, no_such_skill: 5, ...(monOnly ? { [monOnly]: 5 } : {}) };
-    const other = S.skill.list.find(d => d.ownerKind === 'job' && d.id !== id).id;
-    sv.skillCodexExp[other] = 0;
+    sv.skillCodexExp = { [job]: 1e6, [pair[0].innate]: 1e6 };
+    delete sv.blueprints;
+    sv.books = { [job]: 2 };
     const back = S.game.deserialize(sv);
-    if (!eq(back.skillCodexExp, { [id]: g.skillCodexExp[id] })) fail(`로드 정리 ${JSON.stringify(back.skillCodexExp)}`);
-    const none = JSON.parse(JSON.stringify(S.game.serialize(g, NOW)));
-    delete none.skillCodexExp;
-    none.codexExp = { 1101: 1e6 };
-    if (!eq(S.game.deserialize(none).skillCodexExp, {})) fail('스킬 도감이 없는 세이브가 빈 도감으로 안 열렸다 — 몬스터 도감을 옮겼나');
-    // 표 검증 — 깨진 표는 생성 때 던진다
-    const broken = [
-        ['0 행이 없다', rows.slice(1)],
-        ['문턱이 안 오른다', rows.map((r, i) => (i === 2 ? { ...r, expTotal: rows[1].expTotal } : r))],
-        ['상한이 준다', rows.map((r, i) => (i === 2 ? { ...r, upgradeCap: rows[1].upgradeCap - 1 } : r))],
-    ];
-    for (const [why, bad] of broken) {
-        let threw = false;
-        try { buildSystems({ ...D, skillCodex: bad }); } catch (e) { threw = /skill_codex_level/.test(e.message); }
-        if (!threw) fail(`${why} — 안 던졌다`);
-    }
-    return `상한 ${rows.map(r => `Lv${r.level} ${r.upgradeCap}`).join(' · ')} · 문턱 ${rows.map(r => r.expTotal).join(' · ')}`;
+    if ('skillCodexExp' in back) fail(`로드가 스킬 도감 경험치를 안 지웠다 ${JSON.stringify(back.skillCodexExp)}`);
+    if (!eq(back.blueprints, {})) fail(`옛 스킬 도감이 도안으로 보상됐다 ${JSON.stringify(back.blueprints)}`);
+    if (!eq(back.books, { [job]: 2 })) fail(`쌓인 책이 바뀌었다 ${JSON.stringify(back.books)}`);
+    if (S.game.bookState(back).craft.length) fail('옛 스킬 도감이 제작 칸을 열었다 — 도안이 있어야 선다');
+    return `상한 ${max} · 영웅 ${pair.map(h => h.innate).join(' · ')} 둘 다 끝까지 · 옛 스킬 도감 → 지움(보상 없음)`;
 });
 check('advance: 전직 포인트 —전직 레벨에 1 · 그 뒤 advance_point_interval 레벨마다 1 · 첫 포인트로 배운다 · 레벨 올리기 · 모자라면 points · 되돌리면 전부 환급 · 전직 칸 up · 가지 셋은 설명만 · 세이브 왕복 (R216 · skill_design §4)', () => {
     const S = buildSystems(D);
@@ -13568,14 +13634,13 @@ check('advance: 전직 포인트 —전직 레벨에 1 · 그 뒤 advance_point_
     }
     return `포인트 만렙 ${capPts} · 간격 ${iv}`;
 });
-check('book: 책 제작 — 도서관 r2(2026-10-16 · ~~r1~~ — r1 은 배우기만) · 스킬 도안(그 스킬의 스킬 도감 Lv1 — R266 · ~~몬스터 도감 codex_blueprint_level~~)이 열린 책만 · 기본 책도 도안이 있어야 · 골드 · 가루를 낸다 · 가진 책도 만든다(쌓인다 · 2026-09-30) (R179 · R241 · skill_design §2-1)', () => {
+check('book: 책 제작 — 도서관 r2(2026-10-16 · ~~r1~~ — r1 은 배우기만) · 그 스킬의 도안 한 장 + 골드 · 가루 → 책 한 권(도안이 소모된다 · 0 장이면 키를 지운다 · 제작 칸에서 빠진다) · 기본 책도 도안이 있어야 · 거절은 도안을 안 쓴다 · 가진 책도 만든다(쌓인다) · 스킬 · 몬스터 도감은 도안을 안 연다 (R179 · R241 · 2026-10-20 R293 · skill_design §2-1)', () => {
     const g = SYS.game.newGame(94, cands, NOW);
-    // 도안을 열 스킬 — 고유가 책이 되는 직업 스킬인 첫 몬스터의 그 고유 · 곧 만들 책
+    // 만들 책 — 고유가 책이 되는 직업 스킬인 첫 몬스터의 그 고유
     const mon = Object.values(D.monsters).find(m => SYS.skill.defs[m.innate_skill]?.ownerKind === 'job');
     const id = mon.innate_skill;
-    const starter = SYS.skill.list.find(d => d.starterPool && d.ownerKind === 'job' && d.id !== id).id;   // 도안이 없는 기본 책
+    const starter = SYS.skill.list.find(d => d.starterPool && d.ownerKind === 'job' && d.id !== id).id;   // 기본 책 — 상단이 안 팔아도 도안이 있어야 만든다
     const monOnly = SYS.skill.list.find(d => d.ownerKind === 'monster')?.id;
-    const at = SYS.game.skillCodexNext(0);   // 도안(스킬 도감 Lv1)이 열리는 누적 스킬 도감 경험치
     if (SYS.game.craftBook(g, id).err !== 'unbuilt') fail('도서관 전인데 만들었다');
     g.buildings.library = 1;
     if (SYS.game.craftBook(g, id).err !== 'unbuilt') fail('도서관 r1 인데 만들었다 — 책 제작은 r2 (2026-10-16)');
@@ -13583,28 +13648,35 @@ check('book: 책 제작 — 도서관 r2(2026-10-16 · ~~r1~~ — r1 은 배우�
     if (SYS.game.bookState(g).craft.length !== 0) fail('새 게임인데 제작 목록이 있다 — 도안 없이는 아무 책도 못 만든다');
     if (SYS.game.craftBook(g, id).err !== 'blueprint') fail('도안 없이 만들었다');
     if (monOnly && SYS.game.craftBook(g, monOnly).err !== 'missing') fail(`몬스터 전용(${monOnly})을 만들었다`);
-    g.skillCodexExp[id] = at - 1;
-    if (SYS.game.craftBook(g, id).err !== 'blueprint') fail('스킬 도감 문턱 바로 밑인데 도안이 열렸다');
-    g.codexExp[mon.monster_idx] = D.codexLevels[D.codexLevels.length - 1];   // 몬스터 도감은 도안을 안 연다 (2026-10-16 · R266)
-    if (SYS.game.craftBook(g, id).err !== 'blueprint') fail('몬스터 도감이 도안을 열었다');
-    g.skillCodexExp[id] = at;
-    const list = SYS.game.bookState(g).craft.map(c => c.id);
-    const want = SYS.skill.list.map(d => d.id).filter(sid => SYS.game.skillCodexLevel(g.skillCodexExp[sid] ?? 0) >= 1);
-    if (!list.includes(id) || !eq(list, want)) fail(`제작 목록 ${JSON.stringify(list)} — 도안 ${JSON.stringify(want)}`);
+    // 도감은 도안을 안 연다 — 몬스터 도감 끝 · 옛 스킬 도감 경험치를 넣어도 도안이 없으면 못 만든다 (R293 · ~~스킬 도감 Lv1 = 도안~~ R266)
+    g.codexExp[mon.monster_idx] = D.codexLevels[D.codexLevels.length - 1];
+    g.skillCodexExp = { [id]: 1e9 };
+    if (SYS.game.craftBook(g, id).err !== 'blueprint') fail('도감이 도안을 열었다 — 도안은 재고에서만 온다');
+    delete g.skillCodexExp;
+    g.blueprints = { [id]: 2 };
+    const c0 = SYS.game.bookState(g).craft;
+    if (!eq(c0.map(c => c.id), [id]) || c0[0].n !== 2) fail(`제작 목록 ${JSON.stringify(c0)} — 가진 도안 하나 · 장수 2`);
     if (SYS.game.craftBook(g, starter).err !== 'blueprint') fail(`도안이 없는 기본 책(${starter})을 만들었다 — 모든 책이 도안을 요구한다`);
     g.resources.gold = B.book_craft_gold - 1; g.resources.dust = B.book_craft_dust;
     if (SYS.game.craftBook(g, id).err !== 'gold') fail('골드 부족인데 만들었다');
     g.resources.gold = B.book_craft_gold; g.resources.dust = B.book_craft_dust - 1;
     if (SYS.game.craftBook(g, id).err !== 'materials') fail('가루 부족인데 만들었다');
+    if (g.blueprints[id] !== 2 || g.books[id] !== undefined) fail(`거절이 도안 · 책을 바꿨다 ${JSON.stringify({ bp: g.blueprints, books: g.books })}`);
     g.resources.dust = B.book_craft_dust;
-    if (!SYS.game.craftBook(g, id).ok || g.books[id] !== 1 || g.resources.gold !== 0 || g.resources.dust !== 0) fail(`제작 뒤 ${JSON.stringify({ books: g.books, res: g.resources })}`);
+    if (!SYS.game.craftBook(g, id).ok || g.books[id] !== 1 || g.blueprints[id] !== 1 || g.resources.gold !== 0 || g.resources.dust !== 0) fail(`제작 뒤 ${JSON.stringify({ books: g.books, bp: g.blueprints, res: g.resources })}`);
     g.resources.gold = 1e6; g.resources.dust = 1e6;
-    if (SYS.game.bookState(g).craft.find(c => c.id === id).err !== null) fail('가진 책인데 만들기가 막혔다');
+    if (SYS.game.bookState(g).craft.find(c => c.id === id)?.err !== null) fail('가진 책인데 만들기가 막혔다');
+    // 마지막 도안 — 가진 책이어도 또 만든다(쌓인다) · 도안이 0 장이 되면 키가 지워지고 제작 칸에서 빠진다
     if (!SYS.game.craftBook(g, id).ok || g.books[id] !== 2) fail(`가진 책을 또 만들면 두 권 — 재고 ${g.books[id]}`);
+    if (id in g.blueprints) fail(`도안 0 장인데 키가 남았다 ${JSON.stringify(g.blueprints)}`);
+    if (SYS.game.bookState(g).craft.length || SYS.game.craftBook(g, id).err !== 'blueprint') fail('도안을 다 썼는데 또 만들 수 있다 — 도안 한 장이 책 한 권이다');
     if (SYS.game.bookState(g).books.find(b => b.id === id)?.n !== 2) fail('bookState 가 권수를 안 낸다');
-    return `도안 = 스킬 도감 Lv1(${id} · 경험치 ${at}) · 골드 ${B.book_craft_gold} · 가루 ${B.book_craft_dust}`;
+    // 기본 책도 도안 한 장이면 만든다 — 막는 것은 도안이지 기본 책 여부가 아니다
+    g.blueprints[starter] = 1;
+    if (!SYS.game.craftBook(g, starter).ok || g.books[starter] !== 1 || starter in g.blueprints) fail(`기본 책 도안 ${JSON.stringify({ books: g.books, bp: g.blueprints })}`);
+    return `도안 한 장 → 책 한 권(${id} · 2장 → 2권 · 0장이면 칸이 빠진다) · 골드 ${B.book_craft_gold} · 가루 ${B.book_craft_dust}`;
 });
-check('battle: 처치 드롭은 장비 또는 스킬북 — drop_book_pct 0 이면 책 없음 · 1 이면 책이 나오고 전부 그 런의 적이 든 칸의 스킬 · 나이트메어는 2칸 책도 나온다 · 몬스터 전용 스킬은 책이 없다 (R179 · R269 · item_design §1 드롭 1-2 · INTERFACE §5-2)', () => {
+check('battle: 처치 드롭은 장비 또는 스킬 도안 — drop_book_pct 0 이면 도안 없음 · 1 이면 도안이 나오고 전부 그 런의 적이 든 칸의 스킬 · 나이트메어는 2칸 도안도 나온다 · 몬스터 전용 스킬은 도안이 없다 · 결과에 books 칸이 없다 (R179 · R269 · 2026-10-20 R293 ~~스킬북~~ · item_design §1 드롭 1-2 · INTERFACE §5-2)', () => {
     const S0 = buildSystems({ ...D, balance: { ...B, drop_book_pct: 0 } });
     const S1 = buildSystems({ ...D, balance: { ...B, drop_book_pct: 1 } });
     // 그 런의 적이 든 칸 — round · call 이벤트의 칸 줄 (책은 「쥔 스킬이면 어느 칸이든」 · monster_design §5-1)
@@ -13613,12 +13685,13 @@ check('battle: 처치 드롭은 장비 또는 스킬북 — drop_book_pct 0 이�
     let books = 0, drops1 = 0, second = 0;
     for (let seed = 1; seed <= 10; seed++) {
         const r0 = S0.battle.simulate(godUnits(), 1013, makeRng(seed));
-        if (r0.books.length) fail(`시드 ${seed}: 확률 0 인데 책 ${r0.books.length}`);
+        if ('books' in r0) fail('결과에 옛 칸 books 가 남았다 — 처치는 도안을 준다 (R293)');
+        if (r0.blueprints.length) fail(`시드 ${seed}: 확률 0 인데 도안 ${r0.blueprints.length}`);
         for (const diff of [null, 'nightmare']) {
             const r1 = S1.battle.simulate(godUnits(), 1023, makeRng(seed), undefined, null, undefined, diff);
-            books += r1.books.length; drops1 += r1.drops.length;
+            books += r1.blueprints.length; drops1 += r1.drops.length;
             const h = held(r1);
-            for (const id of r1.books) {
+            for (const id of r1.blueprints) {
                 const d = S1.skill.defs[id];
                 if (!d || d.ownerKind === 'monster') fail(`시드 ${seed}: 영웅이 못 배우는 책 ${id}`);
                 if (!h.has(id)) fail(`시드 ${seed} ${diff ?? '노말'}: 그 런의 적이 안 든 책 ${id}`);
@@ -13631,38 +13704,40 @@ check('battle: 처치 드롭은 장비 또는 스킬북 — drop_book_pct 0 이�
     if (!second) fail('나이트메어 10런에서 2칸 책이 하나도 안 나왔다');
     // 몬스터 전용 고유(고블린 소환 · 자폭)를 든 몬스터는 책 후보가 없다
     const only = Object.values(D.monsters).find(m => SYS.skill.defs[m.innate_skill]?.ownerKind === 'monster');
-    if (only && SYS.battle.makeEnemy('e0', only.monster_idx, 'normal', 5, []).codexSkills.length !== 0) fail(`${only.monster_idx} 의 몬스터 전용 고유가 책 후보다`);
+    if (only && SYS.battle.makeEnemy('e0', only.monster_idx, 'normal', 5, []).blueprintSkills.length !== 0) fail(`${only.monster_idx} 의 몬스터 전용 고유가 책 후보다`);
     // 같은 시드 · 같은 확률이면 같은 책 — 결정론
-    if (!eq(S1.battle.simulate(godUnits(), 1023, makeRng(3)).books, S1.battle.simulate(godUnits(), 1023, makeRng(3)).books)) fail('같은 시드가 다른 책을 냈다');
-    return `확률 1 · 노말 · 나이트메어 10런씩 — 책 ${books}(2칸 ${second}) · 장비 ${drops1}`;
+    if (!eq(S1.battle.simulate(godUnits(), 1023, makeRng(3)).blueprints, S1.battle.simulate(godUnits(), 1023, makeRng(3)).blueprints)) fail('같은 시드가 다른 도안을 냈다');
+    return `확률 1 · 노말 · 나이트메어 10런씩 — 도안 ${books}(2칸 ${second}) · 장비 ${drops1}`;
 });
-check('resolve: 떨어진 책은 재고에 쌓이고(가진 책이어도 +1 · 가루 없음 · 가방 칸 안 먹음) · 리포트 books = [{id}] (R179 · 2026-09-30)', () => {
+check('resolve: 떨어진 도안은 도안 재고에 쌓이고(가진 도안이어도 +1 · 가루 없음 · 가방 칸 안 먹음 · 책 재고는 그대로) · 리포트 blueprints = [{id}] (R179 · 2026-09-30 · 2026-10-20 R293 ~~책~~)', () => {
     const S1 = buildSystems({ ...D, balance: { ...B, drop_book_pct: 1 } });
     const count = list => list.reduce((m, b) => ({ ...m, [b.id]: (m[b.id] ?? 0) + 1 }), {});
     for (let seed = 1; seed <= 30; seed++) {
         const g = S1.game.newGame(seed, cands, NOW);
         const bag0 = g.bags[0].length, gDust0 = g.resources.dust;
         const r = S1.game.resolveBattle(g, 1011, NOW);
-        const got = r.report.books ?? [];
+        if ('books' in r.report) fail('리포트에 옛 칸 books 가 섰다 (R293)');
+        const got = r.report.blueprints;
         if (!got.length) continue;
-        // 한 런에서 같은 책이 둘 떨어지면 둘 다 쌓인다 — 재고 = 그 id 가 리포트에 선 횟수
-        if (got.some(b => !eq(Object.keys(b), ['id']))) fail(`시드 ${seed}: 리포트 책 ${JSON.stringify(got)} — {id} 만`);
-        if (!eq(g.books, count(got))) fail(`시드 ${seed}: 재고 ${JSON.stringify(g.books)} ≠ 떨어진 책 ${JSON.stringify(count(got))}`);
-        if (g.bags[0].length > bag0 + r.report.drops.length) fail('책이 가방 칸을 먹었다');
-        // 다시 — 이번에는 같은 책을 이미 두 권씩 가졌다 → 그 위에 쌓이고 가루는 안 는다
+        // 한 런에서 같은 도안이 둘 떨어지면 둘 다 쌓인다 — 재고 = 그 id 가 리포트에 선 횟수
+        if (got.some(b => !eq(Object.keys(b), ['id']))) fail(`시드 ${seed}: 리포트 도안 ${JSON.stringify(got)} — {id} 만`);
+        if (!eq(g.blueprints, count(got))) fail(`시드 ${seed}: 도안 재고 ${JSON.stringify(g.blueprints)} ≠ 떨어진 도안 ${JSON.stringify(count(got))}`);
+        if (!eq(g.books, {})) fail(`시드 ${seed}: 처치가 책을 줬다 ${JSON.stringify(g.books)} — 책은 도서관에서만 생긴다`);
+        if (g.bags[0].length > bag0 + r.report.drops.length) fail('도안이 가방 칸을 먹었다');
+        // 다시 — 이번에는 같은 도안을 이미 두 장씩 가졌다 → 그 위에 쌓이고 가루는 안 는다
         const g2 = S1.game.newGame(seed, cands, NOW);
-        for (const b of got) g2.books[b.id] = 2;
-        const own0 = { ...g2.books };
+        for (const b of got) g2.blueprints[b.id] = 2;
+        const own0 = { ...g2.blueprints };
         const dust0 = g2.resources.dust;
         const r2 = S1.game.resolveBattle(g2, 1011, NOW);
-        const add = count(r2.report.books ?? []);
+        const add = count(r2.report.blueprints);
         for (const id of new Set([...Object.keys(own0), ...Object.keys(add)]))
-            if (g2.books[id] !== (own0[id] ?? 0) + (add[id] ?? 0)) fail(`시드 ${seed}: ${id} 재고 ${g2.books[id]} ≠ ${own0[id] ?? 0} + ${add[id] ?? 0}`);
-        // 가루 — 책을 안 가졌던 같은 시드의 판과 같은 양만 는다(책이 가루로 새지 않는다)
-        if (!eq(r2.report.books, r.report.books) || g2.resources.dust - dust0 !== g.resources.dust - gDust0) fail(`시드 ${seed}: 가진 책 때문에 가루가 달라졌다 ${g2.resources.dust - dust0} ≠ ${g.resources.dust - gDust0}`);
-        return `시드 ${seed} · 책 ${got.map(b => b.id).join(' ')} · 가진 채로 또 → ${JSON.stringify(g2.books)}`;
+            if (g2.blueprints[id] !== (own0[id] ?? 0) + (add[id] ?? 0)) fail(`시드 ${seed}: ${id} 도안 ${g2.blueprints[id]} ≠ ${own0[id] ?? 0} + ${add[id] ?? 0}`);
+        // 가루 — 도안을 안 가졌던 같은 시드의 판과 같은 양만 는다(도안이 가루로 새지 않는다)
+        if (!eq(r2.report.blueprints, r.report.blueprints) || g2.resources.dust - dust0 !== g.resources.dust - gDust0) fail(`시드 ${seed}: 가진 도안 때문에 가루가 달라졌다 ${g2.resources.dust - dust0} ≠ ${g.resources.dust - gDust0}`);
+        return `시드 ${seed} · 도안 ${got.map(b => b.id).join(' ')} · 가진 채로 또 → ${JSON.stringify(g2.blueprints)}`;
     }
-    fail('30 시드에서 1011 을 이겨 책을 얻은 판이 없다');
+    fail('30 시드에서 1011 을 이겨 도안을 얻은 판이 없다');
 });
 /*
  * **몬스터 장비의 아이템 레벨 = 가운데 ± 반폭** [2026-10-06 · 사용자 확정 · item_design §1 3단계 — ~~굴림 없음~~(09-11)].
@@ -13786,7 +13861,7 @@ check('battle: 처치 재료 — 장비 · 책의 1개와 따로 · drop_materia
         const k = Object.values(r1.kills).reduce((x, y) => x + y, 0);
         const n = Object.values(r1.materials).reduce((x, y) => x + y, 0);
         if (n !== k) fail(`시드 ${seed}: 확률 1 인데 재료 ${n} ≠ 처치 ${k}`);
-        if (r1.drops.length + r1.books.length > k) fail(`시드 ${seed}: 장비 + 책 ${r1.drops.length + r1.books.length} > 처치 ${k} — 재료가 처치당 1개 칸을 깼다`);
+        if (r1.drops.length + r1.blueprints.length > k) fail(`시드 ${seed}: 장비 + 도안 ${r1.drops.length + r1.blueprints.length} > 처치 ${k} — 재료가 처치당 1개 칸을 깼다`);
         for (const key of Object.keys(r1.materials)) { if (!KINDS.includes(key)) fail(`시드 ${seed}: 모르는 종류 ${key}`); seen.add(key); }
         mats += n; kills += k;
     }
@@ -13818,7 +13893,7 @@ check('resolve: 처치 재료는 그 스테이지 챕터 단계의 산출물로 
     }
     fail('30 시드에서 재료가 든 판이 없다');
 });
-check('save: 스킬북 — 무기의 skill 을 지운다(배운 스킬로 안 옮긴다) · 책 권수는 그대로(2026-09-30) · 정의에 없거나 몬스터 전용 책 · 양의 정수 아닌 권수 · 배운 스킬은 걸러 낸다 (R179 · INTERFACE §4)', () => {
+check('save: 스킬북 · 도안 — 무기의 skill 을 지운다(배운 스킬로 안 옮긴다) · 책 · 도안 장수는 그대로(2026-09-30 · R293) · 정의에 없거나 몬스터 전용 · 양의 정수 아닌 장수 · 배운 스킬은 걸러 낸다 · 없으면 {} (R179 · R293 · INTERFACE §4)', () => {
     const g = SYS.game.newGame(95, cands, NOW);
     const h = g.heroes[0];
     const w = g.items[h.equipped.weapon];
@@ -13828,15 +13903,18 @@ check('save: 스킬북 — 무기의 skill 을 지운다(배운 스킬로 안 �
     s.items[w.uid].skill = job;                              // 옛 세이브의 무기 스킬
     const job2 = SYS.skill.list.filter(d => d.ownerKind === 'job')[1].id;
     s.books = { [job]: 3, [job2]: 1.5, nope: 1, [mon]: 1 };
+    s.blueprints = { [job2]: 2, [job]: 0, nope: 1, [mon]: 1 };   // 도안도 책과 같은 거름 (R293)
     s.heroes[1].bookSkill = 'nope';
     const L = SYS.game.deserialize(JSON.parse(JSON.stringify(s)));
     if ('skill' in L.items[w.uid]) fail('무기의 skill 이 남았다');
     if (L.heroes[0].bookSkill !== undefined) fail('무기 스킬이 배운 스킬로 옮겨졌다');
     if (!eq(L.books, { [job]: 3 })) fail(`책 ${JSON.stringify(L.books)} — 권수 그대로 · 정의 있는 영웅 스킬 · 양의 정수만`);
+    if (!eq(L.blueprints, { [job2]: 2 })) fail(`도안 ${JSON.stringify(L.blueprints)} — 장수 그대로 · 정의 있는 영웅 스킬 · 양의 정수만`);
     if ('bookSkill' in L.heroes[1]) fail('정의에 없는 배운 스킬이 남았다');
-    const old = SYS.game.serialize(g, NOW); delete old.books;
-    if (!eq(SYS.game.deserialize(old).books, {})) fail('books 가 없는 세이브가 {} 로 안 열렸다');
-    return '무기 skill 삭제 · 책 3권 그대로 · 걸러 냄';
+    const old = SYS.game.serialize(g, NOW); delete old.books; delete old.blueprints;
+    const LO = SYS.game.deserialize(old);
+    if (!eq(LO.books, {}) || !eq(LO.blueprints, {})) fail('books · blueprints 가 없는 세이브가 {} 로 안 열렸다');
+    return '무기 skill 삭제 · 책 3권 · 도안 2장 그대로 · 걸러 냄';
 });
 check('construction: 도서관 — 랭크 하나에 기능 하나(2026-10-16) — r1 = 책 배우기(영웅 레벨 skillbook_learn_level) · r2 = 책 제작(원정 r2) · r3 = 전직(영웅 레벨 advance_unlock_level · 원정 r3) · r4 = 영웅 스킬 더 찍기(준비 중 — 못 짓는다) · 제련소 r5 의 스킬 카드 합성 줄은 없다 (R179 · R231 · R263 · construction_draft §2)', () => {
     const lib = SYS.construction.list.find(b => b.id === 'library') ?? fail('도서관이 없다');

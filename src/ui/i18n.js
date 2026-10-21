@@ -51,7 +51,7 @@ export const L = v =>
     v == null ? '' : (typeof v === 'string' ? v : (v[current] ?? v.ko ?? ''));
 
 /** UI 문구 조회 — 미등록 키는 키 그대로 노출된다 (누락이 화면에서 바로 보이게) */
-/** 그 키가 사전에 있는가 — 어휘가 CSV 에서 오는 자리(걸린 효과 `skill_status.csv:stat`)가 문장을 만들지 말지 고를 때 쓴다 */
+/** 그 키가 사전에 있는가 — 어휘가 데이터에서 오는 자리(마스터리 효과 `app.js`)가 제 문구가 있는지 고를 때 쓴다 */
 export const has = key => Object.prototype.hasOwnProperty.call(STRINGS, key);
 
 export function t(key, params) {
@@ -90,11 +90,6 @@ const STRINGS = {
        값(`hero.trait`)은 살아 있고 화면에만 없다. 다시 보이게 할 자리는 영웅 툴팁(§5)이 1순위라 키는 남긴다 */
     'ng.trait': { ko: '시작 특성', en: 'Starting Trait' },
     'ng.total': { ko: '능력치 합', en: 'Attribute Total' },
-    // 카드 아래 안내 띠 — 지금 세 장의 직업 · 죄종 (SCREEN_DESIGN §3 · ADR-0642 · app.js:startGuide)
-    'ng.guide.cls': { ko: '직업', en: 'Class' },
-    'ng.guide.clsSub': { ko: '싸움에서 맡는 일', en: 'Role in battle' },
-    'ng.guide.sin': { ko: '죄종', en: 'Sin' },
-    'ng.guide.sinSub': { ko: '직업과 상관없이 붙는 성향', en: 'A trait apart from class' },
     'ng.note': {
         ko: '첫 파티는 <b>레어 1 + 매직 1 + 일반 1</b>이다 — 첫 화면부터 영웅 로스터에 <b>층</b>이 보인다. 유니크 15명은 고정 명단이라 시작에 소모하지 않는다<br>'
             + '기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안이다 (등급끼리 대역이 <b>겹칠 수 있다</b>) — '
@@ -923,7 +918,7 @@ const STRINGS = {
     'rep.drops.h': { ko: '획득 아이템', en: 'Loot' },   // 책 · 재료도 이 격자에 선다 (ADR-0625)
     'rep.drops.sub': { ko: '{n}개', en: { one: '{n} item', other: '{n} items' } },
     'rep.drops.none': { ko: '떨어진 아이템 없음', en: 'No loot' },
-    'rep.book': { ko: '책', en: 'Book' },   // 획득 격자의 스킬북 칸 배지 (R179 · ADR-0420)
+    'rep.blueprint': { ko: '도안', en: 'Plan' },   // 스킬 도안 칸 배지 — 리포트 획득 격자 · 상단 도안 칸 (R293 · ADR-0680 — ~~`rep.book` 「책」~~ ADR-0420)
     'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
@@ -1278,7 +1273,7 @@ const STRINGS = {
     // 한국어도 On / Off 그대로 [2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 · SCREEN_DESIGN §15]
     // 연구소 단계 상자 — 산출물 옆 시간당 생산량 (SCREEN_DESIGN §8 · ADR-0665 — ~~기본 · 현재 · 효율 +n%~~ 는 영웅 배치와 함께 걷었다)
     'dp.perHour': { ko: '{n}/시간', en: '{n}/h' },
-    // 칸 레벨 — 트랙 칸의 Lv · 고른 칸의 Lv / 최대 · [레벨 올리기] · 상한 · 결과 플래시 · 줄 목록 아래 오프라인 최대 (SCREEN_DESIGN §8 · ADR-0669 · R288)
+    // 칸 레벨 — 트리 노드의 Lv · 고른 칸의 Lv / 최대 · [레벨 올리기] · 상한 · 결과 플래시 · 트리 뿌리 아래 오프라인 최대 (SCREEN_DESIGN §8 · ADR-0678 · R288)
     'dp.lv': { ko: 'Lv {n}', en: 'Lv {n}' },
     'dp.lvOf': { ko: 'Lv {n} / {max}', en: 'Lv {n} / {max}' },
     'dp.lvUp': { ko: '레벨 올리기', en: 'Level Up' },
@@ -1290,10 +1285,12 @@ const STRINGS = {
     'dp.err.maxUp': { ko: '최대 레벨이다', en: 'Already at max level' },
     'dp.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'dp.err.materials': { ko: '재료가 모자란다', en: 'Not enough materials' },
+    // 줄 등록 — 연구소 띠 위칸의 「등록 안 함」 · 등록 창 머리 (SCREEN_DESIGN §8 · ADR-0677) · ~~`dp.reg.h`(고른 칸의 등록 자리 소제목)~~ 는 영웅 칸이 줄 카드로 가며 걷었다 (ADR-0681)
+    'dp.reg.none': { ko: '미등록', en: 'Unassigned' },
+    'dp.reg.modal': { ko: '{line} — 영웅 등록', en: '{line} — Assign Heroes' },
     // 얻은 재료 플래시 — 미니게임이 쓴다(옛 파견 관전 창의 떨어지는 재료 · 창은 2026-10-18 걷었다)
     'dp.watch.gain': { ko: '+{n} {item}', en: '+{n} {item}' },
-    // 자원 미니게임 — 단 이름 줄의 버튼 · 창 머리 · 시작 / 결과 판 · 판 위 머리 (2026-10-06 · SCREEN_DESIGN §8 · ADR-0532)
-    'mg.play': { ko: '미니게임', en: 'Minigame' },
+    // 자원 미니게임 — 창 머리 · 시작 / 결과 판 · 판 위 머리 (2026-10-06 · SCREEN_DESIGN §8 · ADR-0532) · ~~`mg.play`(연구소의 [미니게임] 버튼)~~ 은 2026-10-21 숨김으로 걷었다 — 창은 개발용 `?dev=mg` 만 연다 (ADR-0682)
     'mg.title': { ko: '{post} 미니게임', en: '{post} Minigame' },
     'mg.start': { ko: '플레이', en: 'Play' },
     'mg.again': { ko: '한 판 더', en: 'Play again' },
@@ -1484,10 +1481,9 @@ const STRINGS = {
     'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite' },
     'bk.upgrade': { ko: '업그레이드 · {n}권', en: 'Upgrade · {n}' },   // 같은 책 — 이번에 드는 책 수 (2026-10-06 · R216 · ADR-0529 — ~~`bk.same` 「배움」~~ 퇴역)
     'bk.max': { ko: '최대', en: 'Max' },
-    'bk.codexCap': { ko: '도감 Lv.{n}', en: 'Codex Lv.{n}' },   // 스킬 도감이 연 상한에 닿았다 — n = 상한을 올려 줄 스킬 도감 레벨 (2026-10-16 · R266 · ADR-0640)
     'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting' },   // 도서관 오른쪽 아래 카드 제목 (2026-10-12 사용자 지시 · ADR-0597)
     'bk.make': { ko: '만들기', en: 'Craft' },
-    'bk.craft.help': { ko: '스킬 도안을 얻으면 그 스킬북을 만들 수 있습니다.', en: 'Obtain a skill blueprint to craft that skill book.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0600)
+    'bk.craft.help': { ko: '스킬 도안 한 장으로 그 스킬북 한 권을 만들 수 있습니다.', en: 'Use one skill blueprint to craft one copy of that skill book.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0600 · 도안이 소모된다 2026-10-20 R293)
     'bk.craft.none': { ko: '스킬 도안이 없다', en: 'No skill blueprints' },   // 제작 칸이 하나도 없을 때 (ADR-0600)
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}' },
     'bk.crafted': { ko: '{skill} 스킬북을 만들었다', en: 'Crafted a {skill} book' },
@@ -1499,153 +1495,12 @@ const STRINGS = {
     'bk.err.missing': { ko: '배울 수 없는 스킬이다', en: 'Cannot be learned' },
     'bk.err.book': { ko: '책이 모자란다', en: 'Not enough books' },   // 없거나 업그레이드에 드는 권수보다 적다 (R216)
     'bk.err.maxUp': { ko: '이미 최대 레벨이다', en: 'Already at max level' },   // 업그레이드 상한 (R216 — ~~`bk.err.same`~~ 퇴역)
-    'bk.err.codexCap': { ko: '스킬 도감 레벨이 모자란다', en: 'Skill codex level too low' },   // 스킬 도감이 연 상한 (2026-10-16 · R266 · ADR-0640)
     'bk.err.gold': { ko: '골드가 모자란다', en: 'Not enough gold' },
     'bk.err.materials': { ko: '가루가 모자란다', en: 'Not enough dust' },
     'bk.err.blueprint': { ko: '스킬 도안이 없다', en: 'No skill blueprint' },   // craftBook — 그 스킬의 도안이 아직 없다 (R241)
-    /* 스킬 툴팁 문장 [전면 개정 2026-09-08 사용자 지시 · SCREEN_DESIGN §4-2]
-       ~~`표기 6초 · 실효 7.2초 (+20%)`~~ 를 버리고 **데이터로 조립한 한 문장**을 낸다.
-       틀은 `kind` × `target` 이 고르고 숫자만 강조색으로 뽑는다. **조각을 이어붙이지 않는다** —
-       ko/en 이 어순이 달라 각 틀이 제 문장을 통째로 든다. {d} 는 아래 수량 구절이 들어가는 자리.
-       [2026-09-10 · ADR-0089] 숫자 자리(`{d}` `{h}` `{k}` `{s}` `{v}` `{c}` `{x}`)는 **단위까지** 들고, Alt 를 누르는 동안
-       괄호 식이 값 뒤에 따라 붙는다 — 그래서 틀은 단위를 안 든다(`{s}초간` → `{s} 동안` · `{h}번` → `{h}`) */
-    'sk.line.single': {
-        ko: '{n}초마다 적 하나를 강하게 공격해 {d}를 가한다',
-        en: 'Every {n}s, strikes one enemy hard for {d}',
-    },
-    'sk.line.singleN': {
-        ko: '{n}초마다 적 하나를 {h} 때려 매번 {d}를 가한다',
-        en: 'Every {n}s, hits one enemy {h} for {d} each',
-    },
-    'sk.line.all': {
-        ko: '{n}초마다 적 전원에게 {d}를 가한다',
-        en: 'Every {n}s, deals {d} to every enemy',
-    },
-    /* 광역 약화 [2026-09-10 · ADR-0089] — `enemy_all` 인데 감쇠가 있으면 **주 대상만 온전**하다(멀티샷 · skill_design §13).
-       감쇠가 없는 광역은 위 틀 그대로다 */
-    'sk.line.allDecay': {
-        ko: '{n}초마다 적 전원을 맞혀 주 대상에게 {d}를 가한다 — 나머지 적은 {k} 덜 받는다',
-        en: 'Every {n}s, hits every enemy — {d} to the main target, {k} less to the rest',
-    },
-    'sk.line.rotate': {
-        ko: '{n}초마다 대상을 옮겨 가며 {h} 공격해 매번 {d}를 가한다',
-        en: 'Every {n}s, attacks {h} moving between targets, {d} each',
-    },
-    'sk.line.chain': {
-        ko: '{n}초마다 줄지어 선 적을 꿰뚫어 {d}를 가한다 — 뒤 대상일수록 {k} 씩 줄어든다',
-        en: 'Every {n}s, pierces enemies in a line for {d} — falling off {k} per target',
-    },
-    'sk.line.heal': {
-        ko: '{n}초마다 파티 전원의 HP 를 {d} 되돌린다',
-        en: 'Every {n}s, restores {d} to the whole party',
-    },
-    /* ⚠ ko 는 **서술어를 틀에 두지 않는다** — 한국어 조사(을/를)가 앞말 받침을 타는데 {e} 가 무엇으로
-       끝날지 틀이 모른다(「+25%」 → 를 · 「보호막」 → 을). 그래서 ko 효과 구절이 서술어까지 들고,
-       en 은 반대로 틀이 `grants` 를 든다. 언어마다 문장을 쪼개는 자리가 다른 것이 정상이다 */
-    'sk.line.buffParty': {
-        ko: '{n}초마다 파티 전원에게 {s} 동안 {e}',
-        en: 'Every {n}s, grants the whole party {e} for {s}',
-    },
-    'sk.line.buffSelf': {
-        ko: '{n}초마다 {s} 동안 자신에게 {e}',
-        en: 'Every {n}s, grants yourself {e} for {s}',
-    },
-    'sk.line.taunt': {
-        ko: '{n}초마다 {s} 동안 적의 공격을 자신에게 끌어모은다',
-        en: 'Every {n}s, draws enemy attacks to yourself for {s}',
-    },
-    /* 2026-09-09 신설 — 직업 스킬 풀 37 이 다 발행되면서 생긴 틀 일곱 (skill_design §12 · DEV_PLAN R61).
-       ⚠ `sk.line.aura` 만 `{n}`(쿨)을 안 든다 — 오오라는 쿨이 없다(§1-5) */
-    'sk.line.healOne': {
-        ko: '{n}초마다 가장 위태로운 아군의 HP 를 {d} 되돌린다',
-        en: 'Every {n}s, restores {d} to the most wounded ally',
-    },
-    /* 자기 회복 — 리커버리 (2026-10-16 · {d} = 최대 HP × 배율) */
-    'sk.line.mend': {
-        ko: '{n}초마다 자신의 HP 를 {d} 되돌린다',
-        en: 'Every {n}s, restores {d} to yourself',
-    },
-    /* 가이디드 애로우 — **단타 + 방어 감소** [개정 2026-09-10 · ADR-0089] — ~~{h}번 때려 매번~~ 다단은 1단계 스킬 변경으로 단타가 됐다.
-       {k} = 그 적의 방어를 깎는 비율(`decay_pct`) — 대상 방어에 영구히 쌓인다 */
-    /* 열 전원 둘 [2026-10-16 · R247 · R249] — 스윕(전열) · 애로우 레인(후열 — 후열이 없으면 남은 적) */
-    'sk.line.front': {
-        ko: '{n}초마다 적 전열 전원에게 {d}를 가한다',
-        en: 'Every {n}s, deals {d} to every enemy in the front row',
-    },
-    'sk.line.back': {
-        ko: '{n}초마다 적 후열 전원에게 {d}를 가한다',
-        en: 'Every {n}s, deals {d} to every enemy in the back row',
-    },
-    /* 기본 스킬 50 의 자기 창 [2026-10-16] — 틀이 문장을 다 든다. {v} = 값 자리(이베이드는 횟수 · 나머지는 %) · {m} = 프렌지 겹 상한 · {e} = 원소 */
-    'sk.line.evade': {
-        ko: '{n}초마다 {s} 동안 받는 공격 {v}을 통째로 피한다',
-        en: 'Every {n}s, for {s} completely avoids incoming attacks {v}',
-    },
-    'sk.line.frenzy': {
-        ko: '{n}초마다 {s} 동안 때릴 때마다 공격 속도가 {v} 씩 오른다 — 최대 {m}겹',
-        en: 'Every {n}s, for {s} each hit adds {v} Attack Speed — up to {m} stacks',
-    },
-    'sk.line.echo': {
-        ko: '{n}초마다 {s} 동안 공격 스킬이 무작위 적에게 한 번 더 나간다',
-        en: 'Every {n}s, for {s} your attack skills fire once more at a random enemy',
-    },
-    'sk.line.imbue.burn': {
-        ko: '{n}초마다 {s} 동안 {e} 스킬이 맞힌 적에게 화상을 입힌다',
-        en: 'Every {n}s, for {s} your {e} skills inflict burn',
-    },
-    'sk.line.imbue.freeze': {
-        ko: '{n}초마다 {s} 동안 {e} 스킬이 거는 결빙이 더 세고 길어진다',
-        en: 'Every {n}s, for {s} your {e} skills freeze harder and longer',
-    },
-    'sk.line.imbue.stun': {
-        ko: '{n}초마다 {s} 동안 {e} 스킬이 맞힌 적을 {v} 확률로 스턴시킨다',
-        en: 'Every {n}s, for {s} your {e} skills have a {v} chance to stun',
-    },
-    /* 오오라 피해 [2026-10-16 · R249 홀리 파이어] — 쿨이 없어 {n} 을 안 든다 · {t} = 간격([balance.csv:aura_pulse_sec]) · {v} = 공격력의 몇 % · {e} = 원소 */
-    'sk.line.auraPulse': {
-        ko: '항상 켜져 있다 — {t}초마다 적 전원에게 공격력 {v} 의 {e} 피해를 준다',
-        en: 'Always on — every {t}s, deals {v} of attack as {e} damage to every enemy',
-    },
-    'sk.line.guided': {
-        ko: '{n}초마다 방어가 가장 두꺼운 적에게 {d}를 가하고 그 적의 방어를 {k} 깎는다',
-        en: 'Every {n}s, deals {d} to the best-armored enemy and strips {k} of its defense',
-    },
-    'sk.line.buffAdjacent': {
-        ko: '{n}초마다 양 옆의 아군에게 {s} 동안 {e}',
-        en: 'Every {n}s, grants the allies beside you {e} for {s}',
-    },
-    'sk.line.debuffAll': {
-        ko: '{n}초마다 적 전원에게 {s} 동안 {e}',
-        en: 'Every {n}s, inflicts {e} on every enemy for {s}',
-    },
-    /* 듀얼 — 그동안 **시전자가 받는 피해 감소** [2026-09-10 · ADR-0089] — {v} = `effect_value`(지목과 같은 끝을 가진 창) */
-    'sk.line.duel': {
-        ko: '{n}초마다 적 하나를 지목해 라운드가 끝날 때까지 자신만 노리게 한다 — 그동안 받는 피해 −{v}',
-        en: 'Every {n}s, marks one enemy to attack only you until the round ends — −{v} damage taken meanwhile',
-    },
-    'sk.line.aura': {
-        ko: '항상 켜져 있다 — 파티 전원에게 {e}',
-        en: 'Always on — {e} for the whole party',
-    },
-    /* 소환 — {d} = 벽의 HP [개정 2026-09-10 · ADR-0089] — ~~최대 HP 의 {h}%~~ 를 값으로 바꿨다(능력치 항이 더해져 % 한 줄로 안 읽힌다).
-       값을 모르면 {d} 가 식(`(최대 HP × 80% × INT)`)이 된다 (뒤 항은 ADR-0164 로 `× 약어`) */
-    'sk.line.summon': {
-        ko: '{n}초마다 {d} 의 HP 를 가진 벽을 세워 적의 공격을 나눠 받는다',
-        en: 'Every {n}s, raises a wall with {d} HP that soaks enemy attacks',
-    },
-    /* 불러내기 — 몬스터 전용 (2026-09-18 · skill_design §12-9 · ADR-0161). 누구를 부르나는 편성이 정해 문장에 이름이 없다 */
-    'sk.line.call': {
-        ko: '{n}초마다 아직 안 나왔거나 쓰러진 무리를 한 번에 모두 불러낸다',
-        en: 'Every {n}s, calls in every member of its band that has not appeared yet or has fallen',
-    },
-    /* 자폭 — 몬스터 전용 비직격 (2026-09-21 · skill_design §12-9 · battle_design §9-6). 쿨이 없어 {n} 을 안 든다(오오라와 같은 자리).
-       {d} = 피해 구절. 방어 · 저항 같은 계산 규칙은 문장에 적지 않는다 — 스킬이 하는 일만 말한다 (2026-09-21 사용자 지시) */
-    'sk.line.selfDestruct': {
-        ko: '쓰러질 때 터져 적 전원에게 {d} 를 입힌다',
-        en: 'On death, explodes to deal {d} to every enemy',
-    },
-    /* 확률로 터지는 추가 피해 [2026-09-10 · ADR-0089] — 공격 문장 **뒤에 서는 완결된 둘째 문장**이다(차지 · 라이트닝 · 체인 라이트닝).
-       공격 틀마다 변형을 두면 틀이 두 배가 되고, 조각을 이으면 ko/en 어순이 깨진다. {c} = 확률 · {x} = 배수(%) */
+    /* 스킬 툴팁 문장은 **스킬마다 제 틀**이다 — `skill.csv:desc_kr` · `desc_en` [2026-10-21 사용자 지시 · ADR-0679 — ~~`sk.line.*` 공용 틀 · `sk.eff.*` 효과 구절~~].
+       여기 남는 것은 공격이 같이 쓰는 둘째 문장(추가 피해)과 숫자 자리 안에 드는 구절(수량 · 단위)이다 — 자리 이름은 `tip.js:descSlots`.
+       확률로 터지는 추가 피해 [2026-09-10 · ADR-0089] — 공격 문장 **뒤에 서는 완결된 둘째 문장**이다. {c} = 확률 · {x} = 배수(%) */
     'sk.line.proc': {
         ko: '타격마다 {c} 확률로 피해가 {x} 가 된다',
         en: 'Each hit has a {c} chance to deal {x} damage',
@@ -1663,31 +1518,6 @@ const STRINGS = {
     /* 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다(Alt 의 괄호 식이 값 바로 뒤에 서게). 초는 `time.s` · % 는 기호 그대로 */
     'sk.u.times': { ko: '{v}번', en: { one: '{v} time', other: '{v} times' } },
     // ~~`sk.altHint`(「Alt 계산식」 각주)~~ 는 2026-10-03 삭제 [사용자 지시 · ADR-0499]
-    /* 버프 효과 구절 — **이름 + 값**만 (원칙 4). 키는 `skill_status.csv:stat` 어휘 그대로(옛 `skill.csv:effect_stat` · 2026-09-22) · 값 자리가 **`%` 까지** 든다 [2026-09-10 · ADR-0089] */
-    'sk.eff.atk_pct': { ko: '데미지 +{v} 를 건다', en: '+{v} Damage' },
-    // 주기를 줄이는 창 = 빨라진다 → 「공격 속도 +」 — 옵션 `aspd_pct`(주기 × (1 − 값))와 같은 방향 · 같은 수 (ADR-0358)
-    'sk.eff.period_pct': { ko: '공격 속도 +{v} 를 건다', en: '+{v} Attack Speed' },
-    'sk.eff.barrier_pct': { ko: '최대 HP {v} 짜리 보호막을 씌운다', en: 'a shield worth {v} of max HP' },
-    /* 2026-09-09 신설. `.neg` 는 **같은 창을 음수로 쓴 디버프**의 틀이다 — 값은 절댓값으로 들어온다(tip.js) */
-    'sk.eff.guard_pct': { ko: '방어력과 모든 저항 +{v} 를 건다', en: '+{v} defense and all resistances' },
-    'sk.eff.hp_max_pct': { ko: '최대 HP +{v} 를 건다', en: '+{v} max HP' },
-    'sk.eff.regen_pct': { ko: 'HP 재생 +{v} 를 건다', en: '+{v} HP regen' },
-    'sk.eff.dr_pct': { ko: '받는 피해 −{v} 를 건다', en: '−{v} damage taken' },
-    'sk.eff.onhit_element': { ko: '기본 공격마다 {v} 의 {e} 추가 피해를 얹는다', en: 'adds a {v} {e} extra hit on every basic attack' },   // {e} = 걸린 효과의 원소 `st.atkType.*` (ADR-0477)
-    'sk.eff.attack_splash': { ko: '기본 공격이 적 전원에게 {v} 로 퍼진다', en: 'basic attacks spread to all enemies at {v}' },
-    'sk.eff.atk_pct.neg': { ko: '데미지 −{v} 를 건다', en: '−{v} Damage' },
-    'sk.eff.period_pct.neg': { ko: '공격 속도 −{v} 를 건다', en: '−{v} Attack Speed' },
-    // 기본 스킬 50 [2026-10-16] — 워 크라이(물리 데미지 −) · 배틀 크라이(방어력 −) · 둠(받는 피해 +) · 퀵 드로우 · 오버드로우(평타 피해 ±)
-    'sk.eff.phys_pct': { ko: '물리 데미지 +{v} 를 건다', en: '+{v} Physical Damage' },
-    'sk.eff.phys_pct.neg': { ko: '물리 데미지 −{v} 를 건다', en: '−{v} Physical Damage' },
-    'sk.eff.def_pct': { ko: '방어력 +{v} 를 건다', en: '+{v} Defense' },
-    'sk.eff.res_pct': { ko: '모든 원소 저항 +{v} 를 건다', en: '+{v} all resistances' },
-    'sk.eff.def_pct.neg': { ko: '방어력 −{v} 를 건다', en: '−{v} Defense' },
-    'sk.eff.dr_pct.neg': { ko: '받는 피해 +{v} 를 건다', en: '+{v} damage taken' },
-    'sk.eff.basic_pct': { ko: '기본 공격 피해 +{v} 를 건다', en: '+{v} Basic Attack Damage' },
-    'sk.eff.basic_pct.neg': { ko: '기본 공격 피해 −{v} 를 건다', en: '−{v} Basic Attack Damage' },
-    // 여러 줄 스킬의 구절 잇기 (퀵 드로우 · 오버드로우 — 2026-10-16)
-    'sk.join': { ko: ' · ', en: ' · ' },
     /* 그 스킬의 **표기 쿨** [개정 2026-09-08 2차 사용자 지시] — 어느 영웅이 들든 같은 수다.
        ~~`sk.base`·`sk.eff`·`sk.aligned`~~ (1차 폐기) → ~~`sk.every`(`{s}초마다`)~~ → **`sk.cool`**.
        **말까지 바꾼 이유는 값이 바뀌었기 때문**이다 — 「{s}초마다」는 빈도의 약속인데 표기 쿨은 빈도가 아니다
@@ -1796,12 +1626,20 @@ const STRINGS = {
     'cx.rw.xp': { ko: '처치 경험치 {v}', en: '{v} Kill EXP' },
     'cx.rw.vs_dmg': { ko: '상대 피해 {v}', en: '{v} Damage to It' },
     'cx.rw.drop': { ko: '드롭 확률 {v}', en: '{v} Drop Chance' },
-    // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 단계 (SCREEN_DESIGN §9-1 · ADR-0650)
+    // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 레벨이 오르면 (SCREEN_DESIGN §9-1 · ADR-0680 — ~~단계~~ ADR-0650) · 「상단」 머리는 건물 이름 데이터(building.csv)
     'cx.tip.source': { ko: '획득처', en: 'Found On' },
     'cx.tip.roll': { ko: '보스 · 무작위 칸', en: 'Bosses · random slot' },   // 셋째 칸(직업 풀 굴림)에서 나올 수 있는 보스 — 고정 칸 몬스터와 따로 묶는다
     'cx.tip.at': { ko: '{c}-{s}', en: '{c}-{s}' },   // 초상 아래 장-장소
-    'cx.tip.blueprint': { ko: '스킬 도안', en: 'Skill Blueprint' },
-    'cx.tip.cap': { ko: '업그레이드 상한 {n}', en: 'Upgrade cap {n}' },   // skill_codex_level.csv:upgrade_cap
+    'cx.tip.lvUp': { ko: '레벨이 오르면', en: 'Per Level' },   // 아랫칸 머리글 — 그 스킬의 레벨 줄 하나 (skill_effect.csv:level_field · level_step)
+    // 레벨 줄의 칸 이름 — `level_field` 하나에 하나 · 값(`level_step`)은 오른쪽 칸이 든다. 피해 배율 · 감쇠는 하는 일 · 대상이 가른다
+    'cx.lv.mult': { ko: '피해 배율', en: 'Damage multiplier' },   // mult_pct — 때린다
+    'cx.lv.heal': { ko: '회복 배율', en: 'Healing multiplier' },   // mult_pct — 회복 · 자기 회복
+    'cx.lv.hits': { ko: '타수', en: 'Hits' },   // hits
+    'cx.lv.decay': { ko: '감쇠', en: 'Falloff' },   // decay_pct — 뒤 대상일수록 줄어드는 비율
+    'cx.lv.strip': { ko: '방어 깎기', en: 'Defense strip' },   // decay_pct — 가이디드(방어가 가장 두꺼운 적)는 그 적의 방어를 깎는 비율이다
+    'cx.lv.dur': { ko: '지속 시간', en: 'Duration' },   // duration_sec
+    'cx.lv.value': { ko: '효과', en: 'Effect' },   // effect_value — 걸린 효과의 값(왼쪽 장의 문장이 그 효과를 말한다 · ADR-0680)
+    'cx.lv.cool': { ko: '쿨타임', en: 'Cooldown' },   // cool_sec
     'cx.note': {
         ko: '그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 보너스 효과가 하나씩 열린다 — 앞 단계(처치 경험치 · 상대 피해 · 드롭 확률)는 <b>그 몬스터에게만</b> · 마지막 단계는 <b>그 몬스터의 전투 옵션 하나가 파티 전원에게</b> 늘 붙는다 — <b>파밍이 도감을 민다</b><br>'
             + '처치 하나의 도감 경험치는 그 원정의 난이도가 정한다 — 높은 난이도일수록 빨리 찬다 · 이긴 라운드의 처치만 센다 · 보스 등급별 차등은 후속<br>'

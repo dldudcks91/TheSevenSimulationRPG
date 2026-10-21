@@ -36,7 +36,6 @@ export const D = {
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
     codexLevels: [],          // codex_level.csv — 레벨순 exp_total (누적 도감 경험치 문턱 · 2026-10-10 R239)
     codexSteps: [],           // codex_level.csv — 레벨순 [{reward, value}] · 레벨 n 이 여는 사다리 단계 (2026-10-18 R286 · ~~bonus_pct~~)
-    skillCodex: [],           // skill_codex_level.csv — 레벨순 [{level, expTotal, upgradeCap}] · 0 행 = 도감 전 (스킬 도감 · 2026-10-16 R266)
     codexOptions: [],         // codex_option.csv — [{monsterId, stat, value}] · 도감 Lv4 몬스터다운 전투 옵션 · 검증은 game_logic/state.js (2026-10-18 R286 · ~~codex_series.csv~~ 삭제)
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
     chapterList: [],
@@ -126,7 +125,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'armor_common_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'skill_codex_level', 'arena_tier'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -143,7 +142,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, armorCommonOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, skillCodexLevelRow, arenaTierRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -178,9 +177,6 @@ export async function loadData(base = './data/') {
     // 사다리 단계 — `option` 단계의 value 는 `-`(몬스터마다라 codex_option.csv 가 든다) · 검증은 game_logic/state.js (monster_design §8 · R286)
     D.codexSteps = codexByLevel.map(r => ({ reward: r.reward, value: r.reward === 'option' ? null : r.value }));
     D.codexOptions = codexOptionRow.map(r => ({ monsterId: String(r.monster_idx), stat: r.stat, value: r.value }));
-    // 스킬 도감 — 스킬마다 누적 문턱과 그 레벨의 책 업그레이드 상한. 검증은 game_logic/state.js (monster_design §8-1 · R266)
-    D.skillCodex = skillCodexLevelRow.slice().sort((a, b) => a.level - b.level)
-        .map(r => ({ level: r.level, expTotal: r.exp_total, upgradeCap: r.upgrade_cap }));
     D.chapterList = chapter.slice().sort((a, b) => a.chapter_id - b.chapter_id)
         .map(r => ({ id: r.chapter_id, sin: r.sin, name: { ko: r.name_kr, en: r.name_en } }));
     D.chapters = indexBy(D.chapterList, 'id');
@@ -326,10 +322,12 @@ export async function loadData(base = './data/') {
     D.classes = classRow.map(r => ({
         id: r.class_id, keyAttr: r.key_attr, ko: r.name_kr, en: r.name_en,
         role: { ko: r.role_kr, en: r.role_en }, stage: r.release, color: r.color_hex || null,
-        // 싸움에서 하는 일 한 문장 — 시작 화면 안내 띠의 직업 줄 (2026-10-16 · app.js:startGuide)
+        // 싸움에서 하는 일 한 문장 — 새 게임 카드 연장 칸의 직업 줄 (2026-10-16 · app.js:startLines)
         roleText: { ko: r.role_text_kr, en: r.role_text_en },
         // 레벨 1 최대 HP — 빈 칸(확장 직업)이면 null 이고 hero.js 가 `balance.csv:hero_hp_base` 로 떨어진다 (2026-10-02)
         hpBase: r.hp_base === '' || r.hp_base == null ? null : Number(r.hp_base),
+        // 새 게임 첫 진형에서 서는 열 — `front` | `back` (2026-10-21 · hero.startRankOf)
+        startRow: r.start_row || null,
     }));
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};
@@ -635,7 +633,6 @@ export function buildSystems(d, dev = {}) {
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         difficulties: d.difficultyList ?? [],   // 난이도 바퀴 — 순서대로 · 첫 단 = 처음부터 열림 (state.js · R236)
         codex: { levels: d.codexLevels, steps: d.codexSteps, options: d.codexOptions },
-        skillCodex: d.skillCodex ?? [],   // 스킬 도감 — 도안(Lv1) · 책 업그레이드 상한 (state.js · R266)
         // 죄종 목록 — 탐험 이야기 표의 `sin` 컬럼 검증용 (~~수색 이야기 · 만남 · 답~~ 2026-10-19 삭제)
         sins,
         exploreStories: d.exploreStories ?? [],   // 탐험 이야기 — 지점마다 막 · 순서는 표가 정한다 (state.js:explorePhases · R235)
@@ -660,12 +657,12 @@ export function buildSystems(d, dev = {}) {
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
     // 결투장 — 오프라인 등급 표 · 온라인 팀 검사기가 볼 끝값 둘을 함께 넘긴다 (INTERFACE §2-17 · 2026-10-17).
-    //   강화 상한은 **건물을 다 지었을 때**다 — 남이 올린 팀이 어디까지 지었는지 모르므로 검사기는 끝을 본다 · 스킬 업그레이드는 스킬 도감 마지막 행
+    //   강화 상한은 **건물을 다 지었을 때**다 — 남이 올린 팀이 어디까지 지었는지 모르므로 검사기는 끝을 본다 · 스킬 업그레이드는 그 상한 하나(`skillbook_upgrade_max` · R293)
     const arena = createArenaSystem({
         hero, item, skill, battle, balance: d.balance, equipSlots: d.equipSlots, advances: d.advanceRows ?? [], classSkills,
         tiers: d.arenaTiers ?? [],
         upgradeCeiling: game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])) }).upgrade,
-        skillCapMax: (d.skillCodex ?? []).at(-1)?.upgradeCap ?? 0,
+        skillCapMax: game.skillCapMax(),
     });
     return { hero, item, battle, arena, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
 }

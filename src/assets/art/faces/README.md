@@ -128,7 +128,8 @@
 ⚠ 이제 `HERO_FACES[<직업>]` 은 **줄일 때만** 영향이 있다(범위 밖 저장값은 그 직업 풀 안에서 접어서 쓴다).
 늘리는 쪽은 기존 영웅에 무해하다.
 
-**⚠ 영웅 초상은 18장 · 5직업 풀(`HERO_FACES = {warrior:5, knight:5, mage:3, archer:1, priest:4}`)이다**
+**⚠ 영웅 초상은 18장 · 5직업 풀(`HERO_FACES = {warrior:5, knight:5, mage:2, archer:1, priest:5}`)이다**
+[2026-10-21 — **노스트라다무스를 사제로 옮겼다** — `hero/mage_3` → `hero/priest_5`(gemini · gpt 둘 다 · `source/ready` 원본도). mage 3 → 2 는 **줄이는 방향**이라 세이브에 `mage_3` 이 박힌 마법사는 `mage_1` 로 접힌다.]
 [2026-10-16 — **`hero/warrior_4` 레오니다스 교체**(장수 그대로) — 시트 `source_sheet_warrior_leonidas_redraw_3x3_1` 의 2번 타일 → `../source/hero/warrior_leonidas_bronze`. 옛 그림은 `../source/hero/warrior_leonidas` 원본만 남는다 · `gpt/hero/warrior_4` 는 옛 그림 그대로다.]
 [2026-09-21 — **전사 2종 추가 · warrior 3 → 5** — 시트 `source_sheet_warrior_2`(아킬레우스 · 레오니다스 · 삼손 · 여포)의 **2 · 3번 타일**:
 `hero/warrior_4` = `../source/hero/warrior_leonidas` **레오니다스** · `hero/warrior_5` = `../source/hero/warrior_samson` **삼손**.
@@ -176,7 +177,7 @@
 | — (신규) | `hero/priest_4` | **닥터 슈나벨** — 역병 의사 · 검은 챙모자 · 흰 부리 가면 (10-18 이름) | `../source/priest_plague_hat` |
 | — (신규) | `hero/mage_1` | 후드 · 안대 · 수정구 | `../source/mage_orb_eyepatch` |
 | — (신규) | `hero/mage_2` | **포세이돈** — 청록 장발·수염 · 갈색 가죽 조끼 | `../source/mage_poseidon` |
-| — (신규) | `hero/mage_3` | **노스트라다무스** — 황도 기호 검은 로브 · 회백 장발 · ⚠ 10-20 사제로 옮긴다 — 사제 풀로 파일 이동은 아트 단계(DEV_PLAN R292) | `../source/mage_nostradamus` |
+| — (신규) | `hero/priest_5` | **노스트라다무스** — 황도 기호 검은 로브 · 회백 장발 (10-21 `mage_3` 에서 옮김) | `../source/mage_nostradamus` |
 
 ⚠ **분류는 그림의 인상으로 정한 것이다** (사용자 확정) — 백발백염(구 7)은 기사 시트에서 왔지만 전사로, 민머리(구 6)·외치는 기사(구 9)는 기사로 갔다. 위 이력 문단의 번호는 전부 **구 파일명**이라 이 표로 읽는다.
 새 파일 열은 2026-09-14 폴더 분리 뒤의 이름이다 — 09-07 ~ 09-14 사이에는 `hero_<직업id>_<k>.png` 였다(이력 문단의 `hero_priest_2` 같은 이름).
@@ -192,4 +193,4 @@
 - ⚠ **「화면에서 깨져 보인다」를 해상도 문제로 읽지 말 것** (2026-09-01) — 원인은 `image-rendering: pixelated` 가 이 스타일에도 걸려 있던 것이었다. 512는 가장 큰 칸(152px @ DPR2 = 304px)을 덮는 정상 해상도다. 줄이는 것은 **용량**을 위한 선택이지 화질을 위한 선택이 아니다 (`../../README.md` 규격)
 
 ---
-*마지막 업데이트: 2026-10-20*
+*마지막 업데이트: 2026-10-21*

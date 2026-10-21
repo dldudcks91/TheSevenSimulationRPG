@@ -74,7 +74,7 @@
  *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = 가운데 `스테이지 레벨 + gear_ilvl_add` ± 반폭(부위마다 균등 · ~~굴림 없음~~ 2026-10-06) ·
  *     희귀도 = 등급의 가중치(`gear_rarity_w_*` · 2026-09-23 — 일반 등급은 레어 0) · 레어 가중에 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
  *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
- *   · **그 한 개는 장비 또는 스킬북이다** [2026-09-29 · R179 · item_design §1 드롭 1-2] — 판정 뒤 종류 1회 · 책은 그 몬스터의 고유 스킬 책(`result.books`).
+ *   · **그 한 개는 장비 또는 스킬 도안이다** [2026-09-29 · R179 · item_design §1 드롭 1-2 · 2026-10-20 · R293 ~~스킬북~~] — 판정 뒤 종류 1회 · 도안은 그 몬스터가 든 칸의 스킬 도안(`result.blueprints`).
  *   · **처치 재료는 그 1개와 따로다** [2026-10-06 · item_design §1 「처치 재료」] — 판정 1회 → 종류 1회(`MATERIAL_KINDS`) · `result.materials` 는 종류만 센다(단계는 state 가 정한다).
  */
 
@@ -293,7 +293,7 @@ export function createBattleSystem(data) {
 
     /**
      * 스킬의 획득처 — 그 스킬을 **칸에 들고 나오는** 몬스터 [2026-10-17 · SCREEN_DESIGN §9-1 · ADR-0650 · monster_design §8-1].
-     *   그 처치가 스킬 도감 경험치 · 스킬북을 준다. 칸 규칙은 `makeEnemy` · `spawnRound` 와 같은 출처를 본다(`slotPlan`) —
+     *   그 처치가 그 스킬의 도안을 준다(2026-10-20 · R293 — ~~스킬 도감 경험치 · 스킬북~~). 칸 규칙은 `makeEnemy` · `spawnRound` 와 같은 출처를 본다(`slotPlan`) —
      *   `fixed` = 정해진 칸이 그 스킬(고유 · 나이트메어 2칸 `nightmare_skill` — R269) · `roll` = 그렇지 않지만 보스의 한 칸 더(등급 `skill_slots_add` ≥ 1)의 직업 풀에 든다.
      *   `difficulty` = 그 칸이 처음 열리는 단 — 고유 · 보스 칸은 첫 단 · 2칸은 `skillSlots` ≥ 2 인 첫 단(단 표가 없으면 2칸 줄은 안 나온다 · R269).
      *   장소마다 일반몹 풀(`stagePool` — 정예도 여기서 승급한다) + 그 장소의 보스 · **열리는 장(`chapter_open_max`)까지만** ·
@@ -360,6 +360,7 @@ export function createBattleSystem(data) {
             elitePool: rules.reduce((ids, r) => (r.elitePool ? r.elitePool(ids) : ids), roundPool),
             plain: roundPool.filter(id => !summoners.has(id)),          // 소환사가 선 뒤의 뽑기 · 채움
             summoners,
+            standing: new Set(rules.flatMap(r => r.standing ?? [])),    // 무리가 대기하지 않는 소환사 (2026-10-21)
             escorts: rules.reduce((lh, r) => (r.escorts ? r.escorts(...lh) : lh), [bd.escort_min, bd.escort_max]),
         };
     }
@@ -604,10 +605,10 @@ export function createBattleSystem(data) {
             expReward: MONSTER_XP.get(lvl) * g.exp_mult * m.exp_coef,
             goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * g.exp_mult * m.exp_coef,
             goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
-            // 스킬 도감이 세는 스킬 = **책 후보** = 스폰 때 든 칸 중 책이 되는 것 [2026-10-16 · R266 · monster_design §8-1 · 책 후보 겸함 2026-10-18 · R269 —
-            //   ~~`bookSkill` = 고유 스킬 하나~~ · 「쥔 스킬이면 어느 칸이든」] — 영웅이 배울 수 있는 것만(몬스터 전용 · 불러내기는 책이 없다 — `skill.bookable` · R258) ·
+            // **도안 후보** = 스폰 때 든 칸 중 책이 되는 것 [2026-10-16 · R266 · 2026-10-18 · R269 「쥔 스킬이면 어느 칸이든」 · 2026-10-20 · R293 — ~~`codexSkills` 스킬 도감이 세는 스킬~~] —
+            //   영웅이 배울 수 있는 것만(몬스터 전용 · 불러내기는 책이 없다 — `skill.bookable` · R258) ·
             //   오오라는 라운드 시작에 `actives` 에서 빠지므로 **여기서** 적는다 · 꺼진 칸도 든다(썼는지는 안 본다) · 칸 순서 · 같은 id 는 하나 · rng 0
-            codexSkills: SK ? [...new Set(acts.map(a => a.id))].filter(id => SK.bookable(id)) : [],
+            blueprintSkills: SK ? [...new Set(acts.map(a => a.id))].filter(id => SK.bookable(id)) : [],
             ...rest,
         });
     }
@@ -649,8 +650,10 @@ export function createBattleSystem(data) {
         // 소환사가 섰나 — 서면 그 뒤의 뽑기는 소환사를 뺀 풀에서 한다(소환사는 라운드에 하나)
         const called = () => specs.some(s => draw.summoners.has(s.id));
         // `reserve` = **소환사 뒤에 뽑힌 몫**(채움 포함) — 라운드 시작에 서지 않고 소환사의 불러내기를 기다린다 (INTERFACE §2-13 · 2026-09-18).
-        //   소환사가 라운드 시작에 먼저 서고 나머지를 부른다(사용자 지시) — 소환사보다 먼저 뽑힌 몬스터만 함께 선다
-        const add = (id, grade, extra) => specs.push({ id, grade, extra, reserve: called() });
+        //   소환사가 라운드 시작에 먼저 서고 나머지를 부른다(사용자 지시) — 소환사보다 먼저 뽑힌 몬스터만 함께 선다.
+        //   **무리와 함께 서는 소환사**(`standing` · 1-1 · 2026-10-21)는 대기를 안 만든다 — 채운 몫까지 라운드 시작에 선다 · 굴림은 같다
+        const waits = () => specs.some(s => draw.summoners.has(s.id) && !draw.standing.has(s.id));
+        const add = (id, grade, extra) => specs.push({ id, grade, extra, reserve: waits() });
         const pick = (ids = draw.roundPool) => {
             const from = called() ? ids.filter(id => !draw.summoners.has(id)) : ids;
             return from[Math.floor(rng() * from.length)];
@@ -878,9 +881,9 @@ export function createBattleSystem(data) {
                 ...slotView(p) })),   // 칸 순서의 스킬 id + 첫 준비 시각 — 재생기가 쿨 칸을 덮인 채로 세운다 (R89 · 오오라 칸 R98)
             // 보상 칸(xpTotal · gold · kills · drops)은 **이긴 라운드의 몫만** 센다 — 처치 순간에는 라운드 몫(`loot`)에 모았다가 이기면 옮긴다 (R89)
             // killGrades = kills 를 처치 순간의 등급으로 가른 것 `{monsterId: {grade: n}}` — 의뢰 「정예 · 보스 n마리」가 읽는다 (R153 · 세는 것뿐이라 rng 0)
-            // books = 떨어진 스킬북의 스킬 id — 처치당 1개를 장비와 나눠 쓴다(onKill · 2026-09-29 R179) · drops 와 같이 이긴 라운드의 몫만
-            // materials = 처치 재료의 종류별 개수 `{ore?, timber?, herb?}` — 장비 · 책의 1개와 따로 굴린다(onKill · 2026-10-06) · drops 와 같이 이긴 라운드의 몫만
-            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, skillKills: {}, drops: [], books: [], materials: {}, downed: [],
+            // blueprints = 떨어진 스킬 도안의 스킬 id — 처치당 1개를 장비와 나눠 쓴다(onKill · 2026-09-29 R179 · 2026-10-20 R293 ~~books 스킬북~~) · drops 와 같이 이긴 라운드의 몫만
+            // materials = 처치 재료의 종류별 개수 `{ore?, timber?, herb?}` — 장비 · 도안의 1개와 따로 굴린다(onKill · 2026-10-06) · drops 와 같이 이긴 라운드의 몫만
+            timeline, xpTotal: 0, gold: 0, kills: {}, killGrades: {}, drops: [], blueprints: [], materials: {}, downed: [],
             roundsCleared: 0, rounds: [], casts: {},
             // 빗나감 집계 — 레벨 부족의 전용 신호라 리포트에 따로 낸다 (§9-4·§9-8). 세는 것뿐이라 rng 소비 없음
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -922,8 +925,8 @@ export function createBattleSystem(data) {
         /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
            결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
         // xpByLevel = xp 를 **몬스터 레벨**로 가른 것 `{lvl: xp}` — 정산이 영웅마다 레벨 차 감쇠를 건다 (2026-09-30 · hero_design §5 · 세는 것뿐이라 rng 0)
-        // skillKills = 스킬 도감의 처치 수 `{skillId: n}` — 처치마다 그 유닛의 `codexSkills` 하나하나에 +1 (2026-10-16 · R266 · 세는 것뿐이라 rng 0)
-        const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, skillKills: {}, drops: [], books: [], materials: {} });
+        // ~~skillKills 스킬 도감의 처치 수~~ — 2026-10-20 삭제(R293 · 세는 것뿐이라 rng 0 이었다)
+        const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, drops: [], blueprints: [], materials: {} });
         let loot = newLoot();
         const bank = () => {
             out.xpTotal += loot.xp;
@@ -933,9 +936,8 @@ export function createBattleSystem(data) {
                 const to = (out.killGrades[id] ??= {});
                 for (const [g, n] of Object.entries(byGrade)) to[g] = (to[g] ?? 0) + n;
             }
-            for (const [id, n] of Object.entries(loot.skillKills)) out.skillKills[id] = (out.skillKills[id] ?? 0) + n;
             out.drops.push(...loot.drops);
-            out.books.push(...loot.books);
+            out.blueprints.push(...loot.blueprints);
             for (const [k, n] of Object.entries(loot.materials)) out.materials[k] = (out.materials[k] ?? 0) + n;
         };
 
@@ -1063,7 +1065,6 @@ export function createBattleSystem(data) {
             loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
             const byGrade = (loot.killGrades[e.monsterId] ??= {});
             byGrade[e.grade] = (byGrade[e.grade] ?? 0) + 1;
-            for (const id of e.codexSkills ?? []) loot.skillKills[id] = (loot.skillKills[id] ?? 0) + 1;   // 스킬 도감 (R266 · rng 0)
             // 도감 Lv1 — 그 몬스터 처치 경험치 × (1 + xp) (R286) · 0 이면 × 1 이라 종전 값과 한 비트도 안 다르다
             const xp = e.expReward * (1 + (e.codex?.xp ?? 0));
             loot.xp += xp;
@@ -1085,25 +1086,25 @@ export function createBattleSystem(data) {
              *   여기서 아이템을 만들지 않는다 — 부위 · ilvl · 희귀도 · 접사 · 개체 굴림은 **스폰 때** 이미 돌았다(`spawnRound`).
              *   남은 굴림은 **입은 부위 중 하나를 고르는 1회**뿐이고, 그것이 「드롭 부위 편향의 단위」의 답이다 — 단위는 **입은 것**이다.
              * ⚠ 맨몸 몬스터는 판정이 성공해도 낼 것이 없다 — 아무것도 굴리지 않고 넘어간다.
-             * **그 한 개가 장비냐 스킬북이냐를 굴린다** [2026-09-29 · R179 · 사용자 「처치당 1개 · 장비냐 책이냐」 · item_design §1 드롭 1-2] —
-             *   드롭이 나면 **종류 1회**(`drop_book_pct`) → 책이면 **책 후보 고르기 1회** · 장비면 입은 부위 1회.
-             *   책 후보 = 그 유닛이 **든 칸** 중 영웅이 배울 수 있는 스킬(`codexSkills` — 칸 순서 · 자폭 · 불러내기는 책이 없다) [개정 2026-10-18 · R269 · monster_design §5-1 「쥔 스킬이면 어느 칸이든」 ·
+             * **그 한 개가 장비냐 스킬 도안이냐를 굴린다** [2026-09-29 · R179 · 사용자 「처치당 1개 · 장비냐 책이냐」 · item_design §1 드롭 1-2 · **2026-10-20 · R293 ~~책~~ → 도안**] —
+             *   드롭이 나면 **종류 1회**(`drop_book_pct`) → 도안이면 **도안 후보 고르기 1회** · 장비면 입은 부위 1회. 책 → 도안은 이름만 바뀌었다 — 후보 · 굴림이 그대로라 수열이 같다.
+             *   도안 후보 = 그 유닛이 **든 칸** 중 영웅이 배울 수 있는 스킬(`blueprintSkills` — 칸 순서 · 자폭 · 불러내기는 책이 없다) [개정 2026-10-18 · R269 · monster_design §5-1 「쥔 스킬이면 어느 칸이든」 ·
              *   ~~고유 스킬 하나 · 굴림 더 없음~~] · ⚠제안 같은 확률.
              *   ⚠ **후보가 없어도 · 하나여도 종류 · 고르기는 1회씩 소비한다** — 소비 수가 몬스터의 칸 수에 의존하면 같은 시드가 다른 드롭을 낸다(INTERFACE §5-2) · 후보가 없으면 장비로 간다
              */
-            const books = e.codexSkills ?? [];
+            const plans = e.blueprintSkills ?? [];
             for (let i = 0; i < got; i++) {
                 const worn = e.gear ?? [];
-                if (!worn.length && !books.length) break;
+                if (!worn.length && !plans.length) break;
                 if (rng() < B.drop_book_pct) {
-                    const pick = Math.floor(rng() * books.length);
-                    if (books.length) { loot.books.push(books[pick]); continue; }
+                    const pick = Math.floor(rng() * plans.length);
+                    if (plans.length) { loot.blueprints.push(plans[pick]); continue; }
                 }
                 if (!worn.length) continue;
                 loot.drops.push(worn[Math.floor(rng() * worn.length)]);
             }
             /*
-             * **처치 재료** [2026-10-06 · 사용자 확정 · item_design §1 「처치 재료」] — 장비 · 책의 1개와 **따로** 판정 1회 → (성공 시) 종류 1회.
+             * **처치 재료** [2026-10-06 · 사용자 확정 · item_design §1 「처치 재료」] — 장비 · 도안의 1개와 **따로** 판정 1회 → (성공 시) 종류 1회.
              *   확률 = `drop_material_pct` × 등급 배율(장비와 같은 `drop_chance_mult`) × 파티 드랍률(사용자 「당연히 붙어야지」) · 보스 보장은 안 걸린다.
              *   **판정은 처치마다 언제나 1회 소비한다**(확률 0 이어도 · 맨몸이어도) — 소비 수가 몬스터에 의존하면 같은 시드가 다른 수열을 낸다(INTERFACE §5-2).
              *   battle 은 **종류만** 낸다 — 어느 단계의 재료인지는 state 가 스테이지의 챕터로 정한다(`settleRound`)
@@ -1672,7 +1673,7 @@ export function createBattleSystem(data) {
         };
         /**
          * 라운드 하나의 요약 — `n` 번째 라운드가 `t` 초에 끝났다 · 이겼나(`cleared`) · 런이 끝났나(`ended`) ·
-         * **그 라운드의 몫**(`xp` · `xpByLevel` · `gold` · `kills` · `drops` · `books` · `materials` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
+         * **그 라운드의 몫**(`xp` · `xpByLevel` · `gold` · `kills` · `drops` · `blueprints` · `materials` — 이겼을 때만) · 그 순간 살아 있는 영웅(`alive` — 경험치를 받는 사람) · 기여
          */
         const summary = cleared => {
             const s = {

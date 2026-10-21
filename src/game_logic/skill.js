@@ -335,6 +335,25 @@ export function createSkillSystem(data) {
         if (d.ownerKind === 'job' ? ![1, 2].includes(d.tier) : d.tier !== null) bad(`tier '${row.tier}' — 직업 스킬은 1 · 2, 그 밖은 -`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
+        // 설명은 **문장의 틀**이다 [2026-10-21 · ADR-0679] — `{자리}` 를 화면이 그 스킬의 수로 채운다(`tip.js:descSlots`). 그 스킬에 없는 수를 부르면
+        //   빈 자리가 화면에 새므로 던진다 · 두 언어는 같은 자리를 부른다(한쪽만 수를 빠뜨리지 않게) · 차례 스킬은 쿨을, 수량을 내는 스킬은 그 수량을 말한다
+        const used = s => [...new Set([...String(s).matchAll(/\{(\w+)\}/g)].map(m => m[1]))].sort();
+        const ko = used(d.desc.ko), en = used(d.desc.en);
+        if (ko.join() !== en.join()) bad(`desc_kr 자리 {${ko}} ≠ desc_en 자리 {${en}}`);
+        const e0 = d.effects[0], st0 = statuses[e0.status] ?? null;
+        const slotHas = {
+            n: CASTS[d.cast].cooled,                                   // 표기 쿨
+            d: AMOUNT_BASIS[e0.effect] !== undefined && e0.mult > 0,   // 수량 구절(피해 · 회복량 · 벽 HP)
+            h: e0.effect === 'hit',                                    // 타수
+            k: e0.effect === 'hit',                                    // 감쇠
+            s: st0 !== null,                                           // 거는 걸린 효과의 시간
+            v: st0 !== null,                                           // 그 값
+            v2: d.effects.slice(1).some(x => x.effect === 'apply'),    // 둘째 걸린 효과의 값
+            m: st0?.stat === 'frenzy',                                 // 겹 상한
+            t: st0?.stat === 'pulse',                                  // 오오라 피해 간격
+        };
+        for (const k of ko) if (!slotHas[k]) bad(`desc 자리 {${k}} — ${k in slotHas ? '이 스킬엔 그 수가 없다' : `모르는 자리(${Object.keys(slotHas).join('·')})`}`);
+        for (const k of ['n', 'd']) if (slotHas[k] && !ko.includes(k)) bad(`desc 에 {${k}} 가 없다 — ${k === 'n' ? '쿨' : '수량'}은 문장이 말한다`);
     }
 
     /**

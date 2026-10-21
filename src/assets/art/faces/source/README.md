@@ -640,6 +640,26 @@ Make each one an elite: a bigger, clearly different headpiece that changes the h
 나가서인데, **잘리는 것이 전부 어깨·멜빵이고 얼굴·엄니는 원 안에 온전히 들어온다.** 화면 확인 후 그대로 뒀다.
 덩치를 줄여 원 안에 넣으면 「대형」이라는 인상 자체가 사라지므로, 이 그림에서는 잘리는 쪽이 맞다.
 
+## 영웅 — Gem 마법사 유니크 스케치 (`source_sheet_mage_<zeus|hades|odin|sorceress>_3x3_<k>.png`) [2026-10-21]
+
+포세이돈을 뺀 마법사 유니크 넷(제우스 · 하데스 · 오딘 · 소서리스)의 스케치다. **아직 아무것도 안 땄다** — 고르는 것은 사용자 몫이다.
+정예 Gem(3×3 · 초록) · `scripts/gemini_web.py run` · 프롬프트 = prompt_template §1 골격 + 「아홉 칸 모두 그 인물」 한 줄 + 칸마다 **머리·어깨에 쓴 것** 한 줄.
+
+| 시트 | 첨부(`ready/hero/`) | 결과 |
+|---|---|---|
+| `zeus_1` · `_2` | `mage_2` · `warrior_3` | 같은 프롬프트라 두 장이 거의 같다 · 7번 볏이 칸 위에서 잘린다 |
+| `zeus_3` · `_4` | `mage_2` · `warrior_5` | 새 소재(번개 왕관 · 숫양 뿔 · 젊은 곱슬 · 대머리 …) — `_4` 는 `_3` 의 변주 |
+| `hades_1` | `mage_2` · `priest_1` | 4번이 `priest_1` 얼굴 복제 · 7번 가시관 |
+| `odin_1` · `_2` | `mage_1` · `warrior_3` | 두 장이 거의 같다 · 후드 칸이 `mage_1` 과 닮는다 |
+| `odin_3` | `mage_1` · `mage_2` | 새 소재(늑대 둘 · 룬 지팡이 · 금 안대 …) · 눈 줄(`Eyes are solid black shapes.`) 추가 |
+| `sorceress_1` · `_2` | `priest_3` · `mage_2` | ✕ **`priest_3` 의 처진 눈 · 슬픈 얼굴이 18칸 전부에 복제됐다** — 눈도 회색 구멍 |
+| `sorceress_3` | `mage_2` · `priest_1` | ✕ 남자 얼굴로 나왔다 |
+| `sorceress_4` | `mage_1` · `warrior_3` | 새 소재 + 눈 줄 — 여자 얼굴 · 검은 덩어리 눈 · 아홉이 갈린다 |
+
+⚠ **하데스는 두 번째 판부터 그림이 안 나온다** — 「이미지를 출력할 수 없다」 글 답 · 「그런 것을 하도록 프로그래밍되지 않았다」 거절 9 · 5분 무응답 4 — 14번 시도가 전부 실패했다.
+해골 · 머리 셋 개를 뺀 판 · 이름을 빼고 「제우스 · 포세이돈의 형」으로 부른 판 · 첨부를 제우스와 같은 둘로 바꾼 판 모두 같았고, 같은 시각 제우스 프롬프트는 바로 그려졌다.
+⚠ **같은 프롬프트를 다시 돌리면 거의 같은 시트가 나온다**(제우스 · 오딘 1 ≈ 2) — 판을 늘리려면 소재 줄을 새로 쓴다.
+
 ## 영웅 — Gem 레오니다스 재발주 (`source_sheet_warrior_leonidas_redraw_3x3_1~5.png`) [2026-10-16]
 
 옛 레오니다스(아래 09-21 · 회색 닫힌 투구 + 진홍 볏)는 `knight_1`~`3`(무안면 볏 투구)과 44px 에서 안 갈려 **처음부터 다시** 뽑았다.
@@ -684,9 +704,9 @@ Make each one an elite: a bigger, clearly different headpiece that changes the h
 
 | 파일 | 내용 | 밝기 중앙 | `cartoon/` 사본 |
 |---|---|---|---|
-| `mage_nostradamus.png` | **노스트라다무스** — 황도 12궁 기호를 수놓은 검은 로브 · 회백 장발·수염 노인 | 93 | `hero/mage_3.png` |
+| `mage_nostradamus.png` | **노스트라다무스** — 황도 12궁 기호를 수놓은 검은 로브 · 회백 장발·수염 노인 | 93 | `hero/priest_5.png` (10-21 사제로 옮김 · 옛 `mage_3`) |
 
-**이름이 붙은 초상이다** — `ui/mock.js:HERO_FACE_NAMES.mage_3` = 노스트라다무스 / Nostradamus,
+**이름이 붙은 초상이다** — `ui/mock.js:HERO_FACE_NAMES.priest_5` = 노스트라다무스 / Nostradamus,
 `data/hero_unique_candidates.csv` 의 `MAGE-P5` 후보 행이 `mage_3` **confirmed** 로 올라갔다(확정 7행 · 제안 33행).
 후보 행의 외형(후드 · 단색 로브)은 실제 그림(황도 기호 검은 로브 · 장발)으로 덮어썼다.
 
@@ -995,4 +1015,4 @@ Gem 재발주 산출물(2048² · 불투명 **초록 `#00FF00` 배경**). 초록
 이 스타일의 굵고 어두운 외곽선(약 `#0B060C`)이 자동 누끼를 가능하게 한다 — 픽셀아트나 회화체면 같은 방법이 안 통한다.
 
 ---
-*마지막 업데이트: 2026-10-18*
+*마지막 업데이트: 2026-10-21*

@@ -13,6 +13,7 @@
  *   materials: {yieldId: n}   — 제작 재료(광석 · 목재 · 약초 — 산출물 id 가 키). 없으면 {} · 버전 무변경 (2026-09-15 · R96) · 연구소 · 미니게임 · 도박장 · 처치(2026-10-06 — `settleRound`)가 채운다
  *   resourceProduction: [{post, tier, at, carry}] — 장소별 기본·배치 추가 생산의 시계. carry = 다음 1개의 소수 진행도(2026-10-16 · 버전 무변경)
  *   labLevels: {'줄:단계': lv} — 연구소 칸 레벨. 0 은 안 적는다 · 없으면 {} · 버전 무변경 (2026-10-18 · R288)
+ *   labReg: {uid: 줄} — 연구소 줄 등록(`mine` · `gather` · `log` · `visit`). 한 영웅은 한 줄 · 효과 없음(표시만) · 없으면 {} · 버전 무변경 (2026-10-21)
  *   potions: {potionId: n}    — 물약 재고(v32 · R124). 마시면 준다(`advanceRun`) · 만들면 는다 · 0 이면 키가 없다. 새 게임 = `start_owned` 개수. 칸 구성은 편성이 든다
  *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, equipped:{position: itemUid|null}}],
  *     — tier = 매직 | 레어 | 유니크 (`hero_tier.csv`). ~~caps(개체별 히든 상한)~~ 는 **v15 에서 사라졌다** —
@@ -38,14 +39,15 @@
  *       tactics = **이 편성의 파티 전술 칸**(v34 · R129) — 아래 옛 `tactics` 와 같은 모양이고 편성마다 한 벌이다
  *     — items[*].proc = **목걸이 발동 스킬** `{trigger, skill, v}` (목걸이만 · v33 · 2026-09-21 · ⚠ 전투는 안 읽는다 — 설명에만).
  *     — ~~items[*].skill = 무기가 담은 액티브 id~~ — **2026-09-29 삭제**(R179 · 스킬북 skill_design §2-1) · 로드가 지운다
- *   books: {skillId: n}   — **스킬북 재고**(R179 · 버전 무변경) — 소모품이라 쌓인다(2026-09-30) · `learnBook` 이 1권을 쓰고 0 이면 키를 지운다
+ *   books: {skillId: n}   — **스킬북 재고**(R179 · 버전 무변경) — 소모품이라 쌓인다(2026-09-30) · `learnBook` 이 1권을 쓰고 0 이면 키를 지운다 · 생기는 곳은 도서관 하나(`craftBook` · 2026-10-20)
+ *   blueprints: {skillId: n} — **스킬 도안 재고**(2026-10-20 · R293 · 버전 무변경) — 처치 · 상단이 한 장씩 준다 · `craftBook` 이 한 장을 쓰고 0 이면 키를 지운다
  *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
  *     heroes[*].skillLv = {skillId: n}(선택 필드 · 2026-10-06 · R216) — 기본 스킬(고유 · 배운 칸)의 업그레이드 횟수 · 같은 책을 읽으면 +1
  *     heroes[*].advanceUp = n(선택 필드 · R216) — 전직 스킬을 배운 뒤 더 넣은 전직 포인트(레벨 = 1 + n)
  *   progress: {cleared: [stageId], clearedIn: {단: [stageId]}, peakTotal},   // ~~levelUp = 스테이지별 올린 양~~(R87) — **2026-09-29 위험도 폐지로 삭제** · 로드가 지운다 · cleared = 첫 단(노말) · clearedIn = 나머지 단 (2026-10-10 · R236 · 버전 무변경)
  *   difficulty: 단 id            — **고른 난이도** (2026-10-10 · R236 · 없으면 첫 단) · 부대 자리 · 리포트의 `difficulty` = 그 런의 단 (몬스터 레벨 = `stage.csv:dlvl` + 단의 더하기 · 만렙에서 자른다)
  *   codexExp: {monsterId: n}     — **도감 레벨의 출처** — 누적 도감 경험치 · 처치 하나 = 그 런 단의 `codex_exp` (monster_design §8 · 2026-10-10 · R239 — ~~codexKills 누적 처치 수~~ 09-21)
- *   skillCodexExp: {skillId: n}  — **스킬 도감** — 처치마다 그 유닛이 든 책이 되는 스킬 하나하나에 그 런 단의 `codex_exp` · 스킬 도안(Lv1)과 책 업그레이드 상한의 출처 (monster_design §8-1 · 2026-10-16 · R266 · 버전 무변경)
+ *   ~~skillCodexExp~~ — 2026-10-20 걷었다(R293 · 스킬 도감 = 레벨 없는 목록 — monster_design §8-1) · 로드가 지운다
  *   bossDown: {"단|stageId": ms} — **챕터보스가 죽은 실제 시각** (2026-10-10 · R240 · 버전 무변경) — 돌아오는 시각 = 값 + `boss_respawn_sec` 초 · 그동안 그 칸 × 단으로는 어느 부대도 못 나간다 (base_expedition_design §1-2)
  *   counters: {hero, item, battle, tavern, tactic, upgrade, visit, make, gamble, commission, shop},   // visit = 찾아온 영웅 번호(시간으로 온 영웅마다 +1 · 2026-10-19 · ~~search~~ 수색 회차는 로드가 지운다) · shop =상단 목록 번호(교체마다 +1 · 2026-10-16 · 없으면 0) · upgrade = 강화 굴림 회차(R253 · 2026-10-14 다시 오른다 — R95(2026-09-15)부터 그때까지는 자리만 있었다 · 옛 값에서 이어 센다) · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, tier, done}` — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
  *   commissions: {cards: [{no, tpl, kind, axis, ref, need, grade, gold, have?}]}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3).
@@ -246,15 +248,16 @@ export function createGameSystem(deps) {
             advancing: [],   // 전직하는 중 [{uid, branch, since, until}] (2026-09-28 · R16)
             resourceProduction: [],   // 장소별 생산 시계 [{post, tier, at, carry}] — carry는 다음 1개의 소수 진행도
             labLevels: {},   // 연구소 칸 레벨 {'줄:단계': lv} — 0 은 안 적는다 (2026-10-18 · R288)
+            labReg: {},      // 연구소 줄 등록 {uid: 줄} — 한 영웅은 한 줄 · 효과 없음 (2026-10-21)
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
-            books: {},       // 스킬북 재고 {skillId: 1} — 처치가 떨군다 · 도서관이 만든다 (2026-09-29 · R179)
+            books: {},       // 스킬북 재고 {skillId: n} — 도서관이 만든다 (2026-09-29 · R179 · 2026-10-20 처치 · 상단은 도안을 준다)
+            blueprints: {},  // 스킬 도안 재고 {skillId: n} — 처치 · 상단이 준다 · 책 한 권에 한 장 (2026-10-20 · R293)
             heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
             // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제 ·
             //   cleared = **첫 단(노말)의** 깬 칸 · clearedIn = 나머지 단의 깬 칸 {단: [stageId]} (2026-10-10 · R236)
             progress: { cleared: [], clearedIn: {}, peakTotal: 0 },
             difficulty: BASE_DIFF,   // 고른 난이도 단 — 원정 탭이 고른다(`selectDifficulty`) · 부대는 나간 단을 제 자리에 든다 (2026-10-10 · R236)
             codexExp: {},   // 몬스터별 누적 도감 경험치 (2026-10-10 · R239)
-            skillCodexExp: {},   // 스킬별 누적 스킬 도감 경험치 — 도안 · 책 업그레이드 상한 (2026-10-16 · R266)
             bossDown: {},   // 죽어 있는 챕터보스 {"단|칸": 죽은 실제 시각} — 런이 끝난 순간 `noteRunEnd` 가 적는다 (2026-10-10 · R240)
             counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, visit: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0, shop: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
@@ -290,9 +293,15 @@ export function createGameSystem(deps) {
         });
         // **편성 1 = 로스터 순서** [2026-09-21 사용자 지시 · ADR-0227 · ~~빈 파티~~ 2026-09-09 폐기] — 첫 원정을 떠날 편성이
         //   처음부터 서 있다. 리더 규칙은 그대로다(`party[0]` = 먼저 넣은 영웅 = 로스터 첫 영웅).
-        //   진형은 `normalizeFormation` 이 파티 순서대로 앞 랭크부터 채운다 — **rng 0 회**라 전투 결과가 안 흔들린다
+        //   **진형은 직업이 정한다** [2026-10-21 사용자 지시 「전사 · 기사는 앞열 · 나머지는 후열」] — `class.csv:start_row` 로
+        //   전열 / 후열을 가르고 정원이 그 두 수와 꼭 맞는 템플릿을 고른다(랭크 안은 파티 순서). 맞는 것이 없으면 기본 템플릿을
+        //   `normalizeFormation` 이 앞 랭크부터 채운다 — **rng 0 회** (INTERFACE §2-7)
         const first = state.presets[0];
-        first.party = state.heroes.slice(0, limitsOf(state).party).map(h => h.uid);
+        const starters = state.heroes.slice(0, limitsOf(state).party);
+        first.party = starters.map(h => h.uid);
+        const rows = [0, 1].map(r => starters.filter(h => H.startRankOf(h.cls) === r).map(h => h.uid));
+        const tpl = FT_ORDER.find(id => { const [front, back] = formCaps(id); return front === rows[0].length && back === rows[1].length; });
+        if (tpl) first.formation = { tpl, ranks: rows };
         normalizeFormation(first);
         return state;
     }
@@ -387,10 +396,9 @@ export function createGameSystem(deps) {
         delete s.codexCards;
         // 처치 수 → 도감 경험치 [2026-10-10 · R239 · 버전 무변경] — 난이도 단(R236) 전의 처치는 전부 노말(처치 하나 = 하나)이라 1:1 로 옮긴다 · 둘 다 있으면 `codexExp` (INTERFACE §4)
         s.codexExp = s.codexExp ?? s.codexKills ?? {}; delete s.codexKills;
-        // 스킬 도감 [2026-10-16 · R266 · 버전 무변경] — 없으면 빈 도감으로 연다. **옛 몬스터 도감 경험치를 스킬로 옮기지 않는다**(옛 세이브는 나중에 완전 초기화 — 사용자 2026-10-16) ·
-        //   책이 안 되는 스킬 · 양의 정수가 아닌 값은 지운다 (INTERFACE §4)
-        s.skillCodexExp = Object.fromEntries(Object.entries(s.skillCodexExp && typeof s.skillCodexExp === 'object' && !Array.isArray(s.skillCodexExp) ? s.skillCodexExp : {})
-            .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
+        // 스킬 도감 경험치는 걷혔다 [2026-10-20 · R293 · 버전 무변경] — 스킬 도감이 레벨 없는 목록이 됐다. **이미 연 도안을 도안으로 보상하지 않는다**
+        //   (옛 세이브는 나중에 완전 초기화 — 사용자 2026-10-21) · 필드만 지운다 (INTERFACE §4)
+        delete s.skillCodexExp;
         // 죽어 있는 챕터보스 — 없으면 「죽어 있는 보스가 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-10 · R240).
         //   유한한 시각이 아닌 값은 지운다 — 셀 수 없는 줄이 칸을 막지 않게
         s.bossDown = Object.fromEntries(Object.entries(s.bossDown && typeof s.bossDown === 'object' ? s.bossDown : {}).filter(([, at]) => Number.isFinite(at)));
@@ -446,7 +454,9 @@ export function createGameSystem(deps) {
         s.counters.shop = s.counters.shop ?? 0;
         s.shop = s.shop && Number.isInteger(s.shop.level) && s.shop.level >= 1 && Array.isArray(s.shop.sold) ? s.shop : null;
         if (s.shop) {
-            s.shop.books = Array.isArray(s.shop.books) ? s.shop.books : [];
+            // 도안 구매 자리 — 옛 이름 `books`(스킬북 · 같은 스트림 0x540B · 같은 자리)를 옮긴다 (2026-10-20 · R293)
+            s.shop.blueprints = Array.isArray(s.shop.blueprints) ? s.shop.blueprints : Array.isArray(s.shop.books) ? s.shop.books : [];
+            delete s.shop.books;
             s.shop.rerolledAt = Number.isFinite(s.shop.rerolledAt) ? s.shop.rerolledAt : null;
             s.shop.paid = Number.isInteger(s.shop.paid) ? s.shop.paid : 0;
         }
@@ -502,10 +512,12 @@ export function createGameSystem(deps) {
         //   옛 무기 스킬을 배운 스킬로 옮기지 않는다: 소급하면 책의 문턱(레벨 · 도서관)을 우회한다)
         s.books = Object.fromEntries(Object.entries(s.books && typeof s.books === 'object' && !Array.isArray(s.books) ? s.books : {})
             .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
+        // 스킬 도안 [2026-10-20 · R293 · 버전 무변경] — 없으면 「가진 도안이 없다」가 정확한 초기 상태다 · 책과 같은 거름(책이 되는 id · 양의 정수 · 장수 그대로)
+        s.blueprints = Object.fromEntries(Object.entries(s.blueprints && typeof s.blueprints === 'object' && !Array.isArray(s.blueprints) ? s.blueprints : {})
+            .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
         for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
         // 스킬 레벨 [2026-10-06 · R216 · 버전 무변경 — INTERFACE §4] — 없으면 「업그레이드 0」이 정확한 초기 상태다.
-        //   지금 고유 · 배운 스킬이 아닌 키 · 양의 정수가 아닌 값은 지우고 상한의 끝(`skillCapMax` — 2026-10-16 · R266 · ~~`skillbook_upgrade_max`~~)을 넘는 값은 끝으로 (0 은 키가 없다) ·
-        //   스킬 도감이 지금 연 상한으로는 안 자른다 — 쌓은 레벨은 남고 더 못 올릴 뿐이다 (INTERFACE §4)
+        //   지금 고유 · 배운 스킬이 아닌 키 · 양의 정수가 아닌 값은 지우고 상한(`skillCapMax` = `skillbook_upgrade_max` — 2026-10-20 · R293)을 넘는 값은 상한으로 (0 은 키가 없다) (INTERFACE §4)
         for (const h of s.heroes) {
             if (h.skillLv === undefined) continue;
             const own = new Set([h.innate, h.bookSkill].filter(Boolean));
@@ -549,6 +561,10 @@ export function createGameSystem(deps) {
         // 줄이 열려 있는데 시계가 없으면(옛 세이브 · 손으로 고친 세이브) 지금 이 순간부터 흐른다 — 열린 줄이 영영 안 오지 않게
         if (s.labLevels[VISIT_KEY] && !s.visit) s.visit = { nextAt: s.savedAt + visitMs(), left: null };
         if (!s.labLevels[VISIT_KEY]) s.visit = null;
+        // 연구소 줄 등록 (2026-10-21 · 버전 무변경) — 없으면 {} · 없는 영웅 · 모르는 줄을 지운다(열림은 다시 안 본다 — 랭크 · 줄 레벨은 안 내려간다)
+        const regIn = s.labReg && typeof s.labReg === 'object' ? s.labReg : {};
+        s.labReg = {};
+        for (const [uid, line] of Object.entries(regIn)) if (LAB_LINES.includes(line) && s.heroes.some(h => h.uid === uid)) s.labReg[uid] = line;
         return s;
     }
 
@@ -682,35 +698,10 @@ export function createGameSystem(deps) {
         return { flat };
     }
 
-    /* ── 스킬 도감 — 스킬마다 도감 경험치 (monster_design §8-1 · 2026-10-16 · R266) ──
-       같은 처치가 몬스터 도감(`codexExp`)과 스킬 도감(`skillCodexExp`)을 **따로** 채운다 — 스킬 쪽은 그 유닛이 든 스킬 칸(`codexSkills`)마다.
-       레벨 1 이상 = **스킬 도안**(`craftableBooks`) · 레벨마다 책 업그레이드 상한(`upgrade_cap` — 0 행 = 도감 전). 표 검증은 생성 때 던진다 */
-    const SKILL_CODEX = (() => {
-        const rows = deps.skillCodex ?? [];
-        const bad = why => { throw new Error(`skill_codex_level: ${why}`); };
-        if (!rows.length) bad('행이 없다');
-        rows.forEach((r, i) => {
-            if (r.level !== i) bad(`레벨이 0 부터 이어지지 않는다 — ${i} 번째 행이 ${r.level}`);
-            const prev = rows[i - 1];
-            if (!Number.isInteger(r.expTotal) || (prev ? r.expTotal <= prev.expTotal : r.expTotal !== 0)) bad(`레벨 ${r.level} — exp_total '${r.expTotal}' (0 행은 0 · 그 뒤는 오름차순 정수)`);
-            if (!Number.isInteger(r.upgradeCap) || r.upgradeCap < 1 || (prev && r.upgradeCap < prev.upgradeCap)) bad(`레벨 ${r.level} — upgrade_cap '${r.upgradeCap}' (1 이상 정수 · 줄지 않는다)`);
-        });
-        return { need: rows.slice(1).map(r => r.expTotal), caps: rows.map(r => r.upgradeCap) };
-    })();
-    /** 누적 스킬 도감 경험치 → 레벨(0 = 도감 전) · 누적 문턱이라 그대로 비교한다 · 역행 없음 */
-    function skillCodexLevel(exp) {
-        let lv = 0;
-        for (const need of SKILL_CODEX.need) {
-            if (exp >= need) lv += 1; else break;
-        }
-        return lv;
-    }
-    /** 다음 레벨의 누적 문턱 — 최종 레벨이면 null */
-    const skillCodexNext = exp => SKILL_CODEX.need[skillCodexLevel(exp)] ?? null;
-    /** 그 스킬의 지금 책 업그레이드 상한 — 스킬 도감 레벨 행의 `upgrade_cap` (계정 단위 — 그 스킬을 가진 모든 영웅이 같다) */
-    const skillCapOf = (state, id) => SKILL_CODEX.caps[skillCodexLevel(state.skillCodexExp?.[id] ?? 0)];
-    /** 상한의 끝 — 마지막 행의 `upgrade_cap` */
-    const skillCapMax = () => SKILL_CODEX.caps[SKILL_CODEX.caps.length - 1];
+    /* ── 책 업그레이드 상한 — 끝 하나 [2026-10-20 · R293 · skill_design §2-3 「레벨 제한을 두지말고 그냥 도안을 계속얻을 수 있게」] ──
+       모든 스킬 · 모든 영웅이 같다. ~~스킬 도감 레벨이 나눠 열던 상한~~(`skill_codex_level.csv` · 2026-10-16 R266)은 표째 걷었다 —
+       같은 책 수(피보나치)가 이미 오르는 속도를 막는다 */
+    const skillCapMax = () => B.skillbook_upgrade_max;
 
     /**
      * 전투 능력치 = 기본 능력치 + 장비 + 도감 + **파티 전술**.
@@ -1916,19 +1907,24 @@ export function createGameSystem(deps) {
     }
 
     /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 도서관 · INTERFACE §2-7] ──
-       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 처치가 떨구고(`settleRound`) 상단이 팔고 **스킬 도안(도감 보상)이 열린 책을** 도서관이 만든다(2026-10-12 · R241 — ~~기본 책만~~) —
+       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 처치(`settleRound`) · 상단은 **스킬 도안**을 주고 책은 도서관이 **도안 한 장 + 골드 · 가루**로 만든다
+       (2026-10-20 · R293 — ~~처치가 책을 떨구고 상단이 책을 판다 · 도안 = 스킬 도감 Lv1 영구 해금~~) —
        **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다).
        배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0
        **같은 책이면 업그레이드다** [2026-10-06 · R216 · skill_design §2-3 — ~~`same` 거절~~] — 이미 가진 스킬(고유 · 배운 칸)의 책은 칸을 늘리지 않고
-       그 스킬의 레벨을 올린다(`hero.skillLv` · 드는 책은 피보나치 · 상한 = 그 스킬의 스킬 도감이 연 단계 `skillCapOf` — 2026-10-16 · R266) · 다른 책으로 덮어쓰면 쌓은 레벨도 사라진다 */
+       그 스킬의 레벨을 올린다(`hero.skillLv` · 드는 책은 피보나치 · 상한 = `skillCapMax` — 2026-10-20 · R293) · 다른 책으로 덮어쓰면 쌓은 레벨도 사라진다 */
     /**
-     * 스킬 도안이 열린 책 [2026-10-12 · R241 · skill_design §2-1 · **2026-10-16 · R266 — 스킬 도감 Lv1** · ~~몬스터 도감 `codex_blueprint_level` 의 고유 스킬~~] —
-     * 스킬 도감 레벨이 1 이상인 스킬 중 책이 되는 것(`bookable`) · `skill.csv` 행 순서.
-     * 도안은 세이브에 따로 없다 — 스킬 도감 경험치에서 읽는다(레벨이 역행하지 않으니 한 번 열리면 영구) · rng 0
+     * 가진 스킬 도안 [2026-10-12 · R241 · skill_design §2-1 · **2026-10-20 · R293 — 쌓이는 소모품** · ~~스킬 도감 Lv1 영구 해금~~(10-16)] —
+     * `state.blueprints` 에 한 장 이상 있는 스킬 중 책이 되는 것(`bookable`) · `skill.csv` 행 순서 · rng 0
      */
     function craftableBooks(state) {
-        const open = new Set(Object.entries(state.skillCodexExp ?? {}).filter(([id, exp]) => bookable(id) && skillCodexLevel(exp) >= 1).map(([id]) => id));
-        return (SK?.list ?? []).filter(d => open.has(d.id)).map(d => d.id);
+        const bp = state.blueprints ?? {};
+        return (SK?.list ?? []).filter(d => bp[d.id] > 0 && bookable(d.id)).map(d => d.id);
+    }
+    /** 도안 한 장을 재고에 쌓는다 — 가진 도안이어도 +1 (2026-10-20 · R293) */
+    function addBlueprint(state, id) {
+        state.blueprints = state.blueprints ?? {};
+        state.blueprints[id] = (state.blueprints[id] ?? 0) + 1;
     }
     /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 */
     function addBook(state, id) {
@@ -1985,18 +1981,16 @@ export function createGameSystem(deps) {
     }
     /**
      * 이 영웅이 이 책을 읽으면 무엇이 되나 — `bookState` 의 `plan` 과 `learnBook` 이 이 하나를 읽는다 (2026-10-06 · R216).
-     *   `upgrade` = 이미 가진 스킬(고유 · 배운 칸) — 그 단계에 드는 책 · 상한이면 `codexCap`(스킬 도감이 더 오르면 열린다 · `codexNeed` = 그 도감 레벨) · 끝이면 `maxUp` /
+     *   `upgrade` = 이미 가진 스킬(고유 · 배운 칸) — 그 단계에 드는 책 · 상한(`skillCapMax`)이면 `maxUp` /
      *   `learn` = 새로 배운다(배운 칸을 덮어쓴다) — 1권. 책 밖 거절은 `learnGate`
      */
     function bookPlan(state, h, id) {
         const have = state.books?.[id] ?? 0;
         if (!h || (id !== h.innate && id !== h.bookSkill)) return { act: 'learn', lv: 0, need: 1, err: have >= 1 ? null : 'book' };
         const lv = h.skillLv?.[id] ?? 0;
-        const cap = skillCapOf(state, id);   // 스킬 도감이 연 상한 (2026-10-16 · R266 · monster_design §8-1)
-        if (lv >= skillCapMax()) return { act: 'upgrade', lv, need: null, cap, err: 'maxUp' };
-        if (lv >= cap) return { act: 'upgrade', lv, need: null, cap, err: 'codexCap', codexNeed: SKILL_CODEX.caps.findIndex(c => c > lv) };
+        if (lv >= skillCapMax()) return { act: 'upgrade', lv, need: null, err: 'maxUp' };
         const need = upgradeBooks(lv + 1);
-        return { act: 'upgrade', lv, need, cap, err: have >= need ? null : 'book' };
+        return { act: 'upgrade', lv, need, err: have >= need ? null : 'book' };
     }
     function bookState(state, uid = null) {
         const h = uid ? heroById(state, uid) : null;
@@ -2005,7 +1999,7 @@ export function createGameSystem(deps) {
             need: { have: h?.level ?? 0, need: B.skillbook_learn_level },
             books: Object.keys(state.books ?? {}).filter(id => state.books[id] > 0)
                 .map(id => ({ id, n: state.books[id], ...(h ? { plan: bookPlan(state, h, id) } : {}) })),
-            craft: craftableBooks(state).map(id => ({ id, gold: B.book_craft_gold, dust: B.book_craft_dust, err: craftGate(state, id) })),
+            craft: craftableBooks(state).map(id => ({ id, n: state.blueprints[id], gold: B.book_craft_gold, dust: B.book_craft_dust, err: craftGate(state, id) })),
             hero: uid ? { skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h) } : null,
         };
     }
@@ -2043,6 +2037,9 @@ export function createGameSystem(deps) {
         if (err) return { ok: false, err };
         state.resources.gold -= B.book_craft_gold;
         state.resources.dust -= B.book_craft_dust;
+        // 도안 한 장이 책 한 권이 된다 — 같은 책을 모으려면 같은 도안을 모은다 (2026-10-20 · R293 · skill_design §2-1)
+        state.blueprints[skillId] -= 1;
+        if (state.blueprints[skillId] <= 0) delete state.blueprints[skillId];
         addBook(state, skillId);
         return { ok: true };
     }
@@ -2384,7 +2381,7 @@ export function createGameSystem(deps) {
             difficulty: dif,                                                                  // 이 런의 난이도 단 — 옛 리포트엔 없다(= 첫 단 · 2026-10-10 R236)
             shrine,                                                                           // 이 런이 입은 신단 id · 없으면 null (2026-09-29)
             gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
-            downed: [], party: going.slice(), drops: [], books: [], materials: {}, discarded: 0,   // materials = 처치 재료 {산출물 id: n} (2026-10-06 · 옛 리포트엔 없다)
+            downed: [], party: going.slice(), drops: [], blueprints: [], materials: {}, discarded: 0,   // materials = 처치 재료 {산출물 id: n} (2026-10-06 · 옛 리포트엔 없다)
             rounds: [], roundsCleared: 0,
             // 빗나감 · 기여는 **0 에서 자리를 잡는다** — 첫 라운드 전에 끊겨도 리포트가 빈 칸 없이 선다 (SCREEN_DESIGN §4-3)
             strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
@@ -2507,9 +2504,6 @@ export function createGameSystem(deps) {
             // 도감 레벨의 출처 — 이긴 라운드의 처치 × 그 런 단의 도감 경험치 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239)
             const cxPer = codexExpOf(run.difficulty ?? BASE_DIFF);
             for (const [id, n] of Object.entries(s.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * cxPer;
-            // 스킬 도감 — 같은 처치 · 같은 값을 그 유닛이 든 스킬마다 따로 (monster_design §8-1 · 2026-10-16 · R266)
-            state.skillCodexExp = state.skillCodexExp ?? {};
-            for (const [id, n] of Object.entries(s.skillKills ?? {})) state.skillCodexExp[id] = (state.skillCodexExp[id] ?? 0) + n * cxPer;
             const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(알아서 분해로 녹은 것은 든다 · 넘쳐 분해된 것은 안 든다 — 칸에 못 들어왔다 · R153 · 2026-10-14)
             // 드롭은 **나간 부대의 인벤토리**로 — 차면 그 부대의 몫만 분해된다 (v40 · ADR-0521 · 2026-10-14 ADR-0625)
             const bag = bagOf(state, run.preset) ?? state.bags[0];
@@ -2532,8 +2526,8 @@ export function createGameSystem(deps) {
                 R.drops.push(added.uid);
                 gained.push(added);
             }
-            // 스킬북 [2026-09-29 · R179] — 재고에 쌓는다(가진 책이어도 +1 · 2026-09-30) · 가방 칸을 안 먹는다 · rng 0
-            for (const id of s.books ?? []) { addBook(state, id); (R.books ??= []).push({ id }); }
+            // 스킬 도안 [2026-09-29 · R179 · **2026-10-20 · R293 — ~~스킬북~~ → 도안**] — 재고에 쌓는다(가진 도안이어도 +1) · 가방 칸을 안 먹는다 · rng 0
+            for (const id of s.blueprints ?? []) { addBlueprint(state, id); (R.blueprints ??= []).push({ id }); }
             // 처치 재료 [2026-10-06 · item_design §1 「처치 재료」] — battle 이 낸 **종류**를 그 스테이지 **챕터 단계**의 산출물 id 로 바꿔 재고에 더한다
             //   (단계 n = 챕터 n 의 지역 · base_expedition §2-1 — 표에 그 단계가 없으면 그 아래 가장 높은 단계 · 도박장과 같은 `tierYield`) · 가방 칸을 안 먹는다 · rng 0
             const chapter = deps.stages[run.stageId]?.chapter ?? 1;
@@ -2863,7 +2857,7 @@ export function createGameSystem(deps) {
         return at == null ? 0 : at + B.shop_refresh_hours * HOUR_MS;
     }
     /** 교체도 구매도 한 적 없는 목록의 기록 — 가운데 레벨 1 · 무료 열림 [2026-10-16 사용자 「한 번도 교체 안 한 첫 목록 = Lv 1」] */
-    const shopFirst = () => ({ level: 1, rerolledAt: null, paid: 0, sold: [], books: [] });
+    const shopFirst = () => ({ level: 1, rerolledAt: null, paid: 0, sold: [], blueprints: [] });
 
     /**
      * 상점 화면 상태 한 덩어리 — 특수상단 방문 시계 + 상단 목록. **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙).
@@ -2888,17 +2882,17 @@ export function createGameSystem(deps) {
         // `open` = 상단 · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 목록 · 시계는 닫혀 있어도 같은 값이다(시드 + 번호)
         // 물약 — **정해진 셋을 늘 판다** [2026-09-28 사용자 지시 · base_expedition §2-6] — `potion.csv:shop_gold` 가 선 행만 · 회차 · 매진이 없다
         const potions = potionRows.filter(p => p.shopGold != null).map(p => ({ id: p.id, tier: p.tier, heal: p.heal, gold: p.shopGold, have: state.potions?.[p.id] ?? 0 }));
-        // 스킬북 — 목록마다 `shop_book_count` 권 · 따로 선 스트림(0x540B) [2026-09-29 사용자 지시 · base_expedition §2-6 · INTERFACE §5-2]
-        const books = shopBookIds(state, list).map((id, i) => ({ id, gold: B.shop_book_gold, sold: sh.books.includes(i) }));
+        // 스킬 도안 — 목록마다 `shop_book_count` 장 · 따로 선 스트림(0x540B) [2026-09-29 사용자 지시 · base_expedition §2-6 · INTERFACE §5-2 · 2026-10-20 · R293 ~~스킬북~~]
+        const blueprints = shopBlueprintIds(state, list).map((id, i) => ({ id, gold: B.shop_book_gold, sold: sh.blueprints.includes(i) }));
         // 교체 값 — 무료가 열렸으면 0 · 아니면 무료 뒤 유료 교체마다 두 배(상한 없음) [2026-09-30 · 2026-10-16 사용자 — `tavernState` 와 같은 틀]
         const freeAt = shopFreeAt(state), free = now >= freeAt;
         const rerollCost = free ? 0 : B.shop_reroll_cost * 2 ** sh.paid;
-        return { ...visit, list, level: sh.level, equip, potions, books, freeAt, free, rerollCost, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
+        return { ...visit, list, level: sh.level, equip, potions, blueprints, freeAt, free, rerollCost, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
     }
 
     /**
      * 상단 목록 교체 [2026-09-30 사용자 지시 · 2026-10-16 개정 · INTERFACE §2-7] — 거절 `unbuilt` → `stale` → `missing` → `gold` · 거절이면 아무것도 안 바뀐다.
-     * 장비 · 책을 다음 번호의 스트림으로 다시 굴린다 — **산 칸도 풀린다**(새 목록이다) · 가운데 레벨 = **고른 영웅(`heroUid`)의 지금 레벨** · 물약은 그대로.
+     * 장비 · 도안을 다음 번호의 스트림으로 다시 굴린다 — **산 칸도 풀린다**(새 목록이다) · 가운데 레벨 = **고른 영웅(`heroUid`)의 지금 레벨** · 물약은 그대로.
      * 무료 시계는 **무료 교체만** 옮기고, 유료 교체 횟수는 무료 교체가 0 으로 돌린다(`tavernReroll` 과 같은 틀)
      */
     function shopReroll(state, list, now, heroUid) {
@@ -2912,15 +2906,15 @@ export function createGameSystem(deps) {
         state.resources.gold -= gold;
         state.counters.shop = S.list + 1;
         const prev = state.shop ?? shopFirst();
-        state.shop = { level: h.level, rerolledAt: S.free ? now : prev.rerolledAt, paid: S.free ? 0 : prev.paid + 1, sold: [], books: [] };
+        state.shop = { level: h.level, rerolledAt: S.free ? now : prev.rerolledAt, paid: S.free ? 0 : prev.paid + 1, sold: [], blueprints: [] };
         return { ok: true, gold, free: S.free, level: h.level };
     }
 
-    /** 상단이 파는 책의 후보 — 직업 스킬 중 기본 책이 아닌 것(기본 책은 도서관이 만든다 · 보스 고유는 드롭만) · `skill.csv` 행 순서 */
-    const shopBookPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && !d.starterPool && bookable(d.id)).map(d => d.id);
-    /** 그 목록의 책 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
-    function shopBookIds(state, list) {
-        const pool = shopBookPool();
+    /** 상단이 파는 도안의 후보 — 직업 스킬 중 기본 책이 아닌 것 · `skill.csv` 행 순서 · 스킬 도감의 획득처도 이것을 읽는다 (2026-10-20 · R293 · ~~책~~) */
+    const shopBlueprintPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && !d.starterPool && bookable(d.id)).map(d => d.id);
+    /** 그 목록의 도안 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
+    function shopBlueprintIds(state, list) {
+        const pool = shopBlueprintPool();
         const rng = makeRng(deriveSeed(state.seed ^ 0x540B, list));
         const n = Math.min(B.shop_book_count, pool.length);
         for (let k = 0; k < n; k++) {
@@ -2931,21 +2925,21 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 상단 스킬북 한 권을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7] — 거절 `unbuilt` → `stale` → `missing` → `sold` → `gold`.
-     * 가진 책도 산다 — 책은 쌓인다(`addBook` · 2026-09-30). rng 를 새로 안 연다(`shopState` 와 같은 스트림)
+     * 상단 스킬 도안 한 장을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7 · 2026-10-20 · R293 ~~스킬북~~] — 거절 `unbuilt` → `stale` → `missing` → `sold` → `gold`.
+     * 가진 도안도 산다 — 쌓인다(`addBlueprint`). rng 를 새로 안 연다(`shopState` 와 같은 스트림)
      */
-    function shopBookBuy(state, i, list, now) {
+    function shopBlueprintBuy(state, i, list, now) {
         if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
         const S = shopState(state, now);
         if (list !== S.list) return { ok: false, err: 'stale' };
-        const b = S.books[i];
+        const b = S.blueprints[i];
         if (!b) return { ok: false, err: 'missing' };
         if (b.sold) return { ok: false, err: 'sold' };
         if (state.resources.gold < b.gold) return { ok: false, err: 'gold' };
         state.shop = state.shop ?? shopFirst();
-        state.shop.books.push(i);
+        state.shop.blueprints.push(i);
         state.resources.gold -= b.gold;
-        addBook(state, b.id);
+        addBlueprint(state, b.id);
         return { ok: true, id: b.id, gold: b.gold };
     }
 
@@ -3239,6 +3233,8 @@ export function createGameSystem(deps) {
             p.party = p.party.filter(u => u !== uid);
             normalizeFormation(p);
         }
+        // 연구소 줄 등록도 지운다 (2026-10-21) — 지운 uid 가 남으면 줄의 등록 영웅에 유령이 선다
+        if (labRegOf(state, uid)) labUnregister(state, uid);
         state.heroes = state.heroes.filter(x => x.uid !== uid);
         return { ok: true };
     }
@@ -3372,6 +3368,30 @@ export function createGameSystem(deps) {
             visitPause(state, now);
         }
         return { ok: true, lv: info.lv + 1 };
+    }
+
+    /* ── 연구소 줄 등록 [신설 2026-10-21 사용자 「연구소 내에서 뭐하는지가 나와야해」 · GAME_DESIGN §9 10-21 · INTERFACE §2-7] ──
+       영웅을 줄(채광 · 채집 · 벌목 · 찾아온 영웅)에 **등록**한다 — `labReg = {uid: 줄}` · 한 영웅은 한 줄.
+       **효과가 없다**(표시만 — 생산 · 찾아온 영웅 굴림이 안 읽는다 · 효과는 GAME_DESIGN §10) · **편성 · 원정 · 탐험 · 전직과 겸직**이라 `heroBusy` 와 서로 안 본다.
+       ~~영웅 배치(자리 · 담당 능력치 효율)~~(2026-10-18 걷음)과 다르다 — 붙잡지도 키우지도 않는다 */
+    const LAB_LINES = [...Object.keys(DISPATCH_TABLES), VISIT_KEY];
+    /** 그 줄이 열렸나 — 단계 줄은 열린 단계가 하나라도(연구소 랭크) · 찾아온 영웅 줄은 줄 레벨 1 부터 */
+    const labLineOpen = (state, line) => line === VISIT_KEY ? visitLevelOf(state) > 0 : limitsOf(state).resourceTiers > 0;
+    const labRegOf = (state, uid) => state.labReg?.[uid] ?? null;
+    const labRegList = (state, line) => state.heroes.filter(h => labRegOf(state, h.uid) === line).map(h => h.uid);
+    /** 등록 — in-place · 다른 줄에 있으면 옮긴다(거절이 아니라 이동) · 같은 줄이면 그대로. 거절: `missing`(없는 영웅 · 모르는 줄) · `locked`(안 열린 줄) */
+    function labRegister(state, uid, line) {
+        if (!heroById(state, uid) || !LAB_LINES.includes(line)) return { ok: false, err: 'missing' };
+        if (!labLineOpen(state, line)) return { ok: false, err: 'locked' };
+        state.labReg = { ...(state.labReg ?? {}), [uid]: line };
+        return { ok: true };
+    }
+    /** 등록을 푼다 — in-place · 등록 안 한 영웅이면 `missing` */
+    function labUnregister(state, uid) {
+        if (!labRegOf(state, uid)) return { ok: false, err: 'missing' };
+        const { [uid]: _, ...rest } = state.labReg;
+        state.labReg = rest;
+        return { ok: true };
     }
 
     /* ── 찾아온 영웅 칸 — 시간으로 온 영웅 · 탐험 마차에서 이긴 적 영웅이 나눠 쓴다 [신설 2026-10-09 가입 희망 · 2026-10-19 찾아온 영웅 · base_expedition §2-4 · INTERFACE §2-7] ──
@@ -3975,7 +3995,7 @@ export function createGameSystem(deps) {
         newGame, serialize, deserialize, canLoad, addExpTime,
         heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexSteps, codexOptionOf, codexLadder, codexOptions, codexExpOf,
-        skillCodexLevel, skillCodexNext, skillCapOf, skillCapMax,   // 스킬 도감 (2026-10-16 · R266)
+        skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
         equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
@@ -3984,12 +4004,12 @@ export function createGameSystem(deps) {
         difficultyState, selectDifficulty, stageLevel, stageCleared,
         runLock, runTactics, runTacticsIf, runBuffs,
         tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
-        shopVisit, shopState, shopBuy, shopPotionBuy, shopBookBuy, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
+        shopVisit, shopState, shopBuy, shopPotionBuy, shopBlueprintBuy, shopBlueprintPool, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         visitSettle, visitState, visitLevelInfo, visitLevelUp,
         joinState, joinAdd, joinHire, joinDrop,
         exploreState, exploreErr, exploreSend, exploreTake, exploreDrop,
-        dispatchSettle, dispatchProgress, labLevelInfo, labLevelUp, materialsState,
+        dispatchSettle, dispatchProgress, labLevelInfo, labLevelUp, labRegOf, labRegList, labRegister, labUnregister, materialsState,
         mgRound, mgJudge, mgClaim,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp,
         bookState, learnBook, craftBook, sortBooks,
