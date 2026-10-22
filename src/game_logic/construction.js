@@ -14,7 +14,7 @@
  *   `live: false` = **준비 중** — 그 기능이 아직 없다. 표에 적어 두면 화면에 「준비 중」으로 보이고, 기능이 생기면 여기만 `true` 로 바꾼다.
  *   `build: true` = 준비 중이어도 **그 줄이 랭크를 지을 수 있게 한다** — 뒤 랭크로 가는 길을 막지 않는다(효과는 기능이 생길 때 먹는다)
  *   더하기는 **기본값에 더한다** — 이름이 `state.limitsOf` 의 키와 같은 대상은 그 상한에 붙는다(단계 셋 `make_level` · `potion_tier` · `tactic_slots` 는
- *   `makeLevels` · `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY` · 장 수 `chapters` 도 기본값이 0 이다).
+ *   `makeLevels` · `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY`).
  *   **첫 단계는 켜기가 심는다**(`seed` = 켜기 대상 id) — 그 켜기가 처음 나오는 랭크에서 이 더하기가 **1 씩 함께 선다**(표에 +1 줄을 따로 적지 않는다 ·
  *   제작 Lv1 은 제작(`make`) · 물약 1단계는 물약 제작(`potion`)과 함께 열린다 — 2026-09-24 사용자 지시 · INTERFACE §2-14). `opened` · `reach` 가 센다
  *   연구의 상한은 `research:<연구 id>` 로 더한다(이 표에 없다 — 연구 표가 id 를 든다)
@@ -24,7 +24,7 @@ const A = (live, seed = null) => ({ kind: 'add', live, seed });
 export const TARGETS = {
     // 켜기 — 지금 있는 기능 (분해 · 알아서 분해는 건물 밖이라 여기 없다 — 처음부터 열려 있다 · 2026-09-23 사용자 지시 · R140)
     //   ~~`repeat` · `stage_level`~~ 도 건물 밖이다 — 반복 원정은 처음부터 열린다 (2026-09-24 사용자 지시 · R152) · 던전 레벨 조절(위험도)은 2026-09-29 폐지됐다
-    //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열리고 원정 r1 은 장만 연다 (2026-09-25 사용자 지시 · R161)
+    //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열린다 (2026-09-25 사용자 지시 · R161 · 원정 건물은 2026-10-22 에 걷혔다 · R319)
     upgrade_item: U(true), make: U(true),
     potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 제련소 r2)
     //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
@@ -47,7 +47,7 @@ export const TARGETS = {
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정이고 건물이 안 늘린다 [2026-09-24 사용자 지시] · ~~`searchSlots`~~ 2026-10-19 수색 삭제
     shopPerSlot: A(true), shopWeapon: A(true),
     make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
-    chapters: A(true),   // 들어갈 수 있는 장 — 원정 랭크마다 +1 · 기본값 0 (`state.limitsOf` · `stageUnlocked` · 2026-09-24 · R152)
+    // ~~`chapters`~~ — 장은 건물이 안 연다(앞 장 보스가 연다 · `state.chapterGate` · 2026-10-22 원정 건물 삭제 · R319)
     commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)
     // 연구소(옛 자원) 단계 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼(`state.limitsOf` 의 `resourceTiers`) · 열린 단계는 표 수량대로 생산한다
     //   ~~`dispatch` 켜기 · `workers` 더하기~~ (2026-09-27 · ADR-0372) · ~~배치(`dispatchAssign`)~~ 는 2026-10-18 영웅 배치 삭제로 걷었다 — 산출은 `dispatchSettle`(base_expedition §3-3)

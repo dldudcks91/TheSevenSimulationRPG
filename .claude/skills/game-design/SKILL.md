@@ -65,14 +65,14 @@ user-invocable: true
 
 ### 3. 작성 · 개정 (요청받았을 때만)
 
-형식은 전부 [doc_conventions.md](doc_conventions.md) — 머리말 · 절 제목 태그 · 취소선 대체 표기 · `⚠제안` · 키 참조 문법 · 꼬리 날짜 · §9/§10 기재 규칙.
+형식은 전부 [doc_conventions.md](doc_conventions.md) — 머리말 · 절 제목 태그 · 바뀐 결정 표기(본문은 지금 규칙만 · 「거른 안」) · `⚠제안` · 키 참조 문법 · 꼬리 날짜 · §9/§10 기재 규칙.
 
 ### 4. 전파한다 — 결정 하나가 건드리는 곳을 한 번에 훑는다
 
 | 곳 | 확인할 것 |
 |---|---|
 | 해당 세부 문서 | 본문 · 절 제목 태그 · 꼬리 날짜 |
-| [GAME_DESIGN.md](docs/game_design/GAME_DESIGN.md) §9 · §10 | 확정은 §9 에 한 줄(30 행을 넘으면 오래된 날짜째 DECISION_LOG §1 로) · 대체된 옛 결정은 취소선 · 확정된 과제는 §10 에서 삭제 |
+| [GAME_DESIGN.md](docs/game_design/GAME_DESIGN.md) §9 · §10 | 확정은 §9 에 한 줄(30 행을 넘으면 오래된 날짜째 DECISION_LOG §1 로) · 본문은 새 규칙으로 덮어쓰고 옛 결정은 §9 의 `〔옛: …〕` 한 줄만(취소선 없음 — doc_conventions.md §4) · 확정된 과제는 그 세부 문서 「남은 것」 행과 §10 색인 줄을 함께 삭제(doc_conventions.md §8) |
 | 다른 세부 문서의 교차 참조 | 이 결정을 가리키던 줄이 낡지 않았나 (양방향 링크) |
 | [CLAUDE.md](CLAUDE.md) | 개요 문구 · 「설계의 큰 틀」 포인터 단락 (**컨셉 락은 09-03 해체** — 큰 틀 본문은 GAME_DESIGN §1·§3) |
 | [DEV_PLAN.md](docs/client/DEV_PLAN.md) §3-3 | 코드 영향이 있으면 R 행 **한 줄** 추가 · §3-2 에서 지울 항목이 생겼나 |
@@ -108,7 +108,8 @@ user-invocable: true
 - **기획이 비어 코드가 못 가는 항목은 이미 목록이 있다** — [DEV_PLAN.md](docs/client/DEV_PLAN.md) §3-2. 새로 세지 말고 그 표를 본다.
 - **포크한 테이블이라고 데이터가 다 차 있는 게 아니다** — 빈 구멍은 [inherited_data_gaps.md](docs/reference/inherited_data_gaps.md).
 - **참고작 문서의 수치는 참고작의 것** — 참고작 조사 문서(lootun · dragoncliff · socket_layer · rune_concept) 머리말의 ⚠ 경고대로 본작 CSV 로 옮기지 않는다. 조사자 제안도 제안이지 결정이 아니다.
-- **미확정을 §9 에 적지 않는다** — 확정 전이면 §10, 확정되면 §10 에서 지우고 §9 에 한 줄.
+- **미확정을 §9 에 적지 않는다** — 확정 전이면 세부 문서 「남은 것」 + §10 색인 한 줄, 확정되면 둘 다 지우고 §9 에 한 줄(doc_conventions.md §8).
+- **§10 은 색인이다** [2026-10-22] — 「큰 틀」 말고는 상세가 없다. 미정 과제의 상세는 색인 줄의 링크를 따라 그 세부 문서 끝 「남은 것 — 미확정 과제」 절에서 읽는다.
 - **GAME_DESIGN 에 근거를 길게 쓰지 않는다** — 방향성 문서다. 길어지면 세부 문서로 내린다.
 
 ## 보조 파일

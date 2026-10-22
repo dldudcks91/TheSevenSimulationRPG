@@ -1,6 +1,6 @@
 # 파티 전술 옵션의 축 — 교차 참고작 조사
 
-> 목적: [tactic_card_design.md §5-7](../game_design/tactic_card_design.md) 의 **임시 옵션 풀**을 나중에 「더 창의적인 전술」로 교체할 때 쓸 **후보 창고**. 지금 풀은 22 가족 전부가 「센다 → 파티 전원에게 스탯 한 줄」 하나의 문법이라, 다른 문법을 어디서 빌려올 수 있는지를 게임별로 모았다.
+> 목적: 옛 [tactic_card_design.md](../game_design/tactic_card_design.md) §5-7(09-22 §5-8 로 교체 · 원문 DECISION_LOG §5) 의 **임시 옵션 풀**을 나중에 「더 창의적인 전술」로 교체할 때 쓸 **후보 창고**. 지금 풀은 22 가족 전부가 「센다 → 파티 전원에게 스탯 한 줄」 하나의 문법이라, 다른 문법을 어디서 빌려올 수 있는지를 게임별로 모았다.
 > 조사 방식: `docs/reference/` 기존 전수 조사분(Idle Champions · AFK Arena · Dungeon Village 2) 재독 + 그 밖의 게임은 세션 내 대조(2026-09-01). 폴더에 전수 조사가 없는 게임은 **[미조사]** — 채택 전에 별도 조사가 필요하다.
 > ⚠ **이 문서는 조사와 후보이지 결정이 아니다.** 여기 실린 어떤 항목도 확정이 아니며, 확정은 [GAME_DESIGN.md §9](../game_design/GAME_DESIGN.md) 한 줄 + [tactic_card_design.md](../game_design/tactic_card_design.md) 가 갖는다. 옵션 이름은 전부 **가칭**이다.
 > ⚠ 인용된 타 게임의 메커니즘은 **그 게임의 것**이다. 수치는 옮기지 않았고, 본 문서에도 절대 수치를 적지 않는다.

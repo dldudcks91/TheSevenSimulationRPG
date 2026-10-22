@@ -1,5 +1,5 @@
 level,exp_total,reward,value,description_kr
-1,100,xp,0.1,도감 레벨 1 — 그 몬스터에게서 누적 도감 경험치를 얼마 모으면 이 레벨인가(누적 문턱 · 처치 하나 = difficulty_tier.csv:codex_exp) · reward xp = 그 몬스터 처치 경험치 × (1 + value) ⚠제안 [2026-10-18 사다리 · 사용자 「단계별로 다른 옵션」 · monster_design §8 · R286 — ~~bonus_pct 스테이지 계열 보정~~] (2026-09-21 카드 → 처치 수 · 2026-10-10 처치 수 → 도감 경험치)
-2,1000,vs_dmg,0.1,도감 레벨 2 — reward vs_dmg = 그 몬스터를 때릴 때 데미지 % 괄호에 + value(조건부 덧셈 · battle_design §9-1) ⚠제안
-3,10000,drop,0.1,도감 레벨 3 — reward drop = 그 몬스터의 장비 · 재료 드롭 판정 확률 × (1 + value) ⚠제안
+1,100,farm,-,도감 레벨 1 — 그 몬스터에게서 누적 도감 경험치를 얼마 모으면 이 레벨인가(누적 문턱 · 처치 하나 = difficulty_tier.csv:codex_exp) · reward farm = 그 몬스터의 파밍 한 줄(codex_option.csv:farm · 직업이 고른다)이 **그 종족 전체**를 잡을 때 붙는다 · value 는 몬스터마다라 여기는 비운다 [2026-10-22 사용자 「Lv3효과는 없는걸로해서」 · 「직업별로 고정」 · monster_design §8 · R314 — ~~xp 그 몬스터 처치 경험치~~ R286] (2026-09-21 카드 → 처치 수 · 2026-10-10 처치 수 → 도감 경험치)
+2,1000,fight,-,도감 레벨 2 — reward fight = 그 몬스터의 전투 한 줄(codex_option.csv:fight · 직업마다 공격 · 방어 · 지원 셋 중 하나)이 **그 종족 상대로** 파티 전원에게 붙는다 [2026-10-22 · R314 — ~~vs_dmg 그 몬스터 상대 피해~~]
+3,10000,none,-,도감 레벨 3 — reward none = 효과 없음 [2026-10-22 사용자 「Lv3효과는 없는걸로해서」 · R314 — ~~drop 그 몬스터 드롭 확률~~ · 거점 업그레이드 초안은 codex_ladder_draft §5]
 4,100000,option,-,도감 레벨 4 (최종) — reward option = 그 몬스터의 전투 옵션 한 줄(codex_option.csv) · 파티 전원 · 늘 · value 는 몬스터마다라 여기는 비운다

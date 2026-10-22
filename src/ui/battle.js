@@ -90,6 +90,17 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
    창은 행동을 넘지 않는다 — 시뮬이 행동 예약을 끝 시각 뒤로 밀기 때문이다(INTERFACE §2-6 「경직」). 계산이 아니라 이벤트 시각을 빼는 표시값이다 */
 /** 마지막 행동 이후 경직으로 선 시간 — 행동 게이지가 그만큼 덜 찬다 */
 const stalledFor = (u, now) => (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, u.lastAct)), 0);
+/**
+ * 정신 집중의 게이지 [2026-10-22 · R318 · ADR-0720] — 차지 않고 **거꾸로 닳는다**: 방(`skill` 의 `chan` · `chan`)마다 남은 방 ÷ (방 수 − 1) 로 맞추고
+ *   다음 방까지 방 사이 간격으로 닳린다(끊어 치기 = 주기 · 계속 닳기 = 시뮬이 실은 `iv` · 경직으로 선 시간은 뺀다 · 다음 방이 늦으면 그 칸에서 선다) · 마지막 방에 0.
+ *   계산이 아니라 이벤트 시각을 그리는 표시값이다
+ */
+const chanFill = (u, now) => {
+    const c = u.chan;
+    if (!(c.n > 1)) return 0;
+    const stall = (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, c.at)), 0);
+    return clamp01((c.left - Math.min(1, Math.max(0, now - c.at - stall) / (c.iv ?? u.period))) / (c.n - 1));
+};
 /** 지금 경직 중인가 — 창 뱃지 줄의 칩이 이것을 본다 */
 const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity) > now;
 /** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다).
@@ -225,8 +236,13 @@ export function mountBattle(container, opts) {
         layout: opts.layout === 'split' ? 'split' : 'wide',
         // 물약 칸 — **파티가 같이 쓰고 칸 하나에 물약 하나**. 결과가 칸 수와 찬 칸을 싣고(`result.potion`) `potion` 이벤트가 마신 칸 번호(`i`)를 준다 (R104 · ADR-0148).
         //   물약 없이 도는 런도 칸은 전부 빈 채 선다 — 값은 항상 찍는다 (SCREEN_DESIGN §4-1)
-        //   칸의 `null` = 빈 채 나간 칸(재고가 모자랐거나 비워 둔 칸 · R124)
-        potion: { max: result.potion?.max ?? 0, slots: (result.potion?.slots ?? []).map(s => (s ? { id: s.id, heal: s.heal, full: true } : null)) },
+        //   칸의 `null` = 그 라운드를 물약 없이 시작한 칸(재고가 모자랐거나 비워 둔 칸 · R124 — 빨간 반투명 · ADR-0716) · 둘째 라운드부터 `round` 의 `pots` 가 갈아 끼운다(R315).
+        //   `cap` = 다 지은 칸 수 — `max` 뒤는 잠긴 칸(자물쇠 · 한 줄 = 앱이 넘긴 `potionLocks`) · 물약이 없는 런(칸 0)은 잠긴 칸도 안 선다
+        potion: {
+            max: result.potion?.max ?? 0, lock: opts.potionLocks ?? null,
+            cap: (result.potion?.max ?? 0) > 0 ? Math.max(result.potion.max, opts.potionLocks?.cap ?? 0) : 0,
+            slots: (result.potion?.slots ?? []).map(s => (s ? { id: s.id, heal: s.heal, full: true } : null)),
+        },
     };
 
     // 파티 유닛 — 결과의 party 정보 + 로스터의 표시 정보(이름·죄종·직업)
@@ -445,16 +461,19 @@ function paintPane(state, root) {
  * 물약 칸 한 줄 (R104 · ADR-0148) — 아레나 왼쪽 아래 구석. 찬 칸 = 그 물약 그림(`mock.potionArt`) · 빈 칸 = 점선.
  * **그림이 없는 칸은 병 실루엣이 깔린다** [2026-09-17 사용자 지시] — 칸 넷이 같은 한 장(`mock.POTION_SLOT_ART`)이고
  *   티어를 안 가린다(「여기에 물약이 들어간다」는 칸의 말이다). 찬 칸은 진하게 · 빈 칸은 옅게 — 진하기는 CSS 가 든다.
- * 재생기는 세지 않는다 — 어느 칸이 비었나는 이벤트의 `i` 가 준다
+ * 재생기는 세지 않는다 — 어느 칸이 비었나는 이벤트의 `i` 가 준다.
+ * **라운드를 물약 없이 시작한 칸**(칸이 `null`)은 빨간 반투명(`.none`) · 마셔서 빈 칸(`full` 이 꺼진 칸)은 빈 칸 그대로 ·
+ *   열린 칸(`max`) 뒤 다 지은 칸 수(`cap`)까지는 **잠긴 칸** — 앱이 넘긴 자물쇠 그림 (2026-10-22 · R315 · ADR-0716)
  */
 function potionBeltHtml(p) {
-    return Array.from({ length: p.max }, (_, i) => {
+    return Array.from({ length: p.cap }, (_, i) => {
+        if (i >= p.max) return `<span class="p-slot locked" data-i="${i}">${p.lock?.icon ?? ''}</span>`;
         const s = p.slots[i];
         const info = s?.full ? potionInfo(s.id) : null;
         const src = info ? M.potionArt(s.id) : null;
         const img = src ? `<img src="${src}" alt="" onerror="this.remove()">`
             : `<img class="p-bg" src="${M.POTION_SLOT_ART}" alt="" onerror="this.remove()">`;
-        return `<span class="p-slot${info ? ' full' : ''}" data-i="${i}">${img}</span>`;
+        return `<span class="p-slot${info ? ' full' : ''}${s ? '' : ' none'}" data-i="${i}">${img}</span>`;
     }).join('');
 }
 /**
@@ -463,7 +482,15 @@ function potionBeltHtml(p) {
  */
 function bindPotionTips(state, root) {
     for (const n of root.querySelectorAll('.b-belt .p-slot')) {
-        const s = state.potion.slots[Number(n.dataset.i)];
+        const i = Number(n.dataset.i);
+        // 잠긴 칸 — 그 칸을 여는 건물 랭크 한 줄(앱이 넘긴 `potionLocks.text` · 편성 탭과 같은 `tip-mini` · ADR-0716)
+        if (i >= state.potion.max) {
+            const txt = state.potion.lock?.text(i) ?? '';
+            bindTipNode(n, () => { const c = document.createElement('div'); c.className = 'tip-card tip-mini'; c.innerHTML = `<div class="tip-name">${txt}</div>`; return c; });
+            n.setAttribute('aria-label', txt);
+            continue;
+        }
+        const s = state.potion.slots[i];
         bindTipNode(n, () => potionTipCard(s?.full ? s.id : null, { heal: s?.heal }));
     }
 }
@@ -578,7 +605,7 @@ const cardV2 = () => CARD_V2;
    **세움은 시계의 일이다** [2026-10-17 사용자 지시 · ADR-0654] — 언제 · 얼마나 서나는 `pace.js` 의 걸음이 정하고 재생기는 그 박자를 그린다.
    앱 시계(안 보는 부대 · 숨긴 탭)도 같은 걸음을 쓰므로 세운 만큼 원정이 늦게 가는 것은 **보든 안 보든 같다** */
 export const FOCUS_MODES = ['off', 'stop', 'dim'];
-const FOCUS_DEFAULT = 'dim';
+const FOCUS_DEFAULT = 'off';   // 2026-10-22 ADR-0713 (~~dim~~ ADR-0621)
 export const focusMode = () => { const v = document.documentElement.dataset.focus; return FOCUS_MODES.includes(v) ? v : FOCUS_DEFAULT; };
 /** 지금 설정의 세움 길이 — 포커스 · 공격 시 흔들림 · 배속 배수(`SPEED_K`). 재생기와 앱 시계가 같이 읽는다 (`pace.js:paceCfg`) ·
  *  라운드 사이 숨(ADR-0500)은 포커스와 상관없이 선다 */
@@ -639,6 +666,8 @@ function syncOffRise(state, root, opts) {
             const key = actorOf(tl[j]);
             if (key != null && !want.has(key)) want.set(key, tl[j].t);
         }
+        // 정신 집중이 열린 카드는 끝날 때까지 나간 채 선다 (R318 · ADR-0720) — 방 사이(주기)가 내다보기보다 길어도 안 내려온다
+        for (const [key, u] of state.units) if (u.chan && u.hp > 0 && !want.has(key)) want.set(key, null);
     }
     const k = SPEED_K[state.speed] ?? 1;
     for (const [key, u] of state.units) {
@@ -883,6 +912,9 @@ function refreshUnit(state, u) {
     const hpText = u.node.querySelector('.hp-text'), hpNow = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
     if (hpText.textContent !== hpNow) hpText.textContent = hpNow;
     u.node.classList.toggle('dead', u.hp <= 0);
+    // 정신 집중 (R318 · ADR-0720) — 쓰러지면 걷힌다 · 열린 동안 카드가 떨린다(나감 · 떨림은 「공격 시 흔들림」을 따른다)
+    if (u.hp <= 0) u.chan = null;
+    u.node.classList.toggle('chan', !!u.chan && lungeFxOn());
     // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다 (SCREEN_DESIGN §4-2 재개정 2026-09-04).
     // 행동한 틱(u.acted — apply 의 skill/hit/dodge 가 세우고 start 의 틱 루프가 눕힌다)은 **100% 를 그린다** —
     // 이벤트가 lastAct 를 곧장 리셋하면 「꽉 참」 프레임이 화면에 한 번도 안 나온다(옛 85% 발광이 때우던 구멍).
@@ -890,22 +922,23 @@ function refreshUnit(state, u) {
     // **경직된 동안은 선다** (R110 · ADR-0154) — 경직으로 선 시간을 경과에서 뺀다. 시뮬이 행동 예약을 그만큼 밀었으므로 다시 차오른 끝에 행동한다
     // **마법 무기는 칸으로 갈린다** (R200 · ADR-0483) — 찬 칸 = 가득 · 지금 차는 칸 = 마지막 칸 시작 이후 경과 ÷ 주기(경직 · 스턴으로 선 시간을 뺀다) · 나머지 빈 칸.
     //   다 찼으면 게이지가 선다. 칸이 비는 것(시전)은 스냅 — 칸마다 앞 값보다 줄면 전환을 끈다
+    // **정신 집중 동안은 거꾸로 닳는다** (R318 · ADR-0720) — 물리 = 한 줄 · 마법 = 쓴 칸 하나(남은 칸 바로 뒤)만 · 닳는 것은 전환을 둔다(눈금 사이를 잇는다)
     const segs = u.node.querySelectorAll('.act-seg > .act-fill');
     if (segs.length) {
         const n = u.hp <= 0 ? 0 : u.charges ?? 0;
-        const part = n >= segs.length ? 0 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
+        const part = u.chan ? chanFill(u, state.t) : n >= segs.length ? 0 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
         u.segFill ??= [];
         segs.forEach((el, i) => {
             const fill = u.hp <= 0 ? 0 : i < n ? 1 : i === n ? part : 0;
-            el.style.transition = fill < (u.segFill[i] ?? 0) ? 'none' : '';
+            el.style.transition = fill < (u.segFill[i] ?? 0) && !(u.chan && i === n) ? 'none' : '';
             el.style.transform = `scaleX(${fill})`;
             u.segFill[i] = fill;
         });
     } else {
         const act = u.node.querySelector('.act-fill');
         if (act) {
-            const fill = u.hp <= 0 ? 0 : u.acted ? 1 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
-            act.style.transition = fill < u.actFill ? 'none' : '';
+            const fill = u.hp <= 0 ? 0 : u.chan ? chanFill(u, state.t) : u.acted ? 1 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
+            act.style.transition = fill < u.actFill && !u.chan ? 'none' : '';
             act.style.transform = `scaleX(${fill})`;
             u.actFill = fill;
         }
@@ -1062,8 +1095,11 @@ function castSkill(state, u, ev) {
     if (i < 0) i = u.skills?.findIndex(at) ?? -1;
     if (i < 0) return;
     const s = u.skills[i];
-    s.firedAt = ev.t;
-    s.readyAt = ev.ready ?? ev.t;   // 준비 시각은 시뮬이 실어 보낸다 (INTERFACE §2-6)
+    // 정신 집중의 방(`chan`)은 칸만 튄다 — 쿨은 여는 `skill` 이 덮고(쓰는 동안 Infinity) `chanEnd` 가 연다 (R318 · ADR-0720)
+    if (ev.e === 'skill') {
+        s.firedAt = ev.t;
+        s.readyAt = ev.chan ? Infinity : (ev.ready ?? ev.t);   // 준비 시각은 시뮬이 실어 보낸다 (INTERFACE §2-6)
+    }
     if (!state.catchUp && u.node) {   // 되감기 중에는 연출을 태우지 않는다
         const slot = u.node.querySelectorAll('.cd-slot')[cdSlots(u).indexOf(s)];   // 화면의 칸 자리 — 전직 스킬은 맨 오른쪽 (ADR-0572)
         if (slot) {
@@ -1183,22 +1219,16 @@ const LVUP_MS = 1600;
  * 레벨업 [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0435] — 재생기는 레벨을 계산하지 않는다. **카드가 마지막으로 그린 레벨(`shownLv`)과
  * 영웅 객체의 지금 레벨을 대조**한다 — 앱이 재생 시각까지만 계산하므로 영웅 레벨은 재생이 그 라운드 끝에 닿는 순간 바뀐다(ADR-0106).
  * 부르는 자리는 경계의 `refit`(레벨이 오른 영웅은 체력이 가득 차 갈아입는다 · R182)과 `end`(마지막 라운드의 레벨업 — `refit` 이 없다).
- * 오른 영웅마다 로그 한 줄 + 카드의 「레벨 업」 글자 · 영웅 레벨이 적보다 낮았으면 글자 아래 적중 변화(명중률 포함 · 가장 높은 적 기준)
+ * 오른 영웅마다 로그 한 줄 + 카드의 「레벨 업」 글자 — 글자 아래 적중 변화 줄은 두지 않는다 (2026-10-22 · ADR-0718)
  */
 function levelCheck(state, root) {
     for (const u of state.party) {
         const lv = u.hero?.level;
         if (!(lv > u.shownLv)) continue;
-        const from = u.shownLv;
         u.shownLv = lv;
         logLine(state, root, 'party', ['lvup', lv], L(u.name), '', '', '', t('log.v.lvup', { n: lv }));
         if (state.catchUp) continue;
-        const foe = Math.max(0, ...state.enemies.map(e => e.sheet?.level ?? 0));
-        const bonus = state.combatOf?.(u.hero)?.option_fx?.hitBonus ?? 0;
-        const a = SYS.formula.hitChance(from, foe, bonus), b = SYS.formula.hitChance(lv, foe, bonus);
-        // 마법 무기는 적중을 굴리지 않아(항상 맞는다 · 2026-10-06 R219) 적중 변화가 없다
-        const sub = !u.noBasic && foe > 0 && b > a ? t('pop.lvupHit', { a: M.pctNum(a), b: M.pctNum(b) }) : null;
-        u.lvPop = { until: performance.now() + LVUP_MS, sub };
+        u.lvPop = { until: performance.now() + LVUP_MS };
         popLevel(state, u);
     }
 }
@@ -1212,7 +1242,6 @@ function popLevel(state, u) {
     p.className = 'pop lvup';
     p.style.animationDelay = `${left - LVUP_MS}ms`;
     p.appendChild(document.createTextNode(t('pop.lvup')));
-    if (lp.sub) { const s = document.createElement('small'); s.textContent = lp.sub; p.appendChild(s); }
     u.node.querySelector('.pop-layer').appendChild(p);
     state.timeouts.push(setTimeout(() => p.remove(), left));
 }
@@ -1468,8 +1497,11 @@ function apply(state, root, opts, ev) {
             for (const e of state.enemies) state.units.set(e.key, e);
             // 전투 시작 시 행동 게이지(R303) — 원정의 라운드가 바뀌면 파티 게이지가 그 초만큼 앞당겨진다. 시뮬이 실어 온 값을 그대로 민다(계산하지 않는다)
             for (const [k, s] of Object.entries(ev.pg ?? {})) { const u = state.units.get(k); if (u) u.lastAct -= s; }
+            // 물약 칸 다시 채우기 — 시뮬이 실어 온 칸(`pots`)으로 갈아 끼운다 · 빈 칸(`null`)은 이 라운드를 물약 없이 시작한 칸이다 (R315 · ADR-0716)
+            if (ev.pots) state.potion.slots = ev.pots.map(s => (s ? { id: s.id, heal: s.heal, full: true } : null));
             renderUnits(state, root);
             paintRound(state, root);
+            if (ev.pots) paintPotion(state, root);
             // 라운드 줄 — 목록에는 경계로 쌓고(지난 라운드를 거슬러 읽을 때), 머리 줄 아래 고정 칸에는 「지금」으로 건다 (ADR-0204)
             //   종류는 글 왼쪽의 칩이다(라운드 트랙과 같은 색) · 첫 라운드는 목록에 안 쌓는다 — 빈 목록 맨 위에서 고정 줄과 같은 글이 두 번 섰다.
             //   목록 줄은 2라운드부터 경계로 선다 (ADR-0205)
@@ -1507,6 +1539,24 @@ function apply(state, root, opts, ev) {
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
             const u = U(ev.u);
             if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); u.skillT = ev.t; }   // 시각을 적어 둔다 — 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564)
+            // 정신 집중을 열었다 — 이 차례가 첫 방 (R318 · ADR-0720) · `iv` = 계속 닳기의 방 사이 간격(없으면 끊어 치기 — 주기)
+            if (u && ev.chan) u.chan = { s: ev.s, n: ev.chan, left: ev.chan - 1, at: ev.t, iv: ev.iv ?? null };
+            break;
+        }
+        case 'chan': {    // 정신 집중의 한 방 (R318 · ADR-0720) — 남은 방으로 게이지를 다시 맞추고 칸이 한 번 튄다(계속 닳기는 1초마다라 칸은 안 튄다) · 타격은 뒤따르는 hit 가 그린다 · 로그 줄은 없다
+            const u = U(ev.u);
+            if (u?.chan) { markActed(u, ev.t); Object.assign(u.chan, { left: ev.left, at: ev.t }); if (!u.chan.iv) castSkill(state, u, ev); }
+            break;
+        }
+        case 'chanEnd': { // 정신 집중이 끝났다 — 그 칸의 쿨은 이 시각부터(`ready`) · 마법 무기는 다음 칸이 이 시각부터 찬다 (R318 · ADR-0720)
+            const u = U(ev.u);
+            if (u) {
+                u.chan = null;
+                const s = u.skills?.find(x => x.id === ev.s && x.readyAt === Infinity);
+                if (s) { s.firedAt = ev.t; s.readyAt = ev.ready; }
+                chargeTo(u, ev.ch, ev.t, true);
+                refreshUnit(state, u);
+            }
             break;
         }
         case 'charge': {  // 마법 무기의 칸이 하나 찼다 (R200) — 다음 칸이 이 시각부터 찬다 · 로그 · 팝업은 없다 (ADR-0483)

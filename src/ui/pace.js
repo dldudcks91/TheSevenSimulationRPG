@@ -24,8 +24,8 @@ export const ROUND_GAP_MS = 500;   // 라운드 사이 숨 — 마지막 몬스�
 const LOOK_SEC = 1;
 const EPS = 1e-9;
 
-/** 행동의 주인 — 시전 · 타격 · 빗나감 · 반격 · 불러내기. 나머지 사건(쓰러짐 · 창 · 재생 · 중독 틱 …)은 주인이 없다 — 같은 순간의 앞 행동에 딸린다 */
-export const actorOf = ev => (ev.e === 'skill' || ev.e === 'counter' || ev.e === 'call') ? ev.u : (ev.e === 'hit' || ev.e === 'dodge') ? ev.a : null;
+/** 행동의 주인 — 시전 · 정신 집중의 한 방(`chan` · R318) · 타격 · 빗나감 · 반격 · 불러내기. 나머지 사건(쓰러짐 · 창 · 재생 · 중독 틱 …)은 주인이 없다 — 같은 순간의 앞 행동에 딸린다 */
+export const actorOf = ev => (ev.e === 'skill' || ev.e === 'chan' || ev.e === 'counter' || ev.e === 'call') ? ev.u : (ev.e === 'hit' || ev.e === 'dodge') ? ev.a : null;
 
 /** 행동 하나의 끝 — `j` 번째 사건(주인이 있다)부터 같은 순간 · 같은 주인(또는 주인 없음)인 사건까지. `round` 는 행동에 안 딸린다(숨이 따로 선다) */
 export function groupEnd(tl, j) {

@@ -33,11 +33,13 @@
  *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], tactics: {slots}}], preset: n, items: {uid: item}, bags: [[uid]],
  *     — bags = **부대마다 인벤토리 — v40** [2026-10-06 · SCREEN_DESIGN ADR-0521] · 길이 = presets · 자리 + 1 = 편성 번호(`runs` 와 같은 색인) · 상한은 하나마다 `limitsOf.bag`.
  *       드롭은 나간 부대의 것에 · 해제 · 꺼내기 · 구매 · 제작은 부르는 쪽이 넘긴 번호(`no`)에 들어간다 (옛 `bag` 하나 → v39 까지)
- *     — presets = **편성**(v32 · R122 · 길이 = `limitsOf(state).presets` — 원정 랭크가 연다 · R156) · preset = 고른 편성 번호(1 부터).
+ *     — salvageRules · salvageLogs = **자동 분해 규칙 · 최근 분해 — 부대마다 · v41** [2026-10-22 · R316] · `bags` 와 같은 색인 · salvageSlots = 프리셋 칸(계정 · 사본)
+ *       (옛 계정 규칙 `autoSalvage` 하나 → v40 까지 · INTERFACE §4)
+ *     — presets = **편성**(v32 · R122 · 길이 = `limitsOf(state).presets` — 탐험 r1 · r4 가 연다 · R319) · preset = 고른 편성 번호(1 부터).
  *       party = **편성한 순서 그대로** · `party[0]` 이 리더 · **새 게임은 전부 빈 배열**이다 (2026-09-09).
  *       **한 영웅은 한 편성에만 든다 — v38** [2026-09-23 · 다부대] — 편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다.
  *       `toggleParty` 가 넣을 때 다른 편성에서 빼고(이동), 로드도 같은 규칙으로 걸러 낸다 (옛 규칙 = 여러 편성에 들어도 됨)
- *       potionSlots = 물약 칸 구성(길이 = `potion_slot_max` · null = 빈 칸) — 런을 열 때 재고에서 앞 칸부터 채운다 (R124)
+ *       potionSlots = 물약 칸 구성(길이 = `potion_slot_max` · null = 빈 칸) — 런을 열 때 · 라운드마다 재고에서 앞 칸부터 채운다 (R124 · R315)
  *       tactics = **이 편성의 파티 전술 칸**(v34 · R129) — 아래 옛 `tactics` 와 같은 모양이고 편성마다 한 벌이다
  *     — items[*].proc = **목걸이 발동 스킬** `{trigger, skill, v}` (목걸이만 · v33 · 2026-09-21 · ⚠ 전투는 안 읽는다 — 설명에만).
  *     — ~~items[*].skill = 무기가 담은 액티브 id~~ — **2026-09-29 삭제**(R179 · 스킬북 skill_design §2-1) · 로드가 지운다
@@ -89,18 +91,20 @@
  */
 
 import { makeRng, deriveSeed } from './rng.js';
+// 물리 감쇠 곡선 — 자동 장착의 「버티는 양」이 전투와 같은 식을 읽는다(R313)
+import { createFormula } from './formula.js';
 // ~~능력치 계수(`statCoef`) — 자원 파견의 산출 속도가 담당 능력치를 탄다~~ — 2026-10-18 연구소에서 영웅 배치를 걷어 쓰는 곳이 사라졌다(R283)
 // 건설 어휘 — 창구가 모르는 이름을 거절하는 데만 쓴다(시스템 주입이 아니다 · skill_effects.js 와 같은 취급)
 import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 40;
+export const SAVE_VERSION = 41;
 
 /**
  * @param {object} deps
  *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
- *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), steps:[{reward, value}](같은 표 — 레벨 n 이 여는 단계 · 2026-10-18 R286), options:[{monsterId, stat, value}](codex_option.csv — Lv4 몬스터다운 전투 옵션)}
+ *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), steps:[{reward, value}](같은 표 — 레벨 n 이 여는 단계 · 2026-10-18 R286), options:[{monsterId, stat, value, farm, farmValue, fight, fightValue}](codex_option.csv — Lv4 몬스터다운 전투 옵션 + Lv1 · Lv2 칸 · 2026-10-22 R314), races:{base: {ko, en}}(monster_base.csv — 종족 이름 · R314)}
  *   sins [죄종 id...] — 탐험 이야기의 `sin` 컬럼 검증에만 쓴다 (~~수색 이야기 · 만남 · 답~~ 표는 2026-10-19 수색과 함께 삭제)
  *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · mineNodes / logNodes — 재료 단계 표 [{id, tier, yieldId, …}] (제작 · R96)
  *   potions [{id, kind, tier, ko, en, heal, craftGold, startOwned}] (potion.csv 행 순서) — 물약 단계 표 · startOwned = 시작 개수 (battle_design §7-1 · item_design §7-4 · R103 · R124) · 만들 수 있는 단계는 제련소 랭크가 연다(R137)
@@ -200,10 +204,31 @@ export function createGameSystem(deps) {
     const maxRanks = Object.fromEntries(CN.list.map(b => [b.id, b.maxRank]));
     const openRanks = state => (openAll() ? maxRanks : state?.buildings ?? CN.startRanks());
     /**
+     * 장을 여는 칸 — `{장: 앞 장의 보스 칸}`(`stage.csv:boss_grade` = `chapter_boss`) · 2장부터 `chapter_open_max` 장까지 [2026-10-22 원정 건물 삭제 · R319 · construction_draft §1-3].
+     *   앞 장에 보스 칸이 없으면 만들 때 던진다 — 그 장이 조용히 안 열린다
+     */
+    const CHAPTER_GATE = (() => {
+        const out = {};
+        for (let ch = 2; ch <= B.chapter_open_max; ch++) {
+            const id = (deps.stageOrder ?? []).find(s => deps.stages[s].chapter === ch - 1 && deps.stages[s].boss_grade === 'chapter_boss');
+            if (id == null) throw new Error(`chapter: ${ch - 1}장에 보스 칸(chapter_boss)이 없다 — ${ch}장이 안 열린다 (stage.csv · INTERFACE §2-7)`);
+            out[ch] = id;
+        }
+        return out;
+    })();
+    /** 열린 장 수 — 1장 + **첫 단에서** 깬 장 보스(앞에서부터 이어진 것만 센다 · 건설 문턱 `stage:` 와 같은 기록) · `limitsOf` 가 `chapter_open_max` 로 자른다 */
+    const chaptersOpened = state => {
+        const cleared = state?.progress?.cleared ?? [];
+        let n = 1;
+        while (CHAPTER_GATE[n + 1] != null && cleared.includes(CHAPTER_GATE[n + 1])) n++;
+        return n;
+    };
+    /**
      * 상한 — **이 세이브가 쓸 수 있는 칸 · 인원 · 단계의 수를 여기 한 곳이 답한다** [신설 2026-09-22 · INTERFACE §2-7 · construction_draft §9].
      *   bag 가방 · stash 창고 · roster 로스터 · party 파티 인원 · presets 편성 수 · **expeditions 동시 원정 부대 수**(v38 · 편성 수를 넘지 않는다) · potionSlots 물약 칸 · upgrade 강화 단계 ·
      *   tavernCandidates 고용 후보 · ~~searchSlots 동시 수색~~(2026-10-19 수색 삭제) · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기) · commissionSlots 동시 의뢰(R153)
-     *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 · **chapters 들어갈 수 있는 장**(원정 랭크 · R152) — 이 넷은 기본값이 0 이다(건물만 연다)
+     *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 — 이 셋은 기본값이 0 이다(건물만 연다) ·
+     *   **chapters 들어갈 수 있는 장** — 1장 + 첫 단에서 깬 장 보스(`chaptersOpened` · 건물이 안 연다 · 2026-10-22 원정 건물 삭제 · R319)
      * **값 = balance.csv 기본값 + 지어진 건물 랭크의 더하기** [2단계 2026-09-22 · R137 · construction_draft §11-2] — 기본값은 **건설 전** 값이고
      *   더하기는 `building_effect.csv` 가 든다(이름이 같은 키에 붙는다 · 단계 셋은 `ADD_KEY`). 판정 · 불러오기 · 전투 입력 · 강화 비용 · 화면이 모두 이것을 읽는다.
      * `state` 가 null 이면(새 게임을 만드는 도중) **시작 랭크**(`building.csv:start_rank`)의 상한이다 · 관리자 모드면 모든 건물의 최대 랭크다(`openRanks`)
@@ -217,7 +242,7 @@ export function createGameSystem(deps) {
             shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon,
             makeLevels: 0, potionTier: 0, tacticSlots: 0,
             gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 — 건물이 안 늘린다 · 도박장이 열리면 다 열린다 (2026-09-27 사용자 지시 · 옛 선술집 r5 · r7 더하기)
-            chapters: 0,   // 들어갈 수 있는 장 — 건물만 연다(원정 랭크마다 +1 · r1 은 처음부터 지어져 1장) (2026-09-24 · R152)
+            chapters: chaptersOpened(state),   // 들어갈 수 있는 장 — 앞 장 보스를 깨면 저절로 열린다 · 건물이 안 연다 (2026-10-22 원정 건물 삭제 · R319)
             commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 더하기 대상이지만 지금 표엔 늘리는 랭크가 없다 (R153 · R162)
             resourceTiers: 0,   // ~~열린 자원 단계 수~~ → **연구소 랭크**(랭크마다 +1 이라 랭크와 같다 · 지점이 열리는 문 · 단계는 「종류」 지점이 연다 — 2026-10-21 · R298) · 이름은 옛 뜻 그대로 산다
             exploreSlots: B.explore_slots,   // 동시 탐험 건수 — 탐험 건물의 `explore_slots` 가 더한다 (2026-10-09 · 탐험 최소 루프)
@@ -232,7 +257,7 @@ export function createGameSystem(deps) {
             out.potionTier = Math.max(out.potionTier, ...potionRows.map(p => p.tier));
             out.chapters = Math.max(out.chapters, B.chapter_open_max);
         }
-        // 장은 이번 버전이 여는 마지막 장까지 — 표가 더 열어도 · 관리자 모드여도 그 뒤는 안 열린다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
+        // 장은 이번 버전이 여는 마지막 장까지 — 관리자 모드여도 그 뒤는 안 열린다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
         out.chapters = Math.min(out.chapters, B.chapter_open_max);
         // 부대는 편성 하나에 하나다 — 편성보다 많은 부대를 낼 수 없다 [2026-09-23 · 다부대]
         out.expeditions = Math.min(out.expeditions, out.presets);
@@ -279,8 +304,8 @@ export function createGameSystem(deps) {
             //   물약 칸도 **편성 1 에만** 시작 물약이 한 칸씩 든다 (v32 · R122 · R124)
             presets: newPresets(), preset: 1,     // 전술 칸도 편성마다 든다(`presets[*].tactics` · v34 · R129)
             bonds: {},                            // 같이 깬 칸 수 — 전술 「관계」 조건 (v36 · R134 · 2026-09-29 — 이긴 칸마다 +1)
-            // 알아서 분해의 선 — 둘 다 안 봄 = 꺼짐이 기본값이다 (item_design §6-5 · R125)
-            autoSalvage: { rarity: null, ilvlBelow: 0 },
+            // 자동 분해 — 부대마다 격자 하나 · 새 게임은 전부 보존(= 아무것도 안 녹음 · 옛 「꺼짐」과 같은 뜻) · 프리셋 칸은 비었다 (item_design §6-5 · v41 · R316)
+            salvageRules: newSalvageRules(), salvageSlots: newSalvageSlots(), salvageLogs: newSalvageLogs(),
             // 건설 — **시작 랭크**(`building.csv:start_rank` · 처음부터 지어진 건물) · 연구는 빈 채 (v37 · R137 · construction_draft §4)
             buildings: CN.startRanks(), research: {},
         };
@@ -372,11 +397,32 @@ export function createGameSystem(deps) {
         return s;
     }
 
-    /** **v38 · v39 · v40 을 연다** — 옛 버전은 한 단계씩 올린다(v38 → `upgradeV38` · v39 → `upgradeV39`) · 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
+    /**
+     * v40 → v41 [2026-10-22 · 자동 분해가 부대마다 격자 · R316 · INTERFACE §4] — 옛 계정 규칙 하나를 **편성마다 같은 뜻으로** 옮긴다:
+     *   등급 선 → 그 줄들의 칸 「분해」 · 레벨 선(절대값 n) → `lvGap = n − 그 편성의 가장 낮은 레벨`(0 에서 자르고 −만렙 아래는 −만렙 · 빈 편성은 안 봄).
+     *   유니크 · 크래프트는 새 규칙에서 언제나 보존이라 옛 레벨 선이 녹이던 고장이 옮기며 고쳐진다 · 프리셋 칸 · 기록은 빈 채로 연다(`deserialize` 가 맞춘다) · rng 0
+     */
+    function upgradeV40(s) {
+        const old = s.autoSalvage ?? {};
+        const rows = { normal: ['normal'], magic: ['normal', 'magic'] }[old.rarity] ?? [];
+        const lv = new Map((s.heroes ?? []).map(h => [h.uid, h.level]));
+        s.salvageRules = (Array.isArray(s.presets) ? s.presets : []).map(p => {
+            const cells = {};
+            for (const part of SALVAGE_PARTS) for (const r of rows) if (cellExists(part, r)) cells[`${part}:${r}`] = 'salvage';
+            const lvs = (p?.party ?? []).map(u => lv.get(u)).filter(Number.isInteger);
+            return { cells, base: {}, lvGap: old.ilvlBelow > 0 && lvs.length ? clampGap(old.ilvlBelow - Math.min(...lvs)) : null };
+        });
+        delete s.autoSalvage;
+        s.version = 41;
+        return s;
+    }
+
+    /** **v38 · v39 · v40 · v41 을 연다** — 옛 버전은 한 단계씩 올린다(v38 → `upgradeV38` · v39 → `upgradeV39` · v40 → `upgradeV40`) · 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
         let src = obj.version === 38 ? upgradeV38(clone(obj)) : obj;
         if (src.version === 39) src = upgradeV39(src === obj ? clone(obj) : src);
+        if (src.version === 40) src = upgradeV40(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(src);
@@ -489,8 +535,10 @@ export function createGameSystem(deps) {
         s.runs = fitRuns(s, s.runs);
         // 부대 인벤토리 — 편성 수에 맞춘다. 남는 인벤토리는 지우지 않고 마지막 것 뒤에 붙인다(아이템은 소유물 · v40 · `fitBags`)
         s.bags = fitBags(s, s.bags);
-        // 알아서 분해 — 없으면 「꺼짐」이 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R125)
-        s.autoSalvage = { rarity: null, ilvlBelow: 0, ...(s.autoSalvage ?? {}) };
+        // 자동 분해 — 편성 수에 맞추고 모르는 칸 · 값을 걸러 낸다(규칙 · 기록 = 부대마다 · 프리셋 칸 = 칸 수에 맞춘다) (v41 · R316 · INTERFACE §4)
+        s.salvageRules = fitSalvageRules(s, s.salvageRules);
+        s.salvageSlots = fitSalvageSlots(s.salvageSlots);
+        s.salvageLogs = fitSalvageLogs(s, s.salvageLogs);
         // 같이 깬 칸 수 — 1 이상 정수만 남긴다 (v36 · R134 · 뜻 개정 2026-09-29 — 옛 값(같이 나간 런 수)은 그대로 읽는다)
         s.bonds = Object.fromEntries(Object.entries(s.bonds && typeof s.bonds === 'object' ? s.bonds : {}).filter(([, n]) => Number.isInteger(n) && n > 0));
         s.progress.peakTotal = Number.isInteger(s.progress.peakTotal) && s.progress.peakTotal > 0 ? s.progress.peakTotal : 0;
@@ -675,46 +723,80 @@ export function createGameSystem(deps) {
     const codexMaxLevel = () => deps.codex.levels.length;
 
     /*
-     * 도감 사다리 — 레벨 n 이 여는 단계 [2026-10-18 · R286 · monster_design §8 · §8-2 — ~~스테이지 계열 보정(`codexBonusAt` · `codexBonus` · codex_series.csv)~~].
-     *   단계의 `reward` 가 무엇을 여는지 정한다 — `xp` · `vs_dmg` · `drop` 은 **그 몬스터에게만**(전투가 그 유닛에 얹는다 — `codexLadder`) ·
-     *   `option` 은 그 몬스터의 전투 옵션 한 줄(codex_option.csv)이 **파티 전원**에게(`codexOptions` → `heroCombat`). 레벨 순서는 표가 정한다 · 표 검증은 생성 때 던진다
+     * 도감 사다리 — 레벨 n 이 여는 단계 [2026-10-18 · R286 · **2026-10-22 · R314 — Lv1 · Lv2 는 그 종족 전체** · monster_design §8 · §8-2].
+     *   단계의 `reward` 가 무엇을 여는지 정한다 — `farm`(파밍 한 줄) · `fight`(전투 한 줄)는 몬스터마다의 칸(codex_option.csv)이 **그 종족 전체**에 걸리고
+     *   (전투가 종족 몫을 유닛에 얹는다 — `codexLadder`) · `none` 은 아무것도 안 연다 · `option` 은 그 몬스터의 전투 옵션 한 줄이 **파티 전원**에게(`codexOptions` → `heroCombat`).
+     *   레벨 순서는 표가 정한다 · 표 검증은 생성 때 던진다 (~~`xp` · `vs_dmg` · `drop` 그 몬스터에게만~~ 2026-10-22)
      */
-    const LADDER_KEY = { xp: 'xp', vs_dmg: 'vs', drop: 'drop' };   // reward id → `codexLadder` 의 칸 (INTERFACE §2-6 「도감 사다리」)
+    const CODEX_REWARDS = ['farm', 'fight', 'none', 'option'];
+    // Lv1 파밍 줄 — `codexLadder().farm` 의 칸 이름이 곧 이것이다(INTERFACE §2-6 「도감 사다리」)
+    const CODEX_FARM = ['xp', 'drop', 'magic', 'gold', 'material'];
+    // Lv2 전투 줄 열다섯 — 걸리는 순간(때릴 때 · 맞을 때 · 그 종족이 나온 라운드)은 battle.js 가 줄마다 안다
+    const CODEX_FIGHT = ['vs_dmg', 'dr_flat', 'stagger_dur_pct', 'crit_rate', 'fhr', 'speed_pct', 'hit_bonus', 'damage_reduction', 'buff_dur_pct',
+        'res_reduction', 'res_all', 'status_dur_pct', 'life_steal', 'hp_regen', 'heal_out_pct'];
     const CODEX = (() => {
         const bad = why => { throw new Error(`codex: ${why}`); };
         const steps = deps.codex.steps ?? [];
         if (steps.length !== deps.codex.levels.length) bad(`단계 ${steps.length} ≠ 레벨 ${deps.codex.levels.length} (codex_level.csv)`);
-        let optionAt = -1;
+        const at = { farm: -1, fight: -1, option: -1 };
         steps.forEach((s, i) => {
-            if (s.reward === 'option') {
-                if (optionAt >= 0) bad(`option 단계가 둘이다 — Lv${optionAt + 1} · Lv${i + 1}`);
-                optionAt = i;
-                return;
-            }
-            if (!LADDER_KEY[s.reward]) bad(`Lv${i + 1} reward '${s.reward}' — xp · vs_dmg · drop · option 중 하나여야 한다`);
-            if (!(Number.isFinite(s.value) && s.value >= 0)) bad(`Lv${i + 1} value '${s.value}' — 0 이상 비율`);
+            if (!CODEX_REWARDS.includes(s.reward)) bad(`Lv${i + 1} reward '${s.reward}' — ${CODEX_REWARDS.join(' · ')} 중 하나여야 한다`);
+            if (s.value !== null) bad(`Lv${i + 1} value '${s.value}' — 값은 몬스터마다다(codex_option.csv) · 여기는 비운다`);
+            if (s.reward === 'none') return;
+            if (at[s.reward] >= 0) bad(`${s.reward} 단계가 둘이다 — Lv${at[s.reward] + 1} · Lv${i + 1}`);
+            at[s.reward] = i;
         });
-        const options = {};
+        const races = deps.codex.races ?? {};
+        const options = {}, lines = {}, members = {};
+        const pos = v => Number.isFinite(v) && v > 0;
         for (const r of deps.codex.options ?? []) {
-            if (!deps.monsters[r.monsterId]) bad(`codex_option ${r.monsterId} — monster.csv 에 없는 몬스터`);
+            const m = deps.monsters[r.monsterId];
+            if (!m) bad(`codex_option ${r.monsterId} — monster.csv 에 없는 몬스터`);
             if (options[r.monsterId]) bad(`codex_option ${r.monsterId} — 행이 둘이다(몬스터마다 한 줄)`);
             if (typeof r.stat !== 'string' || !r.stat) bad(`codex_option ${r.monsterId} — stat 이 비었다`);
-            if (!(Number.isFinite(r.value) && r.value > 0)) bad(`codex_option ${r.monsterId} value '${r.value}' — 양수`);
+            if (!pos(r.value)) bad(`codex_option ${r.monsterId} value '${r.value}' — 양수`);
             options[r.monsterId] = { stat: r.stat, value: r.value };
+            // Lv1 · Lv2 칸 — 둘 다 있거나 둘 다 없다(보스 · VI 자리 · 2026-10-22 R314)
+            const farm = r.farm ?? null, fight = r.fight ?? null;
+            if ((farm === null) !== (fight === null)) bad(`codex_option ${r.monsterId} — farm · fight 중 하나만 있다`);
+            if (farm === null) {
+                if ((r.farmValue ?? null) !== null || (r.fightValue ?? null) !== null) bad(`codex_option ${r.monsterId} — 칸이 없는데 값이 있다`);
+                continue;
+            }
+            if (!CODEX_FARM.includes(farm)) bad(`codex_option ${r.monsterId} farm '${farm}' — ${CODEX_FARM.join(' · ')} 중 하나`);
+            if (!CODEX_FIGHT.includes(fight)) bad(`codex_option ${r.monsterId} fight '${fight}' — 전투 줄 열다섯 중 하나(INTERFACE §2-6)`);
+            if (!pos(r.farmValue) || !pos(r.fightValue)) bad(`codex_option ${r.monsterId} — farm_value · fight_value 는 양수`);
+            const race = m.monster_base;
+            if (!races[race]) bad(`codex_option ${r.monsterId} — 종족 '${race}' 가 monster_base.csv 에 없다`);
+            lines[r.monsterId] = { race, farm: { kind: farm, value: r.farmValue }, fight: { stat: fight, value: r.fightValue } };
+            (members[race] ??= []).push(String(r.monsterId));
         }
-        return { steps, optionAt, options };
+        return { steps, optionAt: at.option, farmAt: at.farm, fightAt: at.fight, options, lines, members, races };
     })();
-    /** 레벨순 단계 `[{level, reward, value}]` — 사본 · `option` 단계의 value 는 null(몬스터마다다 — `codexOptionOf`) */
-    const codexSteps = () => CODEX.steps.map((s, i) => ({ level: i + 1, reward: s.reward, value: s.reward === 'option' ? null : s.value }));
+    /** 레벨순 단계 `[{level, reward, value}]` — 사본 · value 는 늘 null(몬스터마다다 — `codexOptionOf` · `codexLineOf`) */
+    const codexSteps = () => CODEX.steps.map((s, i) => ({ level: i + 1, reward: s.reward, value: null }));
     /** 그 몬스터의 Lv4 전투 옵션 `{stat, value}` — 행이 없으면 null(둘라한 · 6 · 7장) */
     const codexOptionOf = id => CODEX.options[id] ? { ...CODEX.options[id] } : null;
-    /** 그 몬스터의 **닿은 단계** 몫 `{xp, vs, drop}`(같은 reward 가 둘이면 더한다 · 안 닿으면 0) — 전투가 그 몬스터 유닛에 얹는다(`battle.createRun` 의 `codexOf`) · rng 0 */
+    /** 그 몬스터 한 마리가 내는 Lv1 · Lv2 칸 `{race, farm: {kind, value}, fight: {stat, value}}` — 칸이 없으면 null(보스 · 6 · 7장 · VI · 2026-10-22 R314) */
+    const codexLineOf = id => {
+        const l = CODEX.lines[id];
+        return l ? { race: l.race, farm: { ...l.farm }, fight: { ...l.fight } } : null;
+    };
+    /**
+     * 그 몬스터 **종족 전체의 닿은 몫** `{race, farm: {xp, drop, magic, gold, material}, fight: {줄: 값}}` [2026-10-22 · R314 — ~~그 몬스터의 `{xp, vs, drop}`~~].
+     *   같은 종족의 칸 있는 몬스터마다 `farm` 단계에 닿았으면 제 Lv1 칸을 · `fight` 단계에 닿았으면 제 Lv2 칸을 더한다(같은 줄은 더한다).
+     *   farm 다섯 칸은 늘 서고(안 닿으면 0) fight 는 닿은 줄만 · 그 몬스터에 칸이 없으면 null(보스 · 6 · 7장 — 주지도 받지도 않는다).
+     *   전투가 그 몬스터 유닛에 얹는다(`battle.createRun` 의 `codexOf`) · rng 0
+     */
     function codexLadder(state, id) {
-        const out = { xp: 0, vs: 0, drop: 0 };
-        const lv = codexLevel(state.codexExp?.[id] ?? 0);
-        for (let i = 0; i < lv; i++) {
-            const k = LADDER_KEY[CODEX.steps[i].reward];
-            if (k) out[k] += CODEX.steps[i].value;
+        const own = CODEX.lines[id];
+        if (!own) return null;
+        const out = { race: own.race, farm: Object.fromEntries(CODEX_FARM.map(k => [k, 0])), fight: {} };
+        for (const mid of CODEX.members[own.race]) {
+            const lv = codexLevel(state.codexExp?.[mid] ?? 0);
+            const l = CODEX.lines[mid];
+            if (CODEX.farmAt >= 0 && lv > CODEX.farmAt) out.farm[l.farm.kind] += l.farm.value;
+            if (CODEX.fightAt >= 0 && lv > CODEX.fightAt) out.fight[l.fight.stat] = (out.fight[l.fight.stat] ?? 0) + l.fight.value;
         }
         return out;
     }
@@ -914,42 +996,61 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /* ── 자동 장착 [2026-10-22 · R307 · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
+    /* ── 자동 장착 [2026-10-22 · R307 · 기준 개정 R313 · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
        거르기 = 요구 레벨(`canEquip`) + 직업 어울림(`item.fitsClass`) — 직업 무기군이 물리 ↔ 마법(평타)도 같이 거른다.
-       고르기 = **바탕 수치** — 끼면(`heroCombatIf` — 강화 포함) 무기는 초당 세기 · 방어구 넷은 방어력이 가장 많이 오르는 것. 안 오르면 안 바꾸고 빈 칸이면 가장 높은 것.
-       표에 없는 부위(반지 · 목걸이)는 바탕 수치가 없어 **빈 칸만** — 아이템 레벨 → 등급(`CMP`). 점수(§6-2)는 안 쓴다 — 굴림의 운을 재지 세기를 재지 않는다.
-       부위 이름은 수치가 아니라 어휘라 코드에 둔다(`AUTO_RARITY` 와 같은 자리) */
-    const atkMid = c => { const a = c.atk_physical ?? c.atk_magic; return a ? (a.min + a.max) / 2 : 0; };
-    const AUTO_BASE = {
-        weapon: c => atkMid(c) / (c.action_period || 1),   // 초당 세기 — 한 대 평균만 보면 느린 무기를 고른다(주기는 무기군이 정한다 · 장비 봇과 같은 잣대)
-        armor: c => c.defense, helmet: c => c.defense, gloves: c => c.defense, boots: c => c.defense,
+       고르기 = **영웅 세기** [R313] — 무기 · 방어구 넷을 끼면(`heroCombatIf` — 강화 포함) 그 영웅의 「입히는 DPS × 버티는 양」이 가장 높은 것. 안 오르면 안 바꾸고 빈 칸이면 가장 높은 것.
+         1:1 결투에서 이기는 쪽이 이 곱이 큰 쪽이라(PvP 기준) 데미지 1% 와 맷집 1% 의 값어치가 같다. 부위마다 수치를 따로 보면 장갑(가죽 = 속도 · 건틀릿 = 피해 감소)에서 깨진다 —
+         ~~무기 = 초당 세기 · 방어구 = 방어력~~(R307)은 마법사의 캐스팅 속도 장갑을 방어력이 조금 높은 공격 속도 장갑으로 바꿨다.
+       반지 · 목걸이는 **빈 칸만** — 아이템 레벨 → 등급(`CMP`). 줄 대부분(쿨감 · 흡혈 · 저항 · 찾기 · 발동)이 세기로 못 재는 것이다. 점수(§6-2)는 안 쓴다 — 굴림의 운을 재지 세기를 재지 않는다.
+       부위 이름은 수치가 아니라 어휘라 코드에 둔다(`SALVAGE_ROWS` 와 같은 자리) */
+    const F = createFormula(B);   // 물리 감쇠 곡선 — 전투(`formula.strike`)와 같은 함수
+    const MIGHT_PARTS = new Set(['weapon', 'armor', 'helmet', 'gloves', 'boots']);
+    // 입히는 DPS — 평타 한 대 평균(범위에 데미지 % 괄호가 이미 곱해져 있다) × 능력치 계수 × (1 + 피해량) × 치명 기대 ÷ 행동 주기. `strike` 의 곱 그대로 · 맨손도 범위가 있다
+    const dealtPerSec = c => {
+        const a = c.atk_physical ?? c.atk_magic;
+        if (!a) return 0;
+        const crit = 1 + Math.min(1, c.crit_rate ?? 0) * ((c.crit_damage ?? 1) - 1);   // 치명 확률은 상한이 없다 — 1 이면 전타 치명
+        return (a.min + a.max) / 2 * (c.main_attr_mult ?? 1) * (1 + (c.dmg_bonus_pct ?? 0)) * crit / (c.action_period || 1);
     };
+    // 버티는 양 — 최대 HP ÷ 한 대에서 남는 몫(물리 감쇠 × 피해 감소). 상대에 따라 값이 바뀌는 것(저항 · 명중 · 절대값 감소)은 안 넣는다
+    const enduredHp = c => {
+        const keep = (1 - F.mitigation(c.defense ?? 0)) * (1 - (c.damage_reduction ?? 0));
+        return keep > 0 ? (c.hp_max ?? 0) / keep : Infinity;
+    };
+    const might = c => dealtPerSec(c) * enduredHp(c);
 
     function autoEquip(state, heroUid, no = 1) {
         const h = heroById(state, heroUid);
         if (!h || !bagOf(state, no)) return { ok: false, err: 'missing' };
-        const changes = [];
+        const before = { ...h.equipped };
+        const cands = part => bagOf(state, no).map(u => state.items[u])
+            .filter(it => it && it.slot === part && !I.canEquip(h, it) && I.fitsClass(it, h.cls));
+        // 반지 · 목걸이가 먼저 — 다섯 칸의 세기가 반지까지 낀 몸으로 서야 다시 눌렀을 때 그대로다
         for (const { id: pos, part } of deps.equipSlots) {
-            const base = AUTO_BASE[part];
-            if (!base && h.equipped[pos]) continue;                     // 반지 · 목걸이 — 빈 칸만
-            const cands = bagOf(state, no).map(u => state.items[u])
-                .filter(it => it && it.slot === part && !I.canEquip(h, it) && I.fitsClass(it, h.cls));
+            if (MIGHT_PARTS.has(part) || h.equipped[pos]) continue;
             let best = null;
-            if (base) {
-                const now = base(heroCombat(state, h));
-                // 「끼면」의 자리는 `equipTarget` 이 고른다 — 바탕 수치가 있는 부위는 위치가 하나라 곧 `pos` 다
-                for (const it of cands) {
-                    const gain = base(heroCombatIf(state, h, it.uid)) - now;
-                    if (!best || gain > best.gain) best = { it, gain };   // 같으면 인벤토리 앞의 것
-                }
-                if (best && best.gain <= 0 && h.equipped[pos]) best = null;
-            } else {
-                for (const it of cands) if (!best || (CMP.ilvl(it, best.it) || CMP.rarity(it, best.it)) < 0) best = { it };
-            }
-            if (!best) continue;
-            const r = equip(state, h.uid, best.it.uid, pos);
-            if (r.ok) changes.push({ position: pos, item: best.it.uid, back: r.back });
+            for (const it of cands(part)) if (!best || (CMP.ilvl(it, best) || CMP.rarity(it, best)) < 0) best = it;
+            if (best) equip(state, h.uid, best.uid, pos);
         }
+        // 다섯 칸 — 칸마다 하나씩 바꿔 보고, 한 바퀴에 바뀐 것이 있으면 다시 돈다(뒤 칸이 앞 칸의 답을 바꾼다 — 치명 확률 장갑 → 치명 피해 무기).
+        //   바꿀 때마다 세기가 오르니 멈춘다 · 바퀴 상한(인벤토리 수 + 1)은 그물이다
+        const passMax = bagOf(state, no).length + 1;
+        for (let pass = 0, moved = true; moved && pass < passMax; pass++) {
+            moved = false;
+            for (const { id: pos, part } of deps.equipSlots) {
+                if (!MIGHT_PARTS.has(part)) continue;
+                // 「끼면」의 자리는 `equipTarget` 이 고른다 — 다섯 칸은 위치가 하나라 곧 `pos` 다
+                let best = null, top = h.equipped[pos] ? might(heroCombat(state, h)) : -Infinity;
+                for (const it of cands(part)) {
+                    const v = might(heroCombatIf(state, h, it.uid));
+                    if (v > top) { best = it; top = v; }               // 같으면 인벤토리 앞의 것 · 지금 낀 것과 같으면 안 바꾼다
+                }
+                if (best && equip(state, h.uid, best.uid, pos).ok) moved = true;
+            }
+        }
+        // 누르기 전과 달라진 칸만 — 두 바퀴째에 또 바뀐 칸도 한 줄 · `back` = 누르기 전에 그 칸에 있던 것
+        const changes = deps.equipSlots.filter(({ id }) => h.equipped[id] !== before[id])
+            .map(({ id }) => ({ position: id, item: h.equipped[id], back: before[id] ? [before[id]] : [] }));
         return { ok: true, changes };
     }
 
@@ -966,45 +1067,127 @@ export function createGameSystem(deps) {
         return { ok: true, locked: !!it.locked };
     }
 
-    /* ── 알아서 분해 (item_design §6-5 · R125) ──
-       선 둘을 **각각** 긋고 **하나라도 걸리면** 분해한다 — 둘 다 걸려야 하면 높은 레벨의 일반이 계속 쌓인다.
-       새 드롭은 `advanceRun` 이 적재 전에 본다. 이미 가진 것은 `applyAutoSalvage` 를 부를 때만 · rng 0 */
+    /* ── 자동 분해 (item_design §6-5 · R125 · **2026-10-22 개편 R316** — 부대마다 격자) ──
+       **보존 = 레벨 조건(섰으면) 그리고 그 칸이 보존**이다(교집합 · 사용자 「보존을 중심으로 … 교집합」) — [베이스] 칸은 베이스 옵션이 그 부위 문턱 이상이면 보존.
+       줄에 없는 등급(유니크 · 크래프트)은 **언제나 보존**(옛 레벨 선이 이들도 녹이던 고장이 여기서 닫힌다).
+       새 드롭은 `settleRound` 가 적재 전에 **나간 부대의 규칙**으로 본다. 이미 가진 것은 `applyAutoSalvage` 를 부를 때만 · rng 0 */
 
-    // 그 등급 **이하** — 크래프트 · 유니크는 어떤 선에도 안 걸린다
-    const AUTO_RARITY = { normal: ['normal'], magic: ['normal', 'magic'] };
-    const autoRuleOf = state => state.autoSalvage ?? { rarity: null, ilvlBelow: 0 };
-    const autoSalvageHits = (rule, it) =>
-        (!!rule.rarity && AUTO_RARITY[rule.rarity].includes(it.rarity))
-        || (rule.ilvlBelow > 0 && it.ilvl < rule.ilvlBelow);
+    /** 그 편성 영웅의 가장 낮은 레벨 — 레벨 조건의 기준 · 빈 편성이면 null (R316 — 가장 약한 영웅도 못 쓸 것만 녹는다) */
+    const partyMinLevel = (state, no) => {
+        const lvs = (state.presets?.[no - 1]?.party ?? []).map(u => heroById(state, u)?.level).filter(Number.isInteger);
+        return lvs.length ? Math.min(...lvs) : null;
+    };
+    const baseOf = (rule, part) => rule.base[part] ?? B.auto_salvage_base_default;
+    const EPS = 1e-9;   // 문턱 비교 — 굴린 값과 문턱이 둘 다 반올림된 비율이라 같은 값이 부동소수로 갈리지 않게
+    /** 보존하나 — 부대 `no` 의 규칙으로 아이템 `it` 을 본다 (INTERFACE §2-7 `salvageView`) */
+    const salvageKeeps = (state, no, it) => {
+        if (!SALVAGE_ROWS.includes(it.rarity)) return true;
+        const rule = salvageRuleOf(state, no) ?? emptyRule();
+        const minLv = partyMinLevel(state, no);
+        if (rule.lvGap !== null && minLv !== null && it.ilvl < minLv + rule.lvGap) return false;
+        const mode = rule.cells[`${it.slot}:${it.rarity}`] ?? 'keep';
+        if (mode === 'salvage') return false;
+        if (mode === 'base') { const v = I.baseRoll(it); return v === null || v >= baseOf(rule, it.slot) - EPS; }
+        return true;
+    };
+    /** 최근 분해 기록에 사본을 남긴다 — 최신이 앞 · 길이 상한에서 뒤를 버린다 (드롭 순간의 자동 분해 · 넘침만 · R316) */
+    const logSalvaged = (state, no, it) => {
+        const log = state.salvageLogs?.[no - 1];
+        if (!log) return;
+        log.unshift(clone(it));
+        if (log.length > B.auto_salvage_log_max) log.length = B.auto_salvage_log_max;
+    };
 
-    /** 선을 바꾼다 — 준 키만. 가방의 것은 건드리지 않는다(다음 드롭부터 먹는다) · 건물이 막지 않는다 (R140) */
-    function setAutoSalvage(state, rule) {
-        const next = { ...autoRuleOf(state) };
-        if ('rarity' in rule) {
-            if (rule.rarity !== null && !AUTO_RARITY[rule.rarity]) return { ok: false, err: 'invalid' };
-            next.rarity = rule.rarity;
+    /** 부대 `no` 의 규칙을 화면이 그리는 모양으로 — 상태를 안 바꾼다 · 없는 번호면 null (INTERFACE §2-7) */
+    function salvageView(state, no) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule) return null;
+        const minLv = partyMinLevel(state, no);
+        return {
+            no, minLv, lvGap: rule.lvGap,
+            keepFrom: rule.lvGap !== null && minLv !== null ? minLv + rule.lvGap : null,
+            parts: SALVAGE_PARTS.map(part => ({ part, hasBase: I.hasBase(part), base: I.hasBase(part) ? baseOf(rule, part) : null, max: I.baseMax(part) })),
+            rows: SALVAGE_ROWS.slice(),
+            cells: Object.fromEntries(SALVAGE_PARTS.map(part => [part, Object.fromEntries(SALVAGE_ROWS.map(r =>
+                [r, cellExists(part, r) ? rule.cells[`${part}:${r}`] ?? 'keep' : null]))])),
+            on: rule.lvGap !== null || Object.keys(rule.cells).length > 0,
+            slots: (state.salvageSlots ?? []).map((r, i) => ({ slot: i + 1, empty: !r })),
+            log: (state.salvageLogs?.[no - 1] ?? []).slice(),
+        };
+    }
+
+    const putCell = (rule, part, rarity, mode) => {
+        const k = `${part}:${rarity}`;
+        if (mode === 'keep') delete rule.cells[k]; else rule.cells[k] = mode;
+    };
+    /** 칸 하나 — 누르는 즉시 그 부대의 다음 드롭부터 먹는다(가방의 것은 그대로) · 건물이 막지 않는다 (R140) */
+    function setSalvageCell(state, no, part, rarity, mode) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !SALVAGE_PARTS.includes(part) || !SALVAGE_ROWS.includes(rarity) || !cellExists(part, rarity)
+            || !SALVAGE_MODES.includes(mode) || (mode === 'base' && !I.hasBase(part))) return { ok: false, err: 'invalid' };
+        putCell(rule, part, rarity, mode);
+        return { ok: true };
+    }
+    /** 일괄 — `pick = {rarity}`(줄 머리) · `{part}`(열 머리) · `{}`(전부). 베이스가 없는 부위의 `base` 는 보존 · 반지 · 목걸이의 일반 칸은 건너뛴다 */
+    function setSalvageCells(state, no, pick, mode) {
+        const rule = salvageRuleOf(state, no);
+        const p = pick && typeof pick === 'object' ? pick : null;
+        if (!rule || !p || !SALVAGE_MODES.includes(mode)
+            || (p.part !== undefined && !SALVAGE_PARTS.includes(p.part)) || (p.rarity !== undefined && !SALVAGE_ROWS.includes(p.rarity))) return { ok: false, err: 'invalid' };
+        let n = 0;
+        for (const part of SALVAGE_PARTS) for (const r of SALVAGE_ROWS) {
+            if ((p.part !== undefined && p.part !== part) || (p.rarity !== undefined && p.rarity !== r) || !cellExists(part, r)) continue;
+            const m = mode === 'base' && !I.hasBase(part) ? 'keep' : mode;
+            if ((rule.cells[`${part}:${r}`] ?? 'keep') === m) continue;
+            putCell(rule, part, r, m);
+            n++;
         }
-        if ('ilvlBelow' in rule) {
-            if (!Number.isInteger(rule.ilvlBelow) || rule.ilvlBelow < 0) return { ok: false, err: 'invalid' };
-            next.ilvlBelow = rule.ilvlBelow;
-        }
-        state.autoSalvage = next;
+        return { ok: true, n };
+    }
+    /** 그 부위의 베이스 문턱 — 비율 · 0 ~ 그 부위 베이스 옵션의 위끝 · 소수 둘째 자리(= %의 정수)로 박는다 */
+    function setSalvageBase(state, no, part, v) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !SALVAGE_PARTS.includes(part) || !I.hasBase(part) || !Number.isFinite(v)) return { ok: false, err: 'invalid' };
+        const pct = Math.round(v * 100) / 100;   // 비율 → % 의 정수 자리 — 버튼이 0.1 · 0.01 을 더해 생긴 부동소수 꼬리를 지운다
+        if (pct < 0 || pct > I.baseMax(part) + EPS) return { ok: false, err: 'invalid' };
+        rule.base[part] = pct;
+        return { ok: true };
+    }
+    /** 레벨 조건 — `null`(안 봄) · −만렙 ~ 0 정수. 보존 = 아이템 레벨 ≥ 그 편성 영웅의 가장 낮은 레벨 + gap */
+    function setSalvageLevel(state, no, gap) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !(gap === null || (Number.isInteger(gap) && gap <= 0 && gap >= -B.hero_level_cap))) return { ok: false, err: 'invalid' };
+        rule.lvGap = gap;
+        return { ok: true };
+    }
+    const slotOk = (state, slot) => Number.isInteger(slot) && slot >= 1 && slot <= (state.salvageSlots?.length ?? 0);
+    /** 프리셋 칸에 저장 — 부대 `no` 의 규칙 **사본**을 덮어쓴다(가리키지 않는다 · 사용자 「불러오기 느낌으로 복사」) */
+    function saveSalvageSlot(state, no, slot) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !slotOk(state, slot)) return { ok: false, err: 'invalid' };
+        state.salvageSlots[slot - 1] = clone(rule);
+        return { ok: true };
+    }
+    /** 프리셋 칸에서 불러오기 — 칸의 사본을 부대 `no` 에 덮어쓴다 · 뒤에 칸을 고쳐도 부대는 그대로 */
+    function loadSalvageSlot(state, no, slot) {
+        if (!salvageRuleOf(state, no) || !slotOk(state, slot)) return { ok: false, err: 'invalid' };
+        const src = state.salvageSlots[slot - 1];
+        if (!src) return { ok: false, err: 'empty' };
+        state.salvageRules[no - 1] = fitRule(clone(src));
         return { ok: true };
     }
 
-    // [지금 인벤토리에도 적용]이 갈 것 — **부대 `no` 의 인벤토리만**(창고는 옮겨 둔 것이 곧 「남긴다」 · 다른 부대의 것은 안 보이는 칸이다 · v40) · 잠근 것 제외
-    const autoTargets = (state, no) => {
-        const rule = autoRuleOf(state);
-        return (bagOf(state, no) ?? []).map(u => state.items[u]).filter(it => it && !it.locked && autoSalvageHits(rule, it));
-    };
+    // [지금 가방에 적용]이 갈 것 — **부대 `no` 의 인벤토리만**(창고는 옮겨 둔 것이 곧 「남긴다」 · 다른 부대의 것은 안 보이는 칸이다 · v40) · 잠근 것 제외 · 그 부대의 규칙으로
+    const autoTargets = (state, no) =>
+        (bagOf(state, no) ?? []).map(u => state.items[u]).filter(it => it && !it.locked && !salvageKeeps(state, no, it));
 
-    /** 지금 적용하면 갈릴 개수와 가루 — 확인 창이 이 숫자를 보여 준다. 상태를 안 바꾼다 · `no` = 부대(기본 1 · v40) */
+    /** 지금 적용하면 갈릴 개수 · 가루 · uid(가방 순서) — 창이 이 숫자와 그림을 보여 준다. 상태를 안 바꾼다 */
     function autoSalvagePreview(state, no = 1) {
         const list = autoTargets(state, no);
-        return { n: list.length, dust: list.reduce((a, it) => a + I.salvageDust(it), 0) };
+        return { n: list.length, dust: list.reduce((a, it) => a + I.salvageDust(it), 0), uids: list.map(it => it.uid) };
     }
 
-    /** 부대 `no`(기본 1 · v40)의 인벤토리에서 선에 걸린 것을 분해한다 — `salvage` 를 그대로 부르므로 반환량 · 거절 규칙이 같다 */
+    /** 부대 `no` 의 인벤토리에서 그 부대 규칙이 보존하지 않는 것을 분해한다 — `salvage` 를 그대로 부르므로 반환량 · 거절 규칙이 같다 · 기록에는 안 남긴다(손으로 누른 분해) */
     function applyAutoSalvage(state, no = 1) {
         let n = 0, dust = 0;
         for (const it of autoTargets(state, no)) {
@@ -1206,8 +1389,13 @@ export function createGameSystem(deps) {
     const startStock = () => Object.fromEntries(potionRows.filter(p => p.startOwned > 0).map(p => [p.id, p.startOwned]));
     /** 칸 구성을 그 세이브의 칸 수(`limitsOf(state).potionSlots`)에 맞춘다 — 넘치면 뒤를 자르고 모자라면 빈 칸(`null`)을 붙인다 */
     const padSlots = (state, list) => Array.from({ length: limitsOf(state).potionSlots }, (_, i) => list[i] ?? null);
-    /** 시작 칸 — 시작 물약이 **행 순서대로 한 칸씩**(개수와 무관 · 칸 수에서 자른다). 새 게임의 편성 1 이 든다 */
-    const startSlots = state => padSlots(state, potionRows.filter(p => p.startOwned > 0).map(p => p.id));
+    /** 시작 칸 — **열린 칸 전부**에 시작 물약 중 표의 첫 행(개수와 무관). 새 게임의 편성 1 이 든다 [2026-10-22 · R315 — ~~행 순서대로 한 칸씩~~] */
+    const startSlots = state => {
+        const first = potionRows.find(p => p.startOwned > 0);
+        return padSlots(state, first ? Array.from({ length: limitsOf(state).potionSlots }, () => first.id) : []);
+    };
+    /** 다 지었을 때의 물약 칸 수 — 기본값 + 모든 건물 최대 랭크의 더하기. 화면이 열린 칸 뒤를 잠긴 칸으로 세운다 (R315) */
+    const potionSlotCap = B.potion_slot_max + (CN.opened(maxRanks).adds.potionSlots ?? 0);
 
     /**
      * 칸 채우기 — 편성의 칸 구성을 **재고에서 앞 칸부터** 채운다 [R124 · battle_design §7-1]. 칸마다 `{id, heal}` 또는 `null`
@@ -1278,7 +1466,7 @@ export function createGameSystem(deps) {
     const formCaps = tpl => { const t = FT[tpl] ?? FT[DEFAULT_TPL]; return t ? [t.front, t.back] : [B.party_size_max, 0]; };
 
     /* ── 편성 [2026-09-21 · 사용자 확정 · SCREEN_DESIGN §15 · ADR-0192 · R122] ──
-       편성은 **늘 `limitsOf(state).presets` 개가 서 있고** 번호가 이름이다(1 부터) — 만들고 지우는 동작이 없다. 수는 기본값 하나에 원정 랭크가 더 연다(r3 · r6 · R156 · 첫 편성은 기본값 R161).
+       편성은 **늘 `limitsOf(state).presets` 개가 서 있고** 번호가 이름이다(1 부터) — 만들고 지우는 동작이 없다. 수는 기본값 하나에 탐험 랭크가 더 연다(r1 · r4 · R319 · 첫 편성은 기본값 R161).
        편성마다 파티 · 진형 · 물약 칸 · **파티 전술 칸**을 든다(전술은 v34 부터 편성마다 · R129 — 열린 칸 수만 계정이다).
        파티 · 진형 · 물약 칸을 바꾸는 함수는 **고른 편성**(`state.preset`)에 작용한다 — 편성 탭은 늘 고른 편성을 펴므로 번호를 따로 받지 않는다.
        출발만 번호를 받는다 — 반복이 **도는 원정의 편성**으로 다시 나가야 해서다(고른 편성이 그새 바뀌었을 수 있다) */
@@ -1288,6 +1476,10 @@ export function createGameSystem(deps) {
     if (!(Number.isInteger(B.party_preset_count) && B.party_preset_count >= 0 && startPresets >= 1)) throw new Error(`balance: party_preset_count ${B.party_preset_count} · 시작 편성 ${startPresets} — 기본값은 0 이상 정수 · 시작 랭크의 편성은 1 이상이어야 한다 (INTERFACE §2-7)`);
     // 이번 버전이 여는 마지막 장 — 없거나 1 미만이면 모든 장이 조용히 잠기므로 멈춘다 (R227)
     if (!(Number.isInteger(B.chapter_open_max) && B.chapter_open_max >= 1)) throw new Error(`balance: chapter_open_max ${B.chapter_open_max} — 1 이상 정수여야 한다 (INTERFACE §2-7)`);
+    // 자동 분해 — 프리셋 칸 수 · 기록 길이는 0 이상 정수(칸은 1 이상) · 문턱 기본값은 0 이상 (R316) — 틀리면 격자가 조용히 비거나 기록이 안 쌓인다
+    if (!(Number.isInteger(B.auto_salvage_slots) && B.auto_salvage_slots >= 1 && Number.isInteger(B.auto_salvage_log_max) && B.auto_salvage_log_max >= 0
+        && Number.isFinite(B.auto_salvage_base_default) && B.auto_salvage_base_default >= 0))
+        throw new Error(`balance: auto_salvage_slots ${B.auto_salvage_slots} · auto_salvage_log_max ${B.auto_salvage_log_max} · auto_salvage_base_default ${B.auto_salvage_base_default} — 칸은 1 이상 정수 · 기록은 0 이상 정수 · 문턱은 0 이상 (INTERFACE §2-7)`);
     const emptyPreset = state => ({ party: [], formation: { tpl: DEFAULT_TPL, ranks: [[], []] }, potionSlots: padSlots(state, []), tactics: { slots: {}, locked: [] } });
     /** 불러온 전술 칸 — 없으면 리롤한 적이 없는 상태 (R129) · 잠금은 CSV 에 있는 칸 번호만 남긴다(칸이 줄면 잘린다 · v35 · R28) */
     const fitTactics = t => ({
@@ -1333,6 +1525,40 @@ export function createGameSystem(deps) {
     const bagOf = (state, no) => (Number.isInteger(no) && no >= 1 ? state.bags?.[no - 1] ?? null : null);
     /** 그 아이템이 든 부대 인벤토리의 번호 — 없으면 0 */
     const bagNoOf = (state, uid) => (state.bags ?? []).findIndex(b => b.includes(uid)) + 1;
+    /* ── 자동 분해 규칙 — 부대마다 하나 [v41 · 2026-10-22 · R316 · item_design §6-5] ──
+       `salvageRules` · `salvageLogs` 는 `bags` 와 같은 색인(자리 + 1 = 편성 번호) · `salvageSlots` 는 계정의 프리셋 칸(사본). 모양은 INTERFACE §4.
+       규칙 = `{cells: {"부위:등급": 'base'|'salvage'}, base: {부위: 문턱}, lvGap}` — **보존이 아닌 칸만** 적는다(없는 칸 = 보존) */
+    const SALVAGE_PARTS = [...new Set(deps.equipSlots.map(s => s.part))];   // 열 = 부위 — 위치 순서에서 겹친 반지를 뺀 것(= equip_slot.csv:part_order)
+    const SALVAGE_ROWS = ['normal', 'magic', 'rare'];        // 줄 — 유니크 · 크래프트는 줄이 없고 **언제나 보존** (INTERFACE §5-3)
+    const SALVAGE_MODES = ['keep', 'base', 'salvage'];       // 칸 — 보존 · 베이스(문턱 이상이면 보존) · 분해
+    const cellExists = (part, rarity) => rarity !== 'normal' || I.hasNormal(part);   // 반지 · 목걸이는 일반이 없다 (R285)
+    const clampGap = g => Math.max(-B.hero_level_cap, Math.min(0, g));
+    const emptyRule = () => ({ cells: {}, base: {}, lvGap: null });
+    /** 새 게임의 규칙 — 편성마다 빈 규칙(= 전부 보존) · 기록은 빈 것 · 프리셋 칸은 빈 칸 */
+    const newSalvageRules = (state = null) => Array.from({ length: limitsOf(state).presets }, emptyRule);
+    const newSalvageLogs = (state = null) => Array.from({ length: limitsOf(state).presets }, () => []);
+    const newSalvageSlots = () => Array.from({ length: B.auto_salvage_slots }, () => null);
+    /** 규칙 하나를 표에 맞춘다 — 모르는 부위 · 줄 · mode · 베이스가 없는 부위의 base 칸 · 반지 · 목걸이의 일반 칸 · 범위 밖 문턱을 지우고 gap 은 범위로 자른다 */
+    const fitRule = r => {
+        const out = emptyRule();
+        if (!r || typeof r !== 'object') return out;
+        for (const [k, m] of Object.entries(r.cells && typeof r.cells === 'object' ? r.cells : {})) {
+            const [part, rarity] = String(k).split(':');
+            if (!SALVAGE_PARTS.includes(part) || !SALVAGE_ROWS.includes(rarity) || !cellExists(part, rarity)) continue;
+            if (m === 'salvage' || (m === 'base' && I.hasBase(part))) out.cells[k] = m;
+        }
+        for (const [part, v] of Object.entries(r.base && typeof r.base === 'object' ? r.base : {}))
+            if (SALVAGE_PARTS.includes(part) && I.hasBase(part) && Number.isFinite(v) && v >= 0 && v <= I.baseMax(part)) out.base[part] = v;
+        if (Number.isInteger(r.lvGap)) out.lvGap = clampGap(r.lvGap);
+        return out;
+    };
+    /** 불러온 규칙 · 기록을 편성 수에 맞춘다 — 모자라면 빈 것을 붙이고 넘치면 뒤를 자른다(규칙 · 기록은 소유물이 아니라 설정 · 사본이다) */
+    const fitSalvageRules = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) => fitRule(Array.isArray(list) ? list[i] : null));
+    const fitSalvageLogs = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) =>
+        (Array.isArray(list?.[i]) ? list[i] : []).filter(it => it && typeof it === 'object' && typeof it.slot === 'string').slice(0, B.auto_salvage_log_max));
+    const fitSalvageSlots = list => Array.from({ length: B.auto_salvage_slots }, (_, i) => (Array.isArray(list) && list[i] ? fitRule(list[i]) : null));
+    /** 부대 `no` 의 규칙 — **복사본이 아니다** · 없는 번호면 null */
+    const salvageRuleOf = (state, no) => (Number.isInteger(no) && no >= 1 ? state.salvageRules?.[no - 1] ?? null : null);
     /** 불러온 부대 자리를 편성 수에 맞춘다 — 넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다 */
     const fitRuns = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) => {
         const r = Array.isArray(list) ? list[i] : null;
@@ -1478,6 +1704,7 @@ export function createGameSystem(deps) {
         const going = runningNos(state);
         return {
             count: L.presets, activeNo: state.preset, runNos: going, max: L.expeditions, slotMax: L.potionSlots,
+            slotCap: Math.max(L.potionSlots, potionSlotCap),   // 다 지었을 때의 칸 수 — `slotMax` 뒤는 잠긴 칸 (R315 · 관리자 모드는 이미 다 열려 같다)
             presets: state.presets.map((p, i) => {
                 const filled = fillSlots(state, p);
                 return {
@@ -1629,8 +1856,10 @@ export function createGameSystem(deps) {
 
     /* ── 스테이지 · 원정 ── */
 
-    /** 그 장이 원정 랭크로 열렸나 — 보스를 깨도 다음 장은 저절로 안 열린다 (2026-09-24 · R152 · construction_draft §2) */
+    /** 그 장이 열렸나 — 1장은 처음부터 · n장은 첫 단에서 n−1장 보스를 깨면 저절로 (2026-10-22 원정 건물 삭제 · R319 · construction_draft §2) */
     const chapterOpen = (state, chapter) => chapter <= limitsOf(state).chapters;
+    /** 그 장을 여는 칸 — 앞 장의 보스 칸 · 1장 · `chapter_open_max` 뒤의 장은 null (R319 · R227) · 상태를 안 본다 — 잠긴 장의 한 줄 「n−1장 보스 클리어」 */
+    const chapterGate = chapter => CHAPTER_GATE[chapter] ?? null;
 
     /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 ·
      *  관리자 모드면 열린 장의 모든 스테이지가 열린 척한다(클리어 기록은 안 쓴다 · 2026-09-24 · R155 · INTERFACE §2-7) —
@@ -1696,7 +1925,7 @@ export function createGameSystem(deps) {
 
     function canDepart(state, stageId, now, no = state.preset, diff = curDiff(state)) {
         // **그 편성의** 원정이 도는 중이어도 막지 않는다 — 보내면 `departRun` 이 그 부대를 끊는다 (R92 · 다른 부대는 안 건드린다)
-        //   원정은 건물 밖이다 — 처음부터 열려 있어 `hasFeature` 를 묻지 않는다 (2026-09-25 · R161 · 원정 r1 은 장만 연다)
+        //   원정은 건물 밖이다 — 처음부터 열려 있어 `hasFeature` 를 묻지 않는다 (2026-09-25 · R161 · 원정 건물은 2026-10-22 에 걷혔다 · R319)
         //   난이도 `diff`(기본 고른 단 · R236) — 그 단이 안 열렸거나 그 단에서 아직 못 들어가는 칸이면 `locked`
         if (!stageUnlocked(state, stageId, diff)) return 'locked';
         // 챕터보스가 죽어 있다 — 그 칸 × 단의 보스가 돌아올 때까지 어느 편성도 못 나간다 (2026-10-10 · R240)
@@ -2640,7 +2869,7 @@ export function createGameSystem(deps) {
         //   (2026-09-29 · ~~올린 양 포함 · R87~~). 노말은 더하기가 없어 `dlvl` 그대로다. rng 를 안 쓰므로 수열이 안 밀린다
         const level = stageLevel(stageId, dif);
         // 물약 — **이 런을 열 때** 그 편성의 칸 구성을 재고에서 앞 칸부터 채운다(모자란 칸은 빈다). 재고는 마실 때 준다(`advanceRun`).
-        //   원정 도중에 만든 물약은 다음 런부터 든다 (battle_design §7-1 · R124). rng 0
+        //   둘째 라운드부터는 정산이 굳힌 편성의 칸을 재고에서 다시 채워 넘긴다 — 원정 도중에 만들거나 산 물약은 다음 라운드부터 든다 (battle_design §7-1 · R124 · R315). rng 0
         // 전술은 **이 순간 켜진 것만** 산다 — 핸들의 `tactics` 로 굳힌다 (R130 · tactic_card_design §2-1). rng 0
         const tactics = tacticSnap(view, going, no);
         //   조건이 읽은 전열 · 같이 깬 칸 수도 굳힌다 — 도는 원정의 재판정(`runTactics`)이 이 값으로 센다 (R134) · 자리(`byUid`)도 굳힌 편성의 것이다(`partyUnits` · 관전 아레나)
@@ -2797,12 +3026,14 @@ export function createGameSystem(deps) {
                 //   「그 런이 준 것」이라 uid 를 받아 리포트 `drops` 에 남긴 뒤 곧바로 지운다 — 화면은 흐린 빈 칸으로 그린다(SCREEN_DESIGN §4-3) · rng 0
                 //   **인벤토리가 차 있어도 같은 길이다** [2026-10-14 사용자 지시 「넘쳐서 못획득한 장비는 분해한 아이템을 얻도록」 · GAME_DESIGN §9 · item_design §6-5] —
                 //   넘친 드롭은 버리지 않고 가루로 받는다. 그 수는 `discarded`(이름은 그대로 — 넘쳐 분해한 수 · 알아서 분해에 걸린 것은 안 센다) · rng 0
-                const auto = autoSalvageHits(autoRuleOf(state), it);
+                //   **판정은 나간 부대의 규칙**(부대마다 격자 · 2026-10-22 R316) · 녹은 것은 지우기 전에 그 부대의 최근 분해 기록에 사본을 남긴다(넘침도 같다)
+                const auto = !salvageKeeps(state, run.preset, it);
                 if (auto || bag.length >= capOf(state, 'bag')) {
                     const gone = addItem(state, it);
                     R.drops.push(gone.uid);
                     if (auto) gained.push(gone); else R.discarded++;
                     state.resources.dust += I.salvageDust(gone);
+                    logSalvaged(state, run.preset, gone);
                     delete state.items[gone.uid];
                     continue;
                 }
@@ -2871,6 +3102,9 @@ export function createGameSystem(deps) {
             return true;
         }
         run.battle.refit(runUnits(state, run), leveled);
+        // 물약 칸 다시 채우기 [2026-10-22 · R315 · battle_design §7-1] — 굳힌 편성(`run.squad`)의 칸 구성을 **방금 뺀 재고**에서 앞 칸부터 채워 넘긴다(출발과 같은 함수) ·
+        //   다음 라운드를 열 때 칸이 그것이 된다 · 재고가 모자란 칸은 빈 채로 시작한다 · rng 0
+        if (run.squad) run.battle.restock(fillSlots(state, run.squad));
         return false;
     }
 
@@ -3190,8 +3424,8 @@ export function createGameSystem(deps) {
         return { ok: true, gold, free: S.free, level: h.level };
     }
 
-    /** 상단이 파는 도안의 후보 — 직업 스킬 중 기본 책이 아닌 것 · `skill.csv` 행 순서 · 스킬 도감의 획득처도 이것을 읽는다 (2026-10-20 · R293 · ~~책~~) */
-    const shopBlueprintPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && !d.starterPool && bookable(d.id)).map(d => d.id);
+    /** 상단이 파는 도안의 후보 — 직업 스킬 1티어(기본 책 포함) · 2티어는 안 판다 · `skill.csv` 행 순서 · 스킬 도감의 획득처도 이것을 읽는다 (2026-10-20 · R293 · ~~책~~ · 2026-10-22 R310 — ~~기본 책이 아닌 것~~) */
+    const shopBlueprintPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && d.tier === 1 && bookable(d.id)).map(d => d.id);
     /** 그 목록의 도안 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
     function shopBlueprintIds(state, list) {
         const pool = shopBlueprintPool();
@@ -3933,7 +4167,7 @@ export function createGameSystem(deps) {
             const rank = state.buildings[b.id] ?? 0;
             const ranks = Array.from({ length: b.maxRank }, (_, i) => {
                 const info = CN.rankInfo(b.id, i + 1);
-                // 더하기에 `total` — 그 건물을 이 랭크까지 지었을 때의 합(「챕터 n 해금」 같은 누적 문장 · R152)
+                // 더하기에 `total` — 그 건물을 이 랭크까지 지었을 때의 합(「파티 전술 레벨 n 해금」 같은 누적 문장)
                 const upto = CN.opened({ [b.id]: i + 1 }).adds;
                 const effects = info.effects.map(e => (e.kind === 'add' ? { ...e, total: upto[e.target] ?? 0 } : e));
                 return { rank: i + 1, built: i < rank, pending: info.pending, effects, require: CN.check(info.require, ctx, state.buildings) };
@@ -3981,10 +4215,12 @@ export function createGameSystem(deps) {
         state.buildings[buildingId] = nx.rank;
         if (labTouch) labSettle(state, now);   // 새 장소만 지금부터 생산
         // 편성 수 · 물약 칸 수가 더하기로 늘었으면 **그 자리를 곧바로 붙인다**(빈 편성 · 빈 칸 — 불러오기와 같은 `fitPresets`) · 줄어드는 길은 없다
-        //   부대 자리도 편성과 같은 길이로 맞춘다(`fitRuns` — 편성이 원정 랭크로 느는 길이 생겼다 · R156)
+        //   부대 자리도 편성과 같은 길이로 맞춘다(`fitRuns` — 편성이 탐험 랭크로 느는 길이 있다 · R156 · R319)
         state.presets = fitPresets(state, state.presets);
         state.runs = fitRuns(state, state.runs);
         state.bags = fitBags(state, state.bags);   // 새 편성은 빈 인벤토리를 갖고 연다 (v40 · ADR-0521)
+        state.salvageRules = fitSalvageRules(state, state.salvageRules);   // 새 편성은 빈 자동 분해 규칙(= 전부 보존) · 빈 기록으로 연다 (v41 · R316)
+        state.salvageLogs = fitSalvageLogs(state, state.salvageLogs);
         return { ok: true, rank: nx.rank };
     }
 
@@ -4000,9 +4236,9 @@ export function createGameSystem(deps) {
     /**
      * **창구 — 무엇을 지어야 열리나** `{id, name, rank}` · 표에 없으면 null(`construction.reach`) — 잠긴 자리가 「선술집 2랭크」를 말할 때 읽는다.
      *   켜기는 이름만(`needOf('hire')`) · 더하기는 **기본값 위로 몇이 필요한가**(`needOf('tactic_slots', 3)` = 셋째 전술 칸 · 제작 레벨 · 물약 단계 · 전술 칸은 기본값이 0 이라 순번 그대로). 상태를 안 본다 ·
-     *   **장은 `chapter_open_max` 뒤면 표와 무관하게 null** — 이번 버전이 안 여는 장이다(`limitsOf` 가 같은 값으로 자른다 · R227)
+     *   장은 건물이 안 연다 — `chapterGate` (2026-10-22 · R319)
      */
-    const needOf = (target, n = 1) => (target === 'chapters' && n > B.chapter_open_max ? null : CN.reach(target, n));
+    const needOf = (target, n = 1) => CN.reach(target, n);
 
     /**
      * 전술 조건이 세는 파티 — **편성 순서대로**(첫 칸이 리더 · §5-8) · 죄종 · 직업 · 입은 장비 · **전열에 섰나**.
@@ -4253,12 +4489,12 @@ export function createGameSystem(deps) {
     return {
         newGame, serialize, deserialize, canLoad, addExpTime,
         heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
-        codexLevel, codexNext, codexMaxLevel, codexSteps, codexOptionOf, codexLadder, codexOptions, codexExpOf,
+        codexLevel, codexNext, codexMaxLevel, codexSteps, codexOptionOf, codexLineOf, codexLadder, codexOptions, codexExpOf,
         skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
-        equipTarget, equip, unequip, autoEquip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
+        equipTarget, equip, unequip, autoEquip, salvage, setItemLock, salvageView, setSalvageCell, setSalvageCells, setSalvageBase, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
-        stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
+        stageUnlocked, chapterOpen, chapterGate, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
         difficultyState, selectDifficulty, stageLevel, stageCleared,
         runLock, runTactics, runTacticsIf, runBuffs, runCombat,

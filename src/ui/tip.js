@@ -744,13 +744,14 @@ export function monsterTipCard(u, itemCardOf = null) {
     return unitCard(u.stats, color, sheet, rebuild, lift, equipment, itemCardOf);
 }
 
-/** 도감 사다리 앞 단계의 값 표기 — 비율이다(`codex_level.csv:value`) · 옵션 줄 사전에 없는 축이라 `statValue` 에 표기만 넘긴다 */
+/** 도감 Lv1 파밍 줄의 값 표기 — 비율이다(`codex_option.csv:farm_value`) · 옵션 줄 사전에 없는 축이라 `statValue` 에 표기만 넘긴다 */
 const CX_PCT = { fmt: 'pct' };
 
 /**
  * 도감 몬스터 툴팁 — **두 장**: 왼쪽 선술집 후보 카드 · 오른쪽 이야기 · 단계 (SCREEN_DESIGN §9 · ADR-0206 · ADR-0233).
  * 오른쪽 장 = 「스토리」 머리글 + 이야기 · 아래 「보너스 효과」 머리글 + 단계(초상 · 이름 · 직업은 왼쪽 장이 든다). 도감 경험치는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
- * 단계 줄은 **그 단계가 여는 효과**다(ADR-0667 · monster_design §8) — 종류 · 순서 · 값은 `game.codexSteps`, 옵션 단계의 줄은 `game.codexOptionOf`(장비 옵션 줄과 같은 표기 · 행이 없으면 `—`)
+ * 단계 줄은 **그 단계가 여는 효과**다(ADR-0667 · ADR-0715 · monster_design §8) — 종류 · 순서는 `game.codexSteps`, Lv1 · Lv2 줄은 `game.codexLineOf`(종족 이름 + 한 마리 몫) ·
+ *   옵션 단계의 줄은 `game.codexOptionOf`(장비 옵션 줄과 같은 표기 · 행이 없으면 `—`)
  * @param m `{id, exp, boss}` — 도감 카드 한 장의 집계(exp = 누적 도감 경험치 · ADR-0587)
  * @param grade 초상 등급 — 일반 / 정예 고르개를 그대로 따른다 (ADR-0167)
  * @returns `[후보 카드 장, 이야기 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
@@ -761,11 +762,21 @@ export function codexMonsterTipCard(m, grade) {
     const lv = SYS.game.codexLevel(m.exp);
     // 단계는 **늘 전부 선다** — 닿지 않은 단계도 보여야 「다음에 무엇을 받나」가 읽힌다 · 닿은 단계만 켜진다.
     //   **레벨만 든다** — 「경험치를 얼마 모아야 열린다」는 적지 않는다(다음 문턱은 카드가 든다 · ADR-0209)
-    //   앞 단계는 그 몬스터에게만 걸리는 효과(`cx.rw.<reward>`) · 옵션 단계는 그 몬스터의 전투 옵션 한 줄 (ADR-0667)
+    //   Lv1 · Lv2 = 그 몬스터 **한 마리의 몫** 앞에 종족 이름(Lv2 는 「상대」 · ADR-0715) · Lv3(none) = `—` · 옵션 단계는 그 몬스터의 전투 옵션 한 줄 (ADR-0667)
+    //   칸이 없는 몬스터(보스)는 Lv1 · Lv2 도 `—`
     const opt = SYS.game.codexOptionOf(m.id);
-    const stepText = s => s.reward === 'option'
-        ? (opt ? L(M.affixText(opt.stat, opt.value)) : '—')
-        : t(`cx.rw.${s.reward}`, { v: M.statValue(s.reward, s.value, CX_PCT) });   // 셋 다 비율 — 부호 · 단위는 옵션 줄과 같은 규칙(`statValue`)
+    const line = SYS.game.codexLineOf(m.id);
+    const race = line ? L(D.codexRaces[line.race]) : '';
+    const stepText = s => {
+        if (s.reward === 'option') return opt ? L(M.affixText(opt.stat, opt.value)) : '—';
+        if (!line || s.reward === 'none') return '—';
+        if (s.reward === 'farm') {
+            const { kind, value } = line.farm;   // 다섯 다 비율 — 부호 · 단위는 옵션 줄과 같은 규칙(`statValue`)
+            return t('cx.rw.farm', { race, line: t(`cx.rw.${kind}`, { v: M.statValue(kind, value, CX_PCT) }) });
+        }
+        const { stat, value } = line.fight;      // 장비 옵션 사전 · 사전에 없는 둘은 도감 전용 이름(`CODEX_FIGHT_LABELS`)
+        return t('cx.rw.fight', { race, line: L(M.affixText(stat, value, M.CODEX_FIGHT_LABELS[stat])) });
+    };
     const steps = SYS.game.codexSteps().map((s, i) => `
         <div class="cx-step${i < lv ? ' on' : ''}">
             <span class="cx-step-lv">${t('cx.tip.lv', { lv: s.level })}</span>

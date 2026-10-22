@@ -8,15 +8,15 @@
  *            group?(무기군 id — weapon_group.csv),
  *            ~~skill?~~(무기가 담은 액티브 id — 2026-09-29 R179 삭제 · 스킬북),
  *            baseId?(베이스 id — 무기는 weapon_base.csv(그 무기군에 풀이 있을 때만 · 2026-09-10) · 방어구 · 장신구는 item_base.csv(2026-09-17)),
- *            proc?(목걸이 고정 옵션 = 발동 스킬 `{trigger, skill, v}` — 목걸이만 · 2026-09-21 · ⚠ 전투는 안 읽는다) }
+ *            proc?(목걸이 베이스 옵션 = 발동 스킬 `{trigger, skill, v}` — 목걸이만 · 2026-09-21 · ⚠ 전투는 안 읽는다) }
  *   표시 문자열은 name 하나뿐이다 — 접사는 stat id + 숫자로 들고 다니고 단위 붙이기는 렌더러가 한다.
  *   name 은 `sins` · `words` · 베이스로 조립한 **결과**다 — 죄종 단어의 자리는 `words` 와 naming.sinPhrase 가 다시 낸다.
  *   (CSV 로 이사할 때 stat id 가 곧 combat_stat.csv 의 키가 된다)
  *   무기의 행동 주기·공격 타입·착용 직업은 아이템에 박지 않는다 — 매번 무기군(group)에서 읽는다. SSOT 는 weapon_group.csv.
  *
- * **접사는 출처(`src`)를 든다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — `fixed`(고정 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션).
+ * **접사는 출처(`src`)를 든다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — `fixed`(베이스 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션).
  *   **무기 · 갑옷은 죄종 계열표로 받는다** [2026-10-05 · 사용자 확정 · R206 · R208 · R209 · R210 · item_design §1 「무기 옵션 — 죄종 계열」 — ~~세 층(고정 · 죄종 칸 · 통합)~~] —
- *   고정 1 + **메인 줄**(이름의 죄종마다 그 계열 셋 중 하나 — 반드시 · 일반 0 · 매직 1 · 레어 2) + **랜덤 줄**(계열표 21 옵션 중 아직 안 붙은 것에서 ·
+ *   베이스 옵션 1 + **메인 줄**(이름의 죄종마다 그 계열 셋 중 하나 — 반드시 · 일반 0 · 매직 1 · 레어 2) + **랜덤 줄**(계열표 21 옵션 중 아직 안 붙은 것에서 ·
  *   같은 계열이 겹쳐도 된다). 대역은 하나 · **발동은 아이템당 하나**.
  *   **랜덤 줄은 칸마다 붙을지 굴린다** [2026-10-20 · 사용자 확정 · R291 · item_design §1 희귀도 — ~~줄 수 `item_lines_*` · 반지는 랜덤 하나 더~~(10-18 R285)] —
  *   일반 · 매직 · 레어 모두 랜덤 칸 [balance.csv:item_random_slots] · 전 부위 같다(`randomSlots` · ~~일반 0~~ 2026-10-21 R297).
@@ -27,11 +27,11 @@
  *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)를 함께 든다 — ⚠ 목걸이 `proc` 처럼 **전투는 안 읽는다**(설명에만 · GAME_DESIGN §10).
  *   **방어구 넷 모두 죄종 계열표다** [투구 2026-10-21 R299 · 장갑 · 신발 2026-10-21 R303 · item_design §1 「10-21 방어구 개정」 — ~~투구 · 장갑 · 신발 세 층 ·
  *   공통옵션 `armor_common_option.csv`~~(09-18 · 파일째 퇴역)] — 부위마다 표 하나 · 갈래가 표를 가르지 않는다.
- *   **갈래는 방어 계수 + 굴리는 고정 특성**(`armor_group.csv:trait_*` · 투구 · 장갑 · 신발) — 특성은 고정 「방어력 +%」 바로 뒤에 `src: 'fixed'` 줄로 박힌다(R303).
+ *   **갈래는 방어 계수 + 굴리는 베이스 특성**(`armor_group.csv:trait_*` · 투구 · 장갑 · 신발) — 특성은 베이스 「방어력 +%」 바로 뒤에 `src: 'fixed'` 줄로 박힌다(R303).
  *   **오만은 부위마다 한 칸 · 장갑 시기도 한 칸**(`singleOption`) · **특정 스킬 +n 은 장비에서 뺐다**(2026-10-21 — 표에 서면 로드가 던진다 · 옛 아이템의 줄은 `skillPlusOf` 가 그대로 읽는다).
  *   **목걸이 · 반지도 세 층이다** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 `accessory_sin_option.csv` +
- *   공통옵션 `accessory_common_option.csv`(두 부위 한 풀 · 랜덤 칸 — 위). 반지는 고정이 없고(~~그만큼 랜덤 줄이 하나 더~~ 2026-10-20 — 칸 수는 같다),
- *   **목걸이 고정 옵션은 발동 스킬**이라 `affixes` 가 아니라 `item.proc` 에 든다(발동 조건은 베이스 — `amulet_proc.csv`).
+ *   공통옵션 `accessory_common_option.csv`(두 부위 한 풀 · 랜덤 칸 — 위). 반지는 베이스 옵션이 없고(~~그만큼 랜덤 줄이 하나 더~~ 2026-10-20 — 칸 수는 같다),
+ *   **목걸이 베이스 옵션은 발동 스킬**이라 `affixes` 가 아니라 `item.proc` 에 든다(발동 조건은 베이스 — `amulet_proc.csv`).
  *   ~~`affix.csv` 한 풀(전부 `random`)을 쓰는 것은 목걸이 · 반지뿐이다~~ — 마지막 사용자가 떠나 파일째 퇴역했다.
  *
  * **한손 개념은 없다** (2026-09-01) — 전 무기가 양손이라 `twoHanded` 플래그도 보조(offhand) 슬롯도 폐지했다.
@@ -41,7 +41,7 @@
  *   ~~지역 드롭 편향~~ 08-27 · ~~낙인 지정~~ 2026-09-15 에 사라졌다)일 뿐 포인트가 아니다. 양손 2포인트 · 메인 죄종 +1 도 같이 보류라 여기 없다.
  *
  * **개체 굴림은 없다** [2026-09-18 · 사용자 확정 · item_design §1 「부위 고유 방어력」] — ~~방어구 고유 방어력만 드롭 시 한 번 굴려 개체에 박는다~~.
- *   방어구 고유값은 레벨 · 부위 · 갈래가 정한 값 그대로이고 개체 사이의 차이는 고정 옵션 「방어력 +%」 한 줄이 든다.
+ *   방어구 고유값은 레벨 · 부위 · 갈래가 정한 값 그대로이고 개체 사이의 차이는 베이스 옵션 「방어력 +%」 한 줄이 든다.
  *   ~~무기는 공격력(watk, 무기군 편차 폭)~~ 은 **2026-09-14 폐지**(R90 · battle_design §9-1) — 무기 피해는 **최소 ~ 최대 범위**이고
  *   무기군 × ilvl × 강화 단계가 정한다(`weaponDamage` — 박지 않고 파생). 범위 안의 굴림은 직격마다 전투(formula.strike)가 한다.
  *
@@ -93,7 +93,7 @@ import { createFormula } from './formula.js';
  *                  ~~특정 스킬 +n 풀(`armorPool` · `buffPool`)~~ — 2026-10-21 R303 장비에서 뺐다(유니크 논의 대기 · 안 읽는다)
  *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, trait, …}}} ← armor_group.csv — **부위 → 갈래** (갑옷군 2026-09-16 · 투구 · 장갑 · 신발 2026-09-18).
  *                  고유 방어력의 갈래 계수(`defMult`)를 여기서 읽는다 — 갈래 id 는 부위마다 겹친다(`leather`).
- *                  `trait` = `{stats:[stat…], scale, min, max}` | null — **굴리는 고정 특성**(2026-10-21 R303) · `stats` 가 둘 이상이면 드롭 때 하나
+ *                  `trait` = `{stats:[stat…], scale, min, max}` | null — **굴리는 베이스 특성**(2026-10-21 R303) · `stats` 가 둘 이상이면 드롭 때 하나
  *   armorSinOptions    — [{slot, sin, option, stat, scale, min, max, perIlvl?}] ← armor_sin_option.csv — **방어구 넷의 죄종 계열표** (2026-09-18 · `option` 2026-10-05 ·
  *                         네 부위 2026-10-21 R303). 같은 (부위, 죄종, option) 의 행 여럿 = 변형 · **행 순서가 결정론 계약**
  *   ~~armorCommonOptions~~ — 2026-10-21 R303 퇴역(`armor_common_option.csv` 삭제 — 방어구 넷이 계열표다)
@@ -131,7 +131,7 @@ export function createItemSystem(data) {
 
     /** 베이스 능력치가 없는 부위 — 무기(피해 범위)도 방어구(고유값)도 아닌 둘. 고유값 굴림과 강화가 같은 판정을 쓴다 (R95) */
     const baseless = slot => slot === 'amulet' || slot === 'ring';
-    /** 방어구 네 부위(갑옷 · 투구 · 장갑 · 신발) — 고유 방어력을 갖고 고정 「방어력 +%」 + 죄종 계열을 받는 부위 (2026-09-18 · 계열 2026-10-21 R303) */
+    /** 방어구 네 부위(갑옷 · 투구 · 장갑 · 신발) — 고유 방어력을 갖고 베이스 「방어력 +%」 + 죄종 계열을 받는 부위 (2026-09-18 · 계열 2026-10-21 R303) */
     const isArmor = slot => !!slot && slot !== 'weapon' && !baseless(slot);
     // ~~SIN_FROM_WEAPON = ['gloves']~~ — 2026-10-05 R206 퇴역. 무기 표가 계열표로 바뀌어 장갑은 옛 무기 행 13개를 `armor_sin_option.csv` 의 장갑 행으로 그대로 든다
     /**
@@ -242,7 +242,7 @@ export function createItemSystem(data) {
                     if (!have.has(o)) throw new Error(`item: armor_sin_option 에 ${slot} · ${sin} 옵션 ${o} 행이 없다`);
             }
         }
-        // 굴리는 고정 특성 [2026-10-21 · R303] — 어휘 · 범위 · **그 부위 표에 같은 능력치가 없다**(한 아이템에 같은 줄이 두 번 서지 않게 · item_design §1 「10-21 방어구 개정」 규칙)
+        // 굴리는 베이스 특성 [2026-10-21 · R303] — 어휘 · 범위 · **그 부위 표에 같은 능력치가 없다**(한 아이템에 같은 줄이 두 번 서지 않게 · item_design §1 「10-21 방어구 개정」 규칙)
         for (const [slot, groups] of Object.entries(AG)) for (const g of Object.values(groups)) {
             const tr = g.trait;
             if (!tr) continue;
@@ -376,7 +376,7 @@ export function createItemSystem(data) {
     // ~~rollAffixes · affixCount~~ — 2026-09-21 R127 퇴역. 목걸이 · 반지가 마지막 사용자였다 (아래 `accessoryOptions`)
 
     /**
-     * 목걸이 고정 옵션 — **발동 스킬 하나** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「목걸이 고정 옵션」].
+     * 목걸이 베이스 옵션 — **발동 스킬 하나** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「목걸이 베이스 옵션」].
      * 발동 조건은 **베이스가 정한다**(`amulet_proc.csv` — rng 0) · 스킬은 `procSkills` 에서 1회 · 값 1회(확률 · 또는 쿨타임 배수 — 0.01 단위).
      * rng 소비(계약 — INTERFACE §5-2): **스킬 1 → 값 1** — 베이스에 행이 없거나 풀이 비어도 2회 그대로다.
      * 값은 아이템 레벨이 치우친다(`lean` · R291) — **`interval`(쿨타임 배수 — 낮을수록 좋다)만 균등 그대로**다(방향 미정 · 사용자 10-20 「나중에」)
@@ -396,7 +396,7 @@ export function createItemSystem(data) {
     /**
      * 반지 · 목걸이 옵션 — 죄종 칸 → 공통옵션 [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 순서가 곧 표시 순서다.
      * rng 소비(계약 — INTERFACE §5-2): **방어구와 같은 모양** — 죄종마다 (행 1 → 값 1) → 공통 칸마다 (붙나 1 → 종류 1 → 변형 1 → 값 1 · R291).
-     * 고정 층은 반지에 없고 목걸이는 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 · 칸이 안 붙어도 소비 수는 같다
+     * 베이스 층은 반지에 없고 목걸이는 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 · 칸이 안 붙어도 소비 수는 같다
      */
     function accessoryOptions(rng, slot, sins, rarity, ilvl) {
         const out = [];
@@ -475,13 +475,13 @@ export function createItemSystem(data) {
     }
 
     /**
-     * 무기 옵션 — 고정 1 + 죄종 계열 [2026-10-05 · R206 · R208 · R210 — ~~세 층(고정 · 죄종 칸 · 통합)~~ 2026-09-11 R78 대체] — 아이템이 드는 **순서가 곧 표시 순서**다(고정 → 메인 → 랜덤).
-     * rng 소비(계약 — INTERFACE §5-2): 고정 값 1 → `familyOptions`.
+     * 무기 옵션 — 베이스 옵션 1 + 죄종 계열 [2026-10-05 · R206 · R208 · R210 — ~~세 층(고정 · 죄종 칸 · 통합)~~ 2026-09-11 R78 대체] — 아이템이 드는 **순서가 곧 표시 순서**다(베이스 옵션 → 메인 → 랜덤).
+     * rng 소비(계약 — INTERFACE §5-2): 베이스 옵션 값 1 → `familyOptions`.
      * ⚠ **후보가 비어도 소비 수는 같다** — 무기군 · 표 내용이 소비 수를 바꾸면 같은 시드가 다른 드롭을 낸다(베이스 굴림과 같은 규칙)
      */
     function weaponOptions(rng, g, sins, rarity, ilvl) {
         const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
-        // 고정 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 고정 옵션) · 값도 아이템 레벨이 치우친다(R291)
+        // 베이스 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 베이스 옵션) · 값도 아이템 레벨이 치우친다(R291)
         const out = [{ stat: 'atk_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303 · 표에 서면 로드가 던진다)
         return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, randomSlots(rarity), ilvl, g.classes ?? []));
@@ -489,11 +489,11 @@ export function createItemSystem(data) {
 
     /**
      * 방어구 옵션 [2026-09-18 · 사용자 확정 · item_design §1 「투구 옵션」 · **네 부위 계열표 2026-10-21 R303** · 「10-21 방어구 개정」] — 순서가 곧 표시 순서.
-     *   고정 「방어력 +%」 1 → **갈래 특성** 1(굴림 · 갈래에 특성이 있을 때만 줄이 선다 — 투구 · 장갑 · 신발) → 죄종 계열(`familyOptions` — 무기와 같다)
+     *   베이스 「방어력 +%」 1 → **갈래 특성** 1(굴림 · 갈래에 특성이 있을 때만 줄이 선다 — 투구 · 장갑 · 신발) → 죄종 계열(`familyOptions` — 무기와 같다)
      *   ~~장갑 · 신발 세 층(고정 → 죄종 칸 → 공통)~~ — R303 퇴역
-     * rng 소비(계약 — INTERFACE §5-2): 고정 값 1 → **특성 변형 1 → 특성 값 1**(R303) → `familyOptions`.
+     * rng 소비(계약 — INTERFACE §5-2): 베이스 옵션 값 1 → **특성 변형 1 → 특성 값 1**(R303) → `familyOptions`.
      * ⚠ **후보가 비어도 · 칸이 안 붙어도 소비 수는 같다** — 특성이 없는 갈래(갑옷군 · 시작 칸)도 특성 둘을 소비한다. 부위 · 갈래 · 표 내용이 소비 수를 바꾸면 같은 시드가 다른 드롭을 낸다.
-     *   고정 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 — 합산은 `hero.computeCombat` 이 아이템마다 한다.
+     *   베이스 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 — 합산은 `hero.computeCombat` 이 아이템마다 한다.
      *   특성 줄은 다른 접사와 같은 채널이다(`src: 'fixed'` · 공속 · 쿨감 · 최대 체력 % · 명중률 · 피해 감소 · 행동 게이지 · 절대값 피해 감소)
      */
     function armorOptions(rng, slot, group, sins, rarity, ilvl) {
@@ -512,7 +512,7 @@ export function createItemSystem(data) {
      * **부위 배수** [2026-09-16 사용자 확정] — 갑옷 2.0 · 투구 1.0 · 장갑 0.6 · 신발 0.6(`armor_def_slot_*`).
      * **갈래 계수는 부위마다** [개정 2026-09-18 — ~~갑옷군 배수는 갑옷 칸에만~~] — 갑옷 중갑 1.6 · 경갑 1.0 · 로브 0.5 /
      *   투구 플레이트 1 · 가죽 0.4 · 티아라 0.2 / 장갑 · 신발 1 · 가죽 1/3 (`armor_group.csv:def_mult` · 시작 칸은 갈래가 없어 1).
-     * ~~개체 편차 1회~~ **2026-09-18 폐지** — 개체차는 고정 옵션 「방어력 +%」가 든다. **rng 를 안 쓴다**.
+     * ~~개체 편차 1회~~ **2026-09-18 폐지** — 개체차는 베이스 옵션 「방어력 +%」가 든다. **rng 를 안 쓴다**.
      * 값은 **정수**다 [2026-09-16 사용자 지시] — 표기 = 계산.
      */
     function implicitFor(slot, ilvl, group = null) {
@@ -527,8 +527,8 @@ export function createItemSystem(data) {
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
      * opts.weaponBase = (무기) 세부 베이스 고정 — 제작이 레벨의 베이스를 넘긴다(2026-09-21 · `weaponBaseAt`). **베이스 굴림은 1회 그대로 소비한다**(값만 안 쓴다).
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직·레어) 접두 죄종 → (레어) 접미 죄종 →
-     *   **(무기 · 방어구 넷) 고정 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05 · 랜덤 칸은 그 앞에 붙나 1 — 2026-10-20 R291 ·
-     *   **방어구는 고정 뒤에 갈래 특성 변형 1 → 값 1** — 2026-10-21 R303 · ~~(투구 · 장갑 · 신발) 옵션 세 층~~ R303 퇴역) /
+     *   **(무기 · 방어구 넷) 베이스 옵션 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05 · 랜덤 칸은 그 앞에 붙나 1 — 2026-10-20 R291 ·
+     *   **방어구는 베이스 옵션 뒤에 갈래 특성 변형 1 → 값 1** — 2026-10-21 R303 · ~~(투구 · 장갑 · 신발) 옵션 세 층~~ R303 퇴역) /
  *   **(목걸이 · 반지) 옵션 세 층** [2026-09-21 · R127 — ~~접사 수 → 접사마다 (정의 선택 → 값)~~] — (목걸이) 발동 스킬 1 → 값 1 → `accessoryOptions` →
      *   **(무기) 베이스 1회** [신설 2026-09-10] · ~~(무기) 스킬 1회~~ **2026-09-29 삭제**(R179) · ~~(방어구) 개체 굴림 1회~~ **2026-09-18 삭제** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
@@ -544,7 +544,7 @@ export function createItemSystem(data) {
         const suffix = suf?.sin ?? null;
         const sins = [prefix, suffix].filter(Boolean);
         const words = [pre, suf].filter(Boolean).map(x => x.word);
-        // 목걸이 고정 옵션(발동 스킬)은 **죄종 칸보다 앞**에서 굴린다 — 무기 · 방어구의 고정 옵션이 죄종 칸 앞인 것과 같은 자리 (2026-09-21 · R127)
+        // 목걸이 베이스 옵션(발동 스킬)은 **죄종 칸보다 앞**에서 굴린다 — 무기 · 방어구의 베이스 옵션이 죄종 칸 앞인 것과 같은 자리 (2026-09-21 · R127)
         const proc = slot === 'amulet' ? amuletProc(rng, base?.id, ilvl) : null;
         const item = {
             uid: null,
@@ -729,9 +729,9 @@ export function createItemSystem(data) {
     const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, WG[item.group] ?? null, item.up) : null);
 
     /**
-     * 무기 피해 범위에 **고정 옵션 「무기 데미지 +%」**(`src: 'fixed'` 의 `atk_pct` — 화면 이름 2026-10-15)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
+     * 무기 피해 범위에 **베이스 옵션 「무기 데미지 +%」**(`src: 'fixed'` 의 `atk_pct` — 화면 이름 2026-10-15)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
      * 양끝마다 곱하고 한 번 반올림한다 — `hero.computeCombat` 의 괄호 곱과 같은 규칙. 다른 % (죄종 칸 · 랜덤 · 마스터리 · 도감)는 안 든다 —
-     * 그 합은 영웅이 정하는 괄호라 캐릭터 시트가 든다. 고정 줄이 없는 옛 무기는 `weaponDamage` 그대로.
+     * 그 합은 영웅이 정하는 괄호라 캐릭터 시트가 든다. 베이스 줄이 없는 옛 무기는 `weaponDamage` 그대로.
      * **색욕 최소 · 최대 데미지**(`dmg_min_flat` · `dmg_max_flat` · 고정 수치)는 무기 % 를 곱한 양끝 **뒤에** 더하고, 최소가 최대를 넘으면 최대 = 최소 + 1 이다
      *   [2026-10-05 · R206 · item_design §1 — D2 방식]. 레벨당 최대 데미지는 영웅 레벨이 정해 여기 안 든다(시트가 든다) — `hero.computeCombat` 과 같은 순서
      */
@@ -751,9 +751,9 @@ export function createItemSystem(data) {
     }
 
     /**
-     * 방어구 고유값에 **고정 옵션 「방어력 +%」**(`armor_def_pct`)를 먹인 값 `{stat, v}` [2026-09-23 사용자 지시] — 툴팁 메인 옵션 · 제련소가 부른다.
+     * 방어구 고유값에 **베이스 옵션 「방어력 +%」**(`armor_def_pct`)를 먹인 값 `{stat, v}` [2026-09-23 사용자 지시] — 툴팁 메인 옵션 · 제련소가 부른다.
      * 강화 배율까지 든다(`effective`). 곱한 뒤 정수 — `hero.computeCombat` 이 아이템마다 하는 곱과 **같은 판정 · 같은 반올림**이다
-     * (그 아이템의 `armor_def_pct` 를 출처와 무관하게 더한다 — 이 stat 은 고정 줄에만 선다). 고유값이 없으면(무기 · 목걸이 · 반지) null
+     * (그 아이템의 `armor_def_pct` 를 출처와 무관하게 더한다 — 이 stat 은 베이스 줄에만 선다). 고유값이 없으면(무기 · 목걸이 · 반지) null
      */
     function implicitFixed(item) {
         const imp = effective(item)?.implicit;
@@ -780,7 +780,7 @@ export function createItemSystem(data) {
     /**
      * 옵션 줄 하나가 **굴릴 수 있었던 범위** `{min, max}` [신설 2026-10-14 · SCREEN_DESIGN §6 「비교 툴팁 규격」 Shift 범위 · ADR-0617 · INTERFACE §2-5].
      * 그 줄의 표 행을 **굴림이 고른 것과 같은 표**에서 찾는다 — `stat` · `src`(죄종 id · `fixed` · `random`) · 부위 · 무기군(`appliesTo`) · 방어구 갈래.
-     * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 고정 옵션은 `pctOption` · `rollOf` 의 `u` = 0 · 1 — 치우침 `lean` 은 양끝을 안 바꾼다 · R291)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
+     * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 베이스 옵션은 `pctOption` · `rollOf` 의 `u` = 0 · 1 — 치우침 `lean` 은 양끝을 안 바꾼다 · R291)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
      * 행을 못 찾으면(표에서 빠진 옛 옵션 · `src` 가 없는 줄 · 옛 무기의 `random` 줄) `null`. 목걸이 `proc` 은 `affixes` 밖이라 안 든다
      */
     function optionRange(item, i) {
@@ -820,6 +820,15 @@ export function createItemSystem(data) {
 
     /** 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화하지 않는다 (item_design §7-2 · R95). 부위만 본다 */
     const upgradeable = item => !baseless(item?.slot);
+
+    /** 베이스 옵션을 굴리는 부위인가 — 무기 · 방어구 넷 [2026-10-22 · R316 · INTERFACE §2-5] · 반지 · 목걸이는 베이스 옵션이 서면 바뀐다 */
+    const hasBase = part => !!part && !baseless(part);
+    /** 일반이 떨어지는 부위인가 — 반지 · 목걸이는 매직부터다(`rollGear` 가 일반을 매직으로 올린다 · R285) · 자동 분해 격자의 일반 칸이 이 부위에만 선다 */
+    const hasNormal = part => !!part && !baseless(part);
+    /** 베이스 옵션의 굴린 값(비율) — 무기 「무기 데미지 +%」 · 방어구 「방어력 +%」(`src: 'fixed'`) · 줄이 없으면 null · 강화 무관 (R316 — 자동 분해 [베이스] 칸) */
+    const baseRoll = item => (item?.affixes ?? []).find(a => a.src === 'fixed' && (a.stat === 'atk_pct' || a.stat === 'armor_def_pct'))?.v ?? null;
+    /** 그 부위 베이스 옵션의 위끝(비율) — 자동 분해 문턱의 상한 · 베이스가 없는 부위면 null (R316) */
+    const baseMax = part => (!hasBase(part) ? null : part === 'weapon' ? B.weapon_fixed_atk_pct_max : B.armor_fixed_def_pct_max);
 
     /** 다음 한 단계의 골드. 상한이거나 강화 대상이 아니면 null — 비용은 단계마다 기하로 붙는다.
      *  `max` = 그 세이브의 강화 상한 — 게임은 `state.limitsOf(state).upgrade` 를 넘긴다 · 안 주면 CSV 기본값 [balance.csv:equip_upgrade_max] (2026-09-22) */
@@ -866,5 +875,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
 }

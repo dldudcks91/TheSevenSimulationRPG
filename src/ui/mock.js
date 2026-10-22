@@ -62,10 +62,10 @@ export const SINS = {
 };
 
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
-   `src/data/skill_tag.csv`(14행 — 2026-09-08 오오라 추가)로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
+   `src/data/skill_tag.csv`(15행 — 2026-09-08 오오라 · 2026-10-22 정신 집중 추가)로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
 
 // 매직~유니크는 equip_rarity_config.csv 의 color_hex 그대로 — **5단계** [일반 신설 2026-09-14 · 사용자 확정 · R86]
-// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · ~~랜덤옵션은 붙는다~~ ~~고정 옵션 한 줄(2026-10-18 · R285)~~ 고정 옵션 + 랜덤 줄(2026-10-21 · R297) · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
+// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · ~~랜덤옵션은 붙는다~~ ~~고정 옵션 한 줄(2026-10-18 · R285)~~ 베이스 옵션 + 랜덤 줄(2026-10-21 · R297) · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
 // 통제 가능성의 계단: 일반(죄종 없음) → 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(매직 + 전용 옵션 하나 — 2026-09-15 · ~~낙인으로 죄종 지정~~) → 유니크(고정)
 export const RARITY = {
     normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
@@ -130,9 +130,9 @@ export const AFFIX_LABELS = {
     lightning_dmg_pct: { ko: '전기 피해', en: 'Lightning Damage', fmt: 'pct' },
     poison_dmg_pct: { ko: '독 피해', en: 'Poison Damage', fmt: 'pct' },
     res_down_pct: { ko: '타격 시 대상 원소 저항 감소', en: 'Resist Shred on Hit', fmt: 'pct' },
-    // ── 방어구 옵션 (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 신발 행 · 2026-09-18) — 고정 · 죄종 칸 · 공통옵션 표가 쓰는 축.
+    // ── 방어구 옵션 (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 신발 행 · 2026-09-18) — 베이스 옵션 · 죄종 칸 · 공통옵션 표가 쓰는 축.
     //    `fhr` · `cooldown_reduction` 은 combat_stat.csv 이름과 같게 둔다(마스터리 칸도 이 사전을 먼저 읽는다)
-    armor_def_pct: { ko: '물리 방어', en: 'Physical Defense', fmt: 'pct' },           // 고정 — 그 장비 자신의 고유 방어력에만 곱한다
+    armor_def_pct: { ko: '물리 방어', en: 'Physical Defense', fmt: 'pct' },           // 베이스 옵션 — 그 장비 자신의 고유 방어력에만 곱한다
     fhr: { ko: '타격 회복', en: 'Hit Recovery', fmt: 'pct' },
     cooldown_reduction: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'pct' },
     hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', fmt: 'pct' },
@@ -193,6 +193,15 @@ export const AFFIX_LABELS = {
     proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
     // 특정 스킬 +n — 줄에 스킬 id(`a.skill`)를 든다. `skill` = 툴팁 문장 `tip.skillPlus`(「파이어볼 +1」 · app.js `affixText`) [2026-10-08 · R225 · ADR-0535]
     skill_plus: { ko: '스킬 레벨', en: 'Skill Level', fmt: 'n', skill: true },
+};
+
+/**
+ * 도감 Lv2 전투 줄 중 **장비 옵션 사전에 없는 둘**의 이름 [2026-10-22 · R314 · ADR-0715] — 나머지 열셋은 `AFFIX_LABELS` 를 그대로 쓴다.
+ *   접사가 아니라서 접사 사전에 넣지 않는다 — `affixText` 의 `fallback` 으로 넘긴다
+ */
+export const CODEX_FIGHT_LABELS = {
+    vs_dmg: { ko: '데미지', en: 'Damage', fmt: 'pct' },
+    speed_pct: { ko: '공격 · 캐스팅 속도', en: 'Attack · Casting Speed', fmt: 'pct' },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
@@ -435,6 +444,8 @@ export const SKILL_ICON_FILES = [
     'mag_thunderstrike', 'mag_nova', 'mag_staticfield',
     'pri_aegis', 'pri_benediction', 'pri_resurrection', 'pri_punishment', 'pri_atonement', 'pri_excommunication',
     'pri_diamondbody', 'pri_sweep', 'pri_counter',
+    // 몬스터 전용 — 헬파이어(1-5 사탄 · 정신 집중 · 2026-10-22 Codex 단색 · 기본 스킬과 같은 연한 회청색 실루엣) · 자폭은 쥔 몬스터가 없어 그림도 없다
+    'mon_hellfire',
 ];
 // ~~`SKILL_ADV_ICON_FILES`(전직 스킬 그림 표 — 행보다 그림이 먼저 왔던 09-22 의 임시 목록)~~ 는 2026-10-02 삭제 —
 //   도감 전직 탭이 `skill.csv` 의 `owner_kind=advance` 행을 직접 편다(SCREEN_DESIGN §9-1 · ADR-0472)
@@ -823,8 +834,7 @@ export const TRADE = {
  */
 const rsSvg = body => `<svg viewBox="0 0 64 48" aria-hidden="true">${body}</svg>`;
 export const BUILDING_ART = {
-    // 원정 — 성문(탑 둘 · 아치 문 · 깃발)
-    expedition: rsSvg('<path fill-rule="evenodd" d="M6 46V12h4v4h3v-4h4v4h3v-4h4v10h16V12h4v4h3v-4h4v4h3v-4h4v34ZM26 46V36a6 6 0 0 1 12 0v10Z"/><path d="M50 12V1h1.4v11ZM51.4 1.2 60 4l-8.6 2.8Z"/>'),
+    // ~~원정~~ — 2026-10-22 건물째 걷혔다(장은 앞 장 보스가 연다 · ADR-0719 · R319)
     // 탐험 — 언덕 위 망루
     explore: rsSvg('<path d="M2 46c8-8 18-12 30-12s22 4 30 12Z"/><path d="M27 35 29 15h6l2 20Z"/><path d="M24 15h16l-8-9Z"/><path d="M31.4 6V0h1.2v6ZM32.6 .4 39 2.2l-6.4 1.8Z"/>'),
     // 제련소 — 작업장 + 굴뚝 + 화로 입
@@ -850,7 +860,7 @@ export const BUILDING_ART = {
  * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`CLASS_ICON_FILES` 와 같은 재고 목록)
  */
 export const BUILDING_IMG_DIR = './assets/art/buildings/';
-export const BUILDING_IMAGES = ['expedition', 'command', 'forge', 'tavern', 'shop', 'resource', 'explore', 'codex', 'storage', 'library'];   // ~~training~~ 2026-10-09 (그림 파일은 남아 있다)
+export const BUILDING_IMAGES = ['command', 'forge', 'tavern', 'shop', 'resource', 'explore', 'codex', 'storage', 'library'];   // ~~training~~ 2026-10-09 · ~~expedition~~ 2026-10-22 (그림 파일은 남아 있다)
 export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${id}.webp` : null);
 
 /**

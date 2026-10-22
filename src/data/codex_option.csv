@@ -1,86 +1,86 @@
-monster_idx,stat,value,description_kr
-1101,aspd_pct,0.02,고블린 척후병 — 민첩이 가장 높은 연사꾼(래피드 샷) · 값 = 그 줄 장비 범위의 아래 끝 ⚠제안 [2026-10-18 사용자 「몬스터다운옵션으로 모두 정해줘볼래」 · 「이렇게 모두 적용」 · monster_design §8-2 · R286]
-1102,stagger_dur_pct,0.1,고블린 전사 — 배시로 멈춰 세운다
-1103,buff_dur_pct,0.05,고블린 주술사 — 헤이스트를 거는 쪽
-1150,crit_damage,0.04,아바돈 — 파멸의 천사 · 혼자가 되면 세지는 오크
-1201,life_steal,0.01,인간 보병 — 핏빛 교전지대 · 프렌지
-1202,hit_bonus,0.1,인간 궁수 — 훈련된 정규군
-1203,def_flat,17,인간 기사 — 판금 · 값 = 아이템 레벨 50 의 아래 끝(도감엔 아이템 레벨이 없다)
-1251,counter_chance,0.05,라멕 — 「일흔일곱 배」의 복수
-1301,fhr,0.1,스켈레톤 전사 — 아픔을 모르는 뼈
-1302,dr_flat,3,스켈레톤 기사 — 갈비뼈 사이로 칼이 빠진다 · 값 = 아이템 레벨 50 의 아래 끝
-1303,fire_dmg_pct,0.06,스켈레톤 마법사 — 파이어볼
-1250,hp_pct,0.03,레기온 — 「우리는 많다」 · 배틀 오더
-1401,res_reduction_fire,0.03,화염 광신도 — 광신의 불은 막아도 탄다
-1402,hp_regen,0.2,임프 제사장 — 리젠
-1403,res_fire,0.06,청동 수호상 — 화로를 지키는 청동
-1450,cast_speed_pct,0.02,몰록 — 꺼지지 않는 화로
-1900,crit_rate,0.02,사탄 — 분노 죄종의 줄
-2101,damage_reduction,0.02,오크 전사 — 아이언 스킨
-2102,def_ignore,0.03,오크 궁수 — 오버드로우 · 힘으로 당긴 화살
-2103,debuff_dur_pct,0.1,오크 주술사 — 둠
-2150,hp_flat,139,라합 — 바다를 채운 혼돈의 짐승 · 값 = 아이템 레벨 50 의 아래 끝
-2201,hp_pct,0.03,엔트 — 나무의 두께
-2202,res_poison,0.06,썩어가는 엔트 — 독무 속에서 썩어 가며 버틴다
-2203,lightning_dmg_pct,0.06,지혜로운 엔트 — 라이트닝
-2250,def_ignore,0.03,맨드레이크 — 남이 지키는 것을 노리는 시기
-2301,counter_chance,0.05,우상족 사냥꾼 — 덤벼드는 사냥감을 받아친다
-2302,res_reduction_poison,0.03,우상족 추적자 — 포이즌 애로우
-2303,hp_recovery_pct,0.05,우상족 주술사 — 그레이스(은총)
-2350,res_reduction_cold,0.03,인비디아 — 시기 그 자체 · 프로스트 노바
-2401,counter_chance,0.05,나가 전사 — 휘감는 꼬리가 되받아친다
-2402,freeze_dur_reduction,0.1,나가 주술사 — 큐어 · 심연의 냉기
-2403,cold_dmg_pct,0.06,나가 마법사 — 프로스트 노바 · 딥 프리즈
-2450,status_dur_pct,0.1,메두사 — 눈길이 닿은 것을 오래 굳히는 자
-2900,res_max_poison,0.02,레비아탄 — 시기 죄종의 줄(장비의 시기 저항 = 독) · 칼이 들지 않는 비늘
-3101,aspd_pct,0.02,사막 도마뱀 약탈자 — 래피드 샷(고블린 척후병과 같은 스킬)
-3102,buff_dur_pct,0.05,사막 도마뱀 주술사 — 헤이스트
-3103,res_all,0.03,사암 골렘 — 레지스트 실드
-3150,fhr,0.1,다곤 — 돌은 움찔하지 않는다
-3201,fhr,0.1,스켈레톤 전사 — 1장과 같은 이름 = 같은 옵션
-3202,crit_damage,0.04,스켈레톤 궁수 — 스나이프 한 발
-3203,dr_flat,3,스켈레톤 기사 — 1장과 같은 이름 = 같은 옵션
-3250,debuff_dur_pct,0.1,카론 — 건넌 자는 돌아오지 못한다
-3301,heal_out_pct,0.04,맨머리 미라 — 힐
-3302,hp_pct,0.03,청동 미라 — 썩지 않는 몸 · 배틀 오더
-3303,res_reduction_lightning,0.03,금관 미라 — 금관에 깃든 번개
-3350,buff_dur_pct,0.05,메피스토펠레스 — 계약은 오래 묶는다
-3401,cooldown_reduction,0.02,황금 장부 — 에코 · 같은 주문을 되읽는다
-3402,aspd_pct,0.02,황궁 근위궁수 — 근위대의 일제 사격
-3403,def_flat,17,황궁 근위대장 — 근위대장의 갑옷
-3450,crit_rate,0.02,플루토스 — 눈먼 부의 신 · 어디로 떨어질지 모르는 행운
-3900,life_steal,0.01,맘몬 — 남의 것을 제 것으로 · ⚠ 탐욕엔 전투 줄이 없어 흡혈을 빌렸다
-4101,hp_regen,0.2,트롤 전사 — 트롤의 재생
-4102,heal_out_pct,0.04,트롤 주술사 — 큐어 · 리젠
-4103,cold_dmg_pct,0.06,트롤 서리술사 — 아이스 블라스트
-4150,cold_dmg_pct,0.06,유키온나 — 숨결로 얼린다
-4201,status_dur_pct,0.1,서리 원혼 — 딥 프리즈 · 얼음이 오래 붙는다
-4202,debuff_dur_pct,0.1,동결 곡성귀 — 바인드
-4203,res_max_cold,0.02,망령 백인대장 — 빙하 요새를 지킨 망령
-4250,res_cold,0.06,아스타로스 — 빙하 요새의 주인 · 나태의 대공
-4301,res_cold,0.06,예티 — 털가죽
-4302,stagger_dur_pct,0.1,예티 투석병 — 돌덩이에 맞으면 멈춘다
-4303,hp_flat,139,예티 빙하거인 — 거인
-4350,hp_regen,0.2,파주주 — 트롤
-4401,damage_reduction,0.02,왕좌 수호상 — 홀리 실드 · 방어 최고
-4402,res_reduction_cold,0.03,서리 석상 — 얼음을 깎은 석상 · 아이스 블라스트
-4403,hit_bonus,0.1,날개 석상 — 내리꽂는 스나이프
-4450,status_dur_pct,0.1,힙노스 — 잠의 신 · 걸린 것이 깨지 않는다
-4900,cooldown_reduction,0.02,벨페고르 — 나태 죄종의 줄
-5101,life_steal,0.01,굶주린 구울 — 허기 · 물어뜯어 채운다
-5102,res_reduction_poison,0.03,구울 사냥꾼 — 포이즌 애로우
-5103,res_poison,0.06,구울 주술사 — 시체의 독 속에 산다
-5150,res_reduction_poison,0.03,오르쿠스 — 독 저항이 가장 높은 저승의 신
-5201,hp_flat,139,오크 대식가 — 먹은 만큼 불어난 몸
-5202,def_ignore,0.03,오크 작살꾼 — 작살이 꿰뚫는다
-5203,crit_damage,0.04,오크 요리장 — 고기를 가르는 식칼
-5250,dr_flat,3,탈로스 — 청동 거인
-5301,res_all,0.03,스카라브 병사 — 딱딱한 갑각
-5302,fire_dmg_pct,0.06,스카라브 마법사 — 파이어볼
-5303,hp_recovery_pct,0.05,스카라브 여왕 — 알을 낳아 무리를 키운다 · 리젠
-5350,hp_recovery_pct,0.05,베히모스 — 먹은 것이 다 살이 된다
-5401,crit_rate,0.02,파리 사수 — 겹눈이 급소를 본다
-5402,cast_speed_pct,0.02,파리 마법사 — 날갯짓처럼 빠른 시전
-5403,res_lightning,0.06,파리 시종장 — 번개 치는 연회의 대문을 지킨다
-5450,stagger_dur_pct,0.1,케르베로스 — 세 머리가 물고 놓지 않는다
-5900,res_all,0.03,바알제붑 — 폭식 죄종의 줄
+monster_idx,stat,value,farm,farm_value,fight,fight_value,description_kr
+1101,crit_rate,0.01,drop,0.02,speed_pct,0.01,고블린 척후병 — 1장 분노 줄 · 줄 종류 = 그 장 죄종 · 원소 줄은 그 장 원소(1장 화염 · 2장 독 · 3장 번개 · 4장 냉기 · 5장 물리) · 3장은 탐욕 파밍 줄 + 색욕 전투 줄 · 값 = 장비 같은 줄 범위 아래 끝의 절반(고정 수치는 아이템 레벨 50 기준) ⚠임시 · 보스 행은 옛 줄 · 옛 값(장비 아래 끝 — 사용자가 나중에 다 정한다) [2026-10-22 사용자 「붙는 옵션의 종류가 죄종을 따라가라고」 · 「1장 화염 2장 독 3장 라이트닝 4장 얼음 5장 물리」 · 「일단 이대로 넣어봐 나중에 수정할게」 · monster_design §8-2 · R320] · farm · farm_value · fight · fight_value = 도감 Lv1 · Lv2 칸(그 종족 전체 — monster_base) — farm = 직업이 고른다(전사 xp · 궁수 drop · 마법사 magic · 기사 gold · 사제 material) · fight = 직업마다 공격 · 방어 · 지원 셋 중 몬스터가 고른 하나 · 값 = 3마리 종족의 한 칸 × 3 ÷ 그 종족 1 ~ 5장 일반몹 수(끝수 0.75 는 올림) ⚠임시 · 보스 · VI 자리는 - [2026-10-22 사용자 「직업별로 3개씩」 · 「종족별 갯수에 맞춰서 수치를 수정」 · monster_design §8 · R314]
+1102,fhr,0.05,xp,0.02,stagger_dur_pct,0.04,고블린 전사 — 1장 분노 줄
+1103,burn_dur_reduction,0.05,material,0.02,hp_regen,0.1,고블린 주술사 — 1장 화염 줄
+1150,crit_damage,0.04,-,-,-,-,아바돈 — 파멸의 천사 · 혼자가 되면 세지는 오크
+1201,crit_damage,0.02,xp,0.01,vs_dmg,0.01,인간 보병 — 1장 분노 줄
+1202,crit_rate,0.01,drop,0.01,speed_pct,0.005,인간 궁수 — 1장 분노 줄
+1203,damage_reduction,0.01,gold,0.01,hit_bonus,0.02,인간 기사 — 1장 분노 줄
+1251,counter_chance,0.05,-,-,-,-,라멕 — 「일흔일곱 배」의 복수
+1301,fhr,0.05,xp,0.01,stagger_dur_pct,0.02,스켈레톤 전사 — 아픔을 모르는 뼈
+1302,damage_reduction,0.01,gold,0.01,hit_bonus,0.02,스켈레톤 기사 — 1장 분노 줄
+1303,fire_dmg_pct,0.03,magic,0.01,res_reduction,0.01,스켈레톤 마법사 — 파이어볼
+1250,hp_pct,0.03,-,-,-,-,레기온 — 「우리는 많다」 · 배틀 오더
+1401,res_reduction_fire,0.015,magic,0.03,status_dur_pct,0.06,화염 광신도 — 광신의 불은 막아도 탄다
+1402,crit_damage,0.02,material,0.03,hp_regen,0.15,임프 제사장 — 1장 분노 줄
+1403,res_fire,0.03,gold,0.015,damage_reduction,0.01,청동 수호상 — 화로를 지키는 청동
+1450,cast_speed_pct,0.02,-,-,-,-,몰록 — 꺼지지 않는 화로
+1900,crit_rate,0.02,-,-,-,-,사탄 — 분노 죄종의 줄
+2101,counter_chance,0.025,xp,0.01,dr_flat,1,오크 전사 — 2장 시기 줄
+2102,stagger_dur_pct,0.05,drop,0.01,crit_rate,0.005,오크 궁수 — 2장 시기 줄
+2103,debuff_dur_pct,0.05,material,0.01,heal_out_pct,0.01,오크 주술사 — 둠
+2150,hp_flat,139,-,-,-,-,라합 — 바다를 채운 혼돈의 짐승 · 값 = 아이템 레벨 50 의 아래 끝
+2201,res_poison,0.03,gold,0.02,damage_reduction,0.01,엔트 — 2장 독 줄
+2202,res_poison,0.03,material,0.02,life_steal,0.005,썩어가는 엔트 — 독무 속에서 썩어 가며 버틴다
+2203,poison_dur_reduction,0.05,magic,0.02,res_reduction,0.02,지혜로운 엔트 — 2장 독 줄
+2250,def_ignore,0.03,-,-,-,-,맨드레이크 — 남이 지키는 것을 노리는 시기
+2301,counter_chance,0.025,xp,0.01,stagger_dur_pct,0.02,우상족 사냥꾼 — 덤벼드는 사냥감을 받아친다
+2302,res_reduction_poison,0.015,drop,0.01,crit_rate,0.005,우상족 추적자 — 포이즌 애로우
+2303,heal_out_pct,0.02,material,0.01,hp_regen,0.05,우상족 주술사 — 2장 시기 줄
+2350,res_reduction_cold,0.03,-,-,-,-,인비디아 — 시기 그 자체 · 프로스트 노바
+2401,counter_chance,0.025,xp,0.02,dr_flat,2,나가 전사 — 휘감는 꼬리가 되받아친다
+2402,heal_out_pct,0.02,material,0.02,heal_out_pct,0.02,나가 주술사 — 2장 시기 줄
+2403,status_dur_pct,0.05,magic,0.02,status_dur_pct,0.04,나가 마법사 — 2장 시기 줄
+2450,status_dur_pct,0.1,-,-,-,-,메두사 — 눈길이 닿은 것을 오래 굳히는 자
+2900,res_max_poison,0.02,-,-,-,-,레비아탄 — 시기 죄종의 줄(장비의 시기 저항 = 독) · 칼이 들지 않는 비늘
+3101,item_find,0.02,drop,0.03,speed_pct,0.015,사막 도마뱀 약탈자 — 3장 탐욕 줄
+3102,kill_heal_pct,0.01,material,0.03,life_steal,0.01,사막 도마뱀 주술사 — 3장 색욕 줄(빌린 줄)
+3103,res_lightning,0.03,gold,0.06,damage_reduction,0.03,사암 골렘 — 3장 번개 줄
+3150,fhr,0.1,-,-,-,-,다곤 — 돌은 움찔하지 않는다
+3201,dmg_max_flat,5,xp,0.01,stagger_dur_pct,0.02,스켈레톤 전사 — 3장 색욕 줄(빌린 줄)
+3202,item_find,0.02,drop,0.01,crit_rate,0.005,스켈레톤 궁수 — 3장 탐욕 줄
+3203,hp_flat,70,gold,0.01,hit_bonus,0.02,스켈레톤 기사 — 3장 색욕 줄(빌린 줄)
+3250,debuff_dur_pct,0.1,-,-,-,-,카론 — 건넌 자는 돌아오지 못한다
+3301,kill_heal_pct,0.01,material,0.02,heal_out_pct,0.02,맨머리 미라 — 3장 색욕 줄(빌린 줄)
+3302,life_steal,0.005,xp,0.02,dr_flat,2,청동 미라 — 3장 색욕 줄(빌린 줄)
+3303,res_reduction_lightning,0.015,magic,0.02,res_all,0.02,금관 미라 — 금관에 깃든 번개
+3350,buff_dur_pct,0.05,-,-,-,-,메피스토펠레스 — 계약은 오래 묶는다
+3401,lightning_dmg_pct,0.03,magic,0.02,res_reduction,0.02,황금 장부 — 3장 번개 줄
+3402,dmg_max_flat,5,drop,0.02,fhr,0.04,황궁 근위궁수 — 3장 색욕 줄(빌린 줄)
+3403,hp_flat,70,gold,0.02,buff_dur_pct,0.02,황궁 근위대장 — 3장 색욕 줄(빌린 줄)
+3450,crit_rate,0.02,-,-,-,-,플루토스 — 눈먼 부의 신 · 어디로 떨어질지 모르는 행운
+3900,life_steal,0.01,-,-,-,-,맘몬 — 남의 것을 제 것으로 · ⚠ 탐욕엔 전투 줄이 없어 흡혈을 빌렸다
+4101,hp_pct,0.015,xp,0.02,vs_dmg,0.02,트롤 전사 — 4장 나태 줄
+4102,buff_dur_pct,0.025,material,0.02,hp_regen,0.1,트롤 주술사 — 4장 나태 줄
+4103,cold_dmg_pct,0.03,magic,0.02,status_dur_pct,0.04,트롤 서리술사 — 아이스 블라스트
+4150,cold_dmg_pct,0.06,-,-,-,-,유키온나 — 숨결로 얼린다
+4201,cast_speed_pct,0.01,magic,0.02,status_dur_pct,0.04,서리 원혼 — 4장 나태 줄
+4202,freeze_dur_reduction,0.05,material,0.02,life_steal,0.005,동결 곡성귀 — 4장 냉기 줄
+4203,res_max_cold,0.01,gold,0.02,buff_dur_pct,0.02,망령 백인대장 — 빙하 요새를 지킨 망령
+4250,res_cold,0.06,-,-,-,-,아스타로스 — 빙하 요새의 주인 · 나태의 대공
+4301,res_cold,0.03,xp,0.02,dr_flat,2,예티 — 털가죽
+4302,aspd_pct,0.01,drop,0.02,fhr,0.04,예티 투석병 — 4장 나태 줄
+4303,hp_pct,0.015,gold,0.02,damage_reduction,0.01,예티 빙하거인 — 4장 나태 줄
+4350,hp_regen,0.2,-,-,-,-,파주주 — 트롤
+4401,buff_dur_pct,0.025,gold,0.015,buff_dur_pct,0.015,왕좌 수호상 — 4장 나태 줄
+4402,res_reduction_cold,0.015,magic,0.015,res_all,0.015,서리 석상 — 얼음을 깎은 석상 · 아이스 블라스트
+4403,aspd_pct,0.01,drop,0.015,crit_rate,0.01,날개 석상 — 4장 나태 줄
+4450,status_dur_pct,0.1,-,-,-,-,힙노스 — 잠의 신 · 걸린 것이 깨지 않는다
+4900,cooldown_reduction,0.02,-,-,-,-,벨페고르 — 나태 죄종의 줄
+5101,def_down_pct,0.025,xp,0.02,vs_dmg,0.02,굶주린 구울 — 5장 물리 줄
+5102,def_down_pct,0.025,drop,0.02,speed_pct,0.01,구울 사냥꾼 — 5장 물리 줄
+5103,stun_dur_reduction,0.05,material,0.02,heal_out_pct,0.02,구울 주술사 — 5장 물리 줄
+5150,res_reduction_poison,0.03,-,-,-,-,오르쿠스 — 독 저항이 가장 높은 저승의 신
+5201,def_flat,9,gold,0.01,hit_bonus,0.02,오크 대식가 — 5장 물리 줄
+5202,def_ignore,0.015,drop,0.01,fhr,0.02,오크 작살꾼 — 작살이 꿰뚫는다
+5203,def_down_pct,0.025,xp,0.01,vs_dmg,0.01,오크 요리장 — 5장 물리 줄
+5250,dr_flat,3,-,-,-,-,탈로스 — 청동 거인
+5301,def_flat,9,gold,0.02,buff_dur_pct,0.02,스카라브 병사 — 5장 물리 줄
+5302,cast_stack_pct,0.005,magic,0.02,res_all,0.02,스카라브 마법사 — 5장 폭식 줄
+5303,cast_stack_pct,0.005,material,0.02,hp_regen,0.1,스카라브 여왕 — 5장 폭식 줄
+5350,hp_recovery_pct,0.05,-,-,-,-,베히모스 — 먹은 것이 다 살이 된다
+5401,def_ignore,0.015,drop,0.02,fhr,0.04,파리 사수 — 5장 물리 줄
+5402,cast_stack_pct,0.005,magic,0.02,res_reduction,0.02,파리 마법사 — 5장 폭식 줄
+5403,stun_dur_reduction,0.05,material,0.02,life_steal,0.005,파리 시종장 — 5장 물리 줄
+5450,stagger_dur_pct,0.1,-,-,-,-,케르베로스 — 세 머리가 물고 놓지 않는다
+5900,res_all,0.03,-,-,-,-,바알제붑 — 폭식 죄종의 줄

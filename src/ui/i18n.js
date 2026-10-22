@@ -277,6 +277,8 @@ const STRINGS = {
     'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
     'exp.departCut': { ko: '이 파티는 지금 원정 중입니다. 진행 중인 원정을 접고 새로 출격할까요?', en: 'This party is on an expedition. End the current run and deploy anew?' },
     'exp.locked': { ko: '이전 스테이지 클리어', en: 'Clear the previous stage', lock: true },
+    // 잠긴 장의 한 줄 — 그 장을 여는 앞 장 보스 (SCREEN_DESIGN §4-1 · §8-4 · ADR-0719 · R319). {ch} = 보스 칸의 장(`game.chapterGate`)
+    'exp.chNeed': { ko: '{ch}장 보스 클리어', en: 'Clear the Ch{ch} boss', lock: true },
     // 난이도 탭 바로 옆 — 다음에 열릴 단의 조건 (SCREEN_DESIGN §4-1 · ADR-0586 · ADR-0596). {d} = 앞 단 이름 · {ch} = `balance.csv:difficulty_unlock_chapter`
     'exp.diff.need': { ko: '{d} {ch}장 보스 클리어', en: 'Clear the {d} Ch{ch} boss', lock: true },
     /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-10-17 · SCREEN_DESIGN §4-1 · ADR-0649 — 소요 · 원소를 걷어 레벨만]. {lv} = 고른 난이도의 몬스터 레벨 */
@@ -335,8 +337,8 @@ const STRINGS = {
     'ch.menu.lock': { ko: '잠금', en: 'Lock' },
     'ch.menu.unlock': { ko: '잠금 해제', en: 'Unlock' },
     // 도움말이 받는 힌트 — 인게임 패널에는 규칙 문구를 안 둔다 (SCREEN_DESIGN §12)
-    'ch.salvageHint': { ko: '장비를 우클릭해 [잠금]을 누르면 잠기거나 풀린다 — 잠근 장비는 분해되지 않는다. [분해]를 누르면 분해함이 뜬다 — 장비를 눌러 함에 올리거나, 등급 · 레벨 · 고정 열에서 고르면 맞는 장비가 바로 함에 오른다 — [분해하기]로 가루를 얻으면 필터가 풀린다. 열을 여럿 고르면 모든 열에 맞는 것만 오른다 — 고정 옵션이 높은 장비는 고정 열로 남길 수 있다. [자동 분해]에서 등급 · 아이템 레벨 선을 그으면 새로 들어오는 장비 중 하나라도 걸리는 것은 가방에 들어오기 전에 가루가 된다 — 이미 가진 것은 [지금 인벤토리에도 적용]을 눌러야 갈린다',
-        en: 'Right-click gear and press [Lock] to lock or unlock it — locked gear is never salvaged. Press [Salvage] to open the Salvage Box — click gear to put it in, or pick from the rarity, level and fixed columns and the matching gear goes in at once — [Salvage now] turns it to dust and clears the picks. With several columns picked, only gear matching every column goes in — keep high fixed-mod gear out with the fixed column. In [Auto salvage], set a rarity and an item-level line: new gear that hits either line turns to dust before it enters the bag — gear you already hold is only salvaged when you press [Apply to inventory now]' },
+    'ch.salvageHint': { ko: '장비를 우클릭해 [잠금]을 누르면 잠기거나 풀립니다. 잠근 장비는 분해되지 않습니다. [분해]를 누르면 분해함이 뜹니다. 장비를 눌러 함에 올리거나 등급 · 레벨 · 베이스 열에서 고르면 맞는 장비가 바로 함에 오르고, [분해하기]로 가루를 얻으면 필터가 풀립니다. 열을 여럿 고르면 모든 열에 맞는 것만 오르니, 베이스 옵션이 높은 장비는 베이스 열로 남길 수 있습니다. [자동 분해]는 부대마다 따로 정합니다. 등급 × 부위 칸마다 보존 · 베이스 · 분해를 고르고, 레벨 조건을 켜면 부대에서 가장 낮은 영웅 레벨보다 많이 낮은 장비를 분해합니다. 레벨 조건과 그 칸을 모두 만족해야 보존하고, [베이스] 칸은 베이스 옵션이 그 부위 문턱 이상인 것만 보존합니다. 유니크 · 크래프트는 언제나 보존합니다. 새로 들어오는 장비에만 걸리니 이미 가진 것은 [지금 인벤토리에 적용]을 눌러야 분해됩니다. 지금 규칙을 프리셋에 저장해 두면 다른 부대에서 불러올 수 있습니다',
+        en: 'Right-click gear and press [Lock] to lock or unlock it. Locked gear is never salvaged. Press [Salvage] to open the Salvage Box: click gear to put it in, or pick from the rarity, level and base columns and the matching gear goes in at once — [Salvage now] turns it to dust and clears the picks. With several columns picked, only gear matching every column goes in, so you can keep high base-option gear out with the base column. [Auto salvage] is set per party. For each rarity × slot cell choose Keep, Base or Salvage, and turn on the level condition to salvage gear far below the party’s lowest hero level. Gear is kept only when it meets both the level condition and its cell; a Base cell keeps only gear whose base option is at or above that slot’s threshold. Uniques and crafted gear are always kept. Only new gear is checked — press [Apply to inventory now] to salvage what you already hold. Save the rules to a preset to load them on another party' },
     // 보관 두 칸의 이름 — 왼쪽 창고 / 오른쪽 인벤토리 (2026-09-11 · item_design §1 · SCREEN_DESIGN §6)
     'ch.bag.stash': { ko: '창고', en: 'Stash' },
     'ch.bag.inv': { ko: '인벤토리', en: 'Inventory' },
@@ -362,25 +364,37 @@ const STRINGS = {
     // 분해함 필터의 열 머리 (ADR-0673)
     'ch.sel.byRarity': { ko: '등급', en: 'Rarity' },
     'ch.sel.byLevel': { ko: '레벨', en: 'Level' },
-    'ch.sel.byFixed': { ko: '고정', en: 'Fixed' },
+    'ch.sel.byFixed': { ko: '베이스', en: 'Base' },
     'ch.sel.title': { ko: '분해함', en: 'Salvage Box' },
     // ~~'ch.sel.lift'~~ 는 2026-10-21 삭제 — 필터를 누르면 바로 함에 오른다 (ADR-0695)
     'ch.sel.dust': { ko: '가루 +{d}', en: 'Dust +{d}' },
     'ch.sel.full': { ko: '분해함이 가득 찼다', en: 'The Salvage Box is full' },
     'ch.sel.lockedNo': { ko: '잠긴 장비는 분해함에 못 올린다', en: 'Locked gear cannot go in the Salvage Box' },
-    // 자동 분해 창 — 선 둘 + 지금 적용 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0203)
+    // 자동 분해 창 — 부대 하나의 규칙 · 프리셋 · 레벨 조건 · 등급 × 부위 격자 · 미리보기 · 최근 분해 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0717 — ~~선 둘~~ ADR-0203)
     'ch.auto.btn': { ko: '자동 분해', en: 'Auto salvage' },
     'ch.auto.h': { ko: '자동 분해', en: 'Auto Salvage' },
-    'ch.auto.rarity': { ko: '등급', en: 'Rarity' },
-    'ch.auto.r.none': { ko: '안 봄', en: 'Off' },
-    'ch.auto.r.normal': { ko: '일반 이하', en: 'Normal and below' },
-    'ch.auto.r.magic': { ko: '매직 이하', en: 'Magic and below' },
-    'ch.auto.ilvl': { ko: '아이템 레벨', en: 'Item level' },
-    'ch.auto.ilvlOff': { ko: '안 봄', en: 'Off' },
-    'ch.auto.ilvlBelow': { ko: 'Lv.{n} 미만', en: 'Below Lv.{n}' },
-    'ch.auto.apply': { ko: '지금 인벤토리에도 적용', en: 'Apply to inventory now' },
-    'ch.auto.confirm': { ko: '인벤토리의 {n}개가 분해된다', en: { one: '{n} item in the inventory will be salvaged', other: '{n} items in the inventory will be salvaged' } },
+    'ch.auto.hNo': { ko: '자동 분해 · {p}', en: 'Auto Salvage · {p}' },
+    'ch.auto.preset': { ko: '프리셋', en: 'Preset' },
+    'ch.auto.load': { ko: '불러오기', en: 'Load' },
+    'ch.auto.save': { ko: '저장', en: 'Save' },
+    'ch.auto.loaded': { ko: '프리셋 {n}에서 불러왔습니다', en: 'Loaded preset {n}' },
+    'ch.auto.saved': { ko: '프리셋 {n}에 저장했습니다', en: 'Saved to preset {n}' },
+    'ch.auto.lv': { ko: '레벨', en: 'Level' },
+    'ch.auto.lvOff': { ko: '안 봄', en: 'Off' },
+    'ch.auto.lvGap': { ko: '부대 최저 Lv −{g} 이상', en: 'Party min Lv −{g}+' },
+    'ch.auto.lvGap0': { ko: '부대 최저 Lv 이상', en: 'Party min Lv+' },
+    'ch.auto.th': { ko: '문턱', en: 'Min' },
+    'ch.auto.m.keep': { ko: '보존', en: 'Keep' },
+    'ch.auto.m.base': { ko: '베이스', en: 'Base' },
+    'ch.auto.m.salvage': { ko: '분해', en: 'Salvage' },
+    'ch.auto.preview': { ko: '지금 인벤토리 기준 분해 {n}개 · 가루 +{d}', en: 'Inventory now: salvage {n} · dust +{d}' },
+    'ch.auto.log': { ko: '최근 분해', en: 'Recently salvaged' },
+    'ch.auto.logNone': { ko: '없음', en: 'None' },
+    'ch.auto.apply': { ko: '지금 인벤토리에 적용', en: 'Apply to inventory now' },
+    'ch.auto.confirm': { ko: '인벤토리의 장비 {n}개를 분해합니다', en: { one: '{n} item in the inventory will be salvaged', other: '{n} items in the inventory will be salvaged' } },
     'ch.auto.ok': { ko: '확인', en: 'Confirm' },
+    // 출정 창 「들고 가는 것」의 자동 분해 칸 — 그 편성의 자동 분해 창을 연다 (SCREEN_DESIGN §4-1 · ADR-0717)
+    'ex.salvEdit': { ko: '바꾸기', en: 'Edit' },
     // ~~'ch.err.class'~~ 은 2026-10-06 삭제 — 09-10 장착 개방 뒤로 내는 곳이 없다. 거절 사유는 요구 레벨 하나 (R215 · ADR-0525)
     'ch.err.level': { ko: '레벨이 모자라 낄 수 없다', en: 'Level too low to equip' },
     'ch.err.bagFull': { ko: '인벤토리가 가득 찼다', en: 'Inventory is full' },
@@ -1149,10 +1163,10 @@ const STRINGS = {
     /* 스킬 칸 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
        공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 칸은 스킬 설명창 몸통 그대로라 문구도 설명창 키를 쓴다.
        ~~`tip.skill`~~(「담은 스킬」 라벨)은 2026-09-15 삭제 [사용자 지시 · ADR-0139] */
-    // 옵션 출처 태그 (SCREEN_DESIGN §6 · ADR-0100) — 셋이다: 고정(그 부위면 무조건) · 죄종 이름(죄종 칸 — 문구는 `mock.js:SINS`) · 랜덤(통합옵션).
+    // 옵션 출처 태그 (SCREEN_DESIGN §6 · ADR-0100) — 셋이다: 베이스 옵션(그 부위면 무조건) · 죄종 이름(죄종 칸 — 문구는 `mock.js:SINS`) · 랜덤(통합옵션).
     // 출처가 없는 옛 접사는 랜덤으로 찍는다 (2026-09-08 신설 · 2026-09-11 셋으로 — R78)
     'tip.src.random': { ko: '랜덤', en: 'Random' },
-    'tip.src.fixed': { ko: '고정', en: 'Fixed' },
+    'tip.src.fixed': { ko: '베이스', en: 'Base' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 낀다', en: 'Goes on ring slot {n}' },
     'tip.tacticOff': { ko: '끼우면 전술이 꺼진다 — {eff}', en: 'Equipping turns a tactic off — {eff}' },
     // 아이템 툴팁 각주 — 기본은 착용품과 비교 두 장이고 Alt 동안 「이 아이템」 카드에 착용 델타가 선다 (SCREEN_DESIGN §6 · 2026-10-18 · ADR-0658)
@@ -1262,8 +1276,6 @@ const STRINGS = {
     'cn.t.potion_tier': { ko: '물약 단계 +{n}', en: 'Potion tier +{n}' },
     // 전술 칸도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 칸 수 (SCREEN_DESIGN §13-1 · 2026-09-27 사용자 지시 「파티 전술 레벨1 해금」)
     'cn.t.tactic_slots': { ko: '파티 전술 레벨 {total} 해금', en: 'Unlocks Party Tactics Level {total}' },
-    // 장은 예외로 누적 번호 — `{total}` = 그 랭크까지 연 장 수 (SCREEN_DESIGN §13-1 · R152 · 문구 2026-09-25 사용자 지시 · R161)
-    'cn.t.chapters': { ko: '챕터 {total} 해금', en: 'Unlocks Chapter {total}' },
     'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}' },
     // 자원 단계도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 단계 (2026-09-27 사용자 지시 「랭크1에 채광, 채집, 벌목 n단계 해금」)
     'cn.t.resource_tier': { ko: '채광 · 채집 · 벌목 {total}단계 해금 · 자동 생산', en: 'Unlocks Mining, Gathering and Logging Tier {total} · Automatic production' },
@@ -1665,7 +1677,7 @@ const STRINGS = {
     'cx.seg.fx': { ko: '이펙트', en: 'Effects' },
     'cx.seg.mastery': { ko: '마스터리', en: 'Masteries' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
-    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오른다 — 처치 하나에 {per} · 레벨마다 그 몬스터의 보너스 효과가 하나씩 열린다', en: 'Levels up at {list} codex EXP — each kill gives {per} · each level opens one more of that monster\'s bonus effects' },
+    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오른다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 종족 전체에 붙는다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same race' },
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
     'cx.exp': { ko: '경험치 {n}', en: '{n} EXP' },   // 그 몬스터의 누적 도감 경험치 — 카드 진행 줄 · 핍 툴팁 (ADR-0587 · ~~cx.kills 처치 {n}~~)
@@ -1674,10 +1686,15 @@ const STRINGS = {
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story' },
     'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },
-    // 단계표의 앞 단계 — **그 몬스터에게만** 걸린다(옵션 단계는 장비 옵션 줄 표기 그대로) · `{v}` = 부호 붙은 값 (SCREEN_DESIGN §9 · ADR-0667 · monster_design §8)
+    // 단계표의 Lv1 · Lv2 — **그 몬스터 한 마리의 몫** 앞에 종족 이름(`{race}` — monster_base.csv)을 단다 · Lv2 는 「상대」 · `{line}` = 줄 한 줄(파밍 = 아래 다섯 ·
+    //   전투 = 장비 옵션 줄 표기) · `{v}` = 부호 붙은 값 (SCREEN_DESIGN §9 · ADR-0715 · monster_design §8 — ~~그 몬스터에게만 · cx.rw.vs_dmg~~ ADR-0667)
+    'cx.rw.farm': { ko: '{race} {line}', en: '{line} from {race}' },
+    'cx.rw.fight': { ko: '{race} 상대 {line}', en: '{line} vs {race}' },
     'cx.rw.xp': { ko: '처치 경험치 {v}', en: '{v} Kill EXP' },
-    'cx.rw.vs_dmg': { ko: '상대 피해 {v}', en: '{v} Damage to It' },
     'cx.rw.drop': { ko: '드롭 확률 {v}', en: '{v} Drop Chance' },
+    'cx.rw.magic': { ko: '매직 아이템 획득 {v}', en: '{v} Magic Find' },
+    'cx.rw.gold': { ko: '골드 획득 {v}', en: '{v} Gold Find' },
+    'cx.rw.material': { ko: '재료 획득 {v}', en: '{v} Material Find' },
     // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 레벨이 오르면 (SCREEN_DESIGN §9-1 · ADR-0680 — ~~단계~~ ADR-0650) · 「상단」 머리는 건물 이름 데이터(building.csv)
     'cx.tip.source': { ko: '획득처', en: 'Found On' },
     'cx.tip.roll': { ko: '보스 · 무작위 칸', en: 'Bosses · random slot' },   // 셋째 칸(직업 풀 굴림)에서 나올 수 있는 보스 — 고정 칸 몬스터와 따로 묶는다
@@ -1961,7 +1978,6 @@ const STRINGS = {
     'pop.echo': { ko: '에코', en: 'ECHO' },     // 에코 (2026-10-16)   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
-    // 레벨업 (2026-09-29 · ADR-0435) — 오른 카드의 금색 글자 · 영웅 레벨이 적보다 낮았으면 아래 작은 줄에 적중 변화
+    // 레벨업 (2026-09-29 · ADR-0435) — 오른 카드의 금색 글자 · 아래 적중 변화 줄(`pop.lvupHit`)은 2026-10-22 삭제 (ADR-0718)
     'pop.lvup': { ko: '레벨 업', en: 'LEVEL UP' },
-    'pop.lvupHit': { ko: '적중 {a}% → {b}%', en: 'Hit {a}% → {b}%' },
 };

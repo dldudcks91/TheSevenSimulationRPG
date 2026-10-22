@@ -48,6 +48,7 @@ pri_bind,1,apply,-,0,0,0,0,0,-,pri_bind,effect_value,cha,0,-,-,0,-,-,0,effect_va
 pri_doom,1,apply,-,0,0,0,0,0,-,pri_doom,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.015,-
 pri_summon,1,call,-,0,0,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-
 mon_selfdestruct,1,fixed,-,1,0.3,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-
+mon_hellfire,1,hit,-,10,0.4,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,-,-,사탄 헬파이어 — 정신 집중 계속 닳기 · 타수 10 = 1초 틱 수 · 배율 = 한 틱 몫 · 몬스터 전용이라 레벨 줄이 없다(R216) · ⚠값 임시
 war_ragnarok,1,apply,-,0,0,0,0,0,-,war_ragnarok,effect_value,str,0,duration_sec,vit,0,-,-,0,duration_sec,1,-
 war_berserk,1,apply,-,0,0,0,0,0,-,war_berserk,effect_value,str,0,duration_sec,vit,0,-,-,0,duration_sec,0.8,-
 war_mutualruin,1,hit,-,1,4.2,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.42,-

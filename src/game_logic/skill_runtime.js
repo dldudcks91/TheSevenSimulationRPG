@@ -29,7 +29,7 @@
  */
 
 import { createFormula } from './formula.js';
-import { AILMENTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
+import { AILMENTS, CASTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
 
 /**
  * 사건 훅 — 유닛이 든 `reactions: [{on, fn}]` 를 **배열 순서대로** 부른다. 등록이 없으면 아무 일도 없다.
@@ -126,10 +126,17 @@ export function createSkillRuntime(ctx) {
      * 시전 한 번에 한 번 굴려 대상 전원이 같은 양을 받는다 (battle_design §9-1 · §9-2 · R90).
      * `def` 는 `scaleDef` 가 낸 시전 단위(`heal` 줄)다 — `statMult` 가 없으면 1 로 읽는다 (2026-09-18 — ~~`+ flat`~~)
      */
+    /**
+     * 거는 쪽의 회복량 증가 — 장비(`healOut` · 사제 무기 시기 ②) + **도감 Lv2**(그 종족이 나온 라운드 동안 파티 · `units.codexRound.heal` · 2026-10-22 R314).
+     *   둘 다 없으면 0 이라 아래 곱이 ×1 — 종전 값
+     */
+    const healOutOf = u => (u.healOut ?? 0) + (u.side === 'party' ? units.codexRound?.heal ?? 0 : 0);
+
     function castHeal(u, def, t) {
         const matk = u.matkMin + rng() * (u.matkMax - u.matkMin);   // 회복량 굴림 — 대상 선택 앞 · 양끝이 같아도 1회 (R90)
         // 배율은 비율 (R111) · 능력치 계수는 곱 (2026-09-18) · **회복량 증가**(거는 쪽 — 사제 무기 시기 ② · 2026-10-05 R208)는 곱 — 0 이면 ×1 이라 종전 값
-        const amt = Math.round(matk * def.mult * (def.statMult ?? 1) * (u.healOut ? 1 + u.healOut : 1));
+        const ho = healOutOf(u);
+        const amt = Math.round(matk * def.mult * (def.statMult ?? 1) * (ho ? 1 + ho : 1));
         const targets = targetsOf(u, def);
         for (const tgt of targets) {
             // 받는 쪽의 체력 회복 +%(갑옷 나태 · 2026-09-18) — 그 대상만 늘어난다 · 이벤트의 `amt` 가 받은 양이다. 0 이면 종전과 같다(rng 0)
@@ -144,7 +151,8 @@ export function createSkillRuntime(ctx) {
      *   마법 공격력이 없는 직업(전사)의 회복이라 밑수가 최대 HP 다. 회복량 증가(거는 쪽) · 체력 회복 +%(받는 쪽)는 `castHeal` 과 같다 · 이벤트도 `heal` 이다
      */
     function castMend(u, def, t) {
-        const amt = Math.round(u.hpMax * def.mult * (def.statMult ?? 1) * (u.healOut ? 1 + u.healOut : 1));
+        const ho = healOutOf(u);
+        const amt = Math.round(u.hpMax * def.mult * (def.statMult ?? 1) * (ho ? 1 + ho : 1));
         for (const tgt of targetsOf(u, def)) {
             const got = tgt.recv ? Math.round(amt * (1 + tgt.recv)) : amt;
             tgt.hp = Math.min(tgt.hpMax, tgt.hp + got);
@@ -173,11 +181,14 @@ export function createSkillRuntime(ctx) {
      * 같은 열쇠의 창을 **다른 스킬**이 걸었었으면 옛 `s` 의 `buffEnd` 를 먼저 낸다 — 재생기가 칩을 `s` 로 들어서, 안 내면 옛 칩이 남는다(조용한 창 제외). rng 0
      */
     function applyStatus(u, tgt, x, t) {
-        let dur = x.dur * (1 + (u.buffDur ?? 0));
+        // 버프 지속시간 +% — 장비 + **도감 Lv2**(그 종족이 나온 라운드 동안 파티가 거는 창 · `units.codexRound.buff` · 2026-10-22 R314) · 없으면 0 을 더해 종전 값
+        let dur = x.dur * (1 + (u.buffDur ?? 0) + (u.side === 'party' ? units.codexRound?.buff ?? 0 : 0));
         const ail = x.ailment ? AILMENTS[x.ailment] : null;
         // 거는 쪽의 시간 증가 [2026-10-05 · R208 · item_design §1 「마법사 · 사제 무기」] — 상태이상 = `statusDur`(마법사 시기 ③) ·
         //   **다른 편에 거는** 상태이상 아닌 창 = `debuffDur`(사제 시기 ③). 0 이면 곱하지 않는다 — 부동소수가 종전과 같다
-        if (ail ? u.statusDur : (u.debuffDur && tgt.side !== u.side)) dur *= 1 + (ail ? u.statusDur : u.debuffDur);
+        //   도감 Lv2 [2026-10-22 · R314] — 파티가 **그 종족에** 거는 상태이상은 그 유닛이 든 종족 몫을 `statusDur` 에 더한다
+        const sd = ail ? (u.statusDur ?? 0) + (u.side === 'party' ? tgt.codex?.fight.status_dur_pct ?? 0 : 0) : 0;
+        if (ail ? sd : (u.debuffDur && tgt.side !== u.side)) dur *= 1 + (ail ? sd : u.debuffDur);
         const cut = ail ? (tgt[ail.cut] ?? 0) : 0;
         if (cut) dur *= 1 - cut;
         if (!(dur > 0)) return;
@@ -274,7 +285,8 @@ export function createSkillRuntime(ctx) {
      *   `attack_splash`  단일 → 광역. 그때 배율이 창 합(비율)이다 (창이 없으면 1배 단일)
      *   `onhit_element`  때린 대상마다 원소 추가타 1회(`onhitExtra`) — **물리 스킬 시전도 같은 추가타를 낸다**(`cast` · 2026-10-02 R201)
      * ⚠ 창이 켜지면 타격 수가 늘어 rng 소비도 는다 — 창이 없을 때의 수열은 종전과 **완전히 같다**
-     * @param forced 대상을 정해 준다 — **반격**이 때린 쪽을 넘긴다(battle.strikeOnce · 2026-09-18). 주면 타겟 굴림(`pickTarget`)을 **안 쓴다** ·
+     * @param forced 대상을 정해 준다 — **반격**이 때린 쪽을 넘긴다(battle.strikeOnce · 2026-09-18) · **스킬 차례**는 그 스킬의 기준 대상을 넘긴다(`act` · R317).
+     *   주면 타겟 굴림(`pickTarget`)을 **안 쓰고** 그 대상이 쓰러져 있으면 치지 않는다 ·
      *   광역 창이 켜져 있으면 평타처럼 적 전원이다(「반격은 평타와 모든 로직이 같다」 · 사용자)
      */
     function basicAttack(u, t, foes, forced = null) {
@@ -323,25 +335,32 @@ export function createSkillRuntime(ctx) {
      *   줄마다 살아 있는 적을 **다시 본다** — 앞 줄이 쓰러뜨린 적은 뒤 줄의 대상이 아니고, 적이 없으면 적을 쓰는 줄(`foes`)은 건너뛴다(굴림도 없다).
      *   능력치 계수는 영웅 · 몬스터가 같이 탄다 (2026-09-22 — 보류 해제 · battle_design §9-2)
      *   줄을 다 돈 뒤 **원소 추가타** — 원소 태그 없는 공격 줄이 겨눈 대상마다 한 번(발마다가 아니다 · `onhitExtra` · 2026-10-02 R201). 창이 없으면 rng · 타임라인 불변
+     * @returns 기준 대상 [2026-10-22 · R317] — 공격 줄(`hit`)이 처음 돌려준 적(`ATTACK_TARGETS`) · 공격 줄이 없거나 건너뛰었으면 null.
+     *   에코로 한 번 더 나간 시전은 기준 대상을 안 바꾼다
      */
-    function cast(u, def, t, echoing = false) {
-        const eff = SK.scaleDef(def, u.stats ?? null);
+    function cast(u, def, t, echoing = false, one = false) {
+        let eff = SK.scaleDef(def, u.stats ?? null);
+        // 정신 집중의 한 방 [2026-10-22 · R318] — 그 스킬의 타수는 방 수라 한 방은 1타다(실효 타수는 연 차례에 `chanOpen` 이 쟀다)
+        if (one) eff = { ...eff, effects: eff.effects.map(x => (x.effect === 'hit' ? { ...x, hits: 1 } : x)) };
         const outer = struck;
         const mine = struck = { u, list: [] };
+        let lead = null;
         for (const x of eff.effects) {
             const type = EFFECT_TYPES[x.effect];
             const foes = alive(foesOf(u));
             if (type.foes && foes.length === 0) continue;
-            type.run(rt, u, x, t, foes);
+            const got = type.run(rt, u, x, t, foes);
+            lead ??= got ?? null;
         }
         struck = outer;
         onhitExtra(u, mine.list);
         // 에코 [2026-10-16 · R250 · skill_design §12-6] — 공격 스킬(`hit` 줄이 있다)이 창 동안 **한 번 더** — 대상은 평소 규칙대로 다시 고르고(그 스킬의 굴림이 한 번 더)
         //   쿨 · 시전 수 · `skill` 이벤트 · `cast` 훅은 없다 · 에코로 나간 시전은 다시 에코하지 않는다. 창이 없으면 아무 일도 없다(rng · 타임라인 불변)
-        if (echoing || u.hp <= 0 || !def.effects.some(e => e.effect === 'hit')) return;
-        if (!stateOf(u, 'echo') || alive(foesOf(u)).length === 0) return;
+        if (echoing || u.hp <= 0 || !def.effects.some(e => e.effect === 'hit')) return lead;
+        if (!stateOf(u, 'echo') || alive(foesOf(u)).length === 0) return lead;
         timeline.push({ t: r1(t), e: 'echo', u: u.key, s: def.id });
         cast(u, def, t, true);
+        return lead;
     }
 
     /**
@@ -374,17 +393,80 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
+     * **정신 집중** [2026-10-22 · R318 · battle_design §3-2] — `cast = channel` 스킬이 열리면 `hit` 줄 실효 타수만큼 **차례마다 한 방**을 친다.
+     *   `u.chan = {a, def, left, single, tgt}` — `a` 그 칸 · `left` 남은 방 · `tgt` 기준 대상(단일 대상은 쓰러질 때까지 이 적을 친다).
+     *   여는 차례가 첫 방이다 · 열린 동안 그 칸은 `readyAt = Infinity`(다시 안 골라진다 · 스턴이 밀어도 그대로) · 기본 공격 · 다른 스킬은 없다(쿨은 그대로 돈다).
+     *   마법 무기는 칸 하나를 쓰고 연다(부르는 쪽 `chargeTick`) — 차던 칸은 버리고 열린 동안 `next` 가 방 사이 시계다(battle.js). 쓰는 스킬이 없으면 아래 넷은 안 돈다
+     *   **계속 닳기**(`cast = channel_tick` · 2026-10-22) — 방 사이 시계만 다르다: `iv` = [balance.csv:dot_tick_sec] · `acc` 를 battle.js `chanTick` 이 쌓아 한 방을 부른다(`chanHit`)
+     */
+    function chanOpen(u, sel, t) {
+        const def = sel.def;
+        const hit = SK.scaleDef(def, u.stats ?? null).effects.find(x => x.effect === 'hit');
+        const n = Math.max(1, hit?.hits ?? 1);
+        const iv = CASTS[def.cast].chan === 'tick' ? B.dot_tick_sec : null;
+        sel.readyAt = Infinity;
+        u.chan = { a: sel, def, left: n, single: hit?.target === 'enemy_single', tgt: null, iv, acc: 0 };
+        if (u.noBasic || iv) u.next = u.period;
+        out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
+        // `chan` = 방 수 · `ready` 는 없다 — 쿨은 닫힐 때 `chanEnd` 가 싣는다 · `iv` = 계속 닳기의 방 사이 간격(재생기가 게이지를 그 간격으로 닳린다)
+        timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, chan: n, ...(iv ? { iv } : {}), ...(u.noBasic ? { ch: u.charges } : {}) });
+        hooks.emit('cast', u, { t, def });
+        chanStrike(u, t);
+        return true;
+    }
+
+    /** 열린 동안의 차례 — `chan` 이벤트(`left` = 이 방 뒤에 남는 방) 뒤 한 방 */
+    function chanHit(u, t) {
+        timeline.push({ t: r1(t), e: 'chan', u: u.key, s: u.chan.def.id, left: u.chan.left - 1 });
+        chanStrike(u, t);
+        return true;
+    }
+
+    /**
+     * 한 방 — 그 스킬을 **타수 1** 로 한 번 시전한다(원소 추가타는 방마다 · 에코 없음). 단일 대상은 기준 대상을 살아 있는 동안 다시 쓰고
+     *   쓰러졌으면 평소처럼 새로 고른다(그때만 굴림) — 그 밖의 대상은 방마다 그 대상 규칙대로. 마지막 방이면 같은 틱에 닫는다
+     */
+    function chanStrike(u, t) {
+        const c = u.chan;
+        c.left -= 1;
+        const keep = c.single ? c.tgt : null;
+        rt.pickTarget = (who, foes) => (who === u && keep && keep.hp > 0 && foes.includes(keep) ? keep : ctx.pickTarget(who, foes));
+        let lead = null;
+        try { lead = cast(u, c.def, t, true, true); } finally { rt.pickTarget = ctx.pickTarget; }
+        if (lead) c.tgt = lead;
+        if (c.left <= 0 && u.chan === c) chanClose(u, t);
+    }
+
+    /**
+     * 닫는다 — 마지막 방 뒤 · 라운드 경계 · 갈아입기(battle.js 가 부른다). 쿨은 **지금부터** · `chanEnd` 이벤트 ·
+     *   마법 무기는 충전을 다시 연다(`next = period`) · 계속 닳기는 물리도 `next = period`(열린 동안 선 차례 · 경직이 민 몫은 버린다 — 틱이 이미 섰다).
+     *   열린 것이 없으면 아무것도 안 한다 · rng 0
+     */
+    function chanClose(u, t) {
+        const c = u.chan;
+        if (!c) return;
+        u.chan = null;
+        c.a.readyAt = t + cooldownSec(B, u, c.def);
+        if (u.noBasic || c.iv) u.next = u.period;
+        timeline.push({ t: r1(t), e: 'chanEnd', u: u.key, s: c.def.id, ready: r1(c.a.readyAt), ...(u.noBasic ? { ch: u.charges } : {}) });
+    }
+
+    /**
      * 한 차례 — 준비된 액티브 하나를 쓰고 **이어서 기본 공격**, 없으면 기본 공격만 (battle_design §3).
      *   **스킬 뒤 기본 공격** [2026-10-06 · R218 · 사용자 확정 — ~~스킬이 그 차례의 기본 공격을 대체~~] — 스킬 종류(버프 · 힐 포함)와 무관하다.
-     *   스킬이 끝난 뒤 **살아 있는 적을 다시 본다** — 스킬이 다 쓰러뜨렸으면 치지 않고, 대상은 평소처럼 고른다(`basicAttack` 그대로).
+     *   스킬이 끝난 뒤 **살아 있는 적을 다시 본다** — 스킬이 다 쓰러뜨렸으면 치지 않는다.
+     *   대상 = **스킬의 기준 대상**(`cast` 가 돌려준 적 · 2026-10-22 R317 · battle_design §3) — 굴리지 않고, 그 적이 스킬에 쓰러졌으면 그 차례 기본 공격은 버려진다.
+     *   적을 겨누지 않은 스킬(버프 · 힐 · 적 전체 창 · 소환)이면 기준이 없어 평소처럼 고른다(`basicAttack` 그대로).
      *   시전자가 스킬 도중 쓰러졌으면 `basicAttack` 이 건너뛴다(`u.hp <= 0`)
      *   **마법 무기(`noBasic`)는 기본 공격이 없다** [2026-10-02 · R198] — 준비된 것이 없으면 아무것도 안 한다. 그 차례를 세우지 않는 것
      *   (칸 충전 · R200)은 부르는 쪽(battle.js `chargeTick`)이 `pick` 으로 먼저 가른다 — 여기는 안전장치다
+     *   **정신 집중**(R318) — 열린 동안의 차례는 한 방(`chanHit`)이고, 고른 스킬이 정신 집중이면 그 차례에 연다(`chanOpen`) — 둘 다 기본 공격이 없다
      * @returns 무언가 했으면 참(시전 · 기본 공격) — 마법 무기의 칸을 되돌리는 판정이 읽는다 (R200)
      */
     function act(u, t) {
         const foes = alive(foesOf(u));
         if (foes.length === 0) return false;
+        if (u.chan) return chanHit(u, t);
         const sel = pick(u, t);
         if (!sel) {
             if (u.noBasic) return false;
@@ -392,6 +474,7 @@ export function createSkillRuntime(ctx) {
             return true;
         }
         const def = sel.def;
+        if (CASTS[def.cast]?.chan) return chanOpen(u, sel, t);
         // 쿨은 실시간 초 — 시전 순간부터 (battle_design §6). 쿨감소는 **표기 쿨에 곱**한다 (combat_stat:cooldown_reduction)
         sel.readyAt = t + cooldownSec(B, u, def);
         out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
@@ -400,11 +483,11 @@ export function createSkillRuntime(ctx) {
         timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt), ...(u.noBasic ? { ch: u.charges } : {}) });
         hooks.emit('cast', u, { t, def });
         // 쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
-        cast(u, def, t);
-        // 스킬 뒤 기본 공격 (R218) — 적 목록은 스킬이 끝난 뒤의 것이다. 적이 없으면 굴림도 없다
+        const lead = cast(u, def, t);
+        // 스킬 뒤 기본 공격 (R218) — 적 목록은 스킬이 끝난 뒤의 것이다. 적이 없으면 굴림도 없다 · 대상은 스킬의 기준 대상(R317)
         if (!u.noBasic) {
             const left = alive(foesOf(u));
-            if (left.length > 0) basicAttack(u, t, left);
+            if (left.length > 0) basicAttack(u, t, left, lead);
         }
         return true;
     }
@@ -416,7 +499,7 @@ export function createSkillRuntime(ctx) {
      */
     const rt = {
         rng, F, strikeOnce: skillStrike, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
-        alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf,
+        alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
     };
     return rt;
 }

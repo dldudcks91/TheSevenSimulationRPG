@@ -6,17 +6,17 @@
  * test.js 에 넣지 않은 이유 — 모든 세션의 검증이 대량 실행만큼 느려진다.
  *
  * ⚠ **이식 대상이 아니다** — `game_logic/` 을 읽기만 한다(golden.js 와 같은 자리).
- *   봇(장비 고르기)도 여기 산다 — 게임의 자동 장착(`game.autoEquip` · 2026-10-22 R307)은 잣대가 같지만(무기 초당 세기 · 그 밖 방어)
- *   범위가 다르다: 그쪽은 버튼 하나 · 영웅 하나 · 인벤토리 하나, 봇은 판마다 모든 인벤토리를 파티 전원에 나눈다.
+ *   봇(장비 고르기)도 여기 산다 — 게임의 자동 장착(`game.autoEquip`)과 **잣대가 다르다**: 봇은 무기 초당 세기 · 그 밖 방어(R307 의 잣대 그대로),
+ *   자동 장착은 영웅 세기(입히는 DPS × 버티는 양 · 2026-10-22 R313). 범위도 다르다: 그쪽은 버튼 하나 · 영웅 하나 · 인벤토리 하나, 봇은 판마다 모든 인벤토리를 파티 전원에 나눈다.
  *   봇 규칙과 가정은 결과의 `meta.bot` · `meta.assume` 에 글로 실린다 — 그것이 곧 결과의 한계다.
  *
  *   ?mode=stage&seeds=1-50&stages=101&strip=0|1
  *       시드마다 새 게임 → 앞 스테이지 해금만 → 그 스테이지 한 판. `strip=1` 이면 출발 전에 파티 장비를 전부 벗긴다
- *   ?mode=campaign&seeds=1-20&runs=30&bot=greedy|off[&until=105][&mastery=1][&potion=1][&build=expedition,shop|max]
+ *   ?mode=campaign&seeds=1-20&runs=30&bot=greedy|off[&until=105][&mastery=1][&potion=1][&build=explore,shop|max]
  *       시드마다 게임 하나로 원정을 `runs` 번 잇는다 — 매번 아직 못 깬 첫 스테이지. 판이 끝날 때마다 봇이 장착하고 남은 가방은 분해한다.
  *       시간 = 판마다 `durationSec` + [balance.csv:repeat_restart_sec] 를 쌓는다 — 스테이지별 **첫 클리어 시각 · 도착 레벨**을 낸다.
  *       `until` = 그 스테이지를 깨면 그 시드를 멈춘다 · `mastery=1` = 판마다 포인트를 찍는다 · `potion=1` = 판마다 골드로 물약을 산다
- *       `build` = 그 건물을 **끝까지 지은 채** 시작한다(문턱 · 비용 없이 · `max` 면 전부) — 2장부터는 원정 건물이 장을 열어(R152) 안 주면 `locked` 로 멈춘다
+ *       `build` = 그 건물을 **끝까지 지은 채** 시작한다(문턱 · 비용 없이 · `max` 면 전부) — 장은 건물이 안 연다(앞 장 보스 · R319)
  */
 
 import { loadData, buildSystems, D } from '../ui/data.js';

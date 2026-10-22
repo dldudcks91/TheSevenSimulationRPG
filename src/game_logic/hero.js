@@ -553,7 +553,7 @@ export function createHeroSystem(data) {
         const drList = [];                     // 피해 감소는 합치지 않고 원천별로 모은다 (§9-3)
         for (const it of items) {
             if (it.implicit) {
-                // 고정 옵션 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 [2026-09-18 · item_design §1 「갑옷 옵션」 · 네 부위 공통].
+                // 베이스 옵션 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 [2026-09-18 · item_design §1 「갑옷 옵션」 · 네 부위 공통].
                 //   고유값은 강화까지 먹은 값으로 온다(부르는 쪽이 `item.effective` 를 지난다) · 다른 부위 · 접사 · 오만의 더하기 값에는 안 곱한다 · 곱한 뒤 정수
                 const own = (it.affixes ?? []).reduce((s, a) => s + (a.stat === 'armor_def_pct' ? a.v : 0), 0);
                 const v = own ? Math.round(it.implicit.v * (1 + own)) : it.implicit.v;
@@ -572,14 +572,14 @@ export function createHeroSystem(data) {
         const mb = masteryBonus(hero, items);
         for (const k of Object.keys(mb.flat)) flat[k] = (flat[k] ?? 0) + mb.flat[k];
         for (const v of mb.dr) drList.push(v);
+        // 파티 정산의 제 몫 — 파티 단위 출처(도감 · 전술 · 신단)를 더하기 **전**의 골드 · 드랍 · 매직 [2026-10-05 · INTERFACE §2-6 「파티 골드 · 드랍 · 매직 배율」].
+        //   파티 몫은 전원에게 같은 값이라 합산하면 인원수만큼 불어난다 — 전투가 한 번만 더한다(`find_party`)
+        const ownFind = { gold: flat.gold_find ?? 0, item: flat.item_find ?? 0, magic: flat.magic_find ?? 0 };
         // 도감 Lv4 옵션도 같은 채널이다 [2026-10-18 · R286 · monster_design §8-2] — 장비 옵션 어휘 그대로 · 피해 감소는 **도감 전체가 원천 하나**(몬스터마다 따로 곱하지 않는다).
-        //   골드 · 아이템 · 매직 획득 줄은 없다(§8-2 뺀 줄) — 아래 제 몫(`ownFind`)에 섞여도 0 이다
+        //   골드 · 아이템 · 매직 획득 줄(3장 탐욕 · 2026-10-22 R320)은 계정 몫이라 전원에게 같다 — 위 제 몫이 아니라 `find_party` 로 간다
         const cxFlat = codex.flat ?? {};
         for (const k of Object.keys(cxFlat)) flat[k] = (flat[k] ?? 0) + cxFlat[k];
         if (cxFlat.damage_reduction) drList.push(cxFlat.damage_reduction);
-        // 파티 정산의 제 몫 — 파티 단위 출처(전술 · 신단)를 더하기 **전**의 골드 · 드랍 · 매직 [2026-10-05 · INTERFACE §2-6 「파티 골드 · 드랍 · 매직 배율」].
-        //   파티 몫은 전원에게 같은 값이라 합산하면 인원수만큼 불어난다 — 전투가 한 번만 더한다(`find_party`)
-        const ownFind = { gold: flat.gold_find ?? 0, item: flat.item_find ?? 0, magic: flat.magic_find ?? 0 };
         // 파티 전술도 같은 채널로 합류한다 — 새 곱셈 층을 만들지 않는다 (tactic_card_design §2-4)
         for (const k of Object.keys(party?.flat ?? {})) flat[k] = (flat[k] ?? 0) + party.flat[k];
         for (const v of party?.dr ?? []) drList.push(v);
@@ -592,7 +592,7 @@ export function createHeroSystem(data) {
         //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
         const range = weapon ? F.weaponDamage(weapon.ilvl, group, weapon.up) : { min: B.unarmed_atk, max: B.unarmed_atk };
         const atkFlat = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0);
-        // 무기 % = **무기 슬롯 접사의 데미지 %**(고정 옵션 「무기 데미지 +%」 — 화면 이름 2026-10-15 · ADR-0628) — 무기 양끝에만 곱하고 양끝마다 한 번 반올림한다
+        // 무기 % = **무기 슬롯 접사의 데미지 %**(베이스 옵션 「무기 데미지 +%」 — 화면 이름 2026-10-15 · ADR-0628) — 무기 양끝에만 곱하고 양끝마다 한 번 반올림한다
         //   [2026-10-03 · 사용자 확정 · battle_design §9-1 — D2 의 무기 ED]. `item.weaponDamageFixed` 와 같은 값이다(툴팁 표기 = 계산)
         const weaponPct = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_pct' ? a.v : 0), 0);
         // 데미지 % 괄호 = **무기 % 를 뺀** Σ 데미지 % + **오만 칸의 레벨당 데미지 × 영웅 레벨** [2026-09-11 · R78 · item_design §1 「무기 옵션」]
@@ -619,7 +619,7 @@ export function createHeroSystem(data) {
         if (units === undefined) throw new Error(`hero: 레벨 ${hero.level} 은 HP 구간 밖이다(1 ~ 만렙 ${B.hero_level_cap}) — 몬스터면 stage.csv:dlvl 이 만렙을 넘었다`);
         // 방어구 갈래가 고정값을 낸다 [2026-09-16 사용자 확정 · R107 · item_design §1] — ~~갑옷 칸 하나만~~ → **낀 방어구마다 제 갈래 값을 더한다**
         //   [2026-09-18 — 네 부위가 갈래를 갖는다]. 값이 있는 것은 갑옷군뿐이다(중갑은 음수 — 느려진다 · 경갑 공속 · 로브 쿨감).
-        //   **투구 · 장갑 · 신발 갈래 특성은 아이템의 `[고정]` 줄이다**(굴림 · 2026-10-21 R303 — ~~갈래 값 `hpPct` · `castSpeedPct` 합산~~ R299 퇴역) — 아래 접사 합산이 그대로 읽는다.
+        //   **투구 · 장갑 · 신발 갈래 특성은 아이템의 `[베이스]` 줄이다**(굴림 · 2026-10-21 R303 — ~~갈래 값 `hpPct` · `castSpeedPct` 합산~~ R299 퇴역) — 아래 접사 합산이 그대로 읽는다.
         //   갈래 id 가 부위마다 겹쳐(`leather`) 부위와 함께 찾는다. 무기의 `group`(무기군)은 `weapon` 칸이라 여기 안 걸린다
         const worn = items.map(it => (data.armorGroups ?? {})[it?.slot]?.[it?.group]).filter(Boolean);
         const groupAspd = worn.reduce((s, g) => s + (g.aspdPct ?? 0), 0);
@@ -700,7 +700,7 @@ export function createHeroSystem(data) {
             basic_attack: !magic,
             level: hero.level,                 // 적중률의 공격자 레벨 (§9-4)
             hp_max: hpMax,
-            // 갑옷 오만 「레벨당 방어력」은 **더하기**다 — 영웅 레벨 × 값 [2026-09-16 · item_design §1 「갑옷 옵션」]. 고정 옵션 % 는 위 아이템 루프에서 고유값에만 곱했다
+            // 갑옷 오만 「레벨당 방어력」은 **더하기**다 — 영웅 레벨 × 값 [2026-09-16 · item_design §1 「갑옷 옵션」]. 베이스 옵션 % 는 위 아이템 루프에서 고유값에만 곱했다
             defense: f('def_flat') + f('def_per_level') * hero.level,
             ...Object.fromEntries(ELEMENTS.map(e => [`res_${e}`, resAll + f(`res_${e}`)])),
             res_max_bonus: f('res_max_bonus'),  // 저항 기본 상한을 뚫는 유일한 수단 (§9-5)
@@ -748,7 +748,7 @@ export function createHeroSystem(data) {
             },
             find_party: (() => {
                 const p = party?.flat ?? {};
-                const v = { gold: p.gold_find ?? 0, item: p.item_find ?? 0, magic: p.magic_find ?? 0 };
+                const v = { gold: (p.gold_find ?? 0) + (cxFlat.gold_find ?? 0), item: (p.item_find ?? 0) + (cxFlat.item_find ?? 0), magic: (p.magic_find ?? 0) + (cxFlat.magic_find ?? 0) };
                 return v.gold || v.item || v.magic ? v : null;
             })(),
             // 죄종 T2 조건부 줄 [2026-10-05 · skill_design §3-2 · INTERFACE §2-4] — 전투가 타격마다 판정한다. 치명 피해 줄은 **치명 보너스 몫과 같은 운 계수**를 먹여 낸다

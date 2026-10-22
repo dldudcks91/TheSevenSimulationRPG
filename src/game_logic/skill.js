@@ -78,7 +78,7 @@ const OWNER_KINDS = ['job', 'advance', 'unique', 'monster'];
  * CSV 의 `derived=1` 집합이 아래 셋과 어긋나면 CSV 가 코드에 없는 태그를 약속하는 것이므로 로드 시 던진다.
  */
 const TAG_CATEGORIES = ['damage', 'buff', 'debuff', 'other'];
-const DERIVED_TAG_IDS = ['aoe', 'single', 'multihit'];
+const DERIVED_TAG_IDS = ['aoe', 'single', 'multihit', 'channel'];
 const MAX_TAGS = 2;                   // §11-2 규칙 1 — 세 번째 태그는 변형 노드가 준다
 const NONE = '-';                     // CSV 의 "없음" 표기 — 정규화하면 null
 /** 걸린 효과의 라운드 경계 규칙 — `keep` 라운드를 넘어 유지 · `close` 라운드가 바뀌면 닫힌다(battle.beginRound · 2026-09-24 R151 · INTERFACE §2-6 「라운드 경계」) */
@@ -187,7 +187,7 @@ export function createSkillSystem(data) {
         desc: { ko: row.desc_kr, en: row.desc_en },
         // 고유 스킬 후보 풀에 들어가는가 (hero.rollInnate 가 받는 목록 · §9-0). `note` 는 설계 노트라 화면에 안 나간다
         innatePool: row.innate_pool === 1,
-        // 목걸이 발동 스킬 후보인가 [2026-09-21 · R127 · item_design §1 「목걸이 고정 옵션」] — 확률로 나가도 이득만 되는 것(피해 · 회복 · 함성류)만 1
+        // 목걸이 발동 스킬 후보인가 [2026-09-21 · R127 · item_design §1 「목걸이 베이스 옵션」] — 확률로 나가도 이득만 되는 것(피해 · 회복 · 함성류)만 1
         amuletPool: row.amulet_pool === 1,
         // 시작 무기 스킬 후보인가 [2026-09-27 사용자 지시 · hero_design §1] — 새 게임 · 선술집 영웅의 첫 무기가 직업 기본기를 담게
         starterPool: row.starter_pool === 1,
@@ -298,6 +298,8 @@ export function createSkillSystem(data) {
         } else if (d.cool !== 0) {
             bad(`${d.cast} 인데 cool_sec ${d.cool} — 쿨이 없다`);
         }
+        // 정신 집중 [2026-10-22 · R318 · battle_design §3-2] — 하는 일은 **`hit` 줄 하나**다. 그 타수가 방 수라(차례마다 한 방) 줄이 둘이면 무엇을 되풀이할지가 갈린다
+        if (CASTS[d.cast].chan && (d.effects.length !== 1 || d.effects[0].effect !== 'hit')) bad('channel 인데 하는 일이 hit 줄 하나가 아니다 — 그 타수가 방 수다');
         // 하는 일 — **줄 1개 이상**이고 seq 는 1 부터 빈틈없이 (표 사이 검사 ① · 2026-09-24 R151 — ~~1단계는 정확히 한 줄~~)
         if (d.effects.length === 0) bad('하는 일 줄이 없다 — skill_effect.csv 에 줄이 있어야 한다');
         d.effects.forEach((e, i) => {
@@ -328,7 +330,7 @@ export function createSkillSystem(data) {
         //   고유 · 기본 책을 막는다 · 목걸이는 바로 위 검사 · 책 · 도안은 `bookable` 이 막는다
         if (d.effects.some(e => e.effect === 'call') && (row.innate_pool !== 0 || row.starter_pool !== 0))
             bad(`불러내기인데 innate_pool ${row.innate_pool} · starter_pool ${row.starter_pool} — 영웅은 무리가 없어 안 나간다 · 둘 다 0`);
-        // 직업 기본기 [2026-09-27 · 2026-09-29 R179] — 지금 하는 일은 **상단이 안 파는 책**(`state.js:shopBookPool`) 하나 · ~~첫 파티의 고유~~(2026-10-16 R271 — 첫 파티는 직업 풀의 1티어 · `ui/data.js:starterSkills`) · ~~도서관 기본 책~~(10-12 R241 — 제작 목록은 도안) · ~~시작 무기 스킬~~ — 0/1 · 직업 스킬만
+        // 직업 기본기 [2026-09-27 · 2026-09-29 R179] — **지금 게임 로직이 읽는 곳이 없다**(이 검사뿐) · ~~상단이 안 파는 책~~(2026-10-22 R310 — 상단 후보는 1티어 · `state.js:shopBlueprintPool`) · ~~첫 파티의 고유~~(2026-10-16 R271 — 첫 파티는 직업 풀의 1티어 · `ui/data.js:starterSkills`) · ~~도서관 기본 책~~(10-12 R241 — 제작 목록은 도안) · ~~시작 무기 스킬~~ — 0/1 · 직업 스킬만
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
         if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
         // 갑옷 특정 스킬 +n 후보 [2026-10-08 · R225] — 0/1 · **기본 스킬(직업 스킬)만** — 풀은 직업 스킬만 읽어 다른 행의 1 은 조용히 버려진다
@@ -441,7 +443,8 @@ export function createSkillSystem(data) {
         }
         // 광역·연쇄는 **대상 수가 타수를 정한다** — hits 를 따로 적으면 두 곳 관리가 된다 (§9-3).
         //   ⚠ `hit` 에만 건다 — 같은 대상어를 **적에게 거는 창**(참회·속박)도 쓰는데 그쪽은 타수가 0 이다
-        if (e.effect === 'hit' && (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') && e.hits !== 1)
+        //   정신 집중은 빼고 — 그 타수는 한 방의 타수가 아니라 **방 수**다(방마다 대상 수만큼 · R318)
+        if (e.effect === 'hit' && !CASTS[d.cast]?.chan && (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') && e.hits !== 1)
             bad(`${t} 인데 hits ${e.hits} — 타수는 대상 수가 정한다`);
         // 감쇠 — 세 공격 대상이 쓴다(`HIT_DECAY`). 뜻이 다르다: 연쇄는 **배율**이 줄고, 최고 방어 다단은 **대상의 방어값**이 주고,
         //   광역 공격은 **주 대상 밖의 배율**이 준다(멀티샷 광역 약화 · skill_design §13-5 · 2026-09-10).
@@ -507,7 +510,9 @@ export function createSkillSystem(data) {
         const t = lineTarget(d, hit);
         if (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') out.push('aoe');
         if (t === 'enemy_single' || t === 'enemy_highest_def') out.push('single');
-        if (hit.hits > 1) out.push('multihit');
+        // 정신 집중 [2026-10-22 · R318] — 나가는 방식에서 파생한다 · 그 타수는 방 수라 다단히트로 세지 않는다
+        if (CASTS[d.cast]?.chan) out.push('channel');   // 끊어 치기 · 계속 닳기 둘 다
+        else if (hit.hits > 1) out.push('multihit');
         return out;
     }
 
@@ -844,7 +849,7 @@ export function createSkillSystem(data) {
     };
 
     /**
-     * 목걸이 발동 스킬의 **간격 초** [2026-09-21 · R127 · item_design §1 「목걸이 고정 옵션」] — `n초마다` 발동의 초 = 그 스킬 쿨타임 × 굴린 배수(`item.proc.v`).
+     * 목걸이 발동 스킬의 **간격 초** [2026-09-21 · R127 · item_design §1 「목걸이 베이스 옵션」] — `n초마다` 발동의 초 = 그 스킬 쿨타임 × 굴린 배수(`item.proc.v`).
      * 0.1초 단위로 자른다(`battle.js:r1` — 타임라인 시각과 같은 눈금 · 결정론 상수 — INTERFACE §5-3). 스킬을 모르면 null. ⚠ 발동은 전투에 아직 안 걸린다 — 이 값은 설명에만 쓰인다
      */
     const procIntervalSec = (id, mult) => {
