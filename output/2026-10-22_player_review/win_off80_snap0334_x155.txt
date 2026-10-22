@@ -1,0 +1,83 @@
+meta.bot: 장착하지 않는다 · 가방은 분해한다
+meta.assume: ['시작 파티 그대로 — 고용 · 해고 · 수색 없음', '마스터리 포인트를 안 쓴다 · 전술 리롤 · 강화 · 제작 · 크래프트 없음', '스테이지 레벨은 기본값 · 진형은 편성 순서 그대로', '시각 고정 · 즉시 정산(resolveBattle) — 라운드 사이에 장비를 안 바꾼다']
+repeat_restart_sec: None | seeds: 80 | rows: 6239
+
+== first 10 min (median all | front/back) ==
+  runs     6.0 | 6.0/6.0   q1..q3 4..7  max 8
+  wins     0.0 | 0.0/0.0   q1..q3 0..1  max 4
+  losses   5.0 | 5.0/5.0   q1..q3 3..7  max 8
+  clears   0.0 | 0.0/0.0   q1..q3 0..1  max 4
+  streak   5.0 | 5.0/4.5   q1..q3 3..7  max 8
+  gap      10.0 | 10.0/10.0   q1..q3 7.5..10.0  max 10.0
+  lv       4.0 | 4.0/4.0   q1..q3 3..4  max 6
+  lossmin  8.5 | 8.5/8.5   q1..q3 6.6..9.4  max 9.9
+  seeds with 0 wins: 50/80 (front 25 / back 25)
+  last cleared stage: -:50, 1-1 I:19, 1-1 II:6, 1-1 III:3, 1-2 I:2
+  longest-gap stage: 1-1 I:64, 1-1 II:10, 1-1 III:6
+  gap >= 5 min: 73/80 (front 36 / back 37)
+  gap >= 10 min: 50/80 (front 25 / back 25)
+  gap >= 20 min: 0/80 (front 0 / back 0)
+
+== first 30 min (median all | front/back) ==
+  runs     18.0 | 18.0/18.0   q1..q3 14..20  max 25
+  wins     1.0 | 1.0/1.0   q1..q3 0..2  max 8
+  losses   16.5 | 16.5/16.5   q1..q3 11..19  max 25
+  clears   1.0 | 1.0/1.0   q1..q3 0..2  max 8
+  streak   13.0 | 12.5/13.0   q1..q3 8..19  max 25
+  gap      27.2 | 23.0/27.8   q1..q3 16.0..30.0  max 30.0
+  lv       5.0 | 5.0/5.0   q1..q3 4.7..6  max 8
+  lossmin  27.0 | 26.2/27.2   q1..q3 23.3..29.2  max 30.0
+  seeds with 0 wins: 36/80 (front 18 / back 18)
+  last cleared stage: -:36, 1-1 I:14, 1-1 II:12, 1-1 III:7, 1-2 I:5, 1-2 II:2, 1-2 III:2, 1-3 II:2
+  longest-gap stage: 1-1 I:48, 1-1 II:18, 1-1 III:6, 1-2 II:4, 1-2 III:2, 1-3 III:1, 1-3 I:1
+  gap >= 5 min: 80/80 (front 40 / back 40)
+  gap >= 10 min: 76/80 (front 37 / back 39)
+  gap >= 20 min: 52/80 (front 23 / back 29)
+
+== first 60 min (median all | front/back) ==
+  runs     38.0 | 37.0/38.0   q1..q3 28..42  max 51
+  wins     1.0 | 1.0/1.0   q1..q3 0..4  max 13
+  losses   34.0 | 34.0/34.5   q1..q3 24..40  max 51
+  clears   1.0 | 1.0/1.0   q1..q3 0..4  max 13
+  streak   25.0 | 25.5/25.0   q1..q3 14..38  max 51
+  gap      44.2 | 42.6/44.9   q1..q3 29.2..60.0  max 60.0
+  lv       6.7 | 6.7/6.7   q1..q3 5.7..7.7  max 11.0
+  lossmin  56.5 | 56.6/55.7   q1..q3 49.0..59.1  max 59.9
+  seeds with 0 wins: 33/80 (front 17 / back 16)
+  last cleared stage: -:33, 1-1 I:10, 1-1 II:7, 1-1 III:8, 1-2 I:8, 1-2 II:4, 1-2 III:5, 1-3 I:3, 1-5 I:2
+  longest-gap stage: 1-1 I:39, 1-1 II:12, 1-1 III:10, 1-2 II:7, 1-2 I:5, 1-2 III:3, 1-3 III:2, 1-3 II:1
+  gap >= 5 min: 80/80 (front 40 / back 40)
+  gap >= 10 min: 80/80 (front 40 / back 40)
+  gap >= 20 min: 75/80 (front 37 / back 38)
+  share of time in lost runs: median 95.9 %
+
+== chapter-1 boss (1051) first clear (target 30 min — PLAN_early_progression) ==
+  all: median 181.6 | q1 59.5 q3 220.5 | <=30: 0/80 | <=60: 2/80 | not cleared: 74
+  front: median 181.6 | q1 168.9 q3 194.2 | <=30: 0/40 | <=60: 1/40 | not cleared: 36
+  back: median 135.1 | q1 49.8 q3 220.5 | <=30: 0/40 | <=60: 1/40 | not cleared: 38
+
+== per stage (runs started within 60 min): dlvl | first-try win% f/b | per-run win% f/b | runs to clear (median) | seeds tried | arrive Lv ==
+  1-1 I   dl1 | 12 (10/15) | 2 (2/2) | 4.0 (max 79) | 80 | Lv 1
+  1-1 II  dl2 | 12 (11/14) | 5 (4/6) | 4 (max 64) | 56 | Lv 4.1
+  1-1 III dl3 | 16 (24/8) | 9 (11/8) | 5 (max 42) | 45 | Lv 5.3
+  1-2 I   dl3 | 22 (26/19) | 11 (10/12) | 4 (max 37) | 40 | Lv 6.3
+  1-2 II  dl4 | 14 (22/5) | 11 (12/9) | 7 (max 31) | 37 | Lv 7.0
+  1-2 III dl5 | 3 (0/6) | 5 (7/5) | 9 (max 54) | 35 | Lv 8.0
+  1-3 I   dl4 | 14 (20/7) | 6 (7/6) | 6 (max 58) | 29 | Lv 9.1
+  1-3 II  dl5 | 0 (0/0) | 5 (5/4) | 14.0 (max 35) | 22 | Lv 9.6
+  1-3 III dl6 | 0 (0/0) | 5 (5/5) | 12.5 (max 26) | 16 | Lv 10.3
+  1-4 I   dl6 | 90 (100/75) | 82 (100/60) | 1 (max 1) | 10 | Lv 11.2
+  1-4 II  dl7 | 78 (83/67) | 69 (75/60) | 1 (max 3) | 9 | Lv 11.1
+  1-4 III dl8 | 44 (17/100) | 33 (25/100) | 2 (max 7) | 9 | Lv 11.3
+  1-5 I   dl10 | 25 (40/0) | 21 (18/29) | 2.5 (max 4) | 8 | Lv 11.8
+
+== by starting combo: n | clears@10 | clears@60 | 1051 min | worst streak@60 | gap@60 ==
+   knight · priest · warrior | 6 | 1.5 | 5.5 | 59.5 | 20 | 23.7
+   knight · mage · priest | 6 | 0.5 | 3.0 | 168.9 | 48 | 32.2
+   mage · priest · warrior | 16 | 0.0 | 0.5 | 194.2 | 51 | 53.1
+   archer · knight · priest | 12 | 0.0 | 0.5 | 223.5 | 46 | 52.0
+   archer · knight · mage | 13 | 0 | 1 | None | 48 | 58.4
+   archer · knight · warrior | 3 | 2 | 3 | None | 37 | 38.9
+   archer · mage · warrior | 9 | 0 | 0 | None | 48 | 60.0
+   archer · priest · warrior | 8 | 0.5 | 1.5 | None | 38 | 42.8
+   knight · mage · warrior | 7 | 1 | 4 | None | 37 | 33.2

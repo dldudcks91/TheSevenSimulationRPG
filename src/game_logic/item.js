@@ -698,6 +698,13 @@ export function createItemSystem(data) {
     /** 무기군 정의 — 무기가 아니거나 모르는 군이면 null */
     const groupOf = item => (item && item.slot === 'weapon' ? WG[item.group] : null) ?? null;
 
+    /** 그 직업에 **어울리는** 장비인가 [2026-10-22 · R307 · item_design §6-3] — 자동 장착(`game.autoEquip`)이 거르는 데만 쓴다. 착용은 막지 않는다(`canEquip`).
+     *  무기 = 무기군의 `classes` · 방어구 = 갈래의 `classes`(비었으면 누구나) · 갈래가 없으면(시작 칸 · 반지 · 목걸이) 누구나 */
+    function fitsClass(item, cls) {
+        const cs = (item?.slot === 'weapon' ? groupOf(item) : groupDef(item?.slot, item?.group))?.classes ?? [];
+        return !cs.length || cs.includes(cls);
+    }
+
     /** 착용 요구 레벨 = 아이템 레벨 · **만렙에서 멈춘다** [2026-10-06 사용자 확정 · R215 · item_design §2] —
      *  아이템 레벨은 등급 가산(`spawn_grade.csv:gear_ilvl_add`)만큼 만렙 위로 올라가므로, 상한이 없으면 그 드롭은 영원히 못 낀다 */
     const reqLevel = item => Math.min(item.ilvl, B.hero_level_cap);
@@ -859,5 +866,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
+    return { rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
 }

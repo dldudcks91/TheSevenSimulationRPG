@@ -50,6 +50,7 @@ export const lungeFxOn = () => fxOn.lunge;
 export function setFxOn(k, on) {
     if (!(k in fxOn)) return;
     fxOn[k] = !!on;
+    if (k === 'skill' && on) fxPreload(artPref, battleSkills);   // 꺼 둔 동안 안 읽은 관전 카드의 스킬 그림 — 덜 읽힌 칸은 그동안 코드 조합으로 선다
     try { localStorage.setItem(PREF_KEY[k], on ? 'on' : 'off'); } catch { /* 저장 실패는 무해 — 이번 창에서만 먹는다 */ }
 }
 
@@ -83,11 +84,11 @@ let artPref = (() => {
 })();
 /** 고른 그림체 — 스킬 그림을 띄울 때마다 읽는다 */
 export const fxArtStyle = () => artPref;
-/** 그림체를 고른다 — 누른 순간부터 다음 사건에 먹는다(그 그림체 그림을 바로 읽기 시작한다 · 덜 읽힌 칸은 그동안 코드 조합으로 선다) */
+/** 그림체를 고른다 — 누른 순간부터 다음 사건에 먹는다(관전 카드의 스킬 그림을 그 그림체로 바로 읽기 시작한다 · 덜 읽힌 칸은 그동안 코드 조합으로 선다) */
 export function setFxArtStyle(s) {
     if (!ART_STYLES.includes(s)) return;
     artPref = artStyle = s;
-    fxPreload(s);
+    if (fxOn.skill) fxPreload(s, battleSkills);
     try { localStorage.setItem(ART_KEY, s); } catch { /* 저장 실패는 무해 */ }
 }
 
@@ -466,25 +467,29 @@ const ART_KINDS = ['physical', 'fire', 'cold', 'lightning', 'poison', 'blast', '
 const art = new Map();   // 종류 → 읽힌 주소 (읽히기 전 · 파일이 없는 종류는 비어 있다)
 let preloaded = false;
 const skillArt = new Map();   // 스킬 그림 파일 → 준비된 주소 · 실패한 그림은 코드 조합으로 표시한다
-const skillReady = new Map();   // 그림체 → 그 그림체 그림을 다 읽었나(Promise)
+const skillLoad = new Map();   // 스킬 그림 파일 → 읽기(Promise) — 파일마다 한 번만 받는다
+/* 지금 관전 카드들의 스킬 — 카드가 설 때 알린다(`fxPreloadSkills`). 스킬 이펙트를 켜거나 그림체를 바꾸면 이것만 읽는다 */
+let battleSkills = [];
 /* 지금 그림을 띄우는 그림체 — 관전은 설정이 고른 것(`artPref`) · 도감 이펙트 세그먼트의 미리보기(`fxPreview`)가 부르는 동안만 그 탭의 것 (ADR-0559 · ADR-0561) */
 let artStyle = artPref;
 /** 그 그림체로 바꾼 그림 정의 — 이어 서는 그림(`then`)도 같이. 코드 모양이면 파일이 없다(null) */
 const styled = (def, style) => def && { ...def, file: artFile(def.file, style), ...(def.then && { then: styled(def.then, style) }) };
-/** 관전 · 도감 이펙트 세그먼트가 설 때 부른다 — 스킬 그림은 그림체마다 한 번만 읽는다(관전은 설정이 고른 그림체). 종류 공통 그림은 ART_ON을 따른다 */
-export function fxPreload(style = artPref) {
-    if (!skillReady.has(style)) {
-        const files = new Set(Object.values(SKILL_ART).flatMap(events => Object.values(events).flatMap(x => {
-            const d = styled(x, style);
-            return [d.file, d.then?.file];
-        })).filter(Boolean));
-        skillReady.set(style, Promise.all([...files].map(file => new Promise(resolve => {
-            const im = new Image();
-            im.onload = () => { skillArt.set(file, im.src); resolve(); };
-            im.onerror = () => resolve();   // 읽기 실패가 관전 부팅을 막지 않는다 — 그 칸은 코드 조합으로 선다
-            im.src = `${ART_DIR}skills/${file}.webp`;
-        }))));
-    }
+/** 스킬 그림 한 장을 읽는다 — 파일마다 한 번 */
+const loadSkillArt = file => {
+    if (!skillLoad.has(file)) skillLoad.set(file, new Promise(resolve => {
+        const im = new Image();
+        im.onload = () => { skillArt.set(file, im.src); resolve(); };
+        im.onerror = () => resolve();   // 읽기 실패가 관전 부팅을 막지 않는다 — 그 칸은 코드 조합으로 선다
+        im.src = `${ART_DIR}skills/${file}.webp`;
+    }));
+    return skillLoad.get(file);
+};
+/** 스킬 그림을 읽어 둔다 — `skills` = 그 스킬들만(관전 — 그 전투에 나오는 스킬) · 안 주면 전부(도감 이펙트 세그먼트가 그림체 하나를 다 깐다). 종류 공통 그림은 ART_ON을 따른다 */
+export function fxPreload(style = artPref, skills = Object.keys(SKILL_ART)) {
+    const files = new Set(skills.flatMap(s => Object.values(SKILL_ART[s] ?? {}).flatMap(x => {
+        const d = styled(x, style);
+        return [d.file, d.then?.file];
+    })).filter(Boolean));
     if (!preloaded && ART_ON) {
         preloaded = true;
         for (const k of ART_KINDS) {
@@ -493,7 +498,13 @@ export function fxPreload(style = artPref) {
             im.src = `${ART_DIR}${k}.webp`;
         }
     }
-    return skillReady.get(style);
+    return Promise.all([...files].map(loadSkillArt));
+}
+/** 관전 카드가 설 때 부른다 — 지금 선 카드들의 스킬 그림만 읽는다 · 스킬 이펙트가 꺼져 있으면 안 읽는다(켜는 순간 읽는다 · DEV_PLAN §4 #86).
+ *  타임라인이 아니라 카드를 본다 — 원정의 타임라인은 걸음마다 자라 관전이 설 때는 뒤 라운드의 사건이 없다 */
+export function fxPreloadSkills(ids) {
+    battleSkills = [...new Set(ids)];
+    if (fxOn.skill) fxPreload(artPref, battleSkills);
 }
 /** 준비된 스킬 그림을 초상 위에 띄운다 — 없으면 기존 조각을 부르는 쪽으로 돌아간다(코드 모양 그림체도 이쪽이다) */
 function skillStamp(L, s, kind, x) {

@@ -914,6 +914,45 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
+    /* ── 자동 장착 [2026-10-22 · R307 · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
+       거르기 = 요구 레벨(`canEquip`) + 직업 어울림(`item.fitsClass`) — 직업 무기군이 물리 ↔ 마법(평타)도 같이 거른다.
+       고르기 = **바탕 수치** — 끼면(`heroCombatIf` — 강화 포함) 무기는 초당 세기 · 방어구 넷은 방어력이 가장 많이 오르는 것. 안 오르면 안 바꾸고 빈 칸이면 가장 높은 것.
+       표에 없는 부위(반지 · 목걸이)는 바탕 수치가 없어 **빈 칸만** — 아이템 레벨 → 등급(`CMP`). 점수(§6-2)는 안 쓴다 — 굴림의 운을 재지 세기를 재지 않는다.
+       부위 이름은 수치가 아니라 어휘라 코드에 둔다(`AUTO_RARITY` 와 같은 자리) */
+    const atkMid = c => { const a = c.atk_physical ?? c.atk_magic; return a ? (a.min + a.max) / 2 : 0; };
+    const AUTO_BASE = {
+        weapon: c => atkMid(c) / (c.action_period || 1),   // 초당 세기 — 한 대 평균만 보면 느린 무기를 고른다(주기는 무기군이 정한다 · 장비 봇과 같은 잣대)
+        armor: c => c.defense, helmet: c => c.defense, gloves: c => c.defense, boots: c => c.defense,
+    };
+
+    function autoEquip(state, heroUid, no = 1) {
+        const h = heroById(state, heroUid);
+        if (!h || !bagOf(state, no)) return { ok: false, err: 'missing' };
+        const changes = [];
+        for (const { id: pos, part } of deps.equipSlots) {
+            const base = AUTO_BASE[part];
+            if (!base && h.equipped[pos]) continue;                     // 반지 · 목걸이 — 빈 칸만
+            const cands = bagOf(state, no).map(u => state.items[u])
+                .filter(it => it && it.slot === part && !I.canEquip(h, it) && I.fitsClass(it, h.cls));
+            let best = null;
+            if (base) {
+                const now = base(heroCombat(state, h));
+                // 「끼면」의 자리는 `equipTarget` 이 고른다 — 바탕 수치가 있는 부위는 위치가 하나라 곧 `pos` 다
+                for (const it of cands) {
+                    const gain = base(heroCombatIf(state, h, it.uid)) - now;
+                    if (!best || gain > best.gain) best = { it, gain };   // 같으면 인벤토리 앞의 것
+                }
+                if (best && best.gain <= 0 && h.equipped[pos]) best = null;
+            } else {
+                for (const it of cands) if (!best || (CMP.ilvl(it, best.it) || CMP.rarity(it, best.it)) < 0) best = { it };
+            }
+            if (!best) continue;
+            const r = equip(state, h.uid, best.it.uid, pos);
+            if (r.ok) changes.push({ position: pos, item: best.it.uid, back: r.back });
+        }
+        return { ok: true, changes };
+    }
+
     /**
      * 자물쇠 하나를 켜고 끈다 [2026-09-21 · ADR-0185] — 잠긴 아이템은 `salvage` 가 `locked` 로 거절한다.
      * 보관 두 칸(가방 · 창고)에 있는 것만 잠근다 — 착용 중인 것은 어차피 분해되지 않는다.
@@ -4216,7 +4255,7 @@ export function createGameSystem(deps) {
         heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexSteps, codexOptionOf, codexLadder, codexOptions, codexExpOf,
         skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
-        equipTarget, equip, unequip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
+        equipTarget, equip, unequip, autoEquip, salvage, setItemLock, setAutoSalvage, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, chapterOpen, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,

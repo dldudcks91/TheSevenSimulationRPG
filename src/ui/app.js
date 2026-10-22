@@ -3393,11 +3393,18 @@ function paperdoll(h, { onPick = null, selUid = null } = {}) {
     return box;
 }
 
-/** 장비 패널 — 캐릭터 탭 · 상점 · 제련소가 같이 쓴다. `pick` 은 페이퍼돌로 넘긴다(제련소 — 칸 클릭 = 고르기 · ADR-0366) */
-function gearPanel(h, pick = {}) {
+/** 장비 패널 — 캐릭터 탭 · 상점 · 제련소가 같이 쓴다. `pick` 은 페이퍼돌로 넘긴다(제련소 — 칸 클릭 = 고르기 · ADR-0366)
+ *  `auto` = 제목 오른쪽 끝 [자동 장착] — **캐릭터 탭만** 켠다 (§6 · ADR-0712) */
+function gearPanel(h, pick = {}, { auto = false } = {}) {
     const p = el('div', 'panel');
     const worn = wornItems(h);
-    p.appendChild(el('h2', '', t('ch.gear.h')));
+    const head = el('h2', '', auto ? `<span>${t('ch.gear.h')}</span>` : t('ch.gear.h'));
+    if (auto) {
+        const b = el('button', 'btn sm pd-auto', t('ch.autoEq'));
+        b.onclick = () => autoEquipHero(h);
+        head.appendChild(b);
+    }
+    p.appendChild(head);
     p.appendChild(paperdoll(h, pick));
 
     // 접사 죄종 — 세트포인트가 아니라 **태그**다 (세트효과 보류, item_design §4). 수는 "죄종 접사 수" — 접사 시너지 노드의 축
@@ -3415,6 +3422,17 @@ function gearPanel(h, pick = {}) {
     }
     p.appendChild(chips);
     return p;
+}
+
+/** [자동 장착] — 고른 영웅에게 보고 있는 인벤토리에서 (`game.autoEquip` 이 고른다 · 화면은 결과만 · §6 · ADR-0712).
+ *  원정 중이면 손으로 낄 때와 같은 교체 플래시(보스전 · 꺼진 전술 — R130)가 뒤따른다 */
+function autoEquipHero(h) {
+    const before = runTacticsNow();
+    const r = SYS.game.autoEquip(G, h.uid, invNo());
+    if (!r.ok) flash(`ch.err.${r.err}`);
+    else if (!r.changes.length) flash('ch.autoEq.none');
+    else { save(); flash('ch.autoEq.done', { n: r.changes.length }); runChangeFlash(h.uid, before); }
+    render();
 }
 
 /** ②-2 기본 옵션 — 맨 위 레벨 · 경험치 + 기본 능력치 7 막대 + 그 아래 현재 스킬(액티브 3, 정사각 카드). 옛 핵심 전투치 4 줄은 세부 옵션이 흡수했다 (2026-08-27) */
@@ -4252,7 +4270,7 @@ function renderCharacter(main) {
     // 끌어서 카드 사이 틈에 놓으면 그리로 들어간다 — 사이는 한 칸씩 밀리고 당겨진다 (2026-10-09 사용자 지시 · ADR-0571)
     stack.appendChild(heroStrip(pickHero, { dismissable: true, tip: false, reorder: true }));
     const band = el('div', 'cols c-char');
-    band.appendChild(gearPanel(h));
+    band.appendChild(gearPanel(h, {}, { auto: true }));
     band.appendChild(attrPanel(h));
     for (const p of detailPanels(h)) band.appendChild(p);
     stack.appendChild(band);

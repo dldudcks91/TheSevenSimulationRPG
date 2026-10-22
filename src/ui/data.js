@@ -51,7 +51,7 @@ export const D = {
     skillStatusRows: [],      // skill_status.csv 원시 행 — 걸린 효과(버프 · 디버프 · 오오라가 거는 창 · 2026-09-22)
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
-    heroTiers: [],            // hero_tier.csv — [{id, weight, totalMin, totalMax, shape, color, ko, en, desc:{ko,en}}] · 굴림 SSOT + 화면 표기
+    heroTiers: [],            // hero_tier.csv — [{id, weight, totalMin, totalMax, attrSd, color, ko, en, desc:{ko,en}}] · 굴림 SSOT + 화면 표기
     commissionKinds: null,    // commission_kind.csv — {id: {id, ridesOn, ko, en, how:{ko,en}}} · ridesOn = battle(전투가 센다) | yield(드롭·산출이 채운다)
     // 의뢰 표 셋 — 원시 행 그대로 넘긴다. 검증 · 굴림 · 대조는 game_logic/commission.js (base_expedition_design §1-3 · 2026-09-24 · R153) · ⚠ 행 순서가 굴림 순서다
     commissionKindRows: [],   // commission_kind.csv 원시 행
@@ -71,7 +71,8 @@ export const D = {
     tacticScores: [],         // tactic_score.csv 원시 행 — 점수 하나 = 등급별 배수 ⚠제안 (§5-8)
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
-    classes: [],              // class.csv — [{id, keyAttr, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
+    classes: [],              // class.csv — [{id, keyAttr, subAttr, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
+    sinAttrs: null,           // sin_attr.csv — {sinId: statId} · 죄종이 능력치 굴림에서 미는 칸 한 개 ⚠제안 (hero_design §4-3 · 2026-10-22 · R308)
     sinWords: null,           // sin_word.csv — {sinId: [{ko, en}...]} **단 순서**(tier 로 정렬) · 아이템 이름의 죄종 단어 (item_design §1 「이름」 · 2026-09-19)
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
     // ~~affixDefs~~ (affix.csv) — 2026-09-21 R127 퇴역. 반지 · 목걸이가 아래 세 표로 옮겼다
@@ -125,7 +126,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'gather_node', 'log_node', 'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -142,7 +143,7 @@ export async function loadData(base = './data/') {
         gatherNodeRow, logNodeRow, heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -210,7 +211,7 @@ export async function loadData(base = './data/') {
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
     // 방어구 갈래 — **부위 → 갈래** 두 단으로 묶는다. 방어 계수 · 갑옷군 고정값(공속 · 쿨감)을 든다 (2026-09-16 갑옷군 · R107 · 2026-09-18 투구 · 장갑 · 신발).
     //   **굴리는 고정 특성** `trait` = `{stats, scale, min, max}` [2026-10-21 · R303 · item_design §1 「10-21 방어구 개정」] — 투구 · 장갑 · 신발 갈래 · 드롭이 아이템의 `[고정]` 줄로 박는다
-    //   (`stats` 가 둘 이상이면 드롭 때 하나 · `-` 면 null). 갈래 id 가 부위마다 겹친다(`leather` — 투구 · 장갑 · 신발) — 그래서 id 하나로 색인하지 않는다. 숙련 직업(`classes`)은 갑옷만 들고 나머지는 `-`
+    //   (`stats` 가 둘 이상이면 드롭 때 하나 · `-` 면 null). 갈래 id 가 부위마다 겹친다(`leather` — 투구 · 장갑 · 신발) — 그래서 id 하나로 색인하지 않는다. 직업(`classes`) — 갑옷은 숙련 게이트 · 투구 · 장갑 · 신발은 **자동 장착의 직업 어울림**에만(`item.fitsClass` · 2026-10-22 · R307 · ⚠임시)
     D.armorGroupList = armorGroupRow.map(r => ({
         id: r.group_id, slot: r.slot, ko: r.group_kr, en: r.group_en,
         classes: r.classes === '-' ? [] : String(r.classes).split('|'),
@@ -271,7 +272,8 @@ export async function loadData(base = './data/') {
     // ~~`ui/mock.js:HERO_TIER`~~ 를 대체한다 — 이름·색이 mock 에 있고 대역이 CSV 에 있으면 SSOT 가 둘로 갈린다.
     // 행 순서가 곧 굴림 순서라 정렬하지 않는다 (INTERFACE §5-2)
     D.heroTiers = heroTierRow.map(r => ({
-        id: r.tier_id, weight: r.weight, totalMin: r.attr_total_min, totalMax: r.attr_total_max, shape: r.shape,
+        id: r.tier_id, weight: r.weight, totalMin: r.attr_total_min, totalMax: r.attr_total_max,
+        attrSd: r.attr_sd,   // 칸마다 굴림의 폭 — 유니크는 `-`(hero.js 가 굴리는 첫 등급의 폭을 빌린다 · 2026-10-22 · R308)
         color: r.color_hex, ko: r.name_kr, en: r.name_en, desc: { ko: r.desc_kr, en: r.desc_en },
     }));
     D.commissionKinds = indexBy(commissionKind.map(r => ({
@@ -329,6 +331,8 @@ export async function loadData(base = './data/') {
     // 직업 — CSV 컬럼은 `release`(스테이지와 충돌하지 않는 이름), game_logic 이 읽는 필드는 `stage` 그대로
     D.classes = classRow.map(r => ({
         id: r.class_id, keyAttr: r.key_attr, ko: r.name_kr, en: r.name_en,
+        // 보조 능력치 — 능력치 굴림에서 주력 다음으로 미는 칸 · `-` 면 null (2026-10-22 · R308 · hero_design §4-3)
+        subAttr: r.sub_attr && r.sub_attr !== '-' ? r.sub_attr : null,
         role: { ko: r.role_kr, en: r.role_en }, stage: r.release, color: r.color_hex || null,
         // 싸움에서 하는 일 한 문장 — 새 게임 카드 연장 칸의 직업 줄 (2026-10-16 · app.js:startLines)
         roleText: { ko: r.role_text_kr, en: r.role_text_en },
@@ -337,6 +341,8 @@ export async function loadData(base = './data/') {
         // 새 게임 첫 진형에서 서는 열 — `front` | `back` (2026-10-21 · hero.startRankOf)
         startRow: r.start_row || null,
     }));
+    // 죄종 → 능력치 한 칸 — 능력치 굴림의 죄종 비율 (2026-10-22 · R308) · 빠진 죄종 · 어휘 밖 id 는 hero.js 가 생성 때 던진다
+    D.sinAttrs = Object.fromEntries(sinAttrRow.map(r => [r.sin_id, r.attr_id]));
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};
     //   갑옷은 `group`(갑옷군)과 `tierMin`(티어가 열리는 ilvl)을 같이 든다 — 나머지 부위는 group 이 null (2026-09-16 · R107)
@@ -563,13 +569,14 @@ export function buildSystems(d, dev = {}) {
         [c, ids.filter(id => skill.defs[id].tier === 1)]));
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
+        sinAttrs: d.sinAttrs ?? undefined,   // 죄종 → 능력치 한 칸 — 능력치 굴림의 죄종 비율 (sin_attr.csv · 2026-10-22 · R308)
         levelXp: d.levelXp,   // 레벨업 필요 XP 표 (level_xp.csv)
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
         // 초상 장수 — 로직은 그림을 모르고 **직업별 장수 객체만** 받는다. 영웅이 태어날 때 제 직업 풀에서 굴려 세이브에 박는다
         // (2026-09-06 저장형 · 2026-09-07 직업 분류 — 풀이 0장인 직업은 face = null)
         heroFaces: M.HERO_FACES,
         // 등급 표 — **행 순서가 결정론 계약이다** (INTERFACE §5-2). weight 0(유니크)은 굴림에서 빠진다.
-        // 등급이 정하는 것은 총합 대역과 분포 모양 둘뿐이고 상한은 전 영웅 공통이다 (hero_design §1 · §4-3)
+        // 등급이 정하는 것은 총합 대역과 굴림의 폭(`attrSd`) 둘뿐이고 상한은 전 영웅 공통이다 · 어느 칸이 크게는 직업 · 죄종(`sinAttrs`)이 정한다 (hero_design §1 · §4-3)
         heroTiers: d.heroTiers,   // 인자 `d` 에서 읽는다 — 전역 `D` 를 읽으면 테스트가 바꿔 끼운 표가 조용히 무시됐다 (2026-09-22 · 부채 #58)
         // 고유 스킬 풀 — **직업별**이다 (skill_design §12-1 규칙 1). hero 는 skill 시스템이 아니라 id 목록을 받는다
         skillPool: classSkills,

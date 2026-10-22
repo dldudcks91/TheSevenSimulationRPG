@@ -1,8 +1,8 @@
-class_id,key_attr,name_kr,name_en,role_kr,role_en,role_text_kr,role_text_en,release,description_kr,color_hex,hp_base,start_row
-warrior,str,전사,Warrior,근접 물리,Melee Physical,도끼와 둔기를 쓰는 맷집 좋은 근접 딜러,Tough melee DPS with axes and maces,main,-,#7895A9,100,front
-knight,str,기사,Knight,탱커 · 수호,Tank · Guardian,양손검과 창을 쓰는 탱커. 공격도 한다,Greatsword and spear tank. Hits too,main,메인 스탯 = 힘 [확정 2026-09-18 · 사용자] — ~~건강(⚠제안)~~ 대체 · 능력치 굴림에서 최고치로 밀어주는 축 (hero_design §2),#C6CDD6,100,front
-mage,int,마법사,Mage,마법,Magic,스태프와 오브를 쓰는 마법 딜러. 몸이 약하다,Frail magic DPS with staves and orbs,main,-,#7878D9,50,back
-archer,agi,궁수,Archer,원거리 물리,Ranged Physical,활과 석궁을 쓰는 원거리 물리 딜러,Ranged DPS with bows and crossbows,main,메인 스탯 = 민첩 [확정 2026-09-18 · 사용자] — ~~운(08-26 감각→운을 이름만 따라간 것)~~ 대체 (hero_design §2),#93A861,50,back
-priest,cha,사제,Priest,지원 · 회복,Support · Healing,십자가와 성경을 쓰는 힐러. 축복과 약화도 건다,"Crucifix and bible healer. Buffs, curses",main,메인 스탯 = 매력 [확정 2026-09-27 · 사용자] — ~~지능(2026-09-18)~~ 대체 · 매력이 회복량을 민다 · 피해(평타 · 심판)는 여전히 지능(마법 무기) · 지능을 부스탯으로 붙이는 것은 나중에 (hero_design §2) · 사제 = 순수 캐스터(전용 무기 성경·십자가 — 2026-09-07 마법사와 풀 분리),#E1CE98,70,back
-assassin,luck,암살자,Assassin,치명 · 속도,Crit · Speed,빠르게 파고들어 치명타로 끝낸다,Darts in and finishes with critical hits,expansion,메인 스탯 = 운 [확정 2026-09-18 · 사용자] — 종전 민첩 대체 · ⚠ 운은 드랍률 · 골드도 민다 (hero_design §2 · §4-1-1),,,back
-necromancer,int,네크로맨서,Necromancer,소환,Summoning,죽은 자를 불러내 대신 싸우게 한다,Raises the dead to fight in its place,expansion,-,,,back
+class_id,key_attr,sub_attr,name_kr,name_en,role_kr,role_en,role_text_kr,role_text_en,release,description_kr,color_hex,hp_base,start_row
+warrior,str,vit,전사,Warrior,근접 물리,Melee Physical,도끼와 둔기를 쓰는 맷집 좋은 근접 딜러,Tough melee DPS with axes and maces,main,-,#7895A9,100,front
+knight,str,ldr,기사,Knight,탱커 · 수호,Tank · Guardian,양손검과 창을 쓰는 탱커. 공격도 한다,Greatsword and spear tank. Hits too,main,메인 스탯 = 힘 [확정 2026-09-18 · 사용자] — ~~건강(⚠제안)~~ 대체 · 능력치 굴림에서 최고치로 밀어주는 축 (hero_design §2),#C6CDD6,100,front
+mage,int,luck,마법사,Mage,마법,Magic,스태프와 오브를 쓰는 마법 딜러. 몸이 약하다,Frail magic DPS with staves and orbs,main,-,#7878D9,50,back
+archer,agi,str,궁수,Archer,원거리 물리,Ranged Physical,활과 석궁을 쓰는 원거리 물리 딜러,Ranged DPS with bows and crossbows,main,메인 스탯 = 민첩 [확정 2026-09-18 · 사용자] — ~~운(08-26 감각→운을 이름만 따라간 것)~~ 대체 (hero_design §2),#93A861,50,back
+priest,cha,int,사제,Priest,지원 · 회복,Support · Healing,십자가와 성경을 쓰는 힐러. 축복과 약화도 건다,"Crucifix and bible healer. Buffs, curses",main,메인 스탯 = 매력 [확정 2026-09-27 · 사용자] — ~~지능(2026-09-18)~~ 대체 · 매력이 회복량을 민다 · 피해(평타 · 심판)는 여전히 지능(마법 무기) · 지능을 부스탯으로 붙이는 것은 나중에 (hero_design §2) · 사제 = 순수 캐스터(전용 무기 성경·십자가 — 2026-09-07 마법사와 풀 분리),#E1CE98,70,back
+assassin,luck,-,암살자,Assassin,치명 · 속도,Crit · Speed,빠르게 파고들어 치명타로 끝낸다,Darts in and finishes with critical hits,expansion,메인 스탯 = 운 [확정 2026-09-18 · 사용자] — 종전 민첩 대체 · ⚠ 운은 드랍률 · 골드도 민다 (hero_design §2 · §4-1-1),,,back
+necromancer,int,-,네크로맨서,Necromancer,소환,Summoning,죽은 자를 불러내 대신 싸우게 한다,Raises the dead to fight in its place,expansion,-,,,back

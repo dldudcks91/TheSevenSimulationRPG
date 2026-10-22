@@ -1095,6 +1095,10 @@ const STRINGS = {
 
     /* ── 캐릭터 탭 (2026-08-23 개편) — 영웅 띠 / 장비·전체·세부·스킬 4칸 / 아이템 가로 ── */
     'ch.gear.h': { ko: '장비', en: 'Equipment' },
+    // 장비 칸 제목 오른쪽 끝 [자동 장착] (§6 · ADR-0712 · 2026-10-22) — `ch.auto.*` 는 자동 분해 창의 것이라 접두를 가른다
+    'ch.autoEq': { ko: '자동 장착', en: 'Auto-equip' },
+    'ch.autoEq.done': { ko: '{n}개 장착했다', en: { one: 'Equipped {n} item', other: 'Equipped {n} items' } },
+    'ch.autoEq.none': { ko: '더 나은 장비가 없다', en: 'No better gear' },
     'ch.attr.h': { ko: '기본 옵션', en: 'Basic Stats' },
     'ch.attr.sub': { ko: '장비 불변', en: 'Gear-immutable' },
     'ch.attr.note': {

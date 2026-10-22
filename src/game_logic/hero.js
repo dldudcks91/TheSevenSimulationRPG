@@ -30,6 +30,7 @@
  */
 
 import { createFormula } from './formula.js';
+import { makeRng } from './rng.js';
 
 /** 원소 4종 — combat_stat.csv 의 res_* 와 스킬의 원소 태그(`skill_effect.csv:element`)가 쓰는 같은 어휘 (battle_design §9-5) */
 export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
@@ -39,7 +40,9 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   balance      — balance.csv 를 {key: value} 로 눕힌 것
  *   stats        — 기본 능력치 7종 정의 [{id}...] (순서 = 표시 순서)  ← hero_attribute.csv
  *   sins         — 죄종 id 목록
- *   classes      — 직업 정의 [{id, keyAttr, stage, hpBase}...] — `hpBase` = 레벨 1 최대 HP(null 이면 `hero_hp_base` · 2026-10-02)
+ *   sinAttrs     — {sinId: statId} ← sin_attr.csv — 죄종이 잘 붙게 미는 능력치 한 칸 (2026-10-22 · R308 · 능력치 굴림 비율)
+ *   classes      — 직업 정의 [{id, keyAttr, subAttr, stage, hpBase}...] — `hpBase` = 레벨 1 최대 HP(null 이면 `hero_hp_base` · 2026-10-02) ·
+ *                  `keyAttr` · `subAttr` = 능력치 굴림에서 그 직업이 미는 주력 · 보조 칸(`subAttr` null = 없음 · 2026-10-22 · R308)
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
  *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, trait, ...}}} ← armor_group.csv — **부위 → 갈래** (2026-09-16 갑옷군 · R107 · 2026-09-18 네 부위).
  *                  **낀 방어구마다** 제 갈래의 공속 · 쿨감을 더한다 — 값이 있는 것은 갑옷군뿐이다. 투구 · 장갑 · 신발 갈래 특성(`trait`)은 드롭이 아이템 줄로 박아
@@ -53,9 +56,9 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   starterPool  — `skillPool` 과 같은 모양 ← 직업 풀 중 skill.csv:tier = 1 — **첫 파티의 고유만** 여기서 굴린다
  *                  [2026-10-16 · R271 · hero_design §1 — ~~직업 기본기 starter_pool(딜 · 힐)~~ 2026-09-29 R179 대체] · 그 직업이 비면 직업 풀 · 행 순서가 결정론 계약
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
- *   heroTiers    — 영웅 등급 표 [{id, weight, totalMin, totalMax, shape}...] ← `hero_tier.csv` (**행 순서가 굴림 결과를 정한다**).
- *                  `weight = 0` 인 행은 생성기가 안 뽑는다(유니크는 수작업). 등급을 가르는 것은 **총합 대역과 분포 모양 둘뿐**이다
- *                  (hero_design §1 확정 2026-09-07). 상한은 등급이 아니라 `[balance.csv:hero_attr_max]` 하나다
+ *   heroTiers    — 영웅 등급 표 [{id, weight, totalMin, totalMax, attrSd}...] ← `hero_tier.csv` (**행 순서가 굴림 결과를 정한다**).
+ *                  `weight = 0` 인 행은 생성기가 안 뽑는다(유니크는 수작업). 등급을 가르는 것은 **총합 대역과 굴림의 폭 둘뿐**이다
+ *                  (hero_design §1 확정 2026-09-07 · 폭 `attrSd` 2026-10-22 R308 — ~~분포 모양 `shape`~~). 상한은 등급이 아니라 `[balance.csv:hero_attr_max]` 하나다
  *   heroFaces    — **직업별** 초상 장수 `{classId: n}`. **영웅이 태어날 때 제 직업 풀에서 굴려 `face` 에 박는다**
  *                  (2026-09-07 — 구 `heroFaceMax` 정수 하나를 대체). `face` 는 `'<classId>_<k>'` 문자열이고
  *                  풀이 0장인 직업은 `null`(초상 없음)이다. 로직은 그림을 모른다 — 직업별 장수 객체만 받고
@@ -69,9 +72,10 @@ export function createHeroSystem(data) {
     const skillPool = data.skillPool ?? {};      // {classId: [skillId...]} — 직업 풀 (skill_design §12)
     const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 풀의 1티어 · 첫 파티 고유만 (2026-10-16 · R271)
     const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
-    const keyAttrOf = id => data.classes.find(c => c.id === id)?.keyAttr ?? null;
     // 레벨 1 최대 HP — **직업마다** [2026-10-02 사용자 「궁수 · 마법사 50 · 사제 70」] · 빈 칸이면 전역 `hero_hp_base`
     const hpBaseOf = id => data.classes.find(c => c.id === id)?.hpBase ?? B.hero_hp_base;
+    // 새 게임 첫 진형의 랭크 — `class.csv:start_row` 가 `back` 이면 1(후열) · 그 밖은 0(전열) (INTERFACE §2-4 · 2026-10-21 사용자 지시)
+    const startRankOf = id => data.classes.find(c => c.id === id)?.startRow === 'back' ? 1 : 0;
 
     /* ── 마스터리 노드 (skill_design §3) — 정의는 CSV · 값은 balance.csv · 랭크는 영웅이 든다 ── */
 
@@ -193,6 +197,27 @@ export function createHeroSystem(data) {
     };
 
     /**
+     * 첫 파티의 직업 — **앞줄 직업(`startRankOf` = 0)이 하나는 든다** [2026-10-22 사용자 지시 「3개중에 전사나 기사가 한마리는 무조건」 · hero_design §1].
+     *   `drawDistinct` 와 같은 굴림을 같은 수만큼 쓰고, **마지막 자리까지 앞줄이 없는데 그 자리도 뒷줄을 냈을 때만** 같은 굴림의 남은 몫(`x − k`)으로
+     *   남은 앞줄 직업 중 하나를 고른다(추가 소비 없음 · 앞줄 직업끼리는 균등) — 앞줄 0명이던 판만 1명으로 옮겨 가고 2명 비율은 그대로다.
+     *   앞줄이 이미 든 시드는 결과도 `drawDistinct` 와 같다 (INTERFACE §5-2)
+     */
+    function drawStartClasses(rng, n) {
+        const rest = mainClasses.slice(), out = [];
+        const m = Math.min(n, rest.length);
+        for (let i = 0; i < m; i++) {
+            const x = rng() * rest.length, k = Math.floor(x);
+            let c = rest[k];
+            const front = rest.filter(id => startRankOf(id) === 0);
+            if (i === m - 1 && startRankOf(c) !== 0 && front.length && !out.some(id => startRankOf(id) === 0))
+                c = front[Math.floor((x - k) * front.length)];
+            out.push(c);
+            rest.splice(rest.indexOf(c), 1);
+        }
+        return out;
+    }
+
+    /**
      * 얼굴 1회 — 태어날 때 **제 직업 풀에서** 굴려 영웅에 박고, 그 뒤로 안 바뀐다 (hero_design §1 의 고유 스킬과 같은 층).
      * **화면이 매번 다시 계산하지 않게** 하려고 저장한다 — 렌더러는 전체를 다시 그리므로 그때마다 굴리면 얼굴이 흔들린다.
      * 결과는 `'<classId>_<k>'` 문자열(k ≥ 1)이고, 그 직업의 그림이 하나도 없으면 `null` = 초상 없음(2026-09-07).
@@ -226,62 +251,81 @@ export function createHeroSystem(data) {
         return defaultTier();
     }
 
-    /** 능력치 총합 1회 — 등급이 대역을 정하고 그 안에서 굴린다. 여기도 **소비 1회 고정** */
-    function rollTotal(rng, tier) {
-        const lo = Math.max(B.hero_attr_min * statIds.length, tier?.totalMin ?? 0);
-        const hi = Math.min(B.hero_attr_max * statIds.length, tier?.totalMax ?? lo);
-        return lo + Math.floor(rng() * (Math.max(lo, hi) - lo + 1));
+    /* ── 기본 능력치 굴림 (hero_design §4-3 · 2026-10-22 R308 — 칸마다 굴리고 합이 등급 대역 밖이면 다시) ── */
+
+    const classOf = id => data.classes.find(c => c.id === id) ?? null;
+    const sinAttrs = data.sinAttrs ?? {};
+    // 로드 검증 — 직업 · 죄종이 미는 칸이 능력치 어휘 밖이면 그 칸의 비율이 조용히 1 로 떨어진다 → 생성 때 던진다
+    for (const c of data.classes) for (const k of ['keyAttr', 'subAttr'])
+        if (c[k] != null && !statIds.includes(c[k])) throw new Error(`hero: class.csv ${c.id} 의 ${k} '${c[k]}' 가 hero_attribute.csv 에 없다`);
+    if (data.sinAttrs) for (const s of data.sins ?? [])
+        if (!statIds.includes(sinAttrs[s])) throw new Error(`hero: sin_attr.csv 에 죄종 '${s}' 의 칸이 없거나 어휘 밖이다 (${sinAttrs[s]})`);
+    // 대역 · 폭이 다 있는 등급 — 유니크(수작업 · 기획 미정)는 칸이 `-` 라 굴리는 첫 등급의 것을 빌린다
+    const usableTier = t => !!t && Number.isFinite(t.totalMin) && Number.isFinite(t.totalMax) && t.totalMin <= t.totalMax && t.attrSd > 0;
+    for (const t of rollable) if (!usableTier(t)) throw new Error(`hero: hero_tier.csv ${t.id} 의 대역 · 폭(attr_sd)이 비었다`);
+
+    /** 등급 → 대역(일곱 칸 합의 범위) · 폭 — 대역은 칸 범위로 닿을 수 있는 곳 `[7 × 최소, 7 × 최대]` 안으로 자른다 */
+    function bandOf(tier) {
+        const t0 = typeof tier === 'string' ? tierById(tier) : tier;
+        const t = usableTier(t0) ? t0 : defaultTier();
+        if (!usableTier(t)) throw new Error('hero: 능력치를 굴릴 등급(대역 · 폭)이 없다 — hero_tier.csv');
+        const n = statIds.length;
+        const min = Math.max(t.totalMin, B.hero_attr_min * n);
+        return { min, max: Math.max(min, Math.min(t.totalMax, B.hero_attr_max * n)), sd: t.attrSd };
     }
 
     /**
-     * 기본 능력치 굴림 — **합은 등급이 정하고 모양만 굴린다** (`hero_tier.csv`).
-     * 축마다 독립 균등이면 합이 33↔86까지 벌어져 죽은 카드가 나온다 — 차이는 양이 아니라 모양.
-     * `shape` 는 그 모양의 손잡이다 — **작을수록 가중치가 고르게 나서 극값이 드물다**(레어 = 정규),
-     * 클수록 치우쳐 한 축이 크게 튄다. **1.0 이 균등 가중치**이고 그 위는 균등보다도 퍼진다.
-     * ⚠ 2026-09-08 정정 — 옛 주석은 이 방향을 반대로 적어(「1 에 가까울수록 고르다」) 레어에 1.0,
-     *   매직에 2.5 가 들어가 있었다. 실측 결과 레어의 최고축 18+ 가 20.4% 로 「극값이 드물다」가
-     *   성립하지 않았고, 매직 최고축 평균(17.2)이 레어(15.4)를 넘어 **등급이 뒤집혀** 있었다.
-     *   주력 축이 전투 계수를 쥐므로(hero_design §4-1) 이는 밸런스 역전이다 — DEV_PLAN R50.
-     * 마지막에 직업 주력 축(keyAttr)이 최고치가 되도록 **자리만 바꾼다** (합·분포 불변).
-     *
-     * ⚠ **rng 소비는 축 수(7)로 고정이다** — 옛 판은 나머지 보정 루프가 `rng()` 로 칸을 골라
-     *   소비 수가 굴림 결과에 의존했다. 총합이 등급마다 달라지는 09-07 개정에서는 그것이 곧
-     *   「등급이 소비 수를 민다」가 되므로 **보정을 결정적으로** 바꿨다 (소수부 큰 축부터 · 동률은 인덱스 순).
+     * 칸마다의 중심 — 대역 가운데 × 그 칸 비율 ÷ 비율 합. 비율은 1 에서 시작해 직업 주력 · 보조 · 죄종 칸에 손잡이를 곱한다
+     * (`hero_attr_key_weight` · `_sub_weight` · `_sin_weight`) — **겹치면 곱도 겹친다**(분노 전사의 힘 = 주력 × 죄종).
+     * 직업 · 죄종은 「어느 칸이 크게」만 정하고 「얼마나」는 등급의 대역이 정한다 — 비율 표 하나로 세 등급을 다 쓴다
      */
-    function rollAttributes(rng, favor, opts = {}) {
-        const t = opts.total != null ? null : defaultTier();
-        const total = opts.total ?? Math.round(((t?.totalMin ?? 7) + (t?.totalMax ?? 7)) / 2);
-        const shape = opts.shape ?? t?.shape ?? 2;
-        const lo = B.hero_attr_min, hi = B.hero_attr_max;
-        const w = statIds.map(() => rng() ** shape + 0.04);   // 소비 = 축 수. 등급과 무관하다
-        const sum = w.reduce((a, b) => a + b, 0);
-        const free = total - lo * statIds.length;
-        const raw = w.map(x => lo + free * x / sum);
-        const v = raw.map(x => Math.max(lo, Math.min(hi, Math.floor(x))));
-
-        let diff = total - v.reduce((a, b) => a + b, 0);
-        const order = raw
-            .map((x, i) => [x - Math.floor(x), i])
-            .sort((a, b) => b[0] - a[0] || a[1] - b[1])
-            .map(([, i]) => i);
-        for (let pass = 0; diff !== 0 && pass < hi + 2; pass++) {
-            let moved = false;
-            for (let k = 0; k < order.length && diff !== 0; k++) {
-                const i = order[diff > 0 ? k : order.length - 1 - k];
-                if (diff > 0 && v[i] < hi) { v[i]++; diff--; moved = true; }
-                else if (diff < 0 && v[i] > lo) { v[i]--; diff++; moved = true; }
-            }
-            if (!moved) break;                                // 대역이 [lo*7, hi*7] 밖이면 더 못 민다
-        }
-        const fi = statIds.indexOf(favor);
-        if (fi >= 0) {
-            let top = 0;
-            for (let i = 1; i < v.length; i++) if (v[i] > v[top]) top = i;
-            if (top !== fi) { const x = v[fi]; v[fi] = v[top]; v[top] = x; }
-        }
-
-        return Object.fromEntries(statIds.map((id, i) => [id, v[i]]));
+    function centersOf(cls, sin, band) {
+        const c = classOf(cls);
+        const w = statIds.map(() => 1);
+        const bump = (id, k) => { const i = statIds.indexOf(id); if (i >= 0) w[i] *= k; };
+        bump(c?.keyAttr, B.hero_attr_key_weight);
+        bump(c?.subAttr, B.hero_attr_sub_weight);
+        bump(sinAttrs[sin], B.hero_attr_sin_weight);
+        const sum = w.reduce((a, b) => a + b, 0), mid = (band.min + band.max) / 2;
+        return w.map(x => mid * x / sum);
     }
+    const toStats = v => Object.fromEntries(statIds.map((id, i) => [id, v[i]]));
+
+    /** 표준정규 1개 — Box–Muller · rng 2회(u₁ → u₂ · INTERFACE §5-3). `1 − u₁` 이라 log(0) 이 안 나온다 */
+    const gauss = r => { const u1 = r(), u2 = r(); return Math.sqrt(-2 * Math.log(1 - u1)) * Math.cos(2 * Math.PI * u2); };
+
+    /**
+     * 기본 능력치 굴림 — **칸마다 제 분포(중심 · 등급의 폭)에서 굴리고, 일곱 칸의 합이 등급 대역 밖이면 처음부터 다시** 굴린다.
+     *   ~~합을 먼저 굴리고 가중치로 나눈 뒤 주력을 최고치 자리로 바꿔치기~~(09-08 · R48) 대체 — 바꿔치기는 보조 · 죄종 칸을 밀어도
+     *   그 몫을 주력이 가져가 버려서(2026-10-22 실측) 뺐다. **주력 최고치 보장은 없다** — 주력은 중심이 가장 높아 대개 가장 높게 나올 뿐이다.
+     * `hero_attr_reroll_max` 번째도 대역 밖이면 그 굴림을 **다듬어** 끝낸다 — 넘치면 가장 큰 칸 · 모자라면 가장 작은 칸부터 1씩(동률은 앞 칸).
+     *   평소엔 몇 번 안에 든다 · 상한은 대역에 들 수 없는 데이터에서 멈추지 않게 하는 안전장치다.
+     * ⚠ **바깥 rng 소비는 언제나 1회다** — 그 값을 씨앗으로 만든 보조 rng 안에서만 다시 굴린다. 다시 굴린 횟수가 바깥 수열을 밀면
+     *   중심 · 폭을 고칠 때마다 같은 시드의 고유 · 얼굴 · 다음 영웅까지 바뀐다 (INTERFACE §5-2).
+     * 몇 번째에 들었나(`tries`) · 다듬었나(`trimmed`)를 함께 낸다 — 단정 · 캘리브레이션용. 영웅에는 `stats` 만 박힌다(`rollAttributes`)
+     */
+    function rollAttributesTrace(rng, { cls = null, sin = null, tier = null } = {}) {
+        const sub = makeRng(Math.floor(rng() * 2 ** 32));
+        const band = bandOf(tier);
+        const c = centersOf(cls, sin, band);
+        const lo = B.hero_attr_min, hi = B.hero_attr_max;
+        let v = null, tries = 0;
+        while (tries < Math.max(1, B.hero_attr_reroll_max)) {
+            tries++;
+            v = c.map(x => Math.max(lo, Math.min(hi, Math.round(x + band.sd * gauss(sub)))));
+            const s = v.reduce((a, b) => a + b, 0);
+            if (s >= band.min && s <= band.max) return { stats: toStats(v), tries, trimmed: false };
+        }
+        let s = v.reduce((a, b) => a + b, 0);
+        const pick = (ok, better) => { let k = -1; for (let i = 0; i < v.length; i++) if (ok(v[i]) && (k < 0 || better(v[i], v[k]))) k = i; return k; };
+        for (let k; s > band.max && (k = pick(x => x > lo, (a, b) => a > b)) >= 0; s--) v[k]--;
+        for (let k; s < band.min && (k = pick(x => x < hi, (a, b) => a < b)) >= 0; s++) v[k]++;
+        return { stats: toStats(v), tries, trimmed: true };
+    }
+    const rollAttributes = (rng, opts) => rollAttributesTrace(rng, opts).stats;
+
+    /** 칸마다의 중심(rng 0) — 「이 직업 · 죄종 · 등급은 어느 칸이 크게 나오나」 · `tier` 는 등급 행이나 id */
+    const attrCenters = (cls, sin, tier) => toStats(centersOf(cls, sin, bandOf(tier)));
 
     /**
      * 고유 스킬 1개 — 영웅이 태어날 때 딱 한 번 굴린다 (hero_design §1).
@@ -300,12 +344,12 @@ export function createHeroSystem(data) {
 
     /** 생성 영웅 1명 — 죄종·직업·특성을 겹침 없이 뽑는 건 rollParty 쪽의 일 · `starter` = 첫 파티(고유를 1티어에서 — rollInnate) */
     function rollHero(rng, { sin, cls, name, trait, tier, starter = false }) {
-        // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 등급 1 → 총합 1 → 능력치 7 → 고유 1 = **언제나 10회**.
+        // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 등급 1 → 능력치 1 → 고유 1 = **언제나 3회**
+        //   (2026-10-22 R308 — ~~총합 1 · 능력치 7 = 10회~~ · 총합은 굴리지 않고 일곱 칸의 합으로 나온다 · 다시 굴리기는 능력치의 보조 rng 안).
         // 객체 리터럴 안에서 부르면 평가 순서가 문장으로 안 보여 순서가 조용히 밀린다.
         // ⚠ ~~상한 7회(`rollCaps`)~~ 는 09-07 폐지 — 상한은 개체별이 아니라 `hero_attr_max` 하나다 (§4-3)
         const t = rollTier(rng, tier);
-        const total = rollTotal(rng, t);
-        const stats = rollAttributes(rng, keyAttrOf(cls), { total, shape: t?.shape });
+        const stats = rollAttributes(rng, { cls, sin, tier: t });
         const innate = rollInnate(rng, cls, starter);
         return {
             uid: null,               // uid 발급은 state 의 일 (카운터 소유자)
@@ -322,7 +366,7 @@ export function createHeroSystem(data) {
     /**
      * 시작 파티 — 죄종·직업·이름·특성이 셋 사이에서 겹치지 않는다 (같은 카드 3장 방지).
      * 얼굴은 **겹침 방지를 따로 안 한다** (2026-09-07) — 직업 풀에서 굴리는데 파티 안 직업이 이미 서로 다르므로
-     *   (바로 위 `drawDistinct(mainClasses)`) 다른 풀에서 나온 얼굴끼리는 id 가 겹칠 수 없다.
+     *   (바로 위 `drawDistinct(mainClasses)` · 첫 파티는 `drawStartClasses` — 둘 다 겹침 없음) 다른 풀에서 나온 얼굴끼리는 id 가 겹칠 수 없다.
      *
      * ⚠ **얼굴은 맨 마지막에 굴린다** (2026-09-06) — 능력치·상한·고유 뒤에 두어야 **앞의 소비 순서가 안 밀린다**.
      *   영웅 안에서 굴리면 1번 영웅의 얼굴이 2번 영웅의 능력치를 밀어 **같은 시드가 다른 파티**를 낸다 (INTERFACE §5-2).
@@ -330,7 +374,7 @@ export function createHeroSystem(data) {
     function rollParty(rng, n, tiers, starter = false) {
         const names = drawDistinct(rng, data.namePool, n);
         const sins = drawDistinct(rng, data.sins, n);
-        const classes = drawDistinct(rng, mainClasses, n);
+        const classes = starter ? drawStartClasses(rng, n) : drawDistinct(rng, mainClasses, n);   // 첫 파티만 앞줄 하나 보장 (2026-10-22)
         const traits = drawDistinct(rng, data.traitPool, n);
         const party = names.map((name, i) =>
             rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i], starter }));
@@ -382,7 +426,7 @@ export function createHeroSystem(data) {
     /**
      * 직업을 정한 영웅 1명 [2026-10-08 · 개발 장치 — 관리자 모드가 그 직업을 넣는 자리 · `state.adminHero`].
      * 이름 · 죄종 · 특성 · 등급은 선술집 후보처럼 굴리고(고유는 직업 풀) **얼굴은 맨 마지막**(`rollParty` 와 같은 이유).
-     * 소비 = 이름 1 → 죄종 1 → 특성 1 → `rollHero` 10 → 얼굴 1 = 언제나 14회 · 메인 직업이 아니면 `null`(소비 0)
+     * 소비 = 이름 1 → 죄종 1 → 특성 1 → `rollHero` 3 → 얼굴 1 = 언제나 7회 · 메인 직업이 아니면 `null`(소비 0)
      */
     function rollHeroOf(rng, cls) {
         if (!mainClasses.includes(cls)) return null;
@@ -720,11 +764,11 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, gateOn, sinGearCount,
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)
-        // 새 게임 첫 진형의 랭크 — `class.csv:start_row` 가 `back` 이면 1(후열) · 그 밖은 0(전열) (INTERFACE §2-4 · 2026-10-21 사용자 지시)
-        startRankOf: id => data.classes.find(c => c.id === id)?.startRow === 'back' ? 1 : 0,
+        // 새 게임 첫 진형의 랭크 · 첫 파티 앞줄 보장의 기준 (위 `startRankOf` · INTERFACE §2-4)
+        startRankOf,
     };
 }

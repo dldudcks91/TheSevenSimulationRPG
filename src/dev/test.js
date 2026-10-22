@@ -909,6 +909,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'mg_pluck_gap_ms', 'mg_pluck_life_ms', 'mg_pluck_power_ms', 'mg_pluck_window', 'mg_pluck_rare_window', 'mg_pluck_perfect',
         'mg_chop_height', 'mg_chop_branch_pct', 'mg_chop_drain_start', 'mg_chop_drain_end', 'mg_chop_refill',
         'party_size_max','party_preset_count', 'roster_cap', 'wave_monster_max', 'hero_attr_min', 'hero_attr_max',
+        'hero_attr_key_weight', 'hero_attr_sub_weight', 'hero_attr_sin_weight', 'hero_attr_reroll_max',   // 능력치 굴림 (2026-10-22 · R308)
         'hero_hp_base', 'monster_hp_base', 'hero_hp_band_levels', 'attr_bonus_per_point', 'power_growth_per_level', 'attr_growth_chance_pct', 'xp_rate', 'xp_level_gap_mult', 'monster_gold_base', 'monster_gold_growth',
         'unarmed_atk', 'unarmed_period', 'weapon_atk_base', 'weapon_atk_band_levels', 'weapon_atk_band1_unit', 'weapon_atk_band8_unit',
         'armor_def_l1', 'armor_def_band_levels', 'armor_def_band1_unit', 'armor_def_band8_unit',
@@ -1531,8 +1532,9 @@ check('시작 파티: 3명, 죄종·직업·이름 겹침 없음', () => {
     const u = k => new Set(cands.map(c => typeof c[k] === 'object' ? c[k].en : c[k])).size === cands.length;
     return cands.length === B.party_size_max && u('sin') && u('cls') && u('name');
 });
-check('시작 파티: 능력치 합이 **등급 대역** 안 · 범위 준수 · 주력 축(class.csv:key_attr)이 최고', () => {
+check('시작 파티: 능력치 합이 **등급 대역** 안 · 범위 준수 (주력 최고치 보장은 없다 — 2026-10-22 · R308)', () => {
     // ⚠ ~~합은 hero_attr_total 하나로 고정~~ 은 09-07 폐지 — 등급이 대역을 정하고 그 안에서 굴린다 (hero_design §1)
+    // ~~주력 축(class.csv:key_attr)이 최고~~ — 2026-10-22 R308 로 바꿔치기를 걷었다. 주력은 중심이 가장 높아 대개 높게 나올 뿐이다(아래 「능력치 굴림」 단정들)
     for (const c of cands) {
         const vals = Object.values(c.stats);
         const sum = vals.reduce((a, b) => a + b, 0);
@@ -1540,11 +1542,115 @@ check('시작 파티: 능력치 합이 **등급 대역** 안 · 범위 준수 ·
         if (!tier) fail(`등급 '${c.tier}' 가 hero_tier.csv 에 없다`);
         if (sum < tier.totalMin || sum > tier.totalMax) fail(`${c.tier} sum ${sum} ∉ [${tier.totalMin}·${tier.totalMax}]`);
         if (vals.some(v => v < B.hero_attr_min || v > B.hero_attr_max)) fail('range');
-        const key = D.classes.find(x => x.id === c.cls).keyAttr;
-        if (c.stats[key] !== Math.max(...vals)) fail(`${c.cls} key ${key}=${c.stats[key]} max=${Math.max(...vals)}`);
         if ('caps' in c) fail('caps 가 남았다 — 개체별 히든 상한은 09-07 폐지');
     }
     return `등급 ${cands.map(c => c.tier).join('·')}`;
+});
+/*
+ * 능력치 굴림 [2026-10-22 사용자 · R308 · hero_design §4-3 · INTERFACE §2-4 · §5-2] — 칸마다 중심(대역 가운데 × 직업 · 죄종 비율) · 폭(등급)에서 굴리고
+ *   합이 대역 밖이면 보조 rng 안에서 다시 굴린다. 잠그는 것: 바깥 소비 1회 · 중심 식 · 많이 굴린 평균의 순서 · 다시 굴리기 평균 · 다듬기 · 로드 검증
+ */
+check('능력치 굴림: 바깥 rng 소비 — rollAttributes 1회 · rollHero 3회 · 다시 굴리기가 늘어도 같다 (보조 rng · INTERFACE §5-2 · R308)', () => {
+    const counted = seed => { const r = makeRng(seed); const f = () => { f.n++; return r(); }; f.n = 0; return f; };
+    const one = { sin: 'wrath', cls: 'warrior', name: { ko: 'x', en: 'x' }, trait: { ko: 't', en: 't' } };
+    // 다시 굴리기가 많아지는 판 — 폭을 세 배로 · 주력 비율을 네 배로 (늘어나는 소비는 보조 rng 안에만 있어야 한다)
+    const WIDE = buildSystems({ ...D, balance: { ...B, hero_attr_key_weight: B.hero_attr_key_weight * 4 },
+        heroTiers: D.heroTiers.map(t => ({ ...t, attrSd: t.attrSd > 0 ? t.attrSd * 3 : t.attrSd })) });
+    for (const [label, S] of [['기본', SYS], ['넓힌 판', WIDE]]) for (let s = 1; s <= 30; s++) {
+        const a = counted(s);
+        S.hero.rollAttributes(a, { cls: 'warrior', sin: 'wrath', tier: 'rare' });
+        if (a.n !== 1) fail(`${label} 시드 ${s} — rollAttributes 바깥 소비 ${a.n}회 (1회여야)`);
+        const h = counted(s);
+        S.hero.rollHero(h, one);
+        if (h.n !== 3) fail(`${label} 시드 ${s} — rollHero 소비 ${h.n}회 (등급 1 → 능력치 1 → 고유 1 = 3회여야)`);
+    }
+    // 넓힌 판은 다시 굴리기가 실제로 늘었다 — 안 늘면 이 단정은 보조 rng 를 시험하지 않는 것이다
+    const avg = S => { let t = 0; for (let s = 1; s <= 200; s++) t += S.hero.rollAttributesTrace(makeRng(s), { cls: 'warrior', sin: 'wrath', tier: 'rare' }).tries; return t / 200; };
+    const base = avg(SYS), wide = avg(WIDE);
+    if (!(wide > base)) fail(`넓힌 판의 다시 굴리기 평균 ${wide} 가 기본 ${base} 보다 크지 않다`);
+    return `바깥 1회 · 영웅 3회 · 다시 굴리기 평균 기본 ${base.toFixed(2)} · 넓힌 판 ${wide.toFixed(2)}`;
+});
+check('능력치 굴림: 중심 = 대역 가운데 × 비율 ÷ 비율 합 — 일곱 칸 합 = 대역 가운데 · 직업 주력 · 보조 · 죄종 칸에 손잡이가 곱해지고 겹치면 곱이 겹친다 · 유니크는 굴리는 첫 등급의 대역 (R308)', () => {
+    const ids = D.heroAttributes.map(s => s.id);
+    const first = D.heroTiers.find(t => t.weight > 0);
+    let n = 0;
+    for (const t of D.heroTiers.filter(x => x.weight > 0)) {
+        const mid = (t.totalMin + t.totalMax) / 2;
+        for (const c of D.classes) for (const sin of Object.keys(D.sinAttrs)) {
+            const ce = SYS.hero.attrCenters(c.id, sin, t.id);
+            const w = Object.fromEntries(ids.map(id => [id, 1]));
+            w[c.keyAttr] *= B.hero_attr_key_weight;
+            if (c.subAttr) w[c.subAttr] *= B.hero_attr_sub_weight;
+            w[D.sinAttrs[sin]] *= B.hero_attr_sin_weight;
+            const ws = ids.reduce((a, id) => a + w[id], 0);
+            for (const id of ids) if (Math.abs(ce[id] - mid * w[id] / ws) > 1e-9) fail(`${t.id} ${c.id} ${sin} ${id} 중심 ${ce[id]} ≠ ${mid * w[id] / ws}`);
+            if (Math.abs(ids.reduce((a, id) => a + ce[id], 0) - mid) > 1e-9) fail(`${t.id} ${c.id} ${sin} 중심 합 ≠ 대역 가운데 ${mid}`);
+            n++;
+        }
+    }
+    // 겹침 — 직업 주력과 같은 칸을 미는 죄종이면 그 칸의 중심이 다른 죄종일 때보다 높다
+    const key = D.classes.find(c => c.id === 'warrior').keyAttr;
+    const same = Object.keys(D.sinAttrs).find(s => D.sinAttrs[s] === key), other = Object.keys(D.sinAttrs).find(s => D.sinAttrs[s] !== key);
+    if (!same) fail(`전사 주력 ${key} 를 미는 죄종이 없다 — 겹침을 못 본다`);
+    const hi = SYS.hero.attrCenters('warrior', same, 'rare')[key], lo = SYS.hero.attrCenters('warrior', other, 'rare')[key];
+    if (!(hi > lo)) fail(`겹친 죄종(${same})의 ${key} 중심 ${hi} ≤ 안 겹친 죄종(${other}) ${lo}`);
+    if (!eq(SYS.hero.attrCenters('mage', 'greed', 'unique'), SYS.hero.attrCenters('mage', 'greed', first.id))) fail(`유니크의 중심이 굴리는 첫 등급(${first.id})과 다르다`);
+    return `${n}조합 · 전사 ${key} 중심 ${same} ${hi.toFixed(2)} > ${other} ${lo.toFixed(2)}`;
+});
+check('능력치 굴림: 등급 × 직업마다 많이 굴리면 — 합은 늘 대역 안 · 칸은 정수 · 범위 안 · 평균 주력 > 보조 > 나머지 · 죄종 칸 > 나머지 · 다시 굴리기 평균이 상한의 1/10 아래 (R308)', () => {
+    const ids = D.heroAttributes.map(s => s.id);
+    const N = 400;
+    let worst = 0, worstAt = '', trimmed = 0;
+    const rows = [];
+    for (const t of D.heroTiers.filter(x => x.weight > 0)) for (const c of D.classes.filter(x => x.stage === 'main')) {
+        // 죄종 — 주력 · 보조와 안 겹치는 첫 죄종(죄종 칸이 오르는지 따로 보려고)
+        const sin = Object.keys(D.sinAttrs).find(s => D.sinAttrs[s] !== c.keyAttr && D.sinAttrs[s] !== c.subAttr);
+        const sa = D.sinAttrs[sin];
+        const sum = Object.fromEntries(ids.map(id => [id, 0]));
+        let tries = 0;
+        for (let s = 1; s <= N; s++) {
+            const r = SYS.hero.rollAttributesTrace(makeRng(s * 7919 + 13), { cls: c.id, sin, tier: t });
+            const vals = ids.map(id => r.stats[id]), tot = vals.reduce((a, b) => a + b, 0);
+            if (tot < t.totalMin || tot > t.totalMax) fail(`${t.id} ${c.id} 합 ${tot} ∉ [${t.totalMin}·${t.totalMax}]`);
+            if (vals.some(v => !Number.isInteger(v) || v < B.hero_attr_min || v > B.hero_attr_max)) fail(`${t.id} ${c.id} 칸 ${vals.join('/')}`);
+            for (const id of ids) sum[id] += r.stats[id];
+            tries += r.tries; trimmed += r.trimmed ? 1 : 0;
+        }
+        const avg = id => sum[id] / N;
+        const rest = ids.filter(id => id !== c.keyAttr && id !== c.subAttr && id !== sa);
+        const restAvg = rest.reduce((a, id) => a + avg(id), 0) / rest.length;
+        if (c.subAttr && !(avg(c.keyAttr) > avg(c.subAttr))) fail(`${t.id} ${c.id} 주력 ${c.keyAttr} ${avg(c.keyAttr)} ≤ 보조 ${c.subAttr} ${avg(c.subAttr)}`);
+        if (c.subAttr && !(avg(c.subAttr) > restAvg)) fail(`${t.id} ${c.id} 보조 ${c.subAttr} ${avg(c.subAttr)} ≤ 나머지 평균 ${restAvg}`);
+        if (!(avg(sa) > restAvg)) fail(`${t.id} ${c.id} ${sin} 죄종 칸 ${sa} ${avg(sa)} ≤ 나머지 평균 ${restAvg}`);
+        if (tries / N > worst) { worst = tries / N; worstAt = `${t.id} ${c.id}`; }
+        if (c.id === 'warrior') rows.push(`${t.id} 전사 ${c.keyAttr} ${avg(c.keyAttr).toFixed(1)} · ${c.subAttr} ${avg(c.subAttr).toFixed(1)} · ${sa} ${avg(sa).toFixed(1)} · 나머지 ${restAvg.toFixed(1)}`);
+    }
+    // 데이터 실수 그물 — 중심 합이 대역 가운데에서 벗어나거나 폭이 너무 넓으면 다시 굴리기가 치솟는다(그러면 설계한 모양과 다른 영웅이 나온다)
+    if (worst > B.hero_attr_reroll_max / 10) fail(`다시 굴리기 평균 ${worst.toFixed(2)}(${worstAt}) — 상한 ${B.hero_attr_reroll_max} 의 1/10 을 넘는다`);
+    return `${rows.join(' / ')} · 다시 굴리기 평균 최대 ${worst.toFixed(2)}(${worstAt}) · 다듬기 ${trimmed}`;
+});
+check('능력치 굴림: 상한에 닿으면 다듬는다 — 상한 1 이면 대역 밖 굴림을 깎거나 채워 합이 대역 안 · 칸 범위 준수 · 굴림은 1번 (R308)', () => {
+    const S = buildSystems({ ...D, balance: { ...B, hero_attr_reroll_max: 1 } });
+    let trimmed = 0;
+    for (const t of D.heroTiers.filter(x => x.weight > 0)) for (let s = 1; s <= 300; s++) {
+        const r = S.hero.rollAttributesTrace(makeRng(s), { cls: 'mage', sin: 'pride', tier: t });
+        const vals = Object.values(r.stats), tot = vals.reduce((a, b) => a + b, 0);
+        if (r.tries !== 1) fail(`상한 1 인데 ${r.tries}번 굴렸다`);
+        if (tot < t.totalMin || tot > t.totalMax) fail(`${t.id} 다듬은 합 ${tot} ∉ [${t.totalMin}·${t.totalMax}]`);
+        if (vals.some(v => v < B.hero_attr_min || v > B.hero_attr_max)) fail(`${t.id} 다듬은 칸이 범위 밖 ${vals.join('/')}`);
+        if (r.trimmed) trimmed++;
+    }
+    if (!trimmed) fail('상한 1 인데 다듬은 굴림이 하나도 없다 — 단정이 다듬기를 안 본다');
+    return `다듬기 ${trimmed} / ${300 * D.heroTiers.filter(x => x.weight > 0).length}`;
+});
+check('능력치 굴림: 로드 검증 — 보조 칸 오타 · 빠진 죄종 · 죄종 칸 오타 · 폭이 빈 등급이면 생성 때 던진다 (R308)', () => {
+    const throws = (label, d) => { try { buildSystems(d); } catch { return; } fail(`${label} 인데 안 던졌다`); };
+    throws('보조 칸 오타', { ...D, classes: D.classes.map((c, i) => (i === 0 ? { ...c, subAttr: 'vitt' } : c)) });
+    const { wrath, ...noWrath } = D.sinAttrs;
+    throws('분노 행이 없다', { ...D, sinAttrs: noWrath });
+    throws('죄종 칸 오타', { ...D, sinAttrs: { ...D.sinAttrs, wrath: 'power' } });
+    throws('폭이 빈 등급', { ...D, heroTiers: D.heroTiers.map(t => (t.id === 'rare' ? { ...t, attrSd: '-' } : t)) });
+    return `넷 다 던진다 (분노 = ${wrath})`;
 });
 check('시작 파티: **레어 1 + 매직 1 + 일반 1** — 첫 화면부터 세 층이 보인다 (hero_design §1 개정 2026-09-14)', () => {
     const got = cands.map(c => c.tier);
@@ -1571,6 +1677,32 @@ check('영웅 등급: rng 소비 수가 등급에 의존하지 않는다 — 지
     return `지정 ${forced.map(h => h.tier).join('·')} vs 굴림 ${free.map(h => h.tier).join('·')} — 소비 동일`;
 });
 check('시작 파티: 같은 시드 = 같은 3명', () => eq(SYS.hero.rollStartParty(makeRng(1), 3), cands));
+check('시작 파티: 앞줄 직업(class.csv:start_row ≠ back)이 하나는 든다 · 앞줄이 든 시드는 선술집 굴림과 직업이 같다 · 바뀐 시드는 마지막 자리만 앞줄로 · 소비 수 같다 (2026-10-22 사용자 지시 · hero_design §1 · INTERFACE §5-2)', () => {
+    const front = c => SYS.hero.startRankOf(c) === 0;
+    let moved = 0, two = 0;
+    const to = {};   // 옮겨 간 앞줄 직업 — 앞줄끼리 균등이면 둘 다 나온다
+    for (let s = 1; s <= 500; s++) {
+        const ra = makeRng(9000 + s), rb = makeRng(9000 + s);
+        const a = SYS.hero.rollStartParty(ra, 3), b = SYS.hero.rollCandidates(rb, 3, ['rare', 'magic', 'normal']);
+        if (ra() !== rb()) fail(`시드 ${s} 첫 파티와 선술집 굴림의 소비 수가 다르다`);
+        const fa = a.filter(h => front(h.cls)).length, fb = b.filter(h => front(h.cls)).length;
+        if (!fa) fail(`시드 ${s} 앞줄이 없다 — ${a.map(h => h.cls).join('·')}`);
+        if (fb) {
+            if (!eq(a.map(h => h.cls), b.map(h => h.cls))) fail(`시드 ${s} 앞줄이 이미 있는데 직업이 바뀌었다 ${b.map(h => h.cls).join('·')} → ${a.map(h => h.cls).join('·')}`);
+        } else {
+            moved++;
+            // 앞줄 0명이던 판 — 앞 두 자리는 그대로 · 마지막 자리만 앞줄 직업 · 앞줄은 정확히 1명
+            if (fa !== 1 || !front(a[2].cls) || !eq(a.slice(0, 2).map(h => h.cls), b.slice(0, 2).map(h => h.cls)))
+                fail(`시드 ${s} 마지막 자리만 앞줄로 바뀌어야 한다 ${b.map(h => h.cls).join('·')} → ${a.map(h => h.cls).join('·')}`);
+            to[a[2].cls] = (to[a[2].cls] ?? 0) + 1;
+        }
+        if (fa === 2) two++;
+    }
+    if (!moved) fail('앞줄 0명 판을 한 번도 안 만났다 — 단정이 보장을 안 본다');
+    const frontIds = D.classes.filter(c => c.stage === 'main' && front(c.id)).map(c => c.id);
+    if (frontIds.some(id => !to[id])) fail(`옮겨 간 앞줄 직업이 한쪽뿐이다 ${JSON.stringify(to)} — 앞줄끼리 균등이어야 한다`);
+    return `500 시드 · 앞줄 0명 → 1명 ${moved}(${Object.entries(to).map(([k, v]) => `${k} ${v}`).join(' · ')}) · 앞줄 2명 ${two}`;
+});
 check('시작 파티: 고유 스킬 — 생성 시 skill.csv 풀에서 1개 · 정의에 있는 id · 같은 시드 = 같은 스킬 (hero_design §1 프로토타입 2026-09-01)', () => {
     for (const c of cands) if (!SYS.skill.defs[c.innate]) fail(`${c.cls} 의 고유 '${c.innate}' 가 정의에 없다`);
     // 굴림 순서(능력치 → 상한 → 고유)가 계약이라 같은 시드는 같은 고유를 내야 한다
@@ -1773,7 +1905,8 @@ check('newGame: 첫 파티의 고유는 직업 풀의 1티어(skill.csv:tier = 1
         const ra = makeRng(7000 + s), rb = makeRng(7000 + s);
         const a = SYS.hero.rollStartParty(ra, 3), b = SYS.hero.rollCandidates(rb, 3, ['rare', 'magic', 'normal']);
         if (ra() !== rb()) fail(`시드 ${s} 첫 파티와 선술집 굴림의 소비 수가 다르다`);
-        if (!eq(a.map(h => ({ ...h, innate: null })), b.map(h => ({ ...h, innate: null })))) fail(`시드 ${s} 고유 밖의 굴림이 달라졌다`);
+        // 앞줄 보장이 직업을 바꾼 시드(2026-10-22)는 능력치 · 얼굴도 그 직업을 따른다 — 직업이 같은 시드만 대조한다
+        if (eq(a.map(h => h.cls), b.map(h => h.cls)) && !eq(a.map(h => ({ ...h, innate: null })), b.map(h => ({ ...h, innate: null })))) fail(`시드 ${s} 고유 밖의 굴림이 달라졌다`);
         wide += b.filter(h => starter(h.cls).length && !starter(h.cls).includes(h.innate)).length;
     }
     if (!wide) fail('선술집 후보가 1티어 밖의 고유를 한 번도 안 굴렸다 — 직업 풀 전체여야 한다');
@@ -4193,7 +4326,8 @@ check('csv: 방어구 옵션 표 — 방어구 넷 = 죄종 7 × 옵션 1 · 2 �
             if (D.armorSinOptions.some(r => r.slot === g.slot && r.stat === st)) fail(`${k} 특성 ${st} 이 ${g.slot} 표에도 있다`);
         }
         if (!ARMOR_PARTS.includes(g.slot)) fail(`armor_group ${g.id} slot '${g.slot}'`);
-        if (g.slot !== 'armor' && g.classes.length) fail(`${g.slot} 갈래 ${g.id} 가 숙련 직업을 든다 — 숙련은 갑옷 한 칸만 본다`);
+        // 직업은 아는 직업만 — 갑옷은 숙련 게이트 · 투구 · 장갑 · 신발은 자동 장착의 직업 어울림이 읽는다(`item.fitsClass` · 2026-10-22 R307 — ~~「숙련은 갑옷 한 칸만 본다」라 비어야 했다~~)
+        for (const c of g.classes) if (!D.classes.some(x => x.id === c)) fail(`${g.slot} 갈래 ${g.id} 의 직업 '${c}' 를 모른다`);
         if (g.slot !== 'armor' && (g.aspdPct || g.cdrPct)) fail(`${k} 갈래 고정값 — 투구 · 장갑 · 신발은 특성 줄로만 낸다`);
     }
     for (const slot of ARMOR_PARTS)
@@ -4887,6 +5021,55 @@ check('정렬: 등급순 · 레벨순 · 부위순이 각자의 동점 규칙으
         if (r.ok || r.err !== 'invalid') fail(`${w}/${k} → ${JSON.stringify(r)}`);
     }
     return Object.entries(want).map(([k, w]) => `${k} ${w}`).join(' · ');
+});
+
+/** 자동 장착 [신설 2026-10-22 · R307 · INTERFACE §2-7 `autoEquip` · item_design §6-3] — 직업 어울림으로 거르고 바탕 수치로 고른다 · 반지 · 목걸이는 빈 칸만 · rng 0 */
+check('자동 장착: 직업 무기군 · 갈래만 거른다 · 무기 = 초당 세기 · 투구 = 방어력 · 반지는 빈 칸만(레벨 → 등급) · 다시 누르면 그대로 · 다른 영웅 · 창고 불변 (R307)', () => {
+    // 캐스터로 잰다 — 플레이트(방어 계수가 가장 크다)가 직업에 안 맞아야 거르기가 결과를 바꾼다
+    const caster = D.armorGroups.helmet?.tiara?.classes ?? [];
+    let party = null;
+    for (let s = 1; s < 60 && !party; s++) { const p = SYS.hero.rollStartParty(makeRng(s), B.party_size_max); if (p.some(x => caster.includes(x.cls))) party = p; }
+    if (!party) fail('fixture: 티아라가 어울리는 직업이 든 첫 파티가 없다');
+    const g = SYS.game.newGame(5, party, NOW);
+    const h = g.heroes.find(x => caster.includes(x.cls));
+    h.level = B.hero_level_cap;
+    g.bags[0] = [];
+    const rng = makeRng(907);
+    let n = 0;
+    const put = it => { it.uid = `ae${n++}`; g.items[it.uid] = it; g.bags[0].push(it.uid); return it; };
+    const roll = (slot, ilvl, ok, extra = {}) => {
+        for (let i = 0; i < 400; i++) { const it = SYS.item.rollGear(rng, { slots: [slot], ilvl, ...extra })[0]; if (ok(it)) return put(it); }
+        return fail(`fixture: ${slot} 를 못 굴렸다`);
+    };
+    const own = SYS.item.groupsFor(h.cls)[0]?.id ?? fail('fixture: 직업 무기군');
+    const other = D.weaponGroupList.find(w => w.release === 'main' && !w.classes.includes(h.cls))?.id ?? fail('fixture: 다른 직업 무기군');
+    const wOther = roll('weapon', 20, () => true, { weaponGroup: other });
+    const wMine = roll('weapon', 10, () => true, { weaponGroup: own });
+    const hPlate = roll('helmet', 20, it => it.group === 'plate');
+    const hTiara = roll('helmet', 10, it => it.group === 'tiara');
+    put(mkItem('ring', [], { rarity: 'magic', ilvl: 5 }));
+    const r2 = put(mkItem('ring', [], { rarity: 'magic', ilvl: 9 }));
+    const r3 = put(mkItem('ring', [], { rarity: 'rare', ilvl: 9 }));
+    const startW = h.equipped.weapon ?? fail('fixture: 시작 무기가 없다');
+    const J = x => JSON.stringify(x);
+    const others = J(g.heroes.filter(x => x !== h).map(x => x.equipped)), stash = J(g.stash);
+    if (SYS.item.fitsClass(hPlate, h.cls) || !SYS.item.fitsClass(hTiara, h.cls) || SYS.item.fitsClass(wOther, h.cls) || !SYS.item.fitsClass(r2, h.cls)) fail('fitsClass');
+    if (SYS.game.heroCombatIf(g, h, hPlate.uid).defense <= SYS.game.heroCombatIf(g, h, hTiara.uid).defense) fail('fixture: 플레이트가 더 단단하지 않다 — 거르기를 못 잰다');
+    const r = SYS.game.autoEquip(g, h.uid, 1);
+    if (!r.ok) fail(J(r));
+    const e = h.equipped;
+    if (e.weapon !== wMine.uid) fail(`무기 ${e.weapon} — 직업 무기 ${wMine.uid} 를 기대`);
+    if (!g.bags[0].includes(startW) || !g.bags[0].includes(wOther.uid)) fail('벗은 시작 무기 · 다른 직업 무기는 인벤토리에 남아야 한다');
+    if (e.helmet !== hTiara.uid) fail(`투구 ${e.helmet} — 티아라를 기대(플레이트는 직업이 안 맞는다)`);
+    if (e.ring1 !== r3.uid || e.ring2 !== r2.uid) fail(`반지 ${e.ring1} · ${e.ring2} — 레벨 → 등급 순을 기대`);
+    if (e.amulet) fail('목걸이를 넣지 않았는데 찼다');
+    if (J(g.heroes.filter(x => x !== h).map(x => x.equipped)) !== others || J(g.stash) !== stash) fail('다른 영웅 · 창고가 움직였다');
+    put(mkItem('ring', [], { rarity: 'rare', ilvl: 30 }));      // 반지는 찬 칸을 안 바꾼다
+    const snap = J(g);
+    const again = SYS.game.autoEquip(g, h.uid, 1);
+    if (!again.ok || again.changes.length || J(g) !== snap) fail(`다시 누르면 그대로여야 한다 ${J(again)}`);
+    if (SYS.game.autoEquip(g, 'nope', 1).err !== 'missing' || SYS.game.autoEquip(g, h.uid, 9).err !== 'missing') fail('없는 영웅 · 부대');
+    return `${h.cls} · ${r.changes.map(c => c.position).join(' ')} · 다시 누르면 0`;
 });
 
 /** 책 정렬 [신설 2026-10-14 · ADR-0620] — 가진 책의 키 순서를 한 번 다시 세운다 · 기준마다 동점 규칙이 다르다 · 권수 그대로 · 세이브 왕복에도 순서가 산다 · rng 0 */
@@ -7707,8 +7890,11 @@ const SYS_AIL = (() => {
     return buildSystems({ ...D, skillEffectRows: t.effectRows, skillStatusRows: t.statusRows });
 })();
 check('battle: 화상 · 중독 · 스턴 — 중독은 dot_tick_sec 마다 독 피해(dot · 건 쪽 몫) · 스턴 동안 그 유닛은 행동하지 않는다 · 스턴 cd 는 늘어난 시간 안 · 화상이 걸린다 (battle_design §2-5 ~ §2-7 · R178)', () => {
-    let dots = 0, stuns = 0, burns = 0;
-    for (let seed = 1; seed <= 10; seed++) {
+    // 런 수 — 셋이 다 나올 때까지(최대 40) · 중독 틱은 걸린 적이 틱 전에 죽으면 안 나와 드물다(40 런에 걸림 43 · 틱 10 — 2026-10-22 실측).
+    //   ~~고정 10 런~~ 은 시작 파티 능력치 굴림이 바뀌자(R308) 틱 0 으로 헛돌았다 — 표본은 공유 판 G 의 파티에 달렸다
+    let dots = 0, stuns = 0, burns = 0, runs = 0;
+    for (let seed = 1; seed <= 40 && !(dots && stuns && burns); seed++) {
+        runs++;
         const r = SYS_AIL.battle.simulate(clsUnits('mage'), 1013, makeRng(seed));
         const tl = r.timeline;
         const lastDot = {};
@@ -7733,8 +7919,8 @@ check('battle: 화상 · 중독 · 스턴 — 중독은 dot_tick_sec 마다 독 
             }
         });
     }
-    if (!dots || !stuns || !burns) fail(`10 런에 중독 틱 ${dots} · 스턴 ${stuns} · 화상 알림 ${burns} — 단정이 헛돈다`);
-    return `10 런 — 중독 틱 ${dots} · 스턴 ${stuns} · 화상 알림 ${burns}`;
+    if (!dots || !stuns || !burns) fail(`${runs} 런에 중독 틱 ${dots} · 스턴 ${stuns} · 화상 알림 ${burns} — 단정이 헛돈다`);
+    return `${runs} 런 — 중독 틱 ${dots} · 스턴 ${stuns} · 화상 알림 ${burns}`;
 });
 /* ── 2026-09-09 신설 — 직업 스킬 풀 37 이 연 어휘 (skill_design §12 · DEV_PLAN R61) ── */
 check('runtime: ally_single — 회복은 **HP 비율 최저** 아군 하나에게 간다 · 대상 선택 rng 0회 — 쓰는 것은 회복량 굴림 1회뿐 (사용자 확정 2026-09-09 · R90)', () => {
@@ -9086,7 +9272,21 @@ check('battle: 몬스터 레벨은 값만 바꾼다 — HP · 드롭 아이템 �
  */
 check('battle: stat 이벤트 = 지금 값 — 아이언 스킨이 열면 그 영웅의 방어가 오르고 닫히면 내려간다 · 달라진 줄만 싣는다 (R305 · INTERFACE §2-6 · ADR-0707)', () => {
     const P = clsUnits('warrior');
-    const { seed, r } = findSeed(x => x.timeline.some(ev => ev.e === 'buffEnd' && ev.s === 'war_ironskin' && ev.u.startsWith('p')), () => P);
+    // 시드 — 아이언 스킨이 닫히고 · **화면에 보이는 방어가 시트 그대로일 때 열린** 아이언 스킨(아래 「시트 그대로였던 열림」)이 있는 첫 시드.
+    //   보이는 방어는 아래 본문과 같게 stat 이벤트로 따라간다. ~~닫힘만 보고 고르기~~ 는 시작 파티 능력치 굴림이 바뀌자(R308)
+    //   시드 1 에 시트 그대로의 열림이 없어 「표본이 모자란다」로 빨갰다 — 표본은 공유 판 G 의 파티에 달렸다
+    const sheetShown = new Map(P.map((p, i) => [`p${i}`, Math.round(p.combat.defense * 1e4) / 1e4]));
+    const fullSample = x => {
+        const cur = new Map(sheetShown);
+        let open = false, close = false;
+        for (const ev of x.timeline) {
+            if (ev.e === 'stat' && ev.v?.defense !== undefined) cur.set(ev.u, ev.v.defense);
+            else if (ev.e === 'buff' && ev.s === 'war_ironskin' && sheetShown.has(ev.u) && cur.get(ev.u) === sheetShown.get(ev.u)) open = true;
+            else if (ev.e === 'buffEnd' && ev.s === 'war_ironskin' && sheetShown.has(ev.u)) close = true;
+        }
+        return open && close;
+    };
+    const { seed, r } = findSeed(fullSample, () => P);
     const sheetDef = new Map(P.map((p, i) => [`p${i}`, p.combat.defense]));
     const shown = new Map(P.map((p, i) => [`p${i}`, { defense: Math.round(p.combat.defense * 1e4) / 1e4 }]));
     const defAt = k => shown.get(k)?.defense;
@@ -9094,6 +9294,10 @@ check('battle: stat 이벤트 = 지금 값 — 아이언 스킨이 열면 그 �
     let opened = 0, exact = 0, closed = 0, stats = 0;
     for (let i = 0; i < tl.length; i++) {
         const ev = tl[i];
+        // 적 key 는 라운드마다 다시 쓰인다 — 새로 선 적(`round` · `call`)은 **제 시트에서 다시 센다**(INTERFACE §2-6) · 지난 적에게 알린 값과 대조하지 않는다
+        //   (~~라운드를 넘겨 같은 key 의 값을 잇기~~ — 새 적의 첫 stat 이 앞 적의 마지막 값과 같으면 「다시 실었다」로 오탐했다 · 2026-10-22 시드 16)
+        if (ev.e === 'round') { for (const k of [...shown.keys()]) if (!sheetDef.has(k)) shown.delete(k); continue; }
+        if (ev.e === 'call') { for (const x of ev.units ?? []) shown.delete(x.key); continue; }
         if (ev.e === 'stat') {
             stats++;
             if (!ev.v || !Object.keys(ev.v).length) fail(`seed ${seed} t=${ev.t} ${ev.u} — 빈 stat`);
@@ -9121,6 +9325,8 @@ check('battle: stat 이벤트 = 지금 값 — 아이언 스킨이 열면 그 �
         } else {
             // 같은 틱에 다시 걸었으면 방어가 그대로일 수 있다 — 그 닫힘은 건너뛴다
             if (tl.slice(i + 1, j).some(x => x.e === 'buff' && x.s === 'war_ironskin' && x.u === ev.u)) continue;
+            // 같은 틱에 쓰러졌으면 stat 이 안 온다(살아 있는 유닛만 · INTERFACE §2-6) — 그 닫힘도 건너뛴다 (2026-10-22 시드 10 의 오탐)
+            if (tl.slice(i + 1, j).some(x => x.e === 'down' && x.u === ev.u)) continue;
             if (!(after < before)) fail(`seed ${seed} t=${ev.t} ${ev.u} — 아이언 스킨이 닫혔는데 방어 ${before} → ${after}`);
             closed++;
         }

@@ -46,7 +46,7 @@ import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skil
 import { t, L } from './i18n.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip } from './tip.js';
 import { paceAt, paceStep, paceCfg, actorOf, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
-import { fxPreload, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
+import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 const SPEEDS = [1, 2, 4, 16];   // ×16 — 2026-10-05 사용자 지시 (SCREEN_DESIGN §4-2)
 const TICK = 0.1;
@@ -255,7 +255,6 @@ export function mountBattle(container, opts) {
     });
     for (const u of state.party) { state.units.set(u.key, u); dmgEntry(state, u); }   // 파티는 0 이어도 누적 표에 찍는다
 
-    fxPreload();   // 기본 직업 스킬 이미지를 미리 읽는다(ADR-0515 · ADR-0520) · 종류 공통 그림은 꺼져 있다
     const dom = buildDom(state, stage, stageId, opts.shrine ?? null, !!opts.buffsOf, opts);
     container.appendChild(dom);
     bindControls(state, container, opts);
@@ -699,6 +698,9 @@ function shrineTipCard(s, f) {
 
 function renderUnits(state, root) {
     if (state.catchUp) return;      // 되감는 동안은 카드를 안 짓는다 — `u.node` 가 비어 있어 `refreshUnit` 도 그냥 지나간다
+    // 선 카드들의 스킬 그림만 미리 읽는다 — 첫 라운드 · 라운드마다 바뀐 적 · 불린 무리 · 갈아입기가 다 여기를 지난다.
+    //   스킬 이펙트가 꺼져 있으면 안 읽는다 (ADR-0515 · ADR-0520 · DEV_PLAN §4 #86) · 종류 공통 그림은 꺼져 있다
+    fxPreloadSkills([...state.party, ...state.enemies].flatMap(u => (u.skills ?? []).map(s => s.id)));
     const v2 = cardV2();
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
         const side = root.querySelector(sel);
@@ -802,7 +804,7 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
     // 칸 자리는 `cdSlots` 가 정한다 — 전직 스킬은 늘 맨 오른쪽 칸 (ADR-0572)
     // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
     // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
-    const mask = ready ? '<i class="cd-mask" style="height:0"></i>' : '<i class="cd-mask"></i>';
+    const mask = ready ? '<i class="cd-mask" style="transform:scaleY(0)"></i>' : '<i class="cd-mask"></i>';
     // 칸은 그림 오른쪽 아래에 `Lv.n` — 쿨 판 위에 선다(DOM 이 뒤라 위에 그려진다 · `slotLv` · R302 · ADR-0701 · ADR-0705) · 양 진영 같다
     const lvTag = s => (Number.isFinite(s.lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '');
     const skills = `<div class="cd-list">${slots.map(s => s
@@ -831,7 +833,7 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
             <div class="unit-info">
                 ${idRow}
                 <div class="hp-row">
-                    <div class="bar hp"><i style="width:${u.hp / u.hpMax * 100}%"></i></div>
+                    <div class="bar hp"><i style="transform:scaleX(${Math.max(0, u.hp / u.hpMax)})"></i></div>
                     <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
                 </div>
                 <div class="act-row${u.noBasic ? ' segs' : ''}" title="${t(u.noBasic ? 'bt.castTitle' : 'bt.actTitle', { s: u.period.toFixed(2) })}">
@@ -875,9 +877,11 @@ export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = nul
 
 function refreshUnit(state, u) {
     if (!u.node || state.catchUp) return;
-    const pct = Math.max(0, u.hp / u.hpMax * 100);
-    u.node.querySelector('.bar.hp > i').style.width = pct + '%';
-    u.node.querySelector('.hp-text').textContent = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
+    // 게이지 셋(HP · 행동 · 쿨)은 폭 · 높이가 아니라 늘이고 줄인다(scaleX · scaleY) — 폭 · 높이를 바꾸면 0.1초 눈금마다 카드의 배치를 다시 잰다.
+    //   HP 글자도 바뀔 때만 쓴다 (DEV_PLAN §4 #86)
+    u.node.querySelector('.bar.hp > i').style.transform = `scaleX(${Math.max(0, u.hp / u.hpMax)})`;
+    const hpText = u.node.querySelector('.hp-text'), hpNow = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
+    if (hpText.textContent !== hpNow) hpText.textContent = hpNow;
     u.node.classList.toggle('dead', u.hp <= 0);
     // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다 (SCREEN_DESIGN §4-2 재개정 2026-09-04).
     // 행동한 틱(u.acted — apply 의 skill/hit/dodge 가 세우고 start 의 틱 루프가 눕힌다)은 **100% 를 그린다** —
@@ -894,7 +898,7 @@ function refreshUnit(state, u) {
         segs.forEach((el, i) => {
             const fill = u.hp <= 0 ? 0 : i < n ? 1 : i === n ? part : 0;
             el.style.transition = fill < (u.segFill[i] ?? 0) ? 'none' : '';
-            el.style.width = fill * 100 + '%';
+            el.style.transform = `scaleX(${fill})`;
             u.segFill[i] = fill;
         });
     } else {
@@ -902,7 +906,7 @@ function refreshUnit(state, u) {
         if (act) {
             const fill = u.hp <= 0 ? 0 : u.acted ? 1 : clamp01((state.t - u.lastAct - stalledFor(u, state.t)) / u.period);
             act.style.transition = fill < u.actFill ? 'none' : '';
-            act.style.width = fill * 100 + '%';
+            act.style.transform = `scaleX(${fill})`;
             u.actFill = fill;
         }
     }
@@ -914,7 +918,7 @@ function refreshUnit(state, u) {
         // 오오라 칸 (R98 · ADR-0127) — 켜진 오오라는 준비 `0` 이라 아래 식이 늘 걷힌 칸을 낸다 · 안 켜진 오오라는 `Infinity` 라 늘 덮는다
         const span = Math.max(1e-6, s.readyAt - s.firedAt);
         const pct = u.hp <= 0 || s.readyAt === Infinity ? 0 : clamp01(1 - (s.readyAt - state.t) / span);
-        slot.querySelector('.cd-mask').style.height = (1 - pct) * 100 + '%';   // 남은 쿨만큼 위에서 덮는다
+        slot.querySelector('.cd-mask').style.transform = `scaleY(${1 - pct})`;   // 남은 쿨만큼 위에서 덮는다
         // 준비 강조(`ready` 파란 테두리)는 2026-09-03 사용자 지시로 삭제 — 마스크가 다 걷힌 것 자체가 준비다
     });
     // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 카드 밖 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)

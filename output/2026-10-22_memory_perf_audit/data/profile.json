@@ -1,0 +1,444 @@
+{
+ "watch_x16": {
+  "totalMs": 20016,
+  "byFile": {
+   "(native)": 18946,
+   "battle.js": 413,
+   "fx.js": 220,
+   "construction.js": 153,
+   "state.js": 129,
+   "hero.js": 120,
+   "skill_effects.js": 10,
+   "skill_runtime.js": 9,
+   "tactic.js": 4,
+   "item.js": 2,
+   "storage.js": 2,
+   "pace.js": 1,
+   "formula.js": 1,
+   "tip.js": 1,
+   "app.js": 1
+  },
+  "top": [
+   [
+    "(idle)",
+    16240.2
+   ],
+   [
+    "(program)",
+    2520.1
+   ],
+   [
+    "play fx.js:156",
+    185.8
+   ],
+   [
+    "opened construction.js:238",
+    153.2
+   ],
+   [
+    "(garbage collector)",
+    81.5
+   ],
+   [
+    "refreshUnit battle.js:878",
+    70.2
+   ],
+   [
+    "computeCombat hero.js:547",
+    68.3
+   ],
+   [
+    "limitsOf state.js:211",
+    67.4
+   ],
+   [
+    "sayLine battle.js:1279",
+    45.9
+   ],
+   [
+    "querySelectorAll",
+    34.9
+   ],
+   [
+    "(anon) battle.js:915",
+    31.6
+   ],
+   [
+    "heroCombat state.js:748",
+    28.3
+   ],
+   [
+    "f hero.js:586",
+    27.7
+   ],
+   [
+    "advance battle.js:1903",
+    25.2
+   ],
+   [
+    "sigOf battle.js:1798",
+    23.0
+   ],
+   [
+    "refreshBuffs battle.js:1009",
+    22.2
+   ],
+   [
+    "querySelector",
+    21.4
+   ],
+   [
+    "renderUnits battle.js:699",
+    20.8
+   ],
+   [
+    "popup battle.js:1164",
+    20.7
+   ],
+   [
+    "layerOf fx.js:169",
+    20.1
+   ],
+   [
+    "syncOffRise battle.js:627",
+    18.5
+   ],
+   [
+    "drain battle.js:1413",
+    16.1
+   ],
+   [
+    "logRow battle.js:1254",
+    15.9
+   ],
+   [
+    "speedCoef hero.js:504",
+    14.7
+   ],
+   [
+    "sameRow battle.js:147",
+    14.3
+   ],
+   [
+    "step battle.js:1391",
+    13.7
+   ],
+   [
+    "focusMode battle.js:582",
+    11.5
+   ],
+   [
+    "heroById state.js:605",
+    10.7
+   ],
+   [
+    "addEventListener",
+    10.6
+   ],
+   [
+    "remove",
+    8.1
+   ]
+  ],
+  "metrics": {
+   "TaskDuration": 7.196,
+   "ScriptDuration": 0.855,
+   "LayoutDuration": 0.708,
+   "LayoutCount": 1433,
+   "RecalcStyleDuration": 1.582,
+   "RecalcStyleCount": 1638
+  }
+ },
+ "watch_x1": {
+  "totalMs": 20014,
+  "byFile": {
+   "(native)": 19611,
+   "construction.js": 115,
+   "battle.js": 113,
+   "state.js": 83,
+   "fx.js": 56,
+   "hero.js": 22,
+   "app.js": 6,
+   "skill_runtime.js": 5,
+   "i18n.js": 2,
+   "skill.js": 1
+  },
+  "top": [
+   [
+    "(idle)",
+    19073.3
+   ],
+   [
+    "(program)",
+    496.0
+   ],
+   [
+    "opened construction.js:238",
+    114.2
+   ],
+   [
+    "play fx.js:156",
+    52.0
+   ],
+   [
+    "limitsOf state.js:211",
+    49.1
+   ],
+   [
+    "refreshUnit battle.js:878",
+    19.2
+   ],
+   [
+    "step battle.js:1391",
+    18.3
+   ],
+   [
+    "refreshBuffs battle.js:1009",
+    16.5
+   ],
+   [
+    "querySelector",
+    13.6
+   ],
+   [
+    "advance battle.js:1903",
+    12.1
+   ],
+   [
+    "querySelectorAll",
+    11.8
+   ],
+   [
+    "computeCombat hero.js:547",
+    11.5
+   ],
+   [
+    "toggle",
+    9.1
+   ],
+   [
+    "stepRun state.js:2899",
+    9.0
+   ],
+   [
+    "f hero.js:586",
+    7.3
+   ],
+   [
+    "drinkPotions battle.js:1043",
+    7.1
+   ],
+   [
+    "heroCombat state.js:748",
+    7.1
+   ],
+   [
+    "labVal state.js:2139",
+    5.6
+   ],
+   [
+    "(anon) battle.js:915",
+    5.5
+   ],
+   [
+    "expTick app.js:2924",
+    5.3
+   ],
+   [
+    "(anon) battle.js:898",
+    5.1
+   ],
+   [
+    "expire skill_runtime.js:85",
+    5.0
+   ],
+   [
+    "onKill battle.js:1133",
+    5.0
+   ],
+   [
+    "(anon) state.js:2131",
+    4.1
+   ],
+   [
+    "sigOf battle.js:1798",
+    3.8
+   ],
+   [
+    "labNodeRow state.js:2131",
+    3.7
+   ],
+   [
+    "renderUnits battle.js:699",
+    2.9
+   ],
+   [
+    "logRow battle.js:1254",
+    2.6
+   ],
+   [
+    "remove",
+    2.5
+   ],
+   [
+    "t i18n.js:59",
+    2.3
+   ]
+  ],
+  "metrics": {
+   "TaskDuration": 2.066,
+   "ScriptDuration": 0.356,
+   "LayoutDuration": 0.054,
+   "LayoutCount": 168,
+   "RecalcStyleDuration": 0.475,
+   "RecalcStyleCount": 843
+  }
+ },
+ "multi_bg": {
+  "totalMs": 20018,
+  "byFile": {
+   "(native)": 19856,
+   "state.js": 43,
+   "construction.js": 40,
+   "app.js": 38,
+   "battle.js": 13,
+   "storage.js": 10,
+   "hero.js": 9,
+   "formula.js": 2,
+   "tactic.js": 2,
+   "item.js": 2,
+   "skill_runtime.js": 1,
+   "pace.js": 1
+  },
+  "top": [
+   [
+    "(idle)",
+    19808.1
+   ],
+   [
+    "opened construction.js:238",
+    39.5
+   ],
+   [
+    "(program)",
+    38.3
+   ],
+   [
+    "render app.js:593",
+    15.1
+   ],
+   [
+    "(anon) app.js:617",
+    14.9
+   ],
+   [
+    "limitsOf state.js:211",
+    11.5
+   ],
+   [
+    "writeSave storage.js:24",
+    10.3
+   ],
+   [
+    "(garbage collector)",
+    5.5
+   ],
+   [
+    "computeCombat hero.js:547",
+    4.4
+   ],
+   [
+    "advance battle.js:1903",
+    2.9
+   ],
+   [
+    "labLineNodes state.js:2132",
+    2.4
+   ],
+   [
+    "f hero.js:586",
+    2.0
+   ],
+   [
+    "tickBattle app.js:2976",
+    1.8
+   ],
+   [
+    "(anon) state.js:3934",
+    1.7
+   ],
+   [
+    "masteryBonus hero.js:177",
+    1.6
+   ],
+   [
+    "gambleRate state.js:2256",
+    1.6
+   ],
+   [
+    "(anon) state.js:1728",
+    1.6
+   ],
+   [
+    "heroItems state.js:606",
+    1.6
+   ],
+   [
+    "dispatchSettle state.js:2218",
+    1.6
+   ],
+   [
+    "bonusOf tactic.js:243",
+    1.5
+   ],
+   [
+    "makeEnemy battle.js:577",
+    1.4
+   ],
+   [
+    "snapMeasure state.js:1726",
+    1.3
+   ],
+   [
+    "(anon) state.js:1741",
+    1.3
+   ],
+   [
+    "formationOf state.js:1404",
+    1.3
+   ],
+   [
+    "labNodeRow state.js:2131",
+    1.3
+   ],
+   [
+    "beginRound battle.js:1064",
+    1.2
+   ],
+   [
+    "focusMode battle.js:582",
+    1.2
+   ],
+   [
+    "expTick app.js:2924",
+    1.2
+   ],
+   [
+    "liveRows battle.js:137",
+    1.2
+   ],
+   [
+    "appendChild",
+    1.2
+   ]
+  ],
+  "metrics": {
+   "TaskDuration": 0.356,
+   "ScriptDuration": 0.175,
+   "LayoutDuration": 0.02,
+   "LayoutCount": 29,
+   "RecalcStyleDuration": 0.015,
+   "RecalcStyleCount": 36
+  }
+ }
+}

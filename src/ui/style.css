@@ -501,6 +501,9 @@ html, body { height: 100%; overflow: hidden; }
 .panel > h2 small { color: var(--text-muted); font-size: var(--fs-xs); }
 /* 제목 줄 안의 부제 · 목업 표지 · 죄종 칩(기본 옵션 · ADR-0166)은 굵어지지 않는다 — 제목이 아니라 제목에 붙은 값이다 */
 .panel > h2 small, .sub-h small, .panel > h2 .sin-chip { font-weight: normal; }
+/* 장비 칸 제목 오른쪽 끝 [자동 장착] (§6 · ADR-0712) — 제목 줄을 안 키운다(옆 칸 제목과 밑줄 높이가 같아야 한다) · 굵어지지 않는다.
+   선택자는 `.btn.sm.pd-auto` — 한 단이면 공용 `.btn.sm { padding }` 에 진다(`.go-tree` 와 같은 사정) */
+.btn.sm.pd-auto { padding: 0 8px; line-height: 1.5; font-weight: normal; align-self: center; }
 
 .cols { display: grid; gap: 14px; }
 .cols.c2 { grid-template-columns: 1fr 1fr; }
@@ -621,7 +624,7 @@ html, body { height: 100%; overflow: hidden; }
 .bar { height: 6px; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .bar > i { display: block; height: 100%; background: var(--color-info); }
 .bar.xp > i { background: var(--xp-fill); }
-.bar.hp > i { background: var(--hp-fill); }
+.bar.hp > i { background: var(--hp-fill); width: 100%; transform-origin: left; }   /* 관전 HP 는 늘이고 줄인다(scaleX) — 폭을 바꾸면 눈금마다 배치를 다시 잰다 (DEV_PLAN §4 #86) */
 
 /* ───────── 원정 ───────── */
 
@@ -1981,9 +1984,10 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--bg-input); border: 1px solid var(--border-dark);
 }
 .act-fill {
-    display: block; height: 100%; width: 0;
+    display: block; height: 100%; width: 100%;
     background: var(--color-warning);        /* 기본 노랑 — 파견 창(채굴 타격)이 쓴다 */
-    transition: width .1s linear;            /* 틱 간격과 맞춘다 */
+    transform: scaleX(0); transform-origin: left;   /* 차오름은 늘임이다 — 폭을 바꾸면 눈금마다 배치를 다시 잰다 (DEV_PLAN §4 #86) */
+    transition: transform .1s linear;        /* 틱 간격과 맞춘다 */
 }
 /* 관전 카드는 **무기 종류** 색이다 [2026-10-02 사용자 지시 · ADR-0476] — 물리 무기 주황 · 마법 무기(평타 없음 — 칸을 쌓아 스킬에 쓴다 · R198 · R200) 파랑.
    양 진영 같다(옛 적 갈색 `--enemy-fill` 폐지) · 누적 판 막대(`.bar.dmg > i.k-phys/k-magic`)와 같은 두 색 */
@@ -2017,7 +2021,8 @@ html, body { height: 100%; overflow: hidden; }
 /* 쿨 마스크 — 남은 쿨만큼 위에서 덮는다. 다 걷히면 아이콘이 전부 드러난다 = 준비 완료 */
 .cd-slot .cd-mask {
     position: absolute; left: 0; right: 0; top: 0; height: 100%;
-    background: rgba(var(--veil-rgb),.78); transition: height .1s linear;
+    background: rgba(var(--veil-rgb),.78);
+    transform-origin: top; transition: transform .1s linear;   /* 걷힘은 줄임(scaleY)이다 — 높이를 바꾸면 눈금마다 배치를 다시 잰다 (DEV_PLAN §4 #86) */
 }
 /* 빈 칸 — 액티브가 셋을 못 채운 영웅의 남은 자리. 칸 수는 언제나 active_slots 다 (SCREEN_DESIGN §4-2 개정 2026-08-31).
    칸이 사라지면 카드마다 줄 길이가 달라져 위아래 두 진영이 같은 격자로 안 읽힌다 */
