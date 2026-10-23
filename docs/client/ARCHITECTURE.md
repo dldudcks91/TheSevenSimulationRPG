@@ -126,7 +126,7 @@ render()
 
 | 의존 | 위치 | 비고 |
 |---|---|---|
-| Cinzel(Google Fonts — 워드마크) · Pretendard 웹폰트 (CDN **2개**) | `index.html` | 오프라인이면 폴백 폰트 (하이브리드 폰트 도입 08-27 · 워드마크 Galmuri → Cinzel 10-16 · ADR-0644 — DEV_PLAN 부채 #11) |
+| Cinzel(Google Fonts — 워드마크) · Pretendard 웹폰트 (CDN **2개**) | `index.html` | 오프라인이면 폴백 폰트 (하이브리드 폰트 도입 08-27 · 워드마크 Galmuri → Cinzel 10-16 · ADR-0644 — DEV_PLAN 부채 #11) · Pretendard 는 **dynamic-subset** 판 — 화면에 쓴 글자 조각만 받는다(10-23 — 정적판은 굵기마다 0.8MB 를 통째로 받아 폰 첫 접속에서 그림보다 무거웠다) |
 | Firebase JS SDK (gstatic CDN — `app` · `auth` · `firestore-lite`) + Firebase Authentication(**익명**) · Firestore | `ui/cloud.js` · `ui/firebase_config.js` | 배포 주소에서만 첫 올리기 때 동적 import — **게임은 기다리지 않는다**(실패해도 그대로 돈다). 진행 요약 `players/<uid>` + 세이브 사본 `saves/<uid>` 를 한 방향으로 · 보안 규칙은 「자기 문서만 쓴다 · 관리자 uid 만 남의 것을 읽는다」 (SCREEN_DESIGN §2-1 · 규칙 본문은 `src/dev/README.md` 「퍼널」). 관리자 페이지 `dev/funnel.html` 만 Google 로그인을 쓴다 |
 | Python `http.server` | `serve.py` (← `start.bat`) | ES Modules 가 `file://` 에서 막혀서. `serve.py` 는 그걸 얇게 감싸 **`Cache-Control: no-cache` + ETag**(수정 시각 + 크기)만 더한다 — 같은 파일명으로 아트를 갈아끼우면 브라우저 휴리스틱 캐시가 옛 그림을 계속 쓴다. 쓸 때마다 재검증하고 안 바뀐 파일은 304 (2026-09-24 · 옛 `no-store` 는 다시 그릴 때마다 그림을 본문째 다시 받았다) |
 
@@ -174,4 +174,4 @@ render()
 
 ---
 
-*마지막 업데이트: 2026-10-18*
+*마지막 업데이트: 2026-10-23*
