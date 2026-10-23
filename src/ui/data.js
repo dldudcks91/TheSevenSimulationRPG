@@ -652,6 +652,7 @@ export function buildSystems(d, dev = {}) {
     const game = createGameSystem({
         hero, item, battle, skill, tactic, construction, gamble, commission, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
+        grades: d.grades,                          // spawn_grade.csv — 첫 클리어 상자의 희귀도 가중치 (2026-10-23 · R328 · INTERFACE §2-7)
         difficulties: d.difficultyList ?? [],   // 난이도 바퀴 — 순서대로 · 첫 단 = 처음부터 열림 (state.js · R236)
         codex: { levels: d.codexLevels, steps: d.codexSteps, options: d.codexOptions, races: d.codexRaces },
         // 죄종 목록 — 탐험 이야기 표의 `sin` 컬럼 검증용 (~~수색 이야기 · 만남 · 답~~ 2026-10-19 삭제)

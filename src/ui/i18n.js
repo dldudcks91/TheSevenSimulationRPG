@@ -336,6 +336,18 @@ const STRINGS = {
     'ch.menu.equip': { ko: '착용', en: 'Equip' },
     'ch.menu.lock': { ko: '잠금', en: 'Lock' },
     'ch.menu.unlock': { ko: '잠금 해제', en: 'Unlock' },
+    'ch.menu.open': { ko: '사용', en: 'Use' },   // 상자 칸에만 서는 버튼 — 상자를 여는 유일한 길(칸 클릭은 안 연다 · ADR-0733)
+    // 첫 클리어 상자 칸 · 툴팁 · 여는 플래시 (SCREEN_DESIGN §6 · ADR-0731 · R328)
+    'box.name': { ko: '첫 클리어 상자', en: 'First Clear Chest' },
+    'box.from': { ko: '{stage} · {diff}', en: '{stage} · {diff}' },
+    'box.opened': { ko: '상자 개봉 — {name}', en: 'Chest opened — {name}' },
+    // 우편함 — 상단바 편지봉투 · 창 (SCREEN_DESIGN §2 「상단바」 · ADR-0732 · R328)
+    'mail.h': { ko: '우편함', en: 'Mailbox' },
+    'mail.none': { ko: '우편 없음', en: 'No mail' },
+    'mail.row': { ko: '{stage} · {diff} — 첫 클리어 상자', en: '{stage} · {diff} — First Clear Chest' },
+    'mail.claim': { ko: '받기', en: 'Claim' },
+    'mail.claimAll': { ko: '모두 받기', en: 'Claim All' },
+    'mail.claimed': { ko: '우편 {n}통 수령', en: 'Claimed {n} mail' },
     // 도움말이 받는 힌트 — 인게임 패널에는 규칙 문구를 안 둔다 (SCREEN_DESIGN §12)
     'ch.salvageHint': { ko: '장비를 우클릭해 [잠금]을 누르면 잠기거나 풀립니다. 잠근 장비는 분해되지 않습니다. [분해]를 누르면 분해함이 뜹니다. 장비를 눌러 함에 올리거나 등급 · 레벨 · 베이스 열에서 고르면 맞는 장비가 바로 함에 오르고, [분해하기]로 가루를 얻으면 필터가 풀립니다. 열을 여럿 고르면 모든 열에 맞는 것만 오르니, 베이스 옵션이 높은 장비는 베이스 열로 남길 수 있습니다. [자동 분해]는 부대마다 따로 정합니다. 등급 × 부위 칸마다 보존 · 베이스 · 분해를 고르고, 레벨 조건을 켜면 부대에서 가장 낮은 영웅 레벨보다 많이 낮은 장비를 분해합니다. 레벨 조건과 그 칸을 모두 만족해야 보존하고, [베이스] 칸은 베이스 옵션이 그 부위 문턱 이상인 것만 보존합니다. 유니크 · 크래프트는 언제나 보존합니다. 새로 들어오는 장비에만 걸리니 이미 가진 것은 [지금 인벤토리에 적용]을 눌러야 분해됩니다. 지금 규칙을 프리셋에 저장해 두면 다른 부대에서 불러올 수 있습니다',
         en: 'Right-click gear and press [Lock] to lock or unlock it. Locked gear is never salvaged. Press [Salvage] to open the Salvage Box: click gear to put it in, or pick from the rarity, level and base columns and the matching gear goes in at once — [Salvage now] turns it to dust and clears the picks. With several columns picked, only gear matching every column goes in, so you can keep high base-option gear out with the base column. [Auto salvage] is set per party. For each rarity × slot cell choose Keep, Base or Salvage, and turn on the level condition to salvage gear far below the party’s lowest hero level. Gear is kept only when it meets both the level condition and its cell; a Base cell keeps only gear whose base option is at or above that slot’s threshold. Uniques and crafted gear are always kept. Only new gear is checked — press [Apply to inventory now] to salvage what you already hold. Save the rules to a preset to load them on another party' },
@@ -400,6 +412,7 @@ const STRINGS = {
     'ch.err.bagFull': { ko: '인벤토리 가득 참', en: 'Inventory is full' },
     'ch.err.stashFull': { ko: '창고 가득 참', en: 'Stash is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없음', en: 'Item not found' },
+    'ch.err.sealed': { ko: '열지 않은 상자', en: 'Open the chest first' },   // 봉인된 첫 클리어 상자 — 장착 · 분해 · 강화 거절 (R328)
     // 결과 플래시 — 문장을 조각내 잇지 않는다. 건너뛴 것이 있으면 키째 다른 줄을 쓴다
     'ch.sel.salvaged': { ko: '{n}개 분해 → 가루 +{d}', en: 'Salvaged {n} → dust +{d}' },
     // ~~'ch.sel.salvagedSkip'~~ · ~~'ch.sel.allLocked'~~ 는 2026-10-20 삭제 — 잠긴 것은 분해함에 안 올라가 건너뛸 일이 없다 (ADR-0673)
@@ -482,6 +495,10 @@ const STRINGS = {
     'bt.skipWait': { ko: '건너뛰기', en: 'Skip' },
     'bt.skipRetry': { ko: '재도전', en: 'Retry' },   // 같은 버튼의 진 런 글자 — 졌으면 다음 런이 같은 칸이다 (ADR-0698)
     'rep.shrine': { ko: '신단', en: 'Shrine' },
+    // 처음 깬 런의 요약 칸 — 상자가 어디로 갔나 (SCREEN_DESIGN §4-3 · ADR-0731)
+    'rep.clearBox': { ko: '클리어 보상', en: 'Clear Reward' },
+    'rep.clearBoxBag': { ko: '상자 · 인벤토리', en: 'Chest · Inventory' },
+    'rep.clearBoxMail': { ko: '상자 · 우편함', en: 'Chest · Mailbox' },
     'shrine.fx.atk_pct': { ko: '데미지 +{v}%', en: 'Damage +{v}%' },
     'shrine.fx.cooldown_reduction': { ko: '쿨타임 감소 {v}%', en: 'Cooldown Reduction {v}%' },
     'shrine.fx.life_steal': { ko: '흡혈 {v}%', en: 'Life Steal {v}%' },
@@ -756,6 +773,7 @@ const STRINGS = {
     // 상단 장비 구매 (SCREEN_DESIGN §8-3 · game.shopBuy · 2026-09-27) — 거절은 결과 코드와 짝이다(unbuilt 는 flashNeed · missing 은 stale 과 같은 뜻)
     'td.sold': { ko: '팔림', en: 'Sold' },
     'td.bought': { ko: '{name} 구매 (−{g} G)', en: 'Bought {name} (−{g} G)' },
+    'td.boughtN': { ko: '{name} ×{n} 구매 (−{g} G)', en: 'Bought {name} ×{n} (−{g} G)' },   // 물약 묶음 구매 (§8-3 · 2026-10-23)
     'td.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'td.err.bagFull': { ko: '인벤토리 가득 참', en: 'Inventory is full' },
     'td.err.sold': { ko: '이미 팔린 물건', en: 'Already sold' },
@@ -1976,7 +1994,6 @@ const STRINGS = {
     'pop.counter': { ko: '반격', en: 'COUNTER' },
     'pop.evade': { ko: '회피', en: 'EVADE' },   // 이베이드 (2026-10-16)
     'pop.echo': { ko: '에코', en: 'ECHO' },     // 에코 (2026-10-16)   // 반격한 카드에 뜬다 (ADR-0158)
-    'pop.slain': { ko: '처치', en: 'Slain' },
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
     // 레벨업 (2026-09-29 · ADR-0435) — 오른 카드의 금색 글자 · 아래 적중 변화 줄(`pop.lvupHit`)은 2026-10-22 삭제 (ADR-0718)
     'pop.lvup': { ko: '레벨 업', en: 'LEVEL UP' },

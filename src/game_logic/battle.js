@@ -213,10 +213,17 @@ export function createBattleSystem(data) {
      *   반폭 = 가운데 × 비율 반올림 · 하한 — 모든 등급이 같은 비율이라 평균은 종전과 같다. 몬스터가 입는 장비라 그 세기도 같이 흔들린다(사용자가 알고 택했다)
      * **입는 부위** [2026-10-12 · R245] — 등급의 고정 부위는 언제나 · 선택 부위는 **부위마다 「입나」 1회**(`rng() < chance`)를 먼저 굴린다.
      *   확률이 0 · 1 이어도 소비한다 — 소비 수가 단에 의존하면 같은 시드가 단마다 다른 차림 줄을 낸다 (INTERFACE §5-2)
+     * **무기군 `-`** [2026-10-23 · R324 · 사용자 「랜덤하게 줘도될거같에」] — 그 직업 본편 무기군(`item.groupsFor` 순서) 중 하나를 **이 줄의 첫 굴림 1회**로 고른다.
+     *   무기군이 박힌 몬스터는 안 굴려 차림 수열이 종전과 같다 · 든 무기군은 입은 무기의 `group` 이 들고 간다(`makeEnemy` 의 무기 판정이 그것을 읽는다)
      * @param level 스테이지 레벨 — `level_add` 는 안 탄다(INTERFACE §2-6 `lvl`)
      * @param chance 선택 부위 착용 확률 — 그 런의 단(`wearChanceOf`)
      */
     const wearGear = (rng, m, g, level, magicFind, chance) => {
+        let weaponGroup = m.weapon_group;
+        if (weaponGroup === '-') {
+            const gs = data.itemSystem.groupsFor(m.cls);
+            weaponGroup = gs[Math.floor(rng() * gs.length)].id;
+        }
         const { fixed, optional } = wearOf(g);
         const worn = [];
         for (const part of optional) if (rng() < chance) worn.push(part);
@@ -229,7 +236,7 @@ export function createBattleSystem(data) {
             rareBonusPct: g.gear_rare_bonus_pct,
             // 희귀도 가중치는 **등급이 쥔다** — 일반 = 일반 + 가끔 매직(레어 0) · 정예 = 일반 + 매직 + 가끔 레어 (2026-09-23 사용자 지시)
             rarityWeights: gearWeights(g),
-            weaponGroup: m.weapon_group,
+            weaponGroup,
         });
     };
 
@@ -237,15 +244,19 @@ export function createBattleSystem(data) {
      * 그 몬스터가 그 등급 · 그 스테이지 레벨로 설 때 입는 장비의 조건 [신설 2026-10-10 · 실험실 · INTERFACE §2-6] —
      * `wearGear` 가 `rollGear` 에 넘기는 값 그대로다(아이템 레벨 아래 끝은 `rollGear` 와 같이 1). 없는 몬스터 · 등급이면 null · rng 0.
      * 부위는 등급이 정한다 — `slots` = 입을 수 있는 부위(고정 → 선택) · 선택 부위는 `wearChance`(그 단 · 안 주면 첫 단)로 입는다 [2026-10-12 · R245]
+     * 무기군 — `weaponGroups` = 들 수 있는 무기군(박힌 몬스터는 하나 · `-` 는 그 직업 본편 무기군 전부 · 2026-10-23 · R324) · `weaponGroup` = 박힌 것 또는 null
      */
     function monsterGearSpec(monsterId, grade, level, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
         const center = level + g.gear_ilvl_add, s = ilvlSpreadOf(center);
         const { fixed, optional } = wearOf(g);
+        const rolled = m.weapon_group === '-';
         return {
             slots: [...fixed, ...optional], fixed, optional, wearChance: wearChanceOf(difficulty),
-            weaponGroup: m.weapon_group, ilvlMin: Math.max(1, center - s), ilvlMax: center + s, rarityWeights: gearWeights(g),
+            weaponGroup: rolled ? null : m.weapon_group,
+            weaponGroups: rolled ? data.itemSystem.groupsFor(m.cls).map(x => x.id) : [m.weapon_group],
+            ilvlMin: Math.max(1, center - s), ilvlMax: center + s, rarityWeights: gearWeights(g),
         };
     }
 
@@ -271,7 +282,9 @@ export function createBattleSystem(data) {
         for (const m of Object.values(data.monsters)) {
             const at = m.monster_idx;
             if (!(m.cls in CLASS_SKILLS)) throw new Error(`battle: 몬스터 ${at} 의 직업 '${m.cls}' 를 모른다`);
-            if (!data.itemSystem.groupOf({ slot: 'weapon', group: m.weapon_group })) throw new Error(`battle: 몬스터 ${at} 의 무기군 '${m.weapon_group}' 를 모른다`);
+            // 무기군 `-` = 그 직업 본편 무기군 중에서 판마다 굴린다(`wearGear` · 2026-10-23 · R324) — 굴릴 무기군이 하나는 있어야 한다
+            if (m.weapon_group === '-' ? !data.itemSystem.groupsFor(m.cls).length : !data.itemSystem.groupOf({ slot: 'weapon', group: m.weapon_group }))
+                throw new Error(`battle: 몬스터 ${at} 의 무기군 '${m.weapon_group}' 를 모른다${m.weapon_group === '-' ? ` — 직업 ${m.cls} 의 본편 무기군이 없다` : ''}`);
             if (m.innate_skill !== '-' && SK && !SK.defs[m.innate_skill]) throw new Error(`battle: 몬스터 ${at} 의 고유 스킬 '${m.innate_skill}' 를 모른다`);
             // 2칸 = 그 직업의 2티어 (monster_design §5-1 「나이트메어 2칸 = 2티어」 · §5-2-1 · R269) — 칸이 비면 `-`
             const nm = m.nightmare_skill ?? '-', nd = SK?.defs[nm];
@@ -389,6 +402,7 @@ export function createBattleSystem(data) {
             summoners,
             standing: new Set(rules.flatMap(r => r.standing ?? [])),    // 무리가 대기하지 않는 소환사 (2026-10-21)
             escorts: rules.reduce((lh, r) => (r.escorts ? r.escorts(...lh) : lh), [bd.escort_min, bd.escort_max]),
+            guards: rules.reduce((gs, r) => r.guards ?? gs, null),        // 정예 호위 명단 — 있으면 호위 수 · 풀 굴림을 대신한다 (2026-10-23 · R329)
         };
     }
     // 예외 표도 **로드에서 멈춘다** — 번호가 틀리면 규칙이 조용히 헛돌고(풀에 없는 몬스터를 빼거나 좁혀도 아무 일도 없다),
@@ -405,6 +419,14 @@ export function createBattleSystem(data) {
             if (SK && !SK.defs[data.monsters[id].innate_skill]?.effects.some(e => e.effect === 'call'))
                 throw new Error(`battle: 스테이지 ${sid} 의 소환사 ${id} 는 고유 스킬이 불러내기(call)가 아니다 — 대기 무리가 안 선다 (spawn_rule.js)`);
         }
+        // 정예 호위 명단 [2026-10-23 · R329] — 그 장의 일반몹이어야 하고(장소 풀 밖이어도 된다) · 보스 라운드가 있는 장소에만 · 보스와 합쳐 라운드 상한 안
+        const guards = rules.flatMap(r => r.guards ?? []);
+        for (const id of guards) {
+            const gm = data.monsters[id];
+            if (!gm || gm.spawn_grade !== 'normal' || gm.chapter !== st.chapter) throw new Error(`battle: 스테이지 ${sid} 의 호위 ${id} 가 그 장의 일반몹이 아니다 (spawn_rule.js)`);
+        }
+        if (guards.length && !stageRounds(st).some(r => r.round_type === 'boss')) throw new Error(`battle: 스테이지 ${sid} 에 호위 명단이 있는데 보스 라운드가 없다 (spawn_rule.js)`);
+        if (guards.length + 1 > B.wave_monster_max) throw new Error(`battle: 스테이지 ${sid} 의 호위 ${guards.length} — 보스와 합쳐 라운드 상한 ${B.wave_monster_max} 을 넘는다 (spawn_rule.js)`);
         for (const { round_num: n, round_type: type } of stageRounds(st)) {
             const bd = data.budgets[type === 'boss' ? st.boss_grade : type];
             const d = roundDraw(st, pool, n, bd);
@@ -606,8 +628,9 @@ export function createBattleSystem(data) {
         const plan = slotPlan(m, g, difficulty);
         // ⚠ `activesFor` 는 **인스턴스**(`{id, source}`)를 낸다 — 파티 경로와 같이 **정의를 풀고 `readyAt` 을 얹어야** 한다.
         //   안 풀면 `skill.castable(def, …)` 이 undefined 를 읽는다 (INTERFACE §2-6 「전투 유닛」 actives 행)
-        //   무기 판정은 영웅과 같은 규칙이다 — 무기가 필요한 스킬이 `monster.csv:weapon_group` 과 안 맞으면 꺼진다 · 지금 데이터는 전부 맞는다 (R204 · skill_design §2-2)
-        const fits = fitterOf(m.weapon_group);
+        //   무기 판정은 영웅과 같은 규칙이다 — 무기가 필요한 스킬이 **든 무기**의 무기군과 안 맞으면 꺼진다 · 지금 데이터는 전부 맞는다 (R204 · skill_design §2-2).
+        //   든 무기군 = 입은 무기의 `group` — `monster.csv:weapon_group` 이 `-` 면 판마다 굴린 것이다(`wearGear` · 2026-10-23 · R324) · 맨몸이면 박힌 값
+        const fits = fitterOf(gear.find(it => it.slot === 'weapon')?.group ?? m.weapon_group);
         //   낀 장비의 특정 스킬 +n 은 **영웅과 같은 규칙**으로 고유 · 2칸 레벨에 더해진다(보스의 한 칸 더는 안 받는다 · 2026-10-08 · R225)
         const acts = SK ? SK.activesFor({ innate: plan.innate, bookSkill: plan.second }, {
             thirdSkill: plan.rolled ? thirdSkill : null,
@@ -637,8 +660,9 @@ export function createBattleSystem(data) {
             actives: acts,
             // 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이 같으면 몬스터가 달라도 같다. `exp_coef` 는 몬스터별 조정 칸 (monster_design §7 · R85)
             //   XP 는 레벨 표(`level_xp.csv`) · 골드는 옛 지수 곡선(`monster_gold_*`)을 따로 탄다 (2026-09-28 · PLAN_early_progression D3)
+            //   골드는 등급의 `exp_mult` 를 안 탄다 — 등급은 `goldMult`(= `gold_mult`) 한 번만 곱한다 (2026-10-23 · R330 · monster_design §7)
             expReward: MONSTER_XP.get(lvl) * g.exp_mult * m.exp_coef,
-            goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * g.exp_mult * m.exp_coef,
+            goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * m.exp_coef,
             goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
             // **도안 후보** = 스폰 때 든 칸 중 책이 되는 것 [2026-10-16 · R266 · 2026-10-18 · R269 「쥔 스킬이면 어느 칸이든」 · 2026-10-20 · R293 — ~~`codexSkills` 스킬 도감이 세는 스킬~~] —
             //   영웅이 배울 수 있는 것만(몬스터 전용 · 불러내기는 책이 없다 — `skill.bookable` · R258) ·
@@ -657,7 +681,8 @@ export function createBattleSystem(data) {
 
     /**
      * 라운드 편성 — 구조는 그 스테이지의 세트(stage_round), 내용물은 예산(round_budget) 안에서 랜덤.
-     * 챕터보스 스테이지는 일반몹 풀이 비어 있지만 호위 예산이 0 이라 `pick` 을 한 번도 안 부른다 — 호위 수 굴림(1회)은 그대로 돈다
+     * 챕터보스 스테이지는 일반몹 풀이 비어 있다 — 1 ~ 5장은 정예 호위 명단(`spawn_rule.js` · 2026-10-23 · R329)이 서서 풀을 안 뽑고,
+     *   6 · 7장은 호위 예산이 0 이라 `pick` 을 한 번도 안 부른다(호위 수 굴림 1회는 그대로 돈다)
      *
      * **2단이다** [개정 2026-09-11 · R79 · INTERFACE §5-2]:
      *   **1단 편성** — 누가 나오나. 스테이지 편성 예외(`spawn_rule.js`)가 뽑을 목록과 범위를 바꾸고, 소환사가 서면 상한까지 채운다 [2026-09-18].
@@ -701,8 +726,17 @@ export function createBattleSystem(data) {
         /* ── 1단 편성 (예외가 없는 스테이지는 굴림 순서·횟수 불변) ── */
         if (type === 'boss') {
             add(stage.boss_monster_idx, stage.boss_grade);
-            const escorts = between(...draw.escorts);
-            for (let i = 0; i < escorts; i++) add(pick(), 'normal');
+            if (draw.guards) {
+                // 정예 호위 명단 [2026-10-23 · R329 · monster_design §4] — 명단 순서대로 정예로 선다 · 호위 수 · 풀은 안 굴린다 ·
+                //   정예마다 죄종 1 → 공통 특성 둘(정예 라운드의 정예와 같은 묶음 — 후보 뽑기만 없다)
+                for (const id of draw.guards) {
+                    const sin = data.sins[Math.floor(rng() * data.sins.length)];
+                    add(id, 'elite', { sin, traits: [data.sinTraits[sin], ...pickTwo(rng, data.commonTraits)] });
+                }
+            } else {
+                const escorts = between(...draw.escorts);
+                for (let i = 0; i < escorts; i++) add(pick(), 'normal');
+            }
         } else {
             for (let i = 0; i < bd.elite_count; i++) {
                 // 정예 = 일반몹 1종 + 죄종 특성 1 + 공통 특성 2. 죄종은 이 판에서 굴린다
@@ -1250,12 +1284,14 @@ export function createBattleSystem(data) {
          *     지금 구조에서 연쇄는 안 생긴다(몬스터의 자폭은 파티만 때린다) — 그 규칙은 그 가정이 깨졌을 때의 잠금이다
          */
         const dealIndirect = (a, d, dmg, s) => {
-            d.hp = Math.max(0, d.hp - dmg);
-            timeline.push({ t: r1(t), e: 'blast', a: a.key, d: d.key, s, dmg, dhp: d.hp });
+            const ov = loseHp(d, dmg);
+            const ev = { t: r1(t), e: 'blast', a: a.key, d: d.key, s, dmg, dhp: d.hp };
+            if (ov) ev.ov = ov;
+            timeline.push(ev);
             const ca = credit(a), cd = credit(d);
-            if (ca) ca.dealt += dmg;
-            if (cd) cd.taken += dmg;
-            noteTaken(d, a, dmg);
+            if (ca) ca.dealt += dmg - ov;
+            if (cd) cd.taken += dmg - ov;
+            noteTaken(d, a, dmg - ov);
             if (d.hp <= 0) {
                 if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1;
                 killHeal(a, d);
@@ -1425,6 +1461,14 @@ export function createBattleSystem(data) {
             return { absorbed };
         }
 
+        /** 비직격 피해 — HP 에서 바로 뺀다(배리어 없음 · §9-6). 돌려주는 것은 **넘친 몫**(남은 HP 밖으로 넘친 양 · 쓰러뜨렸을 때만 0 초과) —
+         *  기여 · 쓰러짐 기록은 `dmg − 넘친 몫`(실제로 깎은 값)을 센다 [2026-10-23 · R326 · INTERFACE §2-6 `ov`] */
+        function loseHp(d, dmg) {
+            const ov = Math.max(0, dmg - d.hp);
+            d.hp = Math.max(0, d.hp - dmg);
+            return ov;
+        }
+
         /**
          * 물리 경직 [2026-09-17 · R110 · battle_design §2-3] — **행동 차례만** 늦춘다. 스킬 쿨(`readyAt` 은 절대 시각) · 창 · 재생 · 물약은 그대로 돈다
          *   (쿨까지 멈추는 것은 스턴이다). 길이는 [balance.csv:stagger_sec] 고정 × (1 − 타격 회복) — 피해에 비례하지 않고, 0 이하면 면역이다.
@@ -1544,13 +1588,15 @@ export function createBattleSystem(data) {
             u.dotAcc -= B.dot_tick_sec;
             const resist = F.appliedResist(u.res?.poison ?? 0, u.resMaxBonus ?? 0, u.resMaxEl?.poison ?? 0);
             const dmg = F.indirect(w.v * B.dot_tick_sec * (1 - resist));
-            u.hp = Math.max(0, u.hp - dmg);
-            timeline.push({ t: r1(t), e: 'dot', a: w.by, d: u.key, k: 'poison', s: w.s, dmg, dhp: u.hp, ty: 'poison' });
+            const ov = loseHp(u, dmg);
+            const ev = { t: r1(t), e: 'dot', a: w.by, d: u.key, k: 'poison', s: w.s, dmg, dhp: u.hp, ty: 'poison' };
+            if (ov) ev.ov = ov;
+            timeline.push(ev);
             const src = party.find(x => x.key === w.by) ?? units.enemies.find(x => x.key === w.by) ?? null;
             const ca = src ? credit(src) : null, cd = credit(u);
-            if (ca) ca.dealt += dmg;
-            if (cd) cd.taken += dmg;
-            noteTaken(u, src, dmg);
+            if (ca) ca.dealt += dmg - ov;
+            if (cd) cd.taken += dmg - ov;
+            noteTaken(u, src, dmg - ov);
             if (u.hp <= 0) {
                 if (ca && u.side !== 'party' && !u.summon && !u.rewarded) ca.kills += 1;
                 killHeal(src, u);
@@ -1577,12 +1623,14 @@ export function createBattleSystem(data) {
                 const resist = F.appliedResist(d.res?.[el] ?? 0, d.resMaxBonus ?? 0, d.resMaxEl?.[el] ?? 0);
                 const dmg = F.indirect(base * (1 - resist));
                 if (!(dmg > 0)) continue;
-                d.hp = Math.max(0, d.hp - dmg);
-                timeline.push({ t: r1(t), e: 'dot', a: u.key, d: d.key, k: 'pulse', s: w.s, dmg, dhp: d.hp, ty: el });
+                const ov = loseHp(d, dmg);
+                const ev = { t: r1(t), e: 'dot', a: u.key, d: d.key, k: 'pulse', s: w.s, dmg, dhp: d.hp, ty: el };
+                if (ov) ev.ov = ov;
+                timeline.push(ev);
                 const cd = credit(d);
-                if (ca) ca.dealt += dmg;
-                if (cd) cd.taken += dmg;
-                noteTaken(d, u, dmg);
+                if (ca) ca.dealt += dmg - ov;
+                if (cd) cd.taken += dmg - ov;
+                noteTaken(d, u, dmg - ov);
                 if (d.hp <= 0) {
                     if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1;
                     killHeal(u, d);
@@ -1753,7 +1801,9 @@ export function createBattleSystem(data) {
             const cb = crush > 0 ? Math.round(target.hp * crush) : 0;
             const total = dmg + cb;
             const hpBefore = target.hp;
-            applyDamage(target, total);
+            const { absorbed } = applyDamage(target, total);
+            // 넘친 몫 [2026-10-23 · R326] — 배리어 · HP 밖으로 넘친 양(쓰러뜨린 타격에만 0 초과). 처형 판정 앞에서 잰다(처형은 남은 체력을 지울 뿐 넘치지 않는다)
+            const ov = Math.max(0, total - absorbed - hpBefore);
             // 일반몹 처형 [2026-10-21 · R303 · 장갑 폭식 ② · item_design §1 「10-21 방어구 개정」 — 정의는 10-08 대화] — 이 직격이 맞은 뒤 **등급 「일반」 몬스터**의 체력이
             //   최대 HP × 값 이하면 그 자리에서 쓰러뜨린다 — 남은 체력이 `ev.cull` 이고 아래 처치 판정이 그대로 센다(기여 · 처치 시 회복 · 보상).
             //   영웅(결투장 상대 포함) · 정예 · 보스 · 소환은 아니다 · 도트 · 반사 · 비직격은 안 건다 · rng 0
@@ -1761,15 +1811,18 @@ export function createBattleSystem(data) {
             const cull = cullR > 0 && target.hp > 0 && target.grade === 'normal' && !target.hero && !target.summon && target.side !== u.side
                 && target.hp <= target.hpMax * cullR ? target.hp : 0;
             if (cull) target.hp = 0;
-            // 기여 — **감쇠 후 최종 피해**를 센다. 배리어가 먹은 몫도 포함이라 관전의 누적 데미지 판과 같은 값이다(처형으로 지운 체력은 안 센다)
+            // 기여 — **실제로 깎은 값**을 센다 [2026-10-23 · R326]: 배리어가 먹은 몫 + 깎인 HP(넘친 몫 빼고) + 처형으로 지운 체력. 관전의 누적 데미지 판과 같은 값이다
+            //   (이벤트의 `dmg` 는 넘친 몫까지 그대로 — 피해 숫자 · 로그 줄)
+            const real = total - ov + cull;
             const cA = credit(u), cD = credit(target);
-            if (cA) cA.dealt += total;
-            if (cD) cD.taken += total;
-            noteTaken(target, u, total);
+            if (cA) cA.dealt += real;
+            if (cD) cD.taken += real;
+            noteTaken(target, u, real);
             // `ty` — 그 타격의 피해 종류(`hitType`). 표시용이다 — 관전 로그가 피해 숫자를 종류 색으로 칠한다 (INTERFACE §2-6 · SCREEN_DESIGN §4-2)
             const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: total, crit, dhp: target.hp, ty: hitType };
             if (cb) ev.cb = cb;                              // 강타 몫 — 강타가 들어간 타격에만 키가 선다(`dmg` 는 합 · 흡혈 · 반사는 강타 몫을 안 먹는다)
             if (cull) ev.cull = cull;                        // 처형으로 지운 체력 — 처형이 터진 타격에만 키가 선다(`dmg` 에는 안 든다 · R303)
+            if (ov) ev.ov = ov;                              // 넘친 몫 — 쓰러뜨린 타격에만 키가 선다(`dmg` 에는 들었다 · R326)
             // 흡혈 — 직격의 최종 피해에만 비례 (§9-6). 배리어가 먹은 몫도 포함한다 (직격이 들어간 사실은 같다)
             //   마스터리 조건부 흡혈(색욕 T2-3 · 2026-10-05)은 그 타격의 흡혈에 더한다
             //   도감 Lv2 흡혈(그 종족을 때릴 때 · R314)도 같은 자리다
@@ -1815,11 +1868,13 @@ export function createBattleSystem(data) {
             const refl = (target.reflect ?? 0) + (md?.sum.reflect_damage ?? 0);
             if (refl > 0 && u.hp > 0) {
                 const back = F.indirect(dmg * refl);
-                u.hp = Math.max(0, u.hp - back);
-                timeline.push({ t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp });
-                if (cD) cD.dealt += back;                       // 반사도 **가한 피해**다 — 때린 쪽이 아니라 되받은 쪽의 몫
-                if (cA) cA.taken += back;
-                noteTaken(u, target, back);
+                const bov = loseHp(u, back);
+                const rev = { t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp };
+                if (bov) rev.ov = bov;
+                timeline.push(rev);
+                if (cD) cD.dealt += back - bov;                 // 반사도 **가한 피해**다 — 때린 쪽이 아니라 되받은 쪽의 몫
+                if (cA) cA.taken += back - bov;
+                noteTaken(u, target, back - bov);
                 if (u.hp <= 0) { if (cD && u.side !== 'party' && !u.rewarded) cD.kills += 1; killHeal(target, u); downed(u); }
             }
             if (target.hp <= 0) {

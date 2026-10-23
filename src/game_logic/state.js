@@ -283,13 +283,14 @@ export function createGameSystem(deps) {
             books: {},       // 스킬북 재고 {skillId: n} — 도서관이 만든다 (2026-09-29 · R179 · 2026-10-20 처치 · 상단은 도안을 준다)
             blueprints: {},  // 스킬 도안 재고 {skillId: n} — 처치 · 상단이 준다 · 책 한 권에 한 장 (2026-10-20 · R293)
             heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
+            mail: [],        // 우편함 [{id, item, no, stageId, difficulty}] — 인벤토리가 차서 못 들어간 첫 클리어 상자 (2026-10-23 · R328 · INTERFACE §4)
             // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제 ·
             //   cleared = **첫 단(노말)의** 깬 칸 · clearedIn = 나머지 단의 깬 칸 {단: [stageId]} (2026-10-10 · R236)
             progress: { cleared: [], clearedIn: {}, peakTotal: 0 },
             difficulty: BASE_DIFF,   // 고른 난이도 단 — 원정 탭이 고른다(`selectDifficulty`) · 부대는 나간 단을 제 자리에 든다 (2026-10-10 · R236)
             codexExp: {},   // 몬스터별 누적 도감 경험치 (2026-10-10 · R239)
             bossDown: {},   // 죽어 있는 챕터보스 {"단|칸": 죽은 실제 시각} — 런이 끝난 순간 `noteRunEnd` 가 적는다 (2026-10-10 · R240)
-            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, visit: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0, shop: 0, lab: 0 },
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, visit: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0, shop: 0, lab: 0, mail: 0 },
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [], paid: 0 },
             shop: null,      // 상단 목록 `{level, rerolledAt, paid, sold, books}` — 교체도 구매도 한 적 없으면 null(레벨 1 · 무료 열림) (2026-09-27 · 2026-10-16 · INTERFACE §4)
@@ -457,6 +458,10 @@ export function createGameSystem(deps) {
         s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
         s.tavern.paid = s.tavern.paid ?? 0;   // 유료 리롤 횟수 — 없으면 0 이 정확한 초기 상태라 버전을 안 올린다 (2026-09-30 · INTERFACE §4)
         s.stash = s.stash ?? [];       // 창고 — v24. 없던 세이브는 빈 채로 열린다
+        // 우편함 — 없으면 「온 우편이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 · 이미 깬 칸의 상자는 소급하지 않는다 (INTERFACE §4 · 2026-10-23 · R328).
+        //   모양이 틀린 우편(아이템이 없다 · 번호가 정수가 아니다)은 지운다
+        s.counters.mail = Number.isInteger(s.counters.mail) && s.counters.mail >= 0 ? s.counters.mail : 0;
+        s.mail = (Array.isArray(s.mail) ? s.mail : []).filter(m => m && Number.isInteger(m.id) && Number.isInteger(m.no) && s.items?.[m.item]);
         // 스테이지 레벨 올린 양 — **위험도 폐지로 지운다** [2026-09-29 · PLAN_expedition_window D2 · 버전 무변경] — 몬스터 레벨은 칸의 기본 레벨 고정이라 옮길 곳이 없다
         delete s.progress.levelUp;
         // 수색 — **2026-10-19 삭제**(찾아온 영웅이 대체 · 사용자 「세이브 자체를 초기화시키면 됨」) · 버전을 안 올리고 옛 필드를 지운다 —
@@ -898,6 +903,7 @@ export function createGameSystem(deps) {
         const h = heroById(state, heroUid), it = state.items[itemUid];
         const from = h && it ? holderOf(state, itemUid) : null;
         if (!from) return { ok: false, err: 'missing' };
+        if (it.box) return { ok: false, err: 'sealed' };   // 봉인된 첫 클리어 상자 — 열어야 무기다 (R328)
         const why = I.canEquip(h, it);
         if (why) return { ok: false, err: why };
         const pos = position && positionsOf(it.slot).includes(position) ? position : equipTarget(h, it);
@@ -936,6 +942,7 @@ export function createGameSystem(deps) {
         const it = state.items[itemUid];
         const from = it ? holderOf(state, itemUid) : null;   // 창고 것도 분해된다 [v24 · item_design §1]
         if (!from) return { ok: false, err: 'missing' };
+        if (it.box) return { ok: false, err: 'sealed' };   // 봉인된 첫 클리어 상자는 분해되지 않는다 (R328)
         // 잠금은 **분해만** 막는다 [2026-09-21 · ADR-0185] — 여러 개를 한 번에 지우는 길이 열려 보호 태그가 필요해졌다
         if (it.locked) return { ok: false, err: 'locked' };
         const dust = I.salvageDust(it);
@@ -1024,7 +1031,7 @@ export function createGameSystem(deps) {
         if (!h || !bagOf(state, no)) return { ok: false, err: 'missing' };
         const before = { ...h.equipped };
         const cands = part => bagOf(state, no).map(u => state.items[u])
-            .filter(it => it && it.slot === part && !I.canEquip(h, it) && I.fitsClass(it, h.cls));
+            .filter(it => it && !it.box && it.slot === part && !I.canEquip(h, it) && I.fitsClass(it, h.cls));   // 봉인된 상자는 안 본다 (R328)
         // 반지 · 목걸이가 먼저 — 다섯 칸의 세기가 반지까지 낀 몸으로 서야 다시 눌렀을 때 그대로다
         for (const { id: pos, part } of deps.equipSlots) {
             if (MIGHT_PARTS.has(part) || h.equipped[pos]) continue;
@@ -1065,6 +1072,37 @@ export function createGameSystem(deps) {
         if (!it || !holderOf(state, itemUid)) return { ok: false, err: 'missing' };
         if (on) it.locked = true; else delete it.locked;
         return { ok: true, locked: !!it.locked };
+    }
+
+    /**
+     * 첫 클리어 상자를 연다 [2026-10-23 · R328 · base_expedition_design §1-6] — 상자는 봉인된 무기라(깬 순간 굴렸다 · `grantClearBox`)
+     * 열면 `box` 를 지운다 · **그 칸 그대로** 무기가 된다(칸을 따로 안 먹는다). 보관 두 칸(인벤토리 · 창고)에 있는 상자만 · rng 0
+     */
+    function openBox(state, itemUid) {
+        const it = state.items[itemUid];
+        if (!it?.box || !holderOf(state, itemUid)) return { ok: false, err: 'missing' };
+        delete it.box;
+        return { ok: true, item: itemUid };
+    }
+
+    /** 우편 한 통을 받는다 [2026-10-23 · R328] — 그 우편의 부대 인벤토리 끝으로(없는 번호면 편성 1) · 차 있으면 `bagFull` · rng 0 */
+    function claimMail(state, id) {
+        const at = (state.mail ?? []).findIndex(m => m.id === id);
+        if (at < 0) return { ok: false, err: 'missing' };
+        const m = state.mail[at];
+        const no = bagOf(state, m.no) ? m.no : 1;
+        const bag = bagOf(state, no);
+        if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        bag.push(m.item);
+        state.mail.splice(at, 1);
+        return { ok: true, no };
+    }
+
+    /** 우편을 오래된 것부터 **들어가는 만큼** 받는다 — 인벤토리가 찬 우편은 남는다 · `n` = 받은 수 · `left` = 남은 수 · rng 0 */
+    function claimAllMail(state) {
+        let n = 0;
+        for (const { id } of (state.mail ?? []).slice()) if (claimMail(state, id).ok) n++;
+        return { ok: true, n, left: (state.mail ?? []).length };
     }
 
     /* ── 자동 분해 (item_design §6-5 · R125 · **2026-10-22 개편 R316** — 부대마다 격자) ──
@@ -1179,7 +1217,7 @@ export function createGameSystem(deps) {
 
     // [지금 가방에 적용]이 갈 것 — **부대 `no` 의 인벤토리만**(창고는 옮겨 둔 것이 곧 「남긴다」 · 다른 부대의 것은 안 보이는 칸이다 · v40) · 잠근 것 제외 · 그 부대의 규칙으로
     const autoTargets = (state, no) =>
-        (bagOf(state, no) ?? []).map(u => state.items[u]).filter(it => it && !it.locked && !salvageKeeps(state, no, it));
+        (bagOf(state, no) ?? []).map(u => state.items[u]).filter(it => it && !it.locked && !it.box && !salvageKeeps(state, no, it));   // 봉인된 상자는 안 녹는다 (R328)
 
     /** 지금 적용하면 갈릴 개수 · 가루 · uid(가방 순서) — 창이 이 숫자와 그림을 보여 준다. 상태를 안 바꾼다 */
     function autoSalvagePreview(state, no = 1) {
@@ -1209,7 +1247,7 @@ export function createGameSystem(deps) {
      */
     function upgradeState(state, itemUid) {
         const it = state.items[itemUid];
-        if (!it) return null;
+        if (!it || it.box) return null;   // 봉인된 첫 클리어 상자는 강화 대상이 아니다 (R328)
         const up = it.up ?? 0, max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
         const open = hasFeature(state, 'upgrade_item');   // 제련소가 연다 (R137)
         const peek = cost == null ? null : { ...it, up: up + 1 };
@@ -1232,6 +1270,7 @@ export function createGameSystem(deps) {
     function upgradeItem(state, itemUid) {
         const it = state.items[itemUid];
         if (!it) return { ok: false, err: 'missing' };
+        if (it.box) return { ok: false, err: 'sealed' };   // 봉인된 첫 클리어 상자 (R328)
         if (!hasFeature(state, 'upgrade_item')) return { ok: false, err: 'unbuilt' };
         if (!I.upgradeable(it)) return { ok: false, err: 'noBase' };
         const max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
@@ -2998,6 +3037,46 @@ export function createGameSystem(deps) {
         return cut;
     }
 
+    /* ── 첫 클리어 상자 [2026-10-23 · R328 · base_expedition_design §1-6 · INTERFACE §2-7 · §5] ──
+       그 단에서 처음 깬 칸마다 **봉인된 무기** 한 점을 깬 순간 굴린다 — 나간 인원 중 한 명의 직업 무기군 · 레벨 = 그 장소 보스의 레벨 ·
+       희귀도 = 보스 등급의 장비 가중치에서 바닥 아래를 뺀다. 바닥은 규칙이라 코드에 둔다(「매직 이상 · 챕터보스 칸은 레어 이상」 · §5-3) */
+    const BOX_SALT = 0xB0C5;
+    const BOX_FLOOR = { chapter_boss: 'rare' };   // 그 밖 등급은 'magic'
+    /** 그 장소의 마지막 칸 — 스테이지보스가 서는 칸(I · II 는 정예로 끝난다) · 챕터보스 장소는 칸이 하나다 */
+    const placeLastCell = st => deps.stageOrder.filter(id => deps.stages[id].chapter === st.chapter && deps.stages[id].stage_num === st.stage_num).at(-1) ?? st.stage_id;
+    /** 그 단에서 그 칸의 상자 레벨 = 장소 마지막 칸의 몬스터 레벨 + 보스의 `level_add` (monster_design §7) · rng 0 */
+    const boxLevel = (stageId, diff) => {
+        const st = deps.stages[stageId];
+        return stageLevel(placeLastCell(st), diff) + (deps.monsters[st.boss_monster_idx]?.level_add ?? 0);
+    };
+
+    function grantClearBox(state, run, diff, R) {
+        const st = deps.stages[run.stageId];
+        const party = (run.party ?? []).map(u => heroById(state, u)).filter(Boolean);
+        if (!st || !party.length) return;
+        // 소비 순서 — 영웅 1 → 무기군 1 → `rollGear` 한 점 (INTERFACE §5-2) · 신단과 같은 문법의 따로 선 스트림이라 전투 수열을 안 민다
+        const r = makeRng(deriveSeed(state.seed ^ BOX_SALT, run.seq ?? state.counters.battle));
+        const h = party[Math.floor(r() * party.length)];
+        const own = I.groupsFor(h.cls);
+        const groups = own.length ? own : I.basesAt('weapon', 1);
+        const g = groups[Math.floor(r() * groups.length)];
+        const gr = deps.grades?.[st.boss_grade] ?? {};
+        const rare = gr.gear_rarity_w_rare ?? B.rarity_w_rare;
+        const magic = (BOX_FLOOR[st.boss_grade] ?? 'magic') === 'rare' ? 0 : gr.gear_rarity_w_magic ?? B.rarity_w_magic;
+        const weights = magic + rare > 0 ? { normal: 0, magic, rare } : { normal: 0, magic: 1, rare: 0 };
+        const it = addItem(state, I.rollGear(r, { slots: ['weapon'], ilvl: boxLevel(run.stageId, diff), weaponGroup: g.id, rarityWeights: weights })[0]);
+        it.box = { stageId: run.stageId, difficulty: diff };
+        // 나간 부대의 인벤토리 끝 · 차 있으면 우편함 — 알아서 분해 · 넘침 분해를 안 지난다(드롭이 아니다)
+        const no = bagOf(state, run.preset) ? run.preset : 1;
+        const bag = bagOf(state, no);
+        const mail = bag.length >= capOf(state, 'bag');
+        if (mail) {
+            state.counters.mail = (state.counters.mail ?? 0) + 1;
+            (state.mail ??= []).push({ id: state.counters.mail, item: it.uid, no, stageId: run.stageId, difficulty: diff });
+        } else bag.push(it.uid);
+        R.clearBox = { item: it.uid, mail };
+    }
+
     /**
      * 끝난 라운드 하나를 정산한다 — `advanceRun` · `stepRun` 이 같이 쓴다.
      *   ① **이긴 라운드만**: 골드 → 도감(처치 수) → 드롭(인벤토리 · 넘치면 그 순간 버린다) →
@@ -3086,8 +3165,11 @@ export function createGameSystem(deps) {
             R.won = res.won;
             R.reason = res.reason;
             if (res.fall) R.fall = clone(res.fall);   // 진 런 · 시간 초과의 사실 — 리포트 「왜 졌나」 (SCREEN_DESIGN §4-3 · ADR-0623)
+            // 첫 클리어 상자 — **그 단에서 처음 깬 칸**이면 깬 순간 굴린다 · 깬 기록을 적기 **전에** 본다 (2026-10-23 · R328 · INTERFACE §2-7)
+            const diff = run.difficulty ?? BASE_DIFF;
+            if (res.won && !clearedList(state, diff).includes(run.stageId)) grantClearBox(state, run, diff, R);
             // 깬 기록은 **그 런의 단**에 — 첫 단 = `progress.cleared` · 나머지 = `progress.clearedIn[단]` (2026-10-10 · R236)
-            if (res.won) markCleared(state, run.difficulty ?? BASE_DIFF, run.stageId);
+            if (res.won) markCleared(state, diff, run.stageId);
             // 같이 깬 칸 수 — **칸을 이길 때마다 +1**(나간 인원 그대로 · 처음 깬 칸이든 다시 깬 칸이든) · 진 칸 · 철수 · 끊김은 안 센다 [2026-09-29 사용자 지시 · tactic_card_design §5-8]
             if (res.won) { state.bonds = state.bonds ?? {}; state.bonds[bondKey(run.party)] = bondOf(state, run.party) + 1; }
             run.done = true;
@@ -3303,11 +3385,12 @@ export function createGameSystem(deps) {
      * 관리자 모드 — 그 직업 영웅 한 명을 그 레벨로 로스터 끝에 넣는다 [2026-10-08 사용자 「30레벨 전사, 마법사, 기사 … 키우기 귀찮아서」 · 개발 장치 · SCREEN_DESIGN §10-3].
      *   굴림은 선술집 후보와 같다(`hero.rollHeroOf` — 등급도 굴린다 · 그 영웅이 받을 번호의 전용 스트림) · 고용과 같은 시작 장비 한 벌 ·
      *   레벨은 1 에서 그 레벨까지의 필요 XP 합을 한 번에 준다 — **레벨업을 차례로 거쳐** 마스터리 포인트가 오른 수만큼 붙는다(`grantXp` · 상한 `hero_level_cap`). 골드를 안 쓴다
+     *   `cls` 가 null 이면 메인 직업 중 하나를 그 스트림의 첫 수로 고른다 · `openAll` 을 안 본다 — 로스터 자리만 본다 [2026-10-23 사용자 「1마리씩 … 랜덤하게」 · 「자리있으면 넣어 없으면 넣지마」 · R332]
      */
     function adminHero(state, cls, level) {
-        if (!openAll()) return { ok: false, err: 'admin' };
         if (state.heroes.length >= limitsOf(state).roster) return { ok: false, err: 'roster' };
-        const rolled = H.rollHeroOf(makeRng(deriveSeed(state.seed ^ 0xAD31, state.counters.hero + 1)), cls);
+        const rng = makeRng(deriveSeed(state.seed ^ 0xAD31, state.counters.hero + 1));
+        const rolled = H.rollHeroOf(rng, cls ?? H.mainClasses[Math.floor(rng() * H.mainClasses.length)]);
         if (!rolled) return { ok: false, err: 'class' };
         const h = addHero(state, rolled);
         equipStarter(state, h, recruitRng(state));
@@ -3457,19 +3540,27 @@ export function createGameSystem(deps) {
         return { ok: true, id: b.id, gold: b.gold };
     }
 
-    /**
-     * 상단 물약 1개를 산다 [2026-09-28 사용자 지시 · base_expedition §2-6] — 골드를 내고 **재고를 1 올린다**(`makePotion` 과 같은 자리).
-     * 거절 `unbuilt` → `missing`(안 파는 물약) → `gold` — 거절이면 아무것도 안 바뀐다 · rng 0 · 매진 없음
-     */
-    function shopPotionBuy(state, potionId) {
-        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+    /** 상단 물약 `n`개의 값(골드) — 안 파는 물약 · `n` 이 양의 정수가 아니면 null · 사기 줄의 가격이 이것이고 `shopPotionBuy` 가 같은 값을 낸다 (2026-10-23) */
+    function shopPotionGold(potionId, n = 1) {
         const p = potionById(potionId);
-        if (!p || p.shopGold == null) return { ok: false, err: 'missing' };
-        if (state.resources.gold < p.shopGold) return { ok: false, err: 'gold' };
-        state.resources.gold -= p.shopGold;
+        return p && p.shopGold != null && Number.isInteger(n) && n > 0 ? p.shopGold * n : null;
+    }
+
+    /**
+     * 상단 물약 `n`개를 산다 [2026-09-28 사용자 지시 · base_expedition §2-6] — 골드를 내고 **재고를 n 올린다**(`makePotion` 과 같은 자리).
+     * 거절 `unbuilt` → `missing`(안 파는 물약) → `gold` — 거절이면 아무것도 안 바뀐다 · rng 0 · 매진 없음.
+     * `n` 은 한 번에 사는 수(기본 1 · 2026-10-23 사용자 「x10, x50, x100」) — **다 사거나 하나도 안 산다**(n 개 값이 모자라면 `gold`) · `gold` 는 낸 합
+     */
+    function shopPotionBuy(state, potionId, n = 1) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const gold = shopPotionGold(potionId, n);
+        if (gold == null) return { ok: false, err: 'missing' };
+        const p = potionById(potionId);
+        if (state.resources.gold < gold) return { ok: false, err: 'gold' };
+        state.resources.gold -= gold;
         state.potions = state.potions ?? {};
-        state.potions[p.id] = (state.potions[p.id] ?? 0) + 1;
-        return { ok: true, id: p.id, gold: p.shopGold, have: state.potions[p.id] };
+        state.potions[p.id] = (state.potions[p.id] ?? 0) + n;
+        return { ok: true, id: p.id, n, gold, have: state.potions[p.id] };
     }
 
     /**
@@ -4491,7 +4582,7 @@ export function createGameSystem(deps) {
         heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexSteps, codexOptionOf, codexLineOf, codexLadder, codexOptions, codexExpOf,
         skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
-        equipTarget, equip, unequip, autoEquip, salvage, setItemLock, salvageView, setSalvageCell, setSalvageCells, setSalvageBase, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
+        equipTarget, equip, unequip, autoEquip, salvage, setItemLock, openBox, claimMail, claimAllMail, salvageView, setSalvageCell, setSalvageCells, setSalvageBase, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot,
         stageUnlocked, chapterOpen, chapterGate, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
@@ -4499,7 +4590,7 @@ export function createGameSystem(deps) {
         difficultyState, selectDifficulty, stageLevel, stageCleared,
         runLock, runTactics, runTacticsIf, runBuffs, runCombat,
         tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
-        shopVisit, shopState, shopBuy, shopPotionBuy, shopBlueprintBuy, shopBlueprintPool, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
+        shopVisit, shopState, shopBuy, shopPotionBuy, shopPotionGold, shopBlueprintBuy, shopBlueprintPool, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         visitSettle, visitState,
         joinState, joinAdd, joinHire, joinDrop,

@@ -1,8 +1,9 @@
 /**
  * devpalette.js — 상단바 오른쪽 끝 `⚙` 판 (SCREEN_DESIGN §2-2 · §10-1 · ADR-0414)
  *
- * 판 머리에 **탭 둘** — **설정**(게임 기능 — 스킬 이펙트 · 피격 반응. 탭 이름과 속은 app.js 가 넘긴다 · 다국어) ·
- *   **Palette**(개발용 색 피커). 열면 설정 탭이고 페이지를 연 동안은 마지막 탭으로 연다. 판은 창 레이어가 아니다 — `⚙` 이나 × 로만 여닫는다.
+ * 판 머리에 **탭 셋** — **설정**(게임 기능 — 스킬 이펙트 · 피격 반응. 탭 이름과 속은 app.js 가 넘긴다 · 다국어) ·
+ *   **Palette**(개발용 색 피커) · **Save**(개발용 세이브 슬롯 — 덧붙는 탭으로 app.js 가 넘긴다 · 속은 devsave.js · §10-4 · 2026-10-23).
+ *   열면 설정 탭이고 페이지를 연 동안은 마지막 탭으로 연다. 판은 창 레이어가 아니다 — `⚙` 이나 × 로만 여닫는다.
  *   판은 **한 장(`#stage`) 안**에 선다 — 게임과 함께 줄고 는다 (ADR-0481).
  *
  * **Palette** — 배경 RGB · 글자 3단 · 투명도 3축을 실시간으로 바꿔 보고,
@@ -124,6 +125,7 @@ let state = null;
 let panel = null;
 let ui = null;         // 판 안의 노드 참조 — 다시 그리지 않으므로 계속 살아 있다
 let settings = null;   // 설정 탭 { label, body } — app.js 가 상단바를 그릴 때마다 넘긴다(언어가 바뀌면 새 이름)
+let extras = [];       // Palette 뒤에 덧붙는 탭 [{ id, label, body }] — 지금은 Save(devsave.js · §10-4) 하나
 let tab = 'set';       // 열 탭 — 열면 설정 · 페이지를 연 동안은 마지막에 고른 탭
 
 /** 부팅 직후 1회 — 저장된 값이 있으면 되살린다 */
@@ -136,11 +138,13 @@ export function initDevPalette() {
 }
 
 /** 상단바가 다시 그려질 때마다 호출된다 — 버튼은 매번 새로 붙는다 (app.js 의 전체 다시 그림).
-    `set` = 설정 탭 { label, body() } — 판이 열려 있으면 설정 탭만 새로 선다(언어 · 값). 슬라이더는 안 건드린다 */
-export function mountDevPalette(container, set = null) {
+    `set` = 설정 탭 { label, body() } — 판이 열려 있으면 설정 탭만 새로 선다(언어 · 값). 슬라이더는 안 건드린다.
+    `more` = Palette 뒤에 덧붙는 탭 [{ id, label, body() }] — 설정 탭처럼 판이 열려 있으면 속이 새로 선다 */
+export function mountDevPalette(container, set = null, more = []) {
     initDevPalette();
     injectStyle();
     settings = set;
+    extras = more;
     const b = document.createElement('button');
     b.className = 'btn sm dp-btn';
     b.textContent = '⚙';
@@ -182,8 +186,10 @@ function buildPanel() {
     if (!settings) tab = 'pal';
     // 탭 둘은 **열 때 한 번** 만들고 고를 때는 숨기기만 한다 — Palette 탭을 다시 그리면 드래그가 끊긴다(위 ⚠)
     panel.innerHTML = `
-        <div class="dp-h"><span class="dp-tabs">${settings ? '<button class="dp-tab" data-tab="set"></button>' : ''}<button class="dp-tab" data-tab="pal">Palette</button></span><button class="dp-x" title="close">×</button></div>
+        <div class="dp-h"><span class="dp-tabs">${settings ? '<button class="dp-tab" data-tab="set"></button>' : ''}<button class="dp-tab" data-tab="pal">Palette</button>${
+            extras.map(x => `<button class="dp-tab" data-tab="${x.id}">${x.label}</button>`).join('')}</span><button class="dp-x" title="close">×</button></div>
         ${settings ? '<div class="dp-pane dp-set" data-pane="set"></div>' : ''}
+        ${extras.map(x => `<div class="dp-pane" data-pane="${x.id}"></div>`).join('')}
         <div class="dp-pane" data-pane="pal">
         <div class="dp-sec">BACKGROUND</div>
         <label class="dp-row dp-pick"><span class="dp-k">#</span>
@@ -233,14 +239,16 @@ function showTab() {
     panel.querySelectorAll('.dp-pane').forEach(p => { p.hidden = p.dataset.pane !== tab; });
 }
 
-/** 설정 탭 — 이름과 속을 새로 세운다. 줄 둘뿐이라 통째로 다시 만들어도 끊길 드래그가 없다 */
+/** 설정 탭 — 이름과 속을 새로 세운다. 줄 둘뿐이라 통째로 다시 만들어도 끊길 드래그가 없다 · 덧붙는 탭(Save)도 같다 */
 function refreshSettings() {
-    if (!panel || !settings) return;
-    const t = panel.querySelector('.dp-tab[data-tab="set"]');
-    const pane = panel.querySelector('.dp-pane[data-pane="set"]');
-    if (!t || !pane) return;
-    t.textContent = settings.label;
-    pane.replaceChildren(settings.body());
+    if (!panel) return;
+    const t = settings && panel.querySelector('.dp-tab[data-tab="set"]');
+    const pane = settings && panel.querySelector('.dp-pane[data-pane="set"]');
+    if (t && pane) {
+        t.textContent = settings.label;
+        pane.replaceChildren(settings.body());
+    }
+    for (const x of extras) panel.querySelector(`.dp-pane[data-pane="${x.id}"]`)?.replaceChildren(x.body());
 }
 
 /**

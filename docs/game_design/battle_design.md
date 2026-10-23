@@ -180,7 +180,7 @@ attack_type = physical | fire | cold | lightning | poison
 | 쪽 | 자리의 출처 |
 |---|---|
 | 영웅 | **편성 화면의 진형 템플릿** — 전열·후열 **2랭크** (`formation_template.csv`) |
-| 몬스터 | **`monster.csv:role`** 이 랭크를 정한다 (`monster_role.csv:rank`) — 후열 = `ranged` · `caster` · `skirmish`, 나머지는 전열 |
+| 몬스터 | **`monster.csv:role`** 이 랭크를 정한다 (`monster_role.csv:rank`) — 후열 = `ranged` · `caster` · `skirmish` · `boss_back`, 나머지는 전열 · 보스는 전열(`boss`)이고 **마법사 · 궁수 · 사제 챕터보스만 후열**(`boss_back` — 직업 줄을 따른다 · 2026-10-23 · monster_design.md §4) |
 
 **대상 선택**
 
@@ -355,7 +355,7 @@ attack_type = physical | fire | cold | lightning | poison
 | defense | **최대 HP**(건강 — 레벨업 증가분만) · 물리 방어 · **원소 저항 4종** · 최대 저항 증가 · 피해 감소 · 반사 피해 | 회피는 08-26 삭제 |
 | sustain | 흡혈 · HP 재생 | 라운드 간 회복이 없어 **런 깊이를 결정**. **두 축은 방향이 반대다** — 흡혈은 직격 최종 피해 비례(딜이 곧 회복 · 고강도 순간 소모를 상쇄), 재생은 초당(전투가 길수록 총량 · 저강도 지속 소모를 상쇄) |
 | tempo | **행동 주기**(민첩) · **타격 회복**(09-16 — §2-3) · 쿨타임 감소 | **건강은 tempo·sustain 에 없고 defense 의 최대 HP 에 있다**(09-10) |
-| utility | 드랍률 · 골드 획득 — **운 계수** | **전투 계산 밖** — 전투력 vs 파밍 효율 맞바꾸기 축 |
+| utility | 드랍률 · 골드 획득 — **운 계수** | **전투 계산 밖** — 전투력 vs 파밍 효율 맞바꾸기 축 · 탐욕 마스터리 T3 만 이 수치를 데미지 · 체력 · 쿨타임 감소로 바꾼다(skill_design.md §3-3 · 10-23) |
 
 - **최대 HP 시작값은 직업마다** `[class.csv:hp_base]`(빈 칸인 직업은 `[balance.csv:hero_hp_base]` · **2026-10-02 사용자** — hero_design.md §4-1) — **시작값은 능력치와 무관하고 레벨업 증가분이 건강을 탄다**(09-10). 영웅끼리도 레벨 1 이 직업마다 다르다(10-02). **몬스터는 레벨 1 바탕이 따로다** `[balance.csv:monster_hp_base]` [2026-09-14 사용자 지시] — 성장분은 같은 식이다 (monster_design.md §5)
 - 전투 능력치는 계산 결과이므로 **세이브에 저장하지 않는다**
@@ -685,4 +685,4 @@ attack_type = physical | fire | cold | lightning | poison
 
 ---
 
-*마지막 업데이트: 2026-10-22*
+*마지막 업데이트: 2026-10-23*

@@ -135,6 +135,9 @@ export const SKILL_ART = {
     pri_diamondbody: { buff: { file: 'pri_diamondbody', motion: 'shell', size: 130, duration: 600 } },
     pri_sweep: { hit: { file: 'pri_sweep', motion: 'sweep', size: 140, duration: 480 } },
     pri_counter: { buff: { file: 'pri_counter', motion: 'burst', size: 132, duration: 560 } },
+
+    // 몬스터 — 소환은 불려 나온 · 되살아난 카드의 초상에 오오라(마이트)와 같은 마법진이 붉게 · 별은 뒤집혀 선다 · 크기 · 움직임도 오오라와 같다(ADR-0728).
+    pri_summon: { call: { file: 'pri_summon', motion: 'orbit', size: 90, duration: 620 } },
 };
 
 /* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).

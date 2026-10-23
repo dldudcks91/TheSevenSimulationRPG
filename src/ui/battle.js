@@ -1117,7 +1117,11 @@ function castSkill(state, u, ev) {
 const slotReady = (r, dflt) => r === null ? Infinity : (r ?? dflt);
 const strikeLabel = id => id ? L(skillInfo(id).name) : t('bt.basicAttack');
 
-/* ───────── 누적 데미지 — 이벤트의 dmg 를 더할 뿐이다. 재생기는 계산하지 않는다 (정산은 game_logic) ───────── */
+/* ───────── 누적 데미지 — 이벤트가 실어 온 값을 더할 뿐이다. 재생기는 계산하지 않는다 (정산은 game_logic) ───────── */
+
+/** 판에 더하는 값 = **실제로 깎은 값** — `dmg` 에서 넘친 몫(`ov`)을 빼고 처형으로 지운 체력(`cull`)을 넣는다. 리포트 기여 표와 같은 값이다
+    (ADR-0729 · INTERFACE §2-6 · R326). 피해 숫자 · 로그 줄은 `dmg` 그대로 — 넘친 몫까지 */
+const dealtOf = ev => ev.dmg - (ev.ov ?? 0) + (ev.cull ?? 0);
 
 /** **영웅만** 쌓는다 — 판이 영웅만 든다 (SCREEN_DESIGN §4-2 · ADR-0149). 항목은 **장부 둘** — 가한 피해(`dealt`) · 받은 피해(`taken`) (ADR-0252).
     가한 피해 줄의 키는 **id** 다 — 스킬 id · 기본 공격 `basic` · 반사 `reflect`. 받은 피해 줄의 키는 **때린 몬스터 id** 다(정예도 같은 줄 — 적 이름이 등급을 안 가른다).
@@ -1581,7 +1585,7 @@ function apply(state, root, opts, ev) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
                 logLine(state, root, a.side, 'hit', L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
-                addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
+                addDmg(state, a, d, ev.s ?? 'basic', dealtOf(ev), ev.ty);
             }
             break;
         }
@@ -1592,7 +1596,7 @@ function apply(state, root, opts, ev) {
             fxReflect(state, d);   // 피격 반응만 — 반사는 스킬이 아니다 (ADR-0410)
             if (a && d) {
                 logLine(state, root, a.side, 'reflect', L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
-                addDmg(state, a, d, 'reflect', ev.dmg);
+                addDmg(state, a, d, 'reflect', dealtOf(ev));
             }
             break;
         }
@@ -1604,7 +1608,7 @@ function apply(state, root, opts, ev) {
             fxBlast(state, d, ev);   // 자폭은 스킬이라 이펙트가 선다 · 피격 반응도 (ADR-0409 · ADR-0410)
             if (a && d) {
                 logLine(state, root, a.side, 'hit', L(a.name), ev.s ? dmgIcon(ev.s) : '', strikeLabel(ev.s), L(d.name), ev.dmg);   // 주체는 터진 쪽 (반사와 같은 자리)
-                addDmg(state, a, d, ev.s, ev.dmg);
+                addDmg(state, a, d, ev.s, dealtOf(ev));
             }
             break;
         }
@@ -1658,7 +1662,7 @@ function apply(state, root, opts, ev) {
             if (a && d) {
                 // 이름 = 상태이상 · 오오라 피해(`k = pulse` — 홀리 파이어 · 2026-10-16)는 상태이상이 아니라 그 스킬 이름이다
                 logLine(state, root, a.side, 'dot', L(a.name), ev.s ? dmgIcon(ev.s) : '', ev.k === 'pulse' ? strikeLabel(ev.s) : t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
-                addDmg(state, a, d, ev.s ?? 'basic', ev.dmg, ev.ty);
+                addDmg(state, a, d, ev.s ?? 'basic', dealtOf(ev), ev.ty);
             }
             break;
         }
@@ -1670,7 +1674,7 @@ function apply(state, root, opts, ev) {
             const enemy = u.side === 'enemy';
             // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
             logLine(state, root, enemy ? 'party' : 'enemy', enemy ? 'slain' : 'downed', L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed'));
-            popup(state, u, t(enemy ? 'pop.slain' : 'pop.downed'), 'dead-tag');
+            if (!enemy) popup(state, u, t('pop.downed'), 'dead-tag');   // 적이 쓰러질 땐 글자가 없다 — 카드가 보인다 · 로그 줄은 그대로 (ADR-0726)
             fxDown(state, u);   // 피격 반응 (ADR-0410)
             break;
         }

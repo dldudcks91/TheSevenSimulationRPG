@@ -464,6 +464,8 @@ export function sheetRowsHtml(rows, c, base = null) {
 
 /** 저항 행의 상한 = 기본 + 최대 저항 증가 + **그 원소의** 최대 저항 증가(투구 시기 칸 · `res_max_el` · 2026-09-18) — 곡선은 `formula.resCap` 하나다 */
 const resCapOf = (c, id) => SYS.formula.resCap(c?.res_max_bonus ?? 0, c?.res_max_el?.[id.slice(4)] ?? 0);   // `res_fire` → `fire`
+/** 저항 행의 값 = **상한에서 자른 값** — 장비 · 스킬로 상한을 넘겨도 상한을 찍는다 [2026-10-23 사용자 지시 · ADR-0736]. 자르는 식은 전투와 같은 `formula.appliedResist` */
+const resShownOf = (c, id) => SYS.formula.appliedResist(c?.[id], c?.res_max_bonus ?? 0, c?.res_max_el?.[id.slice(4)] ?? 0);
 
 /** 줄 이름 — 속도 행은 마법 무기(평타 없음)를 든 유닛이면 「캐스팅 속도」 [2026-10-03 · R202 · ADR-0492] — 값은 같은 주기다 */
 const rowName = (s, c) => (s.fx ? s.name() : s.id === 'action_period' && c?.basic_attack === false ? t('sk.castSpeed') : L(s));
@@ -480,7 +482,7 @@ function rowCells(s, c) {
         : s.id === 'defense' && has ? t('st.mitigation', { p: Math.round(SYS.formula.mitigation(v) * 100) }) : '';
     // 물리 방어는 정수로 반올림해 찍는다 (2026-09-15 사용자 지시 · SCREEN_DESIGN §6) — 감쇠율은 위에서 반올림 전 값으로 냈다.
     //   fmt 로 가르지 않는다: 같은 `n` 인 HP 재생(0.05)까지 0 이 된다
-    const shown = s.id === 'defense' && has ? Math.round(v) : v;
+    const shown = !has ? v : s.id === 'defense' ? Math.round(v) : RES_ROWS.includes(s.id) ? resShownOf(c, s.id) : v;
     // 피해 감소 = **고정 / %** 한 줄 [2026-09-27 사용자 지시 · SCREEN_DESIGN §6] — 고정 피해 감소(`option_fx.drFlat` · 모든 감소 뒤에 뺀다)는 제 줄을 잃었다
     return [s.id === 'damage_reduction' && has ? `${c.option_fx?.drFlat ?? 0} / ${fmtCombat(s, v)}` : fmtCombat(s, shown), extra];
 }
@@ -495,10 +497,10 @@ function fxText(s, c) {
         : on.length ? on.map(([n, v]) => t('st.fx.part', { n, v: fmtCombat(s, v) })).join(' · ') : '—';
 }
 
-/** 줄을 이루는 값 — 방향을 묻는 단위다(착용 델타 · 미리보기). 묶은 줄은 조각마다 · 피해 감소는 고정 + % · 저항은 값 + 상한 */
+/** 줄을 이루는 값 — 방향을 묻는 단위다(착용 델타 · 미리보기). 묶은 줄은 조각마다 · 피해 감소는 고정 + % · 저항은 상한에서 자른 값 + 상한 (ADR-0736) */
 const rowVals = (s, c) => (s.fx ? fxParts(s, c).map(([, v]) => v)
     : s.id === 'damage_reduction' ? [c?.option_fx?.drFlat ?? 0, c?.[s.id]]
-        : RES_ROWS.includes(s.id) ? [c?.[s.id], resCapOf(c, s.id)] : [c?.[s.id]]);
+        : RES_ROWS.includes(s.id) ? [c?.[s.id] === undefined ? undefined : resShownOf(c, s.id), resCapOf(c, s.id)] : [c?.[s.id]]);
 /**
  * 줄의 방향 — 값마다 `formula.statBetter` 를 묻고 모은다: 전부 같거나 좋아짐 → `1` · 전부 같거나 나빠짐 → `-1` · 섞임 → `0`.
  * 좋고 나쁨은 로직이 답한다(공격 속도는 초라 줄어야 좋다) — 렌더러는 크기를 견주지 않는다 (ADR-0618)
@@ -886,8 +888,11 @@ function codexCandCard(m, grade) {
     const total = stats ? D.heroAttributes.reduce((a, s) => a + (stats[s.id] ?? 0), 0) : '—';
     // 역할 줄 = 직업의 역할 + **그 몬스터의 무기군** — 영웅은 직업이 드는 무기군 전부를 적지만 몬스터는 제 무기군이 하나다
     const cls = D.classes.find(c => c.id === row?.cls);
-    const wg = D.weaponGroups?.[row?.weapon_group];
-    const role = [cls ? L(cls.role) : '', wg ? L(wg) : ''].filter(Boolean).join(' · ');
+    //   무기군 `-` = 그 직업 본편 무기군 중 판마다 굴린다(2026-10-23 · R324) — 그때는 영웅처럼 그 직업 무기군을 잇는다
+    const wgs = row?.weapon_group === '-'
+        ? D.weaponGroupList.filter(g => g.release === 'main' && g.classes.includes(row.cls))
+        : [D.weaponGroups?.[row?.weapon_group]].filter(Boolean);
+    const role = [cls ? L(cls.role) : '', wgs.map(g => L(g)).join(' / ')].filter(Boolean).join(' · ');
     // 스킬은 **정해진 칸의 그림만 가로로** — 고유 → 나이트메어 2칸(모서리 표시) · 이름 없음 · 목록 카드와 같은 줄(ADR-0666) · 보스의 한 칸 더는 판마다 굴려 정해진다(ADR-0233)
     const skills = monsterSkillIcons(m.id, 'ng-skill', 'ico sk-ico');
     // 초상은 **영웅과 같은 네모 칸**(`.hero-face` — `app.js:heroFace` 와 같은 꼴) — 이 장은 선술집 영웅 카드 그대로라

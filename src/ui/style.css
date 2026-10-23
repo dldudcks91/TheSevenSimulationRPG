@@ -386,6 +386,18 @@ html, body { height: 100%; overflow: hidden; }
 .resources .exp-time b { font-variant-numeric: tabular-nums; }
 /* 언어 토글 — 리소스 줄 끝에 붙는다 */
 .lang-btn { margin-left: 4px; min-width: 46px; }
+/* 우편함 — 골드 바로 오른쪽 편지봉투 · 우편이 있으면 오른쪽 위 개수 배지 (SCREEN_DESIGN §2 「상단바」 · ADR-0732) */
+.mail-btn {
+    position: relative; width: 30px; height: 30px; padding: 2px; align-self: center;
+    background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer;
+}
+.mail-btn:hover { border-color: var(--border-highlight); background: var(--surface-5); }
+.mail-btn img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); opacity: .7; }
+.mail-btn.has img { opacity: 1; }
+.mail-btn .mail-n {
+    position: absolute; top: -4px; right: -6px; min-width: 16px; padding: 0 4px; border-radius: 8px;
+    background: var(--color-error); color: var(--text-primary); font-size: var(--fs-xs); line-height: 16px; text-align: center;
+}
 /* 플래시 — 한 장 오른쪽 아래의 카드 [2026-10-21 사용자 지시 · ADR-0692 · SCREEN_DESIGN §2 「플래시」].
    한 장 오른쪽 가장자리 밖에서 튀어나와 서 있다가 다시 들어간다. **길이는 `app.js:TOAST_MS` 가 준다**(인라인 animation-duration) — 여기는 들고 나기의 **몫**만 든다.
    카드는 세로로 쌓인다 — 새 카드가 맨 아래(모서리)에 붙고 위의 카드는 밀려 오른다. 몇 장까지인지는 `app.js:TOAST_MAX`.
@@ -2121,7 +2133,7 @@ html, body { height: 100%; overflow: hidden; }
     animation: pop-up-r .9s ease-out forwards; white-space: nowrap;
     text-shadow: 0 1px 2px #000;
 }
-/* 피해 숫자는 크다 [2026-09-28 사용자 지시 · ADR-0407 → 2026-10-18 한 단 더 · ADR-0657] — 13 → 15 → 18. 글자 팝업(빗나감 · 반격 · 처치 · 회복)은 그대로.
+/* 피해 숫자는 크다 [2026-09-28 사용자 지시 · ADR-0407 → 2026-10-18 한 단 더 · ADR-0657] — 13 → 15 → 18. 글자 팝업(빗나감 · 반격 · 전투 불능 · 회복)은 그대로.
    색은 **피해 종류 색** — 로그의 피해 숫자와 같은 토큰(`--dt-*`) [2026-09-28 사용자 지시 · ADR-0408]. 종류가 없는 피해(반사 · 자폭)는 무채색 기본이다.
    때린 쪽 · 맞은 쪽을 색으로 가르지 않는다(옛 `--dmg-out` 연분홍 / `--dmg-in` 빨강 폐지 — 카드 자리가 든다) · 치명도 같은 색이고 크기만 크다(옛 치명 노랑 폐지) */
 .unit.v2 .pop:not(.lvup) { top: 33px; }
@@ -2825,6 +2837,19 @@ html, body { height: 100%; overflow: hidden; }
 .btn.seg-lock:hover { border-color: var(--border-secondary); background: var(--bg-tertiary); }
 .btn.seg-lock .lock-ico { display: inline-flex; flex: 0 0 auto; }
 .btn.seg-lock .lock-ico svg { width: 1em; height: 1em; }
+/* 부서진 글자 챕터 — 이번 버전이 안 여는 장(`chapterGate` 가 null · 원정 챕터 세그먼트 · SCREEN_DESIGN §4-1 · ADR-0739). 자물쇠 없이 꺼진 버튼이고,
+   흐림은 여느 꺼진 버튼(.4)보다 옅다 — 부서진 모양이 읽혀야 한다. 글자 전체에 `#fx-crumble`(index.html)이 걸리고,
+   렌더러가 한 자씩 감싼 `<i>` 의 **끝 넷이 차례로 기울며 내려앉아 흐려지고** 끝 셋은 더 큰 조각 필터를 받는다 — 앞(장 번호)은 읽힌다 */
+.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.btn.seg-crumble:disabled { opacity: .7; }
+.btn.seg-crumble:hover { border-color: var(--border-secondary); background: var(--bg-tertiary); }
+.seg-crumble .crumble { display: inline-block; filter: url(#fx-crumble); }
+.seg-crumble .crumble > i { display: inline-block; font-style: normal; white-space: pre; }
+.seg-crumble .crumble > i:nth-last-child(1) { transform: translate(3px, 5px) rotate(32deg); opacity: .3; filter: url(#fx-crumble-1); }
+.seg-crumble .crumble > i:nth-last-child(2) { transform: translate(1.5px, 3px) rotate(-16deg); opacity: .5; filter: url(#fx-crumble-2); }
+.seg-crumble .crumble > i:nth-last-child(3) { transform: translate(.5px, 1.6px) rotate(9deg); opacity: .7; filter: url(#fx-crumble-3); }
+.seg-crumble .crumble > i:nth-last-child(4) { transform: translateY(.7px) rotate(-5deg); opacity: .85; }
+.seg-crumble .crumble > i:nth-last-child(5) { transform: rotate(2deg); }
 /* 난이도 탭 — 원정 목록 패널 윗변에 붙은 폴더 탭(SCREEN_DESIGN §4-1 · ADR-0596 이 ADR-0586 의 세그먼트 줄을 대체).
    **패널의 윗선은 이 줄이 긋는다** — 틈(`.dt-gap` · 첫 틈은 패널 가로 여백만큼) · 남은 자리(`.dt-fill`) · 안 고른 탭의 아랫변이 한 선을 잇고,
    고른 탭은 아랫변이 비어 그 자리에서만 선이 끊긴다 → 탭 안과 패널 안이 이어진다. 패널(`.diff-panel`)은 윗선이 없다.
@@ -3427,6 +3452,8 @@ html, body { height: 100%; overflow: hidden; }
 }
 .inv-cell.filled:hover { background: var(--surface-5); }
 .inv-icon { font-size: 20px; line-height: 1; }
+/* 첫 클리어 상자 — 등급 테두리 없이 중립 테두리 · 그림만 (SCREEN_DESIGN §6 · ADR-0731) */
+.inv-cell.box { border-color: var(--border-highlight); }
 
 /* 유니크는 은은하게 빛난다 */
 .inv-cell.shine { animation: shine 2.4s ease-in-out infinite; }
@@ -3869,8 +3896,9 @@ html, body { height: 100%; overflow: hidden; }
    ⚠ 기준은 **창이 아니라 카드**다 [개정 2026-09-10 · ADR-0076] — ~~`9.5vw`~~ 는 창을 봐서, 같은 `.ng-card` 인데도
    시작 화면(`.ng-wrap` 이 1060px 에서 자른다 → 카드 343px)과 선술집(패널 전폭 → 카드 378px)에서 **초상만 같은 137px** 이었다.
    카드는 10% 넓은데 얼굴은 그대로라 「카드에서 가장 큰 조각」이 선술집에서만 풀렸다. `cqw` 는 카드 안쪽 폭의 %라
-   두 화면 모두 **44%** 로 같다(시작 136px · 선술 151px). 상한 152px 은 그대로 — 넓은 창에서 무한정 크지 않는다 */
-.ng-head .hero-face { width: clamp(96px, 44cqw, 152px); height: clamp(96px, 44cqw, 152px); }
+   두 화면 모두 **44%** 로 같다(시작 136px · 선술 151px). 상한 152px 은 그대로 — 넓은 창에서 무한정 크지 않는다.
+   **41%** 로 줄였다 [2026-10-23 · ADR-0734] — 오른쪽 열을 넓혀 영어 칩 셋(`Normal Gluttony Warrior`)이 한 줄에 서게 한다 */
+.ng-head .hero-face { width: clamp(96px, 41cqw, 152px); height: clamp(96px, 41cqw, 152px); }
 .ng-id { min-width: 0; display: flex; flex-direction: column; }
 /* 정체성은 **두 줄**이다 — 칩 줄(등급 + 죄종) 위, 이름 아래 [개정 2026-09-08 사용자 지시].
    ~~이름 + 칩 둘을 한 줄에~~ (2026-09-01) 는 영어에서 이름을 상시로 잘랐다: 3열 카드의 좁은 폭에
@@ -3878,27 +3906,34 @@ html, body { height: 100%; overflow: hidden; }
    이름이 제 줄을 통째로 쓰면 말줄임이 거의 안 걸리고, §5 관전 카드가 09-07 에 간 길(신원 윗줄 · 이름 아랫줄)과
    문법이 같아진다. 칩 둘이 나란히 서는 것은 그대로다 (SCREEN_DESIGN §3) */
 /* 칩이 셋(등급 · 종족 → 죄종 → 직업 · ADR-0724)이라 영어는 좁은 카드에서 줄이 모자란다(`Undead Gluttony Warrior` — 도감 카드 약 27px) —
-   칩을 자르지 않고 **다음 줄로 접는다**. 한국어는 한 줄에 든다 */
-.ng-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 6px; line-height: 1.3; }
-.ng-chips .tier-chip, .ng-chips .sin-chip, .ng-chips .cls-chip { flex: 0 0 auto; }
+   칩을 자르지 않고 **다음 줄로 접는다**. 한국어는 한 줄에 든다.
+   영웅 카드는 영어도 **한 줄**이다 [2026-10-23 · ADR-0734] — 칩 줄 안에서만 칩 여백 · 간격을 6 → 4px 로 좁히고 초상을 41% 로 줄였다
+   (가장 긴 Normal · Gluttony · Warrior 145px · 열 155px). 접기는 도감 몬스터 장(초상 112px 고정)의 안전망으로 남는다 */
+.ng-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 4px; line-height: 1.3; }
+.ng-chips .tier-chip, .ng-chips .sin-chip, .ng-chips .cls-chip { flex: 0 0 auto; padding: 0 4px; }
 /* 칩 줄과 이름 사이는 **살짝 띄운다** (2026-09-08 사용자 지시) — 붙어 있으면 두 줄이 한 덩어리로 읽혀
    「무엇인가(칩) / 누구인가(이름)」가 안 갈린다. 층을 가르는 최소값이라 4px 이고 그 이상은 카드가 길어진다 */
-.ng-name { line-height: 1.3; min-width: 0; margin-top: 4px; }
+/* 레벨은 **이름 오른쪽**이다 [2026-10-23 사용자 지시 · ADR-0727] — 글자 아랫선을 맞추고, 긴 이름은 이름만 말줄임으로 준다(`Lv.n` 은 안 준다).
+   도감 몬스터 장은 `.ng-lv` 가 없어 이름 혼자 선다 */
+.ng-name { line-height: 1.3; min-width: 0; margin-top: 4px; display: flex; align-items: baseline; gap: 6px; }
+/* 영웅 후보 카드는 **이름 + 무기군 덩어리가 칩 줄과 스킬 칸 사이 가운데**다 [2026-10-23 사용자 「이름을 좀 더 아래로 … 너무 높아서」 · ADR-0735] —
+   위 여백 `auto` 가 스킬 칸의 `margin-top: auto` 와 남는 자리를 반씩 나눈다. 4px 은 padding 으로 남겨 최소를 지킨다.
+   스킬 칸이 없으면 이름이 바닥까지 내려가므로 있을 때만 · 도감 몬스터 장(`.cx-cand`)은 칩 줄 바로 아래 그대로 */
+.ng-card:not(.cx-cand) .ng-id:has(> .ng-skill) > .ng-name { margin-top: auto; padding-top: 4px; }
 .ng-name > b {
-    display: block;
+    display: block; min-width: 0;
     font-weight: normal; font-size: var(--fs-lg);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.ng-cls { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
-/* 역할/무기군 줄 — **직업 줄 바로 아래에 붙는다** [2026-09-18 사용자 지시 · ADR-0156]. 제 줄 수만 쓴다 —
-   영어는 다섯 직업 중 셋이 두 줄로 접히는데(「Ranged Physical · Bow / Crossbow」) 두 줄이어도 오른쪽 열이 초상 높이 안에
-   든다(아래 스킬 칸이 낮아서 · ADR-0159). 열이 초상보다 짧으면 머리 높이는 늘 초상이 정해 세 장이 어긋나지 않는다 */
+.ng-lv { flex: 0 0 auto; font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; }
+/* 무기군 줄 — **이름 줄 바로 아래에 붙는다** [2026-09-18 사용자 지시 · ADR-0156]. 역할 이름은 걷었다 [2026-10-23 · ADR-0730] —
+   `역할 · 무기군` 일 땐 영어 다섯 직업 중 셋이 두 줄로 접혔다. 무기군만이면 가장 긴 `Greatsword / Spear` 도 한 줄이다.
+   열이 초상보다 짧으면 머리 높이는 늘 초상이 정해 세 장이 어긋나지 않는다 */
 .ng-role { font-size: var(--fs-xs); line-height: 1.35; }
 /* 영어만 **이름 · 직업 · 역할 줄 간격을 좁힌다** [2026-09-18 · ADR-0160] — 스킬 그림이 49px 로 커져, 역할이 두 줄인
    카드(다섯 직업 중 셋)는 이대로면 열이 초상보다 약 12px 길다. 칩 줄 · 이름 사이 4px 는 건드리지 않는다(09-08 지시).
    한국어는 역할이 한 줄이라 그림을 키워도 빈 자리가 남는다 — 좁히지 않는다 */
 html[lang="en"] .ng-name { line-height: 1.1; }
-html[lang="en"] .ng-cls { line-height: 1.2; }
 html[lang="en"] .ng-role { line-height: 1.2; }
 /* 고유 스킬 칸 — 네모 아이콘 + 이름. 능력치 막대 위·정체성 줄 아래다 (§3). 쿨은 툴팁이 들고 출처 글자(「영웅」)는 없다 (ADR-0163 · 0159).
    **칸은 나중에 들어올 스킬 이미지의 자리다** (2026-09-03 사용자 지시) — 위 여백 0 (ADR-0159).
@@ -4171,6 +4206,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 스킬 도안 칸 배지 「도안」 — 리포트 획득 격자 · 상단 도안 칸 (§4-3 · §8-3 · ADR-0680 — ~~「책」~~ ADR-0420) — 체크 배지 자리 · 색은 정보색 */
 .inv-check.bp-tag { color: var(--info-fg); font-size: var(--fs-2xs); }
 .book-cell .inv-icon img { image-rendering: var(--face-render); }
+/* 우편함 창 — 줄마다 상자 그림 · 칸 · 난이도 · 받을 부대 · [받기] · 맨 아래 [모두 받기] (SCREEN_DESIGN §2 「상단바」 · ADR-0732) */
+.mail-modal { width: min(560px, 92%); }
+.mail-body { display: flex; flex-direction: column; gap: 10px; }
+.mail-list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.mail-row { display: grid; grid-template-columns: 36px 1fr auto auto; align-items: center; gap: 10px; padding: 4px 6px; border-bottom: 1px solid var(--border-dark); }
+.mail-icon img { width: 36px; height: 36px; object-fit: contain; image-rendering: var(--face-render); display: block; }
+.mail-to { font-size: var(--fs-sm); }
+.mail-all { align-self: flex-end; }
+.mail-none { padding: 12px 4px; }
 /* ───────── 창 레이어 (SCREEN_DESIGN §2 · §7) ─────────
    탭 위에 겹쳐 뜨는 판 하나. 툴팁(z-index 50)보다 아래에 둔다 — 창 안의 스킬 칸에도 툴팁이 떠야 한다.
    판은 자기 내용 폭을 쓰되 화면을 넘지 않는다(고정 px 금지 · ui/README 폭 정책). 세로가 모자라면 판 안에서만 스크롤한다 */
@@ -5575,6 +5619,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     border: 1px solid var(--border-dark); background: var(--bg-input); border-radius: 2px; font-size: var(--fs-xs); }
 .td-buy-n { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .td-buy .td-price { font-size: var(--fs-xs); }
+/* 물약 수 고르기 ×n — 고른 수는 강조색 테두리 + 밝은 글자(공용 `.btn.sm.on` 은 한 단 밝아질 뿐이라 안 갈린다 · 도감 · 제련소 탭과 같은 처방 · 2026-10-23) */
+.td-buy .btn.sm.on { color: var(--text-primary); border-color: var(--text-accent); }
 /* 상점은 **캐릭터 탭과 같은 세로 3단**(`.char-stack` — 띠 / 가운데 단 / 아이템창 · ADR-0365).
    가운데 단 = 왼쪽 영웅 장비 · 오른쪽 상점 열. 장비 칸은 캐릭터 탭 네 칸 중 첫 칸과 같은 폭이다(`.cols` 틈 14px 셋을 뺀 4분의 1) */
 .c-shop-band { grid-template-columns: minmax(0, calc((100% - 3 * 14px) / 4)) minmax(0, 1fr); min-height: 0; }

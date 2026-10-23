@@ -64,7 +64,8 @@ import { mountDevPalette } from './devpalette.js';
 import { mountFocusCompare } from './devcompare.js';   // 임시 — 공격자 포커스 버튼(⚙ 설정 탭 마지막 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
 import { skillFxOn, basicFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeLevel, setShakeLevel, previewOf, fxPreview, fxPreload, fxArtStyle, setFxArtStyle, FX_ALPHA_STEPS, fxTransparency, setFxTransparency } from './fx.js';   // ⚙ 설정 · 도감 이펙트 세그먼트 (SCREEN_DESIGN §2-2 · §9-1 · ADR-0513 · ADR-0515 · ADR-0561 · ADR-0562)
 import { SKILL_ART, ART_STYLES } from './skill_art.js';   // Aura art preview in the codex (ADR-0520) · 이펙트 그림체 — 도감 탭 · 설정 줄 (ADR-0559 · ADR-0561)
-import { mountAdmin, mountAdminHeroes, ADMIN_HERO_CLASSES } from './devadmin.js';   // 개발 장치 — 관리자 모드(건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
+import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(고르는 판 · Unlock = 건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
+import { saveSlotsTab } from './devsave.js';   // 개발 장치 — ⚙ 판 Save 탭 · 세이브 슬롯 셋(SCREEN_DESIGN §10-4 · ADR-0738). 걷어내려면 이 줄 · mountDevPalette 의 셋째 인자 · devsave.js · storage.js 슬롯 함수
 
 const $ = sel => document.querySelector(sel);
 const el = (tag, cls, html) => {
@@ -207,7 +208,6 @@ const classColor = id => classDef(id)?.color ?? null;
 /** 직업 칩 — 후보 카드 칩 줄의 셋째(죄종 오른쪽) · 그 직업 색 (SCREEN_DESIGN §3 · ADR-0724) */
 const clsChip = id => `<span class="cls-chip"${classColor(id) ? ` style="color:${classColor(id)}"` : ''}>${className(id)}</span>`;
 const classWeapons =id => D.weaponGroupList.filter(g => g.classes.includes(id)).map(g => L(g)).join(' / ');
-const classLine = id => { const c = classDef(id); return c ? `${L(c.role)} · ${classWeapons(id)}` : t('class.unassigned'); };
 const slotDef = id => D.slots.find(s => s.id === id);                                   // 부위
 const posDef = pos => slotDef(D.equipSlots.find(s => s.id === pos)?.part);             // 착용 위치 → 부위 정의
 /** 옵션 한 줄 — **발동 옵션**(`AFFIX_LABELS[..].proc` · 2026-10-05 R206)은 목걸이 발동 줄과 같은 문장(`tip.proc.<조건>` · 확률 + 스킬 이름)이다.
@@ -445,11 +445,11 @@ const state = {
     exArm: null,                 // 탐험 — 불러들이기 첫 누름이 걸린 지점 키(`장:지점`) · 두 번 누르기 (§3)
     cmArm: null,                 // 의뢰 [포기]를 한 번 누른 카드 번호 — 두 번째 누름이 버린다(§3 · ADR-0352) · 탭을 떠나면 풀린다 · 세이브 아님
     forgeItem: null,             // 제련소에서 고른 장비 uid
-    fgAnim: null,                // 재생 중인 강화 한 건 {id, uid, pre(누르기 전 upgradeState), r(결과), t0} — 결과는 이미 저장됐다 (SCREEN_DESIGN §8-2 · ADR-0626 · 세이브 아님)
     makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 · 'potion' 이면 물약 칸 (SCREEN_DESIGN §8-2 · ADR-0219)
     makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
     forgeTab: 'make',            // 제련소의 작업 탭 — 'make' | 'up' | 'craft' (ADR-0142 · `?fg=` 로도 연다)
     cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
+    shopPotionN: 1,              // 상단 물약을 한 번에 살 수 — 사기 줄 ×n 이 고른다 (§8-3 · 2026-10-23)
     shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · `cycle` = 그 격자의 번호(상단 = 목록 번호 `list` · 특수상단 = 방문 회차) · 바뀌면 풀린다
 advSel: null,                // 도서관 전직 패널에서 고른 갈래 {uid, branch} — 띠에서 다른 영웅을 고르면 안 먹는다 (§17 · ADR-0536 · ADR-0567)
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
@@ -555,32 +555,47 @@ function renderShell() {
     $('.resources').innerHTML = pre || !r ? '' : `
         <span>${t('res.gold')}<b data-res="gold">${r.gold.toLocaleString()}</b></span>`;
 
+    // 우편함 — 골드 바로 오른쪽 · 게임 화면이면 늘 선다 · 우편이 있으면 개수 배지 (§2 「상단바」 · ADR-0732)
+    if (!pre && G) $('.resources').appendChild(mailButton());
     const langBtn = el('button', 'btn sm lang-btn', t('ui.langBtn'));
     langBtn.onclick = () => { setLang(lang() === 'ko' ? 'en' : 'ko'); render(); };
     $('.resources').appendChild(langBtn);
-    // Admin — 켜면 건물로 막힌 탭 · 기능 · 상한이 열린 척한다 (devadmin.js) · **켤 때 골드를 `admin_gold` 까지 채운다**(진짜 골드 · 2026-09-27 · SCREEN_DESIGN §10-3)
-    //   · **재료도 종류마다 `admin_materials` 까지**(파견처 산출물 전 단계 + 가루 · 낙인 · 2026-10-09)
-    mountAdmin($('.resources'), render, () => {
-        if (!G) return;
-        const top = (bag, k, n) => { if ((bag[k] ?? 0) < n) bag[k] = n; };
-        top(G.resources, 'gold', D.balance.admin_gold);
-        const m = D.balance.admin_materials;
-        G.materials ??= {};
-        for (const { items } of SYS.game.materialsState(G).rows) for (const { id } of items) top(G.materials, id, m);
-        top(G.resources, 'dust', m); top(G.resources, 'stigma', m);
-        save();
-    });
-    // `+Lv30` — 켜져 있을 때만 · 전사 · 마법사 · 기사를 `admin_hero_level` 로 로스터 끝에(진짜 영웅 · 자리가 모자라면 들어가는 만큼) [2026-10-08 사용자 지시 · SCREEN_DESIGN §10-3]
-    if (!pre && G) mountAdminHeroes($('.resources'), D.balance.admin_hero_level, G.heroes.length >= SYS.game.limitsOf(G).roster, () => {
-        for (const cls of ADMIN_HERO_CLASSES) if (!SYS.game.adminHero(G, cls, D.balance.admin_hero_level).ok) break;
-        save(); render();
+    // Admin — 누르면 아래에 판이 열린다 · 누르기만으론 안 넣는다 (devadmin.js · SCREEN_DESIGN §10-3 · 2026-10-23 · R332). Unlock(건물로 막힌 것이 열린 척)은 devadmin 이 든다.
+    //   [Add] 줄은 세이브를 만진다 — 모자란 만큼 채운다: 골드 `admin_gold` · 재료 `admin_materials`(파견처 산출물 전 단계 + 가루 · 낙인) · 도안 `admin_blueprints`(책이 되는 스킬 전부)
+    //   · 영웅 1명(메인 직업 랜덤 · `admin_hero_level` · Unlock 과 무관 — 로스터 자리만 본다). 판이 없으면 흐린다
+    const top = (bag, k, n) => { if ((bag[k] ?? 0) < n) bag[k] = n; };
+    const add = f => G ? () => { f(); save(); } : null;
+    const AB = D.balance;
+    mountAdmin($('.resources'), render, {
+        gold: { n: AB.admin_gold, run: add(() => top(G.resources, 'gold', AB.admin_gold)) },
+        materials: { n: AB.admin_materials, run: add(() => {
+            G.materials ??= {};
+            for (const { items } of SYS.game.materialsState(G).rows) for (const { id } of items) top(G.materials, id, AB.admin_materials);
+            top(G.resources, 'dust', AB.admin_materials); top(G.resources, 'stigma', AB.admin_materials);
+        }) },
+        blueprints: { n: AB.admin_blueprints, run: add(() => {
+            G.blueprints ??= {};
+            for (const { id } of SYS.skill.list) if (SYS.skill.bookable(id)) top(G.blueprints, id, AB.admin_blueprints);
+        }) },
+        hero: { n: AB.admin_hero_level, full: !!G && G.heroes.length >= SYS.game.limitsOf(G).roster, run: add(() => SYS.game.adminHero(G, null, AB.admin_hero_level)) },
     });
     // 아트 스타일 고르개는 상단바에 안 선다 — ⚙ 설정 첫 줄 · 도감에 있다 [2026-10-06 사용자 지시 · SCREEN_DESIGN §2-2]
     // 원정 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · 2026-10-05 · ADR-0514]. `data-exp-time` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshExpTime`)
     if (!pre && G) $('.resources').appendChild(el('span', 'exp-time', `${t('ui.expTime')}<b data-exp-time>${fmtExpTime(G.expMs)}</b>`));
-    // ⚙ — 판의 탭 둘: 설정(스킬 이펙트 · 피격 반응 — 속은 여기 `settingsBody`) · Palette(배경 · 글자 색을 눈으로 맞추는 개발 장치)
-    //   [2026-09-28 사용자 지시 · SCREEN_DESIGN §2-2 · ADR-0414]
-    mountDevPalette($('.resources'), { label: t('set.h'), body: settingsBody });
+    // ⚙ — 판의 탭 셋: 설정(스킬 이펙트 · 피격 반응 — 속은 여기 `settingsBody`) · Palette(배경 · 글자 색을 눈으로 맞추는 개발 장치)
+    //   [2026-09-28 사용자 지시 · SCREEN_DESIGN §2-2 · ADR-0414] · Save(세이브 슬롯 셋 — 개발 장치 · 2026-10-23 · §10-4 · ADR-0738)
+    //   Save 의 불러오기 = 이어 하기와 같은 길 + 자동 저장을 그 내용으로 덮는다(거기서부터 자동 저장이 다시 갱신된다) · 못 열면 지금 판을 그대로 둔다
+    mountDevPalette($('.resources'), { label: t('set.h'), body: settingsBody }, [saveSlotsTab({
+        hasGame: () => !!G,
+        snapshot: () => SYS.game.serialize(G, now()),
+        canLoad: s => SYS.game.canLoad(s),
+        restore: s => {
+            const prev = G;
+            if (!continueGame(s)) { G = prev; return false; }
+            save(); render();
+            return true;
+        },
+    })]);
 
     // crumb — 게임 밖 화면 이름만 선다 · 게임 화면엔 없다(지금 탭은 탭 내비의 고른 칸이 든다) — 비면 자리를 안 잡아 원정 세그먼트가 왼쪽 끝에 붙는다
     //   [2026-10-21 사용자 지시 · SCREEN_DESIGN §2 · ADR-0686 — 0353 의 「가장 긴 탭 이름만큼 폭」을 대체 · style.css `.crumb:empty`]
@@ -590,6 +605,94 @@ function renderShell() {
     const seg = $('.tab-seg');
     seg.innerHTML = '';
     if (!pre && G && tabOpen.expedition !== false) seg.appendChild(expNavBox());
+}
+
+/* ── 첫 클리어 상자 · 우편함 (SCREEN_DESIGN §2 「상단바」 · §6 · ADR-0731 · ADR-0732 · R328) ── */
+
+/** 상자가 어느 칸 · 어느 단의 것인가 — 「1-2 II · 노말」(칸이 하나인 장소는 칸 번호를 안 단다) */
+function boxFrom(b) {
+    const z = D.stages[b.stageId];
+    const one = z && D.stageList.filter(s => s.chapter === z.chapter && s.stage_num === z.stage_num).length === 1;
+    const stage = z ? `${z.chapter}-${z.stage_num}${one ? '' : ` ${M.roman(z.cell)}`}` : String(b.stageId);
+    return { stage, diff: L(D.difficulties[b.difficulty]?.name ?? D.difficultyList[0]?.name) };
+}
+const boxImg = () => `<img src="${M.CLEAR_BOX_ART}" alt="" draggable="false">`;
+
+/** 상자를 연다 — 그 칸이 그대로 무기가 된다 · 플래시가 무기 이름을 등급 색으로 (ADR-0731) */
+function openBoxCell(it) {
+    const r = SYS.game.openBox(G, it.uid);
+    if (!r.ok) { flash(`ch.err.${r.err}`); return; }
+    save();
+    flash('box.opened', { name: `<span style="color:${rarity(it.rarity).color}">${L(it.name)}</span>` });
+}
+
+/** 보관 칸의 상자 한 칸 — 상자 그림만(등급 테두리 · 레벨 · 강화 배지 없음) · **여는 길은 우클릭 [사용] 하나** — 칸 클릭은 안 연다 (§6 · ADR-0731 · ADR-0733) */
+function boxCell(cell, it, h, where, moding, onPick) {
+    cell.classList.add('box');
+    cell.innerHTML = `<span class="inv-icon">${boxImg()}</span>`;
+    bindTipNode(cell, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${t('box.name')}</div><div class="muted">${t('box.from', boxFrom(it.box))}</div>`),
+        { actions: moding ? null : () => itemActions(h, it), side: where === 'bag' ? 'left' : null });
+    if (!moding) bindCardDrag(cell, where === 'stash' ? '.store-bag' : '.store-stash', () => { sendAcross(where, it); return true; });
+    cell.onclick = (e) => {
+        if (formDragEnded) return;
+        hideTip();
+        if (state.bagSelMode) cubeToggle(it);                   // 분해함엔 안 오른다 — 거절 플래시
+        else if (e.ctrlKey || e.metaKey) sendAcross(where, it);
+        else if (onPick) { flash('ch.err.sealed'); return; }    // 제련소 고르기 — 열기 전엔 무기가 아니다
+        else return;                                            // 그냥 클릭은 아무 일도 없다 — 우클릭 [사용]으로 연다 (ADR-0733)
+        render();
+    };
+    cell.oncontextmenu = e => {
+        e.preventDefault();
+        if (moding || isTouchInput()) return;
+        hideTip();
+        const pt = stagePoint(e);
+        state.itemMenu = { uid: it.uid, hero: h.uid, x: pt.x, y: pt.y };
+        render();
+    };
+    return cell;
+}
+
+/** 상단바 편지봉투 — 우편이 있으면 오른쪽 위 개수 배지 · 누르면 우편함 창 (ADR-0732) */
+function mailButton() {
+    const n = (G.mail ?? []).length;
+    const b = el('button', `mail-btn${n ? ' has' : ''}`, `<img src="${M.MAIL_ART}" alt="" draggable="false">${n ? `<span class="mail-n">${n}</span>` : ''}`);
+    b.title = t('mail.h');
+    b.setAttribute('aria-label', t('mail.h'));
+    b.onclick = () => openModal('mail');
+    return b;
+}
+
+/** 우편함 창 — 줄마다 상자 그림 + 「칸 · 난이도 — 첫 클리어 상자」 + 받을 부대 + [받기] · 맨 아래 [모두 받기] · 없으면 「우편 없음」 (ADR-0732) */
+function mailBody() {
+    const body = el('div', 'mail-body');
+    const list = G.mail ?? [];
+    if (!list.length) { body.appendChild(el('div', 'muted mail-none', t('mail.none'))); return body; }
+    const rows = el('div', 'mail-list');
+    for (const m of list) {
+        const row = el('div', 'mail-row');
+        row.appendChild(el('span', 'mail-icon', boxImg()));
+        row.appendChild(el('span', 'mail-text', t('mail.row', boxFrom(m))));
+        row.appendChild(el('span', 'muted mail-to', t('pt.preset', { n: M.roman(m.no) })));
+        const b = el('button', 'btn sm', t('mail.claim'));
+        b.onclick = () => {
+            const r = SYS.game.claimMail(G, m.id);
+            if (!r.ok) flash(`ch.err.${r.err}`); else save();
+            render();
+        };
+        row.appendChild(b);
+        rows.appendChild(row);
+    }
+    body.appendChild(rows);
+    const all = el('button', 'btn sm primary mail-all', t('mail.claimAll'));
+    all.onclick = () => {
+        const r = SYS.game.claimAllMail(G);
+        if (r.n) { save(); flash('mail.claimed', { n: r.n }); }
+        if (r.left) flash('ch.err.bagFull');
+        render();
+    };
+    body.appendChild(all);
+    return body;
 }
 
 function render() {
@@ -679,6 +782,8 @@ const MODALS = {
     labReg: { head: labRegHead, body: labRegBody, cls: 'lr-modal', gone: () => !G || !SYS.game.labState(G, now()).lines.find(l => l.line === labRegPost().id)?.open },
     // 친선전 — 결투장 레일의 [친선전]이 연다 · 팀 코드 글상자 둘(SCREEN_DESIGN §1 · ADR-0670) · 받은 팀이 서면 닫힌다
     arenaCode: { title: 'ar.code.h', body: arenaCodeBody, cls: 'ar-code-modal' },
+    // 우편함 — 상단바 골드 오른쪽 편지봉투가 연다 (SCREEN_DESIGN §2 「상단바」 · ADR-0732 · R328)
+    mail: { title: 'mail.h', body: mailBody, cls: 'mail-modal' },
 };
 
 function renderModal() {
@@ -832,8 +937,8 @@ function dropBattles() {
     state.battle = null;
 }
 
-function continueGame() {
-    const saved = loadSave();
+/** 이어 하기 — 자동 저장을 연다. `saved` 를 주면 그 세이브로(⚙ Save 탭의 슬롯 · SCREEN_DESIGN §10-4) */
+function continueGame(saved = loadSave()) {
     if (!saved) return false;
     try { G = SYS.game.deserialize(saved); }
     catch (e) { console.warn(e); G = null; return false; }
@@ -857,15 +962,15 @@ function candidateCard(h, extra = '', fresh = false) {
     //   (`class.csv:hp_base` · 10-02) 공통값을 찍으면 첫 전투에서 반이 된다 (DEV_PLAN §4 #74). 시작 카드는 판이 없거나 지울 판이라 영웅 혼자의 값
     const hpMax = (fresh || !G ? SYS.hero.computeCombat(h, []) : SYS.game.heroCombat(G, h)).hp_max;
     // 죄종 칩은 그 죄종 색 · 직업 칩은 그 직업 색이다 (SCREEN_DESIGN §3 · ADR-0155 · ADR-0724) — 윗변 · 막대는 등급 색 그대로(ADR-0023)
-    //   직업은 칩 줄 셋째(죄종 오른쪽)로 올라가 이름 아래 줄은 레벨만 든다 (ADR-0724)
+    //   직업은 칩 줄 셋째(죄종 오른쪽)로 올라가고(ADR-0724) 레벨은 이름 오른쪽에 선다 (ADR-0727).
+    //   이름 아래 줄은 그 직업의 무기군만 — 역할 이름(「근접 물리」)은 안 적는다 (ADR-0730)
     c.innerHTML = `
         <div class="ng-head">
             ${heroFace(h)}
             <div class="ng-id">
                 <div class="ng-chips">${tierChip(h)}<span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span>${clsChip(h.cls)}</div>
-                <div class="ng-name"><b>${L(h.name)}</b></div>
-                <div class="ng-cls">Lv.${h.level}</div>
-                <div class="ng-role muted">${classLine(h.cls)}</div>
+                <div class="ng-name"><b>${L(h.name)}</b><span class="ng-lv">Lv.${h.level}</span></div>
+                <div class="ng-role muted">${classDef(h.cls) ? classWeapons(h.cls) : t('class.unassigned')}</div>
                 ${innate ? `<div class="ng-skill">
                     <span class="ico">${skillImg(innate)}${skLvTag(innate)}</span>
                     <span class="txt"><b>${L(innate.name)}</b></span>
@@ -893,7 +998,7 @@ function candidateCard(h, extra = '', fresh = false) {
 /** 카드 연장 칸 — **그 카드 영웅의** 직업 · 죄종을 한 줄씩, 어떤 역할을 하나 한 문장 (SCREEN_DESIGN §3 · ADR-0675 ·
  *  사용자 「각 카드 아래로 연장해서 기사 / 분노 이런식으로」 — 카드 밖 안내 띠(ADR-0642)를 대체). 새 게임 카드만 `candidateCard` 의
  *  꼬리 자리로 싣는다 — 선술집 · 찾아온 영웅 카드엔 없다.
- *  직업 = `class.csv:role_text` · 죄종 = `mock.js:SINS.line`. 역할 줄(「근접 물리」)은 카드 머리가 이미 들어 안 되풀이한다.
+ *  직업 = `class.csv:role_text` · 죄종 = `mock.js:SINS.line`. 카드 머리는 역할 이름(「근접 물리」)을 안 적는다 — 역할은 이 문장이 든다 (ADR-0730).
  *  이름은 **칩**이다 [2026-10-21 사용자 「전사 적에게 붙어 … 이게 뭐야」] — 맨 글자로 서면 이름이 문장의 주어로 붙어 읽혔다 */
 function startLines(h) {
     const cls = classDef(h.cls);
@@ -1719,6 +1824,8 @@ const flashChapterNeed = ch => flash(...chapterNeedArgs(ch));
 /** 잠긴 스테이지가 왜 잠겼나 — 그 장이 안 열렸으면 「1장 보스 클리어」 · 장은 열렸으면 「이전 스테이지 클리어」 */
 const stageLockText = z => (SYS.game.chapterOpen(G, z.chapter) ? t('exp.locked') : chapterNeedText(z.chapter));
 const flashStageLock = z => (SYS.game.chapterOpen(G, z.chapter) ? flash('exp.locked') : flashChapterNeed(z.chapter));
+/** 부서진 글자 — 한 자씩 `<i>` 로 감싼다 · 끝 글자들이 무너지는 모양은 CSS(`.seg-crumble`)와 필터(`index.html #fx-crumble`)가 든다 (§4-1 · ADR-0739) */
+const crumbleLabel = s => `<span class="crumble">${[...s].map(c => `<i>${c}</i>`).join('')}</span>`;
 
 function renderExpIdle(main) {
     const nb = noticeBanner();
@@ -1734,13 +1841,12 @@ function renderExpIdle(main) {
     // 패널 윗변에 난이도 탭이 붙고 · 패널의 첫 줄이 챕터 세그먼트다 (ADR-0596 · `exp.zones.h` 는 도움말이 계속 부른다)
     const zp = el('div', 'panel');
     /* 챕터 세그먼트 — **한 챕터가 한 화면**이다 [2026-09-09 사용자 지시 · ADR-0067 · 도감 몬스터 세그먼트와 같은 문법(§9)].
-       **전 챕터가 선다** — 잠긴 챕터도 눌러 볼 수 있다. 이 절이 원래부터 잠긴 스테이지를 그리는 근거
-       (「어디까지 가야 하는지가 보여야 한다」)를 챕터 단위로 넓힌 것이고, 막는 자리는 **보내기**(`canDepart`) 하나다.
+       **전 챕터가 선다**(숨기지 않는다) — 단 **고른 단에서 칸이 하나도 안 열린 장은 꺼진 버튼**이다 [2026-10-23 사용자 지시 · ADR-0740 이 ADR-0067 의 「잠긴 챕터도 눌러 본다」를 대체].
+       판정은 `stageUnlocked`(고른 단) 하나라 노말 · 나이트메어(그 단의 앞 장 보스) · 헬(열린 장마다 첫 칸) · 관리자 모드가 한 줄로 맞는다.
        넘기면 **전진 패널을 닫는다** — 패널은 스테이지 행에 딸려 있어서, 안 닫으면 영웅 띠만 흐린 채 보드가 사라진다.
-       ⚠ 단 **그 장을 여는 보스 칸이 없는 챕터**(`chapterGate(n)` 이 null — `chapter_open_max` 뒤의 장)는 자물쇠 + 꺼진 버튼이다 [2026-10-06 사용자 지시 · ADR-0531 · 기준 ADR-0719] —
-       갈 길이 없어 보여 줄 「어디까지」가 없다. 번호를 박지 않고 `chapter_open_max` 를 읽으므로 그 값을 올리면 저절로 풀린다.
-       그 장의 스테이지가 하나라도 열렸으면 안 잠근다(1장은 여는 칸이 없어도 첫 칸이 열려 있다). 관리자 모드(`openAll`)도 그 장을 못 열어서
-       **켜 둬도 잠긴다** [2026-10-09 사용자 지시 · ADR-0552] */
+       꺼진 모양은 둘 — 열릴 장은 자물쇠(ADR-0531 · 기준 ADR-0719) · **그 장을 여는 보스 칸이 없는 장**(`chapterGate(n)` 이 null — `chapter_open_max` 뒤의 장)은
+       자물쇠 없이 **글자가 부서져 흩어진다** [2026-10-23 사용자 지시 · ADR-0739 · `crumbleLabel`]. 번호를 박지 않고 `chapter_open_max` 를 읽으므로 그 값을 올리면 저절로 풀린다.
+       관리자 모드(`openAll`)도 그 장을 못 열어서 **켜 둬도 부서진 채다** [2026-10-09 사용자 지시 · ADR-0552] */
     /* 난이도 탭 — **패널 윗변에 붙은 폴더 탭 · 챕터 줄 위** [2026-10-12 사용자 「버튼 UI가 구리다」 · SCREEN_DESIGN §4-1 · ADR-0596 이 ADR-0586 의 세그먼트 줄을 대체].
        고른 단이 목록 · 출정 창 · 보내기를 전부 정한다(잠김 · 칸 레벨 · 나가는 단 — `game.stageUnlocked` · `canDepart` · `departRun` 의 기본값이 고른 단이다).
        **패널의 윗선은 이 줄이 긋는다** — 틈(`.dt-gap`) · 남은 자리(`.dt-fill`) · 안 고른 탭의 아랫변이 한 선을 잇고 고른 탭 자리에서만 끊겨 탭 안과 패널 안이 이어진다
@@ -1779,11 +1885,14 @@ function renderExpIdle(main) {
     zp.classList.add('diff-panel');
     const curCh = expChapter();
     const cb = el('div', 'sub-bar');
-    const sealed = id => !SYS.game.chapterGate(id) && !D.stageList.some(s => s.chapter === id && SYS.game.stageUnlocked(G, s.stage_id));
+    // 잠김 = 고른 단에서 그 장의 칸이 하나도 안 열렸다(ADR-0740) · 그중 여는 칸이 없는 장(`chapterGate` null)은 자물쇠 대신 부서진 글자다(ADR-0739)
+    const chShut = id => !D.stageList.some(s => s.chapter === id && SYS.game.stageUnlocked(G, s.stage_id));
     cb.appendChild(segmented(D.chapterList.map(c => {
         const label = `Ch${c.id} ${L(c.name)}`;
-        return sealed(c.id) ? { id: c.id, label: `<span class="lock-ico">${lockIcon(true)}</span>${label}`, color: sinColor(c.sin), disabled: true, cls: 'seg-lock' }
-            : { id: c.id, label, color: sinColor(c.sin) };
+        if (!chShut(c.id)) return { id: c.id, label, color: sinColor(c.sin) };
+        return SYS.game.chapterGate(c.id)
+            ? { id: c.id, label: `<span class="lock-ico">${lockIcon(true)}</span>${label}`, color: sinColor(c.sin), disabled: true, cls: 'seg-lock' }
+            : { id: c.id, label: crumbleLabel(label), color: sinColor(c.sin), disabled: true, cls: 'seg-crumble' };
     }), curCh,
         id => { state.expChapter = id; state.expStage = null; render(); }));
     zp.appendChild(cb);
@@ -3125,6 +3234,7 @@ function reportDetail(R) {
             <div><span>${t('rep.downed')}</span>${R.downed.length ? `<span class="down">${t('rep.downedN', { n: R.downed.length })}</span>` : t('rep.none')}</div>
             <div><span>${t('rep.miss')}</span>${missText}</div>
             ${R.shrine ? `<div><span>${t('rep.shrine')}</span>${shrineChip(R.shrine)}</div>` : ''}
+            ${R.clearBox ? `<div><span>${t('rep.clearBox')}</span>${t(R.clearBox.mail ? 'rep.clearBoxMail' : 'rep.clearBoxBag')}</div>` : ''}
         </div>`;
 
     dropSection(p, R);
@@ -3404,7 +3514,7 @@ function paperdoll(h, { onPick = null, selUid = null } = {}) {
             //   부위 이름은 **빈 칸만** `title` 로 든다 — 찬 칸에 달면 아이템 툴팁 위에 브라우저 기본 툴팁이 겹친다
             //   **예외 — 찬 칸은 가방 칸과 같은 모서리 배지 둘**을 든다 [2026-09-18 사용자 지시]: 오른쪽 위 강화 `+n`(ADR-0169 · 0 이면 안 선다) ·
             //   오른쪽 아래 아이템 레벨(ADR-0168). 둘 다 그림도 칸 자리도 대신 말해 주지 못하는 개체값이라, 가방 칸과 견주려면 여기도 들어야 한다
-            const us = it ? { up: upShown(it) } : null;   // 강화 재생 중이면 누르기 전 단계 (ADR-0626)
+            const us = it ? { up: upShown(it) } : null;
             cell.innerHTML = (art ? `<span class="pd-art"><img src="${art}" alt="" loading="lazy" onerror="this.remove()"></span>`
                 : `<div class="pd-icon">${it ? itemImg(it) : def.icon}</div>`)
                 + (us && us.up > 0 ? `<span class="pd-up">+${us.up}</span>` : '')
@@ -3829,7 +3939,7 @@ function cubeCandidates(cols) {
         const on = state.cubeF[c.id];
         return !on.size || c.opts.some(o => on.has(o.key) && o.has(it));
     });
-    return invBag().map(itemOf).filter(it => it && !it.locked && !state.bagSel.has(it.uid) && hit(it))
+    return invBag().map(itemOf).filter(it => it && !it.locked && !it.box && !state.bagSel.has(it.uid) && hit(it))
         .sort((a, b) => order.indexOf(a.rarity) - order.indexOf(b.rarity) || a.ilvl - b.ilvl || (fixedOf(a) ?? -1) - (fixedOf(b) ?? -1));
 }
 
@@ -3857,6 +3967,7 @@ function cubeDrop(uid) {
 /** 함에 올린다 · 이미 올라 있으면 내린다 — 보관 칸 클릭이 부른다. 잠긴 것 · 찬 함은 플래시만 (ADR-0673) */
 function cubeToggle(it) {
     if (state.bagSel.has(it.uid)) { cubeDrop(it.uid); return; }
+    if (it.box) { flash('ch.err.sealed'); return; }   // 열지 않은 상자는 분해함에 안 오른다 (ADR-0731)
     if (it.locked) { flash('ch.sel.lockedNo'); return; }
     if (state.bagSel.size >= cubeCap()) { flash('ch.sel.full'); return; }
     state.bagSel.add(it.uid);
@@ -3875,7 +3986,7 @@ function salvageCube(h) {
 
     const left = el('div', 'salv-left');
     const cols = cubeCols();
-    const open = invBag().map(itemOf).filter(it => it && !it.locked);   // 꺼진 채 서는 판정 — 그 묶음에 올릴 것이 하나도 없나
+    const open = invBag().map(itemOf).filter(it => it && !it.locked && !it.box);   // 꺼진 채 서는 판정 — 그 묶음에 올릴 것이 하나도 없나 · 열지 않은 상자는 안 센다
     const fl = el('div', 'salv-filters');
     for (const c of cols) {
         const col = el('div', 'salv-col');
@@ -4307,9 +4418,11 @@ function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
             continue;
         }
         const cell = el('div', `inv-cell${it ? ' filled' : ''}${it && it.uid === selUid ? ' sel' : ''}`);
+        // 첫 클리어 상자 — 상자 그림 한 칸 · 누르면 그 칸에서 열린다 (§6 · ADR-0731)
+        if (it?.box) { grid.appendChild(boxCell(cell, it, h, where, moding, onPick)); continue; }
         if (it) {
             cell.style.borderColor = rarity(it.rarity).color;
-            const us = { up: upShown(it) };   // 강화 재생 중이면 누르기 전 단계 (ADR-0626)
+            const us = { up: upShown(it) };
             // 모서리 배지 셋 [2026-09-21 · ADR-0168 · ADR-0185 · 왼쪽 위 체크는 2026-10-20 걷음 — 분해함 ADR-0673] —
             //   오른쪽 위 = 유저가 쌓은 강화(0 이면 안 선다) · 왼쪽 아래 = 자물쇠(잠근 것만) · 오른쪽 아래 = 태어날 때 박힌 ilvl(언제나 선다)
             //   ilvl 배지는 **장착 대상이 못 끼면 빨강**(요구 레벨 미달 · R215 · ADR-0525) — 칸 클릭이 장착인 자리에서만(제련소 고르기는 그대로)
@@ -4384,6 +4497,8 @@ function toggleItemLock(it) {
 
 /** 우클릭 메뉴 · 손가락 버튼 줄의 행동 — [착용] · [잠금]/[잠금 해제] (§6 「우클릭 메뉴」 · ADR-0451). `run` 이 다시 그리기까지 한다 */
 function itemActions(h, it) {
+    // 상자 칸은 [사용] 하나 — 상자를 여는 유일한 길이다(칸 클릭은 안 연다 · ADR-0733)
+    if (it.box) return [{ label: t('ch.menu.open'), run: () => { openBoxCell(it); render(); } }];
     return [
         { label: t('ch.menu.equip'), run: () => { equipFromStorage(h, it); render(); } },
         { label: t(it.locked ? 'ch.menu.unlock' : 'ch.menu.lock'), run: () => { toggleItemLock(it); render(); } },
@@ -7076,53 +7191,16 @@ function forgePotion(p) {
     p.appendChild(col);
 }
 
-/* ── 강화 연출 — 모루와 망치 (SCREEN_DESIGN §8-2 · ADR-0626) ──
-   **판정은 하나도 안 한다** — 성패는 [강화]를 누르는 순간 `upgradeItem` 이 굴려 저장했다. 여기는 그 결과를 **재생**할 뿐이다(도박장 판과 같은 문법).
-   모루가 올라오고 그림이 앉는다 → 망치 세 번(칠 때마다 불꽃 · 흔들림) → 성공 = 큰 불꽃 + `+n` / 실패 = 세 번째에 망치가 튕기고 연기 + 표지 → 플래시 · 다시 그리기.
-   박자는 여기 한 곳이고 CSS 는 변수(`--fg-in` · `--fg-hit` · `--fg-hits` · `--fg-e`)로 받는다 — 흐른 시간(`--fg-e`)만큼 앞당겨 시작해 다시 그려져도 이어서 돈다 */
+/** 칸 배지에 찍을 강화 단계 — 장비칸 · 아이템창의 `+n` */
+function upShown(it) { return SYS.game.upgradeState(G, it.uid)?.up ?? 0; }
 
-/** 박자 — 모루가 올라와 그림이 앉는 시간 · 망치 한 번 · 망치 수(사용자 「땅땅땅」) · 결과가 서 있는 시간 (ms). 연출 전용이라 결과를 안 바꾼다 */
-const FG_IN_MS = 320, FG_HIT_MS = 360, FG_HITS = 3, FG_RES_MS = 1000;
-const FG_TOTAL_MS = FG_IN_MS + FG_HIT_MS * FG_HITS + FG_RES_MS;
-let fgAnimSeq = 0;
-
-/** 칸 배지에 찍을 강화 단계 — 재생 중인 그 아이템은 **누르기 전** 단계다(장비칸 · 아이템창의 `+n` 이 망치보다 먼저 결과를 말하지 않게 · ADR-0626) */
-function upShown(it) { return state.fgAnim?.uid === it.uid ? state.fgAnim.pre.up : SYS.game.upgradeState(G, it.uid)?.up ?? 0; }
-
-/** [강화] — 굴려 저장하고 재생을 건다. `pre` = 누르기 전의 `upgradeState`(재생 중 칸이 이 모습을 든다) */
-function forgeUpgradeGo(it, pre) {
-    if (state.fgAnim) return;   // 재생 중 — 다음 강화는 끝난 뒤에
+/** [강화] — 굴려 저장하고 그 자리에서 결과를 말한다. 연출 · 기다림이 없다 (SCREEN_DESIGN §8-2 · ADR-0737) */
+function forgeUpgradeGo(it) {
     const r = SYS.game.upgradeItem(G, it.uid);
     if (!r.ok) { flashErr('ch', r.err, 'upgrade_item'); render(); return; }
     save();
-    const id = ++fgAnimSeq;
-    state.fgAnim = { id, uid: it.uid, pre, r, t0: now() };
-    setTimeout(() => fgAnimEnd(id), FG_TOTAL_MS);
+    flash(r.success ? 'ch.upgraded' : 'fg.upFail', { n: r.up, g: r.cost });
     render();
-}
-
-/** 재생 끝 — 시간이 다 됐거나 강화 칸을 눌러 건너뛰었다. 같은 재생을 두 번 끝내지 않는다 */
-function fgAnimEnd(id) {
-    const a = state.fgAnim;
-    if (!a || a.id !== id) return;
-    state.fgAnim = null;
-    flash(a.r.success ? 'ch.upgraded' : 'fg.upFail', { n: a.r.up, g: a.r.cost });
-    render();
-}
-
-/** 진열 칸 위 무대 — 모루 · 앉은 그림 · 망치 · 불꽃 · (성공) 큰 불꽃 / (실패) 연기 · 결과 표지. `shown` = 누르기 전 단계의 사본 */
-function fgAnimStage(a, shown) {
-    const st = el('div', `fg-anim ${a.r.success ? 'win' : 'lose'}`, `<div class="fg-rig">
-        <img class="fg-anvil" src="${M.FORGE_ART.anvil}" alt="" draggable="false">
-        <span class="fg-anim-item">${itemImg(shown)}</span>
-        <img class="fg-hammer" src="${M.FORGE_ART.hammer}" alt="" draggable="false">
-        <i class="fg-spark"></i><i class="${a.r.success ? 'fg-burst' : 'fg-smoke'}"></i>
-        <b class="fg-anim-res">${a.r.success ? `+${a.r.up}` : t('fg.failMark')}</b></div>`);
-    st.style.setProperty('--fg-in', `${FG_IN_MS}ms`);
-    st.style.setProperty('--fg-hit', `${FG_HIT_MS}ms`);
-    st.style.setProperty('--fg-hits', FG_HITS);
-    st.style.setProperty('--fg-e', `${Math.min(Math.max(0, now() - a.t0), FG_TOTAL_MS)}ms`);
-    return st;
 }
 
 /**
@@ -7130,32 +7208,25 @@ function fgAnimStage(a, shown) {
  * 세 칸이다 (ADR-0604 · ADR-0605) — 왼쪽 **진열**(큰 그림 · 이름 · 메타) | 가운데 **옵션**(툴팁 카드의 몸 그대로 — 모든 옵션) |
  * 오른쪽 **작업**(단계 눈금 · 「지금 › 다음」 비교 · 확률 칩 · 비용 칩 + [강화]).
  * 다음 값은 `upgradeState.next` 가 낸다 — 렌더러는 강화 배율 · 반올림을 모른다 (ui 원칙 2)
- * **재생 중엔 누르기 전 모습이다** (ADR-0626) — 결과는 이미 저장됐지만 단계 · 이름 · 옵션 · 미리보기가 망치보다 먼저 결과를 말하지 않게 `pre` 와 그 단계의 사본을 그린다
  */
 function forgeUpgrade(p) {
     const it = itemOf(state.forgeItem);
     if (!it) { p.appendChild(el('div', 'fg-up-empty', t('fg.pick'))); return; }
-    const anim = state.fgAnim?.uid === it.uid ? state.fgAnim : null;
-    const shown = anim ? { ...it, up: anim.pre.up } : it;
-    const us = anim ? anim.pre : SYS.game.upgradeState(G, it.uid);
+    const us = SYS.game.upgradeState(G, it.uid);
     const color = rarity(it.rarity).color;
     // 메타의 끝 — 누가 끼고 있나 · 안 끼었으면 있는 곳(창고 · 인벤토리)
     const holder = G.heroes.find(x => Object.values(x.equipped ?? {}).includes(it.uid));
     const where = holder ? t('fg.wornBy', { name: L(holder.name) }) : t((G.stash ?? []).includes(it.uid) ? 'ch.bag.stash' : 'ch.bag.inv');
 
-    const wrap = el('div', `fg-up${anim ? ' anim' : ''}`);
-    // 재생 중 — 강화 칸 어디든 누르면 결과로 건너뛴다 (ADR-0626)
-    if (anim) wrap.onclick = () => fgAnimEnd(anim.id);
-    // 진열 — 이름의 `+n` 은 §6 툴팁과 같은 규칙(이름 앞) · 재생 중엔 그 위에 모루와 망치 무대가 선다
-    const show = el('div', `fg-up-show${anim ? ' anim' : ''}`, `
-        <span class="fg-up-frame" style="border-color:${color}">${itemImg(shown)}</span>
+    const wrap = el('div', 'fg-up');
+    // 진열 — 이름의 `+n` 은 §6 툴팁과 같은 규칙(이름 앞)
+    wrap.appendChild(el('div', 'fg-up-show', `
+        <span class="fg-up-frame" style="border-color:${color}">${itemImg(it)}</span>
         <span class="fg-up-name" style="color:${color}">${us.up > 0 ? `+${us.up} ` : ''}${L(it.name)}</span>
         <span class="fg-up-meta">${L(rarity(it.rarity))} · ${L(slotDef(it.slot))} · ${t('ch.itemLv', { n: it.ilvl })}</span>
-        <span class="fg-up-meta">${where}</span>`);
-    if (anim) show.appendChild(fgAnimStage(anim, shown));
-    wrap.appendChild(show);
+        <span class="fg-up-meta">${where}</span>`));
     // 옵션 — 그 아이템의 모든 옵션 (ADR-0605). 툴팁 카드의 몸과 **같은 함수**라 표기가 안 갈린다 · `tip-card` 를 같이 달아 툴팁 규칙을 탄다
-    wrap.appendChild(el('div', 'fg-up-opts tip-card', itemBodyHtml(shown)));
+    wrap.appendChild(el('div', 'fg-up-opts tip-card', itemBodyHtml(it)));
 
     const work = el('div', 'fg-up-work');
     // 목걸이 · 반지 — 눈금 · 값 · 버튼 대신 한 줄 (ADR-0125)
@@ -7168,10 +7239,10 @@ function forgeUpgrade(p) {
             <div class="fg-up-pips">${pips}</div>`));
         // ② 지금 › 다음 — 먹인 값(강화 · 베이스 옵션)이라 툴팁·캐릭터 시트와 같은 숫자다 (§6 · ADR-0309) · 상한이면 다음 열이 빈다
         //   이름은 가운데 옵션 열의 메인 옵션 행과 같다(물리 ↔ 마법 데미지 — `combat_stat.csv` · `itemBodyHtml`)
-        const n = us.next, imp = SYS.item.implicitFixed(shown), grp = SYS.item.groupOf(it);
+        const n = us.next, imp = SYS.item.implicitFixed(it), grp = SYS.item.groupOf(it);
         const atkStat = grp && statRow(grp.damageKind === 'physical' ? 'atk_physical' : 'atk_magic');
         const [lab, now, next] = grp
-            ? [atkStat ? L(atkStat) : t('st.atk'), rangeText(SYS.item.weaponDamageFixed(shown)), n?.dmg && rangeText(n.dmg)]
+            ? [atkStat ? L(atkStat) : t('st.atk'), rangeText(SYS.item.weaponDamageFixed(it)), n?.dmg && rangeText(n.dmg)]
             : [imp ? L(M.statLabel(imp.stat)) : t('fg.base'), imp ? M.statValue(imp.stat, imp.v) : '—', n?.imp && M.statValue(n.imp.stat, n.imp.v)];
         //   다음이 지금과 같으면(작은 값에서 반올림이 한 단계를 먹는다) 초록이 아니라 흐리게 — 오른다고 읽히면 거짓 신호다
         work.appendChild(el('div', 'fg-up-cmp', `<span class="lab">${lab}</span><b>${now}</b>${next ? `<i>›</i><b class="nx${next === now ? ' same' : ''}">${next}</b>` : ''}`));
@@ -7180,12 +7251,12 @@ function forgeUpgrade(p) {
         const act = el('div', 'fg-up-act');
         if (us.chance != null) act.appendChild(el('span', 'fg-up-chance', t('fg.chance', { p: Math.round(us.chance * 100) })));
         if (us.cost != null) act.appendChild(el('span', `fg-up-cost${us.gold < us.cost ? ' no' : ''}`, `${M.RES_ART.gold}<b>${us.cost.toLocaleString()}</b>`));
-        // 제련소를 안 지었으면 흐리고(눌린다) 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308) · 재생 중엔 잠긴다
+        // 제련소를 안 지었으면 흐리고(눌린다) 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308)
         const go = el('button', `btn primary lg${us.open ? '' : ' dim'}`, us.cost == null ? t('fg.upMax', { up: us.up }) : t('fg.go'));
-        go.disabled = !!state.fgAnim || (us.open && !us.canUpgrade);
+        go.disabled = us.open && !us.canUpgrade;
         go.onclick = () => {
             if (!us.open) { flashNeed('upgrade_item'); return; }
-            forgeUpgradeGo(it, us);
+            forgeUpgradeGo(it);
         };
         act.appendChild(go);
         work.appendChild(act);
@@ -7470,23 +7541,33 @@ function shopGoods(list, src, cycle, potions = [], bps = []) {
         box.appendChild(split);
     } else box.appendChild(grid);
 
+    // 물약 수 — 사기 줄의 ×n 이 고른다(`state.shopPotionN` · 기본 1) · 가격은 그 수의 값이다 (§8-3 · 2026-10-23 사용자 「클릭하면 가격이 바뀌고 buy를 눌러야 사지도록」)
+    const pn = sel?.potion ? state.shopPotionN ?? 1 : 1;
+    const cost = sel?.potion ? SYS.game.shopPotionGold(sel.potion.id, pn) : sel?.gold;
     // 사기 줄 — 고른 것의 이름(희귀도 색) · 가격 · [사기]. 고른 것이 없으면 `—` 와 꺼진 [사기] (§8-3)
     const bar = el('div', 'td-buy', sel
         ? `<span class="td-buy-n"${sel.color ? ` style="color:${sel.color}"` : ''}>${sel.name}</span>
-           <span class="td-price${poor(sel) ? ' no' : ''}">${sel.gold.toLocaleString()} G</span>`
+           <span class="td-price${poor({ gold: cost }) ? ' no' : ''}">${cost.toLocaleString()} G</span>`
         : '<span class="td-buy-n muted">—</span>');
     // 상단을 안 지었으면 흐리고 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308)
     const open = SYS.game.hasFeature(G, 'shop');
+    // 물약을 골랐으면 [구매] 왼쪽에 수 고르기 셋 — 누르면 그 수를 고른다(가격이 바뀐다) · 고른 것을 다시 누르면 1개로 · 사는 것은 [구매]
+    //   수는 `[balance.csv:shop_potion_bulk_*]` · 사도 · 다른 물약을 골라도 고른 수는 남는다
+    if (sel?.potion) for (const n of [1, 2, 3].map(k => D.balance[`shop_potion_bulk_${k}`])) {
+        const m = el('button', `btn sm${pn === n ? ' on' : ''}`, `×${n}`);
+        m.onclick = () => { state.shopPotionN = pn === n ? 1 : n; render(); };
+        bar.appendChild(m);
+    }
     const b = el('button', `btn sm primary${open ? '' : ' dim'}`, t('td.buy'));
     b.disabled = !sel;
     // 장비는 `game.shopBuy` 가 정산한다 — 골드를 내고 인벤토리 끝에 넣는다 (§8-3 · 2026-09-27).
     //   ⚠ 재료 · 특수상단은 정산이 `game_logic` 에 없다 — 미착수 안내는 새 문구가 아니라 도움말·미착수 화면이 쓰던 키 그대로다 (ui 원칙 4 · §11)
     b.onclick = () => {
         if (!open) { flashNeed('shop'); return; }
-        // 물약 — `game.shopPotionBuy` · 사도 고른 채 둔다(거듭 산다 · 매진 없음)
+        // 물약 — `game.shopPotionBuy` · 고른 수만큼(골드가 모자라면 하나도 안 산다) · 사도 고른 채 둔다(거듭 산다 · 매진 없음)
         if (sel?.potion) {
-            const r = SYS.game.shopPotionBuy(G, sel.potion.id);
-            if (r.ok) { flash('td.bought', { name: sel.name, g: r.gold.toLocaleString() }); save(); }
+            const r = SYS.game.shopPotionBuy(G, sel.potion.id, pn);
+            if (r.ok) { flash(pn > 1 ? 'td.boughtN' : 'td.bought', { name: sel.name, n: pn, g: r.gold.toLocaleString() }); save(); }
             else if (r.err === 'unbuilt') { flashNeed('shop'); return; }
             else flash(`td.err.${r.err === 'missing' ? 'stale' : r.err}`);
             render();
@@ -7608,15 +7689,17 @@ function faceStyleButtons() {
 
 /** 몬스터 세그먼트 — 도감 경험치 (§9). 레벨의 출처는 누적 도감 경험치(G.codexExp · 2026-10-10 처치 수 → 도감 경험치 · ADR-0587) */
 function codexMonster(p) {
-    const ch = chapterOf(state.codexChapter) ?? D.chapterList[0];
-    // **해금은 안 본다** — 전 챕터·전 몬스터를 그대로 그린다 (SCREEN_DESIGN §9, 2026-09-06)
+    // 장은 **이번 버전이 여는 장까지만** — 그 뒤(6 · 7장)는 버튼도 행도 없다 (§9 · ADR-0741) · 고른 장이 그 밖이면 첫 장
+    const chs = D.chapterList.filter(c => c.id <= D.balance.chapter_open_max);
+    const ch = chs.find(c => c.id === state.codexChapter) ?? chs[0];
+    // **해금은 안 본다** — 그 안의 전 챕터·전 몬스터를 그대로 그린다 (SCREEN_DESIGN §9, 2026-09-06)
     const stages = codexStages().filter(st => st.chapter === ch.id).map(st => ({
         ...st, monsters: st.monsters.map(m => ({ ...m, exp: G.codexExp[m.id] ?? 0 })),
     }));
 
     const bar = el('div', 'sub-bar');
     // 챕터 버튼은 상단바 탭 세그먼트와 같은 크기다 — `.cx-ch-seg` 가 메인 배율을 되돌린다 (§9 · 2026-09-21 사용자 지시)
-    const chSeg = segmented(D.chapterList.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}`, color: sinColor(c.sin) })), ch.id,
+    const chSeg = segmented(chs.map(c => ({ id: c.id, label: `Ch${c.id} ${L(c.name)}`, color: sinColor(c.sin) })), ch.id,
         id => { state.codexChapter = id; render(); });
     chSeg.classList.add('cx-ch-seg');
     bar.appendChild(chSeg);

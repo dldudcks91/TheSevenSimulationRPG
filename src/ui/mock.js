@@ -493,6 +493,12 @@ export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}$
  */
 export const POTION_SLOT_ART = `${POTION_ART_DIR}slot${ICON_EXT}`;
 /**
+ * 첫 클리어 상자 · 우편함 그림 [2026-10-23 · R328 · base_expedition_design §1-6 · SCREEN_DESIGN §2 · §6] — Codex 시트 한 장의 두 칸(`icons_source/items/source/sheet_box_mail.png`).
+ * 상자는 **봉인된 무기 칸**이 무기 그림 대신 든다(열면 그 무기 그림) · 편지봉투는 상단바 우편함 버튼이 든다
+ */
+export const CLEAR_BOX_ART = `./assets/art/icons/items/box/clear_box${ICON_EXT}`;
+export const MAIL_ART = `./assets/art/icons/mail/mail${ICON_EXT}`;
+/**
  * 방어구 · 장신구 그림 — `icons/items/item_base/<base_id>.webp` (2026-09-03 · **베이스 축으로 개정 2026-09-17** · SCREEN_DESIGN §2).
  *
  * 축은 `item_base.csv:base_id` 다 — 개체가 드롭 때 그 id 를 들고(`item.js:build` · INTERFACE 「item 객체」) 화면은 그대로 읽는다.

@@ -1,0 +1,67 @@
+diff --git a/src/dev/sim.js "b/C:\\Users\\user\\AppData\\Local\\Temp\\claude\\c--Users-user-Desktop-python-text-git-TheSevenSimulationRPG\\79db0486-24ac-4963-8e8a-7574f67765bb\\scratchpad\\pace\\snap\\src\\dev\\sim.js"
+index 34fe33a..51712a2 100644
+--- a/src/dev/sim.js
++++ "b/C:\\Users\\user\\AppData\\Local\\Temp\\claude\\c--Users-user-Desktop-python-text-git-TheSevenSimulationRPG\\79db0486-24ac-4963-8e8a-7574f67765bb\\scratchpad\\pace\\snap\\src\\dev\\sim.js"
+@@ -175,6 +175,33 @@ function stageSummary(rows, seeds) {
+ 
+ /* ── campaign — 한 게임으로 원정을 잇는다 ── */
+ 
++/* scratch experiment — first-clear box: one item for a random party hero, fitted to that hero's class,
++   ilvl = cleared stage dlvl, rarity = drop weights with normal removed (magic floor). Separate rng stream. */
++const BOX_SLOTS = { weapon: ['weapon'], armor: ['armor'], helmet: ['helmet'], gloves: ['gloves'], boots: ['boots'],
++    mix5: ['weapon', 'armor', 'helmet', 'gloves', 'boots'], def4: ['armor', 'helmet', 'gloves', 'boots'] };
++function giveBox(SYS, B, G, seed, n, stageId, variant) {
++    const rng = makeRng(seed * 7919 + n * 104729 + 17);
++    const heroes = partyHeroes(SYS, G);
++    const h = heroes[Math.floor(rng() * heroes.length)];
++    const pool = BOX_SLOTS[variant];
++    const slot = pool[Math.floor(rng() * pool.length)];
++    const ilvl = Math.max(1, Number(D.stages[stageId].dlvl) || 1);
++    const weights = { normal: 0, magic: B.rarity_w_magic, rare: B.rarity_w_rare };
++    let it = null;
++    for (let k = 0; k < 40; k++) {
++        const gs = slot === 'weapon' ? SYS.item.groupsFor(h.cls) : null;
++        const opts = { slots: [slot], ilvl, rarityWeights: weights };
++        if (gs) opts.weaponGroup = gs[Math.floor(rng() * gs.length)].id;
++        it = SYS.item.rollGear(rng, opts)[0];
++        if (SYS.item.fitsClass(it, h.cls)) break;
++    }
++    G.counters.item += 1;
++    it.uid = `i${G.counters.item}`;
++    G.items[it.uid] = it;
++    G.bags[0].push(it.uid);
++    return slot;
++}
++
+ function runCampaign(SYS, B, seeds, runs, bot, opt = {}) {
+     const rows = [];
+     for (const seed of seeds) {
+@@ -189,6 +216,11 @@ function runCampaign(SYS, B, seeds, runs, bot, opt = {}) {
+             if (!r.ok) throw new Error(`sim: seed ${seed} run ${n} stage ${stageId} — ${r.err}`);
+             const rp = r.report;
+             t += rp.durationSec + B.repeat_restart_sec;
++            let boxSlot = null;
++            if (opt.box && opt.box !== 'none' && rp.won && G.progress.cleared.includes(stageId) && !(G._boxed ??= new Set()).has(stageId)) {
++                G._boxed.add(stageId);
++                boxSlot = giveBox(SYS, B, G, seed, n, stageId, opt.box);
++            }
+             const equips = bot === 'greedy' ? botEquip(SYS, G) : 0;
+             const salvaged = salvageBag(SYS, G);
+             const learned = opt.mastery ? botMastery(SYS, G) : 0;
+@@ -198,6 +230,7 @@ function runCampaign(SYS, B, seeds, runs, bot, opt = {}) {
+                 gold: rp.gold, goldHave: G.resources.gold, dustHave: G.resources.dust, kills: sum(rp.contrib ?? [], c => c.kills ?? 0),
+                 drops: rp.drops.length, discarded: rp.discarded, equips, salvaged, learned, potions,
+                 reached: G.progress.cleared.length, levels: sum(partyHeroes(SYS, G), h => h.level), dealt: dealtOf(rp),
++                boxSlot, boxWorn: boxSlot ? partyHeroes(SYS, G).some(h => Object.values(h.equipped).includes(`i${G.counters.item}`)) || null : null,
+             });
+             if (opt.until != null && G.progress.cleared.includes(opt.until)) break;
+         }
+@@ -300,7 +333,7 @@ try {
+         if (!BOT[bot]) throw new Error(`sim: bot=${bot} 은 없다 — ${Object.keys(BOT).join(' | ')}`);
+         const opt = {
+             until: q.get('until') != null ? Number(q.get('until')) : null,
+-            mastery: q.get('mastery') === '1', potion: q.get('potion') === '1',
++            mastery: q.get('mastery') === '1', potion: q.get('potion') === '1', box: q.get('box'),
+             build: q.get('build') === 'max' ? 'max' : q.get('build') ? q.get('build').split(',') : null,
+         };
+         if (opt.until != null && !D.stageOrder.includes(opt.until)) throw new Error(`sim: until=${opt.until} 이 stage.csv 에 없다`);

@@ -33,6 +33,7 @@ GAME_DIRS = [
     "items/empty",
     "items/item_base",
     "items/potion",
+    "items/box",
     "items/weapon_base/*",
     "mastery/sin",
     "mastery/class",
@@ -47,6 +48,7 @@ GAME_DIRS = [
     "lab",
     "lab/node",
     "arena",
+    "mail",
 ]
 
 

@@ -50,7 +50,7 @@ const dealtOf = rp => sum(rp.contrib ?? [], c => c.dealt ?? 0);
 
 const BOT = {
     greedy: '가방 순서대로 한 개씩 — 파티 영웅마다 「끼면」 전투 수치(heroCombatIf)를 지금과 비교한다: 무기 = 공격력 범위의 평균 ÷ 행동 주기(초당 세기) · **제 직업의 무기군만**(weapon_group.csv:classes) · 평타가 생기거나 없어지는 무기(물리 ↔ 마법)는 안 낀다 · 그 밖 = 방어. '
-        + '가장 많이 오르는 영웅에게 끼고, 안 올라도 그 자리가 비어 있으면 낀다. 벗은 것 · 남은 가방은 분해한다',
+        + '가장 많이 오르는 영웅에게 끼고, 안 올라도 그 자리가 비어 있으면 낀다. 벗은 것 · 남은 가방은 분해한다 · 첫 클리어 상자는 끼기 전에 연다(R328)',
     off: '장착하지 않는다 · 가방은 분해한다',
 };
 const BOT_MASTERY = '판마다 파티 영웅의 포인트를 masteryState 노드 순서대로 찍을 수 있는 첫 칸에 전부 찍는다';
@@ -90,6 +90,7 @@ const scoreOf = (c, slot) => slot === 'weapon' ? (atkOf(c).min + atkOf(c).max) /
 
 function botEquip(SYS, G) {
     let n = 0;
+    for (const uid of G.bags.flat()) if (G.items[uid]?.box) SYS.game.openBox(G, uid);   // 첫 클리어 상자 — 열어야 무기다 (R328)
     for (const uid of G.bags.flat()) {                 // 부대마다 인벤토리 (v40) — 봇은 전부 본다
         const it = G.items[uid];
         if (!it || SYS.game.holderOf(G, uid) !== 'bag') continue;
