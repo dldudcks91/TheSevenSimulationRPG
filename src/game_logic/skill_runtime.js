@@ -397,13 +397,13 @@ export function createSkillRuntime(ctx) {
      *   `u.chan = {a, def, left, single, tgt}` — `a` 그 칸 · `left` 남은 방 · `tgt` 기준 대상(단일 대상은 쓰러질 때까지 이 적을 친다).
      *   여는 차례가 첫 방이다 · 열린 동안 그 칸은 `readyAt = Infinity`(다시 안 골라진다 · 스턴이 밀어도 그대로) · 기본 공격 · 다른 스킬은 없다(쿨은 그대로 돈다).
      *   마법 무기는 칸 하나를 쓰고 연다(부르는 쪽 `chargeTick`) — 차던 칸은 버리고 열린 동안 `next` 가 방 사이 시계다(battle.js). 쓰는 스킬이 없으면 아래 넷은 안 돈다
-     *   **계속 닳기**(`cast = channel_tick` · 2026-10-22) — 방 사이 시계만 다르다: `iv` = [balance.csv:dot_tick_sec] · `acc` 를 battle.js `chanTick` 이 쌓아 한 방을 부른다(`chanHit`)
+     *   **계속 닳기**(`cast = channel_tick` · 2026-10-22) — 방 사이 시계만 다르다: `iv` = [balance.csv:channel_tick_sec] · `acc` 를 battle.js `chanTick` 이 쌓아 한 방을 부른다(`chanHit`)
      */
     function chanOpen(u, sel, t) {
         const def = sel.def;
         const hit = SK.scaleDef(def, u.stats ?? null).effects.find(x => x.effect === 'hit');
         const n = Math.max(1, hit?.hits ?? 1);
-        const iv = CASTS[def.cast].chan === 'tick' ? B.dot_tick_sec : null;
+        const iv = CASTS[def.cast].chan === 'tick' ? B.channel_tick_sec : null;
         sel.readyAt = Infinity;
         u.chan = { a: sel, def, left: n, single: hit?.target === 'enemy_single', tgt: null, iv, acc: 0 };
         if (u.noBasic || iv) u.next = u.period;

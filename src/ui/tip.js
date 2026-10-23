@@ -870,7 +870,7 @@ function shopSource() {
 
 /**
  * 도감 툴팁 왼쪽 장 = **선술집 후보 카드 그대로** (ADR-0233 · SCREEN_DESIGN §3 후보 카드 · §8) — `app.js:candidateCard` 와 같은 `.ng-card` 칸 · 같은 줄 순서다:
- * 초상 옆에 칩 줄(등급 + 죄종) · 이름 · 직업 · 역할 · 무기군 · 고유 스킬, 아래에 능력치 7 막대 · 능력치 합.
+ * 초상 옆에 칩 줄(종족 + 죄종 + 직업 · ADR-0724) · 이름 · 역할 · 무기군 · 고유 스킬, 아래에 능력치 7 막대 · 능력치 합.
  * 값은 `monster.csv` 의 기본 능력치 7 — 레벨과 무관하고 `battle.makeEnemy` 가 읽는 것과 같다. 막대 줄은 **같은 함수**다(`attrRowsHtml` · ADR-0114).
  * 후보 카드의 `Lv.1` · 최대 HP 줄은 없다 — 몬스터의 레벨 · HP 는 스테이지 레벨 · 등급이 정해 한 값이 없다
  */
@@ -878,9 +878,9 @@ function codexCandCard(m, grade) {
     const row = D.monsters?.[m.id];
     const sin = monsterSin(m.id);
     const sinColor = M.SINS[sin]?.color ?? 'var(--text-muted)';
-    // 등급 = 영웅의 티어 칩 자리 — 보스는 보스, 아니면 일반 / 정예 고르개 (`kind.*` — 관전 카드 · 도감 고르개와 같은 말).
-    //   윗변 · 막대 · 칩 색 = 관전 몬스터 툴팁의 등급 색. 어두운 색은 막대만 밝힌다(`bar-lift` · monsterTipCard 와 같다)
-    const kind = m.boss ? 'boss' : grade;
+    // 영웅의 티어 칩 자리 = **종족**(`monster.csv:monster_type` 의 이름 — 관전 신원과 같은 `SYS.commission.races` · ADR-0724).
+    //   윗변 · 막대 · 칩 색 = 관전 몬스터 툴팁의 등급 색(보스는 보스, 아니면 일반 / 정예 고르개). 어두운 색은 막대만 밝힌다(`bar-lift` · monsterTipCard 와 같다)
+    const race = SYS.commission?.races?.find(x => x.id === row?.monster_type);
     const line = GRADE_LINE[m.boss ? 'stage_boss' : grade] ?? GRADE_LINE.normal;
     const stats = row ? Object.fromEntries(D.heroAttributes.map(s => [s.id, row[s.id]])) : null;
     const total = stats ? D.heroAttributes.reduce((a, s) => a + (stats[s.id] ?? 0), 0) : '—';
@@ -898,9 +898,8 @@ function codexCandCard(m, grade) {
         <div class="ng-head">
             ${face}
             <div class="ng-id">
-                <div class="ng-chips"><span class="tier-chip" style="color:${line}">${t(`kind.${kind}`)}</span><span class="sin-chip" style="color:${sinColor}">${L(M.SINS[sin]) || sin}</span></div>
+                <div class="ng-chips">${race ? `<span class="tier-chip" style="color:${line}">${L(race.name)}</span>` : ''}<span class="sin-chip" style="color:${sinColor}">${L(M.SINS[sin]) || sin}</span>${cls ? `<span class="cls-chip"${cls.color ? ` style="color:${cls.color}"` : ''}>${L(cls)}</span>` : ''}</div>
                 <div class="ng-name"><b>${L(monsterName(m.id))}</b></div>
-                <div class="ng-cls">${cls ? L(cls) : ''}</div>
                 <div class="ng-role muted">${role}</div>
                 ${skills}
             </div>
@@ -1035,7 +1034,7 @@ function amountPhrase(line, part, atkType, R) {
  * 자리는 **틀이 쓸 때만** 만든다(`() =>`) — 안 쓰는 자리가 `R.fx` 를 켜지 않게.
  *   n 쿨(단위 없음 — 틀이 「초마다」를 든다 · 설명창은 쿨감을 곱한 실제 쿨 · 줄 문장은 표기 쿨 — ADR-0703) · d 수량 구절(피해는 종류까지 — ADR-0477 · 벽은 HP 만) · h 타수 · k 감쇠
  *   s · v 거는 걸린 효과의 시간 · 값(`hit` 줄이면 맞은 대상에게 거는 것 — 결빙 · 음수는 절댓값이라 방향은 틀이 든다 · 이베이드는 횟수)
- *   v2 둘째 `apply` 줄의 값(퀵 드로우 · 오버드로우 — 슬롯 식 없이 원값 · 설명창 재료는 첫 줄 `skill.previewOf`) · m 프렌지 겹 상한 · t 오오라 피해 간격
+ *   v2 둘째 `apply` 줄의 값(퀵 드로우 · 오버드로우 — 슬롯 식 없이 원값 · 설명창 재료는 첫 줄 `skill.previewOf`) · m 프렌지 겹 상한 · t 오오라 피해 간격 · i 계속 닳기의 방 사이 간격
  *   c · x 확률로 터지는 추가 피해의 확률 · 배수(둘째 문장 `sk.line.proc` 가 쓴다)
  */
 function descSlots(def, pv, atkType, R) {
@@ -1063,6 +1062,7 @@ function descSlots(def, pv, atkType, R) {
         v2: () => st2 ? slot({ raw: Math.abs(st2.value), unit: UNIT.pct }, R) : null,
         m: () => hl(num(D.balance.frenzy_stack_max)),
         t: () => sec(D.balance.aura_pulse_sec),
+        i: () => sec(D.balance.channel_tick_sec),
         c: () => at(e.procChance, 'procChance', UNIT.pct),
         x: () => at(e.procMult, 'procMult', UNIT.pct),
     };

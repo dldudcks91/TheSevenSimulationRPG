@@ -912,9 +912,8 @@ function refreshUnit(state, u) {
     const hpText = u.node.querySelector('.hp-text'), hpNow = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
     if (hpText.textContent !== hpNow) hpText.textContent = hpNow;
     u.node.classList.toggle('dead', u.hp <= 0);
-    // 정신 집중 (R318 · ADR-0720) — 쓰러지면 걷힌다 · 열린 동안 카드가 떨린다(나감 · 떨림은 「공격 시 흔들림」을 따른다)
+    // 정신 집중 (R318 · ADR-0720) — 쓰러지면 걷힌다 · 표시는 카드가 아니라 쓰는 스킬 칸이 든다(아래 쿨 게이지 · ADR-0723)
     if (u.hp <= 0) u.chan = null;
-    u.node.classList.toggle('chan', !!u.chan && lungeFxOn());
     // 행동 게이지 — 마지막 행동 이후 경과가 주기에 닿으면 가득 찬다 (SCREEN_DESIGN §4-2 재개정 2026-09-04).
     // 행동한 틱(u.acted — apply 의 skill/hit/dodge 가 세우고 start 의 틱 루프가 눕힌다)은 **100% 를 그린다** —
     // 이벤트가 lastAct 를 곧장 리셋하면 「꽉 참」 프레임이 화면에 한 번도 안 나온다(옛 85% 발광이 때우던 구멍).
@@ -952,6 +951,8 @@ function refreshUnit(state, u) {
         const span = Math.max(1e-6, s.readyAt - s.firedAt);
         const pct = u.hp <= 0 || s.readyAt === Infinity ? 0 : clamp01(1 - (s.readyAt - state.t) / span);
         slot.querySelector('.cd-mask').style.transform = `scaleY(${1 - pct})`;   // 남은 쿨만큼 위에서 덮는다
+        // 정신 집중 중인 칸 (ADR-0723) — 쓰는 칸은 `readyAt = Infinity` 로 덮여 있다(castSkill) · 덮개를 걷고 테두리에 불빛이 돈다(CSS `.cd-slot.chan`)
+        slot.classList.toggle('chan', !!u.chan && u.hp > 0 && s.id === u.chan.s && s.readyAt === Infinity);
         // 준비 강조(`ready` 파란 테두리)는 2026-09-03 사용자 지시로 삭제 — 마스크가 다 걷힌 것 자체가 준비다
     });
     // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 카드 밖 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
@@ -1543,7 +1544,7 @@ function apply(state, root, opts, ev) {
             if (u && ev.chan) u.chan = { s: ev.s, n: ev.chan, left: ev.chan - 1, at: ev.t, iv: ev.iv ?? null };
             break;
         }
-        case 'chan': {    // 정신 집중의 한 방 (R318 · ADR-0720) — 남은 방으로 게이지를 다시 맞추고 칸이 한 번 튄다(계속 닳기는 1초마다라 칸은 안 튄다) · 타격은 뒤따르는 hit 가 그린다 · 로그 줄은 없다
+        case 'chan': {    // 정신 집중의 한 방 (R318 · ADR-0720) — 남은 방으로 게이지를 다시 맞추고 칸이 한 번 튄다(계속 닳기는 방이 잦아 칸은 안 튄다) · 타격은 뒤따르는 hit 가 그린다 · 로그 줄은 없다
             const u = U(ev.u);
             if (u?.chan) { markActed(u, ev.t); Object.assign(u.chan, { left: ev.left, at: ev.t }); if (!u.chan.iv) castSkill(state, u, ev); }
             break;

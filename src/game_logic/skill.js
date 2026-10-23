@@ -359,6 +359,7 @@ export function createSkillSystem(data) {
             v2: d.effects.slice(1).some(x => x.effect === 'apply'),    // 둘째 걸린 효과의 값
             m: st0?.stat === 'frenzy',                                 // 겹 상한
             t: st0?.stat === 'pulse',                                  // 오오라 피해 간격
+            i: CASTS[d.cast].chan === 'tick',                          // 계속 닳기의 방 사이 간격 (2026-10-22)
         };
         for (const k of ko) if (!slotHas[k]) bad(`desc 자리 {${k}} — ${k in slotHas ? '이 스킬엔 그 수가 없다' : `모르는 자리(${Object.keys(slotHas).join('·')})`}`);
         for (const k of ['n', 'd']) if (slotHas[k] && !ko.includes(k)) bad(`desc 에 {${k}} 가 없다 — ${k === 'n' ? '쿨' : '수량'}은 문장이 말한다`);

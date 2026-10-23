@@ -1473,8 +1473,8 @@ export function createBattleSystem(data) {
         }
 
         /**
-         * 계속 닳기 정신 집중의 한 틱 [2026-10-22 · 사용자 「도트딜로」 · 「1초간격」 · 「직격」 · battle_design §3-2] — 열린 동안 그 유닛은 차례 · 칸 충전을 건너뛰고(`next` 가 선다)
-         *   여기서 `acc` 를 쌓아 `iv`([balance.csv:dot_tick_sec])마다 한 방(`rt.chanHit` — `chan` 이벤트 · 직격 굴림)을 친다. **경직 · 스턴 중엔 안 쌓는다**(빔이 선다).
+         * 계속 닳기 정신 집중의 한 틱 [2026-10-22 · 사용자 「도트딜로」 · 「직격」 · 간격 「0.5초마다」 · battle_design §3-2] — 열린 동안 그 유닛은 차례 · 칸 충전을 건너뛰고(`next` 가 선다)
+         *   여기서 `acc` 를 쌓아 `iv`([balance.csv:channel_tick_sec])마다 한 방(`rt.chanHit` — `chan` 이벤트 · 직격 굴림)을 친다. **경직 · 스턴 중엔 안 쌓는다**(빔이 선다).
          *   살아 있는 적이 없으면 치지 않는다(라운드가 끝나는 틱) · 마지막 방이면 `chanHit` 이 같은 틱에 닫는다 · rng 는 한 방의 직격 굴림뿐
          */
         function chanTick(u) {

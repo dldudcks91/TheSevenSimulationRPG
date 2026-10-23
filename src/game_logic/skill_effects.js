@@ -50,7 +50,7 @@ export const CASTS = {
     aura: { picked: false, cooled: false },
     event: { picked: false, cooled: false },
     channel: { picked: true, cooled: true, chan: 'turn' },
-    // 계속 닳기 [2026-10-22 · 사용자 「도트딜로」 · 「1초간격」 · 「직격」] — 같은 정신 집중이고 방이 [balance.csv:dot_tick_sec] 마다다(타수 = 틱 수 · 배율 = 한 틱 몫)
+    // 계속 닳기 [2026-10-22 · 사용자 「도트딜로」 · 「직격」 · 간격 「0.5초마다」] — 같은 정신 집중이고 방이 [balance.csv:channel_tick_sec] 마다다(타수 = 틱 수 · 배율 = 한 틱 몫 · 중독 틱과 따로)
     channel_tick: { picked: true, cooled: true, chan: 'tick' },
 };
 export const CAST_IDS = Object.keys(CASTS);

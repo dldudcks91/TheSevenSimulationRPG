@@ -204,7 +204,9 @@ function fmtExpTime(ms) {
 const classDef = id => D.classes.find(c => c.id === id);
 const className = id => L(classDef(id)) || id;
 const classColor = id => classDef(id)?.color ?? null;
-const classWeapons = id => D.weaponGroupList.filter(g => g.classes.includes(id)).map(g => L(g)).join(' / ');
+/** 직업 칩 — 후보 카드 칩 줄의 셋째(죄종 오른쪽) · 그 직업 색 (SCREEN_DESIGN §3 · ADR-0724) */
+const clsChip = id => `<span class="cls-chip"${classColor(id) ? ` style="color:${classColor(id)}"` : ''}>${className(id)}</span>`;
+const classWeapons =id => D.weaponGroupList.filter(g => g.classes.includes(id)).map(g => L(g)).join(' / ');
 const classLine = id => { const c = classDef(id); return c ? `${L(c.role)} · ${classWeapons(id)}` : t('class.unassigned'); };
 const slotDef = id => D.slots.find(s => s.id === id);                                   // 부위
 const posDef = pos => slotDef(D.equipSlots.find(s => s.id === pos)?.part);             // 착용 위치 → 부위 정의
@@ -854,14 +856,15 @@ function candidateCard(h, extra = '', fresh = false) {
     // 최대 HP — **고용하면 캐릭터 탭에 설 값**이다(장비 없음 · 지금 판의 도감 보너스 포함 · `game.heroCombat`). 레벨 1 값이 직업마다 달라
     //   (`class.csv:hp_base` · 10-02) 공통값을 찍으면 첫 전투에서 반이 된다 (DEV_PLAN §4 #74). 시작 카드는 판이 없거나 지울 판이라 영웅 혼자의 값
     const hpMax = (fresh || !G ? SYS.hero.computeCombat(h, []) : SYS.game.heroCombat(G, h)).hp_max;
-    // 죄종 칩만 그 죄종 색이다 (SCREEN_DESIGN §3 · ADR-0155) — 윗변 · 막대는 등급 색 그대로(ADR-0023)
+    // 죄종 칩은 그 죄종 색 · 직업 칩은 그 직업 색이다 (SCREEN_DESIGN §3 · ADR-0155 · ADR-0724) — 윗변 · 막대는 등급 색 그대로(ADR-0023)
+    //   직업은 칩 줄 셋째(죄종 오른쪽)로 올라가 이름 아래 줄은 레벨만 든다 (ADR-0724)
     c.innerHTML = `
         <div class="ng-head">
             ${heroFace(h)}
             <div class="ng-id">
-                <div class="ng-chips">${tierChip(h)}<span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span></div>
+                <div class="ng-chips">${tierChip(h)}<span class="sin-chip" style="color:${sinColor(h.sin)}">${sinName(h.sin)}</span>${clsChip(h.cls)}</div>
                 <div class="ng-name"><b>${L(h.name)}</b></div>
-                <div class="ng-cls">${className(h.cls)} · Lv.${h.level}</div>
+                <div class="ng-cls">Lv.${h.level}</div>
                 <div class="ng-role muted">${classLine(h.cls)}</div>
                 ${innate ? `<div class="ng-skill">
                     <span class="ico">${skillImg(innate)}${skLvTag(innate)}</span>

@@ -968,7 +968,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'party_gold_find_k', 'party_item_find_k', 'party_magic_find_k',
         'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare',
         'tactic_reroll_base_cost', 'tactic_reroll_lock_mult',
-        'potion_slot_max', 'potion_use_hp_pct', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'burn_heal_cut', 'dot_tick_sec', 'repeat_restart_sec',
+        'potion_slot_max', 'potion_use_hp_pct', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'burn_heal_cut', 'dot_tick_sec', 'channel_tick_sec', 'repeat_restart_sec',
         'boss_respawn_sec',    // 챕터보스 재등장 (2026-10-10 · R240)
         'gamble_batch_spins', 'gamble_stake_steps', 'gamble_stake_gold', 'gamble_stake_chapter_mult',
         'gamble_reels', 'gamble_rows', 'gamble_hold_trigger', 'gamble_hold_respins', 'gamble_hold_coin_pct',
@@ -8239,7 +8239,7 @@ check('battle: 화상 · 중독 · 스턴 — 중독은 dot_tick_sec 마다 독 
 const CHAN_N = 5;
 const chanRow = (id, pri, cast = 'channel') => ({ ...D.skillRows.find(r => r.skill_id === 'war_bash'), skill_id: id, owner_kind: 'monster', owner_id: '-', cast, priority: pri, innate_pool: 0, amulet_pool: 0, starter_pool: 0, tier: '-' });
 const chanLine = (id, seq = 1) => ({ ...D.skillEffectRows.find(r => r.skill_id === 'war_bash'), skill_id: id, seq, hits: CHAN_N });
-// `zz_chant` = 계속 닳기(`channel_tick` · 2026-10-22 — 방이 1초 틱마다)
+// `zz_chant` = 계속 닳기(`channel_tick` · 2026-10-22 — 방이 [balance.csv:channel_tick_sec] 마다)
 const SYS_CHAN = buildSystems({ ...D, skillRows: [...D.skillRows, chanRow('zz_chan', 97), chanRow('zz_chant', 95, 'channel_tick')], skillEffectRows: [...D.skillEffectRows, chanLine('zz_chan'), chanLine('zz_chant')] });
 /** p0 만 정신 집중 하나를 든 파티 — 나머지는 칸이 없다 · `mk(전투 시트, i)` 로 시트를 손본다 · `id` 로 든 스킬을 바꾼다 */
 const chanUnits = (mk = c => c, id = 'zz_chan') => godUnits().map((u, i) => ({ ...u, combat: mk(u.combat, i), actives: i === 0 ? [{ id, source: 'innate' }] : [] }));
@@ -8300,19 +8300,19 @@ check('battle: 정신 집중 — 여는 차례가 첫 방 · 차례마다 한 �
         createSkillSystem({ balance: D.balance, rows: [...D.skillRows, chanRow('zz_chan2', 96)], effectRows: [...D.skillEffectRows, chanLine('zz_chan2', 1), chanLine('zz_chan2', 2)], statusRows: D.skillStatusRows, tagRows: D.skillTagRows, attributes: D.heroAttributes });
     } catch (e) { threw = /channel/.test(String(e)); }
     if (!threw) fail('hit 줄 둘인 정신 집중이 로드됐다');
-    // ⑤ 계속 닳기(`channel_tick`) — 방이 행동 주기와 상관없이 dot_tick_sec 마다 · 여는 skill 이 `iv` 를 싣는다 · 그동안 p0 의 타격은 그 스킬뿐 · 태그도 정신 집중
+    // ⑤ 계속 닳기(`channel_tick`) — 방이 행동 주기와 상관없이 channel_tick_sec 마다 · 여는 skill 이 `iv` 를 싣는다 · 그동안 p0 의 타격은 그 스킬뿐 · 태그도 정신 집중
     const tk = SYS_CHAN.battle.simulate(chanUnits(weak, 'zz_chant'), 1013, makeRng(7)).timeline;
     const k0 = tk.findIndex(ev => ev.e === 'skill' && ev.u === 'p0' && ev.s === 'zz_chant');
     const k1 = tk.findIndex((ev, j) => j > k0 && ev.e === 'chanEnd' && ev.u === 'p0');
     if (k0 < 0 || k1 < 0) fail(`계속 닳기를 열고 닫지 않았다 (열기 ${k0} · 닫기 ${k1})`);
-    if (tk[k0].chan !== CHAN_N || tk[k0].iv !== B.dot_tick_sec) fail(`계속 닳기 skill ${JSON.stringify(tk[k0])} — chan ${CHAN_N} · iv ${B.dot_tick_sec}`);
+    if (tk[k0].chan !== CHAN_N || tk[k0].iv !== B.channel_tick_sec) fail(`계속 닳기 skill ${JSON.stringify(tk[k0])} — chan ${CHAN_N} · iv ${B.channel_tick_sec}`);
     const tat = [tk[k0].t, ...tk.slice(k0, k1).filter(ev => ev.e === 'chan' && ev.u === 'p0').map(ev => ev.t)];
     const tgaps = tat.slice(1).map((v, k) => v - tat[k]);
-    if (tat.length !== CHAN_N || tgaps.some(g => Math.abs(g - B.dot_tick_sec) > 0.11)) fail(`계속 닳기 방 ${tat.length} · 간격 [${tgaps}] — ${CHAN_N} 방 · ${B.dot_tick_sec}초마다`);
+    if (tat.length !== CHAN_N || tgaps.some(g => Math.abs(g - B.channel_tick_sec) > 0.11)) fail(`계속 닳기 방 ${tat.length} · 간격 [${tgaps}] — ${CHAN_N} 방 · ${B.channel_tick_sec}초마다`);
     const tstr = tk.slice(k0, k1 + 1).filter(ev => (ev.e === 'hit' || ev.e === 'dodge') && ev.a === 'p0');
     if (tstr.length !== CHAN_N || tstr.some(ev => ev.s !== 'zz_chant')) fail(`계속 닳기 p0 타격 ${tstr.length} · s [${[...new Set(tstr.map(ev => ev.s))]}] — 틱마다 1타 · 기본 공격 없음`);
     if (!SYS_CHAN.skill.tagsOf(SYS_CHAN.skill.defs.zz_chant).includes('channel')) fail('계속 닳기에 정신 집중 태그가 없다');
-    return `끊어 치기 방 ${CHAN_N} · 간격 ${gaps[0].toFixed(1)}초 · 대상 ${strikes[0].d} 고정 · 마법 칸 ${m[j0].ch} 유지 · 라운드 경계 닫힘 ${cut} · 계속 닳기 ${tgaps.length + 1}방 · ${B.dot_tick_sec}초마다`;
+    return `끊어 치기 방 ${CHAN_N} · 간격 ${gaps[0].toFixed(1)}초 · 대상 ${strikes[0].d} 고정 · 마법 칸 ${m[j0].ch} 유지 · 라운드 경계 닫힘 ${cut} · 계속 닳기 ${tgaps.length + 1}방 · ${B.channel_tick_sec}초마다`;
 });
 /* ── 2026-09-09 신설 — 직업 스킬 풀 37 이 연 어휘 (skill_design §12 · DEV_PLAN R61) ── */
 check('runtime: ally_single — 회복은 **HP 비율 최저** 아군 하나에게 간다 · 대상 선택 rng 0회 — 쓰는 것은 회복량 굴림 1회뿐 (사용자 확정 2026-09-09 · R90)', () => {
