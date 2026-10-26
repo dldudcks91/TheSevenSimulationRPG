@@ -21,6 +21,9 @@ export const SKILL_LOOKS = {
     war_shout: { buff: [['ring', { c: 'gold', n: 3, s: 80, w: 3, step: 110 }]] },                         // 워 크라이 — 소리 고리 셋
     war_battleorders: { buff: [['sweep', { c: 'gold' }], ['chevron', { c: 'gold', n: 3 }]] },             // 배틀오더스 — 금빛 훑음 + 꺾쇠
     war_ironskin: { buff: [['shell', { c: 'steel' }], ['flash', { c: 'steel' }]] },                       // 아이언 스킨 — 강철 막
+    war_frenzy: { buff: [['sweep', { c: 'blood' }], ['chevron', { c: 'blood', n: 3 }]] },
+    war_warcry: { bad: [['ring', { c: 'blood', s: 80, r0: 1.3, r1: .7 }], ['xmark', { c: 'blood', s: 24 }]] },
+    war_battlecry: { bad: [['ring', { c: 'earth', s: 80, r0: 1.3, r1: .7 }], ['spray', { c: 'steel', n: 4, shape: 'shard', r0: 28, r1: 44 }]] },
 
     /* ── 기사 — 성광 · 강철 ── */
     kni_resistshield: { buff: [['shell', { c: 'holy' }], ['ring', { c: 'holy', n: 3, s: 80, w: 3, step: 110 }]] },   // 레지스탕스 실드 — 성광 막 + 고리 (2026-10-16 · ~~스마이트~~ 자리)
@@ -28,6 +31,8 @@ export const SKILL_LOOKS = {
     kni_charge: { hit: [['streak', { c: 'steel', a: 'in', len: 72, w: 12 }], ['flare', { c: 'steel', s: 60, dl: 80 }], ['ring', { c: 'steel', s: 66, dl: 80 }]] },   // 차지 — 굵은 창끝이 날아든다
     kni_rush: { hit: [['streak', { c: 'steel', a: 'in', n: 2, len: 60, w: 6, gap: 14, step: 40 }]] },    // 러시 — 짧은 찌르기 둘
     kni_enchant: { buff: [['streak', { c: 'holy', a: -60, len: 100, w: 5 }], ['rise', { c: 'holy', n: 10, shape: 'shard' }]] },   // 인챈트 — 칼날에 빛 + 빛 조각
+    kni_sweep: { hit: [['arc', { c: 'steel', a: 0, jit: 0, s: 110, h: 40, w: 8 }], ['spray', { c: 'blood', n: 3, r0: 20, r1: 44 }]] },
+    kni_holyfire: { buff: [['ring', { c: 'fire', s: 80, w: 4 }], ['rise', { c: 'holy', n: 6 }]] },
 
     /* ── 궁수 — 바람 ── */
     arc_snipe: { hit: [['streak', { c: 'wind', a: 'in', len: 76, w: 3 }], ['flare', { c: 'wind', s: 40, dl: 70 }]] },   // 스나이프 — 가늘고 긴 바늘
@@ -36,6 +41,9 @@ export const SKILL_LOOKS = {
     arc_guided: { hit: [['sigil', { c: 'wind', s: 60, t: 360 }], ['streak', { c: 'wind', a: 'in', len: 72, w: 5, dl: 120 }]] },   // 가이디드 애로우 — 표식 뒤 바늘
     arc_pierce: { buff: [['sweep', { c: 'wind' }], ['streak', { c: 'wind', a: 0, jit: 0, len: 104, w: 4 }]] },   // 피어싱 샷 — 바람 훑음 + 가로 줄
     arc_poison: { buff: [['sweep', { c: 'poison' }], ['rise', { c: 'poison', n: 8, shape: 'drop' }]] },  // 포이즌 애로우 — 독 훑음 + 방울
+    arc_arrowrain: { hit: [['rain', { c: 'wind', n: 5, far: 50 }], ['streak', { c: 'steel', a: 55, len: 64, w: 4 }]] },
+    arc_evade: { buff: [['sweep', { c: 'wind' }], ['ring', { c: 'wind', s: 76, fy: .45, oy: 22 }]] },
+    arc_overdraw: { buff: [['sweep', { c: 'wind' }], ['arc', { c: 'earth', a: -90, jit: 0, s: 100, h: 44, w: 5 }]] },
 
     /* ── 마법사 — 원소 ── */
     mag_fireball: { hit: [['flare', { c: 'fire', s: 76 }], ['spray', { c: 'fire', n: 12, up: 8, r0: 26, r1: 52 }]] },   // 파이어볼 — 터짐 + 불똥
@@ -44,6 +52,10 @@ export const SKILL_LOOKS = {
     mag_frostnova: { hit: [['ring', { c: 'cold', s: 84, w: 5 }], ['ring', { c: 'cold', fy: 0.35, oy: 24, s: 84, dl: 80 }], ['spray', { c: 'cold', n: 6, shape: 'shard', r0: 20, r1: 44 }]] },   // 프로스트 노바 — 냉기 고리 둘
     mag_lightning: { hit: [['flare', { c: 'lightning', s: 64 }], ['bolt', { c: 'lightning', n: 3, h: 52 }]] },   // 라이트닝 — 번개 셋
     mag_chain: { hit: [['bolt', { c: 'lightning', n: 2, from: 'side' }], ['spray', { c: 'lightning', n: 6, shape: 'dash', r0: 20, r1: 46 }]] },   // 체인 라이트닝 — 옆에서 이어지는 번개
+    mag_ignite: { buff: [['sweep', { c: 'fire' }], ['rise', { c: 'fire', n: 6 }]] },
+    mag_deepfreeze: { buff: [['shell', { c: 'cold' }], ['spray', { c: 'cold', n: 4, shape: 'shard', r0: 28, r1: 44 }]] },
+    mag_surge: { buff: [['sweep', { c: 'lightning' }], ['bolt', { c: 'lightning', n: 4, short: true, h: 44 }]] },
+    mag_echo: { buff: [['ring', { c: 'cold', n: 3, s: 80, step: 110 }]] },
 
     /* ── 사제 — 성광 · 회복 · 그림자 ── */
     pri_judgment: { hit: [['pillar', { c: 'holy', w: 50, h: 100 }], ['ring', { c: 'holy', s: 80, dl: 120 }]] },   // 심판 — 굵은 빛기둥 + 고리
@@ -54,10 +66,12 @@ export const SKILL_LOOKS = {
     pri_regen: { buff: [['sigil', { c: 'heal', s: 76 }], ['rise', { c: 'heal', n: 5, t: 900 }]] },       // 프레이어 오브 리제너레이션 — 초록 문양 + 느린 알갱이
     pri_penitence: { buff: [['haze', { c: 'shadow' }], ['ring', { c: 'shadow', fy: 0.35, oy: 26, s: 84 }]] },   // 페니턴스 — 그림자 + 땅 고리
     pri_bind: { buff: [['sigil', { c: 'shadow', s: 76 }], ['streak', { c: 'shadow', a: 0, jit: 0, n: 2, gap: 30, len: 100, w: 5 }]] },   // 바인드 — 문양 + 묶는 가로 줄
+    pri_doom: { bad: [['haze', { c: 'shadow' }], ['ring', { c: 'blood', s: 80, r0: 1.3, r1: .7 }]] },
 
     /* ── 몬스터 ── */
     pri_summon: { call: [['ring', { c: 'earth', fy: 0.35, oy: 30, s: 110 }], ['rise', { c: 'earth', n: 6, shape: 'shard' }]] },   // 소환 — 흙 고리 + 흙 조각 (옛 고블린 소환 · 2026-10-16 R258)
     mon_selfdestruct: { hit: [['flare', { c: 'blood', s: 110 }], ['ring', { c: 'fire', s: 110, w: 6 }], ['spray', { c: 'fire', n: 10, shape: 'shard' }]] },   // 자폭 — 큰 붉은 터짐
+    mon_hellfire: { hit: [['pillar', { c: 'fire', w: 38, h: 100 }], ['rise', { c: 'blood', n: 8 }]] },
 
     /* ── 광전사 — 피 ── */
     war_ragnarok: { buff: [['flash', { c: 'blood' }], ['rise', { c: 'fire', n: 14 }], ['ring', { c: 'blood', s: 120 }]] },   // 라그나로크 — 붉은 번쩍 + 불티

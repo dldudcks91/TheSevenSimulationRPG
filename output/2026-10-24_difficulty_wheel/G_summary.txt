@@ -1,0 +1,258 @@
+# G — seeds 40 · bot: 게임 자동 장착(autoEquip · 영웅 세기 R313)을 파티 영웅마다 + 반지 · 목걸이는 아이템 레벨 → 등급이 높으면 바꾼다 · 첫 클리어 상자 연다 · 남은 가방 분해 · 마스터리 첫 칸 몰아 찍기 · 상단 물약 최고 단계 구매 · 건물 max 끝까지 · 무기 · 갑옷은 normal 부터 늘 +6강(비용 · 실패 무시)
+assume: 시작 파티 그대로 — 고용 · 해고 · 수색 없음 / 강화 · 상점 장비 · 제작 · 크래프트 · 책 · 전직 · 전술 리롤 없음 / 진형은 편성 순서 그대로 / 시각 고정 · 즉시 정산 — 라운드 사이에 장비를 안 바꾼다 / 한 단의 칸을 순서대로 다 깨면 다음 단 / 한 칸에서 10판 연속 지면 앞의 깬 칸(챕터보스 칸 제외)을 10판 돌고 돌아온다 — 그 칸 도전 800판(파밍 판 제외)에 못 깨면 막힘
+opt: {"bot": "auto", "mastery": true, "potion": true, "build": "max", "stall": 800, "cap": 20000, "patience": 10, "farm": 10, "up": 6, "upFrom": "normal", "diffs": ["normal", "nightmare", "hell"], "chapters": 5} · harness ms 360244 · user time = sim time x 1.55
+
+## 1. where seeds end (diff · cell) — stall = 800 tries on one cell without a clear (farm runs not counted)
+  done                        25  (halves 14 / 11)
+  hell      2-2 I              3  (halves 2 / 1)
+  hell      3-4 II             2  (halves 1 / 1)
+  hell      1-5 I              2  (halves 1 / 1)
+  hell      1-1 I              2  (halves 1 / 1)
+  hell      3-4 III            1  (halves 1 / 0)
+  hell      2-2 III            1  (halves 0 / 1)
+  hell      1-3 I              1  (halves 0 / 1)
+  hell      4-4 III            1  (halves 0 / 1)
+  hell      3-4 I              1  (halves 0 / 1)
+  hell      4-3 I              1  (halves 0 / 1)
+
+## 2. per difficulty — seeds that finished it · time spent in it (user h) · party Lv / gear ilvl at its end
+  diff       reached finished | tier time med [q1 q3] | cum time med | Lv end med [min max] | ilvl end med | halves finished
+  normal      40  40     | 7.5 [5.4 10.6] | 7.5 | 27 [24 30.7] | 21.8 | 20 / 20
+  nightmare   40  40     | 27.4 [20.4 33.3] | 35.6 | 46.7 [43.3 50] | 41.8 | 20 / 20
+  hell        40  25     | 71.0 [44.5 140.9] | 115.7 | 50 [50 50] | 49.6 | 14 / 11
+
+## 3. stuck seeds — party Lv vs monster Lv · gear · rounds cleared in last 50 tries (of 9 / 6)
+  seed   6 warr/mage/arch   hell      2-2 I     mLv 50 | party Lv 50 | worn 24 ilvl 48.46 min 33 wpn [50, 50, 50] | rar {'normal': 7, 'magic': 7, 'rare': 10} | wins on cell 0 / 800 (+farm 800) | recent rounds 4.06 | at 172.4 user h
+  seed  10 warr/prie/mage   hell      3-4 II    mLv 50 | party Lv 50 | worn 24 ilvl 49.58 min 47 wpn [50, 50, 50] | rar {'magic': 9, 'normal': 5, 'rare': 10} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.5 | at 293.3 user h
+  seed  11 knig/warr/mage   hell      3-4 III   mLv 50 | party Lv 50 | worn 24 ilvl 49.67 min 44 wpn [50, 50, 50] | rar {'magic': 10, 'normal': 6, 'rare': 8} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.98 | at 165.6 user h
+  seed  14 knig/arch/mage   hell      1-5 I     mLv 50 | party Lv 50 | worn 24 ilvl 49.71 min 46 wpn [50, 50, 50] | rar {'magic': 7, 'rare': 14, 'normal': 3} | wins on cell 0 / 800 (+farm 800) | recent rounds 0 | at 154.7 user h
+  seed  15 knig/mage/prie   hell      1-1 I     mLv 50 | party Lv 50 | worn 24 ilvl 48.63 min 46 wpn [47, 47, 50] | rar {'rare': 2, 'normal': 5, 'magic': 17} | wins on cell 0 / 800 (+farm 0) | recent rounds 3.38 | at 83.7 user h
+  seed  18 mage/arch/warr   hell      2-2 I     mLv 50 | party Lv 50 | worn 24 ilvl 48.88 min 31 wpn [50, 50, 50] | rar {'magic': 5, 'normal': 5, 'rare': 14} | wins on cell 0 / 800 (+farm 800) | recent rounds 4.76 | at 209.1 user h
+  seed  24 knig/prie/arch   hell      2-2 III   mLv 50 | party Lv 50 | worn 24 ilvl 49.71 min 44 wpn [50, 50, 50] | rar {'normal': 6, 'magic': 4, 'rare': 14} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.28 | at 162.2 user h
+  seed  25 mage/warr/arch   hell      2-2 I     mLv 50 | party Lv 50 | worn 24 ilvl 49.33 min 45 wpn [50, 50, 50] | rar {'normal': 4, 'magic': 8, 'rare': 12} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.66 | at 142.5 user h
+  seed  29 prie/mage/warr   hell      1-3 I     mLv 50 | party Lv 50 | worn 24 ilvl 49.5 min 45 wpn [50, 50, 50] | rar {'magic': 10, 'normal': 5, 'rare': 9} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.2 | at 165.1 user h
+  seed  30 warr/mage/prie   hell      1-1 I     mLv 50 | party Lv 50 | worn 24 ilvl 48.79 min 44 wpn [50, 45, 50] | rar {'normal': 7, 'rare': 5, 'magic': 12} | wins on cell 0 / 800 (+farm 0) | recent rounds 4.58 | at 72.7 user h
+  seed  34 knig/arch/prie   hell      1-5 I     mLv 50 | party Lv 50 | worn 24 ilvl 49.33 min 46 wpn [50, 46, 50] | rar {'normal': 5, 'magic': 6, 'rare': 13} | wins on cell 0 / 800 (+farm 800) | recent rounds 0 | at 88.9 user h
+  seed  35 knig/mage/arch   hell      3-4 II    mLv 50 | party Lv 50 | worn 24 ilvl 49.5 min 43 wpn [50, 50, 50] | rar {'magic': 8, 'normal': 5, 'rare': 11} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.66 | at 316.0 user h
+  seed  36 warr/mage/knig   hell      4-4 III   mLv 50 | party Lv 50 | worn 24 ilvl 49.63 min 46 wpn [50, 50, 50] | rar {'magic': 12, 'normal': 2, 'rare': 10} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.6 | at 292.6 user h
+  seed  39 arch/mage/knig   hell      3-4 I     mLv 50 | party Lv 50 | worn 24 ilvl 48.88 min 35 wpn [50, 50, 50] | rar {'magic': 5, 'normal': 6, 'rare': 13} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.02 | at 180.2 user h
+  seed  40 arch/knig/mage   hell      4-3 I     mLv 50 | party Lv 50 | worn 24 ilvl 49.96 min 49 wpn [50, 50, 50] | rar {'rare': 12, 'normal': 5, 'magic': 7} | wins on cell 0 / 800 (+farm 800) | recent rounds 3.88 | at 138.9 user h
+
+## 4. normal — per cell: seeds tried / cleared · tries per clear (med, p90) · first clear cum user h (med) · mLv · arrive Lv · arrive ilvl · clear Lv
+  1-1 I      40  40 | tries 1 p90 2 farm 0 | at 0.1 h | mLv 1 | arrive Lv 1 ilvl 1 | clear Lv 3.1
+  1-1 II     40  40 | tries 1 p90 1 farm 0 | at 0.2 h | mLv 2 | arrive Lv 3.1 ilvl 1.2 | clear Lv 4.3
+  1-1 III    40  40 | tries 1 p90 5 farm 0 | at 0.2 h | mLv 3 | arrive Lv 4.3 ilvl 1.6 | clear Lv 5.4
+  1-2 I      40  40 | tries 1 p90 1 farm 0 | at 0.3 h | mLv 3 | arrive Lv 5.4 ilvl 2.3 | clear Lv 5.5
+  1-2 II     40  40 | tries 1 p90 2 farm 0 | at 0.3 h | mLv 4 | arrive Lv 5.5 ilvl 2.6 | clear Lv 6.3
+  1-2 III    40  40 | tries 1 p90 3 farm 0 | at 0.4 h | mLv 5 | arrive Lv 6.3 ilvl 3.1 | clear Lv 6.7
+  1-3 I      40  40 | tries 1 p90 5 farm 0 | at 0.5 h | mLv 4 | arrive Lv 6.7 ilvl 3.6 | clear Lv 7.4
+  1-3 II     40  40 | tries 1 p90 3 farm 0 | at 0.6 h | mLv 5 | arrive Lv 7.4 ilvl 3.9 | clear Lv 7.8
+  1-3 III    40  40 | tries 2 p90 7 farm 0 | at 0.8 h | mLv 6 | arrive Lv 7.8 ilvl 4.2 | clear Lv 8.7
+  1-4 I      40  40 | tries 1 p90 1 farm 0 | at 0.8 h | mLv 6 | arrive Lv 8.7 ilvl 4.7 | clear Lv 9.0
+  1-4 II     40  40 | tries 1 p90 1 farm 0 | at 0.9 h | mLv 7 | arrive Lv 9.0 ilvl 5.0 | clear Lv 9.4
+  1-4 III    40  40 | tries 1 p90 2 farm 0 | at 0.9 h | mLv 8 | arrive Lv 9.4 ilvl 5.3 | clear Lv 9.9
+  1-5 I      40  40 | tries 2 p90 11 farm 0 | at 0.9 h | mLv 10 | arrive Lv 9.9 ilvl 5.6 | clear Lv 10.7
+  2-1 I      40  40 | tries 1 p90 2 farm 0 | at 1.0 h | mLv 11 | arrive Lv 10.7 ilvl 6.0 | clear Lv 11.3
+  2-1 II     40  40 | tries 1 p90 2 farm 0 | at 1.1 h | mLv 11 | arrive Lv 11.3 ilvl 6.3 | clear Lv 11.8
+  2-1 III    40  40 | tries 1 p90 2 farm 0 | at 1.2 h | mLv 11 | arrive Lv 11.8 ilvl 6.6 | clear Lv 12.3
+  2-2 I      40  40 | tries 1 p90 3 farm 0 | at 1.3 h | mLv 12 | arrive Lv 12.3 ilvl 7.1 | clear Lv 12.8
+  2-2 II     40  40 | tries 1 p90 3 farm 0 | at 1.3 h | mLv 12 | arrive Lv 12.8 ilvl 7.4 | clear Lv 13.2
+  2-2 III    40  40 | tries 1 p90 1 farm 0 | at 1.4 h | mLv 12 | arrive Lv 13.2 ilvl 7.7 | clear Lv 13.6
+  2-3 I      40  40 | tries 1 p90 4 farm 0 | at 1.5 h | mLv 13 | arrive Lv 13.6 ilvl 8.0 | clear Lv 13.9
+  2-3 II     40  40 | tries 1 p90 1 farm 0 | at 1.5 h | mLv 13 | arrive Lv 13.9 ilvl 8.4 | clear Lv 14.2
+  2-3 III    40  40 | tries 1 p90 2 farm 0 | at 1.5 h | mLv 13 | arrive Lv 14.2 ilvl 8.7 | clear Lv 14.5
+  2-4 I      40  40 | tries 1 p90 1 farm 0 | at 1.6 h | mLv 14 | arrive Lv 14.5 ilvl 9.0 | clear Lv 14.8
+  2-4 II     40  40 | tries 1 p90 1 farm 0 | at 1.6 h | mLv 14 | arrive Lv 14.8 ilvl 9.3 | clear Lv 15.1
+  2-4 III    40  40 | tries 1 p90 1 farm 0 | at 1.7 h | mLv 14 | arrive Lv 15.1 ilvl 9.5 | clear Lv 15.3
+  2-5 I      40  40 | tries 1 p90 1 farm 0 | at 1.7 h | mLv 15 | arrive Lv 15.3 ilvl 9.8 | clear Lv 15.5
+  3-1 I      40  40 | tries 1 p90 2 farm 0 | at 1.8 h | mLv 16 | arrive Lv 15.5 ilvl 10.1 | clear Lv 15.9
+  3-1 II     40  40 | tries 1 p90 1 farm 0 | at 1.8 h | mLv 16 | arrive Lv 15.9 ilvl 10.3 | clear Lv 16.2
+  3-1 III    40  40 | tries 1 p90 2 farm 0 | at 1.9 h | mLv 16 | arrive Lv 16.2 ilvl 10.5 | clear Lv 16.4
+  3-2 I      40  40 | tries 1 p90 5 farm 0 | at 1.9 h | mLv 17 | arrive Lv 16.4 ilvl 10.9 | clear Lv 16.9
+  3-2 II     40  40 | tries 1 p90 4 farm 0 | at 2.0 h | mLv 17 | arrive Lv 16.9 ilvl 11.3 | clear Lv 17.3
+  3-2 III    40  40 | tries 1 p90 2 farm 0 | at 2.0 h | mLv 17 | arrive Lv 17.3 ilvl 11.5 | clear Lv 17.6
+  3-3 I      40  40 | tries 1 p90 1 farm 0 | at 2.1 h | mLv 18 | arrive Lv 17.6 ilvl 11.8 | clear Lv 17.8
+  3-3 II     40  40 | tries 1 p90 1 farm 0 | at 2.1 h | mLv 18 | arrive Lv 17.8 ilvl 12.0 | clear Lv 18.0
+  3-3 III    40  40 | tries 1 p90 1 farm 0 | at 2.2 h | mLv 18 | arrive Lv 18.0 ilvl 12.2 | clear Lv 18.3
+  3-4 I      40  40 | tries 1 p90 4 farm 0 | at 2.3 h | mLv 19 | arrive Lv 18.3 ilvl 12.5 | clear Lv 18.5
+  3-4 II     40  40 | tries 1 p90 2 farm 0 | at 2.3 h | mLv 19 | arrive Lv 18.5 ilvl 12.7 | clear Lv 18.8
+  3-4 III    40  40 | tries 1 p90 4 farm 0 | at 2.4 h | mLv 19 | arrive Lv 18.8 ilvl 12.9 | clear Lv 19.1
+  3-5 I      40  40 | tries 1 p90 1 farm 0 | at 2.4 h | mLv 20 | arrive Lv 19.1 ilvl 13.2 | clear Lv 19.3
+  4-1 I      40  40 | tries 1 p90 10 farm 0 | at 2.7 h | mLv 21 | arrive Lv 19.3 ilvl 13.3 | clear Lv 19.7
+  4-1 II     40  40 | tries 2 p90 8 farm 0 | at 2.8 h | mLv 21 | arrive Lv 19.7 ilvl 13.6 | clear Lv 20.0
+  4-1 III    40  40 | tries 1 p90 4 farm 0 | at 2.9 h | mLv 21 | arrive Lv 20.0 ilvl 13.9 | clear Lv 20.3
+  4-2 I      40  40 | tries 1 p90 1 farm 0 | at 3.0 h | mLv 22 | arrive Lv 20.3 ilvl 14.1 | clear Lv 20.5
+  4-2 II     40  40 | tries 1 p90 1 farm 0 | at 3.1 h | mLv 22 | arrive Lv 20.5 ilvl 14.3 | clear Lv 20.7
+  4-2 III    40  40 | tries 1 p90 1 farm 0 | at 3.1 h | mLv 22 | arrive Lv 20.7 ilvl 14.4 | clear Lv 20.9
+  4-3 I      40  40 | tries 2 p90 15 farm 0 | at 3.7 h | mLv 23 | arrive Lv 20.9 ilvl 14.7 | clear Lv 21.5
+  4-3 II     40  40 | tries 2 p90 9 farm 0 | at 3.8 h | mLv 23 | arrive Lv 21.5 ilvl 15.2 | clear Lv 22.0
+  4-3 III    40  40 | tries 1 p90 5 farm 0 | at 3.9 h | mLv 23 | arrive Lv 22.0 ilvl 15.6 | clear Lv 22.2
+  4-4 I      40  40 | tries 4 p90 17 farm 0 | at 4.2 h | mLv 24 | arrive Lv 22.2 ilvl 15.7 | clear Lv 22.7
+  4-4 II     40  40 | tries 2 p90 7 farm 0 | at 4.4 h | mLv 24 | arrive Lv 22.7 ilvl 16.4 | clear Lv 23.0
+  4-4 III    40  40 | tries 2 p90 7 farm 0 | at 4.5 h | mLv 24 | arrive Lv 23.0 ilvl 16.7 | clear Lv 23.3
+  4-5 I      40  40 | tries 1 p90 6 farm 0 | at 4.5 h | mLv 25 | arrive Lv 23.3 ilvl 16.9 | clear Lv 23.5
+  5-1 I      40  40 | tries 1 p90 2 farm 0 | at 4.6 h | mLv 26 | arrive Lv 23.5 ilvl 17.1 | clear Lv 23.6
+  5-1 II     40  40 | tries 1 p90 1 farm 0 | at 4.7 h | mLv 26 | arrive Lv 23.6 ilvl 17.2 | clear Lv 23.7
+  5-1 III    40  40 | tries 1 p90 2 farm 0 | at 4.8 h | mLv 26 | arrive Lv 23.7 ilvl 17.3 | clear Lv 23.8
+  5-2 I      40  40 | tries 14 p90 31 farm 10 | at 6.1 h | mLv 27 | arrive Lv 23.8 ilvl 17.4 | clear Lv 25.6
+  5-2 II     40  40 | tries 4 p90 18 farm 0 | at 6.4 h | mLv 27 | arrive Lv 25.6 ilvl 18.8 | clear Lv 26.1
+  5-2 III    40  40 | tries 2 p90 13 farm 0 | at 7.1 h | mLv 27 | arrive Lv 26.1 ilvl 19.4 | clear Lv 26.4
+  5-3 I      40  40 | tries 1 p90 7 farm 0 | at 7.2 h | mLv 28 | arrive Lv 26.4 ilvl 19.6 | clear Lv 26.5
+  5-3 II     40  40 | tries 1 p90 3 farm 0 | at 7.3 h | mLv 28 | arrive Lv 26.5 ilvl 19.7 | clear Lv 26.6
+  5-3 III    40  40 | tries 1 p90 3 farm 0 | at 7.3 h | mLv 28 | arrive Lv 26.6 ilvl 19.9 | clear Lv 26.7
+  5-4 I      40  40 | tries 1 p90 1 farm 0 | at 7.4 h | mLv 29 | arrive Lv 26.7 ilvl 20.1 | clear Lv 26.8
+  5-4 II     40  40 | tries 1 p90 1 farm 0 | at 7.4 h | mLv 29 | arrive Lv 26.8 ilvl 20.2 | clear Lv 26.9
+  5-4 III    40  40 | tries 1 p90 1 farm 0 | at 7.5 h | mLv 29 | arrive Lv 26.9 ilvl 20.4 | clear Lv 27.0
+  5-5 I      40  40 | tries 1 p90 2 farm 0 | at 7.5 h | mLv 30 | arrive Lv 27.0 ilvl 20.5 | clear Lv 27.0
+
+## 4. nightmare — per cell: seeds tried / cleared · tries per clear (med, p90) · first clear cum user h (med) · mLv · arrive Lv · arrive ilvl · clear Lv
+  1-1 I      40  40 | tries 2 p90 18 farm 0 | at 7.5 h | mLv 30 | arrive Lv 27.0 ilvl 20.7 | clear Lv 27.3
+  1-1 II     40  40 | tries 3 p90 12 farm 0 | at 7.9 h | mLv 30 | arrive Lv 27.3 ilvl 20.8 | clear Lv 27.6
+  1-1 III    40  40 | tries 2 p90 4 farm 0 | at 8.0 h | mLv 30 | arrive Lv 27.6 ilvl 21.0 | clear Lv 27.7
+  1-2 I      40  40 | tries 3 p90 20 farm 0 | at 8.4 h | mLv 31 | arrive Lv 27.7 ilvl 21.1 | clear Lv 28.2
+  1-2 II     40  40 | tries 2 p90 8 farm 0 | at 8.5 h | mLv 31 | arrive Lv 28.2 ilvl 21.5 | clear Lv 28.5
+  1-2 III    40  40 | tries 2 p90 10 farm 0 | at 9.4 h | mLv 31 | arrive Lv 28.5 ilvl 21.9 | clear Lv 28.7
+  1-3 I      40  40 | tries 29 p90 59 farm 20 | at 11.4 h | mLv 32 | arrive Lv 28.7 ilvl 22.1 | clear Lv 30.9
+  1-3 II     40  40 | tries 8 p90 27 farm 0 | at 11.8 h | mLv 32 | arrive Lv 30.9 ilvl 23.9 | clear Lv 31.4
+  1-3 III    40  40 | tries 11 p90 28 farm 10 | at 12.4 h | mLv 32 | arrive Lv 31.4 ilvl 24.4 | clear Lv 31.8
+  1-4 I      40  40 | tries 2 p90 5 farm 0 | at 12.5 h | mLv 33 | arrive Lv 31.8 ilvl 25.2 | clear Lv 32.0
+  1-4 II     40  40 | tries 1 p90 5 farm 0 | at 12.6 h | mLv 33 | arrive Lv 32.0 ilvl 25.4 | clear Lv 32.0
+  1-4 III    40  40 | tries 4 p90 13 farm 0 | at 13.4 h | mLv 33 | arrive Lv 32.0 ilvl 25.6 | clear Lv 32.4
+  1-5 I      40  40 | tries 13 p90 70 farm 10 | at 14.0 h | mLv 34 | arrive Lv 32.4 ilvl 26.0 | clear Lv 33.3
+  2-1 I      40  40 | tries 1 p90 3 farm 0 | at 14.2 h | mLv 34 | arrive Lv 33.3 ilvl 27.4 | clear Lv 33.4
+  2-1 II     40  40 | tries 1 p90 3 farm 0 | at 14.3 h | mLv 34 | arrive Lv 33.4 ilvl 27.6 | clear Lv 33.5
+  2-1 III    40  40 | tries 1 p90 4 farm 0 | at 14.6 h | mLv 34 | arrive Lv 33.5 ilvl 27.7 | clear Lv 33.6
+  2-2 I      40  40 | tries 3 p90 12 farm 0 | at 15.8 h | mLv 35 | arrive Lv 33.6 ilvl 28.0 | clear Lv 33.9
+  2-2 II     40  40 | tries 2 p90 8 farm 0 | at 15.8 h | mLv 35 | arrive Lv 33.9 ilvl 28.4 | clear Lv 34.1
+  2-2 III    40  40 | tries 2 p90 4 farm 0 | at 15.9 h | mLv 35 | arrive Lv 34.1 ilvl 28.6 | clear Lv 34.1
+  2-3 I      40  40 | tries 2 p90 7 farm 0 | at 16.2 h | mLv 36 | arrive Lv 34.1 ilvl 28.7 | clear Lv 34.3
+  2-3 II     40  40 | tries 1 p90 5 farm 0 | at 16.2 h | mLv 36 | arrive Lv 34.3 ilvl 28.8 | clear Lv 34.4
+  2-3 III    40  40 | tries 2 p90 8 farm 0 | at 16.5 h | mLv 36 | arrive Lv 34.4 ilvl 28.9 | clear Lv 34.6
+  2-4 I      40  40 | tries 1 p90 3 farm 0 | at 16.8 h | mLv 37 | arrive Lv 34.6 ilvl 29.0 | clear Lv 34.6
+  2-4 II     40  40 | tries 1 p90 4 farm 0 | at 16.9 h | mLv 37 | arrive Lv 34.6 ilvl 29.2 | clear Lv 34.7
+  2-4 III    40  40 | tries 1 p90 3 farm 0 | at 17.1 h | mLv 37 | arrive Lv 34.7 ilvl 29.2 | clear Lv 34.9
+  2-5 I      40  40 | tries 1 p90 1 farm 0 | at 17.1 h | mLv 38 | arrive Lv 34.9 ilvl 29.3 | clear Lv 34.9
+  3-1 I      40  40 | tries 2 p90 10 farm 0 | at 17.2 h | mLv 38 | arrive Lv 34.9 ilvl 29.4 | clear Lv 35.2
+  3-1 II     40  40 | tries 1 p90 11 farm 0 | at 17.3 h | mLv 38 | arrive Lv 35.2 ilvl 29.5 | clear Lv 35.4
+  3-1 III    40  40 | tries 1 p90 5 farm 0 | at 17.6 h | mLv 38 | arrive Lv 35.4 ilvl 29.7 | clear Lv 35.5
+  3-2 I      40  40 | tries 9 p90 33 farm 0 | at 18.4 h | mLv 39 | arrive Lv 35.5 ilvl 29.8 | clear Lv 36.4
+  3-2 II     40  40 | tries 4 p90 21 farm 0 | at 18.5 h | mLv 39 | arrive Lv 36.4 ilvl 30.5 | clear Lv 36.7
+  3-2 III    40  40 | tries 2 p90 13 farm 0 | at 19.1 h | mLv 39 | arrive Lv 36.7 ilvl 30.7 | clear Lv 36.9
+  3-3 I      40  40 | tries 2 p90 21 farm 0 | at 19.3 h | mLv 40 | arrive Lv 36.9 ilvl 30.8 | clear Lv 37.5
+  3-3 II     40  40 | tries 2 p90 7 farm 0 | at 19.6 h | mLv 40 | arrive Lv 37.5 ilvl 31.2 | clear Lv 37.6
+  3-3 III    40  40 | tries 2 p90 7 farm 0 | at 19.8 h | mLv 40 | arrive Lv 37.6 ilvl 31.4 | clear Lv 37.7
+  3-4 I      40  40 | tries 13 p90 53 farm 10 | at 22.1 h | mLv 41 | arrive Lv 37.7 ilvl 31.6 | clear Lv 39.1
+  3-4 II     40  40 | tries 5 p90 16 farm 0 | at 22.5 h | mLv 41 | arrive Lv 39.1 ilvl 32.8 | clear Lv 39.4
+  3-4 III    40  40 | tries 4 p90 15 farm 0 | at 23.1 h | mLv 41 | arrive Lv 39.4 ilvl 33.2 | clear Lv 39.6
+  3-5 I      40  40 | tries 2 p90 15 farm 0 | at 23.2 h | mLv 42 | arrive Lv 39.6 ilvl 33.5 | clear Lv 39.8
+  4-1 I      40  40 | tries 2 p90 11 farm 0 | at 23.3 h | mLv 42 | arrive Lv 39.8 ilvl 33.7 | clear Lv 40.0
+  4-1 II     40  40 | tries 2 p90 7 farm 0 | at 23.4 h | mLv 42 | arrive Lv 40.0 ilvl 33.9 | clear Lv 40.2
+  4-1 III    40  40 | tries 3 p90 11 farm 0 | at 25.5 h | mLv 42 | arrive Lv 40.2 ilvl 34.0 | clear Lv 40.4
+  4-2 I      40  40 | tries 1 p90 6 farm 0 | at 25.8 h | mLv 43 | arrive Lv 40.4 ilvl 34.1 | clear Lv 40.5
+  4-2 II     40  40 | tries 1 p90 4 farm 0 | at 25.8 h | mLv 43 | arrive Lv 40.5 ilvl 34.3 | clear Lv 40.5
+  4-2 III    40  40 | tries 1 p90 4 farm 0 | at 25.9 h | mLv 43 | arrive Lv 40.5 ilvl 34.3 | clear Lv 40.6
+  4-3 I      40  40 | tries 21 p90 50 farm 20 | at 26.3 h | mLv 44 | arrive Lv 40.6 ilvl 34.5 | clear Lv 41.9
+  4-3 II     40  40 | tries 5 p90 18 farm 0 | at 26.5 h | mLv 44 | arrive Lv 41.9 ilvl 35.8 | clear Lv 42.2
+  4-3 III    40  40 | tries 3 p90 9 farm 0 | at 28.0 h | mLv 44 | arrive Lv 42.2 ilvl 36.1 | clear Lv 42.4
+  4-4 I      40  40 | tries 24 p90 56 farm 20 | at 30.1 h | mLv 45 | arrive Lv 42.4 ilvl 36.3 | clear Lv 43.6
+  4-4 II     40  40 | tries 7 p90 17 farm 0 | at 30.5 h | mLv 45 | arrive Lv 43.6 ilvl 37.3 | clear Lv 43.9
+  4-4 III    40  40 | tries 8 p90 24 farm 0 | at 32.3 h | mLv 45 | arrive Lv 43.9 ilvl 37.7 | clear Lv 44.3
+  4-5 I      40  40 | tries 2 p90 9 farm 0 | at 32.3 h | mLv 46 | arrive Lv 44.3 ilvl 38.2 | clear Lv 44.4
+  5-1 I      40  40 | tries 1 p90 1 farm 0 | at 32.3 h | mLv 46 | arrive Lv 44.4 ilvl 38.4 | clear Lv 44.4
+  5-1 II     40  40 | tries 1 p90 1 farm 0 | at 32.4 h | mLv 46 | arrive Lv 44.4 ilvl 38.5 | clear Lv 44.5
+  5-1 III    40  40 | tries 1 p90 1 farm 0 | at 32.5 h | mLv 46 | arrive Lv 44.5 ilvl 38.6 | clear Lv 44.5
+  5-2 I      40  40 | tries 18 p90 55 farm 10 | at 34.0 h | mLv 47 | arrive Lv 44.5 ilvl 38.7 | clear Lv 45.8
+  5-2 II     40  40 | tries 4 p90 24 farm 0 | at 34.8 h | mLv 47 | arrive Lv 45.8 ilvl 40.1 | clear Lv 46.1
+  5-2 III    40  40 | tries 3 p90 11 farm 0 | at 34.9 h | mLv 47 | arrive Lv 46.1 ilvl 40.3 | clear Lv 46.2
+  5-3 I      40  40 | tries 2 p90 5 farm 0 | at 35.1 h | mLv 48 | arrive Lv 46.2 ilvl 40.5 | clear Lv 46.3
+  5-3 II     40  40 | tries 1 p90 5 farm 0 | at 35.1 h | mLv 48 | arrive Lv 46.3 ilvl 40.6 | clear Lv 46.4
+  5-3 III    40  40 | tries 1 p90 4 farm 0 | at 35.5 h | mLv 48 | arrive Lv 46.4 ilvl 40.7 | clear Lv 46.5
+  5-4 I      40  40 | tries 1 p90 1 farm 0 | at 35.5 h | mLv 49 | arrive Lv 46.5 ilvl 40.8 | clear Lv 46.6
+  5-4 II     40  40 | tries 1 p90 1 farm 0 | at 35.5 h | mLv 49 | arrive Lv 46.6 ilvl 40.9 | clear Lv 46.6
+  5-4 III    40  40 | tries 1 p90 2 farm 0 | at 35.6 h | mLv 49 | arrive Lv 46.6 ilvl 41.0 | clear Lv 46.7
+  5-5 I      40  40 | tries 1 p90 3 farm 0 | at 35.6 h | mLv 50 | arrive Lv 46.7 ilvl 41.2 | clear Lv 46.7
+
+## 4. hell — per cell: seeds tried / cleared · tries per clear (med, p90) · first clear cum user h (med) · mLv · arrive Lv · arrive ilvl · clear Lv
+  1-1 I      40  38 | tries 87 p90 356 farm 0 | at 38.5 h | mLv 50 | arrive Lv 46.7 ilvl 41.3 | clear Lv 47.7
+  1-1 II     38  38 | tries 24 p90 143 farm 20 | at 41.7 h | mLv 50 | arrive Lv 47.7 ilvl 42.2 | clear Lv 48.2
+  1-1 III    38  38 | tries 4 p90 24 farm 0 | at 42.0 h | mLv 50 | arrive Lv 48.2 ilvl 43.1 | clear Lv 48.3
+  1-2 I      38  38 | tries 18 p90 92 farm 10 | at 45.7 h | mLv 50 | arrive Lv 48.3 ilvl 43.5 | clear Lv 48.7
+  1-2 II     38  38 | tries 12 p90 51 farm 10 | at 46.5 h | mLv 50 | arrive Lv 48.7 ilvl 44.3 | clear Lv 48.8
+  1-2 III    38  38 | tries 8 p90 20 farm 0 | at 47.9 h | mLv 50 | arrive Lv 48.8 ilvl 44.7 | clear Lv 48.9
+  1-3 I      38  37 | tries 82 p90 317 farm 80 | at 56.8 h | mLv 50 | arrive Lv 48.9 ilvl 44.9 | clear Lv 49.6
+  1-3 II     37  37 | tries 30 p90 137 farm 20 | at 59.9 h | mLv 50 | arrive Lv 49.6 ilvl 46.8 | clear Lv 49.8
+  1-3 III    37  37 | tries 15 p90 61 farm 10 | at 60.0 h | mLv 50 | arrive Lv 49.8 ilvl 47.1 | clear Lv 49.8
+  1-4 I      37  37 | tries 9 p90 156 farm 0 | at 64.0 h | mLv 50 | arrive Lv 49.8 ilvl 47.4 | clear Lv 49.9
+  1-4 II     37  37 | tries 5 p90 43 farm 0 | at 65.7 h | mLv 50 | arrive Lv 49.9 ilvl 47.8 | clear Lv 49.9
+  1-4 III    37  37 | tries 30 p90 201 farm 20 | at 67.5 h | mLv 50 | arrive Lv 49.9 ilvl 47.9 | clear Lv 49.9
+  1-5 I      37  35 | tries 17 p90 98 farm 10 | at 68.0 h | mLv 50 | arrive Lv 49.9 ilvl 48.1 | clear Lv 49.9
+  2-1 I      35  35 | tries 1 p90 4 farm 0 | at 68.1 h | mLv 50 | arrive Lv 49.9 ilvl 48.3 | clear Lv 49.9
+  2-1 II     35  35 | tries 2 p90 3 farm 0 | at 68.1 h | mLv 50 | arrive Lv 49.9 ilvl 48.4 | clear Lv 49.9
+  2-1 III    35  35 | tries 1 p90 5 farm 0 | at 68.2 h | mLv 50 | arrive Lv 49.9 ilvl 48.4 | clear Lv 49.9
+  2-2 I      35  32 | tries 5 p90 135 farm 0 | at 69.7 h | mLv 50 | arrive Lv 49.9 ilvl 48.4 | clear Lv 49.9
+  2-2 II     32  32 | tries 6 p90 169 farm 0 | at 76.1 h | mLv 50 | arrive Lv 49.9 ilvl 48.5 | clear Lv 49.9
+  2-2 III    32  31 | tries 9 p90 102 farm 0 | at 71.4 h | mLv 50 | arrive Lv 49.9 ilvl 48.5 | clear Lv 49.9
+  2-3 I      31  31 | tries 1 p90 3 farm 0 | at 71.4 h | mLv 50 | arrive Lv 49.9 ilvl 48.6 | clear Lv 49.9
+  2-3 II     31  31 | tries 1 p90 3 farm 0 | at 71.4 h | mLv 50 | arrive Lv 49.9 ilvl 48.6 | clear Lv 50.0
+  2-3 III    31  31 | tries 3 p90 5 farm 0 | at 71.5 h | mLv 50 | arrive Lv 50.0 ilvl 48.7 | clear Lv 50.0
+  2-4 I      31  31 | tries 2 p90 9 farm 0 | at 71.6 h | mLv 50 | arrive Lv 50.0 ilvl 48.7 | clear Lv 50.0
+  2-4 II     31  31 | tries 2 p90 11 farm 0 | at 73.7 h | mLv 50 | arrive Lv 50.0 ilvl 48.7 | clear Lv 50.0
+  2-4 III    31  31 | tries 2 p90 8 farm 0 | at 75.4 h | mLv 50 | arrive Lv 50.0 ilvl 48.7 | clear Lv 50.0
+  2-5 I      31  31 | tries 1 p90 1 farm 0 | at 75.4 h | mLv 50 | arrive Lv 50.0 ilvl 48.7 | clear Lv 50.0
+  3-1 I      31  31 | tries 1 p90 9 farm 0 | at 76.0 h | mLv 50 | arrive Lv 50.0 ilvl 48.8 | clear Lv 50.0
+  3-1 II     31  31 | tries 1 p90 8 farm 0 | at 76.7 h | mLv 50 | arrive Lv 50.0 ilvl 48.8 | clear Lv 50.0
+  3-1 III    31  31 | tries 1 p90 4 farm 0 | at 77.4 h | mLv 50 | arrive Lv 50.0 ilvl 48.8 | clear Lv 50.0
+  3-2 I      31  31 | tries 1 p90 6 farm 0 | at 77.4 h | mLv 50 | arrive Lv 50.0 ilvl 48.8 | clear Lv 50.0
+  3-2 II     31  31 | tries 1 p90 6 farm 0 | at 77.5 h | mLv 50 | arrive Lv 50.0 ilvl 48.8 | clear Lv 50.0
+  3-2 III    31  31 | tries 1 p90 6 farm 0 | at 77.7 h | mLv 50 | arrive Lv 50.0 ilvl 48.8 | clear Lv 50.0
+  3-3 I      31  31 | tries 6 p90 100 farm 0 | at 79.7 h | mLv 50 | arrive Lv 50.0 ilvl 48.8 | clear Lv 50.0
+  3-3 II     31  31 | tries 4 p90 25 farm 0 | at 79.8 h | mLv 50 | arrive Lv 50.0 ilvl 49.0 | clear Lv 50.0
+  3-3 III    31  31 | tries 4 p90 22 farm 0 | at 82.0 h | mLv 50 | arrive Lv 50.0 ilvl 49.0 | clear Lv 50.0
+  3-4 I      31  30 | tries 17 p90 422 farm 10 | at 97.2 h | mLv 50 | arrive Lv 50.0 ilvl 49.0 | clear Lv 50
+  3-4 II     30  28 | tries 12 p90 82 farm 10 | at 89.2 h | mLv 50 | arrive Lv 50 ilvl 49.2 | clear Lv 50
+  3-4 III    28  27 | tries 13 p90 69 farm 10 | at 82.3 h | mLv 50 | arrive Lv 50 ilvl 49.2 | clear Lv 50
+  3-5 I      27  27 | tries 3 p90 17 farm 0 | at 82.8 h | mLv 50 | arrive Lv 50 ilvl 49.2 | clear Lv 50
+  4-1 I      27  27 | tries 3 p90 12 farm 0 | at 83.9 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-1 II     27  27 | tries 3 p90 28 farm 0 | at 84.0 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-1 III    27  27 | tries 3 p90 12 farm 0 | at 84.1 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-2 I      27  27 | tries 1 p90 6 farm 0 | at 84.1 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-2 II     27  27 | tries 1 p90 6 farm 0 | at 84.2 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-2 III    27  27 | tries 1 p90 8 farm 0 | at 84.2 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-3 I      27  26 | tries 2 p90 61 farm 0 | at 84.3 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-3 II     26  26 | tries 2 p90 109 farm 0 | at 84.4 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-3 III    26  26 | tries 2 p90 12 farm 0 | at 84.5 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-4 I      26  26 | tries 12 p90 123 farm 10 | at 105.6 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-4 II     26  26 | tries 17 p90 174 farm 10 | at 107.5 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-4 III    26  25 | tries 34 p90 526 farm 30 | at 99.6 h | mLv 50 | arrive Lv 50 ilvl 49.3 | clear Lv 50
+  4-5 I      25  25 | tries 5 p90 33 farm 0 | at 102.1 h | mLv 50 | arrive Lv 50 ilvl 49.4 | clear Lv 50
+  5-1 I      25  25 | tries 1 p90 1 farm 0 | at 102.1 h | mLv 50 | arrive Lv 50 ilvl 49.4 | clear Lv 50
+  5-1 II     25  25 | tries 1 p90 1 farm 0 | at 102.2 h | mLv 50 | arrive Lv 50 ilvl 49.4 | clear Lv 50
+  5-1 III    25  25 | tries 1 p90 1 farm 0 | at 102.2 h | mLv 50 | arrive Lv 50 ilvl 49.4 | clear Lv 50
+  5-2 I      25  25 | tries 17 p90 179 farm 10 | at 104.6 h | mLv 50 | arrive Lv 50 ilvl 49.4 | clear Lv 50
+  5-2 II     25  25 | tries 6 p90 222 farm 0 | at 112.7 h | mLv 50 | arrive Lv 50 ilvl 49.5 | clear Lv 50
+  5-2 III    25  25 | tries 9 p90 34 farm 0 | at 114.6 h | mLv 50 | arrive Lv 50 ilvl 49.5 | clear Lv 50
+  5-3 I      25  25 | tries 2 p90 18 farm 0 | at 114.7 h | mLv 50 | arrive Lv 50 ilvl 49.5 | clear Lv 50
+  5-3 II     25  25 | tries 2 p90 24 farm 0 | at 115.0 h | mLv 50 | arrive Lv 50 ilvl 49.5 | clear Lv 50
+  5-3 III    25  25 | tries 4 p90 14 farm 0 | at 115.4 h | mLv 50 | arrive Lv 50 ilvl 49.6 | clear Lv 50
+  5-4 I      25  25 | tries 1 p90 2 farm 0 | at 115.5 h | mLv 50 | arrive Lv 50 ilvl 49.6 | clear Lv 50
+  5-4 II     25  25 | tries 1 p90 3 farm 0 | at 115.6 h | mLv 50 | arrive Lv 50 ilvl 49.6 | clear Lv 50
+  5-4 III    25  25 | tries 1 p90 3 farm 0 | at 115.7 h | mLv 50 | arrive Lv 50 ilvl 49.6 | clear Lv 50
+  5-5 I      25  25 | tries 1 p90 5 farm 0 | at 115.7 h | mLv 50 | arrive Lv 50 ilvl 49.6 | clear Lv 50
+
+## 5. where the time goes — cells with the largest median share of a tier (finished tiers only)
+  normal: 5-2 I 11% · 4-4 I 2% · 5-2 II 2% · 4-3 II 2% · 4-4 II 2% · 4-4 III 2%
+  nightmare: 1-3 I 7% · 4-3 I 6% · 4-4 I 5% · 3-4 I 5% · 5-2 I 4% · 1-5 I 2%
+  hell: 1-3 I 6% · 4-4 III 4% · 1-1 I 3% · 1-4 III 2% · 3-4 I 2% · 4-4 II 1%
+
+## 6. weapon lag at the end — heroes whose weapon ilvl < party avg ilvl - 10 (class: count)
+  none
+
+## 7. level cap — first cell whose clear leaves party avg Lv >= cap-0.5 · user h at that point
+  hell 1-3 I 11 · hell 1-1 II 7 · hell 1-1 I 6 · hell 1-2 I 4 · hell 1-3 II 3 · hell 1-1 III 2 · hell 3-4 I 1 · nightmare 5-2 I 1 | reached by 40/40 · user h med 49.3 [35.8 59.9]
+
+## 8. by class present in party — seeds · finished nightmare · finished hell · median cells cleared in total
+  archer    22 | nm  22 | hell  13 | cells 195
+  knight    22 | nm  22 | hell  13 | cells 195
+  mage      25 | nm  25 | hell  12 | cells 180
+  priest    23 | nm  23 | hell  17 | cells 195
+  warrior   28 | nm  28 | hell  20 | cells 195

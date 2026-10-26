@@ -1,0 +1,4 @@
+607c607
+<         lvl += levelAdd;
+---
+>         lvl = Math.min(B.hero_level_cap, lvl + levelAdd);   // SCRATCH 2026-10-24 — R336 의 몬스터 레벨 자르기만 (헬 1장 III 이 레벨 52 로 던진다)

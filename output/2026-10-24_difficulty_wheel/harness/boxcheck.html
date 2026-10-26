@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>box …</title></head><body><pre id="sim"></pre>
+<script type="module">
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const NOW = 1_700_000_000_000;
+await loadData('../data/');
+const SYS = buildSystems(D), B = D.balance, out = [];
+for (const seed of [1, 2]) {
+  const G = SYS.game.newGame(seed, SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max), NOW);
+  let n = 0; while (!G.progress.cleared.includes(1011) && n++ < 50) SYS.game.resolveBattle(G, 1011, NOW);
+  const box = G.bags.flat().find(u => G.items[u]?.box);
+  const two = box ? SYS.game.openBox(G, box) : null;            // sim.js:93 그대로 — 영웅 없이
+  const still = box ? !!G.items[box]?.box : null;
+  const hero = SYS.game.partyOf(G)[0];
+  const three = box ? SYS.game.openBox(G, box, hero) : null;      // 영웅을 주면
+  out.push({ seed, cleared1011: G.progress.cleared.includes(1011), box: !!box, openTwoArgs: two, stillSealed: still, openWithHero: three && { ok: three.ok, err: three.err } });
+}
+document.getElementById('sim').textContent = JSON.stringify(out);
+document.title = 'BOX ok';
+</script></body></html>

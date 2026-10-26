@@ -1,0 +1,35 @@
+<!-- PvP 거울전 측정 (2026-10-24 코드 리뷰 · REPORT.md 1-4) — src/dev/ 에 두고 서버로 연다. 같은 팀을 양쪽에 세워 200판 × 레벨 셋 -->
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>running</title></head>
+<body><pre id="out"></pre>
+<script type="module">
+import { D, loadData, buildSystems } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const out = document.getElementById('out');
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const res = {};
+    for (const level of [1, 10, 30]) {
+        let win = 0, loss = 0, draw = 0, firstActParty = 0, n = 0;
+        for (let seed = 1; seed <= 200; seed++) {
+            const g = SYS.game.newGame(seed, SYS.hero.rollCandidates(makeRng(seed), 3), 0);
+            g.heroes.slice(0, 3).forEach(h => { h.level = level; });
+            const team = SYS.arena.snapshotTeam(g.heroes.slice(0, 3), g.items);
+            const mirror = JSON.parse(JSON.stringify(team));
+            const r = SYS.arena.fight(team, mirror, makeRng(seed * 7919 + level));
+            n++;
+            if (r.reason === 'timeout') draw++; else if (r.won) win++; else loss++;
+            const firstAct = r.timeline.find(e => e.e === 'hit' || e.e === 'skill' || e.e === 'dodge');
+            const actor = firstAct?.a ?? firstAct?.u;
+            if (typeof actor === 'string' && actor.startsWith('p')) firstActParty++;
+        }
+        res[`lv${level}`] = { n, partyWin: win, enemyWin: loss, draw, firstActionByParty: firstActParty };
+    }
+    out.textContent = JSON.stringify(res);
+    document.title = 'DONE';
+} catch (e) {
+    out.textContent = 'ERR ' + (e?.stack ?? e);
+    document.title = 'ERR';
+}
+</script></body></html>

@@ -3,19 +3,29 @@
  * 게임 로직과 슬롯 아이콘은 이 표를 모른다. 그림이 준비되지 않으면
  * fx.js가 skill_looks.js의 기존 조각 조합을 표시한다.
  */
+/* 단일 다단의 조각 — k 번째 타격은 `beat` × k 늦게 서고 그림의 `parts[k % 길이]` 만 보인다(값은 인라인 변수 · ADR-0778).
+   X 는 두 칼날이 대각선으로 엇갈린 구도라 칼날을 따라가는 흐린 띠(가장자리가 부드러운 가림) 둘로 · 화살 셋은 위아래로 나란해 가로 띠 셋으로 가른다(두 그림체 같은 구도) */
+const X_BLADES = [
+    { mask: 'linear-gradient(45deg, transparent 33%, #000 41%, #000 55%, transparent 63%)', mx: '-14px', my: '-14px' },    // 「\」 — 왼쪽 위에서 그어 내린다
+    { mask: 'linear-gradient(135deg, transparent 37%, #000 45%, #000 59%, transparent 67%)', mx: '14px', my: '-14px' },    // 「/」 — 오른쪽 위에서 그어 내린다
+];
+const THREE_ARROWS = [{ ct: '0%', cb: '66%' }, { ct: '33%', cb: '33%' }, { ct: '66%', cb: '0%' }];
+/* 러시 — 창끝 둘이 위아래로 나란한 그림을 창 하나씩 · `jitter` 가 타마다 각도(r 도) · 자리(x · y px)를 무작위로 흔들고 위 · 아래 창도 무작위로 고른다 (ADR-0780) */
+const TWO_SPEARS = [{ ct: '0%', cb: '57%' }, { ct: '43%', cb: '0%' }];
+
 export const SKILL_ART = {
     war_bash: { hit: { file: 'war_bash', motion: 'slash', size: 92, duration: 360 } },
-    war_doubleswing: { hit: { file: 'war_doubleswing', motion: 'cross', size: 90, duration: 400 } },
+    war_doubleswing: { hit: { file: 'war_doubleswing', motion: 'swing', size: 90, duration: 400, beat: 130, parts: X_BLADES } },
     war_leap: { hit: { file: 'war_leap', motion: 'land', size: 94, duration: 460, quake: true } },
     // 함성 셋 — 같은 집중선 · 색만 다르다 · 움직임도 퍼짐 하나(ADR-0546).
     war_shout: { buff: { file: 'war_shout', motion: 'wave', size: 90, duration: 580 } },
     war_battleorders: { buff: { file: 'war_battleorders', motion: 'wave', size: 90, duration: 580 } },
     war_ironskin: { buff: { file: 'war_ironskin', motion: 'shell', size: 94, duration: 540 } },
 
-    // 기사 — 인챈트는 실제 추가 피해인 화염이다. ~~스마이트~~ 는 2026-10-16 삭제(레지스탕스 실드 — 그림 없음 · 코드 연출 `skill_looks`)
+    // 기사 — 인챈트는 실제 추가 피해인 화염이다. 레지스탕스 실드는 아래 추가 다크 카툰 표가 든다.
     kni_holyshield: { buff: { file: 'kni_holyshield', motion: 'shell', size: 92, duration: 540 } },
     kni_charge: { hit: { file: 'kni_charge', motion: 'thrust', size: 88, duration: 360 } },
-    kni_rush: { hit: { file: 'kni_rush', motion: 'thrust', size: 84, duration: 340 } },
+    kni_rush: { hit: { file: 'kni_rush', motion: 'thrust', size: 84, duration: 340, beat: 110, parts: TWO_SPEARS, jitter: { r: 70, x: 26, y: 26 }, preview: 4 } },
     kni_enchant: { buff: { file: 'kni_enchant', motion: 'orders', size: 88, duration: 540 } },
     // 상시 오오라의 그림은 도감에서만 재생한다(fxBuff의 until: null 제외).
     // 오오라 셋 — 같은 푸른 마법진 원 · 안쪽 문양만 다르다 · 크기 · 움직임도 하나(ADR-0548).
@@ -37,7 +47,7 @@ export const SKILL_ART = {
 
     // 궁수 — 단발 · 연사 · 광역 · 유도 · 관통 · 독 강화.
     arc_snipe: { hit: { file: 'arc_snipe', motion: 'thrust', size: 84, duration: 340 } },
-    arc_rapid: { hit: { file: 'arc_rapid', motion: 'thrust', size: 84, duration: 340 } },
+    arc_rapid: { hit: { file: 'arc_rapid', motion: 'thrust', size: 84, duration: 340, beat: 90, parts: THREE_ARROWS } },
     arc_multishot: { hit: { file: 'arc_multishot', motion: 'rain', size: 90, duration: 440 } },
     arc_guided: { hit: { file: 'arc_guided', motion: 'thrust', size: 88, duration: 400 } },
     arc_pierce: { buff: { file: 'arc_pierce', motion: 'sweep', size: 90, duration: 520 } },
@@ -138,15 +148,37 @@ export const SKILL_ART = {
 
     // 몬스터 — 소환은 불려 나온 · 되살아난 카드의 초상에 오오라(마이트)와 같은 마법진이 붉게 · 별은 뒤집혀 선다 · 크기 · 움직임도 오오라와 같다(ADR-0728).
     pri_summon: { call: { file: 'pri_summon', motion: 'orbit', size: 90, duration: 620 } },
+
+    // 누락 스킬 보완 — 다크 카툰으로 새로 그린다. 금속박은 기존 코드 대체 연출을 쓴다(ADR-0754).
+    war_recovery: { heal: { file: 'war_recovery', motion: 'heal', size: 88, duration: 640, styles: ['darktoon'] } },
+    war_frenzy: { buff: { file: 'war_frenzy', motion: 'orders', size: 90, duration: 560, styles: ['darktoon'] } },
+    war_warcry: { bad: { file: 'war_warcry', motion: 'inward', size: 90, duration: 580, styles: ['darktoon'] } },
+    war_battlecry: { bad: { file: 'war_battlecry', motion: 'inward', size: 90, duration: 580, styles: ['darktoon'] } },
+    kni_resistshield: { buff: { file: 'kni_resistshield', motion: 'shell', size: 92, duration: 540, styles: ['darktoon'] } },
+    kni_sweep: { hit: { file: 'kni_sweep', motion: 'sweep', size: 94, duration: 420, styles: ['darktoon'] } },
+    kni_holyfire: { buff: { file: 'kni_holyfire', motion: 'orbit', size: 90, duration: 620, styles: ['darktoon'] } },
+    arc_arrowrain: { hit: { file: 'arc_arrowrain', motion: 'rain', size: 94, duration: 500, styles: ['darktoon'] } },
+    arc_evade: { buff: { file: 'arc_evade', motion: 'sweep', size: 88, duration: 520, styles: ['darktoon'] } },
+    arc_overdraw: { buff: { file: 'arc_overdraw', motion: 'orders', size: 92, duration: 620, styles: ['darktoon'] } },
+    mag_ignite: { buff: { file: 'mag_ignite', motion: 'orders', size: 90, duration: 560, styles: ['darktoon'] } },
+    mag_deepfreeze: { buff: { file: 'mag_deepfreeze', motion: 'shell', size: 92, duration: 560, styles: ['darktoon'] } },
+    mag_surge: { buff: { file: 'mag_surge', motion: 'wave', size: 90, duration: 520, styles: ['darktoon'] } },
+    mag_echo: { buff: { file: 'mag_echo', motion: 'wave', size: 90, duration: 660, styles: ['darktoon'] } },
+    pri_doom: { bad: { file: 'pri_doom', motion: 'sink', size: 92, duration: 620, styles: ['darktoon'] } },
+    mon_selfdestruct: { hit: { file: 'mon_selfdestruct', motion: 'burst', size: 124, duration: 460, styles: ['darktoon'] } },
+    mon_hellfire: { hit: { file: 'mon_hellfire', motion: 'pillar', size: 118, duration: 420, styles: ['darktoon'] } },
 };
 
 /* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).
    버튼 · 탭 순서 = 이 배열 순서 · 기본값 = 한 번도 안 고른 사람의 관전(다크 카툰 · ADR-0621) */
-export const ART_STYLES = ['darktoon', 'ink', 'pixel2d', 'papercut', 'pastel', 'foil', 'riso', 'clay'];
+export const ART_STYLES = ['darktoon', 'foil'];
 export const ART_DEFAULT = 'darktoon';
-/* 보존 셋 + 서로 다른 재료로 그린 다섯 — 같은 스킬 구도·재생으로 그림체만 견준다(ADR-0655). */
+/* 다크 카툰·금속박을 보존하고 누락된 스킬은 다크 카툰으로 보완한다(ADR-0754). */
 const SUFFIXED = new Set(ART_STYLES);
+const FILE_STYLES = new Map(Object.values(SKILL_ART).flatMap(events =>
+    Object.values(events).filter(def => def.styles).map(def => [def.file, def.styles])));
 /** 그 그림체의 파일 이름 — 없는 그림체는 null, 그림 없는 스킬은 기존 조각 조합을 쓴다. */
 export function artFile(file, style) {
-    return SUFFIXED.has(style) ? `${file}_${style}` : null;
+    const available = FILE_STYLES.get(file);
+    return SUFFIXED.has(style) && (!available || available.includes(style)) ? `${file}_${style}` : null;
 }

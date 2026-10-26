@@ -1,0 +1,48 @@
+# 배포판 — main 에 푸시하면 주석을 뗀 사본(_site)을 지어 GitHub Pages 에 올린다 (docs/client/ARCHITECTURE.md §11)
+# 처음 한 번: 저장소 Settings → Pages → Build and deployment → Source 를 「GitHub Actions」로 바꾼다
+#   (「Deploy from a branch」인 동안은 이 워크플로의 deploy 단계가 실패하고 저장소를 그대로 내보내는 옛 배포가 계속 돈다)
+name: Deploy Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 게임이 읽는 경로만 받는다 — 아트 원본(source/ · *_source/)은 받지도 올리지도 않는다
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /index.html
+            /scripts/build_deploy.py
+            /src/
+            !/src/assets/art/**/source/
+            !/src/assets/art/*_source/
+      - run: python3 scripts/build_deploy.py _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -26,7 +26,7 @@ export const TARGETS = {
     //   ~~`repeat` · `stage_level`~~ 도 건물 밖이다 — 반복 원정은 처음부터 열린다 (2026-09-24 사용자 지시 · R152) · 던전 레벨 조절(위험도)은 2026-09-29 폐지됐다
     //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열린다 (2026-09-25 사용자 지시 · R161 · 원정 건물은 2026-10-22 에 걷혔다 · R319)
     upgrade_item: U(true), make: U(true),
-    potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 제련소 r2)
+    potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 대장간 r2)
     //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
     storage: U(true), codex: U(true), hire: U(true), shop: U(true), shop_special: U(true),
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
@@ -37,7 +37,7 @@ export const TARGETS = {
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
     // 도서관 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook` · r1) · 책 제작(`craftBook` · r2 — 2026-10-16 · R263).
-    //   ~~제련소 r5 `skill_card`~~ 줄은 걷었다(도서관이 받는다 — 스킬 카드는 정의가 없어 대상만 남는다)
+    //   ~~대장간 r5 `skill_card`~~ 줄은 걷었다(도서관이 받는다 — 스킬 카드는 정의가 없어 대상만 남는다)
     skillbook: U(true), book_craft: U(true),
     // 전직 — 도서관 r3 (2026-10-16 · R263 — ~~r2~~ 2026-10-09 · R231 · construction_draft §2 — ~~훈련장 r3~~ · 훈련장은 `training` · `training_slots` 와 함께 걷혔다).
     //   전직은 섰다(R16 · 2026-09-28) · 「영웅 스킬을 더 찍는다」(도서관 r4)는 준비 중이라 그 랭크는 못 짓는다
@@ -47,6 +47,8 @@ export const TARGETS = {
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정이고 건물이 안 늘린다 [2026-09-24 사용자 지시] · ~~`searchSlots`~~ 2026-10-19 수색 삭제
     shopPerSlot: A(true), shopWeapon: A(true),
     make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
+    // 도감이 오를 수 있는 단계 — 도서관 r1 의 `codex` 가 Lv1 을 심고 뒤 랭크가 하나씩 더한다(`state.limitsOf` 의 `codexLevel` · 2026-10-24 도감 건물을 도서관에 합침 · R339)
+    codex_level: A(true, 'codex'),
     // ~~`chapters`~~ — 장은 건물이 안 연다(앞 장 보스가 연다 · `state.chapterGate` · 2026-10-22 원정 건물 삭제 · R319)
     commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)
     // 연구소(옛 자원) 단계 — 채광 · 채집 · 벌목이 앞에서부터 같은 수만큼(`state.limitsOf` 의 `resourceTiers`) · 열린 단계는 표 수량대로 생산한다
@@ -114,7 +116,10 @@ export function createConstruction(data) {
         if (!r.name_kr || !r.name_en) bad(`${id} — 이름이 비었다`);
         if (!r.tab) bad(`${id} — tab 이 비었다('-' = 탭 없음)`);
         if (!(Number.isInteger(r.start_rank) && r.start_rank >= 0)) bad(`${id} — start_rank ${r.start_rank}`);
-        const b = { id, name: { ko: r.name_kr, en: r.name_en }, tab: r.tab, startRank: r.start_rank, order: Number(r.sort_order) || 0, maxRank: 0 };
+        // 탭은 `|` 로 여럿 — 한 건물이 탭 여럿을 연다(도서관 = 도서관 · 도감 · 2026-10-24 · R339) · `tab` 은 첫째(부지 순서 · 흐린 탭 플래시)
+        const tabIds = r.tab === '-' ? [] : String(r.tab).split('|');
+        if (tabIds.some(t => !t)) bad(`${id} — tab '${r.tab}'`);
+        const b = { id, name: { ko: r.name_kr, en: r.name_en }, tab: tabIds[0] ?? '-', tabIds, startRank: r.start_rank, order: Number(r.sort_order) || 0, maxRank: 0 };
         byId.set(id, b);
         list.push(b);
     }
@@ -287,7 +292,7 @@ export function createConstruction(data) {
     /**
      * 그 대상이 **n 에 닿는 랭크** `{id, name, rank}` — 잠긴 자리가 「무엇을 지어야 열리나」를 말할 때 읽는다(`state.needOf`) · 못 닿으면 null.
      *   켜기 = 그 줄이 처음 나오는 랭크(n 은 안 본다) · 더하기 = 값을 쌓아 **n 이상**이 되는 랭크(기본값은 안 센다 — 부르는 쪽이 뺀다 ·
-     *   켜기가 심는 첫 단계는 센다 — `reach('make_level', 1)` = 제련소 r1). 한 대상을 여러 건물이 더하면 **표의 건물 순서 · 랭크 순서**로 쌓는다
+     *   켜기가 심는 첫 단계는 센다 — `reach('make_level', 1)` = 대장간 r1). 한 대상을 여러 건물이 더하면 **표의 건물 순서 · 랭크 순서**로 쌓는다
      */
     function reach(target, n = 1) {
         let sum = 0;
@@ -309,10 +314,10 @@ export function createConstruction(data) {
         return null;
     }
 
-    /** 화면 탭마다 열렸나 `{tab: bool}` — 그 탭에 붙은 건물(`tab`) 중 **하나라도 지어졌으면** 연다. 붙은 건물이 없는 탭은 안 적는다(늘 열림) */
+    /** 화면 탭마다 열렸나 `{tab: bool}` — 그 탭에 붙은 건물(`tabIds`) 중 **하나라도 지어졌으면** 연다. 붙은 건물이 없는 탭은 안 적는다(늘 열림) */
     function tabs(ranks) {
         const out = {};
-        for (const b of list) if (b.tab !== '-') out[b.tab] = (out[b.tab] ?? false) || (ranks?.[b.id] ?? 0) > 0;
+        for (const b of list) for (const t of b.tabIds) out[t] = (out[t] ?? false) || (ranks?.[b.id] ?? 0) > 0;
         return out;
     }
 

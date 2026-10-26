@@ -52,6 +52,9 @@ export const CASTS = {
     channel: { picked: true, cooled: true, chan: 'turn' },
     // 계속 닳기 [2026-10-22 · 사용자 「도트딜로」 · 「직격」 · 간격 「0.5초마다」] — 같은 정신 집중이고 방이 [balance.csv:channel_tick_sec] 마다다(타수 = 틱 수 · 배율 = 한 틱 몫 · 중독 틱과 따로)
     channel_tick: { picked: true, cooled: true, chan: 'tick' },
+    // 모으기 [2026-10-26 · R357 · 사용자 「기모아서 마지막에 한발」 · 초 시계 R358 「그냥 n초로해」] — 계속 닳기와 같은 초 시계인데 **방이 둘**(여는 순간 · 쏘는 순간)이고
+    //   **마지막 방에만 친다**(`burst`) · 그 사이 = [balance.csv:channel_charge_sec](공속과 상관없다) · `hit` 줄은 한 발(타수 1 — 로드 검사)
+    channel_charge: { picked: true, cooled: true, chan: 'tick', burst: true },
 };
 export const CAST_IDS = Object.keys(CASTS);
 
@@ -83,22 +86,33 @@ const frontOf = foes => {
 };
 
 /**
- * **공격 대상** 7종(열 전원 둘 2026-10-16) — 각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
+ * **공격 대상** 8종(열 전원 둘 2026-10-16 · HP 최대 2026-10-26) —각 함수가 「누구를 몇 번 어떤 배율로」만 정하고, 타격 자체는 `rt.strikeOnce` 가 한다.
  * **돌려주는 값 = 기준 대상** [2026-10-22 · R317 · battle_design §3] — 그 스킬 뒤 기본 공격이 칠 적(`skill_runtime.act`). 맞기 전에 정한 적이라
  *   스킬에 쓰러져도 바뀌지 않는다(그러면 그 차례 기본 공격은 버려진다) · 고르는 데 rng 를 더 쓰지 않는다
  * @param rt   skill_runtime 이 만든 런타임 — `rng` · `strikeOnce` · `pickTarget` 을 쓴다
  * @param u    시전자 · @param def 시전 단위(`skill.scaleDef` 가 낸 `hit` 줄 — 스킬 id · 실효값) · @param foes **생존** 적 배열(호출자가 걸러 준다)
  */
 export const ATTACK_TARGETS = {
-    /** 단일 다단 — 대상을 한 번 고르고 `hits` 회. 대상이 쓰러지면 남은 타수는 버린다 · 기준 = 그 대상 */
+    /**
+     * 단일 다단 — 대상을 한 번 고르고 `hits` 회. 대상이 타수 도중에 쓰러지면 **남은 타수는 새로 고른 적에게**
+     *   [2026-10-24 · R353 · battle_design §3-1 — ~~남은 타수는 버린다~~] — 다음 타격 앞에서 살아 있는 적 중 `pickTarget` 1회(평소 규칙 ·
+     *   정신 집중의 단일 대상과 같다) · 또 쓰러지면 또 고른다 · 살아 있는 적이 없으면 버린다. 쓰러뜨리지 않은 시전은 rng 가 종전 그대로다 ·
+     *   기준 = **첫 대상**(넘어가도 안 바뀐다 — R317)
+     */
     enemy_single: (rt, u, def, foes) => {
-        const tgt = rt.pickTarget(u, foes);
+        const first = rt.pickTarget(u, foes);
         const sk = skillHit(def);
+        let tgt = first;
         for (let k = 0; k < def.hits; k++) {
-            if (u.hp <= 0 || tgt.hp <= 0) break;
+            if (u.hp <= 0) break;
+            if (tgt.hp <= 0) {
+                const left = foes.filter(f => f.hp > 0);
+                if (!left.length) break;
+                tgt = rt.pickTarget(u, left);
+            }
             rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
         }
-        return tgt;
+        return first;
     },
     /**
      * 광역 — 생존 적 배열 순 전원에게 각 1회. 대상을 고르지 않으므로 **타겟 rng 를 쓰지 않는다**.
@@ -156,6 +170,19 @@ export const ATTACK_TARGETS = {
                 tgt.defKeep = (tgt.defKeep ?? 1) * (1 - def.decay);
                 tgt.def = tgt.def * (1 - def.decay);
             }
+        }
+        return tgt;
+    },
+    /**
+     * 체력이 가장 많은 적 [2026-10-26 · R357 · skill_design §12-5 스나이프] — **남은 HP 절댓값**이 가장 큰 적 하나를 `hits` 회.
+     *   동률이면 배열 순 앞이라 **rng 0** · 모집단은 **전열**이다(밝히지 않은 스킬은 전열부터 · 2026-10-03 — 고르는 대상 표의 같은 이름 · 결투 지목과 같은 규칙) · 기준 = 그 대상
+     */
+    enemy_hp_max: (rt, u, def, foes) => {
+        const tgt = frontOf(foes).reduce((a, b) => (b.hp > a.hp ? b : a));
+        const sk = skillHit(def);
+        for (let k = 0; k < def.hits; k++) {
+            if (u.hp <= 0 || tgt.hp <= 0) break;
+            rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
         }
         return tgt;
     },
@@ -267,7 +294,7 @@ export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...Object.ke
  *              `event` 스킬이라 사건(`rt.fire`)이 부른다 [`run` 2026-09-24 R151 — ~~`battle.js:blast` 전용 함수~~]
  */
 export const EFFECT_TYPES = {
-    hit: { casts: ['turn', 'channel', 'channel_tick'], foes: true, weapon: true, run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
+    hit: { casts: ['turn', 'channel', 'channel_tick', 'channel_charge'], foes: true, weapon: true, run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
     heal: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castHeal(u, x, t) },
     // 자기 회복 — 시전자 최대 HP 비율만큼 바로(리커버리 · 2026-10-16) · 굴리지 않는다(rng 0) · 무기의 힘을 안 끌어 쓰므로 `weapon` 이 없다
     mend: { casts: ['turn'], run: (rt, u, x, t) => rt.castMend(u, x, t) },
@@ -527,9 +554,11 @@ export function refreshDerived(u) {
  */
 export function weaponOnHit(u, fx, d, type, t, sec) {
     let changed = false;
+    // 매력 — 대상이 받는 디버프 시간 [2026-10-24 · R346 · battle_design §2-4] · `rt.applyStatus` 와 같은 값(`ddr`) · 0 이면 곱하지 않는다 · 시간으로 안 푸는 겹(∞)은 안 탄다
+    const len = dur => (d.ddr ? dur * (1 - d.ddr) : dur);
     const strongest = (key, stat, pct, dur) => {
         const cur = d.buffs[key];
-        d.buffs[key] = { stat, v: cur ? Math.min(cur.v, -pct) : -pct, until: t + dur, element: null, by: u.key, quiet: true };
+        d.buffs[key] = { stat, v: cur ? Math.min(cur.v, -pct) : -pct, until: t + len(dur), element: null, by: u.key, quiet: true };
         changed = true;
     };
     if (fx.defDown > 0) strongest('wx:def_down', 'def_pct', fx.defDown, sec.def);
@@ -543,7 +572,7 @@ export function weaponOnHit(u, fx, d, type, t, sec) {
     const atkDown = d.noBasic ? fx.atkDownMag : fx.atkDownPhys;
     if (atkDown > 0) strongest('wx:atk_down', 'atk_pct', atkDown, sec.atk);
     if (fx.resDown > 0 && type !== 'physical' && type in d.res) {
-        d.buffs[`wx:res_down:${u.key}:${type}`] = { stat: 'res_elem', v: -fx.resDown, until: t + sec.res, element: type, by: u.key, quiet: true };
+        d.buffs[`wx:res_down:${u.key}:${type}`] = { stat: 'res_elem', v: -fx.resDown, until: t + len(sec.res), element: type, by: u.key, quiet: true };
         changed = true;
     }
     if (changed) refreshDerived(d);

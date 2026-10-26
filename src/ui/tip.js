@@ -419,7 +419,8 @@ const DETAIL_LAYOUT = [
         ['atk_physical', 'atk_magic', 'action_period', 'hp_max'],
         ['crit_rate', 'crit_damage', 'def_ignore', 'cooldown_reduction'],
         // 피해 감소 줄이 고정 피해 감소를 함께 든다(`고정 / %`) [2026-09-27 사용자 지시]
-        ['defense', 'damage_reduction', 'fhr'],
+        // 상태이상 · 디버프 시간 감소(매력)는 타격 회복 다음 — 둘 다 받는 쪽에서 짧게 한다 [2026-10-24 · R346 · ADR-0770]
+        ['defense', 'damage_reduction', 'fhr', 'debuff_dur_reduction'],
         // 저항 넷 아래에 원소 두 줄(화염/냉기/전기/독 네 값) · 타격 회복과 화염 저항 사이를 띄운다 [2026-09-28 사용자 지시]
         ['res_fire', 'res_cold', 'res_lightning', 'res_poison', 'fx_ele', 'fx_res_red'],
     ],
@@ -649,7 +650,7 @@ function bindEquipmentCells(c, equipment, itemCardOf) {
  * 붙는 쪽은 유닛 카드와 같다 — 카드 왼쪽에 선 툴팁은 열이 왼쪽으로 자란다(ADR-0126 · 격자가 자리를 정하고 DOM 순서는 그대로다)
  * @param skills 액티브 칸 셋 — 스킬 개체 또는 `null`(빈 칸). 부르는 쪽이 넘긴다(`app.js:activeCells` — 이 파일은 `G` 를 모른다)
  */
-function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { skills = null, gearBelow = false, cls = '' } = {}) {
+function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { skills = null, gearBelow = false, cls = '', chips = '' } = {}) {
     const side = anchorSide === 'left' ? ' grow-left' : '';
     const open = altHeld;
     // 관전 양 진영의 `gearBelow` — 장비가 기본 옵션 아래에 늘 서고 Alt는 세부 옵션 1 · 2만 연다 (ADR-0486).
@@ -669,7 +670,7 @@ function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { 
     c.innerHTML = `
         <div class="tip-unit">
             <div class="tip-unit-col base">
-                <div class="tip-col-h">${t('ch.attr.h')}</div>
+                ${chips ? `<div class="tip-col-h with-chips"><span>${t('ch.attr.h')}</span><span class="tip-chips">${chips}</span></div>` : `<div class="tip-col-h">${t('ch.attr.h')}</div>`}
                 <div class="attr-list">${attrRowsHtml(stats, color)}</div>
                 ${skills ? `<div class="tip-skills">${icons}</div>` : ''}
                 ${gearBelow ? `<div class="tip-gear-below">${equipment.html}</div>` : ''}
@@ -683,11 +684,29 @@ function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { 
 /** 유닛 툴팁 전부: 기본 옵션 + 그 아래 장비 · Alt로 세부 옵션 1 · 2. false면 영웅 · 몬스터 모두 장비 첫 장으로 돌아간다 (ADR-0486 · 관전 밖 영웅도 ADR-0498). */
 const UNIT_TIP_ALL = true;
 
+/* 「기본 옵션」 머리 오른쪽 칩 셋 [2026-10-24 사용자 지시 · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0773] — 후보 카드 · 도감 몬스터 카드 칩 줄과
+   같은 칩 · 같은 순서 · 같은 색이다(ADR-0724). 이름이 없는 조각은 칩째 빠진다 — 지어내지 않는다 */
+const chipHtml = (cls, color, text) => (text ? `<span class="${cls}"${color ? ` style="color:${color}"` : ''}>${text}</span>` : '');
+const sinChipHtml = id => chipHtml('sin-chip', M.SINS[id]?.color, M.SINS[id] ? L(M.SINS[id]) : '');
+const clsChipHtml = id => {
+    const c = D.classes.find(x => x.id === id);
+    return c ? chipHtml('cls-chip', c.color, L(c)) : '';
+};
+/** 영웅 = `등급 → 죄종 → 직업` (`app.js:candidateCard` 와 같은 셋) */
+const heroChipsHtml = h => chipHtml('tier-chip', tierOf(h).color, L(tierOf(h))) + sinChipHtml(h.sin) + clsChipHtml(h.cls);
+/** 몬스터 = `종족 → 죄종 → 직업` (`codexCandCard` 와 같은 셋) — 종족 칩 색 = 등급 색(윗변 · 막대와 같다) ·
+ *  죄종 = 정예가 그 판에서 굴린 죄종(`round` 이벤트 적 항목의 `sin`), 없으면 장 죄종(도감과 같다) */
+const monsterChipsHtml = (u, color) => {
+    const row = D.monsters?.[u.monsterId];
+    const race = SYS.commission?.races?.find(x => x.id === row?.monster_type);
+    return chipHtml('tier-chip', color, race ? L(race.name) : '') + sinChipHtml(u.sin ?? monsterSin(u.monsterId)) + clsChipHtml(row?.cls);
+};
+
 /**
  * 영웅 카드 — 기본 옵션 + 그 아래 착용 장비 · (Alt) 세부 옵션 (SCREEN_DESIGN §2 「유닛 툴팁 규격」 · §4-2 · §5 · ADR-0486 · ADR-0498).
- * 관전 · 편성 · 출정 창 · 상점 · 제련소 · 도서관 — 서는 자리 전부 같은 카드다 [2026-10-03 사용자 지시 · ADR-0498].
+ * 관전 · 편성 · 출정 창 · 상점 · 대장간 · 도서관 — 서는 자리 전부 같은 카드다 [2026-10-03 사용자 지시 · ADR-0498].
  * 능력치는 `h.stats` 에서 그대로 읽는다. 세부 옵션은 **부르는 쪽이 넘긴다** — `game.heroCombat` 은 상태 `G` 가 있어야 하는데 이 파일은 `G` 를 모른다.
- * 이름 · 직업 · 레벨 · 죄종 · 등급 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134)
+ * 이름 · 레벨 줄은 없다 — 올린 카드가 이미 든다 (ADR-0134) · 등급 · 죄종 · 직업은 「기본 옵션」 머리 오른쪽 칩 셋이다 (ADR-0773)
  * @param combat computeCombat 결과 — 없으면 세부 옵션이 전부 `—`. **함수면 지을 때마다 부른다** — 관전이 지금 값(`withLive`)을 넘긴다:
  *               Alt 로 다시 지을 때(`_rebuild`)도 · 떠 있는 동안 바뀔 때(`refreshTip`)도 그 순간의 값이다 (R305 · ADR-0707)
  * @param itemOf uid 로 현재 세이브의 아이템을 찾는 함수 — tip.js 는 G 를 모른다
@@ -701,7 +720,7 @@ export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, 
     if (statsFirst || UNIT_TIP_ALL) return statsFirstCard(h.stats, tierOf(h).color, sheet,
         equipmentHtml(wornOfHero(h, itemOf)), itemCardOf,
         () => heroTipCard(h, combat, itemOf, itemCardOf, { statsFirst, skills }),
-        { skills: statsFirst ? skills : null, gearBelow: !statsFirst });
+        { skills: statsFirst ? skills : null, gearBelow: !statsFirst, chips: heroChipsHtml(h) });
     return unitCard(h.stats, tierOf(h).color, sheet, () => heroTipCard(h, combat, itemOf, itemCardOf), '',
         equipmentHtml(wornOfHero(h, itemOf)), itemCardOf);
 }
@@ -728,8 +747,8 @@ const GRADE_LINE = { normal: 'var(--enemy-line)', elite: 'var(--color-warning)',
  * 몬스터 카드 — 기본 옵션 + 그 아래 착용 장비 · (Alt) 세부 옵션. 관전 영웅과 같은 조립 함수 · 배치 · 전 행이다 (ADR-0486).
  * 한 벌은 `round` 이벤트의 `gear`(그 몬스터가 입고 있는 장비 — 처치 드롭이 이 중 하나로 나간다 · INTERFACE §2-6),
  * 세부 옵션은 같은 이벤트의 `sheet`(R94)에 재생기가 쌓은 지금 값(`u.live` · `stat` 이벤트 · R305)을 덮은 것이다 — 렌더러는 계산하지 않는다.
- * 이름 · 직업 · 등급 줄은 없다 — 올린 카드의 이름 줄 · 테두리 색이 이미 든다 (ADR-0134)
- * @param u 재생기의 적 유닛 `{grade, stats, sheet, live, gear}`
+ * 이름 줄은 없다 — 올린 카드의 이름 줄 · 테두리 색이 이미 든다 (ADR-0134) · 종족 · 죄종 · 직업은 「기본 옵션」 머리 오른쪽 칩 셋이다 (ADR-0773)
+ * @param u 재생기의 적 유닛 `{monsterId, grade, sin, stats, sheet, live, gear}`
  * @param itemCardOf 장비 아이템 개체 → 「착용 중」 아이템 카드 — 영웅 · 캐릭터 탭과 같은 카드다 (ui/battle.js · ADR-0312)
  */
 export function monsterTipCard(u, itemCardOf = null) {
@@ -742,7 +761,7 @@ export function monsterTipCard(u, itemCardOf = null) {
     // 시트는 평타 여부를 안 싣는다(battle.js 가 뺀다) — 속도 행 이름은 재생기 유닛의 `noBasic` 으로 고른다 (ADR-0492)
     const sheet = u.sheet ? { ...withLive(u.sheet, u.live), basic_attack: !u.noBasic } : null;
     if (UNIT_TIP_ALL) return statsFirstCard(u.stats, color, sheet, equipment, itemCardOf, rebuild,
-        { gearBelow: true, cls: lift });
+        { gearBelow: true, cls: lift, chips: monsterChipsHtml(u, color) });
     return unitCard(u.stats, color, sheet, rebuild, lift, equipment, itemCardOf);
 }
 
@@ -754,14 +773,15 @@ const CX_PCT = { fmt: 'pct' };
  * 오른쪽 장 = 「스토리」 머리글 + 이야기 · 아래 「보너스 효과」 머리글 + 단계(초상 · 이름 · 직업은 왼쪽 장이 든다). 도감 경험치는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
  * 단계 줄은 **그 단계가 여는 효과**다(ADR-0667 · ADR-0715 · monster_design §8) — 종류 · 순서는 `game.codexSteps`, Lv1 · Lv2 줄은 `game.codexLineOf`(종족 이름 + 한 마리 몫) ·
  *   옵션 단계의 줄은 `game.codexOptionOf`(장비 옵션 줄과 같은 표기 · 행이 없으면 `—`)
- * @param m `{id, exp, boss}` — 도감 카드 한 장의 집계(exp = 누적 도감 경험치 · ADR-0587)
+ * @param m `{id, exp, boss, lv?, lockHtml?}` — 도감 카드 한 장의 집계(exp = 누적 도감 경험치 · ADR-0587) · `lv` = 먹는 레벨(도서관이 연 단계에서 자른다 · 없으면 경험치 레벨) ·
+ *   `lockHtml` = 도서관이 안 연 단계의 잠금 줄 `{레벨: 자물쇠 + 「도서관 n랭크」}` — 그 줄 효과 아래에 선다 (ADR-0762 · 부르는 쪽이 `lockLine` 으로 만든다)
  * @param grade 초상 등급 — 일반 / 정예 고르개를 그대로 따른다 (ADR-0167)
  * @returns `[후보 카드 장, 이야기 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
  */
 export function codexMonsterTipCard(m, grade) {
     // 이름은 자리표시자다(`{m:1900|이/가}` — 이름의 SSOT 는 monster.csv · 스테이지 이야기와 같은 규칙). 몬스터 이야기는 `{leader}` 를 안 쓴다
     const story = fillStory(L(monsterStory(m.id)), lang());
-    const lv = SYS.game.codexLevel(m.exp);
+    const lv = m.lv ?? SYS.game.codexLevel(m.exp);
     // 단계는 **늘 전부 선다** — 닿지 않은 단계도 보여야 「다음에 무엇을 받나」가 읽힌다 · 닿은 단계만 켜진다.
     //   **레벨만 든다** — 「경험치를 얼마 모아야 열린다」는 적지 않는다(다음 문턱은 카드가 든다 · ADR-0209)
     //   Lv1 · Lv2 = 그 몬스터 **한 마리의 몫** 앞에 종족 이름(Lv2 는 「상대」 · ADR-0715) · Lv3(none) = `—` · 옵션 단계는 그 몬스터의 전투 옵션 한 줄 (ADR-0667)
@@ -782,7 +802,7 @@ export function codexMonsterTipCard(m, grade) {
     const steps = SYS.game.codexSteps().map((s, i) => `
         <div class="cx-step${i < lv ? ' on' : ''}">
             <span class="cx-step-lv">${t('cx.tip.lv', { lv: s.level })}</span>
-            <span class="cx-step-b">${stepText(s)}</span>
+            <span class="cx-step-b">${stepText(s)}${m.lockHtml?.[s.level] ? `<span class="cx-step-need">${m.lockHtml[s.level]}</span>` : ''}</span>
         </div>`).join('');
     const card = el('div', 'tip-card cx-tip', `
         <div class="cx-tip-h">${t('cx.tip.story')}</div>
@@ -917,7 +937,7 @@ function codexCandCard(m, grade) {
 
 /**
  * 물약 카드 (SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315 · 신설 2026-09-24) — **두 렌더러가 함께 쓴다**:
- * 편성 탭 칸 · 가진 물약 (§15) · 출정 창 칸 (§4-1) · 제련소 재고 · 제작 행 (§8-2) · 도감 타일 (§9-1) ↔ 관전 아레나 칸 (§4-2).
+ * 편성 탭 칸 · 가진 물약 (§15) · 출정 창 칸 (§4-1) · 대장간 재고 · 제작 행 (§8-2) · 도감 타일 (§9-1) ↔ 관전 아레나 칸 (§4-2).
  * **관전 창 뱃지(버프) 툴팁과 같은 모양이다** [2026-09-24 사용자 지시 「스킬 버프 나올 때처럼 통일」] — 첫 줄 **이름**,
  *   가는 선 아래 **효과 한 줄**. 클래스도 그 카드(`battle.js:effectTipCard`)의 것을 그대로 쓴다(`.tip-effect-head` · `.tip-effect-summary`).
  *   **그림은 안 단다** [2026-09-24 사용자 지시] — 올린 칸이 이미 그 그림이다.
@@ -945,7 +965,7 @@ const num = v => String(Number(Number(v).toFixed(1)));
 const sec = v => hl(num(v));
 /**
  * 범위 표기 `{min, max}` — 양끝이 다르면 `st.range`(「1,200~1,800」) · 같으면 한 수 (R90 · SCREEN_DESIGN §2 · §6 · ADR-0108).
- * 무기 피해 · 스킬 피해 · 회복량이 쓴다 — 캐릭터 시트 · 아이템 툴팁 · 제련소도 같은 함수를 부른다(app.js)
+ * 무기 피해 · 스킬 피해 · 회복량이 쓴다 — 캐릭터 시트 · 아이템 툴팁 · 대장간도 같은 함수를 부른다(app.js)
  */
 export const rangeText = r => (r.min === r.max ? r.min.toLocaleString()
     : t('st.range', { a: r.min.toLocaleString(), b: r.max.toLocaleString() }));
@@ -1040,7 +1060,7 @@ function amountPhrase(line, part, atkType, R) {
  *   n 쿨(단위 없음 — 틀이 「초마다」를 든다 · 설명창은 쿨감을 곱한 실제 쿨 · 줄 문장은 표기 쿨 — ADR-0703) · d 수량 구절(피해는 종류까지 — ADR-0477 · 벽은 HP 만) · h 타수 · k 감쇠
  *   s · v 거는 걸린 효과의 시간 · 값(`hit` 줄이면 맞은 대상에게 거는 것 — 결빙 · 음수는 절댓값이라 방향은 틀이 든다 · 이베이드는 횟수)
  *   v2 둘째 `apply` 줄의 값(퀵 드로우 · 오버드로우 — 슬롯 식 없이 원값 · 설명창 재료는 첫 줄 `skill.previewOf`) · m 프렌지 겹 상한 · t 오오라 피해 간격 · i 계속 닳기의 방 사이 간격
- *   c · x 확률로 터지는 추가 피해의 확률 · 배수(둘째 문장 `sk.line.proc` 가 쓴다)
+ *   c · x 확률로 터지는 추가 피해의 확률 · 배수(둘째 문장 `sk.line.proc` 가 쓴다) · p 쓸 때 내는 HP(지금 HP 의 비율 — 원값 · 2026-10-24 R355)
  */
 function descSlots(def, pv, atkType, R) {
     const P = pv?.parts ?? {};
@@ -1070,6 +1090,7 @@ function descSlots(def, pv, atkType, R) {
         i: () => sec(D.balance.channel_tick_sec),
         c: () => at(e.procChance, 'procChance', UNIT.pct),
         x: () => at(e.procMult, 'procMult', UNIT.pct),
+        p: () => slot({ raw: def.hpCost, unit: UNIT.pct }, R),
     };
 }
 

@@ -12,7 +12,7 @@ resource,4,stage:3051,gold:9000|dust:90,proposed
 resource,5,stage:4051,gold:12000|dust:120,proposed
 resource,6,stage:5051,gold:15000|dust:150,proposed
 resource,7,stage:6051,gold:18000|dust:180,proposed
-shop,1,stage:1013,gold:600,proposed
+shop,1,-,gold:600,proposed
 shop,2,stage:2013,gold:2000|dust:20,proposed
 shop,3,stage:3013,gold:3000|dust:30,proposed
 shop,4,stage:4033,gold:6000|dust:60,proposed
@@ -26,9 +26,7 @@ storage,2,stage:2013,gold:2000|dust:20,proposed
 storage,3,stage:3033,gold:4500|dust:45,proposed
 storage,4,stage:4033,gold:6000|dust:60,proposed
 storage,5,stage:5013,gold:5000|dust:50,proposed
-codex,1,-,-,proposed
-codex,2,stage:1051,-,proposed
-tavern,1,-,gold:600,proposed
+tavern,1,stage:1013,gold:600,proposed
 tavern,2,stage:1051,gold:1500,proposed
 tavern,3,total:30|stage:2051,gold:3000,proposed
 tavern,4,total:55|stage:3051,gold:5500,proposed
@@ -46,3 +44,5 @@ library,1,hero:skillbook_learn_level,gold:600,proposed
 library,2,stage:1051,gold:5000,proposed
 library,3,hero:advance_unlock_level|stage:2051,gold:10000,proposed
 library,4,stage:3051,gold:15000,proposed
+library,5,stage:4051,gold:20000,proposed
+library,6,stage:5051,gold:25000,proposed

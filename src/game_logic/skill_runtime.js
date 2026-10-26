@@ -191,6 +191,9 @@ export function createSkillRuntime(ctx) {
         if (ail ? sd : (u.debuffDur && tgt.side !== u.side)) dur *= 1 + (ail ? sd : u.debuffDur);
         const cut = ail ? (tgt[ail.cut] ?? 0) : 0;
         if (cut) dur *= 1 - cut;
+        // 매력 — 받는 상태이상 · **상대 편이 건** 창의 시간 [2026-10-24 · R346 · battle_design §2-4 「털어내는 능력치」] · 장비 감소와 곱 ·
+        //   아군이 건 창은 안 줄인다 · 경직은 여기를 안 지난다(타격 회복 몫) · 0 이면 곱하지 않는다 — 부동소수가 종전과 같다
+        if (tgt.ddr && (ail || tgt.side !== u.side)) dur *= 1 - tgt.ddr;
         if (!(dur > 0)) return;
         let until = t + dur;
         // 화상 · 중독 — 거는 것마다 창이 제 시간으로 흐르고 가장 센 하나만 적용된다 (2026-09-28 · R178 · battle_design §2-5)
@@ -402,8 +405,10 @@ export function createSkillRuntime(ctx) {
     function chanOpen(u, sel, t) {
         const def = sel.def;
         const hit = SK.scaleDef(def, u.stats ?? null).effects.find(x => x.effect === 'hit');
-        const n = Math.max(1, hit?.hits ?? 1);
-        const iv = CASTS[def.cast].chan === 'tick' ? B.channel_tick_sec : null;
+        // 모으기(`burst` · 2026-10-26 R358)는 방이 둘 — 여는 순간 · [balance.csv:channel_charge_sec] 뒤 쏘는 순간
+        const burst = CASTS[def.cast].burst === true;
+        const n = burst ? 2 : Math.max(1, hit?.hits ?? 1);
+        const iv = CASTS[def.cast].chan === 'tick' ? (burst ? B.channel_charge_sec : B.channel_tick_sec) : null;
         sel.readyAt = Infinity;
         u.chan = { a: sel, def, left: n, single: hit?.target === 'enemy_single', tgt: null, iv, acc: 0 };
         if (u.noBasic || iv) u.next = u.period;
@@ -424,11 +429,13 @@ export function createSkillRuntime(ctx) {
 
     /**
      * 한 방 — 그 스킬을 **타수 1** 로 한 번 시전한다(원소 추가타는 방마다 · 에코 없음). 단일 대상은 기준 대상을 살아 있는 동안 다시 쓰고
-     *   쓰러졌으면 평소처럼 새로 고른다(그때만 굴림) — 그 밖의 대상은 방마다 그 대상 규칙대로. 마지막 방이면 같은 틱에 닫는다
+     *   쓰러졌으면 평소처럼 새로 고른다(그때만 굴림) — 그 밖의 대상은 방마다 그 대상 규칙대로. 마지막 방이면 같은 틱에 닫는다.
+     *   **모으기**(`burst` · 2026-10-26 R357 · R358)는 마지막 방에만 친다 — 여는 방은 모으기 시작이라 시전이 없다(rng 0 · 대상은 쏘는 순간의 규칙대로)
      */
     function chanStrike(u, t) {
         const c = u.chan;
         c.left -= 1;
+        if (CASTS[c.def.cast].burst && c.left > 0) return;
         const keep = c.single ? c.tgt : null;
         rt.pickTarget = (who, foes) => (who === u && keep && keep.hp > 0 && foes.includes(keep) ? keep : ctx.pickTarget(who, foes));
         let lead = null;
@@ -482,6 +489,15 @@ export function createSkillRuntime(ctx) {
         //   `ch` = 마법 무기의 남은 칸 — 부르는 쪽(battle.js chargeTick)이 칸을 먼저 쓰고 부른다 (R200)
         timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, ready: r1(sel.readyAt), ...(u.noBasic ? { ch: u.charges } : {}) });
         hooks.emit('cast', u, { t, def });
+        // HP 소모 [2026-10-24 · R355 · skill_design §12-4 차지] — 줄을 돌기 전에 **지금 HP 의 `hpCost`** 를 낸다(내림이라 쓰러지지 않는다 · 0 이면 사건 없음).
+        //   피해가 아니다 — 배리어 · 피해 감소를 안 지나고 훅 · 경직 · 반격 · 기여를 안 부른다 · rng 0 · 에코로 한 번 더 나간 시전은 안 낸다(`cast` 밖이다)
+        if (def.hpCost > 0) {
+            const amt = Math.floor(u.hp * def.hpCost);
+            if (amt > 0) {
+                u.hp -= amt;
+                timeline.push({ t: r1(t), e: 'pay', u: u.key, s: def.id, amt, dhp: u.hp });
+            }
+        }
         // 쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
         const lead = cast(u, def, t);
         // 스킬 뒤 기본 공격 (R218) — 적 목록은 스킬이 끝난 뒤의 것이다. 적이 없으면 굴림도 없다 · 대상은 스킬의 기준 대상(R317)

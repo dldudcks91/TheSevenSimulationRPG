@@ -10,7 +10,7 @@ active_slots,3,fixed,0,액티브 칸 수 — 고유 · 무기군 · 전직 각 �
 skill_cd_floor_mult,0.1,proposed,1,쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로 안 내려간다. 0 이면 스킬이 매 차례 나가 예산이 무너진다 (2026-09-01 코드 상수 CD_MIN_MULT 이관 · battle_design §6)
 cast_charge_max,4,fixed,0,마법 무기 시전 게이지의 칸 수 [2026-10-02 사용자 확정 「캐스팅창을 4개로 나눠 · 채워 둔 칸을 하나씩 소모」 · R200 · battle_design §3] — 게이지 한 바퀴(행동 주기)에 칸 하나가 쌓이고 · 시전 한 번이 칸 하나를 쓴다 · 다 차면 게이지가 선다
 skill_decay_cap_pct,0.9,proposed,0,스케일링 슬롯이 민 감쇠(decay_pct)의 상한(%) — 연쇄 배율 감쇠·광역 약화·방어 감소가 민첩으로 100 에 닿으면 두 번째 대상부터 0 이 되거나 방어가 한 방에 사라진다. 슬롯이 더한 뒤에만 건다 — CSV 원값은 skill.js 의 0 이상 100 미만 검증 그대로다. 안전 상한이라 손잡이(knob)가 아니다(~~crit_cap_pct 와 같은~~ — 치명 상한은 2026-09-25 삭제) (skill_design §13-5 · DEV_PLAN R72) (2026-09-10 R72 발행)
-hero_level_cap,50,fixed,0,영웅 레벨 상한 = **만렙** [2026-09-30 사용자 「만렙50으로 갈거고」 · GAME_DESIGN §9 09-30 · hero_design §5 · R194] — 나이트메어를 깼을 때 45 ~ 50 이고 헬은 레벨이 아니라 난이도로 오른다. 상한에 닿으면 XP 를 더 쌓지 않는다. 몬스터 레벨(stage.csv:dlvl + monster.csv:level_add)도 이 값을 넘지 않는다 — HP 구간 키(hero_hp_band{b}_unit)가 만렙까지만 있다. ~~7장 끝 · 챕터 하나가 10레벨~~(2026-09-14 · R88) (2026-08-30 발행 · 2026-09-14 50 → 70 · 2026-09-30 70 → 50)
+hero_level_cap,50,fixed,0,영웅 레벨 상한 = **만렙** [2026-09-30 사용자 「만렙50으로 갈거고」 · GAME_DESIGN §9 09-30 · hero_design §5 · R194] — 나이트메어를 깼을 때 45 ~ 50 이고 헬은 레벨이 아니라 난이도로 오른다. 상한에 닿으면 XP 를 더 쌓지 않는다. 몬스터 레벨(stage.csv:dlvl + monster.csv:level_add)도 이 값을 넘지 않는다 — HP 구간 키(hero_hp_band{b}_unit)가 만렙까지만 있다. 아이템 레벨도 이 값을 넘지 않는다(어느 경로든 item.rollGear 가 자른다 · 2026-10-24). ~~7장 끝 · 챕터 하나가 10레벨~~(2026-09-14 · R88) (2026-08-30 발행 · 2026-09-14 50 → 70 · 2026-09-30 70 → 50)
 hero_attr_min,1,fixed,0,영웅 기본 능력치 최소값 — 7종 공통 (2026-08-22 확정)
 hero_attr_max,20,fixed,0,영웅 기본 능력치 최대값 — **전 영웅 공통 상한 하나**다. ~~히든 상한선은 이 값 이하에서 개체별로 굴림~~ 은 2026-09-07 폐지(rollCaps 삭제 · 세이브 v15) — 개체차는 시작 굴림(등급별 총합 대역 + 분포 모양 · hero_tier.csv)이 만들고 상한이 만들지 않는다. ~~「등급은 출발선이지 천장이 아니다」~~ → 2026-09-14 레벨업 능력치 성장 폐지로 **시작 굴림이 닿는 끝**이다 (hero_design §4-3) (2026-08-22 확정)
 hero_attr_key_weight,1.6,proposed,1,능력치 굴림에서 **직업 주력**(`class.csv:key_attr`) 칸의 비율 — 칸의 중심 = 등급 대역 가운데 × 그 칸 비율 ÷ 일곱 칸 비율 합이고 나머지 칸의 비율은 1 [2026-10-22 사용자 · R308 · hero_design §4-3] — 크게 할수록 주력이 높게 나오고 나머지가 낮아진다
@@ -28,7 +28,7 @@ hero_hp_band3_unit,26,proposed,1,HP 구간 3(레벨 21~30)의 레벨업 1회 상
 hero_hp_band4_unit,48,proposed,1,HP 구간 4(레벨 31~40)의 레벨업 1회 상승 단위 — 건강 계수 1.0 기준 (2026-09-14 · R84)
 hero_hp_band5_unit,86,proposed,1,HP 구간 5(레벨 41~50)의 레벨업 1회 상승 단위 — 건강 계수 1.0 기준 (2026-09-14 · R84)
 hp_regen_base_per_level,0.05,proposed,1,**HP 재생 밑수** — 전 영웅이 갖는 레벨 1 초당 회복. 이후 base x power_growth_per_level ^ (level-1) 로 성장 축(기하)을 탄다 — 안 태우면 밑수만 선형으로 자라 후반에 무의미해진다. 그 위에 장비 접사·마스터리가 더해진다 — ~~마지막에 건강 계수가 곱해진다~~ 2026-09-10 폐기 · R72 (battle_design §8 · hero_design §4-1). 「장비가 0이면 능력치도 0」의 유일한 예외 — 밑수는 세기가 아니라 생존의 바닥이라 hero_hp_base 와 같은 분류다. ⚠제안 — 구조만 확정(2026-09-07)이고 값·곡선은 미정이다 (GAME_DESIGN §10). 가드: **밑수 x 파티 인원이 몬스터 DPS 를 넘으면 안 된다** — 넘으면 전멸이 오지 않아 「출정을 끊는 것은 전멸」(§9 09-07)이 무력화된다 (2026-09-08 R43 발행)
-start_gold,600,proposed,0,새 게임 시작 골드 — 첫 건설(선술집 · 자원) 중 한 채를 바로 짓는 만큼(building_rank.csv r1 비용 · construction_draft §4 조건 ①) (2026-08-25 초반 루프 구현하면서 발생 · 2026-10-12 사용자 「첫골드 600으로해」 300 → 600)
+start_gold,600,proposed,0,새 게임 시작 골드 — 첫 건설(상단 · 연구소 — 2026-10-24 선술집 → 상단) 중 한 채를 바로 짓는 만큼(building_rank.csv r1 비용 · construction_draft §4 조건 ①) (2026-08-25 초반 루프 구현하면서 발생 · 2026-10-12 사용자 「첫골드 600으로해」 300 → 600)
 start_dust,0,proposed,0,새 게임 시작 몬스터 가루 (2026-08-25 초반 루프 구현하면서 발생)
 start_stigma,0,proposed,0,새 게임 시작 낙인 (2026-08-25 초반 루프 구현하면서 발생)
 attr_growth_chance_pct,0.35,proposed,0,⚠ **퇴역 — 코드가 안 읽는다** · 기본 능력치 자동 성장은 2026-09-14 폐지(R83 · hero_design §4-3) · 옛 뜻: 레벨업 시 축별 +1 확률(%) (2026-08-25 초반 루프 구현하면서 발생)
@@ -68,9 +68,10 @@ dmg_variance_pct,0.15,proposed,0,**타격 범위 폭** 기본값(±%) [뜻 이�
 def_curve_k,200,proposed,1,물리 감쇠 곡선 상수 — 감쇠율 = 방어값/(방어값+K). **상수다**(롤 방식). 뜻은 — 감쇠가 정확히 50%가 되는 방어값 · K x 3 이면 75%(= 저항 상한과 같은 감소). 실효 체력 = HP x (1 + 방어/K) 라 방어 1점의 가치가 항상 같다. 레벨 앵커(K = k x 공격자 레벨)는 폐기 (battle_design §9-3) (2026-08-26 수치 대역 재설계) (2026-10-06 사용자 「K=200으로」 — ~~100~~ · PvP 기준 · 레벨 30 · 명중 0 에서 결투장 탱커 상대 물리 ≈ 마법 · 명중 줄이 들어오면 150 쪽을 다시 본다 · 언제든 바꾸는 손잡이 · R223)
 monster_def_scale,1.0,proposed,1,몬스터 **물리 방어** 전역 배율 — 소재값 x spawn_grade.def_mult 위에 곱한다. 원소 저항은 직접 %라 이 배율을 받지 않는다 (등급 가산은 spawn_grade.res_add) (2026-08-26 수치 대역 재설계)
 dmg_min,1,proposed,0,최종 피해 하한 — 감쇠 뒤에도 이만큼은 들어간다 (battle_design §9-3) (2026-08-26 피해 공식 확정하면서 발생)
-attr_dmg_pivot,10,fixed,1,능력치 계수의 **기준 능력치** — 이 값에서 계수가 1 이다(정해진 데미지) [2026-09-18 사용자 확정 · battle_design §9-2] — 평타는 직업 메인 스탯 · 스킬은 데미지 슬롯이 적은 능력치 · 회복량 · 소환 HP 도 같다 · 몬스터도 같다(2026-09-22 사용자 — 보류 해제) · 민첩의 행동 주기 계수(attr_speed_step_pct)도 이 기준을 쓴다(2026-10-17)
+attr_dmg_pivot,10,fixed,1,능력치 계수의 **기준 능력치** — 이 값에서 계수가 1 이다(정해진 데미지) [2026-09-18 사용자 확정 · battle_design §9-2] — 평타는 직업 메인 스탯 · 스킬은 데미지 슬롯이 적은 능력치 · 회복량 · 소환 HP 도 같다 · 몬스터도 같다(2026-09-22 사용자 — 보류 해제) · 민첩의 행동 주기 계수(attr_speed_step_pct)도 이 기준을 쓴다(2026-10-17) · 파티 전술 리더 보너스(tactic_leader_mult_*)도 이 기준에서 1 이다(2026-10-24 · R340)
 attr_dmg_step_pct,0.1,fixed,1,능력치 계수의 **1점당 복리 비율**(0.1 = 10%) [2026-09-18 사용자 확정 · battle_design §9-2] — 계수 = (1 + 이 값) ^ (능력치 − attr_dmg_pivot) · 20 이면 약 2.59배 · 1 이면 약 0.42배 · 0 에 닿지 않는다
 attr_speed_step_pct,0.05,fixed,1,민첩의 **행동 주기 계수 — 1점당 복리 비율**(0.05 = 5%) [2026-10-17 사용자 확정 — 민첩 = 모든 직업의 속도 축 · 크기는 attr_dmg_step_pct 의 절반 · hero_design §4-1] — 행동 주기 = 무기 주기 ÷ (1 + 이 값) ^ (민첩 − attr_dmg_pivot) × (1 − 공속) · 20 이면 속도 약 1.63배 · 1 이면 약 0.64배 · ~~1 + 민첩 × 0.01(hero_attribute.csv 선형 · 2026-09-13)~~ 대체 · 몬스터도 같다
+cha_debuff_dur_step_pct,0.03,proposed,1,매력의 **받는 상태이상 · 디버프 시간 감소 — 1점당 비율**(0.03 = 3%) [2026-10-24 사용자 「매력수치에 따라 내가 받는 상태이상과 디버프 길이가 정해지는걸로」 · 「그냥 위아래 3%씩」 · battle_design §2-4 「털어내는 능력치」 · R346] — 감소 = 이 값 × (매력 − attr_dmg_pivot) · 기준에서 0 · 20 이면 30% 짧게 · 1 이면 27% 길게 · 결빙 · 중독 · 화상 · 스턴 + 상대 편이 건 창 · 장비의 시간 감소와 곱 · 경직은 안 줄인다 · 몬스터도 같다 ⚠임시
 skill_dps_budget_pct,0.2,proposed,1,액티브 스킬 하나의 목표 DPS 기여(%) — 기여 = (스킬 배율 − 1) ÷ N · N = ceil(표기 쿨 ÷ 행동 주기). 버프는 (지속 ÷ 실효 쿨) × 효과% − 1÷N 으로 같은 자에 맞춘다. skill.csv 14행이 이 값에서 역산됐다 (skill_design §9-1) (2026-08-26 전직 액티브 15 발행하면서 발생)
 res_cap_base,0.75,proposed,1,원소 저항 기본 상한(%) — 저항은 소재값이 아니라 직접 %다. 이 상한은 최대 저항 증가 접사로만 뚫는다 (battle_design §9-5) (2026-08-26 수치 대역 재설계)
 res_cap_absolute,0.95,proposed,1,원소 저항 절대 상한(%) — 최대 저항 증가를 아무리 쌓아도 이 값을 넘지 못한다. 면역 차단 (2026-08-26 수치 대역 재설계)
@@ -79,6 +80,7 @@ stagger_sec,0.5,proposed,1,물리 경직 시간(초) [2026-09-16 사용자 확�
 burn_heal_cut,0.5,proposed,1,화상의 받는 회복 감소(**비율** — 0.5 = 50%) [2026-09-28 사용자 「일단 50%」 · battle_design §2-6] — 모든 화상이 같다 · 회복 스킬 · 재생 · 물약 · 흡혈 전부 · 체력 회복 +% 와 곱
 dot_tick_sec,1,proposed,1,지속 피해(중독) 틱 간격(초) [2026-09-28 · battle_design §2-6] — 이 간격마다 초당 피해 × 간격을 한 번에 뺀다
 channel_tick_sec,0.5,proposed,1,정신 집중 계속 닳기(skill.csv:cast = channel_tick)의 방 사이 간격(초) [2026-10-22 · battle_design §3-2 · 사용자 「1초에서 0.5초마다」] — 공속과 상관없이 이 간격마다 한 방(직격) · 중독 틱(dot_tick_sec)과 따로 · 지속 = 타수 × 이 값 · ⚠값 임시
+channel_charge_sec,3,proposed,1,정신 집중 모으기(skill.csv:cast = channel_charge)의 모으는 시간(초) [2026-10-26 · battle_design §3-2 · 사용자 「그냥 n초로해」 · R358] — 여는 순간부터 이 시간 뒤 한 발(공속과 상관없다 · 경직 · 스턴 동안은 안 쌓인다) · 쓰는 스킬은 스나이프 하나 · ⚠값 임시
 frenzy_stack_max,5,proposed,1,프렌지 겹의 상한 [2026-10-16 · skill_design §12-3 · R246] — 프렌지 창 동안 직격이 적중할 때마다 겹 +1 · 겹마다 그 창의 값만큼 공격 속도 · 다시 걸면 0 부터 · ⚠값 임시
 aura_pulse_sec,2,proposed,1,오오라 피해의 간격(초) [2026-10-16 · skill_design §12-4 홀리 파이어 · R249] — 켜 둔 동안 이 간격마다 적 전원에게 한 번(중독 틱과 같은 비직격) · ⚠값 임시
 hit_base_pct,0.75,fixed,1,기본 적중률(%) — 물리 직격의 출발값. 적중률 = 이 값 x (1 + 명중률) x (1 - 명중 감소) x 레벨 계수 → hit_min_pct ~ 100% 로 자른다 · 마법 무기를 든 공격자는 굴리지 않는다(항상 맞는다) · 영웅 · 몬스터 같은 값 (battle_design §9-4) (2026-08-26 수치 대역 재설계) (2026-10-06 사용자 확정 75% — ~~1 · 레벨 이상이면 100%~~ · 회피 없이 명중률이 같은 레벨에서도 듣게 · R219)
@@ -92,16 +94,20 @@ battle_timeout_sec,600,proposed,0,전투 제한시간(초) — 넘으면 `timeou
 gold_rate,0.3,proposed,1,처치 골드 = monster_gold_base 곡선 × exp_coef × gold_mult × gold_rate (2026-09-28 처치 XP 와 분리 · 2026-10-23 R330 등급 exp_mult 를 뺐다) — ~~exp_reward~~ 는 2026-09-14 R85 로 exp_coef 가 됐다 (2026-08-25 초반 루프 구현하면서 발생)
 drop_chance_pct,0.05,proposed,0,드롭 판정 1회의 기본 성공 확률(비율 — 1 = 100%) — 등급 배율은 spawn_grade.drop_chance_mult · 처치당 최대 1개 (item_design §1) (2026-08-25 초반 루프 구현하면서 발생 · 2026-08-28 판정 1회로 개정)
 boss_guaranteed_drop,1,proposed,0,보스 처치 시 최소 드롭 개수 (2026-08-25 초반 루프 구현하면서 발생)
-drop_ilvl_spread_pct,0.15,proposed,1,몬스터 장비 아이템 레벨의 반폭 비율 — 가운데(스테이지 레벨 + spawn_grade.gear_ilvl_add) × 이 값을 반올림한 만큼 위아래로 부위마다 균등하게 굴린다 · 모든 등급 같은 비율 · ⚠제안 — 사용자 「폭은 레벨의 10~20%」 안에서 가운데 값으로 시작 [2026-10-06 · item_design §1 3단계 · ~~drop_ilvl_spread~~ 퇴역 키와 다르다]
+drop_ilvl_spread_pct,0.15,proposed,1,몬스터 장비 아이템 레벨의 반폭 비율 — 가운데(스테이지 레벨 + spawn_grade.gear_ilvl_add) × 이 값을 반올림한 만큼 위아래로 부위마다 균등하게 굴린다 · 모든 등급 같은 비율 · 위 끝 = 그 몬스터의 레벨(넘치면 자른다 · 2026-10-24) · ⚠제안 — 사용자 「폭은 레벨의 10~20%」 안에서 가운데 값으로 시작 [2026-10-06 · item_design §1 3단계 · ~~drop_ilvl_spread~~ 퇴역 키와 다르다]
 drop_ilvl_spread_min,1,proposed,0,몬스터 장비 아이템 레벨 반폭의 하한 — 낮은 레벨에서 반올림이 0 이 되어 굴림이 사라지지 않게 한다 [2026-10-06 사용자 확정(추천안) · item_design §1 3단계]
 drop_material_pct,0.05,proposed,1,처치 재료(챕터 단계의 광석 · 목재 · 약초 중 하나) 판정의 기본 확률(비율) — 장비 · 책의 처치당 1개와 따로 굴린다 · 등급 배율은 spawn_grade.drop_chance_mult · 파티 드랍률이 곱해진다 [2026-10-06 사용자 「5%」 · item_design §1 「처치 재료」]
 rarity_w_normal,60,proposed,0,드롭 희귀도 가중치 — **일반** [신설 2026-09-14 사용자 지시 · item_design §1 · R86] — 훑는 순서는 일반 → 매직 → 레어 · 매직아이템 획득확률은 레어 가중치에만 곱한다(일반·매직은 그대로)
 rarity_w_magic,30,proposed,0,드롭 희귀도 가중치 — 매직 (2026-08-25 초반 루프 구현하면서 발생 · 2026-09-14 사용자 지시 ~~78~~ → 30)
 rarity_w_rare,10,proposed,0,드롭 희귀도 가중치 — 레어 (크래프트·유니크는 드롭 미연결) (2026-08-25 초반 루프 구현하면서 발생 · 2026-09-14 사용자 지시 ~~22~~ → 10)
-item_random_slots,3,fixed,0,랜덤 칸 수 — 일반 · 매직 · 레어 · 유니크 (~~일반 0~~ 10-21 · **전 부위 같다** — 반지도 칸을 더 받지 않는다) · 칸마다 붙을지 굴린다(확률 item_random_chance_*) — 한 아이템의 랜덤 줄은 item_random_min ~ 이 수(~~0 ~ 이 수~~ — 10-21) [2026-10-20 사용자 「랜덤이 0~최대 3개까지」 · 「랜덤칸은 그냥 랜덤임 더 안적음」 · 「반지 랜덤칸 하나 더 아님」 · item_design §1 희귀도 · R291 — ~~item_lines_normal · _magic · _rare~~(10-18 R285) 대체]
-item_random_min,1,fixed,0,랜덤 줄의 최소 수 — 일반 · 매직 · 레어 · 유니크 모두 · 앞의 이만큼 칸은 늘 붙고 나머지 칸(item_random_slots − 이 값)만 칸마다 붙을지 굴린다(확률 item_random_chance_*) [2026-10-21 사용자 「노말/매직/레어/유니크 모두 랜덤옵션이 최소 1개붙도록 수정(현재 0개)」 · 「최대 3개까지만 붙도록 확정해 일단」 · item_design §1 희귀도 · R297]
-item_random_chance_min,0.05,proposed,1,랜덤 칸 하나가 붙을 확률 — 아이템 레벨 1 (만렙 hero_level_cap 의 item_random_chance_max 까지 레벨 따라 선형 · 만렙 위는 max) · 1레벨에서도 아주 드물게 칸이 다 붙는다 [2026-10-20 사용자 「1레벨에서도 아주 드물게 3줄」 · 「이정도로해봐」 · item_design §1 희귀도 · R291]
-item_random_chance_max,0.6,proposed,1,랜덤 칸 하나가 붙을 확률 — 만렙(hero_level_cap) 이상 · 1 보다 작아야 한다(만렙에서도 늘 다 붙지는 않는다 — 다 붙을 확률은 이 값의 칸 수 제곱) [2026-10-20 사용자 「만렙에서 랜덤칸이 다붙을 확률이 존재하도록」 · R291]
+box_upper_pct_low,0.25,proposed,1,하급 상자(매직 ~ 레어)를 깔 때 위 희귀도(레어)가 나올 비율 — 나머지는 매직 [신설 2026-10-24 사용자 「하급은 매직~레어」 · base_expedition_design §1-6 「등급」 · R349] — 시작값 = 옛 비율(rarity_w_rare ÷ (rarity_w_magic + rarity_w_rare)) · 첫 클리어 상자는 지금 모든 난이도에서 하급 · state.js openBox
+box_upper_pct_mid,0.25,proposed,1,중급 상자(레어 ~ 에픽)를 깔 때 위 희귀도(에픽)가 나올 비율 — 나머지는 레어 [신설 2026-10-24 · R349] ⚠임시 — 하급과 같은 값 · 아직 들어오는 길이 없다(base_expedition_design 「남은 것」 ⑦)
+box_upper_pct_high,0.25,proposed,1,고급 상자(에픽 ~ 레전더리)를 깔 때 위 희귀도(레전더리)가 나올 비율 — 나머지는 에픽 [신설 2026-10-24 · R349] ⚠임시 — 하급과 같은 값 · 아직 들어오는 길이 없다(base_expedition_design 「남은 것」 ⑦)
+item_random_lines_normal,1,fixed,0,랜덤 줄 수 — 일반 [신설 2026-10-24 사용자 「랜덤줄을 1개씩으로하고」 · item_design §1 희귀도 · R342 — ~~item_random_slots · item_random_min · item_random_chance_min · _max~~(R291 · R297) 퇴역] — 굴리지 않는다 · 베이스 옵션을 뺀 줄 = 죄종 줄(일반 0 · 매직 1 · 레어 이상 2) + 이 값 = 등급의 차례 · 모든 부위가 같다 · item.js randomLines
+item_random_lines_magic,1,fixed,0,랜덤 줄 수 — 매직 [신설 2026-10-24 · R342] — 일반 행과 같은 규칙
+item_random_lines_rare,1,fixed,0,랜덤 줄 수 — 레어 [신설 2026-10-24 · R342] — 일반 행과 같은 규칙 · 크래프트(매직 + 고른 죄종)도 레어와 줄 수가 같다
+item_random_lines_epic,2,fixed,0,랜덤 줄 수 — 에픽(나이트메어부터) [신설 2026-10-24 사용자 「에픽은 나이트메어부터」 · R342] — 일반 행과 같은 규칙
+item_random_lines_legendary,3,fixed,0,랜덤 줄 수 — 레전더리(헬에서만) [신설 2026-10-24 사용자 「레전더리는 헬에서만」 · R342] — 일반 행과 같은 규칙 · 이 개정 전 랜덤 칸이 다 붙은 레어와 줄 수가 같다
 item_roll_skew,2,proposed,1,값 굴림의 치우침 세기 — 아이템 레벨 1 = 낮은 값 쪽 삼각 분포 · 그 가운데 = 균등 · 만렙 = 높은 값 쪽 삼각 분포(1 = 언제나 균등 · 클수록 끝이 세다) · 범위 양끝은 그대로 · 거는 곳 = 베이스 옵션 · 죄종 줄 · 랜덤 줄 · 목걸이 발동 확률(쿨타임 배수는 균등 — 미정) [2026-10-20 사용자 「좌로치우친분포에서 우로치우친분포」 · 「전부 걸어야해」 · item_design §2-1 · R291 — ~~magic_option_max_mult~~(10-18) 퇴역]
 weapon_fixed_atk_pct_min,0.01,proposed,0,무기 베이스 옵션 「무기 데미지 +%」 최소 — 무기면 무조건 1개 · 값만 굴린다 · 1~200% 균등 굴림(아이템 레벨 무관) ⚠제안 (2026-09-21 사용자 지시)
 weapon_fixed_atk_pct_max,2,proposed,0,무기 베이스 옵션 「무기 데미지 +%」 최대 — 200% ⚠제안 (2026-09-21 사용자 지시)
@@ -124,8 +130,8 @@ potion_use_hp_pct,0.5,proposed,1,물약을 마시는 HP 비율 % — 살아 있�
 potion_cooldown_sec,4,proposed,1,물약 쿨타임(초) — 영웅마다 · 원정 시작 때 준비 상태 · 한 영웅이 한순간에 칸을 다 비우지 않게 한다 · 사용자 3~5초 [신설 2026-09-15 · R103]
 make_rarity_w_normal,60,proposed,0,제작 희귀도 가중치 — 일반 [신설 2026-09-15 사용자 지시 · item_design §7-1 · R96] — 드롭(rarity_w_*)과 따로 쥔다 · 훑는 순서는 일반 → 매직 → 레어
 make_rarity_w_magic,30,proposed,0,제작 희귀도 가중치 — 매직 [신설 2026-09-15 사용자 지시 · R96]
-make_rarity_w_rare,10,proposed,0,제작 희귀도 가중치 — 레어 [신설 2026-09-15 사용자 지시 · R96] · 제련소 운 배치가 이 가중치를 미는지는 미정(GAME_DESIGN §10)
-equip_upgrade_max,3,fixed,0,강화 단계 상한 **기본값** — 건설 전 값이고 제련소 랭크의 더하기가 얹힌다(building_effect.csv upgrade · 2026-09-22 R137) · 다 지으면 +6강(2026-09-24 사용자 — 제련소 r2 의 +3 을 뺐다 · 나중에 다시 넣는다 · 확정 목표는 +9강 · 2026-08-31 item_design §1)
+make_rarity_w_rare,10,proposed,0,제작 희귀도 가중치 — 레어 [신설 2026-09-15 사용자 지시 · R96] · 대장간 운 배치가 이 가중치를 미는지는 미정(GAME_DESIGN §10)
+equip_upgrade_max,3,fixed,0,강화 단계 상한 **기본값** — 건설 전 값이고 대장간 랭크의 더하기가 얹힌다(building_effect.csv upgrade · 2026-09-22 R137) · 다 지으면 +6강(2026-09-24 사용자 — 대장간 r2 의 +3 을 뺐다 · 나중에 다시 넣는다 · 확정 목표는 +9강 · 2026-08-31 item_design §1)
 equip_upgrade_base_pct,0.05,proposed,1,강화 1단계당 베이스 능력치 % — 무기 데미지 밑수와 방어구 부위 고유 방어력에 곱해진다. 개체 굴림값은 안 건드리고 배율로 파생한다 (2026-08-31 발행)
 equip_upgrade_gold_base,600,proposed,1,+1강 비용(골드) — 골드의 최종 소모처 (2026-08-31 발행) · 200 → 600(2026-10-14 사용자 「시작을 600으로」 — 강화에 실패가 생겨 한 단계의 평균 비용이 비용 ÷ 성공 확률(upgrade_chance.csv)로 는다 · R253)
 equip_upgrade_gold_growth,1.35,proposed,1,강화 단계마다 비용에 곱하는 배율 — 비용 = base × growth^(현재 단계) (2026-08-31 발행)
@@ -167,7 +173,7 @@ shop_refresh_hours,4,proposed,1,상단 무료 교체 쿨다운(시간) — 자�
 shop_potion_bulk_1,10,proposed,0,상단 물약 수 고르기 버튼 첫째 수 — 물약을 고르면 사기 줄 [구매] 왼쪽에 ×이 값 · 누르면 그 수를 고르고 가격이 그 수의 값으로 바뀐다 · [구매]가 그 수만큼 산다(골드가 모자라면 하나도 안 산다) [신설 2026-10-23 사용자 「물약구매할때 buy 왼쪽에 x10, x50, x100 버튼」 · 「클릭하면 가격이 바뀌고 buy를 눌러야 사지도록」]
 shop_potion_bulk_2,50,proposed,0,상단 물약 수 고르기 버튼 둘째 수 — shop_potion_bulk_1 과 같은 틀 [신설 2026-10-23 사용자]
 shop_potion_bulk_3,100,proposed,0,상단 물약 수 고르기 버튼 셋째 수 — shop_potion_bulk_1 과 같은 틀 [신설 2026-10-23 사용자]
-mastery_t1_max_rank,5,proposed,1,T1·T2 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
+mastery_t1_max_rank,5,proposed,1,T1·T2·T3 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
 mastery_t2_unlock_level,10,proposed,0,마스터리 T2 해금 레벨 — 죄종 T2 · 직업 T2 공통 (2026-08-28 확정 · 2026-10-05 죄종 T2 = 조건부 층)
 mastery_t3_unlock_level,20,fixed,0,마스터리 T3 해금 영웅 레벨 — 죄종 · 직업 T3 공통 · 스킬북(skillbook_learn_level)과 전직(advance_unlock_level) 사이 [2026-10-06 사용자 확정 「20레벨에서 마스터리 3번째꺼를 찍을 수 있게」 · ~~전직과 같은 레벨~~(09-07) 대체 · skill_design §3-3 · R216 — T3 노드가 아직 없어 코드는 안 읽는다]
 mastery_wrath_t1_atkspeed_pct,0.01,proposed,1,분노 마스터리 T1-1 격분 — 랭크당 [combat_stat.csv:action_period] 감소 % · 레벨 1 (skill_design §3-1 · 2026-10-05 옛 T2-1 을 당겼다 · 옛 공통 T1 은 폐지)
@@ -204,6 +210,14 @@ mastery_envy_t2_stronger_reflect_pct,0.01,proposed,1,시기 마스터리 T2-3 �
 mastery_greed_t2_gear_magicfind_pct,0.02,proposed,1,탐욕 마스터리 T2-1 — 탐욕 장비가 문턱 이상인 동안 랭크당 매직아이템 획득확률(제 몫 · 운 계수) (skill_design §3-2 · 2026-10-05)
 mastery_greed_t2_elite_atk_pct,0.02,proposed,1,탐욕 마스터리 T2-2 — 대상이 정예 · 보스인 동안 랭크당 데미지 %(그 타격의 데미지 % 괄호) · T1 밖 능력치(탐욕 예외) (skill_design §3-2 · 2026-10-05)
 mastery_greed_t2_elite_critchance_pct,0.01,proposed,1,탐욕 마스터리 T2-3 — 대상이 정예 · 보스인 동안 랭크당 치명 확률 · T1 밖 능력치(탐욕 예외) (skill_design §3-2 · 2026-10-05)
+mastery_greed_t3_dmg_pct,0.08,proposed,1,탐욕 마스터리 T3-1 황금 칼날 — 랭크당 데미지 % = 값 × 탐욕 합(제 몫 골드 획득 + 드랍률 + 매직아이템 획득확률 · 운 계수 뒤 · 파티 합산 · 체감 전 — 상한 [balance.csv:mastery_greed_t3_input_cap]) · 데미지 % 괄호에 더한다 ⚠임시 (skill_design §3-3 · 2026-10-24 · R325)
+mastery_greed_t3_hp_pct,0.06,proposed,1,탐욕 마스터리 T3-2 황금 심장 — 랭크당 최대 HP % = 값 × 탐욕 합 · 체력 % 칸(hp_pct)에 더한다 ⚠임시 (skill_design §3-3 · 2026-10-24 · R325)
+mastery_greed_t3_cdr_pct,0.03,proposed,1,탐욕 마스터리 T3-3 시간은 돈이다 — 랭크당 쿨타임 감소 = 값 × 탐욕 합 · [combat_stat.csv:cooldown_reduction] 에 더한다 · 쿨감 합의 상한은 아직 없다(바닥은 [balance.csv:skill_cd_floor_mult]) ⚠임시 (skill_design §3-3 · 2026-10-24 · R325)
+mastery_greed_t3_input_cap,1,proposed,1,탐욕 마스터리 T3 의 탐욕 합 상한(비율 — 1 = 100%) · 넘긴 몫은 T3 가 안 센다 ⚠임시 (skill_design §3-3 · 2026-10-24 · R325)
+mastery_wrath_t3_atk_pct,0.12,proposed,1,분노 마스터리 T3 풀려난 분노 — 내 HP 가 문턱 미만인 동안 데미지 %(그 타격의 데미지 % 괄호) · 랭크와 상관없이 하나 — 랭크는 문턱을 올린다 [balance.csv:mastery_wrath_t3_hp_step_pct] ⚠임시 (skill_design §3-3 · 2026-10-24 · R343)
+mastery_wrath_t3_hp_step_pct,0.1,proposed,1,분노 마스터리 T3 — 랭크마다 HP 문턱이 오르는 폭 · 1랭크 = [balance.csv:mastery_t2_hp_threshold_pct] · n랭크 = 그 + (n − 1) × 이 값 ⚠임시 (skill_design §3-3 · 2026-10-24 · R343)
+mastery_gluttony_t3_stack_atk_pct,0.005,proposed,1,폭식 마스터리 T3 끝없는 만찬 — 겹당 데미지 %(그 타격의 데미지 % 괄호) · 직격이 맞을 때마다 한 겹 · 라운드를 열면 비운다 · 랭크와 상관없이 하나 — 랭크는 상한을 올린다 [balance.csv:mastery_gluttony_t3_stack_per_rank] ⚠임시 (skill_design §3-3 · 2026-10-24 · R343)
+mastery_gluttony_t3_stack_per_rank,5,proposed,1,폭식 마스터리 T3 — 랭크당 겹 상한 · n랭크 상한 = n × 이 값 ⚠임시 (skill_design §3-3 · 2026-10-24 · R343)
 mastery_sloth_t2_gear_dr_pct,0.005,proposed,1,나태 마스터리 T2-1 — 나태 장비가 문턱 이상인 동안 랭크당 피해 감소(원천 하나) (skill_design §3-2 · 2026-10-05)
 mastery_sloth_t2_tick_dr_pct,0.005,proposed,1,나태 마스터리 T2-2 — 겹당 · 랭크당 피해 감소(겹 합이 원천 하나) · 겹은 [balance.csv:mastery_sloth_t2_tick_sec] 마다 · 상한 [balance.csv:mastery_sloth_t2_max_stack] (skill_design §3-2 · 2026-10-05)
 mastery_sloth_t2_tick_cdr_pct,0.01,proposed,1,나태 마스터리 T2-3 — 겹당 · 랭크당 쿨타임 감소 (skill_design §3-2 · 2026-10-05)
@@ -250,6 +264,8 @@ tactic_grade_weight_magic,25,proposed,1,전술 옵션 리롤이 **매직**을 �
 tactic_grade_weight_rare,5,proposed,1,전술 옵션 리롤이 **레어**를 낼 상대 가중치. 파워 예산의 상한선(§5-7 「7칸 전부 레어」)에 닿는 빈도를 이 값이 정한다. ⚠ 기획 미정 — 값 임시 (2026-09-02 등급 축 코드 반영하면서 발행)
 tactic_reroll_base_cost,600,proposed,1,전술 **전체 리롤**의 기본가(지금은 골드) — 잠근 칸이 없을 때의 값. 비용 = 이 값 × tactic_reroll_lock_mult ^ 잠근 칸 수. 칸이 몇 개 열렸든 같은 기본가다(일단) (tactic_card_design §5-6 · 2026-09-22 사용자 「일단 600」). ⚠ 값 임시 — 밸런스 때 올린다 · 재화가 낙인으로 바뀌어도 키 이름은 그대로
 tactic_reroll_lock_mult,2,proposed,1,전술 리롤 비용이 **잠금 1개마다** 곱해지는 배수 — 가파른 곱이라 다 잠그고 하나만 굴리기가 가장 비싸다 (tactic_card_design §5-6 · 2026-09-22 사용자 확정 「잠금마다 ×2 · 나중에 더 올린다」). 1 미만이면 로드가 멈춘다(지킬수록 싸지면 안 된다)
+tactic_leader_mult_min,0.5,proposed,1,파티 전술 **리더 보너스** — 리더(편성 첫 칸)의 통솔이 **최소**(hero_attr_min)일 때 전술 옵션 값에 곱하는 배수 · 기준(attr_dmg_pivot)에서 1 · 그 사이는 직선 · 옵션마다 받는 몫은 tactic_option.csv:leader_bonus [2026-10-24 사용자 「통솔 10을 기준으로 10보다 낮으면 감소해서 1이면 50%」 · tactic_card_design §5-10 · R340] ⚠임시
+tactic_leader_mult_max,2,proposed,1,파티 전술 **리더 보너스** — 리더의 통솔이 **최대**(hero_attr_max)일 때 전술 옵션 값에 곱하는 배수 · 기준에서 1 · 그 사이는 직선 [2026-10-24 사용자 「20이면 2배」 · tactic_card_design §5-10 · R340] ⚠임시
 chapter_open_max,5,fixed,0,**이번 버전이 여는 마지막 장** — 이 장보다 뒤(6 · 7장)는 **무엇으로도 안 열린다**: 앞 장 보스가 여는 장(`limitsOf.chapters` — 2026-10-22 원정 건물 삭제 · R319)이 여기서 잘리고 · 관리자 모드(Admin)도 이 장까지만 연다 · 그 장을 여는 칸(`chapterGate`)도 이 뒤면 null(챕터 세그먼트 자물쇠). 다음 버전에서 장을 열 때 이 값을 올린다 [2026-10-09 사용자 지시 「챕터6이랑 7은 admin이고 뭐고 이번 버전에서는 절대 안열거야」 · ADR-0552 · R227]
 difficulty_unlock_chapter,5,fixed,0,**다음 난이도를 여는 장** — 한 난이도에서 이 장의 보스 칸(`stage.csv:boss_grade` = `chapter_boss`)을 깨면 `difficulty_tier.csv` 의 다음 단이 열린다(노말은 처음부터 · 관리자 모드는 전부) [2026-10-10 사용자 「챕터 5보스를 깰 때마다 다음 난이도가 열리는식」 · base_expedition_design §1-4 · R236]. `chapter_open_max` 와 따로다 — 6 · 7장이 열려도 바퀴는 1 ~ 5장을 돈다
 admin_gold,1000000,fixed,0,**개발 장치** — 관리자 모드(Admin) 판의 Gold [Add] 가 골드를 이 값까지 채운다(모자란 만큼 · 진짜 골드 · 세이브에 남는다) · 게임 기능이 아니다 [2026-09-27 사용자 지시 「Admin 누르면 돈 100만 쓸 수 있도록」 · 2026-10-23 켤 때 → 판의 줄 · R332 · SCREEN_DESIGN §10-3]
@@ -311,9 +327,9 @@ shop_book_count,3,proposed,1,상단이 **목록마다** 파는 스킬 도안 수
 shop_book_gold,1500,proposed,1,상단 스킬 도안 한 장의 골드(2026-10-20 ~~스킬북 한 권~~ · R293 — 책으로 만들려면 book_craft_gold + 가루가 더 든다) · ⚠임시 [2026-09-29 · base_expedition_design §2-6]
 arena_ai_main_tree_weight,3,proposed,1,결투장 등급 AI 가 마스터리를 찍을 때 **주력 트리**(직업 / 죄종 중 굴린 하나) 노드에 곱하는 가중치 — 사람처럼 한 트리에 몬다 · ⚠임시 [2026-10-17 · arena_design §7 · INTERFACE §2-17]
 arena_ai_continue_weight,2,proposed,1,결투장 등급 AI 가 마스터리를 찍을 때 **이미 찍은 노드**에 곱하는 가중치 — 찍던 노드를 이어 찍는다 · 주력 트리 가중치와 곱한다 · ⚠임시 [2026-10-17 · arena_design §7 · INTERFACE §2-17]
-arena_elo_start,1000,proposed,1,결투장 ELO **시작 레이팅** — 새 게임 · 레이팅이 없는 세이브가 여기서 시작한다 · arena_tier.csv 첫 행 rating_min 근처 · ⚠임시 [2026-10-18 사용자 「온라인 결투장은 elo 방식」 · arena_design §8 · INTERFACE §2-7]
-arena_elo_k,32,proposed,1,결투장 ELO **K 계수** — 한 판의 레이팅 변화 = K × (결과 − 기대 승률) · 결과 승 1 · 무 0.5 · 패 0 · 반올림 · ⚠임시 [2026-10-18 · arena_design §8]
-arena_elo_scale,400,fixed,0,결투장 ELO 기대 승률의 **눈금** — 레이팅이 이만큼 높으면 기대 승률 10:1 · E = 1 / (1 + 10^((상대 − 나) / 이 값)) · 표준 ELO 값 [2026-10-18 · arena_design §8]
-arena_pick_spread,100,proposed,1,결투장 상대 후보 셋의 **레이팅 간격** — 내 레이팅 − 이 값 · 그대로 · + 이 값(아래 · 비슷 · 위) · ⚠임시 [2026-10-18 · arena_design §8 · INTERFACE §2-17]
-arena_pick_jitter,30,proposed,1,결투장 상대 후보 레이팅의 **흔들림** — 후보마다 ± 이 값 안에서 고르게 굴린다(정수) · 간격보다 작아야 셋의 순서가 안 뒤집힌다 · ⚠임시 [2026-10-18 · arena_design §8]
-colosseum_seed,7300,fixed,0,콜로세움 **층 상대의 시드 바탕** — 층 n 의 AI 팀 = deriveSeed(이 값 · n) 으로 굴린다 · 같은 층은 언제 · 누가 가도 같은 팀이다 · 바꾸면 사다리 전체의 상대가 바뀐다 [2026-10-18 · arena_design §7 · INTERFACE §2-17]
+arena_elo_start,1000,proposed,1,콜로세움 ELO **시작 레이팅** — 새 게임 · 레이팅이 없는 세이브가 여기서 시작한다 · arena_tier.csv 첫 행 rating_min 근처 · ⚠임시 [2026-10-18 사용자 「온라인 결투장은 elo 방식」 · arena_design §8 · INTERFACE §2-7]
+arena_elo_k,32,proposed,1,콜로세움 ELO **K 계수** — 한 판의 레이팅 변화 = K × (결과 − 기대 승률) · 결과 승 1 · 무 0.5 · 패 0 · 반올림 · ⚠임시 [2026-10-18 · arena_design §8]
+arena_elo_scale,400,fixed,0,콜로세움 ELO 기대 승률의 **눈금** — 레이팅이 이만큼 높으면 기대 승률 10:1 · E = 1 / (1 + 10^((상대 − 나) / 이 값)) · 표준 ELO 값 [2026-10-18 · arena_design §8]
+arena_pick_spread,100,proposed,1,콜로세움 상대 후보 셋의 **레이팅 간격** — 내 레이팅 − 이 값 · 그대로 · + 이 값(아래 · 비슷 · 위) · ⚠임시 [2026-10-18 · arena_design §8 · INTERFACE §2-17]
+arena_pick_jitter,30,proposed,1,콜로세움 상대 후보 레이팅의 **흔들림** — 후보마다 ± 이 값 안에서 고르게 굴린다(정수) · 간격보다 작아야 셋의 순서가 안 뒤집힌다 · ⚠임시 [2026-10-18 · arena_design §8]
+colosseum_seed,7300,fixed,0,결투장 **층 상대의 시드 바탕** — 층 n 의 AI 팀 = deriveSeed(이 값 · n) 으로 굴린다 · 같은 층은 언제 · 누가 가도 같은 팀이다 · 바꾸면 사다리 전체의 상대가 바뀐다 [2026-10-18 · arena_design §7 · INTERFACE §2-17]

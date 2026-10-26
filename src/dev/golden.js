@@ -80,16 +80,15 @@ const strMapSig = m => Object.keys(m ?? {}).sort()
     .map(k => `${k}:${m[k]}`).join('|') || '-';
 
 /**
- * 정예 편성 — 라운드마다 `라운드:죄종:특성+특성+특성`.
- * `spawnRound` 의 정예 굴림(죄종 1회 · `pickTwo` 2회)이 여기서만 잡힌다 — 특히 `pickTwo` 의
- * `if (b === a) b = (b + 1) % len` 규칙은 다른 어느 필드도 못 본다. 정예를 못 잡고 라운드가 끝나면
+ * 정예 편성 — 라운드마다 `라운드:죄종:특성id+특성id`(그 단이 연 칸만 · R344).
+ * `spawnRound` 의 정예 굴림(죄종 1회 · 특성 3회 — 단과 무관)이 여기서만 잡힌다. 정예를 못 잡고 라운드가 끝나면
  * `kills` 에도 안 남으므로 **스폰 구성 자체**를 적어야 한다.
  * 출처는 타임라인의 `round` 이벤트다 (`roundLog` 는 죄종만 들고 특성을 안 든다).
  */
 const eliteSig = timeline => timeline
     .filter(ev => ev.e === 'round')
     .flatMap(ev => (ev.enemies ?? []).filter(en => en.grade === 'elite')
-        .map(en => `${ev.n}:${en.sin ?? '-'}:${(en.traits ?? []).map(t => t?.en ?? t).join('+') || '-'}`))
+        .map(en => `${ev.n}:${en.sin ?? '-'}:${(en.traits ?? []).map(t => t?.id ?? t).join('+') || '-'}`))   // 특성 = 칸의 id (R344 — 옛 이름표 `{ko,en}` 의 en)
     .join(' ') || '-';
 
 /**

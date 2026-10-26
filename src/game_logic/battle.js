@@ -72,7 +72,7 @@
  *     그대로이고 판정도 1회 · 등급은 확률 배율(`spawn_grade.csv:drop_chance_mult`)이다. 바뀐 것은 **무엇이 떨어지나** —
  *     판정 뒤 **입은 부위 중 하나**를 골라 그 아이템을 그대로 낸다. 파이프라인 3~6단계(ilvl · 희귀도 · 접사 · 개체 굴림)는
  *     **스폰으로 옮겨갔다**(`spawnRound`) — 그래서 등급 반영이 해소됐다(~~DEV_PLAN R20~~): ilvl = 가운데 `스테이지 레벨 + gear_ilvl_add` ± 반폭(부위마다 균등 · ~~굴림 없음~~ 2026-10-06) ·
- *     희귀도 = 등급의 가중치(`gear_rarity_w_*` · 2026-09-23 — 일반 등급은 레어 0) · 레어 가중에 파티 평균 매직찬스 + `gear_rare_bonus_pct`. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
+ *     희귀도 = 그 등급 × 그 단의 한 행(`gearRarity` — `gear_rarity.csv` · 2026-10-24 R350 · 노말 일반몹은 레어 0) · 레어 이상 가중에 파티 평균 매직찬스. ⚠ 굴림 수가 **스폰 수**를 따라가고(몬스터마다 제 줄이라 전투 수열은 안 민다 · 2026-09-22), 파티의 매직찬스가 **적 장비도 좋게 한다**
  *     (사용자가 알고 택한 「이스터에그」). 적의 소환 벽은 처치가 아니다 — `onKill` 을 안 지난다.
  *   · **그 한 개는 장비 또는 스킬 도안이다** [2026-09-29 · R179 · item_design §1 드롭 1-2 · 2026-10-20 · R293 ~~스킬북~~] — 판정 뒤 종류 1회 · 도안은 그 몬스터가 든 칸의 스킬 도안(`result.blueprints`).
  *   · **처치 재료는 그 1개와 따로다** [2026-10-06 · item_design §1 「처치 재료」] — 판정 1회 → 종류 1회(`MATERIAL_KINDS`) · `result.materials` 는 종류만 센다(단계는 state 가 정한다).
@@ -101,14 +101,16 @@ const MATERIAL_KINDS = Object.freeze(['ore', 'timber', 'herb']);
  * @param {object} data
  *   balance, monsters(byId), stages(byId), roundSets {round_set: [{round_num, round_type}]} (세트마다 round_num 순),
  *   budgets(byKey: normal/elite/stage_boss/chapter_boss), grades(byKey), sins [...],
- *   sinTraits {sin: trait}, commonTraits [trait...], itemSystem,
+ *   eliteTraits {sin: {sinId: [masteryNodeId]}, stat: [attrId], def: [defId]} — 정예 특성 칸의 풀 (2026-10-24 · R344 · monster_design §6 · 생성 시 검사), itemSystem,
  *   skillSystem — skill.js (정의·발동 선택). 없으면 액티브 없이 기본 공격만 돈다,
  *   heroSystem — hero.js. **몬스터도 `computeCombat` 을 지난다** (§8-1 「계산이 한 곳」 · 신설 2026-09-11 R79),
  *   classSkills {classId: [skillId]} — 보스의 한 칸 더의 후보 풀. item·hero 에 넘기는 **같은 표**다 (신설 2026-09-11 R79 · ⚠ 보스마다 정한 고유 스킬이 서기 전의 임시 · R269),
  *   slots [partId] — 장비 부위 어휘. 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 검증에만 쓴다 (신설 2026-09-11 R79 · 개정 2026-10-12 R245),
  *   levelXp [{level, monsterXp}] — `level_xp.csv`. 몬스터 레벨 → 처치 XP 기준값 (신설 2026-09-28 · 1 ~ 만렙을 덮어야 한다),
- *   difficulties [{id, wearChance, skillSlots, monsterDmgMult, monsterHpMult}] — `difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
+ *   difficulties [{id, wearChance, skillSlots, monsterDmgMult, monsterHpMult, eliteTraitSlots}] — (eliteTraitSlots = 정예 특성 칸 수 · 2026-10-24 R344 · ~~rarityMax~~ R342 → 2026-10-24 R350 `gearRarity` 의 0) —`difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
  *     몬스터 **스킬 칸 수**(난이도가 연다 — 노말 1 · 나이트메어 2 · 헬 3 · 없으면 1 · 2026-10-18 R269), 몬스터 **데미지 · HP 배수**(전역 배율 위에 곱한다 · 없으면 1 · 2026-10-21 R301),
+ *   gearRarity {grade: {difficultyId: {normal, magic, rare, epic, legendary}}} — `gear_rarity.csv`. 몬스터 장비 희귀도 가중치 **등급 × 단 한 장**
+ *     (행마다 합 100 · 에픽 · 레전더리를 안 여는 단은 0 · 2026-10-24 R350 · item_design §1 희귀도). 주면 등급 × 단 칸이 다 있어야 한다 · 없으면 드롭 가중치,
  *   monsterRoles {role: {rank}} — `monster_role.csv`. **적의 자리**를 정한다 (진형 확정 2026-09-09).
  *     모르는 역할은 **전열(0)** 로 떨어뜨린다 — 빠뜨린 몬스터가 뒤에 숨어 무적이 되는 것보다 앞에 서는 편이 안전하다
  */
@@ -119,6 +121,12 @@ export function createBattleSystem(data) {
     const HS = data.heroSystem ?? null;            // 몬스터도 computeCombat 을 지난다 (R79)
     const CLASS_SKILLS = data.classSkills ?? {};   // 보스의 한 칸 더의 후보 풀 (R79 · ⚠ 보스마다 정한 고유 스킬 전의 임시 · R269)
     if (!HS) throw new Error('battle: heroSystem 이 없다 — 몬스터도 computeCombat 을 지난다 (INTERFACE §2-6)');
+    // 정예 특성 칸의 풀 (R344 · monster_design §6) — 죄종마다 그 마스터리 T1 · 능력치 · 방어. 비면 그 칸 굴림이 undefined 를 싣는다
+    const ET = data.eliteTraits ?? {};
+    for (const s of data.sins ?? [])
+        if (!ET.sin?.[s]?.length) throw new Error(`battle: eliteTraits.sin.${s} 가 비었다 — 그 죄종의 마스터리 T1 (mastery_node.csv · INTERFACE §2-6)`);
+    for (const k of ['stat', 'def'])
+        if (!ET[k]?.length) throw new Error(`battle: eliteTraits.${k} 가 비었다 (INTERFACE §2-6)`);
     // 파티 골드 · 드랍 · 매직의 체감 K [2026-10-05] — 없으면 정산이 NaN 으로 조용히 샌다
     for (const k of ['party_gold_find_k', 'party_item_find_k', 'party_magic_find_k'])
         if (!(B[k] > 0)) throw new Error(`battle: balance.csv 의 ${k} 가 없거나 0 이하다`);
@@ -184,6 +192,13 @@ export function createBattleSystem(data) {
     const diffOf = diff => DIFFS.find(d => d.id === diff) ?? DIFFS[0];
     const wearChanceOf = diff => diffOf(diff)?.wearChance ?? 1;
     /**
+     * 몬스터 장비의 희귀도 가중치 — **그 등급 × 그 단의 한 행** `[gear_rarity.csv]` [2026-10-24 · 사용자 확정 · R350 · item_design §1 희귀도 —
+     *   ~~등급의 `gear_rarity_w_*` · 단의 `rarity_max`~~(R342)]. 에픽은 나이트메어부터 · 레전더리는 헬에서만도 그 행의 0 이다.
+     *   안 준 단 · 표에 없는 단은 첫 단(`diffOf`) · 표가 없는 조립은 `null`(= `rollGear` 의 드롭 가중치) · rng 0
+     */
+    const RARITY = data.gearRarity ?? null;
+    const gearWeightsOf = (g, diff) => (RARITY ? RARITY[g.grade]?.[diffOf(diff)?.id] ?? null : null);
+    /**
      * 몬스터 스킬 칸 — **난이도가 연다 · 보스는 한 칸 더** [2026-10-18 · R269 · monster_design §5-1 — ~~등급이 연다(일반 1 · 정예 2 · 보스 3)~~ 09-11].
      *   칸 수 = 그 단 `[difficulty_tier.csv:skill_slots]` + 등급 `[spawn_grade.csv:skill_slots_add]`. **칸은 출처 자리**다 —
      *   1칸 = 고유 · 2칸(단 ≥ 2) = `monster.csv:nightmare_skill`(2티어 · 몬스터마다 고정 · monster_design §5-2-1) · 보스의 한 칸 더 = 스폰 굴림(`thirdSkill`).
@@ -191,6 +206,8 @@ export function createBattleSystem(data) {
      *   2칸은 영웅의 **배운 칸 자리**(`bookSkill` · source `book`)로 넘긴다 — 칸 순서 · 특정 스킬 +n 이 영웅과 같은 길을 탄다. 스폰 · 출정 창 · 획득처가 이 하나를 본다 · rng 0
      */
     const slotsOf = diff => diffOf(diff)?.skillSlots ?? 1;
+    /** 정예 특성 칸 수 — **난이도가 연다** `[difficulty_tier.csv:elite_trait_slots]` (노말 죄종 · 나이트메어 + 능력치 · 헬 + 방어 · 2026-10-24 · R344 · monster_design §6) · 표가 없는 조립은 1 */
+    const eliteSlotsOf = diff => diffOf(diff)?.eliteTraitSlots ?? 1;
     /**
      * 몬스터 데미지 · HP 배수 — **난이도 단이 든다** [2026-10-21 · R301 · base_expedition_design §1-4] `[difficulty_tier.csv:monster_dmg_mult · monster_hp_mult]`.
      *   전역 배율(`monster_atk_scale` · `monster_hp_scale`) 위에 곱한다 · 표가 없는 조립은 1 · rng 0
@@ -205,20 +222,23 @@ export function createBattleSystem(data) {
     /** 몬스터 장비 아이템 레벨의 반폭 — 가운데 × `[balance.csv:drop_ilvl_spread_pct]` 반올림 · 하한 `[balance.csv:drop_ilvl_spread_min]`
      *  [2026-10-06 · item_design §1 3단계 · 반올림 자릿수는 INTERFACE §5-3] */
     const ilvlSpreadOf = center => Math.max(B.drop_ilvl_spread_min, Math.round(center * B.drop_ilvl_spread_pct));
-    /** 등급의 장비 희귀도 가중치 `{normal, magic, rare}` (spawn_grade.csv:gear_rarity_w_*) */
-    const gearWeights = g => ({ normal: g.gear_rarity_w_normal, magic: g.gear_rarity_w_magic, rare: g.gear_rarity_w_rare });
+    /** 몬스터 레벨 = 스테이지 레벨 + `monster.csv:level_add` · 만렙 `[balance.csv:hero_level_cap]` 에서 자른다 [2026-10-24 · INTERFACE §2-6 `lvl`] —
+     *  입은 장비 아이템 레벨의 위 끝도 이 값이다(`wearGear`) */
+    const monsterLevelOf = (m, level) => Math.min(B.hero_level_cap, level + m.level_add);
     /**
      * 한 마리의 차림 — 스폰 2단과 실험실(`rollMonsterDrop`)이 **같은 이 함수**를 부른다 [2026-10-10 · 스폰에서 뺐다 · rng 순서 불변 · INTERFACE §5-2].
      * 아이템 레벨 = 가운데(스테이지 레벨 + 등급 가산) ± 반폭 — **부위마다** `rollGear` 가 굴린다 [개정 2026-10-06 · 사용자 확정 · item_design §1 3단계 — ~~굴리지 않는다~~(09-11)].
      *   반폭 = 가운데 × 비율 반올림 · 하한 — 모든 등급이 같은 비율이라 평균은 종전과 같다. 몬스터가 입는 장비라 그 세기도 같이 흔들린다(사용자가 알고 택했다)
+     *   **위 끝 = 그 몬스터의 레벨**(`monsterLevelOf`) — 넘친 값은 자른다 [2026-10-24 사용자 「몬스터가 장착중인 아이템은 본인의 레벨을 넘을 수 없다」 · 굴림 수 불변]
      * **입는 부위** [2026-10-12 · R245] — 등급의 고정 부위는 언제나 · 선택 부위는 **부위마다 「입나」 1회**(`rng() < chance`)를 먼저 굴린다.
      *   확률이 0 · 1 이어도 소비한다 — 소비 수가 단에 의존하면 같은 시드가 단마다 다른 차림 줄을 낸다 (INTERFACE §5-2)
      * **무기군 `-`** [2026-10-23 · R324 · 사용자 「랜덤하게 줘도될거같에」] — 그 직업 본편 무기군(`item.groupsFor` 순서) 중 하나를 **이 줄의 첫 굴림 1회**로 고른다.
      *   무기군이 박힌 몬스터는 안 굴려 차림 수열이 종전과 같다 · 든 무기군은 입은 무기의 `group` 이 들고 간다(`makeEnemy` 의 무기 판정이 그것을 읽는다)
      * @param level 스테이지 레벨 — `level_add` 는 안 탄다(INTERFACE §2-6 `lvl`)
      * @param chance 선택 부위 착용 확률 — 그 런의 단(`wearChanceOf`)
+     * @param weights 희귀도 가중치 — 그 등급 × 그 런의 단(`gearWeightsOf` · 2026-10-24 · R350) · `null` 이면 드롭 가중치 · 굴림 수 불변
      */
-    const wearGear = (rng, m, g, level, magicFind, chance) => {
+    const wearGear = (rng, m, g, level, magicFind, chance, weights) => {
         let weaponGroup = m.weapon_group;
         if (weaponGroup === '-') {
             const gs = data.itemSystem.groupsFor(m.cls);
@@ -232,31 +252,36 @@ export function createBattleSystem(data) {
             slots: [...fixed, ...worn],
             ilvl: center,
             ilvlSpread: ilvlSpreadOf(center),
+            ilvlMax: monsterLevelOf(m, level),
             magicFind,
-            rareBonusPct: g.gear_rare_bonus_pct,
-            // 희귀도 가중치는 **등급이 쥔다** — 일반 = 일반 + 가끔 매직(레어 0) · 정예 = 일반 + 매직 + 가끔 레어 (2026-09-23 사용자 지시)
-            rarityWeights: gearWeights(g),
+            // 희귀도 가중치는 **등급 × 단이 쥔다** — 노말 일반몹 = 일반 + 가끔 매직(레어 0) · 나이트메어 · 헬 일반몹은 레어까지 (2026-10-24 사용자 확정 · R350)
+            rarityWeights: weights,
             weaponGroup,
         });
     };
 
     /**
      * 그 몬스터가 그 등급 · 그 스테이지 레벨로 설 때 입는 장비의 조건 [신설 2026-10-10 · 실험실 · INTERFACE §2-6] —
-     * `wearGear` 가 `rollGear` 에 넘기는 값 그대로다(아이템 레벨 아래 끝은 `rollGear` 와 같이 1). 없는 몬스터 · 등급이면 null · rng 0.
+     * `wearGear` 가 `rollGear` 에 넘기는 값 그대로다(아이템 레벨 아래 끝은 `rollGear` 와 같이 1 · 위 끝은 그 몬스터의 레벨 — 2026-10-24). 없는 몬스터 · 등급이면 null · rng 0.
      * 부위는 등급이 정한다 — `slots` = 입을 수 있는 부위(고정 → 선택) · 선택 부위는 `wearChance`(그 단 · 안 주면 첫 단)로 입는다 [2026-10-12 · R245]
      * 무기군 — `weaponGroups` = 들 수 있는 무기군(박힌 몬스터는 하나 · `-` 는 그 직업 본편 무기군 전부 · 2026-10-23 · R324) · `weaponGroup` = 박힌 것 또는 null
+     * 희귀도 — `rarityWeights` = 그 등급 × 그 단의 한 행(표가 없는 조립은 null = 드롭 가중치) · `rarityMax` = 그 행에서 0 이 아닌 가장 높은 희귀도
+     *   (표시용 — 실험실이 거기까지 보인다 · 행이 없으면 `rare` · 2026-10-24 · R350)
      */
     function monsterGearSpec(monsterId, grade, level, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
-        const center = level + g.gear_ilvl_add, s = ilvlSpreadOf(center);
+        const center = level + g.gear_ilvl_add, s = ilvlSpreadOf(center), top = monsterLevelOf(m, level);
         const { fixed, optional } = wearOf(g);
         const rolled = m.weapon_group === '-';
+        const weights = gearWeightsOf(g, difficulty);
+        const RARS = data.itemSystem.rarities;
         return {
             slots: [...fixed, ...optional], fixed, optional, wearChance: wearChanceOf(difficulty),
             weaponGroup: rolled ? null : m.weapon_group,
             weaponGroups: rolled ? data.itemSystem.groupsFor(m.cls).map(x => x.id) : [m.weapon_group],
-            ilvlMin: Math.max(1, center - s), ilvlMax: center + s, rarityWeights: gearWeights(g),
+            ilvlMin: Math.min(top, Math.max(1, center - s)), ilvlMax: Math.min(top, center + s), rarityWeights: weights,
+            rarityMax: weights ? [...RARS].reverse().find(r => weights[r] > 0) ?? RARS[0] : 'rare',
         };
     }
 
@@ -269,7 +294,7 @@ export function createBattleSystem(data) {
     function rollMonsterDrop(rng, monsterId, grade, level, magicFind = 0, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
-        const worn = wearGear(rng, m, g, level, magicFind, wearChanceOf(difficulty));
+        const worn = wearGear(rng, m, g, level, magicFind, wearChanceOf(difficulty), gearWeightsOf(g, difficulty));
         return { worn, drop: worn.length ? worn[Math.floor(rng() * worn.length)] : null };
     }
 
@@ -308,6 +333,20 @@ export function createBattleSystem(data) {
             for (const [k, col] of [['monsterDmgMult', 'monster_dmg_mult'], ['monsterHpMult', 'monster_hp_mult']])
                 if (d[k] !== undefined && !(typeof d[k] === 'number' && d[k] > 0))
                     throw new Error(`battle: 난이도 ${d.id} 의 ${col} '${d[k]}' — 양수여야 한다 (difficulty_tier.csv · R301)`);
+        }
+        // 희귀도 표 — 주면 등급 × 단 칸이 다 있어야 한다 · 칸은 희귀도 다섯 · 음수 없음 · 합 > 0 (2026-10-24 · R350).
+        //   빈 칸이 조용히 새면 그 등급 · 단의 몬스터가 드롭 가중치로 굴러 표가 안 먹는다
+        if (RARITY) {
+            const RARS = data.itemSystem?.rarities ?? [];
+            for (const g of Object.values(data.grades)) for (const d of DIFFS) {
+                const w = RARITY[g.grade]?.[d.id];
+                if (!w) throw new Error(`battle: 희귀도 표에 ${g.grade} × ${d.id} 행이 없다 (gear_rarity.csv · R350)`);
+                const ks = Object.keys(w);
+                if (RARS.length && (ks.length !== RARS.length || ks.some(k => !RARS.includes(k))))
+                    throw new Error(`battle: 희귀도 표 ${g.grade} × ${d.id} 의 칸 ${ks.join(' · ')} — ${RARS.join(' · ')} 이어야 한다 (gear_rarity.csv)`);
+                if (ks.some(k => !(typeof w[k] === 'number' && w[k] >= 0)) || !(ks.reduce((a, k) => a + w[k], 0) > 0))
+                    throw new Error(`battle: 희귀도 표 ${g.grade} × ${d.id} 의 가중치 ${JSON.stringify(w)} — 0 이상 숫자 · 합 > 0 (gear_rarity.csv)`);
+            }
         }
     }
 
@@ -499,6 +538,8 @@ export function createBattleSystem(data) {
             freezeDur: c.option_fx?.freezeDur ?? 0,
             // 화상 · 중독 · 스턴 시간 감소 [2026-09-28 · R178 · battle_design §2-5] — 받는 쪽 값(비율 · 공통옵션). `AILMENTS[..].cut` 이 이 이름을 읽는다. 없으면 0
             burnDur: c.option_fx?.burnDur ?? 0, poisonDur: c.option_fx?.poisonDur ?? 0, stunDur: c.option_fx?.stunDur ?? 0,
+            // 매력의 받는 시간 감소 [2026-10-24 · R346 · battle_design §2-4] — 상태이상 · 상대 편이 건 창에 `rt.applyStatus` 가 곱한다(장비 감소 다음). 없으면 0
+            ddr: c.debuff_dur_reduction ?? 0,
             skillMult: 1, bonusPct: c.dmg_bonus_pct, // 피해량(도감) — 따로 곱한다(2026-09-18) · strike 가 읽는 이름과 같아야 한다
             crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
@@ -509,6 +550,8 @@ export function createBattleSystem(data) {
             // 죄종 마스터리 T2 조건부 [2026-10-05 · skill_design §3-2 · INTERFACE §2-6 「마스터리 조건부」] — `strikeOnce` 가 그 타격 동안만 얹는다 · 겹(`tick`) 줄은 따로 든다. 없으면 null
             mcond: c.mastery_cond ?? null,
             mtick: c.mastery_cond?.some(m => m.cond === 'tick') ? c.mastery_cond.filter(m => m.cond === 'tick') : null,
+            // 폭식 T3 겹 [2026-10-24 · R343 · skill_design §3-3] — `mfeast` = 그 줄(`{v, cap}` — 상한은 랭크가 정한다) · `feast` = 지금 겹(직격이 맞을 때마다 +1 · 라운드를 열면 0). 없으면 null
+            mfeast: c.mastery_cond?.find(m => m.cond === 'feast') ?? null, feast: 0,
             period: c.action_period, basePeriod: c.action_period,
             // 행동 게이지는 **빈 채로 출발한다** [2026-10-02 · 사용자 확정 · R200 · battle_design §6 — ~~`next: 0` 곧바로 차례~~] — 첫 차례(마법 무기는 첫 칸)는 한 바퀴 뒤.
             //   자리가 정하는 엇갈림(파티 편성 차례 · 적 등장 지연)은 부르는 쪽이 extra 로 더 얹는다 · `fillAt` = 그 게이지가 차기 시작하는 시각(재생기 표시값)
@@ -549,10 +592,10 @@ export function createBattleSystem(data) {
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
     const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType', 'noBasic', 'sureHit',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'killHeal', 'defIgnore', 'resReduction',
-        'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur',
+        'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur', 'ddr',
         'staggerDur', 'castRefund', 'castStack', 'statusDur', 'debuffDur', 'healOut',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'cdrBase', 'period', 'basePeriod', 'fhr',
-        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtick', 'liveAtk'];
+        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtick', 'mfeast', 'liveAtk'];
 
     /**
      * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
@@ -600,11 +643,11 @@ export function createBattleSystem(data) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
         const { thirdSkill = null, difficulty = null, ...rest } = extra;
-        // 몬스터 레벨 = 스테이지 레벨(인자 `lvl`) + 몬스터별 가산 [2026-09-28 · 사용자 「사탄만 13」 · monster_design §7 · INTERFACE §2-6] —
-        //   아래 전투 능력치 · 적중(`makeUnit` 의 `lvl`) · 처치 XP 가 더한 레벨을 읽는다. 입은 장비의 ilvl 은 `spawnRound` 가 스테이지 레벨로 굴려 안 탄다
+        // 몬스터 레벨 = 스테이지 레벨(인자 `lvl`) + 몬스터별 가산 [2026-09-28 · 사용자 「사탄만 13」 · monster_design §7 · INTERFACE §2-6] · 만렙에서 자른다(2026-10-24) —
+        //   아래 전투 능력치 · 적중(`makeUnit` 의 `lvl`) · 처치 XP 가 더한 레벨을 읽는다. 입은 장비 ilvl 의 가운데는 `spawnRound` 가 스테이지 레벨로 굴려 안 타고 위 끝만 이 레벨이다
         const levelAdd = m.level_add;
         if (!Number.isInteger(levelAdd) || levelAdd < 0) throw new Error(`battle: 몬스터 ${monsterId} 의 level_add '${levelAdd}' — 0 이상 정수여야 한다 (monster.csv)`);
-        lvl += levelAdd;
+        lvl = monsterLevelOf(m, lvl);
         const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
         // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
         // 입력에서 다른 것은 **레벨 1 HP 바탕** 하나다 — 영웅 `hero_hp_base` 대신 `monster_hp_base` [2026-09-14 사용자 지시 · R91 · monster_design §5]
@@ -672,11 +715,17 @@ export function createBattleSystem(data) {
         });
     }
 
-    const pickTwo = (rng, arr) => {
-        const a = Math.floor(rng() * arr.length);
-        let b = Math.floor(rng() * arr.length);
-        if (b === a) b = (b + 1) % arr.length;
-        return [arr[a], arr[b]];
+    /**
+     * 정예 특성 칸 [2026-10-24 · R344 · monster_design §6 · INTERFACE §5-2] — 죄종 칸(그 죄종 마스터리 T1) → 능력치 칸 → 방어 칸을 **각 1회**,
+     *   **단과 무관하게 언제나 3회** 굴리고 그 단이 연 칸(`eliteSlotsOf` — 앞에서부터)만 싣는다. 소비 수가 단에 의존하면
+     *   같은 시드가 단마다 다른 편성을 낸다(선택 부위 「입나」와 같은 이유). 효과는 아직 없다(값 미정 — 굴림 · 표시만)
+     * @returns [{slot: 'sin'|'stat'|'def', id}]
+     */
+    const ELITE_SLOTS = ['sin', 'stat', 'def'];
+    const rollEliteTraits = (rng, sin, difficulty) => {
+        const at = list => list[Math.floor(rng() * list.length)];
+        const all = [{ slot: 'sin', id: at(ET.sin[sin]) }, { slot: 'stat', id: at(ET.stat) }, { slot: 'def', id: at(ET.def) }];
+        return all.slice(0, Math.min(ELITE_SLOTS.length, eliteSlotsOf(difficulty)));
     };
 
     /**
@@ -728,10 +777,10 @@ export function createBattleSystem(data) {
             add(stage.boss_monster_idx, stage.boss_grade);
             if (draw.guards) {
                 // 정예 호위 명단 [2026-10-23 · R329 · monster_design §4] — 명단 순서대로 정예로 선다 · 호위 수 · 풀은 안 굴린다 ·
-                //   정예마다 죄종 1 → 공통 특성 둘(정예 라운드의 정예와 같은 묶음 — 후보 뽑기만 없다)
+                //   정예마다 죄종 1 → 특성 3(정예 라운드의 정예와 같은 묶음 — 후보 뽑기만 없다 · R344)
                 for (const id of draw.guards) {
                     const sin = data.sins[Math.floor(rng() * data.sins.length)];
-                    add(id, 'elite', { sin, traits: [data.sinTraits[sin], ...pickTwo(rng, data.commonTraits)] });
+                    add(id, 'elite', { sin, traits: rollEliteTraits(rng, sin, difficulty) });
                 }
             } else {
                 const escorts = between(...draw.escorts);
@@ -739,9 +788,10 @@ export function createBattleSystem(data) {
             }
         } else {
             for (let i = 0; i < bd.elite_count; i++) {
-                // 정예 = 일반몹 1종 + 죄종 특성 1 + 공통 특성 2. 죄종은 이 판에서 굴린다
+                // 정예 = 일반몹 1종 + 특성 칸(단이 연다 · R344 · monster_design §6). 죄종은 이 판에서 7 중 무작위 — 후보를 뽑은 뒤 특성 3회
                 const sin = data.sins[Math.floor(rng() * data.sins.length)];
-                add(pick(draw.elitePool), 'elite', { sin, traits: [data.sinTraits[sin], ...pickTwo(rng, data.commonTraits)] });
+                const eid = pick(draw.elitePool);
+                add(eid, 'elite', { sin, traits: rollEliteTraits(rng, sin, difficulty) });
             }
             const normals = between(bd.normal_min, bd.normal_max);
             // 반대 줄 보장 [2026-10-21 · R304 · 사용자 지시] — 정예가 섰으면 정예와 반대 줄(`monster_role.csv:rank`)이 하나는 선다:
@@ -768,7 +818,7 @@ export function createBattleSystem(data) {
             // 차림 — 아이템 레벨 · 희귀도 가중치 규칙은 `wearGear` 한 곳이다(실험실이 같은 함수를 부른다 · 2026-10-10)
             // 제 줄 = (씨앗 · 라운드 · 목록 자리) — 앞 몬스터의 굴림 수가 뒤 몬스터의 장비도 전투 수열도 안 민다 (INTERFACE §5-1 · 2026-09-22)
             const mf = cxMagic ? magicFind + cxMagic(s.id) : magicFind;   // 도감 Lv1 매직 — 그 종족 몫(R314)
-            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, mf, wearChance);
+            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, mf, wearChance, gearWeightsOf(g, difficulty));
             // 보스의 한 칸 더 — 보스만(`skill_slots_add` ≥ 1 · R269 — ~~`skill_slots` ≥ 3~~ 같은 유닛이라 순서 · 횟수 불변). ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙).
             //   2칸(나이트메어)은 굴리지 않는다 — `nightmare_skill` 이 정한다
             let thirdSkill = null;
@@ -1135,6 +1185,7 @@ export function createBattleSystem(data) {
             const pots = round > 1 && potionPending ? potionPending : null;
             if (pots) { potionSlots = pots; potionNext = 0; potionLeft = pots.filter(Boolean).length; potionPending = null; }
             roundAt = t;   // 나태 T2 겹이 0 으로 돌아간다 — 쿨감은 다음 틱이 원값으로 되쓴다(advance)
+            for (const u of [...party, ...units.enemies]) if (u.mfeast) u.feast = 0;   // 폭식 T3 겹도 라운드를 열면 비운다 (R343)
             // 정신 집중은 라운드를 안 넘는다 [2026-10-22 · R318] — 열린 채 끝난 라운드면 여기서 닫는다(쿨은 지금부터 · `chanEnd` 는 `round` 앞) · rng 0
             for (const p of party) if (p.chan) rt.chanClose(p, t);
             // 소환물은 **라운드가 끝나면 사라진다** (skill_design §12-6). 걷어내는 자리가 여기다 —
@@ -1663,15 +1714,16 @@ export function createBattleSystem(data) {
          *   `strikeOnce` 가 `F.strike` 직전에 판정해 **그 타격 동안만** 얹고 원복한다. HP 는 그 타격 직전 값 · rng 0 · 이벤트 없음.
          *   `self` = 노드 주인 · `other` = 상대(때리는 쪽이면 맞는 쪽 · 맞는 쪽이면 때린 쪽)
          */
-        const condOn = (cond, self, other) => {
+        const condOn = (cond, self, other, m = null) => {
             switch (cond) {
                 case 'wounded': return self.hp < self.hpMax * B.mastery_t2_hp_threshold_pct;    // 분노 — 문턱 **미만**
+                case 'fury': return self.hp < self.hpMax * m.thr;                                 // 분노 T3 — 랭크가 올린 문턱 **미만** (R343)
                 case 'sated': return self.hp >= self.hpMax * B.mastery_t2_hp_threshold_pct;     // 폭식 — 문턱 **이상**
                 case 'stronger': return other.hp > self.hp;                                       // 시기 — 현재 HP **수치** 비교
                 case 'weaker': return other.hp < self.hp;                                         // 오만
                 case 'elite': return !!other.grade && other.grade !== 'normal';                   // 탐욕 — 정예 · 보스
                 case 'ailing': return Object.values(other.buffs ?? {}).some(b => b.ail);          // 색욕 — 결빙 · 화상 · 중독 · 스턴 창
-                default: return false;                                                            // `tick` 은 겹으로 따로 잰다
+                default: return false;                                                            // `tick` · `feast` 는 겹으로 따로 잰다
             }
         };
         /** 나태 겹 — 라운드가 열린 뒤 [balance.csv:mastery_sloth_t2_tick_sec] 마다 하나 · 상한 [balance.csv:mastery_sloth_t2_max_stack]. 시각 꼬리는 걸음과 같은 여유로 판정한다 */
@@ -1688,7 +1740,9 @@ export function createBattleSystem(data) {
             const out = { sum: {}, dr: [] };
             for (const m of self.mcond) {
                 if (m.stat === 'cooldown_reduction' || COND_ATK.has(m.stat) !== atk) continue;
-                const v = m.cond === 'tick' ? m.v * Math.max(0, tickStacks()) : condOn(m.cond, self, other) ? m.v : 0;
+                const v = m.cond === 'tick' ? m.v * Math.max(0, tickStacks())
+                    : m.cond === 'feast' ? m.v * (self.feast ?? 0)                  // 폭식 T3 — 이 타격 **전**까지 쌓인 겹 (R343)
+                    : condOn(m.cond, self, other, m) ? m.v : 0;
                 if (!(v > 0)) continue;
                 if (m.stat === 'damage_reduction') out.dr.push(Math.min(1, v));   // 원천 하나가 100% 를 넘으면 피해가 회복으로 뒤집힌다 — 겹이 커도 1 에서 자른다
                 else out.sum[m.stat] = (out.sum[m.stat] ?? 0) + v;
@@ -1835,6 +1889,8 @@ export function createBattleSystem(data) {
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
             timeline.push(ev);
+            // 폭식 T3 겹 [2026-10-24 · R343 · skill_design §3-3] — 직격이 맞을 때마다 +1 · 상한 = 그 줄의 `cap`(랭크 × 랭크당 겹). 빗나간 타격은 위에서 돌아갔다 · rng 0
+            if (u.mfeast && u.feast < u.mfeast.cap) u.feast += 1;
             // 프렌지 겹 [2026-10-16 · R246] — 적중할 때마다 겹 +1(상한 [balance.csv:frenzy_stack_max]) · 주기는 다음 차례 예약부터 바뀐다. 창이 없으면 아무 일도 없다 · rng 0
             const fz = u.hp > 0 ? stateOf(u, 'frenzy') : null;
             if (fz && (fz[1].n ?? 0) < B.frenzy_stack_max) {

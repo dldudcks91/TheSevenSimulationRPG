@@ -21,8 +21,8 @@ import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
  * 로더는 `ui/data.js:D.classes`·`D.slots`/`D.equipSlots`·`D.itemBases`·`D.affixDefs`·`D.heroNamePool`·`D.heroTraitPool`).
  * `ELEMENT_IDS` 는 삭제 — SSOT 는 `game_logic/hero.js:ELEMENTS` 하나다.
  * `nm`(이름 조립)은 CSV 가 아니라 **이식 대상 코드**라 `game_logic/naming.js` 로 갔다 (`eliteName` 도 같이).
- * game_logic 이 주입받는데 아직 여기 남은 것 — `SINS` · `SIN_TRAITS` · `COMMON_TRAITS` 셋뿐
- * (전부 죄종 매핑 미확정에 걸려 있다 — INTERFACE §7 · DEV_PLAN §5-B).
+ * game_logic 이 주입받는데 아직 여기 남은 것 — `SINS` · `ELITE_TRAIT_STAT` · `ELITE_TRAIT_DEF` 셋뿐
+ * (`SINS` 는 죄종 매핑 미확정 · 정예 특성 둘은 값과 함께 CSV 로 — INTERFACE §7 · DEV_PLAN §5-B · R344).
  *
  * ── i18n 규약 (2026-08-23) ──
  * 표시 문자열은 전부 **{ko, en} 쌍**이다. 화면은 i18n.js 의 L() 로 현재 언어를 고른다.
@@ -66,12 +66,15 @@ export const SINS = {
 
 // 매직~유니크는 equip_rarity_config.csv 의 color_hex 그대로 — **5단계** [일반 신설 2026-09-14 · 사용자 확정 · R86]
 // ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · ~~랜덤옵션은 붙는다~~ ~~고정 옵션 한 줄(2026-10-18 · R285)~~ 베이스 옵션 + 랜덤 줄(2026-10-21 · R297) · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
-// 통제 가능성의 계단: 일반(죄종 없음) → 매직(완전 RNG) → 레어(옵션 수↑) → 크래프트(매직 + 전용 옵션 하나 — 2026-09-15 · ~~낙인으로 죄종 지정~~) → 유니크(고정)
+// 순서 = 정렬 사다리(game_logic/state.js:RARITY_LADDER) · 필터 순서: 일반 → 매직 → 레어 → 크래프트(매직 + 고른 죄종 — 레어와 줄 수가 같다) → 에픽 → 레전더리 → 유니크(고정)
+//   **에픽 · 레전더리** [2026-10-24 · 사용자 「에픽이랑 레전더리를 추가하자, 보라색 및 빨간색으로」 · R342 · ADR-0767] — 오만 #8040e0 · 분노 #e03030 과 떨어뜨린 밝은 라벤더 · 산호빛 빨강
 export const RARITY = {
     normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
     magic: { ko: '매직', en: 'Magic', color: '#4169E1' },
     rare: { ko: '레어', en: 'Rare', color: '#FFD700' },
     craft: { ko: '크래프트', en: 'Craft', color: '#22C55E' },
+    epic: { ko: '에픽', en: 'Epic', color: '#B266FF' },
+    legendary: { ko: '레전더리', en: 'Legendary', color: '#FF4D4D' },
     unique: { ko: '유니크', en: 'Unique', color: '#FF8C00' },
 };
 
@@ -202,6 +205,16 @@ export const AFFIX_LABELS = {
 export const CODEX_FIGHT_LABELS = {
     vs_dmg: { ko: '데미지', en: 'Damage', fmt: 'pct' },
     speed_pct: { ko: '공격 · 캐스팅 속도', en: 'Attack · Casting Speed', fmt: 'pct' },
+};
+
+/**
+ * 마스터리에만 있는 축 — 접사도 `combat_stat.csv` 행도 아니다 [2026-10-24 · R325 — 탐욕 T3 「탐욕 합에 비례」]. 마스터리 칸 툴팁(`app.js:masteryTipCard`)의 `fallback`.
+ *   효과 문장은 `i18n.js:sk.masteryEffect.<stat>` 이 통째로 들고, 여기는 값의 단위(%)만 정한다
+ */
+export const MASTERY_LABELS = {
+    atk_pct_per_greed: { ko: '탐욕 비례 데미지', en: 'Damage per Greed', fmt: 'pct' },
+    hp_pct_per_greed: { ko: '탐욕 비례 최대 HP', en: 'Max HP per Greed', fmt: 'pct' },
+    cdr_per_greed: { ko: '탐욕 비례 쿨타임 감소', en: 'Cooldown Reduction per Greed', fmt: 'pct' },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
@@ -661,6 +674,11 @@ export const bgDir = () => `${BG_DIR}${bgStyleCur}/`;
  *  ⚠ 정식 배경이 일러스트가 된 뒤로 **거점만 도트로 남아 있다** — 거점 일러스트가 나오면 `bgDir()` 로 돌린다 (ADR-0152 「열린 것」) */
 export const TOWN_BG = BG_DIR + 'pixel/town.webp';
 export const stageBg = id => bgDir() + `background_stage_${id}.webp`;
+/** 결투 배경 — 판과 관전이 같은 그림을 깐다 (SCREEN_DESIGN §1 「판」 · ADR-0749 · ADR-0752 · ADR-0761).
+ *  콜로세움(탭 id `arena` · ELO)은 로마 콜로세움 한 장 · 결투장(탭 id `colosseum` · 층 사다리)은 **고른 층의 등급마다 한 장**(id = `arena_tier.csv:tier_id`).
+ *  **스타일을 안 탄다** — 일러스트 한 벌뿐이라 `illustrate/` 를 박았다(`TOWN_BG` 와 같은 수법). 다른 스타일 판이 생기면 `bgDir()` 로 돌린다 */
+export const COLOSSEUM_BG = BG_DIR + 'illustrate/background_colosseum.webp';
+export const duelBg = tierId => BG_DIR + `illustrate/background_duel_${tierId}.webp`;
 
 /**
  * 탐험 지도 — **세계지도 한 장 · 일곱 챕터가 구간** (SCREEN_DESIGN §8-4 · 2026-10-08 사용자 지시 · ADR-0537).
@@ -692,8 +710,10 @@ export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
 /** 연구소 줄 아이콘 — `src/assets/art/icons/lab/<줄 id>.webp`(`mine` · `gather` · `log`) · 탐험 지점 아이콘과 같은 둥근 그림 원판(Codex · ADR-0669) */
 export const LAB_ICON_DIR = './assets/art/icons/lab/';
 export const labIcon = post => LAB_ICON_DIR + post + ICON_EXT;
-/** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp` · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · R298) */
-export const labNodeIcon = node => `${LAB_ICON_DIR}node/${node}${ICON_EXT}`;
+/** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp` · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · R298).
+ *  ⚠ 「자원」 줄의 채광 · 채집 · 벌목 지점은 실루엣이 아직 없어 **옛 줄 그림**(`icons/lab/<지점>` — 색 원판)을 빌린다 (2026-10-25 · ADR-0788) */
+const LAB_NODE_BORROW = ['mine', 'gather', 'log'];
+export const labNodeIcon = node => (LAB_NODE_BORROW.includes(node) ? labIcon(node) : `${LAB_ICON_DIR}node/${node}${ICON_EXT}`);
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
@@ -748,29 +768,28 @@ export function facePath(file) {
 }
 
 /**
- * 정예 특성 — 계승 elite_trait.csv. en 은 CSV 의 trait_name(영문) 그대로.
- * 죄종 고유 1 + 공통 2 로 정예가 조립된다 — ⚠ 공통은 계승 16 중 10 만 옮겼고(840 변형은 기획의 16 기준) 효과는 아직 없다 · 이름표만 굴린다 (monster_design §6).
+ * 정예 특성 칸 — 능력치 칸 · 방어 칸 (monster_design §6 · 2026-10-24 · R344). 죄종 칸은 `mastery_node.csv` 의 죄종 T1 이다.
+ * **game_logic 이 주입받는 풀**이다 — `ui/data.js` 가 `attr` · `dt` 목록을 `battle.eliteTraits.stat` · `def` 로 넘긴다(이 순서가 굴림 인덱스 · INTERFACE §2-6).
+ * 이름은 관전 카드 띠 오른쪽 칩이 읽는다(ADR-0775). ⚠ SSOT 미발행 — 값이 정해지면 이름과 함께 CSV 로 나간다(계승 `elite_trait.csv` 대체).
+ * `dt` = 방어 칸 id 이자 피해 종류 색(`--dt-*`).
+ * **이름이 길수록 띠의 신원이 줄어든다** — 이름을 바꾸거나 더할 때 `&traits=max&lang=en` 으로 다시 본다(ADR-0775)
  */
-export const SIN_TRAITS = {
-    wrath: { ko: '격분', en: 'Frenzy' },
-    sloth: { ko: '태만', en: 'Apathy' },
-    lust: { ko: '유혹', en: 'Temptation' },
-    envy: { ko: '박탈', en: 'Deprivation' },
-    pride: { ko: '불가침', en: 'Inviolable' },
-    gluttony: { ko: '탐식', en: 'Gorging' },
-    greed: { ko: '도박', en: 'Gamble' },
-};
-export const COMMON_TRAITS = [
-    { ko: '강인한', en: 'Vigorous' },
-    { ko: '단단한', en: 'Durable' },
-    { ko: '날랜', en: 'Swift' },
-    { ko: '흉포한', en: 'Ferocious' },
-    { ko: '민첩한', en: 'Nimble' },
-    { ko: '정확한', en: 'Precise' },
-    { ko: '치명적인', en: 'Deadly' },
-    { ko: '가시의', en: 'Thorny' },
-    { ko: '선제의', en: 'Preemptive' },
-    { ko: '흡혈의', en: 'Vampiric' },
+export const ELITE_TRAIT_STAT = [
+    { attr: 'str', ko: '힘센', en: 'Strong' },
+    { attr: 'agi', ko: '민첩한', en: 'Agile' },
+    { attr: 'int', ko: '지적인', en: 'Intelligent' },
+    { attr: 'vit', ko: '건강한', en: 'Healthy' },
+    { attr: 'luck', ko: '운 좋은', en: 'Lucky' },
+    { attr: 'ldr', ko: '이끄는', en: 'Leading' },   // 「Commanding 지휘하는」은 영어 최장 조합이 카드 폭을 넘어 바꿨다(ADR-0768)
+    { attr: 'cha', ko: '매력적인', en: 'Charming' },
+];
+// 한글은 짧은 직역(내화 · 방한 · 방독 — 칩에 맞는 길이 · 2026-10-24 사용자 「살의, 매력적인 이런게 좋은거같에」)
+export const ELITE_TRAIT_DEF = [
+    { dt: 'physical', ko: '단단한', en: 'Durable' },
+    { dt: 'fire', ko: '내화의', en: 'Fireproof' },
+    { dt: 'cold', ko: '방한의', en: 'Frostproof' },
+    { dt: 'lightning', ko: '절연된', en: 'Insulated' },
+    { dt: 'poison', ko: '방독의', en: 'Venomproof' },
 ];
 
 /**
@@ -807,25 +826,14 @@ export const MASTERY_GRID = { tiers: 3, nodes: 3 };
  * 확정되면 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다(건설 목업이 2026-09-22 에 그렇게 걷혔다 — R137).
  *
  * **여기 없는 것 둘** [2026-09-21 · ADR-0223] — 특수상단의 **방문 시계**(와 있나 · 남은 시간)와 상단의 **장비 목록**은
- * `game.shopState` 가 낸다(주기 · 체류 · 장비 칸 수 · 가격은 balance.csv ⚠임시). 여기 남은 것은 재료 목록 · 특수상단 재고 · 상인 이름이다.
+ * `game.shopState` 가 낸다(주기 · 체류 · 장비 칸 수 · 가격은 balance.csv ⚠임시). 여기 남은 것은 특수상단의 상인 이름 · 물건 칸 수다.
+ * 재료 목록 · 지어낸 재고(루비 · 낙인)는 2026-10-24 걷었다 — 물건은 미정이라 칸 셋에 `?` 만 선다(SCREEN_DESIGN §8-3 · ADR-0782).
  */
-/* ⚠ **`ore_*` 의 이름은 `mine_node.csv` 가 SSOT 다** [2026-09-10] — 여기 이름이 갈리면 같은 id 가 화면 두 곳에서
-   다르게 불린다(실제로 `ore_t5` 가 「흑철」로 남아 있었다). 재고 구성·가격만 목업이고 **이름은 표에서 베낀다.**
-   상단 재고가 CSV 로 나가면 이 주의는 사라진다 (「mock 과 CSV 가 겹치면 CSV 만」 — DEV_PLAN §5-B) */
 export const TRADE = {
-    /** 상단의 재료 탭 — 상주 · 고정 목록. 「언제 가도 같다」가 요점이라 타이머가 없다 */
-    basic: [
-        { id: 'ore_t1', name: { ko: '구리', en: 'Copper' }, n: 20, gold: 120 },
-        { id: 'ore_t2', name: { ko: '철', en: 'Iron' }, n: 12, gold: 380 },
-        { id: 'dust', name: { ko: '분해 가루', en: 'Salvage Dust' }, n: 40, gold: 60 },
-    ],
-    /** 특수상단 — 상인 이름과 재고. 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다 */
+    /** 특수상단 — 상인 이름과 물건 칸 수(사용자 「특수한 물건 3개 정도」). 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다 */
     special: {
         who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
-        stock: [
-            { id: 'ore_t5', name: { ko: '루비', en: 'Ruby' }, n: 4, gold: 2400 },
-            { id: 'brand', name: { ko: '낙인', en: 'Brand' }, n: 1, gold: 5000 },
-        ],
+        slots: 3,
     },
 };
 
@@ -843,7 +851,7 @@ export const BUILDING_ART = {
     // ~~원정~~ — 2026-10-22 건물째 걷혔다(장은 앞 장 보스가 연다 · ADR-0719 · R319)
     // 탐험 — 언덕 위 망루
     explore: rsSvg('<path d="M2 46c8-8 18-12 30-12s22 4 30 12Z"/><path d="M27 35 29 15h6l2 20Z"/><path d="M24 15h16l-8-9Z"/><path d="M31.4 6V0h1.2v6ZM32.6 .4 39 2.2l-6.4 1.8Z"/>'),
-    // 제련소 — 작업장 + 굴뚝 + 화로 입
+    // 대장간 — 작업장 + 굴뚝 + 화로 입
     forge: rsSvg('<path fill-rule="evenodd" d="M4 46V26l15-10 15 10v20ZM14 46v-9h10v9Z"/><path d="M44 30V8h7v22Z"/><path fill-rule="evenodd" d="M36 46V28h24v18ZM42 46v-6a6 6 0 0 1 12 0v6Z"/><circle cx="47" cy="4" r="2.6"/><circle cx="53" cy="1.8" r="1.8"/>'),
     // 선술집 — 박공집 + 매단 간판
     tavern: rsSvg('<path fill-rule="evenodd" d="M6 46V24L24 10l18 14v22ZM19 46V35h10v11Z"/><path d="M42 20h16v2H42Z"/><path d="M47 22h1.2v3H47ZM54 22h1.2v3H54ZM45 25h12v9H45Z"/>'),
@@ -866,28 +874,26 @@ export const BUILDING_ART = {
  * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`CLASS_ICON_FILES` 와 같은 재고 목록)
  */
 export const BUILDING_IMG_DIR = './assets/art/buildings/';
-export const BUILDING_IMAGES = ['command', 'forge', 'tavern', 'shop', 'resource', 'explore', 'codex', 'storage', 'library'];   // ~~training~~ 2026-10-09 · ~~expedition~~ 2026-10-22 (그림 파일은 남아 있다)
-export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${id}.webp` : null);
+export const BUILDING_IMAGES = ['command', 'forge', 'tavern', 'shop', 'resource', 'explore', 'storage', 'library'];   // ~~training~~ 2026-10-09 · ~~expedition~~ 2026-10-22 · ~~codex~~ 2026-10-24 도서관에 합침 (그림 파일은 남아 있다)
+/** 그림 파일 이름이 건물 id 와 다른 건물 — 도서관은 옛 도감 건물 그림을 쓴다 (2026-10-24 사용자 지시 「그림은 도감그림을 쓰도록」 · ADR-0762) */
+export const BUILDING_IMG_FILE = { library: 'codex' };
+export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${BUILDING_IMG_FILE[id] ?? id}.webp` : null);
 
 /**
- * 재료 아이콘 — 자원 단계 상자의 산출물 그림 (SCREEN_DESIGN §8 · ADR-0377) · 파일명 = 재료 id (`mine_node.csv:ore_id` …).
- * **목록에 있는 재료만 그림을 읽는다** — 없는 재료는 칸째 빠진다.
+ * 재료 아이콘 — 연구소 「이 줄」 · 창고 재료 탭 · 비용 칸의 재료 그림 (SCREEN_DESIGN §8 · §6 · ADR-0377 · ADR-0789) · 키 = 재료 id (`lab_material.csv:material_id`).
+ * ⚠ 재료가 한 종류씩이 되며(2026-10-25 · R356) **옛 단계 그림을 빌린다** — 철광 = 철(`ore_t2`) · 약초 = 쑥(`herb_t1`) · 목재 = 소나무(`timber_t1`).
+ *   옛 단계 그림 파일(`ore_t*` · `herb_t*` · `timber_t*`)은 지우지 않았다 — 합성으로 만드는 상위 재료(GAME_DESIGN §9 10-24)가 서면 쓸 수 있다.
+ * **표에 있는 재료만 그림을 읽는다** — 없는 재료는 null(칸은 종류 실루엣 `RES_ART`).
  */
-export const MATERIAL_ICONS = {
-    ore: { dir: './assets/art/icons/materials/ores/', ids: ['ore_t1', 'ore_t2', 'ore_t3', 'ore_t4', 'ore_t5', 'ore_t6', 'ore_t7'] },
-    timber: { dir: './assets/art/icons/materials/timbers/', ids: ['timber_t1', 'timber_t2', 'timber_t3', 'timber_t4', 'timber_t5', 'timber_t6', 'timber_t7'] },
-    herb: { dir: './assets/art/icons/materials/herbs/', ids: ['herb_t1', 'herb_t2', 'herb_t3', 'herb_t4', 'herb_t5', 'herb_t6', 'herb_t7'] },
-};
-export const materialIcon = id => {
-    const g = Object.values(MATERIAL_ICONS).find(x => x.ids.includes(id));
-    return g ? `${g.dir}${id}${ICON_EXT}` : null;
-};
+const MATERIAL_ICON_DIR = './assets/art/icons/materials/';
+export const MATERIAL_ICONS = { iron_ore: 'ores/ore_t2', herb: 'herbs/herb_t1', timber: 'timbers/timber_t1' };
+export const materialIcon = id => (MATERIAL_ICONS[id] ? `${MATERIAL_ICON_DIR}${MATERIAL_ICONS[id]}${ICON_EXT}` : null);
 
 /**
  * 재화 그림 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). **골드 · 분해 가루는 그림**(`icons/currency/`) · 낙인은 ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.
- * 제작 재료(광석 · 목재 · 약초)는 칸이 먼저 그 단계의 재료 아이콘(`materialIcon`)을 읽는다 — 아래 ore · wood · herb 실루엣은 아이콘 없는 재료의 폴백이다.
+ * 연구소 재료(철광 · 목재 · 약초)는 칸이 먼저 그 재료 아이콘(`materialIcon`)을 읽는다 — 아래 ore · wood · herb 실루엣은 아이콘 없는 재료의 폴백이다.
  * 실루엣은 viewBox 32×32 · 채움은 CSS 의 currentColor(칸마다 `.res-<종류>` 가 색을 준다). 아트가 오면 이 표의 그 줄만 `resImg` 로 갈아 끼운다.
- * 종류 = 자원 셋(gold · dust · stigma) · 제작 재료는 그 재료가 나는 파견처로 가른다(ore 채광 · wood 벌목 · herb 채집 — `app.js:resKind`)
+ * 종류 = 자원 셋(gold · dust · stigma) · 연구소 재료는 그 재료를 내는 지점으로 가른다(ore 채광 · wood 벌목 · herb 채집 — `app.js:resKind`)
  */
 const resSvg = body => `<svg viewBox="0 0 32 32" aria-hidden="true">${body}</svg>`;
 const resImg = id => `<img src="./assets/art/icons/currency/${id}${ICON_EXT}" alt="" draggable="false">`;

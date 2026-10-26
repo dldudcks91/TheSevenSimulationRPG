@@ -21,6 +21,8 @@
  *    ⚠ 색 피커를 걷을 때는 **이 파일을 지우지 않고 Palette 탭만** 걷는다 — 판 · 탭 틀 · 설정 탭이 여기 산다 (ADR-0414).
  *
  * ⚠ Palette 탭의 문구는 전부 영어 · 기호다(개발 장치 · 다국어 대상이 아니다). 설정 탭의 이름 · 속은 app.js 가 `t()` 로 넘긴다.
+ *
+ * **배포 주소에서는 설정 탭 하나뿐이다** — app.js 가 `palette: false` · 덧붙는 탭 없음으로 붙인다. 그때는 저장된 색(`devPalette`)도 안 칠한다 (ADR-0751).
  */
 
 const KEY = 'devPalette';
@@ -126,21 +128,24 @@ let panel = null;
 let ui = null;         // 판 안의 노드 참조 — 다시 그리지 않으므로 계속 살아 있다
 let settings = null;   // 설정 탭 { label, body } — app.js 가 상단바를 그릴 때마다 넘긴다(언어가 바뀌면 새 이름)
 let extras = [];       // Palette 뒤에 덧붙는 탭 [{ id, label, body }] — 지금은 Save(devsave.js · §10-4) 하나
+let palOn = true;      // Palette 탭이 서나 — 배포 주소는 false (ADR-0751)
 let tab = 'set';       // 열 탭 — 열면 설정 · 페이지를 연 동안은 마지막에 고른 탭
 
-/** 부팅 직후 1회 — 저장된 값이 있으면 되살린다 */
-export function initDevPalette() {
+/** 부팅 직후 1회 — 저장된 값이 있으면 되살린다(Palette 탭이 설 때만) */
+function initDevPalette() {
     if (DEFAULTS) return;
     DEFAULTS = readDefaults();
     const saved = load();
     state = saved || freshState(DEFAULTS);
-    if (saved) apply(DEFAULTS, state);
+    if (saved && palOn) apply(DEFAULTS, state);
 }
 
 /** 상단바가 다시 그려질 때마다 호출된다 — 버튼은 매번 새로 붙는다 (app.js 의 전체 다시 그림).
     `set` = 설정 탭 { label, body() } — 판이 열려 있으면 설정 탭만 새로 선다(언어 · 값). 슬라이더는 안 건드린다.
-    `more` = Palette 뒤에 덧붙는 탭 [{ id, label, body() }] — 설정 탭처럼 판이 열려 있으면 속이 새로 선다 */
-export function mountDevPalette(container, set = null, more = []) {
+    `more` = Palette 뒤에 덧붙는 탭 [{ id, label, body() }] — 설정 탭처럼 판이 열려 있으면 속이 새로 선다
+    `palette` = Palette 탭을 세우나 — 배포 주소는 false (ADR-0751) */
+export function mountDevPalette(container, set = null, more = [], { palette = true } = {}) {
+    palOn = palette;
     initDevPalette();
     injectStyle();
     settings = set;
@@ -182,14 +187,8 @@ function sliderRow(d) {
     return { wrap, range, num, def: d };
 }
 
-function buildPanel() {
-    if (!settings) tab = 'pal';
-    // 탭 둘은 **열 때 한 번** 만들고 고를 때는 숨기기만 한다 — Palette 탭을 다시 그리면 드래그가 끊긴다(위 ⚠)
-    panel.innerHTML = `
-        <div class="dp-h"><span class="dp-tabs">${settings ? '<button class="dp-tab" data-tab="set"></button>' : ''}<button class="dp-tab" data-tab="pal">Palette</button>${
-            extras.map(x => `<button class="dp-tab" data-tab="${x.id}">${x.label}</button>`).join('')}</span><button class="dp-x" title="close">×</button></div>
-        ${settings ? '<div class="dp-pane dp-set" data-pane="set"></div>' : ''}
-        ${extras.map(x => `<div class="dp-pane" data-pane="${x.id}"></div>`).join('')}
+/** Palette 탭의 속 — 판을 열 때 한 번 */
+const PAL_PANE = `
         <div class="dp-pane" data-pane="pal">
         <div class="dp-sec">BACKGROUND</div>
         <label class="dp-row dp-pick"><span class="dp-k">#</span>
@@ -205,6 +204,26 @@ function buildPanel() {
         <div class="dp-foot"><button class="btn sm dp-reset">Reset</button></div>
         </div>`;
 
+function buildPanel() {
+    if (!settings && palOn) tab = 'pal';
+    // 탭 둘은 **열 때 한 번** 만들고 고를 때는 숨기기만 한다 — Palette 탭을 다시 그리면 드래그가 끊긴다(위 ⚠)
+    panel.innerHTML = `
+        <div class="dp-h"><span class="dp-tabs">${settings ? '<button class="dp-tab" data-tab="set"></button>' : ''}${palOn ? '<button class="dp-tab" data-tab="pal">Palette</button>' : ''}${
+            extras.map(x => `<button class="dp-tab" data-tab="${x.id}">${x.label}</button>`).join('')}</span><button class="dp-x" title="close">×</button></div>
+        ${settings ? '<div class="dp-pane dp-set" data-pane="set"></div>' : ''}
+        ${extras.map(x => `<div class="dp-pane" data-pane="${x.id}"></div>`).join('')}
+        ${palOn ? PAL_PANE : ''}`;
+
+    panel.querySelector('.dp-x').onclick = () => togglePanel();
+    panel.querySelectorAll('.dp-tab').forEach(b => { b.onclick = () => { tab = b.dataset.tab; showTab(); }; });
+    if (palOn) wirePalette();
+    refreshSettings();
+    showTab();
+    syncPanel();
+}
+
+/** Palette 탭의 슬라이더 · 색 상자 · Reset — 판을 열 때 한 번 */
+function wirePalette() {
     const rows = SLIDERS.map(sliderRow);
     rows.forEach(r => panel.querySelector(`.dp-rows[data-sec="${r.def.sec}"]`).appendChild(r.wrap));
 
@@ -221,15 +240,9 @@ function buildPanel() {
         apply(DEFAULTS, state); save(state); syncPanel(ui.color);
     });
     for (let i = 0; i < STEPS; i++) ui.sw.appendChild(document.createElement('i'));
-
-    panel.querySelector('.dp-x').onclick = () => togglePanel();
     panel.querySelector('.dp-reset').onclick = () => {
         state = freshState(DEFAULTS); clear(); save(state); syncPanel();
     };
-    panel.querySelectorAll('.dp-tab').forEach(b => { b.onclick = () => { tab = b.dataset.tab; showTab(); }; });
-    refreshSettings();
-    showTab();
-    syncPanel();
 }
 
 /** 고른 탭만 보인다 — 숨기기만 하고 다시 만들지 않는다 */

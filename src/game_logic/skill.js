@@ -197,6 +197,8 @@ export function createSkillSystem(data) {
         buffPool: row.buff_pool === 1,
         // 직업 스킬의 티어 1 · 2 · 3 [2026-10-02 · skill_design §12-10] — 표시 전용(도감) · 직업 밖은 `-` → null
         tier: dash(row.tier ?? '-'),
+        // HP 소모 — 차례에 쓸 때 **지금 HP 의 이 비율**을 낸다(내림 · 쓰러지지 않는다) [2026-10-24 · R355 · skill_design §12-4 차지] · 0 = 없음
+        hpCost: row.hp_cost_pct ?? 0,
         note: row.note,
         // 하는 일 줄 — `skill_effect.csv` 를 아래에서 붙인다(`seq` 순)
         effects: [],
@@ -300,6 +302,8 @@ export function createSkillSystem(data) {
         }
         // 정신 집중 [2026-10-22 · R318 · battle_design §3-2] — 하는 일은 **`hit` 줄 하나**다. 그 타수가 방 수라(차례마다 한 방) 줄이 둘이면 무엇을 되풀이할지가 갈린다
         if (CASTS[d.cast].chan && (d.effects.length !== 1 || d.effects[0].effect !== 'hit')) bad('channel 인데 하는 일이 hit 줄 하나가 아니다 — 그 타수가 방 수다');
+        // 모으기 [2026-10-26 · R358] — 모으는 시간은 [balance.csv:channel_charge_sec] 가 들고 치는 것은 한 발이다 — 타수가 1 이 아니면 뜻이 둘로 갈린다
+        if (CASTS[d.cast].burst && d.effects[0].hits !== 1) bad(`${d.cast} 인데 hit 줄 타수 ${d.effects[0].hits} — 모으기는 한 발(타수 1)`);
         // 하는 일 — **줄 1개 이상**이고 seq 는 1 부터 빈틈없이 (표 사이 검사 ① · 2026-09-24 R151 — ~~1단계는 정확히 한 줄~~)
         if (d.effects.length === 0) bad('하는 일 줄이 없다 — skill_effect.csv 에 줄이 있어야 한다');
         d.effects.forEach((e, i) => {
@@ -341,6 +345,9 @@ export function createSkillSystem(data) {
         if (row.buff_pool === 1 && d.ownerKind !== 'job') bad(`buff_pool 1 인데 owner_kind ${d.ownerKind} — 특정 스킬 +n 은 기본 스킬만`);
         // 티어 [2026-10-02 · skill_design §12-10 · 두 층 2026-10-15 — 3티어 없음] — 직업 스킬은 1 · 2, 그 밖은 `-`
         if (d.ownerKind === 'job' ? ![1, 2].includes(d.tier) : d.tier !== null) bad(`tier '${row.tier}' — 직업 스킬은 1 · 2, 그 밖은 -`);
+        // HP 소모 [2026-10-24 · R355] — 비율 0 이상 1 미만 · **차례 스킬만**(내는 자리가 `skill_runtime.act` 다 — 오오라 · 사건 · 정신 집중은 안 낸다)
+        if (!(d.hpCost >= 0 && d.hpCost < 1)) bad(`hp_cost_pct ${d.hpCost} — 비율 0 이상 1 미만`);
+        if (d.hpCost > 0 && d.cast !== 'turn') bad(`hp_cost_pct ${d.hpCost} 인데 cast ${d.cast} — HP 소모는 차례 스킬만`);
         if (d.icon === '') bad('icon 이 비었다');
         if (!d.desc.ko || !d.desc.en) bad('desc_kr·desc_en 이 비었다');
         // 설명은 **문장의 틀**이다 [2026-10-21 · ADR-0679] — `{자리}` 를 화면이 그 스킬의 수로 채운다(`tip.js:descSlots`). 그 스킬에 없는 수를 부르면
@@ -359,7 +366,8 @@ export function createSkillSystem(data) {
             v2: d.effects.slice(1).some(x => x.effect === 'apply'),    // 둘째 걸린 효과의 값
             m: st0?.stat === 'frenzy',                                 // 겹 상한
             t: st0?.stat === 'pulse',                                  // 오오라 피해 간격
-            i: CASTS[d.cast].chan === 'tick',                          // 계속 닳기의 방 사이 간격 (2026-10-22)
+            i: CASTS[d.cast].chan === 'tick' && !CASTS[d.cast].burst,  // 계속 닳기의 방 사이 간격 (2026-10-22 · 모으기는 같은 초 시계라도 아니다 — R358)
+            p: d.hpCost > 0,                                           // HP 소모 비율 (2026-10-24 · R355)
         };
         for (const k of ko) if (!slotHas[k]) bad(`desc 자리 {${k}} — ${k in slotHas ? '이 스킬엔 그 수가 없다' : `모르는 자리(${Object.keys(slotHas).join('·')})`}`);
         for (const k of ['n', 'd']) if (slotHas[k] && !ko.includes(k)) bad(`desc 에 {${k}} 가 없다 — ${k === 'n' ? '쿨' : '수량'}은 문장이 말한다`);
@@ -510,9 +518,9 @@ export function createSkillSystem(data) {
         if (!hit) return out;
         const t = lineTarget(d, hit);
         if (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') out.push('aoe');
-        if (t === 'enemy_single' || t === 'enemy_highest_def') out.push('single');
+        if (t === 'enemy_single' || t === 'enemy_highest_def' || t === 'enemy_hp_max') out.push('single');   // HP 최대 — 스나이프(2026-10-26 · R357)
         // 정신 집중 [2026-10-22 · R318] — 나가는 방식에서 파생한다 · 그 타수는 방 수라 다단히트로 세지 않는다
-        if (CASTS[d.cast]?.chan) out.push('channel');   // 끊어 치기 · 계속 닳기 둘 다
+        if (CASTS[d.cast]?.chan) out.push('channel');   // 끊어 치기 · 계속 닳기 · 모으기 셋 다
         else if (hit.hits > 1) out.push('multihit');
         return out;
     }

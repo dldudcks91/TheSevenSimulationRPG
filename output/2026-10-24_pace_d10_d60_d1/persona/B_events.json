@@ -1,0 +1,960 @@
+[
+{
+"min": 0.18,
+"event": "start_party",
+"extra": "rolls 2 ['기사', '전사', '궁수']"
+},
+{
+"min": 0.31,
+"event": "first_send",
+"extra": null
+},
+{
+"min": 0.38,
+"event": "built",
+"extra": "연구소"
+},
+{
+"min": 0.56,
+"event": "lab_reg",
+"extra": {
+"h4": "mine",
+"h1": "gather",
+"h2": "log"
+}
+},
+{
+"min": 0.91,
+"event": "level",
+"extra": "h1 1->2"
+},
+{
+"min": 0.91,
+"event": "level",
+"extra": "h2 1->2"
+},
+{
+"min": 0.91,
+"event": "level",
+"extra": "h3 1->2"
+},
+{
+"min": 1.58,
+"event": "level",
+"extra": "h1 2->3"
+},
+{
+"min": 1.58,
+"event": "level",
+"extra": "h2 2->3"
+},
+{
+"min": 1.58,
+"event": "level",
+"extra": "h3 2->3"
+},
+{
+"min": 1.91,
+"event": "clear",
+"extra": 1011
+},
+{
+"min": 2.3,
+"event": "autoequip",
+"extra": "h1 1"
+},
+{
+"min": 2.6,
+"event": "mastery",
+"extra": "spent 6"
+},
+{
+"min": 3.49,
+"event": "level",
+"extra": "h1 3->4"
+},
+{
+"min": 3.49,
+"event": "level",
+"extra": "h2 3->4"
+},
+{
+"min": 3.49,
+"event": "level",
+"extra": "h3 3->4"
+},
+{
+"min": 3.83,
+"event": "clear",
+"extra": 1012
+},
+{
+"min": 4.64,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 4.72,
+"event": "built",
+"extra": "상단"
+},
+{
+"min": 4.8,
+"event": "shop_refresh_free",
+"extra": "h1"
+},
+{
+"min": 5.17,
+"event": "building",
+"extra": "shop None->1"
+},
+{
+"min": 5.84,
+"event": "clear",
+"extra": 1013
+},
+{
+"min": 5.84,
+"event": "level",
+"extra": "h1 4->5"
+},
+{
+"min": 5.84,
+"event": "level",
+"extra": "h2 4->5"
+},
+{
+"min": 5.84,
+"event": "level",
+"extra": "h3 4->5"
+},
+{
+"min": 6.76,
+"event": "box_open",
+"extra": "h1 armor -> autoequip 1"
+},
+{
+"min": 6.81,
+"event": "autoequip",
+"extra": "h2 2"
+},
+{
+"min": 7.05,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 7.12,
+"event": "built",
+"extra": "선술집"
+},
+{
+"min": 7.32,
+"event": "building",
+"extra": "tavern None->1"
+},
+{
+"min": 7.49,
+"event": "clear",
+"extra": 1021
+},
+{
+"min": 8.32,
+"event": "level",
+"extra": "h1 5->6"
+},
+{
+"min": 8.32,
+"event": "level",
+"extra": "h2 5->6"
+},
+{
+"min": 8.32,
+"event": "level",
+"extra": "h3 5->6"
+},
+{
+"min": 8.87,
+"event": "autoequip",
+"extra": "h1 1"
+},
+{
+"min": 8.92,
+"event": "autoequip",
+"extra": "h3 1"
+},
+{
+"min": 9.14,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 9.37,
+"event": "clear",
+"extra": 1022
+},
+{
+"min": 11.67,
+"event": "level",
+"extra": "h3 6->7"
+},
+{
+"min": 11.72,
+"event": "autoequip",
+"extra": "h1 1"
+},
+{
+"min": 11.84,
+"event": "mastery",
+"extra": "spent 1"
+},
+{
+"min": 12.23,
+"event": "level",
+"extra": "h2 6->7"
+},
+{
+"min": 12.56,
+"event": "level",
+"extra": "h1 6->7"
+},
+{
+"min": 13.4,
+"event": "clear",
+"extra": 1023
+},
+{
+"min": 13.66,
+"event": "box_open",
+"extra": "h1 armor -> autoequip 1"
+},
+{
+"min": 13.72,
+"event": "autoequip",
+"extra": "h3 1"
+},
+{
+"min": 13.87,
+"event": "mastery",
+"extra": "spent 2"
+},
+{
+"min": 13.95,
+"event": "built",
+"extra": "제련소"
+},
+{
+"min": 14.08,
+"event": "shop_buy",
+"extra": "h1 장갑 Lv4 600G"
+},
+{
+"min": 14.27,
+"event": "autoequip",
+"extra": "h2 2"
+},
+{
+"min": 14.6,
+"event": "building",
+"extra": "forge None->1"
+},
+{
+"min": 14.77,
+"event": "clear",
+"extra": 1031
+},
+{
+"min": 15.27,
+"event": "level",
+"extra": "h3 7->8"
+},
+{
+"min": 15.44,
+"event": "level",
+"extra": "h1 7->8"
+},
+{
+"min": 15.44,
+"event": "level",
+"extra": "h2 7->8"
+},
+{
+"min": 16.16,
+"event": "autoequip",
+"extra": "h1 1"
+},
+{
+"min": 16.18,
+"event": "autoequip",
+"extra": "h2 2"
+},
+{
+"min": 16.42,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 16.59,
+"event": "enhance",
+"extra": [
+[
+"h1",
+600
+]
+]
+},
+{
+"min": 16.77,
+"event": "clear",
+"extra": 1032
+},
+{
+"min": 17.61,
+"event": "clear",
+"extra": 1033
+},
+{
+"min": 17.61,
+"event": "level",
+"extra": "h3 8->9"
+},
+{
+"min": 17.94,
+"event": "level",
+"extra": "h2 8->9"
+},
+{
+"min": 18.11,
+"event": "level",
+"extra": "h1 8->9"
+},
+{
+"min": 18.36,
+"event": "box_open",
+"extra": "h1 weapon -> autoequip 3"
+},
+{
+"min": 18.41,
+"event": "autoequip",
+"extra": "h2 3"
+},
+{
+"min": 18.43,
+"event": "autoequip",
+"extra": "h3 2"
+},
+{
+"min": 18.65,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 18.83,
+"event": "enhance",
+"extra": [
+[
+"h1",
+600
+]
+]
+},
+{
+"min": 19.01,
+"event": "clear",
+"extra": 1041
+},
+{
+"min": 19.68,
+"event": "clear",
+"extra": 1042
+},
+{
+"min": 20.18,
+"event": "level",
+"extra": "h2 9->10"
+},
+{
+"min": 20.18,
+"event": "level",
+"extra": "h3 9->10"
+},
+{
+"min": 20.34,
+"event": "level",
+"extra": "h1 9->10"
+},
+{
+"min": 20.6,
+"event": "box_open",
+"extra": "h1 armor -> autoequip 1"
+},
+{
+"min": 20.64,
+"event": "autoequip",
+"extra": "h2 1"
+},
+{
+"min": 20.67,
+"event": "autoequip",
+"extra": "h3 3"
+},
+{
+"min": 20.88,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 20.96,
+"event": "built",
+"extra": "도서관"
+},
+{
+"min": 21.12,
+"event": "enhance",
+"extra": [
+[
+"h1",
+810
+],
+[
+"h1",
+1094
+]
+]
+},
+{
+"min": 21.3,
+"event": "clear",
+"extra": 1043
+},
+{
+"min": 21.3,
+"event": "clear",
+"extra": 1051
+},
+{
+"min": 21.3,
+"event": "level",
+"extra": "h2 10->11"
+},
+{
+"min": 21.3,
+"event": "level",
+"extra": "h3 10->11"
+},
+{
+"min": 21.3,
+"event": "building",
+"extra": "library None->1"
+},
+{
+"min": 21.46,
+"event": "level",
+"extra": "h1 10->11"
+},
+{
+"min": 22.46,
+"event": "clear",
+"extra": 2011
+},
+{
+"min": 22.89,
+"event": "box_open",
+"extra": "h3 weapon -> autoequip 1"
+},
+{
+"min": 23.19,
+"event": "mastery",
+"extra": "spent 4"
+},
+{
+"min": 23.26,
+"event": "built",
+"extra": "탐험"
+},
+{
+"min": 23.87,
+"event": "clear",
+"extra": 2012
+},
+{
+"min": 23.87,
+"event": "level",
+"extra": "h1 11->12"
+},
+{
+"min": 23.87,
+"event": "level",
+"extra": "h2 11->12"
+},
+{
+"min": 23.87,
+"event": "level",
+"extra": "h3 11->12"
+},
+{
+"min": 23.87,
+"event": "building",
+"extra": "explore None->1"
+},
+{
+"min": 24.05,
+"event": "clear",
+"extra": 2012
+},
+{
+"min": 24.05,
+"event": "level",
+"extra": "h1 11->12"
+},
+{
+"min": 24.05,
+"event": "level",
+"extra": "h2 11->12"
+},
+{
+"min": 24.05,
+"event": "level",
+"extra": "h3 11->12"
+},
+{
+"min": 24.05,
+"event": "building",
+"extra": "explore None->1"
+},
+{
+"min": 25.05,
+"event": "clear",
+"extra": 2013
+},
+{
+"min": 25.64,
+"event": "box_open",
+"extra": "h2 weapon -> autoequip 2"
+},
+{
+"min": 25.7,
+"event": "autoequip",
+"extra": "h3 1"
+},
+{
+"min": 25.92,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 26.11,
+"event": "enhance",
+"extra": [
+[
+"h2",
+600
+],
+[
+"h2",
+810
+]
+]
+},
+{
+"min": 26.29,
+"event": "level",
+"extra": "h2 12->13"
+},
+{
+"min": 26.29,
+"event": "level",
+"extra": "h3 12->13"
+},
+{
+"min": 26.46,
+"event": "clear",
+"extra": 2021
+},
+{
+"min": 27.12,
+"event": "level",
+"extra": "h1 12->13"
+},
+{
+"min": 27.62,
+"event": "clear",
+"extra": 2022
+},
+{
+"min": 27.85,
+"event": "autoequip",
+"extra": "h1 1"
+},
+{
+"min": 28.04,
+"event": "mastery",
+"extra": "spent 2"
+},
+{
+"min": 28.21,
+"event": "enhance",
+"extra": [
+[
+"h2",
+1094
+]
+]
+},
+{
+"min": 28.89,
+"event": "clear",
+"extra": 2023
+},
+{
+"min": 28.89,
+"event": "level",
+"extra": "h2 13->14"
+},
+{
+"min": 29.73,
+"event": "level",
+"extra": "h3 13->14"
+},
+{
+"min": 29.99,
+"event": "box_open",
+"extra": "h2 weapon -> autoequip 2"
+},
+{
+"min": 30.01,
+"event": "autoequip",
+"extra": "h1 1"
+},
+{
+"min": 30.05,
+"event": "autoequip",
+"extra": "h3 1"
+},
+{
+"min": 30.2,
+"event": "mastery",
+"extra": "spent 2"
+},
+{
+"min": 30.38,
+"event": "enhance",
+"extra": [
+[
+"h2",
+600
+],
+[
+"h2",
+810
+]
+]
+},
+{
+"min": 30.57,
+"event": "clear",
+"extra": 2031
+},
+{
+"min": 30.57,
+"event": "level",
+"extra": "h1 13->14"
+},
+{
+"min": 31.4,
+"event": "clear",
+"extra": 2032
+},
+{
+"min": 32.16,
+"event": "autoequip",
+"extra": "h3 1"
+},
+{
+"min": 32.24,
+"event": "mastery",
+"extra": "spent 1"
+},
+{
+"min": 32.4,
+"event": "shop_buy",
+"extra": "h1 장갑 Lv4 1500G"
+},
+{
+"min": 32.6,
+"event": "autoequip",
+"extra": "h1 1"
+},
+{
+"min": 32.62,
+"event": "autoequip",
+"extra": "h2 1"
+},
+{
+"min": 32.64,
+"event": "autoequip",
+"extra": "h3 1"
+},
+{
+"min": 33.13,
+"event": "clear",
+"extra": 2033
+},
+{
+"min": 33.13,
+"event": "level",
+"extra": "h2 14->15"
+},
+{
+"min": 34.13,
+"event": "level",
+"extra": "h3 14->15"
+},
+{
+"min": 34.55,
+"event": "box_open",
+"extra": "h1 weapon -> autoequip 1"
+},
+{
+"min": 34.62,
+"event": "autoequip",
+"extra": "h3 1"
+},
+{
+"min": 34.76,
+"event": "mastery",
+"extra": "spent 2"
+},
+{
+"min": 34.95,
+"event": "enhance",
+"extra": [
+[
+"h1",
+600
+],
+[
+"h1",
+810
+]
+]
+},
+{
+"min": 35.13,
+"event": "clear",
+"extra": 2041
+},
+{
+"min": 35.63,
+"event": "level",
+"extra": "h1 14->15"
+},
+{
+"min": 35.97,
+"event": "clear",
+"extra": 2042
+},
+{
+"min": 36.68,
+"event": "autoequip",
+"extra": "h1 2"
+},
+{
+"min": 36.71,
+"event": "autoequip",
+"extra": "h2 1"
+},
+{
+"min": 36.8,
+"event": "mastery",
+"extra": "spent 1"
+},
+{
+"min": 36.98,
+"event": "enhance",
+"extra": [
+[
+"h1",
+1094
+]
+]
+},
+{
+"min": 37.33,
+"event": "clear",
+"extra": 2043
+},
+{
+"min": 37.33,
+"event": "level",
+"extra": "h2 15->16"
+},
+{
+"min": 37.66,
+"event": "clear",
+"extra": 2051
+},
+{
+"min": 37.66,
+"event": "level",
+"extra": "h3 15->16"
+},
+{
+"min": 38.66,
+"event": "level",
+"extra": "h1 15->16"
+},
+{
+"min": 39.03,
+"event": "mastery",
+"extra": "spent 3"
+},
+{
+"min": 39.22,
+"event": "enhance",
+"extra": [
+[
+"h2",
+1094
+],
+[
+"h3",
+600
+],
+[
+"h3",
+810
+]
+]
+},
+{
+"min": 39.4,
+"event": "clear",
+"extra": 3011
+},
+{
+"min": 40.4,
+"event": "clear",
+"extra": 3012
+},
+{
+"min": 41.49,
+"event": "enhance",
+"extra": [
+[
+"h3",
+1094
+]
+]
+},
+{
+"min": 41.67,
+"event": "clear",
+"extra": 3013
+},
+{
+"min": 41.67,
+"event": "level",
+"extra": "h2 16->17"
+},
+{
+"min": 41.67,
+"event": "level",
+"extra": "h3 16->17"
+},
+{
+"min": 43.47,
+"event": "mastery",
+"extra": "spent 2"
+},
+{
+"min": 43.82,
+"event": "level",
+"extra": "h1 16->17"
+},
+{
+"min": 44.15,
+"event": "clear",
+"extra": 3021
+},
+{
+"min": 45.54,
+"event": "mastery",
+"extra": "spent 1"
+},
+{
+"min": 46.72,
+"event": "clear",
+"extra": 3022
+},
+{
+"min": 47.05,
+"event": "level",
+"extra": "h2 17->18"
+},
+{
+"min": 47.39,
+"event": "level",
+"extra": "h3 17->18"
+},
+{
+"min": 47.68,
+"event": "mastery",
+"extra": "spent 2"
+},
+{
+"min": 48.03,
+"event": "clear",
+"extra": 3023
+},
+{
+"min": 49.03,
+"event": "clear",
+"extra": 3031
+},
+{
+"min": 49.53,
+"event": "level",
+"extra": "h1 17->18"
+},
+{
+"min": 49.75,
+"event": "mastery",
+"extra": "spent 1"
+},
+{
+"min": 50.53,
+"event": "clear",
+"extra": 3032
+},
+{
+"min": 52.37,
+"event": "clear",
+"extra": 3033
+},
+{
+"min": 53.2,
+"event": "level",
+"extra": "h2 18->19"
+},
+{
+"min": 53.2,
+"event": "level",
+"extra": "h3 18->19"
+},
+{
+"min": 54.16,
+"event": "mastery",
+"extra": "spent 2"
+},
+{
+"min": 58.22,
+"event": "mastery",
+"extra": "spent 1"
+},
+{
+"min": 58.84,
+"event": "level",
+"extra": "h1 18->19"
+}
+]

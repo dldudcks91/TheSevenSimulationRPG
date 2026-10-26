@@ -16,14 +16,17 @@
  *   넣은 것은 세이브에 남는다. Hero 는 누를 때마다 1명(메인 직업 랜덤 · `state.adminHero` · Unlock 과 무관 — 로스터 자리만 본다).
  *
  * ⚠ 걷어내려면 이 파일과 `app.js` 의 import · 호출(`mountAdmin`) 두 줄, `data.js` 의 import · 주입 두 줄을 지운다(`state.adminHero` 는 부르는 곳이 없어질 뿐이다).
- * ⚠ 문구는 영어다 — 다국어 대상이 아니다(유저에게 안 보인다 · devcompare.js 와 같다).
+ * ⚠ 문구는 영어다 — 다국어 대상이 아니다(개발 장치 · devcompare.js 와 같다).
+ * **개발 환경에서만 선다** — 배포 주소에서는 `app.js` 가 붙이지 않고, 이 브라우저에 켜 둔 Unlock 도 안 먹는다(`env.js` · ADR-0751).
  */
+
+import { DEV_HOST } from './env.js';
 
 const KEY = 'devAdmin';
 const read = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
 const write = v => { try { if (v) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch { /* 사생활 모드 */ } };
 
-let on = read();
+let on = DEV_HOST && read();
 /** Unlock 이 켜져 있나 — `data.js` 가 `openAll` 로 주입한다 */
 export const adminOn = () => on;
 

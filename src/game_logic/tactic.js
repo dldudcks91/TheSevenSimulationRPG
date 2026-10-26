@@ -33,6 +33,7 @@
  *   classes      — 직업 정의 [{id, ...}] (인자 검증)
  *   gradeWeights — {common, magic, rare} 상대 가중치 (balance.csv:tactic_grade_weight_*) — 리롤의 등급 추첨
  *   rerollCost   — {base, lockMult} (balance.csv:tactic_reroll_base_cost · tactic_reroll_lock_mult) — 전체 리롤 비용 (§5-6)
+ *   leader       — {pivot, min, max, multMin, multMax} (balance.csv:attr_dmg_pivot · hero_attr_min · hero_attr_max · tactic_leader_mult_min · _max) — 리더 보너스 (§5-10)
  */
 export function createTacticSystem(data) {
     const NONE = '-';
@@ -138,6 +139,26 @@ export function createTacticSystem(data) {
         };
     }
 
+    /* ── 리더 보너스 (balance.csv:tactic_leader_mult_* — 2026-10-24 · R340 · §5-10) ── */
+
+    const LD = data.leader ?? {};
+    if (![LD.pivot, LD.min, LD.max].every(Number.isFinite) || !(LD.min < LD.pivot && LD.pivot < LD.max))
+        throw new Error(`tactic: 리더 통솔 범위 ${LD.min} < 기준 ${LD.pivot} < ${LD.max} 가 아니다 (balance.csv:hero_attr_min · attr_dmg_pivot · hero_attr_max)`);
+    // 최소 쪽이 1 을 넘거나 최대 쪽이 1 밑이면 통솔이 높을수록 약해진다 — 곡선이 뒤집힌다
+    if (!(LD.multMin > 0 && LD.multMin <= 1 && LD.multMax >= 1))
+        throw new Error(`tactic: 리더 배수 ${LD.multMin} ~ ${LD.multMax} — 0 < 최소 ≤ 1 ≤ 최대 (balance.csv:tactic_leader_mult_min · _max)`);
+    /**
+     * 리더 곡선 — 리더(편성 첫 칸)의 통솔을 [최소, 최대]로 자르고 **기준 아래는 최소 배수까지 · 위는 최대 배수까지 직선** [2026-10-24 사용자
+     *   「통솔 10을 기준으로 10보다 낮으면 감소해서 1이면 50%, 20이면 2배」]. 기준에서 1 · 리더가 없거나 통솔을 모르면 1
+     */
+    const leadCurve = ldr => {
+        if (!Number.isFinite(ldr)) return 1;
+        const v = Math.min(LD.max, Math.max(LD.min, ldr));
+        return v >= LD.pivot
+            ? 1 + (LD.multMax - 1) * (v - LD.pivot) / (LD.max - LD.pivot)
+            : 1 - (1 - LD.multMin) * (LD.pivot - v) / (LD.pivot - LD.min);
+    };
+
     /* ── 옵션 (tactic_option.csv — 1행 = 가족 하나) ── */
 
     /** 기준값 × 배수 — 고정값 채널(`_flat`)은 정수, 나머지는 비율이라 부동소수 꼬리만 자른다 */
@@ -160,6 +181,10 @@ export function createTacticSystem(data) {
         else { if (own !== null) bad(`조건 ${cond.id} 는 인자를 안 받는다(이미 정했거나 없다)`); arg = cond.arg; }
         if (!row.stat) bad('stat 이 없다');
         if (typeof row.unit !== 'number' || !(row.unit > 0)) bad(`unit ${row.unit} — 기준값은 양수`);
+        // 리더 곡선을 받는 몫 — 1 = 전부 · 0 = 안 받음(리더 통솔 칸 — 같은 축을 두 번 보상하지 않는다) · 통솔 최소에서도 값이 0 보다 커야 한다
+        const lb = row.leader_bonus;
+        if (typeof lb !== 'number' || !(lb >= 0)) bad(`leader_bonus ${lb} — 0 이상 (tactic_option.csv)`);
+        if (!(1 + lb * (LD.multMin - 1) > 0)) bad(`leader_bonus ${lb} — 통솔 최소에서 값이 0 이하가 된다`);
         const mult = scoreMult[cond.score];
         const grades = Object.fromEntries(GRADES.map(g => [g, valueOf(row.stat, row.unit, mult[g])]));
         // 반올림 뒤에도 등급 순으로 커져야 한다 — 고정값 채널은 기준값이 작으면 둘이 같은 정수로 뭉칠 수 있다
@@ -167,7 +192,7 @@ export function createTacticSystem(data) {
             if (!(grades[GRADES[i]] > grades[GRADES[i - 1]])) bad(`${GRADES[i]} ${grades[GRADES[i]]} 가 ${GRADES[i - 1]} ${grades[GRADES[i - 1]]} 보다 크지 않다 — 기준값이 너무 작다`);
         const fam = famById[id] = {
             id, condId: cond.id, category: cond.category, polarity: cond.polarity, condKind: cond.test, condArg: arg, condN: cond.n,
-            score: cond.score, stat: row.stat, unit: row.unit, grades,
+            score: cond.score, stat: row.stat, unit: row.unit, leaderBonus: lb, grades,
         };
         families.push(fam);
     }
@@ -205,7 +230,7 @@ export function createTacticSystem(data) {
         if (value === undefined) return null;
         return {
             id: fam.id, grade: ref.grade, condId: fam.condId, category: fam.category, polarity: fam.polarity,
-            condKind: fam.condKind, condArg: fam.condArg, condN: fam.condN, score: fam.score, stat: fam.stat, value,
+            condKind: fam.condKind, condArg: fam.condArg, condN: fam.condN, score: fam.score, stat: fam.stat, leaderBonus: fam.leaderBonus, value,
         };
     }
 
@@ -229,11 +254,19 @@ export function createTacticSystem(data) {
         return ctx;
     }
 
-    /** 조건이 참인가 — 지금 센 숫자와 함께 낸다 (화면이 「3 / 2」 처럼 카운터를 찍는다 — §4 「안 보이면 함정」). 없으면은 `need` 0 */
+    /**
+     * 조건이 참인가 — 지금 센 숫자와 함께 낸다 (화면이 「3 / 2」 처럼 카운터를 찍는다 — §4 「안 보이면 함정」). 없으면은 `need` 0.
+     *   `lead` · `value` = 리더 보너스 [2026-10-24 · R340 · §5-10] — 적용 값 = 등급 값 × (1 + leader_bonus × (리더 곡선 − 1)).
+     *   켜짐과 무관하게 낸다(화면이 꺼진 칸의 값도 찍는다) · `leaderBonus` 가 없는 옵션(옛 세이브의 원정 스냅숏)은 곡선을 안 받는다
+     */
     function measure(option, ctx) {
         const have = TESTS[option.condKind].count(ctx, option.condArg);
         const active = option.polarity === 'not' ? have === 0 : have >= option.condN;
-        return { have, need: option.condN, active };
+        const lead = 1 + (option.leaderBonus ?? 0) * (leadCurve(ctx.leader?.ldr) - 1);
+        const value = valueOf(option.stat, option.value, lead);
+        // 리더 몫 = 적용 값 − 등급 값 — 편성 탭 행의 리더 보너스 칸이 찍는다(ADR-0757) · 고정값 채널은 정수 차 · 나머지는 같은 자리에서 자른다
+        const bonus = option.stat.endsWith('_flat') ? value - option.value : Math.round((value - option.value) * 1e4) / 1e4;
+        return { have, need: option.condN, active, lead, value, bonus };
     }
 
     /**
@@ -316,7 +349,7 @@ export function createTacticSystem(data) {
     }
 
     return {
-        slotList, slotCount, families, familyIds, optionOf, contextOf, measure, bonusOf,
+        slotList, slotCount, families, familyIds, optionOf, contextOf, measure, bonusOf, leadCurve,
         initialAssign, pick, pickMany, rerollCost, GRADES, COND_KINDS: Object.keys(TESTS), CATEGORIES,
         conditions: Object.values(condById), scoreMult,
     };

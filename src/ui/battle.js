@@ -44,11 +44,15 @@
 import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
+import { DEV_HOST } from './env.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip } from './tip.js';
 import { paceAt, paceStep, paceCfg, actorOf, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
 import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
-const SPEEDS = [1, 2, 4, 16];   // ×16 — 2026-10-05 사용자 지시 (SCREEN_DESIGN §4-2)
+/** 배속 버튼 — 배포 주소는 ×2 까지 · 개발 환경은 ×4 · ×16 도(×16 은 2026-10-05 사용자 지시) (SCREEN_DESIGN §4-2 · ADR-0755).
+ *  배속은 화면 상태뿐이고 바꾸는 길은 이 버튼들뿐이라 목록이 곧 상한이다 */
+export const speedsFor = dev => (dev ? [1, 2, 4, 16] : [1, 2]);
+const SPEEDS = speedsFor(DEV_HOST);
 const TICK = 0.1;
 /* 눈금 간격의 하한(ms) — 간격은 `TICK / 배속`이라 ×16 이면 6ms 마다 그린다. 시각은 실제 경과 × 배속으로 밀어(`step`) 간격은 그리는 빈도일 뿐이므로
    ×4 의 간격에서 멈춘다 — 게임 수치가 아니라 브라우저 사정이라 CSV 가 아니다 */
@@ -189,8 +193,11 @@ function openBuffPop(btn, b) {
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
  *   shrine = 이 런이 입은 신단 id(없으면 null) — 헤드의 칩 (ADR-0445)
+ *   teamPane = 두 팀 누적 데미지 판을 그릴 요소(결투 관전의 아레나 아래 칸) — 주면 상대 진영도 장부를 쌓고 걸음 끝마다 그 안에 두 판을 그린다 (ADR-0769)
+ *   teamView = 두 팀 판의 보기 'rows'(요약) | 'cols'(스킬별) · onTeamView(v) = 판의 버튼으로 바꾼 보기 — 취향이라 앱이 든다 (ADR-0772)
  *   intro = `{ diff }` 면 재생 위치가 런의 처음일 때 스테이지 띠를 한 번 띄운다 — 「그 런에 한 번」은 앱이 정한다 · 결투장은 안 넘긴다 (ADR-0663)
- *   upNext() = 다음 런 `{stageId, at, shrine}`(앱이 `game.nextRepeat` 로 답한다) · 멈춘 부대(철수 · 끊김 뒤)면 null — 결과 띠는 이 답이 있으면 **언제나** 센다 (ADR-0430).
+ *   upNext() = 다음 런 `{stageId, difficulty, at, shrine}`(앱이 `game.nextRepeat` 로 답한다) · 멈춘 부대(철수 · 끊김 뒤)면 null — 결과 띠는 이 답이 있으면 **언제나** 센다 (ADR-0430).
+ *     difficulty = 이 런의 단(앱이 넘긴다) — 다음 런의 단과 다르면 세기 글의 칸 이름 앞에 그 단 이름 (ADR-0779)
  *     `respawn` 이 지금보다 뒤면 다음 칸의 챕터보스가 죽어 있다 — 세기 글이 「보스 재등장까지」 · [건너뛰기] 없음 (ADR-0590)
  *   graveAt() = 이 런의 칸 챕터보스가 돌아오는 시각(ms) 또는 null(앱이 `game.bossRespawnAt` 로 답한다) — 이겨서 끝났고 지금보다 뒤면 쓰러진 보스 카드의 초상이 무덤 명패다 (ADR-0590)
  *     ~~onRetry()[다시 도전] · onNext()[다음 스테이지] · repeat · restartAt~~ 은 2026-09-29 삭제 — 원정이 멈추지 않아 이어 가기가 두 버튼의 일을 한다
@@ -222,6 +229,9 @@ export function mountBattle(container, opts) {
         clock: opts.now,         // 명패의 남은 시간을 그리는 시계 — 재생 시각이 아니라 실제 시각이다
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
+        teamPane: opts.teamPane ?? null,   // 두 팀 누적 판의 자리(결투 관전) — 있으면 상대 진영도 쌓는다 (ADR-0769)
+        // 두 팀 판의 보기 — rows(요약) | cols(스킬별) · 취향이라 앱의 화면 상태가 들고 `onTeamView` 로 돌려받는다 (ADR-0772)
+        teamView: opts.teamView === 'cols' ? 'cols' : 'rows', onTeamView: opts.onTeamView ?? null,
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않고 DOM 도 안 만진다(끝에 `paintCaughtUp` 이 한 번 그린다)
         // 로그 — 적은 줄 수(되감기 중 모아 둔 것 포함) · 목록에 선 주체별 줄 수 · 되감기 중 모아 둔 재료 · 목록을 맨 아래로 맞출 일이 남았나.
         //   `dmgDirty` = 누적 판을 다시 그릴 일이 남았나 — 둘 다 걸음 끝에 한 번 푼다(`step`)
@@ -288,6 +298,7 @@ export function mountBattle(container, opts) {
     scrollLog(state, container);
     if (!state.ended) { start(state, container, opts); wake(state, container, opts); }   // 세운 자리에 다시 섰으면 풀리는 순간에 깨운다
     renderDmg(state, container);
+    renderTeams(state);   // 두 팀 판 — 0 부터 찍는다 · 재개 되감기 뒤에도 여기서 한 번 (ADR-0769)
     // 스테이지 띠 — 앱이 「그 런에 한 번」을 정하고(`opts.intro`) 여기서는 런의 처음일 때만 띄운다 · 런 도중에 들어온 관전은 안 띄운다 (ADR-0663)
     if (opts.intro && state.t <= INTRO_FROM_T) stageIntro(state, dom, stage, opts.intro);
 
@@ -326,6 +337,9 @@ function stageIntro(state, root, stage, intro) {
 
 /* ───────── 구성 ───────── */
 
+/** 아레나 배경 — 그림 위에 어둡게 누르는 막 한 겹(카드가 배경에서 떠 보인다). 결투 판(`app.js:arenaStage`)도 같은 값을 깐다 */
+export const arenaBgImage = bg => `linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.78)),url('${bg}')`;
+
 function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'panel battle-panel';
@@ -362,7 +376,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
         </div>
         <div class="battle-body">
             <div class="arena${bg ? ' has-bg' : ''}"${bg
-                ? ` style="background-image:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.78)),url('${bg}')"`
+                ? ` style="background-image:${arenaBgImage(bg)}"`
                 : ''}>
                 <div class="side side-enemy"></div>
                 <div class="divider"><span class="muted">VS</span></div>
@@ -529,6 +543,49 @@ const clsName = id => { const c = D.classes.find(x => x.id === id); return c ? L
 const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
     : u.grade === 'stage_boss' ? t('kind.boss')
     : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '';
+/* 개편판 몬스터 카드 이름 줄의 등급 칩 [2026-10-24 사용자 지시 · ADR-0759] — 정예 「정예」 · 스테이지보스와 챕터보스는 둘 다 「보스」 · 일반은 없다.
+   모양은 죄종 칩(`sin-chip`) · 색은 라운드 트랙 · 로그의 등급 칸과 같다(`.grade-chip.elite` · `.boss`) */
+const gradeChip = u => u.grade === 'elite' ? `<span class="sin-chip grade-chip elite">${t('kind.elite')}</span>`
+    : u.grade === 'stage_boss' || u.grade === 'chapter_boss' ? `<span class="sin-chip grade-chip boss">${t('kind.boss')}</span>` : '';
+/* 정예 특성 칩 — 카드 띠 오른쪽 · 오른쪽 맞춤 [2026-10-24 사용자 지시 · ADR-0775 · 칩 모양 ADR-0768] — 칸마다 칩 하나(이름):
+   죄종 칸 = 그 죄종의 마스터리 T1 이름(죄종 색) · 능력치 칸 = 이름(본문 색) · 방어 칸 = 이름(피해 종류 색) · 칩 모양은 죄종 칩과 같다.
+   카드 크기는 그대로 · 띠가 모자라면 왼쪽 신원이 먼저 줄어든다(CSS) · 글씨는 카드 밖으로 안 나간다.
+   로직이 굴려 실어 온 칸(`round` 적 항목의 `traits` = `[{slot, id}]` · R344 · INTERFACE §2-6)을 `eliteTraitView` 가 이름 · 색으로 바꾼다 —
+   죄종 칸 id = 마스터리 T1 노드 · 능력치 칸 id = 능력치 · 방어 칸 id = 피해 종류. 칩 항목 = `{name:{ko,en}, color}`.
+   개발용 `&traits=<단>`(normal · nightmare · hell = 칸 하나 · 둘 · 셋)은 그 런의 단과 상관없이 **고정 예시**로 덮는다:
+   그 정예의 죄종 · 키에서 고른다(난수 아님) · `&traits=max` = 칸마다 **지금 언어에서 가장 긴 이름**(죄종은 일곱 죄종 전체에서) —
+   띠에서 신원이 얼마나 줄어드는지 보는 자리다(ADR-0775) */
+const TRAIT_Q = new URLSearchParams(location.search).get('traits');
+const TRAIT_DEMO = { normal: 1, nightmare: 2, hell: 3, max: 3 }[TRAIT_Q] ?? 0;
+const keyHash = s => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const longestName = list => list.reduce((a, b) => (L(b.name).length >= L(a.name).length ? b : a));   // 같은 길이면 뒤 — Frostproof · Venomproof 중 실제로 넓은 쪽
+const demoEliteTraits = e => {
+    if (!TRAIT_DEMO || e.grade !== 'elite' || !M.SINS[e.sin]) return null;
+    if (TRAIT_Q === 'max') return [
+        longestName((D.masteryNodes ?? []).filter(n => n.tree_kind === 'sin' && Number(n.tier) === 1)
+            .map(n => ({ name: { ko: n.name_kr, en: n.name_en }, color: M.SINS[n.owner_id]?.color ?? null }))),
+        longestName(M.ELITE_TRAIT_STAT.map(s => ({ name: s, color: null }))),
+        longestName(M.ELITE_TRAIT_DEF.map(d => ({ name: d, color: `var(--dt-${d.dt})` }))),
+    ];
+    const h = keyHash(`${e.key}:${e.monsterId}`);
+    const t1 = (D.masteryNodes ?? []).filter(n => n.tree_kind === 'sin' && n.owner_id === e.sin && Number(n.tier) === 1);
+    const out = t1.length ? [{ name: { ko: t1[h % t1.length].name_kr, en: t1[h % t1.length].name_en }, color: M.SINS[e.sin].color }] : [];
+    if (TRAIT_DEMO >= 2) out.push({ name: M.ELITE_TRAIT_STAT[(h >>> 4) % M.ELITE_TRAIT_STAT.length], color: null });
+    if (TRAIT_DEMO >= 3) { const d = M.ELITE_TRAIT_DEF[(h >>> 8) % M.ELITE_TRAIT_DEF.length]; out.push({ name: d, color: `var(--dt-${d.dt})` }); }
+    return out;
+};
+const eliteTraitView = traits => (traits ?? []).map(({ slot, id } = {}) => {
+    if (slot === 'sin') {
+        const n = (D.masteryNodes ?? []).find(x => x.node_id === id);
+        return n ? { name: { ko: n.name_kr, en: n.name_en }, color: M.SINS[n.owner_id]?.color ?? null } : null;
+    }
+    if (slot === 'stat') { const s = M.ELITE_TRAIT_STAT.find(x => x.attr === id); return s ? { name: s, color: null } : null; }
+    if (slot === 'def') { const d = M.ELITE_TRAIT_DEF.find(x => x.dt === id); return d ? { name: d, color: `var(--dt-${d.dt})` } : null; }
+    return null;
+}).filter(Boolean);
+const traitsHtml = u => u.eliteTraits?.length
+    ? `<div class="unit-traits">${u.eliteTraits.map(x => `<span class="trait-chip"${x.color ? ` style="color:${x.color}"` : ''}>${L(x.name)}</span>`).join('')}</div>`
+    : '';
 const identOf = (u, state) => u.hero ? `${lvSpan(state, u, u.hero.level)} · ${clsName(u.cls)}` : gradeLabel(u);
 /* 몬스터의 종족 — `monster.csv:monster_type` 의 이름(의뢰가 검증한 `SYS.commission.races`) [2026-10-03 사용자 지시 · ADR-0494].
    영웅(결투장의 적 영웅 포함)은 종족이 없다 */
@@ -847,13 +904,16 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
     // 한 줄 합침은 좁은 열(~104px)에서 신원(고정 조각)이 줄을 먼저 먹어 이름이 짜부라졌다.
     // 일반 몬스터는 윗줄이 **빈 채**로 자리만 잡는다 — 줄 위치·카드 높이가 카드마다 같아야 격자로 읽힌다
     const ident = identOf(u, state);
-    // 개편판(cardV2) — 맨 위 띠가 신원을 들고, HP 바 바로 위 이름 줄이 **왼쪽 죄종 칩 · 오른쪽 이름**이다 (ADR-0262 · ADR-0270 · ADR-0274).
-    //   죄종 칩은 다른 화면과 같은 `sin-chip`(죄종 색 글씨) · 몬스터는 죄종을 가진 정예만 — 일반 · 보스는 `sin` 이 없다
-    const sin = v2 && u.sin && M.SINS[u.sin] ? `<span class="sin-chip" style="color:${M.SINS[u.sin].color}">${L(M.SINS[u.sin])}</span>` : '';
-    const grade = v2 ? gradeLabel(u) : '';
-    const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u, state)}</span>${grade ? `<span class="unit-grade">${grade}</span>` : ''}</div>` : '';
+    // 개편판(cardV2) — 맨 위 띠가 신원을 들고, HP 바 바로 위 이름 줄이 **왼쪽 칩 · 오른쪽 이름**이다 (ADR-0262 · ADR-0270 · ADR-0274).
+    //   칩은 다른 화면과 같은 `sin-chip` 모양 — **영웅 = 죄종**(죄종 색 글씨) · **몬스터 = 등급**(`gradeChip` · ADR-0759).
+    //   정예 특성은 카드 위에 뜬 칩 줄이다(`traitsHtml` · ADR-0768) — 로직이 굴린 칸(R344)을 그린다
+    const chip = !v2 ? '' : u.hero
+        ? (u.sin && M.SINS[u.sin] ? `<span class="sin-chip" style="color:${M.SINS[u.sin].color}">${L(M.SINS[u.sin])}</span>` : '')
+        : gradeChip(u);
+    const traits = v2 ? traitsHtml(u) : '';   // 정예 특성 칩 — 띠 오른쪽 · 오른쪽 맞춤 (ADR-0775)
+    const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u, state)}</span>${traits}</div>` : '';
     const idRow = v2
-        ? `<div class="unit-id">${sin}<span class="unit-name">${name}</span></div>`
+        ? `<div class="unit-id">${chip}<span class="unit-name">${name}</span></div>`
         : `<div class="unit-id"><span class="unit-ident">${ident}</span><span class="unit-name">${name}</span></div>`;
     return `
         ${top}
@@ -1128,7 +1188,7 @@ const dealtOf = ev => ev.dmg - (ev.ov ?? 0) + (ev.cull ?? 0);
     이름은 그릴 때 붙인다 — 칸 순서로 줄을 세우려면 스킬 id 가 있어야 한다. 항목이 유닛을 들어 그 영웅의 스킬 칸을 읽는다(갈아입기 `refit` 는 같은 유닛에 덮어쓴다) */
 const dmgLedger = () => ({ total: 0, kind: { phys: 0, magic: 0, etc: 0 }, by: new Map() });
 function dmgEntry(state, u) {
-    if (!state.dmg.has(u.key)) state.dmg.set(u.key, { name: u.name, unit: u, dealt: dmgLedger(), taken: dmgLedger() });
+    if (!state.dmg.has(u.key)) state.dmg.set(u.key, { name: u.name, unit: u, side: u.side, dealt: dmgLedger(), taken: dmgLedger() });
     return state.dmg.get(u.key);
 }
 /* 막대 조각 — 물리 · 마법(원소 전부 — 저항으로 깎이는 쪽) · 기타(종류를 안 싣는 반사 · 자폭 · **고정 피해** — 깎이지 않는 쪽 · R221) (ADR-0252) */
@@ -1138,12 +1198,13 @@ function tally(g, key, dmg, kind) {
     g.kind[kind] += dmg;
     g.by.set(key, (g.by.get(key) ?? 0) + dmg);
 }
-/** 한 번의 피해 — 때린 쪽(`a`)이 영웅이면 가한 피해, 맞은 쪽(`d`)이 영웅이면 받은 피해에 쌓는다. `ty` = 이벤트가 실어 온 피해 종류(타격만 · 없으면 기타) */
+/** 한 번의 피해 — 때린 쪽(`a`)이 영웅이면 가한 피해, 맞은 쪽(`d`)이 영웅이면 받은 피해에 쌓는다. `ty` = 이벤트가 실어 온 피해 종류(타격만 · 없으면 기타).
+    두 팀 판이 있으면(결투 관전 · `teamPane`) **상대 진영도** 쌓는다 — 오른쪽 판은 그래도 우리 편 장부만 읽는다 (ADR-0769) */
 function addDmg(state, a, d, id, dmg, ty) {
     state.dmgDirty = true;   // 판은 걸음 끝에 한 번 다시 그린다(`step`) — 타격마다 다시 짓지 않는다
-    const kind = dmgKind(ty);
-    if (a.side === 'party') tally(dmgEntry(state, a).dealt, id, dmg, kind);
-    if (d.side === 'party') tally(dmgEntry(state, d).taken, a.monsterId ?? a.key, dmg, kind);
+    const kind = dmgKind(ty), both = !!state.teamPane;
+    if (a.side === 'party' || both) tally(dmgEntry(state, a).dealt, id, dmg, kind);
+    if (d.side === 'party' || both) tally(dmgEntry(state, d).taken, a.monsterId ?? a.key, dmg, kind);
 }
 /** 누적 데미지 판 — 영웅 한 덩어리 = 왼쪽 초상 + 오른쪽 열(ADR-0211). 열은 머리 줄(합계 · 파티 합 안 % · 막대는 파티 안 최대 기준) 아래에 한 줄씩(아이콘 · 이름 · 피해).
     탭(`state.dmgf`)이 장부를 고른다 — 덩어리 모양은 같고 값의 축만 바뀐다 (ADR-0252). 보이는 동안만 그린다 */
@@ -1151,7 +1212,7 @@ function renderDmg(state, root) {
     const box = root.querySelector('.battle-dmg-wrap');
     if (!box || box.hidden || state.catchUp) return;   // 되감는 동안은 안 그린다 — 되감기 뒤 `mountBattle` 이 한 번
     const f = state.dmgf;
-    const rows = [...state.dmg.values()].sort((a, b) => b[f].total - a[f].total);
+    const rows = [...state.dmg.values()].filter(e => e.side === 'party').sort((a, b) => b[f].total - a[f].total);   // 영웅만 (ADR-0149) — 상대 장부는 두 팀 판의 몫
     const sum = rows.reduce((a, e) => a + e[f].total, 0);
     const max = rows[0]?.[f].total || 1;
     box.innerHTML = rows.length ? rows.map(e => `
@@ -1162,6 +1223,59 @@ function renderDmg(state, root) {
             <div class="dmg-sks">${(f === 'dealt' ? dmgLines(e) : [...e.taken.by.entries()]).map(([id, v]) => `
                 <div class="dmg-sk"><i class="dmg-ico">${f === 'dealt' ? dmgIcon(id) : foeIcon(id, state.units.get(id)?.hero)}</i><span class="dmg-skn">${f === 'dealt' ? dmgName(id) : L(state.units.get(id)?.name ?? monsterName(id))}</span><span class="dmg-skv">${v.toLocaleString()}</span></div>`).join('')}</div>
         </div></div>`).join('') : `<div class="dmg-row"><span class="muted">—</span></div>`;
+}
+/** 두 팀 누적 데미지 판 [2026-10-24 · SCREEN_DESIGN §1 「판」 · ADR-0769] — 결투 관전 아래 칸(`teamPane`). **왼쪽 우리 팀 · 오른쪽 상대 팀**.
+    판 머리 = 팀 이름(아래 선 · ADR-0771) · 오른쪽 판 머리 끝에 보기 버튼 [요약] · [스킬별] — 두 판을 함께 바꾼다(취향 — 앱의 화면 상태 · ADR-0772).
+    요약 = 줄 = 유닛 하나(초상 · 이름 · 가한 피해 · 받은 피해 — 막대 + 수 · 머리에 열 이름). 막대 길이는 **두 팀 모든 유닛 중 최대**가 기준이다(팀끼리 비교된다).
+    스킬별 = 유닛이 **가로로 한 명씩** · 유닛 머리(초상 · 이름 · 가한 · 받은 합) 아래에 스킬마다 가한 피해 한 줄(`teamLines`).
+    순서 = 장부에 든 순서(= 카드 순서 — 숫자가 올라도 자리를 안 바꾼다) · 쓰러진 유닛은 흐리다. 되감는 동안은 안 그린다 */
+function renderTeams(state) {
+    const pane = state.teamPane;
+    if (!pane || state.catchUp) return;
+    const all = [...state.dmg.values()];
+    const cols = state.teamView === 'cols';
+    const max = f => Math.max(1, ...all.map(e => e[f].total));
+    const mx = { dealt: max('dealt'), taken: max('taken') };
+    const n = v => v.toLocaleString();
+    const cell = (g, m) => `<span class="tdm-v">${dmgBar(g, m)}<b>${n(g.total)}</b></span>`;
+    const views = `<span class="segmented tdm-view">${['rows', 'cols'].map(v => `<button class="btn sm${state.teamView === v ? ' on' : ''}" data-tdm="${v}">${t(`bt.tdmView.${v}`)}</button>`).join('')}</span>`;
+    const row = e => `<div class="tdm-row${e.unit.hp <= 0 ? ' fallen' : ''}">${dmgFace(e.unit)}<span class="tdm-n">${L(e.name)}</span>${cell(e.dealt, mx.dealt)}${cell(e.taken, mx.taken)}</div>`;
+    const hero = e => `<div class="tdm-hero${e.unit.hp <= 0 ? ' fallen' : ''}">
+        <div class="tdm-hh">${dmgFace(e.unit)}<span class="tdm-hn"><span class="tdm-n">${L(e.name)}</span>
+            <span class="tdm-ht">${t('bt.dmgf.dealt')} <b>${n(e.dealt.total)}</b> · ${t('bt.dmgf.taken')} <b>${n(e.taken.total)}</b></span></span></div>
+        <div class="tdm-sks">${teamLines(e).map(([id, v]) => `<div class="tdm-sk"><i class="dmg-ico">${dmgIcon(id)}</i><span class="tdm-skn" title="${dmgName(id)}">${dmgName(id)}</span><b>${n(v)}</b></div>`).join('')}</div>
+    </div>`;
+    const team = side => {
+        const rows = all.filter(e => e.side === side);
+        const labels = cols ? '' : `<span class="tdm-col">${t('bt.dmgf.dealt')}</span><span class="tdm-col">${t('bt.dmgf.taken')}</span>`;
+        return `<div class="panel tdm-team ${side}">
+            <div class="tdm-head"><span class="tdm-name">${t(`bt.team.${side}`)}</span>${labels}${side === 'enemy' ? views : ''}</div>
+            ${cols ? `<div class="tdm-cols">${rows.map(hero).join('')}</div>` : `<div class="tdm-rows">${rows.map(row).join('')}</div>`}
+        </div>`;
+    };
+    let box = pane.querySelector(':scope > .tdm');
+    if (!box) {
+        box = document.createElement('div');
+        box.className = 'tdm';
+        pane.appendChild(box);
+        // 보기 버튼 — 판은 걸음마다 새로 지어지므로 누름은 판 밖 상자가 한 번 받는다
+        box.addEventListener('click', ev => {
+            const b = ev.target.closest('[data-tdm]');
+            if (!b || b.dataset.tdm === state.teamView) return;
+            state.teamView = b.dataset.tdm;
+            state.onTeamView?.(state.teamView);   // 취향이라 앱의 화면 상태에 남긴다 — 다음 결투에도 이어진다
+            renderTeams(state);
+        });
+    }
+    box.classList.toggle('cols', cols);
+    box.innerHTML = team('party') + team('enemy');
+}
+/** 스킬별 보기의 줄 — 기본 공격(평타가 없는 마법 무기면 빠진다) → 카드의 스킬 칸 순 → 그 밖에 피해를 낸 것(반사 · 칸에서 빠진 스킬).
+    피해를 안 낸 칸도 0 으로 선다 — 값은 늘 찍는다 (ADR-0772) */
+function teamLines(e) {
+    const ids = [...(e.unit.noBasic ? [] : ['basic']), ...(e.unit.skills ?? []).map(s => s.id)];
+    for (const id of e.dealt.by.keys()) ids.push(id);
+    return [...new Set(ids)].map(id => [id, e.dealt.by.get(id) ?? 0]);
 }
 /** 머리 줄 막대 — 조각 셋을 왼쪽부터 물리 → 마법 → 기타로 쌓는다. 조각 폭 = 그 값 / 파티 안 최대라 합이 곧 막대 길이다 · 올리면 세 값(기타는 있을 때만) */
 function dmgBar(g, max) {
@@ -1202,6 +1316,12 @@ const dmgPop = (ty = null, crit = false) => `dmg${crit ? ' crit' : ''}${ty ? ` d
  */
 /* 팝업 줄 수 — 초상 높이(101px) 안에 줄 높이(CSS `.pop` 의 18px)로 든다. 다 차면 마지막 줄에 겹친다 */
 const POP_ROWS = 4;
+/** 같은 차례 그 스킬의 타격 순번 — `skill` 사건이 0 으로 되돌리고 그 스킬의 `hit` · `dodge` 마다 하나씩 센다(사건을 셀 뿐이다 · ADR-0778).
+ *  스킬이 아닌 타격 · 다른 차례의 타격은 0 */
+function hitIndex(a, ev) {
+    return a && ev.s && a.skillT === ev.t && a.skillS === ev.s ? a.skillN++ : 0;
+}
+
 function popup(state, u, text, cls) {
     if (!u?.node || state.catchUp) return;   // 되감기 중에는 팝업을 띄우지 않는다
     const layer = u.node.querySelector('.pop-layer');
@@ -1440,7 +1560,7 @@ function step(state, root, opts) {
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
     for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
     scrollLog(state, root);   // 이 걸음에 붙은 줄이 몇이든 목록은 한 번만 맞춘다
-    if (state.dmgDirty) { state.dmgDirty = false; renderDmg(state, root); }   // 누적 판도 한 번 (숨어 있으면 `renderDmg` 가 그냥 지나간다)
+    if (state.dmgDirty) { state.dmgDirty = false; renderDmg(state, root); renderTeams(state); }   // 누적 판도 한 번 (숨어 있으면 `renderDmg` 가 그냥 지나간다) · 두 팀 판도 (ADR-0769)
 }
 
 /** 박자가 지난 사건(`pace.i` 앞)을 전부 적용하고 세운 행동을 그린다 — 언제 서나는 박자가 정했다(라운드 숨 동안은 다음 `round` 가 안 지났고 ① 동안은 그 행동이 안 지났다) */
@@ -1473,6 +1593,8 @@ const unitSkillCtx = (u, combatOf = null) => ({
  *  @param at 그 카드가 선 시각 — 행동 게이지의 기준 · 스킬 칸의 첫 준비 시각 */
 const enemyEntry = (e, at) => ({
     key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
+    eliteTraits: TRAIT_DEMO ? demoEliteTraits(e) : eliteTraitView(e.traits),   // 카드 위 특성 칩 (ADR-0768) — 로직이 굴린 칸 · 개발용 `&traits=` 면 예시로 덮는다
+
     hero: e.hero ?? null, cls: e.hero?.cls,
     // 게이지는 등장 지연 뒤 빈 채로 찬다 — 시뮬이 실어 온 `fillAt` (R200 · ADR-0483) · 마법 무기의 칸은 0 에서
     name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: e.fillAt ?? at, charges: 0, node: null,
@@ -1500,6 +1622,7 @@ function apply(state, root, opts, ev) {
             for (const e of state.enemies) state.units.delete(e.key);
             state.enemies = ev.enemies.map(e => enemyEntry(e, ev.t));
             for (const e of state.enemies) state.units.set(e.key, e);
+            if (state.teamPane) { for (const e of state.enemies) dmgEntry(state, e); state.dmgDirty = true; }   // 두 팀 판 — 상대도 0 부터 찍는다 (ADR-0769)
             // 전투 시작 시 행동 게이지(R303) — 원정의 라운드가 바뀌면 파티 게이지가 그 초만큼 앞당겨진다. 시뮬이 실어 온 값을 그대로 민다(계산하지 않는다)
             for (const [k, s] of Object.entries(ev.pg ?? {})) { const u = state.units.get(k); if (u) u.lastAct -= s; }
             // 물약 칸 다시 채우기 — 시뮬이 실어 온 칸(`pots`)으로 갈아 끼운다 · 빈 칸(`null`)은 이 라운드를 물약 없이 시작한 칸이다 (R315 · ADR-0716)
@@ -1543,7 +1666,7 @@ function apply(state, root, opts, ev) {
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
             const u = U(ev.u);
-            if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); u.skillT = ev.t; }   // 시각을 적어 둔다 — 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564)
+            if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); u.skillT = ev.t; u.skillS = ev.s; u.skillN = 0; }   // 시각을 적어 둔다 — 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564) · 그 스킬의 타격 순번은 0 부터 (ADR-0778)
             // 정신 집중을 열었다 — 이 차례가 첫 방 (R318 · ADR-0720) · `iv` = 계속 닳기의 방 사이 간격(없으면 끊어 치기 — 주기)
             if (u && ev.chan) u.chan = { s: ev.s, n: ev.chan, left: ev.chan - 1, at: ev.t, iv: ev.iv ?? null };
             break;
@@ -1580,7 +1703,8 @@ function apply(state, root, opts, ev) {
             }
             // 스킬 이펙트는 스킬마다 다른 생김새(ADR-0511) · 피격 반응은 모든 타격(켜져 있을 때) · 기본 공격 · 반격은 대각선 베기 한 줄 (ADR-0409 · ADR-0410 · ADR-0505)
             //   같은 공격자가 같은 시각에 스킬을 냈으면(한 차례 = 스킬 뒤 기본 공격 · R218) 그 기본 공격은 베기를 안 띄운다 (ADR-0564)
-            fxHit(state, a, d, ev, !ev.s && a?.skillT === ev.t);
+            //   단일 다단은 타격마다 한 박자 · 한 조각 — 같은 차례 그 스킬의 타격 순번을 넘긴다(대상이 바뀌어도 이어 센다 · ADR-0778)
+            fxHit(state, a, d, ev, !ev.s && a?.skillT === ev.t, hitIndex(a, ev));
             if (a && d) {
                 // 모든 타격을 적는다 — 공격자 · 스킬 그림 · 대상 · 피해 (ADR-0189)
                 // 피해 숫자는 **피해 종류 색**(`ty` — 시뮬이 싣는다) · 치명은 로그에 따로 표시하지 않는다 (ADR-0150)
@@ -1624,6 +1748,7 @@ function apply(state, root, opts, ev) {
             const skill = strikeLabel(ev.s);
             if (a) markActed(a, ev.t);
             if (d) popup(state, d, t('pop.dodge'), 'miss');
+            hitIndex(a, ev);       // 빗나간 타격도 순번을 먹는다 — 그 조각 자리만 빈다 (ADR-0778)
             fxMiss(state, a, d);   // 피격 반응 (ADR-0410)
             if (a && d) logLine(state, root, a.side, 'miss', L(a.name), dmgIcon(ev.s ?? 'basic'), skill, L(d.name), t('log.v.miss'));
             break;
@@ -1699,6 +1824,11 @@ function apply(state, root, opts, ev) {
         case 'regen': {   // HP 재생 · 처치 시 체력 회복(R299) — 조용히 오른다(팝업 없음). 재생은 정수 1 이상 쌓인 틱에만 온다
             const u = U(ev.u);
             if (u) { u.hp = ev.dhp; refreshUnit(state, u); }
+            break;
+        }
+        case 'pay': {     // HP 소모 — 스킬을 쓰며 낸 HP(차지 · R355). 피해가 아니라 작고 흐린 숫자만 · 로그 · 피격 반응은 없다 (ADR-0781)
+            const u = U(ev.u);
+            if (u) { u.hp = ev.dhp; popup(state, u, `-${ev.amt}`, 'pay'); refreshUnit(state, u); }
             break;
         }
         case 'buff': {   // 창 적용 · 갱신. 배리어면 총량(amt)도, 최대 HP 를 민 창이면 새 최대치(hpMax·dhp)도 온다
@@ -1824,8 +1954,10 @@ function showResult(state, root, opts, won) {
         // 세는 초 = 다음 런이 나가는 시각까지 남은 초 — 그 시각(끝난 순간 + [balance.csv:repeat_restart_sec])은 앱이 준다(`game.nextRepeat` · ADR-0300).
         //   끝난 뒤에 관전을 다시 열었으면 이미 흐른 만큼 덜 센다 — 출발 시각은 세기가 아니라 그 답이 정한다
         const next = D.stages[nx.stageId];
-        const key = waiting ? 'bt.respawnWait' : nx.stageId === opts.stageId ? 'bt.again' : 'bt.nextCell';
-        const name = next ? `Ch${next.chapter}-${next.stage_num} ${L(stageName(next))}` : '';
+        // 바퀴를 넘는 다음 런 — 단이 바뀌면 칸 이름 앞에 그 단 이름이 선다 · 같은 단이면 안 붙인다 (SCREEN_DESIGN §4-2 「결과 띠」 · ADR-0779)
+        const climb = opts.difficulty != null && nx.difficulty != null && nx.difficulty !== opts.difficulty && D.difficulties[nx.difficulty];
+        const key = waiting ? 'bt.respawnWait' : nx.stageId === opts.stageId && !climb ? 'bt.again' : 'bt.nextCell';
+        const name = next ? `${climb ? `${L(climb.name)} ` : ''}Ch${next.chapter}-${next.stage_num} ${L(stageName(next))}` : '';
         let left = Math.max(0, Math.ceil((nx.at - opts.now()) / 1000)), beat = opts.now();
         const tick = () => {
             // 멈췄다 깨어났으면 다음 런을 세우지 않는다 — 꺼져 있던 것이다. 마무리는 앱 시계가 한다 (ADR-0102)

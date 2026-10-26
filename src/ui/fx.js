@@ -510,6 +510,21 @@ export function fxPreloadSkills(ids) {
 function skillStamp(L, s, kind, x) {
     const def = styled(SKILL_ART[s]?.[kind], artStyle);
     if (!def?.file || !skillArt.has(def.file)) return false;
+    // 다단 — k 번째 타격은 k × `beat` 늦게 · 그림의 k 번째 조각만 (더블스윙 「\」 → 「/」 · 래피드 샷 한 발씩 · ADR-0778).
+    //   `jitter` 가 있으면 조각을 무작위로 고르고 각도 · 자리를 흔든다(러시 — 한 대씩 이곳저곳 · ADR-0780). 씨앗은 사건마다라 다시 재생해도 같다.
+    //   순번이 없으면(도감 미리보기) 조각을 차례로 다 띄운다 — `preview` 가 있으면 그 수만큼
+    if (def.parts) {
+        const j = def.jitter;
+        const ks = x.k == null ? [...Array(def.preview ?? def.parts.length).keys()] : [x.k];
+        for (const k of ks) {
+            const sd = x.sd + k;
+            const part = j ? { ...def.parts[Math.floor(rnd(sd, 74) * def.parts.length)],
+                rot: deg((rnd(sd, 71) - 0.5) * j.r), jx: px((rnd(sd, 72) - 0.5) * j.x), jy: px((rnd(sd, 73) - 0.5) * j.y) }
+                : def.parts[k % def.parts.length];
+            stampArt(L, s, def, x.crit, k * (def.beat ?? 0), part);
+        }
+        return true;
+    }
     // 이어 서는 그림(`then`)은 앞 그림이 끝나는 때에 선다 — 아이스 블라스트의 떨어짐 → 깨짐 (ADR-0541)
     for (let d = def, dl = 0; d && skillArt.has(d.file); dl += d.duration, d = d.then) stampArt(L, s, d, x.crit, dl);
     // 강화 · 회복 그림엔 코드의 훑어 오름(그 스킬 색의 띠가 카드를 아래에서 위로)이 늘 같이 선다 — 색은 그 스킬 코드 조합의 훑음 색 · 없으면 첫 조각 색 (ADR-0551)
@@ -521,13 +536,15 @@ function skillStamp(L, s, kind, x) {
     if (def.quake) PIECES.quake(L, { dl: def.then && skillArt.has(def.then.file) ? def.duration : 0 }, x);
     return true;
 }
-/** 그림 한 장 — `ay` 는 그림에서 초상 가운데에 닿는 높이(0 = 위 끝 · 1 = 아래 끝 · 없으면 가운데) · `dl` 은 늦춤(배속을 탄다) */
-function stampArt(L, s, def, crit, dl) {
+/** 그림 한 장 — `ay` 는 그림에서 초상 가운데에 닿는 높이(0 = 위 끝 · 1 = 아래 끝 · 없으면 가운데) · `dl` 은 늦춤(배속을 탄다) ·
+ *  `part` 는 단일 다단의 조각 하나가 다는 인라인 변수(띠 · 들어오는 방향 — ADR-0778) */
+function stampArt(L, s, def, crit, dl, part = null) {
     const size = def.fit === 'portrait' ? parseFloat(L.style.getPropertyValue('--sw')) || def.size : def.size;
     const im = spawn(L, `fx-skill-stamp fx-skill-${def.motion}${crit ? ' crit' : ''}`, {
         sz: px(size), t: ms(def.duration),
         ...(def.ay != null && { oy: px((.5 - def.ay) * size) }),
         ...(dl && { dl: ms(dl) }),
+        ...part,
     }, 'img');
     im.alt = '';
     im.draggable = false;
@@ -546,15 +563,15 @@ function stamp(L, kind, sd, crit) {
     return true;
 }
 
-/** 스킬 타격 — 준비된 스킬 이미지 → 스킬 코드 조합 → 피해 종류 모양. 종류 없는 피해(자폭)는 `blast` */
-function impact(state, d, ty, crit, s) {
+/** 스킬 타격 — 준비된 스킬 이미지 → 스킬 코드 조합 → 피해 종류 모양. 종류 없는 피해(자폭)는 `blast` · `k` = 같은 차례 그 스킬의 타격 순번(ADR-0778) */
+function impact(state, d, ty, crit, s, k) {
     if (!fxShown(state, 'skill') || !live(state, d)) return;
     prep(state, d);
     const L = layerOf(d);
     if (L.childElementCount > FX_CAP) return;
     const sd = seedOf(state, d), look = SKILL_LOOKS[s]?.hit;
     asSkill(L, () => {
-        if (skillStamp(L, s, 'hit', { sd, crit, d })) return;
+        if (skillStamp(L, s, 'hit', { sd, crit, d, k })) return;
         if (look) return playLook(L, look, { sd, crit, d });
         if (!stamp(L, ty ?? 'blast', sd, crit)) (SHAPES[ty] ?? ring)(L, sd, crit);
     });
@@ -563,11 +580,12 @@ function impact(state, d, ty, crit, s) {
 /* ═══ 재생기가 부르는 자리 — 사건 하나에 하나 ═══ */
 
 /** 타격(`hit`) — 피격 반응은 모든 타격(켜져 있을 때) · 스킬 이펙트는 스킬(`s`)만 — 그 스킬의 생김새(ADR-0511) · 그 밖(기본 공격 · 반격)은 대각선 베기 한 줄(ADR-0505).
- *  afterSkill = 스킬을 쓴 차례에 이어진 기본 공격이다(재생기가 같은 시각을 본다) — 베기를 안 띄운다(스킬 이펙트와 겹치지 않게 · ADR-0564) */
-export function fxHit(state, a, d, ev, afterSkill = false) {
+ *  afterSkill = 스킬을 쓴 차례에 이어진 기본 공격이다(재생기가 같은 시각을 본다) — 베기를 안 띄운다(스킬 이펙트와 겹치지 않게 · ADR-0564) ·
+ *  k = 같은 차례 그 스킬의 타격 순번(재생기가 센다 · 없으면 미리보기 — 단일 다단의 박자 · 조각 · ADR-0778) */
+export function fxHit(state, a, d, ev, afterSkill = false, k) {
     lunge(state, a);
     struck(state, d, ev.crit);
-    if (ev.s) impact(state, d, ev.ty, ev.crit, ev.s);
+    if (ev.s) impact(state, d, ev.ty, ev.crit, ev.s, k);
     else if (!afterSkill) swing(state, d, ev.crit);
 }
 /** 반사(`reflect`) — 비직격 · 스킬이 아니다. 맞은 카드만 흔들린다(친 쪽이 튀어나가지 않는다 — 되받아 친 것이다) */

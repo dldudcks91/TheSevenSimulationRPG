@@ -130,7 +130,9 @@ render()
 | Firebase JS SDK (gstatic CDN — `app` · `auth` · `firestore-lite`) + Firebase Authentication(**익명**) · Firestore | `ui/cloud.js` · `ui/firebase_config.js` | 배포 주소에서만 첫 올리기 때 동적 import — **게임은 기다리지 않는다**(실패해도 그대로 돈다). 진행 요약 `players/<uid>` + 세이브 사본 `saves/<uid>` 를 한 방향으로 · 보안 규칙은 「자기 문서만 쓴다 · 관리자 uid 만 남의 것을 읽는다」 (SCREEN_DESIGN §2-1 · 규칙 본문은 `src/dev/README.md` 「퍼널」). 관리자 페이지 `dev/funnel.html` 만 Google 로그인을 쓴다 |
 | Python `http.server` | `serve.py` (← `start.bat`) | ES Modules 가 `file://` 에서 막혀서. `serve.py` 는 그걸 얇게 감싸 **`Cache-Control: no-cache` + ETag**(수정 시각 + 크기)만 더한다 — 같은 파일명으로 아트를 갈아끼우면 브라우저 휴리스틱 캐시가 옛 그림을 계속 쓴다. 쓸 때마다 재검증하고 안 바뀐 파일은 304 (2026-09-24 · 옛 `no-store` 는 다시 그릴 때마다 그림을 본문째 다시 받았다) |
 
-패키지 매니저·빌드 도구·프레임워크 없음.
+| GitHub Pages · GitHub Actions | `.github/workflows/pages.yml` · `scripts/build_deploy.py` | 배포판 — `main` 에 푸시하면 주석을 뗀 사본을 지어 올린다(§11) |
+
+패키지 매니저·빌드 도구·프레임워크 없음 — **개발은 저장소를 그대로 돌린다.** 배포판만 주석을 떼는 한 단계(Python 표준 라이브러리)를 지난다(§11).
 
 ---
 
@@ -150,7 +152,7 @@ render()
 | `nm()` · `eliteName()` | **`game_logic/naming.js`** — 어순·조사가 규칙이라 CSV 가 아니라 이식 대상 코드다 (08-31) |
 | `STATS` · `COMBAT_STATS` · `CODEX_*` · 이름·얼굴 | `hero_attribute` · `combat_stat` · `codex_level` · `codex_series` · `chapter` · `monster`/`stage` 의 `_kr`/`_en` (08-28) |
 
-**남은 것은 셋** — `SINS` · `SIN_TRAITS` · `COMMON_TRAITS`. 전부 **죄종 매핑 확정**(`sin_mapping.md` — GAME_DESIGN §10 첫 SSOT 과제)에 막혀 있다. `SINS` 는 표시명 외에 `adj`(영문 형용사)를 들고 있고 `naming.js` 가 그것을 읽으므로, 죄종 CSV 가 생길 때 그 컬럼이 따라와야 한다.
+**남은 것은 셋** — `SINS` · `ELITE_TRAIT_STAT` · `ELITE_TRAIT_DEF`. `SINS` 는 **죄종 매핑 확정**(`sin_mapping.md` — GAME_DESIGN §10 첫 SSOT 과제)에, 정예 특성 칸 둘(능력치 · 방어 — 2026-10-24 옛 `SIN_TRAITS` · `COMMON_TRAITS` 대체 · R344)은 **값**(GAME_DESIGN §10 「정예 특성의 남은 칸」)에 막혀 있다. `SINS` 는 표시명 외에 `adj`(영문 형용사)를 들고 있고 `naming.js` 가 그것을 읽으므로, 죄종 CSV 가 생길 때 그 컬럼이 따라와야 한다.
 
 목록은 [INTERFACE.md §7](INTERFACE.md#7-데이터-계약--무엇이-어디서-오는가), 일정은 [DEV_PLAN.md](DEV_PLAN.md).
 
@@ -174,4 +176,25 @@ render()
 
 ---
 
-*마지막 업데이트: 2026-10-23*
+## 11. 배포판 — 개발 환경과 무엇이 다른가
+
+| | 개발 환경 | 배포판 |
+|---|---|---|
+| 주소 | `localhost` · `127.0.0.1` · `[::1]` (`start.bat` · `serve.py`) | 그 밖 전부 — GitHub Pages |
+| 개발 장치 · 개발용 URL | 선다 · 먹는다 | 안 선다 · 무시한다(보기 설정 `?lang` · `?face` · `?bg` · `?focus` 만) |
+| 관전 배속 | ×1 · ×2 · ×4 · ×16 | ×1 · ×2 (`ui/battle.js:speedsFor` · ADR-0755) |
+| 플레이 기록 | 안 올린다 | 올린다 (SCREEN_DESIGN §2-1) |
+| 파일 | 저장소 그대로 — 빌드 없음 | `scripts/build_deploy.py` 가 지은 사본 |
+
+판정은 `ui/env.js:DEV_HOST` 하나다 — 개발 장치 · 개발용 URL · 플레이 기록이 같은 값을 읽는다. 모르는 주소는 배포판으로 친다 (SCREEN_DESIGN §10 머리 · ADR-0751).
+
+**배포 사본** — `main` 에 푸시하면 `.github/workflows/pages.yml` 이 아트 원본을 뺀 경로만 받아 `python3 scripts/build_deploy.py _site` 로 사본을 짓고 Pages 에 올린다.
+
+- **담는 것은 게임이 읽는 파일뿐이다** — 루트 `index.html` · `src/index.html` · `src/ui` · `src/game_logic` · `src/data/*.csv` · 설치된 아트(`source/` · `*_source/` 원본 제외) · `src/dev/funnel.*`(관리자 퍼널). 문서 · 계획 · 테스트 페이지 · 아트 원본은 안 올린다
+- **JS · CSS · HTML 의 주석을 뗀다** — 이름 · 문자열 · 템플릿 · 정규식은 바이트 그대로이고 줄 밖 공백만 정리한다. CSV 는 그대로다(CLAUDE.md 규칙 4). 파일마다 「주석을 뺀 토큰 열이 원본과 같다 · 괄호 짝이 맞는다」를 스스로 검사하고 어긋나면 빌드가 멈춘다
+- **사본을 검증하는 법** — `--with-dev` 로 테스트 페이지까지 지어 그 사본에서 `dev/test.html` 을 돌린다. 결과가 원본과 같아야 한다(명령은 스크립트 머리)
+- ⚠ 이 길은 저장소 Settings → Pages → Source 가 「GitHub Actions」일 때 선다. 「Deploy from a branch」인 동안은 저장소를 통째로 내보내는 옛 배포가 돈다
+
+---
+
+*마지막 업데이트: 2026-10-24*

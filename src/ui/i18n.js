@@ -50,15 +50,18 @@ export function applyDocumentLang() {
 export const L = v =>
     v == null ? '' : (typeof v === 'string' ? v : (v[current] ?? v.ko ?? ''));
 
-/** UI 문구 조회 — 미등록 키는 키 그대로 노출된다 (누락이 화면에서 바로 보이게) */
 /** 그 키가 사전에 있는가 — 어휘가 데이터에서 오는 자리(마스터리 효과 `app.js`)가 제 문구가 있는지 고를 때 쓴다 */
 export const has = key => Object.prototype.hasOwnProperty.call(STRINGS, key);
 /** 잠김 문구인가 — 항목에 `lock: true` 면 플래시가 글 앞에 자물쇠를 세운다 (SCREEN_DESIGN §13-1 · ADR-0699) */
 export const isLock = key => STRINGS[key]?.lock === true;
 
+/** 미등록 키를 화면 글로 낼 때 — 문구는 `innerHTML` 로 들어가므로 키에 든 태그 글자를 글자로 바꾼다 (ADR-0751) */
+const escapeKey = key => String(key).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+/** UI 문구 조회 — 미등록 키는 키 그대로 노출된다(누락이 화면에서 바로 보이게 · HTML 글자는 이스케이프) */
 export function t(key, params) {
-    const e = STRINGS[key];
-    let s = e ? (e[current] ?? e.ko) : key;
+    const e = has(key) ? STRINGS[key] : null;
+    let s = e ? (e[current] ?? e.ko) : escapeKey(key);
     // 단수 · 복수 — 값이 `{one, other}` 면 수가 1 일 때 `one` [2026-10-17 · 「1 items」] · 수는 `{n}`, 없으면 `{v}` (천 단위 쉼표를 단 문자열도 받는다)
     if (s && typeof s === 'object') s = Number(String(params?.n ?? params?.v ?? '').replaceAll(',', '')) === 1 ? s.one : s.other;
     if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, v);
@@ -301,9 +304,9 @@ const STRINGS = {
     },
     'exp.repeat.sub': {
         ko: '원정은 <b>멈추지 않습니다</b> — 런이 끝나면 곧 다음 런이 나가고, 멈추는 길은 <b>철수</b>와 <b>게임 끄기</b> 둘뿐입니다 · <b>게임이 켜져 있는 동안만</b> 돕니다<br>'
-            + '이기면 다음 칸 · 지면(전원 전투불능 · 제한시간 초과) 같은 칸을 다시 돕니다 · <b>반복을 켜면</b> 그 장소의 칸 I → II → III → I 을 돌고, <b>끄면</b> 순서의 다음 칸으로 나아갑니다(다음 칸이 잠겼으면 같은 칸) · 칸마다 새 런이라 전원 회복한 채 나갑니다',
+            + '이기면 다음 칸 · 지면(전원 전투불능 · 제한시간 초과) 같은 칸을 다시 돕니다 · <b>반복을 켜면</b> 그 장소의 칸 I → II → III → I 을 돌고, <b>끄면</b> 순서의 다음 칸으로 나아갑니다(다음 칸이 잠겼으면 같은 칸 · 다음 난이도를 여는 보스를 이기면 다음 난이도의 1-1) · 칸마다 새 런이라 전원 회복한 채 나갑니다',
         en: 'Expeditions <b>never stop on their own</b> — when a run ends the next one heads out shortly; only <b>Retreat</b> or <b>closing the game</b> stops them · they run <b>only while the game is open</b><br>'
-            + 'A win moves on to the next stage · a loss (whole party downed · timed out) runs the same stage again · <b>with repeat on</b> the party loops through the area\'s stages I → II → III → I; <b>with it off</b> it moves on to the next stage in order (the same stage again if the next is locked) · every stage is a new run, so everyone heads out recovered',
+            + 'A win moves on to the next stage · a loss (whole party downed · timed out) runs the same stage again · <b>with repeat on</b> the party loops through the area\'s stages I → II → III → I; <b>with it off</b> it moves on to the next stage in order (the same stage again if the next is locked · beating the boss that unlocks the next difficulty moves on to that difficulty\'s 1-1) · every stage is a new run, so everyone heads out recovered',
     },
     'exp.notice.runClosed.h': { ko: '부재 중', en: 'While you were away' },
     'exp.notice.runClosed.body': {
@@ -337,14 +340,23 @@ const STRINGS = {
     'ch.menu.lock': { ko: '잠금', en: 'Lock' },
     'ch.menu.unlock': { ko: '잠금 해제', en: 'Unlock' },
     'ch.menu.open': { ko: '사용', en: 'Use' },   // 상자 칸에만 서는 버튼 — 상자를 여는 유일한 길(칸 클릭은 안 연다 · ADR-0733)
-    // 첫 클리어 상자 칸 · 툴팁 · 여는 플래시 (SCREEN_DESIGN §6 · ADR-0731 · R328)
-    'box.name': { ko: '첫 클리어 상자', en: 'First Clear Chest' },
-    'box.from': { ko: '{stage} · {diff}', en: '{stage} · {diff}' },
+    // 첫 클리어 상자 칸 · 툴팁 · 까는 플래시 (SCREEN_DESIGN §6 · ADR-0731 · ADR-0742 · R328 · R333)
+    'box.weapon': { ko: '무기 상자', en: 'Weapon Chest' },
+    'box.armor': { ko: '방어구 상자', en: 'Armor Chest' },
+    'box.part.weapon': { ko: '무기', en: 'Weapon' },
+    'box.part.armor': { ko: '방어구', en: 'Armor' },
+    // 상자 등급 — 이름 앞 낱말 · 툴팁의 희귀도 줄 (base_expedition_design §1-6 「등급」 · ADR-0776 · R349)
+    'box.named': { ko: '{tier} {box}', en: '{tier} {box}' },
+    'box.tier.low': { ko: '하급', en: 'Low-Grade' },
+    'box.tier.mid': { ko: '중급', en: 'Mid-Grade' },
+    'box.tier.high': { ko: '고급', en: 'High-Grade' },
+    'box.rarity': { ko: '{lo} ~ {hi}', en: '{lo} – {hi}' },
+    'box.for': { ko: '{hero}에게 맞는 Lv {lv} {part}', en: '{part} for {hero} · Lv {lv}' },
     'box.opened': { ko: '상자 개봉 — {name}', en: 'Chest opened — {name}' },
     // 우편함 — 상단바 편지봉투 · 창 (SCREEN_DESIGN §2 「상단바」 · ADR-0732 · R328)
     'mail.h': { ko: '우편함', en: 'Mailbox' },
-    'mail.none': { ko: '우편 없음', en: 'No mail' },
-    'mail.row': { ko: '{stage} · {diff} — 첫 클리어 상자', en: '{stage} · {diff} — First Clear Chest' },
+    'mail.from': { ko: '{stage} · {diff} 첫 클리어', en: '{stage} · {diff} First Clear' },   // 우편 카드의 둘째 줄 — 어디서 받았나 (ADR-0748)
+    'mail.count': { ko: '우편 {n}통', en: 'Mail {n}' },
     'mail.claim': { ko: '받기', en: 'Claim' },
     'mail.claimAll': { ko: '모두 받기', en: 'Claim All' },
     'mail.claimed': { ko: '우편 {n}통 수령', en: 'Claimed {n} mail' },
@@ -412,15 +424,15 @@ const STRINGS = {
     'ch.err.bagFull': { ko: '인벤토리 가득 참', en: 'Inventory is full' },
     'ch.err.stashFull': { ko: '창고 가득 참', en: 'Stash is full' },
     'ch.err.missing': { ko: '아이템을 찾을 수 없음', en: 'Item not found' },
-    'ch.err.sealed': { ko: '열지 않은 상자', en: 'Open the chest first' },   // 봉인된 첫 클리어 상자 — 장착 · 분해 · 강화 거절 (R328)
+    'ch.err.sealed': { ko: '열지 않은 상자', en: 'Open the chest first' },   // 첫 클리어 상자 칸 — 장착 · 분해 · 강화 거절 (R328)
     // 결과 플래시 — 문장을 조각내 잇지 않는다. 건너뛴 것이 있으면 키째 다른 줄을 쓴다
     'ch.sel.salvaged': { ko: '{n}개 분해 → 가루 +{d}', en: 'Salvaged {n} → dust +{d}' },
     // ~~'ch.sel.salvagedSkip'~~ · ~~'ch.sel.allLocked'~~ 는 2026-10-20 삭제 — 잠긴 것은 분해함에 안 올라가 건너뛸 일이 없다 (ADR-0673)
     // 툴팁이 걷은 강화 규칙 문구가 앉는 자리다 (SCREEN_DESIGN §6 개정 2026-09-08 — 조건·규칙 주석은 도움말의 몫).
-    // ⚠ 「강화 모드」는 09-03 에 폐기됐는데 문구만 남아 있었다 — 없는 토글을 찾게 만든다. 자리는 제련소(§8-2).
+    // ⚠ 「강화 모드」는 09-03 에 폐기됐는데 문구만 남아 있었다 — 없는 토글을 찾게 만든다. 자리는 대장간(§8-2).
     // 2026-09-15 — 옵션 계단이 퇴역해(R95) 「{n}강마다 옵션」을 걷고 목걸이 · 반지의 강화 없음을 넣었다 (ADR-0125)
-    'ch.upgradeHint': { ko: '강화는 제련소에서 합니다 — 골드로 한 단계씩 베이스 능력치를 올립니다. 목걸이 · 반지는 강화하지 않습니다',
-        en: 'Upgrading happens at the Smeltery — one step at a time for gold, raising the base stat. Amulets and rings cannot be upgraded' },
+    'ch.upgradeHint': { ko: '강화는 대장간에서 합니다 — 골드로 한 단계씩 베이스 능력치를 올립니다. 목걸이 · 반지는 강화하지 않습니다',
+        en: 'Upgrading happens at the Blacksmith — one step at a time for gold, raising the base stat. Amulets and rings cannot be upgraded' },
     'ch.err.maxUp': { ko: '더 이상 강화할 수 없음', en: 'Already fully upgraded' },
     'ch.err.noBase': { ko: '베이스 능력치가 없어 강화할 수 없음', en: 'Nothing to upgrade — this item has no base stat' },
     /* 해고 (SCREEN_DESIGN §6 · 2026-09-09) — 창 하나가 세 상태를 든다: 막힘(장비) · 막힘(마지막) · 확인.
@@ -497,8 +509,8 @@ const STRINGS = {
     'rep.shrine': { ko: '신단', en: 'Shrine' },
     // 처음 깬 런의 요약 칸 — 상자가 어디로 갔나 (SCREEN_DESIGN §4-3 · ADR-0731)
     'rep.clearBox': { ko: '클리어 보상', en: 'Clear Reward' },
-    'rep.clearBoxBag': { ko: '상자 · 인벤토리', en: 'Chest · Inventory' },
-    'rep.clearBoxMail': { ko: '상자 · 우편함', en: 'Chest · Mailbox' },
+    'rep.clearBoxBag': { ko: '{box} · 인벤토리', en: '{box} · Inventory' },
+    'rep.clearBoxMail': { ko: '{box} · 우편함', en: '{box} · Mailbox' },
     'shrine.fx.atk_pct': { ko: '데미지 +{v}%', en: 'Damage +{v}%' },
     'shrine.fx.cooldown_reduction': { ko: '쿨타임 감소 {v}%', en: 'Cooldown Reduction {v}%' },
     'shrine.fx.life_steal': { ko: '흡혈 {v}%', en: 'Life Steal {v}%' },
@@ -512,24 +524,24 @@ const STRINGS = {
 
     /* [개정 2026-10-18 사용자 지시 · ADR-0660] 탐험은 원정 바로 아래 · 자원은 마을 맨 아래 — 파견 묶음(`nav.grp.dispatch`)은 걷혔다.
        탭 13 [개정 2026-10-09 사용자 지시 · ADR-0567] — 훈련장이 빠졌다 · 순서와 묶음은 `app.js:NAV_GROUPS` 가 든다 (SCREEN_DESIGN §1).
-       [개정 2026-09-24 사용자 지시 · ADR-0348] 탭 12 — 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 제련소 · 훈련장 · 자원 · 탐험 · 도감 · 도움말.
-       [개정 2026-09-21 사용자 지시 · ADR-0253] 탭 11 — 원정 · 편성 · 캐릭터 · 건설 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 도감 · 도움말.
+       [개정 2026-09-24 사용자 지시 · ADR-0348] 탭 12 — 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 대장간 · 훈련장 · 자원 · 탐험 · 도감 · 도움말.
+       [개정 2026-09-21 사용자 지시 · ADR-0253] 탭 11 — 원정 · 편성 · 캐릭터 · 건설 · 대장간 · 선술집 · 상점 · 자원 · 탐험 · 도감 · 도움말.
        연구가 「건설」이 되어 캐릭터 바로 뒤로 왔다 — 키(`nav.research`)는 옛 이름 그대로다.
-       [개정 2026-09-08 사용자 지시] 탭 10 — 원정 · 캐릭터 · 제련소 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
+       [개정 2026-09-08 사용자 지시] 탭 10 — 원정 · 캐릭터 · 대장간 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
        09-08 에 **이미지 도감이 도감 안으로 들어가며** `nav.imagedex` 가 삭제됐다 — 탭이 아니라 도감의 **세그먼트 넷 중 셋**이다 (`cx.seg.*` · §9 · §9-1).
        그래서 이 목록의 탭 수만 11 → 10 으로 줄고 **움직인 탭은 없다** — 도움말이 한 칸 당겨졌을 뿐이다.
        [개정 2026-09-06 사용자 지시] 탭 11 — 도감 뒤에 이미지 도감이 서던 자리. 09-08 에 되물렸다.
        [개정 2026-09-04 사용자 지시] 탭 10 — 원정 · 캐릭터 · 강화 · 선술집 · 상점 · 자원 · 탐험 · 연구 · 도감 · 도움말.
        마을 탭이 **자원**(1인 배치 — 광산 · 채집)과 **탐험**(파티)으로 갈리면서 `nav.town` 은 삭제됐다.
        `nav.explore` 는 값이 그대로인 채 **파견처 칸 라벨에서 탭 라벨로 승격**됐다 (§8-4) — `nav.tavern` 과 같은 사례다.
-       상점은 탭 이름이 **활동**이고 패널 머리가 **장소**(`dp.post.trade` 상단)다 (§8-3) — 제련소는 [2026-09-21 사용자 지시] 탭 이름도 장소다(`nav.forge` · §8-2 · ADR-0190).
+       상점은 탭 이름이 **활동**이고 패널 머리가 **장소**(`dp.post.trade` 상단)다 (§8-3) — 대장간은 [2026-09-21 사용자 지시] 탭 이름도 장소다(`nav.forge` · §8-2 · ADR-0190).
        nav.commission 은 탭에서 빠졌지만 **지우지 않는다** — 선술집 탭 의뢰 패널의 제목이다 (§8-1 · ADR-0248).
        nav.skill 도 탭이 아니라 **창 제목**이다 (§7). nav.base(거점)는 여전히 유일한 미사용 키다.
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
-    // 콜로세움 [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670] — 결투장 바로 앞 · 오프라인 층 사다리 · 레일(사다리) | 판
-    'nav.colosseum': { ko: '콜로세움', en: 'Colosseum' },
+    // 결투장(탭 id `colosseum`) [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670 · 이름 맞바꿈 2026-10-24 ADR-0760] — 콜로세움 바로 앞 · 오프라인 층 사다리 · 레일(사다리) | 판
+    'nav.colosseum': { ko: '결투장', en: 'Arena' },
     'cs.progress': { ko: '{n} / {total}층', en: 'Floor {n} / {total}' },
     'cs.progressDone': { ko: '{total}층 완주', en: 'All {total} floors cleared' },
     'cs.lv': { ko: 'Lv.{a}~{b}', en: 'Lv.{a}–{b}' },
@@ -537,16 +549,16 @@ const STRINGS = {
     'cs.from': { ko: '{n}층 · {tier} · AI 팀', en: 'Floor {n} · {tier} · AI team' },
     'cs.fromGate': { ko: '{n}층 · {tier} 승급전 · AI 팀', en: 'Floor {n} · {tier} promotion bout · AI team' },
     'cs.fight': { ko: '도전', en: 'Challenge' },
-    'cs.back': { ko: '콜로세움으로', en: 'Back to Colosseum' },
+    'cs.back': { ko: '결투장으로', en: 'Back to Arena' },
     'cs.last': { ko: '지난 도전: {result} · {sec}초', en: 'Last challenge: {result} · {sec}s' },
     'cs.last.open': { ko: '지난 도전: {result} · {sec}초 · {n}층 열림', en: 'Last challenge: {result} · {sec}s · Floor {n} unlocked' },
     'cs.emblem': { ko: '{tier} 휘장 획득', en: '{tier} emblem earned' },
     'cs.help': {
-        ko: '콜로세움은 한 층씩 올라가는 사다리입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 위층일수록 상대의 레벨 · 장비 · 강화 · 스킬이 오릅니다.<br>등급의 마지막 층은 승급전입니다. 이기면 그 등급의 휘장을 얻습니다.',
-        en: 'The Colosseum is a ladder you climb one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. Higher floors bring higher level, gear, upgrades and skills.<br>The last floor of each tier is a promotion bout. Win it to earn that tier’s emblem.',
+        ko: '결투장은 한 층씩 올라가는 사다리입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 위층일수록 상대의 레벨 · 장비 · 강화 · 스킬이 오릅니다.<br>등급의 마지막 층은 승급전입니다. 이기면 그 등급의 휘장을 얻습니다.',
+        en: 'The Arena is a ladder you climb one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. Higher floors bring higher level, gear, upgrades and skills.<br>The last floor of each tier is a promotion bout. Win it to earn that tier’s emblem.',
     },
-    'nav.arena': { ko: '결투장', en: 'Arena' },
-    // 결투장 = 온라인 ELO [2026-10-18 · ADR-0670 — ~~오프라인 | 온라인 갈래~~ ADR-0656] — 리그 카드 · 상대 후보 셋 · 친선전 창 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
+    'nav.arena': { ko: '콜로세움', en: 'Colosseum' },
+    // 콜로세움(탭 id `arena`) = 온라인 ELO [2026-10-18 · ADR-0670 · 이름 맞바꿈 2026-10-24 ADR-0760 — ~~오프라인 | 온라인 갈래~~ ADR-0656] — 리그 카드 · 상대 후보 셋 · 친선전 창 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
     'ar.rating': { ko: '레이팅', en: 'Rating' },
     'ar.peak': { ko: '최고 {n}', en: 'Best {n}' },
     'ar.record': { ko: '{w}승 {d}무 {l}패', en: '{w}W {d}D {l}L' },
@@ -591,8 +603,8 @@ const STRINGS = {
     'ar.bad.option': { ko: '옵션 수치가 범위를 벗어남', en: 'An option value is out of range' },
     'ar.rules': { ko: '결투 규칙', en: 'Duel rules' },
     'ar.help.rating': {
-        ko: '결투장은 레이팅으로 겨룹니다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려갑니다. 레이팅이 문턱을 넘으면 리그가 오릅니다.<br>상대 후보 셋은 내 레이팅의 아래 · 비슷 · 위에서 나옵니다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅입니다. 결투가 끝나면 후보가 새로 섭니다.<br>레이팅은 결투를 시작하는 순간 정해집니다 — 관전을 닫아도 결과는 그대로입니다. 서버가 열리기 전까지 상대는 그 레이팅에 맞춰 갖춘 AI 팀입니다.',
-        en: 'The Arena is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Three opponents are drawn from below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Until the server opens, opponents are AI teams equipped for their rating.',
+        ko: '콜로세움은 레이팅으로 겨룹니다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려갑니다. 레이팅이 문턱을 넘으면 리그가 오릅니다.<br>상대 후보 셋은 내 레이팅의 아래 · 비슷 · 위에서 나옵니다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅입니다. 결투가 끝나면 후보가 새로 섭니다.<br>레이팅은 결투를 시작하는 순간 정해집니다 — 관전을 닫아도 결과는 그대로입니다. 서버가 열리기 전까지 상대는 그 레이팅에 맞춰 갖춘 AI 팀입니다.',
+        en: 'The Colosseum is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Three opponents are drawn from below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Until the server opens, opponents are AI teams equipped for their rating.',
     },
     'ar.help.friendly': {
         ko: '친선전 창에서 코드 만들기로 고른 편성의 세 영웅을 팀 코드로 만듭니다. 다른 사람의 코드를 붙여넣고 불러오면 규칙에 맞는지 검사한 뒤 그 팀이 그대로 상대로 나옵니다. 친선전은 레이팅이 바뀌지 않습니다.',
@@ -605,12 +617,12 @@ const STRINGS = {
     'ar.noOpponent': { ko: '상대를 고르면 팀이 나타납니다', en: 'Pick an opponent to reveal their team' },
     'ar.noTactic': { ko: '열린 전술 칸 없음', en: 'No tactic slots open' },   // Party 판의 전술 칸이 빌 때 (ADR-0495)
     'ar.fight': { ko: '결투 시작', en: 'Start duel' },
-    'ar.back': { ko: '결투장으로', en: 'Back to arena' },
+    'ar.back': { ko: '콜로세움으로', en: 'Back to Colosseum' },
     'ar.draw': { ko: '무승부', en: 'Draw' },
     'ar.last': { ko: '지난 결투: {result} · {sec}초', en: 'Last duel: {result} · {sec}s' },
     'ar.help': {
-        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전합니다. 인원과 진형은 편성 탭에서 수정합니다. 영웅 3명을 채워야 결투를 시작할 수 있습니다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 합니다. 도감 보너스는 적용하지 않고, 상대는 파티 전술·물약이 없습니다. 제한시간이 지나면 무승부입니다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없습니다. 마신 물약도 재고에서 줄지 않습니다. 결투장 레이팅과 콜로세움에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화됩니다.',
-        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents have no tactics or potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Arena rating and Colosseum progress are saved; the picked opponent and last result reset when you reload.',
+        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전합니다. 인원과 진형은 편성 탭에서 수정합니다. 영웅 3명을 채워야 결투를 시작할 수 있습니다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 합니다. 도감 보너스는 적용하지 않고, 상대는 파티 전술·물약이 없습니다. 제한시간이 지나면 무승부입니다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없습니다. 마신 물약도 재고에서 줄지 않습니다. 콜로세움 레이팅과 결투장에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화됩니다.',
+        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents have no tactics or potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Colosseum rating and Arena progress are saved; the picked opponent and last result reset when you reload.',
     },
     'nav.party': { ko: '편성', en: 'Party' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
@@ -618,8 +630,8 @@ const STRINGS = {
     'nav.research': { ko: '건설', en: 'Construction' },
     'nav.tavern': { ko: '선술집', en: 'Tavern' },
     'nav.shop': { ko: '상점', en: 'Shop' },
-    'nav.forge': { ko: '제련소', en: 'Smeltery' },
-    // 도서관 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422 · 이름 2026-10-10 ~~서고~~] — 제련소 뒤 · 건물 이름(`building.csv`)과 같은 말 · ~~`nav.training`~~ 은 2026-10-09 훈련장 탭과 함께 걷혔다(ADR-0567)
+    'nav.forge': { ko: '대장간', en: 'Blacksmith' },
+    // 도서관 [2026-09-29 사용자 지시 · SCREEN_DESIGN §17 · ADR-0422 · 이름 2026-10-10 ~~서고~~] — 대장간 뒤 · 건물 이름(`building.csv`)과 같은 말 · ~~`nav.training`~~ 은 2026-10-09 훈련장 탭과 함께 걷혔다(ADR-0567)
     'nav.library': { ko: '도서관', en: 'Library' },
     'nav.resource': { ko: '연구소', en: 'Laboratory' },   // 건물 이름(`building.csv:resource`)과 같은 말 · 키는 옛 이름 그대로 (2026-10-18 · ADR-0665)
     'nav.codex': { ko: '도감', en: 'Codex' },
@@ -663,15 +675,16 @@ const STRINGS = {
     'set.logText': { ko: '문장', en: 'Text' },
     'set.nick': { ko: '닉네임', en: 'Nickname' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
 
-    /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 **단 3**: 채광 · 채집 · 벌목 (SCREEN_DESIGN §8) ──
+    /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 넷: 자원 · 찾아온 영웅 · 훈련 · 도박장 (SCREEN_DESIGN §8) ──
+       채광 · 채집 · 벌목은 「자원」 줄의 지점이다(`dp.node.mine` · `gather` · `log` — 2026-10-25 · ADR-0788 · R356) · `dp.post.mine` · `gather` · `log` 는 미니게임 창 제목이 쓴다.
        영웅은 앉지 않는다 [2026-10-18 · ADR-0665] — ~~자리 칸의 선택 창 · 회수 · `dp.err.*` · 담당 능력치(`dp.attrTitle`)~~ 를 걷었다.
        `dp.solo` · `dp.party` 는 참조가 0 이지만 **지우지 않는다**: 탐험 탭이 같은 문구를 쓸 수 있다.
-       `dp.post.forge`(제련소) · `dp.post.trade`(상단)는 줄에서 빠졌지만 **지우지 않는다** —
+       `dp.post.forge`(대장간) · `dp.post.trade`(상단)는 줄에서 빠졌지만 **지우지 않는다** —
        `dp.post.forge` 는 연구의 가지 이름(`mock.js` rsBranch)이, `dp.post.trade` 는 상점 탭의 패널 머리가 쓴다(§8-3).
-       ⚠ **`dp.post.mine` 은 값만 「채광」(활동)으로 바뀌고 키는 옛 장소 id 그대로다** [2026-09-04 사용자 지시] —
-       키를 바꾸면 CSV 키(`mine_node.csv`)와 갈리고, 그건 public 이름 변경이라 별도 승인 사항이다 (CLAUDE.md) */
+       ⚠ **`dp.post.mine` 은 값만 「채광」(활동)으로 바뀌고 키는 옛 장소 id 그대로다** [2026-09-04 사용자 지시] — 지점 id(`lab_material.csv:post`)와 같은 글자다 */
+    'dp.post.res': { ko: '자원', en: 'Resources' },
     'dp.post.trade': { ko: '상단', en: 'Trading House' },
-    'dp.post.forge': { ko: '제련소', en: 'Smeltery' },
+    'dp.post.forge': { ko: '대장간', en: 'Blacksmith' },
     'dp.post.mine': { ko: '채광', en: 'Mining' },
     'dp.post.gather': { ko: '채집', en: 'Gathering' },
     'dp.post.log': { ko: '벌목', en: 'Logging' },
@@ -684,10 +697,10 @@ const STRINGS = {
     // 연구소 줄 · 지점 · 연구 (2026-10-21 · SCREEN_DESIGN §8 · ADR-0684 · R298)
     'dp.post.train': { ko: '훈련', en: 'Training' },
     'dp.post.gamble': { ko: '도박장', en: 'Gambling Den' },
-    'dp.node.kind': { ko: '종류', en: 'Variety' },
-    'dp.node.yield': { ko: '획득량', en: 'Yield' },
+    'dp.node.mine': { ko: '채광', en: 'Mining' },
+    'dp.node.gather': { ko: '채집', en: 'Gathering' },
+    'dp.node.log': { ko: '벌목', en: 'Logging' },
     'dp.node.burst': { ko: '대박', en: 'Jackpot' },
-    'dp.node.depth': { ko: '깊이', en: 'Depth' },
     'dp.node.seats': { ko: '등록 칸', en: 'Seats' },
     'dp.node.interval': { ko: '간격', en: 'Interval' },
     'dp.node.quality': { ko: '품질', en: 'Quality' },
@@ -695,7 +708,6 @@ const STRINGS = {
     'dp.node.speed': { ko: '속도', en: 'Speed' },
     'dp.node.range': { ko: '범위', en: 'Range' },
     'dp.node.income': { ko: '수익', en: 'Income' },
-    'dp.val.tiers': { ko: '{n}단계', en: 'Tier {n}' },
     'dp.val.seats': { ko: '{n}명', en: '{n}' },
     'dp.val.slots': { ko: '+{n}칸', en: '+{n}' },
     'dp.val.range': { ko: '최고 −{n}', en: 'Top −{n}' },
@@ -717,7 +729,7 @@ const STRINGS = {
     'dp.fx.research': { ko: '연구 속도 ×{v}', en: 'Research ×{v}' },
     'dp.fx.quality': { ko: '품질 +{v}%', en: 'Quality +{v}%' },
     'dp.fx.cost': { ko: '연구 비용 −{v}%', en: 'Research cost −{v}%' },
-    // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 콜로세움 `cs.help` 와 같은 도움말 전용 문장
+    // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 결투장 `cs.help` 와 같은 도움말 전용 문장
     'dp.help': {
         ko: '줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 찾아온 영웅은 칸이 찰 때까지)<br>'
             + '지점을 골라 <b>연구</b>하면 레벨이 오릅니다 — 시간이 걸리고 연구소 전체에 <b>한 번에 하나</b> · 그만두면 비용을 전부 돌려받습니다 · 연구소 랭크가 새 지점을 엽니다<br>'
@@ -758,14 +770,11 @@ const STRINGS = {
 
     /* 상점 (SCREEN_DESIGN §8-3 · ADR-0223) — 패널 머리는 `dp.post.trade`(상단) 재사용. 상단은 탭 없이 장비 목록 하나(2026-09-30),
        오른쪽 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
-    'td.tab.mat': { ko: '재료', en: 'Materials' },   // 특수상단 재료 칸 툴팁 머리
     // 상단 목록 교체 — 고른 영웅의 레벨({lv})로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · game.shopReroll · ADR-0648)
     'td.reroll': { ko: '교체 · Lv {lv} ({g} 골드)', en: 'Refresh · Lv {lv} ({g} gold)' },
     'td.reroll.free': { ko: '교체 · Lv {lv} (무료)', en: 'Refresh · Lv {lv} (free)' },
     // 상단 제목 옆 `?` — 올리면 뜨는 두 문장 · {h} = [balance.csv:shop_refresh_hours] (ADR-0464 · ADR-0648)
     'td.reroll.help': { ko: '교체하면 고른 영웅 레벨에 맞춰 다시 들어옵니다. 무료 교체 뒤 {h}시간이 지나면 다시 무료.', en: 'A refresh restocks at the selected hero\'s level. After a free refresh, it is free again in {h} hours.' },
-    // 재료 칸의 그림 자리 — 재료 아이콘 아트가 없어 글자로 선다 (사용자 지시 「일단 재료라고만」)
-    'td.matIcon': { ko: '재료', en: 'Mat.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
@@ -778,7 +787,6 @@ const STRINGS = {
     'td.err.bagFull': { ko: '인벤토리 가득 참', en: 'Inventory is full' },
     'td.err.sold': { ko: '이미 팔린 물건', en: 'Already sold' },
     'td.err.stale': { ko: '목록이 바뀜', en: 'The stock has changed' },   // 그리는 사이 다른 탭에서 [교체]했다 (ADR-0648 — 상단 목록은 방문 회차와 무관)
-    'td.stock': { ko: '수량 {n}', en: '{n} in stock' },
 
     /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
        ⚠ **종류 · 등급 이름은 여기 없다** — `commission_kind.csv` · `commission_grade.csv` 의 `_kr`/`_en` 쌍이고 화면은 `L()` 로 푼다.
@@ -823,20 +831,20 @@ const STRINGS = {
         ko: '선술집이 엽니다. 횟수 제한은 없습니다 — 판돈만 있으면 돕니다. {n}판 돌리기는 한 번에 {n}판을 돌리고, 도중에 판돈이 떨어지면 거기서 멈춥니다<br>'
             + '판돈을 걸고 돌리면 가로 · 대각 {lines}라인에서 같은 심볼 셋이 골드나 재료를 줍니다. 와일드가 다른 심볼 대신 섭니다 · 코인은 라인을 끊습니다<br>'
             + '코인이 {trig}개 이상 서면 홀드 앤 스핀 — 코인은 제자리에 붙고, 새 코인이 설 때마다 리스핀이 {re}번으로 돌아갑니다. 판이 다 차면 그랜드<br>'
-            + '판돈과 재료는 진행 중인 챕터를 따릅니다. 윗단계 판돈은 선술집 랭크가 엽니다. 장비 · 낙인은 안 나옵니다',
+            + '판돈은 진행 중인 챕터를 따릅니다. 윗단계 판돈은 선술집 랭크가 엽니다. 장비 · 낙인은 안 나옵니다',
         en: 'The Tavern opens it. There is no spin limit — spin as long as you can pay the stake. Spin ×{n} plays {n} spins at once and stops early if you run out of gold<br>'
             + 'Stake gold and spin: three matching symbols on any of the {lines} rows or diagonals pay gold or materials. Wilds stand in for other symbols · coins break a line<br>'
             + 'Land {trig}+ coins for Hold & Spin — coins stick, and each new coin resets the respins to {re}. Fill the board for the Grand<br>'
-            + 'Stakes and materials follow your current chapter. Higher stakes unlock with Tavern ranks. No equipment or stigma comes out',
+            + 'Stakes follow your current chapter. Higher stakes unlock with Tavern ranks. No equipment or stigma comes out',
     },
 
-    /* 제련소 (SCREEN_DESIGN §8-2) — 제목 줄이 없다: 탭 이름(`nav.forge`)이 crumb 에 서고 작업 탭은 상단바에 선다 (ADR-0190).
+    /* 대장간 (SCREEN_DESIGN §8-2) — 제목 줄이 없다: 탭 이름(`nav.forge`)이 crumb 에 서고 작업 탭은 상단바에 선다 (ADR-0190).
        작업 탭 셋 = 제작 · 강화 · 크래프트 (ADR-0142) · 배치 줄은 걷었다 (ADR-0191). 강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
     'fg.seg.make': { ko: '제작', en: 'Smith' },
     'fg.seg.up': { ko: '강화', en: 'Upgrade' },
     'fg.seg.craft': { ko: '크래프트', en: 'Craft' },
     'fg.go': { ko: '강화', en: 'Upgrade' },
-    // 옛 `tip.up.max` — 2026-09-08 에 툴팁의 강화 줄이 죽으면서 **제련소 전용**이 되어 접두를 옮겼다 (문구·인자 동일)
+    // 옛 `tip.up.max` — 2026-09-08 에 툴팁의 강화 줄이 죽으면서 **대장간 전용**이 되어 접두를 옮겼다 (문구·인자 동일)
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
     'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
     // 강화 진열의 메타 — 누가 끼고 있나 · 안 끼었으면 있는 곳(`ch.bag.inv` · `ch.bag.stash`) (ADR-0604 · ~~`fg.worn` 착용 중 · `fg.bag` 가방~~)
@@ -860,7 +868,7 @@ const STRINGS = {
     'fg.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'fg.potion.stock': { ko: '재고', en: 'Stock' },
     'fg.potion.none': { ko: '없음', en: 'None' },
-    // ~~`fg.potion.tip`~~ (제련소 · 편성 탭의 `title` 한 줄) 은 2026-09-24 삭제 — 물약은 어디서나 **물약 카드**를 띄운다 (ADR-0315)
+    // ~~`fg.potion.tip`~~ (대장간 · 편성 탭의 `title` 한 줄) 은 2026-09-24 삭제 — 물약은 어디서나 **물약 카드**를 띄운다 (ADR-0315)
     'fg.potion.heal': { ko: '회복 {n}', en: 'Heals {n}' },
 
     /* ── 도움말 탭 (2026-08-26) ──
@@ -1076,8 +1084,8 @@ const STRINGS = {
     'st.desc.int': { ko: '마법 스킬 피해 증가', en: 'Increases magic skill damage' },
     'st.desc.vit': { ko: '레벨업마다 오르는 최대 HP 증가<br>버프 지속시간 증가', en: 'More Max HP per level-up<br>Longer-lasting buffs' },
     'st.desc.luck': { ko: '치명타 피해 · 드랍률 · 골드 획득 증가<br>일부 스킬의 추가 피해 증가', en: 'Increases Crit Damage, Item Find and Gold Find<br>Boosts bonus damage of some skills' },
-    'st.desc.ldr': { ko: '아군에게 거는 버프 강화', en: 'Strengthens the buffs you give allies' },
-    'st.desc.cha': { ko: '회복량 · 적에게 거는 효과 증가', en: 'Increases healing and the effects you put on enemies' },
+    'st.desc.ldr': { ko: '아군에게 거는 버프 강화 · 리더면 파티 전술 효과 증가', en: 'Strengthens the buffs you give allies · As leader, strengthens party tactics' },
+    'st.desc.cha': { ko: '회복량 · 적에게 거는 효과 증가 · 받는 상태이상 · 디버프 시간 감소', en: 'Increases healing and the effects you put on enemies · Shortens ailments and debuffs on you' },
     'st.desc.atk_physical': { ko: '평타와 물리 스킬 피해의 바탕이 되는 값', en: 'The base of basic attack and physical skill damage' },
     'st.desc.atk_magic': { ko: '마법 스킬 피해와 회복량의 바탕이 되는 값', en: 'The base of magic skill damage and healing' },
     'st.desc.action_period': { ko: '한 번 행동하는 데 걸리는 시간 — 짧을수록 자주 행동', en: 'Time per action — the lower, the more often you act' },
@@ -1089,6 +1097,8 @@ const STRINGS = {
     'st.desc.defense': { ko: '받는 물리 피해 감소 — 옆의 감쇠 % 만큼 덜 받음', en: 'Reduces physical damage taken — by the mitigation % beside it' },
     'st.desc.damage_reduction': { ko: '받는 피해를 % 만큼 줄이고 고정값만큼 더 뺌 (고정 / %)', en: 'Cuts damage taken by the %, then subtracts the flat amount (flat / %)' },
     'st.desc.fhr': { ko: '물리 공격에 맞아 경직되는 시간 감소', en: 'Shortens the stagger from physical hits' },
+    // 매력이 낸다 (2026-10-24 · R346 · ADR-0770) — 음수면 늘어난다
+    'st.desc.debuff_dur_reduction': { ko: '받는 상태이상 · 디버프 시간 감소', en: 'Shortens ailments and debuffs on you' },
     'st.desc.res_fire': { ko: '받는 화염 피해를 이 % 만큼 감소 — 옆의 상한까지', en: 'Reduces Fire damage taken by this % — up to the cap beside it' },
     'st.desc.res_cold': { ko: '받는 냉기 피해를 이 % 만큼 감소 — 옆의 상한까지', en: 'Reduces Cold damage taken by this % — up to the cap beside it' },
     'st.desc.res_lightning': { ko: '받는 전기 피해를 이 % 만큼 감소 — 옆의 상한까지', en: 'Reduces Lightning damage taken by this % — up to the cap beside it' },
@@ -1200,8 +1210,8 @@ const STRINGS = {
     'tip.delta.on': { ko: '켜짐', en: 'On' },
     'tip.delta.off': { ko: '꺼짐', en: 'Off' },
     // ~~`tip.up.first`·`tip.up.next`~~ 는 2026-09-08 삭제 [사용자 지시] — 툴팁의 강화 줄이 통째로 죽었다.
-    // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 제련소(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
-    // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 제련소가 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
+    // 단계는 이름 앞의 `+n` 이 들고, 비용·상한은 대장간(SCREEN_DESIGN §8-2)의 값이다. `tip.up.option` 은 09-08 에 먼저 죽었다.
+    // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 대장간이 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
     // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
     // ~~tip.hero.h · tip.monster.h~~ (「영웅」 · 「몬스터」 머리글) 는 2026-09-15 삭제 — 유닛 툴팁은 머리글이 없다 (ADR-0115)
     'tip.unit.altHint': { ko: 'Alt 세부 옵션', en: 'Alt: detailed stats' },   // 유닛 툴팁 각주 — 열 이름은 캐릭터 탭 키(ch.attr.h · ch.detail.h) 재사용 (ADR-0114)
@@ -1257,13 +1267,13 @@ const STRINGS = {
     'cn.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'cn.err.materials': { ko: '재료 부족', en: 'Not enough materials' },
     // 여는 것 설명 — 「무엇을 할 수 있게 되나」 한 문장 · 대상마다 한 키 · 효과만(조건 · 절차는 안 적는다) [2026-09-24 사용자 지시 · ADR-0325 — 옛 값은 기능 이름]
-    // 제련소 랭크 I 의 둘은 문장이 아니라 이름 토막 [2026-09-24 사용자 지시 「장비 강화, 장비 제작 이렇게만」 · 시험 중 — SCREEN_DESIGN §13-1]
+    // 대장간 랭크 I 의 둘은 문장이 아니라 이름 토막 [2026-09-24 사용자 지시 「장비 강화, 장비 제작 이렇게만」 · 시험 중 — SCREEN_DESIGN §13-1]
     'cn.t.upgrade_item': { ko: '장비 강화', en: 'Equipment Upgrade' },
     'cn.t.make': { ko: '장비 제작', en: 'Equipment Smithing' },
-    'cn.t.potion': { ko: '물약 제작', en: 'Potion Brewing' },   // 제련소 r2 — 물약 1단계를 함께 연다 (2026-09-24 사용자 지시)
+    'cn.t.potion': { ko: '물약 제작', en: 'Potion Brewing' },   // 대장간 r2 — 물약 1단계를 함께 연다 (2026-09-24 사용자 지시)
     'cn.t.storage': { ko: '가방 · 창고 사용', en: 'Use the bag and stash' },
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록', en: 'Record monsters you meet in the codex' },
-    // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 제련소와 같은 시험 중 — SCREEN_DESIGN §13-1]
+    // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 대장간과 같은 시험 중 — SCREEN_DESIGN §13-1]
     'cn.t.hire': { ko: '영웅 고용', en: 'Hero Hiring' },
     'cn.t.shop': { ko: '상단에서 장비 · 재료 구매', en: 'Buy gear and materials at the trading house' },
     'cn.t.shop_special': { ko: '특수상단 방문', en: 'The special merchant starts visiting' },
@@ -1294,9 +1304,10 @@ const STRINGS = {
     'cn.t.potion_tier': { ko: '물약 단계 +{n}', en: 'Potion tier +{n}' },
     // 전술 칸도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 칸 수 (SCREEN_DESIGN §13-1 · 2026-09-27 사용자 지시 「파티 전술 레벨1 해금」)
     'cn.t.tactic_slots': { ko: '파티 전술 레벨 {total} 해금', en: 'Unlocks Party Tactics Level {total}' },
+    'cn.t.codex_level': { ko: '도감 Lv{total} 해금', en: 'Unlocks Codex Level {total}' },   // 도서관 r4 · r5 · r6 — {total} = 그 랭크까지 연 도감 단계(r1 의 도감이 Lv1 을 심는다 · 2026-10-24 · R339)
     'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}' },
-    // 자원 단계도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 단계 (2026-09-27 사용자 지시 「랭크1에 채광, 채집, 벌목 n단계 해금」)
-    'cn.t.resource_tier': { ko: '채광 · 채집 · 벌목 {total}단계 해금 · 자동 생산', en: 'Unlocks Mining, Gathering and Logging Tier {total} · Automatic production' },
+    // 연구소 랭크 — `{total}` = 그 랭크(랭크마다 1 · 그 랭크의 지점이 열린다 · 2026-10-25 R356 — ~~채광 · 채집 · 벌목 n단계~~ 재료에 단계가 없다)
+    'cn.t.resource_tier': { ko: '연구소 {total}랭크 지점 해금 · 자동 생산', en: 'Unlocks Laboratory Rank {total} nodes · Automatic production' },
     'cn.t.shop_layers': { ko: '상단 품목 층 +{n}', en: 'Ware tiers +{n}' },
     'cn.t.explore_regions': { ko: '탐험 지역 +{n}', en: 'Exploration regions +{n}' },
     'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
@@ -1332,7 +1343,6 @@ const STRINGS = {
     'tr.err.done': { ko: '이미 전직 완료', en: 'Already advanced' },
     'tr.err.working': { ko: '전직 중', en: 'Already advancing' },
     'tr.err.level': { ko: '레벨 부족', en: 'Level too low' },
-    'tr.err.running': { ko: '원정에서 싸우는 중', en: 'Fighting on an expedition' },
     'tr.err.exploring': { ko: '탐험 나가 있음', en: 'Out exploring' },
     'tr.err.none': { ko: '전직', en: 'Advance', lock: true },
     'tr.err.learned': { ko: '배운 스킬 되돌리기', en: 'Refund the learned skill', lock: true },
@@ -1423,7 +1433,6 @@ const STRINGS = {
     'mg.why.time': { ko: '시간 끝', en: "Time's up" },
     'mg.why.lives': { ko: '목숨 소진', en: 'Out of lives' },
     'mg.why.done': { ko: '나무를 모두 벰', en: 'Tree felled' },
-    'mg.err.locked': { ko: '{node} Lv {n}', en: '{node} Lv {n}', lock: true },   // 그 단계를 여는 「종류」 연구 레벨 (ADR-0699)
     'mg.err.post': { ko: '미니게임이 없는 곳', en: 'No minigame here' },
     'rs.on': { ko: 'On', en: 'On' },
     'rs.off': { ko: 'Off', en: 'Off' },
@@ -1446,6 +1455,25 @@ const STRINGS = {
             + '전투 중에 변하는 값(현재 HP · 남은 적)은 쓰지 않습니다. 효과는 <b>파티에 든 영웅</b>에게만 붙습니다.',
         en: 'Conditions read only what the formation fixes — sins, classes, gear sins, the leader, the formation and runs taken as this party. <b>The harder the condition</b> (Difficulty), the higher a roll can go. '
             + 'Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.',
+    },
+    // 열 이름 줄 — 칸 목록 위 · 행의 여섯 세로줄 (ADR-0763) · 진행 = 조건 카운터 「지금 / 필요」 · 리더 = 리더 보너스 양
+    'rs.col.state': { ko: '상태', en: 'State' },
+    'rs.col.cond': { ko: '조건', en: 'Condition' },
+    'rs.col.prog': { ko: '진행', en: 'Progress' },
+    // 버프 = 칸의 효과(등급 값) · 추가 버프 = 그 위에 더해지는 양 — 오른쪽 위 「추가 버프」 칸과 같은 이름 (ADR-0764)
+    'rs.col.buff': { ko: '버프', en: 'Buff' },
+    'rs.col.extra': { ko: '추가 버프', en: 'Extra Buff' },
+    'rs.col.lock': { ko: '잠금', en: 'Lock' },
+    // 「추가 버프」 — 「파티 전술」 소제목 줄 오른쪽 끝 · 올리면 **출처마다 한 줄** [2026-10-24 · ADR-0757 · ADR-0758 — 칸마다 안 적는다]
+    'rs.buff': { ko: '추가 버프', en: 'Extra Buffs' },
+    'rs.buff.lead': { ko: '리더 통솔 {n} — 전술 ×{m}', en: 'Leader Leadership {n} — Tactics ×{m}' },
+    'rs.buff.noLead': { ko: '리더 없음', en: 'No leader' },
+    // 리더 보너스 — 도움말 파티 전술 묶음 전용 [2026-10-24 · ADR-0753 · tactic_card_design §5-10] · 수치는 balance.csv 다섯 키
+    'rs.note.lead': {
+        ko: '<b>리더</b>(편성 첫 칸)의 <b>통솔</b>이 전술 효과의 크기를 바꿉니다 — 통솔 {pivot}에서 그대로이고, {min}이면 ×{lo} · {max}이면 ×{hi}입니다. 그 사이는 고르게 변합니다. '
+            + '리더의 통솔을 조건으로 보는 칸은 그대로입니다.',
+        en: 'The <b>leader</b>\'s (first slot) <b>Leadership</b> scales tactic effects — unchanged at {pivot}, ×{lo} at {min} and ×{hi} at {max}, evenly in between. '
+            + 'Slots whose condition is the leader\'s Leadership are unaffected.',
     },
     // 전술 옵션 등급 — ⚠ 아이템 희귀도(`mock.js:RARITY`)와 **별개 축**이고 이름만 같다 (tactic_card_design §5-5)
     'rs.grade.common': { ko: '일반', en: 'Common' },
@@ -1490,6 +1518,10 @@ const STRINGS = {
     'sk.cond.elite': { ko: '정예 · 보스에게', en: 'Against elites and bosses' },
     'sk.cond.ailing': { ko: '상태이상에 걸린 대상에게', en: 'Against ailing targets' },
     'sk.cond.tick': { ko: '라운드 {sec}초마다 한 겹 · 최대 {max}겹', en: 'One stack per {sec}s in a round · up to {max}' },
+    // 분노 · 폭식 T3 — 랭크가 한계(문턱 · 겹 상한)를 넓힌다 [2026-10-24 · R343 · skill_design §3-3] · {pct} · {cap} = 지금 랭크(안 찍었으면 1랭크)의 값
+    'sk.cond.fury': { ko: '내 HP 가 {pct} 미만일 때 (랭크당 문턱 +{step})', en: 'While below {pct} HP (threshold +{step} per rank)' },
+    'sk.cond.feast': { ko: '라운드 동안 직격이 맞을 때마다 한 겹 · 최대 {cap}겹 (랭크당 +{per}겹)', en: 'One stack per landed direct hit in a round · up to {cap} (+{per} per rank)' },
+    'sk.tip.perStack': { ko: '겹당 {effect}', en: '{effect} per stack' },
     /* 마스터리 효과 문장 — 「무엇이 n 증가한다」 (SCREEN_DESIGN §7 · ADR-0332). 축마다 **통째로** 든다 — 조사(이/가)와
        동사(증가/감소)를 렌더러가 고르지 않는다. 이름이 「감소」인 축은 줄어드는 것이 주어다. {v} 는 부호 없는 값.
        사전에 없는 축은 맨 위 틀로 떨어진다 */
@@ -1515,6 +1547,10 @@ const STRINGS = {
     'sk.masteryEffect.item_find': { ko: '드랍률 {v} 증가', en: 'Item Find increases by {v}' },
     'sk.masteryEffect.life_steal': { ko: '흡혈 {v} 증가', en: 'Life Steal increases by {v}' },
     'sk.masteryEffect.magic_find': { ko: '매직아이템 획득 {v} 증가', en: 'Magic Find increases by {v}' },
+    // 탐욕 T3 — 「탐욕 합에 비례」가 효과의 일부라 한 토막에 같이 든다 (SCREEN_DESIGN §7 · R325)
+    'sk.masteryEffect.atk_pct_per_greed': { ko: '골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 데미지 증가', en: 'Damage increases by {v} of your total Gold Find, Item Find and Magic Find' },
+    'sk.masteryEffect.hp_pct_per_greed': { ko: '골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 최대 HP 증가', en: 'Max HP increases by {v} of your total Gold Find, Item Find and Magic Find' },
+    'sk.masteryEffect.cdr_per_greed': { ko: '골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 쿨타임 감소', en: 'Cooldowns are reduced by {v} of your total Gold Find, Item Find and Magic Find' },
     'sk.masteryEffect.reflect_damage': { ko: '반사 피해 {v} 증가', en: 'Reflect Damage increases by {v}' },
     'sk.masteryEffect.res_all': { ko: '모든 원소 저항 {v} 증가', en: 'All Resistances increase by {v}' },
     'sk.masteryEffect.res_max_bonus': { ko: '최대 원소 저항 {v} 증가', en: 'Max Resistances increase by {v}' },
@@ -1695,7 +1731,7 @@ const STRINGS = {
     'cx.seg.fx': { ko: '이펙트', en: 'Effects' },
     'cx.seg.mastery': { ko: '마스터리', en: 'Masteries' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
-    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 종족 전체에 붙습니다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same race' },
+    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 부류 전체에 붙습니다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same family' },   // 부류 = monster_base(군대 · 부족 · 거인 · 수호자 · 이형 — 2026-10-24)
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
     'cx.exp': { ko: '경험치 {n}', en: '{n} EXP' },   // 그 몬스터의 누적 도감 경험치 — 카드 진행 줄 · 핍 툴팁 (ADR-0587 · ~~cx.kills 처치 {n}~~)
@@ -1704,7 +1740,7 @@ const STRINGS = {
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story' },
     'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },
-    // 단계표의 Lv1 · Lv2 — **그 몬스터 한 마리의 몫** 앞에 종족 이름(`{race}` — monster_base.csv)을 단다 · Lv2 는 「상대」 · `{line}` = 줄 한 줄(파밍 = 아래 다섯 ·
+    // 단계표의 Lv1 · Lv2 — **그 몬스터 한 마리의 몫** 앞에 부류 이름(`{race}` — monster_base.csv · 군대 · 부족 · 거인 · 수호자 · 이형 — 2026-10-24)을 단다 · Lv2 는 「상대」 · `{line}` = 줄 한 줄(파밍 = 아래 다섯 ·
     //   전투 = 장비 옵션 줄 표기) · `{v}` = 부호 붙은 값 (SCREEN_DESIGN §9 · ADR-0715 · monster_design §8 — ~~그 몬스터에게만 · cx.rw.vs_dmg~~ ADR-0667)
     'cx.rw.farm': { ko: '{race} {line}', en: '{line} from {race}' },
     'cx.rw.fight': { ko: '{race} 상대 {line}', en: '{line} vs {race}' },
@@ -1843,14 +1879,8 @@ const STRINGS = {
     // 이펙트 세그먼트 [2026-10-05 · §9-1 · ADR-0513 · 세그먼트로 2026-10-09 ADR-0559] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
     'ix.fx.playAll': { ko: '▶ 전부 재생', en: '▶ Play All' },
     // 이펙트 세그먼트의 그림체 탭 [2026-10-09 · §9-1 · ADR-0559] — 키 = skill_art.js:ART_STYLES · 실전 그림체에는 live 가 이름을 감싼다
-    'ix.fxs.ink': { ko: '수묵', en: 'Ink' },
     'ix.fxs.darktoon': { ko: '다크 카툰', en: 'Dark Cartoon' },
-    'ix.fxs.pixel2d': { ko: '클린 도트', en: 'Clean Pixel' },
-    'ix.fxs.papercut': { ko: '종이 콜라주', en: 'Paper Collage' },
-    'ix.fxs.pastel': { ko: '오일 파스텔', en: 'Oil Pastel' },
     'ix.fxs.foil': { ko: '금속박', en: 'Metal Foil' },
-    'ix.fxs.riso': { ko: '리소 인쇄', en: 'Riso Print' },
-    'ix.fxs.clay': { ko: '클레이', en: 'Clay' },
     'ix.fxs.live': { ko: '{name} · 실전', en: '{name} · In Battle' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]
     'ix.tier': { ko: '{n}티어', en: 'Tier {n}' },
@@ -1945,6 +1975,11 @@ const STRINGS = {
     // 누적 데미지 탭 — 값의 **축**을 고른다 (2026-09-21 · ADR-0252)
     'bt.dmgf.dealt': { ko: '가한 피해', en: 'Dealt' },
     'bt.dmgf.taken': { ko: '받은 피해', en: 'Taken' },
+    // 두 팀 누적 데미지 판 — 결투 관전 아래 칸의 판 이름 (SCREEN_DESIGN §1 「판」 · ADR-0769) · 열 이름은 위 `bt.dmgf.*` 를 다시 쓴다
+    'bt.team.party': { ko: '우리 팀', en: 'Our team' },
+    'bt.team.enemy': { ko: '상대 팀', en: 'Opponents' },
+    'bt.tdmView.rows': { ko: '요약', en: 'Summary' },     // 두 팀 판 보기 버튼 (ADR-0772)
+    'bt.tdmView.cols': { ko: '스킬별', en: 'By skill' },
     // 누적 데미지 막대의 조각 — 막대에 올리면 뜬다 (ADR-0252). 기타 = 종류 없는 피해(반사 · 자폭)
     'bt.dmgk.phys': { ko: '물리 {n}', en: 'Physical {n}' },
     'bt.dmgk.magic': { ko: '마법 {n}', en: 'Magic {n}' },

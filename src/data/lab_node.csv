@@ -1,19 +1,9 @@
 line,node,ord,unlock_rank,max_lv,base,per_lv,cost_gold,cost_mat_hours,cost_growth,research_min,research_growth,description_kr
-mine,kind,1,1,6,1,1,300,1,2,30,1.6,⚠임시 [신설 2026-10-21 · R298 · base_expedition_design §2-1 「지점」] — 표 전체가 임시값이다(사용자 「임시로 넣어」). 한 행 = 줄 하나의 지점 하나 · 값 = base + 레벨 × per_lv · 레벨 lv → lv + 1 비용 = 골드 cost_gold × cost_growth^lv + (재료 줄이면) 그 줄 맨 위 단계 재료 yield_per_hour × cost_mat_hours × cost_growth^lv · 걸리는 시간 = research_min × research_growth^lv 분 · unlock_rank = 이 지점이 생기는 연구소 랭크 · 지점이 무엇을 미는가는 지점 id 가 정한다(INTERFACE §5-3). 종류 = 열린 단계 수(상한 = 열린 장)
-mine,yield,2,1,10,1,0.1,200,0.5,1.5,10,1.4,⚠임시 — 획득량 = 열린 단계 전체의 시간당 산출 배수
-mine,seats,3,1,2,1,1,500,0,3,30,2,⚠임시 — 등록 칸 = 이 줄에 등록할 수 있는 영웅 수
-mine,burst,4,2,10,0,0.02,400,0.5,1.5,20,1.4,⚠임시 — 대박 = 한 개가 나올 때 하나 더 나올 확률(비율)
-mine,depth,5,3,10,1,0.2,600,0.5,1.5,30,1.4,⚠임시 — 깊이 = 맨 위 단계의 시간당 산출 배수(아래 단계는 그대로)
-gather,kind,1,1,6,1,1,300,1,2,30,1.6,⚠임시
-gather,yield,2,1,10,1,0.1,200,0.5,1.5,10,1.4,⚠임시
-gather,seats,3,1,2,1,1,500,0,3,30,2,⚠임시
-gather,burst,4,2,10,0,0.02,400,0.5,1.5,20,1.4,⚠임시
-gather,depth,5,3,10,1,0.2,600,0.5,1.5,30,1.4,⚠임시
-log,kind,1,1,6,1,1,300,1,2,30,1.6,⚠임시
-log,yield,2,1,10,1,0.1,200,0.5,1.5,10,1.4,⚠임시
-log,seats,3,1,2,1,1,500,0,3,30,2,⚠임시
-log,burst,4,2,10,0,0.02,400,0.5,1.5,20,1.4,⚠임시
-log,depth,5,3,10,1,0.2,600,0.5,1.5,30,1.4,⚠임시
+res,mine,1,1,10,1,0.1,200,0.5,1.5,10,1.4,⚠임시 [신설 2026-10-21 · R298 · base_expedition_design §2-1 「지점」 · 2026-10-25 R356 — 채광 · 채집 · 벌목 세 줄 → 자원 한 줄] — 표 전체가 임시값이다(사용자 「임시로 넣어」). 한 행 = 줄 하나의 지점 하나 · 값 = base + 레벨 × per_lv · 레벨 lv → lv + 1 비용 = 골드 cost_gold × cost_growth^lv + (재료 지점이면) 그 재료 yield_per_hour(lab_material.csv) × cost_mat_hours × cost_growth^lv · 걸리는 시간 = research_min × research_growth^lv 분 · unlock_rank = 이 지점이 생기는 연구소 랭크 · 지점이 무엇을 미는가는 지점 id 가 정한다(INTERFACE §5-3). 채광 = 철광의 시간당 산출 배수
+res,gather,2,1,10,1,0.1,200,0.5,1.5,10,1.4,⚠임시 — 채집 = 약초의 시간당 산출 배수
+res,log,3,1,10,1,0.1,200,0.5,1.5,10,1.4,⚠임시 — 벌목 = 목재의 시간당 산출 배수
+res,seats,4,1,2,1,1,500,0,3,30,2,⚠임시 — 등록 칸 = 이 줄에 등록할 수 있는 영웅 수
+res,burst,5,2,10,0,0.02,400,0,1.5,20,1.4,⚠임시 — 대박 = 한 개가 나올 때 하나 더 나올 확률(비율) · 재료 셋 모두에 건다 · 재료가 하나가 아니라 비용은 골드만
 visit,interval,1,1,10,1,0.1,300,0,1.5,30,1.5,⚠임시 — 간격 = 레벨 1 에 줄이 열리고 시계가 선다 · 간격 = balance.csv:visit_hours ÷ (base + (레벨 − 1) × per_lv) ÷ 속도 효과
 visit,quality,2,1,10,0,0.03,300,0,1.5,20,1.5,⚠임시 — 품질 = 레어로 올 확률에 더한다(balance.csv:visit_rare_base_pct + 레벨 × per_lv + 매력 효과)
 visit,seats,3,1,2,1,1,500,0,3,30,2,⚠임시

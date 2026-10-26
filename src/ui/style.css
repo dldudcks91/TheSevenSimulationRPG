@@ -175,6 +175,8 @@
     --rarity-normal: #D8D8D8;
     --rarity-magic: #4169E1;
     --rarity-rare: #FFD700;
+    --rarity-epic: #B266FF;        /* 아이템만 — 영웅 등급엔 없다 (2026-10-24 · R342 · ADR-0767) */
+    --rarity-legendary: #FF4D4D;   /* 아이템만 — 영웅 등급엔 없다 (ADR-0767) */
     --rarity-unique: #FF8C00;
     --rarity-unique-rgb: 255, 140, 0;
 
@@ -511,8 +513,10 @@ html, body { height: 100%; overflow: hidden; }
 .panel > h2 { margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .panel > h2 small { text-align: right; }
 .panel > h2 small { color: var(--text-muted); font-size: var(--fs-xs); }
-/* 제목 줄 안의 부제 · 목업 표지 · 죄종 칩(기본 옵션 · ADR-0166)은 굵어지지 않는다 — 제목이 아니라 제목에 붙은 값이다 */
-.panel > h2 small, .sub-h small, .panel > h2 .sin-chip { font-weight: normal; }
+/* 제목 줄 안의 부제 · 목업 표지 · 신원 칩(기본 옵션의 등급 · 죄종 · 직업 · ADR-0750)은 굵어지지 않는다 — 제목이 아니라 제목에 붙은 값이다 */
+.panel > h2 small, .sub-h small, .panel > h2 .sin-chip, .panel > h2 .attr-ids { font-weight: normal; }
+/* 기본 옵션 제목 오른쪽의 칩 셋 — 한 줄로 서고 접히지 않는다 (SCREEN_DESIGN §6 · ADR-0750) */
+.panel > h2 .attr-ids { display: flex; gap: 4px; flex: none; white-space: nowrap; }
 
 .cols { display: grid; gap: 14px; }
 .cols.c2 { grid-template-columns: 1fr 1fr; }
@@ -650,11 +654,13 @@ html, body { height: 100%; overflow: hidden; }
    `align-items: center` 라 남는 세로는 글 위아래로 고르게 퍼진다 */
 /* **장소 한 줄 = 버튼 하나** [2026-09-29 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0436 — 같은 날의 칸 버튼 셋(ADR-0429)을 걷고 옛 행 모양으로].
    왼쪽 = 이름 + 잔글씨(레벨 범위 · 소요 · 원소) · 오른쪽 끝 = 잠긴 줄의 자물쇠 + 이유. 칸은 출정 창의 출발 칸 버튼(`.cp-*`)이 고른다 */
+/* 줄은 **회색 테두리가 없다** [2026-10-25 사용자 지시 · ADR-0787] — 테두리 자리(1px)는 투명으로 남아 올린 줄 · 고른 줄에서만 밝은 테두리가 선다.
+   면 밝기는 손대지 않는다(ADR-0786 의 흰 기운을 되돌렸다) · 왼쪽 죄종 색 띠는 그대로 */
 .zone {
     display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
     min-height: 109px;
     padding: 11px 12px; background: var(--bg-tertiary);
-    border: 1px solid var(--border-dark); border-left: 3px solid var(--border-secondary);
+    border: 1px solid transparent; border-left: 3px solid var(--border-secondary);
     margin-bottom: 8px;
 }
 /* 69.3% = 잘라 낸 사본(2752×1360)에서 원본(×1536)의 60% 와 **같은 띠**가 보이는 값 — 행 그림은 안 바뀐다 (2026-09-11 · 아래 `.arena.has-bg`) */
@@ -939,7 +945,7 @@ html, body { height: 100%; overflow: hidden; }
 .cp-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 /* ⚠ 선택자는 `.btn.sm.cp-btn` — 한 단(`.cp-btn`)이면 공용 `.btn.sm { padding }` · `.btn.sm.on`(클래스 둘 · 셋)에 져서 안 먹는다(`.go-tree` 와 같은 사정) */
 .btn.sm.cp-btn { min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 4px; line-height: 1.2; text-align: center; }
-/* 고른 칸 — 강조색 테두리 + 밝은 글자(공용 `.btn.sm.on` 은 한 단 밝아질 뿐이라 안 보였다 — 제련소 작업 탭과 같은 처방 · 2026-09-21) */
+/* 고른 칸 — 강조색 테두리 + 밝은 글자(공용 `.btn.sm.on` 은 한 단 밝아질 뿐이라 안 보였다 — 대장간 작업 탭과 같은 처방 · 2026-09-21) */
 .btn.sm.cp-btn.on { color: var(--text-primary); border-color: var(--text-accent); }
 /* 잠긴 칸 — 흐리고 자물쇠. 눌러도 플래시뿐이라 커서를 안 준다 · 이유는 툴팁 한 줄(`tip-mini`) */
 .cp-btn.locked { opacity: .45; cursor: default; }
@@ -1166,6 +1172,12 @@ html, body { height: 100%; overflow: hidden; }
 /* 열 이름(장비 · 세부 옵션 1 · 2 · 기본 옵션) — 흰 글씨 · 한 단 크게 · 아래에 열 폭 전부를 긋는 선 [2026-09-21 사용자 지시 · ADR-0277].
    숨은 높이 기준(`.tip-equipment-probe`)도 같은 머리를 들어 기본 · Alt 높이가 같이 는다 */
 .tip-col-h { font-size: var(--fs-sm); color: var(--text-primary); margin: 4px 0 6px; padding-bottom: 3px; border-bottom: 1px solid var(--border-secondary); }
+/* 「기본 옵션」 머리 오른쪽 끝 칩 셋 [2026-10-24 사용자 지시 · ADR-0773] — 영웅 등급 · 죄종 · 직업 / 몬스터 종족 · 죄종 · 직업.
+   후보 카드 칩 줄(`.ng-chips`)과 같은 칩 · 같은 여백 · 어두운 등급 색(몬스터 일반 · 보스)의 종족 칩은 막대처럼 밝힌다(`bar-lift`) */
+.tip-col-h.with-chips { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tip-chips { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.tip-chips > span { padding: 0 4px; }
+.tip-card.unit.bar-lift .tip-chips .tier-chip { filter: brightness(1.8); }
 /* 개정 2026-09-15 [사용자 지시 · ADR-0119 · ADR-0120 · SCREEN_DESIGN §2 「유닛 툴팁 규격」]
    ① 윗변 3px = 막대 색(`--unit-line` — 렌더러가 카드에 건다) — 관전 카드 · 띠 카드의 윗변(3px)과 같은 문법이다.
       툴팁 겉테두리(1px) 위에 겹쳐 앉힌다(margin -1) — 안쪽에 따로 서면 회색 선과 색 선이 두 줄로 읽힌다
@@ -1489,9 +1501,9 @@ html, body { height: 100%; overflow: hidden; }
 .bp-row > b { color: var(--text-secondary); font-weight: normal; }
 .bp-fx { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 .bp-it { white-space: nowrap; }
-/* 물약 칸 [2026-09-15 · R104 · ADR-0148] — 칸 하나에 물약 하나. **관전 아레나 왼쪽 아래 구석**과 **제련소 물약 머리 줄**이 같은 칸을 쓴다.
+/* 물약 칸 [2026-09-15 · R104 · ADR-0148] — 칸 하나에 물약 하나. **관전 아레나 왼쪽 아래 구석**과 **대장간 물약 머리 줄**이 같은 칸을 쓴다.
    찬 칸 = 실선 + 그 물약 그림 · 빈 칸 = 점선(스킬 빈 칸 `.cd-slot.empty` 와 같은 문법).
-   바탕 한 변 28(제련소 재고 칸) · **아레나 칸은 34** [2026-09-21 사용자 지시 「좀만 더 키워봐」 · ADR-0276] — 아래 `.b-belt .p-slot`.
+   바탕 한 변 28(대장간 재고 칸) · **아레나 칸은 34** [2026-09-21 사용자 지시 「좀만 더 키워봐」 · ADR-0276] — 아래 `.b-belt .p-slot`.
    ⚠ 나눔 배치에서 칸 줄(오른쪽 끝 161)이 왼쪽 카드의 창 뱃지 줄 밑으로 들어간다(카드 왼쪽 끝 108 · 개편 전 카드 147) — 뱃지 첫 칩과 세로로 겹칠 수 있다 */
 .p-belt { display: inline-flex; flex-direction: row; gap: 4px; }
 .p-slot {
@@ -1651,7 +1663,46 @@ html, body { height: 100%; overflow: hidden; }
 .arena-prep .unit.vacant > .unit-top { visibility: hidden; }
 .arena-prep .unit.vacant .unit-body { justify-content: center; text-align: center; }
 .arena-actions { display: flex; gap: 12px; align-items: center; margin-top: auto; }
-.arena-watch .battle-panel { height: 100%; }
+/* 결투 관전 = 원정 관전과 같은 높이 [2026-10-24 사용자 지시 · ADR-0766] — 전투 판은 `.bt-page > .battle-panel` 의 flex 가 나머지를 받고,
+   아래 칸이 원정 보관 줄 자리를 든다. 칸 안의 보관 줄(`itemsPanel`)은 **높이만 빌린다** — 안 보이고 안 눌린다(포커스도 안 간다).
+   그 위를 **두 팀 누적 데미지 판**(`.tdm` — 재생기 `renderTeams`)이 덮는다 (ADR-0769) */
+.arena-floor { flex: none; position: relative; }
+.arena-floor > .bag-row { visibility: hidden; pointer-events: none; }
+/*   두 판은 보관 줄의 두 칸처럼 나란히 · 간격도 같은 14 · 판은 패널 모양 그대로 */
+.tdm { position: absolute; inset: 0; display: flex; gap: 14px; }
+.tdm-team { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.tdm > .panel + .panel { margin-top: 0; }   /* `.panel + .panel` 의 세로 마진을 걷는다 — 나란히 선 판이다 */
+/*   머리 줄과 유닛 줄이 같은 열을 쓴다 — 초상 · 이름 | 가한 피해 | 받은 피해 (머리는 팀 이름이 앞 두 열을 덮는다) */
+.tdm-head, .tdm-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.25fr); column-gap: 10px; align-items: center; }
+/*   머리 아래 선 = 패널 제목(`.panel > h2`)의 선 · 팀 이름도 제목 글씨 [2026-10-24 사용자 지시 · ADR-0771] — 합계 수는 없고 열 이름만 막대 열 위에 선다 */
+.tdm-head { border-bottom: 1px solid var(--border-primary); padding-bottom: 5px; }
+.tdm-name { grid-column: 1 / 3; font-size: var(--fs-md); font-weight: bold; color: var(--text-primary); }
+.tdm-col { font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/*   소환으로 줄이 늘면 판 안에서 스크롤한다 — 판 높이는 보관 줄 높이로 박혀 있다 */
+.tdm-rows { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.tdm-row .dmg-face { width: 44px; height: 44px; }
+.tdm-n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tdm-v { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tdm-v .bar.dmg { flex: 1 1 0; min-width: 0; margin-top: 0; }
+.tdm-v > b { flex: none; min-width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.tdm-row.fallen { opacity: .45; }   /* `.down` 은 수치 감소(빨강)의 전역 이름이라 안 쓴다 */
+/*   보기 버튼 [요약] · [스킬별] — 오른쪽 판 머리 끝 (ADR-0772). 흐름 밖에 띄운다 — 머리 줄의 높이 · 열 격자를 안 건드려 두 판의 줄이 같은 높이에 선다 */
+.tdm-head { position: relative; }
+.tdm-view { position: absolute; right: 0; bottom: 4px; flex-wrap: nowrap; }
+/*   스킬별 보기 — 유닛이 가로로 한 명씩(사이 세로선) · 유닛 머리 아래에 스킬마다 한 줄. 줄이 넘치면 그 열 안에서 스크롤한다 */
+.tdm-cols { flex: 1 1 0; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); column-gap: 12px; }
+.tdm-hero { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 5px; }
+.tdm-hero + .tdm-hero { border-left: 1px solid var(--border-dark); padding-left: 12px; }
+.tdm-hero.fallen { opacity: .45; }
+.tdm-hh { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.tdm-hh .dmg-face { flex: none; width: 36px; height: 36px; }
+.tdm-hn { min-width: 0; display: flex; flex-direction: column; }
+.tdm-ht { font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tdm-ht b { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+.tdm-sks { flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.tdm-sk { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); line-height: 1.35; }
+.tdm-skn { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+.tdm-sk > b { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
 /* 우리 팀 아래 물약 · 전술 [2026-10-03 사용자 지시 · ADR-0497] — 카드 줄 바로 아래에 **늘 선다**.
    두 열이다 — 왼쪽 물약 · 오른쪽 파티 전술. 한 줄로 쌓으면 전술 7칸에서 결투 버튼이 한 장(1600×800) 밖으로 밀렸다(실측).
    진형 글씨 칸은 걷었다 — 카드 자리가 진형을 말한다 (ADR-0602).
@@ -1857,11 +1908,26 @@ html, body { height: 100%; overflow: hidden; }
     background: rgba(var(--tint-rgb), .06); border-bottom: 1px solid var(--border-dark);
 }
 .unit.v2 > .unit-top .unit-ident { flex: 0 1 auto; min-width: 0; font-size: var(--fs-xs); color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 띠 오른쪽 = 정예 · 보스 라벨 [2026-09-21 사용자 지시 · ADR-0275] — 왼쪽 신원이 양 진영 `Lv.n · 직업` 이 되며 옮겨 왔다. 같은 무채색 보조 글씨 */
+/* 띠 오른쪽 라벨 — 신단 카드의 「신단 획득」 [ADR-0275 의 자리] · 몬스터 등급은 이름 줄 칩으로 내려갔다(ADR-0759). 무채색 보조 글씨 */
 .unit.v2 > .unit-top .unit-grade { flex: none; margin-left: auto; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
-/* 이름 줄 = 왼쪽 죄종 칩(왼쪽 정렬) · 오른쪽 이름 [2026-09-21 사용자 지시 · ADR-0274] — HP 바와 조금 띄운다(열 틈 2 + 3) */
+/* 정예 특성 칩 = **띠 오른쪽 · 오른쪽 맞춤 · 가로 한 줄** [2026-10-24 사용자 「초상화 말고 카드 오른쪽위에 오른쪽정렬로 넣어줘 일단」 · ADR-0775 — ADR-0774 의 초상 아래를 대체].
+   띠가 모자라면 **왼쪽 신원이 먼저 줄어든다** — 칩 줄은 줄지 않고(`flex-shrink: 0`) 띠 폭까지만(`max-width: 100%`) · 그래도 넘치면 왼쪽부터 잘린다(카드 밖으로 안 나간다).
+   칩 모양은 죄종 칩(`.sin-chip` — 글자색 1px 테두리 · 모서리 2px)에 카드 바탕 · 색은 항목이 든다(없으면 본문 색 · 무채색 테두리) · 글씨는 신원보다 1px 작다(`.tip-meta` 와 같은 값) */
+.unit.v2 > .unit-top .unit-traits {
+    flex: 0 0 auto; max-width: 100%; min-width: 0; margin-left: auto;
+    display: flex; justify-content: flex-end; gap: 3px; overflow: hidden; pointer-events: none;
+}
+.unit.v2 > .unit-top .unit-traits .trait-chip {
+    flex: none; font-size: calc(var(--fs-xs) - 1px); line-height: 15px; padding: 0 5px; white-space: nowrap;
+    color: var(--text-primary); border: 1px solid currentColor; border-radius: 2px; background: var(--bg-tertiary);
+}
+.unit.v2 > .unit-top .unit-traits .trait-chip:not([style]) { border-color: var(--border-secondary); }
+/* 이름 줄 = 왼쪽 칩(왼쪽 정렬) · 오른쪽 이름 [2026-09-21 사용자 지시 · ADR-0274] — HP 바와 조금 띄운다(열 틈 2 + 3).
+   칩은 영웅 = 죄종 · 몬스터 = 등급 [2026-10-24 · ADR-0759] — 등급 칩 색은 라운드 트랙 · 로그의 정예 · 보스 칸과 같다 */
 .unit.v2 .unit-id { flex-direction: row; align-items: center; gap: 6px; margin-bottom: 3px; }
 .unit.v2 .unit-id .sin-chip { flex: none; }
+.unit.v2 .unit-id .grade-chip.elite { color: var(--elite-fg); }
+.unit.v2 .unit-id .grade-chip.boss { color: var(--text-accent); border-color: var(--boss-line); }
 .unit.v2 .unit-id .unit-name { flex: 0 1 auto; margin-left: auto; }
 /* 개편판 크기 [2026-09-21 사용자 지시 · ADR-0265 · ADR-0270] — 카드가 넓고(226 → 260 · 폭은 칸이 정한다) 스킬 칸 · HP 바 · HP 수치가 크다.
    **스킬 칸은 40 × 40 정사각 고정** · **카드 폭은 스킬 칸 오른쪽 끝에 맞춘다**(ADR-0274) — 252 = 테두리 2 + 안쪽 여백 12 + 초상 101 + 틈 7 + 칸 셋 130(40 × 3 + 틈 5 × 2).
@@ -2147,6 +2213,7 @@ html, body { height: 100%; overflow: hidden; }
 .pop.dead-tag { color: var(--text-muted); font-size: var(--fs-xs); }
 .pop.counter { color: var(--color-warning); font-size: var(--fs-xs); }            /* 반격 — 반격한 카드의 글자 (ADR-0158) */
 .pop.heal { color: var(--heal-fg); }                                          /* 회복 — 피해와 같은 자리, 부호와 색만 반대 */
+.pop.pay { color: var(--text-muted); font-size: var(--fs-xs); }              /* HP 소모 — 스킬을 쓰며 낸 HP(차지) · 피해 숫자와 갈리게 작고 흐리다 (ADR-0781) */
 /* 레벨업 — 금색 · 다른 글자 팝업보다 크고 한 박자 길다(1.6s = battle.js `LVUP_MS`) (2026-09-29 · ADR-0435) · 아래 적중 변화 줄은 없다 (2026-10-22 · ADR-0718).
    피해 숫자(초상 오른쪽 위 모서리)와 자리를 갈라 왼쪽 초상(101px 칸 — 패딩 6 + 50.5) 위에서 떠오른다 (ADR-0470) */
 .pop.lvup {
@@ -2497,6 +2564,8 @@ html, body { height: 100%; overflow: hidden; }
     object-fit: contain; image-rendering: auto;
     animation: fx-skill-slash calc(var(--t) * var(--fx-k, 1)) ease-out both;
     animation-delay: calc(var(--dl, 0ms) * var(--fx-k, 1));
+    /* 다단의 흔들림 — 타마다 각도 · 자리(`SKILL_ART` 의 `jitter` · 러시 · ADR-0780) · 움직임의 transform 과 따로 얹힌다 · 없으면 0 */
+    rotate: var(--rot, 0deg); translate: var(--jx, 0px) var(--jy, 0px);
 }
 .fx-skill-stamp.crit { filter: brightness(1.12); }
 /* 스킬 이펙트 투명도 — 스킬이 그린 조각에만(fx.js:asSkill 이 `.fx-sk` · `--fx-skill-a` 를 단다 · §2-2 · ADR-0562).
@@ -2504,6 +2573,8 @@ html, body { height: 100%; overflow: hidden; }
 .fx-layer > .fx-sk { filter: opacity(var(--fx-skill-a, 1)); }
 .fx-layer > .fx-sk.fx-skill-stamp.crit { filter: brightness(1.12) opacity(var(--fx-skill-a, 1)); }
 .fx-skill-cross { animation-name: fx-skill-cross; }
+/* 단일 다단의 칼날 하나 — 그림을 `--mask` 띠(칼날을 따라가는 흐린 가림)로 갈라 그 칼날만 · `--mx` · `--my` 쪽에서 그어 들어온다(더블스윙 「\」 → 「/」 · ADR-0778) */
+.fx-skill-swing { animation-name: fx-skill-swing; -webkit-mask-image: var(--mask, none); mask-image: var(--mask, none); }
 .fx-skill-ground { animation-name: fx-skill-ground; }
 .fx-skill-land { animation-name: fx-skill-land; }
 .fx-skill-inward { animation-name: fx-skill-inward; }
@@ -2574,6 +2645,12 @@ html, body { height: 100%; overflow: hidden; }
     65% { opacity: 1; }
     100% { transform: scale(1.04); opacity: 0; }
 }
+@keyframes fx-skill-swing {
+    0% { transform: translate(var(--mx, 0px), var(--my, 0px)) scale(.92); opacity: 0; }
+    22% { transform: translate(0, 0) scale(1); opacity: 1; }
+    65% { opacity: 1; }
+    100% { transform: scale(1.03); opacity: 0; }
+}
 @keyframes fx-skill-ground {
     0% { transform: scale(.55, .35); opacity: 0; }
     25% { transform: scale(1); opacity: 1; }
@@ -2616,11 +2693,12 @@ html, body { height: 100%; overflow: hidden; }
     65% { transform: scale(1.02); opacity: 1; }
     100% { transform: scale(1.04); opacity: 0; }
 }
+/* `--ct` · `--cb` = 위아래를 잘라 한 띠만 보인다(래피드 샷 한 발 · ADR-0778) — 없으면 0 이라 다른 스킬은 그림 전체 */
 @keyframes fx-skill-thrust {
-    0% { clip-path: inset(0 100% 0 0); transform: translateX(-6px); opacity: 0; }
-    25% { clip-path: inset(0); transform: translateX(0); opacity: 1; }
+    0% { clip-path: inset(var(--ct, 0) 100% var(--cb, 0) 0); transform: translateX(-6px); opacity: 0; }
+    25% { clip-path: inset(var(--ct, 0) 0 var(--cb, 0) 0); transform: translateX(0); opacity: 1; }
     65% { opacity: 1; }
-    100% { clip-path: inset(0); transform: translateX(3px); opacity: 0; }
+    100% { clip-path: inset(var(--ct, 0) 0 var(--cb, 0) 0); transform: translateX(3px); opacity: 0; }
 }
 @keyframes fx-skill-pillar {
     0% { clip-path: inset(100% 0 0); transform: scale(.86, .7); opacity: 0; }
@@ -2727,10 +2805,10 @@ html, body { height: 100%; overflow: hidden; }
 /* 막대 = 피해 종류 조각 셋을 왼쪽부터 쌓는다 [2026-09-21 사용자 지시 · ADR-0252] — 물리 주황(로그의 물리 숫자와 같은 토큰) · 마법(원소 전부) 파랑 · 기타(반사 · 자폭) 회색.
    조각 폭은 렌더러가 인라인으로 건다(값 / 파티 안 최대) — 합이 곧 막대 길이다 */
 .bar.dmg { display: flex; height: 12px; margin-top: 3px; }
-.dmg-row .bar.dmg > i { flex: none; }
-.dmg-row .bar.dmg > i.k-phys { background: var(--dt-physical); }
-.dmg-row .bar.dmg > i.k-magic { background: var(--color-info); }
-.dmg-row .bar.dmg > i.k-etc { background: var(--text-muted); }
+.dmg-row .bar.dmg > i, .tdm .bar.dmg > i { flex: none; }
+.dmg-row .bar.dmg > i.k-phys, .tdm .bar.dmg > i.k-phys { background: var(--dt-physical); }
+.dmg-row .bar.dmg > i.k-magic, .tdm .bar.dmg > i.k-magic { background: var(--color-info); }
+.dmg-row .bar.dmg > i.k-etc, .tdm .bar.dmg > i.k-etc { background: var(--text-muted); }
 .dmg-sks { margin-top: 4px; }
 .dmg-sk { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-muted); }
 .dmg-ico { flex: none; width: 18px; height: 18px; display: inline-flex; }
@@ -2852,7 +2930,7 @@ html, body { height: 100%; overflow: hidden; }
 .seg-crumble .crumble > i:nth-last-child(5) { transform: rotate(2deg); }
 /* 난이도 탭 — 원정 목록 패널 윗변에 붙은 폴더 탭(SCREEN_DESIGN §4-1 · ADR-0596 이 ADR-0586 의 세그먼트 줄을 대체).
    **패널의 윗선은 이 줄이 긋는다** — 틈(`.dt-gap` · 첫 틈은 패널 가로 여백만큼) · 남은 자리(`.dt-fill`) · 안 고른 탭의 아랫변이 한 선을 잇고,
-   고른 탭은 아랫변이 비어 그 자리에서만 선이 끊긴다 → 탭 안과 패널 안이 이어진다. 패널(`.diff-panel`)은 윗선이 없다.
+   고른 탭은 아랫변이 비어 그 자리에서만 선이 끊긴다 → 탭 안과 패널 안이 이어진다. 패널(`.diff-panel`)은 테두리가 없다(ADR-0785).
    흐림은 탭의 글자(안쪽 span)에만 건다 — 탭째 흐리면 아랫변(= 패널 윗선)까지 흐려져 선이 끊겨 보인다.
    고른 탭 윗변의 강조색은 출발 칸 버튼의 고른 칸(`.cp-btn.on`)과 같은 「고른 것」 표시다 — 단마다 색을 주지 않는다(ADR-0586).
    조건 글자는 잠긴 장소 줄 이유와 같은 `.zone-lock` 이고 탭 바로 옆에 선다 */
@@ -2877,7 +2955,8 @@ html, body { height: 100%; overflow: hidden; }
 }
 .diff-tab.locked { cursor: default; }
 .diff-tab.locked > span { opacity: .45; }
-.panel.diff-panel { border-top: none; }
+/* 패널은 테두리가 없다 — 선은 위 탭 줄 밑선 하나다(장소 줄 띠가 칸이다 · ADR-0785) */
+.panel.diff-panel { border: none; }
 /* 단 이름 조각 — 부대 칸 · 리포트 머리의 스테이지 앞(노말은 안 선다). 색을 안 얹는다 — 색 자리는 챕터 죄종 색이 쓴다(ADR-0586) */
 .diff-tag { font-weight: 700; }
 /* 도감 챕터 버튼 — 상단바 탭 세그먼트와 같은 크기 (SCREEN_DESIGN §9 · 2026-09-21 사용자 지시).
@@ -3134,7 +3213,7 @@ html, body { height: 100%; overflow: hidden; }
    **스테이지 상자는 지금 없다** [2026-09-21 사용자 지시 · 시험 중] — 여백 · 테두리가 0 이라 간격 = 틈이다.
    상자를 되살리면 `--cx-pad: 6px; --cx-bd: 1px` 과 `.mon-strip` 의 배경 한 줄이다 */
 /* 세그먼트 줄 — 패널 박스 바로 위 (ADR-0273). 메인 배율을 되돌려 상단바 탭 세그먼트 · 챕터 버튼과 같은 크기다 */
-/* 제련소 작업 탭(`.fg-tabs` · ADR-0281)도 같은 자리 · 같은 모양이다 — 박스 위 전환 줄은 한 규칙 */
+/* 대장간 작업 탭(`.fg-tabs` · ADR-0281)도 같은 자리 · 같은 모양이다 — 박스 위 전환 줄은 한 규칙 */
 .cx-tabs, .fg-tabs { flex: none; flex-wrap: nowrap; margin-bottom: 6px; zoom: calc(1 / .9); }
 /* 고른 칸이 안 보였다 [2026-09-21 사용자 지시] — 공용 `.btn.sm.on` 은 테두리 · 배경이 한 단 밝아질 뿐이다.
    고른 칸 = 왼쪽 메뉴의 고른 칸과 같은 강조색 테두리 + 흰 글씨. 굵기는 안 바꾼다(폭이 흔들린다).
@@ -3235,6 +3314,8 @@ html, body { height: 100%; overflow: hidden; }
     border: 1px solid var(--border-secondary);
 }
 .pips .pip.on { background: var(--color-warning); border-color: var(--color-warning); }
+/* 경험치는 닿았지만 도서관이 안 연 단계 — 테두리만 주황 (§9 · ADR-0762) · 작은 툴팁 끝에 「도서관 n랭크」 */
+.pips .pip.held { border-color: var(--color-warning); }
 
 /* 도감 몬스터 툴팁 — 두 장: 왼쪽 선술집 후보 카드 · 오른쪽 스토리(머리글 + 이야기) · 보너스 효과(머리글 + 단계) (SCREEN_DESIGN §9 · ADR-0206 · ADR-0209 · ADR-0233 · ADR-0239 · ADR-0244).
    폭은 고정이고 이야기는 원고가 이야기 칸(최대 여섯 줄) 안에 든다(ADR-0244).
@@ -3268,6 +3349,8 @@ html, body { height: 100%; overflow: hidden; }
 .cx-step:first-child { border-top: 0; }
 .cx-step > span { padding: 5px 0; }
 .cx-step-b { text-align: right; border-left: 1px solid var(--border-dark); }
+/* 도서관이 안 연 단계 — 효과 글 아래 한 줄: 자물쇠 + 「도서관 n랭크」(글자색 = 경고색 · 잠긴 행과 같다 · ADR-0699 · ADR-0762) */
+.cx-step-need { display: block; margin-top: 2px; color: var(--color-warning); }
 /* 왼쪽 장 = 선술집 후보 카드 그대로 (ADR-0233) — `.ng-card` 규격을 탄다. 초상도 영웅과 같은 네모다(ADR-0237).
    **배율은 선술집 카드와 같다** (ADR-0237) — 메인 배율(`#app:not(.pregame) > .main { zoom: .9 }`). 툴팁은 `#stage` 바로 아래라 메인 배율 밖이어서 카드가 스스로 든다 —
    안 들면 같은 규격이 약 11% 크게 섰다(실측 343 대 309.6). 오른쪽 장도 같은 배율이다(두 장의 글자 크기가 같아야 한 툴팁으로 읽힌다).
@@ -3454,6 +3537,11 @@ html, body { height: 100%; overflow: hidden; }
 .inv-icon { font-size: 20px; line-height: 1; }
 /* 첫 클리어 상자 — 등급 테두리 없이 중립 테두리 · 그림만 (SCREEN_DESIGN §6 · ADR-0731) */
 .inv-cell.box { border-color: var(--border-highlight); }
+/* 상자의 부위 표식 — 왼쪽 위 모서리 · 빈 칸 실루엣을 어두운 바탕에 (ADR-0742). 기준은 `.inv-cell` — 보관 칸과 우편 카드의 첨부 칸(ADR-0748)이 같이 쓴다 */
+.inv-icon img.box-kind {
+    position: absolute; left: 2px; top: 2px; width: 42%; height: 42%;
+    padding: 1px; box-sizing: border-box; background: rgba(0, 0, 0, .6); border-radius: 3px; pointer-events: none;
+}
 
 /* 유니크는 은은하게 빛난다 */
 .inv-cell.shine { animation: shine 2.4s ease-in-out infinite; }
@@ -4206,15 +4294,34 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 스킬 도안 칸 배지 「도안」 — 리포트 획득 격자 · 상단 도안 칸 (§4-3 · §8-3 · ADR-0680 — ~~「책」~~ ADR-0420) — 체크 배지 자리 · 색은 정보색 */
 .inv-check.bp-tag { color: var(--info-fg); font-size: var(--fs-2xs); }
 .book-cell .inv-icon img { image-rendering: var(--face-render); }
-/* 우편함 창 — 줄마다 상자 그림 · 칸 · 난이도 · 받을 부대 · [받기] · 맨 아래 [모두 받기] (SCREEN_DESIGN §2 「상단바」 · ADR-0732) */
-.mail-modal { width: min(560px, 92%); }
-.mail-body { display: flex; flex-direction: column; gap: 10px; }
-.mail-list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
-.mail-row { display: grid; grid-template-columns: 36px 1fr auto auto; align-items: center; gap: 10px; padding: 4px 6px; border-bottom: 1px solid var(--border-dark); }
-.mail-icon img { width: 36px; height: 36px; object-fit: contain; image-rendering: var(--face-render); display: block; }
-.mail-to { font-size: var(--fs-sm); }
-.mail-all { align-self: flex-end; }
-.mail-none { padding: 12px 4px; }
+/* 우편함 창 [ADR-0748] — 우편 한 통 = 카드 한 장(첨부 칸 · 이름 + 출처 · 받을 부대 + [받기]) · 카드 자리는 `--mail-cols` 줄 × `--mail-rows` 단이 늘 깔리고
+   (`app.js:MAIL_SLOTS` · `MAIL_COLS` · ADR-0743) 넘치면 판 안에서 스크롤 · 카드 높이는 `--mail-h` 하나가 정한다 · 맨 아래 띠 = 개수 · [모두 받기] */
+.mail-modal { width: min(760px, 94%); }
+.mail-body { display: flex; flex-direction: column; gap: 12px; }
+.mail-grid {
+    --mail-h: 66px; display: grid; gap: 8px;
+    grid-template-columns: repeat(var(--mail-cols), minmax(0, 1fr)); grid-auto-rows: var(--mail-h);
+    max-height: calc(var(--mail-rows) * (var(--mail-h) + 8px) - 8px); overflow-y: auto;
+}
+/* 카드 — 왼쪽 굵은 띠는 보상 색(경고색) · 인벤토리 칸과 같은 바탕 */
+.mail-card {
+    display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+    padding: 0 10px 0 9px; background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary); border-left: 3px solid var(--color-warning);
+}
+.mail-card:hover { background: var(--surface-5); }
+.mail-card.empty { display: flex; align-items: center; justify-content: center; background: transparent; border: 1px dashed var(--border-dark); }
+.mail-card.empty img { width: 26px; height: 26px; object-fit: contain; opacity: .12; image-rendering: var(--face-render); }
+.mail-att { width: 48px; height: 48px; box-sizing: border-box; cursor: default; }
+.mail-att.filled:hover { background: var(--bg-tertiary); }
+.mail-info { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mail-title, .mail-from { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mail-title { font-weight: bold; color: var(--text-primary); }
+.mail-from { font-size: var(--fs-xs); color: var(--text-muted); }
+.mail-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.mail-to { font-size: var(--fs-2xs); color: var(--text-secondary); }
+.mail-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border-dark); }
+.mail-count { font-size: var(--fs-sm); color: var(--text-muted); }
 /* ───────── 창 레이어 (SCREEN_DESIGN §2 · §7) ─────────
    탭 위에 겹쳐 뜨는 판 하나. 툴팁(z-index 50)보다 아래에 둔다 — 창 안의 스킬 칸에도 툴팁이 떠야 한다.
    판은 자기 내용 폭을 쓰되 화면을 넘지 않는다(고정 px 금지 · ui/README 폭 정책). 세로가 모자라면 판 안에서만 스크롤한다 */
@@ -4237,6 +4344,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 창 머리 — 왼쪽 제목 / 오른쪽 닫기. 닫는 길 셋 중 **눈에 보이는** 하나다 */
 .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .modal-head h2 { margin: 0; }
+/* 이름 하나뿐인 창 머리 [2026-10-24 사용자 지시 「제목 크기 지금 보다 줄이고 아래에 선그어」 · §2 창 레이어 · ADR-0744] —
+   이름 = 패널 제목(`.panel > h2`)과 같은 크기 · 머리 아래 판 전폭 선(출정 창 머리 선과 같은 색 · 닫기 X 까지 한 줄 — ADR-0288).
+   머리를 갈아 끼우는 창(`head` — 출정 · 자동 분해 · 미니게임 · 연구소 등록)은 제 규칙을 든다 */
+.modal-head.plain { padding-bottom: 8px; border-bottom: 1px solid var(--border-primary); }
+.modal-head.plain h2 { font-size: var(--fs-md); }
 /* 닫기 = **정사각 X** (2026-09-01 사용자 지시). 창이 여럿이 돼도 **모양도 자리도 같다** — 창마다 다르면
    닫는 법을 창마다 다시 배워야 한다. 글자가 아니라 글리프라 ko/en 에서 폭이 흔들리지 않는다(이름은 title 이 든다) */
 .modal-x {
@@ -4406,7 +4518,6 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dp-tier { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 8px; align-items: center; font-size: var(--fs-sm); }
 .dp-tier > img { grid-row: 1 / span 2; width: 28px; height: 28px; object-fit: contain; }
 .dp-tier-n { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
-.dp-tier-n i { font-style: normal; color: var(--text-muted); margin-right: 4px; }
 .dp-tier > b { color: var(--text-primary); }
 .dp-tier > .dp-gauge { grid-column: 2 / span 2; height: 4px; }
 .dp-line-out { font-size: var(--fs-sm); color: var(--text-primary); }
@@ -4428,7 +4539,6 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .mg-head { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; }
 .mg-head h2 { font-size: var(--fs-md); color: var(--mg-cream); white-space: nowrap; letter-spacing: .03em; }
 .mg-head .segmented { flex-wrap: wrap; }
-.mg-tab-ico { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; margin-right: 5px; }
 .mg-field { --mg-accent: var(--mg-mint); position: relative; height: 540px; isolation: isolate; overflow: hidden; border-radius: 9px; border: 1px solid var(--mg-line); background: var(--mg-ink) var(--mg-scene) center / cover no-repeat; user-select: none; touch-action: none; color: var(--mg-cream); }
 .mg-field.mg-gather { --mg-accent: var(--mg-sage); }
 .mg-field.mg-log { --mg-accent: var(--mg-honey); }
@@ -4725,7 +4835,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .bag-row .items-tools { flex-wrap: nowrap; }
 .bag-row .items-tools > * { flex-shrink: 0; }
 /* 분해함 [2026-10-20 사용자 지시 「4x4 · 화면 가운데 · 아이템창 방해 x」 · SCREEN_DESIGN §6 · ADR-0673] — 보관 줄(`.bag-row`) **바로 위 · 박스 가로 가운데**.
-   보관 칸은 안 덮고 위 패널(세부 옵션 · 관전 아레나 · 제련소 작업 칸)을 덮는다 — 칸을 눌러 올리는 손짓이 본체라 칸이 보여야 한다.
+   보관 칸은 안 덮고 위 패널(세부 옵션 · 관전 아레나 · 대장간 작업 칸)을 덮는다 — 칸을 눌러 올리는 손짓이 본체라 칸이 보여야 한다.
    왼쪽 = 필터 세 열(등급 · 레벨 · 베이스 — 누르면 바로 함에 오른다 · ADR-0695) · 오른쪽 = 4×4 격자 + 가루 · [분해하기] · [취소]. 세 열을 세로로 둬 높이가 격자와 맞는다.
    격자 칸은 보관 칸과 같은 크기 — 보관 칸은 폭을 열 수로 나눈 1fr 이라(위 `.bag .inv-cells.wide`) 한 장(1600) 폭에서 나온 값을 박는다.
    필터 글자색(등급 색)은 JS 인라인이다 — 크래프트엔 `--rarity-*` 토큰이 없다 */
@@ -5093,14 +5203,38 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    일곱 칸을 위에서 아래로 훑어 견준다. 조건 · 효과는 글이 길면 **그 행 안에서** 줄을 바꾼다(칸 폭은 안 준다 — 행이 높아진다).
    글자는 연구 노드(`.rs-cell` 공용)보다 한 단 작다(--fs-xs). 행 높이는 위아래 여백이 준다 — 오른쪽 열 아래가 남아
    한 단 키웠다 [2026-09-21 사용자 지시 「좀만 더 키워보자」] · 일곱 행이 오른쪽 열 안에 드는 것은 그대로 지킨다 */
-.pt-tactics .rs-grid { grid-template-columns: max-content minmax(0, 1.4fr) minmax(0, 1fr) max-content; gap: 8px 16px; }
-.pt-tactics .rs-cell { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; padding: 11px 12px; }
+/* 세로줄 여섯 — 등급 · 켜짐 | 조건 | 카운터 | 효과 | 리더 보너스 | 잠금 · **전부 왼쪽 정렬** [2026-10-24 사용자 「다같이 칸 맞춰서 왼쪽정렬」 · ADR-0757].
+   **칸은 전부 내용 폭**(조건은 열 폭의 일부까지 — 넘치면 줄을 바꾼다)이고 **남는 폭은 칸 사이에 고르게** 나눈다 — 한 칸이 다 먹으면
+   행이 왼쪽 · 오른쪽 두 덩어리로 갈린다 [2026-10-24 사용자 「왼쪽 오른쪽 너무 극명하게 나뉘었잖아」 · ADR-0758] */
+.pt-tactics .rs-grid { grid-template-columns: max-content fit-content(42%) max-content max-content max-content max-content; justify-content: space-between; gap: 8px 10px; }
+.pt-tactics .rs-cond { justify-content: flex-start; }
+.pt-tactics .rs-cnt-c, .pt-tactics .rs-eff, .pt-tactics .rs-lead { justify-self: start; white-space: nowrap; }
+.pt-tactics .rs-cnt-c { font-size: calc(var(--fs-xs) + 1px); }
+/* 리더 보너스 칸 — 효과 오른쪽 (§15 · ADR-0757) · 더하면 성공색 · 빼면 오류색 · 0 · 곡선을 안 받는 칸(「—」)은 흐림 */
+.pt-tactics .rs-lead { font-size: calc(var(--fs-xs) + 1px); color: var(--text-secondary); }
+.pt-tactics .rs-lead.up { color: var(--color-success); }
+.pt-tactics .rs-lead.down { color: var(--color-error); }
+.pt-tactics .rs-lead.muted { color: var(--text-muted); }
+/* 「추가 버프」 — 「파티 전술」 소제목 줄 오른쪽 끝 · 올리면 받는 보너스 툴팁 (ADR-0757) */
+.pt-tactics > .sub-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.rs-buff-btn {
+    font-size: var(--fs-xs); font-weight: normal; color: var(--text-secondary); cursor: help;
+    border: 1px solid var(--border-secondary); border-radius: 3px; padding: 1px 7px;
+}
+.rs-buff-btn:hover { color: var(--text-primary); border-color: var(--border-highlight); }
+.pt-tactics .rs-cell { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; padding: 11px 12px; column-gap: normal; }   /* 목록의 칸 사이(gap + 고르게 나눈 폭)를 그대로 — 공용 `.rs-cell` 의 gap 5px 이 덮으면 열 이름 줄과 어긋난다 (ADR-0763) */
 .pt-tactics .rs-top { gap: 6px; }
 .pt-tactics .rs-state { margin-left: 0; min-width: 3ch; }   /* 맨 왼쪽 (2026-09-27) — On · Off 글자 폭이 달라도 등급 칩이 같은 자리에 선다 */
 .pt-tactics .rs-roll { margin-top: 0; justify-self: end; }
 .pt-tactics .rs-lock { grid-column: 1 / -1; margin-top: 0; }   /* 잠긴 행은 여는 조건 한 줄 — 첫 세로줄부터 선다 (ADR-0261) */
-/* 리롤 줄 — 전체 리롤 버튼 하나 · 진척 줄과 칸 목록 사이 · 잠금 토글이 선 오른쪽 세로줄 위에 맞춘다 (§15 · R28) */
-.pt-tactics .rs-bar { display: flex; justify-content: flex-end; margin: -3px 0 10px; }
+/* 전체 리롤 — 진척 줄 오른쪽 끝 (§15 · ADR-0763 · ~~진척 줄 아래 리롤 줄~~) */
+.pt-tactics .rs-head .rs-roll { margin-left: auto; align-self: center; }
+/* 열 이름 줄 — 칸 목록과 같은 격자(subgrid) · 좌우 여백 = 칸 행의 여백 + 테두리 1px · 잠금만 오른쪽 끝 (ADR-0763) */
+.pt-tactics .rs-colh {
+    grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: end;
+    padding: 0 13px; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap;
+}
+.pt-tactics .rs-colh .c-lock { justify-self: end; }
 /* 잠금 토글 — 행의 넷째 칸. 잠근 칸은 버튼이 강조되고 행 왼쪽에 경고색 선이 선다 (`.locked` = 안 열린 칸과는 다른 말이다) */
 .pt-tactics .rs-pin { justify-self: end; }
 .rs-pin.on { color: var(--text-primary); border-color: var(--border-highlight); }
@@ -5207,11 +5341,14 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .tr-adv-hero .no { color: var(--color-warning); }
 /* 갈래는 세로로 쌓인다 · 갈래마다 가로로 긴 카드 = 왼쪽 칸(갈래 이름 + 설명) | 오른쪽 스킬 줄 셋 (ADR-0402 · ADR-0403) */
 /* 갈래 카드 셋은 **높이가 같다** — 가장 긴 카드에 맞춘다(설명이 두 줄로 접힌 스킬이 한 카드만 늘리지 않게 · 2026-10-08 사용자 지시 · ADR-0538) */
-.tr-adv-row { flex: 1 0 auto; display: grid; grid-auto-rows: 1fr; gap: 10px; }
-.tr-adv-branch { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 5fr); gap: 12px; padding: 4px 10px; background: var(--bg-card); border: 1px solid var(--border-secondary); }
-/* 전직 전 — 카드를 눌러 갈래를 고른다(ADR-0536) · 고른 것은 파란 테두리(아래 `.pick`) */
+/* 갈래는 **테두리 · 바탕이 없고 갈래마다 위에 가로 구분선 하나**(패널 제목 밑줄과 같은 선) — 빈 간격 없이 선이 셋을 나눈다
+   (2026-10-25 사용자 지시 「네모낳게 둘러쳐있는데 사이 구분선으로 깔끔하게」 · ADR-0783 — ~~카드 테두리 · 사이 10px~~ ADR-0402 · ADR-0607).
+   첫 갈래 위에도 선다 — 지금 가진 스킬과 갈래 셋 사이 (같은 날 「광전사 위에도 선하나」 · ADR-0784 — ~~갈래 사이만~~ ADR-0783) */
+.tr-adv-row { flex: 1 0 auto; display: grid; grid-auto-rows: 1fr; }
+.tr-adv-branch { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 5fr); gap: 12px; padding: 4px 10px; border-top: 1px solid var(--border-primary); }
+/* 전직 전 — 카드를 눌러 갈래를 고른다(ADR-0536) · 고른 것은 파란 테두리(아래 `.pick`) · 올리면 바탕이 조금 밝다(테두리가 없다 · ADR-0783) */
 .tr-adv-branch.can-pick { cursor: pointer; }
-.tr-adv-branch.can-pick:hover { border-color: var(--border-primary); }
+.tr-adv-branch.can-pick:hover { background: var(--surface-5); }
 /* 고른 테두리는 카드 **안쪽**에 그린다 — 카드가 스크롤 본문(`.box-body` · overflow)의 양 끝에 붙어 바깥 테두리는 잘렸다 (ADR-0538) */
 .tr-adv-branch.pick { outline: 2px solid var(--color-info); outline-offset: -2px; }
 /* 전직 후 — 갈래 셋이 그대로 서고 **전직한 갈래만 주황 테두리**(같은 안쪽 자리 · 나머지 둘은 평소 카드 · 누를 것이 없다) (2026-10-12 사용자 지시 · ADR-0592) */
@@ -5240,19 +5377,22 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .cn-work {
     flex: 1 1 0; min-height: 0;
     /* 부지 | 상세가 폭을 거의 반씩 · 사이를 넉넉히 (2026-09-24 사용자 지시 「왼쪽이 너무 답답해 보여」 — ~~상세 1.25 · 간격 12~~ ADR-0326).
-       **상세는 반에서 100px 좁고** 오른쪽 끝이 판에 붙는다 · 왼쪽 열은 나머지 전부이고 **부지 격자는 그 왼쪽에 붙는다**(`.cn-lots` 의 폭 · `justify-self`) · 남는 폭이 두 열 사이가 된다
+       **상세는 반에서 100px 좁고** 오른쪽 끝이 판에 붙는다 · 왼쪽 열은 나머지 전부이고 **부지 격자가 그 열을 채운다**(`.cn-lots` 의 폭 — 상세와의 사이 `--cn-gap` 만 남긴다 · ADR-0747)
        (2026-09-24 사용자 지시 「오른쪽 넓이를 줄여」 → 「더 줄여」 → 「100px 까지」 → 「그림 가로를 살짝만」 → 가운데에 세워 본 뒤 「다시 왼쪽에 맞춰」) */
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, calc((100% - 24px) / 2 - 100px)); grid-template-rows: minmax(0, 1fr); gap: 0;
 }
 /* 박스 — 한 장의 남는 세로를 다 받는다(`.page-stack > .fill` · 영웅 띠는 없다 — ADR-0354). 안은 두 열 */
-.cn-box { display: flex; flex-direction: column; }
-/* 부지 격자의 폭 = 왼쪽 열 − 64px — 반 폭 + 60px(네모가 반 폭 때보다 조금 넓다 · 사용자 「그림 가로를 살짝만」)과 같은 값이고 왼쪽에 붙어 남는 64px 가 상세와의 사이가 된다 */
-.cn-work > .cn-lots { width: calc(100% - 64px); justify-self: start; }
-/* 부지 — 건물 하나가 네모 하나 · **한 줄에 3개**(3열 · 폭은 열이 나눠 갖는다 · 2026-09-24 사용자 지시 · ADR-0326) · **높이는 139 고정** (2026-09-23 사용자 지시 「세로는 고정」).
-   **격자는 늘 3 × 5 = 15칸** — 빈 칸은 빈 부지(`.cn-lot.empty`)가 채운다. **네모 높이 148 그대로 · 줄 간격 9** — 다섯 줄(148 × 5 + 9 × 4 = 776)이 격자 세로(한 장 기준 779)에 든다 ·
-   간격 10 이면 780 으로 1 이 넘쳐 스크롤이 생긴다 (2026-09-24 사용자 지시 「5칸으로 늘려서 세로 높이 기존처럼」 · ADR-0355 — ~~3 × 4 · 줄 187~~ ADR-0354). 건물이 15를 넘으면 줄이 늘고 격자가 스크롤한다 */
+/* **부지 둘레는 한 값(`--cn-gap` 22)** — 박스 위 · 왼쪽 여백 · 칸 사이 · 줄 사이 · 상세와의 사이가 같다 (2026-10-24 사용자 지시 「위랑 왼쪽이 너무 좁은데」 · ADR-0747).
+   위 여백은 상세에도 걸려 두 열의 윗변이 같다 · 오른쪽 · 아래는 패널 여백 그대로(상세가 판 오른쪽 끝에 붙는다).
+   22 가 상한이다 — 값이 1 늘면 상세 머리(아래 `.cn-head`)와 위 여백이 1 씩 먹어 랭크 목록이 2 준다 · 23 이면 선술집(두 줄 랭크 넷)의 목록이 스크롤한다 (1600×800 실측) */
+.cn-box { --cn-gap: 22px; display: flex; flex-direction: column; padding-top: var(--cn-gap); padding-left: var(--cn-gap); }
+/* 부지 격자의 폭 = 왼쪽 열 − 칸 사이 하나 — 남는 폭이 상세와의 사이다 */
+.cn-work > .cn-lots { width: calc(100% - var(--cn-gap)); justify-self: start; }
+/* 부지 — 건물 하나가 네모 하나 · **한 줄에 3개**(3열 · 폭은 열이 나눠 갖는다 · 2026-09-24 사용자 지시 · ADR-0326) · **높이는 148 고정** (2026-09-23 사용자 지시 「세로는 고정」).
+   **격자는 늘 3 × 4 = 12칸** — 빈 칸은 빈 부지(`.cn-lot.empty`)가 채운다. **칸 사이 · 줄 사이 = `--cn-gap`** — 네 줄(148 × 4 + 22 × 3 = 658)이 격자 세로(한 장 기준 767)에 들고 아래는 빈다
+   (2026-10-24 사용자 지시 「그림별 거리를 조금만 더」 · 「5번째 칸 없애고 세로끼리도 좀만 더」 · ADR-0745 · ADR-0747). 건물이 12를 넘으면 줄이 늘고 격자가 스크롤한다 */
 .cn-lots {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 148px; align-content: start; gap: 9px 10px;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 148px; align-content: start; gap: var(--cn-gap);
     overflow-y: auto; min-height: 0;
 }
 .cn-lot {
@@ -5298,10 +5438,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     background: var(--bg-secondary); border: 1px solid var(--border-primary);
 }
 /* 머리 — 그림(부지와 같은 그림 · 3:2) + 바로 아래 눈금 · 이름 · 상태 한 줄(미건설 · n랭크 · 최대 랭크) · 기능 칸(ADR-0383). 안 지었으면 그림이 어둡고 테두리가 점선.
-   **그림 + 눈금 = 114** — 그림 101 + 틈 6 + 눈금 7 (옛 그림 114 한 장의 자리를 그대로 쓴다 · 아래 문장의 114 는 이 합이다).
-   **그림 높이 114 = 아래 두 소제목의 글자 윗선이 부지 둘째 줄 네모의 윗변(148 + 9)에 서는 값** (2026-09-24 사용자 지시 · 한 장 실측 · ~~96 × 64~~ · ~~106~~ 은 줄 139 · ~~104~~ 는 줄 137 · ~~115~~ 는 줄 간격 10 · ~~154~~ 는 줄 187 때 — 둘째 줄 윗변이 움직인 만큼 같이 움직인다).
-   머리 높이는 그림이 정한다 — 부지 네모 높이 · `.cn-side` 위 여백 · `.cn-head` 아래 여백 · `.sub-h` 위 여백이 바뀌면 다시 잰다 */
-.cn-head { flex: none; display: flex; align-items: flex-start; gap: 16px; margin-bottom: 12px; --cn-thumb-h: 101px; --cn-head-h: 114px; }
+   **그림 + 눈금 = 127** — 그림 114 + 틈 6 + 눈금 7 (아래 문장의 127 은 이 합이다).
+   **그림 + 눈금 127 = 아래 두 소제목의 글자 윗선이 부지 둘째 줄 네모의 윗변(148 + 22)에 서는 값** (2026-09-24 사용자 지시 · 한 장 실측 · 줄 사이 9 때 114 → 22 에서 127 (ADR-0747) — 둘째 줄 윗변이 움직인 만큼 같이 움직인다).
+   머리 높이는 그림이 정한다 — 부지 네모 높이 · 줄 사이 · `.cn-side` 위 여백 · `.cn-head` 아래 여백 · `.sub-h` 위 여백이 바뀌면 다시 잰다 */
+.cn-head { flex: none; display: flex; align-items: flex-start; gap: 16px; margin-bottom: 12px; --cn-thumb-h: 114px; --cn-head-h: 127px; }
 .cn-thumb-col { flex: none; display: flex; flex-direction: column; gap: 6px; }
 .cn-thumb {
     flex: none; width: calc(var(--cn-thumb-h) * 1.5); height: var(--cn-thumb-h); display: flex; align-items: center; justify-content: center;
@@ -5328,7 +5468,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 머리 아래는 한 열 — 「다음 랭크」 위 · 「{건물} 랭크」 목록 아래 · 목록만 스크롤한다 (ADR-0388) */
 .cn-next .cn-sub { margin-bottom: 0; }
 .cn-next { flex: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 0; }   /* 아래 여백 0 — 랭크 목록을 위로 올려 2.2줄 칸 일곱이 바닥 안에 든다 (2026-09-28 · ~~18~~) */   /* 머리 아래 위 칸 (ADR-0388) */
-/* 「다음 랭크」 높이 고정 — 가장 긴 판(제련소 IV: 여는 것 4줄 + 조건 한 줄)에 맞춘다 · 그래서 「{건물} 랭크」 소제목이 건물 · 랭크와 상관없이 늘 같은 자리다 (2026-09-28 사용자 지시 「다음 랭크의 최종 하단을 확정」 · 1600×800 실측). 여는 것이 더 길어지면 다시 잰다 */
+/* 「다음 랭크」 높이 고정 — 가장 긴 판(대장간 IV: 여는 것 4줄 + 조건 한 줄)에 맞춘다 · 그래서 「{건물} 랭크」 소제목이 건물 · 랭크와 상관없이 늘 같은 자리다 (2026-09-28 사용자 지시 「다음 랭크의 최종 하단을 확정」 · 1600×800 실측). 여는 것이 더 길어지면 다시 잰다 */
 .cn-next { min-height: 204px; }
 /* 「n랭크」 아래 여는 것 설명 — 한 줄에 한 문장 · 상자 없이 글이다 (ADR-0324 · ADR-0325).
    **소제목 아래 글은 전부 `--fs-xs`** — 소제목(`--fs-md` 굵게)보다 눈에 띄게 작다 · 강조는 색 · 굵기가 든다 (2026-09-24 사용자 지시 「부제목보다 크거나 비슷하면 … 더 작아야 해」 · ~~`--fs-md` · `--fs-sm`~~) */
@@ -5380,7 +5520,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 }
 /* 상태는 글자색과 오른쪽 끝 글자가 말한다 — 지음 흰 글씨 + 「✓」(목록의 주황은 조건만 — ADR-0330) · 다음 흰 굵은 글 + 옅은 붉은 바탕 · 그 뒤 · 준비 중 흐림 */
 .cn-rank {
-    flex: 0 0 auto; font-size: var(--fs-xs); min-height: calc(2.2 * 1.4em + 9px);   /* 글 2.2줄(줄 높이 1.4 · 2026-09-28 사용자 지시 — 일곱 랭크가 목록 바닥까지 찬다) + 위아래 여백 8 + 아래 선 1 (ADR-0392) · 늘이지 않는다 — 랭크가 적으면 목록 아래가 빈다 (ADR-0398) */
+    flex: 0 0 auto; font-size: var(--fs-xs); min-height: calc(2 * 1.4em + 9px);   /* 글 두 줄(줄 높이 1.4 · 2026-09-28 사용자 지시 — 일곱 랭크가 목록 바닥까지 찬다 · 박스 위 여백 · 머리가 부지 둘레 22 를 따라 커져 2.2 에서 줄였다 · ADR-0747) + 위아래 여백 8 + 아래 선 1 (ADR-0392) · 늘이지 않는다 — 랭크가 적으면 목록 아래가 빈다 (ADR-0398) */
     display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; align-items: center;
     column-gap: 14px; padding: 4px 8px; line-height: 1.4;
     border-bottom: 1px solid var(--border-dark);
@@ -5402,8 +5542,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .cn-state { grid-column: 3; font-size: var(--fs-xs); white-space: nowrap; color: var(--text-muted); }
 .cn-rank.on .cn-state { color: var(--color-success); }
 
-/* ───────── 제련소 (SCREEN_DESIGN §8-2) ─────────
-   상점과 같은 세로 3단(ADR-0366) — 띠 / 왼쪽 장비 패널 · 오른쪽 제련소 열(작업 탭 + 패널) / 아이템창. 강화 패널은 열 전폭이다. 2단 격자는 §4-1 편성 패널과 같은 문법이고
+/* ───────── 대장간 (SCREEN_DESIGN §8-2) ─────────
+   상점과 같은 세로 3단(ADR-0366) — 띠 / 왼쪽 장비 패널 · 오른쪽 대장간 열(작업 탭 + 패널) / 아이템창. 강화 패널은 열 전폭이다. 2단 격자는 §4-1 편성 패널과 같은 문법이고
    좁아지면 세로로 접힌다 — 라벨 칸에 고정 px 을 주지 않는다 (src/ui/README.md 폭 정책) */
 .fg-col { border: 1px solid var(--border-dark); background: var(--bg-input); border-radius: 3px; padding: 8px; min-width: 0; }
 /* 강화 대상으로 고른 칸 — 장비칸 · 아이템창이 같은 강조 테두리 (ADR-0364). 희귀도 색 테두리는 그대로 두고 바깥에 한 겹 */
@@ -5571,7 +5711,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     border: 1px solid var(--border-dark); background: var(--bg-input); padding: 3px 9px; border-radius: 2px; }
 .fg-kind .fg-kname { font-size: var(--fs-md); white-space: nowrap; padding-left: 12px; }   /* 그림과 이름 사이는 열 간격보다 더 띄운다 [사용자 지시] */
 .fg-kmats { display: flex; gap: 6px; }
-/* 재료 칸 — 그림 한 변(40) 높이의 상자 안에 두 줄: 재료 이름(재료 아트가 없다 · 상점 `.td-mat` 과 같은 규칙) · `보유/필요`.
+/* 재료 칸 — 그림 한 변(40) 높이의 상자 안에 두 줄: 재료 이름(재료 아트가 없다) · `보유/필요`.
    폭은 이름을 따른다(한 줄 · 고정 px 금지) — 한 레벨의 줄들은 같은 재료라 열이 저절로 맞는다 */
 .fg-kmat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
     height: 40px; min-width: 52px; padding: 0 6px;
@@ -5609,8 +5749,6 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .td-slot .inv-icon { width: 44px; height: 44px; }
 /* 고른 칸 — 영웅 띠 · 관전 유닛 카드와 같은 **파란 겉 테두리**(§5). 테두리 색은 희귀도가 들고 있어 그 바깥에 선다 */
 .inv-cell.td-picked { outline: 2px solid var(--color-info); outline-offset: 1px; }
-/* 재료 칸의 그림 자리 — 아이콘 아트가 없어 글자로 선다(⚠ 자리표시) */
-.td-mat { font-size: var(--fs-xs); color: var(--text-secondary); }
 /* 칸 아래 가격 — 칸 안 ilvl(`.inv-lv` 2xs)보다 크게 11px(사용자 지시 「골드 표기 글씨 더 키워」 → 「11로 조금 줄여」) · 특수상단의 작은 칸도 같다 */
 .td-price { font-size: 11px; color: var(--color-warning); text-align: center; white-space: nowrap; }
 .td-price.no { color: var(--color-error); }
@@ -5619,7 +5757,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     border: 1px solid var(--border-dark); background: var(--bg-input); border-radius: 2px; font-size: var(--fs-xs); }
 .td-buy-n { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .td-buy .td-price { font-size: var(--fs-xs); }
-/* 물약 수 고르기 ×n — 고른 수는 강조색 테두리 + 밝은 글자(공용 `.btn.sm.on` 은 한 단 밝아질 뿐이라 안 갈린다 · 도감 · 제련소 탭과 같은 처방 · 2026-10-23) */
+/* 물약 수 고르기 ×n — 고른 수는 강조색 테두리 + 밝은 글자(공용 `.btn.sm.on` 은 한 단 밝아질 뿐이라 안 갈린다 · 도감 · 대장간 탭과 같은 처방 · 2026-10-23) */
 .td-buy .btn.sm.on { color: var(--text-primary); border-color: var(--text-accent); }
 /* 상점은 **캐릭터 탭과 같은 세로 3단**(`.char-stack` — 띠 / 가운데 단 / 아이템창 · ADR-0365).
    가운데 단 = 왼쪽 영웅 장비 · 오른쪽 상점 열. 장비 칸은 캐릭터 탭 네 칸 중 첫 칸과 같은 폭이다(`.cols` 틈 14px 셋을 뺀 4분의 1) */
@@ -5629,16 +5767,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    폭은 고정 반반이라 상단의 장비 · 재료 탭을 바꿔도 특수상단이 밀리지 않는다. 둘 다 단 높이까지 서고 넘치면 **제 본문이** 스크롤한다 */
 .c-shop-col { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); min-height: 0; }
 .c-shop-col > .panel { display: flex; flex-direction: column; min-height: 0; }
-/* 특수상단의 상인 카드 — **한 줄로 납작하게** 선다(사용자 지시 「특수상단을 일단 좀 줄여」 · ADR-0235) — 왼쪽 이름 · 남은 시간 / 가운데 작은 칸 / 오른쪽 사기 줄 */
+/* 특수상단의 상인 카드 — **한 줄로 납작하게** 선다(사용자 지시 「특수상단을 일단 좀 줄여」 · ADR-0235) — 왼쪽 이름 · 남은 시간 / 오른쪽 작은 칸 셋(ADR-0782) */
 .td-card { display: inline-flex; align-items: center; gap: 14px; max-width: 100%;
     padding: 7px 10px; background: var(--bg-card); border: 1px solid var(--border-secondary); }
 .td-card-h { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); white-space: nowrap; }
 .td-card-h b { font-weight: 500; }
-.td-card .td-goods { display: flex; align-items: center; gap: 12px; }
 /* 작은 칸 — 모양은 상단 칸 그대로, 크기만 줄인다 */
 .td-card .td-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 40px; gap: 6px; }
-.td-card .td-slot .inv-icon { width: 30px; height: 30px; }
-.td-card .td-buy { margin-top: 0; min-width: 200px; }
+/* 물건 칸 — 물건이 미정이라 빈 칸 가운데에 `?` 하나만 선다 · 누르는 자리가 아니다 (§8-3 · ADR-0782) */
+.td-unknown { color: var(--text-muted); font-size: var(--fs-md); cursor: default; user-select: none; }
 /* 남은 시간 — **정보**다. 재촉 연출(빨강 · 깜빡임 · 강조)을 붙이지 않는다 (기획 §2-6 방치형 계약) */
 .td-clock { color: var(--text-muted); font-size: var(--fs-xs); }
 /* 상단 제목 줄 오른쪽 끝 — 무료까지 남은 시간 + [교체] 한 덩이 (§8-3 · ADR-0648). 남은 시간은 제목의 굵기를 안 받는다 */
@@ -5710,12 +5847,12 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 상인이 없을 때 — 카드 대신 한 줄이 자리를 지킨다(「지금 없다」와 「고장났다」가 갈려야 한다 · §4-1) */
 .td-away { display: inline-block; padding: 7px 9px; border: 1px solid var(--border-dark); background: var(--bg-secondary); border-radius: 2px; }
 
-/* 제련소는 **상점과 같은 세로 3단**(`.char-stack` — 띠 / 가운데 단 / 아이템창 · ADR-0366). 가운데 단 = 왼쪽 영웅 장비 · 오른쪽 제련소 열.
-   장비 칸 폭은 상점 · 캐릭터 탭 첫 칸과 같다. 제련소 열은 작업 탭(제 높이) 아래 패널(`.fill`)이 남는 세로를 받아 제 본문이 스크롤한다 */
+/* 대장간은 **상점과 같은 세로 3단**(`.char-stack` — 띠 / 가운데 단 / 아이템창 · ADR-0366). 가운데 단 = 왼쪽 영웅 장비 · 오른쪽 대장간 열.
+   장비 칸 폭은 상점 · 캐릭터 탭 첫 칸과 같다. 대장간 열은 작업 탭(제 높이) 아래 패널(`.fill`)이 남는 세로를 받아 제 본문이 스크롤한다 */
 .c-forge-band { grid-template-columns: minmax(0, calc((100% - 3 * 14px) / 4)) minmax(0, 1fr); min-height: 0; }
 .c-forge-band > .panel { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
 .c-forge-col { min-height: 0; }
-/* 제련소 — 제작 · 강화 · 크래프트 중 고른 하나만 편다 · 작업 탭은 패널 박스 바로 위(`.fg-tabs` — 도감 `.cx-tabs` 와 한 규칙) (SCREEN_DESIGN §8-2 · ADR-0142 · ADR-0281) */
+/* 대장간 — 제작 · 강화 · 크래프트 중 고른 하나만 편다 · 작업 탭은 패널 박스 바로 위(`.fg-tabs` — 도감 `.cx-tabs` 와 한 규칙) (SCREEN_DESIGN §8-2 · ADR-0142 · ADR-0281) */
 .fg-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-items: start; }
 /* 박스 안에서는 고른 작업이 박스 끝까지 선다 (ADR-0097) — 넘치면 그 영역이 스크롤한다 */
 .fg-split.box-body { align-items: stretch; }
@@ -5781,3 +5918,111 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .lab-card .tip-card { background: var(--bg-card); border: 1px solid var(--border-secondary); }
 .lab-log-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--fs-xs); }
 .lab-log { grid-template-columns: repeat(auto-fill, 52px); gap: 6px; align-content: start; }
+
+/* ───────── 겉모양 비교 — D2 Min (임시 · 2026-10-26 사용자 지시 · SCREEN_DESIGN §10-5 · ADR-0791) ─────────
+   `⚙` 설정 탭 마지막 줄 `Skin` 이 `<html data-skin="d2min">` 을 걸면 화면을 **컨셉 17번(「최소화한 디아블로 2」)의 부품**으로 입힌다 —
+   부품 다섯 장은 그 그림에서 잘라 낸 것이다(`src/assets/art/skins/source/cut_d2min_parts.py`):
+     frame  = 패널 둘레의 두 겹 돌 테두리(9-slice · slice 11) · btn = 버튼의 밝은 턱(9-slice · slice 4) · slot = 파인 칸 한 칸
+     chrome = 밝은 돌 결(상단바 · 제목 띠 · 버튼 · 고른 탭) · fill = 어두운 돌 결(패널 · 탭 열 · 카드)
+   테두리는 `border-image` 로 그려 테두리 두께 · 여백을 안 바꾼다(그림 폭은 `border-image-width` · 바깥으로는 `-outset`).
+   제목 띠는 음의 여백 = 같은 양의 안쪽 여백이라 글자 자리가 그대로다. 바뀌는 자리는 탭 열 하나다(틀 안으로 버튼이 8px 들어간다).
+   뜻이 있는 선(희귀도 · 등급 · 진영 · 고른 표시 · 경고 · 주 행동)은 다른 토큰 · 더 구체적인 규칙이라 그대로 선다.
+   ⚠ 규칙은 모두 `:where(:root[data-skin="d2min"])` 로 감싼다 — 감싼 부분은 강도 0 이라 각 규칙이 바꾸는 기본 규칙과 같은 강도로 서고
+     파일 끝이라 그것만 이긴다. 걷어낼 때는 이 절 · devcompare.js 의 Skin 줄 · `assets/art/skins/` 를 지운다 */
+:root[data-skin="d2min"] {
+    --sk-frame: url('../assets/art/skins/d2min_frame.webp');
+    --sk-btn: url('../assets/art/skins/d2min_btn.webp');
+    --sk-slot: url('../assets/art/skins/d2min_slot.webp');
+    --sk-chrome: url('../assets/art/skins/d2min_chrome.webp');
+    --sk-fill: url('../assets/art/skins/d2min_fill.webp');
+    --sk-ground: #050505;
+    --sk-lip: rgba(168, 160, 148, .30);   /* 돌 턱의 밝은 줄 — 컨셉의 테두리 밝은 쪽과 같은 결 */
+    /* 중립 회색 선 → 홈 색 (판 사이 틈으로 읽힌다) */
+    --border-primary: #070707;
+    --border-secondary: #0a0a0a;
+    --border-dark: #060606;
+    --border-highlight: #6a6660;
+    --bg-secondary: #0f0f0f;
+    --bg-card: #0f0f0f;
+    --bg-tertiary: #161616;
+    --bg-input: #080808;
+    --art-opacity: .03;
+}
+
+/* 바탕 — 판들 사이 틈 */
+:where(:root[data-skin="d2min"]) #stage { background: linear-gradient(rgba(0, 0, 0, .6), rgba(0, 0, 0, .6)), var(--sk-fill), var(--sk-ground); }
+
+/* 셸 — 상단바 · 브랜드는 밝은 돌, 탭 열은 어두운 돌. 셋 다 두 겹 돌 테두리를 두른다 */
+:where(:root[data-skin="d2min"]) .brand,
+:where(:root[data-skin="d2min"]) .topbar { background: var(--sk-chrome), #1a1a1a; }
+:where(:root[data-skin="d2min"]) .nav { background: var(--sk-fill), #0f0f0f; }
+:where(:root[data-skin="d2min"]) .brand,
+:where(:root[data-skin="d2min"]) .topbar,
+:where(:root[data-skin="d2min"]) .nav { border-image: var(--sk-frame) 11 / 9px / 0 round; }
+/* 탭 — 틀 안으로 8px 들인다(글자 자리는 그대로) · 줄 사이 홈 줄 · 고른 탭 = 밝은 돌판 + 턱 (왼쪽 빨간 띠는 그대로) */
+:where(:root[data-skin="d2min"]) .nav button { margin: 0 8px; padding-left: 23px; padding-right: 8px; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .75), 0 1px 0 rgba(255, 255, 255, .025); }
+:where(:root[data-skin="d2min"]) .nav button:hover { background: rgba(255, 255, 255, .03); }
+:where(:root[data-skin="d2min"]) .nav button.on { background: var(--sk-chrome), #1c1c1c; box-shadow: inset 0 0 0 1px var(--sk-lip), inset 0 2px 0 rgba(255, 255, 255, .05), 0 1px 3px rgba(0, 0, 0, .8); }
+:where(:root[data-skin="d2min"]) .nav button.todo::after { right: 12px; }
+
+/* 패널 — 어두운 돌 + 두 겹 돌 테두리(바깥으로 4px 나간다 — 글자와 안 겹친다) */
+:where(:root[data-skin="d2min"]) .panel {
+    background: var(--sk-fill), #0f0f0f;
+    border-image: var(--sk-frame) 11 / 11px / 4px round;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .7);
+}
+/* 패널 제목 = 밝은 돌 띠 — 틀 안쪽 끝(7px)까지 넓힌다. 음의 여백만큼 안쪽 여백을 줘 글자 자리는 그대로다 */
+:where(:root[data-skin="d2min"]) .panel > h2 {
+    margin: -4px -10px 8px; padding: 4px 10px 5px;
+    background: var(--sk-chrome), #1a1a1a;
+    border-bottom-color: #050505; box-shadow: 0 1px 0 rgba(255, 255, 255, .04);
+}
+:where(:root[data-skin="d2min"]) .sub-h {
+    margin-left: -8px; margin-right: -8px; padding-left: 8px; padding-right: 8px;
+    background: var(--sk-chrome), #1a1a1a;
+    border-bottom-color: #050505; box-shadow: 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+/* 버튼 — 밝은 돌 + 턱(9-slice). 고른 버튼 · 주 행동 · 상태 색 버튼은 턱을 걷어 제 테두리 색을 보인다 */
+:where(:root[data-skin="d2min"]) .btn { background: var(--sk-chrome), #181818; border-image: var(--sk-btn) 4 / 4px / 0 stretch; color: #dedad4; box-shadow: inset 0 0 0 1px rgba(168, 160, 148, .16), 0 1px 2px rgba(0, 0, 0, .8); }
+:where(:root[data-skin="d2min"]) .btn:hover { filter: brightness(1.25); }
+:where(:root[data-skin="d2min"]) .btn.on,
+:where(:root[data-skin="d2min"]) .btn.primary { border-image: none; }
+:where(:root[data-skin="d2min"]) .btn.sm.on { background: var(--sk-chrome), #262626; box-shadow: inset 0 0 0 1px var(--sk-lip); color: #fff; }
+
+/* 파인 칸 — 컨셉의 빈 칸 그림을 칸 크기로 늘린다. 찬 칸도 그 홈에 앉는다 · 희귀도 테두리(인라인)는 그 위에 그대로 선다 */
+:where(:root[data-skin="d2min"]) .inv-cell,
+:where(:root[data-skin="d2min"]) .inv-cell.filled,
+:where(:root[data-skin="d2min"]) .pd-cell,
+:where(:root[data-skin="d2min"]) .pd-cell.filled,
+:where(:root[data-skin="d2min"]) .sk-card,
+:where(:root[data-skin="d2min"]) .cd-slot,
+:where(:root[data-skin="d2min"]) .p-slot,
+:where(:root[data-skin="d2min"]) .fm-cell,
+:where(:root[data-skin="d2min"]) .hs-card.empty,
+:where(:root[data-skin="d2min"]) .cn-lot.empty { background: var(--sk-slot) center / 100% 100% no-repeat, #080808; box-shadow: none; }
+/* 빈 자리의 점선은 칸 그림이 대신한다 */
+:where(:root[data-skin="d2min"]) .inv-cell:not(.filled):not(.box),
+:where(:root[data-skin="d2min"]) .pd-cell:not(.filled),
+:where(:root[data-skin="d2min"]) .p-slot:not(.full),
+:where(:root[data-skin="d2min"]) .fm-cell:not(.filled),
+:where(:root[data-skin="d2min"]) .hs-card.empty,
+:where(:root[data-skin="d2min"]) .cn-lot.empty { border-color: transparent; }
+:where(:root[data-skin="d2min"]) .inv-cell.filled:hover,
+:where(:root[data-skin="d2min"]) .pd-cell:hover,
+:where(:root[data-skin="d2min"]) .pd-cell.filled:hover { filter: brightness(1.35); }
+:where(:root[data-skin="d2min"]) .bar { background: #050505; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .04); }
+
+/* 카드 — 영웅 띠 · 관전 · 전술 칸 · 건설 부지: 어두운 돌 + 턱 한 줄 (윗변 등급 · 진영 색 · 부지 그림은 그대로) */
+:where(:root[data-skin="d2min"]) .hs-card,
+:where(:root[data-skin="d2min"]) .unit,
+:where(:root[data-skin="d2min"]) .rs-cell { background: var(--sk-fill), #121212; }
+:where(:root[data-skin="d2min"]) .hs-card,
+:where(:root[data-skin="d2min"]) .unit,
+:where(:root[data-skin="d2min"]) .rs-cell,
+:where(:root[data-skin="d2min"]) .cn-lot { box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }
+
+/* 전장 — 판에 파인 넓은 홈 · 툴팁 · 창 — 패널과 같은 돌판 + 테두리 */
+:where(:root[data-skin="d2min"]) .arena { box-shadow: inset 0 2px 12px rgba(0, 0, 0, .9); }
+:where(:root[data-skin="d2min"]) .tooltip,
+:where(:root[data-skin="d2min"]) .modal-box { background: var(--sk-fill), #0f0f0f; border-image: var(--sk-frame) 11 / 11px / 3px round; }

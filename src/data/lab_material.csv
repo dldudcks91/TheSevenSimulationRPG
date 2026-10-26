@@ -1,0 +1,4 @@
+post,material_id,name_kr,name_en,yield_per_hour,description_kr
+mine,iron_ore,철광,Iron Ore,60,⚠임시 [신설 2026-10-25 · R356 · base_expedition_design §2-1 · item_design §5-1 — mine_node · gather_node · log_node(단계 7) 셋을 대체] — 수량은 구조 검증용 임시값이다. 한 행 = 연구소 「자원」 줄의 재료 지점 하나(post = lab_node.csv 의 res 줄 지점 id)가 내는 재료 · 재료에 단계가 없다 — 뒤로 갈수록 필요 수량이 는다 · 상위 재료는 캐지 않고 셋을 합성해서만 만든다(GAME_DESIGN §9 10-24) · 행 순서 = 화면 · 대박 굴림 순서. 채광 = 철광 — 무기 제작 · 강화 · 건설이 먹는다
+gather,herb,약초,Herb,60,⚠임시 — 채집 = 약초 — 크래프트 · 물약이 먹는다
+log,timber,목재,Timber,60,⚠임시 — 벌목 = 목재 — 방어구 제작 · 강화 · 건설이 먹는다
