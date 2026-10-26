@@ -401,6 +401,7 @@ const state = {
     //   세이브 아님 — 새로고침하면 걷힌다(사용자 선택) · `lvSeenOf` = 이 표를 연 게임(G) — 새 게임 · 불러오기면 새로 연다(`render`)
     lvSeen: {}, lvSeenOf: null,
     heroUid: null,
+    btNoPick: false,        // 관전에서 아레나 빈 곳을 눌러 장착 대상을 비웠다 — 관전 화면에 있는 동안만 · `heroUid` 는 그대로 (ADR-0849)
     codexChapter: 1,
     expChapter: null,       // 원정에서 보고 있는 챕터 — `null` 이면 「다음에 갈 곳」으로 자동 (ADR-0067)
     // 도감 세그먼트 (SCREEN_DESIGN §9) — monster | character | item | skill | fx | mastery.
@@ -665,7 +666,7 @@ function boxCell(cell, it, h, where, moding, onPick) {
         if (moding || isTouchInput()) return;
         hideTip();
         const pt = stagePoint(e);
-        state.itemMenu = { uid: it.uid, hero: h.uid, x: pt.x, y: pt.y };
+        state.itemMenu = { uid: it.uid, hero: h?.uid ?? null, x: pt.x, y: pt.y };
         render();
     };
     return cell;
@@ -739,6 +740,7 @@ function render() {
     M.applyDocumentBg();
     if (G) {
         if (!heroById(state.heroUid)) state.heroUid = G.heroes[0]?.uid ?? null;
+        if (!(state.tab === 'expedition' && expScreen() === 'battle')) state.btNoPick = false;   // 비운 장착 대상은 관전을 떠나면 풀린다 (ADR-0849)
         // 레벨업 반짝임의 본 레벨 — 처음 보는 영웅은 지금 레벨을 본 것으로 친다 · 게임이 바뀌면 새로 연다 (ADR-0440).
         //   영웅은 그리기를 거친 뒤에야 파티에 들어 레벨이 오르므로(고용 · 편성은 클릭 → 그리기) 첫 레벨업 전에 여기서 적힌다
         if (state.lvSeenOf !== G) { state.lvSeenOf = G; state.lvSeen = {}; }
@@ -1747,7 +1749,9 @@ function renderExpedition(main) {
             // 유닛 툴팁 — 현재 착용 장비 + 캐릭터 탭과 같은 세부 옵션 + Alt 장비 hover의 기존 「착용 중」 아이템 카드 (ADR-0171 · ADR-0182 · ADR-0183)
             // 장착 대상 — 영웅 카드를 누르면 그 영웅으로 바뀐다 [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137].
             //   아래 보관 칸의 장착 · 비교가 그 영웅을 향한다. 다시 그려도 재생은 resume 으로 이어진다(가방 칸 클릭과 같은 길)
-            pickedUid: state.heroUid, onPickHero: uid => { state.heroUid = uid; render(); },
+            pickedUid: state.btNoPick ? null : state.heroUid, onPickHero: uid => { state.heroUid = uid; state.btNoPick = false; render(); },
+            // 아레나 빈 곳 클릭 — 장착 대상을 비운다: 테두리가 걷히고 카드를 다시 누를 때까지 보관 칸이 아무도 안 향한다 (§4-2 · ADR-0849)
+            onPickNone: () => { if (state.btNoPick) return; state.btNoPick = true; render(); },
             // 본 적 없는 레벨업 — 카드 신원의 `Lv` 가 반짝이고 그 글자를 누르면 걷힌다 (SCREEN_DESIGN §4-2 · ADR-0440)
             lvUnseen, onLvSeen: lvSee,
             // 진형 (⚠ 목업 · SCREEN_DESIGN §4-1) — 출발 순간에 찍은 스냅샷이다. 재생기는 이 값으로 **자리만** 민다
@@ -1813,7 +1817,7 @@ function renderExpedition(main) {
         const wn = watchNo() ?? 0;
         if (wn && wn !== invWatchPrev) state.invNo = wn;
         state.invWatch = wn;
-        battleBag = itemsPanel(heroById(state.heroUid));
+        battleBag = itemsPanel(bagHero());
         page.appendChild(battleBag);
         return;
     }
@@ -3114,7 +3118,7 @@ function refreshBattleBag() {
     bagStale = false;
     if (!battleBag?.isConnected) return;
     hideTip();                        // 갈아 끼울 칸 위에 떠 있던 툴팁이 주인을 잃는다 — 손이 빈 눈금에만 오므로 대개 빈 손이다
-    const fresh = itemsPanel(heroById(state.heroUid));
+    const fresh = itemsPanel(bagHero());
     battleBag.replaceWith(fresh);
     battleBag = fresh;
 }
@@ -3936,6 +3940,9 @@ function clearBagSel() {
     state.itemMenu = null;   // 우클릭 메뉴도 탭 밖으로 안 샌다 (ADR-0451)
 }
 
+/** 보관 칸이 향하는 영웅 — 관전에서 아레나 빈 곳을 눌러 비웠으면 없다(카드를 다시 누를 때까지 · ADR-0849) · 그 밖은 고른 영웅 */
+const bagHero = () => (state.btNoPick ? null : heroById(state.heroUid));
+
 const BAG_ROWS = 3;   // 보관 격자의 줄 수 — 가방 높이가 원정 화면과 같고 안 줄어든다(ADR-0384)
 /** 보관 — **왼쪽 창고 / 오른쪽 인벤토리 두 칸** [2026-09-11 사용자 확정 · SCREEN_DESIGN §6 · item_design §1].
  *  **갈래 탭은 없다 — 장비만 든다** [2026-09-21 · ADR-0188]. 재료(가루 · 낙인)는 셸 머리의 자원 줄이 이미 찍고 있어
@@ -4360,7 +4367,9 @@ function storageTools(where) {
         //   대상은 칸 클릭이 끼우는 영웅과 같다 — 캐릭터 탭 = 영웅 띠 · 원정 = 아레나의 고른 카드(둘 다 `state.heroUid`)
         if (!open && (state.tab === 'character' || state.tab === 'expedition')) {
             const ae = el('button', 'btn sm', t('ch.autoEq'));
-            ae.onclick = () => autoEquipHero(heroById(state.heroUid));
+            const ah = bagHero();   // 관전에서 대상을 비웠으면 꺼진 버튼 (ADR-0849)
+            if (!ah) ae.disabled = true;
+            else ae.onclick = () => autoEquipHero(ah);
             tools.appendChild(ae);
         }
         const sv = el('button', `btn sm toggle${open ? ' on' : ''}`, t('ch.sel.start'));
@@ -4481,15 +4490,16 @@ function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
                 + (it.locked ? '<span class="inv-lock">🔒</span>' : '')
                 + `<span class="inv-lv${noLv ? ' no' : ''}">${t('ch.itemLv', { n: it.ilvl })}</span>`;
             if (it.rarity === 'unique') cell.classList.add('shine');
-            // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸)
-            const target = SYS.game.equipTarget(h, it);
-            const ringHint = it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
+            // 비교 상대 = 실제로 교체될 위치의 착용품 (반지는 빈 칸 우선, 없으면 1번 칸) · 장착 대상이 없으면(관전에서 비웠다 · ADR-0849) 비교 없이 그 아이템 카드만
+            const target = h ? SYS.game.equipTarget(h, it) : null;
+            const ringHint = h && it.slot === 'ring' ? t('tip.ringSlot', { n: target === 'ring2' ? 2 : 1 }) : '';
+            const vs = h ? { compare: itemOf(h.equipped[target]), compareHints: [ringHint], hero: h } : {};
             // 원정 중이면 「끼우면 꺼지는 전술」 줄이 선다 — 끼우기 전에 말한다 (§6 · ADR-0272)
             //   ~~스킬 칸의 맥락(`heroCombatIf`)~~ 은 2026-09-29 걷었다 — 아이템 툴팁에 스킬 칸이 없다(ADR-0421)
             //   반지 칸 줄은 비교의 줄이라 전술 줄 아래에 선다 (ADR-0658)
             //   손가락 툴팁의 버튼 줄 = 우클릭 메뉴와 같은 둘 (ADR-0374 · ADR-0451) — 분해함이 떠 있는 동안 안 선다
             //   인벤토리 칸은 툴팁이 커서 왼쪽에 먼저 선다 — 화면 오른쪽 절반이라 칸마다 쪽이 안 갈린다 (§6 · ADR-0693) · 창고는 기본(오른쪽)
-            bindTip(cell, it, { compare: itemOf(h.equipped[target]), hints: [runTacticHint(h, it)], compareHints: [ringHint], hero: h,
+            bindTip(cell, it, { ...vs, hints: [runTacticHint(h, it)],
                 actions: moding ? null : () => itemActions(h, it), side: where === 'bag' ? 'left' : null });
             // 캐릭터 탭이면 세부 옵션 1 · 2 가 「끼면」 값을 미리 보인다 — 올린 동안만 (§6 · ADR-0619). 목록이 없는 화면(관전 · 대장간)은 할 일이 없다
             cell.addEventListener('mouseenter', () => { if (!isTouchInput()) previewSheet(h, it); });
@@ -4509,10 +4519,10 @@ function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
                 } else if (onPick) {
                     onPick(it);   // 대장간 — 고르기만 한다 (ADR-0364) · 다시 그리기는 onPick 이 한다
                     return;
-                } else {
+                } else if (h) {
                     // 창고에서도 **바로** 장착된다 — 꺼내는 단계가 없다 (item_design §1)
                     equipFromStorage(h, it);
-                }
+                } else return;   // 장착 대상이 없다(관전에서 비웠다) — 아무 일도 없다 (ADR-0849)
                 render();
             };
             // **우클릭 = [착용] · [잠금] 버튼** [2026-09-29 사용자 지시 · §6 「우클릭 메뉴」 · ADR-0451] — 커서 자리(한 장 좌표)에 선다.
@@ -4522,7 +4532,7 @@ function storagePanel(h, where, { onPick = null, selUid = null } = {}) {
                 if (moding || isTouchInput()) return;
                 hideTip();
                 const pt = stagePoint(e);
-                state.itemMenu = { uid: it.uid, hero: h.uid, x: pt.x, y: pt.y };
+                state.itemMenu = { uid: it.uid, hero: h?.uid ?? null, x: pt.x, y: pt.y };
                 render();
             };
         }
@@ -4547,11 +4557,10 @@ function toggleItemLock(it) {
 /** 우클릭 메뉴 · 손가락 버튼 줄의 행동 — [착용] · [잠금]/[잠금 해제] (§6 「우클릭 메뉴」 · ADR-0451). `run` 이 다시 그리기까지 한다 */
 function itemActions(h, it) {
     // 상자 칸은 [사용] 하나 — 보고 있는 영웅의 장비를 하나 깐다 · 상자를 까는 유일한 길이다(칸 클릭은 안 깐다 · ADR-0733 · ADR-0742)
-    if (it.box) return [{ label: t('ch.menu.open'), run: () => { openBoxCell(h, it); render(); } }];
-    return [
-        { label: t('ch.menu.equip'), run: () => { equipFromStorage(h, it); render(); } },
-        { label: t(it.locked ? 'ch.menu.unlock' : 'ch.menu.lock'), run: () => { toggleItemLock(it); render(); } },
-    ];
+    //   장착 대상이 없으면(관전에서 비웠다 · ADR-0849) 상자는 행동이 없고 장비는 [잠금] 하나
+    if (it.box) return h ? [{ label: t('ch.menu.open'), run: () => { openBoxCell(h, it); render(); } }] : [];
+    const lock = { label: t(it.locked ? 'ch.menu.unlock' : 'ch.menu.lock'), run: () => { toggleItemLock(it); render(); } };
+    return h ? [{ label: t('ch.menu.equip'), run: () => { equipFromStorage(h, it); render(); } }, lock] : [lock];
 }
 
 /**
@@ -4562,14 +4571,16 @@ function itemActions(h, it) {
  */
 function itemMenuPanel() {
     const { uid, hero, x, y } = state.itemMenu;
-    const it = itemOf(uid), h = heroById(hero);
-    if (!it || !h || !SYS.game.holderOf(G, uid)) { state.itemMenu = null; return; }
+    // 영웅 없이 연 메뉴(관전에서 장착 대상을 비웠다 · ADR-0849)는 [잠금] 하나 · 상자는 행동이 없어 안 선다
+    const it = itemOf(uid), h = hero == null ? null : heroById(hero);
+    const acts = it && (hero == null || h) && SYS.game.holderOf(G, uid) ? itemActions(h, it) : [];
+    if (!acts.length) { state.itemMenu = null; return; }
     const close = () => { state.itemMenu = null; render(); };
     const back = el('div', 'item-menu-back');
     back.onclick = close;
     back.oncontextmenu = e => { e.preventDefault(); close(); };
     const box = el('div', 'item-menu');
-    for (const a of itemActions(h, it)) {
+    for (const a of acts) {
         const b = el('button', 'btn sm', a.label);
         b.onclick = () => { state.itemMenu = null; a.run(); };
         box.appendChild(b);

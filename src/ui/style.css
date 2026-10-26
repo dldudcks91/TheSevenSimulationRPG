@@ -5925,7 +5925,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
      frame  = 패널 둘레의 두 겹 돌 테두리(9-slice · slice 11) · btn = 버튼의 밝은 턱(9-slice · slice 4) · slot = 파인 칸 한 칸
      chrome = 밝은 돌 결(상단바 · 제목 띠 · 버튼 · 고른 탭) · fill = 어두운 돌 결(패널 · 탭 열 · 카드)
    테두리는 `border-image` 로 그려 테두리 두께 · 여백을 안 바꾼다(그림 폭은 `border-image-width` · 바깥으로는 `-outset`).
-   제목 띠는 음의 여백 = 같은 양의 안쪽 여백이라 글자 자리가 그대로다. 바뀌는 자리는 탭 열 하나다(틀 안으로 버튼이 8px 들어간다).
+   제목 띠는 음의 여백 = 같은 양의 안쪽 여백이라 글자 자리가 그대로다. 바뀌는 자리는 둘이다 — 탭 열(틀 안으로 버튼이 8px 들어간다) ·
+   게임 화면 메인의 여백(사방 4px — 판이 상단바 · 탭 열 틀과 한 장 끝에 맞붙는다 · ADR-0792 · 0793) · 판과 판 사이(모두 8px · ADR-0794 · 0795).
    뜻이 있는 선(희귀도 · 등급 · 진영 · 고른 표시 · 경고 · 주 행동)은 다른 토큰 · 더 구체적인 규칙이라 그대로 선다.
    ⚠ 규칙은 모두 `:where(:root[data-skin="d2min"])` 로 감싼다 — 감싼 부분은 강도 0 이라 각 규칙이 바꾸는 기본 규칙과 같은 강도로 서고
      파일 끝이라 그것만 이긴다. 걷어낼 때는 이 절 · devcompare.js 의 Skin 줄 · `assets/art/skins/` 를 지운다 */
@@ -5959,8 +5960,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .brand,
 :where(:root[data-skin="d2min"]) .topbar,
 :where(:root[data-skin="d2min"]) .nav { border-image: var(--sk-frame) 11 / 9px / 0 round; }
-/* 탭 — 틀 안으로 8px 들인다(글자 자리는 그대로) · 줄 사이 홈 줄 · 고른 탭 = 밝은 돌판 + 턱 (왼쪽 빨간 띠는 그대로) */
-:where(:root[data-skin="d2min"]) .nav button { margin: 0 8px; padding-left: 23px; padding-right: 8px; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .75), 0 1px 0 rgba(255, 255, 255, .025); }
+/* 탭 — 틀 안으로 8px 들인다(글자 자리는 그대로) · 탭 사이 구분선 없음(「새 게임」 위 줄도 — 두께는 남아 자리가 그대로 · ADR-0836) · 고른 탭 = 밝은 돌판 + 턱 (왼쪽 빨간 띠는 그대로) */
+:where(:root[data-skin="d2min"]) .nav button { margin: 0 8px; padding-left: 23px; padding-right: 8px; }
+:where(:root[data-skin="d2min"]) .nav .b-newgame { border-top-color: transparent; }
 :where(:root[data-skin="d2min"]) .nav button:hover { background: rgba(255, 255, 255, .03); }
 :where(:root[data-skin="d2min"]) .nav button.on { background: var(--sk-chrome), #1c1c1c; box-shadow: inset 0 0 0 1px var(--sk-lip), inset 0 2px 0 rgba(255, 255, 255, .05), 0 1px 3px rgba(0, 0, 0, .8); }
 :where(:root[data-skin="d2min"]) .nav button.todo::after { right: 12px; }
@@ -5971,6 +5973,105 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     border-image: var(--sk-frame) 11 / 11px / 4px round;
     box-shadow: 0 6px 16px rgba(0, 0, 0, .7);
 }
+/* 메인 여백 = 패널 테두리가 바깥으로 나간 4px(사방) — 판의 돌 테두리가 상단바 · 탭 열 틀과 한 장 끝에 맞붙어
+   틈이 상단바 줄(브랜드 ↔ 상단바)과 같다 · 박스 아랫변은 「새 게임」 대신 탭 열 틀 아랫변에 맞는다 (2026-10-26 사용자 지시 · ADR-0792 · 0793) */
+:where(:root[data-skin="d2min"]) #app:not(.pregame) > .main { padding: 4px; }
+/* 상단바 줄 = 62px — 탐험 지도 판의 위아래 여백이 좌우와 같아지는 높이. 줄어든 메인 세로는 남는 세로를 받는 판(1fr · fill)이 내고
+   영웅 띠 · 창고 · 인벤토리 줄은 내용 높이라 그대로다 · 게임 밖 화면은 48px 그대로 (ADR-0831) */
+:where(:root[data-skin="d2min"]) #app:not(.pregame) { grid-template-rows: 62px 1fr; }
+/* 상단바 줄의 버튼 · 글씨 = 모두 높이 가운데 (ADR-0841) — 상단바 위 여백 1px 이 아래 테두리 1px 와 맞서 내용 가운데 = 돌 틀 가운데 ·
+   자원 줄은 버튼(30px)에 맞춰 늘어나 글씨 칸이 위에 붙었다 — 글씨 칸만 가운데로 세우고 줄 높이를 버튼 글씨와 같게(줄째 세우면 버튼이 줄어든다) ·
+   브랜드는 대문자뿐인 장르 글꼴이라 글자 칸 가운데보다 글자가 위로 보인다 — 보이는 글자 높이의 가운데를 맞춘다 */
+:where(:root[data-skin="d2min"]) #app:not(.pregame) > .topbar { padding-top: 1px; }
+:where(:root[data-skin="d2min"]) #app:not(.pregame) .topbar > .resources > span { align-self: center; line-height: normal; }
+:where(:root[data-skin="d2min"]) #app:not(.pregame) > .brand { padding-top: 5px; }
+/* 판 사이 = 두 판이 바깥으로 나간 4px × 2 — 테두리가 맞닿아 셸 판끼리의 틈과 같다. 기본이 14px 인 자리(간격 · 위 마진)를 모두 고친다 (ADR-0794 · 0795) */
+:where(:root[data-skin="d2min"]) .bt-page,
+:where(:root[data-skin="d2min"]) .char-stack,
+:where(:root[data-skin="d2min"]) .main .cols:not(.panel .cols),
+:where(:root[data-skin="d2min"]) .bag-row,
+:where(:root[data-skin="d2min"]) .tdm,
+:where(:root[data-skin="d2min"]) .lib-col,
+:where(:root[data-skin="d2min"]) .dp-wrap,
+:where(:root[data-skin="d2min"]) .c-tavern > .tv-low { gap: 8px; }
+:where(:root[data-skin="d2min"]) .panel + .panel,
+:where(:root[data-skin="d2min"]) .hs-panel + .dp-wrap,
+:where(:root[data-skin="d2min"]) .c-tavern > .tv-low { margin-top: 8px; }
+/* ⚠ 나란히 선 판의 위 마진 0 — 기본 규칙이 위 줄과 같은 강도라 파일 끝인 위 줄이 덮는다. 같은 0 을 여기서 다시 건다 */
+:where(:root[data-skin="d2min"]) .dp-wrap > .dp-side,
+:where(:root[data-skin="d2min"]) .tv-low > .tv-gb { margin-top: 0; }
+/* ── 판 밖에 남았던 것 — 박스 · 돌 처리 (ADR-0799) ──
+   탐험 지도 = 판. 지도 칸(`.ex-map-wrap`)에 돌 테두리 · 어두운 돌 바탕을 두르고 지도는 그 안 가운데 선다(안쪽 여백 = 테두리가 안으로 들어온 만큼).
+   지도 칸은 `overflow: hidden` 이라 지도에 테두리를 걸면 바깥으로 나간 4px 가 잘린다 — 그래서 칸에 건다. 위 영웅 띠와는 판 사이 8px */
+:where(:root[data-skin="d2min"]) .hs-panel + .ex-map-wrap { margin-top: 8px; }
+:where(:root[data-skin="d2min"]) .ex-map-wrap {
+    display: flex; align-items: center; justify-content: center; padding: 7px;
+    background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round;
+}
+/* 판 위에 뜨는 작은 창(탐험 지점 창 · 분해함) — 툴팁 · 창과 같은 돌판 + 테두리 */
+:where(:root[data-skin="d2min"]) .ex-pop,
+:where(:root[data-skin="d2min"]) .salv-cube { background: var(--sk-fill), #0f0f0f; border-image: var(--sk-frame) 11 / 11px / 3px round; }
+/* 판 밖 탭 줄(도감 · 실험실 · 대장간) — 상단바처럼 돌 테두리 띠 안에 선다. 줄은 메인 배율을 되돌린 자리(zoom 1/.9)라
+   테두리 값에 .9 를 곱해 판과 같은 굵기 · 아래 틈 7.2px = 판 사이(8 × .9) */
+:where(:root[data-skin="d2min"]) .cx-tabs,
+:where(:root[data-skin="d2min"]) .fg-tabs {
+    padding: 7px 8px; margin-bottom: 7.2px;
+    background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 9.9px / 3.6px round;
+}
+/* 원정 난이도 탭 줄 — 띠 없이 판 밖에 그대로 선다(감싸던 돌 테두리 띠를 걷었다 · ADR-0830).
+   탭 줄의 밑선(틈 · 남은 자리)은 안 긋는다 — 아래 목록 판이 제 테두리를 두른다 (ADR-0800) */
+:where(:root[data-skin="d2min"]) .diff-tabs { align-items: center; }
+:where(:root[data-skin="d2min"]) .diff-tabs .dt-gap:first-child { display: none; }
+:where(:root[data-skin="d2min"]) .diff-tabs .dt-gap,
+:where(:root[data-skin="d2min"]) .diff-tabs .dt-fill { border-bottom-color: transparent; }
+:where(:root[data-skin="d2min"]) .diff-tabs .dt-report { margin-right: 0; }
+/*   단계 화살표 — 「노말 › 나이트메어 › 헬」 글자만 선다(바탕 · 턱 · 테두리 없음). 고른 단은 크고 흰 글씨 · 나머지는 작고 어두운 글씨 ·
+     잠긴 단은 자물쇠 + 흐림(기본 규칙) · 마우스를 올리면 밝아진다. 탭 사이 틈이 화살표를 든다.
+     줄 높이는 옛 버튼 줄(35)을 지켜 아래 목록 판이 제자리다 (ADR-0837).
+     줄은 16 내려서고(판 위 여백이 그만큼 줄어 판은 제자리) · 첫 글자 왼끝은 Ch1 탭 왼끝(판 테두리 1 + 탭 줄 12)에서 8 안쪽이다 — 17 = 13 + 8 − 탭 안쪽 여백 4 (ADR-0839 · 0846) */
+:where(:root[data-skin="d2min"]) .diff-tabs { min-height: 35px; margin-top: 16px; padding-left: 17px; }
+:where(:root[data-skin="d2min"]) .diff-tabs .dt-gap:not(:first-child) { flex: 0 0 auto; align-self: center; display: inline-flex; align-items: center; padding: 0 10px; }
+:where(:root[data-skin="d2min"]) .diff-tabs .dt-gap:not(:first-child)::before { content: '\203A'; color: #5d574f; font-size: 22px; line-height: 1; }
+:where(:root[data-skin="d2min"]) .diff-tab { padding: 2px 4px; border: 0; border-image: none; background: none; box-shadow: none; font-size: 14px; color: #7d776e; }
+:where(:root[data-skin="d2min"]) .diff-tab:not(.on):not(:disabled):hover { color: #dedad4; }
+:where(:root[data-skin="d2min"]) .diff-tab.on { padding: 2px 4px; border: 0; background: none; font-size: 20px; color: #f2ece2; }
+/* 게임 밖 — 새 게임 후보 셋 · 프롤로그 글도 판 안에 선다. 새 게임 판은 옛 위 여백 81 을 바깥 57 + 안 24 로 나눠 카드가 제자리다.
+   후보 카드는 카드 모양(어두운 돌 + 턱 한 줄 · 윗변 희귀도 색은 그대로). 메뉴(워드마크 · 버튼 둘)는 표지라 판을 안 두른다 */
+:where(:root[data-skin="d2min"]) .ng-wrap,
+:where(:root[data-skin="d2min"]) .pro-wrap { background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; }
+:where(:root[data-skin="d2min"]) .ng-wrap { margin-top: 57px; padding: 24px 16px; }
+:where(:root[data-skin="d2min"]) .ng-card { background: var(--sk-fill), #121212; box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }
+/* 원정 목록 판 — 기본은 테두리가 없어(난이도 탭 줄이 윗선 · ADR-0785) 위 규칙보다 강한 `border: none` 이 돌 테두리를 걷었다.
+   다른 판과 같은 테두리를 다시 두른다(위 여백은 아래 「챕터 줄은 목록 판 바깥 위」 묶음이 정한다) */
+:where(:root[data-skin="d2min"]) .panel.diff-panel { border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; margin-top: 8px; }
+/* 장소 줄 바탕은 `Now` 색 그대로 — 줄 · 그림 앞 그라데이션(app.js 인라인)이 `--bg-tertiary`(고른 줄은 `--bg-card`)를 쓰는데 위 토큰이 한 단 밝혀 회색이 됐다.
+   줄에서만 토큰을 `Now` 값으로 되돌린다. 잠긴 줄은 줄째 반투명이라 판 바탕이 비친다 — 목록 판 안쪽도 `Now` 처럼 검정(테두리는 돌) (ADR-0800) */
+:where(:root[data-skin="d2min"]) .panel.diff-panel { background: var(--surface-0); }
+/* 원정 챕터 = 폴더 탭 — 탭은 어두운 돌 + 버튼 턱(밑변 없음) · 누르면 그 장의 탭이 위로 솟고 장이 넘어간다.
+   선반 · 자리는 아래 「챕터 줄은 목록 판 바깥 위」 묶음이 정한다 (ADR-0801 · 0802 · 0809 · 0817) */
+:where(:root[data-skin="d2min"]) .diff-panel > .sub-bar { align-items: flex-end; border-bottom: 2px solid var(--sk-lip); box-shadow: 0 1px 0 rgba(0, 0, 0, .8); }
+:where(:root[data-skin="d2min"]) .diff-panel > .sub-bar > .segmented { flex: 1 1 auto; flex-wrap: nowrap; align-items: flex-end; gap: 3px; padding-left: 6px; }
+/*   일곱 장이 줄 폭을 **같은 폭으로** 나눈다 — 글자가 그 폭보다 긴 장(영어)만 제 글자 폭까지 넓어지고 나머지가 그만큼 준다(줄어드는 하한 = 글자 폭) (ADR-0807) */
+:where(:root[data-skin="d2min"]) .diff-panel > .sub-bar .btn {
+    flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; font-size: 14px; font-weight: 700;   /* 위 난이도 탭과 같은 굵기 · 크기는 1px 작다(글씨 단계 13 · 15 사이 · ADR-0825) */
+    padding: 8px 10px 7px; border: 1px solid transparent; border-bottom-width: 0; border-image: var(--sk-btn) 4 / 4px 4px 0 / 0 stretch;
+    background: var(--sk-fill), #121212; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+/*   고른 장 = 안 고른 탭과 **같은 모양**이 위로 10 솟는다 — 바탕 · 턱 · 밝기는 안 바꾼다. 위아래 여백을 5 씩 더해 글자는 가운데를 따라 5 오른다.
+     장 색 테두리(렌더러 인라인)는 턱 그림(`border-image`)이 대신 그려 안 보인다 (ADR-0817) */
+:where(:root[data-skin="d2min"]) .diff-panel > .sub-bar .btn.on {
+    position: relative; z-index: 1; margin-bottom: 0; padding: 13px 10px 12px;
+    border-width: 1px 1px 0; border-image: var(--sk-btn) 4 / 4px 4px 0 / 0 stretch;
+    background: var(--sk-fill), #121212; filter: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+/*   챕터 줄은 목록 판 **바깥 위**에 선다 — 판의 돌 테두리 바깥 끝이 선반이고 모든 탭이 그 위에 앉는다. 고른 장의 탭은 **위로만** 커진다(판 안으로 안 내려온다).
+     렌더러는 줄을 판 안에 넣는다 — 판에서 띄워(absolute) 판 위로 올린다. 판 위 여백 72 = 틈 + 탭 줄(= 솟은 고른 탭 높이) + 판 테두리 4 —
+     탭 글씨 · 솟음을 줄이거나 난이도 띠를 걷어도 판 위 여백은 그대로이고 틈이 받는다 · 띠를 걷은 뒤 판째 24 더 내려선다(맨 아래까지는 안 간다) ·
+     난이도 줄이 16 내려선 만큼 여백이 줄어 판은 제자리다 (ADR-0809 · 0811 · 0812 · 0817 · 0819 · 0825 · 0826 · 0830 · 0833 · 0839) */
+:where(:root[data-skin="d2min"]) .panel.diff-panel { position: relative; margin-top: 72px; padding-top: 19px; }   /* 위 여백 19 = 아래(줄 마진 8 + 판 여백 11) — 첫 장소 줄과 테두리 사이가 마지막 줄 아래와 같다 (ADR-0821) */
+:where(:root[data-skin="d2min"]) .diff-panel > .sub-bar { position: absolute; left: 12px; right: 12px; bottom: calc(100% + 5px); margin: 0; border-bottom: 0; box-shadow: none; }
+:where(:root[data-skin="d2min"]) .diff-panel > .sub-bar > .segmented { padding-left: 0; }
+:where(:root[data-skin="d2min"]) .zone { --bg-tertiary: var(--surface-1); --bg-card: var(--surface-0); --border-secondary: #4e4e4e; --border-highlight: #707070; }   /* 왼쪽 띠 · 올린 줄 테두리도 `Now` 값(맨 위 :root) */
 /* 패널 제목 = 밝은 돌 띠 — 틀 안쪽 끝(7px)까지 넓힌다. 음의 여백만큼 안쪽 여백을 줘 글자 자리는 그대로다 */
 :where(:root[data-skin="d2min"]) .panel > h2 {
     margin: -4px -10px 8px; padding: 4px 10px 5px;
@@ -5982,6 +6083,13 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     background: var(--sk-chrome), #1a1a1a;
     border-bottom-color: #050505; box-shadow: 0 1px 0 rgba(255, 255, 255, .04);
 }
+/* 창고 · 인벤토리의 이름 줄(제목이 아니라 버튼과 한 줄인 도구 줄)도 같은 띠 — 위 · 옆은 패널 제목 띠와 같다.
+   보관 칸은 남는 높이가 없어(칸 격자가 바로 아래) 띠 위아래 여백 4 + 홈 줄 1 + 격자까지 3 을 원래 아래 여백 8 안에서 나눈다 — 격자 자리 · 칸 크기 그대로 (ADR-0838) */
+:where(:root[data-skin="d2min"]) .panel.bag > .items-tools {
+    margin: -4px -10px 3px; padding: 4px 10px;
+    background: var(--sk-chrome), #1a1a1a;
+    border-bottom: 1px solid #050505; box-shadow: 0 1px 0 rgba(255, 255, 255, .04);
+}
 
 /* 버튼 — 밝은 돌 + 턱(9-slice). 고른 버튼 · 주 행동 · 상태 색 버튼은 턱을 걷어 제 테두리 색을 보인다 */
 :where(:root[data-skin="d2min"]) .btn { background: var(--sk-chrome), #181818; border-image: var(--sk-btn) 4 / 4px / 0 stretch; color: #dedad4; box-shadow: inset 0 0 0 1px rgba(168, 160, 148, .16), 0 1px 2px rgba(0, 0, 0, .8); }
@@ -5990,7 +6098,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .btn.primary { border-image: none; }
 :where(:root[data-skin="d2min"]) .btn.sm.on { background: var(--sk-chrome), #262626; box-shadow: inset 0 0 0 1px var(--sk-lip); color: #fff; }
 
-/* 파인 칸 — 컨셉의 빈 칸 그림을 칸 크기로 늘린다. 찬 칸도 그 홈에 앉는다 · 희귀도 테두리(인라인)는 그 위에 그대로 선다 */
+/* 파인 칸 — 컨셉의 빈 칸 그림을 칸 크기로 늘린다. 찬 칸도 그 홈에 앉는다 · 장비 칸의 희귀도 선은 그림의 회색선 위에 선다(아래) */
 :where(:root[data-skin="d2min"]) .inv-cell,
 :where(:root[data-skin="d2min"]) .inv-cell.filled,
 :where(:root[data-skin="d2min"]) .pd-cell,
@@ -6008,9 +6116,56 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .fm-cell:not(.filled),
 :where(:root[data-skin="d2min"]) .hs-card.empty,
 :where(:root[data-skin="d2min"]) .cn-lot.empty { border-color: transparent; }
+/* 큰 빈 칸(영웅 띠 빈 자리 · 빈 부지 · 진형 빈 칸)은 칸 그림을 통째로 늘리면 1~2px 선이 몇 배로 번진다 — 9-slice 로 바깥 6px(모든 스킨의 칸 테두리가 그 안이다)는
+   원본 픽셀 그대로 두고 가운데만 늘린다 (ADR-0798 · 0804) */
+:where(:root[data-skin="d2min"]) .hs-card.empty,
+:where(:root[data-skin="d2min"]) .cn-lot.empty,
+:where(:root[data-skin="d2min"]) .fm-cell:not(.filled) { background: #080808; border-image: var(--sk-slot) 6 fill / 6px stretch; }
 :where(:root[data-skin="d2min"]) .inv-cell.filled:hover,
 :where(:root[data-skin="d2min"]) .pd-cell:hover,
 :where(:root[data-skin="d2min"]) .pd-cell.filled:hover { filter: brightness(1.35); }
+/* 스킬 그림이 든 칸 — 액티브 스킬 칸(캐릭터 탭 · 도서관) · 관전 카드 스킬 칸 · 창고 스킬북 칸 — 은 칸 그림을 걷는다(회색 네모가 없다).
+   그림 크기 · 칸 여백 · 테두리는 `Now` 그대로다 — 테두리는 홈 색이라 줄로 안 보인다. 빈 칸 · 자물쇠 칸은 그대로 (ADR-0840 · 0843 · 0844).
+   관전 칸의 발동(`.fire`)은 제 바탕을 그대로 둔다 · 신단 효과 칸(72% 그림)은 스킬 칸이 아니라 뺀다 */
+:where(:root[data-skin="d2min"]) .sk-card:not(.vacant),
+:where(:root[data-skin="d2min"]) .unit:not(.shrine) .cd-slot:not(.empty):not(.fire),
+:where(:root[data-skin="d2min"]) .stash-books > .book-cell { background-image: none; }
+/* 장비 칸의 희귀도 선 — 아이템이 든 칸은 칸 그림을 걷고(회색 네모가 없다) 선이 **칸 바깥 끝**에 붙는다 · 굵기 = 칸 폭 × 1.82/47
+   (2026-10-26 사용자 지시 · ADR-0806 · 0810 · 0816 · 0822).
+   굵기는 칸 크기에 비례한다 — 1600×800 에서 가방 · 창고 칸(46.4px) 1.8px · 장착 칸(54px) 2.1px (ADR-0822 「가방/창고 기준 1.8px」).
+   칸 테두리 두께는 0 — 칸 크기는 그대로(border-box)고 칸 안쪽이 칸 끝까지 넓어진다. 계산된 테두리 색(인라인 `border-color`)은 남아 선이 물려받는다.
+   선 = 칸보다 사방 1px 큰 판 두 장(::before · ::after)의 굵은 테두리(6px — 선이 그 안에 든다)를 ㄱ자 경로(clip-path)로 자른 것 —
+   ::before = 위 + 왼쪽 · ::after = 오른쪽 + 아래, 두 조각은 모서리에서 겹친다. 선의 바깥 끝(칸 끝 = 판의 1px 안)과 안쪽 끝(칸 끝 + 선 굵기)을 모두 경로가 정한다.
+   ⚠ 이렇게 된 까닭(2026-10-26 실측) — 굵기를 `cqw` 로 재면 메인 배율(.9) 아래에서 배율을 두 번 먹어 10% 얇았다 ·
+     구멍을 마스크(그라디언트 · 그림)로 뚫으면 크기가 정수 px 로 반올림돼 1.8 · 1.9 모두 2px 로 그려졌다 ·
+     판 끝을 칸 끝에 두면 판이 픽셀에 맞춰 반올림될 때 칸 끝의 선이 변마다 0 ~ 0.4px 깎였다 ·
+     구멍 뚫린 고리를 경로 하나로 그리면 바깥 · 안쪽을 잇는 이음매가 모서리에 검은 점으로 남았다.
+   칸 안 맨 아래 층이라 구석 글자(`+n` · `Lv.n`)가 그 위에 선다. 바탕은 그림 안쪽과 같은 #080808.
+   부품 시트 스킨은 칸 그림의 고리 자리가 달라 칸 가장자리 그대로다 */
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .inv-cell.filled[style*="border-color"],
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .pd-cell.filled[style*="border-color"] {
+    --rare-line: calc(100% * 1.82 / 47);   /* 선 굵기 — 레벨 글자 자리에서 100% 는 칸 폭이다 */
+    background-image: none; border-width: 0; isolation: isolate;
+}
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .inv-cell.filled[style*="border-color"]::before,
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .inv-cell.filled[style*="border-color"]::after,
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .pd-cell.filled[style*="border-color"]::before,
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .pd-cell.filled[style*="border-color"]::after {
+    --in: calc(1px + (100% - 2px) * 1.82 / 47);   /* 판 안에서 선의 안쪽 끝 — 100% 는 칸 + 2px 다 */
+    content: ''; position: absolute; z-index: -1; inset: -1px; pointer-events: none;
+    border-width: 6px; border-style: inherit; border-color: inherit;
+}
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .inv-cell.filled[style*="border-color"]::before,
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .pd-cell.filled[style*="border-color"]::before {
+    clip-path: polygon(1px 1px, calc(100% - 1px) 1px, calc(100% - 1px) var(--in), var(--in) var(--in), var(--in) calc(100% - 1px), 1px calc(100% - 1px));
+}
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .inv-cell.filled[style*="border-color"]::after,
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .pd-cell.filled[style*="border-color"]::after {
+    clip-path: polygon(calc(100% - 1px) 1px, calc(100% - 1px) calc(100% - 1px), 1px calc(100% - 1px), 1px calc(100% - var(--in)), calc(100% - var(--in)) calc(100% - var(--in)), calc(100% - var(--in)) 1px);
+}
+/* 레벨 글자(`Lv.n`)는 선 안쪽 — 선 굵기만큼 들인 뒤 기본 여백(오른쪽 3px · 아래 2px)을 둔다. 칸은 정사각이라 아래도 같은 비율이다 (ADR-0818 · 0822) */
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .inv-cell.filled[style*="border-color"] > .inv-lv,
+:where(:root[data-skin="d2min"]:not([data-skin-parts])) .pd-cell.filled[style*="border-color"] > .pd-lv { right: calc(var(--rare-line) + 3px); bottom: calc(var(--rare-line) + 2px); }
 :where(:root[data-skin="d2min"]) .bar { background: #050505; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .04); }
 
 /* 카드 — 영웅 띠 · 관전 · 전술 칸 · 건설 부지: 어두운 돌 + 턱 한 줄 (윗변 등급 · 진영 색 · 부지 그림은 그대로) */
@@ -6021,6 +6176,46 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .unit,
 :where(:root[data-skin="d2min"]) .rs-cell,
 :where(:root[data-skin="d2min"]) .cn-lot { box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }
+
+/* 편성 탭 — 박스 하나를 판 셋(진형 · 물약 | 파티 전술)으로 나눈다 · 판 사이 8px · 세로 가림선 없음 (ADR-0815).
+   박스는 판을 걷고 스크롤 자리로만 남는다. 박스가 `overflow-y: auto` 라 안의 판 테두리(바깥 4px)가 잘리지 않게 안쪽 여백 4px 을 두고,
+   그만큼 바깥으로 넓혀(음의 마진) 판 바깥 끝이 옛 박스 테두리 바깥 끝과 같다 */
+:where(:root[data-skin="d2min"]) .panel.pt-body { background: none; border: 0; border-image: none; box-shadow: none; margin: 4px -4px -4px; padding: 4px; gap: 8px; }
+/* 편성 고르개 = 폴더 탭 — 원정 챕터 줄과 같은 모양(어두운 돌 + 버튼 턱 · 밑변 없음). 띠 없이 판 셋의 돌 테두리 바깥 끝(선반)에 앉는다 —
+   줄 아래 마진 −4 = 판 테두리가 위로 나간 몫 · 솟은 탭 위는 영웅 띠와 판 사이만큼 띄운다 · 탭 폭은 글자 폭(셋 이하라 줄을 안 나눈다) (ADR-0847) */
+:where(:root[data-skin="d2min"]) .pt-body > .pt-pick { align-items: flex-end; gap: 3px; margin: 4px 0 -4px; padding: 0 12px; background: none; border: 0; border-image: none; box-shadow: none; }
+:where(:root[data-skin="d2min"]) .pt-mid { gap: 8px; }
+/* 모양 버튼 열의 위아래 빈자리(ADR-0577)는 「끝 버튼 ↔ 물약 이름」이었는데 물약이 다른 판으로 나갔다 —
+   아래 빈자리 = 진형 판 안쪽 아랫변까지(판 아래 여백 11 − 테두리가 안으로 든 7) */
+:where(:root[data-skin="d2min"]) .pt-left { gap: 8px; --pt-left-gap: 4px; }
+:where(:root[data-skin="d2min"]) .pt-left > .fm-box,
+:where(:root[data-skin="d2min"]) .pt-left > .pt-potion,
+:where(:root[data-skin="d2min"]) .pt-mid > .pt-tactics {
+    padding: 10px 16px 11px;
+    background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; box-shadow: 0 6px 16px rgba(0, 0, 0, .7);
+}
+:where(:root[data-skin="d2min"]) .pt-left > .pt-potion { flex: 1 1 auto; }   /* 왼쪽 열의 남는 세로 — 아랫변이 파티 전술 판과 맞는다 */
+/* 소제목 띠 = 패널 제목 띠(위)와 같은 자리 — 판 테두리 안쪽 끝까지 */
+:where(:root[data-skin="d2min"]) .pt-body .sub-h { margin: -4px -10px 20px; padding: 4px 10px 5px; }
+/* 상단바 부대 칸 · 편성 고르개 = 큰 버튼 — 글씨는 작은 버튼 그대로 · 여백만 키운다 (ADR-0824 · 0828) ·
+   편성 고르개는 폴더 탭 얼굴 — 고른 편성은 같은 모양이 위로 10 솟고(위아래 여백 +5) 글씨가 밝다 (ADR-0847) */
+:where(:root[data-skin="d2min"]) .tab-seg .btn.sm.seg-party { padding: 6px 18px; }
+:where(:root[data-skin="d2min"]) .pt-body > .pt-pick .btn.sm {
+    padding: 9px 24px; border: 1px solid transparent; border-bottom-width: 0; border-image: var(--sk-btn) 4 / 4px 4px 0 / 0 stretch;
+    background: var(--sk-fill), #121212; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04); color: var(--text-secondary);
+}
+:where(:root[data-skin="d2min"]) .pt-body > .pt-pick .btn.sm.on { padding: 14px 24px; color: #f2ece2; }
+
+/* 도서관 전직 갈래 — 구분선 대신 갈래마다 어두운 박스(판에 파인 홈) · 사이 8px. 고른 · 전직한 갈래의 안쪽 테두리는 그대로 위에 선다 ·
+   올린 바탕은 기본(`--surface-5`)이 박스와 거의 같은 검정이라 한 단 덜 어둡게 따로 건다 (ADR-0834) */
+:where(:root[data-skin="d2min"]) .tr-adv-row { gap: 8px; }
+:where(:root[data-skin="d2min"]) .tr-adv-branch { border: 1px solid #050505; background: rgba(0, 0, 0, .5); box-shadow: inset 0 1px 6px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .04); }
+:where(:root[data-skin="d2min"]) .tr-adv-branch.can-pick:hover { background: rgba(0, 0, 0, .25); }
+
+/* 관전 물약 띠의 안 열린 칸 = 창고 빈 칸과 같은 빈 칸 그림 — 띠의 반투명 바닥(`.b-belt .p-slot`)이 칸 그림을 덮었다 ·
+   칸째 옅게(.7) 하면 그림의 회색 네모도 흐려져 자물쇠만 옅게 둔다 (ADR-0850) */
+:where(:root[data-skin="d2min"]) .b-belt .p-slot.locked { background: var(--sk-slot) center / 100% 100% no-repeat, #080808; opacity: 1; }
+:where(:root[data-skin="d2min"]) .b-belt .p-slot.locked .rs-pin-ico { opacity: .7; }
 
 /* 전장 — 판에 파인 넓은 홈 · 툴팁 · 창 — 패널과 같은 돌판 + 테두리 */
 :where(:root[data-skin="d2min"]) .arena { box-shadow: inset 0 2px 12px rgba(0, 0, 0, .9); }

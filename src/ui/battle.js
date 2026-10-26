@@ -191,6 +191,7 @@ function openBuffPop(btn, b) {
  *   pace = 런 핸들의 박자(`pace.js` — 재생기가 그대로 밀고 앱 시계가 이어 민다 · 없으면 재생 위치에서 제 것을 연다) ·
  *   onDone(at) = 박자가 `end` 에 닿은 실제 시각 — 결과 띠가 다음 런을 세기 전에 부른다 (ADR-0654)
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
+ *   onPickNone() = 아레나의 빈 곳 클릭 — 앱이 장착 대상을 비운다 (ADR-0849)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
  *   shrine = 이 런이 입은 신단 id(없으면 null) — 헤드의 칩 (ADR-0445)
  *   teamPane = 두 팀 누적 데미지 판을 그릴 요소(결투 관전의 아레나 아래 칸) — 주면 상대 진영도 장부를 쌓고 걸음 끝마다 그 안에 두 판을 그린다 (ADR-0769)
@@ -285,6 +286,10 @@ export function mountBattle(container, opts) {
     container.appendChild(dom);
     bindControls(state, container, opts);
     bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
+    // 아레나의 빈 곳(카드 · 버튼 · 물약 칸 · 결과 띠 밖)을 누르면 장착 대상을 비운다 — 비우는 것은 앱이다 (ADR-0849)
+    if (opts.onPickNone) dom.querySelector('.arena').addEventListener('click', e => {
+        if (!e.target.closest('.unit, button, .p-belt, .b-buffwrap, .battle-result')) opts.onPickNone();
+    });
     // t=0 의 이벤트(첫 라운드 편성)를 먼저 적용해서 첫 프레임부터 적이 서 있게 한다.
     // 재개(resume)면 그 시각까지 조용히 되감는다 — 팝업 없이. 로그·게이지·누적은 다시 쌓인다 (2026-08-27).
     //   되감는 동안은 상태만 적용하고 그리는 것은 끝에 한 번이다 (2026-09-24 · `paintCaughtUp`)
