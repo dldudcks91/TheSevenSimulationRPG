@@ -29,12 +29,16 @@ export const TARGETS = {
     synth: U(true),   // 재료 합성 — 하급을 모아 위 단계 하나(대장간 r1 · 2026-10-27 · R359 · item_design §5-2)
     potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 대장간 r2)
     //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
-    storage: U(true), codex: U(true), hire: U(true), shop: U(true), shop_special: U(true),
+    //   ~~`storage`~~ 도 건물 밖이다 — 가방 · 창고 칸은 처음부터 열린다 (2026-10-27 사용자 지시 · R361)
+    codex: U(true), hire: U(true), shop: U(true), shop_special: U(true),
+    lab_res: U(true),   // 연구소 「자원」 줄 — 창고 r1 이 연다(연구소는 시작부터 r1 · 2026-10-27 사용자 지시 · R361 · `state.labLineOpen`)
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
     raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
     // 탐험 — 탐험 r1 이 탭과 보내기를 연다(SCREEN_DESIGN §8-4 · 2026-10-08 「건설에 탐험 열어봐」 → 2026-10-09 최소 루프가 서며 켰다 · `state.exploreErr` 의 `unbuilt`)
     explore: U(true),
+    // 탐험 지점 — 마차(상단) · 폐허 아이콘이 이 줄부터 지도에 선다(탐험 r2 · r3 · 동굴은 `explore` 가 연다 · 2026-10-27 · R362 · `state.EXPLORE_SPOT_FEATURE`)
+    explore_caravan: U(true), explore_ruins: U(true),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
     // 도서관 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook` · r1) · 책 제작(`craftBook` · r2 — 2026-10-16 · R263).
@@ -57,11 +61,11 @@ export const TARGETS = {
     resource_tier: A(true),
     // 더하기 — 준비 중
     make_kinds: A(false), shop_layers: A(false),
-    // 동시 탐험 — 기본값 `explore_slots` 위로 더한다(`state.limitsOf` 의 `exploreSlots` · 2026-10-09 켰다) · 탐험 지역은 장이 연다(ADR-0537)라 `explore_regions` 는 읽는 자리가 없다
+    // 동시 탐험 — 기본값 `explore_slots` 위로 더한다(`state.limitsOf` 의 `exploreSlots` · 2026-10-09 켰다 · 지금 표엔 늘리는 랭크가 없다 — 2026-10-27 탐험 r5 가 편성으로 · R362) · 탐험 지역은 장이 연다(ADR-0537)라 `explore_regions` 는 읽는 자리가 없다
     explore_slots: A(true),
     explore_regions: A(false), gear_sets: A(false),
     // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
-    //   준비 중이어도 짓는다 — 선술집 r5 · r7 의 유일한 줄이라 막으면 r6 · r7 로스터에 못 닿는다 (2026-09-27 사용자 지시)
+    //   준비 중이어도 짓는다(2026-09-27 사용자 지시) · **지금 표에 이 줄이 없다** — 선술집에서 뺐다(2026-10-27 사용자 「나중에 연구소에 넣을게」 · R363)
     recruit_quality: { ...A(false), build: true },
 };
 
@@ -74,13 +78,20 @@ export const RESEARCH_TARGETS = {
 };
 
 /**
- * 문턱 조건 종류 넷 — 칸 = `종류:값`, 여러 개는 `|` 로 잇고 **전부** 채워야 한다(construction_draft §11-3).
- *   `stage:<id>` 그 스테이지 클리어 · `total:<n>` 로스터 합산 레벨 **도달 최고치** · `hero:<n>` 로스터 최고 영웅 레벨 ·
+ * 문턱 조건 종류 여섯 — 칸 = `종류:값`, 여러 개는 `|` 로 잇고 **전부** 채워야 한다(construction_draft §11-3).
+ *   `stage:<id>` 그 스테이지 클리어 · `chapter:<장>` 그 장의 보스 칸 클리어 · `chapter:<장>:<단>` **그 단에서** 그 장의 보스 칸 클리어 ·
+ *   `difficulty:<id>` **그 단에서** 다음 단을 여는 칸 클리어 ·
+ *   `total:<n>` 로스터 합산 레벨 **도달 최고치** · `hero:<n>` 로스터 최고 영웅 레벨 ·
  *   `building:<id>:<랭크>` 그 건물이 그 랭크 이상. 수 칸에 **balance 키 이름**을 적으면 그 값이다(같은 수를 두 곳에 두지 않는다)
- *   `have(ctx, cond, rankOf)` = 지금 값 · `ok` 는 `have >= need` 하나로 판정한다(스테이지는 클리어면 1)
+ *   `have(ctx, cond, rankOf)` = 지금 값 · `ok` 는 `have >= need` 하나로 판정한다(스테이지 · 장 · 난이도는 클리어면 1)
  */
 export const CONDITIONS = {
     stage: { have: (ctx, c) => (ctx.cleared.has(c.ref) ? 1 : 0) },
+    // 장 · 난이도 클리어 [2026-10-27 · R362 · 탐험 건물] — 장은 `stage:` 와 같은 첫 단 기록(보스 칸은 만들 때 `chapterBosses` 로 푼다) ·
+    //   난이도는 그 단의 기록이라 `state.js` 가 센 `ctx.diffCleared` 를 읽는다
+    //   단을 적은 장(`diff`)은 그 단의 기록 `ctx.clearedIn[단]` 을 읽는다(선술집 r4 ~ r7 = 나이트메어 1 ~ 4장 · 2026-10-27 · R363)
+    chapter: { have: (ctx, c) => ((c.diff ? ctx.clearedIn?.[c.diff] : ctx.cleared)?.has(c.stage) ? 1 : 0) },
+    difficulty: { have: (ctx, c) => (ctx.diffCleared?.has(c.ref) ? 1 : 0) },
     total: { have: ctx => ctx.peakTotal },
     hero: { have: ctx => ctx.topLevel },
     building: { have: (ctx, c, rankOf) => rankOf(c.ref) },
@@ -93,12 +104,16 @@ const NONE = v => v === '-' || v === '' || v == null;
  * @param {object} data
  *   buildings / ranks / effects / research — 표 넷의 파싱 행
  *   stageIds [id] — 문턱 `stage:` 가 가리킬 수 있는 스테이지 · resources [id] — 비용이 적을 수 있는 재화(`gold` · `dust` · `stigma` · 제작 재료 id)
+ *   chapterBosses {장: 칸 id} — 문턱 `chapter:` 가 푸는 보스 칸 · difficultyIds [id] — 문턱 `difficulty:` 가 가리킬 수 있는 단 (R362)
  *   balance — 문턱 값에 키 이름을 적었을 때 읽는다
  */
 export function createConstruction(data) {
     const bad = why => { throw new Error(`construction: ${why}`); };
     const B = data.balance ?? {};
     const stageIds = new Set(data.stageIds ?? []);
+    const chapterBosses = data.chapterBosses ?? {};
+    const difficultyIds = new Set(data.difficultyIds ?? []);
+    const baseDiff = (data.difficultyIds ?? [])[0];   // 첫 단 — `chapter:<장>:<첫 단>` 은 `chapter:<장>` 과 같다(첫 단 기록은 `ctx.cleared`)
     const resources = new Set(data.resources ?? []);
     const posInt = v => Number.isInteger(v) && v > 0;
     // 켜기 → 그 켜기가 첫 단계를 심는 더하기들 (`TARGETS.seed`) — 심는 쪽은 켜기여야 한다
@@ -140,6 +155,16 @@ export function createConstruction(data) {
             const ref = Number(a);
             if (!stageIds.has(ref)) bad(`${where} — 없는 스테이지 '${part}'`);
             return { kind, ref, need: 1 };
+        }
+        if (kind === 'chapter') {
+            const ref = Number(a), stage = chapterBosses[ref];
+            if (!stageIds.has(stage)) bad(`${where} — 보스 칸이 없는 장 '${part}'`);
+            if (b !== undefined && !difficultyIds.has(b)) bad(`${where} — 없는 난이도 '${part}'`);
+            return { kind, ref, stage, diff: b === undefined || b === baseDiff ? null : b, need: 1 };
+        }
+        if (kind === 'difficulty') {
+            if (!difficultyIds.has(a)) bad(`${where} — 없는 난이도 '${part}'`);
+            return { kind, ref: a, need: 1 };
         }
         if (kind === 'building') {
             if (!a || b === undefined) bad(`${where} — 'building:<id>:<랭크>' 모양이 아니다 '${part}'`);

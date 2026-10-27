@@ -410,12 +410,12 @@ export function createHeroSystem(data) {
      */
     const START_TIERS = ['rare', 'magic', 'normal'];
 
-    // 첫 파티만 고유를 직업 기본기 풀에서 굴린다 [2026-09-29 · R179 · hero_design §1] — 선술집 · 찾아온 영웅(`rollCandidates`)은 직업 풀 그대로
+    // 첫 파티만 고유를 직업 기본기 풀에서 굴린다 [2026-09-29 · R179 · hero_design §1] — 선술집 · 수색(`rollCandidates`)은 직업 풀 그대로
     const rollStartParty = (rng, n) => rollParty(rng, n, START_TIERS, true);
 
     /**
      * 선술집 후보 — 시작 파티와 같은 굴림이되 **등급도 굴린다** (첫 파티만 지정이다).
-     * `tiers` 를 주면 그 등급으로 굳는다 — **찾아온 영웅이 줄 레벨로 등급을 미는 자리**다 (state.visitRoll · ~~수색~~ 2026-10-19).
+     * `tiers` 를 주면 그 등급으로 굳는다 — **수색이 줄 레벨로 등급을 미는 자리**다 (state.visitRoll · ~~수색~~ 2026-10-19).
      *   `rollTier` 가 지정이어도 굴림을 태우므로(위 계약) **소비 수는 지정 여부와 무관하게 같다**.
      */
     const rollCandidates = (rng, n, tiers = null) => rollParty(rng, n, tiers);
@@ -456,6 +456,19 @@ export function createHeroSystem(data) {
         const h = rollHero(rng, { name, sin, cls, trait });
         h.face = rollFace(rng, cls);
         return h;
+    }
+
+    /**
+     * 새 게임의 고블린 1마리 [2026-10-27 사용자 · hero_design §1 「성장 영웅」] — 다섯 종(`kinds` — 직업마다 하나 · state 가 넘긴다) 중 하나를 고르고
+     * 죄종 · 특성 · 고유를 굴린다. 고유는 **직업 풀 전체**(선술집과 같다 · 첫 파티의 1티어 규칙 밖). 등급 · 능력치 · 얼굴은 종류가 정한다(state 가 박는다).
+     * 소비 = 종류 1 → 죄종 1 → 특성 1 → 고유 1 = 언제나 4회 (INTERFACE §5-2)
+     */
+    function rollGoblin(rng, kinds) {
+        const kind = kinds[Math.floor(rng() * kinds.length)];
+        const [sin] = drawDistinct(rng, data.sins, 1);
+        const [trait] = drawDistinct(rng, data.traitPool, 1);
+        const innate = rollInnate(rng, kind.cls);
+        return { kind, sin, trait, innate };
     }
 
     /* ── 성장 ── */
@@ -798,7 +811,7 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, gateOn, sinGearCount,
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)

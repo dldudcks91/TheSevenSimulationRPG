@@ -540,7 +540,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **원본** — Codex 이미지 생성 · 2×2 시트 · 탐험 지점 시트(`explore/source/codex_explore_icons_sheet.png`)를 기준 그림으로 붙이고 「청동 테두리 없이 원판만」을 시켰다(지시문 `source/sheet_prompt.txt` · 시트 `source/sheet_01_codex.png`). 넷째 칸(교차한 곡괭이 — 채광 둘째 판)은 `unused/mine_crossed.png`
 - **자르기** — `cut.py --grid 2x2`(흰 시트 · 원판이 칸 안에 떨어져 있어 손볼 것이 없었다)
-- **줄 그림은 채광 · 채집 · 벌목 셋뿐이다** — 찾아온 영웅 · 훈련 · 도박장 줄(GAME_DESIGN §9 10-21)은 아직 그림이 없다
+- **줄 그림은 채광 · 채집 · 벌목 셋뿐이다** — 수색 · 훈련 · 도박장 줄(GAME_DESIGN §9 10-21)은 아직 그림이 없다
 - **지점 아이콘 — `icons/lab/node/<지점 id>.webp` 12장** [신설 2026-10-21 — 사용자 「codex활용해서 각 연구별 아이콘 · 무채색」 · ADR-0684] — 회색 단색 실루엣(`#d8d8e6` · 512 투명 · 긴 변 0.88 · 중앙 — 마스터리 아이콘과 같은 그림체). 파일명 = `lab_node.csv:node` — `kind` 종류 · `yield` 획득량 · `burst` 대박(재료 줄 · 도박장 공용) · `depth` 깊이 · `seats` 등록 칸 · `interval` 간격 · `quality` 품질 · `waiting` 대기 칸 · `speed` 훈련 속도 · `range` 범위 · `income` 수익 + **`unique` 유니크 확률**(지점은 유니크 영웅 굴림이 서면 — 그림만 먼저 있다). 연구소 트리 노드 · 고른 지점 머리가 읽는다(`mock.js:labNodeIcon`) · `build_icons.py:GAME_DIRS` 에 `lab/node`. `trainees`(훈련 「인원」 — 같은 날 「등록 칸」과 같아 지점이 빠졌다)는 `unused/`
 - **지점 원본** — Codex 이미지 생성 · 마스터리 시트(`mastery/source/sheet_01_codex.png`)를 기준 그림으로 붙인 검정 실루엣 3×3 · 2×2(`source/sheet_node_01_codex.png` · `sheet_node_02_codex.png` · 지시문 `*_prompt.txt`) → `cut.py` → `mastery/source/mono.py` 로 회색. 40px 몽타주에서 13장이 다 갈렸다
 

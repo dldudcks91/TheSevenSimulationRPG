@@ -463,11 +463,11 @@ const STRINGS = {
 
     /* ── 선술집 (실동작) ── */
     'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)' },
-    // 보관 — 후보를 찾아온 영웅 칸에 넣는다(무료 · `game.tavernKeep` · ADR-0897)
+    // 보관 — 후보를 수색 칸에 넣는다(무료 · `game.tavernKeep` · ADR-0897)
     'tv.keep': { ko: '보관', en: 'Keep' },
-    'tv.kept': { ko: '{name} 보관 — 찾아온 영웅 칸', en: 'Kept {name} in Visiting Heroes' },
+    'tv.kept': { ko: '{name} 보관 — 수색 칸', en: 'Kept {name} in Search' },
     'tv.empty.kept': { ko: '보관함 — 다음 교체 때 채워짐', en: 'Kept — refills on next refresh' },
-    'tv.err.joinFull': { ko: '찾아온 영웅 칸 가득 참 ({n})', en: 'Visiting Heroes full ({n})' },
+    'tv.err.joinFull': { ko: '수색 칸 가득 참 ({n})', en: 'Search full ({n})' },
     'tv.reroll': { ko: '교체하기 ({g} 골드)', en: 'Refresh ({g} gold)' },
     'tv.reroll.wait': { ko: '무료까지 {t}', en: 'Free in {t}' },
     'tv.reroll.free': { ko: '후보 교체 (무료)', en: 'New candidates (free)' },
@@ -475,8 +475,8 @@ const STRINGS = {
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'tv.err.roster': { ko: '영웅 로스터 가득 참 ({cap})', en: 'Hero roster full ({cap})' },
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
-    /* 찾아온 영웅 [2026-10-19 · SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 · 영웅 보내기 · 가입 희망~~ 대체] — 명단 셋째 칸(안내 · 고른 얼굴의 카드) · 오른쪽 열 2×2 */
-    'tv.visit.h': { ko: '찾아온 영웅', en: 'Visiting Heroes' },
+    /* 수색 [2026-10-19 · SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 · 영웅 보내기 · 가입 희망~~ 대체] — 명단 셋째 칸(안내 · 고른 얼굴의 카드) · 오른쪽 열 2×2 */
+    'tv.visit.h': { ko: '수색', en: 'Search' },
     'tv.visit.spec': { ko: '{h}시간마다 한 명 · {n}칸', en: 'One every {h}h · {n} slots' },
     'tv.visit.odds': { ko: '레어 {r}%', en: 'Rare {r}%' },
     'tv.visit.next': { ko: '다음 도착까지 {t}', en: 'Next arrival in {t}' },
@@ -681,7 +681,7 @@ const STRINGS = {
     'set.logText': { ko: '문장', en: 'Text' },
     'set.nick': { ko: '닉네임', en: 'Nickname' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
 
-    /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 넷: 자원 · 찾아온 영웅 · 훈련 · 도박장 (SCREEN_DESIGN §8) ──
+    /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 넷: 자원 · 수색 · 훈련 · 도박장 (SCREEN_DESIGN §8) ──
        채광 · 채집 · 벌목은 「자원」 줄의 지점이다(`dp.node.mine` · `gather` · `log` — 2026-10-25 · ADR-0788 · R356) · `dp.post.mine` · `gather` · `log` 는 미니게임 창 제목이 쓴다.
        영웅은 앉지 않는다 [2026-10-18 · ADR-0665] — ~~자리 칸의 선택 창 · 회수 · `dp.err.*` · 담당 능력치(`dp.attrTitle`)~~ 를 걷었다.
        `dp.solo` · `dp.party` 는 참조가 0 이지만 **지우지 않는다**: 탐험 탭이 같은 문구를 쓸 수 있다.
@@ -694,8 +694,8 @@ const STRINGS = {
     'dp.post.mine': { ko: '채광', en: 'Mining' },
     'dp.post.gather': { ko: '채집', en: 'Gathering' },
     'dp.post.log': { ko: '벌목', en: 'Logging' },
-    // 연구소 줄 「찾아온 영웅」 — 단계 없는 칸 하나 (SCREEN_DESIGN §8 · ADR-0672 · 2026-10-19)
-    'dp.post.visit': { ko: '찾아온 영웅', en: 'Visiting Heroes' },
+    // 연구소 줄 「수색」 — 단계 없는 칸 하나 (SCREEN_DESIGN §8 · ADR-0672 · 2026-10-19)
+    'dp.post.visit': { ko: '수색', en: 'Search' },
     'dp.visit.every': { ko: '{h}시간마다 한 명', en: 'One every {h}h' },
     'dp.visit.rare': { ko: '레어 {r}%', en: 'Rare {r}%' },
     'dp.visit.closed': { ko: '닫힘', en: 'Closed' },
@@ -737,11 +737,11 @@ const STRINGS = {
     'dp.fx.cost': { ko: '연구 비용 −{v}%', en: 'Research cost −{v}%' },
     // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 결투장 `cs.help` 와 같은 도움말 전용 문장
     'dp.help': {
-        ko: '줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 찾아온 영웅은 칸이 찰 때까지)<br>'
+        ko: '줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 수색은 칸이 찰 때까지)<br>'
             + '지점을 골라 <b>연구</b>하면 레벨이 오릅니다 — 시간이 걸리고 연구소 전체에 <b>한 번에 하나</b> · 그만두면 비용을 전부 돌려받습니다 · 연구소 랭크가 새 지점을 엽니다<br>'
             + '영웅을 줄에 <b>등록</b>하면 능력치가 그 줄에 효과를 줍니다 — 힘 속도 · 운 대박 · 지능 연구 시간 · 매력 품질 · 건강 숙련(오래 등록할수록) · 통솔 같은 줄 동료 · 민첩 연구 비용. 등록은 원정 · 탐험과 겸합니다<br>'
             + '<b>훈련</b> 줄은 등록한 영웅이 경험치를 받습니다(로스터 최고 레벨까지) · <b>도박장</b> 줄은 선술집의 도박장이 열리면 같이 열립니다',
-        en: 'Lines produce over time <b>without heroes</b> — even while the game is closed (up to {h}h · Visiting Heroes until the slots fill)<br>'
+        en: 'Lines produce over time <b>without heroes</b> — even while the game is closed (up to {h}h · Search until the slots fill)<br>'
             + 'Pick a node and <b>Research</b> it to raise its level — it takes time and the Laboratory runs <b>one at a time</b> · cancelling refunds the full cost · Laboratory rank opens new nodes<br>'
             + 'Heroes <b>assigned</b> to a line lend it their stats — Strength speed · Luck jackpot · Intelligence research time · Charisma quality · Vitality mastery (the longer assigned) · Leadership peers on the line · Agility research cost. Assignment does not stop expeditions or exploring<br>'
             + 'The <b>Training</b> line gives XP to its assigned heroes (up to the roster\'s top level) · the <b>Gambling Den</b> line opens along with the Tavern\'s Gambling Den',
@@ -920,6 +920,8 @@ const STRINGS = {
     'exp.seg.party': { ko: 'Party {n}', en: 'Party {n}' },
     /* 원정이 있는 부대 칸 — 이름 뒤에 그 부대가 있는 스테이지(`data.js:stageName`) [2026-10-06 사용자 지시 · ADR-0517] */
     'exp.seg.partyAt': { ko: 'Party {n} - {where}', en: 'Party {n} - {where}' },
+    // 원정이 없는 열린 부대 칸 — 흰 글씨 [2026-10-27 사용자 지시 · ADR-0912] · 자물쇠 칸은 `exp.seg.party`
+    'exp.seg.partyIdle': { ko: 'Party {n} - 대기 중', en: 'Party {n} - Idle' },
     // 스테이지 화면 오른쪽 위 버튼 · 도움말 소제목 (§4-1 · ADR-0661)
     'exp.seg.report': { ko: 'Report', en: 'Report' },
     'exp.oneParty': {
@@ -1266,9 +1268,15 @@ const STRINGS = {
     'cn.owned': { ko: '보유 {n}', en: 'Owned {n}' },
     'cn.built': { ko: '{b} {n}랭크 건설 완료', en: 'Built {b} rank {n}' },
     'cn.req.stage': { ko: '스테이지 {s} 클리어', en: 'Clear Stage {s}' },   // 「스테이지」 를 앞에 명시 (2026-09-27 사용자 지시)
+    // 장 · 난이도 클리어 — 탐험 건물 [2026-10-27 사용자 「챕터 1 클리어」 · 「노말 클리어」 · ADR-0909] · {d} = 난이도 이름(difficulty_tier.csv)
+    'cn.req.chapter': { ko: '챕터 {n} 클리어', en: 'Clear Chapter {n}' },
+    'cn.req.difficulty': { ko: '{d} 클리어', en: 'Clear {d}' },
+    // 단을 적은 장 — 선술집 r4 ~ r7 [2026-10-27 사용자 「나이트메어 챕터1~나이트메어챕터4」 · R363]
+    'cn.req.chapterIn': { ko: '{d} 챕터 {n} 클리어', en: 'Clear {d} Chapter {n}' },
     'cn.req.total': { ko: '합산 레벨 {have} / {need}', en: 'Total level {have} / {need}' },
     'cn.req.hero': { ko: '최고 영웅 Lv.{have} / {need}', en: 'Top hero Lv.{have} / {need}' },
     'cn.req.building': { ko: '{b} {n}랭크', en: '{b} rank {n}' },
+    'cn.req.built': { ko: '{b} 건설', en: 'Build {b}' },   // 다른 건물의 첫 랭크 — 선술집 r1 「상단 건설」 (2026-10-27 사용자 「영웅고용 - 상단 건설 필요」 · R363)
     // 거절 코드 — construct 의 err (INTERFACE §3)
     'cn.err.missing': { ko: '없는 건물', en: 'Unknown building' },
     'cn.err.maxRank': { ko: '최대 랭크', en: 'Fully built' },
@@ -1282,7 +1290,8 @@ const STRINGS = {
     'cn.t.make': { ko: '장비 제작', en: 'Equipment Smithing' },
     'cn.t.synth': { ko: '재료 합성', en: 'Material Combining' },
     'cn.t.potion': { ko: '물약 제작', en: 'Potion Brewing' },   // 대장간 r2 — 물약 1단계를 함께 연다 (2026-09-24 사용자 지시)
-    'cn.t.storage': { ko: '가방 · 창고 사용', en: 'Use the bag and stash' },
+    // ~~'cn.t.storage'~~ 은 2026-10-27 삭제 — 가방 · 창고 칸은 건물 밖이다(처음부터 열림 · R361)
+    'cn.t.lab_res': { ko: '연구소 자원 생산', en: 'Laboratory resource production' },   // 창고 r1 — 연구소 「자원」 줄을 연다 (R361)
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록', en: 'Record monsters you meet in the codex' },
     // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 대장간과 같은 시험 중 — SCREEN_DESIGN §13-1]
     'cn.t.hire': { ko: '영웅 고용', en: 'Hero Hiring' },
@@ -1291,22 +1300,25 @@ const STRINGS = {
     'cn.t.craft': { ko: '매직 장비에 전용 옵션 추가', en: 'Add a special option to magic gear' },
     'cn.t.stigma_craft': { ko: '낙인으로 장비 크래프트', en: 'Craft equipment with stigmas' },
     'cn.t.skill_card': { ko: '스킬 카드 합성', en: 'Fuse skill cards' },
-    'cn.t.skillbook': { ko: '스킬북으로 스킬 습득', en: 'Learn skills from skill books' },   // 도서관 r1 (R179 · construction_draft §2)
+    'cn.t.skillbook': { ko: '스킬북으로 스킬 습득', en: 'Learn skills from skill books' },   // 도서관 r2 (R179 · 2026-10-27 R364 · construction_draft §2)
     'cn.t.book_craft': { ko: '스킬북 제작', en: 'Craft skill books' },   // 도서관 r2 (2026-10-16 · R263 — 도안이 열린 책 · ~~기본 책~~ 10-12)
     'cn.t.explore': { ko: '파티를 탐험에 파견', en: 'Send a party to explore' },
+    // 탐험 r2 · r3 — 지도에 그 지점 아이콘이 생긴다 [2026-10-27 사용자 「상단 오픈」 · 「폐허 오픈」 · ADR-0908]
+    'cn.t.explore_caravan': { ko: '상단 오픈', en: 'Unlocks Caravan' },
+    'cn.t.explore_ruins': { ko: '폐허 오픈', en: 'Unlocks Ruins' },
     'cn.t.raid': { ko: '목표를 털어 전리품 획득', en: 'Raid a target for loot' },
     'cn.t.escort': { ko: '의뢰인의 상단 호위', en: "Escort a client's caravan" },
     'cn.t.gear_set': { ko: '장비 한 벌을 저장해 바로 갈아입기', en: 'Save a gear loadout and swap instantly' },
     'cn.t.monster_card': { ko: '몬스터 카드 수집', en: 'Collect monster cards' },
     'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission Board' },   // 선술집 r2 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-25)
-    'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r4 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
+    'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r3 — 2026-10-27 R363 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
     'cn.t.advance': { ko: '영웅 전직', en: "Advance a hero's class" },
     'cn.t.skill_depth': { ko: '영웅 스킬에 포인트 추가', en: 'Invest more points into hero skills' },
     // 더하기는 「대상 +n」 한 토막 — 서술형 문장으로 늘리지 않는다 (ADR-0329) · 「증가」 도 안 붙인다 — 「+」 가 이미 말한다 (ADR-0351)
     'cn.t.bag': { ko: '가방 칸 +{n}', en: 'Bag slots +{n}' },
     'cn.t.stash': { ko: '창고 칸 +{n}', en: 'Stash slots +{n}' },
     'cn.t.roster': { ko: '영웅 로스터 +{n}', en: 'Hero roster +{n}' },
-    'cn.t.presets': { ko: '편성 +{n}', en: 'Party presets +{n}' },
+    'cn.t.presets': { ko: 'Party +{n}', en: 'Party +{n}' },   // 모든 언어에서 「Party」 (2026-10-27 사용자 지시 · ADR-0910)
     'cn.t.potionSlots': { ko: '원정 물약 칸 +{n}', en: 'Expedition potion slots +{n}' },
     'cn.t.upgrade': { ko: '강화 상한 +{n}', en: 'Upgrade cap +{n}' },
     'cn.t.shopPerSlot': { ko: '상단 부위별 품목 +{n}', en: 'Wares per slot +{n}' },
@@ -1319,12 +1331,13 @@ const STRINGS = {
     'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}' },
     // 연구소 랭크 — `{total}` = 그 랭크(랭크마다 1 · 그 랭크의 지점이 열린다 · 2026-10-25 R356 — ~~채광 · 채집 · 벌목 n단계~~ 재료에 단계가 없다)
     'cn.t.resource_tier': { ko: '연구소 {total}랭크 지점 해금 · 자동 생산', en: 'Unlocks Laboratory Rank {total} nodes · Automatic production' },
+    'cn.t.lab_open': { ko: '연구소 개방', en: 'Laboratory Opens' },   // 연구소 랭크 I — 줄을 안 연다(줄은 관련 건물이 연다 · 2026-10-27 사용자 지시 · R361)
     'cn.t.shop_layers': { ko: '상단 품목 층 +{n}', en: 'Ware tiers +{n}' },
     'cn.t.explore_regions': { ko: '탐험 지역 +{n}', en: 'Exploration regions +{n}' },
     'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}' },
     'cn.t.gear_sets': { ko: '장비 세트 +{n}', en: 'Gear sets +{n}' },
     'cn.t.commission_slots': { ko: '동시 의뢰 +{n}', en: 'Parallel commissions +{n}' },
-    'cn.t.recruit_quality': { ko: '고용 · 찾아온 영웅 품질 +{n}', en: 'Hire and visiting hero quality +{n}' },
+    'cn.t.recruit_quality': { ko: '고용 · 수색 품질 +{n}', en: 'Hire and search quality +{n}' },
     'cn.t.research': { ko: '연구 상한 +{n}', en: 'Research cap +{n}' },
     // 건설 [2026-09-21 ADR-0253] — 옛 「연구」. 본문은 위쪽 탭(ADR-0192 로 걷힘)을 설명하던 것을 지금 화면 기준으로 다시 썼다
     'rs.research.h': { ko: '건설', en: 'Construction' },

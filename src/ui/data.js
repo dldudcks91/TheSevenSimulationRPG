@@ -645,6 +645,9 @@ export function buildSystems(d, dev = {}) {
     const construction = createConstruction({
         buildings: d.buildingRows ?? [], ranks: d.buildingRankRows ?? [], effects: d.buildingEffectRows ?? [], research: d.researchRows ?? [],
         stageIds: d.stageOrder ?? [], balance: d.balance,
+        // 문턱 `chapter:<장>` 이 푸는 장 보스 칸(`stage.csv:boss_grade` = `chapter_boss`) · `difficulty:<id>` 가 가리킬 수 있는 단 (R362)
+        chapterBosses: Object.fromEntries((d.stageOrder ?? []).filter(id => d.stages[id].boss_grade === 'chapter_boss').map(id => [d.stages[id].chapter, id])),
+        difficultyIds: (d.difficultyList ?? []).map(x => x.id),
         resources: ['gold', 'dust', 'stigma', ...(d.labMaterials ?? []).map(m => m.id), ...(d.materialSynth ?? []).map(m => m.id)],
     });
     // 도박장 슬롯 — 표 넷이 판을 정하고 이 시스템은 한 판을 굴린다(세이브를 모른다 · INTERFACE §2-15 · R149)

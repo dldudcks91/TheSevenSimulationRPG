@@ -402,7 +402,7 @@ const strHash = s => {
 export const heroFace = hero => {
     const id = hero?.face;
     if (typeof id !== 'string') return null;            // null·옛 정수 → 빈 칸 (v13 이관이 정수를 남기지 않는다 — 방어)
-    if (id === 'goblin_butler') return facePath('hero/goblin_butler.webp');
+    if (/^goblin_[a-z]+$/.test(id)) return facePath(`hero/${id}.webp`);   // 고블린 다섯 종 — 직업 풀 밖 · id 가 곧 파일 (2026-10-27)
     const i = id.lastIndexOf('_');
     const cls = id.slice(0, i), k = Math.floor(+id.slice(i + 1));
     const m = HERO_FACES[cls] ?? 0;

@@ -2,7 +2,11 @@
 export const PORTRAIT_FILES = {
   "gemini": [
     "hero/archer_1.webp",
+    "hero/goblin_beater.webp",
+    "hero/goblin_bellringer.webp",
     "hero/goblin_butler.webp",
+    "hero/goblin_porter.webp",
+    "hero/goblin_steward.webp",
     "hero/knight_1.webp",
     "hero/knight_2.webp",
     "hero/knight_3.webp",

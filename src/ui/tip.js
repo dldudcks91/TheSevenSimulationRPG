@@ -799,10 +799,11 @@ export function codexMonsterTipCard(m, grade) {
         const { stat, value } = line.fight;      // 장비 옵션 사전 · 사전에 없는 둘은 도감 전용 이름(`CODEX_FIGHT_LABELS`)
         return t('cx.rw.fight', { race, line: L(M.affixText(stat, value, M.CODEX_FIGHT_LABELS[stat])) });
     };
+    //   도서관이 안 연 단계는 **자물쇠 줄만**(자물쇠 + 「도서관 n랭크」 · 회색) — 효과 글은 안 든다 (ADR-0922 · ADR-0762)
     const steps = SYS.game.codexSteps().map((s, i) => `
         <div class="cx-step${i < lv ? ' on' : ''}">
             <span class="cx-step-lv">${t('cx.tip.lv', { lv: s.level })}</span>
-            <span class="cx-step-b">${stepText(s)}${m.lockHtml?.[s.level] ? `<span class="cx-step-need">${m.lockHtml[s.level]}</span>` : ''}</span>
+            <span class="cx-step-b">${m.lockHtml?.[s.level] ? `<span class="cx-step-need">${m.lockHtml[s.level]}</span>` : stepText(s)}</span>
         </div>`).join('');
     const card = el('div', 'tip-card cx-tip', `
         <div class="cx-tip-h">${t('cx.tip.story')}</div>
@@ -892,17 +893,17 @@ function shopSource() {
 
 /**
  * 도감 툴팁 왼쪽 장 = **선술집 후보 카드 그대로** (ADR-0233 · SCREEN_DESIGN §3 후보 카드 · §8) — `app.js:candidateCard` 와 같은 `.ng-card` 칸 · 같은 줄 순서다:
- * 초상 옆에 칩 줄(종족 + 죄종 + 직업 · ADR-0724) · 이름 · 역할 · 무기군 · 고유 스킬, 아래에 능력치 7 막대 · 능력치 합.
+ * 초상 옆에 칩 줄(종족 + 부류 + 직업 · ADR-0724 · ADR-0922) · 이름 · 역할 · 무기군 · 고유 스킬, 아래에 능력치 7 막대 · 능력치 합.
  * 값은 `monster.csv` 의 기본 능력치 7 — 레벨과 무관하고 `battle.makeEnemy` 가 읽는 것과 같다. 막대 줄은 **같은 함수**다(`attrRowsHtml` · ADR-0114).
  * 후보 카드의 `Lv.1` · 최대 HP 줄은 없다 — 몬스터의 레벨 · HP 는 스테이지 레벨 · 등급이 정해 한 값이 없다
  */
 function codexCandCard(m, grade) {
     const row = D.monsters?.[m.id];
-    const sin = monsterSin(m.id);
-    const sinColor = M.SINS[sin]?.color ?? 'var(--text-muted)';
     // 영웅의 티어 칩 자리 = **종족**(`monster.csv:monster_type` 의 이름 — 관전 신원과 같은 `SYS.commission.races` · ADR-0724).
     //   윗변 · 막대 · 칩 색 = 관전 몬스터 툴팁의 등급 색(보스는 보스, 아니면 일반 / 정예 고르개). 어두운 색은 막대만 밝힌다(`bar-lift` · monsterTipCard 와 같다)
+    //   둘째 칩 = **부류**(`monster.csv:monster_base` 의 이름 · 무채색) — 죄종 칩이 섰던 자리 (ADR-0922)
     const race = SYS.commission?.races?.find(x => x.id === row?.monster_type);
+    const base = D.codexRaces?.[row?.monster_base];
     const line = GRADE_LINE[m.boss ? 'stage_boss' : grade] ?? GRADE_LINE.normal;
     const stats = row ? Object.fromEntries(D.heroAttributes.map(s => [s.id, row[s.id]])) : null;
     const total = stats ? D.heroAttributes.reduce((a, s) => a + (stats[s.id] ?? 0), 0) : '—';
@@ -923,7 +924,7 @@ function codexCandCard(m, grade) {
         <div class="ng-head">
             ${face}
             <div class="ng-id">
-                <div class="ng-chips">${race ? `<span class="tier-chip" style="color:${line}">${L(race.name)}</span>` : ''}<span class="sin-chip" style="color:${sinColor}">${L(M.SINS[sin]) || sin}</span>${cls ? `<span class="cls-chip"${cls.color ? ` style="color:${cls.color}"` : ''}>${L(cls)}</span>` : ''}</div>
+                <div class="ng-chips">${race ? `<span class="tier-chip" style="color:${line}">${L(race.name)}</span>` : ''}${base ? `<span class="base-chip">${L(base)}</span>` : ''}${cls ? `<span class="cls-chip"${cls.color ? ` style="color:${cls.color}"` : ''}>${L(cls)}</span>` : ''}</div>
                 <div class="ng-name"><b>${L(monsterName(m.id))}</b></div>
                 <div class="ng-role muted">${role}</div>
                 ${skills}
