@@ -434,6 +434,14 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 `<죄종 id>.webp` 7장(`wrath` · `sloth` · `lust` · `envy` · `pride` · `gluttony` · `greed`) — 512 투명 · 내용 88% · 원본 `shrines/source/<id>.png`(1024 · 게임이 안 읽는다). 결과 띠 · 관전 헤드 · 리포트의 신단 칩이 읽는다(`data.js:shrineInfo` · SCREEN_DESIGN §4-2 「신단」 · ADR-0445) · 파일명 = `shrine.csv:shrine_id`. 발주 지시문 · 규격 [docs/reference/shrine_art_prompt.md](../../../docs/reference/shrine_art_prompt.md)
 
+## logo/ — 브랜드 워드마크 [신설 2026-10-27]
+
+`the_seven.webp` 한 장 — 브랜드 칸 · 메뉴의 워드마크 「THE SEVEN」(SCREEN_DESIGN §2 「브랜드」 · ADR-0883). 870×240 투명 WebP q88 · 그림 경계로 자른 것이라 여백이 없다(화면이 높이만 정한다 — `style.css` `.brand img` · `.mn-logo img`).
+
+- **원본** — `source/codex_20261027/` · Codex(ChatGPT 로그인) 발주. `run_codex.py`(공통 프롬프트 + 시안마다 한 덩어리 · 앵커 = 지금 화면 캡처 `ref_ui_now.png`) → `out/` · `compare.py` 가 알파 경계로 잘라(`trim/`) 실제 화면 브랜드 칸에 끼워 찍고 `compare.png` 로 모은다(사용자 서버 8777 을 읽기만 한다)
+- 설치본의 원본 = `installed/08_dagger.png`(Codex 그대로) · `installed/08_dagger_trim.png`(알파 경계로 자른 것 — 이것을 높이 240 으로 줄여 설치). 다른 시안은 판마다 지우고 새로 그린다 — `out/` · `trim/` · `compare.png` 은 지금 판만 든다
+- 작은 칸에서 거른 것 — 검은 장식은 돌 바탕에 묻힌다 · 칸 높이를 먹는 장식은 글자를 작게 만든다 · 가는 금 · 덩굴은 얼룩이 된다. 다시 뽑을 때 공통 프롬프트에 그대로 둔다
+
 ## skins/ — 겉모양 비교의 질감 [신설 2026-10-26 · 임시]
 
 `d2min_*.webp` 다섯 장 — 설정 탭 `Skin` 의 `D2 Min`(SCREEN_DESIGN §10-5 · ADR-0791)이 쓰는 부품. **컨셉 17번 그림에서 잘라 낸다** — 원본 `source/concept_17_minimal.png`(캐릭터 탭 캡처를 Codex 가 「어둡고 깔끔한 디아블로 2 · 최소화」로 다시 그린 페인트오버 · 지시문 `source/concept_17_minimal_prompt.txt`) · `python src/assets/art/skins/source/cut_d2min_parts.py`
@@ -447,6 +455,12 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 | `d2min_fill` | 영웅 띠 패널의 빈 자리 — 뒤집어 2×2 | 패널 · 탭 열 · 카드의 결 |
 
 자리는 원본의 픽셀 좌표다(스크립트 머리) — 원본을 바꾸면 다시 잰다. 비교 줄을 걷으면 이 폴더도 걷는다.
+
+**`k<번호>_*.webp` — 스킨 키트 스물(191 ~ 210 · 다섯 장씩)** [2026-10-27 · ADR-0901] — `Skin` 줄의 번호 버튼이 내용물(메인 · 툴팁 · 창 · 플래시)에 갈아 끼우는 부품 · `d2min_*` 와 같은 다섯 장 · 같은 크기다.
+
+- **그리기** — `python src/assets/art/skins/source/run_skin_repaints.py [번호 …]` — Codex(ChatGPT 로그인)에 `concept_17_minimal.png` 를 Image 1 로 주고 배치 · 글자는 그대로 · 재질만 키트의 변주(`KITS` — 깔끔한 중세)로 다시 그리게 한다 · 결과 `source/repaint_<번호>_<id>.png`(1536×1024) · 지시문 `source/repaint_<번호>_<id>_prompt.txt`
+- **자르기** — `python src/assets/art/skins/source/cut_skin_repaints.py [번호 …]` — `cut_d2min_parts.py` 의 좌표 그대로(밀리면 가장자리 맞대기로 옮긴다) · 결은 그 자리 안 가장 민 곳 · 글자 면 밝기 상한 · `--css` 로 style.css 「스킨 키트」 절의 토큰 덩어리를 찍는다
+- ⚠ 다시 그린 원본 스무 장이 약 36MB 다 — 키트를 걷을 때 `source/repaint_*` 도 같이 지운다
 
 ## grave/ — 무덤 명패 비석 [신설 2026-10-13]
 
@@ -794,4 +808,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-24*
+*마지막 업데이트: 2026-10-27*

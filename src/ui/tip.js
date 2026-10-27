@@ -1294,16 +1294,17 @@ function addTouchBar(node, ev) {
 /**
  * 툴팁이 내는 **문장**을 그대로 낸다 — 스킬 창의 액티브 줄이 hover 와 같은 말을 하게 하는 창이다
  * [2026-09-08 사용자 지시 · SCREEN_DESIGN §7]. 카드와 **같은 함수**(`skillLines`)를 쓰므로 둘이 갈릴 길이 없다.
- * ⚠ **Alt 를 안 본다** — 기본 · 값 없음 두 상태만 탄다 (ADR-0089). 추가 피해 문장은 줄바꿈으로 가른다.
+ * ⚠ **Alt 를 안 본다** — 기본 · 값 없음 두 상태만 탄다 (ADR-0089). 추가 피해 문장은 줄바꿈으로 가른다 —
+ *   `sep` 을 주면 그 글자로 잇는다(도서관 전직 줄은 ` · ` — 설명이 한 줄이다 · ADR-0852).
  * ⚠ `desc`(고정 설명)는 **안 낸다** — 줄에서 뺐다(같은 지시). 설명창도 2026-09-15 에 뗐다(ADR-0118).
  * @returns {string} 틀이 없는 스킬이면 빈 문자열
  */
 /** 설명창 · 액티브 줄이 읽는 정의 — **스킬 레벨을 얹은 것**이다(`s.up` · `skill.resolve` · 2026-10-06 · R216 · ADR-0529). 행이 지워진 옛 세이브는 null */
 const defOf = s => SYS.skill?.resolve?.({ id: s?.id, up: s?.up ?? 0 }) ?? null;
-export function skillLineHtml(s, ctx = {}) {
+export function skillLineHtml(s, ctx = {}, sep = '<br>') {
     const def = defOf(s);
     if (!def) return '';
-    return (skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, { alt: false, fx: false }) ?? []).join('<br>');
+    return (skillLines(def, SYS.skill.previewOf(def, ctx), ctx.atkType, { alt: false, fx: false }) ?? []).join(sep);
 }
 
 /**

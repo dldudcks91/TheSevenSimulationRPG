@@ -26,6 +26,7 @@ export const TARGETS = {
     //   ~~`repeat` · `stage_level`~~ 도 건물 밖이다 — 반복 원정은 처음부터 열린다 (2026-09-24 사용자 지시 · R152) · 던전 레벨 조절(위험도)은 2026-09-29 폐지됐다
     //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열린다 (2026-09-25 사용자 지시 · R161 · 원정 건물은 2026-10-22 에 걷혔다 · R319)
     upgrade_item: U(true), make: U(true),
+    synth: U(true),   // 재료 합성 — 하급을 모아 위 단계 하나(대장간 r1 · 2026-10-27 · R359 · item_design §5-2)
     potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 대장간 r2)
     //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
     storage: U(true), codex: U(true), hire: U(true), shop: U(true), shop_special: U(true),

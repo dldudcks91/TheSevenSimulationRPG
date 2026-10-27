@@ -1,0 +1,64 @@
+A3_nopick_s1               spectate_nopick  seed 1   actions 69   errors 0 []
+A3_tabs_s2                 tabs             seed 2   actions 428  errors 0 []
+B3_nopick_s2               spectate_nopick  seed 2   actions 65   errors 0 []
+B3_nopick_s3               spectate_nopick  seed 3   actions 57   errors 0 []
+B3_nopick_s4               spectate_nopick  seed 4   actions 35   errors 0 []
+B3_spec_s1                 spectate         seed 1   actions 43   errors 0 []
+B3_spec_s2                 spectate         seed 2   actions 74   errors 0 []
+B3_tabs_s1                 tabs             seed 1   actions 409  errors 0 []
+X_spectate_nopick_s10      spectate_nopick  seed 10  actions 64   errors 0 []
+X_spectate_nopick_s11      spectate_nopick  seed 11  actions 25   errors 0 []
+X_spectate_nopick_s12      spectate_nopick  seed 12  actions 83   errors 0 []
+X_spectate_nopick_s5       spectate_nopick  seed 5   actions 139  errors 0 []
+X_spectate_nopick_s6       spectate_nopick  seed 6   actions 57   errors 0 []
+X_spectate_nopick_s7       spectate_nopick  seed 7   actions 154  errors 0 []
+X_spectate_nopick_s8       spectate_nopick  seed 8   actions 76   errors 0 []
+X_spectate_nopick_s9       spectate_nopick  seed 9   actions 30   errors 0 []
+X_spectate_s10             spectate         seed 10  actions 58   errors 0 []
+X_spectate_s11             spectate         seed 11  actions 90   errors 0 []
+X_spectate_s12             spectate         seed 12  actions 60   errors 0 []
+X_spectate_s5              spectate         seed 5   actions 86   errors 0 []
+X_spectate_s6              spectate         seed 6   actions 51   errors 0 []
+X_spectate_s7              spectate         seed 7   actions 88   errors 0 []
+X_spectate_s8              spectate         seed 8   actions 50   errors 0 []
+X_spectate_s9              spectate         seed 9   actions 68   errors 0 []
+ctrl_hit_s1                spectate_nopick  seed 1   actions 102  errors 1 ["Cannot read properties of null (reading 'equipped')"]
+ctrl_nopick                spectate_nopick  seed 1   actions 81   errors 0 []
+ctrl_nopick_s1             spectate_nopick  seed 1   actions 119  errors 7 ["Cannot read properties of null (reading 'equipped')", "Cannot read properties of undefined (reading 'chapter')"]
+ctrl_nopick_s2             spectate_nopick  seed 2   actions 151  errors 0 []
+smoke_ctrl                 spectate         seed 1   actions 69   errors 0 []
+NOW_B3_tabs_s3             tabs             seed 3   actions 410  errors 0 []   (사본 02:05)
+NOW_B3_nopick_s3           spectate_nopick  seed 3   actions 77   errors 0 []   (사본 02:05)
+NOW_A3_tabs_s4             tabs             seed 4   actions 401  errors 0 []   (사본 02:05)
+
+# ctrl_* = #89 수정 전 app.js(HEAD) 대조군. ctrl_nopick_s1 의 'chapter' 에러는 hit-test 를 넣기 전 거짓 양성(출정 창에 가린 챕터 탭) — 같은 함수의 사람이 닿는 길은 §4 #90(wheel_depart.py)
+# 나머지 = 사본 01:38(#89 수정 포함). 세이브 = 10-27 D10/D60 사람 흉내 B3 · A3 60분 상태(스크래치)
+
+# 다시 돌리기 — 서버(serve.py <포트>)를 띄우고:
+#   python harness/wheel_depart.py <포트> saves/B3_60min_storage.json r1      → §4 #90 (약 40초 뒤 departHead 에러 · 빈 막)
+#   python harness/fuzz.py <포트> tabs|spectate|spectate_nopick <태그> saves/B3_60min_storage.json [단계] [시드]
+
+# #90 수정 뒤 (사본 02:2x)
+FIX_B3_spec_s5             spectate         seed 5   actions 69   errors 0 []
+FIX_A3_nopick_s6           spectate_nopick  seed 6   actions 64   errors 0 []
+FIX_B3_tabs_s7             tabs             seed 7   actions 434  errors 0 []
+wheel_depart fix1 · fix2   → 바퀴 넘김에 출정 창이 닫힘 · 에러 0
+depart_flow                → 출정 · 확인([취소] · [확인]) · 자동 분해 창 동선 9단계 그대로
+
+# 3판 — fuzz2.py (시계 점프 · 영어 · 터치 · 준비 상태). C_* = #90 수정 전 사본(01:38) 대조군 · G/E/T = #90 · #91 수정 사본(02:40)
+C_gate_s1          tabs             steps=40 seed=1 clock=0.3 prep=gate            actions 63    errors 35 ["Cannot read properties of undefined (reading 'chapter')"] end nightmare
+C_gate_s2          tabs             steps=40 seed=2 clock=0.3 prep=gate            actions 59    errors 35 ["Cannot read properties of undefined (reading 'chapter')"] end nightmare
+C_gate_s3          tabs             steps=40 seed=3 clock=0.3 prep=gate            actions 528   errors 0 [] end normal
+E_en_A3_s7         tabs             steps=40 seed=7 clock=0.2 prep=gate lang=en    actions 537   errors 0 [] end nightmare
+E_en_B3_s6         tabs             steps=40 seed=6 clock=0.2 prep=run lang=en     actions 478   errors 0 [] end normal
+G_gate_s1          tabs             steps=40 seed=1 clock=0.3 prep=gate            actions 492   errors 0 [] end nightmare
+G_gate_s2          tabs             steps=40 seed=2 clock=0.3 prep=gate            actions 689   errors 0 [] end nightmare
+G_gate_s3          tabs             steps=40 seed=3 clock=0.3 prep=gate            actions 522   errors 0 [] end normal
+G_gate_spec_s4     spectate_nopick  steps=40 seed=4 clock=0.3 prep=gate            actions 139   errors 0 [] end nightmare
+G_run_A3_s5        tabs             steps=40 seed=5 clock=0.3 prep=run             actions 581   errors 0 [] end normal
+T_touch_A3_s10     tabs             steps=40 seed=10 clock=0.2 prep=gate touch=1   actions 979   errors 0 [] end nightmare
+T_touch_B3_s8      tabs             steps=40 seed=8 clock=0.2 prep=run touch=1     actions 1042  errors 0 [] end normal
+T_touch_spec_s9    spectate_nopick  steps=40 seed=9 clock=0.2 prep=run touch=1     actions 207   errors 0 [] end normal
+pause_probe A x2 · B · 첫 시도 = §4 #91 재현(다음 런이 멈춘 채 · 다른 탭 60초에도 원정 정지) · S · C = 정상
+pause_probe A · B · S + pause_band (수정 뒤) = 다음 런 이어 돎 · ⏸ 다시 먹음 · 가방 칸 48/48
+boss_band 반복 켬 1-5 = 재등장 띠 매번 섬(risk_map 10-16 관찰은 이 동선으로 안 남)

@@ -60,6 +60,7 @@ export const D = {
     commissionGradeRows: [],  // commission_grade.csv — 의뢰 등급 일반 · 매직 · 레어(카드 희귀도) ⚠제안
     monsterTypeRows: [],      // monster_type.csv — 종족 표시 이름 · 행 순서가 의뢰 종족 풀의 순서
     labMaterials: [],         // lab_material.csv — 연구소 「자원」 줄의 재료 셋 [{post, id, ko, en, yieldPerHour}] · 행 순서(채광 · 채집 · 벌목) ⚠임시 (2026-10-25 · R356 — ~~단계 표 셋 mine_node · gather_node · log_node~~)
+    materialSynth: [],        // material_synth.csv — 위 단계 재료와 그 합성 [{id, from, need, gold, ko, en}] · 행 순서 ⚠임시 (2026-10-27 · R359 — 연구소 재료 셋이 하급)
     labNodes: [],             // lab_node.csv — 연구소 **지점** [{line, node, ord, unlockRank, max, base, perLv, costGold, costMatHours, costGrowth, researchMin, researchGrowth}] · 표 순 ⚠임시 (2026-10-21 · R298)
     makeRecipes: {},          // make_recipe.csv — {part: {ore, timber, dust}} · 제작 필요량 ⚠임시 (item_design §7-1 · R96)
     potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103) · 만들 수 있는 단계는 대장간 랭크(R137)
@@ -126,7 +127,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -143,7 +144,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -300,6 +301,8 @@ export async function loadData(base = './data/') {
     // 연구소 「자원」 줄의 재료 셋 — 행 순서 그대로(= 화면 · 대박 굴림 순서). `post` = 그 재료를 내는 지점 id(`lab_node.csv` 의 res 줄) ·
     //   재료에 단계가 없다 — 뒤로 갈수록 필요 수량이 는다 (2026-10-25 · R356 · base_expedition_design §2-1 · 검증은 state.js)
     D.labMaterials = labMaterialRow.map(r => ({ post: r.post, id: r.material_id, ko: r.name_kr, en: r.name_en, yieldPerHour: r.yield_per_hour }));
+    // 위 단계 재료와 그 합성 — 행 순서 그대로(= 화면 순서). 연구소 재료 셋이 하급이고 `from` 사슬이 줄 · 단계를 정한다 — 검증은 state.js (2026-10-27 · R359 · item_design §5-2)
+    D.materialSynth = materialSynthRow.map(r => ({ id: r.material_id, from: r.from_id, need: r.need, gold: r.gold, ko: r.name_kr, en: r.name_en }));
     // 연구소 지점 — 행 순서 그대로(같은 줄 안은 `ord` 가 화면 순서). 무엇을 미는가는 지점 id 가 정한다 — 검증은 state.js (2026-10-21 · R298 · INTERFACE §5-3)
     D.labNodes = labNodeRow.map(r => ({
         line: r.line, node: r.node, ord: r.ord, unlockRank: r.unlock_rank, max: r.max_lv, base: r.base, perLv: r.per_lv,
@@ -642,7 +645,7 @@ export function buildSystems(d, dev = {}) {
     const construction = createConstruction({
         buildings: d.buildingRows ?? [], ranks: d.buildingRankRows ?? [], effects: d.buildingEffectRows ?? [], research: d.researchRows ?? [],
         stageIds: d.stageOrder ?? [], balance: d.balance,
-        resources: ['gold', 'dust', 'stigma', ...(d.labMaterials ?? []).map(m => m.id)],
+        resources: ['gold', 'dust', 'stigma', ...(d.labMaterials ?? []).map(m => m.id), ...(d.materialSynth ?? []).map(m => m.id)],
     });
     // 도박장 슬롯 — 표 넷이 판을 정하고 이 시스템은 한 판을 굴린다(세이브를 모른다 · INTERFACE §2-15 · R149)
     const gamble = createGamble({
@@ -667,6 +670,8 @@ export function buildSystems(d, dev = {}) {
         defaultFormationTpl: (d.formationTplOrder ?? [])[0],
         // 제작 레시피 (item_design §7-1 · R96) · 연구소 재료 셋 — 생산 · 제작 · 도박장 · 처치 재료가 같은 id 를 쓴다 (2026-10-25 · R356)
         makeRecipes: d.makeRecipes ?? {}, labMaterials: d.labMaterials ?? [],
+        // 위 단계 재료 — 하급(연구소 재료 셋)을 모아 대장간에서 합성한다 (item_design §5-2 · 2026-10-27 · R359)
+        materialSynth: d.materialSynth ?? [],
         // 연구소 지점 — 줄마다 레벨과 특징 · 연구 시간 (base_expedition_design §2-1 「지점」 · 2026-10-21 · R298)
         labNodes: d.labNodes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)

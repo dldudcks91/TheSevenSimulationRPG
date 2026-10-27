@@ -12726,17 +12726,71 @@ check('minigame: 벌목 — 가지 회피 · 귀한 마디 · 시간 막대 · �
     if (one.why !== 'time' || Math.abs(one.end - 1000 / d1) > 1) fail(`막대 ${one.why} ${one.end} vs ${1000 / d1}`);
     return `팀버맨 ${ch.items} (만점 기준)`;
 });
-check('materials: 재료 탭 — 철광 · 약초 · 목재 한 줄(재료 표 순서) · 0 개여도 선다 · 보유는 materials 를 읽는다 (INTERFACE §2-7 · ADR-0789)', () => {
+check('materials: 재료 탭 — 줄(재료 표 순서) × 단계(하급 → 합성 사슬) · 0 개여도 선다 · 보유는 materials 를 읽는다 (INTERFACE §2-7 · ADR-0857 · R359)', () => {
     const g = newGameS(42);
     const s0 = SYS.game.materialsState(g);
-    if ('rows' in s0 || s0.items.map(x => x.id).join() !== D.labMaterials.map(m => m.id).join() || s0.items.map(x => x.post).join() !== 'mine,gather,log') fail(`칸 ${JSON.stringify(s0)}`);
+    // 줄마다 하급(연구소 재료) 다음에 `from` 사슬을 따라 위 단계 — 표의 사다리를 테스트가 따로 세워 대조한다
+    const want = D.labMaterials.flatMap(m => {
+        const out = [{ id: m.id, post: m.post, tier: 1 }];
+        for (let up = D.materialSynth.find(r => r.from === m.id); up; up = D.materialSynth.find(r => r.from === up.id)) out.push({ id: up.id, post: m.post, tier: out.length + 1 });
+        return out;
+    });
+    if ('rows' in s0 || !eq(s0.items.map(({ id, post, tier }) => ({ id, post, tier })), want)) fail(`칸 ${JSON.stringify(s0.items)}`);
+    if (want.length !== D.labMaterials.length + D.materialSynth.length) fail(`사다리에 안 든 합성 행이 있다 — ${want.length} 칸`);
     if (s0.items.some(x => x.have !== 0)) fail('새 게임인데 보유가 있다');
-    const noIcon = D.labMaterials.filter(m => !M.materialIcon(m.id)).map(m => m.id);
+    if (!eq(SYS.game.materialLadder().map(x => x.id), want.map(x => x.id))) fail('materialLadder 순서가 materialsState 와 다르다');
+    const noIcon = want.filter(m => !M.materialIcon(m.id)).map(m => m.id);
     if (noIcon.length) fail(`그림 없는 재료 ${noIcon} — mock.js:MATERIAL_ICONS`);
-    const lastMat = D.labMaterials.at(-1);
+    const lastMat = want.at(-1);
     g.materials[lastMat.id] = 3;
     const last = SYS.game.materialsState(g).items.at(-1);
     return (last.id === lastMat.id && last.have === 3) || fail(`보유 ${JSON.stringify(last)}`);
+});
+check('materials: 합성 — 바로 아래 단계 need 개 + 골드 → 하나 · 거절 unbuilt → missing → materials → gold 는 아무것도 안 바꾼다 · 다 만들거나 하나도 안 만든다 · max = 재료 · 골드 둘 다 맞는 수 · 캐는 곳(제작 레벨의 재료)은 하급 (INTERFACE §2-7 · item_design §5-2 · R359)', () => {
+    const g = newGameS(42);
+    for (const b of SYS.construction.list) g.buildings[b.id] = b.maxRank;
+    const r = D.materialSynth.find(x => x.from === D.labMaterials[0].id);
+    const r3 = D.materialSynth.find(x => x.from === r?.id);
+    if (!r || !r3 || r.gold <= 0) fail('픽스처 — 첫 줄에 하급 → 위 → 그 위 사슬 · 골드가 드는 합성이 있어야 한다');
+    const snap = () => JSON.stringify([g.materials, g.resources.gold]);
+    g.materials = {}; g.resources.gold = 0;
+    let s = snap();
+    for (const [id, n] of [['nope', 1], [r.id, 0], [r.id, 1.5], [D.labMaterials[0].id, 1]])
+        if (SYS.game.synthesize(g, id, n).err !== 'missing' || snap() !== s) fail(`${id} × ${n} — missing 이 아니거나 바뀌었다`);
+    // 재료 — n 개 몫이 하나라도 모자라면 하나도 안 만든다 · max 는 되는 만큼
+    g.materials[r.from] = r.need * 3 - 1; g.resources.gold = r.gold * 3; s = snap();
+    if (SYS.game.synthesize(g, r.id, 3).err !== 'materials' || snap() !== s) fail('아래 재료가 모자란데 바뀌었다');
+    let st = SYS.game.synthState(g).list.find(x => x.id === r.id);
+    if (st.max !== 2 || st.err !== null || st.have !== r.need * 3 - 1 || st.own !== 0 || st.from !== r.from || st.tier !== 2) fail(`synthState ${JSON.stringify(st)}`);
+    // 골드 — 같은 규칙
+    g.materials[r.from] = r.need * 3; g.resources.gold = r.gold * 3 - 1; s = snap();
+    if (SYS.game.synthesize(g, r.id, 3).err !== 'gold' || snap() !== s) fail('골드가 모자란데 바뀌었다');
+    if (SYS.game.synthState(g).list.find(x => x.id === r.id).max !== 2) fail('골드가 max 를 안 막는다');
+    g.resources.gold = r.gold * 3;
+    const ok = SYS.game.synthesize(g, r.id, 3);
+    if (!ok.ok || ok.n !== 3 || ok.gold !== r.gold * 3 || ok.have !== 3 || g.materials[r.from] !== 0 || g.resources.gold !== 0) fail(`합성 ×3 → ${JSON.stringify(ok)} · ${snap()}`);
+    st = SYS.game.synthState(g).list.find(x => x.id === r.id);
+    if (st.max !== 0 || st.err !== 'materials' || st.own !== 3) fail(`다 쓴 뒤 ${JSON.stringify(st)}`);
+    // 사슬 — 위 단계는 바로 아래 단계를 먹는다(하급을 건너뛰지 않는다)
+    g.materials[r3.from] = r3.need; g.resources.gold = r3.gold; g.materials[r.from] = 999;
+    if (!SYS.game.synthesize(g, r3.id).ok || g.materials[r3.id] !== 1 || g.materials[r.id] !== 0 || g.materials[r.from] !== 999) fail(`${r3.id} ← ${r3.from} — ${snap()}`);
+    // 대장간이 연다
+    const g2 = newGameS(42); g2.buildings.forge = 0; g2.materials[r.from] = 99; g2.resources.gold = 1e6;
+    if (SYS.game.hasFeature(g2, 'synth')) fail('픽스처 — 대장간 0 랭크인데 합성이 열렸다');
+    if (SYS.game.synthesize(g2, r.id).err !== 'unbuilt' || g2.materials[r.from] !== 99) fail('대장간을 안 지었는데 합성했다');
+    if (SYS.game.synthState(g2).list.some(x => x.err !== 'unbuilt' || x.max !== 0)) fail('닫힌 합성의 synthState 가 unbuilt · max 0 이 아니다');
+    // 캐는 곳은 하급 — 처치 · 도박장 · 제작이 같은 `materialIdOf` 를 쓴다(제작 레벨의 재료 id 로 본다)
+    const lv = SYS.game.makeLevels()[0], idOf = post => D.labMaterials.find(m => m.post === post).id;
+    if (lv.ore !== idOf('mine') || lv.timber !== idOf('log')) fail(`제작 재료 ${lv.ore} · ${lv.timber} — 하급이 아니다`);
+    // 표 검증 — 사다리가 아닌 표는 생성 때 던진다
+    const throws = (label, rows) => { try { buildSystems({ ...D, materialSynth: rows }); } catch { return; } fail(`${label} 인데 안 던졌다`); };
+    throws('from 이 없는 재료', [{ ...r, from: 'nope' }]);
+    throws('한 재료 위에 둘', [r, { ...r, id: 'x2' }]);
+    throws('하급과 같은 id', [{ ...r, id: D.labMaterials[0].id }]);
+    throws('need 0', [{ ...r, need: 0 }]);
+    throws('이름 빈 칸', [{ ...r, en: '' }]);
+    throws('뒤 행을 가리킨다', [r3, r]);
+    return `${r.id} ← ${r.from} ×${r.need} + ${r.gold}G · ${r3.id} ← ${r3.from} ×${r3.need} + ${r3.gold}G`;
 });
 /* ── 찾아온 영웅 — 연구소 줄을 열면 시간마다 한 명이 선술집 칸에 저절로 온다 (base_expedition §2-4 · INTERFACE §2-7 · 2026-10-19 — ~~수색~~ 대체) ── */
 const VISIT_MS = () => B.visit_hours * 3600000;
@@ -12859,6 +12913,35 @@ check('visit: 마차 영웅도 같은 칸을 나눠 쓴다 — joinAdd 는 먼�
     const c = g.joins.find(j => j.src === 'caravan').no;
     if (!SYS.game.joinDrop(g, c, T).ok || !eq(g.visit, { nextAt: T + (NOW + 2 * I - t), left: null })) fail(`마차 영웅을 비운 뒤 ${JSON.stringify(g.visit)}`);
     return `칸 ${N} = 찾아온 1 + 마차 ${N - 1} · 남은 ${(NOW + 2 * I - t) / 3600000}시간에서 멈춤`;
+});
+check('tavern: 보관 — 후보를 찾아온 영웅 칸에 무료로 넣는다 · 그 칸만 빈다 · 칸이 차면 full · 꺼낼 때가 고용 · 리롤이 되살린다 · 로드가 출처를 지킨다 (2026-10-27 사용자 · base_expedition §2-4)', () => {
+    if (SYS.game.tavernKeep(SYS.game.newGame(42, cands, NOW), 0, NOW).err !== 'unbuilt') fail('선술집 전에 보관했다');
+    const g = newGameP(42, cands, NOW), N = B.tavern_join_slots;
+    const before = SYS.game.tavernCandidates(g), gold = g.resources.gold;
+    const r = SYS.game.tavernKeep(g, 0, NOW);
+    if (!r.ok) fail(`보관 ${r.err}`);
+    const j = (g.joins ?? []).find(x => x.no === r.no);
+    if (!j || j.src !== 'tavern' || !eq(j.hero, before[0])) fail(`칸 ${JSON.stringify(j && { src: j.src, name: j.hero?.name })}`);
+    if (g.resources.gold !== gold) fail('보관이 골드를 썼다');
+    // 고용한 칸과 같다 — 그 칸만 빈다 · 명단은 그대로
+    const after = SYS.game.tavernCandidates(g);
+    if (after[0] !== null || !eq(after.slice(1), before.slice(1))) fail('보관한 칸만 비어야 한다');
+    if (!eq(SYS.game.tavernState(g, NOW).kept, [0])) fail(`kept ${JSON.stringify(SYS.game.tavernState(g, NOW).kept)}`);
+    if (SYS.game.tavernKeep(g, 0, NOW).err !== 'missing' || SYS.game.hire(g, 0).err !== 'missing') fail('빈 칸을 또 보관 · 고용했다');
+    // 로드가 출처를 지킨다 — 모르는 값을 caravan 으로 바꾸는 문을 지난다
+    const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))));
+    if (back.joins.find(x => x.no === r.no)?.src !== 'tavern' || !eq(back.tavern.kept, [0])) fail('로드가 보관을 잃었다');
+    // 칸이 다 차면 full — 거절된 보관은 명단을 안 비운다
+    const pool = SYS.hero.rollCandidates(makeRng(7), N);
+    for (let i = 0; g.joins.length < N; i++) if (!SYS.game.joinAdd(g, pool[i], NOW).ok) fail(`${i} 번째 마차 영웅`);
+    if (SYS.game.tavernKeep(g, 1, NOW).err !== 'full' || SYS.game.tavernCandidates(g)[1] === null) fail('찬 칸에 보관했다');
+    // 꺼낼 때가 고용이다 — 고용비를 그때 낸다
+    g.resources.gold = B.tavern_hire_cost;
+    const h = SYS.game.joinHire(g, r.no, NOW);
+    if (!h.ok || g.resources.gold !== 0 || !eq(h.hero.name, before[0].name)) fail(`꺼내 고용 ${h.err ?? ''}`);
+    // 리롤이 보관한 칸을 되살린다
+    if (!SYS.game.tavernReroll(g, NOW).ok || SYS.game.tavernCandidates(g)[0] === null || SYS.game.tavernState(g, NOW).kept.length) fail('리롤 뒤 보관 칸');
+    return `보관 → 칸 ${g.joins.length} / ${N} · 꺼내 고용 ${B.tavern_hire_cost} 골드`;
 });
 check('visit: 지점 — 레어 확률 = 기준 + 「품질」 · 「대기 칸」이 칸을 늘린다 · 「간격」이 간격을 줄인다 · 더 연구해도 시계를 다시 세우지 않는다 (R298 · base_expedition §2-1)', () => {
     const Q = labRow('visit', 'quality'), W = labRow('visit', 'waiting'), IV = labRow('visit', 'interval');
@@ -14914,10 +14997,10 @@ check('construction: 잠긴 자리가 말할 건물 — needOf 는 켜기면 처
     if (S.game.needOf('gamble').name.ko !== '가') fail('이름이 없다');
     return Object.entries(got).map(([k, v]) => `${k} ${v ?? '-'}`).join(' · ');
 });
-check('construction: 첫 단계는 켜기가 심는다 — 대장간 r1(장비 강화 · 장비 제작)이 제작 Lv1 을 · r2(물약 제작)가 물약 1단계를 연다 · 표에 첫 단계 줄이 없고 · 잠긴 자리는 그 랭크를 말하고 · 뒤 랭크의 +1 은 그 위로 쌓인다 (TARGETS.seed · INTERFACE §2-14 · 2026-09-24 사용자 지시)', () => {
+check('construction: 첫 단계는 켜기가 심는다 — 대장간 r1(장비 강화 · 장비 제작 · 재료 합성 — 2026-10-27 R359)이 제작 Lv1 을 · r2(물약 제작)가 물약 1단계를 연다 · 표에 첫 단계 줄이 없고 · 잠긴 자리는 그 랭크를 말하고 · 뒤 랭크의 +1 은 그 위로 쌓인다 (TARGETS.seed · INTERFACE §2-14 · 2026-09-24 사용자 지시)', () => {
     const fx = n => SYS.construction.rankInfo('forge', n).effects.map(e => e.target);
     const r1 = fx(1), r2 = fx(2);
-    if (!eq(r1, ['upgrade_item', 'make'])) fail(`대장간 r1 표 ${r1.join(' · ')} — 장비 강화 · 장비 제작 둘이어야 한다`);
+    if (!eq(r1, ['upgrade_item', 'make', 'synth'])) fail(`대장간 r1 표 ${r1.join(' · ')} — 장비 강화 · 장비 제작 · 재료 합성 셋이어야 한다`);
     if (!eq(r2, ['potion', 'make_level'])) fail(`대장간 r2 표 ${r2.join(' · ')} — 물약 제작 · 제작 레벨 둘이어야 한다`);
     const g = SYS.game.newGame(45, cands, NOW);
     if (g.buildings.forge) fail('fixture: 새 게임인데 대장간이 지어져 있다');

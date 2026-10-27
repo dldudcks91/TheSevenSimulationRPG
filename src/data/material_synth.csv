@@ -1,0 +1,10 @@
+material_id,from_id,need,gold,name_kr,name_en,description_kr
+iron_ore_2,iron_ore,5,20,철광석,Iron Ore,⚠임시 [신설 2026-10-27 · R359 · item_design §5-2 — 사용자 「하급 재료를 모아서 철광석 · 상급철광석 · 최상급철광석으로 업그레이드」] — 표 전체가 임시값이다. 한 행 = 위 단계 재료 하나와 그 합성 — from_id(바로 아래 재료 · lab_material.csv 의 하급 또는 앞 행) need 개 + 골드 gold → 이 재료 하나 · 대장간 「합성」 · 즉시 · 실패 없음 · 줄 · 단계는 from_id 사슬이 정한다(하급 = 1 · 한 재료 위에 하나만) · 행 순서 = 화면 순서 · ⚠ 아직 먹는 곳이 없다(GAME_DESIGN §10 「위 단계 재료의 쓸 곳」)
+iron_ore_3,iron_ore_2,5,80,상급 철광석,High-Grade Iron Ore,⚠임시
+iron_ore_4,iron_ore_3,5,320,최상급 철광석,Top-Grade Iron Ore,⚠임시
+herb_2,herb,5,20,약초,Herb,⚠임시
+herb_3,herb_2,5,80,상급 약초,High-Grade Herb,⚠임시
+herb_4,herb_3,5,320,최상급 약초,Top-Grade Herb,⚠임시
+timber_2,timber,5,20,목재,Timber,⚠임시
+timber_3,timber_2,5,80,상급 목재,High-Grade Timber,⚠임시
+timber_4,timber_3,5,320,최상급 목재,Top-Grade Timber,⚠임시

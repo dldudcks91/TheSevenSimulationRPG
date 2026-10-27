@@ -66,7 +66,7 @@
  *     반복 원정은 이기는 동안 런을 잇는데, 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3)
  *   notice: {kind:'runClosed', runs: [{stageId, at}], stageId, at, seenAt} | null   — 재접속 알림 (배너 1회).
  *     `runs` = **끊은 부대마다 한 줄 — v38**(편성 번호 순) · `stageId`·`at` 은 그중 첫 줄을 그대로 둔 것이다(한 부대만 돌던 화면이 안 깨지게)
- *   tavern: {rerolledAt: ms|null, hired: [슬롯번호], paid}   — 리롤 쿨다운의 기준 시각(**마지막 무료 리롤** — 유료는 안 옮긴다 · 10-16) · 이번 명단에서 산 칸 · 무료 뒤 유료 리롤 횟수(값이 두 배씩 · 09-30).
+ *   tavern: {rerolledAt: ms|null, hired: [슬롯번호], kept: [슬롯번호], paid}   — 리롤 쿨다운의 기준 시각(**마지막 무료 리롤** — 유료는 안 옮긴다 · 10-16) · 이번 명단에서 산 칸 · 찾아온 영웅 칸에 보관한 칸(10-27 · 없으면 빈 목록) · 무료 뒤 유료 리롤 횟수(값이 두 배씩 · 09-30).
  *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
  *   joins: [{no, hero, arrivedAt, src}]   — **찾아온 영웅 칸** · 도착 순 (2026-10-09 가입 희망 · 2026-10-19 찾아온 영웅 · base_expedition_design §2-4).
  *     `src` = 어떻게 왔나 — `'visit'`(연구소 줄이 연 시계) · `'caravan'`(탐험 마차 · 지금은 개발 경로뿐). **떠나지 않는다** — 돌려보낼 때까지 남는다(~~leavesAt~~ 2026-10-19).
@@ -106,7 +106,8 @@ export const SAVE_VERSION = 42;
  *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
  *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), steps:[{reward, value}](같은 표 — 레벨 n 이 여는 단계 · 2026-10-18 R286), options:[{monsterId, stat, value, farm, farmValue, fight, fightValue}](codex_option.csv — Lv4 몬스터다운 전투 옵션 + Lv1 · Lv2 칸 · 2026-10-22 R314), races:{base: {ko, en}}(monster_base.csv — 종족 이름 · R314)}
  *   sins [죄종 id...] — 탐험 이야기의 `sin` 컬럼 검증에만 쓴다 (~~수색 이야기 · 만남 · 답~~ 표는 2026-10-19 수색과 함께 삭제)
- *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · labMaterials [{post, id, ko, en, yieldPerHour}] (lab_material.csv — 연구소 「자원」 줄의 재료 셋 · 생산 · 제작 · 도박장 · 처치 재료가 같은 id 를 쓴다 · 2026-10-25 R356)
+ *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · labMaterials [{post, id, ko, en, yieldPerHour}] (lab_material.csv — 연구소 「자원」 줄의 재료 셋 = **하급** · 생산 · 제작 · 도박장 · 처치 재료가 같은 id 를 쓴다 · 2026-10-25 R356)
+ *   materialSynth [{id, from, need, gold, ko, en}] (material_synth.csv — 위 단계 재료와 그 합성 · `from` 사슬이 줄 · 단계를 정한다 · 2026-10-27 R359)
  *   potions [{id, kind, tier, ko, en, heal, craftGold, startOwned}] (potion.csv 행 순서) — 물약 단계 표 · startOwned = 시작 개수 (battle_design §7-1 · item_design §7-4 · R103 · R124) · 만들 수 있는 단계는 대장간 랭크가 연다(R137)
  *   construction — 건설 시스템(`construction.js` · 표 넷을 든다 · INTERFACE §2-14 · R137)
  *   gamble — 도박장 슬롯(`gamble.js` · 표 넷을 든다 · 한 판을 굴린다 · INTERFACE §2-15 · R149)
@@ -2486,6 +2487,28 @@ export function createGameSystem(deps) {
         if (LAB_MATERIALS.filter(x => x.post === m.post || x.id === m.id).length > 1) throw new Error(`state: lab_material.csv — '${m.post}' · '${m.id}' 가 두 번 있다`);
     }
     const MAT_BY_POST = Object.fromEntries(LAB_MATERIALS.map(m => [m.post, m]));
+    /**
+     * 재료 사다리 [2026-10-27 · R359 · item_design §5-2] — 줄마다 **하급**(연구소 재료 셋) → 위 단계(`material_synth.csv` 의 `from` 사슬 · 한 재료 위에 하나만).
+     * 한 줄 = `{id, post, tier, ko, en, from?, need?, gold?}` · 하급은 `tier` 1 이고 `from` 이 없다 · 순서 = 줄 순서(`lab_material.csv`) × 단계 — 재료 탭 · 관리자 채우기가 이 순서다
+     */
+    const MAT_SYNTH = deps.materialSynth ?? [];
+    const MAT_LADDER = (() => {
+        const bad = why => { throw new Error(`state: material_synth.csv — ${why} (INTERFACE §2-7)`); };
+        const known = new Map(LAB_MATERIALS.map(m => [m.id, { id: m.id, post: m.post, tier: 1, ko: m.ko, en: m.en }]));
+        const topped = new Set();
+        for (const r of MAT_SYNTH) {
+            if (!r?.id || known.has(r.id)) bad(`id '${r?.id}' 가 비었거나 겹친다`);
+            const low = known.get(r.from);
+            if (!low) bad(`${r.id} — from '${r.from}' 는 연구소 재료도 앞 행도 아니다`);
+            if (topped.has(r.from)) bad(`${r.id} — '${r.from}' 위에 재료가 둘이다`);
+            if (!(Number.isInteger(r.need) && r.need >= 1) || !(Number.isInteger(r.gold) && r.gold >= 0)) bad(`${r.id} — need 는 1 이상 · gold 는 0 이상 정수다`);
+            if (!r.ko || !r.en) bad(`${r.id} — 이름이 비었다`);
+            topped.add(r.from);
+            known.set(r.id, { id: r.id, post: low.post, tier: low.tier + 1, ko: r.ko, en: r.en, from: r.from, need: r.need, gold: r.gold });
+        }
+        return LAB_MATERIALS.flatMap(m => [...known.values()].filter(x => x.post === m.post).sort((a, b) => a.tier - b.tier));
+    })();
+    const MAT_SYNTH_BY_ID = Object.fromEntries(MAT_LADDER.filter(x => x.from).map(x => [x.id, x]));
     const RES_KEY = 'res', VISIT_KEY = 'visit', TRAIN_KEY = 'train', GAMBLE_KEY = 'gamble';
     /** 연구소 줄 — 순서 = 화면 · 대박 굴림 순서 (INTERFACE §5-3) */
     const LAB_LINES = [RES_KEY, VISIT_KEY, TRAIN_KEY, GAMBLE_KEY];
@@ -3474,9 +3497,10 @@ export function createGameSystem(deps) {
      */
     function tavernCandidates(state) {
         const rng = makeRng(deriveSeed(state.seed ^ 0x5A17, state.counters.tavern));
-        const hired = state.tavern?.hired ?? [];
-        // 내 영웅과 같은 이름은 피한다 — rng 를 안 쓰고 고용한 칸(`null`)은 건너뛴다 (`hero.avoidNames` · 2026-10-15 · PLAN_user_review 2-5)
-        const list = H.rollCandidates(rng, limitsOf(state).tavernCandidates).map((c, i) => (hired.includes(i) ? null : c));
+        // 고용한 칸 · 찾아온 영웅 칸에 보관한 칸(`tavernKeep` · 2026-10-27)은 빈다
+        const gone = [...(state.tavern?.hired ?? []), ...(state.tavern?.kept ?? [])];
+        // 내 영웅과 같은 이름은 피한다 — rng 를 안 쓰고 빈 칸(`null`)은 건너뛴다 (`hero.avoidNames` · 2026-10-15 · PLAN_user_review 2-5)
+        const list = H.rollCandidates(rng, limitsOf(state).tavernCandidates).map((c, i) => (gone.includes(i) ? null : c));
         return H.avoidNames(list, state.heroes.map(h => h.name));
     }
     /**
@@ -3492,7 +3516,7 @@ export function createGameSystem(deps) {
     /** 선술집 화면 상태 한 덩어리 — 판정을 여기서 다 낸다 (masteryState 와 같은 규칙) · `open` = 고용이 열렸나(선술집 건물 · R137) */
     function tavernState(state, now) {
         const freeAt = tavernFreeAt(state);
-        return { candidates: tavernCandidates(state), freeAt, free: now >= freeAt, cost: tavernRerollCost(state), open: hasFeature(state, 'hire') };
+        return { candidates: tavernCandidates(state), kept: state.tavern?.kept ?? [], freeAt, free: now >=freeAt, cost: tavernRerollCost(state), open: hasFeature(state, 'hire') };
     }
     /** 다음 유료 리롤 값 — 무료 리롤 뒤 유료 리롤마다 **두 배**(상한 없음) [2026-09-30 사용자 지시] · 쿨다운이 끝나면 다음 리롤이 무료라 첫 값으로 돌아간다 */
     const tavernRerollCost = state => B.tavern_reroll_cost * 2 ** (state.tavern?.paid ?? 0);
@@ -3574,12 +3598,48 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 보유 재료 — 철광 · 약초 · 목재 한 줄 (SCREEN_DESIGN §6 재료 탭 · ADR-0379 · 2026-10-25 R356 — ~~채광 · 채집 · 벌목 한 줄씩 · 표의 단계 전부~~).
-     * 표의 재료 셋이 늘 선다(0 개여도). 가루 · 낙인은 `resources` 라 안 든다 · rng 0
+     * 보유 재료 — 줄(철광석 · 약초 · 목재) × 단계(하급 → 최상급) (SCREEN_DESIGN §6 재료 탭 · ADR-0379 · 2026-10-25 R356 · 2026-10-27 R359 — 단계 넷).
+     * 사다리의 재료가 전부 늘 선다(0 개여도). 가루 · 낙인은 `resources` 라 안 든다 · rng 0
      */
     function materialsState(state) {
         const mats = state.materials ?? {};
-        return { items: LAB_MATERIALS.map(m => ({ id: m.id, post: m.post, have: mats[m.id] ?? 0 })) };
+        return { items: MAT_LADDER.map(m => ({ id: m.id, post: m.post, tier: m.tier, have: mats[m.id] ?? 0 })) };
+    }
+
+    /** 재료 사다리 — 줄 순서 × 단계 · 이름 · 합성 비용 (`MAT_LADDER` 사본 · 순수 · 2026-10-27 · R359) */
+    const materialLadder = () => MAT_LADDER.map(m => ({ ...m }));
+
+    /**
+     * 합성 화면 상태 [2026-10-27 · R359 · item_design §5-2] — **판정을 여기서 다 낸다**(`potionState` 와 같은 규칙).
+     * `list` = `material_synth.csv` 행 순서 · `have` = 바로 아래 재료 · `own` = 이 재료 · `max` = 아래 재료 · 골드 둘 다 맞는 최대 개수(닫혀 있으면 0) ·
+     * `err` = 하나를 누르면 나올 거절(`unbuilt` → `materials` → `gold`) 또는 null · 상태를 안 바꾼다 · rng 0
+     */
+    function synthState(state) {
+        const open = hasFeature(state, 'synth'), mats = state.materials ?? {}, gold = state.resources.gold ?? 0;
+        const list = MAT_SYNTH.map(r => {
+            const m = MAT_SYNTH_BY_ID[r.id], have = mats[m.from] ?? 0;
+            const max = open ? Math.min(Math.floor(have / m.need), m.gold > 0 ? Math.floor(gold / m.gold) : Infinity) : 0;
+            const err = !open ? 'unbuilt' : have < m.need ? 'materials' : gold < m.gold ? 'gold' : null;
+            return { id: m.id, from: m.from, post: m.post, tier: m.tier, need: m.need, gold: m.gold, have, own: mats[m.id] ?? 0, max, err };
+        });
+        return { open, list };
+    }
+
+    /**
+     * 합성 `n`회 [2026-10-27 · R359 · item_design §5-2] — 바로 아래 재료 `need × n` · 골드 `gold × n` 을 내고 그 재료를 n 올린다 · 즉시 · 실패 없음.
+     * 거절 `unbuilt` → `missing`(표에 없는 재료 · `n` 이 양의 정수가 아님) → `materials` → `gold` — **다 만들거나 하나도 안 만든다** · 거절이면 아무것도 안 바뀐다 · rng 0
+     */
+    function synthesize(state, id, n = 1) {
+        if (!hasFeature(state, 'synth')) return { ok: false, err: 'unbuilt' };
+        const m = MAT_SYNTH_BY_ID[id];
+        if (!m || !Number.isInteger(n) || n < 1) return { ok: false, err: 'missing' };
+        const gold = m.gold * n;
+        if ((state.materials?.[m.from] ?? 0) < m.need * n) return { ok: false, err: 'materials' };
+        if (state.resources.gold < gold) return { ok: false, err: 'gold' };
+        state.materials[m.from] -= m.need * n;
+        state.resources.gold -= gold;
+        state.materials[id] = (state.materials[id] ?? 0) + n;
+        return { ok: true, id, n, gold, have: state.materials[id] };
     }
 
     /** 상단이 파는 부위 — 착용 위치 순서에서 부위만 한 번씩(반지는 위치가 둘이어도 한 종류다) */
@@ -4001,7 +4061,7 @@ export function createGameSystem(deps) {
        **꺼져 있어도 흐른다** — 연구소의 오프라인 상한을 안 받는다(칸 수가 상한이다). **떠나지 않는다** — 돌려보낼 때까지 남는다.
        온 사람은 **굴린 순간 통째로 박는다**(`joins[].hero`) — 번호(`counters.visit` 선증가)와 시드가 굴리고 다시 굴리지 않는다 */
     /** 칸의 출처 어휘 — 어떻게 왔나. **찾아오는 방식이 늘면 여기에 하나씩 는다** (INTERFACE §5-3) */
-    const JOIN_SRC = ['visit', 'caravan'];
+    const JOIN_SRC = ['visit', 'caravan', 'tavern'];   // tavern = 명단에서 보관(`tavernKeep` · 2026-10-27)
     /** 간격(ms) — `visit_hours` ÷ (「간격」 지점 배수 × 힘 효과) · `at` = 효과를 재는 시각 (2026-10-21 · R298) */
     const visitMs = (state, at) => Math.max(0, B.visit_hours ?? 0) * 3600000 / (labVal(state, VISIT_KEY, 'interval', 1) * labEffects(state, VISIT_KEY, at).speed);
     /** 줄 레벨 = 「간격」 지점 레벨 — 0 = 닫힘 (~~`labLevels.visit`~~ 2026-10-21 · R298) */
@@ -4171,6 +4231,21 @@ export function createGameSystem(deps) {
         state.joins = state.joins.filter(x => x !== j);
         visitResume(state, now);
         return { ok: true };
+    }
+    /**
+     * 보관 — 명단 후보를 찾아온 영웅 칸에 넣는다 [2026-10-27 사용자 「Hire 오른쪽에 버튼하나 더 만들어서 Visiting Heroes에 저장」 · base_expedition §2-4].
+     *   **무료** · rng 0 · 거절 순서 `unbuilt`(고용과 같은 문) → `missing`(빈 칸) → `full`(`joinAdd` 가 먼저 정산하고 낸다).
+     *   명단은 그대로 · **그 칸만 빈다**(`tavern.kept` — 고용한 칸과 같다 · 리롤이 되살린다). 꺼낼 때가 고용이다(`joinHire` — 고용비 · 시작 장비 한 벌)
+     */
+    function tavernKeep(state, index, now) {
+        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };
+        const c = tavernCandidates(state)[index];
+        if (!c) return { ok: false, err: 'missing' };
+        const r = joinAdd(state, clone(c), now, 'tavern');
+        if (!r.ok) return r;
+        state.tavern = state.tavern ?? { rerolledAt: null, hired: [], paid: 0 };
+        state.tavern.kept = [...(state.tavern.kept ?? []), index];
+        return { ok: true, no: r.no };
     }
 
     /* ── 탐험 — 지점 아이콘 → 보내기 → 수령 [신설 2026-10-09 · base_expedition §3-1 · SCREEN_DESIGN §8-4 · ADR-0553 · INTERFACE §2-7] ──
@@ -4737,9 +4812,10 @@ export function createGameSystem(deps) {
         shopVisit, shopState, shopBuy, shopPotionBuy, shopPotionGold, shopBlueprintBuy, shopBlueprintPool, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         visitSettle, visitState,
-        joinState, joinAdd, joinHire, joinDrop,
+        joinState, joinAdd, joinHire, joinDrop, tavernKeep,
         exploreState, exploreErr, exploreSend, exploreTake, exploreDrop,
         dispatchSettle, dispatchProgress, labState, labSettle, labResearchStart, labResearchCancel, labRegOf, labRegList, labRegister, labUnregister, materialsState,
+        materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)
         mgRound, mgJudge, mgClaim,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp,
         bookState, learnBook, craftBook, sortBooks,

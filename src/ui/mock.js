@@ -881,12 +881,18 @@ export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG
 
 /**
  * 재료 아이콘 — 연구소 「이 줄」 · 창고 재료 탭 · 비용 칸의 재료 그림 (SCREEN_DESIGN §8 · §6 · ADR-0377 · ADR-0789) · 키 = 재료 id (`lab_material.csv:material_id`).
- * ⚠ 재료가 한 종류씩이 되며(2026-10-25 · R356) **옛 단계 그림을 빌린다** — 철광 = 철(`ore_t2`) · 약초 = 쑥(`herb_t1`) · 목재 = 소나무(`timber_t1`).
- *   옛 단계 그림 파일(`ore_t*` · `herb_t*` · `timber_t*`)은 지우지 않았다 — 합성으로 만드는 상위 재료(GAME_DESIGN §9 10-24)가 서면 쓸 수 있다.
+ * ⚠ 재료가 한 종류씩이 되며(2026-10-25 · R356) **옛 단계 그림을 빌린다** — 하급 철광석 = 철(`ore_t2`) · 하급 약초 = 쑥(`herb_t1`) · 하급 목재 = 소나무(`timber_t1`).
+ *   옛 단계 그림 파일(`ore_t*` · `herb_t*` · `timber_t*`)은 서로 다른 재료의 그림이라 위 단계(같은 재료 · 다른 단계 — 2026-10-27)에 못 쓴다 — 위 단계는 하급 그림을 빌린다.
  * **표에 있는 재료만 그림을 읽는다** — 없는 재료는 null(칸은 종류 실루엣 `RES_ART`).
  */
 const MATERIAL_ICON_DIR = './assets/art/icons/materials/';
-export const MATERIAL_ICONS = { iron_ore: 'ores/ore_t2', herb: 'herbs/herb_t1', timber: 'timbers/timber_t1' };
+export const MATERIAL_ICONS = {
+    iron_ore: 'ores/ore_t2', herb: 'herbs/herb_t1', timber: 'timbers/timber_t1',
+    // 위 단계(합성 — 2026-10-27 · R359) ⚠임시 — 제 그림이 없어 **하급 그림을 빌린다** · 칸이 단계 점을 얹는다(`app.js:matPips` · ADR-0857)
+    iron_ore_2: 'ores/ore_t2', iron_ore_3: 'ores/ore_t2', iron_ore_4: 'ores/ore_t2',
+    herb_2: 'herbs/herb_t1', herb_3: 'herbs/herb_t1', herb_4: 'herbs/herb_t1',
+    timber_2: 'timbers/timber_t1', timber_3: 'timbers/timber_t1', timber_4: 'timbers/timber_t1',
+};
 export const materialIcon = id => (MATERIAL_ICONS[id] ? `${MATERIAL_ICON_DIR}${MATERIAL_ICONS[id]}${ICON_EXT}` : null);
 
 /**

@@ -463,6 +463,11 @@ const STRINGS = {
 
     /* ── 선술집 (실동작) ── */
     'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)' },
+    // 보관 — 후보를 찾아온 영웅 칸에 넣는다(무료 · `game.tavernKeep` · ADR-0897)
+    'tv.keep': { ko: '보관', en: 'Keep' },
+    'tv.kept': { ko: '{name} 보관 — 찾아온 영웅 칸', en: 'Kept {name} in Visiting Heroes' },
+    'tv.empty.kept': { ko: '보관함 — 다음 교체 때 채워짐', en: 'Kept — refills on next refresh' },
+    'tv.err.joinFull': { ko: '찾아온 영웅 칸 가득 참 ({n})', en: 'Visiting Heroes full ({n})' },
     'tv.reroll': { ko: '교체하기 ({g} 골드)', en: 'Refresh ({g} gold)' },
     'tv.reroll.wait': { ko: '무료까지 {t}', en: 'Free in {t}' },
     'tv.reroll.free': { ko: '후보 교체 (무료)', en: 'New candidates (free)' },
@@ -483,6 +488,7 @@ const STRINGS = {
     // 칸 띠 — 어떻게 왔나(출처 · `state.js:JOIN_SRC`). 찾아오는 방식이 늘면 한 줄씩 는다
     'tv.visit.src.visit': { ko: '찾아옴', en: 'Visitor' },
     'tv.visit.src.caravan': { ko: '마차', en: 'Caravan' },
+    'tv.visit.src.tavern': { ko: '보관', en: 'Kept' },
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
     'time.m': { ko: '{m}분', en: '{m}m' },
@@ -843,6 +849,9 @@ const STRINGS = {
     'fg.seg.make': { ko: '제작', en: 'Smith' },
     'fg.seg.up': { ko: '강화', en: 'Upgrade' },
     'fg.seg.craft': { ko: '크래프트', en: 'Craft' },
+    'fg.seg.synth': { ko: '합성', en: 'Combine' },   // 재료 합성 — 바로 아래 단계를 모아 위 단계 하나 (2026-10-27 · ADR-0856)
+    'fg.synth.go': { ko: '합성', en: 'Combine' },
+    'fg.synth.max': { ko: '최대 ×{n}', en: 'Max ×{n}' },
     'fg.go': { ko: '강화', en: 'Upgrade' },
     // 옛 `tip.up.max` — 2026-09-08 에 툴팁의 강화 줄이 죽으면서 **대장간 전용**이 되어 접두를 옮겼다 (문구·인자 동일)
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
@@ -861,6 +870,7 @@ const STRINGS = {
     'fg.make.go': { ko: '만들기', en: 'Make' },
     'fg.make.potion': { ko: '물약', en: 'Potions' },   // 제작 고르개 줄 끝의 물약 칸 이름 — 올리면 뜬다 (ADR-0219)
     'fg.made': { ko: '제작 — {name}', en: 'Made — {name}' },
+    'fg.synthed': { ko: '합성 — {name} ×{n}', en: 'Combined — {name} ×{n}' },
     'fg.err.materials': { ko: '재료 부족', en: 'Not enough materials' },
     'fg.err.bagFull': { ko: '인벤토리 가득 참', en: 'Inventory is full' },
     'fg.err.missing': { ko: '없는 부위 · 레벨 · 종류', en: 'Unknown slot, level or type' },
@@ -1270,6 +1280,7 @@ const STRINGS = {
     // 대장간 랭크 I 의 둘은 문장이 아니라 이름 토막 [2026-09-24 사용자 지시 「장비 강화, 장비 제작 이렇게만」 · 시험 중 — SCREEN_DESIGN §13-1]
     'cn.t.upgrade_item': { ko: '장비 강화', en: 'Equipment Upgrade' },
     'cn.t.make': { ko: '장비 제작', en: 'Equipment Smithing' },
+    'cn.t.synth': { ko: '재료 합성', en: 'Material Combining' },
     'cn.t.potion': { ko: '물약 제작', en: 'Potion Brewing' },   // 대장간 r2 — 물약 1단계를 함께 연다 (2026-09-24 사용자 지시)
     'cn.t.storage': { ko: '가방 · 창고 사용', en: 'Use the bag and stash' },
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록', en: 'Record monsters you meet in the codex' },
