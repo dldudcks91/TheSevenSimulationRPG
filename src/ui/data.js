@@ -96,6 +96,7 @@ export const D = {
     exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
     difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelCol, levelAdd, codexExp, chapterGate}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239) · chapterGate = 장 순서 해금 1/0(R242)
     difficulties: {},         // 같은 것 byId
+    chapterDebuffs: [],       // chapter_debuff.csv — [{difficultyId, chapter, sin, effect, value, intervalSec, durationSec, cap}] · 단 · 장마다 그 장 죄종의 디버프 한 줄(헬 · R366 · base_expedition_design §1-4) · 검증은 game_logic/battle.js
     gearRarity: {},           // gear_rarity.csv — {grade: {difficultyId: {normal, magic, rare, epic, legendary}}} · 몬스터 장비 희귀도 가중치(등급 × 단 · 행마다 합 100) · 검증은 game_logic/battle.js (item_design §1 희귀도 · R350)
     arenaTiers: [],           // arena_tier.csv 원시 행 — 콜로세움 층 · 결투장 리그의 등급 · 검증 · 정렬 · 층 펴기는 game_logic/arena.js (arena_design §7 · §8 · 2026-10-18)
     exploreSpots: {},         // explore_spot.csv — {'장:지점': {chapter, spot, name:{ko,en}, story:{ko,en}}} · 탐험 지점 이름 · 두 줄 이야기(줄바꿈 풀어 둠) (SCREEN_DESIGN §8-4 · ADR-0563 · 화면만 읽는다)
@@ -127,7 +128,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect', 'research',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -144,7 +145,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow, researchRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow] = texts.map(parseCsv);
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -193,13 +194,17 @@ export async function loadData(base = './data/') {
             wearChance: r.wear_chance,       // 몬스터 선택 부위 착용 확률 — battle.js 가 읽는다 (monster_design §5-1 · R245)
             skillSlots: r.skill_slots,       // 몬스터 스킬 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §5-1 · R269)
             monsterDmgMult: r.monster_dmg_mult, monsterHpMult: r.monster_hp_mult,   // 몬스터 데미지 · HP 배수 — battle.js 가 읽는다 (base_expedition_design §1-4 · R301)
-            eliteTraitSlots: r.elite_trait_slots }));   // 정예 특성 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §6 · R344)
+            eliteTraitSlots: r.elite_trait_slots,   // 정예 특성 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §6 · R344)
+            gearIlvlFixed: r.gear_ilvl_fixed }));   // 몬스터 장비 아이템 레벨 고정(1 = 그 몬스터의 레벨 · 헬) — battle.js 가 읽는다 (R366)
     D.difficulties = indexBy(D.difficultyList, 'id');
     // 몬스터 장비 희귀도 — 등급 × 단 한 장 · 행마다 합 100 · 에픽 · 레전더리를 안 여는 단은 0 (2026-10-24 · R350 — ~~spawn_grade.csv:gear_rarity_w_* · difficulty_tier.csv:rarity_max~~).
     //   빈 칸 · 음수 · 합 0 검증은 game_logic/battle.js
     D.gearRarity = {};
     for (const r of gearRarityRow) (D.gearRarity[r.grade] ??= {})[r.difficulty_id] =
         { normal: r.w_normal, magic: r.w_magic, rare: r.w_rare, epic: r.w_epic, legendary: r.w_legendary };
+    // 장 디버프 — 단 · 장마다 한 줄(헬 · 2026-10-28 · R366) · 효과 어휘 · 칸 검증은 game_logic/battle.js
+    D.chapterDebuffs = chapterDebuffRow.map(r => ({ difficultyId: r.difficulty_id, chapter: r.chapter, sin: r.sin, effect: r.effect, value: r.value,
+        intervalSec: r.interval_sec, durationSec: r.duration_sec, cap: r.cap }));
     D.arenaTiers = arenaTierRow;   // 콜로세움 · 결투장 등급 — 원시 행 그대로 · 정렬 · 검증은 arena.js (2026-10-17 · 층 · 레이팅 2026-10-18)
     // 기본 능력치 7종 — hero.js 는 id 만 읽고, 화면은 ko/en/abbr 을 읽는다 (같은 한 줄이 둘을 먹인다)
     D.heroAttributes = heroAttr.map(r => ({
@@ -636,9 +641,10 @@ export function buildSystems(d, dev = {}) {
         //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스의 한 칸 더의 후보 풀(hero 와 같은 표)
         //   이고 `slots` 는 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 어휘 검증용이다 (R245)
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
-        // 런의 단이 고르는 것 — 선택 부위 착용 확률(R245) · 몬스터 스킬 칸 수(R269) · 몬스터 데미지 · HP 배수(R301) · 정예 특성 칸 수(R344)
-        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, wearChance: x.wearChance, skillSlots: x.skillSlots, monsterDmgMult: x.monsterDmgMult, monsterHpMult: x.monsterHpMult, eliteTraitSlots: x.eliteTraitSlots })),
+        // 런의 단이 고르는 것 — 선택 부위 착용 확률(R245) · 몬스터 스킬 칸 수(R269) · 몬스터 데미지 · HP 배수(R301) · 정예 특성 칸 수(R344) · 장비 아이템 레벨 고정(R366)
+        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, wearChance: x.wearChance, skillSlots: x.skillSlots, monsterDmgMult: x.monsterDmgMult, monsterHpMult: x.monsterHpMult, eliteTraitSlots: x.eliteTraitSlots, gearIlvlFixed: x.gearIlvlFixed })),
         gearRarity: d.gearRarity,                  // 몬스터 장비 희귀도 — 등급 × 단 한 장 (gear_rarity.csv · R350 — ~~단의 rarityMax~~ R342)
+        chapterDebuffs: d.chapterDebuffs ?? [],    // 장 디버프 — 단 · 장마다 한 줄 (chapter_debuff.csv · R366)
     });
     // 건설 — 표 넷이 무엇을 여는지 정하고 이 시스템은 센다 (construction_draft §11 · INTERFACE §2-14 · R137).
     //   비용이 적을 수 있는 재화 = 자원 셋 + 연구소 재료 셋(철광 · 약초 · 목재 — 공급은 연구소 「자원」 줄)

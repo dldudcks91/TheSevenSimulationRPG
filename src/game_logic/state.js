@@ -4067,6 +4067,22 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
+    /**
+     * 스킬 우선순위 — 캐릭터 탭 스킬 우선순위 창의 끌어 옮기기 [2026-10-28 사용자 지시 · INTERFACE §2-7 · SCREEN_DESIGN §6 · ADR-0937 · battle_design §5].
+     * `order` = 그 영웅의 지금 액티브 id 를 빠짐 · 겹침 · 남의 것 없이 다시 늘어놓은 것 → `hero.skillOrder`. 칸을 내는 것은 `activesFor` 이고
+     * 전투는 그 배열 순서를 동률 결정자로 쓴다(`pickReady` — 시작엔 전부 준비라 1 → 2 → 3 · 그 뒤는 쿨이 먼저 돈 것).
+     * 무료 · 원정 중에도 된다 — 도는 원정은 다음 걸음 첫머리의 `refit` 이 칸 순서가 바뀐 영웅을 갈아입히고 쿨은 칸마다 잇는다
+     */
+    function setSkillOrder(state, uid, order) {
+        const h = heroById(state, uid);
+        if (!h || !Array.isArray(order)) return { ok: false, err: 'missing' };
+        const have = SK.activesFor(h).map(a => a.id).sort();
+        const want = [...order].sort();
+        if (want.length !== have.length || want.some((id, i) => id !== have[i])) return { ok: false, err: 'missing' };
+        h.skillOrder = [...order];
+        return { ok: true };
+    }
+
     /* ── 수색 — 시간마다 한 명이 선술집 칸에 저절로 온다 [신설 2026-10-19 · base_expedition §2-4 · INTERFACE §2-7 — ~~수색~~(대기 영웅 하나를 내보낸다 · 2026-09-09 ~ 10-16) 대체] ──
        **영웅을 보내지 않는다** — 연구소 줄 「수색」의 「간격」 지점(`labNodes['visit:interval']` · 2026-10-21 R298)을 처음 연구하면 시계가 서고 `visit_hours` 마다 한 명이 칸(`joins`)에 선다.
        칸은 마차 영웅과 나눠 쓰고(`tavern_join_slots`) **다 차면 더 안 받는다** — 찬 동안 시계가 멈추고(`visit.left`) 고용 · 돌려보내기로 비면 그때부터 남은 시간 뒤에 온다.
@@ -4830,7 +4846,7 @@ export function createGameSystem(deps) {
         noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
         difficultyState, selectDifficulty, stageLevel, stageCleared,
         runLock, runTactics, runTacticsIf, runBuffs, runCombat,
-        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
+        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero, setSkillOrder,
         shopVisit, shopState, shopBuy, shopPotionBuy, shopPotionGold, shopBlueprintBuy, shopBlueprintPool, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         visitSettle, visitState,

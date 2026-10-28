@@ -224,6 +224,9 @@ export function createSkillSystem(data) {
         // 스킬 레벨 줄 [2026-10-06 · R216 · skill_design §2-3] — 레벨이 올리는 칸과 한 단계(부호가 방향 — 체인 라이트닝은 음수라 덜 약해진다). `-` 면 null
         levelField: dash(row.level_field),
         levelStep: dash(row.level_step),
+        // 둘째 레벨 칸 [2026-10-28 · R374] — 한 줄이 두 숫자를 같이 올린다(러시 = 타수 + 한 타 배율). 칸이 없는 표(옛 테스트 표)는 `-` 로 읽는다
+        levelField2: dash(row.level_field2 ?? '-'),
+        levelStep2: dash(row.level_step2 ?? '-'),
     });
 
     /** 걸린 효과 1행 정규화(`skill_status.csv`) — 값은 비율 그대로 · 시간 0 = 상시(오오라가 거는 것) */
@@ -491,18 +494,22 @@ export function createSkillSystem(data) {
             if (!slotFits(d, e, s.field)) bad(`${at}_field '${s.field}' — ${d.cast}·${e.effect}·${t} 에는 그 항이 없다`);
         }
         // 스킬 레벨 줄 [2026-10-06 · R216 · skill_design §2-3] — 칸과 한 단계는 **한 쌍**이다. 없는 칸을 미는 레벨은 조용히 0 이 되므로 로드에서 막는다
-        if ((e.levelField === null) !== (e.levelStep === null)) bad(`level_field '${e.levelField}' · level_step '${e.levelStep}' — 둘 다 '-' 이거나 둘 다 채운다`);
-        if (e.levelField !== null) {
-            if (!LEVEL_FIELDS.includes(e.levelField)) bad(`level_field '${e.levelField}' — 레벨이 밀 수 있는 칸이 아니다(${LEVEL_FIELDS.join('·')})`);
-            if (typeof e.levelStep !== 'number' || !Number.isFinite(e.levelStep) || e.levelStep === 0) bad(`level_step '${e.levelStep}' — 0 이 아닌 숫자`);
-            if (e.levelField === 'cool_sec') {
+        //   둘째 쌍(`level_field2` · `level_step2` · 2026-10-28 R374)도 같은 검사 · 첫 쌍이 있어야 서고 첫 쌍과 다른 칸이어야 한다
+        const pairs = [['level_field', 'level_step', e.levelField, e.levelStep], ['level_field2', 'level_step2', e.levelField2, e.levelStep2]];
+        if (e.levelField2 !== null && (e.levelField === null || e.levelField2 === e.levelField)) bad(`level_field2 '${e.levelField2}' — 첫 레벨 칸('${e.levelField}')이 있어야 하고 그와 달라야 한다`);
+        for (const [fk, sk, field, step] of pairs) {
+            if ((field === null) !== (step === null)) bad(`${fk} '${field}' · ${sk} '${step}' — 둘 다 '-' 이거나 둘 다 채운다`);
+            if (field === null) continue;
+            if (!LEVEL_FIELDS.includes(field)) bad(`${fk} '${field}' — 레벨이 밀 수 있는 칸이 아니다(${LEVEL_FIELDS.join('·')})`);
+            if (typeof step !== 'number' || !Number.isFinite(step) || step === 0) bad(`${sk} '${step}' — 0 이 아닌 숫자`);
+            if (field === 'cool_sec') {
                 // 쿨은 스킬 것이다 — 첫 줄에만 적어 줄마다 쿨이 있는 것처럼 읽히지 않게 한다
-                if (e.seq !== 1) bad('level_field cool_sec 은 첫 줄(seq 1)만 적는다 — 쿨은 스킬 것이다');
-                if (!(d.cool > 0)) bad(`level_field cool_sec 인데 cool_sec ${d.cool}`);
-            } else if (!slotFits(d, e, e.levelField)) {
-                bad(`level_field '${e.levelField}' — ${d.cast}·${e.effect}·${t} 에는 그 칸이 없다`);
-            } else if (e.levelField === 'decay_pct' && !(e.decay > 0)) {
-                bad(`level_field decay_pct 인데 decay_pct ${e.decay} — 감쇠가 없는 줄이다`);
+                if (e.seq !== 1) bad(`${fk} cool_sec 은 첫 줄(seq 1)만 적는다 — 쿨은 스킬 것이다`);
+                if (!(d.cool > 0)) bad(`${fk} cool_sec 인데 cool_sec ${d.cool}`);
+            } else if (!slotFits(d, e, field)) {
+                bad(`${fk} '${field}' — ${d.cast}·${e.effect}·${t} 에는 그 칸이 없다`);
+            } else if (field === 'decay_pct' && !(e.decay > 0)) {
+                bad(`${fk} decay_pct 인데 decay_pct ${e.decay} — 감쇠가 없는 줄이다`);
             }
         }
     }
@@ -559,8 +566,7 @@ export function createSkillSystem(data) {
         const lineRows = lineRowsOf.get(d.id).slice().sort((a, b) => a.seq - b.seq);
         d.effects = lineRows.map(normalizeLine);
         validate(d, rows[i], lineRows);
-        // 레벨은 그 스킬의 숫자 **하나**를 올린다 — 레벨 줄이 둘이면 어느 숫자가 레벨인지 두 곳을 봐야 한다 (2026-10-06 · R216 · skill_design §2-3)
-        if (d.effects.filter(e => e.levelField !== null).length > 1) throw new Error(`skill_effect: ${d.id} — 레벨 줄(level_field)이 둘 이상이다 — 스킬마다 많아야 한 줄`);
+        // ~~레벨 줄은 스킬마다 많아야 하나~~(2026-10-06 · R216) — 2026-10-28 워 오더스가 방어 · 저항 두 줄을 같이 올린다(R367 · skill_design §2-3). 줄마다 검사는 `validate` 그대로
         d.derived = derivedTagsOf(d);
         // 무기 판정의 재료 — **CSV 칸이 없다**(파생 · skill_design §2-2 · 2026-10-03 R204). 직업 = 직업 스킬은 `owner_id` · 전직 스킬은 그 갈래의 직업 · 그 밖 null.
         //   무기가 필요한가 = 무기의 힘을 끌어다 쓰는 줄(`EFFECT_TYPES[effect].weapon` — 타격 · 회복 · 소환)이 하나라도 있는가
@@ -588,7 +594,7 @@ export function createSkillSystem(data) {
      *   변형 노드가 붙으면 칸마다 덧씌울 것이 생긴다(정의 객체는 공유물이라 손대면 안 된다 — `resolve` 참조).
      * hero 를 통째로 받는 이유: 전직 출처가 붙어도 이 함수 안만 바뀌게 하려는 것.
      * ~~@param ctx.weaponSkill 착용 무기 개체가 든 스킬 id~~ — **2026-09-29 폐지 · R179** (skill_design §2-1) — 둘째 칸은 `hero.bookSkill`(책으로 배운 것)이다
-     * @param hero.skillOrder [skillId] — 플레이어가 정한 칸 순서(선택 필드). 지금은 아무도 싣지 않아 기본 순서가 곧 결과다
+     * @param hero.skillOrder [skillId] — 플레이어가 정한 칸 순서(선택 필드) — 싣는 곳은 `game.setSkillOrder`(캐릭터 탭 스킬 우선순위 창 · 2026-10-28 · ADR-0937)
      * @param ctx.skillPlus {skillId: n} — 낀 장비의 특정 스킬 +n(`item.skillPlusOf` · 2026-10-08 · R225). 고유 · 배운 칸의 `up` 에 더한다 · 안 넘기면 종전과 같다
      */
     const activesFor = (hero, ctx = {}) => {
@@ -655,24 +661,28 @@ export function createSkillSystem(data) {
     };
     const leveled = new Map();
     /**
-     * 레벨을 얹은 정의 — 레벨 줄(`levelField` · `levelStep`)의 값에 `up × levelStep` 을 더한다. 스킬마다 레벨 줄은 많아야 하나다(로드 검사).
+     * 레벨을 얹은 정의 — 레벨 줄(`levelField` · `levelStep`)마다 그 값에 `up × levelStep` 을 더한다. 레벨 줄은 스킬마다 하나 이상일 수 있다(워 오더스 둘 · 2026-10-28 R367).
      *   `effect_value` · `duration_sec` 은 줄이 아니라 **걸린 효과**의 값이라 `lvAdd` 로 실어 `scaleLine` 이 크기에 더한다(부호 유지 — 슬롯과 같은 규칙)
      *   쿨은 원값 × `[balance.csv:skill_cd_floor_mult]` 밑으로 · 감쇠는 0 ~ `[balance.csv:skill_decay_cap_pct]` 로 자른다 · 확률은 1 에서 자른다
      */
     function levelDef(d, up) {
         let cool = d.cool;
-        const effects = d.effects.map(e => {
-            if (e.levelField === null) return e;
-            const add = up * e.levelStep;
-            switch (e.levelField) {
+        const bump = (e, field, add) => {
+            switch (field) {
                 case 'mult_pct': return { ...e, mult: e.mult + add };
                 case 'hits': return { ...e, hits: e.hits + add };                       // 소수 그대로 — `scaleLine` 이 버린다
                 case 'decay_pct': return { ...e, decay: Math.min(Math.max(0, e.decay + add), Math.max(e.decay, B.skill_decay_cap_pct)) };
                 case 'proc_chance_pct': return { ...e, procChance: Math.min(1, e.procChance + add) };
                 case 'proc_mult_pct': return { ...e, procMult: e.procMult + add };
                 case 'cool_sec': cool = Math.max(d.cool * B.skill_cd_floor_mult, d.cool + add); return e;
-                default: return { ...e, lvAdd: { [e.levelField]: add } };              // effect_value · duration_sec
+                default: return { ...e, lvAdd: { ...e.lvAdd, [field]: add } };          // effect_value · duration_sec
             }
+        };
+        const effects = d.effects.map(e => {
+            if (e.levelField === null) return e;
+            const x = bump(e, e.levelField, up * e.levelStep);
+            // 둘째 레벨 칸 (2026-10-28 R374) — 없으면 첫 칸만(종전 그대로)
+            return e.levelField2 === null ? x : bump(x, e.levelField2, up * e.levelStep2);
         });
         return { ...d, cool, effects, up };
     }

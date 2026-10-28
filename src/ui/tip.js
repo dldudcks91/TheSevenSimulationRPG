@@ -829,6 +829,8 @@ const LV_LABEL = {
     effect_value: () => 'cx.lv.value',
     cool_sec: () => 'cx.lv.cool',
 };
+/** 레벨 줄이 둘인 스킬의 `effect_value` 줄 — 걸린 효과의 수치(`skill_status.csv:stat`) → 칸 이름 (2026-10-28 R367 · 워 오더스) */
+const LV_STAT = { def_pct: 'cx.lv.def', res_pct: 'cx.lv.resAll' };
 /** 레벨 줄의 값 — `level_step` **그대로**(레벨마다 더하는 양 · 부호를 단다). 시간 칸은 초 · 타수는 회 · 나머지는 비율(%) */
 function lvStepText(field, step) {
     const sign = step < 0 ? '−' : '+';
@@ -836,6 +838,13 @@ function lvStepText(field, step) {
     if (field === 'duration_sec' || field === 'cool_sec') return sign + t('time.s', { s: num(v) });
     if (field === 'hits') return sign + t('sk.u.times', { v: num(v) });
     return `${sign}${M.pctNum(v)}%`;
+}
+/** 타수 레벨 칸 — 단계가 정수가 아니면 「+0.34회」 대신 **한 타가 느는 레벨**을 적는다(러시 Lv4 · 7 · 10 · 2026-10-28 R374). 정수 단계면 종전 그대로 */
+function hitsStepText(hits, step) {
+    if (Number.isInteger(step)) return lvStepText('hits', step);
+    const at = [];
+    for (let up = 1; up <= D.balance.skillbook_upgrade_max; up++) if (Math.floor(hits + up * step) > Math.floor(hits + (up - 1) * step)) at.push(up + 1);
+    return at.length ? t('cx.lv.hitsAt', { l: at.join(' · ') }) : '—';
 }
 
 /**
@@ -868,11 +877,15 @@ export function codexSkillTipCard(id) {
         + later.map(([d, list]) => `<div class="cx-src-h muted">${L(d.name)}</div>${grid(list)}`).join('')
         + (src.roll.length ? `<div class="cx-src-h muted">${t('cx.tip.roll')}</div>${grid(src.roll, ' roll')}` : '')
         + (SYS.game.shopBlueprintPool().includes(id) ? shopSource() : '');
-    // 레벨이 오르면 — 그 스킬의 레벨 줄 하나(스킬마다 많아야 한 줄 · 로드 검사) · 칸 이름 | `level_step` 그대로. 없으면 `—`
+    // 레벨이 오르면 — 그 스킬의 레벨 줄마다 한 줄(워 오더스는 둘 · 2026-10-28 R367) · 칸 이름 | `level_step` 그대로. 없으면 `—`
     const def = SYS.skill.defs[id];
-    const e = def?.effects.find(x => x.levelField !== null);
-    const lvUp = e
-        ? `<div class="cx-lvup"><span>${t(LV_LABEL[e.levelField]?.(def, e) ?? 'cx.lv.value')}</span><b>${lvStepText(e.levelField, e.levelStep)}</b></div>`
+    //   한 줄이 레벨 칸을 둘 들 수 있다(러시 — 타수 + 한 타 배율 · 2026-10-28 R374) — 칸마다 한 줄
+    const lvRows = (def?.effects ?? []).flatMap(e => [[e, e.levelField, e.levelStep], [e, e.levelField2 ?? null, e.levelStep2 ?? null]]).filter(([, f]) => f !== null);
+    //   줄이 둘이면 「효과」가 안 갈린다 — 걸린 효과의 수치 이름으로 (없는 수치는 「효과」 그대로)
+    const lvKey = (e, f) => (lvRows.length > 1 && f === 'effect_value' && LV_STAT[SYS.skill.statuses[e.status]?.stat])
+        || (LV_LABEL[f]?.(def, e) ?? 'cx.lv.value');
+    const lvUp = lvRows.length
+        ? lvRows.map(([e, f, s]) => `<div class="cx-lvup"><span>${t(lvKey(e, f))}</span><b>${f === 'hits' ? hitsStepText(e.hits, s) : lvStepText(f, s)}</b></div>`).join('')
         : '<span class="muted">—</span>';
     const card = el('div', 'tip-card cx-tip cx-sk-tip', `
         <div class="cx-tip-h">${t('cx.tip.source')}</div>

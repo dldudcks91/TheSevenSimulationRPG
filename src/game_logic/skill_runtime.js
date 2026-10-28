@@ -224,10 +224,11 @@ export function createSkillRuntime(ctx) {
     /**
      * 화상 · 중독 한 번 [2026-09-28 · R178 · battle_design §2-5 · §2-6] — 창 열쇠 = `status_id@시전자` 라 **같은 시전자의 같은 행**만 그 창을 새로 걸고
      *   나머지는 제 시간으로 따로 흐른다. 창은 조용하다(`quiet`) — 이벤트는 `syncAilment` 가 가장 센 창이 바뀔 때만 낸다.
-     *   값 — 화상 = 행의 값(받는 피해 증가 · 비율) + 받는 회복 감소 [balance.csv:burn_heal_cut] · 중독 = **초당 피해를 지금 굳힌다**(시전자 데미지 중앙값 × 행의 값). rng 0
+     *   값 — 화상 = 행의 값(받는 피해 증가 · 비율) + 받는 회복 감소 [balance.csv:burn_heal_cut] · 중독 = **초당 피해를 지금 굳힌다**(시전자 데미지 중앙값 × 행의 값).
+     *   시전자가 없는 중독(헬 장 디버프 — battle.js `curseCast` · 2026-10-28 · R366)은 굳힌 초당 피해 `x.dps` 를 그대로 쓴다. rng 0
      */
     function applyStrongest(u, tgt, x, until, t) {
-        const v = x.stat === 'poison' ? ((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * x.value : x.value;
+        const v = x.stat === 'poison' ? x.dps ?? ((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * x.value : x.value;
         const win = { stat: x.stat, v, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep', ail: x.ailment, quiet: true };
         if (x.stat === 'burn') win.cut = B.burn_heal_cut;
         tgt.buffs[`${x.status ?? x.id}@${u.key}`] = win;

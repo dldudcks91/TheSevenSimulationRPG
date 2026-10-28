@@ -107,10 +107,13 @@ const MATERIAL_KINDS = Object.freeze(['ore', 'timber', 'herb']);
  *   classSkills {classId: [skillId]} — 보스의 한 칸 더의 후보 풀. item·hero 에 넘기는 **같은 표**다 (신설 2026-09-11 R79 · ⚠ 보스마다 정한 고유 스킬이 서기 전의 임시 · R269),
  *   slots [partId] — 장비 부위 어휘. 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 검증에만 쓴다 (신설 2026-09-11 R79 · 개정 2026-10-12 R245),
  *   levelXp [{level, monsterXp}] — `level_xp.csv`. 몬스터 레벨 → 처치 XP 기준값 (신설 2026-09-28 · 1 ~ 만렙을 덮어야 한다),
- *   difficulties [{id, wearChance, skillSlots, monsterDmgMult, monsterHpMult, eliteTraitSlots}] — (eliteTraitSlots = 정예 특성 칸 수 · 2026-10-24 R344 · ~~rarityMax~~ R342 → 2026-10-24 R350 `gearRarity` 의 0) —`difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
+ *   difficulties [{id, wearChance, skillSlots, monsterDmgMult, monsterHpMult, eliteTraitSlots, gearIlvlFixed}] — (eliteTraitSlots = 정예 특성 칸 수 · 2026-10-24 R344 · ~~rarityMax~~ R342 → 2026-10-24 R350 `gearRarity` 의 0) —`difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
  *     몬스터 **스킬 칸 수**(난이도가 연다 — 노말 1 · 나이트메어 2 · 헬 3 · 없으면 1 · 2026-10-18 R269), 몬스터 **데미지 · HP 배수**(전역 배율 위에 곱한다 · 없으면 1 · 2026-10-21 R301),
+ *     몬스터 장비 **아이템 레벨 고정**(gearIlvlFixed 1 = 그 몬스터의 레벨 — 헬 · 없으면 굴림 · 2026-10-28 R366),
  *   gearRarity {grade: {difficultyId: {normal, magic, rare, epic, legendary}}} — `gear_rarity.csv`. 몬스터 장비 희귀도 가중치 **등급 × 단 한 장**
  *     (행마다 합 100 · 에픽 · 레전더리를 안 여는 단은 0 · 2026-10-24 R350 · item_design §1 희귀도). 주면 등급 × 단 칸이 다 있어야 한다 · 없으면 드롭 가중치,
+ *   chapterDebuffs [{difficultyId, chapter, sin, effect, value, intervalSec, durationSec, cap}] — `chapter_debuff.csv`. 단 · 장마다 그 장 죄종의 디버프 한 줄
+ *     (헬 · 2026-10-28 R366 · base_expedition_design §1-4 · 생성 시 검사). 없으면 디버프 없음,
  *   monsterRoles {role: {rank}} — `monster_role.csv`. **적의 자리**를 정한다 (진형 확정 2026-09-09).
  *     모르는 역할은 **전열(0)** 로 떨어뜨린다 — 빠뜨린 몬스터가 뒤에 숨어 무적이 되는 것보다 앞에 서는 편이 안전하다
  */
@@ -198,6 +201,24 @@ export function createBattleSystem(data) {
      */
     const RARITY = data.gearRarity ?? null;
     const gearWeightsOf = (g, diff) => (RARITY ? RARITY[g.grade]?.[diffOf(diff)?.id] ?? null : null);
+    /** 몬스터 장비 아이템 레벨 고정 — 그 단이 **그 몬스터의 레벨로** 고정하나 `[difficulty_tier.csv:gear_ilvl_fixed]` (헬 · 사용자 「ㅇㅇ장비 50고정」 2026-10-28 · R366) · 표가 없는 조립은 굴림 */
+    const gearFixedOf = diff => diffOf(diff)?.gearIlvlFixed === 1;
+    /**
+     * 장 디버프 — **단 · 장마다 한 줄** `[chapter_debuff.csv]` [2026-10-28 · 사용자 · R366 · base_expedition_design §1-4 — ~~라운드 단계~~(10-24)].
+     *   장 안의 칸은 같은 값이고 **챕터보스 칸만** 값에 `[balance.csv:chapter_debuff_boss_mult]` 를 곱한다(간격 · 시간 · 상한은 그대로).
+     *   출정 창과 `createRun` 이 이것 하나를 읽는다 · 줄이 없는 단 · 장 · 없는 칸은 null · rng 0
+     */
+    const DEBUFFS = data.chapterDebuffs ?? [];
+    const DEBUFF_EFFECTS = ['taken_pct', 'poison', 'heal_cut', 'freeze', 'feast'];
+    function debuffOf(stageId, difficulty = null) {
+        const stage = data.stages[stageId], d = diffOf(difficulty);
+        if (!stage || !d) return null;
+        const row = DEBUFFS.find(x => x.difficultyId === d.id && x.chapter === stage.chapter);
+        if (!row) return null;
+        const boss = stage.boss_grade === 'chapter_boss';
+        return { sin: row.sin, effect: row.effect, value: boss ? row.value * B.chapter_debuff_boss_mult : row.value,
+            intervalSec: row.intervalSec, durationSec: row.durationSec, cap: row.cap, boss };
+    }
     /**
      * 몬스터 스킬 칸 — **난이도가 연다 · 보스는 한 칸 더** [2026-10-18 · R269 · monster_design §5-1 — ~~등급이 연다(일반 1 · 정예 2 · 보스 3)~~ 09-11].
      *   칸 수 = 그 단 `[difficulty_tier.csv:skill_slots]` + 등급 `[spawn_grade.csv:skill_slots_add]`. **칸은 출처 자리**다 —
@@ -237,8 +258,9 @@ export function createBattleSystem(data) {
      * @param level 스테이지 레벨 — `level_add` 는 안 탄다(INTERFACE §2-6 `lvl`)
      * @param chance 선택 부위 착용 확률 — 그 런의 단(`wearChanceOf`)
      * @param weights 희귀도 가중치 — 그 등급 × 그 런의 단(`gearWeightsOf` · 2026-10-24 · R350) · `null` 이면 드롭 가중치 · 굴림 수 불변
+     * @param ilvlFixed 그 런의 단이 아이템 레벨을 고정하나(`gearFixedOf` — 헬) — 참이면 아래 끝도 그 몬스터의 레벨이다(굴림은 소비만 · 2026-10-28 · R366)
      */
-    const wearGear = (rng, m, g, level, magicFind, chance, weights) => {
+    const wearGear = (rng, m, g, level, magicFind, chance, weights, ilvlFixed = false) => {
         let weaponGroup = m.weapon_group;
         if (weaponGroup === '-') {
             const gs = data.itemSystem.groupsFor(m.cls);
@@ -253,6 +275,7 @@ export function createBattleSystem(data) {
             ilvl: center,
             ilvlSpread: ilvlSpreadOf(center),
             ilvlMax: monsterLevelOf(m, level),
+            ...(ilvlFixed ? { ilvlMin: monsterLevelOf(m, level) } : {}),
             magicFind,
             // 희귀도 가중치는 **등급 × 단이 쥔다** — 노말 일반몹 = 일반 + 가끔 매직(레어 0) · 나이트메어 · 헬 일반몹은 레어까지 (2026-10-24 사용자 확정 · R350)
             rarityWeights: weights,
@@ -280,7 +303,8 @@ export function createBattleSystem(data) {
             slots: [...fixed, ...optional], fixed, optional, wearChance: wearChanceOf(difficulty),
             weaponGroup: rolled ? null : m.weapon_group,
             weaponGroups: rolled ? data.itemSystem.groupsFor(m.cls).map(x => x.id) : [m.weapon_group],
-            ilvlMin: Math.min(top, Math.max(1, center - s)), ilvlMax: Math.min(top, center + s), rarityWeights: weights,
+            // 단이 고정하면(헬) 아래 끝도 그 몬스터의 레벨이다 (2026-10-28 · R366)
+            ilvlMin: gearFixedOf(difficulty) ? top : Math.min(top, Math.max(1, center - s)), ilvlMax: Math.min(top, center + s), rarityWeights: weights,
             rarityMax: weights ? [...RARS].reverse().find(r => weights[r] > 0) ?? RARS[0] : 'rare',
         };
     }
@@ -294,7 +318,7 @@ export function createBattleSystem(data) {
     function rollMonsterDrop(rng, monsterId, grade, level, magicFind = 0, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
-        const worn = wearGear(rng, m, g, level, magicFind, wearChanceOf(difficulty), gearWeightsOf(g, difficulty));
+        const worn = wearGear(rng, m, g, level, magicFind, wearChanceOf(difficulty), gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
         return { worn, drop: worn.length ? worn[Math.floor(rng() * worn.length)] : null };
     }
 
@@ -333,6 +357,26 @@ export function createBattleSystem(data) {
             for (const [k, col] of [['monsterDmgMult', 'monster_dmg_mult'], ['monsterHpMult', 'monster_hp_mult']])
                 if (d[k] !== undefined && !(typeof d[k] === 'number' && d[k] > 0))
                     throw new Error(`battle: 난이도 ${d.id} 의 ${col} '${d[k]}' — 양수여야 한다 (difficulty_tier.csv · R301)`);
+            if (d.gearIlvlFixed !== undefined && d.gearIlvlFixed !== 0 && d.gearIlvlFixed !== 1)
+                throw new Error(`battle: 난이도 ${d.id} 의 gear_ilvl_fixed '${d.gearIlvlFixed}' — 0 · 1 이어야 한다 (difficulty_tier.csv · R366)`);
+        }
+        // 장 디버프 — 아는 단 · 효과 다섯 · 단 · 장마다 한 줄 · 효과마다 쓰는 칸 (2026-10-28 · R366). 어긋난 줄이 조용히 새면 그 장에 디버프가 안 걸린다
+        if (DEBUFFS.length && !(typeof B.chapter_debuff_boss_mult === 'number' && B.chapter_debuff_boss_mult > 0))
+            throw new Error(`battle: chapter_debuff_boss_mult '${B.chapter_debuff_boss_mult}' — 양수여야 한다 (balance.csv · R366)`);
+        const debuffSeen = new Set();
+        const pos = v => typeof v === 'number' && v > 0;
+        for (const x of DEBUFFS) {
+            const at = `${x.difficultyId} ${x.chapter}장`;
+            if (!DIFFS.some(d => d.id === x.difficultyId)) throw new Error(`battle: 장 디버프 ${at} — 모르는 단 (chapter_debuff.csv)`);
+            if (debuffSeen.has(at)) throw new Error(`battle: 장 디버프 ${at} 이 두 줄 — 단 · 장마다 한 줄이다 (chapter_debuff.csv)`);
+            debuffSeen.add(at);
+            if (!DEBUFF_EFFECTS.includes(x.effect)) throw new Error(`battle: 장 디버프 ${at} 의 effect '${x.effect}' — ${DEBUFF_EFFECTS.join(' · ')} 중 하나 (chapter_debuff.csv)`);
+            // 결빙은 행동 속도(`period_pct`)라 음수 · 나머지는 양수
+            if (x.effect === 'freeze' ? !(typeof x.value === 'number' && x.value < 0) : !pos(x.value))
+                throw new Error(`battle: 장 디버프 ${at} 의 value '${x.value}' — ${x.effect === 'freeze' ? '음수' : '양수'}여야 한다 (chapter_debuff.csv)`);
+            if ((x.effect === 'poison' || x.effect === 'freeze') && !(pos(x.intervalSec) && pos(x.durationSec)))
+                throw new Error(`battle: 장 디버프 ${at} — ${x.effect} 는 interval_sec · duration_sec 가 양수여야 한다 (chapter_debuff.csv)`);
+            if (x.effect === 'feast' && !pos(x.cap)) throw new Error(`battle: 장 디버프 ${at} — feast 는 cap 이 양수여야 한다 (chapter_debuff.csv)`);
         }
         // 희귀도 표 — 주면 등급 × 단 칸이 다 있어야 한다 · 칸은 희귀도 다섯 · 음수 없음 · 합 > 0 (2026-10-24 · R350).
         //   빈 칸이 조용히 새면 그 등급 · 단의 몬스터가 드롭 가중치로 굴러 표가 안 먹는다
@@ -818,7 +862,7 @@ export function createBattleSystem(data) {
             // 차림 — 아이템 레벨 · 희귀도 가중치 규칙은 `wearGear` 한 곳이다(실험실이 같은 함수를 부른다 · 2026-10-10)
             // 제 줄 = (씨앗 · 라운드 · 목록 자리) — 앞 몬스터의 굴림 수가 뒤 몬스터의 장비도 전투 수열도 안 민다 (INTERFACE §5-1 · 2026-09-22)
             const mf = cxMagic ? magicFind + cxMagic(s.id) : magicFind;   // 도감 Lv1 매직 — 그 종족 몫(R314)
-            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, mf, wearChance, gearWeightsOf(g, difficulty));
+            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, mf, wearChance, gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
             // 보스의 한 칸 더 — 보스만(`skill_slots_add` ≥ 1 · R269 — ~~`skill_slots` ≥ 3~~ 같은 유닛이라 순서 · 횟수 불변). ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙).
             //   2칸(나이트메어)은 굴리지 않는다 — `nightmare_skill` 이 정한다
             let thirdSkill = null;
@@ -1098,6 +1142,31 @@ export function createBattleSystem(data) {
         let t = 0, round = 1;
         // 이 라운드가 열린 시각 — 나태 T2 겹(`tick`)이 여기서부터 잰다 [2026-10-05 · skill_design §3-2]. `beginRound` 가 쓴다
         let roundAt = 0;
+        // 장 디버프 [2026-10-28 · R366 · base_expedition_design §1-4] — 이 칸 · 이 단의 한 줄(`debuffOf` · 결투장은 없다)이 런 내내 같다 —
+        //   분노 · 폭식 = 직격(`strikeOnce`) · 탐욕 = 영웅의 받는 회복(`curseCut` → `ATTRS`) · 시기 · 나태 = 간격마다 거는 창(`curseCast`) · rng 0
+        const curse = encounter ? null : debuffOf(stageId, difficulty);
+        // 다음에 걸 시각 — 라운드를 열면 그 시각부터 간격마다(`beginRound`) · 거는 효과가 아니면 null
+        let curseAt = null;
+        // 거는 쪽 — 시전자가 없다(기여 · 처치 몫 없음) · 영웅의 「상대 편」이라 받는 쪽 시간 감소 · 매력이 줄인다
+        const CURSE_SRC = { key: 'curse', side: 'enemy' };
+        /** 몬스터가 때린 직격에서 맞는 영웅이 더 받는 비율 — 분노 = 값 · 폭식 = 라운드를 연 뒤 지난 초 × 값(상한) · 그 밖 0 */
+        const curseTaken = () => curse?.effect === 'taken_pct' ? curse.value
+            : curse?.effect === 'feast' ? Math.min(curse.cap, curse.value * (t - roundAt)) : 0;
+        /** 시기 · 나태 — 살아 있는 영웅 전원에게 중독(초당 = 그 영웅 최대 HP × 값) · 결빙(행동 속도 = 값)을 그 시간만큼 건다 */
+        const curseCast = () => {
+            for (const u of party) {
+                if (u.hp <= 0 || u.summon) continue;
+                rt.applyStatus(CURSE_SRC, u, curse.effect === 'poison'
+                    ? { status: 'curse_poison', stat: 'poison', value: curse.value, dps: u.hpMax * curse.value, dur: curse.durationSec, ailment: 'poison' }
+                    : { status: 'curse_freeze', stat: 'period_pct', value: curse.value, dur: curse.durationSec, ailment: 'freeze' }, t);
+            }
+        };
+        // 탐욕 — 받는 회복 감소를 영웅 유닛에 싣는다(갈아입어도 잇는다 — `REFIT_FIELDS` 밖) · 창이 없는 지금 값도 `ATTRS` 의 받는 회복과 같은 식으로 바로 쓴다
+        if (curse?.effect === 'heal_cut') for (const u of party) {
+            if (u.recvBase === undefined) continue;
+            u.curseCut = curse.value;
+            u.recv = (1 + u.recvBase) * (1 - curse.value) - 1;
+        }
         // 적 배열은 라운드마다 **갈아 끼운다** — 런타임이 속성으로 읽어야 옛 라운드를 가리키지 않는다 (skill_runtime @param units)
         //   `codexRound` = 도감 Lv2 의 「그 종족이 나온 라운드 동안」 몫 `{speed, buff, regen, heal}` 또는 null — `beginRound` 가 쓰고 런타임(버프 시간 · 회복)도 읽는다 (R314)
         const units = { party, enemies: [], codexRound: null };
@@ -1185,6 +1254,8 @@ export function createBattleSystem(data) {
             const pots = round > 1 && potionPending ? potionPending : null;
             if (pots) { potionSlots = pots; potionNext = 0; potionLeft = pots.filter(Boolean).length; potionPending = null; }
             roundAt = t;   // 나태 T2 겹이 0 으로 돌아간다 — 쿨감은 다음 틱이 원값으로 되쓴다(advance)
+            // 장 디버프(시기 · 나태)도 라운드를 연 시각부터 다시 잰다 — 첫 틱에 걸린다 (R366) · 폭식은 `roundAt` 에서 0 부터
+            curseAt = curse?.effect === 'poison' || curse?.effect === 'freeze' ? t : null;
             for (const u of [...party, ...units.enemies]) if (u.mfeast) u.feast = 0;   // 폭식 T3 겹도 라운드를 열면 비운다 (R343)
             // 정신 집중은 라운드를 안 넘는다 [2026-10-22 · R318] — 열린 채 끝난 라운드면 여기서 닫는다(쿨은 지금부터 · `chanEnd` 는 `round` 앞) · rng 0
             for (const p of party) if (p.chan) rt.chanClose(p, t);
@@ -1823,6 +1894,17 @@ export function createBattleSystem(data) {
             for (const v of md?.dr ?? []) target.dr = 1 - (1 - target.dr) * (1 - v);
             // 도감 Lv2 받는 피해 감소 — 도감 전체가 **원천 하나**(장비 Lv4 의 피해 감소와 같은 규칙 · R314)
             if (cxD?.damage_reduction) target.dr = 1 - (1 - target.dr) * (1 - cxD.damage_reduction);
+            // 장 디버프 — 분노(받는 피해 증가) · 폭식(라운드 안에서 오르는 몬스터 데미지)은 **몬스터가 때린 직격**에서 맞는 영웅의 `dr` 에
+            //   받는 피해 증가 원천 하나로 곱한다 · 아래에서 되돌린다 · 없으면 안 건드린다 (2026-10-28 · R366) · rng 0
+            const taken = target.side === 'party' && u.side === 'enemy' ? curseTaken() : 0;
+            if (taken) target.dr = 1 - (1 - target.dr) * (1 + taken);
+            // 적 데미지 감소 디버프 [2026-10-28 · R368 · battle_design §9-3] — 때리는 쪽 창마다 `1 + v` 를 **최종 피해**에 곱한다(데미지 % 괄호 밖).
+            //   `dr` 에 원천으로 얹어 위 둘과 같은 자리에서 되돌린다 · 물리 몫은 물리 직격만 · 0 밑으로 안 간다 · 창이 없으면 안 건드린다 · rng 0
+            let dealt = 1;
+            for (const b of Object.values(u.buffs ?? {})) {
+                if (b.stat === 'final_dmg_pct' || (b.stat === 'final_phys_pct' && hitType === 'physical')) dealt *= Math.max(0, 1 + b.v);
+            }
+            if (dealt !== 1) target.dr = 1 - (1 - target.dr) * dealt;
             const { hit, dmg, crit, proc } = F.strike(rng, u, target);
             target.dr = dr0;
             target.res = res0;
@@ -2124,6 +2206,8 @@ export function createBattleSystem(data) {
                 t += TICK;
                 // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) rt.expire(u, t);
+                // 장 디버프 — 시기 · 나태는 간격마다 영웅 전원에게 건다 — 창 만료 **뒤** · 중독 틱 **앞** (2026-10-28 · R366 · INTERFACE §5-2) · rng 0
+                if (curseAt !== null && t + STEP_EPS >= curseAt) { curseCast(); curseAt += curse.intervalSec; }
                 // 나태 T2 겹의 쿨감 [2026-10-05 · skill_design §3-2] — 행동 **앞**에서 그 틱의 겹으로 `cdr` 를 되쓴다(시전 순간 `cooldownSec` 이 읽는다). 겹 줄이 없는 유닛은 안 건드린다 · rng 0
                 for (const u of [...party, ...units.enemies]) if (u.mtick) u.cdr = u.cdrBase + tickSum(u, 'cooldown_reduction');
                 // 중독 틱 — 창 만료 **뒤** · 재생 **앞** (2026-09-28 · R178 · INTERFACE §5-2). 앞 유닛의 틱이 쓰러뜨려도 배열은 그대로 돈다
@@ -2227,5 +2311,5 @@ export function createBattleSystem(data) {
         return { ...run.result, mode: 'arena' };
     }
 
-    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, skillCarriers, monsterSkillSlots, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf };
+    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, skillCarriers, monsterSkillSlots, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf, debuffOf };
 }

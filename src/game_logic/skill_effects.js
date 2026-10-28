@@ -371,7 +371,7 @@ export const EFFECTS = {
     poison: { state: true },
     stun: { state: true },
     // 기본 스킬 50 의 장치 일곱 [2026-10-16 · R246 · R247 · R249 · R250 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 전부 표식이고 읽는 쪽이 따로 있다:
-    //   phys_pct   물리 타격의 데미지 % (워 크라이 — 적에게 음수) — battle.strikeOnce 가 그 타격의 condPct 에 더한다
+    //   phys_pct   물리 타격의 데미지 % — battle.strikeOnce 가 그 타격의 condPct 에 더한다 · 쓰는 행 0(~~워 크라이~~ 2026-10-28 → final_phys_pct)
     //   basic_pct  평타 피해 % (퀵 드로우 · 오버드로우) — skill_runtime.basicAttack 이 배율에 곱한다
     //   frenzy     겹마다 공속 (프렌지) — 창이 겹 `n` 을 들고 적중마다 battle.strikeOnce 가 올린다 · 주기 파생(아래 능력치 표)이 `v × n` 을 읽는다
     //   evade      받는 직격 n 번 무효 (이베이드) — 창이 횟수 `n` 을 든다 · battle.strikeOnce 첫머리가 쓴다
@@ -379,6 +379,10 @@ export const EFFECTS = {
     //   pulse      오오라 피해 (홀리 파이어) — battle.js 의 틱이 간격마다 적 전원에게 비직격
     //   echo       공격 스킬 한 번 더 (에코) — skill_runtime.cast 끝
     phys_pct: { state: true },
+    // 적 데미지 감소 디버프 둘 [2026-10-28 · R368 · battle_design §9-3] — 때리는 쪽이 든 창 · battle.strikeOnce 가 **직격의 최종 피해**에 창마다 `1 + v` 를 곱한다
+    //   (데미지 % 괄호 밖 · 적에게 음수 · 다른 스킬끼리 곱). final_dmg_pct = 모든 직격(페니턴스 · 일갈 · 사냥 표식 · 속죄) · final_phys_pct = 물리 직격만(워 크라이)
+    final_dmg_pct: { state: true },
+    final_phys_pct: { state: true },
     basic_pct: { state: true },
     frenzy: { state: true },
     evade: {
@@ -478,7 +482,13 @@ const ATTRS = [
     // 행동 주기 — 프렌지 겹(`v × n` · 2026-10-16 R246)도 같은 괄호다. 프렌지 창이 없으면 0 을 빼므로 부동소수가 종전과 같다
     u => { u.period = u.basePeriod * (1 - sumOf(u, 'period_pct') - stackSum(u, 'frenzy')); },
     // 방어 = 무기 옵션 방어 % + 외침(guard) — 같은 축을 미는 둘을 한 번에 모은다
-    u => { u.def = defScaled(u.defBase, sumOf(u, 'def_pct') + sumOf(u, 'guard_pct')); },
+    //   방어 감소(`def_pct` 음수 — 배틀 크라이 · 무기 옵션 한 창 · 겹 창)는 **창마다 곱**한다 [2026-10-28 · R370 · battle_design §9-3 — 10-12 「같은 수치를 깎는 디버프도 서로 곱한다」] ·
+    //   버프(양수 · `guard_pct`)는 합 그대로 · 창마다 0 밑으로 안 간다 · 감소가 없으면 종전 식 그대로
+    u => {
+        let up = 0, down = 1;
+        for (const b of Object.values(u.buffs)) if (b.stat === 'def_pct') { if (b.v < 0) down *= Math.max(0, 1 + b.v); else up += b.v; }
+        u.def = u.defBase > 0 ? defScaled(u.defBase, up + sumOf(u, 'guard_pct')) * down : u.defBase;
+    },
     // 저항 = 밑수 + 외침(guard · 전 원소) + 레지스탕스 실드(res_pct · 전 원소) 에 원소 하나의 창(무기 옵션 · `element` 칸만)을 **창 순서대로** 더한다
     u => {
         const guard = sumOf(u, 'guard_pct') + sumOf(u, 'res_pct');
@@ -505,10 +515,12 @@ const ATTRS = [
     },
     // 받는 회복 — 화상이 걸려 있으면 장비의 체력 회복 +% 와 **곱**으로 줄인다(`cut` = 창에 굳힌 [balance.csv:burn_heal_cut]) [2026-09-28 · R178].
     //   회복 스킬 · 재생 · 물약 · 흡혈이 전부 `recv` 를 읽으므로 여기 한 곳이다. 밑값(`recvBase`)이 없는 유닛(손으로 만든 유닛)은 건드리지 않는다
+    //   헬 장 디버프(탐욕)의 받는 회복 감소(`curseCut` — battle.js 가 런 내내 싣는다 · 2026-10-28 · R366)도 같은 곱이다 · 둘 다 없으면 밑값 그대로
     u => {
         if (u.recvBase === undefined) return;
         const burn = strongestOf(u, 'burn');
-        u.recv = burn ? (1 + u.recvBase) * (1 - (burn.cut ?? 0)) - 1 : u.recvBase;
+        const cut = u.curseCut ?? 0;
+        u.recv = burn || cut ? (1 + u.recvBase) * (1 - (burn?.cut ?? 0)) * (1 - cut) - 1 : u.recvBase;
     },
 ];
 
@@ -570,7 +582,8 @@ export function weaponOnHit(u, fx, d, type, t, sec) {
         changed = true;
     }
     const atkDown = d.noBasic ? fx.atkDownMag : fx.atkDownPhys;
-    if (atkDown > 0) strongest('wx:atk_down', 'atk_pct', atkDown, sec.atk);
+    // 데미지 감소 — 스킬 디버프와 같은 자리 · 직격의 최종 피해에 곱 (2026-10-28 R368 — ~~atk_pct 음수 · 데미지 % 괄호~~)
+    if (atkDown > 0) strongest('wx:atk_down', 'final_dmg_pct', atkDown, sec.atk);
     if (fx.resDown > 0 && type !== 'physical' && type in d.res) {
         d.buffs[`wx:res_down:${u.key}:${type}`] = { stat: 'res_elem', v: -fx.resDown, until: t + len(sec.res), element: type, by: u.key, quiet: true };
         changed = true;

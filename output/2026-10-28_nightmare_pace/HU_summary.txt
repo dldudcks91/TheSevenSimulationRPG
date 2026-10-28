@@ -1,0 +1,74 @@
+# HU — seeds 40 · bot: 게임 자동 장착(autoEquip · 영웅 세기 R313)을 파티 영웅마다 + 반지 · 목걸이는 아이템 레벨 → 등급이 높으면 바꾼다 · 첫 클리어 상자 연다 · 남은 가방 분해 · 마스터리 첫 칸 몰아 찍기 · 상단 물약 최고 단계 구매 · 건물 max 끝까지 · 무기 · 갑옷은 normal 부터 늘 +6강(비용 · 실패 무시)
+assume: 시작 파티 그대로 — 고용 · 해고 · 수색 없음 / 강화 · 상점 장비 · 제작 · 크래프트 · 책 · 전직 · 전술 리롤 없음 / 진형은 편성 순서 그대로 / 시각 고정 · 즉시 정산 — 라운드 사이에 장비를 안 바꾼다 / 한 단의 칸을 순서대로 다 깨면 다음 단 / 한 칸에서 10판 연속 지면 앞의 깬 칸(챕터보스 칸 제외)을 10판 돌고 돌아온다 — 그 칸 도전 800판(파밍 판 제외)에 못 깨면 막힘
+opt: {"bot": "auto", "mastery": true, "potion": true, "build": "max", "stall": 800, "cap": 20000, "patience": 10, "farm": 10, "up": 6, "upFrom": "normal", "upAll": true, "diffs": ["normal", "nightmare", "hell"], "chapters": 5} · harness ms 166116 · user = sim x 1.04
+
+## per difficulty — finished · hours in that tier (median [q1 ~ q3]) · cumulative from new game · party Lv at its end
+  normal: finished 40/40 (halves 20/20 · 20/20)
+    exp : tier 6.4 [4.4 ~ 7.7] h · cumulative 6.4 [4.4 ~ 7.7] h (halves med 6.8 / 6.4) · min 2.9 max 19.7
+    sim : tier 6.7 [4.7 ~ 8.0] h · cumulative 6.7 [4.7 ~ 8.0] h (halves med 7.1 / 6.7) · min 3.2 max 20.4
+    user: tier 6.9 [4.9 ~ 8.3] h · cumulative 6.9 [4.9 ~ 8.3] h (halves med 7.3 / 6.9) · min 3.3 max 21.2
+    Lv end 27.7 [27.0 ~ 28.3] · min 25.0 max 31.3 · runs in tier 192.0 [141.0 ~ 260.0] · win rate 43.2%
+  nightmare: finished 40/40 (halves 20/20 · 20/20)
+    exp : tier 19.1 [13.3 ~ 24.2] h · cumulative 26.1 [18.9 ~ 31.2] h (halves med 26.4 / 25.4) · min 10.4 max 55.3
+    sim : tier 19.9 [14.4 ~ 25.3] h · cumulative 27.4 [20.0 ~ 32.3] h (halves med 27.9 / 26.7) · min 11.4 max 57.9
+    user: tier 20.7 [15.0 ~ 26.3] h · cumulative 28.5 [20.8 ~ 33.5] h (halves med 29.0 / 27.7) · min 11.9 max 60.3
+    Lv end 46.7 [45.3 ~ 48.0] · min 43.0 max 50.0 · runs in tier 669.0 [605.0 ~ 771.0] · win rate 21.7%
+  hell: finished 13/40 (halves 7/20 · 6/20)
+    exp : tier 80.2 [54.0 ~ 116.7] h · cumulative 108.0 [73.0 ~ 164.1] h (halves med 108.0 / 147.8) · min 41.9 max 329.1
+    sim : tier 83.2 [58.2 ~ 122.1] h · cumulative 112.2 [78.3 ~ 170.9] h (halves med 112.2 / 150.9) · min 45.5 max 334.6
+    user: tier 86.5 [60.5 ~ 127.0] h · cumulative 116.7 [81.4 ~ 177.8] h (halves med 116.7 / 156.9) · min 47.3 max 348.0
+    Lv end 50.0 [50.0 ~ 50.0] · min 50.0 max 50.0 · runs in tier 3262.0 [2052.0 ~ 3849.0] · win rate 10.8%
+
+## completion over ALL seeds (stuck = never) — cumulative exp h from new game when 10/25/50/75% of seeds had finished the tier
+  normal: finished 40/40 · 10% 3.6 · 25% 4.4 · 50% 6.2 · 75% 7.7 h
+  nightmare: finished 40/40 · 10% 14.0 · 25% 18.5 · 50% 25.4 · 75% 31.2 h
+  hell: finished 13/40 · 10% 73.0 · 25% 164.1 · 50% never · 75% never h
+
+## stuck cells (count)
+  hell 1-1 I 12 · hell 1-3 I 5 · hell 2-2 I 3 · hell 1-4 III 1 · hell 2-1 III 1 · hell 1-1 II 1 · hell 3-3 II 1 · hell 2-2 II 1 · hell 1-3 III 1 · hell 1-4 I 1
+
+## stuck / capped seeds
+  seed   1 mage/prie/warr stall hell 1-1 I mLv 50 · party Lv 46.33 ilvl 42.17 · at exp 37.0 h
+  seed   2 knig/warr/prie stall hell 1-1 I mLv 50 · party Lv 49 ilvl 35.13 · at exp 44.2 h
+  seed   4 mage/arch/knig stall hell 2-2 I mLv 50 · party Lv 50 ilvl 50 · at exp 77.9 h
+  seed   5 knig/warr/prie stall hell 1-1 I mLv 50 · party Lv 48 ilvl 35.54 · at exp 66.6 h
+  seed   6 warr/mage/arch stall hell 1-3 I mLv 50 · party Lv 50 ilvl 50 · at exp 76.9 h
+  seed   9 arch/knig/warr stall hell 2-2 I mLv 50 · party Lv 50 ilvl 50 · at exp 105.9 h
+  seed  10 warr/prie/mage stall hell 1-4 III mLv 50 · party Lv 50 ilvl 50 · at exp 149.0 h
+  seed  11 knig/warr/mage stall hell 1-3 I mLv 50 · party Lv 50 ilvl 50 · at exp 64.2 h
+  seed  12 knig/warr/prie stall hell 1-1 I mLv 50 · party Lv 49.33 ilvl 41.54 · at exp 81.3 h
+  seed  13 mage/arch/warr stall hell 1-1 I mLv 50 · party Lv 50 ilvl 45.04 · at exp 26.0 h
+  seed  14 knig/arch/mage stall hell 1-1 I mLv 50 · party Lv 50 ilvl 47.58 · at exp 35.7 h
+  seed  15 knig/mage/prie stall hell 1-1 I mLv 50 · party Lv 50 ilvl 47.79 · at exp 68.2 h
+  seed  18 mage/arch/warr stall hell 1-3 I mLv 50 · party Lv 50 ilvl 49.13 · at exp 59.5 h
+  seed  22 arch/prie/knig stall hell 1-1 I mLv 50 · party Lv 45.67 ilvl 38.17 · at exp 37.2 h
+  seed  23 warr/mage/prie stall hell 1-1 I mLv 50 · party Lv 47.67 ilvl 39.04 · at exp 26.8 h
+  seed  24 knig/prie/arch stall hell 1-3 I mLv 50 · party Lv 50 ilvl 48.42 · at exp 54.5 h
+  seed  25 mage/warr/arch stall hell 2-1 III mLv 50 · party Lv 50 ilvl 49.17 · at exp 111.4 h
+  seed  26 warr/knig/mage stall hell 1-3 I mLv 50 · party Lv 50 ilvl 48.79 · at exp 58.1 h
+  seed  27 arch/warr/prie stall hell 1-1 I mLv 50 · party Lv 49.67 ilvl 37.79 · at exp 39.2 h
+  seed  29 prie/mage/warr stall hell 1-1 I mLv 50 · party Lv 50 ilvl 49.08 · at exp 39.7 h
+  seed  30 warr/mage/prie stall hell 1-1 II mLv 50 · party Lv 50 ilvl 48.54 · at exp 74.0 h
+  seed  31 prie/mage/warr stall hell 3-3 II mLv 50 · party Lv 50 ilvl 49.54 · at exp 261.5 h
+  seed  33 knig/arch/warr stall hell 2-2 II mLv 50 · party Lv 50 ilvl 50 · at exp 91.8 h
+  seed  35 knig/mage/arch stall hell 1-3 III mLv 50 · party Lv 50 ilvl 49.38 · at exp 81.2 h
+  seed  36 warr/mage/knig stall hell 1-4 I mLv 50 · party Lv 50 ilvl 49.88 · at exp 93.7 h
+  seed  39 arch/mage/knig stall hell 1-1 I mLv 50 · party Lv 50 ilvl 47.67 · at exp 41.3 h
+  seed  40 arch/knig/mage stall hell 2-2 I mLv 50 · party Lv 50 ilvl 50 · at exp 83.0 h
+
+## where the time goes — median share of the tier (finished tiers)
+  normal: 5-2 I 14% · 5-2 II 2% · 4-4 I 2% · 4-3 I 2% · 5-2 III 2% · 4-1 II 1%
+  nightmare: 3-4 I 11% · 1-3 I 6% · 5-2 I 4% · 4-3 I 3% · 4-4 III 3% · 1-3 II 2%
+  hell: 1-3 I 12% · 1-1 I 7% · 5-2 I 3% · 1-4 III 2% · 1-1 II 2% · 5-3 II 1%
+
+## level cap — first cell clear with party avg Lv >= cap-0.5
+  hell 1-1 I 11 · hell 1-1 II 6 · hell 1-2 I 4 · hell 1-3 I 3 · hell 1-4 III 1 · nightmare 4-4 II 1 | reached 30/40 · user h 41.2 [28.4 ~ 59.4]
+
+## drops by rarity per tier (all seeds, all runs)
+  normal: normal 6660 · magic 2715 · rare 787
+  nightmare: normal 13664 · magic 7616 · rare 3328 · epic 1724
+  hell: normal 27544 · magic 22989 · rare 15452 · epic 3985 · legendary 2012
+
+## feature counters (median per seed) — each must be > 0
+  box 53.0 (min 50) · boxFail 0.0 (min 0) · autoMoves 197.0 (min 109) · accSwap 133.0 (min 18) · salvage 2860.0 (min 705) · mastery 147.0 (min 134) · potion 53373.0 (min 9174)
+  end weapon/armor up: Counter({6: 600})

@@ -64,6 +64,10 @@ const INTRO_FROM_T = 0.5;
 const INTRO_ART = 'assets/art/fx/ui/stage_banner.webp';
 let introArt = null;   // 그림을 읽었나 — null 모름 · true · false. 모를 땐 그림으로 건다(첫 런 전에 거의 다 읽힌다)
 { const img = new Image(); img.onload = () => { introArt = true; }; img.onerror = () => { introArt = false; }; img.src = INTRO_ART; }
+/* 상태이상 초상 표시 (SCREEN_DESIGN §4-2 「초상 빛깔 · 스턴 별」 · ADR-0936) — 물드는 상태이상과 그 순서(결빙 › 화상 › 중독) · 스턴 별 그림.
+   색은 style.css `--ail-<열쇠>` 가 든다 */
+const AIL_TINTS = ['freeze', 'burn', 'poison'];
+const STUN_STAR_ART = 'assets/art/fx/ui/stun_star.webp';
 
 const kindLabel = k => t(`kind.${k}`);
 /* 스킬 아이콘 그림 — `app.js:skillImg` 와 같은 규칙이다 (SCREEN_DESIGN §2). 두 파일이 서로를 import 하지
@@ -1064,6 +1068,9 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'taunt': return 'bt.effect.taunt';
             // 기본 스킬 50 의 창 (2026-10-16)
             case 'phys_pct': return v < 0 ? 'bt.effect.phys.down' : 'bt.effect.phys.up';
+            // 적 데미지 감소 디버프 — 최종 피해에 곱 (2026-10-28 · R368)
+            case 'final_dmg_pct': return v < 0 ? 'bt.effect.dmg.down' : 'bt.effect.dmg.up';
+            case 'final_phys_pct': return v < 0 ? 'bt.effect.phys.down' : 'bt.effect.phys.up';
             case 'basic_pct': return v < 0 ? 'bt.effect.basic.down' : 'bt.effect.basic.up';
             case 'frenzy': return 'bt.effect.frenzy';
             case 'evade': return 'bt.effect.evade';
@@ -1097,6 +1104,43 @@ function effectTipCard({ owner, info = null, name = '', stat = null, value = 0, 
 }
 
 /**
+ * 상태이상 초상 표시 (SCREEN_DESIGN §4-2 「초상 빛깔 · 스턴 별」 · ADR-0936) — 칩 줄과 같은 지문이 바뀔 때만 간다.
+ * 결빙 · 화상 · 중독 = 인물 모양 색 겹(`.ail-tint` — 초상 그림이 가림막 · 원색 ↔ 색 깜빡임 · 여럿이면 번갈아 · `data-n` = 색 수).
+ *   걸린 색이 바뀌면 겹을 새로 세운다 — 깜빡임이 원색부터 다시 시작한다(카드마다 걸린 순간이 달라 판 전체가 한 박자로 안 깜빡인다).
+ * 스턴 = 초상 윗부분의 검은 선 + 그 선을 도는 별 셋(`.stun-mark` — 궤도 · 회전은 CSS · 관전 배속 `--fx-k`). 경직은 칩만이다.
+ * 재생기는 계산하지 않는다 — 켜진 창의 상태이상 열쇠(`k`)만 읽는다. 쓰러지면 `live` 가 비어 둘 다 걷힌다
+ */
+function refreshAilmentLook(u, live) {
+    const sprite = u.node?.querySelector('.sprite');
+    if (!sprite) return;
+    const keys = new Set(live.map(([, b]) => b?.k).filter(Boolean));
+    const tints = AIL_TINTS.filter(k => keys.has(k));
+    const img = sprite.querySelector('img');
+    let tint = sprite.querySelector('.ail-tint');
+    const tintSig = tints.join(',');
+    if (!tints.length || !img) tint?.remove();
+    else if (tint?.dataset.sig !== tintSig) {
+        tint?.remove();
+        tint = document.createElement('i');
+        tint.className = 'ail-tint';
+        tint.dataset.sig = tintSig;
+        tint.dataset.n = String(tints.length);
+        // 절대 주소로 건다 — 변수 속 상대 `url()` 은 변수를 쓰는 style.css 기준으로 풀려 가림막이 비고 겹이 통째로 안 보인다
+        tint.style.setProperty('--face', `url("${img.src}")`);
+        tints.forEach((k, i) => tint.style.setProperty(`--c${i}`, `var(--ail-${k})`));
+        sprite.appendChild(tint);
+    }
+    const mark = sprite.querySelector('.stun-mark');
+    if (!keys.has('stun')) mark?.remove();
+    else if (!mark) {
+        const m = document.createElement('div');
+        m.className = 'stun-mark';
+        m.innerHTML = '<i></i>' + `<b><img src="${STUN_STAR_ART}" alt=""></b>`.repeat(3);
+        sprite.appendChild(m);
+    }
+}
+
+/**
  * 창 뱃지 줄 — 걸려 있는 창 하나 = 칩 하나. 칩은 그 창을 만든 스킬의 아이콘이고 이름·실제 적용 효과·남은 시간은 전용 툴팁이 든다.
  * **이로운 창은 초록 · 해로운 창은 빨강** 테두리 — 가르는 것은 창의 값 부호다(`buff` 이벤트의 `v`).
  * ⚠ 지금 도는 창 4종은 전부 이로워서 빨강은 아직 안 켜진다 (skill.csv · SCREEN_DESIGN §4-2).
@@ -1118,6 +1162,7 @@ function refreshBuffs(u, now) {
         + (stag ? `|stagger:${stagUntil}` : '');
     if (row.dataset.sig === sig) return;      // 안 바뀌었으면 손대지 않는다 — 매 틱 다시 그리는 자리다
     row.dataset.sig = sig;
+    refreshAilmentLook(u, live);
     // 이 유닛의 칩을 갈아 끼우면 떠 있던 툴팁의 앵커가 DOM에서 빠진다. 유령 툴팁으로 남기지 않는다.
     const open = document.querySelector('#tooltip .effect-tip');
     if (open?.dataset.effectOwner === String(u.key)) hideTip();

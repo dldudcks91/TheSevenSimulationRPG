@@ -286,6 +286,14 @@ const STRINGS = {
     'exp.diff.need': { ko: '{d} {ch}장 보스 클리어', en: 'Clear the {d} Ch{ch} boss', lock: true },
     /* 칸 한 줄 — 출정 창 머리의 잔글씨 [개정 2026-10-17 · SCREEN_DESIGN §4-1 · ADR-0649 — 소요 · 원소를 걷어 레벨만]. {lv} = 고른 난이도의 몬스터 레벨 */
     'exp.stageMeta': { ko: '레벨 {lv}', en: 'Level {lv}' },
+    /* 출정 창 머리의 헬 장 디버프 한 줄 [2026-10-28 · SCREEN_DESIGN §4-1 · ADR-0935] — {sin} = 그 장 죄종 이름 · {fx} = 아래 효과 한 마디.
+       효과 값은 그 칸의 값(챕터보스 칸은 배수) — {v} = 값 % · {i} = 거는 간격 초 · {d} = 거는 시간 초 · {c} = 폭식 상한 % */
+    'exp.debuffLine': { ko: '{sin} — {fx}', en: '{sin} — {fx}' },
+    'exp.debuff.taken_pct': { ko: '받는 피해 +{v}%', en: 'Damage taken +{v}%' },
+    'exp.debuff.poison': { ko: '{i}초마다 중독 {d}초 · 초당 최대 체력의 {v}%', en: 'Poison for {d}s every {i}s · {v}% of max HP per second' },
+    'exp.debuff.heal_cut': { ko: '받는 회복 −{v}%', en: 'Healing received −{v}%' },
+    'exp.debuff.freeze': { ko: '{i}초마다 결빙 {d}초 · 행동 속도 −{v}%', en: 'Freeze for {d}s every {i}s · Action speed −{v}%' },
+    'exp.debuff.feast': { ko: '몬스터 데미지 초당 +{v}% · 최대 +{c}%', en: 'Monster damage +{v}% per second · up to +{c}%' },
     /* 장소 줄 잔글씨 맨 앞의 레벨 — `Lv23` [2026-10-21 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0710 · ADR-0711]. {lv} = 칸 I 의 고른 난이도 몬스터 레벨(숫자 하나 — ~~범위~~) */
     'exp.placeLv': { ko: 'Lv{lv}', en: 'Lv{lv}' },
     /* 장소 줄 잔글씨의 챕터보스 이름 — 「분노의 사탄」 [2026-10-17 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0649]. {sin} = 죄종 이름 · {name} = 몬스터 이름 */
@@ -1180,6 +1188,9 @@ const STRINGS = {
     //   위의 `ch.lv`(영웅 레벨)와 글자가 같아도 가리키는 것이 달라 키를 나눈다
     'ch.itemLv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
+    // 스킬 우선순위 — 소제목 오른쪽 끝 버튼 · 그 버튼이 여는 창의 제목 (SCREEN_DESIGN §6 · ADR-0937)
+    'ch.skill.order': { ko: '우선순위', en: 'Priority' },
+    'ch.skill.orderH': { ko: '스킬 우선순위', en: 'Skill Priority' },
     'ch.skill.go': { ko: '마스터리 열기', en: 'Open Mastery' },
     'ch.items.h': { ko: '아이템', en: 'Items' },
 
@@ -1786,7 +1797,11 @@ const STRINGS = {
     'cx.lv.strip': { ko: '방어 깎기', en: 'Defense strip' },   // decay_pct — 가이디드(방어가 가장 두꺼운 적)는 그 적의 방어를 깎는 비율이다
     'cx.lv.dur': { ko: '지속 시간', en: 'Duration' },   // duration_sec
     'cx.lv.value': { ko: '효과', en: 'Effect' },   // effect_value — 걸린 효과의 값(왼쪽 장의 문장이 그 효과를 말한다 · ADR-0680)
+    // 레벨 줄이 둘인 스킬(워 오더스 · 2026-10-28 R367)은 「효과」 두 줄이 안 갈려 걸린 효과의 수치 이름을 든다
+    'cx.lv.def': { ko: '방어력', en: 'Defense' },   // effect_value · def_pct
+    'cx.lv.resAll': { ko: '모든 저항', en: 'All Resistances' },   // effect_value · res_pct
     'cx.lv.cool': { ko: '쿨타임', en: 'Cooldown' },   // cool_sec
+    'cx.lv.hitsAt': { ko: 'Lv {l} 에 +1번', en: '+1 at Lv {l}' },   // hits — 단계가 정수가 아니면 한 타가 느는 레벨(러시 · 2026-10-28 R374)
     'cx.note': {
         ko: '그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 보너스 효과가 하나씩 열립니다 — 앞 단계(처치 경험치 · 상대 피해 · 드롭 확률)는 <b>그 몬스터에게만</b> · 마지막 단계는 <b>그 몬스터의 전투 옵션 하나가 파티 전원에게</b> 늘 붙습니다 — <b>파밍이 도감을 밉니다</b><br>'
             + '처치 하나의 도감 경험치는 그 원정의 난이도가 정합니다 — 높은 난이도일수록 빨리 찹니다 · 이긴 라운드의 처치만 셉니다 · 보스 등급별 차등은 후속<br>'
@@ -1973,6 +1988,9 @@ const STRINGS = {
     // 기본 스킬 50 의 창 [2026-10-16] — {v} = % · {n} = 횟수 · {e} = 원소
     'bt.effect.phys.up': { ko: '물리 데미지 {v}% 증가', en: 'Physical damage +{v}%' },
     'bt.effect.phys.down': { ko: '물리 데미지 {v}% 감소', en: 'Physical damage −{v}%' },
+    // 적 데미지 감소 디버프 — 최종 피해에 곱 (final_dmg_pct · 2026-10-28 R368)
+    'bt.effect.dmg.up': { ko: '데미지 {v}% 증가', en: 'Damage +{v}%' },
+    'bt.effect.dmg.down': { ko: '데미지 {v}% 감소', en: 'Damage −{v}%' },
     'bt.effect.basic.up': { ko: '기본 공격 피해 {v}% 증가', en: 'Basic attack damage +{v}%' },
     'bt.effect.basic.down': { ko: '기본 공격 피해 {v}% 감소', en: 'Basic attack damage −{v}%' },
     'bt.effect.frenzy': { ko: '때릴 때마다 공격 속도 {v}% 씩 증가', en: 'Attack Speed +{v}% per hit' },

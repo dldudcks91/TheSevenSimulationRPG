@@ -1,10 +1,11 @@
 status_id,stat,value,duration_sec,element,round_end,ailment,hit_status,note
-war_shout,guard_pct,0.25,10,-,keep,-,-,-
-war_battleorders,hp_max_pct,0.2,12,-,keep,-,-,-
-war_ironskin,def_pct,0.4,10,-,keep,-,-,-
+war_shout,def_pct,0.25,10,-,keep,-,-,워 오더스 첫 줄 — 방어력 % · ~~guard_pct(방어 + 모든 저항을 한 값으로)~~ 2026-10-28 두 줄로 나눴다 · ⚠값 임시
+war_shout_res,res_pct,0.15,10,-,keep,-,-,워 오더스 둘째 줄 — 모든 원소 저항 %p · 시간은 첫 줄과 같게 둔다 · ⚠값 임시 2026-10-28
+war_battleorders,hp_max_pct,0.1,10,-,keep,-,-,⚠값 임시 2026-10-28
+war_ironskin,def_pct,1,10,-,keep,-,-,-
 war_frenzy,frenzy,0.04,10,-,keep,-,-,겹마다 공속 — 겹은 직격 적중마다 +1 · 상한 [balance.csv:frenzy_stack_max] · ⚠값 임시 2026-10-16
-war_warcry,phys_pct,-0.2,10,-,keep,-,-,물리 타격의 데미지 % — 적에게 음수 · ⚠값 임시 2026-10-16
-war_battlecry,def_pct,-0.25,10,-,keep,-,-,방어값 % — 적에게 음수 · ⚠값 임시 2026-10-16
+war_warcry,final_phys_pct,-0.1,10,-,keep,-,-,물리 직격의 최종 피해 % — 적에게 음수 · 곱 · ~~phys_pct(데미지 % 괄호)~~ 2026-10-28 R368 · ⚠값 임시
+war_battlecry,def_pct,-0.25,10,-,keep,-,-,방어값 % — 적에게 음수 · 감소는 곱(2026-10-28 R370) · ⚠값 임시
 kni_holyshield,barrier_pct,0.25,10,-,keep,-,-,-
 kni_resistshield,res_pct,0.4,10,-,keep,-,-,-
 kni_enchant,onhit_element,0.6,10,fire,keep,-,-,-
@@ -18,13 +19,13 @@ arc_evade,evade,2,10,-,keep,-,-,받는 직격 횟수(반올림 · 최소 1) · �
 pri_grace,atk_pct,0.25,8,-,keep,-,-,-
 pri_haste,period_pct,0.2,8,-,keep,-,-,-
 pri_regen,regen_pct,0.6,12,-,keep,-,-,-
-pri_penitence,atk_pct,-0.25,10,-,keep,-,-,-
+pri_penitence,final_dmg_pct,-0.25,10,-,keep,-,-,직격의 최종 피해 % — 적에게 음수 · 곱 · ~~atk_pct 음수~~ 2026-10-28 R368 · ⚠값은 곱으로 다시 잰다(사제 차례)
 pri_bind,period_pct,-0.2,10,-,keep,-,-,-
 pri_doom,dr_pct,-0.15,10,-,keep,-,-,받는 피해 감소 — 적에게 음수(받는 피해 증가) · ⚠값 임시 2026-10-16
 war_ragnarok,atk_pct,0.35,10,-,keep,-,-,-
 war_berserk,atk_pct,0.4,8,-,keep,-,-,-
 war_command,atk_pct,0.3,10,-,keep,-,-,-
-war_intimidate,atk_pct,-0.25,10,-,keep,-,-,-
+war_intimidate,final_dmg_pct,-0.25,10,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
 kni_lastbastion,dr_pct,0.25,10,-,keep,-,-,-
 kni_unbreakablewill,dr_pct,0.3,10,-,keep,-,-,-
 kni_divinejudgment,barrier_pct,0.4,10,-,keep,-,-,-
@@ -41,10 +42,10 @@ arc_overdraw,period_pct,-0.4,10,-,keep,-,-,오버드로우 첫 줄 — 주기가
 arc_overdraw_power,basic_pct,0.7,10,-,keep,-,-,오버드로우 둘째 줄 — 평타 피해 % · ⚠값 임시 2026-10-16
 arc_fulldraw,atk_pct,0.45,10,-,keep,-,-,-
 arc_chaindraw,attack_splash,0.75,10,-,keep,-,-,-
-arc_huntersmark,atk_pct,-0.2,10,-,keep,-,-,-
+arc_huntersmark,final_dmg_pct,-0.2,10,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
 arc_supportingfire,atk_pct,0.2,10,-,keep,-,-,-
 pri_aegis,barrier_pct,0.45,10,-,keep,-,-,-
-pri_atonement,atk_pct,-0.15,12,-,keep,-,-,-
+pri_atonement,final_dmg_pct,-0.15,12,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
 pri_diamondbody,dr_pct,0.3,10,-,keep,-,-,-
 pri_counter,barrier_pct,0.35,10,-,keep,-,-,-
 freeze,period_pct,-0.25,3,-,keep,freeze,-,결빙 — 공속 감소(battle_design §2-4) · 아이스 블라스트 · 프로스트 노바의 타격 줄이 맞은 대상에게 건다 · id 가 곧 상태이상 이름(skill_effects.js:AILMENTS) — 어느 스킬이 걸어도 창 하나 · ⚠값 임시 2026-09-28 R177

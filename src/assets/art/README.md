@@ -311,7 +311,11 @@ fx_source/material_20261017/   보존한 금속박 원본·프롬프트와 이�
 fx_source/world_styles_20261012/sheet_darktoon_*.png  보존한 다크 카툰 원본
 fx/ui/stage_banner.webp         관전 스테이지 띠의 붓 한 획 — 흰색 + 알파(모양만) · 2026-10-18
 fx_source/stage_banner_20261018/ 그 원본(Codex 생성 · 흰 바탕 먹) · 프롬프트 · 안 고른 시안 unused_*
+fx/ui/stun_star.webp            스턴 별(녹슨 쇠) — 관전 카드 초상 위 선을 도는 별 · 128px 알파 · 2026-10-28
+fx_source/stun_star_20261028/   그 원본(Codex 다크 카툰 2×2 · 왼쪽 위 칸) · 프롬프트 · 안 고른 시안 unused_*
 ```
+
+**스턴 별**(SCREEN_DESIGN §4-2 「초상 빛깔 · 스턴 별」 · ADR-0936)은 한 장을 화면에서 14px 로 세 번 쓴다 — 궤도 · 회전은 CSS 다. 원본을 갈면 시트 왼쪽 위 사분면을 알파 경계로 잘라 긴 변 128 WebP q90(절차는 원본 폴더 README).
 
 **스테이지 띠**(SCREEN_DESIGN §4-2 · ADR-0663)는 그림을 **모양(mask)으로만** 쓴다 — 색은 CSS 가 챕터 죄종 색으로 칠한다. 원본을 갈면 `python scripts/build_stage_banner.py`(먹의 짙기 → 알파 · 먹 둘레로 자르기 · 폭 1600 WebP).
 

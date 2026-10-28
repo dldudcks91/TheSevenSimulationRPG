@@ -631,10 +631,11 @@ export function createItemSystem(data) {
      * 몬스터가 **입고 있는** 장비가 이것이고, 처치 드롭은 그중 하나가 **그대로** 나간다(2단계 = 입은 부위 중 하나).
      * rng 소비 순서(계약 — INTERFACE §5-2): 부위 배열 순서대로 — (`ilvlSpread > 0` 이면) 아이템 레벨 1 → 베이스(무기는 `weaponGroup` 을 주면 **0회**) → 희귀도 1 → `build`.
      *   ⚠ **부위 배열 순서가 계약이다** — 같은 부위 묶음이라도 순서가 바뀌면 같은 시드가 다른 한 벌을 낸다.
-     * @param opts `{slots, ilvl, ilvlSpread?, ilvlMax?, magicFind?, weaponGroup?, itemBase?, weaponBase?, rarityWeights?}`
+     * @param opts `{slots, ilvl, ilvlSpread?, ilvlMax?, ilvlMin?, magicFind?, weaponGroup?, itemBase?, weaponBase?, rarityWeights?}`
      *   · `ilvlSpread` 아이템 레벨의 반폭(정수) — 부위마다 `ilvl ± ilvlSpread` 에서 균등 1회 · 하한 1 [2026-10-06 · item_design §1 3단계].
      *     몬스터 장비만 넘긴다(`battle.spawnRound`) — 없거나 0 이면 굴리지 않아 제작 · 상단 · 시작 장비의 수열이 그대로다
      *   · `ilvlMax` 아이템 레벨의 위 끝 — 넘으면 이 값으로 자른다 · 소비 불변. 몬스터 장비만 넘긴다(그 몬스터의 레벨 · 2026-10-24)
+     *   · `ilvlMin` 아이템 레벨의 아래 끝 — 위 끝으로 자른 뒤 모자라면 이 값으로 올린다 · 소비 불변. 몬스터 장비만 넘긴다(단이 고정하면 그 몬스터의 레벨 — 헬 · 2026-10-28 · R366)
      *   · 아이템 레벨의 천장은 언제나 만렙 `[balance.csv:hero_level_cap]` — 어느 경로(드롭 · 상단 · 제작 · 탐험 · 상자 · 결투장)든 넘치면 자른다 (2026-10-24)
      *   · `magicFind` 파티 평균(비율) — 레어 이상 가중치에 곱한다(~~`rareBonusPct` 등급이 같은 채널로 더 밀던 자리~~ 2026-10-24 R350 퇴역 — 등급 차는 희귀도 표의 행이 낸다)
      *   · `weaponGroup` 무기군 고정. 몬스터는 제 무기군(`monster.csv:weapon_group`)을 들고, 안 주면 본편 무기군에서 굴린다
@@ -652,8 +653,10 @@ export function createItemSystem(data) {
             // 아이템 레벨 — 반폭을 받으면 **부위마다** 가운데 ± 반폭에서 균등 1회 (2026-10-06 · item_design §1 3단계).
             //   레벨 1 은 아이템 레벨의 바닥이라 그 아래로 굴러가면 1 로 세운다(INTERFACE §5-3) · 반폭이 없으면 굴리지 않는다
             //   위 끝을 넘으면 자른다 — 천장은 만렙 · 몬스터는 그 아래 제 레벨(`ilvlMax`)을 넘는 장비를 못 입는다(2026-10-24 · 굴림 수 불변)
+            //   아래 끝(`ilvlMin`)을 받으면 그 뒤에 올린다 — 헬 몬스터는 굴린 값과 무관하게 제 레벨을 입는다(2026-10-28 · R366 · 굴림 수 불변)
             const raw = spread > 0 ? Math.max(1, opts.ilvl - spread + Math.floor(rng() * (2 * spread + 1))) : opts.ilvl;
-            const ilvl = Math.min(opts.ilvlMax ?? Infinity, B.hero_level_cap, raw);
+            const top = Math.min(opts.ilvlMax ?? Infinity, B.hero_level_cap, raw);
+            const ilvl = opts.ilvlMin !== undefined ? Math.max(opts.ilvlMin, top) : top;
             // 무기군을 지정받으면 굴리지 않는다 — 그 몬스터가 어느 무기를 드는지는 데이터가 정한다(드롭 편향의 단위)
             // 무기 외는 **그 ilvl 의 티어 행**에서 굴린다(2026-09-18) — 후보만 좁고 소비는 1회 그대로다 · `itemBase` 를 받으면 굴리지 않는다(제작 · 2026-09-21)
             const base = slot === 'weapon'
