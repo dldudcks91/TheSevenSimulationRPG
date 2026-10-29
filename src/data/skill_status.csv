@@ -21,9 +21,9 @@ arc_coldarrow,onhit_element,0.4,10,cold,keep,-,freeze,덤 창 — 냉기 추가�
 arc_quickhands,period_pct,0.2,10,-,keep,-,-,자기 공속 · ⚠값 임시 2026-10-29 R383
 arc_eagleeye,phys_pct,0.2,10,-,keep,-,-,자기 물리 데미지 % · ⚠값 임시 2026-10-29 R383
 arc_evade,evade,2,10,-,keep,-,-,받는 직격 횟수(반올림 · 최소 1) · ⚠값 임시 2026-10-16
-pri_grace,atk_pct,0.25,8,-,keep,-,-,-
-pri_haste,period_pct,0.2,8,-,keep,-,-,-
-pri_regen,regen_pct,0.6,12,-,keep,-,-,-
+pri_grace,atk_pct,0.25,10,-,keep,-,-,-
+pri_haste,period_pct,0.2,10,-,keep,-,-,-
+pri_regen,regen_flat,1,10,-,keep,-,-,HP 재생 + 수치(초당 · 장비 「체력 재생」과 같은 단위 · ~~재생 % regen_pct 0.6~~ 2026-10-29) · ⚠값 임시
 pri_penitence,final_dmg_pct,-0.25,10,-,keep,-,-,직격의 최종 피해 % — 적에게 음수 · 곱 · ~~atk_pct 음수~~ 2026-10-28 R368 · ⚠값은 곱으로 다시 잰다(사제 차례)
 pri_bind,period_pct,-0.2,10,-,keep,-,-,-
 pri_doom,dr_pct,-0.15,10,-,keep,-,-,받는 피해 감소 — 적에게 음수(받는 피해 증가) · ⚠값 임시 2026-10-16

@@ -1023,7 +1023,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'tavern_join_slots', 'visit_hours', 'visit_rare_base_pct',   // 수색 (2026-10-19 · ~~visit_rare_per_level_pct · visit_level_gold~~ 2026-10-21 지점)
         'trade_visit_hours', 'trade_stay_hours', 'shop_equip_per_slot', 'shop_equip_weapon', 'shop_price_normal', 'shop_price_magic', 'shop_price_rare', 'shop_price_step_levels', 'shop_price_step_mult', 'shop_reroll_cost', 'shop_refresh_hours', 'shop_book_count', 'shop_book_gold', 'shop_potion_bulk_1', 'shop_potion_bulk_2', 'shop_potion_bulk_3',
         'hero_level_cap', 'concurrent_expedition_parties', 'active_slots', 'skill_cd_floor_mult', 'cast_charge_max', 'skill_decay_cap_pct',
-        'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level',
+        'mastery_point_per_level', 'mastery_t1_max_rank', 'mastery_t2_unlock_level', 'growth_attr_per_level',
         // 죄종 마스터리 T2 · 파티 정산 체감 (2026-10-05 — 노드 값 키는 mastery_node 단정이 따로 본다)
         'mastery_t2_sin_gear_min', 'mastery_t2_hp_threshold_pct', 'mastery_sloth_t2_tick_sec', 'mastery_sloth_t2_max_stack',
         'mastery_greed_t3_input_cap',   // 탐욕 T3 의 탐욕 합 상한 (2026-10-24 · R325)
@@ -2591,6 +2591,46 @@ check('xp: 레벨업해도 기본 능력치는 안 바뀐다 — gains 는 비�
     if (Object.keys(lu.gains).length !== 0) fail(`gains ${JSON.stringify(lu.gains)}`);
     if (calls !== 0) fail(`rng ${calls}회 소비`);
     return `Lv ${lu.from}→${lu.to} · 능력치 불변 · rng 0회`;
+});
+// 고블린 성장 [2026-10-29 · R365 · hero_design §1] — 레벨마다 상한 미만 칸 하나가 growth_attr_per_level 자란다 · 굴림은 제 씨앗(인자 rng 0회)
+check('xp: 성장 고블린은 레벨마다 한 칸이 자란다 — 상한 안 · 인자 rng 0회 · 나눠 올려도 같은 칸 · 옛 세이브는 씨앗만 (R365)', () => {
+    const g = SYS.game.newGame(99, cands, NOW);
+    const gob = g.heroes.at(-1);
+    if (gob.tier !== 'growth' || !Number.isInteger(gob.growthSeed)) fail(`씨앗 ${gob.growthSeed}`);
+    const sum = st => Object.values(st).reduce((a, b) => a + b, 0);
+    const h = JSON.parse(JSON.stringify(gob)), sum0 = sum(h.stats);
+    const base = makeRng(3);
+    let calls = 0;
+    const lu = SYS.hero.grantXp(h, 100000, () => { calls += 1; return base(); });
+    if (!(lu && lu.to > lu.from)) fail('no levelup');
+    const grew = sum(lu.gains);
+    if (grew !== (lu.to - lu.from) * B.growth_attr_per_level || sum(h.stats) - sum0 !== grew) fail(`Lv ${lu.from}→${lu.to} 합 ${sum0}→${sum(h.stats)} · gains ${grew}`);
+    if (Object.values(h.stats).some(v => v > B.hero_attr_max)) fail('상한을 넘었다');
+    if (calls !== 0) fail(`인자 rng ${calls}회`);
+    // 한 레벨씩 올려도 같은 칸 — 레벨이 굴림을 정한다(원정 · 연구소 · 관리자 어느 길이든)
+    const step = JSON.parse(JSON.stringify(gob));
+    while (step.level < h.level) SYS.hero.grantXp(step, SYS.hero.xpNeeded(step.level) - step.xp, null);
+    if (!eq(step.stats, h.stats)) fail(`나눠 올림 ${JSON.stringify(step.stats)} ≠ ${JSON.stringify(h.stats)}`);
+    // 상한 — 한 칸만 비면 그 칸으로만 · 다 차면 멈춘다
+    const cap = JSON.parse(JSON.stringify(gob));
+    for (const id of Object.keys(cap.stats)) cap.stats[id] = B.hero_attr_max;
+    cap.stats.str = B.hero_attr_max - 1;
+    const lc = SYS.hero.grantXp(cap, 100000, null);
+    if (cap.stats.str !== B.hero_attr_max || Object.keys(lc.gains).join() !== 'str') fail(`상한 ${JSON.stringify(lc.gains)}`);
+    // 옛 세이브 — 씨앗이 없으면 로드가 새 게임과 같은 값으로 채우고, 지난 레벨은 소급하지 않는다(사용자 결정)
+    const old = SYS.game.serialize(g, NOW);
+    delete old.heroes.at(-1).growthSeed;
+    old.heroes.at(-1).level = 8;
+    const back = SYS.game.deserialize(old).heroes.at(-1);
+    if (back.growthSeed !== gob.growthSeed) fail('로드가 채운 씨앗이 다르다');
+    if (!eq(back.stats, gob.stats)) fail('로드가 지난 레벨을 소급했다');
+    // 씨앗 없는 성장 영웅은 던진다 — 조용히 안 자라면 못 찾는다
+    const bare = JSON.parse(JSON.stringify(gob));
+    delete bare.growthSeed;
+    let threw = false;
+    try { SYS.hero.grantXp(bare, 100000, null); } catch { threw = true; }
+    if (!threw) fail('씨앗 없이 레벨이 올랐다');
+    return `Lv ${lu.from}→${lu.to} · +${grew} ${JSON.stringify(lu.gains)} · 인자 rng 0회`;
 });
 
 /* ── 마스터리 (skill_design §3-1~§3-4 확정 2026-08-28) ── */
@@ -7682,7 +7722,7 @@ check('skill: 어휘 — owner_kind/cast/effect/target/걸린 효과 stat/cast_c
         'self', 'party', 'ally_single', 'party_adjacent', 'enemy_hp_max'];      // enemy_hp_max — 적에게 거는 창의 「HP 최대」(2026-09-24 R151)
     // 2026-10-16 기본 스킬 50 — 물리 % · 평타 % · 방어 % · 프렌지 · 이베이드 · 원소 부여 · 오오라 피해 · 에코 · 상태이상 셋(화상 · 스턴은 원소 부여가 건다 — 스턴은 리프 어택의 타격 줄도 · 2026-10-28 R371)
     const STAT = ['atk_pct', 'barrier_pct', 'period_pct', 'taunt', 'guard_pct', 'hp_max_pct',
-        'regen_pct', 'dr_pct', 'onhit_element', 'attack_splash', 'duel',
+        'regen_pct', 'regen_flat', 'dr_pct', 'onhit_element', 'attack_splash', 'duel',   // regen_flat = 재생 + 수치(프레이어 · 2026-10-29)
         'phys_pct', 'basic_pct', 'def_pct', 'frenzy', 'evade', 'imbue', 'pulse', 'echo',
         'res_pct',   // 전 원소 저항 — 레지스탕스 실드 (2026-10-16)
         'final_dmg_pct', 'final_phys_pct',   // 적 데미지 감소 디버프 — 최종 피해에 곱 (2026-10-28 R368)

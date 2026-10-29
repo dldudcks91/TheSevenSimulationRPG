@@ -47,7 +47,7 @@ import { t, L } from './i18n.js';
 import { DEV_HOST } from './env.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip } from './tip.js';
 import { paceAt, paceStep, paceCfg, actorOf, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
-import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
+import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, fxArriveMark, fxArrive, fxRoundClear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 /** 배속 버튼 — 배포 주소는 ×2 까지 · 개발 환경은 ×4 · ×16 도(×16 은 2026-10-05 사용자 지시) (SCREEN_DESIGN §4-2 · ADR-0755).
  *  배속은 화면 상태뿐이고 바꾸는 길은 이 버튼들뿐이라 목록이 곧 상한이다 */
@@ -235,6 +235,7 @@ export function mountBattle(container, opts) {
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
         teamPane: opts.teamPane ?? null,   // 두 팀 누적 판의 자리(결투 관전) — 있으면 상대 진영도 쌓는다 (ADR-0769)
+        arrive: stageId != null,   // 새 라운드의 적이 먼 곳에서 다가온다 — 원정만(결투는 스테이지가 없다 · 제자리에 선다) (ADR-0948)
         // 두 팀 판의 보기 — rows(요약) | cols(스킬별) · 취향이라 앱의 화면 상태가 들고 `onTeamView` 로 돌려받는다 (ADR-0772)
         teamView: opts.teamView === 'cols' ? 'cols' : 'rows', onTeamView: opts.onTeamView ?? null,
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않고 DOM 도 안 만진다(끝에 `paintCaughtUp` 이 한 번 그린다)
@@ -879,6 +880,7 @@ function renderUnits(state, root) {
             cell.insertAdjacentHTML('beforeend', '<div class="buff-row"></div>');
             u.buffRow = cell.lastElementChild;
             side.appendChild(cell);
+            fxArrive(state, u);   // 다가오는 중인 적 — 불러내기로 다시 지어도 지난 만큼에서 이어 간다 (ADR-0948)
         }
     }
 }
@@ -1075,7 +1077,7 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'res_elem': return v < 0 ? 'bt.effect.res.down' : 'bt.effect.res.up';
             case 'res_pct': return v < 0 ? 'bt.effect.resAll.down' : 'bt.effect.resAll.up';
             case 'hp_max_pct': return v < 0 ? 'bt.effect.hp.down' : 'bt.effect.hp.up';
-            case 'regen_pct': return v < 0 ? 'bt.effect.regen.down' : 'bt.effect.regen.up';
+            case 'regen_pct': case 'regen_flat': return v < 0 ? 'bt.effect.regen.down' : 'bt.effect.regen.up';
             case 'dr_pct': return v < 0 ? 'bt.effect.taken.up' : 'bt.effect.taken.down';
             case 'onhit_element': return 'bt.effect.onhit';
             case 'attack_splash': return 'bt.effect.splash';
@@ -1643,6 +1645,7 @@ function drain(state, root, opts) {
         if (state.ended) break;
     }
     syncFocus(state, root, opts);   // 끝난 판이면 걷기만 한다 — 나간 카드가 남지 않게
+    fxRoundClear(state, root);      // 라운드 숨 동안 적 줄을 비운다 — 다음 `round` 가 새 카드를 지은 뒤 같은 걸음에 걷힌다 (ADR-0948)
 }
 
 /**
@@ -1692,6 +1695,7 @@ function apply(state, root, opts, ev) {
             for (const e of state.enemies) state.units.delete(e.key);
             state.enemies = ev.enemies.map(e => enemyEntry(e, ev.t));
             for (const e of state.enemies) state.units.set(e.key, e);
+            if (state.arrive) fxArriveMark(state, state.enemies);   // 원정의 새 적은 먼 곳에서 다가온다 — 카드를 짓기 전에 단다 (ADR-0948)
             if (state.teamPane) { for (const e of state.enemies) dmgEntry(state, e); state.dmgDirty = true; }   // 두 팀 판 — 상대도 0 부터 찍는다 (ADR-0769)
             // 전투 시작 시 행동 게이지(R303) — 원정의 라운드가 바뀌면 파티 게이지가 그 초만큼 앞당겨진다. 시뮬이 실어 온 값을 그대로 민다(계산하지 않는다)
             for (const [k, s] of Object.entries(ev.pg ?? {})) { const u = state.units.get(k); if (u) u.lastAct -= s; }

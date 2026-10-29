@@ -2619,6 +2619,9 @@ html, body { height: 100%; overflow: hidden; }
 /* 불러낸 무리 — 떠오르며 선다 */
 .unit-slot.fx-appear { animation: fx-appear calc(380ms * var(--fx-k, 1)) ease-out backwards; }
 @keyframes fx-appear { 0% { transform: translateY(12px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+/* 라운드 사이 — 마지막 적이 쓰러지면 적 카드가 사라지고 숨 동안 빈 줄이 선다 (ADR-0948). 사라지는 0.45초는 숨 길이(pace.js:ROUND_GAP_MS 0.95초 =
+   사라짐 0.45 + 빈 줄 0.5)와 짝이다 — 하나만 바꾸면 빈 줄 길이가 바뀐다. 새 라운드 적의 다가옴은 fx.js:fxArrive(웹 애니메이션)다 */
+.side-enemy.round-clear > .unit-slot { opacity: 0; transition: opacity calc(450ms * var(--fx-k, 1)) cubic-bezier(.4, 0, .6, 1); }
 
 /* ── 기본 공격 이펙트 [2026-10-03 · SCREEN_DESIGN §4-2 「연출」 · ADR-0501 · 모양 ADR-0505] — 기본 공격 · 반격.
    **무기와 상관없이 대각선 베기 한 줄** — 스킬 물리 베기(`.fx-slash`)와 같은 크기 · 같은 그어짐(키프레임 `fx-slash` 를 같이 쓴다)이고 **색만 무채색**(`--fx-basic*`)이다.

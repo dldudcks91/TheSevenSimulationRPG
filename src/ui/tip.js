@@ -834,12 +834,13 @@ const LV_LABEL = {
 };
 /** 레벨 줄이 둘인 스킬의 `effect_value` 줄 — 걸린 효과의 수치(`skill_status.csv:stat`) → 칸 이름 (2026-10-28 R367 · 워 오더스) */
 const LV_STAT = { def_pct: 'cx.lv.def', res_pct: 'cx.lv.resAll' };
-/** 레벨 줄의 값 — `level_step` **그대로**(레벨마다 더하는 양 · 부호를 단다). 시간 칸은 초 · 타수는 회 · 나머지는 비율(%) */
-function lvStepText(field, step) {
+/** 레벨 줄의 값 — `level_step` **그대로**(레벨마다 더하는 양 · 부호를 단다). 시간 칸은 초 · 타수는 회 · 재생 + 수치는 수(프레이어 · 2026-10-29) · 나머지는 비율(%) */
+function lvStepText(field, step, stat = null) {
     const sign = step < 0 ? '−' : '+';
     const v = Math.abs(step);
     if (field === 'duration_sec' || field === 'cool_sec' || field === 'hit_duration_sec') return sign + t('time.s', { s: num(v) });
     if (field === 'hits') return sign + t('sk.u.times', { v: num(v) });
+    if (field === 'effect_value' && stat === 'regen_flat') return sign + num(v);
     return `${sign}${M.pctNum(v)}%`;
 }
 /** 타수 레벨 칸 — 단계가 정수가 아니면 「+0.34회」 대신 **한 타가 느는 레벨**을 적는다(러시 Lv4 · 7 · 10 · 2026-10-28 R374). 정수 단계면 종전 그대로 */
@@ -888,7 +889,7 @@ export function codexSkillTipCard(id) {
     const lvKey = (e, f) => (lvRows.length > 1 && f === 'effect_value' && LV_STAT[SYS.skill.statuses[e.status]?.stat])
         || (LV_LABEL[f]?.(def, e) ?? 'cx.lv.value');
     const lvUp = lvRows.length
-        ? lvRows.map(([e, f, s]) => `<div class="cx-lvup"><span>${t(lvKey(e, f))}</span><b>${f === 'hits' ? hitsStepText(e.hits, s) : lvStepText(f, s)}</b></div>`).join('')
+        ? lvRows.map(([e, f, s]) => `<div class="cx-lvup"><span>${t(lvKey(e, f))}</span><b>${f === 'hits' ? hitsStepText(e.hits, s) : lvStepText(f, s, SYS.skill.statuses[e.status]?.stat)}</b></div>`).join('')
         : '<span class="muted">—</span>';
     const card = el('div', 'tip-card cx-tip cx-sk-tip', `
         <div class="cx-tip-h">${t('cx.tip.source')}</div>
@@ -1100,8 +1101,8 @@ function descSlots(def, pv, atkType, R) {
         h: () => at(e.hits, 'hits', UNIT.times),
         k: () => at(e.decay, 'decay', UNIT.pct),
         s: () => st ? at(st.dur, 'dur', UNIT.sec) : null,
-        // 값의 단위 — 이베이드는 횟수 · 변신은 맞힐 때마다 늘어나는 초(골드 피버 · 2026-10-29 R380) · 그 밖은 %
-        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : st.stat === 'transform' ? UNIT.sec : UNIT.pct) : null,
+        // 값의 단위 — 이베이드는 횟수 · 변신은 맞힐 때마다 늘어나는 초(골드 피버 · 2026-10-29 R380) · 재생 + 수치는 수(프레이어 · 2026-10-29) · 그 밖은 %
+        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : st.stat === 'transform' ? UNIT.sec : st.stat === 'regen_flat' ? UNIT.none : UNIT.pct) : null,
         v2: () => st2 ? slot({ raw: Math.abs(st2.value), unit: UNIT.pct }, R) : null,
         m: () => hl(num(D.balance.frenzy_stack_max)),
         f: () => hl(num(D.balance.swarm_fly_count)),   // 스웜의 파리 수 (2026-10-29 · R380)

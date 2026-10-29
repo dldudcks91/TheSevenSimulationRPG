@@ -31,7 +31,7 @@
  */
 
 import { createFormula } from './formula.js';
-import { makeRng } from './rng.js';
+import { makeRng, deriveSeed } from './rng.js';
 
 /** 원소 4종 — combat_stat.csv 의 res_* 와 스킬의 원소 태그(`skill_effect.csv:element`)가 쓰는 같은 어휘 (battle_design §9-5) */
 export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
@@ -488,8 +488,27 @@ export function createHeroSystem(data) {
      * **기본 능력치는 안 바꾼다** [2026-09-14 사용자 확정 · hero_design §4-3 · R83] — 태어날 때 굴린 값이 평생 간다.
      *   ~~레벨업마다 축별 [balance.csv:attr_growth_chance_pct]% 확률로 +1~~ 은 폐지됐다 — 7축을 공통 상한으로 모아
      *   만렙에서 개체차를 지웠다. 등급 차이는 이제 끝까지 간다.
-     * `gains` 는 언제나 `{}` 이고 `rng` 는 소비하지 않는다 — 둘 다 계약 모양으로만 남는다 (INTERFACE §2-4 · §5-2).
+     * `rng` 는 소비하지 않는다 — 계약 모양으로만 남는다 (INTERFACE §2-4 · §5-2).
+     * **예외 — 등급 「성장」(고블린)** [2026-10-29 · R365 · hero_design §1] — 오른 레벨마다 상한 미만 칸 중 하나가
+     *   [balance.csv:growth_attr_per_level] 자란다. 굴림은 영웅의 `growthSeed` 에서 레벨마다 따로 연다(§5-1 「고블린 성장」) —
+     *   인자 rng 와 무관해 원정 · 연구소 · 관리자 어느 길로 올라도 같은 칸이다. 일반 영웅의 `gains` 는 `{}`.
      */
+    const GROWTH_TIER = 'growth';   // hero_tier.csv 의 성장 행 id (생성기가 안 뽑는다 · state.newGame 의 고블린만)
+    if (!(B.growth_attr_per_level > 0)) throw new Error(`hero: balance.csv 의 growth_attr_per_level 이 없거나 0 이하다`);
+    function growLevels(hero, from, to) {
+        const gains = {};
+        if (hero.tier !== GROWTH_TIER) return gains;
+        if (!Number.isInteger(hero.growthSeed)) throw new Error(`hero: 성장 영웅 ${hero.uid} 에 growthSeed 가 없다`);
+        for (let lv = from + 1; lv <= to; lv++) {
+            const open = statIds.filter(id => (hero.stats[id] ?? 0) < B.hero_attr_max);
+            if (!open.length) break;   // 일곱 칸이 다 찼다
+            const id = open[Math.floor(makeRng(deriveSeed(hero.growthSeed, lv))() * open.length)];
+            const add = Math.min(B.growth_attr_per_level, B.hero_attr_max - (hero.stats[id] ?? 0));
+            hero.stats[id] = (hero.stats[id] ?? 0) + add;
+            gains[id] = (gains[id] ?? 0) + add;
+        }
+        return gains;
+    }
     function grantXp(hero, amount, rng) {
         // 레벨 상한 — 상한에 닿으면 XP 를 쌓지 않는다 (GAME_DESIGN §9 08-26 「레벨 상한 99」).
         // 남은 XP 를 들고 있어 봐야 쓸 곳이 없고, 세이브에 의미 없는 잔량이 남는다
@@ -504,7 +523,7 @@ export function createHeroSystem(data) {
         // 마스터리 포인트 — 레벨업 1회당 정액. 지급 곡선 자체가 기획 미확정이라 형태도 임시다 (skill_design §7)
         const points = (hero.level - from) * B.mastery_point_per_level;
         if (points > 0) hero.masteryPoints = (hero.masteryPoints ?? 0) + points;
-        return hero.level > from ? { uid: hero.uid, from, to: hero.level, gains: {}, points } : null;
+        return hero.level > from ? { uid: hero.uid, from, to: hero.level, gains: growLevels(hero, from, hero.level), points } : null;
     }
 
     /* ── 전투 능력치 (계수는 전부 balance.csv ⚠제안 키) ── */

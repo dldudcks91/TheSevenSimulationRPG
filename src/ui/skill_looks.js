@@ -63,7 +63,7 @@ export const SKILL_LOOKS = {
     pri_grace: { buff: [['sweep', { c: 'holy' }], ['rise', { c: 'holy', n: 6 }]] },                      // 그레이스 — 성광 훑음
     pri_haste: { buff: [['chevron', { c: 'wind', n: 4, t: 380 }]] },                                      // 헤이스트 — 빠른 꺾쇠 넷
     pri_cure: { heal: [['flare', { c: 'heal', s: 60 }], ['rise', { c: 'heal', n: 6 }], ['ring', { c: 'heal', s: 76 }]] },   // 힐 — 초록 터짐 + 고리
-    pri_regen: { buff: [['sigil', { c: 'heal', s: 76 }], ['rise', { c: 'heal', n: 5, t: 900 }]] },       // 프레이어 오브 리제너레이션 — 초록 문양 + 느린 알갱이
+    pri_regen: { buff: [['sigil', { c: 'heal', s: 76 }], ['rise', { c: 'heal', n: 5, t: 900 }]] },       // 프레이어 — 초록 문양 + 느린 알갱이
     pri_penitence: { buff: [['haze', { c: 'shadow' }], ['ring', { c: 'shadow', fy: 0.35, oy: 26, s: 84 }]] },   // 페니턴스 — 그림자 + 땅 고리
     pri_bind: { buff: [['sigil', { c: 'shadow', s: 76 }], ['streak', { c: 'shadow', a: 0, jit: 0, n: 2, gap: 30, len: 100, w: 5 }]] },   // 바인드 — 문양 + 묶는 가로 줄
     pri_doom: { bad: [['haze', { c: 'shadow' }], ['ring', { c: 'blood', s: 80, r0: 1.3, r1: .7 }]] },

@@ -171,6 +171,8 @@ export function createGameSystem(deps) {
         state.heroes.push(h);
         return h;
     }
+    /** 성장 영웅(고블린)의 성장 굴림 씨앗 — `seed ^ 0x60B1` · 두 번째 인자는 그 영웅의 번호(uid `h<n>`) · rng 0 (2026-10-29 · R365 · INTERFACE §5-1) */
+    const growthSeedOf = (state, h) => deriveSeed(state.seed ^ 0x60B1, Number(h.uid.slice(1)));
     function addItem(state, it) {
         state.counters.item += 1;
         it.uid = `i${state.counters.item}`;
@@ -328,7 +330,7 @@ export function createGameSystem(deps) {
         // 모든 새 게임에 고블린 한 마리 — **다섯 종 중 하나** · 등급 「성장」 · 능력치 일곱 칸 5 [2026-10-27 사용자 · hero_design §1].
         //   시작 파티 뒤에 넣어 첫 편성은 그대로다 · 굴림은 시작 장비 스트림을 이어 쓴다(종류 → 죄종 → 특성 → 고유 4회 · INTERFACE §5-2)
         const gob = H.rollGoblin(rng, GOBLIN_KINDS);
-        addHero(state, {
+        const gh = addHero(state, {
             name: { ...gob.kind.name },
             tier: 'growth', sin: gob.sin, cls: gob.kind.cls,
             trait: gob.trait, face: gob.kind.face,
@@ -336,6 +338,8 @@ export function createGameSystem(deps) {
             stats: { str: 5, agi: 5, int: 5, vit: 5, luck: 5, ldr: 5, cha: 5 },
             equipped: {},
         });
+        // 레벨마다 한 칸이 자란다 — 씨앗만 박는다(rng 0 · 굴림은 `hero.grantXp` · 2026-10-29 · R365)
+        gh.growthSeed = growthSeedOf(state, gh);
         // **편성 1 = 로스터 순서** [2026-09-21 사용자 지시 · ADR-0227 · ~~빈 파티~~ 2026-09-09 폐기] — 첫 원정을 떠날 편성이
         //   처음부터 서 있다. 리더 규칙은 그대로다(`party[0]` = 먼저 넣은 영웅 = 로스터 첫 영웅).
         //   **진형은 직업이 정한다** [2026-10-21 사용자 지시 「전사 · 기사는 앞열 · 나머지는 후열」] — `class.csv:start_row` 로
@@ -505,6 +509,9 @@ export function createGameSystem(deps) {
         // 고정 지급 캐릭터의 옛 이름을 이미 저장된 세이브에서도 갱신한다.
         for (const h of s.heroes) if (h.face === 'goblin_butler' && h.name?.ko === '집사 고블린')
             h.name = { ko: '고블린 일꾼', en: 'Goblin Worker' };
+        // 성장 영웅의 씨앗 [2026-10-29 · R365 · 버전 무변경] — 없으면 새 게임과 같은 식으로 채운다.
+        //   **지난 레벨은 소급하지 않는다**(사용자 결정) — 채운 뒤 오르는 레벨부터 자란다
+        for (const h of s.heroes) if (h.tier === 'growth' && !Number.isInteger(h.growthSeed)) h.growthSeed = growthSeedOf(s, h);
         // 지운 기본 스킬 → 대체 스킬 [2026-10-16 · R246 · R249 · R250 · 사용자 「대체 스킬로 옮김」 · 버전 무변경 — INTERFACE §4] — 아래 정리(정의 밖 id 지우기)보다 **먼저** 옮긴다
         retireSkills(s);
         // 마스터리 — **표에 맞춘다** [2026-09-22 · R138 · 버전 무변경] — 그 영웅의 트리에 없는 노드(표에서 걷힌 칸)와 상한을 넘은 랭크는

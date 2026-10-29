@@ -363,6 +363,8 @@ export const EFFECTS = {
     },
     // HP 재생 창 — 09-07 확정 구조(레벨 곡선 밑수)에 **얹는다**. 밑수가 0 이면 아무 일도 없다
     regen_pct: {},
+    // HP 재생 + 수치 — 장비 「체력 재생」과 같은 단위를 밑수 위에 **더한다**(프레이어 · 2026-10-29) · 밑수가 0 이어도 선다
+    regen_flat: {},
     // 받는 피해 감소 — 감쇠 뒤 곱이고 원천별로 각각 곱한다 (battle_design §9-3). 방어·저항과 채널이 다르다
     dr_pct: {},
     // 평타 부여 둘 — 소비자는 skill_runtime 의 기본 공격이다
@@ -552,8 +554,8 @@ const ATTRS = [
         u.hpMax = Math.round(u.hpMaxBase * (1 + sumOf(u, 'hp_max_pct')));
         if (u.hp > u.hpMax) u.hp = u.hpMax;
     },
-    // HP 재생
-    u => { u.regen = u.regenBase * (1 + sumOf(u, 'regen_pct')); },
+    // HP 재생 — 밑수 × (1 + % 창) + 수치 창
+    u => { u.regen = u.regenBase * (1 + sumOf(u, 'regen_pct')) + sumOf(u, 'regen_flat'); },
     // 받는 피해 감소 — **창 하나 = 원천 하나** — 창 합을 안 쓰고 창마다 곱한다. 밑값(`drBase` — 장비 · 마스터리를 이미 곱으로 합친 값)도 원천 하나다.
     //   ~~`drBase + sum`~~ 은 2026-09-22 에 고쳤다 — 덧셈이라 장비 50% + 결투 20% 가 70%(곱이면 60%)였고 합이 100% 를 넘을 수 있었다.
     //   창이 없으면 밑값을 그대로 둔다(부동소수 왕복 없이 원값 복원) · 음수 창(받는 피해 증가)은 `1 − v` 가 1 보다 커져 그대로 곱해진다
