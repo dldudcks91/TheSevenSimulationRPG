@@ -2117,6 +2117,11 @@ html, body { height: 100%; overflow: hidden; }
     display: flex; align-items: center; justify-content: center;
     background: var(--bg-input); border: 1px solid var(--border-secondary); overflow: hidden;
 }
+/* 파리 떼 (스웜 · R380 · ADR-0944) — 창 동안 초상 아래쪽에 파리 마리마다 작은 HP 막대 한 줄 · 초상 칸 안에 겹쳐 카드 배치를 안 민다 · 쓰러진 파리는 흐린 빈 칸 */
+.unit .sprite .fly-row { position: absolute; left: 4px; right: 4px; bottom: 4px; z-index: 2; display: flex; gap: 3px; pointer-events: none; }
+.unit .sprite .fly-row > i { flex: 1 1 0; height: 7px; position: relative; overflow: hidden; background: var(--bg-input); border: 1px solid var(--border-dark); }
+.unit .sprite .fly-row > i > b { position: absolute; inset: 0; background: var(--hp-fill); transform-origin: left; }
+.unit .sprite .fly-row > i.gone { opacity: .35; }
 /* 보스도 같은 크기다 — 카드 크기를 진영·등급 무관 고정으로 못박았다 (2026-08-27). 보스 표시는 태그와 테두리가 든다 */
 /* 얼굴 이미지가 있는 유닛 — **없으면 양쪽 다 빈 칸**이다 (영웅 2026-09-03 · 몬스터 2026-09-06 사용자 지시) */
 .sprite.has-face { background: radial-gradient(circle at 50% 38%, var(--surface-6) 0%, var(--bg-input) 100%); }
@@ -4157,6 +4162,26 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .ng-line.sep { border-top: 1px solid var(--border-dark); margin-top: 9px; padding-top: 8px; }
 .ng-card .attr-list { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border-dark); }
 
+/* 능력치 범례 — 시작 화면 첫 카드 왼쪽 빈자리 (SCREEN_DESIGN §3 · ADR-0943 · app.js:renderStart).
+   첫 카드의 능력치 목록 안에 절대 위치로 서서 **그 목록의 높이를 일곱 등분**한다 — 목록의 줄은 모양이 같아 높이가 같으므로
+   범례 줄이 막대 줄과 같은 높이에 선다(좌표를 재지 않는다). 위 여백 · 줄 틈은 목록의 것을 물려받는다.
+   가로는 목록 왼쪽 변에서 카드 안쪽 여백 16 + 테두리 1 + 틈 28 만큼 바깥 — 머리의 아랫선이 목록 윗선과 같은 높이다 */
+.attr-list:has(> .ng-legend) { position: relative; }
+.ng-legend {
+    position: absolute; top: 0; bottom: 0; right: calc(100% + 45px);
+    padding-top: inherit; row-gap: inherit;
+    display: grid; grid-template-columns: auto auto; grid-template-rows: repeat(7, 1fr);
+    column-gap: 10px; align-items: center; white-space: nowrap;
+}
+.ng-lg-h {
+    position: absolute; bottom: 100%; left: 0; right: 0;
+    font-size: var(--fs-sm); color: var(--text-primary);
+    padding-bottom: 5px; border-bottom: 1px solid var(--border-dark);
+}
+.ng-lg-r { display: contents; }
+.ng-lg-r b { font-size: var(--fs-sm); color: var(--text-primary); text-align: right; }
+.ng-lg-r span { font-size: var(--fs-sm); color: var(--text-muted); }
+
 /* 카드 연장 칸 — 그 영웅의 직업 · 죄종 한 문장 (SCREEN_DESIGN §3 · ADR-0675 · app.js:startLines). 새 게임 카드만 든다.
    합계 줄 아래 구분선 뒤 — 머리와 능력치 막대 사이에 안 끼어 막대 읽기를 안 끊는다.
    이름은 **칩**이다 — 카드 머리의 등급 · 죄종 칩과 같은 규격(`.sin-chip`) · 그 직업 · 죄종 색 테두리 [2026-10-21 사용자 지적].
@@ -5251,27 +5276,36 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .party-slot .ps-sub .injury-chip { margin-top: 0; white-space: nowrap; }
 .party-slot .b-toggle { flex: 0 0 auto; }
 
-/* ───────── 도움말 탭 (2026-08-26) ─────────
-   인게임 패널에서 걷어낸 설명 문장이 전부 모이는 한 페이지. 읽기 폭과 제목 간격만 잡는다 — 장식 없음.
-   본문 글자는 기존 `.note-body` 규격을 그대로 쓴다 */
-.help { max-width: 860px; }
+/* ───────── 도움말 탭 (2026-08-26 · 전면 정리 2026-10-29 · ADR-0946) ─────────
+   메인 폭을 모두 쓰고 제목·목차는 고정한다. 본문만 스크롤하며 긴 문장은 폭 안에서 줄바꿈한다.
+   본문은 --fs-sm, 소제목은 --fs-md로 읽기 쉽게 구분한다. */
+.help { width: 100%; min-width: 0; }
 .help > h1 { font-size: var(--fs-xl); color: var(--text-primary); font-weight: normal; }
-.help > .segmented { margin: 12px 0 4px; }
+.help > h1, .help > .help-search, .help > .segmented { flex: none; }
+.help-search { display: flex; align-items: center; gap: 9px; margin-top: 10px; }
+.help-search label { flex: none; font-size: var(--fs-sm); color: var(--text-secondary); }
+.help-search-input { flex: 1 1 300px; min-width: 0; max-width: 540px; font: inherit; font-size: var(--fs-sm); padding: 6px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); }
+.help-search-count { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.help > .segmented { margin: 12px 0 14px; }
 /* 본문(`.help-body`)은 박스 안에서 스크롤한다 — 제목 · 점프 세그먼트는 서 있다 (ADR-0097).
    여기 h2 는 패널 제목이 아니라 문서 섹션 제목이다 — 모양만 준다 */
+.help-body { position: relative; min-width: 0; padding: 0 12px 18px 0; overflow-wrap: anywhere; }
+.help-body > [hidden] { display: none; }
 .help-body > h2 {
     display: block; letter-spacing: 0;
     font-size: var(--fs-lg); color: var(--text-primary); font-weight: normal;
     margin: 26px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--border-dark);
     scroll-margin-top: 10px;
 }
+.help-body > h2:first-child, .help-body > h2.help-first { margin-top: 0; }
 .help-body > h3 {
-    font-size: var(--fs-sm); color: var(--text-secondary); font-weight: normal;
-    margin: 15px 0 0;
+    font-size: var(--fs-md); color: var(--text-primary); font-weight: bold;
+    margin: 18px 0 0;
 }
 .help-body > h3 small { color: var(--text-muted); font-size: var(--fs-xs); margin-left: 7px; }
-.help-body > .note-body { margin-top: 5px; }
+.help-body > .note-body { margin-top: 5px; font-size: var(--fs-sm); color: var(--text-secondary); }
 .help-body > .note-body + .note-body { margin-top: 7px; }
+.help-body > .help-empty { padding: 16px 0; }
 
 /* ───────── 편성 탭 (2026-09-21 · SCREEN_DESIGN §15 · ADR-0192 ~ 0195 · 배치 ADR-0221 · 0260) ─────────
    캐릭터 탭과 같은 짜임 — 띠 패널(`.hs-panel` 공용)이 박스 밖 맨 위에 서고, 아래 박스 안은 맨 위 편성 고르개(ADR-0251) 아래로 **두 열**이다:
@@ -5309,6 +5343,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .pt-body > .pt-pick { flex-wrap: nowrap; }
 /* 물약 — 칸은 아레나 칸(`.p-slot`)과 같은 생김새 · 여기서는 끌어다 놓는 자리라 한 단 크다 */
 .pt-potion-row { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; }
+/* 칸 줄 + 기준 줄 — 기준 줄이 칸 줄 왼쪽 끝에 맞춰 바로 아래 선다 (§15 · ADR-0942) */
+.pt-potion-left { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.pt-use { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-secondary); }
+.pt-use-btn { padding: 0 6px; min-width: 0; }
+.pt-use-val { font-variant-numeric: tabular-nums; }
 .pt-potion .pt-slot { width: 44px; height: 44px; cursor: pointer; touch-action: none; }
 .pt-potion .pt-lock { width: 44px; height: 44px; cursor: pointer; }   /* 안 열린 칸 — 같은 크기 · 누르면 여는 건물 랭크 플래시 (ADR-0716) */
 .pt-potion .pt-slot:not(.full) { cursor: default; }
@@ -5728,6 +5767,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .fg-up-cmp .nx.same { color: var(--text-muted); }   /* 다음이 지금과 같다 — 반올림이 한 단계를 먹었다 · 오른다고 읽히지 않게 */
 /* ③ 비용 칩 + [강화] — 칩 바로 옆에 버튼이 붙어 오른쪽 끝에 선다. 골드가 모자라면 값이 빨강 */
 .fg-up-act { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.fg-up-mats { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px 14px; font-size: var(--fs-sm); color: var(--text-secondary); }
+.fg-up-mats .no, .fg-pact .fg-cost.no { color: var(--color-error); }
 .fg-up-cost { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px;
     background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 2px; }
 .fg-up-cost img { width: 22px; height: 22px; object-fit: contain; }
@@ -5965,6 +6006,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .cm-card.done .cm-prog .bar > i { background: var(--color-success); }
 /* 패널 제목 옆 — 받은 수 / 받을 수 (값은 늘 찍는다 · §4-1) */
 .cm-slots { margin-left: 8px; font-size: var(--fs-xs); font-weight: normal; color: var(--text-muted); }
+.cm-fame { margin-left: 14px; }   /* 명성 레벨 — 받은 수 옆 같은 글씨 (§14 · ADR-0945) */
 /* 게시판이 안 열렸을 때 — 빈 카드 틀이 자리를 잡고 그 위에 잠김 베일(.lock-veil) */
 .cm-card.ghost { min-height: 96px; }
 
@@ -6197,6 +6239,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .ng-wrap,
 :where(:root[data-skin="d2min"]) .pro-wrap { background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; }
 :where(:root[data-skin="d2min"]) .ng-wrap { margin-top: 57px; padding: 24px 16px; }
+/* 능력치 범례는 판 테두리 **밖**에 선다(뒤로가기처럼 · ADR-0943) — 판 안 카드 줄 옆 여백이 53(.9 배율 안에서 59)이라 범례가 테두리를 가로지른다 */
+:where(:root[data-skin="d2min"]) .ng-legend { right: calc(100% + 45px + 59px); }
 :where(:root[data-skin="d2min"]) .ng-card { background: var(--sk-fill), #121212; box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }
 /* 원정 목록 판 — 기본은 테두리가 없어(난이도 탭 줄이 윗선 · ADR-0785) 위 규칙보다 강한 `border: none` 이 돌 테두리를 걷었다.
    다른 판과 같은 테두리를 다시 두른다(위 여백은 아래 「챕터 줄은 목록 판 바깥 위」 묶음이 정한다) */
@@ -6590,9 +6634,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .b-belt .p-slot.full { border-color: transparent; }
 /* 물약 없이 시작한 빨간 칸도 같은 틀 — 빨간 점선을 걷고 속만 빨갛다 · 바깥 1px 은 찬 칸과 같은 어두운 바닥(빨강이 비치지 않게) (ADR-0920) */
 :where(:root[data-skin="d2min"]) .b-belt .p-slot.none { border-style: solid; border-color: rgba(var(--veil-rgb), .85); background-clip: padding-box; }
+/*   테두리는 **회색 선까지만** 자른다(위 · 왼 4 · 아래 · 오른 3 — `d2min_slot.webp` 의 선이 그 안쪽 끝이다) — 6 으로 자르면 선 안쪽의 불투명 검은 띠가
+     바닥을 가려 빨간 속이 선에서 떨어진 작은 네모로 섰다(왼 · 위 2px · 오른 · 아래 3px 틈) · 이제 바닥(반투명 · 빨강)이 선까지 꽉 찬다 [2026-10-29 사용자 지시 · ADR-0939] */
 :where(:root[data-skin="d2min"]) .b-belt .p-slot:not(.locked)::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    border-style: solid; border-image: var(--sk-slot) 6 / 6px stretch;
+    border-style: solid; border-image: var(--sk-slot) 4 3 3 4 / 4px 3px 3px 4px stretch;
 }
 
 /* 전장 — 판에 파인 넓은 홈 · 툴팁 · 창 — 패널과 같은 돌판 + 테두리 */

@@ -567,12 +567,14 @@ icons_source/skills/
 │   ├── sheet_07_codex_warrior.png … sheet_12_codex_extra.png  ← 기본 50 을 다시 뽑은 시트(2026-10-15 · Codex 이미지 생성 · 3×3 여섯) — 설치한 것은 새 스킬 14 칸뿐 · 지시문 sheet_NN_codex_<직업>_prompt.txt
 │   ├── sheet_07_12_anchor_installed_mono.png  ← 그 여섯에 붙인 기준 그림 — 그때 설치돼 있던 기본 아이콘 9장을 흰 바탕 검정으로 되돌린 것
 │   ├── sheet_13_codex_inferno.png · sheet_14_codex_summon.png  ← 인페르노 · 소환 2×2 (2026-10-16 · Codex) — 둘 다 1번 칸을 설치 · 기준 그림 = 같은 직업 설치본 9장(`sheet_13_anchor_installed_mage` · `sheet_14_anchor_installed_priest`) · 지시문 `*_prompt.txt`
+│   ├── sheet_17_codex_ironmaiden.png … sheet_20_codex_swarm.png  ← 장 보스 고유 넷 2×2 (2026-10-29 · Codex) — 스킬마다 구도 넷 · 기준 그림 = 설치본 9장(헬파이어 · 둠 · 바인드 · 기사 오오라 셋 · 멀티샷 · 소환 · 프렌지)을 흰 바탕 검정으로 · 지시문 `*_prompt.txt`
+│   ├── sheet_21_codex_family.png  ← 부류 기믹 버프 · 디버프 칩 시안 넷 2×2 (2026-10-29 · Codex) — 군대 · 수호자 · 거인 · 이형 · 기준 그림 `sheet_21_anchor_installed_buffs`(오오라 · 버프 · 디버프 설치본 9장) · 지시문 `sheet_21_codex_family_prompt.txt` · 칸은 `unused/fam_*`
 │   ├── war_recovery_20261017.png · kni_resistshield_20261017.png  ← 리커버리 · 레지스탕스 실드 단독 생성 원본(내장 image_gen · 투명 배경) · 지시문 `*_20261017_prompt.txt` · 내보내기 기록 `missing_basic_20261017.json`
 │   ├── missing_basic_20261017_preview.png  ← 새 아이콘과 같은 직업 기존 아이콘을 28 · 32 · 44px로 비교
 │   ├── body_shield_revision_20261017/  ← 리커버리 · 아이언 스킨의 공통 몸, 홀리 실드형 레지스탕스 실드 수정본 · `*_generated.png` · `*_prompt.txt` · `manifest.json` · 비교 `comparison.png` · 이전 설치본 `previous/`
 │   ├── <직업>_advanced_skills_sheet.png  ← 전직 45 투톤 시트 다섯 (2026-09-28 · 전직 시트의 앵커는 war_ 시트)
 │   └── sheet_01 ~ 06 · Gemini_Generated_Image_*  ← 9월 Gemini 시트 — 지금 설치된 기존 기본 36 의 출처 · sheet_02_mono_anchor 가 그때의 앵커
-└── unused/               ← id 가 없는 여분 · 10-15 「새 B」 넷(`war_frenzy_b` · `arc_evade_b` · `pri_halo_b` · `pri_doom_b`)
+└── unused/               ← id 가 없는 여분 · 10-15 「새 B」 넷(`war_frenzy_b` · `arc_evade_b` · `pri_halo_b` · `pri_doom_b`) · 부류 기믹 칩 시안 넷(`fam_army` · `fam_guardian` · `fam_giant` · `fam_aberration` — 회백 단색 · 긴 변 88 · 기믹 id 가 서면 그 이름으로 옮긴다 · monster_design §3-1)
 ```
 
 **새 기본 스킬 14 — 2026-10-15 Codex 단색 발주** — skill_design §12 의 직업마다 10(50)을 전부 다시 뽑았고, **그림이 없던 새 스킬 14 만 설치했다**(사용자 「기존꺼 내버려두고 새로 뽑힌 애들만」) — 기존 36 은 9월 그림 그대로이고 그 36 의 새 판은 원본 시트에만 있다. 같은 단색 실루엣 형태를 지키려고 설치돼 있던 그림을 기준 그림으로 붙였고, 칸 문장은 `.claude/skills/icon-prompt/skill_tiles.md` 의 타일을 따랐다(새 스킬은 시트 지시문이 원문). 실측 — 장변 88 · 중앙 50/50 · 단색(기존 설치본과 같은 값). 지시와 다르게 나온 칸 — `arc_overdraw`(큰 화살 대신 활 쏘는 사람) · 40px 에서 약한 칸 — `arc_arrowrain`(가는 화살) · `arc_overdraw`
@@ -582,6 +584,7 @@ icons_source/skills/
 - **리커버리 · 레지스탕스 실드 초판** [2026-10-17 · 내장 image_gen 단색] — 기본 스킬 50행과 화면 등록 목록 · 설치 파일을 대조해 비어 있던 두 스킬을 채우고 `mock.js:SKILL_ICON_FILES`에 등록했다. 건틀릿과 회복 화살표 · 원소 방패와 보호 호로 만든 첫 그림은 같은 날 아래 수정본으로 교체했다. 원본과 지시문은 `source/`, 당시 설치본은 수정 폴더의 `previous/`에 남는다
 - **리커버리 · 아이언 스킨 · 레지스탕스 실드 수정** [2026-10-17 · 사용자 지시 · 내장 image_gen 편집] — 리커버리와 아이언 스킨은 같은 정면 사람 상반신을 쓴다. 리커버리는 몸 가운데 큰 십자 구멍, 아이언 스킨은 십자 대신 목 · 어깨 · 가슴 · 복부의 적은 갑옷 선으로만 구분한다. 레지스탕스 실드는 홀리 실드의 방패 외형 · 테두리 · 바깥 광선을 기준으로 안쪽 십자를 화염 · 얼음 · 번개로 바꿨다. 회백 `#d8d9e6`, 생성 알파 유지, 512 PNG · 장변 88% · 중앙 50/50, 게임용 256 WebP 세 장만 기존 인코더로 내보냈다. 원본 · 프롬프트 · 이전 설치본 · 크기 비교는 [`body_shield_revision_20261017/`](icons_source/skills/source/body_shield_revision_20261017/manifest.json)에 기록한다
 - **헬파이어**(`mon_hellfire` — 몬스터 전용 · 1-5 사탄의 정신 집중) [2026-10-22 · Codex 단색] — 「굵은 뿔 한 쌍 사이로 쏟아지는 지옥불이 해골 하나에 떨어진다」. 첫 시트(`source/sheet_15_codex_hellfire.png`)는 길쭉해서 40px 에서 가늘어 버렸고 두 번째 시트(`sheet_16_codex_hellfire.png` 오른쪽 위 칸)를 설치했다 · 프롬프트는 각 시트 옆 `_prompt.txt`. 설치본 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6` · 256 WebP 한 장만 기존 인코더로 내보냈다
+- **장 보스 고유 넷**(몬스터 전용 · skill_design §12-9) [2026-10-29 · Codex 단색] — `mon_ironmaiden` 「양쪽 문이 열린 가시 고문함」(`sheet_17` 왼쪽 위) · `mon_goldfever` 「왕관 쓴 채 포효하는 뿔 머리 · 위로 튀는 동전 셋」(`sheet_18` 왼쪽 위) · `mon_delegate` 「원 배지 안 빈 왕좌 · 자리를 떠나는 화살」(오오라라 원 배지 · `sheet_19` 오른쪽 위) · `mon_swarm` 「금이 가며 갈라지는 파리」(`sheet_20` 왼쪽 아래). 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6`. **화면에는 아직 안 나온다** — `skill.csv` 행이 없어(DEV_PLAN R380) `mock.js:SKILL_ICON_FILES` 에 넣지 않았다 · 고른 칸 밖의 구도는 시트에만 있다
 - 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
 - **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 강조색 픽셀은 그대로 두고 검정만 회백으로 칠한다
 
@@ -603,7 +606,7 @@ Might(굽은 갈고리 → **굽힌 팔**) · Fanaticism(가는 평행 줄무늬
 | 궁수 10 | **10** | 10 | — (퀵 드로우는 전직 투톤 그림 그대로) |
 | 마법사 10 | **10** | 10 | — |
 | 사제 10 | **10** | 10 | — |
-| 몬스터 전용 2 | **1** | 1 | 자폭(쥔 몬스터가 없다) |
+| 몬스터 전용 2 + 장 보스 고유 넷(행 없음 · R380) | **5** | 1 | 자폭(쥔 몬스터가 없다) · 넷은 행이 서면 `SKILL_ICON_FILES` 에 넣는다 |
 
 발주 프롬프트와 **타일 문장**(무엇을 그리는가)은 `.claude/skills/icon-prompt/skill_tiles.md` 가 든다.
 
@@ -812,4 +815,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-27*
+*마지막 업데이트: 2026-10-29*

@@ -53,7 +53,7 @@ export const CASTS = {
     // 계속 닳기 [2026-10-22 · 사용자 「도트딜로」 · 「직격」 · 간격 「0.5초마다」] — 같은 정신 집중이고 방이 [balance.csv:channel_tick_sec] 마다다(타수 = 틱 수 · 배율 = 한 틱 몫 · 중독 틱과 따로)
     channel_tick: { picked: true, cooled: true, chan: 'tick' },
     // 모으기 [2026-10-26 · R357 · 사용자 「기모아서 마지막에 한발」 · 초 시계 R358 「그냥 n초로해」] — 계속 닳기와 같은 초 시계인데 **방이 둘**(여는 순간 · 쏘는 순간)이고
-    //   **마지막 방에만 친다**(`burst`) · 그 사이 = [balance.csv:channel_charge_sec](공속과 상관없다) · `hit` 줄은 한 발(타수 1 — 로드 검사)
+    //   **마지막 방에만 친다**(`burst`) · 그 사이 = 그 스킬의 `charge_sec`(공속과 상관없다 · 스킬마다 — 2026-10-28 R371) · `hit` 줄은 한 발(타수 1 — 로드 검사)
     channel_charge: { picked: true, cooled: true, chan: 'tick', burst: true },
 };
 export const CAST_IDS = Object.keys(CASTS);
@@ -73,7 +73,13 @@ export const EVENT_IDS = Object.keys(EVENT_TRIGGERS);
  *   **맞은 대상에게 거는 걸린 효과**(`onHit` — 결빙 · 2026-09-28 R177 · battle_design §2-4 — 적중하면 `battle.strikeOnce` 가 `rt.applyStatus` 로 건다).
  * `def` 가 `scaleDef` 를 안 지난 원시 정의여도 `statMult` 는 1 로 읽는다. 기본 공격은 이것을 안 만든다(메인 스탯 계수를 쓴다 · 결빙도 안 건다)
  */
-const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0, onHit: def.onHit ?? null });
+const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0, onHit: def.onHit ?? null, spread: SPREAD.has(def.target) });
+
+/**
+ * **여럿을 치는 공격 대상** [2026-10-29 · R380 · skill_design §12-9 스웜] — 이 대상의 타격은 `spread` 를 싣고, 맞는 쪽이 파리 떼(`swarm`)면
+ *   **산 파리마다** 그 피해를 받는다(단일 · 순환 · 최고 방어 · HP 최대는 한 마리) — battle.js `swarmTake`. 파리 떼가 없으면 아무 뜻이 없다
+ */
+const SPREAD = new Set(['enemy_all', 'enemy_chain', 'enemy_front', 'enemy_back']);
 
 /**
  * 전열만 남긴다 — battle.js `frontOf` 와 같은 규칙(랭크가 없으면 전열 · 전열 생존자가 없으면 받은 목록 그대로).
@@ -124,11 +130,13 @@ export const ATTACK_TARGETS = {
     enemy_all: (rt, u, def, foes) => {
         const sk = skillHit(def);
         const lead = foes.find(f => f.hp > 0 && (f.rank ?? 0) === 0) ?? foes.find(f => f.hp > 0) ?? null;
-        const primary = def.decay > 0 ? lead : null;
+        // 후열 약화 [2026-10-29 · R383 · skill_design §12-5 멀티샷 — ~~주 대상 밖이 준다(09-10)~~ 대체] — **시전 순간 전열이 살아 있으면** 후열(문을 넘은 대상)이
+        //   `decay` 만큼 약하다 · 전열이 비었으면 후열이 곧 전열이라 안 깎는다 · `decay` 0 이면 전원 같은 값 · rng 0
+        const gate = def.decay > 0 && foes.some(f => f.hp > 0 && (f.rank ?? 0) === 0);
         const weak = def.mult * (1 - def.decay);
         for (const tgt of foes) {
             if (u.hp <= 0) break;
-            if (tgt.hp > 0) rt.strikeOnce(u, tgt, primary === null || tgt === primary ? def.mult : weak, def.element, def.id, sk);
+            if (tgt.hp > 0) rt.strikeOnce(u, tgt, gate && (tgt.rank ?? 0) !== 0 ? weak : def.mult, def.element, def.id, sk);
         }
         return lead;
     },
@@ -165,10 +173,13 @@ export const ATTACK_TARGETS = {
             // 방어 감소는 **밑수까지** 깎는다 — 창이 다시 파생돼도 되돌아오지 않게 (guard_pct 와 같은 축이다).
             //   % 로 깎으므로 **양수 밑수만** 깎고, 깎은 비율을 `defKeep` 에 곱한다 — 갈아입기가 이 비율로 잇는다(벗었다 입어도 안 씻긴다 · R130).
             //   `def` 도 같은 비율로 — 밑수 × 창 배수라 둘을 같이 곱하면 다시 파생한 것과 같다(0 밑으로 자르지 않는다 · 음수 방어 R130)
-            if (tgt.defBase > 0) {
+            //   **겹 상한** [2026-10-29 · R383 · battle_design §9-3 「쌓이는 방어 감소는 상한이 같다」] — 대상마다 깎은 횟수(`shredN`)가
+            //   `rt.shredMax`([balance.csv:weapon_def_down_stack_max] — 무기 시기 ② 겹과 같은 값)에 닿으면 더 안 깎는다 · 감쇠가 0 인 줄은 세지 않는다
+            if (tgt.defBase > 0 && def.decay > 0 && (tgt.shredN ?? 0) < rt.shredMax) {
                 tgt.defBase = tgt.defBase * (1 - def.decay);
                 tgt.defKeep = (tgt.defKeep ?? 1) * (1 - def.decay);
                 tgt.def = tgt.def * (1 - def.decay);
+                tgt.shredN = (tgt.shredN ?? 0) + 1;
             }
         }
         return tgt;
@@ -230,7 +241,7 @@ function strikeEach(rt, u, def, list) {
  *   어느 대상이 그 칸을 읽는지를 대상 곁에 적는다 — 여기 없는 대상의 `hit` 줄은 `decay_pct = 0` 이어야 한다(로드 검사 · skill.js)
  */
 export const HIT_DECAY = {
-    enemy_all: 'secondary',          // 주 대상 밖의 배율이 준다 (멀티샷 · 2026-09-10)
+    enemy_all: 'back',               // 전열이 살아 있는 동안 후열의 배율이 준다 (멀티샷 · 2026-10-29 R383 — ~~주 대상 밖 · 2026-09-10~~)
     enemy_chain: 'by_order',         // 순서마다 배율이 곱으로 준다
     enemy_highest_def: 'def_shred',  // 타격마다 대상 방어가 준다 (가이디드 애로우)
 };
@@ -397,6 +408,32 @@ export const EFFECTS = {
     imbue: { state: true },
     pulse: { state: true },
     echo: { state: true },
+    // 2026-10-29 기본 스킬 개편 셋 [R383 · R385 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 전부 표식:
+    //   def_ignore  방어 무시(피어싱 샷) — battle.strikeOnce 가 **물리 타격만** 그 타격 동안 `defIgnore` 에 창 합을 더한다
+    //   shatter     딥 프리즈 — **이미 결빙된** 적을 창의 원소 스킬 타격이 맞히면 창이 든 상태이상(`hit` — 스턴)을 건다 · battle.strikeOnce
+    //   period_fix  주기 고정(보우마스터 퀵 드로우 · 오버드로우) — 위 능력치 표의 주기가 무기 주기 × 값이 된다(공속 · 둔화 · 민첩 무시)
+    def_ignore: { state: true },
+    shatter: { state: true },
+    period_fix: { state: true },
+    // 장 보스 고유 넷 [2026-10-29 · R380 · skill_design §12-9 · INTERFACE §2-6 「장 보스 고유 넷의 장치」] — 전부 표식이고 읽는 쪽이 따로 있다:
+    //   maiden     아이언 메이든 — 이 창을 든 유닛(적에게 건다)이 직격을 맞히면 그 피해 × 창 합을 **자기도** 받는다(반사 규칙 · battle.strikeOnce)
+    //   transform  변신 — 창 동안 액티브를 못 고른다(skill_runtime.pick) · 값(초) > 0 이면 직격을 맞힐 때마다 **그 시전이 건 창**이 값만큼 늘고
+    //              끝은 연 시각(`t0`) + [balance.csv:transform_max_sec] (battle.strikeOnce)
+    //   delegate   델리게이트(오오라) — 제 차례에 행동하지 않고 공격력이 가장 높은 아군에게 넘긴다(battle.js 차례 순회)
+    //   swarm      스웜 — 창 동안 한 자리 안에서 파리 [balance.csv:swarm_fly_count] 마리 · 마리마다 지금 HP × 값 · 닫힐 때(`end`) 뭉친다 ·
+    //              피해를 파리로 나누는 일 · 여닫기는 battle.js(`rt.swarmOpen` · `rt.swarmClose`)
+    //   `end(rt, u, b, at)` — 창이 **만료로** 닫힐 때 한 번(skill_runtime.expire) · 지금 쓰는 효과는 swarm 하나
+    maiden: { state: true },
+    transform: {
+        state: true,
+        apply: (rt, tgt, def, until, ev) => { tgt.buffs[def.status ?? def.id].t0 = ev.t; },
+    },
+    delegate: { state: true },
+    swarm: {
+        state: true,
+        apply: (rt, tgt, def, until, ev) => rt.swarmOpen(tgt, def, ev),
+        end: (rt, u, b, at) => rt.swarmClose(u, at),
+    },
 };
 
 export const EFFECT_STATS = Object.keys(EFFECTS);
@@ -479,8 +516,23 @@ const ATTRS = [
         u.atkMin = u.atkMinBase * mult; u.atkMax = u.atkMaxBase * mult;
         u.matkMin = u.matkMinBase * mult; u.matkMax = u.matkMaxBase * mult;
     },
-    // 행동 주기 — 프렌지 겹(`v × n` · 2026-10-16 R246)도 같은 괄호다. 프렌지 창이 없으면 0 을 빼므로 부동소수가 종전과 같다
-    u => { u.period = u.basePeriod * (1 - sumOf(u, 'period_pct') - stackSum(u, 'frenzy')); },
+    // 행동 주기 [2026-10-29 · R386 · battle_design §2 — ~~`basePeriod × (1 − Σperiod_pct − 프렌지)`~~ 대체] — 공속은 「몇 % 더 치나」다:
+    //   주기 = 원값(`periodRaw` = 무기 주기 ÷ 민첩 계수) × (1 + 둔화 합) ÷ (1 + 공속 합) · 바닥 `periodFloor`([balance.csv:period_floor_sec]).
+    //   공속 합 = 장비 · 마스터리(`speedBase`) + 양수 `period_pct` 창 + 프렌지 겹(`v × n`) · 둔화 합 = 음수 `period_pct` 창의 크기(결빙 · 바인드).
+    //   **고정 창**(`period_fix` — 보우마스터 퀵 드로우 · 오버드로우)이 있으면 주기 = 무기 주기(`periodWeapon`) × 첫 창의 값 — 공속 · 둔화 · 민첩을 안 탄다.
+    //   주기 창이 하나도 없으면 `basePeriod` 그대로 — 부동소수가 종전과 같다
+    u => {
+        const fix = stateOf(u, 'period_fix');
+        if (fix) { u.period = Math.max(u.periodFloor ?? 0, (u.periodWeapon ?? u.basePeriod) * fix[1].v); return; }
+        let fast = 0, slow = 0, any = false;
+        for (const b of Object.values(u.buffs)) {
+            if (b.stat === 'period_pct') { any = true; if (b.v >= 0) fast += b.v; else slow -= b.v; }
+            else if (b.stat === 'frenzy' && (b.n ?? 0) > 0) { any = true; fast += b.v * b.n; }
+        }
+        if (!any) { u.period = u.basePeriod; return; }
+        const base = u.speedBase ?? 0;
+        u.period = Math.max(u.periodFloor ?? 0, (u.periodRaw ?? u.basePeriod) * (1 + slow) / (1 + base + fast));
+    },
     // 방어 = 무기 옵션 방어 % + 외침(guard) — 같은 축을 미는 둘을 한 번에 모은다
     //   방어 감소(`def_pct` 음수 — 배틀 크라이 · 무기 옵션 한 창 · 겹 창)는 **창마다 곱**한다 [2026-10-28 · R370 · battle_design §9-3 — 10-12 「같은 수치를 깎는 디버프도 서로 곱한다」] ·
     //   버프(양수 · `guard_pct`)는 합 그대로 · 창마다 0 밑으로 안 간다 · 감소가 없으면 종전 식 그대로

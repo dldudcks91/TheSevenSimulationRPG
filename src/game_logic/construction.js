@@ -2,10 +2,10 @@
  * 건설 — 건물 랭크가 기능을 연다 [신설 2026-09-22 · construction_draft §11 구조 확정 · INTERFACE §2-14 · DEV_PLAN R137].
  *
  * 순수 모듈 — DOM · 저장소 · 시계 · Math.random 접근 없음. **상태도 rng 도 없다.**
- * **무엇을 여는지는 표 넷이 정하고 이 모듈은 센다** — 건물(`building.csv`) · 랭크(`building_rank.csv` — 문턱 · 비용) ·
- *   여는 것(`building_effect.csv` — **한 줄에 하나**) · 연구(`research.csv`).
+ * **무엇을 여는지는 표 셋이 정하고 이 모듈은 센다** — 건물(`building.csv`) · 랭크(`building_rank.csv` — 문턱 · 비용) ·
+ *   여는 것(`building_effect.csv` — **한 줄에 하나**). ~~연구(`research.csv`)~~ 는 2026-09-30 사용자 「연구 완전히 삭제」로 걷었다(R195 — 연구소 줄의 연구는 `state.js` 의 별개 기능).
  *   세이브는 건물별 랭크 숫자만 든다(`state.js`) — 「무엇이 열렸나」는 부를 때마다 여기서 다시 센다. 표를 고치면 옛 세이브도 곧바로 새 표를 따른다.
- * **코드가 정하는 것은 어휘뿐이다** — 여는 것의 대상(`TARGETS`) · 문턱 조건 종류(`CONDITIONS`) · 연구 대상(`RESEARCH_TARGETS`).
+ * **코드가 정하는 것은 어휘뿐이다** — 여는 것의 대상(`TARGETS`) · 문턱 조건 종류(`CONDITIONS`).
  *   새 기능을 건물 뒤로 넣을 때만 `TARGETS` 에 한 줄이 는다(그 기능 자리에는 `state.hasFeature` 한 줄).
  */
 
@@ -17,7 +17,6 @@
  *   `makeLevels` · `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY`).
  *   **첫 단계는 켜기가 심는다**(`seed` = 켜기 대상 id) — 그 켜기가 처음 나오는 랭크에서 이 더하기가 **1 씩 함께 선다**(표에 +1 줄을 따로 적지 않는다 ·
  *   제작 Lv1 은 제작(`make`) · 물약 1단계는 물약 제작(`potion`)과 함께 열린다 — 2026-09-24 사용자 지시 · INTERFACE §2-14). `opened` · `reach` 가 센다
- *   연구의 상한은 `research:<연구 id>` 로 더한다(이 표에 없다 — 연구 표가 id 를 든다)
  */
 const U = live => ({ kind: 'unlock', live });
 const A = (live, seed = null) => ({ kind: 'add', live, seed });
@@ -69,14 +68,6 @@ export const TARGETS = {
     recruit_quality: { ...A(false), build: true },
 };
 
-/** 연구가 받는 대상 — `live: false` = 그 값을 읽는 자리가 아직 없다(construction_draft §5) */
-export const RESEARCH_TARGETS = {
-    gold_gain: false, drop_rate: false, drop_quality: false,
-    upgrade_cost: false, make_cost: false, salvage_dust: false,
-    ore_yield: false, timber_yield: false, herb_yield: false,
-    hire_cost: false, shop_price: false, explore_reward: false, tactic_reroll_cost: false, xp_gain: false,
-};
-
 /**
  * 문턱 조건 종류 여섯 — 칸 = `종류:값`, 여러 개는 `|` 로 잇고 **전부** 채워야 한다(construction_draft §11-3).
  *   `stage:<id>` 그 스테이지 클리어 · `chapter:<장>` 그 장의 보스 칸 클리어 · `chapter:<장>:<단>` **그 단에서** 그 장의 보스 칸 클리어 ·
@@ -102,7 +93,7 @@ const NONE = v => v === '-' || v === '' || v == null;
 
 /**
  * @param {object} data
- *   buildings / ranks / effects / research — 표 넷의 파싱 행
+ *   buildings / ranks / effects — 표 셋의 파싱 행
  *   stageIds [id] — 문턱 `stage:` 가 가리킬 수 있는 스테이지 · resources [id] — 비용이 적을 수 있는 재화(`gold` · `dust` · `stigma` · 제작 재료 id)
  *   chapterBosses {장: 칸 id} — 문턱 `chapter:` 가 푸는 보스 칸 · difficultyIds [id] — 문턱 `difficulty:` 가 가리킬 수 있는 단 (R362)
  *   balance — 문턱 값에 키 이름을 적었을 때 읽는다
@@ -201,29 +192,8 @@ export function createConstruction(data) {
         for (const c of row.require)
             if (c.kind === 'building' && !(byId.has(c.ref) && posInt(c.need) && c.need <= byId.get(c.ref).maxRank)) bad(`${key} — 없는 건물 랭크 '${c.ref}:${c.need}'`);
 
-    /* ── 연구 ── */
-    const researchList = [];
-    const researchById = new Map();
-    for (const r of data.research ?? []) {
-        const id = r.research_id;
-        if (!id || researchById.has(id)) bad(`research_id '${id}'`);
-        if (!byId.has(r.building_id)) bad(`연구 ${id} — 없는 건물 '${r.building_id}'`);
-        if (!(r.target in RESEARCH_TARGETS)) bad(`연구 ${id} — 모르는 대상 '${r.target}'`);
-        if (!(typeof r.per_level === 'number' && r.per_level !== 0)) bad(`연구 ${id} — per_level ${r.per_level}`);
-        if (!r.name_kr || !r.name_en) bad(`연구 ${id} — 이름이 비었다`);
-        if (!STATUS.includes(r.status)) bad(`연구 ${id} — status '${r.status}'`);
-        const x = { id, building: r.building_id, target: r.target, perLevel: r.per_level, cost: parseCost(r.cost, `연구 ${id}`), name: { ko: r.name_kr, en: r.name_en } };
-        researchById.set(id, x);
-        researchList.push(x);
-    }
-
     /* ── 여는 것 — 한 줄에 하나 ── */
-    const targetOf = target => {
-        if (target in TARGETS) return TARGETS[target];
-        const [head, id] = String(target).split(':');
-        if (head === 'research' && researchById.has(id)) return { kind: 'add', live: RESEARCH_TARGETS[researchById.get(id).target] };
-        return null;
-    };
+    const targetOf = target => TARGETS[target] ?? null;
     for (const r of data.effects ?? []) {
         const where = `${r.building_id} r${r.rank} ${r.target}`;
         const row = rankRows.get(`${r.building_id}:${r.rank}`);
@@ -254,9 +224,6 @@ export function createConstruction(data) {
         }
         return out;
     }
-
-    /** 세이브의 연구 레벨을 표에 맞춘다 — 없는 연구 · 0 · 정수 아님은 지운다(상한은 지을 때 본다) */
-    const fitResearch = levels => Object.fromEntries(Object.entries(levels ?? {}).filter(([id, n]) => researchById.has(id) && Number.isInteger(n) && n > 0));
 
     /** 그 랭크의 정의 — `{require, cost, effects[+live], pending}` · `pending` = 지을 수 없는 준비 중(짓게 하는 줄이 하나도 없다) · 없으면 null */
     function rankInfo(id, rank) {
@@ -309,12 +276,6 @@ export function createConstruction(data) {
         return { rank, require, cost, effects: info.effects, err };
     }
 
-    /** 연구 배율 `1 + Σ(레벨 × 레벨당 %)` — 그 대상을 받는 연구를 모두 더한다 · 연구가 없으면 1. 다른 원천과는 **부르는 쪽이 곱한다**(§11-7) */
-    function bonus(levels, target) {
-        if (!(target in RESEARCH_TARGETS)) bad(`모르는 연구 대상 '${target}'`);
-        return 1 + researchList.filter(r => r.target === target).reduce((a, r) => a + (levels?.[r.id] ?? 0) * r.perLevel, 0);
-    }
-
     /**
      * 그 대상이 **n 에 닿는 랭크** `{id, name, rank}` — 잠긴 자리가 「무엇을 지어야 열리나」를 말할 때 읽는다(`state.needOf`) · 못 닿으면 null.
      *   켜기 = 그 줄이 처음 나오는 랭크(n 은 안 본다) · 더하기 = 값을 쌓아 **n 이상**이 되는 랭크(기본값은 안 센다 — 부르는 쪽이 뺀다 ·
@@ -347,5 +308,5 @@ export function createConstruction(data) {
         return out;
     }
 
-    return { list, research: researchList, startRanks, fitRanks, fitResearch, rankInfo, opened, check, nextState, bonus, reach, tabs };
+    return { list, startRanks, fitRanks, rankInfo, opened, check, nextState, reach, tabs };
 }

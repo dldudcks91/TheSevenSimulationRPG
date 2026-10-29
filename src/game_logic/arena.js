@@ -143,8 +143,8 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
 
     function fight(team, opponent, rng, loadout = null) {
         if (team.length !== teamSize || opponent.length !== teamSize) throw new Error('arena: expected 3 vs 3');
-        // 물약을 안 주면 칸 0 — 물약 줄이 아예 안 선다
-        return battle.simulateTeams(clone(team), clone(opponent), rng, loadout?.potions ?? null, loadout?.slotMax ?? 0);
+        // 물약을 안 주면 칸 0 — 물약 줄이 아예 안 선다 · 마시는 HP 비율은 편성의 값(없으면 CSV 기본값 · R378)
+        return battle.simulateTeams(clone(team), clone(opponent), rng, loadout?.potions ?? null, loadout?.slotMax ?? 0, loadout?.potionHp ?? null);
     }
 
     /* ── 오프라인 — 등급에 맞춰 갖춘 AI 팀 (arena_design §7) ── */

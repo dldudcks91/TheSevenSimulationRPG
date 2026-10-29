@@ -1,6 +1,6 @@
-base_id,name_kr,name_en,description_kr
-Army,군대,Army,부류 — 무기 · 갑옷으로 대열을 짠 병사 · monster.csv:monster_base 의 플레이어가 보는 이름 · 도감 Lv1 · Lv2 의 범위(그 부류 전체) · 종족(monster_type — 데몬 · 일반 · 언데드)과 따로인 축 · 1 ~ 5장 일반몹만 부류가 있다(보스 · 6 · 7장은 옛 종족 id 그대로 — 이름 없음 · 보스 부류는 나중) [2026-10-24 · monster_design §3 · §8 — 옛 종족 열여덟(2026-10-22)을 대체]
-Tribe,부족,Tribe,주술사가 이끄는 원시 무리
-Giant,거인,Giant,사람보다 훨씬 큰 몸
-Guardian,수호자,Guardian,무언가를 지키려고 움직이는 것
-Aberration,이형,Aberration,사람 꼴이 아닌 것
+base_id,name_kr,name_en,gimmick_value,gimmick_n,description_kr
+Army,군대,Army,0.2,3,부류 — 무기 · 갑옷으로 대열을 짠 병사 · monster.csv:monster_base 의 플레이어가 보는 이름 · 도감 Lv1 · Lv2 의 범위(그 부류 전체) · 종족(monster_type — 데몬 · 일반 · 언데드)과 따로인 축 · 1 ~ 5장 일반몹만 부류가 있다(보스 · 6 · 7장은 옛 종족 id 그대로 — 이름 없음 · 보스 부류는 나중) [2026-10-24 · monster_design §3 · §8 — 옛 종족 열여덟(2026-10-22)을 대체] · **기믹**(2026-10-29 · R388 · D4) — 서 있는 군대가 gimmick_n(셋) 이상이면 군대의 직격 데미지 ×(1 + gimmick_value) · 하나라도 쓰러져 n 밑이면 꺼진다 ⚠제안(값 · Q3 「셋 이상」)
+Tribe,부족,Tribe,0,0,주술사가 이끄는 원시 무리 · **기믹**(R388 · D5) — 주술사가 쓰러진 동료를 다시 부른다 · 주술사는 한 번에 하나 — ⚠ Q4(주술사 스킬 칸) 대기라 코드가 안 읽는다(값 0)
+Giant,거인,Giant,0.3,0,사람보다 훨씬 큰 몸 · **기믹**(R388 · D6) — 서 있는 적이 자기 하나면 직격 데미지 ×(1 + gimmick_value) ⚠제안(Q8 — 데미지만)
+Guardian,수호자,Guardian,0.2,0,무언가를 지키려고 움직이는 것 · **기믹**(R388 · D7) — 수호자가 서 있는 동안 후열 동료가 받는 직격 ×(1 − gimmick_value) · 자신은 안 받는다 ⚠제안
+Aberration,이형,Aberration,0.05,5,사람 꼴이 아닌 것 · **기믹**(R388 · D8) — 쓰러질 때마다 영웅 전원의 원소 저항 넷 −gimmick_value 한 겹 · 상한 gimmick_n 겹(사용자 「5칸까지」) · 라운드가 바뀌면 비운다 ⚠제안(값)

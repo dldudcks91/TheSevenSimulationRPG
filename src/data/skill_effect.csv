@@ -2,7 +2,7 @@ skill_id,seq,effect,target,hits,mult_pct,decay_pct,proc_chance_pct,proc_mult_pct
 war_bash,1,hit,-,1,3,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.3,-,-,-
 war_doubleswing,1,hit,-,2,1.1,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.11,-,-,-
 war_recovery,1,mend,-,0,0.25,0,0,0,-,-,mult_pct,vit,0,-,-,0,-,-,0,mult_pct,0.025,-,-,-
-war_leap,1,hit,-,1,1.1,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.11,-,-,-
+war_leap,1,hit,-,1,1.5,0,0,0,-,war_leap,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.15,레벨 칸 ⚠임시 — 레벨이 무엇을 올리나는 미정(skill_design §12-8) · 맞은 적마다 스턴 2026-10-28 R371,-,-
 war_shout,1,apply,-,0,0,0,0,0,-,war_shout,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.04,-,-,-
 war_shout,2,apply,-,0,0,0,0,0,-,war_shout_res,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
 war_battleorders,1,apply,-,0,0,0,0,0,-,war_battleorders,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.01,-,-,-
@@ -10,33 +10,34 @@ war_ironskin,1,apply,-,0,0,0,0,0,-,war_ironskin,effect_value,vit,0,duration_sec,
 war_frenzy,1,apply,-,0,0,0,0,0,-,war_frenzy,effect_value,agi,0,duration_sec,vit,0,-,-,0,cool_sec,-0.5,-,-,-
 war_warcry,1,apply,-,0,0,0,0,0,-,war_warcry,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.01,-,-,-
 war_battlecry,1,apply,-,0,0,0,0,0,-,war_battlecry,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
-kni_resistshield,1,apply,-,0,0,0,0,0,-,kni_resistshield,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.04,-,-,-
+kni_resistshield,1,apply,-,0,0,0,0,0,-,kni_resistshield,effect_value,vit,0,duration_sec,vit,0,-,-,0,duration_sec,0.5,레벨 = 지속(2026-10-29 R384 — 저항 상한에 막혀 값 레벨이 헛돈다),-,-
 kni_holyshield,1,apply,-,0,0,0,0,0,-,kni_holyshield,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.025,-,-,-
 kni_charge,1,hit,-,1,2.5,0,0.1,2,-,-,mult_pct,str,0,proc_chance_pct,luck,0,-,-,0,mult_pct,0.25,-,-,-
 kni_rush,1,hit,-,4,2,0,0,0,-,-,mult_pct,str,0,hits,agi,0,-,-,0,hits,0.34,-,mult_pct,0.01
 kni_enchant,1,apply,-,0,0,0,0,0,-,kni_enchant,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.06,-,-,-
-kni_might,1,apply,-,0,0,0,0,0,-,kni_might,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.015,-,-,-
-kni_fanaticism,1,apply,-,0,0,0,0,0,-,kni_fanaticism,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.012,-,-,-
+kni_might,1,apply,-,0,0,0,0,0,-,kni_might,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
+kni_fanaticism,1,apply,-,0,0,0,0,0,-,kni_fanaticism,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
 kni_defiance,1,apply,-,0,0,0,0,0,-,kni_defiance,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
-kni_sweep,1,hit,-,1,1.3,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.13,-,-,-
+kni_sweep,1,hit,-,1,2,0,0,0,-,kni_sweep_def,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.2,맞은 전열에 방어 감소 창(2026-10-29 R384),-,-
 kni_holyfire,1,apply,-,0,0,0,0,0,-,kni_holyfire,effect_value,int,0,-,-,0,-,-,0,effect_value,0.015,-,-,-
 arc_snipe,1,hit,-,1,5.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.55,-,-,-
-arc_rapid,1,hit,-,3,0.55,0,0,0,-,-,mult_pct,str,0,hits,agi,0,-,-,0,hits,0.3,-,-,-
-arc_multishot,1,hit,-,1,1.2,0.4,0,0,-,-,mult_pct,str,0,decay_pct,agi,0,-,-,0,mult_pct,0.12,-,-,-
-arc_guided,1,hit,-,1,2.7,0.15,0,0,-,-,mult_pct,str,0,decay_pct,agi,0,-,-,0,decay_pct,0.015,-,-,-
-arc_pierce,1,apply,-,0,0,0,0,0,-,arc_pierce,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.07,-,-,-
+arc_rapid,1,hit,-,3,0.55,0,0,0,-,-,mult_pct,str,0,hits,agi,0,-,-,0,hits,0.34,레벨 칸 둘 — 타수 Lv4 · 7 · 10 에 +1 · 한 발 배율 +1%p(2026-10-29 R383 · 러시와 같은 모양),mult_pct,0.01
+arc_multishot,1,hit,-,1,1,0.5,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.1,decay = 전열이 살아 있는 동안 후열 약화(2026-10-29 R383 · HIT_DECAY enemy_all = back),-,-
+arc_guided,1,hit,-,1,1.85,0.15,0,0,-,-,mult_pct,str,0,decay_pct,agi,0,-,-,0,decay_pct,0.015,방어 깎기 겹 상한 [balance.csv:weapon_def_down_stack_max](2026-10-29 R383),-,-
+arc_pierce,1,apply,-,0,0,0,0,0,-,arc_pierce,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
 arc_poison,1,apply,-,0,0,0,0,0,-,arc_poison,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
-arc_arrowrain,1,hit,-,1,1.4,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.14,-,-,-
-arc_evade,1,apply,-,0,0,0,0,0,-,arc_evade,effect_value,agi,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
-mag_fireball,1,hit,-,1,3.1,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.31,-,-,-
-mag_inferno,1,hit,-,1,1.3,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.13,-,-,-
-mag_iceblast,1,hit,-,1,1.8,0,0,0,cold,freeze,mult_pct,int,0,duration_sec,cha,0,-,-,0,mult_pct,0.18,-,-,-
+arc_coldarrow,1,apply,-,0,0,0,0,0,-,arc_coldarrow,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.04,-,-,-
+arc_evade,1,apply,-,0,0,0,0,0,-,arc_evade,effect_value,agi,0,duration_sec,vit,0,-,-,0,cool_sec,-0.5,레벨 = 쿨(2026-10-29 R383 — 횟수를 다 쓰면 창이 닫혀 지속이 헛돈다),-,-
+mag_fireball,1,hit,-,1,3.2,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.32,-,-,-
+mag_inferno,1,hit,-,1,1.6,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.16,-,-,-
+mag_iceblast,1,hit,-,1,1.1,0,0,0,cold,freeze,mult_pct,int,0,duration_sec,cha,0,-,-,0,mult_pct,0.11,-,-,-
 mag_frostnova,1,hit,-,1,1.15,0,0,0,cold,freeze,mult_pct,int,0,duration_sec,cha,0,-,-,0,mult_pct,0.115,-,-,-
-mag_lightning,1,hit,-,1,2.2,0,0.1,2,lightning,-,mult_pct,int,0,proc_mult_pct,luck,0,-,-,0,mult_pct,0.22,-,-,-
+mag_lightning,1,hit,-,1,2.5,0,0.1,2,lightning,-,mult_pct,int,0,proc_mult_pct,luck,0,-,-,0,mult_pct,0.25,-,-,-
 mag_chain,1,hit,-,1,1.3,0.3,0.1,2,lightning,-,mult_pct,int,0,decay_pct,agi,0,proc_mult_pct,luck,0,decay_pct,-0.03,-,-,-
-mag_ignite,1,apply,-,0,0,0,0,0,-,mag_ignite,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,-,-,-
-mag_deepfreeze,1,apply,-,0,0,0,0,0,-,mag_deepfreeze,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,-,-,-
-mag_surge,1,apply,-,0,0,0,0,0,-,mag_surge,effect_value,luck,0,duration_sec,vit,0,-,-,0,effect_value,0.025,-,-,-
+mag_ignite,1,apply,-,0,0,0,0,0,-,mag_ignite,duration_sec,vit,0,-,-,0,-,-,0,hit_value,0.01,레벨 = 화상 세기(2026-10-29 R385 — 옛 지속 +1초는 중간 레벨에서 상시가 됐다),-,-
+mag_deepfreeze,1,apply,-,0,0,0,0,0,-,mag_deepfreeze,duration_sec,vit,0,-,-,0,-,-,0,-,-,① 긴 결빙(imbue),-,-
+mag_deepfreeze,2,apply,-,0,0,0,0,0,-,mag_deepfreeze_shatter,duration_sec,vit,0,-,-,0,-,-,0,hit_duration_sec,0.1,② 얼어 있던 적에게 스턴(shatter) · 레벨 = 스턴 시간(2026-10-29 R385),-,-
+mag_surge,1,apply,-,0,0,0,0,0,-,mag_surge,effect_value,luck,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
 mag_echo,1,apply,-,0,0,0,0,0,-,mag_echo,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,0.5,-,-,-
 pri_judgment,1,hit,-,1,0.88,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.088,고정 피해 — 방어 · 저항 · 피해 감소를 안 받는다 · 배율 · 레벨당 ×0.4 (2.2 · 0.22 → 10-06 사용자 「데미지를 낮춰서」 · R221),-,-
 pri_heal,1,heal,-,0,1.6,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,-,-,-
@@ -50,6 +51,11 @@ pri_doom,1,apply,-,0,0,0,0,0,-,pri_doom,effect_value,cha,0,-,-,0,-,-,0,effect_va
 pri_summon,1,call,-,0,0,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-,-,-
 mon_selfdestruct,1,fixed,-,1,0.3,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-,-,-
 mon_hellfire,1,hit,-,10,0.4,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,-,-,사탄 헬파이어 — 정신 집중 계속 닳기 · 타수 10 = 틱 수(× balance.csv:channel_tick_sec = 지속) · 배율 = 한 틱 몫 · 몬스터 전용이라 레벨 줄이 없다(R216) · ⚠값 임시,-,-
+mon_ironmaiden,1,apply,-,0,0,0,0,0,-,mon_ironmaiden,-,-,0,-,-,0,-,-,0,-,-,레비아탄 아이언 메이든 — 적 전원에게 maiden 창 · 몬스터 전용이라 레벨 줄이 없다 · ⚠값 임시,-,-
+mon_goldfever,1,apply,-,0,0,0,0,0,-,mon_goldfever,-,-,0,-,-,0,-,-,0,-,-,맘몬 골드 피버 첫 줄 — 변신 창(봉인 · 맞히면 늘어남) · ⚠값 임시,-,-
+mon_goldfever,2,apply,-,0,0,0,0,0,-,mon_goldfever_atk,-,-,0,-,-,0,-,-,0,-,-,둘째 줄 — 데미지 창(같은 시전이라 변신 창과 함께 늘어난다) · ⚠값 임시,-,-
+mon_delegate,1,apply,-,0,0,0,0,0,-,mon_delegate,-,-,0,-,-,0,-,-,0,-,-,벨페고르 델리게이트 — 오오라 · 값은 안 읽는다,-,-
+mon_swarm,1,apply,-,0,0,0,0,0,-,mon_swarm,-,-,0,-,-,0,-,-,0,-,-,바알제붑 스웜 — 파리 떼 창 · ⚠값 임시,-,-
 war_ragnarok,1,apply,-,0,0,0,0,0,-,war_ragnarok,effect_value,str,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
 war_berserk,1,apply,-,0,0,0,0,0,-,war_berserk,effect_value,str,0,duration_sec,vit,0,-,-,0,duration_sec,0.8,-,-,-
 war_mutualruin,1,hit,-,1,4.2,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.42,-,-,-
@@ -80,11 +86,12 @@ mag_staticfield,1,hit,-,1,3.0,0,0,0,lightning,-,mult_pct,int,0,-,-,0,-,-,0,-,-,-
 arc_trueaim,1,apply,-,0,0,0,0,0,-,arc_trueaim,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.04,-,-,-
 arc_singlestrike,1,hit,-,1,4.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.45,-,-,-
 arc_reload,1,apply,-,0,0,0,0,0,-,arc_reload,effect_value,agi,0,duration_sec,vit,0,-,-,0,duration_sec,0.8,-,-,-
-arc_quickdraw,1,apply,-,0,0,0,0,0,-,arc_quickdraw,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
-arc_quickdraw,2,apply,-,0,0,0,0,0,-,arc_quickdraw_weak,duration_sec,vit,0,-,-,0,-,-,0,-,-,-,-,-
-arc_overdraw,1,apply,-,0,0,0,0,0,-,arc_overdraw,duration_sec,vit,0,-,-,0,-,-,0,-,-,-,-,-
-arc_overdraw,2,apply,-,0,0,0,0,0,-,arc_overdraw_power,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.07,-,-,-
-arc_fulldraw,1,apply,-,0,0,0,0,0,-,arc_fulldraw,effect_value,agi,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
+arc_quickhands,1,apply,-,0,0,0,0,0,-,arc_quickhands,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+arc_eagleeye,1,apply,-,0,0,0,0,0,-,arc_eagleeye,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+arc_quickdraw,1,apply,-,0,0,0,0,0,-,arc_quickdraw,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,-,-,-
+arc_quickdraw,2,apply,-,0,0,0,0,0,-,arc_quickdraw_weak,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,두 창이 함께 끝난다 — 레벨도 둘 다 시간,-,-
+arc_overdraw,1,apply,-,0,0,0,0,0,-,arc_overdraw,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,-,-,-
+arc_overdraw,2,apply,-,0,0,0,0,0,-,arc_overdraw_power,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,두 창이 함께 끝난다 — 레벨도 둘 다 시간,-,-
 arc_chaindraw,1,apply,-,0,0,0,0,0,-,arc_chaindraw,effect_value,agi,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
 arc_huntersmark,1,apply,-,0,0,0,0,0,-,arc_huntersmark,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
 arc_supportingfire,1,apply,-,0,0,0,0,0,-,arc_supportingfire,effect_value,ldr,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-

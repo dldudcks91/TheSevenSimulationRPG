@@ -682,10 +682,11 @@ export function createHeroSystem(data) {
         //   마법 무기 오만 ② 「레벨당 캐스팅 속도」 — 영웅 레벨 × 값이 캐스팅 속도에 더해진다 [2026-10-05 · R208 · item_design §1 「마법사 · 사제 무기」]
         //   장갑 가죽 특성(공격 속도 / 캐스팅 속도 — 줄)도 같은 규칙이다 · 갑옷군 공속은 물리 무기 · 맨손만 (R303)
         const speed = magic ? f('cast_speed_pct') + f('cast_speed_per_level_pct') * hero.level : f('aspd_pct') + f('aspd_per_level_pct') * hero.level + groupAspd;
-        const period = Math.max(0.4,
-            (group ? group.period : B.unarmed_period)
-            / speedCoef(A?.agi)
-            * (1 - speed));
+        // 공속은 「몇 % 더 치나」 [2026-10-29 · R386 · battle_design §2] — 주기 = 원값 ÷ (1 + 공속 합) · 바닥 [balance.csv:period_floor_sec].
+        //   ~~× (1 − 공속 합) · 하한 0.4 상수~~ 대체 — 합이 1 에 가까워질수록 몇 %p 가 공격 수를 폭증시켰다. 원값 · 공속 합 · 무기 주기는 전투가 버프와 한 합으로 다시 쓴다(`period_raw` · `speed_pct` · `period_weapon`)
+        const weaponPeriod = group ? group.period : B.unarmed_period;
+        const periodRaw = weaponPeriod / speedCoef(A?.agi);
+        const period = Math.max(B.period_floor_sec, periodRaw / (1 + speed));
 
         // 신발 오만 「레벨당 모든 원소 저항」 — 영웅 레벨 × 값이 모든 원소 저항에 더해진다 [2026-10-21 · R303 · item_design §1 「10-21 방어구 개정」]
         const resAll = f('res_all') + f('res_all_per_level') * hero.level;
@@ -728,12 +729,14 @@ export function createHeroSystem(data) {
             statusDur: f('status_dur_pct'),       // 내가 건 상태이상 +% (skill_runtime.applyStatus)
             debuffDur: f('debuff_dur_pct'),       // 내가 적에게 건 상태이상 아닌 창 +% (skill_runtime.applyStatus)
             healOut: f('heal_out_pct'),           // 내가 거는 회복 스킬 +% — 받는 쪽 체력 회복 +% 와 곱(⚠제안 · skill_runtime.castHeal)
+            // 물약 효과 상승 — **낀 영웅이 마시는 물약의 수치**(반지 분노 ③ · 2026-10-29 R382 · battle_design §7-1). 체력 물약은 체력 회복 +% 와 한 괄호(battle.drinkPotions)
+            potion: f('potion_effect_pct'),
         };
         const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,
-            fx.defStack, fx.staggerDur, fx.castRefund, fx.castStack, fx.statusDur, fx.debuffDur, fx.healOut].some(v => v !== 0);
+            fx.defStack, fx.staggerDur, fx.castRefund, fx.castStack, fx.statusDur, fx.debuffDur, fx.healOut, fx.potion].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
             // **평타는 언제나 물리다** [2026-10-02 · 사용자 확정 · R198 · battle_design §2-1 — ~~원소 옵션이 없는 마법 무기의 기본 공격은 물리~~(09-11 · R80) 대체].
@@ -781,6 +784,9 @@ export function createHeroSystem(data) {
             //   1점당 `cha_debuff_dur_step_pct` × (매력 − 기준) · 기준에서 0 · 낮으면 음수(길어진다) · 능력치를 모르면 0 · 몬스터도 같은 길(`battle.makeEnemy`)
             debuff_dur_reduction: Number.isFinite(A?.cha) ? Number((B.cha_debuff_dur_step_pct * (A.cha - B.attr_dmg_pivot)).toFixed(4)) : 0,
             action_period: Number(period.toFixed(3)),
+            // 주기의 재료 [2026-10-29 · R386 · INTERFACE §2-3] — **`combat_stat.csv` 행이 아니다**(시트에 안 선다). 전투가 버프 공속을 같은 합에 넣어 다시 쓴다:
+            //   `period_raw` = 무기 주기 ÷ 민첩 계수 · `speed_pct` = 장비 · 마스터리 공속 합(마법 무기는 캐스팅 속도) · `period_weapon` = 무기 주기(고정 창 — 퀵 드로우 · 오버드로우)
+            period_raw: periodRaw, speed_pct: speed, period_weapon: weaponPeriod,
             // 피해량 — 데미지 % 괄호와 합치지 않고 전투가 따로 곱한다 (2026-09-18 · battle_design §9-2). **지금 출처가 없어 언제나 0** —
             //   하나뿐이던 도감 「피해량」이 2026-10-18 계열 보정 폐지로 나갔다(R286 · 칸만 남았다 — DEV_PLAN §4 부채)
             dmg_bonus_pct: 0,

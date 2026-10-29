@@ -30,8 +30,10 @@
  *   공통옵션 `armor_common_option.csv`~~(09-18 · 파일째 퇴역)] — 부위마다 표 하나 · 갈래가 표를 가르지 않는다.
  *   **갈래는 방어 계수 + 굴리는 베이스 특성**(`armor_group.csv:trait_*` · 투구 · 장갑 · 신발) — 특성은 베이스 「방어력 +%」 바로 뒤에 `src: 'fixed'` 줄로 박힌다(R303).
  *   **오만은 부위마다 한 칸 · 장갑 시기도 한 칸**(`singleOption`) · **특정 스킬 +n 은 장비에서 뺐다**(2026-10-21 — 표에 서면 로드가 던진다 · 옛 아이템의 줄은 `skillPlusOf` 가 그대로 읽는다).
- *   **목걸이 · 반지도 세 층이다** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 `accessory_sin_option.csv` +
- *   공통옵션 `accessory_common_option.csv`(두 부위 한 풀 · 랜덤 칸 — 위). 반지는 베이스 옵션이 없고(~~그만큼 랜덤 줄이 하나 더~~ 2026-10-20 — 칸 수는 같다),
+ *   **반지도 죄종 계열표다** [2026-10-29 · 사용자 확정 · R382 · item_design §1 「반지 옵션 — 죄종 계열」] — `accessory_sin_option.csv` 의 반지 행(`option`)을
+ *   무기 · 방어구와 같은 `familyOptions` 로 굴린다 · 베이스 옵션은 아직 없다(스킬 태그 — R321).
+ *   **목걸이는 세 층이다** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 `accessory_sin_option.csv` +
+ *   공통옵션 `accessory_common_option.csv`(한 풀 · 랜덤 줄 — 위 · ~~두 부위 한 풀~~ 반지는 R382 로 떠났다),
  *   **목걸이 베이스 옵션은 발동 스킬**이라 `affixes` 가 아니라 `item.proc` 에 든다(발동 조건은 베이스 — `amulet_proc.csv`).
  *   ~~`affix.csv` 한 풀(전부 `random`)을 쓰는 것은 목걸이 · 반지뿐이다~~ — 마지막 사용자가 떠나 파일째 퇴역했다.
  *
@@ -81,9 +83,9 @@ import { createFormula } from './formula.js';
  *                  풀이 있는 무기군만 드롭 때 하나를 굴려 이름·그림을 그 베이스로 좁힌다(2026-09-10). 없으면 무기군 이름 그대로
  *   ~~classSkills · starterSkills~~ — 2026-09-29 R179 퇴역(무기가 스킬을 안 담는다 — skill_design §2-1 스킬북)
  *   ~~affixDefs~~ — 2026-09-21 R127 퇴역(`affix.csv` 삭제 — 마지막 사용자였던 목걸이 · 반지가 아래 세 표로 옮겼다)
- *   accessorySinOptions    — [{slot, sin, stat, scale, min, max, perIlvl?}] ← accessory_sin_option.csv — 반지 · 목걸이 죄종 칸 후보 (2026-09-21).
- *                            한 부위 · 한 죄종에 행이 여럿이면 그중 하나를 굴린다(반지 시기 다섯 · 목걸이 시기 둘 · 탐욕 셋) · **행 순서가 결정론 계약**
- *   accessoryCommonOptions — [{family, stat, scale, min, max, perIlvl?}] ← accessory_common_option.csv — **두 부위 한 풀** (2026-09-21) · **행 순서가 결정론 계약**
+ *   accessorySinOptions    — [{slot, sin, option, stat, scale, min, max, perIlvl?}] ← accessory_sin_option.csv — 반지 죄종 계열표(`option` · 2026-10-29 R382) ·
+ *                            목걸이 죄종 칸 후보(2026-09-21 · 한 죄종에 행이 여럿이면 그중 하나 — 시기 둘 · 탐욕 셋) · **행 순서가 결정론 계약**
+ *   accessoryCommonOptions — [{family, stat, scale, min, max, perIlvl?}] ← accessory_common_option.csv — **목걸이 공통옵션 한 풀** (2026-09-21 · 반지는 R382 부터 안 굴린다) · **행 순서가 결정론 계약**
  *   amuletProcs  — [{baseId, trigger, min, max}] ← amulet_proc.csv — 목걸이 베이스마다 발동 조건 하나(`hit` · `struck` · `interval`)
  *   procSkills   — [skillId] ← skill.csv:amulet_pool = 1 — 목걸이 발동 스킬 후보(직업을 안 가리는 한 풀) · **행 순서가 결정론 계약**
  *   weaponSinOptions    — [{sin, option, appliesTo, stat, scale, min, max}] ← weapon_sin_option.csv — **죄종 계열표** (2026-09-11 · R78 · 계열표 2026-10-05 · R206).
@@ -141,18 +143,20 @@ export function createItemSystem(data) {
     // ~~SIN_FROM_WEAPON = ['gloves']~~ — 2026-10-05 R206 퇴역. 무기 표가 계열표로 바뀌어 장갑은 옛 무기 행 13개를 `armor_sin_option.csv` 의 장갑 행으로 그대로 든다
     /**
      * **죄종 계열표로 굴리는 부위** [2026-10-05 · R206 · R209 · item_design §1 「무기 옵션 — 죄종 계열」 · 「갑옷 옵션 — 죄종 계열」] — 메인 줄 + 랜덤 줄(`familyOptions`).
-     * **방어구 넷 전부** [투구 2026-10-21 R299 · 장갑 · 신발 R303 · item_design §1 「10-21 방어구 개정」]. 장신구만 장신구 세 층이다.
+     * **방어구 넷 전부** [투구 2026-10-21 R299 · 장갑 · 신발 R303 · item_design §1 「10-21 방어구 개정」] · **반지** [2026-10-29 · R382 · 「반지 옵션 — 죄종 계열」]. 목걸이만 장신구 세 층이다.
      * 구조 상수라 CSV 가 아니라 여기 둔다(INTERFACE §5-3)
      */
-    const FAMILY_SLOTS = new Set(['weapon', 'armor', 'helmet', 'gloves', 'boots']);
+    const FAMILY_SLOTS = new Set(['weapon', 'armor', 'helmet', 'gloves', 'boots', 'ring']);
     /** 계열마다 옵션 셋 — 옵션 번호(`option`)가 1 · 2 · 3 이다. 로드 검증이 계열표 부위 · 무기군마다 이 셋을 다 요구한다(아래 한 칸 예외만 1 하나) (구조 상수 · INTERFACE §5-3) */
     const FAMILY_OPTIONS = [1, 2, 3];
     /**
      * **한 칸뿐인 계열** [2026-10-21 · 사용자 · R303 · item_design §1 「10-21 방어구 개정」 · INTERFACE §5-3] — 옵션이 1 하나다(변형은 여럿일 수 있다).
-     *   오만 — 모든 부위(「오만은 1 · 2 · 3 중 하나만 남기고 모두 삭제」) · 장갑 시기 — 다섯 변형 한 칸(「다섯 중에 1개가 나오는거야」). 구조 상수
+     *   오만 — 모든 부위(「오만은 1 · 2 · 3 중 하나만 남기고 모두 삭제」 · 반지는 최소 · 최대 데미지 둘) · 장갑 시기 — 다섯 변형 한 칸(「다섯 중에 1개가 나오는거야」). 구조 상수
      */
     const singleOption = (slot, sin) => sin === 'pride' || (slot === 'gloves' && sin === 'envy');
-    const optionsOf = (slot, sin) => (singleOption(slot, sin) ? [1] : FAMILY_OPTIONS);
+    /** **두 칸뿐인 계열** [2026-10-29 · 사용자 「지원은 삭제」 · R382 · item_design §1 「반지 옵션 — 죄종 계열」 · INTERFACE §5-3] — 반지 시기(① 다섯 변형 · ② 독 저항). 구조 상수 */
+    const twoOptions = (slot, sin) => slot === 'ring' && sin === 'envy';
+    const optionsOf = (slot, sin) => (singleOption(slot, sin) ? [1] : twoOptions(slot, sin) ? [1, 2] : FAMILY_OPTIONS);
     /**
      * 발동 옵션 → 스킬 풀 [2026-10-05 · R206 · R208 · R209 · INTERFACE §5-3 `PROC_POOL`] — 구조 어휘라 CSV 가 아니라 여기 둔다(`PROC_TRIGGERS` 와 같은 자리).
      * ⚠ `proc_struck_buff`(갑옷 오만 ③)는 「방어 쪽으로 한정」 목록이 미정이라 `buff` 그대로다(⚠임시)
@@ -279,10 +283,17 @@ export function createItemSystem(data) {
         for (const r of accSinOpts) {
             if (!ACC_SLOTS.includes(r.slot)) throw new Error(`item: accessory_sin_option ${r.stat} slot '${r.slot}' 은 반지 · 목걸이가 아니다`);
             if (!data.sins.includes(r.sin)) throw new Error(`item: accessory_sin_option 죄종 '${r.sin}'`);
+            // 반지 = 계열표(R382 — 방어구 표와 같은 옵션 번호 · 발동 · 특정 스킬 +n 금지) · 목걸이 = 죄종 칸 하나(`option` 1)
+            const opts = FAMILY_SLOTS.has(r.slot) ? optionsOf(r.slot, r.sin) : [1];
+            if (!opts.includes(r.option)) throw new Error(`item: accessory_sin_option ${r.slot} ${r.sin} ${r.stat} option '${r.option}'`);
+            if (FAMILY_SLOTS.has(r.slot) && (isProc(r.stat) || r.stat === SKILL_PLUS)) throw new Error(`item: accessory_sin_option ${r.slot} ${r.sin} 의 ${r.stat} — 장비 발동 · 특정 스킬 +n 은 반지에 없다`);
         }
         for (const slot of ACC_SLOTS) {
-            for (const sin of data.sins)
-                if (!accSinOpts.some(r => r.slot === slot && r.sin === sin)) throw new Error(`item: accessory_sin_option 에 ${slot} · ${sin} 행이 없다`);
+            for (const sin of data.sins) {
+                const have = new Set(accSinOpts.filter(r => r.slot === slot && r.sin === sin).map(r => r.option));
+                for (const o of FAMILY_SLOTS.has(slot) ? optionsOf(slot, sin) : [1])
+                    if (!have.has(o)) throw new Error(`item: accessory_sin_option 에 ${slot} · ${sin} 옵션 ${o} 행이 없다`);
+            }
         }
         if (ACC_SLOTS.length && !accCommonOpts.length) throw new Error('item: accessory_common_option 이 비었다');
         const amuletBases = (data.itemBases?.amulet ?? []).map(b => b.id);
@@ -295,6 +306,8 @@ export function createItemSystem(data) {
             for (const id of amuletBases) if (!procByBase[id]) throw new Error(`item: amulet_proc 에 목걸이 베이스 '${id}' 행이 없다`);
     }
     const accSinRows = (slot, sin) => accSinOpts.filter(r => r.slot === slot && r.sin === sin);
+    /** 계열표 부위(무기 밖)의 표 행 — 방어구 넷은 `armor_sin_option` · 반지는 `accessory_sin_option` 의 반지 행(R382) */
+    const familyRows = slot => (slot === 'ring' ? accSinOpts : armorSinOpts).filter(r => r.slot === slot);
 
     // ~~armorSinRows · armorCommonRows~~ — 2026-10-21 R303 퇴역(방어구 넷이 계열표 — `familyOptions` 가 그 부위의 행을 받는다)
 
@@ -397,13 +410,13 @@ export function createItemSystem(data) {
     }
 
     /**
-     * 반지 · 목걸이 옵션 — 죄종 칸 → 공통옵션 [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 순서가 곧 표시 순서다.
-     * rng 소비(계약 — INTERFACE §5-2): **방어구와 같은 모양** — 죄종마다 (행 1 → 값 1) → 공통 줄마다 (종류 1 → 변형 1 → 값 1 · R342 — ~~붙나 1 먼저~~ R291).
-     * 베이스 층은 반지에 없고 목걸이는 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 소비 수는 같다
+     * 목걸이 옵션 — 죄종 칸 → 공통옵션 [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 순서가 곧 표시 순서다.
+     * rng 소비(계약 — INTERFACE §5-2): 죄종마다 (행 1 → 값 1) → 공통 줄마다 (종류 1 → 변형 1 → 값 1 · R342 — ~~붙나 1 먼저~~ R291).
+     * 베이스 층은 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 소비 수는 같다 · ~~반지도 여기~~ — 2026-10-29 R382 로 반지는 `familyOptions`(아래 `build`)
      */
     function accessoryOptions(rng, slot, sins, rarity, ilvl) {
         const out = [];
-        // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(반지 시기 다섯 · 목걸이 시기 둘 · 탐욕 셋) 그중 하나를 균등으로 굴린다
+        // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(목걸이 시기 둘 · 탐욕 셋) 그중 하나를 균등으로 굴린다
         for (const sin of sins) {
             const rows = accSinRows(slot, sin);
             const pr = rng(), vr = rng();
@@ -411,8 +424,8 @@ export function createItemSystem(data) {
             const d = rows[Math.floor(pr * rows.length)];
             out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: sin });
         }
-        // 공통옵션 — 두 부위 한 풀. **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 상태이상 ×4 가 행 수만큼 비중을 먹지 않게) · 같은 종류는 한 번
-        //   줄 수는 희귀도가 정한다(R342 — ~~칸마다 붙을지 먼저 굴린다~~ R291 · R297) · 반지도 줄 수가 같다
+        // 공통옵션 — 한 풀. **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 상태이상 ×4 가 행 수만큼 비중을 먹지 않게) · 같은 종류는 한 번
+        //   줄 수는 희귀도가 정한다(R342 — ~~칸마다 붙을지 먼저 굴린다~~ R291 · R297)
         const families = [...new Set(accCommonOpts.map(r => r.family))];   // 첫 등장 순 = CSV 행 순서
         const n = randomLines(rarity);
         for (let i = 0; i < n; i++) {
@@ -506,6 +519,15 @@ export function createItemSystem(data) {
     }
 
     /**
+     * 반지 옵션 — **죄종 계열**만 [2026-10-29 · 사용자 확정 · R382 · item_design §1 「반지 옵션 — 죄종 계열」 — ~~죄종 칸 → 공통옵션~~(09-21 R127)].
+     *   베이스 옵션(스킬 태그 — R321)이 아직 없어 메인 줄부터다 · 랜덤 줄도 반지 계열표에서 고른다(오만 제외 · 무기 · 방어구와 같다).
+     * rng 소비(계약 — INTERFACE §5-2): `familyOptions` 그대로 — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1(발동 · 특정 스킬 +n 행이 없어도 소비)
+     */
+    function ringOptions(rng, sins, rarity, ilvl) {
+        return familyOptions(rng, familyRows('ring'), sins, randomLines(rarity), ilvl, []);
+    }
+
+    /**
      * 부위 고유값(Implicit) — 방어구만 든다 (무기는 피해 범위 — 파생 `weaponDamage` · 목걸이·반지는 없다).
      * 방어는 **비율 축**이라 곱셈 곡선을 타지 않는다 (§9-0) — ~~ilvl 완만 가산~~ → **10레벨 구간 직선**(2026-09-16 · R107).
      * **부위 배수** [2026-09-16 사용자 확정] — 갑옷 2.0 · 투구 1.0 · 장갑 0.6 · 신발 0.6(`armor_def_slot_*`).
@@ -528,7 +550,8 @@ export function createItemSystem(data) {
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직 이상) 접두 죄종 → (레어 · 에픽 · 레전더리) 접미 죄종 →
      *   **(무기 · 방어구 넷) 베이스 옵션 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05 · 랜덤 줄 수는 희귀도가 정한다 · 붙나 굴림 없음 — 2026-10-24 R342 ·
      *   **방어구는 베이스 옵션 뒤에 갈래 특성 변형 1 → 값 1** — 2026-10-21 R303 · ~~(투구 · 장갑 · 신발) 옵션 세 층~~ R303 퇴역) /
- *   **(목걸이 · 반지) 옵션 세 층** [2026-09-21 · R127 — ~~접사 수 → 접사마다 (정의 선택 → 값)~~] — (목걸이) 발동 스킬 1 → 값 1 → `accessoryOptions` →
+ *   **(반지) 죄종 계열** [2026-10-29 · R382] — `ringOptions` → `familyOptions`(베이스 옵션 0회) /
+ *   **(목걸이) 옵션 세 층** [2026-09-21 · R127 — ~~접사 수 → 접사마다 (정의 선택 → 값)~~] — 발동 스킬 1 → 값 1 → `accessoryOptions` →
      *   **(무기) 베이스 1회** [신설 2026-09-10] · ~~(무기) 스킬 1회~~ **2026-09-29 삭제**(R179) · ~~(방어구) 개체 굴림 1회~~ **2026-09-18 삭제** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
      */
@@ -551,10 +574,11 @@ export function createItemSystem(data) {
             up: 0,                             // 강화 단계 — 드롭은 굴리지 않는다. 올리는 것은 upgrade 하나뿐
             name: N.composeName(prefix, base, suffix, words),
             implicit: null,
-            // 무기(R78) · 방어구(2026-09-18) · 목걸이 · 반지(2026-09-21 · R127)는 세 층 — 셋 다 베이스 굴림보다 **앞**에서 굴린다 (§5-2)
+            // 무기(R78) · 방어구(2026-09-18) · 목걸이(2026-09-21 · R127) · 반지(계열표 — 2026-10-29 R382) — 모두 베이스 굴림보다 **앞**에서 굴린다 (§5-2)
             affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, rarity, ilvl)
                 : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, rarity, ilvl)
-                    : accessoryOptions(rng, slot, sins, rarity, ilvl),
+                    : slot === 'ring' ? ringOptions(rng, sins, rarity, ilvl)
+                        : accessoryOptions(rng, slot, sins, rarity, ilvl),
             sins,
             words,                             // 이름의 죄종 단어 — sins 와 같은 길이 (2026-09-19)
         };
@@ -726,6 +750,8 @@ export function createItemSystem(data) {
     // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루는 제작 재료 — item_design §7-1 · 반환량은 §5-3 미정)
     //   에픽 · 레전더리는 레어 값 ⚠임시(2026-10-24 · R342 — item_design 「남은 것」 「희귀도 개정의 남은 칸」 ③)
     const salvageDust = item => TWO_SINS.has(item.rarity) ? B.salvage_dust_rare : B.salvage_dust_magic;
+    /** 분해가 내는 부위 재료의 개수 — 가루와 같은 희귀도 문턱 [2026-10-29 · R373 · item_design §5-3] · 어느 재료인지는 부위가 정한다(state — `make_recipe.csv:salvage_mat`) */
+    const salvageMatUnits = item => TWO_SINS.has(item.rarity) ? B.salvage_mat_rare : B.salvage_mat_magic;
 
     /* ── 강화 (item_design §7-2 개정 2026-09-15 · R95) ── */
 
@@ -804,11 +830,12 @@ export function createItemSystem(data) {
         }
         const slot = item.slot, src = a.src;
         const g = slot === 'weapon' ? WG[item.group] ?? null : null;
-        // 굴림이 읽은 표 — 무기 · 방어구 넷은 죄종 계열표(`familyOptions` · 투구 R299 · 장갑 · 신발 R303) / 목걸이 · 반지는 죄종 칸 / 공통 한 풀
-        //   (그 전에 굴린 방어구의 옛 줄 — `random` 공통옵션 · 지금 표에 없는 stat — 은 null · 범위 꼬리가 안 붙는다)
+        // 굴림이 읽은 표 — 무기 · 방어구 넷 · 반지는 죄종 계열표(`familyOptions` · 투구 R299 · 장갑 · 신발 R303 · 반지 R382) / 목걸이는 죄종 칸 / 공통 한 풀
+        //   (그 전에 굴린 방어구의 옛 줄 — `random` 공통옵션 · 지금 표에 없는 stat — 은 null · 범위 꼬리가 안 붙는다 · 옛 반지의 `random` 줄은 공통 풀에서 찾는다)
         const rows = slot === 'weapon' ? (g ? sinOpts.filter(r => r.sin === src && appliesTo(r, g)) : [])
-            : FAMILY_SLOTS.has(slot) ? armorSinOpts.filter(r => r.slot === slot && r.sin === src)
-                : baseless(slot) ? (src === 'random' ? accCommonOpts : accSinRows(slot, src)) : [];
+            : baseless(slot) && src === 'random' ? accCommonOpts
+                : FAMILY_SLOTS.has(slot) ? familyRows(slot).filter(r => r.sin === src)
+                    : baseless(slot) ? accSinRows(slot, src) : [];
         const d = rows.find(r => r.stat === a.stat);
         return d ? { min: valueOf(d, rollOf(d, 0, item.ilvl), item.ilvl), max: valueOf(d, rollOf(d, 1, item.ilvl), item.ilvl) } : null;
     }
@@ -883,5 +910,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
+    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
 }

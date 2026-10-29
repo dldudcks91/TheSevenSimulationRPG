@@ -171,6 +171,8 @@ export const AFFIX_LABELS = {
     burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct' },   // 화상이 읽는다(R178)
     stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct' },   // 스턴이 읽는다(R178)
     buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
+    // 물약 효과 상승 — 낀 영웅이 마시는 물약의 수치(반지 분노 ③ · 2026-10-29 · R382 · item_design §1 「반지 옵션 — 죄종 계열」)
+    potion_effect_pct: { ko: '물약 효과', en: 'Potion Effect', fmt: 'pct' },
     // 명중률 — 지금은 궁수 마스터리 T1-3 의 축이다(적중률에 (1 + 명중률)로 곱한다 · 2026-09-22 R138 · 곱 2026-10-06 R219). 폐지된 `accuracy` 와 다른 id
     hit_bonus: { ko: '명중률', en: 'Hit Bonus', fmt: 'pct' },
     // ── 죄종 계열 옵션 (item_design §1 「무기 옵션 — 죄종 계열」 · 「마법사 · 사제 무기」 · 「갑옷 옵션 — 죄종 계열」 · 2026-10-05 · R206 · R208 · R209)
@@ -459,6 +461,8 @@ export const SKILL_ICON_FILES = [
     'pri_diamondbody', 'pri_sweep', 'pri_counter',
     // 몬스터 전용 — 헬파이어(1-5 사탄 · 정신 집중 · 2026-10-22 Codex 단색 · 기본 스킬과 같은 연한 회청색 실루엣) · 자폭은 쥔 몬스터가 없어 그림도 없다
     'mon_hellfire',
+    // 장 보스 고유 넷(2026-10-29 · R380 · Codex 단색 · art/README) — 레비아탄 · 맘몬 · 벨페고르(오오라라 원 배지) · 바알제붑
+    'mon_ironmaiden', 'mon_goldfever', 'mon_delegate', 'mon_swarm',
 ];
 // ~~`SKILL_ADV_ICON_FILES`(전직 스킬 그림 표 — 행보다 그림이 먼저 왔던 09-22 의 임시 목록)~~ 는 2026-10-02 삭제 —
 //   도감 전직 탭이 `skill.csv` 의 `owner_kind=advance` 행을 직접 편다(SCREEN_DESIGN §9-1 · ADR-0472)
@@ -889,9 +893,11 @@ const MATERIAL_ICON_DIR = './assets/art/icons/materials/';
 export const MATERIAL_ICONS = {
     iron_ore: 'ores/ore_t2', herb: 'herbs/herb_t1', timber: 'timbers/timber_t1',
     // 위 단계(합성 — 2026-10-27 · R359) ⚠임시 — 제 그림이 없어 **하급 그림을 빌린다** · 칸이 단계 점을 얹는다(`app.js:matPips` · ADR-0857)
-    iron_ore_2: 'ores/ore_t2', iron_ore_3: 'ores/ore_t2', iron_ore_4: 'ores/ore_t2',
-    herb_2: 'herbs/herb_t1', herb_3: 'herbs/herb_t1', herb_4: 'herbs/herb_t1',
-    timber_2: 'timbers/timber_t1', timber_3: 'timbers/timber_t1', timber_4: 'timbers/timber_t1',
+    iron_ore_2: 'ores/ore_t2', iron_ore_3: 'ores/ore_t2', iron_ore_4: 'ores/ore_t2', iron_ore_5: 'ores/ore_t2',
+    herb_2: 'herbs/herb_t1', herb_3: 'herbs/herb_t1', herb_4: 'herbs/herb_t1', herb_5: 'herbs/herb_t1',
+    timber_2: 'timbers/timber_t1', timber_3: 'timbers/timber_t1', timber_4: 'timbers/timber_t1', timber_5: 'timbers/timber_t1',
+    // 가루 줄(2026-10-29 · R373 — 단계 다섯 · 세이브 v43) ⚠임시 — 단계마다 제 그림이 없어 **분해 가루 그림**(`icons/currency/dust`)을 빌린다
+    dust: '../currency/dust', dust_2: '../currency/dust', dust_3: '../currency/dust', dust_4: '../currency/dust', dust_5: '../currency/dust',
 };
 export const materialIcon = id => (MATERIAL_ICONS[id] ? `${MATERIAL_ICON_DIR}${MATERIAL_ICONS[id]}${ICON_EXT}` : null);
 

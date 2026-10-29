@@ -828,6 +828,9 @@ const LV_LABEL = {
     duration_sec: () => 'cx.lv.dur',
     effect_value: () => 'cx.lv.value',
     cool_sec: () => 'cx.lv.cool',
+    // 창이 거는 상태이상의 값 · 시간 — 이그나이트 화상 세기 · 딥 프리즈 스턴 시간 (2026-10-29 · R385)
+    hit_value: () => 'cx.lv.value',
+    hit_duration_sec: () => 'cx.lv.dur',
 };
 /** 레벨 줄이 둘인 스킬의 `effect_value` 줄 — 걸린 효과의 수치(`skill_status.csv:stat`) → 칸 이름 (2026-10-28 R367 · 워 오더스) */
 const LV_STAT = { def_pct: 'cx.lv.def', res_pct: 'cx.lv.resAll' };
@@ -835,7 +838,7 @@ const LV_STAT = { def_pct: 'cx.lv.def', res_pct: 'cx.lv.resAll' };
 function lvStepText(field, step) {
     const sign = step < 0 ? '−' : '+';
     const v = Math.abs(step);
-    if (field === 'duration_sec' || field === 'cool_sec') return sign + t('time.s', { s: num(v) });
+    if (field === 'duration_sec' || field === 'cool_sec' || field === 'hit_duration_sec') return sign + t('time.s', { s: num(v) });
     if (field === 'hits') return sign + t('sk.u.times', { v: num(v) });
     return `${sign}${M.pctNum(v)}%`;
 }
@@ -1097,9 +1100,11 @@ function descSlots(def, pv, atkType, R) {
         h: () => at(e.hits, 'hits', UNIT.times),
         k: () => at(e.decay, 'decay', UNIT.pct),
         s: () => st ? at(st.dur, 'dur', UNIT.sec) : null,
-        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : UNIT.pct) : null,
+        // 값의 단위 — 이베이드는 횟수 · 변신은 맞힐 때마다 늘어나는 초(골드 피버 · 2026-10-29 R380) · 그 밖은 %
+        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : st.stat === 'transform' ? UNIT.sec : UNIT.pct) : null,
         v2: () => st2 ? slot({ raw: Math.abs(st2.value), unit: UNIT.pct }, R) : null,
         m: () => hl(num(D.balance.frenzy_stack_max)),
+        f: () => hl(num(D.balance.swarm_fly_count)),   // 스웜의 파리 수 (2026-10-29 · R380)
         t: () => sec(D.balance.aura_pulse_sec),
         i: () => sec(D.balance.channel_tick_sec),
         c: () => at(e.procChance, 'procChance', UNIT.pct),

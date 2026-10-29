@@ -92,12 +92,16 @@ export function createSkillRuntime(ctx) {
             if (b.until <= at + EPS) {
                 // `quiet` = 무기 옵션 창(타격 시 디버프 · R78) — 열 때 이벤트를 안 냈으므로 닫을 때도 안 낸다(재생기는 `s` 로 스킬 이름을 찾는다)
                 delete u.buffs[id];
+                // 프렌지 겹 이어짐 [2026-10-28 · R372 · skill_design §12-3] — 쌓인 겹을 그 유닛의 **다음 차례**까지 남긴다(`act` 가 지운다 · `applyStatus` 가 잇는다)
+                if (b.stat === 'frenzy' && (b.n ?? 0) > 0) u.fzKeep = { s: id, n: b.n };
                 // `s` = 그 창을 건 스킬 — 창 열쇠는 걸린 효과 id 다 (2026-09-24 · R151). 손으로 만든 창(`s` 없음)은 열쇠를 쓴다 · 상태이상은 `k` (R178)
                 if (!b.quiet) {
                     const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: b.s ?? id };
                     if (b.ail) ev.k = b.ail;
                     shown.push(ev); timeline.push(ev);
                 } else if (b.ail) ails.add(b.ail);
+                // 닫힐 때 할 일이 있는 효과 — 스웜이 뭉친다(`EFFECTS.swarm.end` · 2026-10-29 R380) · 없으면 아무 일도 없다 · rng 0
+                EFFECTS[b.stat]?.end?.(rt, u, b, at);
                 changed = true;
             }
         }
@@ -209,6 +213,8 @@ export function createSkillRuntime(ctx) {
         tgt.buffs[key] = { stat: x.stat, v: x.value, until, element: x.element ?? null, by: u.key, s: x.id, roundEnd: x.roundEnd ?? 'keep', ...(ail ? { ail: x.ailment } : {}),
             // 원소 부여 창(이그나이트 · 딥 프리즈 · 서지 · 2026-10-16 R250)은 창 동안 거는 상태이상을 든다 — `battle.strikeOnce` 가 읽는다
             ...(x.hit ? { hit: x.hit } : {}) };
+        // 프렌지 — 창이 끝난 뒤 첫 차례에 다시 걸면 남긴 겹에서 시작한다 [2026-10-28 · R372] · 남긴 것이 없으면 0 부터(종전) · 파생값은 아래 `refreshDerived` 가 민다
+        if (x.stat === 'frenzy' && tgt.fzKeep?.s === key) { tgt.buffs[key].n = tgt.fzKeep.n; delete tgt.fzKeep; }
         const ev = { t: r1(t), e: 'buff', u: tgt.key, s: x.id, stat: x.stat, v: x.value, until: r1(until) };
         if (ail) ev.k = x.ailment;
         // 스턴 — 행동 예약 · 스킬 쿨을 미는 일은 그것을 아는 battle.js 가 한다. 민 쿨 초를 재생기에 싣는다
@@ -293,7 +299,7 @@ export function createSkillRuntime(ctx) {
      *   주면 타겟 굴림(`pickTarget`)을 **안 쓰고** 그 대상이 쓰러져 있으면 치지 않는다 ·
      *   광역 창이 켜져 있으면 평타처럼 적 전원이다(「반격은 평타와 모든 로직이 같다」 · 사용자)
      */
-    function basicAttack(u, t, foes, forced = null) {
+    function basicAttack(u, t, foes, forced = null, scale = 1) {
         const splash = sumOf(u, 'attack_splash');
         const targets = splash > 0 ? foes.slice() : [forced ?? ctx.pickTarget(u, foes)];
         // 평타 피해 % [2026-10-16 · R247 · 퀵 드로우 · 오버드로우] — 평타 배율에 곱한다(원소 추가타 · 스킬은 안 받는다). 창이 없으면 곱하지 않는다 — 종전 값 그대로
@@ -301,36 +307,43 @@ export function createSkillRuntime(ctx) {
         const mult = splash > 0 ? splash : 1;
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
-            ctx.strikeOnce(u, tgt, bp ? Math.max(0, mult * (1 + bp)) : mult, null);
+            // `scale` — 파리 한 마리의 몫(스웜 · 2026-10-29 R380) · 1 이면 곱하지 않는다 — 종전 값 그대로 · 평타 광역은 파리 떼를 마리마다 친다(`spread`)
+            const m = bp ? Math.max(0, mult * (1 + bp)) : mult;
+            ctx.strikeOnce(u, tgt, scale === 1 ? m : m * scale, null, undefined, null, splash > 0);
         }
-        onhitExtra(u, targets);
+        onhitExtra(u, targets, t);
     }
 
     /**
-     * 원소 추가타 — `onhit_element` 창(인챈트 · 포이즌 애로우)이 있으면 `targets` 마다 1회. 첫 창의 원소 · 값(둘을 겹쳐 든 경우는 먼저 걸린 것) ·
-     *   `s` = 그 창을 건 스킬. 기본 공격(때린 대상)과 **물리 스킬 시전**(겨눈 대상 — `cast` · 2026-10-02 · 사용자 확정 · R201 · battle_design §2-1)이 같이 쓴다.
-     *   스킬 타격 필드(`sk`)를 안 싣는다 — 능력치 계수는 평타 계수 · 추가 피해 · 결빙 없음. 시전자나 그 대상이 쓰러졌으면 건너뛴다
+     * 원소 추가타(덤) — `onhit_element` 창(인챈트 · 포이즌 애로우 · 콜드 애로우)마다 `targets` 마다 1회 [2026-10-29 · R387 · battle_design §2-1 —
+     *   ~~첫 창 하나만~~ 대체 · 서로 다른 스킬의 창은 **모두** 붙는다(같은 스킬은 열쇠가 같아 창 하나 — skill_design §1-6)]. 도는 순서는 **대상 → 창(삽입 순서)**.
+     *   `s` = 그 창을 건 스킬. 기본 공격(때린 대상)과 **공격 스킬 시전**(겨눈 대상 — 물리 · 원소 모두 · `cast` · 2026-10-29 — ~~물리만 · R201~~)이 같이 쓴다.
+     *   스킬 타격 필드(`sk`)를 안 싣는다 — 능력치 계수는 평타 계수 · 추가 피해 · 원소 부여 없음. 창이 거는 상태이상(`hit` — 콜드 애로우의 결빙)은
+     *   그 추가타가 **적중했고** 대상이 살아 있으면(소환 제외) 건다 · rng 0. 시전자나 그 대상이 쓰러졌으면 건너뛴다
      */
-    function onhitExtra(u, targets) {
-        const oh = stateOf(u, 'onhit_element');
-        if (!oh) return;
-        const [key, win] = oh;
+    function onhitExtra(u, targets, t) {
+        const wins = Object.entries(u.buffs).filter(([, b]) => b.stat === 'onhit_element');
+        if (!wins.length) return;
         for (const tgt of targets) {
-            if (u.hp <= 0 || tgt.hp <= 0) continue;
-            ctx.strikeOnce(u, tgt, win.v, win.element, win.s ?? key);
+            for (const [key, win] of wins) {
+                if (u.hp <= 0 || tgt.hp <= 0) break;
+                const landed = ctx.strikeOnce(u, tgt, win.v, win.element, win.s ?? key);
+                if (landed && win.hit && tgt.hp > 0 && !tgt.summon) applyStatus(u, tgt, win.hit, t);
+            }
         }
     }
 
     /**
-     * 시전 하나가 **물리로 겨눈 대상** 장부 `{u, list}` [2026-10-02 · R201] — `cast` 가 열고 닫는다(시전 안에서 열린 다른 시전 — 쓰러진 적의 자폭 — 은
-     *   제 장부를 갈아 끼웠다 되돌린다). 적는 것은 공격 대상 표의 직격(`skillStrike`) 중 **그 시전자 · 원소 태그 없는 것**뿐 — 반격(`basicAttack`)은 안 적힌다
+     * 시전 하나가 **겨눈 대상** 장부 `{u, list}` [2026-10-02 · R201 · 2026-10-29 R387 — ~~물리만~~ 원소 스킬도] — `cast` 가 열고 닫는다(시전 안에서 열린 다른 시전 — 쓰러진 적의 자폭 — 은
+     *   제 장부를 갈아 끼웠다 되돌린다). 적는 것은 공격 대상 표의 직격(`skillStrike`) 중 **그 시전자 것**뿐 — 반격(`basicAttack`)은 안 적힌다
      */
     let struck = null;
 
     /** 공격 대상 표(`skill_effects.ATTACK_TARGETS`)가 부르는 직격 — `ctx.strikeOnce` 그대로이고, 장부에 대상을 처음 겨눈 순서로 적는다(rng 0) */
     function skillStrike(u, tgt, mult, element, s, sk) {
-        if (struck?.u === u && !element && !struck.list.includes(tgt)) struck.list.push(tgt);
-        ctx.strikeOnce(u, tgt, mult, element, s, sk);
+        // 덤이 붙는 대상 장부 — 원소 스킬도 적는다(2026-10-29 · R387 — ~~원소 태그 없는 것만 · R201~~)
+        if (struck?.u === u && !struck.list.includes(tgt)) struck.list.push(tgt);
+        return ctx.strikeOnce(u, tgt, mult, element, s, sk);
     }
 
     /**
@@ -357,7 +370,7 @@ export function createSkillRuntime(ctx) {
             lead ??= got ?? null;
         }
         struck = outer;
-        onhitExtra(u, mine.list);
+        onhitExtra(u, mine.list, t);
         // 에코 [2026-10-16 · R250 · skill_design §12-6] — 공격 스킬(`hit` 줄이 있다)이 창 동안 **한 번 더** — 대상은 평소 규칙대로 다시 고르고(그 스킬의 굴림이 한 번 더)
         //   쿨 · 시전 수 · `skill` 이벤트 · `cast` 훅은 없다 · 에코로 나간 시전은 다시 에코하지 않는다. 창이 없으면 아무 일도 없다(rng · 타임라인 불변)
         if (echoing || u.hp <= 0 || !def.effects.some(e => e.effect === 'hit')) return lead;
@@ -390,6 +403,8 @@ export function createSkillRuntime(ctx) {
      *   차례(`act`)와 마법 무기의 기다림(battle.js 틱 루프 — 찬 채로 기다리다 준비되는 틱에 시전 · R198)이 같은 판정을 쓴다
      */
     function pick(u, t) {
+        // 변신 · 파리 떼 동안은 액티브를 못 고른다 [2026-10-29 · R380 · skill_design §12-9 골드 피버 · 스웜] — 차례는 기본 공격만(스웜은 파리마다 · `turn`)
+        if (u.swarm || stateOf(u, 'transform')) return null;
         // 발동 선택 — rng 를 쓰지 않는다. 조건이 거짓인 것은 준비된 것으로 치지 않는다 (skill_design §9-3)
         return SK && u.actives.length
             ? SK.pickReady(u.actives, t, a => SK.castable(a.def, { self: u, allies: alive(alliesOf(u)) }))
@@ -406,10 +421,10 @@ export function createSkillRuntime(ctx) {
     function chanOpen(u, sel, t) {
         const def = sel.def;
         const hit = SK.scaleDef(def, u.stats ?? null).effects.find(x => x.effect === 'hit');
-        // 모으기(`burst` · 2026-10-26 R358)는 방이 둘 — 여는 순간 · [balance.csv:channel_charge_sec] 뒤 쏘는 순간
+        // 모으기(`burst` · 2026-10-26 R358)는 방이 둘 — 여는 순간 · 그 스킬의 모으는 시간(`chargeSec` = skill.csv:charge_sec · 2026-10-28 R371) 뒤 쏘는 순간
         const burst = CASTS[def.cast].burst === true;
         const n = burst ? 2 : Math.max(1, hit?.hits ?? 1);
-        const iv = CASTS[def.cast].chan === 'tick' ? (burst ? B.channel_charge_sec : B.channel_tick_sec) : null;
+        const iv = CASTS[def.cast].chan === 'tick' ? (burst ? def.chargeSec : B.channel_tick_sec) : null;
         sel.readyAt = Infinity;
         u.chan = { a: sel, def, left: n, single: hit?.target === 'enemy_single', tgt: null, iv, acc: 0 };
         if (u.noBasic || iv) u.next = u.period;
@@ -469,12 +484,31 @@ export function createSkillRuntime(ctx) {
      *   **마법 무기(`noBasic`)는 기본 공격이 없다** [2026-10-02 · R198] — 준비된 것이 없으면 아무것도 안 한다. 그 차례를 세우지 않는 것
      *   (칸 충전 · R200)은 부르는 쪽(battle.js `chargeTick`)이 `pick` 으로 먼저 가른다 — 여기는 안전장치다
      *   **정신 집중**(R318) — 열린 동안의 차례는 한 방(`chanHit`)이고, 고른 스킬이 정신 집중이면 그 차례에 연다(`chanOpen`) — 둘 다 기본 공격이 없다
+     *   **프렌지 겹 이어짐**(2026-10-28 · R372) — 창이 끝나며 남긴 겹(`fzKeep` · `expire`)은 **이 차례 한 번만** 산다 — 걸었든 안 걸었든 차례가 끝나면 지운다
      * @returns 무언가 했으면 참(시전 · 기본 공격) — 마법 무기의 칸을 되돌리는 판정이 읽는다 (R200)
      */
     function act(u, t) {
+        const did = turn(u, t);
+        if (u.fzKeep) delete u.fzKeep;
+        return did;
+    }
+
+    function turn(u, t) {
         const foes = alive(foesOf(u));
         if (foes.length === 0) return false;
         if (u.chan) return chanHit(u, t);
+        // 파리 떼 [2026-10-29 · R380 · skill_design §12-9 스웜] — 그 차례는 **산 파리마다 기본 공격 한 번**(배율 = 파리 몫 · 대상 굴림도 마리마다) · 스킬은 없다(`pick`).
+        //   마법 무기는 기본 공격이 없어 파리도 안 쏜다 · 앞 파리의 타격이 반격 등으로 파리를 쓰러뜨리면 그 파리는 건너뛴다
+        if (u.swarm) {
+            if (u.noBasic) return false;
+            for (let i = 0; u.swarm && i < u.swarm.hp.length; i++) {
+                if (u.hp <= 0 || u.swarm.hp[i] <= 0) continue;
+                const left = alive(foesOf(u));
+                if (left.length === 0) break;
+                basicAttack(u, t, left, null, u.swarm.v);
+            }
+            return true;
+        }
         const sel = pick(u, t);
         if (!sel) {
             if (u.noBasic) return false;
@@ -516,6 +550,10 @@ export function createSkillRuntime(ctx) {
      */
     const rt = {
         rng, F, strikeOnce: skillStrike, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
+        // 가이디드 애로우 방어 깎기의 겹 상한 — 무기 시기 ② 겹과 같은 값 (2026-10-29 · R383 · `skill_effects.ATTACK_TARGETS.enemy_highest_def`)
+        shredMax: B.weapon_def_down_stack_max,
+        // 파리 떼 여닫기 — HP · 타임라인 · 판 크기를 아는 battle.js 가 한다(`EFFECTS.swarm` · 2026-10-29 R380)
+        swarmOpen: ctx.swarmOpen, swarmClose: ctx.swarmClose,
         alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
     };
     return rt;

@@ -1027,6 +1027,21 @@ function refreshUnit(state, u) {
     // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 카드 밖 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
     u.node.classList.toggle('buffed', u.hp > 0 && u.buffs?.size > 0);
     refreshBuffs(u, state.t);
+    // 파리 떼 (스웜 · R380 · ADR-0944) — 창 동안 초상 아래쪽에 파리 마리마다 작은 HP 막대 한 줄 · 쓰러진 파리는 흐린 빈 칸 · 걷히면 줄째 뺀다
+    const fr = u.node.querySelector('.fly-row');
+    if (u.fly?.length && u.hp > 0) {
+        let row = fr;
+        if (!row) {
+            row = document.createElement('div');
+            row.className = 'fly-row';
+            u.node.querySelector('.sprite')?.appendChild(row);
+        }
+        if (row.children.length !== u.fly.length) row.innerHTML = u.fly.map(() => '<i><b></b></i>').join('');
+        [...row.children].forEach((el, i) => {
+            el.firstChild.style.transform = `scaleX(${clamp01(u.fly[i] / u.flyMax)})`;
+            el.classList.toggle('gone', u.fly[i] <= 0);
+        });
+    } else if (fr) fr.remove();
 }
 
 /** 남은 시간 표기 — 전투 시각은 0.1초 눈금이라 그 자리까지만 보인다. 12.0은 12로 접는다. */
@@ -1077,6 +1092,11 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'imbue': return 'bt.effect.imbue';
             case 'pulse': return 'bt.effect.pulse';
             case 'echo': return 'bt.effect.echo';
+            // 장 보스 고유 넷 (2026-10-29 · R380 · ADR-0944)
+            case 'maiden': return 'bt.effect.maiden';
+            case 'transform': return 'bt.effect.transform';
+            case 'delegate': return 'bt.effect.delegate';
+            case 'swarm': return 'bt.effect.swarm';
             default: return 'bt.effect.active';
         }
     })();
@@ -1768,6 +1788,12 @@ function apply(state, root, opts, ev) {
             const a = U(ev.a), d = U(ev.d);
             if (d) { d.hp = ev.ahp; popup(state, d, `-${ev.dmg}`, dmgPop()); refreshUnit(state, d); }
             fxReflect(state, d);   // 피격 반응만 — 반사는 스킬이 아니다 (ADR-0410)
+            // 아이언 메이든 (R380 · ADR-0944) — 저주가 되돌린 피해는 `s` 를 단다 · 줄은 「되받음」 · 그림 · 이름은 그 스킬 · 몫은 그 스킬 칸
+            if (ev.s && a && d) {
+                logLine(state, root, d.side, 'maiden', L(a.name), dmgIcon(ev.s), strikeLabel(ev.s), L(d.name), ev.dmg);
+                addDmg(state, a, d, ev.s, dealtOf(ev));
+                break;
+            }
             if (a && d) {
                 logLine(state, root, a.side, 'reflect', L(a.name), dmgIcon('reflect'), t('bt.reflectLabel'), L(d.name), ev.dmg);   // 반사의 주체는 되받아 친 쪽 · 그림 없음 · 칠하지 않는다(종류가 없다)
                 addDmg(state, a, d, 'reflect', dealtOf(ev));
@@ -1886,6 +1912,10 @@ function apply(state, root, opts, ev) {
             if (!u) break;
             // 상태이상은 칩을 `k`(이름)로 든다 — 한 유닛에 상태이상 하나 = 칩 하나 (R178 · ADR-0405)
             u.buffs?.set(ev.k ?? ev.s, { until: ev.until, stat: ev.stat, v: ev.v, s: ev.s, k: ev.k ?? null, cut: ev.cut ?? 0 });
+            // 변신 창이 늘어났다(골드 피버 · `ext` · R380 · ADR-0944) — 칩의 남은 시간만 · 이펙트 · 로그 없음
+            if (ev.ext) { refreshUnit(state, u); break; }
+            // 파리 떼가 섰다(스웜 · `fly` · R380) — 마리마다 HP · 막대의 한 칸 = 연 순간의 한 마리
+            if (ev.fly) { u.fly = ev.fly.slice(); u.flyMax = Math.max(1, ...ev.fly); }
             // 스턴 — 경직과 같은 창으로 행동 게이지를 세우고(겹치면 늦은 끝) 아직 안 준비된 칸의 쿨을 시뮬이 민 만큼(`cd`) 민다. 계산이 아니라 실려 온 값이다
             if (ev.k === 'stun') {
                 u.stalls = u.stalls ?? [];
@@ -1906,6 +1936,29 @@ function apply(state, root, opts, ev) {
             if (ev.until !== null) logLine(state, root, u.side, ev.stat === 'barrier_pct' ? ['barrier', ev.amt] : ev.k ? 'ail' : 'buff',
                 L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '',
                 ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up'));
+            break;
+        }
+        // 장 보스 고유 넷 (R380 · ADR-0944) — 시뮬이 실어 온 값만 그린다
+        case 'delegate': {   // 델리게이트 — 넘긴 쪽 카드에 「넘김」 · 로그 한 줄(주체 = 넘긴 쪽 · 대상 = 받은 아군) · 뒤에 받은 쪽의 행동 이벤트가 잇는다
+            const u = U(ev.u), d = U(ev.d);
+            if (u) { markActed(u, ev.t); popup(state, u, t('pop.delegate'), 'counter'); }
+            if (u && d) logLine(state, root, u.side, 'delegate', L(u.name), '', '', L(d.name), t('log.v.delegate'));
+            break;
+        }
+        case 'fly': {   // 파리 HP — 마리마다 · 본체 HP 막대는 창 동안 그대로다
+            const u = U(ev.u);
+            if (!u) break;
+            u.fly = ev.hp.slice();
+            refreshUnit(state, u);
+            break;
+        }
+        case 'swarmEnd': {   // 뭉쳤다 — 파리 막대가 걷히고 본체 HP 가 실려 온 값이 된다 · 로그 한 줄
+            const u = U(ev.u);
+            if (!u) break;
+            u.fly = null;
+            u.hp = ev.dhp;
+            refreshUnit(state, u);
+            logLine(state, root, u.side, 'regroup', L(u.name), dmgIcon('mon_swarm'), strikeLabel('mon_swarm'), '', ev.dhp);
             break;
         }
         case 'stat': {   // 지금 값 (R305 · ADR-0707) — 달라진 세부 옵션 줄만 온다. 쌓아 두고 그 유닛의 툴팁이 떠 있으면 세부 옵션 열을 다시 짓는다 · 로그 · 팝업 없음

@@ -183,7 +183,7 @@ function runFingerprint(SYS, B, NOW, seed, stage, order) {
         tactics,
         drops: res.drops.map(dropSig),
         blueprints: res.blueprints.join('|') || '-',                 // 떨어진 스킬 도안 — 처치당 1개를 장비와 나눠 쓴다 (2026-09-29 · R179 · 종류 굴림 1회 · 2026-10-20 R293 ~~books 스킬북~~ — 칸 이름만 바뀌었다)
-        mats: strMapSig(res.materials),                               // 처치 재료의 종류별 개수 — 장비 · 도안과 따로 굴린다 (2026-10-06 · 판정 1회 → 종류 1회)
+        // ~~mats 처치 재료~~ — 2026-10-29 R373 삭제(처치가 재료를 안 뱉는다 · INTERFACE §5-5)
         // 타임라인 전체의 지문 — 요약 필드가 못 보는 순서·값 변화를 잡는다.
         // 어디가 깨졌는지는 위 필드들이 말하고 이 값은 「달라졌다」만 말한다
         tl: csvHash(JSON.stringify(res.timeline)),

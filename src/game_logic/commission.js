@@ -7,17 +7,18 @@
  *
  * **무엇이 서는가는 표 넷이 정한다** — 틀(`commission.csv` — 종류 × 대상 어휘 · 기본 수 · 기본 골드 · 가중치) ·
  *   종류(`commission_kind.csv` — 처치 · 수집) · 의뢰 등급(`commission_grade.csv` — 일반 · 매직 · 레어 · 카드 희귀도) ·
- *   종족(`monster_type.csv`). **코드가 아는 것은 대상 어휘(`AXES`)뿐이다** — 무엇을 세는지는 코드라서다(construction 의 `TARGETS` 와 같은 자리).
+ *   종족(`monster_type.csv`) · 명성 레벨(`commission_fame.csv` — 2026-10-29 · R375). **코드가 아는 것은 대상 어휘(`AXES`)뿐이다** — 무엇을 세는지는 코드라서다(construction 의 `TARGETS` 와 같은 자리).
  *
  * 확정 규칙 [2026-09-24 사용자 — 「랜덤하게 모두가 나오도록」 · 「일반 · 매직 · 레어」 · 명성 보류]:
  *   · 의뢰는 받아 두는 목표다 — 전장을 안 연다 · 파티가 없다 (base_expedition_design §1-3 · 09-07)
  *   · 한 장 = **틀 · 등급 · 대상**을 굴린다 · 대상은 **지금 들어갈 수 있는 곳에서만**(부르는 쪽이 `ctx` 로 모은다)
  *   · 의뢰 등급은 카드 희귀도 — 윗 등급이 드물고 **목표당 골드가 좋다**(표가 그렇게 들고 있다)
- *   · 명성은 없다 — 보류 (카드에 명성 칸이 없다)
+ *   · **명성 레벨** [2026-10-29 사용자 「의뢰를 계속깨면 난이도랑 보상이 같이올라가는걸로해」 · R375] — 명성 경험치(= 누적 수령 수)가 레벨을 정하고
+ *     레벨이 **새로 굴리는 카드**의 목표 수 · 골드에 배수를 붙인다 · 골드가 더 가파르다 · 카드에 명성 칸은 없다(굴린 순간의 배수가 need · gold 에 박힌다)
  * ⚠ 값은 전부 제안값 — 각 CSV 의 description
  *
  * @param {object} data
- *   templates / kinds / grades / races — 표 넷의 파싱 행
+ *   templates / kinds / grades / races / fame — 표 다섯의 파싱 행
  *   monsters — byId(monster.csv) · 고정 대상 검증 · 개체 틀의 보상 챕터 · 종족 표가 모든 `monster_type` 을 덮는지 검증
  *   balance — `commission_gold_chapter_mult`
  */
@@ -109,6 +110,33 @@ export function createCommission(data) {
     if (!(grades.reduce((a, g) => a + g.weight, 0) > 0)) bad('등급 가중치 합이 0 이다');
     const gradeById = new Map(grades.map(g => [g.id, g]));
 
+    /* ── 명성 레벨 — 행 순서 = 레벨 순서 · 레벨 1 = 틀의 값 (R375) ── */
+    const fame = (data.fame ?? []).map((r, i) => {
+        const lv = i + 1;
+        if (r.level !== lv) bad(`명성 ${i + 1}번째 행 — level ${r.level} (1 부터 1씩)`);
+        if (!(Number.isInteger(r.claims_total) && r.claims_total >= 0)) bad(`명성 Lv${lv} — claims_total ${r.claims_total}`);
+        if (!(typeof r.need_mult === 'number' && r.need_mult > 0)) bad(`명성 Lv${lv} — need_mult ${r.need_mult}`);
+        if (!(typeof r.gold_mult === 'number' && r.gold_mult > 0)) bad(`명성 Lv${lv} — gold_mult ${r.gold_mult}`);
+        return { level: lv, total: r.claims_total, needMult: r.need_mult, goldMult: r.gold_mult };
+    });
+    if (!fame.length) bad('명성 표가 비었다');
+    if (fame[0].total !== 0 || fame[0].needMult !== 1 || fame[0].goldMult !== 1) bad('명성 Lv1 은 문턱 0 · 배수 1 이어야 한다 — 틀의 값이 레벨 1 의 값이다');
+    for (let i = 1; i < fame.length; i++) {
+        const a = fame[i - 1], b = fame[i];
+        if (!(b.total > a.total)) bad(`명성 Lv${b.level} — 문턱 ${b.total} 이 Lv${a.level} 의 ${a.total} 보다 크지 않다`);
+        if (b.needMult < a.needMult) bad(`명성 Lv${b.level} — 목표 배수가 준다`);
+        if (!(b.goldMult / b.needMult > a.goldMult / a.needMult)) bad(`명성 Lv${b.level} — 목표당 골드가 Lv${a.level} 보다 크지 않다(골드가 목표보다 가파르다)`);
+    }
+
+    /** 명성 경험치 → 레벨 한 벌 — 닿은 가장 높은 레벨 · 0 이상 정수가 아니면 0 으로 읽는다 · rng 0 */
+    function fameOf(xp) {
+        const x = Number.isInteger(xp) && xp > 0 ? xp : 0;
+        let f = fame[0];
+        for (const r of fame) if (x >= r.total) f = r;
+        const nx = fame[f.level] ?? null;
+        return { level: f.level, xp: x, total: f.total, next: nx ? nx.total : null, needMult: f.needMult, goldMult: f.goldMult, max: !nx };
+    }
+
     /* ── 굴림 ── */
 
     /** 가중 추첨 1회 — **목록 순서로 훑는다**(INTERFACE §5-2) */
@@ -130,7 +158,8 @@ export function createCommission(data) {
 
     /**
      * 카드 한 장 — **언제나 3회**: 틀 1 → 등급 1 → 대상 1(고정이어도 소비하고 버린다) · 굴릴 틀이 없으면 0회 `null`.
-     * `ctx = {chapters, races, monsters, chapter}` — 지금 들어갈 수 있는 것만 · 순서가 계약이다(INTERFACE §2-16)
+     * `ctx = {chapters, races, monsters, chapter, fame}` — 지금 들어갈 수 있는 것만 · 순서가 계약이다(INTERFACE §2-16) ·
+     *   `fame` = 명성 경험치 — 레벨의 배수가 목표 · 골드에 곱해진다(굴림 수는 안 바뀐다 · R375)
      */
     function roll(rng, ctx) {
         const open = templates.filter(t => usable(t, ctx));
@@ -141,11 +170,12 @@ export function createCommission(data) {
         const picked = pool[Math.floor(rng() * pool.length)];
         const ref = t.ref ?? picked;
         const ch = rewardChapter(t.axis, ref, ctx) ?? 1;
+        const f = fameOf(ctx.fame);
         return {
             tpl: t.id, kind: t.kind, axis: t.axis, ref,
-            need: Math.max(1, Math.round(t.need * g.needMult)),
+            need: Math.max(1, Math.round(t.need * g.needMult * f.needMult)),
             grade: g.id,
-            gold: Math.round(t.gold * g.goldMult * chapterMult ** (ch - 1)),
+            gold: Math.round(t.gold * g.goldMult * f.goldMult * chapterMult ** (ch - 1)),
         };
     }
 
@@ -156,5 +186,5 @@ export function createCommission(data) {
     /** 들어온 드롭 하나가 이 카드를 채우나 */
     const matchDrop = (card, item) => AXES[card.axis]?.on === 'yield' && AXES[card.axis].hit(card.ref, item);
 
-    return { templates, grades, races, gradeById, roll, matchKill, matchDrop };
+    return { templates, grades, races, fame, gradeById, fameOf, roll, matchKill, matchDrop };
 }

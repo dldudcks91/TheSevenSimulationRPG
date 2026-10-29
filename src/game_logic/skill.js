@@ -97,8 +97,10 @@ const SCALE_FIELD_IDS = Object.keys(SCALE_FIELDS);
 /**
  * 스킬 레벨이 밀 수 있는 칸 [2026-10-06 · R216 · skill_design §2-3] — `skill_effect.csv:level_field` 의 어휘. 슬롯이 미는 항 + 스킬의 쿨(`cool_sec` — 첫 줄만 적는다).
  *   레벨은 **그 스킬의 숫자 하나**를 올린다 — 스킬마다 레벨 줄은 많아야 하나다
+ *   `hit_value` · `hit_duration_sec` [2026-10-29 · R385] — 창이 맞은 대상에게 **거는 상태이상**(`skill_status.csv:hit_status`)의 값 · 시간 — 레벨만 민다(슬롯은 없다).
+ *   이그나이트(화상 세기) · 딥 프리즈(스턴 시간)가 쓴다
  */
-const LEVEL_FIELDS = [...SCALE_FIELD_IDS, 'cool_sec'];
+const LEVEL_FIELDS = [...SCALE_FIELD_IDS, 'cool_sec', 'hit_value', 'hit_duration_sec'];
 /** 미리보기 `amount` 의 밑수 — **하는 일**로 가른다: 때린다는 공격력 · 회복은 마법 공격력 · 소환 · 자기 회복(리커버리 · 2026-10-16)은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
 const AMOUNT_BASIS = { hit: 'atk', heal: 'matk', mend: 'hpMax', summon: 'hpMax', fixed: 'atk' };   // fixed(자폭)의 밑수도 공격력이다 — 단 범위를 굴리지 않고 중앙값을 쓴다 (아래 previewOf · skill_effects EFFECT_TYPES.fixed · 2026-09-21)
 /** 밑수의 양끝 — 공격 · 회복은 범위(`atkMin`~`atkMax` · `matkMin`~`matkMax` · R90), 벽은 한 점(`hpMax`) */
@@ -166,6 +168,9 @@ export function createSkillSystem(data) {
         decay_pct: usesDecayOf(lineTarget(d, e), e),
         proc_chance_pct: e.effect === 'hit' && e.procChance > 0,
         proc_mult_pct: e.effect === 'hit' && e.procChance > 0,
+        // 창이 거는 상태이상의 값 · 시간 — 거는 상태이상(`hit_status`)을 든 걸린 효과의 `apply` 줄만 (2026-10-29 · R385 · 레벨 전용)
+        hit_value: e.effect === 'apply' && e.status !== null && statuses[e.status]?.hitStatus != null,
+        hit_duration_sec: e.effect === 'apply' && e.status !== null && statuses[e.status]?.hitStatus != null,
     })[field] === true;
 
     /** 정의 1행 정규화(`skill.csv` — 스킬마다 하나뿐인 것) — %·배율은 CSV 의 **비율** 그대로(2026-09-17 R111 · 310% = 3.1), 없음은 null */
@@ -199,6 +204,8 @@ export function createSkillSystem(data) {
         tier: dash(row.tier ?? '-'),
         // HP 소모 — 차례에 쓸 때 **지금 HP 의 이 비율**을 낸다(내림 · 쓰러지지 않는다) [2026-10-24 · R355 · skill_design §12-4 차지] · 0 = 없음
         hpCost: row.hp_cost_pct ?? 0,
+        // 모으는 시간(초) — 모으기(`cast = channel_charge`)만 양수 · 그 밖은 `-` → null [2026-10-28 · R371 · skill_design §12-3 「모으는 시간은 스킬마다」] · 칸이 없는 표(옛 테스트 표)는 `-` 로 읽는다
+        chargeSec: dash(row.charge_sec ?? '-'),
         note: row.note,
         // 하는 일 줄 — `skill_effect.csv` 를 아래에서 붙인다(`seq` 순)
         effects: [],
@@ -266,14 +273,20 @@ export function createSkillSystem(data) {
         if (st.stat === 'duel' && !(st.value >= 0)) bad(`duel 인데 value ${st.value} — 시전자 피해 감소라 0 이상`);
         // 원소 부여 상태이상 [2026-10-16 · R250] — `imbue` 는 원소 · 거는 행이 둘 다 있고 값은 거는 확률(0 초과 1 이하) · 그 밖의 행은 `hit_status` 를 안 쓴다.
         //   가리킨 행이 상태이상인지는 표가 다 선 뒤에 본다(아래)
-        if (st.stat === 'imbue') {
-            if (st.element === null || st.hitStatus === null) bad(`imbue 인데 element '${st.element}' · hit_status '${st.hitStatus}' — 둘 다 있어야 한다`);
-            if (!(st.value > 0 && st.value <= 1)) bad(`imbue 인데 value ${st.value} — 거는 확률 0 초과 1 이하`);
-        } else if (st.hitStatus !== null) {
-            bad(`hit_status '${st.hitStatus}' — imbue 행만 쓴다`);
+        //   **`shatter`**(딥 프리즈 — 이미 결빙된 적을 그 원소로 다시 맞히면 · 2026-10-29 · R385)도 같은 모양 · **`onhit_element`**(덤 — 콜드 애로우의 결빙)는
+        //   거는 행을 들 수 있다(값은 추가타 배율이라 확률 검사 없음 · 2026-10-29 · R383)
+        if (st.stat === 'imbue' || st.stat === 'shatter') {
+            if (st.element === null || st.hitStatus === null) bad(`${st.stat} 인데 element '${st.element}' · hit_status '${st.hitStatus}' — 둘 다 있어야 한다`);
+            if (!(st.value > 0 && st.value <= 1)) bad(`${st.stat} 인데 value ${st.value} — 거는 확률 0 초과 1 이하`);
+        } else if (st.hitStatus !== null && st.stat !== 'onhit_element') {
+            bad(`hit_status '${st.hitStatus}' — imbue · shatter · onhit_element 행만 쓴다`);
         }
         // 이베이드 — 값은 피하는 횟수(반올림해 1 이상)
         if (st.stat === 'evade' && !(st.value >= 0.5)) bad(`evade 인데 value ${st.value} — 피하는 횟수라 반올림해 1 이상`);
+        // 장 보스 고유 넷 [2026-10-29 · R380] — 메이든 = 되돌리는 몫(0 초과) · 변신 = 맞힐 때마다 늘어나는 초(0 = 안 늘어난다) · 파리 떼 = 마리 몫(0 초과 1 이하) · 둘 다 시간이 있어야 한다
+        if (st.stat === 'maiden' && !(st.value > 0)) bad(`maiden 인데 value ${st.value} — 되돌리는 몫이라 0 초과`);
+        if (st.stat === 'transform' && !(st.value >= 0 && st.dur > 0)) bad(`transform 인데 value ${st.value} · duration_sec ${st.dur} — 늘어나는 초 0 이상 · 시작 길이 0 초과`);
+        if (st.stat === 'swarm' && !(st.value > 0 && st.value <= 1 && st.dur > 0)) bad(`swarm 인데 value ${st.value} · duration_sec ${st.dur} — 마리 몫 0 초과 1 이하 · 창이 있어야 뭉친다`);
     }
 
     /**
@@ -305,8 +318,10 @@ export function createSkillSystem(data) {
         }
         // 정신 집중 [2026-10-22 · R318 · battle_design §3-2] — 하는 일은 **`hit` 줄 하나**다. 그 타수가 방 수라(차례마다 한 방) 줄이 둘이면 무엇을 되풀이할지가 갈린다
         if (CASTS[d.cast].chan && (d.effects.length !== 1 || d.effects[0].effect !== 'hit')) bad('channel 인데 하는 일이 hit 줄 하나가 아니다 — 그 타수가 방 수다');
-        // 모으기 [2026-10-26 · R358] — 모으는 시간은 [balance.csv:channel_charge_sec] 가 들고 치는 것은 한 발이다 — 타수가 1 이 아니면 뜻이 둘로 갈린다
+        // 모으기 [2026-10-26 · R358] — 모으는 시간은 그 스킬의 `charge_sec`(2026-10-28 R371 — 스킬마다)이 들고 치는 것은 한 발이다 — 타수가 1 이 아니면 뜻이 둘로 갈린다
         if (CASTS[d.cast].burst && d.effects[0].hits !== 1) bad(`${d.cast} 인데 hit 줄 타수 ${d.effects[0].hits} — 모으기는 한 발(타수 1)`);
+        //   모으는 시간은 모으기만 든다 — 다른 방식에 적으면 읽는 곳이 없어 조용히 버려진다
+        if (CASTS[d.cast].burst ? !(d.chargeSec > 0) : d.chargeSec !== null) bad(`${d.cast} 인데 charge_sec '${d.chargeSec ?? '-'}' — 모으기는 양수 · 그 밖은 -`);
         // 하는 일 — **줄 1개 이상**이고 seq 는 1 부터 빈틈없이 (표 사이 검사 ① · 2026-09-24 R151 — ~~1단계는 정확히 한 줄~~)
         if (d.effects.length === 0) bad('하는 일 줄이 없다 — skill_effect.csv 에 줄이 있어야 한다');
         d.effects.forEach((e, i) => {
@@ -371,6 +386,7 @@ export function createSkillSystem(data) {
             t: st0?.stat === 'pulse',                                  // 오오라 피해 간격
             i: CASTS[d.cast].chan === 'tick' && !CASTS[d.cast].burst,  // 계속 닳기의 방 사이 간격 (2026-10-22 · 모으기는 같은 초 시계라도 아니다 — R358)
             p: d.hpCost > 0,                                           // HP 소모 비율 (2026-10-24 · R355)
+            f: st0?.stat === 'swarm',                                  // 파리 수 [balance.csv:swarm_fly_count] (스웜 · 2026-10-29 R380)
         };
         for (const k of ko) if (!slotHas[k]) bad(`desc 자리 {${k}} — ${k in slotHas ? '이 스킬엔 그 수가 없다' : `모르는 자리(${Object.keys(slotHas).join('·')})`}`);
         for (const k of ['n', 'd']) if (slotHas[k] && !ko.includes(k)) bad(`desc 에 {${k}} 가 없다 — ${k === 'n' ? '쿨' : '수량'}은 문장이 말한다`);
@@ -406,8 +422,9 @@ export function createSkillSystem(data) {
             //   적의 창은 적 배열과 함께 사라지고 파티의 창은 라운드를 넘어 남아야 해서(결빙이 라운드 경계에서 풀리면 규칙이 둘이 된다) keep 이다
             const st = statuses[e.status];
             if (!st) bad(`status '${e.status}' 가 skill_status 에 없다`);
-            // 맞은 대상(= 적)에게 거는 것은 **상태이상뿐**이다 — 버프를 적에게 거는 줄이 조용히 통과하지 않게(옛 「attack 이 창을 연다」 검사가 이것이다)
-            if (!st.ailment) bad(`hit 줄이 거는 ${st.id} 는 상태이상이 아니다 — 맞은 대상에게 거는 것은 상태이상(${AILMENT_IDS.join('·')})뿐`);
+            // 맞은 대상(= 적)에게 거는 것은 **상태이상 · 디버프(값이 음수)뿐**이다 — 버프를 적에게 거는 줄이 조용히 통과하지 않게(옛 「attack 이 창을 연다」 검사가 이것이다) ·
+            //   디버프는 2026-10-29 기사 스윕의 방어 감소부터(R384 · 창 열쇠 = 걸린 효과 id · 매력 · 디버프 시간 증가를 탄다)
+            if (!st.ailment && !(st.value < 0)) bad(`hit 줄이 거는 ${st.id} 는 상태이상도 디버프(값 음수)도 아니다 — 맞은 대상에게 거는 것은 상태이상(${AILMENT_IDS.join('·')}) · 디버프뿐`);
             if (!(st.dur > 0)) bad(`맞은 대상에게 창을 거는데 ${st.id} 의 duration_sec ${st.dur}`);
             if (st.roundEnd !== 'keep') bad(`hit 줄이 거는 ${st.id} 의 round_end '${st.roundEnd}' — keep 이다`);
         } else if (e.status !== null) {
@@ -771,9 +788,11 @@ export function createSkillSystem(data) {
         // 거는 걸린 효과 — 값 · 시간은 **이 줄의 슬롯**이 민다(S5). 창의 열쇠는 걸린 효과 id(`status`)다
         const st = e.status === null ? null : statuses[e.status];
         const sv = st ? { stat: st.stat, value: grow(st.value, 'effect_value'), dur: grow(st.dur, 'duration_sec'), element: st.element, roundEnd: st.roundEnd, ailment: st.ailment } : null;
-        // 원소 부여 창이 거는 상태이상 — 그 행의 원값 그대로(슬롯 · 레벨은 창의 값 · 시간만 민다 · 2026-10-16 R250). 창(`applyStatus`)이 `hit` 으로 싣는다
+        // 창이 맞은 대상에게 거는 상태이상 — 그 행의 원값(슬롯은 창의 값 · 시간만 민다 · 2026-10-16 R250) + **레벨 칸 `hit_value` · `hit_duration_sec`** 몫
+        //   (2026-10-29 · R385 — 이그나이트 화상 세기 · 딥 프리즈 스턴 시간 · 부호 유지). 창(`applyStatus`)이 `hit` 으로 싣는다
         const to = st?.hitStatus ? statuses[st.hitStatus] : null;
-        if (sv && to) sv.hit = { id: def.id, status: to.id, stat: to.stat, value: to.value, dur: to.dur, element: to.element, roundEnd: to.roundEnd, ailment: to.ailment };
+        const hitGrow = (raw, field) => { const a = e.lvAdd?.[field] ?? 0; return a === 0 ? raw : raw < 0 ? -(-raw + a) : raw + a; };
+        if (sv && to) sv.hit = { id: def.id, status: to.id, stat: to.stat, value: hitGrow(to.value, 'hit_value'), dur: hitGrow(to.dur, 'hit_duration_sec'), element: to.element, roundEnd: to.roundEnd, ailment: to.ailment };
         return {
             ...e,
             id: def.id,
